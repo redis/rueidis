@@ -21,12 +21,7 @@ type String struct {
 }
 
 func (s *String) WriteTo(o *bufio.Writer) error {
-	_ = o.WriteByte('$')
-	_, _ = o.WriteString(strconv.Itoa(len(s.v)))
-	_, _ = o.WriteString("\r\n")
-	_, _ = o.WriteString(s.v)
-	_, err := o.WriteString("\r\n")
-	return err
+	return blob(o, '$', s.v)
 }
 
 type Verbatim struct {
@@ -36,14 +31,7 @@ type Verbatim struct {
 }
 
 func (v *Verbatim) WriteTo(o *bufio.Writer) error {
-	_ = o.WriteByte('=')
-	_, _ = o.WriteString(strconv.Itoa(len(v.v) + len(v.t) + 1))
-	_, _ = o.WriteString("\r\n")
-	_, _ = o.WriteString(v.t)
-	_, _ = o.WriteString(":")
-	_, _ = o.WriteString(v.v)
-	_, err := o.WriteString("\r\n")
-	return err
+	return blob(o, '=', v.t+":"+v.v)
 }
 
 type Error struct {
@@ -52,12 +40,7 @@ type Error struct {
 }
 
 func (e *Error) WriteTo(o *bufio.Writer) error {
-	_ = o.WriteByte('!')
-	_, _ = o.WriteString(strconv.Itoa(len(e.v)))
-	_, _ = o.WriteString("\r\n")
-	_, _ = o.WriteString(e.v)
-	_, err := o.WriteString("\r\n")
-	return err
+	return blob(o, '!', e.v)
 }
 
 type Int64 struct {
@@ -66,10 +49,7 @@ type Int64 struct {
 }
 
 func (i *Int64) WriteTo(o *bufio.Writer) error {
-	_ = o.WriteByte(':')
-	_, _ = o.WriteString(strconv.FormatInt(i.v, 10))
-	_, err := o.WriteString("\r\n")
-	return err
+	return write(o, ':', strconv.FormatInt(i.v, 10))
 }
 
 type BigInt struct {
@@ -78,10 +58,7 @@ type BigInt struct {
 }
 
 func (i *BigInt) WriteTo(o *bufio.Writer) error {
-	_ = o.WriteByte(':')
-	_, _ = o.WriteString(i.v.String())
-	_, err := o.WriteString("\r\n")
-	return err
+	return write(o, '(', i.v.String())
 }
 
 type Float64 struct {
@@ -90,10 +67,7 @@ type Float64 struct {
 }
 
 func (f *Float64) WriteTo(o *bufio.Writer) error {
-	_ = o.WriteByte(',')
-	_, _ = o.WriteString(strconv.FormatFloat(f.v, 'f', -1, 64))
-	_, err := o.WriteString("\r\n")
-	return err
+	return write(o, ',', strconv.FormatFloat(f.v, 'f', -1, 64))
 }
 
 type Bool struct {
@@ -102,14 +76,11 @@ type Bool struct {
 }
 
 func (b *Bool) WriteTo(o *bufio.Writer) error {
-	_ = o.WriteByte('#')
 	if b.v {
-		_ = o.WriteByte('t')
+		return write(o, '#', "t")
 	} else {
-		_ = o.WriteByte('f')
+		return write(o, '#', "f")
 	}
-	_, err := o.WriteString("\r\n")
-	return err
 }
 
 type Nil struct {
@@ -117,9 +88,7 @@ type Nil struct {
 }
 
 func (n *Nil) WriteTo(o *bufio.Writer) error {
-	_ = o.WriteByte('_')
-	_, err := o.WriteString("\r\n")
-	return err
+	return write(o, '_', "")
 }
 
 type Array struct {
@@ -128,13 +97,7 @@ type Array struct {
 }
 
 func (a *Array) WriteTo(o *bufio.Writer) (err error) {
-	_ = o.WriteByte('*')
-	_, _ = o.WriteString(strconv.Itoa(len(a.v)))
-	_, err = o.WriteString("\r\n")
-	for _, m := range a.v {
-		err = m.WriteTo(o)
-	}
-	return err
+	return writeA(o, '*', a.v)
 }
 
 type Set struct {
@@ -143,13 +106,7 @@ type Set struct {
 }
 
 func (s *Set) WriteTo(o *bufio.Writer) (err error) {
-	_ = o.WriteByte('~')
-	_, _ = o.WriteString(strconv.Itoa(len(s.v)))
-	_, err = o.WriteString("\r\n")
-	for _, m := range s.v {
-		err = m.WriteTo(o)
-	}
-	return err
+	return writeA(o, '~', s.v)
 }
 
 type Map struct {
@@ -159,14 +116,7 @@ type Map struct {
 }
 
 func (s *Map) WriteTo(o *bufio.Writer) (err error) {
-	_ = o.WriteByte('%')
-	_, _ = o.WriteString(strconv.Itoa(len(s.k)))
-	_, err = o.WriteString("\r\n")
-	for i, m := range s.k {
-		err = m.WriteTo(o)
-		err = s.v[i].WriteTo(o)
-	}
-	return err
+	return writeM(o, '%', s.k, s.v)
 }
 
 type Attributes struct {
@@ -175,14 +125,7 @@ type Attributes struct {
 }
 
 func (s *Attributes) WriteTo(o *bufio.Writer) (err error) {
-	_ = o.WriteByte('|')
-	_, _ = o.WriteString(strconv.Itoa(len(s.k)))
-	_, err = o.WriteString("\r\n")
-	for i, m := range s.k {
-		err = m.WriteTo(o)
-		err = s.v[i].WriteTo(o)
-	}
-	return err
+	return writeM(o, '|', s.k, s.v)
 }
 
 type Push struct {
@@ -191,11 +134,36 @@ type Push struct {
 }
 
 func (s *Push) WriteTo(o *bufio.Writer) (err error) {
-	_ = o.WriteByte('>')
-	_, _ = o.WriteString(strconv.Itoa(len(s.v)))
+	return writeA(o, '>', s.v)
+}
+
+func blob(o *bufio.Writer, id byte, str string) (err error) {
+	_ = write(o, id, strconv.Itoa(len(str)))
+	_, _ = o.WriteString(str)
 	_, err = o.WriteString("\r\n")
-	for _, m := range s.v {
+	return err
+}
+
+func write(o *bufio.Writer, id byte, str string) (err error) {
+	_ = o.WriteByte(id)
+	_, _ = o.WriteString(str)
+	_, err = o.WriteString("\r\n")
+	return err
+}
+
+func writeA(o *bufio.Writer, id byte, v []Message) (err error) {
+	err = write(o, id, strconv.Itoa(len(v)))
+	for _, m := range v {
 		err = m.WriteTo(o)
+	}
+	return err
+}
+
+func writeM(o *bufio.Writer, id byte, k, v []Message) (err error) {
+	err = write(o, id, strconv.Itoa(len(k)))
+	for i, m := range k {
+		err = m.WriteTo(o)
+		err = v[i].WriteTo(o)
 	}
 	return err
 }
