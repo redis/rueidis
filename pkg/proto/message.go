@@ -17,66 +17,66 @@ func (a *Attributes) SetAttributes(attrs Attributes) {
 
 type String struct {
 	Attributes
-	v string
+	Val string
 }
 
 func (s *String) WriteTo(o *bufio.Writer) error {
-	return blob(o, '$', s.v)
+	return blob(o, '$', s.Val)
 }
 
 type Verbatim struct {
 	Attributes
-	t string
-	v string
+	Ver string
+	Val string
 }
 
 func (v *Verbatim) WriteTo(o *bufio.Writer) error {
-	return blob(o, '=', v.t+":"+v.v)
+	return blob(o, '=', v.Ver+":"+v.Val)
 }
 
 type Error struct {
 	Attributes
-	v string
+	Val string
 }
 
 func (e *Error) WriteTo(o *bufio.Writer) error {
-	return blob(o, '!', e.v)
+	return blob(o, '!', e.Val)
 }
 
 type Int64 struct {
 	Attributes
-	v int64
+	Val int64
 }
 
 func (i *Int64) WriteTo(o *bufio.Writer) error {
-	return write(o, ':', strconv.FormatInt(i.v, 10))
+	return write(o, ':', strconv.FormatInt(i.Val, 10))
 }
 
 type BigInt struct {
 	Attributes
-	v big.Int
+	Val big.Int
 }
 
 func (i *BigInt) WriteTo(o *bufio.Writer) error {
-	return write(o, '(', i.v.String())
+	return write(o, '(', i.Val.String())
 }
 
 type Float64 struct {
 	Attributes
-	v float64
+	Val float64
 }
 
 func (f *Float64) WriteTo(o *bufio.Writer) error {
-	return write(o, ',', strconv.FormatFloat(f.v, 'f', -1, 64))
+	return write(o, ',', strconv.FormatFloat(f.Val, 'f', -1, 64))
 }
 
 type Bool struct {
 	Attributes
-	v bool
+	Val bool
 }
 
 func (b *Bool) WriteTo(o *bufio.Writer) error {
-	if b.v {
+	if b.Val {
 		return write(o, '#', "t")
 	} else {
 		return write(o, '#', "f")
@@ -93,48 +93,48 @@ func (n *Nil) WriteTo(o *bufio.Writer) error {
 
 type Array struct {
 	Attributes
-	v []Message
+	Val []Message
 }
 
 func (a *Array) WriteTo(o *bufio.Writer) (err error) {
-	return writeA(o, '*', a.v)
+	return writeA(o, '*', a.Val)
 }
 
 type Set struct {
 	Attributes
-	v []Message
+	Val []Message
 }
 
 func (s *Set) WriteTo(o *bufio.Writer) (err error) {
-	return writeA(o, '~', s.v)
+	return writeA(o, '~', s.Val)
 }
 
 type Map struct {
 	Attributes
-	k []Message
-	v []Message
+	Key []Message
+	Val []Message
 }
 
 func (s *Map) WriteTo(o *bufio.Writer) (err error) {
-	return writeM(o, '%', s.k, s.v)
+	return writeM(o, '%', s.Key, s.Val)
 }
 
 type Attributes struct {
-	k []Message
-	v []Message
+	Key []Message
+	Val []Message
 }
 
 func (s *Attributes) WriteTo(o *bufio.Writer) (err error) {
-	return writeM(o, '|', s.k, s.v)
+	return writeM(o, '|', s.Key, s.Val)
 }
 
 type Push struct {
 	Attributes
-	v []Message
+	Val []Message
 }
 
 func (s *Push) WriteTo(o *bufio.Writer) (err error) {
-	return writeA(o, '>', s.v)
+	return writeA(o, '>', s.Val)
 }
 
 func blob(o *bufio.Writer, id byte, str string) (err error) {

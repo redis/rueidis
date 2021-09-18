@@ -14,23 +14,27 @@ type ReadFunc func(i *bufio.Reader) (Message, error)
 
 var chunked = errors.New("unbounded redis message")
 
-var readFns = map[byte]ReadFunc{
-	'$': ReadBlobString,
-	'+': ReadSimpleString,
-	'-': ReadSimpleError,
-	':': ReadNumber,
-	'_': ReadNull,
-	',': ReadDouble,
-	'#': ReadBoolean,
-	'!': ReadBlobError,
-	'=': ReadVerbatimString,
-	'(': ReadBigNumber,
-	'*': ReadArray,
-	'%': ReadMap,
-	'~': ReadSet,
-	'|': ReadAttributes,
-	'>': ReadPush,
-	'.': ReadEnd,
+var readFns map[byte]ReadFunc
+
+func init() {
+	readFns = map[byte]ReadFunc{
+		'$': ReadBlobString,
+		'+': ReadSimpleString,
+		'-': ReadSimpleError,
+		':': ReadNumber,
+		'_': ReadNull,
+		',': ReadDouble,
+		'#': ReadBoolean,
+		'!': ReadBlobError,
+		'=': ReadVerbatimString,
+		'(': ReadBigNumber,
+		'*': ReadArray,
+		'%': ReadMap,
+		'~': ReadSet,
+		'|': ReadAttributes,
+		'>': ReadPush,
+		'.': ReadEnd,
+	}
 }
 
 func readS(i *bufio.Reader) (string, error) {
@@ -51,7 +55,7 @@ func ReadSimpleString(i *bufio.Reader) (Message, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &String{v: v}, nil
+	return &String{Val: v}, nil
 }
 
 func readB(i *bufio.Reader) (string, error) {
@@ -80,7 +84,7 @@ func readC(i *bufio.Reader) (Message, error) {
 			return nil, err
 		}
 		if length == 0 {
-			return &String{v: sb.String()}, nil
+			return &String{Val: sb.String()}, nil
 		}
 		sb.Grow(int(length))
 		if _, err = io.CopyN(&sb, i, length); err != nil {
@@ -100,7 +104,7 @@ func ReadBlobString(i *bufio.Reader) (Message, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &String{v: v}, nil
+	return &String{Val: v}, nil
 }
 
 func ReadVerbatimString(i *bufio.Reader) (Message, error) {
@@ -108,7 +112,7 @@ func ReadVerbatimString(i *bufio.Reader) (Message, error) {
 	if err != nil || len(str) <= 4 {
 		return nil, err
 	}
-	return &Verbatim{t: str[:3], v: str[4:]}, err
+	return &Verbatim{Ver: str[:3], Val: str[4:]}, err
 }
 
 func ReadSimpleError(i *bufio.Reader) (Message, error) {
@@ -116,7 +120,7 @@ func ReadSimpleError(i *bufio.Reader) (Message, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Error{v: v}, nil
+	return &Error{Val: v}, nil
 }
 
 func ReadBlobError(i *bufio.Reader) (Message, error) {
@@ -124,7 +128,7 @@ func ReadBlobError(i *bufio.Reader) (Message, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Error{v: v}, nil
+	return &Error{Val: v}, nil
 }
 
 func readI(i *bufio.Reader) (int64, error) {
@@ -136,7 +140,7 @@ func readI(i *bufio.Reader) (int64, error) {
 		return 0, chunked
 	}
 	v, err := strconv.ParseInt(str, 10, 64)
-	if err == nil {
+	if err != nil {
 		return 0, err
 	}
 	return v, err
@@ -147,7 +151,7 @@ func ReadNumber(i *bufio.Reader) (Message, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Int64{v: v}, nil
+	return &Int64{Val: v}, nil
 }
 
 func ReadBigNumber(i *bufio.Reader) (Message, error) {
@@ -159,7 +163,7 @@ func ReadBigNumber(i *bufio.Reader) (Message, error) {
 	if _, ok := v.SetString(str, 10); !ok {
 		panic("fail to decode the big number: " + str)
 	}
-	return &BigInt{v: v}, nil
+	return &BigInt{Val: v}, nil
 }
 
 func ReadDouble(i *bufio.Reader) (Message, error) {
@@ -168,10 +172,10 @@ func ReadDouble(i *bufio.Reader) (Message, error) {
 		return nil, err
 	}
 	v, err := strconv.ParseFloat(str, 64)
-	if err == nil {
+	if err != nil {
 		return nil, err
 	}
-	return &Float64{v: v}, err
+	return &Float64{Val: v}, err
 }
 
 func ReadBoolean(i *bufio.Reader) (Message, error) {
@@ -180,10 +184,10 @@ func ReadBoolean(i *bufio.Reader) (Message, error) {
 		return nil, err
 	}
 	v, err := strconv.ParseBool(str)
-	if err == nil {
+	if err != nil {
 		return nil, err
 	}
-	return &Bool{v: v}, err
+	return &Bool{Val: v}, err
 }
 
 func ReadNull(i *bufio.Reader) (Message, error) {
@@ -260,7 +264,7 @@ func ReadArray(i *bufio.Reader) (Message, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Array{v: v}, nil
+	return &Array{Val: v}, nil
 }
 
 func ReadSet(i *bufio.Reader) (Message, error) {
@@ -268,7 +272,7 @@ func ReadSet(i *bufio.Reader) (Message, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Set{v: v}, nil
+	return &Set{Val: v}, nil
 }
 
 func ReadPush(i *bufio.Reader) (Message, error) {
@@ -276,7 +280,7 @@ func ReadPush(i *bufio.Reader) (Message, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Push{v: v}, nil
+	return &Push{Val: v}, nil
 }
 
 func ReadMap(i *bufio.Reader) (Message, error) {
@@ -284,7 +288,7 @@ func ReadMap(i *bufio.Reader) (Message, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Map{k: k, v: v}, err
+	return &Map{Key: k, Val: v}, err
 }
 
 func ReadAttributes(i *bufio.Reader) (Message, error) {
@@ -292,7 +296,7 @@ func ReadAttributes(i *bufio.Reader) (Message, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Attributes{k: k, v: v}, err
+	return &Attributes{Key: k, Val: v}, err
 }
 
 func ReadEnd(i *bufio.Reader) (Message, error) {
