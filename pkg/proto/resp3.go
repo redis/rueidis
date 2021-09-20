@@ -130,18 +130,24 @@ func ReadBlobError(i *bufio.Reader) (Message, error) {
 }
 
 func readI(i *bufio.Reader) (int64, error) {
-	str, err := readS(i)
-	if err != nil {
-		return 0, err
+	var v int64
+	for {
+		c, err := i.ReadByte()
+		if err != nil {
+			return 0, err
+		}
+		switch {
+		case '0' <= c && c <= '9':
+			v = v*10 + int64(c-'0')
+		case '\r' == c:
+			_, err = i.Discard(1)
+			return v, err
+		case '?' == c:
+			return 0, chunked
+		default:
+			panic("received unexpected number byte: " + string(c))
+		}
 	}
-	if str == "?" {
-		return 0, chunked
-	}
-	v, err := strconv.ParseInt(str, 10, 64)
-	if err != nil {
-		return 0, err
-	}
-	return v, err
 }
 
 func ReadNumber(i *bufio.Reader) (Message, error) {
