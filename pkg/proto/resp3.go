@@ -14,27 +14,25 @@ type ReadFunc func(i *bufio.Reader) (Message, error)
 
 var chunked = errors.New("unbounded redis message")
 
-var readFns map[byte]ReadFunc
+var readers = [128]ReadFunc{}
 
 func init() {
-	readFns = map[byte]ReadFunc{
-		'$': ReadBlobString,
-		'+': ReadSimpleString,
-		'-': ReadSimpleError,
-		':': ReadNumber,
-		'_': ReadNull,
-		',': ReadDouble,
-		'#': ReadBoolean,
-		'!': ReadBlobError,
-		'=': ReadVerbatimString,
-		'(': ReadBigNumber,
-		'*': ReadArray,
-		'%': ReadMap,
-		'~': ReadSet,
-		'|': ReadAttributes,
-		'>': ReadPush,
-		'.': ReadEnd,
-	}
+	readers['$'] = ReadBlobString
+	readers['+'] = ReadSimpleString
+	readers['-'] = ReadSimpleError
+	readers[':'] = ReadNumber
+	readers['_'] = ReadNull
+	readers[','] = ReadDouble
+	readers['#'] = ReadBoolean
+	readers['!'] = ReadBlobError
+	readers['='] = ReadVerbatimString
+	readers['('] = ReadBigNumber
+	readers['*'] = ReadArray
+	readers['%'] = ReadMap
+	readers['~'] = ReadSet
+	readers['|'] = ReadAttributes
+	readers['>'] = ReadPush
+	readers['.'] = ReadEnd
 }
 
 func readS(i *bufio.Reader) (string, error) {
@@ -311,8 +309,8 @@ func ReadNext(i *bufio.Reader) (Message, error) {
 		if err != nil {
 			return nil, err
 		}
-		fn, ok := readFns[t]
-		if !ok {
+		fn := readers[t]
+		if fn == nil {
 			panic("received unknown message type: " + string(t))
 		}
 		msg, err := fn(i)
