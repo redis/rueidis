@@ -15,7 +15,7 @@ type Task struct {
 
 type Queue interface {
 	Put(m *Task)
-	Next1() *Task
+	Next1(try bool) *Task
 	Next2() *Task
 }
 

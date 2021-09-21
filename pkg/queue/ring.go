@@ -35,17 +35,28 @@ func (r *Ring) Put(m *Task) {
 	atomic.StoreUint64(&n.r, 2)
 }
 
-func (r *Ring) Next1() *Task {
-	p := atomic.AddUint64(&r.read1, 1) & r.mask
+// Next1 should be only called by one dedicated thread
+func (r *Ring) Next1(try bool) *Task {
+	r.read1++
+	p := r.read1 & r.mask
 	n := r.store[p]
-	for !atomic.CompareAndSwapUint64(&n.r, 2, 3) {
-		runtime.Gosched()
+	if try {
+		if !atomic.CompareAndSwapUint64(&n.r, 2, 3) {
+			r.read1--
+			return nil
+		}
+	} else {
+		for !atomic.CompareAndSwapUint64(&n.r, 2, 3) {
+			runtime.Gosched()
+		}
 	}
 	return n.v
 }
 
+// Next2 should be only called by one dedicated thread
 func (r *Ring) Next2() *Task {
-	p := atomic.AddUint64(&r.read2, 1) & r.mask
+	r.read2++
+	p := r.read2 & r.mask
 	n := r.store[p]
 	v := n.v
 	if !atomic.CompareAndSwapUint64(&n.r, 3, 0) {

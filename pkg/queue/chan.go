@@ -13,7 +13,7 @@ func (r *Chan) Put(t *Task) {
 	r.ch1 <- t
 }
 
-func (r *Chan) Next1() *Task {
+func (r *Chan) Next1(try bool) *Task {
 	t := <-r.ch1
 	r.ch2 <- t
 	return t

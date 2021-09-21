@@ -12,7 +12,7 @@ func BenchmarkNewRing(b *testing.B) {
 			stop := int32(0)
 			go func() {
 				for atomic.LoadInt32(&stop) == 0 {
-					q.Next1()
+					q.Next1(false)
 					q.Next2()
 				}
 			}()
