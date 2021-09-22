@@ -131,6 +131,7 @@ func ReadBlobError(i *bufio.Reader) (Message, error) {
 
 func readI(i *bufio.Reader) (int64, error) {
 	var v int64
+	var neg bool
 	for {
 		c, err := i.ReadByte()
 		if err != nil {
@@ -141,7 +142,12 @@ func readI(i *bufio.Reader) (int64, error) {
 			v = v*10 + int64(c-'0')
 		case '\r' == c:
 			_, err = i.Discard(1)
+			if neg {
+				return v * -1, err
+			}
 			return v, err
+		case '-' == c:
+			neg = true
 		case '?' == c:
 			return 0, chunked
 		default:
