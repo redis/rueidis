@@ -100,6 +100,19 @@ func (a *Array) WriteTo(o *bufio.Writer) (err error) {
 	return writeA(o, '*', a.Val)
 }
 
+type StringArray []string
+
+func (a *StringArray) SetAttributes(attrs Attributes) {
+}
+
+func (a StringArray) WriteTo(o *bufio.Writer) (err error) {
+	err = write(o, '*', strconv.Itoa(len(a)))
+	for _, m := range a {
+		err = blob(o, '$', m)
+	}
+	return err
+}
+
 type Set struct {
 	Attributes
 	Val []Message
@@ -166,4 +179,13 @@ func writeM(o *bufio.Writer, id byte, k, v []Message) (err error) {
 		err = v[i].WriteTo(o)
 	}
 	return err
+}
+
+type Raw struct {
+	String  string
+	Integer int64
+	Double  float64
+	Values  []Raw
+	Attrs   *Raw
+	Type    byte
 }
