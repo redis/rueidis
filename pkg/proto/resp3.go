@@ -189,15 +189,12 @@ func ReadDouble(i *bufio.Reader) (Message, error) {
 }
 
 func ReadBoolean(i *bufio.Reader) (Message, error) {
-	str, err := readS(i)
+	b, err := i.ReadByte()
 	if err != nil {
 		return nil, err
 	}
-	v, err := strconv.ParseBool(str)
-	if err != nil {
-		return nil, err
-	}
-	return &Bool{Val: v}, err
+	_, err = i.Discard(2)
+	return &Bool{Val: b == 't'}, err
 }
 
 func ReadNull(i *bufio.Reader) (Message, error) {
