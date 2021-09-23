@@ -47,5 +47,6 @@ func BenchmarkNewConn(b *testing.B) {
 				conn.Write(m)
 			}
 		})
+		conn.Close()
 	})
 }
