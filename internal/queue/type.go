@@ -1,16 +1,12 @@
 package queue
 
 import (
-	"sync"
-
 	"github.com/rueian/rueidis/pkg/proto"
 )
 
 type Task struct {
-	W sync.WaitGroup
-	C proto.Message
-	R proto.Message
-	E error
+	W chan interface{}
+	C proto.StringArray
 }
 
 type Queue interface {
