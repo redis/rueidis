@@ -1,12 +1,12 @@
 package conn
 
 import (
+	"github.com/rueian/rueidis/internal/proto"
 	"io"
 	"net"
 	"testing"
 
 	conn2 "github.com/rueian/rueidis/pkg/conn"
-	"github.com/rueian/rueidis/pkg/proto"
 )
 
 func BenchmarkNewConn(b *testing.B) {

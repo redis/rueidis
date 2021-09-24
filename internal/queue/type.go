@@ -1,12 +1,8 @@
 package queue
 
-import (
-	"github.com/rueian/rueidis/pkg/proto"
-)
-
 type Task struct {
 	W chan interface{}
-	C proto.StringArray
+	C []string
 }
 
 type Queue interface {

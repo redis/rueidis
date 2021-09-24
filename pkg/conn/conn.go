@@ -48,14 +48,14 @@ func (c *Conn) reading() {
 				}
 				cmd = c.q.nextCmd()
 			}
-			if err = cmd.WriteTo(c.w); err != nil {
+			if err = proto.WriteCmd(c.w, cmd); err != nil {
 				return
 			}
 		}
 	}()
 	go func() {
 		for atomic.LoadInt32(&c.state) != 2 {
-			msg, err := proto.ReadNextRaw(c.r)
+			msg, err := proto.ReadNextMessage(c.r)
 			if err == nil {
 				if msg.Type == '>' {
 					// TODO: handle push data
@@ -68,11 +68,11 @@ func (c *Conn) reading() {
 	}()
 }
 
-func (c *Conn) Write(cmd proto.StringArray) (proto.Raw, error) {
+func (c *Conn) Write(cmd []string) (proto.Message, error) {
 	atomic.AddInt32(&c.waits, 1)
 	if atomic.LoadInt32(&c.state) != 0 {
 		atomic.AddInt32(&c.waits, -1)
-		return proto.Raw{}, ErrConnClosing
+		return proto.Message{}, ErrConnClosing
 	}
 	r := <-c.q.put(cmd)
 	atomic.AddInt32(&c.waits, -1)

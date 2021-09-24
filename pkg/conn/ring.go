@@ -26,23 +26,23 @@ type ring struct {
 	_     [7]uint64
 	mask  uint64
 	_     [7]uint64
-	store [4096]node // store's size must be 2^N to work with the mask
+	store [8192]node // store's size must be 2^N to work with the mask
 }
 
 type node struct {
 	_   [8]uint64
 	r   uint64
 	_   [7]uint64
-	cmd proto.StringArray
+	cmd []string
 	ch  chan result
 }
 
 type result struct {
-	val proto.Raw
+	val proto.Message
 	err error
 }
 
-func (r *ring) put(m proto.StringArray) chan result {
+func (r *ring) put(m []string) chan result {
 	p := atomic.AddUint64(&r.write, 1) & r.mask
 	n := &r.store[p]
 	for !atomic.CompareAndSwapUint64(&n.r, 0, 1) {
@@ -54,7 +54,7 @@ func (r *ring) put(m proto.StringArray) chan result {
 }
 
 // tryNextCmd should be only called by one dedicated thread
-func (r *ring) tryNextCmd() proto.StringArray {
+func (r *ring) tryNextCmd() []string {
 	r.read1++
 	p := r.read1 & r.mask
 	n := &r.store[p]
@@ -66,7 +66,7 @@ func (r *ring) tryNextCmd() proto.StringArray {
 }
 
 // nextCmd should be only called by one dedicated thread
-func (r *ring) nextCmd() proto.StringArray {
+func (r *ring) nextCmd() []string {
 	r.read1++
 	p := r.read1 & r.mask
 	n := &r.store[p]

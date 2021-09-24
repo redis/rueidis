@@ -5,6 +5,8 @@ import (
 	"bytes"
 	"io"
 	"testing"
+
+	"github.com/rueian/rueidis/pkg/proto"
 )
 
 func BenchmarkWriteArray(b *testing.B) {
@@ -17,8 +19,7 @@ func BenchmarkWriteArray(b *testing.B) {
 	})
 	b.Run("Simple Array", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			m := StringArray([]string{"GET", "a"})
-			m.WriteTo(w)
+			proto.WriteCmd(w, []string{"GET", "a"})
 		}
 	})
 }
@@ -28,7 +29,7 @@ func BenchmarkReadNext(b *testing.B) {
 		buf := bytes.NewBuffer(nil)
 		w := bufio.NewWriter(buf)
 		for i := 0; i < b.N; i++ {
-			StringArray([]string{"GET", "a"}).WriteTo(w)
+			proto.WriteCmd(w, []string{"GET", "a"})
 		}
 		w.Flush()
 		r := bufio.NewReader(bytes.NewReader(buf.Bytes()))
@@ -43,13 +44,13 @@ func BenchmarkReadNext(b *testing.B) {
 		buf := bytes.NewBuffer(nil)
 		w := bufio.NewWriter(buf)
 		for i := 0; i < b.N; i++ {
-			StringArray([]string{"GET", "a"}).WriteTo(w)
+			proto.WriteCmd(w, []string{"GET", "a"})
 		}
 		w.Flush()
 		r := bufio.NewReader(bytes.NewReader(buf.Bytes()))
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
-			if _, err := ReadNextRaw(r); err != nil {
+			if _, err := proto.ReadNextMessage(r); err != nil {
 				panic(err)
 			}
 		}

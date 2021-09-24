@@ -2,10 +2,10 @@ package conn
 
 import (
 	"bufio"
+	proto2 "github.com/rueian/rueidis/internal/proto"
 	"net"
 
 	"github.com/rueian/rueidis/internal/queue"
-	"github.com/rueian/rueidis/pkg/proto"
 )
 
 type InterfaceConn struct {
@@ -37,9 +37,9 @@ func (c *InterfaceConn) reading() {
 	}()
 	go func() {
 		for {
-			msg, err := proto.ReadNext(c.r)
+			msg, err := proto2.ReadNext(c.r)
 			if msg != nil {
-				if _, ok := msg.(*proto.Push); ok {
+				if _, ok := msg.(*proto2.Push); ok {
 					continue
 				}
 			}
@@ -49,7 +49,7 @@ func (c *InterfaceConn) reading() {
 	}()
 }
 
-func (c *InterfaceConn) Write(cmd proto.StringArray) (proto.Message, error) {
+func (c *InterfaceConn) Write(cmd proto2.StringArray) (proto2.Message, error) {
 	t := queue.Task{C: cmd, W: make(chan interface{}, 1)}
 	c.q.Put(&t)
 	r := (<-t.W).(*result)
@@ -57,6 +57,6 @@ func (c *InterfaceConn) Write(cmd proto.StringArray) (proto.Message, error) {
 }
 
 type result struct {
-	R proto.Message
+	R proto2.Message
 	E error
 }
