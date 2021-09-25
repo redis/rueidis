@@ -2,10 +2,10 @@ package conn
 
 import (
 	"bufio"
-	proto2 "github.com/rueian/rueidis/internal/proto"
 	"net"
 
 	"github.com/rueian/rueidis/internal/queue"
+	"github.com/rueian/rueidis/pkg/proto"
 )
 
 type StructConn struct {
@@ -30,14 +30,14 @@ func (c *StructConn) reading() {
 				}
 				t = c.q.Next1(false)
 			}
-			if err := t.C.WriteTo(c.w); err != nil {
+			if err := proto.WriteCmd(c.w, t.C); err != nil {
 				panic(err)
 			}
 		}
 	}()
 	go func() {
 		for {
-			msg, err := proto2.ReadNextRaw(c.r)
+			msg, err := proto.ReadNextMessage(c.r)
 			if err == nil {
 				if msg.Type == '>' {
 					continue
@@ -49,7 +49,7 @@ func (c *StructConn) reading() {
 	}()
 }
 
-func (c *StructConn) Write(cmd proto2.StringArray) (proto2.Raw, error) {
+func (c *StructConn) Write(cmd []string) (proto.Message, error) {
 	t := queue.Task{C: cmd, W: make(chan interface{}, 1)}
 	c.q.Put(&t)
 	r := (<-t.W).(*resultS)
@@ -57,6 +57,6 @@ func (c *StructConn) Write(cmd proto2.StringArray) (proto2.Raw, error) {
 }
 
 type resultS struct {
-	S proto2.Raw
+	S proto.Message
 	E error
 }

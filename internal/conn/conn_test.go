@@ -1,7 +1,6 @@
 package conn
 
 import (
-	"github.com/rueian/rueidis/internal/proto"
 	"io"
 	"net"
 	"testing"
@@ -14,7 +13,7 @@ func BenchmarkNewConn(b *testing.B) {
 		server, client := net.Pipe()
 		go io.Copy(server, server)
 		conn := NewConn(client)
-		m := proto.StringArray{"GET", "a"}
+		m := []string{"GET", "a"}
 		b.SetParallelism(20)
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
@@ -27,7 +26,7 @@ func BenchmarkNewConn(b *testing.B) {
 		server, client := net.Pipe()
 		go io.Copy(server, server)
 		conn := NewStructConn(client)
-		m := proto.StringArray{"GET", "a"}
+		m := []string{"GET", "a"}
 		b.SetParallelism(20)
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
@@ -40,11 +39,11 @@ func BenchmarkNewConn(b *testing.B) {
 		server, client := net.Pipe()
 		go io.Copy(server, server)
 		conn := conn2.NewConn(client)
-		m := proto.StringArray{"GET", "a"}
+		m := []string{"GET", "a"}
 		b.SetParallelism(20)
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
-				conn.Write(m)
+				conn.WriteOne(m)
 			}
 		})
 		conn.Close()
