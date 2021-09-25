@@ -7,6 +7,11 @@ import (
 	"strings"
 )
 
+type Result struct {
+	Val Message
+	Err error
+}
+
 type Message struct {
 	String  string
 	Integer int64

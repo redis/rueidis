@@ -11,7 +11,7 @@ func newRing() *ring {
 	r := &ring{}
 	r.mask = uint64(len(r.store) - 1)
 	for i := range r.store {
-		r.store[i].ch = make(chan result, 1)
+		r.store[i].ch = make(chan proto.Result, 1)
 	}
 	return r
 }
@@ -34,17 +34,27 @@ type node struct {
 	r   uint64
 	_   [7]uint64
 	cmd []string
-	ch  chan result
+	ch  chan proto.Result
 }
 
-type result struct {
-	val proto.Message
-	err error
+func (r *ring) putOne(m []string) chan proto.Result {
+	return r.put(atomic.AddUint64(&r.write, 1)&r.mask, m)
 }
 
-func (r *ring) put(m []string) chan result {
-	p := atomic.AddUint64(&r.write, 1) & r.mask
-	n := &r.store[p]
+func (r *ring) putMulti(m [][]string) []chan proto.Result {
+	l := uint64(len(m))
+	e := atomic.AddUint64(&r.write, l)
+	s := e - l + 1
+
+	chs := make([]chan proto.Result, len(m))
+	for i := uint64(0); i < l; i++ {
+		chs[i] = r.put((s+i)&r.mask, m[i])
+	}
+	return chs
+}
+
+func (r *ring) put(position uint64, m []string) chan proto.Result {
+	n := &r.store[position]
 	for !atomic.CompareAndSwapUint64(&n.r, 0, 1) {
 		runtime.Gosched()
 	}
@@ -77,7 +87,7 @@ func (r *ring) nextCmd() []string {
 }
 
 // nextResultCh should be only called by one dedicated thread
-func (r *ring) nextResultCh() chan result {
+func (r *ring) nextResultCh() chan proto.Result {
 	r.read2++
 	p := r.read2 & r.mask
 	n := &r.store[p]

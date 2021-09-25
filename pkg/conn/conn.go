@@ -63,20 +63,36 @@ func (c *Conn) reading() {
 				}
 			}
 			ch := c.q.nextResultCh()
-			ch <- result{val: msg, err: err}
+			ch <- proto.Result{Val: msg, Err: err}
 		}
 	}()
 }
 
-func (c *Conn) Write(cmd []string) (proto.Message, error) {
+func (c *Conn) WriteOne(cmd []string) (res proto.Result) {
 	atomic.AddInt32(&c.waits, 1)
-	if atomic.LoadInt32(&c.state) != 0 {
-		atomic.AddInt32(&c.waits, -1)
-		return proto.Message{}, ErrConnClosing
+	if atomic.LoadInt32(&c.state) == 0 {
+		res = <-c.q.putOne(cmd)
+	} else {
+		res.Err = ErrConnClosing
 	}
-	r := <-c.q.put(cmd)
 	atomic.AddInt32(&c.waits, -1)
-	return r.val, r.err
+	return res
+}
+
+func (c *Conn) WriteMulti(cmd [][]string) []proto.Result {
+	res := make([]proto.Result, len(cmd))
+	atomic.AddInt32(&c.waits, 1)
+	if atomic.LoadInt32(&c.state) == 0 {
+		for i, ch := range c.q.putMulti(cmd) {
+			res[i] = <-ch
+		}
+	} else {
+		for i := 0; i < len(res); i++ {
+			res[i].Err = ErrConnClosing
+		}
+	}
+	atomic.AddInt32(&c.waits, -1)
+	return res
 }
 
 func (c *Conn) Close() {
