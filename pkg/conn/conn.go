@@ -6,11 +6,13 @@ import (
 	"net"
 	"runtime"
 	"sync/atomic"
+	"time"
 
 	"github.com/rueian/rueidis/pkg/proto"
 )
 
 var ErrConnClosing = errors.New("conn is closing")
+var OptInCmd = []string{"CLIENT", "CACHING", "yes"}
 
 type Conn struct {
 	waits int32
@@ -22,6 +24,8 @@ type Conn struct {
 	r *bufio.Reader
 	w *bufio.Writer
 	q *ring
+
+	cache *cache
 }
 
 func NewConn(conn net.Conn) *Conn {
@@ -37,7 +41,7 @@ func (c *Conn) reading() {
 			if err != nil {
 				c.err.Store(err)
 			}
-			c.conn.Close()
+			_ = c.conn.Close()
 			c.Close()
 		}()
 		for atomic.LoadInt32(&c.state) != 2 {
@@ -54,15 +58,32 @@ func (c *Conn) reading() {
 		}
 	}()
 	go func() {
+		var opted bool
 		for atomic.LoadInt32(&c.state) != 2 {
 			msg, err := proto.ReadNextMessage(c.r)
-			if err == nil {
-				if msg.Type == '>' {
-					// TODO: handle push data
+			if msg.Type == '>' {
+				// TODO: handle other push data
+				// tracking-redir-broken
+				// message
+				// pmessage
+				// subscribe
+				// unsubscribe
+				// psubscribe
+				// punsubscribe
+				// server-cpu-usage
+				if len(msg.Values) < 2 {
 					continue
 				}
+				if msg.Values[0].String == "invalidate" {
+					c.cache.Delete(msg.Values[1].String)
+				}
+				continue
 			}
-			ch := c.q.nextResultCh()
+			cmd, ch := c.q.nextResultCh()
+			if err == nil && msg.Type != '-' && msg.Type != '!' && opted {
+				c.cache.Update(cmd[1], msg)
+			}
+			opted = cmdEqual(cmd, OptInCmd)
 			ch <- proto.Result{Val: msg, Err: err}
 		}
 	}()
@@ -95,6 +116,14 @@ func (c *Conn) WriteMulti(cmd [][]string) []proto.Result {
 	return res
 }
 
+func (c *Conn) WriteOptInCache(cmd []string, ttl time.Duration) proto.Result {
+	v := c.cache.GetOrPrepare(cmd[1], ttl)
+	if v.Type != 0 {
+		return proto.Result{Val: v}
+	}
+	return c.WriteMulti([][]string{OptInCmd, cmd})[1]
+}
+
 func (c *Conn) Close() {
 	atomic.CompareAndSwapInt32(&c.state, 0, 1)
 	for atomic.LoadInt32(&c.waits) != 0 {
@@ -109,4 +138,16 @@ func (c *Conn) Err() error {
 		return nil
 	}
 	return v.(error)
+}
+
+func cmdEqual(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i, s := range a {
+		if s != b[i] {
+			return false
+		}
+	}
+	return true
 }

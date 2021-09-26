@@ -5,7 +5,10 @@ import (
 	"io"
 	"strconv"
 	"strings"
+	"unsafe"
 )
+
+const MessageStructSize = int(unsafe.Sizeof(Message{}))
 
 type Result struct {
 	Val Message
@@ -19,6 +22,18 @@ type Message struct {
 	Values  []Message
 	Attrs   *Message
 	Type    byte
+}
+
+func (m *Message) Size() (s int) {
+	s += MessageStructSize
+	s += len(m.String)
+	for _, v := range m.Values {
+		s += v.Size()
+	}
+	if m.Attrs != nil {
+		s += m.Attrs.Size()
+	}
+	return
 }
 
 type StringArray []string

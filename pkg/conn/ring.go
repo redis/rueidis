@@ -85,29 +85,13 @@ func (r *ring) nextCmd() []string {
 	return n.cmd
 }
 
-// skipLastOne should be only called by the same thread right after calling nextCmd or tryNextCmd
-// this is related to client side cache
-func (r *ring) skipLastOne() {
-	n := &r.store[r.read1]
-	for !atomic.CompareAndSwapUint64(&n.r, 3, 0) {
-		panic("unexpected skipLastOne call on ring")
-	}
-}
-
 // nextResultCh should be only called by one dedicated thread
-func (r *ring) nextResultCh() chan proto.Result {
-	for {
-		r.read2++
-		p := r.read2 & r.mask
-		n := &r.store[p]
-		v := n.ch
-		if old := atomic.SwapUint64(&n.r, 0); old == 3 {
-			return v
-		} else if old == 0 {
-			// already marked skipped by skipLastOne, try next
-			// this is related to client side cache
-			continue
-		}
-		panic("unexpected nextResultCh call on ring")
+func (r *ring) nextResultCh() ([]string, chan proto.Result) {
+	r.read2++
+	p := r.read2 & r.mask
+	n := &r.store[p]
+	if atomic.CompareAndSwapUint64(&n.r, 3, 0) {
+		return n.cmd, n.ch
 	}
+	panic("unexpected nextResultCh call on ring")
 }
