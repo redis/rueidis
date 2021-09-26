@@ -8,14 +8,16 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/rueian/rueidis/pkg/proto"
+	"github.com/rueian/rueidis/internal/cache"
+	"github.com/rueian/rueidis/internal/proto"
+	"github.com/rueian/rueidis/internal/queue"
 )
 
 var (
-	ErrConnClosing = errors.New("conn is closing")
+	PingCmd        = []string{"PING"}
 	OptInCmd       = []string{"CLIENT", "CACHING", "yes"}
 	TrackingCmd    = []string{"CLIENT", "TRACKING", "on", "OPTIN"}
-	PingCmd        = []string{"PING"}
+	ErrConnClosing = errors.New("conn is closing")
 )
 
 type Conn struct {
@@ -27,9 +29,9 @@ type Conn struct {
 
 	r *bufio.Reader
 	w *bufio.Writer
-	q *ring
+	q *queue.Ring
 
-	cache *cache
+	cache *cache.LRU
 
 	info proto.Message
 }
@@ -44,10 +46,10 @@ type Option struct {
 func NewConn(conn net.Conn, option Option) (*Conn, error) {
 	c := &Conn{
 		conn:  conn,
-		cache: NewCache(option.CacheSize),
+		cache: cache.NewLRU(option.CacheSize),
 		r:     bufio.NewReader(conn),
 		w:     bufio.NewWriter(conn),
-		q:     newRing(),
+		q:     queue.NewRing(),
 	}
 	c.reading()
 
@@ -96,12 +98,12 @@ func (c *Conn) reading() {
 			c.Close()
 		}()
 		for atomic.LoadInt32(&c.state) != 2 {
-			cmd := c.q.tryNextCmd()
+			cmd := c.q.TryNextCmd()
 			if cmd == nil {
 				if err = c.w.Flush(); err != nil {
 					return
 				}
-				cmd = c.q.nextCmd()
+				cmd = c.q.NextCmd()
 			}
 			if err = proto.WriteCmd(c.w, cmd); err != nil {
 				return
@@ -130,7 +132,7 @@ func (c *Conn) reading() {
 				}
 				continue
 			}
-			cmd, ch := c.q.nextResultCh()
+			cmd, ch := c.q.NextResultCh()
 			if err == nil && msg.Type != '-' && msg.Type != '!' && opted {
 				c.cache.Update(cmd[1], msg)
 			}
@@ -147,7 +149,7 @@ func (c *Conn) Into() proto.Message {
 func (c *Conn) WriteOne(cmd []string) (res proto.Result) {
 	atomic.AddInt32(&c.waits, 1)
 	if atomic.LoadInt32(&c.state) == 0 {
-		res = <-c.q.putOne(cmd)
+		res = <-c.q.PutOne(cmd)
 	} else {
 		res.Err = ErrConnClosing
 	}
@@ -159,7 +161,7 @@ func (c *Conn) WriteMulti(cmd [][]string) []proto.Result {
 	res := make([]proto.Result, len(cmd))
 	atomic.AddInt32(&c.waits, 1)
 	if atomic.LoadInt32(&c.state) == 0 {
-		for i, ch := range c.q.putMulti(cmd) {
+		for i, ch := range c.q.PutMulti(cmd) {
 			res[i] = <-ch
 		}
 	} else {

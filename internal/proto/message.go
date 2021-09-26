@@ -2,168 +2,68 @@ package proto
 
 import (
 	"bufio"
-	"math/big"
 	"strconv"
+	"unsafe"
 )
 
-type Message interface {
-	SetAttributes(attrs Attributes)
-	WriteTo(o *bufio.Writer) error
+const MessageStructSize = int(unsafe.Sizeof(Message{}))
+
+type Result struct {
+	Val Message
+	Err error
 }
 
-func (a *Attributes) SetAttributes(attrs Attributes) {
-	*a = attrs
+type Message struct {
+	String  string
+	Integer int64
+	Double  float64
+	Values  []Message
+	Attrs   *Message
+	Type    byte
 }
 
-type String struct {
-	Attributes
-	Val string
+func (m *Message) Size() (s int) {
+	s += MessageStructSize
+	s += len(m.String)
+	for _, v := range m.Values {
+		s += v.Size()
+	}
+	if m.Attrs != nil {
+		s += m.Attrs.Size()
+	}
+	return
 }
 
-func (s *String) WriteTo(o *bufio.Writer) error {
-	return blob(o, '$', s.Val)
-}
-
-type Verbatim struct {
-	Attributes
-	Ver string
-	Val string
-}
-
-func (v *Verbatim) WriteTo(o *bufio.Writer) error {
-	return blob(o, '=', v.Ver+":"+v.Val)
-}
-
-type Error struct {
-	Attributes
-	Val string
-}
-
-func (e *Error) WriteTo(o *bufio.Writer) error {
-	return blob(o, '!', e.Val)
-}
-
-type Int64 struct {
-	Attributes
-	Val int64
-}
-
-func (i *Int64) WriteTo(o *bufio.Writer) error {
-	return write(o, ':', strconv.FormatInt(i.Val, 10))
-}
-
-type BigInt struct {
-	Attributes
-	Val big.Int
-}
-
-func (i *BigInt) WriteTo(o *bufio.Writer) error {
-	return write(o, '(', i.Val.String())
-}
-
-type Float64 struct {
-	Attributes
-	Val float64
-}
-
-func (f *Float64) WriteTo(o *bufio.Writer) error {
-	return write(o, ',', strconv.FormatFloat(f.Val, 'f', -1, 64))
-}
-
-type Bool struct {
-	Attributes
-	Val bool
-}
-
-func (b *Bool) WriteTo(o *bufio.Writer) error {
-	if b.Val {
-		return write(o, '#', "t")
-	} else {
-		return write(o, '#', "f")
+func ReadNextMessage(i *bufio.Reader) (m Message, err error) {
+	var attrs *Message
+	var typ byte
+	for {
+		if typ, err = i.ReadByte(); err != nil {
+			return m, err
+		}
+		fn := readers[typ]
+		if fn == nil {
+			panic("received unknown message type: " + string(typ))
+		}
+		if m, err = fn(i); err != nil {
+			return Message{}, err
+		}
+		m.Type = typ
+		if m.Type == '|' { // handle the attributes
+			a := m     // clone the original m first, and then take address of the clone
+			attrs = &a // to avoid go compiler allocating the m on heap which causing worse performance.
+			m = Message{}
+			continue
+		}
+		m.Attrs = attrs
+		return m, nil
 	}
 }
 
-type Nil struct {
-	Attributes
-}
-
-func (n *Nil) WriteTo(o *bufio.Writer) error {
-	return write(o, '_', "")
-}
-
-type Array struct {
-	Attributes
-	Val []Message
-}
-
-func (a *Array) WriteTo(o *bufio.Writer) (err error) {
-	return writeA(o, '*', a.Val)
-}
-
-type Set struct {
-	Attributes
-	Val []Message
-}
-
-func (s *Set) WriteTo(o *bufio.Writer) (err error) {
-	return writeA(o, '~', s.Val)
-}
-
-type Map struct {
-	Attributes
-	Key []Message
-	Val []Message
-}
-
-func (s *Map) WriteTo(o *bufio.Writer) (err error) {
-	return writeM(o, '%', s.Key, s.Val)
-}
-
-type Attributes struct {
-	Key []Message
-	Val []Message
-}
-
-func (s *Attributes) WriteTo(o *bufio.Writer) (err error) {
-	return writeM(o, '|', s.Key, s.Val)
-}
-
-type Push struct {
-	Attributes
-	Val []Message
-}
-
-func (s *Push) WriteTo(o *bufio.Writer) (err error) {
-	return writeA(o, '>', s.Val)
-}
-
-func blob(o *bufio.Writer, id byte, str string) (err error) {
-	_ = write(o, id, strconv.Itoa(len(str)))
-	_, _ = o.WriteString(str)
-	_, err = o.WriteString("\r\n")
-	return err
-}
-
-func write(o *bufio.Writer, id byte, str string) (err error) {
-	_ = o.WriteByte(id)
-	_, _ = o.WriteString(str)
-	_, err = o.WriteString("\r\n")
-	return err
-}
-
-func writeA(o *bufio.Writer, id byte, v []Message) (err error) {
-	err = write(o, id, strconv.Itoa(len(v)))
-	for _, m := range v {
-		err = m.WriteTo(o)
-	}
-	return err
-}
-
-func writeM(o *bufio.Writer, id byte, k, v []Message) (err error) {
-	err = write(o, id, strconv.Itoa(len(k)))
-	for i, m := range k {
-		err = m.WriteTo(o)
-		err = v[i].WriteTo(o)
+func WriteCmd(o *bufio.Writer, cmd []string) (err error) {
+	err = WriteS(o, '*', strconv.Itoa(len(cmd)))
+	for _, m := range cmd {
+		err = WriteB(o, '$', m)
 	}
 	return err
 }

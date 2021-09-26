@@ -1,4 +1,4 @@
-package conn
+package cache
 
 import (
 	"container/list"
@@ -6,13 +6,13 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/rueian/rueidis/pkg/proto"
+	"github.com/rueian/rueidis/internal/proto"
 )
 
 const (
-	EntrySize        = int(unsafe.Sizeof(entry{})) + int(unsafe.Sizeof(&entry{}))
-	ElementSize      = int(unsafe.Sizeof(list.Element{})) + int(unsafe.Sizeof(&list.Element{}))
-	StringStructSize = int(unsafe.Sizeof(""))
+	EntrySize   = int(unsafe.Sizeof(entry{})) + int(unsafe.Sizeof(&entry{}))
+	ElementSize = int(unsafe.Sizeof(list.Element{})) + int(unsafe.Sizeof(&list.Element{}))
+	StringSSize = int(unsafe.Sizeof(""))
 )
 
 type entry struct {
@@ -22,7 +22,7 @@ type entry struct {
 	size int
 }
 
-type cache struct {
+type LRU struct {
 	mu sync.Mutex
 
 	store map[string]*list.Element
@@ -32,15 +32,15 @@ type cache struct {
 	max  int
 }
 
-func NewCache(max int) *cache {
-	return &cache{
+func NewLRU(max int) *LRU {
+	return &LRU{
 		max:   max,
 		store: make(map[string]*list.Element),
 		list:  list.New(),
 	}
 }
 
-func (c *cache) GetOrPrepare(key string, ttl time.Duration) (v proto.Message) {
+func (c *LRU) GetOrPrepare(key string, ttl time.Duration) (v proto.Message) {
 	c.mu.Lock()
 	ele, ok := c.store[key]
 	if ok {
@@ -63,13 +63,13 @@ func (c *cache) GetOrPrepare(key string, ttl time.Duration) (v proto.Message) {
 	return v
 }
 
-func (c *cache) Update(key string, value proto.Message) {
+func (c *LRU) Update(key string, value proto.Message) {
 	c.mu.Lock()
 	ele, ok := c.store[key]
 	if ok {
 		e := ele.Value.(*entry)
 		e.val = value
-		e.size = EntrySize + ElementSize + 2*(StringStructSize+len(key)) + value.Size()
+		e.size = EntrySize + ElementSize + 2*(StringSSize+len(key)) + value.Size()
 
 		c.size += e.size
 		for c.size > c.max {
@@ -84,7 +84,7 @@ func (c *cache) Update(key string, value proto.Message) {
 	c.mu.Unlock()
 }
 
-func (c *cache) Delete(keys []proto.Message) {
+func (c *LRU) Delete(keys []proto.Message) {
 	c.mu.Lock()
 	for _, k := range keys {
 		e, ok := c.store[k.String]
@@ -96,7 +96,7 @@ func (c *cache) Delete(keys []proto.Message) {
 	c.mu.Unlock()
 }
 
-func (c *cache) DeleteAll() {
+func (c *LRU) DeleteAll() {
 	c.mu.Lock()
 	c.store = make(map[string]*list.Element)
 	c.list = nil
