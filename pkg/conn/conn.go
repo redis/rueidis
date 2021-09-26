@@ -11,8 +11,12 @@ import (
 	"github.com/rueian/rueidis/pkg/proto"
 )
 
-var ErrConnClosing = errors.New("conn is closing")
-var OptInCmd = []string{"CLIENT", "CACHING", "yes"}
+var (
+	ErrConnClosing = errors.New("conn is closing")
+	OptInCmd       = []string{"CLIENT", "CACHING", "yes"}
+	TrackingCmd    = []string{"CLIENT", "TRACKING", "on", "OPTIN"}
+	PingCmd        = []string{"PING"}
+)
 
 type Conn struct {
 	waits int32
@@ -26,24 +30,64 @@ type Conn struct {
 	q *ring
 
 	cache *cache
+
+	info proto.Message
 }
 
-func NewConn(conn net.Conn, cacheSize int) *Conn {
+type Option struct {
+	CacheSize  int
+	Username   string
+	Password   string
+	ClientName string
+}
+
+func NewConn(conn net.Conn, option Option) (*Conn, error) {
 	c := &Conn{
 		conn:  conn,
-		cache: NewCache(cacheSize),
+		cache: NewCache(option.CacheSize),
 		r:     bufio.NewReader(conn),
 		w:     bufio.NewWriter(conn),
 		q:     newRing(),
 	}
 	c.reading()
-	return c
+
+	helloCmd := []string{"HELLO", "3"}
+	if option.Username != "" {
+		helloCmd = append(helloCmd, "AUTH", option.Username, option.Password)
+	}
+	if option.ClientName != "" {
+		helloCmd = append(helloCmd, "SETNAME", option.ClientName)
+	}
+
+	res := c.WriteMulti([][]string{helloCmd, TrackingCmd})
+	for _, r := range res {
+		if r.Err != nil {
+			return nil, r.Err
+		}
+	}
+
+	c.info = res[0].Val
+
+	// make client side caching be as healthy as possible
+	c.pinging()
+
+	return c, nil
+}
+
+func (c *Conn) pinging() {
+	go func() {
+		for atomic.LoadInt32(&c.state) == 0 {
+			time.Sleep(time.Second)
+			c.WriteOne(PingCmd) // if the ping fail, the client side caching will be cleared
+		}
+	}()
 }
 
 func (c *Conn) reading() {
 	go func() {
 		var err error
 		defer func() {
+			// if any error, make sure to clear the cache
 			c.cache.DeleteAll()
 			if err != nil {
 				c.err.Store(err)
@@ -82,7 +126,7 @@ func (c *Conn) reading() {
 					continue
 				}
 				if msg.Values[0].String == "invalidate" {
-					c.cache.Delete(msg.Values[1].String)
+					c.cache.Delete(msg.Values[1].Values)
 				}
 				continue
 			}
@@ -94,6 +138,10 @@ func (c *Conn) reading() {
 			ch <- proto.Result{Val: msg, Err: err}
 		}
 	}()
+}
+
+func (c *Conn) Into() proto.Message {
+	return c.info
 }
 
 func (c *Conn) WriteOne(cmd []string) (res proto.Result) {

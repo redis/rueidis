@@ -84,12 +84,14 @@ func (c *cache) Update(key string, value proto.Message) {
 	c.mu.Unlock()
 }
 
-func (c *cache) Delete(key string) {
+func (c *cache) Delete(keys []proto.Message) {
 	c.mu.Lock()
-	e, ok := c.store[key]
-	if ok {
-		delete(c.store, key)
-		c.list.Remove(e)
+	for _, k := range keys {
+		e, ok := c.store[k.String]
+		if ok {
+			delete(c.store, k.String)
+			c.list.Remove(e)
+		}
 	}
 	c.mu.Unlock()
 }

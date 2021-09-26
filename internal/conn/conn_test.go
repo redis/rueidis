@@ -38,7 +38,7 @@ func BenchmarkNewConn(b *testing.B) {
 	b.Run("Flat", func(b *testing.B) {
 		server, client := net.Pipe()
 		go io.Copy(server, server)
-		conn := conn2.NewConn(client, 128*(1<<20))
+		conn, _ := conn2.NewConn(client, conn2.Option{CacheSize: 128 * (1 << 20)})
 		m := []string{"GET", "a"}
 		b.SetParallelism(20)
 		b.RunParallel(func(pb *testing.PB) {

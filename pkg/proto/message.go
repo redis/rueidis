@@ -150,17 +150,19 @@ func readMap(i *bufio.Reader) (m Message, err error) {
 
 func ReadNextMessage(i *bufio.Reader) (m Message, err error) {
 	var attrs *Message
+	var typ byte
 	for {
-		if m.Type, err = i.ReadByte(); err != nil {
+		if typ, err = i.ReadByte(); err != nil {
 			return m, err
 		}
-		fn := readers[m.Type]
+		fn := readers[typ]
 		if fn == nil {
-			panic("received unknown message type: " + string(m.Type))
+			panic("received unknown message type: " + string(typ))
 		}
 		if m, err = fn(i); err != nil {
 			return Message{}, err
 		}
+		m.Type = typ
 		if m.Type == '|' { // handle the attributes
 			a := m     // clone the original m first, and then take address of the clone
 			attrs = &a // to avoid go compiler allocating the m on heap which causing worse performance.
