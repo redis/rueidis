@@ -28,8 +28,14 @@ type Conn struct {
 	cache *cache
 }
 
-func NewConn(conn net.Conn) *Conn {
-	c := &Conn{conn: conn, r: bufio.NewReader(conn), w: bufio.NewWriter(conn), q: newRing()}
+func NewConn(conn net.Conn, cacheSize int) *Conn {
+	c := &Conn{
+		conn:  conn,
+		cache: NewCache(cacheSize),
+		r:     bufio.NewReader(conn),
+		w:     bufio.NewWriter(conn),
+		q:     newRing(),
+	}
 	c.reading()
 	return c
 }
@@ -38,6 +44,7 @@ func (c *Conn) reading() {
 	go func() {
 		var err error
 		defer func() {
+			c.cache.DeleteAll()
 			if err != nil {
 				c.err.Store(err)
 			}

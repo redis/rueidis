@@ -32,6 +32,14 @@ type cache struct {
 	max  int
 }
 
+func NewCache(max int) *cache {
+	return &cache{
+		max:   max,
+		store: make(map[string]*list.Element),
+		list:  list.New(),
+	}
+}
+
 func (c *cache) GetOrPrepare(key string, ttl time.Duration) (v proto.Message) {
 	c.mu.Lock()
 	ele, ok := c.store[key]
@@ -44,7 +52,7 @@ func (c *cache) GetOrPrepare(key string, ttl time.Duration) (v proto.Message) {
 			delete(c.store, key)
 			c.list.Remove(ele)
 		}
-	} else {
+	} else if c.list != nil {
 		c.list.PushBack(&entry{
 			key: key,
 			ttl: time.Now().Add(ttl),
@@ -83,5 +91,12 @@ func (c *cache) Delete(key string) {
 		delete(c.store, key)
 		c.list.Remove(e)
 	}
+	c.mu.Unlock()
+}
+
+func (c *cache) DeleteAll() {
+	c.mu.Lock()
+	c.store = make(map[string]*list.Element)
+	c.list = nil
 	c.mu.Unlock()
 }
