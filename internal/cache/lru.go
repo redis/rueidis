@@ -10,9 +10,11 @@ import (
 )
 
 const (
-	EntrySize   = int(unsafe.Sizeof(entry{})) + int(unsafe.Sizeof(&entry{}))
-	ElementSize = int(unsafe.Sizeof(list.Element{})) + int(unsafe.Sizeof(&list.Element{}))
-	StringSSize = int(unsafe.Sizeof(""))
+	entrySize   = int(unsafe.Sizeof(entry{})) + int(unsafe.Sizeof(&entry{}))
+	elementSize = int(unsafe.Sizeof(list.Element{})) + int(unsafe.Sizeof(&list.Element{}))
+	stringSSize = int(unsafe.Sizeof(""))
+
+	EntryMinSize = entrySize + elementSize + stringSSize*2 + proto.MessageStructSize
 )
 
 type entry struct {
@@ -69,7 +71,7 @@ func (c *LRU) Update(key string, value proto.Message) {
 	if ok {
 		e := ele.Value.(*entry)
 		e.val = value
-		e.size = EntrySize + ElementSize + 2*(StringSSize+len(key)) + value.Size()
+		e.size = entrySize + elementSize + 2*(stringSSize+len(key)) + value.Size()
 
 		c.size += e.size
 		for c.size > c.max {

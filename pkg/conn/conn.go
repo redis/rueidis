@@ -174,8 +174,7 @@ func (c *Conn) WriteMulti(cmd [][]string) []proto.Result {
 }
 
 func (c *Conn) WriteOptInCache(cmd []string, ttl time.Duration) proto.Result {
-	v := c.cache.GetOrPrepare(cmd[1], ttl)
-	if v.Type != 0 {
+	if v := c.cache.GetOrPrepare(cmd[1], ttl); v.Type != 0 {
 		return proto.Result{Val: v}
 	}
 	return c.WriteMulti([][]string{OptInCmd, cmd})[1]
