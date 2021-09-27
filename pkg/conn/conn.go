@@ -98,48 +98,67 @@ func (c *Conn) reading() {
 			c.Close()
 		}()
 		for atomic.LoadInt32(&c.state) != 2 {
-			cmd := c.q.TryNextCmd()
-			if cmd == nil {
+			cmds := c.q.TryNextCmd()
+			if cmds == nil {
 				if err = c.w.Flush(); err != nil {
 					return
 				}
-				cmd = c.q.NextCmd()
+				cmds = c.q.NextCmd()
 			}
-			if err = proto.WriteCmd(c.w, cmd); err != nil {
-				return
+			for _, cmd := range cmds {
+				if err = proto.WriteCmd(c.w, cmd); err != nil {
+					return
+				}
 			}
 		}
 	}()
 	go func() {
-		var opted bool
 		for atomic.LoadInt32(&c.state) != 2 {
 			msg, err := proto.ReadNextMessage(c.r)
 			if msg.Type == '>' {
-				// TODO: handle other push data
-				// tracking-redir-broken
-				// message
-				// pmessage
-				// subscribe
-				// unsubscribe
-				// psubscribe
-				// punsubscribe
-				// server-cpu-usage
-				if len(msg.Values) < 2 {
-					continue
-				}
-				if msg.Values[0].String == "invalidate" {
-					c.cache.Delete(msg.Values[1].Values)
-				}
+				c.handlePush(msg.Values)
 				continue
 			}
-			cmd, ch := c.q.NextResultCh()
-			if err == nil && msg.Type != '-' && msg.Type != '!' && opted {
-				c.cache.Update(cmd[1], msg)
-			}
-			opted = cmdEqual(cmd, OptInCmd)
+			cmds, ch := c.q.NextResultCh()
 			ch <- proto.Result{Val: msg, Err: err}
+
+			// in current implementation, the cache opt-in will only be in the first cmd in batch
+			// TODO: handle opt-in cache for MULTI, LUA commands
+			opted := cmdEqual(cmds[0], OptInCmd)
+
+			// read the rest cmd responses
+			for i := 1; i < len(cmds); {
+				msg, err = proto.ReadNextMessage(c.r)
+				if msg.Type == '>' {
+					c.handlePush(msg.Values)
+					continue
+				}
+				if err == nil && msg.Type != '-' && msg.Type != '!' && opted {
+					c.cache.Update(cmds[i][1], msg)
+				}
+				ch <- proto.Result{Val: msg, Err: err}
+				i++
+			}
 		}
 	}()
+}
+
+func (c *Conn) handlePush(values []proto.Message) {
+	// TODO: handle other push data
+	// tracking-redir-broken
+	// message
+	// pmessage
+	// subscribe
+	// unsubscribe
+	// psubscribe
+	// punsubscribe
+	// server-cpu-usage
+	if len(values) < 2 {
+		return
+	}
+	if values[0].String == "invalidate" {
+		c.cache.Delete(values[1].Values)
+	}
 }
 
 func (c *Conn) Into() proto.Message {
@@ -161,7 +180,8 @@ func (c *Conn) WriteMulti(cmd [][]string) []proto.Result {
 	res := make([]proto.Result, len(cmd))
 	atomic.AddInt32(&c.waits, 1)
 	if atomic.LoadInt32(&c.state) == 0 {
-		for i, ch := range c.q.PutMulti(cmd) {
+		ch := c.q.PutMulti(cmd)
+		for i := range res {
 			res[i] = <-ch
 		}
 	} else {

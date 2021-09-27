@@ -25,13 +25,13 @@ func (c *Chan) PutOne(m []string) chan proto.Result {
 	return nil
 }
 
-func (c *Chan) NextCmd() []string {
+func (c *Chan) NextCmd() [][]string {
 	m := <-c.ch1
 	c.ch2 <- m
-	return m
+	return nil
 }
 
-func (c *Chan) NextResultCh() ([]string, chan proto.Result) {
-	m := <-c.ch2
-	return m, nil
+func (c *Chan) NextResultCh() ([][]string, chan proto.Result) {
+	<-c.ch2
+	return nil, nil
 }

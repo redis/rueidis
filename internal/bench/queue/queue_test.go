@@ -10,8 +10,8 @@ import (
 
 type Queue interface {
 	PutOne(m []string) chan proto.Result
-	NextCmd() []string
-	NextResultCh() ([]string, chan proto.Result)
+	NextCmd() [][]string
+	NextResultCh() ([][]string, chan proto.Result)
 }
 
 func BenchmarkQueue(b *testing.B) {

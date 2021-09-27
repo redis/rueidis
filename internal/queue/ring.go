@@ -14,6 +14,7 @@ func NewRing() *Ring {
 	r.mask = uint64(len(r.store) - 1)
 	for i := range r.store {
 		r.store[i].ch = make(chan proto.Result, 1)
+		r.store[i].cmds = make([][]string, 1)
 	}
 	return r
 }
@@ -32,39 +33,36 @@ type Ring struct {
 }
 
 type node struct {
-	r   uint64
-	cmd []string
-	ch  chan proto.Result
+	r    uint64
+	cmds [][]string
+	ch   chan proto.Result
 }
 
 func (r *Ring) PutOne(m []string) chan proto.Result {
-	return r.put(atomic.AddUint64(&r.write, 1)&r.mask, m)
-}
-
-func (r *Ring) PutMulti(m [][]string) []chan proto.Result {
-	l := uint64(len(m))
-	e := atomic.AddUint64(&r.write, l)
-	s := e - l + 1
-
-	chs := make([]chan proto.Result, len(m))
-	for i := uint64(0); i < l; i++ {
-		chs[i] = r.put((s+i)&r.mask, m[i])
-	}
-	return chs
-}
-
-func (r *Ring) put(position uint64, m []string) chan proto.Result {
-	n := &r.store[position]
-	for !atomic.CompareAndSwapUint64(&n.r, 0, 1) {
-		runtime.Gosched()
-	}
-	n.cmd = m
+	n := r.acquire(atomic.AddUint64(&r.write, 1) & r.mask)
+	n.cmds[0] = m
+	n.cmds = n.cmds[:1]
 	atomic.StoreUint64(&n.r, 2)
 	return n.ch
 }
 
+func (r *Ring) PutMulti(m [][]string) chan proto.Result {
+	n := r.acquire(atomic.AddUint64(&r.write, 1) & r.mask)
+	n.cmds = m
+	atomic.StoreUint64(&n.r, 2)
+	return n.ch
+}
+
+func (r *Ring) acquire(position uint64) *node {
+	n := &r.store[position]
+	for !atomic.CompareAndSwapUint64(&n.r, 0, 1) {
+		runtime.Gosched()
+	}
+	return n
+}
+
 // TryNextCmd should be only called by one dedicated thread
-func (r *Ring) TryNextCmd() []string {
+func (r *Ring) TryNextCmd() [][]string {
 	r.read1++
 	p := r.read1 & r.mask
 	n := &r.store[p]
@@ -72,26 +70,27 @@ func (r *Ring) TryNextCmd() []string {
 		r.read1--
 		return nil
 	}
-	return n.cmd
+	return n.cmds
 }
 
 // NextCmd should be only called by one dedicated thread
-func (r *Ring) NextCmd() []string {
+func (r *Ring) NextCmd() [][]string {
 	r.read1 = (r.read1 + 1) & r.mask
 	n := &r.store[r.read1]
 	for !atomic.CompareAndSwapUint64(&n.r, 2, 3) {
 		runtime.Gosched()
 	}
-	return n.cmd
+	return n.cmds
 }
 
 // NextResultCh should be only called by one dedicated thread
-func (r *Ring) NextResultCh() ([]string, chan proto.Result) {
+func (r *Ring) NextResultCh() (cmds [][]string, ch chan proto.Result) {
 	r.read2++
 	p := r.read2 & r.mask
 	n := &r.store[p]
+	cmds, ch = n.cmds, n.ch
 	if atomic.CompareAndSwapUint64(&n.r, 3, 0) {
-		return n.cmd, n.ch
+		return
 	}
 	panic("unexpected NextResultCh call on ring")
 }
