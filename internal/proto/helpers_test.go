@@ -65,11 +65,7 @@ func source(str string) *bufio.Reader {
 }
 
 func random(trim bool) string {
-	var size int
-	for size == 0 {
-		size = rand.Intn(5000)
-	}
-	bs := make([]byte, size)
+	bs := make([]byte, randN(5000))
 	if _, err := rand.Read(bs); err != nil {
 		panic(err)
 	}
@@ -77,4 +73,11 @@ func random(trim bool) string {
 		return strings.NewReplacer("\r", "", "\n", "").Replace(string(bs))
 	}
 	return string(bs)
+}
+
+func randN(n int) (v int) {
+	for v == 0 {
+		v = rand.Intn(n)
+	}
+	return
 }
