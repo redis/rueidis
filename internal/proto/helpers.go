@@ -13,7 +13,7 @@ var chunked = errors.New("unbounded redis message")
 
 type reader func(i *bufio.Reader) (Message, error)
 
-var readers = [128]reader{}
+var readers = [256]reader{}
 
 func init() {
 	readers['$'] = readBlobString
@@ -100,24 +100,24 @@ func readNull(i *bufio.Reader) (m Message, err error) {
 func readArray(i *bufio.Reader) (m Message, err error) {
 	length, err := ReadI(i)
 	if err == chunked {
-		m.Values, err = ReadE(i)
+		m.Values, err = readE(i)
 	}
 	if err != nil {
 		return Message{}, err
 	}
-	m.Values, err = ReadA(i, int(length))
+	m.Values, err = readA(i, int(length))
 	return
 }
 
 func readMap(i *bufio.Reader) (m Message, err error) {
 	length, err := ReadI(i)
 	if err == chunked {
-		m.Values, err = ReadE(i)
+		m.Values, err = readE(i)
 	}
 	if err != nil {
 		return Message{}, err
 	}
-	m.Values, err = ReadA(i, int(length*2))
+	m.Values, err = readA(i, int(length*2))
 	return
 }
 
@@ -176,7 +176,7 @@ func ReadB(i *bufio.Reader) (string, error) {
 	return *(*string)(unsafe.Pointer(&bs)), nil
 }
 
-func ReadE(i *bufio.Reader) ([]Message, error) {
+func readE(i *bufio.Reader) ([]Message, error) {
 	v := make([]Message, 0)
 	for {
 		n, err := ReadNextMessage(i)
@@ -190,7 +190,7 @@ func ReadE(i *bufio.Reader) ([]Message, error) {
 	}
 }
 
-func ReadA(i *bufio.Reader, length int) (v []Message, err error) {
+func readA(i *bufio.Reader, length int) (v []Message, err error) {
 	v = make([]Message, length)
 	for n := 0; n < length; n++ {
 		if v[n], err = ReadNextMessage(i); err != nil {
