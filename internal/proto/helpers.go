@@ -21,7 +21,7 @@ func init() {
 	readers['-'] = readSimpleString
 	readers[':'] = readInteger
 	readers['_'] = readNull
-	readers[','] = readDouble
+	readers[','] = readSimpleString
 	readers['#'] = readBoolean
 	readers['!'] = readBlobString
 	readers['='] = readBlobString
@@ -68,15 +68,6 @@ func readBlobString(i *bufio.Reader) (m Message, err error) {
 
 func readInteger(i *bufio.Reader) (m Message, err error) {
 	m.Integer, err = ReadI(i)
-	return
-}
-
-func readDouble(i *bufio.Reader) (m Message, err error) {
-	str, err := ReadS(i)
-	if err != nil {
-		return Message{}, err
-	}
-	m.Double, err = strconv.ParseFloat(str, 64)
 	return
 }
 

@@ -16,7 +16,6 @@ type Result struct {
 type Message struct {
 	String  string
 	Integer int64
-	Double  float64
 	Values  []Message
 	Attrs   *Message
 	Type    byte
