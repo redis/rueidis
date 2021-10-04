@@ -61,7 +61,7 @@ func NewConn(conn net.Conn, option Option) (*Conn, error) {
 		helloCmd = append(helloCmd, "SETNAME", option.ClientName)
 	}
 
-	res := c.WriteMulti([][]string{helloCmd, TrackingCmd})
+	res := c.DoMulti(helloCmd, TrackingCmd)
 	for _, r := range res {
 		if r.Err != nil {
 			return nil, r.Err
@@ -80,7 +80,7 @@ func (c *Conn) pinging() {
 	go func() {
 		for atomic.LoadInt32(&c.state) == 0 {
 			time.Sleep(time.Second)
-			c.WriteOne(PingCmd) // if the ping fail, the client side caching will be cleared
+			c.Do(PingCmd) // if the ping fail, the client side caching will be cleared
 		}
 	}()
 }
@@ -165,7 +165,7 @@ func (c *Conn) Into() proto.Message {
 	return c.info
 }
 
-func (c *Conn) WriteOne(cmd []string) (res proto.Result) {
+func (c *Conn) Do(cmd []string) (res proto.Result) {
 	atomic.AddInt32(&c.waits, 1)
 	if atomic.LoadInt32(&c.state) == 0 {
 		res = <-c.q.PutOne(cmd)
@@ -176,7 +176,7 @@ func (c *Conn) WriteOne(cmd []string) (res proto.Result) {
 	return res
 }
 
-func (c *Conn) WriteMulti(cmd [][]string) []proto.Result {
+func (c *Conn) DoMulti(cmd ...[]string) []proto.Result {
 	res := make([]proto.Result, len(cmd))
 	atomic.AddInt32(&c.waits, 1)
 	if atomic.LoadInt32(&c.state) == 0 {
@@ -193,11 +193,11 @@ func (c *Conn) WriteMulti(cmd [][]string) []proto.Result {
 	return res
 }
 
-func (c *Conn) WriteOptInCache(cmd []string, ttl time.Duration) proto.Result {
+func (c *Conn) DoCache(cmd []string, ttl time.Duration) proto.Result {
 	if v := c.cache.GetOrPrepare(cmd[1], ttl); v.Type != 0 {
 		return proto.Result{Val: v}
 	}
-	return c.WriteMulti([][]string{OptInCmd, cmd})[1]
+	return c.DoMulti(OptInCmd, cmd)[1]
 }
 
 func (c *Conn) Close() {
