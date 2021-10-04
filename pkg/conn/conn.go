@@ -5,10 +5,12 @@ import (
 	"errors"
 	"net"
 	"runtime"
+	"strconv"
 	"sync/atomic"
 	"time"
 
 	"github.com/rueian/rueidis/internal/cache"
+	"github.com/rueian/rueidis/internal/cmds"
 	"github.com/rueian/rueidis/internal/proto"
 	"github.com/rueian/rueidis/internal/queue"
 )
@@ -38,6 +40,7 @@ type Conn struct {
 
 type Option struct {
 	CacheSize  int
+	SelectDB   int
 	Username   string
 	Password   string
 	ClientName string
@@ -61,7 +64,12 @@ func NewConn(conn net.Conn, option Option) (*Conn, error) {
 		helloCmd = append(helloCmd, "SETNAME", option.ClientName)
 	}
 
-	res := c.DoMulti(helloCmd, TrackingCmd)
+	init := [][]string{helloCmd, TrackingCmd}
+	if option.SelectDB != 0 {
+		init = append(init, []string{"SELECT", strconv.Itoa(option.SelectDB)})
+	}
+
+	res := c.DoMulti(init...)
 	for _, r := range res {
 		if r.Err != nil {
 			return nil, r.Err
