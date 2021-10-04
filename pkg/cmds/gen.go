@@ -2,13331 +2,13331 @@ package cmds
 
 import "strconv"
 
-type aclCat struct {
+type AclCat struct {
 	cs []string
 }
 
-func (c aclCat) Categoryname(categoryname string) aclCatCategoryname {
-	return aclCatCategoryname{cs: append(c.cs, categoryname)}
+func (c AclCat) Categoryname(Categoryname string) AclCatCategoryname {
+	return AclCatCategoryname{cs: append(c.cs, Categoryname)}
 }
 
-func (c aclCat) Build() []string {
+func (c AclCat) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) AclCat() (c aclCat) {
+func (b *Builder) AclCat() (c AclCat) {
 	c.cs = append(b.get(), "ACL", "CAT")
 	return
 }
 
-type aclCatCategoryname struct {
+type AclCatCategoryname struct {
 	cs []string
 }
 
-func (c aclCatCategoryname) Build() []string {
+func (c AclCatCategoryname) Build() []string {
 	return c.cs
 }
 
-type aclDeluser struct {
+type AclDeluser struct {
 	cs []string
 }
 
-func (c aclDeluser) Username(username ...string) aclDeluserUsername {
-	return aclDeluserUsername{cs: append(c.cs, username...)}
+func (c AclDeluser) Username(Username ...string) AclDeluserUsername {
+	return AclDeluserUsername{cs: append(c.cs, Username...)}
 }
 
-func (b *Builder) AclDeluser() (c aclDeluser) {
+func (b *Builder) AclDeluser() (c AclDeluser) {
 	c.cs = append(b.get(), "ACL", "DELUSER")
 	return
 }
 
-type aclDeluserUsername struct {
+type AclDeluserUsername struct {
 	cs []string
 }
 
-func (c aclDeluserUsername) Username(username ...string) aclDeluserUsername {
-	return aclDeluserUsername{cs: append(c.cs, username...)}
+func (c AclDeluserUsername) Username(Username ...string) AclDeluserUsername {
+	return AclDeluserUsername{cs: append(c.cs, Username...)}
 }
 
-func (c aclDeluserUsername) Build() []string {
+func (c AclDeluserUsername) Build() []string {
 	return c.cs
 }
 
-type aclGenpass struct {
+type AclGenpass struct {
 	cs []string
 }
 
-func (c aclGenpass) Bits(bits int64) aclGenpassBits {
-	return aclGenpassBits{cs: append(c.cs, strconv.FormatInt(bits, 10))}
+func (c AclGenpass) Bits(Bits int64) AclGenpassBits {
+	return AclGenpassBits{cs: append(c.cs, strconv.FormatInt(Bits, 10))}
 }
 
-func (c aclGenpass) Build() []string {
+func (c AclGenpass) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) AclGenpass() (c aclGenpass) {
+func (b *Builder) AclGenpass() (c AclGenpass) {
 	c.cs = append(b.get(), "ACL", "GENPASS")
 	return
 }
 
-type aclGenpassBits struct {
+type AclGenpassBits struct {
 	cs []string
 }
 
-func (c aclGenpassBits) Build() []string {
+func (c AclGenpassBits) Build() []string {
 	return c.cs
 }
 
-type aclGetuser struct {
+type AclGetuser struct {
 	cs []string
 }
 
-func (c aclGetuser) Username(username string) aclGetuserUsername {
-	return aclGetuserUsername{cs: append(c.cs, username)}
+func (c AclGetuser) Username(Username string) AclGetuserUsername {
+	return AclGetuserUsername{cs: append(c.cs, Username)}
 }
 
-func (b *Builder) AclGetuser() (c aclGetuser) {
+func (b *Builder) AclGetuser() (c AclGetuser) {
 	c.cs = append(b.get(), "ACL", "GETUSER")
 	return
 }
 
-type aclGetuserUsername struct {
+type AclGetuserUsername struct {
 	cs []string
 }
 
-func (c aclGetuserUsername) Build() []string {
+func (c AclGetuserUsername) Build() []string {
 	return c.cs
 }
 
-type aclHelp struct {
+type AclHelp struct {
 	cs []string
 }
 
-func (c aclHelp) Build() []string {
+func (c AclHelp) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) AclHelp() (c aclHelp) {
+func (b *Builder) AclHelp() (c AclHelp) {
 	c.cs = append(b.get(), "ACL", "HELP")
 	return
 }
 
-type aclList struct {
+type AclList struct {
 	cs []string
 }
 
-func (c aclList) Build() []string {
+func (c AclList) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) AclList() (c aclList) {
+func (b *Builder) AclList() (c AclList) {
 	c.cs = append(b.get(), "ACL", "LIST")
 	return
 }
 
-type aclLoad struct {
+type AclLoad struct {
 	cs []string
 }
 
-func (c aclLoad) Build() []string {
+func (c AclLoad) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) AclLoad() (c aclLoad) {
+func (b *Builder) AclLoad() (c AclLoad) {
 	c.cs = append(b.get(), "ACL", "LOAD")
 	return
 }
 
-type aclLog struct {
+type AclLog struct {
 	cs []string
 }
 
-func (c aclLog) CountOrReset(countOrReset string) aclLogCountOrReset {
-	return aclLogCountOrReset{cs: append(c.cs, countOrReset)}
+func (c AclLog) CountOrReset(CountOrReset string) AclLogCountOrReset {
+	return AclLogCountOrReset{cs: append(c.cs, CountOrReset)}
 }
 
-func (c aclLog) Build() []string {
+func (c AclLog) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) AclLog() (c aclLog) {
+func (b *Builder) AclLog() (c AclLog) {
 	c.cs = append(b.get(), "ACL", "LOG")
 	return
 }
 
-type aclLogCountOrReset struct {
+type AclLogCountOrReset struct {
 	cs []string
 }
 
-func (c aclLogCountOrReset) Build() []string {
+func (c AclLogCountOrReset) Build() []string {
 	return c.cs
 }
 
-type aclSave struct {
+type AclSave struct {
 	cs []string
 }
 
-func (c aclSave) Build() []string {
+func (c AclSave) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) AclSave() (c aclSave) {
+func (b *Builder) AclSave() (c AclSave) {
 	c.cs = append(b.get(), "ACL", "SAVE")
 	return
 }
 
-type aclSetuser struct {
+type AclSetuser struct {
 	cs []string
 }
 
-func (c aclSetuser) Username(username string) aclSetuserUsername {
-	return aclSetuserUsername{cs: append(c.cs, username)}
+func (c AclSetuser) Username(Username string) AclSetuserUsername {
+	return AclSetuserUsername{cs: append(c.cs, Username)}
 }
 
-func (b *Builder) AclSetuser() (c aclSetuser) {
+func (b *Builder) AclSetuser() (c AclSetuser) {
 	c.cs = append(b.get(), "ACL", "SETUSER")
 	return
 }
 
-type aclSetuserRule struct {
+type AclSetuserRule struct {
 	cs []string
 }
 
-func (c aclSetuserRule) Rule(rule ...string) aclSetuserRule {
-	return aclSetuserRule{cs: append(c.cs, rule...)}
+func (c AclSetuserRule) Rule(Rule ...string) AclSetuserRule {
+	return AclSetuserRule{cs: append(c.cs, Rule...)}
 }
 
-func (c aclSetuserRule) Build() []string {
+func (c AclSetuserRule) Build() []string {
 	return c.cs
 }
 
-type aclSetuserUsername struct {
+type AclSetuserUsername struct {
 	cs []string
 }
 
-func (c aclSetuserUsername) Rule(rule ...string) aclSetuserRule {
-	return aclSetuserRule{cs: append(c.cs, rule...)}
+func (c AclSetuserUsername) Rule(Rule ...string) AclSetuserRule {
+	return AclSetuserRule{cs: append(c.cs, Rule...)}
 }
 
-func (c aclSetuserUsername) Build() []string {
+func (c AclSetuserUsername) Build() []string {
 	return c.cs
 }
 
-type aclUsers struct {
+type AclUsers struct {
 	cs []string
 }
 
-func (c aclUsers) Build() []string {
+func (c AclUsers) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) AclUsers() (c aclUsers) {
+func (b *Builder) AclUsers() (c AclUsers) {
 	c.cs = append(b.get(), "ACL", "USERS")
 	return
 }
 
-type aclWhoami struct {
+type AclWhoami struct {
 	cs []string
 }
 
-func (c aclWhoami) Build() []string {
+func (c AclWhoami) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) AclWhoami() (c aclWhoami) {
+func (b *Builder) AclWhoami() (c AclWhoami) {
 	c.cs = append(b.get(), "ACL", "WHOAMI")
 	return
 }
 
-type rAppend struct {
+type Append struct {
 	cs []string
 }
 
-func (c rAppend) Key(key string) appendKey {
-	return appendKey{cs: append(c.cs, key)}
+func (c Append) Key(Key string) AppendKey {
+	return AppendKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Append() (c rAppend) {
+func (b *Builder) Append() (c Append) {
 	c.cs = append(b.get(), "APPEND")
 	return
 }
 
-type appendKey struct {
+type AppendKey struct {
 	cs []string
 }
 
-func (c appendKey) Value(value string) appendValue {
-	return appendValue{cs: append(c.cs, value)}
+func (c AppendKey) Value(Value string) AppendValue {
+	return AppendValue{cs: append(c.cs, Value)}
 }
 
-type appendValue struct {
+type AppendValue struct {
 	cs []string
 }
 
-func (c appendValue) Build() []string {
+func (c AppendValue) Build() []string {
 	return c.cs
 }
 
-type asking struct {
+type Asking struct {
 	cs []string
 }
 
-func (c asking) Build() []string {
+func (c Asking) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) Asking() (c asking) {
+func (b *Builder) Asking() (c Asking) {
 	c.cs = append(b.get(), "ASKING")
 	return
 }
 
-type auth struct {
+type Auth struct {
 	cs []string
 }
 
-func (c auth) Username(username string) authUsername {
-	return authUsername{cs: append(c.cs, username)}
+func (c Auth) Username(Username string) AuthUsername {
+	return AuthUsername{cs: append(c.cs, Username)}
 }
 
-func (c auth) Password(password string) authPassword {
-	return authPassword{cs: append(c.cs, password)}
+func (c Auth) Password(Password string) AuthPassword {
+	return AuthPassword{cs: append(c.cs, Password)}
 }
 
-func (b *Builder) Auth() (c auth) {
+func (b *Builder) Auth() (c Auth) {
 	c.cs = append(b.get(), "AUTH")
 	return
 }
 
-type authPassword struct {
+type AuthPassword struct {
 	cs []string
 }
 
-func (c authPassword) Build() []string {
+func (c AuthPassword) Build() []string {
 	return c.cs
 }
 
-type authUsername struct {
+type AuthUsername struct {
 	cs []string
 }
 
-func (c authUsername) Password(password string) authPassword {
-	return authPassword{cs: append(c.cs, password)}
+func (c AuthUsername) Password(Password string) AuthPassword {
+	return AuthPassword{cs: append(c.cs, Password)}
 }
 
-type bgrewriteaof struct {
+type Bgrewriteaof struct {
 	cs []string
 }
 
-func (c bgrewriteaof) Build() []string {
+func (c Bgrewriteaof) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) Bgrewriteaof() (c bgrewriteaof) {
+func (b *Builder) Bgrewriteaof() (c Bgrewriteaof) {
 	c.cs = append(b.get(), "BGREWRITEAOF")
 	return
 }
 
-type bgsave struct {
+type Bgsave struct {
 	cs []string
 }
 
-func (c bgsave) Schedule() bgsaveScheduleSchedule {
-	return bgsaveScheduleSchedule{cs: append(c.cs, "SCHEDULE")}
+func (c Bgsave) Schedule() BgsaveScheduleSchedule {
+	return BgsaveScheduleSchedule{cs: append(c.cs, "SCHEDULE")}
 }
 
-func (c bgsave) Build() []string {
+func (c Bgsave) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) Bgsave() (c bgsave) {
+func (b *Builder) Bgsave() (c Bgsave) {
 	c.cs = append(b.get(), "BGSAVE")
 	return
 }
 
-type bgsaveScheduleSchedule struct {
+type BgsaveScheduleSchedule struct {
 	cs []string
 }
 
-func (c bgsaveScheduleSchedule) Build() []string {
+func (c BgsaveScheduleSchedule) Build() []string {
 	return c.cs
 }
 
-type bitcount struct {
+type Bitcount struct {
 	cs []string
 }
 
-func (c bitcount) Key(key string) bitcountKey {
-	return bitcountKey{cs: append(c.cs, key)}
+func (c Bitcount) Key(Key string) BitcountKey {
+	return BitcountKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Bitcount() (c bitcount) {
+func (b *Builder) Bitcount() (c Bitcount) {
 	c.cs = append(b.get(), "BITCOUNT")
 	return
 }
 
-type bitcountKey struct {
+type BitcountKey struct {
 	cs []string
 }
 
-func (c bitcountKey) StartEnd(start int64, end int64) bitcountStartEnd {
-	return bitcountStartEnd{cs: append(c.cs, strconv.FormatInt(start, 10), strconv.FormatInt(end, 10))}
+func (c BitcountKey) StartEnd(Start int64, End int64) BitcountStartEnd {
+	return BitcountStartEnd{cs: append(c.cs, strconv.FormatInt(Start, 10), strconv.FormatInt(End, 10))}
 }
 
-func (c bitcountKey) Build() []string {
+func (c BitcountKey) Build() []string {
 	return c.cs
 }
 
-type bitcountStartEnd struct {
+type BitcountStartEnd struct {
 	cs []string
 }
 
-func (c bitcountStartEnd) Build() []string {
+func (c BitcountStartEnd) Build() []string {
 	return c.cs
 }
 
-type bitfield struct {
+type Bitfield struct {
 	cs []string
 }
 
-func (c bitfield) Key(key string) bitfieldKey {
-	return bitfieldKey{cs: append(c.cs, key)}
+func (c Bitfield) Key(Key string) BitfieldKey {
+	return BitfieldKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Bitfield() (c bitfield) {
+func (b *Builder) Bitfield() (c Bitfield) {
 	c.cs = append(b.get(), "BITFIELD")
 	return
 }
 
-type bitfieldFail struct {
+type BitfieldFail struct {
 	cs []string
 }
 
-func (c bitfieldFail) Build() []string {
+func (c BitfieldFail) Build() []string {
 	return c.cs
 }
 
-type bitfieldGet struct {
+type BitfieldGet struct {
 	cs []string
 }
 
-func (c bitfieldGet) Set(typ string, offset int64, value int64) bitfieldSet {
-	return bitfieldSet{cs: append(c.cs, "SET", typ, strconv.FormatInt(offset, 10), strconv.FormatInt(value, 10))}
+func (c BitfieldGet) Set(Type string, Offset int64, Value int64) BitfieldSet {
+	return BitfieldSet{cs: append(c.cs, "SET", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Value, 10))}
 }
 
-func (c bitfieldGet) Incrby(typ string, offset int64, increment int64) bitfieldIncrby {
-	return bitfieldIncrby{cs: append(c.cs, "INCRBY", typ, strconv.FormatInt(offset, 10), strconv.FormatInt(increment, 10))}
+func (c BitfieldGet) Incrby(Type string, Offset int64, Increment int64) BitfieldIncrby {
+	return BitfieldIncrby{cs: append(c.cs, "INCRBY", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Increment, 10))}
 }
 
-func (c bitfieldGet) Wrap() bitfieldWrap {
-	return bitfieldWrap{cs: append(c.cs, "WRAP")}
+func (c BitfieldGet) Wrap() BitfieldWrap {
+	return BitfieldWrap{cs: append(c.cs, "WRAP")}
 }
 
-func (c bitfieldGet) Sat() bitfieldSat {
-	return bitfieldSat{cs: append(c.cs, "SAT")}
+func (c BitfieldGet) Sat() BitfieldSat {
+	return BitfieldSat{cs: append(c.cs, "SAT")}
 }
 
-func (c bitfieldGet) Fail() bitfieldFail {
-	return bitfieldFail{cs: append(c.cs, "FAIL")}
+func (c BitfieldGet) Fail() BitfieldFail {
+	return BitfieldFail{cs: append(c.cs, "FAIL")}
 }
 
-func (c bitfieldGet) Build() []string {
+func (c BitfieldGet) Build() []string {
 	return c.cs
 }
 
-type bitfieldIncrby struct {
+type BitfieldIncrby struct {
 	cs []string
 }
 
-func (c bitfieldIncrby) Wrap() bitfieldWrap {
-	return bitfieldWrap{cs: append(c.cs, "WRAP")}
+func (c BitfieldIncrby) Wrap() BitfieldWrap {
+	return BitfieldWrap{cs: append(c.cs, "WRAP")}
 }
 
-func (c bitfieldIncrby) Sat() bitfieldSat {
-	return bitfieldSat{cs: append(c.cs, "SAT")}
+func (c BitfieldIncrby) Sat() BitfieldSat {
+	return BitfieldSat{cs: append(c.cs, "SAT")}
 }
 
-func (c bitfieldIncrby) Fail() bitfieldFail {
-	return bitfieldFail{cs: append(c.cs, "FAIL")}
+func (c BitfieldIncrby) Fail() BitfieldFail {
+	return BitfieldFail{cs: append(c.cs, "FAIL")}
 }
 
-func (c bitfieldIncrby) Build() []string {
+func (c BitfieldIncrby) Build() []string {
 	return c.cs
 }
 
-type bitfieldKey struct {
+type BitfieldKey struct {
 	cs []string
 }
 
-func (c bitfieldKey) Get(typ string, offset int64) bitfieldGet {
-	return bitfieldGet{cs: append(c.cs, "GET", typ, strconv.FormatInt(offset, 10))}
+func (c BitfieldKey) Get(Type string, Offset int64) BitfieldGet {
+	return BitfieldGet{cs: append(c.cs, "GET", Type, strconv.FormatInt(Offset, 10))}
 }
 
-func (c bitfieldKey) Set(typ string, offset int64, value int64) bitfieldSet {
-	return bitfieldSet{cs: append(c.cs, "SET", typ, strconv.FormatInt(offset, 10), strconv.FormatInt(value, 10))}
+func (c BitfieldKey) Set(Type string, Offset int64, Value int64) BitfieldSet {
+	return BitfieldSet{cs: append(c.cs, "SET", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Value, 10))}
 }
 
-func (c bitfieldKey) Incrby(typ string, offset int64, increment int64) bitfieldIncrby {
-	return bitfieldIncrby{cs: append(c.cs, "INCRBY", typ, strconv.FormatInt(offset, 10), strconv.FormatInt(increment, 10))}
+func (c BitfieldKey) Incrby(Type string, Offset int64, Increment int64) BitfieldIncrby {
+	return BitfieldIncrby{cs: append(c.cs, "INCRBY", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Increment, 10))}
 }
 
-func (c bitfieldKey) Wrap() bitfieldWrap {
-	return bitfieldWrap{cs: append(c.cs, "WRAP")}
+func (c BitfieldKey) Wrap() BitfieldWrap {
+	return BitfieldWrap{cs: append(c.cs, "WRAP")}
 }
 
-func (c bitfieldKey) Sat() bitfieldSat {
-	return bitfieldSat{cs: append(c.cs, "SAT")}
+func (c BitfieldKey) Sat() BitfieldSat {
+	return BitfieldSat{cs: append(c.cs, "SAT")}
 }
 
-func (c bitfieldKey) Fail() bitfieldFail {
-	return bitfieldFail{cs: append(c.cs, "FAIL")}
+func (c BitfieldKey) Fail() BitfieldFail {
+	return BitfieldFail{cs: append(c.cs, "FAIL")}
 }
 
-func (c bitfieldKey) Build() []string {
+func (c BitfieldKey) Build() []string {
 	return c.cs
 }
 
-type bitfieldRo struct {
+type BitfieldRo struct {
 	cs []string
 }
 
-func (c bitfieldRo) Key(key string) bitfieldRoKey {
-	return bitfieldRoKey{cs: append(c.cs, key)}
+func (c BitfieldRo) Key(Key string) BitfieldRoKey {
+	return BitfieldRoKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) BitfieldRo() (c bitfieldRo) {
+func (b *Builder) BitfieldRo() (c BitfieldRo) {
 	c.cs = append(b.get(), "BITFIELD_RO")
 	return
 }
 
-type bitfieldRoGet struct {
+type BitfieldRoGet struct {
 	cs []string
 }
 
-func (c bitfieldRoGet) Build() []string {
+func (c BitfieldRoGet) Build() []string {
 	return c.cs
 }
 
-type bitfieldRoKey struct {
+type BitfieldRoKey struct {
 	cs []string
 }
 
-func (c bitfieldRoKey) Get(typ string, offset int64) bitfieldRoGet {
-	return bitfieldRoGet{cs: append(c.cs, "GET", typ, strconv.FormatInt(offset, 10))}
+func (c BitfieldRoKey) Get(Type string, Offset int64) BitfieldRoGet {
+	return BitfieldRoGet{cs: append(c.cs, "GET", Type, strconv.FormatInt(Offset, 10))}
 }
 
-type bitfieldSat struct {
+type BitfieldSat struct {
 	cs []string
 }
 
-func (c bitfieldSat) Build() []string {
+func (c BitfieldSat) Build() []string {
 	return c.cs
 }
 
-type bitfieldSet struct {
+type BitfieldSet struct {
 	cs []string
 }
 
-func (c bitfieldSet) Incrby(typ string, offset int64, increment int64) bitfieldIncrby {
-	return bitfieldIncrby{cs: append(c.cs, "INCRBY", typ, strconv.FormatInt(offset, 10), strconv.FormatInt(increment, 10))}
+func (c BitfieldSet) Incrby(Type string, Offset int64, Increment int64) BitfieldIncrby {
+	return BitfieldIncrby{cs: append(c.cs, "INCRBY", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Increment, 10))}
 }
 
-func (c bitfieldSet) Wrap() bitfieldWrap {
-	return bitfieldWrap{cs: append(c.cs, "WRAP")}
+func (c BitfieldSet) Wrap() BitfieldWrap {
+	return BitfieldWrap{cs: append(c.cs, "WRAP")}
 }
 
-func (c bitfieldSet) Sat() bitfieldSat {
-	return bitfieldSat{cs: append(c.cs, "SAT")}
+func (c BitfieldSet) Sat() BitfieldSat {
+	return BitfieldSat{cs: append(c.cs, "SAT")}
 }
 
-func (c bitfieldSet) Fail() bitfieldFail {
-	return bitfieldFail{cs: append(c.cs, "FAIL")}
+func (c BitfieldSet) Fail() BitfieldFail {
+	return BitfieldFail{cs: append(c.cs, "FAIL")}
 }
 
-func (c bitfieldSet) Build() []string {
+func (c BitfieldSet) Build() []string {
 	return c.cs
 }
 
-type bitfieldWrap struct {
+type BitfieldWrap struct {
 	cs []string
 }
 
-func (c bitfieldWrap) Build() []string {
+func (c BitfieldWrap) Build() []string {
 	return c.cs
 }
 
-type bitop struct {
+type Bitop struct {
 	cs []string
 }
 
-func (c bitop) Operation(operation string) bitopOperation {
-	return bitopOperation{cs: append(c.cs, operation)}
+func (c Bitop) Operation(Operation string) BitopOperation {
+	return BitopOperation{cs: append(c.cs, Operation)}
 }
 
-func (b *Builder) Bitop() (c bitop) {
+func (b *Builder) Bitop() (c Bitop) {
 	c.cs = append(b.get(), "BITOP")
 	return
 }
 
-type bitopDestkey struct {
+type BitopDestkey struct {
 	cs []string
 }
 
-func (c bitopDestkey) Key(key ...string) bitopKey {
-	return bitopKey{cs: append(c.cs, key...)}
+func (c BitopDestkey) Key(Key ...string) BitopKey {
+	return BitopKey{cs: append(c.cs, Key...)}
 }
 
-type bitopKey struct {
+type BitopKey struct {
 	cs []string
 }
 
-func (c bitopKey) Key(key ...string) bitopKey {
-	return bitopKey{cs: append(c.cs, key...)}
+func (c BitopKey) Key(Key ...string) BitopKey {
+	return BitopKey{cs: append(c.cs, Key...)}
 }
 
-func (c bitopKey) Build() []string {
+func (c BitopKey) Build() []string {
 	return c.cs
 }
 
-type bitopOperation struct {
+type BitopOperation struct {
 	cs []string
 }
 
-func (c bitopOperation) Destkey(destkey string) bitopDestkey {
-	return bitopDestkey{cs: append(c.cs, destkey)}
+func (c BitopOperation) Destkey(Destkey string) BitopDestkey {
+	return BitopDestkey{cs: append(c.cs, Destkey)}
 }
 
-type bitpos struct {
+type Bitpos struct {
 	cs []string
 }
 
-func (c bitpos) Key(key string) bitposKey {
-	return bitposKey{cs: append(c.cs, key)}
+func (c Bitpos) Key(Key string) BitposKey {
+	return BitposKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Bitpos() (c bitpos) {
+func (b *Builder) Bitpos() (c Bitpos) {
 	c.cs = append(b.get(), "BITPOS")
 	return
 }
 
-type bitposBit struct {
+type BitposBit struct {
 	cs []string
 }
 
-func (c bitposBit) Start(start int64) bitposIndexStart {
-	return bitposIndexStart{cs: append(c.cs, strconv.FormatInt(start, 10))}
+func (c BitposBit) Start(Start int64) BitposIndexStart {
+	return BitposIndexStart{cs: append(c.cs, strconv.FormatInt(Start, 10))}
 }
 
-type bitposIndexEnd struct {
+type BitposIndexEnd struct {
 	cs []string
 }
 
-func (c bitposIndexEnd) Build() []string {
+func (c BitposIndexEnd) Build() []string {
 	return c.cs
 }
 
-type bitposIndexStart struct {
+type BitposIndexStart struct {
 	cs []string
 }
 
-func (c bitposIndexStart) End(end int64) bitposIndexEnd {
-	return bitposIndexEnd{cs: append(c.cs, strconv.FormatInt(end, 10))}
+func (c BitposIndexStart) End(End int64) BitposIndexEnd {
+	return BitposIndexEnd{cs: append(c.cs, strconv.FormatInt(End, 10))}
 }
 
-func (c bitposIndexStart) Build() []string {
+func (c BitposIndexStart) Build() []string {
 	return c.cs
 }
 
-type bitposKey struct {
+type BitposKey struct {
 	cs []string
 }
 
-func (c bitposKey) Bit(bit int64) bitposBit {
-	return bitposBit{cs: append(c.cs, strconv.FormatInt(bit, 10))}
+func (c BitposKey) Bit(Bit int64) BitposBit {
+	return BitposBit{cs: append(c.cs, strconv.FormatInt(Bit, 10))}
 }
 
-type blmove struct {
+type Blmove struct {
 	cs []string
 }
 
-func (c blmove) Source(source string) blmoveSource {
-	return blmoveSource{cs: append(c.cs, source)}
+func (c Blmove) Source(Source string) BlmoveSource {
+	return BlmoveSource{cs: append(c.cs, Source)}
 }
 
-func (b *Builder) Blmove() (c blmove) {
+func (b *Builder) Blmove() (c Blmove) {
 	c.cs = append(b.get(), "BLMOVE")
 	return
 }
 
-type blmoveDestination struct {
+type BlmoveDestination struct {
 	cs []string
 }
 
-func (c blmoveDestination) Left() blmoveWherefromLeft {
-	return blmoveWherefromLeft{cs: append(c.cs, "LEFT")}
+func (c BlmoveDestination) Left() BlmoveWherefromLeft {
+	return BlmoveWherefromLeft{cs: append(c.cs, "LEFT")}
 }
 
-func (c blmoveDestination) Right() blmoveWherefromRight {
-	return blmoveWherefromRight{cs: append(c.cs, "RIGHT")}
+func (c BlmoveDestination) Right() BlmoveWherefromRight {
+	return BlmoveWherefromRight{cs: append(c.cs, "RIGHT")}
 }
 
-type blmoveSource struct {
+type BlmoveSource struct {
 	cs []string
 }
 
-func (c blmoveSource) Destination(destination string) blmoveDestination {
-	return blmoveDestination{cs: append(c.cs, destination)}
+func (c BlmoveSource) Destination(Destination string) BlmoveDestination {
+	return BlmoveDestination{cs: append(c.cs, Destination)}
 }
 
-type blmoveTimeout struct {
+type BlmoveTimeout struct {
 	cs []string
 }
 
-func (c blmoveTimeout) Build() []string {
+func (c BlmoveTimeout) Build() []string {
 	return c.cs
 }
 
-type blmoveWherefromLeft struct {
+type BlmoveWherefromLeft struct {
 	cs []string
 }
 
-func (c blmoveWherefromLeft) Left() blmoveWheretoLeft {
-	return blmoveWheretoLeft{cs: append(c.cs, "LEFT")}
+func (c BlmoveWherefromLeft) Left() BlmoveWheretoLeft {
+	return BlmoveWheretoLeft{cs: append(c.cs, "LEFT")}
 }
 
-func (c blmoveWherefromLeft) Right() blmoveWheretoRight {
-	return blmoveWheretoRight{cs: append(c.cs, "RIGHT")}
+func (c BlmoveWherefromLeft) Right() BlmoveWheretoRight {
+	return BlmoveWheretoRight{cs: append(c.cs, "RIGHT")}
 }
 
-type blmoveWherefromRight struct {
+type BlmoveWherefromRight struct {
 	cs []string
 }
 
-func (c blmoveWherefromRight) Left() blmoveWheretoLeft {
-	return blmoveWheretoLeft{cs: append(c.cs, "LEFT")}
+func (c BlmoveWherefromRight) Left() BlmoveWheretoLeft {
+	return BlmoveWheretoLeft{cs: append(c.cs, "LEFT")}
 }
 
-func (c blmoveWherefromRight) Right() blmoveWheretoRight {
-	return blmoveWheretoRight{cs: append(c.cs, "RIGHT")}
+func (c BlmoveWherefromRight) Right() BlmoveWheretoRight {
+	return BlmoveWheretoRight{cs: append(c.cs, "RIGHT")}
 }
 
-type blmoveWheretoLeft struct {
+type BlmoveWheretoLeft struct {
 	cs []string
 }
 
-func (c blmoveWheretoLeft) Timeout(timeout float64) blmoveTimeout {
-	return blmoveTimeout{cs: append(c.cs, strconv.FormatFloat(timeout, 'f', -1, 64))}
+func (c BlmoveWheretoLeft) Timeout(Timeout float64) BlmoveTimeout {
+	return BlmoveTimeout{cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64))}
 }
 
-type blmoveWheretoRight struct {
+type BlmoveWheretoRight struct {
 	cs []string
 }
 
-func (c blmoveWheretoRight) Timeout(timeout float64) blmoveTimeout {
-	return blmoveTimeout{cs: append(c.cs, strconv.FormatFloat(timeout, 'f', -1, 64))}
+func (c BlmoveWheretoRight) Timeout(Timeout float64) BlmoveTimeout {
+	return BlmoveTimeout{cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64))}
 }
 
-type blmpop struct {
+type Blmpop struct {
 	cs []string
 }
 
-func (c blmpop) Timeout(timeout float64) blmpopTimeout {
-	return blmpopTimeout{cs: append(c.cs, strconv.FormatFloat(timeout, 'f', -1, 64))}
+func (c Blmpop) Timeout(Timeout float64) BlmpopTimeout {
+	return BlmpopTimeout{cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64))}
 }
 
-func (b *Builder) Blmpop() (c blmpop) {
+func (b *Builder) Blmpop() (c Blmpop) {
 	c.cs = append(b.get(), "BLMPOP")
 	return
 }
 
-type blmpopCount struct {
+type BlmpopCount struct {
 	cs []string
 }
 
-func (c blmpopCount) Build() []string {
+func (c BlmpopCount) Build() []string {
 	return c.cs
 }
 
-type blmpopKey struct {
+type BlmpopKey struct {
 	cs []string
 }
 
-func (c blmpopKey) Left() blmpopWhereLeft {
-	return blmpopWhereLeft{cs: append(c.cs, "LEFT")}
+func (c BlmpopKey) Left() BlmpopWhereLeft {
+	return BlmpopWhereLeft{cs: append(c.cs, "LEFT")}
 }
 
-func (c blmpopKey) Right() blmpopWhereRight {
-	return blmpopWhereRight{cs: append(c.cs, "RIGHT")}
+func (c BlmpopKey) Right() BlmpopWhereRight {
+	return BlmpopWhereRight{cs: append(c.cs, "RIGHT")}
 }
 
-func (c blmpopKey) Key(key ...string) blmpopKey {
-	return blmpopKey{cs: append(c.cs, key...)}
+func (c BlmpopKey) Key(Key ...string) BlmpopKey {
+	return BlmpopKey{cs: append(c.cs, Key...)}
 }
 
-type blmpopNumkeys struct {
+type BlmpopNumkeys struct {
 	cs []string
 }
 
-func (c blmpopNumkeys) Key(key ...string) blmpopKey {
-	return blmpopKey{cs: append(c.cs, key...)}
+func (c BlmpopNumkeys) Key(Key ...string) BlmpopKey {
+	return BlmpopKey{cs: append(c.cs, Key...)}
 }
 
-func (c blmpopNumkeys) Left() blmpopWhereLeft {
-	return blmpopWhereLeft{cs: append(c.cs, "LEFT")}
+func (c BlmpopNumkeys) Left() BlmpopWhereLeft {
+	return BlmpopWhereLeft{cs: append(c.cs, "LEFT")}
 }
 
-func (c blmpopNumkeys) Right() blmpopWhereRight {
-	return blmpopWhereRight{cs: append(c.cs, "RIGHT")}
+func (c BlmpopNumkeys) Right() BlmpopWhereRight {
+	return BlmpopWhereRight{cs: append(c.cs, "RIGHT")}
 }
 
-type blmpopTimeout struct {
+type BlmpopTimeout struct {
 	cs []string
 }
 
-func (c blmpopTimeout) Numkeys(numkeys int64) blmpopNumkeys {
-	return blmpopNumkeys{cs: append(c.cs, strconv.FormatInt(numkeys, 10))}
+func (c BlmpopTimeout) Numkeys(Numkeys int64) BlmpopNumkeys {
+	return BlmpopNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
 }
 
-type blmpopWhereLeft struct {
+type BlmpopWhereLeft struct {
 	cs []string
 }
 
-func (c blmpopWhereLeft) Count(count int64) blmpopCount {
-	return blmpopCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c BlmpopWhereLeft) Count(Count int64) BlmpopCount {
+	return BlmpopCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c blmpopWhereLeft) Build() []string {
+func (c BlmpopWhereLeft) Build() []string {
 	return c.cs
 }
 
-type blmpopWhereRight struct {
+type BlmpopWhereRight struct {
 	cs []string
 }
 
-func (c blmpopWhereRight) Count(count int64) blmpopCount {
-	return blmpopCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c BlmpopWhereRight) Count(Count int64) BlmpopCount {
+	return BlmpopCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c blmpopWhereRight) Build() []string {
+func (c BlmpopWhereRight) Build() []string {
 	return c.cs
 }
 
-type blpop struct {
+type Blpop struct {
 	cs []string
 }
 
-func (c blpop) Key(key ...string) blpopKey {
-	return blpopKey{cs: append(c.cs, key...)}
+func (c Blpop) Key(Key ...string) BlpopKey {
+	return BlpopKey{cs: append(c.cs, Key...)}
 }
 
-func (b *Builder) Blpop() (c blpop) {
+func (b *Builder) Blpop() (c Blpop) {
 	c.cs = append(b.get(), "BLPOP")
 	return
 }
 
-type blpopKey struct {
+type BlpopKey struct {
 	cs []string
 }
 
-func (c blpopKey) Timeout(timeout float64) blpopTimeout {
-	return blpopTimeout{cs: append(c.cs, strconv.FormatFloat(timeout, 'f', -1, 64))}
+func (c BlpopKey) Timeout(Timeout float64) BlpopTimeout {
+	return BlpopTimeout{cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64))}
 }
 
-func (c blpopKey) Key(key ...string) blpopKey {
-	return blpopKey{cs: append(c.cs, key...)}
+func (c BlpopKey) Key(Key ...string) BlpopKey {
+	return BlpopKey{cs: append(c.cs, Key...)}
 }
 
-type blpopTimeout struct {
+type BlpopTimeout struct {
 	cs []string
 }
 
-func (c blpopTimeout) Build() []string {
+func (c BlpopTimeout) Build() []string {
 	return c.cs
 }
 
-type brpop struct {
+type Brpop struct {
 	cs []string
 }
 
-func (c brpop) Key(key ...string) brpopKey {
-	return brpopKey{cs: append(c.cs, key...)}
+func (c Brpop) Key(Key ...string) BrpopKey {
+	return BrpopKey{cs: append(c.cs, Key...)}
 }
 
-func (b *Builder) Brpop() (c brpop) {
+func (b *Builder) Brpop() (c Brpop) {
 	c.cs = append(b.get(), "BRPOP")
 	return
 }
 
-type brpopKey struct {
+type BrpopKey struct {
 	cs []string
 }
 
-func (c brpopKey) Timeout(timeout float64) brpopTimeout {
-	return brpopTimeout{cs: append(c.cs, strconv.FormatFloat(timeout, 'f', -1, 64))}
+func (c BrpopKey) Timeout(Timeout float64) BrpopTimeout {
+	return BrpopTimeout{cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64))}
 }
 
-func (c brpopKey) Key(key ...string) brpopKey {
-	return brpopKey{cs: append(c.cs, key...)}
+func (c BrpopKey) Key(Key ...string) BrpopKey {
+	return BrpopKey{cs: append(c.cs, Key...)}
 }
 
-type brpopTimeout struct {
+type BrpopTimeout struct {
 	cs []string
 }
 
-func (c brpopTimeout) Build() []string {
+func (c BrpopTimeout) Build() []string {
 	return c.cs
 }
 
-type brpoplpush struct {
+type Brpoplpush struct {
 	cs []string
 }
 
-func (c brpoplpush) Source(source string) brpoplpushSource {
-	return brpoplpushSource{cs: append(c.cs, source)}
+func (c Brpoplpush) Source(Source string) BrpoplpushSource {
+	return BrpoplpushSource{cs: append(c.cs, Source)}
 }
 
-func (b *Builder) Brpoplpush() (c brpoplpush) {
+func (b *Builder) Brpoplpush() (c Brpoplpush) {
 	c.cs = append(b.get(), "BRPOPLPUSH")
 	return
 }
 
-type brpoplpushDestination struct {
+type BrpoplpushDestination struct {
 	cs []string
 }
 
-func (c brpoplpushDestination) Timeout(timeout float64) brpoplpushTimeout {
-	return brpoplpushTimeout{cs: append(c.cs, strconv.FormatFloat(timeout, 'f', -1, 64))}
+func (c BrpoplpushDestination) Timeout(Timeout float64) BrpoplpushTimeout {
+	return BrpoplpushTimeout{cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64))}
 }
 
-type brpoplpushSource struct {
+type BrpoplpushSource struct {
 	cs []string
 }
 
-func (c brpoplpushSource) Destination(destination string) brpoplpushDestination {
-	return brpoplpushDestination{cs: append(c.cs, destination)}
+func (c BrpoplpushSource) Destination(Destination string) BrpoplpushDestination {
+	return BrpoplpushDestination{cs: append(c.cs, Destination)}
 }
 
-type brpoplpushTimeout struct {
+type BrpoplpushTimeout struct {
 	cs []string
 }
 
-func (c brpoplpushTimeout) Build() []string {
+func (c BrpoplpushTimeout) Build() []string {
 	return c.cs
 }
 
-type bzpopmax struct {
+type Bzpopmax struct {
 	cs []string
 }
 
-func (c bzpopmax) Key(key ...string) bzpopmaxKey {
-	return bzpopmaxKey{cs: append(c.cs, key...)}
+func (c Bzpopmax) Key(Key ...string) BzpopmaxKey {
+	return BzpopmaxKey{cs: append(c.cs, Key...)}
 }
 
-func (b *Builder) Bzpopmax() (c bzpopmax) {
+func (b *Builder) Bzpopmax() (c Bzpopmax) {
 	c.cs = append(b.get(), "BZPOPMAX")
 	return
 }
 
-type bzpopmaxKey struct {
+type BzpopmaxKey struct {
 	cs []string
 }
 
-func (c bzpopmaxKey) Timeout(timeout float64) bzpopmaxTimeout {
-	return bzpopmaxTimeout{cs: append(c.cs, strconv.FormatFloat(timeout, 'f', -1, 64))}
+func (c BzpopmaxKey) Timeout(Timeout float64) BzpopmaxTimeout {
+	return BzpopmaxTimeout{cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64))}
 }
 
-func (c bzpopmaxKey) Key(key ...string) bzpopmaxKey {
-	return bzpopmaxKey{cs: append(c.cs, key...)}
+func (c BzpopmaxKey) Key(Key ...string) BzpopmaxKey {
+	return BzpopmaxKey{cs: append(c.cs, Key...)}
 }
 
-type bzpopmaxTimeout struct {
+type BzpopmaxTimeout struct {
 	cs []string
 }
 
-func (c bzpopmaxTimeout) Build() []string {
+func (c BzpopmaxTimeout) Build() []string {
 	return c.cs
 }
 
-type bzpopmin struct {
+type Bzpopmin struct {
 	cs []string
 }
 
-func (c bzpopmin) Key(key ...string) bzpopminKey {
-	return bzpopminKey{cs: append(c.cs, key...)}
+func (c Bzpopmin) Key(Key ...string) BzpopminKey {
+	return BzpopminKey{cs: append(c.cs, Key...)}
 }
 
-func (b *Builder) Bzpopmin() (c bzpopmin) {
+func (b *Builder) Bzpopmin() (c Bzpopmin) {
 	c.cs = append(b.get(), "BZPOPMIN")
 	return
 }
 
-type bzpopminKey struct {
+type BzpopminKey struct {
 	cs []string
 }
 
-func (c bzpopminKey) Timeout(timeout float64) bzpopminTimeout {
-	return bzpopminTimeout{cs: append(c.cs, strconv.FormatFloat(timeout, 'f', -1, 64))}
+func (c BzpopminKey) Timeout(Timeout float64) BzpopminTimeout {
+	return BzpopminTimeout{cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64))}
 }
 
-func (c bzpopminKey) Key(key ...string) bzpopminKey {
-	return bzpopminKey{cs: append(c.cs, key...)}
+func (c BzpopminKey) Key(Key ...string) BzpopminKey {
+	return BzpopminKey{cs: append(c.cs, Key...)}
 }
 
-type bzpopminTimeout struct {
+type BzpopminTimeout struct {
 	cs []string
 }
 
-func (c bzpopminTimeout) Build() []string {
+func (c BzpopminTimeout) Build() []string {
 	return c.cs
 }
 
-type clientCaching struct {
+type ClientCaching struct {
 	cs []string
 }
 
-func (c clientCaching) Yes() clientCachingModeYes {
-	return clientCachingModeYes{cs: append(c.cs, "YES")}
+func (c ClientCaching) Yes() ClientCachingModeYes {
+	return ClientCachingModeYes{cs: append(c.cs, "YES")}
 }
 
-func (c clientCaching) No() clientCachingModeNo {
-	return clientCachingModeNo{cs: append(c.cs, "NO")}
+func (c ClientCaching) No() ClientCachingModeNo {
+	return ClientCachingModeNo{cs: append(c.cs, "NO")}
 }
 
-func (b *Builder) ClientCaching() (c clientCaching) {
+func (b *Builder) ClientCaching() (c ClientCaching) {
 	c.cs = append(b.get(), "CLIENT", "CACHING")
 	return
 }
 
-type clientCachingModeNo struct {
+type ClientCachingModeNo struct {
 	cs []string
 }
 
-func (c clientCachingModeNo) Build() []string {
+func (c ClientCachingModeNo) Build() []string {
 	return c.cs
 }
 
-type clientCachingModeYes struct {
+type ClientCachingModeYes struct {
 	cs []string
 }
 
-func (c clientCachingModeYes) Build() []string {
+func (c ClientCachingModeYes) Build() []string {
 	return c.cs
 }
 
-type clientGetname struct {
+type ClientGetname struct {
 	cs []string
 }
 
-func (c clientGetname) Build() []string {
+func (c ClientGetname) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) ClientGetname() (c clientGetname) {
+func (b *Builder) ClientGetname() (c ClientGetname) {
 	c.cs = append(b.get(), "CLIENT", "GETNAME")
 	return
 }
 
-type clientGetredir struct {
+type ClientGetredir struct {
 	cs []string
 }
 
-func (c clientGetredir) Build() []string {
+func (c ClientGetredir) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) ClientGetredir() (c clientGetredir) {
+func (b *Builder) ClientGetredir() (c ClientGetredir) {
 	c.cs = append(b.get(), "CLIENT", "GETREDIR")
 	return
 }
 
-type clientId struct {
+type ClientId struct {
 	cs []string
 }
 
-func (c clientId) Build() []string {
+func (c ClientId) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) ClientId() (c clientId) {
+func (b *Builder) ClientId() (c ClientId) {
 	c.cs = append(b.get(), "CLIENT", "ID")
 	return
 }
 
-type clientInfo struct {
+type ClientInfo struct {
 	cs []string
 }
 
-func (c clientInfo) Build() []string {
+func (c ClientInfo) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) ClientInfo() (c clientInfo) {
+func (b *Builder) ClientInfo() (c ClientInfo) {
 	c.cs = append(b.get(), "CLIENT", "INFO")
 	return
 }
 
-type clientKill struct {
+type ClientKill struct {
 	cs []string
 }
 
-func (c clientKill) IpPort(ipPort string) clientKillIpPort {
-	return clientKillIpPort{cs: append(c.cs, ipPort)}
+func (c ClientKill) IpPort(IpPort string) ClientKillIpPort {
+	return ClientKillIpPort{cs: append(c.cs, IpPort)}
 }
 
-func (c clientKill) Id(clientId int64) clientKillId {
-	return clientKillId{cs: append(c.cs, "ID", strconv.FormatInt(clientId, 10))}
+func (c ClientKill) Id(ClientId int64) ClientKillId {
+	return ClientKillId{cs: append(c.cs, "ID", strconv.FormatInt(ClientId, 10))}
 }
 
-func (c clientKill) Normal() clientKillNormal {
-	return clientKillNormal{cs: append(c.cs, "normal")}
+func (c ClientKill) Normal() ClientKillNormal {
+	return ClientKillNormal{cs: append(c.cs, "normal")}
 }
 
-func (c clientKill) Master() clientKillMaster {
-	return clientKillMaster{cs: append(c.cs, "master")}
+func (c ClientKill) Master() ClientKillMaster {
+	return ClientKillMaster{cs: append(c.cs, "master")}
 }
 
-func (c clientKill) Slave() clientKillSlave {
-	return clientKillSlave{cs: append(c.cs, "slave")}
+func (c ClientKill) Slave() ClientKillSlave {
+	return ClientKillSlave{cs: append(c.cs, "slave")}
 }
 
-func (c clientKill) Pubsub() clientKillPubsub {
-	return clientKillPubsub{cs: append(c.cs, "pubsub")}
+func (c ClientKill) Pubsub() ClientKillPubsub {
+	return ClientKillPubsub{cs: append(c.cs, "pubsub")}
 }
 
-func (c clientKill) User(username string) clientKillUser {
-	return clientKillUser{cs: append(c.cs, "USER", username)}
+func (c ClientKill) User(Username string) ClientKillUser {
+	return ClientKillUser{cs: append(c.cs, "USER", Username)}
 }
 
-func (c clientKill) Addr(ipPort string) clientKillAddr {
-	return clientKillAddr{cs: append(c.cs, "ADDR", ipPort)}
+func (c ClientKill) Addr(IpPort string) ClientKillAddr {
+	return ClientKillAddr{cs: append(c.cs, "ADDR", IpPort)}
 }
 
-func (c clientKill) Laddr(ipPort string) clientKillLaddr {
-	return clientKillLaddr{cs: append(c.cs, "LADDR", ipPort)}
+func (c ClientKill) Laddr(IpPort string) ClientKillLaddr {
+	return ClientKillLaddr{cs: append(c.cs, "LADDR", IpPort)}
 }
 
-func (c clientKill) Skipme(yesNo string) clientKillSkipme {
-	return clientKillSkipme{cs: append(c.cs, "SKIPME", yesNo)}
+func (c ClientKill) Skipme(YesNo string) ClientKillSkipme {
+	return ClientKillSkipme{cs: append(c.cs, "SKIPME", YesNo)}
 }
 
-func (c clientKill) Build() []string {
+func (c ClientKill) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) ClientKill() (c clientKill) {
+func (b *Builder) ClientKill() (c ClientKill) {
 	c.cs = append(b.get(), "CLIENT", "KILL")
 	return
 }
 
-type clientKillAddr struct {
+type ClientKillAddr struct {
 	cs []string
 }
 
-func (c clientKillAddr) Laddr(ipPort string) clientKillLaddr {
-	return clientKillLaddr{cs: append(c.cs, "LADDR", ipPort)}
+func (c ClientKillAddr) Laddr(IpPort string) ClientKillLaddr {
+	return ClientKillLaddr{cs: append(c.cs, "LADDR", IpPort)}
 }
 
-func (c clientKillAddr) Skipme(yesNo string) clientKillSkipme {
-	return clientKillSkipme{cs: append(c.cs, "SKIPME", yesNo)}
+func (c ClientKillAddr) Skipme(YesNo string) ClientKillSkipme {
+	return ClientKillSkipme{cs: append(c.cs, "SKIPME", YesNo)}
 }
 
-func (c clientKillAddr) Build() []string {
+func (c ClientKillAddr) Build() []string {
 	return c.cs
 }
 
-type clientKillId struct {
+type ClientKillId struct {
 	cs []string
 }
 
-func (c clientKillId) Normal() clientKillNormal {
-	return clientKillNormal{cs: append(c.cs, "normal")}
+func (c ClientKillId) Normal() ClientKillNormal {
+	return ClientKillNormal{cs: append(c.cs, "normal")}
 }
 
-func (c clientKillId) Master() clientKillMaster {
-	return clientKillMaster{cs: append(c.cs, "master")}
+func (c ClientKillId) Master() ClientKillMaster {
+	return ClientKillMaster{cs: append(c.cs, "master")}
 }
 
-func (c clientKillId) Slave() clientKillSlave {
-	return clientKillSlave{cs: append(c.cs, "slave")}
+func (c ClientKillId) Slave() ClientKillSlave {
+	return ClientKillSlave{cs: append(c.cs, "slave")}
 }
 
-func (c clientKillId) Pubsub() clientKillPubsub {
-	return clientKillPubsub{cs: append(c.cs, "pubsub")}
+func (c ClientKillId) Pubsub() ClientKillPubsub {
+	return ClientKillPubsub{cs: append(c.cs, "pubsub")}
 }
 
-func (c clientKillId) User(username string) clientKillUser {
-	return clientKillUser{cs: append(c.cs, "USER", username)}
+func (c ClientKillId) User(Username string) ClientKillUser {
+	return ClientKillUser{cs: append(c.cs, "USER", Username)}
 }
 
-func (c clientKillId) Addr(ipPort string) clientKillAddr {
-	return clientKillAddr{cs: append(c.cs, "ADDR", ipPort)}
+func (c ClientKillId) Addr(IpPort string) ClientKillAddr {
+	return ClientKillAddr{cs: append(c.cs, "ADDR", IpPort)}
 }
 
-func (c clientKillId) Laddr(ipPort string) clientKillLaddr {
-	return clientKillLaddr{cs: append(c.cs, "LADDR", ipPort)}
+func (c ClientKillId) Laddr(IpPort string) ClientKillLaddr {
+	return ClientKillLaddr{cs: append(c.cs, "LADDR", IpPort)}
 }
 
-func (c clientKillId) Skipme(yesNo string) clientKillSkipme {
-	return clientKillSkipme{cs: append(c.cs, "SKIPME", yesNo)}
+func (c ClientKillId) Skipme(YesNo string) ClientKillSkipme {
+	return ClientKillSkipme{cs: append(c.cs, "SKIPME", YesNo)}
 }
 
-func (c clientKillId) Build() []string {
+func (c ClientKillId) Build() []string {
 	return c.cs
 }
 
-type clientKillIpPort struct {
+type ClientKillIpPort struct {
 	cs []string
 }
 
-func (c clientKillIpPort) Id(clientId int64) clientKillId {
-	return clientKillId{cs: append(c.cs, "ID", strconv.FormatInt(clientId, 10))}
+func (c ClientKillIpPort) Id(ClientId int64) ClientKillId {
+	return ClientKillId{cs: append(c.cs, "ID", strconv.FormatInt(ClientId, 10))}
 }
 
-func (c clientKillIpPort) Normal() clientKillNormal {
-	return clientKillNormal{cs: append(c.cs, "normal")}
+func (c ClientKillIpPort) Normal() ClientKillNormal {
+	return ClientKillNormal{cs: append(c.cs, "normal")}
 }
 
-func (c clientKillIpPort) Master() clientKillMaster {
-	return clientKillMaster{cs: append(c.cs, "master")}
+func (c ClientKillIpPort) Master() ClientKillMaster {
+	return ClientKillMaster{cs: append(c.cs, "master")}
 }
 
-func (c clientKillIpPort) Slave() clientKillSlave {
-	return clientKillSlave{cs: append(c.cs, "slave")}
+func (c ClientKillIpPort) Slave() ClientKillSlave {
+	return ClientKillSlave{cs: append(c.cs, "slave")}
 }
 
-func (c clientKillIpPort) Pubsub() clientKillPubsub {
-	return clientKillPubsub{cs: append(c.cs, "pubsub")}
+func (c ClientKillIpPort) Pubsub() ClientKillPubsub {
+	return ClientKillPubsub{cs: append(c.cs, "pubsub")}
 }
 
-func (c clientKillIpPort) User(username string) clientKillUser {
-	return clientKillUser{cs: append(c.cs, "USER", username)}
+func (c ClientKillIpPort) User(Username string) ClientKillUser {
+	return ClientKillUser{cs: append(c.cs, "USER", Username)}
 }
 
-func (c clientKillIpPort) Addr(ipPort string) clientKillAddr {
-	return clientKillAddr{cs: append(c.cs, "ADDR", ipPort)}
+func (c ClientKillIpPort) Addr(IpPort string) ClientKillAddr {
+	return ClientKillAddr{cs: append(c.cs, "ADDR", IpPort)}
 }
 
-func (c clientKillIpPort) Laddr(ipPort string) clientKillLaddr {
-	return clientKillLaddr{cs: append(c.cs, "LADDR", ipPort)}
+func (c ClientKillIpPort) Laddr(IpPort string) ClientKillLaddr {
+	return ClientKillLaddr{cs: append(c.cs, "LADDR", IpPort)}
 }
 
-func (c clientKillIpPort) Skipme(yesNo string) clientKillSkipme {
-	return clientKillSkipme{cs: append(c.cs, "SKIPME", yesNo)}
+func (c ClientKillIpPort) Skipme(YesNo string) ClientKillSkipme {
+	return ClientKillSkipme{cs: append(c.cs, "SKIPME", YesNo)}
 }
 
-func (c clientKillIpPort) Build() []string {
+func (c ClientKillIpPort) Build() []string {
 	return c.cs
 }
 
-type clientKillLaddr struct {
+type ClientKillLaddr struct {
 	cs []string
 }
 
-func (c clientKillLaddr) Skipme(yesNo string) clientKillSkipme {
-	return clientKillSkipme{cs: append(c.cs, "SKIPME", yesNo)}
+func (c ClientKillLaddr) Skipme(YesNo string) ClientKillSkipme {
+	return ClientKillSkipme{cs: append(c.cs, "SKIPME", YesNo)}
 }
 
-func (c clientKillLaddr) Build() []string {
+func (c ClientKillLaddr) Build() []string {
 	return c.cs
 }
 
-type clientKillMaster struct {
+type ClientKillMaster struct {
 	cs []string
 }
 
-func (c clientKillMaster) User(username string) clientKillUser {
-	return clientKillUser{cs: append(c.cs, "USER", username)}
+func (c ClientKillMaster) User(Username string) ClientKillUser {
+	return ClientKillUser{cs: append(c.cs, "USER", Username)}
 }
 
-func (c clientKillMaster) Addr(ipPort string) clientKillAddr {
-	return clientKillAddr{cs: append(c.cs, "ADDR", ipPort)}
+func (c ClientKillMaster) Addr(IpPort string) ClientKillAddr {
+	return ClientKillAddr{cs: append(c.cs, "ADDR", IpPort)}
 }
 
-func (c clientKillMaster) Laddr(ipPort string) clientKillLaddr {
-	return clientKillLaddr{cs: append(c.cs, "LADDR", ipPort)}
+func (c ClientKillMaster) Laddr(IpPort string) ClientKillLaddr {
+	return ClientKillLaddr{cs: append(c.cs, "LADDR", IpPort)}
 }
 
-func (c clientKillMaster) Skipme(yesNo string) clientKillSkipme {
-	return clientKillSkipme{cs: append(c.cs, "SKIPME", yesNo)}
+func (c ClientKillMaster) Skipme(YesNo string) ClientKillSkipme {
+	return ClientKillSkipme{cs: append(c.cs, "SKIPME", YesNo)}
 }
 
-func (c clientKillMaster) Build() []string {
+func (c ClientKillMaster) Build() []string {
 	return c.cs
 }
 
-type clientKillNormal struct {
+type ClientKillNormal struct {
 	cs []string
 }
 
-func (c clientKillNormal) User(username string) clientKillUser {
-	return clientKillUser{cs: append(c.cs, "USER", username)}
+func (c ClientKillNormal) User(Username string) ClientKillUser {
+	return ClientKillUser{cs: append(c.cs, "USER", Username)}
 }
 
-func (c clientKillNormal) Addr(ipPort string) clientKillAddr {
-	return clientKillAddr{cs: append(c.cs, "ADDR", ipPort)}
+func (c ClientKillNormal) Addr(IpPort string) ClientKillAddr {
+	return ClientKillAddr{cs: append(c.cs, "ADDR", IpPort)}
 }
 
-func (c clientKillNormal) Laddr(ipPort string) clientKillLaddr {
-	return clientKillLaddr{cs: append(c.cs, "LADDR", ipPort)}
+func (c ClientKillNormal) Laddr(IpPort string) ClientKillLaddr {
+	return ClientKillLaddr{cs: append(c.cs, "LADDR", IpPort)}
 }
 
-func (c clientKillNormal) Skipme(yesNo string) clientKillSkipme {
-	return clientKillSkipme{cs: append(c.cs, "SKIPME", yesNo)}
+func (c ClientKillNormal) Skipme(YesNo string) ClientKillSkipme {
+	return ClientKillSkipme{cs: append(c.cs, "SKIPME", YesNo)}
 }
 
-func (c clientKillNormal) Build() []string {
+func (c ClientKillNormal) Build() []string {
 	return c.cs
 }
 
-type clientKillPubsub struct {
+type ClientKillPubsub struct {
 	cs []string
 }
 
-func (c clientKillPubsub) User(username string) clientKillUser {
-	return clientKillUser{cs: append(c.cs, "USER", username)}
+func (c ClientKillPubsub) User(Username string) ClientKillUser {
+	return ClientKillUser{cs: append(c.cs, "USER", Username)}
 }
 
-func (c clientKillPubsub) Addr(ipPort string) clientKillAddr {
-	return clientKillAddr{cs: append(c.cs, "ADDR", ipPort)}
+func (c ClientKillPubsub) Addr(IpPort string) ClientKillAddr {
+	return ClientKillAddr{cs: append(c.cs, "ADDR", IpPort)}
 }
 
-func (c clientKillPubsub) Laddr(ipPort string) clientKillLaddr {
-	return clientKillLaddr{cs: append(c.cs, "LADDR", ipPort)}
+func (c ClientKillPubsub) Laddr(IpPort string) ClientKillLaddr {
+	return ClientKillLaddr{cs: append(c.cs, "LADDR", IpPort)}
 }
 
-func (c clientKillPubsub) Skipme(yesNo string) clientKillSkipme {
-	return clientKillSkipme{cs: append(c.cs, "SKIPME", yesNo)}
+func (c ClientKillPubsub) Skipme(YesNo string) ClientKillSkipme {
+	return ClientKillSkipme{cs: append(c.cs, "SKIPME", YesNo)}
 }
 
-func (c clientKillPubsub) Build() []string {
+func (c ClientKillPubsub) Build() []string {
 	return c.cs
 }
 
-type clientKillSkipme struct {
+type ClientKillSkipme struct {
 	cs []string
 }
 
-func (c clientKillSkipme) Build() []string {
+func (c ClientKillSkipme) Build() []string {
 	return c.cs
 }
 
-type clientKillSlave struct {
+type ClientKillSlave struct {
 	cs []string
 }
 
-func (c clientKillSlave) User(username string) clientKillUser {
-	return clientKillUser{cs: append(c.cs, "USER", username)}
+func (c ClientKillSlave) User(Username string) ClientKillUser {
+	return ClientKillUser{cs: append(c.cs, "USER", Username)}
 }
 
-func (c clientKillSlave) Addr(ipPort string) clientKillAddr {
-	return clientKillAddr{cs: append(c.cs, "ADDR", ipPort)}
+func (c ClientKillSlave) Addr(IpPort string) ClientKillAddr {
+	return ClientKillAddr{cs: append(c.cs, "ADDR", IpPort)}
 }
 
-func (c clientKillSlave) Laddr(ipPort string) clientKillLaddr {
-	return clientKillLaddr{cs: append(c.cs, "LADDR", ipPort)}
+func (c ClientKillSlave) Laddr(IpPort string) ClientKillLaddr {
+	return ClientKillLaddr{cs: append(c.cs, "LADDR", IpPort)}
 }
 
-func (c clientKillSlave) Skipme(yesNo string) clientKillSkipme {
-	return clientKillSkipme{cs: append(c.cs, "SKIPME", yesNo)}
+func (c ClientKillSlave) Skipme(YesNo string) ClientKillSkipme {
+	return ClientKillSkipme{cs: append(c.cs, "SKIPME", YesNo)}
 }
 
-func (c clientKillSlave) Build() []string {
+func (c ClientKillSlave) Build() []string {
 	return c.cs
 }
 
-type clientKillUser struct {
+type ClientKillUser struct {
 	cs []string
 }
 
-func (c clientKillUser) Addr(ipPort string) clientKillAddr {
-	return clientKillAddr{cs: append(c.cs, "ADDR", ipPort)}
+func (c ClientKillUser) Addr(IpPort string) ClientKillAddr {
+	return ClientKillAddr{cs: append(c.cs, "ADDR", IpPort)}
 }
 
-func (c clientKillUser) Laddr(ipPort string) clientKillLaddr {
-	return clientKillLaddr{cs: append(c.cs, "LADDR", ipPort)}
+func (c ClientKillUser) Laddr(IpPort string) ClientKillLaddr {
+	return ClientKillLaddr{cs: append(c.cs, "LADDR", IpPort)}
 }
 
-func (c clientKillUser) Skipme(yesNo string) clientKillSkipme {
-	return clientKillSkipme{cs: append(c.cs, "SKIPME", yesNo)}
+func (c ClientKillUser) Skipme(YesNo string) ClientKillSkipme {
+	return ClientKillSkipme{cs: append(c.cs, "SKIPME", YesNo)}
 }
 
-func (c clientKillUser) Build() []string {
+func (c ClientKillUser) Build() []string {
 	return c.cs
 }
 
-type clientList struct {
+type ClientList struct {
 	cs []string
 }
 
-func (c clientList) Normal() clientListNormal {
-	return clientListNormal{cs: append(c.cs, "normal")}
+func (c ClientList) Normal() ClientListNormal {
+	return ClientListNormal{cs: append(c.cs, "normal")}
 }
 
-func (c clientList) Master() clientListMaster {
-	return clientListMaster{cs: append(c.cs, "master")}
+func (c ClientList) Master() ClientListMaster {
+	return ClientListMaster{cs: append(c.cs, "master")}
 }
 
-func (c clientList) Replica() clientListReplica {
-	return clientListReplica{cs: append(c.cs, "replica")}
+func (c ClientList) Replica() ClientListReplica {
+	return ClientListReplica{cs: append(c.cs, "replica")}
 }
 
-func (c clientList) Pubsub() clientListPubsub {
-	return clientListPubsub{cs: append(c.cs, "pubsub")}
+func (c ClientList) Pubsub() ClientListPubsub {
+	return ClientListPubsub{cs: append(c.cs, "pubsub")}
 }
 
-func (c clientList) Id() clientListIdId {
-	return clientListIdId{cs: append(c.cs, "ID")}
+func (c ClientList) Id() ClientListIdId {
+	return ClientListIdId{cs: append(c.cs, "ID")}
 }
 
-func (b *Builder) ClientList() (c clientList) {
+func (b *Builder) ClientList() (c ClientList) {
 	c.cs = append(b.get(), "CLIENT", "LIST")
 	return
 }
 
-type clientListIdClientId struct {
+type ClientListIdClientId struct {
 	cs []string
 }
 
-func (c clientListIdClientId) ClientId(clientId ...int64) clientListIdClientId {
-	for _, n := range clientId {
+func (c ClientListIdClientId) ClientId(ClientId ...int64) ClientListIdClientId {
+	for _, n := range ClientId {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return clientListIdClientId{cs: c.cs}
+	return ClientListIdClientId{cs: c.cs}
 }
 
-func (c clientListIdClientId) Build() []string {
+func (c ClientListIdClientId) Build() []string {
 	return c.cs
 }
 
-type clientListIdId struct {
+type ClientListIdId struct {
 	cs []string
 }
 
-func (c clientListIdId) ClientId(clientId ...int64) clientListIdClientId {
-	for _, n := range clientId {
+func (c ClientListIdId) ClientId(ClientId ...int64) ClientListIdClientId {
+	for _, n := range ClientId {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return clientListIdClientId{cs: c.cs}
+	return ClientListIdClientId{cs: c.cs}
 }
 
-type clientListMaster struct {
+type ClientListMaster struct {
 	cs []string
 }
 
-func (c clientListMaster) Id() clientListIdId {
-	return clientListIdId{cs: append(c.cs, "ID")}
+func (c ClientListMaster) Id() ClientListIdId {
+	return ClientListIdId{cs: append(c.cs, "ID")}
 }
 
-type clientListNormal struct {
+type ClientListNormal struct {
 	cs []string
 }
 
-func (c clientListNormal) Id() clientListIdId {
-	return clientListIdId{cs: append(c.cs, "ID")}
+func (c ClientListNormal) Id() ClientListIdId {
+	return ClientListIdId{cs: append(c.cs, "ID")}
 }
 
-type clientListPubsub struct {
+type ClientListPubsub struct {
 	cs []string
 }
 
-func (c clientListPubsub) Id() clientListIdId {
-	return clientListIdId{cs: append(c.cs, "ID")}
+func (c ClientListPubsub) Id() ClientListIdId {
+	return ClientListIdId{cs: append(c.cs, "ID")}
 }
 
-type clientListReplica struct {
+type ClientListReplica struct {
 	cs []string
 }
 
-func (c clientListReplica) Id() clientListIdId {
-	return clientListIdId{cs: append(c.cs, "ID")}
+func (c ClientListReplica) Id() ClientListIdId {
+	return ClientListIdId{cs: append(c.cs, "ID")}
 }
 
-type clientNoEvict struct {
+type ClientNoEvict struct {
 	cs []string
 }
 
-func (c clientNoEvict) On() clientNoEvictEnabledOn {
-	return clientNoEvictEnabledOn{cs: append(c.cs, "ON")}
+func (c ClientNoEvict) On() ClientNoEvictEnabledOn {
+	return ClientNoEvictEnabledOn{cs: append(c.cs, "ON")}
 }
 
-func (c clientNoEvict) Off() clientNoEvictEnabledOff {
-	return clientNoEvictEnabledOff{cs: append(c.cs, "OFF")}
+func (c ClientNoEvict) Off() ClientNoEvictEnabledOff {
+	return ClientNoEvictEnabledOff{cs: append(c.cs, "OFF")}
 }
 
-func (b *Builder) ClientNoEvict() (c clientNoEvict) {
+func (b *Builder) ClientNoEvict() (c ClientNoEvict) {
 	c.cs = append(b.get(), "CLIENT", "NO-EVICT")
 	return
 }
 
-type clientNoEvictEnabledOff struct {
+type ClientNoEvictEnabledOff struct {
 	cs []string
 }
 
-func (c clientNoEvictEnabledOff) Build() []string {
+func (c ClientNoEvictEnabledOff) Build() []string {
 	return c.cs
 }
 
-type clientNoEvictEnabledOn struct {
+type ClientNoEvictEnabledOn struct {
 	cs []string
 }
 
-func (c clientNoEvictEnabledOn) Build() []string {
+func (c ClientNoEvictEnabledOn) Build() []string {
 	return c.cs
 }
 
-type clientPause struct {
+type ClientPause struct {
 	cs []string
 }
 
-func (c clientPause) Timeout(timeout int64) clientPauseTimeout {
-	return clientPauseTimeout{cs: append(c.cs, strconv.FormatInt(timeout, 10))}
+func (c ClientPause) Timeout(Timeout int64) ClientPauseTimeout {
+	return ClientPauseTimeout{cs: append(c.cs, strconv.FormatInt(Timeout, 10))}
 }
 
-func (b *Builder) ClientPause() (c clientPause) {
+func (b *Builder) ClientPause() (c ClientPause) {
 	c.cs = append(b.get(), "CLIENT", "PAUSE")
 	return
 }
 
-type clientPauseModeAll struct {
+type ClientPauseModeAll struct {
 	cs []string
 }
 
-func (c clientPauseModeAll) Build() []string {
+func (c ClientPauseModeAll) Build() []string {
 	return c.cs
 }
 
-type clientPauseModeWrite struct {
+type ClientPauseModeWrite struct {
 	cs []string
 }
 
-func (c clientPauseModeWrite) Build() []string {
+func (c ClientPauseModeWrite) Build() []string {
 	return c.cs
 }
 
-type clientPauseTimeout struct {
+type ClientPauseTimeout struct {
 	cs []string
 }
 
-func (c clientPauseTimeout) Write() clientPauseModeWrite {
-	return clientPauseModeWrite{cs: append(c.cs, "WRITE")}
+func (c ClientPauseTimeout) Write() ClientPauseModeWrite {
+	return ClientPauseModeWrite{cs: append(c.cs, "WRITE")}
 }
 
-func (c clientPauseTimeout) All() clientPauseModeAll {
-	return clientPauseModeAll{cs: append(c.cs, "ALL")}
+func (c ClientPauseTimeout) All() ClientPauseModeAll {
+	return ClientPauseModeAll{cs: append(c.cs, "ALL")}
 }
 
-func (c clientPauseTimeout) Build() []string {
+func (c ClientPauseTimeout) Build() []string {
 	return c.cs
 }
 
-type clientReply struct {
+type ClientReply struct {
 	cs []string
 }
 
-func (c clientReply) On() clientReplyReplyModeOn {
-	return clientReplyReplyModeOn{cs: append(c.cs, "ON")}
+func (c ClientReply) On() ClientReplyReplyModeOn {
+	return ClientReplyReplyModeOn{cs: append(c.cs, "ON")}
 }
 
-func (c clientReply) Off() clientReplyReplyModeOff {
-	return clientReplyReplyModeOff{cs: append(c.cs, "OFF")}
+func (c ClientReply) Off() ClientReplyReplyModeOff {
+	return ClientReplyReplyModeOff{cs: append(c.cs, "OFF")}
 }
 
-func (c clientReply) Skip() clientReplyReplyModeSkip {
-	return clientReplyReplyModeSkip{cs: append(c.cs, "SKIP")}
+func (c ClientReply) Skip() ClientReplyReplyModeSkip {
+	return ClientReplyReplyModeSkip{cs: append(c.cs, "SKIP")}
 }
 
-func (b *Builder) ClientReply() (c clientReply) {
+func (b *Builder) ClientReply() (c ClientReply) {
 	c.cs = append(b.get(), "CLIENT", "REPLY")
 	return
 }
 
-type clientReplyReplyModeOff struct {
+type ClientReplyReplyModeOff struct {
 	cs []string
 }
 
-func (c clientReplyReplyModeOff) Build() []string {
+func (c ClientReplyReplyModeOff) Build() []string {
 	return c.cs
 }
 
-type clientReplyReplyModeOn struct {
+type ClientReplyReplyModeOn struct {
 	cs []string
 }
 
-func (c clientReplyReplyModeOn) Build() []string {
+func (c ClientReplyReplyModeOn) Build() []string {
 	return c.cs
 }
 
-type clientReplyReplyModeSkip struct {
+type ClientReplyReplyModeSkip struct {
 	cs []string
 }
 
-func (c clientReplyReplyModeSkip) Build() []string {
+func (c ClientReplyReplyModeSkip) Build() []string {
 	return c.cs
 }
 
-type clientSetname struct {
+type ClientSetname struct {
 	cs []string
 }
 
-func (c clientSetname) ConnectionName(connectionName string) clientSetnameConnectionName {
-	return clientSetnameConnectionName{cs: append(c.cs, connectionName)}
+func (c ClientSetname) ConnectionName(ConnectionName string) ClientSetnameConnectionName {
+	return ClientSetnameConnectionName{cs: append(c.cs, ConnectionName)}
 }
 
-func (b *Builder) ClientSetname() (c clientSetname) {
+func (b *Builder) ClientSetname() (c ClientSetname) {
 	c.cs = append(b.get(), "CLIENT", "SETNAME")
 	return
 }
 
-type clientSetnameConnectionName struct {
+type ClientSetnameConnectionName struct {
 	cs []string
 }
 
-func (c clientSetnameConnectionName) Build() []string {
+func (c ClientSetnameConnectionName) Build() []string {
 	return c.cs
 }
 
-type clientTracking struct {
+type ClientTracking struct {
 	cs []string
 }
 
-func (c clientTracking) On() clientTrackingStatusOn {
-	return clientTrackingStatusOn{cs: append(c.cs, "ON")}
+func (c ClientTracking) On() ClientTrackingStatusOn {
+	return ClientTrackingStatusOn{cs: append(c.cs, "ON")}
 }
 
-func (c clientTracking) Off() clientTrackingStatusOff {
-	return clientTrackingStatusOff{cs: append(c.cs, "OFF")}
+func (c ClientTracking) Off() ClientTrackingStatusOff {
+	return ClientTrackingStatusOff{cs: append(c.cs, "OFF")}
 }
 
-func (b *Builder) ClientTracking() (c clientTracking) {
+func (b *Builder) ClientTracking() (c ClientTracking) {
 	c.cs = append(b.get(), "CLIENT", "TRACKING")
 	return
 }
 
-type clientTrackingBcastBcast struct {
+type ClientTrackingBcastBcast struct {
 	cs []string
 }
 
-func (c clientTrackingBcastBcast) Optin() clientTrackingOptinOptin {
-	return clientTrackingOptinOptin{cs: append(c.cs, "OPTIN")}
+func (c ClientTrackingBcastBcast) Optin() ClientTrackingOptinOptin {
+	return ClientTrackingOptinOptin{cs: append(c.cs, "OPTIN")}
 }
 
-func (c clientTrackingBcastBcast) Optout() clientTrackingOptoutOptout {
-	return clientTrackingOptoutOptout{cs: append(c.cs, "OPTOUT")}
+func (c ClientTrackingBcastBcast) Optout() ClientTrackingOptoutOptout {
+	return ClientTrackingOptoutOptout{cs: append(c.cs, "OPTOUT")}
 }
 
-func (c clientTrackingBcastBcast) Noloop() clientTrackingNoloopNoloop {
-	return clientTrackingNoloopNoloop{cs: append(c.cs, "NOLOOP")}
+func (c ClientTrackingBcastBcast) Noloop() ClientTrackingNoloopNoloop {
+	return ClientTrackingNoloopNoloop{cs: append(c.cs, "NOLOOP")}
 }
 
-func (c clientTrackingBcastBcast) Build() []string {
+func (c ClientTrackingBcastBcast) Build() []string {
 	return c.cs
 }
 
-type clientTrackingNoloopNoloop struct {
+type ClientTrackingNoloopNoloop struct {
 	cs []string
 }
 
-func (c clientTrackingNoloopNoloop) Build() []string {
+func (c ClientTrackingNoloopNoloop) Build() []string {
 	return c.cs
 }
 
-type clientTrackingOptinOptin struct {
+type ClientTrackingOptinOptin struct {
 	cs []string
 }
 
-func (c clientTrackingOptinOptin) Optout() clientTrackingOptoutOptout {
-	return clientTrackingOptoutOptout{cs: append(c.cs, "OPTOUT")}
+func (c ClientTrackingOptinOptin) Optout() ClientTrackingOptoutOptout {
+	return ClientTrackingOptoutOptout{cs: append(c.cs, "OPTOUT")}
 }
 
-func (c clientTrackingOptinOptin) Noloop() clientTrackingNoloopNoloop {
-	return clientTrackingNoloopNoloop{cs: append(c.cs, "NOLOOP")}
+func (c ClientTrackingOptinOptin) Noloop() ClientTrackingNoloopNoloop {
+	return ClientTrackingNoloopNoloop{cs: append(c.cs, "NOLOOP")}
 }
 
-func (c clientTrackingOptinOptin) Build() []string {
+func (c ClientTrackingOptinOptin) Build() []string {
 	return c.cs
 }
 
-type clientTrackingOptoutOptout struct {
+type ClientTrackingOptoutOptout struct {
 	cs []string
 }
 
-func (c clientTrackingOptoutOptout) Noloop() clientTrackingNoloopNoloop {
-	return clientTrackingNoloopNoloop{cs: append(c.cs, "NOLOOP")}
+func (c ClientTrackingOptoutOptout) Noloop() ClientTrackingNoloopNoloop {
+	return ClientTrackingNoloopNoloop{cs: append(c.cs, "NOLOOP")}
 }
 
-func (c clientTrackingOptoutOptout) Build() []string {
+func (c ClientTrackingOptoutOptout) Build() []string {
 	return c.cs
 }
 
-type clientTrackingPrefix struct {
+type ClientTrackingPrefix struct {
 	cs []string
 }
 
-func (c clientTrackingPrefix) Bcast() clientTrackingBcastBcast {
-	return clientTrackingBcastBcast{cs: append(c.cs, "BCAST")}
+func (c ClientTrackingPrefix) Bcast() ClientTrackingBcastBcast {
+	return ClientTrackingBcastBcast{cs: append(c.cs, "BCAST")}
 }
 
-func (c clientTrackingPrefix) Optin() clientTrackingOptinOptin {
-	return clientTrackingOptinOptin{cs: append(c.cs, "OPTIN")}
+func (c ClientTrackingPrefix) Optin() ClientTrackingOptinOptin {
+	return ClientTrackingOptinOptin{cs: append(c.cs, "OPTIN")}
 }
 
-func (c clientTrackingPrefix) Optout() clientTrackingOptoutOptout {
-	return clientTrackingOptoutOptout{cs: append(c.cs, "OPTOUT")}
+func (c ClientTrackingPrefix) Optout() ClientTrackingOptoutOptout {
+	return ClientTrackingOptoutOptout{cs: append(c.cs, "OPTOUT")}
 }
 
-func (c clientTrackingPrefix) Noloop() clientTrackingNoloopNoloop {
-	return clientTrackingNoloopNoloop{cs: append(c.cs, "NOLOOP")}
+func (c ClientTrackingPrefix) Noloop() ClientTrackingNoloopNoloop {
+	return ClientTrackingNoloopNoloop{cs: append(c.cs, "NOLOOP")}
 }
 
-func (c clientTrackingPrefix) Prefix(prefix ...string) clientTrackingPrefix {
-	return clientTrackingPrefix{cs: append(c.cs, prefix...)}
+func (c ClientTrackingPrefix) Prefix(Prefix ...string) ClientTrackingPrefix {
+	return ClientTrackingPrefix{cs: append(c.cs, Prefix...)}
 }
 
-func (c clientTrackingPrefix) Build() []string {
+func (c ClientTrackingPrefix) Build() []string {
 	return c.cs
 }
 
-type clientTrackingRedirect struct {
+type ClientTrackingRedirect struct {
 	cs []string
 }
 
-func (c clientTrackingRedirect) Prefix(prefix ...string) clientTrackingPrefix {
+func (c ClientTrackingRedirect) Prefix(Prefix ...string) ClientTrackingPrefix {
 	c.cs = append(c.cs, "PREFIX")
-	return clientTrackingPrefix{cs: append(c.cs, prefix...)}
+	return ClientTrackingPrefix{cs: append(c.cs, Prefix...)}
 }
 
-func (c clientTrackingRedirect) Bcast() clientTrackingBcastBcast {
-	return clientTrackingBcastBcast{cs: append(c.cs, "BCAST")}
+func (c ClientTrackingRedirect) Bcast() ClientTrackingBcastBcast {
+	return ClientTrackingBcastBcast{cs: append(c.cs, "BCAST")}
 }
 
-func (c clientTrackingRedirect) Optin() clientTrackingOptinOptin {
-	return clientTrackingOptinOptin{cs: append(c.cs, "OPTIN")}
+func (c ClientTrackingRedirect) Optin() ClientTrackingOptinOptin {
+	return ClientTrackingOptinOptin{cs: append(c.cs, "OPTIN")}
 }
 
-func (c clientTrackingRedirect) Optout() clientTrackingOptoutOptout {
-	return clientTrackingOptoutOptout{cs: append(c.cs, "OPTOUT")}
+func (c ClientTrackingRedirect) Optout() ClientTrackingOptoutOptout {
+	return ClientTrackingOptoutOptout{cs: append(c.cs, "OPTOUT")}
 }
 
-func (c clientTrackingRedirect) Noloop() clientTrackingNoloopNoloop {
-	return clientTrackingNoloopNoloop{cs: append(c.cs, "NOLOOP")}
+func (c ClientTrackingRedirect) Noloop() ClientTrackingNoloopNoloop {
+	return ClientTrackingNoloopNoloop{cs: append(c.cs, "NOLOOP")}
 }
 
-func (c clientTrackingRedirect) Build() []string {
+func (c ClientTrackingRedirect) Build() []string {
 	return c.cs
 }
 
-type clientTrackingStatusOff struct {
+type ClientTrackingStatusOff struct {
 	cs []string
 }
 
-func (c clientTrackingStatusOff) Redirect(clientId int64) clientTrackingRedirect {
-	return clientTrackingRedirect{cs: append(c.cs, "REDIRECT", strconv.FormatInt(clientId, 10))}
+func (c ClientTrackingStatusOff) Redirect(ClientId int64) ClientTrackingRedirect {
+	return ClientTrackingRedirect{cs: append(c.cs, "REDIRECT", strconv.FormatInt(ClientId, 10))}
 }
 
-func (c clientTrackingStatusOff) Prefix(prefix ...string) clientTrackingPrefix {
+func (c ClientTrackingStatusOff) Prefix(Prefix ...string) ClientTrackingPrefix {
 	c.cs = append(c.cs, "PREFIX")
-	return clientTrackingPrefix{cs: append(c.cs, prefix...)}
+	return ClientTrackingPrefix{cs: append(c.cs, Prefix...)}
 }
 
-func (c clientTrackingStatusOff) Bcast() clientTrackingBcastBcast {
-	return clientTrackingBcastBcast{cs: append(c.cs, "BCAST")}
+func (c ClientTrackingStatusOff) Bcast() ClientTrackingBcastBcast {
+	return ClientTrackingBcastBcast{cs: append(c.cs, "BCAST")}
 }
 
-func (c clientTrackingStatusOff) Optin() clientTrackingOptinOptin {
-	return clientTrackingOptinOptin{cs: append(c.cs, "OPTIN")}
+func (c ClientTrackingStatusOff) Optin() ClientTrackingOptinOptin {
+	return ClientTrackingOptinOptin{cs: append(c.cs, "OPTIN")}
 }
 
-func (c clientTrackingStatusOff) Optout() clientTrackingOptoutOptout {
-	return clientTrackingOptoutOptout{cs: append(c.cs, "OPTOUT")}
+func (c ClientTrackingStatusOff) Optout() ClientTrackingOptoutOptout {
+	return ClientTrackingOptoutOptout{cs: append(c.cs, "OPTOUT")}
 }
 
-func (c clientTrackingStatusOff) Noloop() clientTrackingNoloopNoloop {
-	return clientTrackingNoloopNoloop{cs: append(c.cs, "NOLOOP")}
+func (c ClientTrackingStatusOff) Noloop() ClientTrackingNoloopNoloop {
+	return ClientTrackingNoloopNoloop{cs: append(c.cs, "NOLOOP")}
 }
 
-func (c clientTrackingStatusOff) Build() []string {
+func (c ClientTrackingStatusOff) Build() []string {
 	return c.cs
 }
 
-type clientTrackingStatusOn struct {
+type ClientTrackingStatusOn struct {
 	cs []string
 }
 
-func (c clientTrackingStatusOn) Redirect(clientId int64) clientTrackingRedirect {
-	return clientTrackingRedirect{cs: append(c.cs, "REDIRECT", strconv.FormatInt(clientId, 10))}
+func (c ClientTrackingStatusOn) Redirect(ClientId int64) ClientTrackingRedirect {
+	return ClientTrackingRedirect{cs: append(c.cs, "REDIRECT", strconv.FormatInt(ClientId, 10))}
 }
 
-func (c clientTrackingStatusOn) Prefix(prefix ...string) clientTrackingPrefix {
+func (c ClientTrackingStatusOn) Prefix(Prefix ...string) ClientTrackingPrefix {
 	c.cs = append(c.cs, "PREFIX")
-	return clientTrackingPrefix{cs: append(c.cs, prefix...)}
+	return ClientTrackingPrefix{cs: append(c.cs, Prefix...)}
 }
 
-func (c clientTrackingStatusOn) Bcast() clientTrackingBcastBcast {
-	return clientTrackingBcastBcast{cs: append(c.cs, "BCAST")}
+func (c ClientTrackingStatusOn) Bcast() ClientTrackingBcastBcast {
+	return ClientTrackingBcastBcast{cs: append(c.cs, "BCAST")}
 }
 
-func (c clientTrackingStatusOn) Optin() clientTrackingOptinOptin {
-	return clientTrackingOptinOptin{cs: append(c.cs, "OPTIN")}
+func (c ClientTrackingStatusOn) Optin() ClientTrackingOptinOptin {
+	return ClientTrackingOptinOptin{cs: append(c.cs, "OPTIN")}
 }
 
-func (c clientTrackingStatusOn) Optout() clientTrackingOptoutOptout {
-	return clientTrackingOptoutOptout{cs: append(c.cs, "OPTOUT")}
+func (c ClientTrackingStatusOn) Optout() ClientTrackingOptoutOptout {
+	return ClientTrackingOptoutOptout{cs: append(c.cs, "OPTOUT")}
 }
 
-func (c clientTrackingStatusOn) Noloop() clientTrackingNoloopNoloop {
-	return clientTrackingNoloopNoloop{cs: append(c.cs, "NOLOOP")}
+func (c ClientTrackingStatusOn) Noloop() ClientTrackingNoloopNoloop {
+	return ClientTrackingNoloopNoloop{cs: append(c.cs, "NOLOOP")}
 }
 
-func (c clientTrackingStatusOn) Build() []string {
+func (c ClientTrackingStatusOn) Build() []string {
 	return c.cs
 }
 
-type clientTrackinginfo struct {
+type ClientTrackinginfo struct {
 	cs []string
 }
 
-func (c clientTrackinginfo) Build() []string {
+func (c ClientTrackinginfo) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) ClientTrackinginfo() (c clientTrackinginfo) {
+func (b *Builder) ClientTrackinginfo() (c ClientTrackinginfo) {
 	c.cs = append(b.get(), "CLIENT", "TRACKINGINFO")
 	return
 }
 
-type clientUnblock struct {
+type ClientUnblock struct {
 	cs []string
 }
 
-func (c clientUnblock) ClientId(clientId int64) clientUnblockClientId {
-	return clientUnblockClientId{cs: append(c.cs, strconv.FormatInt(clientId, 10))}
+func (c ClientUnblock) ClientId(ClientId int64) ClientUnblockClientId {
+	return ClientUnblockClientId{cs: append(c.cs, strconv.FormatInt(ClientId, 10))}
 }
 
-func (b *Builder) ClientUnblock() (c clientUnblock) {
+func (b *Builder) ClientUnblock() (c ClientUnblock) {
 	c.cs = append(b.get(), "CLIENT", "UNBLOCK")
 	return
 }
 
-type clientUnblockClientId struct {
+type ClientUnblockClientId struct {
 	cs []string
 }
 
-func (c clientUnblockClientId) Timeout() clientUnblockUnblockTypeTimeout {
-	return clientUnblockUnblockTypeTimeout{cs: append(c.cs, "TIMEOUT")}
+func (c ClientUnblockClientId) Timeout() ClientUnblockUnblockTypeTimeout {
+	return ClientUnblockUnblockTypeTimeout{cs: append(c.cs, "TIMEOUT")}
 }
 
-func (c clientUnblockClientId) Error() clientUnblockUnblockTypeError {
-	return clientUnblockUnblockTypeError{cs: append(c.cs, "ERROR")}
+func (c ClientUnblockClientId) Error() ClientUnblockUnblockTypeError {
+	return ClientUnblockUnblockTypeError{cs: append(c.cs, "ERROR")}
 }
 
-func (c clientUnblockClientId) Build() []string {
+func (c ClientUnblockClientId) Build() []string {
 	return c.cs
 }
 
-type clientUnblockUnblockTypeError struct {
+type ClientUnblockUnblockTypeError struct {
 	cs []string
 }
 
-func (c clientUnblockUnblockTypeError) Build() []string {
+func (c ClientUnblockUnblockTypeError) Build() []string {
 	return c.cs
 }
 
-type clientUnblockUnblockTypeTimeout struct {
+type ClientUnblockUnblockTypeTimeout struct {
 	cs []string
 }
 
-func (c clientUnblockUnblockTypeTimeout) Build() []string {
+func (c ClientUnblockUnblockTypeTimeout) Build() []string {
 	return c.cs
 }
 
-type clientUnpause struct {
+type ClientUnpause struct {
 	cs []string
 }
 
-func (c clientUnpause) Build() []string {
+func (c ClientUnpause) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) ClientUnpause() (c clientUnpause) {
+func (b *Builder) ClientUnpause() (c ClientUnpause) {
 	c.cs = append(b.get(), "CLIENT", "UNPAUSE")
 	return
 }
 
-type clusterAddslots struct {
+type ClusterAddslots struct {
 	cs []string
 }
 
-func (c clusterAddslots) Slot(slot ...int64) clusterAddslotsSlot {
-	for _, n := range slot {
+func (c ClusterAddslots) Slot(Slot ...int64) ClusterAddslotsSlot {
+	for _, n := range Slot {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return clusterAddslotsSlot{cs: c.cs}
+	return ClusterAddslotsSlot{cs: c.cs}
 }
 
-func (b *Builder) ClusterAddslots() (c clusterAddslots) {
+func (b *Builder) ClusterAddslots() (c ClusterAddslots) {
 	c.cs = append(b.get(), "CLUSTER", "ADDSLOTS")
 	return
 }
 
-type clusterAddslotsSlot struct {
+type ClusterAddslotsSlot struct {
 	cs []string
 }
 
-func (c clusterAddslotsSlot) Slot(slot ...int64) clusterAddslotsSlot {
-	for _, n := range slot {
+func (c ClusterAddslotsSlot) Slot(Slot ...int64) ClusterAddslotsSlot {
+	for _, n := range Slot {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return clusterAddslotsSlot{cs: c.cs}
+	return ClusterAddslotsSlot{cs: c.cs}
 }
 
-func (c clusterAddslotsSlot) Build() []string {
+func (c ClusterAddslotsSlot) Build() []string {
 	return c.cs
 }
 
-type clusterBumpepoch struct {
+type ClusterBumpepoch struct {
 	cs []string
 }
 
-func (c clusterBumpepoch) Build() []string {
+func (c ClusterBumpepoch) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) ClusterBumpepoch() (c clusterBumpepoch) {
+func (b *Builder) ClusterBumpepoch() (c ClusterBumpepoch) {
 	c.cs = append(b.get(), "CLUSTER", "BUMPEPOCH")
 	return
 }
 
-type clusterCountFailureReports struct {
+type ClusterCountFailureReports struct {
 	cs []string
 }
 
-func (c clusterCountFailureReports) NodeId(nodeId string) clusterCountFailureReportsNodeId {
-	return clusterCountFailureReportsNodeId{cs: append(c.cs, nodeId)}
+func (c ClusterCountFailureReports) NodeId(NodeId string) ClusterCountFailureReportsNodeId {
+	return ClusterCountFailureReportsNodeId{cs: append(c.cs, NodeId)}
 }
 
-func (b *Builder) ClusterCountFailureReports() (c clusterCountFailureReports) {
+func (b *Builder) ClusterCountFailureReports() (c ClusterCountFailureReports) {
 	c.cs = append(b.get(), "CLUSTER", "COUNT-FAILURE-REPORTS")
 	return
 }
 
-type clusterCountFailureReportsNodeId struct {
+type ClusterCountFailureReportsNodeId struct {
 	cs []string
 }
 
-func (c clusterCountFailureReportsNodeId) Build() []string {
+func (c ClusterCountFailureReportsNodeId) Build() []string {
 	return c.cs
 }
 
-type clusterCountkeysinslot struct {
+type ClusterCountkeysinslot struct {
 	cs []string
 }
 
-func (c clusterCountkeysinslot) Slot(slot int64) clusterCountkeysinslotSlot {
-	return clusterCountkeysinslotSlot{cs: append(c.cs, strconv.FormatInt(slot, 10))}
+func (c ClusterCountkeysinslot) Slot(Slot int64) ClusterCountkeysinslotSlot {
+	return ClusterCountkeysinslotSlot{cs: append(c.cs, strconv.FormatInt(Slot, 10))}
 }
 
-func (b *Builder) ClusterCountkeysinslot() (c clusterCountkeysinslot) {
+func (b *Builder) ClusterCountkeysinslot() (c ClusterCountkeysinslot) {
 	c.cs = append(b.get(), "CLUSTER", "COUNTKEYSINSLOT")
 	return
 }
 
-type clusterCountkeysinslotSlot struct {
+type ClusterCountkeysinslotSlot struct {
 	cs []string
 }
 
-func (c clusterCountkeysinslotSlot) Build() []string {
+func (c ClusterCountkeysinslotSlot) Build() []string {
 	return c.cs
 }
 
-type clusterDelslots struct {
+type ClusterDelslots struct {
 	cs []string
 }
 
-func (c clusterDelslots) Slot(slot ...int64) clusterDelslotsSlot {
-	for _, n := range slot {
+func (c ClusterDelslots) Slot(Slot ...int64) ClusterDelslotsSlot {
+	for _, n := range Slot {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return clusterDelslotsSlot{cs: c.cs}
+	return ClusterDelslotsSlot{cs: c.cs}
 }
 
-func (b *Builder) ClusterDelslots() (c clusterDelslots) {
+func (b *Builder) ClusterDelslots() (c ClusterDelslots) {
 	c.cs = append(b.get(), "CLUSTER", "DELSLOTS")
 	return
 }
 
-type clusterDelslotsSlot struct {
+type ClusterDelslotsSlot struct {
 	cs []string
 }
 
-func (c clusterDelslotsSlot) Slot(slot ...int64) clusterDelslotsSlot {
-	for _, n := range slot {
+func (c ClusterDelslotsSlot) Slot(Slot ...int64) ClusterDelslotsSlot {
+	for _, n := range Slot {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return clusterDelslotsSlot{cs: c.cs}
+	return ClusterDelslotsSlot{cs: c.cs}
 }
 
-func (c clusterDelslotsSlot) Build() []string {
+func (c ClusterDelslotsSlot) Build() []string {
 	return c.cs
 }
 
-type clusterFailover struct {
+type ClusterFailover struct {
 	cs []string
 }
 
-func (c clusterFailover) Force() clusterFailoverOptionsForce {
-	return clusterFailoverOptionsForce{cs: append(c.cs, "FORCE")}
+func (c ClusterFailover) Force() ClusterFailoverOptionsForce {
+	return ClusterFailoverOptionsForce{cs: append(c.cs, "FORCE")}
 }
 
-func (c clusterFailover) Takeover() clusterFailoverOptionsTakeover {
-	return clusterFailoverOptionsTakeover{cs: append(c.cs, "TAKEOVER")}
+func (c ClusterFailover) Takeover() ClusterFailoverOptionsTakeover {
+	return ClusterFailoverOptionsTakeover{cs: append(c.cs, "TAKEOVER")}
 }
 
-func (c clusterFailover) Build() []string {
+func (c ClusterFailover) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) ClusterFailover() (c clusterFailover) {
+func (b *Builder) ClusterFailover() (c ClusterFailover) {
 	c.cs = append(b.get(), "CLUSTER", "FAILOVER")
 	return
 }
 
-type clusterFailoverOptionsForce struct {
+type ClusterFailoverOptionsForce struct {
 	cs []string
 }
 
-func (c clusterFailoverOptionsForce) Build() []string {
+func (c ClusterFailoverOptionsForce) Build() []string {
 	return c.cs
 }
 
-type clusterFailoverOptionsTakeover struct {
+type ClusterFailoverOptionsTakeover struct {
 	cs []string
 }
 
-func (c clusterFailoverOptionsTakeover) Build() []string {
+func (c ClusterFailoverOptionsTakeover) Build() []string {
 	return c.cs
 }
 
-type clusterFlushslots struct {
+type ClusterFlushslots struct {
 	cs []string
 }
 
-func (c clusterFlushslots) Build() []string {
+func (c ClusterFlushslots) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) ClusterFlushslots() (c clusterFlushslots) {
+func (b *Builder) ClusterFlushslots() (c ClusterFlushslots) {
 	c.cs = append(b.get(), "CLUSTER", "FLUSHSLOTS")
 	return
 }
 
-type clusterForget struct {
+type ClusterForget struct {
 	cs []string
 }
 
-func (c clusterForget) NodeId(nodeId string) clusterForgetNodeId {
-	return clusterForgetNodeId{cs: append(c.cs, nodeId)}
+func (c ClusterForget) NodeId(NodeId string) ClusterForgetNodeId {
+	return ClusterForgetNodeId{cs: append(c.cs, NodeId)}
 }
 
-func (b *Builder) ClusterForget() (c clusterForget) {
+func (b *Builder) ClusterForget() (c ClusterForget) {
 	c.cs = append(b.get(), "CLUSTER", "FORGET")
 	return
 }
 
-type clusterForgetNodeId struct {
+type ClusterForgetNodeId struct {
 	cs []string
 }
 
-func (c clusterForgetNodeId) Build() []string {
+func (c ClusterForgetNodeId) Build() []string {
 	return c.cs
 }
 
-type clusterGetkeysinslot struct {
+type ClusterGetkeysinslot struct {
 	cs []string
 }
 
-func (c clusterGetkeysinslot) Slot(slot int64) clusterGetkeysinslotSlot {
-	return clusterGetkeysinslotSlot{cs: append(c.cs, strconv.FormatInt(slot, 10))}
+func (c ClusterGetkeysinslot) Slot(Slot int64) ClusterGetkeysinslotSlot {
+	return ClusterGetkeysinslotSlot{cs: append(c.cs, strconv.FormatInt(Slot, 10))}
 }
 
-func (b *Builder) ClusterGetkeysinslot() (c clusterGetkeysinslot) {
+func (b *Builder) ClusterGetkeysinslot() (c ClusterGetkeysinslot) {
 	c.cs = append(b.get(), "CLUSTER", "GETKEYSINSLOT")
 	return
 }
 
-type clusterGetkeysinslotCount struct {
+type ClusterGetkeysinslotCount struct {
 	cs []string
 }
 
-func (c clusterGetkeysinslotCount) Build() []string {
+func (c ClusterGetkeysinslotCount) Build() []string {
 	return c.cs
 }
 
-type clusterGetkeysinslotSlot struct {
+type ClusterGetkeysinslotSlot struct {
 	cs []string
 }
 
-func (c clusterGetkeysinslotSlot) Count(count int64) clusterGetkeysinslotCount {
-	return clusterGetkeysinslotCount{cs: append(c.cs, strconv.FormatInt(count, 10))}
+func (c ClusterGetkeysinslotSlot) Count(Count int64) ClusterGetkeysinslotCount {
+	return ClusterGetkeysinslotCount{cs: append(c.cs, strconv.FormatInt(Count, 10))}
 }
 
-type clusterInfo struct {
+type ClusterInfo struct {
 	cs []string
 }
 
-func (c clusterInfo) Build() []string {
+func (c ClusterInfo) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) ClusterInfo() (c clusterInfo) {
+func (b *Builder) ClusterInfo() (c ClusterInfo) {
 	c.cs = append(b.get(), "CLUSTER", "INFO")
 	return
 }
 
-type clusterKeyslot struct {
+type ClusterKeyslot struct {
 	cs []string
 }
 
-func (c clusterKeyslot) Key(key string) clusterKeyslotKey {
-	return clusterKeyslotKey{cs: append(c.cs, key)}
+func (c ClusterKeyslot) Key(Key string) ClusterKeyslotKey {
+	return ClusterKeyslotKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) ClusterKeyslot() (c clusterKeyslot) {
+func (b *Builder) ClusterKeyslot() (c ClusterKeyslot) {
 	c.cs = append(b.get(), "CLUSTER", "KEYSLOT")
 	return
 }
 
-type clusterKeyslotKey struct {
+type ClusterKeyslotKey struct {
 	cs []string
 }
 
-func (c clusterKeyslotKey) Build() []string {
+func (c ClusterKeyslotKey) Build() []string {
 	return c.cs
 }
 
-type clusterMeet struct {
+type ClusterMeet struct {
 	cs []string
 }
 
-func (c clusterMeet) Ip(ip string) clusterMeetIp {
-	return clusterMeetIp{cs: append(c.cs, ip)}
+func (c ClusterMeet) Ip(Ip string) ClusterMeetIp {
+	return ClusterMeetIp{cs: append(c.cs, Ip)}
 }
 
-func (b *Builder) ClusterMeet() (c clusterMeet) {
+func (b *Builder) ClusterMeet() (c ClusterMeet) {
 	c.cs = append(b.get(), "CLUSTER", "MEET")
 	return
 }
 
-type clusterMeetIp struct {
+type ClusterMeetIp struct {
 	cs []string
 }
 
-func (c clusterMeetIp) Port(port int64) clusterMeetPort {
-	return clusterMeetPort{cs: append(c.cs, strconv.FormatInt(port, 10))}
+func (c ClusterMeetIp) Port(Port int64) ClusterMeetPort {
+	return ClusterMeetPort{cs: append(c.cs, strconv.FormatInt(Port, 10))}
 }
 
-type clusterMeetPort struct {
+type ClusterMeetPort struct {
 	cs []string
 }
 
-func (c clusterMeetPort) Build() []string {
+func (c ClusterMeetPort) Build() []string {
 	return c.cs
 }
 
-type clusterMyid struct {
+type ClusterMyid struct {
 	cs []string
 }
 
-func (c clusterMyid) Build() []string {
+func (c ClusterMyid) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) ClusterMyid() (c clusterMyid) {
+func (b *Builder) ClusterMyid() (c ClusterMyid) {
 	c.cs = append(b.get(), "CLUSTER", "MYID")
 	return
 }
 
-type clusterNodes struct {
+type ClusterNodes struct {
 	cs []string
 }
 
-func (c clusterNodes) Build() []string {
+func (c ClusterNodes) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) ClusterNodes() (c clusterNodes) {
+func (b *Builder) ClusterNodes() (c ClusterNodes) {
 	c.cs = append(b.get(), "CLUSTER", "NODES")
 	return
 }
 
-type clusterReplicas struct {
+type ClusterReplicas struct {
 	cs []string
 }
 
-func (c clusterReplicas) NodeId(nodeId string) clusterReplicasNodeId {
-	return clusterReplicasNodeId{cs: append(c.cs, nodeId)}
+func (c ClusterReplicas) NodeId(NodeId string) ClusterReplicasNodeId {
+	return ClusterReplicasNodeId{cs: append(c.cs, NodeId)}
 }
 
-func (b *Builder) ClusterReplicas() (c clusterReplicas) {
+func (b *Builder) ClusterReplicas() (c ClusterReplicas) {
 	c.cs = append(b.get(), "CLUSTER", "REPLICAS")
 	return
 }
 
-type clusterReplicasNodeId struct {
+type ClusterReplicasNodeId struct {
 	cs []string
 }
 
-func (c clusterReplicasNodeId) Build() []string {
+func (c ClusterReplicasNodeId) Build() []string {
 	return c.cs
 }
 
-type clusterReplicate struct {
+type ClusterReplicate struct {
 	cs []string
 }
 
-func (c clusterReplicate) NodeId(nodeId string) clusterReplicateNodeId {
-	return clusterReplicateNodeId{cs: append(c.cs, nodeId)}
+func (c ClusterReplicate) NodeId(NodeId string) ClusterReplicateNodeId {
+	return ClusterReplicateNodeId{cs: append(c.cs, NodeId)}
 }
 
-func (b *Builder) ClusterReplicate() (c clusterReplicate) {
+func (b *Builder) ClusterReplicate() (c ClusterReplicate) {
 	c.cs = append(b.get(), "CLUSTER", "REPLICATE")
 	return
 }
 
-type clusterReplicateNodeId struct {
+type ClusterReplicateNodeId struct {
 	cs []string
 }
 
-func (c clusterReplicateNodeId) Build() []string {
+func (c ClusterReplicateNodeId) Build() []string {
 	return c.cs
 }
 
-type clusterReset struct {
+type ClusterReset struct {
 	cs []string
 }
 
-func (c clusterReset) Hard() clusterResetResetTypeHard {
-	return clusterResetResetTypeHard{cs: append(c.cs, "HARD")}
+func (c ClusterReset) Hard() ClusterResetResetTypeHard {
+	return ClusterResetResetTypeHard{cs: append(c.cs, "HARD")}
 }
 
-func (c clusterReset) Soft() clusterResetResetTypeSoft {
-	return clusterResetResetTypeSoft{cs: append(c.cs, "SOFT")}
+func (c ClusterReset) Soft() ClusterResetResetTypeSoft {
+	return ClusterResetResetTypeSoft{cs: append(c.cs, "SOFT")}
 }
 
-func (c clusterReset) Build() []string {
+func (c ClusterReset) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) ClusterReset() (c clusterReset) {
+func (b *Builder) ClusterReset() (c ClusterReset) {
 	c.cs = append(b.get(), "CLUSTER", "RESET")
 	return
 }
 
-type clusterResetResetTypeHard struct {
+type ClusterResetResetTypeHard struct {
 	cs []string
 }
 
-func (c clusterResetResetTypeHard) Build() []string {
+func (c ClusterResetResetTypeHard) Build() []string {
 	return c.cs
 }
 
-type clusterResetResetTypeSoft struct {
+type ClusterResetResetTypeSoft struct {
 	cs []string
 }
 
-func (c clusterResetResetTypeSoft) Build() []string {
+func (c ClusterResetResetTypeSoft) Build() []string {
 	return c.cs
 }
 
-type clusterSaveconfig struct {
+type ClusterSaveconfig struct {
 	cs []string
 }
 
-func (c clusterSaveconfig) Build() []string {
+func (c ClusterSaveconfig) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) ClusterSaveconfig() (c clusterSaveconfig) {
+func (b *Builder) ClusterSaveconfig() (c ClusterSaveconfig) {
 	c.cs = append(b.get(), "CLUSTER", "SAVECONFIG")
 	return
 }
 
-type clusterSetConfigEpoch struct {
+type ClusterSetConfigEpoch struct {
 	cs []string
 }
 
-func (c clusterSetConfigEpoch) ConfigEpoch(configEpoch int64) clusterSetConfigEpochConfigEpoch {
-	return clusterSetConfigEpochConfigEpoch{cs: append(c.cs, strconv.FormatInt(configEpoch, 10))}
+func (c ClusterSetConfigEpoch) ConfigEpoch(ConfigEpoch int64) ClusterSetConfigEpochConfigEpoch {
+	return ClusterSetConfigEpochConfigEpoch{cs: append(c.cs, strconv.FormatInt(ConfigEpoch, 10))}
 }
 
-func (b *Builder) ClusterSetConfigEpoch() (c clusterSetConfigEpoch) {
+func (b *Builder) ClusterSetConfigEpoch() (c ClusterSetConfigEpoch) {
 	c.cs = append(b.get(), "CLUSTER", "SET-CONFIG-EPOCH")
 	return
 }
 
-type clusterSetConfigEpochConfigEpoch struct {
+type ClusterSetConfigEpochConfigEpoch struct {
 	cs []string
 }
 
-func (c clusterSetConfigEpochConfigEpoch) Build() []string {
+func (c ClusterSetConfigEpochConfigEpoch) Build() []string {
 	return c.cs
 }
 
-type clusterSetslot struct {
+type ClusterSetslot struct {
 	cs []string
 }
 
-func (c clusterSetslot) Slot(slot int64) clusterSetslotSlot {
-	return clusterSetslotSlot{cs: append(c.cs, strconv.FormatInt(slot, 10))}
+func (c ClusterSetslot) Slot(Slot int64) ClusterSetslotSlot {
+	return ClusterSetslotSlot{cs: append(c.cs, strconv.FormatInt(Slot, 10))}
 }
 
-func (b *Builder) ClusterSetslot() (c clusterSetslot) {
+func (b *Builder) ClusterSetslot() (c ClusterSetslot) {
 	c.cs = append(b.get(), "CLUSTER", "SETSLOT")
 	return
 }
 
-type clusterSetslotNodeId struct {
+type ClusterSetslotNodeId struct {
 	cs []string
 }
 
-func (c clusterSetslotNodeId) Build() []string {
+func (c ClusterSetslotNodeId) Build() []string {
 	return c.cs
 }
 
-type clusterSetslotSlot struct {
+type ClusterSetslotSlot struct {
 	cs []string
 }
 
-func (c clusterSetslotSlot) Importing() clusterSetslotSubcommandImporting {
-	return clusterSetslotSubcommandImporting{cs: append(c.cs, "IMPORTING")}
+func (c ClusterSetslotSlot) Importing() ClusterSetslotSubcommandImporting {
+	return ClusterSetslotSubcommandImporting{cs: append(c.cs, "IMPORTING")}
 }
 
-func (c clusterSetslotSlot) Migrating() clusterSetslotSubcommandMigrating {
-	return clusterSetslotSubcommandMigrating{cs: append(c.cs, "MIGRATING")}
+func (c ClusterSetslotSlot) Migrating() ClusterSetslotSubcommandMigrating {
+	return ClusterSetslotSubcommandMigrating{cs: append(c.cs, "MIGRATING")}
 }
 
-func (c clusterSetslotSlot) Stable() clusterSetslotSubcommandStable {
-	return clusterSetslotSubcommandStable{cs: append(c.cs, "STABLE")}
+func (c ClusterSetslotSlot) Stable() ClusterSetslotSubcommandStable {
+	return ClusterSetslotSubcommandStable{cs: append(c.cs, "STABLE")}
 }
 
-func (c clusterSetslotSlot) Node() clusterSetslotSubcommandNode {
-	return clusterSetslotSubcommandNode{cs: append(c.cs, "NODE")}
+func (c ClusterSetslotSlot) Node() ClusterSetslotSubcommandNode {
+	return ClusterSetslotSubcommandNode{cs: append(c.cs, "NODE")}
 }
 
-type clusterSetslotSubcommandImporting struct {
+type ClusterSetslotSubcommandImporting struct {
 	cs []string
 }
 
-func (c clusterSetslotSubcommandImporting) NodeId(nodeId string) clusterSetslotNodeId {
-	return clusterSetslotNodeId{cs: append(c.cs, nodeId)}
+func (c ClusterSetslotSubcommandImporting) NodeId(NodeId string) ClusterSetslotNodeId {
+	return ClusterSetslotNodeId{cs: append(c.cs, NodeId)}
 }
 
-func (c clusterSetslotSubcommandImporting) Build() []string {
+func (c ClusterSetslotSubcommandImporting) Build() []string {
 	return c.cs
 }
 
-type clusterSetslotSubcommandMigrating struct {
+type ClusterSetslotSubcommandMigrating struct {
 	cs []string
 }
 
-func (c clusterSetslotSubcommandMigrating) NodeId(nodeId string) clusterSetslotNodeId {
-	return clusterSetslotNodeId{cs: append(c.cs, nodeId)}
+func (c ClusterSetslotSubcommandMigrating) NodeId(NodeId string) ClusterSetslotNodeId {
+	return ClusterSetslotNodeId{cs: append(c.cs, NodeId)}
 }
 
-func (c clusterSetslotSubcommandMigrating) Build() []string {
+func (c ClusterSetslotSubcommandMigrating) Build() []string {
 	return c.cs
 }
 
-type clusterSetslotSubcommandNode struct {
+type ClusterSetslotSubcommandNode struct {
 	cs []string
 }
 
-func (c clusterSetslotSubcommandNode) NodeId(nodeId string) clusterSetslotNodeId {
-	return clusterSetslotNodeId{cs: append(c.cs, nodeId)}
+func (c ClusterSetslotSubcommandNode) NodeId(NodeId string) ClusterSetslotNodeId {
+	return ClusterSetslotNodeId{cs: append(c.cs, NodeId)}
 }
 
-func (c clusterSetslotSubcommandNode) Build() []string {
+func (c ClusterSetslotSubcommandNode) Build() []string {
 	return c.cs
 }
 
-type clusterSetslotSubcommandStable struct {
+type ClusterSetslotSubcommandStable struct {
 	cs []string
 }
 
-func (c clusterSetslotSubcommandStable) NodeId(nodeId string) clusterSetslotNodeId {
-	return clusterSetslotNodeId{cs: append(c.cs, nodeId)}
+func (c ClusterSetslotSubcommandStable) NodeId(NodeId string) ClusterSetslotNodeId {
+	return ClusterSetslotNodeId{cs: append(c.cs, NodeId)}
 }
 
-func (c clusterSetslotSubcommandStable) Build() []string {
+func (c ClusterSetslotSubcommandStable) Build() []string {
 	return c.cs
 }
 
-type clusterSlaves struct {
+type ClusterSlaves struct {
 	cs []string
 }
 
-func (c clusterSlaves) NodeId(nodeId string) clusterSlavesNodeId {
-	return clusterSlavesNodeId{cs: append(c.cs, nodeId)}
+func (c ClusterSlaves) NodeId(NodeId string) ClusterSlavesNodeId {
+	return ClusterSlavesNodeId{cs: append(c.cs, NodeId)}
 }
 
-func (b *Builder) ClusterSlaves() (c clusterSlaves) {
+func (b *Builder) ClusterSlaves() (c ClusterSlaves) {
 	c.cs = append(b.get(), "CLUSTER", "SLAVES")
 	return
 }
 
-type clusterSlavesNodeId struct {
+type ClusterSlavesNodeId struct {
 	cs []string
 }
 
-func (c clusterSlavesNodeId) Build() []string {
+func (c ClusterSlavesNodeId) Build() []string {
 	return c.cs
 }
 
-type clusterSlots struct {
+type ClusterSlots struct {
 	cs []string
 }
 
-func (c clusterSlots) Build() []string {
+func (c ClusterSlots) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) ClusterSlots() (c clusterSlots) {
+func (b *Builder) ClusterSlots() (c ClusterSlots) {
 	c.cs = append(b.get(), "CLUSTER", "SLOTS")
 	return
 }
 
-type command struct {
+type Command struct {
 	cs []string
 }
 
-func (c command) Build() []string {
+func (c Command) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) Command() (c command) {
+func (b *Builder) Command() (c Command) {
 	c.cs = append(b.get(), "COMMAND")
 	return
 }
 
-type commandCount struct {
+type CommandCount struct {
 	cs []string
 }
 
-func (c commandCount) Build() []string {
+func (c CommandCount) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) CommandCount() (c commandCount) {
+func (b *Builder) CommandCount() (c CommandCount) {
 	c.cs = append(b.get(), "COMMAND", "COUNT")
 	return
 }
 
-type commandGetkeys struct {
+type CommandGetkeys struct {
 	cs []string
 }
 
-func (c commandGetkeys) Build() []string {
+func (c CommandGetkeys) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) CommandGetkeys() (c commandGetkeys) {
+func (b *Builder) CommandGetkeys() (c CommandGetkeys) {
 	c.cs = append(b.get(), "COMMAND", "GETKEYS")
 	return
 }
 
-type commandInfo struct {
+type CommandInfo struct {
 	cs []string
 }
 
-func (c commandInfo) CommandName(commandName ...string) commandInfoCommandName {
-	return commandInfoCommandName{cs: append(c.cs, commandName...)}
+func (c CommandInfo) CommandName(CommandName ...string) CommandInfoCommandName {
+	return CommandInfoCommandName{cs: append(c.cs, CommandName...)}
 }
 
-func (b *Builder) CommandInfo() (c commandInfo) {
+func (b *Builder) CommandInfo() (c CommandInfo) {
 	c.cs = append(b.get(), "COMMAND", "INFO")
 	return
 }
 
-type commandInfoCommandName struct {
+type CommandInfoCommandName struct {
 	cs []string
 }
 
-func (c commandInfoCommandName) CommandName(commandName ...string) commandInfoCommandName {
-	return commandInfoCommandName{cs: append(c.cs, commandName...)}
+func (c CommandInfoCommandName) CommandName(CommandName ...string) CommandInfoCommandName {
+	return CommandInfoCommandName{cs: append(c.cs, CommandName...)}
 }
 
-func (c commandInfoCommandName) Build() []string {
+func (c CommandInfoCommandName) Build() []string {
 	return c.cs
 }
 
-type configGet struct {
+type ConfigGet struct {
 	cs []string
 }
 
-func (c configGet) Parameter(parameter string) configGetParameter {
-	return configGetParameter{cs: append(c.cs, parameter)}
+func (c ConfigGet) Parameter(Parameter string) ConfigGetParameter {
+	return ConfigGetParameter{cs: append(c.cs, Parameter)}
 }
 
-func (b *Builder) ConfigGet() (c configGet) {
+func (b *Builder) ConfigGet() (c ConfigGet) {
 	c.cs = append(b.get(), "CONFIG", "GET")
 	return
 }
 
-type configGetParameter struct {
+type ConfigGetParameter struct {
 	cs []string
 }
 
-func (c configGetParameter) Build() []string {
+func (c ConfigGetParameter) Build() []string {
 	return c.cs
 }
 
-type configResetstat struct {
+type ConfigResetstat struct {
 	cs []string
 }
 
-func (c configResetstat) Build() []string {
+func (c ConfigResetstat) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) ConfigResetstat() (c configResetstat) {
+func (b *Builder) ConfigResetstat() (c ConfigResetstat) {
 	c.cs = append(b.get(), "CONFIG", "RESETSTAT")
 	return
 }
 
-type configRewrite struct {
+type ConfigRewrite struct {
 	cs []string
 }
 
-func (c configRewrite) Build() []string {
+func (c ConfigRewrite) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) ConfigRewrite() (c configRewrite) {
+func (b *Builder) ConfigRewrite() (c ConfigRewrite) {
 	c.cs = append(b.get(), "CONFIG", "REWRITE")
 	return
 }
 
-type configSet struct {
+type ConfigSet struct {
 	cs []string
 }
 
-func (c configSet) Parameter(parameter string) configSetParameter {
-	return configSetParameter{cs: append(c.cs, parameter)}
+func (c ConfigSet) Parameter(Parameter string) ConfigSetParameter {
+	return ConfigSetParameter{cs: append(c.cs, Parameter)}
 }
 
-func (b *Builder) ConfigSet() (c configSet) {
+func (b *Builder) ConfigSet() (c ConfigSet) {
 	c.cs = append(b.get(), "CONFIG", "SET")
 	return
 }
 
-type configSetParameter struct {
+type ConfigSetParameter struct {
 	cs []string
 }
 
-func (c configSetParameter) Value(value string) configSetValue {
-	return configSetValue{cs: append(c.cs, value)}
+func (c ConfigSetParameter) Value(Value string) ConfigSetValue {
+	return ConfigSetValue{cs: append(c.cs, Value)}
 }
 
-type configSetValue struct {
+type ConfigSetValue struct {
 	cs []string
 }
 
-func (c configSetValue) Build() []string {
+func (c ConfigSetValue) Build() []string {
 	return c.cs
 }
 
-type copy struct {
+type Copy struct {
 	cs []string
 }
 
-func (c copy) Source(source string) copySource {
-	return copySource{cs: append(c.cs, source)}
+func (c Copy) Source(Source string) CopySource {
+	return CopySource{cs: append(c.cs, Source)}
 }
 
-func (b *Builder) Copy() (c copy) {
+func (b *Builder) Copy() (c Copy) {
 	c.cs = append(b.get(), "COPY")
 	return
 }
 
-type copyDb struct {
+type CopyDb struct {
 	cs []string
 }
 
-func (c copyDb) Replace() copyReplaceReplace {
-	return copyReplaceReplace{cs: append(c.cs, "REPLACE")}
+func (c CopyDb) Replace() CopyReplaceReplace {
+	return CopyReplaceReplace{cs: append(c.cs, "REPLACE")}
 }
 
-func (c copyDb) Build() []string {
+func (c CopyDb) Build() []string {
 	return c.cs
 }
 
-type copyDestination struct {
+type CopyDestination struct {
 	cs []string
 }
 
-func (c copyDestination) Db(destinationDb int64) copyDb {
-	return copyDb{cs: append(c.cs, "DB", strconv.FormatInt(destinationDb, 10))}
+func (c CopyDestination) Db(DestinationDb int64) CopyDb {
+	return CopyDb{cs: append(c.cs, "DB", strconv.FormatInt(DestinationDb, 10))}
 }
 
-func (c copyDestination) Replace() copyReplaceReplace {
-	return copyReplaceReplace{cs: append(c.cs, "REPLACE")}
+func (c CopyDestination) Replace() CopyReplaceReplace {
+	return CopyReplaceReplace{cs: append(c.cs, "REPLACE")}
 }
 
-func (c copyDestination) Build() []string {
+func (c CopyDestination) Build() []string {
 	return c.cs
 }
 
-type copyReplaceReplace struct {
+type CopyReplaceReplace struct {
 	cs []string
 }
 
-func (c copyReplaceReplace) Build() []string {
+func (c CopyReplaceReplace) Build() []string {
 	return c.cs
 }
 
-type copySource struct {
+type CopySource struct {
 	cs []string
 }
 
-func (c copySource) Destination(destination string) copyDestination {
-	return copyDestination{cs: append(c.cs, destination)}
+func (c CopySource) Destination(Destination string) CopyDestination {
+	return CopyDestination{cs: append(c.cs, Destination)}
 }
 
-type dbsize struct {
+type Dbsize struct {
 	cs []string
 }
 
-func (c dbsize) Build() []string {
+func (c Dbsize) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) Dbsize() (c dbsize) {
+func (b *Builder) Dbsize() (c Dbsize) {
 	c.cs = append(b.get(), "DBSIZE")
 	return
 }
 
-type debugObject struct {
+type DebugObject struct {
 	cs []string
 }
 
-func (c debugObject) Key(key string) debugObjectKey {
-	return debugObjectKey{cs: append(c.cs, key)}
+func (c DebugObject) Key(Key string) DebugObjectKey {
+	return DebugObjectKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) DebugObject() (c debugObject) {
+func (b *Builder) DebugObject() (c DebugObject) {
 	c.cs = append(b.get(), "DEBUG", "OBJECT")
 	return
 }
 
-type debugObjectKey struct {
+type DebugObjectKey struct {
 	cs []string
 }
 
-func (c debugObjectKey) Build() []string {
+func (c DebugObjectKey) Build() []string {
 	return c.cs
 }
 
-type debugSegfault struct {
+type DebugSegfault struct {
 	cs []string
 }
 
-func (c debugSegfault) Build() []string {
+func (c DebugSegfault) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) DebugSegfault() (c debugSegfault) {
+func (b *Builder) DebugSegfault() (c DebugSegfault) {
 	c.cs = append(b.get(), "DEBUG", "SEGFAULT")
 	return
 }
 
-type decr struct {
+type Decr struct {
 	cs []string
 }
 
-func (c decr) Key(key string) decrKey {
-	return decrKey{cs: append(c.cs, key)}
+func (c Decr) Key(Key string) DecrKey {
+	return DecrKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Decr() (c decr) {
+func (b *Builder) Decr() (c Decr) {
 	c.cs = append(b.get(), "DECR")
 	return
 }
 
-type decrKey struct {
+type DecrKey struct {
 	cs []string
 }
 
-func (c decrKey) Build() []string {
+func (c DecrKey) Build() []string {
 	return c.cs
 }
 
-type decrby struct {
+type Decrby struct {
 	cs []string
 }
 
-func (c decrby) Key(key string) decrbyKey {
-	return decrbyKey{cs: append(c.cs, key)}
+func (c Decrby) Key(Key string) DecrbyKey {
+	return DecrbyKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Decrby() (c decrby) {
+func (b *Builder) Decrby() (c Decrby) {
 	c.cs = append(b.get(), "DECRBY")
 	return
 }
 
-type decrbyDecrement struct {
+type DecrbyDecrement struct {
 	cs []string
 }
 
-func (c decrbyDecrement) Build() []string {
+func (c DecrbyDecrement) Build() []string {
 	return c.cs
 }
 
-type decrbyKey struct {
+type DecrbyKey struct {
 	cs []string
 }
 
-func (c decrbyKey) Decrement(decrement int64) decrbyDecrement {
-	return decrbyDecrement{cs: append(c.cs, strconv.FormatInt(decrement, 10))}
+func (c DecrbyKey) Decrement(Decrement int64) DecrbyDecrement {
+	return DecrbyDecrement{cs: append(c.cs, strconv.FormatInt(Decrement, 10))}
 }
 
-type del struct {
+type Del struct {
 	cs []string
 }
 
-func (c del) Key(key ...string) delKey {
-	return delKey{cs: append(c.cs, key...)}
+func (c Del) Key(Key ...string) DelKey {
+	return DelKey{cs: append(c.cs, Key...)}
 }
 
-func (b *Builder) Del() (c del) {
+func (b *Builder) Del() (c Del) {
 	c.cs = append(b.get(), "DEL")
 	return
 }
 
-type delKey struct {
+type DelKey struct {
 	cs []string
 }
 
-func (c delKey) Key(key ...string) delKey {
-	return delKey{cs: append(c.cs, key...)}
+func (c DelKey) Key(Key ...string) DelKey {
+	return DelKey{cs: append(c.cs, Key...)}
 }
 
-func (c delKey) Build() []string {
+func (c DelKey) Build() []string {
 	return c.cs
 }
 
-type discard struct {
+type Discard struct {
 	cs []string
 }
 
-func (c discard) Build() []string {
+func (c Discard) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) Discard() (c discard) {
+func (b *Builder) Discard() (c Discard) {
 	c.cs = append(b.get(), "DISCARD")
 	return
 }
 
-type dump struct {
+type Dump struct {
 	cs []string
 }
 
-func (c dump) Key(key string) dumpKey {
-	return dumpKey{cs: append(c.cs, key)}
+func (c Dump) Key(Key string) DumpKey {
+	return DumpKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Dump() (c dump) {
+func (b *Builder) Dump() (c Dump) {
 	c.cs = append(b.get(), "DUMP")
 	return
 }
 
-type dumpKey struct {
+type DumpKey struct {
 	cs []string
 }
 
-func (c dumpKey) Build() []string {
+func (c DumpKey) Build() []string {
 	return c.cs
 }
 
-type echo struct {
+type Echo struct {
 	cs []string
 }
 
-func (c echo) Message(message string) echoMessage {
-	return echoMessage{cs: append(c.cs, message)}
+func (c Echo) Message(Message string) EchoMessage {
+	return EchoMessage{cs: append(c.cs, Message)}
 }
 
-func (b *Builder) Echo() (c echo) {
+func (b *Builder) Echo() (c Echo) {
 	c.cs = append(b.get(), "ECHO")
 	return
 }
 
-type echoMessage struct {
+type EchoMessage struct {
 	cs []string
 }
 
-func (c echoMessage) Build() []string {
+func (c EchoMessage) Build() []string {
 	return c.cs
 }
 
-type eval struct {
+type Eval struct {
 	cs []string
 }
 
-func (c eval) Script(script string) evalScript {
-	return evalScript{cs: append(c.cs, script)}
+func (c Eval) Script(Script string) EvalScript {
+	return EvalScript{cs: append(c.cs, Script)}
 }
 
-func (b *Builder) Eval() (c eval) {
+func (b *Builder) Eval() (c Eval) {
 	c.cs = append(b.get(), "EVAL")
 	return
 }
 
-type evalArg struct {
+type EvalArg struct {
 	cs []string
 }
 
-func (c evalArg) Arg(arg ...string) evalArg {
-	return evalArg{cs: append(c.cs, arg...)}
+func (c EvalArg) Arg(Arg ...string) EvalArg {
+	return EvalArg{cs: append(c.cs, Arg...)}
 }
 
-func (c evalArg) Build() []string {
+func (c EvalArg) Build() []string {
 	return c.cs
 }
 
-type evalKey struct {
+type EvalKey struct {
 	cs []string
 }
 
-func (c evalKey) Arg(arg ...string) evalArg {
-	return evalArg{cs: append(c.cs, arg...)}
+func (c EvalKey) Arg(Arg ...string) EvalArg {
+	return EvalArg{cs: append(c.cs, Arg...)}
 }
 
-func (c evalKey) Key(key ...string) evalKey {
-	return evalKey{cs: append(c.cs, key...)}
+func (c EvalKey) Key(Key ...string) EvalKey {
+	return EvalKey{cs: append(c.cs, Key...)}
 }
 
-func (c evalKey) Build() []string {
+func (c EvalKey) Build() []string {
 	return c.cs
 }
 
-type evalNumkeys struct {
+type EvalNumkeys struct {
 	cs []string
 }
 
-func (c evalNumkeys) Key(key ...string) evalKey {
-	return evalKey{cs: append(c.cs, key...)}
+func (c EvalNumkeys) Key(Key ...string) EvalKey {
+	return EvalKey{cs: append(c.cs, Key...)}
 }
 
-func (c evalNumkeys) Arg(arg ...string) evalArg {
-	return evalArg{cs: append(c.cs, arg...)}
+func (c EvalNumkeys) Arg(Arg ...string) EvalArg {
+	return EvalArg{cs: append(c.cs, Arg...)}
 }
 
-func (c evalNumkeys) Build() []string {
+func (c EvalNumkeys) Build() []string {
 	return c.cs
 }
 
-type evalRo struct {
+type EvalRo struct {
 	cs []string
 }
 
-func (c evalRo) Script(script string) evalRoScript {
-	return evalRoScript{cs: append(c.cs, script)}
+func (c EvalRo) Script(Script string) EvalRoScript {
+	return EvalRoScript{cs: append(c.cs, Script)}
 }
 
-func (b *Builder) EvalRo() (c evalRo) {
+func (b *Builder) EvalRo() (c EvalRo) {
 	c.cs = append(b.get(), "EVAL_RO")
 	return
 }
 
-type evalRoArg struct {
+type EvalRoArg struct {
 	cs []string
 }
 
-func (c evalRoArg) Arg(arg ...string) evalRoArg {
-	return evalRoArg{cs: append(c.cs, arg...)}
+func (c EvalRoArg) Arg(Arg ...string) EvalRoArg {
+	return EvalRoArg{cs: append(c.cs, Arg...)}
 }
 
-func (c evalRoArg) Build() []string {
+func (c EvalRoArg) Build() []string {
 	return c.cs
 }
 
-type evalRoKey struct {
+type EvalRoKey struct {
 	cs []string
 }
 
-func (c evalRoKey) Arg(arg ...string) evalRoArg {
-	return evalRoArg{cs: append(c.cs, arg...)}
+func (c EvalRoKey) Arg(Arg ...string) EvalRoArg {
+	return EvalRoArg{cs: append(c.cs, Arg...)}
 }
 
-func (c evalRoKey) Key(key ...string) evalRoKey {
-	return evalRoKey{cs: append(c.cs, key...)}
+func (c EvalRoKey) Key(Key ...string) EvalRoKey {
+	return EvalRoKey{cs: append(c.cs, Key...)}
 }
 
-type evalRoNumkeys struct {
+type EvalRoNumkeys struct {
 	cs []string
 }
 
-func (c evalRoNumkeys) Key(key ...string) evalRoKey {
-	return evalRoKey{cs: append(c.cs, key...)}
+func (c EvalRoNumkeys) Key(Key ...string) EvalRoKey {
+	return EvalRoKey{cs: append(c.cs, Key...)}
 }
 
-type evalRoScript struct {
+type EvalRoScript struct {
 	cs []string
 }
 
-func (c evalRoScript) Numkeys(numkeys int64) evalRoNumkeys {
-	return evalRoNumkeys{cs: append(c.cs, strconv.FormatInt(numkeys, 10))}
+func (c EvalRoScript) Numkeys(Numkeys int64) EvalRoNumkeys {
+	return EvalRoNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
 }
 
-type evalScript struct {
+type EvalScript struct {
 	cs []string
 }
 
-func (c evalScript) Numkeys(numkeys int64) evalNumkeys {
-	return evalNumkeys{cs: append(c.cs, strconv.FormatInt(numkeys, 10))}
+func (c EvalScript) Numkeys(Numkeys int64) EvalNumkeys {
+	return EvalNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
 }
 
-type evalsha struct {
+type Evalsha struct {
 	cs []string
 }
 
-func (c evalsha) Sha1(sha1 string) evalshaSha1 {
-	return evalshaSha1{cs: append(c.cs, sha1)}
+func (c Evalsha) Sha1(Sha1 string) EvalshaSha1 {
+	return EvalshaSha1{cs: append(c.cs, Sha1)}
 }
 
-func (b *Builder) Evalsha() (c evalsha) {
+func (b *Builder) Evalsha() (c Evalsha) {
 	c.cs = append(b.get(), "EVALSHA")
 	return
 }
 
-type evalshaArg struct {
+type EvalshaArg struct {
 	cs []string
 }
 
-func (c evalshaArg) Arg(arg ...string) evalshaArg {
-	return evalshaArg{cs: append(c.cs, arg...)}
+func (c EvalshaArg) Arg(Arg ...string) EvalshaArg {
+	return EvalshaArg{cs: append(c.cs, Arg...)}
 }
 
-func (c evalshaArg) Build() []string {
+func (c EvalshaArg) Build() []string {
 	return c.cs
 }
 
-type evalshaKey struct {
+type EvalshaKey struct {
 	cs []string
 }
 
-func (c evalshaKey) Arg(arg ...string) evalshaArg {
-	return evalshaArg{cs: append(c.cs, arg...)}
+func (c EvalshaKey) Arg(Arg ...string) EvalshaArg {
+	return EvalshaArg{cs: append(c.cs, Arg...)}
 }
 
-func (c evalshaKey) Key(key ...string) evalshaKey {
-	return evalshaKey{cs: append(c.cs, key...)}
+func (c EvalshaKey) Key(Key ...string) EvalshaKey {
+	return EvalshaKey{cs: append(c.cs, Key...)}
 }
 
-func (c evalshaKey) Build() []string {
+func (c EvalshaKey) Build() []string {
 	return c.cs
 }
 
-type evalshaNumkeys struct {
+type EvalshaNumkeys struct {
 	cs []string
 }
 
-func (c evalshaNumkeys) Key(key ...string) evalshaKey {
-	return evalshaKey{cs: append(c.cs, key...)}
+func (c EvalshaNumkeys) Key(Key ...string) EvalshaKey {
+	return EvalshaKey{cs: append(c.cs, Key...)}
 }
 
-func (c evalshaNumkeys) Arg(arg ...string) evalshaArg {
-	return evalshaArg{cs: append(c.cs, arg...)}
+func (c EvalshaNumkeys) Arg(Arg ...string) EvalshaArg {
+	return EvalshaArg{cs: append(c.cs, Arg...)}
 }
 
-func (c evalshaNumkeys) Build() []string {
+func (c EvalshaNumkeys) Build() []string {
 	return c.cs
 }
 
-type evalshaRo struct {
+type EvalshaRo struct {
 	cs []string
 }
 
-func (c evalshaRo) Sha1(sha1 string) evalshaRoSha1 {
-	return evalshaRoSha1{cs: append(c.cs, sha1)}
+func (c EvalshaRo) Sha1(Sha1 string) EvalshaRoSha1 {
+	return EvalshaRoSha1{cs: append(c.cs, Sha1)}
 }
 
-func (b *Builder) EvalshaRo() (c evalshaRo) {
+func (b *Builder) EvalshaRo() (c EvalshaRo) {
 	c.cs = append(b.get(), "EVALSHA_RO")
 	return
 }
 
-type evalshaRoArg struct {
+type EvalshaRoArg struct {
 	cs []string
 }
 
-func (c evalshaRoArg) Arg(arg ...string) evalshaRoArg {
-	return evalshaRoArg{cs: append(c.cs, arg...)}
+func (c EvalshaRoArg) Arg(Arg ...string) EvalshaRoArg {
+	return EvalshaRoArg{cs: append(c.cs, Arg...)}
 }
 
-func (c evalshaRoArg) Build() []string {
+func (c EvalshaRoArg) Build() []string {
 	return c.cs
 }
 
-type evalshaRoKey struct {
+type EvalshaRoKey struct {
 	cs []string
 }
 
-func (c evalshaRoKey) Arg(arg ...string) evalshaRoArg {
-	return evalshaRoArg{cs: append(c.cs, arg...)}
+func (c EvalshaRoKey) Arg(Arg ...string) EvalshaRoArg {
+	return EvalshaRoArg{cs: append(c.cs, Arg...)}
 }
 
-func (c evalshaRoKey) Key(key ...string) evalshaRoKey {
-	return evalshaRoKey{cs: append(c.cs, key...)}
+func (c EvalshaRoKey) Key(Key ...string) EvalshaRoKey {
+	return EvalshaRoKey{cs: append(c.cs, Key...)}
 }
 
-type evalshaRoNumkeys struct {
+type EvalshaRoNumkeys struct {
 	cs []string
 }
 
-func (c evalshaRoNumkeys) Key(key ...string) evalshaRoKey {
-	return evalshaRoKey{cs: append(c.cs, key...)}
+func (c EvalshaRoNumkeys) Key(Key ...string) EvalshaRoKey {
+	return EvalshaRoKey{cs: append(c.cs, Key...)}
 }
 
-type evalshaRoSha1 struct {
+type EvalshaRoSha1 struct {
 	cs []string
 }
 
-func (c evalshaRoSha1) Numkeys(numkeys int64) evalshaRoNumkeys {
-	return evalshaRoNumkeys{cs: append(c.cs, strconv.FormatInt(numkeys, 10))}
+func (c EvalshaRoSha1) Numkeys(Numkeys int64) EvalshaRoNumkeys {
+	return EvalshaRoNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
 }
 
-type evalshaSha1 struct {
+type EvalshaSha1 struct {
 	cs []string
 }
 
-func (c evalshaSha1) Numkeys(numkeys int64) evalshaNumkeys {
-	return evalshaNumkeys{cs: append(c.cs, strconv.FormatInt(numkeys, 10))}
+func (c EvalshaSha1) Numkeys(Numkeys int64) EvalshaNumkeys {
+	return EvalshaNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
 }
 
-type exec struct {
+type Exec struct {
 	cs []string
 }
 
-func (c exec) Build() []string {
+func (c Exec) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) Exec() (c exec) {
+func (b *Builder) Exec() (c Exec) {
 	c.cs = append(b.get(), "EXEC")
 	return
 }
 
-type exists struct {
+type Exists struct {
 	cs []string
 }
 
-func (c exists) Key(key ...string) existsKey {
-	return existsKey{cs: append(c.cs, key...)}
+func (c Exists) Key(Key ...string) ExistsKey {
+	return ExistsKey{cs: append(c.cs, Key...)}
 }
 
-func (b *Builder) Exists() (c exists) {
+func (b *Builder) Exists() (c Exists) {
 	c.cs = append(b.get(), "EXISTS")
 	return
 }
 
-type existsKey struct {
+type ExistsKey struct {
 	cs []string
 }
 
-func (c existsKey) Key(key ...string) existsKey {
-	return existsKey{cs: append(c.cs, key...)}
+func (c ExistsKey) Key(Key ...string) ExistsKey {
+	return ExistsKey{cs: append(c.cs, Key...)}
 }
 
-func (c existsKey) Build() []string {
+func (c ExistsKey) Build() []string {
 	return c.cs
 }
 
-type expire struct {
+type Expire struct {
 	cs []string
 }
 
-func (c expire) Key(key string) expireKey {
-	return expireKey{cs: append(c.cs, key)}
+func (c Expire) Key(Key string) ExpireKey {
+	return ExpireKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Expire() (c expire) {
+func (b *Builder) Expire() (c Expire) {
 	c.cs = append(b.get(), "EXPIRE")
 	return
 }
 
-type expireConditionGt struct {
+type ExpireConditionGt struct {
 	cs []string
 }
 
-func (c expireConditionGt) Build() []string {
+func (c ExpireConditionGt) Build() []string {
 	return c.cs
 }
 
-type expireConditionLt struct {
+type ExpireConditionLt struct {
 	cs []string
 }
 
-func (c expireConditionLt) Build() []string {
+func (c ExpireConditionLt) Build() []string {
 	return c.cs
 }
 
-type expireConditionNx struct {
+type ExpireConditionNx struct {
 	cs []string
 }
 
-func (c expireConditionNx) Build() []string {
+func (c ExpireConditionNx) Build() []string {
 	return c.cs
 }
 
-type expireConditionXx struct {
+type ExpireConditionXx struct {
 	cs []string
 }
 
-func (c expireConditionXx) Build() []string {
+func (c ExpireConditionXx) Build() []string {
 	return c.cs
 }
 
-type expireKey struct {
+type ExpireKey struct {
 	cs []string
 }
 
-func (c expireKey) Seconds(seconds int64) expireSeconds {
-	return expireSeconds{cs: append(c.cs, strconv.FormatInt(seconds, 10))}
+func (c ExpireKey) Seconds(Seconds int64) ExpireSeconds {
+	return ExpireSeconds{cs: append(c.cs, strconv.FormatInt(Seconds, 10))}
 }
 
-type expireSeconds struct {
+type ExpireSeconds struct {
 	cs []string
 }
 
-func (c expireSeconds) Nx() expireConditionNx {
-	return expireConditionNx{cs: append(c.cs, "NX")}
+func (c ExpireSeconds) Nx() ExpireConditionNx {
+	return ExpireConditionNx{cs: append(c.cs, "NX")}
 }
 
-func (c expireSeconds) Xx() expireConditionXx {
-	return expireConditionXx{cs: append(c.cs, "XX")}
+func (c ExpireSeconds) Xx() ExpireConditionXx {
+	return ExpireConditionXx{cs: append(c.cs, "XX")}
 }
 
-func (c expireSeconds) Gt() expireConditionGt {
-	return expireConditionGt{cs: append(c.cs, "GT")}
+func (c ExpireSeconds) Gt() ExpireConditionGt {
+	return ExpireConditionGt{cs: append(c.cs, "GT")}
 }
 
-func (c expireSeconds) Lt() expireConditionLt {
-	return expireConditionLt{cs: append(c.cs, "LT")}
+func (c ExpireSeconds) Lt() ExpireConditionLt {
+	return ExpireConditionLt{cs: append(c.cs, "LT")}
 }
 
-func (c expireSeconds) Build() []string {
+func (c ExpireSeconds) Build() []string {
 	return c.cs
 }
 
-type expireat struct {
+type Expireat struct {
 	cs []string
 }
 
-func (c expireat) Key(key string) expireatKey {
-	return expireatKey{cs: append(c.cs, key)}
+func (c Expireat) Key(Key string) ExpireatKey {
+	return ExpireatKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Expireat() (c expireat) {
+func (b *Builder) Expireat() (c Expireat) {
 	c.cs = append(b.get(), "EXPIREAT")
 	return
 }
 
-type expireatConditionGt struct {
+type ExpireatConditionGt struct {
 	cs []string
 }
 
-func (c expireatConditionGt) Build() []string {
+func (c ExpireatConditionGt) Build() []string {
 	return c.cs
 }
 
-type expireatConditionLt struct {
+type ExpireatConditionLt struct {
 	cs []string
 }
 
-func (c expireatConditionLt) Build() []string {
+func (c ExpireatConditionLt) Build() []string {
 	return c.cs
 }
 
-type expireatConditionNx struct {
+type ExpireatConditionNx struct {
 	cs []string
 }
 
-func (c expireatConditionNx) Build() []string {
+func (c ExpireatConditionNx) Build() []string {
 	return c.cs
 }
 
-type expireatConditionXx struct {
+type ExpireatConditionXx struct {
 	cs []string
 }
 
-func (c expireatConditionXx) Build() []string {
+func (c ExpireatConditionXx) Build() []string {
 	return c.cs
 }
 
-type expireatKey struct {
+type ExpireatKey struct {
 	cs []string
 }
 
-func (c expireatKey) Timestamp(timestamp int64) expireatTimestamp {
-	return expireatTimestamp{cs: append(c.cs, strconv.FormatInt(timestamp, 10))}
+func (c ExpireatKey) Timestamp(Timestamp int64) ExpireatTimestamp {
+	return ExpireatTimestamp{cs: append(c.cs, strconv.FormatInt(Timestamp, 10))}
 }
 
-type expireatTimestamp struct {
+type ExpireatTimestamp struct {
 	cs []string
 }
 
-func (c expireatTimestamp) Nx() expireatConditionNx {
-	return expireatConditionNx{cs: append(c.cs, "NX")}
+func (c ExpireatTimestamp) Nx() ExpireatConditionNx {
+	return ExpireatConditionNx{cs: append(c.cs, "NX")}
 }
 
-func (c expireatTimestamp) Xx() expireatConditionXx {
-	return expireatConditionXx{cs: append(c.cs, "XX")}
+func (c ExpireatTimestamp) Xx() ExpireatConditionXx {
+	return ExpireatConditionXx{cs: append(c.cs, "XX")}
 }
 
-func (c expireatTimestamp) Gt() expireatConditionGt {
-	return expireatConditionGt{cs: append(c.cs, "GT")}
+func (c ExpireatTimestamp) Gt() ExpireatConditionGt {
+	return ExpireatConditionGt{cs: append(c.cs, "GT")}
 }
 
-func (c expireatTimestamp) Lt() expireatConditionLt {
-	return expireatConditionLt{cs: append(c.cs, "LT")}
+func (c ExpireatTimestamp) Lt() ExpireatConditionLt {
+	return ExpireatConditionLt{cs: append(c.cs, "LT")}
 }
 
-func (c expireatTimestamp) Build() []string {
+func (c ExpireatTimestamp) Build() []string {
 	return c.cs
 }
 
-type expiretime struct {
+type Expiretime struct {
 	cs []string
 }
 
-func (c expiretime) Key(key string) expiretimeKey {
-	return expiretimeKey{cs: append(c.cs, key)}
+func (c Expiretime) Key(Key string) ExpiretimeKey {
+	return ExpiretimeKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Expiretime() (c expiretime) {
+func (b *Builder) Expiretime() (c Expiretime) {
 	c.cs = append(b.get(), "EXPIRETIME")
 	return
 }
 
-type expiretimeKey struct {
+type ExpiretimeKey struct {
 	cs []string
 }
 
-func (c expiretimeKey) Build() []string {
+func (c ExpiretimeKey) Build() []string {
 	return c.cs
 }
 
-type failover struct {
+type Failover struct {
 	cs []string
 }
 
-func (c failover) To() failoverTargetTo {
-	return failoverTargetTo{cs: append(c.cs, "TO")}
+func (c Failover) To() FailoverTargetTo {
+	return FailoverTargetTo{cs: append(c.cs, "TO")}
 }
 
-func (c failover) Abort() failoverAbort {
-	return failoverAbort{cs: append(c.cs, "ABORT")}
+func (c Failover) Abort() FailoverAbort {
+	return FailoverAbort{cs: append(c.cs, "ABORT")}
 }
 
-func (c failover) Timeout(milliseconds int64) failoverTimeout {
-	return failoverTimeout{cs: append(c.cs, "TIMEOUT", strconv.FormatInt(milliseconds, 10))}
+func (c Failover) Timeout(Milliseconds int64) FailoverTimeout {
+	return FailoverTimeout{cs: append(c.cs, "TIMEOUT", strconv.FormatInt(Milliseconds, 10))}
 }
 
-func (b *Builder) Failover() (c failover) {
+func (b *Builder) Failover() (c Failover) {
 	c.cs = append(b.get(), "FAILOVER")
 	return
 }
 
-type failoverAbort struct {
+type FailoverAbort struct {
 	cs []string
 }
 
-func (c failoverAbort) Timeout(milliseconds int64) failoverTimeout {
-	return failoverTimeout{cs: append(c.cs, "TIMEOUT", strconv.FormatInt(milliseconds, 10))}
+func (c FailoverAbort) Timeout(Milliseconds int64) FailoverTimeout {
+	return FailoverTimeout{cs: append(c.cs, "TIMEOUT", strconv.FormatInt(Milliseconds, 10))}
 }
 
-func (c failoverAbort) Build() []string {
+func (c FailoverAbort) Build() []string {
 	return c.cs
 }
 
-type failoverTargetForce struct {
+type FailoverTargetForce struct {
 	cs []string
 }
 
-func (c failoverTargetForce) Abort() failoverAbort {
-	return failoverAbort{cs: append(c.cs, "ABORT")}
+func (c FailoverTargetForce) Abort() FailoverAbort {
+	return FailoverAbort{cs: append(c.cs, "ABORT")}
 }
 
-func (c failoverTargetForce) Timeout(milliseconds int64) failoverTimeout {
-	return failoverTimeout{cs: append(c.cs, "TIMEOUT", strconv.FormatInt(milliseconds, 10))}
+func (c FailoverTargetForce) Timeout(Milliseconds int64) FailoverTimeout {
+	return FailoverTimeout{cs: append(c.cs, "TIMEOUT", strconv.FormatInt(Milliseconds, 10))}
 }
 
-func (c failoverTargetForce) Build() []string {
+func (c FailoverTargetForce) Build() []string {
 	return c.cs
 }
 
-type failoverTargetHost struct {
+type FailoverTargetHost struct {
 	cs []string
 }
 
-func (c failoverTargetHost) Port(port int64) failoverTargetPort {
-	return failoverTargetPort{cs: append(c.cs, strconv.FormatInt(port, 10))}
+func (c FailoverTargetHost) Port(Port int64) FailoverTargetPort {
+	return FailoverTargetPort{cs: append(c.cs, strconv.FormatInt(Port, 10))}
 }
 
-type failoverTargetPort struct {
+type FailoverTargetPort struct {
 	cs []string
 }
 
-func (c failoverTargetPort) Force() failoverTargetForce {
-	return failoverTargetForce{cs: append(c.cs, "FORCE")}
+func (c FailoverTargetPort) Force() FailoverTargetForce {
+	return FailoverTargetForce{cs: append(c.cs, "FORCE")}
 }
 
-func (c failoverTargetPort) Abort() failoverAbort {
-	return failoverAbort{cs: append(c.cs, "ABORT")}
+func (c FailoverTargetPort) Abort() FailoverAbort {
+	return FailoverAbort{cs: append(c.cs, "ABORT")}
 }
 
-func (c failoverTargetPort) Timeout(milliseconds int64) failoverTimeout {
-	return failoverTimeout{cs: append(c.cs, "TIMEOUT", strconv.FormatInt(milliseconds, 10))}
+func (c FailoverTargetPort) Timeout(Milliseconds int64) FailoverTimeout {
+	return FailoverTimeout{cs: append(c.cs, "TIMEOUT", strconv.FormatInt(Milliseconds, 10))}
 }
 
-func (c failoverTargetPort) Build() []string {
+func (c FailoverTargetPort) Build() []string {
 	return c.cs
 }
 
-type failoverTargetTo struct {
+type FailoverTargetTo struct {
 	cs []string
 }
 
-func (c failoverTargetTo) Host(host string) failoverTargetHost {
-	return failoverTargetHost{cs: append(c.cs, host)}
+func (c FailoverTargetTo) Host(Host string) FailoverTargetHost {
+	return FailoverTargetHost{cs: append(c.cs, Host)}
 }
 
-type failoverTimeout struct {
+type FailoverTimeout struct {
 	cs []string
 }
 
-func (c failoverTimeout) Build() []string {
+func (c FailoverTimeout) Build() []string {
 	return c.cs
 }
 
-type flushall struct {
+type Flushall struct {
 	cs []string
 }
 
-func (c flushall) Async() flushallAsyncAsync {
-	return flushallAsyncAsync{cs: append(c.cs, "ASYNC")}
+func (c Flushall) Async() FlushallAsyncAsync {
+	return FlushallAsyncAsync{cs: append(c.cs, "ASYNC")}
 }
 
-func (c flushall) Sync() flushallAsyncSync {
-	return flushallAsyncSync{cs: append(c.cs, "SYNC")}
+func (c Flushall) Sync() FlushallAsyncSync {
+	return FlushallAsyncSync{cs: append(c.cs, "SYNC")}
 }
 
-func (c flushall) Build() []string {
+func (c Flushall) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) Flushall() (c flushall) {
+func (b *Builder) Flushall() (c Flushall) {
 	c.cs = append(b.get(), "FLUSHALL")
 	return
 }
 
-type flushallAsyncAsync struct {
+type FlushallAsyncAsync struct {
 	cs []string
 }
 
-func (c flushallAsyncAsync) Build() []string {
+func (c FlushallAsyncAsync) Build() []string {
 	return c.cs
 }
 
-type flushallAsyncSync struct {
+type FlushallAsyncSync struct {
 	cs []string
 }
 
-func (c flushallAsyncSync) Build() []string {
+func (c FlushallAsyncSync) Build() []string {
 	return c.cs
 }
 
-type flushdb struct {
+type Flushdb struct {
 	cs []string
 }
 
-func (c flushdb) Async() flushdbAsyncAsync {
-	return flushdbAsyncAsync{cs: append(c.cs, "ASYNC")}
+func (c Flushdb) Async() FlushdbAsyncAsync {
+	return FlushdbAsyncAsync{cs: append(c.cs, "ASYNC")}
 }
 
-func (c flushdb) Sync() flushdbAsyncSync {
-	return flushdbAsyncSync{cs: append(c.cs, "SYNC")}
+func (c Flushdb) Sync() FlushdbAsyncSync {
+	return FlushdbAsyncSync{cs: append(c.cs, "SYNC")}
 }
 
-func (c flushdb) Build() []string {
+func (c Flushdb) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) Flushdb() (c flushdb) {
+func (b *Builder) Flushdb() (c Flushdb) {
 	c.cs = append(b.get(), "FLUSHDB")
 	return
 }
 
-type flushdbAsyncAsync struct {
+type FlushdbAsyncAsync struct {
 	cs []string
 }
 
-func (c flushdbAsyncAsync) Build() []string {
+func (c FlushdbAsyncAsync) Build() []string {
 	return c.cs
 }
 
-type flushdbAsyncSync struct {
+type FlushdbAsyncSync struct {
 	cs []string
 }
 
-func (c flushdbAsyncSync) Build() []string {
+func (c FlushdbAsyncSync) Build() []string {
 	return c.cs
 }
 
-type geoadd struct {
+type Geoadd struct {
 	cs []string
 }
 
-func (c geoadd) Key(key string) geoaddKey {
-	return geoaddKey{cs: append(c.cs, key)}
+func (c Geoadd) Key(Key string) GeoaddKey {
+	return GeoaddKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Geoadd() (c geoadd) {
+func (b *Builder) Geoadd() (c Geoadd) {
 	c.cs = append(b.get(), "GEOADD")
 	return
 }
 
-type geoaddChangeCh struct {
+type GeoaddChangeCh struct {
 	cs []string
 }
 
-func (c geoaddChangeCh) LongitudeLatitudeMember() geoaddLongitudeLatitudeMember {
-	return geoaddLongitudeLatitudeMember{cs: append(c.cs)}
+func (c GeoaddChangeCh) LongitudeLatitudeMember() GeoaddLongitudeLatitudeMember {
+	return GeoaddLongitudeLatitudeMember{cs: append(c.cs)}
 }
 
-type geoaddConditionNx struct {
+type GeoaddConditionNx struct {
 	cs []string
 }
 
-func (c geoaddConditionNx) Ch() geoaddChangeCh {
-	return geoaddChangeCh{cs: append(c.cs, "CH")}
+func (c GeoaddConditionNx) Ch() GeoaddChangeCh {
+	return GeoaddChangeCh{cs: append(c.cs, "CH")}
 }
 
-func (c geoaddConditionNx) LongitudeLatitudeMember() geoaddLongitudeLatitudeMember {
-	return geoaddLongitudeLatitudeMember{cs: append(c.cs)}
+func (c GeoaddConditionNx) LongitudeLatitudeMember() GeoaddLongitudeLatitudeMember {
+	return GeoaddLongitudeLatitudeMember{cs: append(c.cs)}
 }
 
-type geoaddConditionXx struct {
+type GeoaddConditionXx struct {
 	cs []string
 }
 
-func (c geoaddConditionXx) Ch() geoaddChangeCh {
-	return geoaddChangeCh{cs: append(c.cs, "CH")}
+func (c GeoaddConditionXx) Ch() GeoaddChangeCh {
+	return GeoaddChangeCh{cs: append(c.cs, "CH")}
 }
 
-func (c geoaddConditionXx) LongitudeLatitudeMember() geoaddLongitudeLatitudeMember {
-	return geoaddLongitudeLatitudeMember{cs: append(c.cs)}
+func (c GeoaddConditionXx) LongitudeLatitudeMember() GeoaddLongitudeLatitudeMember {
+	return GeoaddLongitudeLatitudeMember{cs: append(c.cs)}
 }
 
-type geoaddKey struct {
+type GeoaddKey struct {
 	cs []string
 }
 
-func (c geoaddKey) Nx() geoaddConditionNx {
-	return geoaddConditionNx{cs: append(c.cs, "NX")}
+func (c GeoaddKey) Nx() GeoaddConditionNx {
+	return GeoaddConditionNx{cs: append(c.cs, "NX")}
 }
 
-func (c geoaddKey) Xx() geoaddConditionXx {
-	return geoaddConditionXx{cs: append(c.cs, "XX")}
+func (c GeoaddKey) Xx() GeoaddConditionXx {
+	return GeoaddConditionXx{cs: append(c.cs, "XX")}
 }
 
-func (c geoaddKey) Ch() geoaddChangeCh {
-	return geoaddChangeCh{cs: append(c.cs, "CH")}
+func (c GeoaddKey) Ch() GeoaddChangeCh {
+	return GeoaddChangeCh{cs: append(c.cs, "CH")}
 }
 
-func (c geoaddKey) LongitudeLatitudeMember() geoaddLongitudeLatitudeMember {
-	return geoaddLongitudeLatitudeMember{cs: append(c.cs)}
+func (c GeoaddKey) LongitudeLatitudeMember() GeoaddLongitudeLatitudeMember {
+	return GeoaddLongitudeLatitudeMember{cs: append(c.cs)}
 }
 
-type geoaddLongitudeLatitudeMember struct {
+type GeoaddLongitudeLatitudeMember struct {
 	cs []string
 }
 
-func (c geoaddLongitudeLatitudeMember) LongitudeLatitudeMember(longitude float64, latitude float64, member string) geoaddLongitudeLatitudeMember {
-	return geoaddLongitudeLatitudeMember{cs: append(c.cs, strconv.FormatFloat(longitude, 'f', -1, 64), strconv.FormatFloat(latitude, 'f', -1, 64), member)}
+func (c GeoaddLongitudeLatitudeMember) LongitudeLatitudeMember(Longitude float64, Latitude float64, Member string) GeoaddLongitudeLatitudeMember {
+	return GeoaddLongitudeLatitudeMember{cs: append(c.cs, strconv.FormatFloat(Longitude, 'f', -1, 64), strconv.FormatFloat(Latitude, 'f', -1, 64), Member)}
 }
 
-func (c geoaddLongitudeLatitudeMember) Build() []string {
+func (c GeoaddLongitudeLatitudeMember) Build() []string {
 	return c.cs
 }
 
-type geodist struct {
+type Geodist struct {
 	cs []string
 }
 
-func (c geodist) Key(key string) geodistKey {
-	return geodistKey{cs: append(c.cs, key)}
+func (c Geodist) Key(Key string) GeodistKey {
+	return GeodistKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Geodist() (c geodist) {
+func (b *Builder) Geodist() (c Geodist) {
 	c.cs = append(b.get(), "GEODIST")
 	return
 }
 
-type geodistKey struct {
+type GeodistKey struct {
 	cs []string
 }
 
-func (c geodistKey) Member1(member1 string) geodistMember1 {
-	return geodistMember1{cs: append(c.cs, member1)}
+func (c GeodistKey) Member1(Member1 string) GeodistMember1 {
+	return GeodistMember1{cs: append(c.cs, Member1)}
 }
 
-type geodistMember1 struct {
+type GeodistMember1 struct {
 	cs []string
 }
 
-func (c geodistMember1) Member2(member2 string) geodistMember2 {
-	return geodistMember2{cs: append(c.cs, member2)}
+func (c GeodistMember1) Member2(Member2 string) GeodistMember2 {
+	return GeodistMember2{cs: append(c.cs, Member2)}
 }
 
-type geodistMember2 struct {
+type GeodistMember2 struct {
 	cs []string
 }
 
-func (c geodistMember2) M() geodistUnitM {
-	return geodistUnitM{cs: append(c.cs, "m")}
+func (c GeodistMember2) M() GeodistUnitM {
+	return GeodistUnitM{cs: append(c.cs, "m")}
 }
 
-func (c geodistMember2) Km() geodistUnitKm {
-	return geodistUnitKm{cs: append(c.cs, "km")}
+func (c GeodistMember2) Km() GeodistUnitKm {
+	return GeodistUnitKm{cs: append(c.cs, "km")}
 }
 
-func (c geodistMember2) Ft() geodistUnitFt {
-	return geodistUnitFt{cs: append(c.cs, "ft")}
+func (c GeodistMember2) Ft() GeodistUnitFt {
+	return GeodistUnitFt{cs: append(c.cs, "ft")}
 }
 
-func (c geodistMember2) Mi() geodistUnitMi {
-	return geodistUnitMi{cs: append(c.cs, "mi")}
+func (c GeodistMember2) Mi() GeodistUnitMi {
+	return GeodistUnitMi{cs: append(c.cs, "mi")}
 }
 
-func (c geodistMember2) Build() []string {
+func (c GeodistMember2) Build() []string {
 	return c.cs
 }
 
-type geodistUnitFt struct {
+type GeodistUnitFt struct {
 	cs []string
 }
 
-func (c geodistUnitFt) Build() []string {
+func (c GeodistUnitFt) Build() []string {
 	return c.cs
 }
 
-type geodistUnitKm struct {
+type GeodistUnitKm struct {
 	cs []string
 }
 
-func (c geodistUnitKm) Build() []string {
+func (c GeodistUnitKm) Build() []string {
 	return c.cs
 }
 
-type geodistUnitM struct {
+type GeodistUnitM struct {
 	cs []string
 }
 
-func (c geodistUnitM) Build() []string {
+func (c GeodistUnitM) Build() []string {
 	return c.cs
 }
 
-type geodistUnitMi struct {
+type GeodistUnitMi struct {
 	cs []string
 }
 
-func (c geodistUnitMi) Build() []string {
+func (c GeodistUnitMi) Build() []string {
 	return c.cs
 }
 
-type geohash struct {
+type Geohash struct {
 	cs []string
 }
 
-func (c geohash) Key(key string) geohashKey {
-	return geohashKey{cs: append(c.cs, key)}
+func (c Geohash) Key(Key string) GeohashKey {
+	return GeohashKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Geohash() (c geohash) {
+func (b *Builder) Geohash() (c Geohash) {
 	c.cs = append(b.get(), "GEOHASH")
 	return
 }
 
-type geohashKey struct {
+type GeohashKey struct {
 	cs []string
 }
 
-func (c geohashKey) Member(member ...string) geohashMember {
-	return geohashMember{cs: append(c.cs, member...)}
+func (c GeohashKey) Member(Member ...string) GeohashMember {
+	return GeohashMember{cs: append(c.cs, Member...)}
 }
 
-type geohashMember struct {
+type GeohashMember struct {
 	cs []string
 }
 
-func (c geohashMember) Member(member ...string) geohashMember {
-	return geohashMember{cs: append(c.cs, member...)}
+func (c GeohashMember) Member(Member ...string) GeohashMember {
+	return GeohashMember{cs: append(c.cs, Member...)}
 }
 
-func (c geohashMember) Build() []string {
+func (c GeohashMember) Build() []string {
 	return c.cs
 }
 
-type geopos struct {
+type Geopos struct {
 	cs []string
 }
 
-func (c geopos) Key(key string) geoposKey {
-	return geoposKey{cs: append(c.cs, key)}
+func (c Geopos) Key(Key string) GeoposKey {
+	return GeoposKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Geopos() (c geopos) {
+func (b *Builder) Geopos() (c Geopos) {
 	c.cs = append(b.get(), "GEOPOS")
 	return
 }
 
-type geoposKey struct {
+type GeoposKey struct {
 	cs []string
 }
 
-func (c geoposKey) Member(member ...string) geoposMember {
-	return geoposMember{cs: append(c.cs, member...)}
+func (c GeoposKey) Member(Member ...string) GeoposMember {
+	return GeoposMember{cs: append(c.cs, Member...)}
 }
 
-type geoposMember struct {
+type GeoposMember struct {
 	cs []string
 }
 
-func (c geoposMember) Member(member ...string) geoposMember {
-	return geoposMember{cs: append(c.cs, member...)}
+func (c GeoposMember) Member(Member ...string) GeoposMember {
+	return GeoposMember{cs: append(c.cs, Member...)}
 }
 
-func (c geoposMember) Build() []string {
+func (c GeoposMember) Build() []string {
 	return c.cs
 }
 
-type georadius struct {
+type Georadius struct {
 	cs []string
 }
 
-func (c georadius) Key(key string) georadiusKey {
-	return georadiusKey{cs: append(c.cs, key)}
+func (c Georadius) Key(Key string) GeoradiusKey {
+	return GeoradiusKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Georadius() (c georadius) {
+func (b *Builder) Georadius() (c Georadius) {
 	c.cs = append(b.get(), "GEORADIUS")
 	return
 }
 
-type georadiusCountAnyAny struct {
+type GeoradiusCountAnyAny struct {
 	cs []string
 }
 
-func (c georadiusCountAnyAny) Asc() georadiusOrderAsc {
-	return georadiusOrderAsc{cs: append(c.cs, "ASC")}
+func (c GeoradiusCountAnyAny) Asc() GeoradiusOrderAsc {
+	return GeoradiusOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c georadiusCountAnyAny) Desc() georadiusOrderDesc {
-	return georadiusOrderDesc{cs: append(c.cs, "DESC")}
+func (c GeoradiusCountAnyAny) Desc() GeoradiusOrderDesc {
+	return GeoradiusOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c georadiusCountAnyAny) Store(key string) georadiusStore {
-	return georadiusStore{cs: append(c.cs, "STORE", key)}
+func (c GeoradiusCountAnyAny) Store(Key string) GeoradiusStore {
+	return GeoradiusStore{cs: append(c.cs, "STORE", Key)}
 }
 
-func (c georadiusCountAnyAny) Storedist(key string) georadiusStoredist {
-	return georadiusStoredist{cs: append(c.cs, "STOREDIST", key)}
+func (c GeoradiusCountAnyAny) Storedist(Key string) GeoradiusStoredist {
+	return GeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key)}
 }
 
-func (c georadiusCountAnyAny) Build() []string {
+func (c GeoradiusCountAnyAny) Build() []string {
 	return c.cs
 }
 
-type georadiusCountCount struct {
+type GeoradiusCountCount struct {
 	cs []string
 }
 
-func (c georadiusCountCount) Any() georadiusCountAnyAny {
-	return georadiusCountAnyAny{cs: append(c.cs, "ANY")}
+func (c GeoradiusCountCount) Any() GeoradiusCountAnyAny {
+	return GeoradiusCountAnyAny{cs: append(c.cs, "ANY")}
 }
 
-func (c georadiusCountCount) Asc() georadiusOrderAsc {
-	return georadiusOrderAsc{cs: append(c.cs, "ASC")}
+func (c GeoradiusCountCount) Asc() GeoradiusOrderAsc {
+	return GeoradiusOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c georadiusCountCount) Desc() georadiusOrderDesc {
-	return georadiusOrderDesc{cs: append(c.cs, "DESC")}
+func (c GeoradiusCountCount) Desc() GeoradiusOrderDesc {
+	return GeoradiusOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c georadiusCountCount) Store(key string) georadiusStore {
-	return georadiusStore{cs: append(c.cs, "STORE", key)}
+func (c GeoradiusCountCount) Store(Key string) GeoradiusStore {
+	return GeoradiusStore{cs: append(c.cs, "STORE", Key)}
 }
 
-func (c georadiusCountCount) Storedist(key string) georadiusStoredist {
-	return georadiusStoredist{cs: append(c.cs, "STOREDIST", key)}
+func (c GeoradiusCountCount) Storedist(Key string) GeoradiusStoredist {
+	return GeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key)}
 }
 
-func (c georadiusCountCount) Build() []string {
+func (c GeoradiusCountCount) Build() []string {
 	return c.cs
 }
 
-type georadiusKey struct {
+type GeoradiusKey struct {
 	cs []string
 }
 
-func (c georadiusKey) Longitude(longitude float64) georadiusLongitude {
-	return georadiusLongitude{cs: append(c.cs, strconv.FormatFloat(longitude, 'f', -1, 64))}
+func (c GeoradiusKey) Longitude(Longitude float64) GeoradiusLongitude {
+	return GeoradiusLongitude{cs: append(c.cs, strconv.FormatFloat(Longitude, 'f', -1, 64))}
 }
 
-type georadiusLatitude struct {
+type GeoradiusLatitude struct {
 	cs []string
 }
 
-func (c georadiusLatitude) Radius(radius float64) georadiusRadius {
-	return georadiusRadius{cs: append(c.cs, strconv.FormatFloat(radius, 'f', -1, 64))}
+func (c GeoradiusLatitude) Radius(Radius float64) GeoradiusRadius {
+	return GeoradiusRadius{cs: append(c.cs, strconv.FormatFloat(Radius, 'f', -1, 64))}
 }
 
-type georadiusLongitude struct {
+type GeoradiusLongitude struct {
 	cs []string
 }
 
-func (c georadiusLongitude) Latitude(latitude float64) georadiusLatitude {
-	return georadiusLatitude{cs: append(c.cs, strconv.FormatFloat(latitude, 'f', -1, 64))}
+func (c GeoradiusLongitude) Latitude(Latitude float64) GeoradiusLatitude {
+	return GeoradiusLatitude{cs: append(c.cs, strconv.FormatFloat(Latitude, 'f', -1, 64))}
 }
 
-type georadiusOrderAsc struct {
+type GeoradiusOrderAsc struct {
 	cs []string
 }
 
-func (c georadiusOrderAsc) Store(key string) georadiusStore {
-	return georadiusStore{cs: append(c.cs, "STORE", key)}
+func (c GeoradiusOrderAsc) Store(Key string) GeoradiusStore {
+	return GeoradiusStore{cs: append(c.cs, "STORE", Key)}
 }
 
-func (c georadiusOrderAsc) Storedist(key string) georadiusStoredist {
-	return georadiusStoredist{cs: append(c.cs, "STOREDIST", key)}
+func (c GeoradiusOrderAsc) Storedist(Key string) GeoradiusStoredist {
+	return GeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key)}
 }
 
-func (c georadiusOrderAsc) Build() []string {
+func (c GeoradiusOrderAsc) Build() []string {
 	return c.cs
 }
 
-type georadiusOrderDesc struct {
+type GeoradiusOrderDesc struct {
 	cs []string
 }
 
-func (c georadiusOrderDesc) Store(key string) georadiusStore {
-	return georadiusStore{cs: append(c.cs, "STORE", key)}
+func (c GeoradiusOrderDesc) Store(Key string) GeoradiusStore {
+	return GeoradiusStore{cs: append(c.cs, "STORE", Key)}
 }
 
-func (c georadiusOrderDesc) Storedist(key string) georadiusStoredist {
-	return georadiusStoredist{cs: append(c.cs, "STOREDIST", key)}
+func (c GeoradiusOrderDesc) Storedist(Key string) GeoradiusStoredist {
+	return GeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key)}
 }
 
-func (c georadiusOrderDesc) Build() []string {
+func (c GeoradiusOrderDesc) Build() []string {
 	return c.cs
 }
 
-type georadiusRadius struct {
+type GeoradiusRadius struct {
 	cs []string
 }
 
-func (c georadiusRadius) M() georadiusUnitM {
-	return georadiusUnitM{cs: append(c.cs, "m")}
+func (c GeoradiusRadius) M() GeoradiusUnitM {
+	return GeoradiusUnitM{cs: append(c.cs, "m")}
 }
 
-func (c georadiusRadius) Km() georadiusUnitKm {
-	return georadiusUnitKm{cs: append(c.cs, "km")}
+func (c GeoradiusRadius) Km() GeoradiusUnitKm {
+	return GeoradiusUnitKm{cs: append(c.cs, "km")}
 }
 
-func (c georadiusRadius) Ft() georadiusUnitFt {
-	return georadiusUnitFt{cs: append(c.cs, "ft")}
+func (c GeoradiusRadius) Ft() GeoradiusUnitFt {
+	return GeoradiusUnitFt{cs: append(c.cs, "ft")}
 }
 
-func (c georadiusRadius) Mi() georadiusUnitMi {
-	return georadiusUnitMi{cs: append(c.cs, "mi")}
+func (c GeoradiusRadius) Mi() GeoradiusUnitMi {
+	return GeoradiusUnitMi{cs: append(c.cs, "mi")}
 }
 
-type georadiusStore struct {
+type GeoradiusStore struct {
 	cs []string
 }
 
-func (c georadiusStore) Storedist(key string) georadiusStoredist {
-	return georadiusStoredist{cs: append(c.cs, "STOREDIST", key)}
+func (c GeoradiusStore) Storedist(Key string) GeoradiusStoredist {
+	return GeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key)}
 }
 
-func (c georadiusStore) Build() []string {
+func (c GeoradiusStore) Build() []string {
 	return c.cs
 }
 
-type georadiusStoredist struct {
+type GeoradiusStoredist struct {
 	cs []string
 }
 
-func (c georadiusStoredist) Build() []string {
+func (c GeoradiusStoredist) Build() []string {
 	return c.cs
 }
 
-type georadiusUnitFt struct {
+type GeoradiusUnitFt struct {
 	cs []string
 }
 
-func (c georadiusUnitFt) Withcoord() georadiusWithcoordWithcoord {
-	return georadiusWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+func (c GeoradiusUnitFt) Withcoord() GeoradiusWithcoordWithcoord {
+	return GeoradiusWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
 }
 
-func (c georadiusUnitFt) Withdist() georadiusWithdistWithdist {
-	return georadiusWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+func (c GeoradiusUnitFt) Withdist() GeoradiusWithdistWithdist {
+	return GeoradiusWithdistWithdist{cs: append(c.cs, "WITHDIST")}
 }
 
-func (c georadiusUnitFt) Withhash() georadiusWithhashWithhash {
-	return georadiusWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+func (c GeoradiusUnitFt) Withhash() GeoradiusWithhashWithhash {
+	return GeoradiusWithhashWithhash{cs: append(c.cs, "WITHHASH")}
 }
 
-func (c georadiusUnitFt) Count(count int64) georadiusCountCount {
-	return georadiusCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c GeoradiusUnitFt) Count(Count int64) GeoradiusCountCount {
+	return GeoradiusCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c georadiusUnitFt) Asc() georadiusOrderAsc {
-	return georadiusOrderAsc{cs: append(c.cs, "ASC")}
+func (c GeoradiusUnitFt) Asc() GeoradiusOrderAsc {
+	return GeoradiusOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c georadiusUnitFt) Desc() georadiusOrderDesc {
-	return georadiusOrderDesc{cs: append(c.cs, "DESC")}
+func (c GeoradiusUnitFt) Desc() GeoradiusOrderDesc {
+	return GeoradiusOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c georadiusUnitFt) Store(key string) georadiusStore {
-	return georadiusStore{cs: append(c.cs, "STORE", key)}
+func (c GeoradiusUnitFt) Store(Key string) GeoradiusStore {
+	return GeoradiusStore{cs: append(c.cs, "STORE", Key)}
 }
 
-func (c georadiusUnitFt) Storedist(key string) georadiusStoredist {
-	return georadiusStoredist{cs: append(c.cs, "STOREDIST", key)}
+func (c GeoradiusUnitFt) Storedist(Key string) GeoradiusStoredist {
+	return GeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key)}
 }
 
-type georadiusUnitKm struct {
+type GeoradiusUnitKm struct {
 	cs []string
 }
 
-func (c georadiusUnitKm) Withcoord() georadiusWithcoordWithcoord {
-	return georadiusWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+func (c GeoradiusUnitKm) Withcoord() GeoradiusWithcoordWithcoord {
+	return GeoradiusWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
 }
 
-func (c georadiusUnitKm) Withdist() georadiusWithdistWithdist {
-	return georadiusWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+func (c GeoradiusUnitKm) Withdist() GeoradiusWithdistWithdist {
+	return GeoradiusWithdistWithdist{cs: append(c.cs, "WITHDIST")}
 }
 
-func (c georadiusUnitKm) Withhash() georadiusWithhashWithhash {
-	return georadiusWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+func (c GeoradiusUnitKm) Withhash() GeoradiusWithhashWithhash {
+	return GeoradiusWithhashWithhash{cs: append(c.cs, "WITHHASH")}
 }
 
-func (c georadiusUnitKm) Count(count int64) georadiusCountCount {
-	return georadiusCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c GeoradiusUnitKm) Count(Count int64) GeoradiusCountCount {
+	return GeoradiusCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c georadiusUnitKm) Asc() georadiusOrderAsc {
-	return georadiusOrderAsc{cs: append(c.cs, "ASC")}
+func (c GeoradiusUnitKm) Asc() GeoradiusOrderAsc {
+	return GeoradiusOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c georadiusUnitKm) Desc() georadiusOrderDesc {
-	return georadiusOrderDesc{cs: append(c.cs, "DESC")}
+func (c GeoradiusUnitKm) Desc() GeoradiusOrderDesc {
+	return GeoradiusOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c georadiusUnitKm) Store(key string) georadiusStore {
-	return georadiusStore{cs: append(c.cs, "STORE", key)}
+func (c GeoradiusUnitKm) Store(Key string) GeoradiusStore {
+	return GeoradiusStore{cs: append(c.cs, "STORE", Key)}
 }
 
-func (c georadiusUnitKm) Storedist(key string) georadiusStoredist {
-	return georadiusStoredist{cs: append(c.cs, "STOREDIST", key)}
+func (c GeoradiusUnitKm) Storedist(Key string) GeoradiusStoredist {
+	return GeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key)}
 }
 
-type georadiusUnitM struct {
+type GeoradiusUnitM struct {
 	cs []string
 }
 
-func (c georadiusUnitM) Withcoord() georadiusWithcoordWithcoord {
-	return georadiusWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+func (c GeoradiusUnitM) Withcoord() GeoradiusWithcoordWithcoord {
+	return GeoradiusWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
 }
 
-func (c georadiusUnitM) Withdist() georadiusWithdistWithdist {
-	return georadiusWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+func (c GeoradiusUnitM) Withdist() GeoradiusWithdistWithdist {
+	return GeoradiusWithdistWithdist{cs: append(c.cs, "WITHDIST")}
 }
 
-func (c georadiusUnitM) Withhash() georadiusWithhashWithhash {
-	return georadiusWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+func (c GeoradiusUnitM) Withhash() GeoradiusWithhashWithhash {
+	return GeoradiusWithhashWithhash{cs: append(c.cs, "WITHHASH")}
 }
 
-func (c georadiusUnitM) Count(count int64) georadiusCountCount {
-	return georadiusCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c GeoradiusUnitM) Count(Count int64) GeoradiusCountCount {
+	return GeoradiusCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c georadiusUnitM) Asc() georadiusOrderAsc {
-	return georadiusOrderAsc{cs: append(c.cs, "ASC")}
+func (c GeoradiusUnitM) Asc() GeoradiusOrderAsc {
+	return GeoradiusOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c georadiusUnitM) Desc() georadiusOrderDesc {
-	return georadiusOrderDesc{cs: append(c.cs, "DESC")}
+func (c GeoradiusUnitM) Desc() GeoradiusOrderDesc {
+	return GeoradiusOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c georadiusUnitM) Store(key string) georadiusStore {
-	return georadiusStore{cs: append(c.cs, "STORE", key)}
+func (c GeoradiusUnitM) Store(Key string) GeoradiusStore {
+	return GeoradiusStore{cs: append(c.cs, "STORE", Key)}
 }
 
-func (c georadiusUnitM) Storedist(key string) georadiusStoredist {
-	return georadiusStoredist{cs: append(c.cs, "STOREDIST", key)}
+func (c GeoradiusUnitM) Storedist(Key string) GeoradiusStoredist {
+	return GeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key)}
 }
 
-type georadiusUnitMi struct {
+type GeoradiusUnitMi struct {
 	cs []string
 }
 
-func (c georadiusUnitMi) Withcoord() georadiusWithcoordWithcoord {
-	return georadiusWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+func (c GeoradiusUnitMi) Withcoord() GeoradiusWithcoordWithcoord {
+	return GeoradiusWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
 }
 
-func (c georadiusUnitMi) Withdist() georadiusWithdistWithdist {
-	return georadiusWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+func (c GeoradiusUnitMi) Withdist() GeoradiusWithdistWithdist {
+	return GeoradiusWithdistWithdist{cs: append(c.cs, "WITHDIST")}
 }
 
-func (c georadiusUnitMi) Withhash() georadiusWithhashWithhash {
-	return georadiusWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+func (c GeoradiusUnitMi) Withhash() GeoradiusWithhashWithhash {
+	return GeoradiusWithhashWithhash{cs: append(c.cs, "WITHHASH")}
 }
 
-func (c georadiusUnitMi) Count(count int64) georadiusCountCount {
-	return georadiusCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c GeoradiusUnitMi) Count(Count int64) GeoradiusCountCount {
+	return GeoradiusCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c georadiusUnitMi) Asc() georadiusOrderAsc {
-	return georadiusOrderAsc{cs: append(c.cs, "ASC")}
+func (c GeoradiusUnitMi) Asc() GeoradiusOrderAsc {
+	return GeoradiusOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c georadiusUnitMi) Desc() georadiusOrderDesc {
-	return georadiusOrderDesc{cs: append(c.cs, "DESC")}
+func (c GeoradiusUnitMi) Desc() GeoradiusOrderDesc {
+	return GeoradiusOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c georadiusUnitMi) Store(key string) georadiusStore {
-	return georadiusStore{cs: append(c.cs, "STORE", key)}
+func (c GeoradiusUnitMi) Store(Key string) GeoradiusStore {
+	return GeoradiusStore{cs: append(c.cs, "STORE", Key)}
 }
 
-func (c georadiusUnitMi) Storedist(key string) georadiusStoredist {
-	return georadiusStoredist{cs: append(c.cs, "STOREDIST", key)}
+func (c GeoradiusUnitMi) Storedist(Key string) GeoradiusStoredist {
+	return GeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key)}
 }
 
-type georadiusWithcoordWithcoord struct {
+type GeoradiusWithcoordWithcoord struct {
 	cs []string
 }
 
-func (c georadiusWithcoordWithcoord) Withdist() georadiusWithdistWithdist {
-	return georadiusWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+func (c GeoradiusWithcoordWithcoord) Withdist() GeoradiusWithdistWithdist {
+	return GeoradiusWithdistWithdist{cs: append(c.cs, "WITHDIST")}
 }
 
-func (c georadiusWithcoordWithcoord) Withhash() georadiusWithhashWithhash {
-	return georadiusWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+func (c GeoradiusWithcoordWithcoord) Withhash() GeoradiusWithhashWithhash {
+	return GeoradiusWithhashWithhash{cs: append(c.cs, "WITHHASH")}
 }
 
-func (c georadiusWithcoordWithcoord) Count(count int64) georadiusCountCount {
-	return georadiusCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c GeoradiusWithcoordWithcoord) Count(Count int64) GeoradiusCountCount {
+	return GeoradiusCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c georadiusWithcoordWithcoord) Asc() georadiusOrderAsc {
-	return georadiusOrderAsc{cs: append(c.cs, "ASC")}
+func (c GeoradiusWithcoordWithcoord) Asc() GeoradiusOrderAsc {
+	return GeoradiusOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c georadiusWithcoordWithcoord) Desc() georadiusOrderDesc {
-	return georadiusOrderDesc{cs: append(c.cs, "DESC")}
+func (c GeoradiusWithcoordWithcoord) Desc() GeoradiusOrderDesc {
+	return GeoradiusOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c georadiusWithcoordWithcoord) Store(key string) georadiusStore {
-	return georadiusStore{cs: append(c.cs, "STORE", key)}
+func (c GeoradiusWithcoordWithcoord) Store(Key string) GeoradiusStore {
+	return GeoradiusStore{cs: append(c.cs, "STORE", Key)}
 }
 
-func (c georadiusWithcoordWithcoord) Storedist(key string) georadiusStoredist {
-	return georadiusStoredist{cs: append(c.cs, "STOREDIST", key)}
+func (c GeoradiusWithcoordWithcoord) Storedist(Key string) GeoradiusStoredist {
+	return GeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key)}
 }
 
-type georadiusWithdistWithdist struct {
+type GeoradiusWithdistWithdist struct {
 	cs []string
 }
 
-func (c georadiusWithdistWithdist) Withhash() georadiusWithhashWithhash {
-	return georadiusWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+func (c GeoradiusWithdistWithdist) Withhash() GeoradiusWithhashWithhash {
+	return GeoradiusWithhashWithhash{cs: append(c.cs, "WITHHASH")}
 }
 
-func (c georadiusWithdistWithdist) Count(count int64) georadiusCountCount {
-	return georadiusCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c GeoradiusWithdistWithdist) Count(Count int64) GeoradiusCountCount {
+	return GeoradiusCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c georadiusWithdistWithdist) Asc() georadiusOrderAsc {
-	return georadiusOrderAsc{cs: append(c.cs, "ASC")}
+func (c GeoradiusWithdistWithdist) Asc() GeoradiusOrderAsc {
+	return GeoradiusOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c georadiusWithdistWithdist) Desc() georadiusOrderDesc {
-	return georadiusOrderDesc{cs: append(c.cs, "DESC")}
+func (c GeoradiusWithdistWithdist) Desc() GeoradiusOrderDesc {
+	return GeoradiusOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c georadiusWithdistWithdist) Store(key string) georadiusStore {
-	return georadiusStore{cs: append(c.cs, "STORE", key)}
+func (c GeoradiusWithdistWithdist) Store(Key string) GeoradiusStore {
+	return GeoradiusStore{cs: append(c.cs, "STORE", Key)}
 }
 
-func (c georadiusWithdistWithdist) Storedist(key string) georadiusStoredist {
-	return georadiusStoredist{cs: append(c.cs, "STOREDIST", key)}
+func (c GeoradiusWithdistWithdist) Storedist(Key string) GeoradiusStoredist {
+	return GeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key)}
 }
 
-type georadiusWithhashWithhash struct {
+type GeoradiusWithhashWithhash struct {
 	cs []string
 }
 
-func (c georadiusWithhashWithhash) Count(count int64) georadiusCountCount {
-	return georadiusCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c GeoradiusWithhashWithhash) Count(Count int64) GeoradiusCountCount {
+	return GeoradiusCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c georadiusWithhashWithhash) Asc() georadiusOrderAsc {
-	return georadiusOrderAsc{cs: append(c.cs, "ASC")}
+func (c GeoradiusWithhashWithhash) Asc() GeoradiusOrderAsc {
+	return GeoradiusOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c georadiusWithhashWithhash) Desc() georadiusOrderDesc {
-	return georadiusOrderDesc{cs: append(c.cs, "DESC")}
+func (c GeoradiusWithhashWithhash) Desc() GeoradiusOrderDesc {
+	return GeoradiusOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c georadiusWithhashWithhash) Store(key string) georadiusStore {
-	return georadiusStore{cs: append(c.cs, "STORE", key)}
+func (c GeoradiusWithhashWithhash) Store(Key string) GeoradiusStore {
+	return GeoradiusStore{cs: append(c.cs, "STORE", Key)}
 }
 
-func (c georadiusWithhashWithhash) Storedist(key string) georadiusStoredist {
-	return georadiusStoredist{cs: append(c.cs, "STOREDIST", key)}
+func (c GeoradiusWithhashWithhash) Storedist(Key string) GeoradiusStoredist {
+	return GeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key)}
 }
 
-type georadiusbymember struct {
+type Georadiusbymember struct {
 	cs []string
 }
 
-func (c georadiusbymember) Key(key string) georadiusbymemberKey {
-	return georadiusbymemberKey{cs: append(c.cs, key)}
+func (c Georadiusbymember) Key(Key string) GeoradiusbymemberKey {
+	return GeoradiusbymemberKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Georadiusbymember() (c georadiusbymember) {
+func (b *Builder) Georadiusbymember() (c Georadiusbymember) {
 	c.cs = append(b.get(), "GEORADIUSBYMEMBER")
 	return
 }
 
-type georadiusbymemberCountAnyAny struct {
+type GeoradiusbymemberCountAnyAny struct {
 	cs []string
 }
 
-func (c georadiusbymemberCountAnyAny) Asc() georadiusbymemberOrderAsc {
-	return georadiusbymemberOrderAsc{cs: append(c.cs, "ASC")}
+func (c GeoradiusbymemberCountAnyAny) Asc() GeoradiusbymemberOrderAsc {
+	return GeoradiusbymemberOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c georadiusbymemberCountAnyAny) Desc() georadiusbymemberOrderDesc {
-	return georadiusbymemberOrderDesc{cs: append(c.cs, "DESC")}
+func (c GeoradiusbymemberCountAnyAny) Desc() GeoradiusbymemberOrderDesc {
+	return GeoradiusbymemberOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c georadiusbymemberCountAnyAny) Store(key string) georadiusbymemberStore {
-	return georadiusbymemberStore{cs: append(c.cs, "STORE", key)}
+func (c GeoradiusbymemberCountAnyAny) Store(Key string) GeoradiusbymemberStore {
+	return GeoradiusbymemberStore{cs: append(c.cs, "STORE", Key)}
 }
 
-func (c georadiusbymemberCountAnyAny) Storedist(key string) georadiusbymemberStoredist {
-	return georadiusbymemberStoredist{cs: append(c.cs, "STOREDIST", key)}
+func (c GeoradiusbymemberCountAnyAny) Storedist(Key string) GeoradiusbymemberStoredist {
+	return GeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key)}
 }
 
-func (c georadiusbymemberCountAnyAny) Build() []string {
+func (c GeoradiusbymemberCountAnyAny) Build() []string {
 	return c.cs
 }
 
-type georadiusbymemberCountCount struct {
+type GeoradiusbymemberCountCount struct {
 	cs []string
 }
 
-func (c georadiusbymemberCountCount) Any() georadiusbymemberCountAnyAny {
-	return georadiusbymemberCountAnyAny{cs: append(c.cs, "ANY")}
+func (c GeoradiusbymemberCountCount) Any() GeoradiusbymemberCountAnyAny {
+	return GeoradiusbymemberCountAnyAny{cs: append(c.cs, "ANY")}
 }
 
-func (c georadiusbymemberCountCount) Asc() georadiusbymemberOrderAsc {
-	return georadiusbymemberOrderAsc{cs: append(c.cs, "ASC")}
+func (c GeoradiusbymemberCountCount) Asc() GeoradiusbymemberOrderAsc {
+	return GeoradiusbymemberOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c georadiusbymemberCountCount) Desc() georadiusbymemberOrderDesc {
-	return georadiusbymemberOrderDesc{cs: append(c.cs, "DESC")}
+func (c GeoradiusbymemberCountCount) Desc() GeoradiusbymemberOrderDesc {
+	return GeoradiusbymemberOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c georadiusbymemberCountCount) Store(key string) georadiusbymemberStore {
-	return georadiusbymemberStore{cs: append(c.cs, "STORE", key)}
+func (c GeoradiusbymemberCountCount) Store(Key string) GeoradiusbymemberStore {
+	return GeoradiusbymemberStore{cs: append(c.cs, "STORE", Key)}
 }
 
-func (c georadiusbymemberCountCount) Storedist(key string) georadiusbymemberStoredist {
-	return georadiusbymemberStoredist{cs: append(c.cs, "STOREDIST", key)}
+func (c GeoradiusbymemberCountCount) Storedist(Key string) GeoradiusbymemberStoredist {
+	return GeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key)}
 }
 
-func (c georadiusbymemberCountCount) Build() []string {
+func (c GeoradiusbymemberCountCount) Build() []string {
 	return c.cs
 }
 
-type georadiusbymemberKey struct {
+type GeoradiusbymemberKey struct {
 	cs []string
 }
 
-func (c georadiusbymemberKey) Member(member string) georadiusbymemberMember {
-	return georadiusbymemberMember{cs: append(c.cs, member)}
+func (c GeoradiusbymemberKey) Member(Member string) GeoradiusbymemberMember {
+	return GeoradiusbymemberMember{cs: append(c.cs, Member)}
 }
 
-type georadiusbymemberMember struct {
+type GeoradiusbymemberMember struct {
 	cs []string
 }
 
-func (c georadiusbymemberMember) Radius(radius float64) georadiusbymemberRadius {
-	return georadiusbymemberRadius{cs: append(c.cs, strconv.FormatFloat(radius, 'f', -1, 64))}
+func (c GeoradiusbymemberMember) Radius(Radius float64) GeoradiusbymemberRadius {
+	return GeoradiusbymemberRadius{cs: append(c.cs, strconv.FormatFloat(Radius, 'f', -1, 64))}
 }
 
-type georadiusbymemberOrderAsc struct {
+type GeoradiusbymemberOrderAsc struct {
 	cs []string
 }
 
-func (c georadiusbymemberOrderAsc) Store(key string) georadiusbymemberStore {
-	return georadiusbymemberStore{cs: append(c.cs, "STORE", key)}
+func (c GeoradiusbymemberOrderAsc) Store(Key string) GeoradiusbymemberStore {
+	return GeoradiusbymemberStore{cs: append(c.cs, "STORE", Key)}
 }
 
-func (c georadiusbymemberOrderAsc) Storedist(key string) georadiusbymemberStoredist {
-	return georadiusbymemberStoredist{cs: append(c.cs, "STOREDIST", key)}
+func (c GeoradiusbymemberOrderAsc) Storedist(Key string) GeoradiusbymemberStoredist {
+	return GeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key)}
 }
 
-func (c georadiusbymemberOrderAsc) Build() []string {
+func (c GeoradiusbymemberOrderAsc) Build() []string {
 	return c.cs
 }
 
-type georadiusbymemberOrderDesc struct {
+type GeoradiusbymemberOrderDesc struct {
 	cs []string
 }
 
-func (c georadiusbymemberOrderDesc) Store(key string) georadiusbymemberStore {
-	return georadiusbymemberStore{cs: append(c.cs, "STORE", key)}
+func (c GeoradiusbymemberOrderDesc) Store(Key string) GeoradiusbymemberStore {
+	return GeoradiusbymemberStore{cs: append(c.cs, "STORE", Key)}
 }
 
-func (c georadiusbymemberOrderDesc) Storedist(key string) georadiusbymemberStoredist {
-	return georadiusbymemberStoredist{cs: append(c.cs, "STOREDIST", key)}
+func (c GeoradiusbymemberOrderDesc) Storedist(Key string) GeoradiusbymemberStoredist {
+	return GeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key)}
 }
 
-func (c georadiusbymemberOrderDesc) Build() []string {
+func (c GeoradiusbymemberOrderDesc) Build() []string {
 	return c.cs
 }
 
-type georadiusbymemberRadius struct {
+type GeoradiusbymemberRadius struct {
 	cs []string
 }
 
-func (c georadiusbymemberRadius) M() georadiusbymemberUnitM {
-	return georadiusbymemberUnitM{cs: append(c.cs, "m")}
+func (c GeoradiusbymemberRadius) M() GeoradiusbymemberUnitM {
+	return GeoradiusbymemberUnitM{cs: append(c.cs, "m")}
 }
 
-func (c georadiusbymemberRadius) Km() georadiusbymemberUnitKm {
-	return georadiusbymemberUnitKm{cs: append(c.cs, "km")}
+func (c GeoradiusbymemberRadius) Km() GeoradiusbymemberUnitKm {
+	return GeoradiusbymemberUnitKm{cs: append(c.cs, "km")}
 }
 
-func (c georadiusbymemberRadius) Ft() georadiusbymemberUnitFt {
-	return georadiusbymemberUnitFt{cs: append(c.cs, "ft")}
+func (c GeoradiusbymemberRadius) Ft() GeoradiusbymemberUnitFt {
+	return GeoradiusbymemberUnitFt{cs: append(c.cs, "ft")}
 }
 
-func (c georadiusbymemberRadius) Mi() georadiusbymemberUnitMi {
-	return georadiusbymemberUnitMi{cs: append(c.cs, "mi")}
+func (c GeoradiusbymemberRadius) Mi() GeoradiusbymemberUnitMi {
+	return GeoradiusbymemberUnitMi{cs: append(c.cs, "mi")}
 }
 
-type georadiusbymemberStore struct {
+type GeoradiusbymemberStore struct {
 	cs []string
 }
 
-func (c georadiusbymemberStore) Storedist(key string) georadiusbymemberStoredist {
-	return georadiusbymemberStoredist{cs: append(c.cs, "STOREDIST", key)}
+func (c GeoradiusbymemberStore) Storedist(Key string) GeoradiusbymemberStoredist {
+	return GeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key)}
 }
 
-func (c georadiusbymemberStore) Build() []string {
+func (c GeoradiusbymemberStore) Build() []string {
 	return c.cs
 }
 
-type georadiusbymemberStoredist struct {
+type GeoradiusbymemberStoredist struct {
 	cs []string
 }
 
-func (c georadiusbymemberStoredist) Build() []string {
+func (c GeoradiusbymemberStoredist) Build() []string {
 	return c.cs
 }
 
-type georadiusbymemberUnitFt struct {
+type GeoradiusbymemberUnitFt struct {
 	cs []string
 }
 
-func (c georadiusbymemberUnitFt) Withcoord() georadiusbymemberWithcoordWithcoord {
-	return georadiusbymemberWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+func (c GeoradiusbymemberUnitFt) Withcoord() GeoradiusbymemberWithcoordWithcoord {
+	return GeoradiusbymemberWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
 }
 
-func (c georadiusbymemberUnitFt) Withdist() georadiusbymemberWithdistWithdist {
-	return georadiusbymemberWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+func (c GeoradiusbymemberUnitFt) Withdist() GeoradiusbymemberWithdistWithdist {
+	return GeoradiusbymemberWithdistWithdist{cs: append(c.cs, "WITHDIST")}
 }
 
-func (c georadiusbymemberUnitFt) Withhash() georadiusbymemberWithhashWithhash {
-	return georadiusbymemberWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+func (c GeoradiusbymemberUnitFt) Withhash() GeoradiusbymemberWithhashWithhash {
+	return GeoradiusbymemberWithhashWithhash{cs: append(c.cs, "WITHHASH")}
 }
 
-func (c georadiusbymemberUnitFt) Count(count int64) georadiusbymemberCountCount {
-	return georadiusbymemberCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c GeoradiusbymemberUnitFt) Count(Count int64) GeoradiusbymemberCountCount {
+	return GeoradiusbymemberCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c georadiusbymemberUnitFt) Asc() georadiusbymemberOrderAsc {
-	return georadiusbymemberOrderAsc{cs: append(c.cs, "ASC")}
+func (c GeoradiusbymemberUnitFt) Asc() GeoradiusbymemberOrderAsc {
+	return GeoradiusbymemberOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c georadiusbymemberUnitFt) Desc() georadiusbymemberOrderDesc {
-	return georadiusbymemberOrderDesc{cs: append(c.cs, "DESC")}
+func (c GeoradiusbymemberUnitFt) Desc() GeoradiusbymemberOrderDesc {
+	return GeoradiusbymemberOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c georadiusbymemberUnitFt) Store(key string) georadiusbymemberStore {
-	return georadiusbymemberStore{cs: append(c.cs, "STORE", key)}
+func (c GeoradiusbymemberUnitFt) Store(Key string) GeoradiusbymemberStore {
+	return GeoradiusbymemberStore{cs: append(c.cs, "STORE", Key)}
 }
 
-func (c georadiusbymemberUnitFt) Storedist(key string) georadiusbymemberStoredist {
-	return georadiusbymemberStoredist{cs: append(c.cs, "STOREDIST", key)}
+func (c GeoradiusbymemberUnitFt) Storedist(Key string) GeoradiusbymemberStoredist {
+	return GeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key)}
 }
 
-type georadiusbymemberUnitKm struct {
+type GeoradiusbymemberUnitKm struct {
 	cs []string
 }
 
-func (c georadiusbymemberUnitKm) Withcoord() georadiusbymemberWithcoordWithcoord {
-	return georadiusbymemberWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+func (c GeoradiusbymemberUnitKm) Withcoord() GeoradiusbymemberWithcoordWithcoord {
+	return GeoradiusbymemberWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
 }
 
-func (c georadiusbymemberUnitKm) Withdist() georadiusbymemberWithdistWithdist {
-	return georadiusbymemberWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+func (c GeoradiusbymemberUnitKm) Withdist() GeoradiusbymemberWithdistWithdist {
+	return GeoradiusbymemberWithdistWithdist{cs: append(c.cs, "WITHDIST")}
 }
 
-func (c georadiusbymemberUnitKm) Withhash() georadiusbymemberWithhashWithhash {
-	return georadiusbymemberWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+func (c GeoradiusbymemberUnitKm) Withhash() GeoradiusbymemberWithhashWithhash {
+	return GeoradiusbymemberWithhashWithhash{cs: append(c.cs, "WITHHASH")}
 }
 
-func (c georadiusbymemberUnitKm) Count(count int64) georadiusbymemberCountCount {
-	return georadiusbymemberCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c GeoradiusbymemberUnitKm) Count(Count int64) GeoradiusbymemberCountCount {
+	return GeoradiusbymemberCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c georadiusbymemberUnitKm) Asc() georadiusbymemberOrderAsc {
-	return georadiusbymemberOrderAsc{cs: append(c.cs, "ASC")}
+func (c GeoradiusbymemberUnitKm) Asc() GeoradiusbymemberOrderAsc {
+	return GeoradiusbymemberOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c georadiusbymemberUnitKm) Desc() georadiusbymemberOrderDesc {
-	return georadiusbymemberOrderDesc{cs: append(c.cs, "DESC")}
+func (c GeoradiusbymemberUnitKm) Desc() GeoradiusbymemberOrderDesc {
+	return GeoradiusbymemberOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c georadiusbymemberUnitKm) Store(key string) georadiusbymemberStore {
-	return georadiusbymemberStore{cs: append(c.cs, "STORE", key)}
+func (c GeoradiusbymemberUnitKm) Store(Key string) GeoradiusbymemberStore {
+	return GeoradiusbymemberStore{cs: append(c.cs, "STORE", Key)}
 }
 
-func (c georadiusbymemberUnitKm) Storedist(key string) georadiusbymemberStoredist {
-	return georadiusbymemberStoredist{cs: append(c.cs, "STOREDIST", key)}
+func (c GeoradiusbymemberUnitKm) Storedist(Key string) GeoradiusbymemberStoredist {
+	return GeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key)}
 }
 
-type georadiusbymemberUnitM struct {
+type GeoradiusbymemberUnitM struct {
 	cs []string
 }
 
-func (c georadiusbymemberUnitM) Withcoord() georadiusbymemberWithcoordWithcoord {
-	return georadiusbymemberWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+func (c GeoradiusbymemberUnitM) Withcoord() GeoradiusbymemberWithcoordWithcoord {
+	return GeoradiusbymemberWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
 }
 
-func (c georadiusbymemberUnitM) Withdist() georadiusbymemberWithdistWithdist {
-	return georadiusbymemberWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+func (c GeoradiusbymemberUnitM) Withdist() GeoradiusbymemberWithdistWithdist {
+	return GeoradiusbymemberWithdistWithdist{cs: append(c.cs, "WITHDIST")}
 }
 
-func (c georadiusbymemberUnitM) Withhash() georadiusbymemberWithhashWithhash {
-	return georadiusbymemberWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+func (c GeoradiusbymemberUnitM) Withhash() GeoradiusbymemberWithhashWithhash {
+	return GeoradiusbymemberWithhashWithhash{cs: append(c.cs, "WITHHASH")}
 }
 
-func (c georadiusbymemberUnitM) Count(count int64) georadiusbymemberCountCount {
-	return georadiusbymemberCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c GeoradiusbymemberUnitM) Count(Count int64) GeoradiusbymemberCountCount {
+	return GeoradiusbymemberCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c georadiusbymemberUnitM) Asc() georadiusbymemberOrderAsc {
-	return georadiusbymemberOrderAsc{cs: append(c.cs, "ASC")}
+func (c GeoradiusbymemberUnitM) Asc() GeoradiusbymemberOrderAsc {
+	return GeoradiusbymemberOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c georadiusbymemberUnitM) Desc() georadiusbymemberOrderDesc {
-	return georadiusbymemberOrderDesc{cs: append(c.cs, "DESC")}
+func (c GeoradiusbymemberUnitM) Desc() GeoradiusbymemberOrderDesc {
+	return GeoradiusbymemberOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c georadiusbymemberUnitM) Store(key string) georadiusbymemberStore {
-	return georadiusbymemberStore{cs: append(c.cs, "STORE", key)}
+func (c GeoradiusbymemberUnitM) Store(Key string) GeoradiusbymemberStore {
+	return GeoradiusbymemberStore{cs: append(c.cs, "STORE", Key)}
 }
 
-func (c georadiusbymemberUnitM) Storedist(key string) georadiusbymemberStoredist {
-	return georadiusbymemberStoredist{cs: append(c.cs, "STOREDIST", key)}
+func (c GeoradiusbymemberUnitM) Storedist(Key string) GeoradiusbymemberStoredist {
+	return GeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key)}
 }
 
-type georadiusbymemberUnitMi struct {
+type GeoradiusbymemberUnitMi struct {
 	cs []string
 }
 
-func (c georadiusbymemberUnitMi) Withcoord() georadiusbymemberWithcoordWithcoord {
-	return georadiusbymemberWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+func (c GeoradiusbymemberUnitMi) Withcoord() GeoradiusbymemberWithcoordWithcoord {
+	return GeoradiusbymemberWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
 }
 
-func (c georadiusbymemberUnitMi) Withdist() georadiusbymemberWithdistWithdist {
-	return georadiusbymemberWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+func (c GeoradiusbymemberUnitMi) Withdist() GeoradiusbymemberWithdistWithdist {
+	return GeoradiusbymemberWithdistWithdist{cs: append(c.cs, "WITHDIST")}
 }
 
-func (c georadiusbymemberUnitMi) Withhash() georadiusbymemberWithhashWithhash {
-	return georadiusbymemberWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+func (c GeoradiusbymemberUnitMi) Withhash() GeoradiusbymemberWithhashWithhash {
+	return GeoradiusbymemberWithhashWithhash{cs: append(c.cs, "WITHHASH")}
 }
 
-func (c georadiusbymemberUnitMi) Count(count int64) georadiusbymemberCountCount {
-	return georadiusbymemberCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c GeoradiusbymemberUnitMi) Count(Count int64) GeoradiusbymemberCountCount {
+	return GeoradiusbymemberCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c georadiusbymemberUnitMi) Asc() georadiusbymemberOrderAsc {
-	return georadiusbymemberOrderAsc{cs: append(c.cs, "ASC")}
+func (c GeoradiusbymemberUnitMi) Asc() GeoradiusbymemberOrderAsc {
+	return GeoradiusbymemberOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c georadiusbymemberUnitMi) Desc() georadiusbymemberOrderDesc {
-	return georadiusbymemberOrderDesc{cs: append(c.cs, "DESC")}
+func (c GeoradiusbymemberUnitMi) Desc() GeoradiusbymemberOrderDesc {
+	return GeoradiusbymemberOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c georadiusbymemberUnitMi) Store(key string) georadiusbymemberStore {
-	return georadiusbymemberStore{cs: append(c.cs, "STORE", key)}
+func (c GeoradiusbymemberUnitMi) Store(Key string) GeoradiusbymemberStore {
+	return GeoradiusbymemberStore{cs: append(c.cs, "STORE", Key)}
 }
 
-func (c georadiusbymemberUnitMi) Storedist(key string) georadiusbymemberStoredist {
-	return georadiusbymemberStoredist{cs: append(c.cs, "STOREDIST", key)}
+func (c GeoradiusbymemberUnitMi) Storedist(Key string) GeoradiusbymemberStoredist {
+	return GeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key)}
 }
 
-type georadiusbymemberWithcoordWithcoord struct {
+type GeoradiusbymemberWithcoordWithcoord struct {
 	cs []string
 }
 
-func (c georadiusbymemberWithcoordWithcoord) Withdist() georadiusbymemberWithdistWithdist {
-	return georadiusbymemberWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+func (c GeoradiusbymemberWithcoordWithcoord) Withdist() GeoradiusbymemberWithdistWithdist {
+	return GeoradiusbymemberWithdistWithdist{cs: append(c.cs, "WITHDIST")}
 }
 
-func (c georadiusbymemberWithcoordWithcoord) Withhash() georadiusbymemberWithhashWithhash {
-	return georadiusbymemberWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+func (c GeoradiusbymemberWithcoordWithcoord) Withhash() GeoradiusbymemberWithhashWithhash {
+	return GeoradiusbymemberWithhashWithhash{cs: append(c.cs, "WITHHASH")}
 }
 
-func (c georadiusbymemberWithcoordWithcoord) Count(count int64) georadiusbymemberCountCount {
-	return georadiusbymemberCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c GeoradiusbymemberWithcoordWithcoord) Count(Count int64) GeoradiusbymemberCountCount {
+	return GeoradiusbymemberCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c georadiusbymemberWithcoordWithcoord) Asc() georadiusbymemberOrderAsc {
-	return georadiusbymemberOrderAsc{cs: append(c.cs, "ASC")}
+func (c GeoradiusbymemberWithcoordWithcoord) Asc() GeoradiusbymemberOrderAsc {
+	return GeoradiusbymemberOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c georadiusbymemberWithcoordWithcoord) Desc() georadiusbymemberOrderDesc {
-	return georadiusbymemberOrderDesc{cs: append(c.cs, "DESC")}
+func (c GeoradiusbymemberWithcoordWithcoord) Desc() GeoradiusbymemberOrderDesc {
+	return GeoradiusbymemberOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c georadiusbymemberWithcoordWithcoord) Store(key string) georadiusbymemberStore {
-	return georadiusbymemberStore{cs: append(c.cs, "STORE", key)}
+func (c GeoradiusbymemberWithcoordWithcoord) Store(Key string) GeoradiusbymemberStore {
+	return GeoradiusbymemberStore{cs: append(c.cs, "STORE", Key)}
 }
 
-func (c georadiusbymemberWithcoordWithcoord) Storedist(key string) georadiusbymemberStoredist {
-	return georadiusbymemberStoredist{cs: append(c.cs, "STOREDIST", key)}
+func (c GeoradiusbymemberWithcoordWithcoord) Storedist(Key string) GeoradiusbymemberStoredist {
+	return GeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key)}
 }
 
-type georadiusbymemberWithdistWithdist struct {
+type GeoradiusbymemberWithdistWithdist struct {
 	cs []string
 }
 
-func (c georadiusbymemberWithdistWithdist) Withhash() georadiusbymemberWithhashWithhash {
-	return georadiusbymemberWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+func (c GeoradiusbymemberWithdistWithdist) Withhash() GeoradiusbymemberWithhashWithhash {
+	return GeoradiusbymemberWithhashWithhash{cs: append(c.cs, "WITHHASH")}
 }
 
-func (c georadiusbymemberWithdistWithdist) Count(count int64) georadiusbymemberCountCount {
-	return georadiusbymemberCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c GeoradiusbymemberWithdistWithdist) Count(Count int64) GeoradiusbymemberCountCount {
+	return GeoradiusbymemberCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c georadiusbymemberWithdistWithdist) Asc() georadiusbymemberOrderAsc {
-	return georadiusbymemberOrderAsc{cs: append(c.cs, "ASC")}
+func (c GeoradiusbymemberWithdistWithdist) Asc() GeoradiusbymemberOrderAsc {
+	return GeoradiusbymemberOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c georadiusbymemberWithdistWithdist) Desc() georadiusbymemberOrderDesc {
-	return georadiusbymemberOrderDesc{cs: append(c.cs, "DESC")}
+func (c GeoradiusbymemberWithdistWithdist) Desc() GeoradiusbymemberOrderDesc {
+	return GeoradiusbymemberOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c georadiusbymemberWithdistWithdist) Store(key string) georadiusbymemberStore {
-	return georadiusbymemberStore{cs: append(c.cs, "STORE", key)}
+func (c GeoradiusbymemberWithdistWithdist) Store(Key string) GeoradiusbymemberStore {
+	return GeoradiusbymemberStore{cs: append(c.cs, "STORE", Key)}
 }
 
-func (c georadiusbymemberWithdistWithdist) Storedist(key string) georadiusbymemberStoredist {
-	return georadiusbymemberStoredist{cs: append(c.cs, "STOREDIST", key)}
+func (c GeoradiusbymemberWithdistWithdist) Storedist(Key string) GeoradiusbymemberStoredist {
+	return GeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key)}
 }
 
-type georadiusbymemberWithhashWithhash struct {
+type GeoradiusbymemberWithhashWithhash struct {
 	cs []string
 }
 
-func (c georadiusbymemberWithhashWithhash) Count(count int64) georadiusbymemberCountCount {
-	return georadiusbymemberCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c GeoradiusbymemberWithhashWithhash) Count(Count int64) GeoradiusbymemberCountCount {
+	return GeoradiusbymemberCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c georadiusbymemberWithhashWithhash) Asc() georadiusbymemberOrderAsc {
-	return georadiusbymemberOrderAsc{cs: append(c.cs, "ASC")}
+func (c GeoradiusbymemberWithhashWithhash) Asc() GeoradiusbymemberOrderAsc {
+	return GeoradiusbymemberOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c georadiusbymemberWithhashWithhash) Desc() georadiusbymemberOrderDesc {
-	return georadiusbymemberOrderDesc{cs: append(c.cs, "DESC")}
+func (c GeoradiusbymemberWithhashWithhash) Desc() GeoradiusbymemberOrderDesc {
+	return GeoradiusbymemberOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c georadiusbymemberWithhashWithhash) Store(key string) georadiusbymemberStore {
-	return georadiusbymemberStore{cs: append(c.cs, "STORE", key)}
+func (c GeoradiusbymemberWithhashWithhash) Store(Key string) GeoradiusbymemberStore {
+	return GeoradiusbymemberStore{cs: append(c.cs, "STORE", Key)}
 }
 
-func (c georadiusbymemberWithhashWithhash) Storedist(key string) georadiusbymemberStoredist {
-	return georadiusbymemberStoredist{cs: append(c.cs, "STOREDIST", key)}
+func (c GeoradiusbymemberWithhashWithhash) Storedist(Key string) GeoradiusbymemberStoredist {
+	return GeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key)}
 }
 
-type geosearch struct {
+type Geosearch struct {
 	cs []string
 }
 
-func (c geosearch) Key(key string) geosearchKey {
-	return geosearchKey{cs: append(c.cs, key)}
+func (c Geosearch) Key(Key string) GeosearchKey {
+	return GeosearchKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Geosearch() (c geosearch) {
+func (b *Builder) Geosearch() (c Geosearch) {
 	c.cs = append(b.get(), "GEOSEARCH")
 	return
 }
 
-type geosearchBoxBybox struct {
+type GeosearchBoxBybox struct {
 	cs []string
 }
 
-func (c geosearchBoxBybox) Height(height float64) geosearchBoxHeight {
-	return geosearchBoxHeight{cs: append(c.cs, strconv.FormatFloat(height, 'f', -1, 64))}
+func (c GeosearchBoxBybox) Height(Height float64) GeosearchBoxHeight {
+	return GeosearchBoxHeight{cs: append(c.cs, strconv.FormatFloat(Height, 'f', -1, 64))}
 }
 
-type geosearchBoxHeight struct {
+type GeosearchBoxHeight struct {
 	cs []string
 }
 
-func (c geosearchBoxHeight) M() geosearchBoxUnitM {
-	return geosearchBoxUnitM{cs: append(c.cs, "m")}
+func (c GeosearchBoxHeight) M() GeosearchBoxUnitM {
+	return GeosearchBoxUnitM{cs: append(c.cs, "m")}
 }
 
-func (c geosearchBoxHeight) Km() geosearchBoxUnitKm {
-	return geosearchBoxUnitKm{cs: append(c.cs, "km")}
+func (c GeosearchBoxHeight) Km() GeosearchBoxUnitKm {
+	return GeosearchBoxUnitKm{cs: append(c.cs, "km")}
 }
 
-func (c geosearchBoxHeight) Ft() geosearchBoxUnitFt {
-	return geosearchBoxUnitFt{cs: append(c.cs, "ft")}
+func (c GeosearchBoxHeight) Ft() GeosearchBoxUnitFt {
+	return GeosearchBoxUnitFt{cs: append(c.cs, "ft")}
 }
 
-func (c geosearchBoxHeight) Mi() geosearchBoxUnitMi {
-	return geosearchBoxUnitMi{cs: append(c.cs, "mi")}
+func (c GeosearchBoxHeight) Mi() GeosearchBoxUnitMi {
+	return GeosearchBoxUnitMi{cs: append(c.cs, "mi")}
 }
 
-type geosearchBoxUnitFt struct {
+type GeosearchBoxUnitFt struct {
 	cs []string
 }
 
-func (c geosearchBoxUnitFt) Asc() geosearchOrderAsc {
-	return geosearchOrderAsc{cs: append(c.cs, "ASC")}
+func (c GeosearchBoxUnitFt) Asc() GeosearchOrderAsc {
+	return GeosearchOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c geosearchBoxUnitFt) Desc() geosearchOrderDesc {
-	return geosearchOrderDesc{cs: append(c.cs, "DESC")}
+func (c GeosearchBoxUnitFt) Desc() GeosearchOrderDesc {
+	return GeosearchOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c geosearchBoxUnitFt) Count(count int64) geosearchCountCount {
-	return geosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c GeosearchBoxUnitFt) Count(Count int64) GeosearchCountCount {
+	return GeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c geosearchBoxUnitFt) Withcoord() geosearchWithcoordWithcoord {
-	return geosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+func (c GeosearchBoxUnitFt) Withcoord() GeosearchWithcoordWithcoord {
+	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
 }
 
-func (c geosearchBoxUnitFt) Withdist() geosearchWithdistWithdist {
-	return geosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+func (c GeosearchBoxUnitFt) Withdist() GeosearchWithdistWithdist {
+	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
 }
 
-func (c geosearchBoxUnitFt) Withhash() geosearchWithhashWithhash {
-	return geosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+func (c GeosearchBoxUnitFt) Withhash() GeosearchWithhashWithhash {
+	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
 }
 
-type geosearchBoxUnitKm struct {
+type GeosearchBoxUnitKm struct {
 	cs []string
 }
 
-func (c geosearchBoxUnitKm) Asc() geosearchOrderAsc {
-	return geosearchOrderAsc{cs: append(c.cs, "ASC")}
+func (c GeosearchBoxUnitKm) Asc() GeosearchOrderAsc {
+	return GeosearchOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c geosearchBoxUnitKm) Desc() geosearchOrderDesc {
-	return geosearchOrderDesc{cs: append(c.cs, "DESC")}
+func (c GeosearchBoxUnitKm) Desc() GeosearchOrderDesc {
+	return GeosearchOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c geosearchBoxUnitKm) Count(count int64) geosearchCountCount {
-	return geosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c GeosearchBoxUnitKm) Count(Count int64) GeosearchCountCount {
+	return GeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c geosearchBoxUnitKm) Withcoord() geosearchWithcoordWithcoord {
-	return geosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+func (c GeosearchBoxUnitKm) Withcoord() GeosearchWithcoordWithcoord {
+	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
 }
 
-func (c geosearchBoxUnitKm) Withdist() geosearchWithdistWithdist {
-	return geosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+func (c GeosearchBoxUnitKm) Withdist() GeosearchWithdistWithdist {
+	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
 }
 
-func (c geosearchBoxUnitKm) Withhash() geosearchWithhashWithhash {
-	return geosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+func (c GeosearchBoxUnitKm) Withhash() GeosearchWithhashWithhash {
+	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
 }
 
-type geosearchBoxUnitM struct {
+type GeosearchBoxUnitM struct {
 	cs []string
 }
 
-func (c geosearchBoxUnitM) Asc() geosearchOrderAsc {
-	return geosearchOrderAsc{cs: append(c.cs, "ASC")}
+func (c GeosearchBoxUnitM) Asc() GeosearchOrderAsc {
+	return GeosearchOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c geosearchBoxUnitM) Desc() geosearchOrderDesc {
-	return geosearchOrderDesc{cs: append(c.cs, "DESC")}
+func (c GeosearchBoxUnitM) Desc() GeosearchOrderDesc {
+	return GeosearchOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c geosearchBoxUnitM) Count(count int64) geosearchCountCount {
-	return geosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c GeosearchBoxUnitM) Count(Count int64) GeosearchCountCount {
+	return GeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c geosearchBoxUnitM) Withcoord() geosearchWithcoordWithcoord {
-	return geosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+func (c GeosearchBoxUnitM) Withcoord() GeosearchWithcoordWithcoord {
+	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
 }
 
-func (c geosearchBoxUnitM) Withdist() geosearchWithdistWithdist {
-	return geosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+func (c GeosearchBoxUnitM) Withdist() GeosearchWithdistWithdist {
+	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
 }
 
-func (c geosearchBoxUnitM) Withhash() geosearchWithhashWithhash {
-	return geosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+func (c GeosearchBoxUnitM) Withhash() GeosearchWithhashWithhash {
+	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
 }
 
-type geosearchBoxUnitMi struct {
+type GeosearchBoxUnitMi struct {
 	cs []string
 }
 
-func (c geosearchBoxUnitMi) Asc() geosearchOrderAsc {
-	return geosearchOrderAsc{cs: append(c.cs, "ASC")}
+func (c GeosearchBoxUnitMi) Asc() GeosearchOrderAsc {
+	return GeosearchOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c geosearchBoxUnitMi) Desc() geosearchOrderDesc {
-	return geosearchOrderDesc{cs: append(c.cs, "DESC")}
+func (c GeosearchBoxUnitMi) Desc() GeosearchOrderDesc {
+	return GeosearchOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c geosearchBoxUnitMi) Count(count int64) geosearchCountCount {
-	return geosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c GeosearchBoxUnitMi) Count(Count int64) GeosearchCountCount {
+	return GeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c geosearchBoxUnitMi) Withcoord() geosearchWithcoordWithcoord {
-	return geosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+func (c GeosearchBoxUnitMi) Withcoord() GeosearchWithcoordWithcoord {
+	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
 }
 
-func (c geosearchBoxUnitMi) Withdist() geosearchWithdistWithdist {
-	return geosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+func (c GeosearchBoxUnitMi) Withdist() GeosearchWithdistWithdist {
+	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
 }
 
-func (c geosearchBoxUnitMi) Withhash() geosearchWithhashWithhash {
-	return geosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+func (c GeosearchBoxUnitMi) Withhash() GeosearchWithhashWithhash {
+	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
 }
 
-type geosearchCircleByradius struct {
+type GeosearchCircleByradius struct {
 	cs []string
 }
 
-func (c geosearchCircleByradius) M() geosearchCircleUnitM {
-	return geosearchCircleUnitM{cs: append(c.cs, "m")}
+func (c GeosearchCircleByradius) M() GeosearchCircleUnitM {
+	return GeosearchCircleUnitM{cs: append(c.cs, "m")}
 }
 
-func (c geosearchCircleByradius) Km() geosearchCircleUnitKm {
-	return geosearchCircleUnitKm{cs: append(c.cs, "km")}
+func (c GeosearchCircleByradius) Km() GeosearchCircleUnitKm {
+	return GeosearchCircleUnitKm{cs: append(c.cs, "km")}
 }
 
-func (c geosearchCircleByradius) Ft() geosearchCircleUnitFt {
-	return geosearchCircleUnitFt{cs: append(c.cs, "ft")}
+func (c GeosearchCircleByradius) Ft() GeosearchCircleUnitFt {
+	return GeosearchCircleUnitFt{cs: append(c.cs, "ft")}
 }
 
-func (c geosearchCircleByradius) Mi() geosearchCircleUnitMi {
-	return geosearchCircleUnitMi{cs: append(c.cs, "mi")}
+func (c GeosearchCircleByradius) Mi() GeosearchCircleUnitMi {
+	return GeosearchCircleUnitMi{cs: append(c.cs, "mi")}
 }
 
-type geosearchCircleUnitFt struct {
+type GeosearchCircleUnitFt struct {
 	cs []string
 }
 
-func (c geosearchCircleUnitFt) Bybox(width float64) geosearchBoxBybox {
-	return geosearchBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(width, 'f', -1, 64))}
+func (c GeosearchCircleUnitFt) Bybox(Width float64) GeosearchBoxBybox {
+	return GeosearchBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
 }
 
-func (c geosearchCircleUnitFt) Asc() geosearchOrderAsc {
-	return geosearchOrderAsc{cs: append(c.cs, "ASC")}
+func (c GeosearchCircleUnitFt) Asc() GeosearchOrderAsc {
+	return GeosearchOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c geosearchCircleUnitFt) Desc() geosearchOrderDesc {
-	return geosearchOrderDesc{cs: append(c.cs, "DESC")}
+func (c GeosearchCircleUnitFt) Desc() GeosearchOrderDesc {
+	return GeosearchOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c geosearchCircleUnitFt) Count(count int64) geosearchCountCount {
-	return geosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c GeosearchCircleUnitFt) Count(Count int64) GeosearchCountCount {
+	return GeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c geosearchCircleUnitFt) Withcoord() geosearchWithcoordWithcoord {
-	return geosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+func (c GeosearchCircleUnitFt) Withcoord() GeosearchWithcoordWithcoord {
+	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
 }
 
-func (c geosearchCircleUnitFt) Withdist() geosearchWithdistWithdist {
-	return geosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+func (c GeosearchCircleUnitFt) Withdist() GeosearchWithdistWithdist {
+	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
 }
 
-func (c geosearchCircleUnitFt) Withhash() geosearchWithhashWithhash {
-	return geosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+func (c GeosearchCircleUnitFt) Withhash() GeosearchWithhashWithhash {
+	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
 }
 
-type geosearchCircleUnitKm struct {
+type GeosearchCircleUnitKm struct {
 	cs []string
 }
 
-func (c geosearchCircleUnitKm) Bybox(width float64) geosearchBoxBybox {
-	return geosearchBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(width, 'f', -1, 64))}
+func (c GeosearchCircleUnitKm) Bybox(Width float64) GeosearchBoxBybox {
+	return GeosearchBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
 }
 
-func (c geosearchCircleUnitKm) Asc() geosearchOrderAsc {
-	return geosearchOrderAsc{cs: append(c.cs, "ASC")}
+func (c GeosearchCircleUnitKm) Asc() GeosearchOrderAsc {
+	return GeosearchOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c geosearchCircleUnitKm) Desc() geosearchOrderDesc {
-	return geosearchOrderDesc{cs: append(c.cs, "DESC")}
+func (c GeosearchCircleUnitKm) Desc() GeosearchOrderDesc {
+	return GeosearchOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c geosearchCircleUnitKm) Count(count int64) geosearchCountCount {
-	return geosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c GeosearchCircleUnitKm) Count(Count int64) GeosearchCountCount {
+	return GeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c geosearchCircleUnitKm) Withcoord() geosearchWithcoordWithcoord {
-	return geosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+func (c GeosearchCircleUnitKm) Withcoord() GeosearchWithcoordWithcoord {
+	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
 }
 
-func (c geosearchCircleUnitKm) Withdist() geosearchWithdistWithdist {
-	return geosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+func (c GeosearchCircleUnitKm) Withdist() GeosearchWithdistWithdist {
+	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
 }
 
-func (c geosearchCircleUnitKm) Withhash() geosearchWithhashWithhash {
-	return geosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+func (c GeosearchCircleUnitKm) Withhash() GeosearchWithhashWithhash {
+	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
 }
 
-type geosearchCircleUnitM struct {
+type GeosearchCircleUnitM struct {
 	cs []string
 }
 
-func (c geosearchCircleUnitM) Bybox(width float64) geosearchBoxBybox {
-	return geosearchBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(width, 'f', -1, 64))}
+func (c GeosearchCircleUnitM) Bybox(Width float64) GeosearchBoxBybox {
+	return GeosearchBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
 }
 
-func (c geosearchCircleUnitM) Asc() geosearchOrderAsc {
-	return geosearchOrderAsc{cs: append(c.cs, "ASC")}
+func (c GeosearchCircleUnitM) Asc() GeosearchOrderAsc {
+	return GeosearchOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c geosearchCircleUnitM) Desc() geosearchOrderDesc {
-	return geosearchOrderDesc{cs: append(c.cs, "DESC")}
+func (c GeosearchCircleUnitM) Desc() GeosearchOrderDesc {
+	return GeosearchOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c geosearchCircleUnitM) Count(count int64) geosearchCountCount {
-	return geosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c GeosearchCircleUnitM) Count(Count int64) GeosearchCountCount {
+	return GeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c geosearchCircleUnitM) Withcoord() geosearchWithcoordWithcoord {
-	return geosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+func (c GeosearchCircleUnitM) Withcoord() GeosearchWithcoordWithcoord {
+	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
 }
 
-func (c geosearchCircleUnitM) Withdist() geosearchWithdistWithdist {
-	return geosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+func (c GeosearchCircleUnitM) Withdist() GeosearchWithdistWithdist {
+	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
 }
 
-func (c geosearchCircleUnitM) Withhash() geosearchWithhashWithhash {
-	return geosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+func (c GeosearchCircleUnitM) Withhash() GeosearchWithhashWithhash {
+	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
 }
 
-type geosearchCircleUnitMi struct {
+type GeosearchCircleUnitMi struct {
 	cs []string
 }
 
-func (c geosearchCircleUnitMi) Bybox(width float64) geosearchBoxBybox {
-	return geosearchBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(width, 'f', -1, 64))}
+func (c GeosearchCircleUnitMi) Bybox(Width float64) GeosearchBoxBybox {
+	return GeosearchBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
 }
 
-func (c geosearchCircleUnitMi) Asc() geosearchOrderAsc {
-	return geosearchOrderAsc{cs: append(c.cs, "ASC")}
+func (c GeosearchCircleUnitMi) Asc() GeosearchOrderAsc {
+	return GeosearchOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c geosearchCircleUnitMi) Desc() geosearchOrderDesc {
-	return geosearchOrderDesc{cs: append(c.cs, "DESC")}
+func (c GeosearchCircleUnitMi) Desc() GeosearchOrderDesc {
+	return GeosearchOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c geosearchCircleUnitMi) Count(count int64) geosearchCountCount {
-	return geosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c GeosearchCircleUnitMi) Count(Count int64) GeosearchCountCount {
+	return GeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c geosearchCircleUnitMi) Withcoord() geosearchWithcoordWithcoord {
-	return geosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+func (c GeosearchCircleUnitMi) Withcoord() GeosearchWithcoordWithcoord {
+	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
 }
 
-func (c geosearchCircleUnitMi) Withdist() geosearchWithdistWithdist {
-	return geosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+func (c GeosearchCircleUnitMi) Withdist() GeosearchWithdistWithdist {
+	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
 }
 
-func (c geosearchCircleUnitMi) Withhash() geosearchWithhashWithhash {
-	return geosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+func (c GeosearchCircleUnitMi) Withhash() GeosearchWithhashWithhash {
+	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
 }
 
-type geosearchCountAnyAny struct {
+type GeosearchCountAnyAny struct {
 	cs []string
 }
 
-func (c geosearchCountAnyAny) Withcoord() geosearchWithcoordWithcoord {
-	return geosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+func (c GeosearchCountAnyAny) Withcoord() GeosearchWithcoordWithcoord {
+	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
 }
 
-func (c geosearchCountAnyAny) Withdist() geosearchWithdistWithdist {
-	return geosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+func (c GeosearchCountAnyAny) Withdist() GeosearchWithdistWithdist {
+	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
 }
 
-func (c geosearchCountAnyAny) Withhash() geosearchWithhashWithhash {
-	return geosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+func (c GeosearchCountAnyAny) Withhash() GeosearchWithhashWithhash {
+	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
 }
 
-func (c geosearchCountAnyAny) Build() []string {
+func (c GeosearchCountAnyAny) Build() []string {
 	return c.cs
 }
 
-type geosearchCountCount struct {
+type GeosearchCountCount struct {
 	cs []string
 }
 
-func (c geosearchCountCount) Any() geosearchCountAnyAny {
-	return geosearchCountAnyAny{cs: append(c.cs, "ANY")}
+func (c GeosearchCountCount) Any() GeosearchCountAnyAny {
+	return GeosearchCountAnyAny{cs: append(c.cs, "ANY")}
 }
 
-func (c geosearchCountCount) Withcoord() geosearchWithcoordWithcoord {
-	return geosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+func (c GeosearchCountCount) Withcoord() GeosearchWithcoordWithcoord {
+	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
 }
 
-func (c geosearchCountCount) Withdist() geosearchWithdistWithdist {
-	return geosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+func (c GeosearchCountCount) Withdist() GeosearchWithdistWithdist {
+	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
 }
 
-func (c geosearchCountCount) Withhash() geosearchWithhashWithhash {
-	return geosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+func (c GeosearchCountCount) Withhash() GeosearchWithhashWithhash {
+	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
 }
 
-func (c geosearchCountCount) Build() []string {
+func (c GeosearchCountCount) Build() []string {
 	return c.cs
 }
 
-type geosearchFromlonlat struct {
+type GeosearchFromlonlat struct {
 	cs []string
 }
 
-func (c geosearchFromlonlat) Byradius(radius float64) geosearchCircleByradius {
-	return geosearchCircleByradius{cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(radius, 'f', -1, 64))}
+func (c GeosearchFromlonlat) Byradius(Radius float64) GeosearchCircleByradius {
+	return GeosearchCircleByradius{cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64))}
 }
 
-func (c geosearchFromlonlat) Bybox(width float64) geosearchBoxBybox {
-	return geosearchBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(width, 'f', -1, 64))}
+func (c GeosearchFromlonlat) Bybox(Width float64) GeosearchBoxBybox {
+	return GeosearchBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
 }
 
-func (c geosearchFromlonlat) Asc() geosearchOrderAsc {
-	return geosearchOrderAsc{cs: append(c.cs, "ASC")}
+func (c GeosearchFromlonlat) Asc() GeosearchOrderAsc {
+	return GeosearchOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c geosearchFromlonlat) Desc() geosearchOrderDesc {
-	return geosearchOrderDesc{cs: append(c.cs, "DESC")}
+func (c GeosearchFromlonlat) Desc() GeosearchOrderDesc {
+	return GeosearchOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c geosearchFromlonlat) Count(count int64) geosearchCountCount {
-	return geosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c GeosearchFromlonlat) Count(Count int64) GeosearchCountCount {
+	return GeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c geosearchFromlonlat) Withcoord() geosearchWithcoordWithcoord {
-	return geosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+func (c GeosearchFromlonlat) Withcoord() GeosearchWithcoordWithcoord {
+	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
 }
 
-func (c geosearchFromlonlat) Withdist() geosearchWithdistWithdist {
-	return geosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+func (c GeosearchFromlonlat) Withdist() GeosearchWithdistWithdist {
+	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
 }
 
-func (c geosearchFromlonlat) Withhash() geosearchWithhashWithhash {
-	return geosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+func (c GeosearchFromlonlat) Withhash() GeosearchWithhashWithhash {
+	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
 }
 
-type geosearchFrommember struct {
+type GeosearchFrommember struct {
 	cs []string
 }
 
-func (c geosearchFrommember) Fromlonlat(longitude float64, latitude float64) geosearchFromlonlat {
-	return geosearchFromlonlat{cs: append(c.cs, "FROMLONLAT", strconv.FormatFloat(longitude, 'f', -1, 64), strconv.FormatFloat(latitude, 'f', -1, 64))}
+func (c GeosearchFrommember) Fromlonlat(Longitude float64, Latitude float64) GeosearchFromlonlat {
+	return GeosearchFromlonlat{cs: append(c.cs, "FROMLONLAT", strconv.FormatFloat(Longitude, 'f', -1, 64), strconv.FormatFloat(Latitude, 'f', -1, 64))}
 }
 
-func (c geosearchFrommember) Byradius(radius float64) geosearchCircleByradius {
-	return geosearchCircleByradius{cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(radius, 'f', -1, 64))}
+func (c GeosearchFrommember) Byradius(Radius float64) GeosearchCircleByradius {
+	return GeosearchCircleByradius{cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64))}
 }
 
-func (c geosearchFrommember) Bybox(width float64) geosearchBoxBybox {
-	return geosearchBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(width, 'f', -1, 64))}
+func (c GeosearchFrommember) Bybox(Width float64) GeosearchBoxBybox {
+	return GeosearchBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
 }
 
-func (c geosearchFrommember) Asc() geosearchOrderAsc {
-	return geosearchOrderAsc{cs: append(c.cs, "ASC")}
+func (c GeosearchFrommember) Asc() GeosearchOrderAsc {
+	return GeosearchOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c geosearchFrommember) Desc() geosearchOrderDesc {
-	return geosearchOrderDesc{cs: append(c.cs, "DESC")}
+func (c GeosearchFrommember) Desc() GeosearchOrderDesc {
+	return GeosearchOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c geosearchFrommember) Count(count int64) geosearchCountCount {
-	return geosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c GeosearchFrommember) Count(Count int64) GeosearchCountCount {
+	return GeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c geosearchFrommember) Withcoord() geosearchWithcoordWithcoord {
-	return geosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+func (c GeosearchFrommember) Withcoord() GeosearchWithcoordWithcoord {
+	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
 }
 
-func (c geosearchFrommember) Withdist() geosearchWithdistWithdist {
-	return geosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+func (c GeosearchFrommember) Withdist() GeosearchWithdistWithdist {
+	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
 }
 
-func (c geosearchFrommember) Withhash() geosearchWithhashWithhash {
-	return geosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+func (c GeosearchFrommember) Withhash() GeosearchWithhashWithhash {
+	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
 }
 
-type geosearchKey struct {
+type GeosearchKey struct {
 	cs []string
 }
 
-func (c geosearchKey) Frommember(member string) geosearchFrommember {
-	return geosearchFrommember{cs: append(c.cs, "FROMMEMBER", member)}
+func (c GeosearchKey) Frommember(Member string) GeosearchFrommember {
+	return GeosearchFrommember{cs: append(c.cs, "FROMMEMBER", Member)}
 }
 
-func (c geosearchKey) Fromlonlat(longitude float64, latitude float64) geosearchFromlonlat {
-	return geosearchFromlonlat{cs: append(c.cs, "FROMLONLAT", strconv.FormatFloat(longitude, 'f', -1, 64), strconv.FormatFloat(latitude, 'f', -1, 64))}
+func (c GeosearchKey) Fromlonlat(Longitude float64, Latitude float64) GeosearchFromlonlat {
+	return GeosearchFromlonlat{cs: append(c.cs, "FROMLONLAT", strconv.FormatFloat(Longitude, 'f', -1, 64), strconv.FormatFloat(Latitude, 'f', -1, 64))}
 }
 
-func (c geosearchKey) Byradius(radius float64) geosearchCircleByradius {
-	return geosearchCircleByradius{cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(radius, 'f', -1, 64))}
+func (c GeosearchKey) Byradius(Radius float64) GeosearchCircleByradius {
+	return GeosearchCircleByradius{cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64))}
 }
 
-func (c geosearchKey) Bybox(width float64) geosearchBoxBybox {
-	return geosearchBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(width, 'f', -1, 64))}
+func (c GeosearchKey) Bybox(Width float64) GeosearchBoxBybox {
+	return GeosearchBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
 }
 
-func (c geosearchKey) Asc() geosearchOrderAsc {
-	return geosearchOrderAsc{cs: append(c.cs, "ASC")}
+func (c GeosearchKey) Asc() GeosearchOrderAsc {
+	return GeosearchOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c geosearchKey) Desc() geosearchOrderDesc {
-	return geosearchOrderDesc{cs: append(c.cs, "DESC")}
+func (c GeosearchKey) Desc() GeosearchOrderDesc {
+	return GeosearchOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c geosearchKey) Count(count int64) geosearchCountCount {
-	return geosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c GeosearchKey) Count(Count int64) GeosearchCountCount {
+	return GeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c geosearchKey) Withcoord() geosearchWithcoordWithcoord {
-	return geosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+func (c GeosearchKey) Withcoord() GeosearchWithcoordWithcoord {
+	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
 }
 
-func (c geosearchKey) Withdist() geosearchWithdistWithdist {
-	return geosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+func (c GeosearchKey) Withdist() GeosearchWithdistWithdist {
+	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
 }
 
-func (c geosearchKey) Withhash() geosearchWithhashWithhash {
-	return geosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+func (c GeosearchKey) Withhash() GeosearchWithhashWithhash {
+	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
 }
 
-type geosearchOrderAsc struct {
+type GeosearchOrderAsc struct {
 	cs []string
 }
 
-func (c geosearchOrderAsc) Count(count int64) geosearchCountCount {
-	return geosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c GeosearchOrderAsc) Count(Count int64) GeosearchCountCount {
+	return GeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c geosearchOrderAsc) Withcoord() geosearchWithcoordWithcoord {
-	return geosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+func (c GeosearchOrderAsc) Withcoord() GeosearchWithcoordWithcoord {
+	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
 }
 
-func (c geosearchOrderAsc) Withdist() geosearchWithdistWithdist {
-	return geosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+func (c GeosearchOrderAsc) Withdist() GeosearchWithdistWithdist {
+	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
 }
 
-func (c geosearchOrderAsc) Withhash() geosearchWithhashWithhash {
-	return geosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+func (c GeosearchOrderAsc) Withhash() GeosearchWithhashWithhash {
+	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
 }
 
-type geosearchOrderDesc struct {
+type GeosearchOrderDesc struct {
 	cs []string
 }
 
-func (c geosearchOrderDesc) Count(count int64) geosearchCountCount {
-	return geosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c GeosearchOrderDesc) Count(Count int64) GeosearchCountCount {
+	return GeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c geosearchOrderDesc) Withcoord() geosearchWithcoordWithcoord {
-	return geosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+func (c GeosearchOrderDesc) Withcoord() GeosearchWithcoordWithcoord {
+	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
 }
 
-func (c geosearchOrderDesc) Withdist() geosearchWithdistWithdist {
-	return geosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+func (c GeosearchOrderDesc) Withdist() GeosearchWithdistWithdist {
+	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
 }
 
-func (c geosearchOrderDesc) Withhash() geosearchWithhashWithhash {
-	return geosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+func (c GeosearchOrderDesc) Withhash() GeosearchWithhashWithhash {
+	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
 }
 
-type geosearchWithcoordWithcoord struct {
+type GeosearchWithcoordWithcoord struct {
 	cs []string
 }
 
-func (c geosearchWithcoordWithcoord) Withdist() geosearchWithdistWithdist {
-	return geosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+func (c GeosearchWithcoordWithcoord) Withdist() GeosearchWithdistWithdist {
+	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
 }
 
-func (c geosearchWithcoordWithcoord) Withhash() geosearchWithhashWithhash {
-	return geosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+func (c GeosearchWithcoordWithcoord) Withhash() GeosearchWithhashWithhash {
+	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
 }
 
-func (c geosearchWithcoordWithcoord) Build() []string {
+func (c GeosearchWithcoordWithcoord) Build() []string {
 	return c.cs
 }
 
-type geosearchWithdistWithdist struct {
+type GeosearchWithdistWithdist struct {
 	cs []string
 }
 
-func (c geosearchWithdistWithdist) Withhash() geosearchWithhashWithhash {
-	return geosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+func (c GeosearchWithdistWithdist) Withhash() GeosearchWithhashWithhash {
+	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
 }
 
-func (c geosearchWithdistWithdist) Build() []string {
+func (c GeosearchWithdistWithdist) Build() []string {
 	return c.cs
 }
 
-type geosearchWithhashWithhash struct {
+type GeosearchWithhashWithhash struct {
 	cs []string
 }
 
-func (c geosearchWithhashWithhash) Build() []string {
+func (c GeosearchWithhashWithhash) Build() []string {
 	return c.cs
 }
 
-type geosearchstore struct {
+type Geosearchstore struct {
 	cs []string
 }
 
-func (c geosearchstore) Destination(destination string) geosearchstoreDestination {
-	return geosearchstoreDestination{cs: append(c.cs, destination)}
+func (c Geosearchstore) Destination(Destination string) GeosearchstoreDestination {
+	return GeosearchstoreDestination{cs: append(c.cs, Destination)}
 }
 
-func (b *Builder) Geosearchstore() (c geosearchstore) {
+func (b *Builder) Geosearchstore() (c Geosearchstore) {
 	c.cs = append(b.get(), "GEOSEARCHSTORE")
 	return
 }
 
-type geosearchstoreBoxBybox struct {
+type GeosearchstoreBoxBybox struct {
 	cs []string
 }
 
-func (c geosearchstoreBoxBybox) Height(height float64) geosearchstoreBoxHeight {
-	return geosearchstoreBoxHeight{cs: append(c.cs, strconv.FormatFloat(height, 'f', -1, 64))}
+func (c GeosearchstoreBoxBybox) Height(Height float64) GeosearchstoreBoxHeight {
+	return GeosearchstoreBoxHeight{cs: append(c.cs, strconv.FormatFloat(Height, 'f', -1, 64))}
 }
 
-type geosearchstoreBoxHeight struct {
+type GeosearchstoreBoxHeight struct {
 	cs []string
 }
 
-func (c geosearchstoreBoxHeight) M() geosearchstoreBoxUnitM {
-	return geosearchstoreBoxUnitM{cs: append(c.cs, "m")}
+func (c GeosearchstoreBoxHeight) M() GeosearchstoreBoxUnitM {
+	return GeosearchstoreBoxUnitM{cs: append(c.cs, "m")}
 }
 
-func (c geosearchstoreBoxHeight) Km() geosearchstoreBoxUnitKm {
-	return geosearchstoreBoxUnitKm{cs: append(c.cs, "km")}
+func (c GeosearchstoreBoxHeight) Km() GeosearchstoreBoxUnitKm {
+	return GeosearchstoreBoxUnitKm{cs: append(c.cs, "km")}
 }
 
-func (c geosearchstoreBoxHeight) Ft() geosearchstoreBoxUnitFt {
-	return geosearchstoreBoxUnitFt{cs: append(c.cs, "ft")}
+func (c GeosearchstoreBoxHeight) Ft() GeosearchstoreBoxUnitFt {
+	return GeosearchstoreBoxUnitFt{cs: append(c.cs, "ft")}
 }
 
-func (c geosearchstoreBoxHeight) Mi() geosearchstoreBoxUnitMi {
-	return geosearchstoreBoxUnitMi{cs: append(c.cs, "mi")}
+func (c GeosearchstoreBoxHeight) Mi() GeosearchstoreBoxUnitMi {
+	return GeosearchstoreBoxUnitMi{cs: append(c.cs, "mi")}
 }
 
-type geosearchstoreBoxUnitFt struct {
+type GeosearchstoreBoxUnitFt struct {
 	cs []string
 }
 
-func (c geosearchstoreBoxUnitFt) Asc() geosearchstoreOrderAsc {
-	return geosearchstoreOrderAsc{cs: append(c.cs, "ASC")}
+func (c GeosearchstoreBoxUnitFt) Asc() GeosearchstoreOrderAsc {
+	return GeosearchstoreOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c geosearchstoreBoxUnitFt) Desc() geosearchstoreOrderDesc {
-	return geosearchstoreOrderDesc{cs: append(c.cs, "DESC")}
+func (c GeosearchstoreBoxUnitFt) Desc() GeosearchstoreOrderDesc {
+	return GeosearchstoreOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c geosearchstoreBoxUnitFt) Count(count int64) geosearchstoreCountCount {
-	return geosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c GeosearchstoreBoxUnitFt) Count(Count int64) GeosearchstoreCountCount {
+	return GeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c geosearchstoreBoxUnitFt) Storedist() geosearchstoreStoredistStoredist {
-	return geosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
+func (c GeosearchstoreBoxUnitFt) Storedist() GeosearchstoreStoredistStoredist {
+	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
 }
 
-type geosearchstoreBoxUnitKm struct {
+type GeosearchstoreBoxUnitKm struct {
 	cs []string
 }
 
-func (c geosearchstoreBoxUnitKm) Asc() geosearchstoreOrderAsc {
-	return geosearchstoreOrderAsc{cs: append(c.cs, "ASC")}
+func (c GeosearchstoreBoxUnitKm) Asc() GeosearchstoreOrderAsc {
+	return GeosearchstoreOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c geosearchstoreBoxUnitKm) Desc() geosearchstoreOrderDesc {
-	return geosearchstoreOrderDesc{cs: append(c.cs, "DESC")}
+func (c GeosearchstoreBoxUnitKm) Desc() GeosearchstoreOrderDesc {
+	return GeosearchstoreOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c geosearchstoreBoxUnitKm) Count(count int64) geosearchstoreCountCount {
-	return geosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c GeosearchstoreBoxUnitKm) Count(Count int64) GeosearchstoreCountCount {
+	return GeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c geosearchstoreBoxUnitKm) Storedist() geosearchstoreStoredistStoredist {
-	return geosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
+func (c GeosearchstoreBoxUnitKm) Storedist() GeosearchstoreStoredistStoredist {
+	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
 }
 
-type geosearchstoreBoxUnitM struct {
+type GeosearchstoreBoxUnitM struct {
 	cs []string
 }
 
-func (c geosearchstoreBoxUnitM) Asc() geosearchstoreOrderAsc {
-	return geosearchstoreOrderAsc{cs: append(c.cs, "ASC")}
+func (c GeosearchstoreBoxUnitM) Asc() GeosearchstoreOrderAsc {
+	return GeosearchstoreOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c geosearchstoreBoxUnitM) Desc() geosearchstoreOrderDesc {
-	return geosearchstoreOrderDesc{cs: append(c.cs, "DESC")}
+func (c GeosearchstoreBoxUnitM) Desc() GeosearchstoreOrderDesc {
+	return GeosearchstoreOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c geosearchstoreBoxUnitM) Count(count int64) geosearchstoreCountCount {
-	return geosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c GeosearchstoreBoxUnitM) Count(Count int64) GeosearchstoreCountCount {
+	return GeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c geosearchstoreBoxUnitM) Storedist() geosearchstoreStoredistStoredist {
-	return geosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
+func (c GeosearchstoreBoxUnitM) Storedist() GeosearchstoreStoredistStoredist {
+	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
 }
 
-type geosearchstoreBoxUnitMi struct {
+type GeosearchstoreBoxUnitMi struct {
 	cs []string
 }
 
-func (c geosearchstoreBoxUnitMi) Asc() geosearchstoreOrderAsc {
-	return geosearchstoreOrderAsc{cs: append(c.cs, "ASC")}
+func (c GeosearchstoreBoxUnitMi) Asc() GeosearchstoreOrderAsc {
+	return GeosearchstoreOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c geosearchstoreBoxUnitMi) Desc() geosearchstoreOrderDesc {
-	return geosearchstoreOrderDesc{cs: append(c.cs, "DESC")}
+func (c GeosearchstoreBoxUnitMi) Desc() GeosearchstoreOrderDesc {
+	return GeosearchstoreOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c geosearchstoreBoxUnitMi) Count(count int64) geosearchstoreCountCount {
-	return geosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c GeosearchstoreBoxUnitMi) Count(Count int64) GeosearchstoreCountCount {
+	return GeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c geosearchstoreBoxUnitMi) Storedist() geosearchstoreStoredistStoredist {
-	return geosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
+func (c GeosearchstoreBoxUnitMi) Storedist() GeosearchstoreStoredistStoredist {
+	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
 }
 
-type geosearchstoreCircleByradius struct {
+type GeosearchstoreCircleByradius struct {
 	cs []string
 }
 
-func (c geosearchstoreCircleByradius) M() geosearchstoreCircleUnitM {
-	return geosearchstoreCircleUnitM{cs: append(c.cs, "m")}
+func (c GeosearchstoreCircleByradius) M() GeosearchstoreCircleUnitM {
+	return GeosearchstoreCircleUnitM{cs: append(c.cs, "m")}
 }
 
-func (c geosearchstoreCircleByradius) Km() geosearchstoreCircleUnitKm {
-	return geosearchstoreCircleUnitKm{cs: append(c.cs, "km")}
+func (c GeosearchstoreCircleByradius) Km() GeosearchstoreCircleUnitKm {
+	return GeosearchstoreCircleUnitKm{cs: append(c.cs, "km")}
 }
 
-func (c geosearchstoreCircleByradius) Ft() geosearchstoreCircleUnitFt {
-	return geosearchstoreCircleUnitFt{cs: append(c.cs, "ft")}
+func (c GeosearchstoreCircleByradius) Ft() GeosearchstoreCircleUnitFt {
+	return GeosearchstoreCircleUnitFt{cs: append(c.cs, "ft")}
 }
 
-func (c geosearchstoreCircleByradius) Mi() geosearchstoreCircleUnitMi {
-	return geosearchstoreCircleUnitMi{cs: append(c.cs, "mi")}
+func (c GeosearchstoreCircleByradius) Mi() GeosearchstoreCircleUnitMi {
+	return GeosearchstoreCircleUnitMi{cs: append(c.cs, "mi")}
 }
 
-type geosearchstoreCircleUnitFt struct {
+type GeosearchstoreCircleUnitFt struct {
 	cs []string
 }
 
-func (c geosearchstoreCircleUnitFt) Bybox(width float64) geosearchstoreBoxBybox {
-	return geosearchstoreBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(width, 'f', -1, 64))}
+func (c GeosearchstoreCircleUnitFt) Bybox(Width float64) GeosearchstoreBoxBybox {
+	return GeosearchstoreBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
 }
 
-func (c geosearchstoreCircleUnitFt) Asc() geosearchstoreOrderAsc {
-	return geosearchstoreOrderAsc{cs: append(c.cs, "ASC")}
+func (c GeosearchstoreCircleUnitFt) Asc() GeosearchstoreOrderAsc {
+	return GeosearchstoreOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c geosearchstoreCircleUnitFt) Desc() geosearchstoreOrderDesc {
-	return geosearchstoreOrderDesc{cs: append(c.cs, "DESC")}
+func (c GeosearchstoreCircleUnitFt) Desc() GeosearchstoreOrderDesc {
+	return GeosearchstoreOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c geosearchstoreCircleUnitFt) Count(count int64) geosearchstoreCountCount {
-	return geosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c GeosearchstoreCircleUnitFt) Count(Count int64) GeosearchstoreCountCount {
+	return GeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c geosearchstoreCircleUnitFt) Storedist() geosearchstoreStoredistStoredist {
-	return geosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
+func (c GeosearchstoreCircleUnitFt) Storedist() GeosearchstoreStoredistStoredist {
+	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
 }
 
-type geosearchstoreCircleUnitKm struct {
+type GeosearchstoreCircleUnitKm struct {
 	cs []string
 }
 
-func (c geosearchstoreCircleUnitKm) Bybox(width float64) geosearchstoreBoxBybox {
-	return geosearchstoreBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(width, 'f', -1, 64))}
+func (c GeosearchstoreCircleUnitKm) Bybox(Width float64) GeosearchstoreBoxBybox {
+	return GeosearchstoreBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
 }
 
-func (c geosearchstoreCircleUnitKm) Asc() geosearchstoreOrderAsc {
-	return geosearchstoreOrderAsc{cs: append(c.cs, "ASC")}
+func (c GeosearchstoreCircleUnitKm) Asc() GeosearchstoreOrderAsc {
+	return GeosearchstoreOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c geosearchstoreCircleUnitKm) Desc() geosearchstoreOrderDesc {
-	return geosearchstoreOrderDesc{cs: append(c.cs, "DESC")}
+func (c GeosearchstoreCircleUnitKm) Desc() GeosearchstoreOrderDesc {
+	return GeosearchstoreOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c geosearchstoreCircleUnitKm) Count(count int64) geosearchstoreCountCount {
-	return geosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c GeosearchstoreCircleUnitKm) Count(Count int64) GeosearchstoreCountCount {
+	return GeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c geosearchstoreCircleUnitKm) Storedist() geosearchstoreStoredistStoredist {
-	return geosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
+func (c GeosearchstoreCircleUnitKm) Storedist() GeosearchstoreStoredistStoredist {
+	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
 }
 
-type geosearchstoreCircleUnitM struct {
+type GeosearchstoreCircleUnitM struct {
 	cs []string
 }
 
-func (c geosearchstoreCircleUnitM) Bybox(width float64) geosearchstoreBoxBybox {
-	return geosearchstoreBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(width, 'f', -1, 64))}
+func (c GeosearchstoreCircleUnitM) Bybox(Width float64) GeosearchstoreBoxBybox {
+	return GeosearchstoreBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
 }
 
-func (c geosearchstoreCircleUnitM) Asc() geosearchstoreOrderAsc {
-	return geosearchstoreOrderAsc{cs: append(c.cs, "ASC")}
+func (c GeosearchstoreCircleUnitM) Asc() GeosearchstoreOrderAsc {
+	return GeosearchstoreOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c geosearchstoreCircleUnitM) Desc() geosearchstoreOrderDesc {
-	return geosearchstoreOrderDesc{cs: append(c.cs, "DESC")}
+func (c GeosearchstoreCircleUnitM) Desc() GeosearchstoreOrderDesc {
+	return GeosearchstoreOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c geosearchstoreCircleUnitM) Count(count int64) geosearchstoreCountCount {
-	return geosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c GeosearchstoreCircleUnitM) Count(Count int64) GeosearchstoreCountCount {
+	return GeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c geosearchstoreCircleUnitM) Storedist() geosearchstoreStoredistStoredist {
-	return geosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
+func (c GeosearchstoreCircleUnitM) Storedist() GeosearchstoreStoredistStoredist {
+	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
 }
 
-type geosearchstoreCircleUnitMi struct {
+type GeosearchstoreCircleUnitMi struct {
 	cs []string
 }
 
-func (c geosearchstoreCircleUnitMi) Bybox(width float64) geosearchstoreBoxBybox {
-	return geosearchstoreBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(width, 'f', -1, 64))}
+func (c GeosearchstoreCircleUnitMi) Bybox(Width float64) GeosearchstoreBoxBybox {
+	return GeosearchstoreBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
 }
 
-func (c geosearchstoreCircleUnitMi) Asc() geosearchstoreOrderAsc {
-	return geosearchstoreOrderAsc{cs: append(c.cs, "ASC")}
+func (c GeosearchstoreCircleUnitMi) Asc() GeosearchstoreOrderAsc {
+	return GeosearchstoreOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c geosearchstoreCircleUnitMi) Desc() geosearchstoreOrderDesc {
-	return geosearchstoreOrderDesc{cs: append(c.cs, "DESC")}
+func (c GeosearchstoreCircleUnitMi) Desc() GeosearchstoreOrderDesc {
+	return GeosearchstoreOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c geosearchstoreCircleUnitMi) Count(count int64) geosearchstoreCountCount {
-	return geosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c GeosearchstoreCircleUnitMi) Count(Count int64) GeosearchstoreCountCount {
+	return GeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c geosearchstoreCircleUnitMi) Storedist() geosearchstoreStoredistStoredist {
-	return geosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
+func (c GeosearchstoreCircleUnitMi) Storedist() GeosearchstoreStoredistStoredist {
+	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
 }
 
-type geosearchstoreCountAnyAny struct {
+type GeosearchstoreCountAnyAny struct {
 	cs []string
 }
 
-func (c geosearchstoreCountAnyAny) Storedist() geosearchstoreStoredistStoredist {
-	return geosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
+func (c GeosearchstoreCountAnyAny) Storedist() GeosearchstoreStoredistStoredist {
+	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
 }
 
-func (c geosearchstoreCountAnyAny) Build() []string {
+func (c GeosearchstoreCountAnyAny) Build() []string {
 	return c.cs
 }
 
-type geosearchstoreCountCount struct {
+type GeosearchstoreCountCount struct {
 	cs []string
 }
 
-func (c geosearchstoreCountCount) Any() geosearchstoreCountAnyAny {
-	return geosearchstoreCountAnyAny{cs: append(c.cs, "ANY")}
+func (c GeosearchstoreCountCount) Any() GeosearchstoreCountAnyAny {
+	return GeosearchstoreCountAnyAny{cs: append(c.cs, "ANY")}
 }
 
-func (c geosearchstoreCountCount) Storedist() geosearchstoreStoredistStoredist {
-	return geosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
+func (c GeosearchstoreCountCount) Storedist() GeosearchstoreStoredistStoredist {
+	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
 }
 
-func (c geosearchstoreCountCount) Build() []string {
+func (c GeosearchstoreCountCount) Build() []string {
 	return c.cs
 }
 
-type geosearchstoreDestination struct {
+type GeosearchstoreDestination struct {
 	cs []string
 }
 
-func (c geosearchstoreDestination) Source(source string) geosearchstoreSource {
-	return geosearchstoreSource{cs: append(c.cs, source)}
+func (c GeosearchstoreDestination) Source(Source string) GeosearchstoreSource {
+	return GeosearchstoreSource{cs: append(c.cs, Source)}
 }
 
-type geosearchstoreFromlonlat struct {
+type GeosearchstoreFromlonlat struct {
 	cs []string
 }
 
-func (c geosearchstoreFromlonlat) Byradius(radius float64) geosearchstoreCircleByradius {
-	return geosearchstoreCircleByradius{cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(radius, 'f', -1, 64))}
+func (c GeosearchstoreFromlonlat) Byradius(Radius float64) GeosearchstoreCircleByradius {
+	return GeosearchstoreCircleByradius{cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64))}
 }
 
-func (c geosearchstoreFromlonlat) Bybox(width float64) geosearchstoreBoxBybox {
-	return geosearchstoreBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(width, 'f', -1, 64))}
+func (c GeosearchstoreFromlonlat) Bybox(Width float64) GeosearchstoreBoxBybox {
+	return GeosearchstoreBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
 }
 
-func (c geosearchstoreFromlonlat) Asc() geosearchstoreOrderAsc {
-	return geosearchstoreOrderAsc{cs: append(c.cs, "ASC")}
+func (c GeosearchstoreFromlonlat) Asc() GeosearchstoreOrderAsc {
+	return GeosearchstoreOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c geosearchstoreFromlonlat) Desc() geosearchstoreOrderDesc {
-	return geosearchstoreOrderDesc{cs: append(c.cs, "DESC")}
+func (c GeosearchstoreFromlonlat) Desc() GeosearchstoreOrderDesc {
+	return GeosearchstoreOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c geosearchstoreFromlonlat) Count(count int64) geosearchstoreCountCount {
-	return geosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c GeosearchstoreFromlonlat) Count(Count int64) GeosearchstoreCountCount {
+	return GeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c geosearchstoreFromlonlat) Storedist() geosearchstoreStoredistStoredist {
-	return geosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
+func (c GeosearchstoreFromlonlat) Storedist() GeosearchstoreStoredistStoredist {
+	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
 }
 
-type geosearchstoreFrommember struct {
+type GeosearchstoreFrommember struct {
 	cs []string
 }
 
-func (c geosearchstoreFrommember) Fromlonlat(longitude float64, latitude float64) geosearchstoreFromlonlat {
-	return geosearchstoreFromlonlat{cs: append(c.cs, "FROMLONLAT", strconv.FormatFloat(longitude, 'f', -1, 64), strconv.FormatFloat(latitude, 'f', -1, 64))}
+func (c GeosearchstoreFrommember) Fromlonlat(Longitude float64, Latitude float64) GeosearchstoreFromlonlat {
+	return GeosearchstoreFromlonlat{cs: append(c.cs, "FROMLONLAT", strconv.FormatFloat(Longitude, 'f', -1, 64), strconv.FormatFloat(Latitude, 'f', -1, 64))}
 }
 
-func (c geosearchstoreFrommember) Byradius(radius float64) geosearchstoreCircleByradius {
-	return geosearchstoreCircleByradius{cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(radius, 'f', -1, 64))}
+func (c GeosearchstoreFrommember) Byradius(Radius float64) GeosearchstoreCircleByradius {
+	return GeosearchstoreCircleByradius{cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64))}
 }
 
-func (c geosearchstoreFrommember) Bybox(width float64) geosearchstoreBoxBybox {
-	return geosearchstoreBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(width, 'f', -1, 64))}
+func (c GeosearchstoreFrommember) Bybox(Width float64) GeosearchstoreBoxBybox {
+	return GeosearchstoreBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
 }
 
-func (c geosearchstoreFrommember) Asc() geosearchstoreOrderAsc {
-	return geosearchstoreOrderAsc{cs: append(c.cs, "ASC")}
+func (c GeosearchstoreFrommember) Asc() GeosearchstoreOrderAsc {
+	return GeosearchstoreOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c geosearchstoreFrommember) Desc() geosearchstoreOrderDesc {
-	return geosearchstoreOrderDesc{cs: append(c.cs, "DESC")}
+func (c GeosearchstoreFrommember) Desc() GeosearchstoreOrderDesc {
+	return GeosearchstoreOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c geosearchstoreFrommember) Count(count int64) geosearchstoreCountCount {
-	return geosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c GeosearchstoreFrommember) Count(Count int64) GeosearchstoreCountCount {
+	return GeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c geosearchstoreFrommember) Storedist() geosearchstoreStoredistStoredist {
-	return geosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
+func (c GeosearchstoreFrommember) Storedist() GeosearchstoreStoredistStoredist {
+	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
 }
 
-type geosearchstoreOrderAsc struct {
+type GeosearchstoreOrderAsc struct {
 	cs []string
 }
 
-func (c geosearchstoreOrderAsc) Count(count int64) geosearchstoreCountCount {
-	return geosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c GeosearchstoreOrderAsc) Count(Count int64) GeosearchstoreCountCount {
+	return GeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c geosearchstoreOrderAsc) Storedist() geosearchstoreStoredistStoredist {
-	return geosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
+func (c GeosearchstoreOrderAsc) Storedist() GeosearchstoreStoredistStoredist {
+	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
 }
 
-type geosearchstoreOrderDesc struct {
+type GeosearchstoreOrderDesc struct {
 	cs []string
 }
 
-func (c geosearchstoreOrderDesc) Count(count int64) geosearchstoreCountCount {
-	return geosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c GeosearchstoreOrderDesc) Count(Count int64) GeosearchstoreCountCount {
+	return GeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c geosearchstoreOrderDesc) Storedist() geosearchstoreStoredistStoredist {
-	return geosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
+func (c GeosearchstoreOrderDesc) Storedist() GeosearchstoreStoredistStoredist {
+	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
 }
 
-type geosearchstoreSource struct {
+type GeosearchstoreSource struct {
 	cs []string
 }
 
-func (c geosearchstoreSource) Frommember(member string) geosearchstoreFrommember {
-	return geosearchstoreFrommember{cs: append(c.cs, "FROMMEMBER", member)}
+func (c GeosearchstoreSource) Frommember(Member string) GeosearchstoreFrommember {
+	return GeosearchstoreFrommember{cs: append(c.cs, "FROMMEMBER", Member)}
 }
 
-func (c geosearchstoreSource) Fromlonlat(longitude float64, latitude float64) geosearchstoreFromlonlat {
-	return geosearchstoreFromlonlat{cs: append(c.cs, "FROMLONLAT", strconv.FormatFloat(longitude, 'f', -1, 64), strconv.FormatFloat(latitude, 'f', -1, 64))}
+func (c GeosearchstoreSource) Fromlonlat(Longitude float64, Latitude float64) GeosearchstoreFromlonlat {
+	return GeosearchstoreFromlonlat{cs: append(c.cs, "FROMLONLAT", strconv.FormatFloat(Longitude, 'f', -1, 64), strconv.FormatFloat(Latitude, 'f', -1, 64))}
 }
 
-func (c geosearchstoreSource) Byradius(radius float64) geosearchstoreCircleByradius {
-	return geosearchstoreCircleByradius{cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(radius, 'f', -1, 64))}
+func (c GeosearchstoreSource) Byradius(Radius float64) GeosearchstoreCircleByradius {
+	return GeosearchstoreCircleByradius{cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64))}
 }
 
-func (c geosearchstoreSource) Bybox(width float64) geosearchstoreBoxBybox {
-	return geosearchstoreBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(width, 'f', -1, 64))}
+func (c GeosearchstoreSource) Bybox(Width float64) GeosearchstoreBoxBybox {
+	return GeosearchstoreBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
 }
 
-func (c geosearchstoreSource) Asc() geosearchstoreOrderAsc {
-	return geosearchstoreOrderAsc{cs: append(c.cs, "ASC")}
+func (c GeosearchstoreSource) Asc() GeosearchstoreOrderAsc {
+	return GeosearchstoreOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c geosearchstoreSource) Desc() geosearchstoreOrderDesc {
-	return geosearchstoreOrderDesc{cs: append(c.cs, "DESC")}
+func (c GeosearchstoreSource) Desc() GeosearchstoreOrderDesc {
+	return GeosearchstoreOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c geosearchstoreSource) Count(count int64) geosearchstoreCountCount {
-	return geosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c GeosearchstoreSource) Count(Count int64) GeosearchstoreCountCount {
+	return GeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c geosearchstoreSource) Storedist() geosearchstoreStoredistStoredist {
-	return geosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
+func (c GeosearchstoreSource) Storedist() GeosearchstoreStoredistStoredist {
+	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
 }
 
-type geosearchstoreStoredistStoredist struct {
+type GeosearchstoreStoredistStoredist struct {
 	cs []string
 }
 
-func (c geosearchstoreStoredistStoredist) Build() []string {
+func (c GeosearchstoreStoredistStoredist) Build() []string {
 	return c.cs
 }
 
-type get struct {
+type Get struct {
 	cs []string
 }
 
-func (c get) Key(key string) getKey {
-	return getKey{cs: append(c.cs, key)}
+func (c Get) Key(Key string) GetKey {
+	return GetKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Get() (c get) {
+func (b *Builder) Get() (c Get) {
 	c.cs = append(b.get(), "GET")
 	return
 }
 
-type getKey struct {
+type GetKey struct {
 	cs []string
 }
 
-func (c getKey) Build() []string {
+func (c GetKey) Build() []string {
 	return c.cs
 }
 
-type getbit struct {
+type Getbit struct {
 	cs []string
 }
 
-func (c getbit) Key(key string) getbitKey {
-	return getbitKey{cs: append(c.cs, key)}
+func (c Getbit) Key(Key string) GetbitKey {
+	return GetbitKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Getbit() (c getbit) {
+func (b *Builder) Getbit() (c Getbit) {
 	c.cs = append(b.get(), "GETBIT")
 	return
 }
 
-type getbitKey struct {
+type GetbitKey struct {
 	cs []string
 }
 
-func (c getbitKey) Offset(offset int64) getbitOffset {
-	return getbitOffset{cs: append(c.cs, strconv.FormatInt(offset, 10))}
+func (c GetbitKey) Offset(Offset int64) GetbitOffset {
+	return GetbitOffset{cs: append(c.cs, strconv.FormatInt(Offset, 10))}
 }
 
-type getbitOffset struct {
+type GetbitOffset struct {
 	cs []string
 }
 
-func (c getbitOffset) Build() []string {
+func (c GetbitOffset) Build() []string {
 	return c.cs
 }
 
-type getdel struct {
+type Getdel struct {
 	cs []string
 }
 
-func (c getdel) Key(key string) getdelKey {
-	return getdelKey{cs: append(c.cs, key)}
+func (c Getdel) Key(Key string) GetdelKey {
+	return GetdelKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Getdel() (c getdel) {
+func (b *Builder) Getdel() (c Getdel) {
 	c.cs = append(b.get(), "GETDEL")
 	return
 }
 
-type getdelKey struct {
+type GetdelKey struct {
 	cs []string
 }
 
-func (c getdelKey) Build() []string {
+func (c GetdelKey) Build() []string {
 	return c.cs
 }
 
-type getex struct {
+type Getex struct {
 	cs []string
 }
 
-func (c getex) Key(key string) getexKey {
-	return getexKey{cs: append(c.cs, key)}
+func (c Getex) Key(Key string) GetexKey {
+	return GetexKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Getex() (c getex) {
+func (b *Builder) Getex() (c Getex) {
 	c.cs = append(b.get(), "GETEX")
 	return
 }
 
-type getexExpirationEx struct {
+type GetexExpirationEx struct {
 	cs []string
 }
 
-func (c getexExpirationEx) Build() []string {
+func (c GetexExpirationEx) Build() []string {
 	return c.cs
 }
 
-type getexExpirationExat struct {
+type GetexExpirationExat struct {
 	cs []string
 }
 
-func (c getexExpirationExat) Build() []string {
+func (c GetexExpirationExat) Build() []string {
 	return c.cs
 }
 
-type getexExpirationPersist struct {
+type GetexExpirationPersist struct {
 	cs []string
 }
 
-func (c getexExpirationPersist) Build() []string {
+func (c GetexExpirationPersist) Build() []string {
 	return c.cs
 }
 
-type getexExpirationPx struct {
+type GetexExpirationPx struct {
 	cs []string
 }
 
-func (c getexExpirationPx) Build() []string {
+func (c GetexExpirationPx) Build() []string {
 	return c.cs
 }
 
-type getexExpirationPxat struct {
+type GetexExpirationPxat struct {
 	cs []string
 }
 
-func (c getexExpirationPxat) Build() []string {
+func (c GetexExpirationPxat) Build() []string {
 	return c.cs
 }
 
-type getexKey struct {
+type GetexKey struct {
 	cs []string
 }
 
-func (c getexKey) Ex(seconds int64) getexExpirationEx {
-	return getexExpirationEx{cs: append(c.cs, "EX", strconv.FormatInt(seconds, 10))}
+func (c GetexKey) Ex(Seconds int64) GetexExpirationEx {
+	return GetexExpirationEx{cs: append(c.cs, "EX", strconv.FormatInt(Seconds, 10))}
 }
 
-func (c getexKey) Px(milliseconds int64) getexExpirationPx {
-	return getexExpirationPx{cs: append(c.cs, "PX", strconv.FormatInt(milliseconds, 10))}
+func (c GetexKey) Px(Milliseconds int64) GetexExpirationPx {
+	return GetexExpirationPx{cs: append(c.cs, "PX", strconv.FormatInt(Milliseconds, 10))}
 }
 
-func (c getexKey) Exat(timestamp int64) getexExpirationExat {
-	return getexExpirationExat{cs: append(c.cs, "EXAT", strconv.FormatInt(timestamp, 10))}
+func (c GetexKey) Exat(Timestamp int64) GetexExpirationExat {
+	return GetexExpirationExat{cs: append(c.cs, "EXAT", strconv.FormatInt(Timestamp, 10))}
 }
 
-func (c getexKey) Pxat(millisecondstimestamp int64) getexExpirationPxat {
-	return getexExpirationPxat{cs: append(c.cs, "PXAT", strconv.FormatInt(millisecondstimestamp, 10))}
+func (c GetexKey) Pxat(Millisecondstimestamp int64) GetexExpirationPxat {
+	return GetexExpirationPxat{cs: append(c.cs, "PXAT", strconv.FormatInt(Millisecondstimestamp, 10))}
 }
 
-func (c getexKey) Persist() getexExpirationPersist {
-	return getexExpirationPersist{cs: append(c.cs, "PERSIST")}
+func (c GetexKey) Persist() GetexExpirationPersist {
+	return GetexExpirationPersist{cs: append(c.cs, "PERSIST")}
 }
 
-func (c getexKey) Build() []string {
+func (c GetexKey) Build() []string {
 	return c.cs
 }
 
-type getrange struct {
+type Getrange struct {
 	cs []string
 }
 
-func (c getrange) Key(key string) getrangeKey {
-	return getrangeKey{cs: append(c.cs, key)}
+func (c Getrange) Key(Key string) GetrangeKey {
+	return GetrangeKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Getrange() (c getrange) {
+func (b *Builder) Getrange() (c Getrange) {
 	c.cs = append(b.get(), "GETRANGE")
 	return
 }
 
-type getrangeEnd struct {
+type GetrangeEnd struct {
 	cs []string
 }
 
-func (c getrangeEnd) Build() []string {
+func (c GetrangeEnd) Build() []string {
 	return c.cs
 }
 
-type getrangeKey struct {
+type GetrangeKey struct {
 	cs []string
 }
 
-func (c getrangeKey) Start(start int64) getrangeStart {
-	return getrangeStart{cs: append(c.cs, strconv.FormatInt(start, 10))}
+func (c GetrangeKey) Start(Start int64) GetrangeStart {
+	return GetrangeStart{cs: append(c.cs, strconv.FormatInt(Start, 10))}
 }
 
-type getrangeStart struct {
+type GetrangeStart struct {
 	cs []string
 }
 
-func (c getrangeStart) End(end int64) getrangeEnd {
-	return getrangeEnd{cs: append(c.cs, strconv.FormatInt(end, 10))}
+func (c GetrangeStart) End(End int64) GetrangeEnd {
+	return GetrangeEnd{cs: append(c.cs, strconv.FormatInt(End, 10))}
 }
 
-type getset struct {
+type Getset struct {
 	cs []string
 }
 
-func (c getset) Key(key string) getsetKey {
-	return getsetKey{cs: append(c.cs, key)}
+func (c Getset) Key(Key string) GetsetKey {
+	return GetsetKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Getset() (c getset) {
+func (b *Builder) Getset() (c Getset) {
 	c.cs = append(b.get(), "GETSET")
 	return
 }
 
-type getsetKey struct {
+type GetsetKey struct {
 	cs []string
 }
 
-func (c getsetKey) Value(value string) getsetValue {
-	return getsetValue{cs: append(c.cs, value)}
+func (c GetsetKey) Value(Value string) GetsetValue {
+	return GetsetValue{cs: append(c.cs, Value)}
 }
 
-type getsetValue struct {
+type GetsetValue struct {
 	cs []string
 }
 
-func (c getsetValue) Build() []string {
+func (c GetsetValue) Build() []string {
 	return c.cs
 }
 
-type hdel struct {
+type Hdel struct {
 	cs []string
 }
 
-func (c hdel) Key(key string) hdelKey {
-	return hdelKey{cs: append(c.cs, key)}
+func (c Hdel) Key(Key string) HdelKey {
+	return HdelKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Hdel() (c hdel) {
+func (b *Builder) Hdel() (c Hdel) {
 	c.cs = append(b.get(), "HDEL")
 	return
 }
 
-type hdelField struct {
+type HdelField struct {
 	cs []string
 }
 
-func (c hdelField) Field(field ...string) hdelField {
-	return hdelField{cs: append(c.cs, field...)}
+func (c HdelField) Field(Field ...string) HdelField {
+	return HdelField{cs: append(c.cs, Field...)}
 }
 
-func (c hdelField) Build() []string {
+func (c HdelField) Build() []string {
 	return c.cs
 }
 
-type hdelKey struct {
+type HdelKey struct {
 	cs []string
 }
 
-func (c hdelKey) Field(field ...string) hdelField {
-	return hdelField{cs: append(c.cs, field...)}
+func (c HdelKey) Field(Field ...string) HdelField {
+	return HdelField{cs: append(c.cs, Field...)}
 }
 
-type hello struct {
+type Hello struct {
 	cs []string
 }
 
-func (c hello) Protover(protover int64) helloArgumentsProtover {
-	return helloArgumentsProtover{cs: append(c.cs, strconv.FormatInt(protover, 10))}
+func (c Hello) Protover(Protover int64) HelloArgumentsProtover {
+	return HelloArgumentsProtover{cs: append(c.cs, strconv.FormatInt(Protover, 10))}
 }
 
-func (b *Builder) Hello() (c hello) {
+func (b *Builder) Hello() (c Hello) {
 	c.cs = append(b.get(), "HELLO")
 	return
 }
 
-type helloArgumentsAuth struct {
+type HelloArgumentsAuth struct {
 	cs []string
 }
 
-func (c helloArgumentsAuth) Setname(clientname string) helloArgumentsSetname {
-	return helloArgumentsSetname{cs: append(c.cs, "SETNAME", clientname)}
+func (c HelloArgumentsAuth) Setname(Clientname string) HelloArgumentsSetname {
+	return HelloArgumentsSetname{cs: append(c.cs, "SETNAME", Clientname)}
 }
 
-func (c helloArgumentsAuth) Build() []string {
+func (c HelloArgumentsAuth) Build() []string {
 	return c.cs
 }
 
-type helloArgumentsProtover struct {
+type HelloArgumentsProtover struct {
 	cs []string
 }
 
-func (c helloArgumentsProtover) Auth(username string, password string) helloArgumentsAuth {
-	return helloArgumentsAuth{cs: append(c.cs, "AUTH", username, password)}
+func (c HelloArgumentsProtover) Auth(Username string, Password string) HelloArgumentsAuth {
+	return HelloArgumentsAuth{cs: append(c.cs, "AUTH", Username, Password)}
 }
 
-func (c helloArgumentsProtover) Setname(clientname string) helloArgumentsSetname {
-	return helloArgumentsSetname{cs: append(c.cs, "SETNAME", clientname)}
+func (c HelloArgumentsProtover) Setname(Clientname string) HelloArgumentsSetname {
+	return HelloArgumentsSetname{cs: append(c.cs, "SETNAME", Clientname)}
 }
 
-func (c helloArgumentsProtover) Build() []string {
+func (c HelloArgumentsProtover) Build() []string {
 	return c.cs
 }
 
-type helloArgumentsSetname struct {
+type HelloArgumentsSetname struct {
 	cs []string
 }
 
-func (c helloArgumentsSetname) Build() []string {
+func (c HelloArgumentsSetname) Build() []string {
 	return c.cs
 }
 
-type hexists struct {
+type Hexists struct {
 	cs []string
 }
 
-func (c hexists) Key(key string) hexistsKey {
-	return hexistsKey{cs: append(c.cs, key)}
+func (c Hexists) Key(Key string) HexistsKey {
+	return HexistsKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Hexists() (c hexists) {
+func (b *Builder) Hexists() (c Hexists) {
 	c.cs = append(b.get(), "HEXISTS")
 	return
 }
 
-type hexistsField struct {
+type HexistsField struct {
 	cs []string
 }
 
-func (c hexistsField) Build() []string {
+func (c HexistsField) Build() []string {
 	return c.cs
 }
 
-type hexistsKey struct {
+type HexistsKey struct {
 	cs []string
 }
 
-func (c hexistsKey) Field(field string) hexistsField {
-	return hexistsField{cs: append(c.cs, field)}
+func (c HexistsKey) Field(Field string) HexistsField {
+	return HexistsField{cs: append(c.cs, Field)}
 }
 
-type hget struct {
+type Hget struct {
 	cs []string
 }
 
-func (c hget) Key(key string) hgetKey {
-	return hgetKey{cs: append(c.cs, key)}
+func (c Hget) Key(Key string) HgetKey {
+	return HgetKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Hget() (c hget) {
+func (b *Builder) Hget() (c Hget) {
 	c.cs = append(b.get(), "HGET")
 	return
 }
 
-type hgetField struct {
+type HgetField struct {
 	cs []string
 }
 
-func (c hgetField) Build() []string {
+func (c HgetField) Build() []string {
 	return c.cs
 }
 
-type hgetKey struct {
+type HgetKey struct {
 	cs []string
 }
 
-func (c hgetKey) Field(field string) hgetField {
-	return hgetField{cs: append(c.cs, field)}
+func (c HgetKey) Field(Field string) HgetField {
+	return HgetField{cs: append(c.cs, Field)}
 }
 
-type hgetall struct {
+type Hgetall struct {
 	cs []string
 }
 
-func (c hgetall) Key(key string) hgetallKey {
-	return hgetallKey{cs: append(c.cs, key)}
+func (c Hgetall) Key(Key string) HgetallKey {
+	return HgetallKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Hgetall() (c hgetall) {
+func (b *Builder) Hgetall() (c Hgetall) {
 	c.cs = append(b.get(), "HGETALL")
 	return
 }
 
-type hgetallKey struct {
+type HgetallKey struct {
 	cs []string
 }
 
-func (c hgetallKey) Build() []string {
+func (c HgetallKey) Build() []string {
 	return c.cs
 }
 
-type hincrby struct {
+type Hincrby struct {
 	cs []string
 }
 
-func (c hincrby) Key(key string) hincrbyKey {
-	return hincrbyKey{cs: append(c.cs, key)}
+func (c Hincrby) Key(Key string) HincrbyKey {
+	return HincrbyKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Hincrby() (c hincrby) {
+func (b *Builder) Hincrby() (c Hincrby) {
 	c.cs = append(b.get(), "HINCRBY")
 	return
 }
 
-type hincrbyField struct {
+type HincrbyField struct {
 	cs []string
 }
 
-func (c hincrbyField) Increment(increment int64) hincrbyIncrement {
-	return hincrbyIncrement{cs: append(c.cs, strconv.FormatInt(increment, 10))}
+func (c HincrbyField) Increment(Increment int64) HincrbyIncrement {
+	return HincrbyIncrement{cs: append(c.cs, strconv.FormatInt(Increment, 10))}
 }
 
-type hincrbyIncrement struct {
+type HincrbyIncrement struct {
 	cs []string
 }
 
-func (c hincrbyIncrement) Build() []string {
+func (c HincrbyIncrement) Build() []string {
 	return c.cs
 }
 
-type hincrbyKey struct {
+type HincrbyKey struct {
 	cs []string
 }
 
-func (c hincrbyKey) Field(field string) hincrbyField {
-	return hincrbyField{cs: append(c.cs, field)}
+func (c HincrbyKey) Field(Field string) HincrbyField {
+	return HincrbyField{cs: append(c.cs, Field)}
 }
 
-type hincrbyfloat struct {
+type Hincrbyfloat struct {
 	cs []string
 }
 
-func (c hincrbyfloat) Key(key string) hincrbyfloatKey {
-	return hincrbyfloatKey{cs: append(c.cs, key)}
+func (c Hincrbyfloat) Key(Key string) HincrbyfloatKey {
+	return HincrbyfloatKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Hincrbyfloat() (c hincrbyfloat) {
+func (b *Builder) Hincrbyfloat() (c Hincrbyfloat) {
 	c.cs = append(b.get(), "HINCRBYFLOAT")
 	return
 }
 
-type hincrbyfloatField struct {
+type HincrbyfloatField struct {
 	cs []string
 }
 
-func (c hincrbyfloatField) Increment(increment float64) hincrbyfloatIncrement {
-	return hincrbyfloatIncrement{cs: append(c.cs, strconv.FormatFloat(increment, 'f', -1, 64))}
+func (c HincrbyfloatField) Increment(Increment float64) HincrbyfloatIncrement {
+	return HincrbyfloatIncrement{cs: append(c.cs, strconv.FormatFloat(Increment, 'f', -1, 64))}
 }
 
-type hincrbyfloatIncrement struct {
+type HincrbyfloatIncrement struct {
 	cs []string
 }
 
-func (c hincrbyfloatIncrement) Build() []string {
+func (c HincrbyfloatIncrement) Build() []string {
 	return c.cs
 }
 
-type hincrbyfloatKey struct {
+type HincrbyfloatKey struct {
 	cs []string
 }
 
-func (c hincrbyfloatKey) Field(field string) hincrbyfloatField {
-	return hincrbyfloatField{cs: append(c.cs, field)}
+func (c HincrbyfloatKey) Field(Field string) HincrbyfloatField {
+	return HincrbyfloatField{cs: append(c.cs, Field)}
 }
 
-type hkeys struct {
+type Hkeys struct {
 	cs []string
 }
 
-func (c hkeys) Key(key string) hkeysKey {
-	return hkeysKey{cs: append(c.cs, key)}
+func (c Hkeys) Key(Key string) HkeysKey {
+	return HkeysKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Hkeys() (c hkeys) {
+func (b *Builder) Hkeys() (c Hkeys) {
 	c.cs = append(b.get(), "HKEYS")
 	return
 }
 
-type hkeysKey struct {
+type HkeysKey struct {
 	cs []string
 }
 
-func (c hkeysKey) Build() []string {
+func (c HkeysKey) Build() []string {
 	return c.cs
 }
 
-type hlen struct {
+type Hlen struct {
 	cs []string
 }
 
-func (c hlen) Key(key string) hlenKey {
-	return hlenKey{cs: append(c.cs, key)}
+func (c Hlen) Key(Key string) HlenKey {
+	return HlenKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Hlen() (c hlen) {
+func (b *Builder) Hlen() (c Hlen) {
 	c.cs = append(b.get(), "HLEN")
 	return
 }
 
-type hlenKey struct {
+type HlenKey struct {
 	cs []string
 }
 
-func (c hlenKey) Build() []string {
+func (c HlenKey) Build() []string {
 	return c.cs
 }
 
-type hmget struct {
+type Hmget struct {
 	cs []string
 }
 
-func (c hmget) Key(key string) hmgetKey {
-	return hmgetKey{cs: append(c.cs, key)}
+func (c Hmget) Key(Key string) HmgetKey {
+	return HmgetKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Hmget() (c hmget) {
+func (b *Builder) Hmget() (c Hmget) {
 	c.cs = append(b.get(), "HMGET")
 	return
 }
 
-type hmgetField struct {
+type HmgetField struct {
 	cs []string
 }
 
-func (c hmgetField) Field(field ...string) hmgetField {
-	return hmgetField{cs: append(c.cs, field...)}
+func (c HmgetField) Field(Field ...string) HmgetField {
+	return HmgetField{cs: append(c.cs, Field...)}
 }
 
-func (c hmgetField) Build() []string {
+func (c HmgetField) Build() []string {
 	return c.cs
 }
 
-type hmgetKey struct {
+type HmgetKey struct {
 	cs []string
 }
 
-func (c hmgetKey) Field(field ...string) hmgetField {
-	return hmgetField{cs: append(c.cs, field...)}
+func (c HmgetKey) Field(Field ...string) HmgetField {
+	return HmgetField{cs: append(c.cs, Field...)}
 }
 
-type hmset struct {
+type Hmset struct {
 	cs []string
 }
 
-func (c hmset) Key(key string) hmsetKey {
-	return hmsetKey{cs: append(c.cs, key)}
+func (c Hmset) Key(Key string) HmsetKey {
+	return HmsetKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Hmset() (c hmset) {
+func (b *Builder) Hmset() (c Hmset) {
 	c.cs = append(b.get(), "HMSET")
 	return
 }
 
-type hmsetFieldValue struct {
+type HmsetFieldValue struct {
 	cs []string
 }
 
-func (c hmsetFieldValue) FieldValue(field string, value string) hmsetFieldValue {
-	return hmsetFieldValue{cs: append(c.cs, field, value)}
+func (c HmsetFieldValue) FieldValue(Field string, Value string) HmsetFieldValue {
+	return HmsetFieldValue{cs: append(c.cs, Field, Value)}
 }
 
-func (c hmsetFieldValue) Build() []string {
+func (c HmsetFieldValue) Build() []string {
 	return c.cs
 }
 
-type hmsetKey struct {
+type HmsetKey struct {
 	cs []string
 }
 
-func (c hmsetKey) FieldValue() hmsetFieldValue {
-	return hmsetFieldValue{cs: append(c.cs)}
+func (c HmsetKey) FieldValue() HmsetFieldValue {
+	return HmsetFieldValue{cs: append(c.cs)}
 }
 
-type hrandfield struct {
+type Hrandfield struct {
 	cs []string
 }
 
-func (c hrandfield) Key(key string) hrandfieldKey {
-	return hrandfieldKey{cs: append(c.cs, key)}
+func (c Hrandfield) Key(Key string) HrandfieldKey {
+	return HrandfieldKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Hrandfield() (c hrandfield) {
+func (b *Builder) Hrandfield() (c Hrandfield) {
 	c.cs = append(b.get(), "HRANDFIELD")
 	return
 }
 
-type hrandfieldKey struct {
+type HrandfieldKey struct {
 	cs []string
 }
 
-func (c hrandfieldKey) Count(count int64) hrandfieldOptionsCount {
-	return hrandfieldOptionsCount{cs: append(c.cs, strconv.FormatInt(count, 10))}
+func (c HrandfieldKey) Count(Count int64) HrandfieldOptionsCount {
+	return HrandfieldOptionsCount{cs: append(c.cs, strconv.FormatInt(Count, 10))}
 }
 
-type hrandfieldOptionsCount struct {
+type HrandfieldOptionsCount struct {
 	cs []string
 }
 
-func (c hrandfieldOptionsCount) Withvalues() hrandfieldOptionsWithvaluesWithvalues {
-	return hrandfieldOptionsWithvaluesWithvalues{cs: append(c.cs, "WITHVALUES")}
+func (c HrandfieldOptionsCount) Withvalues() HrandfieldOptionsWithvaluesWithvalues {
+	return HrandfieldOptionsWithvaluesWithvalues{cs: append(c.cs, "WITHVALUES")}
 }
 
-func (c hrandfieldOptionsCount) Build() []string {
+func (c HrandfieldOptionsCount) Build() []string {
 	return c.cs
 }
 
-type hrandfieldOptionsWithvaluesWithvalues struct {
+type HrandfieldOptionsWithvaluesWithvalues struct {
 	cs []string
 }
 
-func (c hrandfieldOptionsWithvaluesWithvalues) Build() []string {
+func (c HrandfieldOptionsWithvaluesWithvalues) Build() []string {
 	return c.cs
 }
 
-type hscan struct {
+type Hscan struct {
 	cs []string
 }
 
-func (c hscan) Key(key string) hscanKey {
-	return hscanKey{cs: append(c.cs, key)}
+func (c Hscan) Key(Key string) HscanKey {
+	return HscanKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Hscan() (c hscan) {
+func (b *Builder) Hscan() (c Hscan) {
 	c.cs = append(b.get(), "HSCAN")
 	return
 }
 
-type hscanCount struct {
+type HscanCount struct {
 	cs []string
 }
 
-func (c hscanCount) Build() []string {
+func (c HscanCount) Build() []string {
 	return c.cs
 }
 
-type hscanCursor struct {
+type HscanCursor struct {
 	cs []string
 }
 
-func (c hscanCursor) Match(pattern string) hscanMatch {
-	return hscanMatch{cs: append(c.cs, "MATCH", pattern)}
+func (c HscanCursor) Match(Pattern string) HscanMatch {
+	return HscanMatch{cs: append(c.cs, "MATCH", Pattern)}
 }
 
-func (c hscanCursor) Count(count int64) hscanCount {
-	return hscanCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c HscanCursor) Count(Count int64) HscanCount {
+	return HscanCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c hscanCursor) Build() []string {
+func (c HscanCursor) Build() []string {
 	return c.cs
 }
 
-type hscanKey struct {
+type HscanKey struct {
 	cs []string
 }
 
-func (c hscanKey) Cursor(cursor int64) hscanCursor {
-	return hscanCursor{cs: append(c.cs, strconv.FormatInt(cursor, 10))}
+func (c HscanKey) Cursor(Cursor int64) HscanCursor {
+	return HscanCursor{cs: append(c.cs, strconv.FormatInt(Cursor, 10))}
 }
 
-type hscanMatch struct {
+type HscanMatch struct {
 	cs []string
 }
 
-func (c hscanMatch) Count(count int64) hscanCount {
-	return hscanCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c HscanMatch) Count(Count int64) HscanCount {
+	return HscanCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c hscanMatch) Build() []string {
+func (c HscanMatch) Build() []string {
 	return c.cs
 }
 
-type hset struct {
+type Hset struct {
 	cs []string
 }
 
-func (c hset) Key(key string) hsetKey {
-	return hsetKey{cs: append(c.cs, key)}
+func (c Hset) Key(Key string) HsetKey {
+	return HsetKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Hset() (c hset) {
+func (b *Builder) Hset() (c Hset) {
 	c.cs = append(b.get(), "HSET")
 	return
 }
 
-type hsetFieldValue struct {
+type HsetFieldValue struct {
 	cs []string
 }
 
-func (c hsetFieldValue) FieldValue(field string, value string) hsetFieldValue {
-	return hsetFieldValue{cs: append(c.cs, field, value)}
+func (c HsetFieldValue) FieldValue(Field string, Value string) HsetFieldValue {
+	return HsetFieldValue{cs: append(c.cs, Field, Value)}
 }
 
-func (c hsetFieldValue) Build() []string {
+func (c HsetFieldValue) Build() []string {
 	return c.cs
 }
 
-type hsetKey struct {
+type HsetKey struct {
 	cs []string
 }
 
-func (c hsetKey) FieldValue() hsetFieldValue {
-	return hsetFieldValue{cs: append(c.cs)}
+func (c HsetKey) FieldValue() HsetFieldValue {
+	return HsetFieldValue{cs: append(c.cs)}
 }
 
-type hsetnx struct {
+type Hsetnx struct {
 	cs []string
 }
 
-func (c hsetnx) Key(key string) hsetnxKey {
-	return hsetnxKey{cs: append(c.cs, key)}
+func (c Hsetnx) Key(Key string) HsetnxKey {
+	return HsetnxKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Hsetnx() (c hsetnx) {
+func (b *Builder) Hsetnx() (c Hsetnx) {
 	c.cs = append(b.get(), "HSETNX")
 	return
 }
 
-type hsetnxField struct {
+type HsetnxField struct {
 	cs []string
 }
 
-func (c hsetnxField) Value(value string) hsetnxValue {
-	return hsetnxValue{cs: append(c.cs, value)}
+func (c HsetnxField) Value(Value string) HsetnxValue {
+	return HsetnxValue{cs: append(c.cs, Value)}
 }
 
-type hsetnxKey struct {
+type HsetnxKey struct {
 	cs []string
 }
 
-func (c hsetnxKey) Field(field string) hsetnxField {
-	return hsetnxField{cs: append(c.cs, field)}
+func (c HsetnxKey) Field(Field string) HsetnxField {
+	return HsetnxField{cs: append(c.cs, Field)}
 }
 
-type hsetnxValue struct {
+type HsetnxValue struct {
 	cs []string
 }
 
-func (c hsetnxValue) Build() []string {
+func (c HsetnxValue) Build() []string {
 	return c.cs
 }
 
-type hstrlen struct {
+type Hstrlen struct {
 	cs []string
 }
 
-func (c hstrlen) Key(key string) hstrlenKey {
-	return hstrlenKey{cs: append(c.cs, key)}
+func (c Hstrlen) Key(Key string) HstrlenKey {
+	return HstrlenKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Hstrlen() (c hstrlen) {
+func (b *Builder) Hstrlen() (c Hstrlen) {
 	c.cs = append(b.get(), "HSTRLEN")
 	return
 }
 
-type hstrlenField struct {
+type HstrlenField struct {
 	cs []string
 }
 
-func (c hstrlenField) Build() []string {
+func (c HstrlenField) Build() []string {
 	return c.cs
 }
 
-type hstrlenKey struct {
+type HstrlenKey struct {
 	cs []string
 }
 
-func (c hstrlenKey) Field(field string) hstrlenField {
-	return hstrlenField{cs: append(c.cs, field)}
+func (c HstrlenKey) Field(Field string) HstrlenField {
+	return HstrlenField{cs: append(c.cs, Field)}
 }
 
-type hvals struct {
+type Hvals struct {
 	cs []string
 }
 
-func (c hvals) Key(key string) hvalsKey {
-	return hvalsKey{cs: append(c.cs, key)}
+func (c Hvals) Key(Key string) HvalsKey {
+	return HvalsKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Hvals() (c hvals) {
+func (b *Builder) Hvals() (c Hvals) {
 	c.cs = append(b.get(), "HVALS")
 	return
 }
 
-type hvalsKey struct {
+type HvalsKey struct {
 	cs []string
 }
 
-func (c hvalsKey) Build() []string {
+func (c HvalsKey) Build() []string {
 	return c.cs
 }
 
-type incr struct {
+type Incr struct {
 	cs []string
 }
 
-func (c incr) Key(key string) incrKey {
-	return incrKey{cs: append(c.cs, key)}
+func (c Incr) Key(Key string) IncrKey {
+	return IncrKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Incr() (c incr) {
+func (b *Builder) Incr() (c Incr) {
 	c.cs = append(b.get(), "INCR")
 	return
 }
 
-type incrKey struct {
+type IncrKey struct {
 	cs []string
 }
 
-func (c incrKey) Build() []string {
+func (c IncrKey) Build() []string {
 	return c.cs
 }
 
-type incrby struct {
+type Incrby struct {
 	cs []string
 }
 
-func (c incrby) Key(key string) incrbyKey {
-	return incrbyKey{cs: append(c.cs, key)}
+func (c Incrby) Key(Key string) IncrbyKey {
+	return IncrbyKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Incrby() (c incrby) {
+func (b *Builder) Incrby() (c Incrby) {
 	c.cs = append(b.get(), "INCRBY")
 	return
 }
 
-type incrbyIncrement struct {
+type IncrbyIncrement struct {
 	cs []string
 }
 
-func (c incrbyIncrement) Build() []string {
+func (c IncrbyIncrement) Build() []string {
 	return c.cs
 }
 
-type incrbyKey struct {
+type IncrbyKey struct {
 	cs []string
 }
 
-func (c incrbyKey) Increment(increment int64) incrbyIncrement {
-	return incrbyIncrement{cs: append(c.cs, strconv.FormatInt(increment, 10))}
+func (c IncrbyKey) Increment(Increment int64) IncrbyIncrement {
+	return IncrbyIncrement{cs: append(c.cs, strconv.FormatInt(Increment, 10))}
 }
 
-type incrbyfloat struct {
+type Incrbyfloat struct {
 	cs []string
 }
 
-func (c incrbyfloat) Key(key string) incrbyfloatKey {
-	return incrbyfloatKey{cs: append(c.cs, key)}
+func (c Incrbyfloat) Key(Key string) IncrbyfloatKey {
+	return IncrbyfloatKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Incrbyfloat() (c incrbyfloat) {
+func (b *Builder) Incrbyfloat() (c Incrbyfloat) {
 	c.cs = append(b.get(), "INCRBYFLOAT")
 	return
 }
 
-type incrbyfloatIncrement struct {
+type IncrbyfloatIncrement struct {
 	cs []string
 }
 
-func (c incrbyfloatIncrement) Build() []string {
+func (c IncrbyfloatIncrement) Build() []string {
 	return c.cs
 }
 
-type incrbyfloatKey struct {
+type IncrbyfloatKey struct {
 	cs []string
 }
 
-func (c incrbyfloatKey) Increment(increment float64) incrbyfloatIncrement {
-	return incrbyfloatIncrement{cs: append(c.cs, strconv.FormatFloat(increment, 'f', -1, 64))}
+func (c IncrbyfloatKey) Increment(Increment float64) IncrbyfloatIncrement {
+	return IncrbyfloatIncrement{cs: append(c.cs, strconv.FormatFloat(Increment, 'f', -1, 64))}
 }
 
-type info struct {
+type Info struct {
 	cs []string
 }
 
-func (c info) Section(section string) infoSection {
-	return infoSection{cs: append(c.cs, section)}
+func (c Info) Section(Section string) InfoSection {
+	return InfoSection{cs: append(c.cs, Section)}
 }
 
-func (c info) Build() []string {
+func (c Info) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) Info() (c info) {
+func (b *Builder) Info() (c Info) {
 	c.cs = append(b.get(), "INFO")
 	return
 }
 
-type infoSection struct {
+type InfoSection struct {
 	cs []string
 }
 
-func (c infoSection) Build() []string {
+func (c InfoSection) Build() []string {
 	return c.cs
 }
 
-type keys struct {
+type Keys struct {
 	cs []string
 }
 
-func (c keys) Pattern(pattern string) keysPattern {
-	return keysPattern{cs: append(c.cs, pattern)}
+func (c Keys) Pattern(Pattern string) KeysPattern {
+	return KeysPattern{cs: append(c.cs, Pattern)}
 }
 
-func (b *Builder) Keys() (c keys) {
+func (b *Builder) Keys() (c Keys) {
 	c.cs = append(b.get(), "KEYS")
 	return
 }
 
-type keysPattern struct {
+type KeysPattern struct {
 	cs []string
 }
 
-func (c keysPattern) Build() []string {
+func (c KeysPattern) Build() []string {
 	return c.cs
 }
 
-type lastsave struct {
+type Lastsave struct {
 	cs []string
 }
 
-func (c lastsave) Build() []string {
+func (c Lastsave) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) Lastsave() (c lastsave) {
+func (b *Builder) Lastsave() (c Lastsave) {
 	c.cs = append(b.get(), "LASTSAVE")
 	return
 }
 
-type latencyDoctor struct {
+type LatencyDoctor struct {
 	cs []string
 }
 
-func (c latencyDoctor) Build() []string {
+func (c LatencyDoctor) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) LatencyDoctor() (c latencyDoctor) {
+func (b *Builder) LatencyDoctor() (c LatencyDoctor) {
 	c.cs = append(b.get(), "LATENCY", "DOCTOR")
 	return
 }
 
-type latencyGraph struct {
+type LatencyGraph struct {
 	cs []string
 }
 
-func (c latencyGraph) Event(event string) latencyGraphEvent {
-	return latencyGraphEvent{cs: append(c.cs, event)}
+func (c LatencyGraph) Event(Event string) LatencyGraphEvent {
+	return LatencyGraphEvent{cs: append(c.cs, Event)}
 }
 
-func (b *Builder) LatencyGraph() (c latencyGraph) {
+func (b *Builder) LatencyGraph() (c LatencyGraph) {
 	c.cs = append(b.get(), "LATENCY", "GRAPH")
 	return
 }
 
-type latencyGraphEvent struct {
+type LatencyGraphEvent struct {
 	cs []string
 }
 
-func (c latencyGraphEvent) Build() []string {
+func (c LatencyGraphEvent) Build() []string {
 	return c.cs
 }
 
-type latencyHelp struct {
+type LatencyHelp struct {
 	cs []string
 }
 
-func (c latencyHelp) Build() []string {
+func (c LatencyHelp) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) LatencyHelp() (c latencyHelp) {
+func (b *Builder) LatencyHelp() (c LatencyHelp) {
 	c.cs = append(b.get(), "LATENCY", "HELP")
 	return
 }
 
-type latencyHistory struct {
+type LatencyHistory struct {
 	cs []string
 }
 
-func (c latencyHistory) Event(event string) latencyHistoryEvent {
-	return latencyHistoryEvent{cs: append(c.cs, event)}
+func (c LatencyHistory) Event(Event string) LatencyHistoryEvent {
+	return LatencyHistoryEvent{cs: append(c.cs, Event)}
 }
 
-func (b *Builder) LatencyHistory() (c latencyHistory) {
+func (b *Builder) LatencyHistory() (c LatencyHistory) {
 	c.cs = append(b.get(), "LATENCY", "HISTORY")
 	return
 }
 
-type latencyHistoryEvent struct {
+type LatencyHistoryEvent struct {
 	cs []string
 }
 
-func (c latencyHistoryEvent) Build() []string {
+func (c LatencyHistoryEvent) Build() []string {
 	return c.cs
 }
 
-type latencyLatest struct {
+type LatencyLatest struct {
 	cs []string
 }
 
-func (c latencyLatest) Build() []string {
+func (c LatencyLatest) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) LatencyLatest() (c latencyLatest) {
+func (b *Builder) LatencyLatest() (c LatencyLatest) {
 	c.cs = append(b.get(), "LATENCY", "LATEST")
 	return
 }
 
-type latencyReset struct {
+type LatencyReset struct {
 	cs []string
 }
 
-func (c latencyReset) Event(event ...string) latencyResetEvent {
-	return latencyResetEvent{cs: append(c.cs, event...)}
+func (c LatencyReset) Event(Event ...string) LatencyResetEvent {
+	return LatencyResetEvent{cs: append(c.cs, Event...)}
 }
 
-func (c latencyReset) Build() []string {
+func (c LatencyReset) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) LatencyReset() (c latencyReset) {
+func (b *Builder) LatencyReset() (c LatencyReset) {
 	c.cs = append(b.get(), "LATENCY", "RESET")
 	return
 }
 
-type latencyResetEvent struct {
+type LatencyResetEvent struct {
 	cs []string
 }
 
-func (c latencyResetEvent) Event(event ...string) latencyResetEvent {
-	return latencyResetEvent{cs: append(c.cs, event...)}
+func (c LatencyResetEvent) Event(Event ...string) LatencyResetEvent {
+	return LatencyResetEvent{cs: append(c.cs, Event...)}
 }
 
-func (c latencyResetEvent) Build() []string {
+func (c LatencyResetEvent) Build() []string {
 	return c.cs
 }
 
-type lindex struct {
+type Lindex struct {
 	cs []string
 }
 
-func (c lindex) Key(key string) lindexKey {
-	return lindexKey{cs: append(c.cs, key)}
+func (c Lindex) Key(Key string) LindexKey {
+	return LindexKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Lindex() (c lindex) {
+func (b *Builder) Lindex() (c Lindex) {
 	c.cs = append(b.get(), "LINDEX")
 	return
 }
 
-type lindexIndex struct {
+type LindexIndex struct {
 	cs []string
 }
 
-func (c lindexIndex) Build() []string {
+func (c LindexIndex) Build() []string {
 	return c.cs
 }
 
-type lindexKey struct {
+type LindexKey struct {
 	cs []string
 }
 
-func (c lindexKey) Index(index int64) lindexIndex {
-	return lindexIndex{cs: append(c.cs, strconv.FormatInt(index, 10))}
+func (c LindexKey) Index(Index int64) LindexIndex {
+	return LindexIndex{cs: append(c.cs, strconv.FormatInt(Index, 10))}
 }
 
-type linsert struct {
+type Linsert struct {
 	cs []string
 }
 
-func (c linsert) Key(key string) linsertKey {
-	return linsertKey{cs: append(c.cs, key)}
+func (c Linsert) Key(Key string) LinsertKey {
+	return LinsertKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Linsert() (c linsert) {
+func (b *Builder) Linsert() (c Linsert) {
 	c.cs = append(b.get(), "LINSERT")
 	return
 }
 
-type linsertElement struct {
+type LinsertElement struct {
 	cs []string
 }
 
-func (c linsertElement) Build() []string {
+func (c LinsertElement) Build() []string {
 	return c.cs
 }
 
-type linsertKey struct {
+type LinsertKey struct {
 	cs []string
 }
 
-func (c linsertKey) Before() linsertWhereBefore {
-	return linsertWhereBefore{cs: append(c.cs, "BEFORE")}
+func (c LinsertKey) Before() LinsertWhereBefore {
+	return LinsertWhereBefore{cs: append(c.cs, "BEFORE")}
 }
 
-func (c linsertKey) After() linsertWhereAfter {
-	return linsertWhereAfter{cs: append(c.cs, "AFTER")}
+func (c LinsertKey) After() LinsertWhereAfter {
+	return LinsertWhereAfter{cs: append(c.cs, "AFTER")}
 }
 
-type linsertPivot struct {
+type LinsertPivot struct {
 	cs []string
 }
 
-func (c linsertPivot) Element(element string) linsertElement {
-	return linsertElement{cs: append(c.cs, element)}
+func (c LinsertPivot) Element(Element string) LinsertElement {
+	return LinsertElement{cs: append(c.cs, Element)}
 }
 
-type linsertWhereAfter struct {
+type LinsertWhereAfter struct {
 	cs []string
 }
 
-func (c linsertWhereAfter) Pivot(pivot string) linsertPivot {
-	return linsertPivot{cs: append(c.cs, pivot)}
+func (c LinsertWhereAfter) Pivot(Pivot string) LinsertPivot {
+	return LinsertPivot{cs: append(c.cs, Pivot)}
 }
 
-type linsertWhereBefore struct {
+type LinsertWhereBefore struct {
 	cs []string
 }
 
-func (c linsertWhereBefore) Pivot(pivot string) linsertPivot {
-	return linsertPivot{cs: append(c.cs, pivot)}
+func (c LinsertWhereBefore) Pivot(Pivot string) LinsertPivot {
+	return LinsertPivot{cs: append(c.cs, Pivot)}
 }
 
-type llen struct {
+type Llen struct {
 	cs []string
 }
 
-func (c llen) Key(key string) llenKey {
-	return llenKey{cs: append(c.cs, key)}
+func (c Llen) Key(Key string) LlenKey {
+	return LlenKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Llen() (c llen) {
+func (b *Builder) Llen() (c Llen) {
 	c.cs = append(b.get(), "LLEN")
 	return
 }
 
-type llenKey struct {
+type LlenKey struct {
 	cs []string
 }
 
-func (c llenKey) Build() []string {
+func (c LlenKey) Build() []string {
 	return c.cs
 }
 
-type lmove struct {
+type Lmove struct {
 	cs []string
 }
 
-func (c lmove) Source(source string) lmoveSource {
-	return lmoveSource{cs: append(c.cs, source)}
+func (c Lmove) Source(Source string) LmoveSource {
+	return LmoveSource{cs: append(c.cs, Source)}
 }
 
-func (b *Builder) Lmove() (c lmove) {
+func (b *Builder) Lmove() (c Lmove) {
 	c.cs = append(b.get(), "LMOVE")
 	return
 }
 
-type lmoveDestination struct {
+type LmoveDestination struct {
 	cs []string
 }
 
-func (c lmoveDestination) Left() lmoveWherefromLeft {
-	return lmoveWherefromLeft{cs: append(c.cs, "LEFT")}
+func (c LmoveDestination) Left() LmoveWherefromLeft {
+	return LmoveWherefromLeft{cs: append(c.cs, "LEFT")}
 }
 
-func (c lmoveDestination) Right() lmoveWherefromRight {
-	return lmoveWherefromRight{cs: append(c.cs, "RIGHT")}
+func (c LmoveDestination) Right() LmoveWherefromRight {
+	return LmoveWherefromRight{cs: append(c.cs, "RIGHT")}
 }
 
-type lmoveSource struct {
+type LmoveSource struct {
 	cs []string
 }
 
-func (c lmoveSource) Destination(destination string) lmoveDestination {
-	return lmoveDestination{cs: append(c.cs, destination)}
+func (c LmoveSource) Destination(Destination string) LmoveDestination {
+	return LmoveDestination{cs: append(c.cs, Destination)}
 }
 
-type lmoveWherefromLeft struct {
+type LmoveWherefromLeft struct {
 	cs []string
 }
 
-func (c lmoveWherefromLeft) Left() lmoveWheretoLeft {
-	return lmoveWheretoLeft{cs: append(c.cs, "LEFT")}
+func (c LmoveWherefromLeft) Left() LmoveWheretoLeft {
+	return LmoveWheretoLeft{cs: append(c.cs, "LEFT")}
 }
 
-func (c lmoveWherefromLeft) Right() lmoveWheretoRight {
-	return lmoveWheretoRight{cs: append(c.cs, "RIGHT")}
+func (c LmoveWherefromLeft) Right() LmoveWheretoRight {
+	return LmoveWheretoRight{cs: append(c.cs, "RIGHT")}
 }
 
-type lmoveWherefromRight struct {
+type LmoveWherefromRight struct {
 	cs []string
 }
 
-func (c lmoveWherefromRight) Left() lmoveWheretoLeft {
-	return lmoveWheretoLeft{cs: append(c.cs, "LEFT")}
+func (c LmoveWherefromRight) Left() LmoveWheretoLeft {
+	return LmoveWheretoLeft{cs: append(c.cs, "LEFT")}
 }
 
-func (c lmoveWherefromRight) Right() lmoveWheretoRight {
-	return lmoveWheretoRight{cs: append(c.cs, "RIGHT")}
+func (c LmoveWherefromRight) Right() LmoveWheretoRight {
+	return LmoveWheretoRight{cs: append(c.cs, "RIGHT")}
 }
 
-type lmoveWheretoLeft struct {
+type LmoveWheretoLeft struct {
 	cs []string
 }
 
-func (c lmoveWheretoLeft) Build() []string {
+func (c LmoveWheretoLeft) Build() []string {
 	return c.cs
 }
 
-type lmoveWheretoRight struct {
+type LmoveWheretoRight struct {
 	cs []string
 }
 
-func (c lmoveWheretoRight) Build() []string {
+func (c LmoveWheretoRight) Build() []string {
 	return c.cs
 }
 
-type lmpop struct {
+type Lmpop struct {
 	cs []string
 }
 
-func (c lmpop) Numkeys(numkeys int64) lmpopNumkeys {
-	return lmpopNumkeys{cs: append(c.cs, strconv.FormatInt(numkeys, 10))}
+func (c Lmpop) Numkeys(Numkeys int64) LmpopNumkeys {
+	return LmpopNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
 }
 
-func (b *Builder) Lmpop() (c lmpop) {
+func (b *Builder) Lmpop() (c Lmpop) {
 	c.cs = append(b.get(), "LMPOP")
 	return
 }
 
-type lmpopCount struct {
+type LmpopCount struct {
 	cs []string
 }
 
-func (c lmpopCount) Build() []string {
+func (c LmpopCount) Build() []string {
 	return c.cs
 }
 
-type lmpopKey struct {
+type LmpopKey struct {
 	cs []string
 }
 
-func (c lmpopKey) Left() lmpopWhereLeft {
-	return lmpopWhereLeft{cs: append(c.cs, "LEFT")}
+func (c LmpopKey) Left() LmpopWhereLeft {
+	return LmpopWhereLeft{cs: append(c.cs, "LEFT")}
 }
 
-func (c lmpopKey) Right() lmpopWhereRight {
-	return lmpopWhereRight{cs: append(c.cs, "RIGHT")}
+func (c LmpopKey) Right() LmpopWhereRight {
+	return LmpopWhereRight{cs: append(c.cs, "RIGHT")}
 }
 
-func (c lmpopKey) Key(key ...string) lmpopKey {
-	return lmpopKey{cs: append(c.cs, key...)}
+func (c LmpopKey) Key(Key ...string) LmpopKey {
+	return LmpopKey{cs: append(c.cs, Key...)}
 }
 
-type lmpopNumkeys struct {
+type LmpopNumkeys struct {
 	cs []string
 }
 
-func (c lmpopNumkeys) Key(key ...string) lmpopKey {
-	return lmpopKey{cs: append(c.cs, key...)}
+func (c LmpopNumkeys) Key(Key ...string) LmpopKey {
+	return LmpopKey{cs: append(c.cs, Key...)}
 }
 
-func (c lmpopNumkeys) Left() lmpopWhereLeft {
-	return lmpopWhereLeft{cs: append(c.cs, "LEFT")}
+func (c LmpopNumkeys) Left() LmpopWhereLeft {
+	return LmpopWhereLeft{cs: append(c.cs, "LEFT")}
 }
 
-func (c lmpopNumkeys) Right() lmpopWhereRight {
-	return lmpopWhereRight{cs: append(c.cs, "RIGHT")}
+func (c LmpopNumkeys) Right() LmpopWhereRight {
+	return LmpopWhereRight{cs: append(c.cs, "RIGHT")}
 }
 
-type lmpopWhereLeft struct {
+type LmpopWhereLeft struct {
 	cs []string
 }
 
-func (c lmpopWhereLeft) Count(count int64) lmpopCount {
-	return lmpopCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c LmpopWhereLeft) Count(Count int64) LmpopCount {
+	return LmpopCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c lmpopWhereLeft) Build() []string {
+func (c LmpopWhereLeft) Build() []string {
 	return c.cs
 }
 
-type lmpopWhereRight struct {
+type LmpopWhereRight struct {
 	cs []string
 }
 
-func (c lmpopWhereRight) Count(count int64) lmpopCount {
-	return lmpopCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c LmpopWhereRight) Count(Count int64) LmpopCount {
+	return LmpopCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c lmpopWhereRight) Build() []string {
+func (c LmpopWhereRight) Build() []string {
 	return c.cs
 }
 
-type lolwut struct {
+type Lolwut struct {
 	cs []string
 }
 
-func (c lolwut) Version(version int64) lolwutVersion {
-	return lolwutVersion{cs: append(c.cs, "VERSION", strconv.FormatInt(version, 10))}
+func (c Lolwut) Version(Version int64) LolwutVersion {
+	return LolwutVersion{cs: append(c.cs, "VERSION", strconv.FormatInt(Version, 10))}
 }
 
-func (c lolwut) Build() []string {
+func (c Lolwut) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) Lolwut() (c lolwut) {
+func (b *Builder) Lolwut() (c Lolwut) {
 	c.cs = append(b.get(), "LOLWUT")
 	return
 }
 
-type lolwutVersion struct {
+type LolwutVersion struct {
 	cs []string
 }
 
-func (c lolwutVersion) Build() []string {
+func (c LolwutVersion) Build() []string {
 	return c.cs
 }
 
-type lpop struct {
+type Lpop struct {
 	cs []string
 }
 
-func (c lpop) Key(key string) lpopKey {
-	return lpopKey{cs: append(c.cs, key)}
+func (c Lpop) Key(Key string) LpopKey {
+	return LpopKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Lpop() (c lpop) {
+func (b *Builder) Lpop() (c Lpop) {
 	c.cs = append(b.get(), "LPOP")
 	return
 }
 
-type lpopCount struct {
+type LpopCount struct {
 	cs []string
 }
 
-func (c lpopCount) Build() []string {
+func (c LpopCount) Build() []string {
 	return c.cs
 }
 
-type lpopKey struct {
+type LpopKey struct {
 	cs []string
 }
 
-func (c lpopKey) Count(count int64) lpopCount {
-	return lpopCount{cs: append(c.cs, strconv.FormatInt(count, 10))}
+func (c LpopKey) Count(Count int64) LpopCount {
+	return LpopCount{cs: append(c.cs, strconv.FormatInt(Count, 10))}
 }
 
-func (c lpopKey) Build() []string {
+func (c LpopKey) Build() []string {
 	return c.cs
 }
 
-type lpos struct {
+type Lpos struct {
 	cs []string
 }
 
-func (c lpos) Key(key string) lposKey {
-	return lposKey{cs: append(c.cs, key)}
+func (c Lpos) Key(Key string) LposKey {
+	return LposKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Lpos() (c lpos) {
+func (b *Builder) Lpos() (c Lpos) {
 	c.cs = append(b.get(), "LPOS")
 	return
 }
 
-type lposCount struct {
+type LposCount struct {
 	cs []string
 }
 
-func (c lposCount) Maxlen(len int64) lposMaxlen {
-	return lposMaxlen{cs: append(c.cs, "MAXLEN", strconv.FormatInt(len, 10))}
+func (c LposCount) Maxlen(Len int64) LposMaxlen {
+	return LposMaxlen{cs: append(c.cs, "MAXLEN", strconv.FormatInt(Len, 10))}
 }
 
-func (c lposCount) Build() []string {
+func (c LposCount) Build() []string {
 	return c.cs
 }
 
-type lposElement struct {
+type LposElement struct {
 	cs []string
 }
 
-func (c lposElement) Rank(rank int64) lposRank {
-	return lposRank{cs: append(c.cs, "RANK", strconv.FormatInt(rank, 10))}
+func (c LposElement) Rank(Rank int64) LposRank {
+	return LposRank{cs: append(c.cs, "RANK", strconv.FormatInt(Rank, 10))}
 }
 
-func (c lposElement) Count(numMatches int64) lposCount {
-	return lposCount{cs: append(c.cs, "COUNT", strconv.FormatInt(numMatches, 10))}
+func (c LposElement) Count(NumMatches int64) LposCount {
+	return LposCount{cs: append(c.cs, "COUNT", strconv.FormatInt(NumMatches, 10))}
 }
 
-func (c lposElement) Maxlen(len int64) lposMaxlen {
-	return lposMaxlen{cs: append(c.cs, "MAXLEN", strconv.FormatInt(len, 10))}
+func (c LposElement) Maxlen(Len int64) LposMaxlen {
+	return LposMaxlen{cs: append(c.cs, "MAXLEN", strconv.FormatInt(Len, 10))}
 }
 
-func (c lposElement) Build() []string {
+func (c LposElement) Build() []string {
 	return c.cs
 }
 
-type lposKey struct {
+type LposKey struct {
 	cs []string
 }
 
-func (c lposKey) Element(element string) lposElement {
-	return lposElement{cs: append(c.cs, element)}
+func (c LposKey) Element(Element string) LposElement {
+	return LposElement{cs: append(c.cs, Element)}
 }
 
-type lposMaxlen struct {
+type LposMaxlen struct {
 	cs []string
 }
 
-func (c lposMaxlen) Build() []string {
+func (c LposMaxlen) Build() []string {
 	return c.cs
 }
 
-type lposRank struct {
+type LposRank struct {
 	cs []string
 }
 
-func (c lposRank) Count(numMatches int64) lposCount {
-	return lposCount{cs: append(c.cs, "COUNT", strconv.FormatInt(numMatches, 10))}
+func (c LposRank) Count(NumMatches int64) LposCount {
+	return LposCount{cs: append(c.cs, "COUNT", strconv.FormatInt(NumMatches, 10))}
 }
 
-func (c lposRank) Maxlen(len int64) lposMaxlen {
-	return lposMaxlen{cs: append(c.cs, "MAXLEN", strconv.FormatInt(len, 10))}
+func (c LposRank) Maxlen(Len int64) LposMaxlen {
+	return LposMaxlen{cs: append(c.cs, "MAXLEN", strconv.FormatInt(Len, 10))}
 }
 
-func (c lposRank) Build() []string {
+func (c LposRank) Build() []string {
 	return c.cs
 }
 
-type lpush struct {
+type Lpush struct {
 	cs []string
 }
 
-func (c lpush) Key(key string) lpushKey {
-	return lpushKey{cs: append(c.cs, key)}
+func (c Lpush) Key(Key string) LpushKey {
+	return LpushKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Lpush() (c lpush) {
+func (b *Builder) Lpush() (c Lpush) {
 	c.cs = append(b.get(), "LPUSH")
 	return
 }
 
-type lpushElement struct {
+type LpushElement struct {
 	cs []string
 }
 
-func (c lpushElement) Element(element ...string) lpushElement {
-	return lpushElement{cs: append(c.cs, element...)}
+func (c LpushElement) Element(Element ...string) LpushElement {
+	return LpushElement{cs: append(c.cs, Element...)}
 }
 
-func (c lpushElement) Build() []string {
+func (c LpushElement) Build() []string {
 	return c.cs
 }
 
-type lpushKey struct {
+type LpushKey struct {
 	cs []string
 }
 
-func (c lpushKey) Element(element ...string) lpushElement {
-	return lpushElement{cs: append(c.cs, element...)}
+func (c LpushKey) Element(Element ...string) LpushElement {
+	return LpushElement{cs: append(c.cs, Element...)}
 }
 
-type lpushx struct {
+type Lpushx struct {
 	cs []string
 }
 
-func (c lpushx) Key(key string) lpushxKey {
-	return lpushxKey{cs: append(c.cs, key)}
+func (c Lpushx) Key(Key string) LpushxKey {
+	return LpushxKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Lpushx() (c lpushx) {
+func (b *Builder) Lpushx() (c Lpushx) {
 	c.cs = append(b.get(), "LPUSHX")
 	return
 }
 
-type lpushxElement struct {
+type LpushxElement struct {
 	cs []string
 }
 
-func (c lpushxElement) Element(element ...string) lpushxElement {
-	return lpushxElement{cs: append(c.cs, element...)}
+func (c LpushxElement) Element(Element ...string) LpushxElement {
+	return LpushxElement{cs: append(c.cs, Element...)}
 }
 
-func (c lpushxElement) Build() []string {
+func (c LpushxElement) Build() []string {
 	return c.cs
 }
 
-type lpushxKey struct {
+type LpushxKey struct {
 	cs []string
 }
 
-func (c lpushxKey) Element(element ...string) lpushxElement {
-	return lpushxElement{cs: append(c.cs, element...)}
+func (c LpushxKey) Element(Element ...string) LpushxElement {
+	return LpushxElement{cs: append(c.cs, Element...)}
 }
 
-type lrange struct {
+type Lrange struct {
 	cs []string
 }
 
-func (c lrange) Key(key string) lrangeKey {
-	return lrangeKey{cs: append(c.cs, key)}
+func (c Lrange) Key(Key string) LrangeKey {
+	return LrangeKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Lrange() (c lrange) {
+func (b *Builder) Lrange() (c Lrange) {
 	c.cs = append(b.get(), "LRANGE")
 	return
 }
 
-type lrangeKey struct {
+type LrangeKey struct {
 	cs []string
 }
 
-func (c lrangeKey) Start(start int64) lrangeStart {
-	return lrangeStart{cs: append(c.cs, strconv.FormatInt(start, 10))}
+func (c LrangeKey) Start(Start int64) LrangeStart {
+	return LrangeStart{cs: append(c.cs, strconv.FormatInt(Start, 10))}
 }
 
-type lrangeStart struct {
+type LrangeStart struct {
 	cs []string
 }
 
-func (c lrangeStart) Stop(stop int64) lrangeStop {
-	return lrangeStop{cs: append(c.cs, strconv.FormatInt(stop, 10))}
+func (c LrangeStart) Stop(Stop int64) LrangeStop {
+	return LrangeStop{cs: append(c.cs, strconv.FormatInt(Stop, 10))}
 }
 
-type lrangeStop struct {
+type LrangeStop struct {
 	cs []string
 }
 
-func (c lrangeStop) Build() []string {
+func (c LrangeStop) Build() []string {
 	return c.cs
 }
 
-type lrem struct {
+type Lrem struct {
 	cs []string
 }
 
-func (c lrem) Key(key string) lremKey {
-	return lremKey{cs: append(c.cs, key)}
+func (c Lrem) Key(Key string) LremKey {
+	return LremKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Lrem() (c lrem) {
+func (b *Builder) Lrem() (c Lrem) {
 	c.cs = append(b.get(), "LREM")
 	return
 }
 
-type lremCount struct {
+type LremCount struct {
 	cs []string
 }
 
-func (c lremCount) Element(element string) lremElement {
-	return lremElement{cs: append(c.cs, element)}
+func (c LremCount) Element(Element string) LremElement {
+	return LremElement{cs: append(c.cs, Element)}
 }
 
-type lremElement struct {
+type LremElement struct {
 	cs []string
 }
 
-func (c lremElement) Build() []string {
+func (c LremElement) Build() []string {
 	return c.cs
 }
 
-type lremKey struct {
+type LremKey struct {
 	cs []string
 }
 
-func (c lremKey) Count(count int64) lremCount {
-	return lremCount{cs: append(c.cs, strconv.FormatInt(count, 10))}
+func (c LremKey) Count(Count int64) LremCount {
+	return LremCount{cs: append(c.cs, strconv.FormatInt(Count, 10))}
 }
 
-type lset struct {
+type Lset struct {
 	cs []string
 }
 
-func (c lset) Key(key string) lsetKey {
-	return lsetKey{cs: append(c.cs, key)}
+func (c Lset) Key(Key string) LsetKey {
+	return LsetKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Lset() (c lset) {
+func (b *Builder) Lset() (c Lset) {
 	c.cs = append(b.get(), "LSET")
 	return
 }
 
-type lsetElement struct {
+type LsetElement struct {
 	cs []string
 }
 
-func (c lsetElement) Build() []string {
+func (c LsetElement) Build() []string {
 	return c.cs
 }
 
-type lsetIndex struct {
+type LsetIndex struct {
 	cs []string
 }
 
-func (c lsetIndex) Element(element string) lsetElement {
-	return lsetElement{cs: append(c.cs, element)}
+func (c LsetIndex) Element(Element string) LsetElement {
+	return LsetElement{cs: append(c.cs, Element)}
 }
 
-type lsetKey struct {
+type LsetKey struct {
 	cs []string
 }
 
-func (c lsetKey) Index(index int64) lsetIndex {
-	return lsetIndex{cs: append(c.cs, strconv.FormatInt(index, 10))}
+func (c LsetKey) Index(Index int64) LsetIndex {
+	return LsetIndex{cs: append(c.cs, strconv.FormatInt(Index, 10))}
 }
 
-type ltrim struct {
+type Ltrim struct {
 	cs []string
 }
 
-func (c ltrim) Key(key string) ltrimKey {
-	return ltrimKey{cs: append(c.cs, key)}
+func (c Ltrim) Key(Key string) LtrimKey {
+	return LtrimKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Ltrim() (c ltrim) {
+func (b *Builder) Ltrim() (c Ltrim) {
 	c.cs = append(b.get(), "LTRIM")
 	return
 }
 
-type ltrimKey struct {
+type LtrimKey struct {
 	cs []string
 }
 
-func (c ltrimKey) Start(start int64) ltrimStart {
-	return ltrimStart{cs: append(c.cs, strconv.FormatInt(start, 10))}
+func (c LtrimKey) Start(Start int64) LtrimStart {
+	return LtrimStart{cs: append(c.cs, strconv.FormatInt(Start, 10))}
 }
 
-type ltrimStart struct {
+type LtrimStart struct {
 	cs []string
 }
 
-func (c ltrimStart) Stop(stop int64) ltrimStop {
-	return ltrimStop{cs: append(c.cs, strconv.FormatInt(stop, 10))}
+func (c LtrimStart) Stop(Stop int64) LtrimStop {
+	return LtrimStop{cs: append(c.cs, strconv.FormatInt(Stop, 10))}
 }
 
-type ltrimStop struct {
+type LtrimStop struct {
 	cs []string
 }
 
-func (c ltrimStop) Build() []string {
+func (c LtrimStop) Build() []string {
 	return c.cs
 }
 
-type memoryDoctor struct {
+type MemoryDoctor struct {
 	cs []string
 }
 
-func (c memoryDoctor) Build() []string {
+func (c MemoryDoctor) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) MemoryDoctor() (c memoryDoctor) {
+func (b *Builder) MemoryDoctor() (c MemoryDoctor) {
 	c.cs = append(b.get(), "MEMORY", "DOCTOR")
 	return
 }
 
-type memoryHelp struct {
+type MemoryHelp struct {
 	cs []string
 }
 
-func (c memoryHelp) Build() []string {
+func (c MemoryHelp) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) MemoryHelp() (c memoryHelp) {
+func (b *Builder) MemoryHelp() (c MemoryHelp) {
 	c.cs = append(b.get(), "MEMORY", "HELP")
 	return
 }
 
-type memoryMallocStats struct {
+type MemoryMallocStats struct {
 	cs []string
 }
 
-func (c memoryMallocStats) Build() []string {
+func (c MemoryMallocStats) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) MemoryMallocStats() (c memoryMallocStats) {
+func (b *Builder) MemoryMallocStats() (c MemoryMallocStats) {
 	c.cs = append(b.get(), "MEMORY", "MALLOC-STATS")
 	return
 }
 
-type memoryPurge struct {
+type MemoryPurge struct {
 	cs []string
 }
 
-func (c memoryPurge) Build() []string {
+func (c MemoryPurge) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) MemoryPurge() (c memoryPurge) {
+func (b *Builder) MemoryPurge() (c MemoryPurge) {
 	c.cs = append(b.get(), "MEMORY", "PURGE")
 	return
 }
 
-type memoryStats struct {
+type MemoryStats struct {
 	cs []string
 }
 
-func (c memoryStats) Build() []string {
+func (c MemoryStats) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) MemoryStats() (c memoryStats) {
+func (b *Builder) MemoryStats() (c MemoryStats) {
 	c.cs = append(b.get(), "MEMORY", "STATS")
 	return
 }
 
-type memoryUsage struct {
+type MemoryUsage struct {
 	cs []string
 }
 
-func (c memoryUsage) Key(key string) memoryUsageKey {
-	return memoryUsageKey{cs: append(c.cs, key)}
+func (c MemoryUsage) Key(Key string) MemoryUsageKey {
+	return MemoryUsageKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) MemoryUsage() (c memoryUsage) {
+func (b *Builder) MemoryUsage() (c MemoryUsage) {
 	c.cs = append(b.get(), "MEMORY", "USAGE")
 	return
 }
 
-type memoryUsageKey struct {
+type MemoryUsageKey struct {
 	cs []string
 }
 
-func (c memoryUsageKey) Samples(count int64) memoryUsageSamples {
-	return memoryUsageSamples{cs: append(c.cs, "SAMPLES", strconv.FormatInt(count, 10))}
+func (c MemoryUsageKey) Samples(Count int64) MemoryUsageSamples {
+	return MemoryUsageSamples{cs: append(c.cs, "SAMPLES", strconv.FormatInt(Count, 10))}
 }
 
-func (c memoryUsageKey) Build() []string {
+func (c MemoryUsageKey) Build() []string {
 	return c.cs
 }
 
-type memoryUsageSamples struct {
+type MemoryUsageSamples struct {
 	cs []string
 }
 
-func (c memoryUsageSamples) Build() []string {
+func (c MemoryUsageSamples) Build() []string {
 	return c.cs
 }
 
-type mget struct {
+type Mget struct {
 	cs []string
 }
 
-func (c mget) Key(key ...string) mgetKey {
-	return mgetKey{cs: append(c.cs, key...)}
+func (c Mget) Key(Key ...string) MgetKey {
+	return MgetKey{cs: append(c.cs, Key...)}
 }
 
-func (b *Builder) Mget() (c mget) {
+func (b *Builder) Mget() (c Mget) {
 	c.cs = append(b.get(), "MGET")
 	return
 }
 
-type mgetKey struct {
+type MgetKey struct {
 	cs []string
 }
 
-func (c mgetKey) Key(key ...string) mgetKey {
-	return mgetKey{cs: append(c.cs, key...)}
+func (c MgetKey) Key(Key ...string) MgetKey {
+	return MgetKey{cs: append(c.cs, Key...)}
 }
 
-func (c mgetKey) Build() []string {
+func (c MgetKey) Build() []string {
 	return c.cs
 }
 
-type migrate struct {
+type Migrate struct {
 	cs []string
 }
 
-func (c migrate) Host(host string) migrateHost {
-	return migrateHost{cs: append(c.cs, host)}
+func (c Migrate) Host(Host string) MigrateHost {
+	return MigrateHost{cs: append(c.cs, Host)}
 }
 
-func (b *Builder) Migrate() (c migrate) {
+func (b *Builder) Migrate() (c Migrate) {
 	c.cs = append(b.get(), "MIGRATE")
 	return
 }
 
-type migrateAuth struct {
+type MigrateAuth struct {
 	cs []string
 }
 
-func (c migrateAuth) Auth2(usernamePassword string) migrateAuth2 {
-	return migrateAuth2{cs: append(c.cs, "AUTH2", usernamePassword)}
+func (c MigrateAuth) Auth2(UsernamePassword string) MigrateAuth2 {
+	return MigrateAuth2{cs: append(c.cs, "AUTH2", UsernamePassword)}
 }
 
-func (c migrateAuth) Keys(key ...string) migrateKeys {
+func (c MigrateAuth) Keys(Key ...string) MigrateKeys {
 	c.cs = append(c.cs, "KEYS")
-	return migrateKeys{cs: append(c.cs, key...)}
+	return MigrateKeys{cs: append(c.cs, Key...)}
 }
 
-func (c migrateAuth) Build() []string {
+func (c MigrateAuth) Build() []string {
 	return c.cs
 }
 
-type migrateAuth2 struct {
+type MigrateAuth2 struct {
 	cs []string
 }
 
-func (c migrateAuth2) Keys(key ...string) migrateKeys {
+func (c MigrateAuth2) Keys(Key ...string) MigrateKeys {
 	c.cs = append(c.cs, "KEYS")
-	return migrateKeys{cs: append(c.cs, key...)}
+	return MigrateKeys{cs: append(c.cs, Key...)}
 }
 
-func (c migrateAuth2) Build() []string {
+func (c MigrateAuth2) Build() []string {
 	return c.cs
 }
 
-type migrateCopyCopy struct {
+type MigrateCopyCopy struct {
 	cs []string
 }
 
-func (c migrateCopyCopy) Replace() migrateReplaceReplace {
-	return migrateReplaceReplace{cs: append(c.cs, "REPLACE")}
+func (c MigrateCopyCopy) Replace() MigrateReplaceReplace {
+	return MigrateReplaceReplace{cs: append(c.cs, "REPLACE")}
 }
 
-func (c migrateCopyCopy) Auth(password string) migrateAuth {
-	return migrateAuth{cs: append(c.cs, "AUTH", password)}
+func (c MigrateCopyCopy) Auth(Password string) MigrateAuth {
+	return MigrateAuth{cs: append(c.cs, "AUTH", Password)}
 }
 
-func (c migrateCopyCopy) Auth2(usernamePassword string) migrateAuth2 {
-	return migrateAuth2{cs: append(c.cs, "AUTH2", usernamePassword)}
+func (c MigrateCopyCopy) Auth2(UsernamePassword string) MigrateAuth2 {
+	return MigrateAuth2{cs: append(c.cs, "AUTH2", UsernamePassword)}
 }
 
-func (c migrateCopyCopy) Keys(key ...string) migrateKeys {
+func (c MigrateCopyCopy) Keys(Key ...string) MigrateKeys {
 	c.cs = append(c.cs, "KEYS")
-	return migrateKeys{cs: append(c.cs, key...)}
+	return MigrateKeys{cs: append(c.cs, Key...)}
 }
 
-func (c migrateCopyCopy) Build() []string {
+func (c MigrateCopyCopy) Build() []string {
 	return c.cs
 }
 
-type migrateDestinationDb struct {
+type MigrateDestinationDb struct {
 	cs []string
 }
 
-func (c migrateDestinationDb) Timeout(timeout int64) migrateTimeout {
-	return migrateTimeout{cs: append(c.cs, strconv.FormatInt(timeout, 10))}
+func (c MigrateDestinationDb) Timeout(Timeout int64) MigrateTimeout {
+	return MigrateTimeout{cs: append(c.cs, strconv.FormatInt(Timeout, 10))}
 }
 
-type migrateHost struct {
+type MigrateHost struct {
 	cs []string
 }
 
-func (c migrateHost) Port(port string) migratePort {
-	return migratePort{cs: append(c.cs, port)}
+func (c MigrateHost) Port(Port string) MigratePort {
+	return MigratePort{cs: append(c.cs, Port)}
 }
 
-type migrateKeyEmpty struct {
+type MigrateKeyEmpty struct {
 	cs []string
 }
 
-func (c migrateKeyEmpty) DestinationDb(destinationDb int64) migrateDestinationDb {
-	return migrateDestinationDb{cs: append(c.cs, strconv.FormatInt(destinationDb, 10))}
+func (c MigrateKeyEmpty) DestinationDb(DestinationDb int64) MigrateDestinationDb {
+	return MigrateDestinationDb{cs: append(c.cs, strconv.FormatInt(DestinationDb, 10))}
 }
 
-type migrateKeyKey struct {
+type MigrateKeyKey struct {
 	cs []string
 }
 
-func (c migrateKeyKey) DestinationDb(destinationDb int64) migrateDestinationDb {
-	return migrateDestinationDb{cs: append(c.cs, strconv.FormatInt(destinationDb, 10))}
+func (c MigrateKeyKey) DestinationDb(DestinationDb int64) MigrateDestinationDb {
+	return MigrateDestinationDb{cs: append(c.cs, strconv.FormatInt(DestinationDb, 10))}
 }
 
-type migrateKeys struct {
+type MigrateKeys struct {
 	cs []string
 }
 
-func (c migrateKeys) Keys(keys ...string) migrateKeys {
-	return migrateKeys{cs: append(c.cs, keys...)}
+func (c MigrateKeys) Keys(Keys ...string) MigrateKeys {
+	return MigrateKeys{cs: append(c.cs, Keys...)}
 }
 
-func (c migrateKeys) Build() []string {
+func (c MigrateKeys) Build() []string {
 	return c.cs
 }
 
-type migratePort struct {
+type MigratePort struct {
 	cs []string
 }
 
-func (c migratePort) Key() migrateKeyKey {
-	return migrateKeyKey{cs: append(c.cs, "key")}
+func (c MigratePort) Key() MigrateKeyKey {
+	return MigrateKeyKey{cs: append(c.cs, "key")}
 }
 
-func (c migratePort) Empty() migrateKeyEmpty {
-	return migrateKeyEmpty{cs: append(c.cs, "\"\"")}
+func (c MigratePort) Empty() MigrateKeyEmpty {
+	return MigrateKeyEmpty{cs: append(c.cs, "\"\"")}
 }
 
-type migrateReplaceReplace struct {
+type MigrateReplaceReplace struct {
 	cs []string
 }
 
-func (c migrateReplaceReplace) Auth(password string) migrateAuth {
-	return migrateAuth{cs: append(c.cs, "AUTH", password)}
+func (c MigrateReplaceReplace) Auth(Password string) MigrateAuth {
+	return MigrateAuth{cs: append(c.cs, "AUTH", Password)}
 }
 
-func (c migrateReplaceReplace) Auth2(usernamePassword string) migrateAuth2 {
-	return migrateAuth2{cs: append(c.cs, "AUTH2", usernamePassword)}
+func (c MigrateReplaceReplace) Auth2(UsernamePassword string) MigrateAuth2 {
+	return MigrateAuth2{cs: append(c.cs, "AUTH2", UsernamePassword)}
 }
 
-func (c migrateReplaceReplace) Keys(key ...string) migrateKeys {
+func (c MigrateReplaceReplace) Keys(Key ...string) MigrateKeys {
 	c.cs = append(c.cs, "KEYS")
-	return migrateKeys{cs: append(c.cs, key...)}
+	return MigrateKeys{cs: append(c.cs, Key...)}
 }
 
-func (c migrateReplaceReplace) Build() []string {
+func (c MigrateReplaceReplace) Build() []string {
 	return c.cs
 }
 
-type migrateTimeout struct {
+type MigrateTimeout struct {
 	cs []string
 }
 
-func (c migrateTimeout) Copy() migrateCopyCopy {
-	return migrateCopyCopy{cs: append(c.cs, "COPY")}
+func (c MigrateTimeout) Copy() MigrateCopyCopy {
+	return MigrateCopyCopy{cs: append(c.cs, "COPY")}
 }
 
-func (c migrateTimeout) Replace() migrateReplaceReplace {
-	return migrateReplaceReplace{cs: append(c.cs, "REPLACE")}
+func (c MigrateTimeout) Replace() MigrateReplaceReplace {
+	return MigrateReplaceReplace{cs: append(c.cs, "REPLACE")}
 }
 
-func (c migrateTimeout) Auth(password string) migrateAuth {
-	return migrateAuth{cs: append(c.cs, "AUTH", password)}
+func (c MigrateTimeout) Auth(Password string) MigrateAuth {
+	return MigrateAuth{cs: append(c.cs, "AUTH", Password)}
 }
 
-func (c migrateTimeout) Auth2(usernamePassword string) migrateAuth2 {
-	return migrateAuth2{cs: append(c.cs, "AUTH2", usernamePassword)}
+func (c MigrateTimeout) Auth2(UsernamePassword string) MigrateAuth2 {
+	return MigrateAuth2{cs: append(c.cs, "AUTH2", UsernamePassword)}
 }
 
-func (c migrateTimeout) Keys(key ...string) migrateKeys {
+func (c MigrateTimeout) Keys(Key ...string) MigrateKeys {
 	c.cs = append(c.cs, "KEYS")
-	return migrateKeys{cs: append(c.cs, key...)}
+	return MigrateKeys{cs: append(c.cs, Key...)}
 }
 
-func (c migrateTimeout) Build() []string {
+func (c MigrateTimeout) Build() []string {
 	return c.cs
 }
 
-type moduleList struct {
+type ModuleList struct {
 	cs []string
 }
 
-func (c moduleList) Build() []string {
+func (c ModuleList) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) ModuleList() (c moduleList) {
+func (b *Builder) ModuleList() (c ModuleList) {
 	c.cs = append(b.get(), "MODULE", "LIST")
 	return
 }
 
-type moduleLoad struct {
+type ModuleLoad struct {
 	cs []string
 }
 
-func (c moduleLoad) Path(path string) moduleLoadPath {
-	return moduleLoadPath{cs: append(c.cs, path)}
+func (c ModuleLoad) Path(Path string) ModuleLoadPath {
+	return ModuleLoadPath{cs: append(c.cs, Path)}
 }
 
-func (b *Builder) ModuleLoad() (c moduleLoad) {
+func (b *Builder) ModuleLoad() (c ModuleLoad) {
 	c.cs = append(b.get(), "MODULE", "LOAD")
 	return
 }
 
-type moduleLoadArg struct {
+type ModuleLoadArg struct {
 	cs []string
 }
 
-func (c moduleLoadArg) Arg(arg ...string) moduleLoadArg {
-	return moduleLoadArg{cs: append(c.cs, arg...)}
+func (c ModuleLoadArg) Arg(Arg ...string) ModuleLoadArg {
+	return ModuleLoadArg{cs: append(c.cs, Arg...)}
 }
 
-func (c moduleLoadArg) Build() []string {
+func (c ModuleLoadArg) Build() []string {
 	return c.cs
 }
 
-type moduleLoadPath struct {
+type ModuleLoadPath struct {
 	cs []string
 }
 
-func (c moduleLoadPath) Arg(arg ...string) moduleLoadArg {
-	return moduleLoadArg{cs: append(c.cs, arg...)}
+func (c ModuleLoadPath) Arg(Arg ...string) ModuleLoadArg {
+	return ModuleLoadArg{cs: append(c.cs, Arg...)}
 }
 
-func (c moduleLoadPath) Build() []string {
+func (c ModuleLoadPath) Build() []string {
 	return c.cs
 }
 
-type moduleUnload struct {
+type ModuleUnload struct {
 	cs []string
 }
 
-func (c moduleUnload) Name(name string) moduleUnloadName {
-	return moduleUnloadName{cs: append(c.cs, name)}
+func (c ModuleUnload) Name(Name string) ModuleUnloadName {
+	return ModuleUnloadName{cs: append(c.cs, Name)}
 }
 
-func (b *Builder) ModuleUnload() (c moduleUnload) {
+func (b *Builder) ModuleUnload() (c ModuleUnload) {
 	c.cs = append(b.get(), "MODULE", "UNLOAD")
 	return
 }
 
-type moduleUnloadName struct {
+type ModuleUnloadName struct {
 	cs []string
 }
 
-func (c moduleUnloadName) Build() []string {
+func (c ModuleUnloadName) Build() []string {
 	return c.cs
 }
 
-type monitor struct {
+type Monitor struct {
 	cs []string
 }
 
-func (c monitor) Build() []string {
+func (c Monitor) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) Monitor() (c monitor) {
+func (b *Builder) Monitor() (c Monitor) {
 	c.cs = append(b.get(), "MONITOR")
 	return
 }
 
-type move struct {
+type Move struct {
 	cs []string
 }
 
-func (c move) Key(key string) moveKey {
-	return moveKey{cs: append(c.cs, key)}
+func (c Move) Key(Key string) MoveKey {
+	return MoveKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Move() (c move) {
+func (b *Builder) Move() (c Move) {
 	c.cs = append(b.get(), "MOVE")
 	return
 }
 
-type moveDb struct {
+type MoveDb struct {
 	cs []string
 }
 
-func (c moveDb) Build() []string {
+func (c MoveDb) Build() []string {
 	return c.cs
 }
 
-type moveKey struct {
+type MoveKey struct {
 	cs []string
 }
 
-func (c moveKey) Db(db int64) moveDb {
-	return moveDb{cs: append(c.cs, strconv.FormatInt(db, 10))}
+func (c MoveKey) Db(Db int64) MoveDb {
+	return MoveDb{cs: append(c.cs, strconv.FormatInt(Db, 10))}
 }
 
-type mset struct {
+type Mset struct {
 	cs []string
 }
 
-func (c mset) KeyValue() msetKeyValue {
-	return msetKeyValue{cs: append(c.cs)}
+func (c Mset) KeyValue() MsetKeyValue {
+	return MsetKeyValue{cs: append(c.cs)}
 }
 
-func (b *Builder) Mset() (c mset) {
+func (b *Builder) Mset() (c Mset) {
 	c.cs = append(b.get(), "MSET")
 	return
 }
 
-type msetKeyValue struct {
+type MsetKeyValue struct {
 	cs []string
 }
 
-func (c msetKeyValue) KeyValue(key string, value string) msetKeyValue {
-	return msetKeyValue{cs: append(c.cs, key, value)}
+func (c MsetKeyValue) KeyValue(Key string, Value string) MsetKeyValue {
+	return MsetKeyValue{cs: append(c.cs, Key, Value)}
 }
 
-func (c msetKeyValue) Build() []string {
+func (c MsetKeyValue) Build() []string {
 	return c.cs
 }
 
-type msetnx struct {
+type Msetnx struct {
 	cs []string
 }
 
-func (c msetnx) KeyValue() msetnxKeyValue {
-	return msetnxKeyValue{cs: append(c.cs)}
+func (c Msetnx) KeyValue() MsetnxKeyValue {
+	return MsetnxKeyValue{cs: append(c.cs)}
 }
 
-func (b *Builder) Msetnx() (c msetnx) {
+func (b *Builder) Msetnx() (c Msetnx) {
 	c.cs = append(b.get(), "MSETNX")
 	return
 }
 
-type msetnxKeyValue struct {
+type MsetnxKeyValue struct {
 	cs []string
 }
 
-func (c msetnxKeyValue) KeyValue(key string, value string) msetnxKeyValue {
-	return msetnxKeyValue{cs: append(c.cs, key, value)}
+func (c MsetnxKeyValue) KeyValue(Key string, Value string) MsetnxKeyValue {
+	return MsetnxKeyValue{cs: append(c.cs, Key, Value)}
 }
 
-func (c msetnxKeyValue) Build() []string {
+func (c MsetnxKeyValue) Build() []string {
 	return c.cs
 }
 
-type multi struct {
+type Multi struct {
 	cs []string
 }
 
-func (c multi) Build() []string {
+func (c Multi) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) Multi() (c multi) {
+func (b *Builder) Multi() (c Multi) {
 	c.cs = append(b.get(), "MULTI")
 	return
 }
 
-type object struct {
+type Object struct {
 	cs []string
 }
 
-func (c object) Subcommand(subcommand string) objectSubcommand {
-	return objectSubcommand{cs: append(c.cs, subcommand)}
+func (c Object) Subcommand(Subcommand string) ObjectSubcommand {
+	return ObjectSubcommand{cs: append(c.cs, Subcommand)}
 }
 
-func (b *Builder) Object() (c object) {
+func (b *Builder) Object() (c Object) {
 	c.cs = append(b.get(), "OBJECT")
 	return
 }
 
-type objectArguments struct {
+type ObjectArguments struct {
 	cs []string
 }
 
-func (c objectArguments) Arguments(arguments ...string) objectArguments {
-	return objectArguments{cs: append(c.cs, arguments...)}
+func (c ObjectArguments) Arguments(Arguments ...string) ObjectArguments {
+	return ObjectArguments{cs: append(c.cs, Arguments...)}
 }
 
-func (c objectArguments) Build() []string {
+func (c ObjectArguments) Build() []string {
 	return c.cs
 }
 
-type objectSubcommand struct {
+type ObjectSubcommand struct {
 	cs []string
 }
 
-func (c objectSubcommand) Arguments(arguments ...string) objectArguments {
-	return objectArguments{cs: append(c.cs, arguments...)}
+func (c ObjectSubcommand) Arguments(Arguments ...string) ObjectArguments {
+	return ObjectArguments{cs: append(c.cs, Arguments...)}
 }
 
-func (c objectSubcommand) Build() []string {
+func (c ObjectSubcommand) Build() []string {
 	return c.cs
 }
 
-type persist struct {
+type Persist struct {
 	cs []string
 }
 
-func (c persist) Key(key string) persistKey {
-	return persistKey{cs: append(c.cs, key)}
+func (c Persist) Key(Key string) PersistKey {
+	return PersistKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Persist() (c persist) {
+func (b *Builder) Persist() (c Persist) {
 	c.cs = append(b.get(), "PERSIST")
 	return
 }
 
-type persistKey struct {
+type PersistKey struct {
 	cs []string
 }
 
-func (c persistKey) Build() []string {
+func (c PersistKey) Build() []string {
 	return c.cs
 }
 
-type pexpire struct {
+type Pexpire struct {
 	cs []string
 }
 
-func (c pexpire) Key(key string) pexpireKey {
-	return pexpireKey{cs: append(c.cs, key)}
+func (c Pexpire) Key(Key string) PexpireKey {
+	return PexpireKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Pexpire() (c pexpire) {
+func (b *Builder) Pexpire() (c Pexpire) {
 	c.cs = append(b.get(), "PEXPIRE")
 	return
 }
 
-type pexpireConditionGt struct {
+type PexpireConditionGt struct {
 	cs []string
 }
 
-func (c pexpireConditionGt) Build() []string {
+func (c PexpireConditionGt) Build() []string {
 	return c.cs
 }
 
-type pexpireConditionLt struct {
+type PexpireConditionLt struct {
 	cs []string
 }
 
-func (c pexpireConditionLt) Build() []string {
+func (c PexpireConditionLt) Build() []string {
 	return c.cs
 }
 
-type pexpireConditionNx struct {
+type PexpireConditionNx struct {
 	cs []string
 }
 
-func (c pexpireConditionNx) Build() []string {
+func (c PexpireConditionNx) Build() []string {
 	return c.cs
 }
 
-type pexpireConditionXx struct {
+type PexpireConditionXx struct {
 	cs []string
 }
 
-func (c pexpireConditionXx) Build() []string {
+func (c PexpireConditionXx) Build() []string {
 	return c.cs
 }
 
-type pexpireKey struct {
+type PexpireKey struct {
 	cs []string
 }
 
-func (c pexpireKey) Milliseconds(milliseconds int64) pexpireMilliseconds {
-	return pexpireMilliseconds{cs: append(c.cs, strconv.FormatInt(milliseconds, 10))}
+func (c PexpireKey) Milliseconds(Milliseconds int64) PexpireMilliseconds {
+	return PexpireMilliseconds{cs: append(c.cs, strconv.FormatInt(Milliseconds, 10))}
 }
 
-type pexpireMilliseconds struct {
+type PexpireMilliseconds struct {
 	cs []string
 }
 
-func (c pexpireMilliseconds) Nx() pexpireConditionNx {
-	return pexpireConditionNx{cs: append(c.cs, "NX")}
+func (c PexpireMilliseconds) Nx() PexpireConditionNx {
+	return PexpireConditionNx{cs: append(c.cs, "NX")}
 }
 
-func (c pexpireMilliseconds) Xx() pexpireConditionXx {
-	return pexpireConditionXx{cs: append(c.cs, "XX")}
+func (c PexpireMilliseconds) Xx() PexpireConditionXx {
+	return PexpireConditionXx{cs: append(c.cs, "XX")}
 }
 
-func (c pexpireMilliseconds) Gt() pexpireConditionGt {
-	return pexpireConditionGt{cs: append(c.cs, "GT")}
+func (c PexpireMilliseconds) Gt() PexpireConditionGt {
+	return PexpireConditionGt{cs: append(c.cs, "GT")}
 }
 
-func (c pexpireMilliseconds) Lt() pexpireConditionLt {
-	return pexpireConditionLt{cs: append(c.cs, "LT")}
+func (c PexpireMilliseconds) Lt() PexpireConditionLt {
+	return PexpireConditionLt{cs: append(c.cs, "LT")}
 }
 
-func (c pexpireMilliseconds) Build() []string {
+func (c PexpireMilliseconds) Build() []string {
 	return c.cs
 }
 
-type pexpireat struct {
+type Pexpireat struct {
 	cs []string
 }
 
-func (c pexpireat) Key(key string) pexpireatKey {
-	return pexpireatKey{cs: append(c.cs, key)}
+func (c Pexpireat) Key(Key string) PexpireatKey {
+	return PexpireatKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Pexpireat() (c pexpireat) {
+func (b *Builder) Pexpireat() (c Pexpireat) {
 	c.cs = append(b.get(), "PEXPIREAT")
 	return
 }
 
-type pexpireatConditionGt struct {
+type PexpireatConditionGt struct {
 	cs []string
 }
 
-func (c pexpireatConditionGt) Build() []string {
+func (c PexpireatConditionGt) Build() []string {
 	return c.cs
 }
 
-type pexpireatConditionLt struct {
+type PexpireatConditionLt struct {
 	cs []string
 }
 
-func (c pexpireatConditionLt) Build() []string {
+func (c PexpireatConditionLt) Build() []string {
 	return c.cs
 }
 
-type pexpireatConditionNx struct {
+type PexpireatConditionNx struct {
 	cs []string
 }
 
-func (c pexpireatConditionNx) Build() []string {
+func (c PexpireatConditionNx) Build() []string {
 	return c.cs
 }
 
-type pexpireatConditionXx struct {
+type PexpireatConditionXx struct {
 	cs []string
 }
 
-func (c pexpireatConditionXx) Build() []string {
+func (c PexpireatConditionXx) Build() []string {
 	return c.cs
 }
 
-type pexpireatKey struct {
+type PexpireatKey struct {
 	cs []string
 }
 
-func (c pexpireatKey) MillisecondsTimestamp(millisecondsTimestamp int64) pexpireatMillisecondsTimestamp {
-	return pexpireatMillisecondsTimestamp{cs: append(c.cs, strconv.FormatInt(millisecondsTimestamp, 10))}
+func (c PexpireatKey) MillisecondsTimestamp(MillisecondsTimestamp int64) PexpireatMillisecondsTimestamp {
+	return PexpireatMillisecondsTimestamp{cs: append(c.cs, strconv.FormatInt(MillisecondsTimestamp, 10))}
 }
 
-type pexpireatMillisecondsTimestamp struct {
+type PexpireatMillisecondsTimestamp struct {
 	cs []string
 }
 
-func (c pexpireatMillisecondsTimestamp) Nx() pexpireatConditionNx {
-	return pexpireatConditionNx{cs: append(c.cs, "NX")}
+func (c PexpireatMillisecondsTimestamp) Nx() PexpireatConditionNx {
+	return PexpireatConditionNx{cs: append(c.cs, "NX")}
 }
 
-func (c pexpireatMillisecondsTimestamp) Xx() pexpireatConditionXx {
-	return pexpireatConditionXx{cs: append(c.cs, "XX")}
+func (c PexpireatMillisecondsTimestamp) Xx() PexpireatConditionXx {
+	return PexpireatConditionXx{cs: append(c.cs, "XX")}
 }
 
-func (c pexpireatMillisecondsTimestamp) Gt() pexpireatConditionGt {
-	return pexpireatConditionGt{cs: append(c.cs, "GT")}
+func (c PexpireatMillisecondsTimestamp) Gt() PexpireatConditionGt {
+	return PexpireatConditionGt{cs: append(c.cs, "GT")}
 }
 
-func (c pexpireatMillisecondsTimestamp) Lt() pexpireatConditionLt {
-	return pexpireatConditionLt{cs: append(c.cs, "LT")}
+func (c PexpireatMillisecondsTimestamp) Lt() PexpireatConditionLt {
+	return PexpireatConditionLt{cs: append(c.cs, "LT")}
 }
 
-func (c pexpireatMillisecondsTimestamp) Build() []string {
+func (c PexpireatMillisecondsTimestamp) Build() []string {
 	return c.cs
 }
 
-type pexpiretime struct {
+type Pexpiretime struct {
 	cs []string
 }
 
-func (c pexpiretime) Key(key string) pexpiretimeKey {
-	return pexpiretimeKey{cs: append(c.cs, key)}
+func (c Pexpiretime) Key(Key string) PexpiretimeKey {
+	return PexpiretimeKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Pexpiretime() (c pexpiretime) {
+func (b *Builder) Pexpiretime() (c Pexpiretime) {
 	c.cs = append(b.get(), "PEXPIRETIME")
 	return
 }
 
-type pexpiretimeKey struct {
+type PexpiretimeKey struct {
 	cs []string
 }
 
-func (c pexpiretimeKey) Build() []string {
+func (c PexpiretimeKey) Build() []string {
 	return c.cs
 }
 
-type pfadd struct {
+type Pfadd struct {
 	cs []string
 }
 
-func (c pfadd) Key(key string) pfaddKey {
-	return pfaddKey{cs: append(c.cs, key)}
+func (c Pfadd) Key(Key string) PfaddKey {
+	return PfaddKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Pfadd() (c pfadd) {
+func (b *Builder) Pfadd() (c Pfadd) {
 	c.cs = append(b.get(), "PFADD")
 	return
 }
 
-type pfaddElement struct {
+type PfaddElement struct {
 	cs []string
 }
 
-func (c pfaddElement) Element(element ...string) pfaddElement {
-	return pfaddElement{cs: append(c.cs, element...)}
+func (c PfaddElement) Element(Element ...string) PfaddElement {
+	return PfaddElement{cs: append(c.cs, Element...)}
 }
 
-func (c pfaddElement) Build() []string {
+func (c PfaddElement) Build() []string {
 	return c.cs
 }
 
-type pfaddKey struct {
+type PfaddKey struct {
 	cs []string
 }
 
-func (c pfaddKey) Element(element ...string) pfaddElement {
-	return pfaddElement{cs: append(c.cs, element...)}
+func (c PfaddKey) Element(Element ...string) PfaddElement {
+	return PfaddElement{cs: append(c.cs, Element...)}
 }
 
-func (c pfaddKey) Build() []string {
+func (c PfaddKey) Build() []string {
 	return c.cs
 }
 
-type pfcount struct {
+type Pfcount struct {
 	cs []string
 }
 
-func (c pfcount) Key(key ...string) pfcountKey {
-	return pfcountKey{cs: append(c.cs, key...)}
+func (c Pfcount) Key(Key ...string) PfcountKey {
+	return PfcountKey{cs: append(c.cs, Key...)}
 }
 
-func (b *Builder) Pfcount() (c pfcount) {
+func (b *Builder) Pfcount() (c Pfcount) {
 	c.cs = append(b.get(), "PFCOUNT")
 	return
 }
 
-type pfcountKey struct {
+type PfcountKey struct {
 	cs []string
 }
 
-func (c pfcountKey) Key(key ...string) pfcountKey {
-	return pfcountKey{cs: append(c.cs, key...)}
+func (c PfcountKey) Key(Key ...string) PfcountKey {
+	return PfcountKey{cs: append(c.cs, Key...)}
 }
 
-func (c pfcountKey) Build() []string {
+func (c PfcountKey) Build() []string {
 	return c.cs
 }
 
-type pfmerge struct {
+type Pfmerge struct {
 	cs []string
 }
 
-func (c pfmerge) Destkey(destkey string) pfmergeDestkey {
-	return pfmergeDestkey{cs: append(c.cs, destkey)}
+func (c Pfmerge) Destkey(Destkey string) PfmergeDestkey {
+	return PfmergeDestkey{cs: append(c.cs, Destkey)}
 }
 
-func (b *Builder) Pfmerge() (c pfmerge) {
+func (b *Builder) Pfmerge() (c Pfmerge) {
 	c.cs = append(b.get(), "PFMERGE")
 	return
 }
 
-type pfmergeDestkey struct {
+type PfmergeDestkey struct {
 	cs []string
 }
 
-func (c pfmergeDestkey) Sourcekey(sourcekey ...string) pfmergeSourcekey {
-	return pfmergeSourcekey{cs: append(c.cs, sourcekey...)}
+func (c PfmergeDestkey) Sourcekey(Sourcekey ...string) PfmergeSourcekey {
+	return PfmergeSourcekey{cs: append(c.cs, Sourcekey...)}
 }
 
-type pfmergeSourcekey struct {
+type PfmergeSourcekey struct {
 	cs []string
 }
 
-func (c pfmergeSourcekey) Sourcekey(sourcekey ...string) pfmergeSourcekey {
-	return pfmergeSourcekey{cs: append(c.cs, sourcekey...)}
+func (c PfmergeSourcekey) Sourcekey(Sourcekey ...string) PfmergeSourcekey {
+	return PfmergeSourcekey{cs: append(c.cs, Sourcekey...)}
 }
 
-func (c pfmergeSourcekey) Build() []string {
+func (c PfmergeSourcekey) Build() []string {
 	return c.cs
 }
 
-type ping struct {
+type Ping struct {
 	cs []string
 }
 
-func (c ping) Message(message string) pingMessage {
-	return pingMessage{cs: append(c.cs, message)}
+func (c Ping) Message(Message string) PingMessage {
+	return PingMessage{cs: append(c.cs, Message)}
 }
 
-func (c ping) Build() []string {
+func (c Ping) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) Ping() (c ping) {
+func (b *Builder) Ping() (c Ping) {
 	c.cs = append(b.get(), "PING")
 	return
 }
 
-type pingMessage struct {
+type PingMessage struct {
 	cs []string
 }
 
-func (c pingMessage) Build() []string {
+func (c PingMessage) Build() []string {
 	return c.cs
 }
 
-type psetex struct {
+type Psetex struct {
 	cs []string
 }
 
-func (c psetex) Key(key string) psetexKey {
-	return psetexKey{cs: append(c.cs, key)}
+func (c Psetex) Key(Key string) PsetexKey {
+	return PsetexKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Psetex() (c psetex) {
+func (b *Builder) Psetex() (c Psetex) {
 	c.cs = append(b.get(), "PSETEX")
 	return
 }
 
-type psetexKey struct {
+type PsetexKey struct {
 	cs []string
 }
 
-func (c psetexKey) Milliseconds(milliseconds int64) psetexMilliseconds {
-	return psetexMilliseconds{cs: append(c.cs, strconv.FormatInt(milliseconds, 10))}
+func (c PsetexKey) Milliseconds(Milliseconds int64) PsetexMilliseconds {
+	return PsetexMilliseconds{cs: append(c.cs, strconv.FormatInt(Milliseconds, 10))}
 }
 
-type psetexMilliseconds struct {
+type PsetexMilliseconds struct {
 	cs []string
 }
 
-func (c psetexMilliseconds) Value(value string) psetexValue {
-	return psetexValue{cs: append(c.cs, value)}
+func (c PsetexMilliseconds) Value(Value string) PsetexValue {
+	return PsetexValue{cs: append(c.cs, Value)}
 }
 
-type psetexValue struct {
+type PsetexValue struct {
 	cs []string
 }
 
-func (c psetexValue) Build() []string {
+func (c PsetexValue) Build() []string {
 	return c.cs
 }
 
-type psubscribe struct {
+type Psubscribe struct {
 	cs []string
 }
 
-func (c psubscribe) Pattern(pattern ...string) psubscribePattern {
-	return psubscribePattern{cs: append(c.cs, pattern...)}
+func (c Psubscribe) Pattern(Pattern ...string) PsubscribePattern {
+	return PsubscribePattern{cs: append(c.cs, Pattern...)}
 }
 
-func (b *Builder) Psubscribe() (c psubscribe) {
+func (b *Builder) Psubscribe() (c Psubscribe) {
 	c.cs = append(b.get(), "PSUBSCRIBE")
 	return
 }
 
-type psubscribePattern struct {
+type PsubscribePattern struct {
 	cs []string
 }
 
-func (c psubscribePattern) Pattern(pattern ...string) psubscribePattern {
-	return psubscribePattern{cs: append(c.cs, pattern...)}
+func (c PsubscribePattern) Pattern(Pattern ...string) PsubscribePattern {
+	return PsubscribePattern{cs: append(c.cs, Pattern...)}
 }
 
-func (c psubscribePattern) Build() []string {
+func (c PsubscribePattern) Build() []string {
 	return c.cs
 }
 
-type psync struct {
+type Psync struct {
 	cs []string
 }
 
-func (c psync) Replicationid(replicationid int64) psyncReplicationid {
-	return psyncReplicationid{cs: append(c.cs, strconv.FormatInt(replicationid, 10))}
+func (c Psync) Replicationid(Replicationid int64) PsyncReplicationid {
+	return PsyncReplicationid{cs: append(c.cs, strconv.FormatInt(Replicationid, 10))}
 }
 
-func (b *Builder) Psync() (c psync) {
+func (b *Builder) Psync() (c Psync) {
 	c.cs = append(b.get(), "PSYNC")
 	return
 }
 
-type psyncOffset struct {
+type PsyncOffset struct {
 	cs []string
 }
 
-func (c psyncOffset) Build() []string {
+func (c PsyncOffset) Build() []string {
 	return c.cs
 }
 
-type psyncReplicationid struct {
+type PsyncReplicationid struct {
 	cs []string
 }
 
-func (c psyncReplicationid) Offset(offset int64) psyncOffset {
-	return psyncOffset{cs: append(c.cs, strconv.FormatInt(offset, 10))}
+func (c PsyncReplicationid) Offset(Offset int64) PsyncOffset {
+	return PsyncOffset{cs: append(c.cs, strconv.FormatInt(Offset, 10))}
 }
 
-type pttl struct {
+type Pttl struct {
 	cs []string
 }
 
-func (c pttl) Key(key string) pttlKey {
-	return pttlKey{cs: append(c.cs, key)}
+func (c Pttl) Key(Key string) PttlKey {
+	return PttlKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Pttl() (c pttl) {
+func (b *Builder) Pttl() (c Pttl) {
 	c.cs = append(b.get(), "PTTL")
 	return
 }
 
-type pttlKey struct {
+type PttlKey struct {
 	cs []string
 }
 
-func (c pttlKey) Build() []string {
+func (c PttlKey) Build() []string {
 	return c.cs
 }
 
-type publish struct {
+type Publish struct {
 	cs []string
 }
 
-func (c publish) Channel(channel string) publishChannel {
-	return publishChannel{cs: append(c.cs, channel)}
+func (c Publish) Channel(Channel string) PublishChannel {
+	return PublishChannel{cs: append(c.cs, Channel)}
 }
 
-func (b *Builder) Publish() (c publish) {
+func (b *Builder) Publish() (c Publish) {
 	c.cs = append(b.get(), "PUBLISH")
 	return
 }
 
-type publishChannel struct {
+type PublishChannel struct {
 	cs []string
 }
 
-func (c publishChannel) Message(message string) publishMessage {
-	return publishMessage{cs: append(c.cs, message)}
+func (c PublishChannel) Message(Message string) PublishMessage {
+	return PublishMessage{cs: append(c.cs, Message)}
 }
 
-type publishMessage struct {
+type PublishMessage struct {
 	cs []string
 }
 
-func (c publishMessage) Build() []string {
+func (c PublishMessage) Build() []string {
 	return c.cs
 }
 
-type pubsub struct {
+type Pubsub struct {
 	cs []string
 }
 
-func (c pubsub) Subcommand(subcommand string) pubsubSubcommand {
-	return pubsubSubcommand{cs: append(c.cs, subcommand)}
+func (c Pubsub) Subcommand(Subcommand string) PubsubSubcommand {
+	return PubsubSubcommand{cs: append(c.cs, Subcommand)}
 }
 
-func (b *Builder) Pubsub() (c pubsub) {
+func (b *Builder) Pubsub() (c Pubsub) {
 	c.cs = append(b.get(), "PUBSUB")
 	return
 }
 
-type pubsubArgument struct {
+type PubsubArgument struct {
 	cs []string
 }
 
-func (c pubsubArgument) Argument(argument ...string) pubsubArgument {
-	return pubsubArgument{cs: append(c.cs, argument...)}
+func (c PubsubArgument) Argument(Argument ...string) PubsubArgument {
+	return PubsubArgument{cs: append(c.cs, Argument...)}
 }
 
-func (c pubsubArgument) Build() []string {
+func (c PubsubArgument) Build() []string {
 	return c.cs
 }
 
-type pubsubSubcommand struct {
+type PubsubSubcommand struct {
 	cs []string
 }
 
-func (c pubsubSubcommand) Argument(argument ...string) pubsubArgument {
-	return pubsubArgument{cs: append(c.cs, argument...)}
+func (c PubsubSubcommand) Argument(Argument ...string) PubsubArgument {
+	return PubsubArgument{cs: append(c.cs, Argument...)}
 }
 
-func (c pubsubSubcommand) Build() []string {
+func (c PubsubSubcommand) Build() []string {
 	return c.cs
 }
 
-type punsubscribe struct {
+type Punsubscribe struct {
 	cs []string
 }
 
-func (c punsubscribe) Pattern(pattern ...string) punsubscribePattern {
-	return punsubscribePattern{cs: append(c.cs, pattern...)}
+func (c Punsubscribe) Pattern(Pattern ...string) PunsubscribePattern {
+	return PunsubscribePattern{cs: append(c.cs, Pattern...)}
 }
 
-func (c punsubscribe) Build() []string {
+func (c Punsubscribe) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) Punsubscribe() (c punsubscribe) {
+func (b *Builder) Punsubscribe() (c Punsubscribe) {
 	c.cs = append(b.get(), "PUNSUBSCRIBE")
 	return
 }
 
-type punsubscribePattern struct {
+type PunsubscribePattern struct {
 	cs []string
 }
 
-func (c punsubscribePattern) Pattern(pattern ...string) punsubscribePattern {
-	return punsubscribePattern{cs: append(c.cs, pattern...)}
+func (c PunsubscribePattern) Pattern(Pattern ...string) PunsubscribePattern {
+	return PunsubscribePattern{cs: append(c.cs, Pattern...)}
 }
 
-func (c punsubscribePattern) Build() []string {
+func (c PunsubscribePattern) Build() []string {
 	return c.cs
 }
 
-type quit struct {
+type Quit struct {
 	cs []string
 }
 
-func (c quit) Build() []string {
+func (c Quit) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) Quit() (c quit) {
+func (b *Builder) Quit() (c Quit) {
 	c.cs = append(b.get(), "QUIT")
 	return
 }
 
-type randomkey struct {
+type Randomkey struct {
 	cs []string
 }
 
-func (c randomkey) Build() []string {
+func (c Randomkey) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) Randomkey() (c randomkey) {
+func (b *Builder) Randomkey() (c Randomkey) {
 	c.cs = append(b.get(), "RANDOMKEY")
 	return
 }
 
-type readonly struct {
+type Readonly struct {
 	cs []string
 }
 
-func (c readonly) Build() []string {
+func (c Readonly) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) Readonly() (c readonly) {
+func (b *Builder) Readonly() (c Readonly) {
 	c.cs = append(b.get(), "READONLY")
 	return
 }
 
-type readwrite struct {
+type Readwrite struct {
 	cs []string
 }
 
-func (c readwrite) Build() []string {
+func (c Readwrite) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) Readwrite() (c readwrite) {
+func (b *Builder) Readwrite() (c Readwrite) {
 	c.cs = append(b.get(), "READWRITE")
 	return
 }
 
-type rename struct {
+type Rename struct {
 	cs []string
 }
 
-func (c rename) Key(key string) renameKey {
-	return renameKey{cs: append(c.cs, key)}
+func (c Rename) Key(Key string) RenameKey {
+	return RenameKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Rename() (c rename) {
+func (b *Builder) Rename() (c Rename) {
 	c.cs = append(b.get(), "RENAME")
 	return
 }
 
-type renameKey struct {
+type RenameKey struct {
 	cs []string
 }
 
-func (c renameKey) Newkey(newkey string) renameNewkey {
-	return renameNewkey{cs: append(c.cs, newkey)}
+func (c RenameKey) Newkey(Newkey string) RenameNewkey {
+	return RenameNewkey{cs: append(c.cs, Newkey)}
 }
 
-type renameNewkey struct {
+type RenameNewkey struct {
 	cs []string
 }
 
-func (c renameNewkey) Build() []string {
+func (c RenameNewkey) Build() []string {
 	return c.cs
 }
 
-type renamenx struct {
+type Renamenx struct {
 	cs []string
 }
 
-func (c renamenx) Key(key string) renamenxKey {
-	return renamenxKey{cs: append(c.cs, key)}
+func (c Renamenx) Key(Key string) RenamenxKey {
+	return RenamenxKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Renamenx() (c renamenx) {
+func (b *Builder) Renamenx() (c Renamenx) {
 	c.cs = append(b.get(), "RENAMENX")
 	return
 }
 
-type renamenxKey struct {
+type RenamenxKey struct {
 	cs []string
 }
 
-func (c renamenxKey) Newkey(newkey string) renamenxNewkey {
-	return renamenxNewkey{cs: append(c.cs, newkey)}
+func (c RenamenxKey) Newkey(Newkey string) RenamenxNewkey {
+	return RenamenxNewkey{cs: append(c.cs, Newkey)}
 }
 
-type renamenxNewkey struct {
+type RenamenxNewkey struct {
 	cs []string
 }
 
-func (c renamenxNewkey) Build() []string {
+func (c RenamenxNewkey) Build() []string {
 	return c.cs
 }
 
-type replicaof struct {
+type Replicaof struct {
 	cs []string
 }
 
-func (c replicaof) Host(host string) replicaofHost {
-	return replicaofHost{cs: append(c.cs, host)}
+func (c Replicaof) Host(Host string) ReplicaofHost {
+	return ReplicaofHost{cs: append(c.cs, Host)}
 }
 
-func (b *Builder) Replicaof() (c replicaof) {
+func (b *Builder) Replicaof() (c Replicaof) {
 	c.cs = append(b.get(), "REPLICAOF")
 	return
 }
 
-type replicaofHost struct {
+type ReplicaofHost struct {
 	cs []string
 }
 
-func (c replicaofHost) Port(port string) replicaofPort {
-	return replicaofPort{cs: append(c.cs, port)}
+func (c ReplicaofHost) Port(Port string) ReplicaofPort {
+	return ReplicaofPort{cs: append(c.cs, Port)}
 }
 
-type replicaofPort struct {
+type ReplicaofPort struct {
 	cs []string
 }
 
-func (c replicaofPort) Build() []string {
+func (c ReplicaofPort) Build() []string {
 	return c.cs
 }
 
-type reset struct {
+type Reset struct {
 	cs []string
 }
 
-func (c reset) Build() []string {
+func (c Reset) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) Reset() (c reset) {
+func (b *Builder) Reset() (c Reset) {
 	c.cs = append(b.get(), "RESET")
 	return
 }
 
-type restore struct {
+type Restore struct {
 	cs []string
 }
 
-func (c restore) Key(key string) restoreKey {
-	return restoreKey{cs: append(c.cs, key)}
+func (c Restore) Key(Key string) RestoreKey {
+	return RestoreKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Restore() (c restore) {
+func (b *Builder) Restore() (c Restore) {
 	c.cs = append(b.get(), "RESTORE")
 	return
 }
 
-type restoreAbsttlAbsttl struct {
+type RestoreAbsttlAbsttl struct {
 	cs []string
 }
 
-func (c restoreAbsttlAbsttl) Idletime(seconds int64) restoreIdletime {
-	return restoreIdletime{cs: append(c.cs, "IDLETIME", strconv.FormatInt(seconds, 10))}
+func (c RestoreAbsttlAbsttl) Idletime(Seconds int64) RestoreIdletime {
+	return RestoreIdletime{cs: append(c.cs, "IDLETIME", strconv.FormatInt(Seconds, 10))}
 }
 
-func (c restoreAbsttlAbsttl) Freq(frequency int64) restoreFreq {
-	return restoreFreq{cs: append(c.cs, "FREQ", strconv.FormatInt(frequency, 10))}
+func (c RestoreAbsttlAbsttl) Freq(Frequency int64) RestoreFreq {
+	return RestoreFreq{cs: append(c.cs, "FREQ", strconv.FormatInt(Frequency, 10))}
 }
 
-func (c restoreAbsttlAbsttl) Build() []string {
+func (c RestoreAbsttlAbsttl) Build() []string {
 	return c.cs
 }
 
-type restoreFreq struct {
+type RestoreFreq struct {
 	cs []string
 }
 
-func (c restoreFreq) Build() []string {
+func (c RestoreFreq) Build() []string {
 	return c.cs
 }
 
-type restoreIdletime struct {
+type RestoreIdletime struct {
 	cs []string
 }
 
-func (c restoreIdletime) Freq(frequency int64) restoreFreq {
-	return restoreFreq{cs: append(c.cs, "FREQ", strconv.FormatInt(frequency, 10))}
+func (c RestoreIdletime) Freq(Frequency int64) RestoreFreq {
+	return RestoreFreq{cs: append(c.cs, "FREQ", strconv.FormatInt(Frequency, 10))}
 }
 
-func (c restoreIdletime) Build() []string {
+func (c RestoreIdletime) Build() []string {
 	return c.cs
 }
 
-type restoreKey struct {
+type RestoreKey struct {
 	cs []string
 }
 
-func (c restoreKey) Ttl(ttl int64) restoreTtl {
-	return restoreTtl{cs: append(c.cs, strconv.FormatInt(ttl, 10))}
+func (c RestoreKey) Ttl(Ttl int64) RestoreTtl {
+	return RestoreTtl{cs: append(c.cs, strconv.FormatInt(Ttl, 10))}
 }
 
-type restoreReplaceReplace struct {
+type RestoreReplaceReplace struct {
 	cs []string
 }
 
-func (c restoreReplaceReplace) Absttl() restoreAbsttlAbsttl {
-	return restoreAbsttlAbsttl{cs: append(c.cs, "ABSTTL")}
+func (c RestoreReplaceReplace) Absttl() RestoreAbsttlAbsttl {
+	return RestoreAbsttlAbsttl{cs: append(c.cs, "ABSTTL")}
 }
 
-func (c restoreReplaceReplace) Idletime(seconds int64) restoreIdletime {
-	return restoreIdletime{cs: append(c.cs, "IDLETIME", strconv.FormatInt(seconds, 10))}
+func (c RestoreReplaceReplace) Idletime(Seconds int64) RestoreIdletime {
+	return RestoreIdletime{cs: append(c.cs, "IDLETIME", strconv.FormatInt(Seconds, 10))}
 }
 
-func (c restoreReplaceReplace) Freq(frequency int64) restoreFreq {
-	return restoreFreq{cs: append(c.cs, "FREQ", strconv.FormatInt(frequency, 10))}
+func (c RestoreReplaceReplace) Freq(Frequency int64) RestoreFreq {
+	return RestoreFreq{cs: append(c.cs, "FREQ", strconv.FormatInt(Frequency, 10))}
 }
 
-func (c restoreReplaceReplace) Build() []string {
+func (c RestoreReplaceReplace) Build() []string {
 	return c.cs
 }
 
-type restoreSerializedValue struct {
+type RestoreSerializedValue struct {
 	cs []string
 }
 
-func (c restoreSerializedValue) Replace() restoreReplaceReplace {
-	return restoreReplaceReplace{cs: append(c.cs, "REPLACE")}
+func (c RestoreSerializedValue) Replace() RestoreReplaceReplace {
+	return RestoreReplaceReplace{cs: append(c.cs, "REPLACE")}
 }
 
-func (c restoreSerializedValue) Absttl() restoreAbsttlAbsttl {
-	return restoreAbsttlAbsttl{cs: append(c.cs, "ABSTTL")}
+func (c RestoreSerializedValue) Absttl() RestoreAbsttlAbsttl {
+	return RestoreAbsttlAbsttl{cs: append(c.cs, "ABSTTL")}
 }
 
-func (c restoreSerializedValue) Idletime(seconds int64) restoreIdletime {
-	return restoreIdletime{cs: append(c.cs, "IDLETIME", strconv.FormatInt(seconds, 10))}
+func (c RestoreSerializedValue) Idletime(Seconds int64) RestoreIdletime {
+	return RestoreIdletime{cs: append(c.cs, "IDLETIME", strconv.FormatInt(Seconds, 10))}
 }
 
-func (c restoreSerializedValue) Freq(frequency int64) restoreFreq {
-	return restoreFreq{cs: append(c.cs, "FREQ", strconv.FormatInt(frequency, 10))}
+func (c RestoreSerializedValue) Freq(Frequency int64) RestoreFreq {
+	return RestoreFreq{cs: append(c.cs, "FREQ", strconv.FormatInt(Frequency, 10))}
 }
 
-func (c restoreSerializedValue) Build() []string {
+func (c RestoreSerializedValue) Build() []string {
 	return c.cs
 }
 
-type restoreTtl struct {
+type RestoreTtl struct {
 	cs []string
 }
 
-func (c restoreTtl) SerializedValue(serializedValue string) restoreSerializedValue {
-	return restoreSerializedValue{cs: append(c.cs, serializedValue)}
+func (c RestoreTtl) SerializedValue(SerializedValue string) RestoreSerializedValue {
+	return RestoreSerializedValue{cs: append(c.cs, SerializedValue)}
 }
 
-type role struct {
+type Role struct {
 	cs []string
 }
 
-func (c role) Build() []string {
+func (c Role) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) Role() (c role) {
+func (b *Builder) Role() (c Role) {
 	c.cs = append(b.get(), "ROLE")
 	return
 }
 
-type rpop struct {
+type Rpop struct {
 	cs []string
 }
 
-func (c rpop) Key(key string) rpopKey {
-	return rpopKey{cs: append(c.cs, key)}
+func (c Rpop) Key(Key string) RpopKey {
+	return RpopKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Rpop() (c rpop) {
+func (b *Builder) Rpop() (c Rpop) {
 	c.cs = append(b.get(), "RPOP")
 	return
 }
 
-type rpopCount struct {
+type RpopCount struct {
 	cs []string
 }
 
-func (c rpopCount) Build() []string {
+func (c RpopCount) Build() []string {
 	return c.cs
 }
 
-type rpopKey struct {
+type RpopKey struct {
 	cs []string
 }
 
-func (c rpopKey) Count(count int64) rpopCount {
-	return rpopCount{cs: append(c.cs, strconv.FormatInt(count, 10))}
+func (c RpopKey) Count(Count int64) RpopCount {
+	return RpopCount{cs: append(c.cs, strconv.FormatInt(Count, 10))}
 }
 
-func (c rpopKey) Build() []string {
+func (c RpopKey) Build() []string {
 	return c.cs
 }
 
-type rpoplpush struct {
+type Rpoplpush struct {
 	cs []string
 }
 
-func (c rpoplpush) Source(source string) rpoplpushSource {
-	return rpoplpushSource{cs: append(c.cs, source)}
+func (c Rpoplpush) Source(Source string) RpoplpushSource {
+	return RpoplpushSource{cs: append(c.cs, Source)}
 }
 
-func (b *Builder) Rpoplpush() (c rpoplpush) {
+func (b *Builder) Rpoplpush() (c Rpoplpush) {
 	c.cs = append(b.get(), "RPOPLPUSH")
 	return
 }
 
-type rpoplpushDestination struct {
+type RpoplpushDestination struct {
 	cs []string
 }
 
-func (c rpoplpushDestination) Build() []string {
+func (c RpoplpushDestination) Build() []string {
 	return c.cs
 }
 
-type rpoplpushSource struct {
+type RpoplpushSource struct {
 	cs []string
 }
 
-func (c rpoplpushSource) Destination(destination string) rpoplpushDestination {
-	return rpoplpushDestination{cs: append(c.cs, destination)}
+func (c RpoplpushSource) Destination(Destination string) RpoplpushDestination {
+	return RpoplpushDestination{cs: append(c.cs, Destination)}
 }
 
-type rpush struct {
+type Rpush struct {
 	cs []string
 }
 
-func (c rpush) Key(key string) rpushKey {
-	return rpushKey{cs: append(c.cs, key)}
+func (c Rpush) Key(Key string) RpushKey {
+	return RpushKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Rpush() (c rpush) {
+func (b *Builder) Rpush() (c Rpush) {
 	c.cs = append(b.get(), "RPUSH")
 	return
 }
 
-type rpushElement struct {
+type RpushElement struct {
 	cs []string
 }
 
-func (c rpushElement) Element(element ...string) rpushElement {
-	return rpushElement{cs: append(c.cs, element...)}
+func (c RpushElement) Element(Element ...string) RpushElement {
+	return RpushElement{cs: append(c.cs, Element...)}
 }
 
-func (c rpushElement) Build() []string {
+func (c RpushElement) Build() []string {
 	return c.cs
 }
 
-type rpushKey struct {
+type RpushKey struct {
 	cs []string
 }
 
-func (c rpushKey) Element(element ...string) rpushElement {
-	return rpushElement{cs: append(c.cs, element...)}
+func (c RpushKey) Element(Element ...string) RpushElement {
+	return RpushElement{cs: append(c.cs, Element...)}
 }
 
-type rpushx struct {
+type Rpushx struct {
 	cs []string
 }
 
-func (c rpushx) Key(key string) rpushxKey {
-	return rpushxKey{cs: append(c.cs, key)}
+func (c Rpushx) Key(Key string) RpushxKey {
+	return RpushxKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Rpushx() (c rpushx) {
+func (b *Builder) Rpushx() (c Rpushx) {
 	c.cs = append(b.get(), "RPUSHX")
 	return
 }
 
-type rpushxElement struct {
+type RpushxElement struct {
 	cs []string
 }
 
-func (c rpushxElement) Element(element ...string) rpushxElement {
-	return rpushxElement{cs: append(c.cs, element...)}
+func (c RpushxElement) Element(Element ...string) RpushxElement {
+	return RpushxElement{cs: append(c.cs, Element...)}
 }
 
-func (c rpushxElement) Build() []string {
+func (c RpushxElement) Build() []string {
 	return c.cs
 }
 
-type rpushxKey struct {
+type RpushxKey struct {
 	cs []string
 }
 
-func (c rpushxKey) Element(element ...string) rpushxElement {
-	return rpushxElement{cs: append(c.cs, element...)}
+func (c RpushxKey) Element(Element ...string) RpushxElement {
+	return RpushxElement{cs: append(c.cs, Element...)}
 }
 
-type sadd struct {
+type Sadd struct {
 	cs []string
 }
 
-func (c sadd) Key(key string) saddKey {
-	return saddKey{cs: append(c.cs, key)}
+func (c Sadd) Key(Key string) SaddKey {
+	return SaddKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Sadd() (c sadd) {
+func (b *Builder) Sadd() (c Sadd) {
 	c.cs = append(b.get(), "SADD")
 	return
 }
 
-type saddKey struct {
+type SaddKey struct {
 	cs []string
 }
 
-func (c saddKey) Member(member ...string) saddMember {
-	return saddMember{cs: append(c.cs, member...)}
+func (c SaddKey) Member(Member ...string) SaddMember {
+	return SaddMember{cs: append(c.cs, Member...)}
 }
 
-type saddMember struct {
+type SaddMember struct {
 	cs []string
 }
 
-func (c saddMember) Member(member ...string) saddMember {
-	return saddMember{cs: append(c.cs, member...)}
+func (c SaddMember) Member(Member ...string) SaddMember {
+	return SaddMember{cs: append(c.cs, Member...)}
 }
 
-func (c saddMember) Build() []string {
+func (c SaddMember) Build() []string {
 	return c.cs
 }
 
-type save struct {
+type Save struct {
 	cs []string
 }
 
-func (c save) Build() []string {
+func (c Save) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) Save() (c save) {
+func (b *Builder) Save() (c Save) {
 	c.cs = append(b.get(), "SAVE")
 	return
 }
 
-type scan struct {
+type Scan struct {
 	cs []string
 }
 
-func (c scan) Cursor(cursor int64) scanCursor {
-	return scanCursor{cs: append(c.cs, strconv.FormatInt(cursor, 10))}
+func (c Scan) Cursor(Cursor int64) ScanCursor {
+	return ScanCursor{cs: append(c.cs, strconv.FormatInt(Cursor, 10))}
 }
 
-func (b *Builder) Scan() (c scan) {
+func (b *Builder) Scan() (c Scan) {
 	c.cs = append(b.get(), "SCAN")
 	return
 }
 
-type scanCount struct {
+type ScanCount struct {
 	cs []string
 }
 
-func (c scanCount) Type(typ string) scanType {
-	return scanType{cs: append(c.cs, "TYPE", typ)}
+func (c ScanCount) Type(Type string) ScanType {
+	return ScanType{cs: append(c.cs, "TYPE", Type)}
 }
 
-func (c scanCount) Build() []string {
+func (c ScanCount) Build() []string {
 	return c.cs
 }
 
-type scanCursor struct {
+type ScanCursor struct {
 	cs []string
 }
 
-func (c scanCursor) Match(pattern string) scanMatch {
-	return scanMatch{cs: append(c.cs, "MATCH", pattern)}
+func (c ScanCursor) Match(Pattern string) ScanMatch {
+	return ScanMatch{cs: append(c.cs, "MATCH", Pattern)}
 }
 
-func (c scanCursor) Count(count int64) scanCount {
-	return scanCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c ScanCursor) Count(Count int64) ScanCount {
+	return ScanCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c scanCursor) Type(typ string) scanType {
-	return scanType{cs: append(c.cs, "TYPE", typ)}
+func (c ScanCursor) Type(Type string) ScanType {
+	return ScanType{cs: append(c.cs, "TYPE", Type)}
 }
 
-func (c scanCursor) Build() []string {
+func (c ScanCursor) Build() []string {
 	return c.cs
 }
 
-type scanMatch struct {
+type ScanMatch struct {
 	cs []string
 }
 
-func (c scanMatch) Count(count int64) scanCount {
-	return scanCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c ScanMatch) Count(Count int64) ScanCount {
+	return ScanCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c scanMatch) Type(typ string) scanType {
-	return scanType{cs: append(c.cs, "TYPE", typ)}
+func (c ScanMatch) Type(Type string) ScanType {
+	return ScanType{cs: append(c.cs, "TYPE", Type)}
 }
 
-func (c scanMatch) Build() []string {
+func (c ScanMatch) Build() []string {
 	return c.cs
 }
 
-type scanType struct {
+type ScanType struct {
 	cs []string
 }
 
-func (c scanType) Build() []string {
+func (c ScanType) Build() []string {
 	return c.cs
 }
 
-type scard struct {
+type Scard struct {
 	cs []string
 }
 
-func (c scard) Key(key string) scardKey {
-	return scardKey{cs: append(c.cs, key)}
+func (c Scard) Key(Key string) ScardKey {
+	return ScardKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Scard() (c scard) {
+func (b *Builder) Scard() (c Scard) {
 	c.cs = append(b.get(), "SCARD")
 	return
 }
 
-type scardKey struct {
+type ScardKey struct {
 	cs []string
 }
 
-func (c scardKey) Build() []string {
+func (c ScardKey) Build() []string {
 	return c.cs
 }
 
-type scriptDebug struct {
+type ScriptDebug struct {
 	cs []string
 }
 
-func (c scriptDebug) Yes() scriptDebugModeYes {
-	return scriptDebugModeYes{cs: append(c.cs, "YES")}
+func (c ScriptDebug) Yes() ScriptDebugModeYes {
+	return ScriptDebugModeYes{cs: append(c.cs, "YES")}
 }
 
-func (c scriptDebug) Sync() scriptDebugModeSync {
-	return scriptDebugModeSync{cs: append(c.cs, "SYNC")}
+func (c ScriptDebug) Sync() ScriptDebugModeSync {
+	return ScriptDebugModeSync{cs: append(c.cs, "SYNC")}
 }
 
-func (c scriptDebug) No() scriptDebugModeNo {
-	return scriptDebugModeNo{cs: append(c.cs, "NO")}
+func (c ScriptDebug) No() ScriptDebugModeNo {
+	return ScriptDebugModeNo{cs: append(c.cs, "NO")}
 }
 
-func (b *Builder) ScriptDebug() (c scriptDebug) {
+func (b *Builder) ScriptDebug() (c ScriptDebug) {
 	c.cs = append(b.get(), "SCRIPT", "DEBUG")
 	return
 }
 
-type scriptDebugModeNo struct {
+type ScriptDebugModeNo struct {
 	cs []string
 }
 
-func (c scriptDebugModeNo) Build() []string {
+func (c ScriptDebugModeNo) Build() []string {
 	return c.cs
 }
 
-type scriptDebugModeSync struct {
+type ScriptDebugModeSync struct {
 	cs []string
 }
 
-func (c scriptDebugModeSync) Build() []string {
+func (c ScriptDebugModeSync) Build() []string {
 	return c.cs
 }
 
-type scriptDebugModeYes struct {
+type ScriptDebugModeYes struct {
 	cs []string
 }
 
-func (c scriptDebugModeYes) Build() []string {
+func (c ScriptDebugModeYes) Build() []string {
 	return c.cs
 }
 
-type scriptExists struct {
+type ScriptExists struct {
 	cs []string
 }
 
-func (c scriptExists) Sha1(sha1 ...string) scriptExistsSha1 {
-	return scriptExistsSha1{cs: append(c.cs, sha1...)}
+func (c ScriptExists) Sha1(Sha1 ...string) ScriptExistsSha1 {
+	return ScriptExistsSha1{cs: append(c.cs, Sha1...)}
 }
 
-func (b *Builder) ScriptExists() (c scriptExists) {
+func (b *Builder) ScriptExists() (c ScriptExists) {
 	c.cs = append(b.get(), "SCRIPT", "EXISTS")
 	return
 }
 
-type scriptExistsSha1 struct {
+type ScriptExistsSha1 struct {
 	cs []string
 }
 
-func (c scriptExistsSha1) Sha1(sha1 ...string) scriptExistsSha1 {
-	return scriptExistsSha1{cs: append(c.cs, sha1...)}
+func (c ScriptExistsSha1) Sha1(Sha1 ...string) ScriptExistsSha1 {
+	return ScriptExistsSha1{cs: append(c.cs, Sha1...)}
 }
 
-func (c scriptExistsSha1) Build() []string {
+func (c ScriptExistsSha1) Build() []string {
 	return c.cs
 }
 
-type scriptFlush struct {
+type ScriptFlush struct {
 	cs []string
 }
 
-func (c scriptFlush) Async() scriptFlushAsyncAsync {
-	return scriptFlushAsyncAsync{cs: append(c.cs, "ASYNC")}
+func (c ScriptFlush) Async() ScriptFlushAsyncAsync {
+	return ScriptFlushAsyncAsync{cs: append(c.cs, "ASYNC")}
 }
 
-func (c scriptFlush) Sync() scriptFlushAsyncSync {
-	return scriptFlushAsyncSync{cs: append(c.cs, "SYNC")}
+func (c ScriptFlush) Sync() ScriptFlushAsyncSync {
+	return ScriptFlushAsyncSync{cs: append(c.cs, "SYNC")}
 }
 
-func (c scriptFlush) Build() []string {
+func (c ScriptFlush) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) ScriptFlush() (c scriptFlush) {
+func (b *Builder) ScriptFlush() (c ScriptFlush) {
 	c.cs = append(b.get(), "SCRIPT", "FLUSH")
 	return
 }
 
-type scriptFlushAsyncAsync struct {
+type ScriptFlushAsyncAsync struct {
 	cs []string
 }
 
-func (c scriptFlushAsyncAsync) Build() []string {
+func (c ScriptFlushAsyncAsync) Build() []string {
 	return c.cs
 }
 
-type scriptFlushAsyncSync struct {
+type ScriptFlushAsyncSync struct {
 	cs []string
 }
 
-func (c scriptFlushAsyncSync) Build() []string {
+func (c ScriptFlushAsyncSync) Build() []string {
 	return c.cs
 }
 
-type scriptKill struct {
+type ScriptKill struct {
 	cs []string
 }
 
-func (c scriptKill) Build() []string {
+func (c ScriptKill) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) ScriptKill() (c scriptKill) {
+func (b *Builder) ScriptKill() (c ScriptKill) {
 	c.cs = append(b.get(), "SCRIPT", "KILL")
 	return
 }
 
-type scriptLoad struct {
+type ScriptLoad struct {
 	cs []string
 }
 
-func (c scriptLoad) Script(script string) scriptLoadScript {
-	return scriptLoadScript{cs: append(c.cs, script)}
+func (c ScriptLoad) Script(Script string) ScriptLoadScript {
+	return ScriptLoadScript{cs: append(c.cs, Script)}
 }
 
-func (b *Builder) ScriptLoad() (c scriptLoad) {
+func (b *Builder) ScriptLoad() (c ScriptLoad) {
 	c.cs = append(b.get(), "SCRIPT", "LOAD")
 	return
 }
 
-type scriptLoadScript struct {
+type ScriptLoadScript struct {
 	cs []string
 }
 
-func (c scriptLoadScript) Build() []string {
+func (c ScriptLoadScript) Build() []string {
 	return c.cs
 }
 
-type sdiff struct {
+type Sdiff struct {
 	cs []string
 }
 
-func (c sdiff) Key(key ...string) sdiffKey {
-	return sdiffKey{cs: append(c.cs, key...)}
+func (c Sdiff) Key(Key ...string) SdiffKey {
+	return SdiffKey{cs: append(c.cs, Key...)}
 }
 
-func (b *Builder) Sdiff() (c sdiff) {
+func (b *Builder) Sdiff() (c Sdiff) {
 	c.cs = append(b.get(), "SDIFF")
 	return
 }
 
-type sdiffKey struct {
+type SdiffKey struct {
 	cs []string
 }
 
-func (c sdiffKey) Key(key ...string) sdiffKey {
-	return sdiffKey{cs: append(c.cs, key...)}
+func (c SdiffKey) Key(Key ...string) SdiffKey {
+	return SdiffKey{cs: append(c.cs, Key...)}
 }
 
-func (c sdiffKey) Build() []string {
+func (c SdiffKey) Build() []string {
 	return c.cs
 }
 
-type sdiffstore struct {
+type Sdiffstore struct {
 	cs []string
 }
 
-func (c sdiffstore) Destination(destination string) sdiffstoreDestination {
-	return sdiffstoreDestination{cs: append(c.cs, destination)}
+func (c Sdiffstore) Destination(Destination string) SdiffstoreDestination {
+	return SdiffstoreDestination{cs: append(c.cs, Destination)}
 }
 
-func (b *Builder) Sdiffstore() (c sdiffstore) {
+func (b *Builder) Sdiffstore() (c Sdiffstore) {
 	c.cs = append(b.get(), "SDIFFSTORE")
 	return
 }
 
-type sdiffstoreDestination struct {
+type SdiffstoreDestination struct {
 	cs []string
 }
 
-func (c sdiffstoreDestination) Key(key ...string) sdiffstoreKey {
-	return sdiffstoreKey{cs: append(c.cs, key...)}
+func (c SdiffstoreDestination) Key(Key ...string) SdiffstoreKey {
+	return SdiffstoreKey{cs: append(c.cs, Key...)}
 }
 
-type sdiffstoreKey struct {
+type SdiffstoreKey struct {
 	cs []string
 }
 
-func (c sdiffstoreKey) Key(key ...string) sdiffstoreKey {
-	return sdiffstoreKey{cs: append(c.cs, key...)}
+func (c SdiffstoreKey) Key(Key ...string) SdiffstoreKey {
+	return SdiffstoreKey{cs: append(c.cs, Key...)}
 }
 
-func (c sdiffstoreKey) Build() []string {
+func (c SdiffstoreKey) Build() []string {
 	return c.cs
 }
 
-type rSelect struct {
+type Select struct {
 	cs []string
 }
 
-func (c rSelect) Index(index int64) selectIndex {
-	return selectIndex{cs: append(c.cs, strconv.FormatInt(index, 10))}
+func (c Select) Index(Index int64) SelectIndex {
+	return SelectIndex{cs: append(c.cs, strconv.FormatInt(Index, 10))}
 }
 
-func (b *Builder) Select() (c rSelect) {
+func (b *Builder) Select() (c Select) {
 	c.cs = append(b.get(), "SELECT")
 	return
 }
 
-type selectIndex struct {
+type SelectIndex struct {
 	cs []string
 }
 
-func (c selectIndex) Build() []string {
+func (c SelectIndex) Build() []string {
 	return c.cs
 }
 
-type set struct {
+type Set struct {
 	cs []string
 }
 
-func (c set) Key(key string) setKey {
-	return setKey{cs: append(c.cs, key)}
+func (c Set) Key(Key string) SetKey {
+	return SetKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Set() (c set) {
+func (b *Builder) Set() (c Set) {
 	c.cs = append(b.get(), "SET")
 	return
 }
 
-type setConditionNx struct {
+type SetConditionNx struct {
 	cs []string
 }
 
-func (c setConditionNx) Get() setGetGet {
-	return setGetGet{cs: append(c.cs, "GET")}
+func (c SetConditionNx) Get() SetGetGet {
+	return SetGetGet{cs: append(c.cs, "GET")}
 }
 
-func (c setConditionNx) Build() []string {
+func (c SetConditionNx) Build() []string {
 	return c.cs
 }
 
-type setConditionXx struct {
+type SetConditionXx struct {
 	cs []string
 }
 
-func (c setConditionXx) Get() setGetGet {
-	return setGetGet{cs: append(c.cs, "GET")}
+func (c SetConditionXx) Get() SetGetGet {
+	return SetGetGet{cs: append(c.cs, "GET")}
 }
 
-func (c setConditionXx) Build() []string {
+func (c SetConditionXx) Build() []string {
 	return c.cs
 }
 
-type setExpirationEx struct {
+type SetExpirationEx struct {
 	cs []string
 }
 
-func (c setExpirationEx) Nx() setConditionNx {
-	return setConditionNx{cs: append(c.cs, "NX")}
+func (c SetExpirationEx) Nx() SetConditionNx {
+	return SetConditionNx{cs: append(c.cs, "NX")}
 }
 
-func (c setExpirationEx) Xx() setConditionXx {
-	return setConditionXx{cs: append(c.cs, "XX")}
+func (c SetExpirationEx) Xx() SetConditionXx {
+	return SetConditionXx{cs: append(c.cs, "XX")}
 }
 
-func (c setExpirationEx) Get() setGetGet {
-	return setGetGet{cs: append(c.cs, "GET")}
+func (c SetExpirationEx) Get() SetGetGet {
+	return SetGetGet{cs: append(c.cs, "GET")}
 }
 
-func (c setExpirationEx) Build() []string {
+func (c SetExpirationEx) Build() []string {
 	return c.cs
 }
 
-type setExpirationExat struct {
+type SetExpirationExat struct {
 	cs []string
 }
 
-func (c setExpirationExat) Nx() setConditionNx {
-	return setConditionNx{cs: append(c.cs, "NX")}
+func (c SetExpirationExat) Nx() SetConditionNx {
+	return SetConditionNx{cs: append(c.cs, "NX")}
 }
 
-func (c setExpirationExat) Xx() setConditionXx {
-	return setConditionXx{cs: append(c.cs, "XX")}
+func (c SetExpirationExat) Xx() SetConditionXx {
+	return SetConditionXx{cs: append(c.cs, "XX")}
 }
 
-func (c setExpirationExat) Get() setGetGet {
-	return setGetGet{cs: append(c.cs, "GET")}
+func (c SetExpirationExat) Get() SetGetGet {
+	return SetGetGet{cs: append(c.cs, "GET")}
 }
 
-func (c setExpirationExat) Build() []string {
+func (c SetExpirationExat) Build() []string {
 	return c.cs
 }
 
-type setExpirationKeepttl struct {
+type SetExpirationKeepttl struct {
 	cs []string
 }
 
-func (c setExpirationKeepttl) Nx() setConditionNx {
-	return setConditionNx{cs: append(c.cs, "NX")}
+func (c SetExpirationKeepttl) Nx() SetConditionNx {
+	return SetConditionNx{cs: append(c.cs, "NX")}
 }
 
-func (c setExpirationKeepttl) Xx() setConditionXx {
-	return setConditionXx{cs: append(c.cs, "XX")}
+func (c SetExpirationKeepttl) Xx() SetConditionXx {
+	return SetConditionXx{cs: append(c.cs, "XX")}
 }
 
-func (c setExpirationKeepttl) Get() setGetGet {
-	return setGetGet{cs: append(c.cs, "GET")}
+func (c SetExpirationKeepttl) Get() SetGetGet {
+	return SetGetGet{cs: append(c.cs, "GET")}
 }
 
-func (c setExpirationKeepttl) Build() []string {
+func (c SetExpirationKeepttl) Build() []string {
 	return c.cs
 }
 
-type setExpirationPx struct {
+type SetExpirationPx struct {
 	cs []string
 }
 
-func (c setExpirationPx) Nx() setConditionNx {
-	return setConditionNx{cs: append(c.cs, "NX")}
+func (c SetExpirationPx) Nx() SetConditionNx {
+	return SetConditionNx{cs: append(c.cs, "NX")}
 }
 
-func (c setExpirationPx) Xx() setConditionXx {
-	return setConditionXx{cs: append(c.cs, "XX")}
+func (c SetExpirationPx) Xx() SetConditionXx {
+	return SetConditionXx{cs: append(c.cs, "XX")}
 }
 
-func (c setExpirationPx) Get() setGetGet {
-	return setGetGet{cs: append(c.cs, "GET")}
+func (c SetExpirationPx) Get() SetGetGet {
+	return SetGetGet{cs: append(c.cs, "GET")}
 }
 
-func (c setExpirationPx) Build() []string {
+func (c SetExpirationPx) Build() []string {
 	return c.cs
 }
 
-type setExpirationPxat struct {
+type SetExpirationPxat struct {
 	cs []string
 }
 
-func (c setExpirationPxat) Nx() setConditionNx {
-	return setConditionNx{cs: append(c.cs, "NX")}
+func (c SetExpirationPxat) Nx() SetConditionNx {
+	return SetConditionNx{cs: append(c.cs, "NX")}
 }
 
-func (c setExpirationPxat) Xx() setConditionXx {
-	return setConditionXx{cs: append(c.cs, "XX")}
+func (c SetExpirationPxat) Xx() SetConditionXx {
+	return SetConditionXx{cs: append(c.cs, "XX")}
 }
 
-func (c setExpirationPxat) Get() setGetGet {
-	return setGetGet{cs: append(c.cs, "GET")}
+func (c SetExpirationPxat) Get() SetGetGet {
+	return SetGetGet{cs: append(c.cs, "GET")}
 }
 
-func (c setExpirationPxat) Build() []string {
+func (c SetExpirationPxat) Build() []string {
 	return c.cs
 }
 
-type setGetGet struct {
+type SetGetGet struct {
 	cs []string
 }
 
-func (c setGetGet) Build() []string {
+func (c SetGetGet) Build() []string {
 	return c.cs
 }
 
-type setKey struct {
+type SetKey struct {
 	cs []string
 }
 
-func (c setKey) Value(value string) setValue {
-	return setValue{cs: append(c.cs, value)}
+func (c SetKey) Value(Value string) SetValue {
+	return SetValue{cs: append(c.cs, Value)}
 }
 
-type setValue struct {
+type SetValue struct {
 	cs []string
 }
 
-func (c setValue) Ex(seconds int64) setExpirationEx {
-	return setExpirationEx{cs: append(c.cs, "EX", strconv.FormatInt(seconds, 10))}
+func (c SetValue) Ex(Seconds int64) SetExpirationEx {
+	return SetExpirationEx{cs: append(c.cs, "EX", strconv.FormatInt(Seconds, 10))}
 }
 
-func (c setValue) Px(milliseconds int64) setExpirationPx {
-	return setExpirationPx{cs: append(c.cs, "PX", strconv.FormatInt(milliseconds, 10))}
+func (c SetValue) Px(Milliseconds int64) SetExpirationPx {
+	return SetExpirationPx{cs: append(c.cs, "PX", strconv.FormatInt(Milliseconds, 10))}
 }
 
-func (c setValue) Exat(timestamp int64) setExpirationExat {
-	return setExpirationExat{cs: append(c.cs, "EXAT", strconv.FormatInt(timestamp, 10))}
+func (c SetValue) Exat(Timestamp int64) SetExpirationExat {
+	return SetExpirationExat{cs: append(c.cs, "EXAT", strconv.FormatInt(Timestamp, 10))}
 }
 
-func (c setValue) Pxat(millisecondstimestamp int64) setExpirationPxat {
-	return setExpirationPxat{cs: append(c.cs, "PXAT", strconv.FormatInt(millisecondstimestamp, 10))}
+func (c SetValue) Pxat(Millisecondstimestamp int64) SetExpirationPxat {
+	return SetExpirationPxat{cs: append(c.cs, "PXAT", strconv.FormatInt(Millisecondstimestamp, 10))}
 }
 
-func (c setValue) Keepttl() setExpirationKeepttl {
-	return setExpirationKeepttl{cs: append(c.cs, "KEEPTTL")}
+func (c SetValue) Keepttl() SetExpirationKeepttl {
+	return SetExpirationKeepttl{cs: append(c.cs, "KEEPTTL")}
 }
 
-func (c setValue) Nx() setConditionNx {
-	return setConditionNx{cs: append(c.cs, "NX")}
+func (c SetValue) Nx() SetConditionNx {
+	return SetConditionNx{cs: append(c.cs, "NX")}
 }
 
-func (c setValue) Xx() setConditionXx {
-	return setConditionXx{cs: append(c.cs, "XX")}
+func (c SetValue) Xx() SetConditionXx {
+	return SetConditionXx{cs: append(c.cs, "XX")}
 }
 
-func (c setValue) Get() setGetGet {
-	return setGetGet{cs: append(c.cs, "GET")}
+func (c SetValue) Get() SetGetGet {
+	return SetGetGet{cs: append(c.cs, "GET")}
 }
 
-func (c setValue) Build() []string {
+func (c SetValue) Build() []string {
 	return c.cs
 }
 
-type setbit struct {
+type Setbit struct {
 	cs []string
 }
 
-func (c setbit) Key(key string) setbitKey {
-	return setbitKey{cs: append(c.cs, key)}
+func (c Setbit) Key(Key string) SetbitKey {
+	return SetbitKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Setbit() (c setbit) {
+func (b *Builder) Setbit() (c Setbit) {
 	c.cs = append(b.get(), "SETBIT")
 	return
 }
 
-type setbitKey struct {
+type SetbitKey struct {
 	cs []string
 }
 
-func (c setbitKey) Offset(offset int64) setbitOffset {
-	return setbitOffset{cs: append(c.cs, strconv.FormatInt(offset, 10))}
+func (c SetbitKey) Offset(Offset int64) SetbitOffset {
+	return SetbitOffset{cs: append(c.cs, strconv.FormatInt(Offset, 10))}
 }
 
-type setbitOffset struct {
+type SetbitOffset struct {
 	cs []string
 }
 
-func (c setbitOffset) Value(value int64) setbitValue {
-	return setbitValue{cs: append(c.cs, strconv.FormatInt(value, 10))}
+func (c SetbitOffset) Value(Value int64) SetbitValue {
+	return SetbitValue{cs: append(c.cs, strconv.FormatInt(Value, 10))}
 }
 
-type setbitValue struct {
+type SetbitValue struct {
 	cs []string
 }
 
-func (c setbitValue) Build() []string {
+func (c SetbitValue) Build() []string {
 	return c.cs
 }
 
-type setex struct {
+type Setex struct {
 	cs []string
 }
 
-func (c setex) Key(key string) setexKey {
-	return setexKey{cs: append(c.cs, key)}
+func (c Setex) Key(Key string) SetexKey {
+	return SetexKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Setex() (c setex) {
+func (b *Builder) Setex() (c Setex) {
 	c.cs = append(b.get(), "SETEX")
 	return
 }
 
-type setexKey struct {
+type SetexKey struct {
 	cs []string
 }
 
-func (c setexKey) Seconds(seconds int64) setexSeconds {
-	return setexSeconds{cs: append(c.cs, strconv.FormatInt(seconds, 10))}
+func (c SetexKey) Seconds(Seconds int64) SetexSeconds {
+	return SetexSeconds{cs: append(c.cs, strconv.FormatInt(Seconds, 10))}
 }
 
-type setexSeconds struct {
+type SetexSeconds struct {
 	cs []string
 }
 
-func (c setexSeconds) Value(value string) setexValue {
-	return setexValue{cs: append(c.cs, value)}
+func (c SetexSeconds) Value(Value string) SetexValue {
+	return SetexValue{cs: append(c.cs, Value)}
 }
 
-type setexValue struct {
+type SetexValue struct {
 	cs []string
 }
 
-func (c setexValue) Build() []string {
+func (c SetexValue) Build() []string {
 	return c.cs
 }
 
-type setnx struct {
+type Setnx struct {
 	cs []string
 }
 
-func (c setnx) Key(key string) setnxKey {
-	return setnxKey{cs: append(c.cs, key)}
+func (c Setnx) Key(Key string) SetnxKey {
+	return SetnxKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Setnx() (c setnx) {
+func (b *Builder) Setnx() (c Setnx) {
 	c.cs = append(b.get(), "SETNX")
 	return
 }
 
-type setnxKey struct {
+type SetnxKey struct {
 	cs []string
 }
 
-func (c setnxKey) Value(value string) setnxValue {
-	return setnxValue{cs: append(c.cs, value)}
+func (c SetnxKey) Value(Value string) SetnxValue {
+	return SetnxValue{cs: append(c.cs, Value)}
 }
 
-type setnxValue struct {
+type SetnxValue struct {
 	cs []string
 }
 
-func (c setnxValue) Build() []string {
+func (c SetnxValue) Build() []string {
 	return c.cs
 }
 
-type setrange struct {
+type Setrange struct {
 	cs []string
 }
 
-func (c setrange) Key(key string) setrangeKey {
-	return setrangeKey{cs: append(c.cs, key)}
+func (c Setrange) Key(Key string) SetrangeKey {
+	return SetrangeKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Setrange() (c setrange) {
+func (b *Builder) Setrange() (c Setrange) {
 	c.cs = append(b.get(), "SETRANGE")
 	return
 }
 
-type setrangeKey struct {
+type SetrangeKey struct {
 	cs []string
 }
 
-func (c setrangeKey) Offset(offset int64) setrangeOffset {
-	return setrangeOffset{cs: append(c.cs, strconv.FormatInt(offset, 10))}
+func (c SetrangeKey) Offset(Offset int64) SetrangeOffset {
+	return SetrangeOffset{cs: append(c.cs, strconv.FormatInt(Offset, 10))}
 }
 
-type setrangeOffset struct {
+type SetrangeOffset struct {
 	cs []string
 }
 
-func (c setrangeOffset) Value(value string) setrangeValue {
-	return setrangeValue{cs: append(c.cs, value)}
+func (c SetrangeOffset) Value(Value string) SetrangeValue {
+	return SetrangeValue{cs: append(c.cs, Value)}
 }
 
-type setrangeValue struct {
+type SetrangeValue struct {
 	cs []string
 }
 
-func (c setrangeValue) Build() []string {
+func (c SetrangeValue) Build() []string {
 	return c.cs
 }
 
-type shutdown struct {
+type Shutdown struct {
 	cs []string
 }
 
-func (c shutdown) Nosave() shutdownSaveModeNosave {
-	return shutdownSaveModeNosave{cs: append(c.cs, "NOSAVE")}
+func (c Shutdown) Nosave() ShutdownSaveModeNosave {
+	return ShutdownSaveModeNosave{cs: append(c.cs, "NOSAVE")}
 }
 
-func (c shutdown) Save() shutdownSaveModeSave {
-	return shutdownSaveModeSave{cs: append(c.cs, "SAVE")}
+func (c Shutdown) Save() ShutdownSaveModeSave {
+	return ShutdownSaveModeSave{cs: append(c.cs, "SAVE")}
 }
 
-func (c shutdown) Build() []string {
+func (c Shutdown) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) Shutdown() (c shutdown) {
+func (b *Builder) Shutdown() (c Shutdown) {
 	c.cs = append(b.get(), "SHUTDOWN")
 	return
 }
 
-type shutdownSaveModeNosave struct {
+type ShutdownSaveModeNosave struct {
 	cs []string
 }
 
-func (c shutdownSaveModeNosave) Build() []string {
+func (c ShutdownSaveModeNosave) Build() []string {
 	return c.cs
 }
 
-type shutdownSaveModeSave struct {
+type ShutdownSaveModeSave struct {
 	cs []string
 }
 
-func (c shutdownSaveModeSave) Build() []string {
+func (c ShutdownSaveModeSave) Build() []string {
 	return c.cs
 }
 
-type sinter struct {
+type Sinter struct {
 	cs []string
 }
 
-func (c sinter) Key(key ...string) sinterKey {
-	return sinterKey{cs: append(c.cs, key...)}
+func (c Sinter) Key(Key ...string) SinterKey {
+	return SinterKey{cs: append(c.cs, Key...)}
 }
 
-func (b *Builder) Sinter() (c sinter) {
+func (b *Builder) Sinter() (c Sinter) {
 	c.cs = append(b.get(), "SINTER")
 	return
 }
 
-type sinterKey struct {
+type SinterKey struct {
 	cs []string
 }
 
-func (c sinterKey) Key(key ...string) sinterKey {
-	return sinterKey{cs: append(c.cs, key...)}
+func (c SinterKey) Key(Key ...string) SinterKey {
+	return SinterKey{cs: append(c.cs, Key...)}
 }
 
-func (c sinterKey) Build() []string {
+func (c SinterKey) Build() []string {
 	return c.cs
 }
 
-type sintercard struct {
+type Sintercard struct {
 	cs []string
 }
 
-func (c sintercard) Key(key ...string) sintercardKey {
-	return sintercardKey{cs: append(c.cs, key...)}
+func (c Sintercard) Key(Key ...string) SintercardKey {
+	return SintercardKey{cs: append(c.cs, Key...)}
 }
 
-func (b *Builder) Sintercard() (c sintercard) {
+func (b *Builder) Sintercard() (c Sintercard) {
 	c.cs = append(b.get(), "SINTERCARD")
 	return
 }
 
-type sintercardKey struct {
+type SintercardKey struct {
 	cs []string
 }
 
-func (c sintercardKey) Key(key ...string) sintercardKey {
-	return sintercardKey{cs: append(c.cs, key...)}
+func (c SintercardKey) Key(Key ...string) SintercardKey {
+	return SintercardKey{cs: append(c.cs, Key...)}
 }
 
-func (c sintercardKey) Build() []string {
+func (c SintercardKey) Build() []string {
 	return c.cs
 }
 
-type sinterstore struct {
+type Sinterstore struct {
 	cs []string
 }
 
-func (c sinterstore) Destination(destination string) sinterstoreDestination {
-	return sinterstoreDestination{cs: append(c.cs, destination)}
+func (c Sinterstore) Destination(Destination string) SinterstoreDestination {
+	return SinterstoreDestination{cs: append(c.cs, Destination)}
 }
 
-func (b *Builder) Sinterstore() (c sinterstore) {
+func (b *Builder) Sinterstore() (c Sinterstore) {
 	c.cs = append(b.get(), "SINTERSTORE")
 	return
 }
 
-type sinterstoreDestination struct {
+type SinterstoreDestination struct {
 	cs []string
 }
 
-func (c sinterstoreDestination) Key(key ...string) sinterstoreKey {
-	return sinterstoreKey{cs: append(c.cs, key...)}
+func (c SinterstoreDestination) Key(Key ...string) SinterstoreKey {
+	return SinterstoreKey{cs: append(c.cs, Key...)}
 }
 
-type sinterstoreKey struct {
+type SinterstoreKey struct {
 	cs []string
 }
 
-func (c sinterstoreKey) Key(key ...string) sinterstoreKey {
-	return sinterstoreKey{cs: append(c.cs, key...)}
+func (c SinterstoreKey) Key(Key ...string) SinterstoreKey {
+	return SinterstoreKey{cs: append(c.cs, Key...)}
 }
 
-func (c sinterstoreKey) Build() []string {
+func (c SinterstoreKey) Build() []string {
 	return c.cs
 }
 
-type sismember struct {
+type Sismember struct {
 	cs []string
 }
 
-func (c sismember) Key(key string) sismemberKey {
-	return sismemberKey{cs: append(c.cs, key)}
+func (c Sismember) Key(Key string) SismemberKey {
+	return SismemberKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Sismember() (c sismember) {
+func (b *Builder) Sismember() (c Sismember) {
 	c.cs = append(b.get(), "SISMEMBER")
 	return
 }
 
-type sismemberKey struct {
+type SismemberKey struct {
 	cs []string
 }
 
-func (c sismemberKey) Member(member string) sismemberMember {
-	return sismemberMember{cs: append(c.cs, member)}
+func (c SismemberKey) Member(Member string) SismemberMember {
+	return SismemberMember{cs: append(c.cs, Member)}
 }
 
-type sismemberMember struct {
+type SismemberMember struct {
 	cs []string
 }
 
-func (c sismemberMember) Build() []string {
+func (c SismemberMember) Build() []string {
 	return c.cs
 }
 
-type slaveof struct {
+type Slaveof struct {
 	cs []string
 }
 
-func (c slaveof) Host(host string) slaveofHost {
-	return slaveofHost{cs: append(c.cs, host)}
+func (c Slaveof) Host(Host string) SlaveofHost {
+	return SlaveofHost{cs: append(c.cs, Host)}
 }
 
-func (b *Builder) Slaveof() (c slaveof) {
+func (b *Builder) Slaveof() (c Slaveof) {
 	c.cs = append(b.get(), "SLAVEOF")
 	return
 }
 
-type slaveofHost struct {
+type SlaveofHost struct {
 	cs []string
 }
 
-func (c slaveofHost) Port(port string) slaveofPort {
-	return slaveofPort{cs: append(c.cs, port)}
+func (c SlaveofHost) Port(Port string) SlaveofPort {
+	return SlaveofPort{cs: append(c.cs, Port)}
 }
 
-type slaveofPort struct {
+type SlaveofPort struct {
 	cs []string
 }
 
-func (c slaveofPort) Build() []string {
+func (c SlaveofPort) Build() []string {
 	return c.cs
 }
 
-type slowlog struct {
+type Slowlog struct {
 	cs []string
 }
 
-func (c slowlog) Subcommand(subcommand string) slowlogSubcommand {
-	return slowlogSubcommand{cs: append(c.cs, subcommand)}
+func (c Slowlog) Subcommand(Subcommand string) SlowlogSubcommand {
+	return SlowlogSubcommand{cs: append(c.cs, Subcommand)}
 }
 
-func (b *Builder) Slowlog() (c slowlog) {
+func (b *Builder) Slowlog() (c Slowlog) {
 	c.cs = append(b.get(), "SLOWLOG")
 	return
 }
 
-type slowlogArgument struct {
+type SlowlogArgument struct {
 	cs []string
 }
 
-func (c slowlogArgument) Build() []string {
+func (c SlowlogArgument) Build() []string {
 	return c.cs
 }
 
-type slowlogSubcommand struct {
+type SlowlogSubcommand struct {
 	cs []string
 }
 
-func (c slowlogSubcommand) Argument(argument string) slowlogArgument {
-	return slowlogArgument{cs: append(c.cs, argument)}
+func (c SlowlogSubcommand) Argument(Argument string) SlowlogArgument {
+	return SlowlogArgument{cs: append(c.cs, Argument)}
 }
 
-func (c slowlogSubcommand) Build() []string {
+func (c SlowlogSubcommand) Build() []string {
 	return c.cs
 }
 
-type smembers struct {
+type Smembers struct {
 	cs []string
 }
 
-func (c smembers) Key(key string) smembersKey {
-	return smembersKey{cs: append(c.cs, key)}
+func (c Smembers) Key(Key string) SmembersKey {
+	return SmembersKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Smembers() (c smembers) {
+func (b *Builder) Smembers() (c Smembers) {
 	c.cs = append(b.get(), "SMEMBERS")
 	return
 }
 
-type smembersKey struct {
+type SmembersKey struct {
 	cs []string
 }
 
-func (c smembersKey) Build() []string {
+func (c SmembersKey) Build() []string {
 	return c.cs
 }
 
-type smismember struct {
+type Smismember struct {
 	cs []string
 }
 
-func (c smismember) Key(key string) smismemberKey {
-	return smismemberKey{cs: append(c.cs, key)}
+func (c Smismember) Key(Key string) SmismemberKey {
+	return SmismemberKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Smismember() (c smismember) {
+func (b *Builder) Smismember() (c Smismember) {
 	c.cs = append(b.get(), "SMISMEMBER")
 	return
 }
 
-type smismemberKey struct {
+type SmismemberKey struct {
 	cs []string
 }
 
-func (c smismemberKey) Member(member ...string) smismemberMember {
-	return smismemberMember{cs: append(c.cs, member...)}
+func (c SmismemberKey) Member(Member ...string) SmismemberMember {
+	return SmismemberMember{cs: append(c.cs, Member...)}
 }
 
-type smismemberMember struct {
+type SmismemberMember struct {
 	cs []string
 }
 
-func (c smismemberMember) Member(member ...string) smismemberMember {
-	return smismemberMember{cs: append(c.cs, member...)}
+func (c SmismemberMember) Member(Member ...string) SmismemberMember {
+	return SmismemberMember{cs: append(c.cs, Member...)}
 }
 
-func (c smismemberMember) Build() []string {
+func (c SmismemberMember) Build() []string {
 	return c.cs
 }
 
-type smove struct {
+type Smove struct {
 	cs []string
 }
 
-func (c smove) Source(source string) smoveSource {
-	return smoveSource{cs: append(c.cs, source)}
+func (c Smove) Source(Source string) SmoveSource {
+	return SmoveSource{cs: append(c.cs, Source)}
 }
 
-func (b *Builder) Smove() (c smove) {
+func (b *Builder) Smove() (c Smove) {
 	c.cs = append(b.get(), "SMOVE")
 	return
 }
 
-type smoveDestination struct {
+type SmoveDestination struct {
 	cs []string
 }
 
-func (c smoveDestination) Member(member string) smoveMember {
-	return smoveMember{cs: append(c.cs, member)}
+func (c SmoveDestination) Member(Member string) SmoveMember {
+	return SmoveMember{cs: append(c.cs, Member)}
 }
 
-type smoveMember struct {
+type SmoveMember struct {
 	cs []string
 }
 
-func (c smoveMember) Build() []string {
+func (c SmoveMember) Build() []string {
 	return c.cs
 }
 
-type smoveSource struct {
+type SmoveSource struct {
 	cs []string
 }
 
-func (c smoveSource) Destination(destination string) smoveDestination {
-	return smoveDestination{cs: append(c.cs, destination)}
+func (c SmoveSource) Destination(Destination string) SmoveDestination {
+	return SmoveDestination{cs: append(c.cs, Destination)}
 }
 
-type sort struct {
+type Sort struct {
 	cs []string
 }
 
-func (c sort) Key(key string) sortKey {
-	return sortKey{cs: append(c.cs, key)}
+func (c Sort) Key(Key string) SortKey {
+	return SortKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Sort() (c sort) {
+func (b *Builder) Sort() (c Sort) {
 	c.cs = append(b.get(), "SORT")
 	return
 }
 
-type sortBy struct {
+type SortBy struct {
 	cs []string
 }
 
-func (c sortBy) Limit(offset int64, count int64) sortLimit {
-	return sortLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(offset, 10), strconv.FormatInt(count, 10))}
+func (c SortBy) Limit(Offset int64, Count int64) SortLimit {
+	return SortLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
 }
 
-func (c sortBy) Get(pattern ...string) sortGet {
+func (c SortBy) Get(Pattern ...string) SortGet {
 	c.cs = append(c.cs, "GET")
-	return sortGet{cs: append(c.cs, pattern...)}
+	return SortGet{cs: append(c.cs, Pattern...)}
 }
 
-func (c sortBy) Asc() sortOrderAsc {
-	return sortOrderAsc{cs: append(c.cs, "ASC")}
+func (c SortBy) Asc() SortOrderAsc {
+	return SortOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c sortBy) Desc() sortOrderDesc {
-	return sortOrderDesc{cs: append(c.cs, "DESC")}
+func (c SortBy) Desc() SortOrderDesc {
+	return SortOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c sortBy) Alpha() sortSortingAlpha {
-	return sortSortingAlpha{cs: append(c.cs, "ALPHA")}
+func (c SortBy) Alpha() SortSortingAlpha {
+	return SortSortingAlpha{cs: append(c.cs, "ALPHA")}
 }
 
-func (c sortBy) Store(destination string) sortStore {
-	return sortStore{cs: append(c.cs, "STORE", destination)}
+func (c SortBy) Store(Destination string) SortStore {
+	return SortStore{cs: append(c.cs, "STORE", Destination)}
 }
 
-func (c sortBy) Build() []string {
+func (c SortBy) Build() []string {
 	return c.cs
 }
 
-type sortGet struct {
+type SortGet struct {
 	cs []string
 }
 
-func (c sortGet) Asc() sortOrderAsc {
-	return sortOrderAsc{cs: append(c.cs, "ASC")}
+func (c SortGet) Asc() SortOrderAsc {
+	return SortOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c sortGet) Desc() sortOrderDesc {
-	return sortOrderDesc{cs: append(c.cs, "DESC")}
+func (c SortGet) Desc() SortOrderDesc {
+	return SortOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c sortGet) Alpha() sortSortingAlpha {
-	return sortSortingAlpha{cs: append(c.cs, "ALPHA")}
+func (c SortGet) Alpha() SortSortingAlpha {
+	return SortSortingAlpha{cs: append(c.cs, "ALPHA")}
 }
 
-func (c sortGet) Store(destination string) sortStore {
-	return sortStore{cs: append(c.cs, "STORE", destination)}
+func (c SortGet) Store(Destination string) SortStore {
+	return SortStore{cs: append(c.cs, "STORE", Destination)}
 }
 
-func (c sortGet) Get(get ...string) sortGet {
-	return sortGet{cs: append(c.cs, get...)}
+func (c SortGet) Get(Get ...string) SortGet {
+	return SortGet{cs: append(c.cs, Get...)}
 }
 
-func (c sortGet) Build() []string {
+func (c SortGet) Build() []string {
 	return c.cs
 }
 
-type sortKey struct {
+type SortKey struct {
 	cs []string
 }
 
-func (c sortKey) By(pattern string) sortBy {
-	return sortBy{cs: append(c.cs, "BY", pattern)}
+func (c SortKey) By(Pattern string) SortBy {
+	return SortBy{cs: append(c.cs, "BY", Pattern)}
 }
 
-func (c sortKey) Limit(offset int64, count int64) sortLimit {
-	return sortLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(offset, 10), strconv.FormatInt(count, 10))}
+func (c SortKey) Limit(Offset int64, Count int64) SortLimit {
+	return SortLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
 }
 
-func (c sortKey) Get(pattern ...string) sortGet {
+func (c SortKey) Get(Pattern ...string) SortGet {
 	c.cs = append(c.cs, "GET")
-	return sortGet{cs: append(c.cs, pattern...)}
+	return SortGet{cs: append(c.cs, Pattern...)}
 }
 
-func (c sortKey) Asc() sortOrderAsc {
-	return sortOrderAsc{cs: append(c.cs, "ASC")}
+func (c SortKey) Asc() SortOrderAsc {
+	return SortOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c sortKey) Desc() sortOrderDesc {
-	return sortOrderDesc{cs: append(c.cs, "DESC")}
+func (c SortKey) Desc() SortOrderDesc {
+	return SortOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c sortKey) Alpha() sortSortingAlpha {
-	return sortSortingAlpha{cs: append(c.cs, "ALPHA")}
+func (c SortKey) Alpha() SortSortingAlpha {
+	return SortSortingAlpha{cs: append(c.cs, "ALPHA")}
 }
 
-func (c sortKey) Store(destination string) sortStore {
-	return sortStore{cs: append(c.cs, "STORE", destination)}
+func (c SortKey) Store(Destination string) SortStore {
+	return SortStore{cs: append(c.cs, "STORE", Destination)}
 }
 
-func (c sortKey) Build() []string {
+func (c SortKey) Build() []string {
 	return c.cs
 }
 
-type sortLimit struct {
+type SortLimit struct {
 	cs []string
 }
 
-func (c sortLimit) Get(pattern ...string) sortGet {
+func (c SortLimit) Get(Pattern ...string) SortGet {
 	c.cs = append(c.cs, "GET")
-	return sortGet{cs: append(c.cs, pattern...)}
+	return SortGet{cs: append(c.cs, Pattern...)}
 }
 
-func (c sortLimit) Asc() sortOrderAsc {
-	return sortOrderAsc{cs: append(c.cs, "ASC")}
+func (c SortLimit) Asc() SortOrderAsc {
+	return SortOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c sortLimit) Desc() sortOrderDesc {
-	return sortOrderDesc{cs: append(c.cs, "DESC")}
+func (c SortLimit) Desc() SortOrderDesc {
+	return SortOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c sortLimit) Alpha() sortSortingAlpha {
-	return sortSortingAlpha{cs: append(c.cs, "ALPHA")}
+func (c SortLimit) Alpha() SortSortingAlpha {
+	return SortSortingAlpha{cs: append(c.cs, "ALPHA")}
 }
 
-func (c sortLimit) Store(destination string) sortStore {
-	return sortStore{cs: append(c.cs, "STORE", destination)}
+func (c SortLimit) Store(Destination string) SortStore {
+	return SortStore{cs: append(c.cs, "STORE", Destination)}
 }
 
-func (c sortLimit) Build() []string {
+func (c SortLimit) Build() []string {
 	return c.cs
 }
 
-type sortOrderAsc struct {
+type SortOrderAsc struct {
 	cs []string
 }
 
-func (c sortOrderAsc) Alpha() sortSortingAlpha {
-	return sortSortingAlpha{cs: append(c.cs, "ALPHA")}
+func (c SortOrderAsc) Alpha() SortSortingAlpha {
+	return SortSortingAlpha{cs: append(c.cs, "ALPHA")}
 }
 
-func (c sortOrderAsc) Store(destination string) sortStore {
-	return sortStore{cs: append(c.cs, "STORE", destination)}
+func (c SortOrderAsc) Store(Destination string) SortStore {
+	return SortStore{cs: append(c.cs, "STORE", Destination)}
 }
 
-func (c sortOrderAsc) Build() []string {
+func (c SortOrderAsc) Build() []string {
 	return c.cs
 }
 
-type sortOrderDesc struct {
+type SortOrderDesc struct {
 	cs []string
 }
 
-func (c sortOrderDesc) Alpha() sortSortingAlpha {
-	return sortSortingAlpha{cs: append(c.cs, "ALPHA")}
+func (c SortOrderDesc) Alpha() SortSortingAlpha {
+	return SortSortingAlpha{cs: append(c.cs, "ALPHA")}
 }
 
-func (c sortOrderDesc) Store(destination string) sortStore {
-	return sortStore{cs: append(c.cs, "STORE", destination)}
+func (c SortOrderDesc) Store(Destination string) SortStore {
+	return SortStore{cs: append(c.cs, "STORE", Destination)}
 }
 
-func (c sortOrderDesc) Build() []string {
+func (c SortOrderDesc) Build() []string {
 	return c.cs
 }
 
-type sortRo struct {
+type SortRo struct {
 	cs []string
 }
 
-func (c sortRo) Key(key string) sortRoKey {
-	return sortRoKey{cs: append(c.cs, key)}
+func (c SortRo) Key(Key string) SortRoKey {
+	return SortRoKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) SortRo() (c sortRo) {
+func (b *Builder) SortRo() (c SortRo) {
 	c.cs = append(b.get(), "SORT_RO")
 	return
 }
 
-type sortRoBy struct {
+type SortRoBy struct {
 	cs []string
 }
 
-func (c sortRoBy) Limit(offset int64, count int64) sortRoLimit {
-	return sortRoLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(offset, 10), strconv.FormatInt(count, 10))}
+func (c SortRoBy) Limit(Offset int64, Count int64) SortRoLimit {
+	return SortRoLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
 }
 
-func (c sortRoBy) Get(pattern ...string) sortRoGet {
+func (c SortRoBy) Get(Pattern ...string) SortRoGet {
 	c.cs = append(c.cs, "GET")
-	return sortRoGet{cs: append(c.cs, pattern...)}
+	return SortRoGet{cs: append(c.cs, Pattern...)}
 }
 
-func (c sortRoBy) Asc() sortRoOrderAsc {
-	return sortRoOrderAsc{cs: append(c.cs, "ASC")}
+func (c SortRoBy) Asc() SortRoOrderAsc {
+	return SortRoOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c sortRoBy) Desc() sortRoOrderDesc {
-	return sortRoOrderDesc{cs: append(c.cs, "DESC")}
+func (c SortRoBy) Desc() SortRoOrderDesc {
+	return SortRoOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c sortRoBy) Alpha() sortRoSortingAlpha {
-	return sortRoSortingAlpha{cs: append(c.cs, "ALPHA")}
+func (c SortRoBy) Alpha() SortRoSortingAlpha {
+	return SortRoSortingAlpha{cs: append(c.cs, "ALPHA")}
 }
 
-func (c sortRoBy) Build() []string {
+func (c SortRoBy) Build() []string {
 	return c.cs
 }
 
-type sortRoGet struct {
+type SortRoGet struct {
 	cs []string
 }
 
-func (c sortRoGet) Asc() sortRoOrderAsc {
-	return sortRoOrderAsc{cs: append(c.cs, "ASC")}
+func (c SortRoGet) Asc() SortRoOrderAsc {
+	return SortRoOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c sortRoGet) Desc() sortRoOrderDesc {
-	return sortRoOrderDesc{cs: append(c.cs, "DESC")}
+func (c SortRoGet) Desc() SortRoOrderDesc {
+	return SortRoOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c sortRoGet) Alpha() sortRoSortingAlpha {
-	return sortRoSortingAlpha{cs: append(c.cs, "ALPHA")}
+func (c SortRoGet) Alpha() SortRoSortingAlpha {
+	return SortRoSortingAlpha{cs: append(c.cs, "ALPHA")}
 }
 
-func (c sortRoGet) Get(get ...string) sortRoGet {
-	return sortRoGet{cs: append(c.cs, get...)}
+func (c SortRoGet) Get(Get ...string) SortRoGet {
+	return SortRoGet{cs: append(c.cs, Get...)}
 }
 
-func (c sortRoGet) Build() []string {
+func (c SortRoGet) Build() []string {
 	return c.cs
 }
 
-type sortRoKey struct {
+type SortRoKey struct {
 	cs []string
 }
 
-func (c sortRoKey) By(pattern string) sortRoBy {
-	return sortRoBy{cs: append(c.cs, "BY", pattern)}
+func (c SortRoKey) By(Pattern string) SortRoBy {
+	return SortRoBy{cs: append(c.cs, "BY", Pattern)}
 }
 
-func (c sortRoKey) Limit(offset int64, count int64) sortRoLimit {
-	return sortRoLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(offset, 10), strconv.FormatInt(count, 10))}
+func (c SortRoKey) Limit(Offset int64, Count int64) SortRoLimit {
+	return SortRoLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
 }
 
-func (c sortRoKey) Get(pattern ...string) sortRoGet {
+func (c SortRoKey) Get(Pattern ...string) SortRoGet {
 	c.cs = append(c.cs, "GET")
-	return sortRoGet{cs: append(c.cs, pattern...)}
+	return SortRoGet{cs: append(c.cs, Pattern...)}
 }
 
-func (c sortRoKey) Asc() sortRoOrderAsc {
-	return sortRoOrderAsc{cs: append(c.cs, "ASC")}
+func (c SortRoKey) Asc() SortRoOrderAsc {
+	return SortRoOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c sortRoKey) Desc() sortRoOrderDesc {
-	return sortRoOrderDesc{cs: append(c.cs, "DESC")}
+func (c SortRoKey) Desc() SortRoOrderDesc {
+	return SortRoOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c sortRoKey) Alpha() sortRoSortingAlpha {
-	return sortRoSortingAlpha{cs: append(c.cs, "ALPHA")}
+func (c SortRoKey) Alpha() SortRoSortingAlpha {
+	return SortRoSortingAlpha{cs: append(c.cs, "ALPHA")}
 }
 
-func (c sortRoKey) Build() []string {
+func (c SortRoKey) Build() []string {
 	return c.cs
 }
 
-type sortRoLimit struct {
+type SortRoLimit struct {
 	cs []string
 }
 
-func (c sortRoLimit) Get(pattern ...string) sortRoGet {
+func (c SortRoLimit) Get(Pattern ...string) SortRoGet {
 	c.cs = append(c.cs, "GET")
-	return sortRoGet{cs: append(c.cs, pattern...)}
+	return SortRoGet{cs: append(c.cs, Pattern...)}
 }
 
-func (c sortRoLimit) Asc() sortRoOrderAsc {
-	return sortRoOrderAsc{cs: append(c.cs, "ASC")}
+func (c SortRoLimit) Asc() SortRoOrderAsc {
+	return SortRoOrderAsc{cs: append(c.cs, "ASC")}
 }
 
-func (c sortRoLimit) Desc() sortRoOrderDesc {
-	return sortRoOrderDesc{cs: append(c.cs, "DESC")}
+func (c SortRoLimit) Desc() SortRoOrderDesc {
+	return SortRoOrderDesc{cs: append(c.cs, "DESC")}
 }
 
-func (c sortRoLimit) Alpha() sortRoSortingAlpha {
-	return sortRoSortingAlpha{cs: append(c.cs, "ALPHA")}
+func (c SortRoLimit) Alpha() SortRoSortingAlpha {
+	return SortRoSortingAlpha{cs: append(c.cs, "ALPHA")}
 }
 
-func (c sortRoLimit) Build() []string {
+func (c SortRoLimit) Build() []string {
 	return c.cs
 }
 
-type sortRoOrderAsc struct {
+type SortRoOrderAsc struct {
 	cs []string
 }
 
-func (c sortRoOrderAsc) Alpha() sortRoSortingAlpha {
-	return sortRoSortingAlpha{cs: append(c.cs, "ALPHA")}
+func (c SortRoOrderAsc) Alpha() SortRoSortingAlpha {
+	return SortRoSortingAlpha{cs: append(c.cs, "ALPHA")}
 }
 
-func (c sortRoOrderAsc) Build() []string {
+func (c SortRoOrderAsc) Build() []string {
 	return c.cs
 }
 
-type sortRoOrderDesc struct {
+type SortRoOrderDesc struct {
 	cs []string
 }
 
-func (c sortRoOrderDesc) Alpha() sortRoSortingAlpha {
-	return sortRoSortingAlpha{cs: append(c.cs, "ALPHA")}
+func (c SortRoOrderDesc) Alpha() SortRoSortingAlpha {
+	return SortRoSortingAlpha{cs: append(c.cs, "ALPHA")}
 }
 
-func (c sortRoOrderDesc) Build() []string {
+func (c SortRoOrderDesc) Build() []string {
 	return c.cs
 }
 
-type sortRoSortingAlpha struct {
+type SortRoSortingAlpha struct {
 	cs []string
 }
 
-func (c sortRoSortingAlpha) Build() []string {
+func (c SortRoSortingAlpha) Build() []string {
 	return c.cs
 }
 
-type sortSortingAlpha struct {
+type SortSortingAlpha struct {
 	cs []string
 }
 
-func (c sortSortingAlpha) Store(destination string) sortStore {
-	return sortStore{cs: append(c.cs, "STORE", destination)}
+func (c SortSortingAlpha) Store(Destination string) SortStore {
+	return SortStore{cs: append(c.cs, "STORE", Destination)}
 }
 
-func (c sortSortingAlpha) Build() []string {
+func (c SortSortingAlpha) Build() []string {
 	return c.cs
 }
 
-type sortStore struct {
+type SortStore struct {
 	cs []string
 }
 
-func (c sortStore) Build() []string {
+func (c SortStore) Build() []string {
 	return c.cs
 }
 
-type spop struct {
+type Spop struct {
 	cs []string
 }
 
-func (c spop) Key(key string) spopKey {
-	return spopKey{cs: append(c.cs, key)}
+func (c Spop) Key(Key string) SpopKey {
+	return SpopKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Spop() (c spop) {
+func (b *Builder) Spop() (c Spop) {
 	c.cs = append(b.get(), "SPOP")
 	return
 }
 
-type spopCount struct {
+type SpopCount struct {
 	cs []string
 }
 
-func (c spopCount) Build() []string {
+func (c SpopCount) Build() []string {
 	return c.cs
 }
 
-type spopKey struct {
+type SpopKey struct {
 	cs []string
 }
 
-func (c spopKey) Count(count int64) spopCount {
-	return spopCount{cs: append(c.cs, strconv.FormatInt(count, 10))}
+func (c SpopKey) Count(Count int64) SpopCount {
+	return SpopCount{cs: append(c.cs, strconv.FormatInt(Count, 10))}
 }
 
-func (c spopKey) Build() []string {
+func (c SpopKey) Build() []string {
 	return c.cs
 }
 
-type srandmember struct {
+type Srandmember struct {
 	cs []string
 }
 
-func (c srandmember) Key(key string) srandmemberKey {
-	return srandmemberKey{cs: append(c.cs, key)}
+func (c Srandmember) Key(Key string) SrandmemberKey {
+	return SrandmemberKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Srandmember() (c srandmember) {
+func (b *Builder) Srandmember() (c Srandmember) {
 	c.cs = append(b.get(), "SRANDMEMBER")
 	return
 }
 
-type srandmemberCount struct {
+type SrandmemberCount struct {
 	cs []string
 }
 
-func (c srandmemberCount) Build() []string {
+func (c SrandmemberCount) Build() []string {
 	return c.cs
 }
 
-type srandmemberKey struct {
+type SrandmemberKey struct {
 	cs []string
 }
 
-func (c srandmemberKey) Count(count int64) srandmemberCount {
-	return srandmemberCount{cs: append(c.cs, strconv.FormatInt(count, 10))}
+func (c SrandmemberKey) Count(Count int64) SrandmemberCount {
+	return SrandmemberCount{cs: append(c.cs, strconv.FormatInt(Count, 10))}
 }
 
-func (c srandmemberKey) Build() []string {
+func (c SrandmemberKey) Build() []string {
 	return c.cs
 }
 
-type srem struct {
+type Srem struct {
 	cs []string
 }
 
-func (c srem) Key(key string) sremKey {
-	return sremKey{cs: append(c.cs, key)}
+func (c Srem) Key(Key string) SremKey {
+	return SremKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Srem() (c srem) {
+func (b *Builder) Srem() (c Srem) {
 	c.cs = append(b.get(), "SREM")
 	return
 }
 
-type sremKey struct {
+type SremKey struct {
 	cs []string
 }
 
-func (c sremKey) Member(member ...string) sremMember {
-	return sremMember{cs: append(c.cs, member...)}
+func (c SremKey) Member(Member ...string) SremMember {
+	return SremMember{cs: append(c.cs, Member...)}
 }
 
-type sremMember struct {
+type SremMember struct {
 	cs []string
 }
 
-func (c sremMember) Member(member ...string) sremMember {
-	return sremMember{cs: append(c.cs, member...)}
+func (c SremMember) Member(Member ...string) SremMember {
+	return SremMember{cs: append(c.cs, Member...)}
 }
 
-func (c sremMember) Build() []string {
+func (c SremMember) Build() []string {
 	return c.cs
 }
 
-type sscan struct {
+type Sscan struct {
 	cs []string
 }
 
-func (c sscan) Key(key string) sscanKey {
-	return sscanKey{cs: append(c.cs, key)}
+func (c Sscan) Key(Key string) SscanKey {
+	return SscanKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Sscan() (c sscan) {
+func (b *Builder) Sscan() (c Sscan) {
 	c.cs = append(b.get(), "SSCAN")
 	return
 }
 
-type sscanCount struct {
+type SscanCount struct {
 	cs []string
 }
 
-func (c sscanCount) Build() []string {
+func (c SscanCount) Build() []string {
 	return c.cs
 }
 
-type sscanCursor struct {
+type SscanCursor struct {
 	cs []string
 }
 
-func (c sscanCursor) Match(pattern string) sscanMatch {
-	return sscanMatch{cs: append(c.cs, "MATCH", pattern)}
+func (c SscanCursor) Match(Pattern string) SscanMatch {
+	return SscanMatch{cs: append(c.cs, "MATCH", Pattern)}
 }
 
-func (c sscanCursor) Count(count int64) sscanCount {
-	return sscanCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c SscanCursor) Count(Count int64) SscanCount {
+	return SscanCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c sscanCursor) Build() []string {
+func (c SscanCursor) Build() []string {
 	return c.cs
 }
 
-type sscanKey struct {
+type SscanKey struct {
 	cs []string
 }
 
-func (c sscanKey) Cursor(cursor int64) sscanCursor {
-	return sscanCursor{cs: append(c.cs, strconv.FormatInt(cursor, 10))}
+func (c SscanKey) Cursor(Cursor int64) SscanCursor {
+	return SscanCursor{cs: append(c.cs, strconv.FormatInt(Cursor, 10))}
 }
 
-type sscanMatch struct {
+type SscanMatch struct {
 	cs []string
 }
 
-func (c sscanMatch) Count(count int64) sscanCount {
-	return sscanCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c SscanMatch) Count(Count int64) SscanCount {
+	return SscanCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c sscanMatch) Build() []string {
+func (c SscanMatch) Build() []string {
 	return c.cs
 }
 
-type stralgo struct {
+type Stralgo struct {
 	cs []string
 }
 
-func (c stralgo) Lcs() stralgoAlgorithmLcs {
-	return stralgoAlgorithmLcs{cs: append(c.cs, "LCS")}
+func (c Stralgo) Lcs() StralgoAlgorithmLcs {
+	return StralgoAlgorithmLcs{cs: append(c.cs, "LCS")}
 }
 
-func (b *Builder) Stralgo() (c stralgo) {
+func (b *Builder) Stralgo() (c Stralgo) {
 	c.cs = append(b.get(), "STRALGO")
 	return
 }
 
-type stralgoAlgoSpecificArgument struct {
+type StralgoAlgoSpecificArgument struct {
 	cs []string
 }
 
-func (c stralgoAlgoSpecificArgument) AlgoSpecificArgument(algoSpecificArgument ...string) stralgoAlgoSpecificArgument {
-	return stralgoAlgoSpecificArgument{cs: append(c.cs, algoSpecificArgument...)}
+func (c StralgoAlgoSpecificArgument) AlgoSpecificArgument(AlgoSpecificArgument ...string) StralgoAlgoSpecificArgument {
+	return StralgoAlgoSpecificArgument{cs: append(c.cs, AlgoSpecificArgument...)}
 }
 
-func (c stralgoAlgoSpecificArgument) Build() []string {
+func (c StralgoAlgoSpecificArgument) Build() []string {
 	return c.cs
 }
 
-type stralgoAlgorithmLcs struct {
+type StralgoAlgorithmLcs struct {
 	cs []string
 }
 
-func (c stralgoAlgorithmLcs) AlgoSpecificArgument(algoSpecificArgument ...string) stralgoAlgoSpecificArgument {
-	return stralgoAlgoSpecificArgument{cs: append(c.cs, algoSpecificArgument...)}
+func (c StralgoAlgorithmLcs) AlgoSpecificArgument(AlgoSpecificArgument ...string) StralgoAlgoSpecificArgument {
+	return StralgoAlgoSpecificArgument{cs: append(c.cs, AlgoSpecificArgument...)}
 }
 
-type strlen struct {
+type Strlen struct {
 	cs []string
 }
 
-func (c strlen) Key(key string) strlenKey {
-	return strlenKey{cs: append(c.cs, key)}
+func (c Strlen) Key(Key string) StrlenKey {
+	return StrlenKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Strlen() (c strlen) {
+func (b *Builder) Strlen() (c Strlen) {
 	c.cs = append(b.get(), "STRLEN")
 	return
 }
 
-type strlenKey struct {
+type StrlenKey struct {
 	cs []string
 }
 
-func (c strlenKey) Build() []string {
+func (c StrlenKey) Build() []string {
 	return c.cs
 }
 
-type subscribe struct {
+type Subscribe struct {
 	cs []string
 }
 
-func (c subscribe) Channel(channel ...string) subscribeChannel {
-	return subscribeChannel{cs: append(c.cs, channel...)}
+func (c Subscribe) Channel(Channel ...string) SubscribeChannel {
+	return SubscribeChannel{cs: append(c.cs, Channel...)}
 }
 
-func (b *Builder) Subscribe() (c subscribe) {
+func (b *Builder) Subscribe() (c Subscribe) {
 	c.cs = append(b.get(), "SUBSCRIBE")
 	return
 }
 
-type subscribeChannel struct {
+type SubscribeChannel struct {
 	cs []string
 }
 
-func (c subscribeChannel) Channel(channel ...string) subscribeChannel {
-	return subscribeChannel{cs: append(c.cs, channel...)}
+func (c SubscribeChannel) Channel(Channel ...string) SubscribeChannel {
+	return SubscribeChannel{cs: append(c.cs, Channel...)}
 }
 
-func (c subscribeChannel) Build() []string {
+func (c SubscribeChannel) Build() []string {
 	return c.cs
 }
 
-type sunion struct {
+type Sunion struct {
 	cs []string
 }
 
-func (c sunion) Key(key ...string) sunionKey {
-	return sunionKey{cs: append(c.cs, key...)}
+func (c Sunion) Key(Key ...string) SunionKey {
+	return SunionKey{cs: append(c.cs, Key...)}
 }
 
-func (b *Builder) Sunion() (c sunion) {
+func (b *Builder) Sunion() (c Sunion) {
 	c.cs = append(b.get(), "SUNION")
 	return
 }
 
-type sunionKey struct {
+type SunionKey struct {
 	cs []string
 }
 
-func (c sunionKey) Key(key ...string) sunionKey {
-	return sunionKey{cs: append(c.cs, key...)}
+func (c SunionKey) Key(Key ...string) SunionKey {
+	return SunionKey{cs: append(c.cs, Key...)}
 }
 
-func (c sunionKey) Build() []string {
+func (c SunionKey) Build() []string {
 	return c.cs
 }
 
-type sunionstore struct {
+type Sunionstore struct {
 	cs []string
 }
 
-func (c sunionstore) Destination(destination string) sunionstoreDestination {
-	return sunionstoreDestination{cs: append(c.cs, destination)}
+func (c Sunionstore) Destination(Destination string) SunionstoreDestination {
+	return SunionstoreDestination{cs: append(c.cs, Destination)}
 }
 
-func (b *Builder) Sunionstore() (c sunionstore) {
+func (b *Builder) Sunionstore() (c Sunionstore) {
 	c.cs = append(b.get(), "SUNIONSTORE")
 	return
 }
 
-type sunionstoreDestination struct {
+type SunionstoreDestination struct {
 	cs []string
 }
 
-func (c sunionstoreDestination) Key(key ...string) sunionstoreKey {
-	return sunionstoreKey{cs: append(c.cs, key...)}
+func (c SunionstoreDestination) Key(Key ...string) SunionstoreKey {
+	return SunionstoreKey{cs: append(c.cs, Key...)}
 }
 
-type sunionstoreKey struct {
+type SunionstoreKey struct {
 	cs []string
 }
 
-func (c sunionstoreKey) Key(key ...string) sunionstoreKey {
-	return sunionstoreKey{cs: append(c.cs, key...)}
+func (c SunionstoreKey) Key(Key ...string) SunionstoreKey {
+	return SunionstoreKey{cs: append(c.cs, Key...)}
 }
 
-func (c sunionstoreKey) Build() []string {
+func (c SunionstoreKey) Build() []string {
 	return c.cs
 }
 
-type swapdb struct {
+type Swapdb struct {
 	cs []string
 }
 
-func (c swapdb) Index1(index1 int64) swapdbIndex1 {
-	return swapdbIndex1{cs: append(c.cs, strconv.FormatInt(index1, 10))}
+func (c Swapdb) Index1(Index1 int64) SwapdbIndex1 {
+	return SwapdbIndex1{cs: append(c.cs, strconv.FormatInt(Index1, 10))}
 }
 
-func (b *Builder) Swapdb() (c swapdb) {
+func (b *Builder) Swapdb() (c Swapdb) {
 	c.cs = append(b.get(), "SWAPDB")
 	return
 }
 
-type swapdbIndex1 struct {
+type SwapdbIndex1 struct {
 	cs []string
 }
 
-func (c swapdbIndex1) Index2(index2 int64) swapdbIndex2 {
-	return swapdbIndex2{cs: append(c.cs, strconv.FormatInt(index2, 10))}
+func (c SwapdbIndex1) Index2(Index2 int64) SwapdbIndex2 {
+	return SwapdbIndex2{cs: append(c.cs, strconv.FormatInt(Index2, 10))}
 }
 
-type swapdbIndex2 struct {
+type SwapdbIndex2 struct {
 	cs []string
 }
 
-func (c swapdbIndex2) Build() []string {
+func (c SwapdbIndex2) Build() []string {
 	return c.cs
 }
 
-type rSync struct {
+type Sync struct {
 	cs []string
 }
 
-func (c rSync) Build() []string {
+func (c Sync) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) Sync() (c rSync) {
+func (b *Builder) Sync() (c Sync) {
 	c.cs = append(b.get(), "SYNC")
 	return
 }
 
-type time struct {
+type Time struct {
 	cs []string
 }
 
-func (c time) Build() []string {
+func (c Time) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) Time() (c time) {
+func (b *Builder) Time() (c Time) {
 	c.cs = append(b.get(), "TIME")
 	return
 }
 
-type touch struct {
+type Touch struct {
 	cs []string
 }
 
-func (c touch) Key(key ...string) touchKey {
-	return touchKey{cs: append(c.cs, key...)}
+func (c Touch) Key(Key ...string) TouchKey {
+	return TouchKey{cs: append(c.cs, Key...)}
 }
 
-func (b *Builder) Touch() (c touch) {
+func (b *Builder) Touch() (c Touch) {
 	c.cs = append(b.get(), "TOUCH")
 	return
 }
 
-type touchKey struct {
+type TouchKey struct {
 	cs []string
 }
 
-func (c touchKey) Key(key ...string) touchKey {
-	return touchKey{cs: append(c.cs, key...)}
+func (c TouchKey) Key(Key ...string) TouchKey {
+	return TouchKey{cs: append(c.cs, Key...)}
 }
 
-func (c touchKey) Build() []string {
+func (c TouchKey) Build() []string {
 	return c.cs
 }
 
-type ttl struct {
+type Ttl struct {
 	cs []string
 }
 
-func (c ttl) Key(key string) ttlKey {
-	return ttlKey{cs: append(c.cs, key)}
+func (c Ttl) Key(Key string) TtlKey {
+	return TtlKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Ttl() (c ttl) {
+func (b *Builder) Ttl() (c Ttl) {
 	c.cs = append(b.get(), "TTL")
 	return
 }
 
-type ttlKey struct {
+type TtlKey struct {
 	cs []string
 }
 
-func (c ttlKey) Build() []string {
+func (c TtlKey) Build() []string {
 	return c.cs
 }
 
-type rType struct {
+type Type struct {
 	cs []string
 }
 
-func (c rType) Key(key string) typeKey {
-	return typeKey{cs: append(c.cs, key)}
+func (c Type) Key(Key string) TypeKey {
+	return TypeKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Type() (c rType) {
+func (b *Builder) Type() (c Type) {
 	c.cs = append(b.get(), "TYPE")
 	return
 }
 
-type typeKey struct {
+type TypeKey struct {
 	cs []string
 }
 
-func (c typeKey) Build() []string {
+func (c TypeKey) Build() []string {
 	return c.cs
 }
 
-type unlink struct {
+type Unlink struct {
 	cs []string
 }
 
-func (c unlink) Key(key ...string) unlinkKey {
-	return unlinkKey{cs: append(c.cs, key...)}
+func (c Unlink) Key(Key ...string) UnlinkKey {
+	return UnlinkKey{cs: append(c.cs, Key...)}
 }
 
-func (b *Builder) Unlink() (c unlink) {
+func (b *Builder) Unlink() (c Unlink) {
 	c.cs = append(b.get(), "UNLINK")
 	return
 }
 
-type unlinkKey struct {
+type UnlinkKey struct {
 	cs []string
 }
 
-func (c unlinkKey) Key(key ...string) unlinkKey {
-	return unlinkKey{cs: append(c.cs, key...)}
+func (c UnlinkKey) Key(Key ...string) UnlinkKey {
+	return UnlinkKey{cs: append(c.cs, Key...)}
 }
 
-func (c unlinkKey) Build() []string {
+func (c UnlinkKey) Build() []string {
 	return c.cs
 }
 
-type unsubscribe struct {
+type Unsubscribe struct {
 	cs []string
 }
 
-func (c unsubscribe) Channel(channel ...string) unsubscribeChannel {
-	return unsubscribeChannel{cs: append(c.cs, channel...)}
+func (c Unsubscribe) Channel(Channel ...string) UnsubscribeChannel {
+	return UnsubscribeChannel{cs: append(c.cs, Channel...)}
 }
 
-func (c unsubscribe) Build() []string {
+func (c Unsubscribe) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) Unsubscribe() (c unsubscribe) {
+func (b *Builder) Unsubscribe() (c Unsubscribe) {
 	c.cs = append(b.get(), "UNSUBSCRIBE")
 	return
 }
 
-type unsubscribeChannel struct {
+type UnsubscribeChannel struct {
 	cs []string
 }
 
-func (c unsubscribeChannel) Channel(channel ...string) unsubscribeChannel {
-	return unsubscribeChannel{cs: append(c.cs, channel...)}
+func (c UnsubscribeChannel) Channel(Channel ...string) UnsubscribeChannel {
+	return UnsubscribeChannel{cs: append(c.cs, Channel...)}
 }
 
-func (c unsubscribeChannel) Build() []string {
+func (c UnsubscribeChannel) Build() []string {
 	return c.cs
 }
 
-type unwatch struct {
+type Unwatch struct {
 	cs []string
 }
 
-func (c unwatch) Build() []string {
+func (c Unwatch) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) Unwatch() (c unwatch) {
+func (b *Builder) Unwatch() (c Unwatch) {
 	c.cs = append(b.get(), "UNWATCH")
 	return
 }
 
-type wait struct {
+type Wait struct {
 	cs []string
 }
 
-func (c wait) Numreplicas(numreplicas int64) waitNumreplicas {
-	return waitNumreplicas{cs: append(c.cs, strconv.FormatInt(numreplicas, 10))}
+func (c Wait) Numreplicas(Numreplicas int64) WaitNumreplicas {
+	return WaitNumreplicas{cs: append(c.cs, strconv.FormatInt(Numreplicas, 10))}
 }
 
-func (b *Builder) Wait() (c wait) {
+func (b *Builder) Wait() (c Wait) {
 	c.cs = append(b.get(), "WAIT")
 	return
 }
 
-type waitNumreplicas struct {
+type WaitNumreplicas struct {
 	cs []string
 }
 
-func (c waitNumreplicas) Timeout(timeout int64) waitTimeout {
-	return waitTimeout{cs: append(c.cs, strconv.FormatInt(timeout, 10))}
+func (c WaitNumreplicas) Timeout(Timeout int64) WaitTimeout {
+	return WaitTimeout{cs: append(c.cs, strconv.FormatInt(Timeout, 10))}
 }
 
-type waitTimeout struct {
+type WaitTimeout struct {
 	cs []string
 }
 
-func (c waitTimeout) Build() []string {
+func (c WaitTimeout) Build() []string {
 	return c.cs
 }
 
-type watch struct {
+type Watch struct {
 	cs []string
 }
 
-func (c watch) Key(key ...string) watchKey {
-	return watchKey{cs: append(c.cs, key...)}
+func (c Watch) Key(Key ...string) WatchKey {
+	return WatchKey{cs: append(c.cs, Key...)}
 }
 
-func (b *Builder) Watch() (c watch) {
+func (b *Builder) Watch() (c Watch) {
 	c.cs = append(b.get(), "WATCH")
 	return
 }
 
-type watchKey struct {
+type WatchKey struct {
 	cs []string
 }
 
-func (c watchKey) Key(key ...string) watchKey {
-	return watchKey{cs: append(c.cs, key...)}
+func (c WatchKey) Key(Key ...string) WatchKey {
+	return WatchKey{cs: append(c.cs, Key...)}
 }
 
-func (c watchKey) Build() []string {
+func (c WatchKey) Build() []string {
 	return c.cs
 }
 
-type xack struct {
+type Xack struct {
 	cs []string
 }
 
-func (c xack) Key(key string) xackKey {
-	return xackKey{cs: append(c.cs, key)}
+func (c Xack) Key(Key string) XackKey {
+	return XackKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Xack() (c xack) {
+func (b *Builder) Xack() (c Xack) {
 	c.cs = append(b.get(), "XACK")
 	return
 }
 
-type xackGroup struct {
+type XackGroup struct {
 	cs []string
 }
 
-func (c xackGroup) Id(id ...string) xackId {
-	return xackId{cs: append(c.cs, id...)}
+func (c XackGroup) Id(Id ...string) XackId {
+	return XackId{cs: append(c.cs, Id...)}
 }
 
-type xackId struct {
+type XackId struct {
 	cs []string
 }
 
-func (c xackId) Id(id ...string) xackId {
-	return xackId{cs: append(c.cs, id...)}
+func (c XackId) Id(Id ...string) XackId {
+	return XackId{cs: append(c.cs, Id...)}
 }
 
-func (c xackId) Build() []string {
+func (c XackId) Build() []string {
 	return c.cs
 }
 
-type xackKey struct {
+type XackKey struct {
 	cs []string
 }
 
-func (c xackKey) Group(group string) xackGroup {
-	return xackGroup{cs: append(c.cs, group)}
+func (c XackKey) Group(Group string) XackGroup {
+	return XackGroup{cs: append(c.cs, Group)}
 }
 
-type xadd struct {
+type Xadd struct {
 	cs []string
 }
 
-func (c xadd) Key(key string) xaddKey {
-	return xaddKey{cs: append(c.cs, key)}
+func (c Xadd) Key(Key string) XaddKey {
+	return XaddKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Xadd() (c xadd) {
+func (b *Builder) Xadd() (c Xadd) {
 	c.cs = append(b.get(), "XADD")
 	return
 }
 
-type xaddFieldValue struct {
+type XaddFieldValue struct {
 	cs []string
 }
 
-func (c xaddFieldValue) FieldValue(field string, value string) xaddFieldValue {
-	return xaddFieldValue{cs: append(c.cs, field, value)}
+func (c XaddFieldValue) FieldValue(Field string, Value string) XaddFieldValue {
+	return XaddFieldValue{cs: append(c.cs, Field, Value)}
 }
 
-func (c xaddFieldValue) Build() []string {
+func (c XaddFieldValue) Build() []string {
 	return c.cs
 }
 
-type xaddId struct {
+type XaddId struct {
 	cs []string
 }
 
-func (c xaddId) FieldValue() xaddFieldValue {
-	return xaddFieldValue{cs: append(c.cs)}
+func (c XaddId) FieldValue() XaddFieldValue {
+	return XaddFieldValue{cs: append(c.cs)}
 }
 
-type xaddKey struct {
+type XaddKey struct {
 	cs []string
 }
 
-func (c xaddKey) Nomkstream() xaddNomkstream {
-	return xaddNomkstream{cs: append(c.cs, "NOMKSTREAM")}
+func (c XaddKey) Nomkstream() XaddNomkstream {
+	return XaddNomkstream{cs: append(c.cs, "NOMKSTREAM")}
 }
 
-func (c xaddKey) Maxlen() xaddTrimStrategyMaxlen {
-	return xaddTrimStrategyMaxlen{cs: append(c.cs, "MAXLEN")}
+func (c XaddKey) Maxlen() XaddTrimStrategyMaxlen {
+	return XaddTrimStrategyMaxlen{cs: append(c.cs, "MAXLEN")}
 }
 
-func (c xaddKey) Minid() xaddTrimStrategyMinid {
-	return xaddTrimStrategyMinid{cs: append(c.cs, "MINID")}
+func (c XaddKey) Minid() XaddTrimStrategyMinid {
+	return XaddTrimStrategyMinid{cs: append(c.cs, "MINID")}
 }
 
-func (c xaddKey) Wildcard() xaddWildcard {
-	return xaddWildcard{cs: append(c.cs, "*")}
+func (c XaddKey) Wildcard() XaddWildcard {
+	return XaddWildcard{cs: append(c.cs, "*")}
 }
 
-func (c xaddKey) Id() xaddId {
-	return xaddId{cs: append(c.cs, "ID")}
+func (c XaddKey) Id() XaddId {
+	return XaddId{cs: append(c.cs, "ID")}
 }
 
-type xaddNomkstream struct {
+type XaddNomkstream struct {
 	cs []string
 }
 
-func (c xaddNomkstream) Maxlen() xaddTrimStrategyMaxlen {
-	return xaddTrimStrategyMaxlen{cs: append(c.cs, "MAXLEN")}
+func (c XaddNomkstream) Maxlen() XaddTrimStrategyMaxlen {
+	return XaddTrimStrategyMaxlen{cs: append(c.cs, "MAXLEN")}
 }
 
-func (c xaddNomkstream) Minid() xaddTrimStrategyMinid {
-	return xaddTrimStrategyMinid{cs: append(c.cs, "MINID")}
+func (c XaddNomkstream) Minid() XaddTrimStrategyMinid {
+	return XaddTrimStrategyMinid{cs: append(c.cs, "MINID")}
 }
 
-func (c xaddNomkstream) Wildcard() xaddWildcard {
-	return xaddWildcard{cs: append(c.cs, "*")}
+func (c XaddNomkstream) Wildcard() XaddWildcard {
+	return XaddWildcard{cs: append(c.cs, "*")}
 }
 
-func (c xaddNomkstream) Id() xaddId {
-	return xaddId{cs: append(c.cs, "ID")}
+func (c XaddNomkstream) Id() XaddId {
+	return XaddId{cs: append(c.cs, "ID")}
 }
 
-type xaddTrimLimit struct {
+type XaddTrimLimit struct {
 	cs []string
 }
 
-func (c xaddTrimLimit) Wildcard() xaddWildcard {
-	return xaddWildcard{cs: append(c.cs, "*")}
+func (c XaddTrimLimit) Wildcard() XaddWildcard {
+	return XaddWildcard{cs: append(c.cs, "*")}
 }
 
-func (c xaddTrimLimit) Id() xaddId {
-	return xaddId{cs: append(c.cs, "ID")}
+func (c XaddTrimLimit) Id() XaddId {
+	return XaddId{cs: append(c.cs, "ID")}
 }
 
-type xaddTrimOperatorAlmost struct {
+type XaddTrimOperatorAlmost struct {
 	cs []string
 }
 
-func (c xaddTrimOperatorAlmost) Threshold(threshold string) xaddTrimThreshold {
-	return xaddTrimThreshold{cs: append(c.cs, threshold)}
+func (c XaddTrimOperatorAlmost) Threshold(Threshold string) XaddTrimThreshold {
+	return XaddTrimThreshold{cs: append(c.cs, Threshold)}
 }
 
-type xaddTrimOperatorExact struct {
+type XaddTrimOperatorExact struct {
 	cs []string
 }
 
-func (c xaddTrimOperatorExact) Threshold(threshold string) xaddTrimThreshold {
-	return xaddTrimThreshold{cs: append(c.cs, threshold)}
+func (c XaddTrimOperatorExact) Threshold(Threshold string) XaddTrimThreshold {
+	return XaddTrimThreshold{cs: append(c.cs, Threshold)}
 }
 
-type xaddTrimStrategyMaxlen struct {
+type XaddTrimStrategyMaxlen struct {
 	cs []string
 }
 
-func (c xaddTrimStrategyMaxlen) Exact() xaddTrimOperatorExact {
-	return xaddTrimOperatorExact{cs: append(c.cs, "=")}
+func (c XaddTrimStrategyMaxlen) Exact() XaddTrimOperatorExact {
+	return XaddTrimOperatorExact{cs: append(c.cs, "=")}
 }
 
-func (c xaddTrimStrategyMaxlen) Almost() xaddTrimOperatorAlmost {
-	return xaddTrimOperatorAlmost{cs: append(c.cs, "~")}
+func (c XaddTrimStrategyMaxlen) Almost() XaddTrimOperatorAlmost {
+	return XaddTrimOperatorAlmost{cs: append(c.cs, "~")}
 }
 
-func (c xaddTrimStrategyMaxlen) Threshold(threshold string) xaddTrimThreshold {
-	return xaddTrimThreshold{cs: append(c.cs, threshold)}
+func (c XaddTrimStrategyMaxlen) Threshold(Threshold string) XaddTrimThreshold {
+	return XaddTrimThreshold{cs: append(c.cs, Threshold)}
 }
 
-type xaddTrimStrategyMinid struct {
+type XaddTrimStrategyMinid struct {
 	cs []string
 }
 
-func (c xaddTrimStrategyMinid) Exact() xaddTrimOperatorExact {
-	return xaddTrimOperatorExact{cs: append(c.cs, "=")}
+func (c XaddTrimStrategyMinid) Exact() XaddTrimOperatorExact {
+	return XaddTrimOperatorExact{cs: append(c.cs, "=")}
 }
 
-func (c xaddTrimStrategyMinid) Almost() xaddTrimOperatorAlmost {
-	return xaddTrimOperatorAlmost{cs: append(c.cs, "~")}
+func (c XaddTrimStrategyMinid) Almost() XaddTrimOperatorAlmost {
+	return XaddTrimOperatorAlmost{cs: append(c.cs, "~")}
 }
 
-func (c xaddTrimStrategyMinid) Threshold(threshold string) xaddTrimThreshold {
-	return xaddTrimThreshold{cs: append(c.cs, threshold)}
+func (c XaddTrimStrategyMinid) Threshold(Threshold string) XaddTrimThreshold {
+	return XaddTrimThreshold{cs: append(c.cs, Threshold)}
 }
 
-type xaddTrimThreshold struct {
+type XaddTrimThreshold struct {
 	cs []string
 }
 
-func (c xaddTrimThreshold) Limit(count int64) xaddTrimLimit {
-	return xaddTrimLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(count, 10))}
+func (c XaddTrimThreshold) Limit(Count int64) XaddTrimLimit {
+	return XaddTrimLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Count, 10))}
 }
 
-func (c xaddTrimThreshold) Wildcard() xaddWildcard {
-	return xaddWildcard{cs: append(c.cs, "*")}
+func (c XaddTrimThreshold) Wildcard() XaddWildcard {
+	return XaddWildcard{cs: append(c.cs, "*")}
 }
 
-func (c xaddTrimThreshold) Id() xaddId {
-	return xaddId{cs: append(c.cs, "ID")}
+func (c XaddTrimThreshold) Id() XaddId {
+	return XaddId{cs: append(c.cs, "ID")}
 }
 
-type xaddWildcard struct {
+type XaddWildcard struct {
 	cs []string
 }
 
-func (c xaddWildcard) FieldValue() xaddFieldValue {
-	return xaddFieldValue{cs: append(c.cs)}
+func (c XaddWildcard) FieldValue() XaddFieldValue {
+	return XaddFieldValue{cs: append(c.cs)}
 }
 
-type xautoclaim struct {
+type Xautoclaim struct {
 	cs []string
 }
 
-func (c xautoclaim) Key(key string) xautoclaimKey {
-	return xautoclaimKey{cs: append(c.cs, key)}
+func (c Xautoclaim) Key(Key string) XautoclaimKey {
+	return XautoclaimKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Xautoclaim() (c xautoclaim) {
+func (b *Builder) Xautoclaim() (c Xautoclaim) {
 	c.cs = append(b.get(), "XAUTOCLAIM")
 	return
 }
 
-type xautoclaimConsumer struct {
+type XautoclaimConsumer struct {
 	cs []string
 }
 
-func (c xautoclaimConsumer) MinIdleTime(minIdleTime string) xautoclaimMinIdleTime {
-	return xautoclaimMinIdleTime{cs: append(c.cs, minIdleTime)}
+func (c XautoclaimConsumer) MinIdleTime(MinIdleTime string) XautoclaimMinIdleTime {
+	return XautoclaimMinIdleTime{cs: append(c.cs, MinIdleTime)}
 }
 
-type xautoclaimCount struct {
+type XautoclaimCount struct {
 	cs []string
 }
 
-func (c xautoclaimCount) Justid() xautoclaimJustidJustid {
-	return xautoclaimJustidJustid{cs: append(c.cs, "JUSTID")}
+func (c XautoclaimCount) Justid() XautoclaimJustidJustid {
+	return XautoclaimJustidJustid{cs: append(c.cs, "JUSTID")}
 }
 
-func (c xautoclaimCount) Build() []string {
+func (c XautoclaimCount) Build() []string {
 	return c.cs
 }
 
-type xautoclaimGroup struct {
+type XautoclaimGroup struct {
 	cs []string
 }
 
-func (c xautoclaimGroup) Consumer(consumer string) xautoclaimConsumer {
-	return xautoclaimConsumer{cs: append(c.cs, consumer)}
+func (c XautoclaimGroup) Consumer(Consumer string) XautoclaimConsumer {
+	return XautoclaimConsumer{cs: append(c.cs, Consumer)}
 }
 
-type xautoclaimJustidJustid struct {
+type XautoclaimJustidJustid struct {
 	cs []string
 }
 
-func (c xautoclaimJustidJustid) Build() []string {
+func (c XautoclaimJustidJustid) Build() []string {
 	return c.cs
 }
 
-type xautoclaimKey struct {
+type XautoclaimKey struct {
 	cs []string
 }
 
-func (c xautoclaimKey) Group(group string) xautoclaimGroup {
-	return xautoclaimGroup{cs: append(c.cs, group)}
+func (c XautoclaimKey) Group(Group string) XautoclaimGroup {
+	return XautoclaimGroup{cs: append(c.cs, Group)}
 }
 
-type xautoclaimMinIdleTime struct {
+type XautoclaimMinIdleTime struct {
 	cs []string
 }
 
-func (c xautoclaimMinIdleTime) Start(start string) xautoclaimStart {
-	return xautoclaimStart{cs: append(c.cs, start)}
+func (c XautoclaimMinIdleTime) Start(Start string) XautoclaimStart {
+	return XautoclaimStart{cs: append(c.cs, Start)}
 }
 
-type xautoclaimStart struct {
+type XautoclaimStart struct {
 	cs []string
 }
 
-func (c xautoclaimStart) Count(count int64) xautoclaimCount {
-	return xautoclaimCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c XautoclaimStart) Count(Count int64) XautoclaimCount {
+	return XautoclaimCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c xautoclaimStart) Justid() xautoclaimJustidJustid {
-	return xautoclaimJustidJustid{cs: append(c.cs, "JUSTID")}
+func (c XautoclaimStart) Justid() XautoclaimJustidJustid {
+	return XautoclaimJustidJustid{cs: append(c.cs, "JUSTID")}
 }
 
-func (c xautoclaimStart) Build() []string {
+func (c XautoclaimStart) Build() []string {
 	return c.cs
 }
 
-type xclaim struct {
+type Xclaim struct {
 	cs []string
 }
 
-func (c xclaim) Key(key string) xclaimKey {
-	return xclaimKey{cs: append(c.cs, key)}
+func (c Xclaim) Key(Key string) XclaimKey {
+	return XclaimKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Xclaim() (c xclaim) {
+func (b *Builder) Xclaim() (c Xclaim) {
 	c.cs = append(b.get(), "XCLAIM")
 	return
 }
 
-type xclaimConsumer struct {
+type XclaimConsumer struct {
 	cs []string
 }
 
-func (c xclaimConsumer) MinIdleTime(minIdleTime string) xclaimMinIdleTime {
-	return xclaimMinIdleTime{cs: append(c.cs, minIdleTime)}
+func (c XclaimConsumer) MinIdleTime(MinIdleTime string) XclaimMinIdleTime {
+	return XclaimMinIdleTime{cs: append(c.cs, MinIdleTime)}
 }
 
-type xclaimForceForce struct {
+type XclaimForceForce struct {
 	cs []string
 }
 
-func (c xclaimForceForce) Justid() xclaimJustidJustid {
-	return xclaimJustidJustid{cs: append(c.cs, "JUSTID")}
+func (c XclaimForceForce) Justid() XclaimJustidJustid {
+	return XclaimJustidJustid{cs: append(c.cs, "JUSTID")}
 }
 
-func (c xclaimForceForce) Build() []string {
+func (c XclaimForceForce) Build() []string {
 	return c.cs
 }
 
-type xclaimGroup struct {
+type XclaimGroup struct {
 	cs []string
 }
 
-func (c xclaimGroup) Consumer(consumer string) xclaimConsumer {
-	return xclaimConsumer{cs: append(c.cs, consumer)}
+func (c XclaimGroup) Consumer(Consumer string) XclaimConsumer {
+	return XclaimConsumer{cs: append(c.cs, Consumer)}
 }
 
-type xclaimId struct {
+type XclaimId struct {
 	cs []string
 }
 
-func (c xclaimId) Idle(ms int64) xclaimIdle {
-	return xclaimIdle{cs: append(c.cs, "IDLE", strconv.FormatInt(ms, 10))}
+func (c XclaimId) Idle(Ms int64) XclaimIdle {
+	return XclaimIdle{cs: append(c.cs, "IDLE", strconv.FormatInt(Ms, 10))}
 }
 
-func (c xclaimId) Time(msUnixTime int64) xclaimTime {
-	return xclaimTime{cs: append(c.cs, "TIME", strconv.FormatInt(msUnixTime, 10))}
+func (c XclaimId) Time(MsUnixTime int64) XclaimTime {
+	return XclaimTime{cs: append(c.cs, "TIME", strconv.FormatInt(MsUnixTime, 10))}
 }
 
-func (c xclaimId) Retrycount(count int64) xclaimRetrycount {
-	return xclaimRetrycount{cs: append(c.cs, "RETRYCOUNT", strconv.FormatInt(count, 10))}
+func (c XclaimId) Retrycount(Count int64) XclaimRetrycount {
+	return XclaimRetrycount{cs: append(c.cs, "RETRYCOUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c xclaimId) Force() xclaimForceForce {
-	return xclaimForceForce{cs: append(c.cs, "FORCE")}
+func (c XclaimId) Force() XclaimForceForce {
+	return XclaimForceForce{cs: append(c.cs, "FORCE")}
 }
 
-func (c xclaimId) Justid() xclaimJustidJustid {
-	return xclaimJustidJustid{cs: append(c.cs, "JUSTID")}
+func (c XclaimId) Justid() XclaimJustidJustid {
+	return XclaimJustidJustid{cs: append(c.cs, "JUSTID")}
 }
 
-func (c xclaimId) Id(id ...string) xclaimId {
-	return xclaimId{cs: append(c.cs, id...)}
+func (c XclaimId) Id(Id ...string) XclaimId {
+	return XclaimId{cs: append(c.cs, Id...)}
 }
 
-func (c xclaimId) Build() []string {
+func (c XclaimId) Build() []string {
 	return c.cs
 }
 
-type xclaimIdle struct {
+type XclaimIdle struct {
 	cs []string
 }
 
-func (c xclaimIdle) Time(msUnixTime int64) xclaimTime {
-	return xclaimTime{cs: append(c.cs, "TIME", strconv.FormatInt(msUnixTime, 10))}
+func (c XclaimIdle) Time(MsUnixTime int64) XclaimTime {
+	return XclaimTime{cs: append(c.cs, "TIME", strconv.FormatInt(MsUnixTime, 10))}
 }
 
-func (c xclaimIdle) Retrycount(count int64) xclaimRetrycount {
-	return xclaimRetrycount{cs: append(c.cs, "RETRYCOUNT", strconv.FormatInt(count, 10))}
+func (c XclaimIdle) Retrycount(Count int64) XclaimRetrycount {
+	return XclaimRetrycount{cs: append(c.cs, "RETRYCOUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c xclaimIdle) Force() xclaimForceForce {
-	return xclaimForceForce{cs: append(c.cs, "FORCE")}
+func (c XclaimIdle) Force() XclaimForceForce {
+	return XclaimForceForce{cs: append(c.cs, "FORCE")}
 }
 
-func (c xclaimIdle) Justid() xclaimJustidJustid {
-	return xclaimJustidJustid{cs: append(c.cs, "JUSTID")}
+func (c XclaimIdle) Justid() XclaimJustidJustid {
+	return XclaimJustidJustid{cs: append(c.cs, "JUSTID")}
 }
 
-func (c xclaimIdle) Build() []string {
+func (c XclaimIdle) Build() []string {
 	return c.cs
 }
 
-type xclaimJustidJustid struct {
+type XclaimJustidJustid struct {
 	cs []string
 }
 
-func (c xclaimJustidJustid) Build() []string {
+func (c XclaimJustidJustid) Build() []string {
 	return c.cs
 }
 
-type xclaimKey struct {
+type XclaimKey struct {
 	cs []string
 }
 
-func (c xclaimKey) Group(group string) xclaimGroup {
-	return xclaimGroup{cs: append(c.cs, group)}
+func (c XclaimKey) Group(Group string) XclaimGroup {
+	return XclaimGroup{cs: append(c.cs, Group)}
 }
 
-type xclaimMinIdleTime struct {
+type XclaimMinIdleTime struct {
 	cs []string
 }
 
-func (c xclaimMinIdleTime) Id(id ...string) xclaimId {
-	return xclaimId{cs: append(c.cs, id...)}
+func (c XclaimMinIdleTime) Id(Id ...string) XclaimId {
+	return XclaimId{cs: append(c.cs, Id...)}
 }
 
-type xclaimRetrycount struct {
+type XclaimRetrycount struct {
 	cs []string
 }
 
-func (c xclaimRetrycount) Force() xclaimForceForce {
-	return xclaimForceForce{cs: append(c.cs, "FORCE")}
+func (c XclaimRetrycount) Force() XclaimForceForce {
+	return XclaimForceForce{cs: append(c.cs, "FORCE")}
 }
 
-func (c xclaimRetrycount) Justid() xclaimJustidJustid {
-	return xclaimJustidJustid{cs: append(c.cs, "JUSTID")}
+func (c XclaimRetrycount) Justid() XclaimJustidJustid {
+	return XclaimJustidJustid{cs: append(c.cs, "JUSTID")}
 }
 
-func (c xclaimRetrycount) Build() []string {
+func (c XclaimRetrycount) Build() []string {
 	return c.cs
 }
 
-type xclaimTime struct {
+type XclaimTime struct {
 	cs []string
 }
 
-func (c xclaimTime) Retrycount(count int64) xclaimRetrycount {
-	return xclaimRetrycount{cs: append(c.cs, "RETRYCOUNT", strconv.FormatInt(count, 10))}
+func (c XclaimTime) Retrycount(Count int64) XclaimRetrycount {
+	return XclaimRetrycount{cs: append(c.cs, "RETRYCOUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c xclaimTime) Force() xclaimForceForce {
-	return xclaimForceForce{cs: append(c.cs, "FORCE")}
+func (c XclaimTime) Force() XclaimForceForce {
+	return XclaimForceForce{cs: append(c.cs, "FORCE")}
 }
 
-func (c xclaimTime) Justid() xclaimJustidJustid {
-	return xclaimJustidJustid{cs: append(c.cs, "JUSTID")}
+func (c XclaimTime) Justid() XclaimJustidJustid {
+	return XclaimJustidJustid{cs: append(c.cs, "JUSTID")}
 }
 
-func (c xclaimTime) Build() []string {
+func (c XclaimTime) Build() []string {
 	return c.cs
 }
 
-type xdel struct {
+type Xdel struct {
 	cs []string
 }
 
-func (c xdel) Key(key string) xdelKey {
-	return xdelKey{cs: append(c.cs, key)}
+func (c Xdel) Key(Key string) XdelKey {
+	return XdelKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Xdel() (c xdel) {
+func (b *Builder) Xdel() (c Xdel) {
 	c.cs = append(b.get(), "XDEL")
 	return
 }
 
-type xdelId struct {
+type XdelId struct {
 	cs []string
 }
 
-func (c xdelId) Id(id ...string) xdelId {
-	return xdelId{cs: append(c.cs, id...)}
+func (c XdelId) Id(Id ...string) XdelId {
+	return XdelId{cs: append(c.cs, Id...)}
 }
 
-func (c xdelId) Build() []string {
+func (c XdelId) Build() []string {
 	return c.cs
 }
 
-type xdelKey struct {
+type XdelKey struct {
 	cs []string
 }
 
-func (c xdelKey) Id(id ...string) xdelId {
-	return xdelId{cs: append(c.cs, id...)}
+func (c XdelKey) Id(Id ...string) XdelId {
+	return XdelId{cs: append(c.cs, Id...)}
 }
 
-type xgroup struct {
+type Xgroup struct {
 	cs []string
 }
 
-func (c xgroup) Create(key string, groupname string) xgroupCreateCreate {
-	return xgroupCreateCreate{cs: append(c.cs, "CREATE", key, groupname)}
+func (c Xgroup) Create(Key string, Groupname string) XgroupCreateCreate {
+	return XgroupCreateCreate{cs: append(c.cs, "CREATE", Key, Groupname)}
 }
 
-func (c xgroup) Setid(key string, groupname string) xgroupSetidSetid {
-	return xgroupSetidSetid{cs: append(c.cs, "SETID", key, groupname)}
+func (c Xgroup) Setid(Key string, Groupname string) XgroupSetidSetid {
+	return XgroupSetidSetid{cs: append(c.cs, "SETID", Key, Groupname)}
 }
 
-func (c xgroup) Destroy(key string, groupname string) xgroupDestroy {
-	return xgroupDestroy{cs: append(c.cs, "DESTROY", key, groupname)}
+func (c Xgroup) Destroy(Key string, Groupname string) XgroupDestroy {
+	return XgroupDestroy{cs: append(c.cs, "DESTROY", Key, Groupname)}
 }
 
-func (c xgroup) Createconsumer(key string, groupname string, consumername string) xgroupCreateconsumer {
-	return xgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", key, groupname, consumername)}
+func (c Xgroup) Createconsumer(Key string, Groupname string, Consumername string) XgroupCreateconsumer {
+	return XgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername)}
 }
 
-func (c xgroup) Delconsumer(key string, groupname string, consumername string) xgroupDelconsumer {
-	return xgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", key, groupname, consumername)}
+func (c Xgroup) Delconsumer(Key string, Groupname string, Consumername string) XgroupDelconsumer {
+	return XgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
 }
 
-func (b *Builder) Xgroup() (c xgroup) {
+func (b *Builder) Xgroup() (c Xgroup) {
 	c.cs = append(b.get(), "XGROUP")
 	return
 }
 
-type xgroupCreateCreate struct {
+type XgroupCreateCreate struct {
 	cs []string
 }
 
-func (c xgroupCreateCreate) Id() xgroupCreateIdId {
-	return xgroupCreateIdId{cs: append(c.cs, "ID")}
+func (c XgroupCreateCreate) Id() XgroupCreateIdId {
+	return XgroupCreateIdId{cs: append(c.cs, "ID")}
 }
 
-func (c xgroupCreateCreate) Lastid() xgroupCreateIdLastID {
-	return xgroupCreateIdLastID{cs: append(c.cs, "$")}
+func (c XgroupCreateCreate) Lastid() XgroupCreateIdLastID {
+	return XgroupCreateIdLastID{cs: append(c.cs, "$")}
 }
 
-type xgroupCreateIdId struct {
+type XgroupCreateIdId struct {
 	cs []string
 }
 
-func (c xgroupCreateIdId) Mkstream() xgroupCreateMkstream {
-	return xgroupCreateMkstream{cs: append(c.cs, "MKSTREAM")}
+func (c XgroupCreateIdId) Mkstream() XgroupCreateMkstream {
+	return XgroupCreateMkstream{cs: append(c.cs, "MKSTREAM")}
 }
 
-func (c xgroupCreateIdId) Setid(key string, groupname string) xgroupSetidSetid {
-	return xgroupSetidSetid{cs: append(c.cs, "SETID", key, groupname)}
+func (c XgroupCreateIdId) Setid(Key string, Groupname string) XgroupSetidSetid {
+	return XgroupSetidSetid{cs: append(c.cs, "SETID", Key, Groupname)}
 }
 
-func (c xgroupCreateIdId) Destroy(key string, groupname string) xgroupDestroy {
-	return xgroupDestroy{cs: append(c.cs, "DESTROY", key, groupname)}
+func (c XgroupCreateIdId) Destroy(Key string, Groupname string) XgroupDestroy {
+	return XgroupDestroy{cs: append(c.cs, "DESTROY", Key, Groupname)}
 }
 
-func (c xgroupCreateIdId) Createconsumer(key string, groupname string, consumername string) xgroupCreateconsumer {
-	return xgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", key, groupname, consumername)}
+func (c XgroupCreateIdId) Createconsumer(Key string, Groupname string, Consumername string) XgroupCreateconsumer {
+	return XgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername)}
 }
 
-func (c xgroupCreateIdId) Delconsumer(key string, groupname string, consumername string) xgroupDelconsumer {
-	return xgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", key, groupname, consumername)}
+func (c XgroupCreateIdId) Delconsumer(Key string, Groupname string, Consumername string) XgroupDelconsumer {
+	return XgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
 }
 
-type xgroupCreateIdLastID struct {
+type XgroupCreateIdLastID struct {
 	cs []string
 }
 
-func (c xgroupCreateIdLastID) Mkstream() xgroupCreateMkstream {
-	return xgroupCreateMkstream{cs: append(c.cs, "MKSTREAM")}
+func (c XgroupCreateIdLastID) Mkstream() XgroupCreateMkstream {
+	return XgroupCreateMkstream{cs: append(c.cs, "MKSTREAM")}
 }
 
-func (c xgroupCreateIdLastID) Setid(key string, groupname string) xgroupSetidSetid {
-	return xgroupSetidSetid{cs: append(c.cs, "SETID", key, groupname)}
+func (c XgroupCreateIdLastID) Setid(Key string, Groupname string) XgroupSetidSetid {
+	return XgroupSetidSetid{cs: append(c.cs, "SETID", Key, Groupname)}
 }
 
-func (c xgroupCreateIdLastID) Destroy(key string, groupname string) xgroupDestroy {
-	return xgroupDestroy{cs: append(c.cs, "DESTROY", key, groupname)}
+func (c XgroupCreateIdLastID) Destroy(Key string, Groupname string) XgroupDestroy {
+	return XgroupDestroy{cs: append(c.cs, "DESTROY", Key, Groupname)}
 }
 
-func (c xgroupCreateIdLastID) Createconsumer(key string, groupname string, consumername string) xgroupCreateconsumer {
-	return xgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", key, groupname, consumername)}
+func (c XgroupCreateIdLastID) Createconsumer(Key string, Groupname string, Consumername string) XgroupCreateconsumer {
+	return XgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername)}
 }
 
-func (c xgroupCreateIdLastID) Delconsumer(key string, groupname string, consumername string) xgroupDelconsumer {
-	return xgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", key, groupname, consumername)}
+func (c XgroupCreateIdLastID) Delconsumer(Key string, Groupname string, Consumername string) XgroupDelconsumer {
+	return XgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
 }
 
-type xgroupCreateMkstream struct {
+type XgroupCreateMkstream struct {
 	cs []string
 }
 
-func (c xgroupCreateMkstream) Setid(key string, groupname string) xgroupSetidSetid {
-	return xgroupSetidSetid{cs: append(c.cs, "SETID", key, groupname)}
+func (c XgroupCreateMkstream) Setid(Key string, Groupname string) XgroupSetidSetid {
+	return XgroupSetidSetid{cs: append(c.cs, "SETID", Key, Groupname)}
 }
 
-func (c xgroupCreateMkstream) Destroy(key string, groupname string) xgroupDestroy {
-	return xgroupDestroy{cs: append(c.cs, "DESTROY", key, groupname)}
+func (c XgroupCreateMkstream) Destroy(Key string, Groupname string) XgroupDestroy {
+	return XgroupDestroy{cs: append(c.cs, "DESTROY", Key, Groupname)}
 }
 
-func (c xgroupCreateMkstream) Createconsumer(key string, groupname string, consumername string) xgroupCreateconsumer {
-	return xgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", key, groupname, consumername)}
+func (c XgroupCreateMkstream) Createconsumer(Key string, Groupname string, Consumername string) XgroupCreateconsumer {
+	return XgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername)}
 }
 
-func (c xgroupCreateMkstream) Delconsumer(key string, groupname string, consumername string) xgroupDelconsumer {
-	return xgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", key, groupname, consumername)}
+func (c XgroupCreateMkstream) Delconsumer(Key string, Groupname string, Consumername string) XgroupDelconsumer {
+	return XgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
 }
 
-type xgroupCreateconsumer struct {
+type XgroupCreateconsumer struct {
 	cs []string
 }
 
-func (c xgroupCreateconsumer) Delconsumer(key string, groupname string, consumername string) xgroupDelconsumer {
-	return xgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", key, groupname, consumername)}
+func (c XgroupCreateconsumer) Delconsumer(Key string, Groupname string, Consumername string) XgroupDelconsumer {
+	return XgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
 }
 
-func (c xgroupCreateconsumer) Build() []string {
+func (c XgroupCreateconsumer) Build() []string {
 	return c.cs
 }
 
-type xgroupDelconsumer struct {
+type XgroupDelconsumer struct {
 	cs []string
 }
 
-func (c xgroupDelconsumer) Build() []string {
+func (c XgroupDelconsumer) Build() []string {
 	return c.cs
 }
 
-type xgroupDestroy struct {
+type XgroupDestroy struct {
 	cs []string
 }
 
-func (c xgroupDestroy) Createconsumer(key string, groupname string, consumername string) xgroupCreateconsumer {
-	return xgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", key, groupname, consumername)}
+func (c XgroupDestroy) Createconsumer(Key string, Groupname string, Consumername string) XgroupCreateconsumer {
+	return XgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername)}
 }
 
-func (c xgroupDestroy) Delconsumer(key string, groupname string, consumername string) xgroupDelconsumer {
-	return xgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", key, groupname, consumername)}
+func (c XgroupDestroy) Delconsumer(Key string, Groupname string, Consumername string) XgroupDelconsumer {
+	return XgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
 }
 
-func (c xgroupDestroy) Build() []string {
+func (c XgroupDestroy) Build() []string {
 	return c.cs
 }
 
-type xgroupSetidIdId struct {
+type XgroupSetidIdId struct {
 	cs []string
 }
 
-func (c xgroupSetidIdId) Destroy(key string, groupname string) xgroupDestroy {
-	return xgroupDestroy{cs: append(c.cs, "DESTROY", key, groupname)}
+func (c XgroupSetidIdId) Destroy(Key string, Groupname string) XgroupDestroy {
+	return XgroupDestroy{cs: append(c.cs, "DESTROY", Key, Groupname)}
 }
 
-func (c xgroupSetidIdId) Createconsumer(key string, groupname string, consumername string) xgroupCreateconsumer {
-	return xgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", key, groupname, consumername)}
+func (c XgroupSetidIdId) Createconsumer(Key string, Groupname string, Consumername string) XgroupCreateconsumer {
+	return XgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername)}
 }
 
-func (c xgroupSetidIdId) Delconsumer(key string, groupname string, consumername string) xgroupDelconsumer {
-	return xgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", key, groupname, consumername)}
+func (c XgroupSetidIdId) Delconsumer(Key string, Groupname string, Consumername string) XgroupDelconsumer {
+	return XgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
 }
 
-func (c xgroupSetidIdId) Build() []string {
+func (c XgroupSetidIdId) Build() []string {
 	return c.cs
 }
 
-type xgroupSetidIdLastID struct {
+type XgroupSetidIdLastID struct {
 	cs []string
 }
 
-func (c xgroupSetidIdLastID) Destroy(key string, groupname string) xgroupDestroy {
-	return xgroupDestroy{cs: append(c.cs, "DESTROY", key, groupname)}
+func (c XgroupSetidIdLastID) Destroy(Key string, Groupname string) XgroupDestroy {
+	return XgroupDestroy{cs: append(c.cs, "DESTROY", Key, Groupname)}
 }
 
-func (c xgroupSetidIdLastID) Createconsumer(key string, groupname string, consumername string) xgroupCreateconsumer {
-	return xgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", key, groupname, consumername)}
+func (c XgroupSetidIdLastID) Createconsumer(Key string, Groupname string, Consumername string) XgroupCreateconsumer {
+	return XgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername)}
 }
 
-func (c xgroupSetidIdLastID) Delconsumer(key string, groupname string, consumername string) xgroupDelconsumer {
-	return xgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", key, groupname, consumername)}
+func (c XgroupSetidIdLastID) Delconsumer(Key string, Groupname string, Consumername string) XgroupDelconsumer {
+	return XgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
 }
 
-func (c xgroupSetidIdLastID) Build() []string {
+func (c XgroupSetidIdLastID) Build() []string {
 	return c.cs
 }
 
-type xgroupSetidSetid struct {
+type XgroupSetidSetid struct {
 	cs []string
 }
 
-func (c xgroupSetidSetid) Id() xgroupSetidIdId {
-	return xgroupSetidIdId{cs: append(c.cs, "ID")}
+func (c XgroupSetidSetid) Id() XgroupSetidIdId {
+	return XgroupSetidIdId{cs: append(c.cs, "ID")}
 }
 
-func (c xgroupSetidSetid) Lastid() xgroupSetidIdLastID {
-	return xgroupSetidIdLastID{cs: append(c.cs, "$")}
+func (c XgroupSetidSetid) Lastid() XgroupSetidIdLastID {
+	return XgroupSetidIdLastID{cs: append(c.cs, "$")}
 }
 
-type xinfo struct {
+type Xinfo struct {
 	cs []string
 }
 
-func (c xinfo) Consumers(key string, groupname string) xinfoConsumers {
-	return xinfoConsumers{cs: append(c.cs, "CONSUMERS", key, groupname)}
+func (c Xinfo) Consumers(Key string, Groupname string) XinfoConsumers {
+	return XinfoConsumers{cs: append(c.cs, "CONSUMERS", Key, Groupname)}
 }
 
-func (c xinfo) Groups(key string) xinfoGroups {
-	return xinfoGroups{cs: append(c.cs, "GROUPS", key)}
+func (c Xinfo) Groups(Key string) XinfoGroups {
+	return XinfoGroups{cs: append(c.cs, "GROUPS", Key)}
 }
 
-func (c xinfo) Stream(key string) xinfoStream {
-	return xinfoStream{cs: append(c.cs, "STREAM", key)}
+func (c Xinfo) Stream(Key string) XinfoStream {
+	return XinfoStream{cs: append(c.cs, "STREAM", Key)}
 }
 
-func (c xinfo) Help() xinfoHelpHelp {
-	return xinfoHelpHelp{cs: append(c.cs, "HELP")}
+func (c Xinfo) Help() XinfoHelpHelp {
+	return XinfoHelpHelp{cs: append(c.cs, "HELP")}
 }
 
-func (c xinfo) Build() []string {
+func (c Xinfo) Build() []string {
 	return c.cs
 }
 
-func (b *Builder) Xinfo() (c xinfo) {
+func (b *Builder) Xinfo() (c Xinfo) {
 	c.cs = append(b.get(), "XINFO")
 	return
 }
 
-type xinfoConsumers struct {
+type XinfoConsumers struct {
 	cs []string
 }
 
-func (c xinfoConsumers) Groups(key string) xinfoGroups {
-	return xinfoGroups{cs: append(c.cs, "GROUPS", key)}
+func (c XinfoConsumers) Groups(Key string) XinfoGroups {
+	return XinfoGroups{cs: append(c.cs, "GROUPS", Key)}
 }
 
-func (c xinfoConsumers) Stream(key string) xinfoStream {
-	return xinfoStream{cs: append(c.cs, "STREAM", key)}
+func (c XinfoConsumers) Stream(Key string) XinfoStream {
+	return XinfoStream{cs: append(c.cs, "STREAM", Key)}
 }
 
-func (c xinfoConsumers) Help() xinfoHelpHelp {
-	return xinfoHelpHelp{cs: append(c.cs, "HELP")}
+func (c XinfoConsumers) Help() XinfoHelpHelp {
+	return XinfoHelpHelp{cs: append(c.cs, "HELP")}
 }
 
-func (c xinfoConsumers) Build() []string {
+func (c XinfoConsumers) Build() []string {
 	return c.cs
 }
 
-type xinfoGroups struct {
+type XinfoGroups struct {
 	cs []string
 }
 
-func (c xinfoGroups) Stream(key string) xinfoStream {
-	return xinfoStream{cs: append(c.cs, "STREAM", key)}
+func (c XinfoGroups) Stream(Key string) XinfoStream {
+	return XinfoStream{cs: append(c.cs, "STREAM", Key)}
 }
 
-func (c xinfoGroups) Help() xinfoHelpHelp {
-	return xinfoHelpHelp{cs: append(c.cs, "HELP")}
+func (c XinfoGroups) Help() XinfoHelpHelp {
+	return XinfoHelpHelp{cs: append(c.cs, "HELP")}
 }
 
-func (c xinfoGroups) Build() []string {
+func (c XinfoGroups) Build() []string {
 	return c.cs
 }
 
-type xinfoHelpHelp struct {
+type XinfoHelpHelp struct {
 	cs []string
 }
 
-func (c xinfoHelpHelp) Build() []string {
+func (c XinfoHelpHelp) Build() []string {
 	return c.cs
 }
 
-type xinfoStream struct {
+type XinfoStream struct {
 	cs []string
 }
 
-func (c xinfoStream) Help() xinfoHelpHelp {
-	return xinfoHelpHelp{cs: append(c.cs, "HELP")}
+func (c XinfoStream) Help() XinfoHelpHelp {
+	return XinfoHelpHelp{cs: append(c.cs, "HELP")}
 }
 
-func (c xinfoStream) Build() []string {
+func (c XinfoStream) Build() []string {
 	return c.cs
 }
 
-type xlen struct {
+type Xlen struct {
 	cs []string
 }
 
-func (c xlen) Key(key string) xlenKey {
-	return xlenKey{cs: append(c.cs, key)}
+func (c Xlen) Key(Key string) XlenKey {
+	return XlenKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Xlen() (c xlen) {
+func (b *Builder) Xlen() (c Xlen) {
 	c.cs = append(b.get(), "XLEN")
 	return
 }
 
-type xlenKey struct {
+type XlenKey struct {
 	cs []string
 }
 
-func (c xlenKey) Build() []string {
+func (c XlenKey) Build() []string {
 	return c.cs
 }
 
-type xpending struct {
+type Xpending struct {
 	cs []string
 }
 
-func (c xpending) Key(key string) xpendingKey {
-	return xpendingKey{cs: append(c.cs, key)}
+func (c Xpending) Key(Key string) XpendingKey {
+	return XpendingKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Xpending() (c xpending) {
+func (b *Builder) Xpending() (c Xpending) {
 	c.cs = append(b.get(), "XPENDING")
 	return
 }
 
-type xpendingFiltersConsumer struct {
+type XpendingFiltersConsumer struct {
 	cs []string
 }
 
-func (c xpendingFiltersConsumer) Build() []string {
+func (c XpendingFiltersConsumer) Build() []string {
 	return c.cs
 }
 
-type xpendingFiltersCount struct {
+type XpendingFiltersCount struct {
 	cs []string
 }
 
-func (c xpendingFiltersCount) Consumer(consumer string) xpendingFiltersConsumer {
-	return xpendingFiltersConsumer{cs: append(c.cs, consumer)}
+func (c XpendingFiltersCount) Consumer(Consumer string) XpendingFiltersConsumer {
+	return XpendingFiltersConsumer{cs: append(c.cs, Consumer)}
 }
 
-func (c xpendingFiltersCount) Build() []string {
+func (c XpendingFiltersCount) Build() []string {
 	return c.cs
 }
 
-type xpendingFiltersEnd struct {
+type XpendingFiltersEnd struct {
 	cs []string
 }
 
-func (c xpendingFiltersEnd) Count(count int64) xpendingFiltersCount {
-	return xpendingFiltersCount{cs: append(c.cs, strconv.FormatInt(count, 10))}
+func (c XpendingFiltersEnd) Count(Count int64) XpendingFiltersCount {
+	return XpendingFiltersCount{cs: append(c.cs, strconv.FormatInt(Count, 10))}
 }
 
-type xpendingFiltersIdle struct {
+type XpendingFiltersIdle struct {
 	cs []string
 }
 
-func (c xpendingFiltersIdle) Start(start string) xpendingFiltersStart {
-	return xpendingFiltersStart{cs: append(c.cs, start)}
+func (c XpendingFiltersIdle) Start(Start string) XpendingFiltersStart {
+	return XpendingFiltersStart{cs: append(c.cs, Start)}
 }
 
-type xpendingFiltersStart struct {
+type XpendingFiltersStart struct {
 	cs []string
 }
 
-func (c xpendingFiltersStart) End(end string) xpendingFiltersEnd {
-	return xpendingFiltersEnd{cs: append(c.cs, end)}
+func (c XpendingFiltersStart) End(End string) XpendingFiltersEnd {
+	return XpendingFiltersEnd{cs: append(c.cs, End)}
 }
 
-type xpendingGroup struct {
+type XpendingGroup struct {
 	cs []string
 }
 
-func (c xpendingGroup) Idle(minIdleTime int64) xpendingFiltersIdle {
-	return xpendingFiltersIdle{cs: append(c.cs, "IDLE", strconv.FormatInt(minIdleTime, 10))}
+func (c XpendingGroup) Idle(MinIdleTime int64) XpendingFiltersIdle {
+	return XpendingFiltersIdle{cs: append(c.cs, "IDLE", strconv.FormatInt(MinIdleTime, 10))}
 }
 
-func (c xpendingGroup) Start(start string) xpendingFiltersStart {
-	return xpendingFiltersStart{cs: append(c.cs, start)}
+func (c XpendingGroup) Start(Start string) XpendingFiltersStart {
+	return XpendingFiltersStart{cs: append(c.cs, Start)}
 }
 
-type xpendingKey struct {
+type XpendingKey struct {
 	cs []string
 }
 
-func (c xpendingKey) Group(group string) xpendingGroup {
-	return xpendingGroup{cs: append(c.cs, group)}
+func (c XpendingKey) Group(Group string) XpendingGroup {
+	return XpendingGroup{cs: append(c.cs, Group)}
 }
 
-type xrange struct {
+type Xrange struct {
 	cs []string
 }
 
-func (c xrange) Key(key string) xrangeKey {
-	return xrangeKey{cs: append(c.cs, key)}
+func (c Xrange) Key(Key string) XrangeKey {
+	return XrangeKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Xrange() (c xrange) {
+func (b *Builder) Xrange() (c Xrange) {
 	c.cs = append(b.get(), "XRANGE")
 	return
 }
 
-type xrangeCount struct {
+type XrangeCount struct {
 	cs []string
 }
 
-func (c xrangeCount) Build() []string {
+func (c XrangeCount) Build() []string {
 	return c.cs
 }
 
-type xrangeEnd struct {
+type XrangeEnd struct {
 	cs []string
 }
 
-func (c xrangeEnd) Count(count int64) xrangeCount {
-	return xrangeCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c XrangeEnd) Count(Count int64) XrangeCount {
+	return XrangeCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c xrangeEnd) Build() []string {
+func (c XrangeEnd) Build() []string {
 	return c.cs
 }
 
-type xrangeKey struct {
+type XrangeKey struct {
 	cs []string
 }
 
-func (c xrangeKey) Start(start string) xrangeStart {
-	return xrangeStart{cs: append(c.cs, start)}
+func (c XrangeKey) Start(Start string) XrangeStart {
+	return XrangeStart{cs: append(c.cs, Start)}
 }
 
-type xrangeStart struct {
+type XrangeStart struct {
 	cs []string
 }
 
-func (c xrangeStart) End(end string) xrangeEnd {
-	return xrangeEnd{cs: append(c.cs, end)}
+func (c XrangeStart) End(End string) XrangeEnd {
+	return XrangeEnd{cs: append(c.cs, End)}
 }
 
-type xread struct {
+type Xread struct {
 	cs []string
 }
 
-func (c xread) Count(count int64) xreadCount {
-	return xreadCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c Xread) Count(Count int64) XreadCount {
+	return XreadCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c xread) Block(milliseconds int64) xreadBlock {
-	return xreadBlock{cs: append(c.cs, "BLOCK", strconv.FormatInt(milliseconds, 10))}
+func (c Xread) Block(Milliseconds int64) XreadBlock {
+	return XreadBlock{cs: append(c.cs, "BLOCK", strconv.FormatInt(Milliseconds, 10))}
 }
 
-func (c xread) Streams() xreadStreamsStreams {
-	return xreadStreamsStreams{cs: append(c.cs, "STREAMS")}
+func (c Xread) Streams() XreadStreamsStreams {
+	return XreadStreamsStreams{cs: append(c.cs, "STREAMS")}
 }
 
-func (b *Builder) Xread() (c xread) {
+func (b *Builder) Xread() (c Xread) {
 	c.cs = append(b.get(), "XREAD")
 	return
 }
 
-type xreadBlock struct {
+type XreadBlock struct {
 	cs []string
 }
 
-func (c xreadBlock) Streams() xreadStreamsStreams {
-	return xreadStreamsStreams{cs: append(c.cs, "STREAMS")}
+func (c XreadBlock) Streams() XreadStreamsStreams {
+	return XreadStreamsStreams{cs: append(c.cs, "STREAMS")}
 }
 
-type xreadCount struct {
+type XreadCount struct {
 	cs []string
 }
 
-func (c xreadCount) Block(milliseconds int64) xreadBlock {
-	return xreadBlock{cs: append(c.cs, "BLOCK", strconv.FormatInt(milliseconds, 10))}
+func (c XreadCount) Block(Milliseconds int64) XreadBlock {
+	return XreadBlock{cs: append(c.cs, "BLOCK", strconv.FormatInt(Milliseconds, 10))}
 }
 
-func (c xreadCount) Streams() xreadStreamsStreams {
-	return xreadStreamsStreams{cs: append(c.cs, "STREAMS")}
+func (c XreadCount) Streams() XreadStreamsStreams {
+	return XreadStreamsStreams{cs: append(c.cs, "STREAMS")}
 }
 
-type xreadId struct {
+type XreadId struct {
 	cs []string
 }
 
-func (c xreadId) Id(id ...string) xreadId {
-	return xreadId{cs: append(c.cs, id...)}
+func (c XreadId) Id(Id ...string) XreadId {
+	return XreadId{cs: append(c.cs, Id...)}
 }
 
-func (c xreadId) Build() []string {
+func (c XreadId) Build() []string {
 	return c.cs
 }
 
-type xreadKey struct {
+type XreadKey struct {
 	cs []string
 }
 
-func (c xreadKey) Id(id ...string) xreadId {
-	return xreadId{cs: append(c.cs, id...)}
+func (c XreadKey) Id(Id ...string) XreadId {
+	return XreadId{cs: append(c.cs, Id...)}
 }
 
-func (c xreadKey) Key(key ...string) xreadKey {
-	return xreadKey{cs: append(c.cs, key...)}
+func (c XreadKey) Key(Key ...string) XreadKey {
+	return XreadKey{cs: append(c.cs, Key...)}
 }
 
-type xreadStreamsStreams struct {
+type XreadStreamsStreams struct {
 	cs []string
 }
 
-func (c xreadStreamsStreams) Key(key ...string) xreadKey {
-	return xreadKey{cs: append(c.cs, key...)}
+func (c XreadStreamsStreams) Key(Key ...string) XreadKey {
+	return XreadKey{cs: append(c.cs, Key...)}
 }
 
-type xreadgroup struct {
+type Xreadgroup struct {
 	cs []string
 }
 
-func (c xreadgroup) Group(group string, consumer string) xreadgroupGroup {
-	return xreadgroupGroup{cs: append(c.cs, "GROUP", group, consumer)}
+func (c Xreadgroup) Group(Group string, Consumer string) XreadgroupGroup {
+	return XreadgroupGroup{cs: append(c.cs, "GROUP", Group, Consumer)}
 }
 
-func (b *Builder) Xreadgroup() (c xreadgroup) {
+func (b *Builder) Xreadgroup() (c Xreadgroup) {
 	c.cs = append(b.get(), "XREADGROUP")
 	return
 }
 
-type xreadgroupBlock struct {
+type XreadgroupBlock struct {
 	cs []string
 }
 
-func (c xreadgroupBlock) Noack() xreadgroupNoackNoack {
-	return xreadgroupNoackNoack{cs: append(c.cs, "NOACK")}
+func (c XreadgroupBlock) Noack() XreadgroupNoackNoack {
+	return XreadgroupNoackNoack{cs: append(c.cs, "NOACK")}
 }
 
-func (c xreadgroupBlock) Streams() xreadgroupStreamsStreams {
-	return xreadgroupStreamsStreams{cs: append(c.cs, "STREAMS")}
+func (c XreadgroupBlock) Streams() XreadgroupStreamsStreams {
+	return XreadgroupStreamsStreams{cs: append(c.cs, "STREAMS")}
 }
 
-type xreadgroupCount struct {
+type XreadgroupCount struct {
 	cs []string
 }
 
-func (c xreadgroupCount) Block(milliseconds int64) xreadgroupBlock {
-	return xreadgroupBlock{cs: append(c.cs, "BLOCK", strconv.FormatInt(milliseconds, 10))}
+func (c XreadgroupCount) Block(Milliseconds int64) XreadgroupBlock {
+	return XreadgroupBlock{cs: append(c.cs, "BLOCK", strconv.FormatInt(Milliseconds, 10))}
 }
 
-func (c xreadgroupCount) Noack() xreadgroupNoackNoack {
-	return xreadgroupNoackNoack{cs: append(c.cs, "NOACK")}
+func (c XreadgroupCount) Noack() XreadgroupNoackNoack {
+	return XreadgroupNoackNoack{cs: append(c.cs, "NOACK")}
 }
 
-func (c xreadgroupCount) Streams() xreadgroupStreamsStreams {
-	return xreadgroupStreamsStreams{cs: append(c.cs, "STREAMS")}
+func (c XreadgroupCount) Streams() XreadgroupStreamsStreams {
+	return XreadgroupStreamsStreams{cs: append(c.cs, "STREAMS")}
 }
 
-type xreadgroupGroup struct {
+type XreadgroupGroup struct {
 	cs []string
 }
 
-func (c xreadgroupGroup) Count(count int64) xreadgroupCount {
-	return xreadgroupCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c XreadgroupGroup) Count(Count int64) XreadgroupCount {
+	return XreadgroupCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c xreadgroupGroup) Block(milliseconds int64) xreadgroupBlock {
-	return xreadgroupBlock{cs: append(c.cs, "BLOCK", strconv.FormatInt(milliseconds, 10))}
+func (c XreadgroupGroup) Block(Milliseconds int64) XreadgroupBlock {
+	return XreadgroupBlock{cs: append(c.cs, "BLOCK", strconv.FormatInt(Milliseconds, 10))}
 }
 
-func (c xreadgroupGroup) Noack() xreadgroupNoackNoack {
-	return xreadgroupNoackNoack{cs: append(c.cs, "NOACK")}
+func (c XreadgroupGroup) Noack() XreadgroupNoackNoack {
+	return XreadgroupNoackNoack{cs: append(c.cs, "NOACK")}
 }
 
-func (c xreadgroupGroup) Streams() xreadgroupStreamsStreams {
-	return xreadgroupStreamsStreams{cs: append(c.cs, "STREAMS")}
+func (c XreadgroupGroup) Streams() XreadgroupStreamsStreams {
+	return XreadgroupStreamsStreams{cs: append(c.cs, "STREAMS")}
 }
 
-type xreadgroupId struct {
+type XreadgroupId struct {
 	cs []string
 }
 
-func (c xreadgroupId) Id(id ...string) xreadgroupId {
-	return xreadgroupId{cs: append(c.cs, id...)}
+func (c XreadgroupId) Id(Id ...string) XreadgroupId {
+	return XreadgroupId{cs: append(c.cs, Id...)}
 }
 
-func (c xreadgroupId) Build() []string {
+func (c XreadgroupId) Build() []string {
 	return c.cs
 }
 
-type xreadgroupKey struct {
+type XreadgroupKey struct {
 	cs []string
 }
 
-func (c xreadgroupKey) Id(id ...string) xreadgroupId {
-	return xreadgroupId{cs: append(c.cs, id...)}
+func (c XreadgroupKey) Id(Id ...string) XreadgroupId {
+	return XreadgroupId{cs: append(c.cs, Id...)}
 }
 
-func (c xreadgroupKey) Key(key ...string) xreadgroupKey {
-	return xreadgroupKey{cs: append(c.cs, key...)}
+func (c XreadgroupKey) Key(Key ...string) XreadgroupKey {
+	return XreadgroupKey{cs: append(c.cs, Key...)}
 }
 
-type xreadgroupNoackNoack struct {
+type XreadgroupNoackNoack struct {
 	cs []string
 }
 
-func (c xreadgroupNoackNoack) Streams() xreadgroupStreamsStreams {
-	return xreadgroupStreamsStreams{cs: append(c.cs, "STREAMS")}
+func (c XreadgroupNoackNoack) Streams() XreadgroupStreamsStreams {
+	return XreadgroupStreamsStreams{cs: append(c.cs, "STREAMS")}
 }
 
-type xreadgroupStreamsStreams struct {
+type XreadgroupStreamsStreams struct {
 	cs []string
 }
 
-func (c xreadgroupStreamsStreams) Key(key ...string) xreadgroupKey {
-	return xreadgroupKey{cs: append(c.cs, key...)}
+func (c XreadgroupStreamsStreams) Key(Key ...string) XreadgroupKey {
+	return XreadgroupKey{cs: append(c.cs, Key...)}
 }
 
-type xrevrange struct {
+type Xrevrange struct {
 	cs []string
 }
 
-func (c xrevrange) Key(key string) xrevrangeKey {
-	return xrevrangeKey{cs: append(c.cs, key)}
+func (c Xrevrange) Key(Key string) XrevrangeKey {
+	return XrevrangeKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Xrevrange() (c xrevrange) {
+func (b *Builder) Xrevrange() (c Xrevrange) {
 	c.cs = append(b.get(), "XREVRANGE")
 	return
 }
 
-type xrevrangeCount struct {
+type XrevrangeCount struct {
 	cs []string
 }
 
-func (c xrevrangeCount) Build() []string {
+func (c XrevrangeCount) Build() []string {
 	return c.cs
 }
 
-type xrevrangeEnd struct {
+type XrevrangeEnd struct {
 	cs []string
 }
 
-func (c xrevrangeEnd) Start(start string) xrevrangeStart {
-	return xrevrangeStart{cs: append(c.cs, start)}
+func (c XrevrangeEnd) Start(Start string) XrevrangeStart {
+	return XrevrangeStart{cs: append(c.cs, Start)}
 }
 
-type xrevrangeKey struct {
+type XrevrangeKey struct {
 	cs []string
 }
 
-func (c xrevrangeKey) End(end string) xrevrangeEnd {
-	return xrevrangeEnd{cs: append(c.cs, end)}
+func (c XrevrangeKey) End(End string) XrevrangeEnd {
+	return XrevrangeEnd{cs: append(c.cs, End)}
 }
 
-type xrevrangeStart struct {
+type XrevrangeStart struct {
 	cs []string
 }
 
-func (c xrevrangeStart) Count(count int64) xrevrangeCount {
-	return xrevrangeCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c XrevrangeStart) Count(Count int64) XrevrangeCount {
+	return XrevrangeCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c xrevrangeStart) Build() []string {
+func (c XrevrangeStart) Build() []string {
 	return c.cs
 }
 
-type xtrim struct {
+type Xtrim struct {
 	cs []string
 }
 
-func (c xtrim) Key(key string) xtrimKey {
-	return xtrimKey{cs: append(c.cs, key)}
+func (c Xtrim) Key(Key string) XtrimKey {
+	return XtrimKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Xtrim() (c xtrim) {
+func (b *Builder) Xtrim() (c Xtrim) {
 	c.cs = append(b.get(), "XTRIM")
 	return
 }
 
-type xtrimKey struct {
+type XtrimKey struct {
 	cs []string
 }
 
-func (c xtrimKey) Maxlen() xtrimTrimStrategyMaxlen {
-	return xtrimTrimStrategyMaxlen{cs: append(c.cs, "MAXLEN")}
+func (c XtrimKey) Maxlen() XtrimTrimStrategyMaxlen {
+	return XtrimTrimStrategyMaxlen{cs: append(c.cs, "MAXLEN")}
 }
 
-func (c xtrimKey) Minid() xtrimTrimStrategyMinid {
-	return xtrimTrimStrategyMinid{cs: append(c.cs, "MINID")}
+func (c XtrimKey) Minid() XtrimTrimStrategyMinid {
+	return XtrimTrimStrategyMinid{cs: append(c.cs, "MINID")}
 }
 
-type xtrimTrimLimit struct {
+type XtrimTrimLimit struct {
 	cs []string
 }
 
-func (c xtrimTrimLimit) Build() []string {
+func (c XtrimTrimLimit) Build() []string {
 	return c.cs
 }
 
-type xtrimTrimOperatorAlmost struct {
+type XtrimTrimOperatorAlmost struct {
 	cs []string
 }
 
-func (c xtrimTrimOperatorAlmost) Threshold(threshold string) xtrimTrimThreshold {
-	return xtrimTrimThreshold{cs: append(c.cs, threshold)}
+func (c XtrimTrimOperatorAlmost) Threshold(Threshold string) XtrimTrimThreshold {
+	return XtrimTrimThreshold{cs: append(c.cs, Threshold)}
 }
 
-type xtrimTrimOperatorExact struct {
+type XtrimTrimOperatorExact struct {
 	cs []string
 }
 
-func (c xtrimTrimOperatorExact) Threshold(threshold string) xtrimTrimThreshold {
-	return xtrimTrimThreshold{cs: append(c.cs, threshold)}
+func (c XtrimTrimOperatorExact) Threshold(Threshold string) XtrimTrimThreshold {
+	return XtrimTrimThreshold{cs: append(c.cs, Threshold)}
 }
 
-type xtrimTrimStrategyMaxlen struct {
+type XtrimTrimStrategyMaxlen struct {
 	cs []string
 }
 
-func (c xtrimTrimStrategyMaxlen) Exact() xtrimTrimOperatorExact {
-	return xtrimTrimOperatorExact{cs: append(c.cs, "=")}
+func (c XtrimTrimStrategyMaxlen) Exact() XtrimTrimOperatorExact {
+	return XtrimTrimOperatorExact{cs: append(c.cs, "=")}
 }
 
-func (c xtrimTrimStrategyMaxlen) Almost() xtrimTrimOperatorAlmost {
-	return xtrimTrimOperatorAlmost{cs: append(c.cs, "~")}
+func (c XtrimTrimStrategyMaxlen) Almost() XtrimTrimOperatorAlmost {
+	return XtrimTrimOperatorAlmost{cs: append(c.cs, "~")}
 }
 
-func (c xtrimTrimStrategyMaxlen) Threshold(threshold string) xtrimTrimThreshold {
-	return xtrimTrimThreshold{cs: append(c.cs, threshold)}
+func (c XtrimTrimStrategyMaxlen) Threshold(Threshold string) XtrimTrimThreshold {
+	return XtrimTrimThreshold{cs: append(c.cs, Threshold)}
 }
 
-type xtrimTrimStrategyMinid struct {
+type XtrimTrimStrategyMinid struct {
 	cs []string
 }
 
-func (c xtrimTrimStrategyMinid) Exact() xtrimTrimOperatorExact {
-	return xtrimTrimOperatorExact{cs: append(c.cs, "=")}
+func (c XtrimTrimStrategyMinid) Exact() XtrimTrimOperatorExact {
+	return XtrimTrimOperatorExact{cs: append(c.cs, "=")}
 }
 
-func (c xtrimTrimStrategyMinid) Almost() xtrimTrimOperatorAlmost {
-	return xtrimTrimOperatorAlmost{cs: append(c.cs, "~")}
+func (c XtrimTrimStrategyMinid) Almost() XtrimTrimOperatorAlmost {
+	return XtrimTrimOperatorAlmost{cs: append(c.cs, "~")}
 }
 
-func (c xtrimTrimStrategyMinid) Threshold(threshold string) xtrimTrimThreshold {
-	return xtrimTrimThreshold{cs: append(c.cs, threshold)}
+func (c XtrimTrimStrategyMinid) Threshold(Threshold string) XtrimTrimThreshold {
+	return XtrimTrimThreshold{cs: append(c.cs, Threshold)}
 }
 
-type xtrimTrimThreshold struct {
+type XtrimTrimThreshold struct {
 	cs []string
 }
 
-func (c xtrimTrimThreshold) Limit(count int64) xtrimTrimLimit {
-	return xtrimTrimLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(count, 10))}
+func (c XtrimTrimThreshold) Limit(Count int64) XtrimTrimLimit {
+	return XtrimTrimLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Count, 10))}
 }
 
-func (c xtrimTrimThreshold) Build() []string {
+func (c XtrimTrimThreshold) Build() []string {
 	return c.cs
 }
 
-type zadd struct {
+type Zadd struct {
 	cs []string
 }
 
-func (c zadd) Key(key string) zaddKey {
-	return zaddKey{cs: append(c.cs, key)}
+func (c Zadd) Key(Key string) ZaddKey {
+	return ZaddKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Zadd() (c zadd) {
+func (b *Builder) Zadd() (c Zadd) {
 	c.cs = append(b.get(), "ZADD")
 	return
 }
 
-type zaddChangeCh struct {
+type ZaddChangeCh struct {
 	cs []string
 }
 
-func (c zaddChangeCh) Incr() zaddIncrementIncr {
-	return zaddIncrementIncr{cs: append(c.cs, "INCR")}
+func (c ZaddChangeCh) Incr() ZaddIncrementIncr {
+	return ZaddIncrementIncr{cs: append(c.cs, "INCR")}
 }
 
-func (c zaddChangeCh) ScoreMember() zaddScoreMember {
-	return zaddScoreMember{cs: append(c.cs)}
+func (c ZaddChangeCh) ScoreMember() ZaddScoreMember {
+	return ZaddScoreMember{cs: append(c.cs)}
 }
 
-type zaddComparisonGt struct {
+type ZaddComparisonGt struct {
 	cs []string
 }
 
-func (c zaddComparisonGt) Ch() zaddChangeCh {
-	return zaddChangeCh{cs: append(c.cs, "CH")}
+func (c ZaddComparisonGt) Ch() ZaddChangeCh {
+	return ZaddChangeCh{cs: append(c.cs, "CH")}
 }
 
-func (c zaddComparisonGt) Incr() zaddIncrementIncr {
-	return zaddIncrementIncr{cs: append(c.cs, "INCR")}
+func (c ZaddComparisonGt) Incr() ZaddIncrementIncr {
+	return ZaddIncrementIncr{cs: append(c.cs, "INCR")}
 }
 
-func (c zaddComparisonGt) ScoreMember() zaddScoreMember {
-	return zaddScoreMember{cs: append(c.cs)}
+func (c ZaddComparisonGt) ScoreMember() ZaddScoreMember {
+	return ZaddScoreMember{cs: append(c.cs)}
 }
 
-type zaddComparisonLt struct {
+type ZaddComparisonLt struct {
 	cs []string
 }
 
-func (c zaddComparisonLt) Ch() zaddChangeCh {
-	return zaddChangeCh{cs: append(c.cs, "CH")}
+func (c ZaddComparisonLt) Ch() ZaddChangeCh {
+	return ZaddChangeCh{cs: append(c.cs, "CH")}
 }
 
-func (c zaddComparisonLt) Incr() zaddIncrementIncr {
-	return zaddIncrementIncr{cs: append(c.cs, "INCR")}
+func (c ZaddComparisonLt) Incr() ZaddIncrementIncr {
+	return ZaddIncrementIncr{cs: append(c.cs, "INCR")}
 }
 
-func (c zaddComparisonLt) ScoreMember() zaddScoreMember {
-	return zaddScoreMember{cs: append(c.cs)}
+func (c ZaddComparisonLt) ScoreMember() ZaddScoreMember {
+	return ZaddScoreMember{cs: append(c.cs)}
 }
 
-type zaddConditionNx struct {
+type ZaddConditionNx struct {
 	cs []string
 }
 
-func (c zaddConditionNx) Gt() zaddComparisonGt {
-	return zaddComparisonGt{cs: append(c.cs, "GT")}
+func (c ZaddConditionNx) Gt() ZaddComparisonGt {
+	return ZaddComparisonGt{cs: append(c.cs, "GT")}
 }
 
-func (c zaddConditionNx) Lt() zaddComparisonLt {
-	return zaddComparisonLt{cs: append(c.cs, "LT")}
+func (c ZaddConditionNx) Lt() ZaddComparisonLt {
+	return ZaddComparisonLt{cs: append(c.cs, "LT")}
 }
 
-func (c zaddConditionNx) Ch() zaddChangeCh {
-	return zaddChangeCh{cs: append(c.cs, "CH")}
+func (c ZaddConditionNx) Ch() ZaddChangeCh {
+	return ZaddChangeCh{cs: append(c.cs, "CH")}
 }
 
-func (c zaddConditionNx) Incr() zaddIncrementIncr {
-	return zaddIncrementIncr{cs: append(c.cs, "INCR")}
+func (c ZaddConditionNx) Incr() ZaddIncrementIncr {
+	return ZaddIncrementIncr{cs: append(c.cs, "INCR")}
 }
 
-func (c zaddConditionNx) ScoreMember() zaddScoreMember {
-	return zaddScoreMember{cs: append(c.cs)}
+func (c ZaddConditionNx) ScoreMember() ZaddScoreMember {
+	return ZaddScoreMember{cs: append(c.cs)}
 }
 
-type zaddConditionXx struct {
+type ZaddConditionXx struct {
 	cs []string
 }
 
-func (c zaddConditionXx) Gt() zaddComparisonGt {
-	return zaddComparisonGt{cs: append(c.cs, "GT")}
+func (c ZaddConditionXx) Gt() ZaddComparisonGt {
+	return ZaddComparisonGt{cs: append(c.cs, "GT")}
 }
 
-func (c zaddConditionXx) Lt() zaddComparisonLt {
-	return zaddComparisonLt{cs: append(c.cs, "LT")}
+func (c ZaddConditionXx) Lt() ZaddComparisonLt {
+	return ZaddComparisonLt{cs: append(c.cs, "LT")}
 }
 
-func (c zaddConditionXx) Ch() zaddChangeCh {
-	return zaddChangeCh{cs: append(c.cs, "CH")}
+func (c ZaddConditionXx) Ch() ZaddChangeCh {
+	return ZaddChangeCh{cs: append(c.cs, "CH")}
 }
 
-func (c zaddConditionXx) Incr() zaddIncrementIncr {
-	return zaddIncrementIncr{cs: append(c.cs, "INCR")}
+func (c ZaddConditionXx) Incr() ZaddIncrementIncr {
+	return ZaddIncrementIncr{cs: append(c.cs, "INCR")}
 }
 
-func (c zaddConditionXx) ScoreMember() zaddScoreMember {
-	return zaddScoreMember{cs: append(c.cs)}
+func (c ZaddConditionXx) ScoreMember() ZaddScoreMember {
+	return ZaddScoreMember{cs: append(c.cs)}
 }
 
-type zaddIncrementIncr struct {
+type ZaddIncrementIncr struct {
 	cs []string
 }
 
-func (c zaddIncrementIncr) ScoreMember() zaddScoreMember {
-	return zaddScoreMember{cs: append(c.cs)}
+func (c ZaddIncrementIncr) ScoreMember() ZaddScoreMember {
+	return ZaddScoreMember{cs: append(c.cs)}
 }
 
-type zaddKey struct {
+type ZaddKey struct {
 	cs []string
 }
 
-func (c zaddKey) Nx() zaddConditionNx {
-	return zaddConditionNx{cs: append(c.cs, "NX")}
+func (c ZaddKey) Nx() ZaddConditionNx {
+	return ZaddConditionNx{cs: append(c.cs, "NX")}
 }
 
-func (c zaddKey) Xx() zaddConditionXx {
-	return zaddConditionXx{cs: append(c.cs, "XX")}
+func (c ZaddKey) Xx() ZaddConditionXx {
+	return ZaddConditionXx{cs: append(c.cs, "XX")}
 }
 
-func (c zaddKey) Gt() zaddComparisonGt {
-	return zaddComparisonGt{cs: append(c.cs, "GT")}
+func (c ZaddKey) Gt() ZaddComparisonGt {
+	return ZaddComparisonGt{cs: append(c.cs, "GT")}
 }
 
-func (c zaddKey) Lt() zaddComparisonLt {
-	return zaddComparisonLt{cs: append(c.cs, "LT")}
+func (c ZaddKey) Lt() ZaddComparisonLt {
+	return ZaddComparisonLt{cs: append(c.cs, "LT")}
 }
 
-func (c zaddKey) Ch() zaddChangeCh {
-	return zaddChangeCh{cs: append(c.cs, "CH")}
+func (c ZaddKey) Ch() ZaddChangeCh {
+	return ZaddChangeCh{cs: append(c.cs, "CH")}
 }
 
-func (c zaddKey) Incr() zaddIncrementIncr {
-	return zaddIncrementIncr{cs: append(c.cs, "INCR")}
+func (c ZaddKey) Incr() ZaddIncrementIncr {
+	return ZaddIncrementIncr{cs: append(c.cs, "INCR")}
 }
 
-func (c zaddKey) ScoreMember() zaddScoreMember {
-	return zaddScoreMember{cs: append(c.cs)}
+func (c ZaddKey) ScoreMember() ZaddScoreMember {
+	return ZaddScoreMember{cs: append(c.cs)}
 }
 
-type zaddScoreMember struct {
+type ZaddScoreMember struct {
 	cs []string
 }
 
-func (c zaddScoreMember) ScoreMember(score float64, member string) zaddScoreMember {
-	return zaddScoreMember{cs: append(c.cs, strconv.FormatFloat(score, 'f', -1, 64), member)}
+func (c ZaddScoreMember) ScoreMember(Score float64, Member string) ZaddScoreMember {
+	return ZaddScoreMember{cs: append(c.cs, strconv.FormatFloat(Score, 'f', -1, 64), Member)}
 }
 
-func (c zaddScoreMember) Build() []string {
+func (c ZaddScoreMember) Build() []string {
 	return c.cs
 }
 
-type zcard struct {
+type Zcard struct {
 	cs []string
 }
 
-func (c zcard) Key(key string) zcardKey {
-	return zcardKey{cs: append(c.cs, key)}
+func (c Zcard) Key(Key string) ZcardKey {
+	return ZcardKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Zcard() (c zcard) {
+func (b *Builder) Zcard() (c Zcard) {
 	c.cs = append(b.get(), "ZCARD")
 	return
 }
 
-type zcardKey struct {
+type ZcardKey struct {
 	cs []string
 }
 
-func (c zcardKey) Build() []string {
+func (c ZcardKey) Build() []string {
 	return c.cs
 }
 
-type zcount struct {
+type Zcount struct {
 	cs []string
 }
 
-func (c zcount) Key(key string) zcountKey {
-	return zcountKey{cs: append(c.cs, key)}
+func (c Zcount) Key(Key string) ZcountKey {
+	return ZcountKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Zcount() (c zcount) {
+func (b *Builder) Zcount() (c Zcount) {
 	c.cs = append(b.get(), "ZCOUNT")
 	return
 }
 
-type zcountKey struct {
+type ZcountKey struct {
 	cs []string
 }
 
-func (c zcountKey) Min(min float64) zcountMin {
-	return zcountMin{cs: append(c.cs, strconv.FormatFloat(min, 'f', -1, 64))}
+func (c ZcountKey) Min(Min float64) ZcountMin {
+	return ZcountMin{cs: append(c.cs, strconv.FormatFloat(Min, 'f', -1, 64))}
 }
 
-type zcountMax struct {
+type ZcountMax struct {
 	cs []string
 }
 
-func (c zcountMax) Build() []string {
+func (c ZcountMax) Build() []string {
 	return c.cs
 }
 
-type zcountMin struct {
+type ZcountMin struct {
 	cs []string
 }
 
-func (c zcountMin) Max(max float64) zcountMax {
-	return zcountMax{cs: append(c.cs, strconv.FormatFloat(max, 'f', -1, 64))}
+func (c ZcountMin) Max(Max float64) ZcountMax {
+	return ZcountMax{cs: append(c.cs, strconv.FormatFloat(Max, 'f', -1, 64))}
 }
 
-type zdiff struct {
+type Zdiff struct {
 	cs []string
 }
 
-func (c zdiff) Numkeys(numkeys int64) zdiffNumkeys {
-	return zdiffNumkeys{cs: append(c.cs, strconv.FormatInt(numkeys, 10))}
+func (c Zdiff) Numkeys(Numkeys int64) ZdiffNumkeys {
+	return ZdiffNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
 }
 
-func (b *Builder) Zdiff() (c zdiff) {
+func (b *Builder) Zdiff() (c Zdiff) {
 	c.cs = append(b.get(), "ZDIFF")
 	return
 }
 
-type zdiffKey struct {
+type ZdiffKey struct {
 	cs []string
 }
 
-func (c zdiffKey) Withscores() zdiffWithscoresWithscores {
-	return zdiffWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
+func (c ZdiffKey) Withscores() ZdiffWithscoresWithscores {
+	return ZdiffWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
 }
 
-func (c zdiffKey) Key(key ...string) zdiffKey {
-	return zdiffKey{cs: append(c.cs, key...)}
+func (c ZdiffKey) Key(Key ...string) ZdiffKey {
+	return ZdiffKey{cs: append(c.cs, Key...)}
 }
 
-func (c zdiffKey) Build() []string {
+func (c ZdiffKey) Build() []string {
 	return c.cs
 }
 
-type zdiffNumkeys struct {
+type ZdiffNumkeys struct {
 	cs []string
 }
 
-func (c zdiffNumkeys) Key(key ...string) zdiffKey {
-	return zdiffKey{cs: append(c.cs, key...)}
+func (c ZdiffNumkeys) Key(Key ...string) ZdiffKey {
+	return ZdiffKey{cs: append(c.cs, Key...)}
 }
 
-type zdiffWithscoresWithscores struct {
+type ZdiffWithscoresWithscores struct {
 	cs []string
 }
 
-func (c zdiffWithscoresWithscores) Build() []string {
+func (c ZdiffWithscoresWithscores) Build() []string {
 	return c.cs
 }
 
-type zdiffstore struct {
+type Zdiffstore struct {
 	cs []string
 }
 
-func (c zdiffstore) Destination(destination string) zdiffstoreDestination {
-	return zdiffstoreDestination{cs: append(c.cs, destination)}
+func (c Zdiffstore) Destination(Destination string) ZdiffstoreDestination {
+	return ZdiffstoreDestination{cs: append(c.cs, Destination)}
 }
 
-func (b *Builder) Zdiffstore() (c zdiffstore) {
+func (b *Builder) Zdiffstore() (c Zdiffstore) {
 	c.cs = append(b.get(), "ZDIFFSTORE")
 	return
 }
 
-type zdiffstoreDestination struct {
+type ZdiffstoreDestination struct {
 	cs []string
 }
 
-func (c zdiffstoreDestination) Numkeys(numkeys int64) zdiffstoreNumkeys {
-	return zdiffstoreNumkeys{cs: append(c.cs, strconv.FormatInt(numkeys, 10))}
+func (c ZdiffstoreDestination) Numkeys(Numkeys int64) ZdiffstoreNumkeys {
+	return ZdiffstoreNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
 }
 
-type zdiffstoreKey struct {
+type ZdiffstoreKey struct {
 	cs []string
 }
 
-func (c zdiffstoreKey) Key(key ...string) zdiffstoreKey {
-	return zdiffstoreKey{cs: append(c.cs, key...)}
+func (c ZdiffstoreKey) Key(Key ...string) ZdiffstoreKey {
+	return ZdiffstoreKey{cs: append(c.cs, Key...)}
 }
 
-func (c zdiffstoreKey) Build() []string {
+func (c ZdiffstoreKey) Build() []string {
 	return c.cs
 }
 
-type zdiffstoreNumkeys struct {
+type ZdiffstoreNumkeys struct {
 	cs []string
 }
 
-func (c zdiffstoreNumkeys) Key(key ...string) zdiffstoreKey {
-	return zdiffstoreKey{cs: append(c.cs, key...)}
+func (c ZdiffstoreNumkeys) Key(Key ...string) ZdiffstoreKey {
+	return ZdiffstoreKey{cs: append(c.cs, Key...)}
 }
 
-type zincrby struct {
+type Zincrby struct {
 	cs []string
 }
 
-func (c zincrby) Key(key string) zincrbyKey {
-	return zincrbyKey{cs: append(c.cs, key)}
+func (c Zincrby) Key(Key string) ZincrbyKey {
+	return ZincrbyKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Zincrby() (c zincrby) {
+func (b *Builder) Zincrby() (c Zincrby) {
 	c.cs = append(b.get(), "ZINCRBY")
 	return
 }
 
-type zincrbyIncrement struct {
+type ZincrbyIncrement struct {
 	cs []string
 }
 
-func (c zincrbyIncrement) Member(member string) zincrbyMember {
-	return zincrbyMember{cs: append(c.cs, member)}
+func (c ZincrbyIncrement) Member(Member string) ZincrbyMember {
+	return ZincrbyMember{cs: append(c.cs, Member)}
 }
 
-type zincrbyKey struct {
+type ZincrbyKey struct {
 	cs []string
 }
 
-func (c zincrbyKey) Increment(increment int64) zincrbyIncrement {
-	return zincrbyIncrement{cs: append(c.cs, strconv.FormatInt(increment, 10))}
+func (c ZincrbyKey) Increment(Increment int64) ZincrbyIncrement {
+	return ZincrbyIncrement{cs: append(c.cs, strconv.FormatInt(Increment, 10))}
 }
 
-type zincrbyMember struct {
+type ZincrbyMember struct {
 	cs []string
 }
 
-func (c zincrbyMember) Build() []string {
+func (c ZincrbyMember) Build() []string {
 	return c.cs
 }
 
-type zinter struct {
+type Zinter struct {
 	cs []string
 }
 
-func (c zinter) Numkeys(numkeys int64) zinterNumkeys {
-	return zinterNumkeys{cs: append(c.cs, strconv.FormatInt(numkeys, 10))}
+func (c Zinter) Numkeys(Numkeys int64) ZinterNumkeys {
+	return ZinterNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
 }
 
-func (b *Builder) Zinter() (c zinter) {
+func (b *Builder) Zinter() (c Zinter) {
 	c.cs = append(b.get(), "ZINTER")
 	return
 }
 
-type zinterAggregateMax struct {
+type ZinterAggregateMax struct {
 	cs []string
 }
 
-func (c zinterAggregateMax) Withscores() zinterWithscoresWithscores {
-	return zinterWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
+func (c ZinterAggregateMax) Withscores() ZinterWithscoresWithscores {
+	return ZinterWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
 }
 
-func (c zinterAggregateMax) Build() []string {
+func (c ZinterAggregateMax) Build() []string {
 	return c.cs
 }
 
-type zinterAggregateMin struct {
+type ZinterAggregateMin struct {
 	cs []string
 }
 
-func (c zinterAggregateMin) Withscores() zinterWithscoresWithscores {
-	return zinterWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
+func (c ZinterAggregateMin) Withscores() ZinterWithscoresWithscores {
+	return ZinterWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
 }
 
-func (c zinterAggregateMin) Build() []string {
+func (c ZinterAggregateMin) Build() []string {
 	return c.cs
 }
 
-type zinterAggregateSum struct {
+type ZinterAggregateSum struct {
 	cs []string
 }
 
-func (c zinterAggregateSum) Withscores() zinterWithscoresWithscores {
-	return zinterWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
+func (c ZinterAggregateSum) Withscores() ZinterWithscoresWithscores {
+	return ZinterWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
 }
 
-func (c zinterAggregateSum) Build() []string {
+func (c ZinterAggregateSum) Build() []string {
 	return c.cs
 }
 
-type zinterKey struct {
+type ZinterKey struct {
 	cs []string
 }
 
-func (c zinterKey) Weights(weight ...int64) zinterWeights {
+func (c ZinterKey) Weights(Weight ...int64) ZinterWeights {
 	c.cs = append(c.cs, "WEIGHTS")
-	for _, n := range weight {
+	for _, n := range Weight {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return zinterWeights{cs: c.cs}
+	return ZinterWeights{cs: c.cs}
 }
 
-func (c zinterKey) Sum() zinterAggregateSum {
-	return zinterAggregateSum{cs: append(c.cs, "SUM")}
+func (c ZinterKey) Sum() ZinterAggregateSum {
+	return ZinterAggregateSum{cs: append(c.cs, "SUM")}
 }
 
-func (c zinterKey) Min() zinterAggregateMin {
-	return zinterAggregateMin{cs: append(c.cs, "MIN")}
+func (c ZinterKey) Min() ZinterAggregateMin {
+	return ZinterAggregateMin{cs: append(c.cs, "MIN")}
 }
 
-func (c zinterKey) Max() zinterAggregateMax {
-	return zinterAggregateMax{cs: append(c.cs, "MAX")}
+func (c ZinterKey) Max() ZinterAggregateMax {
+	return ZinterAggregateMax{cs: append(c.cs, "MAX")}
 }
 
-func (c zinterKey) Withscores() zinterWithscoresWithscores {
-	return zinterWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
+func (c ZinterKey) Withscores() ZinterWithscoresWithscores {
+	return ZinterWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
 }
 
-func (c zinterKey) Key(key ...string) zinterKey {
-	return zinterKey{cs: append(c.cs, key...)}
+func (c ZinterKey) Key(Key ...string) ZinterKey {
+	return ZinterKey{cs: append(c.cs, Key...)}
 }
 
-func (c zinterKey) Build() []string {
+func (c ZinterKey) Build() []string {
 	return c.cs
 }
 
-type zinterNumkeys struct {
+type ZinterNumkeys struct {
 	cs []string
 }
 
-func (c zinterNumkeys) Key(key ...string) zinterKey {
-	return zinterKey{cs: append(c.cs, key...)}
+func (c ZinterNumkeys) Key(Key ...string) ZinterKey {
+	return ZinterKey{cs: append(c.cs, Key...)}
 }
 
-type zinterWeights struct {
+type ZinterWeights struct {
 	cs []string
 }
 
-func (c zinterWeights) Sum() zinterAggregateSum {
-	return zinterAggregateSum{cs: append(c.cs, "SUM")}
+func (c ZinterWeights) Sum() ZinterAggregateSum {
+	return ZinterAggregateSum{cs: append(c.cs, "SUM")}
 }
 
-func (c zinterWeights) Min() zinterAggregateMin {
-	return zinterAggregateMin{cs: append(c.cs, "MIN")}
+func (c ZinterWeights) Min() ZinterAggregateMin {
+	return ZinterAggregateMin{cs: append(c.cs, "MIN")}
 }
 
-func (c zinterWeights) Max() zinterAggregateMax {
-	return zinterAggregateMax{cs: append(c.cs, "MAX")}
+func (c ZinterWeights) Max() ZinterAggregateMax {
+	return ZinterAggregateMax{cs: append(c.cs, "MAX")}
 }
 
-func (c zinterWeights) Withscores() zinterWithscoresWithscores {
-	return zinterWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
+func (c ZinterWeights) Withscores() ZinterWithscoresWithscores {
+	return ZinterWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
 }
 
-func (c zinterWeights) Weights(weights ...int64) zinterWeights {
-	for _, n := range weights {
+func (c ZinterWeights) Weights(Weights ...int64) ZinterWeights {
+	for _, n := range Weights {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return zinterWeights{cs: c.cs}
+	return ZinterWeights{cs: c.cs}
 }
 
-func (c zinterWeights) Build() []string {
+func (c ZinterWeights) Build() []string {
 	return c.cs
 }
 
-type zinterWithscoresWithscores struct {
+type ZinterWithscoresWithscores struct {
 	cs []string
 }
 
-func (c zinterWithscoresWithscores) Build() []string {
+func (c ZinterWithscoresWithscores) Build() []string {
 	return c.cs
 }
 
-type zintercard struct {
+type Zintercard struct {
 	cs []string
 }
 
-func (c zintercard) Numkeys(numkeys int64) zintercardNumkeys {
-	return zintercardNumkeys{cs: append(c.cs, strconv.FormatInt(numkeys, 10))}
+func (c Zintercard) Numkeys(Numkeys int64) ZintercardNumkeys {
+	return ZintercardNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
 }
 
-func (b *Builder) Zintercard() (c zintercard) {
+func (b *Builder) Zintercard() (c Zintercard) {
 	c.cs = append(b.get(), "ZINTERCARD")
 	return
 }
 
-type zintercardKey struct {
+type ZintercardKey struct {
 	cs []string
 }
 
-func (c zintercardKey) Key(key ...string) zintercardKey {
-	return zintercardKey{cs: append(c.cs, key...)}
+func (c ZintercardKey) Key(Key ...string) ZintercardKey {
+	return ZintercardKey{cs: append(c.cs, Key...)}
 }
 
-func (c zintercardKey) Build() []string {
+func (c ZintercardKey) Build() []string {
 	return c.cs
 }
 
-type zintercardNumkeys struct {
+type ZintercardNumkeys struct {
 	cs []string
 }
 
-func (c zintercardNumkeys) Key(key ...string) zintercardKey {
-	return zintercardKey{cs: append(c.cs, key...)}
+func (c ZintercardNumkeys) Key(Key ...string) ZintercardKey {
+	return ZintercardKey{cs: append(c.cs, Key...)}
 }
 
-type zinterstore struct {
+type Zinterstore struct {
 	cs []string
 }
 
-func (c zinterstore) Destination(destination string) zinterstoreDestination {
-	return zinterstoreDestination{cs: append(c.cs, destination)}
+func (c Zinterstore) Destination(Destination string) ZinterstoreDestination {
+	return ZinterstoreDestination{cs: append(c.cs, Destination)}
 }
 
-func (b *Builder) Zinterstore() (c zinterstore) {
+func (b *Builder) Zinterstore() (c Zinterstore) {
 	c.cs = append(b.get(), "ZINTERSTORE")
 	return
 }
 
-type zinterstoreAggregateMax struct {
+type ZinterstoreAggregateMax struct {
 	cs []string
 }
 
-func (c zinterstoreAggregateMax) Build() []string {
+func (c ZinterstoreAggregateMax) Build() []string {
 	return c.cs
 }
 
-type zinterstoreAggregateMin struct {
+type ZinterstoreAggregateMin struct {
 	cs []string
 }
 
-func (c zinterstoreAggregateMin) Build() []string {
+func (c ZinterstoreAggregateMin) Build() []string {
 	return c.cs
 }
 
-type zinterstoreAggregateSum struct {
+type ZinterstoreAggregateSum struct {
 	cs []string
 }
 
-func (c zinterstoreAggregateSum) Build() []string {
+func (c ZinterstoreAggregateSum) Build() []string {
 	return c.cs
 }
 
-type zinterstoreDestination struct {
+type ZinterstoreDestination struct {
 	cs []string
 }
 
-func (c zinterstoreDestination) Numkeys(numkeys int64) zinterstoreNumkeys {
-	return zinterstoreNumkeys{cs: append(c.cs, strconv.FormatInt(numkeys, 10))}
+func (c ZinterstoreDestination) Numkeys(Numkeys int64) ZinterstoreNumkeys {
+	return ZinterstoreNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
 }
 
-type zinterstoreKey struct {
+type ZinterstoreKey struct {
 	cs []string
 }
 
-func (c zinterstoreKey) Weights(weight ...int64) zinterstoreWeights {
+func (c ZinterstoreKey) Weights(Weight ...int64) ZinterstoreWeights {
 	c.cs = append(c.cs, "WEIGHTS")
-	for _, n := range weight {
+	for _, n := range Weight {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return zinterstoreWeights{cs: c.cs}
+	return ZinterstoreWeights{cs: c.cs}
 }
 
-func (c zinterstoreKey) Sum() zinterstoreAggregateSum {
-	return zinterstoreAggregateSum{cs: append(c.cs, "SUM")}
+func (c ZinterstoreKey) Sum() ZinterstoreAggregateSum {
+	return ZinterstoreAggregateSum{cs: append(c.cs, "SUM")}
 }
 
-func (c zinterstoreKey) Min() zinterstoreAggregateMin {
-	return zinterstoreAggregateMin{cs: append(c.cs, "MIN")}
+func (c ZinterstoreKey) Min() ZinterstoreAggregateMin {
+	return ZinterstoreAggregateMin{cs: append(c.cs, "MIN")}
 }
 
-func (c zinterstoreKey) Max() zinterstoreAggregateMax {
-	return zinterstoreAggregateMax{cs: append(c.cs, "MAX")}
+func (c ZinterstoreKey) Max() ZinterstoreAggregateMax {
+	return ZinterstoreAggregateMax{cs: append(c.cs, "MAX")}
 }
 
-func (c zinterstoreKey) Key(key ...string) zinterstoreKey {
-	return zinterstoreKey{cs: append(c.cs, key...)}
+func (c ZinterstoreKey) Key(Key ...string) ZinterstoreKey {
+	return ZinterstoreKey{cs: append(c.cs, Key...)}
 }
 
-func (c zinterstoreKey) Build() []string {
+func (c ZinterstoreKey) Build() []string {
 	return c.cs
 }
 
-type zinterstoreNumkeys struct {
+type ZinterstoreNumkeys struct {
 	cs []string
 }
 
-func (c zinterstoreNumkeys) Key(key ...string) zinterstoreKey {
-	return zinterstoreKey{cs: append(c.cs, key...)}
+func (c ZinterstoreNumkeys) Key(Key ...string) ZinterstoreKey {
+	return ZinterstoreKey{cs: append(c.cs, Key...)}
 }
 
-type zinterstoreWeights struct {
+type ZinterstoreWeights struct {
 	cs []string
 }
 
-func (c zinterstoreWeights) Sum() zinterstoreAggregateSum {
-	return zinterstoreAggregateSum{cs: append(c.cs, "SUM")}
+func (c ZinterstoreWeights) Sum() ZinterstoreAggregateSum {
+	return ZinterstoreAggregateSum{cs: append(c.cs, "SUM")}
 }
 
-func (c zinterstoreWeights) Min() zinterstoreAggregateMin {
-	return zinterstoreAggregateMin{cs: append(c.cs, "MIN")}
+func (c ZinterstoreWeights) Min() ZinterstoreAggregateMin {
+	return ZinterstoreAggregateMin{cs: append(c.cs, "MIN")}
 }
 
-func (c zinterstoreWeights) Max() zinterstoreAggregateMax {
-	return zinterstoreAggregateMax{cs: append(c.cs, "MAX")}
+func (c ZinterstoreWeights) Max() ZinterstoreAggregateMax {
+	return ZinterstoreAggregateMax{cs: append(c.cs, "MAX")}
 }
 
-func (c zinterstoreWeights) Weights(weights ...int64) zinterstoreWeights {
-	for _, n := range weights {
+func (c ZinterstoreWeights) Weights(Weights ...int64) ZinterstoreWeights {
+	for _, n := range Weights {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return zinterstoreWeights{cs: c.cs}
+	return ZinterstoreWeights{cs: c.cs}
 }
 
-func (c zinterstoreWeights) Build() []string {
+func (c ZinterstoreWeights) Build() []string {
 	return c.cs
 }
 
-type zlexcount struct {
+type Zlexcount struct {
 	cs []string
 }
 
-func (c zlexcount) Key(key string) zlexcountKey {
-	return zlexcountKey{cs: append(c.cs, key)}
+func (c Zlexcount) Key(Key string) ZlexcountKey {
+	return ZlexcountKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Zlexcount() (c zlexcount) {
+func (b *Builder) Zlexcount() (c Zlexcount) {
 	c.cs = append(b.get(), "ZLEXCOUNT")
 	return
 }
 
-type zlexcountKey struct {
+type ZlexcountKey struct {
 	cs []string
 }
 
-func (c zlexcountKey) Min(min string) zlexcountMin {
-	return zlexcountMin{cs: append(c.cs, min)}
+func (c ZlexcountKey) Min(Min string) ZlexcountMin {
+	return ZlexcountMin{cs: append(c.cs, Min)}
 }
 
-type zlexcountMax struct {
+type ZlexcountMax struct {
 	cs []string
 }
 
-func (c zlexcountMax) Build() []string {
+func (c ZlexcountMax) Build() []string {
 	return c.cs
 }
 
-type zlexcountMin struct {
+type ZlexcountMin struct {
 	cs []string
 }
 
-func (c zlexcountMin) Max(max string) zlexcountMax {
-	return zlexcountMax{cs: append(c.cs, max)}
+func (c ZlexcountMin) Max(Max string) ZlexcountMax {
+	return ZlexcountMax{cs: append(c.cs, Max)}
 }
 
-type zmscore struct {
+type Zmscore struct {
 	cs []string
 }
 
-func (c zmscore) Key(key string) zmscoreKey {
-	return zmscoreKey{cs: append(c.cs, key)}
+func (c Zmscore) Key(Key string) ZmscoreKey {
+	return ZmscoreKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Zmscore() (c zmscore) {
+func (b *Builder) Zmscore() (c Zmscore) {
 	c.cs = append(b.get(), "ZMSCORE")
 	return
 }
 
-type zmscoreKey struct {
+type ZmscoreKey struct {
 	cs []string
 }
 
-func (c zmscoreKey) Member(member ...string) zmscoreMember {
-	return zmscoreMember{cs: append(c.cs, member...)}
+func (c ZmscoreKey) Member(Member ...string) ZmscoreMember {
+	return ZmscoreMember{cs: append(c.cs, Member...)}
 }
 
-type zmscoreMember struct {
+type ZmscoreMember struct {
 	cs []string
 }
 
-func (c zmscoreMember) Member(member ...string) zmscoreMember {
-	return zmscoreMember{cs: append(c.cs, member...)}
+func (c ZmscoreMember) Member(Member ...string) ZmscoreMember {
+	return ZmscoreMember{cs: append(c.cs, Member...)}
 }
 
-func (c zmscoreMember) Build() []string {
+func (c ZmscoreMember) Build() []string {
 	return c.cs
 }
 
-type zpopmax struct {
+type Zpopmax struct {
 	cs []string
 }
 
-func (c zpopmax) Key(key string) zpopmaxKey {
-	return zpopmaxKey{cs: append(c.cs, key)}
+func (c Zpopmax) Key(Key string) ZpopmaxKey {
+	return ZpopmaxKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Zpopmax() (c zpopmax) {
+func (b *Builder) Zpopmax() (c Zpopmax) {
 	c.cs = append(b.get(), "ZPOPMAX")
 	return
 }
 
-type zpopmaxCount struct {
+type ZpopmaxCount struct {
 	cs []string
 }
 
-func (c zpopmaxCount) Build() []string {
+func (c ZpopmaxCount) Build() []string {
 	return c.cs
 }
 
-type zpopmaxKey struct {
+type ZpopmaxKey struct {
 	cs []string
 }
 
-func (c zpopmaxKey) Count(count int64) zpopmaxCount {
-	return zpopmaxCount{cs: append(c.cs, strconv.FormatInt(count, 10))}
+func (c ZpopmaxKey) Count(Count int64) ZpopmaxCount {
+	return ZpopmaxCount{cs: append(c.cs, strconv.FormatInt(Count, 10))}
 }
 
-func (c zpopmaxKey) Build() []string {
+func (c ZpopmaxKey) Build() []string {
 	return c.cs
 }
 
-type zpopmin struct {
+type Zpopmin struct {
 	cs []string
 }
 
-func (c zpopmin) Key(key string) zpopminKey {
-	return zpopminKey{cs: append(c.cs, key)}
+func (c Zpopmin) Key(Key string) ZpopminKey {
+	return ZpopminKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Zpopmin() (c zpopmin) {
+func (b *Builder) Zpopmin() (c Zpopmin) {
 	c.cs = append(b.get(), "ZPOPMIN")
 	return
 }
 
-type zpopminCount struct {
+type ZpopminCount struct {
 	cs []string
 }
 
-func (c zpopminCount) Build() []string {
+func (c ZpopminCount) Build() []string {
 	return c.cs
 }
 
-type zpopminKey struct {
+type ZpopminKey struct {
 	cs []string
 }
 
-func (c zpopminKey) Count(count int64) zpopminCount {
-	return zpopminCount{cs: append(c.cs, strconv.FormatInt(count, 10))}
+func (c ZpopminKey) Count(Count int64) ZpopminCount {
+	return ZpopminCount{cs: append(c.cs, strconv.FormatInt(Count, 10))}
 }
 
-func (c zpopminKey) Build() []string {
+func (c ZpopminKey) Build() []string {
 	return c.cs
 }
 
-type zrandmember struct {
+type Zrandmember struct {
 	cs []string
 }
 
-func (c zrandmember) Key(key string) zrandmemberKey {
-	return zrandmemberKey{cs: append(c.cs, key)}
+func (c Zrandmember) Key(Key string) ZrandmemberKey {
+	return ZrandmemberKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Zrandmember() (c zrandmember) {
+func (b *Builder) Zrandmember() (c Zrandmember) {
 	c.cs = append(b.get(), "ZRANDMEMBER")
 	return
 }
 
-type zrandmemberKey struct {
+type ZrandmemberKey struct {
 	cs []string
 }
 
-func (c zrandmemberKey) Count(count int64) zrandmemberOptionsCount {
-	return zrandmemberOptionsCount{cs: append(c.cs, strconv.FormatInt(count, 10))}
+func (c ZrandmemberKey) Count(Count int64) ZrandmemberOptionsCount {
+	return ZrandmemberOptionsCount{cs: append(c.cs, strconv.FormatInt(Count, 10))}
 }
 
-type zrandmemberOptionsCount struct {
+type ZrandmemberOptionsCount struct {
 	cs []string
 }
 
-func (c zrandmemberOptionsCount) Withscores() zrandmemberOptionsWithscoresWithscores {
-	return zrandmemberOptionsWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
+func (c ZrandmemberOptionsCount) Withscores() ZrandmemberOptionsWithscoresWithscores {
+	return ZrandmemberOptionsWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
 }
 
-func (c zrandmemberOptionsCount) Build() []string {
+func (c ZrandmemberOptionsCount) Build() []string {
 	return c.cs
 }
 
-type zrandmemberOptionsWithscoresWithscores struct {
+type ZrandmemberOptionsWithscoresWithscores struct {
 	cs []string
 }
 
-func (c zrandmemberOptionsWithscoresWithscores) Build() []string {
+func (c ZrandmemberOptionsWithscoresWithscores) Build() []string {
 	return c.cs
 }
 
-type zrange struct {
+type Zrange struct {
 	cs []string
 }
 
-func (c zrange) Key(key string) zrangeKey {
-	return zrangeKey{cs: append(c.cs, key)}
+func (c Zrange) Key(Key string) ZrangeKey {
+	return ZrangeKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Zrange() (c zrange) {
+func (b *Builder) Zrange() (c Zrange) {
 	c.cs = append(b.get(), "ZRANGE")
 	return
 }
 
-type zrangeKey struct {
+type ZrangeKey struct {
 	cs []string
 }
 
-func (c zrangeKey) Min(min string) zrangeMin {
-	return zrangeMin{cs: append(c.cs, min)}
+func (c ZrangeKey) Min(Min string) ZrangeMin {
+	return ZrangeMin{cs: append(c.cs, Min)}
 }
 
-type zrangeLimit struct {
+type ZrangeLimit struct {
 	cs []string
 }
 
-func (c zrangeLimit) Withscores() zrangeWithscoresWithscores {
-	return zrangeWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
+func (c ZrangeLimit) Withscores() ZrangeWithscoresWithscores {
+	return ZrangeWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
 }
 
-func (c zrangeLimit) Build() []string {
+func (c ZrangeLimit) Build() []string {
 	return c.cs
 }
 
-type zrangeMax struct {
+type ZrangeMax struct {
 	cs []string
 }
 
-func (c zrangeMax) Byscore() zrangeSortbyByscore {
-	return zrangeSortbyByscore{cs: append(c.cs, "BYSCORE")}
+func (c ZrangeMax) Byscore() ZrangeSortbyByscore {
+	return ZrangeSortbyByscore{cs: append(c.cs, "BYSCORE")}
 }
 
-func (c zrangeMax) Bylex() zrangeSortbyBylex {
-	return zrangeSortbyBylex{cs: append(c.cs, "BYLEX")}
+func (c ZrangeMax) Bylex() ZrangeSortbyBylex {
+	return ZrangeSortbyBylex{cs: append(c.cs, "BYLEX")}
 }
 
-func (c zrangeMax) Rev() zrangeRevRev {
-	return zrangeRevRev{cs: append(c.cs, "REV")}
+func (c ZrangeMax) Rev() ZrangeRevRev {
+	return ZrangeRevRev{cs: append(c.cs, "REV")}
 }
 
-func (c zrangeMax) Limit(offset int64, count int64) zrangeLimit {
-	return zrangeLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(offset, 10), strconv.FormatInt(count, 10))}
+func (c ZrangeMax) Limit(Offset int64, Count int64) ZrangeLimit {
+	return ZrangeLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
 }
 
-func (c zrangeMax) Withscores() zrangeWithscoresWithscores {
-	return zrangeWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
+func (c ZrangeMax) Withscores() ZrangeWithscoresWithscores {
+	return ZrangeWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
 }
 
-func (c zrangeMax) Build() []string {
+func (c ZrangeMax) Build() []string {
 	return c.cs
 }
 
-type zrangeMin struct {
+type ZrangeMin struct {
 	cs []string
 }
 
-func (c zrangeMin) Max(max string) zrangeMax {
-	return zrangeMax{cs: append(c.cs, max)}
+func (c ZrangeMin) Max(Max string) ZrangeMax {
+	return ZrangeMax{cs: append(c.cs, Max)}
 }
 
-type zrangeRevRev struct {
+type ZrangeRevRev struct {
 	cs []string
 }
 
-func (c zrangeRevRev) Limit(offset int64, count int64) zrangeLimit {
-	return zrangeLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(offset, 10), strconv.FormatInt(count, 10))}
+func (c ZrangeRevRev) Limit(Offset int64, Count int64) ZrangeLimit {
+	return ZrangeLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
 }
 
-func (c zrangeRevRev) Withscores() zrangeWithscoresWithscores {
-	return zrangeWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
+func (c ZrangeRevRev) Withscores() ZrangeWithscoresWithscores {
+	return ZrangeWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
 }
 
-func (c zrangeRevRev) Build() []string {
+func (c ZrangeRevRev) Build() []string {
 	return c.cs
 }
 
-type zrangeSortbyBylex struct {
+type ZrangeSortbyBylex struct {
 	cs []string
 }
 
-func (c zrangeSortbyBylex) Rev() zrangeRevRev {
-	return zrangeRevRev{cs: append(c.cs, "REV")}
+func (c ZrangeSortbyBylex) Rev() ZrangeRevRev {
+	return ZrangeRevRev{cs: append(c.cs, "REV")}
 }
 
-func (c zrangeSortbyBylex) Limit(offset int64, count int64) zrangeLimit {
-	return zrangeLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(offset, 10), strconv.FormatInt(count, 10))}
+func (c ZrangeSortbyBylex) Limit(Offset int64, Count int64) ZrangeLimit {
+	return ZrangeLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
 }
 
-func (c zrangeSortbyBylex) Withscores() zrangeWithscoresWithscores {
-	return zrangeWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
+func (c ZrangeSortbyBylex) Withscores() ZrangeWithscoresWithscores {
+	return ZrangeWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
 }
 
-func (c zrangeSortbyBylex) Build() []string {
+func (c ZrangeSortbyBylex) Build() []string {
 	return c.cs
 }
 
-type zrangeSortbyByscore struct {
+type ZrangeSortbyByscore struct {
 	cs []string
 }
 
-func (c zrangeSortbyByscore) Rev() zrangeRevRev {
-	return zrangeRevRev{cs: append(c.cs, "REV")}
+func (c ZrangeSortbyByscore) Rev() ZrangeRevRev {
+	return ZrangeRevRev{cs: append(c.cs, "REV")}
 }
 
-func (c zrangeSortbyByscore) Limit(offset int64, count int64) zrangeLimit {
-	return zrangeLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(offset, 10), strconv.FormatInt(count, 10))}
+func (c ZrangeSortbyByscore) Limit(Offset int64, Count int64) ZrangeLimit {
+	return ZrangeLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
 }
 
-func (c zrangeSortbyByscore) Withscores() zrangeWithscoresWithscores {
-	return zrangeWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
+func (c ZrangeSortbyByscore) Withscores() ZrangeWithscoresWithscores {
+	return ZrangeWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
 }
 
-func (c zrangeSortbyByscore) Build() []string {
+func (c ZrangeSortbyByscore) Build() []string {
 	return c.cs
 }
 
-type zrangeWithscoresWithscores struct {
+type ZrangeWithscoresWithscores struct {
 	cs []string
 }
 
-func (c zrangeWithscoresWithscores) Build() []string {
+func (c ZrangeWithscoresWithscores) Build() []string {
 	return c.cs
 }
 
-type zrangebylex struct {
+type Zrangebylex struct {
 	cs []string
 }
 
-func (c zrangebylex) Key(key string) zrangebylexKey {
-	return zrangebylexKey{cs: append(c.cs, key)}
+func (c Zrangebylex) Key(Key string) ZrangebylexKey {
+	return ZrangebylexKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Zrangebylex() (c zrangebylex) {
+func (b *Builder) Zrangebylex() (c Zrangebylex) {
 	c.cs = append(b.get(), "ZRANGEBYLEX")
 	return
 }
 
-type zrangebylexKey struct {
+type ZrangebylexKey struct {
 	cs []string
 }
 
-func (c zrangebylexKey) Min(min string) zrangebylexMin {
-	return zrangebylexMin{cs: append(c.cs, min)}
+func (c ZrangebylexKey) Min(Min string) ZrangebylexMin {
+	return ZrangebylexMin{cs: append(c.cs, Min)}
 }
 
-type zrangebylexLimit struct {
+type ZrangebylexLimit struct {
 	cs []string
 }
 
-func (c zrangebylexLimit) Build() []string {
+func (c ZrangebylexLimit) Build() []string {
 	return c.cs
 }
 
-type zrangebylexMax struct {
+type ZrangebylexMax struct {
 	cs []string
 }
 
-func (c zrangebylexMax) Limit(offset int64, count int64) zrangebylexLimit {
-	return zrangebylexLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(offset, 10), strconv.FormatInt(count, 10))}
+func (c ZrangebylexMax) Limit(Offset int64, Count int64) ZrangebylexLimit {
+	return ZrangebylexLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
 }
 
-func (c zrangebylexMax) Build() []string {
+func (c ZrangebylexMax) Build() []string {
 	return c.cs
 }
 
-type zrangebylexMin struct {
+type ZrangebylexMin struct {
 	cs []string
 }
 
-func (c zrangebylexMin) Max(max string) zrangebylexMax {
-	return zrangebylexMax{cs: append(c.cs, max)}
+func (c ZrangebylexMin) Max(Max string) ZrangebylexMax {
+	return ZrangebylexMax{cs: append(c.cs, Max)}
 }
 
-type zrangebyscore struct {
+type Zrangebyscore struct {
 	cs []string
 }
 
-func (c zrangebyscore) Key(key string) zrangebyscoreKey {
-	return zrangebyscoreKey{cs: append(c.cs, key)}
+func (c Zrangebyscore) Key(Key string) ZrangebyscoreKey {
+	return ZrangebyscoreKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Zrangebyscore() (c zrangebyscore) {
+func (b *Builder) Zrangebyscore() (c Zrangebyscore) {
 	c.cs = append(b.get(), "ZRANGEBYSCORE")
 	return
 }
 
-type zrangebyscoreKey struct {
+type ZrangebyscoreKey struct {
 	cs []string
 }
 
-func (c zrangebyscoreKey) Min(min float64) zrangebyscoreMin {
-	return zrangebyscoreMin{cs: append(c.cs, strconv.FormatFloat(min, 'f', -1, 64))}
+func (c ZrangebyscoreKey) Min(Min float64) ZrangebyscoreMin {
+	return ZrangebyscoreMin{cs: append(c.cs, strconv.FormatFloat(Min, 'f', -1, 64))}
 }
 
-type zrangebyscoreLimit struct {
+type ZrangebyscoreLimit struct {
 	cs []string
 }
 
-func (c zrangebyscoreLimit) Build() []string {
+func (c ZrangebyscoreLimit) Build() []string {
 	return c.cs
 }
 
-type zrangebyscoreMax struct {
+type ZrangebyscoreMax struct {
 	cs []string
 }
 
-func (c zrangebyscoreMax) Withscores() zrangebyscoreWithscoresWithscores {
-	return zrangebyscoreWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
+func (c ZrangebyscoreMax) Withscores() ZrangebyscoreWithscoresWithscores {
+	return ZrangebyscoreWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
 }
 
-func (c zrangebyscoreMax) Limit(offset int64, count int64) zrangebyscoreLimit {
-	return zrangebyscoreLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(offset, 10), strconv.FormatInt(count, 10))}
+func (c ZrangebyscoreMax) Limit(Offset int64, Count int64) ZrangebyscoreLimit {
+	return ZrangebyscoreLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
 }
 
-func (c zrangebyscoreMax) Build() []string {
+func (c ZrangebyscoreMax) Build() []string {
 	return c.cs
 }
 
-type zrangebyscoreMin struct {
+type ZrangebyscoreMin struct {
 	cs []string
 }
 
-func (c zrangebyscoreMin) Max(max float64) zrangebyscoreMax {
-	return zrangebyscoreMax{cs: append(c.cs, strconv.FormatFloat(max, 'f', -1, 64))}
+func (c ZrangebyscoreMin) Max(Max float64) ZrangebyscoreMax {
+	return ZrangebyscoreMax{cs: append(c.cs, strconv.FormatFloat(Max, 'f', -1, 64))}
 }
 
-type zrangebyscoreWithscoresWithscores struct {
+type ZrangebyscoreWithscoresWithscores struct {
 	cs []string
 }
 
-func (c zrangebyscoreWithscoresWithscores) Limit(offset int64, count int64) zrangebyscoreLimit {
-	return zrangebyscoreLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(offset, 10), strconv.FormatInt(count, 10))}
+func (c ZrangebyscoreWithscoresWithscores) Limit(Offset int64, Count int64) ZrangebyscoreLimit {
+	return ZrangebyscoreLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
 }
 
-func (c zrangebyscoreWithscoresWithscores) Build() []string {
+func (c ZrangebyscoreWithscoresWithscores) Build() []string {
 	return c.cs
 }
 
-type zrangestore struct {
+type Zrangestore struct {
 	cs []string
 }
 
-func (c zrangestore) Dst(dst string) zrangestoreDst {
-	return zrangestoreDst{cs: append(c.cs, dst)}
+func (c Zrangestore) Dst(Dst string) ZrangestoreDst {
+	return ZrangestoreDst{cs: append(c.cs, Dst)}
 }
 
-func (b *Builder) Zrangestore() (c zrangestore) {
+func (b *Builder) Zrangestore() (c Zrangestore) {
 	c.cs = append(b.get(), "ZRANGESTORE")
 	return
 }
 
-type zrangestoreDst struct {
+type ZrangestoreDst struct {
 	cs []string
 }
 
-func (c zrangestoreDst) Src(src string) zrangestoreSrc {
-	return zrangestoreSrc{cs: append(c.cs, src)}
+func (c ZrangestoreDst) Src(Src string) ZrangestoreSrc {
+	return ZrangestoreSrc{cs: append(c.cs, Src)}
 }
 
-type zrangestoreLimit struct {
+type ZrangestoreLimit struct {
 	cs []string
 }
 
-func (c zrangestoreLimit) Build() []string {
+func (c ZrangestoreLimit) Build() []string {
 	return c.cs
 }
 
-type zrangestoreMax struct {
+type ZrangestoreMax struct {
 	cs []string
 }
 
-func (c zrangestoreMax) Byscore() zrangestoreSortbyByscore {
-	return zrangestoreSortbyByscore{cs: append(c.cs, "BYSCORE")}
+func (c ZrangestoreMax) Byscore() ZrangestoreSortbyByscore {
+	return ZrangestoreSortbyByscore{cs: append(c.cs, "BYSCORE")}
 }
 
-func (c zrangestoreMax) Bylex() zrangestoreSortbyBylex {
-	return zrangestoreSortbyBylex{cs: append(c.cs, "BYLEX")}
+func (c ZrangestoreMax) Bylex() ZrangestoreSortbyBylex {
+	return ZrangestoreSortbyBylex{cs: append(c.cs, "BYLEX")}
 }
 
-func (c zrangestoreMax) Rev() zrangestoreRevRev {
-	return zrangestoreRevRev{cs: append(c.cs, "REV")}
+func (c ZrangestoreMax) Rev() ZrangestoreRevRev {
+	return ZrangestoreRevRev{cs: append(c.cs, "REV")}
 }
 
-func (c zrangestoreMax) Limit(offset int64, count int64) zrangestoreLimit {
-	return zrangestoreLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(offset, 10), strconv.FormatInt(count, 10))}
+func (c ZrangestoreMax) Limit(Offset int64, Count int64) ZrangestoreLimit {
+	return ZrangestoreLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
 }
 
-func (c zrangestoreMax) Build() []string {
+func (c ZrangestoreMax) Build() []string {
 	return c.cs
 }
 
-type zrangestoreMin struct {
+type ZrangestoreMin struct {
 	cs []string
 }
 
-func (c zrangestoreMin) Max(max string) zrangestoreMax {
-	return zrangestoreMax{cs: append(c.cs, max)}
+func (c ZrangestoreMin) Max(Max string) ZrangestoreMax {
+	return ZrangestoreMax{cs: append(c.cs, Max)}
 }
 
-type zrangestoreRevRev struct {
+type ZrangestoreRevRev struct {
 	cs []string
 }
 
-func (c zrangestoreRevRev) Limit(offset int64, count int64) zrangestoreLimit {
-	return zrangestoreLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(offset, 10), strconv.FormatInt(count, 10))}
+func (c ZrangestoreRevRev) Limit(Offset int64, Count int64) ZrangestoreLimit {
+	return ZrangestoreLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
 }
 
-func (c zrangestoreRevRev) Build() []string {
+func (c ZrangestoreRevRev) Build() []string {
 	return c.cs
 }
 
-type zrangestoreSortbyBylex struct {
+type ZrangestoreSortbyBylex struct {
 	cs []string
 }
 
-func (c zrangestoreSortbyBylex) Rev() zrangestoreRevRev {
-	return zrangestoreRevRev{cs: append(c.cs, "REV")}
+func (c ZrangestoreSortbyBylex) Rev() ZrangestoreRevRev {
+	return ZrangestoreRevRev{cs: append(c.cs, "REV")}
 }
 
-func (c zrangestoreSortbyBylex) Limit(offset int64, count int64) zrangestoreLimit {
-	return zrangestoreLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(offset, 10), strconv.FormatInt(count, 10))}
+func (c ZrangestoreSortbyBylex) Limit(Offset int64, Count int64) ZrangestoreLimit {
+	return ZrangestoreLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
 }
 
-func (c zrangestoreSortbyBylex) Build() []string {
+func (c ZrangestoreSortbyBylex) Build() []string {
 	return c.cs
 }
 
-type zrangestoreSortbyByscore struct {
+type ZrangestoreSortbyByscore struct {
 	cs []string
 }
 
-func (c zrangestoreSortbyByscore) Rev() zrangestoreRevRev {
-	return zrangestoreRevRev{cs: append(c.cs, "REV")}
+func (c ZrangestoreSortbyByscore) Rev() ZrangestoreRevRev {
+	return ZrangestoreRevRev{cs: append(c.cs, "REV")}
 }
 
-func (c zrangestoreSortbyByscore) Limit(offset int64, count int64) zrangestoreLimit {
-	return zrangestoreLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(offset, 10), strconv.FormatInt(count, 10))}
+func (c ZrangestoreSortbyByscore) Limit(Offset int64, Count int64) ZrangestoreLimit {
+	return ZrangestoreLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
 }
 
-func (c zrangestoreSortbyByscore) Build() []string {
+func (c ZrangestoreSortbyByscore) Build() []string {
 	return c.cs
 }
 
-type zrangestoreSrc struct {
+type ZrangestoreSrc struct {
 	cs []string
 }
 
-func (c zrangestoreSrc) Min(min string) zrangestoreMin {
-	return zrangestoreMin{cs: append(c.cs, min)}
+func (c ZrangestoreSrc) Min(Min string) ZrangestoreMin {
+	return ZrangestoreMin{cs: append(c.cs, Min)}
 }
 
-type zrank struct {
+type Zrank struct {
 	cs []string
 }
 
-func (c zrank) Key(key string) zrankKey {
-	return zrankKey{cs: append(c.cs, key)}
+func (c Zrank) Key(Key string) ZrankKey {
+	return ZrankKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Zrank() (c zrank) {
+func (b *Builder) Zrank() (c Zrank) {
 	c.cs = append(b.get(), "ZRANK")
 	return
 }
 
-type zrankKey struct {
+type ZrankKey struct {
 	cs []string
 }
 
-func (c zrankKey) Member(member string) zrankMember {
-	return zrankMember{cs: append(c.cs, member)}
+func (c ZrankKey) Member(Member string) ZrankMember {
+	return ZrankMember{cs: append(c.cs, Member)}
 }
 
-type zrankMember struct {
+type ZrankMember struct {
 	cs []string
 }
 
-func (c zrankMember) Build() []string {
+func (c ZrankMember) Build() []string {
 	return c.cs
 }
 
-type zrem struct {
+type Zrem struct {
 	cs []string
 }
 
-func (c zrem) Key(key string) zremKey {
-	return zremKey{cs: append(c.cs, key)}
+func (c Zrem) Key(Key string) ZremKey {
+	return ZremKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Zrem() (c zrem) {
+func (b *Builder) Zrem() (c Zrem) {
 	c.cs = append(b.get(), "ZREM")
 	return
 }
 
-type zremKey struct {
+type ZremKey struct {
 	cs []string
 }
 
-func (c zremKey) Member(member ...string) zremMember {
-	return zremMember{cs: append(c.cs, member...)}
+func (c ZremKey) Member(Member ...string) ZremMember {
+	return ZremMember{cs: append(c.cs, Member...)}
 }
 
-type zremMember struct {
+type ZremMember struct {
 	cs []string
 }
 
-func (c zremMember) Member(member ...string) zremMember {
-	return zremMember{cs: append(c.cs, member...)}
+func (c ZremMember) Member(Member ...string) ZremMember {
+	return ZremMember{cs: append(c.cs, Member...)}
 }
 
-func (c zremMember) Build() []string {
+func (c ZremMember) Build() []string {
 	return c.cs
 }
 
-type zremrangebylex struct {
+type Zremrangebylex struct {
 	cs []string
 }
 
-func (c zremrangebylex) Key(key string) zremrangebylexKey {
-	return zremrangebylexKey{cs: append(c.cs, key)}
+func (c Zremrangebylex) Key(Key string) ZremrangebylexKey {
+	return ZremrangebylexKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Zremrangebylex() (c zremrangebylex) {
+func (b *Builder) Zremrangebylex() (c Zremrangebylex) {
 	c.cs = append(b.get(), "ZREMRANGEBYLEX")
 	return
 }
 
-type zremrangebylexKey struct {
+type ZremrangebylexKey struct {
 	cs []string
 }
 
-func (c zremrangebylexKey) Min(min string) zremrangebylexMin {
-	return zremrangebylexMin{cs: append(c.cs, min)}
+func (c ZremrangebylexKey) Min(Min string) ZremrangebylexMin {
+	return ZremrangebylexMin{cs: append(c.cs, Min)}
 }
 
-type zremrangebylexMax struct {
+type ZremrangebylexMax struct {
 	cs []string
 }
 
-func (c zremrangebylexMax) Build() []string {
+func (c ZremrangebylexMax) Build() []string {
 	return c.cs
 }
 
-type zremrangebylexMin struct {
+type ZremrangebylexMin struct {
 	cs []string
 }
 
-func (c zremrangebylexMin) Max(max string) zremrangebylexMax {
-	return zremrangebylexMax{cs: append(c.cs, max)}
+func (c ZremrangebylexMin) Max(Max string) ZremrangebylexMax {
+	return ZremrangebylexMax{cs: append(c.cs, Max)}
 }
 
-type zremrangebyrank struct {
+type Zremrangebyrank struct {
 	cs []string
 }
 
-func (c zremrangebyrank) Key(key string) zremrangebyrankKey {
-	return zremrangebyrankKey{cs: append(c.cs, key)}
+func (c Zremrangebyrank) Key(Key string) ZremrangebyrankKey {
+	return ZremrangebyrankKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Zremrangebyrank() (c zremrangebyrank) {
+func (b *Builder) Zremrangebyrank() (c Zremrangebyrank) {
 	c.cs = append(b.get(), "ZREMRANGEBYRANK")
 	return
 }
 
-type zremrangebyrankKey struct {
+type ZremrangebyrankKey struct {
 	cs []string
 }
 
-func (c zremrangebyrankKey) Start(start int64) zremrangebyrankStart {
-	return zremrangebyrankStart{cs: append(c.cs, strconv.FormatInt(start, 10))}
+func (c ZremrangebyrankKey) Start(Start int64) ZremrangebyrankStart {
+	return ZremrangebyrankStart{cs: append(c.cs, strconv.FormatInt(Start, 10))}
 }
 
-type zremrangebyrankStart struct {
+type ZremrangebyrankStart struct {
 	cs []string
 }
 
-func (c zremrangebyrankStart) Stop(stop int64) zremrangebyrankStop {
-	return zremrangebyrankStop{cs: append(c.cs, strconv.FormatInt(stop, 10))}
+func (c ZremrangebyrankStart) Stop(Stop int64) ZremrangebyrankStop {
+	return ZremrangebyrankStop{cs: append(c.cs, strconv.FormatInt(Stop, 10))}
 }
 
-type zremrangebyrankStop struct {
+type ZremrangebyrankStop struct {
 	cs []string
 }
 
-func (c zremrangebyrankStop) Build() []string {
+func (c ZremrangebyrankStop) Build() []string {
 	return c.cs
 }
 
-type zremrangebyscore struct {
+type Zremrangebyscore struct {
 	cs []string
 }
 
-func (c zremrangebyscore) Key(key string) zremrangebyscoreKey {
-	return zremrangebyscoreKey{cs: append(c.cs, key)}
+func (c Zremrangebyscore) Key(Key string) ZremrangebyscoreKey {
+	return ZremrangebyscoreKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Zremrangebyscore() (c zremrangebyscore) {
+func (b *Builder) Zremrangebyscore() (c Zremrangebyscore) {
 	c.cs = append(b.get(), "ZREMRANGEBYSCORE")
 	return
 }
 
-type zremrangebyscoreKey struct {
+type ZremrangebyscoreKey struct {
 	cs []string
 }
 
-func (c zremrangebyscoreKey) Min(min float64) zremrangebyscoreMin {
-	return zremrangebyscoreMin{cs: append(c.cs, strconv.FormatFloat(min, 'f', -1, 64))}
+func (c ZremrangebyscoreKey) Min(Min float64) ZremrangebyscoreMin {
+	return ZremrangebyscoreMin{cs: append(c.cs, strconv.FormatFloat(Min, 'f', -1, 64))}
 }
 
-type zremrangebyscoreMax struct {
+type ZremrangebyscoreMax struct {
 	cs []string
 }
 
-func (c zremrangebyscoreMax) Build() []string {
+func (c ZremrangebyscoreMax) Build() []string {
 	return c.cs
 }
 
-type zremrangebyscoreMin struct {
+type ZremrangebyscoreMin struct {
 	cs []string
 }
 
-func (c zremrangebyscoreMin) Max(max float64) zremrangebyscoreMax {
-	return zremrangebyscoreMax{cs: append(c.cs, strconv.FormatFloat(max, 'f', -1, 64))}
+func (c ZremrangebyscoreMin) Max(Max float64) ZremrangebyscoreMax {
+	return ZremrangebyscoreMax{cs: append(c.cs, strconv.FormatFloat(Max, 'f', -1, 64))}
 }
 
-type zrevrange struct {
+type Zrevrange struct {
 	cs []string
 }
 
-func (c zrevrange) Key(key string) zrevrangeKey {
-	return zrevrangeKey{cs: append(c.cs, key)}
+func (c Zrevrange) Key(Key string) ZrevrangeKey {
+	return ZrevrangeKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Zrevrange() (c zrevrange) {
+func (b *Builder) Zrevrange() (c Zrevrange) {
 	c.cs = append(b.get(), "ZREVRANGE")
 	return
 }
 
-type zrevrangeKey struct {
+type ZrevrangeKey struct {
 	cs []string
 }
 
-func (c zrevrangeKey) Start(start int64) zrevrangeStart {
-	return zrevrangeStart{cs: append(c.cs, strconv.FormatInt(start, 10))}
+func (c ZrevrangeKey) Start(Start int64) ZrevrangeStart {
+	return ZrevrangeStart{cs: append(c.cs, strconv.FormatInt(Start, 10))}
 }
 
-type zrevrangeStart struct {
+type ZrevrangeStart struct {
 	cs []string
 }
 
-func (c zrevrangeStart) Stop(stop int64) zrevrangeStop {
-	return zrevrangeStop{cs: append(c.cs, strconv.FormatInt(stop, 10))}
+func (c ZrevrangeStart) Stop(Stop int64) ZrevrangeStop {
+	return ZrevrangeStop{cs: append(c.cs, strconv.FormatInt(Stop, 10))}
 }
 
-type zrevrangeStop struct {
+type ZrevrangeStop struct {
 	cs []string
 }
 
-func (c zrevrangeStop) Withscores() zrevrangeWithscoresWithscores {
-	return zrevrangeWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
+func (c ZrevrangeStop) Withscores() ZrevrangeWithscoresWithscores {
+	return ZrevrangeWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
 }
 
-func (c zrevrangeStop) Build() []string {
+func (c ZrevrangeStop) Build() []string {
 	return c.cs
 }
 
-type zrevrangeWithscoresWithscores struct {
+type ZrevrangeWithscoresWithscores struct {
 	cs []string
 }
 
-func (c zrevrangeWithscoresWithscores) Build() []string {
+func (c ZrevrangeWithscoresWithscores) Build() []string {
 	return c.cs
 }
 
-type zrevrangebylex struct {
+type Zrevrangebylex struct {
 	cs []string
 }
 
-func (c zrevrangebylex) Key(key string) zrevrangebylexKey {
-	return zrevrangebylexKey{cs: append(c.cs, key)}
+func (c Zrevrangebylex) Key(Key string) ZrevrangebylexKey {
+	return ZrevrangebylexKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Zrevrangebylex() (c zrevrangebylex) {
+func (b *Builder) Zrevrangebylex() (c Zrevrangebylex) {
 	c.cs = append(b.get(), "ZREVRANGEBYLEX")
 	return
 }
 
-type zrevrangebylexKey struct {
+type ZrevrangebylexKey struct {
 	cs []string
 }
 
-func (c zrevrangebylexKey) Max(max string) zrevrangebylexMax {
-	return zrevrangebylexMax{cs: append(c.cs, max)}
+func (c ZrevrangebylexKey) Max(Max string) ZrevrangebylexMax {
+	return ZrevrangebylexMax{cs: append(c.cs, Max)}
 }
 
-type zrevrangebylexLimit struct {
+type ZrevrangebylexLimit struct {
 	cs []string
 }
 
-func (c zrevrangebylexLimit) Build() []string {
+func (c ZrevrangebylexLimit) Build() []string {
 	return c.cs
 }
 
-type zrevrangebylexMax struct {
+type ZrevrangebylexMax struct {
 	cs []string
 }
 
-func (c zrevrangebylexMax) Min(min string) zrevrangebylexMin {
-	return zrevrangebylexMin{cs: append(c.cs, min)}
+func (c ZrevrangebylexMax) Min(Min string) ZrevrangebylexMin {
+	return ZrevrangebylexMin{cs: append(c.cs, Min)}
 }
 
-type zrevrangebylexMin struct {
+type ZrevrangebylexMin struct {
 	cs []string
 }
 
-func (c zrevrangebylexMin) Limit(offset int64, count int64) zrevrangebylexLimit {
-	return zrevrangebylexLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(offset, 10), strconv.FormatInt(count, 10))}
+func (c ZrevrangebylexMin) Limit(Offset int64, Count int64) ZrevrangebylexLimit {
+	return ZrevrangebylexLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
 }
 
-func (c zrevrangebylexMin) Build() []string {
+func (c ZrevrangebylexMin) Build() []string {
 	return c.cs
 }
 
-type zrevrangebyscore struct {
+type Zrevrangebyscore struct {
 	cs []string
 }
 
-func (c zrevrangebyscore) Key(key string) zrevrangebyscoreKey {
-	return zrevrangebyscoreKey{cs: append(c.cs, key)}
+func (c Zrevrangebyscore) Key(Key string) ZrevrangebyscoreKey {
+	return ZrevrangebyscoreKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Zrevrangebyscore() (c zrevrangebyscore) {
+func (b *Builder) Zrevrangebyscore() (c Zrevrangebyscore) {
 	c.cs = append(b.get(), "ZREVRANGEBYSCORE")
 	return
 }
 
-type zrevrangebyscoreKey struct {
+type ZrevrangebyscoreKey struct {
 	cs []string
 }
 
-func (c zrevrangebyscoreKey) Max(max float64) zrevrangebyscoreMax {
-	return zrevrangebyscoreMax{cs: append(c.cs, strconv.FormatFloat(max, 'f', -1, 64))}
+func (c ZrevrangebyscoreKey) Max(Max float64) ZrevrangebyscoreMax {
+	return ZrevrangebyscoreMax{cs: append(c.cs, strconv.FormatFloat(Max, 'f', -1, 64))}
 }
 
-type zrevrangebyscoreLimit struct {
+type ZrevrangebyscoreLimit struct {
 	cs []string
 }
 
-func (c zrevrangebyscoreLimit) Build() []string {
+func (c ZrevrangebyscoreLimit) Build() []string {
 	return c.cs
 }
 
-type zrevrangebyscoreMax struct {
+type ZrevrangebyscoreMax struct {
 	cs []string
 }
 
-func (c zrevrangebyscoreMax) Min(min float64) zrevrangebyscoreMin {
-	return zrevrangebyscoreMin{cs: append(c.cs, strconv.FormatFloat(min, 'f', -1, 64))}
+func (c ZrevrangebyscoreMax) Min(Min float64) ZrevrangebyscoreMin {
+	return ZrevrangebyscoreMin{cs: append(c.cs, strconv.FormatFloat(Min, 'f', -1, 64))}
 }
 
-type zrevrangebyscoreMin struct {
+type ZrevrangebyscoreMin struct {
 	cs []string
 }
 
-func (c zrevrangebyscoreMin) Withscores() zrevrangebyscoreWithscoresWithscores {
-	return zrevrangebyscoreWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
+func (c ZrevrangebyscoreMin) Withscores() ZrevrangebyscoreWithscoresWithscores {
+	return ZrevrangebyscoreWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
 }
 
-func (c zrevrangebyscoreMin) Limit(offset int64, count int64) zrevrangebyscoreLimit {
-	return zrevrangebyscoreLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(offset, 10), strconv.FormatInt(count, 10))}
+func (c ZrevrangebyscoreMin) Limit(Offset int64, Count int64) ZrevrangebyscoreLimit {
+	return ZrevrangebyscoreLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
 }
 
-func (c zrevrangebyscoreMin) Build() []string {
+func (c ZrevrangebyscoreMin) Build() []string {
 	return c.cs
 }
 
-type zrevrangebyscoreWithscoresWithscores struct {
+type ZrevrangebyscoreWithscoresWithscores struct {
 	cs []string
 }
 
-func (c zrevrangebyscoreWithscoresWithscores) Limit(offset int64, count int64) zrevrangebyscoreLimit {
-	return zrevrangebyscoreLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(offset, 10), strconv.FormatInt(count, 10))}
+func (c ZrevrangebyscoreWithscoresWithscores) Limit(Offset int64, Count int64) ZrevrangebyscoreLimit {
+	return ZrevrangebyscoreLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
 }
 
-func (c zrevrangebyscoreWithscoresWithscores) Build() []string {
+func (c ZrevrangebyscoreWithscoresWithscores) Build() []string {
 	return c.cs
 }
 
-type zrevrank struct {
+type Zrevrank struct {
 	cs []string
 }
 
-func (c zrevrank) Key(key string) zrevrankKey {
-	return zrevrankKey{cs: append(c.cs, key)}
+func (c Zrevrank) Key(Key string) ZrevrankKey {
+	return ZrevrankKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Zrevrank() (c zrevrank) {
+func (b *Builder) Zrevrank() (c Zrevrank) {
 	c.cs = append(b.get(), "ZREVRANK")
 	return
 }
 
-type zrevrankKey struct {
+type ZrevrankKey struct {
 	cs []string
 }
 
-func (c zrevrankKey) Member(member string) zrevrankMember {
-	return zrevrankMember{cs: append(c.cs, member)}
+func (c ZrevrankKey) Member(Member string) ZrevrankMember {
+	return ZrevrankMember{cs: append(c.cs, Member)}
 }
 
-type zrevrankMember struct {
+type ZrevrankMember struct {
 	cs []string
 }
 
-func (c zrevrankMember) Build() []string {
+func (c ZrevrankMember) Build() []string {
 	return c.cs
 }
 
-type zscan struct {
+type Zscan struct {
 	cs []string
 }
 
-func (c zscan) Key(key string) zscanKey {
-	return zscanKey{cs: append(c.cs, key)}
+func (c Zscan) Key(Key string) ZscanKey {
+	return ZscanKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Zscan() (c zscan) {
+func (b *Builder) Zscan() (c Zscan) {
 	c.cs = append(b.get(), "ZSCAN")
 	return
 }
 
-type zscanCount struct {
+type ZscanCount struct {
 	cs []string
 }
 
-func (c zscanCount) Build() []string {
+func (c ZscanCount) Build() []string {
 	return c.cs
 }
 
-type zscanCursor struct {
+type ZscanCursor struct {
 	cs []string
 }
 
-func (c zscanCursor) Match(pattern string) zscanMatch {
-	return zscanMatch{cs: append(c.cs, "MATCH", pattern)}
+func (c ZscanCursor) Match(Pattern string) ZscanMatch {
+	return ZscanMatch{cs: append(c.cs, "MATCH", Pattern)}
 }
 
-func (c zscanCursor) Count(count int64) zscanCount {
-	return zscanCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c ZscanCursor) Count(Count int64) ZscanCount {
+	return ZscanCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c zscanCursor) Build() []string {
+func (c ZscanCursor) Build() []string {
 	return c.cs
 }
 
-type zscanKey struct {
+type ZscanKey struct {
 	cs []string
 }
 
-func (c zscanKey) Cursor(cursor int64) zscanCursor {
-	return zscanCursor{cs: append(c.cs, strconv.FormatInt(cursor, 10))}
+func (c ZscanKey) Cursor(Cursor int64) ZscanCursor {
+	return ZscanCursor{cs: append(c.cs, strconv.FormatInt(Cursor, 10))}
 }
 
-type zscanMatch struct {
+type ZscanMatch struct {
 	cs []string
 }
 
-func (c zscanMatch) Count(count int64) zscanCount {
-	return zscanCount{cs: append(c.cs, "COUNT", strconv.FormatInt(count, 10))}
+func (c ZscanMatch) Count(Count int64) ZscanCount {
+	return ZscanCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c zscanMatch) Build() []string {
+func (c ZscanMatch) Build() []string {
 	return c.cs
 }
 
-type zscore struct {
+type Zscore struct {
 	cs []string
 }
 
-func (c zscore) Key(key string) zscoreKey {
-	return zscoreKey{cs: append(c.cs, key)}
+func (c Zscore) Key(Key string) ZscoreKey {
+	return ZscoreKey{cs: append(c.cs, Key)}
 }
 
-func (b *Builder) Zscore() (c zscore) {
+func (b *Builder) Zscore() (c Zscore) {
 	c.cs = append(b.get(), "ZSCORE")
 	return
 }
 
-type zscoreKey struct {
+type ZscoreKey struct {
 	cs []string
 }
 
-func (c zscoreKey) Member(member string) zscoreMember {
-	return zscoreMember{cs: append(c.cs, member)}
+func (c ZscoreKey) Member(Member string) ZscoreMember {
+	return ZscoreMember{cs: append(c.cs, Member)}
 }
 
-type zscoreMember struct {
+type ZscoreMember struct {
 	cs []string
 }
 
-func (c zscoreMember) Build() []string {
+func (c ZscoreMember) Build() []string {
 	return c.cs
 }
 
-type zunion struct {
+type Zunion struct {
 	cs []string
 }
 
-func (c zunion) Numkeys(numkeys int64) zunionNumkeys {
-	return zunionNumkeys{cs: append(c.cs, strconv.FormatInt(numkeys, 10))}
+func (c Zunion) Numkeys(Numkeys int64) ZunionNumkeys {
+	return ZunionNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
 }
 
-func (b *Builder) Zunion() (c zunion) {
+func (b *Builder) Zunion() (c Zunion) {
 	c.cs = append(b.get(), "ZUNION")
 	return
 }
 
-type zunionAggregateMax struct {
+type ZunionAggregateMax struct {
 	cs []string
 }
 
-func (c zunionAggregateMax) Withscores() zunionWithscoresWithscores {
-	return zunionWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
+func (c ZunionAggregateMax) Withscores() ZunionWithscoresWithscores {
+	return ZunionWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
 }
 
-func (c zunionAggregateMax) Build() []string {
+func (c ZunionAggregateMax) Build() []string {
 	return c.cs
 }
 
-type zunionAggregateMin struct {
+type ZunionAggregateMin struct {
 	cs []string
 }
 
-func (c zunionAggregateMin) Withscores() zunionWithscoresWithscores {
-	return zunionWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
+func (c ZunionAggregateMin) Withscores() ZunionWithscoresWithscores {
+	return ZunionWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
 }
 
-func (c zunionAggregateMin) Build() []string {
+func (c ZunionAggregateMin) Build() []string {
 	return c.cs
 }
 
-type zunionAggregateSum struct {
+type ZunionAggregateSum struct {
 	cs []string
 }
 
-func (c zunionAggregateSum) Withscores() zunionWithscoresWithscores {
-	return zunionWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
+func (c ZunionAggregateSum) Withscores() ZunionWithscoresWithscores {
+	return ZunionWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
 }
 
-func (c zunionAggregateSum) Build() []string {
+func (c ZunionAggregateSum) Build() []string {
 	return c.cs
 }
 
-type zunionKey struct {
+type ZunionKey struct {
 	cs []string
 }
 
-func (c zunionKey) Weights(weight ...int64) zunionWeights {
+func (c ZunionKey) Weights(Weight ...int64) ZunionWeights {
 	c.cs = append(c.cs, "WEIGHTS")
-	for _, n := range weight {
+	for _, n := range Weight {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return zunionWeights{cs: c.cs}
+	return ZunionWeights{cs: c.cs}
 }
 
-func (c zunionKey) Sum() zunionAggregateSum {
-	return zunionAggregateSum{cs: append(c.cs, "SUM")}
+func (c ZunionKey) Sum() ZunionAggregateSum {
+	return ZunionAggregateSum{cs: append(c.cs, "SUM")}
 }
 
-func (c zunionKey) Min() zunionAggregateMin {
-	return zunionAggregateMin{cs: append(c.cs, "MIN")}
+func (c ZunionKey) Min() ZunionAggregateMin {
+	return ZunionAggregateMin{cs: append(c.cs, "MIN")}
 }
 
-func (c zunionKey) Max() zunionAggregateMax {
-	return zunionAggregateMax{cs: append(c.cs, "MAX")}
+func (c ZunionKey) Max() ZunionAggregateMax {
+	return ZunionAggregateMax{cs: append(c.cs, "MAX")}
 }
 
-func (c zunionKey) Withscores() zunionWithscoresWithscores {
-	return zunionWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
+func (c ZunionKey) Withscores() ZunionWithscoresWithscores {
+	return ZunionWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
 }
 
-func (c zunionKey) Key(key ...string) zunionKey {
-	return zunionKey{cs: append(c.cs, key...)}
+func (c ZunionKey) Key(Key ...string) ZunionKey {
+	return ZunionKey{cs: append(c.cs, Key...)}
 }
 
-func (c zunionKey) Build() []string {
+func (c ZunionKey) Build() []string {
 	return c.cs
 }
 
-type zunionNumkeys struct {
+type ZunionNumkeys struct {
 	cs []string
 }
 
-func (c zunionNumkeys) Key(key ...string) zunionKey {
-	return zunionKey{cs: append(c.cs, key...)}
+func (c ZunionNumkeys) Key(Key ...string) ZunionKey {
+	return ZunionKey{cs: append(c.cs, Key...)}
 }
 
-type zunionWeights struct {
+type ZunionWeights struct {
 	cs []string
 }
 
-func (c zunionWeights) Sum() zunionAggregateSum {
-	return zunionAggregateSum{cs: append(c.cs, "SUM")}
+func (c ZunionWeights) Sum() ZunionAggregateSum {
+	return ZunionAggregateSum{cs: append(c.cs, "SUM")}
 }
 
-func (c zunionWeights) Min() zunionAggregateMin {
-	return zunionAggregateMin{cs: append(c.cs, "MIN")}
+func (c ZunionWeights) Min() ZunionAggregateMin {
+	return ZunionAggregateMin{cs: append(c.cs, "MIN")}
 }
 
-func (c zunionWeights) Max() zunionAggregateMax {
-	return zunionAggregateMax{cs: append(c.cs, "MAX")}
+func (c ZunionWeights) Max() ZunionAggregateMax {
+	return ZunionAggregateMax{cs: append(c.cs, "MAX")}
 }
 
-func (c zunionWeights) Withscores() zunionWithscoresWithscores {
-	return zunionWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
+func (c ZunionWeights) Withscores() ZunionWithscoresWithscores {
+	return ZunionWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
 }
 
-func (c zunionWeights) Weights(weights ...int64) zunionWeights {
-	for _, n := range weights {
+func (c ZunionWeights) Weights(Weights ...int64) ZunionWeights {
+	for _, n := range Weights {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return zunionWeights{cs: c.cs}
+	return ZunionWeights{cs: c.cs}
 }
 
-func (c zunionWeights) Build() []string {
+func (c ZunionWeights) Build() []string {
 	return c.cs
 }
 
-type zunionWithscoresWithscores struct {
+type ZunionWithscoresWithscores struct {
 	cs []string
 }
 
-func (c zunionWithscoresWithscores) Build() []string {
+func (c ZunionWithscoresWithscores) Build() []string {
 	return c.cs
 }
 
-type zunionstore struct {
+type Zunionstore struct {
 	cs []string
 }
 
-func (c zunionstore) Destination(destination string) zunionstoreDestination {
-	return zunionstoreDestination{cs: append(c.cs, destination)}
+func (c Zunionstore) Destination(Destination string) ZunionstoreDestination {
+	return ZunionstoreDestination{cs: append(c.cs, Destination)}
 }
 
-func (b *Builder) Zunionstore() (c zunionstore) {
+func (b *Builder) Zunionstore() (c Zunionstore) {
 	c.cs = append(b.get(), "ZUNIONSTORE")
 	return
 }
 
-type zunionstoreAggregateMax struct {
+type ZunionstoreAggregateMax struct {
 	cs []string
 }
 
-func (c zunionstoreAggregateMax) Build() []string {
+func (c ZunionstoreAggregateMax) Build() []string {
 	return c.cs
 }
 
-type zunionstoreAggregateMin struct {
+type ZunionstoreAggregateMin struct {
 	cs []string
 }
 
-func (c zunionstoreAggregateMin) Build() []string {
+func (c ZunionstoreAggregateMin) Build() []string {
 	return c.cs
 }
 
-type zunionstoreAggregateSum struct {
+type ZunionstoreAggregateSum struct {
 	cs []string
 }
 
-func (c zunionstoreAggregateSum) Build() []string {
+func (c ZunionstoreAggregateSum) Build() []string {
 	return c.cs
 }
 
-type zunionstoreDestination struct {
+type ZunionstoreDestination struct {
 	cs []string
 }
 
-func (c zunionstoreDestination) Numkeys(numkeys int64) zunionstoreNumkeys {
-	return zunionstoreNumkeys{cs: append(c.cs, strconv.FormatInt(numkeys, 10))}
+func (c ZunionstoreDestination) Numkeys(Numkeys int64) ZunionstoreNumkeys {
+	return ZunionstoreNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
 }
 
-type zunionstoreKey struct {
+type ZunionstoreKey struct {
 	cs []string
 }
 
-func (c zunionstoreKey) Weights(weight ...int64) zunionstoreWeights {
+func (c ZunionstoreKey) Weights(Weight ...int64) ZunionstoreWeights {
 	c.cs = append(c.cs, "WEIGHTS")
-	for _, n := range weight {
+	for _, n := range Weight {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return zunionstoreWeights{cs: c.cs}
+	return ZunionstoreWeights{cs: c.cs}
 }
 
-func (c zunionstoreKey) Sum() zunionstoreAggregateSum {
-	return zunionstoreAggregateSum{cs: append(c.cs, "SUM")}
+func (c ZunionstoreKey) Sum() ZunionstoreAggregateSum {
+	return ZunionstoreAggregateSum{cs: append(c.cs, "SUM")}
 }
 
-func (c zunionstoreKey) Min() zunionstoreAggregateMin {
-	return zunionstoreAggregateMin{cs: append(c.cs, "MIN")}
+func (c ZunionstoreKey) Min() ZunionstoreAggregateMin {
+	return ZunionstoreAggregateMin{cs: append(c.cs, "MIN")}
 }
 
-func (c zunionstoreKey) Max() zunionstoreAggregateMax {
-	return zunionstoreAggregateMax{cs: append(c.cs, "MAX")}
+func (c ZunionstoreKey) Max() ZunionstoreAggregateMax {
+	return ZunionstoreAggregateMax{cs: append(c.cs, "MAX")}
 }
 
-func (c zunionstoreKey) Key(key ...string) zunionstoreKey {
-	return zunionstoreKey{cs: append(c.cs, key...)}
+func (c ZunionstoreKey) Key(Key ...string) ZunionstoreKey {
+	return ZunionstoreKey{cs: append(c.cs, Key...)}
 }
 
-func (c zunionstoreKey) Build() []string {
+func (c ZunionstoreKey) Build() []string {
 	return c.cs
 }
 
-type zunionstoreNumkeys struct {
+type ZunionstoreNumkeys struct {
 	cs []string
 }
 
-func (c zunionstoreNumkeys) Key(key ...string) zunionstoreKey {
-	return zunionstoreKey{cs: append(c.cs, key...)}
+func (c ZunionstoreNumkeys) Key(Key ...string) ZunionstoreKey {
+	return ZunionstoreKey{cs: append(c.cs, Key...)}
 }
 
-type zunionstoreWeights struct {
+type ZunionstoreWeights struct {
 	cs []string
 }
 
-func (c zunionstoreWeights) Sum() zunionstoreAggregateSum {
-	return zunionstoreAggregateSum{cs: append(c.cs, "SUM")}
+func (c ZunionstoreWeights) Sum() ZunionstoreAggregateSum {
+	return ZunionstoreAggregateSum{cs: append(c.cs, "SUM")}
 }
 
-func (c zunionstoreWeights) Min() zunionstoreAggregateMin {
-	return zunionstoreAggregateMin{cs: append(c.cs, "MIN")}
+func (c ZunionstoreWeights) Min() ZunionstoreAggregateMin {
+	return ZunionstoreAggregateMin{cs: append(c.cs, "MIN")}
 }
 
-func (c zunionstoreWeights) Max() zunionstoreAggregateMax {
-	return zunionstoreAggregateMax{cs: append(c.cs, "MAX")}
+func (c ZunionstoreWeights) Max() ZunionstoreAggregateMax {
+	return ZunionstoreAggregateMax{cs: append(c.cs, "MAX")}
 }
 
-func (c zunionstoreWeights) Weights(weights ...int64) zunionstoreWeights {
-	for _, n := range weights {
+func (c ZunionstoreWeights) Weights(Weights ...int64) ZunionstoreWeights {
+	for _, n := range Weights {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return zunionstoreWeights{cs: c.cs}
+	return ZunionstoreWeights{cs: c.cs}
 }
 
-func (c zunionstoreWeights) Build() []string {
+func (c ZunionstoreWeights) Build() []string {
 	return c.cs
 }
