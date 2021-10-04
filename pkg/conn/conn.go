@@ -23,6 +23,8 @@ var (
 )
 
 type Conn struct {
+	Cmd *cmds.Builder
+
 	waits int32
 	state int32
 
@@ -48,6 +50,8 @@ type Option struct {
 
 func NewConn(conn net.Conn, option Option) (*Conn, error) {
 	c := &Conn{
+		Cmd: cmds.NewBuilder(),
+
 		conn:  conn,
 		cache: cache.NewLRU(option.CacheSize),
 		r:     bufio.NewReader(conn),
@@ -117,6 +121,7 @@ func (c *Conn) reading() {
 				if err = proto.WriteCmd(c.w, cmd); err != nil {
 					return
 				}
+				c.Cmd.Put(cmd)
 			}
 		}
 	}()
