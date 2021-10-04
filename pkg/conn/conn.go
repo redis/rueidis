@@ -15,6 +15,8 @@ import (
 	"github.com/rueian/rueidis/internal/queue"
 )
 
+const DefaultCacheBytes = 128 * (1 << 20)
+
 var (
 	PingCmd        = []string{"PING"}
 	OptInCmd       = []string{"CLIENT", "CACHING", "yes"}
@@ -48,7 +50,19 @@ type Option struct {
 	ClientName string
 }
 
-func NewConn(conn net.Conn, option Option) (*Conn, error) {
+func NewConn(dst string, option Option) (*Conn, error) {
+	tcp, err := net.Dial("tcp", dst)
+	if err != nil {
+		return nil, err
+	}
+	return newConn(tcp, option)
+}
+
+func newConn(conn net.Conn, option Option) (*Conn, error) {
+	if option.CacheSize <= 0 {
+		option.CacheSize = DefaultCacheBytes
+	}
+
 	c := &Conn{
 		Cmd: cmds.NewBuilder(),
 
