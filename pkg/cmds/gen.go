@@ -14,8 +14,8 @@ func (c aclCat) Build() []string {
 	return c.cs
 }
 
-func AclCat() (c aclCat) {
-	c.cs = append(c.cs, "ACL", "CAT")
+func (b *Builder) AclCat() (c aclCat) {
+	c.cs = append(b.get(), "ACL", "CAT")
 	return
 }
 
@@ -35,8 +35,8 @@ func (c aclDeluser) Username(username ...string) aclDeluserUsername {
 	return aclDeluserUsername{cs: append(c.cs, username...)}
 }
 
-func AclDeluser() (c aclDeluser) {
-	c.cs = append(c.cs, "ACL", "DELUSER")
+func (b *Builder) AclDeluser() (c aclDeluser) {
+	c.cs = append(b.get(), "ACL", "DELUSER")
 	return
 }
 
@@ -64,8 +64,8 @@ func (c aclGenpass) Build() []string {
 	return c.cs
 }
 
-func AclGenpass() (c aclGenpass) {
-	c.cs = append(c.cs, "ACL", "GENPASS")
+func (b *Builder) AclGenpass() (c aclGenpass) {
+	c.cs = append(b.get(), "ACL", "GENPASS")
 	return
 }
 
@@ -85,8 +85,8 @@ func (c aclGetuser) Username(username string) aclGetuserUsername {
 	return aclGetuserUsername{cs: append(c.cs, username)}
 }
 
-func AclGetuser() (c aclGetuser) {
-	c.cs = append(c.cs, "ACL", "GETUSER")
+func (b *Builder) AclGetuser() (c aclGetuser) {
+	c.cs = append(b.get(), "ACL", "GETUSER")
 	return
 }
 
@@ -106,8 +106,8 @@ func (c aclHelp) Build() []string {
 	return c.cs
 }
 
-func AclHelp() (c aclHelp) {
-	c.cs = append(c.cs, "ACL", "HELP")
+func (b *Builder) AclHelp() (c aclHelp) {
+	c.cs = append(b.get(), "ACL", "HELP")
 	return
 }
 
@@ -119,8 +119,8 @@ func (c aclList) Build() []string {
 	return c.cs
 }
 
-func AclList() (c aclList) {
-	c.cs = append(c.cs, "ACL", "LIST")
+func (b *Builder) AclList() (c aclList) {
+	c.cs = append(b.get(), "ACL", "LIST")
 	return
 }
 
@@ -132,8 +132,8 @@ func (c aclLoad) Build() []string {
 	return c.cs
 }
 
-func AclLoad() (c aclLoad) {
-	c.cs = append(c.cs, "ACL", "LOAD")
+func (b *Builder) AclLoad() (c aclLoad) {
+	c.cs = append(b.get(), "ACL", "LOAD")
 	return
 }
 
@@ -149,8 +149,8 @@ func (c aclLog) Build() []string {
 	return c.cs
 }
 
-func AclLog() (c aclLog) {
-	c.cs = append(c.cs, "ACL", "LOG")
+func (b *Builder) AclLog() (c aclLog) {
+	c.cs = append(b.get(), "ACL", "LOG")
 	return
 }
 
@@ -170,8 +170,8 @@ func (c aclSave) Build() []string {
 	return c.cs
 }
 
-func AclSave() (c aclSave) {
-	c.cs = append(c.cs, "ACL", "SAVE")
+func (b *Builder) AclSave() (c aclSave) {
+	c.cs = append(b.get(), "ACL", "SAVE")
 	return
 }
 
@@ -183,8 +183,8 @@ func (c aclSetuser) Username(username string) aclSetuserUsername {
 	return aclSetuserUsername{cs: append(c.cs, username)}
 }
 
-func AclSetuser() (c aclSetuser) {
-	c.cs = append(c.cs, "ACL", "SETUSER")
+func (b *Builder) AclSetuser() (c aclSetuser) {
+	c.cs = append(b.get(), "ACL", "SETUSER")
 	return
 }
 
@@ -220,8 +220,8 @@ func (c aclUsers) Build() []string {
 	return c.cs
 }
 
-func AclUsers() (c aclUsers) {
-	c.cs = append(c.cs, "ACL", "USERS")
+func (b *Builder) AclUsers() (c aclUsers) {
+	c.cs = append(b.get(), "ACL", "USERS")
 	return
 }
 
@@ -233,8 +233,8 @@ func (c aclWhoami) Build() []string {
 	return c.cs
 }
 
-func AclWhoami() (c aclWhoami) {
-	c.cs = append(c.cs, "ACL", "WHOAMI")
+func (b *Builder) AclWhoami() (c aclWhoami) {
+	c.cs = append(b.get(), "ACL", "WHOAMI")
 	return
 }
 
@@ -246,8 +246,8 @@ func (c rAppend) Key(key string) appendKey {
 	return appendKey{cs: append(c.cs, key)}
 }
 
-func Append() (c rAppend) {
-	c.cs = append(c.cs, "APPEND")
+func (b *Builder) Append() (c rAppend) {
+	c.cs = append(b.get(), "APPEND")
 	return
 }
 
@@ -275,8 +275,8 @@ func (c asking) Build() []string {
 	return c.cs
 }
 
-func Asking() (c asking) {
-	c.cs = append(c.cs, "ASKING")
+func (b *Builder) Asking() (c asking) {
+	c.cs = append(b.get(), "ASKING")
 	return
 }
 
@@ -292,8 +292,8 @@ func (c auth) Password(password string) authPassword {
 	return authPassword{cs: append(c.cs, password)}
 }
 
-func Auth() (c auth) {
-	c.cs = append(c.cs, "AUTH")
+func (b *Builder) Auth() (c auth) {
+	c.cs = append(b.get(), "AUTH")
 	return
 }
 
@@ -321,8 +321,8 @@ func (c bgrewriteaof) Build() []string {
 	return c.cs
 }
 
-func Bgrewriteaof() (c bgrewriteaof) {
-	c.cs = append(c.cs, "BGREWRITEAOF")
+func (b *Builder) Bgrewriteaof() (c bgrewriteaof) {
+	c.cs = append(b.get(), "BGREWRITEAOF")
 	return
 }
 
@@ -338,8 +338,8 @@ func (c bgsave) Build() []string {
 	return c.cs
 }
 
-func Bgsave() (c bgsave) {
-	c.cs = append(c.cs, "BGSAVE")
+func (b *Builder) Bgsave() (c bgsave) {
+	c.cs = append(b.get(), "BGSAVE")
 	return
 }
 
@@ -359,8 +359,8 @@ func (c bitcount) Key(key string) bitcountKey {
 	return bitcountKey{cs: append(c.cs, key)}
 }
 
-func Bitcount() (c bitcount) {
-	c.cs = append(c.cs, "BITCOUNT")
+func (b *Builder) Bitcount() (c bitcount) {
+	c.cs = append(b.get(), "BITCOUNT")
 	return
 }
 
@@ -392,8 +392,8 @@ func (c bitfield) Key(key string) bitfieldKey {
 	return bitfieldKey{cs: append(c.cs, key)}
 }
 
-func Bitfield() (c bitfield) {
-	c.cs = append(c.cs, "BITFIELD")
+func (b *Builder) Bitfield() (c bitfield) {
+	c.cs = append(b.get(), "BITFIELD")
 	return
 }
 
@@ -493,8 +493,8 @@ func (c bitfieldRo) Key(key string) bitfieldRoKey {
 	return bitfieldRoKey{cs: append(c.cs, key)}
 }
 
-func BitfieldRo() (c bitfieldRo) {
-	c.cs = append(c.cs, "BITFIELD_RO")
+func (b *Builder) BitfieldRo() (c bitfieldRo) {
+	c.cs = append(b.get(), "BITFIELD_RO")
 	return
 }
 
@@ -562,8 +562,8 @@ func (c bitop) Operation(operation string) bitopOperation {
 	return bitopOperation{cs: append(c.cs, operation)}
 }
 
-func Bitop() (c bitop) {
-	c.cs = append(c.cs, "BITOP")
+func (b *Builder) Bitop() (c bitop) {
+	c.cs = append(b.get(), "BITOP")
 	return
 }
 
@@ -603,8 +603,8 @@ func (c bitpos) Key(key string) bitposKey {
 	return bitposKey{cs: append(c.cs, key)}
 }
 
-func Bitpos() (c bitpos) {
-	c.cs = append(c.cs, "BITPOS")
+func (b *Builder) Bitpos() (c bitpos) {
+	c.cs = append(b.get(), "BITPOS")
 	return
 }
 
@@ -652,8 +652,8 @@ func (c blmove) Source(source string) blmoveSource {
 	return blmoveSource{cs: append(c.cs, source)}
 }
 
-func Blmove() (c blmove) {
-	c.cs = append(c.cs, "BLMOVE")
+func (b *Builder) Blmove() (c blmove) {
+	c.cs = append(b.get(), "BLMOVE")
 	return
 }
 
@@ -733,8 +733,8 @@ func (c blmpop) Timeout(timeout float64) blmpopTimeout {
 	return blmpopTimeout{cs: append(c.cs, strconv.FormatFloat(timeout, 'f', -1, 64))}
 }
 
-func Blmpop() (c blmpop) {
-	c.cs = append(c.cs, "BLMPOP")
+func (b *Builder) Blmpop() (c blmpop) {
+	c.cs = append(b.get(), "BLMPOP")
 	return
 }
 
@@ -818,8 +818,8 @@ func (c blpop) Key(key ...string) blpopKey {
 	return blpopKey{cs: append(c.cs, key...)}
 }
 
-func Blpop() (c blpop) {
-	c.cs = append(c.cs, "BLPOP")
+func (b *Builder) Blpop() (c blpop) {
+	c.cs = append(b.get(), "BLPOP")
 	return
 }
 
@@ -851,8 +851,8 @@ func (c brpop) Key(key ...string) brpopKey {
 	return brpopKey{cs: append(c.cs, key...)}
 }
 
-func Brpop() (c brpop) {
-	c.cs = append(c.cs, "BRPOP")
+func (b *Builder) Brpop() (c brpop) {
+	c.cs = append(b.get(), "BRPOP")
 	return
 }
 
@@ -884,8 +884,8 @@ func (c brpoplpush) Source(source string) brpoplpushSource {
 	return brpoplpushSource{cs: append(c.cs, source)}
 }
 
-func Brpoplpush() (c brpoplpush) {
-	c.cs = append(c.cs, "BRPOPLPUSH")
+func (b *Builder) Brpoplpush() (c brpoplpush) {
+	c.cs = append(b.get(), "BRPOPLPUSH")
 	return
 }
 
@@ -921,8 +921,8 @@ func (c bzpopmax) Key(key ...string) bzpopmaxKey {
 	return bzpopmaxKey{cs: append(c.cs, key...)}
 }
 
-func Bzpopmax() (c bzpopmax) {
-	c.cs = append(c.cs, "BZPOPMAX")
+func (b *Builder) Bzpopmax() (c bzpopmax) {
+	c.cs = append(b.get(), "BZPOPMAX")
 	return
 }
 
@@ -954,8 +954,8 @@ func (c bzpopmin) Key(key ...string) bzpopminKey {
 	return bzpopminKey{cs: append(c.cs, key...)}
 }
 
-func Bzpopmin() (c bzpopmin) {
-	c.cs = append(c.cs, "BZPOPMIN")
+func (b *Builder) Bzpopmin() (c bzpopmin) {
+	c.cs = append(b.get(), "BZPOPMIN")
 	return
 }
 
@@ -991,8 +991,8 @@ func (c clientCaching) No() clientCachingModeNo {
 	return clientCachingModeNo{cs: append(c.cs, "NO")}
 }
 
-func ClientCaching() (c clientCaching) {
-	c.cs = append(c.cs, "CLIENT", "CACHING")
+func (b *Builder) ClientCaching() (c clientCaching) {
+	c.cs = append(b.get(), "CLIENT", "CACHING")
 	return
 }
 
@@ -1020,8 +1020,8 @@ func (c clientGetname) Build() []string {
 	return c.cs
 }
 
-func ClientGetname() (c clientGetname) {
-	c.cs = append(c.cs, "CLIENT", "GETNAME")
+func (b *Builder) ClientGetname() (c clientGetname) {
+	c.cs = append(b.get(), "CLIENT", "GETNAME")
 	return
 }
 
@@ -1033,8 +1033,8 @@ func (c clientGetredir) Build() []string {
 	return c.cs
 }
 
-func ClientGetredir() (c clientGetredir) {
-	c.cs = append(c.cs, "CLIENT", "GETREDIR")
+func (b *Builder) ClientGetredir() (c clientGetredir) {
+	c.cs = append(b.get(), "CLIENT", "GETREDIR")
 	return
 }
 
@@ -1046,8 +1046,8 @@ func (c clientId) Build() []string {
 	return c.cs
 }
 
-func ClientId() (c clientId) {
-	c.cs = append(c.cs, "CLIENT", "ID")
+func (b *Builder) ClientId() (c clientId) {
+	c.cs = append(b.get(), "CLIENT", "ID")
 	return
 }
 
@@ -1059,8 +1059,8 @@ func (c clientInfo) Build() []string {
 	return c.cs
 }
 
-func ClientInfo() (c clientInfo) {
-	c.cs = append(c.cs, "CLIENT", "INFO")
+func (b *Builder) ClientInfo() (c clientInfo) {
+	c.cs = append(b.get(), "CLIENT", "INFO")
 	return
 }
 
@@ -1112,8 +1112,8 @@ func (c clientKill) Build() []string {
 	return c.cs
 }
 
-func ClientKill() (c clientKill) {
-	c.cs = append(c.cs, "CLIENT", "KILL")
+func (b *Builder) ClientKill() (c clientKill) {
+	c.cs = append(b.get(), "CLIENT", "KILL")
 	return
 }
 
@@ -1377,8 +1377,8 @@ func (c clientList) Id() clientListIdId {
 	return clientListIdId{cs: append(c.cs, "ID")}
 }
 
-func ClientList() (c clientList) {
-	c.cs = append(c.cs, "CLIENT", "LIST")
+func (b *Builder) ClientList() (c clientList) {
+	c.cs = append(b.get(), "CLIENT", "LIST")
 	return
 }
 
@@ -1452,8 +1452,8 @@ func (c clientNoEvict) Off() clientNoEvictEnabledOff {
 	return clientNoEvictEnabledOff{cs: append(c.cs, "OFF")}
 }
 
-func ClientNoEvict() (c clientNoEvict) {
-	c.cs = append(c.cs, "CLIENT", "NO-EVICT")
+func (b *Builder) ClientNoEvict() (c clientNoEvict) {
+	c.cs = append(b.get(), "CLIENT", "NO-EVICT")
 	return
 }
 
@@ -1481,8 +1481,8 @@ func (c clientPause) Timeout(timeout int64) clientPauseTimeout {
 	return clientPauseTimeout{cs: append(c.cs, strconv.FormatInt(timeout, 10))}
 }
 
-func ClientPause() (c clientPause) {
-	c.cs = append(c.cs, "CLIENT", "PAUSE")
+func (b *Builder) ClientPause() (c clientPause) {
+	c.cs = append(b.get(), "CLIENT", "PAUSE")
 	return
 }
 
@@ -1534,8 +1534,8 @@ func (c clientReply) Skip() clientReplyReplyModeSkip {
 	return clientReplyReplyModeSkip{cs: append(c.cs, "SKIP")}
 }
 
-func ClientReply() (c clientReply) {
-	c.cs = append(c.cs, "CLIENT", "REPLY")
+func (b *Builder) ClientReply() (c clientReply) {
+	c.cs = append(b.get(), "CLIENT", "REPLY")
 	return
 }
 
@@ -1571,8 +1571,8 @@ func (c clientSetname) ConnectionName(connectionName string) clientSetnameConnec
 	return clientSetnameConnectionName{cs: append(c.cs, connectionName)}
 }
 
-func ClientSetname() (c clientSetname) {
-	c.cs = append(c.cs, "CLIENT", "SETNAME")
+func (b *Builder) ClientSetname() (c clientSetname) {
+	c.cs = append(b.get(), "CLIENT", "SETNAME")
 	return
 }
 
@@ -1596,8 +1596,8 @@ func (c clientTracking) Off() clientTrackingStatusOff {
 	return clientTrackingStatusOff{cs: append(c.cs, "OFF")}
 }
 
-func ClientTracking() (c clientTracking) {
-	c.cs = append(c.cs, "CLIENT", "TRACKING")
+func (b *Builder) ClientTracking() (c clientTracking) {
+	c.cs = append(b.get(), "CLIENT", "TRACKING")
 	return
 }
 
@@ -1788,8 +1788,8 @@ func (c clientTrackinginfo) Build() []string {
 	return c.cs
 }
 
-func ClientTrackinginfo() (c clientTrackinginfo) {
-	c.cs = append(c.cs, "CLIENT", "TRACKINGINFO")
+func (b *Builder) ClientTrackinginfo() (c clientTrackinginfo) {
+	c.cs = append(b.get(), "CLIENT", "TRACKINGINFO")
 	return
 }
 
@@ -1801,8 +1801,8 @@ func (c clientUnblock) ClientId(clientId int64) clientUnblockClientId {
 	return clientUnblockClientId{cs: append(c.cs, strconv.FormatInt(clientId, 10))}
 }
 
-func ClientUnblock() (c clientUnblock) {
-	c.cs = append(c.cs, "CLIENT", "UNBLOCK")
+func (b *Builder) ClientUnblock() (c clientUnblock) {
+	c.cs = append(b.get(), "CLIENT", "UNBLOCK")
 	return
 }
 
@@ -1846,8 +1846,8 @@ func (c clientUnpause) Build() []string {
 	return c.cs
 }
 
-func ClientUnpause() (c clientUnpause) {
-	c.cs = append(c.cs, "CLIENT", "UNPAUSE")
+func (b *Builder) ClientUnpause() (c clientUnpause) {
+	c.cs = append(b.get(), "CLIENT", "UNPAUSE")
 	return
 }
 
@@ -1862,8 +1862,8 @@ func (c clusterAddslots) Slot(slot ...int64) clusterAddslotsSlot {
 	return clusterAddslotsSlot{cs: c.cs}
 }
 
-func ClusterAddslots() (c clusterAddslots) {
-	c.cs = append(c.cs, "CLUSTER", "ADDSLOTS")
+func (b *Builder) ClusterAddslots() (c clusterAddslots) {
+	c.cs = append(b.get(), "CLUSTER", "ADDSLOTS")
 	return
 }
 
@@ -1890,8 +1890,8 @@ func (c clusterBumpepoch) Build() []string {
 	return c.cs
 }
 
-func ClusterBumpepoch() (c clusterBumpepoch) {
-	c.cs = append(c.cs, "CLUSTER", "BUMPEPOCH")
+func (b *Builder) ClusterBumpepoch() (c clusterBumpepoch) {
+	c.cs = append(b.get(), "CLUSTER", "BUMPEPOCH")
 	return
 }
 
@@ -1903,8 +1903,8 @@ func (c clusterCountFailureReports) NodeId(nodeId string) clusterCountFailureRep
 	return clusterCountFailureReportsNodeId{cs: append(c.cs, nodeId)}
 }
 
-func ClusterCountFailureReports() (c clusterCountFailureReports) {
-	c.cs = append(c.cs, "CLUSTER", "COUNT-FAILURE-REPORTS")
+func (b *Builder) ClusterCountFailureReports() (c clusterCountFailureReports) {
+	c.cs = append(b.get(), "CLUSTER", "COUNT-FAILURE-REPORTS")
 	return
 }
 
@@ -1924,8 +1924,8 @@ func (c clusterCountkeysinslot) Slot(slot int64) clusterCountkeysinslotSlot {
 	return clusterCountkeysinslotSlot{cs: append(c.cs, strconv.FormatInt(slot, 10))}
 }
 
-func ClusterCountkeysinslot() (c clusterCountkeysinslot) {
-	c.cs = append(c.cs, "CLUSTER", "COUNTKEYSINSLOT")
+func (b *Builder) ClusterCountkeysinslot() (c clusterCountkeysinslot) {
+	c.cs = append(b.get(), "CLUSTER", "COUNTKEYSINSLOT")
 	return
 }
 
@@ -1948,8 +1948,8 @@ func (c clusterDelslots) Slot(slot ...int64) clusterDelslotsSlot {
 	return clusterDelslotsSlot{cs: c.cs}
 }
 
-func ClusterDelslots() (c clusterDelslots) {
-	c.cs = append(c.cs, "CLUSTER", "DELSLOTS")
+func (b *Builder) ClusterDelslots() (c clusterDelslots) {
+	c.cs = append(b.get(), "CLUSTER", "DELSLOTS")
 	return
 }
 
@@ -1984,8 +1984,8 @@ func (c clusterFailover) Build() []string {
 	return c.cs
 }
 
-func ClusterFailover() (c clusterFailover) {
-	c.cs = append(c.cs, "CLUSTER", "FAILOVER")
+func (b *Builder) ClusterFailover() (c clusterFailover) {
+	c.cs = append(b.get(), "CLUSTER", "FAILOVER")
 	return
 }
 
@@ -2013,8 +2013,8 @@ func (c clusterFlushslots) Build() []string {
 	return c.cs
 }
 
-func ClusterFlushslots() (c clusterFlushslots) {
-	c.cs = append(c.cs, "CLUSTER", "FLUSHSLOTS")
+func (b *Builder) ClusterFlushslots() (c clusterFlushslots) {
+	c.cs = append(b.get(), "CLUSTER", "FLUSHSLOTS")
 	return
 }
 
@@ -2026,8 +2026,8 @@ func (c clusterForget) NodeId(nodeId string) clusterForgetNodeId {
 	return clusterForgetNodeId{cs: append(c.cs, nodeId)}
 }
 
-func ClusterForget() (c clusterForget) {
-	c.cs = append(c.cs, "CLUSTER", "FORGET")
+func (b *Builder) ClusterForget() (c clusterForget) {
+	c.cs = append(b.get(), "CLUSTER", "FORGET")
 	return
 }
 
@@ -2047,8 +2047,8 @@ func (c clusterGetkeysinslot) Slot(slot int64) clusterGetkeysinslotSlot {
 	return clusterGetkeysinslotSlot{cs: append(c.cs, strconv.FormatInt(slot, 10))}
 }
 
-func ClusterGetkeysinslot() (c clusterGetkeysinslot) {
-	c.cs = append(c.cs, "CLUSTER", "GETKEYSINSLOT")
+func (b *Builder) ClusterGetkeysinslot() (c clusterGetkeysinslot) {
+	c.cs = append(b.get(), "CLUSTER", "GETKEYSINSLOT")
 	return
 }
 
@@ -2076,8 +2076,8 @@ func (c clusterInfo) Build() []string {
 	return c.cs
 }
 
-func ClusterInfo() (c clusterInfo) {
-	c.cs = append(c.cs, "CLUSTER", "INFO")
+func (b *Builder) ClusterInfo() (c clusterInfo) {
+	c.cs = append(b.get(), "CLUSTER", "INFO")
 	return
 }
 
@@ -2089,8 +2089,8 @@ func (c clusterKeyslot) Key(key string) clusterKeyslotKey {
 	return clusterKeyslotKey{cs: append(c.cs, key)}
 }
 
-func ClusterKeyslot() (c clusterKeyslot) {
-	c.cs = append(c.cs, "CLUSTER", "KEYSLOT")
+func (b *Builder) ClusterKeyslot() (c clusterKeyslot) {
+	c.cs = append(b.get(), "CLUSTER", "KEYSLOT")
 	return
 }
 
@@ -2110,8 +2110,8 @@ func (c clusterMeet) Ip(ip string) clusterMeetIp {
 	return clusterMeetIp{cs: append(c.cs, ip)}
 }
 
-func ClusterMeet() (c clusterMeet) {
-	c.cs = append(c.cs, "CLUSTER", "MEET")
+func (b *Builder) ClusterMeet() (c clusterMeet) {
+	c.cs = append(b.get(), "CLUSTER", "MEET")
 	return
 }
 
@@ -2139,8 +2139,8 @@ func (c clusterMyid) Build() []string {
 	return c.cs
 }
 
-func ClusterMyid() (c clusterMyid) {
-	c.cs = append(c.cs, "CLUSTER", "MYID")
+func (b *Builder) ClusterMyid() (c clusterMyid) {
+	c.cs = append(b.get(), "CLUSTER", "MYID")
 	return
 }
 
@@ -2152,8 +2152,8 @@ func (c clusterNodes) Build() []string {
 	return c.cs
 }
 
-func ClusterNodes() (c clusterNodes) {
-	c.cs = append(c.cs, "CLUSTER", "NODES")
+func (b *Builder) ClusterNodes() (c clusterNodes) {
+	c.cs = append(b.get(), "CLUSTER", "NODES")
 	return
 }
 
@@ -2165,8 +2165,8 @@ func (c clusterReplicas) NodeId(nodeId string) clusterReplicasNodeId {
 	return clusterReplicasNodeId{cs: append(c.cs, nodeId)}
 }
 
-func ClusterReplicas() (c clusterReplicas) {
-	c.cs = append(c.cs, "CLUSTER", "REPLICAS")
+func (b *Builder) ClusterReplicas() (c clusterReplicas) {
+	c.cs = append(b.get(), "CLUSTER", "REPLICAS")
 	return
 }
 
@@ -2186,8 +2186,8 @@ func (c clusterReplicate) NodeId(nodeId string) clusterReplicateNodeId {
 	return clusterReplicateNodeId{cs: append(c.cs, nodeId)}
 }
 
-func ClusterReplicate() (c clusterReplicate) {
-	c.cs = append(c.cs, "CLUSTER", "REPLICATE")
+func (b *Builder) ClusterReplicate() (c clusterReplicate) {
+	c.cs = append(b.get(), "CLUSTER", "REPLICATE")
 	return
 }
 
@@ -2215,8 +2215,8 @@ func (c clusterReset) Build() []string {
 	return c.cs
 }
 
-func ClusterReset() (c clusterReset) {
-	c.cs = append(c.cs, "CLUSTER", "RESET")
+func (b *Builder) ClusterReset() (c clusterReset) {
+	c.cs = append(b.get(), "CLUSTER", "RESET")
 	return
 }
 
@@ -2244,8 +2244,8 @@ func (c clusterSaveconfig) Build() []string {
 	return c.cs
 }
 
-func ClusterSaveconfig() (c clusterSaveconfig) {
-	c.cs = append(c.cs, "CLUSTER", "SAVECONFIG")
+func (b *Builder) ClusterSaveconfig() (c clusterSaveconfig) {
+	c.cs = append(b.get(), "CLUSTER", "SAVECONFIG")
 	return
 }
 
@@ -2257,8 +2257,8 @@ func (c clusterSetConfigEpoch) ConfigEpoch(configEpoch int64) clusterSetConfigEp
 	return clusterSetConfigEpochConfigEpoch{cs: append(c.cs, strconv.FormatInt(configEpoch, 10))}
 }
 
-func ClusterSetConfigEpoch() (c clusterSetConfigEpoch) {
-	c.cs = append(c.cs, "CLUSTER", "SET-CONFIG-EPOCH")
+func (b *Builder) ClusterSetConfigEpoch() (c clusterSetConfigEpoch) {
+	c.cs = append(b.get(), "CLUSTER", "SET-CONFIG-EPOCH")
 	return
 }
 
@@ -2278,8 +2278,8 @@ func (c clusterSetslot) Slot(slot int64) clusterSetslotSlot {
 	return clusterSetslotSlot{cs: append(c.cs, strconv.FormatInt(slot, 10))}
 }
 
-func ClusterSetslot() (c clusterSetslot) {
-	c.cs = append(c.cs, "CLUSTER", "SETSLOT")
+func (b *Builder) ClusterSetslot() (c clusterSetslot) {
+	c.cs = append(b.get(), "CLUSTER", "SETSLOT")
 	return
 }
 
@@ -2367,8 +2367,8 @@ func (c clusterSlaves) NodeId(nodeId string) clusterSlavesNodeId {
 	return clusterSlavesNodeId{cs: append(c.cs, nodeId)}
 }
 
-func ClusterSlaves() (c clusterSlaves) {
-	c.cs = append(c.cs, "CLUSTER", "SLAVES")
+func (b *Builder) ClusterSlaves() (c clusterSlaves) {
+	c.cs = append(b.get(), "CLUSTER", "SLAVES")
 	return
 }
 
@@ -2388,8 +2388,8 @@ func (c clusterSlots) Build() []string {
 	return c.cs
 }
 
-func ClusterSlots() (c clusterSlots) {
-	c.cs = append(c.cs, "CLUSTER", "SLOTS")
+func (b *Builder) ClusterSlots() (c clusterSlots) {
+	c.cs = append(b.get(), "CLUSTER", "SLOTS")
 	return
 }
 
@@ -2401,8 +2401,8 @@ func (c command) Build() []string {
 	return c.cs
 }
 
-func Command() (c command) {
-	c.cs = append(c.cs, "COMMAND")
+func (b *Builder) Command() (c command) {
+	c.cs = append(b.get(), "COMMAND")
 	return
 }
 
@@ -2414,8 +2414,8 @@ func (c commandCount) Build() []string {
 	return c.cs
 }
 
-func CommandCount() (c commandCount) {
-	c.cs = append(c.cs, "COMMAND", "COUNT")
+func (b *Builder) CommandCount() (c commandCount) {
+	c.cs = append(b.get(), "COMMAND", "COUNT")
 	return
 }
 
@@ -2427,8 +2427,8 @@ func (c commandGetkeys) Build() []string {
 	return c.cs
 }
 
-func CommandGetkeys() (c commandGetkeys) {
-	c.cs = append(c.cs, "COMMAND", "GETKEYS")
+func (b *Builder) CommandGetkeys() (c commandGetkeys) {
+	c.cs = append(b.get(), "COMMAND", "GETKEYS")
 	return
 }
 
@@ -2440,8 +2440,8 @@ func (c commandInfo) CommandName(commandName ...string) commandInfoCommandName {
 	return commandInfoCommandName{cs: append(c.cs, commandName...)}
 }
 
-func CommandInfo() (c commandInfo) {
-	c.cs = append(c.cs, "COMMAND", "INFO")
+func (b *Builder) CommandInfo() (c commandInfo) {
+	c.cs = append(b.get(), "COMMAND", "INFO")
 	return
 }
 
@@ -2465,8 +2465,8 @@ func (c configGet) Parameter(parameter string) configGetParameter {
 	return configGetParameter{cs: append(c.cs, parameter)}
 }
 
-func ConfigGet() (c configGet) {
-	c.cs = append(c.cs, "CONFIG", "GET")
+func (b *Builder) ConfigGet() (c configGet) {
+	c.cs = append(b.get(), "CONFIG", "GET")
 	return
 }
 
@@ -2486,8 +2486,8 @@ func (c configResetstat) Build() []string {
 	return c.cs
 }
 
-func ConfigResetstat() (c configResetstat) {
-	c.cs = append(c.cs, "CONFIG", "RESETSTAT")
+func (b *Builder) ConfigResetstat() (c configResetstat) {
+	c.cs = append(b.get(), "CONFIG", "RESETSTAT")
 	return
 }
 
@@ -2499,8 +2499,8 @@ func (c configRewrite) Build() []string {
 	return c.cs
 }
 
-func ConfigRewrite() (c configRewrite) {
-	c.cs = append(c.cs, "CONFIG", "REWRITE")
+func (b *Builder) ConfigRewrite() (c configRewrite) {
+	c.cs = append(b.get(), "CONFIG", "REWRITE")
 	return
 }
 
@@ -2512,8 +2512,8 @@ func (c configSet) Parameter(parameter string) configSetParameter {
 	return configSetParameter{cs: append(c.cs, parameter)}
 }
 
-func ConfigSet() (c configSet) {
-	c.cs = append(c.cs, "CONFIG", "SET")
+func (b *Builder) ConfigSet() (c configSet) {
+	c.cs = append(b.get(), "CONFIG", "SET")
 	return
 }
 
@@ -2541,8 +2541,8 @@ func (c copy) Source(source string) copySource {
 	return copySource{cs: append(c.cs, source)}
 }
 
-func Copy() (c copy) {
-	c.cs = append(c.cs, "COPY")
+func (b *Builder) Copy() (c copy) {
+	c.cs = append(b.get(), "COPY")
 	return
 }
 
@@ -2598,8 +2598,8 @@ func (c dbsize) Build() []string {
 	return c.cs
 }
 
-func Dbsize() (c dbsize) {
-	c.cs = append(c.cs, "DBSIZE")
+func (b *Builder) Dbsize() (c dbsize) {
+	c.cs = append(b.get(), "DBSIZE")
 	return
 }
 
@@ -2611,8 +2611,8 @@ func (c debugObject) Key(key string) debugObjectKey {
 	return debugObjectKey{cs: append(c.cs, key)}
 }
 
-func DebugObject() (c debugObject) {
-	c.cs = append(c.cs, "DEBUG", "OBJECT")
+func (b *Builder) DebugObject() (c debugObject) {
+	c.cs = append(b.get(), "DEBUG", "OBJECT")
 	return
 }
 
@@ -2632,8 +2632,8 @@ func (c debugSegfault) Build() []string {
 	return c.cs
 }
 
-func DebugSegfault() (c debugSegfault) {
-	c.cs = append(c.cs, "DEBUG", "SEGFAULT")
+func (b *Builder) DebugSegfault() (c debugSegfault) {
+	c.cs = append(b.get(), "DEBUG", "SEGFAULT")
 	return
 }
 
@@ -2645,8 +2645,8 @@ func (c decr) Key(key string) decrKey {
 	return decrKey{cs: append(c.cs, key)}
 }
 
-func Decr() (c decr) {
-	c.cs = append(c.cs, "DECR")
+func (b *Builder) Decr() (c decr) {
+	c.cs = append(b.get(), "DECR")
 	return
 }
 
@@ -2666,8 +2666,8 @@ func (c decrby) Key(key string) decrbyKey {
 	return decrbyKey{cs: append(c.cs, key)}
 }
 
-func Decrby() (c decrby) {
-	c.cs = append(c.cs, "DECRBY")
+func (b *Builder) Decrby() (c decrby) {
+	c.cs = append(b.get(), "DECRBY")
 	return
 }
 
@@ -2695,8 +2695,8 @@ func (c del) Key(key ...string) delKey {
 	return delKey{cs: append(c.cs, key...)}
 }
 
-func Del() (c del) {
-	c.cs = append(c.cs, "DEL")
+func (b *Builder) Del() (c del) {
+	c.cs = append(b.get(), "DEL")
 	return
 }
 
@@ -2720,8 +2720,8 @@ func (c discard) Build() []string {
 	return c.cs
 }
 
-func Discard() (c discard) {
-	c.cs = append(c.cs, "DISCARD")
+func (b *Builder) Discard() (c discard) {
+	c.cs = append(b.get(), "DISCARD")
 	return
 }
 
@@ -2733,8 +2733,8 @@ func (c dump) Key(key string) dumpKey {
 	return dumpKey{cs: append(c.cs, key)}
 }
 
-func Dump() (c dump) {
-	c.cs = append(c.cs, "DUMP")
+func (b *Builder) Dump() (c dump) {
+	c.cs = append(b.get(), "DUMP")
 	return
 }
 
@@ -2754,8 +2754,8 @@ func (c echo) Message(message string) echoMessage {
 	return echoMessage{cs: append(c.cs, message)}
 }
 
-func Echo() (c echo) {
-	c.cs = append(c.cs, "ECHO")
+func (b *Builder) Echo() (c echo) {
+	c.cs = append(b.get(), "ECHO")
 	return
 }
 
@@ -2775,8 +2775,8 @@ func (c eval) Script(script string) evalScript {
 	return evalScript{cs: append(c.cs, script)}
 }
 
-func Eval() (c eval) {
-	c.cs = append(c.cs, "EVAL")
+func (b *Builder) Eval() (c eval) {
+	c.cs = append(b.get(), "EVAL")
 	return
 }
 
@@ -2832,8 +2832,8 @@ func (c evalRo) Script(script string) evalRoScript {
 	return evalRoScript{cs: append(c.cs, script)}
 }
 
-func EvalRo() (c evalRo) {
-	c.cs = append(c.cs, "EVAL_RO")
+func (b *Builder) EvalRo() (c evalRo) {
+	c.cs = append(b.get(), "EVAL_RO")
 	return
 }
 
@@ -2893,8 +2893,8 @@ func (c evalsha) Sha1(sha1 string) evalshaSha1 {
 	return evalshaSha1{cs: append(c.cs, sha1)}
 }
 
-func Evalsha() (c evalsha) {
-	c.cs = append(c.cs, "EVALSHA")
+func (b *Builder) Evalsha() (c evalsha) {
+	c.cs = append(b.get(), "EVALSHA")
 	return
 }
 
@@ -2950,8 +2950,8 @@ func (c evalshaRo) Sha1(sha1 string) evalshaRoSha1 {
 	return evalshaRoSha1{cs: append(c.cs, sha1)}
 }
 
-func EvalshaRo() (c evalshaRo) {
-	c.cs = append(c.cs, "EVALSHA_RO")
+func (b *Builder) EvalshaRo() (c evalshaRo) {
+	c.cs = append(b.get(), "EVALSHA_RO")
 	return
 }
 
@@ -3011,8 +3011,8 @@ func (c exec) Build() []string {
 	return c.cs
 }
 
-func Exec() (c exec) {
-	c.cs = append(c.cs, "EXEC")
+func (b *Builder) Exec() (c exec) {
+	c.cs = append(b.get(), "EXEC")
 	return
 }
 
@@ -3024,8 +3024,8 @@ func (c exists) Key(key ...string) existsKey {
 	return existsKey{cs: append(c.cs, key...)}
 }
 
-func Exists() (c exists) {
-	c.cs = append(c.cs, "EXISTS")
+func (b *Builder) Exists() (c exists) {
+	c.cs = append(b.get(), "EXISTS")
 	return
 }
 
@@ -3049,8 +3049,8 @@ func (c expire) Key(key string) expireKey {
 	return expireKey{cs: append(c.cs, key)}
 }
 
-func Expire() (c expire) {
-	c.cs = append(c.cs, "EXPIRE")
+func (b *Builder) Expire() (c expire) {
+	c.cs = append(b.get(), "EXPIRE")
 	return
 }
 
@@ -3126,8 +3126,8 @@ func (c expireat) Key(key string) expireatKey {
 	return expireatKey{cs: append(c.cs, key)}
 }
 
-func Expireat() (c expireat) {
-	c.cs = append(c.cs, "EXPIREAT")
+func (b *Builder) Expireat() (c expireat) {
+	c.cs = append(b.get(), "EXPIREAT")
 	return
 }
 
@@ -3203,8 +3203,8 @@ func (c expiretime) Key(key string) expiretimeKey {
 	return expiretimeKey{cs: append(c.cs, key)}
 }
 
-func Expiretime() (c expiretime) {
-	c.cs = append(c.cs, "EXPIRETIME")
+func (b *Builder) Expiretime() (c expiretime) {
+	c.cs = append(b.get(), "EXPIRETIME")
 	return
 }
 
@@ -3232,8 +3232,8 @@ func (c failover) Timeout(milliseconds int64) failoverTimeout {
 	return failoverTimeout{cs: append(c.cs, "TIMEOUT", strconv.FormatInt(milliseconds, 10))}
 }
 
-func Failover() (c failover) {
-	c.cs = append(c.cs, "FAILOVER")
+func (b *Builder) Failover() (c failover) {
+	c.cs = append(b.get(), "FAILOVER")
 	return
 }
 
@@ -3325,8 +3325,8 @@ func (c flushall) Build() []string {
 	return c.cs
 }
 
-func Flushall() (c flushall) {
-	c.cs = append(c.cs, "FLUSHALL")
+func (b *Builder) Flushall() (c flushall) {
+	c.cs = append(b.get(), "FLUSHALL")
 	return
 }
 
@@ -3362,8 +3362,8 @@ func (c flushdb) Build() []string {
 	return c.cs
 }
 
-func Flushdb() (c flushdb) {
-	c.cs = append(c.cs, "FLUSHDB")
+func (b *Builder) Flushdb() (c flushdb) {
+	c.cs = append(b.get(), "FLUSHDB")
 	return
 }
 
@@ -3391,8 +3391,8 @@ func (c geoadd) Key(key string) geoaddKey {
 	return geoaddKey{cs: append(c.cs, key)}
 }
 
-func Geoadd() (c geoadd) {
-	c.cs = append(c.cs, "GEOADD")
+func (b *Builder) Geoadd() (c geoadd) {
+	c.cs = append(b.get(), "GEOADD")
 	return
 }
 
@@ -3468,8 +3468,8 @@ func (c geodist) Key(key string) geodistKey {
 	return geodistKey{cs: append(c.cs, key)}
 }
 
-func Geodist() (c geodist) {
-	c.cs = append(c.cs, "GEODIST")
+func (b *Builder) Geodist() (c geodist) {
+	c.cs = append(b.get(), "GEODIST")
 	return
 }
 
@@ -3553,8 +3553,8 @@ func (c geohash) Key(key string) geohashKey {
 	return geohashKey{cs: append(c.cs, key)}
 }
 
-func Geohash() (c geohash) {
-	c.cs = append(c.cs, "GEOHASH")
+func (b *Builder) Geohash() (c geohash) {
+	c.cs = append(b.get(), "GEOHASH")
 	return
 }
 
@@ -3586,8 +3586,8 @@ func (c geopos) Key(key string) geoposKey {
 	return geoposKey{cs: append(c.cs, key)}
 }
 
-func Geopos() (c geopos) {
-	c.cs = append(c.cs, "GEOPOS")
+func (b *Builder) Geopos() (c geopos) {
+	c.cs = append(b.get(), "GEOPOS")
 	return
 }
 
@@ -3619,8 +3619,8 @@ func (c georadius) Key(key string) georadiusKey {
 	return georadiusKey{cs: append(c.cs, key)}
 }
 
-func Georadius() (c georadius) {
-	c.cs = append(c.cs, "GEORADIUS")
+func (b *Builder) Georadius() (c georadius) {
+	c.cs = append(b.get(), "GEORADIUS")
 	return
 }
 
@@ -4008,8 +4008,8 @@ func (c georadiusbymember) Key(key string) georadiusbymemberKey {
 	return georadiusbymemberKey{cs: append(c.cs, key)}
 }
 
-func Georadiusbymember() (c georadiusbymember) {
-	c.cs = append(c.cs, "GEORADIUSBYMEMBER")
+func (b *Builder) Georadiusbymember() (c georadiusbymember) {
+	c.cs = append(b.get(), "GEORADIUSBYMEMBER")
 	return
 }
 
@@ -4389,8 +4389,8 @@ func (c geosearch) Key(key string) geosearchKey {
 	return geosearchKey{cs: append(c.cs, key)}
 }
 
-func Geosearch() (c geosearch) {
-	c.cs = append(c.cs, "GEOSEARCH")
+func (b *Builder) Geosearch() (c geosearch) {
+	c.cs = append(b.get(), "GEOSEARCH")
 	return
 }
 
@@ -4930,8 +4930,8 @@ func (c geosearchstore) Destination(destination string) geosearchstoreDestinatio
 	return geosearchstoreDestination{cs: append(c.cs, destination)}
 }
 
-func Geosearchstore() (c geosearchstore) {
-	c.cs = append(c.cs, "GEOSEARCHSTORE")
+func (b *Builder) Geosearchstore() (c geosearchstore) {
+	c.cs = append(b.get(), "GEOSEARCHSTORE")
 	return
 }
 
@@ -5331,8 +5331,8 @@ func (c get) Key(key string) getKey {
 	return getKey{cs: append(c.cs, key)}
 }
 
-func Get() (c get) {
-	c.cs = append(c.cs, "GET")
+func (b *Builder) Get() (c get) {
+	c.cs = append(b.get(), "GET")
 	return
 }
 
@@ -5352,8 +5352,8 @@ func (c getbit) Key(key string) getbitKey {
 	return getbitKey{cs: append(c.cs, key)}
 }
 
-func Getbit() (c getbit) {
-	c.cs = append(c.cs, "GETBIT")
+func (b *Builder) Getbit() (c getbit) {
+	c.cs = append(b.get(), "GETBIT")
 	return
 }
 
@@ -5381,8 +5381,8 @@ func (c getdel) Key(key string) getdelKey {
 	return getdelKey{cs: append(c.cs, key)}
 }
 
-func Getdel() (c getdel) {
-	c.cs = append(c.cs, "GETDEL")
+func (b *Builder) Getdel() (c getdel) {
+	c.cs = append(b.get(), "GETDEL")
 	return
 }
 
@@ -5402,8 +5402,8 @@ func (c getex) Key(key string) getexKey {
 	return getexKey{cs: append(c.cs, key)}
 }
 
-func Getex() (c getex) {
-	c.cs = append(c.cs, "GETEX")
+func (b *Builder) Getex() (c getex) {
+	c.cs = append(b.get(), "GETEX")
 	return
 }
 
@@ -5483,8 +5483,8 @@ func (c getrange) Key(key string) getrangeKey {
 	return getrangeKey{cs: append(c.cs, key)}
 }
 
-func Getrange() (c getrange) {
-	c.cs = append(c.cs, "GETRANGE")
+func (b *Builder) Getrange() (c getrange) {
+	c.cs = append(b.get(), "GETRANGE")
 	return
 }
 
@@ -5520,8 +5520,8 @@ func (c getset) Key(key string) getsetKey {
 	return getsetKey{cs: append(c.cs, key)}
 }
 
-func Getset() (c getset) {
-	c.cs = append(c.cs, "GETSET")
+func (b *Builder) Getset() (c getset) {
+	c.cs = append(b.get(), "GETSET")
 	return
 }
 
@@ -5549,8 +5549,8 @@ func (c hdel) Key(key string) hdelKey {
 	return hdelKey{cs: append(c.cs, key)}
 }
 
-func Hdel() (c hdel) {
-	c.cs = append(c.cs, "HDEL")
+func (b *Builder) Hdel() (c hdel) {
+	c.cs = append(b.get(), "HDEL")
 	return
 }
 
@@ -5582,8 +5582,8 @@ func (c hello) Protover(protover int64) helloArgumentsProtover {
 	return helloArgumentsProtover{cs: append(c.cs, strconv.FormatInt(protover, 10))}
 }
 
-func Hello() (c hello) {
-	c.cs = append(c.cs, "HELLO")
+func (b *Builder) Hello() (c hello) {
+	c.cs = append(b.get(), "HELLO")
 	return
 }
 
@@ -5631,8 +5631,8 @@ func (c hexists) Key(key string) hexistsKey {
 	return hexistsKey{cs: append(c.cs, key)}
 }
 
-func Hexists() (c hexists) {
-	c.cs = append(c.cs, "HEXISTS")
+func (b *Builder) Hexists() (c hexists) {
+	c.cs = append(b.get(), "HEXISTS")
 	return
 }
 
@@ -5660,8 +5660,8 @@ func (c hget) Key(key string) hgetKey {
 	return hgetKey{cs: append(c.cs, key)}
 }
 
-func Hget() (c hget) {
-	c.cs = append(c.cs, "HGET")
+func (b *Builder) Hget() (c hget) {
+	c.cs = append(b.get(), "HGET")
 	return
 }
 
@@ -5689,8 +5689,8 @@ func (c hgetall) Key(key string) hgetallKey {
 	return hgetallKey{cs: append(c.cs, key)}
 }
 
-func Hgetall() (c hgetall) {
-	c.cs = append(c.cs, "HGETALL")
+func (b *Builder) Hgetall() (c hgetall) {
+	c.cs = append(b.get(), "HGETALL")
 	return
 }
 
@@ -5710,8 +5710,8 @@ func (c hincrby) Key(key string) hincrbyKey {
 	return hincrbyKey{cs: append(c.cs, key)}
 }
 
-func Hincrby() (c hincrby) {
-	c.cs = append(c.cs, "HINCRBY")
+func (b *Builder) Hincrby() (c hincrby) {
+	c.cs = append(b.get(), "HINCRBY")
 	return
 }
 
@@ -5747,8 +5747,8 @@ func (c hincrbyfloat) Key(key string) hincrbyfloatKey {
 	return hincrbyfloatKey{cs: append(c.cs, key)}
 }
 
-func Hincrbyfloat() (c hincrbyfloat) {
-	c.cs = append(c.cs, "HINCRBYFLOAT")
+func (b *Builder) Hincrbyfloat() (c hincrbyfloat) {
+	c.cs = append(b.get(), "HINCRBYFLOAT")
 	return
 }
 
@@ -5784,8 +5784,8 @@ func (c hkeys) Key(key string) hkeysKey {
 	return hkeysKey{cs: append(c.cs, key)}
 }
 
-func Hkeys() (c hkeys) {
-	c.cs = append(c.cs, "HKEYS")
+func (b *Builder) Hkeys() (c hkeys) {
+	c.cs = append(b.get(), "HKEYS")
 	return
 }
 
@@ -5805,8 +5805,8 @@ func (c hlen) Key(key string) hlenKey {
 	return hlenKey{cs: append(c.cs, key)}
 }
 
-func Hlen() (c hlen) {
-	c.cs = append(c.cs, "HLEN")
+func (b *Builder) Hlen() (c hlen) {
+	c.cs = append(b.get(), "HLEN")
 	return
 }
 
@@ -5826,8 +5826,8 @@ func (c hmget) Key(key string) hmgetKey {
 	return hmgetKey{cs: append(c.cs, key)}
 }
 
-func Hmget() (c hmget) {
-	c.cs = append(c.cs, "HMGET")
+func (b *Builder) Hmget() (c hmget) {
+	c.cs = append(b.get(), "HMGET")
 	return
 }
 
@@ -5859,8 +5859,8 @@ func (c hmset) Key(key string) hmsetKey {
 	return hmsetKey{cs: append(c.cs, key)}
 }
 
-func Hmset() (c hmset) {
-	c.cs = append(c.cs, "HMSET")
+func (b *Builder) Hmset() (c hmset) {
+	c.cs = append(b.get(), "HMSET")
 	return
 }
 
@@ -5892,8 +5892,8 @@ func (c hrandfield) Key(key string) hrandfieldKey {
 	return hrandfieldKey{cs: append(c.cs, key)}
 }
 
-func Hrandfield() (c hrandfield) {
-	c.cs = append(c.cs, "HRANDFIELD")
+func (b *Builder) Hrandfield() (c hrandfield) {
+	c.cs = append(b.get(), "HRANDFIELD")
 	return
 }
 
@@ -5933,8 +5933,8 @@ func (c hscan) Key(key string) hscanKey {
 	return hscanKey{cs: append(c.cs, key)}
 }
 
-func Hscan() (c hscan) {
-	c.cs = append(c.cs, "HSCAN")
+func (b *Builder) Hscan() (c hscan) {
+	c.cs = append(b.get(), "HSCAN")
 	return
 }
 
@@ -5990,8 +5990,8 @@ func (c hset) Key(key string) hsetKey {
 	return hsetKey{cs: append(c.cs, key)}
 }
 
-func Hset() (c hset) {
-	c.cs = append(c.cs, "HSET")
+func (b *Builder) Hset() (c hset) {
+	c.cs = append(b.get(), "HSET")
 	return
 }
 
@@ -6023,8 +6023,8 @@ func (c hsetnx) Key(key string) hsetnxKey {
 	return hsetnxKey{cs: append(c.cs, key)}
 }
 
-func Hsetnx() (c hsetnx) {
-	c.cs = append(c.cs, "HSETNX")
+func (b *Builder) Hsetnx() (c hsetnx) {
+	c.cs = append(b.get(), "HSETNX")
 	return
 }
 
@@ -6060,8 +6060,8 @@ func (c hstrlen) Key(key string) hstrlenKey {
 	return hstrlenKey{cs: append(c.cs, key)}
 }
 
-func Hstrlen() (c hstrlen) {
-	c.cs = append(c.cs, "HSTRLEN")
+func (b *Builder) Hstrlen() (c hstrlen) {
+	c.cs = append(b.get(), "HSTRLEN")
 	return
 }
 
@@ -6089,8 +6089,8 @@ func (c hvals) Key(key string) hvalsKey {
 	return hvalsKey{cs: append(c.cs, key)}
 }
 
-func Hvals() (c hvals) {
-	c.cs = append(c.cs, "HVALS")
+func (b *Builder) Hvals() (c hvals) {
+	c.cs = append(b.get(), "HVALS")
 	return
 }
 
@@ -6110,8 +6110,8 @@ func (c incr) Key(key string) incrKey {
 	return incrKey{cs: append(c.cs, key)}
 }
 
-func Incr() (c incr) {
-	c.cs = append(c.cs, "INCR")
+func (b *Builder) Incr() (c incr) {
+	c.cs = append(b.get(), "INCR")
 	return
 }
 
@@ -6131,8 +6131,8 @@ func (c incrby) Key(key string) incrbyKey {
 	return incrbyKey{cs: append(c.cs, key)}
 }
 
-func Incrby() (c incrby) {
-	c.cs = append(c.cs, "INCRBY")
+func (b *Builder) Incrby() (c incrby) {
+	c.cs = append(b.get(), "INCRBY")
 	return
 }
 
@@ -6160,8 +6160,8 @@ func (c incrbyfloat) Key(key string) incrbyfloatKey {
 	return incrbyfloatKey{cs: append(c.cs, key)}
 }
 
-func Incrbyfloat() (c incrbyfloat) {
-	c.cs = append(c.cs, "INCRBYFLOAT")
+func (b *Builder) Incrbyfloat() (c incrbyfloat) {
+	c.cs = append(b.get(), "INCRBYFLOAT")
 	return
 }
 
@@ -6193,8 +6193,8 @@ func (c info) Build() []string {
 	return c.cs
 }
 
-func Info() (c info) {
-	c.cs = append(c.cs, "INFO")
+func (b *Builder) Info() (c info) {
+	c.cs = append(b.get(), "INFO")
 	return
 }
 
@@ -6214,8 +6214,8 @@ func (c keys) Pattern(pattern string) keysPattern {
 	return keysPattern{cs: append(c.cs, pattern)}
 }
 
-func Keys() (c keys) {
-	c.cs = append(c.cs, "KEYS")
+func (b *Builder) Keys() (c keys) {
+	c.cs = append(b.get(), "KEYS")
 	return
 }
 
@@ -6235,8 +6235,8 @@ func (c lastsave) Build() []string {
 	return c.cs
 }
 
-func Lastsave() (c lastsave) {
-	c.cs = append(c.cs, "LASTSAVE")
+func (b *Builder) Lastsave() (c lastsave) {
+	c.cs = append(b.get(), "LASTSAVE")
 	return
 }
 
@@ -6248,8 +6248,8 @@ func (c latencyDoctor) Build() []string {
 	return c.cs
 }
 
-func LatencyDoctor() (c latencyDoctor) {
-	c.cs = append(c.cs, "LATENCY", "DOCTOR")
+func (b *Builder) LatencyDoctor() (c latencyDoctor) {
+	c.cs = append(b.get(), "LATENCY", "DOCTOR")
 	return
 }
 
@@ -6261,8 +6261,8 @@ func (c latencyGraph) Event(event string) latencyGraphEvent {
 	return latencyGraphEvent{cs: append(c.cs, event)}
 }
 
-func LatencyGraph() (c latencyGraph) {
-	c.cs = append(c.cs, "LATENCY", "GRAPH")
+func (b *Builder) LatencyGraph() (c latencyGraph) {
+	c.cs = append(b.get(), "LATENCY", "GRAPH")
 	return
 }
 
@@ -6282,8 +6282,8 @@ func (c latencyHelp) Build() []string {
 	return c.cs
 }
 
-func LatencyHelp() (c latencyHelp) {
-	c.cs = append(c.cs, "LATENCY", "HELP")
+func (b *Builder) LatencyHelp() (c latencyHelp) {
+	c.cs = append(b.get(), "LATENCY", "HELP")
 	return
 }
 
@@ -6295,8 +6295,8 @@ func (c latencyHistory) Event(event string) latencyHistoryEvent {
 	return latencyHistoryEvent{cs: append(c.cs, event)}
 }
 
-func LatencyHistory() (c latencyHistory) {
-	c.cs = append(c.cs, "LATENCY", "HISTORY")
+func (b *Builder) LatencyHistory() (c latencyHistory) {
+	c.cs = append(b.get(), "LATENCY", "HISTORY")
 	return
 }
 
@@ -6316,8 +6316,8 @@ func (c latencyLatest) Build() []string {
 	return c.cs
 }
 
-func LatencyLatest() (c latencyLatest) {
-	c.cs = append(c.cs, "LATENCY", "LATEST")
+func (b *Builder) LatencyLatest() (c latencyLatest) {
+	c.cs = append(b.get(), "LATENCY", "LATEST")
 	return
 }
 
@@ -6333,8 +6333,8 @@ func (c latencyReset) Build() []string {
 	return c.cs
 }
 
-func LatencyReset() (c latencyReset) {
-	c.cs = append(c.cs, "LATENCY", "RESET")
+func (b *Builder) LatencyReset() (c latencyReset) {
+	c.cs = append(b.get(), "LATENCY", "RESET")
 	return
 }
 
@@ -6358,8 +6358,8 @@ func (c lindex) Key(key string) lindexKey {
 	return lindexKey{cs: append(c.cs, key)}
 }
 
-func Lindex() (c lindex) {
-	c.cs = append(c.cs, "LINDEX")
+func (b *Builder) Lindex() (c lindex) {
+	c.cs = append(b.get(), "LINDEX")
 	return
 }
 
@@ -6387,8 +6387,8 @@ func (c linsert) Key(key string) linsertKey {
 	return linsertKey{cs: append(c.cs, key)}
 }
 
-func Linsert() (c linsert) {
-	c.cs = append(c.cs, "LINSERT")
+func (b *Builder) Linsert() (c linsert) {
+	c.cs = append(b.get(), "LINSERT")
 	return
 }
 
@@ -6444,8 +6444,8 @@ func (c llen) Key(key string) llenKey {
 	return llenKey{cs: append(c.cs, key)}
 }
 
-func Llen() (c llen) {
-	c.cs = append(c.cs, "LLEN")
+func (b *Builder) Llen() (c llen) {
+	c.cs = append(b.get(), "LLEN")
 	return
 }
 
@@ -6465,8 +6465,8 @@ func (c lmove) Source(source string) lmoveSource {
 	return lmoveSource{cs: append(c.cs, source)}
 }
 
-func Lmove() (c lmove) {
-	c.cs = append(c.cs, "LMOVE")
+func (b *Builder) Lmove() (c lmove) {
+	c.cs = append(b.get(), "LMOVE")
 	return
 }
 
@@ -6538,8 +6538,8 @@ func (c lmpop) Numkeys(numkeys int64) lmpopNumkeys {
 	return lmpopNumkeys{cs: append(c.cs, strconv.FormatInt(numkeys, 10))}
 }
 
-func Lmpop() (c lmpop) {
-	c.cs = append(c.cs, "LMPOP")
+func (b *Builder) Lmpop() (c lmpop) {
+	c.cs = append(b.get(), "LMPOP")
 	return
 }
 
@@ -6619,8 +6619,8 @@ func (c lolwut) Build() []string {
 	return c.cs
 }
 
-func Lolwut() (c lolwut) {
-	c.cs = append(c.cs, "LOLWUT")
+func (b *Builder) Lolwut() (c lolwut) {
+	c.cs = append(b.get(), "LOLWUT")
 	return
 }
 
@@ -6640,8 +6640,8 @@ func (c lpop) Key(key string) lpopKey {
 	return lpopKey{cs: append(c.cs, key)}
 }
 
-func Lpop() (c lpop) {
-	c.cs = append(c.cs, "LPOP")
+func (b *Builder) Lpop() (c lpop) {
+	c.cs = append(b.get(), "LPOP")
 	return
 }
 
@@ -6673,8 +6673,8 @@ func (c lpos) Key(key string) lposKey {
 	return lposKey{cs: append(c.cs, key)}
 }
 
-func Lpos() (c lpos) {
-	c.cs = append(c.cs, "LPOS")
+func (b *Builder) Lpos() (c lpos) {
+	c.cs = append(b.get(), "LPOS")
 	return
 }
 
@@ -6750,8 +6750,8 @@ func (c lpush) Key(key string) lpushKey {
 	return lpushKey{cs: append(c.cs, key)}
 }
 
-func Lpush() (c lpush) {
-	c.cs = append(c.cs, "LPUSH")
+func (b *Builder) Lpush() (c lpush) {
+	c.cs = append(b.get(), "LPUSH")
 	return
 }
 
@@ -6783,8 +6783,8 @@ func (c lpushx) Key(key string) lpushxKey {
 	return lpushxKey{cs: append(c.cs, key)}
 }
 
-func Lpushx() (c lpushx) {
-	c.cs = append(c.cs, "LPUSHX")
+func (b *Builder) Lpushx() (c lpushx) {
+	c.cs = append(b.get(), "LPUSHX")
 	return
 }
 
@@ -6816,8 +6816,8 @@ func (c lrange) Key(key string) lrangeKey {
 	return lrangeKey{cs: append(c.cs, key)}
 }
 
-func Lrange() (c lrange) {
-	c.cs = append(c.cs, "LRANGE")
+func (b *Builder) Lrange() (c lrange) {
+	c.cs = append(b.get(), "LRANGE")
 	return
 }
 
@@ -6853,8 +6853,8 @@ func (c lrem) Key(key string) lremKey {
 	return lremKey{cs: append(c.cs, key)}
 }
 
-func Lrem() (c lrem) {
-	c.cs = append(c.cs, "LREM")
+func (b *Builder) Lrem() (c lrem) {
+	c.cs = append(b.get(), "LREM")
 	return
 }
 
@@ -6890,8 +6890,8 @@ func (c lset) Key(key string) lsetKey {
 	return lsetKey{cs: append(c.cs, key)}
 }
 
-func Lset() (c lset) {
-	c.cs = append(c.cs, "LSET")
+func (b *Builder) Lset() (c lset) {
+	c.cs = append(b.get(), "LSET")
 	return
 }
 
@@ -6927,8 +6927,8 @@ func (c ltrim) Key(key string) ltrimKey {
 	return ltrimKey{cs: append(c.cs, key)}
 }
 
-func Ltrim() (c ltrim) {
-	c.cs = append(c.cs, "LTRIM")
+func (b *Builder) Ltrim() (c ltrim) {
+	c.cs = append(b.get(), "LTRIM")
 	return
 }
 
@@ -6964,8 +6964,8 @@ func (c memoryDoctor) Build() []string {
 	return c.cs
 }
 
-func MemoryDoctor() (c memoryDoctor) {
-	c.cs = append(c.cs, "MEMORY", "DOCTOR")
+func (b *Builder) MemoryDoctor() (c memoryDoctor) {
+	c.cs = append(b.get(), "MEMORY", "DOCTOR")
 	return
 }
 
@@ -6977,8 +6977,8 @@ func (c memoryHelp) Build() []string {
 	return c.cs
 }
 
-func MemoryHelp() (c memoryHelp) {
-	c.cs = append(c.cs, "MEMORY", "HELP")
+func (b *Builder) MemoryHelp() (c memoryHelp) {
+	c.cs = append(b.get(), "MEMORY", "HELP")
 	return
 }
 
@@ -6990,8 +6990,8 @@ func (c memoryMallocStats) Build() []string {
 	return c.cs
 }
 
-func MemoryMallocStats() (c memoryMallocStats) {
-	c.cs = append(c.cs, "MEMORY", "MALLOC-STATS")
+func (b *Builder) MemoryMallocStats() (c memoryMallocStats) {
+	c.cs = append(b.get(), "MEMORY", "MALLOC-STATS")
 	return
 }
 
@@ -7003,8 +7003,8 @@ func (c memoryPurge) Build() []string {
 	return c.cs
 }
 
-func MemoryPurge() (c memoryPurge) {
-	c.cs = append(c.cs, "MEMORY", "PURGE")
+func (b *Builder) MemoryPurge() (c memoryPurge) {
+	c.cs = append(b.get(), "MEMORY", "PURGE")
 	return
 }
 
@@ -7016,8 +7016,8 @@ func (c memoryStats) Build() []string {
 	return c.cs
 }
 
-func MemoryStats() (c memoryStats) {
-	c.cs = append(c.cs, "MEMORY", "STATS")
+func (b *Builder) MemoryStats() (c memoryStats) {
+	c.cs = append(b.get(), "MEMORY", "STATS")
 	return
 }
 
@@ -7029,8 +7029,8 @@ func (c memoryUsage) Key(key string) memoryUsageKey {
 	return memoryUsageKey{cs: append(c.cs, key)}
 }
 
-func MemoryUsage() (c memoryUsage) {
-	c.cs = append(c.cs, "MEMORY", "USAGE")
+func (b *Builder) MemoryUsage() (c memoryUsage) {
+	c.cs = append(b.get(), "MEMORY", "USAGE")
 	return
 }
 
@@ -7062,8 +7062,8 @@ func (c mget) Key(key ...string) mgetKey {
 	return mgetKey{cs: append(c.cs, key...)}
 }
 
-func Mget() (c mget) {
-	c.cs = append(c.cs, "MGET")
+func (b *Builder) Mget() (c mget) {
+	c.cs = append(b.get(), "MGET")
 	return
 }
 
@@ -7087,8 +7087,8 @@ func (c migrate) Host(host string) migrateHost {
 	return migrateHost{cs: append(c.cs, host)}
 }
 
-func Migrate() (c migrate) {
-	c.cs = append(c.cs, "MIGRATE")
+func (b *Builder) Migrate() (c migrate) {
+	c.cs = append(b.get(), "MIGRATE")
 	return
 }
 
@@ -7261,8 +7261,8 @@ func (c moduleList) Build() []string {
 	return c.cs
 }
 
-func ModuleList() (c moduleList) {
-	c.cs = append(c.cs, "MODULE", "LIST")
+func (b *Builder) ModuleList() (c moduleList) {
+	c.cs = append(b.get(), "MODULE", "LIST")
 	return
 }
 
@@ -7274,8 +7274,8 @@ func (c moduleLoad) Path(path string) moduleLoadPath {
 	return moduleLoadPath{cs: append(c.cs, path)}
 }
 
-func ModuleLoad() (c moduleLoad) {
-	c.cs = append(c.cs, "MODULE", "LOAD")
+func (b *Builder) ModuleLoad() (c moduleLoad) {
+	c.cs = append(b.get(), "MODULE", "LOAD")
 	return
 }
 
@@ -7311,8 +7311,8 @@ func (c moduleUnload) Name(name string) moduleUnloadName {
 	return moduleUnloadName{cs: append(c.cs, name)}
 }
 
-func ModuleUnload() (c moduleUnload) {
-	c.cs = append(c.cs, "MODULE", "UNLOAD")
+func (b *Builder) ModuleUnload() (c moduleUnload) {
+	c.cs = append(b.get(), "MODULE", "UNLOAD")
 	return
 }
 
@@ -7332,8 +7332,8 @@ func (c monitor) Build() []string {
 	return c.cs
 }
 
-func Monitor() (c monitor) {
-	c.cs = append(c.cs, "MONITOR")
+func (b *Builder) Monitor() (c monitor) {
+	c.cs = append(b.get(), "MONITOR")
 	return
 }
 
@@ -7345,8 +7345,8 @@ func (c move) Key(key string) moveKey {
 	return moveKey{cs: append(c.cs, key)}
 }
 
-func Move() (c move) {
-	c.cs = append(c.cs, "MOVE")
+func (b *Builder) Move() (c move) {
+	c.cs = append(b.get(), "MOVE")
 	return
 }
 
@@ -7374,8 +7374,8 @@ func (c mset) KeyValue() msetKeyValue {
 	return msetKeyValue{cs: append(c.cs)}
 }
 
-func Mset() (c mset) {
-	c.cs = append(c.cs, "MSET")
+func (b *Builder) Mset() (c mset) {
+	c.cs = append(b.get(), "MSET")
 	return
 }
 
@@ -7399,8 +7399,8 @@ func (c msetnx) KeyValue() msetnxKeyValue {
 	return msetnxKeyValue{cs: append(c.cs)}
 }
 
-func Msetnx() (c msetnx) {
-	c.cs = append(c.cs, "MSETNX")
+func (b *Builder) Msetnx() (c msetnx) {
+	c.cs = append(b.get(), "MSETNX")
 	return
 }
 
@@ -7424,8 +7424,8 @@ func (c multi) Build() []string {
 	return c.cs
 }
 
-func Multi() (c multi) {
-	c.cs = append(c.cs, "MULTI")
+func (b *Builder) Multi() (c multi) {
+	c.cs = append(b.get(), "MULTI")
 	return
 }
 
@@ -7437,8 +7437,8 @@ func (c object) Subcommand(subcommand string) objectSubcommand {
 	return objectSubcommand{cs: append(c.cs, subcommand)}
 }
 
-func Object() (c object) {
-	c.cs = append(c.cs, "OBJECT")
+func (b *Builder) Object() (c object) {
+	c.cs = append(b.get(), "OBJECT")
 	return
 }
 
@@ -7474,8 +7474,8 @@ func (c persist) Key(key string) persistKey {
 	return persistKey{cs: append(c.cs, key)}
 }
 
-func Persist() (c persist) {
-	c.cs = append(c.cs, "PERSIST")
+func (b *Builder) Persist() (c persist) {
+	c.cs = append(b.get(), "PERSIST")
 	return
 }
 
@@ -7495,8 +7495,8 @@ func (c pexpire) Key(key string) pexpireKey {
 	return pexpireKey{cs: append(c.cs, key)}
 }
 
-func Pexpire() (c pexpire) {
-	c.cs = append(c.cs, "PEXPIRE")
+func (b *Builder) Pexpire() (c pexpire) {
+	c.cs = append(b.get(), "PEXPIRE")
 	return
 }
 
@@ -7572,8 +7572,8 @@ func (c pexpireat) Key(key string) pexpireatKey {
 	return pexpireatKey{cs: append(c.cs, key)}
 }
 
-func Pexpireat() (c pexpireat) {
-	c.cs = append(c.cs, "PEXPIREAT")
+func (b *Builder) Pexpireat() (c pexpireat) {
+	c.cs = append(b.get(), "PEXPIREAT")
 	return
 }
 
@@ -7649,8 +7649,8 @@ func (c pexpiretime) Key(key string) pexpiretimeKey {
 	return pexpiretimeKey{cs: append(c.cs, key)}
 }
 
-func Pexpiretime() (c pexpiretime) {
-	c.cs = append(c.cs, "PEXPIRETIME")
+func (b *Builder) Pexpiretime() (c pexpiretime) {
+	c.cs = append(b.get(), "PEXPIRETIME")
 	return
 }
 
@@ -7670,8 +7670,8 @@ func (c pfadd) Key(key string) pfaddKey {
 	return pfaddKey{cs: append(c.cs, key)}
 }
 
-func Pfadd() (c pfadd) {
-	c.cs = append(c.cs, "PFADD")
+func (b *Builder) Pfadd() (c pfadd) {
+	c.cs = append(b.get(), "PFADD")
 	return
 }
 
@@ -7707,8 +7707,8 @@ func (c pfcount) Key(key ...string) pfcountKey {
 	return pfcountKey{cs: append(c.cs, key...)}
 }
 
-func Pfcount() (c pfcount) {
-	c.cs = append(c.cs, "PFCOUNT")
+func (b *Builder) Pfcount() (c pfcount) {
+	c.cs = append(b.get(), "PFCOUNT")
 	return
 }
 
@@ -7732,8 +7732,8 @@ func (c pfmerge) Destkey(destkey string) pfmergeDestkey {
 	return pfmergeDestkey{cs: append(c.cs, destkey)}
 }
 
-func Pfmerge() (c pfmerge) {
-	c.cs = append(c.cs, "PFMERGE")
+func (b *Builder) Pfmerge() (c pfmerge) {
+	c.cs = append(b.get(), "PFMERGE")
 	return
 }
 
@@ -7769,8 +7769,8 @@ func (c ping) Build() []string {
 	return c.cs
 }
 
-func Ping() (c ping) {
-	c.cs = append(c.cs, "PING")
+func (b *Builder) Ping() (c ping) {
+	c.cs = append(b.get(), "PING")
 	return
 }
 
@@ -7790,8 +7790,8 @@ func (c psetex) Key(key string) psetexKey {
 	return psetexKey{cs: append(c.cs, key)}
 }
 
-func Psetex() (c psetex) {
-	c.cs = append(c.cs, "PSETEX")
+func (b *Builder) Psetex() (c psetex) {
+	c.cs = append(b.get(), "PSETEX")
 	return
 }
 
@@ -7827,8 +7827,8 @@ func (c psubscribe) Pattern(pattern ...string) psubscribePattern {
 	return psubscribePattern{cs: append(c.cs, pattern...)}
 }
 
-func Psubscribe() (c psubscribe) {
-	c.cs = append(c.cs, "PSUBSCRIBE")
+func (b *Builder) Psubscribe() (c psubscribe) {
+	c.cs = append(b.get(), "PSUBSCRIBE")
 	return
 }
 
@@ -7852,8 +7852,8 @@ func (c psync) Replicationid(replicationid int64) psyncReplicationid {
 	return psyncReplicationid{cs: append(c.cs, strconv.FormatInt(replicationid, 10))}
 }
 
-func Psync() (c psync) {
-	c.cs = append(c.cs, "PSYNC")
+func (b *Builder) Psync() (c psync) {
+	c.cs = append(b.get(), "PSYNC")
 	return
 }
 
@@ -7881,8 +7881,8 @@ func (c pttl) Key(key string) pttlKey {
 	return pttlKey{cs: append(c.cs, key)}
 }
 
-func Pttl() (c pttl) {
-	c.cs = append(c.cs, "PTTL")
+func (b *Builder) Pttl() (c pttl) {
+	c.cs = append(b.get(), "PTTL")
 	return
 }
 
@@ -7902,8 +7902,8 @@ func (c publish) Channel(channel string) publishChannel {
 	return publishChannel{cs: append(c.cs, channel)}
 }
 
-func Publish() (c publish) {
-	c.cs = append(c.cs, "PUBLISH")
+func (b *Builder) Publish() (c publish) {
+	c.cs = append(b.get(), "PUBLISH")
 	return
 }
 
@@ -7931,8 +7931,8 @@ func (c pubsub) Subcommand(subcommand string) pubsubSubcommand {
 	return pubsubSubcommand{cs: append(c.cs, subcommand)}
 }
 
-func Pubsub() (c pubsub) {
-	c.cs = append(c.cs, "PUBSUB")
+func (b *Builder) Pubsub() (c pubsub) {
+	c.cs = append(b.get(), "PUBSUB")
 	return
 }
 
@@ -7972,8 +7972,8 @@ func (c punsubscribe) Build() []string {
 	return c.cs
 }
 
-func Punsubscribe() (c punsubscribe) {
-	c.cs = append(c.cs, "PUNSUBSCRIBE")
+func (b *Builder) Punsubscribe() (c punsubscribe) {
+	c.cs = append(b.get(), "PUNSUBSCRIBE")
 	return
 }
 
@@ -7997,8 +7997,8 @@ func (c quit) Build() []string {
 	return c.cs
 }
 
-func Quit() (c quit) {
-	c.cs = append(c.cs, "QUIT")
+func (b *Builder) Quit() (c quit) {
+	c.cs = append(b.get(), "QUIT")
 	return
 }
 
@@ -8010,8 +8010,8 @@ func (c randomkey) Build() []string {
 	return c.cs
 }
 
-func Randomkey() (c randomkey) {
-	c.cs = append(c.cs, "RANDOMKEY")
+func (b *Builder) Randomkey() (c randomkey) {
+	c.cs = append(b.get(), "RANDOMKEY")
 	return
 }
 
@@ -8023,8 +8023,8 @@ func (c readonly) Build() []string {
 	return c.cs
 }
 
-func Readonly() (c readonly) {
-	c.cs = append(c.cs, "READONLY")
+func (b *Builder) Readonly() (c readonly) {
+	c.cs = append(b.get(), "READONLY")
 	return
 }
 
@@ -8036,8 +8036,8 @@ func (c readwrite) Build() []string {
 	return c.cs
 }
 
-func Readwrite() (c readwrite) {
-	c.cs = append(c.cs, "READWRITE")
+func (b *Builder) Readwrite() (c readwrite) {
+	c.cs = append(b.get(), "READWRITE")
 	return
 }
 
@@ -8049,8 +8049,8 @@ func (c rename) Key(key string) renameKey {
 	return renameKey{cs: append(c.cs, key)}
 }
 
-func Rename() (c rename) {
-	c.cs = append(c.cs, "RENAME")
+func (b *Builder) Rename() (c rename) {
+	c.cs = append(b.get(), "RENAME")
 	return
 }
 
@@ -8078,8 +8078,8 @@ func (c renamenx) Key(key string) renamenxKey {
 	return renamenxKey{cs: append(c.cs, key)}
 }
 
-func Renamenx() (c renamenx) {
-	c.cs = append(c.cs, "RENAMENX")
+func (b *Builder) Renamenx() (c renamenx) {
+	c.cs = append(b.get(), "RENAMENX")
 	return
 }
 
@@ -8107,8 +8107,8 @@ func (c replicaof) Host(host string) replicaofHost {
 	return replicaofHost{cs: append(c.cs, host)}
 }
 
-func Replicaof() (c replicaof) {
-	c.cs = append(c.cs, "REPLICAOF")
+func (b *Builder) Replicaof() (c replicaof) {
+	c.cs = append(b.get(), "REPLICAOF")
 	return
 }
 
@@ -8136,8 +8136,8 @@ func (c reset) Build() []string {
 	return c.cs
 }
 
-func Reset() (c reset) {
-	c.cs = append(c.cs, "RESET")
+func (b *Builder) Reset() (c reset) {
+	c.cs = append(b.get(), "RESET")
 	return
 }
 
@@ -8149,8 +8149,8 @@ func (c restore) Key(key string) restoreKey {
 	return restoreKey{cs: append(c.cs, key)}
 }
 
-func Restore() (c restore) {
-	c.cs = append(c.cs, "RESTORE")
+func (b *Builder) Restore() (c restore) {
+	c.cs = append(b.get(), "RESTORE")
 	return
 }
 
@@ -8258,8 +8258,8 @@ func (c role) Build() []string {
 	return c.cs
 }
 
-func Role() (c role) {
-	c.cs = append(c.cs, "ROLE")
+func (b *Builder) Role() (c role) {
+	c.cs = append(b.get(), "ROLE")
 	return
 }
 
@@ -8271,8 +8271,8 @@ func (c rpop) Key(key string) rpopKey {
 	return rpopKey{cs: append(c.cs, key)}
 }
 
-func Rpop() (c rpop) {
-	c.cs = append(c.cs, "RPOP")
+func (b *Builder) Rpop() (c rpop) {
+	c.cs = append(b.get(), "RPOP")
 	return
 }
 
@@ -8304,8 +8304,8 @@ func (c rpoplpush) Source(source string) rpoplpushSource {
 	return rpoplpushSource{cs: append(c.cs, source)}
 }
 
-func Rpoplpush() (c rpoplpush) {
-	c.cs = append(c.cs, "RPOPLPUSH")
+func (b *Builder) Rpoplpush() (c rpoplpush) {
+	c.cs = append(b.get(), "RPOPLPUSH")
 	return
 }
 
@@ -8333,8 +8333,8 @@ func (c rpush) Key(key string) rpushKey {
 	return rpushKey{cs: append(c.cs, key)}
 }
 
-func Rpush() (c rpush) {
-	c.cs = append(c.cs, "RPUSH")
+func (b *Builder) Rpush() (c rpush) {
+	c.cs = append(b.get(), "RPUSH")
 	return
 }
 
@@ -8366,8 +8366,8 @@ func (c rpushx) Key(key string) rpushxKey {
 	return rpushxKey{cs: append(c.cs, key)}
 }
 
-func Rpushx() (c rpushx) {
-	c.cs = append(c.cs, "RPUSHX")
+func (b *Builder) Rpushx() (c rpushx) {
+	c.cs = append(b.get(), "RPUSHX")
 	return
 }
 
@@ -8399,8 +8399,8 @@ func (c sadd) Key(key string) saddKey {
 	return saddKey{cs: append(c.cs, key)}
 }
 
-func Sadd() (c sadd) {
-	c.cs = append(c.cs, "SADD")
+func (b *Builder) Sadd() (c sadd) {
+	c.cs = append(b.get(), "SADD")
 	return
 }
 
@@ -8432,8 +8432,8 @@ func (c save) Build() []string {
 	return c.cs
 }
 
-func Save() (c save) {
-	c.cs = append(c.cs, "SAVE")
+func (b *Builder) Save() (c save) {
+	c.cs = append(b.get(), "SAVE")
 	return
 }
 
@@ -8445,8 +8445,8 @@ func (c scan) Cursor(cursor int64) scanCursor {
 	return scanCursor{cs: append(c.cs, strconv.FormatInt(cursor, 10))}
 }
 
-func Scan() (c scan) {
-	c.cs = append(c.cs, "SCAN")
+func (b *Builder) Scan() (c scan) {
+	c.cs = append(b.get(), "SCAN")
 	return
 }
 
@@ -8514,8 +8514,8 @@ func (c scard) Key(key string) scardKey {
 	return scardKey{cs: append(c.cs, key)}
 }
 
-func Scard() (c scard) {
-	c.cs = append(c.cs, "SCARD")
+func (b *Builder) Scard() (c scard) {
+	c.cs = append(b.get(), "SCARD")
 	return
 }
 
@@ -8543,8 +8543,8 @@ func (c scriptDebug) No() scriptDebugModeNo {
 	return scriptDebugModeNo{cs: append(c.cs, "NO")}
 }
 
-func ScriptDebug() (c scriptDebug) {
-	c.cs = append(c.cs, "SCRIPT", "DEBUG")
+func (b *Builder) ScriptDebug() (c scriptDebug) {
+	c.cs = append(b.get(), "SCRIPT", "DEBUG")
 	return
 }
 
@@ -8580,8 +8580,8 @@ func (c scriptExists) Sha1(sha1 ...string) scriptExistsSha1 {
 	return scriptExistsSha1{cs: append(c.cs, sha1...)}
 }
 
-func ScriptExists() (c scriptExists) {
-	c.cs = append(c.cs, "SCRIPT", "EXISTS")
+func (b *Builder) ScriptExists() (c scriptExists) {
+	c.cs = append(b.get(), "SCRIPT", "EXISTS")
 	return
 }
 
@@ -8613,8 +8613,8 @@ func (c scriptFlush) Build() []string {
 	return c.cs
 }
 
-func ScriptFlush() (c scriptFlush) {
-	c.cs = append(c.cs, "SCRIPT", "FLUSH")
+func (b *Builder) ScriptFlush() (c scriptFlush) {
+	c.cs = append(b.get(), "SCRIPT", "FLUSH")
 	return
 }
 
@@ -8642,8 +8642,8 @@ func (c scriptKill) Build() []string {
 	return c.cs
 }
 
-func ScriptKill() (c scriptKill) {
-	c.cs = append(c.cs, "SCRIPT", "KILL")
+func (b *Builder) ScriptKill() (c scriptKill) {
+	c.cs = append(b.get(), "SCRIPT", "KILL")
 	return
 }
 
@@ -8655,8 +8655,8 @@ func (c scriptLoad) Script(script string) scriptLoadScript {
 	return scriptLoadScript{cs: append(c.cs, script)}
 }
 
-func ScriptLoad() (c scriptLoad) {
-	c.cs = append(c.cs, "SCRIPT", "LOAD")
+func (b *Builder) ScriptLoad() (c scriptLoad) {
+	c.cs = append(b.get(), "SCRIPT", "LOAD")
 	return
 }
 
@@ -8676,8 +8676,8 @@ func (c sdiff) Key(key ...string) sdiffKey {
 	return sdiffKey{cs: append(c.cs, key...)}
 }
 
-func Sdiff() (c sdiff) {
-	c.cs = append(c.cs, "SDIFF")
+func (b *Builder) Sdiff() (c sdiff) {
+	c.cs = append(b.get(), "SDIFF")
 	return
 }
 
@@ -8701,8 +8701,8 @@ func (c sdiffstore) Destination(destination string) sdiffstoreDestination {
 	return sdiffstoreDestination{cs: append(c.cs, destination)}
 }
 
-func Sdiffstore() (c sdiffstore) {
-	c.cs = append(c.cs, "SDIFFSTORE")
+func (b *Builder) Sdiffstore() (c sdiffstore) {
+	c.cs = append(b.get(), "SDIFFSTORE")
 	return
 }
 
@@ -8734,8 +8734,8 @@ func (c rSelect) Index(index int64) selectIndex {
 	return selectIndex{cs: append(c.cs, strconv.FormatInt(index, 10))}
 }
 
-func Select() (c rSelect) {
-	c.cs = append(c.cs, "SELECT")
+func (b *Builder) Select() (c rSelect) {
+	c.cs = append(b.get(), "SELECT")
 	return
 }
 
@@ -8755,8 +8755,8 @@ func (c set) Key(key string) setKey {
 	return setKey{cs: append(c.cs, key)}
 }
 
-func Set() (c set) {
-	c.cs = append(c.cs, "SET")
+func (b *Builder) Set() (c set) {
+	c.cs = append(b.get(), "SET")
 	return
 }
 
@@ -8948,8 +8948,8 @@ func (c setbit) Key(key string) setbitKey {
 	return setbitKey{cs: append(c.cs, key)}
 }
 
-func Setbit() (c setbit) {
-	c.cs = append(c.cs, "SETBIT")
+func (b *Builder) Setbit() (c setbit) {
+	c.cs = append(b.get(), "SETBIT")
 	return
 }
 
@@ -8985,8 +8985,8 @@ func (c setex) Key(key string) setexKey {
 	return setexKey{cs: append(c.cs, key)}
 }
 
-func Setex() (c setex) {
-	c.cs = append(c.cs, "SETEX")
+func (b *Builder) Setex() (c setex) {
+	c.cs = append(b.get(), "SETEX")
 	return
 }
 
@@ -9022,8 +9022,8 @@ func (c setnx) Key(key string) setnxKey {
 	return setnxKey{cs: append(c.cs, key)}
 }
 
-func Setnx() (c setnx) {
-	c.cs = append(c.cs, "SETNX")
+func (b *Builder) Setnx() (c setnx) {
+	c.cs = append(b.get(), "SETNX")
 	return
 }
 
@@ -9051,8 +9051,8 @@ func (c setrange) Key(key string) setrangeKey {
 	return setrangeKey{cs: append(c.cs, key)}
 }
 
-func Setrange() (c setrange) {
-	c.cs = append(c.cs, "SETRANGE")
+func (b *Builder) Setrange() (c setrange) {
+	c.cs = append(b.get(), "SETRANGE")
 	return
 }
 
@@ -9096,8 +9096,8 @@ func (c shutdown) Build() []string {
 	return c.cs
 }
 
-func Shutdown() (c shutdown) {
-	c.cs = append(c.cs, "SHUTDOWN")
+func (b *Builder) Shutdown() (c shutdown) {
+	c.cs = append(b.get(), "SHUTDOWN")
 	return
 }
 
@@ -9125,8 +9125,8 @@ func (c sinter) Key(key ...string) sinterKey {
 	return sinterKey{cs: append(c.cs, key...)}
 }
 
-func Sinter() (c sinter) {
-	c.cs = append(c.cs, "SINTER")
+func (b *Builder) Sinter() (c sinter) {
+	c.cs = append(b.get(), "SINTER")
 	return
 }
 
@@ -9150,8 +9150,8 @@ func (c sintercard) Key(key ...string) sintercardKey {
 	return sintercardKey{cs: append(c.cs, key...)}
 }
 
-func Sintercard() (c sintercard) {
-	c.cs = append(c.cs, "SINTERCARD")
+func (b *Builder) Sintercard() (c sintercard) {
+	c.cs = append(b.get(), "SINTERCARD")
 	return
 }
 
@@ -9175,8 +9175,8 @@ func (c sinterstore) Destination(destination string) sinterstoreDestination {
 	return sinterstoreDestination{cs: append(c.cs, destination)}
 }
 
-func Sinterstore() (c sinterstore) {
-	c.cs = append(c.cs, "SINTERSTORE")
+func (b *Builder) Sinterstore() (c sinterstore) {
+	c.cs = append(b.get(), "SINTERSTORE")
 	return
 }
 
@@ -9208,8 +9208,8 @@ func (c sismember) Key(key string) sismemberKey {
 	return sismemberKey{cs: append(c.cs, key)}
 }
 
-func Sismember() (c sismember) {
-	c.cs = append(c.cs, "SISMEMBER")
+func (b *Builder) Sismember() (c sismember) {
+	c.cs = append(b.get(), "SISMEMBER")
 	return
 }
 
@@ -9237,8 +9237,8 @@ func (c slaveof) Host(host string) slaveofHost {
 	return slaveofHost{cs: append(c.cs, host)}
 }
 
-func Slaveof() (c slaveof) {
-	c.cs = append(c.cs, "SLAVEOF")
+func (b *Builder) Slaveof() (c slaveof) {
+	c.cs = append(b.get(), "SLAVEOF")
 	return
 }
 
@@ -9266,8 +9266,8 @@ func (c slowlog) Subcommand(subcommand string) slowlogSubcommand {
 	return slowlogSubcommand{cs: append(c.cs, subcommand)}
 }
 
-func Slowlog() (c slowlog) {
-	c.cs = append(c.cs, "SLOWLOG")
+func (b *Builder) Slowlog() (c slowlog) {
+	c.cs = append(b.get(), "SLOWLOG")
 	return
 }
 
@@ -9299,8 +9299,8 @@ func (c smembers) Key(key string) smembersKey {
 	return smembersKey{cs: append(c.cs, key)}
 }
 
-func Smembers() (c smembers) {
-	c.cs = append(c.cs, "SMEMBERS")
+func (b *Builder) Smembers() (c smembers) {
+	c.cs = append(b.get(), "SMEMBERS")
 	return
 }
 
@@ -9320,8 +9320,8 @@ func (c smismember) Key(key string) smismemberKey {
 	return smismemberKey{cs: append(c.cs, key)}
 }
 
-func Smismember() (c smismember) {
-	c.cs = append(c.cs, "SMISMEMBER")
+func (b *Builder) Smismember() (c smismember) {
+	c.cs = append(b.get(), "SMISMEMBER")
 	return
 }
 
@@ -9353,8 +9353,8 @@ func (c smove) Source(source string) smoveSource {
 	return smoveSource{cs: append(c.cs, source)}
 }
 
-func Smove() (c smove) {
-	c.cs = append(c.cs, "SMOVE")
+func (b *Builder) Smove() (c smove) {
+	c.cs = append(b.get(), "SMOVE")
 	return
 }
 
@@ -9390,8 +9390,8 @@ func (c sort) Key(key string) sortKey {
 	return sortKey{cs: append(c.cs, key)}
 }
 
-func Sort() (c sort) {
-	c.cs = append(c.cs, "SORT")
+func (b *Builder) Sort() (c sort) {
+	c.cs = append(b.get(), "SORT")
 	return
 }
 
@@ -9562,8 +9562,8 @@ func (c sortRo) Key(key string) sortRoKey {
 	return sortRoKey{cs: append(c.cs, key)}
 }
 
-func SortRo() (c sortRo) {
-	c.cs = append(c.cs, "SORT_RO")
+func (b *Builder) SortRo() (c sortRo) {
+	c.cs = append(b.get(), "SORT_RO")
 	return
 }
 
@@ -9738,8 +9738,8 @@ func (c spop) Key(key string) spopKey {
 	return spopKey{cs: append(c.cs, key)}
 }
 
-func Spop() (c spop) {
-	c.cs = append(c.cs, "SPOP")
+func (b *Builder) Spop() (c spop) {
+	c.cs = append(b.get(), "SPOP")
 	return
 }
 
@@ -9771,8 +9771,8 @@ func (c srandmember) Key(key string) srandmemberKey {
 	return srandmemberKey{cs: append(c.cs, key)}
 }
 
-func Srandmember() (c srandmember) {
-	c.cs = append(c.cs, "SRANDMEMBER")
+func (b *Builder) Srandmember() (c srandmember) {
+	c.cs = append(b.get(), "SRANDMEMBER")
 	return
 }
 
@@ -9804,8 +9804,8 @@ func (c srem) Key(key string) sremKey {
 	return sremKey{cs: append(c.cs, key)}
 }
 
-func Srem() (c srem) {
-	c.cs = append(c.cs, "SREM")
+func (b *Builder) Srem() (c srem) {
+	c.cs = append(b.get(), "SREM")
 	return
 }
 
@@ -9837,8 +9837,8 @@ func (c sscan) Key(key string) sscanKey {
 	return sscanKey{cs: append(c.cs, key)}
 }
 
-func Sscan() (c sscan) {
-	c.cs = append(c.cs, "SSCAN")
+func (b *Builder) Sscan() (c sscan) {
+	c.cs = append(b.get(), "SSCAN")
 	return
 }
 
@@ -9894,8 +9894,8 @@ func (c stralgo) Lcs() stralgoAlgorithmLcs {
 	return stralgoAlgorithmLcs{cs: append(c.cs, "LCS")}
 }
 
-func Stralgo() (c stralgo) {
-	c.cs = append(c.cs, "STRALGO")
+func (b *Builder) Stralgo() (c stralgo) {
+	c.cs = append(b.get(), "STRALGO")
 	return
 }
 
@@ -9927,8 +9927,8 @@ func (c strlen) Key(key string) strlenKey {
 	return strlenKey{cs: append(c.cs, key)}
 }
 
-func Strlen() (c strlen) {
-	c.cs = append(c.cs, "STRLEN")
+func (b *Builder) Strlen() (c strlen) {
+	c.cs = append(b.get(), "STRLEN")
 	return
 }
 
@@ -9948,8 +9948,8 @@ func (c subscribe) Channel(channel ...string) subscribeChannel {
 	return subscribeChannel{cs: append(c.cs, channel...)}
 }
 
-func Subscribe() (c subscribe) {
-	c.cs = append(c.cs, "SUBSCRIBE")
+func (b *Builder) Subscribe() (c subscribe) {
+	c.cs = append(b.get(), "SUBSCRIBE")
 	return
 }
 
@@ -9973,8 +9973,8 @@ func (c sunion) Key(key ...string) sunionKey {
 	return sunionKey{cs: append(c.cs, key...)}
 }
 
-func Sunion() (c sunion) {
-	c.cs = append(c.cs, "SUNION")
+func (b *Builder) Sunion() (c sunion) {
+	c.cs = append(b.get(), "SUNION")
 	return
 }
 
@@ -9998,8 +9998,8 @@ func (c sunionstore) Destination(destination string) sunionstoreDestination {
 	return sunionstoreDestination{cs: append(c.cs, destination)}
 }
 
-func Sunionstore() (c sunionstore) {
-	c.cs = append(c.cs, "SUNIONSTORE")
+func (b *Builder) Sunionstore() (c sunionstore) {
+	c.cs = append(b.get(), "SUNIONSTORE")
 	return
 }
 
@@ -10031,8 +10031,8 @@ func (c swapdb) Index1(index1 int64) swapdbIndex1 {
 	return swapdbIndex1{cs: append(c.cs, strconv.FormatInt(index1, 10))}
 }
 
-func Swapdb() (c swapdb) {
-	c.cs = append(c.cs, "SWAPDB")
+func (b *Builder) Swapdb() (c swapdb) {
+	c.cs = append(b.get(), "SWAPDB")
 	return
 }
 
@@ -10052,16 +10052,16 @@ func (c swapdbIndex2) Build() []string {
 	return c.cs
 }
 
-type sync struct {
+type rSync struct {
 	cs []string
 }
 
-func (c sync) Build() []string {
+func (c rSync) Build() []string {
 	return c.cs
 }
 
-func Sync() (c sync) {
-	c.cs = append(c.cs, "SYNC")
+func (b *Builder) Sync() (c rSync) {
+	c.cs = append(b.get(), "SYNC")
 	return
 }
 
@@ -10073,8 +10073,8 @@ func (c time) Build() []string {
 	return c.cs
 }
 
-func Time() (c time) {
-	c.cs = append(c.cs, "TIME")
+func (b *Builder) Time() (c time) {
+	c.cs = append(b.get(), "TIME")
 	return
 }
 
@@ -10086,8 +10086,8 @@ func (c touch) Key(key ...string) touchKey {
 	return touchKey{cs: append(c.cs, key...)}
 }
 
-func Touch() (c touch) {
-	c.cs = append(c.cs, "TOUCH")
+func (b *Builder) Touch() (c touch) {
+	c.cs = append(b.get(), "TOUCH")
 	return
 }
 
@@ -10111,8 +10111,8 @@ func (c ttl) Key(key string) ttlKey {
 	return ttlKey{cs: append(c.cs, key)}
 }
 
-func Ttl() (c ttl) {
-	c.cs = append(c.cs, "TTL")
+func (b *Builder) Ttl() (c ttl) {
+	c.cs = append(b.get(), "TTL")
 	return
 }
 
@@ -10132,8 +10132,8 @@ func (c rType) Key(key string) typeKey {
 	return typeKey{cs: append(c.cs, key)}
 }
 
-func Type() (c rType) {
-	c.cs = append(c.cs, "TYPE")
+func (b *Builder) Type() (c rType) {
+	c.cs = append(b.get(), "TYPE")
 	return
 }
 
@@ -10153,8 +10153,8 @@ func (c unlink) Key(key ...string) unlinkKey {
 	return unlinkKey{cs: append(c.cs, key...)}
 }
 
-func Unlink() (c unlink) {
-	c.cs = append(c.cs, "UNLINK")
+func (b *Builder) Unlink() (c unlink) {
+	c.cs = append(b.get(), "UNLINK")
 	return
 }
 
@@ -10182,8 +10182,8 @@ func (c unsubscribe) Build() []string {
 	return c.cs
 }
 
-func Unsubscribe() (c unsubscribe) {
-	c.cs = append(c.cs, "UNSUBSCRIBE")
+func (b *Builder) Unsubscribe() (c unsubscribe) {
+	c.cs = append(b.get(), "UNSUBSCRIBE")
 	return
 }
 
@@ -10207,8 +10207,8 @@ func (c unwatch) Build() []string {
 	return c.cs
 }
 
-func Unwatch() (c unwatch) {
-	c.cs = append(c.cs, "UNWATCH")
+func (b *Builder) Unwatch() (c unwatch) {
+	c.cs = append(b.get(), "UNWATCH")
 	return
 }
 
@@ -10220,8 +10220,8 @@ func (c wait) Numreplicas(numreplicas int64) waitNumreplicas {
 	return waitNumreplicas{cs: append(c.cs, strconv.FormatInt(numreplicas, 10))}
 }
 
-func Wait() (c wait) {
-	c.cs = append(c.cs, "WAIT")
+func (b *Builder) Wait() (c wait) {
+	c.cs = append(b.get(), "WAIT")
 	return
 }
 
@@ -10249,8 +10249,8 @@ func (c watch) Key(key ...string) watchKey {
 	return watchKey{cs: append(c.cs, key...)}
 }
 
-func Watch() (c watch) {
-	c.cs = append(c.cs, "WATCH")
+func (b *Builder) Watch() (c watch) {
+	c.cs = append(b.get(), "WATCH")
 	return
 }
 
@@ -10274,8 +10274,8 @@ func (c xack) Key(key string) xackKey {
 	return xackKey{cs: append(c.cs, key)}
 }
 
-func Xack() (c xack) {
-	c.cs = append(c.cs, "XACK")
+func (b *Builder) Xack() (c xack) {
+	c.cs = append(b.get(), "XACK")
 	return
 }
 
@@ -10315,8 +10315,8 @@ func (c xadd) Key(key string) xaddKey {
 	return xaddKey{cs: append(c.cs, key)}
 }
 
-func Xadd() (c xadd) {
-	c.cs = append(c.cs, "XADD")
+func (b *Builder) Xadd() (c xadd) {
+	c.cs = append(b.get(), "XADD")
 	return
 }
 
@@ -10476,8 +10476,8 @@ func (c xautoclaim) Key(key string) xautoclaimKey {
 	return xautoclaimKey{cs: append(c.cs, key)}
 }
 
-func Xautoclaim() (c xautoclaim) {
-	c.cs = append(c.cs, "XAUTOCLAIM")
+func (b *Builder) Xautoclaim() (c xautoclaim) {
+	c.cs = append(b.get(), "XAUTOCLAIM")
 	return
 }
 
@@ -10557,8 +10557,8 @@ func (c xclaim) Key(key string) xclaimKey {
 	return xclaimKey{cs: append(c.cs, key)}
 }
 
-func Xclaim() (c xclaim) {
-	c.cs = append(c.cs, "XCLAIM")
+func (b *Builder) Xclaim() (c xclaim) {
+	c.cs = append(b.get(), "XCLAIM")
 	return
 }
 
@@ -10714,8 +10714,8 @@ func (c xdel) Key(key string) xdelKey {
 	return xdelKey{cs: append(c.cs, key)}
 }
 
-func Xdel() (c xdel) {
-	c.cs = append(c.cs, "XDEL")
+func (b *Builder) Xdel() (c xdel) {
+	c.cs = append(b.get(), "XDEL")
 	return
 }
 
@@ -10763,8 +10763,8 @@ func (c xgroup) Delconsumer(key string, groupname string, consumername string) x
 	return xgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", key, groupname, consumername)}
 }
 
-func Xgroup() (c xgroup) {
-	c.cs = append(c.cs, "XGROUP")
+func (b *Builder) Xgroup() (c xgroup) {
+	c.cs = append(b.get(), "XGROUP")
 	return
 }
 
@@ -10960,8 +10960,8 @@ func (c xinfo) Build() []string {
 	return c.cs
 }
 
-func Xinfo() (c xinfo) {
-	c.cs = append(c.cs, "XINFO")
+func (b *Builder) Xinfo() (c xinfo) {
+	c.cs = append(b.get(), "XINFO")
 	return
 }
 
@@ -11029,8 +11029,8 @@ func (c xlen) Key(key string) xlenKey {
 	return xlenKey{cs: append(c.cs, key)}
 }
 
-func Xlen() (c xlen) {
-	c.cs = append(c.cs, "XLEN")
+func (b *Builder) Xlen() (c xlen) {
+	c.cs = append(b.get(), "XLEN")
 	return
 }
 
@@ -11050,8 +11050,8 @@ func (c xpending) Key(key string) xpendingKey {
 	return xpendingKey{cs: append(c.cs, key)}
 }
 
-func Xpending() (c xpending) {
-	c.cs = append(c.cs, "XPENDING")
+func (b *Builder) Xpending() (c xpending) {
+	c.cs = append(b.get(), "XPENDING")
 	return
 }
 
@@ -11127,8 +11127,8 @@ func (c xrange) Key(key string) xrangeKey {
 	return xrangeKey{cs: append(c.cs, key)}
 }
 
-func Xrange() (c xrange) {
-	c.cs = append(c.cs, "XRANGE")
+func (b *Builder) Xrange() (c xrange) {
+	c.cs = append(b.get(), "XRANGE")
 	return
 }
 
@@ -11184,8 +11184,8 @@ func (c xread) Streams() xreadStreamsStreams {
 	return xreadStreamsStreams{cs: append(c.cs, "STREAMS")}
 }
 
-func Xread() (c xread) {
-	c.cs = append(c.cs, "XREAD")
+func (b *Builder) Xread() (c xread) {
+	c.cs = append(b.get(), "XREAD")
 	return
 }
 
@@ -11249,8 +11249,8 @@ func (c xreadgroup) Group(group string, consumer string) xreadgroupGroup {
 	return xreadgroupGroup{cs: append(c.cs, "GROUP", group, consumer)}
 }
 
-func Xreadgroup() (c xreadgroup) {
-	c.cs = append(c.cs, "XREADGROUP")
+func (b *Builder) Xreadgroup() (c xreadgroup) {
+	c.cs = append(b.get(), "XREADGROUP")
 	return
 }
 
@@ -11350,8 +11350,8 @@ func (c xrevrange) Key(key string) xrevrangeKey {
 	return xrevrangeKey{cs: append(c.cs, key)}
 }
 
-func Xrevrange() (c xrevrange) {
-	c.cs = append(c.cs, "XREVRANGE")
+func (b *Builder) Xrevrange() (c xrevrange) {
+	c.cs = append(b.get(), "XREVRANGE")
 	return
 }
 
@@ -11399,8 +11399,8 @@ func (c xtrim) Key(key string) xtrimKey {
 	return xtrimKey{cs: append(c.cs, key)}
 }
 
-func Xtrim() (c xtrim) {
-	c.cs = append(c.cs, "XTRIM")
+func (b *Builder) Xtrim() (c xtrim) {
+	c.cs = append(b.get(), "XTRIM")
 	return
 }
 
@@ -11492,8 +11492,8 @@ func (c zadd) Key(key string) zaddKey {
 	return zaddKey{cs: append(c.cs, key)}
 }
 
-func Zadd() (c zadd) {
-	c.cs = append(c.cs, "ZADD")
+func (b *Builder) Zadd() (c zadd) {
+	c.cs = append(b.get(), "ZADD")
 	return
 }
 
@@ -11649,8 +11649,8 @@ func (c zcard) Key(key string) zcardKey {
 	return zcardKey{cs: append(c.cs, key)}
 }
 
-func Zcard() (c zcard) {
-	c.cs = append(c.cs, "ZCARD")
+func (b *Builder) Zcard() (c zcard) {
+	c.cs = append(b.get(), "ZCARD")
 	return
 }
 
@@ -11670,8 +11670,8 @@ func (c zcount) Key(key string) zcountKey {
 	return zcountKey{cs: append(c.cs, key)}
 }
 
-func Zcount() (c zcount) {
-	c.cs = append(c.cs, "ZCOUNT")
+func (b *Builder) Zcount() (c zcount) {
+	c.cs = append(b.get(), "ZCOUNT")
 	return
 }
 
@@ -11707,8 +11707,8 @@ func (c zdiff) Numkeys(numkeys int64) zdiffNumkeys {
 	return zdiffNumkeys{cs: append(c.cs, strconv.FormatInt(numkeys, 10))}
 }
 
-func Zdiff() (c zdiff) {
-	c.cs = append(c.cs, "ZDIFF")
+func (b *Builder) Zdiff() (c zdiff) {
+	c.cs = append(b.get(), "ZDIFF")
 	return
 }
 
@@ -11752,8 +11752,8 @@ func (c zdiffstore) Destination(destination string) zdiffstoreDestination {
 	return zdiffstoreDestination{cs: append(c.cs, destination)}
 }
 
-func Zdiffstore() (c zdiffstore) {
-	c.cs = append(c.cs, "ZDIFFSTORE")
+func (b *Builder) Zdiffstore() (c zdiffstore) {
+	c.cs = append(b.get(), "ZDIFFSTORE")
 	return
 }
 
@@ -11793,8 +11793,8 @@ func (c zincrby) Key(key string) zincrbyKey {
 	return zincrbyKey{cs: append(c.cs, key)}
 }
 
-func Zincrby() (c zincrby) {
-	c.cs = append(c.cs, "ZINCRBY")
+func (b *Builder) Zincrby() (c zincrby) {
+	c.cs = append(b.get(), "ZINCRBY")
 	return
 }
 
@@ -11830,8 +11830,8 @@ func (c zinter) Numkeys(numkeys int64) zinterNumkeys {
 	return zinterNumkeys{cs: append(c.cs, strconv.FormatInt(numkeys, 10))}
 }
 
-func Zinter() (c zinter) {
-	c.cs = append(c.cs, "ZINTER")
+func (b *Builder) Zinter() (c zinter) {
+	c.cs = append(b.get(), "ZINTER")
 	return
 }
 
@@ -11962,8 +11962,8 @@ func (c zintercard) Numkeys(numkeys int64) zintercardNumkeys {
 	return zintercardNumkeys{cs: append(c.cs, strconv.FormatInt(numkeys, 10))}
 }
 
-func Zintercard() (c zintercard) {
-	c.cs = append(c.cs, "ZINTERCARD")
+func (b *Builder) Zintercard() (c zintercard) {
+	c.cs = append(b.get(), "ZINTERCARD")
 	return
 }
 
@@ -11995,8 +11995,8 @@ func (c zinterstore) Destination(destination string) zinterstoreDestination {
 	return zinterstoreDestination{cs: append(c.cs, destination)}
 }
 
-func Zinterstore() (c zinterstore) {
-	c.cs = append(c.cs, "ZINTERSTORE")
+func (b *Builder) Zinterstore() (c zinterstore) {
+	c.cs = append(b.get(), "ZINTERSTORE")
 	return
 }
 
@@ -12107,8 +12107,8 @@ func (c zlexcount) Key(key string) zlexcountKey {
 	return zlexcountKey{cs: append(c.cs, key)}
 }
 
-func Zlexcount() (c zlexcount) {
-	c.cs = append(c.cs, "ZLEXCOUNT")
+func (b *Builder) Zlexcount() (c zlexcount) {
+	c.cs = append(b.get(), "ZLEXCOUNT")
 	return
 }
 
@@ -12144,8 +12144,8 @@ func (c zmscore) Key(key string) zmscoreKey {
 	return zmscoreKey{cs: append(c.cs, key)}
 }
 
-func Zmscore() (c zmscore) {
-	c.cs = append(c.cs, "ZMSCORE")
+func (b *Builder) Zmscore() (c zmscore) {
+	c.cs = append(b.get(), "ZMSCORE")
 	return
 }
 
@@ -12177,8 +12177,8 @@ func (c zpopmax) Key(key string) zpopmaxKey {
 	return zpopmaxKey{cs: append(c.cs, key)}
 }
 
-func Zpopmax() (c zpopmax) {
-	c.cs = append(c.cs, "ZPOPMAX")
+func (b *Builder) Zpopmax() (c zpopmax) {
+	c.cs = append(b.get(), "ZPOPMAX")
 	return
 }
 
@@ -12210,8 +12210,8 @@ func (c zpopmin) Key(key string) zpopminKey {
 	return zpopminKey{cs: append(c.cs, key)}
 }
 
-func Zpopmin() (c zpopmin) {
-	c.cs = append(c.cs, "ZPOPMIN")
+func (b *Builder) Zpopmin() (c zpopmin) {
+	c.cs = append(b.get(), "ZPOPMIN")
 	return
 }
 
@@ -12243,8 +12243,8 @@ func (c zrandmember) Key(key string) zrandmemberKey {
 	return zrandmemberKey{cs: append(c.cs, key)}
 }
 
-func Zrandmember() (c zrandmember) {
-	c.cs = append(c.cs, "ZRANDMEMBER")
+func (b *Builder) Zrandmember() (c zrandmember) {
+	c.cs = append(b.get(), "ZRANDMEMBER")
 	return
 }
 
@@ -12284,8 +12284,8 @@ func (c zrange) Key(key string) zrangeKey {
 	return zrangeKey{cs: append(c.cs, key)}
 }
 
-func Zrange() (c zrange) {
-	c.cs = append(c.cs, "ZRANGE")
+func (b *Builder) Zrange() (c zrange) {
+	c.cs = append(b.get(), "ZRANGE")
 	return
 }
 
@@ -12417,8 +12417,8 @@ func (c zrangebylex) Key(key string) zrangebylexKey {
 	return zrangebylexKey{cs: append(c.cs, key)}
 }
 
-func Zrangebylex() (c zrangebylex) {
-	c.cs = append(c.cs, "ZRANGEBYLEX")
+func (b *Builder) Zrangebylex() (c zrangebylex) {
+	c.cs = append(b.get(), "ZRANGEBYLEX")
 	return
 }
 
@@ -12466,8 +12466,8 @@ func (c zrangebyscore) Key(key string) zrangebyscoreKey {
 	return zrangebyscoreKey{cs: append(c.cs, key)}
 }
 
-func Zrangebyscore() (c zrangebyscore) {
-	c.cs = append(c.cs, "ZRANGEBYSCORE")
+func (b *Builder) Zrangebyscore() (c zrangebyscore) {
+	c.cs = append(b.get(), "ZRANGEBYSCORE")
 	return
 }
 
@@ -12531,8 +12531,8 @@ func (c zrangestore) Dst(dst string) zrangestoreDst {
 	return zrangestoreDst{cs: append(c.cs, dst)}
 }
 
-func Zrangestore() (c zrangestore) {
-	c.cs = append(c.cs, "ZRANGESTORE")
+func (b *Builder) Zrangestore() (c zrangestore) {
+	c.cs = append(b.get(), "ZRANGESTORE")
 	return
 }
 
@@ -12644,8 +12644,8 @@ func (c zrank) Key(key string) zrankKey {
 	return zrankKey{cs: append(c.cs, key)}
 }
 
-func Zrank() (c zrank) {
-	c.cs = append(c.cs, "ZRANK")
+func (b *Builder) Zrank() (c zrank) {
+	c.cs = append(b.get(), "ZRANK")
 	return
 }
 
@@ -12673,8 +12673,8 @@ func (c zrem) Key(key string) zremKey {
 	return zremKey{cs: append(c.cs, key)}
 }
 
-func Zrem() (c zrem) {
-	c.cs = append(c.cs, "ZREM")
+func (b *Builder) Zrem() (c zrem) {
+	c.cs = append(b.get(), "ZREM")
 	return
 }
 
@@ -12706,8 +12706,8 @@ func (c zremrangebylex) Key(key string) zremrangebylexKey {
 	return zremrangebylexKey{cs: append(c.cs, key)}
 }
 
-func Zremrangebylex() (c zremrangebylex) {
-	c.cs = append(c.cs, "ZREMRANGEBYLEX")
+func (b *Builder) Zremrangebylex() (c zremrangebylex) {
+	c.cs = append(b.get(), "ZREMRANGEBYLEX")
 	return
 }
 
@@ -12743,8 +12743,8 @@ func (c zremrangebyrank) Key(key string) zremrangebyrankKey {
 	return zremrangebyrankKey{cs: append(c.cs, key)}
 }
 
-func Zremrangebyrank() (c zremrangebyrank) {
-	c.cs = append(c.cs, "ZREMRANGEBYRANK")
+func (b *Builder) Zremrangebyrank() (c zremrangebyrank) {
+	c.cs = append(b.get(), "ZREMRANGEBYRANK")
 	return
 }
 
@@ -12780,8 +12780,8 @@ func (c zremrangebyscore) Key(key string) zremrangebyscoreKey {
 	return zremrangebyscoreKey{cs: append(c.cs, key)}
 }
 
-func Zremrangebyscore() (c zremrangebyscore) {
-	c.cs = append(c.cs, "ZREMRANGEBYSCORE")
+func (b *Builder) Zremrangebyscore() (c zremrangebyscore) {
+	c.cs = append(b.get(), "ZREMRANGEBYSCORE")
 	return
 }
 
@@ -12817,8 +12817,8 @@ func (c zrevrange) Key(key string) zrevrangeKey {
 	return zrevrangeKey{cs: append(c.cs, key)}
 }
 
-func Zrevrange() (c zrevrange) {
-	c.cs = append(c.cs, "ZREVRANGE")
+func (b *Builder) Zrevrange() (c zrevrange) {
+	c.cs = append(b.get(), "ZREVRANGE")
 	return
 }
 
@@ -12866,8 +12866,8 @@ func (c zrevrangebylex) Key(key string) zrevrangebylexKey {
 	return zrevrangebylexKey{cs: append(c.cs, key)}
 }
 
-func Zrevrangebylex() (c zrevrangebylex) {
-	c.cs = append(c.cs, "ZREVRANGEBYLEX")
+func (b *Builder) Zrevrangebylex() (c zrevrangebylex) {
+	c.cs = append(b.get(), "ZREVRANGEBYLEX")
 	return
 }
 
@@ -12915,8 +12915,8 @@ func (c zrevrangebyscore) Key(key string) zrevrangebyscoreKey {
 	return zrevrangebyscoreKey{cs: append(c.cs, key)}
 }
 
-func Zrevrangebyscore() (c zrevrangebyscore) {
-	c.cs = append(c.cs, "ZREVRANGEBYSCORE")
+func (b *Builder) Zrevrangebyscore() (c zrevrangebyscore) {
+	c.cs = append(b.get(), "ZREVRANGEBYSCORE")
 	return
 }
 
@@ -12980,8 +12980,8 @@ func (c zrevrank) Key(key string) zrevrankKey {
 	return zrevrankKey{cs: append(c.cs, key)}
 }
 
-func Zrevrank() (c zrevrank) {
-	c.cs = append(c.cs, "ZREVRANK")
+func (b *Builder) Zrevrank() (c zrevrank) {
+	c.cs = append(b.get(), "ZREVRANK")
 	return
 }
 
@@ -13009,8 +13009,8 @@ func (c zscan) Key(key string) zscanKey {
 	return zscanKey{cs: append(c.cs, key)}
 }
 
-func Zscan() (c zscan) {
-	c.cs = append(c.cs, "ZSCAN")
+func (b *Builder) Zscan() (c zscan) {
+	c.cs = append(b.get(), "ZSCAN")
 	return
 }
 
@@ -13066,8 +13066,8 @@ func (c zscore) Key(key string) zscoreKey {
 	return zscoreKey{cs: append(c.cs, key)}
 }
 
-func Zscore() (c zscore) {
-	c.cs = append(c.cs, "ZSCORE")
+func (b *Builder) Zscore() (c zscore) {
+	c.cs = append(b.get(), "ZSCORE")
 	return
 }
 
@@ -13095,8 +13095,8 @@ func (c zunion) Numkeys(numkeys int64) zunionNumkeys {
 	return zunionNumkeys{cs: append(c.cs, strconv.FormatInt(numkeys, 10))}
 }
 
-func Zunion() (c zunion) {
-	c.cs = append(c.cs, "ZUNION")
+func (b *Builder) Zunion() (c zunion) {
+	c.cs = append(b.get(), "ZUNION")
 	return
 }
 
@@ -13227,8 +13227,8 @@ func (c zunionstore) Destination(destination string) zunionstoreDestination {
 	return zunionstoreDestination{cs: append(c.cs, destination)}
 }
 
-func Zunionstore() (c zunionstore) {
-	c.cs = append(c.cs, "ZUNIONSTORE")
+func (b *Builder) Zunionstore() (c zunionstore) {
+	c.cs = append(b.get(), "ZUNIONSTORE")
 	return
 }
 
