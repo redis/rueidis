@@ -48,6 +48,10 @@ func (c aclDeluserUsername) Username(username ...string) aclDeluserUsername {
 	return aclDeluserUsername{cs: append(c.cs, username...)}
 }
 
+func (c aclDeluserUsername) Build() []string {
+	return c.cs
+}
+
 type aclGenpass struct {
 	cs []string
 }
@@ -577,6 +581,10 @@ type bitopKey struct {
 
 func (c bitopKey) Key(key ...string) bitopKey {
 	return bitopKey{cs: append(c.cs, key...)}
+}
+
+func (c bitopKey) Build() []string {
+	return c.cs
 }
 
 type bitopOperation struct {
@@ -1385,6 +1393,10 @@ func (c clientListIdClientId) ClientId(clientId ...int64) clientListIdClientId {
 	return clientListIdClientId{cs: c.cs}
 }
 
+func (c clientListIdClientId) Build() []string {
+	return c.cs
+}
+
 type clientListIdId struct {
 	cs []string
 }
@@ -1866,6 +1878,10 @@ func (c clusterAddslotsSlot) Slot(slot ...int64) clusterAddslotsSlot {
 	return clusterAddslotsSlot{cs: c.cs}
 }
 
+func (c clusterAddslotsSlot) Build() []string {
+	return c.cs
+}
+
 type clusterBumpepoch struct {
 	cs []string
 }
@@ -1946,6 +1962,10 @@ func (c clusterDelslotsSlot) Slot(slot ...int64) clusterDelslotsSlot {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
 	return clusterDelslotsSlot{cs: c.cs}
+}
+
+func (c clusterDelslotsSlot) Build() []string {
+	return c.cs
 }
 
 type clusterFailover struct {
@@ -2433,6 +2453,10 @@ func (c commandInfoCommandName) CommandName(commandName ...string) commandInfoCo
 	return commandInfoCommandName{cs: append(c.cs, commandName...)}
 }
 
+func (c commandInfoCommandName) Build() []string {
+	return c.cs
+}
+
 type configGet struct {
 	cs []string
 }
@@ -2684,6 +2708,10 @@ func (c delKey) Key(key ...string) delKey {
 	return delKey{cs: append(c.cs, key...)}
 }
 
+func (c delKey) Build() []string {
+	return c.cs
+}
+
 type discard struct {
 	cs []string
 }
@@ -2817,6 +2845,10 @@ func (c evalRoArg) Arg(arg ...string) evalRoArg {
 	return evalRoArg{cs: append(c.cs, arg...)}
 }
 
+func (c evalRoArg) Build() []string {
+	return c.cs
+}
+
 type evalRoKey struct {
 	cs []string
 }
@@ -2931,6 +2963,10 @@ func (c evalshaRoArg) Arg(arg ...string) evalshaRoArg {
 	return evalshaRoArg{cs: append(c.cs, arg...)}
 }
 
+func (c evalshaRoArg) Build() []string {
+	return c.cs
+}
+
 type evalshaRoKey struct {
 	cs []string
 }
@@ -2999,6 +3035,10 @@ type existsKey struct {
 
 func (c existsKey) Key(key ...string) existsKey {
 	return existsKey{cs: append(c.cs, key...)}
+}
+
+func (c existsKey) Build() []string {
+	return c.cs
 }
 
 type expire struct {
@@ -3416,6 +3456,10 @@ func (c geoaddLongitudeLatitudeMember) LongitudeLatitudeMember(longitude float64
 	return geoaddLongitudeLatitudeMember{cs: append(c.cs, strconv.FormatFloat(longitude, 'f', -1, 64), strconv.FormatFloat(latitude, 'f', -1, 64), member)}
 }
 
+func (c geoaddLongitudeLatitudeMember) Build() []string {
+	return c.cs
+}
+
 type geodist struct {
 	cs []string
 }
@@ -3530,6 +3574,10 @@ func (c geohashMember) Member(member ...string) geohashMember {
 	return geohashMember{cs: append(c.cs, member...)}
 }
 
+func (c geohashMember) Build() []string {
+	return c.cs
+}
+
 type geopos struct {
 	cs []string
 }
@@ -3557,6 +3605,10 @@ type geoposMember struct {
 
 func (c geoposMember) Member(member ...string) geoposMember {
 	return geoposMember{cs: append(c.cs, member...)}
+}
+
+func (c geoposMember) Build() []string {
+	return c.cs
 }
 
 type georadius struct {
@@ -5510,6 +5562,10 @@ func (c hdelField) Field(field ...string) hdelField {
 	return hdelField{cs: append(c.cs, field...)}
 }
 
+func (c hdelField) Build() []string {
+	return c.cs
+}
+
 type hdelKey struct {
 	cs []string
 }
@@ -5783,6 +5839,10 @@ func (c hmgetField) Field(field ...string) hmgetField {
 	return hmgetField{cs: append(c.cs, field...)}
 }
 
+func (c hmgetField) Build() []string {
+	return c.cs
+}
+
 type hmgetKey struct {
 	cs []string
 }
@@ -5810,6 +5870,10 @@ type hmsetFieldValue struct {
 
 func (c hmsetFieldValue) FieldValue(field string, value string) hmsetFieldValue {
 	return hmsetFieldValue{cs: append(c.cs, field, value)}
+}
+
+func (c hmsetFieldValue) Build() []string {
+	return c.cs
 }
 
 type hmsetKey struct {
@@ -5937,6 +6001,10 @@ type hsetFieldValue struct {
 
 func (c hsetFieldValue) FieldValue(field string, value string) hsetFieldValue {
 	return hsetFieldValue{cs: append(c.cs, field, value)}
+}
+
+func (c hsetFieldValue) Build() []string {
+	return c.cs
 }
 
 type hsetKey struct {
@@ -6695,6 +6763,10 @@ func (c lpushElement) Element(element ...string) lpushElement {
 	return lpushElement{cs: append(c.cs, element...)}
 }
 
+func (c lpushElement) Build() []string {
+	return c.cs
+}
+
 type lpushKey struct {
 	cs []string
 }
@@ -6722,6 +6794,10 @@ type lpushxElement struct {
 
 func (c lpushxElement) Element(element ...string) lpushxElement {
 	return lpushxElement{cs: append(c.cs, element...)}
+}
+
+func (c lpushxElement) Build() []string {
+	return c.cs
 }
 
 type lpushxKey struct {
@@ -6997,6 +7073,10 @@ type mgetKey struct {
 
 func (c mgetKey) Key(key ...string) mgetKey {
 	return mgetKey{cs: append(c.cs, key...)}
+}
+
+func (c mgetKey) Build() []string {
+	return c.cs
 }
 
 type migrate struct {
@@ -7307,6 +7387,10 @@ func (c msetKeyValue) KeyValue(key string, value string) msetKeyValue {
 	return msetKeyValue{cs: append(c.cs, key, value)}
 }
 
+func (c msetKeyValue) Build() []string {
+	return c.cs
+}
+
 type msetnx struct {
 	cs []string
 }
@@ -7326,6 +7410,10 @@ type msetnxKeyValue struct {
 
 func (c msetnxKeyValue) KeyValue(key string, value string) msetnxKeyValue {
 	return msetnxKeyValue{cs: append(c.cs, key, value)}
+}
+
+func (c msetnxKeyValue) Build() []string {
+	return c.cs
 }
 
 type multi struct {
@@ -7632,6 +7720,10 @@ func (c pfcountKey) Key(key ...string) pfcountKey {
 	return pfcountKey{cs: append(c.cs, key...)}
 }
 
+func (c pfcountKey) Build() []string {
+	return c.cs
+}
+
 type pfmerge struct {
 	cs []string
 }
@@ -7659,6 +7751,10 @@ type pfmergeSourcekey struct {
 
 func (c pfmergeSourcekey) Sourcekey(sourcekey ...string) pfmergeSourcekey {
 	return pfmergeSourcekey{cs: append(c.cs, sourcekey...)}
+}
+
+func (c pfmergeSourcekey) Build() []string {
+	return c.cs
 }
 
 type ping struct {
@@ -7742,6 +7838,10 @@ type psubscribePattern struct {
 
 func (c psubscribePattern) Pattern(pattern ...string) psubscribePattern {
 	return psubscribePattern{cs: append(c.cs, pattern...)}
+}
+
+func (c psubscribePattern) Build() []string {
+	return c.cs
 }
 
 type psync struct {
@@ -8246,6 +8346,10 @@ func (c rpushElement) Element(element ...string) rpushElement {
 	return rpushElement{cs: append(c.cs, element...)}
 }
 
+func (c rpushElement) Build() []string {
+	return c.cs
+}
+
 type rpushKey struct {
 	cs []string
 }
@@ -8273,6 +8377,10 @@ type rpushxElement struct {
 
 func (c rpushxElement) Element(element ...string) rpushxElement {
 	return rpushxElement{cs: append(c.cs, element...)}
+}
+
+func (c rpushxElement) Build() []string {
+	return c.cs
 }
 
 type rpushxKey struct {
@@ -8310,6 +8418,10 @@ type saddMember struct {
 
 func (c saddMember) Member(member ...string) saddMember {
 	return saddMember{cs: append(c.cs, member...)}
+}
+
+func (c saddMember) Build() []string {
+	return c.cs
 }
 
 type save struct {
@@ -8481,6 +8593,10 @@ func (c scriptExistsSha1) Sha1(sha1 ...string) scriptExistsSha1 {
 	return scriptExistsSha1{cs: append(c.cs, sha1...)}
 }
 
+func (c scriptExistsSha1) Build() []string {
+	return c.cs
+}
+
 type scriptFlush struct {
 	cs []string
 }
@@ -8573,6 +8689,10 @@ func (c sdiffKey) Key(key ...string) sdiffKey {
 	return sdiffKey{cs: append(c.cs, key...)}
 }
 
+func (c sdiffKey) Build() []string {
+	return c.cs
+}
+
 type sdiffstore struct {
 	cs []string
 }
@@ -8600,6 +8720,10 @@ type sdiffstoreKey struct {
 
 func (c sdiffstoreKey) Key(key ...string) sdiffstoreKey {
 	return sdiffstoreKey{cs: append(c.cs, key...)}
+}
+
+func (c sdiffstoreKey) Build() []string {
+	return c.cs
 }
 
 type rSelect struct {
@@ -9014,6 +9138,10 @@ func (c sinterKey) Key(key ...string) sinterKey {
 	return sinterKey{cs: append(c.cs, key...)}
 }
 
+func (c sinterKey) Build() []string {
+	return c.cs
+}
+
 type sintercard struct {
 	cs []string
 }
@@ -9033,6 +9161,10 @@ type sintercardKey struct {
 
 func (c sintercardKey) Key(key ...string) sintercardKey {
 	return sintercardKey{cs: append(c.cs, key...)}
+}
+
+func (c sintercardKey) Build() []string {
+	return c.cs
 }
 
 type sinterstore struct {
@@ -9062,6 +9194,10 @@ type sinterstoreKey struct {
 
 func (c sinterstoreKey) Key(key ...string) sinterstoreKey {
 	return sinterstoreKey{cs: append(c.cs, key...)}
+}
+
+func (c sinterstoreKey) Build() []string {
+	return c.cs
 }
 
 type sismember struct {
@@ -9203,6 +9339,10 @@ type smismemberMember struct {
 
 func (c smismemberMember) Member(member ...string) smismemberMember {
 	return smismemberMember{cs: append(c.cs, member...)}
+}
+
+func (c smismemberMember) Build() []string {
+	return c.cs
 }
 
 type smove struct {
@@ -9685,6 +9825,10 @@ func (c sremMember) Member(member ...string) sremMember {
 	return sremMember{cs: append(c.cs, member...)}
 }
 
+func (c sremMember) Build() []string {
+	return c.cs
+}
+
 type sscan struct {
 	cs []string
 }
@@ -9763,6 +9907,10 @@ func (c stralgoAlgoSpecificArgument) AlgoSpecificArgument(algoSpecificArgument .
 	return stralgoAlgoSpecificArgument{cs: append(c.cs, algoSpecificArgument...)}
 }
 
+func (c stralgoAlgoSpecificArgument) Build() []string {
+	return c.cs
+}
+
 type stralgoAlgorithmLcs struct {
 	cs []string
 }
@@ -9813,6 +9961,10 @@ func (c subscribeChannel) Channel(channel ...string) subscribeChannel {
 	return subscribeChannel{cs: append(c.cs, channel...)}
 }
 
+func (c subscribeChannel) Build() []string {
+	return c.cs
+}
+
 type sunion struct {
 	cs []string
 }
@@ -9832,6 +9984,10 @@ type sunionKey struct {
 
 func (c sunionKey) Key(key ...string) sunionKey {
 	return sunionKey{cs: append(c.cs, key...)}
+}
+
+func (c sunionKey) Build() []string {
+	return c.cs
 }
 
 type sunionstore struct {
@@ -9861,6 +10017,10 @@ type sunionstoreKey struct {
 
 func (c sunionstoreKey) Key(key ...string) sunionstoreKey {
 	return sunionstoreKey{cs: append(c.cs, key...)}
+}
+
+func (c sunionstoreKey) Build() []string {
+	return c.cs
 }
 
 type swapdb struct {
@@ -9939,6 +10099,10 @@ func (c touchKey) Key(key ...string) touchKey {
 	return touchKey{cs: append(c.cs, key...)}
 }
 
+func (c touchKey) Build() []string {
+	return c.cs
+}
+
 type ttl struct {
 	cs []string
 }
@@ -10000,6 +10164,10 @@ type unlinkKey struct {
 
 func (c unlinkKey) Key(key ...string) unlinkKey {
 	return unlinkKey{cs: append(c.cs, key...)}
+}
+
+func (c unlinkKey) Build() []string {
+	return c.cs
 }
 
 type unsubscribe struct {
@@ -10094,6 +10262,10 @@ func (c watchKey) Key(key ...string) watchKey {
 	return watchKey{cs: append(c.cs, key...)}
 }
 
+func (c watchKey) Build() []string {
+	return c.cs
+}
+
 type xack struct {
 	cs []string
 }
@@ -10123,6 +10295,10 @@ func (c xackId) Id(id ...string) xackId {
 	return xackId{cs: append(c.cs, id...)}
 }
 
+func (c xackId) Build() []string {
+	return c.cs
+}
+
 type xackKey struct {
 	cs []string
 }
@@ -10150,6 +10326,10 @@ type xaddFieldValue struct {
 
 func (c xaddFieldValue) FieldValue(field string, value string) xaddFieldValue {
 	return xaddFieldValue{cs: append(c.cs, field, value)}
+}
+
+func (c xaddFieldValue) Build() []string {
+	return c.cs
 }
 
 type xaddId struct {
@@ -10438,6 +10618,10 @@ func (c xclaimId) Id(id ...string) xclaimId {
 	return xclaimId{cs: append(c.cs, id...)}
 }
 
+func (c xclaimId) Build() []string {
+	return c.cs
+}
+
 type xclaimIdle struct {
 	cs []string
 }
@@ -10541,6 +10725,10 @@ type xdelId struct {
 
 func (c xdelId) Id(id ...string) xdelId {
 	return xdelId{cs: append(c.cs, id...)}
+}
+
+func (c xdelId) Build() []string {
+	return c.cs
 }
 
 type xdelKey struct {
@@ -11029,6 +11217,10 @@ func (c xreadId) Id(id ...string) xreadId {
 	return xreadId{cs: append(c.cs, id...)}
 }
 
+func (c xreadId) Build() []string {
+	return c.cs
+}
+
 type xreadKey struct {
 	cs []string
 }
@@ -11116,6 +11308,10 @@ type xreadgroupId struct {
 
 func (c xreadgroupId) Id(id ...string) xreadgroupId {
 	return xreadgroupId{cs: append(c.cs, id...)}
+}
+
+func (c xreadgroupId) Build() []string {
+	return c.cs
 }
 
 type xreadgroupKey struct {
@@ -11441,6 +11637,10 @@ func (c zaddScoreMember) ScoreMember(score float64, member string) zaddScoreMemb
 	return zaddScoreMember{cs: append(c.cs, strconv.FormatFloat(score, 'f', -1, 64), member)}
 }
 
+func (c zaddScoreMember) Build() []string {
+	return c.cs
+}
+
 type zcard struct {
 	cs []string
 }
@@ -11524,6 +11724,10 @@ func (c zdiffKey) Key(key ...string) zdiffKey {
 	return zdiffKey{cs: append(c.cs, key...)}
 }
 
+func (c zdiffKey) Build() []string {
+	return c.cs
+}
+
 type zdiffNumkeys struct {
 	cs []string
 }
@@ -11567,6 +11771,10 @@ type zdiffstoreKey struct {
 
 func (c zdiffstoreKey) Key(key ...string) zdiffstoreKey {
 	return zdiffstoreKey{cs: append(c.cs, key...)}
+}
+
+func (c zdiffstoreKey) Build() []string {
+	return c.cs
 }
 
 type zdiffstoreNumkeys struct {
@@ -11695,6 +11903,10 @@ func (c zinterKey) Key(key ...string) zinterKey {
 	return zinterKey{cs: append(c.cs, key...)}
 }
 
+func (c zinterKey) Build() []string {
+	return c.cs
+}
+
 type zinterNumkeys struct {
 	cs []string
 }
@@ -11761,6 +11973,10 @@ type zintercardKey struct {
 
 func (c zintercardKey) Key(key ...string) zintercardKey {
 	return zintercardKey{cs: append(c.cs, key...)}
+}
+
+func (c zintercardKey) Build() []string {
+	return c.cs
 }
 
 type zintercardNumkeys struct {
@@ -11842,6 +12058,10 @@ func (c zinterstoreKey) Max() zinterstoreAggregateMax {
 
 func (c zinterstoreKey) Key(key ...string) zinterstoreKey {
 	return zinterstoreKey{cs: append(c.cs, key...)}
+}
+
+func (c zinterstoreKey) Build() []string {
+	return c.cs
 }
 
 type zinterstoreNumkeys struct {
@@ -11943,6 +12163,10 @@ type zmscoreMember struct {
 
 func (c zmscoreMember) Member(member ...string) zmscoreMember {
 	return zmscoreMember{cs: append(c.cs, member...)}
+}
+
+func (c zmscoreMember) Build() []string {
+	return c.cs
 }
 
 type zpopmax struct {
@@ -12470,6 +12694,10 @@ func (c zremMember) Member(member ...string) zremMember {
 	return zremMember{cs: append(c.cs, member...)}
 }
 
+func (c zremMember) Build() []string {
+	return c.cs
+}
+
 type zremrangebylex struct {
 	cs []string
 }
@@ -12940,6 +13168,10 @@ func (c zunionKey) Key(key ...string) zunionKey {
 	return zunionKey{cs: append(c.cs, key...)}
 }
 
+func (c zunionKey) Build() []string {
+	return c.cs
+}
+
 type zunionNumkeys struct {
 	cs []string
 }
@@ -13058,6 +13290,10 @@ func (c zunionstoreKey) Max() zunionstoreAggregateMax {
 
 func (c zunionstoreKey) Key(key ...string) zunionstoreKey {
 	return zunionstoreKey{cs: append(c.cs, key...)}
+}
+
+func (c zunionstoreKey) Build() []string {
+	return c.cs
 }
 
 type zunionstoreNumkeys struct {
