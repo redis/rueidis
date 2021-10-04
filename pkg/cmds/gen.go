@@ -3360,8 +3360,8 @@ type geoaddChangeCh struct {
 	cs []string
 }
 
-func (c geoaddChangeCh) LongitudeLatitudeMember(longitude float64, latitude float64, member string) geoaddLongitudeLatitudeMember {
-	return geoaddLongitudeLatitudeMember{cs: append(c.cs, strconv.FormatFloat(longitude, 'f', -1, 64), strconv.FormatFloat(latitude, 'f', -1, 64), member)}
+func (c geoaddChangeCh) LongitudeLatitudeMember() geoaddLongitudeLatitudeMember {
+	return geoaddLongitudeLatitudeMember{cs: append(c.cs)}
 }
 
 type geoaddConditionNx struct {
@@ -3372,8 +3372,8 @@ func (c geoaddConditionNx) Ch() geoaddChangeCh {
 	return geoaddChangeCh{cs: append(c.cs, "CH")}
 }
 
-func (c geoaddConditionNx) LongitudeLatitudeMember(longitude float64, latitude float64, member string) geoaddLongitudeLatitudeMember {
-	return geoaddLongitudeLatitudeMember{cs: append(c.cs, strconv.FormatFloat(longitude, 'f', -1, 64), strconv.FormatFloat(latitude, 'f', -1, 64), member)}
+func (c geoaddConditionNx) LongitudeLatitudeMember() geoaddLongitudeLatitudeMember {
+	return geoaddLongitudeLatitudeMember{cs: append(c.cs)}
 }
 
 type geoaddConditionXx struct {
@@ -3384,8 +3384,8 @@ func (c geoaddConditionXx) Ch() geoaddChangeCh {
 	return geoaddChangeCh{cs: append(c.cs, "CH")}
 }
 
-func (c geoaddConditionXx) LongitudeLatitudeMember(longitude float64, latitude float64, member string) geoaddLongitudeLatitudeMember {
-	return geoaddLongitudeLatitudeMember{cs: append(c.cs, strconv.FormatFloat(longitude, 'f', -1, 64), strconv.FormatFloat(latitude, 'f', -1, 64), member)}
+func (c geoaddConditionXx) LongitudeLatitudeMember() geoaddLongitudeLatitudeMember {
+	return geoaddLongitudeLatitudeMember{cs: append(c.cs)}
 }
 
 type geoaddKey struct {
@@ -3404,8 +3404,8 @@ func (c geoaddKey) Ch() geoaddChangeCh {
 	return geoaddChangeCh{cs: append(c.cs, "CH")}
 }
 
-func (c geoaddKey) LongitudeLatitudeMember(longitude float64, latitude float64, member string) geoaddLongitudeLatitudeMember {
-	return geoaddLongitudeLatitudeMember{cs: append(c.cs, strconv.FormatFloat(longitude, 'f', -1, 64), strconv.FormatFloat(latitude, 'f', -1, 64), member)}
+func (c geoaddKey) LongitudeLatitudeMember() geoaddLongitudeLatitudeMember {
+	return geoaddLongitudeLatitudeMember{cs: append(c.cs)}
 }
 
 type geoaddLongitudeLatitudeMember struct {
@@ -5816,8 +5816,8 @@ type hmsetKey struct {
 	cs []string
 }
 
-func (c hmsetKey) FieldValue(field string, value string) hmsetFieldValue {
-	return hmsetFieldValue{cs: append(c.cs, field, value)}
+func (c hmsetKey) FieldValue() hmsetFieldValue {
+	return hmsetFieldValue{cs: append(c.cs)}
 }
 
 type hrandfield struct {
@@ -5943,8 +5943,8 @@ type hsetKey struct {
 	cs []string
 }
 
-func (c hsetKey) FieldValue(field string, value string) hsetFieldValue {
-	return hsetFieldValue{cs: append(c.cs, field, value)}
+func (c hsetKey) FieldValue() hsetFieldValue {
+	return hsetFieldValue{cs: append(c.cs)}
 }
 
 type hsetnx struct {
@@ -7290,8 +7290,8 @@ type mset struct {
 	cs []string
 }
 
-func (c mset) KeyValue(key string, value string) msetKeyValue {
-	return msetKeyValue{cs: append(c.cs, key, value)}
+func (c mset) KeyValue() msetKeyValue {
+	return msetKeyValue{cs: append(c.cs)}
 }
 
 func Mset() (c mset) {
@@ -7311,8 +7311,8 @@ type msetnx struct {
 	cs []string
 }
 
-func (c msetnx) KeyValue(key string, value string) msetnxKeyValue {
-	return msetnxKeyValue{cs: append(c.cs, key, value)}
+func (c msetnx) KeyValue() msetnxKeyValue {
+	return msetnxKeyValue{cs: append(c.cs)}
 }
 
 func Msetnx() (c msetnx) {
@@ -10156,8 +10156,8 @@ type xaddId struct {
 	cs []string
 }
 
-func (c xaddId) FieldValue(field string, value string) xaddFieldValue {
-	return xaddFieldValue{cs: append(c.cs, field, value)}
+func (c xaddId) FieldValue() xaddFieldValue {
+	return xaddFieldValue{cs: append(c.cs)}
 }
 
 type xaddKey struct {
@@ -10284,8 +10284,8 @@ type xaddWildcard struct {
 	cs []string
 }
 
-func (c xaddWildcard) FieldValue(field string, value string) xaddFieldValue {
-	return xaddFieldValue{cs: append(c.cs, field, value)}
+func (c xaddWildcard) FieldValue() xaddFieldValue {
+	return xaddFieldValue{cs: append(c.cs)}
 }
 
 type xautoclaim struct {
@@ -11309,8 +11309,8 @@ func (c zaddChangeCh) Incr() zaddIncrementIncr {
 	return zaddIncrementIncr{cs: append(c.cs, "INCR")}
 }
 
-func (c zaddChangeCh) ScoreMember(score float64, member string) zaddScoreMember {
-	return zaddScoreMember{cs: append(c.cs, strconv.FormatFloat(score, 'f', -1, 64), member)}
+func (c zaddChangeCh) ScoreMember() zaddScoreMember {
+	return zaddScoreMember{cs: append(c.cs)}
 }
 
 type zaddComparisonGt struct {
@@ -11325,8 +11325,8 @@ func (c zaddComparisonGt) Incr() zaddIncrementIncr {
 	return zaddIncrementIncr{cs: append(c.cs, "INCR")}
 }
 
-func (c zaddComparisonGt) ScoreMember(score float64, member string) zaddScoreMember {
-	return zaddScoreMember{cs: append(c.cs, strconv.FormatFloat(score, 'f', -1, 64), member)}
+func (c zaddComparisonGt) ScoreMember() zaddScoreMember {
+	return zaddScoreMember{cs: append(c.cs)}
 }
 
 type zaddComparisonLt struct {
@@ -11341,8 +11341,8 @@ func (c zaddComparisonLt) Incr() zaddIncrementIncr {
 	return zaddIncrementIncr{cs: append(c.cs, "INCR")}
 }
 
-func (c zaddComparisonLt) ScoreMember(score float64, member string) zaddScoreMember {
-	return zaddScoreMember{cs: append(c.cs, strconv.FormatFloat(score, 'f', -1, 64), member)}
+func (c zaddComparisonLt) ScoreMember() zaddScoreMember {
+	return zaddScoreMember{cs: append(c.cs)}
 }
 
 type zaddConditionNx struct {
@@ -11365,8 +11365,8 @@ func (c zaddConditionNx) Incr() zaddIncrementIncr {
 	return zaddIncrementIncr{cs: append(c.cs, "INCR")}
 }
 
-func (c zaddConditionNx) ScoreMember(score float64, member string) zaddScoreMember {
-	return zaddScoreMember{cs: append(c.cs, strconv.FormatFloat(score, 'f', -1, 64), member)}
+func (c zaddConditionNx) ScoreMember() zaddScoreMember {
+	return zaddScoreMember{cs: append(c.cs)}
 }
 
 type zaddConditionXx struct {
@@ -11389,16 +11389,16 @@ func (c zaddConditionXx) Incr() zaddIncrementIncr {
 	return zaddIncrementIncr{cs: append(c.cs, "INCR")}
 }
 
-func (c zaddConditionXx) ScoreMember(score float64, member string) zaddScoreMember {
-	return zaddScoreMember{cs: append(c.cs, strconv.FormatFloat(score, 'f', -1, 64), member)}
+func (c zaddConditionXx) ScoreMember() zaddScoreMember {
+	return zaddScoreMember{cs: append(c.cs)}
 }
 
 type zaddIncrementIncr struct {
 	cs []string
 }
 
-func (c zaddIncrementIncr) ScoreMember(score float64, member string) zaddScoreMember {
-	return zaddScoreMember{cs: append(c.cs, strconv.FormatFloat(score, 'f', -1, 64), member)}
+func (c zaddIncrementIncr) ScoreMember() zaddScoreMember {
+	return zaddScoreMember{cs: append(c.cs)}
 }
 
 type zaddKey struct {
@@ -11429,8 +11429,8 @@ func (c zaddKey) Incr() zaddIncrementIncr {
 	return zaddIncrementIncr{cs: append(c.cs, "INCR")}
 }
 
-func (c zaddKey) ScoreMember(score float64, member string) zaddScoreMember {
-	return zaddScoreMember{cs: append(c.cs, strconv.FormatFloat(score, 'f', -1, 64), member)}
+func (c zaddKey) ScoreMember() zaddScoreMember {
+	return zaddScoreMember{cs: append(c.cs)}
 }
 
 type zaddScoreMember struct {
