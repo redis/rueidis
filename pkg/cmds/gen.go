@@ -1378,16 +1378,22 @@ type clientListIdClientId struct {
 	cs []string
 }
 
-func (c clientListIdClientId) ClientId(clientId int64) clientListIdClientId {
-	return clientListIdClientId{cs: append(c.cs, strconv.FormatInt(clientId, 10))}
+func (c clientListIdClientId) ClientId(clientId ...int64) clientListIdClientId {
+	for _, n := range clientId {
+		c.cs = append(c.cs, strconv.FormatInt(n, 10))
+	}
+	return clientListIdClientId{cs: c.cs}
 }
 
 type clientListIdId struct {
 	cs []string
 }
 
-func (c clientListIdId) ClientId(clientId int64) clientListIdClientId {
-	return clientListIdClientId{cs: append(c.cs, strconv.FormatInt(clientId, 10))}
+func (c clientListIdId) ClientId(clientId ...int64) clientListIdClientId {
+	for _, n := range clientId {
+		c.cs = append(c.cs, strconv.FormatInt(n, 10))
+	}
+	return clientListIdClientId{cs: c.cs}
 }
 
 type clientListMaster struct {
@@ -1672,8 +1678,8 @@ type clientTrackingRedirect struct {
 }
 
 func (c clientTrackingRedirect) Prefix(prefix ...string) clientTrackingPrefix {
-	cs := append(c.cs, "PREFIX")
-	return clientTrackingPrefix{cs: append(cs, prefix...)}
+	c.cs = append(c.cs, "PREFIX")
+	return clientTrackingPrefix{cs: append(c.cs, prefix...)}
 }
 
 func (c clientTrackingRedirect) Bcast() clientTrackingBcastBcast {
@@ -1705,8 +1711,8 @@ func (c clientTrackingStatusOff) Redirect(clientId int64) clientTrackingRedirect
 }
 
 func (c clientTrackingStatusOff) Prefix(prefix ...string) clientTrackingPrefix {
-	cs := append(c.cs, "PREFIX")
-	return clientTrackingPrefix{cs: append(cs, prefix...)}
+	c.cs = append(c.cs, "PREFIX")
+	return clientTrackingPrefix{cs: append(c.cs, prefix...)}
 }
 
 func (c clientTrackingStatusOff) Bcast() clientTrackingBcastBcast {
@@ -1738,8 +1744,8 @@ func (c clientTrackingStatusOn) Redirect(clientId int64) clientTrackingRedirect 
 }
 
 func (c clientTrackingStatusOn) Prefix(prefix ...string) clientTrackingPrefix {
-	cs := append(c.cs, "PREFIX")
-	return clientTrackingPrefix{cs: append(cs, prefix...)}
+	c.cs = append(c.cs, "PREFIX")
+	return clientTrackingPrefix{cs: append(c.cs, prefix...)}
 }
 
 func (c clientTrackingStatusOn) Bcast() clientTrackingBcastBcast {
@@ -1837,8 +1843,11 @@ type clusterAddslots struct {
 	cs []string
 }
 
-func (c clusterAddslots) Slot(slot int64) clusterAddslotsSlot {
-	return clusterAddslotsSlot{cs: append(c.cs, strconv.FormatInt(slot, 10))}
+func (c clusterAddslots) Slot(slot ...int64) clusterAddslotsSlot {
+	for _, n := range slot {
+		c.cs = append(c.cs, strconv.FormatInt(n, 10))
+	}
+	return clusterAddslotsSlot{cs: c.cs}
 }
 
 func ClusterAddslots() (c clusterAddslots) {
@@ -1850,8 +1859,11 @@ type clusterAddslotsSlot struct {
 	cs []string
 }
 
-func (c clusterAddslotsSlot) Slot(slot int64) clusterAddslotsSlot {
-	return clusterAddslotsSlot{cs: append(c.cs, strconv.FormatInt(slot, 10))}
+func (c clusterAddslotsSlot) Slot(slot ...int64) clusterAddslotsSlot {
+	for _, n := range slot {
+		c.cs = append(c.cs, strconv.FormatInt(n, 10))
+	}
+	return clusterAddslotsSlot{cs: c.cs}
 }
 
 type clusterBumpepoch struct {
@@ -1913,8 +1925,11 @@ type clusterDelslots struct {
 	cs []string
 }
 
-func (c clusterDelslots) Slot(slot int64) clusterDelslotsSlot {
-	return clusterDelslotsSlot{cs: append(c.cs, strconv.FormatInt(slot, 10))}
+func (c clusterDelslots) Slot(slot ...int64) clusterDelslotsSlot {
+	for _, n := range slot {
+		c.cs = append(c.cs, strconv.FormatInt(n, 10))
+	}
+	return clusterDelslotsSlot{cs: c.cs}
 }
 
 func ClusterDelslots() (c clusterDelslots) {
@@ -1926,8 +1941,11 @@ type clusterDelslotsSlot struct {
 	cs []string
 }
 
-func (c clusterDelslotsSlot) Slot(slot int64) clusterDelslotsSlot {
-	return clusterDelslotsSlot{cs: append(c.cs, strconv.FormatInt(slot, 10))}
+func (c clusterDelslotsSlot) Slot(slot ...int64) clusterDelslotsSlot {
+	for _, n := range slot {
+		c.cs = append(c.cs, strconv.FormatInt(n, 10))
+	}
+	return clusterDelslotsSlot{cs: c.cs}
 }
 
 type clusterFailover struct {
@@ -7003,8 +7021,8 @@ func (c migrateAuth) Auth2(usernamePassword string) migrateAuth2 {
 }
 
 func (c migrateAuth) Keys(key ...string) migrateKeys {
-	cs := append(c.cs, "KEYS")
-	return migrateKeys{cs: append(cs, key...)}
+	c.cs = append(c.cs, "KEYS")
+	return migrateKeys{cs: append(c.cs, key...)}
 }
 
 func (c migrateAuth) Build() []string {
@@ -7016,8 +7034,8 @@ type migrateAuth2 struct {
 }
 
 func (c migrateAuth2) Keys(key ...string) migrateKeys {
-	cs := append(c.cs, "KEYS")
-	return migrateKeys{cs: append(cs, key...)}
+	c.cs = append(c.cs, "KEYS")
+	return migrateKeys{cs: append(c.cs, key...)}
 }
 
 func (c migrateAuth2) Build() []string {
@@ -7041,8 +7059,8 @@ func (c migrateCopyCopy) Auth2(usernamePassword string) migrateAuth2 {
 }
 
 func (c migrateCopyCopy) Keys(key ...string) migrateKeys {
-	cs := append(c.cs, "KEYS")
-	return migrateKeys{cs: append(cs, key...)}
+	c.cs = append(c.cs, "KEYS")
+	return migrateKeys{cs: append(c.cs, key...)}
 }
 
 func (c migrateCopyCopy) Build() []string {
@@ -7118,8 +7136,8 @@ func (c migrateReplaceReplace) Auth2(usernamePassword string) migrateAuth2 {
 }
 
 func (c migrateReplaceReplace) Keys(key ...string) migrateKeys {
-	cs := append(c.cs, "KEYS")
-	return migrateKeys{cs: append(cs, key...)}
+	c.cs = append(c.cs, "KEYS")
+	return migrateKeys{cs: append(c.cs, key...)}
 }
 
 func (c migrateReplaceReplace) Build() []string {
@@ -7147,8 +7165,8 @@ func (c migrateTimeout) Auth2(usernamePassword string) migrateAuth2 {
 }
 
 func (c migrateTimeout) Keys(key ...string) migrateKeys {
-	cs := append(c.cs, "KEYS")
-	return migrateKeys{cs: append(cs, key...)}
+	c.cs = append(c.cs, "KEYS")
+	return migrateKeys{cs: append(c.cs, key...)}
 }
 
 func (c migrateTimeout) Build() []string {
@@ -9246,8 +9264,8 @@ func (c sortBy) Limit(offset int64, count int64) sortLimit {
 }
 
 func (c sortBy) Get(pattern ...string) sortGet {
-	cs := append(c.cs, "GET")
-	return sortGet{cs: append(cs, pattern...)}
+	c.cs = append(c.cs, "GET")
+	return sortGet{cs: append(c.cs, pattern...)}
 }
 
 func (c sortBy) Asc() sortOrderAsc {
@@ -9311,8 +9329,8 @@ func (c sortKey) Limit(offset int64, count int64) sortLimit {
 }
 
 func (c sortKey) Get(pattern ...string) sortGet {
-	cs := append(c.cs, "GET")
-	return sortGet{cs: append(cs, pattern...)}
+	c.cs = append(c.cs, "GET")
+	return sortGet{cs: append(c.cs, pattern...)}
 }
 
 func (c sortKey) Asc() sortOrderAsc {
@@ -9340,8 +9358,8 @@ type sortLimit struct {
 }
 
 func (c sortLimit) Get(pattern ...string) sortGet {
-	cs := append(c.cs, "GET")
-	return sortGet{cs: append(cs, pattern...)}
+	c.cs = append(c.cs, "GET")
+	return sortGet{cs: append(c.cs, pattern...)}
 }
 
 func (c sortLimit) Asc() sortOrderAsc {
@@ -9418,8 +9436,8 @@ func (c sortRoBy) Limit(offset int64, count int64) sortRoLimit {
 }
 
 func (c sortRoBy) Get(pattern ...string) sortRoGet {
-	cs := append(c.cs, "GET")
-	return sortRoGet{cs: append(cs, pattern...)}
+	c.cs = append(c.cs, "GET")
+	return sortRoGet{cs: append(c.cs, pattern...)}
 }
 
 func (c sortRoBy) Asc() sortRoOrderAsc {
@@ -9475,8 +9493,8 @@ func (c sortRoKey) Limit(offset int64, count int64) sortRoLimit {
 }
 
 func (c sortRoKey) Get(pattern ...string) sortRoGet {
-	cs := append(c.cs, "GET")
-	return sortRoGet{cs: append(cs, pattern...)}
+	c.cs = append(c.cs, "GET")
+	return sortRoGet{cs: append(c.cs, pattern...)}
 }
 
 func (c sortRoKey) Asc() sortRoOrderAsc {
@@ -9500,8 +9518,8 @@ type sortRoLimit struct {
 }
 
 func (c sortRoLimit) Get(pattern ...string) sortRoGet {
-	cs := append(c.cs, "GET")
-	return sortRoGet{cs: append(cs, pattern...)}
+	c.cs = append(c.cs, "GET")
+	return sortRoGet{cs: append(c.cs, pattern...)}
 }
 
 func (c sortRoLimit) Asc() sortRoOrderAsc {
@@ -11649,8 +11667,12 @@ type zinterKey struct {
 	cs []string
 }
 
-func (c zinterKey) Weights(weight int64) zinterWeights {
-	return zinterWeights{cs: append(c.cs, "WEIGHTS", strconv.FormatInt(weight, 10))}
+func (c zinterKey) Weights(weight ...int64) zinterWeights {
+	c.cs = append(c.cs, "WEIGHTS")
+	for _, n := range weight {
+		c.cs = append(c.cs, strconv.FormatInt(n, 10))
+	}
+	return zinterWeights{cs: c.cs}
 }
 
 func (c zinterKey) Sum() zinterAggregateSum {
@@ -11701,8 +11723,11 @@ func (c zinterWeights) Withscores() zinterWithscoresWithscores {
 	return zinterWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
 }
 
-func (c zinterWeights) Weights(weights int64) zinterWeights {
-	return zinterWeights{cs: append(c.cs, strconv.FormatInt(weights, 10))}
+func (c zinterWeights) Weights(weights ...int64) zinterWeights {
+	for _, n := range weights {
+		c.cs = append(c.cs, strconv.FormatInt(n, 10))
+	}
+	return zinterWeights{cs: c.cs}
 }
 
 func (c zinterWeights) Build() []string {
@@ -11795,8 +11820,12 @@ type zinterstoreKey struct {
 	cs []string
 }
 
-func (c zinterstoreKey) Weights(weight int64) zinterstoreWeights {
-	return zinterstoreWeights{cs: append(c.cs, "WEIGHTS", strconv.FormatInt(weight, 10))}
+func (c zinterstoreKey) Weights(weight ...int64) zinterstoreWeights {
+	c.cs = append(c.cs, "WEIGHTS")
+	for _, n := range weight {
+		c.cs = append(c.cs, strconv.FormatInt(n, 10))
+	}
+	return zinterstoreWeights{cs: c.cs}
 }
 
 func (c zinterstoreKey) Sum() zinterstoreAggregateSum {
@@ -11839,8 +11868,11 @@ func (c zinterstoreWeights) Max() zinterstoreAggregateMax {
 	return zinterstoreAggregateMax{cs: append(c.cs, "MAX")}
 }
 
-func (c zinterstoreWeights) Weights(weights int64) zinterstoreWeights {
-	return zinterstoreWeights{cs: append(c.cs, strconv.FormatInt(weights, 10))}
+func (c zinterstoreWeights) Weights(weights ...int64) zinterstoreWeights {
+	for _, n := range weights {
+		c.cs = append(c.cs, strconv.FormatInt(n, 10))
+	}
+	return zinterstoreWeights{cs: c.cs}
 }
 
 func (c zinterstoreWeights) Build() []string {
@@ -12880,8 +12912,12 @@ type zunionKey struct {
 	cs []string
 }
 
-func (c zunionKey) Weights(weight int64) zunionWeights {
-	return zunionWeights{cs: append(c.cs, "WEIGHTS", strconv.FormatInt(weight, 10))}
+func (c zunionKey) Weights(weight ...int64) zunionWeights {
+	c.cs = append(c.cs, "WEIGHTS")
+	for _, n := range weight {
+		c.cs = append(c.cs, strconv.FormatInt(n, 10))
+	}
+	return zunionWeights{cs: c.cs}
 }
 
 func (c zunionKey) Sum() zunionAggregateSum {
@@ -12932,8 +12968,11 @@ func (c zunionWeights) Withscores() zunionWithscoresWithscores {
 	return zunionWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
 }
 
-func (c zunionWeights) Weights(weights int64) zunionWeights {
-	return zunionWeights{cs: append(c.cs, strconv.FormatInt(weights, 10))}
+func (c zunionWeights) Weights(weights ...int64) zunionWeights {
+	for _, n := range weights {
+		c.cs = append(c.cs, strconv.FormatInt(n, 10))
+	}
+	return zunionWeights{cs: c.cs}
 }
 
 func (c zunionWeights) Build() []string {
@@ -12997,8 +13036,12 @@ type zunionstoreKey struct {
 	cs []string
 }
 
-func (c zunionstoreKey) Weights(weight int64) zunionstoreWeights {
-	return zunionstoreWeights{cs: append(c.cs, "WEIGHTS", strconv.FormatInt(weight, 10))}
+func (c zunionstoreKey) Weights(weight ...int64) zunionstoreWeights {
+	c.cs = append(c.cs, "WEIGHTS")
+	for _, n := range weight {
+		c.cs = append(c.cs, strconv.FormatInt(n, 10))
+	}
+	return zunionstoreWeights{cs: c.cs}
 }
 
 func (c zunionstoreKey) Sum() zunionstoreAggregateSum {
@@ -13041,8 +13084,11 @@ func (c zunionstoreWeights) Max() zunionstoreAggregateMax {
 	return zunionstoreAggregateMax{cs: append(c.cs, "MAX")}
 }
 
-func (c zunionstoreWeights) Weights(weights int64) zunionstoreWeights {
-	return zunionstoreWeights{cs: append(c.cs, strconv.FormatInt(weights, 10))}
+func (c zunionstoreWeights) Weights(weights ...int64) zunionstoreWeights {
+	for _, n := range weights {
+		c.cs = append(c.cs, strconv.FormatInt(n, 10))
+	}
+	return zunionstoreWeights{cs: c.cs}
 }
 
 func (c zunionstoreWeights) Build() []string {
