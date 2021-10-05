@@ -18,9 +18,7 @@ import (
 const DefaultCacheBytes = 128 * (1 << 20)
 
 var (
-	PingCmd        = []string{"PING"}
-	OptInCmd       = []string{"CLIENT", "CACHING", "yes"}
-	TrackingCmd    = []string{"CLIENT", "TRACKING", "on", "OPTIN"}
+	OptInCmd       = []string{"CLIENT", "CACHING", "YES"}
 	ErrConnClosing = errors.New("conn is closing")
 )
 
@@ -82,7 +80,7 @@ func newConn(conn net.Conn, option Option) (*Conn, error) {
 		helloCmd = append(helloCmd, "SETNAME", option.ClientName)
 	}
 
-	init := [][]string{helloCmd, TrackingCmd}
+	init := [][]string{helloCmd, {"CLIENT", "TRACKING", "ON", "OPTIN"}}
 	if option.SelectDB != 0 {
 		init = append(init, []string{"SELECT", strconv.Itoa(option.SelectDB)})
 	}
@@ -106,7 +104,7 @@ func (c *Conn) pinging() {
 	go func() {
 		for atomic.LoadInt32(&c.state) == 0 {
 			time.Sleep(time.Second)
-			c.Do(PingCmd) // if the ping fail, the client side caching will be cleared
+			c.Do(c.Cmd.Ping().Build()) // if the ping fail, the client side caching will be cleared
 		}
 	}()
 }
@@ -135,7 +133,6 @@ func (c *Conn) reading() {
 				if err = proto.WriteCmd(c.w, cmd); err != nil {
 					return
 				}
-				c.Cmd.Put(cmd)
 			}
 		}
 	}()
@@ -200,14 +197,15 @@ func (c *Conn) Do(cmd []string) (res proto.Result) {
 		res.Err = ErrConnClosing
 	}
 	atomic.AddInt32(&c.waits, -1)
+	c.Cmd.Put(cmd)
 	return res
 }
 
-func (c *Conn) DoMulti(cmd ...[]string) []proto.Result {
-	res := make([]proto.Result, len(cmd))
+func (c *Conn) DoMulti(cmds ...[]string) []proto.Result {
+	res := make([]proto.Result, len(cmds))
 	atomic.AddInt32(&c.waits, 1)
 	if atomic.LoadInt32(&c.state) == 0 {
-		ch := c.q.PutMulti(cmd)
+		ch := c.q.PutMulti(cmds)
 		for i := range res {
 			res[i] = <-ch
 		}
@@ -217,12 +215,16 @@ func (c *Conn) DoMulti(cmd ...[]string) []proto.Result {
 		}
 	}
 	atomic.AddInt32(&c.waits, -1)
+	for _, cmd := range cmds {
+		c.Cmd.Put(cmd)
+	}
 	return res
 }
 
 func (c *Conn) DoCache(cmd []string, ttl time.Duration) proto.Result {
 retry:
 	if v, ch := c.cache.GetOrPrepare(cmd[1], ttl); v.Type != 0 {
+		c.Cmd.Put(cmd)
 		return proto.Result{Val: v}
 	} else if ch != nil {
 		<-ch
