@@ -57,8 +57,11 @@ func BenchmarkRedisClient(b *testing.B) {
 
 ## Client Side Caching
 
-Opt-in mode are enabled by default, and can be used by calling `DoCache()` with
-an explicit client side TTL
+The Opt-In mode of server-assisted client side caching are always enabled, and can be used by calling `DoCache()` with
+a separated client side TTL.
+
+A separated client side TTL is required because the current spec (redis 6.2) of Client Side Caching doesn't include notification of
+key expiration on server in time.
 
 ### Benchmark
 
@@ -68,10 +71,10 @@ goos: darwin
 goarch: amd64
 pkg: github.com/rueian/rueidis/cmd/bench4
 cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
-BenchmarkClientSideCache/Do-12                    626848                1917 ns/op            1052 B/op          2 allocs/op
-BenchmarkClientSideCache/DoCache-12              3519226               358.1 ns/op              56 B/op          2 allocs/op
+BenchmarkClientSideCache/Do-12                    594303            1920 ns/op      1048 B/op          2 allocs/op
+BenchmarkClientSideCache/DoCache-12              3448129           347.1 ns/op        24 B/op          1 allocs/op
 PASS
-ok      github.com/rueian/rueidis/cmd/bench4    4.004s
+ok  	github.com/rueian/rueidis/cmd/bench4	3.801s
 ```
 Benchmark source code:
 ```golang
@@ -99,7 +102,21 @@ func BenchmarkClientSideCache(b *testing.B) {
 }
 ```
 
-## Not yet implement
+## Command Builder
+
+Redis commands are very complex and their formats are very different from each other.
+
+This library provides a type safe command builder with in `Conn.Cmd` that can be used as
+an entrypoint to construct a redis command. Once the command is completed, call the `Build()` to get the actual command.
+And then pass it to either `Conn.Do()` or `Conn.DoMulti()` or `Conn.DoCache()`.
+
+```golang
+c.Do(c.Cmd.Set().Key("mykey").Value("myval").Ex(10).Nx().Build())
+```
+
+Once the command is passed to the one of above `Conn.DoXXX()`, the command will be recycled and should not be reused.
+
+## Not Yet Implement
 
 The following subjects are not yet implemented.
 
