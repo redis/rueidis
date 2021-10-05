@@ -21,6 +21,7 @@ type entry struct {
 	val  proto.Message
 	ttl  time.Time
 	key  string
+	ch   chan struct{}
 	size int
 }
 
@@ -42,36 +43,43 @@ func NewLRU(max int) *LRU {
 	}
 }
 
-func (c *LRU) GetOrPrepare(key string, ttl time.Duration) (v proto.Message) {
+func (c *LRU) GetOrPrepare(key string, ttl time.Duration) (v proto.Message, ch chan struct{}) {
 	c.mu.Lock()
 	ele, ok := c.store[key]
 	if ok {
 		e := ele.Value.(*entry)
 		if e.ttl.After(time.Now()) {
 			v = e.val
+			ch = e.ch
 			c.list.MoveToBack(ele)
 		} else {
-			delete(c.store, key)
-			c.list.Remove(ele)
+			e.val = proto.Message{}
+			e.ttl = time.Now().Add(ttl)
+			e.ch = make(chan struct{}, 1)
+			c.list.MoveToBack(ele)
 		}
 	} else if c.list != nil {
 		c.list.PushBack(&entry{
 			key: key,
 			ttl: time.Now().Add(ttl),
+			ch:  make(chan struct{}, 1),
 		})
 		c.store[key] = c.list.Back()
 	}
 	c.mu.Unlock()
-	return v
+	return v, ch
 }
 
 func (c *LRU) Update(key string, value proto.Message) {
+	var ch chan struct{}
 	c.mu.Lock()
 	ele, ok := c.store[key]
 	if ok {
 		e := ele.Value.(*entry)
 		e.val = value
 		e.size = entrySize + elementSize + 2*(stringSSize+len(key)) + value.Size()
+		ch = e.ch
+		e.ch = nil
 
 		c.size += e.size
 		for c.size > c.max {
@@ -84,6 +92,9 @@ func (c *LRU) Update(key string, value proto.Message) {
 		}
 	}
 	c.mu.Unlock()
+	if ch != nil {
+		close(ch)
+	}
 }
 
 func (c *LRU) Delete(keys []proto.Message) {

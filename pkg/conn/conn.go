@@ -221,10 +221,14 @@ func (c *Conn) DoMulti(cmd ...[]string) []proto.Result {
 }
 
 func (c *Conn) DoCache(cmd []string, ttl time.Duration) proto.Result {
-	if v := c.cache.GetOrPrepare(cmd[1], ttl); v.Type != 0 {
+retry:
+	if v, ch := c.cache.GetOrPrepare(cmd[1], ttl); v.Type != 0 {
 		return proto.Result{Val: v}
+	} else if ch != nil {
+		<-ch
+		goto retry
 	}
-	return c.DoMulti(OptInCmd, cmd)[1]
+	return c.DoMulti(c.Cmd.ClientCaching().Yes().Build(), cmd)[1]
 }
 
 func (c *Conn) Close() {
