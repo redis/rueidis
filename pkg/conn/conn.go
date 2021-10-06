@@ -28,14 +28,13 @@ type Conn struct {
 	waits int32
 	state int32
 
-	conn net.Conn
-	err  atomic.Value
+	conn  net.Conn
+	queue queue.Queue
+	cache cache.Cache
+	error atomic.Value
 
 	r *bufio.Reader
 	w *bufio.Writer
-	q *queue.Ring
-
-	cache *cache.LRU
 
 	info proto.Message
 }
@@ -65,10 +64,10 @@ func newConn(conn net.Conn, option Option) (*Conn, error) {
 		Cmd: cmds.NewBuilder(),
 
 		conn:  conn,
+		queue: queue.NewRing(),
 		cache: cache.NewLRU(option.CacheSize),
 		r:     bufio.NewReader(conn),
 		w:     bufio.NewWriter(conn),
-		q:     queue.NewRing(),
 	}
 	c.reading()
 
@@ -116,18 +115,18 @@ func (c *Conn) reading() {
 			// if any error, make sure to clear the cache
 			c.cache.DeleteAll()
 			if err != nil {
-				c.err.Store(err)
+				c.error.Store(err)
 			}
 			_ = c.conn.Close()
 			c.Close()
 		}()
 		for atomic.LoadInt32(&c.state) != 2 {
-			cmds := c.q.TryNextCmd()
+			cmds := c.queue.TryNextCmd()
 			if cmds == nil {
 				if err = c.w.Flush(); err != nil {
 					return
 				}
-				cmds = c.q.NextCmd()
+				cmds = c.queue.NextCmd()
 			}
 			for _, cmd := range cmds {
 				if err = proto.WriteCmd(c.w, cmd); err != nil {
@@ -143,7 +142,7 @@ func (c *Conn) reading() {
 				c.handlePush(msg.Values)
 				continue
 			}
-			cmds, ch := c.q.NextResultCh()
+			cmds, ch := c.queue.NextResultCh()
 			ch <- proto.Result{Val: msg, Err: err}
 
 			// in current implementation, the cache opt-in will only be in the first cmd in batch
@@ -192,7 +191,7 @@ func (c *Conn) Into() proto.Message {
 func (c *Conn) Do(cmd []string) (res proto.Result) {
 	atomic.AddInt32(&c.waits, 1)
 	if atomic.LoadInt32(&c.state) == 0 {
-		res = <-c.q.PutOne(cmd)
+		res = <-c.queue.PutOne(cmd)
 	} else {
 		res.Err = ErrConnClosing
 	}
@@ -205,7 +204,7 @@ func (c *Conn) DoMulti(cmds ...[]string) []proto.Result {
 	res := make([]proto.Result, len(cmds))
 	atomic.AddInt32(&c.waits, 1)
 	if atomic.LoadInt32(&c.state) == 0 {
-		ch := c.q.PutMulti(cmds)
+		ch := c.queue.PutMulti(cmds)
 		for i := range res {
 			res[i] = <-ch
 		}
@@ -242,7 +241,7 @@ func (c *Conn) Close() {
 }
 
 func (c *Conn) Err() error {
-	v := c.err.Load()
+	v := c.error.Load()
 	if v == nil {
 		return nil
 	}
