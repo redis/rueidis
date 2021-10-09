@@ -19,7 +19,7 @@ const DefaultCacheBytes = 128 * (1 << 20)
 
 var (
 	OptInCmd       = []string{"CLIENT", "CACHING", "YES"}
-	ErrConnClosing = errors.New("conn is closing")
+	ErrConnClosing = errors.New("connection is closing")
 )
 
 type Conn struct {
@@ -93,19 +93,7 @@ func newConn(conn net.Conn, option Option) (*Conn, error) {
 
 	c.info = res[0].Val
 
-	// make client side caching be as healthy as possible
-	c.pinging()
-
 	return c, nil
-}
-
-func (c *Conn) pinging() {
-	go func() {
-		for atomic.LoadInt32(&c.state) == 0 {
-			time.Sleep(time.Second)
-			c.Do(c.Cmd.Ping().Build()) // if the ping fail, the client side caching will be cleared
-		}
-	}()
 }
 
 func (c *Conn) reading() {
