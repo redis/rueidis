@@ -26,22 +26,24 @@ type NoPadRing struct {
 }
 
 type node struct {
-	r uint64
+	mark uint32
+	cmds [][]string
+	ch   chan proto.Result
 }
 
 func (r *NoPadRing) PutOne(m []string) chan proto.Result {
 	n := &r.store[atomic.AddUint64(&r.write, 1)&r.mask]
-	for !atomic.CompareAndSwapUint64(&n.r, 0, 1) {
+	for !atomic.CompareAndSwapUint32(&n.mark, 0, 1) {
 		runtime.Gosched()
 	}
-	atomic.StoreUint64(&n.r, 2)
+	atomic.StoreUint32(&n.mark, 2)
 	return nil
 }
 
 func (r *NoPadRing) NextCmd() [][]string {
 	r.read1 = (r.read1 + 1) & r.mask
 	n := &r.store[r.read1]
-	for !atomic.CompareAndSwapUint64(&n.r, 2, 3) {
+	for !atomic.CompareAndSwapUint32(&n.mark, 2, 3) {
 		runtime.Gosched()
 	}
 	return nil
@@ -51,6 +53,6 @@ func (r *NoPadRing) NextResultCh() ([][]string, chan proto.Result) {
 	r.read2++
 	p := r.read2 & r.mask
 	n := &r.store[p]
-	atomic.CompareAndSwapUint64(&n.r, 3, 0)
+	atomic.CompareAndSwapUint32(&n.mark, 3, 0)
 	return nil, nil
 }
