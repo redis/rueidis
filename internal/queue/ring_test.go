@@ -8,7 +8,7 @@ import (
 func TestRing(t *testing.T) {
 	t.Run("Write & Read", func(t *testing.T) {
 		ring := NewRing()
-		size := RingSize * 3
+		size := 8000
 		fixture := make(map[string]struct{}, size)
 		for i := 0; i < size; i++ {
 			fixture[strconv.Itoa(i)] = struct{}{}
@@ -37,7 +37,7 @@ func TestRing(t *testing.T) {
 
 	t.Run("PutMulti", func(t *testing.T) {
 		ring := NewRing()
-		size := RingSize * 3
+		size := 8000
 		fixture := make(map[string]struct{}, size)
 		for i := 0; i < size; i++ {
 			fixture[strconv.Itoa(i)] = struct{}{}
@@ -75,6 +75,23 @@ func TestRing(t *testing.T) {
 		ring.PutOne([]string{"0"})
 		if cmd := ring.TryNextCmd(); len(cmd) == 0 || cmd[0][0] != "0" {
 			t.Fatalf("TryNextCmd should returns next cmd")
+		}
+	})
+
+	t.Run("NextResultCh", func(t *testing.T) {
+		ring := NewRing()
+		ring.PutOne([]string{"0"})
+
+		if cmd, ch := ring.NextResultCh(); cmd != nil || ch != nil {
+			t.Fatalf("NextResultCh should returns nil if not NextCmd yet")
+		}
+
+		if cmd := ring.TryNextCmd(); len(cmd) == 0 || cmd[0][0] != "0" {
+			t.Fatalf("TryNextCmd should returns next cmd")
+		}
+
+		if cmd, ch := ring.NextResultCh(); len(cmd) == 0 || cmd[0][0] != "0" || ch == nil {
+			t.Fatalf("NextResultCh should returns next cmd after NextCmd")
 		}
 	})
 }

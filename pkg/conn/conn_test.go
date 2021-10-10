@@ -148,7 +148,7 @@ func TestResponseSequenceWithPushMessageInjected(t *testing.T) {
 	conn, mock, cancel, _ := setup(t, Option{})
 	defer cancel()
 
-	times := 10000
+	times := 8000
 	wg := sync.WaitGroup{}
 	wg.Add(times)
 	for i := 0; i < times; i++ {
@@ -181,8 +181,8 @@ func TestClientSideCaching(t *testing.T) {
 
 	// single flight
 	wg := sync.WaitGroup{}
-	wg.Add(10000)
-	for i := 0; i < 10000; i++ {
+	wg.Add(8000)
+	for i := 0; i < 8000; i++ {
 		go func() {
 			defer wg.Done()
 			if v := conn.DoCache([]string{"GET", "a"}, time.Second).Val.String; v != "1" {
@@ -208,12 +208,53 @@ func TestClientSideCaching(t *testing.T) {
 	}()
 
 	// single flight
-	wg.Add(10000)
-	for i := 0; i < 10000; i++ {
+	wg.Add(8000)
+	for i := 0; i < 8000; i++ {
 		go func() {
 			defer wg.Done()
 			if v := conn.DoCache([]string{"GET", "a"}, time.Second).Val.String; v != "2" {
 				t.Errorf("unexpected non cached result, expected %v, got %v", "2", v)
+			}
+		}()
+	}
+	wg.Wait()
+}
+
+func TestExitAllGoroutineOnWriteError(t *testing.T) {
+	conn, _, cancel, closePipe := setup(t, Option{})
+	defer cancel()
+
+	closePipe()
+
+	wg := sync.WaitGroup{}
+	wg.Add(8000)
+	for i := 0; i < 8000; i++ {
+		go func() {
+			defer wg.Done()
+			if v := conn.Do([]string{"GET", "a"}); v.Err != io.ErrClosedPipe && v.Err != ErrConnClosing {
+				t.Errorf("unexpected cached result, expected io.ErrClosedPipe or ErrConnClosing, got %v", v.Err)
+			}
+		}()
+	}
+	wg.Wait()
+}
+
+func TestExitAllGoroutineOnReadError(t *testing.T) {
+	conn, mock, cancel, closePipe := setup(t, Option{})
+	defer cancel()
+
+	go func() {
+		mock.Expect([]string{"GET", "a"})
+		closePipe()
+	}()
+
+	wg := sync.WaitGroup{}
+	wg.Add(8000)
+	for i := 0; i < 8000; i++ {
+		go func() {
+			defer wg.Done()
+			if v := conn.Do([]string{"GET", "a"}); v.Err != io.ErrClosedPipe && v.Err != ErrConnClosing {
+				t.Errorf("unexpected cached result, expected io.ErrClosedPipe or ErrConnClosing, got %v", v.Err)
 			}
 		}()
 	}

@@ -6,6 +6,7 @@ import (
 	"net"
 	"runtime"
 	"strconv"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -69,7 +70,7 @@ func newConn(conn net.Conn, option Option) (*Conn, error) {
 		r:     bufio.NewReader(conn),
 		w:     bufio.NewWriter(conn),
 	}
-	c.reading()
+	go c.reading()
 
 	helloCmd := []string{"HELLO", "3"}
 	if option.Username != "" {
@@ -97,40 +98,48 @@ func newConn(conn net.Conn, option Option) (*Conn, error) {
 }
 
 func (c *Conn) reading() {
-	go func() {
-		var err error
-		defer func() {
-			// if any error, make sure to clear the cache
-			c.cache.DeleteAll()
-			if err != nil {
-				c.error.Store(err)
-			}
-			_ = c.conn.Close()
-			c.Close()
-		}()
+	wg := sync.WaitGroup{}
+	wg.Add(2)
+	exit := func() {
+		_ = c.conn.Close() // force both read & write goroutine to exit
+		wg.Done()
+	}
+	go func() { // write goroutine
+		defer exit()
 		for atomic.LoadInt32(&c.state) != 2 {
 			cmds := c.queue.TryNextCmd()
 			if cmds == nil {
-				if err = c.w.Flush(); err != nil {
+				if err := c.w.Flush(); err != nil {
+					c.error.CompareAndSwap(nil, err)
 					return
 				}
-				cmds = c.queue.NextCmd()
+				runtime.Gosched()
+				continue
 			}
 			for _, cmd := range cmds {
-				if err = proto.WriteCmd(c.w, cmd); err != nil {
+				if err := proto.WriteCmd(c.w, cmd); err != nil {
+					c.error.CompareAndSwap(nil, err)
 					return
 				}
 			}
 		}
 	}()
-	go func() {
+	go func() { // read goroutine
+		defer exit()
 		for atomic.LoadInt32(&c.state) != 2 {
 			msg, err := proto.ReadNextMessage(c.r)
+			if err != nil {
+				c.error.CompareAndSwap(nil, err)
+				return
+			}
 			if msg.Type == '>' {
 				c.handlePush(msg.Values)
 				continue
 			}
 			cmds, ch := c.queue.NextResultCh()
+			if ch == nil {
+				panic("receive unexpected out of band message")
+			}
 			ch <- proto.Result{Val: msg, Err: err}
 
 			// in current implementation, the cache opt-in will only be in the first cmd in batch
@@ -140,11 +149,18 @@ func (c *Conn) reading() {
 			// read the rest cmd responses
 			for i := 1; i < len(cmds); {
 				msg, err = proto.ReadNextMessage(c.r)
+				if err != nil {
+					c.error.CompareAndSwap(nil, err)
+					for ; i < len(cmds); i++ {
+						ch <- proto.Result{Val: msg, Err: err}
+					}
+					return
+				}
 				if msg.Type == '>' {
 					c.handlePush(msg.Values)
 					continue
 				}
-				if err == nil && msg.Type != '-' && msg.Type != '!' && opted {
+				if msg.Type != '-' && msg.Type != '!' && opted {
 					c.cache.Update(cmds[i][1], msg)
 				}
 				ch <- proto.Result{Val: msg, Err: err}
@@ -152,6 +168,24 @@ func (c *Conn) reading() {
 			}
 		}
 	}()
+	wg.Wait()
+	atomic.CompareAndSwapInt32(&c.state, 0, 1)
+
+	err, ok := c.error.Load().(error)
+	if !ok {
+		err = ErrConnClosing
+	}
+
+	// clean up write queue and read queue
+	for atomic.LoadInt32(&c.waits) != 0 {
+		c.queue.TryNextCmd()
+		cmds, ch := c.queue.NextResultCh()
+		for i := 0; i < len(cmds); i++ {
+			ch <- proto.Result{Err: err}
+		}
+	}
+
+	atomic.CompareAndSwapInt32(&c.state, 1, 2)
 }
 
 func (c *Conn) handlePush(values []proto.Message) {

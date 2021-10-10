@@ -88,9 +88,11 @@ func (r *Ring) NextResultCh() (cmds [][]string, ch chan proto.Result) {
 	r.read2++
 	p := r.read2 & r.mask
 	n := &r.store[p]
-	cmds, ch = n.cmds, n.ch
-	if atomic.CompareAndSwapUint64(&n.r, 3, 0) {
+	if atomic.LoadUint64(&n.r) == 3 {
+		cmds, ch = n.cmds, n.ch
+		atomic.StoreUint64(&n.r, 0)
 		return
 	}
-	panic("unexpected NextResultCh call on ring")
+	r.read2--
+	return nil, nil
 }
