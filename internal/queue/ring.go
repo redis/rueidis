@@ -61,24 +61,14 @@ func (r *Ring) acquire(position uint64) *node {
 	return n
 }
 
-// TryNextCmd should be only called by one dedicated thread
-func (r *Ring) TryNextCmd() [][]string {
+// NextCmd should be only called by one dedicated thread
+func (r *Ring) NextCmd() [][]string {
 	r.read1++
 	p := r.read1 & r.mask
 	n := &r.store[p]
 	if !atomic.CompareAndSwapUint32(&n.mark, 2, 3) {
 		r.read1--
 		return nil
-	}
-	return n.cmds
-}
-
-// NextCmd should be only called by one dedicated thread
-func (r *Ring) NextCmd() [][]string {
-	r.read1 = (r.read1 + 1) & r.mask
-	n := &r.store[r.read1]
-	for !atomic.CompareAndSwapUint32(&n.mark, 2, 3) {
-		runtime.Gosched()
 	}
 	return n.cmds
 }

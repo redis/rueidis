@@ -107,7 +107,7 @@ func (c *Conn) reading() {
 	go func() { // write goroutine
 		defer exit()
 		for atomic.LoadInt32(&c.state) != 2 {
-			cmds := c.queue.TryNextCmd()
+			cmds := c.queue.NextCmd()
 			if cmds == nil {
 				if err := c.w.Flush(); err != nil {
 					c.error.CompareAndSwap(nil, err)
@@ -178,7 +178,7 @@ func (c *Conn) reading() {
 
 	// clean up write queue and read queue
 	for atomic.LoadInt32(&c.waits) != 0 {
-		c.queue.TryNextCmd()
+		c.queue.NextCmd()
 		cmds, ch := c.queue.NextResultCh()
 		for i := 0; i < len(cmds); i++ {
 			ch <- proto.Result{Err: err}

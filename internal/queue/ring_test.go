@@ -67,14 +67,14 @@ func TestRing(t *testing.T) {
 		}
 	})
 
-	t.Run("TryNextCmd", func(t *testing.T) {
+	t.Run("NextCmd", func(t *testing.T) {
 		ring := NewRing()
-		if ring.TryNextCmd() != nil {
-			t.Fatalf("TryNextCmd should returns nil if empty")
+		if ring.NextCmd() != nil {
+			t.Fatalf("NextCmd should returns nil if empty")
 		}
 		ring.PutOne([]string{"0"})
-		if cmd := ring.TryNextCmd(); len(cmd) == 0 || cmd[0][0] != "0" {
-			t.Fatalf("TryNextCmd should returns next cmd")
+		if cmd := ring.NextCmd(); len(cmd) == 0 || cmd[0][0] != "0" {
+			t.Fatalf("NextCmd should returns next cmd")
 		}
 	})
 
@@ -86,8 +86,8 @@ func TestRing(t *testing.T) {
 			t.Fatalf("NextResultCh should returns nil if not NextCmd yet")
 		}
 
-		if cmd := ring.TryNextCmd(); len(cmd) == 0 || cmd[0][0] != "0" {
-			t.Fatalf("TryNextCmd should returns next cmd")
+		if cmd := ring.NextCmd(); len(cmd) == 0 || cmd[0][0] != "0" {
+			t.Fatalf("NextCmd should returns next cmd")
 		}
 
 		if cmd, ch := ring.NextResultCh(); len(cmd) == 0 || cmd[0][0] != "0" || ch == nil {
