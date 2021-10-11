@@ -106,8 +106,8 @@ func setup(t *testing.T, option Option) (*Conn, *redisMock, func(), func()) {
 	if err != nil {
 		t.Fatalf("conn setup failed: %v", err)
 	}
-	if c.Into().Values[0].String != "key" || c.Into().Values[1].String != "value" {
-		t.Fatalf("conn setup failed, unexpected hello response: %v", c.Into())
+	if c.Info().Values[0].String != "key" || c.Info().Values[1].String != "value" {
+		t.Fatalf("conn setup failed, unexpected hello response: %v", c.Info())
 	}
 	return c, mock, func() {
 			c.Close()

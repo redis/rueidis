@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/rueian/rueidis/internal/cache"
-	"github.com/rueian/rueidis/internal/cmds"
 	"github.com/rueian/rueidis/internal/proto"
 	"github.com/rueian/rueidis/internal/queue"
 )
@@ -24,8 +23,6 @@ var (
 )
 
 type Conn struct {
-	Cmd *cmds.Builder
-
 	waits int32
 	state int32
 
@@ -48,22 +45,12 @@ type Option struct {
 	ClientName string
 }
 
-func NewConn(dst string, option Option) (*Conn, error) {
-	tcp, err := net.Dial("tcp", dst)
-	if err != nil {
-		return nil, err
-	}
-	return newConn(tcp, option)
-}
-
 func newConn(conn net.Conn, option Option) (*Conn, error) {
 	if option.CacheSize <= 0 {
 		option.CacheSize = DefaultCacheBytes
 	}
 
 	c := &Conn{
-		Cmd: cmds.NewBuilder(),
-
 		conn:  conn,
 		queue: queue.NewRing(),
 		cache: cache.NewLRU(option.CacheSize),
@@ -215,7 +202,7 @@ func (c *Conn) handlePush(values []proto.Message) {
 	}
 }
 
-func (c *Conn) Into() proto.Message {
+func (c *Conn) Info() proto.Message {
 	return c.info
 }
 
@@ -224,10 +211,9 @@ func (c *Conn) Do(cmd []string) (res proto.Result) {
 	if atomic.LoadInt32(&c.state) == 0 {
 		res = <-c.queue.PutOne(cmd)
 	} else {
-		res.Err = ErrConnClosing
+		res.Err = c.error.Load().(error)
 	}
 	atomic.AddInt32(&c.waits, -1)
-	c.Cmd.Put(cmd)
 	return res
 }
 
@@ -240,43 +226,33 @@ func (c *Conn) DoMulti(cmds ...[]string) []proto.Result {
 			res[i] = <-ch
 		}
 	} else {
+		err := c.error.Load().(error)
 		for i := 0; i < len(res); i++ {
-			res[i].Err = ErrConnClosing
+			res[i].Err = err
 		}
 	}
 	atomic.AddInt32(&c.waits, -1)
-	for _, cmd := range cmds {
-		c.Cmd.Put(cmd)
-	}
 	return res
 }
 
 func (c *Conn) DoCache(cmd []string, ttl time.Duration) proto.Result {
 retry:
 	if v, ch := c.cache.GetOrPrepare(cmd[1], ttl); v.Type != 0 {
-		c.Cmd.Put(cmd)
 		return proto.Result{Val: v}
 	} else if ch != nil {
 		<-ch
 		goto retry
 	}
-	return c.DoMulti(c.Cmd.ClientCaching().Yes().Build(), cmd)[1]
+	return c.DoMulti(OptInCmd, cmd)[1]
 }
 
 func (c *Conn) Close() {
+	c.error.CompareAndSwap(nil, ErrConnClosing)
 	atomic.CompareAndSwapInt32(&c.state, 0, 1)
 	for atomic.LoadInt32(&c.waits) != 0 {
 		runtime.Gosched()
 	}
 	atomic.CompareAndSwapInt32(&c.state, 1, 2)
-}
-
-func (c *Conn) Err() error {
-	v := c.error.Load()
-	if v == nil {
-		return nil
-	}
-	return v.(error)
 }
 
 func cmdEqual(a, b []string) bool {
