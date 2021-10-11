@@ -13,9 +13,9 @@ type Builder struct {
 }
 
 func (b *Builder) get() []string {
-	return b.sp.Get().([]string)[:0]
+	return b.sp.Get().([]string)
 }
 
 func (b *Builder) Put(s []string) {
-	b.sp.Put(s)
+	b.sp.Put(s[:0])
 }
