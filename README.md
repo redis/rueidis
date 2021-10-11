@@ -123,5 +123,5 @@ The following subjects are not yet implemented.
 * Better blocking commands supporting (ex: BLPOP) 
 * PubSub commands
 * Redis Cluster client
-* Auto Reconnect
+* ~~Auto Reconnect~~
 * RESP2
