@@ -83,7 +83,7 @@ func write(o io.Writer, m proto.Message) (err error) {
 	return err
 }
 
-func setup(t *testing.T, option Option) (*Conn, *redisMock, func(), func()) {
+func setup(t *testing.T, option Option) (*wire, *redisMock, func(), func()) {
 	n1, n2 := net.Pipe()
 	mock := &redisMock{
 		t:    t,
@@ -102,12 +102,12 @@ func setup(t *testing.T, option Option) (*Conn, *redisMock, func(), func()) {
 		mock.Expect([]string{"CLIENT", "TRACKING", "ON", "OPTIN"}).
 			ReplyString("OK")
 	}()
-	c, err := newConn(n1, option)
+	c, err := newWire(n1, option)
 	if err != nil {
-		t.Fatalf("conn setup failed: %v", err)
+		t.Fatalf("wire setup failed: %v", err)
 	}
 	if c.Info().Values[0].String != "key" || c.Info().Values[1].String != "value" {
-		t.Fatalf("conn setup failed, unexpected hello response: %v", c.Info())
+		t.Fatalf("wire setup failed, unexpected hello response: %v", c.Info())
 	}
 	return c, mock, func() {
 			c.Close()
