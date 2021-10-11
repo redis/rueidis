@@ -7,14 +7,13 @@ import (
 	"github.com/rueian/rueidis/internal/proto"
 )
 
-const RingSize = 8192
+const RingSize = 4096
 
 func NewRing() *Ring {
 	r := &Ring{}
 	r.mask = uint64(len(r.store) - 1)
 	for i := range r.store {
 		r.store[i].ch = make(chan proto.Result, 1)
-		r.store[i].cmds = make([][]string, 1)
 	}
 	return r
 }
@@ -33,22 +32,24 @@ type Ring struct {
 }
 
 type node struct {
-	mark uint32
-	cmds [][]string
-	ch   chan proto.Result
+	mark  uint32
+	one   []string
+	multi [][]string
+	ch    chan proto.Result
 }
 
 func (r *Ring) PutOne(m []string) chan proto.Result {
 	n := r.acquire(atomic.AddUint64(&r.write, 1) & r.mask)
-	n.cmds[0] = m
-	n.cmds = n.cmds[:1]
+	n.one = m
+	n.multi = nil
 	atomic.StoreUint32(&n.mark, 2)
 	return n.ch
 }
 
 func (r *Ring) PutMulti(m [][]string) chan proto.Result {
 	n := r.acquire(atomic.AddUint64(&r.write, 1) & r.mask)
-	n.cmds = m
+	n.one = nil
+	n.multi = m
 	atomic.StoreUint32(&n.mark, 2)
 	return n.ch
 }
@@ -62,27 +63,26 @@ func (r *Ring) acquire(position uint64) *node {
 }
 
 // NextCmd should be only called by one dedicated thread
-func (r *Ring) NextCmd() [][]string {
+func (r *Ring) NextCmd() ([]string, [][]string) {
 	r.read1++
 	p := r.read1 & r.mask
 	n := &r.store[p]
 	if !atomic.CompareAndSwapUint32(&n.mark, 2, 3) {
 		r.read1--
-		return nil
+		return nil, nil
 	}
-	return n.cmds
+	return n.one, n.multi
 }
 
 // NextResultCh should be only called by one dedicated thread
-func (r *Ring) NextResultCh() (cmds [][]string, ch chan proto.Result) {
+func (r *Ring) NextResultCh() (one []string, multi [][]string, ch chan proto.Result) {
 	r.read2++
 	p := r.read2 & r.mask
 	n := &r.store[p]
-	if atomic.LoadUint32(&n.mark) == 3 {
-		cmds, ch = n.cmds, n.ch
-		atomic.StoreUint32(&n.mark, 0)
+	one, multi, ch = n.one, n.multi, n.ch
+	if atomic.CompareAndSwapUint32(&n.mark, 3, 0) {
 		return
 	}
 	r.read2--
-	return nil, nil
+	return nil, nil, nil
 }

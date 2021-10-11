@@ -35,7 +35,7 @@ func (c *Conn) Close() {
 func reading(c *Conn) {
 	for atomic.LoadInt32(&c.state) != 2 {
 		c.q.NextCmd()
-		_, ch := c.q.NextResultCh()
+		_, _, ch := c.q.NextResultCh()
 		ch <- proto.Result{}
 	}
 }
@@ -69,7 +69,7 @@ func NewConnMutexInEventLoop(hits, evic int) *Conn {
 			c.q.NextCmd()
 			c.mu.Lock()
 			c.mu.Unlock()
-			_, ch := c.q.NextResultCh()
+			_, _, ch := c.q.NextResultCh()
 			ch <- proto.Result{}
 		}
 	}()

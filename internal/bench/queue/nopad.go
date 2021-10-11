@@ -40,19 +40,19 @@ func (r *NoPadRing) PutOne(m []string) chan proto.Result {
 	return nil
 }
 
-func (r *NoPadRing) NextCmd() [][]string {
+func (r *NoPadRing) NextCmd() ([]string, [][]string) {
 	r.read1 = (r.read1 + 1) & r.mask
 	n := &r.store[r.read1]
 	for !atomic.CompareAndSwapUint32(&n.mark, 2, 3) {
 		runtime.Gosched()
 	}
-	return nil
+	return nil, nil
 }
 
-func (r *NoPadRing) NextResultCh() ([][]string, chan proto.Result) {
+func (r *NoPadRing) NextResultCh() ([]string, [][]string, chan proto.Result) {
 	r.read2++
 	p := r.read2 & r.mask
 	n := &r.store[p]
 	atomic.CompareAndSwapUint32(&n.mark, 3, 0)
-	return nil, nil
+	return nil, nil, nil
 }

@@ -1,12 +1,13 @@
 package queue
 
 import (
+	"runtime"
 	"strconv"
 	"testing"
 )
 
 func TestRing(t *testing.T) {
-	t.Run("Write & Read", func(t *testing.T) {
+	t.Run("PutOne", func(t *testing.T) {
 		ring := NewRing()
 		size := 8000
 		fixture := make(map[string]struct{}, size)
@@ -18,20 +19,20 @@ func TestRing(t *testing.T) {
 			go ring.PutOne([]string{cmd})
 		}
 
-		for i := 0; i < size; i++ {
-			cmd1 := ring.NextCmd()
-			cmd2, ch := ring.NextResultCh()
-			if cmd1[0][0] != cmd2[0][0] {
+		for len(fixture) != 0 {
+			cmd1, _ := ring.NextCmd()
+			if cmd1 == nil {
+				runtime.Gosched()
+				continue
+			}
+			cmd2, _, ch := ring.NextResultCh()
+			if cmd1[0] != cmd2[0] {
 				t.Fatalf("cmds read by NextCmd and NextResultCh is not the same one")
 			}
 			if ch == nil || len(ch) != 0 {
 				t.Fatalf("channel from NextResultCh is broken")
 			}
-			delete(fixture, cmd1[0][0])
-		}
-
-		if len(fixture) != 0 {
-			t.Fatalf("not all cmds are read by NextCmd and NextResultCh")
+			delete(fixture, cmd1[0])
 		}
 	})
 
@@ -49,8 +50,12 @@ func TestRing(t *testing.T) {
 		}
 
 		for i := 0; i < size; i++ {
-			cmd1 := ring.NextCmd()
-			cmd2, ch := ring.NextResultCh()
+			_, cmd1 := ring.NextCmd()
+			if cmd1 == nil {
+				runtime.Gosched()
+				continue
+			}
+			_, cmd2, ch := ring.NextResultCh()
 			for j := 0; j < len(cmd1); j++ {
 				if cmd1[j][0] != cmd2[j][0] {
 					t.Fatalf("cmds read by NextCmd and NextResultCh is not the same one")
@@ -67,30 +72,28 @@ func TestRing(t *testing.T) {
 		}
 	})
 
-	t.Run("NextCmd", func(t *testing.T) {
+	t.Run("NextCmd & NextResultCh", func(t *testing.T) {
 		ring := NewRing()
-		if ring.NextCmd() != nil {
+		if one, multi := ring.NextCmd(); one != nil || multi != nil {
 			t.Fatalf("NextCmd should returns nil if empty")
 		}
-		ring.PutOne([]string{"0"})
-		if cmd := ring.NextCmd(); len(cmd) == 0 || cmd[0][0] != "0" {
-			t.Fatalf("NextCmd should returns next cmd")
-		}
-	})
-
-	t.Run("NextResultCh", func(t *testing.T) {
-		ring := NewRing()
-		ring.PutOne([]string{"0"})
-
-		if cmd, ch := ring.NextResultCh(); cmd != nil || ch != nil {
+		if one, multi, ch := ring.NextResultCh(); one != nil || multi != nil || ch != nil {
 			t.Fatalf("NextResultCh should returns nil if not NextCmd yet")
 		}
 
-		if cmd := ring.NextCmd(); len(cmd) == 0 || cmd[0][0] != "0" {
+		ring.PutOne([]string{"0"})
+		if one, _ := ring.NextCmd(); len(one) == 0 || one[0] != "0" {
 			t.Fatalf("NextCmd should returns next cmd")
 		}
+		if one, _, ch := ring.NextResultCh(); len(one) == 0 || one[0] != "0" || ch == nil {
+			t.Fatalf("NextResultCh should returns next cmd after NextCmd")
+		}
 
-		if cmd, ch := ring.NextResultCh(); len(cmd) == 0 || cmd[0][0] != "0" || ch == nil {
+		ring.PutMulti([][]string{{"0"}})
+		if _, multi := ring.NextCmd(); len(multi) == 0 || multi[0][0] != "0" {
+			t.Fatalf("NextCmd should returns next cmd")
+		}
+		if _, multi, ch := ring.NextResultCh(); len(multi) == 0 || multi[0][0] != "0" || ch == nil {
 			t.Fatalf("NextResultCh should returns next cmd after NextCmd")
 		}
 	})

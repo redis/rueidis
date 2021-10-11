@@ -106,21 +106,22 @@ func (c *Conn) reading() {
 	}
 	go func() { // write goroutine
 		defer exit()
+
+		var err error
 		for atomic.LoadInt32(&c.state) != 2 {
-			cmds := c.queue.NextCmd()
-			if cmds == nil {
-				if err := c.w.Flush(); err != nil {
-					c.error.CompareAndSwap(nil, err)
-					return
+			if one, multi := c.queue.NextCmd(); one != nil {
+				err = proto.WriteCmd(c.w, one)
+			} else if multi != nil {
+				for _, cmd := range multi {
+					err = proto.WriteCmd(c.w, cmd)
 				}
+			} else {
+				err = c.w.Flush()
 				runtime.Gosched()
-				continue
 			}
-			for _, cmd := range cmds {
-				if err := proto.WriteCmd(c.w, cmd); err != nil {
-					c.error.CompareAndSwap(nil, err)
-					return
-				}
+			if err != nil {
+				c.error.CompareAndSwap(nil, err)
+				return
 			}
 		}
 	}()
@@ -136,22 +137,27 @@ func (c *Conn) reading() {
 				c.handlePush(msg.Values)
 				continue
 			}
-			cmds, ch := c.queue.NextResultCh()
+			_, multi, ch := c.queue.NextResultCh()
 			if ch == nil {
 				panic("receive unexpected out of band message")
 			}
 			ch <- proto.Result{Val: msg, Err: err}
 
+			if multi == nil {
+				continue
+			}
+
 			// in current implementation, the cache opt-in will only be in the first cmd in batch
+
 			// TODO: handle opt-in cache for MULTI, LUA commands
-			opted := cmdEqual(cmds[0], OptInCmd)
+			opted := cmdEqual(multi[0], OptInCmd)
 
 			// read the rest cmd responses
-			for i := 1; i < len(cmds); {
+			for i := 1; i < len(multi); {
 				msg, err = proto.ReadNextMessage(c.r)
 				if err != nil {
 					c.error.CompareAndSwap(nil, err)
-					for ; i < len(cmds); i++ {
+					for ; i < len(multi); i++ {
 						ch <- proto.Result{Val: msg, Err: err}
 					}
 					return
@@ -161,7 +167,7 @@ func (c *Conn) reading() {
 					continue
 				}
 				if msg.Type != '-' && msg.Type != '!' && opted {
-					c.cache.Update(cmds[i][1], msg)
+					c.cache.Update(multi[i][1], msg)
 				}
 				ch <- proto.Result{Val: msg, Err: err}
 				i++
@@ -179,9 +185,12 @@ func (c *Conn) reading() {
 	// clean up write queue and read queue
 	for atomic.LoadInt32(&c.waits) != 0 {
 		c.queue.NextCmd()
-		cmds, ch := c.queue.NextResultCh()
-		for i := 0; i < len(cmds); i++ {
+		if one, multi, ch := c.queue.NextResultCh(); one != nil {
 			ch <- proto.Result{Err: err}
+		} else {
+			for i := 0; i < len(multi); i++ {
+				ch <- proto.Result{Err: err}
+			}
 		}
 	}
 

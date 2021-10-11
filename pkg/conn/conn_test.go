@@ -137,8 +137,10 @@ func TestWriteSingleFlush(t *testing.T) {
 func TestWriteMultiFlush(t *testing.T) {
 	conn, mock, cancel, _ := setup(t, Option{})
 	defer cancel()
-	go func() { mock.Expect([]string{"PING"}).Expect([]string{"PING"}) }()
-	go func() { mock.ReplyString("OK").ReplyString("OK") }()
+	go func() {
+		mock.Expect([]string{"PING"}).Expect([]string{"PING"})
+		mock.ReplyString("OK").ReplyString("OK")
+	}()
 	for _, resp := range conn.DoMulti([]string{"PING"}, []string{"PING"}) {
 		ExpectOK(t, resp)
 	}
@@ -148,7 +150,7 @@ func TestResponseSequenceWithPushMessageInjected(t *testing.T) {
 	conn, mock, cancel, _ := setup(t, Option{})
 	defer cancel()
 
-	times := 8000
+	times := 5000
 	wg := sync.WaitGroup{}
 	wg.Add(times)
 	for i := 0; i < times; i++ {
@@ -181,8 +183,8 @@ func TestClientSideCaching(t *testing.T) {
 
 	// single flight
 	wg := sync.WaitGroup{}
-	wg.Add(8000)
-	for i := 0; i < 8000; i++ {
+	wg.Add(5000)
+	for i := 0; i < 5000; i++ {
 		go func() {
 			defer wg.Done()
 			if v := conn.DoCache([]string{"GET", "a"}, time.Second).Val.String; v != "1" {
@@ -208,8 +210,8 @@ func TestClientSideCaching(t *testing.T) {
 	}()
 
 	// single flight
-	wg.Add(8000)
-	for i := 0; i < 8000; i++ {
+	wg.Add(5000)
+	for i := 0; i < 5000; i++ {
 		go func() {
 			defer wg.Done()
 			if v := conn.DoCache([]string{"GET", "a"}, time.Second).Val.String; v != "2" {
@@ -227,8 +229,8 @@ func TestExitAllGoroutineOnWriteError(t *testing.T) {
 	closePipe()
 
 	wg := sync.WaitGroup{}
-	wg.Add(8000)
-	for i := 0; i < 8000; i++ {
+	wg.Add(5000)
+	for i := 0; i < 5000; i++ {
 		go func() {
 			defer wg.Done()
 			if v := conn.Do([]string{"GET", "a"}); v.Err != io.ErrClosedPipe && v.Err != ErrConnClosing {
@@ -249,8 +251,8 @@ func TestExitAllGoroutineOnReadError(t *testing.T) {
 	}()
 
 	wg := sync.WaitGroup{}
-	wg.Add(8000)
-	for i := 0; i < 8000; i++ {
+	wg.Add(5000)
+	for i := 0; i < 5000; i++ {
 		go func() {
 			defer wg.Done()
 			if v := conn.Do([]string{"GET", "a"}); v.Err != io.ErrClosedPipe && v.Err != ErrConnClosing {
