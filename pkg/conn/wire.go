@@ -114,7 +114,7 @@ func (c *wire) reading() {
 	}()
 	go func() { // read goroutine
 		defer exit()
-		for atomic.LoadInt32(&c.state) != 2 {
+		for {
 			msg, err := proto.ReadNextMessage(c.r)
 			if err != nil {
 				c.error.CompareAndSwap(nil, err)
@@ -135,7 +135,6 @@ func (c *wire) reading() {
 			}
 
 			// in current implementation, the cache opt-in will only be in the first cmd in batch
-
 			// TODO: handle opt-in cache for MULTI, LUA commands
 			opted := cmdEqual(multi[0], optInCmd)
 
@@ -164,20 +163,17 @@ func (c *wire) reading() {
 	wg.Wait()
 	atomic.CompareAndSwapInt32(&c.state, 0, 1)
 
-	err, ok := c.error.Load().(error)
-	if !ok {
-		err = ErrConnClosing
-	}
-
 	// clean up write queue and read queue
 	for atomic.LoadInt32(&c.waits) != 0 {
 		c.queue.NextCmd()
 		if one, multi, ch := c.queue.NextResultCh(); one != nil {
-			ch <- proto.Result{Err: err}
-		} else {
+			ch <- proto.Result{Err: c.error.Load().(error)}
+		} else if multi != nil {
 			for i := 0; i < len(multi); i++ {
-				ch <- proto.Result{Err: err}
+				ch <- proto.Result{Err: c.error.Load().(error)}
 			}
+		} else {
+			runtime.Gosched()
 		}
 	}
 
