@@ -122,8 +122,5 @@ func (c *Conn) Close() {
 }
 
 func retryable(err error) bool {
-	if err == nil || err == ErrConnClosing {
-		return false
-	}
-	return true
+	return err != nil && err != ErrConnClosing
 }
