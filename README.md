@@ -95,23 +95,71 @@ func BenchmarkClientSideCache(b *testing.B) {
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
-				c.DoCache(c.Cmd.Get().Key("a").Build(), time.Second*5)
+				c.DoCache(c.Cmd.Get().Key("a").Cache(), time.Second*5)
 			}
 		})
 	})
 }
 ```
 
+### Supported Commands for Client Side Caching
+
+* bitcount
+* bitfieldro
+* bitpos
+* geodist
+* geohash
+* geopos
+* geosearch
+* get
+* getbit
+* getrange
+* hexists
+* hget
+* hgetall
+* hkeys
+* hlen
+* hmget
+* hstrlen
+* hvals
+* lindex
+* llen
+* lpos
+* lrange
+* pttl
+* scard
+* sismember
+* smembers
+* smismember
+* strlen
+* substr
+* ttl
+* type
+* zcard
+* zcount
+* zlexcount
+* zmscore
+* zrange
+* zrangebylex
+* zrangebyscore
+* zrank
+* zrevrange
+* zrevrangebylex
+* zrevrangebyscore
+* zrevrank
+* zscore
+
 ## Command Builder
 
 Redis commands are very complex and their formats are very different from each other.
 
 This library provides a type safe command builder with in `Conn.Cmd` that can be used as
-an entrypoint to construct a redis command. Once the command is completed, call the `Build()` to get the actual command.
+an entrypoint to construct a redis command. Once the command is completed, call the `Build()` or `Cache()` to get the actual command.
 And then pass it to either `Conn.Do()` or `Conn.DoMulti()` or `Conn.DoCache()`.
 
 ```golang
 c.Do(c.Cmd.Set().Key("mykey").Value("myval").Ex(10).Nx().Build())
+c.DoCache(c.Cmd.Hmget().Key("myhash").Field("1", "2").Cache(), time.Second*30)
 ```
 
 Once the command is passed to the one of above `Conn.DoXXX()`, the command will be recycled and should not be reused.
