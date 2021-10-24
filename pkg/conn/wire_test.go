@@ -3,6 +3,7 @@ package conn
 import (
 	"bufio"
 	"fmt"
+	"github.com/rueian/rueidis/internal/cmds"
 	"io"
 	"net"
 	"strconv"
@@ -131,7 +132,7 @@ func TestWriteSingleFlush(t *testing.T) {
 	conn, mock, cancel, _ := setup(t, Option{})
 	defer cancel()
 	go func() { mock.Expect([]string{"PING"}).ReplyString("OK") }()
-	ExpectOK(t, conn.Do([]string{"PING"}))
+	ExpectOK(t, conn.Do(cmds.NewCompleted([]string{"PING"})))
 }
 
 func TestWriteMultiFlush(t *testing.T) {
@@ -141,7 +142,7 @@ func TestWriteMultiFlush(t *testing.T) {
 		mock.Expect([]string{"PING"}).Expect([]string{"PING"})
 		mock.ReplyString("OK").ReplyString("OK")
 	}()
-	for _, resp := range conn.DoMulti([]string{"PING"}, []string{"PING"}) {
+	for _, resp := range conn.DoMulti(cmds.NewCompleted([]string{"PING"}), cmds.NewCompleted([]string{"PING"})) {
 		ExpectOK(t, resp)
 	}
 }
@@ -157,7 +158,7 @@ func TestResponseSequenceWithPushMessageInjected(t *testing.T) {
 		go func(i int) {
 			defer wg.Done()
 			v := strconv.Itoa(i)
-			if resp := conn.Do([]string{"GET", v}).Val.String; resp != v {
+			if resp := conn.Do(cmds.NewCompleted([]string{"GET", v})).Val.String; resp != v {
 				t.Errorf("out of order response, expected %v, got %v", v, resp)
 			}
 		}(i)
@@ -187,7 +188,7 @@ func TestClientSideCaching(t *testing.T) {
 	for i := 0; i < 5000; i++ {
 		go func() {
 			defer wg.Done()
-			if v := conn.DoCache([]string{"GET", "a"}, time.Second).Val.String; v != "1" {
+			if v := conn.DoCache(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), time.Second).Val.String; v != "1" {
 				t.Errorf("unexpected cached result, expected %v, got %v", "1", v)
 			}
 		}()
@@ -214,7 +215,7 @@ func TestClientSideCaching(t *testing.T) {
 	for i := 0; i < 5000; i++ {
 		go func() {
 			defer wg.Done()
-			if v := conn.DoCache([]string{"GET", "a"}, time.Second).Val.String; v != "2" {
+			if v := conn.DoCache(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), time.Second).Val.String; v != "2" {
 				t.Errorf("unexpected non cached result, expected %v, got %v", "2", v)
 			}
 		}()
@@ -233,7 +234,7 @@ func TestExitAllGoroutineOnWriteError(t *testing.T) {
 	for i := 0; i < 5000; i++ {
 		go func() {
 			defer wg.Done()
-			if v := conn.Do([]string{"GET", "a"}); v.Err != io.ErrClosedPipe && v.Err != ErrConnClosing {
+			if v := conn.Do(cmds.NewCompleted([]string{"GET", "a"})); v.Err != io.ErrClosedPipe && v.Err != ErrConnClosing {
 				t.Errorf("unexpected cached result, expected io.ErrClosedPipe or ErrConnClosing, got %v", v.Err)
 			}
 		}()
@@ -255,7 +256,7 @@ func TestExitAllGoroutineOnReadError(t *testing.T) {
 	for i := 0; i < 5000; i++ {
 		go func() {
 			defer wg.Done()
-			if v := conn.Do([]string{"GET", "a"}); v.Err != io.ErrClosedPipe && v.Err != ErrConnClosing {
+			if v := conn.Do(cmds.NewCompleted([]string{"GET", "a"})); v.Err != io.ErrClosedPipe && v.Err != ErrConnClosing {
 				t.Errorf("unexpected cached result, expected io.ErrClosedPipe or ErrConnClosing, got %v", v.Err)
 			}
 		}()

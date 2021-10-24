@@ -8,6 +8,9 @@ var (
 		cs: []string{"CLIENT", "CACHING", "YES"},
 		cf: optInTag,
 	}
+	PingCmd = Completed{
+		cs: []string{"PING"},
+	}
 )
 
 type Completed struct {
@@ -28,6 +31,10 @@ func (c *Completed) Commands() []string {
 }
 
 type Cacheable Completed
+
+func (c *Cacheable) Commands() []string {
+	return c.cs
+}
 
 func (c *Cacheable) CacheKey() (key, command string) {
 	if len(c.cs) == 2 {

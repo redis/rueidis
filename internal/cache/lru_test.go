@@ -14,29 +14,29 @@ func TestLRU(t *testing.T) {
 
 	setup := func(t *testing.T) *LRU {
 		lru := NewLRU(EntryMinSize * Entries)
-		if v, _ := lru.GetOrPrepare("0", TTL); v.Type != 0 {
+		if v, _ := lru.GetOrPrepare("0", "GET", TTL); v.Type != 0 {
 			t.Fatalf("got unexpected value from the first GetOrPrepare: %v", v)
 		}
-		lru.Update("0", proto.Message{Type: '+', String: "0"})
+		lru.Update("0", "GET", proto.Message{Type: '+', String: "0"})
 		return lru
 	}
 
 	t.Run("Cache Hit & Expire", func(t *testing.T) {
 		lru := setup(t)
-		if v, _ := lru.GetOrPrepare("0", TTL); v.Type == 0 {
+		if v, _ := lru.GetOrPrepare("0", "GET", TTL); v.Type == 0 {
 			t.Fatalf("did not get the value from the second GetOrPrepare")
 		} else if v.String != "0" {
 			t.Fatalf("got unexpected value from the second GetOrPrepare: %v", v)
 		}
 		time.Sleep(TTL)
-		if v, _ := lru.GetOrPrepare("0", TTL); v.Type != 0 {
+		if v, _ := lru.GetOrPrepare("0", "GET", TTL); v.Type != 0 {
 			t.Fatalf("got unexpected value from the GetOrPrepare after ttl: %v", v)
 		}
 	})
 
 	t.Run("Cache Miss", func(t *testing.T) {
 		lru := setup(t)
-		if v, _ := lru.GetOrPrepare("1", TTL); v.Type != 0 {
+		if v, _ := lru.GetOrPrepare("1", "GET", TTL); v.Type != 0 {
 			t.Fatalf("got unexpected value from the first GetOrPrepare: %v", v)
 		}
 	})
@@ -44,13 +44,13 @@ func TestLRU(t *testing.T) {
 	t.Run("Cache Evict", func(t *testing.T) {
 		lru := setup(t)
 		for i := 1; i <= Entries; i++ {
-			lru.GetOrPrepare(strconv.Itoa(i), TTL)
-			lru.Update(strconv.Itoa(i), proto.Message{Type: '+', String: strconv.Itoa(i)})
+			lru.GetOrPrepare(strconv.Itoa(i), "GET", TTL)
+			lru.Update(strconv.Itoa(i), "GET", proto.Message{Type: '+', String: strconv.Itoa(i)})
 		}
-		if v, _ := lru.GetOrPrepare("1", TTL); v.Type != 0 {
+		if v, _ := lru.GetOrPrepare("1", "GET", TTL); v.Type != 0 {
 			t.Fatalf("got evicted value from the first GetOrPrepare: %v", v)
 		}
-		if v, _ := lru.GetOrPrepare(strconv.Itoa(Entries), TTL); v.Type == 0 {
+		if v, _ := lru.GetOrPrepare(strconv.Itoa(Entries), "GET", TTL); v.Type == 0 {
 			t.Fatalf("did not get the latest value from the GetOrPrepare")
 		} else if v.String != strconv.Itoa(Entries) {
 			t.Fatalf("got unexpected value from the GetOrPrepare: %v", v)
@@ -60,7 +60,7 @@ func TestLRU(t *testing.T) {
 	t.Run("Cache Delete", func(t *testing.T) {
 		lru := setup(t)
 		lru.Delete([]proto.Message{{String: "0"}})
-		if v, _ := lru.GetOrPrepare("0", TTL); v.Type != 0 {
+		if v, _ := lru.GetOrPrepare("0", "GET", TTL); v.Type != 0 {
 			t.Fatalf("got unexpected value from the first GetOrPrepare: %v", v)
 		}
 	})
@@ -68,7 +68,7 @@ func TestLRU(t *testing.T) {
 	t.Run("Cache DeleteAll", func(t *testing.T) {
 		lru := setup(t)
 		lru.DeleteAll()
-		if v, _ := lru.GetOrPrepare("0", TTL); v.Type != 0 {
+		if v, _ := lru.GetOrPrepare("0", "GET", TTL); v.Type != 0 {
 			t.Fatalf("got unexpected value from the first GetOrPrepare: %v", v)
 		}
 	})
@@ -79,15 +79,15 @@ func BenchmarkLRU(b *testing.B) {
 	b.Run("GetOrPrepare", func(b *testing.B) {
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
-				lru.GetOrPrepare("0", TTL)
+				lru.GetOrPrepare("0", "GET", TTL)
 			}
 		})
 	})
 	b.Run("Update", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			key := strconv.Itoa(i)
-			lru.GetOrPrepare(key, TTL)
-			lru.Update(key, proto.Message{})
+			lru.GetOrPrepare(key, "GET", TTL)
+			lru.Update(key, "GET", proto.Message{})
 		}
 	})
 }

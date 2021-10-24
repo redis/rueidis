@@ -10,7 +10,6 @@ import (
 	"github.com/rueian/rueidis/internal/proto"
 )
 
-var ping = []string{"PING"}
 var broken *wire
 
 type Conn struct {
@@ -56,7 +55,7 @@ func (c *Conn) connect() (*wire, error) {
 	}
 
 	go func() {
-		for resp := wire.Do(ping); resp.Err == nil; resp = wire.Do(ping) {
+		for resp := wire.Do(cmds.PingCmd); resp.Err == nil; resp = wire.Do(cmds.PingCmd) {
 			time.Sleep(time.Second)
 		}
 	}()
@@ -77,7 +76,7 @@ func (c *Conn) Info() proto.Message {
 	return c.acquire().Info()
 }
 
-func (c *Conn) Do(cmd []string) proto.Result {
+func (c *Conn) Do(cmd cmds.Completed) proto.Result {
 retry:
 	wire := c.acquire()
 	resp := wire.Do(cmd)
@@ -85,11 +84,11 @@ retry:
 		c.wire.CompareAndSwap(wire, broken)
 		goto retry
 	}
-	c.Cmd.Put(cmd)
+	c.Cmd.Put(cmd.Commands())
 	return resp
 }
 
-func (c *Conn) DoMulti(multi ...[]string) []proto.Result {
+func (c *Conn) DoMulti(multi ...cmds.Completed) []proto.Result {
 retry:
 	wire := c.acquire()
 	resp := wire.DoMulti(multi...)
@@ -100,12 +99,12 @@ retry:
 		}
 	}
 	for _, cmd := range multi {
-		c.Cmd.Put(cmd)
+		c.Cmd.Put(cmd.Commands())
 	}
 	return resp
 }
 
-func (c *Conn) DoCache(cmd []string, ttl time.Duration) proto.Result {
+func (c *Conn) DoCache(cmd cmds.Cacheable, ttl time.Duration) proto.Result {
 retry:
 	wire := c.acquire()
 	resp := wire.DoCache(cmd, ttl)
@@ -113,7 +112,7 @@ retry:
 		c.wire.CompareAndSwap(wire, broken)
 		goto retry
 	}
-	c.Cmd.Put(cmd)
+	c.Cmd.Put(cmd.Commands())
 	return resp
 }
 

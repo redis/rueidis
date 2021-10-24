@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/rueian/rueidis/internal/cache"
+	"github.com/rueian/rueidis/internal/cmds"
 	"github.com/rueian/rueidis/internal/proto"
 	"github.com/rueian/rueidis/internal/queue"
 )
@@ -18,7 +19,6 @@ import (
 const DefaultCacheBytes = 128 * (1 << 20)
 
 var (
-	optInCmd       = []string{"CLIENT", "CACHING", "YES"}
 	ErrConnClosing = errors.New("connection is closing")
 )
 
@@ -72,7 +72,7 @@ func newWire(conn net.Conn, option Option) (*wire, error) {
 		init = append(init, []string{"SELECT", strconv.Itoa(option.SelectDB)})
 	}
 
-	resp := c.DoMulti(init...)
+	resp := c.DoMulti(cmds.NewMultiCompleted(init)...)
 	for _, r := range resp {
 		if r.Err != nil {
 			return nil, r.Err
@@ -96,11 +96,11 @@ func (c *wire) reading() {
 
 		var err error
 		for atomic.LoadInt32(&c.state) != 2 {
-			if one, multi := c.queue.NextCmd(); one != nil {
-				err = proto.WriteCmd(c.w, one)
+			if one, multi := c.queue.NextCmd(); !one.IsEmpty() {
+				err = proto.WriteCmd(c.w, one.Commands())
 			} else if multi != nil {
 				for _, cmd := range multi {
-					err = proto.WriteCmd(c.w, cmd)
+					err = proto.WriteCmd(c.w, cmd.Commands())
 				}
 			} else {
 				err = c.w.Flush()
@@ -134,10 +134,6 @@ func (c *wire) reading() {
 				continue
 			}
 
-			// in current implementation, the cache opt-in will only be in the first cmd in batch
-			// TODO: handle opt-in cache for MULTI, LUA commands
-			opted := cmdEqual(multi[0], optInCmd)
-
 			// read the rest cmd responses
 			for i := 1; i < len(multi); {
 				msg, err = proto.ReadNextMessage(c.r)
@@ -152,8 +148,12 @@ func (c *wire) reading() {
 					c.handlePush(msg.Values)
 					continue
 				}
-				if msg.Type != '-' && msg.Type != '!' && opted {
-					c.cache.Update(multi[i][1], msg)
+				// in current implementation, the cache opt-in will only be in the first cmd in batch
+				// TODO: handle opt-in cache for MULTI, LUA commands
+				if msg.Type != '-' && msg.Type != '!' && multi[0].IsOptIn() {
+					cacheable := cmds.Cacheable(multi[i])
+					ck, cc := cacheable.CacheKey()
+					c.cache.Update(ck, cc, msg)
 				}
 				ch <- proto.Result{Val: msg, Err: err}
 				i++
@@ -166,7 +166,7 @@ func (c *wire) reading() {
 	// clean up write queue and read queue
 	for atomic.LoadInt32(&c.waits) != 0 {
 		c.queue.NextCmd()
-		if one, multi, ch := c.queue.NextResultCh(); one != nil {
+		if one, multi, ch := c.queue.NextResultCh(); !one.IsEmpty() {
 			ch <- proto.Result{Err: c.error.Load().(error)}
 		} else if multi != nil {
 			for i := 0; i < len(multi); i++ {
@@ -202,7 +202,7 @@ func (c *wire) Info() proto.Message {
 	return c.info
 }
 
-func (c *wire) Do(cmd []string) (resp proto.Result) {
+func (c *wire) Do(cmd cmds.Completed) (resp proto.Result) {
 	atomic.AddInt32(&c.waits, 1)
 	if atomic.LoadInt32(&c.state) == 0 {
 		resp = <-c.queue.PutOne(cmd)
@@ -213,7 +213,7 @@ func (c *wire) Do(cmd []string) (resp proto.Result) {
 	return resp
 }
 
-func (c *wire) DoMulti(multi ...[]string) []proto.Result {
+func (c *wire) DoMulti(multi ...cmds.Completed) []proto.Result {
 	resp := make([]proto.Result, len(multi))
 	atomic.AddInt32(&c.waits, 1)
 	if atomic.LoadInt32(&c.state) == 0 {
@@ -231,15 +231,16 @@ func (c *wire) DoMulti(multi ...[]string) []proto.Result {
 	return resp
 }
 
-func (c *wire) DoCache(cmd []string, ttl time.Duration) proto.Result {
+func (c *wire) DoCache(cmd cmds.Cacheable, ttl time.Duration) proto.Result {
 retry:
-	if v, ch := c.cache.GetOrPrepare(cmd[1], ttl); v.Type != 0 {
+	ck, cc := cmd.CacheKey()
+	if v, ch := c.cache.GetOrPrepare(ck, cc, ttl); v.Type != 0 {
 		return proto.Result{Val: v}
 	} else if ch != nil {
 		<-ch
 		goto retry
 	}
-	return c.DoMulti(optInCmd, cmd)[1]
+	return c.DoMulti(cmds.OptInCmd, cmds.Completed(cmd))[1]
 }
 
 func (c *wire) Close() {
@@ -249,16 +250,4 @@ func (c *wire) Close() {
 		runtime.Gosched()
 	}
 	atomic.CompareAndSwapInt32(&c.state, 1, 2)
-}
-
-func cmdEqual(a, b []string) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for i, s := range a {
-		if s != b[i] {
-			return false
-		}
-	}
-	return true
 }

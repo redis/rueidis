@@ -7,8 +7,8 @@ import (
 )
 
 type Cache interface {
-	GetOrPrepare(key string, ttl time.Duration) (v proto.Message, ch chan struct{})
-	Update(key string, value proto.Message)
+	GetOrPrepare(key, cmd string, ttl time.Duration) (v proto.Message, ch chan struct{})
+	Update(key, cmd string, value proto.Message)
 	Delete(keys []proto.Message)
 	DeleteAll()
 }
