@@ -4,14 +4,15 @@ import (
 	"sync/atomic"
 	"testing"
 
+	"github.com/rueian/rueidis/internal/cmds"
 	"github.com/rueian/rueidis/internal/proto"
 	"github.com/rueian/rueidis/internal/queue"
 )
 
 type Queue interface {
-	PutOne(m []string) chan proto.Result
-	NextCmd() ([]string, [][]string)
-	NextResultCh() ([]string, [][]string, chan proto.Result)
+	PutOne(m cmds.Completed) chan proto.Result
+	NextCmd() (cmds.Completed, []cmds.Completed)
+	NextResultCh() (cmds.Completed, []cmds.Completed, chan proto.Result)
 }
 
 func BenchmarkQueue(b *testing.B) {
@@ -27,7 +28,7 @@ func BenchmarkQueue(b *testing.B) {
 			}()
 			b.RunParallel(func(pb *testing.PB) {
 				for pb.Next() {
-					q.PutOne(nil)
+					q.PutOne(cmds.Completed{})
 				}
 			})
 			atomic.StoreInt32(&stop, 1)

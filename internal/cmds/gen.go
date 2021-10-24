@@ -4,14 +4,15 @@ import "strconv"
 
 type AclCat struct {
 	cs []string
+	cf uint32
 }
 
 func (c AclCat) Categoryname(Categoryname string) AclCatCategoryname {
-	return AclCatCategoryname{cs: append(c.cs, Categoryname)}
+	return AclCatCategoryname{cf: c.cf, cs: append(c.cs, Categoryname)}
 }
 
-func (c AclCat) Build() []string {
-	return c.cs
+func (c AclCat) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) AclCat() (c AclCat) {
@@ -21,18 +22,20 @@ func (b *Builder) AclCat() (c AclCat) {
 
 type AclCatCategoryname struct {
 	cs []string
+	cf uint32
 }
 
-func (c AclCatCategoryname) Build() []string {
-	return c.cs
+func (c AclCatCategoryname) Build() Completed {
+	return Completed(c)
 }
 
 type AclDeluser struct {
 	cs []string
+	cf uint32
 }
 
 func (c AclDeluser) Username(Username ...string) AclDeluserUsername {
-	return AclDeluserUsername{cs: append(c.cs, Username...)}
+	return AclDeluserUsername{cf: c.cf, cs: append(c.cs, Username...)}
 }
 
 func (b *Builder) AclDeluser() (c AclDeluser) {
@@ -42,26 +45,28 @@ func (b *Builder) AclDeluser() (c AclDeluser) {
 
 type AclDeluserUsername struct {
 	cs []string
+	cf uint32
 }
 
 func (c AclDeluserUsername) Username(Username ...string) AclDeluserUsername {
-	return AclDeluserUsername{cs: append(c.cs, Username...)}
+	return AclDeluserUsername{cf: c.cf, cs: append(c.cs, Username...)}
 }
 
-func (c AclDeluserUsername) Build() []string {
-	return c.cs
+func (c AclDeluserUsername) Build() Completed {
+	return Completed(c)
 }
 
 type AclGenpass struct {
 	cs []string
+	cf uint32
 }
 
 func (c AclGenpass) Bits(Bits int64) AclGenpassBits {
-	return AclGenpassBits{cs: append(c.cs, strconv.FormatInt(Bits, 10))}
+	return AclGenpassBits{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Bits, 10))}
 }
 
-func (c AclGenpass) Build() []string {
-	return c.cs
+func (c AclGenpass) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) AclGenpass() (c AclGenpass) {
@@ -71,18 +76,20 @@ func (b *Builder) AclGenpass() (c AclGenpass) {
 
 type AclGenpassBits struct {
 	cs []string
+	cf uint32
 }
 
-func (c AclGenpassBits) Build() []string {
-	return c.cs
+func (c AclGenpassBits) Build() Completed {
+	return Completed(c)
 }
 
 type AclGetuser struct {
 	cs []string
+	cf uint32
 }
 
 func (c AclGetuser) Username(Username string) AclGetuserUsername {
-	return AclGetuserUsername{cs: append(c.cs, Username)}
+	return AclGetuserUsername{cf: c.cf, cs: append(c.cs, Username)}
 }
 
 func (b *Builder) AclGetuser() (c AclGetuser) {
@@ -92,18 +99,20 @@ func (b *Builder) AclGetuser() (c AclGetuser) {
 
 type AclGetuserUsername struct {
 	cs []string
+	cf uint32
 }
 
-func (c AclGetuserUsername) Build() []string {
-	return c.cs
+func (c AclGetuserUsername) Build() Completed {
+	return Completed(c)
 }
 
 type AclHelp struct {
 	cs []string
+	cf uint32
 }
 
-func (c AclHelp) Build() []string {
-	return c.cs
+func (c AclHelp) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) AclHelp() (c AclHelp) {
@@ -113,10 +122,11 @@ func (b *Builder) AclHelp() (c AclHelp) {
 
 type AclList struct {
 	cs []string
+	cf uint32
 }
 
-func (c AclList) Build() []string {
-	return c.cs
+func (c AclList) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) AclList() (c AclList) {
@@ -126,10 +136,11 @@ func (b *Builder) AclList() (c AclList) {
 
 type AclLoad struct {
 	cs []string
+	cf uint32
 }
 
-func (c AclLoad) Build() []string {
-	return c.cs
+func (c AclLoad) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) AclLoad() (c AclLoad) {
@@ -139,14 +150,15 @@ func (b *Builder) AclLoad() (c AclLoad) {
 
 type AclLog struct {
 	cs []string
+	cf uint32
 }
 
 func (c AclLog) CountOrReset(CountOrReset string) AclLogCountOrReset {
-	return AclLogCountOrReset{cs: append(c.cs, CountOrReset)}
+	return AclLogCountOrReset{cf: c.cf, cs: append(c.cs, CountOrReset)}
 }
 
-func (c AclLog) Build() []string {
-	return c.cs
+func (c AclLog) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) AclLog() (c AclLog) {
@@ -156,18 +168,20 @@ func (b *Builder) AclLog() (c AclLog) {
 
 type AclLogCountOrReset struct {
 	cs []string
+	cf uint32
 }
 
-func (c AclLogCountOrReset) Build() []string {
-	return c.cs
+func (c AclLogCountOrReset) Build() Completed {
+	return Completed(c)
 }
 
 type AclSave struct {
 	cs []string
+	cf uint32
 }
 
-func (c AclSave) Build() []string {
-	return c.cs
+func (c AclSave) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) AclSave() (c AclSave) {
@@ -177,10 +191,11 @@ func (b *Builder) AclSave() (c AclSave) {
 
 type AclSetuser struct {
 	cs []string
+	cf uint32
 }
 
 func (c AclSetuser) Username(Username string) AclSetuserUsername {
-	return AclSetuserUsername{cs: append(c.cs, Username)}
+	return AclSetuserUsername{cf: c.cf, cs: append(c.cs, Username)}
 }
 
 func (b *Builder) AclSetuser() (c AclSetuser) {
@@ -190,34 +205,37 @@ func (b *Builder) AclSetuser() (c AclSetuser) {
 
 type AclSetuserRule struct {
 	cs []string
+	cf uint32
 }
 
 func (c AclSetuserRule) Rule(Rule ...string) AclSetuserRule {
-	return AclSetuserRule{cs: append(c.cs, Rule...)}
+	return AclSetuserRule{cf: c.cf, cs: append(c.cs, Rule...)}
 }
 
-func (c AclSetuserRule) Build() []string {
-	return c.cs
+func (c AclSetuserRule) Build() Completed {
+	return Completed(c)
 }
 
 type AclSetuserUsername struct {
 	cs []string
+	cf uint32
 }
 
 func (c AclSetuserUsername) Rule(Rule ...string) AclSetuserRule {
-	return AclSetuserRule{cs: append(c.cs, Rule...)}
+	return AclSetuserRule{cf: c.cf, cs: append(c.cs, Rule...)}
 }
 
-func (c AclSetuserUsername) Build() []string {
-	return c.cs
+func (c AclSetuserUsername) Build() Completed {
+	return Completed(c)
 }
 
 type AclUsers struct {
 	cs []string
+	cf uint32
 }
 
-func (c AclUsers) Build() []string {
-	return c.cs
+func (c AclUsers) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) AclUsers() (c AclUsers) {
@@ -227,10 +245,11 @@ func (b *Builder) AclUsers() (c AclUsers) {
 
 type AclWhoami struct {
 	cs []string
+	cf uint32
 }
 
-func (c AclWhoami) Build() []string {
-	return c.cs
+func (c AclWhoami) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) AclWhoami() (c AclWhoami) {
@@ -240,10 +259,11 @@ func (b *Builder) AclWhoami() (c AclWhoami) {
 
 type Append struct {
 	cs []string
+	cf uint32
 }
 
 func (c Append) Key(Key string) AppendKey {
-	return AppendKey{cs: append(c.cs, Key)}
+	return AppendKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Append() (c Append) {
@@ -253,26 +273,29 @@ func (b *Builder) Append() (c Append) {
 
 type AppendKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c AppendKey) Value(Value string) AppendValue {
-	return AppendValue{cs: append(c.cs, Value)}
+	return AppendValue{cf: c.cf, cs: append(c.cs, Value)}
 }
 
 type AppendValue struct {
 	cs []string
+	cf uint32
 }
 
-func (c AppendValue) Build() []string {
-	return c.cs
+func (c AppendValue) Build() Completed {
+	return Completed(c)
 }
 
 type Asking struct {
 	cs []string
+	cf uint32
 }
 
-func (c Asking) Build() []string {
-	return c.cs
+func (c Asking) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) Asking() (c Asking) {
@@ -282,14 +305,15 @@ func (b *Builder) Asking() (c Asking) {
 
 type Auth struct {
 	cs []string
+	cf uint32
 }
 
 func (c Auth) Username(Username string) AuthUsername {
-	return AuthUsername{cs: append(c.cs, Username)}
+	return AuthUsername{cf: c.cf, cs: append(c.cs, Username)}
 }
 
 func (c Auth) Password(Password string) AuthPassword {
-	return AuthPassword{cs: append(c.cs, Password)}
+	return AuthPassword{cf: c.cf, cs: append(c.cs, Password)}
 }
 
 func (b *Builder) Auth() (c Auth) {
@@ -299,26 +323,29 @@ func (b *Builder) Auth() (c Auth) {
 
 type AuthPassword struct {
 	cs []string
+	cf uint32
 }
 
-func (c AuthPassword) Build() []string {
-	return c.cs
+func (c AuthPassword) Build() Completed {
+	return Completed(c)
 }
 
 type AuthUsername struct {
 	cs []string
+	cf uint32
 }
 
 func (c AuthUsername) Password(Password string) AuthPassword {
-	return AuthPassword{cs: append(c.cs, Password)}
+	return AuthPassword{cf: c.cf, cs: append(c.cs, Password)}
 }
 
 type Bgrewriteaof struct {
 	cs []string
+	cf uint32
 }
 
-func (c Bgrewriteaof) Build() []string {
-	return c.cs
+func (c Bgrewriteaof) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) Bgrewriteaof() (c Bgrewriteaof) {
@@ -328,14 +355,15 @@ func (b *Builder) Bgrewriteaof() (c Bgrewriteaof) {
 
 type Bgsave struct {
 	cs []string
+	cf uint32
 }
 
 func (c Bgsave) Schedule() BgsaveScheduleSchedule {
-	return BgsaveScheduleSchedule{cs: append(c.cs, "SCHEDULE")}
+	return BgsaveScheduleSchedule{cf: c.cf, cs: append(c.cs, "SCHEDULE")}
 }
 
-func (c Bgsave) Build() []string {
-	return c.cs
+func (c Bgsave) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) Bgsave() (c Bgsave) {
@@ -345,18 +373,20 @@ func (b *Builder) Bgsave() (c Bgsave) {
 
 type BgsaveScheduleSchedule struct {
 	cs []string
+	cf uint32
 }
 
-func (c BgsaveScheduleSchedule) Build() []string {
-	return c.cs
+func (c BgsaveScheduleSchedule) Build() Completed {
+	return Completed(c)
 }
 
 type Bitcount struct {
 	cs []string
+	cf uint32
 }
 
 func (c Bitcount) Key(Key string) BitcountKey {
-	return BitcountKey{cs: append(c.cs, Key)}
+	return BitcountKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Bitcount() (c Bitcount) {
@@ -366,30 +396,41 @@ func (b *Builder) Bitcount() (c Bitcount) {
 
 type BitcountKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c BitcountKey) StartEnd(Start int64, End int64) BitcountStartEnd {
-	return BitcountStartEnd{cs: append(c.cs, strconv.FormatInt(Start, 10), strconv.FormatInt(End, 10))}
+	return BitcountStartEnd{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Start, 10), strconv.FormatInt(End, 10))}
 }
 
-func (c BitcountKey) Build() []string {
-	return c.cs
+func (c BitcountKey) Build() Completed {
+	return Completed(c)
+}
+
+func (c BitcountKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type BitcountStartEnd struct {
 	cs []string
+	cf uint32
 }
 
-func (c BitcountStartEnd) Build() []string {
-	return c.cs
+func (c BitcountStartEnd) Build() Completed {
+	return Completed(c)
+}
+
+func (c BitcountStartEnd) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Bitfield struct {
 	cs []string
+	cf uint32
 }
 
 func (c Bitfield) Key(Key string) BitfieldKey {
-	return BitfieldKey{cs: append(c.cs, Key)}
+	return BitfieldKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Bitfield() (c Bitfield) {
@@ -399,98 +440,103 @@ func (b *Builder) Bitfield() (c Bitfield) {
 
 type BitfieldFail struct {
 	cs []string
+	cf uint32
 }
 
-func (c BitfieldFail) Build() []string {
-	return c.cs
+func (c BitfieldFail) Build() Completed {
+	return Completed(c)
 }
 
 type BitfieldGet struct {
 	cs []string
+	cf uint32
 }
 
 func (c BitfieldGet) Set(Type string, Offset int64, Value int64) BitfieldSet {
-	return BitfieldSet{cs: append(c.cs, "SET", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Value, 10))}
+	return BitfieldSet{cf: c.cf, cs: append(c.cs, "SET", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Value, 10))}
 }
 
 func (c BitfieldGet) Incrby(Type string, Offset int64, Increment int64) BitfieldIncrby {
-	return BitfieldIncrby{cs: append(c.cs, "INCRBY", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Increment, 10))}
+	return BitfieldIncrby{cf: c.cf, cs: append(c.cs, "INCRBY", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Increment, 10))}
 }
 
 func (c BitfieldGet) Wrap() BitfieldWrap {
-	return BitfieldWrap{cs: append(c.cs, "WRAP")}
+	return BitfieldWrap{cf: c.cf, cs: append(c.cs, "WRAP")}
 }
 
 func (c BitfieldGet) Sat() BitfieldSat {
-	return BitfieldSat{cs: append(c.cs, "SAT")}
+	return BitfieldSat{cf: c.cf, cs: append(c.cs, "SAT")}
 }
 
 func (c BitfieldGet) Fail() BitfieldFail {
-	return BitfieldFail{cs: append(c.cs, "FAIL")}
+	return BitfieldFail{cf: c.cf, cs: append(c.cs, "FAIL")}
 }
 
-func (c BitfieldGet) Build() []string {
-	return c.cs
+func (c BitfieldGet) Build() Completed {
+	return Completed(c)
 }
 
 type BitfieldIncrby struct {
 	cs []string
+	cf uint32
 }
 
 func (c BitfieldIncrby) Wrap() BitfieldWrap {
-	return BitfieldWrap{cs: append(c.cs, "WRAP")}
+	return BitfieldWrap{cf: c.cf, cs: append(c.cs, "WRAP")}
 }
 
 func (c BitfieldIncrby) Sat() BitfieldSat {
-	return BitfieldSat{cs: append(c.cs, "SAT")}
+	return BitfieldSat{cf: c.cf, cs: append(c.cs, "SAT")}
 }
 
 func (c BitfieldIncrby) Fail() BitfieldFail {
-	return BitfieldFail{cs: append(c.cs, "FAIL")}
+	return BitfieldFail{cf: c.cf, cs: append(c.cs, "FAIL")}
 }
 
-func (c BitfieldIncrby) Build() []string {
-	return c.cs
+func (c BitfieldIncrby) Build() Completed {
+	return Completed(c)
 }
 
 type BitfieldKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c BitfieldKey) Get(Type string, Offset int64) BitfieldGet {
-	return BitfieldGet{cs: append(c.cs, "GET", Type, strconv.FormatInt(Offset, 10))}
+	return BitfieldGet{cf: c.cf, cs: append(c.cs, "GET", Type, strconv.FormatInt(Offset, 10))}
 }
 
 func (c BitfieldKey) Set(Type string, Offset int64, Value int64) BitfieldSet {
-	return BitfieldSet{cs: append(c.cs, "SET", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Value, 10))}
+	return BitfieldSet{cf: c.cf, cs: append(c.cs, "SET", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Value, 10))}
 }
 
 func (c BitfieldKey) Incrby(Type string, Offset int64, Increment int64) BitfieldIncrby {
-	return BitfieldIncrby{cs: append(c.cs, "INCRBY", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Increment, 10))}
+	return BitfieldIncrby{cf: c.cf, cs: append(c.cs, "INCRBY", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Increment, 10))}
 }
 
 func (c BitfieldKey) Wrap() BitfieldWrap {
-	return BitfieldWrap{cs: append(c.cs, "WRAP")}
+	return BitfieldWrap{cf: c.cf, cs: append(c.cs, "WRAP")}
 }
 
 func (c BitfieldKey) Sat() BitfieldSat {
-	return BitfieldSat{cs: append(c.cs, "SAT")}
+	return BitfieldSat{cf: c.cf, cs: append(c.cs, "SAT")}
 }
 
 func (c BitfieldKey) Fail() BitfieldFail {
-	return BitfieldFail{cs: append(c.cs, "FAIL")}
+	return BitfieldFail{cf: c.cf, cs: append(c.cs, "FAIL")}
 }
 
-func (c BitfieldKey) Build() []string {
-	return c.cs
+func (c BitfieldKey) Build() Completed {
+	return Completed(c)
 }
 
 type BitfieldRo struct {
 	cs []string
+	cf uint32
 }
 
 func (c BitfieldRo) Key(Key string) BitfieldRoKey {
-	return BitfieldRoKey{cs: append(c.cs, Key)}
+	return BitfieldRoKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) BitfieldRo() (c BitfieldRo) {
@@ -500,66 +546,80 @@ func (b *Builder) BitfieldRo() (c BitfieldRo) {
 
 type BitfieldRoGet struct {
 	cs []string
+	cf uint32
 }
 
-func (c BitfieldRoGet) Build() []string {
-	return c.cs
+func (c BitfieldRoGet) Build() Completed {
+	return Completed(c)
+}
+
+func (c BitfieldRoGet) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type BitfieldRoKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c BitfieldRoKey) Get(Type string, Offset int64) BitfieldRoGet {
-	return BitfieldRoGet{cs: append(c.cs, "GET", Type, strconv.FormatInt(Offset, 10))}
+	return BitfieldRoGet{cf: c.cf, cs: append(c.cs, "GET", Type, strconv.FormatInt(Offset, 10))}
+}
+
+func (c BitfieldRoKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type BitfieldSat struct {
 	cs []string
+	cf uint32
 }
 
-func (c BitfieldSat) Build() []string {
-	return c.cs
+func (c BitfieldSat) Build() Completed {
+	return Completed(c)
 }
 
 type BitfieldSet struct {
 	cs []string
+	cf uint32
 }
 
 func (c BitfieldSet) Incrby(Type string, Offset int64, Increment int64) BitfieldIncrby {
-	return BitfieldIncrby{cs: append(c.cs, "INCRBY", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Increment, 10))}
+	return BitfieldIncrby{cf: c.cf, cs: append(c.cs, "INCRBY", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Increment, 10))}
 }
 
 func (c BitfieldSet) Wrap() BitfieldWrap {
-	return BitfieldWrap{cs: append(c.cs, "WRAP")}
+	return BitfieldWrap{cf: c.cf, cs: append(c.cs, "WRAP")}
 }
 
 func (c BitfieldSet) Sat() BitfieldSat {
-	return BitfieldSat{cs: append(c.cs, "SAT")}
+	return BitfieldSat{cf: c.cf, cs: append(c.cs, "SAT")}
 }
 
 func (c BitfieldSet) Fail() BitfieldFail {
-	return BitfieldFail{cs: append(c.cs, "FAIL")}
+	return BitfieldFail{cf: c.cf, cs: append(c.cs, "FAIL")}
 }
 
-func (c BitfieldSet) Build() []string {
-	return c.cs
+func (c BitfieldSet) Build() Completed {
+	return Completed(c)
 }
 
 type BitfieldWrap struct {
 	cs []string
+	cf uint32
 }
 
-func (c BitfieldWrap) Build() []string {
-	return c.cs
+func (c BitfieldWrap) Build() Completed {
+	return Completed(c)
 }
 
 type Bitop struct {
 	cs []string
+	cf uint32
 }
 
 func (c Bitop) Operation(Operation string) BitopOperation {
-	return BitopOperation{cs: append(c.cs, Operation)}
+	return BitopOperation{cf: c.cf, cs: append(c.cs, Operation)}
 }
 
 func (b *Builder) Bitop() (c Bitop) {
@@ -569,38 +629,42 @@ func (b *Builder) Bitop() (c Bitop) {
 
 type BitopDestkey struct {
 	cs []string
+	cf uint32
 }
 
 func (c BitopDestkey) Key(Key ...string) BitopKey {
-	return BitopKey{cs: append(c.cs, Key...)}
+	return BitopKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 type BitopKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c BitopKey) Key(Key ...string) BitopKey {
-	return BitopKey{cs: append(c.cs, Key...)}
+	return BitopKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
-func (c BitopKey) Build() []string {
-	return c.cs
+func (c BitopKey) Build() Completed {
+	return Completed(c)
 }
 
 type BitopOperation struct {
 	cs []string
+	cf uint32
 }
 
 func (c BitopOperation) Destkey(Destkey string) BitopDestkey {
-	return BitopDestkey{cs: append(c.cs, Destkey)}
+	return BitopDestkey{cf: c.cf, cs: append(c.cs, Destkey)}
 }
 
 type Bitpos struct {
 	cs []string
+	cf uint32
 }
 
 func (c Bitpos) Key(Key string) BitposKey {
-	return BitposKey{cs: append(c.cs, Key)}
+	return BitposKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Bitpos() (c Bitpos) {
@@ -610,46 +674,67 @@ func (b *Builder) Bitpos() (c Bitpos) {
 
 type BitposBit struct {
 	cs []string
+	cf uint32
 }
 
 func (c BitposBit) Start(Start int64) BitposIndexStart {
-	return BitposIndexStart{cs: append(c.cs, strconv.FormatInt(Start, 10))}
+	return BitposIndexStart{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Start, 10))}
+}
+
+func (c BitposBit) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type BitposIndexEnd struct {
 	cs []string
+	cf uint32
 }
 
-func (c BitposIndexEnd) Build() []string {
-	return c.cs
+func (c BitposIndexEnd) Build() Completed {
+	return Completed(c)
+}
+
+func (c BitposIndexEnd) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type BitposIndexStart struct {
 	cs []string
+	cf uint32
 }
 
 func (c BitposIndexStart) End(End int64) BitposIndexEnd {
-	return BitposIndexEnd{cs: append(c.cs, strconv.FormatInt(End, 10))}
+	return BitposIndexEnd{cf: c.cf, cs: append(c.cs, strconv.FormatInt(End, 10))}
 }
 
-func (c BitposIndexStart) Build() []string {
-	return c.cs
+func (c BitposIndexStart) Build() Completed {
+	return Completed(c)
+}
+
+func (c BitposIndexStart) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type BitposKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c BitposKey) Bit(Bit int64) BitposBit {
-	return BitposBit{cs: append(c.cs, strconv.FormatInt(Bit, 10))}
+	return BitposBit{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Bit, 10))}
+}
+
+func (c BitposKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Blmove struct {
 	cs []string
+	cf uint32
 }
 
 func (c Blmove) Source(Source string) BlmoveSource {
-	return BlmoveSource{cs: append(c.cs, Source)}
+	return BlmoveSource{cf: c.cf, cs: append(c.cs, Source)}
 }
 
 func (b *Builder) Blmove() (c Blmove) {
@@ -659,78 +744,86 @@ func (b *Builder) Blmove() (c Blmove) {
 
 type BlmoveDestination struct {
 	cs []string
+	cf uint32
 }
 
 func (c BlmoveDestination) Left() BlmoveWherefromLeft {
-	return BlmoveWherefromLeft{cs: append(c.cs, "LEFT")}
+	return BlmoveWherefromLeft{cf: c.cf, cs: append(c.cs, "LEFT")}
 }
 
 func (c BlmoveDestination) Right() BlmoveWherefromRight {
-	return BlmoveWherefromRight{cs: append(c.cs, "RIGHT")}
+	return BlmoveWherefromRight{cf: c.cf, cs: append(c.cs, "RIGHT")}
 }
 
 type BlmoveSource struct {
 	cs []string
+	cf uint32
 }
 
 func (c BlmoveSource) Destination(Destination string) BlmoveDestination {
-	return BlmoveDestination{cs: append(c.cs, Destination)}
+	return BlmoveDestination{cf: c.cf, cs: append(c.cs, Destination)}
 }
 
 type BlmoveTimeout struct {
 	cs []string
+	cf uint32
 }
 
-func (c BlmoveTimeout) Build() []string {
-	return c.cs
+func (c BlmoveTimeout) Build() Completed {
+	return Completed(c)
 }
 
 type BlmoveWherefromLeft struct {
 	cs []string
+	cf uint32
 }
 
 func (c BlmoveWherefromLeft) Left() BlmoveWheretoLeft {
-	return BlmoveWheretoLeft{cs: append(c.cs, "LEFT")}
+	return BlmoveWheretoLeft{cf: c.cf, cs: append(c.cs, "LEFT")}
 }
 
 func (c BlmoveWherefromLeft) Right() BlmoveWheretoRight {
-	return BlmoveWheretoRight{cs: append(c.cs, "RIGHT")}
+	return BlmoveWheretoRight{cf: c.cf, cs: append(c.cs, "RIGHT")}
 }
 
 type BlmoveWherefromRight struct {
 	cs []string
+	cf uint32
 }
 
 func (c BlmoveWherefromRight) Left() BlmoveWheretoLeft {
-	return BlmoveWheretoLeft{cs: append(c.cs, "LEFT")}
+	return BlmoveWheretoLeft{cf: c.cf, cs: append(c.cs, "LEFT")}
 }
 
 func (c BlmoveWherefromRight) Right() BlmoveWheretoRight {
-	return BlmoveWheretoRight{cs: append(c.cs, "RIGHT")}
+	return BlmoveWheretoRight{cf: c.cf, cs: append(c.cs, "RIGHT")}
 }
 
 type BlmoveWheretoLeft struct {
 	cs []string
+	cf uint32
 }
 
 func (c BlmoveWheretoLeft) Timeout(Timeout float64) BlmoveTimeout {
-	return BlmoveTimeout{cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64))}
+	return BlmoveTimeout{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64))}
 }
 
 type BlmoveWheretoRight struct {
 	cs []string
+	cf uint32
 }
 
 func (c BlmoveWheretoRight) Timeout(Timeout float64) BlmoveTimeout {
-	return BlmoveTimeout{cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64))}
+	return BlmoveTimeout{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64))}
 }
 
 type Blmpop struct {
 	cs []string
+	cf uint32
 }
 
 func (c Blmpop) Timeout(Timeout float64) BlmpopTimeout {
-	return BlmpopTimeout{cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64))}
+	return BlmpopTimeout{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64))}
 }
 
 func (b *Builder) Blmpop() (c Blmpop) {
@@ -740,82 +833,89 @@ func (b *Builder) Blmpop() (c Blmpop) {
 
 type BlmpopCount struct {
 	cs []string
+	cf uint32
 }
 
-func (c BlmpopCount) Build() []string {
-	return c.cs
+func (c BlmpopCount) Build() Completed {
+	return Completed(c)
 }
 
 type BlmpopKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c BlmpopKey) Left() BlmpopWhereLeft {
-	return BlmpopWhereLeft{cs: append(c.cs, "LEFT")}
+	return BlmpopWhereLeft{cf: c.cf, cs: append(c.cs, "LEFT")}
 }
 
 func (c BlmpopKey) Right() BlmpopWhereRight {
-	return BlmpopWhereRight{cs: append(c.cs, "RIGHT")}
+	return BlmpopWhereRight{cf: c.cf, cs: append(c.cs, "RIGHT")}
 }
 
 func (c BlmpopKey) Key(Key ...string) BlmpopKey {
-	return BlmpopKey{cs: append(c.cs, Key...)}
+	return BlmpopKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 type BlmpopNumkeys struct {
 	cs []string
+	cf uint32
 }
 
 func (c BlmpopNumkeys) Key(Key ...string) BlmpopKey {
-	return BlmpopKey{cs: append(c.cs, Key...)}
+	return BlmpopKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 func (c BlmpopNumkeys) Left() BlmpopWhereLeft {
-	return BlmpopWhereLeft{cs: append(c.cs, "LEFT")}
+	return BlmpopWhereLeft{cf: c.cf, cs: append(c.cs, "LEFT")}
 }
 
 func (c BlmpopNumkeys) Right() BlmpopWhereRight {
-	return BlmpopWhereRight{cs: append(c.cs, "RIGHT")}
+	return BlmpopWhereRight{cf: c.cf, cs: append(c.cs, "RIGHT")}
 }
 
 type BlmpopTimeout struct {
 	cs []string
+	cf uint32
 }
 
 func (c BlmpopTimeout) Numkeys(Numkeys int64) BlmpopNumkeys {
-	return BlmpopNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
+	return BlmpopNumkeys{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
 }
 
 type BlmpopWhereLeft struct {
 	cs []string
+	cf uint32
 }
 
 func (c BlmpopWhereLeft) Count(Count int64) BlmpopCount {
-	return BlmpopCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return BlmpopCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c BlmpopWhereLeft) Build() []string {
-	return c.cs
+func (c BlmpopWhereLeft) Build() Completed {
+	return Completed(c)
 }
 
 type BlmpopWhereRight struct {
 	cs []string
+	cf uint32
 }
 
 func (c BlmpopWhereRight) Count(Count int64) BlmpopCount {
-	return BlmpopCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return BlmpopCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c BlmpopWhereRight) Build() []string {
-	return c.cs
+func (c BlmpopWhereRight) Build() Completed {
+	return Completed(c)
 }
 
 type Blpop struct {
 	cs []string
+	cf uint32
 }
 
 func (c Blpop) Key(Key ...string) BlpopKey {
-	return BlpopKey{cs: append(c.cs, Key...)}
+	return BlpopKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 func (b *Builder) Blpop() (c Blpop) {
@@ -825,30 +925,33 @@ func (b *Builder) Blpop() (c Blpop) {
 
 type BlpopKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c BlpopKey) Timeout(Timeout float64) BlpopTimeout {
-	return BlpopTimeout{cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64))}
+	return BlpopTimeout{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64))}
 }
 
 func (c BlpopKey) Key(Key ...string) BlpopKey {
-	return BlpopKey{cs: append(c.cs, Key...)}
+	return BlpopKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 type BlpopTimeout struct {
 	cs []string
+	cf uint32
 }
 
-func (c BlpopTimeout) Build() []string {
-	return c.cs
+func (c BlpopTimeout) Build() Completed {
+	return Completed(c)
 }
 
 type Brpop struct {
 	cs []string
+	cf uint32
 }
 
 func (c Brpop) Key(Key ...string) BrpopKey {
-	return BrpopKey{cs: append(c.cs, Key...)}
+	return BrpopKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 func (b *Builder) Brpop() (c Brpop) {
@@ -858,30 +961,33 @@ func (b *Builder) Brpop() (c Brpop) {
 
 type BrpopKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c BrpopKey) Timeout(Timeout float64) BrpopTimeout {
-	return BrpopTimeout{cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64))}
+	return BrpopTimeout{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64))}
 }
 
 func (c BrpopKey) Key(Key ...string) BrpopKey {
-	return BrpopKey{cs: append(c.cs, Key...)}
+	return BrpopKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 type BrpopTimeout struct {
 	cs []string
+	cf uint32
 }
 
-func (c BrpopTimeout) Build() []string {
-	return c.cs
+func (c BrpopTimeout) Build() Completed {
+	return Completed(c)
 }
 
 type Brpoplpush struct {
 	cs []string
+	cf uint32
 }
 
 func (c Brpoplpush) Source(Source string) BrpoplpushSource {
-	return BrpoplpushSource{cs: append(c.cs, Source)}
+	return BrpoplpushSource{cf: c.cf, cs: append(c.cs, Source)}
 }
 
 func (b *Builder) Brpoplpush() (c Brpoplpush) {
@@ -891,34 +997,38 @@ func (b *Builder) Brpoplpush() (c Brpoplpush) {
 
 type BrpoplpushDestination struct {
 	cs []string
+	cf uint32
 }
 
 func (c BrpoplpushDestination) Timeout(Timeout float64) BrpoplpushTimeout {
-	return BrpoplpushTimeout{cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64))}
+	return BrpoplpushTimeout{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64))}
 }
 
 type BrpoplpushSource struct {
 	cs []string
+	cf uint32
 }
 
 func (c BrpoplpushSource) Destination(Destination string) BrpoplpushDestination {
-	return BrpoplpushDestination{cs: append(c.cs, Destination)}
+	return BrpoplpushDestination{cf: c.cf, cs: append(c.cs, Destination)}
 }
 
 type BrpoplpushTimeout struct {
 	cs []string
+	cf uint32
 }
 
-func (c BrpoplpushTimeout) Build() []string {
-	return c.cs
+func (c BrpoplpushTimeout) Build() Completed {
+	return Completed(c)
 }
 
 type Bzpopmax struct {
 	cs []string
+	cf uint32
 }
 
 func (c Bzpopmax) Key(Key ...string) BzpopmaxKey {
-	return BzpopmaxKey{cs: append(c.cs, Key...)}
+	return BzpopmaxKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 func (b *Builder) Bzpopmax() (c Bzpopmax) {
@@ -928,30 +1038,33 @@ func (b *Builder) Bzpopmax() (c Bzpopmax) {
 
 type BzpopmaxKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c BzpopmaxKey) Timeout(Timeout float64) BzpopmaxTimeout {
-	return BzpopmaxTimeout{cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64))}
+	return BzpopmaxTimeout{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64))}
 }
 
 func (c BzpopmaxKey) Key(Key ...string) BzpopmaxKey {
-	return BzpopmaxKey{cs: append(c.cs, Key...)}
+	return BzpopmaxKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 type BzpopmaxTimeout struct {
 	cs []string
+	cf uint32
 }
 
-func (c BzpopmaxTimeout) Build() []string {
-	return c.cs
+func (c BzpopmaxTimeout) Build() Completed {
+	return Completed(c)
 }
 
 type Bzpopmin struct {
 	cs []string
+	cf uint32
 }
 
 func (c Bzpopmin) Key(Key ...string) BzpopminKey {
-	return BzpopminKey{cs: append(c.cs, Key...)}
+	return BzpopminKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 func (b *Builder) Bzpopmin() (c Bzpopmin) {
@@ -961,34 +1074,37 @@ func (b *Builder) Bzpopmin() (c Bzpopmin) {
 
 type BzpopminKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c BzpopminKey) Timeout(Timeout float64) BzpopminTimeout {
-	return BzpopminTimeout{cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64))}
+	return BzpopminTimeout{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64))}
 }
 
 func (c BzpopminKey) Key(Key ...string) BzpopminKey {
-	return BzpopminKey{cs: append(c.cs, Key...)}
+	return BzpopminKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 type BzpopminTimeout struct {
 	cs []string
+	cf uint32
 }
 
-func (c BzpopminTimeout) Build() []string {
-	return c.cs
+func (c BzpopminTimeout) Build() Completed {
+	return Completed(c)
 }
 
 type ClientCaching struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClientCaching) Yes() ClientCachingModeYes {
-	return ClientCachingModeYes{cs: append(c.cs, "YES")}
+	return ClientCachingModeYes{cf: c.cf, cs: append(c.cs, "YES")}
 }
 
 func (c ClientCaching) No() ClientCachingModeNo {
-	return ClientCachingModeNo{cs: append(c.cs, "NO")}
+	return ClientCachingModeNo{cf: c.cf, cs: append(c.cs, "NO")}
 }
 
 func (b *Builder) ClientCaching() (c ClientCaching) {
@@ -998,26 +1114,29 @@ func (b *Builder) ClientCaching() (c ClientCaching) {
 
 type ClientCachingModeNo struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClientCachingModeNo) Build() []string {
-	return c.cs
+func (c ClientCachingModeNo) Build() Completed {
+	return Completed(c)
 }
 
 type ClientCachingModeYes struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClientCachingModeYes) Build() []string {
-	return c.cs
+func (c ClientCachingModeYes) Build() Completed {
+	return Completed(c)
 }
 
 type ClientGetname struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClientGetname) Build() []string {
-	return c.cs
+func (c ClientGetname) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) ClientGetname() (c ClientGetname) {
@@ -1027,10 +1146,11 @@ func (b *Builder) ClientGetname() (c ClientGetname) {
 
 type ClientGetredir struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClientGetredir) Build() []string {
-	return c.cs
+func (c ClientGetredir) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) ClientGetredir() (c ClientGetredir) {
@@ -1040,10 +1160,11 @@ func (b *Builder) ClientGetredir() (c ClientGetredir) {
 
 type ClientId struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClientId) Build() []string {
-	return c.cs
+func (c ClientId) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) ClientId() (c ClientId) {
@@ -1053,10 +1174,11 @@ func (b *Builder) ClientId() (c ClientId) {
 
 type ClientInfo struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClientInfo) Build() []string {
-	return c.cs
+func (c ClientInfo) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) ClientInfo() (c ClientInfo) {
@@ -1066,50 +1188,51 @@ func (b *Builder) ClientInfo() (c ClientInfo) {
 
 type ClientKill struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClientKill) IpPort(IpPort string) ClientKillIpPort {
-	return ClientKillIpPort{cs: append(c.cs, IpPort)}
+	return ClientKillIpPort{cf: c.cf, cs: append(c.cs, IpPort)}
 }
 
 func (c ClientKill) Id(ClientId int64) ClientKillId {
-	return ClientKillId{cs: append(c.cs, "ID", strconv.FormatInt(ClientId, 10))}
+	return ClientKillId{cf: c.cf, cs: append(c.cs, "ID", strconv.FormatInt(ClientId, 10))}
 }
 
 func (c ClientKill) Normal() ClientKillNormal {
-	return ClientKillNormal{cs: append(c.cs, "normal")}
+	return ClientKillNormal{cf: c.cf, cs: append(c.cs, "normal")}
 }
 
 func (c ClientKill) Master() ClientKillMaster {
-	return ClientKillMaster{cs: append(c.cs, "master")}
+	return ClientKillMaster{cf: c.cf, cs: append(c.cs, "master")}
 }
 
 func (c ClientKill) Slave() ClientKillSlave {
-	return ClientKillSlave{cs: append(c.cs, "slave")}
+	return ClientKillSlave{cf: c.cf, cs: append(c.cs, "slave")}
 }
 
 func (c ClientKill) Pubsub() ClientKillPubsub {
-	return ClientKillPubsub{cs: append(c.cs, "pubsub")}
+	return ClientKillPubsub{cf: c.cf, cs: append(c.cs, "pubsub")}
 }
 
 func (c ClientKill) User(Username string) ClientKillUser {
-	return ClientKillUser{cs: append(c.cs, "USER", Username)}
+	return ClientKillUser{cf: c.cf, cs: append(c.cs, "USER", Username)}
 }
 
 func (c ClientKill) Addr(IpPort string) ClientKillAddr {
-	return ClientKillAddr{cs: append(c.cs, "ADDR", IpPort)}
+	return ClientKillAddr{cf: c.cf, cs: append(c.cs, "ADDR", IpPort)}
 }
 
 func (c ClientKill) Laddr(IpPort string) ClientKillLaddr {
-	return ClientKillLaddr{cs: append(c.cs, "LADDR", IpPort)}
+	return ClientKillLaddr{cf: c.cf, cs: append(c.cs, "LADDR", IpPort)}
 }
 
 func (c ClientKill) Skipme(YesNo string) ClientKillSkipme {
-	return ClientKillSkipme{cs: append(c.cs, "SKIPME", YesNo)}
+	return ClientKillSkipme{cf: c.cf, cs: append(c.cs, "SKIPME", YesNo)}
 }
 
-func (c ClientKill) Build() []string {
-	return c.cs
+func (c ClientKill) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) ClientKill() (c ClientKill) {
@@ -1119,262 +1242,273 @@ func (b *Builder) ClientKill() (c ClientKill) {
 
 type ClientKillAddr struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClientKillAddr) Laddr(IpPort string) ClientKillLaddr {
-	return ClientKillLaddr{cs: append(c.cs, "LADDR", IpPort)}
+	return ClientKillLaddr{cf: c.cf, cs: append(c.cs, "LADDR", IpPort)}
 }
 
 func (c ClientKillAddr) Skipme(YesNo string) ClientKillSkipme {
-	return ClientKillSkipme{cs: append(c.cs, "SKIPME", YesNo)}
+	return ClientKillSkipme{cf: c.cf, cs: append(c.cs, "SKIPME", YesNo)}
 }
 
-func (c ClientKillAddr) Build() []string {
-	return c.cs
+func (c ClientKillAddr) Build() Completed {
+	return Completed(c)
 }
 
 type ClientKillId struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClientKillId) Normal() ClientKillNormal {
-	return ClientKillNormal{cs: append(c.cs, "normal")}
+	return ClientKillNormal{cf: c.cf, cs: append(c.cs, "normal")}
 }
 
 func (c ClientKillId) Master() ClientKillMaster {
-	return ClientKillMaster{cs: append(c.cs, "master")}
+	return ClientKillMaster{cf: c.cf, cs: append(c.cs, "master")}
 }
 
 func (c ClientKillId) Slave() ClientKillSlave {
-	return ClientKillSlave{cs: append(c.cs, "slave")}
+	return ClientKillSlave{cf: c.cf, cs: append(c.cs, "slave")}
 }
 
 func (c ClientKillId) Pubsub() ClientKillPubsub {
-	return ClientKillPubsub{cs: append(c.cs, "pubsub")}
+	return ClientKillPubsub{cf: c.cf, cs: append(c.cs, "pubsub")}
 }
 
 func (c ClientKillId) User(Username string) ClientKillUser {
-	return ClientKillUser{cs: append(c.cs, "USER", Username)}
+	return ClientKillUser{cf: c.cf, cs: append(c.cs, "USER", Username)}
 }
 
 func (c ClientKillId) Addr(IpPort string) ClientKillAddr {
-	return ClientKillAddr{cs: append(c.cs, "ADDR", IpPort)}
+	return ClientKillAddr{cf: c.cf, cs: append(c.cs, "ADDR", IpPort)}
 }
 
 func (c ClientKillId) Laddr(IpPort string) ClientKillLaddr {
-	return ClientKillLaddr{cs: append(c.cs, "LADDR", IpPort)}
+	return ClientKillLaddr{cf: c.cf, cs: append(c.cs, "LADDR", IpPort)}
 }
 
 func (c ClientKillId) Skipme(YesNo string) ClientKillSkipme {
-	return ClientKillSkipme{cs: append(c.cs, "SKIPME", YesNo)}
+	return ClientKillSkipme{cf: c.cf, cs: append(c.cs, "SKIPME", YesNo)}
 }
 
-func (c ClientKillId) Build() []string {
-	return c.cs
+func (c ClientKillId) Build() Completed {
+	return Completed(c)
 }
 
 type ClientKillIpPort struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClientKillIpPort) Id(ClientId int64) ClientKillId {
-	return ClientKillId{cs: append(c.cs, "ID", strconv.FormatInt(ClientId, 10))}
+	return ClientKillId{cf: c.cf, cs: append(c.cs, "ID", strconv.FormatInt(ClientId, 10))}
 }
 
 func (c ClientKillIpPort) Normal() ClientKillNormal {
-	return ClientKillNormal{cs: append(c.cs, "normal")}
+	return ClientKillNormal{cf: c.cf, cs: append(c.cs, "normal")}
 }
 
 func (c ClientKillIpPort) Master() ClientKillMaster {
-	return ClientKillMaster{cs: append(c.cs, "master")}
+	return ClientKillMaster{cf: c.cf, cs: append(c.cs, "master")}
 }
 
 func (c ClientKillIpPort) Slave() ClientKillSlave {
-	return ClientKillSlave{cs: append(c.cs, "slave")}
+	return ClientKillSlave{cf: c.cf, cs: append(c.cs, "slave")}
 }
 
 func (c ClientKillIpPort) Pubsub() ClientKillPubsub {
-	return ClientKillPubsub{cs: append(c.cs, "pubsub")}
+	return ClientKillPubsub{cf: c.cf, cs: append(c.cs, "pubsub")}
 }
 
 func (c ClientKillIpPort) User(Username string) ClientKillUser {
-	return ClientKillUser{cs: append(c.cs, "USER", Username)}
+	return ClientKillUser{cf: c.cf, cs: append(c.cs, "USER", Username)}
 }
 
 func (c ClientKillIpPort) Addr(IpPort string) ClientKillAddr {
-	return ClientKillAddr{cs: append(c.cs, "ADDR", IpPort)}
+	return ClientKillAddr{cf: c.cf, cs: append(c.cs, "ADDR", IpPort)}
 }
 
 func (c ClientKillIpPort) Laddr(IpPort string) ClientKillLaddr {
-	return ClientKillLaddr{cs: append(c.cs, "LADDR", IpPort)}
+	return ClientKillLaddr{cf: c.cf, cs: append(c.cs, "LADDR", IpPort)}
 }
 
 func (c ClientKillIpPort) Skipme(YesNo string) ClientKillSkipme {
-	return ClientKillSkipme{cs: append(c.cs, "SKIPME", YesNo)}
+	return ClientKillSkipme{cf: c.cf, cs: append(c.cs, "SKIPME", YesNo)}
 }
 
-func (c ClientKillIpPort) Build() []string {
-	return c.cs
+func (c ClientKillIpPort) Build() Completed {
+	return Completed(c)
 }
 
 type ClientKillLaddr struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClientKillLaddr) Skipme(YesNo string) ClientKillSkipme {
-	return ClientKillSkipme{cs: append(c.cs, "SKIPME", YesNo)}
+	return ClientKillSkipme{cf: c.cf, cs: append(c.cs, "SKIPME", YesNo)}
 }
 
-func (c ClientKillLaddr) Build() []string {
-	return c.cs
+func (c ClientKillLaddr) Build() Completed {
+	return Completed(c)
 }
 
 type ClientKillMaster struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClientKillMaster) User(Username string) ClientKillUser {
-	return ClientKillUser{cs: append(c.cs, "USER", Username)}
+	return ClientKillUser{cf: c.cf, cs: append(c.cs, "USER", Username)}
 }
 
 func (c ClientKillMaster) Addr(IpPort string) ClientKillAddr {
-	return ClientKillAddr{cs: append(c.cs, "ADDR", IpPort)}
+	return ClientKillAddr{cf: c.cf, cs: append(c.cs, "ADDR", IpPort)}
 }
 
 func (c ClientKillMaster) Laddr(IpPort string) ClientKillLaddr {
-	return ClientKillLaddr{cs: append(c.cs, "LADDR", IpPort)}
+	return ClientKillLaddr{cf: c.cf, cs: append(c.cs, "LADDR", IpPort)}
 }
 
 func (c ClientKillMaster) Skipme(YesNo string) ClientKillSkipme {
-	return ClientKillSkipme{cs: append(c.cs, "SKIPME", YesNo)}
+	return ClientKillSkipme{cf: c.cf, cs: append(c.cs, "SKIPME", YesNo)}
 }
 
-func (c ClientKillMaster) Build() []string {
-	return c.cs
+func (c ClientKillMaster) Build() Completed {
+	return Completed(c)
 }
 
 type ClientKillNormal struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClientKillNormal) User(Username string) ClientKillUser {
-	return ClientKillUser{cs: append(c.cs, "USER", Username)}
+	return ClientKillUser{cf: c.cf, cs: append(c.cs, "USER", Username)}
 }
 
 func (c ClientKillNormal) Addr(IpPort string) ClientKillAddr {
-	return ClientKillAddr{cs: append(c.cs, "ADDR", IpPort)}
+	return ClientKillAddr{cf: c.cf, cs: append(c.cs, "ADDR", IpPort)}
 }
 
 func (c ClientKillNormal) Laddr(IpPort string) ClientKillLaddr {
-	return ClientKillLaddr{cs: append(c.cs, "LADDR", IpPort)}
+	return ClientKillLaddr{cf: c.cf, cs: append(c.cs, "LADDR", IpPort)}
 }
 
 func (c ClientKillNormal) Skipme(YesNo string) ClientKillSkipme {
-	return ClientKillSkipme{cs: append(c.cs, "SKIPME", YesNo)}
+	return ClientKillSkipme{cf: c.cf, cs: append(c.cs, "SKIPME", YesNo)}
 }
 
-func (c ClientKillNormal) Build() []string {
-	return c.cs
+func (c ClientKillNormal) Build() Completed {
+	return Completed(c)
 }
 
 type ClientKillPubsub struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClientKillPubsub) User(Username string) ClientKillUser {
-	return ClientKillUser{cs: append(c.cs, "USER", Username)}
+	return ClientKillUser{cf: c.cf, cs: append(c.cs, "USER", Username)}
 }
 
 func (c ClientKillPubsub) Addr(IpPort string) ClientKillAddr {
-	return ClientKillAddr{cs: append(c.cs, "ADDR", IpPort)}
+	return ClientKillAddr{cf: c.cf, cs: append(c.cs, "ADDR", IpPort)}
 }
 
 func (c ClientKillPubsub) Laddr(IpPort string) ClientKillLaddr {
-	return ClientKillLaddr{cs: append(c.cs, "LADDR", IpPort)}
+	return ClientKillLaddr{cf: c.cf, cs: append(c.cs, "LADDR", IpPort)}
 }
 
 func (c ClientKillPubsub) Skipme(YesNo string) ClientKillSkipme {
-	return ClientKillSkipme{cs: append(c.cs, "SKIPME", YesNo)}
+	return ClientKillSkipme{cf: c.cf, cs: append(c.cs, "SKIPME", YesNo)}
 }
 
-func (c ClientKillPubsub) Build() []string {
-	return c.cs
+func (c ClientKillPubsub) Build() Completed {
+	return Completed(c)
 }
 
 type ClientKillSkipme struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClientKillSkipme) Build() []string {
-	return c.cs
+func (c ClientKillSkipme) Build() Completed {
+	return Completed(c)
 }
 
 type ClientKillSlave struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClientKillSlave) User(Username string) ClientKillUser {
-	return ClientKillUser{cs: append(c.cs, "USER", Username)}
+	return ClientKillUser{cf: c.cf, cs: append(c.cs, "USER", Username)}
 }
 
 func (c ClientKillSlave) Addr(IpPort string) ClientKillAddr {
-	return ClientKillAddr{cs: append(c.cs, "ADDR", IpPort)}
+	return ClientKillAddr{cf: c.cf, cs: append(c.cs, "ADDR", IpPort)}
 }
 
 func (c ClientKillSlave) Laddr(IpPort string) ClientKillLaddr {
-	return ClientKillLaddr{cs: append(c.cs, "LADDR", IpPort)}
+	return ClientKillLaddr{cf: c.cf, cs: append(c.cs, "LADDR", IpPort)}
 }
 
 func (c ClientKillSlave) Skipme(YesNo string) ClientKillSkipme {
-	return ClientKillSkipme{cs: append(c.cs, "SKIPME", YesNo)}
+	return ClientKillSkipme{cf: c.cf, cs: append(c.cs, "SKIPME", YesNo)}
 }
 
-func (c ClientKillSlave) Build() []string {
-	return c.cs
+func (c ClientKillSlave) Build() Completed {
+	return Completed(c)
 }
 
 type ClientKillUser struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClientKillUser) Addr(IpPort string) ClientKillAddr {
-	return ClientKillAddr{cs: append(c.cs, "ADDR", IpPort)}
+	return ClientKillAddr{cf: c.cf, cs: append(c.cs, "ADDR", IpPort)}
 }
 
 func (c ClientKillUser) Laddr(IpPort string) ClientKillLaddr {
-	return ClientKillLaddr{cs: append(c.cs, "LADDR", IpPort)}
+	return ClientKillLaddr{cf: c.cf, cs: append(c.cs, "LADDR", IpPort)}
 }
 
 func (c ClientKillUser) Skipme(YesNo string) ClientKillSkipme {
-	return ClientKillSkipme{cs: append(c.cs, "SKIPME", YesNo)}
+	return ClientKillSkipme{cf: c.cf, cs: append(c.cs, "SKIPME", YesNo)}
 }
 
-func (c ClientKillUser) Build() []string {
-	return c.cs
+func (c ClientKillUser) Build() Completed {
+	return Completed(c)
 }
 
 type ClientList struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClientList) Normal() ClientListNormal {
-	return ClientListNormal{cs: append(c.cs, "normal")}
+	return ClientListNormal{cf: c.cf, cs: append(c.cs, "normal")}
 }
 
 func (c ClientList) Master() ClientListMaster {
-	return ClientListMaster{cs: append(c.cs, "master")}
+	return ClientListMaster{cf: c.cf, cs: append(c.cs, "master")}
 }
 
 func (c ClientList) Replica() ClientListReplica {
-	return ClientListReplica{cs: append(c.cs, "replica")}
+	return ClientListReplica{cf: c.cf, cs: append(c.cs, "replica")}
 }
 
 func (c ClientList) Pubsub() ClientListPubsub {
-	return ClientListPubsub{cs: append(c.cs, "pubsub")}
+	return ClientListPubsub{cf: c.cf, cs: append(c.cs, "pubsub")}
 }
 
 func (c ClientList) Id() ClientListIdId {
-	return ClientListIdId{cs: append(c.cs, "ID")}
+	return ClientListIdId{cf: c.cf, cs: append(c.cs, "ID")}
 }
 
 func (b *Builder) ClientList() (c ClientList) {
@@ -1384,72 +1518,79 @@ func (b *Builder) ClientList() (c ClientList) {
 
 type ClientListIdClientId struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClientListIdClientId) ClientId(ClientId ...int64) ClientListIdClientId {
 	for _, n := range ClientId {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return ClientListIdClientId{cs: c.cs}
+	return ClientListIdClientId{cf: c.cf, cs: c.cs}
 }
 
-func (c ClientListIdClientId) Build() []string {
-	return c.cs
+func (c ClientListIdClientId) Build() Completed {
+	return Completed(c)
 }
 
 type ClientListIdId struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClientListIdId) ClientId(ClientId ...int64) ClientListIdClientId {
 	for _, n := range ClientId {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return ClientListIdClientId{cs: c.cs}
+	return ClientListIdClientId{cf: c.cf, cs: c.cs}
 }
 
 type ClientListMaster struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClientListMaster) Id() ClientListIdId {
-	return ClientListIdId{cs: append(c.cs, "ID")}
+	return ClientListIdId{cf: c.cf, cs: append(c.cs, "ID")}
 }
 
 type ClientListNormal struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClientListNormal) Id() ClientListIdId {
-	return ClientListIdId{cs: append(c.cs, "ID")}
+	return ClientListIdId{cf: c.cf, cs: append(c.cs, "ID")}
 }
 
 type ClientListPubsub struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClientListPubsub) Id() ClientListIdId {
-	return ClientListIdId{cs: append(c.cs, "ID")}
+	return ClientListIdId{cf: c.cf, cs: append(c.cs, "ID")}
 }
 
 type ClientListReplica struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClientListReplica) Id() ClientListIdId {
-	return ClientListIdId{cs: append(c.cs, "ID")}
+	return ClientListIdId{cf: c.cf, cs: append(c.cs, "ID")}
 }
 
 type ClientNoEvict struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClientNoEvict) On() ClientNoEvictEnabledOn {
-	return ClientNoEvictEnabledOn{cs: append(c.cs, "ON")}
+	return ClientNoEvictEnabledOn{cf: c.cf, cs: append(c.cs, "ON")}
 }
 
 func (c ClientNoEvict) Off() ClientNoEvictEnabledOff {
-	return ClientNoEvictEnabledOff{cs: append(c.cs, "OFF")}
+	return ClientNoEvictEnabledOff{cf: c.cf, cs: append(c.cs, "OFF")}
 }
 
 func (b *Builder) ClientNoEvict() (c ClientNoEvict) {
@@ -1459,26 +1600,29 @@ func (b *Builder) ClientNoEvict() (c ClientNoEvict) {
 
 type ClientNoEvictEnabledOff struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClientNoEvictEnabledOff) Build() []string {
-	return c.cs
+func (c ClientNoEvictEnabledOff) Build() Completed {
+	return Completed(c)
 }
 
 type ClientNoEvictEnabledOn struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClientNoEvictEnabledOn) Build() []string {
-	return c.cs
+func (c ClientNoEvictEnabledOn) Build() Completed {
+	return Completed(c)
 }
 
 type ClientPause struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClientPause) Timeout(Timeout int64) ClientPauseTimeout {
-	return ClientPauseTimeout{cs: append(c.cs, strconv.FormatInt(Timeout, 10))}
+	return ClientPauseTimeout{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Timeout, 10))}
 }
 
 func (b *Builder) ClientPause() (c ClientPause) {
@@ -1488,50 +1632,54 @@ func (b *Builder) ClientPause() (c ClientPause) {
 
 type ClientPauseModeAll struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClientPauseModeAll) Build() []string {
-	return c.cs
+func (c ClientPauseModeAll) Build() Completed {
+	return Completed(c)
 }
 
 type ClientPauseModeWrite struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClientPauseModeWrite) Build() []string {
-	return c.cs
+func (c ClientPauseModeWrite) Build() Completed {
+	return Completed(c)
 }
 
 type ClientPauseTimeout struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClientPauseTimeout) Write() ClientPauseModeWrite {
-	return ClientPauseModeWrite{cs: append(c.cs, "WRITE")}
+	return ClientPauseModeWrite{cf: c.cf, cs: append(c.cs, "WRITE")}
 }
 
 func (c ClientPauseTimeout) All() ClientPauseModeAll {
-	return ClientPauseModeAll{cs: append(c.cs, "ALL")}
+	return ClientPauseModeAll{cf: c.cf, cs: append(c.cs, "ALL")}
 }
 
-func (c ClientPauseTimeout) Build() []string {
-	return c.cs
+func (c ClientPauseTimeout) Build() Completed {
+	return Completed(c)
 }
 
 type ClientReply struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClientReply) On() ClientReplyReplyModeOn {
-	return ClientReplyReplyModeOn{cs: append(c.cs, "ON")}
+	return ClientReplyReplyModeOn{cf: c.cf, cs: append(c.cs, "ON")}
 }
 
 func (c ClientReply) Off() ClientReplyReplyModeOff {
-	return ClientReplyReplyModeOff{cs: append(c.cs, "OFF")}
+	return ClientReplyReplyModeOff{cf: c.cf, cs: append(c.cs, "OFF")}
 }
 
 func (c ClientReply) Skip() ClientReplyReplyModeSkip {
-	return ClientReplyReplyModeSkip{cs: append(c.cs, "SKIP")}
+	return ClientReplyReplyModeSkip{cf: c.cf, cs: append(c.cs, "SKIP")}
 }
 
 func (b *Builder) ClientReply() (c ClientReply) {
@@ -1541,34 +1689,38 @@ func (b *Builder) ClientReply() (c ClientReply) {
 
 type ClientReplyReplyModeOff struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClientReplyReplyModeOff) Build() []string {
-	return c.cs
+func (c ClientReplyReplyModeOff) Build() Completed {
+	return Completed(c)
 }
 
 type ClientReplyReplyModeOn struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClientReplyReplyModeOn) Build() []string {
-	return c.cs
+func (c ClientReplyReplyModeOn) Build() Completed {
+	return Completed(c)
 }
 
 type ClientReplyReplyModeSkip struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClientReplyReplyModeSkip) Build() []string {
-	return c.cs
+func (c ClientReplyReplyModeSkip) Build() Completed {
+	return Completed(c)
 }
 
 type ClientSetname struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClientSetname) ConnectionName(ConnectionName string) ClientSetnameConnectionName {
-	return ClientSetnameConnectionName{cs: append(c.cs, ConnectionName)}
+	return ClientSetnameConnectionName{cf: c.cf, cs: append(c.cs, ConnectionName)}
 }
 
 func (b *Builder) ClientSetname() (c ClientSetname) {
@@ -1578,22 +1730,24 @@ func (b *Builder) ClientSetname() (c ClientSetname) {
 
 type ClientSetnameConnectionName struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClientSetnameConnectionName) Build() []string {
-	return c.cs
+func (c ClientSetnameConnectionName) Build() Completed {
+	return Completed(c)
 }
 
 type ClientTracking struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClientTracking) On() ClientTrackingStatusOn {
-	return ClientTrackingStatusOn{cs: append(c.cs, "ON")}
+	return ClientTrackingStatusOn{cf: c.cf, cs: append(c.cs, "ON")}
 }
 
 func (c ClientTracking) Off() ClientTrackingStatusOff {
-	return ClientTrackingStatusOff{cs: append(c.cs, "OFF")}
+	return ClientTrackingStatusOff{cf: c.cf, cs: append(c.cs, "OFF")}
 }
 
 func (b *Builder) ClientTracking() (c ClientTracking) {
@@ -1603,189 +1757,198 @@ func (b *Builder) ClientTracking() (c ClientTracking) {
 
 type ClientTrackingBcastBcast struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClientTrackingBcastBcast) Optin() ClientTrackingOptinOptin {
-	return ClientTrackingOptinOptin{cs: append(c.cs, "OPTIN")}
+	return ClientTrackingOptinOptin{cf: c.cf, cs: append(c.cs, "OPTIN")}
 }
 
 func (c ClientTrackingBcastBcast) Optout() ClientTrackingOptoutOptout {
-	return ClientTrackingOptoutOptout{cs: append(c.cs, "OPTOUT")}
+	return ClientTrackingOptoutOptout{cf: c.cf, cs: append(c.cs, "OPTOUT")}
 }
 
 func (c ClientTrackingBcastBcast) Noloop() ClientTrackingNoloopNoloop {
-	return ClientTrackingNoloopNoloop{cs: append(c.cs, "NOLOOP")}
+	return ClientTrackingNoloopNoloop{cf: c.cf, cs: append(c.cs, "NOLOOP")}
 }
 
-func (c ClientTrackingBcastBcast) Build() []string {
-	return c.cs
+func (c ClientTrackingBcastBcast) Build() Completed {
+	return Completed(c)
 }
 
 type ClientTrackingNoloopNoloop struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClientTrackingNoloopNoloop) Build() []string {
-	return c.cs
+func (c ClientTrackingNoloopNoloop) Build() Completed {
+	return Completed(c)
 }
 
 type ClientTrackingOptinOptin struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClientTrackingOptinOptin) Optout() ClientTrackingOptoutOptout {
-	return ClientTrackingOptoutOptout{cs: append(c.cs, "OPTOUT")}
+	return ClientTrackingOptoutOptout{cf: c.cf, cs: append(c.cs, "OPTOUT")}
 }
 
 func (c ClientTrackingOptinOptin) Noloop() ClientTrackingNoloopNoloop {
-	return ClientTrackingNoloopNoloop{cs: append(c.cs, "NOLOOP")}
+	return ClientTrackingNoloopNoloop{cf: c.cf, cs: append(c.cs, "NOLOOP")}
 }
 
-func (c ClientTrackingOptinOptin) Build() []string {
-	return c.cs
+func (c ClientTrackingOptinOptin) Build() Completed {
+	return Completed(c)
 }
 
 type ClientTrackingOptoutOptout struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClientTrackingOptoutOptout) Noloop() ClientTrackingNoloopNoloop {
-	return ClientTrackingNoloopNoloop{cs: append(c.cs, "NOLOOP")}
+	return ClientTrackingNoloopNoloop{cf: c.cf, cs: append(c.cs, "NOLOOP")}
 }
 
-func (c ClientTrackingOptoutOptout) Build() []string {
-	return c.cs
+func (c ClientTrackingOptoutOptout) Build() Completed {
+	return Completed(c)
 }
 
 type ClientTrackingPrefix struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClientTrackingPrefix) Bcast() ClientTrackingBcastBcast {
-	return ClientTrackingBcastBcast{cs: append(c.cs, "BCAST")}
+	return ClientTrackingBcastBcast{cf: c.cf, cs: append(c.cs, "BCAST")}
 }
 
 func (c ClientTrackingPrefix) Optin() ClientTrackingOptinOptin {
-	return ClientTrackingOptinOptin{cs: append(c.cs, "OPTIN")}
+	return ClientTrackingOptinOptin{cf: c.cf, cs: append(c.cs, "OPTIN")}
 }
 
 func (c ClientTrackingPrefix) Optout() ClientTrackingOptoutOptout {
-	return ClientTrackingOptoutOptout{cs: append(c.cs, "OPTOUT")}
+	return ClientTrackingOptoutOptout{cf: c.cf, cs: append(c.cs, "OPTOUT")}
 }
 
 func (c ClientTrackingPrefix) Noloop() ClientTrackingNoloopNoloop {
-	return ClientTrackingNoloopNoloop{cs: append(c.cs, "NOLOOP")}
+	return ClientTrackingNoloopNoloop{cf: c.cf, cs: append(c.cs, "NOLOOP")}
 }
 
 func (c ClientTrackingPrefix) Prefix(Prefix ...string) ClientTrackingPrefix {
-	return ClientTrackingPrefix{cs: append(c.cs, Prefix...)}
+	return ClientTrackingPrefix{cf: c.cf, cs: append(c.cs, Prefix...)}
 }
 
-func (c ClientTrackingPrefix) Build() []string {
-	return c.cs
+func (c ClientTrackingPrefix) Build() Completed {
+	return Completed(c)
 }
 
 type ClientTrackingRedirect struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClientTrackingRedirect) Prefix(Prefix ...string) ClientTrackingPrefix {
 	c.cs = append(c.cs, "PREFIX")
-	return ClientTrackingPrefix{cs: append(c.cs, Prefix...)}
+	return ClientTrackingPrefix{cf: c.cf, cs: append(c.cs, Prefix...)}
 }
 
 func (c ClientTrackingRedirect) Bcast() ClientTrackingBcastBcast {
-	return ClientTrackingBcastBcast{cs: append(c.cs, "BCAST")}
+	return ClientTrackingBcastBcast{cf: c.cf, cs: append(c.cs, "BCAST")}
 }
 
 func (c ClientTrackingRedirect) Optin() ClientTrackingOptinOptin {
-	return ClientTrackingOptinOptin{cs: append(c.cs, "OPTIN")}
+	return ClientTrackingOptinOptin{cf: c.cf, cs: append(c.cs, "OPTIN")}
 }
 
 func (c ClientTrackingRedirect) Optout() ClientTrackingOptoutOptout {
-	return ClientTrackingOptoutOptout{cs: append(c.cs, "OPTOUT")}
+	return ClientTrackingOptoutOptout{cf: c.cf, cs: append(c.cs, "OPTOUT")}
 }
 
 func (c ClientTrackingRedirect) Noloop() ClientTrackingNoloopNoloop {
-	return ClientTrackingNoloopNoloop{cs: append(c.cs, "NOLOOP")}
+	return ClientTrackingNoloopNoloop{cf: c.cf, cs: append(c.cs, "NOLOOP")}
 }
 
-func (c ClientTrackingRedirect) Build() []string {
-	return c.cs
+func (c ClientTrackingRedirect) Build() Completed {
+	return Completed(c)
 }
 
 type ClientTrackingStatusOff struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClientTrackingStatusOff) Redirect(ClientId int64) ClientTrackingRedirect {
-	return ClientTrackingRedirect{cs: append(c.cs, "REDIRECT", strconv.FormatInt(ClientId, 10))}
+	return ClientTrackingRedirect{cf: c.cf, cs: append(c.cs, "REDIRECT", strconv.FormatInt(ClientId, 10))}
 }
 
 func (c ClientTrackingStatusOff) Prefix(Prefix ...string) ClientTrackingPrefix {
 	c.cs = append(c.cs, "PREFIX")
-	return ClientTrackingPrefix{cs: append(c.cs, Prefix...)}
+	return ClientTrackingPrefix{cf: c.cf, cs: append(c.cs, Prefix...)}
 }
 
 func (c ClientTrackingStatusOff) Bcast() ClientTrackingBcastBcast {
-	return ClientTrackingBcastBcast{cs: append(c.cs, "BCAST")}
+	return ClientTrackingBcastBcast{cf: c.cf, cs: append(c.cs, "BCAST")}
 }
 
 func (c ClientTrackingStatusOff) Optin() ClientTrackingOptinOptin {
-	return ClientTrackingOptinOptin{cs: append(c.cs, "OPTIN")}
+	return ClientTrackingOptinOptin{cf: c.cf, cs: append(c.cs, "OPTIN")}
 }
 
 func (c ClientTrackingStatusOff) Optout() ClientTrackingOptoutOptout {
-	return ClientTrackingOptoutOptout{cs: append(c.cs, "OPTOUT")}
+	return ClientTrackingOptoutOptout{cf: c.cf, cs: append(c.cs, "OPTOUT")}
 }
 
 func (c ClientTrackingStatusOff) Noloop() ClientTrackingNoloopNoloop {
-	return ClientTrackingNoloopNoloop{cs: append(c.cs, "NOLOOP")}
+	return ClientTrackingNoloopNoloop{cf: c.cf, cs: append(c.cs, "NOLOOP")}
 }
 
-func (c ClientTrackingStatusOff) Build() []string {
-	return c.cs
+func (c ClientTrackingStatusOff) Build() Completed {
+	return Completed(c)
 }
 
 type ClientTrackingStatusOn struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClientTrackingStatusOn) Redirect(ClientId int64) ClientTrackingRedirect {
-	return ClientTrackingRedirect{cs: append(c.cs, "REDIRECT", strconv.FormatInt(ClientId, 10))}
+	return ClientTrackingRedirect{cf: c.cf, cs: append(c.cs, "REDIRECT", strconv.FormatInt(ClientId, 10))}
 }
 
 func (c ClientTrackingStatusOn) Prefix(Prefix ...string) ClientTrackingPrefix {
 	c.cs = append(c.cs, "PREFIX")
-	return ClientTrackingPrefix{cs: append(c.cs, Prefix...)}
+	return ClientTrackingPrefix{cf: c.cf, cs: append(c.cs, Prefix...)}
 }
 
 func (c ClientTrackingStatusOn) Bcast() ClientTrackingBcastBcast {
-	return ClientTrackingBcastBcast{cs: append(c.cs, "BCAST")}
+	return ClientTrackingBcastBcast{cf: c.cf, cs: append(c.cs, "BCAST")}
 }
 
 func (c ClientTrackingStatusOn) Optin() ClientTrackingOptinOptin {
-	return ClientTrackingOptinOptin{cs: append(c.cs, "OPTIN")}
+	return ClientTrackingOptinOptin{cf: c.cf, cs: append(c.cs, "OPTIN")}
 }
 
 func (c ClientTrackingStatusOn) Optout() ClientTrackingOptoutOptout {
-	return ClientTrackingOptoutOptout{cs: append(c.cs, "OPTOUT")}
+	return ClientTrackingOptoutOptout{cf: c.cf, cs: append(c.cs, "OPTOUT")}
 }
 
 func (c ClientTrackingStatusOn) Noloop() ClientTrackingNoloopNoloop {
-	return ClientTrackingNoloopNoloop{cs: append(c.cs, "NOLOOP")}
+	return ClientTrackingNoloopNoloop{cf: c.cf, cs: append(c.cs, "NOLOOP")}
 }
 
-func (c ClientTrackingStatusOn) Build() []string {
-	return c.cs
+func (c ClientTrackingStatusOn) Build() Completed {
+	return Completed(c)
 }
 
 type ClientTrackinginfo struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClientTrackinginfo) Build() []string {
-	return c.cs
+func (c ClientTrackinginfo) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) ClientTrackinginfo() (c ClientTrackinginfo) {
@@ -1795,10 +1958,11 @@ func (b *Builder) ClientTrackinginfo() (c ClientTrackinginfo) {
 
 type ClientUnblock struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClientUnblock) ClientId(ClientId int64) ClientUnblockClientId {
-	return ClientUnblockClientId{cs: append(c.cs, strconv.FormatInt(ClientId, 10))}
+	return ClientUnblockClientId{cf: c.cf, cs: append(c.cs, strconv.FormatInt(ClientId, 10))}
 }
 
 func (b *Builder) ClientUnblock() (c ClientUnblock) {
@@ -1808,42 +1972,46 @@ func (b *Builder) ClientUnblock() (c ClientUnblock) {
 
 type ClientUnblockClientId struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClientUnblockClientId) Timeout() ClientUnblockUnblockTypeTimeout {
-	return ClientUnblockUnblockTypeTimeout{cs: append(c.cs, "TIMEOUT")}
+	return ClientUnblockUnblockTypeTimeout{cf: c.cf, cs: append(c.cs, "TIMEOUT")}
 }
 
 func (c ClientUnblockClientId) Error() ClientUnblockUnblockTypeError {
-	return ClientUnblockUnblockTypeError{cs: append(c.cs, "ERROR")}
+	return ClientUnblockUnblockTypeError{cf: c.cf, cs: append(c.cs, "ERROR")}
 }
 
-func (c ClientUnblockClientId) Build() []string {
-	return c.cs
+func (c ClientUnblockClientId) Build() Completed {
+	return Completed(c)
 }
 
 type ClientUnblockUnblockTypeError struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClientUnblockUnblockTypeError) Build() []string {
-	return c.cs
+func (c ClientUnblockUnblockTypeError) Build() Completed {
+	return Completed(c)
 }
 
 type ClientUnblockUnblockTypeTimeout struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClientUnblockUnblockTypeTimeout) Build() []string {
-	return c.cs
+func (c ClientUnblockUnblockTypeTimeout) Build() Completed {
+	return Completed(c)
 }
 
 type ClientUnpause struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClientUnpause) Build() []string {
-	return c.cs
+func (c ClientUnpause) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) ClientUnpause() (c ClientUnpause) {
@@ -1853,13 +2021,14 @@ func (b *Builder) ClientUnpause() (c ClientUnpause) {
 
 type ClusterAddslots struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClusterAddslots) Slot(Slot ...int64) ClusterAddslotsSlot {
 	for _, n := range Slot {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return ClusterAddslotsSlot{cs: c.cs}
+	return ClusterAddslotsSlot{cf: c.cf, cs: c.cs}
 }
 
 func (b *Builder) ClusterAddslots() (c ClusterAddslots) {
@@ -1869,25 +2038,27 @@ func (b *Builder) ClusterAddslots() (c ClusterAddslots) {
 
 type ClusterAddslotsSlot struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClusterAddslotsSlot) Slot(Slot ...int64) ClusterAddslotsSlot {
 	for _, n := range Slot {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return ClusterAddslotsSlot{cs: c.cs}
+	return ClusterAddslotsSlot{cf: c.cf, cs: c.cs}
 }
 
-func (c ClusterAddslotsSlot) Build() []string {
-	return c.cs
+func (c ClusterAddslotsSlot) Build() Completed {
+	return Completed(c)
 }
 
 type ClusterBumpepoch struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClusterBumpepoch) Build() []string {
-	return c.cs
+func (c ClusterBumpepoch) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) ClusterBumpepoch() (c ClusterBumpepoch) {
@@ -1897,10 +2068,11 @@ func (b *Builder) ClusterBumpepoch() (c ClusterBumpepoch) {
 
 type ClusterCountFailureReports struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClusterCountFailureReports) NodeId(NodeId string) ClusterCountFailureReportsNodeId {
-	return ClusterCountFailureReportsNodeId{cs: append(c.cs, NodeId)}
+	return ClusterCountFailureReportsNodeId{cf: c.cf, cs: append(c.cs, NodeId)}
 }
 
 func (b *Builder) ClusterCountFailureReports() (c ClusterCountFailureReports) {
@@ -1910,18 +2082,20 @@ func (b *Builder) ClusterCountFailureReports() (c ClusterCountFailureReports) {
 
 type ClusterCountFailureReportsNodeId struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClusterCountFailureReportsNodeId) Build() []string {
-	return c.cs
+func (c ClusterCountFailureReportsNodeId) Build() Completed {
+	return Completed(c)
 }
 
 type ClusterCountkeysinslot struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClusterCountkeysinslot) Slot(Slot int64) ClusterCountkeysinslotSlot {
-	return ClusterCountkeysinslotSlot{cs: append(c.cs, strconv.FormatInt(Slot, 10))}
+	return ClusterCountkeysinslotSlot{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Slot, 10))}
 }
 
 func (b *Builder) ClusterCountkeysinslot() (c ClusterCountkeysinslot) {
@@ -1931,21 +2105,23 @@ func (b *Builder) ClusterCountkeysinslot() (c ClusterCountkeysinslot) {
 
 type ClusterCountkeysinslotSlot struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClusterCountkeysinslotSlot) Build() []string {
-	return c.cs
+func (c ClusterCountkeysinslotSlot) Build() Completed {
+	return Completed(c)
 }
 
 type ClusterDelslots struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClusterDelslots) Slot(Slot ...int64) ClusterDelslotsSlot {
 	for _, n := range Slot {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return ClusterDelslotsSlot{cs: c.cs}
+	return ClusterDelslotsSlot{cf: c.cf, cs: c.cs}
 }
 
 func (b *Builder) ClusterDelslots() (c ClusterDelslots) {
@@ -1955,33 +2131,35 @@ func (b *Builder) ClusterDelslots() (c ClusterDelslots) {
 
 type ClusterDelslotsSlot struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClusterDelslotsSlot) Slot(Slot ...int64) ClusterDelslotsSlot {
 	for _, n := range Slot {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return ClusterDelslotsSlot{cs: c.cs}
+	return ClusterDelslotsSlot{cf: c.cf, cs: c.cs}
 }
 
-func (c ClusterDelslotsSlot) Build() []string {
-	return c.cs
+func (c ClusterDelslotsSlot) Build() Completed {
+	return Completed(c)
 }
 
 type ClusterFailover struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClusterFailover) Force() ClusterFailoverOptionsForce {
-	return ClusterFailoverOptionsForce{cs: append(c.cs, "FORCE")}
+	return ClusterFailoverOptionsForce{cf: c.cf, cs: append(c.cs, "FORCE")}
 }
 
 func (c ClusterFailover) Takeover() ClusterFailoverOptionsTakeover {
-	return ClusterFailoverOptionsTakeover{cs: append(c.cs, "TAKEOVER")}
+	return ClusterFailoverOptionsTakeover{cf: c.cf, cs: append(c.cs, "TAKEOVER")}
 }
 
-func (c ClusterFailover) Build() []string {
-	return c.cs
+func (c ClusterFailover) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) ClusterFailover() (c ClusterFailover) {
@@ -1991,26 +2169,29 @@ func (b *Builder) ClusterFailover() (c ClusterFailover) {
 
 type ClusterFailoverOptionsForce struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClusterFailoverOptionsForce) Build() []string {
-	return c.cs
+func (c ClusterFailoverOptionsForce) Build() Completed {
+	return Completed(c)
 }
 
 type ClusterFailoverOptionsTakeover struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClusterFailoverOptionsTakeover) Build() []string {
-	return c.cs
+func (c ClusterFailoverOptionsTakeover) Build() Completed {
+	return Completed(c)
 }
 
 type ClusterFlushslots struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClusterFlushslots) Build() []string {
-	return c.cs
+func (c ClusterFlushslots) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) ClusterFlushslots() (c ClusterFlushslots) {
@@ -2020,10 +2201,11 @@ func (b *Builder) ClusterFlushslots() (c ClusterFlushslots) {
 
 type ClusterForget struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClusterForget) NodeId(NodeId string) ClusterForgetNodeId {
-	return ClusterForgetNodeId{cs: append(c.cs, NodeId)}
+	return ClusterForgetNodeId{cf: c.cf, cs: append(c.cs, NodeId)}
 }
 
 func (b *Builder) ClusterForget() (c ClusterForget) {
@@ -2033,18 +2215,20 @@ func (b *Builder) ClusterForget() (c ClusterForget) {
 
 type ClusterForgetNodeId struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClusterForgetNodeId) Build() []string {
-	return c.cs
+func (c ClusterForgetNodeId) Build() Completed {
+	return Completed(c)
 }
 
 type ClusterGetkeysinslot struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClusterGetkeysinslot) Slot(Slot int64) ClusterGetkeysinslotSlot {
-	return ClusterGetkeysinslotSlot{cs: append(c.cs, strconv.FormatInt(Slot, 10))}
+	return ClusterGetkeysinslotSlot{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Slot, 10))}
 }
 
 func (b *Builder) ClusterGetkeysinslot() (c ClusterGetkeysinslot) {
@@ -2054,26 +2238,29 @@ func (b *Builder) ClusterGetkeysinslot() (c ClusterGetkeysinslot) {
 
 type ClusterGetkeysinslotCount struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClusterGetkeysinslotCount) Build() []string {
-	return c.cs
+func (c ClusterGetkeysinslotCount) Build() Completed {
+	return Completed(c)
 }
 
 type ClusterGetkeysinslotSlot struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClusterGetkeysinslotSlot) Count(Count int64) ClusterGetkeysinslotCount {
-	return ClusterGetkeysinslotCount{cs: append(c.cs, strconv.FormatInt(Count, 10))}
+	return ClusterGetkeysinslotCount{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Count, 10))}
 }
 
 type ClusterInfo struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClusterInfo) Build() []string {
-	return c.cs
+func (c ClusterInfo) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) ClusterInfo() (c ClusterInfo) {
@@ -2083,10 +2270,11 @@ func (b *Builder) ClusterInfo() (c ClusterInfo) {
 
 type ClusterKeyslot struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClusterKeyslot) Key(Key string) ClusterKeyslotKey {
-	return ClusterKeyslotKey{cs: append(c.cs, Key)}
+	return ClusterKeyslotKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) ClusterKeyslot() (c ClusterKeyslot) {
@@ -2096,18 +2284,20 @@ func (b *Builder) ClusterKeyslot() (c ClusterKeyslot) {
 
 type ClusterKeyslotKey struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClusterKeyslotKey) Build() []string {
-	return c.cs
+func (c ClusterKeyslotKey) Build() Completed {
+	return Completed(c)
 }
 
 type ClusterMeet struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClusterMeet) Ip(Ip string) ClusterMeetIp {
-	return ClusterMeetIp{cs: append(c.cs, Ip)}
+	return ClusterMeetIp{cf: c.cf, cs: append(c.cs, Ip)}
 }
 
 func (b *Builder) ClusterMeet() (c ClusterMeet) {
@@ -2117,26 +2307,29 @@ func (b *Builder) ClusterMeet() (c ClusterMeet) {
 
 type ClusterMeetIp struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClusterMeetIp) Port(Port int64) ClusterMeetPort {
-	return ClusterMeetPort{cs: append(c.cs, strconv.FormatInt(Port, 10))}
+	return ClusterMeetPort{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Port, 10))}
 }
 
 type ClusterMeetPort struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClusterMeetPort) Build() []string {
-	return c.cs
+func (c ClusterMeetPort) Build() Completed {
+	return Completed(c)
 }
 
 type ClusterMyid struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClusterMyid) Build() []string {
-	return c.cs
+func (c ClusterMyid) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) ClusterMyid() (c ClusterMyid) {
@@ -2146,10 +2339,11 @@ func (b *Builder) ClusterMyid() (c ClusterMyid) {
 
 type ClusterNodes struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClusterNodes) Build() []string {
-	return c.cs
+func (c ClusterNodes) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) ClusterNodes() (c ClusterNodes) {
@@ -2159,10 +2353,11 @@ func (b *Builder) ClusterNodes() (c ClusterNodes) {
 
 type ClusterReplicas struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClusterReplicas) NodeId(NodeId string) ClusterReplicasNodeId {
-	return ClusterReplicasNodeId{cs: append(c.cs, NodeId)}
+	return ClusterReplicasNodeId{cf: c.cf, cs: append(c.cs, NodeId)}
 }
 
 func (b *Builder) ClusterReplicas() (c ClusterReplicas) {
@@ -2172,18 +2367,20 @@ func (b *Builder) ClusterReplicas() (c ClusterReplicas) {
 
 type ClusterReplicasNodeId struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClusterReplicasNodeId) Build() []string {
-	return c.cs
+func (c ClusterReplicasNodeId) Build() Completed {
+	return Completed(c)
 }
 
 type ClusterReplicate struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClusterReplicate) NodeId(NodeId string) ClusterReplicateNodeId {
-	return ClusterReplicateNodeId{cs: append(c.cs, NodeId)}
+	return ClusterReplicateNodeId{cf: c.cf, cs: append(c.cs, NodeId)}
 }
 
 func (b *Builder) ClusterReplicate() (c ClusterReplicate) {
@@ -2193,26 +2390,28 @@ func (b *Builder) ClusterReplicate() (c ClusterReplicate) {
 
 type ClusterReplicateNodeId struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClusterReplicateNodeId) Build() []string {
-	return c.cs
+func (c ClusterReplicateNodeId) Build() Completed {
+	return Completed(c)
 }
 
 type ClusterReset struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClusterReset) Hard() ClusterResetResetTypeHard {
-	return ClusterResetResetTypeHard{cs: append(c.cs, "HARD")}
+	return ClusterResetResetTypeHard{cf: c.cf, cs: append(c.cs, "HARD")}
 }
 
 func (c ClusterReset) Soft() ClusterResetResetTypeSoft {
-	return ClusterResetResetTypeSoft{cs: append(c.cs, "SOFT")}
+	return ClusterResetResetTypeSoft{cf: c.cf, cs: append(c.cs, "SOFT")}
 }
 
-func (c ClusterReset) Build() []string {
-	return c.cs
+func (c ClusterReset) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) ClusterReset() (c ClusterReset) {
@@ -2222,26 +2421,29 @@ func (b *Builder) ClusterReset() (c ClusterReset) {
 
 type ClusterResetResetTypeHard struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClusterResetResetTypeHard) Build() []string {
-	return c.cs
+func (c ClusterResetResetTypeHard) Build() Completed {
+	return Completed(c)
 }
 
 type ClusterResetResetTypeSoft struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClusterResetResetTypeSoft) Build() []string {
-	return c.cs
+func (c ClusterResetResetTypeSoft) Build() Completed {
+	return Completed(c)
 }
 
 type ClusterSaveconfig struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClusterSaveconfig) Build() []string {
-	return c.cs
+func (c ClusterSaveconfig) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) ClusterSaveconfig() (c ClusterSaveconfig) {
@@ -2251,10 +2453,11 @@ func (b *Builder) ClusterSaveconfig() (c ClusterSaveconfig) {
 
 type ClusterSetConfigEpoch struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClusterSetConfigEpoch) ConfigEpoch(ConfigEpoch int64) ClusterSetConfigEpochConfigEpoch {
-	return ClusterSetConfigEpochConfigEpoch{cs: append(c.cs, strconv.FormatInt(ConfigEpoch, 10))}
+	return ClusterSetConfigEpochConfigEpoch{cf: c.cf, cs: append(c.cs, strconv.FormatInt(ConfigEpoch, 10))}
 }
 
 func (b *Builder) ClusterSetConfigEpoch() (c ClusterSetConfigEpoch) {
@@ -2264,18 +2467,20 @@ func (b *Builder) ClusterSetConfigEpoch() (c ClusterSetConfigEpoch) {
 
 type ClusterSetConfigEpochConfigEpoch struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClusterSetConfigEpochConfigEpoch) Build() []string {
-	return c.cs
+func (c ClusterSetConfigEpochConfigEpoch) Build() Completed {
+	return Completed(c)
 }
 
 type ClusterSetslot struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClusterSetslot) Slot(Slot int64) ClusterSetslotSlot {
-	return ClusterSetslotSlot{cs: append(c.cs, strconv.FormatInt(Slot, 10))}
+	return ClusterSetslotSlot{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Slot, 10))}
 }
 
 func (b *Builder) ClusterSetslot() (c ClusterSetslot) {
@@ -2285,86 +2490,93 @@ func (b *Builder) ClusterSetslot() (c ClusterSetslot) {
 
 type ClusterSetslotNodeId struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClusterSetslotNodeId) Build() []string {
-	return c.cs
+func (c ClusterSetslotNodeId) Build() Completed {
+	return Completed(c)
 }
 
 type ClusterSetslotSlot struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClusterSetslotSlot) Importing() ClusterSetslotSubcommandImporting {
-	return ClusterSetslotSubcommandImporting{cs: append(c.cs, "IMPORTING")}
+	return ClusterSetslotSubcommandImporting{cf: c.cf, cs: append(c.cs, "IMPORTING")}
 }
 
 func (c ClusterSetslotSlot) Migrating() ClusterSetslotSubcommandMigrating {
-	return ClusterSetslotSubcommandMigrating{cs: append(c.cs, "MIGRATING")}
+	return ClusterSetslotSubcommandMigrating{cf: c.cf, cs: append(c.cs, "MIGRATING")}
 }
 
 func (c ClusterSetslotSlot) Stable() ClusterSetslotSubcommandStable {
-	return ClusterSetslotSubcommandStable{cs: append(c.cs, "STABLE")}
+	return ClusterSetslotSubcommandStable{cf: c.cf, cs: append(c.cs, "STABLE")}
 }
 
 func (c ClusterSetslotSlot) Node() ClusterSetslotSubcommandNode {
-	return ClusterSetslotSubcommandNode{cs: append(c.cs, "NODE")}
+	return ClusterSetslotSubcommandNode{cf: c.cf, cs: append(c.cs, "NODE")}
 }
 
 type ClusterSetslotSubcommandImporting struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClusterSetslotSubcommandImporting) NodeId(NodeId string) ClusterSetslotNodeId {
-	return ClusterSetslotNodeId{cs: append(c.cs, NodeId)}
+	return ClusterSetslotNodeId{cf: c.cf, cs: append(c.cs, NodeId)}
 }
 
-func (c ClusterSetslotSubcommandImporting) Build() []string {
-	return c.cs
+func (c ClusterSetslotSubcommandImporting) Build() Completed {
+	return Completed(c)
 }
 
 type ClusterSetslotSubcommandMigrating struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClusterSetslotSubcommandMigrating) NodeId(NodeId string) ClusterSetslotNodeId {
-	return ClusterSetslotNodeId{cs: append(c.cs, NodeId)}
+	return ClusterSetslotNodeId{cf: c.cf, cs: append(c.cs, NodeId)}
 }
 
-func (c ClusterSetslotSubcommandMigrating) Build() []string {
-	return c.cs
+func (c ClusterSetslotSubcommandMigrating) Build() Completed {
+	return Completed(c)
 }
 
 type ClusterSetslotSubcommandNode struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClusterSetslotSubcommandNode) NodeId(NodeId string) ClusterSetslotNodeId {
-	return ClusterSetslotNodeId{cs: append(c.cs, NodeId)}
+	return ClusterSetslotNodeId{cf: c.cf, cs: append(c.cs, NodeId)}
 }
 
-func (c ClusterSetslotSubcommandNode) Build() []string {
-	return c.cs
+func (c ClusterSetslotSubcommandNode) Build() Completed {
+	return Completed(c)
 }
 
 type ClusterSetslotSubcommandStable struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClusterSetslotSubcommandStable) NodeId(NodeId string) ClusterSetslotNodeId {
-	return ClusterSetslotNodeId{cs: append(c.cs, NodeId)}
+	return ClusterSetslotNodeId{cf: c.cf, cs: append(c.cs, NodeId)}
 }
 
-func (c ClusterSetslotSubcommandStable) Build() []string {
-	return c.cs
+func (c ClusterSetslotSubcommandStable) Build() Completed {
+	return Completed(c)
 }
 
 type ClusterSlaves struct {
 	cs []string
+	cf uint32
 }
 
 func (c ClusterSlaves) NodeId(NodeId string) ClusterSlavesNodeId {
-	return ClusterSlavesNodeId{cs: append(c.cs, NodeId)}
+	return ClusterSlavesNodeId{cf: c.cf, cs: append(c.cs, NodeId)}
 }
 
 func (b *Builder) ClusterSlaves() (c ClusterSlaves) {
@@ -2374,18 +2586,20 @@ func (b *Builder) ClusterSlaves() (c ClusterSlaves) {
 
 type ClusterSlavesNodeId struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClusterSlavesNodeId) Build() []string {
-	return c.cs
+func (c ClusterSlavesNodeId) Build() Completed {
+	return Completed(c)
 }
 
 type ClusterSlots struct {
 	cs []string
+	cf uint32
 }
 
-func (c ClusterSlots) Build() []string {
-	return c.cs
+func (c ClusterSlots) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) ClusterSlots() (c ClusterSlots) {
@@ -2395,10 +2609,11 @@ func (b *Builder) ClusterSlots() (c ClusterSlots) {
 
 type Command struct {
 	cs []string
+	cf uint32
 }
 
-func (c Command) Build() []string {
-	return c.cs
+func (c Command) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) Command() (c Command) {
@@ -2408,10 +2623,11 @@ func (b *Builder) Command() (c Command) {
 
 type CommandCount struct {
 	cs []string
+	cf uint32
 }
 
-func (c CommandCount) Build() []string {
-	return c.cs
+func (c CommandCount) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) CommandCount() (c CommandCount) {
@@ -2421,10 +2637,11 @@ func (b *Builder) CommandCount() (c CommandCount) {
 
 type CommandGetkeys struct {
 	cs []string
+	cf uint32
 }
 
-func (c CommandGetkeys) Build() []string {
-	return c.cs
+func (c CommandGetkeys) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) CommandGetkeys() (c CommandGetkeys) {
@@ -2434,10 +2651,11 @@ func (b *Builder) CommandGetkeys() (c CommandGetkeys) {
 
 type CommandInfo struct {
 	cs []string
+	cf uint32
 }
 
 func (c CommandInfo) CommandName(CommandName ...string) CommandInfoCommandName {
-	return CommandInfoCommandName{cs: append(c.cs, CommandName...)}
+	return CommandInfoCommandName{cf: c.cf, cs: append(c.cs, CommandName...)}
 }
 
 func (b *Builder) CommandInfo() (c CommandInfo) {
@@ -2447,22 +2665,24 @@ func (b *Builder) CommandInfo() (c CommandInfo) {
 
 type CommandInfoCommandName struct {
 	cs []string
+	cf uint32
 }
 
 func (c CommandInfoCommandName) CommandName(CommandName ...string) CommandInfoCommandName {
-	return CommandInfoCommandName{cs: append(c.cs, CommandName...)}
+	return CommandInfoCommandName{cf: c.cf, cs: append(c.cs, CommandName...)}
 }
 
-func (c CommandInfoCommandName) Build() []string {
-	return c.cs
+func (c CommandInfoCommandName) Build() Completed {
+	return Completed(c)
 }
 
 type ConfigGet struct {
 	cs []string
+	cf uint32
 }
 
 func (c ConfigGet) Parameter(Parameter string) ConfigGetParameter {
-	return ConfigGetParameter{cs: append(c.cs, Parameter)}
+	return ConfigGetParameter{cf: c.cf, cs: append(c.cs, Parameter)}
 }
 
 func (b *Builder) ConfigGet() (c ConfigGet) {
@@ -2472,18 +2692,20 @@ func (b *Builder) ConfigGet() (c ConfigGet) {
 
 type ConfigGetParameter struct {
 	cs []string
+	cf uint32
 }
 
-func (c ConfigGetParameter) Build() []string {
-	return c.cs
+func (c ConfigGetParameter) Build() Completed {
+	return Completed(c)
 }
 
 type ConfigResetstat struct {
 	cs []string
+	cf uint32
 }
 
-func (c ConfigResetstat) Build() []string {
-	return c.cs
+func (c ConfigResetstat) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) ConfigResetstat() (c ConfigResetstat) {
@@ -2493,10 +2715,11 @@ func (b *Builder) ConfigResetstat() (c ConfigResetstat) {
 
 type ConfigRewrite struct {
 	cs []string
+	cf uint32
 }
 
-func (c ConfigRewrite) Build() []string {
-	return c.cs
+func (c ConfigRewrite) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) ConfigRewrite() (c ConfigRewrite) {
@@ -2506,10 +2729,11 @@ func (b *Builder) ConfigRewrite() (c ConfigRewrite) {
 
 type ConfigSet struct {
 	cs []string
+	cf uint32
 }
 
 func (c ConfigSet) Parameter(Parameter string) ConfigSetParameter {
-	return ConfigSetParameter{cs: append(c.cs, Parameter)}
+	return ConfigSetParameter{cf: c.cf, cs: append(c.cs, Parameter)}
 }
 
 func (b *Builder) ConfigSet() (c ConfigSet) {
@@ -2519,26 +2743,29 @@ func (b *Builder) ConfigSet() (c ConfigSet) {
 
 type ConfigSetParameter struct {
 	cs []string
+	cf uint32
 }
 
 func (c ConfigSetParameter) Value(Value string) ConfigSetValue {
-	return ConfigSetValue{cs: append(c.cs, Value)}
+	return ConfigSetValue{cf: c.cf, cs: append(c.cs, Value)}
 }
 
 type ConfigSetValue struct {
 	cs []string
+	cf uint32
 }
 
-func (c ConfigSetValue) Build() []string {
-	return c.cs
+func (c ConfigSetValue) Build() Completed {
+	return Completed(c)
 }
 
 type Copy struct {
 	cs []string
+	cf uint32
 }
 
 func (c Copy) Source(Source string) CopySource {
-	return CopySource{cs: append(c.cs, Source)}
+	return CopySource{cf: c.cf, cs: append(c.cs, Source)}
 }
 
 func (b *Builder) Copy() (c Copy) {
@@ -2548,54 +2775,59 @@ func (b *Builder) Copy() (c Copy) {
 
 type CopyDb struct {
 	cs []string
+	cf uint32
 }
 
 func (c CopyDb) Replace() CopyReplaceReplace {
-	return CopyReplaceReplace{cs: append(c.cs, "REPLACE")}
+	return CopyReplaceReplace{cf: c.cf, cs: append(c.cs, "REPLACE")}
 }
 
-func (c CopyDb) Build() []string {
-	return c.cs
+func (c CopyDb) Build() Completed {
+	return Completed(c)
 }
 
 type CopyDestination struct {
 	cs []string
+	cf uint32
 }
 
 func (c CopyDestination) Db(DestinationDb int64) CopyDb {
-	return CopyDb{cs: append(c.cs, "DB", strconv.FormatInt(DestinationDb, 10))}
+	return CopyDb{cf: c.cf, cs: append(c.cs, "DB", strconv.FormatInt(DestinationDb, 10))}
 }
 
 func (c CopyDestination) Replace() CopyReplaceReplace {
-	return CopyReplaceReplace{cs: append(c.cs, "REPLACE")}
+	return CopyReplaceReplace{cf: c.cf, cs: append(c.cs, "REPLACE")}
 }
 
-func (c CopyDestination) Build() []string {
-	return c.cs
+func (c CopyDestination) Build() Completed {
+	return Completed(c)
 }
 
 type CopyReplaceReplace struct {
 	cs []string
+	cf uint32
 }
 
-func (c CopyReplaceReplace) Build() []string {
-	return c.cs
+func (c CopyReplaceReplace) Build() Completed {
+	return Completed(c)
 }
 
 type CopySource struct {
 	cs []string
+	cf uint32
 }
 
 func (c CopySource) Destination(Destination string) CopyDestination {
-	return CopyDestination{cs: append(c.cs, Destination)}
+	return CopyDestination{cf: c.cf, cs: append(c.cs, Destination)}
 }
 
 type Dbsize struct {
 	cs []string
+	cf uint32
 }
 
-func (c Dbsize) Build() []string {
-	return c.cs
+func (c Dbsize) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) Dbsize() (c Dbsize) {
@@ -2605,10 +2837,11 @@ func (b *Builder) Dbsize() (c Dbsize) {
 
 type DebugObject struct {
 	cs []string
+	cf uint32
 }
 
 func (c DebugObject) Key(Key string) DebugObjectKey {
-	return DebugObjectKey{cs: append(c.cs, Key)}
+	return DebugObjectKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) DebugObject() (c DebugObject) {
@@ -2618,18 +2851,20 @@ func (b *Builder) DebugObject() (c DebugObject) {
 
 type DebugObjectKey struct {
 	cs []string
+	cf uint32
 }
 
-func (c DebugObjectKey) Build() []string {
-	return c.cs
+func (c DebugObjectKey) Build() Completed {
+	return Completed(c)
 }
 
 type DebugSegfault struct {
 	cs []string
+	cf uint32
 }
 
-func (c DebugSegfault) Build() []string {
-	return c.cs
+func (c DebugSegfault) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) DebugSegfault() (c DebugSegfault) {
@@ -2639,10 +2874,11 @@ func (b *Builder) DebugSegfault() (c DebugSegfault) {
 
 type Decr struct {
 	cs []string
+	cf uint32
 }
 
 func (c Decr) Key(Key string) DecrKey {
-	return DecrKey{cs: append(c.cs, Key)}
+	return DecrKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Decr() (c Decr) {
@@ -2652,18 +2888,20 @@ func (b *Builder) Decr() (c Decr) {
 
 type DecrKey struct {
 	cs []string
+	cf uint32
 }
 
-func (c DecrKey) Build() []string {
-	return c.cs
+func (c DecrKey) Build() Completed {
+	return Completed(c)
 }
 
 type Decrby struct {
 	cs []string
+	cf uint32
 }
 
 func (c Decrby) Key(Key string) DecrbyKey {
-	return DecrbyKey{cs: append(c.cs, Key)}
+	return DecrbyKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Decrby() (c Decrby) {
@@ -2673,26 +2911,29 @@ func (b *Builder) Decrby() (c Decrby) {
 
 type DecrbyDecrement struct {
 	cs []string
+	cf uint32
 }
 
-func (c DecrbyDecrement) Build() []string {
-	return c.cs
+func (c DecrbyDecrement) Build() Completed {
+	return Completed(c)
 }
 
 type DecrbyKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c DecrbyKey) Decrement(Decrement int64) DecrbyDecrement {
-	return DecrbyDecrement{cs: append(c.cs, strconv.FormatInt(Decrement, 10))}
+	return DecrbyDecrement{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Decrement, 10))}
 }
 
 type Del struct {
 	cs []string
+	cf uint32
 }
 
 func (c Del) Key(Key ...string) DelKey {
-	return DelKey{cs: append(c.cs, Key...)}
+	return DelKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 func (b *Builder) Del() (c Del) {
@@ -2702,22 +2943,24 @@ func (b *Builder) Del() (c Del) {
 
 type DelKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c DelKey) Key(Key ...string) DelKey {
-	return DelKey{cs: append(c.cs, Key...)}
+	return DelKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
-func (c DelKey) Build() []string {
-	return c.cs
+func (c DelKey) Build() Completed {
+	return Completed(c)
 }
 
 type Discard struct {
 	cs []string
+	cf uint32
 }
 
-func (c Discard) Build() []string {
-	return c.cs
+func (c Discard) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) Discard() (c Discard) {
@@ -2727,10 +2970,11 @@ func (b *Builder) Discard() (c Discard) {
 
 type Dump struct {
 	cs []string
+	cf uint32
 }
 
 func (c Dump) Key(Key string) DumpKey {
-	return DumpKey{cs: append(c.cs, Key)}
+	return DumpKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Dump() (c Dump) {
@@ -2740,18 +2984,20 @@ func (b *Builder) Dump() (c Dump) {
 
 type DumpKey struct {
 	cs []string
+	cf uint32
 }
 
-func (c DumpKey) Build() []string {
-	return c.cs
+func (c DumpKey) Build() Completed {
+	return Completed(c)
 }
 
 type Echo struct {
 	cs []string
+	cf uint32
 }
 
 func (c Echo) Message(Message string) EchoMessage {
-	return EchoMessage{cs: append(c.cs, Message)}
+	return EchoMessage{cf: c.cf, cs: append(c.cs, Message)}
 }
 
 func (b *Builder) Echo() (c Echo) {
@@ -2761,18 +3007,20 @@ func (b *Builder) Echo() (c Echo) {
 
 type EchoMessage struct {
 	cs []string
+	cf uint32
 }
 
-func (c EchoMessage) Build() []string {
-	return c.cs
+func (c EchoMessage) Build() Completed {
+	return Completed(c)
 }
 
 type Eval struct {
 	cs []string
+	cf uint32
 }
 
 func (c Eval) Script(Script string) EvalScript {
-	return EvalScript{cs: append(c.cs, Script)}
+	return EvalScript{cf: c.cf, cs: append(c.cs, Script)}
 }
 
 func (b *Builder) Eval() (c Eval) {
@@ -2782,54 +3030,58 @@ func (b *Builder) Eval() (c Eval) {
 
 type EvalArg struct {
 	cs []string
+	cf uint32
 }
 
 func (c EvalArg) Arg(Arg ...string) EvalArg {
-	return EvalArg{cs: append(c.cs, Arg...)}
+	return EvalArg{cf: c.cf, cs: append(c.cs, Arg...)}
 }
 
-func (c EvalArg) Build() []string {
-	return c.cs
+func (c EvalArg) Build() Completed {
+	return Completed(c)
 }
 
 type EvalKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c EvalKey) Arg(Arg ...string) EvalArg {
-	return EvalArg{cs: append(c.cs, Arg...)}
+	return EvalArg{cf: c.cf, cs: append(c.cs, Arg...)}
 }
 
 func (c EvalKey) Key(Key ...string) EvalKey {
-	return EvalKey{cs: append(c.cs, Key...)}
+	return EvalKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
-func (c EvalKey) Build() []string {
-	return c.cs
+func (c EvalKey) Build() Completed {
+	return Completed(c)
 }
 
 type EvalNumkeys struct {
 	cs []string
+	cf uint32
 }
 
 func (c EvalNumkeys) Key(Key ...string) EvalKey {
-	return EvalKey{cs: append(c.cs, Key...)}
+	return EvalKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 func (c EvalNumkeys) Arg(Arg ...string) EvalArg {
-	return EvalArg{cs: append(c.cs, Arg...)}
+	return EvalArg{cf: c.cf, cs: append(c.cs, Arg...)}
 }
 
-func (c EvalNumkeys) Build() []string {
-	return c.cs
+func (c EvalNumkeys) Build() Completed {
+	return Completed(c)
 }
 
 type EvalRo struct {
 	cs []string
+	cf uint32
 }
 
 func (c EvalRo) Script(Script string) EvalRoScript {
-	return EvalRoScript{cs: append(c.cs, Script)}
+	return EvalRoScript{cf: c.cf, cs: append(c.cs, Script)}
 }
 
 func (b *Builder) EvalRo() (c EvalRo) {
@@ -2839,58 +3091,64 @@ func (b *Builder) EvalRo() (c EvalRo) {
 
 type EvalRoArg struct {
 	cs []string
+	cf uint32
 }
 
 func (c EvalRoArg) Arg(Arg ...string) EvalRoArg {
-	return EvalRoArg{cs: append(c.cs, Arg...)}
+	return EvalRoArg{cf: c.cf, cs: append(c.cs, Arg...)}
 }
 
-func (c EvalRoArg) Build() []string {
-	return c.cs
+func (c EvalRoArg) Build() Completed {
+	return Completed(c)
 }
 
 type EvalRoKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c EvalRoKey) Arg(Arg ...string) EvalRoArg {
-	return EvalRoArg{cs: append(c.cs, Arg...)}
+	return EvalRoArg{cf: c.cf, cs: append(c.cs, Arg...)}
 }
 
 func (c EvalRoKey) Key(Key ...string) EvalRoKey {
-	return EvalRoKey{cs: append(c.cs, Key...)}
+	return EvalRoKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 type EvalRoNumkeys struct {
 	cs []string
+	cf uint32
 }
 
 func (c EvalRoNumkeys) Key(Key ...string) EvalRoKey {
-	return EvalRoKey{cs: append(c.cs, Key...)}
+	return EvalRoKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 type EvalRoScript struct {
 	cs []string
+	cf uint32
 }
 
 func (c EvalRoScript) Numkeys(Numkeys int64) EvalRoNumkeys {
-	return EvalRoNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
+	return EvalRoNumkeys{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
 }
 
 type EvalScript struct {
 	cs []string
+	cf uint32
 }
 
 func (c EvalScript) Numkeys(Numkeys int64) EvalNumkeys {
-	return EvalNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
+	return EvalNumkeys{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
 }
 
 type Evalsha struct {
 	cs []string
+	cf uint32
 }
 
 func (c Evalsha) Sha1(Sha1 string) EvalshaSha1 {
-	return EvalshaSha1{cs: append(c.cs, Sha1)}
+	return EvalshaSha1{cf: c.cf, cs: append(c.cs, Sha1)}
 }
 
 func (b *Builder) Evalsha() (c Evalsha) {
@@ -2900,54 +3158,58 @@ func (b *Builder) Evalsha() (c Evalsha) {
 
 type EvalshaArg struct {
 	cs []string
+	cf uint32
 }
 
 func (c EvalshaArg) Arg(Arg ...string) EvalshaArg {
-	return EvalshaArg{cs: append(c.cs, Arg...)}
+	return EvalshaArg{cf: c.cf, cs: append(c.cs, Arg...)}
 }
 
-func (c EvalshaArg) Build() []string {
-	return c.cs
+func (c EvalshaArg) Build() Completed {
+	return Completed(c)
 }
 
 type EvalshaKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c EvalshaKey) Arg(Arg ...string) EvalshaArg {
-	return EvalshaArg{cs: append(c.cs, Arg...)}
+	return EvalshaArg{cf: c.cf, cs: append(c.cs, Arg...)}
 }
 
 func (c EvalshaKey) Key(Key ...string) EvalshaKey {
-	return EvalshaKey{cs: append(c.cs, Key...)}
+	return EvalshaKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
-func (c EvalshaKey) Build() []string {
-	return c.cs
+func (c EvalshaKey) Build() Completed {
+	return Completed(c)
 }
 
 type EvalshaNumkeys struct {
 	cs []string
+	cf uint32
 }
 
 func (c EvalshaNumkeys) Key(Key ...string) EvalshaKey {
-	return EvalshaKey{cs: append(c.cs, Key...)}
+	return EvalshaKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 func (c EvalshaNumkeys) Arg(Arg ...string) EvalshaArg {
-	return EvalshaArg{cs: append(c.cs, Arg...)}
+	return EvalshaArg{cf: c.cf, cs: append(c.cs, Arg...)}
 }
 
-func (c EvalshaNumkeys) Build() []string {
-	return c.cs
+func (c EvalshaNumkeys) Build() Completed {
+	return Completed(c)
 }
 
 type EvalshaRo struct {
 	cs []string
+	cf uint32
 }
 
 func (c EvalshaRo) Sha1(Sha1 string) EvalshaRoSha1 {
-	return EvalshaRoSha1{cs: append(c.cs, Sha1)}
+	return EvalshaRoSha1{cf: c.cf, cs: append(c.cs, Sha1)}
 }
 
 func (b *Builder) EvalshaRo() (c EvalshaRo) {
@@ -2957,58 +3219,64 @@ func (b *Builder) EvalshaRo() (c EvalshaRo) {
 
 type EvalshaRoArg struct {
 	cs []string
+	cf uint32
 }
 
 func (c EvalshaRoArg) Arg(Arg ...string) EvalshaRoArg {
-	return EvalshaRoArg{cs: append(c.cs, Arg...)}
+	return EvalshaRoArg{cf: c.cf, cs: append(c.cs, Arg...)}
 }
 
-func (c EvalshaRoArg) Build() []string {
-	return c.cs
+func (c EvalshaRoArg) Build() Completed {
+	return Completed(c)
 }
 
 type EvalshaRoKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c EvalshaRoKey) Arg(Arg ...string) EvalshaRoArg {
-	return EvalshaRoArg{cs: append(c.cs, Arg...)}
+	return EvalshaRoArg{cf: c.cf, cs: append(c.cs, Arg...)}
 }
 
 func (c EvalshaRoKey) Key(Key ...string) EvalshaRoKey {
-	return EvalshaRoKey{cs: append(c.cs, Key...)}
+	return EvalshaRoKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 type EvalshaRoNumkeys struct {
 	cs []string
+	cf uint32
 }
 
 func (c EvalshaRoNumkeys) Key(Key ...string) EvalshaRoKey {
-	return EvalshaRoKey{cs: append(c.cs, Key...)}
+	return EvalshaRoKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 type EvalshaRoSha1 struct {
 	cs []string
+	cf uint32
 }
 
 func (c EvalshaRoSha1) Numkeys(Numkeys int64) EvalshaRoNumkeys {
-	return EvalshaRoNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
+	return EvalshaRoNumkeys{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
 }
 
 type EvalshaSha1 struct {
 	cs []string
+	cf uint32
 }
 
 func (c EvalshaSha1) Numkeys(Numkeys int64) EvalshaNumkeys {
-	return EvalshaNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
+	return EvalshaNumkeys{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
 }
 
 type Exec struct {
 	cs []string
+	cf uint32
 }
 
-func (c Exec) Build() []string {
-	return c.cs
+func (c Exec) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) Exec() (c Exec) {
@@ -3018,10 +3286,11 @@ func (b *Builder) Exec() (c Exec) {
 
 type Exists struct {
 	cs []string
+	cf uint32
 }
 
 func (c Exists) Key(Key ...string) ExistsKey {
-	return ExistsKey{cs: append(c.cs, Key...)}
+	return ExistsKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 func (b *Builder) Exists() (c Exists) {
@@ -3031,22 +3300,24 @@ func (b *Builder) Exists() (c Exists) {
 
 type ExistsKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c ExistsKey) Key(Key ...string) ExistsKey {
-	return ExistsKey{cs: append(c.cs, Key...)}
+	return ExistsKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
-func (c ExistsKey) Build() []string {
-	return c.cs
+func (c ExistsKey) Build() Completed {
+	return Completed(c)
 }
 
 type Expire struct {
 	cs []string
+	cf uint32
 }
 
 func (c Expire) Key(Key string) ExpireKey {
-	return ExpireKey{cs: append(c.cs, Key)}
+	return ExpireKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Expire() (c Expire) {
@@ -3056,74 +3327,81 @@ func (b *Builder) Expire() (c Expire) {
 
 type ExpireConditionGt struct {
 	cs []string
+	cf uint32
 }
 
-func (c ExpireConditionGt) Build() []string {
-	return c.cs
+func (c ExpireConditionGt) Build() Completed {
+	return Completed(c)
 }
 
 type ExpireConditionLt struct {
 	cs []string
+	cf uint32
 }
 
-func (c ExpireConditionLt) Build() []string {
-	return c.cs
+func (c ExpireConditionLt) Build() Completed {
+	return Completed(c)
 }
 
 type ExpireConditionNx struct {
 	cs []string
+	cf uint32
 }
 
-func (c ExpireConditionNx) Build() []string {
-	return c.cs
+func (c ExpireConditionNx) Build() Completed {
+	return Completed(c)
 }
 
 type ExpireConditionXx struct {
 	cs []string
+	cf uint32
 }
 
-func (c ExpireConditionXx) Build() []string {
-	return c.cs
+func (c ExpireConditionXx) Build() Completed {
+	return Completed(c)
 }
 
 type ExpireKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c ExpireKey) Seconds(Seconds int64) ExpireSeconds {
-	return ExpireSeconds{cs: append(c.cs, strconv.FormatInt(Seconds, 10))}
+	return ExpireSeconds{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Seconds, 10))}
 }
 
 type ExpireSeconds struct {
 	cs []string
+	cf uint32
 }
 
 func (c ExpireSeconds) Nx() ExpireConditionNx {
-	return ExpireConditionNx{cs: append(c.cs, "NX")}
+	return ExpireConditionNx{cf: c.cf, cs: append(c.cs, "NX")}
 }
 
 func (c ExpireSeconds) Xx() ExpireConditionXx {
-	return ExpireConditionXx{cs: append(c.cs, "XX")}
+	return ExpireConditionXx{cf: c.cf, cs: append(c.cs, "XX")}
 }
 
 func (c ExpireSeconds) Gt() ExpireConditionGt {
-	return ExpireConditionGt{cs: append(c.cs, "GT")}
+	return ExpireConditionGt{cf: c.cf, cs: append(c.cs, "GT")}
 }
 
 func (c ExpireSeconds) Lt() ExpireConditionLt {
-	return ExpireConditionLt{cs: append(c.cs, "LT")}
+	return ExpireConditionLt{cf: c.cf, cs: append(c.cs, "LT")}
 }
 
-func (c ExpireSeconds) Build() []string {
-	return c.cs
+func (c ExpireSeconds) Build() Completed {
+	return Completed(c)
 }
 
 type Expireat struct {
 	cs []string
+	cf uint32
 }
 
 func (c Expireat) Key(Key string) ExpireatKey {
-	return ExpireatKey{cs: append(c.cs, Key)}
+	return ExpireatKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Expireat() (c Expireat) {
@@ -3133,74 +3411,81 @@ func (b *Builder) Expireat() (c Expireat) {
 
 type ExpireatConditionGt struct {
 	cs []string
+	cf uint32
 }
 
-func (c ExpireatConditionGt) Build() []string {
-	return c.cs
+func (c ExpireatConditionGt) Build() Completed {
+	return Completed(c)
 }
 
 type ExpireatConditionLt struct {
 	cs []string
+	cf uint32
 }
 
-func (c ExpireatConditionLt) Build() []string {
-	return c.cs
+func (c ExpireatConditionLt) Build() Completed {
+	return Completed(c)
 }
 
 type ExpireatConditionNx struct {
 	cs []string
+	cf uint32
 }
 
-func (c ExpireatConditionNx) Build() []string {
-	return c.cs
+func (c ExpireatConditionNx) Build() Completed {
+	return Completed(c)
 }
 
 type ExpireatConditionXx struct {
 	cs []string
+	cf uint32
 }
 
-func (c ExpireatConditionXx) Build() []string {
-	return c.cs
+func (c ExpireatConditionXx) Build() Completed {
+	return Completed(c)
 }
 
 type ExpireatKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c ExpireatKey) Timestamp(Timestamp int64) ExpireatTimestamp {
-	return ExpireatTimestamp{cs: append(c.cs, strconv.FormatInt(Timestamp, 10))}
+	return ExpireatTimestamp{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Timestamp, 10))}
 }
 
 type ExpireatTimestamp struct {
 	cs []string
+	cf uint32
 }
 
 func (c ExpireatTimestamp) Nx() ExpireatConditionNx {
-	return ExpireatConditionNx{cs: append(c.cs, "NX")}
+	return ExpireatConditionNx{cf: c.cf, cs: append(c.cs, "NX")}
 }
 
 func (c ExpireatTimestamp) Xx() ExpireatConditionXx {
-	return ExpireatConditionXx{cs: append(c.cs, "XX")}
+	return ExpireatConditionXx{cf: c.cf, cs: append(c.cs, "XX")}
 }
 
 func (c ExpireatTimestamp) Gt() ExpireatConditionGt {
-	return ExpireatConditionGt{cs: append(c.cs, "GT")}
+	return ExpireatConditionGt{cf: c.cf, cs: append(c.cs, "GT")}
 }
 
 func (c ExpireatTimestamp) Lt() ExpireatConditionLt {
-	return ExpireatConditionLt{cs: append(c.cs, "LT")}
+	return ExpireatConditionLt{cf: c.cf, cs: append(c.cs, "LT")}
 }
 
-func (c ExpireatTimestamp) Build() []string {
-	return c.cs
+func (c ExpireatTimestamp) Build() Completed {
+	return Completed(c)
 }
 
 type Expiretime struct {
 	cs []string
+	cf uint32
 }
 
 func (c Expiretime) Key(Key string) ExpiretimeKey {
-	return ExpiretimeKey{cs: append(c.cs, Key)}
+	return ExpiretimeKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Expiretime() (c Expiretime) {
@@ -3210,26 +3495,28 @@ func (b *Builder) Expiretime() (c Expiretime) {
 
 type ExpiretimeKey struct {
 	cs []string
+	cf uint32
 }
 
-func (c ExpiretimeKey) Build() []string {
-	return c.cs
+func (c ExpiretimeKey) Build() Completed {
+	return Completed(c)
 }
 
 type Failover struct {
 	cs []string
+	cf uint32
 }
 
 func (c Failover) To() FailoverTargetTo {
-	return FailoverTargetTo{cs: append(c.cs, "TO")}
+	return FailoverTargetTo{cf: c.cf, cs: append(c.cs, "TO")}
 }
 
 func (c Failover) Abort() FailoverAbort {
-	return FailoverAbort{cs: append(c.cs, "ABORT")}
+	return FailoverAbort{cf: c.cf, cs: append(c.cs, "ABORT")}
 }
 
 func (c Failover) Timeout(Milliseconds int64) FailoverTimeout {
-	return FailoverTimeout{cs: append(c.cs, "TIMEOUT", strconv.FormatInt(Milliseconds, 10))}
+	return FailoverTimeout{cf: c.cf, cs: append(c.cs, "TIMEOUT", strconv.FormatInt(Milliseconds, 10))}
 }
 
 func (b *Builder) Failover() (c Failover) {
@@ -3239,90 +3526,97 @@ func (b *Builder) Failover() (c Failover) {
 
 type FailoverAbort struct {
 	cs []string
+	cf uint32
 }
 
 func (c FailoverAbort) Timeout(Milliseconds int64) FailoverTimeout {
-	return FailoverTimeout{cs: append(c.cs, "TIMEOUT", strconv.FormatInt(Milliseconds, 10))}
+	return FailoverTimeout{cf: c.cf, cs: append(c.cs, "TIMEOUT", strconv.FormatInt(Milliseconds, 10))}
 }
 
-func (c FailoverAbort) Build() []string {
-	return c.cs
+func (c FailoverAbort) Build() Completed {
+	return Completed(c)
 }
 
 type FailoverTargetForce struct {
 	cs []string
+	cf uint32
 }
 
 func (c FailoverTargetForce) Abort() FailoverAbort {
-	return FailoverAbort{cs: append(c.cs, "ABORT")}
+	return FailoverAbort{cf: c.cf, cs: append(c.cs, "ABORT")}
 }
 
 func (c FailoverTargetForce) Timeout(Milliseconds int64) FailoverTimeout {
-	return FailoverTimeout{cs: append(c.cs, "TIMEOUT", strconv.FormatInt(Milliseconds, 10))}
+	return FailoverTimeout{cf: c.cf, cs: append(c.cs, "TIMEOUT", strconv.FormatInt(Milliseconds, 10))}
 }
 
-func (c FailoverTargetForce) Build() []string {
-	return c.cs
+func (c FailoverTargetForce) Build() Completed {
+	return Completed(c)
 }
 
 type FailoverTargetHost struct {
 	cs []string
+	cf uint32
 }
 
 func (c FailoverTargetHost) Port(Port int64) FailoverTargetPort {
-	return FailoverTargetPort{cs: append(c.cs, strconv.FormatInt(Port, 10))}
+	return FailoverTargetPort{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Port, 10))}
 }
 
 type FailoverTargetPort struct {
 	cs []string
+	cf uint32
 }
 
 func (c FailoverTargetPort) Force() FailoverTargetForce {
-	return FailoverTargetForce{cs: append(c.cs, "FORCE")}
+	return FailoverTargetForce{cf: c.cf, cs: append(c.cs, "FORCE")}
 }
 
 func (c FailoverTargetPort) Abort() FailoverAbort {
-	return FailoverAbort{cs: append(c.cs, "ABORT")}
+	return FailoverAbort{cf: c.cf, cs: append(c.cs, "ABORT")}
 }
 
 func (c FailoverTargetPort) Timeout(Milliseconds int64) FailoverTimeout {
-	return FailoverTimeout{cs: append(c.cs, "TIMEOUT", strconv.FormatInt(Milliseconds, 10))}
+	return FailoverTimeout{cf: c.cf, cs: append(c.cs, "TIMEOUT", strconv.FormatInt(Milliseconds, 10))}
 }
 
-func (c FailoverTargetPort) Build() []string {
-	return c.cs
+func (c FailoverTargetPort) Build() Completed {
+	return Completed(c)
 }
 
 type FailoverTargetTo struct {
 	cs []string
+	cf uint32
 }
 
 func (c FailoverTargetTo) Host(Host string) FailoverTargetHost {
-	return FailoverTargetHost{cs: append(c.cs, Host)}
+	return FailoverTargetHost{cf: c.cf, cs: append(c.cs, Host)}
 }
 
 type FailoverTimeout struct {
 	cs []string
+	cf uint32
 }
 
-func (c FailoverTimeout) Build() []string {
-	return c.cs
+func (c FailoverTimeout) Build() Completed {
+	return Completed(c)
 }
 
 type Flushall struct {
 	cs []string
+	cf uint32
 }
 
 func (c Flushall) Async() FlushallAsyncAsync {
-	return FlushallAsyncAsync{cs: append(c.cs, "ASYNC")}
+	return FlushallAsyncAsync{cf: c.cf, cs: append(c.cs, "ASYNC")}
 }
 
 func (c Flushall) Sync() FlushallAsyncSync {
-	return FlushallAsyncSync{cs: append(c.cs, "SYNC")}
+	return FlushallAsyncSync{cf: c.cf, cs: append(c.cs, "SYNC")}
 }
 
-func (c Flushall) Build() []string {
-	return c.cs
+func (c Flushall) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) Flushall() (c Flushall) {
@@ -3332,34 +3626,37 @@ func (b *Builder) Flushall() (c Flushall) {
 
 type FlushallAsyncAsync struct {
 	cs []string
+	cf uint32
 }
 
-func (c FlushallAsyncAsync) Build() []string {
-	return c.cs
+func (c FlushallAsyncAsync) Build() Completed {
+	return Completed(c)
 }
 
 type FlushallAsyncSync struct {
 	cs []string
+	cf uint32
 }
 
-func (c FlushallAsyncSync) Build() []string {
-	return c.cs
+func (c FlushallAsyncSync) Build() Completed {
+	return Completed(c)
 }
 
 type Flushdb struct {
 	cs []string
+	cf uint32
 }
 
 func (c Flushdb) Async() FlushdbAsyncAsync {
-	return FlushdbAsyncAsync{cs: append(c.cs, "ASYNC")}
+	return FlushdbAsyncAsync{cf: c.cf, cs: append(c.cs, "ASYNC")}
 }
 
 func (c Flushdb) Sync() FlushdbAsyncSync {
-	return FlushdbAsyncSync{cs: append(c.cs, "SYNC")}
+	return FlushdbAsyncSync{cf: c.cf, cs: append(c.cs, "SYNC")}
 }
 
-func (c Flushdb) Build() []string {
-	return c.cs
+func (c Flushdb) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) Flushdb() (c Flushdb) {
@@ -3369,26 +3666,29 @@ func (b *Builder) Flushdb() (c Flushdb) {
 
 type FlushdbAsyncAsync struct {
 	cs []string
+	cf uint32
 }
 
-func (c FlushdbAsyncAsync) Build() []string {
-	return c.cs
+func (c FlushdbAsyncAsync) Build() Completed {
+	return Completed(c)
 }
 
 type FlushdbAsyncSync struct {
 	cs []string
+	cf uint32
 }
 
-func (c FlushdbAsyncSync) Build() []string {
-	return c.cs
+func (c FlushdbAsyncSync) Build() Completed {
+	return Completed(c)
 }
 
 type Geoadd struct {
 	cs []string
+	cf uint32
 }
 
 func (c Geoadd) Key(Key string) GeoaddKey {
-	return GeoaddKey{cs: append(c.cs, Key)}
+	return GeoaddKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Geoadd() (c Geoadd) {
@@ -3398,74 +3698,80 @@ func (b *Builder) Geoadd() (c Geoadd) {
 
 type GeoaddChangeCh struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeoaddChangeCh) LongitudeLatitudeMember() GeoaddLongitudeLatitudeMember {
-	return GeoaddLongitudeLatitudeMember{cs: append(c.cs)}
+	return GeoaddLongitudeLatitudeMember{cf: c.cf, cs: append(c.cs, )}
 }
 
 type GeoaddConditionNx struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeoaddConditionNx) Ch() GeoaddChangeCh {
-	return GeoaddChangeCh{cs: append(c.cs, "CH")}
+	return GeoaddChangeCh{cf: c.cf, cs: append(c.cs, "CH")}
 }
 
 func (c GeoaddConditionNx) LongitudeLatitudeMember() GeoaddLongitudeLatitudeMember {
-	return GeoaddLongitudeLatitudeMember{cs: append(c.cs)}
+	return GeoaddLongitudeLatitudeMember{cf: c.cf, cs: append(c.cs, )}
 }
 
 type GeoaddConditionXx struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeoaddConditionXx) Ch() GeoaddChangeCh {
-	return GeoaddChangeCh{cs: append(c.cs, "CH")}
+	return GeoaddChangeCh{cf: c.cf, cs: append(c.cs, "CH")}
 }
 
 func (c GeoaddConditionXx) LongitudeLatitudeMember() GeoaddLongitudeLatitudeMember {
-	return GeoaddLongitudeLatitudeMember{cs: append(c.cs)}
+	return GeoaddLongitudeLatitudeMember{cf: c.cf, cs: append(c.cs, )}
 }
 
 type GeoaddKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeoaddKey) Nx() GeoaddConditionNx {
-	return GeoaddConditionNx{cs: append(c.cs, "NX")}
+	return GeoaddConditionNx{cf: c.cf, cs: append(c.cs, "NX")}
 }
 
 func (c GeoaddKey) Xx() GeoaddConditionXx {
-	return GeoaddConditionXx{cs: append(c.cs, "XX")}
+	return GeoaddConditionXx{cf: c.cf, cs: append(c.cs, "XX")}
 }
 
 func (c GeoaddKey) Ch() GeoaddChangeCh {
-	return GeoaddChangeCh{cs: append(c.cs, "CH")}
+	return GeoaddChangeCh{cf: c.cf, cs: append(c.cs, "CH")}
 }
 
 func (c GeoaddKey) LongitudeLatitudeMember() GeoaddLongitudeLatitudeMember {
-	return GeoaddLongitudeLatitudeMember{cs: append(c.cs)}
+	return GeoaddLongitudeLatitudeMember{cf: c.cf, cs: append(c.cs, )}
 }
 
 type GeoaddLongitudeLatitudeMember struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeoaddLongitudeLatitudeMember) LongitudeLatitudeMember(Longitude float64, Latitude float64, Member string) GeoaddLongitudeLatitudeMember {
-	return GeoaddLongitudeLatitudeMember{cs: append(c.cs, strconv.FormatFloat(Longitude, 'f', -1, 64), strconv.FormatFloat(Latitude, 'f', -1, 64), Member)}
+	return GeoaddLongitudeLatitudeMember{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Longitude, 'f', -1, 64), strconv.FormatFloat(Latitude, 'f', -1, 64), Member)}
 }
 
-func (c GeoaddLongitudeLatitudeMember) Build() []string {
-	return c.cs
+func (c GeoaddLongitudeLatitudeMember) Build() Completed {
+	return Completed(c)
 }
 
 type Geodist struct {
 	cs []string
+	cf uint32
 }
 
 func (c Geodist) Key(Key string) GeodistKey {
-	return GeodistKey{cs: append(c.cs, Key)}
+	return GeodistKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Geodist() (c Geodist) {
@@ -3475,82 +3781,118 @@ func (b *Builder) Geodist() (c Geodist) {
 
 type GeodistKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeodistKey) Member1(Member1 string) GeodistMember1 {
-	return GeodistMember1{cs: append(c.cs, Member1)}
+	return GeodistMember1{cf: c.cf, cs: append(c.cs, Member1)}
+}
+
+func (c GeodistKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type GeodistMember1 struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeodistMember1) Member2(Member2 string) GeodistMember2 {
-	return GeodistMember2{cs: append(c.cs, Member2)}
+	return GeodistMember2{cf: c.cf, cs: append(c.cs, Member2)}
+}
+
+func (c GeodistMember1) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type GeodistMember2 struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeodistMember2) M() GeodistUnitM {
-	return GeodistUnitM{cs: append(c.cs, "m")}
+	return GeodistUnitM{cf: c.cf, cs: append(c.cs, "m")}
 }
 
 func (c GeodistMember2) Km() GeodistUnitKm {
-	return GeodistUnitKm{cs: append(c.cs, "km")}
+	return GeodistUnitKm{cf: c.cf, cs: append(c.cs, "km")}
 }
 
 func (c GeodistMember2) Ft() GeodistUnitFt {
-	return GeodistUnitFt{cs: append(c.cs, "ft")}
+	return GeodistUnitFt{cf: c.cf, cs: append(c.cs, "ft")}
 }
 
 func (c GeodistMember2) Mi() GeodistUnitMi {
-	return GeodistUnitMi{cs: append(c.cs, "mi")}
+	return GeodistUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
 }
 
-func (c GeodistMember2) Build() []string {
-	return c.cs
+func (c GeodistMember2) Build() Completed {
+	return Completed(c)
+}
+
+func (c GeodistMember2) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type GeodistUnitFt struct {
 	cs []string
+	cf uint32
 }
 
-func (c GeodistUnitFt) Build() []string {
-	return c.cs
+func (c GeodistUnitFt) Build() Completed {
+	return Completed(c)
+}
+
+func (c GeodistUnitFt) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type GeodistUnitKm struct {
 	cs []string
+	cf uint32
 }
 
-func (c GeodistUnitKm) Build() []string {
-	return c.cs
+func (c GeodistUnitKm) Build() Completed {
+	return Completed(c)
+}
+
+func (c GeodistUnitKm) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type GeodistUnitM struct {
 	cs []string
+	cf uint32
 }
 
-func (c GeodistUnitM) Build() []string {
-	return c.cs
+func (c GeodistUnitM) Build() Completed {
+	return Completed(c)
+}
+
+func (c GeodistUnitM) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type GeodistUnitMi struct {
 	cs []string
+	cf uint32
 }
 
-func (c GeodistUnitMi) Build() []string {
-	return c.cs
+func (c GeodistUnitMi) Build() Completed {
+	return Completed(c)
+}
+
+func (c GeodistUnitMi) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Geohash struct {
 	cs []string
+	cf uint32
 }
 
 func (c Geohash) Key(Key string) GeohashKey {
-	return GeohashKey{cs: append(c.cs, Key)}
+	return GeohashKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Geohash() (c Geohash) {
@@ -3560,30 +3902,41 @@ func (b *Builder) Geohash() (c Geohash) {
 
 type GeohashKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeohashKey) Member(Member ...string) GeohashMember {
-	return GeohashMember{cs: append(c.cs, Member...)}
+	return GeohashMember{cf: c.cf, cs: append(c.cs, Member...)}
+}
+
+func (c GeohashKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type GeohashMember struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeohashMember) Member(Member ...string) GeohashMember {
-	return GeohashMember{cs: append(c.cs, Member...)}
+	return GeohashMember{cf: c.cf, cs: append(c.cs, Member...)}
 }
 
-func (c GeohashMember) Build() []string {
-	return c.cs
+func (c GeohashMember) Build() Completed {
+	return Completed(c)
+}
+
+func (c GeohashMember) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Geopos struct {
 	cs []string
+	cf uint32
 }
 
 func (c Geopos) Key(Key string) GeoposKey {
-	return GeoposKey{cs: append(c.cs, Key)}
+	return GeoposKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Geopos() (c Geopos) {
@@ -3593,30 +3946,41 @@ func (b *Builder) Geopos() (c Geopos) {
 
 type GeoposKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeoposKey) Member(Member ...string) GeoposMember {
-	return GeoposMember{cs: append(c.cs, Member...)}
+	return GeoposMember{cf: c.cf, cs: append(c.cs, Member...)}
+}
+
+func (c GeoposKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type GeoposMember struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeoposMember) Member(Member ...string) GeoposMember {
-	return GeoposMember{cs: append(c.cs, Member...)}
+	return GeoposMember{cf: c.cf, cs: append(c.cs, Member...)}
 }
 
-func (c GeoposMember) Build() []string {
-	return c.cs
+func (c GeoposMember) Build() Completed {
+	return Completed(c)
+}
+
+func (c GeoposMember) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Georadius struct {
 	cs []string
+	cf uint32
 }
 
 func (c Georadius) Key(Key string) GeoradiusKey {
-	return GeoradiusKey{cs: append(c.cs, Key)}
+	return GeoradiusKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Georadius() (c Georadius) {
@@ -3626,386 +3990,404 @@ func (b *Builder) Georadius() (c Georadius) {
 
 type GeoradiusCountAnyAny struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeoradiusCountAnyAny) Asc() GeoradiusOrderAsc {
-	return GeoradiusOrderAsc{cs: append(c.cs, "ASC")}
+	return GeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c GeoradiusCountAnyAny) Desc() GeoradiusOrderDesc {
-	return GeoradiusOrderDesc{cs: append(c.cs, "DESC")}
+	return GeoradiusOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c GeoradiusCountAnyAny) Store(Key string) GeoradiusStore {
-	return GeoradiusStore{cs: append(c.cs, "STORE", Key)}
+	return GeoradiusStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
 }
 
 func (c GeoradiusCountAnyAny) Storedist(Key string) GeoradiusStoredist {
-	return GeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
-func (c GeoradiusCountAnyAny) Build() []string {
-	return c.cs
+func (c GeoradiusCountAnyAny) Build() Completed {
+	return Completed(c)
 }
 
 type GeoradiusCountCount struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeoradiusCountCount) Any() GeoradiusCountAnyAny {
-	return GeoradiusCountAnyAny{cs: append(c.cs, "ANY")}
+	return GeoradiusCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
 }
 
 func (c GeoradiusCountCount) Asc() GeoradiusOrderAsc {
-	return GeoradiusOrderAsc{cs: append(c.cs, "ASC")}
+	return GeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c GeoradiusCountCount) Desc() GeoradiusOrderDesc {
-	return GeoradiusOrderDesc{cs: append(c.cs, "DESC")}
+	return GeoradiusOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c GeoradiusCountCount) Store(Key string) GeoradiusStore {
-	return GeoradiusStore{cs: append(c.cs, "STORE", Key)}
+	return GeoradiusStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
 }
 
 func (c GeoradiusCountCount) Storedist(Key string) GeoradiusStoredist {
-	return GeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
-func (c GeoradiusCountCount) Build() []string {
-	return c.cs
+func (c GeoradiusCountCount) Build() Completed {
+	return Completed(c)
 }
 
 type GeoradiusKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeoradiusKey) Longitude(Longitude float64) GeoradiusLongitude {
-	return GeoradiusLongitude{cs: append(c.cs, strconv.FormatFloat(Longitude, 'f', -1, 64))}
+	return GeoradiusLongitude{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Longitude, 'f', -1, 64))}
 }
 
 type GeoradiusLatitude struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeoradiusLatitude) Radius(Radius float64) GeoradiusRadius {
-	return GeoradiusRadius{cs: append(c.cs, strconv.FormatFloat(Radius, 'f', -1, 64))}
+	return GeoradiusRadius{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Radius, 'f', -1, 64))}
 }
 
 type GeoradiusLongitude struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeoradiusLongitude) Latitude(Latitude float64) GeoradiusLatitude {
-	return GeoradiusLatitude{cs: append(c.cs, strconv.FormatFloat(Latitude, 'f', -1, 64))}
+	return GeoradiusLatitude{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Latitude, 'f', -1, 64))}
 }
 
 type GeoradiusOrderAsc struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeoradiusOrderAsc) Store(Key string) GeoradiusStore {
-	return GeoradiusStore{cs: append(c.cs, "STORE", Key)}
+	return GeoradiusStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
 }
 
 func (c GeoradiusOrderAsc) Storedist(Key string) GeoradiusStoredist {
-	return GeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
-func (c GeoradiusOrderAsc) Build() []string {
-	return c.cs
+func (c GeoradiusOrderAsc) Build() Completed {
+	return Completed(c)
 }
 
 type GeoradiusOrderDesc struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeoradiusOrderDesc) Store(Key string) GeoradiusStore {
-	return GeoradiusStore{cs: append(c.cs, "STORE", Key)}
+	return GeoradiusStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
 }
 
 func (c GeoradiusOrderDesc) Storedist(Key string) GeoradiusStoredist {
-	return GeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
-func (c GeoradiusOrderDesc) Build() []string {
-	return c.cs
+func (c GeoradiusOrderDesc) Build() Completed {
+	return Completed(c)
 }
 
 type GeoradiusRadius struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeoradiusRadius) M() GeoradiusUnitM {
-	return GeoradiusUnitM{cs: append(c.cs, "m")}
+	return GeoradiusUnitM{cf: c.cf, cs: append(c.cs, "m")}
 }
 
 func (c GeoradiusRadius) Km() GeoradiusUnitKm {
-	return GeoradiusUnitKm{cs: append(c.cs, "km")}
+	return GeoradiusUnitKm{cf: c.cf, cs: append(c.cs, "km")}
 }
 
 func (c GeoradiusRadius) Ft() GeoradiusUnitFt {
-	return GeoradiusUnitFt{cs: append(c.cs, "ft")}
+	return GeoradiusUnitFt{cf: c.cf, cs: append(c.cs, "ft")}
 }
 
 func (c GeoradiusRadius) Mi() GeoradiusUnitMi {
-	return GeoradiusUnitMi{cs: append(c.cs, "mi")}
+	return GeoradiusUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
 }
 
 type GeoradiusStore struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeoradiusStore) Storedist(Key string) GeoradiusStoredist {
-	return GeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
-func (c GeoradiusStore) Build() []string {
-	return c.cs
+func (c GeoradiusStore) Build() Completed {
+	return Completed(c)
 }
 
 type GeoradiusStoredist struct {
 	cs []string
+	cf uint32
 }
 
-func (c GeoradiusStoredist) Build() []string {
-	return c.cs
+func (c GeoradiusStoredist) Build() Completed {
+	return Completed(c)
 }
 
 type GeoradiusUnitFt struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeoradiusUnitFt) Withcoord() GeoradiusWithcoordWithcoord {
-	return GeoradiusWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+	return GeoradiusWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
 }
 
 func (c GeoradiusUnitFt) Withdist() GeoradiusWithdistWithdist {
-	return GeoradiusWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+	return GeoradiusWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
 }
 
 func (c GeoradiusUnitFt) Withhash() GeoradiusWithhashWithhash {
-	return GeoradiusWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+	return GeoradiusWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
 }
 
 func (c GeoradiusUnitFt) Count(Count int64) GeoradiusCountCount {
-	return GeoradiusCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c GeoradiusUnitFt) Asc() GeoradiusOrderAsc {
-	return GeoradiusOrderAsc{cs: append(c.cs, "ASC")}
+	return GeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c GeoradiusUnitFt) Desc() GeoradiusOrderDesc {
-	return GeoradiusOrderDesc{cs: append(c.cs, "DESC")}
+	return GeoradiusOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c GeoradiusUnitFt) Store(Key string) GeoradiusStore {
-	return GeoradiusStore{cs: append(c.cs, "STORE", Key)}
+	return GeoradiusStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
 }
 
 func (c GeoradiusUnitFt) Storedist(Key string) GeoradiusStoredist {
-	return GeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
 type GeoradiusUnitKm struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeoradiusUnitKm) Withcoord() GeoradiusWithcoordWithcoord {
-	return GeoradiusWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+	return GeoradiusWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
 }
 
 func (c GeoradiusUnitKm) Withdist() GeoradiusWithdistWithdist {
-	return GeoradiusWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+	return GeoradiusWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
 }
 
 func (c GeoradiusUnitKm) Withhash() GeoradiusWithhashWithhash {
-	return GeoradiusWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+	return GeoradiusWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
 }
 
 func (c GeoradiusUnitKm) Count(Count int64) GeoradiusCountCount {
-	return GeoradiusCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c GeoradiusUnitKm) Asc() GeoradiusOrderAsc {
-	return GeoradiusOrderAsc{cs: append(c.cs, "ASC")}
+	return GeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c GeoradiusUnitKm) Desc() GeoradiusOrderDesc {
-	return GeoradiusOrderDesc{cs: append(c.cs, "DESC")}
+	return GeoradiusOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c GeoradiusUnitKm) Store(Key string) GeoradiusStore {
-	return GeoradiusStore{cs: append(c.cs, "STORE", Key)}
+	return GeoradiusStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
 }
 
 func (c GeoradiusUnitKm) Storedist(Key string) GeoradiusStoredist {
-	return GeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
 type GeoradiusUnitM struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeoradiusUnitM) Withcoord() GeoradiusWithcoordWithcoord {
-	return GeoradiusWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+	return GeoradiusWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
 }
 
 func (c GeoradiusUnitM) Withdist() GeoradiusWithdistWithdist {
-	return GeoradiusWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+	return GeoradiusWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
 }
 
 func (c GeoradiusUnitM) Withhash() GeoradiusWithhashWithhash {
-	return GeoradiusWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+	return GeoradiusWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
 }
 
 func (c GeoradiusUnitM) Count(Count int64) GeoradiusCountCount {
-	return GeoradiusCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c GeoradiusUnitM) Asc() GeoradiusOrderAsc {
-	return GeoradiusOrderAsc{cs: append(c.cs, "ASC")}
+	return GeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c GeoradiusUnitM) Desc() GeoradiusOrderDesc {
-	return GeoradiusOrderDesc{cs: append(c.cs, "DESC")}
+	return GeoradiusOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c GeoradiusUnitM) Store(Key string) GeoradiusStore {
-	return GeoradiusStore{cs: append(c.cs, "STORE", Key)}
+	return GeoradiusStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
 }
 
 func (c GeoradiusUnitM) Storedist(Key string) GeoradiusStoredist {
-	return GeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
 type GeoradiusUnitMi struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeoradiusUnitMi) Withcoord() GeoradiusWithcoordWithcoord {
-	return GeoradiusWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+	return GeoradiusWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
 }
 
 func (c GeoradiusUnitMi) Withdist() GeoradiusWithdistWithdist {
-	return GeoradiusWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+	return GeoradiusWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
 }
 
 func (c GeoradiusUnitMi) Withhash() GeoradiusWithhashWithhash {
-	return GeoradiusWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+	return GeoradiusWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
 }
 
 func (c GeoradiusUnitMi) Count(Count int64) GeoradiusCountCount {
-	return GeoradiusCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c GeoradiusUnitMi) Asc() GeoradiusOrderAsc {
-	return GeoradiusOrderAsc{cs: append(c.cs, "ASC")}
+	return GeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c GeoradiusUnitMi) Desc() GeoradiusOrderDesc {
-	return GeoradiusOrderDesc{cs: append(c.cs, "DESC")}
+	return GeoradiusOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c GeoradiusUnitMi) Store(Key string) GeoradiusStore {
-	return GeoradiusStore{cs: append(c.cs, "STORE", Key)}
+	return GeoradiusStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
 }
 
 func (c GeoradiusUnitMi) Storedist(Key string) GeoradiusStoredist {
-	return GeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
 type GeoradiusWithcoordWithcoord struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeoradiusWithcoordWithcoord) Withdist() GeoradiusWithdistWithdist {
-	return GeoradiusWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+	return GeoradiusWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
 }
 
 func (c GeoradiusWithcoordWithcoord) Withhash() GeoradiusWithhashWithhash {
-	return GeoradiusWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+	return GeoradiusWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
 }
 
 func (c GeoradiusWithcoordWithcoord) Count(Count int64) GeoradiusCountCount {
-	return GeoradiusCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c GeoradiusWithcoordWithcoord) Asc() GeoradiusOrderAsc {
-	return GeoradiusOrderAsc{cs: append(c.cs, "ASC")}
+	return GeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c GeoradiusWithcoordWithcoord) Desc() GeoradiusOrderDesc {
-	return GeoradiusOrderDesc{cs: append(c.cs, "DESC")}
+	return GeoradiusOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c GeoradiusWithcoordWithcoord) Store(Key string) GeoradiusStore {
-	return GeoradiusStore{cs: append(c.cs, "STORE", Key)}
+	return GeoradiusStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
 }
 
 func (c GeoradiusWithcoordWithcoord) Storedist(Key string) GeoradiusStoredist {
-	return GeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
 type GeoradiusWithdistWithdist struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeoradiusWithdistWithdist) Withhash() GeoradiusWithhashWithhash {
-	return GeoradiusWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+	return GeoradiusWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
 }
 
 func (c GeoradiusWithdistWithdist) Count(Count int64) GeoradiusCountCount {
-	return GeoradiusCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c GeoradiusWithdistWithdist) Asc() GeoradiusOrderAsc {
-	return GeoradiusOrderAsc{cs: append(c.cs, "ASC")}
+	return GeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c GeoradiusWithdistWithdist) Desc() GeoradiusOrderDesc {
-	return GeoradiusOrderDesc{cs: append(c.cs, "DESC")}
+	return GeoradiusOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c GeoradiusWithdistWithdist) Store(Key string) GeoradiusStore {
-	return GeoradiusStore{cs: append(c.cs, "STORE", Key)}
+	return GeoradiusStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
 }
 
 func (c GeoradiusWithdistWithdist) Storedist(Key string) GeoradiusStoredist {
-	return GeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
 type GeoradiusWithhashWithhash struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeoradiusWithhashWithhash) Count(Count int64) GeoradiusCountCount {
-	return GeoradiusCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c GeoradiusWithhashWithhash) Asc() GeoradiusOrderAsc {
-	return GeoradiusOrderAsc{cs: append(c.cs, "ASC")}
+	return GeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c GeoradiusWithhashWithhash) Desc() GeoradiusOrderDesc {
-	return GeoradiusOrderDesc{cs: append(c.cs, "DESC")}
+	return GeoradiusOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c GeoradiusWithhashWithhash) Store(Key string) GeoradiusStore {
-	return GeoradiusStore{cs: append(c.cs, "STORE", Key)}
+	return GeoradiusStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
 }
 
 func (c GeoradiusWithhashWithhash) Storedist(Key string) GeoradiusStoredist {
-	return GeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
 type Georadiusbymember struct {
 	cs []string
+	cf uint32
 }
 
 func (c Georadiusbymember) Key(Key string) GeoradiusbymemberKey {
-	return GeoradiusbymemberKey{cs: append(c.cs, Key)}
+	return GeoradiusbymemberKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Georadiusbymember() (c Georadiusbymember) {
@@ -4015,378 +4397,395 @@ func (b *Builder) Georadiusbymember() (c Georadiusbymember) {
 
 type GeoradiusbymemberCountAnyAny struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeoradiusbymemberCountAnyAny) Asc() GeoradiusbymemberOrderAsc {
-	return GeoradiusbymemberOrderAsc{cs: append(c.cs, "ASC")}
+	return GeoradiusbymemberOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c GeoradiusbymemberCountAnyAny) Desc() GeoradiusbymemberOrderDesc {
-	return GeoradiusbymemberOrderDesc{cs: append(c.cs, "DESC")}
+	return GeoradiusbymemberOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c GeoradiusbymemberCountAnyAny) Store(Key string) GeoradiusbymemberStore {
-	return GeoradiusbymemberStore{cs: append(c.cs, "STORE", Key)}
+	return GeoradiusbymemberStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
 }
 
 func (c GeoradiusbymemberCountAnyAny) Storedist(Key string) GeoradiusbymemberStoredist {
-	return GeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
-func (c GeoradiusbymemberCountAnyAny) Build() []string {
-	return c.cs
+func (c GeoradiusbymemberCountAnyAny) Build() Completed {
+	return Completed(c)
 }
 
 type GeoradiusbymemberCountCount struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeoradiusbymemberCountCount) Any() GeoradiusbymemberCountAnyAny {
-	return GeoradiusbymemberCountAnyAny{cs: append(c.cs, "ANY")}
+	return GeoradiusbymemberCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
 }
 
 func (c GeoradiusbymemberCountCount) Asc() GeoradiusbymemberOrderAsc {
-	return GeoradiusbymemberOrderAsc{cs: append(c.cs, "ASC")}
+	return GeoradiusbymemberOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c GeoradiusbymemberCountCount) Desc() GeoradiusbymemberOrderDesc {
-	return GeoradiusbymemberOrderDesc{cs: append(c.cs, "DESC")}
+	return GeoradiusbymemberOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c GeoradiusbymemberCountCount) Store(Key string) GeoradiusbymemberStore {
-	return GeoradiusbymemberStore{cs: append(c.cs, "STORE", Key)}
+	return GeoradiusbymemberStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
 }
 
 func (c GeoradiusbymemberCountCount) Storedist(Key string) GeoradiusbymemberStoredist {
-	return GeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
-func (c GeoradiusbymemberCountCount) Build() []string {
-	return c.cs
+func (c GeoradiusbymemberCountCount) Build() Completed {
+	return Completed(c)
 }
 
 type GeoradiusbymemberKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeoradiusbymemberKey) Member(Member string) GeoradiusbymemberMember {
-	return GeoradiusbymemberMember{cs: append(c.cs, Member)}
+	return GeoradiusbymemberMember{cf: c.cf, cs: append(c.cs, Member)}
 }
 
 type GeoradiusbymemberMember struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeoradiusbymemberMember) Radius(Radius float64) GeoradiusbymemberRadius {
-	return GeoradiusbymemberRadius{cs: append(c.cs, strconv.FormatFloat(Radius, 'f', -1, 64))}
+	return GeoradiusbymemberRadius{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Radius, 'f', -1, 64))}
 }
 
 type GeoradiusbymemberOrderAsc struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeoradiusbymemberOrderAsc) Store(Key string) GeoradiusbymemberStore {
-	return GeoradiusbymemberStore{cs: append(c.cs, "STORE", Key)}
+	return GeoradiusbymemberStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
 }
 
 func (c GeoradiusbymemberOrderAsc) Storedist(Key string) GeoradiusbymemberStoredist {
-	return GeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
-func (c GeoradiusbymemberOrderAsc) Build() []string {
-	return c.cs
+func (c GeoradiusbymemberOrderAsc) Build() Completed {
+	return Completed(c)
 }
 
 type GeoradiusbymemberOrderDesc struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeoradiusbymemberOrderDesc) Store(Key string) GeoradiusbymemberStore {
-	return GeoradiusbymemberStore{cs: append(c.cs, "STORE", Key)}
+	return GeoradiusbymemberStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
 }
 
 func (c GeoradiusbymemberOrderDesc) Storedist(Key string) GeoradiusbymemberStoredist {
-	return GeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
-func (c GeoradiusbymemberOrderDesc) Build() []string {
-	return c.cs
+func (c GeoradiusbymemberOrderDesc) Build() Completed {
+	return Completed(c)
 }
 
 type GeoradiusbymemberRadius struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeoradiusbymemberRadius) M() GeoradiusbymemberUnitM {
-	return GeoradiusbymemberUnitM{cs: append(c.cs, "m")}
+	return GeoradiusbymemberUnitM{cf: c.cf, cs: append(c.cs, "m")}
 }
 
 func (c GeoradiusbymemberRadius) Km() GeoradiusbymemberUnitKm {
-	return GeoradiusbymemberUnitKm{cs: append(c.cs, "km")}
+	return GeoradiusbymemberUnitKm{cf: c.cf, cs: append(c.cs, "km")}
 }
 
 func (c GeoradiusbymemberRadius) Ft() GeoradiusbymemberUnitFt {
-	return GeoradiusbymemberUnitFt{cs: append(c.cs, "ft")}
+	return GeoradiusbymemberUnitFt{cf: c.cf, cs: append(c.cs, "ft")}
 }
 
 func (c GeoradiusbymemberRadius) Mi() GeoradiusbymemberUnitMi {
-	return GeoradiusbymemberUnitMi{cs: append(c.cs, "mi")}
+	return GeoradiusbymemberUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
 }
 
 type GeoradiusbymemberStore struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeoradiusbymemberStore) Storedist(Key string) GeoradiusbymemberStoredist {
-	return GeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
-func (c GeoradiusbymemberStore) Build() []string {
-	return c.cs
+func (c GeoradiusbymemberStore) Build() Completed {
+	return Completed(c)
 }
 
 type GeoradiusbymemberStoredist struct {
 	cs []string
+	cf uint32
 }
 
-func (c GeoradiusbymemberStoredist) Build() []string {
-	return c.cs
+func (c GeoradiusbymemberStoredist) Build() Completed {
+	return Completed(c)
 }
 
 type GeoradiusbymemberUnitFt struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeoradiusbymemberUnitFt) Withcoord() GeoradiusbymemberWithcoordWithcoord {
-	return GeoradiusbymemberWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+	return GeoradiusbymemberWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
 }
 
 func (c GeoradiusbymemberUnitFt) Withdist() GeoradiusbymemberWithdistWithdist {
-	return GeoradiusbymemberWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+	return GeoradiusbymemberWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
 }
 
 func (c GeoradiusbymemberUnitFt) Withhash() GeoradiusbymemberWithhashWithhash {
-	return GeoradiusbymemberWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+	return GeoradiusbymemberWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
 }
 
 func (c GeoradiusbymemberUnitFt) Count(Count int64) GeoradiusbymemberCountCount {
-	return GeoradiusbymemberCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusbymemberCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c GeoradiusbymemberUnitFt) Asc() GeoradiusbymemberOrderAsc {
-	return GeoradiusbymemberOrderAsc{cs: append(c.cs, "ASC")}
+	return GeoradiusbymemberOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c GeoradiusbymemberUnitFt) Desc() GeoradiusbymemberOrderDesc {
-	return GeoradiusbymemberOrderDesc{cs: append(c.cs, "DESC")}
+	return GeoradiusbymemberOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c GeoradiusbymemberUnitFt) Store(Key string) GeoradiusbymemberStore {
-	return GeoradiusbymemberStore{cs: append(c.cs, "STORE", Key)}
+	return GeoradiusbymemberStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
 }
 
 func (c GeoradiusbymemberUnitFt) Storedist(Key string) GeoradiusbymemberStoredist {
-	return GeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
 type GeoradiusbymemberUnitKm struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeoradiusbymemberUnitKm) Withcoord() GeoradiusbymemberWithcoordWithcoord {
-	return GeoradiusbymemberWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+	return GeoradiusbymemberWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
 }
 
 func (c GeoradiusbymemberUnitKm) Withdist() GeoradiusbymemberWithdistWithdist {
-	return GeoradiusbymemberWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+	return GeoradiusbymemberWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
 }
 
 func (c GeoradiusbymemberUnitKm) Withhash() GeoradiusbymemberWithhashWithhash {
-	return GeoradiusbymemberWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+	return GeoradiusbymemberWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
 }
 
 func (c GeoradiusbymemberUnitKm) Count(Count int64) GeoradiusbymemberCountCount {
-	return GeoradiusbymemberCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusbymemberCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c GeoradiusbymemberUnitKm) Asc() GeoradiusbymemberOrderAsc {
-	return GeoradiusbymemberOrderAsc{cs: append(c.cs, "ASC")}
+	return GeoradiusbymemberOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c GeoradiusbymemberUnitKm) Desc() GeoradiusbymemberOrderDesc {
-	return GeoradiusbymemberOrderDesc{cs: append(c.cs, "DESC")}
+	return GeoradiusbymemberOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c GeoradiusbymemberUnitKm) Store(Key string) GeoradiusbymemberStore {
-	return GeoradiusbymemberStore{cs: append(c.cs, "STORE", Key)}
+	return GeoradiusbymemberStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
 }
 
 func (c GeoradiusbymemberUnitKm) Storedist(Key string) GeoradiusbymemberStoredist {
-	return GeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
 type GeoradiusbymemberUnitM struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeoradiusbymemberUnitM) Withcoord() GeoradiusbymemberWithcoordWithcoord {
-	return GeoradiusbymemberWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+	return GeoradiusbymemberWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
 }
 
 func (c GeoradiusbymemberUnitM) Withdist() GeoradiusbymemberWithdistWithdist {
-	return GeoradiusbymemberWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+	return GeoradiusbymemberWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
 }
 
 func (c GeoradiusbymemberUnitM) Withhash() GeoradiusbymemberWithhashWithhash {
-	return GeoradiusbymemberWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+	return GeoradiusbymemberWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
 }
 
 func (c GeoradiusbymemberUnitM) Count(Count int64) GeoradiusbymemberCountCount {
-	return GeoradiusbymemberCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusbymemberCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c GeoradiusbymemberUnitM) Asc() GeoradiusbymemberOrderAsc {
-	return GeoradiusbymemberOrderAsc{cs: append(c.cs, "ASC")}
+	return GeoradiusbymemberOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c GeoradiusbymemberUnitM) Desc() GeoradiusbymemberOrderDesc {
-	return GeoradiusbymemberOrderDesc{cs: append(c.cs, "DESC")}
+	return GeoradiusbymemberOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c GeoradiusbymemberUnitM) Store(Key string) GeoradiusbymemberStore {
-	return GeoradiusbymemberStore{cs: append(c.cs, "STORE", Key)}
+	return GeoradiusbymemberStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
 }
 
 func (c GeoradiusbymemberUnitM) Storedist(Key string) GeoradiusbymemberStoredist {
-	return GeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
 type GeoradiusbymemberUnitMi struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeoradiusbymemberUnitMi) Withcoord() GeoradiusbymemberWithcoordWithcoord {
-	return GeoradiusbymemberWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+	return GeoradiusbymemberWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
 }
 
 func (c GeoradiusbymemberUnitMi) Withdist() GeoradiusbymemberWithdistWithdist {
-	return GeoradiusbymemberWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+	return GeoradiusbymemberWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
 }
 
 func (c GeoradiusbymemberUnitMi) Withhash() GeoradiusbymemberWithhashWithhash {
-	return GeoradiusbymemberWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+	return GeoradiusbymemberWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
 }
 
 func (c GeoradiusbymemberUnitMi) Count(Count int64) GeoradiusbymemberCountCount {
-	return GeoradiusbymemberCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusbymemberCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c GeoradiusbymemberUnitMi) Asc() GeoradiusbymemberOrderAsc {
-	return GeoradiusbymemberOrderAsc{cs: append(c.cs, "ASC")}
+	return GeoradiusbymemberOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c GeoradiusbymemberUnitMi) Desc() GeoradiusbymemberOrderDesc {
-	return GeoradiusbymemberOrderDesc{cs: append(c.cs, "DESC")}
+	return GeoradiusbymemberOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c GeoradiusbymemberUnitMi) Store(Key string) GeoradiusbymemberStore {
-	return GeoradiusbymemberStore{cs: append(c.cs, "STORE", Key)}
+	return GeoradiusbymemberStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
 }
 
 func (c GeoradiusbymemberUnitMi) Storedist(Key string) GeoradiusbymemberStoredist {
-	return GeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
 type GeoradiusbymemberWithcoordWithcoord struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeoradiusbymemberWithcoordWithcoord) Withdist() GeoradiusbymemberWithdistWithdist {
-	return GeoradiusbymemberWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+	return GeoradiusbymemberWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
 }
 
 func (c GeoradiusbymemberWithcoordWithcoord) Withhash() GeoradiusbymemberWithhashWithhash {
-	return GeoradiusbymemberWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+	return GeoradiusbymemberWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
 }
 
 func (c GeoradiusbymemberWithcoordWithcoord) Count(Count int64) GeoradiusbymemberCountCount {
-	return GeoradiusbymemberCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusbymemberCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c GeoradiusbymemberWithcoordWithcoord) Asc() GeoradiusbymemberOrderAsc {
-	return GeoradiusbymemberOrderAsc{cs: append(c.cs, "ASC")}
+	return GeoradiusbymemberOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c GeoradiusbymemberWithcoordWithcoord) Desc() GeoradiusbymemberOrderDesc {
-	return GeoradiusbymemberOrderDesc{cs: append(c.cs, "DESC")}
+	return GeoradiusbymemberOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c GeoradiusbymemberWithcoordWithcoord) Store(Key string) GeoradiusbymemberStore {
-	return GeoradiusbymemberStore{cs: append(c.cs, "STORE", Key)}
+	return GeoradiusbymemberStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
 }
 
 func (c GeoradiusbymemberWithcoordWithcoord) Storedist(Key string) GeoradiusbymemberStoredist {
-	return GeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
 type GeoradiusbymemberWithdistWithdist struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeoradiusbymemberWithdistWithdist) Withhash() GeoradiusbymemberWithhashWithhash {
-	return GeoradiusbymemberWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+	return GeoradiusbymemberWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
 }
 
 func (c GeoradiusbymemberWithdistWithdist) Count(Count int64) GeoradiusbymemberCountCount {
-	return GeoradiusbymemberCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusbymemberCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c GeoradiusbymemberWithdistWithdist) Asc() GeoradiusbymemberOrderAsc {
-	return GeoradiusbymemberOrderAsc{cs: append(c.cs, "ASC")}
+	return GeoradiusbymemberOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c GeoradiusbymemberWithdistWithdist) Desc() GeoradiusbymemberOrderDesc {
-	return GeoradiusbymemberOrderDesc{cs: append(c.cs, "DESC")}
+	return GeoradiusbymemberOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c GeoradiusbymemberWithdistWithdist) Store(Key string) GeoradiusbymemberStore {
-	return GeoradiusbymemberStore{cs: append(c.cs, "STORE", Key)}
+	return GeoradiusbymemberStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
 }
 
 func (c GeoradiusbymemberWithdistWithdist) Storedist(Key string) GeoradiusbymemberStoredist {
-	return GeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
 type GeoradiusbymemberWithhashWithhash struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeoradiusbymemberWithhashWithhash) Count(Count int64) GeoradiusbymemberCountCount {
-	return GeoradiusbymemberCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusbymemberCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c GeoradiusbymemberWithhashWithhash) Asc() GeoradiusbymemberOrderAsc {
-	return GeoradiusbymemberOrderAsc{cs: append(c.cs, "ASC")}
+	return GeoradiusbymemberOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c GeoradiusbymemberWithhashWithhash) Desc() GeoradiusbymemberOrderDesc {
-	return GeoradiusbymemberOrderDesc{cs: append(c.cs, "DESC")}
+	return GeoradiusbymemberOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c GeoradiusbymemberWithhashWithhash) Store(Key string) GeoradiusbymemberStore {
-	return GeoradiusbymemberStore{cs: append(c.cs, "STORE", Key)}
+	return GeoradiusbymemberStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
 }
 
 func (c GeoradiusbymemberWithhashWithhash) Storedist(Key string) GeoradiusbymemberStoredist {
-	return GeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
 type Geosearch struct {
 	cs []string
+	cf uint32
 }
 
 func (c Geosearch) Key(Key string) GeosearchKey {
-	return GeosearchKey{cs: append(c.cs, Key)}
+	return GeosearchKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Geosearch() (c Geosearch) {
@@ -4396,538 +4795,644 @@ func (b *Builder) Geosearch() (c Geosearch) {
 
 type GeosearchBoxBybox struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeosearchBoxBybox) Height(Height float64) GeosearchBoxHeight {
-	return GeosearchBoxHeight{cs: append(c.cs, strconv.FormatFloat(Height, 'f', -1, 64))}
+	return GeosearchBoxHeight{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Height, 'f', -1, 64))}
+}
+
+func (c GeosearchBoxBybox) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type GeosearchBoxHeight struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeosearchBoxHeight) M() GeosearchBoxUnitM {
-	return GeosearchBoxUnitM{cs: append(c.cs, "m")}
+	return GeosearchBoxUnitM{cf: c.cf, cs: append(c.cs, "m")}
 }
 
 func (c GeosearchBoxHeight) Km() GeosearchBoxUnitKm {
-	return GeosearchBoxUnitKm{cs: append(c.cs, "km")}
+	return GeosearchBoxUnitKm{cf: c.cf, cs: append(c.cs, "km")}
 }
 
 func (c GeosearchBoxHeight) Ft() GeosearchBoxUnitFt {
-	return GeosearchBoxUnitFt{cs: append(c.cs, "ft")}
+	return GeosearchBoxUnitFt{cf: c.cf, cs: append(c.cs, "ft")}
 }
 
 func (c GeosearchBoxHeight) Mi() GeosearchBoxUnitMi {
-	return GeosearchBoxUnitMi{cs: append(c.cs, "mi")}
+	return GeosearchBoxUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
+}
+
+func (c GeosearchBoxHeight) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type GeosearchBoxUnitFt struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeosearchBoxUnitFt) Asc() GeosearchOrderAsc {
-	return GeosearchOrderAsc{cs: append(c.cs, "ASC")}
+	return GeosearchOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c GeosearchBoxUnitFt) Desc() GeosearchOrderDesc {
-	return GeosearchOrderDesc{cs: append(c.cs, "DESC")}
+	return GeosearchOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c GeosearchBoxUnitFt) Count(Count int64) GeosearchCountCount {
-	return GeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c GeosearchBoxUnitFt) Withcoord() GeosearchWithcoordWithcoord {
-	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+	return GeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
 }
 
 func (c GeosearchBoxUnitFt) Withdist() GeosearchWithdistWithdist {
-	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+	return GeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
 }
 
 func (c GeosearchBoxUnitFt) Withhash() GeosearchWithhashWithhash {
-	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c GeosearchBoxUnitFt) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type GeosearchBoxUnitKm struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeosearchBoxUnitKm) Asc() GeosearchOrderAsc {
-	return GeosearchOrderAsc{cs: append(c.cs, "ASC")}
+	return GeosearchOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c GeosearchBoxUnitKm) Desc() GeosearchOrderDesc {
-	return GeosearchOrderDesc{cs: append(c.cs, "DESC")}
+	return GeosearchOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c GeosearchBoxUnitKm) Count(Count int64) GeosearchCountCount {
-	return GeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c GeosearchBoxUnitKm) Withcoord() GeosearchWithcoordWithcoord {
-	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+	return GeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
 }
 
 func (c GeosearchBoxUnitKm) Withdist() GeosearchWithdistWithdist {
-	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+	return GeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
 }
 
 func (c GeosearchBoxUnitKm) Withhash() GeosearchWithhashWithhash {
-	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c GeosearchBoxUnitKm) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type GeosearchBoxUnitM struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeosearchBoxUnitM) Asc() GeosearchOrderAsc {
-	return GeosearchOrderAsc{cs: append(c.cs, "ASC")}
+	return GeosearchOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c GeosearchBoxUnitM) Desc() GeosearchOrderDesc {
-	return GeosearchOrderDesc{cs: append(c.cs, "DESC")}
+	return GeosearchOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c GeosearchBoxUnitM) Count(Count int64) GeosearchCountCount {
-	return GeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c GeosearchBoxUnitM) Withcoord() GeosearchWithcoordWithcoord {
-	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+	return GeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
 }
 
 func (c GeosearchBoxUnitM) Withdist() GeosearchWithdistWithdist {
-	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+	return GeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
 }
 
 func (c GeosearchBoxUnitM) Withhash() GeosearchWithhashWithhash {
-	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c GeosearchBoxUnitM) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type GeosearchBoxUnitMi struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeosearchBoxUnitMi) Asc() GeosearchOrderAsc {
-	return GeosearchOrderAsc{cs: append(c.cs, "ASC")}
+	return GeosearchOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c GeosearchBoxUnitMi) Desc() GeosearchOrderDesc {
-	return GeosearchOrderDesc{cs: append(c.cs, "DESC")}
+	return GeosearchOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c GeosearchBoxUnitMi) Count(Count int64) GeosearchCountCount {
-	return GeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c GeosearchBoxUnitMi) Withcoord() GeosearchWithcoordWithcoord {
-	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+	return GeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
 }
 
 func (c GeosearchBoxUnitMi) Withdist() GeosearchWithdistWithdist {
-	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+	return GeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
 }
 
 func (c GeosearchBoxUnitMi) Withhash() GeosearchWithhashWithhash {
-	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c GeosearchBoxUnitMi) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type GeosearchCircleByradius struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeosearchCircleByradius) M() GeosearchCircleUnitM {
-	return GeosearchCircleUnitM{cs: append(c.cs, "m")}
+	return GeosearchCircleUnitM{cf: c.cf, cs: append(c.cs, "m")}
 }
 
 func (c GeosearchCircleByradius) Km() GeosearchCircleUnitKm {
-	return GeosearchCircleUnitKm{cs: append(c.cs, "km")}
+	return GeosearchCircleUnitKm{cf: c.cf, cs: append(c.cs, "km")}
 }
 
 func (c GeosearchCircleByradius) Ft() GeosearchCircleUnitFt {
-	return GeosearchCircleUnitFt{cs: append(c.cs, "ft")}
+	return GeosearchCircleUnitFt{cf: c.cf, cs: append(c.cs, "ft")}
 }
 
 func (c GeosearchCircleByradius) Mi() GeosearchCircleUnitMi {
-	return GeosearchCircleUnitMi{cs: append(c.cs, "mi")}
+	return GeosearchCircleUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
+}
+
+func (c GeosearchCircleByradius) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type GeosearchCircleUnitFt struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeosearchCircleUnitFt) Bybox(Width float64) GeosearchBoxBybox {
-	return GeosearchBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return GeosearchBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
 }
 
 func (c GeosearchCircleUnitFt) Asc() GeosearchOrderAsc {
-	return GeosearchOrderAsc{cs: append(c.cs, "ASC")}
+	return GeosearchOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c GeosearchCircleUnitFt) Desc() GeosearchOrderDesc {
-	return GeosearchOrderDesc{cs: append(c.cs, "DESC")}
+	return GeosearchOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c GeosearchCircleUnitFt) Count(Count int64) GeosearchCountCount {
-	return GeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c GeosearchCircleUnitFt) Withcoord() GeosearchWithcoordWithcoord {
-	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+	return GeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
 }
 
 func (c GeosearchCircleUnitFt) Withdist() GeosearchWithdistWithdist {
-	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+	return GeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
 }
 
 func (c GeosearchCircleUnitFt) Withhash() GeosearchWithhashWithhash {
-	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c GeosearchCircleUnitFt) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type GeosearchCircleUnitKm struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeosearchCircleUnitKm) Bybox(Width float64) GeosearchBoxBybox {
-	return GeosearchBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return GeosearchBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
 }
 
 func (c GeosearchCircleUnitKm) Asc() GeosearchOrderAsc {
-	return GeosearchOrderAsc{cs: append(c.cs, "ASC")}
+	return GeosearchOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c GeosearchCircleUnitKm) Desc() GeosearchOrderDesc {
-	return GeosearchOrderDesc{cs: append(c.cs, "DESC")}
+	return GeosearchOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c GeosearchCircleUnitKm) Count(Count int64) GeosearchCountCount {
-	return GeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c GeosearchCircleUnitKm) Withcoord() GeosearchWithcoordWithcoord {
-	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+	return GeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
 }
 
 func (c GeosearchCircleUnitKm) Withdist() GeosearchWithdistWithdist {
-	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+	return GeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
 }
 
 func (c GeosearchCircleUnitKm) Withhash() GeosearchWithhashWithhash {
-	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c GeosearchCircleUnitKm) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type GeosearchCircleUnitM struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeosearchCircleUnitM) Bybox(Width float64) GeosearchBoxBybox {
-	return GeosearchBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return GeosearchBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
 }
 
 func (c GeosearchCircleUnitM) Asc() GeosearchOrderAsc {
-	return GeosearchOrderAsc{cs: append(c.cs, "ASC")}
+	return GeosearchOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c GeosearchCircleUnitM) Desc() GeosearchOrderDesc {
-	return GeosearchOrderDesc{cs: append(c.cs, "DESC")}
+	return GeosearchOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c GeosearchCircleUnitM) Count(Count int64) GeosearchCountCount {
-	return GeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c GeosearchCircleUnitM) Withcoord() GeosearchWithcoordWithcoord {
-	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+	return GeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
 }
 
 func (c GeosearchCircleUnitM) Withdist() GeosearchWithdistWithdist {
-	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+	return GeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
 }
 
 func (c GeosearchCircleUnitM) Withhash() GeosearchWithhashWithhash {
-	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c GeosearchCircleUnitM) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type GeosearchCircleUnitMi struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeosearchCircleUnitMi) Bybox(Width float64) GeosearchBoxBybox {
-	return GeosearchBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return GeosearchBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
 }
 
 func (c GeosearchCircleUnitMi) Asc() GeosearchOrderAsc {
-	return GeosearchOrderAsc{cs: append(c.cs, "ASC")}
+	return GeosearchOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c GeosearchCircleUnitMi) Desc() GeosearchOrderDesc {
-	return GeosearchOrderDesc{cs: append(c.cs, "DESC")}
+	return GeosearchOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c GeosearchCircleUnitMi) Count(Count int64) GeosearchCountCount {
-	return GeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c GeosearchCircleUnitMi) Withcoord() GeosearchWithcoordWithcoord {
-	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+	return GeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
 }
 
 func (c GeosearchCircleUnitMi) Withdist() GeosearchWithdistWithdist {
-	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+	return GeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
 }
 
 func (c GeosearchCircleUnitMi) Withhash() GeosearchWithhashWithhash {
-	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c GeosearchCircleUnitMi) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type GeosearchCountAnyAny struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeosearchCountAnyAny) Withcoord() GeosearchWithcoordWithcoord {
-	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+	return GeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
 }
 
 func (c GeosearchCountAnyAny) Withdist() GeosearchWithdistWithdist {
-	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+	return GeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
 }
 
 func (c GeosearchCountAnyAny) Withhash() GeosearchWithhashWithhash {
-	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
 }
 
-func (c GeosearchCountAnyAny) Build() []string {
-	return c.cs
+func (c GeosearchCountAnyAny) Build() Completed {
+	return Completed(c)
+}
+
+func (c GeosearchCountAnyAny) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type GeosearchCountCount struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeosearchCountCount) Any() GeosearchCountAnyAny {
-	return GeosearchCountAnyAny{cs: append(c.cs, "ANY")}
+	return GeosearchCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
 }
 
 func (c GeosearchCountCount) Withcoord() GeosearchWithcoordWithcoord {
-	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+	return GeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
 }
 
 func (c GeosearchCountCount) Withdist() GeosearchWithdistWithdist {
-	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+	return GeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
 }
 
 func (c GeosearchCountCount) Withhash() GeosearchWithhashWithhash {
-	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
 }
 
-func (c GeosearchCountCount) Build() []string {
-	return c.cs
+func (c GeosearchCountCount) Build() Completed {
+	return Completed(c)
+}
+
+func (c GeosearchCountCount) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type GeosearchFromlonlat struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeosearchFromlonlat) Byradius(Radius float64) GeosearchCircleByradius {
-	return GeosearchCircleByradius{cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64))}
+	return GeosearchCircleByradius{cf: c.cf, cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64))}
 }
 
 func (c GeosearchFromlonlat) Bybox(Width float64) GeosearchBoxBybox {
-	return GeosearchBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return GeosearchBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
 }
 
 func (c GeosearchFromlonlat) Asc() GeosearchOrderAsc {
-	return GeosearchOrderAsc{cs: append(c.cs, "ASC")}
+	return GeosearchOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c GeosearchFromlonlat) Desc() GeosearchOrderDesc {
-	return GeosearchOrderDesc{cs: append(c.cs, "DESC")}
+	return GeosearchOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c GeosearchFromlonlat) Count(Count int64) GeosearchCountCount {
-	return GeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c GeosearchFromlonlat) Withcoord() GeosearchWithcoordWithcoord {
-	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+	return GeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
 }
 
 func (c GeosearchFromlonlat) Withdist() GeosearchWithdistWithdist {
-	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+	return GeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
 }
 
 func (c GeosearchFromlonlat) Withhash() GeosearchWithhashWithhash {
-	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c GeosearchFromlonlat) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type GeosearchFrommember struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeosearchFrommember) Fromlonlat(Longitude float64, Latitude float64) GeosearchFromlonlat {
-	return GeosearchFromlonlat{cs: append(c.cs, "FROMLONLAT", strconv.FormatFloat(Longitude, 'f', -1, 64), strconv.FormatFloat(Latitude, 'f', -1, 64))}
+	return GeosearchFromlonlat{cf: c.cf, cs: append(c.cs, "FROMLONLAT", strconv.FormatFloat(Longitude, 'f', -1, 64), strconv.FormatFloat(Latitude, 'f', -1, 64))}
 }
 
 func (c GeosearchFrommember) Byradius(Radius float64) GeosearchCircleByradius {
-	return GeosearchCircleByradius{cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64))}
+	return GeosearchCircleByradius{cf: c.cf, cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64))}
 }
 
 func (c GeosearchFrommember) Bybox(Width float64) GeosearchBoxBybox {
-	return GeosearchBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return GeosearchBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
 }
 
 func (c GeosearchFrommember) Asc() GeosearchOrderAsc {
-	return GeosearchOrderAsc{cs: append(c.cs, "ASC")}
+	return GeosearchOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c GeosearchFrommember) Desc() GeosearchOrderDesc {
-	return GeosearchOrderDesc{cs: append(c.cs, "DESC")}
+	return GeosearchOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c GeosearchFrommember) Count(Count int64) GeosearchCountCount {
-	return GeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c GeosearchFrommember) Withcoord() GeosearchWithcoordWithcoord {
-	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+	return GeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
 }
 
 func (c GeosearchFrommember) Withdist() GeosearchWithdistWithdist {
-	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+	return GeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
 }
 
 func (c GeosearchFrommember) Withhash() GeosearchWithhashWithhash {
-	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c GeosearchFrommember) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type GeosearchKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeosearchKey) Frommember(Member string) GeosearchFrommember {
-	return GeosearchFrommember{cs: append(c.cs, "FROMMEMBER", Member)}
+	return GeosearchFrommember{cf: c.cf, cs: append(c.cs, "FROMMEMBER", Member)}
 }
 
 func (c GeosearchKey) Fromlonlat(Longitude float64, Latitude float64) GeosearchFromlonlat {
-	return GeosearchFromlonlat{cs: append(c.cs, "FROMLONLAT", strconv.FormatFloat(Longitude, 'f', -1, 64), strconv.FormatFloat(Latitude, 'f', -1, 64))}
+	return GeosearchFromlonlat{cf: c.cf, cs: append(c.cs, "FROMLONLAT", strconv.FormatFloat(Longitude, 'f', -1, 64), strconv.FormatFloat(Latitude, 'f', -1, 64))}
 }
 
 func (c GeosearchKey) Byradius(Radius float64) GeosearchCircleByradius {
-	return GeosearchCircleByradius{cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64))}
+	return GeosearchCircleByradius{cf: c.cf, cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64))}
 }
 
 func (c GeosearchKey) Bybox(Width float64) GeosearchBoxBybox {
-	return GeosearchBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return GeosearchBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
 }
 
 func (c GeosearchKey) Asc() GeosearchOrderAsc {
-	return GeosearchOrderAsc{cs: append(c.cs, "ASC")}
+	return GeosearchOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c GeosearchKey) Desc() GeosearchOrderDesc {
-	return GeosearchOrderDesc{cs: append(c.cs, "DESC")}
+	return GeosearchOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c GeosearchKey) Count(Count int64) GeosearchCountCount {
-	return GeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c GeosearchKey) Withcoord() GeosearchWithcoordWithcoord {
-	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+	return GeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
 }
 
 func (c GeosearchKey) Withdist() GeosearchWithdistWithdist {
-	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+	return GeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
 }
 
 func (c GeosearchKey) Withhash() GeosearchWithhashWithhash {
-	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c GeosearchKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type GeosearchOrderAsc struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeosearchOrderAsc) Count(Count int64) GeosearchCountCount {
-	return GeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c GeosearchOrderAsc) Withcoord() GeosearchWithcoordWithcoord {
-	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+	return GeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
 }
 
 func (c GeosearchOrderAsc) Withdist() GeosearchWithdistWithdist {
-	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+	return GeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
 }
 
 func (c GeosearchOrderAsc) Withhash() GeosearchWithhashWithhash {
-	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c GeosearchOrderAsc) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type GeosearchOrderDesc struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeosearchOrderDesc) Count(Count int64) GeosearchCountCount {
-	return GeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c GeosearchOrderDesc) Withcoord() GeosearchWithcoordWithcoord {
-	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD")}
+	return GeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
 }
 
 func (c GeosearchOrderDesc) Withdist() GeosearchWithdistWithdist {
-	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+	return GeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
 }
 
 func (c GeosearchOrderDesc) Withhash() GeosearchWithhashWithhash {
-	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c GeosearchOrderDesc) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type GeosearchWithcoordWithcoord struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeosearchWithcoordWithcoord) Withdist() GeosearchWithdistWithdist {
-	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST")}
+	return GeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
 }
 
 func (c GeosearchWithcoordWithcoord) Withhash() GeosearchWithhashWithhash {
-	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
 }
 
-func (c GeosearchWithcoordWithcoord) Build() []string {
-	return c.cs
+func (c GeosearchWithcoordWithcoord) Build() Completed {
+	return Completed(c)
+}
+
+func (c GeosearchWithcoordWithcoord) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type GeosearchWithdistWithdist struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeosearchWithdistWithdist) Withhash() GeosearchWithhashWithhash {
-	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH")}
+	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
 }
 
-func (c GeosearchWithdistWithdist) Build() []string {
-	return c.cs
+func (c GeosearchWithdistWithdist) Build() Completed {
+	return Completed(c)
+}
+
+func (c GeosearchWithdistWithdist) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type GeosearchWithhashWithhash struct {
 	cs []string
+	cf uint32
 }
 
-func (c GeosearchWithhashWithhash) Build() []string {
-	return c.cs
+func (c GeosearchWithhashWithhash) Build() Completed {
+	return Completed(c)
+}
+
+func (c GeosearchWithhashWithhash) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Geosearchstore struct {
 	cs []string
+	cf uint32
 }
 
 func (c Geosearchstore) Destination(Destination string) GeosearchstoreDestination {
-	return GeosearchstoreDestination{cs: append(c.cs, Destination)}
+	return GeosearchstoreDestination{cf: c.cf, cs: append(c.cs, Destination)}
 }
 
 func (b *Builder) Geosearchstore() (c Geosearchstore) {
@@ -4937,398 +5442,419 @@ func (b *Builder) Geosearchstore() (c Geosearchstore) {
 
 type GeosearchstoreBoxBybox struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeosearchstoreBoxBybox) Height(Height float64) GeosearchstoreBoxHeight {
-	return GeosearchstoreBoxHeight{cs: append(c.cs, strconv.FormatFloat(Height, 'f', -1, 64))}
+	return GeosearchstoreBoxHeight{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Height, 'f', -1, 64))}
 }
 
 type GeosearchstoreBoxHeight struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeosearchstoreBoxHeight) M() GeosearchstoreBoxUnitM {
-	return GeosearchstoreBoxUnitM{cs: append(c.cs, "m")}
+	return GeosearchstoreBoxUnitM{cf: c.cf, cs: append(c.cs, "m")}
 }
 
 func (c GeosearchstoreBoxHeight) Km() GeosearchstoreBoxUnitKm {
-	return GeosearchstoreBoxUnitKm{cs: append(c.cs, "km")}
+	return GeosearchstoreBoxUnitKm{cf: c.cf, cs: append(c.cs, "km")}
 }
 
 func (c GeosearchstoreBoxHeight) Ft() GeosearchstoreBoxUnitFt {
-	return GeosearchstoreBoxUnitFt{cs: append(c.cs, "ft")}
+	return GeosearchstoreBoxUnitFt{cf: c.cf, cs: append(c.cs, "ft")}
 }
 
 func (c GeosearchstoreBoxHeight) Mi() GeosearchstoreBoxUnitMi {
-	return GeosearchstoreBoxUnitMi{cs: append(c.cs, "mi")}
+	return GeosearchstoreBoxUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
 }
 
 type GeosearchstoreBoxUnitFt struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeosearchstoreBoxUnitFt) Asc() GeosearchstoreOrderAsc {
-	return GeosearchstoreOrderAsc{cs: append(c.cs, "ASC")}
+	return GeosearchstoreOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c GeosearchstoreBoxUnitFt) Desc() GeosearchstoreOrderDesc {
-	return GeosearchstoreOrderDesc{cs: append(c.cs, "DESC")}
+	return GeosearchstoreOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c GeosearchstoreBoxUnitFt) Count(Count int64) GeosearchstoreCountCount {
-	return GeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchstoreCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c GeosearchstoreBoxUnitFt) Storedist() GeosearchstoreStoredistStoredist {
-	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
+	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
 }
 
 type GeosearchstoreBoxUnitKm struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeosearchstoreBoxUnitKm) Asc() GeosearchstoreOrderAsc {
-	return GeosearchstoreOrderAsc{cs: append(c.cs, "ASC")}
+	return GeosearchstoreOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c GeosearchstoreBoxUnitKm) Desc() GeosearchstoreOrderDesc {
-	return GeosearchstoreOrderDesc{cs: append(c.cs, "DESC")}
+	return GeosearchstoreOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c GeosearchstoreBoxUnitKm) Count(Count int64) GeosearchstoreCountCount {
-	return GeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchstoreCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c GeosearchstoreBoxUnitKm) Storedist() GeosearchstoreStoredistStoredist {
-	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
+	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
 }
 
 type GeosearchstoreBoxUnitM struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeosearchstoreBoxUnitM) Asc() GeosearchstoreOrderAsc {
-	return GeosearchstoreOrderAsc{cs: append(c.cs, "ASC")}
+	return GeosearchstoreOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c GeosearchstoreBoxUnitM) Desc() GeosearchstoreOrderDesc {
-	return GeosearchstoreOrderDesc{cs: append(c.cs, "DESC")}
+	return GeosearchstoreOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c GeosearchstoreBoxUnitM) Count(Count int64) GeosearchstoreCountCount {
-	return GeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchstoreCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c GeosearchstoreBoxUnitM) Storedist() GeosearchstoreStoredistStoredist {
-	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
+	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
 }
 
 type GeosearchstoreBoxUnitMi struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeosearchstoreBoxUnitMi) Asc() GeosearchstoreOrderAsc {
-	return GeosearchstoreOrderAsc{cs: append(c.cs, "ASC")}
+	return GeosearchstoreOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c GeosearchstoreBoxUnitMi) Desc() GeosearchstoreOrderDesc {
-	return GeosearchstoreOrderDesc{cs: append(c.cs, "DESC")}
+	return GeosearchstoreOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c GeosearchstoreBoxUnitMi) Count(Count int64) GeosearchstoreCountCount {
-	return GeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchstoreCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c GeosearchstoreBoxUnitMi) Storedist() GeosearchstoreStoredistStoredist {
-	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
+	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
 }
 
 type GeosearchstoreCircleByradius struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeosearchstoreCircleByradius) M() GeosearchstoreCircleUnitM {
-	return GeosearchstoreCircleUnitM{cs: append(c.cs, "m")}
+	return GeosearchstoreCircleUnitM{cf: c.cf, cs: append(c.cs, "m")}
 }
 
 func (c GeosearchstoreCircleByradius) Km() GeosearchstoreCircleUnitKm {
-	return GeosearchstoreCircleUnitKm{cs: append(c.cs, "km")}
+	return GeosearchstoreCircleUnitKm{cf: c.cf, cs: append(c.cs, "km")}
 }
 
 func (c GeosearchstoreCircleByradius) Ft() GeosearchstoreCircleUnitFt {
-	return GeosearchstoreCircleUnitFt{cs: append(c.cs, "ft")}
+	return GeosearchstoreCircleUnitFt{cf: c.cf, cs: append(c.cs, "ft")}
 }
 
 func (c GeosearchstoreCircleByradius) Mi() GeosearchstoreCircleUnitMi {
-	return GeosearchstoreCircleUnitMi{cs: append(c.cs, "mi")}
+	return GeosearchstoreCircleUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
 }
 
 type GeosearchstoreCircleUnitFt struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeosearchstoreCircleUnitFt) Bybox(Width float64) GeosearchstoreBoxBybox {
-	return GeosearchstoreBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return GeosearchstoreBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
 }
 
 func (c GeosearchstoreCircleUnitFt) Asc() GeosearchstoreOrderAsc {
-	return GeosearchstoreOrderAsc{cs: append(c.cs, "ASC")}
+	return GeosearchstoreOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c GeosearchstoreCircleUnitFt) Desc() GeosearchstoreOrderDesc {
-	return GeosearchstoreOrderDesc{cs: append(c.cs, "DESC")}
+	return GeosearchstoreOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c GeosearchstoreCircleUnitFt) Count(Count int64) GeosearchstoreCountCount {
-	return GeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchstoreCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c GeosearchstoreCircleUnitFt) Storedist() GeosearchstoreStoredistStoredist {
-	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
+	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
 }
 
 type GeosearchstoreCircleUnitKm struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeosearchstoreCircleUnitKm) Bybox(Width float64) GeosearchstoreBoxBybox {
-	return GeosearchstoreBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return GeosearchstoreBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
 }
 
 func (c GeosearchstoreCircleUnitKm) Asc() GeosearchstoreOrderAsc {
-	return GeosearchstoreOrderAsc{cs: append(c.cs, "ASC")}
+	return GeosearchstoreOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c GeosearchstoreCircleUnitKm) Desc() GeosearchstoreOrderDesc {
-	return GeosearchstoreOrderDesc{cs: append(c.cs, "DESC")}
+	return GeosearchstoreOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c GeosearchstoreCircleUnitKm) Count(Count int64) GeosearchstoreCountCount {
-	return GeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchstoreCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c GeosearchstoreCircleUnitKm) Storedist() GeosearchstoreStoredistStoredist {
-	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
+	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
 }
 
 type GeosearchstoreCircleUnitM struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeosearchstoreCircleUnitM) Bybox(Width float64) GeosearchstoreBoxBybox {
-	return GeosearchstoreBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return GeosearchstoreBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
 }
 
 func (c GeosearchstoreCircleUnitM) Asc() GeosearchstoreOrderAsc {
-	return GeosearchstoreOrderAsc{cs: append(c.cs, "ASC")}
+	return GeosearchstoreOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c GeosearchstoreCircleUnitM) Desc() GeosearchstoreOrderDesc {
-	return GeosearchstoreOrderDesc{cs: append(c.cs, "DESC")}
+	return GeosearchstoreOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c GeosearchstoreCircleUnitM) Count(Count int64) GeosearchstoreCountCount {
-	return GeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchstoreCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c GeosearchstoreCircleUnitM) Storedist() GeosearchstoreStoredistStoredist {
-	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
+	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
 }
 
 type GeosearchstoreCircleUnitMi struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeosearchstoreCircleUnitMi) Bybox(Width float64) GeosearchstoreBoxBybox {
-	return GeosearchstoreBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return GeosearchstoreBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
 }
 
 func (c GeosearchstoreCircleUnitMi) Asc() GeosearchstoreOrderAsc {
-	return GeosearchstoreOrderAsc{cs: append(c.cs, "ASC")}
+	return GeosearchstoreOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c GeosearchstoreCircleUnitMi) Desc() GeosearchstoreOrderDesc {
-	return GeosearchstoreOrderDesc{cs: append(c.cs, "DESC")}
+	return GeosearchstoreOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c GeosearchstoreCircleUnitMi) Count(Count int64) GeosearchstoreCountCount {
-	return GeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchstoreCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c GeosearchstoreCircleUnitMi) Storedist() GeosearchstoreStoredistStoredist {
-	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
+	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
 }
 
 type GeosearchstoreCountAnyAny struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeosearchstoreCountAnyAny) Storedist() GeosearchstoreStoredistStoredist {
-	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
+	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
 }
 
-func (c GeosearchstoreCountAnyAny) Build() []string {
-	return c.cs
+func (c GeosearchstoreCountAnyAny) Build() Completed {
+	return Completed(c)
 }
 
 type GeosearchstoreCountCount struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeosearchstoreCountCount) Any() GeosearchstoreCountAnyAny {
-	return GeosearchstoreCountAnyAny{cs: append(c.cs, "ANY")}
+	return GeosearchstoreCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
 }
 
 func (c GeosearchstoreCountCount) Storedist() GeosearchstoreStoredistStoredist {
-	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
+	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
 }
 
-func (c GeosearchstoreCountCount) Build() []string {
-	return c.cs
+func (c GeosearchstoreCountCount) Build() Completed {
+	return Completed(c)
 }
 
 type GeosearchstoreDestination struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeosearchstoreDestination) Source(Source string) GeosearchstoreSource {
-	return GeosearchstoreSource{cs: append(c.cs, Source)}
+	return GeosearchstoreSource{cf: c.cf, cs: append(c.cs, Source)}
 }
 
 type GeosearchstoreFromlonlat struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeosearchstoreFromlonlat) Byradius(Radius float64) GeosearchstoreCircleByradius {
-	return GeosearchstoreCircleByradius{cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64))}
+	return GeosearchstoreCircleByradius{cf: c.cf, cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64))}
 }
 
 func (c GeosearchstoreFromlonlat) Bybox(Width float64) GeosearchstoreBoxBybox {
-	return GeosearchstoreBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return GeosearchstoreBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
 }
 
 func (c GeosearchstoreFromlonlat) Asc() GeosearchstoreOrderAsc {
-	return GeosearchstoreOrderAsc{cs: append(c.cs, "ASC")}
+	return GeosearchstoreOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c GeosearchstoreFromlonlat) Desc() GeosearchstoreOrderDesc {
-	return GeosearchstoreOrderDesc{cs: append(c.cs, "DESC")}
+	return GeosearchstoreOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c GeosearchstoreFromlonlat) Count(Count int64) GeosearchstoreCountCount {
-	return GeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchstoreCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c GeosearchstoreFromlonlat) Storedist() GeosearchstoreStoredistStoredist {
-	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
+	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
 }
 
 type GeosearchstoreFrommember struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeosearchstoreFrommember) Fromlonlat(Longitude float64, Latitude float64) GeosearchstoreFromlonlat {
-	return GeosearchstoreFromlonlat{cs: append(c.cs, "FROMLONLAT", strconv.FormatFloat(Longitude, 'f', -1, 64), strconv.FormatFloat(Latitude, 'f', -1, 64))}
+	return GeosearchstoreFromlonlat{cf: c.cf, cs: append(c.cs, "FROMLONLAT", strconv.FormatFloat(Longitude, 'f', -1, 64), strconv.FormatFloat(Latitude, 'f', -1, 64))}
 }
 
 func (c GeosearchstoreFrommember) Byradius(Radius float64) GeosearchstoreCircleByradius {
-	return GeosearchstoreCircleByradius{cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64))}
+	return GeosearchstoreCircleByradius{cf: c.cf, cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64))}
 }
 
 func (c GeosearchstoreFrommember) Bybox(Width float64) GeosearchstoreBoxBybox {
-	return GeosearchstoreBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return GeosearchstoreBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
 }
 
 func (c GeosearchstoreFrommember) Asc() GeosearchstoreOrderAsc {
-	return GeosearchstoreOrderAsc{cs: append(c.cs, "ASC")}
+	return GeosearchstoreOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c GeosearchstoreFrommember) Desc() GeosearchstoreOrderDesc {
-	return GeosearchstoreOrderDesc{cs: append(c.cs, "DESC")}
+	return GeosearchstoreOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c GeosearchstoreFrommember) Count(Count int64) GeosearchstoreCountCount {
-	return GeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchstoreCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c GeosearchstoreFrommember) Storedist() GeosearchstoreStoredistStoredist {
-	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
+	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
 }
 
 type GeosearchstoreOrderAsc struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeosearchstoreOrderAsc) Count(Count int64) GeosearchstoreCountCount {
-	return GeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchstoreCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c GeosearchstoreOrderAsc) Storedist() GeosearchstoreStoredistStoredist {
-	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
+	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
 }
 
 type GeosearchstoreOrderDesc struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeosearchstoreOrderDesc) Count(Count int64) GeosearchstoreCountCount {
-	return GeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchstoreCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c GeosearchstoreOrderDesc) Storedist() GeosearchstoreStoredistStoredist {
-	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
+	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
 }
 
 type GeosearchstoreSource struct {
 	cs []string
+	cf uint32
 }
 
 func (c GeosearchstoreSource) Frommember(Member string) GeosearchstoreFrommember {
-	return GeosearchstoreFrommember{cs: append(c.cs, "FROMMEMBER", Member)}
+	return GeosearchstoreFrommember{cf: c.cf, cs: append(c.cs, "FROMMEMBER", Member)}
 }
 
 func (c GeosearchstoreSource) Fromlonlat(Longitude float64, Latitude float64) GeosearchstoreFromlonlat {
-	return GeosearchstoreFromlonlat{cs: append(c.cs, "FROMLONLAT", strconv.FormatFloat(Longitude, 'f', -1, 64), strconv.FormatFloat(Latitude, 'f', -1, 64))}
+	return GeosearchstoreFromlonlat{cf: c.cf, cs: append(c.cs, "FROMLONLAT", strconv.FormatFloat(Longitude, 'f', -1, 64), strconv.FormatFloat(Latitude, 'f', -1, 64))}
 }
 
 func (c GeosearchstoreSource) Byradius(Radius float64) GeosearchstoreCircleByradius {
-	return GeosearchstoreCircleByradius{cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64))}
+	return GeosearchstoreCircleByradius{cf: c.cf, cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64))}
 }
 
 func (c GeosearchstoreSource) Bybox(Width float64) GeosearchstoreBoxBybox {
-	return GeosearchstoreBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return GeosearchstoreBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
 }
 
 func (c GeosearchstoreSource) Asc() GeosearchstoreOrderAsc {
-	return GeosearchstoreOrderAsc{cs: append(c.cs, "ASC")}
+	return GeosearchstoreOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c GeosearchstoreSource) Desc() GeosearchstoreOrderDesc {
-	return GeosearchstoreOrderDesc{cs: append(c.cs, "DESC")}
+	return GeosearchstoreOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c GeosearchstoreSource) Count(Count int64) GeosearchstoreCountCount {
-	return GeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchstoreCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c GeosearchstoreSource) Storedist() GeosearchstoreStoredistStoredist {
-	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST")}
+	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
 }
 
 type GeosearchstoreStoredistStoredist struct {
 	cs []string
+	cf uint32
 }
 
-func (c GeosearchstoreStoredistStoredist) Build() []string {
-	return c.cs
+func (c GeosearchstoreStoredistStoredist) Build() Completed {
+	return Completed(c)
 }
 
 type Get struct {
 	cs []string
+	cf uint32
 }
 
 func (c Get) Key(Key string) GetKey {
-	return GetKey{cs: append(c.cs, Key)}
+	return GetKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Get() (c Get) {
@@ -5338,18 +5864,24 @@ func (b *Builder) Get() (c Get) {
 
 type GetKey struct {
 	cs []string
+	cf uint32
 }
 
-func (c GetKey) Build() []string {
-	return c.cs
+func (c GetKey) Build() Completed {
+	return Completed(c)
+}
+
+func (c GetKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Getbit struct {
 	cs []string
+	cf uint32
 }
 
 func (c Getbit) Key(Key string) GetbitKey {
-	return GetbitKey{cs: append(c.cs, Key)}
+	return GetbitKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Getbit() (c Getbit) {
@@ -5359,26 +5891,37 @@ func (b *Builder) Getbit() (c Getbit) {
 
 type GetbitKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c GetbitKey) Offset(Offset int64) GetbitOffset {
-	return GetbitOffset{cs: append(c.cs, strconv.FormatInt(Offset, 10))}
+	return GetbitOffset{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Offset, 10))}
+}
+
+func (c GetbitKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type GetbitOffset struct {
 	cs []string
+	cf uint32
 }
 
-func (c GetbitOffset) Build() []string {
-	return c.cs
+func (c GetbitOffset) Build() Completed {
+	return Completed(c)
+}
+
+func (c GetbitOffset) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Getdel struct {
 	cs []string
+	cf uint32
 }
 
 func (c Getdel) Key(Key string) GetdelKey {
-	return GetdelKey{cs: append(c.cs, Key)}
+	return GetdelKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Getdel() (c Getdel) {
@@ -5388,18 +5931,20 @@ func (b *Builder) Getdel() (c Getdel) {
 
 type GetdelKey struct {
 	cs []string
+	cf uint32
 }
 
-func (c GetdelKey) Build() []string {
-	return c.cs
+func (c GetdelKey) Build() Completed {
+	return Completed(c)
 }
 
 type Getex struct {
 	cs []string
+	cf uint32
 }
 
 func (c Getex) Key(Key string) GetexKey {
-	return GetexKey{cs: append(c.cs, Key)}
+	return GetexKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Getex() (c Getex) {
@@ -5409,78 +5954,85 @@ func (b *Builder) Getex() (c Getex) {
 
 type GetexExpirationEx struct {
 	cs []string
+	cf uint32
 }
 
-func (c GetexExpirationEx) Build() []string {
-	return c.cs
+func (c GetexExpirationEx) Build() Completed {
+	return Completed(c)
 }
 
 type GetexExpirationExat struct {
 	cs []string
+	cf uint32
 }
 
-func (c GetexExpirationExat) Build() []string {
-	return c.cs
+func (c GetexExpirationExat) Build() Completed {
+	return Completed(c)
 }
 
 type GetexExpirationPersist struct {
 	cs []string
+	cf uint32
 }
 
-func (c GetexExpirationPersist) Build() []string {
-	return c.cs
+func (c GetexExpirationPersist) Build() Completed {
+	return Completed(c)
 }
 
 type GetexExpirationPx struct {
 	cs []string
+	cf uint32
 }
 
-func (c GetexExpirationPx) Build() []string {
-	return c.cs
+func (c GetexExpirationPx) Build() Completed {
+	return Completed(c)
 }
 
 type GetexExpirationPxat struct {
 	cs []string
+	cf uint32
 }
 
-func (c GetexExpirationPxat) Build() []string {
-	return c.cs
+func (c GetexExpirationPxat) Build() Completed {
+	return Completed(c)
 }
 
 type GetexKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c GetexKey) Ex(Seconds int64) GetexExpirationEx {
-	return GetexExpirationEx{cs: append(c.cs, "EX", strconv.FormatInt(Seconds, 10))}
+	return GetexExpirationEx{cf: c.cf, cs: append(c.cs, "EX", strconv.FormatInt(Seconds, 10))}
 }
 
 func (c GetexKey) Px(Milliseconds int64) GetexExpirationPx {
-	return GetexExpirationPx{cs: append(c.cs, "PX", strconv.FormatInt(Milliseconds, 10))}
+	return GetexExpirationPx{cf: c.cf, cs: append(c.cs, "PX", strconv.FormatInt(Milliseconds, 10))}
 }
 
 func (c GetexKey) Exat(Timestamp int64) GetexExpirationExat {
-	return GetexExpirationExat{cs: append(c.cs, "EXAT", strconv.FormatInt(Timestamp, 10))}
+	return GetexExpirationExat{cf: c.cf, cs: append(c.cs, "EXAT", strconv.FormatInt(Timestamp, 10))}
 }
 
 func (c GetexKey) Pxat(Millisecondstimestamp int64) GetexExpirationPxat {
-	return GetexExpirationPxat{cs: append(c.cs, "PXAT", strconv.FormatInt(Millisecondstimestamp, 10))}
+	return GetexExpirationPxat{cf: c.cf, cs: append(c.cs, "PXAT", strconv.FormatInt(Millisecondstimestamp, 10))}
 }
 
 func (c GetexKey) Persist() GetexExpirationPersist {
-	return GetexExpirationPersist{cs: append(c.cs, "PERSIST")}
+	return GetexExpirationPersist{cf: c.cf, cs: append(c.cs, "PERSIST")}
 }
 
-func (c GetexKey) Build() []string {
-	return c.cs
+func (c GetexKey) Build() Completed {
+	return Completed(c)
 }
 
 type Getrange struct {
 	cs []string
+	cf uint32
 }
 
 func (c Getrange) Key(Key string) GetrangeKey {
-	return GetrangeKey{cs: append(c.cs, Key)}
+	return GetrangeKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Getrange() (c Getrange) {
@@ -5490,34 +6042,50 @@ func (b *Builder) Getrange() (c Getrange) {
 
 type GetrangeEnd struct {
 	cs []string
+	cf uint32
 }
 
-func (c GetrangeEnd) Build() []string {
-	return c.cs
+func (c GetrangeEnd) Build() Completed {
+	return Completed(c)
+}
+
+func (c GetrangeEnd) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type GetrangeKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c GetrangeKey) Start(Start int64) GetrangeStart {
-	return GetrangeStart{cs: append(c.cs, strconv.FormatInt(Start, 10))}
+	return GetrangeStart{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Start, 10))}
+}
+
+func (c GetrangeKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type GetrangeStart struct {
 	cs []string
+	cf uint32
 }
 
 func (c GetrangeStart) End(End int64) GetrangeEnd {
-	return GetrangeEnd{cs: append(c.cs, strconv.FormatInt(End, 10))}
+	return GetrangeEnd{cf: c.cf, cs: append(c.cs, strconv.FormatInt(End, 10))}
+}
+
+func (c GetrangeStart) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Getset struct {
 	cs []string
+	cf uint32
 }
 
 func (c Getset) Key(Key string) GetsetKey {
-	return GetsetKey{cs: append(c.cs, Key)}
+	return GetsetKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Getset() (c Getset) {
@@ -5527,26 +6095,29 @@ func (b *Builder) Getset() (c Getset) {
 
 type GetsetKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c GetsetKey) Value(Value string) GetsetValue {
-	return GetsetValue{cs: append(c.cs, Value)}
+	return GetsetValue{cf: c.cf, cs: append(c.cs, Value)}
 }
 
 type GetsetValue struct {
 	cs []string
+	cf uint32
 }
 
-func (c GetsetValue) Build() []string {
-	return c.cs
+func (c GetsetValue) Build() Completed {
+	return Completed(c)
 }
 
 type Hdel struct {
 	cs []string
+	cf uint32
 }
 
 func (c Hdel) Key(Key string) HdelKey {
-	return HdelKey{cs: append(c.cs, Key)}
+	return HdelKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Hdel() (c Hdel) {
@@ -5556,30 +6127,33 @@ func (b *Builder) Hdel() (c Hdel) {
 
 type HdelField struct {
 	cs []string
+	cf uint32
 }
 
 func (c HdelField) Field(Field ...string) HdelField {
-	return HdelField{cs: append(c.cs, Field...)}
+	return HdelField{cf: c.cf, cs: append(c.cs, Field...)}
 }
 
-func (c HdelField) Build() []string {
-	return c.cs
+func (c HdelField) Build() Completed {
+	return Completed(c)
 }
 
 type HdelKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c HdelKey) Field(Field ...string) HdelField {
-	return HdelField{cs: append(c.cs, Field...)}
+	return HdelField{cf: c.cf, cs: append(c.cs, Field...)}
 }
 
 type Hello struct {
 	cs []string
+	cf uint32
 }
 
 func (c Hello) Protover(Protover int64) HelloArgumentsProtover {
-	return HelloArgumentsProtover{cs: append(c.cs, strconv.FormatInt(Protover, 10))}
+	return HelloArgumentsProtover{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Protover, 10))}
 }
 
 func (b *Builder) Hello() (c Hello) {
@@ -5589,46 +6163,50 @@ func (b *Builder) Hello() (c Hello) {
 
 type HelloArgumentsAuth struct {
 	cs []string
+	cf uint32
 }
 
 func (c HelloArgumentsAuth) Setname(Clientname string) HelloArgumentsSetname {
-	return HelloArgumentsSetname{cs: append(c.cs, "SETNAME", Clientname)}
+	return HelloArgumentsSetname{cf: c.cf, cs: append(c.cs, "SETNAME", Clientname)}
 }
 
-func (c HelloArgumentsAuth) Build() []string {
-	return c.cs
+func (c HelloArgumentsAuth) Build() Completed {
+	return Completed(c)
 }
 
 type HelloArgumentsProtover struct {
 	cs []string
+	cf uint32
 }
 
 func (c HelloArgumentsProtover) Auth(Username string, Password string) HelloArgumentsAuth {
-	return HelloArgumentsAuth{cs: append(c.cs, "AUTH", Username, Password)}
+	return HelloArgumentsAuth{cf: c.cf, cs: append(c.cs, "AUTH", Username, Password)}
 }
 
 func (c HelloArgumentsProtover) Setname(Clientname string) HelloArgumentsSetname {
-	return HelloArgumentsSetname{cs: append(c.cs, "SETNAME", Clientname)}
+	return HelloArgumentsSetname{cf: c.cf, cs: append(c.cs, "SETNAME", Clientname)}
 }
 
-func (c HelloArgumentsProtover) Build() []string {
-	return c.cs
+func (c HelloArgumentsProtover) Build() Completed {
+	return Completed(c)
 }
 
 type HelloArgumentsSetname struct {
 	cs []string
+	cf uint32
 }
 
-func (c HelloArgumentsSetname) Build() []string {
-	return c.cs
+func (c HelloArgumentsSetname) Build() Completed {
+	return Completed(c)
 }
 
 type Hexists struct {
 	cs []string
+	cf uint32
 }
 
 func (c Hexists) Key(Key string) HexistsKey {
-	return HexistsKey{cs: append(c.cs, Key)}
+	return HexistsKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Hexists() (c Hexists) {
@@ -5638,26 +6216,37 @@ func (b *Builder) Hexists() (c Hexists) {
 
 type HexistsField struct {
 	cs []string
+	cf uint32
 }
 
-func (c HexistsField) Build() []string {
-	return c.cs
+func (c HexistsField) Build() Completed {
+	return Completed(c)
+}
+
+func (c HexistsField) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type HexistsKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c HexistsKey) Field(Field string) HexistsField {
-	return HexistsField{cs: append(c.cs, Field)}
+	return HexistsField{cf: c.cf, cs: append(c.cs, Field)}
+}
+
+func (c HexistsKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Hget struct {
 	cs []string
+	cf uint32
 }
 
 func (c Hget) Key(Key string) HgetKey {
-	return HgetKey{cs: append(c.cs, Key)}
+	return HgetKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Hget() (c Hget) {
@@ -5667,26 +6256,37 @@ func (b *Builder) Hget() (c Hget) {
 
 type HgetField struct {
 	cs []string
+	cf uint32
 }
 
-func (c HgetField) Build() []string {
-	return c.cs
+func (c HgetField) Build() Completed {
+	return Completed(c)
+}
+
+func (c HgetField) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type HgetKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c HgetKey) Field(Field string) HgetField {
-	return HgetField{cs: append(c.cs, Field)}
+	return HgetField{cf: c.cf, cs: append(c.cs, Field)}
+}
+
+func (c HgetKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Hgetall struct {
 	cs []string
+	cf uint32
 }
 
 func (c Hgetall) Key(Key string) HgetallKey {
-	return HgetallKey{cs: append(c.cs, Key)}
+	return HgetallKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Hgetall() (c Hgetall) {
@@ -5696,18 +6296,24 @@ func (b *Builder) Hgetall() (c Hgetall) {
 
 type HgetallKey struct {
 	cs []string
+	cf uint32
 }
 
-func (c HgetallKey) Build() []string {
-	return c.cs
+func (c HgetallKey) Build() Completed {
+	return Completed(c)
+}
+
+func (c HgetallKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Hincrby struct {
 	cs []string
+	cf uint32
 }
 
 func (c Hincrby) Key(Key string) HincrbyKey {
-	return HincrbyKey{cs: append(c.cs, Key)}
+	return HincrbyKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Hincrby() (c Hincrby) {
@@ -5717,34 +6323,38 @@ func (b *Builder) Hincrby() (c Hincrby) {
 
 type HincrbyField struct {
 	cs []string
+	cf uint32
 }
 
 func (c HincrbyField) Increment(Increment int64) HincrbyIncrement {
-	return HincrbyIncrement{cs: append(c.cs, strconv.FormatInt(Increment, 10))}
+	return HincrbyIncrement{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Increment, 10))}
 }
 
 type HincrbyIncrement struct {
 	cs []string
+	cf uint32
 }
 
-func (c HincrbyIncrement) Build() []string {
-	return c.cs
+func (c HincrbyIncrement) Build() Completed {
+	return Completed(c)
 }
 
 type HincrbyKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c HincrbyKey) Field(Field string) HincrbyField {
-	return HincrbyField{cs: append(c.cs, Field)}
+	return HincrbyField{cf: c.cf, cs: append(c.cs, Field)}
 }
 
 type Hincrbyfloat struct {
 	cs []string
+	cf uint32
 }
 
 func (c Hincrbyfloat) Key(Key string) HincrbyfloatKey {
-	return HincrbyfloatKey{cs: append(c.cs, Key)}
+	return HincrbyfloatKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Hincrbyfloat() (c Hincrbyfloat) {
@@ -5754,34 +6364,38 @@ func (b *Builder) Hincrbyfloat() (c Hincrbyfloat) {
 
 type HincrbyfloatField struct {
 	cs []string
+	cf uint32
 }
 
 func (c HincrbyfloatField) Increment(Increment float64) HincrbyfloatIncrement {
-	return HincrbyfloatIncrement{cs: append(c.cs, strconv.FormatFloat(Increment, 'f', -1, 64))}
+	return HincrbyfloatIncrement{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Increment, 'f', -1, 64))}
 }
 
 type HincrbyfloatIncrement struct {
 	cs []string
+	cf uint32
 }
 
-func (c HincrbyfloatIncrement) Build() []string {
-	return c.cs
+func (c HincrbyfloatIncrement) Build() Completed {
+	return Completed(c)
 }
 
 type HincrbyfloatKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c HincrbyfloatKey) Field(Field string) HincrbyfloatField {
-	return HincrbyfloatField{cs: append(c.cs, Field)}
+	return HincrbyfloatField{cf: c.cf, cs: append(c.cs, Field)}
 }
 
 type Hkeys struct {
 	cs []string
+	cf uint32
 }
 
 func (c Hkeys) Key(Key string) HkeysKey {
-	return HkeysKey{cs: append(c.cs, Key)}
+	return HkeysKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Hkeys() (c Hkeys) {
@@ -5791,18 +6405,24 @@ func (b *Builder) Hkeys() (c Hkeys) {
 
 type HkeysKey struct {
 	cs []string
+	cf uint32
 }
 
-func (c HkeysKey) Build() []string {
-	return c.cs
+func (c HkeysKey) Build() Completed {
+	return Completed(c)
+}
+
+func (c HkeysKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Hlen struct {
 	cs []string
+	cf uint32
 }
 
 func (c Hlen) Key(Key string) HlenKey {
-	return HlenKey{cs: append(c.cs, Key)}
+	return HlenKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Hlen() (c Hlen) {
@@ -5812,18 +6432,24 @@ func (b *Builder) Hlen() (c Hlen) {
 
 type HlenKey struct {
 	cs []string
+	cf uint32
 }
 
-func (c HlenKey) Build() []string {
-	return c.cs
+func (c HlenKey) Build() Completed {
+	return Completed(c)
+}
+
+func (c HlenKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Hmget struct {
 	cs []string
+	cf uint32
 }
 
 func (c Hmget) Key(Key string) HmgetKey {
-	return HmgetKey{cs: append(c.cs, Key)}
+	return HmgetKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Hmget() (c Hmget) {
@@ -5833,30 +6459,41 @@ func (b *Builder) Hmget() (c Hmget) {
 
 type HmgetField struct {
 	cs []string
+	cf uint32
 }
 
 func (c HmgetField) Field(Field ...string) HmgetField {
-	return HmgetField{cs: append(c.cs, Field...)}
+	return HmgetField{cf: c.cf, cs: append(c.cs, Field...)}
 }
 
-func (c HmgetField) Build() []string {
-	return c.cs
+func (c HmgetField) Build() Completed {
+	return Completed(c)
+}
+
+func (c HmgetField) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type HmgetKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c HmgetKey) Field(Field ...string) HmgetField {
-	return HmgetField{cs: append(c.cs, Field...)}
+	return HmgetField{cf: c.cf, cs: append(c.cs, Field...)}
+}
+
+func (c HmgetKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Hmset struct {
 	cs []string
+	cf uint32
 }
 
 func (c Hmset) Key(Key string) HmsetKey {
-	return HmsetKey{cs: append(c.cs, Key)}
+	return HmsetKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Hmset() (c Hmset) {
@@ -5866,30 +6503,33 @@ func (b *Builder) Hmset() (c Hmset) {
 
 type HmsetFieldValue struct {
 	cs []string
+	cf uint32
 }
 
 func (c HmsetFieldValue) FieldValue(Field string, Value string) HmsetFieldValue {
-	return HmsetFieldValue{cs: append(c.cs, Field, Value)}
+	return HmsetFieldValue{cf: c.cf, cs: append(c.cs, Field, Value)}
 }
 
-func (c HmsetFieldValue) Build() []string {
-	return c.cs
+func (c HmsetFieldValue) Build() Completed {
+	return Completed(c)
 }
 
 type HmsetKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c HmsetKey) FieldValue() HmsetFieldValue {
-	return HmsetFieldValue{cs: append(c.cs)}
+	return HmsetFieldValue{cf: c.cf, cs: append(c.cs, )}
 }
 
 type Hrandfield struct {
 	cs []string
+	cf uint32
 }
 
 func (c Hrandfield) Key(Key string) HrandfieldKey {
-	return HrandfieldKey{cs: append(c.cs, Key)}
+	return HrandfieldKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Hrandfield() (c Hrandfield) {
@@ -5899,38 +6539,42 @@ func (b *Builder) Hrandfield() (c Hrandfield) {
 
 type HrandfieldKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c HrandfieldKey) Count(Count int64) HrandfieldOptionsCount {
-	return HrandfieldOptionsCount{cs: append(c.cs, strconv.FormatInt(Count, 10))}
+	return HrandfieldOptionsCount{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Count, 10))}
 }
 
 type HrandfieldOptionsCount struct {
 	cs []string
+	cf uint32
 }
 
 func (c HrandfieldOptionsCount) Withvalues() HrandfieldOptionsWithvaluesWithvalues {
-	return HrandfieldOptionsWithvaluesWithvalues{cs: append(c.cs, "WITHVALUES")}
+	return HrandfieldOptionsWithvaluesWithvalues{cf: c.cf, cs: append(c.cs, "WITHVALUES")}
 }
 
-func (c HrandfieldOptionsCount) Build() []string {
-	return c.cs
+func (c HrandfieldOptionsCount) Build() Completed {
+	return Completed(c)
 }
 
 type HrandfieldOptionsWithvaluesWithvalues struct {
 	cs []string
+	cf uint32
 }
 
-func (c HrandfieldOptionsWithvaluesWithvalues) Build() []string {
-	return c.cs
+func (c HrandfieldOptionsWithvaluesWithvalues) Build() Completed {
+	return Completed(c)
 }
 
 type Hscan struct {
 	cs []string
+	cf uint32
 }
 
 func (c Hscan) Key(Key string) HscanKey {
-	return HscanKey{cs: append(c.cs, Key)}
+	return HscanKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Hscan() (c Hscan) {
@@ -5940,54 +6584,59 @@ func (b *Builder) Hscan() (c Hscan) {
 
 type HscanCount struct {
 	cs []string
+	cf uint32
 }
 
-func (c HscanCount) Build() []string {
-	return c.cs
+func (c HscanCount) Build() Completed {
+	return Completed(c)
 }
 
 type HscanCursor struct {
 	cs []string
+	cf uint32
 }
 
 func (c HscanCursor) Match(Pattern string) HscanMatch {
-	return HscanMatch{cs: append(c.cs, "MATCH", Pattern)}
+	return HscanMatch{cf: c.cf, cs: append(c.cs, "MATCH", Pattern)}
 }
 
 func (c HscanCursor) Count(Count int64) HscanCount {
-	return HscanCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return HscanCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c HscanCursor) Build() []string {
-	return c.cs
+func (c HscanCursor) Build() Completed {
+	return Completed(c)
 }
 
 type HscanKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c HscanKey) Cursor(Cursor int64) HscanCursor {
-	return HscanCursor{cs: append(c.cs, strconv.FormatInt(Cursor, 10))}
+	return HscanCursor{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Cursor, 10))}
 }
 
 type HscanMatch struct {
 	cs []string
+	cf uint32
 }
 
 func (c HscanMatch) Count(Count int64) HscanCount {
-	return HscanCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return HscanCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c HscanMatch) Build() []string {
-	return c.cs
+func (c HscanMatch) Build() Completed {
+	return Completed(c)
 }
 
 type Hset struct {
 	cs []string
+	cf uint32
 }
 
 func (c Hset) Key(Key string) HsetKey {
-	return HsetKey{cs: append(c.cs, Key)}
+	return HsetKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Hset() (c Hset) {
@@ -5997,30 +6646,33 @@ func (b *Builder) Hset() (c Hset) {
 
 type HsetFieldValue struct {
 	cs []string
+	cf uint32
 }
 
 func (c HsetFieldValue) FieldValue(Field string, Value string) HsetFieldValue {
-	return HsetFieldValue{cs: append(c.cs, Field, Value)}
+	return HsetFieldValue{cf: c.cf, cs: append(c.cs, Field, Value)}
 }
 
-func (c HsetFieldValue) Build() []string {
-	return c.cs
+func (c HsetFieldValue) Build() Completed {
+	return Completed(c)
 }
 
 type HsetKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c HsetKey) FieldValue() HsetFieldValue {
-	return HsetFieldValue{cs: append(c.cs)}
+	return HsetFieldValue{cf: c.cf, cs: append(c.cs, )}
 }
 
 type Hsetnx struct {
 	cs []string
+	cf uint32
 }
 
 func (c Hsetnx) Key(Key string) HsetnxKey {
-	return HsetnxKey{cs: append(c.cs, Key)}
+	return HsetnxKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Hsetnx() (c Hsetnx) {
@@ -6030,34 +6682,38 @@ func (b *Builder) Hsetnx() (c Hsetnx) {
 
 type HsetnxField struct {
 	cs []string
+	cf uint32
 }
 
 func (c HsetnxField) Value(Value string) HsetnxValue {
-	return HsetnxValue{cs: append(c.cs, Value)}
+	return HsetnxValue{cf: c.cf, cs: append(c.cs, Value)}
 }
 
 type HsetnxKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c HsetnxKey) Field(Field string) HsetnxField {
-	return HsetnxField{cs: append(c.cs, Field)}
+	return HsetnxField{cf: c.cf, cs: append(c.cs, Field)}
 }
 
 type HsetnxValue struct {
 	cs []string
+	cf uint32
 }
 
-func (c HsetnxValue) Build() []string {
-	return c.cs
+func (c HsetnxValue) Build() Completed {
+	return Completed(c)
 }
 
 type Hstrlen struct {
 	cs []string
+	cf uint32
 }
 
 func (c Hstrlen) Key(Key string) HstrlenKey {
-	return HstrlenKey{cs: append(c.cs, Key)}
+	return HstrlenKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Hstrlen() (c Hstrlen) {
@@ -6067,26 +6723,37 @@ func (b *Builder) Hstrlen() (c Hstrlen) {
 
 type HstrlenField struct {
 	cs []string
+	cf uint32
 }
 
-func (c HstrlenField) Build() []string {
-	return c.cs
+func (c HstrlenField) Build() Completed {
+	return Completed(c)
+}
+
+func (c HstrlenField) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type HstrlenKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c HstrlenKey) Field(Field string) HstrlenField {
-	return HstrlenField{cs: append(c.cs, Field)}
+	return HstrlenField{cf: c.cf, cs: append(c.cs, Field)}
+}
+
+func (c HstrlenKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Hvals struct {
 	cs []string
+	cf uint32
 }
 
 func (c Hvals) Key(Key string) HvalsKey {
-	return HvalsKey{cs: append(c.cs, Key)}
+	return HvalsKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Hvals() (c Hvals) {
@@ -6096,18 +6763,24 @@ func (b *Builder) Hvals() (c Hvals) {
 
 type HvalsKey struct {
 	cs []string
+	cf uint32
 }
 
-func (c HvalsKey) Build() []string {
-	return c.cs
+func (c HvalsKey) Build() Completed {
+	return Completed(c)
+}
+
+func (c HvalsKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Incr struct {
 	cs []string
+	cf uint32
 }
 
 func (c Incr) Key(Key string) IncrKey {
-	return IncrKey{cs: append(c.cs, Key)}
+	return IncrKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Incr() (c Incr) {
@@ -6117,18 +6790,20 @@ func (b *Builder) Incr() (c Incr) {
 
 type IncrKey struct {
 	cs []string
+	cf uint32
 }
 
-func (c IncrKey) Build() []string {
-	return c.cs
+func (c IncrKey) Build() Completed {
+	return Completed(c)
 }
 
 type Incrby struct {
 	cs []string
+	cf uint32
 }
 
 func (c Incrby) Key(Key string) IncrbyKey {
-	return IncrbyKey{cs: append(c.cs, Key)}
+	return IncrbyKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Incrby() (c Incrby) {
@@ -6138,26 +6813,29 @@ func (b *Builder) Incrby() (c Incrby) {
 
 type IncrbyIncrement struct {
 	cs []string
+	cf uint32
 }
 
-func (c IncrbyIncrement) Build() []string {
-	return c.cs
+func (c IncrbyIncrement) Build() Completed {
+	return Completed(c)
 }
 
 type IncrbyKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c IncrbyKey) Increment(Increment int64) IncrbyIncrement {
-	return IncrbyIncrement{cs: append(c.cs, strconv.FormatInt(Increment, 10))}
+	return IncrbyIncrement{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Increment, 10))}
 }
 
 type Incrbyfloat struct {
 	cs []string
+	cf uint32
 }
 
 func (c Incrbyfloat) Key(Key string) IncrbyfloatKey {
-	return IncrbyfloatKey{cs: append(c.cs, Key)}
+	return IncrbyfloatKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Incrbyfloat() (c Incrbyfloat) {
@@ -6167,30 +6845,33 @@ func (b *Builder) Incrbyfloat() (c Incrbyfloat) {
 
 type IncrbyfloatIncrement struct {
 	cs []string
+	cf uint32
 }
 
-func (c IncrbyfloatIncrement) Build() []string {
-	return c.cs
+func (c IncrbyfloatIncrement) Build() Completed {
+	return Completed(c)
 }
 
 type IncrbyfloatKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c IncrbyfloatKey) Increment(Increment float64) IncrbyfloatIncrement {
-	return IncrbyfloatIncrement{cs: append(c.cs, strconv.FormatFloat(Increment, 'f', -1, 64))}
+	return IncrbyfloatIncrement{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Increment, 'f', -1, 64))}
 }
 
 type Info struct {
 	cs []string
+	cf uint32
 }
 
 func (c Info) Section(Section string) InfoSection {
-	return InfoSection{cs: append(c.cs, Section)}
+	return InfoSection{cf: c.cf, cs: append(c.cs, Section)}
 }
 
-func (c Info) Build() []string {
-	return c.cs
+func (c Info) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) Info() (c Info) {
@@ -6200,18 +6881,20 @@ func (b *Builder) Info() (c Info) {
 
 type InfoSection struct {
 	cs []string
+	cf uint32
 }
 
-func (c InfoSection) Build() []string {
-	return c.cs
+func (c InfoSection) Build() Completed {
+	return Completed(c)
 }
 
 type Keys struct {
 	cs []string
+	cf uint32
 }
 
 func (c Keys) Pattern(Pattern string) KeysPattern {
-	return KeysPattern{cs: append(c.cs, Pattern)}
+	return KeysPattern{cf: c.cf, cs: append(c.cs, Pattern)}
 }
 
 func (b *Builder) Keys() (c Keys) {
@@ -6221,18 +6904,20 @@ func (b *Builder) Keys() (c Keys) {
 
 type KeysPattern struct {
 	cs []string
+	cf uint32
 }
 
-func (c KeysPattern) Build() []string {
-	return c.cs
+func (c KeysPattern) Build() Completed {
+	return Completed(c)
 }
 
 type Lastsave struct {
 	cs []string
+	cf uint32
 }
 
-func (c Lastsave) Build() []string {
-	return c.cs
+func (c Lastsave) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) Lastsave() (c Lastsave) {
@@ -6242,10 +6927,11 @@ func (b *Builder) Lastsave() (c Lastsave) {
 
 type LatencyDoctor struct {
 	cs []string
+	cf uint32
 }
 
-func (c LatencyDoctor) Build() []string {
-	return c.cs
+func (c LatencyDoctor) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) LatencyDoctor() (c LatencyDoctor) {
@@ -6255,10 +6941,11 @@ func (b *Builder) LatencyDoctor() (c LatencyDoctor) {
 
 type LatencyGraph struct {
 	cs []string
+	cf uint32
 }
 
 func (c LatencyGraph) Event(Event string) LatencyGraphEvent {
-	return LatencyGraphEvent{cs: append(c.cs, Event)}
+	return LatencyGraphEvent{cf: c.cf, cs: append(c.cs, Event)}
 }
 
 func (b *Builder) LatencyGraph() (c LatencyGraph) {
@@ -6268,18 +6955,20 @@ func (b *Builder) LatencyGraph() (c LatencyGraph) {
 
 type LatencyGraphEvent struct {
 	cs []string
+	cf uint32
 }
 
-func (c LatencyGraphEvent) Build() []string {
-	return c.cs
+func (c LatencyGraphEvent) Build() Completed {
+	return Completed(c)
 }
 
 type LatencyHelp struct {
 	cs []string
+	cf uint32
 }
 
-func (c LatencyHelp) Build() []string {
-	return c.cs
+func (c LatencyHelp) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) LatencyHelp() (c LatencyHelp) {
@@ -6289,10 +6978,11 @@ func (b *Builder) LatencyHelp() (c LatencyHelp) {
 
 type LatencyHistory struct {
 	cs []string
+	cf uint32
 }
 
 func (c LatencyHistory) Event(Event string) LatencyHistoryEvent {
-	return LatencyHistoryEvent{cs: append(c.cs, Event)}
+	return LatencyHistoryEvent{cf: c.cf, cs: append(c.cs, Event)}
 }
 
 func (b *Builder) LatencyHistory() (c LatencyHistory) {
@@ -6302,18 +6992,20 @@ func (b *Builder) LatencyHistory() (c LatencyHistory) {
 
 type LatencyHistoryEvent struct {
 	cs []string
+	cf uint32
 }
 
-func (c LatencyHistoryEvent) Build() []string {
-	return c.cs
+func (c LatencyHistoryEvent) Build() Completed {
+	return Completed(c)
 }
 
 type LatencyLatest struct {
 	cs []string
+	cf uint32
 }
 
-func (c LatencyLatest) Build() []string {
-	return c.cs
+func (c LatencyLatest) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) LatencyLatest() (c LatencyLatest) {
@@ -6323,14 +7015,15 @@ func (b *Builder) LatencyLatest() (c LatencyLatest) {
 
 type LatencyReset struct {
 	cs []string
+	cf uint32
 }
 
 func (c LatencyReset) Event(Event ...string) LatencyResetEvent {
-	return LatencyResetEvent{cs: append(c.cs, Event...)}
+	return LatencyResetEvent{cf: c.cf, cs: append(c.cs, Event...)}
 }
 
-func (c LatencyReset) Build() []string {
-	return c.cs
+func (c LatencyReset) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) LatencyReset() (c LatencyReset) {
@@ -6340,22 +7033,24 @@ func (b *Builder) LatencyReset() (c LatencyReset) {
 
 type LatencyResetEvent struct {
 	cs []string
+	cf uint32
 }
 
 func (c LatencyResetEvent) Event(Event ...string) LatencyResetEvent {
-	return LatencyResetEvent{cs: append(c.cs, Event...)}
+	return LatencyResetEvent{cf: c.cf, cs: append(c.cs, Event...)}
 }
 
-func (c LatencyResetEvent) Build() []string {
-	return c.cs
+func (c LatencyResetEvent) Build() Completed {
+	return Completed(c)
 }
 
 type Lindex struct {
 	cs []string
+	cf uint32
 }
 
 func (c Lindex) Key(Key string) LindexKey {
-	return LindexKey{cs: append(c.cs, Key)}
+	return LindexKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Lindex() (c Lindex) {
@@ -6365,26 +7060,37 @@ func (b *Builder) Lindex() (c Lindex) {
 
 type LindexIndex struct {
 	cs []string
+	cf uint32
 }
 
-func (c LindexIndex) Build() []string {
-	return c.cs
+func (c LindexIndex) Build() Completed {
+	return Completed(c)
+}
+
+func (c LindexIndex) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type LindexKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c LindexKey) Index(Index int64) LindexIndex {
-	return LindexIndex{cs: append(c.cs, strconv.FormatInt(Index, 10))}
+	return LindexIndex{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Index, 10))}
+}
+
+func (c LindexKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Linsert struct {
 	cs []string
+	cf uint32
 }
 
 func (c Linsert) Key(Key string) LinsertKey {
-	return LinsertKey{cs: append(c.cs, Key)}
+	return LinsertKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Linsert() (c Linsert) {
@@ -6394,54 +7100,60 @@ func (b *Builder) Linsert() (c Linsert) {
 
 type LinsertElement struct {
 	cs []string
+	cf uint32
 }
 
-func (c LinsertElement) Build() []string {
-	return c.cs
+func (c LinsertElement) Build() Completed {
+	return Completed(c)
 }
 
 type LinsertKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c LinsertKey) Before() LinsertWhereBefore {
-	return LinsertWhereBefore{cs: append(c.cs, "BEFORE")}
+	return LinsertWhereBefore{cf: c.cf, cs: append(c.cs, "BEFORE")}
 }
 
 func (c LinsertKey) After() LinsertWhereAfter {
-	return LinsertWhereAfter{cs: append(c.cs, "AFTER")}
+	return LinsertWhereAfter{cf: c.cf, cs: append(c.cs, "AFTER")}
 }
 
 type LinsertPivot struct {
 	cs []string
+	cf uint32
 }
 
 func (c LinsertPivot) Element(Element string) LinsertElement {
-	return LinsertElement{cs: append(c.cs, Element)}
+	return LinsertElement{cf: c.cf, cs: append(c.cs, Element)}
 }
 
 type LinsertWhereAfter struct {
 	cs []string
+	cf uint32
 }
 
 func (c LinsertWhereAfter) Pivot(Pivot string) LinsertPivot {
-	return LinsertPivot{cs: append(c.cs, Pivot)}
+	return LinsertPivot{cf: c.cf, cs: append(c.cs, Pivot)}
 }
 
 type LinsertWhereBefore struct {
 	cs []string
+	cf uint32
 }
 
 func (c LinsertWhereBefore) Pivot(Pivot string) LinsertPivot {
-	return LinsertPivot{cs: append(c.cs, Pivot)}
+	return LinsertPivot{cf: c.cf, cs: append(c.cs, Pivot)}
 }
 
 type Llen struct {
 	cs []string
+	cf uint32
 }
 
 func (c Llen) Key(Key string) LlenKey {
-	return LlenKey{cs: append(c.cs, Key)}
+	return LlenKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Llen() (c Llen) {
@@ -6451,18 +7163,24 @@ func (b *Builder) Llen() (c Llen) {
 
 type LlenKey struct {
 	cs []string
+	cf uint32
 }
 
-func (c LlenKey) Build() []string {
-	return c.cs
+func (c LlenKey) Build() Completed {
+	return Completed(c)
+}
+
+func (c LlenKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Lmove struct {
 	cs []string
+	cf uint32
 }
 
 func (c Lmove) Source(Source string) LmoveSource {
-	return LmoveSource{cs: append(c.cs, Source)}
+	return LmoveSource{cf: c.cf, cs: append(c.cs, Source)}
 }
 
 func (b *Builder) Lmove() (c Lmove) {
@@ -6472,70 +7190,77 @@ func (b *Builder) Lmove() (c Lmove) {
 
 type LmoveDestination struct {
 	cs []string
+	cf uint32
 }
 
 func (c LmoveDestination) Left() LmoveWherefromLeft {
-	return LmoveWherefromLeft{cs: append(c.cs, "LEFT")}
+	return LmoveWherefromLeft{cf: c.cf, cs: append(c.cs, "LEFT")}
 }
 
 func (c LmoveDestination) Right() LmoveWherefromRight {
-	return LmoveWherefromRight{cs: append(c.cs, "RIGHT")}
+	return LmoveWherefromRight{cf: c.cf, cs: append(c.cs, "RIGHT")}
 }
 
 type LmoveSource struct {
 	cs []string
+	cf uint32
 }
 
 func (c LmoveSource) Destination(Destination string) LmoveDestination {
-	return LmoveDestination{cs: append(c.cs, Destination)}
+	return LmoveDestination{cf: c.cf, cs: append(c.cs, Destination)}
 }
 
 type LmoveWherefromLeft struct {
 	cs []string
+	cf uint32
 }
 
 func (c LmoveWherefromLeft) Left() LmoveWheretoLeft {
-	return LmoveWheretoLeft{cs: append(c.cs, "LEFT")}
+	return LmoveWheretoLeft{cf: c.cf, cs: append(c.cs, "LEFT")}
 }
 
 func (c LmoveWherefromLeft) Right() LmoveWheretoRight {
-	return LmoveWheretoRight{cs: append(c.cs, "RIGHT")}
+	return LmoveWheretoRight{cf: c.cf, cs: append(c.cs, "RIGHT")}
 }
 
 type LmoveWherefromRight struct {
 	cs []string
+	cf uint32
 }
 
 func (c LmoveWherefromRight) Left() LmoveWheretoLeft {
-	return LmoveWheretoLeft{cs: append(c.cs, "LEFT")}
+	return LmoveWheretoLeft{cf: c.cf, cs: append(c.cs, "LEFT")}
 }
 
 func (c LmoveWherefromRight) Right() LmoveWheretoRight {
-	return LmoveWheretoRight{cs: append(c.cs, "RIGHT")}
+	return LmoveWheretoRight{cf: c.cf, cs: append(c.cs, "RIGHT")}
 }
 
 type LmoveWheretoLeft struct {
 	cs []string
+	cf uint32
 }
 
-func (c LmoveWheretoLeft) Build() []string {
-	return c.cs
+func (c LmoveWheretoLeft) Build() Completed {
+	return Completed(c)
 }
 
 type LmoveWheretoRight struct {
 	cs []string
+	cf uint32
 }
 
-func (c LmoveWheretoRight) Build() []string {
-	return c.cs
+func (c LmoveWheretoRight) Build() Completed {
+	return Completed(c)
 }
 
 type Lmpop struct {
 	cs []string
+	cf uint32
 }
 
 func (c Lmpop) Numkeys(Numkeys int64) LmpopNumkeys {
-	return LmpopNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
+	return LmpopNumkeys{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
 }
 
 func (b *Builder) Lmpop() (c Lmpop) {
@@ -6545,78 +7270,84 @@ func (b *Builder) Lmpop() (c Lmpop) {
 
 type LmpopCount struct {
 	cs []string
+	cf uint32
 }
 
-func (c LmpopCount) Build() []string {
-	return c.cs
+func (c LmpopCount) Build() Completed {
+	return Completed(c)
 }
 
 type LmpopKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c LmpopKey) Left() LmpopWhereLeft {
-	return LmpopWhereLeft{cs: append(c.cs, "LEFT")}
+	return LmpopWhereLeft{cf: c.cf, cs: append(c.cs, "LEFT")}
 }
 
 func (c LmpopKey) Right() LmpopWhereRight {
-	return LmpopWhereRight{cs: append(c.cs, "RIGHT")}
+	return LmpopWhereRight{cf: c.cf, cs: append(c.cs, "RIGHT")}
 }
 
 func (c LmpopKey) Key(Key ...string) LmpopKey {
-	return LmpopKey{cs: append(c.cs, Key...)}
+	return LmpopKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 type LmpopNumkeys struct {
 	cs []string
+	cf uint32
 }
 
 func (c LmpopNumkeys) Key(Key ...string) LmpopKey {
-	return LmpopKey{cs: append(c.cs, Key...)}
+	return LmpopKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 func (c LmpopNumkeys) Left() LmpopWhereLeft {
-	return LmpopWhereLeft{cs: append(c.cs, "LEFT")}
+	return LmpopWhereLeft{cf: c.cf, cs: append(c.cs, "LEFT")}
 }
 
 func (c LmpopNumkeys) Right() LmpopWhereRight {
-	return LmpopWhereRight{cs: append(c.cs, "RIGHT")}
+	return LmpopWhereRight{cf: c.cf, cs: append(c.cs, "RIGHT")}
 }
 
 type LmpopWhereLeft struct {
 	cs []string
+	cf uint32
 }
 
 func (c LmpopWhereLeft) Count(Count int64) LmpopCount {
-	return LmpopCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return LmpopCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c LmpopWhereLeft) Build() []string {
-	return c.cs
+func (c LmpopWhereLeft) Build() Completed {
+	return Completed(c)
 }
 
 type LmpopWhereRight struct {
 	cs []string
+	cf uint32
 }
 
 func (c LmpopWhereRight) Count(Count int64) LmpopCount {
-	return LmpopCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return LmpopCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c LmpopWhereRight) Build() []string {
-	return c.cs
+func (c LmpopWhereRight) Build() Completed {
+	return Completed(c)
 }
 
 type Lolwut struct {
 	cs []string
+	cf uint32
 }
 
 func (c Lolwut) Version(Version int64) LolwutVersion {
-	return LolwutVersion{cs: append(c.cs, "VERSION", strconv.FormatInt(Version, 10))}
+	return LolwutVersion{cf: c.cf, cs: append(c.cs, "VERSION", strconv.FormatInt(Version, 10))}
 }
 
-func (c Lolwut) Build() []string {
-	return c.cs
+func (c Lolwut) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) Lolwut() (c Lolwut) {
@@ -6626,18 +7357,20 @@ func (b *Builder) Lolwut() (c Lolwut) {
 
 type LolwutVersion struct {
 	cs []string
+	cf uint32
 }
 
-func (c LolwutVersion) Build() []string {
-	return c.cs
+func (c LolwutVersion) Build() Completed {
+	return Completed(c)
 }
 
 type Lpop struct {
 	cs []string
+	cf uint32
 }
 
 func (c Lpop) Key(Key string) LpopKey {
-	return LpopKey{cs: append(c.cs, Key)}
+	return LpopKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Lpop() (c Lpop) {
@@ -6647,30 +7380,33 @@ func (b *Builder) Lpop() (c Lpop) {
 
 type LpopCount struct {
 	cs []string
+	cf uint32
 }
 
-func (c LpopCount) Build() []string {
-	return c.cs
+func (c LpopCount) Build() Completed {
+	return Completed(c)
 }
 
 type LpopKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c LpopKey) Count(Count int64) LpopCount {
-	return LpopCount{cs: append(c.cs, strconv.FormatInt(Count, 10))}
+	return LpopCount{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Count, 10))}
 }
 
-func (c LpopKey) Build() []string {
-	return c.cs
+func (c LpopKey) Build() Completed {
+	return Completed(c)
 }
 
 type Lpos struct {
 	cs []string
+	cf uint32
 }
 
 func (c Lpos) Key(Key string) LposKey {
-	return LposKey{cs: append(c.cs, Key)}
+	return LposKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Lpos() (c Lpos) {
@@ -6680,74 +7416,100 @@ func (b *Builder) Lpos() (c Lpos) {
 
 type LposCount struct {
 	cs []string
+	cf uint32
 }
 
 func (c LposCount) Maxlen(Len int64) LposMaxlen {
-	return LposMaxlen{cs: append(c.cs, "MAXLEN", strconv.FormatInt(Len, 10))}
+	return LposMaxlen{cf: c.cf, cs: append(c.cs, "MAXLEN", strconv.FormatInt(Len, 10))}
 }
 
-func (c LposCount) Build() []string {
-	return c.cs
+func (c LposCount) Build() Completed {
+	return Completed(c)
+}
+
+func (c LposCount) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type LposElement struct {
 	cs []string
+	cf uint32
 }
 
 func (c LposElement) Rank(Rank int64) LposRank {
-	return LposRank{cs: append(c.cs, "RANK", strconv.FormatInt(Rank, 10))}
+	return LposRank{cf: c.cf, cs: append(c.cs, "RANK", strconv.FormatInt(Rank, 10))}
 }
 
 func (c LposElement) Count(NumMatches int64) LposCount {
-	return LposCount{cs: append(c.cs, "COUNT", strconv.FormatInt(NumMatches, 10))}
+	return LposCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(NumMatches, 10))}
 }
 
 func (c LposElement) Maxlen(Len int64) LposMaxlen {
-	return LposMaxlen{cs: append(c.cs, "MAXLEN", strconv.FormatInt(Len, 10))}
+	return LposMaxlen{cf: c.cf, cs: append(c.cs, "MAXLEN", strconv.FormatInt(Len, 10))}
 }
 
-func (c LposElement) Build() []string {
-	return c.cs
+func (c LposElement) Build() Completed {
+	return Completed(c)
+}
+
+func (c LposElement) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type LposKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c LposKey) Element(Element string) LposElement {
-	return LposElement{cs: append(c.cs, Element)}
+	return LposElement{cf: c.cf, cs: append(c.cs, Element)}
+}
+
+func (c LposKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type LposMaxlen struct {
 	cs []string
+	cf uint32
 }
 
-func (c LposMaxlen) Build() []string {
-	return c.cs
+func (c LposMaxlen) Build() Completed {
+	return Completed(c)
+}
+
+func (c LposMaxlen) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type LposRank struct {
 	cs []string
+	cf uint32
 }
 
 func (c LposRank) Count(NumMatches int64) LposCount {
-	return LposCount{cs: append(c.cs, "COUNT", strconv.FormatInt(NumMatches, 10))}
+	return LposCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(NumMatches, 10))}
 }
 
 func (c LposRank) Maxlen(Len int64) LposMaxlen {
-	return LposMaxlen{cs: append(c.cs, "MAXLEN", strconv.FormatInt(Len, 10))}
+	return LposMaxlen{cf: c.cf, cs: append(c.cs, "MAXLEN", strconv.FormatInt(Len, 10))}
 }
 
-func (c LposRank) Build() []string {
-	return c.cs
+func (c LposRank) Build() Completed {
+	return Completed(c)
+}
+
+func (c LposRank) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Lpush struct {
 	cs []string
+	cf uint32
 }
 
 func (c Lpush) Key(Key string) LpushKey {
-	return LpushKey{cs: append(c.cs, Key)}
+	return LpushKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Lpush() (c Lpush) {
@@ -6757,30 +7519,33 @@ func (b *Builder) Lpush() (c Lpush) {
 
 type LpushElement struct {
 	cs []string
+	cf uint32
 }
 
 func (c LpushElement) Element(Element ...string) LpushElement {
-	return LpushElement{cs: append(c.cs, Element...)}
+	return LpushElement{cf: c.cf, cs: append(c.cs, Element...)}
 }
 
-func (c LpushElement) Build() []string {
-	return c.cs
+func (c LpushElement) Build() Completed {
+	return Completed(c)
 }
 
 type LpushKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c LpushKey) Element(Element ...string) LpushElement {
-	return LpushElement{cs: append(c.cs, Element...)}
+	return LpushElement{cf: c.cf, cs: append(c.cs, Element...)}
 }
 
 type Lpushx struct {
 	cs []string
+	cf uint32
 }
 
 func (c Lpushx) Key(Key string) LpushxKey {
-	return LpushxKey{cs: append(c.cs, Key)}
+	return LpushxKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Lpushx() (c Lpushx) {
@@ -6790,30 +7555,33 @@ func (b *Builder) Lpushx() (c Lpushx) {
 
 type LpushxElement struct {
 	cs []string
+	cf uint32
 }
 
 func (c LpushxElement) Element(Element ...string) LpushxElement {
-	return LpushxElement{cs: append(c.cs, Element...)}
+	return LpushxElement{cf: c.cf, cs: append(c.cs, Element...)}
 }
 
-func (c LpushxElement) Build() []string {
-	return c.cs
+func (c LpushxElement) Build() Completed {
+	return Completed(c)
 }
 
 type LpushxKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c LpushxKey) Element(Element ...string) LpushxElement {
-	return LpushxElement{cs: append(c.cs, Element...)}
+	return LpushxElement{cf: c.cf, cs: append(c.cs, Element...)}
 }
 
 type Lrange struct {
 	cs []string
+	cf uint32
 }
 
 func (c Lrange) Key(Key string) LrangeKey {
-	return LrangeKey{cs: append(c.cs, Key)}
+	return LrangeKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Lrange() (c Lrange) {
@@ -6823,34 +7591,50 @@ func (b *Builder) Lrange() (c Lrange) {
 
 type LrangeKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c LrangeKey) Start(Start int64) LrangeStart {
-	return LrangeStart{cs: append(c.cs, strconv.FormatInt(Start, 10))}
+	return LrangeStart{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Start, 10))}
+}
+
+func (c LrangeKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type LrangeStart struct {
 	cs []string
+	cf uint32
 }
 
 func (c LrangeStart) Stop(Stop int64) LrangeStop {
-	return LrangeStop{cs: append(c.cs, strconv.FormatInt(Stop, 10))}
+	return LrangeStop{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Stop, 10))}
+}
+
+func (c LrangeStart) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type LrangeStop struct {
 	cs []string
+	cf uint32
 }
 
-func (c LrangeStop) Build() []string {
-	return c.cs
+func (c LrangeStop) Build() Completed {
+	return Completed(c)
+}
+
+func (c LrangeStop) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Lrem struct {
 	cs []string
+	cf uint32
 }
 
 func (c Lrem) Key(Key string) LremKey {
-	return LremKey{cs: append(c.cs, Key)}
+	return LremKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Lrem() (c Lrem) {
@@ -6860,34 +7644,38 @@ func (b *Builder) Lrem() (c Lrem) {
 
 type LremCount struct {
 	cs []string
+	cf uint32
 }
 
 func (c LremCount) Element(Element string) LremElement {
-	return LremElement{cs: append(c.cs, Element)}
+	return LremElement{cf: c.cf, cs: append(c.cs, Element)}
 }
 
 type LremElement struct {
 	cs []string
+	cf uint32
 }
 
-func (c LremElement) Build() []string {
-	return c.cs
+func (c LremElement) Build() Completed {
+	return Completed(c)
 }
 
 type LremKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c LremKey) Count(Count int64) LremCount {
-	return LremCount{cs: append(c.cs, strconv.FormatInt(Count, 10))}
+	return LremCount{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Count, 10))}
 }
 
 type Lset struct {
 	cs []string
+	cf uint32
 }
 
 func (c Lset) Key(Key string) LsetKey {
-	return LsetKey{cs: append(c.cs, Key)}
+	return LsetKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Lset() (c Lset) {
@@ -6897,34 +7685,38 @@ func (b *Builder) Lset() (c Lset) {
 
 type LsetElement struct {
 	cs []string
+	cf uint32
 }
 
-func (c LsetElement) Build() []string {
-	return c.cs
+func (c LsetElement) Build() Completed {
+	return Completed(c)
 }
 
 type LsetIndex struct {
 	cs []string
+	cf uint32
 }
 
 func (c LsetIndex) Element(Element string) LsetElement {
-	return LsetElement{cs: append(c.cs, Element)}
+	return LsetElement{cf: c.cf, cs: append(c.cs, Element)}
 }
 
 type LsetKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c LsetKey) Index(Index int64) LsetIndex {
-	return LsetIndex{cs: append(c.cs, strconv.FormatInt(Index, 10))}
+	return LsetIndex{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Index, 10))}
 }
 
 type Ltrim struct {
 	cs []string
+	cf uint32
 }
 
 func (c Ltrim) Key(Key string) LtrimKey {
-	return LtrimKey{cs: append(c.cs, Key)}
+	return LtrimKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Ltrim() (c Ltrim) {
@@ -6934,34 +7726,38 @@ func (b *Builder) Ltrim() (c Ltrim) {
 
 type LtrimKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c LtrimKey) Start(Start int64) LtrimStart {
-	return LtrimStart{cs: append(c.cs, strconv.FormatInt(Start, 10))}
+	return LtrimStart{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Start, 10))}
 }
 
 type LtrimStart struct {
 	cs []string
+	cf uint32
 }
 
 func (c LtrimStart) Stop(Stop int64) LtrimStop {
-	return LtrimStop{cs: append(c.cs, strconv.FormatInt(Stop, 10))}
+	return LtrimStop{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Stop, 10))}
 }
 
 type LtrimStop struct {
 	cs []string
+	cf uint32
 }
 
-func (c LtrimStop) Build() []string {
-	return c.cs
+func (c LtrimStop) Build() Completed {
+	return Completed(c)
 }
 
 type MemoryDoctor struct {
 	cs []string
+	cf uint32
 }
 
-func (c MemoryDoctor) Build() []string {
-	return c.cs
+func (c MemoryDoctor) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) MemoryDoctor() (c MemoryDoctor) {
@@ -6971,10 +7767,11 @@ func (b *Builder) MemoryDoctor() (c MemoryDoctor) {
 
 type MemoryHelp struct {
 	cs []string
+	cf uint32
 }
 
-func (c MemoryHelp) Build() []string {
-	return c.cs
+func (c MemoryHelp) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) MemoryHelp() (c MemoryHelp) {
@@ -6984,10 +7781,11 @@ func (b *Builder) MemoryHelp() (c MemoryHelp) {
 
 type MemoryMallocStats struct {
 	cs []string
+	cf uint32
 }
 
-func (c MemoryMallocStats) Build() []string {
-	return c.cs
+func (c MemoryMallocStats) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) MemoryMallocStats() (c MemoryMallocStats) {
@@ -6997,10 +7795,11 @@ func (b *Builder) MemoryMallocStats() (c MemoryMallocStats) {
 
 type MemoryPurge struct {
 	cs []string
+	cf uint32
 }
 
-func (c MemoryPurge) Build() []string {
-	return c.cs
+func (c MemoryPurge) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) MemoryPurge() (c MemoryPurge) {
@@ -7010,10 +7809,11 @@ func (b *Builder) MemoryPurge() (c MemoryPurge) {
 
 type MemoryStats struct {
 	cs []string
+	cf uint32
 }
 
-func (c MemoryStats) Build() []string {
-	return c.cs
+func (c MemoryStats) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) MemoryStats() (c MemoryStats) {
@@ -7023,10 +7823,11 @@ func (b *Builder) MemoryStats() (c MemoryStats) {
 
 type MemoryUsage struct {
 	cs []string
+	cf uint32
 }
 
 func (c MemoryUsage) Key(Key string) MemoryUsageKey {
-	return MemoryUsageKey{cs: append(c.cs, Key)}
+	return MemoryUsageKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) MemoryUsage() (c MemoryUsage) {
@@ -7036,30 +7837,33 @@ func (b *Builder) MemoryUsage() (c MemoryUsage) {
 
 type MemoryUsageKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c MemoryUsageKey) Samples(Count int64) MemoryUsageSamples {
-	return MemoryUsageSamples{cs: append(c.cs, "SAMPLES", strconv.FormatInt(Count, 10))}
+	return MemoryUsageSamples{cf: c.cf, cs: append(c.cs, "SAMPLES", strconv.FormatInt(Count, 10))}
 }
 
-func (c MemoryUsageKey) Build() []string {
-	return c.cs
+func (c MemoryUsageKey) Build() Completed {
+	return Completed(c)
 }
 
 type MemoryUsageSamples struct {
 	cs []string
+	cf uint32
 }
 
-func (c MemoryUsageSamples) Build() []string {
-	return c.cs
+func (c MemoryUsageSamples) Build() Completed {
+	return Completed(c)
 }
 
 type Mget struct {
 	cs []string
+	cf uint32
 }
 
 func (c Mget) Key(Key ...string) MgetKey {
-	return MgetKey{cs: append(c.cs, Key...)}
+	return MgetKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 func (b *Builder) Mget() (c Mget) {
@@ -7069,22 +7873,24 @@ func (b *Builder) Mget() (c Mget) {
 
 type MgetKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c MgetKey) Key(Key ...string) MgetKey {
-	return MgetKey{cs: append(c.cs, Key...)}
+	return MgetKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
-func (c MgetKey) Build() []string {
-	return c.cs
+func (c MgetKey) Build() Completed {
+	return Completed(c)
 }
 
 type Migrate struct {
 	cs []string
+	cf uint32
 }
 
 func (c Migrate) Host(Host string) MigrateHost {
-	return MigrateHost{cs: append(c.cs, Host)}
+	return MigrateHost{cf: c.cf, cs: append(c.cs, Host)}
 }
 
 func (b *Builder) Migrate() (c Migrate) {
@@ -7094,171 +7900,183 @@ func (b *Builder) Migrate() (c Migrate) {
 
 type MigrateAuth struct {
 	cs []string
+	cf uint32
 }
 
 func (c MigrateAuth) Auth2(UsernamePassword string) MigrateAuth2 {
-	return MigrateAuth2{cs: append(c.cs, "AUTH2", UsernamePassword)}
+	return MigrateAuth2{cf: c.cf, cs: append(c.cs, "AUTH2", UsernamePassword)}
 }
 
 func (c MigrateAuth) Keys(Key ...string) MigrateKeys {
 	c.cs = append(c.cs, "KEYS")
-	return MigrateKeys{cs: append(c.cs, Key...)}
+	return MigrateKeys{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
-func (c MigrateAuth) Build() []string {
-	return c.cs
+func (c MigrateAuth) Build() Completed {
+	return Completed(c)
 }
 
 type MigrateAuth2 struct {
 	cs []string
+	cf uint32
 }
 
 func (c MigrateAuth2) Keys(Key ...string) MigrateKeys {
 	c.cs = append(c.cs, "KEYS")
-	return MigrateKeys{cs: append(c.cs, Key...)}
+	return MigrateKeys{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
-func (c MigrateAuth2) Build() []string {
-	return c.cs
+func (c MigrateAuth2) Build() Completed {
+	return Completed(c)
 }
 
 type MigrateCopyCopy struct {
 	cs []string
+	cf uint32
 }
 
 func (c MigrateCopyCopy) Replace() MigrateReplaceReplace {
-	return MigrateReplaceReplace{cs: append(c.cs, "REPLACE")}
+	return MigrateReplaceReplace{cf: c.cf, cs: append(c.cs, "REPLACE")}
 }
 
 func (c MigrateCopyCopy) Auth(Password string) MigrateAuth {
-	return MigrateAuth{cs: append(c.cs, "AUTH", Password)}
+	return MigrateAuth{cf: c.cf, cs: append(c.cs, "AUTH", Password)}
 }
 
 func (c MigrateCopyCopy) Auth2(UsernamePassword string) MigrateAuth2 {
-	return MigrateAuth2{cs: append(c.cs, "AUTH2", UsernamePassword)}
+	return MigrateAuth2{cf: c.cf, cs: append(c.cs, "AUTH2", UsernamePassword)}
 }
 
 func (c MigrateCopyCopy) Keys(Key ...string) MigrateKeys {
 	c.cs = append(c.cs, "KEYS")
-	return MigrateKeys{cs: append(c.cs, Key...)}
+	return MigrateKeys{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
-func (c MigrateCopyCopy) Build() []string {
-	return c.cs
+func (c MigrateCopyCopy) Build() Completed {
+	return Completed(c)
 }
 
 type MigrateDestinationDb struct {
 	cs []string
+	cf uint32
 }
 
 func (c MigrateDestinationDb) Timeout(Timeout int64) MigrateTimeout {
-	return MigrateTimeout{cs: append(c.cs, strconv.FormatInt(Timeout, 10))}
+	return MigrateTimeout{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Timeout, 10))}
 }
 
 type MigrateHost struct {
 	cs []string
+	cf uint32
 }
 
 func (c MigrateHost) Port(Port string) MigratePort {
-	return MigratePort{cs: append(c.cs, Port)}
+	return MigratePort{cf: c.cf, cs: append(c.cs, Port)}
 }
 
 type MigrateKeyEmpty struct {
 	cs []string
+	cf uint32
 }
 
 func (c MigrateKeyEmpty) DestinationDb(DestinationDb int64) MigrateDestinationDb {
-	return MigrateDestinationDb{cs: append(c.cs, strconv.FormatInt(DestinationDb, 10))}
+	return MigrateDestinationDb{cf: c.cf, cs: append(c.cs, strconv.FormatInt(DestinationDb, 10))}
 }
 
 type MigrateKeyKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c MigrateKeyKey) DestinationDb(DestinationDb int64) MigrateDestinationDb {
-	return MigrateDestinationDb{cs: append(c.cs, strconv.FormatInt(DestinationDb, 10))}
+	return MigrateDestinationDb{cf: c.cf, cs: append(c.cs, strconv.FormatInt(DestinationDb, 10))}
 }
 
 type MigrateKeys struct {
 	cs []string
+	cf uint32
 }
 
 func (c MigrateKeys) Keys(Keys ...string) MigrateKeys {
-	return MigrateKeys{cs: append(c.cs, Keys...)}
+	return MigrateKeys{cf: c.cf, cs: append(c.cs, Keys...)}
 }
 
-func (c MigrateKeys) Build() []string {
-	return c.cs
+func (c MigrateKeys) Build() Completed {
+	return Completed(c)
 }
 
 type MigratePort struct {
 	cs []string
+	cf uint32
 }
 
 func (c MigratePort) Key() MigrateKeyKey {
-	return MigrateKeyKey{cs: append(c.cs, "key")}
+	return MigrateKeyKey{cf: c.cf, cs: append(c.cs, "key")}
 }
 
 func (c MigratePort) Empty() MigrateKeyEmpty {
-	return MigrateKeyEmpty{cs: append(c.cs, "\"\"")}
+	return MigrateKeyEmpty{cf: c.cf, cs: append(c.cs, "\"\"")}
 }
 
 type MigrateReplaceReplace struct {
 	cs []string
+	cf uint32
 }
 
 func (c MigrateReplaceReplace) Auth(Password string) MigrateAuth {
-	return MigrateAuth{cs: append(c.cs, "AUTH", Password)}
+	return MigrateAuth{cf: c.cf, cs: append(c.cs, "AUTH", Password)}
 }
 
 func (c MigrateReplaceReplace) Auth2(UsernamePassword string) MigrateAuth2 {
-	return MigrateAuth2{cs: append(c.cs, "AUTH2", UsernamePassword)}
+	return MigrateAuth2{cf: c.cf, cs: append(c.cs, "AUTH2", UsernamePassword)}
 }
 
 func (c MigrateReplaceReplace) Keys(Key ...string) MigrateKeys {
 	c.cs = append(c.cs, "KEYS")
-	return MigrateKeys{cs: append(c.cs, Key...)}
+	return MigrateKeys{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
-func (c MigrateReplaceReplace) Build() []string {
-	return c.cs
+func (c MigrateReplaceReplace) Build() Completed {
+	return Completed(c)
 }
 
 type MigrateTimeout struct {
 	cs []string
+	cf uint32
 }
 
 func (c MigrateTimeout) Copy() MigrateCopyCopy {
-	return MigrateCopyCopy{cs: append(c.cs, "COPY")}
+	return MigrateCopyCopy{cf: c.cf, cs: append(c.cs, "COPY")}
 }
 
 func (c MigrateTimeout) Replace() MigrateReplaceReplace {
-	return MigrateReplaceReplace{cs: append(c.cs, "REPLACE")}
+	return MigrateReplaceReplace{cf: c.cf, cs: append(c.cs, "REPLACE")}
 }
 
 func (c MigrateTimeout) Auth(Password string) MigrateAuth {
-	return MigrateAuth{cs: append(c.cs, "AUTH", Password)}
+	return MigrateAuth{cf: c.cf, cs: append(c.cs, "AUTH", Password)}
 }
 
 func (c MigrateTimeout) Auth2(UsernamePassword string) MigrateAuth2 {
-	return MigrateAuth2{cs: append(c.cs, "AUTH2", UsernamePassword)}
+	return MigrateAuth2{cf: c.cf, cs: append(c.cs, "AUTH2", UsernamePassword)}
 }
 
 func (c MigrateTimeout) Keys(Key ...string) MigrateKeys {
 	c.cs = append(c.cs, "KEYS")
-	return MigrateKeys{cs: append(c.cs, Key...)}
+	return MigrateKeys{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
-func (c MigrateTimeout) Build() []string {
-	return c.cs
+func (c MigrateTimeout) Build() Completed {
+	return Completed(c)
 }
 
 type ModuleList struct {
 	cs []string
+	cf uint32
 }
 
-func (c ModuleList) Build() []string {
-	return c.cs
+func (c ModuleList) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) ModuleList() (c ModuleList) {
@@ -7268,10 +8086,11 @@ func (b *Builder) ModuleList() (c ModuleList) {
 
 type ModuleLoad struct {
 	cs []string
+	cf uint32
 }
 
 func (c ModuleLoad) Path(Path string) ModuleLoadPath {
-	return ModuleLoadPath{cs: append(c.cs, Path)}
+	return ModuleLoadPath{cf: c.cf, cs: append(c.cs, Path)}
 }
 
 func (b *Builder) ModuleLoad() (c ModuleLoad) {
@@ -7281,34 +8100,37 @@ func (b *Builder) ModuleLoad() (c ModuleLoad) {
 
 type ModuleLoadArg struct {
 	cs []string
+	cf uint32
 }
 
 func (c ModuleLoadArg) Arg(Arg ...string) ModuleLoadArg {
-	return ModuleLoadArg{cs: append(c.cs, Arg...)}
+	return ModuleLoadArg{cf: c.cf, cs: append(c.cs, Arg...)}
 }
 
-func (c ModuleLoadArg) Build() []string {
-	return c.cs
+func (c ModuleLoadArg) Build() Completed {
+	return Completed(c)
 }
 
 type ModuleLoadPath struct {
 	cs []string
+	cf uint32
 }
 
 func (c ModuleLoadPath) Arg(Arg ...string) ModuleLoadArg {
-	return ModuleLoadArg{cs: append(c.cs, Arg...)}
+	return ModuleLoadArg{cf: c.cf, cs: append(c.cs, Arg...)}
 }
 
-func (c ModuleLoadPath) Build() []string {
-	return c.cs
+func (c ModuleLoadPath) Build() Completed {
+	return Completed(c)
 }
 
 type ModuleUnload struct {
 	cs []string
+	cf uint32
 }
 
 func (c ModuleUnload) Name(Name string) ModuleUnloadName {
-	return ModuleUnloadName{cs: append(c.cs, Name)}
+	return ModuleUnloadName{cf: c.cf, cs: append(c.cs, Name)}
 }
 
 func (b *Builder) ModuleUnload() (c ModuleUnload) {
@@ -7318,18 +8140,20 @@ func (b *Builder) ModuleUnload() (c ModuleUnload) {
 
 type ModuleUnloadName struct {
 	cs []string
+	cf uint32
 }
 
-func (c ModuleUnloadName) Build() []string {
-	return c.cs
+func (c ModuleUnloadName) Build() Completed {
+	return Completed(c)
 }
 
 type Monitor struct {
 	cs []string
+	cf uint32
 }
 
-func (c Monitor) Build() []string {
-	return c.cs
+func (c Monitor) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) Monitor() (c Monitor) {
@@ -7339,10 +8163,11 @@ func (b *Builder) Monitor() (c Monitor) {
 
 type Move struct {
 	cs []string
+	cf uint32
 }
 
 func (c Move) Key(Key string) MoveKey {
-	return MoveKey{cs: append(c.cs, Key)}
+	return MoveKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Move() (c Move) {
@@ -7352,26 +8177,29 @@ func (b *Builder) Move() (c Move) {
 
 type MoveDb struct {
 	cs []string
+	cf uint32
 }
 
-func (c MoveDb) Build() []string {
-	return c.cs
+func (c MoveDb) Build() Completed {
+	return Completed(c)
 }
 
 type MoveKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c MoveKey) Db(Db int64) MoveDb {
-	return MoveDb{cs: append(c.cs, strconv.FormatInt(Db, 10))}
+	return MoveDb{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Db, 10))}
 }
 
 type Mset struct {
 	cs []string
+	cf uint32
 }
 
 func (c Mset) KeyValue() MsetKeyValue {
-	return MsetKeyValue{cs: append(c.cs)}
+	return MsetKeyValue{cf: c.cf, cs: append(c.cs, )}
 }
 
 func (b *Builder) Mset() (c Mset) {
@@ -7381,22 +8209,24 @@ func (b *Builder) Mset() (c Mset) {
 
 type MsetKeyValue struct {
 	cs []string
+	cf uint32
 }
 
 func (c MsetKeyValue) KeyValue(Key string, Value string) MsetKeyValue {
-	return MsetKeyValue{cs: append(c.cs, Key, Value)}
+	return MsetKeyValue{cf: c.cf, cs: append(c.cs, Key, Value)}
 }
 
-func (c MsetKeyValue) Build() []string {
-	return c.cs
+func (c MsetKeyValue) Build() Completed {
+	return Completed(c)
 }
 
 type Msetnx struct {
 	cs []string
+	cf uint32
 }
 
 func (c Msetnx) KeyValue() MsetnxKeyValue {
-	return MsetnxKeyValue{cs: append(c.cs)}
+	return MsetnxKeyValue{cf: c.cf, cs: append(c.cs, )}
 }
 
 func (b *Builder) Msetnx() (c Msetnx) {
@@ -7406,22 +8236,24 @@ func (b *Builder) Msetnx() (c Msetnx) {
 
 type MsetnxKeyValue struct {
 	cs []string
+	cf uint32
 }
 
 func (c MsetnxKeyValue) KeyValue(Key string, Value string) MsetnxKeyValue {
-	return MsetnxKeyValue{cs: append(c.cs, Key, Value)}
+	return MsetnxKeyValue{cf: c.cf, cs: append(c.cs, Key, Value)}
 }
 
-func (c MsetnxKeyValue) Build() []string {
-	return c.cs
+func (c MsetnxKeyValue) Build() Completed {
+	return Completed(c)
 }
 
 type Multi struct {
 	cs []string
+	cf uint32
 }
 
-func (c Multi) Build() []string {
-	return c.cs
+func (c Multi) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) Multi() (c Multi) {
@@ -7431,10 +8263,11 @@ func (b *Builder) Multi() (c Multi) {
 
 type Object struct {
 	cs []string
+	cf uint32
 }
 
 func (c Object) Subcommand(Subcommand string) ObjectSubcommand {
-	return ObjectSubcommand{cs: append(c.cs, Subcommand)}
+	return ObjectSubcommand{cf: c.cf, cs: append(c.cs, Subcommand)}
 }
 
 func (b *Builder) Object() (c Object) {
@@ -7444,34 +8277,37 @@ func (b *Builder) Object() (c Object) {
 
 type ObjectArguments struct {
 	cs []string
+	cf uint32
 }
 
 func (c ObjectArguments) Arguments(Arguments ...string) ObjectArguments {
-	return ObjectArguments{cs: append(c.cs, Arguments...)}
+	return ObjectArguments{cf: c.cf, cs: append(c.cs, Arguments...)}
 }
 
-func (c ObjectArguments) Build() []string {
-	return c.cs
+func (c ObjectArguments) Build() Completed {
+	return Completed(c)
 }
 
 type ObjectSubcommand struct {
 	cs []string
+	cf uint32
 }
 
 func (c ObjectSubcommand) Arguments(Arguments ...string) ObjectArguments {
-	return ObjectArguments{cs: append(c.cs, Arguments...)}
+	return ObjectArguments{cf: c.cf, cs: append(c.cs, Arguments...)}
 }
 
-func (c ObjectSubcommand) Build() []string {
-	return c.cs
+func (c ObjectSubcommand) Build() Completed {
+	return Completed(c)
 }
 
 type Persist struct {
 	cs []string
+	cf uint32
 }
 
 func (c Persist) Key(Key string) PersistKey {
-	return PersistKey{cs: append(c.cs, Key)}
+	return PersistKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Persist() (c Persist) {
@@ -7481,18 +8317,20 @@ func (b *Builder) Persist() (c Persist) {
 
 type PersistKey struct {
 	cs []string
+	cf uint32
 }
 
-func (c PersistKey) Build() []string {
-	return c.cs
+func (c PersistKey) Build() Completed {
+	return Completed(c)
 }
 
 type Pexpire struct {
 	cs []string
+	cf uint32
 }
 
 func (c Pexpire) Key(Key string) PexpireKey {
-	return PexpireKey{cs: append(c.cs, Key)}
+	return PexpireKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Pexpire() (c Pexpire) {
@@ -7502,74 +8340,81 @@ func (b *Builder) Pexpire() (c Pexpire) {
 
 type PexpireConditionGt struct {
 	cs []string
+	cf uint32
 }
 
-func (c PexpireConditionGt) Build() []string {
-	return c.cs
+func (c PexpireConditionGt) Build() Completed {
+	return Completed(c)
 }
 
 type PexpireConditionLt struct {
 	cs []string
+	cf uint32
 }
 
-func (c PexpireConditionLt) Build() []string {
-	return c.cs
+func (c PexpireConditionLt) Build() Completed {
+	return Completed(c)
 }
 
 type PexpireConditionNx struct {
 	cs []string
+	cf uint32
 }
 
-func (c PexpireConditionNx) Build() []string {
-	return c.cs
+func (c PexpireConditionNx) Build() Completed {
+	return Completed(c)
 }
 
 type PexpireConditionXx struct {
 	cs []string
+	cf uint32
 }
 
-func (c PexpireConditionXx) Build() []string {
-	return c.cs
+func (c PexpireConditionXx) Build() Completed {
+	return Completed(c)
 }
 
 type PexpireKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c PexpireKey) Milliseconds(Milliseconds int64) PexpireMilliseconds {
-	return PexpireMilliseconds{cs: append(c.cs, strconv.FormatInt(Milliseconds, 10))}
+	return PexpireMilliseconds{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Milliseconds, 10))}
 }
 
 type PexpireMilliseconds struct {
 	cs []string
+	cf uint32
 }
 
 func (c PexpireMilliseconds) Nx() PexpireConditionNx {
-	return PexpireConditionNx{cs: append(c.cs, "NX")}
+	return PexpireConditionNx{cf: c.cf, cs: append(c.cs, "NX")}
 }
 
 func (c PexpireMilliseconds) Xx() PexpireConditionXx {
-	return PexpireConditionXx{cs: append(c.cs, "XX")}
+	return PexpireConditionXx{cf: c.cf, cs: append(c.cs, "XX")}
 }
 
 func (c PexpireMilliseconds) Gt() PexpireConditionGt {
-	return PexpireConditionGt{cs: append(c.cs, "GT")}
+	return PexpireConditionGt{cf: c.cf, cs: append(c.cs, "GT")}
 }
 
 func (c PexpireMilliseconds) Lt() PexpireConditionLt {
-	return PexpireConditionLt{cs: append(c.cs, "LT")}
+	return PexpireConditionLt{cf: c.cf, cs: append(c.cs, "LT")}
 }
 
-func (c PexpireMilliseconds) Build() []string {
-	return c.cs
+func (c PexpireMilliseconds) Build() Completed {
+	return Completed(c)
 }
 
 type Pexpireat struct {
 	cs []string
+	cf uint32
 }
 
 func (c Pexpireat) Key(Key string) PexpireatKey {
-	return PexpireatKey{cs: append(c.cs, Key)}
+	return PexpireatKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Pexpireat() (c Pexpireat) {
@@ -7579,74 +8424,81 @@ func (b *Builder) Pexpireat() (c Pexpireat) {
 
 type PexpireatConditionGt struct {
 	cs []string
+	cf uint32
 }
 
-func (c PexpireatConditionGt) Build() []string {
-	return c.cs
+func (c PexpireatConditionGt) Build() Completed {
+	return Completed(c)
 }
 
 type PexpireatConditionLt struct {
 	cs []string
+	cf uint32
 }
 
-func (c PexpireatConditionLt) Build() []string {
-	return c.cs
+func (c PexpireatConditionLt) Build() Completed {
+	return Completed(c)
 }
 
 type PexpireatConditionNx struct {
 	cs []string
+	cf uint32
 }
 
-func (c PexpireatConditionNx) Build() []string {
-	return c.cs
+func (c PexpireatConditionNx) Build() Completed {
+	return Completed(c)
 }
 
 type PexpireatConditionXx struct {
 	cs []string
+	cf uint32
 }
 
-func (c PexpireatConditionXx) Build() []string {
-	return c.cs
+func (c PexpireatConditionXx) Build() Completed {
+	return Completed(c)
 }
 
 type PexpireatKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c PexpireatKey) MillisecondsTimestamp(MillisecondsTimestamp int64) PexpireatMillisecondsTimestamp {
-	return PexpireatMillisecondsTimestamp{cs: append(c.cs, strconv.FormatInt(MillisecondsTimestamp, 10))}
+	return PexpireatMillisecondsTimestamp{cf: c.cf, cs: append(c.cs, strconv.FormatInt(MillisecondsTimestamp, 10))}
 }
 
 type PexpireatMillisecondsTimestamp struct {
 	cs []string
+	cf uint32
 }
 
 func (c PexpireatMillisecondsTimestamp) Nx() PexpireatConditionNx {
-	return PexpireatConditionNx{cs: append(c.cs, "NX")}
+	return PexpireatConditionNx{cf: c.cf, cs: append(c.cs, "NX")}
 }
 
 func (c PexpireatMillisecondsTimestamp) Xx() PexpireatConditionXx {
-	return PexpireatConditionXx{cs: append(c.cs, "XX")}
+	return PexpireatConditionXx{cf: c.cf, cs: append(c.cs, "XX")}
 }
 
 func (c PexpireatMillisecondsTimestamp) Gt() PexpireatConditionGt {
-	return PexpireatConditionGt{cs: append(c.cs, "GT")}
+	return PexpireatConditionGt{cf: c.cf, cs: append(c.cs, "GT")}
 }
 
 func (c PexpireatMillisecondsTimestamp) Lt() PexpireatConditionLt {
-	return PexpireatConditionLt{cs: append(c.cs, "LT")}
+	return PexpireatConditionLt{cf: c.cf, cs: append(c.cs, "LT")}
 }
 
-func (c PexpireatMillisecondsTimestamp) Build() []string {
-	return c.cs
+func (c PexpireatMillisecondsTimestamp) Build() Completed {
+	return Completed(c)
 }
 
 type Pexpiretime struct {
 	cs []string
+	cf uint32
 }
 
 func (c Pexpiretime) Key(Key string) PexpiretimeKey {
-	return PexpiretimeKey{cs: append(c.cs, Key)}
+	return PexpiretimeKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Pexpiretime() (c Pexpiretime) {
@@ -7656,18 +8508,20 @@ func (b *Builder) Pexpiretime() (c Pexpiretime) {
 
 type PexpiretimeKey struct {
 	cs []string
+	cf uint32
 }
 
-func (c PexpiretimeKey) Build() []string {
-	return c.cs
+func (c PexpiretimeKey) Build() Completed {
+	return Completed(c)
 }
 
 type Pfadd struct {
 	cs []string
+	cf uint32
 }
 
 func (c Pfadd) Key(Key string) PfaddKey {
-	return PfaddKey{cs: append(c.cs, Key)}
+	return PfaddKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Pfadd() (c Pfadd) {
@@ -7677,34 +8531,37 @@ func (b *Builder) Pfadd() (c Pfadd) {
 
 type PfaddElement struct {
 	cs []string
+	cf uint32
 }
 
 func (c PfaddElement) Element(Element ...string) PfaddElement {
-	return PfaddElement{cs: append(c.cs, Element...)}
+	return PfaddElement{cf: c.cf, cs: append(c.cs, Element...)}
 }
 
-func (c PfaddElement) Build() []string {
-	return c.cs
+func (c PfaddElement) Build() Completed {
+	return Completed(c)
 }
 
 type PfaddKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c PfaddKey) Element(Element ...string) PfaddElement {
-	return PfaddElement{cs: append(c.cs, Element...)}
+	return PfaddElement{cf: c.cf, cs: append(c.cs, Element...)}
 }
 
-func (c PfaddKey) Build() []string {
-	return c.cs
+func (c PfaddKey) Build() Completed {
+	return Completed(c)
 }
 
 type Pfcount struct {
 	cs []string
+	cf uint32
 }
 
 func (c Pfcount) Key(Key ...string) PfcountKey {
-	return PfcountKey{cs: append(c.cs, Key...)}
+	return PfcountKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 func (b *Builder) Pfcount() (c Pfcount) {
@@ -7714,22 +8571,24 @@ func (b *Builder) Pfcount() (c Pfcount) {
 
 type PfcountKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c PfcountKey) Key(Key ...string) PfcountKey {
-	return PfcountKey{cs: append(c.cs, Key...)}
+	return PfcountKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
-func (c PfcountKey) Build() []string {
-	return c.cs
+func (c PfcountKey) Build() Completed {
+	return Completed(c)
 }
 
 type Pfmerge struct {
 	cs []string
+	cf uint32
 }
 
 func (c Pfmerge) Destkey(Destkey string) PfmergeDestkey {
-	return PfmergeDestkey{cs: append(c.cs, Destkey)}
+	return PfmergeDestkey{cf: c.cf, cs: append(c.cs, Destkey)}
 }
 
 func (b *Builder) Pfmerge() (c Pfmerge) {
@@ -7739,34 +8598,37 @@ func (b *Builder) Pfmerge() (c Pfmerge) {
 
 type PfmergeDestkey struct {
 	cs []string
+	cf uint32
 }
 
 func (c PfmergeDestkey) Sourcekey(Sourcekey ...string) PfmergeSourcekey {
-	return PfmergeSourcekey{cs: append(c.cs, Sourcekey...)}
+	return PfmergeSourcekey{cf: c.cf, cs: append(c.cs, Sourcekey...)}
 }
 
 type PfmergeSourcekey struct {
 	cs []string
+	cf uint32
 }
 
 func (c PfmergeSourcekey) Sourcekey(Sourcekey ...string) PfmergeSourcekey {
-	return PfmergeSourcekey{cs: append(c.cs, Sourcekey...)}
+	return PfmergeSourcekey{cf: c.cf, cs: append(c.cs, Sourcekey...)}
 }
 
-func (c PfmergeSourcekey) Build() []string {
-	return c.cs
+func (c PfmergeSourcekey) Build() Completed {
+	return Completed(c)
 }
 
 type Ping struct {
 	cs []string
+	cf uint32
 }
 
 func (c Ping) Message(Message string) PingMessage {
-	return PingMessage{cs: append(c.cs, Message)}
+	return PingMessage{cf: c.cf, cs: append(c.cs, Message)}
 }
 
-func (c Ping) Build() []string {
-	return c.cs
+func (c Ping) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) Ping() (c Ping) {
@@ -7776,18 +8638,20 @@ func (b *Builder) Ping() (c Ping) {
 
 type PingMessage struct {
 	cs []string
+	cf uint32
 }
 
-func (c PingMessage) Build() []string {
-	return c.cs
+func (c PingMessage) Build() Completed {
+	return Completed(c)
 }
 
 type Psetex struct {
 	cs []string
+	cf uint32
 }
 
 func (c Psetex) Key(Key string) PsetexKey {
-	return PsetexKey{cs: append(c.cs, Key)}
+	return PsetexKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Psetex() (c Psetex) {
@@ -7797,34 +8661,38 @@ func (b *Builder) Psetex() (c Psetex) {
 
 type PsetexKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c PsetexKey) Milliseconds(Milliseconds int64) PsetexMilliseconds {
-	return PsetexMilliseconds{cs: append(c.cs, strconv.FormatInt(Milliseconds, 10))}
+	return PsetexMilliseconds{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Milliseconds, 10))}
 }
 
 type PsetexMilliseconds struct {
 	cs []string
+	cf uint32
 }
 
 func (c PsetexMilliseconds) Value(Value string) PsetexValue {
-	return PsetexValue{cs: append(c.cs, Value)}
+	return PsetexValue{cf: c.cf, cs: append(c.cs, Value)}
 }
 
 type PsetexValue struct {
 	cs []string
+	cf uint32
 }
 
-func (c PsetexValue) Build() []string {
-	return c.cs
+func (c PsetexValue) Build() Completed {
+	return Completed(c)
 }
 
 type Psubscribe struct {
 	cs []string
+	cf uint32
 }
 
 func (c Psubscribe) Pattern(Pattern ...string) PsubscribePattern {
-	return PsubscribePattern{cs: append(c.cs, Pattern...)}
+	return PsubscribePattern{cf: c.cf, cs: append(c.cs, Pattern...)}
 }
 
 func (b *Builder) Psubscribe() (c Psubscribe) {
@@ -7834,22 +8702,24 @@ func (b *Builder) Psubscribe() (c Psubscribe) {
 
 type PsubscribePattern struct {
 	cs []string
+	cf uint32
 }
 
 func (c PsubscribePattern) Pattern(Pattern ...string) PsubscribePattern {
-	return PsubscribePattern{cs: append(c.cs, Pattern...)}
+	return PsubscribePattern{cf: c.cf, cs: append(c.cs, Pattern...)}
 }
 
-func (c PsubscribePattern) Build() []string {
-	return c.cs
+func (c PsubscribePattern) Build() Completed {
+	return Completed(c)
 }
 
 type Psync struct {
 	cs []string
+	cf uint32
 }
 
 func (c Psync) Replicationid(Replicationid int64) PsyncReplicationid {
-	return PsyncReplicationid{cs: append(c.cs, strconv.FormatInt(Replicationid, 10))}
+	return PsyncReplicationid{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Replicationid, 10))}
 }
 
 func (b *Builder) Psync() (c Psync) {
@@ -7859,26 +8729,29 @@ func (b *Builder) Psync() (c Psync) {
 
 type PsyncOffset struct {
 	cs []string
+	cf uint32
 }
 
-func (c PsyncOffset) Build() []string {
-	return c.cs
+func (c PsyncOffset) Build() Completed {
+	return Completed(c)
 }
 
 type PsyncReplicationid struct {
 	cs []string
+	cf uint32
 }
 
 func (c PsyncReplicationid) Offset(Offset int64) PsyncOffset {
-	return PsyncOffset{cs: append(c.cs, strconv.FormatInt(Offset, 10))}
+	return PsyncOffset{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Offset, 10))}
 }
 
 type Pttl struct {
 	cs []string
+	cf uint32
 }
 
 func (c Pttl) Key(Key string) PttlKey {
-	return PttlKey{cs: append(c.cs, Key)}
+	return PttlKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Pttl() (c Pttl) {
@@ -7888,18 +8761,24 @@ func (b *Builder) Pttl() (c Pttl) {
 
 type PttlKey struct {
 	cs []string
+	cf uint32
 }
 
-func (c PttlKey) Build() []string {
-	return c.cs
+func (c PttlKey) Build() Completed {
+	return Completed(c)
+}
+
+func (c PttlKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Publish struct {
 	cs []string
+	cf uint32
 }
 
 func (c Publish) Channel(Channel string) PublishChannel {
-	return PublishChannel{cs: append(c.cs, Channel)}
+	return PublishChannel{cf: c.cf, cs: append(c.cs, Channel)}
 }
 
 func (b *Builder) Publish() (c Publish) {
@@ -7909,26 +8788,29 @@ func (b *Builder) Publish() (c Publish) {
 
 type PublishChannel struct {
 	cs []string
+	cf uint32
 }
 
 func (c PublishChannel) Message(Message string) PublishMessage {
-	return PublishMessage{cs: append(c.cs, Message)}
+	return PublishMessage{cf: c.cf, cs: append(c.cs, Message)}
 }
 
 type PublishMessage struct {
 	cs []string
+	cf uint32
 }
 
-func (c PublishMessage) Build() []string {
-	return c.cs
+func (c PublishMessage) Build() Completed {
+	return Completed(c)
 }
 
 type Pubsub struct {
 	cs []string
+	cf uint32
 }
 
 func (c Pubsub) Subcommand(Subcommand string) PubsubSubcommand {
-	return PubsubSubcommand{cs: append(c.cs, Subcommand)}
+	return PubsubSubcommand{cf: c.cf, cs: append(c.cs, Subcommand)}
 }
 
 func (b *Builder) Pubsub() (c Pubsub) {
@@ -7938,38 +8820,41 @@ func (b *Builder) Pubsub() (c Pubsub) {
 
 type PubsubArgument struct {
 	cs []string
+	cf uint32
 }
 
 func (c PubsubArgument) Argument(Argument ...string) PubsubArgument {
-	return PubsubArgument{cs: append(c.cs, Argument...)}
+	return PubsubArgument{cf: c.cf, cs: append(c.cs, Argument...)}
 }
 
-func (c PubsubArgument) Build() []string {
-	return c.cs
+func (c PubsubArgument) Build() Completed {
+	return Completed(c)
 }
 
 type PubsubSubcommand struct {
 	cs []string
+	cf uint32
 }
 
 func (c PubsubSubcommand) Argument(Argument ...string) PubsubArgument {
-	return PubsubArgument{cs: append(c.cs, Argument...)}
+	return PubsubArgument{cf: c.cf, cs: append(c.cs, Argument...)}
 }
 
-func (c PubsubSubcommand) Build() []string {
-	return c.cs
+func (c PubsubSubcommand) Build() Completed {
+	return Completed(c)
 }
 
 type Punsubscribe struct {
 	cs []string
+	cf uint32
 }
 
 func (c Punsubscribe) Pattern(Pattern ...string) PunsubscribePattern {
-	return PunsubscribePattern{cs: append(c.cs, Pattern...)}
+	return PunsubscribePattern{cf: c.cf, cs: append(c.cs, Pattern...)}
 }
 
-func (c Punsubscribe) Build() []string {
-	return c.cs
+func (c Punsubscribe) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) Punsubscribe() (c Punsubscribe) {
@@ -7979,22 +8864,24 @@ func (b *Builder) Punsubscribe() (c Punsubscribe) {
 
 type PunsubscribePattern struct {
 	cs []string
+	cf uint32
 }
 
 func (c PunsubscribePattern) Pattern(Pattern ...string) PunsubscribePattern {
-	return PunsubscribePattern{cs: append(c.cs, Pattern...)}
+	return PunsubscribePattern{cf: c.cf, cs: append(c.cs, Pattern...)}
 }
 
-func (c PunsubscribePattern) Build() []string {
-	return c.cs
+func (c PunsubscribePattern) Build() Completed {
+	return Completed(c)
 }
 
 type Quit struct {
 	cs []string
+	cf uint32
 }
 
-func (c Quit) Build() []string {
-	return c.cs
+func (c Quit) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) Quit() (c Quit) {
@@ -8004,10 +8891,11 @@ func (b *Builder) Quit() (c Quit) {
 
 type Randomkey struct {
 	cs []string
+	cf uint32
 }
 
-func (c Randomkey) Build() []string {
-	return c.cs
+func (c Randomkey) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) Randomkey() (c Randomkey) {
@@ -8017,10 +8905,11 @@ func (b *Builder) Randomkey() (c Randomkey) {
 
 type Readonly struct {
 	cs []string
+	cf uint32
 }
 
-func (c Readonly) Build() []string {
-	return c.cs
+func (c Readonly) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) Readonly() (c Readonly) {
@@ -8030,10 +8919,11 @@ func (b *Builder) Readonly() (c Readonly) {
 
 type Readwrite struct {
 	cs []string
+	cf uint32
 }
 
-func (c Readwrite) Build() []string {
-	return c.cs
+func (c Readwrite) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) Readwrite() (c Readwrite) {
@@ -8043,10 +8933,11 @@ func (b *Builder) Readwrite() (c Readwrite) {
 
 type Rename struct {
 	cs []string
+	cf uint32
 }
 
 func (c Rename) Key(Key string) RenameKey {
-	return RenameKey{cs: append(c.cs, Key)}
+	return RenameKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Rename() (c Rename) {
@@ -8056,26 +8947,29 @@ func (b *Builder) Rename() (c Rename) {
 
 type RenameKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c RenameKey) Newkey(Newkey string) RenameNewkey {
-	return RenameNewkey{cs: append(c.cs, Newkey)}
+	return RenameNewkey{cf: c.cf, cs: append(c.cs, Newkey)}
 }
 
 type RenameNewkey struct {
 	cs []string
+	cf uint32
 }
 
-func (c RenameNewkey) Build() []string {
-	return c.cs
+func (c RenameNewkey) Build() Completed {
+	return Completed(c)
 }
 
 type Renamenx struct {
 	cs []string
+	cf uint32
 }
 
 func (c Renamenx) Key(Key string) RenamenxKey {
-	return RenamenxKey{cs: append(c.cs, Key)}
+	return RenamenxKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Renamenx() (c Renamenx) {
@@ -8085,26 +8979,29 @@ func (b *Builder) Renamenx() (c Renamenx) {
 
 type RenamenxKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c RenamenxKey) Newkey(Newkey string) RenamenxNewkey {
-	return RenamenxNewkey{cs: append(c.cs, Newkey)}
+	return RenamenxNewkey{cf: c.cf, cs: append(c.cs, Newkey)}
 }
 
 type RenamenxNewkey struct {
 	cs []string
+	cf uint32
 }
 
-func (c RenamenxNewkey) Build() []string {
-	return c.cs
+func (c RenamenxNewkey) Build() Completed {
+	return Completed(c)
 }
 
 type Replicaof struct {
 	cs []string
+	cf uint32
 }
 
 func (c Replicaof) Host(Host string) ReplicaofHost {
-	return ReplicaofHost{cs: append(c.cs, Host)}
+	return ReplicaofHost{cf: c.cf, cs: append(c.cs, Host)}
 }
 
 func (b *Builder) Replicaof() (c Replicaof) {
@@ -8114,26 +9011,29 @@ func (b *Builder) Replicaof() (c Replicaof) {
 
 type ReplicaofHost struct {
 	cs []string
+	cf uint32
 }
 
 func (c ReplicaofHost) Port(Port string) ReplicaofPort {
-	return ReplicaofPort{cs: append(c.cs, Port)}
+	return ReplicaofPort{cf: c.cf, cs: append(c.cs, Port)}
 }
 
 type ReplicaofPort struct {
 	cs []string
+	cf uint32
 }
 
-func (c ReplicaofPort) Build() []string {
-	return c.cs
+func (c ReplicaofPort) Build() Completed {
+	return Completed(c)
 }
 
 type Reset struct {
 	cs []string
+	cf uint32
 }
 
-func (c Reset) Build() []string {
-	return c.cs
+func (c Reset) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) Reset() (c Reset) {
@@ -8143,10 +9043,11 @@ func (b *Builder) Reset() (c Reset) {
 
 type Restore struct {
 	cs []string
+	cf uint32
 }
 
 func (c Restore) Key(Key string) RestoreKey {
-	return RestoreKey{cs: append(c.cs, Key)}
+	return RestoreKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Restore() (c Restore) {
@@ -8156,106 +9057,114 @@ func (b *Builder) Restore() (c Restore) {
 
 type RestoreAbsttlAbsttl struct {
 	cs []string
+	cf uint32
 }
 
 func (c RestoreAbsttlAbsttl) Idletime(Seconds int64) RestoreIdletime {
-	return RestoreIdletime{cs: append(c.cs, "IDLETIME", strconv.FormatInt(Seconds, 10))}
+	return RestoreIdletime{cf: c.cf, cs: append(c.cs, "IDLETIME", strconv.FormatInt(Seconds, 10))}
 }
 
 func (c RestoreAbsttlAbsttl) Freq(Frequency int64) RestoreFreq {
-	return RestoreFreq{cs: append(c.cs, "FREQ", strconv.FormatInt(Frequency, 10))}
+	return RestoreFreq{cf: c.cf, cs: append(c.cs, "FREQ", strconv.FormatInt(Frequency, 10))}
 }
 
-func (c RestoreAbsttlAbsttl) Build() []string {
-	return c.cs
+func (c RestoreAbsttlAbsttl) Build() Completed {
+	return Completed(c)
 }
 
 type RestoreFreq struct {
 	cs []string
+	cf uint32
 }
 
-func (c RestoreFreq) Build() []string {
-	return c.cs
+func (c RestoreFreq) Build() Completed {
+	return Completed(c)
 }
 
 type RestoreIdletime struct {
 	cs []string
+	cf uint32
 }
 
 func (c RestoreIdletime) Freq(Frequency int64) RestoreFreq {
-	return RestoreFreq{cs: append(c.cs, "FREQ", strconv.FormatInt(Frequency, 10))}
+	return RestoreFreq{cf: c.cf, cs: append(c.cs, "FREQ", strconv.FormatInt(Frequency, 10))}
 }
 
-func (c RestoreIdletime) Build() []string {
-	return c.cs
+func (c RestoreIdletime) Build() Completed {
+	return Completed(c)
 }
 
 type RestoreKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c RestoreKey) Ttl(Ttl int64) RestoreTtl {
-	return RestoreTtl{cs: append(c.cs, strconv.FormatInt(Ttl, 10))}
+	return RestoreTtl{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Ttl, 10))}
 }
 
 type RestoreReplaceReplace struct {
 	cs []string
+	cf uint32
 }
 
 func (c RestoreReplaceReplace) Absttl() RestoreAbsttlAbsttl {
-	return RestoreAbsttlAbsttl{cs: append(c.cs, "ABSTTL")}
+	return RestoreAbsttlAbsttl{cf: c.cf, cs: append(c.cs, "ABSTTL")}
 }
 
 func (c RestoreReplaceReplace) Idletime(Seconds int64) RestoreIdletime {
-	return RestoreIdletime{cs: append(c.cs, "IDLETIME", strconv.FormatInt(Seconds, 10))}
+	return RestoreIdletime{cf: c.cf, cs: append(c.cs, "IDLETIME", strconv.FormatInt(Seconds, 10))}
 }
 
 func (c RestoreReplaceReplace) Freq(Frequency int64) RestoreFreq {
-	return RestoreFreq{cs: append(c.cs, "FREQ", strconv.FormatInt(Frequency, 10))}
+	return RestoreFreq{cf: c.cf, cs: append(c.cs, "FREQ", strconv.FormatInt(Frequency, 10))}
 }
 
-func (c RestoreReplaceReplace) Build() []string {
-	return c.cs
+func (c RestoreReplaceReplace) Build() Completed {
+	return Completed(c)
 }
 
 type RestoreSerializedValue struct {
 	cs []string
+	cf uint32
 }
 
 func (c RestoreSerializedValue) Replace() RestoreReplaceReplace {
-	return RestoreReplaceReplace{cs: append(c.cs, "REPLACE")}
+	return RestoreReplaceReplace{cf: c.cf, cs: append(c.cs, "REPLACE")}
 }
 
 func (c RestoreSerializedValue) Absttl() RestoreAbsttlAbsttl {
-	return RestoreAbsttlAbsttl{cs: append(c.cs, "ABSTTL")}
+	return RestoreAbsttlAbsttl{cf: c.cf, cs: append(c.cs, "ABSTTL")}
 }
 
 func (c RestoreSerializedValue) Idletime(Seconds int64) RestoreIdletime {
-	return RestoreIdletime{cs: append(c.cs, "IDLETIME", strconv.FormatInt(Seconds, 10))}
+	return RestoreIdletime{cf: c.cf, cs: append(c.cs, "IDLETIME", strconv.FormatInt(Seconds, 10))}
 }
 
 func (c RestoreSerializedValue) Freq(Frequency int64) RestoreFreq {
-	return RestoreFreq{cs: append(c.cs, "FREQ", strconv.FormatInt(Frequency, 10))}
+	return RestoreFreq{cf: c.cf, cs: append(c.cs, "FREQ", strconv.FormatInt(Frequency, 10))}
 }
 
-func (c RestoreSerializedValue) Build() []string {
-	return c.cs
+func (c RestoreSerializedValue) Build() Completed {
+	return Completed(c)
 }
 
 type RestoreTtl struct {
 	cs []string
+	cf uint32
 }
 
 func (c RestoreTtl) SerializedValue(SerializedValue string) RestoreSerializedValue {
-	return RestoreSerializedValue{cs: append(c.cs, SerializedValue)}
+	return RestoreSerializedValue{cf: c.cf, cs: append(c.cs, SerializedValue)}
 }
 
 type Role struct {
 	cs []string
+	cf uint32
 }
 
-func (c Role) Build() []string {
-	return c.cs
+func (c Role) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) Role() (c Role) {
@@ -8265,10 +9174,11 @@ func (b *Builder) Role() (c Role) {
 
 type Rpop struct {
 	cs []string
+	cf uint32
 }
 
 func (c Rpop) Key(Key string) RpopKey {
-	return RpopKey{cs: append(c.cs, Key)}
+	return RpopKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Rpop() (c Rpop) {
@@ -8278,30 +9188,33 @@ func (b *Builder) Rpop() (c Rpop) {
 
 type RpopCount struct {
 	cs []string
+	cf uint32
 }
 
-func (c RpopCount) Build() []string {
-	return c.cs
+func (c RpopCount) Build() Completed {
+	return Completed(c)
 }
 
 type RpopKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c RpopKey) Count(Count int64) RpopCount {
-	return RpopCount{cs: append(c.cs, strconv.FormatInt(Count, 10))}
+	return RpopCount{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Count, 10))}
 }
 
-func (c RpopKey) Build() []string {
-	return c.cs
+func (c RpopKey) Build() Completed {
+	return Completed(c)
 }
 
 type Rpoplpush struct {
 	cs []string
+	cf uint32
 }
 
 func (c Rpoplpush) Source(Source string) RpoplpushSource {
-	return RpoplpushSource{cs: append(c.cs, Source)}
+	return RpoplpushSource{cf: c.cf, cs: append(c.cs, Source)}
 }
 
 func (b *Builder) Rpoplpush() (c Rpoplpush) {
@@ -8311,26 +9224,29 @@ func (b *Builder) Rpoplpush() (c Rpoplpush) {
 
 type RpoplpushDestination struct {
 	cs []string
+	cf uint32
 }
 
-func (c RpoplpushDestination) Build() []string {
-	return c.cs
+func (c RpoplpushDestination) Build() Completed {
+	return Completed(c)
 }
 
 type RpoplpushSource struct {
 	cs []string
+	cf uint32
 }
 
 func (c RpoplpushSource) Destination(Destination string) RpoplpushDestination {
-	return RpoplpushDestination{cs: append(c.cs, Destination)}
+	return RpoplpushDestination{cf: c.cf, cs: append(c.cs, Destination)}
 }
 
 type Rpush struct {
 	cs []string
+	cf uint32
 }
 
 func (c Rpush) Key(Key string) RpushKey {
-	return RpushKey{cs: append(c.cs, Key)}
+	return RpushKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Rpush() (c Rpush) {
@@ -8340,30 +9256,33 @@ func (b *Builder) Rpush() (c Rpush) {
 
 type RpushElement struct {
 	cs []string
+	cf uint32
 }
 
 func (c RpushElement) Element(Element ...string) RpushElement {
-	return RpushElement{cs: append(c.cs, Element...)}
+	return RpushElement{cf: c.cf, cs: append(c.cs, Element...)}
 }
 
-func (c RpushElement) Build() []string {
-	return c.cs
+func (c RpushElement) Build() Completed {
+	return Completed(c)
 }
 
 type RpushKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c RpushKey) Element(Element ...string) RpushElement {
-	return RpushElement{cs: append(c.cs, Element...)}
+	return RpushElement{cf: c.cf, cs: append(c.cs, Element...)}
 }
 
 type Rpushx struct {
 	cs []string
+	cf uint32
 }
 
 func (c Rpushx) Key(Key string) RpushxKey {
-	return RpushxKey{cs: append(c.cs, Key)}
+	return RpushxKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Rpushx() (c Rpushx) {
@@ -8373,30 +9292,33 @@ func (b *Builder) Rpushx() (c Rpushx) {
 
 type RpushxElement struct {
 	cs []string
+	cf uint32
 }
 
 func (c RpushxElement) Element(Element ...string) RpushxElement {
-	return RpushxElement{cs: append(c.cs, Element...)}
+	return RpushxElement{cf: c.cf, cs: append(c.cs, Element...)}
 }
 
-func (c RpushxElement) Build() []string {
-	return c.cs
+func (c RpushxElement) Build() Completed {
+	return Completed(c)
 }
 
 type RpushxKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c RpushxKey) Element(Element ...string) RpushxElement {
-	return RpushxElement{cs: append(c.cs, Element...)}
+	return RpushxElement{cf: c.cf, cs: append(c.cs, Element...)}
 }
 
 type Sadd struct {
 	cs []string
+	cf uint32
 }
 
 func (c Sadd) Key(Key string) SaddKey {
-	return SaddKey{cs: append(c.cs, Key)}
+	return SaddKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Sadd() (c Sadd) {
@@ -8406,30 +9328,33 @@ func (b *Builder) Sadd() (c Sadd) {
 
 type SaddKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c SaddKey) Member(Member ...string) SaddMember {
-	return SaddMember{cs: append(c.cs, Member...)}
+	return SaddMember{cf: c.cf, cs: append(c.cs, Member...)}
 }
 
 type SaddMember struct {
 	cs []string
+	cf uint32
 }
 
 func (c SaddMember) Member(Member ...string) SaddMember {
-	return SaddMember{cs: append(c.cs, Member...)}
+	return SaddMember{cf: c.cf, cs: append(c.cs, Member...)}
 }
 
-func (c SaddMember) Build() []string {
-	return c.cs
+func (c SaddMember) Build() Completed {
+	return Completed(c)
 }
 
 type Save struct {
 	cs []string
+	cf uint32
 }
 
-func (c Save) Build() []string {
-	return c.cs
+func (c Save) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) Save() (c Save) {
@@ -8439,10 +9364,11 @@ func (b *Builder) Save() (c Save) {
 
 type Scan struct {
 	cs []string
+	cf uint32
 }
 
 func (c Scan) Cursor(Cursor int64) ScanCursor {
-	return ScanCursor{cs: append(c.cs, strconv.FormatInt(Cursor, 10))}
+	return ScanCursor{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Cursor, 10))}
 }
 
 func (b *Builder) Scan() (c Scan) {
@@ -8452,66 +9378,71 @@ func (b *Builder) Scan() (c Scan) {
 
 type ScanCount struct {
 	cs []string
+	cf uint32
 }
 
 func (c ScanCount) Type(Type string) ScanType {
-	return ScanType{cs: append(c.cs, "TYPE", Type)}
+	return ScanType{cf: c.cf, cs: append(c.cs, "TYPE", Type)}
 }
 
-func (c ScanCount) Build() []string {
-	return c.cs
+func (c ScanCount) Build() Completed {
+	return Completed(c)
 }
 
 type ScanCursor struct {
 	cs []string
+	cf uint32
 }
 
 func (c ScanCursor) Match(Pattern string) ScanMatch {
-	return ScanMatch{cs: append(c.cs, "MATCH", Pattern)}
+	return ScanMatch{cf: c.cf, cs: append(c.cs, "MATCH", Pattern)}
 }
 
 func (c ScanCursor) Count(Count int64) ScanCount {
-	return ScanCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return ScanCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c ScanCursor) Type(Type string) ScanType {
-	return ScanType{cs: append(c.cs, "TYPE", Type)}
+	return ScanType{cf: c.cf, cs: append(c.cs, "TYPE", Type)}
 }
 
-func (c ScanCursor) Build() []string {
-	return c.cs
+func (c ScanCursor) Build() Completed {
+	return Completed(c)
 }
 
 type ScanMatch struct {
 	cs []string
+	cf uint32
 }
 
 func (c ScanMatch) Count(Count int64) ScanCount {
-	return ScanCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return ScanCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c ScanMatch) Type(Type string) ScanType {
-	return ScanType{cs: append(c.cs, "TYPE", Type)}
+	return ScanType{cf: c.cf, cs: append(c.cs, "TYPE", Type)}
 }
 
-func (c ScanMatch) Build() []string {
-	return c.cs
+func (c ScanMatch) Build() Completed {
+	return Completed(c)
 }
 
 type ScanType struct {
 	cs []string
+	cf uint32
 }
 
-func (c ScanType) Build() []string {
-	return c.cs
+func (c ScanType) Build() Completed {
+	return Completed(c)
 }
 
 type Scard struct {
 	cs []string
+	cf uint32
 }
 
 func (c Scard) Key(Key string) ScardKey {
-	return ScardKey{cs: append(c.cs, Key)}
+	return ScardKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Scard() (c Scard) {
@@ -8521,26 +9452,32 @@ func (b *Builder) Scard() (c Scard) {
 
 type ScardKey struct {
 	cs []string
+	cf uint32
 }
 
-func (c ScardKey) Build() []string {
-	return c.cs
+func (c ScardKey) Build() Completed {
+	return Completed(c)
+}
+
+func (c ScardKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type ScriptDebug struct {
 	cs []string
+	cf uint32
 }
 
 func (c ScriptDebug) Yes() ScriptDebugModeYes {
-	return ScriptDebugModeYes{cs: append(c.cs, "YES")}
+	return ScriptDebugModeYes{cf: c.cf, cs: append(c.cs, "YES")}
 }
 
 func (c ScriptDebug) Sync() ScriptDebugModeSync {
-	return ScriptDebugModeSync{cs: append(c.cs, "SYNC")}
+	return ScriptDebugModeSync{cf: c.cf, cs: append(c.cs, "SYNC")}
 }
 
 func (c ScriptDebug) No() ScriptDebugModeNo {
-	return ScriptDebugModeNo{cs: append(c.cs, "NO")}
+	return ScriptDebugModeNo{cf: c.cf, cs: append(c.cs, "NO")}
 }
 
 func (b *Builder) ScriptDebug() (c ScriptDebug) {
@@ -8550,34 +9487,38 @@ func (b *Builder) ScriptDebug() (c ScriptDebug) {
 
 type ScriptDebugModeNo struct {
 	cs []string
+	cf uint32
 }
 
-func (c ScriptDebugModeNo) Build() []string {
-	return c.cs
+func (c ScriptDebugModeNo) Build() Completed {
+	return Completed(c)
 }
 
 type ScriptDebugModeSync struct {
 	cs []string
+	cf uint32
 }
 
-func (c ScriptDebugModeSync) Build() []string {
-	return c.cs
+func (c ScriptDebugModeSync) Build() Completed {
+	return Completed(c)
 }
 
 type ScriptDebugModeYes struct {
 	cs []string
+	cf uint32
 }
 
-func (c ScriptDebugModeYes) Build() []string {
-	return c.cs
+func (c ScriptDebugModeYes) Build() Completed {
+	return Completed(c)
 }
 
 type ScriptExists struct {
 	cs []string
+	cf uint32
 }
 
 func (c ScriptExists) Sha1(Sha1 ...string) ScriptExistsSha1 {
-	return ScriptExistsSha1{cs: append(c.cs, Sha1...)}
+	return ScriptExistsSha1{cf: c.cf, cs: append(c.cs, Sha1...)}
 }
 
 func (b *Builder) ScriptExists() (c ScriptExists) {
@@ -8587,30 +9528,32 @@ func (b *Builder) ScriptExists() (c ScriptExists) {
 
 type ScriptExistsSha1 struct {
 	cs []string
+	cf uint32
 }
 
 func (c ScriptExistsSha1) Sha1(Sha1 ...string) ScriptExistsSha1 {
-	return ScriptExistsSha1{cs: append(c.cs, Sha1...)}
+	return ScriptExistsSha1{cf: c.cf, cs: append(c.cs, Sha1...)}
 }
 
-func (c ScriptExistsSha1) Build() []string {
-	return c.cs
+func (c ScriptExistsSha1) Build() Completed {
+	return Completed(c)
 }
 
 type ScriptFlush struct {
 	cs []string
+	cf uint32
 }
 
 func (c ScriptFlush) Async() ScriptFlushAsyncAsync {
-	return ScriptFlushAsyncAsync{cs: append(c.cs, "ASYNC")}
+	return ScriptFlushAsyncAsync{cf: c.cf, cs: append(c.cs, "ASYNC")}
 }
 
 func (c ScriptFlush) Sync() ScriptFlushAsyncSync {
-	return ScriptFlushAsyncSync{cs: append(c.cs, "SYNC")}
+	return ScriptFlushAsyncSync{cf: c.cf, cs: append(c.cs, "SYNC")}
 }
 
-func (c ScriptFlush) Build() []string {
-	return c.cs
+func (c ScriptFlush) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) ScriptFlush() (c ScriptFlush) {
@@ -8620,26 +9563,29 @@ func (b *Builder) ScriptFlush() (c ScriptFlush) {
 
 type ScriptFlushAsyncAsync struct {
 	cs []string
+	cf uint32
 }
 
-func (c ScriptFlushAsyncAsync) Build() []string {
-	return c.cs
+func (c ScriptFlushAsyncAsync) Build() Completed {
+	return Completed(c)
 }
 
 type ScriptFlushAsyncSync struct {
 	cs []string
+	cf uint32
 }
 
-func (c ScriptFlushAsyncSync) Build() []string {
-	return c.cs
+func (c ScriptFlushAsyncSync) Build() Completed {
+	return Completed(c)
 }
 
 type ScriptKill struct {
 	cs []string
+	cf uint32
 }
 
-func (c ScriptKill) Build() []string {
-	return c.cs
+func (c ScriptKill) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) ScriptKill() (c ScriptKill) {
@@ -8649,10 +9595,11 @@ func (b *Builder) ScriptKill() (c ScriptKill) {
 
 type ScriptLoad struct {
 	cs []string
+	cf uint32
 }
 
 func (c ScriptLoad) Script(Script string) ScriptLoadScript {
-	return ScriptLoadScript{cs: append(c.cs, Script)}
+	return ScriptLoadScript{cf: c.cf, cs: append(c.cs, Script)}
 }
 
 func (b *Builder) ScriptLoad() (c ScriptLoad) {
@@ -8662,18 +9609,20 @@ func (b *Builder) ScriptLoad() (c ScriptLoad) {
 
 type ScriptLoadScript struct {
 	cs []string
+	cf uint32
 }
 
-func (c ScriptLoadScript) Build() []string {
-	return c.cs
+func (c ScriptLoadScript) Build() Completed {
+	return Completed(c)
 }
 
 type Sdiff struct {
 	cs []string
+	cf uint32
 }
 
 func (c Sdiff) Key(Key ...string) SdiffKey {
-	return SdiffKey{cs: append(c.cs, Key...)}
+	return SdiffKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 func (b *Builder) Sdiff() (c Sdiff) {
@@ -8683,22 +9632,24 @@ func (b *Builder) Sdiff() (c Sdiff) {
 
 type SdiffKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c SdiffKey) Key(Key ...string) SdiffKey {
-	return SdiffKey{cs: append(c.cs, Key...)}
+	return SdiffKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
-func (c SdiffKey) Build() []string {
-	return c.cs
+func (c SdiffKey) Build() Completed {
+	return Completed(c)
 }
 
 type Sdiffstore struct {
 	cs []string
+	cf uint32
 }
 
 func (c Sdiffstore) Destination(Destination string) SdiffstoreDestination {
-	return SdiffstoreDestination{cs: append(c.cs, Destination)}
+	return SdiffstoreDestination{cf: c.cf, cs: append(c.cs, Destination)}
 }
 
 func (b *Builder) Sdiffstore() (c Sdiffstore) {
@@ -8708,30 +9659,33 @@ func (b *Builder) Sdiffstore() (c Sdiffstore) {
 
 type SdiffstoreDestination struct {
 	cs []string
+	cf uint32
 }
 
 func (c SdiffstoreDestination) Key(Key ...string) SdiffstoreKey {
-	return SdiffstoreKey{cs: append(c.cs, Key...)}
+	return SdiffstoreKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 type SdiffstoreKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c SdiffstoreKey) Key(Key ...string) SdiffstoreKey {
-	return SdiffstoreKey{cs: append(c.cs, Key...)}
+	return SdiffstoreKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
-func (c SdiffstoreKey) Build() []string {
-	return c.cs
+func (c SdiffstoreKey) Build() Completed {
+	return Completed(c)
 }
 
 type Select struct {
 	cs []string
+	cf uint32
 }
 
 func (c Select) Index(Index int64) SelectIndex {
-	return SelectIndex{cs: append(c.cs, strconv.FormatInt(Index, 10))}
+	return SelectIndex{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Index, 10))}
 }
 
 func (b *Builder) Select() (c Select) {
@@ -8741,18 +9695,20 @@ func (b *Builder) Select() (c Select) {
 
 type SelectIndex struct {
 	cs []string
+	cf uint32
 }
 
-func (c SelectIndex) Build() []string {
-	return c.cs
+func (c SelectIndex) Build() Completed {
+	return Completed(c)
 }
 
 type Set struct {
 	cs []string
+	cf uint32
 }
 
 func (c Set) Key(Key string) SetKey {
-	return SetKey{cs: append(c.cs, Key)}
+	return SetKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Set() (c Set) {
@@ -8762,190 +9718,201 @@ func (b *Builder) Set() (c Set) {
 
 type SetConditionNx struct {
 	cs []string
+	cf uint32
 }
 
 func (c SetConditionNx) Get() SetGetGet {
-	return SetGetGet{cs: append(c.cs, "GET")}
+	return SetGetGet{cf: c.cf, cs: append(c.cs, "GET")}
 }
 
-func (c SetConditionNx) Build() []string {
-	return c.cs
+func (c SetConditionNx) Build() Completed {
+	return Completed(c)
 }
 
 type SetConditionXx struct {
 	cs []string
+	cf uint32
 }
 
 func (c SetConditionXx) Get() SetGetGet {
-	return SetGetGet{cs: append(c.cs, "GET")}
+	return SetGetGet{cf: c.cf, cs: append(c.cs, "GET")}
 }
 
-func (c SetConditionXx) Build() []string {
-	return c.cs
+func (c SetConditionXx) Build() Completed {
+	return Completed(c)
 }
 
 type SetExpirationEx struct {
 	cs []string
+	cf uint32
 }
 
 func (c SetExpirationEx) Nx() SetConditionNx {
-	return SetConditionNx{cs: append(c.cs, "NX")}
+	return SetConditionNx{cf: c.cf, cs: append(c.cs, "NX")}
 }
 
 func (c SetExpirationEx) Xx() SetConditionXx {
-	return SetConditionXx{cs: append(c.cs, "XX")}
+	return SetConditionXx{cf: c.cf, cs: append(c.cs, "XX")}
 }
 
 func (c SetExpirationEx) Get() SetGetGet {
-	return SetGetGet{cs: append(c.cs, "GET")}
+	return SetGetGet{cf: c.cf, cs: append(c.cs, "GET")}
 }
 
-func (c SetExpirationEx) Build() []string {
-	return c.cs
+func (c SetExpirationEx) Build() Completed {
+	return Completed(c)
 }
 
 type SetExpirationExat struct {
 	cs []string
+	cf uint32
 }
 
 func (c SetExpirationExat) Nx() SetConditionNx {
-	return SetConditionNx{cs: append(c.cs, "NX")}
+	return SetConditionNx{cf: c.cf, cs: append(c.cs, "NX")}
 }
 
 func (c SetExpirationExat) Xx() SetConditionXx {
-	return SetConditionXx{cs: append(c.cs, "XX")}
+	return SetConditionXx{cf: c.cf, cs: append(c.cs, "XX")}
 }
 
 func (c SetExpirationExat) Get() SetGetGet {
-	return SetGetGet{cs: append(c.cs, "GET")}
+	return SetGetGet{cf: c.cf, cs: append(c.cs, "GET")}
 }
 
-func (c SetExpirationExat) Build() []string {
-	return c.cs
+func (c SetExpirationExat) Build() Completed {
+	return Completed(c)
 }
 
 type SetExpirationKeepttl struct {
 	cs []string
+	cf uint32
 }
 
 func (c SetExpirationKeepttl) Nx() SetConditionNx {
-	return SetConditionNx{cs: append(c.cs, "NX")}
+	return SetConditionNx{cf: c.cf, cs: append(c.cs, "NX")}
 }
 
 func (c SetExpirationKeepttl) Xx() SetConditionXx {
-	return SetConditionXx{cs: append(c.cs, "XX")}
+	return SetConditionXx{cf: c.cf, cs: append(c.cs, "XX")}
 }
 
 func (c SetExpirationKeepttl) Get() SetGetGet {
-	return SetGetGet{cs: append(c.cs, "GET")}
+	return SetGetGet{cf: c.cf, cs: append(c.cs, "GET")}
 }
 
-func (c SetExpirationKeepttl) Build() []string {
-	return c.cs
+func (c SetExpirationKeepttl) Build() Completed {
+	return Completed(c)
 }
 
 type SetExpirationPx struct {
 	cs []string
+	cf uint32
 }
 
 func (c SetExpirationPx) Nx() SetConditionNx {
-	return SetConditionNx{cs: append(c.cs, "NX")}
+	return SetConditionNx{cf: c.cf, cs: append(c.cs, "NX")}
 }
 
 func (c SetExpirationPx) Xx() SetConditionXx {
-	return SetConditionXx{cs: append(c.cs, "XX")}
+	return SetConditionXx{cf: c.cf, cs: append(c.cs, "XX")}
 }
 
 func (c SetExpirationPx) Get() SetGetGet {
-	return SetGetGet{cs: append(c.cs, "GET")}
+	return SetGetGet{cf: c.cf, cs: append(c.cs, "GET")}
 }
 
-func (c SetExpirationPx) Build() []string {
-	return c.cs
+func (c SetExpirationPx) Build() Completed {
+	return Completed(c)
 }
 
 type SetExpirationPxat struct {
 	cs []string
+	cf uint32
 }
 
 func (c SetExpirationPxat) Nx() SetConditionNx {
-	return SetConditionNx{cs: append(c.cs, "NX")}
+	return SetConditionNx{cf: c.cf, cs: append(c.cs, "NX")}
 }
 
 func (c SetExpirationPxat) Xx() SetConditionXx {
-	return SetConditionXx{cs: append(c.cs, "XX")}
+	return SetConditionXx{cf: c.cf, cs: append(c.cs, "XX")}
 }
 
 func (c SetExpirationPxat) Get() SetGetGet {
-	return SetGetGet{cs: append(c.cs, "GET")}
+	return SetGetGet{cf: c.cf, cs: append(c.cs, "GET")}
 }
 
-func (c SetExpirationPxat) Build() []string {
-	return c.cs
+func (c SetExpirationPxat) Build() Completed {
+	return Completed(c)
 }
 
 type SetGetGet struct {
 	cs []string
+	cf uint32
 }
 
-func (c SetGetGet) Build() []string {
-	return c.cs
+func (c SetGetGet) Build() Completed {
+	return Completed(c)
 }
 
 type SetKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c SetKey) Value(Value string) SetValue {
-	return SetValue{cs: append(c.cs, Value)}
+	return SetValue{cf: c.cf, cs: append(c.cs, Value)}
 }
 
 type SetValue struct {
 	cs []string
+	cf uint32
 }
 
 func (c SetValue) Ex(Seconds int64) SetExpirationEx {
-	return SetExpirationEx{cs: append(c.cs, "EX", strconv.FormatInt(Seconds, 10))}
+	return SetExpirationEx{cf: c.cf, cs: append(c.cs, "EX", strconv.FormatInt(Seconds, 10))}
 }
 
 func (c SetValue) Px(Milliseconds int64) SetExpirationPx {
-	return SetExpirationPx{cs: append(c.cs, "PX", strconv.FormatInt(Milliseconds, 10))}
+	return SetExpirationPx{cf: c.cf, cs: append(c.cs, "PX", strconv.FormatInt(Milliseconds, 10))}
 }
 
 func (c SetValue) Exat(Timestamp int64) SetExpirationExat {
-	return SetExpirationExat{cs: append(c.cs, "EXAT", strconv.FormatInt(Timestamp, 10))}
+	return SetExpirationExat{cf: c.cf, cs: append(c.cs, "EXAT", strconv.FormatInt(Timestamp, 10))}
 }
 
 func (c SetValue) Pxat(Millisecondstimestamp int64) SetExpirationPxat {
-	return SetExpirationPxat{cs: append(c.cs, "PXAT", strconv.FormatInt(Millisecondstimestamp, 10))}
+	return SetExpirationPxat{cf: c.cf, cs: append(c.cs, "PXAT", strconv.FormatInt(Millisecondstimestamp, 10))}
 }
 
 func (c SetValue) Keepttl() SetExpirationKeepttl {
-	return SetExpirationKeepttl{cs: append(c.cs, "KEEPTTL")}
+	return SetExpirationKeepttl{cf: c.cf, cs: append(c.cs, "KEEPTTL")}
 }
 
 func (c SetValue) Nx() SetConditionNx {
-	return SetConditionNx{cs: append(c.cs, "NX")}
+	return SetConditionNx{cf: c.cf, cs: append(c.cs, "NX")}
 }
 
 func (c SetValue) Xx() SetConditionXx {
-	return SetConditionXx{cs: append(c.cs, "XX")}
+	return SetConditionXx{cf: c.cf, cs: append(c.cs, "XX")}
 }
 
 func (c SetValue) Get() SetGetGet {
-	return SetGetGet{cs: append(c.cs, "GET")}
+	return SetGetGet{cf: c.cf, cs: append(c.cs, "GET")}
 }
 
-func (c SetValue) Build() []string {
-	return c.cs
+func (c SetValue) Build() Completed {
+	return Completed(c)
 }
 
 type Setbit struct {
 	cs []string
+	cf uint32
 }
 
 func (c Setbit) Key(Key string) SetbitKey {
-	return SetbitKey{cs: append(c.cs, Key)}
+	return SetbitKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Setbit() (c Setbit) {
@@ -8955,34 +9922,38 @@ func (b *Builder) Setbit() (c Setbit) {
 
 type SetbitKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c SetbitKey) Offset(Offset int64) SetbitOffset {
-	return SetbitOffset{cs: append(c.cs, strconv.FormatInt(Offset, 10))}
+	return SetbitOffset{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Offset, 10))}
 }
 
 type SetbitOffset struct {
 	cs []string
+	cf uint32
 }
 
 func (c SetbitOffset) Value(Value int64) SetbitValue {
-	return SetbitValue{cs: append(c.cs, strconv.FormatInt(Value, 10))}
+	return SetbitValue{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Value, 10))}
 }
 
 type SetbitValue struct {
 	cs []string
+	cf uint32
 }
 
-func (c SetbitValue) Build() []string {
-	return c.cs
+func (c SetbitValue) Build() Completed {
+	return Completed(c)
 }
 
 type Setex struct {
 	cs []string
+	cf uint32
 }
 
 func (c Setex) Key(Key string) SetexKey {
-	return SetexKey{cs: append(c.cs, Key)}
+	return SetexKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Setex() (c Setex) {
@@ -8992,34 +9963,38 @@ func (b *Builder) Setex() (c Setex) {
 
 type SetexKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c SetexKey) Seconds(Seconds int64) SetexSeconds {
-	return SetexSeconds{cs: append(c.cs, strconv.FormatInt(Seconds, 10))}
+	return SetexSeconds{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Seconds, 10))}
 }
 
 type SetexSeconds struct {
 	cs []string
+	cf uint32
 }
 
 func (c SetexSeconds) Value(Value string) SetexValue {
-	return SetexValue{cs: append(c.cs, Value)}
+	return SetexValue{cf: c.cf, cs: append(c.cs, Value)}
 }
 
 type SetexValue struct {
 	cs []string
+	cf uint32
 }
 
-func (c SetexValue) Build() []string {
-	return c.cs
+func (c SetexValue) Build() Completed {
+	return Completed(c)
 }
 
 type Setnx struct {
 	cs []string
+	cf uint32
 }
 
 func (c Setnx) Key(Key string) SetnxKey {
-	return SetnxKey{cs: append(c.cs, Key)}
+	return SetnxKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Setnx() (c Setnx) {
@@ -9029,26 +10004,29 @@ func (b *Builder) Setnx() (c Setnx) {
 
 type SetnxKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c SetnxKey) Value(Value string) SetnxValue {
-	return SetnxValue{cs: append(c.cs, Value)}
+	return SetnxValue{cf: c.cf, cs: append(c.cs, Value)}
 }
 
 type SetnxValue struct {
 	cs []string
+	cf uint32
 }
 
-func (c SetnxValue) Build() []string {
-	return c.cs
+func (c SetnxValue) Build() Completed {
+	return Completed(c)
 }
 
 type Setrange struct {
 	cs []string
+	cf uint32
 }
 
 func (c Setrange) Key(Key string) SetrangeKey {
-	return SetrangeKey{cs: append(c.cs, Key)}
+	return SetrangeKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Setrange() (c Setrange) {
@@ -9058,42 +10036,46 @@ func (b *Builder) Setrange() (c Setrange) {
 
 type SetrangeKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c SetrangeKey) Offset(Offset int64) SetrangeOffset {
-	return SetrangeOffset{cs: append(c.cs, strconv.FormatInt(Offset, 10))}
+	return SetrangeOffset{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Offset, 10))}
 }
 
 type SetrangeOffset struct {
 	cs []string
+	cf uint32
 }
 
 func (c SetrangeOffset) Value(Value string) SetrangeValue {
-	return SetrangeValue{cs: append(c.cs, Value)}
+	return SetrangeValue{cf: c.cf, cs: append(c.cs, Value)}
 }
 
 type SetrangeValue struct {
 	cs []string
+	cf uint32
 }
 
-func (c SetrangeValue) Build() []string {
-	return c.cs
+func (c SetrangeValue) Build() Completed {
+	return Completed(c)
 }
 
 type Shutdown struct {
 	cs []string
+	cf uint32
 }
 
 func (c Shutdown) Nosave() ShutdownSaveModeNosave {
-	return ShutdownSaveModeNosave{cs: append(c.cs, "NOSAVE")}
+	return ShutdownSaveModeNosave{cf: c.cf, cs: append(c.cs, "NOSAVE")}
 }
 
 func (c Shutdown) Save() ShutdownSaveModeSave {
-	return ShutdownSaveModeSave{cs: append(c.cs, "SAVE")}
+	return ShutdownSaveModeSave{cf: c.cf, cs: append(c.cs, "SAVE")}
 }
 
-func (c Shutdown) Build() []string {
-	return c.cs
+func (c Shutdown) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) Shutdown() (c Shutdown) {
@@ -9103,26 +10085,29 @@ func (b *Builder) Shutdown() (c Shutdown) {
 
 type ShutdownSaveModeNosave struct {
 	cs []string
+	cf uint32
 }
 
-func (c ShutdownSaveModeNosave) Build() []string {
-	return c.cs
+func (c ShutdownSaveModeNosave) Build() Completed {
+	return Completed(c)
 }
 
 type ShutdownSaveModeSave struct {
 	cs []string
+	cf uint32
 }
 
-func (c ShutdownSaveModeSave) Build() []string {
-	return c.cs
+func (c ShutdownSaveModeSave) Build() Completed {
+	return Completed(c)
 }
 
 type Sinter struct {
 	cs []string
+	cf uint32
 }
 
 func (c Sinter) Key(Key ...string) SinterKey {
-	return SinterKey{cs: append(c.cs, Key...)}
+	return SinterKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 func (b *Builder) Sinter() (c Sinter) {
@@ -9132,22 +10117,24 @@ func (b *Builder) Sinter() (c Sinter) {
 
 type SinterKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c SinterKey) Key(Key ...string) SinterKey {
-	return SinterKey{cs: append(c.cs, Key...)}
+	return SinterKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
-func (c SinterKey) Build() []string {
-	return c.cs
+func (c SinterKey) Build() Completed {
+	return Completed(c)
 }
 
 type Sintercard struct {
 	cs []string
+	cf uint32
 }
 
 func (c Sintercard) Key(Key ...string) SintercardKey {
-	return SintercardKey{cs: append(c.cs, Key...)}
+	return SintercardKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 func (b *Builder) Sintercard() (c Sintercard) {
@@ -9157,22 +10144,24 @@ func (b *Builder) Sintercard() (c Sintercard) {
 
 type SintercardKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c SintercardKey) Key(Key ...string) SintercardKey {
-	return SintercardKey{cs: append(c.cs, Key...)}
+	return SintercardKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
-func (c SintercardKey) Build() []string {
-	return c.cs
+func (c SintercardKey) Build() Completed {
+	return Completed(c)
 }
 
 type Sinterstore struct {
 	cs []string
+	cf uint32
 }
 
 func (c Sinterstore) Destination(Destination string) SinterstoreDestination {
-	return SinterstoreDestination{cs: append(c.cs, Destination)}
+	return SinterstoreDestination{cf: c.cf, cs: append(c.cs, Destination)}
 }
 
 func (b *Builder) Sinterstore() (c Sinterstore) {
@@ -9182,30 +10171,33 @@ func (b *Builder) Sinterstore() (c Sinterstore) {
 
 type SinterstoreDestination struct {
 	cs []string
+	cf uint32
 }
 
 func (c SinterstoreDestination) Key(Key ...string) SinterstoreKey {
-	return SinterstoreKey{cs: append(c.cs, Key...)}
+	return SinterstoreKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 type SinterstoreKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c SinterstoreKey) Key(Key ...string) SinterstoreKey {
-	return SinterstoreKey{cs: append(c.cs, Key...)}
+	return SinterstoreKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
-func (c SinterstoreKey) Build() []string {
-	return c.cs
+func (c SinterstoreKey) Build() Completed {
+	return Completed(c)
 }
 
 type Sismember struct {
 	cs []string
+	cf uint32
 }
 
 func (c Sismember) Key(Key string) SismemberKey {
-	return SismemberKey{cs: append(c.cs, Key)}
+	return SismemberKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Sismember() (c Sismember) {
@@ -9215,26 +10207,37 @@ func (b *Builder) Sismember() (c Sismember) {
 
 type SismemberKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c SismemberKey) Member(Member string) SismemberMember {
-	return SismemberMember{cs: append(c.cs, Member)}
+	return SismemberMember{cf: c.cf, cs: append(c.cs, Member)}
+}
+
+func (c SismemberKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type SismemberMember struct {
 	cs []string
+	cf uint32
 }
 
-func (c SismemberMember) Build() []string {
-	return c.cs
+func (c SismemberMember) Build() Completed {
+	return Completed(c)
+}
+
+func (c SismemberMember) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Slaveof struct {
 	cs []string
+	cf uint32
 }
 
 func (c Slaveof) Host(Host string) SlaveofHost {
-	return SlaveofHost{cs: append(c.cs, Host)}
+	return SlaveofHost{cf: c.cf, cs: append(c.cs, Host)}
 }
 
 func (b *Builder) Slaveof() (c Slaveof) {
@@ -9244,26 +10247,29 @@ func (b *Builder) Slaveof() (c Slaveof) {
 
 type SlaveofHost struct {
 	cs []string
+	cf uint32
 }
 
 func (c SlaveofHost) Port(Port string) SlaveofPort {
-	return SlaveofPort{cs: append(c.cs, Port)}
+	return SlaveofPort{cf: c.cf, cs: append(c.cs, Port)}
 }
 
 type SlaveofPort struct {
 	cs []string
+	cf uint32
 }
 
-func (c SlaveofPort) Build() []string {
-	return c.cs
+func (c SlaveofPort) Build() Completed {
+	return Completed(c)
 }
 
 type Slowlog struct {
 	cs []string
+	cf uint32
 }
 
 func (c Slowlog) Subcommand(Subcommand string) SlowlogSubcommand {
-	return SlowlogSubcommand{cs: append(c.cs, Subcommand)}
+	return SlowlogSubcommand{cf: c.cf, cs: append(c.cs, Subcommand)}
 }
 
 func (b *Builder) Slowlog() (c Slowlog) {
@@ -9273,30 +10279,33 @@ func (b *Builder) Slowlog() (c Slowlog) {
 
 type SlowlogArgument struct {
 	cs []string
+	cf uint32
 }
 
-func (c SlowlogArgument) Build() []string {
-	return c.cs
+func (c SlowlogArgument) Build() Completed {
+	return Completed(c)
 }
 
 type SlowlogSubcommand struct {
 	cs []string
+	cf uint32
 }
 
 func (c SlowlogSubcommand) Argument(Argument string) SlowlogArgument {
-	return SlowlogArgument{cs: append(c.cs, Argument)}
+	return SlowlogArgument{cf: c.cf, cs: append(c.cs, Argument)}
 }
 
-func (c SlowlogSubcommand) Build() []string {
-	return c.cs
+func (c SlowlogSubcommand) Build() Completed {
+	return Completed(c)
 }
 
 type Smembers struct {
 	cs []string
+	cf uint32
 }
 
 func (c Smembers) Key(Key string) SmembersKey {
-	return SmembersKey{cs: append(c.cs, Key)}
+	return SmembersKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Smembers() (c Smembers) {
@@ -9306,18 +10315,24 @@ func (b *Builder) Smembers() (c Smembers) {
 
 type SmembersKey struct {
 	cs []string
+	cf uint32
 }
 
-func (c SmembersKey) Build() []string {
-	return c.cs
+func (c SmembersKey) Build() Completed {
+	return Completed(c)
+}
+
+func (c SmembersKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Smismember struct {
 	cs []string
+	cf uint32
 }
 
 func (c Smismember) Key(Key string) SmismemberKey {
-	return SmismemberKey{cs: append(c.cs, Key)}
+	return SmismemberKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Smismember() (c Smismember) {
@@ -9327,30 +10342,41 @@ func (b *Builder) Smismember() (c Smismember) {
 
 type SmismemberKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c SmismemberKey) Member(Member ...string) SmismemberMember {
-	return SmismemberMember{cs: append(c.cs, Member...)}
+	return SmismemberMember{cf: c.cf, cs: append(c.cs, Member...)}
+}
+
+func (c SmismemberKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type SmismemberMember struct {
 	cs []string
+	cf uint32
 }
 
 func (c SmismemberMember) Member(Member ...string) SmismemberMember {
-	return SmismemberMember{cs: append(c.cs, Member...)}
+	return SmismemberMember{cf: c.cf, cs: append(c.cs, Member...)}
 }
 
-func (c SmismemberMember) Build() []string {
-	return c.cs
+func (c SmismemberMember) Build() Completed {
+	return Completed(c)
+}
+
+func (c SmismemberMember) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Smove struct {
 	cs []string
+	cf uint32
 }
 
 func (c Smove) Source(Source string) SmoveSource {
-	return SmoveSource{cs: append(c.cs, Source)}
+	return SmoveSource{cf: c.cf, cs: append(c.cs, Source)}
 }
 
 func (b *Builder) Smove() (c Smove) {
@@ -9360,34 +10386,38 @@ func (b *Builder) Smove() (c Smove) {
 
 type SmoveDestination struct {
 	cs []string
+	cf uint32
 }
 
 func (c SmoveDestination) Member(Member string) SmoveMember {
-	return SmoveMember{cs: append(c.cs, Member)}
+	return SmoveMember{cf: c.cf, cs: append(c.cs, Member)}
 }
 
 type SmoveMember struct {
 	cs []string
+	cf uint32
 }
 
-func (c SmoveMember) Build() []string {
-	return c.cs
+func (c SmoveMember) Build() Completed {
+	return Completed(c)
 }
 
 type SmoveSource struct {
 	cs []string
+	cf uint32
 }
 
 func (c SmoveSource) Destination(Destination string) SmoveDestination {
-	return SmoveDestination{cs: append(c.cs, Destination)}
+	return SmoveDestination{cf: c.cf, cs: append(c.cs, Destination)}
 }
 
 type Sort struct {
 	cs []string
+	cf uint32
 }
 
 func (c Sort) Key(Key string) SortKey {
-	return SortKey{cs: append(c.cs, Key)}
+	return SortKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Sort() (c Sort) {
@@ -9397,169 +10427,176 @@ func (b *Builder) Sort() (c Sort) {
 
 type SortBy struct {
 	cs []string
+	cf uint32
 }
 
 func (c SortBy) Limit(Offset int64, Count int64) SortLimit {
-	return SortLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return SortLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
 }
 
 func (c SortBy) Get(Pattern ...string) SortGet {
 	c.cs = append(c.cs, "GET")
-	return SortGet{cs: append(c.cs, Pattern...)}
+	return SortGet{cf: c.cf, cs: append(c.cs, Pattern...)}
 }
 
 func (c SortBy) Asc() SortOrderAsc {
-	return SortOrderAsc{cs: append(c.cs, "ASC")}
+	return SortOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c SortBy) Desc() SortOrderDesc {
-	return SortOrderDesc{cs: append(c.cs, "DESC")}
+	return SortOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c SortBy) Alpha() SortSortingAlpha {
-	return SortSortingAlpha{cs: append(c.cs, "ALPHA")}
+	return SortSortingAlpha{cf: c.cf, cs: append(c.cs, "ALPHA")}
 }
 
 func (c SortBy) Store(Destination string) SortStore {
-	return SortStore{cs: append(c.cs, "STORE", Destination)}
+	return SortStore{cf: c.cf, cs: append(c.cs, "STORE", Destination)}
 }
 
-func (c SortBy) Build() []string {
-	return c.cs
+func (c SortBy) Build() Completed {
+	return Completed(c)
 }
 
 type SortGet struct {
 	cs []string
+	cf uint32
 }
 
 func (c SortGet) Asc() SortOrderAsc {
-	return SortOrderAsc{cs: append(c.cs, "ASC")}
+	return SortOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c SortGet) Desc() SortOrderDesc {
-	return SortOrderDesc{cs: append(c.cs, "DESC")}
+	return SortOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c SortGet) Alpha() SortSortingAlpha {
-	return SortSortingAlpha{cs: append(c.cs, "ALPHA")}
+	return SortSortingAlpha{cf: c.cf, cs: append(c.cs, "ALPHA")}
 }
 
 func (c SortGet) Store(Destination string) SortStore {
-	return SortStore{cs: append(c.cs, "STORE", Destination)}
+	return SortStore{cf: c.cf, cs: append(c.cs, "STORE", Destination)}
 }
 
 func (c SortGet) Get(Get ...string) SortGet {
-	return SortGet{cs: append(c.cs, Get...)}
+	return SortGet{cf: c.cf, cs: append(c.cs, Get...)}
 }
 
-func (c SortGet) Build() []string {
-	return c.cs
+func (c SortGet) Build() Completed {
+	return Completed(c)
 }
 
 type SortKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c SortKey) By(Pattern string) SortBy {
-	return SortBy{cs: append(c.cs, "BY", Pattern)}
+	return SortBy{cf: c.cf, cs: append(c.cs, "BY", Pattern)}
 }
 
 func (c SortKey) Limit(Offset int64, Count int64) SortLimit {
-	return SortLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return SortLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
 }
 
 func (c SortKey) Get(Pattern ...string) SortGet {
 	c.cs = append(c.cs, "GET")
-	return SortGet{cs: append(c.cs, Pattern...)}
+	return SortGet{cf: c.cf, cs: append(c.cs, Pattern...)}
 }
 
 func (c SortKey) Asc() SortOrderAsc {
-	return SortOrderAsc{cs: append(c.cs, "ASC")}
+	return SortOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c SortKey) Desc() SortOrderDesc {
-	return SortOrderDesc{cs: append(c.cs, "DESC")}
+	return SortOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c SortKey) Alpha() SortSortingAlpha {
-	return SortSortingAlpha{cs: append(c.cs, "ALPHA")}
+	return SortSortingAlpha{cf: c.cf, cs: append(c.cs, "ALPHA")}
 }
 
 func (c SortKey) Store(Destination string) SortStore {
-	return SortStore{cs: append(c.cs, "STORE", Destination)}
+	return SortStore{cf: c.cf, cs: append(c.cs, "STORE", Destination)}
 }
 
-func (c SortKey) Build() []string {
-	return c.cs
+func (c SortKey) Build() Completed {
+	return Completed(c)
 }
 
 type SortLimit struct {
 	cs []string
+	cf uint32
 }
 
 func (c SortLimit) Get(Pattern ...string) SortGet {
 	c.cs = append(c.cs, "GET")
-	return SortGet{cs: append(c.cs, Pattern...)}
+	return SortGet{cf: c.cf, cs: append(c.cs, Pattern...)}
 }
 
 func (c SortLimit) Asc() SortOrderAsc {
-	return SortOrderAsc{cs: append(c.cs, "ASC")}
+	return SortOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c SortLimit) Desc() SortOrderDesc {
-	return SortOrderDesc{cs: append(c.cs, "DESC")}
+	return SortOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c SortLimit) Alpha() SortSortingAlpha {
-	return SortSortingAlpha{cs: append(c.cs, "ALPHA")}
+	return SortSortingAlpha{cf: c.cf, cs: append(c.cs, "ALPHA")}
 }
 
 func (c SortLimit) Store(Destination string) SortStore {
-	return SortStore{cs: append(c.cs, "STORE", Destination)}
+	return SortStore{cf: c.cf, cs: append(c.cs, "STORE", Destination)}
 }
 
-func (c SortLimit) Build() []string {
-	return c.cs
+func (c SortLimit) Build() Completed {
+	return Completed(c)
 }
 
 type SortOrderAsc struct {
 	cs []string
+	cf uint32
 }
 
 func (c SortOrderAsc) Alpha() SortSortingAlpha {
-	return SortSortingAlpha{cs: append(c.cs, "ALPHA")}
+	return SortSortingAlpha{cf: c.cf, cs: append(c.cs, "ALPHA")}
 }
 
 func (c SortOrderAsc) Store(Destination string) SortStore {
-	return SortStore{cs: append(c.cs, "STORE", Destination)}
+	return SortStore{cf: c.cf, cs: append(c.cs, "STORE", Destination)}
 }
 
-func (c SortOrderAsc) Build() []string {
-	return c.cs
+func (c SortOrderAsc) Build() Completed {
+	return Completed(c)
 }
 
 type SortOrderDesc struct {
 	cs []string
+	cf uint32
 }
 
 func (c SortOrderDesc) Alpha() SortSortingAlpha {
-	return SortSortingAlpha{cs: append(c.cs, "ALPHA")}
+	return SortSortingAlpha{cf: c.cf, cs: append(c.cs, "ALPHA")}
 }
 
 func (c SortOrderDesc) Store(Destination string) SortStore {
-	return SortStore{cs: append(c.cs, "STORE", Destination)}
+	return SortStore{cf: c.cf, cs: append(c.cs, "STORE", Destination)}
 }
 
-func (c SortOrderDesc) Build() []string {
-	return c.cs
+func (c SortOrderDesc) Build() Completed {
+	return Completed(c)
 }
 
 type SortRo struct {
 	cs []string
+	cf uint32
 }
 
 func (c SortRo) Key(Key string) SortRoKey {
-	return SortRoKey{cs: append(c.cs, Key)}
+	return SortRoKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) SortRo() (c SortRo) {
@@ -9569,173 +10606,183 @@ func (b *Builder) SortRo() (c SortRo) {
 
 type SortRoBy struct {
 	cs []string
+	cf uint32
 }
 
 func (c SortRoBy) Limit(Offset int64, Count int64) SortRoLimit {
-	return SortRoLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return SortRoLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
 }
 
 func (c SortRoBy) Get(Pattern ...string) SortRoGet {
 	c.cs = append(c.cs, "GET")
-	return SortRoGet{cs: append(c.cs, Pattern...)}
+	return SortRoGet{cf: c.cf, cs: append(c.cs, Pattern...)}
 }
 
 func (c SortRoBy) Asc() SortRoOrderAsc {
-	return SortRoOrderAsc{cs: append(c.cs, "ASC")}
+	return SortRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c SortRoBy) Desc() SortRoOrderDesc {
-	return SortRoOrderDesc{cs: append(c.cs, "DESC")}
+	return SortRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c SortRoBy) Alpha() SortRoSortingAlpha {
-	return SortRoSortingAlpha{cs: append(c.cs, "ALPHA")}
+	return SortRoSortingAlpha{cf: c.cf, cs: append(c.cs, "ALPHA")}
 }
 
-func (c SortRoBy) Build() []string {
-	return c.cs
+func (c SortRoBy) Build() Completed {
+	return Completed(c)
 }
 
 type SortRoGet struct {
 	cs []string
+	cf uint32
 }
 
 func (c SortRoGet) Asc() SortRoOrderAsc {
-	return SortRoOrderAsc{cs: append(c.cs, "ASC")}
+	return SortRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c SortRoGet) Desc() SortRoOrderDesc {
-	return SortRoOrderDesc{cs: append(c.cs, "DESC")}
+	return SortRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c SortRoGet) Alpha() SortRoSortingAlpha {
-	return SortRoSortingAlpha{cs: append(c.cs, "ALPHA")}
+	return SortRoSortingAlpha{cf: c.cf, cs: append(c.cs, "ALPHA")}
 }
 
 func (c SortRoGet) Get(Get ...string) SortRoGet {
-	return SortRoGet{cs: append(c.cs, Get...)}
+	return SortRoGet{cf: c.cf, cs: append(c.cs, Get...)}
 }
 
-func (c SortRoGet) Build() []string {
-	return c.cs
+func (c SortRoGet) Build() Completed {
+	return Completed(c)
 }
 
 type SortRoKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c SortRoKey) By(Pattern string) SortRoBy {
-	return SortRoBy{cs: append(c.cs, "BY", Pattern)}
+	return SortRoBy{cf: c.cf, cs: append(c.cs, "BY", Pattern)}
 }
 
 func (c SortRoKey) Limit(Offset int64, Count int64) SortRoLimit {
-	return SortRoLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return SortRoLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
 }
 
 func (c SortRoKey) Get(Pattern ...string) SortRoGet {
 	c.cs = append(c.cs, "GET")
-	return SortRoGet{cs: append(c.cs, Pattern...)}
+	return SortRoGet{cf: c.cf, cs: append(c.cs, Pattern...)}
 }
 
 func (c SortRoKey) Asc() SortRoOrderAsc {
-	return SortRoOrderAsc{cs: append(c.cs, "ASC")}
+	return SortRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c SortRoKey) Desc() SortRoOrderDesc {
-	return SortRoOrderDesc{cs: append(c.cs, "DESC")}
+	return SortRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c SortRoKey) Alpha() SortRoSortingAlpha {
-	return SortRoSortingAlpha{cs: append(c.cs, "ALPHA")}
+	return SortRoSortingAlpha{cf: c.cf, cs: append(c.cs, "ALPHA")}
 }
 
-func (c SortRoKey) Build() []string {
-	return c.cs
+func (c SortRoKey) Build() Completed {
+	return Completed(c)
 }
 
 type SortRoLimit struct {
 	cs []string
+	cf uint32
 }
 
 func (c SortRoLimit) Get(Pattern ...string) SortRoGet {
 	c.cs = append(c.cs, "GET")
-	return SortRoGet{cs: append(c.cs, Pattern...)}
+	return SortRoGet{cf: c.cf, cs: append(c.cs, Pattern...)}
 }
 
 func (c SortRoLimit) Asc() SortRoOrderAsc {
-	return SortRoOrderAsc{cs: append(c.cs, "ASC")}
+	return SortRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
 
 func (c SortRoLimit) Desc() SortRoOrderDesc {
-	return SortRoOrderDesc{cs: append(c.cs, "DESC")}
+	return SortRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
 }
 
 func (c SortRoLimit) Alpha() SortRoSortingAlpha {
-	return SortRoSortingAlpha{cs: append(c.cs, "ALPHA")}
+	return SortRoSortingAlpha{cf: c.cf, cs: append(c.cs, "ALPHA")}
 }
 
-func (c SortRoLimit) Build() []string {
-	return c.cs
+func (c SortRoLimit) Build() Completed {
+	return Completed(c)
 }
 
 type SortRoOrderAsc struct {
 	cs []string
+	cf uint32
 }
 
 func (c SortRoOrderAsc) Alpha() SortRoSortingAlpha {
-	return SortRoSortingAlpha{cs: append(c.cs, "ALPHA")}
+	return SortRoSortingAlpha{cf: c.cf, cs: append(c.cs, "ALPHA")}
 }
 
-func (c SortRoOrderAsc) Build() []string {
-	return c.cs
+func (c SortRoOrderAsc) Build() Completed {
+	return Completed(c)
 }
 
 type SortRoOrderDesc struct {
 	cs []string
+	cf uint32
 }
 
 func (c SortRoOrderDesc) Alpha() SortRoSortingAlpha {
-	return SortRoSortingAlpha{cs: append(c.cs, "ALPHA")}
+	return SortRoSortingAlpha{cf: c.cf, cs: append(c.cs, "ALPHA")}
 }
 
-func (c SortRoOrderDesc) Build() []string {
-	return c.cs
+func (c SortRoOrderDesc) Build() Completed {
+	return Completed(c)
 }
 
 type SortRoSortingAlpha struct {
 	cs []string
+	cf uint32
 }
 
-func (c SortRoSortingAlpha) Build() []string {
-	return c.cs
+func (c SortRoSortingAlpha) Build() Completed {
+	return Completed(c)
 }
 
 type SortSortingAlpha struct {
 	cs []string
+	cf uint32
 }
 
 func (c SortSortingAlpha) Store(Destination string) SortStore {
-	return SortStore{cs: append(c.cs, "STORE", Destination)}
+	return SortStore{cf: c.cf, cs: append(c.cs, "STORE", Destination)}
 }
 
-func (c SortSortingAlpha) Build() []string {
-	return c.cs
+func (c SortSortingAlpha) Build() Completed {
+	return Completed(c)
 }
 
 type SortStore struct {
 	cs []string
+	cf uint32
 }
 
-func (c SortStore) Build() []string {
-	return c.cs
+func (c SortStore) Build() Completed {
+	return Completed(c)
 }
 
 type Spop struct {
 	cs []string
+	cf uint32
 }
 
 func (c Spop) Key(Key string) SpopKey {
-	return SpopKey{cs: append(c.cs, Key)}
+	return SpopKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Spop() (c Spop) {
@@ -9745,30 +10792,33 @@ func (b *Builder) Spop() (c Spop) {
 
 type SpopCount struct {
 	cs []string
+	cf uint32
 }
 
-func (c SpopCount) Build() []string {
-	return c.cs
+func (c SpopCount) Build() Completed {
+	return Completed(c)
 }
 
 type SpopKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c SpopKey) Count(Count int64) SpopCount {
-	return SpopCount{cs: append(c.cs, strconv.FormatInt(Count, 10))}
+	return SpopCount{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Count, 10))}
 }
 
-func (c SpopKey) Build() []string {
-	return c.cs
+func (c SpopKey) Build() Completed {
+	return Completed(c)
 }
 
 type Srandmember struct {
 	cs []string
+	cf uint32
 }
 
 func (c Srandmember) Key(Key string) SrandmemberKey {
-	return SrandmemberKey{cs: append(c.cs, Key)}
+	return SrandmemberKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Srandmember() (c Srandmember) {
@@ -9778,30 +10828,33 @@ func (b *Builder) Srandmember() (c Srandmember) {
 
 type SrandmemberCount struct {
 	cs []string
+	cf uint32
 }
 
-func (c SrandmemberCount) Build() []string {
-	return c.cs
+func (c SrandmemberCount) Build() Completed {
+	return Completed(c)
 }
 
 type SrandmemberKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c SrandmemberKey) Count(Count int64) SrandmemberCount {
-	return SrandmemberCount{cs: append(c.cs, strconv.FormatInt(Count, 10))}
+	return SrandmemberCount{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Count, 10))}
 }
 
-func (c SrandmemberKey) Build() []string {
-	return c.cs
+func (c SrandmemberKey) Build() Completed {
+	return Completed(c)
 }
 
 type Srem struct {
 	cs []string
+	cf uint32
 }
 
 func (c Srem) Key(Key string) SremKey {
-	return SremKey{cs: append(c.cs, Key)}
+	return SremKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Srem() (c Srem) {
@@ -9811,30 +10864,33 @@ func (b *Builder) Srem() (c Srem) {
 
 type SremKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c SremKey) Member(Member ...string) SremMember {
-	return SremMember{cs: append(c.cs, Member...)}
+	return SremMember{cf: c.cf, cs: append(c.cs, Member...)}
 }
 
 type SremMember struct {
 	cs []string
+	cf uint32
 }
 
 func (c SremMember) Member(Member ...string) SremMember {
-	return SremMember{cs: append(c.cs, Member...)}
+	return SremMember{cf: c.cf, cs: append(c.cs, Member...)}
 }
 
-func (c SremMember) Build() []string {
-	return c.cs
+func (c SremMember) Build() Completed {
+	return Completed(c)
 }
 
 type Sscan struct {
 	cs []string
+	cf uint32
 }
 
 func (c Sscan) Key(Key string) SscanKey {
-	return SscanKey{cs: append(c.cs, Key)}
+	return SscanKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Sscan() (c Sscan) {
@@ -9844,54 +10900,59 @@ func (b *Builder) Sscan() (c Sscan) {
 
 type SscanCount struct {
 	cs []string
+	cf uint32
 }
 
-func (c SscanCount) Build() []string {
-	return c.cs
+func (c SscanCount) Build() Completed {
+	return Completed(c)
 }
 
 type SscanCursor struct {
 	cs []string
+	cf uint32
 }
 
 func (c SscanCursor) Match(Pattern string) SscanMatch {
-	return SscanMatch{cs: append(c.cs, "MATCH", Pattern)}
+	return SscanMatch{cf: c.cf, cs: append(c.cs, "MATCH", Pattern)}
 }
 
 func (c SscanCursor) Count(Count int64) SscanCount {
-	return SscanCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SscanCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c SscanCursor) Build() []string {
-	return c.cs
+func (c SscanCursor) Build() Completed {
+	return Completed(c)
 }
 
 type SscanKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c SscanKey) Cursor(Cursor int64) SscanCursor {
-	return SscanCursor{cs: append(c.cs, strconv.FormatInt(Cursor, 10))}
+	return SscanCursor{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Cursor, 10))}
 }
 
 type SscanMatch struct {
 	cs []string
+	cf uint32
 }
 
 func (c SscanMatch) Count(Count int64) SscanCount {
-	return SscanCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SscanCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c SscanMatch) Build() []string {
-	return c.cs
+func (c SscanMatch) Build() Completed {
+	return Completed(c)
 }
 
 type Stralgo struct {
 	cs []string
+	cf uint32
 }
 
 func (c Stralgo) Lcs() StralgoAlgorithmLcs {
-	return StralgoAlgorithmLcs{cs: append(c.cs, "LCS")}
+	return StralgoAlgorithmLcs{cf: c.cf, cs: append(c.cs, "LCS")}
 }
 
 func (b *Builder) Stralgo() (c Stralgo) {
@@ -9901,30 +10962,33 @@ func (b *Builder) Stralgo() (c Stralgo) {
 
 type StralgoAlgoSpecificArgument struct {
 	cs []string
+	cf uint32
 }
 
 func (c StralgoAlgoSpecificArgument) AlgoSpecificArgument(AlgoSpecificArgument ...string) StralgoAlgoSpecificArgument {
-	return StralgoAlgoSpecificArgument{cs: append(c.cs, AlgoSpecificArgument...)}
+	return StralgoAlgoSpecificArgument{cf: c.cf, cs: append(c.cs, AlgoSpecificArgument...)}
 }
 
-func (c StralgoAlgoSpecificArgument) Build() []string {
-	return c.cs
+func (c StralgoAlgoSpecificArgument) Build() Completed {
+	return Completed(c)
 }
 
 type StralgoAlgorithmLcs struct {
 	cs []string
+	cf uint32
 }
 
 func (c StralgoAlgorithmLcs) AlgoSpecificArgument(AlgoSpecificArgument ...string) StralgoAlgoSpecificArgument {
-	return StralgoAlgoSpecificArgument{cs: append(c.cs, AlgoSpecificArgument...)}
+	return StralgoAlgoSpecificArgument{cf: c.cf, cs: append(c.cs, AlgoSpecificArgument...)}
 }
 
 type Strlen struct {
 	cs []string
+	cf uint32
 }
 
 func (c Strlen) Key(Key string) StrlenKey {
-	return StrlenKey{cs: append(c.cs, Key)}
+	return StrlenKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Strlen() (c Strlen) {
@@ -9934,18 +10998,24 @@ func (b *Builder) Strlen() (c Strlen) {
 
 type StrlenKey struct {
 	cs []string
+	cf uint32
 }
 
-func (c StrlenKey) Build() []string {
-	return c.cs
+func (c StrlenKey) Build() Completed {
+	return Completed(c)
+}
+
+func (c StrlenKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Subscribe struct {
 	cs []string
+	cf uint32
 }
 
 func (c Subscribe) Channel(Channel ...string) SubscribeChannel {
-	return SubscribeChannel{cs: append(c.cs, Channel...)}
+	return SubscribeChannel{cf: c.cf, cs: append(c.cs, Channel...)}
 }
 
 func (b *Builder) Subscribe() (c Subscribe) {
@@ -9955,22 +11025,24 @@ func (b *Builder) Subscribe() (c Subscribe) {
 
 type SubscribeChannel struct {
 	cs []string
+	cf uint32
 }
 
 func (c SubscribeChannel) Channel(Channel ...string) SubscribeChannel {
-	return SubscribeChannel{cs: append(c.cs, Channel...)}
+	return SubscribeChannel{cf: c.cf, cs: append(c.cs, Channel...)}
 }
 
-func (c SubscribeChannel) Build() []string {
-	return c.cs
+func (c SubscribeChannel) Build() Completed {
+	return Completed(c)
 }
 
 type Sunion struct {
 	cs []string
+	cf uint32
 }
 
 func (c Sunion) Key(Key ...string) SunionKey {
-	return SunionKey{cs: append(c.cs, Key...)}
+	return SunionKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 func (b *Builder) Sunion() (c Sunion) {
@@ -9980,22 +11052,24 @@ func (b *Builder) Sunion() (c Sunion) {
 
 type SunionKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c SunionKey) Key(Key ...string) SunionKey {
-	return SunionKey{cs: append(c.cs, Key...)}
+	return SunionKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
-func (c SunionKey) Build() []string {
-	return c.cs
+func (c SunionKey) Build() Completed {
+	return Completed(c)
 }
 
 type Sunionstore struct {
 	cs []string
+	cf uint32
 }
 
 func (c Sunionstore) Destination(Destination string) SunionstoreDestination {
-	return SunionstoreDestination{cs: append(c.cs, Destination)}
+	return SunionstoreDestination{cf: c.cf, cs: append(c.cs, Destination)}
 }
 
 func (b *Builder) Sunionstore() (c Sunionstore) {
@@ -10005,30 +11079,33 @@ func (b *Builder) Sunionstore() (c Sunionstore) {
 
 type SunionstoreDestination struct {
 	cs []string
+	cf uint32
 }
 
 func (c SunionstoreDestination) Key(Key ...string) SunionstoreKey {
-	return SunionstoreKey{cs: append(c.cs, Key...)}
+	return SunionstoreKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 type SunionstoreKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c SunionstoreKey) Key(Key ...string) SunionstoreKey {
-	return SunionstoreKey{cs: append(c.cs, Key...)}
+	return SunionstoreKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
-func (c SunionstoreKey) Build() []string {
-	return c.cs
+func (c SunionstoreKey) Build() Completed {
+	return Completed(c)
 }
 
 type Swapdb struct {
 	cs []string
+	cf uint32
 }
 
 func (c Swapdb) Index1(Index1 int64) SwapdbIndex1 {
-	return SwapdbIndex1{cs: append(c.cs, strconv.FormatInt(Index1, 10))}
+	return SwapdbIndex1{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Index1, 10))}
 }
 
 func (b *Builder) Swapdb() (c Swapdb) {
@@ -10038,26 +11115,29 @@ func (b *Builder) Swapdb() (c Swapdb) {
 
 type SwapdbIndex1 struct {
 	cs []string
+	cf uint32
 }
 
 func (c SwapdbIndex1) Index2(Index2 int64) SwapdbIndex2 {
-	return SwapdbIndex2{cs: append(c.cs, strconv.FormatInt(Index2, 10))}
+	return SwapdbIndex2{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Index2, 10))}
 }
 
 type SwapdbIndex2 struct {
 	cs []string
+	cf uint32
 }
 
-func (c SwapdbIndex2) Build() []string {
-	return c.cs
+func (c SwapdbIndex2) Build() Completed {
+	return Completed(c)
 }
 
 type Sync struct {
 	cs []string
+	cf uint32
 }
 
-func (c Sync) Build() []string {
-	return c.cs
+func (c Sync) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) Sync() (c Sync) {
@@ -10067,10 +11147,11 @@ func (b *Builder) Sync() (c Sync) {
 
 type Time struct {
 	cs []string
+	cf uint32
 }
 
-func (c Time) Build() []string {
-	return c.cs
+func (c Time) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) Time() (c Time) {
@@ -10080,10 +11161,11 @@ func (b *Builder) Time() (c Time) {
 
 type Touch struct {
 	cs []string
+	cf uint32
 }
 
 func (c Touch) Key(Key ...string) TouchKey {
-	return TouchKey{cs: append(c.cs, Key...)}
+	return TouchKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 func (b *Builder) Touch() (c Touch) {
@@ -10093,22 +11175,24 @@ func (b *Builder) Touch() (c Touch) {
 
 type TouchKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c TouchKey) Key(Key ...string) TouchKey {
-	return TouchKey{cs: append(c.cs, Key...)}
+	return TouchKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
-func (c TouchKey) Build() []string {
-	return c.cs
+func (c TouchKey) Build() Completed {
+	return Completed(c)
 }
 
 type Ttl struct {
 	cs []string
+	cf uint32
 }
 
 func (c Ttl) Key(Key string) TtlKey {
-	return TtlKey{cs: append(c.cs, Key)}
+	return TtlKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Ttl() (c Ttl) {
@@ -10118,18 +11202,24 @@ func (b *Builder) Ttl() (c Ttl) {
 
 type TtlKey struct {
 	cs []string
+	cf uint32
 }
 
-func (c TtlKey) Build() []string {
-	return c.cs
+func (c TtlKey) Build() Completed {
+	return Completed(c)
+}
+
+func (c TtlKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Type struct {
 	cs []string
+	cf uint32
 }
 
 func (c Type) Key(Key string) TypeKey {
-	return TypeKey{cs: append(c.cs, Key)}
+	return TypeKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Type() (c Type) {
@@ -10139,18 +11229,24 @@ func (b *Builder) Type() (c Type) {
 
 type TypeKey struct {
 	cs []string
+	cf uint32
 }
 
-func (c TypeKey) Build() []string {
-	return c.cs
+func (c TypeKey) Build() Completed {
+	return Completed(c)
+}
+
+func (c TypeKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Unlink struct {
 	cs []string
+	cf uint32
 }
 
 func (c Unlink) Key(Key ...string) UnlinkKey {
-	return UnlinkKey{cs: append(c.cs, Key...)}
+	return UnlinkKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 func (b *Builder) Unlink() (c Unlink) {
@@ -10160,26 +11256,28 @@ func (b *Builder) Unlink() (c Unlink) {
 
 type UnlinkKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c UnlinkKey) Key(Key ...string) UnlinkKey {
-	return UnlinkKey{cs: append(c.cs, Key...)}
+	return UnlinkKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
-func (c UnlinkKey) Build() []string {
-	return c.cs
+func (c UnlinkKey) Build() Completed {
+	return Completed(c)
 }
 
 type Unsubscribe struct {
 	cs []string
+	cf uint32
 }
 
 func (c Unsubscribe) Channel(Channel ...string) UnsubscribeChannel {
-	return UnsubscribeChannel{cs: append(c.cs, Channel...)}
+	return UnsubscribeChannel{cf: c.cf, cs: append(c.cs, Channel...)}
 }
 
-func (c Unsubscribe) Build() []string {
-	return c.cs
+func (c Unsubscribe) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) Unsubscribe() (c Unsubscribe) {
@@ -10189,22 +11287,24 @@ func (b *Builder) Unsubscribe() (c Unsubscribe) {
 
 type UnsubscribeChannel struct {
 	cs []string
+	cf uint32
 }
 
 func (c UnsubscribeChannel) Channel(Channel ...string) UnsubscribeChannel {
-	return UnsubscribeChannel{cs: append(c.cs, Channel...)}
+	return UnsubscribeChannel{cf: c.cf, cs: append(c.cs, Channel...)}
 }
 
-func (c UnsubscribeChannel) Build() []string {
-	return c.cs
+func (c UnsubscribeChannel) Build() Completed {
+	return Completed(c)
 }
 
 type Unwatch struct {
 	cs []string
+	cf uint32
 }
 
-func (c Unwatch) Build() []string {
-	return c.cs
+func (c Unwatch) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) Unwatch() (c Unwatch) {
@@ -10214,10 +11314,11 @@ func (b *Builder) Unwatch() (c Unwatch) {
 
 type Wait struct {
 	cs []string
+	cf uint32
 }
 
 func (c Wait) Numreplicas(Numreplicas int64) WaitNumreplicas {
-	return WaitNumreplicas{cs: append(c.cs, strconv.FormatInt(Numreplicas, 10))}
+	return WaitNumreplicas{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numreplicas, 10))}
 }
 
 func (b *Builder) Wait() (c Wait) {
@@ -10227,26 +11328,29 @@ func (b *Builder) Wait() (c Wait) {
 
 type WaitNumreplicas struct {
 	cs []string
+	cf uint32
 }
 
 func (c WaitNumreplicas) Timeout(Timeout int64) WaitTimeout {
-	return WaitTimeout{cs: append(c.cs, strconv.FormatInt(Timeout, 10))}
+	return WaitTimeout{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Timeout, 10))}
 }
 
 type WaitTimeout struct {
 	cs []string
+	cf uint32
 }
 
-func (c WaitTimeout) Build() []string {
-	return c.cs
+func (c WaitTimeout) Build() Completed {
+	return Completed(c)
 }
 
 type Watch struct {
 	cs []string
+	cf uint32
 }
 
 func (c Watch) Key(Key ...string) WatchKey {
-	return WatchKey{cs: append(c.cs, Key...)}
+	return WatchKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 func (b *Builder) Watch() (c Watch) {
@@ -10256,22 +11360,24 @@ func (b *Builder) Watch() (c Watch) {
 
 type WatchKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c WatchKey) Key(Key ...string) WatchKey {
-	return WatchKey{cs: append(c.cs, Key...)}
+	return WatchKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
-func (c WatchKey) Build() []string {
-	return c.cs
+func (c WatchKey) Build() Completed {
+	return Completed(c)
 }
 
 type Xack struct {
 	cs []string
+	cf uint32
 }
 
 func (c Xack) Key(Key string) XackKey {
-	return XackKey{cs: append(c.cs, Key)}
+	return XackKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Xack() (c Xack) {
@@ -10281,38 +11387,42 @@ func (b *Builder) Xack() (c Xack) {
 
 type XackGroup struct {
 	cs []string
+	cf uint32
 }
 
 func (c XackGroup) Id(Id ...string) XackId {
-	return XackId{cs: append(c.cs, Id...)}
+	return XackId{cf: c.cf, cs: append(c.cs, Id...)}
 }
 
 type XackId struct {
 	cs []string
+	cf uint32
 }
 
 func (c XackId) Id(Id ...string) XackId {
-	return XackId{cs: append(c.cs, Id...)}
+	return XackId{cf: c.cf, cs: append(c.cs, Id...)}
 }
 
-func (c XackId) Build() []string {
-	return c.cs
+func (c XackId) Build() Completed {
+	return Completed(c)
 }
 
 type XackKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c XackKey) Group(Group string) XackGroup {
-	return XackGroup{cs: append(c.cs, Group)}
+	return XackGroup{cf: c.cf, cs: append(c.cs, Group)}
 }
 
 type Xadd struct {
 	cs []string
+	cf uint32
 }
 
 func (c Xadd) Key(Key string) XaddKey {
-	return XaddKey{cs: append(c.cs, Key)}
+	return XaddKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Xadd() (c Xadd) {
@@ -10322,158 +11432,170 @@ func (b *Builder) Xadd() (c Xadd) {
 
 type XaddFieldValue struct {
 	cs []string
+	cf uint32
 }
 
 func (c XaddFieldValue) FieldValue(Field string, Value string) XaddFieldValue {
-	return XaddFieldValue{cs: append(c.cs, Field, Value)}
+	return XaddFieldValue{cf: c.cf, cs: append(c.cs, Field, Value)}
 }
 
-func (c XaddFieldValue) Build() []string {
-	return c.cs
+func (c XaddFieldValue) Build() Completed {
+	return Completed(c)
 }
 
 type XaddId struct {
 	cs []string
+	cf uint32
 }
 
 func (c XaddId) FieldValue() XaddFieldValue {
-	return XaddFieldValue{cs: append(c.cs)}
+	return XaddFieldValue{cf: c.cf, cs: append(c.cs, )}
 }
 
 type XaddKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c XaddKey) Nomkstream() XaddNomkstream {
-	return XaddNomkstream{cs: append(c.cs, "NOMKSTREAM")}
+	return XaddNomkstream{cf: c.cf, cs: append(c.cs, "NOMKSTREAM")}
 }
 
 func (c XaddKey) Maxlen() XaddTrimStrategyMaxlen {
-	return XaddTrimStrategyMaxlen{cs: append(c.cs, "MAXLEN")}
+	return XaddTrimStrategyMaxlen{cf: c.cf, cs: append(c.cs, "MAXLEN")}
 }
 
 func (c XaddKey) Minid() XaddTrimStrategyMinid {
-	return XaddTrimStrategyMinid{cs: append(c.cs, "MINID")}
+	return XaddTrimStrategyMinid{cf: c.cf, cs: append(c.cs, "MINID")}
 }
 
 func (c XaddKey) Wildcard() XaddWildcard {
-	return XaddWildcard{cs: append(c.cs, "*")}
+	return XaddWildcard{cf: c.cf, cs: append(c.cs, "*")}
 }
 
 func (c XaddKey) Id() XaddId {
-	return XaddId{cs: append(c.cs, "ID")}
+	return XaddId{cf: c.cf, cs: append(c.cs, "ID")}
 }
 
 type XaddNomkstream struct {
 	cs []string
+	cf uint32
 }
 
 func (c XaddNomkstream) Maxlen() XaddTrimStrategyMaxlen {
-	return XaddTrimStrategyMaxlen{cs: append(c.cs, "MAXLEN")}
+	return XaddTrimStrategyMaxlen{cf: c.cf, cs: append(c.cs, "MAXLEN")}
 }
 
 func (c XaddNomkstream) Minid() XaddTrimStrategyMinid {
-	return XaddTrimStrategyMinid{cs: append(c.cs, "MINID")}
+	return XaddTrimStrategyMinid{cf: c.cf, cs: append(c.cs, "MINID")}
 }
 
 func (c XaddNomkstream) Wildcard() XaddWildcard {
-	return XaddWildcard{cs: append(c.cs, "*")}
+	return XaddWildcard{cf: c.cf, cs: append(c.cs, "*")}
 }
 
 func (c XaddNomkstream) Id() XaddId {
-	return XaddId{cs: append(c.cs, "ID")}
+	return XaddId{cf: c.cf, cs: append(c.cs, "ID")}
 }
 
 type XaddTrimLimit struct {
 	cs []string
+	cf uint32
 }
 
 func (c XaddTrimLimit) Wildcard() XaddWildcard {
-	return XaddWildcard{cs: append(c.cs, "*")}
+	return XaddWildcard{cf: c.cf, cs: append(c.cs, "*")}
 }
 
 func (c XaddTrimLimit) Id() XaddId {
-	return XaddId{cs: append(c.cs, "ID")}
+	return XaddId{cf: c.cf, cs: append(c.cs, "ID")}
 }
 
 type XaddTrimOperatorAlmost struct {
 	cs []string
+	cf uint32
 }
 
 func (c XaddTrimOperatorAlmost) Threshold(Threshold string) XaddTrimThreshold {
-	return XaddTrimThreshold{cs: append(c.cs, Threshold)}
+	return XaddTrimThreshold{cf: c.cf, cs: append(c.cs, Threshold)}
 }
 
 type XaddTrimOperatorExact struct {
 	cs []string
+	cf uint32
 }
 
 func (c XaddTrimOperatorExact) Threshold(Threshold string) XaddTrimThreshold {
-	return XaddTrimThreshold{cs: append(c.cs, Threshold)}
+	return XaddTrimThreshold{cf: c.cf, cs: append(c.cs, Threshold)}
 }
 
 type XaddTrimStrategyMaxlen struct {
 	cs []string
+	cf uint32
 }
 
 func (c XaddTrimStrategyMaxlen) Exact() XaddTrimOperatorExact {
-	return XaddTrimOperatorExact{cs: append(c.cs, "=")}
+	return XaddTrimOperatorExact{cf: c.cf, cs: append(c.cs, "=")}
 }
 
 func (c XaddTrimStrategyMaxlen) Almost() XaddTrimOperatorAlmost {
-	return XaddTrimOperatorAlmost{cs: append(c.cs, "~")}
+	return XaddTrimOperatorAlmost{cf: c.cf, cs: append(c.cs, "~")}
 }
 
 func (c XaddTrimStrategyMaxlen) Threshold(Threshold string) XaddTrimThreshold {
-	return XaddTrimThreshold{cs: append(c.cs, Threshold)}
+	return XaddTrimThreshold{cf: c.cf, cs: append(c.cs, Threshold)}
 }
 
 type XaddTrimStrategyMinid struct {
 	cs []string
+	cf uint32
 }
 
 func (c XaddTrimStrategyMinid) Exact() XaddTrimOperatorExact {
-	return XaddTrimOperatorExact{cs: append(c.cs, "=")}
+	return XaddTrimOperatorExact{cf: c.cf, cs: append(c.cs, "=")}
 }
 
 func (c XaddTrimStrategyMinid) Almost() XaddTrimOperatorAlmost {
-	return XaddTrimOperatorAlmost{cs: append(c.cs, "~")}
+	return XaddTrimOperatorAlmost{cf: c.cf, cs: append(c.cs, "~")}
 }
 
 func (c XaddTrimStrategyMinid) Threshold(Threshold string) XaddTrimThreshold {
-	return XaddTrimThreshold{cs: append(c.cs, Threshold)}
+	return XaddTrimThreshold{cf: c.cf, cs: append(c.cs, Threshold)}
 }
 
 type XaddTrimThreshold struct {
 	cs []string
+	cf uint32
 }
 
 func (c XaddTrimThreshold) Limit(Count int64) XaddTrimLimit {
-	return XaddTrimLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Count, 10))}
+	return XaddTrimLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Count, 10))}
 }
 
 func (c XaddTrimThreshold) Wildcard() XaddWildcard {
-	return XaddWildcard{cs: append(c.cs, "*")}
+	return XaddWildcard{cf: c.cf, cs: append(c.cs, "*")}
 }
 
 func (c XaddTrimThreshold) Id() XaddId {
-	return XaddId{cs: append(c.cs, "ID")}
+	return XaddId{cf: c.cf, cs: append(c.cs, "ID")}
 }
 
 type XaddWildcard struct {
 	cs []string
+	cf uint32
 }
 
 func (c XaddWildcard) FieldValue() XaddFieldValue {
-	return XaddFieldValue{cs: append(c.cs)}
+	return XaddFieldValue{cf: c.cf, cs: append(c.cs, )}
 }
 
 type Xautoclaim struct {
 	cs []string
+	cf uint32
 }
 
 func (c Xautoclaim) Key(Key string) XautoclaimKey {
-	return XautoclaimKey{cs: append(c.cs, Key)}
+	return XautoclaimKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Xautoclaim() (c Xautoclaim) {
@@ -10483,78 +11605,86 @@ func (b *Builder) Xautoclaim() (c Xautoclaim) {
 
 type XautoclaimConsumer struct {
 	cs []string
+	cf uint32
 }
 
 func (c XautoclaimConsumer) MinIdleTime(MinIdleTime string) XautoclaimMinIdleTime {
-	return XautoclaimMinIdleTime{cs: append(c.cs, MinIdleTime)}
+	return XautoclaimMinIdleTime{cf: c.cf, cs: append(c.cs, MinIdleTime)}
 }
 
 type XautoclaimCount struct {
 	cs []string
+	cf uint32
 }
 
 func (c XautoclaimCount) Justid() XautoclaimJustidJustid {
-	return XautoclaimJustidJustid{cs: append(c.cs, "JUSTID")}
+	return XautoclaimJustidJustid{cf: c.cf, cs: append(c.cs, "JUSTID")}
 }
 
-func (c XautoclaimCount) Build() []string {
-	return c.cs
+func (c XautoclaimCount) Build() Completed {
+	return Completed(c)
 }
 
 type XautoclaimGroup struct {
 	cs []string
+	cf uint32
 }
 
 func (c XautoclaimGroup) Consumer(Consumer string) XautoclaimConsumer {
-	return XautoclaimConsumer{cs: append(c.cs, Consumer)}
+	return XautoclaimConsumer{cf: c.cf, cs: append(c.cs, Consumer)}
 }
 
 type XautoclaimJustidJustid struct {
 	cs []string
+	cf uint32
 }
 
-func (c XautoclaimJustidJustid) Build() []string {
-	return c.cs
+func (c XautoclaimJustidJustid) Build() Completed {
+	return Completed(c)
 }
 
 type XautoclaimKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c XautoclaimKey) Group(Group string) XautoclaimGroup {
-	return XautoclaimGroup{cs: append(c.cs, Group)}
+	return XautoclaimGroup{cf: c.cf, cs: append(c.cs, Group)}
 }
 
 type XautoclaimMinIdleTime struct {
 	cs []string
+	cf uint32
 }
 
 func (c XautoclaimMinIdleTime) Start(Start string) XautoclaimStart {
-	return XautoclaimStart{cs: append(c.cs, Start)}
+	return XautoclaimStart{cf: c.cf, cs: append(c.cs, Start)}
 }
 
 type XautoclaimStart struct {
 	cs []string
+	cf uint32
 }
 
 func (c XautoclaimStart) Count(Count int64) XautoclaimCount {
-	return XautoclaimCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return XautoclaimCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c XautoclaimStart) Justid() XautoclaimJustidJustid {
-	return XautoclaimJustidJustid{cs: append(c.cs, "JUSTID")}
+	return XautoclaimJustidJustid{cf: c.cf, cs: append(c.cs, "JUSTID")}
 }
 
-func (c XautoclaimStart) Build() []string {
-	return c.cs
+func (c XautoclaimStart) Build() Completed {
+	return Completed(c)
 }
 
 type Xclaim struct {
 	cs []string
+	cf uint32
 }
 
 func (c Xclaim) Key(Key string) XclaimKey {
-	return XclaimKey{cs: append(c.cs, Key)}
+	return XclaimKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Xclaim() (c Xclaim) {
@@ -10564,154 +11694,165 @@ func (b *Builder) Xclaim() (c Xclaim) {
 
 type XclaimConsumer struct {
 	cs []string
+	cf uint32
 }
 
 func (c XclaimConsumer) MinIdleTime(MinIdleTime string) XclaimMinIdleTime {
-	return XclaimMinIdleTime{cs: append(c.cs, MinIdleTime)}
+	return XclaimMinIdleTime{cf: c.cf, cs: append(c.cs, MinIdleTime)}
 }
 
 type XclaimForceForce struct {
 	cs []string
+	cf uint32
 }
 
 func (c XclaimForceForce) Justid() XclaimJustidJustid {
-	return XclaimJustidJustid{cs: append(c.cs, "JUSTID")}
+	return XclaimJustidJustid{cf: c.cf, cs: append(c.cs, "JUSTID")}
 }
 
-func (c XclaimForceForce) Build() []string {
-	return c.cs
+func (c XclaimForceForce) Build() Completed {
+	return Completed(c)
 }
 
 type XclaimGroup struct {
 	cs []string
+	cf uint32
 }
 
 func (c XclaimGroup) Consumer(Consumer string) XclaimConsumer {
-	return XclaimConsumer{cs: append(c.cs, Consumer)}
+	return XclaimConsumer{cf: c.cf, cs: append(c.cs, Consumer)}
 }
 
 type XclaimId struct {
 	cs []string
+	cf uint32
 }
 
 func (c XclaimId) Idle(Ms int64) XclaimIdle {
-	return XclaimIdle{cs: append(c.cs, "IDLE", strconv.FormatInt(Ms, 10))}
+	return XclaimIdle{cf: c.cf, cs: append(c.cs, "IDLE", strconv.FormatInt(Ms, 10))}
 }
 
 func (c XclaimId) Time(MsUnixTime int64) XclaimTime {
-	return XclaimTime{cs: append(c.cs, "TIME", strconv.FormatInt(MsUnixTime, 10))}
+	return XclaimTime{cf: c.cf, cs: append(c.cs, "TIME", strconv.FormatInt(MsUnixTime, 10))}
 }
 
 func (c XclaimId) Retrycount(Count int64) XclaimRetrycount {
-	return XclaimRetrycount{cs: append(c.cs, "RETRYCOUNT", strconv.FormatInt(Count, 10))}
+	return XclaimRetrycount{cf: c.cf, cs: append(c.cs, "RETRYCOUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c XclaimId) Force() XclaimForceForce {
-	return XclaimForceForce{cs: append(c.cs, "FORCE")}
+	return XclaimForceForce{cf: c.cf, cs: append(c.cs, "FORCE")}
 }
 
 func (c XclaimId) Justid() XclaimJustidJustid {
-	return XclaimJustidJustid{cs: append(c.cs, "JUSTID")}
+	return XclaimJustidJustid{cf: c.cf, cs: append(c.cs, "JUSTID")}
 }
 
 func (c XclaimId) Id(Id ...string) XclaimId {
-	return XclaimId{cs: append(c.cs, Id...)}
+	return XclaimId{cf: c.cf, cs: append(c.cs, Id...)}
 }
 
-func (c XclaimId) Build() []string {
-	return c.cs
+func (c XclaimId) Build() Completed {
+	return Completed(c)
 }
 
 type XclaimIdle struct {
 	cs []string
+	cf uint32
 }
 
 func (c XclaimIdle) Time(MsUnixTime int64) XclaimTime {
-	return XclaimTime{cs: append(c.cs, "TIME", strconv.FormatInt(MsUnixTime, 10))}
+	return XclaimTime{cf: c.cf, cs: append(c.cs, "TIME", strconv.FormatInt(MsUnixTime, 10))}
 }
 
 func (c XclaimIdle) Retrycount(Count int64) XclaimRetrycount {
-	return XclaimRetrycount{cs: append(c.cs, "RETRYCOUNT", strconv.FormatInt(Count, 10))}
+	return XclaimRetrycount{cf: c.cf, cs: append(c.cs, "RETRYCOUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c XclaimIdle) Force() XclaimForceForce {
-	return XclaimForceForce{cs: append(c.cs, "FORCE")}
+	return XclaimForceForce{cf: c.cf, cs: append(c.cs, "FORCE")}
 }
 
 func (c XclaimIdle) Justid() XclaimJustidJustid {
-	return XclaimJustidJustid{cs: append(c.cs, "JUSTID")}
+	return XclaimJustidJustid{cf: c.cf, cs: append(c.cs, "JUSTID")}
 }
 
-func (c XclaimIdle) Build() []string {
-	return c.cs
+func (c XclaimIdle) Build() Completed {
+	return Completed(c)
 }
 
 type XclaimJustidJustid struct {
 	cs []string
+	cf uint32
 }
 
-func (c XclaimJustidJustid) Build() []string {
-	return c.cs
+func (c XclaimJustidJustid) Build() Completed {
+	return Completed(c)
 }
 
 type XclaimKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c XclaimKey) Group(Group string) XclaimGroup {
-	return XclaimGroup{cs: append(c.cs, Group)}
+	return XclaimGroup{cf: c.cf, cs: append(c.cs, Group)}
 }
 
 type XclaimMinIdleTime struct {
 	cs []string
+	cf uint32
 }
 
 func (c XclaimMinIdleTime) Id(Id ...string) XclaimId {
-	return XclaimId{cs: append(c.cs, Id...)}
+	return XclaimId{cf: c.cf, cs: append(c.cs, Id...)}
 }
 
 type XclaimRetrycount struct {
 	cs []string
+	cf uint32
 }
 
 func (c XclaimRetrycount) Force() XclaimForceForce {
-	return XclaimForceForce{cs: append(c.cs, "FORCE")}
+	return XclaimForceForce{cf: c.cf, cs: append(c.cs, "FORCE")}
 }
 
 func (c XclaimRetrycount) Justid() XclaimJustidJustid {
-	return XclaimJustidJustid{cs: append(c.cs, "JUSTID")}
+	return XclaimJustidJustid{cf: c.cf, cs: append(c.cs, "JUSTID")}
 }
 
-func (c XclaimRetrycount) Build() []string {
-	return c.cs
+func (c XclaimRetrycount) Build() Completed {
+	return Completed(c)
 }
 
 type XclaimTime struct {
 	cs []string
+	cf uint32
 }
 
 func (c XclaimTime) Retrycount(Count int64) XclaimRetrycount {
-	return XclaimRetrycount{cs: append(c.cs, "RETRYCOUNT", strconv.FormatInt(Count, 10))}
+	return XclaimRetrycount{cf: c.cf, cs: append(c.cs, "RETRYCOUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c XclaimTime) Force() XclaimForceForce {
-	return XclaimForceForce{cs: append(c.cs, "FORCE")}
+	return XclaimForceForce{cf: c.cf, cs: append(c.cs, "FORCE")}
 }
 
 func (c XclaimTime) Justid() XclaimJustidJustid {
-	return XclaimJustidJustid{cs: append(c.cs, "JUSTID")}
+	return XclaimJustidJustid{cf: c.cf, cs: append(c.cs, "JUSTID")}
 }
 
-func (c XclaimTime) Build() []string {
-	return c.cs
+func (c XclaimTime) Build() Completed {
+	return Completed(c)
 }
 
 type Xdel struct {
 	cs []string
+	cf uint32
 }
 
 func (c Xdel) Key(Key string) XdelKey {
-	return XdelKey{cs: append(c.cs, Key)}
+	return XdelKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Xdel() (c Xdel) {
@@ -10721,46 +11862,49 @@ func (b *Builder) Xdel() (c Xdel) {
 
 type XdelId struct {
 	cs []string
+	cf uint32
 }
 
 func (c XdelId) Id(Id ...string) XdelId {
-	return XdelId{cs: append(c.cs, Id...)}
+	return XdelId{cf: c.cf, cs: append(c.cs, Id...)}
 }
 
-func (c XdelId) Build() []string {
-	return c.cs
+func (c XdelId) Build() Completed {
+	return Completed(c)
 }
 
 type XdelKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c XdelKey) Id(Id ...string) XdelId {
-	return XdelId{cs: append(c.cs, Id...)}
+	return XdelId{cf: c.cf, cs: append(c.cs, Id...)}
 }
 
 type Xgroup struct {
 	cs []string
+	cf uint32
 }
 
 func (c Xgroup) Create(Key string, Groupname string) XgroupCreateCreate {
-	return XgroupCreateCreate{cs: append(c.cs, "CREATE", Key, Groupname)}
+	return XgroupCreateCreate{cf: c.cf, cs: append(c.cs, "CREATE", Key, Groupname)}
 }
 
 func (c Xgroup) Setid(Key string, Groupname string) XgroupSetidSetid {
-	return XgroupSetidSetid{cs: append(c.cs, "SETID", Key, Groupname)}
+	return XgroupSetidSetid{cf: c.cf, cs: append(c.cs, "SETID", Key, Groupname)}
 }
 
 func (c Xgroup) Destroy(Key string, Groupname string) XgroupDestroy {
-	return XgroupDestroy{cs: append(c.cs, "DESTROY", Key, Groupname)}
+	return XgroupDestroy{cf: c.cf, cs: append(c.cs, "DESTROY", Key, Groupname)}
 }
 
 func (c Xgroup) Createconsumer(Key string, Groupname string, Consumername string) XgroupCreateconsumer {
-	return XgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername)}
+	return XgroupCreateconsumer{cf: c.cf, cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername)}
 }
 
 func (c Xgroup) Delconsumer(Key string, Groupname string, Consumername string) XgroupDelconsumer {
-	return XgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
+	return XgroupDelconsumer{cf: c.cf, cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
 }
 
 func (b *Builder) Xgroup() (c Xgroup) {
@@ -10770,194 +11914,205 @@ func (b *Builder) Xgroup() (c Xgroup) {
 
 type XgroupCreateCreate struct {
 	cs []string
+	cf uint32
 }
 
 func (c XgroupCreateCreate) Id() XgroupCreateIdId {
-	return XgroupCreateIdId{cs: append(c.cs, "ID")}
+	return XgroupCreateIdId{cf: c.cf, cs: append(c.cs, "ID")}
 }
 
 func (c XgroupCreateCreate) Lastid() XgroupCreateIdLastID {
-	return XgroupCreateIdLastID{cs: append(c.cs, "$")}
+	return XgroupCreateIdLastID{cf: c.cf, cs: append(c.cs, "$")}
 }
 
 type XgroupCreateIdId struct {
 	cs []string
+	cf uint32
 }
 
 func (c XgroupCreateIdId) Mkstream() XgroupCreateMkstream {
-	return XgroupCreateMkstream{cs: append(c.cs, "MKSTREAM")}
+	return XgroupCreateMkstream{cf: c.cf, cs: append(c.cs, "MKSTREAM")}
 }
 
 func (c XgroupCreateIdId) Setid(Key string, Groupname string) XgroupSetidSetid {
-	return XgroupSetidSetid{cs: append(c.cs, "SETID", Key, Groupname)}
+	return XgroupSetidSetid{cf: c.cf, cs: append(c.cs, "SETID", Key, Groupname)}
 }
 
 func (c XgroupCreateIdId) Destroy(Key string, Groupname string) XgroupDestroy {
-	return XgroupDestroy{cs: append(c.cs, "DESTROY", Key, Groupname)}
+	return XgroupDestroy{cf: c.cf, cs: append(c.cs, "DESTROY", Key, Groupname)}
 }
 
 func (c XgroupCreateIdId) Createconsumer(Key string, Groupname string, Consumername string) XgroupCreateconsumer {
-	return XgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername)}
+	return XgroupCreateconsumer{cf: c.cf, cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername)}
 }
 
 func (c XgroupCreateIdId) Delconsumer(Key string, Groupname string, Consumername string) XgroupDelconsumer {
-	return XgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
+	return XgroupDelconsumer{cf: c.cf, cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
 }
 
 type XgroupCreateIdLastID struct {
 	cs []string
+	cf uint32
 }
 
 func (c XgroupCreateIdLastID) Mkstream() XgroupCreateMkstream {
-	return XgroupCreateMkstream{cs: append(c.cs, "MKSTREAM")}
+	return XgroupCreateMkstream{cf: c.cf, cs: append(c.cs, "MKSTREAM")}
 }
 
 func (c XgroupCreateIdLastID) Setid(Key string, Groupname string) XgroupSetidSetid {
-	return XgroupSetidSetid{cs: append(c.cs, "SETID", Key, Groupname)}
+	return XgroupSetidSetid{cf: c.cf, cs: append(c.cs, "SETID", Key, Groupname)}
 }
 
 func (c XgroupCreateIdLastID) Destroy(Key string, Groupname string) XgroupDestroy {
-	return XgroupDestroy{cs: append(c.cs, "DESTROY", Key, Groupname)}
+	return XgroupDestroy{cf: c.cf, cs: append(c.cs, "DESTROY", Key, Groupname)}
 }
 
 func (c XgroupCreateIdLastID) Createconsumer(Key string, Groupname string, Consumername string) XgroupCreateconsumer {
-	return XgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername)}
+	return XgroupCreateconsumer{cf: c.cf, cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername)}
 }
 
 func (c XgroupCreateIdLastID) Delconsumer(Key string, Groupname string, Consumername string) XgroupDelconsumer {
-	return XgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
+	return XgroupDelconsumer{cf: c.cf, cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
 }
 
 type XgroupCreateMkstream struct {
 	cs []string
+	cf uint32
 }
 
 func (c XgroupCreateMkstream) Setid(Key string, Groupname string) XgroupSetidSetid {
-	return XgroupSetidSetid{cs: append(c.cs, "SETID", Key, Groupname)}
+	return XgroupSetidSetid{cf: c.cf, cs: append(c.cs, "SETID", Key, Groupname)}
 }
 
 func (c XgroupCreateMkstream) Destroy(Key string, Groupname string) XgroupDestroy {
-	return XgroupDestroy{cs: append(c.cs, "DESTROY", Key, Groupname)}
+	return XgroupDestroy{cf: c.cf, cs: append(c.cs, "DESTROY", Key, Groupname)}
 }
 
 func (c XgroupCreateMkstream) Createconsumer(Key string, Groupname string, Consumername string) XgroupCreateconsumer {
-	return XgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername)}
+	return XgroupCreateconsumer{cf: c.cf, cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername)}
 }
 
 func (c XgroupCreateMkstream) Delconsumer(Key string, Groupname string, Consumername string) XgroupDelconsumer {
-	return XgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
+	return XgroupDelconsumer{cf: c.cf, cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
 }
 
 type XgroupCreateconsumer struct {
 	cs []string
+	cf uint32
 }
 
 func (c XgroupCreateconsumer) Delconsumer(Key string, Groupname string, Consumername string) XgroupDelconsumer {
-	return XgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
+	return XgroupDelconsumer{cf: c.cf, cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
 }
 
-func (c XgroupCreateconsumer) Build() []string {
-	return c.cs
+func (c XgroupCreateconsumer) Build() Completed {
+	return Completed(c)
 }
 
 type XgroupDelconsumer struct {
 	cs []string
+	cf uint32
 }
 
-func (c XgroupDelconsumer) Build() []string {
-	return c.cs
+func (c XgroupDelconsumer) Build() Completed {
+	return Completed(c)
 }
 
 type XgroupDestroy struct {
 	cs []string
+	cf uint32
 }
 
 func (c XgroupDestroy) Createconsumer(Key string, Groupname string, Consumername string) XgroupCreateconsumer {
-	return XgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername)}
+	return XgroupCreateconsumer{cf: c.cf, cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername)}
 }
 
 func (c XgroupDestroy) Delconsumer(Key string, Groupname string, Consumername string) XgroupDelconsumer {
-	return XgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
+	return XgroupDelconsumer{cf: c.cf, cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
 }
 
-func (c XgroupDestroy) Build() []string {
-	return c.cs
+func (c XgroupDestroy) Build() Completed {
+	return Completed(c)
 }
 
 type XgroupSetidIdId struct {
 	cs []string
+	cf uint32
 }
 
 func (c XgroupSetidIdId) Destroy(Key string, Groupname string) XgroupDestroy {
-	return XgroupDestroy{cs: append(c.cs, "DESTROY", Key, Groupname)}
+	return XgroupDestroy{cf: c.cf, cs: append(c.cs, "DESTROY", Key, Groupname)}
 }
 
 func (c XgroupSetidIdId) Createconsumer(Key string, Groupname string, Consumername string) XgroupCreateconsumer {
-	return XgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername)}
+	return XgroupCreateconsumer{cf: c.cf, cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername)}
 }
 
 func (c XgroupSetidIdId) Delconsumer(Key string, Groupname string, Consumername string) XgroupDelconsumer {
-	return XgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
+	return XgroupDelconsumer{cf: c.cf, cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
 }
 
-func (c XgroupSetidIdId) Build() []string {
-	return c.cs
+func (c XgroupSetidIdId) Build() Completed {
+	return Completed(c)
 }
 
 type XgroupSetidIdLastID struct {
 	cs []string
+	cf uint32
 }
 
 func (c XgroupSetidIdLastID) Destroy(Key string, Groupname string) XgroupDestroy {
-	return XgroupDestroy{cs: append(c.cs, "DESTROY", Key, Groupname)}
+	return XgroupDestroy{cf: c.cf, cs: append(c.cs, "DESTROY", Key, Groupname)}
 }
 
 func (c XgroupSetidIdLastID) Createconsumer(Key string, Groupname string, Consumername string) XgroupCreateconsumer {
-	return XgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername)}
+	return XgroupCreateconsumer{cf: c.cf, cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername)}
 }
 
 func (c XgroupSetidIdLastID) Delconsumer(Key string, Groupname string, Consumername string) XgroupDelconsumer {
-	return XgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
+	return XgroupDelconsumer{cf: c.cf, cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
 }
 
-func (c XgroupSetidIdLastID) Build() []string {
-	return c.cs
+func (c XgroupSetidIdLastID) Build() Completed {
+	return Completed(c)
 }
 
 type XgroupSetidSetid struct {
 	cs []string
+	cf uint32
 }
 
 func (c XgroupSetidSetid) Id() XgroupSetidIdId {
-	return XgroupSetidIdId{cs: append(c.cs, "ID")}
+	return XgroupSetidIdId{cf: c.cf, cs: append(c.cs, "ID")}
 }
 
 func (c XgroupSetidSetid) Lastid() XgroupSetidIdLastID {
-	return XgroupSetidIdLastID{cs: append(c.cs, "$")}
+	return XgroupSetidIdLastID{cf: c.cf, cs: append(c.cs, "$")}
 }
 
 type Xinfo struct {
 	cs []string
+	cf uint32
 }
 
 func (c Xinfo) Consumers(Key string, Groupname string) XinfoConsumers {
-	return XinfoConsumers{cs: append(c.cs, "CONSUMERS", Key, Groupname)}
+	return XinfoConsumers{cf: c.cf, cs: append(c.cs, "CONSUMERS", Key, Groupname)}
 }
 
 func (c Xinfo) Groups(Key string) XinfoGroups {
-	return XinfoGroups{cs: append(c.cs, "GROUPS", Key)}
+	return XinfoGroups{cf: c.cf, cs: append(c.cs, "GROUPS", Key)}
 }
 
 func (c Xinfo) Stream(Key string) XinfoStream {
-	return XinfoStream{cs: append(c.cs, "STREAM", Key)}
+	return XinfoStream{cf: c.cf, cs: append(c.cs, "STREAM", Key)}
 }
 
 func (c Xinfo) Help() XinfoHelpHelp {
-	return XinfoHelpHelp{cs: append(c.cs, "HELP")}
+	return XinfoHelpHelp{cf: c.cf, cs: append(c.cs, "HELP")}
 }
 
-func (c Xinfo) Build() []string {
-	return c.cs
+func (c Xinfo) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) Xinfo() (c Xinfo) {
@@ -10967,66 +12122,71 @@ func (b *Builder) Xinfo() (c Xinfo) {
 
 type XinfoConsumers struct {
 	cs []string
+	cf uint32
 }
 
 func (c XinfoConsumers) Groups(Key string) XinfoGroups {
-	return XinfoGroups{cs: append(c.cs, "GROUPS", Key)}
+	return XinfoGroups{cf: c.cf, cs: append(c.cs, "GROUPS", Key)}
 }
 
 func (c XinfoConsumers) Stream(Key string) XinfoStream {
-	return XinfoStream{cs: append(c.cs, "STREAM", Key)}
+	return XinfoStream{cf: c.cf, cs: append(c.cs, "STREAM", Key)}
 }
 
 func (c XinfoConsumers) Help() XinfoHelpHelp {
-	return XinfoHelpHelp{cs: append(c.cs, "HELP")}
+	return XinfoHelpHelp{cf: c.cf, cs: append(c.cs, "HELP")}
 }
 
-func (c XinfoConsumers) Build() []string {
-	return c.cs
+func (c XinfoConsumers) Build() Completed {
+	return Completed(c)
 }
 
 type XinfoGroups struct {
 	cs []string
+	cf uint32
 }
 
 func (c XinfoGroups) Stream(Key string) XinfoStream {
-	return XinfoStream{cs: append(c.cs, "STREAM", Key)}
+	return XinfoStream{cf: c.cf, cs: append(c.cs, "STREAM", Key)}
 }
 
 func (c XinfoGroups) Help() XinfoHelpHelp {
-	return XinfoHelpHelp{cs: append(c.cs, "HELP")}
+	return XinfoHelpHelp{cf: c.cf, cs: append(c.cs, "HELP")}
 }
 
-func (c XinfoGroups) Build() []string {
-	return c.cs
+func (c XinfoGroups) Build() Completed {
+	return Completed(c)
 }
 
 type XinfoHelpHelp struct {
 	cs []string
+	cf uint32
 }
 
-func (c XinfoHelpHelp) Build() []string {
-	return c.cs
+func (c XinfoHelpHelp) Build() Completed {
+	return Completed(c)
 }
 
 type XinfoStream struct {
 	cs []string
+	cf uint32
 }
 
 func (c XinfoStream) Help() XinfoHelpHelp {
-	return XinfoHelpHelp{cs: append(c.cs, "HELP")}
+	return XinfoHelpHelp{cf: c.cf, cs: append(c.cs, "HELP")}
 }
 
-func (c XinfoStream) Build() []string {
-	return c.cs
+func (c XinfoStream) Build() Completed {
+	return Completed(c)
 }
 
 type Xlen struct {
 	cs []string
+	cf uint32
 }
 
 func (c Xlen) Key(Key string) XlenKey {
-	return XlenKey{cs: append(c.cs, Key)}
+	return XlenKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Xlen() (c Xlen) {
@@ -11036,18 +12196,20 @@ func (b *Builder) Xlen() (c Xlen) {
 
 type XlenKey struct {
 	cs []string
+	cf uint32
 }
 
-func (c XlenKey) Build() []string {
-	return c.cs
+func (c XlenKey) Build() Completed {
+	return Completed(c)
 }
 
 type Xpending struct {
 	cs []string
+	cf uint32
 }
 
 func (c Xpending) Key(Key string) XpendingKey {
-	return XpendingKey{cs: append(c.cs, Key)}
+	return XpendingKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Xpending() (c Xpending) {
@@ -11057,74 +12219,82 @@ func (b *Builder) Xpending() (c Xpending) {
 
 type XpendingFiltersConsumer struct {
 	cs []string
+	cf uint32
 }
 
-func (c XpendingFiltersConsumer) Build() []string {
-	return c.cs
+func (c XpendingFiltersConsumer) Build() Completed {
+	return Completed(c)
 }
 
 type XpendingFiltersCount struct {
 	cs []string
+	cf uint32
 }
 
 func (c XpendingFiltersCount) Consumer(Consumer string) XpendingFiltersConsumer {
-	return XpendingFiltersConsumer{cs: append(c.cs, Consumer)}
+	return XpendingFiltersConsumer{cf: c.cf, cs: append(c.cs, Consumer)}
 }
 
-func (c XpendingFiltersCount) Build() []string {
-	return c.cs
+func (c XpendingFiltersCount) Build() Completed {
+	return Completed(c)
 }
 
 type XpendingFiltersEnd struct {
 	cs []string
+	cf uint32
 }
 
 func (c XpendingFiltersEnd) Count(Count int64) XpendingFiltersCount {
-	return XpendingFiltersCount{cs: append(c.cs, strconv.FormatInt(Count, 10))}
+	return XpendingFiltersCount{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Count, 10))}
 }
 
 type XpendingFiltersIdle struct {
 	cs []string
+	cf uint32
 }
 
 func (c XpendingFiltersIdle) Start(Start string) XpendingFiltersStart {
-	return XpendingFiltersStart{cs: append(c.cs, Start)}
+	return XpendingFiltersStart{cf: c.cf, cs: append(c.cs, Start)}
 }
 
 type XpendingFiltersStart struct {
 	cs []string
+	cf uint32
 }
 
 func (c XpendingFiltersStart) End(End string) XpendingFiltersEnd {
-	return XpendingFiltersEnd{cs: append(c.cs, End)}
+	return XpendingFiltersEnd{cf: c.cf, cs: append(c.cs, End)}
 }
 
 type XpendingGroup struct {
 	cs []string
+	cf uint32
 }
 
 func (c XpendingGroup) Idle(MinIdleTime int64) XpendingFiltersIdle {
-	return XpendingFiltersIdle{cs: append(c.cs, "IDLE", strconv.FormatInt(MinIdleTime, 10))}
+	return XpendingFiltersIdle{cf: c.cf, cs: append(c.cs, "IDLE", strconv.FormatInt(MinIdleTime, 10))}
 }
 
 func (c XpendingGroup) Start(Start string) XpendingFiltersStart {
-	return XpendingFiltersStart{cs: append(c.cs, Start)}
+	return XpendingFiltersStart{cf: c.cf, cs: append(c.cs, Start)}
 }
 
 type XpendingKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c XpendingKey) Group(Group string) XpendingGroup {
-	return XpendingGroup{cs: append(c.cs, Group)}
+	return XpendingGroup{cf: c.cf, cs: append(c.cs, Group)}
 }
 
 type Xrange struct {
 	cs []string
+	cf uint32
 }
 
 func (c Xrange) Key(Key string) XrangeKey {
-	return XrangeKey{cs: append(c.cs, Key)}
+	return XrangeKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Xrange() (c Xrange) {
@@ -11134,54 +12304,59 @@ func (b *Builder) Xrange() (c Xrange) {
 
 type XrangeCount struct {
 	cs []string
+	cf uint32
 }
 
-func (c XrangeCount) Build() []string {
-	return c.cs
+func (c XrangeCount) Build() Completed {
+	return Completed(c)
 }
 
 type XrangeEnd struct {
 	cs []string
+	cf uint32
 }
 
 func (c XrangeEnd) Count(Count int64) XrangeCount {
-	return XrangeCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return XrangeCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c XrangeEnd) Build() []string {
-	return c.cs
+func (c XrangeEnd) Build() Completed {
+	return Completed(c)
 }
 
 type XrangeKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c XrangeKey) Start(Start string) XrangeStart {
-	return XrangeStart{cs: append(c.cs, Start)}
+	return XrangeStart{cf: c.cf, cs: append(c.cs, Start)}
 }
 
 type XrangeStart struct {
 	cs []string
+	cf uint32
 }
 
 func (c XrangeStart) End(End string) XrangeEnd {
-	return XrangeEnd{cs: append(c.cs, End)}
+	return XrangeEnd{cf: c.cf, cs: append(c.cs, End)}
 }
 
 type Xread struct {
 	cs []string
+	cf uint32
 }
 
 func (c Xread) Count(Count int64) XreadCount {
-	return XreadCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return XreadCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c Xread) Block(Milliseconds int64) XreadBlock {
-	return XreadBlock{cs: append(c.cs, "BLOCK", strconv.FormatInt(Milliseconds, 10))}
+	return XreadBlock{cf: c.cf, cs: append(c.cs, "BLOCK", strconv.FormatInt(Milliseconds, 10))}
 }
 
 func (c Xread) Streams() XreadStreamsStreams {
-	return XreadStreamsStreams{cs: append(c.cs, "STREAMS")}
+	return XreadStreamsStreams{cf: c.cf, cs: append(c.cs, "STREAMS")}
 }
 
 func (b *Builder) Xread() (c Xread) {
@@ -11191,62 +12366,68 @@ func (b *Builder) Xread() (c Xread) {
 
 type XreadBlock struct {
 	cs []string
+	cf uint32
 }
 
 func (c XreadBlock) Streams() XreadStreamsStreams {
-	return XreadStreamsStreams{cs: append(c.cs, "STREAMS")}
+	return XreadStreamsStreams{cf: c.cf, cs: append(c.cs, "STREAMS")}
 }
 
 type XreadCount struct {
 	cs []string
+	cf uint32
 }
 
 func (c XreadCount) Block(Milliseconds int64) XreadBlock {
-	return XreadBlock{cs: append(c.cs, "BLOCK", strconv.FormatInt(Milliseconds, 10))}
+	return XreadBlock{cf: c.cf, cs: append(c.cs, "BLOCK", strconv.FormatInt(Milliseconds, 10))}
 }
 
 func (c XreadCount) Streams() XreadStreamsStreams {
-	return XreadStreamsStreams{cs: append(c.cs, "STREAMS")}
+	return XreadStreamsStreams{cf: c.cf, cs: append(c.cs, "STREAMS")}
 }
 
 type XreadId struct {
 	cs []string
+	cf uint32
 }
 
 func (c XreadId) Id(Id ...string) XreadId {
-	return XreadId{cs: append(c.cs, Id...)}
+	return XreadId{cf: c.cf, cs: append(c.cs, Id...)}
 }
 
-func (c XreadId) Build() []string {
-	return c.cs
+func (c XreadId) Build() Completed {
+	return Completed(c)
 }
 
 type XreadKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c XreadKey) Id(Id ...string) XreadId {
-	return XreadId{cs: append(c.cs, Id...)}
+	return XreadId{cf: c.cf, cs: append(c.cs, Id...)}
 }
 
 func (c XreadKey) Key(Key ...string) XreadKey {
-	return XreadKey{cs: append(c.cs, Key...)}
+	return XreadKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 type XreadStreamsStreams struct {
 	cs []string
+	cf uint32
 }
 
 func (c XreadStreamsStreams) Key(Key ...string) XreadKey {
-	return XreadKey{cs: append(c.cs, Key...)}
+	return XreadKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 type Xreadgroup struct {
 	cs []string
+	cf uint32
 }
 
 func (c Xreadgroup) Group(Group string, Consumer string) XreadgroupGroup {
-	return XreadgroupGroup{cs: append(c.cs, "GROUP", Group, Consumer)}
+	return XreadgroupGroup{cf: c.cf, cs: append(c.cs, "GROUP", Group, Consumer)}
 }
 
 func (b *Builder) Xreadgroup() (c Xreadgroup) {
@@ -11256,98 +12437,106 @@ func (b *Builder) Xreadgroup() (c Xreadgroup) {
 
 type XreadgroupBlock struct {
 	cs []string
+	cf uint32
 }
 
 func (c XreadgroupBlock) Noack() XreadgroupNoackNoack {
-	return XreadgroupNoackNoack{cs: append(c.cs, "NOACK")}
+	return XreadgroupNoackNoack{cf: c.cf, cs: append(c.cs, "NOACK")}
 }
 
 func (c XreadgroupBlock) Streams() XreadgroupStreamsStreams {
-	return XreadgroupStreamsStreams{cs: append(c.cs, "STREAMS")}
+	return XreadgroupStreamsStreams{cf: c.cf, cs: append(c.cs, "STREAMS")}
 }
 
 type XreadgroupCount struct {
 	cs []string
+	cf uint32
 }
 
 func (c XreadgroupCount) Block(Milliseconds int64) XreadgroupBlock {
-	return XreadgroupBlock{cs: append(c.cs, "BLOCK", strconv.FormatInt(Milliseconds, 10))}
+	return XreadgroupBlock{cf: c.cf, cs: append(c.cs, "BLOCK", strconv.FormatInt(Milliseconds, 10))}
 }
 
 func (c XreadgroupCount) Noack() XreadgroupNoackNoack {
-	return XreadgroupNoackNoack{cs: append(c.cs, "NOACK")}
+	return XreadgroupNoackNoack{cf: c.cf, cs: append(c.cs, "NOACK")}
 }
 
 func (c XreadgroupCount) Streams() XreadgroupStreamsStreams {
-	return XreadgroupStreamsStreams{cs: append(c.cs, "STREAMS")}
+	return XreadgroupStreamsStreams{cf: c.cf, cs: append(c.cs, "STREAMS")}
 }
 
 type XreadgroupGroup struct {
 	cs []string
+	cf uint32
 }
 
 func (c XreadgroupGroup) Count(Count int64) XreadgroupCount {
-	return XreadgroupCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return XreadgroupCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
 func (c XreadgroupGroup) Block(Milliseconds int64) XreadgroupBlock {
-	return XreadgroupBlock{cs: append(c.cs, "BLOCK", strconv.FormatInt(Milliseconds, 10))}
+	return XreadgroupBlock{cf: c.cf, cs: append(c.cs, "BLOCK", strconv.FormatInt(Milliseconds, 10))}
 }
 
 func (c XreadgroupGroup) Noack() XreadgroupNoackNoack {
-	return XreadgroupNoackNoack{cs: append(c.cs, "NOACK")}
+	return XreadgroupNoackNoack{cf: c.cf, cs: append(c.cs, "NOACK")}
 }
 
 func (c XreadgroupGroup) Streams() XreadgroupStreamsStreams {
-	return XreadgroupStreamsStreams{cs: append(c.cs, "STREAMS")}
+	return XreadgroupStreamsStreams{cf: c.cf, cs: append(c.cs, "STREAMS")}
 }
 
 type XreadgroupId struct {
 	cs []string
+	cf uint32
 }
 
 func (c XreadgroupId) Id(Id ...string) XreadgroupId {
-	return XreadgroupId{cs: append(c.cs, Id...)}
+	return XreadgroupId{cf: c.cf, cs: append(c.cs, Id...)}
 }
 
-func (c XreadgroupId) Build() []string {
-	return c.cs
+func (c XreadgroupId) Build() Completed {
+	return Completed(c)
 }
 
 type XreadgroupKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c XreadgroupKey) Id(Id ...string) XreadgroupId {
-	return XreadgroupId{cs: append(c.cs, Id...)}
+	return XreadgroupId{cf: c.cf, cs: append(c.cs, Id...)}
 }
 
 func (c XreadgroupKey) Key(Key ...string) XreadgroupKey {
-	return XreadgroupKey{cs: append(c.cs, Key...)}
+	return XreadgroupKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 type XreadgroupNoackNoack struct {
 	cs []string
+	cf uint32
 }
 
 func (c XreadgroupNoackNoack) Streams() XreadgroupStreamsStreams {
-	return XreadgroupStreamsStreams{cs: append(c.cs, "STREAMS")}
+	return XreadgroupStreamsStreams{cf: c.cf, cs: append(c.cs, "STREAMS")}
 }
 
 type XreadgroupStreamsStreams struct {
 	cs []string
+	cf uint32
 }
 
 func (c XreadgroupStreamsStreams) Key(Key ...string) XreadgroupKey {
-	return XreadgroupKey{cs: append(c.cs, Key...)}
+	return XreadgroupKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 type Xrevrange struct {
 	cs []string
+	cf uint32
 }
 
 func (c Xrevrange) Key(Key string) XrevrangeKey {
-	return XrevrangeKey{cs: append(c.cs, Key)}
+	return XrevrangeKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Xrevrange() (c Xrevrange) {
@@ -11357,46 +12546,51 @@ func (b *Builder) Xrevrange() (c Xrevrange) {
 
 type XrevrangeCount struct {
 	cs []string
+	cf uint32
 }
 
-func (c XrevrangeCount) Build() []string {
-	return c.cs
+func (c XrevrangeCount) Build() Completed {
+	return Completed(c)
 }
 
 type XrevrangeEnd struct {
 	cs []string
+	cf uint32
 }
 
 func (c XrevrangeEnd) Start(Start string) XrevrangeStart {
-	return XrevrangeStart{cs: append(c.cs, Start)}
+	return XrevrangeStart{cf: c.cf, cs: append(c.cs, Start)}
 }
 
 type XrevrangeKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c XrevrangeKey) End(End string) XrevrangeEnd {
-	return XrevrangeEnd{cs: append(c.cs, End)}
+	return XrevrangeEnd{cf: c.cf, cs: append(c.cs, End)}
 }
 
 type XrevrangeStart struct {
 	cs []string
+	cf uint32
 }
 
 func (c XrevrangeStart) Count(Count int64) XrevrangeCount {
-	return XrevrangeCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return XrevrangeCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c XrevrangeStart) Build() []string {
-	return c.cs
+func (c XrevrangeStart) Build() Completed {
+	return Completed(c)
 }
 
 type Xtrim struct {
 	cs []string
+	cf uint32
 }
 
 func (c Xtrim) Key(Key string) XtrimKey {
-	return XtrimKey{cs: append(c.cs, Key)}
+	return XtrimKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Xtrim() (c Xtrim) {
@@ -11406,90 +12600,98 @@ func (b *Builder) Xtrim() (c Xtrim) {
 
 type XtrimKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c XtrimKey) Maxlen() XtrimTrimStrategyMaxlen {
-	return XtrimTrimStrategyMaxlen{cs: append(c.cs, "MAXLEN")}
+	return XtrimTrimStrategyMaxlen{cf: c.cf, cs: append(c.cs, "MAXLEN")}
 }
 
 func (c XtrimKey) Minid() XtrimTrimStrategyMinid {
-	return XtrimTrimStrategyMinid{cs: append(c.cs, "MINID")}
+	return XtrimTrimStrategyMinid{cf: c.cf, cs: append(c.cs, "MINID")}
 }
 
 type XtrimTrimLimit struct {
 	cs []string
+	cf uint32
 }
 
-func (c XtrimTrimLimit) Build() []string {
-	return c.cs
+func (c XtrimTrimLimit) Build() Completed {
+	return Completed(c)
 }
 
 type XtrimTrimOperatorAlmost struct {
 	cs []string
+	cf uint32
 }
 
 func (c XtrimTrimOperatorAlmost) Threshold(Threshold string) XtrimTrimThreshold {
-	return XtrimTrimThreshold{cs: append(c.cs, Threshold)}
+	return XtrimTrimThreshold{cf: c.cf, cs: append(c.cs, Threshold)}
 }
 
 type XtrimTrimOperatorExact struct {
 	cs []string
+	cf uint32
 }
 
 func (c XtrimTrimOperatorExact) Threshold(Threshold string) XtrimTrimThreshold {
-	return XtrimTrimThreshold{cs: append(c.cs, Threshold)}
+	return XtrimTrimThreshold{cf: c.cf, cs: append(c.cs, Threshold)}
 }
 
 type XtrimTrimStrategyMaxlen struct {
 	cs []string
+	cf uint32
 }
 
 func (c XtrimTrimStrategyMaxlen) Exact() XtrimTrimOperatorExact {
-	return XtrimTrimOperatorExact{cs: append(c.cs, "=")}
+	return XtrimTrimOperatorExact{cf: c.cf, cs: append(c.cs, "=")}
 }
 
 func (c XtrimTrimStrategyMaxlen) Almost() XtrimTrimOperatorAlmost {
-	return XtrimTrimOperatorAlmost{cs: append(c.cs, "~")}
+	return XtrimTrimOperatorAlmost{cf: c.cf, cs: append(c.cs, "~")}
 }
 
 func (c XtrimTrimStrategyMaxlen) Threshold(Threshold string) XtrimTrimThreshold {
-	return XtrimTrimThreshold{cs: append(c.cs, Threshold)}
+	return XtrimTrimThreshold{cf: c.cf, cs: append(c.cs, Threshold)}
 }
 
 type XtrimTrimStrategyMinid struct {
 	cs []string
+	cf uint32
 }
 
 func (c XtrimTrimStrategyMinid) Exact() XtrimTrimOperatorExact {
-	return XtrimTrimOperatorExact{cs: append(c.cs, "=")}
+	return XtrimTrimOperatorExact{cf: c.cf, cs: append(c.cs, "=")}
 }
 
 func (c XtrimTrimStrategyMinid) Almost() XtrimTrimOperatorAlmost {
-	return XtrimTrimOperatorAlmost{cs: append(c.cs, "~")}
+	return XtrimTrimOperatorAlmost{cf: c.cf, cs: append(c.cs, "~")}
 }
 
 func (c XtrimTrimStrategyMinid) Threshold(Threshold string) XtrimTrimThreshold {
-	return XtrimTrimThreshold{cs: append(c.cs, Threshold)}
+	return XtrimTrimThreshold{cf: c.cf, cs: append(c.cs, Threshold)}
 }
 
 type XtrimTrimThreshold struct {
 	cs []string
+	cf uint32
 }
 
 func (c XtrimTrimThreshold) Limit(Count int64) XtrimTrimLimit {
-	return XtrimTrimLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Count, 10))}
+	return XtrimTrimLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Count, 10))}
 }
 
-func (c XtrimTrimThreshold) Build() []string {
-	return c.cs
+func (c XtrimTrimThreshold) Build() Completed {
+	return Completed(c)
 }
 
 type Zadd struct {
 	cs []string
+	cf uint32
 }
 
 func (c Zadd) Key(Key string) ZaddKey {
-	return ZaddKey{cs: append(c.cs, Key)}
+	return ZaddKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Zadd() (c Zadd) {
@@ -11499,154 +12701,163 @@ func (b *Builder) Zadd() (c Zadd) {
 
 type ZaddChangeCh struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZaddChangeCh) Incr() ZaddIncrementIncr {
-	return ZaddIncrementIncr{cs: append(c.cs, "INCR")}
+	return ZaddIncrementIncr{cf: c.cf, cs: append(c.cs, "INCR")}
 }
 
 func (c ZaddChangeCh) ScoreMember() ZaddScoreMember {
-	return ZaddScoreMember{cs: append(c.cs)}
+	return ZaddScoreMember{cf: c.cf, cs: append(c.cs, )}
 }
 
 type ZaddComparisonGt struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZaddComparisonGt) Ch() ZaddChangeCh {
-	return ZaddChangeCh{cs: append(c.cs, "CH")}
+	return ZaddChangeCh{cf: c.cf, cs: append(c.cs, "CH")}
 }
 
 func (c ZaddComparisonGt) Incr() ZaddIncrementIncr {
-	return ZaddIncrementIncr{cs: append(c.cs, "INCR")}
+	return ZaddIncrementIncr{cf: c.cf, cs: append(c.cs, "INCR")}
 }
 
 func (c ZaddComparisonGt) ScoreMember() ZaddScoreMember {
-	return ZaddScoreMember{cs: append(c.cs)}
+	return ZaddScoreMember{cf: c.cf, cs: append(c.cs, )}
 }
 
 type ZaddComparisonLt struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZaddComparisonLt) Ch() ZaddChangeCh {
-	return ZaddChangeCh{cs: append(c.cs, "CH")}
+	return ZaddChangeCh{cf: c.cf, cs: append(c.cs, "CH")}
 }
 
 func (c ZaddComparisonLt) Incr() ZaddIncrementIncr {
-	return ZaddIncrementIncr{cs: append(c.cs, "INCR")}
+	return ZaddIncrementIncr{cf: c.cf, cs: append(c.cs, "INCR")}
 }
 
 func (c ZaddComparisonLt) ScoreMember() ZaddScoreMember {
-	return ZaddScoreMember{cs: append(c.cs)}
+	return ZaddScoreMember{cf: c.cf, cs: append(c.cs, )}
 }
 
 type ZaddConditionNx struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZaddConditionNx) Gt() ZaddComparisonGt {
-	return ZaddComparisonGt{cs: append(c.cs, "GT")}
+	return ZaddComparisonGt{cf: c.cf, cs: append(c.cs, "GT")}
 }
 
 func (c ZaddConditionNx) Lt() ZaddComparisonLt {
-	return ZaddComparisonLt{cs: append(c.cs, "LT")}
+	return ZaddComparisonLt{cf: c.cf, cs: append(c.cs, "LT")}
 }
 
 func (c ZaddConditionNx) Ch() ZaddChangeCh {
-	return ZaddChangeCh{cs: append(c.cs, "CH")}
+	return ZaddChangeCh{cf: c.cf, cs: append(c.cs, "CH")}
 }
 
 func (c ZaddConditionNx) Incr() ZaddIncrementIncr {
-	return ZaddIncrementIncr{cs: append(c.cs, "INCR")}
+	return ZaddIncrementIncr{cf: c.cf, cs: append(c.cs, "INCR")}
 }
 
 func (c ZaddConditionNx) ScoreMember() ZaddScoreMember {
-	return ZaddScoreMember{cs: append(c.cs)}
+	return ZaddScoreMember{cf: c.cf, cs: append(c.cs, )}
 }
 
 type ZaddConditionXx struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZaddConditionXx) Gt() ZaddComparisonGt {
-	return ZaddComparisonGt{cs: append(c.cs, "GT")}
+	return ZaddComparisonGt{cf: c.cf, cs: append(c.cs, "GT")}
 }
 
 func (c ZaddConditionXx) Lt() ZaddComparisonLt {
-	return ZaddComparisonLt{cs: append(c.cs, "LT")}
+	return ZaddComparisonLt{cf: c.cf, cs: append(c.cs, "LT")}
 }
 
 func (c ZaddConditionXx) Ch() ZaddChangeCh {
-	return ZaddChangeCh{cs: append(c.cs, "CH")}
+	return ZaddChangeCh{cf: c.cf, cs: append(c.cs, "CH")}
 }
 
 func (c ZaddConditionXx) Incr() ZaddIncrementIncr {
-	return ZaddIncrementIncr{cs: append(c.cs, "INCR")}
+	return ZaddIncrementIncr{cf: c.cf, cs: append(c.cs, "INCR")}
 }
 
 func (c ZaddConditionXx) ScoreMember() ZaddScoreMember {
-	return ZaddScoreMember{cs: append(c.cs)}
+	return ZaddScoreMember{cf: c.cf, cs: append(c.cs, )}
 }
 
 type ZaddIncrementIncr struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZaddIncrementIncr) ScoreMember() ZaddScoreMember {
-	return ZaddScoreMember{cs: append(c.cs)}
+	return ZaddScoreMember{cf: c.cf, cs: append(c.cs, )}
 }
 
 type ZaddKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZaddKey) Nx() ZaddConditionNx {
-	return ZaddConditionNx{cs: append(c.cs, "NX")}
+	return ZaddConditionNx{cf: c.cf, cs: append(c.cs, "NX")}
 }
 
 func (c ZaddKey) Xx() ZaddConditionXx {
-	return ZaddConditionXx{cs: append(c.cs, "XX")}
+	return ZaddConditionXx{cf: c.cf, cs: append(c.cs, "XX")}
 }
 
 func (c ZaddKey) Gt() ZaddComparisonGt {
-	return ZaddComparisonGt{cs: append(c.cs, "GT")}
+	return ZaddComparisonGt{cf: c.cf, cs: append(c.cs, "GT")}
 }
 
 func (c ZaddKey) Lt() ZaddComparisonLt {
-	return ZaddComparisonLt{cs: append(c.cs, "LT")}
+	return ZaddComparisonLt{cf: c.cf, cs: append(c.cs, "LT")}
 }
 
 func (c ZaddKey) Ch() ZaddChangeCh {
-	return ZaddChangeCh{cs: append(c.cs, "CH")}
+	return ZaddChangeCh{cf: c.cf, cs: append(c.cs, "CH")}
 }
 
 func (c ZaddKey) Incr() ZaddIncrementIncr {
-	return ZaddIncrementIncr{cs: append(c.cs, "INCR")}
+	return ZaddIncrementIncr{cf: c.cf, cs: append(c.cs, "INCR")}
 }
 
 func (c ZaddKey) ScoreMember() ZaddScoreMember {
-	return ZaddScoreMember{cs: append(c.cs)}
+	return ZaddScoreMember{cf: c.cf, cs: append(c.cs, )}
 }
 
 type ZaddScoreMember struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZaddScoreMember) ScoreMember(Score float64, Member string) ZaddScoreMember {
-	return ZaddScoreMember{cs: append(c.cs, strconv.FormatFloat(Score, 'f', -1, 64), Member)}
+	return ZaddScoreMember{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Score, 'f', -1, 64), Member)}
 }
 
-func (c ZaddScoreMember) Build() []string {
-	return c.cs
+func (c ZaddScoreMember) Build() Completed {
+	return Completed(c)
 }
 
 type Zcard struct {
 	cs []string
+	cf uint32
 }
 
 func (c Zcard) Key(Key string) ZcardKey {
-	return ZcardKey{cs: append(c.cs, Key)}
+	return ZcardKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Zcard() (c Zcard) {
@@ -11656,18 +12867,24 @@ func (b *Builder) Zcard() (c Zcard) {
 
 type ZcardKey struct {
 	cs []string
+	cf uint32
 }
 
-func (c ZcardKey) Build() []string {
-	return c.cs
+func (c ZcardKey) Build() Completed {
+	return Completed(c)
+}
+
+func (c ZcardKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Zcount struct {
 	cs []string
+	cf uint32
 }
 
 func (c Zcount) Key(Key string) ZcountKey {
-	return ZcountKey{cs: append(c.cs, Key)}
+	return ZcountKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Zcount() (c Zcount) {
@@ -11677,34 +12894,50 @@ func (b *Builder) Zcount() (c Zcount) {
 
 type ZcountKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZcountKey) Min(Min float64) ZcountMin {
-	return ZcountMin{cs: append(c.cs, strconv.FormatFloat(Min, 'f', -1, 64))}
+	return ZcountMin{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Min, 'f', -1, 64))}
+}
+
+func (c ZcountKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type ZcountMax struct {
 	cs []string
+	cf uint32
 }
 
-func (c ZcountMax) Build() []string {
-	return c.cs
+func (c ZcountMax) Build() Completed {
+	return Completed(c)
+}
+
+func (c ZcountMax) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type ZcountMin struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZcountMin) Max(Max float64) ZcountMax {
-	return ZcountMax{cs: append(c.cs, strconv.FormatFloat(Max, 'f', -1, 64))}
+	return ZcountMax{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Max, 'f', -1, 64))}
+}
+
+func (c ZcountMin) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Zdiff struct {
 	cs []string
+	cf uint32
 }
 
 func (c Zdiff) Numkeys(Numkeys int64) ZdiffNumkeys {
-	return ZdiffNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
+	return ZdiffNumkeys{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
 }
 
 func (b *Builder) Zdiff() (c Zdiff) {
@@ -11714,42 +12947,46 @@ func (b *Builder) Zdiff() (c Zdiff) {
 
 type ZdiffKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZdiffKey) Withscores() ZdiffWithscoresWithscores {
-	return ZdiffWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
+	return ZdiffWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
 }
 
 func (c ZdiffKey) Key(Key ...string) ZdiffKey {
-	return ZdiffKey{cs: append(c.cs, Key...)}
+	return ZdiffKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
-func (c ZdiffKey) Build() []string {
-	return c.cs
+func (c ZdiffKey) Build() Completed {
+	return Completed(c)
 }
 
 type ZdiffNumkeys struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZdiffNumkeys) Key(Key ...string) ZdiffKey {
-	return ZdiffKey{cs: append(c.cs, Key...)}
+	return ZdiffKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 type ZdiffWithscoresWithscores struct {
 	cs []string
+	cf uint32
 }
 
-func (c ZdiffWithscoresWithscores) Build() []string {
-	return c.cs
+func (c ZdiffWithscoresWithscores) Build() Completed {
+	return Completed(c)
 }
 
 type Zdiffstore struct {
 	cs []string
+	cf uint32
 }
 
 func (c Zdiffstore) Destination(Destination string) ZdiffstoreDestination {
-	return ZdiffstoreDestination{cs: append(c.cs, Destination)}
+	return ZdiffstoreDestination{cf: c.cf, cs: append(c.cs, Destination)}
 }
 
 func (b *Builder) Zdiffstore() (c Zdiffstore) {
@@ -11759,38 +12996,42 @@ func (b *Builder) Zdiffstore() (c Zdiffstore) {
 
 type ZdiffstoreDestination struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZdiffstoreDestination) Numkeys(Numkeys int64) ZdiffstoreNumkeys {
-	return ZdiffstoreNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
+	return ZdiffstoreNumkeys{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
 }
 
 type ZdiffstoreKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZdiffstoreKey) Key(Key ...string) ZdiffstoreKey {
-	return ZdiffstoreKey{cs: append(c.cs, Key...)}
+	return ZdiffstoreKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
-func (c ZdiffstoreKey) Build() []string {
-	return c.cs
+func (c ZdiffstoreKey) Build() Completed {
+	return Completed(c)
 }
 
 type ZdiffstoreNumkeys struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZdiffstoreNumkeys) Key(Key ...string) ZdiffstoreKey {
-	return ZdiffstoreKey{cs: append(c.cs, Key...)}
+	return ZdiffstoreKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 type Zincrby struct {
 	cs []string
+	cf uint32
 }
 
 func (c Zincrby) Key(Key string) ZincrbyKey {
-	return ZincrbyKey{cs: append(c.cs, Key)}
+	return ZincrbyKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Zincrby() (c Zincrby) {
@@ -11800,34 +13041,38 @@ func (b *Builder) Zincrby() (c Zincrby) {
 
 type ZincrbyIncrement struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZincrbyIncrement) Member(Member string) ZincrbyMember {
-	return ZincrbyMember{cs: append(c.cs, Member)}
+	return ZincrbyMember{cf: c.cf, cs: append(c.cs, Member)}
 }
 
 type ZincrbyKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZincrbyKey) Increment(Increment int64) ZincrbyIncrement {
-	return ZincrbyIncrement{cs: append(c.cs, strconv.FormatInt(Increment, 10))}
+	return ZincrbyIncrement{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Increment, 10))}
 }
 
 type ZincrbyMember struct {
 	cs []string
+	cf uint32
 }
 
-func (c ZincrbyMember) Build() []string {
-	return c.cs
+func (c ZincrbyMember) Build() Completed {
+	return Completed(c)
 }
 
 type Zinter struct {
 	cs []string
+	cf uint32
 }
 
 func (c Zinter) Numkeys(Numkeys int64) ZinterNumkeys {
-	return ZinterNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
+	return ZinterNumkeys{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
 }
 
 func (b *Builder) Zinter() (c Zinter) {
@@ -11837,42 +13082,46 @@ func (b *Builder) Zinter() (c Zinter) {
 
 type ZinterAggregateMax struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZinterAggregateMax) Withscores() ZinterWithscoresWithscores {
-	return ZinterWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
+	return ZinterWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
 }
 
-func (c ZinterAggregateMax) Build() []string {
-	return c.cs
+func (c ZinterAggregateMax) Build() Completed {
+	return Completed(c)
 }
 
 type ZinterAggregateMin struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZinterAggregateMin) Withscores() ZinterWithscoresWithscores {
-	return ZinterWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
+	return ZinterWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
 }
 
-func (c ZinterAggregateMin) Build() []string {
-	return c.cs
+func (c ZinterAggregateMin) Build() Completed {
+	return Completed(c)
 }
 
 type ZinterAggregateSum struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZinterAggregateSum) Withscores() ZinterWithscoresWithscores {
-	return ZinterWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
+	return ZinterWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
 }
 
-func (c ZinterAggregateSum) Build() []string {
-	return c.cs
+func (c ZinterAggregateSum) Build() Completed {
+	return Completed(c)
 }
 
 type ZinterKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZinterKey) Weights(Weight ...int64) ZinterWeights {
@@ -11880,86 +13129,90 @@ func (c ZinterKey) Weights(Weight ...int64) ZinterWeights {
 	for _, n := range Weight {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return ZinterWeights{cs: c.cs}
+	return ZinterWeights{cf: c.cf, cs: c.cs}
 }
 
 func (c ZinterKey) Sum() ZinterAggregateSum {
-	return ZinterAggregateSum{cs: append(c.cs, "SUM")}
+	return ZinterAggregateSum{cf: c.cf, cs: append(c.cs, "SUM")}
 }
 
 func (c ZinterKey) Min() ZinterAggregateMin {
-	return ZinterAggregateMin{cs: append(c.cs, "MIN")}
+	return ZinterAggregateMin{cf: c.cf, cs: append(c.cs, "MIN")}
 }
 
 func (c ZinterKey) Max() ZinterAggregateMax {
-	return ZinterAggregateMax{cs: append(c.cs, "MAX")}
+	return ZinterAggregateMax{cf: c.cf, cs: append(c.cs, "MAX")}
 }
 
 func (c ZinterKey) Withscores() ZinterWithscoresWithscores {
-	return ZinterWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
+	return ZinterWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
 }
 
 func (c ZinterKey) Key(Key ...string) ZinterKey {
-	return ZinterKey{cs: append(c.cs, Key...)}
+	return ZinterKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
-func (c ZinterKey) Build() []string {
-	return c.cs
+func (c ZinterKey) Build() Completed {
+	return Completed(c)
 }
 
 type ZinterNumkeys struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZinterNumkeys) Key(Key ...string) ZinterKey {
-	return ZinterKey{cs: append(c.cs, Key...)}
+	return ZinterKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 type ZinterWeights struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZinterWeights) Sum() ZinterAggregateSum {
-	return ZinterAggregateSum{cs: append(c.cs, "SUM")}
+	return ZinterAggregateSum{cf: c.cf, cs: append(c.cs, "SUM")}
 }
 
 func (c ZinterWeights) Min() ZinterAggregateMin {
-	return ZinterAggregateMin{cs: append(c.cs, "MIN")}
+	return ZinterAggregateMin{cf: c.cf, cs: append(c.cs, "MIN")}
 }
 
 func (c ZinterWeights) Max() ZinterAggregateMax {
-	return ZinterAggregateMax{cs: append(c.cs, "MAX")}
+	return ZinterAggregateMax{cf: c.cf, cs: append(c.cs, "MAX")}
 }
 
 func (c ZinterWeights) Withscores() ZinterWithscoresWithscores {
-	return ZinterWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
+	return ZinterWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
 }
 
 func (c ZinterWeights) Weights(Weights ...int64) ZinterWeights {
 	for _, n := range Weights {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return ZinterWeights{cs: c.cs}
+	return ZinterWeights{cf: c.cf, cs: c.cs}
 }
 
-func (c ZinterWeights) Build() []string {
-	return c.cs
+func (c ZinterWeights) Build() Completed {
+	return Completed(c)
 }
 
 type ZinterWithscoresWithscores struct {
 	cs []string
+	cf uint32
 }
 
-func (c ZinterWithscoresWithscores) Build() []string {
-	return c.cs
+func (c ZinterWithscoresWithscores) Build() Completed {
+	return Completed(c)
 }
 
 type Zintercard struct {
 	cs []string
+	cf uint32
 }
 
 func (c Zintercard) Numkeys(Numkeys int64) ZintercardNumkeys {
-	return ZintercardNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
+	return ZintercardNumkeys{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
 }
 
 func (b *Builder) Zintercard() (c Zintercard) {
@@ -11969,30 +13222,33 @@ func (b *Builder) Zintercard() (c Zintercard) {
 
 type ZintercardKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZintercardKey) Key(Key ...string) ZintercardKey {
-	return ZintercardKey{cs: append(c.cs, Key...)}
+	return ZintercardKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
-func (c ZintercardKey) Build() []string {
-	return c.cs
+func (c ZintercardKey) Build() Completed {
+	return Completed(c)
 }
 
 type ZintercardNumkeys struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZintercardNumkeys) Key(Key ...string) ZintercardKey {
-	return ZintercardKey{cs: append(c.cs, Key...)}
+	return ZintercardKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 type Zinterstore struct {
 	cs []string
+	cf uint32
 }
 
 func (c Zinterstore) Destination(Destination string) ZinterstoreDestination {
-	return ZinterstoreDestination{cs: append(c.cs, Destination)}
+	return ZinterstoreDestination{cf: c.cf, cs: append(c.cs, Destination)}
 }
 
 func (b *Builder) Zinterstore() (c Zinterstore) {
@@ -12002,38 +13258,43 @@ func (b *Builder) Zinterstore() (c Zinterstore) {
 
 type ZinterstoreAggregateMax struct {
 	cs []string
+	cf uint32
 }
 
-func (c ZinterstoreAggregateMax) Build() []string {
-	return c.cs
+func (c ZinterstoreAggregateMax) Build() Completed {
+	return Completed(c)
 }
 
 type ZinterstoreAggregateMin struct {
 	cs []string
+	cf uint32
 }
 
-func (c ZinterstoreAggregateMin) Build() []string {
-	return c.cs
+func (c ZinterstoreAggregateMin) Build() Completed {
+	return Completed(c)
 }
 
 type ZinterstoreAggregateSum struct {
 	cs []string
+	cf uint32
 }
 
-func (c ZinterstoreAggregateSum) Build() []string {
-	return c.cs
+func (c ZinterstoreAggregateSum) Build() Completed {
+	return Completed(c)
 }
 
 type ZinterstoreDestination struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZinterstoreDestination) Numkeys(Numkeys int64) ZinterstoreNumkeys {
-	return ZinterstoreNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
+	return ZinterstoreNumkeys{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
 }
 
 type ZinterstoreKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZinterstoreKey) Weights(Weight ...int64) ZinterstoreWeights {
@@ -12041,70 +13302,73 @@ func (c ZinterstoreKey) Weights(Weight ...int64) ZinterstoreWeights {
 	for _, n := range Weight {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return ZinterstoreWeights{cs: c.cs}
+	return ZinterstoreWeights{cf: c.cf, cs: c.cs}
 }
 
 func (c ZinterstoreKey) Sum() ZinterstoreAggregateSum {
-	return ZinterstoreAggregateSum{cs: append(c.cs, "SUM")}
+	return ZinterstoreAggregateSum{cf: c.cf, cs: append(c.cs, "SUM")}
 }
 
 func (c ZinterstoreKey) Min() ZinterstoreAggregateMin {
-	return ZinterstoreAggregateMin{cs: append(c.cs, "MIN")}
+	return ZinterstoreAggregateMin{cf: c.cf, cs: append(c.cs, "MIN")}
 }
 
 func (c ZinterstoreKey) Max() ZinterstoreAggregateMax {
-	return ZinterstoreAggregateMax{cs: append(c.cs, "MAX")}
+	return ZinterstoreAggregateMax{cf: c.cf, cs: append(c.cs, "MAX")}
 }
 
 func (c ZinterstoreKey) Key(Key ...string) ZinterstoreKey {
-	return ZinterstoreKey{cs: append(c.cs, Key...)}
+	return ZinterstoreKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
-func (c ZinterstoreKey) Build() []string {
-	return c.cs
+func (c ZinterstoreKey) Build() Completed {
+	return Completed(c)
 }
 
 type ZinterstoreNumkeys struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZinterstoreNumkeys) Key(Key ...string) ZinterstoreKey {
-	return ZinterstoreKey{cs: append(c.cs, Key...)}
+	return ZinterstoreKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 type ZinterstoreWeights struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZinterstoreWeights) Sum() ZinterstoreAggregateSum {
-	return ZinterstoreAggregateSum{cs: append(c.cs, "SUM")}
+	return ZinterstoreAggregateSum{cf: c.cf, cs: append(c.cs, "SUM")}
 }
 
 func (c ZinterstoreWeights) Min() ZinterstoreAggregateMin {
-	return ZinterstoreAggregateMin{cs: append(c.cs, "MIN")}
+	return ZinterstoreAggregateMin{cf: c.cf, cs: append(c.cs, "MIN")}
 }
 
 func (c ZinterstoreWeights) Max() ZinterstoreAggregateMax {
-	return ZinterstoreAggregateMax{cs: append(c.cs, "MAX")}
+	return ZinterstoreAggregateMax{cf: c.cf, cs: append(c.cs, "MAX")}
 }
 
 func (c ZinterstoreWeights) Weights(Weights ...int64) ZinterstoreWeights {
 	for _, n := range Weights {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return ZinterstoreWeights{cs: c.cs}
+	return ZinterstoreWeights{cf: c.cf, cs: c.cs}
 }
 
-func (c ZinterstoreWeights) Build() []string {
-	return c.cs
+func (c ZinterstoreWeights) Build() Completed {
+	return Completed(c)
 }
 
 type Zlexcount struct {
 	cs []string
+	cf uint32
 }
 
 func (c Zlexcount) Key(Key string) ZlexcountKey {
-	return ZlexcountKey{cs: append(c.cs, Key)}
+	return ZlexcountKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Zlexcount() (c Zlexcount) {
@@ -12114,34 +13378,50 @@ func (b *Builder) Zlexcount() (c Zlexcount) {
 
 type ZlexcountKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZlexcountKey) Min(Min string) ZlexcountMin {
-	return ZlexcountMin{cs: append(c.cs, Min)}
+	return ZlexcountMin{cf: c.cf, cs: append(c.cs, Min)}
+}
+
+func (c ZlexcountKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type ZlexcountMax struct {
 	cs []string
+	cf uint32
 }
 
-func (c ZlexcountMax) Build() []string {
-	return c.cs
+func (c ZlexcountMax) Build() Completed {
+	return Completed(c)
+}
+
+func (c ZlexcountMax) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type ZlexcountMin struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZlexcountMin) Max(Max string) ZlexcountMax {
-	return ZlexcountMax{cs: append(c.cs, Max)}
+	return ZlexcountMax{cf: c.cf, cs: append(c.cs, Max)}
+}
+
+func (c ZlexcountMin) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Zmscore struct {
 	cs []string
+	cf uint32
 }
 
 func (c Zmscore) Key(Key string) ZmscoreKey {
-	return ZmscoreKey{cs: append(c.cs, Key)}
+	return ZmscoreKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Zmscore() (c Zmscore) {
@@ -12151,30 +13431,41 @@ func (b *Builder) Zmscore() (c Zmscore) {
 
 type ZmscoreKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZmscoreKey) Member(Member ...string) ZmscoreMember {
-	return ZmscoreMember{cs: append(c.cs, Member...)}
+	return ZmscoreMember{cf: c.cf, cs: append(c.cs, Member...)}
+}
+
+func (c ZmscoreKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type ZmscoreMember struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZmscoreMember) Member(Member ...string) ZmscoreMember {
-	return ZmscoreMember{cs: append(c.cs, Member...)}
+	return ZmscoreMember{cf: c.cf, cs: append(c.cs, Member...)}
 }
 
-func (c ZmscoreMember) Build() []string {
-	return c.cs
+func (c ZmscoreMember) Build() Completed {
+	return Completed(c)
+}
+
+func (c ZmscoreMember) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Zpopmax struct {
 	cs []string
+	cf uint32
 }
 
 func (c Zpopmax) Key(Key string) ZpopmaxKey {
-	return ZpopmaxKey{cs: append(c.cs, Key)}
+	return ZpopmaxKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Zpopmax() (c Zpopmax) {
@@ -12184,30 +13475,33 @@ func (b *Builder) Zpopmax() (c Zpopmax) {
 
 type ZpopmaxCount struct {
 	cs []string
+	cf uint32
 }
 
-func (c ZpopmaxCount) Build() []string {
-	return c.cs
+func (c ZpopmaxCount) Build() Completed {
+	return Completed(c)
 }
 
 type ZpopmaxKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZpopmaxKey) Count(Count int64) ZpopmaxCount {
-	return ZpopmaxCount{cs: append(c.cs, strconv.FormatInt(Count, 10))}
+	return ZpopmaxCount{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Count, 10))}
 }
 
-func (c ZpopmaxKey) Build() []string {
-	return c.cs
+func (c ZpopmaxKey) Build() Completed {
+	return Completed(c)
 }
 
 type Zpopmin struct {
 	cs []string
+	cf uint32
 }
 
 func (c Zpopmin) Key(Key string) ZpopminKey {
-	return ZpopminKey{cs: append(c.cs, Key)}
+	return ZpopminKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Zpopmin() (c Zpopmin) {
@@ -12217,30 +13511,33 @@ func (b *Builder) Zpopmin() (c Zpopmin) {
 
 type ZpopminCount struct {
 	cs []string
+	cf uint32
 }
 
-func (c ZpopminCount) Build() []string {
-	return c.cs
+func (c ZpopminCount) Build() Completed {
+	return Completed(c)
 }
 
 type ZpopminKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZpopminKey) Count(Count int64) ZpopminCount {
-	return ZpopminCount{cs: append(c.cs, strconv.FormatInt(Count, 10))}
+	return ZpopminCount{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Count, 10))}
 }
 
-func (c ZpopminKey) Build() []string {
-	return c.cs
+func (c ZpopminKey) Build() Completed {
+	return Completed(c)
 }
 
 type Zrandmember struct {
 	cs []string
+	cf uint32
 }
 
 func (c Zrandmember) Key(Key string) ZrandmemberKey {
-	return ZrandmemberKey{cs: append(c.cs, Key)}
+	return ZrandmemberKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Zrandmember() (c Zrandmember) {
@@ -12250,38 +13547,42 @@ func (b *Builder) Zrandmember() (c Zrandmember) {
 
 type ZrandmemberKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZrandmemberKey) Count(Count int64) ZrandmemberOptionsCount {
-	return ZrandmemberOptionsCount{cs: append(c.cs, strconv.FormatInt(Count, 10))}
+	return ZrandmemberOptionsCount{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Count, 10))}
 }
 
 type ZrandmemberOptionsCount struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZrandmemberOptionsCount) Withscores() ZrandmemberOptionsWithscoresWithscores {
-	return ZrandmemberOptionsWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
+	return ZrandmemberOptionsWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
 }
 
-func (c ZrandmemberOptionsCount) Build() []string {
-	return c.cs
+func (c ZrandmemberOptionsCount) Build() Completed {
+	return Completed(c)
 }
 
 type ZrandmemberOptionsWithscoresWithscores struct {
 	cs []string
+	cf uint32
 }
 
-func (c ZrandmemberOptionsWithscoresWithscores) Build() []string {
-	return c.cs
+func (c ZrandmemberOptionsWithscoresWithscores) Build() Completed {
+	return Completed(c)
 }
 
 type Zrange struct {
 	cs []string
+	cf uint32
 }
 
 func (c Zrange) Key(Key string) ZrangeKey {
-	return ZrangeKey{cs: append(c.cs, Key)}
+	return ZrangeKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Zrange() (c Zrange) {
@@ -12291,130 +13592,171 @@ func (b *Builder) Zrange() (c Zrange) {
 
 type ZrangeKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZrangeKey) Min(Min string) ZrangeMin {
-	return ZrangeMin{cs: append(c.cs, Min)}
+	return ZrangeMin{cf: c.cf, cs: append(c.cs, Min)}
+}
+
+func (c ZrangeKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type ZrangeLimit struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZrangeLimit) Withscores() ZrangeWithscoresWithscores {
-	return ZrangeWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
+	return ZrangeWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
 }
 
-func (c ZrangeLimit) Build() []string {
-	return c.cs
+func (c ZrangeLimit) Build() Completed {
+	return Completed(c)
+}
+
+func (c ZrangeLimit) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type ZrangeMax struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZrangeMax) Byscore() ZrangeSortbyByscore {
-	return ZrangeSortbyByscore{cs: append(c.cs, "BYSCORE")}
+	return ZrangeSortbyByscore{cf: c.cf, cs: append(c.cs, "BYSCORE")}
 }
 
 func (c ZrangeMax) Bylex() ZrangeSortbyBylex {
-	return ZrangeSortbyBylex{cs: append(c.cs, "BYLEX")}
+	return ZrangeSortbyBylex{cf: c.cf, cs: append(c.cs, "BYLEX")}
 }
 
 func (c ZrangeMax) Rev() ZrangeRevRev {
-	return ZrangeRevRev{cs: append(c.cs, "REV")}
+	return ZrangeRevRev{cf: c.cf, cs: append(c.cs, "REV")}
 }
 
 func (c ZrangeMax) Limit(Offset int64, Count int64) ZrangeLimit {
-	return ZrangeLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return ZrangeLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
 }
 
 func (c ZrangeMax) Withscores() ZrangeWithscoresWithscores {
-	return ZrangeWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
+	return ZrangeWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
 }
 
-func (c ZrangeMax) Build() []string {
-	return c.cs
+func (c ZrangeMax) Build() Completed {
+	return Completed(c)
+}
+
+func (c ZrangeMax) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type ZrangeMin struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZrangeMin) Max(Max string) ZrangeMax {
-	return ZrangeMax{cs: append(c.cs, Max)}
+	return ZrangeMax{cf: c.cf, cs: append(c.cs, Max)}
+}
+
+func (c ZrangeMin) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type ZrangeRevRev struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZrangeRevRev) Limit(Offset int64, Count int64) ZrangeLimit {
-	return ZrangeLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return ZrangeLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
 }
 
 func (c ZrangeRevRev) Withscores() ZrangeWithscoresWithscores {
-	return ZrangeWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
+	return ZrangeWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
 }
 
-func (c ZrangeRevRev) Build() []string {
-	return c.cs
+func (c ZrangeRevRev) Build() Completed {
+	return Completed(c)
+}
+
+func (c ZrangeRevRev) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type ZrangeSortbyBylex struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZrangeSortbyBylex) Rev() ZrangeRevRev {
-	return ZrangeRevRev{cs: append(c.cs, "REV")}
+	return ZrangeRevRev{cf: c.cf, cs: append(c.cs, "REV")}
 }
 
 func (c ZrangeSortbyBylex) Limit(Offset int64, Count int64) ZrangeLimit {
-	return ZrangeLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return ZrangeLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
 }
 
 func (c ZrangeSortbyBylex) Withscores() ZrangeWithscoresWithscores {
-	return ZrangeWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
+	return ZrangeWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
 }
 
-func (c ZrangeSortbyBylex) Build() []string {
-	return c.cs
+func (c ZrangeSortbyBylex) Build() Completed {
+	return Completed(c)
+}
+
+func (c ZrangeSortbyBylex) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type ZrangeSortbyByscore struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZrangeSortbyByscore) Rev() ZrangeRevRev {
-	return ZrangeRevRev{cs: append(c.cs, "REV")}
+	return ZrangeRevRev{cf: c.cf, cs: append(c.cs, "REV")}
 }
 
 func (c ZrangeSortbyByscore) Limit(Offset int64, Count int64) ZrangeLimit {
-	return ZrangeLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return ZrangeLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
 }
 
 func (c ZrangeSortbyByscore) Withscores() ZrangeWithscoresWithscores {
-	return ZrangeWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
+	return ZrangeWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
 }
 
-func (c ZrangeSortbyByscore) Build() []string {
-	return c.cs
+func (c ZrangeSortbyByscore) Build() Completed {
+	return Completed(c)
+}
+
+func (c ZrangeSortbyByscore) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type ZrangeWithscoresWithscores struct {
 	cs []string
+	cf uint32
 }
 
-func (c ZrangeWithscoresWithscores) Build() []string {
-	return c.cs
+func (c ZrangeWithscoresWithscores) Build() Completed {
+	return Completed(c)
+}
+
+func (c ZrangeWithscoresWithscores) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Zrangebylex struct {
 	cs []string
+	cf uint32
 }
 
 func (c Zrangebylex) Key(Key string) ZrangebylexKey {
-	return ZrangebylexKey{cs: append(c.cs, Key)}
+	return ZrangebylexKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Zrangebylex() (c Zrangebylex) {
@@ -12424,46 +13766,67 @@ func (b *Builder) Zrangebylex() (c Zrangebylex) {
 
 type ZrangebylexKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZrangebylexKey) Min(Min string) ZrangebylexMin {
-	return ZrangebylexMin{cs: append(c.cs, Min)}
+	return ZrangebylexMin{cf: c.cf, cs: append(c.cs, Min)}
+}
+
+func (c ZrangebylexKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type ZrangebylexLimit struct {
 	cs []string
+	cf uint32
 }
 
-func (c ZrangebylexLimit) Build() []string {
-	return c.cs
+func (c ZrangebylexLimit) Build() Completed {
+	return Completed(c)
+}
+
+func (c ZrangebylexLimit) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type ZrangebylexMax struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZrangebylexMax) Limit(Offset int64, Count int64) ZrangebylexLimit {
-	return ZrangebylexLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return ZrangebylexLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
 }
 
-func (c ZrangebylexMax) Build() []string {
-	return c.cs
+func (c ZrangebylexMax) Build() Completed {
+	return Completed(c)
+}
+
+func (c ZrangebylexMax) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type ZrangebylexMin struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZrangebylexMin) Max(Max string) ZrangebylexMax {
-	return ZrangebylexMax{cs: append(c.cs, Max)}
+	return ZrangebylexMax{cf: c.cf, cs: append(c.cs, Max)}
+}
+
+func (c ZrangebylexMin) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Zrangebyscore struct {
 	cs []string
+	cf uint32
 }
 
 func (c Zrangebyscore) Key(Key string) ZrangebyscoreKey {
-	return ZrangebyscoreKey{cs: append(c.cs, Key)}
+	return ZrangebyscoreKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Zrangebyscore() (c Zrangebyscore) {
@@ -12473,62 +13836,88 @@ func (b *Builder) Zrangebyscore() (c Zrangebyscore) {
 
 type ZrangebyscoreKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZrangebyscoreKey) Min(Min float64) ZrangebyscoreMin {
-	return ZrangebyscoreMin{cs: append(c.cs, strconv.FormatFloat(Min, 'f', -1, 64))}
+	return ZrangebyscoreMin{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Min, 'f', -1, 64))}
+}
+
+func (c ZrangebyscoreKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type ZrangebyscoreLimit struct {
 	cs []string
+	cf uint32
 }
 
-func (c ZrangebyscoreLimit) Build() []string {
-	return c.cs
+func (c ZrangebyscoreLimit) Build() Completed {
+	return Completed(c)
+}
+
+func (c ZrangebyscoreLimit) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type ZrangebyscoreMax struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZrangebyscoreMax) Withscores() ZrangebyscoreWithscoresWithscores {
-	return ZrangebyscoreWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
+	return ZrangebyscoreWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
 }
 
 func (c ZrangebyscoreMax) Limit(Offset int64, Count int64) ZrangebyscoreLimit {
-	return ZrangebyscoreLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return ZrangebyscoreLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
 }
 
-func (c ZrangebyscoreMax) Build() []string {
-	return c.cs
+func (c ZrangebyscoreMax) Build() Completed {
+	return Completed(c)
+}
+
+func (c ZrangebyscoreMax) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type ZrangebyscoreMin struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZrangebyscoreMin) Max(Max float64) ZrangebyscoreMax {
-	return ZrangebyscoreMax{cs: append(c.cs, strconv.FormatFloat(Max, 'f', -1, 64))}
+	return ZrangebyscoreMax{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Max, 'f', -1, 64))}
+}
+
+func (c ZrangebyscoreMin) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type ZrangebyscoreWithscoresWithscores struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZrangebyscoreWithscoresWithscores) Limit(Offset int64, Count int64) ZrangebyscoreLimit {
-	return ZrangebyscoreLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return ZrangebyscoreLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
 }
 
-func (c ZrangebyscoreWithscoresWithscores) Build() []string {
-	return c.cs
+func (c ZrangebyscoreWithscoresWithscores) Build() Completed {
+	return Completed(c)
+}
+
+func (c ZrangebyscoreWithscoresWithscores) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Zrangestore struct {
 	cs []string
+	cf uint32
 }
 
 func (c Zrangestore) Dst(Dst string) ZrangestoreDst {
-	return ZrangestoreDst{cs: append(c.cs, Dst)}
+	return ZrangestoreDst{cf: c.cf, cs: append(c.cs, Dst)}
 }
 
 func (b *Builder) Zrangestore() (c Zrangestore) {
@@ -12538,110 +13927,119 @@ func (b *Builder) Zrangestore() (c Zrangestore) {
 
 type ZrangestoreDst struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZrangestoreDst) Src(Src string) ZrangestoreSrc {
-	return ZrangestoreSrc{cs: append(c.cs, Src)}
+	return ZrangestoreSrc{cf: c.cf, cs: append(c.cs, Src)}
 }
 
 type ZrangestoreLimit struct {
 	cs []string
+	cf uint32
 }
 
-func (c ZrangestoreLimit) Build() []string {
-	return c.cs
+func (c ZrangestoreLimit) Build() Completed {
+	return Completed(c)
 }
 
 type ZrangestoreMax struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZrangestoreMax) Byscore() ZrangestoreSortbyByscore {
-	return ZrangestoreSortbyByscore{cs: append(c.cs, "BYSCORE")}
+	return ZrangestoreSortbyByscore{cf: c.cf, cs: append(c.cs, "BYSCORE")}
 }
 
 func (c ZrangestoreMax) Bylex() ZrangestoreSortbyBylex {
-	return ZrangestoreSortbyBylex{cs: append(c.cs, "BYLEX")}
+	return ZrangestoreSortbyBylex{cf: c.cf, cs: append(c.cs, "BYLEX")}
 }
 
 func (c ZrangestoreMax) Rev() ZrangestoreRevRev {
-	return ZrangestoreRevRev{cs: append(c.cs, "REV")}
+	return ZrangestoreRevRev{cf: c.cf, cs: append(c.cs, "REV")}
 }
 
 func (c ZrangestoreMax) Limit(Offset int64, Count int64) ZrangestoreLimit {
-	return ZrangestoreLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return ZrangestoreLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
 }
 
-func (c ZrangestoreMax) Build() []string {
-	return c.cs
+func (c ZrangestoreMax) Build() Completed {
+	return Completed(c)
 }
 
 type ZrangestoreMin struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZrangestoreMin) Max(Max string) ZrangestoreMax {
-	return ZrangestoreMax{cs: append(c.cs, Max)}
+	return ZrangestoreMax{cf: c.cf, cs: append(c.cs, Max)}
 }
 
 type ZrangestoreRevRev struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZrangestoreRevRev) Limit(Offset int64, Count int64) ZrangestoreLimit {
-	return ZrangestoreLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return ZrangestoreLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
 }
 
-func (c ZrangestoreRevRev) Build() []string {
-	return c.cs
+func (c ZrangestoreRevRev) Build() Completed {
+	return Completed(c)
 }
 
 type ZrangestoreSortbyBylex struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZrangestoreSortbyBylex) Rev() ZrangestoreRevRev {
-	return ZrangestoreRevRev{cs: append(c.cs, "REV")}
+	return ZrangestoreRevRev{cf: c.cf, cs: append(c.cs, "REV")}
 }
 
 func (c ZrangestoreSortbyBylex) Limit(Offset int64, Count int64) ZrangestoreLimit {
-	return ZrangestoreLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return ZrangestoreLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
 }
 
-func (c ZrangestoreSortbyBylex) Build() []string {
-	return c.cs
+func (c ZrangestoreSortbyBylex) Build() Completed {
+	return Completed(c)
 }
 
 type ZrangestoreSortbyByscore struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZrangestoreSortbyByscore) Rev() ZrangestoreRevRev {
-	return ZrangestoreRevRev{cs: append(c.cs, "REV")}
+	return ZrangestoreRevRev{cf: c.cf, cs: append(c.cs, "REV")}
 }
 
 func (c ZrangestoreSortbyByscore) Limit(Offset int64, Count int64) ZrangestoreLimit {
-	return ZrangestoreLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return ZrangestoreLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
 }
 
-func (c ZrangestoreSortbyByscore) Build() []string {
-	return c.cs
+func (c ZrangestoreSortbyByscore) Build() Completed {
+	return Completed(c)
 }
 
 type ZrangestoreSrc struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZrangestoreSrc) Min(Min string) ZrangestoreMin {
-	return ZrangestoreMin{cs: append(c.cs, Min)}
+	return ZrangestoreMin{cf: c.cf, cs: append(c.cs, Min)}
 }
 
 type Zrank struct {
 	cs []string
+	cf uint32
 }
 
 func (c Zrank) Key(Key string) ZrankKey {
-	return ZrankKey{cs: append(c.cs, Key)}
+	return ZrankKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Zrank() (c Zrank) {
@@ -12651,26 +14049,37 @@ func (b *Builder) Zrank() (c Zrank) {
 
 type ZrankKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZrankKey) Member(Member string) ZrankMember {
-	return ZrankMember{cs: append(c.cs, Member)}
+	return ZrankMember{cf: c.cf, cs: append(c.cs, Member)}
+}
+
+func (c ZrankKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type ZrankMember struct {
 	cs []string
+	cf uint32
 }
 
-func (c ZrankMember) Build() []string {
-	return c.cs
+func (c ZrankMember) Build() Completed {
+	return Completed(c)
+}
+
+func (c ZrankMember) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Zrem struct {
 	cs []string
+	cf uint32
 }
 
 func (c Zrem) Key(Key string) ZremKey {
-	return ZremKey{cs: append(c.cs, Key)}
+	return ZremKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Zrem() (c Zrem) {
@@ -12680,30 +14089,33 @@ func (b *Builder) Zrem() (c Zrem) {
 
 type ZremKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZremKey) Member(Member ...string) ZremMember {
-	return ZremMember{cs: append(c.cs, Member...)}
+	return ZremMember{cf: c.cf, cs: append(c.cs, Member...)}
 }
 
 type ZremMember struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZremMember) Member(Member ...string) ZremMember {
-	return ZremMember{cs: append(c.cs, Member...)}
+	return ZremMember{cf: c.cf, cs: append(c.cs, Member...)}
 }
 
-func (c ZremMember) Build() []string {
-	return c.cs
+func (c ZremMember) Build() Completed {
+	return Completed(c)
 }
 
 type Zremrangebylex struct {
 	cs []string
+	cf uint32
 }
 
 func (c Zremrangebylex) Key(Key string) ZremrangebylexKey {
-	return ZremrangebylexKey{cs: append(c.cs, Key)}
+	return ZremrangebylexKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Zremrangebylex() (c Zremrangebylex) {
@@ -12713,34 +14125,38 @@ func (b *Builder) Zremrangebylex() (c Zremrangebylex) {
 
 type ZremrangebylexKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZremrangebylexKey) Min(Min string) ZremrangebylexMin {
-	return ZremrangebylexMin{cs: append(c.cs, Min)}
+	return ZremrangebylexMin{cf: c.cf, cs: append(c.cs, Min)}
 }
 
 type ZremrangebylexMax struct {
 	cs []string
+	cf uint32
 }
 
-func (c ZremrangebylexMax) Build() []string {
-	return c.cs
+func (c ZremrangebylexMax) Build() Completed {
+	return Completed(c)
 }
 
 type ZremrangebylexMin struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZremrangebylexMin) Max(Max string) ZremrangebylexMax {
-	return ZremrangebylexMax{cs: append(c.cs, Max)}
+	return ZremrangebylexMax{cf: c.cf, cs: append(c.cs, Max)}
 }
 
 type Zremrangebyrank struct {
 	cs []string
+	cf uint32
 }
 
 func (c Zremrangebyrank) Key(Key string) ZremrangebyrankKey {
-	return ZremrangebyrankKey{cs: append(c.cs, Key)}
+	return ZremrangebyrankKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Zremrangebyrank() (c Zremrangebyrank) {
@@ -12750,34 +14166,38 @@ func (b *Builder) Zremrangebyrank() (c Zremrangebyrank) {
 
 type ZremrangebyrankKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZremrangebyrankKey) Start(Start int64) ZremrangebyrankStart {
-	return ZremrangebyrankStart{cs: append(c.cs, strconv.FormatInt(Start, 10))}
+	return ZremrangebyrankStart{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Start, 10))}
 }
 
 type ZremrangebyrankStart struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZremrangebyrankStart) Stop(Stop int64) ZremrangebyrankStop {
-	return ZremrangebyrankStop{cs: append(c.cs, strconv.FormatInt(Stop, 10))}
+	return ZremrangebyrankStop{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Stop, 10))}
 }
 
 type ZremrangebyrankStop struct {
 	cs []string
+	cf uint32
 }
 
-func (c ZremrangebyrankStop) Build() []string {
-	return c.cs
+func (c ZremrangebyrankStop) Build() Completed {
+	return Completed(c)
 }
 
 type Zremrangebyscore struct {
 	cs []string
+	cf uint32
 }
 
 func (c Zremrangebyscore) Key(Key string) ZremrangebyscoreKey {
-	return ZremrangebyscoreKey{cs: append(c.cs, Key)}
+	return ZremrangebyscoreKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Zremrangebyscore() (c Zremrangebyscore) {
@@ -12787,34 +14207,38 @@ func (b *Builder) Zremrangebyscore() (c Zremrangebyscore) {
 
 type ZremrangebyscoreKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZremrangebyscoreKey) Min(Min float64) ZremrangebyscoreMin {
-	return ZremrangebyscoreMin{cs: append(c.cs, strconv.FormatFloat(Min, 'f', -1, 64))}
+	return ZremrangebyscoreMin{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Min, 'f', -1, 64))}
 }
 
 type ZremrangebyscoreMax struct {
 	cs []string
+	cf uint32
 }
 
-func (c ZremrangebyscoreMax) Build() []string {
-	return c.cs
+func (c ZremrangebyscoreMax) Build() Completed {
+	return Completed(c)
 }
 
 type ZremrangebyscoreMin struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZremrangebyscoreMin) Max(Max float64) ZremrangebyscoreMax {
-	return ZremrangebyscoreMax{cs: append(c.cs, strconv.FormatFloat(Max, 'f', -1, 64))}
+	return ZremrangebyscoreMax{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Max, 'f', -1, 64))}
 }
 
 type Zrevrange struct {
 	cs []string
+	cf uint32
 }
 
 func (c Zrevrange) Key(Key string) ZrevrangeKey {
-	return ZrevrangeKey{cs: append(c.cs, Key)}
+	return ZrevrangeKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Zrevrange() (c Zrevrange) {
@@ -12824,46 +14248,67 @@ func (b *Builder) Zrevrange() (c Zrevrange) {
 
 type ZrevrangeKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZrevrangeKey) Start(Start int64) ZrevrangeStart {
-	return ZrevrangeStart{cs: append(c.cs, strconv.FormatInt(Start, 10))}
+	return ZrevrangeStart{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Start, 10))}
+}
+
+func (c ZrevrangeKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type ZrevrangeStart struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZrevrangeStart) Stop(Stop int64) ZrevrangeStop {
-	return ZrevrangeStop{cs: append(c.cs, strconv.FormatInt(Stop, 10))}
+	return ZrevrangeStop{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Stop, 10))}
+}
+
+func (c ZrevrangeStart) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type ZrevrangeStop struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZrevrangeStop) Withscores() ZrevrangeWithscoresWithscores {
-	return ZrevrangeWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
+	return ZrevrangeWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
 }
 
-func (c ZrevrangeStop) Build() []string {
-	return c.cs
+func (c ZrevrangeStop) Build() Completed {
+	return Completed(c)
+}
+
+func (c ZrevrangeStop) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type ZrevrangeWithscoresWithscores struct {
 	cs []string
+	cf uint32
 }
 
-func (c ZrevrangeWithscoresWithscores) Build() []string {
-	return c.cs
+func (c ZrevrangeWithscoresWithscores) Build() Completed {
+	return Completed(c)
+}
+
+func (c ZrevrangeWithscoresWithscores) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Zrevrangebylex struct {
 	cs []string
+	cf uint32
 }
 
 func (c Zrevrangebylex) Key(Key string) ZrevrangebylexKey {
-	return ZrevrangebylexKey{cs: append(c.cs, Key)}
+	return ZrevrangebylexKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Zrevrangebylex() (c Zrevrangebylex) {
@@ -12873,46 +14318,67 @@ func (b *Builder) Zrevrangebylex() (c Zrevrangebylex) {
 
 type ZrevrangebylexKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZrevrangebylexKey) Max(Max string) ZrevrangebylexMax {
-	return ZrevrangebylexMax{cs: append(c.cs, Max)}
+	return ZrevrangebylexMax{cf: c.cf, cs: append(c.cs, Max)}
+}
+
+func (c ZrevrangebylexKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type ZrevrangebylexLimit struct {
 	cs []string
+	cf uint32
 }
 
-func (c ZrevrangebylexLimit) Build() []string {
-	return c.cs
+func (c ZrevrangebylexLimit) Build() Completed {
+	return Completed(c)
+}
+
+func (c ZrevrangebylexLimit) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type ZrevrangebylexMax struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZrevrangebylexMax) Min(Min string) ZrevrangebylexMin {
-	return ZrevrangebylexMin{cs: append(c.cs, Min)}
+	return ZrevrangebylexMin{cf: c.cf, cs: append(c.cs, Min)}
+}
+
+func (c ZrevrangebylexMax) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type ZrevrangebylexMin struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZrevrangebylexMin) Limit(Offset int64, Count int64) ZrevrangebylexLimit {
-	return ZrevrangebylexLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return ZrevrangebylexLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
 }
 
-func (c ZrevrangebylexMin) Build() []string {
-	return c.cs
+func (c ZrevrangebylexMin) Build() Completed {
+	return Completed(c)
+}
+
+func (c ZrevrangebylexMin) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Zrevrangebyscore struct {
 	cs []string
+	cf uint32
 }
 
 func (c Zrevrangebyscore) Key(Key string) ZrevrangebyscoreKey {
-	return ZrevrangebyscoreKey{cs: append(c.cs, Key)}
+	return ZrevrangebyscoreKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Zrevrangebyscore() (c Zrevrangebyscore) {
@@ -12922,62 +14388,88 @@ func (b *Builder) Zrevrangebyscore() (c Zrevrangebyscore) {
 
 type ZrevrangebyscoreKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZrevrangebyscoreKey) Max(Max float64) ZrevrangebyscoreMax {
-	return ZrevrangebyscoreMax{cs: append(c.cs, strconv.FormatFloat(Max, 'f', -1, 64))}
+	return ZrevrangebyscoreMax{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Max, 'f', -1, 64))}
+}
+
+func (c ZrevrangebyscoreKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type ZrevrangebyscoreLimit struct {
 	cs []string
+	cf uint32
 }
 
-func (c ZrevrangebyscoreLimit) Build() []string {
-	return c.cs
+func (c ZrevrangebyscoreLimit) Build() Completed {
+	return Completed(c)
+}
+
+func (c ZrevrangebyscoreLimit) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type ZrevrangebyscoreMax struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZrevrangebyscoreMax) Min(Min float64) ZrevrangebyscoreMin {
-	return ZrevrangebyscoreMin{cs: append(c.cs, strconv.FormatFloat(Min, 'f', -1, 64))}
+	return ZrevrangebyscoreMin{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Min, 'f', -1, 64))}
+}
+
+func (c ZrevrangebyscoreMax) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type ZrevrangebyscoreMin struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZrevrangebyscoreMin) Withscores() ZrevrangebyscoreWithscoresWithscores {
-	return ZrevrangebyscoreWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
+	return ZrevrangebyscoreWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
 }
 
 func (c ZrevrangebyscoreMin) Limit(Offset int64, Count int64) ZrevrangebyscoreLimit {
-	return ZrevrangebyscoreLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return ZrevrangebyscoreLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
 }
 
-func (c ZrevrangebyscoreMin) Build() []string {
-	return c.cs
+func (c ZrevrangebyscoreMin) Build() Completed {
+	return Completed(c)
+}
+
+func (c ZrevrangebyscoreMin) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type ZrevrangebyscoreWithscoresWithscores struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZrevrangebyscoreWithscoresWithscores) Limit(Offset int64, Count int64) ZrevrangebyscoreLimit {
-	return ZrevrangebyscoreLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return ZrevrangebyscoreLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
 }
 
-func (c ZrevrangebyscoreWithscoresWithscores) Build() []string {
-	return c.cs
+func (c ZrevrangebyscoreWithscoresWithscores) Build() Completed {
+	return Completed(c)
+}
+
+func (c ZrevrangebyscoreWithscoresWithscores) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Zrevrank struct {
 	cs []string
+	cf uint32
 }
 
 func (c Zrevrank) Key(Key string) ZrevrankKey {
-	return ZrevrankKey{cs: append(c.cs, Key)}
+	return ZrevrankKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Zrevrank() (c Zrevrank) {
@@ -12987,26 +14479,37 @@ func (b *Builder) Zrevrank() (c Zrevrank) {
 
 type ZrevrankKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZrevrankKey) Member(Member string) ZrevrankMember {
-	return ZrevrankMember{cs: append(c.cs, Member)}
+	return ZrevrankMember{cf: c.cf, cs: append(c.cs, Member)}
+}
+
+func (c ZrevrankKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type ZrevrankMember struct {
 	cs []string
+	cf uint32
 }
 
-func (c ZrevrankMember) Build() []string {
-	return c.cs
+func (c ZrevrankMember) Build() Completed {
+	return Completed(c)
+}
+
+func (c ZrevrankMember) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Zscan struct {
 	cs []string
+	cf uint32
 }
 
 func (c Zscan) Key(Key string) ZscanKey {
-	return ZscanKey{cs: append(c.cs, Key)}
+	return ZscanKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Zscan() (c Zscan) {
@@ -13016,54 +14519,59 @@ func (b *Builder) Zscan() (c Zscan) {
 
 type ZscanCount struct {
 	cs []string
+	cf uint32
 }
 
-func (c ZscanCount) Build() []string {
-	return c.cs
+func (c ZscanCount) Build() Completed {
+	return Completed(c)
 }
 
 type ZscanCursor struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZscanCursor) Match(Pattern string) ZscanMatch {
-	return ZscanMatch{cs: append(c.cs, "MATCH", Pattern)}
+	return ZscanMatch{cf: c.cf, cs: append(c.cs, "MATCH", Pattern)}
 }
 
 func (c ZscanCursor) Count(Count int64) ZscanCount {
-	return ZscanCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return ZscanCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c ZscanCursor) Build() []string {
-	return c.cs
+func (c ZscanCursor) Build() Completed {
+	return Completed(c)
 }
 
 type ZscanKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZscanKey) Cursor(Cursor int64) ZscanCursor {
-	return ZscanCursor{cs: append(c.cs, strconv.FormatInt(Cursor, 10))}
+	return ZscanCursor{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Cursor, 10))}
 }
 
 type ZscanMatch struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZscanMatch) Count(Count int64) ZscanCount {
-	return ZscanCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return ZscanCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c ZscanMatch) Build() []string {
-	return c.cs
+func (c ZscanMatch) Build() Completed {
+	return Completed(c)
 }
 
 type Zscore struct {
 	cs []string
+	cf uint32
 }
 
 func (c Zscore) Key(Key string) ZscoreKey {
-	return ZscoreKey{cs: append(c.cs, Key)}
+	return ZscoreKey{cf: c.cf, cs: append(c.cs, Key)}
 }
 
 func (b *Builder) Zscore() (c Zscore) {
@@ -13073,26 +14581,37 @@ func (b *Builder) Zscore() (c Zscore) {
 
 type ZscoreKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZscoreKey) Member(Member string) ZscoreMember {
-	return ZscoreMember{cs: append(c.cs, Member)}
+	return ZscoreMember{cf: c.cf, cs: append(c.cs, Member)}
+}
+
+func (c ZscoreKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type ZscoreMember struct {
 	cs []string
+	cf uint32
 }
 
-func (c ZscoreMember) Build() []string {
-	return c.cs
+func (c ZscoreMember) Build() Completed {
+	return Completed(c)
+}
+
+func (c ZscoreMember) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Zunion struct {
 	cs []string
+	cf uint32
 }
 
 func (c Zunion) Numkeys(Numkeys int64) ZunionNumkeys {
-	return ZunionNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
+	return ZunionNumkeys{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
 }
 
 func (b *Builder) Zunion() (c Zunion) {
@@ -13102,42 +14621,46 @@ func (b *Builder) Zunion() (c Zunion) {
 
 type ZunionAggregateMax struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZunionAggregateMax) Withscores() ZunionWithscoresWithscores {
-	return ZunionWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
+	return ZunionWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
 }
 
-func (c ZunionAggregateMax) Build() []string {
-	return c.cs
+func (c ZunionAggregateMax) Build() Completed {
+	return Completed(c)
 }
 
 type ZunionAggregateMin struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZunionAggregateMin) Withscores() ZunionWithscoresWithscores {
-	return ZunionWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
+	return ZunionWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
 }
 
-func (c ZunionAggregateMin) Build() []string {
-	return c.cs
+func (c ZunionAggregateMin) Build() Completed {
+	return Completed(c)
 }
 
 type ZunionAggregateSum struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZunionAggregateSum) Withscores() ZunionWithscoresWithscores {
-	return ZunionWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
+	return ZunionWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
 }
 
-func (c ZunionAggregateSum) Build() []string {
-	return c.cs
+func (c ZunionAggregateSum) Build() Completed {
+	return Completed(c)
 }
 
 type ZunionKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZunionKey) Weights(Weight ...int64) ZunionWeights {
@@ -13145,86 +14668,90 @@ func (c ZunionKey) Weights(Weight ...int64) ZunionWeights {
 	for _, n := range Weight {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return ZunionWeights{cs: c.cs}
+	return ZunionWeights{cf: c.cf, cs: c.cs}
 }
 
 func (c ZunionKey) Sum() ZunionAggregateSum {
-	return ZunionAggregateSum{cs: append(c.cs, "SUM")}
+	return ZunionAggregateSum{cf: c.cf, cs: append(c.cs, "SUM")}
 }
 
 func (c ZunionKey) Min() ZunionAggregateMin {
-	return ZunionAggregateMin{cs: append(c.cs, "MIN")}
+	return ZunionAggregateMin{cf: c.cf, cs: append(c.cs, "MIN")}
 }
 
 func (c ZunionKey) Max() ZunionAggregateMax {
-	return ZunionAggregateMax{cs: append(c.cs, "MAX")}
+	return ZunionAggregateMax{cf: c.cf, cs: append(c.cs, "MAX")}
 }
 
 func (c ZunionKey) Withscores() ZunionWithscoresWithscores {
-	return ZunionWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
+	return ZunionWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
 }
 
 func (c ZunionKey) Key(Key ...string) ZunionKey {
-	return ZunionKey{cs: append(c.cs, Key...)}
+	return ZunionKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
-func (c ZunionKey) Build() []string {
-	return c.cs
+func (c ZunionKey) Build() Completed {
+	return Completed(c)
 }
 
 type ZunionNumkeys struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZunionNumkeys) Key(Key ...string) ZunionKey {
-	return ZunionKey{cs: append(c.cs, Key...)}
+	return ZunionKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 type ZunionWeights struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZunionWeights) Sum() ZunionAggregateSum {
-	return ZunionAggregateSum{cs: append(c.cs, "SUM")}
+	return ZunionAggregateSum{cf: c.cf, cs: append(c.cs, "SUM")}
 }
 
 func (c ZunionWeights) Min() ZunionAggregateMin {
-	return ZunionAggregateMin{cs: append(c.cs, "MIN")}
+	return ZunionAggregateMin{cf: c.cf, cs: append(c.cs, "MIN")}
 }
 
 func (c ZunionWeights) Max() ZunionAggregateMax {
-	return ZunionAggregateMax{cs: append(c.cs, "MAX")}
+	return ZunionAggregateMax{cf: c.cf, cs: append(c.cs, "MAX")}
 }
 
 func (c ZunionWeights) Withscores() ZunionWithscoresWithscores {
-	return ZunionWithscoresWithscores{cs: append(c.cs, "WITHSCORES")}
+	return ZunionWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
 }
 
 func (c ZunionWeights) Weights(Weights ...int64) ZunionWeights {
 	for _, n := range Weights {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return ZunionWeights{cs: c.cs}
+	return ZunionWeights{cf: c.cf, cs: c.cs}
 }
 
-func (c ZunionWeights) Build() []string {
-	return c.cs
+func (c ZunionWeights) Build() Completed {
+	return Completed(c)
 }
 
 type ZunionWithscoresWithscores struct {
 	cs []string
+	cf uint32
 }
 
-func (c ZunionWithscoresWithscores) Build() []string {
-	return c.cs
+func (c ZunionWithscoresWithscores) Build() Completed {
+	return Completed(c)
 }
 
 type Zunionstore struct {
 	cs []string
+	cf uint32
 }
 
 func (c Zunionstore) Destination(Destination string) ZunionstoreDestination {
-	return ZunionstoreDestination{cs: append(c.cs, Destination)}
+	return ZunionstoreDestination{cf: c.cf, cs: append(c.cs, Destination)}
 }
 
 func (b *Builder) Zunionstore() (c Zunionstore) {
@@ -13234,38 +14761,43 @@ func (b *Builder) Zunionstore() (c Zunionstore) {
 
 type ZunionstoreAggregateMax struct {
 	cs []string
+	cf uint32
 }
 
-func (c ZunionstoreAggregateMax) Build() []string {
-	return c.cs
+func (c ZunionstoreAggregateMax) Build() Completed {
+	return Completed(c)
 }
 
 type ZunionstoreAggregateMin struct {
 	cs []string
+	cf uint32
 }
 
-func (c ZunionstoreAggregateMin) Build() []string {
-	return c.cs
+func (c ZunionstoreAggregateMin) Build() Completed {
+	return Completed(c)
 }
 
 type ZunionstoreAggregateSum struct {
 	cs []string
+	cf uint32
 }
 
-func (c ZunionstoreAggregateSum) Build() []string {
-	return c.cs
+func (c ZunionstoreAggregateSum) Build() Completed {
+	return Completed(c)
 }
 
 type ZunionstoreDestination struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZunionstoreDestination) Numkeys(Numkeys int64) ZunionstoreNumkeys {
-	return ZunionstoreNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
+	return ZunionstoreNumkeys{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
 }
 
 type ZunionstoreKey struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZunionstoreKey) Weights(Weight ...int64) ZunionstoreWeights {
@@ -13273,60 +14805,63 @@ func (c ZunionstoreKey) Weights(Weight ...int64) ZunionstoreWeights {
 	for _, n := range Weight {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return ZunionstoreWeights{cs: c.cs}
+	return ZunionstoreWeights{cf: c.cf, cs: c.cs}
 }
 
 func (c ZunionstoreKey) Sum() ZunionstoreAggregateSum {
-	return ZunionstoreAggregateSum{cs: append(c.cs, "SUM")}
+	return ZunionstoreAggregateSum{cf: c.cf, cs: append(c.cs, "SUM")}
 }
 
 func (c ZunionstoreKey) Min() ZunionstoreAggregateMin {
-	return ZunionstoreAggregateMin{cs: append(c.cs, "MIN")}
+	return ZunionstoreAggregateMin{cf: c.cf, cs: append(c.cs, "MIN")}
 }
 
 func (c ZunionstoreKey) Max() ZunionstoreAggregateMax {
-	return ZunionstoreAggregateMax{cs: append(c.cs, "MAX")}
+	return ZunionstoreAggregateMax{cf: c.cf, cs: append(c.cs, "MAX")}
 }
 
 func (c ZunionstoreKey) Key(Key ...string) ZunionstoreKey {
-	return ZunionstoreKey{cs: append(c.cs, Key...)}
+	return ZunionstoreKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
-func (c ZunionstoreKey) Build() []string {
-	return c.cs
+func (c ZunionstoreKey) Build() Completed {
+	return Completed(c)
 }
 
 type ZunionstoreNumkeys struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZunionstoreNumkeys) Key(Key ...string) ZunionstoreKey {
-	return ZunionstoreKey{cs: append(c.cs, Key...)}
+	return ZunionstoreKey{cf: c.cf, cs: append(c.cs, Key...)}
 }
 
 type ZunionstoreWeights struct {
 	cs []string
+	cf uint32
 }
 
 func (c ZunionstoreWeights) Sum() ZunionstoreAggregateSum {
-	return ZunionstoreAggregateSum{cs: append(c.cs, "SUM")}
+	return ZunionstoreAggregateSum{cf: c.cf, cs: append(c.cs, "SUM")}
 }
 
 func (c ZunionstoreWeights) Min() ZunionstoreAggregateMin {
-	return ZunionstoreAggregateMin{cs: append(c.cs, "MIN")}
+	return ZunionstoreAggregateMin{cf: c.cf, cs: append(c.cs, "MIN")}
 }
 
 func (c ZunionstoreWeights) Max() ZunionstoreAggregateMax {
-	return ZunionstoreAggregateMax{cs: append(c.cs, "MAX")}
+	return ZunionstoreAggregateMax{cf: c.cf, cs: append(c.cs, "MAX")}
 }
 
 func (c ZunionstoreWeights) Weights(Weights ...int64) ZunionstoreWeights {
 	for _, n := range Weights {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return ZunionstoreWeights{cs: c.cs}
+	return ZunionstoreWeights{cf: c.cf, cs: c.cs}
 }
 
-func (c ZunionstoreWeights) Build() []string {
-	return c.cs
+func (c ZunionstoreWeights) Build() Completed {
+	return Completed(c)
 }
+

@@ -9,6 +9,7 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"github.com/rueian/rueidis/internal/cmds"
 	"github.com/rueian/rueidis/internal/proto"
 	"github.com/rueian/rueidis/internal/queue"
 )
@@ -34,7 +35,11 @@ func (c *Conn) Close() {
 
 func reading(c *Conn) {
 	for atomic.LoadInt32(&c.state) != 2 {
-		c.q.NextCmd()
+		cmd, _ := c.q.NextCmd()
+		if cmd.IsEmpty() {
+			runtime.Gosched()
+			continue
+		}
 		_, _, ch := c.q.NextResultCh()
 		ch <- proto.Result{}
 	}
@@ -66,7 +71,11 @@ func NewConnMutexInEventLoop(hits, evic int) *Conn {
 	c := &Conn{q: queue.NewRing(), hits: hits, evic: evic}
 	go func() {
 		for atomic.LoadInt32(&c.state) != 2 {
-			c.q.NextCmd()
+			cmd, _ := c.q.NextCmd()
+			if cmd.IsEmpty() {
+				runtime.Gosched()
+				continue
+			}
 			c.mu.Lock()
 			c.mu.Unlock()
 			_, _, ch := c.q.NextResultCh()
@@ -77,7 +86,7 @@ func NewConnMutexInEventLoop(hits, evic int) *Conn {
 	return c
 }
 
-func WriteWithMutex(c *Conn, cmd []string) (res proto.Result) {
+func WriteWithMutex(c *Conn, cmd cmds.Completed) (res proto.Result) {
 	atomic.AddInt32(&c.waits, 1)
 	if atomic.LoadInt32(&c.state) == 0 {
 		c.mu.Lock()
@@ -90,7 +99,7 @@ func WriteWithMutex(c *Conn, cmd []string) (res proto.Result) {
 	return res
 }
 
-func WriteNoMutex(c *Conn, cmd []string) (res proto.Result) {
+func WriteNoMutex(c *Conn, cmd cmds.Completed) (res proto.Result) {
 	atomic.AddInt32(&c.waits, 1)
 	if atomic.LoadInt32(&c.state) == 0 {
 		res = <-c.q.PutOne(cmd)

@@ -4,6 +4,7 @@ package queue
 // that showing the performance difference with using padding
 
 import (
+	"github.com/rueian/rueidis/internal/cmds"
 	"runtime"
 	"sync/atomic"
 
@@ -27,11 +28,11 @@ type NoPadRing struct {
 
 type node struct {
 	mark uint32
-	cmds [][]string
+	cmds []cmds.Completed
 	ch   chan proto.Result
 }
 
-func (r *NoPadRing) PutOne(m []string) chan proto.Result {
+func (r *NoPadRing) PutOne(m cmds.Completed) chan proto.Result {
 	n := &r.store[atomic.AddUint64(&r.write, 1)&r.mask]
 	for !atomic.CompareAndSwapUint32(&n.mark, 0, 1) {
 		runtime.Gosched()
@@ -40,19 +41,19 @@ func (r *NoPadRing) PutOne(m []string) chan proto.Result {
 	return nil
 }
 
-func (r *NoPadRing) NextCmd() ([]string, [][]string) {
+func (r *NoPadRing) NextCmd() (cmds.Completed, []cmds.Completed) {
 	r.read1 = (r.read1 + 1) & r.mask
 	n := &r.store[r.read1]
 	for !atomic.CompareAndSwapUint32(&n.mark, 2, 3) {
 		runtime.Gosched()
 	}
-	return nil, nil
+	return cmds.Completed{}, nil
 }
 
-func (r *NoPadRing) NextResultCh() ([]string, [][]string, chan proto.Result) {
+func (r *NoPadRing) NextResultCh() (cmds.Completed, []cmds.Completed, chan proto.Result) {
 	r.read2++
 	p := r.read2 & r.mask
 	n := &r.store[p]
 	atomic.CompareAndSwapUint32(&n.mark, 3, 0)
-	return nil, nil, nil
+	return cmds.Completed{}, nil, nil
 }

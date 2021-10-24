@@ -54,7 +54,7 @@ type CmdNode struct {
 	Argument
 	StructName string
 	Children   []string
-	Root       bool
+	Root       *CmdNode
 }
 
 func UcFirst(str string) string {
@@ -72,7 +72,7 @@ func main() {
 	}
 	for k, info := range commands {
 		sn := name(k)
-		cmd := &CmdNode{Root: true, StructName: sn, Argument: Argument{Command: k}}
+		cmd := &CmdNode{Root: nil, StructName: sn, Argument: Argument{Command: k}}
 		if _, ok := nodes[cmd.StructName]; ok {
 			panic("StructName conflict " + cmd.StructName)
 		}
@@ -84,7 +84,7 @@ func main() {
 			}
 		}
 		for i, arg := range info.Arguments {
-			node(sn, arg, info.Arguments[i+1:], "", nil)
+			node(cmd, sn, arg, info.Arguments[i+1:], "", nil)
 		}
 	}
 	var keys []string
@@ -112,11 +112,12 @@ func main() {
 
 		fmt.Printf("type %s struct {\n", node.StructName)
 		fmt.Printf("\tcs []string\n")
+		fmt.Printf("\tcf uint32\n")
 		fmt.Printf("}\n\n")
 
 		if node.Multiple || node.Variadic {
 			// put node itself (no command) as child
-			nocmd := &CmdNode{StructName: node.StructName + "_nocmd", Argument: node.Argument}
+			nocmd := &CmdNode{Root: node, StructName: node.StructName + "_nocmd", Argument: node.Argument}
 			if nocmd.Argument.Command != "" {
 				nocmd.Argument.Name = strings.ToLower(nocmd.Argument.Command)
 				nocmd.Argument.Command = ""
@@ -201,7 +202,7 @@ func main() {
 			if len(args) == 1 && (child.Multiple || child.Variadic) {
 				if len(appends) == 0 && args[0][1] == "string" {
 					// one line append
-					fmt.Printf("\treturn %s{cs: append(c.cs, %s...)}\n", strings.TrimSuffix(child.StructName, "_nocmd"), args[0][0])
+					fmt.Printf("\treturn %s{cf: c.cf, cs: append(c.cs, %s...)}\n", strings.TrimSuffix(child.StructName, "_nocmd"), args[0][0])
 				} else {
 					if len(appends) != 0 {
 						fmt.Printf("\tc.cs = append(c.cs, ")
@@ -214,17 +215,17 @@ func main() {
 						fmt.Printf(")\n")
 					}
 					if args[0][1] == "string" {
-						fmt.Printf("\treturn %s{cs: append(c.cs, %s...)}\n", strings.TrimSuffix(child.StructName, "_nocmd"), args[0][0])
+						fmt.Printf("\treturn %s{cf: c.cf, cs: append(c.cs, %s...)}\n", strings.TrimSuffix(child.StructName, "_nocmd"), args[0][0])
 					} else {
 						fmt.Printf("\tfor _, n := range %s {\n", args[0][0])
 						fmt.Printf("\t\tc.cs = append(c.cs, strconv.FormatInt(n, 10))\n")
 						fmt.Printf("\t}\n")
-						fmt.Printf("\treturn %s{cs: c.cs}\n", strings.TrimSuffix(child.StructName, "_nocmd"))
+						fmt.Printf("\treturn %s{cf: c.cf, cs: c.cs}\n", strings.TrimSuffix(child.StructName, "_nocmd"))
 					}
 				}
 			} else {
 				// one line append
-				fmt.Printf("\treturn %s{cs: append(c.cs, ", strings.TrimSuffix(child.StructName, "_nocmd"))
+				fmt.Printf("\treturn %s{cf: c.cf, cs: append(c.cs, ", strings.TrimSuffix(child.StructName, "_nocmd"))
 				for i, ap := range appends {
 					fmt.Printf(ap)
 					if i != len(appends)-1 {
@@ -237,12 +238,18 @@ func main() {
 		}
 
 		if allOptional(node.Children) {
-			fmt.Printf("func (c %s) Build() []string {\n", node.StructName)
-			fmt.Printf("\treturn c.cs\n")
+			fmt.Printf("func (c %s) Build() Completed {\n", node.StructName)
+			fmt.Printf("\treturn Completed(c)\n")
 			fmt.Printf("}\n\n")
 		}
 
-		if node.Root {
+		if node.Root != nil && supportCaching(node.Root) {
+			fmt.Printf("func (c %s) Cache() Cacheable {\n", node.StructName)
+			fmt.Printf("\treturn Cacheable(c)\n")
+			fmt.Printf("}\n\n")
+		}
+
+		if node.Root == nil {
 			var appends []string
 			for _, c := range strings.Split(node.Command, " ") {
 				if c == "empty" {
@@ -266,7 +273,7 @@ func main() {
 	}
 }
 
-func node(prefix string, arg Argument, args []Argument, parent string, parentArgs []Argument) {
+func node(root *CmdNode, prefix string, arg Argument, args []Argument, parent string, parentArgs []Argument) {
 	if len(arg.Enum) > 0 && arg.Type == nil {
 		arg.Type = "enum"
 	}
@@ -282,7 +289,7 @@ func node(prefix string, arg Argument, args []Argument, parent string, parentArg
 	switch arg.Type {
 	case "enum":
 		for _, e := range arg.Enum {
-			cmd := &CmdNode{}
+			cmd := &CmdNode{Root: root}
 			switch e {
 			case "~":
 				cmd.StructName = prefix + UcFirst(name(arg.Name)) + "Almost"
@@ -347,11 +354,11 @@ func node(prefix string, arg Argument, args []Argument, parent string, parentArg
 		}
 	case "block":
 		for i, a := range arg.Block {
-			node(prefix+UcFirst(name(arg.Name)), a, arg.Block[i+1:], prefix, args)
+			node(root, prefix+UcFirst(name(arg.Name)), a, arg.Block[i+1:], prefix, args)
 		}
 	default:
 		sn := UcFirst(prefix) + UcFirst(arg.FullName())
-		cmd := &CmdNode{StructName: sn, Argument: arg}
+		cmd := &CmdNode{Root: root, StructName: sn, Argument: arg}
 		if _, ok := nodes[cmd.StructName]; ok {
 			panic("StructName conflict " + cmd.StructName)
 		}
@@ -457,4 +464,61 @@ func allOptional(children []string) bool {
 		}
 	}
 	return true
+}
+
+func supportCaching(cmd *CmdNode) bool {
+	n := strings.ToLower(cmd.StructName)
+	for _, v := range cacheableCMDs {
+		if v == n {
+			return true
+		}
+	}
+	return false
+}
+
+var cacheableCMDs = []string{
+	"bitcount",
+	"bitfieldro",
+	"bitpos",
+	"geodist",
+	"geohash",
+	"geopos",
+	"geosearch",
+	"get",
+	"getbit",
+	"getrange",
+	"hexists",
+	"hget",
+	"hgetall",
+	"hkeys",
+	"hlen",
+	"hmget",
+	"hstrlen",
+	"hvals",
+	"lindex",
+	"llen",
+	"lpos",
+	"lrange",
+	"pttl",
+	"scard",
+	"sismember",
+	"smembers",
+	"smismember",
+	"strlen",
+	"substr",
+	"ttl",
+	"type",
+	"zcard",
+	"zcount",
+	"zlexcount",
+	"zmscore",
+	"zrange",
+	"zrangebylex",
+	"zrangebyscore",
+	"zrank",
+	"zrevrange",
+	"zrevrangebylex",
+	"zrevrangebyscore",
+	"zrevrank",
+	"zscore",
 }

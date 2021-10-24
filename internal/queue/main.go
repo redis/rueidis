@@ -1,10 +1,13 @@
 package queue
 
-import "github.com/rueian/rueidis/internal/proto"
+import (
+	"github.com/rueian/rueidis/internal/cmds"
+	"github.com/rueian/rueidis/internal/proto"
+)
 
 type Queue interface {
-	PutOne(m []string) chan proto.Result
-	PutMulti(m [][]string) chan proto.Result
-	NextCmd() ([]string, [][]string)
-	NextResultCh() ([]string, [][]string, chan proto.Result)
+	PutOne(m cmds.Completed) chan proto.Result
+	PutMulti(m []cmds.Completed) chan proto.Result
+	NextCmd() (cmds.Completed, []cmds.Completed)
+	NextResultCh() (cmds.Completed, []cmds.Completed, chan proto.Result)
 }

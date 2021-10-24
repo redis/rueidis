@@ -4,6 +4,7 @@ import (
 	"runtime"
 	"sync/atomic"
 
+	"github.com/rueian/rueidis/internal/cmds"
 	"github.com/rueian/rueidis/internal/proto"
 )
 
@@ -33,12 +34,12 @@ type Ring struct {
 
 type node struct {
 	mark  uint32
-	one   []string
-	multi [][]string
+	one   cmds.Completed
+	multi []cmds.Completed
 	ch    chan proto.Result
 }
 
-func (r *Ring) PutOne(m []string) chan proto.Result {
+func (r *Ring) PutOne(m cmds.Completed) chan proto.Result {
 	n := r.acquire(atomic.AddUint64(&r.write, 1) & r.mask)
 	n.one = m
 	n.multi = nil
@@ -46,9 +47,9 @@ func (r *Ring) PutOne(m []string) chan proto.Result {
 	return n.ch
 }
 
-func (r *Ring) PutMulti(m [][]string) chan proto.Result {
+func (r *Ring) PutMulti(m []cmds.Completed) chan proto.Result {
 	n := r.acquire(atomic.AddUint64(&r.write, 1) & r.mask)
-	n.one = nil
+	n.one = cmds.Completed{}
 	n.multi = m
 	atomic.StoreUint32(&n.mark, 2)
 	return n.ch
@@ -63,19 +64,19 @@ func (r *Ring) acquire(position uint64) *node {
 }
 
 // NextCmd should be only called by one dedicated thread
-func (r *Ring) NextCmd() ([]string, [][]string) {
+func (r *Ring) NextCmd() (cmds.Completed, []cmds.Completed) {
 	r.read1++
 	p := r.read1 & r.mask
 	n := &r.store[p]
 	if !atomic.CompareAndSwapUint32(&n.mark, 2, 3) {
 		r.read1--
-		return nil, nil
+		return cmds.Completed{}, nil
 	}
 	return n.one, n.multi
 }
 
 // NextResultCh should be only called by one dedicated thread
-func (r *Ring) NextResultCh() (one []string, multi [][]string, ch chan proto.Result) {
+func (r *Ring) NextResultCh() (one cmds.Completed, multi []cmds.Completed, ch chan proto.Result) {
 	r.read2++
 	p := r.read2 & r.mask
 	n := &r.store[p]
@@ -84,5 +85,5 @@ func (r *Ring) NextResultCh() (one []string, multi [][]string, ch chan proto.Res
 		return
 	}
 	r.read2--
-	return nil, nil, nil
+	return cmds.Completed{}, nil, nil
 }

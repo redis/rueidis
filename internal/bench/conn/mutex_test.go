@@ -3,17 +3,17 @@ package conn
 import (
 	"testing"
 
+	"github.com/rueian/rueidis/internal/cmds"
 	"github.com/rueian/rueidis/internal/proto"
 )
 
 func BenchmarkConnCacheMutex(b *testing.B) {
-	bench := func(factory func() *Conn, write func(*Conn, []string) proto.Result) func(b *testing.B) {
+	bench := func(factory func() *Conn, write func(*Conn, cmds.Completed) proto.Result) func(b *testing.B) {
 		return func(b *testing.B) {
 			conn := factory()
-			b.SetParallelism(1000)
 			b.RunParallel(func(pb *testing.PB) {
 				for pb.Next() {
-					write(conn, nil)
+					write(conn, cmds.PingCmd)
 				}
 			})
 			conn.Close()
