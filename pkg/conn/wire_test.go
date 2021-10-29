@@ -3,7 +3,6 @@ package conn
 import (
 	"bufio"
 	"fmt"
-	"github.com/rueian/rueidis/internal/cmds"
 	"io"
 	"net"
 	"strconv"
@@ -11,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/rueian/rueidis/internal/cmds"
 	"github.com/rueian/rueidis/internal/proto"
 )
 

@@ -738,6 +738,7 @@ func (c Blmove) Source(Source string) BlmoveSource {
 }
 
 func (b *Builder) Blmove() (c Blmove) {
+	c.cf = blockTag
 	c.cs = append(b.get(), "BLMOVE")
 	return
 }
@@ -827,6 +828,7 @@ func (c Blmpop) Timeout(Timeout float64) BlmpopTimeout {
 }
 
 func (b *Builder) Blmpop() (c Blmpop) {
+	c.cf = blockTag
 	c.cs = append(b.get(), "BLMPOP")
 	return
 }
@@ -919,6 +921,7 @@ func (c Blpop) Key(Key ...string) BlpopKey {
 }
 
 func (b *Builder) Blpop() (c Blpop) {
+	c.cf = blockTag
 	c.cs = append(b.get(), "BLPOP")
 	return
 }
@@ -955,6 +958,7 @@ func (c Brpop) Key(Key ...string) BrpopKey {
 }
 
 func (b *Builder) Brpop() (c Brpop) {
+	c.cf = blockTag
 	c.cs = append(b.get(), "BRPOP")
 	return
 }
@@ -991,6 +995,7 @@ func (c Brpoplpush) Source(Source string) BrpoplpushSource {
 }
 
 func (b *Builder) Brpoplpush() (c Brpoplpush) {
+	c.cf = blockTag
 	c.cs = append(b.get(), "BRPOPLPUSH")
 	return
 }
@@ -1032,6 +1037,7 @@ func (c Bzpopmax) Key(Key ...string) BzpopmaxKey {
 }
 
 func (b *Builder) Bzpopmax() (c Bzpopmax) {
+	c.cf = blockTag
 	c.cs = append(b.get(), "BZPOPMAX")
 	return
 }
@@ -1068,6 +1074,7 @@ func (c Bzpopmin) Key(Key ...string) BzpopminKey {
 }
 
 func (b *Builder) Bzpopmin() (c Bzpopmin) {
+	c.cf = blockTag
 	c.cs = append(b.get(), "BZPOPMIN")
 	return
 }
@@ -1626,6 +1633,7 @@ func (c ClientPause) Timeout(Timeout int64) ClientPauseTimeout {
 }
 
 func (b *Builder) ClientPause() (c ClientPause) {
+	c.cf = blockTag
 	c.cs = append(b.get(), "CLIENT", "PAUSE")
 	return
 }
@@ -7894,6 +7902,7 @@ func (c Migrate) Host(Host string) MigrateHost {
 }
 
 func (b *Builder) Migrate() (c Migrate) {
+	c.cf = blockTag
 	c.cs = append(b.get(), "MIGRATE")
 	return
 }
@@ -11322,6 +11331,7 @@ func (c Wait) Numreplicas(Numreplicas int64) WaitNumreplicas {
 }
 
 func (b *Builder) Wait() (c Wait) {
+	c.cf = blockTag
 	c.cs = append(b.get(), "WAIT")
 	return
 }

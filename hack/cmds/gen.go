@@ -259,6 +259,11 @@ func main() {
 				}
 			}
 			fmt.Printf("func (b *Builder) %s() (c %s) {\n", node.Argument.FullName(), node.StructName)
+
+			if isBlocking(node) {
+				fmt.Printf("\tc.cf = blockTag\n")
+			}
+
 			fmt.Printf("\tc.cs = append(b.get(), ")
 			for i, ap := range appends {
 				fmt.Printf(ap)
@@ -466,6 +471,16 @@ func allOptional(children []string) bool {
 	return true
 }
 
+func isBlocking(cmd *CmdNode) bool {
+	n := strings.ToLower(cmd.StructName)
+	for _, v := range blockingCMDs {
+		if v == n {
+			return true
+		}
+	}
+	return false
+}
+
 func supportCaching(cmd *CmdNode) bool {
 	n := strings.ToLower(cmd.StructName)
 	for _, v := range cacheableCMDs {
@@ -474,6 +489,19 @@ func supportCaching(cmd *CmdNode) bool {
 		}
 	}
 	return false
+}
+
+var blockingCMDs = []string{
+	"blpop",
+	"brpop",
+	"brpoplpush",
+	"blmove",
+	"blmpop",
+	"bzpopmin",
+	"bzpopmax",
+	"clientpause",
+	"migrate",
+	"wait",
 }
 
 var cacheableCMDs = []string{

@@ -4,6 +4,7 @@ import "strings"
 
 var (
 	optInTag = uint32(1 << 31)
+	blockTag = uint32(1 << 30)
 	OptInCmd = Completed{
 		cs: []string{"CLIENT", "CACHING", "YES"},
 		cf: optInTag,
@@ -24,6 +25,10 @@ func (c *Completed) IsEmpty() bool {
 
 func (c *Completed) IsOptIn() bool {
 	return c.cf&optInTag == optInTag
+}
+
+func (c *Completed) IsBlock() bool {
+	return c.cf&blockTag == blockTag
 }
 
 func (c *Completed) Commands() []string {
