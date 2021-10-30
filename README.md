@@ -4,7 +4,7 @@ A Golang Redis RESP3 client that does auto pipelining and supports client side c
 
 ## Auto Pipeline
 
-All commands to a single redis are pipelined through one tcp connection, which reduces
+All non-blocking commands to a single redis are pipelined through one tcp connection, which reduces
 the overall round trip costs, and gets higher throughput.
 
 ### Benchmark comparison with go-redis v8.11.4
@@ -149,6 +149,22 @@ func BenchmarkClientSideCache(b *testing.B) {
 * zrevrank
 * zscore
 
+## Blocking Commands
+
+The following blocking commands use another connection pool and will not share the same connection
+with others and will not cause others to be blocked:
+
+* blpop
+* brpop
+* brpoplpush
+* blmove
+* blmpop
+* bzpopmin
+* bzpopmax
+* client pause
+* migrate
+* wait
+
 ## Command Builder
 
 Redis commands are very complex and their formats are very different from each other.
@@ -168,7 +184,6 @@ Once the command is passed to the one of above `Conn.DoXXX()`, the command will 
 
 The following subjects are not yet implemented.
 
-* Better blocking commands supporting (ex: BLPOP) 
 * PubSub commands
 * Redis Cluster client
 * ~~Auto Reconnect~~
