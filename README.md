@@ -186,7 +186,6 @@ Once the command is passed to the one of above `Conn.DoXXX()`, the command will 
 
 The following subjects are not yet implemented.
 
-* PubSub commands
 * Redis Cluster client
 * ~~Auto Reconnect~~
 * RESP2

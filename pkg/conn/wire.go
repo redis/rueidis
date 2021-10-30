@@ -35,6 +35,8 @@ type wire struct {
 	w *bufio.Writer
 
 	info proto.Message
+
+	psHandlers PubSubHandlers
 }
 
 type Option struct {
@@ -43,6 +45,15 @@ type Option struct {
 	Username   string
 	Password   string
 	ClientName string
+
+	PubSubHandlers PubSubHandlers
+}
+
+type PubSubHandlers struct {
+	OnMessage      func(channel, message string)
+	OnPMessage     func(pattern, channel, message string)
+	OnSubscribed   func(channel string, active int64)
+	OnUnSubscribed func(channel string, active int64)
 }
 
 func newWire(conn net.Conn, option Option) (*wire, error) {
@@ -56,6 +67,8 @@ func newWire(conn net.Conn, option Option) (*wire, error) {
 		cache: cache.NewLRU(option.CacheSize),
 		r:     bufio.NewReader(conn),
 		w:     bufio.NewWriter(conn),
+
+		psHandlers: option.PubSubHandlers,
 	}
 	go c.reading()
 
@@ -114,6 +127,14 @@ func (c *wire) reading() {
 	}()
 	go func() { // read goroutine
 		defer exit()
+
+		var (
+			ones  = make([]cmds.Completed, 1)
+			multi []cmds.Completed
+			ch    chan proto.Result
+			ff    int
+		)
+
 		for {
 			msg, err := proto.ReadNextMessage(c.r)
 			if err != nil {
@@ -124,39 +145,31 @@ func (c *wire) reading() {
 				c.handlePush(msg.Values)
 				continue
 			}
-			_, multi, ch := c.queue.NextResultCh()
-			if ch == nil {
-				panic("receive unexpected out of band message")
-			}
-			ch <- proto.Result{Val: msg, Err: err}
 
-			if multi == nil {
-				continue
+			// if unfulfilled multi commands are lead by opt-in and get success response
+			if ff != len(multi) && len(multi) > 1 && multi[0].IsOptIn() && msg.Type != '-' && msg.Type != '!' {
+				cacheable := cmds.Cacheable(multi[ff])
+				ck, cc := cacheable.CacheKey()
+				c.cache.Update(ck, cc, msg)
 			}
 
-			// read the rest cmd responses
-			for i := 1; i < len(multi); {
-				msg, err = proto.ReadNextMessage(c.r)
-				if err != nil {
-					c.error.CompareAndSwap(nil, err)
-					for ; i < len(multi); i++ {
-						ch <- proto.Result{Val: msg, Err: err}
-					}
-					return
+		nextCMD:
+			if ff == len(multi) {
+				ff = 0
+				ones[0], multi, ch = c.queue.NextResultCh()
+				if ch == nil {
+					panic("receive unexpected out of band message")
 				}
-				if msg.Type == '>' {
-					c.handlePush(msg.Values)
-					continue
-				}
-				// in current implementation, the cache opt-in will only be in the first cmd in batch
-				// TODO: handle opt-in cache for MULTI, LUA commands
-				if msg.Type != '-' && msg.Type != '!' && multi[0].IsOptIn() {
-					cacheable := cmds.Cacheable(multi[i])
-					ck, cc := cacheable.CacheKey()
-					c.cache.Update(ck, cc, msg)
-				}
+			}
+			if len(multi) == 0 {
+				multi = ones
+			}
+			if multi[ff].NoReply() {
+				ff++
+				goto nextCMD
+			} else {
+				ff++
 				ch <- proto.Result{Val: msg, Err: err}
-				i++
 			}
 		}
 	}()
@@ -181,20 +194,31 @@ func (c *wire) reading() {
 }
 
 func (c *wire) handlePush(values []proto.Message) {
-	// TODO: handle other push data
-	// tracking-redir-broken
-	// message
-	// pmessage
-	// subscribe
-	// unsubscribe
-	// psubscribe
-	// punsubscribe
-	// server-cpu-usage
 	if len(values) < 2 {
 		return
 	}
-	if values[0].String == "invalidate" {
+	// TODO: handle other push data
+	// tracking-redir-broken
+	// server-cpu-usage
+	switch values[0].String {
+	case "invalidate":
 		c.cache.Delete(values[1].Values)
+	case "message":
+		if c.psHandlers.OnMessage != nil {
+			c.psHandlers.OnMessage(values[1].String, values[2].String)
+		}
+	case "pmessage":
+		if c.psHandlers.OnPMessage != nil {
+			c.psHandlers.OnPMessage(values[1].String, values[2].String, values[3].String)
+		}
+	case "subscribe", "psubscribe":
+		if c.psHandlers.OnSubscribed != nil {
+			c.psHandlers.OnSubscribed(values[1].String, values[2].Integer)
+		}
+	case "unsubscribe", "punsubscribe":
+		if c.psHandlers.OnUnSubscribed != nil {
+			c.psHandlers.OnUnSubscribed(values[1].String, values[2].Integer)
+		}
 	}
 }
 
@@ -205,7 +229,9 @@ func (c *wire) Info() proto.Message {
 func (c *wire) Do(cmd cmds.Completed) (resp proto.Result) {
 	atomic.AddInt32(&c.waits, 1)
 	if atomic.LoadInt32(&c.state) == 0 {
-		resp = <-c.queue.PutOne(cmd)
+		if ch := c.queue.PutOne(cmd); !cmd.NoReply() {
+			resp = <-ch
+		}
 	} else {
 		resp.Err = c.error.Load().(error)
 	}
@@ -219,7 +245,9 @@ func (c *wire) DoMulti(multi ...cmds.Completed) []proto.Result {
 	if atomic.LoadInt32(&c.state) == 0 {
 		ch := c.queue.PutMulti(multi)
 		for i := range resp {
-			resp[i] = <-ch
+			if !multi[i].NoReply() {
+				resp[i] = <-ch
+			}
 		}
 	} else {
 		err := c.error.Load().(error)

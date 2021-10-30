@@ -248,7 +248,7 @@ func main() {
 			fmt.Printf("}\n\n")
 		}
 
-		if node.Root != nil && supportCaching(node.Root) {
+		if node.Root != nil && within(node.Root, cacheableCMDs) {
 			fmt.Printf("func (c %s) Cache() Cacheable {\n", node.StructName)
 			fmt.Printf("\treturn Cacheable(c)\n")
 			fmt.Printf("}\n\n")
@@ -265,8 +265,12 @@ func main() {
 			}
 			fmt.Printf("func (b *Builder) %s() (c %s) {\n", node.Argument.FullName(), node.StructName)
 
-			if isBlocking(node) {
+			if within(node, blockingCMDs) {
 				fmt.Printf("\tc.cf = blockTag\n")
+			}
+
+			if within(node, noRetCMDs) {
+				fmt.Printf("\tc.cf = noRetTag\n")
 			}
 
 			fmt.Printf("\tc.cs = append(b.get(), ")
@@ -486,9 +490,9 @@ func allOptional(children []string) bool {
 	return true
 }
 
-func isBlocking(cmd *CmdNode) bool {
+func within(cmd *CmdNode, cmds []string) bool {
 	n := strings.ToLower(cmd.StructName)
-	for _, v := range blockingCMDs {
+	for _, v := range cmds {
 		if v == n {
 			return true
 		}
@@ -496,14 +500,11 @@ func isBlocking(cmd *CmdNode) bool {
 	return false
 }
 
-func supportCaching(cmd *CmdNode) bool {
-	n := strings.ToLower(cmd.StructName)
-	for _, v := range cacheableCMDs {
-		if v == n {
-			return true
-		}
-	}
-	return false
+var noRetCMDs = []string{
+	"subscribe",
+	"psubscribe",
+	"unsubscribe",
+	"punsubscribe",
 }
 
 var blockingCMDs = []string{

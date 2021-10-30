@@ -8707,6 +8707,7 @@ func (c Psubscribe) Pattern(Pattern ...string) PsubscribePattern {
 }
 
 func (b *Builder) Psubscribe() (c Psubscribe) {
+	c.cf = noRetTag
 	c.cs = append(b.get(), "PSUBSCRIBE")
 	return
 }
@@ -8869,6 +8870,7 @@ func (c Punsubscribe) Build() Completed {
 }
 
 func (b *Builder) Punsubscribe() (c Punsubscribe) {
+	c.cf = noRetTag
 	c.cs = append(b.get(), "PUNSUBSCRIBE")
 	return
 }
@@ -11030,6 +11032,7 @@ func (c Subscribe) Channel(Channel ...string) SubscribeChannel {
 }
 
 func (b *Builder) Subscribe() (c Subscribe) {
+	c.cf = noRetTag
 	c.cs = append(b.get(), "SUBSCRIBE")
 	return
 }
@@ -11292,6 +11295,7 @@ func (c Unsubscribe) Build() Completed {
 }
 
 func (b *Builder) Unsubscribe() (c Unsubscribe) {
+	c.cf = noRetTag
 	c.cs = append(b.get(), "UNSUBSCRIBE")
 	return
 }
