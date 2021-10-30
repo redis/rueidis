@@ -12,6 +12,9 @@ var (
 	PingCmd = Completed{
 		cs: []string{"PING"},
 	}
+	QuitCmd = Completed{
+		cs: []string{"QUIT"},
+	}
 )
 
 type Completed struct {

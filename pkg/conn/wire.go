@@ -251,10 +251,13 @@ func (c *wire) Error() error {
 }
 
 func (c *wire) Close() {
-	c.error.CompareAndSwap(nil, ErrConnClosing)
+	swapped := c.error.CompareAndSwap(nil, ErrConnClosing)
 	atomic.CompareAndSwapInt32(&c.state, 0, 1)
 	for atomic.LoadInt32(&c.waits) != 0 {
 		runtime.Gosched()
+	}
+	if swapped {
+		<-c.queue.PutOne(cmds.QuitCmd)
 	}
 	atomic.CompareAndSwapInt32(&c.state, 1, 2)
 }
