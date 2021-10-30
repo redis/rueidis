@@ -18,6 +18,8 @@ type Conn struct {
 	opt  Option
 	wire atomic.Value
 	mu   sync.Mutex
+
+	blocking *pool
 }
 
 func NewConn(dst string, option Option) (*Conn, error) {
@@ -29,6 +31,7 @@ func NewConn(dst string, option Option) (*Conn, error) {
 	if _, err := conn.connect(); err != nil {
 		return nil, err
 	}
+	conn.blocking = newPool(defaultPoolSize, conn.dialRetry)
 	return conn, nil
 }
 
@@ -44,12 +47,7 @@ func (c *Conn) connect() (*wire, error) {
 		return wire, nil
 	}
 
-	conn, err := net.Dial("tcp", c.dst)
-	if err != nil {
-		return nil, err
-	}
-
-	wire, err := newWire(conn, c.opt)
+	wire, err := c.dial()
 	if err != nil {
 		return nil, err
 	}
@@ -64,6 +62,26 @@ func (c *Conn) connect() (*wire, error) {
 	return wire, nil
 }
 
+func (c *Conn) dial() (*wire, error) {
+	conn, err := net.Dial("tcp", c.dst)
+	if err != nil {
+		return nil, err
+	}
+	wire, err := newWire(conn, c.opt)
+	if err != nil {
+		return nil, err
+	}
+	return wire, nil
+}
+
+func (c *Conn) dialRetry() *wire {
+retry:
+	if wire, err := c.dial(); err == nil {
+		return wire
+	}
+	goto retry
+}
+
 func (c *Conn) acquire() *wire {
 retry:
 	if wire, err := c.connect(); err == nil {
@@ -76,26 +94,53 @@ func (c *Conn) Info() proto.Message {
 	return c.acquire().Info()
 }
 
-func (c *Conn) Do(cmd cmds.Completed) proto.Result {
+func (c *Conn) Do(cmd cmds.Completed) (resp proto.Result) {
 retry:
-	wire := c.acquire()
-	resp := wire.Do(cmd)
-	if retryable(resp.Err) {
-		c.wire.CompareAndSwap(wire, broken)
-		goto retry
+	if cmd.IsBlock() {
+		wire := c.blocking.Acquire()
+		resp = wire.Do(cmd)
+		c.blocking.Store(wire)
+		if retryable(resp.Err) {
+			goto retry
+		}
+	} else {
+		wire := c.acquire()
+		resp = wire.Do(cmd)
+		if retryable(resp.Err) {
+			c.wire.CompareAndSwap(wire, broken)
+			goto retry
+		}
 	}
 	c.Cmd.Put(cmd.Commands())
 	return resp
 }
 
-func (c *Conn) DoMulti(multi ...cmds.Completed) []proto.Result {
+func (c *Conn) DoMulti(multi ...cmds.Completed) (resp []proto.Result) {
+	var blocking bool
+	for i := len(multi) - 1; i >= 0; i-- {
+		if multi[i].IsBlock() {
+			blocking = true
+			break
+		}
+	}
 retry:
-	wire := c.acquire()
-	resp := wire.DoMulti(multi...)
-	for _, r := range resp {
-		if retryable(r.Err) {
-			c.wire.CompareAndSwap(wire, broken)
-			goto retry
+	if blocking {
+		wire := c.blocking.Acquire()
+		resp = wire.DoMulti(multi...)
+		c.blocking.Store(wire)
+		for _, r := range resp {
+			if retryable(r.Err) {
+				goto retry
+			}
+		}
+	} else {
+		wire := c.acquire()
+		resp := wire.DoMulti(multi...)
+		for _, r := range resp {
+			if retryable(r.Err) {
+				c.wire.CompareAndSwap(wire, broken)
+				goto retry
+			}
 		}
 	}
 	for _, cmd := range multi {

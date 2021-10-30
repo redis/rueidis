@@ -243,6 +243,13 @@ retry:
 	return c.DoMulti(cmds.OptInCmd, cmds.Completed(cmd))[1]
 }
 
+func (c *wire) Error() error {
+	if err, ok := c.error.Load().(error); ok {
+		return err
+	}
+	return nil
+}
+
 func (c *wire) Close() {
 	c.error.CompareAndSwap(nil, ErrConnClosing)
 	atomic.CompareAndSwapInt32(&c.state, 0, 1)
