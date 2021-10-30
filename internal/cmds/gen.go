@@ -1,3 +1,5 @@
+// Code generated DO NOT EDIT
+
 package cmds
 
 import "strconv"
@@ -11479,12 +11481,8 @@ func (c XaddKey) Minid() XaddTrimStrategyMinid {
 	return XaddTrimStrategyMinid{cf: c.cf, cs: append(c.cs, "MINID")}
 }
 
-func (c XaddKey) Wildcard() XaddWildcard {
-	return XaddWildcard{cf: c.cf, cs: append(c.cs, "*")}
-}
-
-func (c XaddKey) Id() XaddId {
-	return XaddId{cf: c.cf, cs: append(c.cs, "ID")}
+func (c XaddKey) Id(Id string) XaddId {
+	return XaddId{cf: c.cf, cs: append(c.cs, Id)}
 }
 
 type XaddNomkstream struct {
@@ -11500,12 +11498,8 @@ func (c XaddNomkstream) Minid() XaddTrimStrategyMinid {
 	return XaddTrimStrategyMinid{cf: c.cf, cs: append(c.cs, "MINID")}
 }
 
-func (c XaddNomkstream) Wildcard() XaddWildcard {
-	return XaddWildcard{cf: c.cf, cs: append(c.cs, "*")}
-}
-
-func (c XaddNomkstream) Id() XaddId {
-	return XaddId{cf: c.cf, cs: append(c.cs, "ID")}
+func (c XaddNomkstream) Id(Id string) XaddId {
+	return XaddId{cf: c.cf, cs: append(c.cs, Id)}
 }
 
 type XaddTrimLimit struct {
@@ -11513,12 +11507,8 @@ type XaddTrimLimit struct {
 	cf uint32
 }
 
-func (c XaddTrimLimit) Wildcard() XaddWildcard {
-	return XaddWildcard{cf: c.cf, cs: append(c.cs, "*")}
-}
-
-func (c XaddTrimLimit) Id() XaddId {
-	return XaddId{cf: c.cf, cs: append(c.cs, "ID")}
+func (c XaddTrimLimit) Id(Id string) XaddId {
+	return XaddId{cf: c.cf, cs: append(c.cs, Id)}
 }
 
 type XaddTrimOperatorAlmost struct {
@@ -11582,21 +11572,8 @@ func (c XaddTrimThreshold) Limit(Count int64) XaddTrimLimit {
 	return XaddTrimLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Count, 10))}
 }
 
-func (c XaddTrimThreshold) Wildcard() XaddWildcard {
-	return XaddWildcard{cf: c.cf, cs: append(c.cs, "*")}
-}
-
-func (c XaddTrimThreshold) Id() XaddId {
-	return XaddId{cf: c.cf, cs: append(c.cs, "ID")}
-}
-
-type XaddWildcard struct {
-	cs []string
-	cf uint32
-}
-
-func (c XaddWildcard) FieldValue() XaddFieldValue {
-	return XaddFieldValue{cf: c.cf, cs: append(c.cs, )}
+func (c XaddTrimThreshold) Id(Id string) XaddId {
+	return XaddId{cf: c.cf, cs: append(c.cs, Id)}
 }
 
 type Xautoclaim struct {
@@ -11927,61 +11904,32 @@ type XgroupCreateCreate struct {
 	cf uint32
 }
 
-func (c XgroupCreateCreate) Id() XgroupCreateIdId {
-	return XgroupCreateIdId{cf: c.cf, cs: append(c.cs, "ID")}
+func (c XgroupCreateCreate) Id(Id string) XgroupCreateId {
+	return XgroupCreateId{cf: c.cf, cs: append(c.cs, Id)}
 }
 
-func (c XgroupCreateCreate) Lastid() XgroupCreateIdLastID {
-	return XgroupCreateIdLastID{cf: c.cf, cs: append(c.cs, "$")}
-}
-
-type XgroupCreateIdId struct {
+type XgroupCreateId struct {
 	cs []string
 	cf uint32
 }
 
-func (c XgroupCreateIdId) Mkstream() XgroupCreateMkstream {
+func (c XgroupCreateId) Mkstream() XgroupCreateMkstream {
 	return XgroupCreateMkstream{cf: c.cf, cs: append(c.cs, "MKSTREAM")}
 }
 
-func (c XgroupCreateIdId) Setid(Key string, Groupname string) XgroupSetidSetid {
+func (c XgroupCreateId) Setid(Key string, Groupname string) XgroupSetidSetid {
 	return XgroupSetidSetid{cf: c.cf, cs: append(c.cs, "SETID", Key, Groupname)}
 }
 
-func (c XgroupCreateIdId) Destroy(Key string, Groupname string) XgroupDestroy {
+func (c XgroupCreateId) Destroy(Key string, Groupname string) XgroupDestroy {
 	return XgroupDestroy{cf: c.cf, cs: append(c.cs, "DESTROY", Key, Groupname)}
 }
 
-func (c XgroupCreateIdId) Createconsumer(Key string, Groupname string, Consumername string) XgroupCreateconsumer {
+func (c XgroupCreateId) Createconsumer(Key string, Groupname string, Consumername string) XgroupCreateconsumer {
 	return XgroupCreateconsumer{cf: c.cf, cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername)}
 }
 
-func (c XgroupCreateIdId) Delconsumer(Key string, Groupname string, Consumername string) XgroupDelconsumer {
-	return XgroupDelconsumer{cf: c.cf, cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
-}
-
-type XgroupCreateIdLastID struct {
-	cs []string
-	cf uint32
-}
-
-func (c XgroupCreateIdLastID) Mkstream() XgroupCreateMkstream {
-	return XgroupCreateMkstream{cf: c.cf, cs: append(c.cs, "MKSTREAM")}
-}
-
-func (c XgroupCreateIdLastID) Setid(Key string, Groupname string) XgroupSetidSetid {
-	return XgroupSetidSetid{cf: c.cf, cs: append(c.cs, "SETID", Key, Groupname)}
-}
-
-func (c XgroupCreateIdLastID) Destroy(Key string, Groupname string) XgroupDestroy {
-	return XgroupDestroy{cf: c.cf, cs: append(c.cs, "DESTROY", Key, Groupname)}
-}
-
-func (c XgroupCreateIdLastID) Createconsumer(Key string, Groupname string, Consumername string) XgroupCreateconsumer {
-	return XgroupCreateconsumer{cf: c.cf, cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername)}
-}
-
-func (c XgroupCreateIdLastID) Delconsumer(Key string, Groupname string, Consumername string) XgroupDelconsumer {
+func (c XgroupCreateId) Delconsumer(Key string, Groupname string, Consumername string) XgroupDelconsumer {
 	return XgroupDelconsumer{cf: c.cf, cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
 }
 
@@ -12045,45 +11993,24 @@ func (c XgroupDestroy) Build() Completed {
 	return Completed(c)
 }
 
-type XgroupSetidIdId struct {
+type XgroupSetidId struct {
 	cs []string
 	cf uint32
 }
 
-func (c XgroupSetidIdId) Destroy(Key string, Groupname string) XgroupDestroy {
+func (c XgroupSetidId) Destroy(Key string, Groupname string) XgroupDestroy {
 	return XgroupDestroy{cf: c.cf, cs: append(c.cs, "DESTROY", Key, Groupname)}
 }
 
-func (c XgroupSetidIdId) Createconsumer(Key string, Groupname string, Consumername string) XgroupCreateconsumer {
+func (c XgroupSetidId) Createconsumer(Key string, Groupname string, Consumername string) XgroupCreateconsumer {
 	return XgroupCreateconsumer{cf: c.cf, cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername)}
 }
 
-func (c XgroupSetidIdId) Delconsumer(Key string, Groupname string, Consumername string) XgroupDelconsumer {
+func (c XgroupSetidId) Delconsumer(Key string, Groupname string, Consumername string) XgroupDelconsumer {
 	return XgroupDelconsumer{cf: c.cf, cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
 }
 
-func (c XgroupSetidIdId) Build() Completed {
-	return Completed(c)
-}
-
-type XgroupSetidIdLastID struct {
-	cs []string
-	cf uint32
-}
-
-func (c XgroupSetidIdLastID) Destroy(Key string, Groupname string) XgroupDestroy {
-	return XgroupDestroy{cf: c.cf, cs: append(c.cs, "DESTROY", Key, Groupname)}
-}
-
-func (c XgroupSetidIdLastID) Createconsumer(Key string, Groupname string, Consumername string) XgroupCreateconsumer {
-	return XgroupCreateconsumer{cf: c.cf, cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername)}
-}
-
-func (c XgroupSetidIdLastID) Delconsumer(Key string, Groupname string, Consumername string) XgroupDelconsumer {
-	return XgroupDelconsumer{cf: c.cf, cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
-}
-
-func (c XgroupSetidIdLastID) Build() Completed {
+func (c XgroupSetidId) Build() Completed {
 	return Completed(c)
 }
 
@@ -12092,12 +12019,8 @@ type XgroupSetidSetid struct {
 	cf uint32
 }
 
-func (c XgroupSetidSetid) Id() XgroupSetidIdId {
-	return XgroupSetidIdId{cf: c.cf, cs: append(c.cs, "ID")}
-}
-
-func (c XgroupSetidSetid) Lastid() XgroupSetidIdLastID {
-	return XgroupSetidIdLastID{cf: c.cf, cs: append(c.cs, "$")}
+func (c XgroupSetidSetid) Id(Id string) XgroupSetidId {
+	return XgroupSetidId{cf: c.cf, cs: append(c.cs, Id)}
 }
 
 type Xinfo struct {
@@ -12362,6 +12285,7 @@ func (c Xread) Count(Count int64) XreadCount {
 }
 
 func (c Xread) Block(Milliseconds int64) XreadBlock {
+	c.cf = blockTag
 	return XreadBlock{cf: c.cf, cs: append(c.cs, "BLOCK", strconv.FormatInt(Milliseconds, 10))}
 }
 
@@ -12389,6 +12313,7 @@ type XreadCount struct {
 }
 
 func (c XreadCount) Block(Milliseconds int64) XreadBlock {
+	c.cf = blockTag
 	return XreadBlock{cf: c.cf, cs: append(c.cs, "BLOCK", strconv.FormatInt(Milliseconds, 10))}
 }
 
@@ -12464,6 +12389,7 @@ type XreadgroupCount struct {
 }
 
 func (c XreadgroupCount) Block(Milliseconds int64) XreadgroupBlock {
+	c.cf = blockTag
 	return XreadgroupBlock{cf: c.cf, cs: append(c.cs, "BLOCK", strconv.FormatInt(Milliseconds, 10))}
 }
 
@@ -12485,6 +12411,7 @@ func (c XreadgroupGroup) Count(Count int64) XreadgroupCount {
 }
 
 func (c XreadgroupGroup) Block(Milliseconds int64) XreadgroupBlock {
+	c.cf = blockTag
 	return XreadgroupBlock{cf: c.cf, cs: append(c.cs, "BLOCK", strconv.FormatInt(Milliseconds, 10))}
 }
 

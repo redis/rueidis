@@ -154,6 +154,8 @@ func BenchmarkClientSideCache(b *testing.B) {
 The following blocking commands use another connection pool and will not share the same connection
 with others and will not cause others to be blocked:
 
+* xread with block
+* xreadgroup with block
 * blpop
 * brpop
 * brpoplpush

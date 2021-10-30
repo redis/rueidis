@@ -100,7 +100,7 @@ func main() {
 			}
 		}
 	}
-	fmt.Printf("package cmds\n\n")
+	fmt.Printf("// Code generated DO NOT EDIT\n\npackage cmds\n\n")
 
 	fmt.Printf("import %q\n\n", "strconv")
 	for _, k := range keys {
@@ -176,6 +176,11 @@ func main() {
 			}
 			fmt.Printf(") %s {\n", strings.TrimSuffix(child.StructName, "_nocmd"))
 			// func body
+
+			if child.Command == "BLOCK" {
+				fmt.Printf("\tc.cf = blockTag\n")
+			}
+
 			var appends []string
 			if len(child.Command) > 0 {
 				for _, c := range strings.Split(child.Command, " ") {
@@ -291,6 +296,18 @@ func node(root *CmdNode, prefix string, arg Argument, args []Argument, parent st
 	if len(arg.Block) > 0 && arg.Type != "block" {
 		panic("wrong input")
 	}
+	// fix for XGROUP
+	if len(arg.Enum) == 2 && arg.Enum[0] == "ID" && arg.Enum[1] == "$" {
+		arg.Name = "id"
+		arg.Type = "string"
+		arg.Enum = nil
+	}
+	// fix for XADD
+	if len(arg.Enum) == 2 && arg.Enum[0] == "*" && arg.Enum[1] == "ID" {
+		arg.Name = "id"
+		arg.Type = "string"
+		arg.Enum = nil
+	}
 	switch arg.Type {
 	case "enum":
 		for _, e := range arg.Enum {
@@ -301,12 +318,6 @@ func node(root *CmdNode, prefix string, arg Argument, args []Argument, parent st
 				cmd.Argument = Argument{Command: e, Optional: arg.Optional, Multiple: arg.Multiple, Variadic: arg.Variadic}
 			case "=":
 				cmd.StructName = prefix + UcFirst(name(arg.Name)) + "Exact"
-				cmd.Argument = Argument{Command: e, Optional: arg.Optional, Multiple: arg.Multiple, Variadic: arg.Variadic}
-			case "*":
-				cmd.StructName = prefix + UcFirst(name(arg.Name)) + "Wildcard"
-				cmd.Argument = Argument{Command: e, Optional: arg.Optional, Multiple: arg.Multiple, Variadic: arg.Variadic}
-			case "$":
-				cmd.StructName = prefix + UcFirst(name(arg.Name)) + "LastID"
 				cmd.Argument = Argument{Command: e, Optional: arg.Optional, Multiple: arg.Multiple, Variadic: arg.Variadic}
 			case "\"\"":
 				cmd.StructName = prefix + UcFirst(name(arg.Name)) + "Empty"
@@ -400,6 +411,18 @@ func argIDs(prefix string, arg Argument) (ids []string) {
 	if len(arg.Block) > 0 && arg.Type != "block" {
 		panic("wrong input")
 	}
+	// fix for XGROUP
+	if len(arg.Enum) == 2 && arg.Enum[0] == "ID" && arg.Enum[1] == "$" {
+		arg.Name = "id"
+		arg.Type = "string"
+		arg.Enum = nil
+	}
+	// fix for XADD
+	if len(arg.Enum) == 2 && arg.Enum[0] == "*" && arg.Enum[1] == "ID" {
+		arg.Name = "id"
+		arg.Type = "string"
+		arg.Enum = nil
+	}
 	switch arg.Type {
 	case "enum":
 		for _, e := range arg.Enum {
@@ -408,10 +431,6 @@ func argIDs(prefix string, arg Argument) (ids []string) {
 				ids = append(ids, prefix+UcFirst(name(arg.Name))+"Almost")
 			case "=":
 				ids = append(ids, prefix+UcFirst(name(arg.Name))+"Exact")
-			case "*":
-				ids = append(ids, prefix+UcFirst(name(arg.Name))+"Wildcard")
-			case "$":
-				ids = append(ids, prefix+UcFirst(name(arg.Name))+"LastID")
 			case "\"\"":
 				ids = append(ids, prefix+UcFirst(name(arg.Name))+"Empty")
 			default:
@@ -441,10 +460,6 @@ func name(n interface{}) (name string) {
 			return "almost"
 		case "=":
 			return "exact"
-		case "*":
-			return "wildcard"
-		case "$":
-			return "lastid"
 		case "\"\"":
 			return "empty"
 		}
