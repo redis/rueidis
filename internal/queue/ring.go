@@ -63,7 +63,7 @@ func (r *Ring) acquire(position uint64) *node {
 	return n
 }
 
-// NextCmd should be only called by one dedicated thread
+// NextWriteCmd should be only called by one dedicated thread
 func (r *Ring) NextWriteCmd() (cmds.Completed, []cmds.Completed, chan proto.Result) {
 	r.read1++
 	p := r.read1 & r.mask
