@@ -111,6 +111,7 @@ func setup(t *testing.T, option Option) (*wire, *redisMock, func(), func()) {
 		t.Fatalf("wire setup failed, unexpected hello response: %v", c.Info())
 	}
 	return c, mock, func() {
+			go func() { mock.Expect([]string{"QUIT"}).ReplyString("OK") }()
 			c.Close()
 			mock.Close()
 		}, func() {
