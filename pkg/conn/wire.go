@@ -18,9 +18,11 @@ import (
 
 const DefaultCacheBytes = 128 * (1 << 20)
 
-var (
-	ErrConnClosing = errors.New("connection is closing")
-)
+var ErrConnClosing = errors.New("connection is closing")
+
+type errWrap struct {
+	error
+}
 
 type wire struct {
 	waits int32
@@ -129,7 +131,7 @@ func (c *wire) reading() {
 				}
 			}
 			if err != nil {
-				c.error.CompareAndSwap(nil, err)
+				c.error.CompareAndSwap(nil, &errWrap{error: err})
 				return
 			}
 		}
@@ -148,7 +150,7 @@ func (c *wire) reading() {
 
 		for {
 			if msg, err = proto.ReadNextMessage(c.r); err != nil {
-				c.error.CompareAndSwap(nil, err)
+				c.error.CompareAndSwap(nil, &errWrap{error: err})
 				return
 			}
 			if msg.Type == '>' {
@@ -201,7 +203,7 @@ func (c *wire) reading() {
 			multi = ones
 		}
 		for i := 0; i < len(multi); i++ {
-			ch <- proto.Result{Err: c.error.Load().(error)}
+			ch <- proto.Result{Err: c.Error()}
 		}
 	}
 	atomic.CompareAndSwapInt32(&c.state, 1, 2)
@@ -245,7 +247,7 @@ func (c *wire) Do(cmd cmds.Completed) (resp proto.Result) {
 	if atomic.LoadInt32(&c.state) == 0 {
 		resp = <-c.queue.PutOne(cmd)
 	} else {
-		resp.Err = c.error.Load().(error)
+		resp.Err = c.Error()
 	}
 	atomic.AddInt32(&c.waits, -1)
 	return resp
@@ -260,7 +262,7 @@ func (c *wire) DoMulti(multi ...cmds.Completed) []proto.Result {
 			resp[i] = <-ch
 		}
 	} else {
-		err := c.error.Load().(error)
+		err := c.Error()
 		for i := 0; i < len(resp); i++ {
 			resp[i].Err = err
 		}
@@ -282,14 +284,14 @@ retry:
 }
 
 func (c *wire) Error() error {
-	if err, ok := c.error.Load().(error); ok {
-		return err
+	if err, ok := c.error.Load().(*errWrap); ok {
+		return err.error
 	}
 	return nil
 }
 
 func (c *wire) Close() {
-	swapped := c.error.CompareAndSwap(nil, ErrConnClosing)
+	swapped := c.error.CompareAndSwap(nil, &errWrap{error: ErrConnClosing})
 	atomic.CompareAndSwapInt32(&c.state, 0, 1)
 	for atomic.LoadInt32(&c.waits) != 0 {
 		runtime.Gosched()

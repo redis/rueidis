@@ -18,46 +18,43 @@ the overall round trip costs, and gets higher throughput.
 
 ```shell
 ▶ # run redis-server at 127.0.0.1:6379
-▶ ./redis-6.2.5/src/redis-server
-▶ go test -bench=. -benchmem
+▶ docker run -d -p 6379:6379 redis:6-alpine
+▶ go test -bench=. -benchmem ./cmd/bench3/...
 goos: darwin
 goarch: amd64
 pkg: github.com/rueian/rueidis/cmd/bench3
 cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
-BenchmarkRedisClient/GoRedisParallel100Set1KB-12                   71458             21280 ns/op             855 B/op          9 allocs/op
-BenchmarkRedisClient/RueidisParallel100Set1KB-12                  379381              2809 ns/op              34 B/op          3 allocs/op
+BenchmarkRedisClient/RueidisParallel100Get-12    739058     1534 ns/op     25 B/op    2 allocs/op
+BenchmarkRedisClient/GoRedisParallel100Get-12     40605    30867 ns/op    230 B/op    6 allocs/op
 PASS
-ok      github.com/rueian/rueidis/cmd/bench3    3.973s
+ok  	github.com/rueian/rueidis/cmd/bench3	3.589s
 
 ```
 Benchmark source code:
 ```golang
 func BenchmarkRedisClient(b *testing.B) {
-	sb := strings.Builder{}
-	sb.Write(make([]byte, 1024))
-
-	b.Run("GoRedisParallel100Set1KB", func(b *testing.B) {
-		rdb := redis.NewClient(&redis.Options{Addr: "127.0.0.1:6379", PoolSize: 1000})
-		ctx := context.Background()
-		b.SetParallelism(100)
-		b.ResetTimer()
-		b.RunParallel(func(pb *testing.PB) {
-			for pb.Next() {
-				rdb.Set(ctx, "a", sb.String(), 0)
-			}
-		})
-		rdb.Close()
-	})
-	b.Run("RueidisParallel100Set1KB", func(b *testing.B) {
+	b.Run("RueidisParallel100Get", func(b *testing.B) {
 		c, _ := conn.NewConn("127.0.0.1:6379", conn.Option{})
 		b.SetParallelism(100)
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
-				c.Do(c.Cmd.Set().Key("a").Value(sb.String()).Build())
+				c.Do(c.Cmd.Get().Key("a").Build())
 			}
 		})
 		c.Close()
+	})
+	b.Run("GoRedisParallel100Get", func(b *testing.B) {
+		rdb := redis.NewClient(&redis.Options{Addr: "127.0.0.1:6379", PoolSize: 100})
+		ctx := context.Background()
+		b.SetParallelism(100)
+		b.ResetTimer()
+		b.RunParallel(func(pb *testing.PB) {
+			for pb.Next() {
+				rdb.Get(ctx, "a")
+			}
+		})
+		rdb.Close()
 	})
 }
 ```
@@ -70,18 +67,19 @@ a separated client side TTL.
 A separated client side TTL is required because the current spec (redis 6.2) of Client Side Caching doesn't include notification of
 key expiration on server in time.
 
-### Benchmark
+### Benchmark [(source)](./pkg/conn/conn_test.go)
 
 ```shell
+▶ docker run -d -p 6379:6379 redis:6-alpine
 ▶ go test -bench=BenchmarkClientSideCaching -benchmem ./pkg/conn
 goos: darwin
 goarch: amd64
 pkg: github.com/rueian/rueidis/pkg/conn
 cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
-BenchmarkClientSideCaching/Do-12         1275597    963.1 ns/op    25 B/op    2 allocs/op
-BenchmarkClientSideCaching/DoCache-12    3767133    327.8 ns/op    24 B/op    1 allocs/op
+BenchmarkClientSideCaching/Do-12          672206     1803 ns/op    25 B/op    2 allocs/op
+BenchmarkClientSideCaching/DoCache-12    3282188    368.3 ns/op    24 B/op    1 allocs/op
 PASS
-ok  	github.com/rueian/rueidis/pkg/conn	4.163s
+ok  	github.com/rueian/rueidis/pkg/conn	3.057s
 ```
 
 ### Supported Commands for Client Side Caching

@@ -74,7 +74,7 @@ func TestPoolError(t *testing.T) {
 			w := &wire{}
 			c := atomic.AddInt32(&count, 1)
 			if c%2 == 0 {
-				w.error.Store(errors.New("any"))
+				w.error.Store(&errWrap{error: errors.New("any")})
 			}
 			return w
 		}), &count

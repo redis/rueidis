@@ -11,7 +11,7 @@ func BenchmarkClientSideCaching(b *testing.B) {
 		if err != nil {
 			panic(err)
 		}
-		b.SetParallelism(50)
+		b.SetParallelism(100)
 		b.ResetTimer()
 		return c
 	}
