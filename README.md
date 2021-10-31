@@ -1,6 +1,13 @@
 # rueidis
+A Fast Golang Redis RESP3 client that does auto pipelining and supports client side caching.
 
-A Golang Redis RESP3 client that does auto pipelining and supports client side caching.
+## Features
+
+* auto pipeline for non-blocking redis commands
+* connection pooling for blocking redis commands
+* opt-in client side caching
+* pub/sub, streams
+* IDE friendly redis command builder
 
 ## Auto Pipeline
 
@@ -167,6 +174,21 @@ with others and will not cause others to be blocked:
 * migrate
 * wait
 
+## Pub/Sub
+
+To receive messages from channels, the message handler should be registered when creating the redis connection:
+
+```golang
+conn, _ := conn.NewConn("127.0.0.1:6379", conn.Option{
+    PubSubHandlers: conn.PubSubHandlers{
+        OnMessage: func(channel, message string) {
+            // handle the message
+        },
+    },
+})
+conn.Do(c.Cmd.Subscribe().Channel("my_channel").Build())
+```
+
 ## Command Builder
 
 Redis commands are very complex and their formats are very different from each other.
@@ -187,5 +209,4 @@ Once the command is passed to the one of above `Conn.DoXXX()`, the command will 
 The following subjects are not yet implemented.
 
 * Redis Cluster client
-* ~~Auto Reconnect~~
 * RESP2
