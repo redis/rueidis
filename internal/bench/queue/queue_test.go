@@ -11,7 +11,7 @@ import (
 
 type Queue interface {
 	PutOne(m cmds.Completed) chan proto.Result
-	NextCmd() (cmds.Completed, []cmds.Completed)
+	NextCmd() (cmds.Completed, []cmds.Completed, chan proto.Result)
 	NextResultCh() (cmds.Completed, []cmds.Completed, chan proto.Result)
 }
 

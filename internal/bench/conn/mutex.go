@@ -35,7 +35,7 @@ func (c *Conn) Close() {
 
 func reading(c *Conn) {
 	for atomic.LoadInt32(&c.state) != 2 {
-		cmd, _ := c.q.NextCmd()
+		cmd, _, _ := c.q.NextWriteCmd()
 		if cmd.IsEmpty() {
 			runtime.Gosched()
 			continue
@@ -71,7 +71,7 @@ func NewConnMutexInEventLoop(hits, evic int) *Conn {
 	c := &Conn{q: queue.NewRing(), hits: hits, evic: evic}
 	go func() {
 		for atomic.LoadInt32(&c.state) != 2 {
-			cmd, _ := c.q.NextCmd()
+			cmd, _, _ := c.q.NextWriteCmd()
 			if cmd.IsEmpty() {
 				runtime.Gosched()
 				continue

@@ -14,22 +14,33 @@ import (
 	"github.com/rueian/rueidis/internal/proto"
 )
 
+type redisExpect struct {
+	*redisMock
+	err error
+}
+
 type redisMock struct {
 	t    *testing.T
 	buf  *bufio.Reader
 	conn net.Conn
 }
 
-func (r *redisMock) ReadMessage() proto.Message {
+func (r *redisMock) ReadMessage() (proto.Message, error) {
 	m, err := proto.ReadNextMessage(r.buf)
 	if err != nil {
-		r.t.Fatalf("redismock receive unexpected err while ReadNextMessage: %v", err)
+		return proto.Message{}, err
 	}
-	return m
+	return m, nil
 }
 
-func (r *redisMock) Expect(expected []string) *redisMock {
-	m := r.ReadMessage()
+func (r *redisMock) Expect(expected ...string) *redisExpect {
+	if len(expected) == 0 {
+		return &redisExpect{redisMock: r}
+	}
+	m, err := r.ReadMessage()
+	if err != nil {
+		return &redisExpect{redisMock: r, err: err}
+	}
 	if len(expected) != len(m.Values) {
 		r.t.Fatalf("redismock receive unexpected command length: expected %v, got : %v", len(expected), len(m.Values))
 	}
@@ -38,20 +49,22 @@ func (r *redisMock) Expect(expected []string) *redisMock {
 			r.t.Fatalf("redismock receive unexpected command: expected %v, got : %v", expected, m.Values[i])
 		}
 	}
-	return r
+	return &redisExpect{redisMock: r}
 }
 
-func (r *redisMock) ReplyString(replies ...string) *redisMock {
+func (r *redisExpect) ReplyString(replies ...string) *redisExpect {
 	for _, reply := range replies {
-		r.Reply(proto.Message{Type: '+', String: reply})
+		if r.err == nil {
+			r.Reply(proto.Message{Type: '+', String: reply})
+		}
 	}
 	return r
 }
 
-func (r *redisMock) Reply(replies ...proto.Message) *redisMock {
+func (r *redisExpect) Reply(replies ...proto.Message) *redisExpect {
 	for _, reply := range replies {
-		if err := write(r.conn, reply); err != nil {
-			r.t.Fatalf("unexpected error while setting mock replies: %v", err)
+		if r.err == nil {
+			r.err = write(r.conn, reply)
 		}
 	}
 	return r
@@ -92,7 +105,7 @@ func setup(t *testing.T, option Option) (*wire, *redisMock, func(), func()) {
 		conn: n2,
 	}
 	go func() {
-		mock.Expect([]string{"HELLO", "3"}).
+		mock.Expect("HELLO", "3").
 			Reply(proto.Message{
 				Type: '%',
 				Values: []proto.Message{
@@ -100,7 +113,7 @@ func setup(t *testing.T, option Option) (*wire, *redisMock, func(), func()) {
 					{Type: '+', String: "value"},
 				},
 			})
-		mock.Expect([]string{"CLIENT", "TRACKING", "ON", "OPTIN"}).
+		mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
 			ReplyString("OK")
 	}()
 	c, err := newWire(n1, option)
@@ -111,7 +124,7 @@ func setup(t *testing.T, option Option) (*wire, *redisMock, func(), func()) {
 		t.Fatalf("wire setup failed, unexpected hello response: %v", c.Info())
 	}
 	return c, mock, func() {
-			go func() { mock.Expect([]string{"QUIT"}).ReplyString("OK") }()
+			go func() { mock.Expect("QUIT").ReplyString("OK") }()
 			c.Close()
 			mock.Close()
 		}, func() {
@@ -132,7 +145,7 @@ func ExpectOK(t *testing.T, result proto.Result) {
 func TestWriteSingleFlush(t *testing.T) {
 	conn, mock, cancel, _ := setup(t, Option{})
 	defer cancel()
-	go func() { mock.Expect([]string{"PING"}).ReplyString("OK") }()
+	go func() { mock.Expect("PING").ReplyString("OK") }()
 	ExpectOK(t, conn.Do(cmds.NewCompleted([]string{"PING"})))
 }
 
@@ -140,8 +153,7 @@ func TestWriteMultiFlush(t *testing.T) {
 	conn, mock, cancel, _ := setup(t, Option{})
 	defer cancel()
 	go func() {
-		mock.Expect([]string{"PING"}).Expect([]string{"PING"})
-		mock.ReplyString("OK").ReplyString("OK")
+		mock.Expect("PING").Expect("PING").ReplyString("OK").ReplyString("OK")
 	}()
 	for _, resp := range conn.DoMulti(cmds.NewCompleted([]string{"PING"}), cmds.NewCompleted([]string{"PING"})) {
 		ExpectOK(t, resp)
@@ -165,9 +177,9 @@ func TestResponseSequenceWithPushMessageInjected(t *testing.T) {
 		}(i)
 	}
 	for i := 0; i < times; i++ {
-		m := mock.ReadMessage()
-		mock.ReplyString(m.Values[1].String)
-		mock.Reply(proto.Message{Type: '>', Values: []proto.Message{{Type: '+', String: "should be ignore"}}})
+		m, _ := mock.ReadMessage()
+		mock.Expect().ReplyString(m.Values[1].String).
+			Reply(proto.Message{Type: '>', Values: []proto.Message{{Type: '+', String: "should be ignore"}}})
 	}
 	wg.Wait()
 }
@@ -177,8 +189,8 @@ func TestClientSideCaching(t *testing.T) {
 	defer cancel()
 
 	go func() {
-		mock.Expect([]string{"CLIENT", "CACHING", "YES"}).
-			Expect([]string{"GET", "a"}).
+		mock.Expect("CLIENT", "CACHING", "YES").
+			Expect("GET", "a").
 			ReplyString("OK").
 			ReplyString("1")
 	}()
@@ -197,7 +209,7 @@ func TestClientSideCaching(t *testing.T) {
 	wg.Wait()
 
 	// cache invalidation
-	mock.Reply(proto.Message{
+	mock.Expect().Reply(proto.Message{
 		Type: '>',
 		Values: []proto.Message{
 			{Type: '+', String: "invalidate"},
@@ -205,8 +217,8 @@ func TestClientSideCaching(t *testing.T) {
 		},
 	})
 	go func() {
-		mock.Expect([]string{"CLIENT", "CACHING", "YES"}).
-			Expect([]string{"GET", "a"}).
+		mock.Expect("CLIENT", "CACHING", "YES").
+			Expect("GET", "a").
 			ReplyString("OK").
 			ReplyString("2")
 	}()
@@ -248,7 +260,7 @@ func TestExitAllGoroutineOnReadError(t *testing.T) {
 	defer cancel()
 
 	go func() {
-		mock.Expect([]string{"GET", "a"})
+		mock.Expect("GET", "a")
 		closePipe()
 	}()
 

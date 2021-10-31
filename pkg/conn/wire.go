@@ -111,10 +111,11 @@ func (c *wire) reading() {
 			err   error
 			ones  = make([]cmds.Completed, 1)
 			multi []cmds.Completed
+			ch    chan proto.Result
 		)
 
 		for atomic.LoadInt32(&c.state) != 2 {
-			if ones[0], multi = c.queue.NextCmd(); multi == nil {
+			if ones[0], multi, ch = c.queue.NextWriteCmd(); multi == nil {
 				if !ones[0].IsEmpty() {
 					multi = ones
 				} else {
@@ -123,7 +124,9 @@ func (c *wire) reading() {
 				}
 			}
 			for _, cmd := range multi {
-				err = proto.WriteCmd(c.w, cmd.Commands())
+				if err = proto.WriteCmd(c.w, cmd.Commands()); cmd.NoReply() {
+					ch <- proto.Result{Err: err}
+				}
 			}
 			if err != nil {
 				c.error.CompareAndSwap(nil, err)
@@ -189,7 +192,7 @@ func (c *wire) reading() {
 	// clean up write queue and read queue
 	atomic.CompareAndSwapInt32(&c.state, 0, 1)
 	for atomic.LoadInt32(&c.waits) != 0 {
-		c.queue.NextCmd()
+		c.queue.NextWriteCmd()
 		if ones[0], multi, ch = c.queue.NextResultCh(); ch == nil {
 			runtime.Gosched()
 			continue
@@ -240,9 +243,7 @@ func (c *wire) Info() proto.Message {
 func (c *wire) Do(cmd cmds.Completed) (resp proto.Result) {
 	atomic.AddInt32(&c.waits, 1)
 	if atomic.LoadInt32(&c.state) == 0 {
-		if ch := c.queue.PutOne(cmd); !cmd.NoReply() {
-			resp = <-ch
-		}
+		resp = <-c.queue.PutOne(cmd)
 	} else {
 		resp.Err = c.error.Load().(error)
 	}
@@ -256,9 +257,7 @@ func (c *wire) DoMulti(multi ...cmds.Completed) []proto.Result {
 	if atomic.LoadInt32(&c.state) == 0 {
 		ch := c.queue.PutMulti(multi)
 		for i := range resp {
-			if !multi[i].NoReply() {
-				resp[i] = <-ch
-			}
+			resp[i] = <-ch
 		}
 	} else {
 		err := c.error.Load().(error)

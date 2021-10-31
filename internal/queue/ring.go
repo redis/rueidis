@@ -64,15 +64,15 @@ func (r *Ring) acquire(position uint64) *node {
 }
 
 // NextCmd should be only called by one dedicated thread
-func (r *Ring) NextCmd() (cmds.Completed, []cmds.Completed) {
+func (r *Ring) NextWriteCmd() (cmds.Completed, []cmds.Completed, chan proto.Result) {
 	r.read1++
 	p := r.read1 & r.mask
 	n := &r.store[p]
 	if !atomic.CompareAndSwapUint32(&n.mark, 2, 3) {
 		r.read1--
-		return cmds.Completed{}, nil
+		return cmds.Completed{}, nil, nil
 	}
-	return n.one, n.multi
+	return n.one, n.multi, n.ch
 }
 
 // NextResultCh should be only called by one dedicated thread

@@ -41,13 +41,13 @@ func (r *NoPadRing) PutOne(m cmds.Completed) chan proto.Result {
 	return nil
 }
 
-func (r *NoPadRing) NextCmd() (cmds.Completed, []cmds.Completed) {
+func (r *NoPadRing) NextCmd() (cmds.Completed, []cmds.Completed, chan proto.Result) {
 	r.read1 = (r.read1 + 1) & r.mask
 	n := &r.store[r.read1]
 	for !atomic.CompareAndSwapUint32(&n.mark, 2, 3) {
 		runtime.Gosched()
 	}
-	return cmds.Completed{}, nil
+	return cmds.Completed{}, nil, nil
 }
 
 func (r *NoPadRing) NextResultCh() (cmds.Completed, []cmds.Completed, chan proto.Result) {

@@ -26,10 +26,10 @@ func (c *Chan) PutOne(m cmds.Completed) chan proto.Result {
 	return nil
 }
 
-func (c *Chan) NextCmd() (cmds.Completed, []cmds.Completed) {
+func (c *Chan) NextCmd() (cmds.Completed, []cmds.Completed, chan proto.Result) {
 	m := <-c.ch1
 	c.ch2 <- m
-	return cmds.Completed{}, nil
+	return cmds.Completed{}, nil, nil
 }
 
 func (c *Chan) NextResultCh() (cmds.Completed, []cmds.Completed, chan proto.Result) {
