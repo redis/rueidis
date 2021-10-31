@@ -73,40 +73,15 @@ key expiration on server in time.
 ### Benchmark
 
 ```shell
-▶ go test -bench=. -benchmem
+▶ go test -bench=BenchmarkClientSideCaching -benchmem ./pkg/conn
 goos: darwin
 goarch: amd64
-pkg: github.com/rueian/rueidis/cmd/bench4
+pkg: github.com/rueian/rueidis/pkg/conn
 cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
-BenchmarkClientSideCache/Do-12                    594303            1920 ns/op      1048 B/op          2 allocs/op
-BenchmarkClientSideCache/DoCache-12              3448129           347.1 ns/op        24 B/op          1 allocs/op
+BenchmarkClientSideCaching/Do-12         1275597    963.1 ns/op    25 B/op    2 allocs/op
+BenchmarkClientSideCaching/DoCache-12    3767133    327.8 ns/op    24 B/op    1 allocs/op
 PASS
-ok  	github.com/rueian/rueidis/cmd/bench4	3.801s
-```
-Benchmark source code:
-```golang
-func BenchmarkClientSideCache(b *testing.B) {
-	b.Run("Do", func(b *testing.B) {
-		c, _ := conn.NewConn("127.0.0.1:6379", conn.Option{CacheSize: conn.DefaultCacheBytes})
-		b.SetParallelism(100)
-		b.ResetTimer()
-		b.RunParallel(func(pb *testing.PB) {
-			for pb.Next() {
-				c.Do(c.Cmd.Get().Key("a").Build())
-			}
-		})
-	})
-	b.Run("DoCache", func(b *testing.B) {
-		c, _ := conn.NewConn("127.0.0.1:6379", conn.Option{CacheSize: conn.DefaultCacheBytes})
-		b.SetParallelism(100)
-		b.ResetTimer()
-		b.RunParallel(func(pb *testing.PB) {
-			for pb.Next() {
-				c.DoCache(c.Cmd.Get().Key("a").Cache(), time.Second*5)
-			}
-		})
-	})
-}
+ok  	github.com/rueian/rueidis/pkg/conn	4.163s
 ```
 
 ### Supported Commands for Client Side Caching
