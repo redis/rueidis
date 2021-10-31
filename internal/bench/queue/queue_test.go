@@ -11,7 +11,7 @@ import (
 
 type Queue interface {
 	PutOne(m cmds.Completed) chan proto.Result
-	NextCmd() (cmds.Completed, []cmds.Completed, chan proto.Result)
+	NextWriteCmd() (cmds.Completed, []cmds.Completed, chan proto.Result)
 	NextResultCh() (cmds.Completed, []cmds.Completed, chan proto.Result)
 }
 
@@ -22,7 +22,7 @@ func BenchmarkQueue(b *testing.B) {
 			stop := int32(0)
 			go func() {
 				for atomic.LoadInt32(&stop) == 0 {
-					q.NextCmd()
+					q.NextWriteCmd()
 					q.NextResultCh()
 				}
 			}()

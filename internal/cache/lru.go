@@ -80,26 +80,22 @@ func (c *LRU) GetOrPrepare(key, cmd string, ttl time.Duration) (v proto.Message,
 func (c *LRU) Update(key, cmd string, value proto.Message) {
 	var ch chan struct{}
 	c.mu.Lock()
-	store, ok := c.store[key]
-	if !ok {
-		c.mu.Unlock()
-		return
-	}
-	ele, ok := store[cmd]
-	if ok {
-		e := ele.Value.(*entry)
-		e.val = value
-		e.size = entrySize + elementSize + 2*(stringSSize+len(key)+stringSSize+len(cmd)) + value.Size()
-		ch = e.ch
-		e.ch = nil
+	if store, ok := c.store[key]; ok {
+		if ele, ok := store[cmd]; ok {
+			e := ele.Value.(*entry)
+			e.val = value
+			e.size = entrySize + elementSize + 2*(stringSSize+len(key)+stringSSize+len(cmd)) + value.Size()
+			ch = e.ch
+			e.ch = nil
 
-		c.size += e.size
-		for c.size > c.max {
-			if ele = c.list.Front(); ele != nil {
-				e = ele.Value.(*entry)
-				delete(c.store[e.key], e.cmd)
-				c.list.Remove(ele)
-				c.size -= e.size
+			c.size += e.size
+			for c.size > c.max {
+				if ele = c.list.Front(); ele != nil {
+					e = ele.Value.(*entry)
+					delete(c.store[e.key], e.cmd)
+					c.list.Remove(ele)
+					c.size -= e.size
+				}
 			}
 		}
 	}
