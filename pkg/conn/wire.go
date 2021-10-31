@@ -107,17 +107,23 @@ func (c *wire) reading() {
 	go func() { // write goroutine
 		defer exit()
 
-		var err error
+		var (
+			err   error
+			ones  = make([]cmds.Completed, 1)
+			multi []cmds.Completed
+		)
+
 		for atomic.LoadInt32(&c.state) != 2 {
-			if one, multi := c.queue.NextCmd(); !one.IsEmpty() {
-				err = proto.WriteCmd(c.w, one.Commands())
-			} else if multi != nil {
-				for _, cmd := range multi {
-					err = proto.WriteCmd(c.w, cmd.Commands())
+			if ones[0], multi = c.queue.NextCmd(); multi == nil {
+				if !ones[0].IsEmpty() {
+					multi = ones
+				} else {
+					err = c.w.Flush()
+					runtime.Gosched()
 				}
-			} else {
-				err = c.w.Flush()
-				runtime.Gosched()
+			}
+			for _, cmd := range multi {
+				err = proto.WriteCmd(c.w, cmd.Commands())
 			}
 			if err != nil {
 				c.error.CompareAndSwap(nil, err)
@@ -129,6 +135,8 @@ func (c *wire) reading() {
 		defer exit()
 
 		var (
+			err   error
+			msg   proto.Message
 			ones  = make([]cmds.Completed, 1)
 			multi []cmds.Completed
 			ch    chan proto.Result
@@ -136,8 +144,7 @@ func (c *wire) reading() {
 		)
 
 		for {
-			msg, err := proto.ReadNextMessage(c.r)
-			if err != nil {
+			if msg, err = proto.ReadNextMessage(c.r); err != nil {
 				c.error.CompareAndSwap(nil, err)
 				return
 			}
@@ -145,14 +152,12 @@ func (c *wire) reading() {
 				c.handlePush(msg.Values)
 				continue
 			}
-
 			// if unfulfilled multi commands are lead by opt-in and get success response
 			if ff != len(multi) && len(multi) > 1 && multi[0].IsOptIn() && msg.Type != '-' && msg.Type != '!' {
 				cacheable := cmds.Cacheable(multi[ff])
 				ck, cc := cacheable.CacheKey()
 				c.cache.Update(ck, cc, msg)
 			}
-
 		nextCMD:
 			if ff == len(multi) {
 				ff = 0
@@ -161,7 +166,7 @@ func (c *wire) reading() {
 					panic("receive unexpected out of band message")
 				}
 			}
-			if len(multi) == 0 {
+			if multi == nil {
 				multi = ones
 			}
 			if multi[ff].NoReply() {
@@ -174,22 +179,28 @@ func (c *wire) reading() {
 		}
 	}()
 	wg.Wait()
-	atomic.CompareAndSwapInt32(&c.state, 0, 1)
+
+	var (
+		ones  = make([]cmds.Completed, 1)
+		multi []cmds.Completed
+		ch    chan proto.Result
+	)
 
 	// clean up write queue and read queue
+	atomic.CompareAndSwapInt32(&c.state, 0, 1)
 	for atomic.LoadInt32(&c.waits) != 0 {
 		c.queue.NextCmd()
-		if one, multi, ch := c.queue.NextResultCh(); !one.IsEmpty() {
-			ch <- proto.Result{Err: c.error.Load().(error)}
-		} else if multi != nil {
-			for i := 0; i < len(multi); i++ {
-				ch <- proto.Result{Err: c.error.Load().(error)}
-			}
-		} else {
+		if ones[0], multi, ch = c.queue.NextResultCh(); ch == nil {
 			runtime.Gosched()
+			continue
+		}
+		if multi == nil {
+			multi = ones
+		}
+		for i := 0; i < len(multi); i++ {
+			ch <- proto.Result{Err: c.error.Load().(error)}
 		}
 	}
-
 	atomic.CompareAndSwapInt32(&c.state, 1, 2)
 }
 
