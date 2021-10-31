@@ -79,6 +79,8 @@ func write(o io.Writer, m proto.Message) (err error) {
 	switch m.Type {
 	case '+', '-':
 		_, err = o.Write(append([]byte(m.String), '\r', '\n'))
+	case ':':
+		_, err = o.Write(append([]byte(strconv.FormatInt(m.Integer, 10)), '\r', '\n'))
 	case '%', '>', '*':
 		size := int64(len(m.Values))
 		if m.Type == '%' {
@@ -140,6 +142,46 @@ func ExpectOK(t *testing.T, result proto.Result) {
 	if result.Val.Type != '+' || result.Val.String != "OK" {
 		t.Fatalf("unexpected result: %v", fmt.Sprintf("%c%s", result.Val.Type, result.Val.String))
 	}
+}
+
+func TestNewConn(t *testing.T) {
+	t.Run("Auth", func(t *testing.T) {
+		n1, n2 := net.Pipe()
+		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2}
+		go func() {
+			mock.Expect("HELLO", "3", "AUTH", "un", "pa", "SETNAME", "cn").
+				Reply(proto.Message{
+					Type:   '%',
+					Values: []proto.Message{{Type: '+', String: "key"}, {Type: '+', String: "value"}},
+				})
+			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
+				ReplyString("OK")
+			mock.Expect("SELECT", "1").
+				ReplyString("OK")
+		}()
+		c, err := newWire(n1, Option{
+			SelectDB:   1,
+			Username:   "un",
+			Password:   "pa",
+			ClientName: "cn",
+		})
+		if err != nil {
+			t.Fatalf("wire setup failed: %v", err)
+		}
+		go func() { mock.Expect("QUIT").ReplyString("OK") }()
+		c.Close()
+		mock.Close()
+		n1.Close()
+		n2.Close()
+	})
+	t.Run("Network Error", func(t *testing.T) {
+		n1, n2 := net.Pipe()
+		n1.Close()
+		n2.Close()
+		if _, err := newWire(n1, Option{}); err != io.ErrClosedPipe {
+			t.Fatalf("wire setup should failed with io.ErrClosedPipe, but got %v", err)
+		}
+	})
 }
 
 func TestWriteSingleFlush(t *testing.T) {
@@ -236,9 +278,110 @@ func TestClientSideCaching(t *testing.T) {
 	wg.Wait()
 }
 
+func TestPubSub(t *testing.T) {
+	builder := cmds.NewBuilder()
+	t.Run("NoReply Commands", func(t *testing.T) {
+		conn, mock, cancel, _ := setup(t, Option{})
+		defer cancel()
+
+		commands := []cmds.Completed{
+			builder.Subscribe().Channel("a").Build(),
+			builder.Psubscribe().Pattern("b").Build(),
+			builder.Unsubscribe().Channel("c").Build(),
+			builder.Punsubscribe().Pattern("d").Build(),
+		}
+
+		for _, c := range commands {
+			conn.Do(c)
+			mock.Expect(c.Commands()...)
+			go func() { mock.Expect("GET", "k").ReplyString("v") }()
+			if resp := conn.Do(builder.Get().Key("k").Build()); resp.Val.String != "v" {
+				t.Fatalf("no-reply commands should not affect nornal commands")
+			}
+		}
+	})
+
+	t.Run("PubSub Push Message", func(t *testing.T) {
+		count := make([]int32, 4)
+		_, mock, cancel, _ := setup(t, Option{
+			PubSubHandlers: PubSubHandlers{
+				OnMessage: func(channel, message string) {
+					if channel != "1" || message != "2" {
+						t.Fatalf("unexpected OnMessage")
+					}
+					count[0]++
+				},
+				OnPMessage: func(pattern, channel, message string) {
+					if pattern != "3" || channel != "4" || message != "5" {
+						t.Fatalf("unexpected OnPMessage")
+					}
+					count[1]++
+				},
+				OnSubscribed: func(channel string, active int64) {
+					if channel != "6" || active != 7 {
+						t.Fatalf("unexpected OnSubscribed")
+					}
+					count[2]++
+				},
+				OnUnSubscribed: func(channel string, active int64) {
+					if channel != "8" || active != 9 {
+						t.Fatalf("unexpected OnUnSubscribed")
+					}
+					count[3]++
+				},
+			},
+		})
+		mock.Expect().Reply(
+			proto.Message{Type: '>', Values: []proto.Message{
+				{Type: '+', String: "message"},
+				{Type: '+', String: "1"},
+				{Type: '+', String: "2"},
+			}},
+			proto.Message{Type: '>', Values: []proto.Message{
+				{Type: '+', String: "pmessage"},
+				{Type: '+', String: "3"},
+				{Type: '+', String: "4"},
+				{Type: '+', String: "5"},
+			}},
+			proto.Message{Type: '>', Values: []proto.Message{
+				{Type: '+', String: "subscribe"},
+				{Type: '+', String: "6"},
+				{Type: ':', Integer: 7},
+			}},
+			proto.Message{Type: '>', Values: []proto.Message{
+				{Type: '+', String: "psubscribe"},
+				{Type: '+', String: "6"},
+				{Type: ':', Integer: 7},
+			}},
+			proto.Message{Type: '>', Values: []proto.Message{
+				{Type: '+', String: "unsubscribe"},
+				{Type: '+', String: "8"},
+				{Type: ':', Integer: 9},
+			}},
+			proto.Message{Type: '>', Values: []proto.Message{
+				{Type: '+', String: "punsubscribe"},
+				{Type: '+', String: "8"},
+				{Type: ':', Integer: 9},
+			}},
+		)
+		cancel()
+		if count[0] != 1 {
+			t.Fatalf("unexpected OnMessage count")
+		}
+		if count[1] != 1 {
+			t.Fatalf("unexpected OnPMessage count")
+		}
+		if count[2] != 2 {
+			t.Fatalf("unexpected OnSubscribed count")
+		}
+		if count[3] != 2 {
+			t.Fatalf("unexpected OnUnSubscribed count")
+		}
+	})
+}
+
 func TestExitAllGoroutineOnWriteError(t *testing.T) {
-	conn, _, cancel, closePipe := setup(t, Option{})
-	defer cancel()
+	conn, _, _, closePipe := setup(t, Option{})
 
 	closePipe()
 
@@ -250,14 +393,16 @@ func TestExitAllGoroutineOnWriteError(t *testing.T) {
 			if v := conn.Do(cmds.NewCompleted([]string{"GET", "a"})); v.Err != io.ErrClosedPipe && v.Err != ErrConnClosing {
 				t.Errorf("unexpected cached result, expected io.ErrClosedPipe or ErrConnClosing, got %v", v.Err)
 			}
+			if v := conn.DoMulti(cmds.NewCompleted([]string{"GET", "a"})); v[0].Err != io.ErrClosedPipe && v[0].Err != ErrConnClosing {
+				t.Errorf("unexpected cached result, expected io.ErrClosedPipe or ErrConnClosing, got %v", v[0].Err)
+			}
 		}()
 	}
 	wg.Wait()
 }
 
 func TestExitAllGoroutineOnReadError(t *testing.T) {
-	conn, mock, cancel, closePipe := setup(t, Option{})
-	defer cancel()
+	conn, mock, _, closePipe := setup(t, Option{})
 
 	go func() {
 		mock.Expect("GET", "a")
@@ -272,7 +417,36 @@ func TestExitAllGoroutineOnReadError(t *testing.T) {
 			if v := conn.Do(cmds.NewCompleted([]string{"GET", "a"})); v.Err != io.ErrClosedPipe && v.Err != ErrConnClosing {
 				t.Errorf("unexpected cached result, expected io.ErrClosedPipe or ErrConnClosing, got %v", v.Err)
 			}
+			if v := conn.DoMulti(cmds.NewCompleted([]string{"GET", "a"})); v[0].Err != io.ErrClosedPipe && v[0].Err != ErrConnClosing {
+				t.Errorf("unexpected cached result, expected io.ErrClosedPipe or ErrConnClosing, got %v", v[0].Err)
+			}
 		}()
 	}
 	wg.Wait()
+}
+
+func TestCloseAndWaitPendingCMDs(t *testing.T) {
+	conn, mock, _, _ := setup(t, Option{})
+	var wg1, wg2 sync.WaitGroup
+	wg1.Add(5001)
+	wg2.Add(5000)
+	for i := 0; i < 5000; i++ {
+		go func() {
+			defer wg1.Done()
+			go wg2.Done()
+			if v := conn.Do(cmds.NewCompleted([]string{"GET", "a"})); v.Val.String != "b" {
+				t.Errorf("unexpected GET result %v", v)
+			}
+		}()
+	}
+	wg2.Wait()
+	go func() {
+		conn.Close()
+		wg1.Done()
+	}()
+	for i := 0; i < 5000; i++ {
+		mock.Expect("GET", "a").ReplyString("b")
+	}
+	mock.Expect("QUIT").ReplyString("OK")
+	wg1.Wait()
 }
