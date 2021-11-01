@@ -166,10 +166,7 @@ func (c *wire) reading() {
 		nextCMD:
 			if ff == len(multi) {
 				ff = 0
-				ones[0], multi, ch = c.queue.NextResultCh()
-				if ch == nil {
-					panic("receive unexpected out of band message")
-				}
+				ones[0], multi, ch = c.queue.NextResultCh() // ch should not be nil, otherwise it must be a protocol bug
 			}
 			if multi == nil {
 				multi = ones
