@@ -11,10 +11,6 @@ import (
 
 //go:embed commands.json
 var raw []byte
-var commands = map[string]struct {
-	Group     string     `json:"group"`
-	Arguments []Argument `json:"arguments"`
-}{}
 
 type Argument struct {
 	Name     interface{} `json:"name"`
@@ -64,9 +60,20 @@ func UcFirst(str string) string {
 	return ""
 }
 
-var nodes = map[string]*CmdNode{}
-
 func main() {
+	fmt.Printf("// Code generated DO NOT EDIT\n\npackage cmds\n\n")
+	fmt.Printf("import %q\n\n", "strconv")
+
+	generate("")
+	generate("S")
+}
+
+func generate(prefix string) {
+	var nodes = map[string]*CmdNode{}
+	var commands = map[string]struct {
+		Group     string     `json:"group"`
+		Arguments []Argument `json:"arguments"`
+	}{}
 	if err := json.Unmarshal(raw, &commands); err != nil {
 		panic(err)
 	}
@@ -84,7 +91,7 @@ func main() {
 			}
 		}
 		for i, arg := range info.Arguments {
-			node(cmd, sn, arg, info.Arguments[i+1:], "", nil)
+			node(nodes, cmd, sn, arg, info.Arguments[i+1:], "", nil)
 		}
 	}
 	var keys []string
@@ -100,9 +107,7 @@ func main() {
 			}
 		}
 	}
-	fmt.Printf("// Code generated DO NOT EDIT\n\npackage cmds\n\n")
 
-	fmt.Printf("import %q\n\n", "strconv")
 	for _, k := range keys {
 		node := nodes[k]
 
@@ -110,9 +115,10 @@ func main() {
 			panic("reserved word")
 		}
 
-		fmt.Printf("type %s struct {\n", node.StructName)
+		fmt.Printf("type %s struct {\n", prefix+node.StructName)
 		fmt.Printf("\tcs []string\n")
-		fmt.Printf("\tcf uint32\n")
+		fmt.Printf("\tcf uint16\n")
+		fmt.Printf("\tks uint16\n")
 		fmt.Printf("}\n\n")
 
 		if node.Multiple || node.Variadic {
@@ -128,7 +134,7 @@ func main() {
 
 		for _, c := range node.Children {
 			child := nodes[c]
-			fmt.Printf("func (c %s) %s(", node.StructName, child.Argument.FullName())
+			fmt.Printf("func (c %s) %s(", prefix+node.StructName, child.Argument.FullName())
 			// func args
 			var args [][2]string
 			switch nn := child.Argument.Name.(type) {
@@ -150,7 +156,8 @@ func main() {
 					arg[0] = "typ"
 				}
 				switch arg[1] {
-				case "key", "string", "pattern", "type":
+				case "key":
+				case "string", "pattern", "type":
 					arg[1] = "string"
 				case "integer", "posix time":
 					arg[1] = "int64"
@@ -165,17 +172,51 @@ func main() {
 				args = nil
 			}
 			if len(args) == 1 && (child.Multiple || child.Variadic) {
-				fmt.Printf("%s ...%s", args[0][0], args[0][1])
+				if args[0][1] == "key" {
+					fmt.Printf("%s ...string", args[0][0])
+				} else {
+					fmt.Printf("%s ...%s", args[0][0], args[0][1])
+				}
 			} else {
 				for i, arg := range args {
-					fmt.Printf("%s %s", arg[0], arg[1])
+					if arg[1] == "key" {
+						fmt.Printf("%s string", arg[0])
+					} else {
+						fmt.Printf("%s %s", arg[0], arg[1])
+					}
 					if i != len(args)-1 {
 						fmt.Printf(", ")
 					}
 				}
 			}
-			fmt.Printf(") %s {\n", strings.TrimSuffix(child.StructName, "_nocmd"))
+			fmt.Printf(") %s {\n", prefix+strings.TrimSuffix(child.StructName, "_nocmd"))
 			// func body
+
+			if prefix == "S" {
+				if len(args) == 1 && (child.Multiple || child.Variadic) {
+					if args[0][1] == "key" {
+						fmt.Printf("\tfor _, k := range %s {\n", args[0][0])
+						fmt.Printf("\t\ts := slot(k)\n")
+						fmt.Printf("\t\tif c.ks == initSlot {\n")
+						fmt.Printf("\t\t\tc.ks = s\n")
+						fmt.Printf("\t\t} else if c.ks != s {\n")
+						fmt.Printf("\t\t\tpanic(multiKeySlotErr)\n")
+						fmt.Printf("\t\t}\n")
+						fmt.Printf("\t}\n")
+					}
+				} else {
+					for _, arg := range args {
+						if arg[1] == "key" {
+							fmt.Printf("\ts := slot(%s)\n", arg[0])
+							fmt.Printf("\tif c.ks == initSlot {\n")
+							fmt.Printf("\t\tc.ks = s\n")
+							fmt.Printf("\t} else if c.ks != s {\n")
+							fmt.Printf("\t\tpanic(multiKeySlotErr)\n")
+							fmt.Printf("\t}\n")
+						}
+					}
+				}
+			}
 
 			if child.Command == "BLOCK" {
 				fmt.Printf("\tc.cf = blockTag\n")
@@ -205,9 +246,9 @@ func main() {
 				}
 			}
 			if len(args) == 1 && (child.Multiple || child.Variadic) {
-				if len(appends) == 0 && args[0][1] == "string" {
+				if len(appends) == 0 && (args[0][1] == "string" || args[0][1] == "key") {
 					// one line append
-					fmt.Printf("\treturn %s{cf: c.cf, cs: append(c.cs, %s...)}\n", strings.TrimSuffix(child.StructName, "_nocmd"), args[0][0])
+					fmt.Printf("\treturn %s{cf: c.cf, cs: append(c.cs, %s...)}\n", prefix+strings.TrimSuffix(child.StructName, "_nocmd"), args[0][0])
 				} else {
 					if len(appends) != 0 {
 						fmt.Printf("\tc.cs = append(c.cs, ")
@@ -219,18 +260,18 @@ func main() {
 						}
 						fmt.Printf(")\n")
 					}
-					if args[0][1] == "string" {
-						fmt.Printf("\treturn %s{cf: c.cf, cs: append(c.cs, %s...)}\n", strings.TrimSuffix(child.StructName, "_nocmd"), args[0][0])
+					if args[0][1] == "string" || args[0][1] == "key" {
+						fmt.Printf("\treturn %s{cf: c.cf, cs: append(c.cs, %s...)}\n", prefix+strings.TrimSuffix(child.StructName, "_nocmd"), args[0][0])
 					} else {
 						fmt.Printf("\tfor _, n := range %s {\n", args[0][0])
 						fmt.Printf("\t\tc.cs = append(c.cs, strconv.FormatInt(n, 10))\n")
 						fmt.Printf("\t}\n")
-						fmt.Printf("\treturn %s{cf: c.cf, cs: c.cs}\n", strings.TrimSuffix(child.StructName, "_nocmd"))
+						fmt.Printf("\treturn %s{cf: c.cf, cs: c.cs}\n", prefix+strings.TrimSuffix(child.StructName, "_nocmd"))
 					}
 				}
 			} else {
 				// one line append
-				fmt.Printf("\treturn %s{cf: c.cf, cs: append(c.cs, ", strings.TrimSuffix(child.StructName, "_nocmd"))
+				fmt.Printf("\treturn %s{cf: c.cf, cs: append(c.cs, ", prefix+strings.TrimSuffix(child.StructName, "_nocmd"))
 				for i, ap := range appends {
 					fmt.Printf(ap)
 					if i != len(appends)-1 {
@@ -242,15 +283,15 @@ func main() {
 			fmt.Printf("}\n\n")
 		}
 
-		if allOptional(node.Children) {
-			fmt.Printf("func (c %s) Build() Completed {\n", node.StructName)
-			fmt.Printf("\treturn Completed(c)\n")
+		if allOptional(nodes, node.Children) {
+			fmt.Printf("func (c %s) Build() %sCompleted {\n", prefix+node.StructName, prefix)
+			fmt.Printf("\treturn %sCompleted(c)\n", prefix)
 			fmt.Printf("}\n\n")
 		}
 
 		if node.Root != nil && within(node.Root, cacheableCMDs) {
-			fmt.Printf("func (c %s) Cache() Cacheable {\n", node.StructName)
-			fmt.Printf("\treturn Cacheable(c)\n")
+			fmt.Printf("func (c %s) Cache() %sCacheable {\n", prefix+node.StructName, prefix)
+			fmt.Printf("\treturn %sCacheable(c)\n", prefix)
 			fmt.Printf("}\n\n")
 		}
 
@@ -263,15 +304,7 @@ func main() {
 					appends = append(appends, fmt.Sprintf("%q", c))
 				}
 			}
-			fmt.Printf("func (b *Builder) %s() (c %s) {\n", node.Argument.FullName(), node.StructName)
-
-			if within(node, blockingCMDs) {
-				fmt.Printf("\tc.cf = blockTag\n")
-			}
-
-			if within(node, noRetCMDs) {
-				fmt.Printf("\tc.cf = noRetTag\n")
-			}
+			fmt.Printf("func (b *%sBuilder) %s() (c %s) {\n", prefix, node.Argument.FullName(), prefix+node.StructName)
 
 			fmt.Printf("\tc.cs = append(b.get(), ")
 			for i, ap := range appends {
@@ -281,13 +314,26 @@ func main() {
 				}
 			}
 			fmt.Printf(")\n")
+
+			if within(node, blockingCMDs) {
+				fmt.Printf("\tc.cf = blockTag\n")
+			}
+
+			if within(node, noRetCMDs) {
+				fmt.Printf("\tc.cf = noRetTag\n")
+			}
+
+			if prefix == "S" {
+				fmt.Printf("\tc.ks = initSlot\n")
+			}
+
 			fmt.Printf("\treturn\n")
 			fmt.Printf("}\n\n")
 		}
 	}
 }
 
-func node(root *CmdNode, prefix string, arg Argument, args []Argument, parent string, parentArgs []Argument) {
+func node(nodes map[string]*CmdNode, root *CmdNode, prefix string, arg Argument, args []Argument, parent string, parentArgs []Argument) {
 	if len(arg.Enum) > 0 && arg.Type == nil {
 		arg.Type = "enum"
 	}
@@ -374,7 +420,7 @@ func node(root *CmdNode, prefix string, arg Argument, args []Argument, parent st
 		}
 	case "block":
 		for i, a := range arg.Block {
-			node(root, prefix+UcFirst(name(arg.Name)), a, arg.Block[i+1:], prefix, args)
+			node(nodes, root, prefix+UcFirst(name(arg.Name)), a, arg.Block[i+1:], prefix, args)
 		}
 	default:
 		sn := UcFirst(prefix) + UcFirst(arg.FullName())
@@ -476,7 +522,7 @@ func name(n interface{}) (name string) {
 	return ""
 }
 
-func allOptional(children []string) bool {
+func allOptional(nodes map[string]*CmdNode, children []string) bool {
 	for _, c := range children {
 		if strings.HasSuffix(c, "_nocmd") {
 			continue
