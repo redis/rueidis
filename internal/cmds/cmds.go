@@ -2,12 +2,15 @@ package cmds
 
 import "strings"
 
-var (
+const (
 	optInTag = uint16(1 << 15)
 	blockTag = uint16(1 << 14)
 	noRetTag = uint16(1 << 13)
 	readonly = uint16(1 << 12)
 	initSlot = uint16(1 << 15)
+)
+
+var (
 	OptInCmd = Completed{
 		cs: []string{"CLIENT", "CACHING", "YES"},
 		cf: optInTag,
@@ -95,4 +98,11 @@ func NewMultiCompleted(cs [][]string) []Completed {
 	return ret
 }
 
-var multiKeySlotErr = "multi key command with different key slots are not allowed"
+func checkSlot(prev, new uint16) uint16 {
+	if prev == initSlot || prev == new {
+		return new
+	}
+	panic(multiKeySlotErr)
+}
+
+const multiKeySlotErr = "multi key command with different key slots are not allowed"
