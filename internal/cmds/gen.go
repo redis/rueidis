@@ -448,10 +448,6 @@ func (c BitfieldRoKey) Get(Type string, Offset int64) BitfieldRoGet {
 	return BitfieldRoGet{cf: c.cf, cs: append(c.cs, "GET", Type, strconv.FormatInt(Offset, 10))}
 }
 
-func (c BitfieldRoKey) Cache() Cacheable {
-	return Cacheable(c)
-}
-
 type BitfieldSat Completed
 
 func (c BitfieldSat) Build() Completed {
@@ -536,6 +532,10 @@ func (c BitposBit) Start(Start int64) BitposIndexStart {
 	return BitposIndexStart{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Start, 10))}
 }
 
+func (c BitposBit) Build() Completed {
+	return Completed(c)
+}
+
 func (c BitposBit) Cache() Cacheable {
 	return Cacheable(c)
 }
@@ -568,10 +568,6 @@ type BitposKey Completed
 
 func (c BitposKey) Bit(Bit int64) BitposBit {
 	return BitposBit{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Bit, 10))}
-}
-
-func (c BitposKey) Cache() Cacheable {
-	return Cacheable(c)
 }
 
 type Blmove Completed
@@ -1214,6 +1210,10 @@ func (c ClientList) Id() ClientListIdId {
 	return ClientListIdId{cf: c.cf, cs: append(c.cs, "ID")}
 }
 
+func (c ClientList) Build() Completed {
+	return Completed(c)
+}
+
 func (b *Builder) ClientList() (c ClientList) {
 	c.cs = append(b.get(), "CLIENT", "LIST")
 	return
@@ -1247,10 +1247,18 @@ func (c ClientListMaster) Id() ClientListIdId {
 	return ClientListIdId{cf: c.cf, cs: append(c.cs, "ID")}
 }
 
+func (c ClientListMaster) Build() Completed {
+	return Completed(c)
+}
+
 type ClientListNormal Completed
 
 func (c ClientListNormal) Id() ClientListIdId {
 	return ClientListIdId{cf: c.cf, cs: append(c.cs, "ID")}
+}
+
+func (c ClientListNormal) Build() Completed {
+	return Completed(c)
 }
 
 type ClientListPubsub Completed
@@ -1259,10 +1267,18 @@ func (c ClientListPubsub) Id() ClientListIdId {
 	return ClientListIdId{cf: c.cf, cs: append(c.cs, "ID")}
 }
 
+func (c ClientListPubsub) Build() Completed {
+	return Completed(c)
+}
+
 type ClientListReplica Completed
 
 func (c ClientListReplica) Id() ClientListIdId {
 	return ClientListIdId{cf: c.cf, cs: append(c.cs, "ID")}
+}
+
+func (c ClientListReplica) Build() Completed {
+	return Completed(c)
 }
 
 type ClientNoEvict Completed
@@ -2768,6 +2784,10 @@ func (c Failover) Timeout(Milliseconds int64) FailoverTimeout {
 	return FailoverTimeout{cf: c.cf, cs: append(c.cs, "TIMEOUT", strconv.FormatInt(Milliseconds, 10))}
 }
 
+func (c Failover) Build() Completed {
+	return Completed(c)
+}
+
 func (b *Builder) Failover() (c Failover) {
 	c.cs = append(b.get(), "FAILOVER")
 	return
@@ -2977,18 +2997,10 @@ func (c GeodistKey) Member1(Member1 string) GeodistMember1 {
 	return GeodistMember1{cf: c.cf, cs: append(c.cs, Member1)}
 }
 
-func (c GeodistKey) Cache() Cacheable {
-	return Cacheable(c)
-}
-
 type GeodistMember1 Completed
 
 func (c GeodistMember1) Member2(Member2 string) GeodistMember2 {
 	return GeodistMember2{cf: c.cf, cs: append(c.cs, Member2)}
-}
-
-func (c GeodistMember1) Cache() Cacheable {
-	return Cacheable(c)
 }
 
 type GeodistMember2 Completed
@@ -3074,10 +3086,6 @@ func (c GeohashKey) Member(Member ...string) GeohashMember {
 	return GeohashMember{cf: c.cf, cs: append(c.cs, Member...)}
 }
 
-func (c GeohashKey) Cache() Cacheable {
-	return Cacheable(c)
-}
-
 type GeohashMember Completed
 
 func (c GeohashMember) Member(Member ...string) GeohashMember {
@@ -3107,10 +3115,6 @@ type GeoposKey Completed
 
 func (c GeoposKey) Member(Member ...string) GeoposMember {
 	return GeoposMember{cf: c.cf, cs: append(c.cs, Member...)}
-}
-
-func (c GeoposKey) Cache() Cacheable {
-	return Cacheable(c)
 }
 
 type GeoposMember Completed
@@ -3315,28 +3319,16 @@ func (c GeoradiusRoKey) Longitude(Longitude float64) GeoradiusRoLongitude {
 	return GeoradiusRoLongitude{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Longitude, 'f', -1, 64))}
 }
 
-func (c GeoradiusRoKey) Cache() Cacheable {
-	return Cacheable(c)
-}
-
 type GeoradiusRoLatitude Completed
 
 func (c GeoradiusRoLatitude) Radius(Radius float64) GeoradiusRoRadius {
 	return GeoradiusRoRadius{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Radius, 'f', -1, 64))}
 }
 
-func (c GeoradiusRoLatitude) Cache() Cacheable {
-	return Cacheable(c)
-}
-
 type GeoradiusRoLongitude Completed
 
 func (c GeoradiusRoLongitude) Latitude(Latitude float64) GeoradiusRoLatitude {
 	return GeoradiusRoLatitude{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Latitude, 'f', -1, 64))}
-}
-
-func (c GeoradiusRoLongitude) Cache() Cacheable {
-	return Cacheable(c)
 }
 
 type GeoradiusRoOrderAsc Completed
@@ -3385,10 +3377,6 @@ func (c GeoradiusRoRadius) Mi() GeoradiusRoUnitMi {
 	return GeoradiusRoUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
 }
 
-func (c GeoradiusRoRadius) Cache() Cacheable {
-	return Cacheable(c)
-}
-
 type GeoradiusRoStoredist Completed
 
 func (c GeoradiusRoStoredist) Build() Completed {
@@ -3429,6 +3417,10 @@ func (c GeoradiusRoUnitFt) Storedist(Key string) GeoradiusRoStoredist {
 	return GeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
+func (c GeoradiusRoUnitFt) Build() Completed {
+	return Completed(c)
+}
+
 func (c GeoradiusRoUnitFt) Cache() Cacheable {
 	return Cacheable(c)
 }
@@ -3461,6 +3453,10 @@ func (c GeoradiusRoUnitKm) Desc() GeoradiusRoOrderDesc {
 
 func (c GeoradiusRoUnitKm) Storedist(Key string) GeoradiusRoStoredist {
 	return GeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c GeoradiusRoUnitKm) Build() Completed {
+	return Completed(c)
 }
 
 func (c GeoradiusRoUnitKm) Cache() Cacheable {
@@ -3497,6 +3493,10 @@ func (c GeoradiusRoUnitM) Storedist(Key string) GeoradiusRoStoredist {
 	return GeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
+func (c GeoradiusRoUnitM) Build() Completed {
+	return Completed(c)
+}
+
 func (c GeoradiusRoUnitM) Cache() Cacheable {
 	return Cacheable(c)
 }
@@ -3531,6 +3531,10 @@ func (c GeoradiusRoUnitMi) Storedist(Key string) GeoradiusRoStoredist {
 	return GeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
+func (c GeoradiusRoUnitMi) Build() Completed {
+	return Completed(c)
+}
+
 func (c GeoradiusRoUnitMi) Cache() Cacheable {
 	return Cacheable(c)
 }
@@ -3561,6 +3565,10 @@ func (c GeoradiusRoWithcoordWithcoord) Storedist(Key string) GeoradiusRoStoredis
 	return GeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
+func (c GeoradiusRoWithcoordWithcoord) Build() Completed {
+	return Completed(c)
+}
+
 func (c GeoradiusRoWithcoordWithcoord) Cache() Cacheable {
 	return Cacheable(c)
 }
@@ -3587,6 +3595,10 @@ func (c GeoradiusRoWithdistWithdist) Storedist(Key string) GeoradiusRoStoredist 
 	return GeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
+func (c GeoradiusRoWithdistWithdist) Build() Completed {
+	return Completed(c)
+}
+
 func (c GeoradiusRoWithdistWithdist) Cache() Cacheable {
 	return Cacheable(c)
 }
@@ -3607,6 +3619,10 @@ func (c GeoradiusRoWithhashWithhash) Desc() GeoradiusRoOrderDesc {
 
 func (c GeoradiusRoWithhashWithhash) Storedist(Key string) GeoradiusRoStoredist {
 	return GeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c GeoradiusRoWithhashWithhash) Build() Completed {
+	return Completed(c)
 }
 
 func (c GeoradiusRoWithhashWithhash) Cache() Cacheable {
@@ -3647,6 +3663,10 @@ func (c GeoradiusUnitFt) Count(Count int64) GeoradiusCountCount {
 	return GeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
+func (c GeoradiusUnitFt) Any() GeoradiusCountAnyAny {
+	return GeoradiusCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
+}
+
 func (c GeoradiusUnitFt) Asc() GeoradiusOrderAsc {
 	return GeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
@@ -3661,6 +3681,10 @@ func (c GeoradiusUnitFt) Store(Key string) GeoradiusStore {
 
 func (c GeoradiusUnitFt) Storedist(Key string) GeoradiusStoredist {
 	return GeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c GeoradiusUnitFt) Build() Completed {
+	return Completed(c)
 }
 
 type GeoradiusUnitKm Completed
@@ -3681,6 +3705,10 @@ func (c GeoradiusUnitKm) Count(Count int64) GeoradiusCountCount {
 	return GeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
+func (c GeoradiusUnitKm) Any() GeoradiusCountAnyAny {
+	return GeoradiusCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
+}
+
 func (c GeoradiusUnitKm) Asc() GeoradiusOrderAsc {
 	return GeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
@@ -3695,6 +3723,10 @@ func (c GeoradiusUnitKm) Store(Key string) GeoradiusStore {
 
 func (c GeoradiusUnitKm) Storedist(Key string) GeoradiusStoredist {
 	return GeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c GeoradiusUnitKm) Build() Completed {
+	return Completed(c)
 }
 
 type GeoradiusUnitM Completed
@@ -3715,6 +3747,10 @@ func (c GeoradiusUnitM) Count(Count int64) GeoradiusCountCount {
 	return GeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
+func (c GeoradiusUnitM) Any() GeoradiusCountAnyAny {
+	return GeoradiusCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
+}
+
 func (c GeoradiusUnitM) Asc() GeoradiusOrderAsc {
 	return GeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
@@ -3729,6 +3765,10 @@ func (c GeoradiusUnitM) Store(Key string) GeoradiusStore {
 
 func (c GeoradiusUnitM) Storedist(Key string) GeoradiusStoredist {
 	return GeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c GeoradiusUnitM) Build() Completed {
+	return Completed(c)
 }
 
 type GeoradiusUnitMi Completed
@@ -3749,6 +3789,10 @@ func (c GeoradiusUnitMi) Count(Count int64) GeoradiusCountCount {
 	return GeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
+func (c GeoradiusUnitMi) Any() GeoradiusCountAnyAny {
+	return GeoradiusCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
+}
+
 func (c GeoradiusUnitMi) Asc() GeoradiusOrderAsc {
 	return GeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
@@ -3765,6 +3809,10 @@ func (c GeoradiusUnitMi) Storedist(Key string) GeoradiusStoredist {
 	return GeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
+func (c GeoradiusUnitMi) Build() Completed {
+	return Completed(c)
+}
+
 type GeoradiusWithcoordWithcoord Completed
 
 func (c GeoradiusWithcoordWithcoord) Withdist() GeoradiusWithdistWithdist {
@@ -3777,6 +3825,10 @@ func (c GeoradiusWithcoordWithcoord) Withhash() GeoradiusWithhashWithhash {
 
 func (c GeoradiusWithcoordWithcoord) Count(Count int64) GeoradiusCountCount {
 	return GeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+}
+
+func (c GeoradiusWithcoordWithcoord) Any() GeoradiusCountAnyAny {
+	return GeoradiusCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
 }
 
 func (c GeoradiusWithcoordWithcoord) Asc() GeoradiusOrderAsc {
@@ -3795,6 +3847,10 @@ func (c GeoradiusWithcoordWithcoord) Storedist(Key string) GeoradiusStoredist {
 	return GeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
+func (c GeoradiusWithcoordWithcoord) Build() Completed {
+	return Completed(c)
+}
+
 type GeoradiusWithdistWithdist Completed
 
 func (c GeoradiusWithdistWithdist) Withhash() GeoradiusWithhashWithhash {
@@ -3803,6 +3859,10 @@ func (c GeoradiusWithdistWithdist) Withhash() GeoradiusWithhashWithhash {
 
 func (c GeoradiusWithdistWithdist) Count(Count int64) GeoradiusCountCount {
 	return GeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+}
+
+func (c GeoradiusWithdistWithdist) Any() GeoradiusCountAnyAny {
+	return GeoradiusCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
 }
 
 func (c GeoradiusWithdistWithdist) Asc() GeoradiusOrderAsc {
@@ -3821,10 +3881,18 @@ func (c GeoradiusWithdistWithdist) Storedist(Key string) GeoradiusStoredist {
 	return GeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
+func (c GeoradiusWithdistWithdist) Build() Completed {
+	return Completed(c)
+}
+
 type GeoradiusWithhashWithhash Completed
 
 func (c GeoradiusWithhashWithhash) Count(Count int64) GeoradiusCountCount {
 	return GeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+}
+
+func (c GeoradiusWithhashWithhash) Any() GeoradiusCountAnyAny {
+	return GeoradiusCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
 }
 
 func (c GeoradiusWithhashWithhash) Asc() GeoradiusOrderAsc {
@@ -3841,6 +3909,10 @@ func (c GeoradiusWithhashWithhash) Store(Key string) GeoradiusStore {
 
 func (c GeoradiusWithhashWithhash) Storedist(Key string) GeoradiusStoredist {
 	return GeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c GeoradiusWithhashWithhash) Build() Completed {
+	return Completed(c)
 }
 
 type Georadiusbymember Completed
@@ -4025,18 +4097,10 @@ func (c GeoradiusbymemberRoKey) Member(Member string) GeoradiusbymemberRoMember 
 	return GeoradiusbymemberRoMember{cf: c.cf, cs: append(c.cs, Member)}
 }
 
-func (c GeoradiusbymemberRoKey) Cache() Cacheable {
-	return Cacheable(c)
-}
-
 type GeoradiusbymemberRoMember Completed
 
 func (c GeoradiusbymemberRoMember) Radius(Radius float64) GeoradiusbymemberRoRadius {
 	return GeoradiusbymemberRoRadius{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Radius, 'f', -1, 64))}
-}
-
-func (c GeoradiusbymemberRoMember) Cache() Cacheable {
-	return Cacheable(c)
 }
 
 type GeoradiusbymemberRoOrderAsc Completed
@@ -4085,10 +4149,6 @@ func (c GeoradiusbymemberRoRadius) Mi() GeoradiusbymemberRoUnitMi {
 	return GeoradiusbymemberRoUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
 }
 
-func (c GeoradiusbymemberRoRadius) Cache() Cacheable {
-	return Cacheable(c)
-}
-
 type GeoradiusbymemberRoStoredist Completed
 
 func (c GeoradiusbymemberRoStoredist) Build() Completed {
@@ -4117,6 +4177,10 @@ func (c GeoradiusbymemberRoUnitFt) Count(Count int64) GeoradiusbymemberRoCountCo
 	return GeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
+func (c GeoradiusbymemberRoUnitFt) Any() GeoradiusbymemberRoCountAnyAny {
+	return GeoradiusbymemberRoCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
+}
+
 func (c GeoradiusbymemberRoUnitFt) Asc() GeoradiusbymemberRoOrderAsc {
 	return GeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
@@ -4127,6 +4191,10 @@ func (c GeoradiusbymemberRoUnitFt) Desc() GeoradiusbymemberRoOrderDesc {
 
 func (c GeoradiusbymemberRoUnitFt) Storedist(Key string) GeoradiusbymemberRoStoredist {
 	return GeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c GeoradiusbymemberRoUnitFt) Build() Completed {
+	return Completed(c)
 }
 
 func (c GeoradiusbymemberRoUnitFt) Cache() Cacheable {
@@ -4151,6 +4219,10 @@ func (c GeoradiusbymemberRoUnitKm) Count(Count int64) GeoradiusbymemberRoCountCo
 	return GeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
+func (c GeoradiusbymemberRoUnitKm) Any() GeoradiusbymemberRoCountAnyAny {
+	return GeoradiusbymemberRoCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
+}
+
 func (c GeoradiusbymemberRoUnitKm) Asc() GeoradiusbymemberRoOrderAsc {
 	return GeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
@@ -4161,6 +4233,10 @@ func (c GeoradiusbymemberRoUnitKm) Desc() GeoradiusbymemberRoOrderDesc {
 
 func (c GeoradiusbymemberRoUnitKm) Storedist(Key string) GeoradiusbymemberRoStoredist {
 	return GeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c GeoradiusbymemberRoUnitKm) Build() Completed {
+	return Completed(c)
 }
 
 func (c GeoradiusbymemberRoUnitKm) Cache() Cacheable {
@@ -4185,6 +4261,10 @@ func (c GeoradiusbymemberRoUnitM) Count(Count int64) GeoradiusbymemberRoCountCou
 	return GeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
+func (c GeoradiusbymemberRoUnitM) Any() GeoradiusbymemberRoCountAnyAny {
+	return GeoradiusbymemberRoCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
+}
+
 func (c GeoradiusbymemberRoUnitM) Asc() GeoradiusbymemberRoOrderAsc {
 	return GeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
@@ -4195,6 +4275,10 @@ func (c GeoradiusbymemberRoUnitM) Desc() GeoradiusbymemberRoOrderDesc {
 
 func (c GeoradiusbymemberRoUnitM) Storedist(Key string) GeoradiusbymemberRoStoredist {
 	return GeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c GeoradiusbymemberRoUnitM) Build() Completed {
+	return Completed(c)
 }
 
 func (c GeoradiusbymemberRoUnitM) Cache() Cacheable {
@@ -4219,6 +4303,10 @@ func (c GeoradiusbymemberRoUnitMi) Count(Count int64) GeoradiusbymemberRoCountCo
 	return GeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
+func (c GeoradiusbymemberRoUnitMi) Any() GeoradiusbymemberRoCountAnyAny {
+	return GeoradiusbymemberRoCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
+}
+
 func (c GeoradiusbymemberRoUnitMi) Asc() GeoradiusbymemberRoOrderAsc {
 	return GeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
@@ -4229,6 +4317,10 @@ func (c GeoradiusbymemberRoUnitMi) Desc() GeoradiusbymemberRoOrderDesc {
 
 func (c GeoradiusbymemberRoUnitMi) Storedist(Key string) GeoradiusbymemberRoStoredist {
 	return GeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c GeoradiusbymemberRoUnitMi) Build() Completed {
+	return Completed(c)
 }
 
 func (c GeoradiusbymemberRoUnitMi) Cache() Cacheable {
@@ -4249,6 +4341,10 @@ func (c GeoradiusbymemberRoWithcoordWithcoord) Count(Count int64) Georadiusbymem
 	return GeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
+func (c GeoradiusbymemberRoWithcoordWithcoord) Any() GeoradiusbymemberRoCountAnyAny {
+	return GeoradiusbymemberRoCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
+}
+
 func (c GeoradiusbymemberRoWithcoordWithcoord) Asc() GeoradiusbymemberRoOrderAsc {
 	return GeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
@@ -4259,6 +4355,10 @@ func (c GeoradiusbymemberRoWithcoordWithcoord) Desc() GeoradiusbymemberRoOrderDe
 
 func (c GeoradiusbymemberRoWithcoordWithcoord) Storedist(Key string) GeoradiusbymemberRoStoredist {
 	return GeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c GeoradiusbymemberRoWithcoordWithcoord) Build() Completed {
+	return Completed(c)
 }
 
 func (c GeoradiusbymemberRoWithcoordWithcoord) Cache() Cacheable {
@@ -4275,6 +4375,10 @@ func (c GeoradiusbymemberRoWithdistWithdist) Count(Count int64) Georadiusbymembe
 	return GeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
+func (c GeoradiusbymemberRoWithdistWithdist) Any() GeoradiusbymemberRoCountAnyAny {
+	return GeoradiusbymemberRoCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
+}
+
 func (c GeoradiusbymemberRoWithdistWithdist) Asc() GeoradiusbymemberRoOrderAsc {
 	return GeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
@@ -4287,6 +4391,10 @@ func (c GeoradiusbymemberRoWithdistWithdist) Storedist(Key string) Georadiusbyme
 	return GeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
+func (c GeoradiusbymemberRoWithdistWithdist) Build() Completed {
+	return Completed(c)
+}
+
 func (c GeoradiusbymemberRoWithdistWithdist) Cache() Cacheable {
 	return Cacheable(c)
 }
@@ -4295,6 +4403,10 @@ type GeoradiusbymemberRoWithhashWithhash Completed
 
 func (c GeoradiusbymemberRoWithhashWithhash) Count(Count int64) GeoradiusbymemberRoCountCount {
 	return GeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+}
+
+func (c GeoradiusbymemberRoWithhashWithhash) Any() GeoradiusbymemberRoCountAnyAny {
+	return GeoradiusbymemberRoCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
 }
 
 func (c GeoradiusbymemberRoWithhashWithhash) Asc() GeoradiusbymemberRoOrderAsc {
@@ -4307,6 +4419,10 @@ func (c GeoradiusbymemberRoWithhashWithhash) Desc() GeoradiusbymemberRoOrderDesc
 
 func (c GeoradiusbymemberRoWithhashWithhash) Storedist(Key string) GeoradiusbymemberRoStoredist {
 	return GeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c GeoradiusbymemberRoWithhashWithhash) Build() Completed {
+	return Completed(c)
 }
 
 func (c GeoradiusbymemberRoWithhashWithhash) Cache() Cacheable {
@@ -4363,6 +4479,10 @@ func (c GeoradiusbymemberUnitFt) Storedist(Key string) GeoradiusbymemberStoredis
 	return GeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
+func (c GeoradiusbymemberUnitFt) Build() Completed {
+	return Completed(c)
+}
+
 type GeoradiusbymemberUnitKm Completed
 
 func (c GeoradiusbymemberUnitKm) Withcoord() GeoradiusbymemberWithcoordWithcoord {
@@ -4395,6 +4515,10 @@ func (c GeoradiusbymemberUnitKm) Store(Key string) GeoradiusbymemberStore {
 
 func (c GeoradiusbymemberUnitKm) Storedist(Key string) GeoradiusbymemberStoredist {
 	return GeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c GeoradiusbymemberUnitKm) Build() Completed {
+	return Completed(c)
 }
 
 type GeoradiusbymemberUnitM Completed
@@ -4431,6 +4555,10 @@ func (c GeoradiusbymemberUnitM) Storedist(Key string) GeoradiusbymemberStoredist
 	return GeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
+func (c GeoradiusbymemberUnitM) Build() Completed {
+	return Completed(c)
+}
+
 type GeoradiusbymemberUnitMi Completed
 
 func (c GeoradiusbymemberUnitMi) Withcoord() GeoradiusbymemberWithcoordWithcoord {
@@ -4465,6 +4593,10 @@ func (c GeoradiusbymemberUnitMi) Storedist(Key string) GeoradiusbymemberStoredis
 	return GeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
+func (c GeoradiusbymemberUnitMi) Build() Completed {
+	return Completed(c)
+}
+
 type GeoradiusbymemberWithcoordWithcoord Completed
 
 func (c GeoradiusbymemberWithcoordWithcoord) Withdist() GeoradiusbymemberWithdistWithdist {
@@ -4495,6 +4627,10 @@ func (c GeoradiusbymemberWithcoordWithcoord) Storedist(Key string) Georadiusbyme
 	return GeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
+func (c GeoradiusbymemberWithcoordWithcoord) Build() Completed {
+	return Completed(c)
+}
+
 type GeoradiusbymemberWithdistWithdist Completed
 
 func (c GeoradiusbymemberWithdistWithdist) Withhash() GeoradiusbymemberWithhashWithhash {
@@ -4521,6 +4657,10 @@ func (c GeoradiusbymemberWithdistWithdist) Storedist(Key string) Georadiusbymemb
 	return GeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
+func (c GeoradiusbymemberWithdistWithdist) Build() Completed {
+	return Completed(c)
+}
+
 type GeoradiusbymemberWithhashWithhash Completed
 
 func (c GeoradiusbymemberWithhashWithhash) Count(Count int64) GeoradiusbymemberCountCount {
@@ -4543,6 +4683,10 @@ func (c GeoradiusbymemberWithhashWithhash) Storedist(Key string) Georadiusbymemb
 	return GeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
+func (c GeoradiusbymemberWithhashWithhash) Build() Completed {
+	return Completed(c)
+}
+
 type Geosearch Completed
 
 func (c Geosearch) Key(Key string) GeosearchKey {
@@ -4558,10 +4702,6 @@ type GeosearchBoxBybox Completed
 
 func (c GeosearchBoxBybox) Height(Height float64) GeosearchBoxHeight {
 	return GeosearchBoxHeight{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Height, 'f', -1, 64))}
-}
-
-func (c GeosearchBoxBybox) Cache() Cacheable {
-	return Cacheable(c)
 }
 
 type GeosearchBoxHeight Completed
@@ -4580,10 +4720,6 @@ func (c GeosearchBoxHeight) Ft() GeosearchBoxUnitFt {
 
 func (c GeosearchBoxHeight) Mi() GeosearchBoxUnitMi {
 	return GeosearchBoxUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
-}
-
-func (c GeosearchBoxHeight) Cache() Cacheable {
-	return Cacheable(c)
 }
 
 type GeosearchBoxUnitFt Completed
@@ -4610,6 +4746,10 @@ func (c GeosearchBoxUnitFt) Withdist() GeosearchWithdistWithdist {
 
 func (c GeosearchBoxUnitFt) Withhash() GeosearchWithhashWithhash {
 	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c GeosearchBoxUnitFt) Build() Completed {
+	return Completed(c)
 }
 
 func (c GeosearchBoxUnitFt) Cache() Cacheable {
@@ -4642,6 +4782,10 @@ func (c GeosearchBoxUnitKm) Withhash() GeosearchWithhashWithhash {
 	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
 }
 
+func (c GeosearchBoxUnitKm) Build() Completed {
+	return Completed(c)
+}
+
 func (c GeosearchBoxUnitKm) Cache() Cacheable {
 	return Cacheable(c)
 }
@@ -4670,6 +4814,10 @@ func (c GeosearchBoxUnitM) Withdist() GeosearchWithdistWithdist {
 
 func (c GeosearchBoxUnitM) Withhash() GeosearchWithhashWithhash {
 	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c GeosearchBoxUnitM) Build() Completed {
+	return Completed(c)
 }
 
 func (c GeosearchBoxUnitM) Cache() Cacheable {
@@ -4702,6 +4850,10 @@ func (c GeosearchBoxUnitMi) Withhash() GeosearchWithhashWithhash {
 	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
 }
 
+func (c GeosearchBoxUnitMi) Build() Completed {
+	return Completed(c)
+}
+
 func (c GeosearchBoxUnitMi) Cache() Cacheable {
 	return Cacheable(c)
 }
@@ -4722,10 +4874,6 @@ func (c GeosearchCircleByradius) Ft() GeosearchCircleUnitFt {
 
 func (c GeosearchCircleByradius) Mi() GeosearchCircleUnitMi {
 	return GeosearchCircleUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
-}
-
-func (c GeosearchCircleByradius) Cache() Cacheable {
-	return Cacheable(c)
 }
 
 type GeosearchCircleUnitFt Completed
@@ -4756,6 +4904,10 @@ func (c GeosearchCircleUnitFt) Withdist() GeosearchWithdistWithdist {
 
 func (c GeosearchCircleUnitFt) Withhash() GeosearchWithhashWithhash {
 	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c GeosearchCircleUnitFt) Build() Completed {
+	return Completed(c)
 }
 
 func (c GeosearchCircleUnitFt) Cache() Cacheable {
@@ -4792,6 +4944,10 @@ func (c GeosearchCircleUnitKm) Withhash() GeosearchWithhashWithhash {
 	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
 }
 
+func (c GeosearchCircleUnitKm) Build() Completed {
+	return Completed(c)
+}
+
 func (c GeosearchCircleUnitKm) Cache() Cacheable {
 	return Cacheable(c)
 }
@@ -4826,6 +4982,10 @@ func (c GeosearchCircleUnitM) Withhash() GeosearchWithhashWithhash {
 	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
 }
 
+func (c GeosearchCircleUnitM) Build() Completed {
+	return Completed(c)
+}
+
 func (c GeosearchCircleUnitM) Cache() Cacheable {
 	return Cacheable(c)
 }
@@ -4858,6 +5018,10 @@ func (c GeosearchCircleUnitMi) Withdist() GeosearchWithdistWithdist {
 
 func (c GeosearchCircleUnitMi) Withhash() GeosearchWithhashWithhash {
 	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c GeosearchCircleUnitMi) Build() Completed {
+	return Completed(c)
 }
 
 func (c GeosearchCircleUnitMi) Cache() Cacheable {
@@ -4946,6 +5110,10 @@ func (c GeosearchFromlonlat) Withhash() GeosearchWithhashWithhash {
 	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
 }
 
+func (c GeosearchFromlonlat) Build() Completed {
+	return Completed(c)
+}
+
 func (c GeosearchFromlonlat) Cache() Cacheable {
 	return Cacheable(c)
 }
@@ -4986,6 +5154,10 @@ func (c GeosearchFrommember) Withdist() GeosearchWithdistWithdist {
 
 func (c GeosearchFrommember) Withhash() GeosearchWithhashWithhash {
 	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c GeosearchFrommember) Build() Completed {
+	return Completed(c)
 }
 
 func (c GeosearchFrommember) Cache() Cacheable {
@@ -5034,6 +5206,10 @@ func (c GeosearchKey) Withhash() GeosearchWithhashWithhash {
 	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
 }
 
+func (c GeosearchKey) Build() Completed {
+	return Completed(c)
+}
+
 func (c GeosearchKey) Cache() Cacheable {
 	return Cacheable(c)
 }
@@ -5056,6 +5232,10 @@ func (c GeosearchOrderAsc) Withhash() GeosearchWithhashWithhash {
 	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
 }
 
+func (c GeosearchOrderAsc) Build() Completed {
+	return Completed(c)
+}
+
 func (c GeosearchOrderAsc) Cache() Cacheable {
 	return Cacheable(c)
 }
@@ -5076,6 +5256,10 @@ func (c GeosearchOrderDesc) Withdist() GeosearchWithdistWithdist {
 
 func (c GeosearchOrderDesc) Withhash() GeosearchWithhashWithhash {
 	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c GeosearchOrderDesc) Build() Completed {
+	return Completed(c)
 }
 
 func (c GeosearchOrderDesc) Cache() Cacheable {
@@ -5177,6 +5361,10 @@ func (c GeosearchstoreBoxUnitFt) Storedist() GeosearchstoreStoredistStoredist {
 	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
 }
 
+func (c GeosearchstoreBoxUnitFt) Build() Completed {
+	return Completed(c)
+}
+
 type GeosearchstoreBoxUnitKm Completed
 
 func (c GeosearchstoreBoxUnitKm) Asc() GeosearchstoreOrderAsc {
@@ -5193,6 +5381,10 @@ func (c GeosearchstoreBoxUnitKm) Count(Count int64) GeosearchstoreCountCount {
 
 func (c GeosearchstoreBoxUnitKm) Storedist() GeosearchstoreStoredistStoredist {
 	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+}
+
+func (c GeosearchstoreBoxUnitKm) Build() Completed {
+	return Completed(c)
 }
 
 type GeosearchstoreBoxUnitM Completed
@@ -5213,6 +5405,10 @@ func (c GeosearchstoreBoxUnitM) Storedist() GeosearchstoreStoredistStoredist {
 	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
 }
 
+func (c GeosearchstoreBoxUnitM) Build() Completed {
+	return Completed(c)
+}
+
 type GeosearchstoreBoxUnitMi Completed
 
 func (c GeosearchstoreBoxUnitMi) Asc() GeosearchstoreOrderAsc {
@@ -5229,6 +5425,10 @@ func (c GeosearchstoreBoxUnitMi) Count(Count int64) GeosearchstoreCountCount {
 
 func (c GeosearchstoreBoxUnitMi) Storedist() GeosearchstoreStoredistStoredist {
 	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+}
+
+func (c GeosearchstoreBoxUnitMi) Build() Completed {
+	return Completed(c)
 }
 
 type GeosearchstoreCircleByradius Completed
@@ -5271,6 +5471,10 @@ func (c GeosearchstoreCircleUnitFt) Storedist() GeosearchstoreStoredistStoredist
 	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
 }
 
+func (c GeosearchstoreCircleUnitFt) Build() Completed {
+	return Completed(c)
+}
+
 type GeosearchstoreCircleUnitKm Completed
 
 func (c GeosearchstoreCircleUnitKm) Bybox(Width float64) GeosearchstoreBoxBybox {
@@ -5291,6 +5495,10 @@ func (c GeosearchstoreCircleUnitKm) Count(Count int64) GeosearchstoreCountCount 
 
 func (c GeosearchstoreCircleUnitKm) Storedist() GeosearchstoreStoredistStoredist {
 	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+}
+
+func (c GeosearchstoreCircleUnitKm) Build() Completed {
+	return Completed(c)
 }
 
 type GeosearchstoreCircleUnitM Completed
@@ -5315,6 +5523,10 @@ func (c GeosearchstoreCircleUnitM) Storedist() GeosearchstoreStoredistStoredist 
 	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
 }
 
+func (c GeosearchstoreCircleUnitM) Build() Completed {
+	return Completed(c)
+}
+
 type GeosearchstoreCircleUnitMi Completed
 
 func (c GeosearchstoreCircleUnitMi) Bybox(Width float64) GeosearchstoreBoxBybox {
@@ -5335,6 +5547,10 @@ func (c GeosearchstoreCircleUnitMi) Count(Count int64) GeosearchstoreCountCount 
 
 func (c GeosearchstoreCircleUnitMi) Storedist() GeosearchstoreStoredistStoredist {
 	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+}
+
+func (c GeosearchstoreCircleUnitMi) Build() Completed {
+	return Completed(c)
 }
 
 type GeosearchstoreCountAnyAny Completed
@@ -5393,6 +5609,10 @@ func (c GeosearchstoreFromlonlat) Storedist() GeosearchstoreStoredistStoredist {
 	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
 }
 
+func (c GeosearchstoreFromlonlat) Build() Completed {
+	return Completed(c)
+}
+
 type GeosearchstoreFrommember Completed
 
 func (c GeosearchstoreFrommember) Fromlonlat(Longitude float64, Latitude float64) GeosearchstoreFromlonlat {
@@ -5423,6 +5643,10 @@ func (c GeosearchstoreFrommember) Storedist() GeosearchstoreStoredistStoredist {
 	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
 }
 
+func (c GeosearchstoreFrommember) Build() Completed {
+	return Completed(c)
+}
+
 type GeosearchstoreOrderAsc Completed
 
 func (c GeosearchstoreOrderAsc) Count(Count int64) GeosearchstoreCountCount {
@@ -5433,6 +5657,10 @@ func (c GeosearchstoreOrderAsc) Storedist() GeosearchstoreStoredistStoredist {
 	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
 }
 
+func (c GeosearchstoreOrderAsc) Build() Completed {
+	return Completed(c)
+}
+
 type GeosearchstoreOrderDesc Completed
 
 func (c GeosearchstoreOrderDesc) Count(Count int64) GeosearchstoreCountCount {
@@ -5441,6 +5669,10 @@ func (c GeosearchstoreOrderDesc) Count(Count int64) GeosearchstoreCountCount {
 
 func (c GeosearchstoreOrderDesc) Storedist() GeosearchstoreStoredistStoredist {
 	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+}
+
+func (c GeosearchstoreOrderDesc) Build() Completed {
+	return Completed(c)
 }
 
 type GeosearchstoreSource Completed
@@ -5475,6 +5707,10 @@ func (c GeosearchstoreSource) Count(Count int64) GeosearchstoreCountCount {
 
 func (c GeosearchstoreSource) Storedist() GeosearchstoreStoredistStoredist {
 	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+}
+
+func (c GeosearchstoreSource) Build() Completed {
+	return Completed(c)
 }
 
 type GeosearchstoreStoredistStoredist Completed
@@ -5519,10 +5755,6 @@ type GetbitKey Completed
 
 func (c GetbitKey) Offset(Offset int64) GetbitOffset {
 	return GetbitOffset{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Offset, 10))}
-}
-
-func (c GetbitKey) Cache() Cacheable {
-	return Cacheable(c)
 }
 
 type GetbitOffset Completed
@@ -5646,18 +5878,10 @@ func (c GetrangeKey) Start(Start int64) GetrangeStart {
 	return GetrangeStart{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Start, 10))}
 }
 
-func (c GetrangeKey) Cache() Cacheable {
-	return Cacheable(c)
-}
-
 type GetrangeStart Completed
 
 func (c GetrangeStart) End(End int64) GetrangeEnd {
 	return GetrangeEnd{cf: c.cf, cs: append(c.cs, strconv.FormatInt(End, 10))}
-}
-
-func (c GetrangeStart) Cache() Cacheable {
-	return Cacheable(c)
 }
 
 type Getset Completed
@@ -5714,6 +5938,10 @@ type Hello Completed
 
 func (c Hello) Protover(Protover int64) HelloArgumentsProtover {
 	return HelloArgumentsProtover{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Protover, 10))}
+}
+
+func (c Hello) Build() Completed {
+	return Completed(c)
 }
 
 func (b *Builder) Hello() (c Hello) {
@@ -5778,10 +6006,6 @@ func (c HexistsKey) Field(Field string) HexistsField {
 	return HexistsField{cf: c.cf, cs: append(c.cs, Field)}
 }
 
-func (c HexistsKey) Cache() Cacheable {
-	return Cacheable(c)
-}
-
 type Hget Completed
 
 func (c Hget) Key(Key string) HgetKey {
@@ -5807,10 +6031,6 @@ type HgetKey Completed
 
 func (c HgetKey) Field(Field string) HgetField {
 	return HgetField{cf: c.cf, cs: append(c.cs, Field)}
-}
-
-func (c HgetKey) Cache() Cacheable {
-	return Cacheable(c)
 }
 
 type Hgetall Completed
@@ -5965,10 +6185,6 @@ func (c HmgetKey) Field(Field ...string) HmgetField {
 	return HmgetField{cf: c.cf, cs: append(c.cs, Field...)}
 }
 
-func (c HmgetKey) Cache() Cacheable {
-	return Cacheable(c)
-}
-
 type Hmset Completed
 
 func (c Hmset) Key(Key string) HmsetKey {
@@ -6011,6 +6227,10 @@ type HrandfieldKey Completed
 
 func (c HrandfieldKey) Count(Count int64) HrandfieldOptionsCount {
 	return HrandfieldOptionsCount{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Count, 10))}
+}
+
+func (c HrandfieldKey) Build() Completed {
+	return Completed(c)
 }
 
 type HrandfieldOptionsCount Completed
@@ -6157,10 +6377,6 @@ type HstrlenKey Completed
 
 func (c HstrlenKey) Field(Field string) HstrlenField {
 	return HstrlenField{cf: c.cf, cs: append(c.cs, Field)}
-}
-
-func (c HstrlenKey) Cache() Cacheable {
-	return Cacheable(c)
 }
 
 type Hvals Completed
@@ -6413,10 +6629,6 @@ type LindexKey Completed
 
 func (c LindexKey) Index(Index int64) LindexIndex {
 	return LindexIndex{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Index, 10))}
-}
-
-func (c LindexKey) Cache() Cacheable {
-	return Cacheable(c)
 }
 
 type Linsert Completed
@@ -6710,10 +6922,6 @@ func (c LposKey) Element(Element string) LposElement {
 	return LposElement{cf: c.cf, cs: append(c.cs, Element)}
 }
 
-func (c LposKey) Cache() Cacheable {
-	return Cacheable(c)
-}
-
 type LposMaxlen Completed
 
 func (c LposMaxlen) Build() Completed {
@@ -6813,18 +7021,10 @@ func (c LrangeKey) Start(Start int64) LrangeStart {
 	return LrangeStart{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Start, 10))}
 }
 
-func (c LrangeKey) Cache() Cacheable {
-	return Cacheable(c)
-}
-
 type LrangeStart Completed
 
 func (c LrangeStart) Stop(Stop int64) LrangeStop {
 	return LrangeStop{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Stop, 10))}
-}
-
-func (c LrangeStart) Cache() Cacheable {
-	return Cacheable(c)
 }
 
 type LrangeStop Completed
@@ -8824,10 +9024,6 @@ func (c SismemberKey) Member(Member string) SismemberMember {
 	return SismemberMember{cf: c.cf, cs: append(c.cs, Member)}
 }
 
-func (c SismemberKey) Cache() Cacheable {
-	return Cacheable(c)
-}
-
 type SismemberMember Completed
 
 func (c SismemberMember) Build() Completed {
@@ -8924,10 +9120,6 @@ type SmismemberKey Completed
 
 func (c SmismemberKey) Member(Member ...string) SmismemberMember {
 	return SmismemberMember{cf: c.cf, cs: append(c.cs, Member...)}
-}
-
-func (c SmismemberKey) Cache() Cacheable {
-	return Cacheable(c)
 }
 
 type SmismemberMember Completed
@@ -10169,6 +10361,10 @@ func (c Xgroup) Delconsumer(Key string, Groupname string, Consumername string) X
 	return XgroupDelconsumer{cf: c.cf, cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
 }
 
+func (c Xgroup) Build() Completed {
+	return Completed(c)
+}
+
 func (b *Builder) Xgroup() (c Xgroup) {
 	c.cs = append(b.get(), "XGROUP")
 	return
@@ -10202,6 +10398,10 @@ func (c XgroupCreateId) Delconsumer(Key string, Groupname string, Consumername s
 	return XgroupDelconsumer{cf: c.cf, cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
 }
 
+func (c XgroupCreateId) Build() Completed {
+	return Completed(c)
+}
+
 type XgroupCreateMkstream Completed
 
 func (c XgroupCreateMkstream) Setid(Key string, Groupname string) XgroupSetidSetid {
@@ -10218,6 +10418,10 @@ func (c XgroupCreateMkstream) Createconsumer(Key string, Groupname string, Consu
 
 func (c XgroupCreateMkstream) Delconsumer(Key string, Groupname string, Consumername string) XgroupDelconsumer {
 	return XgroupDelconsumer{cf: c.cf, cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
+}
+
+func (c XgroupCreateMkstream) Build() Completed {
+	return Completed(c)
 }
 
 type XgroupCreateconsumer Completed
@@ -10909,10 +11113,6 @@ func (c ZcountKey) Min(Min float64) ZcountMin {
 	return ZcountMin{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Min, 'f', -1, 64))}
 }
 
-func (c ZcountKey) Cache() Cacheable {
-	return Cacheable(c)
-}
-
 type ZcountMax Completed
 
 func (c ZcountMax) Build() Completed {
@@ -10927,10 +11127,6 @@ type ZcountMin Completed
 
 func (c ZcountMin) Max(Max float64) ZcountMax {
 	return ZcountMax{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Max, 'f', -1, 64))}
-}
-
-func (c ZcountMin) Cache() Cacheable {
-	return Cacheable(c)
 }
 
 type Zdiff Completed
@@ -11288,10 +11484,6 @@ func (c ZlexcountKey) Min(Min string) ZlexcountMin {
 	return ZlexcountMin{cf: c.cf, cs: append(c.cs, Min)}
 }
 
-func (c ZlexcountKey) Cache() Cacheable {
-	return Cacheable(c)
-}
-
 type ZlexcountMax Completed
 
 func (c ZlexcountMax) Build() Completed {
@@ -11306,10 +11498,6 @@ type ZlexcountMin Completed
 
 func (c ZlexcountMin) Max(Max string) ZlexcountMax {
 	return ZlexcountMax{cf: c.cf, cs: append(c.cs, Max)}
-}
-
-func (c ZlexcountMin) Cache() Cacheable {
-	return Cacheable(c)
 }
 
 type Zmscore Completed
@@ -11327,10 +11515,6 @@ type ZmscoreKey Completed
 
 func (c ZmscoreKey) Member(Member ...string) ZmscoreMember {
 	return ZmscoreMember{cf: c.cf, cs: append(c.cs, Member...)}
-}
-
-func (c ZmscoreKey) Cache() Cacheable {
-	return Cacheable(c)
 }
 
 type ZmscoreMember Completed
@@ -11418,6 +11602,10 @@ func (c ZrandmemberKey) Count(Count int64) ZrandmemberOptionsCount {
 	return ZrandmemberOptionsCount{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Count, 10))}
 }
 
+func (c ZrandmemberKey) Build() Completed {
+	return Completed(c)
+}
+
 type ZrandmemberOptionsCount Completed
 
 func (c ZrandmemberOptionsCount) Withscores() ZrandmemberOptionsWithscoresWithscores {
@@ -11449,10 +11637,6 @@ type ZrangeKey Completed
 
 func (c ZrangeKey) Min(Min string) ZrangeMin {
 	return ZrangeMin{cf: c.cf, cs: append(c.cs, Min)}
-}
-
-func (c ZrangeKey) Cache() Cacheable {
-	return Cacheable(c)
 }
 
 type ZrangeLimit Completed
@@ -11503,10 +11687,6 @@ type ZrangeMin Completed
 
 func (c ZrangeMin) Max(Max string) ZrangeMax {
 	return ZrangeMax{cf: c.cf, cs: append(c.cs, Max)}
-}
-
-func (c ZrangeMin) Cache() Cacheable {
-	return Cacheable(c)
 }
 
 type ZrangeRevRev Completed
@@ -11598,10 +11778,6 @@ func (c ZrangebylexKey) Min(Min string) ZrangebylexMin {
 	return ZrangebylexMin{cf: c.cf, cs: append(c.cs, Min)}
 }
 
-func (c ZrangebylexKey) Cache() Cacheable {
-	return Cacheable(c)
-}
-
 type ZrangebylexLimit Completed
 
 func (c ZrangebylexLimit) Build() Completed {
@@ -11632,10 +11808,6 @@ func (c ZrangebylexMin) Max(Max string) ZrangebylexMax {
 	return ZrangebylexMax{cf: c.cf, cs: append(c.cs, Max)}
 }
 
-func (c ZrangebylexMin) Cache() Cacheable {
-	return Cacheable(c)
-}
-
 type Zrangebyscore Completed
 
 func (c Zrangebyscore) Key(Key string) ZrangebyscoreKey {
@@ -11651,10 +11823,6 @@ type ZrangebyscoreKey Completed
 
 func (c ZrangebyscoreKey) Min(Min float64) ZrangebyscoreMin {
 	return ZrangebyscoreMin{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Min, 'f', -1, 64))}
-}
-
-func (c ZrangebyscoreKey) Cache() Cacheable {
-	return Cacheable(c)
 }
 
 type ZrangebyscoreLimit Completed
@@ -11689,10 +11857,6 @@ type ZrangebyscoreMin Completed
 
 func (c ZrangebyscoreMin) Max(Max float64) ZrangebyscoreMax {
 	return ZrangebyscoreMax{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Max, 'f', -1, 64))}
-}
-
-func (c ZrangebyscoreMin) Cache() Cacheable {
-	return Cacheable(c)
 }
 
 type ZrangebyscoreWithscoresWithscores Completed
@@ -11819,10 +11983,6 @@ type ZrankKey Completed
 
 func (c ZrankKey) Member(Member string) ZrankMember {
 	return ZrankMember{cf: c.cf, cs: append(c.cs, Member)}
-}
-
-func (c ZrankKey) Cache() Cacheable {
-	return Cacheable(c)
 }
 
 type ZrankMember Completed
@@ -11966,18 +12126,10 @@ func (c ZrevrangeKey) Start(Start int64) ZrevrangeStart {
 	return ZrevrangeStart{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Start, 10))}
 }
 
-func (c ZrevrangeKey) Cache() Cacheable {
-	return Cacheable(c)
-}
-
 type ZrevrangeStart Completed
 
 func (c ZrevrangeStart) Stop(Stop int64) ZrevrangeStop {
 	return ZrevrangeStop{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Stop, 10))}
-}
-
-func (c ZrevrangeStart) Cache() Cacheable {
-	return Cacheable(c)
 }
 
 type ZrevrangeStop Completed
@@ -12021,10 +12173,6 @@ func (c ZrevrangebylexKey) Max(Max string) ZrevrangebylexMax {
 	return ZrevrangebylexMax{cf: c.cf, cs: append(c.cs, Max)}
 }
 
-func (c ZrevrangebylexKey) Cache() Cacheable {
-	return Cacheable(c)
-}
-
 type ZrevrangebylexLimit Completed
 
 func (c ZrevrangebylexLimit) Build() Completed {
@@ -12039,10 +12187,6 @@ type ZrevrangebylexMax Completed
 
 func (c ZrevrangebylexMax) Min(Min string) ZrevrangebylexMin {
 	return ZrevrangebylexMin{cf: c.cf, cs: append(c.cs, Min)}
-}
-
-func (c ZrevrangebylexMax) Cache() Cacheable {
-	return Cacheable(c)
 }
 
 type ZrevrangebylexMin Completed
@@ -12076,10 +12220,6 @@ func (c ZrevrangebyscoreKey) Max(Max float64) ZrevrangebyscoreMax {
 	return ZrevrangebyscoreMax{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Max, 'f', -1, 64))}
 }
 
-func (c ZrevrangebyscoreKey) Cache() Cacheable {
-	return Cacheable(c)
-}
-
 type ZrevrangebyscoreLimit Completed
 
 func (c ZrevrangebyscoreLimit) Build() Completed {
@@ -12094,10 +12234,6 @@ type ZrevrangebyscoreMax Completed
 
 func (c ZrevrangebyscoreMax) Min(Min float64) ZrevrangebyscoreMin {
 	return ZrevrangebyscoreMin{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Min, 'f', -1, 64))}
-}
-
-func (c ZrevrangebyscoreMax) Cache() Cacheable {
-	return Cacheable(c)
 }
 
 type ZrevrangebyscoreMin Completed
@@ -12147,10 +12283,6 @@ type ZrevrankKey Completed
 
 func (c ZrevrankKey) Member(Member string) ZrevrankMember {
 	return ZrevrankMember{cf: c.cf, cs: append(c.cs, Member)}
-}
-
-func (c ZrevrankKey) Cache() Cacheable {
-	return Cacheable(c)
 }
 
 type ZrevrankMember Completed
@@ -12225,10 +12357,6 @@ type ZscoreKey Completed
 
 func (c ZscoreKey) Member(Member string) ZscoreMember {
 	return ZscoreMember{cf: c.cf, cs: append(c.cs, Member)}
-}
-
-func (c ZscoreKey) Cache() Cacheable {
-	return Cacheable(c)
 }
 
 type ZscoreMember Completed
@@ -12923,10 +13051,6 @@ func (c SBitfieldRoKey) Get(Type string, Offset int64) SBitfieldRoGet {
 	return SBitfieldRoGet{cf: c.cf, cs: append(c.cs, "GET", Type, strconv.FormatInt(Offset, 10))}
 }
 
-func (c SBitfieldRoKey) Cache() SCacheable {
-	return SCacheable(c)
-}
-
 type SBitfieldSat SCompleted
 
 func (c SBitfieldSat) Build() SCompleted {
@@ -13022,6 +13146,10 @@ func (c SBitposBit) Start(Start int64) SBitposIndexStart {
 	return SBitposIndexStart{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Start, 10))}
 }
 
+func (c SBitposBit) Build() SCompleted {
+	return SCompleted(c)
+}
+
 func (c SBitposBit) Cache() SCacheable {
 	return SCacheable(c)
 }
@@ -13054,10 +13182,6 @@ type SBitposKey SCompleted
 
 func (c SBitposKey) Bit(Bit int64) SBitposBit {
 	return SBitposBit{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Bit, 10))}
-}
-
-func (c SBitposKey) Cache() SCacheable {
-	return SCacheable(c)
 }
 
 type SBlmove SCompleted
@@ -13747,6 +13871,10 @@ func (c SClientList) Id() SClientListIdId {
 	return SClientListIdId{cf: c.cf, cs: append(c.cs, "ID")}
 }
 
+func (c SClientList) Build() SCompleted {
+	return SCompleted(c)
+}
+
 func (b *SBuilder) ClientList() (c SClientList) {
 	c.cs = append(b.get(), "CLIENT", "LIST")
 	c.ks = initSlot
@@ -13781,10 +13909,18 @@ func (c SClientListMaster) Id() SClientListIdId {
 	return SClientListIdId{cf: c.cf, cs: append(c.cs, "ID")}
 }
 
+func (c SClientListMaster) Build() SCompleted {
+	return SCompleted(c)
+}
+
 type SClientListNormal SCompleted
 
 func (c SClientListNormal) Id() SClientListIdId {
 	return SClientListIdId{cf: c.cf, cs: append(c.cs, "ID")}
+}
+
+func (c SClientListNormal) Build() SCompleted {
+	return SCompleted(c)
 }
 
 type SClientListPubsub SCompleted
@@ -13793,10 +13929,18 @@ func (c SClientListPubsub) Id() SClientListIdId {
 	return SClientListIdId{cf: c.cf, cs: append(c.cs, "ID")}
 }
 
+func (c SClientListPubsub) Build() SCompleted {
+	return SCompleted(c)
+}
+
 type SClientListReplica SCompleted
 
 func (c SClientListReplica) Id() SClientListIdId {
 	return SClientListIdId{cf: c.cf, cs: append(c.cs, "ID")}
+}
+
+func (c SClientListReplica) Build() SCompleted {
+	return SCompleted(c)
 }
 
 type SClientNoEvict SCompleted
@@ -15410,6 +15554,10 @@ func (c SFailover) Timeout(Milliseconds int64) SFailoverTimeout {
 	return SFailoverTimeout{cf: c.cf, cs: append(c.cs, "TIMEOUT", strconv.FormatInt(Milliseconds, 10))}
 }
 
+func (c SFailover) Build() SCompleted {
+	return SCompleted(c)
+}
+
 func (b *SBuilder) Failover() (c SFailover) {
 	c.cs = append(b.get(), "FAILOVER")
 	c.ks = initSlot
@@ -15627,18 +15775,10 @@ func (c SGeodistKey) Member1(Member1 string) SGeodistMember1 {
 	return SGeodistMember1{cf: c.cf, cs: append(c.cs, Member1)}
 }
 
-func (c SGeodistKey) Cache() SCacheable {
-	return SCacheable(c)
-}
-
 type SGeodistMember1 SCompleted
 
 func (c SGeodistMember1) Member2(Member2 string) SGeodistMember2 {
 	return SGeodistMember2{cf: c.cf, cs: append(c.cs, Member2)}
-}
-
-func (c SGeodistMember1) Cache() SCacheable {
-	return SCacheable(c)
 }
 
 type SGeodistMember2 SCompleted
@@ -15727,10 +15867,6 @@ func (c SGeohashKey) Member(Member ...string) SGeohashMember {
 	return SGeohashMember{cf: c.cf, cs: append(c.cs, Member...)}
 }
 
-func (c SGeohashKey) Cache() SCacheable {
-	return SCacheable(c)
-}
-
 type SGeohashMember SCompleted
 
 func (c SGeohashMember) Member(Member ...string) SGeohashMember {
@@ -15763,10 +15899,6 @@ type SGeoposKey SCompleted
 
 func (c SGeoposKey) Member(Member ...string) SGeoposMember {
 	return SGeoposMember{cf: c.cf, cs: append(c.cs, Member...)}
-}
-
-func (c SGeoposKey) Cache() SCacheable {
-	return SCacheable(c)
 }
 
 type SGeoposMember SCompleted
@@ -15986,28 +16118,16 @@ func (c SGeoradiusRoKey) Longitude(Longitude float64) SGeoradiusRoLongitude {
 	return SGeoradiusRoLongitude{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Longitude, 'f', -1, 64))}
 }
 
-func (c SGeoradiusRoKey) Cache() SCacheable {
-	return SCacheable(c)
-}
-
 type SGeoradiusRoLatitude SCompleted
 
 func (c SGeoradiusRoLatitude) Radius(Radius float64) SGeoradiusRoRadius {
 	return SGeoradiusRoRadius{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Radius, 'f', -1, 64))}
 }
 
-func (c SGeoradiusRoLatitude) Cache() SCacheable {
-	return SCacheable(c)
-}
-
 type SGeoradiusRoLongitude SCompleted
 
 func (c SGeoradiusRoLongitude) Latitude(Latitude float64) SGeoradiusRoLatitude {
 	return SGeoradiusRoLatitude{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Latitude, 'f', -1, 64))}
-}
-
-func (c SGeoradiusRoLongitude) Cache() SCacheable {
-	return SCacheable(c)
 }
 
 type SGeoradiusRoOrderAsc SCompleted
@@ -16058,10 +16178,6 @@ func (c SGeoradiusRoRadius) Mi() SGeoradiusRoUnitMi {
 	return SGeoradiusRoUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
 }
 
-func (c SGeoradiusRoRadius) Cache() SCacheable {
-	return SCacheable(c)
-}
-
 type SGeoradiusRoStoredist SCompleted
 
 func (c SGeoradiusRoStoredist) Build() SCompleted {
@@ -16103,6 +16219,10 @@ func (c SGeoradiusRoUnitFt) Storedist(Key string) SGeoradiusRoStoredist {
 	return SGeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
+func (c SGeoradiusRoUnitFt) Build() SCompleted {
+	return SCompleted(c)
+}
+
 func (c SGeoradiusRoUnitFt) Cache() SCacheable {
 	return SCacheable(c)
 }
@@ -16136,6 +16256,10 @@ func (c SGeoradiusRoUnitKm) Desc() SGeoradiusRoOrderDesc {
 func (c SGeoradiusRoUnitKm) Storedist(Key string) SGeoradiusRoStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
 	return SGeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c SGeoradiusRoUnitKm) Build() SCompleted {
+	return SCompleted(c)
 }
 
 func (c SGeoradiusRoUnitKm) Cache() SCacheable {
@@ -16173,6 +16297,10 @@ func (c SGeoradiusRoUnitM) Storedist(Key string) SGeoradiusRoStoredist {
 	return SGeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
+func (c SGeoradiusRoUnitM) Build() SCompleted {
+	return SCompleted(c)
+}
+
 func (c SGeoradiusRoUnitM) Cache() SCacheable {
 	return SCacheable(c)
 }
@@ -16208,6 +16336,10 @@ func (c SGeoradiusRoUnitMi) Storedist(Key string) SGeoradiusRoStoredist {
 	return SGeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
+func (c SGeoradiusRoUnitMi) Build() SCompleted {
+	return SCompleted(c)
+}
+
 func (c SGeoradiusRoUnitMi) Cache() SCacheable {
 	return SCacheable(c)
 }
@@ -16239,6 +16371,10 @@ func (c SGeoradiusRoWithcoordWithcoord) Storedist(Key string) SGeoradiusRoStored
 	return SGeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
+func (c SGeoradiusRoWithcoordWithcoord) Build() SCompleted {
+	return SCompleted(c)
+}
+
 func (c SGeoradiusRoWithcoordWithcoord) Cache() SCacheable {
 	return SCacheable(c)
 }
@@ -16266,6 +16402,10 @@ func (c SGeoradiusRoWithdistWithdist) Storedist(Key string) SGeoradiusRoStoredis
 	return SGeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
+func (c SGeoradiusRoWithdistWithdist) Build() SCompleted {
+	return SCompleted(c)
+}
+
 func (c SGeoradiusRoWithdistWithdist) Cache() SCacheable {
 	return SCacheable(c)
 }
@@ -16287,6 +16427,10 @@ func (c SGeoradiusRoWithhashWithhash) Desc() SGeoradiusRoOrderDesc {
 func (c SGeoradiusRoWithhashWithhash) Storedist(Key string) SGeoradiusRoStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
 	return SGeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c SGeoradiusRoWithhashWithhash) Build() SCompleted {
+	return SCompleted(c)
 }
 
 func (c SGeoradiusRoWithhashWithhash) Cache() SCacheable {
@@ -16328,6 +16472,10 @@ func (c SGeoradiusUnitFt) Count(Count int64) SGeoradiusCountCount {
 	return SGeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
+func (c SGeoradiusUnitFt) Any() SGeoradiusCountAnyAny {
+	return SGeoradiusCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
+}
+
 func (c SGeoradiusUnitFt) Asc() SGeoradiusOrderAsc {
 	return SGeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
@@ -16344,6 +16492,10 @@ func (c SGeoradiusUnitFt) Store(Key string) SGeoradiusStore {
 func (c SGeoradiusUnitFt) Storedist(Key string) SGeoradiusStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
 	return SGeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c SGeoradiusUnitFt) Build() SCompleted {
+	return SCompleted(c)
 }
 
 type SGeoradiusUnitKm SCompleted
@@ -16364,6 +16516,10 @@ func (c SGeoradiusUnitKm) Count(Count int64) SGeoradiusCountCount {
 	return SGeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
+func (c SGeoradiusUnitKm) Any() SGeoradiusCountAnyAny {
+	return SGeoradiusCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
+}
+
 func (c SGeoradiusUnitKm) Asc() SGeoradiusOrderAsc {
 	return SGeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
@@ -16380,6 +16536,10 @@ func (c SGeoradiusUnitKm) Store(Key string) SGeoradiusStore {
 func (c SGeoradiusUnitKm) Storedist(Key string) SGeoradiusStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
 	return SGeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c SGeoradiusUnitKm) Build() SCompleted {
+	return SCompleted(c)
 }
 
 type SGeoradiusUnitM SCompleted
@@ -16400,6 +16560,10 @@ func (c SGeoradiusUnitM) Count(Count int64) SGeoradiusCountCount {
 	return SGeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
+func (c SGeoradiusUnitM) Any() SGeoradiusCountAnyAny {
+	return SGeoradiusCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
+}
+
 func (c SGeoradiusUnitM) Asc() SGeoradiusOrderAsc {
 	return SGeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
@@ -16416,6 +16580,10 @@ func (c SGeoradiusUnitM) Store(Key string) SGeoradiusStore {
 func (c SGeoradiusUnitM) Storedist(Key string) SGeoradiusStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
 	return SGeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c SGeoradiusUnitM) Build() SCompleted {
+	return SCompleted(c)
 }
 
 type SGeoradiusUnitMi SCompleted
@@ -16436,6 +16604,10 @@ func (c SGeoradiusUnitMi) Count(Count int64) SGeoradiusCountCount {
 	return SGeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
+func (c SGeoradiusUnitMi) Any() SGeoradiusCountAnyAny {
+	return SGeoradiusCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
+}
+
 func (c SGeoradiusUnitMi) Asc() SGeoradiusOrderAsc {
 	return SGeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
@@ -16454,6 +16626,10 @@ func (c SGeoradiusUnitMi) Storedist(Key string) SGeoradiusStoredist {
 	return SGeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
+func (c SGeoradiusUnitMi) Build() SCompleted {
+	return SCompleted(c)
+}
+
 type SGeoradiusWithcoordWithcoord SCompleted
 
 func (c SGeoradiusWithcoordWithcoord) Withdist() SGeoradiusWithdistWithdist {
@@ -16466,6 +16642,10 @@ func (c SGeoradiusWithcoordWithcoord) Withhash() SGeoradiusWithhashWithhash {
 
 func (c SGeoradiusWithcoordWithcoord) Count(Count int64) SGeoradiusCountCount {
 	return SGeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+}
+
+func (c SGeoradiusWithcoordWithcoord) Any() SGeoradiusCountAnyAny {
+	return SGeoradiusCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
 }
 
 func (c SGeoradiusWithcoordWithcoord) Asc() SGeoradiusOrderAsc {
@@ -16486,6 +16666,10 @@ func (c SGeoradiusWithcoordWithcoord) Storedist(Key string) SGeoradiusStoredist 
 	return SGeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
+func (c SGeoradiusWithcoordWithcoord) Build() SCompleted {
+	return SCompleted(c)
+}
+
 type SGeoradiusWithdistWithdist SCompleted
 
 func (c SGeoradiusWithdistWithdist) Withhash() SGeoradiusWithhashWithhash {
@@ -16494,6 +16678,10 @@ func (c SGeoradiusWithdistWithdist) Withhash() SGeoradiusWithhashWithhash {
 
 func (c SGeoradiusWithdistWithdist) Count(Count int64) SGeoradiusCountCount {
 	return SGeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+}
+
+func (c SGeoradiusWithdistWithdist) Any() SGeoradiusCountAnyAny {
+	return SGeoradiusCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
 }
 
 func (c SGeoradiusWithdistWithdist) Asc() SGeoradiusOrderAsc {
@@ -16514,10 +16702,18 @@ func (c SGeoradiusWithdistWithdist) Storedist(Key string) SGeoradiusStoredist {
 	return SGeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
+func (c SGeoradiusWithdistWithdist) Build() SCompleted {
+	return SCompleted(c)
+}
+
 type SGeoradiusWithhashWithhash SCompleted
 
 func (c SGeoradiusWithhashWithhash) Count(Count int64) SGeoradiusCountCount {
 	return SGeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+}
+
+func (c SGeoradiusWithhashWithhash) Any() SGeoradiusCountAnyAny {
+	return SGeoradiusCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
 }
 
 func (c SGeoradiusWithhashWithhash) Asc() SGeoradiusOrderAsc {
@@ -16536,6 +16732,10 @@ func (c SGeoradiusWithhashWithhash) Store(Key string) SGeoradiusStore {
 func (c SGeoradiusWithhashWithhash) Storedist(Key string) SGeoradiusStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
 	return SGeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c SGeoradiusWithhashWithhash) Build() SCompleted {
+	return SCompleted(c)
 }
 
 type SGeoradiusbymember SCompleted
@@ -16735,18 +16935,10 @@ func (c SGeoradiusbymemberRoKey) Member(Member string) SGeoradiusbymemberRoMembe
 	return SGeoradiusbymemberRoMember{cf: c.cf, cs: append(c.cs, Member)}
 }
 
-func (c SGeoradiusbymemberRoKey) Cache() SCacheable {
-	return SCacheable(c)
-}
-
 type SGeoradiusbymemberRoMember SCompleted
 
 func (c SGeoradiusbymemberRoMember) Radius(Radius float64) SGeoradiusbymemberRoRadius {
 	return SGeoradiusbymemberRoRadius{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Radius, 'f', -1, 64))}
-}
-
-func (c SGeoradiusbymemberRoMember) Cache() SCacheable {
-	return SCacheable(c)
 }
 
 type SGeoradiusbymemberRoOrderAsc SCompleted
@@ -16797,10 +16989,6 @@ func (c SGeoradiusbymemberRoRadius) Mi() SGeoradiusbymemberRoUnitMi {
 	return SGeoradiusbymemberRoUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
 }
 
-func (c SGeoradiusbymemberRoRadius) Cache() SCacheable {
-	return SCacheable(c)
-}
-
 type SGeoradiusbymemberRoStoredist SCompleted
 
 func (c SGeoradiusbymemberRoStoredist) Build() SCompleted {
@@ -16842,6 +17030,10 @@ func (c SGeoradiusbymemberRoUnitFt) Storedist(Key string) SGeoradiusbymemberRoSt
 	return SGeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
+func (c SGeoradiusbymemberRoUnitFt) Build() SCompleted {
+	return SCompleted(c)
+}
+
 func (c SGeoradiusbymemberRoUnitFt) Cache() SCacheable {
 	return SCacheable(c)
 }
@@ -16875,6 +17067,10 @@ func (c SGeoradiusbymemberRoUnitKm) Desc() SGeoradiusbymemberRoOrderDesc {
 func (c SGeoradiusbymemberRoUnitKm) Storedist(Key string) SGeoradiusbymemberRoStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
 	return SGeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c SGeoradiusbymemberRoUnitKm) Build() SCompleted {
+	return SCompleted(c)
 }
 
 func (c SGeoradiusbymemberRoUnitKm) Cache() SCacheable {
@@ -16912,6 +17108,10 @@ func (c SGeoradiusbymemberRoUnitM) Storedist(Key string) SGeoradiusbymemberRoSto
 	return SGeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
+func (c SGeoradiusbymemberRoUnitM) Build() SCompleted {
+	return SCompleted(c)
+}
+
 func (c SGeoradiusbymemberRoUnitM) Cache() SCacheable {
 	return SCacheable(c)
 }
@@ -16947,6 +17147,10 @@ func (c SGeoradiusbymemberRoUnitMi) Storedist(Key string) SGeoradiusbymemberRoSt
 	return SGeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
+func (c SGeoradiusbymemberRoUnitMi) Build() SCompleted {
+	return SCompleted(c)
+}
+
 func (c SGeoradiusbymemberRoUnitMi) Cache() SCacheable {
 	return SCacheable(c)
 }
@@ -16978,6 +17182,10 @@ func (c SGeoradiusbymemberRoWithcoordWithcoord) Storedist(Key string) SGeoradius
 	return SGeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
+func (c SGeoradiusbymemberRoWithcoordWithcoord) Build() SCompleted {
+	return SCompleted(c)
+}
+
 func (c SGeoradiusbymemberRoWithcoordWithcoord) Cache() SCacheable {
 	return SCacheable(c)
 }
@@ -17005,6 +17213,10 @@ func (c SGeoradiusbymemberRoWithdistWithdist) Storedist(Key string) SGeoradiusby
 	return SGeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
+func (c SGeoradiusbymemberRoWithdistWithdist) Build() SCompleted {
+	return SCompleted(c)
+}
+
 func (c SGeoradiusbymemberRoWithdistWithdist) Cache() SCacheable {
 	return SCacheable(c)
 }
@@ -17026,6 +17238,10 @@ func (c SGeoradiusbymemberRoWithhashWithhash) Desc() SGeoradiusbymemberRoOrderDe
 func (c SGeoradiusbymemberRoWithhashWithhash) Storedist(Key string) SGeoradiusbymemberRoStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
 	return SGeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c SGeoradiusbymemberRoWithhashWithhash) Build() SCompleted {
+	return SCompleted(c)
 }
 
 func (c SGeoradiusbymemberRoWithhashWithhash) Cache() SCacheable {
@@ -17067,6 +17283,10 @@ func (c SGeoradiusbymemberUnitFt) Count(Count int64) SGeoradiusbymemberCountCoun
 	return SGeoradiusbymemberCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
+func (c SGeoradiusbymemberUnitFt) Any() SGeoradiusbymemberCountAnyAny {
+	return SGeoradiusbymemberCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
+}
+
 func (c SGeoradiusbymemberUnitFt) Asc() SGeoradiusbymemberOrderAsc {
 	return SGeoradiusbymemberOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
@@ -17083,6 +17303,10 @@ func (c SGeoradiusbymemberUnitFt) Store(Key string) SGeoradiusbymemberStore {
 func (c SGeoradiusbymemberUnitFt) Storedist(Key string) SGeoradiusbymemberStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
 	return SGeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c SGeoradiusbymemberUnitFt) Build() SCompleted {
+	return SCompleted(c)
 }
 
 type SGeoradiusbymemberUnitKm SCompleted
@@ -17103,6 +17327,10 @@ func (c SGeoradiusbymemberUnitKm) Count(Count int64) SGeoradiusbymemberCountCoun
 	return SGeoradiusbymemberCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
+func (c SGeoradiusbymemberUnitKm) Any() SGeoradiusbymemberCountAnyAny {
+	return SGeoradiusbymemberCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
+}
+
 func (c SGeoradiusbymemberUnitKm) Asc() SGeoradiusbymemberOrderAsc {
 	return SGeoradiusbymemberOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
@@ -17119,6 +17347,10 @@ func (c SGeoradiusbymemberUnitKm) Store(Key string) SGeoradiusbymemberStore {
 func (c SGeoradiusbymemberUnitKm) Storedist(Key string) SGeoradiusbymemberStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
 	return SGeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c SGeoradiusbymemberUnitKm) Build() SCompleted {
+	return SCompleted(c)
 }
 
 type SGeoradiusbymemberUnitM SCompleted
@@ -17139,6 +17371,10 @@ func (c SGeoradiusbymemberUnitM) Count(Count int64) SGeoradiusbymemberCountCount
 	return SGeoradiusbymemberCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
+func (c SGeoradiusbymemberUnitM) Any() SGeoradiusbymemberCountAnyAny {
+	return SGeoradiusbymemberCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
+}
+
 func (c SGeoradiusbymemberUnitM) Asc() SGeoradiusbymemberOrderAsc {
 	return SGeoradiusbymemberOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
@@ -17155,6 +17391,10 @@ func (c SGeoradiusbymemberUnitM) Store(Key string) SGeoradiusbymemberStore {
 func (c SGeoradiusbymemberUnitM) Storedist(Key string) SGeoradiusbymemberStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
 	return SGeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c SGeoradiusbymemberUnitM) Build() SCompleted {
+	return SCompleted(c)
 }
 
 type SGeoradiusbymemberUnitMi SCompleted
@@ -17175,6 +17415,10 @@ func (c SGeoradiusbymemberUnitMi) Count(Count int64) SGeoradiusbymemberCountCoun
 	return SGeoradiusbymemberCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
+func (c SGeoradiusbymemberUnitMi) Any() SGeoradiusbymemberCountAnyAny {
+	return SGeoradiusbymemberCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
+}
+
 func (c SGeoradiusbymemberUnitMi) Asc() SGeoradiusbymemberOrderAsc {
 	return SGeoradiusbymemberOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
@@ -17193,6 +17437,10 @@ func (c SGeoradiusbymemberUnitMi) Storedist(Key string) SGeoradiusbymemberStored
 	return SGeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
+func (c SGeoradiusbymemberUnitMi) Build() SCompleted {
+	return SCompleted(c)
+}
+
 type SGeoradiusbymemberWithcoordWithcoord SCompleted
 
 func (c SGeoradiusbymemberWithcoordWithcoord) Withdist() SGeoradiusbymemberWithdistWithdist {
@@ -17205,6 +17453,10 @@ func (c SGeoradiusbymemberWithcoordWithcoord) Withhash() SGeoradiusbymemberWithh
 
 func (c SGeoradiusbymemberWithcoordWithcoord) Count(Count int64) SGeoradiusbymemberCountCount {
 	return SGeoradiusbymemberCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+}
+
+func (c SGeoradiusbymemberWithcoordWithcoord) Any() SGeoradiusbymemberCountAnyAny {
+	return SGeoradiusbymemberCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
 }
 
 func (c SGeoradiusbymemberWithcoordWithcoord) Asc() SGeoradiusbymemberOrderAsc {
@@ -17225,6 +17477,10 @@ func (c SGeoradiusbymemberWithcoordWithcoord) Storedist(Key string) SGeoradiusby
 	return SGeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
+func (c SGeoradiusbymemberWithcoordWithcoord) Build() SCompleted {
+	return SCompleted(c)
+}
+
 type SGeoradiusbymemberWithdistWithdist SCompleted
 
 func (c SGeoradiusbymemberWithdistWithdist) Withhash() SGeoradiusbymemberWithhashWithhash {
@@ -17233,6 +17489,10 @@ func (c SGeoradiusbymemberWithdistWithdist) Withhash() SGeoradiusbymemberWithhas
 
 func (c SGeoradiusbymemberWithdistWithdist) Count(Count int64) SGeoradiusbymemberCountCount {
 	return SGeoradiusbymemberCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+}
+
+func (c SGeoradiusbymemberWithdistWithdist) Any() SGeoradiusbymemberCountAnyAny {
+	return SGeoradiusbymemberCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
 }
 
 func (c SGeoradiusbymemberWithdistWithdist) Asc() SGeoradiusbymemberOrderAsc {
@@ -17253,10 +17513,18 @@ func (c SGeoradiusbymemberWithdistWithdist) Storedist(Key string) SGeoradiusbyme
 	return SGeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
 }
 
+func (c SGeoradiusbymemberWithdistWithdist) Build() SCompleted {
+	return SCompleted(c)
+}
+
 type SGeoradiusbymemberWithhashWithhash SCompleted
 
 func (c SGeoradiusbymemberWithhashWithhash) Count(Count int64) SGeoradiusbymemberCountCount {
 	return SGeoradiusbymemberCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+}
+
+func (c SGeoradiusbymemberWithhashWithhash) Any() SGeoradiusbymemberCountAnyAny {
+	return SGeoradiusbymemberCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
 }
 
 func (c SGeoradiusbymemberWithhashWithhash) Asc() SGeoradiusbymemberOrderAsc {
@@ -17275,6 +17543,10 @@ func (c SGeoradiusbymemberWithhashWithhash) Store(Key string) SGeoradiusbymember
 func (c SGeoradiusbymemberWithhashWithhash) Storedist(Key string) SGeoradiusbymemberStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
 	return SGeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c SGeoradiusbymemberWithhashWithhash) Build() SCompleted {
+	return SCompleted(c)
 }
 
 type SGeosearch SCompleted
@@ -17297,10 +17569,6 @@ func (c SGeosearchBoxBybox) Height(Height float64) SGeosearchBoxHeight {
 	return SGeosearchBoxHeight{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Height, 'f', -1, 64))}
 }
 
-func (c SGeosearchBoxBybox) Cache() SCacheable {
-	return SCacheable(c)
-}
-
 type SGeosearchBoxHeight SCompleted
 
 func (c SGeosearchBoxHeight) M() SGeosearchBoxUnitM {
@@ -17317,10 +17585,6 @@ func (c SGeosearchBoxHeight) Ft() SGeosearchBoxUnitFt {
 
 func (c SGeosearchBoxHeight) Mi() SGeosearchBoxUnitMi {
 	return SGeosearchBoxUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
-}
-
-func (c SGeosearchBoxHeight) Cache() SCacheable {
-	return SCacheable(c)
 }
 
 type SGeosearchBoxUnitFt SCompleted
@@ -17347,6 +17611,10 @@ func (c SGeosearchBoxUnitFt) Withdist() SGeosearchWithdistWithdist {
 
 func (c SGeosearchBoxUnitFt) Withhash() SGeosearchWithhashWithhash {
 	return SGeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c SGeosearchBoxUnitFt) Build() SCompleted {
+	return SCompleted(c)
 }
 
 func (c SGeosearchBoxUnitFt) Cache() SCacheable {
@@ -17379,6 +17647,10 @@ func (c SGeosearchBoxUnitKm) Withhash() SGeosearchWithhashWithhash {
 	return SGeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
 }
 
+func (c SGeosearchBoxUnitKm) Build() SCompleted {
+	return SCompleted(c)
+}
+
 func (c SGeosearchBoxUnitKm) Cache() SCacheable {
 	return SCacheable(c)
 }
@@ -17407,6 +17679,10 @@ func (c SGeosearchBoxUnitM) Withdist() SGeosearchWithdistWithdist {
 
 func (c SGeosearchBoxUnitM) Withhash() SGeosearchWithhashWithhash {
 	return SGeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c SGeosearchBoxUnitM) Build() SCompleted {
+	return SCompleted(c)
 }
 
 func (c SGeosearchBoxUnitM) Cache() SCacheable {
@@ -17439,6 +17715,10 @@ func (c SGeosearchBoxUnitMi) Withhash() SGeosearchWithhashWithhash {
 	return SGeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
 }
 
+func (c SGeosearchBoxUnitMi) Build() SCompleted {
+	return SCompleted(c)
+}
+
 func (c SGeosearchBoxUnitMi) Cache() SCacheable {
 	return SCacheable(c)
 }
@@ -17459,10 +17739,6 @@ func (c SGeosearchCircleByradius) Ft() SGeosearchCircleUnitFt {
 
 func (c SGeosearchCircleByradius) Mi() SGeosearchCircleUnitMi {
 	return SGeosearchCircleUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
-}
-
-func (c SGeosearchCircleByradius) Cache() SCacheable {
-	return SCacheable(c)
 }
 
 type SGeosearchCircleUnitFt SCompleted
@@ -17493,6 +17769,10 @@ func (c SGeosearchCircleUnitFt) Withdist() SGeosearchWithdistWithdist {
 
 func (c SGeosearchCircleUnitFt) Withhash() SGeosearchWithhashWithhash {
 	return SGeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c SGeosearchCircleUnitFt) Build() SCompleted {
+	return SCompleted(c)
 }
 
 func (c SGeosearchCircleUnitFt) Cache() SCacheable {
@@ -17529,6 +17809,10 @@ func (c SGeosearchCircleUnitKm) Withhash() SGeosearchWithhashWithhash {
 	return SGeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
 }
 
+func (c SGeosearchCircleUnitKm) Build() SCompleted {
+	return SCompleted(c)
+}
+
 func (c SGeosearchCircleUnitKm) Cache() SCacheable {
 	return SCacheable(c)
 }
@@ -17563,6 +17847,10 @@ func (c SGeosearchCircleUnitM) Withhash() SGeosearchWithhashWithhash {
 	return SGeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
 }
 
+func (c SGeosearchCircleUnitM) Build() SCompleted {
+	return SCompleted(c)
+}
+
 func (c SGeosearchCircleUnitM) Cache() SCacheable {
 	return SCacheable(c)
 }
@@ -17595,6 +17883,10 @@ func (c SGeosearchCircleUnitMi) Withdist() SGeosearchWithdistWithdist {
 
 func (c SGeosearchCircleUnitMi) Withhash() SGeosearchWithhashWithhash {
 	return SGeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c SGeosearchCircleUnitMi) Build() SCompleted {
+	return SCompleted(c)
 }
 
 func (c SGeosearchCircleUnitMi) Cache() SCacheable {
@@ -17683,6 +17975,10 @@ func (c SGeosearchFromlonlat) Withhash() SGeosearchWithhashWithhash {
 	return SGeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
 }
 
+func (c SGeosearchFromlonlat) Build() SCompleted {
+	return SCompleted(c)
+}
+
 func (c SGeosearchFromlonlat) Cache() SCacheable {
 	return SCacheable(c)
 }
@@ -17723,6 +18019,10 @@ func (c SGeosearchFrommember) Withdist() SGeosearchWithdistWithdist {
 
 func (c SGeosearchFrommember) Withhash() SGeosearchWithhashWithhash {
 	return SGeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c SGeosearchFrommember) Build() SCompleted {
+	return SCompleted(c)
 }
 
 func (c SGeosearchFrommember) Cache() SCacheable {
@@ -17771,6 +18071,10 @@ func (c SGeosearchKey) Withhash() SGeosearchWithhashWithhash {
 	return SGeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
 }
 
+func (c SGeosearchKey) Build() SCompleted {
+	return SCompleted(c)
+}
+
 func (c SGeosearchKey) Cache() SCacheable {
 	return SCacheable(c)
 }
@@ -17793,6 +18097,10 @@ func (c SGeosearchOrderAsc) Withhash() SGeosearchWithhashWithhash {
 	return SGeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
 }
 
+func (c SGeosearchOrderAsc) Build() SCompleted {
+	return SCompleted(c)
+}
+
 func (c SGeosearchOrderAsc) Cache() SCacheable {
 	return SCacheable(c)
 }
@@ -17813,6 +18121,10 @@ func (c SGeosearchOrderDesc) Withdist() SGeosearchWithdistWithdist {
 
 func (c SGeosearchOrderDesc) Withhash() SGeosearchWithhashWithhash {
 	return SGeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c SGeosearchOrderDesc) Build() SCompleted {
+	return SCompleted(c)
 }
 
 func (c SGeosearchOrderDesc) Cache() SCacheable {
@@ -17916,6 +18228,10 @@ func (c SGeosearchstoreBoxUnitFt) Storedist() SGeosearchstoreStoredistStoredist 
 	return SGeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
 }
 
+func (c SGeosearchstoreBoxUnitFt) Build() SCompleted {
+	return SCompleted(c)
+}
+
 type SGeosearchstoreBoxUnitKm SCompleted
 
 func (c SGeosearchstoreBoxUnitKm) Asc() SGeosearchstoreOrderAsc {
@@ -17932,6 +18248,10 @@ func (c SGeosearchstoreBoxUnitKm) Count(Count int64) SGeosearchstoreCountCount {
 
 func (c SGeosearchstoreBoxUnitKm) Storedist() SGeosearchstoreStoredistStoredist {
 	return SGeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+}
+
+func (c SGeosearchstoreBoxUnitKm) Build() SCompleted {
+	return SCompleted(c)
 }
 
 type SGeosearchstoreBoxUnitM SCompleted
@@ -17952,6 +18272,10 @@ func (c SGeosearchstoreBoxUnitM) Storedist() SGeosearchstoreStoredistStoredist {
 	return SGeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
 }
 
+func (c SGeosearchstoreBoxUnitM) Build() SCompleted {
+	return SCompleted(c)
+}
+
 type SGeosearchstoreBoxUnitMi SCompleted
 
 func (c SGeosearchstoreBoxUnitMi) Asc() SGeosearchstoreOrderAsc {
@@ -17968,6 +18292,10 @@ func (c SGeosearchstoreBoxUnitMi) Count(Count int64) SGeosearchstoreCountCount {
 
 func (c SGeosearchstoreBoxUnitMi) Storedist() SGeosearchstoreStoredistStoredist {
 	return SGeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+}
+
+func (c SGeosearchstoreBoxUnitMi) Build() SCompleted {
+	return SCompleted(c)
 }
 
 type SGeosearchstoreCircleByradius SCompleted
@@ -18010,6 +18338,10 @@ func (c SGeosearchstoreCircleUnitFt) Storedist() SGeosearchstoreStoredistStoredi
 	return SGeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
 }
 
+func (c SGeosearchstoreCircleUnitFt) Build() SCompleted {
+	return SCompleted(c)
+}
+
 type SGeosearchstoreCircleUnitKm SCompleted
 
 func (c SGeosearchstoreCircleUnitKm) Bybox(Width float64) SGeosearchstoreBoxBybox {
@@ -18030,6 +18362,10 @@ func (c SGeosearchstoreCircleUnitKm) Count(Count int64) SGeosearchstoreCountCoun
 
 func (c SGeosearchstoreCircleUnitKm) Storedist() SGeosearchstoreStoredistStoredist {
 	return SGeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+}
+
+func (c SGeosearchstoreCircleUnitKm) Build() SCompleted {
+	return SCompleted(c)
 }
 
 type SGeosearchstoreCircleUnitM SCompleted
@@ -18054,6 +18390,10 @@ func (c SGeosearchstoreCircleUnitM) Storedist() SGeosearchstoreStoredistStoredis
 	return SGeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
 }
 
+func (c SGeosearchstoreCircleUnitM) Build() SCompleted {
+	return SCompleted(c)
+}
+
 type SGeosearchstoreCircleUnitMi SCompleted
 
 func (c SGeosearchstoreCircleUnitMi) Bybox(Width float64) SGeosearchstoreBoxBybox {
@@ -18074,6 +18414,10 @@ func (c SGeosearchstoreCircleUnitMi) Count(Count int64) SGeosearchstoreCountCoun
 
 func (c SGeosearchstoreCircleUnitMi) Storedist() SGeosearchstoreStoredistStoredist {
 	return SGeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+}
+
+func (c SGeosearchstoreCircleUnitMi) Build() SCompleted {
+	return SCompleted(c)
 }
 
 type SGeosearchstoreCountAnyAny SCompleted
@@ -18133,6 +18477,10 @@ func (c SGeosearchstoreFromlonlat) Storedist() SGeosearchstoreStoredistStoredist
 	return SGeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
 }
 
+func (c SGeosearchstoreFromlonlat) Build() SCompleted {
+	return SCompleted(c)
+}
+
 type SGeosearchstoreFrommember SCompleted
 
 func (c SGeosearchstoreFrommember) Fromlonlat(Longitude float64, Latitude float64) SGeosearchstoreFromlonlat {
@@ -18163,6 +18511,10 @@ func (c SGeosearchstoreFrommember) Storedist() SGeosearchstoreStoredistStoredist
 	return SGeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
 }
 
+func (c SGeosearchstoreFrommember) Build() SCompleted {
+	return SCompleted(c)
+}
+
 type SGeosearchstoreOrderAsc SCompleted
 
 func (c SGeosearchstoreOrderAsc) Count(Count int64) SGeosearchstoreCountCount {
@@ -18173,6 +18525,10 @@ func (c SGeosearchstoreOrderAsc) Storedist() SGeosearchstoreStoredistStoredist {
 	return SGeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
 }
 
+func (c SGeosearchstoreOrderAsc) Build() SCompleted {
+	return SCompleted(c)
+}
+
 type SGeosearchstoreOrderDesc SCompleted
 
 func (c SGeosearchstoreOrderDesc) Count(Count int64) SGeosearchstoreCountCount {
@@ -18181,6 +18537,10 @@ func (c SGeosearchstoreOrderDesc) Count(Count int64) SGeosearchstoreCountCount {
 
 func (c SGeosearchstoreOrderDesc) Storedist() SGeosearchstoreStoredistStoredist {
 	return SGeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+}
+
+func (c SGeosearchstoreOrderDesc) Build() SCompleted {
+	return SCompleted(c)
 }
 
 type SGeosearchstoreSource SCompleted
@@ -18215,6 +18575,10 @@ func (c SGeosearchstoreSource) Count(Count int64) SGeosearchstoreCountCount {
 
 func (c SGeosearchstoreSource) Storedist() SGeosearchstoreStoredistStoredist {
 	return SGeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+}
+
+func (c SGeosearchstoreSource) Build() SCompleted {
+	return SCompleted(c)
 }
 
 type SGeosearchstoreStoredistStoredist SCompleted
@@ -18265,10 +18629,6 @@ type SGetbitKey SCompleted
 
 func (c SGetbitKey) Offset(Offset int64) SGetbitOffset {
 	return SGetbitOffset{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Offset, 10))}
-}
-
-func (c SGetbitKey) Cache() SCacheable {
-	return SCacheable(c)
 }
 
 type SGetbitOffset SCompleted
@@ -18399,18 +18759,10 @@ func (c SGetrangeKey) Start(Start int64) SGetrangeStart {
 	return SGetrangeStart{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Start, 10))}
 }
 
-func (c SGetrangeKey) Cache() SCacheable {
-	return SCacheable(c)
-}
-
 type SGetrangeStart SCompleted
 
 func (c SGetrangeStart) End(End int64) SGetrangeEnd {
 	return SGetrangeEnd{cf: c.cf, cs: append(c.cs, strconv.FormatInt(End, 10))}
-}
-
-func (c SGetrangeStart) Cache() SCacheable {
-	return SCacheable(c)
 }
 
 type SGetset SCompleted
@@ -18471,6 +18823,10 @@ type SHello SCompleted
 
 func (c SHello) Protover(Protover int64) SHelloArgumentsProtover {
 	return SHelloArgumentsProtover{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Protover, 10))}
+}
+
+func (c SHello) Build() SCompleted {
+	return SCompleted(c)
 }
 
 func (b *SBuilder) Hello() (c SHello) {
@@ -18539,10 +18895,6 @@ func (c SHexistsKey) Field(Field string) SHexistsField {
 	return SHexistsField{cf: c.cf, cs: append(c.cs, Field)}
 }
 
-func (c SHexistsKey) Cache() SCacheable {
-	return SCacheable(c)
-}
-
 type SHget SCompleted
 
 func (c SHget) Key(Key string) SHgetKey {
@@ -18571,10 +18923,6 @@ type SHgetKey SCompleted
 
 func (c SHgetKey) Field(Field string) SHgetField {
 	return SHgetField{cf: c.cf, cs: append(c.cs, Field)}
-}
-
-func (c SHgetKey) Cache() SCacheable {
-	return SCacheable(c)
 }
 
 type SHgetall SCompleted
@@ -18745,10 +19093,6 @@ func (c SHmgetKey) Field(Field ...string) SHmgetField {
 	return SHmgetField{cf: c.cf, cs: append(c.cs, Field...)}
 }
 
-func (c SHmgetKey) Cache() SCacheable {
-	return SCacheable(c)
-}
-
 type SHmset SCompleted
 
 func (c SHmset) Key(Key string) SHmsetKey {
@@ -18796,6 +19140,10 @@ type SHrandfieldKey SCompleted
 
 func (c SHrandfieldKey) Count(Count int64) SHrandfieldOptionsCount {
 	return SHrandfieldOptionsCount{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Count, 10))}
+}
+
+func (c SHrandfieldKey) Build() SCompleted {
+	return SCompleted(c)
 }
 
 type SHrandfieldOptionsCount SCompleted
@@ -18952,10 +19300,6 @@ type SHstrlenKey SCompleted
 
 func (c SHstrlenKey) Field(Field string) SHstrlenField {
 	return SHstrlenField{cf: c.cf, cs: append(c.cs, Field)}
-}
-
-func (c SHstrlenKey) Cache() SCacheable {
-	return SCacheable(c)
 }
 
 type SHvals SCompleted
@@ -19230,10 +19574,6 @@ type SLindexKey SCompleted
 
 func (c SLindexKey) Index(Index int64) SLindexIndex {
 	return SLindexIndex{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Index, 10))}
-}
-
-func (c SLindexKey) Cache() SCacheable {
-	return SCacheable(c)
 }
 
 type SLinsert SCompleted
@@ -19549,10 +19889,6 @@ func (c SLposKey) Element(Element string) SLposElement {
 	return SLposElement{cf: c.cf, cs: append(c.cs, Element)}
 }
 
-func (c SLposKey) Cache() SCacheable {
-	return SCacheable(c)
-}
-
 type SLposMaxlen SCompleted
 
 func (c SLposMaxlen) Build() SCompleted {
@@ -19659,18 +19995,10 @@ func (c SLrangeKey) Start(Start int64) SLrangeStart {
 	return SLrangeStart{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Start, 10))}
 }
 
-func (c SLrangeKey) Cache() SCacheable {
-	return SCacheable(c)
-}
-
 type SLrangeStart SCompleted
 
 func (c SLrangeStart) Stop(Stop int64) SLrangeStop {
 	return SLrangeStop{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Stop, 10))}
-}
-
-func (c SLrangeStart) Cache() SCacheable {
-	return SCacheable(c)
 }
 
 type SLrangeStop SCompleted
@@ -21854,10 +22182,6 @@ func (c SSismemberKey) Member(Member string) SSismemberMember {
 	return SSismemberMember{cf: c.cf, cs: append(c.cs, Member)}
 }
 
-func (c SSismemberKey) Cache() SCacheable {
-	return SCacheable(c)
-}
-
 type SSismemberMember SCompleted
 
 func (c SSismemberMember) Build() SCompleted {
@@ -21962,10 +22286,6 @@ type SSmismemberKey SCompleted
 
 func (c SSmismemberKey) Member(Member ...string) SSmismemberMember {
 	return SSmismemberMember{cf: c.cf, cs: append(c.cs, Member...)}
-}
-
-func (c SSmismemberKey) Cache() SCacheable {
-	return SCacheable(c)
 }
 
 type SSmismemberMember SCompleted
@@ -23303,6 +23623,10 @@ func (c SXgroup) Delconsumer(Key string, Groupname string, Consumername string) 
 	return SXgroupDelconsumer{cf: c.cf, cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
 }
 
+func (c SXgroup) Build() SCompleted {
+	return SCompleted(c)
+}
+
 func (b *SBuilder) Xgroup() (c SXgroup) {
 	c.cs = append(b.get(), "XGROUP")
 	c.ks = initSlot
@@ -23341,6 +23665,10 @@ func (c SXgroupCreateId) Delconsumer(Key string, Groupname string, Consumername 
 	return SXgroupDelconsumer{cf: c.cf, cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
 }
 
+func (c SXgroupCreateId) Build() SCompleted {
+	return SCompleted(c)
+}
+
 type SXgroupCreateMkstream SCompleted
 
 func (c SXgroupCreateMkstream) Setid(Key string, Groupname string) SXgroupSetidSetid {
@@ -23361,6 +23689,10 @@ func (c SXgroupCreateMkstream) Createconsumer(Key string, Groupname string, Cons
 func (c SXgroupCreateMkstream) Delconsumer(Key string, Groupname string, Consumername string) SXgroupDelconsumer {
 	c.ks = checkSlot(c.ks, slot(Key))
 	return SXgroupDelconsumer{cf: c.cf, cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
+}
+
+func (c SXgroupCreateMkstream) Build() SCompleted {
+	return SCompleted(c)
 }
 
 type SXgroupCreateconsumer SCompleted
@@ -24103,10 +24435,6 @@ func (c SZcountKey) Min(Min float64) SZcountMin {
 	return SZcountMin{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Min, 'f', -1, 64))}
 }
 
-func (c SZcountKey) Cache() SCacheable {
-	return SCacheable(c)
-}
-
 type SZcountMax SCompleted
 
 func (c SZcountMax) Build() SCompleted {
@@ -24121,10 +24449,6 @@ type SZcountMin SCompleted
 
 func (c SZcountMin) Max(Max float64) SZcountMax {
 	return SZcountMax{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Max, 'f', -1, 64))}
-}
-
-func (c SZcountMin) Cache() SCacheable {
-	return SCacheable(c)
 }
 
 type SZdiff SCompleted
@@ -24527,10 +24851,6 @@ func (c SZlexcountKey) Min(Min string) SZlexcountMin {
 	return SZlexcountMin{cf: c.cf, cs: append(c.cs, Min)}
 }
 
-func (c SZlexcountKey) Cache() SCacheable {
-	return SCacheable(c)
-}
-
 type SZlexcountMax SCompleted
 
 func (c SZlexcountMax) Build() SCompleted {
@@ -24545,10 +24865,6 @@ type SZlexcountMin SCompleted
 
 func (c SZlexcountMin) Max(Max string) SZlexcountMax {
 	return SZlexcountMax{cf: c.cf, cs: append(c.cs, Max)}
-}
-
-func (c SZlexcountMin) Cache() SCacheable {
-	return SCacheable(c)
 }
 
 type SZmscore SCompleted
@@ -24569,10 +24885,6 @@ type SZmscoreKey SCompleted
 
 func (c SZmscoreKey) Member(Member ...string) SZmscoreMember {
 	return SZmscoreMember{cf: c.cf, cs: append(c.cs, Member...)}
-}
-
-func (c SZmscoreKey) Cache() SCacheable {
-	return SCacheable(c)
 }
 
 type SZmscoreMember SCompleted
@@ -24667,6 +24979,10 @@ func (c SZrandmemberKey) Count(Count int64) SZrandmemberOptionsCount {
 	return SZrandmemberOptionsCount{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Count, 10))}
 }
 
+func (c SZrandmemberKey) Build() SCompleted {
+	return SCompleted(c)
+}
+
 type SZrandmemberOptionsCount SCompleted
 
 func (c SZrandmemberOptionsCount) Withscores() SZrandmemberOptionsWithscoresWithscores {
@@ -24701,10 +25017,6 @@ type SZrangeKey SCompleted
 
 func (c SZrangeKey) Min(Min string) SZrangeMin {
 	return SZrangeMin{cf: c.cf, cs: append(c.cs, Min)}
-}
-
-func (c SZrangeKey) Cache() SCacheable {
-	return SCacheable(c)
 }
 
 type SZrangeLimit SCompleted
@@ -24755,10 +25067,6 @@ type SZrangeMin SCompleted
 
 func (c SZrangeMin) Max(Max string) SZrangeMax {
 	return SZrangeMax{cf: c.cf, cs: append(c.cs, Max)}
-}
-
-func (c SZrangeMin) Cache() SCacheable {
-	return SCacheable(c)
 }
 
 type SZrangeRevRev SCompleted
@@ -24853,10 +25161,6 @@ func (c SZrangebylexKey) Min(Min string) SZrangebylexMin {
 	return SZrangebylexMin{cf: c.cf, cs: append(c.cs, Min)}
 }
 
-func (c SZrangebylexKey) Cache() SCacheable {
-	return SCacheable(c)
-}
-
 type SZrangebylexLimit SCompleted
 
 func (c SZrangebylexLimit) Build() SCompleted {
@@ -24887,10 +25191,6 @@ func (c SZrangebylexMin) Max(Max string) SZrangebylexMax {
 	return SZrangebylexMax{cf: c.cf, cs: append(c.cs, Max)}
 }
 
-func (c SZrangebylexMin) Cache() SCacheable {
-	return SCacheable(c)
-}
-
 type SZrangebyscore SCompleted
 
 func (c SZrangebyscore) Key(Key string) SZrangebyscoreKey {
@@ -24909,10 +25209,6 @@ type SZrangebyscoreKey SCompleted
 
 func (c SZrangebyscoreKey) Min(Min float64) SZrangebyscoreMin {
 	return SZrangebyscoreMin{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Min, 'f', -1, 64))}
-}
-
-func (c SZrangebyscoreKey) Cache() SCacheable {
-	return SCacheable(c)
 }
 
 type SZrangebyscoreLimit SCompleted
@@ -24947,10 +25243,6 @@ type SZrangebyscoreMin SCompleted
 
 func (c SZrangebyscoreMin) Max(Max float64) SZrangebyscoreMax {
 	return SZrangebyscoreMax{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Max, 'f', -1, 64))}
-}
-
-func (c SZrangebyscoreMin) Cache() SCacheable {
-	return SCacheable(c)
 }
 
 type SZrangebyscoreWithscoresWithscores SCompleted
@@ -25083,10 +25375,6 @@ type SZrankKey SCompleted
 
 func (c SZrankKey) Member(Member string) SZrankMember {
 	return SZrankMember{cf: c.cf, cs: append(c.cs, Member)}
-}
-
-func (c SZrankKey) Cache() SCacheable {
-	return SCacheable(c)
 }
 
 type SZrankMember SCompleted
@@ -25241,18 +25529,10 @@ func (c SZrevrangeKey) Start(Start int64) SZrevrangeStart {
 	return SZrevrangeStart{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Start, 10))}
 }
 
-func (c SZrevrangeKey) Cache() SCacheable {
-	return SCacheable(c)
-}
-
 type SZrevrangeStart SCompleted
 
 func (c SZrevrangeStart) Stop(Stop int64) SZrevrangeStop {
 	return SZrevrangeStop{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Stop, 10))}
-}
-
-func (c SZrevrangeStart) Cache() SCacheable {
-	return SCacheable(c)
 }
 
 type SZrevrangeStop SCompleted
@@ -25299,10 +25579,6 @@ func (c SZrevrangebylexKey) Max(Max string) SZrevrangebylexMax {
 	return SZrevrangebylexMax{cf: c.cf, cs: append(c.cs, Max)}
 }
 
-func (c SZrevrangebylexKey) Cache() SCacheable {
-	return SCacheable(c)
-}
-
 type SZrevrangebylexLimit SCompleted
 
 func (c SZrevrangebylexLimit) Build() SCompleted {
@@ -25317,10 +25593,6 @@ type SZrevrangebylexMax SCompleted
 
 func (c SZrevrangebylexMax) Min(Min string) SZrevrangebylexMin {
 	return SZrevrangebylexMin{cf: c.cf, cs: append(c.cs, Min)}
-}
-
-func (c SZrevrangebylexMax) Cache() SCacheable {
-	return SCacheable(c)
 }
 
 type SZrevrangebylexMin SCompleted
@@ -25357,10 +25629,6 @@ func (c SZrevrangebyscoreKey) Max(Max float64) SZrevrangebyscoreMax {
 	return SZrevrangebyscoreMax{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Max, 'f', -1, 64))}
 }
 
-func (c SZrevrangebyscoreKey) Cache() SCacheable {
-	return SCacheable(c)
-}
-
 type SZrevrangebyscoreLimit SCompleted
 
 func (c SZrevrangebyscoreLimit) Build() SCompleted {
@@ -25375,10 +25643,6 @@ type SZrevrangebyscoreMax SCompleted
 
 func (c SZrevrangebyscoreMax) Min(Min float64) SZrevrangebyscoreMin {
 	return SZrevrangebyscoreMin{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Min, 'f', -1, 64))}
-}
-
-func (c SZrevrangebyscoreMax) Cache() SCacheable {
-	return SCacheable(c)
 }
 
 type SZrevrangebyscoreMin SCompleted
@@ -25431,10 +25695,6 @@ type SZrevrankKey SCompleted
 
 func (c SZrevrankKey) Member(Member string) SZrevrankMember {
 	return SZrevrankMember{cf: c.cf, cs: append(c.cs, Member)}
-}
-
-func (c SZrevrankKey) Cache() SCacheable {
-	return SCacheable(c)
 }
 
 type SZrevrankMember SCompleted
@@ -25515,10 +25775,6 @@ type SZscoreKey SCompleted
 
 func (c SZscoreKey) Member(Member string) SZscoreMember {
 	return SZscoreMember{cf: c.cf, cs: append(c.cs, Member)}
-}
-
-func (c SZscoreKey) Cache() SCacheable {
-	return SCacheable(c)
 }
 
 type SZscoreMember SCompleted

@@ -292,12 +292,12 @@ func generate(prefix string) {
 			fmt.Printf("func (c %s) Build() %sCompleted {\n", prefix+node.StructName, prefix)
 			fmt.Printf("\treturn %sCompleted(c)\n", prefix)
 			fmt.Printf("}\n\n")
-		}
 
-		if node.Root != nil && within(node.Root, cacheableCMDs) {
-			fmt.Printf("func (c %s) Cache() %sCacheable {\n", prefix+node.StructName, prefix)
-			fmt.Printf("\treturn %sCacheable(c)\n", prefix)
-			fmt.Printf("}\n\n")
+			if node.Root != nil && within(node.Root, cacheableCMDs) {
+				fmt.Printf("func (c %s) Cache() %sCacheable {\n", prefix+node.StructName, prefix)
+				fmt.Printf("\treturn %sCacheable(c)\n", prefix)
+				fmt.Printf("}\n\n")
+			}
 		}
 
 		if node.Root == nil {
@@ -427,6 +427,9 @@ func node(nodes map[string]*CmdNode, root *CmdNode, prefix string, arg Argument,
 			}
 		}
 	case "block":
+		if arg.Optional {
+			arg.Block[0].Optional = true
+		}
 		for i, a := range arg.Block {
 			node(nodes, root, prefix+UcFirst(name(arg.Name)), a, arg.Block[i+1:], prefix, args)
 		}
