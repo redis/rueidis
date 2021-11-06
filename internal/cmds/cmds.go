@@ -6,6 +6,7 @@ var (
 	optInTag = uint16(1 << 15)
 	blockTag = uint16(1 << 14)
 	noRetTag = uint16(1 << 13)
+	readonly = uint16(1 << 12)
 	initSlot = uint16(1 << 15)
 	OptInCmd = Completed{
 		cs: []string{"CLIENT", "CACHING", "YES"},
@@ -47,6 +48,11 @@ func (c *Completed) Commands() []string {
 
 type Cacheable Completed
 type SCompleted Completed
+
+func (c *SCompleted) IsReplicaOk() bool {
+	return c.cf&readonly == readonly
+}
+
 type SCacheable Completed
 
 func (c *Cacheable) Commands() []string {
