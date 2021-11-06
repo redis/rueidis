@@ -77,6 +77,21 @@ func generate(prefix string) {
 	if err := json.Unmarshal(raw, &commands); err != nil {
 		panic(err)
 	}
+
+	// fis missing GEORADIUS_RO and GEORADIUSBYMEMBER_RO
+	commands["GEORADIUS_RO"] = struct {
+		Group     string     `json:"group"`
+		Arguments []Argument `json:"arguments"`
+	}{
+		Arguments: filterArgs(commands["GEORADIUS"].Arguments, "STORE"),
+	}
+	commands["GEORADIUSBYMEMBER_RO"] = struct {
+		Group     string     `json:"group"`
+		Arguments []Argument `json:"arguments"`
+	}{
+		Arguments: filterArgs(commands["GEORADIUSBYMEMBER"].Arguments, "STORE"),
+	}
+
 	for k, info := range commands {
 		sn := name(k)
 		cmd := &CmdNode{Root: nil, StructName: sn, Argument: Argument{Command: k}}
@@ -549,6 +564,15 @@ func within(cmd *CmdNode, cmds []string) bool {
 	return false
 }
 
+func filterArgs(args []Argument, exclude string) (out []Argument) {
+	for _, a := range args {
+		if a.Command != exclude {
+			out = append(out, a)
+		}
+	}
+	return out
+}
+
 var noRetCMDs = []string{
 	"subscribe",
 	"psubscribe",
@@ -573,9 +597,12 @@ var cacheableCMDs = []string{
 	"bitcount",
 	"bitfieldro",
 	"bitpos",
+	"expiretime",
 	"geodist",
 	"geohash",
 	"geopos",
+	"georadiusro",
+	"georadiusbymemberro",
 	"geosearch",
 	"get",
 	"getbit",
@@ -592,11 +619,13 @@ var cacheableCMDs = []string{
 	"llen",
 	"lpos",
 	"lrange",
+	"pexpiretime",
 	"pttl",
 	"scard",
 	"sismember",
 	"smembers",
 	"smismember",
+	"sortro",
 	"strlen",
 	"substr",
 	"ttl",
@@ -622,7 +651,10 @@ var readOnlyCMDs = []string{
 	"bitpos",
 	"dbsize",
 	"dump",
+	"evalro",
+	"evalsharo",
 	"exists",
+	"expiretime",
 	"geodist",
 	"geohash",
 	"geopos",
@@ -651,6 +683,7 @@ var readOnlyCMDs = []string{
 	"memory",
 	"mget",
 	"object",
+	"pexpiretime",
 	"pfcount",
 	"post",
 	"pttl",
@@ -659,9 +692,11 @@ var readOnlyCMDs = []string{
 	"scard",
 	"sdiff",
 	"sinter",
+	"sintercard",
 	"sismember",
 	"smembers",
 	"smismember",
+	"sortro",
 	"srandmember",
 	"sscan",
 	"stralgo",
@@ -695,4 +730,5 @@ var readOnlyCMDs = []string{
 	"zscan",
 	"zscore",
 	"zunion",
+	"zintercard",
 }

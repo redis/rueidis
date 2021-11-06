@@ -3766,6 +3766,10 @@ func (c ExpiretimeKey) Build() Completed {
 	return Completed(c)
 }
 
+func (c ExpiretimeKey) Cache() Cacheable {
+	return Cacheable(c)
+}
+
 type Failover struct {
 	cs []string
 	cf uint16
@@ -4430,6 +4434,437 @@ func (c GeoradiusRadius) Mi() GeoradiusUnitMi {
 	return GeoradiusUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
 }
 
+type GeoradiusRo struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c GeoradiusRo) Key(Key string) GeoradiusRoKey {
+	return GeoradiusRoKey{cf: c.cf, cs: append(c.cs, Key)}
+}
+
+func (b *Builder) GeoradiusRo() (c GeoradiusRo) {
+	c.cs = append(b.get(), "GEORADIUS_RO")
+	return
+}
+
+type GeoradiusRoCountAnyAny struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c GeoradiusRoCountAnyAny) Asc() GeoradiusRoOrderAsc {
+	return GeoradiusRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+}
+
+func (c GeoradiusRoCountAnyAny) Desc() GeoradiusRoOrderDesc {
+	return GeoradiusRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+}
+
+func (c GeoradiusRoCountAnyAny) Storedist(Key string) GeoradiusRoStoredist {
+	return GeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c GeoradiusRoCountAnyAny) Build() Completed {
+	return Completed(c)
+}
+
+func (c GeoradiusRoCountAnyAny) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type GeoradiusRoCountCount struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c GeoradiusRoCountCount) Any() GeoradiusRoCountAnyAny {
+	return GeoradiusRoCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
+}
+
+func (c GeoradiusRoCountCount) Asc() GeoradiusRoOrderAsc {
+	return GeoradiusRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+}
+
+func (c GeoradiusRoCountCount) Desc() GeoradiusRoOrderDesc {
+	return GeoradiusRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+}
+
+func (c GeoradiusRoCountCount) Storedist(Key string) GeoradiusRoStoredist {
+	return GeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c GeoradiusRoCountCount) Build() Completed {
+	return Completed(c)
+}
+
+func (c GeoradiusRoCountCount) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type GeoradiusRoKey struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c GeoradiusRoKey) Longitude(Longitude float64) GeoradiusRoLongitude {
+	return GeoradiusRoLongitude{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Longitude, 'f', -1, 64))}
+}
+
+func (c GeoradiusRoKey) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type GeoradiusRoLatitude struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c GeoradiusRoLatitude) Radius(Radius float64) GeoradiusRoRadius {
+	return GeoradiusRoRadius{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Radius, 'f', -1, 64))}
+}
+
+func (c GeoradiusRoLatitude) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type GeoradiusRoLongitude struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c GeoradiusRoLongitude) Latitude(Latitude float64) GeoradiusRoLatitude {
+	return GeoradiusRoLatitude{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Latitude, 'f', -1, 64))}
+}
+
+func (c GeoradiusRoLongitude) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type GeoradiusRoOrderAsc struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c GeoradiusRoOrderAsc) Storedist(Key string) GeoradiusRoStoredist {
+	return GeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c GeoradiusRoOrderAsc) Build() Completed {
+	return Completed(c)
+}
+
+func (c GeoradiusRoOrderAsc) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type GeoradiusRoOrderDesc struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c GeoradiusRoOrderDesc) Storedist(Key string) GeoradiusRoStoredist {
+	return GeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c GeoradiusRoOrderDesc) Build() Completed {
+	return Completed(c)
+}
+
+func (c GeoradiusRoOrderDesc) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type GeoradiusRoRadius struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c GeoradiusRoRadius) M() GeoradiusRoUnitM {
+	return GeoradiusRoUnitM{cf: c.cf, cs: append(c.cs, "m")}
+}
+
+func (c GeoradiusRoRadius) Km() GeoradiusRoUnitKm {
+	return GeoradiusRoUnitKm{cf: c.cf, cs: append(c.cs, "km")}
+}
+
+func (c GeoradiusRoRadius) Ft() GeoradiusRoUnitFt {
+	return GeoradiusRoUnitFt{cf: c.cf, cs: append(c.cs, "ft")}
+}
+
+func (c GeoradiusRoRadius) Mi() GeoradiusRoUnitMi {
+	return GeoradiusRoUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
+}
+
+func (c GeoradiusRoRadius) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type GeoradiusRoStoredist struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c GeoradiusRoStoredist) Build() Completed {
+	return Completed(c)
+}
+
+func (c GeoradiusRoStoredist) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type GeoradiusRoUnitFt struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c GeoradiusRoUnitFt) Withcoord() GeoradiusRoWithcoordWithcoord {
+	return GeoradiusRoWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+}
+
+func (c GeoradiusRoUnitFt) Withdist() GeoradiusRoWithdistWithdist {
+	return GeoradiusRoWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+}
+
+func (c GeoradiusRoUnitFt) Withhash() GeoradiusRoWithhashWithhash {
+	return GeoradiusRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c GeoradiusRoUnitFt) Count(Count int64) GeoradiusRoCountCount {
+	return GeoradiusRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+}
+
+func (c GeoradiusRoUnitFt) Asc() GeoradiusRoOrderAsc {
+	return GeoradiusRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+}
+
+func (c GeoradiusRoUnitFt) Desc() GeoradiusRoOrderDesc {
+	return GeoradiusRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+}
+
+func (c GeoradiusRoUnitFt) Storedist(Key string) GeoradiusRoStoredist {
+	return GeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c GeoradiusRoUnitFt) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type GeoradiusRoUnitKm struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c GeoradiusRoUnitKm) Withcoord() GeoradiusRoWithcoordWithcoord {
+	return GeoradiusRoWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+}
+
+func (c GeoradiusRoUnitKm) Withdist() GeoradiusRoWithdistWithdist {
+	return GeoradiusRoWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+}
+
+func (c GeoradiusRoUnitKm) Withhash() GeoradiusRoWithhashWithhash {
+	return GeoradiusRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c GeoradiusRoUnitKm) Count(Count int64) GeoradiusRoCountCount {
+	return GeoradiusRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+}
+
+func (c GeoradiusRoUnitKm) Asc() GeoradiusRoOrderAsc {
+	return GeoradiusRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+}
+
+func (c GeoradiusRoUnitKm) Desc() GeoradiusRoOrderDesc {
+	return GeoradiusRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+}
+
+func (c GeoradiusRoUnitKm) Storedist(Key string) GeoradiusRoStoredist {
+	return GeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c GeoradiusRoUnitKm) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type GeoradiusRoUnitM struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c GeoradiusRoUnitM) Withcoord() GeoradiusRoWithcoordWithcoord {
+	return GeoradiusRoWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+}
+
+func (c GeoradiusRoUnitM) Withdist() GeoradiusRoWithdistWithdist {
+	return GeoradiusRoWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+}
+
+func (c GeoradiusRoUnitM) Withhash() GeoradiusRoWithhashWithhash {
+	return GeoradiusRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c GeoradiusRoUnitM) Count(Count int64) GeoradiusRoCountCount {
+	return GeoradiusRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+}
+
+func (c GeoradiusRoUnitM) Asc() GeoradiusRoOrderAsc {
+	return GeoradiusRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+}
+
+func (c GeoradiusRoUnitM) Desc() GeoradiusRoOrderDesc {
+	return GeoradiusRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+}
+
+func (c GeoradiusRoUnitM) Storedist(Key string) GeoradiusRoStoredist {
+	return GeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c GeoradiusRoUnitM) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type GeoradiusRoUnitMi struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c GeoradiusRoUnitMi) Withcoord() GeoradiusRoWithcoordWithcoord {
+	return GeoradiusRoWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+}
+
+func (c GeoradiusRoUnitMi) Withdist() GeoradiusRoWithdistWithdist {
+	return GeoradiusRoWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+}
+
+func (c GeoradiusRoUnitMi) Withhash() GeoradiusRoWithhashWithhash {
+	return GeoradiusRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c GeoradiusRoUnitMi) Count(Count int64) GeoradiusRoCountCount {
+	return GeoradiusRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+}
+
+func (c GeoradiusRoUnitMi) Asc() GeoradiusRoOrderAsc {
+	return GeoradiusRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+}
+
+func (c GeoradiusRoUnitMi) Desc() GeoradiusRoOrderDesc {
+	return GeoradiusRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+}
+
+func (c GeoradiusRoUnitMi) Storedist(Key string) GeoradiusRoStoredist {
+	return GeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c GeoradiusRoUnitMi) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type GeoradiusRoWithcoordWithcoord struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c GeoradiusRoWithcoordWithcoord) Withdist() GeoradiusRoWithdistWithdist {
+	return GeoradiusRoWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+}
+
+func (c GeoradiusRoWithcoordWithcoord) Withhash() GeoradiusRoWithhashWithhash {
+	return GeoradiusRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c GeoradiusRoWithcoordWithcoord) Count(Count int64) GeoradiusRoCountCount {
+	return GeoradiusRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+}
+
+func (c GeoradiusRoWithcoordWithcoord) Asc() GeoradiusRoOrderAsc {
+	return GeoradiusRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+}
+
+func (c GeoradiusRoWithcoordWithcoord) Desc() GeoradiusRoOrderDesc {
+	return GeoradiusRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+}
+
+func (c GeoradiusRoWithcoordWithcoord) Storedist(Key string) GeoradiusRoStoredist {
+	return GeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c GeoradiusRoWithcoordWithcoord) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type GeoradiusRoWithdistWithdist struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c GeoradiusRoWithdistWithdist) Withhash() GeoradiusRoWithhashWithhash {
+	return GeoradiusRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c GeoradiusRoWithdistWithdist) Count(Count int64) GeoradiusRoCountCount {
+	return GeoradiusRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+}
+
+func (c GeoradiusRoWithdistWithdist) Asc() GeoradiusRoOrderAsc {
+	return GeoradiusRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+}
+
+func (c GeoradiusRoWithdistWithdist) Desc() GeoradiusRoOrderDesc {
+	return GeoradiusRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+}
+
+func (c GeoradiusRoWithdistWithdist) Storedist(Key string) GeoradiusRoStoredist {
+	return GeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c GeoradiusRoWithdistWithdist) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type GeoradiusRoWithhashWithhash struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c GeoradiusRoWithhashWithhash) Count(Count int64) GeoradiusRoCountCount {
+	return GeoradiusRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+}
+
+func (c GeoradiusRoWithhashWithhash) Asc() GeoradiusRoOrderAsc {
+	return GeoradiusRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+}
+
+func (c GeoradiusRoWithhashWithhash) Desc() GeoradiusRoOrderDesc {
+	return GeoradiusRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+}
+
+func (c GeoradiusRoWithhashWithhash) Storedist(Key string) GeoradiusRoStoredist {
+	return GeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c GeoradiusRoWithhashWithhash) Cache() Cacheable {
+	return Cacheable(c)
+}
+
 type GeoradiusStore struct {
 	cs []string
 	cf uint16
@@ -4843,6 +5278,423 @@ func (c GeoradiusbymemberRadius) Ft() GeoradiusbymemberUnitFt {
 
 func (c GeoradiusbymemberRadius) Mi() GeoradiusbymemberUnitMi {
 	return GeoradiusbymemberUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
+}
+
+type GeoradiusbymemberRo struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c GeoradiusbymemberRo) Key(Key string) GeoradiusbymemberRoKey {
+	return GeoradiusbymemberRoKey{cf: c.cf, cs: append(c.cs, Key)}
+}
+
+func (b *Builder) GeoradiusbymemberRo() (c GeoradiusbymemberRo) {
+	c.cs = append(b.get(), "GEORADIUSBYMEMBER_RO")
+	return
+}
+
+type GeoradiusbymemberRoCountAnyAny struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c GeoradiusbymemberRoCountAnyAny) Asc() GeoradiusbymemberRoOrderAsc {
+	return GeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+}
+
+func (c GeoradiusbymemberRoCountAnyAny) Desc() GeoradiusbymemberRoOrderDesc {
+	return GeoradiusbymemberRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+}
+
+func (c GeoradiusbymemberRoCountAnyAny) Storedist(Key string) GeoradiusbymemberRoStoredist {
+	return GeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c GeoradiusbymemberRoCountAnyAny) Build() Completed {
+	return Completed(c)
+}
+
+func (c GeoradiusbymemberRoCountAnyAny) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type GeoradiusbymemberRoCountCount struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c GeoradiusbymemberRoCountCount) Any() GeoradiusbymemberRoCountAnyAny {
+	return GeoradiusbymemberRoCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
+}
+
+func (c GeoradiusbymemberRoCountCount) Asc() GeoradiusbymemberRoOrderAsc {
+	return GeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+}
+
+func (c GeoradiusbymemberRoCountCount) Desc() GeoradiusbymemberRoOrderDesc {
+	return GeoradiusbymemberRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+}
+
+func (c GeoradiusbymemberRoCountCount) Storedist(Key string) GeoradiusbymemberRoStoredist {
+	return GeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c GeoradiusbymemberRoCountCount) Build() Completed {
+	return Completed(c)
+}
+
+func (c GeoradiusbymemberRoCountCount) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type GeoradiusbymemberRoKey struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c GeoradiusbymemberRoKey) Member(Member string) GeoradiusbymemberRoMember {
+	return GeoradiusbymemberRoMember{cf: c.cf, cs: append(c.cs, Member)}
+}
+
+func (c GeoradiusbymemberRoKey) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type GeoradiusbymemberRoMember struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c GeoradiusbymemberRoMember) Radius(Radius float64) GeoradiusbymemberRoRadius {
+	return GeoradiusbymemberRoRadius{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Radius, 'f', -1, 64))}
+}
+
+func (c GeoradiusbymemberRoMember) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type GeoradiusbymemberRoOrderAsc struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c GeoradiusbymemberRoOrderAsc) Storedist(Key string) GeoradiusbymemberRoStoredist {
+	return GeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c GeoradiusbymemberRoOrderAsc) Build() Completed {
+	return Completed(c)
+}
+
+func (c GeoradiusbymemberRoOrderAsc) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type GeoradiusbymemberRoOrderDesc struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c GeoradiusbymemberRoOrderDesc) Storedist(Key string) GeoradiusbymemberRoStoredist {
+	return GeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c GeoradiusbymemberRoOrderDesc) Build() Completed {
+	return Completed(c)
+}
+
+func (c GeoradiusbymemberRoOrderDesc) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type GeoradiusbymemberRoRadius struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c GeoradiusbymemberRoRadius) M() GeoradiusbymemberRoUnitM {
+	return GeoradiusbymemberRoUnitM{cf: c.cf, cs: append(c.cs, "m")}
+}
+
+func (c GeoradiusbymemberRoRadius) Km() GeoradiusbymemberRoUnitKm {
+	return GeoradiusbymemberRoUnitKm{cf: c.cf, cs: append(c.cs, "km")}
+}
+
+func (c GeoradiusbymemberRoRadius) Ft() GeoradiusbymemberRoUnitFt {
+	return GeoradiusbymemberRoUnitFt{cf: c.cf, cs: append(c.cs, "ft")}
+}
+
+func (c GeoradiusbymemberRoRadius) Mi() GeoradiusbymemberRoUnitMi {
+	return GeoradiusbymemberRoUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
+}
+
+func (c GeoradiusbymemberRoRadius) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type GeoradiusbymemberRoStoredist struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c GeoradiusbymemberRoStoredist) Build() Completed {
+	return Completed(c)
+}
+
+func (c GeoradiusbymemberRoStoredist) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type GeoradiusbymemberRoUnitFt struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c GeoradiusbymemberRoUnitFt) Withcoord() GeoradiusbymemberRoWithcoordWithcoord {
+	return GeoradiusbymemberRoWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+}
+
+func (c GeoradiusbymemberRoUnitFt) Withdist() GeoradiusbymemberRoWithdistWithdist {
+	return GeoradiusbymemberRoWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+}
+
+func (c GeoradiusbymemberRoUnitFt) Withhash() GeoradiusbymemberRoWithhashWithhash {
+	return GeoradiusbymemberRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c GeoradiusbymemberRoUnitFt) Count(Count int64) GeoradiusbymemberRoCountCount {
+	return GeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+}
+
+func (c GeoradiusbymemberRoUnitFt) Asc() GeoradiusbymemberRoOrderAsc {
+	return GeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+}
+
+func (c GeoradiusbymemberRoUnitFt) Desc() GeoradiusbymemberRoOrderDesc {
+	return GeoradiusbymemberRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+}
+
+func (c GeoradiusbymemberRoUnitFt) Storedist(Key string) GeoradiusbymemberRoStoredist {
+	return GeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c GeoradiusbymemberRoUnitFt) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type GeoradiusbymemberRoUnitKm struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c GeoradiusbymemberRoUnitKm) Withcoord() GeoradiusbymemberRoWithcoordWithcoord {
+	return GeoradiusbymemberRoWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+}
+
+func (c GeoradiusbymemberRoUnitKm) Withdist() GeoradiusbymemberRoWithdistWithdist {
+	return GeoradiusbymemberRoWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+}
+
+func (c GeoradiusbymemberRoUnitKm) Withhash() GeoradiusbymemberRoWithhashWithhash {
+	return GeoradiusbymemberRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c GeoradiusbymemberRoUnitKm) Count(Count int64) GeoradiusbymemberRoCountCount {
+	return GeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+}
+
+func (c GeoradiusbymemberRoUnitKm) Asc() GeoradiusbymemberRoOrderAsc {
+	return GeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+}
+
+func (c GeoradiusbymemberRoUnitKm) Desc() GeoradiusbymemberRoOrderDesc {
+	return GeoradiusbymemberRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+}
+
+func (c GeoradiusbymemberRoUnitKm) Storedist(Key string) GeoradiusbymemberRoStoredist {
+	return GeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c GeoradiusbymemberRoUnitKm) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type GeoradiusbymemberRoUnitM struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c GeoradiusbymemberRoUnitM) Withcoord() GeoradiusbymemberRoWithcoordWithcoord {
+	return GeoradiusbymemberRoWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+}
+
+func (c GeoradiusbymemberRoUnitM) Withdist() GeoradiusbymemberRoWithdistWithdist {
+	return GeoradiusbymemberRoWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+}
+
+func (c GeoradiusbymemberRoUnitM) Withhash() GeoradiusbymemberRoWithhashWithhash {
+	return GeoradiusbymemberRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c GeoradiusbymemberRoUnitM) Count(Count int64) GeoradiusbymemberRoCountCount {
+	return GeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+}
+
+func (c GeoradiusbymemberRoUnitM) Asc() GeoradiusbymemberRoOrderAsc {
+	return GeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+}
+
+func (c GeoradiusbymemberRoUnitM) Desc() GeoradiusbymemberRoOrderDesc {
+	return GeoradiusbymemberRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+}
+
+func (c GeoradiusbymemberRoUnitM) Storedist(Key string) GeoradiusbymemberRoStoredist {
+	return GeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c GeoradiusbymemberRoUnitM) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type GeoradiusbymemberRoUnitMi struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c GeoradiusbymemberRoUnitMi) Withcoord() GeoradiusbymemberRoWithcoordWithcoord {
+	return GeoradiusbymemberRoWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+}
+
+func (c GeoradiusbymemberRoUnitMi) Withdist() GeoradiusbymemberRoWithdistWithdist {
+	return GeoradiusbymemberRoWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+}
+
+func (c GeoradiusbymemberRoUnitMi) Withhash() GeoradiusbymemberRoWithhashWithhash {
+	return GeoradiusbymemberRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c GeoradiusbymemberRoUnitMi) Count(Count int64) GeoradiusbymemberRoCountCount {
+	return GeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+}
+
+func (c GeoradiusbymemberRoUnitMi) Asc() GeoradiusbymemberRoOrderAsc {
+	return GeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+}
+
+func (c GeoradiusbymemberRoUnitMi) Desc() GeoradiusbymemberRoOrderDesc {
+	return GeoradiusbymemberRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+}
+
+func (c GeoradiusbymemberRoUnitMi) Storedist(Key string) GeoradiusbymemberRoStoredist {
+	return GeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c GeoradiusbymemberRoUnitMi) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type GeoradiusbymemberRoWithcoordWithcoord struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c GeoradiusbymemberRoWithcoordWithcoord) Withdist() GeoradiusbymemberRoWithdistWithdist {
+	return GeoradiusbymemberRoWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+}
+
+func (c GeoradiusbymemberRoWithcoordWithcoord) Withhash() GeoradiusbymemberRoWithhashWithhash {
+	return GeoradiusbymemberRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c GeoradiusbymemberRoWithcoordWithcoord) Count(Count int64) GeoradiusbymemberRoCountCount {
+	return GeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+}
+
+func (c GeoradiusbymemberRoWithcoordWithcoord) Asc() GeoradiusbymemberRoOrderAsc {
+	return GeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+}
+
+func (c GeoradiusbymemberRoWithcoordWithcoord) Desc() GeoradiusbymemberRoOrderDesc {
+	return GeoradiusbymemberRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+}
+
+func (c GeoradiusbymemberRoWithcoordWithcoord) Storedist(Key string) GeoradiusbymemberRoStoredist {
+	return GeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c GeoradiusbymemberRoWithcoordWithcoord) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type GeoradiusbymemberRoWithdistWithdist struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c GeoradiusbymemberRoWithdistWithdist) Withhash() GeoradiusbymemberRoWithhashWithhash {
+	return GeoradiusbymemberRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c GeoradiusbymemberRoWithdistWithdist) Count(Count int64) GeoradiusbymemberRoCountCount {
+	return GeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+}
+
+func (c GeoradiusbymemberRoWithdistWithdist) Asc() GeoradiusbymemberRoOrderAsc {
+	return GeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+}
+
+func (c GeoradiusbymemberRoWithdistWithdist) Desc() GeoradiusbymemberRoOrderDesc {
+	return GeoradiusbymemberRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+}
+
+func (c GeoradiusbymemberRoWithdistWithdist) Storedist(Key string) GeoradiusbymemberRoStoredist {
+	return GeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c GeoradiusbymemberRoWithdistWithdist) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type GeoradiusbymemberRoWithhashWithhash struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c GeoradiusbymemberRoWithhashWithhash) Count(Count int64) GeoradiusbymemberRoCountCount {
+	return GeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+}
+
+func (c GeoradiusbymemberRoWithhashWithhash) Asc() GeoradiusbymemberRoOrderAsc {
+	return GeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+}
+
+func (c GeoradiusbymemberRoWithhashWithhash) Desc() GeoradiusbymemberRoOrderDesc {
+	return GeoradiusbymemberRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+}
+
+func (c GeoradiusbymemberRoWithhashWithhash) Storedist(Key string) GeoradiusbymemberRoStoredist {
+	return GeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c GeoradiusbymemberRoWithhashWithhash) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type GeoradiusbymemberStore struct {
@@ -9103,6 +9955,10 @@ func (c PexpiretimeKey) Build() Completed {
 	return Completed(c)
 }
 
+func (c PexpiretimeKey) Cache() Cacheable {
+	return Cacheable(c)
+}
+
 type Pfadd struct {
 	cs []string
 	cf uint16
@@ -11381,6 +12237,10 @@ func (c SortRoBy) Build() Completed {
 	return Completed(c)
 }
 
+func (c SortRoBy) Cache() Cacheable {
+	return Cacheable(c)
+}
+
 type SortRoGet struct {
 	cs []string
 	cf uint16
@@ -11405,6 +12265,10 @@ func (c SortRoGet) Get(Get ...string) SortRoGet {
 
 func (c SortRoGet) Build() Completed {
 	return Completed(c)
+}
+
+func (c SortRoGet) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type SortRoKey struct {
@@ -11442,6 +12306,10 @@ func (c SortRoKey) Build() Completed {
 	return Completed(c)
 }
 
+func (c SortRoKey) Cache() Cacheable {
+	return Cacheable(c)
+}
+
 type SortRoLimit struct {
 	cs []string
 	cf uint16
@@ -11469,6 +12337,10 @@ func (c SortRoLimit) Build() Completed {
 	return Completed(c)
 }
 
+func (c SortRoLimit) Cache() Cacheable {
+	return Cacheable(c)
+}
+
 type SortRoOrderAsc struct {
 	cs []string
 	cf uint16
@@ -11481,6 +12353,10 @@ func (c SortRoOrderAsc) Alpha() SortRoSortingAlpha {
 
 func (c SortRoOrderAsc) Build() Completed {
 	return Completed(c)
+}
+
+func (c SortRoOrderAsc) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type SortRoOrderDesc struct {
@@ -11497,6 +12373,10 @@ func (c SortRoOrderDesc) Build() Completed {
 	return Completed(c)
 }
 
+func (c SortRoOrderDesc) Cache() Cacheable {
+	return Cacheable(c)
+}
+
 type SortRoSortingAlpha struct {
 	cs []string
 	cf uint16
@@ -11505,6 +12385,10 @@ type SortRoSortingAlpha struct {
 
 func (c SortRoSortingAlpha) Build() Completed {
 	return Completed(c)
+}
+
+func (c SortRoSortingAlpha) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type SortSortingAlpha struct {
@@ -19467,6 +20351,7 @@ func (c SEvalRo) Script(Script string) SEvalRoScript {
 
 func (b *SBuilder) EvalRo() (c SEvalRo) {
 	c.cs = append(b.get(), "EVAL_RO")
+	c.cf = readonly
 	c.ks = initSlot
 	return
 }
@@ -19639,6 +20524,7 @@ func (c SEvalshaRo) Sha1(Sha1 string) SEvalshaRoSha1 {
 
 func (b *SBuilder) EvalshaRo() (c SEvalshaRo) {
 	c.cs = append(b.get(), "EVALSHA_RO")
+	c.cf = readonly
 	c.ks = initSlot
 	return
 }
@@ -19994,6 +20880,7 @@ func (c SExpiretime) Key(Key string) SExpiretimeKey {
 
 func (b *SBuilder) Expiretime() (c SExpiretime) {
 	c.cs = append(b.get(), "EXPIRETIME")
+	c.cf = readonly
 	c.ks = initSlot
 	return
 }
@@ -20006,6 +20893,10 @@ type SExpiretimeKey struct {
 
 func (c SExpiretimeKey) Build() SCompleted {
 	return SCompleted(c)
+}
+
+func (c SExpiretimeKey) Cache() SCacheable {
+	return SCacheable(c)
 }
 
 type SFailover struct {
@@ -20761,6 +21652,511 @@ func (c SGeoradiusRadius) Mi() SGeoradiusUnitMi {
 	return SGeoradiusUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
 }
 
+type SGeoradiusRo struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c SGeoradiusRo) Key(Key string) SGeoradiusRoKey {
+	s := slot(Key)
+	if c.ks == initSlot {
+		c.ks = s
+	} else if c.ks != s {
+		panic(multiKeySlotErr)
+	}
+	return SGeoradiusRoKey{cf: c.cf, cs: append(c.cs, Key)}
+}
+
+func (b *SBuilder) GeoradiusRo() (c SGeoradiusRo) {
+	c.cs = append(b.get(), "GEORADIUS_RO")
+	c.cf = readonly
+	c.ks = initSlot
+	return
+}
+
+type SGeoradiusRoCountAnyAny struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c SGeoradiusRoCountAnyAny) Asc() SGeoradiusRoOrderAsc {
+	return SGeoradiusRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+}
+
+func (c SGeoradiusRoCountAnyAny) Desc() SGeoradiusRoOrderDesc {
+	return SGeoradiusRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+}
+
+func (c SGeoradiusRoCountAnyAny) Storedist(Key string) SGeoradiusRoStoredist {
+	s := slot(Key)
+	if c.ks == initSlot {
+		c.ks = s
+	} else if c.ks != s {
+		panic(multiKeySlotErr)
+	}
+	return SGeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c SGeoradiusRoCountAnyAny) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c SGeoradiusRoCountAnyAny) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SGeoradiusRoCountCount struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c SGeoradiusRoCountCount) Any() SGeoradiusRoCountAnyAny {
+	return SGeoradiusRoCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
+}
+
+func (c SGeoradiusRoCountCount) Asc() SGeoradiusRoOrderAsc {
+	return SGeoradiusRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+}
+
+func (c SGeoradiusRoCountCount) Desc() SGeoradiusRoOrderDesc {
+	return SGeoradiusRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+}
+
+func (c SGeoradiusRoCountCount) Storedist(Key string) SGeoradiusRoStoredist {
+	s := slot(Key)
+	if c.ks == initSlot {
+		c.ks = s
+	} else if c.ks != s {
+		panic(multiKeySlotErr)
+	}
+	return SGeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c SGeoradiusRoCountCount) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c SGeoradiusRoCountCount) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SGeoradiusRoKey struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c SGeoradiusRoKey) Longitude(Longitude float64) SGeoradiusRoLongitude {
+	return SGeoradiusRoLongitude{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Longitude, 'f', -1, 64))}
+}
+
+func (c SGeoradiusRoKey) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SGeoradiusRoLatitude struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c SGeoradiusRoLatitude) Radius(Radius float64) SGeoradiusRoRadius {
+	return SGeoradiusRoRadius{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Radius, 'f', -1, 64))}
+}
+
+func (c SGeoradiusRoLatitude) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SGeoradiusRoLongitude struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c SGeoradiusRoLongitude) Latitude(Latitude float64) SGeoradiusRoLatitude {
+	return SGeoradiusRoLatitude{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Latitude, 'f', -1, 64))}
+}
+
+func (c SGeoradiusRoLongitude) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SGeoradiusRoOrderAsc struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c SGeoradiusRoOrderAsc) Storedist(Key string) SGeoradiusRoStoredist {
+	s := slot(Key)
+	if c.ks == initSlot {
+		c.ks = s
+	} else if c.ks != s {
+		panic(multiKeySlotErr)
+	}
+	return SGeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c SGeoradiusRoOrderAsc) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c SGeoradiusRoOrderAsc) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SGeoradiusRoOrderDesc struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c SGeoradiusRoOrderDesc) Storedist(Key string) SGeoradiusRoStoredist {
+	s := slot(Key)
+	if c.ks == initSlot {
+		c.ks = s
+	} else if c.ks != s {
+		panic(multiKeySlotErr)
+	}
+	return SGeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c SGeoradiusRoOrderDesc) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c SGeoradiusRoOrderDesc) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SGeoradiusRoRadius struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c SGeoradiusRoRadius) M() SGeoradiusRoUnitM {
+	return SGeoradiusRoUnitM{cf: c.cf, cs: append(c.cs, "m")}
+}
+
+func (c SGeoradiusRoRadius) Km() SGeoradiusRoUnitKm {
+	return SGeoradiusRoUnitKm{cf: c.cf, cs: append(c.cs, "km")}
+}
+
+func (c SGeoradiusRoRadius) Ft() SGeoradiusRoUnitFt {
+	return SGeoradiusRoUnitFt{cf: c.cf, cs: append(c.cs, "ft")}
+}
+
+func (c SGeoradiusRoRadius) Mi() SGeoradiusRoUnitMi {
+	return SGeoradiusRoUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
+}
+
+func (c SGeoradiusRoRadius) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SGeoradiusRoStoredist struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c SGeoradiusRoStoredist) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c SGeoradiusRoStoredist) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SGeoradiusRoUnitFt struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c SGeoradiusRoUnitFt) Withcoord() SGeoradiusRoWithcoordWithcoord {
+	return SGeoradiusRoWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+}
+
+func (c SGeoradiusRoUnitFt) Withdist() SGeoradiusRoWithdistWithdist {
+	return SGeoradiusRoWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+}
+
+func (c SGeoradiusRoUnitFt) Withhash() SGeoradiusRoWithhashWithhash {
+	return SGeoradiusRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c SGeoradiusRoUnitFt) Count(Count int64) SGeoradiusRoCountCount {
+	return SGeoradiusRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+}
+
+func (c SGeoradiusRoUnitFt) Asc() SGeoradiusRoOrderAsc {
+	return SGeoradiusRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+}
+
+func (c SGeoradiusRoUnitFt) Desc() SGeoradiusRoOrderDesc {
+	return SGeoradiusRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+}
+
+func (c SGeoradiusRoUnitFt) Storedist(Key string) SGeoradiusRoStoredist {
+	s := slot(Key)
+	if c.ks == initSlot {
+		c.ks = s
+	} else if c.ks != s {
+		panic(multiKeySlotErr)
+	}
+	return SGeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c SGeoradiusRoUnitFt) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SGeoradiusRoUnitKm struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c SGeoradiusRoUnitKm) Withcoord() SGeoradiusRoWithcoordWithcoord {
+	return SGeoradiusRoWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+}
+
+func (c SGeoradiusRoUnitKm) Withdist() SGeoradiusRoWithdistWithdist {
+	return SGeoradiusRoWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+}
+
+func (c SGeoradiusRoUnitKm) Withhash() SGeoradiusRoWithhashWithhash {
+	return SGeoradiusRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c SGeoradiusRoUnitKm) Count(Count int64) SGeoradiusRoCountCount {
+	return SGeoradiusRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+}
+
+func (c SGeoradiusRoUnitKm) Asc() SGeoradiusRoOrderAsc {
+	return SGeoradiusRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+}
+
+func (c SGeoradiusRoUnitKm) Desc() SGeoradiusRoOrderDesc {
+	return SGeoradiusRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+}
+
+func (c SGeoradiusRoUnitKm) Storedist(Key string) SGeoradiusRoStoredist {
+	s := slot(Key)
+	if c.ks == initSlot {
+		c.ks = s
+	} else if c.ks != s {
+		panic(multiKeySlotErr)
+	}
+	return SGeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c SGeoradiusRoUnitKm) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SGeoradiusRoUnitM struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c SGeoradiusRoUnitM) Withcoord() SGeoradiusRoWithcoordWithcoord {
+	return SGeoradiusRoWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+}
+
+func (c SGeoradiusRoUnitM) Withdist() SGeoradiusRoWithdistWithdist {
+	return SGeoradiusRoWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+}
+
+func (c SGeoradiusRoUnitM) Withhash() SGeoradiusRoWithhashWithhash {
+	return SGeoradiusRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c SGeoradiusRoUnitM) Count(Count int64) SGeoradiusRoCountCount {
+	return SGeoradiusRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+}
+
+func (c SGeoradiusRoUnitM) Asc() SGeoradiusRoOrderAsc {
+	return SGeoradiusRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+}
+
+func (c SGeoradiusRoUnitM) Desc() SGeoradiusRoOrderDesc {
+	return SGeoradiusRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+}
+
+func (c SGeoradiusRoUnitM) Storedist(Key string) SGeoradiusRoStoredist {
+	s := slot(Key)
+	if c.ks == initSlot {
+		c.ks = s
+	} else if c.ks != s {
+		panic(multiKeySlotErr)
+	}
+	return SGeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c SGeoradiusRoUnitM) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SGeoradiusRoUnitMi struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c SGeoradiusRoUnitMi) Withcoord() SGeoradiusRoWithcoordWithcoord {
+	return SGeoradiusRoWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+}
+
+func (c SGeoradiusRoUnitMi) Withdist() SGeoradiusRoWithdistWithdist {
+	return SGeoradiusRoWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+}
+
+func (c SGeoradiusRoUnitMi) Withhash() SGeoradiusRoWithhashWithhash {
+	return SGeoradiusRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c SGeoradiusRoUnitMi) Count(Count int64) SGeoradiusRoCountCount {
+	return SGeoradiusRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+}
+
+func (c SGeoradiusRoUnitMi) Asc() SGeoradiusRoOrderAsc {
+	return SGeoradiusRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+}
+
+func (c SGeoradiusRoUnitMi) Desc() SGeoradiusRoOrderDesc {
+	return SGeoradiusRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+}
+
+func (c SGeoradiusRoUnitMi) Storedist(Key string) SGeoradiusRoStoredist {
+	s := slot(Key)
+	if c.ks == initSlot {
+		c.ks = s
+	} else if c.ks != s {
+		panic(multiKeySlotErr)
+	}
+	return SGeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c SGeoradiusRoUnitMi) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SGeoradiusRoWithcoordWithcoord struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c SGeoradiusRoWithcoordWithcoord) Withdist() SGeoradiusRoWithdistWithdist {
+	return SGeoradiusRoWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+}
+
+func (c SGeoradiusRoWithcoordWithcoord) Withhash() SGeoradiusRoWithhashWithhash {
+	return SGeoradiusRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c SGeoradiusRoWithcoordWithcoord) Count(Count int64) SGeoradiusRoCountCount {
+	return SGeoradiusRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+}
+
+func (c SGeoradiusRoWithcoordWithcoord) Asc() SGeoradiusRoOrderAsc {
+	return SGeoradiusRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+}
+
+func (c SGeoradiusRoWithcoordWithcoord) Desc() SGeoradiusRoOrderDesc {
+	return SGeoradiusRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+}
+
+func (c SGeoradiusRoWithcoordWithcoord) Storedist(Key string) SGeoradiusRoStoredist {
+	s := slot(Key)
+	if c.ks == initSlot {
+		c.ks = s
+	} else if c.ks != s {
+		panic(multiKeySlotErr)
+	}
+	return SGeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c SGeoradiusRoWithcoordWithcoord) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SGeoradiusRoWithdistWithdist struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c SGeoradiusRoWithdistWithdist) Withhash() SGeoradiusRoWithhashWithhash {
+	return SGeoradiusRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c SGeoradiusRoWithdistWithdist) Count(Count int64) SGeoradiusRoCountCount {
+	return SGeoradiusRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+}
+
+func (c SGeoradiusRoWithdistWithdist) Asc() SGeoradiusRoOrderAsc {
+	return SGeoradiusRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+}
+
+func (c SGeoradiusRoWithdistWithdist) Desc() SGeoradiusRoOrderDesc {
+	return SGeoradiusRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+}
+
+func (c SGeoradiusRoWithdistWithdist) Storedist(Key string) SGeoradiusRoStoredist {
+	s := slot(Key)
+	if c.ks == initSlot {
+		c.ks = s
+	} else if c.ks != s {
+		panic(multiKeySlotErr)
+	}
+	return SGeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c SGeoradiusRoWithdistWithdist) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SGeoradiusRoWithhashWithhash struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c SGeoradiusRoWithhashWithhash) Count(Count int64) SGeoradiusRoCountCount {
+	return SGeoradiusRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+}
+
+func (c SGeoradiusRoWithhashWithhash) Asc() SGeoradiusRoOrderAsc {
+	return SGeoradiusRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+}
+
+func (c SGeoradiusRoWithhashWithhash) Desc() SGeoradiusRoOrderDesc {
+	return SGeoradiusRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+}
+
+func (c SGeoradiusRoWithhashWithhash) Storedist(Key string) SGeoradiusRoStoredist {
+	s := slot(Key)
+	if c.ks == initSlot {
+		c.ks = s
+	} else if c.ks != s {
+		panic(multiKeySlotErr)
+	}
+	return SGeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c SGeoradiusRoWithhashWithhash) Cache() SCacheable {
+	return SCacheable(c)
+}
+
 type SGeoradiusStore struct {
 	cs []string
 	cf uint16
@@ -21319,6 +22715,497 @@ func (c SGeoradiusbymemberRadius) Ft() SGeoradiusbymemberUnitFt {
 
 func (c SGeoradiusbymemberRadius) Mi() SGeoradiusbymemberUnitMi {
 	return SGeoradiusbymemberUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
+}
+
+type SGeoradiusbymemberRo struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c SGeoradiusbymemberRo) Key(Key string) SGeoradiusbymemberRoKey {
+	s := slot(Key)
+	if c.ks == initSlot {
+		c.ks = s
+	} else if c.ks != s {
+		panic(multiKeySlotErr)
+	}
+	return SGeoradiusbymemberRoKey{cf: c.cf, cs: append(c.cs, Key)}
+}
+
+func (b *SBuilder) GeoradiusbymemberRo() (c SGeoradiusbymemberRo) {
+	c.cs = append(b.get(), "GEORADIUSBYMEMBER_RO")
+	c.cf = readonly
+	c.ks = initSlot
+	return
+}
+
+type SGeoradiusbymemberRoCountAnyAny struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c SGeoradiusbymemberRoCountAnyAny) Asc() SGeoradiusbymemberRoOrderAsc {
+	return SGeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+}
+
+func (c SGeoradiusbymemberRoCountAnyAny) Desc() SGeoradiusbymemberRoOrderDesc {
+	return SGeoradiusbymemberRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+}
+
+func (c SGeoradiusbymemberRoCountAnyAny) Storedist(Key string) SGeoradiusbymemberRoStoredist {
+	s := slot(Key)
+	if c.ks == initSlot {
+		c.ks = s
+	} else if c.ks != s {
+		panic(multiKeySlotErr)
+	}
+	return SGeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c SGeoradiusbymemberRoCountAnyAny) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c SGeoradiusbymemberRoCountAnyAny) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SGeoradiusbymemberRoCountCount struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c SGeoradiusbymemberRoCountCount) Any() SGeoradiusbymemberRoCountAnyAny {
+	return SGeoradiusbymemberRoCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
+}
+
+func (c SGeoradiusbymemberRoCountCount) Asc() SGeoradiusbymemberRoOrderAsc {
+	return SGeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+}
+
+func (c SGeoradiusbymemberRoCountCount) Desc() SGeoradiusbymemberRoOrderDesc {
+	return SGeoradiusbymemberRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+}
+
+func (c SGeoradiusbymemberRoCountCount) Storedist(Key string) SGeoradiusbymemberRoStoredist {
+	s := slot(Key)
+	if c.ks == initSlot {
+		c.ks = s
+	} else if c.ks != s {
+		panic(multiKeySlotErr)
+	}
+	return SGeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c SGeoradiusbymemberRoCountCount) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c SGeoradiusbymemberRoCountCount) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SGeoradiusbymemberRoKey struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c SGeoradiusbymemberRoKey) Member(Member string) SGeoradiusbymemberRoMember {
+	return SGeoradiusbymemberRoMember{cf: c.cf, cs: append(c.cs, Member)}
+}
+
+func (c SGeoradiusbymemberRoKey) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SGeoradiusbymemberRoMember struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c SGeoradiusbymemberRoMember) Radius(Radius float64) SGeoradiusbymemberRoRadius {
+	return SGeoradiusbymemberRoRadius{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Radius, 'f', -1, 64))}
+}
+
+func (c SGeoradiusbymemberRoMember) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SGeoradiusbymemberRoOrderAsc struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c SGeoradiusbymemberRoOrderAsc) Storedist(Key string) SGeoradiusbymemberRoStoredist {
+	s := slot(Key)
+	if c.ks == initSlot {
+		c.ks = s
+	} else if c.ks != s {
+		panic(multiKeySlotErr)
+	}
+	return SGeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c SGeoradiusbymemberRoOrderAsc) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c SGeoradiusbymemberRoOrderAsc) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SGeoradiusbymemberRoOrderDesc struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c SGeoradiusbymemberRoOrderDesc) Storedist(Key string) SGeoradiusbymemberRoStoredist {
+	s := slot(Key)
+	if c.ks == initSlot {
+		c.ks = s
+	} else if c.ks != s {
+		panic(multiKeySlotErr)
+	}
+	return SGeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c SGeoradiusbymemberRoOrderDesc) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c SGeoradiusbymemberRoOrderDesc) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SGeoradiusbymemberRoRadius struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c SGeoradiusbymemberRoRadius) M() SGeoradiusbymemberRoUnitM {
+	return SGeoradiusbymemberRoUnitM{cf: c.cf, cs: append(c.cs, "m")}
+}
+
+func (c SGeoradiusbymemberRoRadius) Km() SGeoradiusbymemberRoUnitKm {
+	return SGeoradiusbymemberRoUnitKm{cf: c.cf, cs: append(c.cs, "km")}
+}
+
+func (c SGeoradiusbymemberRoRadius) Ft() SGeoradiusbymemberRoUnitFt {
+	return SGeoradiusbymemberRoUnitFt{cf: c.cf, cs: append(c.cs, "ft")}
+}
+
+func (c SGeoradiusbymemberRoRadius) Mi() SGeoradiusbymemberRoUnitMi {
+	return SGeoradiusbymemberRoUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
+}
+
+func (c SGeoradiusbymemberRoRadius) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SGeoradiusbymemberRoStoredist struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c SGeoradiusbymemberRoStoredist) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c SGeoradiusbymemberRoStoredist) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SGeoradiusbymemberRoUnitFt struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c SGeoradiusbymemberRoUnitFt) Withcoord() SGeoradiusbymemberRoWithcoordWithcoord {
+	return SGeoradiusbymemberRoWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+}
+
+func (c SGeoradiusbymemberRoUnitFt) Withdist() SGeoradiusbymemberRoWithdistWithdist {
+	return SGeoradiusbymemberRoWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+}
+
+func (c SGeoradiusbymemberRoUnitFt) Withhash() SGeoradiusbymemberRoWithhashWithhash {
+	return SGeoradiusbymemberRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c SGeoradiusbymemberRoUnitFt) Count(Count int64) SGeoradiusbymemberRoCountCount {
+	return SGeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+}
+
+func (c SGeoradiusbymemberRoUnitFt) Asc() SGeoradiusbymemberRoOrderAsc {
+	return SGeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+}
+
+func (c SGeoradiusbymemberRoUnitFt) Desc() SGeoradiusbymemberRoOrderDesc {
+	return SGeoradiusbymemberRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+}
+
+func (c SGeoradiusbymemberRoUnitFt) Storedist(Key string) SGeoradiusbymemberRoStoredist {
+	s := slot(Key)
+	if c.ks == initSlot {
+		c.ks = s
+	} else if c.ks != s {
+		panic(multiKeySlotErr)
+	}
+	return SGeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c SGeoradiusbymemberRoUnitFt) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SGeoradiusbymemberRoUnitKm struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c SGeoradiusbymemberRoUnitKm) Withcoord() SGeoradiusbymemberRoWithcoordWithcoord {
+	return SGeoradiusbymemberRoWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+}
+
+func (c SGeoradiusbymemberRoUnitKm) Withdist() SGeoradiusbymemberRoWithdistWithdist {
+	return SGeoradiusbymemberRoWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+}
+
+func (c SGeoradiusbymemberRoUnitKm) Withhash() SGeoradiusbymemberRoWithhashWithhash {
+	return SGeoradiusbymemberRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c SGeoradiusbymemberRoUnitKm) Count(Count int64) SGeoradiusbymemberRoCountCount {
+	return SGeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+}
+
+func (c SGeoradiusbymemberRoUnitKm) Asc() SGeoradiusbymemberRoOrderAsc {
+	return SGeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+}
+
+func (c SGeoradiusbymemberRoUnitKm) Desc() SGeoradiusbymemberRoOrderDesc {
+	return SGeoradiusbymemberRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+}
+
+func (c SGeoradiusbymemberRoUnitKm) Storedist(Key string) SGeoradiusbymemberRoStoredist {
+	s := slot(Key)
+	if c.ks == initSlot {
+		c.ks = s
+	} else if c.ks != s {
+		panic(multiKeySlotErr)
+	}
+	return SGeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c SGeoradiusbymemberRoUnitKm) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SGeoradiusbymemberRoUnitM struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c SGeoradiusbymemberRoUnitM) Withcoord() SGeoradiusbymemberRoWithcoordWithcoord {
+	return SGeoradiusbymemberRoWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+}
+
+func (c SGeoradiusbymemberRoUnitM) Withdist() SGeoradiusbymemberRoWithdistWithdist {
+	return SGeoradiusbymemberRoWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+}
+
+func (c SGeoradiusbymemberRoUnitM) Withhash() SGeoradiusbymemberRoWithhashWithhash {
+	return SGeoradiusbymemberRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c SGeoradiusbymemberRoUnitM) Count(Count int64) SGeoradiusbymemberRoCountCount {
+	return SGeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+}
+
+func (c SGeoradiusbymemberRoUnitM) Asc() SGeoradiusbymemberRoOrderAsc {
+	return SGeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+}
+
+func (c SGeoradiusbymemberRoUnitM) Desc() SGeoradiusbymemberRoOrderDesc {
+	return SGeoradiusbymemberRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+}
+
+func (c SGeoradiusbymemberRoUnitM) Storedist(Key string) SGeoradiusbymemberRoStoredist {
+	s := slot(Key)
+	if c.ks == initSlot {
+		c.ks = s
+	} else if c.ks != s {
+		panic(multiKeySlotErr)
+	}
+	return SGeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c SGeoradiusbymemberRoUnitM) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SGeoradiusbymemberRoUnitMi struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c SGeoradiusbymemberRoUnitMi) Withcoord() SGeoradiusbymemberRoWithcoordWithcoord {
+	return SGeoradiusbymemberRoWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+}
+
+func (c SGeoradiusbymemberRoUnitMi) Withdist() SGeoradiusbymemberRoWithdistWithdist {
+	return SGeoradiusbymemberRoWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+}
+
+func (c SGeoradiusbymemberRoUnitMi) Withhash() SGeoradiusbymemberRoWithhashWithhash {
+	return SGeoradiusbymemberRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c SGeoradiusbymemberRoUnitMi) Count(Count int64) SGeoradiusbymemberRoCountCount {
+	return SGeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+}
+
+func (c SGeoradiusbymemberRoUnitMi) Asc() SGeoradiusbymemberRoOrderAsc {
+	return SGeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+}
+
+func (c SGeoradiusbymemberRoUnitMi) Desc() SGeoradiusbymemberRoOrderDesc {
+	return SGeoradiusbymemberRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+}
+
+func (c SGeoradiusbymemberRoUnitMi) Storedist(Key string) SGeoradiusbymemberRoStoredist {
+	s := slot(Key)
+	if c.ks == initSlot {
+		c.ks = s
+	} else if c.ks != s {
+		panic(multiKeySlotErr)
+	}
+	return SGeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c SGeoradiusbymemberRoUnitMi) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SGeoradiusbymemberRoWithcoordWithcoord struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c SGeoradiusbymemberRoWithcoordWithcoord) Withdist() SGeoradiusbymemberRoWithdistWithdist {
+	return SGeoradiusbymemberRoWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+}
+
+func (c SGeoradiusbymemberRoWithcoordWithcoord) Withhash() SGeoradiusbymemberRoWithhashWithhash {
+	return SGeoradiusbymemberRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c SGeoradiusbymemberRoWithcoordWithcoord) Count(Count int64) SGeoradiusbymemberRoCountCount {
+	return SGeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+}
+
+func (c SGeoradiusbymemberRoWithcoordWithcoord) Asc() SGeoradiusbymemberRoOrderAsc {
+	return SGeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+}
+
+func (c SGeoradiusbymemberRoWithcoordWithcoord) Desc() SGeoradiusbymemberRoOrderDesc {
+	return SGeoradiusbymemberRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+}
+
+func (c SGeoradiusbymemberRoWithcoordWithcoord) Storedist(Key string) SGeoradiusbymemberRoStoredist {
+	s := slot(Key)
+	if c.ks == initSlot {
+		c.ks = s
+	} else if c.ks != s {
+		panic(multiKeySlotErr)
+	}
+	return SGeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c SGeoradiusbymemberRoWithcoordWithcoord) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SGeoradiusbymemberRoWithdistWithdist struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c SGeoradiusbymemberRoWithdistWithdist) Withhash() SGeoradiusbymemberRoWithhashWithhash {
+	return SGeoradiusbymemberRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+}
+
+func (c SGeoradiusbymemberRoWithdistWithdist) Count(Count int64) SGeoradiusbymemberRoCountCount {
+	return SGeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+}
+
+func (c SGeoradiusbymemberRoWithdistWithdist) Asc() SGeoradiusbymemberRoOrderAsc {
+	return SGeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+}
+
+func (c SGeoradiusbymemberRoWithdistWithdist) Desc() SGeoradiusbymemberRoOrderDesc {
+	return SGeoradiusbymemberRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+}
+
+func (c SGeoradiusbymemberRoWithdistWithdist) Storedist(Key string) SGeoradiusbymemberRoStoredist {
+	s := slot(Key)
+	if c.ks == initSlot {
+		c.ks = s
+	} else if c.ks != s {
+		panic(multiKeySlotErr)
+	}
+	return SGeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c SGeoradiusbymemberRoWithdistWithdist) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SGeoradiusbymemberRoWithhashWithhash struct {
+	cs []string
+	cf uint16
+	ks uint16
+}
+
+func (c SGeoradiusbymemberRoWithhashWithhash) Count(Count int64) SGeoradiusbymemberRoCountCount {
+	return SGeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+}
+
+func (c SGeoradiusbymemberRoWithhashWithhash) Asc() SGeoradiusbymemberRoOrderAsc {
+	return SGeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+}
+
+func (c SGeoradiusbymemberRoWithhashWithhash) Desc() SGeoradiusbymemberRoOrderDesc {
+	return SGeoradiusbymemberRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+}
+
+func (c SGeoradiusbymemberRoWithhashWithhash) Storedist(Key string) SGeoradiusbymemberRoStoredist {
+	s := slot(Key)
+	if c.ks == initSlot {
+		c.ks = s
+	} else if c.ks != s {
+		panic(multiKeySlotErr)
+	}
+	return SGeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+}
+
+func (c SGeoradiusbymemberRoWithhashWithhash) Cache() SCacheable {
+	return SCacheable(c)
 }
 
 type SGeoradiusbymemberStore struct {
@@ -26123,6 +28010,7 @@ func (c SPexpiretime) Key(Key string) SPexpiretimeKey {
 
 func (b *SBuilder) Pexpiretime() (c SPexpiretime) {
 	c.cs = append(b.get(), "PEXPIRETIME")
+	c.cf = readonly
 	c.ks = initSlot
 	return
 }
@@ -26135,6 +28023,10 @@ type SPexpiretimeKey struct {
 
 func (c SPexpiretimeKey) Build() SCompleted {
 	return SCompleted(c)
+}
+
+func (c SPexpiretimeKey) Cache() SCacheable {
+	return SCacheable(c)
 }
 
 type SPfadd struct {
@@ -28160,6 +30052,7 @@ func (c SSintercard) Key(Key ...string) SSintercardKey {
 
 func (b *SBuilder) Sintercard() (c SSintercard) {
 	c.cs = append(b.get(), "SINTERCARD")
+	c.cf = readonly
 	c.ks = initSlot
 	return
 }
@@ -28772,6 +30665,7 @@ func (c SSortRo) Key(Key string) SSortRoKey {
 
 func (b *SBuilder) SortRo() (c SSortRo) {
 	c.cs = append(b.get(), "SORT_RO")
+	c.cf = readonly
 	c.ks = initSlot
 	return
 }
@@ -28807,6 +30701,10 @@ func (c SSortRoBy) Build() SCompleted {
 	return SCompleted(c)
 }
 
+func (c SSortRoBy) Cache() SCacheable {
+	return SCacheable(c)
+}
+
 type SSortRoGet struct {
 	cs []string
 	cf uint16
@@ -28831,6 +30729,10 @@ func (c SSortRoGet) Get(Get ...string) SSortRoGet {
 
 func (c SSortRoGet) Build() SCompleted {
 	return SCompleted(c)
+}
+
+func (c SSortRoGet) Cache() SCacheable {
+	return SCacheable(c)
 }
 
 type SSortRoKey struct {
@@ -28868,6 +30770,10 @@ func (c SSortRoKey) Build() SCompleted {
 	return SCompleted(c)
 }
 
+func (c SSortRoKey) Cache() SCacheable {
+	return SCacheable(c)
+}
+
 type SSortRoLimit struct {
 	cs []string
 	cf uint16
@@ -28895,6 +30801,10 @@ func (c SSortRoLimit) Build() SCompleted {
 	return SCompleted(c)
 }
 
+func (c SSortRoLimit) Cache() SCacheable {
+	return SCacheable(c)
+}
+
 type SSortRoOrderAsc struct {
 	cs []string
 	cf uint16
@@ -28907,6 +30817,10 @@ func (c SSortRoOrderAsc) Alpha() SSortRoSortingAlpha {
 
 func (c SSortRoOrderAsc) Build() SCompleted {
 	return SCompleted(c)
+}
+
+func (c SSortRoOrderAsc) Cache() SCacheable {
+	return SCacheable(c)
 }
 
 type SSortRoOrderDesc struct {
@@ -28923,6 +30837,10 @@ func (c SSortRoOrderDesc) Build() SCompleted {
 	return SCompleted(c)
 }
 
+func (c SSortRoOrderDesc) Cache() SCacheable {
+	return SCacheable(c)
+}
+
 type SSortRoSortingAlpha struct {
 	cs []string
 	cf uint16
@@ -28931,6 +30849,10 @@ type SSortRoSortingAlpha struct {
 
 func (c SSortRoSortingAlpha) Build() SCompleted {
 	return SCompleted(c)
+}
+
+func (c SSortRoSortingAlpha) Cache() SCacheable {
+	return SCacheable(c)
 }
 
 type SSortSortingAlpha struct {
@@ -32015,6 +33937,7 @@ func (c SZintercard) Numkeys(Numkeys int64) SZintercardNumkeys {
 
 func (b *SBuilder) Zintercard() (c SZintercard) {
 	c.cs = append(b.get(), "ZINTERCARD")
+	c.cf = readonly
 	c.ks = initSlot
 	return
 }
