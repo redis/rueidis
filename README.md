@@ -11,7 +11,7 @@ A Fast Golang Redis RESP3 client that does auto pipelining and supports client s
 
 ## Auto Pipeline
 
-All non-blocking commands to a single redis are pipelined through one tcp connection, which reduces
+All non-blocking commands to a single redis are automatically pipelined through one tcp connection, which reduces
 the overall round trip costs, and gets higher throughput.
 
 ### Benchmark comparison with go-redis v8.11.4
@@ -64,8 +64,8 @@ func BenchmarkRedisClient(b *testing.B) {
 The Opt-In mode of server-assisted client side caching are always enabled, and can be used by calling `DoCache()` with
 a separated client side TTL.
 
-A separated client side TTL is required because the current spec (redis 6.2) of Client Side Caching doesn't include notification of
-key expiration on server in time.
+A separated client side TTL is required because redis server doesn't send invalidation messages in time when
+key expired on the server. Please follow [#6833](https://github.com/redis/redis/issues/6833) and [#6867](https://github.com/redis/redis/issues/6867)
 
 ### Benchmark [(source)](./pkg/conn/conn_test.go)
 
@@ -132,7 +132,7 @@ ok  	github.com/rueian/rueidis/pkg/conn	3.057s
 ## Blocking Commands
 
 The following blocking commands use another connection pool and will not share the same connection
-with others and will not cause others to be blocked:
+with non-blocking commands and will not cause the pipeline to be blocked:
 
 * xread with block
 * xreadgroup with block
@@ -166,16 +166,16 @@ conn.Do(c.Cmd.Subscribe().Channel("my_channel").Build())
 
 Redis commands are very complex and their formats are very different from each other.
 
-This library provides a type safe command builder with in `Conn.Cmd` that can be used as
+This library provides a type safe command builder within `Conn.Cmd` that can be used as
 an entrypoint to construct a redis command. Once the command is completed, call the `Build()` or `Cache()` to get the actual command.
-And then pass it to either `Conn.Do()` or `Conn.DoMulti()` or `Conn.DoCache()`.
+And then pass it to either `Conn.Do()` or `Conn.DoCache()`.
 
 ```golang
 c.Do(c.Cmd.Set().Key("mykey").Value("myval").Ex(10).Nx().Build())
 c.DoCache(c.Cmd.Hmget().Key("myhash").Field("1", "2").Cache(), time.Second*30)
 ```
 
-Once the command is passed to the one of above `Conn.DoXXX()`, the command will be recycled and should not be reused.
+**Once the command is passed to the one of above `Conn.DoXXX()`, the command will be recycled and should not be reused.**
 
 ## Not Yet Implement
 
