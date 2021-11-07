@@ -42,11 +42,12 @@ type wire struct {
 }
 
 type Option struct {
-	CacheSize  int
-	SelectDB   int
-	Username   string
-	Password   string
-	ClientName string
+	CacheSize   int
+	SelectDB    int
+	Username    string
+	Password    string
+	ClientName  string
+	DialTimeout time.Duration
 
 	PubSubHandlers PubSubHandlers
 }

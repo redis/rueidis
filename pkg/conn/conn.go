@@ -63,7 +63,7 @@ func (c *Conn) connect() (*wire, error) {
 }
 
 func (c *Conn) dial() (*wire, error) {
-	conn, err := net.Dial("tcp", c.dst)
+	conn, err := net.DialTimeout("tcp", c.dst, c.opt.DialTimeout)
 	if err != nil {
 		return nil, err
 	}
