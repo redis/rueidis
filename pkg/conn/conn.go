@@ -13,7 +13,6 @@ import (
 var broken *wire
 
 type Conn struct {
-	Cmd  *cmds.Builder
 	dst  string
 	opt  Option
 	wire atomic.Value
@@ -23,10 +22,7 @@ type Conn struct {
 }
 
 func NewConn(dst string, option Option) (*Conn, error) {
-	conn := &Conn{
-		Cmd: cmds.NewBuilder(),
-		dst: dst, opt: option,
-	}
+	conn := &Conn{dst: dst, opt: option}
 	conn.wire.Store(broken)
 	if _, err := conn.connect(); err != nil {
 		return nil, err
@@ -111,7 +107,6 @@ retry:
 			goto retry
 		}
 	}
-	c.Cmd.Put(cmd.Commands())
 	return resp
 }
 
@@ -143,9 +138,6 @@ retry:
 			}
 		}
 	}
-	for _, cmd := range multi {
-		c.Cmd.Put(cmd.Commands())
-	}
 	return resp
 }
 
@@ -157,7 +149,6 @@ retry:
 		c.wire.CompareAndSwap(wire, broken)
 		goto retry
 	}
-	c.Cmd.Put(cmd.Commands())
 	return resp
 }
 

@@ -34,7 +34,7 @@ Benchmark source code:
 ```golang
 func BenchmarkRedisClient(b *testing.B) {
 	b.Run("RueidisParallel100Get", func(b *testing.B) {
-		c, _ := conn.NewConn("127.0.0.1:6379", conn.Option{})
+		c, _ := client.NewSingleClient("127.0.0.1:6379", conn.Option{})
 		b.SetParallelism(100)
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
@@ -152,7 +152,7 @@ with non-blocking commands and will not cause the pipeline to be blocked:
 To receive messages from channels, the message handler should be registered when creating the redis connection:
 
 ```golang
-conn, _ := conn.NewConn("127.0.0.1:6379", conn.Option{
+conn, _ := client.NewSingleClient("127.0.0.1:6379", conn.Option{
     PubSubHandlers: conn.PubSubHandlers{
         OnMessage: func(channel, message string) {
             // handle the message
@@ -166,16 +166,16 @@ conn.Do(c.Cmd.Subscribe().Channel("my_channel").Build())
 
 Redis commands are very complex and their formats are very different from each other.
 
-This library provides a type safe command builder within `Conn.Cmd` that can be used as
+This library provides a type safe command builder within `SingleClient.Cmd` that can be used as
 an entrypoint to construct a redis command. Once the command is completed, call the `Build()` or `Cache()` to get the actual command.
-And then pass it to either `Conn.Do()` or `Conn.DoCache()`.
+And then pass it to either `SingleClient.Do()` or `SingleClient.DoCache()`.
 
 ```golang
 c.Do(c.Cmd.Set().Key("mykey").Value("myval").Ex(10).Nx().Build())
 c.DoCache(c.Cmd.Hmget().Key("myhash").Field("1", "2").Cache(), time.Second*30)
 ```
 
-**Once the command is passed to the one of above `Conn.DoXXX()`, the command will be recycled and should not be reused.**
+**Once the command is passed to the one of above `SingleClient.DoXXX()`, the command will be recycled and should not be reused.**
 
 ## Not Yet Implement
 
