@@ -7,7 +7,7 @@ const (
 	blockTag = uint16(1 << 14)
 	noRetTag = uint16(1 << 13)
 	readonly = uint16(1 << 12)
-	initSlot = uint16(1 << 15)
+	InitSlot = uint16(1 << 15)
 )
 
 var (
@@ -20,6 +20,12 @@ var (
 	}
 	QuitCmd = Completed{
 		cs: []string{"QUIT"},
+	}
+	SlotCmd = Completed{
+		cs: []string{"CLUSTER", "SLOTS"},
+	}
+	AskingCmd = Completed{
+		cs: []string{"ASKING"},
 	}
 )
 
@@ -52,11 +58,27 @@ func (c *Completed) Commands() []string {
 type Cacheable Completed
 type SCompleted Completed
 
+func (c *SCompleted) Commands() []string {
+	return c.cs
+}
+
 func (c *SCompleted) IsReplicaOk() bool {
 	return c.cf&readonly == readonly
 }
 
+func (c *SCompleted) Slot() uint16 {
+	return c.ks
+}
+
 type SCacheable Completed
+
+func (c *SCacheable) Slot() uint16 {
+	return c.ks
+}
+
+func (c *SCacheable) Commands() []string {
+	return c.cs
+}
 
 func (c *Cacheable) Commands() []string {
 	return c.cs
@@ -99,7 +121,7 @@ func NewMultiCompleted(cs [][]string) []Completed {
 }
 
 func checkSlot(prev, new uint16) uint16 {
-	if prev == initSlot || prev == new {
+	if prev == InitSlot || prev == new {
 		return new
 	}
 	panic(multiKeySlotErr)
