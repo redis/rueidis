@@ -21,14 +21,11 @@ type Conn struct {
 	blocking *pool
 }
 
-func NewConn(dst string, option Option) (*Conn, error) {
+func NewConn(dst string, option Option) *Conn {
 	conn := &Conn{dst: dst, opt: option}
 	conn.wire.Store(broken)
-	if _, err := conn.connect(); err != nil {
-		return nil, err
-	}
 	conn.blocking = newPool(defaultPoolSize, conn.dialRetry)
-	return conn, nil
+	return conn
 }
 
 func (c *Conn) connect() (*wire, error) {
@@ -84,6 +81,11 @@ retry:
 		return wire
 	}
 	goto retry
+}
+
+func (c *Conn) Init() error { // no retry
+	_, err := c.connect()
+	return err
 }
 
 func (c *Conn) Info() proto.Message {

@@ -9,8 +9,8 @@ import (
 
 func BenchmarkClientSideCaching(b *testing.B) {
 	setup := func(b *testing.B) *Conn {
-		c, err := NewConn("127.0.0.1:6379", Option{CacheSize: DefaultCacheBytes})
-		if err != nil {
+		c := NewConn("127.0.0.1:6379", Option{CacheSize: DefaultCacheBytes})
+		if err := c.Init(); err != nil {
 			panic(err)
 		}
 		b.SetParallelism(100)

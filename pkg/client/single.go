@@ -14,8 +14,8 @@ type SingleClient struct {
 }
 
 func NewSingleClient(dst string, option conn.Option) (*SingleClient, error) {
-	c, err := conn.NewConn(dst, option)
-	if err != nil {
+	c := conn.NewConn(dst, option)
+	if err := c.Init(); err != nil {
 		return nil, err
 	}
 	return &SingleClient{
