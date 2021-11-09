@@ -3663,10 +3663,6 @@ func (c GeoradiusUnitFt) Count(Count int64) GeoradiusCountCount {
 	return GeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c GeoradiusUnitFt) Any() GeoradiusCountAnyAny {
-	return GeoradiusCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
-}
-
 func (c GeoradiusUnitFt) Asc() GeoradiusOrderAsc {
 	return GeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
@@ -3703,10 +3699,6 @@ func (c GeoradiusUnitKm) Withhash() GeoradiusWithhashWithhash {
 
 func (c GeoradiusUnitKm) Count(Count int64) GeoradiusCountCount {
 	return GeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
-}
-
-func (c GeoradiusUnitKm) Any() GeoradiusCountAnyAny {
-	return GeoradiusCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
 }
 
 func (c GeoradiusUnitKm) Asc() GeoradiusOrderAsc {
@@ -3747,10 +3739,6 @@ func (c GeoradiusUnitM) Count(Count int64) GeoradiusCountCount {
 	return GeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c GeoradiusUnitM) Any() GeoradiusCountAnyAny {
-	return GeoradiusCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
-}
-
 func (c GeoradiusUnitM) Asc() GeoradiusOrderAsc {
 	return GeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
@@ -3789,10 +3777,6 @@ func (c GeoradiusUnitMi) Count(Count int64) GeoradiusCountCount {
 	return GeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c GeoradiusUnitMi) Any() GeoradiusCountAnyAny {
-	return GeoradiusCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
-}
-
 func (c GeoradiusUnitMi) Asc() GeoradiusOrderAsc {
 	return GeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
@@ -3827,10 +3811,6 @@ func (c GeoradiusWithcoordWithcoord) Count(Count int64) GeoradiusCountCount {
 	return GeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c GeoradiusWithcoordWithcoord) Any() GeoradiusCountAnyAny {
-	return GeoradiusCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
-}
-
 func (c GeoradiusWithcoordWithcoord) Asc() GeoradiusOrderAsc {
 	return GeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
@@ -3861,10 +3841,6 @@ func (c GeoradiusWithdistWithdist) Count(Count int64) GeoradiusCountCount {
 	return GeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c GeoradiusWithdistWithdist) Any() GeoradiusCountAnyAny {
-	return GeoradiusCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
-}
-
 func (c GeoradiusWithdistWithdist) Asc() GeoradiusOrderAsc {
 	return GeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
@@ -3889,10 +3865,6 @@ type GeoradiusWithhashWithhash Completed
 
 func (c GeoradiusWithhashWithhash) Count(Count int64) GeoradiusCountCount {
 	return GeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
-}
-
-func (c GeoradiusWithhashWithhash) Any() GeoradiusCountAnyAny {
-	return GeoradiusCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
 }
 
 func (c GeoradiusWithhashWithhash) Asc() GeoradiusOrderAsc {
@@ -4177,10 +4149,6 @@ func (c GeoradiusbymemberRoUnitFt) Count(Count int64) GeoradiusbymemberRoCountCo
 	return GeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c GeoradiusbymemberRoUnitFt) Any() GeoradiusbymemberRoCountAnyAny {
-	return GeoradiusbymemberRoCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
-}
-
 func (c GeoradiusbymemberRoUnitFt) Asc() GeoradiusbymemberRoOrderAsc {
 	return GeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
@@ -4217,10 +4185,6 @@ func (c GeoradiusbymemberRoUnitKm) Withhash() GeoradiusbymemberRoWithhashWithhas
 
 func (c GeoradiusbymemberRoUnitKm) Count(Count int64) GeoradiusbymemberRoCountCount {
 	return GeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
-}
-
-func (c GeoradiusbymemberRoUnitKm) Any() GeoradiusbymemberRoCountAnyAny {
-	return GeoradiusbymemberRoCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
 }
 
 func (c GeoradiusbymemberRoUnitKm) Asc() GeoradiusbymemberRoOrderAsc {
@@ -4261,10 +4225,6 @@ func (c GeoradiusbymemberRoUnitM) Count(Count int64) GeoradiusbymemberRoCountCou
 	return GeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c GeoradiusbymemberRoUnitM) Any() GeoradiusbymemberRoCountAnyAny {
-	return GeoradiusbymemberRoCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
-}
-
 func (c GeoradiusbymemberRoUnitM) Asc() GeoradiusbymemberRoOrderAsc {
 	return GeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
@@ -4303,10 +4263,6 @@ func (c GeoradiusbymemberRoUnitMi) Count(Count int64) GeoradiusbymemberRoCountCo
 	return GeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c GeoradiusbymemberRoUnitMi) Any() GeoradiusbymemberRoCountAnyAny {
-	return GeoradiusbymemberRoCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
-}
-
 func (c GeoradiusbymemberRoUnitMi) Asc() GeoradiusbymemberRoOrderAsc {
 	return GeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
@@ -4341,10 +4297,6 @@ func (c GeoradiusbymemberRoWithcoordWithcoord) Count(Count int64) Georadiusbymem
 	return GeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c GeoradiusbymemberRoWithcoordWithcoord) Any() GeoradiusbymemberRoCountAnyAny {
-	return GeoradiusbymemberRoCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
-}
-
 func (c GeoradiusbymemberRoWithcoordWithcoord) Asc() GeoradiusbymemberRoOrderAsc {
 	return GeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
@@ -4375,10 +4327,6 @@ func (c GeoradiusbymemberRoWithdistWithdist) Count(Count int64) Georadiusbymembe
 	return GeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c GeoradiusbymemberRoWithdistWithdist) Any() GeoradiusbymemberRoCountAnyAny {
-	return GeoradiusbymemberRoCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
-}
-
 func (c GeoradiusbymemberRoWithdistWithdist) Asc() GeoradiusbymemberRoOrderAsc {
 	return GeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
@@ -4403,10 +4351,6 @@ type GeoradiusbymemberRoWithhashWithhash Completed
 
 func (c GeoradiusbymemberRoWithhashWithhash) Count(Count int64) GeoradiusbymemberRoCountCount {
 	return GeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
-}
-
-func (c GeoradiusbymemberRoWithhashWithhash) Any() GeoradiusbymemberRoCountAnyAny {
-	return GeoradiusbymemberRoCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
 }
 
 func (c GeoradiusbymemberRoWithhashWithhash) Asc() GeoradiusbymemberRoOrderAsc {
@@ -12593,7 +12537,7 @@ func (c SAclCat) Build() SCompleted {
 
 func (b *SBuilder) AclCat() (c SAclCat) {
 	c.cs = append(b.get(), "ACL", "CAT")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -12611,7 +12555,7 @@ func (c SAclDeluser) Username(Username ...string) SAclDeluserUsername {
 
 func (b *SBuilder) AclDeluser() (c SAclDeluser) {
 	c.cs = append(b.get(), "ACL", "DELUSER")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -12637,7 +12581,7 @@ func (c SAclGenpass) Build() SCompleted {
 
 func (b *SBuilder) AclGenpass() (c SAclGenpass) {
 	c.cs = append(b.get(), "ACL", "GENPASS")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -12655,7 +12599,7 @@ func (c SAclGetuser) Username(Username string) SAclGetuserUsername {
 
 func (b *SBuilder) AclGetuser() (c SAclGetuser) {
 	c.cs = append(b.get(), "ACL", "GETUSER")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -12673,7 +12617,7 @@ func (c SAclHelp) Build() SCompleted {
 
 func (b *SBuilder) AclHelp() (c SAclHelp) {
 	c.cs = append(b.get(), "ACL", "HELP")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -12685,7 +12629,7 @@ func (c SAclList) Build() SCompleted {
 
 func (b *SBuilder) AclList() (c SAclList) {
 	c.cs = append(b.get(), "ACL", "LIST")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -12697,7 +12641,7 @@ func (c SAclLoad) Build() SCompleted {
 
 func (b *SBuilder) AclLoad() (c SAclLoad) {
 	c.cs = append(b.get(), "ACL", "LOAD")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -12713,7 +12657,7 @@ func (c SAclLog) Build() SCompleted {
 
 func (b *SBuilder) AclLog() (c SAclLog) {
 	c.cs = append(b.get(), "ACL", "LOG")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -12731,7 +12675,7 @@ func (c SAclSave) Build() SCompleted {
 
 func (b *SBuilder) AclSave() (c SAclSave) {
 	c.cs = append(b.get(), "ACL", "SAVE")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -12743,7 +12687,7 @@ func (c SAclSetuser) Username(Username string) SAclSetuserUsername {
 
 func (b *SBuilder) AclSetuser() (c SAclSetuser) {
 	c.cs = append(b.get(), "ACL", "SETUSER")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -12775,7 +12719,7 @@ func (c SAclUsers) Build() SCompleted {
 
 func (b *SBuilder) AclUsers() (c SAclUsers) {
 	c.cs = append(b.get(), "ACL", "USERS")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -12787,7 +12731,7 @@ func (c SAclWhoami) Build() SCompleted {
 
 func (b *SBuilder) AclWhoami() (c SAclWhoami) {
 	c.cs = append(b.get(), "ACL", "WHOAMI")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -12800,7 +12744,7 @@ func (c SAppend) Key(Key string) SAppendKey {
 
 func (b *SBuilder) Append() (c SAppend) {
 	c.cs = append(b.get(), "APPEND")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -12824,7 +12768,7 @@ func (c SAsking) Build() SCompleted {
 
 func (b *SBuilder) Asking() (c SAsking) {
 	c.cs = append(b.get(), "ASKING")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -12840,7 +12784,7 @@ func (c SAuth) Password(Password string) SAuthPassword {
 
 func (b *SBuilder) Auth() (c SAuth) {
 	c.cs = append(b.get(), "AUTH")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -12864,7 +12808,7 @@ func (c SBgrewriteaof) Build() SCompleted {
 
 func (b *SBuilder) Bgrewriteaof() (c SBgrewriteaof) {
 	c.cs = append(b.get(), "BGREWRITEAOF")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -12880,7 +12824,7 @@ func (c SBgsave) Build() SCompleted {
 
 func (b *SBuilder) Bgsave() (c SBgsave) {
 	c.cs = append(b.get(), "BGSAVE")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -12900,7 +12844,7 @@ func (c SBitcount) Key(Key string) SBitcountKey {
 func (b *SBuilder) Bitcount() (c SBitcount) {
 	c.cs = append(b.get(), "BITCOUNT")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -12937,7 +12881,7 @@ func (c SBitfield) Key(Key string) SBitfieldKey {
 
 func (b *SBuilder) Bitfield() (c SBitfield) {
 	c.cs = append(b.get(), "BITFIELD")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -13031,7 +12975,7 @@ func (c SBitfieldRo) Key(Key string) SBitfieldRoKey {
 func (b *SBuilder) BitfieldRo() (c SBitfieldRo) {
 	c.cs = append(b.get(), "BITFIELD_RO")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -13093,7 +13037,7 @@ func (c SBitop) Operation(Operation string) SBitopOperation {
 
 func (b *SBuilder) Bitop() (c SBitop) {
 	c.cs = append(b.get(), "BITOP")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -13136,7 +13080,7 @@ func (c SBitpos) Key(Key string) SBitposKey {
 func (b *SBuilder) Bitpos() (c SBitpos) {
 	c.cs = append(b.get(), "BITPOS")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -13194,7 +13138,7 @@ func (c SBlmove) Source(Source string) SBlmoveSource {
 func (b *SBuilder) Blmove() (c SBlmove) {
 	c.cs = append(b.get(), "BLMOVE")
 	c.cf = blockTag
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -13262,7 +13206,7 @@ func (c SBlmpop) Timeout(Timeout float64) SBlmpopTimeout {
 func (b *SBuilder) Blmpop() (c SBlmpop) {
 	c.cs = append(b.get(), "BLMPOP")
 	c.cf = blockTag
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -13344,7 +13288,7 @@ func (c SBlpop) Key(Key ...string) SBlpopKey {
 func (b *SBuilder) Blpop() (c SBlpop) {
 	c.cs = append(b.get(), "BLPOP")
 	c.cf = blockTag
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -13379,7 +13323,7 @@ func (c SBrpop) Key(Key ...string) SBrpopKey {
 func (b *SBuilder) Brpop() (c SBrpop) {
 	c.cs = append(b.get(), "BRPOP")
 	c.cf = blockTag
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -13412,7 +13356,7 @@ func (c SBrpoplpush) Source(Source string) SBrpoplpushSource {
 func (b *SBuilder) Brpoplpush() (c SBrpoplpush) {
 	c.cs = append(b.get(), "BRPOPLPUSH")
 	c.cf = blockTag
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -13447,7 +13391,7 @@ func (c SBzpopmax) Key(Key ...string) SBzpopmaxKey {
 func (b *SBuilder) Bzpopmax() (c SBzpopmax) {
 	c.cs = append(b.get(), "BZPOPMAX")
 	c.cf = blockTag
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -13482,7 +13426,7 @@ func (c SBzpopmin) Key(Key ...string) SBzpopminKey {
 func (b *SBuilder) Bzpopmin() (c SBzpopmin) {
 	c.cs = append(b.get(), "BZPOPMIN")
 	c.cf = blockTag
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -13517,7 +13461,7 @@ func (c SClientCaching) No() SClientCachingModeNo {
 
 func (b *SBuilder) ClientCaching() (c SClientCaching) {
 	c.cs = append(b.get(), "CLIENT", "CACHING")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -13541,7 +13485,7 @@ func (c SClientGetname) Build() SCompleted {
 
 func (b *SBuilder) ClientGetname() (c SClientGetname) {
 	c.cs = append(b.get(), "CLIENT", "GETNAME")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -13553,7 +13497,7 @@ func (c SClientGetredir) Build() SCompleted {
 
 func (b *SBuilder) ClientGetredir() (c SClientGetredir) {
 	c.cs = append(b.get(), "CLIENT", "GETREDIR")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -13565,7 +13509,7 @@ func (c SClientId) Build() SCompleted {
 
 func (b *SBuilder) ClientId() (c SClientId) {
 	c.cs = append(b.get(), "CLIENT", "ID")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -13577,7 +13521,7 @@ func (c SClientInfo) Build() SCompleted {
 
 func (b *SBuilder) ClientInfo() (c SClientInfo) {
 	c.cs = append(b.get(), "CLIENT", "INFO")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -13629,7 +13573,7 @@ func (c SClientKill) Build() SCompleted {
 
 func (b *SBuilder) ClientKill() (c SClientKill) {
 	c.cs = append(b.get(), "CLIENT", "KILL")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -13877,7 +13821,7 @@ func (c SClientList) Build() SCompleted {
 
 func (b *SBuilder) ClientList() (c SClientList) {
 	c.cs = append(b.get(), "CLIENT", "LIST")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -13955,7 +13899,7 @@ func (c SClientNoEvict) Off() SClientNoEvictEnabledOff {
 
 func (b *SBuilder) ClientNoEvict() (c SClientNoEvict) {
 	c.cs = append(b.get(), "CLIENT", "NO-EVICT")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -13980,7 +13924,7 @@ func (c SClientPause) Timeout(Timeout int64) SClientPauseTimeout {
 func (b *SBuilder) ClientPause() (c SClientPause) {
 	c.cs = append(b.get(), "CLIENT", "PAUSE")
 	c.cf = blockTag
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -14026,7 +13970,7 @@ func (c SClientReply) Skip() SClientReplyReplyModeSkip {
 
 func (b *SBuilder) ClientReply() (c SClientReply) {
 	c.cs = append(b.get(), "CLIENT", "REPLY")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -14056,7 +14000,7 @@ func (c SClientSetname) ConnectionName(ConnectionName string) SClientSetnameConn
 
 func (b *SBuilder) ClientSetname() (c SClientSetname) {
 	c.cs = append(b.get(), "CLIENT", "SETNAME")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -14078,7 +14022,7 @@ func (c SClientTracking) Off() SClientTrackingStatusOff {
 
 func (b *SBuilder) ClientTracking() (c SClientTracking) {
 	c.cs = append(b.get(), "CLIENT", "TRACKING")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -14253,7 +14197,7 @@ func (c SClientTrackinginfo) Build() SCompleted {
 
 func (b *SBuilder) ClientTrackinginfo() (c SClientTrackinginfo) {
 	c.cs = append(b.get(), "CLIENT", "TRACKINGINFO")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -14265,7 +14209,7 @@ func (c SClientUnblock) ClientId(ClientId int64) SClientUnblockClientId {
 
 func (b *SBuilder) ClientUnblock() (c SClientUnblock) {
 	c.cs = append(b.get(), "CLIENT", "UNBLOCK")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -14303,7 +14247,7 @@ func (c SClientUnpause) Build() SCompleted {
 
 func (b *SBuilder) ClientUnpause() (c SClientUnpause) {
 	c.cs = append(b.get(), "CLIENT", "UNPAUSE")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -14318,7 +14262,7 @@ func (c SClusterAddslots) Slot(Slot ...int64) SClusterAddslotsSlot {
 
 func (b *SBuilder) ClusterAddslots() (c SClusterAddslots) {
 	c.cs = append(b.get(), "CLUSTER", "ADDSLOTS")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -14343,7 +14287,7 @@ func (c SClusterBumpepoch) Build() SCompleted {
 
 func (b *SBuilder) ClusterBumpepoch() (c SClusterBumpepoch) {
 	c.cs = append(b.get(), "CLUSTER", "BUMPEPOCH")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -14355,7 +14299,7 @@ func (c SClusterCountFailureReports) NodeId(NodeId string) SClusterCountFailureR
 
 func (b *SBuilder) ClusterCountFailureReports() (c SClusterCountFailureReports) {
 	c.cs = append(b.get(), "CLUSTER", "COUNT-FAILURE-REPORTS")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -14373,7 +14317,7 @@ func (c SClusterCountkeysinslot) Slot(Slot int64) SClusterCountkeysinslotSlot {
 
 func (b *SBuilder) ClusterCountkeysinslot() (c SClusterCountkeysinslot) {
 	c.cs = append(b.get(), "CLUSTER", "COUNTKEYSINSLOT")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -14394,7 +14338,7 @@ func (c SClusterDelslots) Slot(Slot ...int64) SClusterDelslotsSlot {
 
 func (b *SBuilder) ClusterDelslots() (c SClusterDelslots) {
 	c.cs = append(b.get(), "CLUSTER", "DELSLOTS")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -14427,7 +14371,7 @@ func (c SClusterFailover) Build() SCompleted {
 
 func (b *SBuilder) ClusterFailover() (c SClusterFailover) {
 	c.cs = append(b.get(), "CLUSTER", "FAILOVER")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -14451,7 +14395,7 @@ func (c SClusterFlushslots) Build() SCompleted {
 
 func (b *SBuilder) ClusterFlushslots() (c SClusterFlushslots) {
 	c.cs = append(b.get(), "CLUSTER", "FLUSHSLOTS")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -14463,7 +14407,7 @@ func (c SClusterForget) NodeId(NodeId string) SClusterForgetNodeId {
 
 func (b *SBuilder) ClusterForget() (c SClusterForget) {
 	c.cs = append(b.get(), "CLUSTER", "FORGET")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -14481,7 +14425,7 @@ func (c SClusterGetkeysinslot) Slot(Slot int64) SClusterGetkeysinslotSlot {
 
 func (b *SBuilder) ClusterGetkeysinslot() (c SClusterGetkeysinslot) {
 	c.cs = append(b.get(), "CLUSTER", "GETKEYSINSLOT")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -14505,7 +14449,7 @@ func (c SClusterInfo) Build() SCompleted {
 
 func (b *SBuilder) ClusterInfo() (c SClusterInfo) {
 	c.cs = append(b.get(), "CLUSTER", "INFO")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -14517,7 +14461,7 @@ func (c SClusterKeyslot) Key(Key string) SClusterKeyslotKey {
 
 func (b *SBuilder) ClusterKeyslot() (c SClusterKeyslot) {
 	c.cs = append(b.get(), "CLUSTER", "KEYSLOT")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -14535,7 +14479,7 @@ func (c SClusterMeet) Ip(Ip string) SClusterMeetIp {
 
 func (b *SBuilder) ClusterMeet() (c SClusterMeet) {
 	c.cs = append(b.get(), "CLUSTER", "MEET")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -14559,7 +14503,7 @@ func (c SClusterMyid) Build() SCompleted {
 
 func (b *SBuilder) ClusterMyid() (c SClusterMyid) {
 	c.cs = append(b.get(), "CLUSTER", "MYID")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -14571,7 +14515,7 @@ func (c SClusterNodes) Build() SCompleted {
 
 func (b *SBuilder) ClusterNodes() (c SClusterNodes) {
 	c.cs = append(b.get(), "CLUSTER", "NODES")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -14583,7 +14527,7 @@ func (c SClusterReplicas) NodeId(NodeId string) SClusterReplicasNodeId {
 
 func (b *SBuilder) ClusterReplicas() (c SClusterReplicas) {
 	c.cs = append(b.get(), "CLUSTER", "REPLICAS")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -14601,7 +14545,7 @@ func (c SClusterReplicate) NodeId(NodeId string) SClusterReplicateNodeId {
 
 func (b *SBuilder) ClusterReplicate() (c SClusterReplicate) {
 	c.cs = append(b.get(), "CLUSTER", "REPLICATE")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -14627,7 +14571,7 @@ func (c SClusterReset) Build() SCompleted {
 
 func (b *SBuilder) ClusterReset() (c SClusterReset) {
 	c.cs = append(b.get(), "CLUSTER", "RESET")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -14651,7 +14595,7 @@ func (c SClusterSaveconfig) Build() SCompleted {
 
 func (b *SBuilder) ClusterSaveconfig() (c SClusterSaveconfig) {
 	c.cs = append(b.get(), "CLUSTER", "SAVECONFIG")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -14663,7 +14607,7 @@ func (c SClusterSetConfigEpoch) ConfigEpoch(ConfigEpoch int64) SClusterSetConfig
 
 func (b *SBuilder) ClusterSetConfigEpoch() (c SClusterSetConfigEpoch) {
 	c.cs = append(b.get(), "CLUSTER", "SET-CONFIG-EPOCH")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -14681,7 +14625,7 @@ func (c SClusterSetslot) Slot(Slot int64) SClusterSetslotSlot {
 
 func (b *SBuilder) ClusterSetslot() (c SClusterSetslot) {
 	c.cs = append(b.get(), "CLUSTER", "SETSLOT")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -14757,7 +14701,7 @@ func (c SClusterSlaves) NodeId(NodeId string) SClusterSlavesNodeId {
 
 func (b *SBuilder) ClusterSlaves() (c SClusterSlaves) {
 	c.cs = append(b.get(), "CLUSTER", "SLAVES")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -14775,7 +14719,7 @@ func (c SClusterSlots) Build() SCompleted {
 
 func (b *SBuilder) ClusterSlots() (c SClusterSlots) {
 	c.cs = append(b.get(), "CLUSTER", "SLOTS")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -14787,7 +14731,7 @@ func (c SCommand) Build() SCompleted {
 
 func (b *SBuilder) Command() (c SCommand) {
 	c.cs = append(b.get(), "COMMAND")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -14799,7 +14743,7 @@ func (c SCommandCount) Build() SCompleted {
 
 func (b *SBuilder) CommandCount() (c SCommandCount) {
 	c.cs = append(b.get(), "COMMAND", "COUNT")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -14811,7 +14755,7 @@ func (c SCommandGetkeys) Build() SCompleted {
 
 func (b *SBuilder) CommandGetkeys() (c SCommandGetkeys) {
 	c.cs = append(b.get(), "COMMAND", "GETKEYS")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -14823,7 +14767,7 @@ func (c SCommandInfo) CommandName(CommandName ...string) SCommandInfoCommandName
 
 func (b *SBuilder) CommandInfo() (c SCommandInfo) {
 	c.cs = append(b.get(), "COMMAND", "INFO")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -14845,7 +14789,7 @@ func (c SConfigGet) Parameter(Parameter string) SConfigGetParameter {
 
 func (b *SBuilder) ConfigGet() (c SConfigGet) {
 	c.cs = append(b.get(), "CONFIG", "GET")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -14863,7 +14807,7 @@ func (c SConfigResetstat) Build() SCompleted {
 
 func (b *SBuilder) ConfigResetstat() (c SConfigResetstat) {
 	c.cs = append(b.get(), "CONFIG", "RESETSTAT")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -14875,7 +14819,7 @@ func (c SConfigRewrite) Build() SCompleted {
 
 func (b *SBuilder) ConfigRewrite() (c SConfigRewrite) {
 	c.cs = append(b.get(), "CONFIG", "REWRITE")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -14887,7 +14831,7 @@ func (c SConfigSet) Parameter(Parameter string) SConfigSetParameter {
 
 func (b *SBuilder) ConfigSet() (c SConfigSet) {
 	c.cs = append(b.get(), "CONFIG", "SET")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -14912,7 +14856,7 @@ func (c SCopy) Source(Source string) SCopySource {
 
 func (b *SBuilder) Copy() (c SCopy) {
 	c.cs = append(b.get(), "COPY")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -14962,7 +14906,7 @@ func (c SDbsize) Build() SCompleted {
 func (b *SBuilder) Dbsize() (c SDbsize) {
 	c.cs = append(b.get(), "DBSIZE")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -14975,7 +14919,7 @@ func (c SDebugObject) Key(Key string) SDebugObjectKey {
 
 func (b *SBuilder) DebugObject() (c SDebugObject) {
 	c.cs = append(b.get(), "DEBUG", "OBJECT")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -14993,7 +14937,7 @@ func (c SDebugSegfault) Build() SCompleted {
 
 func (b *SBuilder) DebugSegfault() (c SDebugSegfault) {
 	c.cs = append(b.get(), "DEBUG", "SEGFAULT")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -15006,7 +14950,7 @@ func (c SDecr) Key(Key string) SDecrKey {
 
 func (b *SBuilder) Decr() (c SDecr) {
 	c.cs = append(b.get(), "DECR")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -15025,7 +14969,7 @@ func (c SDecrby) Key(Key string) SDecrbyKey {
 
 func (b *SBuilder) Decrby() (c SDecrby) {
 	c.cs = append(b.get(), "DECRBY")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -15052,7 +14996,7 @@ func (c SDel) Key(Key ...string) SDelKey {
 
 func (b *SBuilder) Del() (c SDel) {
 	c.cs = append(b.get(), "DEL")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -15077,7 +15021,7 @@ func (c SDiscard) Build() SCompleted {
 
 func (b *SBuilder) Discard() (c SDiscard) {
 	c.cs = append(b.get(), "DISCARD")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -15091,7 +15035,7 @@ func (c SDump) Key(Key string) SDumpKey {
 func (b *SBuilder) Dump() (c SDump) {
 	c.cs = append(b.get(), "DUMP")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -15109,7 +15053,7 @@ func (c SEcho) Message(Message string) SEchoMessage {
 
 func (b *SBuilder) Echo() (c SEcho) {
 	c.cs = append(b.get(), "ECHO")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -15127,7 +15071,7 @@ func (c SEval) Script(Script string) SEvalScript {
 
 func (b *SBuilder) Eval() (c SEval) {
 	c.cs = append(b.get(), "EVAL")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -15184,7 +15128,7 @@ func (c SEvalRo) Script(Script string) SEvalRoScript {
 func (b *SBuilder) EvalRo() (c SEvalRo) {
 	c.cs = append(b.get(), "EVAL_RO")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -15240,7 +15184,7 @@ func (c SEvalsha) Sha1(Sha1 string) SEvalshaSha1 {
 
 func (b *SBuilder) Evalsha() (c SEvalsha) {
 	c.cs = append(b.get(), "EVALSHA")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -15297,7 +15241,7 @@ func (c SEvalshaRo) Sha1(Sha1 string) SEvalshaRoSha1 {
 func (b *SBuilder) EvalshaRo() (c SEvalshaRo) {
 	c.cs = append(b.get(), "EVALSHA_RO")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -15353,7 +15297,7 @@ func (c SExec) Build() SCompleted {
 
 func (b *SBuilder) Exec() (c SExec) {
 	c.cs = append(b.get(), "EXEC")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -15369,7 +15313,7 @@ func (c SExists) Key(Key ...string) SExistsKey {
 func (b *SBuilder) Exists() (c SExists) {
 	c.cs = append(b.get(), "EXISTS")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -15395,7 +15339,7 @@ func (c SExpire) Key(Key string) SExpireKey {
 
 func (b *SBuilder) Expire() (c SExpire) {
 	c.cs = append(b.get(), "EXPIRE")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -15460,7 +15404,7 @@ func (c SExpireat) Key(Key string) SExpireatKey {
 
 func (b *SBuilder) Expireat() (c SExpireat) {
 	c.cs = append(b.get(), "EXPIREAT")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -15526,7 +15470,7 @@ func (c SExpiretime) Key(Key string) SExpiretimeKey {
 func (b *SBuilder) Expiretime() (c SExpiretime) {
 	c.cs = append(b.get(), "EXPIRETIME")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -15560,7 +15504,7 @@ func (c SFailover) Build() SCompleted {
 
 func (b *SBuilder) Failover() (c SFailover) {
 	c.cs = append(b.get(), "FAILOVER")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -15640,7 +15584,7 @@ func (c SFlushall) Build() SCompleted {
 
 func (b *SBuilder) Flushall() (c SFlushall) {
 	c.cs = append(b.get(), "FLUSHALL")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -15672,7 +15616,7 @@ func (c SFlushdb) Build() SCompleted {
 
 func (b *SBuilder) Flushdb() (c SFlushdb) {
 	c.cs = append(b.get(), "FLUSHDB")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -15697,7 +15641,7 @@ func (c SGeoadd) Key(Key string) SGeoaddKey {
 
 func (b *SBuilder) Geoadd() (c SGeoadd) {
 	c.cs = append(b.get(), "GEOADD")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -15765,7 +15709,7 @@ func (c SGeodist) Key(Key string) SGeodistKey {
 func (b *SBuilder) Geodist() (c SGeodist) {
 	c.cs = append(b.get(), "GEODIST")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -15857,7 +15801,7 @@ func (c SGeohash) Key(Key string) SGeohashKey {
 func (b *SBuilder) Geohash() (c SGeohash) {
 	c.cs = append(b.get(), "GEOHASH")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -15891,7 +15835,7 @@ func (c SGeopos) Key(Key string) SGeoposKey {
 func (b *SBuilder) Geopos() (c SGeopos) {
 	c.cs = append(b.get(), "GEOPOS")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -15924,7 +15868,7 @@ func (c SGeoradius) Key(Key string) SGeoradiusKey {
 
 func (b *SBuilder) Georadius() (c SGeoradius) {
 	c.cs = append(b.get(), "GEORADIUS")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -16058,7 +16002,7 @@ func (c SGeoradiusRo) Key(Key string) SGeoradiusRoKey {
 func (b *SBuilder) GeoradiusRo() (c SGeoradiusRo) {
 	c.cs = append(b.get(), "GEORADIUS_RO")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -16472,10 +16416,6 @@ func (c SGeoradiusUnitFt) Count(Count int64) SGeoradiusCountCount {
 	return SGeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c SGeoradiusUnitFt) Any() SGeoradiusCountAnyAny {
-	return SGeoradiusCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
-}
-
 func (c SGeoradiusUnitFt) Asc() SGeoradiusOrderAsc {
 	return SGeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
@@ -16514,10 +16454,6 @@ func (c SGeoradiusUnitKm) Withhash() SGeoradiusWithhashWithhash {
 
 func (c SGeoradiusUnitKm) Count(Count int64) SGeoradiusCountCount {
 	return SGeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
-}
-
-func (c SGeoradiusUnitKm) Any() SGeoradiusCountAnyAny {
-	return SGeoradiusCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
 }
 
 func (c SGeoradiusUnitKm) Asc() SGeoradiusOrderAsc {
@@ -16560,10 +16496,6 @@ func (c SGeoradiusUnitM) Count(Count int64) SGeoradiusCountCount {
 	return SGeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c SGeoradiusUnitM) Any() SGeoradiusCountAnyAny {
-	return SGeoradiusCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
-}
-
 func (c SGeoradiusUnitM) Asc() SGeoradiusOrderAsc {
 	return SGeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
@@ -16604,10 +16536,6 @@ func (c SGeoradiusUnitMi) Count(Count int64) SGeoradiusCountCount {
 	return SGeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c SGeoradiusUnitMi) Any() SGeoradiusCountAnyAny {
-	return SGeoradiusCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
-}
-
 func (c SGeoradiusUnitMi) Asc() SGeoradiusOrderAsc {
 	return SGeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
@@ -16644,10 +16572,6 @@ func (c SGeoradiusWithcoordWithcoord) Count(Count int64) SGeoradiusCountCount {
 	return SGeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c SGeoradiusWithcoordWithcoord) Any() SGeoradiusCountAnyAny {
-	return SGeoradiusCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
-}
-
 func (c SGeoradiusWithcoordWithcoord) Asc() SGeoradiusOrderAsc {
 	return SGeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
@@ -16680,10 +16604,6 @@ func (c SGeoradiusWithdistWithdist) Count(Count int64) SGeoradiusCountCount {
 	return SGeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c SGeoradiusWithdistWithdist) Any() SGeoradiusCountAnyAny {
-	return SGeoradiusCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
-}
-
 func (c SGeoradiusWithdistWithdist) Asc() SGeoradiusOrderAsc {
 	return SGeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
@@ -16710,10 +16630,6 @@ type SGeoradiusWithhashWithhash SCompleted
 
 func (c SGeoradiusWithhashWithhash) Count(Count int64) SGeoradiusCountCount {
 	return SGeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
-}
-
-func (c SGeoradiusWithhashWithhash) Any() SGeoradiusCountAnyAny {
-	return SGeoradiusCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
 }
 
 func (c SGeoradiusWithhashWithhash) Asc() SGeoradiusOrderAsc {
@@ -16747,7 +16663,7 @@ func (c SGeoradiusbymember) Key(Key string) SGeoradiusbymemberKey {
 
 func (b *SBuilder) Georadiusbymember() (c SGeoradiusbymember) {
 	c.cs = append(b.get(), "GEORADIUSBYMEMBER")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -16875,7 +16791,7 @@ func (c SGeoradiusbymemberRo) Key(Key string) SGeoradiusbymemberRoKey {
 func (b *SBuilder) GeoradiusbymemberRo() (c SGeoradiusbymemberRo) {
 	c.cs = append(b.get(), "GEORADIUSBYMEMBER_RO")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -17283,10 +17199,6 @@ func (c SGeoradiusbymemberUnitFt) Count(Count int64) SGeoradiusbymemberCountCoun
 	return SGeoradiusbymemberCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c SGeoradiusbymemberUnitFt) Any() SGeoradiusbymemberCountAnyAny {
-	return SGeoradiusbymemberCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
-}
-
 func (c SGeoradiusbymemberUnitFt) Asc() SGeoradiusbymemberOrderAsc {
 	return SGeoradiusbymemberOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
@@ -17325,10 +17237,6 @@ func (c SGeoradiusbymemberUnitKm) Withhash() SGeoradiusbymemberWithhashWithhash 
 
 func (c SGeoradiusbymemberUnitKm) Count(Count int64) SGeoradiusbymemberCountCount {
 	return SGeoradiusbymemberCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
-}
-
-func (c SGeoradiusbymemberUnitKm) Any() SGeoradiusbymemberCountAnyAny {
-	return SGeoradiusbymemberCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
 }
 
 func (c SGeoradiusbymemberUnitKm) Asc() SGeoradiusbymemberOrderAsc {
@@ -17371,10 +17279,6 @@ func (c SGeoradiusbymemberUnitM) Count(Count int64) SGeoradiusbymemberCountCount
 	return SGeoradiusbymemberCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c SGeoradiusbymemberUnitM) Any() SGeoradiusbymemberCountAnyAny {
-	return SGeoradiusbymemberCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
-}
-
 func (c SGeoradiusbymemberUnitM) Asc() SGeoradiusbymemberOrderAsc {
 	return SGeoradiusbymemberOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
@@ -17415,10 +17319,6 @@ func (c SGeoradiusbymemberUnitMi) Count(Count int64) SGeoradiusbymemberCountCoun
 	return SGeoradiusbymemberCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c SGeoradiusbymemberUnitMi) Any() SGeoradiusbymemberCountAnyAny {
-	return SGeoradiusbymemberCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
-}
-
 func (c SGeoradiusbymemberUnitMi) Asc() SGeoradiusbymemberOrderAsc {
 	return SGeoradiusbymemberOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
@@ -17455,10 +17355,6 @@ func (c SGeoradiusbymemberWithcoordWithcoord) Count(Count int64) SGeoradiusbymem
 	return SGeoradiusbymemberCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c SGeoradiusbymemberWithcoordWithcoord) Any() SGeoradiusbymemberCountAnyAny {
-	return SGeoradiusbymemberCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
-}
-
 func (c SGeoradiusbymemberWithcoordWithcoord) Asc() SGeoradiusbymemberOrderAsc {
 	return SGeoradiusbymemberOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
@@ -17491,10 +17387,6 @@ func (c SGeoradiusbymemberWithdistWithdist) Count(Count int64) SGeoradiusbymembe
 	return SGeoradiusbymemberCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
 }
 
-func (c SGeoradiusbymemberWithdistWithdist) Any() SGeoradiusbymemberCountAnyAny {
-	return SGeoradiusbymemberCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
-}
-
 func (c SGeoradiusbymemberWithdistWithdist) Asc() SGeoradiusbymemberOrderAsc {
 	return SGeoradiusbymemberOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
 }
@@ -17521,10 +17413,6 @@ type SGeoradiusbymemberWithhashWithhash SCompleted
 
 func (c SGeoradiusbymemberWithhashWithhash) Count(Count int64) SGeoradiusbymemberCountCount {
 	return SGeoradiusbymemberCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
-}
-
-func (c SGeoradiusbymemberWithhashWithhash) Any() SGeoradiusbymemberCountAnyAny {
-	return SGeoradiusbymemberCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
 }
 
 func (c SGeoradiusbymemberWithhashWithhash) Asc() SGeoradiusbymemberOrderAsc {
@@ -17559,7 +17447,7 @@ func (c SGeosearch) Key(Key string) SGeosearchKey {
 func (b *SBuilder) Geosearch() (c SGeosearch) {
 	c.cs = append(b.get(), "GEOSEARCH")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -18182,7 +18070,7 @@ func (c SGeosearchstore) Destination(Destination string) SGeosearchstoreDestinat
 
 func (b *SBuilder) Geosearchstore() (c SGeosearchstore) {
 	c.cs = append(b.get(), "GEOSEARCHSTORE")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -18597,7 +18485,7 @@ func (c SGet) Key(Key string) SGetKey {
 func (b *SBuilder) Get() (c SGet) {
 	c.cs = append(b.get(), "GET")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -18621,7 +18509,7 @@ func (c SGetbit) Key(Key string) SGetbitKey {
 func (b *SBuilder) Getbit() (c SGetbit) {
 	c.cs = append(b.get(), "GETBIT")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -18650,7 +18538,7 @@ func (c SGetdel) Key(Key string) SGetdelKey {
 
 func (b *SBuilder) Getdel() (c SGetdel) {
 	c.cs = append(b.get(), "GETDEL")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -18669,7 +18557,7 @@ func (c SGetex) Key(Key string) SGetexKey {
 
 func (b *SBuilder) Getex() (c SGetex) {
 	c.cs = append(b.get(), "GETEX")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -18739,7 +18627,7 @@ func (c SGetrange) Key(Key string) SGetrangeKey {
 func (b *SBuilder) Getrange() (c SGetrange) {
 	c.cs = append(b.get(), "GETRANGE")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -18774,7 +18662,7 @@ func (c SGetset) Key(Key string) SGetsetKey {
 
 func (b *SBuilder) Getset() (c SGetset) {
 	c.cs = append(b.get(), "GETSET")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -18799,7 +18687,7 @@ func (c SHdel) Key(Key string) SHdelKey {
 
 func (b *SBuilder) Hdel() (c SHdel) {
 	c.cs = append(b.get(), "HDEL")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -18831,7 +18719,7 @@ func (c SHello) Build() SCompleted {
 
 func (b *SBuilder) Hello() (c SHello) {
 	c.cs = append(b.get(), "HELLO")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -18875,7 +18763,7 @@ func (c SHexists) Key(Key string) SHexistsKey {
 func (b *SBuilder) Hexists() (c SHexists) {
 	c.cs = append(b.get(), "HEXISTS")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -18905,7 +18793,7 @@ func (c SHget) Key(Key string) SHgetKey {
 func (b *SBuilder) Hget() (c SHget) {
 	c.cs = append(b.get(), "HGET")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -18935,7 +18823,7 @@ func (c SHgetall) Key(Key string) SHgetallKey {
 func (b *SBuilder) Hgetall() (c SHgetall) {
 	c.cs = append(b.get(), "HGETALL")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -18958,7 +18846,7 @@ func (c SHincrby) Key(Key string) SHincrbyKey {
 
 func (b *SBuilder) Hincrby() (c SHincrby) {
 	c.cs = append(b.get(), "HINCRBY")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -18989,7 +18877,7 @@ func (c SHincrbyfloat) Key(Key string) SHincrbyfloatKey {
 
 func (b *SBuilder) Hincrbyfloat() (c SHincrbyfloat) {
 	c.cs = append(b.get(), "HINCRBYFLOAT")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -19021,7 +18909,7 @@ func (c SHkeys) Key(Key string) SHkeysKey {
 func (b *SBuilder) Hkeys() (c SHkeys) {
 	c.cs = append(b.get(), "HKEYS")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -19045,7 +18933,7 @@ func (c SHlen) Key(Key string) SHlenKey {
 func (b *SBuilder) Hlen() (c SHlen) {
 	c.cs = append(b.get(), "HLEN")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -19069,7 +18957,7 @@ func (c SHmget) Key(Key string) SHmgetKey {
 func (b *SBuilder) Hmget() (c SHmget) {
 	c.cs = append(b.get(), "HMGET")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -19102,7 +18990,7 @@ func (c SHmset) Key(Key string) SHmsetKey {
 
 func (b *SBuilder) Hmset() (c SHmset) {
 	c.cs = append(b.get(), "HMSET")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -19132,7 +19020,7 @@ func (c SHrandfield) Key(Key string) SHrandfieldKey {
 func (b *SBuilder) Hrandfield() (c SHrandfield) {
 	c.cs = append(b.get(), "HRANDFIELD")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -19172,7 +19060,7 @@ func (c SHscan) Key(Key string) SHscanKey {
 func (b *SBuilder) Hscan() (c SHscan) {
 	c.cs = append(b.get(), "HSCAN")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -19221,7 +19109,7 @@ func (c SHset) Key(Key string) SHsetKey {
 
 func (b *SBuilder) Hset() (c SHset) {
 	c.cs = append(b.get(), "HSET")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -19250,7 +19138,7 @@ func (c SHsetnx) Key(Key string) SHsetnxKey {
 
 func (b *SBuilder) Hsetnx() (c SHsetnx) {
 	c.cs = append(b.get(), "HSETNX")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -19282,7 +19170,7 @@ func (c SHstrlen) Key(Key string) SHstrlenKey {
 func (b *SBuilder) Hstrlen() (c SHstrlen) {
 	c.cs = append(b.get(), "HSTRLEN")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -19312,7 +19200,7 @@ func (c SHvals) Key(Key string) SHvalsKey {
 func (b *SBuilder) Hvals() (c SHvals) {
 	c.cs = append(b.get(), "HVALS")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -19335,7 +19223,7 @@ func (c SIncr) Key(Key string) SIncrKey {
 
 func (b *SBuilder) Incr() (c SIncr) {
 	c.cs = append(b.get(), "INCR")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -19354,7 +19242,7 @@ func (c SIncrby) Key(Key string) SIncrbyKey {
 
 func (b *SBuilder) Incrby() (c SIncrby) {
 	c.cs = append(b.get(), "INCRBY")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -19379,7 +19267,7 @@ func (c SIncrbyfloat) Key(Key string) SIncrbyfloatKey {
 
 func (b *SBuilder) Incrbyfloat() (c SIncrbyfloat) {
 	c.cs = append(b.get(), "INCRBYFLOAT")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -19407,7 +19295,7 @@ func (c SInfo) Build() SCompleted {
 
 func (b *SBuilder) Info() (c SInfo) {
 	c.cs = append(b.get(), "INFO")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -19426,7 +19314,7 @@ func (c SKeys) Pattern(Pattern string) SKeysPattern {
 func (b *SBuilder) Keys() (c SKeys) {
 	c.cs = append(b.get(), "KEYS")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -19444,7 +19332,7 @@ func (c SLastsave) Build() SCompleted {
 
 func (b *SBuilder) Lastsave() (c SLastsave) {
 	c.cs = append(b.get(), "LASTSAVE")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -19456,7 +19344,7 @@ func (c SLatencyDoctor) Build() SCompleted {
 
 func (b *SBuilder) LatencyDoctor() (c SLatencyDoctor) {
 	c.cs = append(b.get(), "LATENCY", "DOCTOR")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -19468,7 +19356,7 @@ func (c SLatencyGraph) Event(Event string) SLatencyGraphEvent {
 
 func (b *SBuilder) LatencyGraph() (c SLatencyGraph) {
 	c.cs = append(b.get(), "LATENCY", "GRAPH")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -19486,7 +19374,7 @@ func (c SLatencyHelp) Build() SCompleted {
 
 func (b *SBuilder) LatencyHelp() (c SLatencyHelp) {
 	c.cs = append(b.get(), "LATENCY", "HELP")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -19498,7 +19386,7 @@ func (c SLatencyHistory) Event(Event string) SLatencyHistoryEvent {
 
 func (b *SBuilder) LatencyHistory() (c SLatencyHistory) {
 	c.cs = append(b.get(), "LATENCY", "HISTORY")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -19516,7 +19404,7 @@ func (c SLatencyLatest) Build() SCompleted {
 
 func (b *SBuilder) LatencyLatest() (c SLatencyLatest) {
 	c.cs = append(b.get(), "LATENCY", "LATEST")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -19532,7 +19420,7 @@ func (c SLatencyReset) Build() SCompleted {
 
 func (b *SBuilder) LatencyReset() (c SLatencyReset) {
 	c.cs = append(b.get(), "LATENCY", "RESET")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -19556,7 +19444,7 @@ func (c SLindex) Key(Key string) SLindexKey {
 func (b *SBuilder) Lindex() (c SLindex) {
 	c.cs = append(b.get(), "LINDEX")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -19585,7 +19473,7 @@ func (c SLinsert) Key(Key string) SLinsertKey {
 
 func (b *SBuilder) Linsert() (c SLinsert) {
 	c.cs = append(b.get(), "LINSERT")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -19633,7 +19521,7 @@ func (c SLlen) Key(Key string) SLlenKey {
 func (b *SBuilder) Llen() (c SLlen) {
 	c.cs = append(b.get(), "LLEN")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -19656,7 +19544,7 @@ func (c SLmove) Source(Source string) SLmoveSource {
 
 func (b *SBuilder) Lmove() (c SLmove) {
 	c.cs = append(b.get(), "LMOVE")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -19717,7 +19605,7 @@ func (c SLmpop) Numkeys(Numkeys int64) SLmpopNumkeys {
 
 func (b *SBuilder) Lmpop() (c SLmpop) {
 	c.cs = append(b.get(), "LMPOP")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -19794,7 +19682,7 @@ func (c SLolwut) Build() SCompleted {
 func (b *SBuilder) Lolwut() (c SLolwut) {
 	c.cs = append(b.get(), "LOLWUT")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -19813,7 +19701,7 @@ func (c SLpop) Key(Key string) SLpopKey {
 
 func (b *SBuilder) Lpop() (c SLpop) {
 	c.cs = append(b.get(), "LPOP")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -19843,7 +19731,7 @@ func (c SLpos) Key(Key string) SLposKey {
 func (b *SBuilder) Lpos() (c SLpos) {
 	c.cs = append(b.get(), "LPOS")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -19926,7 +19814,7 @@ func (c SLpush) Key(Key string) SLpushKey {
 
 func (b *SBuilder) Lpush() (c SLpush) {
 	c.cs = append(b.get(), "LPUSH")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -19955,7 +19843,7 @@ func (c SLpushx) Key(Key string) SLpushxKey {
 
 func (b *SBuilder) Lpushx() (c SLpushx) {
 	c.cs = append(b.get(), "LPUSHX")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -19985,7 +19873,7 @@ func (c SLrange) Key(Key string) SLrangeKey {
 func (b *SBuilder) Lrange() (c SLrange) {
 	c.cs = append(b.get(), "LRANGE")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -20020,7 +19908,7 @@ func (c SLrem) Key(Key string) SLremKey {
 
 func (b *SBuilder) Lrem() (c SLrem) {
 	c.cs = append(b.get(), "LREM")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -20051,7 +19939,7 @@ func (c SLset) Key(Key string) SLsetKey {
 
 func (b *SBuilder) Lset() (c SLset) {
 	c.cs = append(b.get(), "LSET")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -20082,7 +19970,7 @@ func (c SLtrim) Key(Key string) SLtrimKey {
 
 func (b *SBuilder) Ltrim() (c SLtrim) {
 	c.cs = append(b.get(), "LTRIM")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -20112,7 +20000,7 @@ func (c SMemoryDoctor) Build() SCompleted {
 
 func (b *SBuilder) MemoryDoctor() (c SMemoryDoctor) {
 	c.cs = append(b.get(), "MEMORY", "DOCTOR")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -20124,7 +20012,7 @@ func (c SMemoryHelp) Build() SCompleted {
 
 func (b *SBuilder) MemoryHelp() (c SMemoryHelp) {
 	c.cs = append(b.get(), "MEMORY", "HELP")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -20136,7 +20024,7 @@ func (c SMemoryMallocStats) Build() SCompleted {
 
 func (b *SBuilder) MemoryMallocStats() (c SMemoryMallocStats) {
 	c.cs = append(b.get(), "MEMORY", "MALLOC-STATS")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -20148,7 +20036,7 @@ func (c SMemoryPurge) Build() SCompleted {
 
 func (b *SBuilder) MemoryPurge() (c SMemoryPurge) {
 	c.cs = append(b.get(), "MEMORY", "PURGE")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -20160,7 +20048,7 @@ func (c SMemoryStats) Build() SCompleted {
 
 func (b *SBuilder) MemoryStats() (c SMemoryStats) {
 	c.cs = append(b.get(), "MEMORY", "STATS")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -20173,7 +20061,7 @@ func (c SMemoryUsage) Key(Key string) SMemoryUsageKey {
 
 func (b *SBuilder) MemoryUsage() (c SMemoryUsage) {
 	c.cs = append(b.get(), "MEMORY", "USAGE")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -20205,7 +20093,7 @@ func (c SMget) Key(Key ...string) SMgetKey {
 func (b *SBuilder) Mget() (c SMget) {
 	c.cs = append(b.get(), "MGET")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -20231,7 +20119,7 @@ func (c SMigrate) Host(Host string) SMigrateHost {
 func (b *SBuilder) Migrate() (c SMigrate) {
 	c.cs = append(b.get(), "MIGRATE")
 	c.cf = blockTag
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -20400,7 +20288,7 @@ func (c SModuleList) Build() SCompleted {
 
 func (b *SBuilder) ModuleList() (c SModuleList) {
 	c.cs = append(b.get(), "MODULE", "LIST")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -20412,7 +20300,7 @@ func (c SModuleLoad) Path(Path string) SModuleLoadPath {
 
 func (b *SBuilder) ModuleLoad() (c SModuleLoad) {
 	c.cs = append(b.get(), "MODULE", "LOAD")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -20444,7 +20332,7 @@ func (c SModuleUnload) Name(Name string) SModuleUnloadName {
 
 func (b *SBuilder) ModuleUnload() (c SModuleUnload) {
 	c.cs = append(b.get(), "MODULE", "UNLOAD")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -20462,7 +20350,7 @@ func (c SMonitor) Build() SCompleted {
 
 func (b *SBuilder) Monitor() (c SMonitor) {
 	c.cs = append(b.get(), "MONITOR")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -20475,7 +20363,7 @@ func (c SMove) Key(Key string) SMoveKey {
 
 func (b *SBuilder) Move() (c SMove) {
 	c.cs = append(b.get(), "MOVE")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -20499,7 +20387,7 @@ func (c SMset) KeyValue() SMsetKeyValue {
 
 func (b *SBuilder) Mset() (c SMset) {
 	c.cs = append(b.get(), "MSET")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -20522,7 +20410,7 @@ func (c SMsetnx) KeyValue() SMsetnxKeyValue {
 
 func (b *SBuilder) Msetnx() (c SMsetnx) {
 	c.cs = append(b.get(), "MSETNX")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -20545,7 +20433,7 @@ func (c SMulti) Build() SCompleted {
 
 func (b *SBuilder) Multi() (c SMulti) {
 	c.cs = append(b.get(), "MULTI")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -20558,7 +20446,7 @@ func (c SObject) Subcommand(Subcommand string) SObjectSubcommand {
 func (b *SBuilder) Object() (c SObject) {
 	c.cs = append(b.get(), "OBJECT")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -20591,7 +20479,7 @@ func (c SPersist) Key(Key string) SPersistKey {
 
 func (b *SBuilder) Persist() (c SPersist) {
 	c.cs = append(b.get(), "PERSIST")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -20610,7 +20498,7 @@ func (c SPexpire) Key(Key string) SPexpireKey {
 
 func (b *SBuilder) Pexpire() (c SPexpire) {
 	c.cs = append(b.get(), "PEXPIRE")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -20675,7 +20563,7 @@ func (c SPexpireat) Key(Key string) SPexpireatKey {
 
 func (b *SBuilder) Pexpireat() (c SPexpireat) {
 	c.cs = append(b.get(), "PEXPIREAT")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -20741,7 +20629,7 @@ func (c SPexpiretime) Key(Key string) SPexpiretimeKey {
 func (b *SBuilder) Pexpiretime() (c SPexpiretime) {
 	c.cs = append(b.get(), "PEXPIRETIME")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -20764,7 +20652,7 @@ func (c SPfadd) Key(Key string) SPfaddKey {
 
 func (b *SBuilder) Pfadd() (c SPfadd) {
 	c.cs = append(b.get(), "PFADD")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -20800,7 +20688,7 @@ func (c SPfcount) Key(Key ...string) SPfcountKey {
 func (b *SBuilder) Pfcount() (c SPfcount) {
 	c.cs = append(b.get(), "PFCOUNT")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -20826,7 +20714,7 @@ func (c SPfmerge) Destkey(Destkey string) SPfmergeDestkey {
 
 func (b *SBuilder) Pfmerge() (c SPfmerge) {
 	c.cs = append(b.get(), "PFMERGE")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -20864,7 +20752,7 @@ func (c SPing) Build() SCompleted {
 
 func (b *SBuilder) Ping() (c SPing) {
 	c.cs = append(b.get(), "PING")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -20883,7 +20771,7 @@ func (c SPsetex) Key(Key string) SPsetexKey {
 
 func (b *SBuilder) Psetex() (c SPsetex) {
 	c.cs = append(b.get(), "PSETEX")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -20914,7 +20802,7 @@ func (c SPsubscribe) Pattern(Pattern ...string) SPsubscribePattern {
 func (b *SBuilder) Psubscribe() (c SPsubscribe) {
 	c.cs = append(b.get(), "PSUBSCRIBE")
 	c.cf = noRetTag
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -20936,7 +20824,7 @@ func (c SPsync) Replicationid(Replicationid int64) SPsyncReplicationid {
 
 func (b *SBuilder) Psync() (c SPsync) {
 	c.cs = append(b.get(), "PSYNC")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -20962,7 +20850,7 @@ func (c SPttl) Key(Key string) SPttlKey {
 func (b *SBuilder) Pttl() (c SPttl) {
 	c.cs = append(b.get(), "PTTL")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -20984,7 +20872,7 @@ func (c SPublish) Channel(Channel string) SPublishChannel {
 
 func (b *SBuilder) Publish() (c SPublish) {
 	c.cs = append(b.get(), "PUBLISH")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -21008,7 +20896,7 @@ func (c SPubsub) Subcommand(Subcommand string) SPubsubSubcommand {
 
 func (b *SBuilder) Pubsub() (c SPubsub) {
 	c.cs = append(b.get(), "PUBSUB")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -21045,7 +20933,7 @@ func (c SPunsubscribe) Build() SCompleted {
 func (b *SBuilder) Punsubscribe() (c SPunsubscribe) {
 	c.cs = append(b.get(), "PUNSUBSCRIBE")
 	c.cf = noRetTag
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -21067,7 +20955,7 @@ func (c SQuit) Build() SCompleted {
 
 func (b *SBuilder) Quit() (c SQuit) {
 	c.cs = append(b.get(), "QUIT")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -21080,7 +20968,7 @@ func (c SRandomkey) Build() SCompleted {
 func (b *SBuilder) Randomkey() (c SRandomkey) {
 	c.cs = append(b.get(), "RANDOMKEY")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -21092,7 +20980,7 @@ func (c SReadonly) Build() SCompleted {
 
 func (b *SBuilder) Readonly() (c SReadonly) {
 	c.cs = append(b.get(), "READONLY")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -21104,7 +20992,7 @@ func (c SReadwrite) Build() SCompleted {
 
 func (b *SBuilder) Readwrite() (c SReadwrite) {
 	c.cs = append(b.get(), "READWRITE")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -21117,7 +21005,7 @@ func (c SRename) Key(Key string) SRenameKey {
 
 func (b *SBuilder) Rename() (c SRename) {
 	c.cs = append(b.get(), "RENAME")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -21143,7 +21031,7 @@ func (c SRenamenx) Key(Key string) SRenamenxKey {
 
 func (b *SBuilder) Renamenx() (c SRenamenx) {
 	c.cs = append(b.get(), "RENAMENX")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -21168,7 +21056,7 @@ func (c SReplicaof) Host(Host string) SReplicaofHost {
 
 func (b *SBuilder) Replicaof() (c SReplicaof) {
 	c.cs = append(b.get(), "REPLICAOF")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -21192,7 +21080,7 @@ func (c SReset) Build() SCompleted {
 
 func (b *SBuilder) Reset() (c SReset) {
 	c.cs = append(b.get(), "RESET")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -21205,7 +21093,7 @@ func (c SRestore) Key(Key string) SRestoreKey {
 
 func (b *SBuilder) Restore() (c SRestore) {
 	c.cs = append(b.get(), "RESTORE")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -21299,7 +21187,7 @@ func (c SRole) Build() SCompleted {
 
 func (b *SBuilder) Role() (c SRole) {
 	c.cs = append(b.get(), "ROLE")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -21312,7 +21200,7 @@ func (c SRpop) Key(Key string) SRpopKey {
 
 func (b *SBuilder) Rpop() (c SRpop) {
 	c.cs = append(b.get(), "RPOP")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -21341,7 +21229,7 @@ func (c SRpoplpush) Source(Source string) SRpoplpushSource {
 
 func (b *SBuilder) Rpoplpush() (c SRpoplpush) {
 	c.cs = append(b.get(), "RPOPLPUSH")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -21367,7 +21255,7 @@ func (c SRpush) Key(Key string) SRpushKey {
 
 func (b *SBuilder) Rpush() (c SRpush) {
 	c.cs = append(b.get(), "RPUSH")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -21396,7 +21284,7 @@ func (c SRpushx) Key(Key string) SRpushxKey {
 
 func (b *SBuilder) Rpushx() (c SRpushx) {
 	c.cs = append(b.get(), "RPUSHX")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -21425,7 +21313,7 @@ func (c SSadd) Key(Key string) SSaddKey {
 
 func (b *SBuilder) Sadd() (c SSadd) {
 	c.cs = append(b.get(), "SADD")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -21453,7 +21341,7 @@ func (c SSave) Build() SCompleted {
 
 func (b *SBuilder) Save() (c SSave) {
 	c.cs = append(b.get(), "SAVE")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -21466,7 +21354,7 @@ func (c SScan) Cursor(Cursor int64) SScanCursor {
 func (b *SBuilder) Scan() (c SScan) {
 	c.cs = append(b.get(), "SCAN")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -21528,7 +21416,7 @@ func (c SScard) Key(Key string) SScardKey {
 func (b *SBuilder) Scard() (c SScard) {
 	c.cs = append(b.get(), "SCARD")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -21558,7 +21446,7 @@ func (c SScriptDebug) No() SScriptDebugModeNo {
 
 func (b *SBuilder) ScriptDebug() (c SScriptDebug) {
 	c.cs = append(b.get(), "SCRIPT", "DEBUG")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -21588,7 +21476,7 @@ func (c SScriptExists) Sha1(Sha1 ...string) SScriptExistsSha1 {
 
 func (b *SBuilder) ScriptExists() (c SScriptExists) {
 	c.cs = append(b.get(), "SCRIPT", "EXISTS")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -21618,7 +21506,7 @@ func (c SScriptFlush) Build() SCompleted {
 
 func (b *SBuilder) ScriptFlush() (c SScriptFlush) {
 	c.cs = append(b.get(), "SCRIPT", "FLUSH")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -21642,7 +21530,7 @@ func (c SScriptKill) Build() SCompleted {
 
 func (b *SBuilder) ScriptKill() (c SScriptKill) {
 	c.cs = append(b.get(), "SCRIPT", "KILL")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -21654,7 +21542,7 @@ func (c SScriptLoad) Script(Script string) SScriptLoadScript {
 
 func (b *SBuilder) ScriptLoad() (c SScriptLoad) {
 	c.cs = append(b.get(), "SCRIPT", "LOAD")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -21676,7 +21564,7 @@ func (c SSdiff) Key(Key ...string) SSdiffKey {
 func (b *SBuilder) Sdiff() (c SSdiff) {
 	c.cs = append(b.get(), "SDIFF")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -21702,7 +21590,7 @@ func (c SSdiffstore) Destination(Destination string) SSdiffstoreDestination {
 
 func (b *SBuilder) Sdiffstore() (c SSdiffstore) {
 	c.cs = append(b.get(), "SDIFFSTORE")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -21736,7 +21624,7 @@ func (c SSelect) Index(Index int64) SSelectIndex {
 
 func (b *SBuilder) Select() (c SSelect) {
 	c.cs = append(b.get(), "SELECT")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -21755,7 +21643,7 @@ func (c SSet) Key(Key string) SSetKey {
 
 func (b *SBuilder) Set() (c SSet) {
 	c.cs = append(b.get(), "SET")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -21928,7 +21816,7 @@ func (c SSetbit) Key(Key string) SSetbitKey {
 
 func (b *SBuilder) Setbit() (c SSetbit) {
 	c.cs = append(b.get(), "SETBIT")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -21959,7 +21847,7 @@ func (c SSetex) Key(Key string) SSetexKey {
 
 func (b *SBuilder) Setex() (c SSetex) {
 	c.cs = append(b.get(), "SETEX")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -21990,7 +21878,7 @@ func (c SSetnx) Key(Key string) SSetnxKey {
 
 func (b *SBuilder) Setnx() (c SSetnx) {
 	c.cs = append(b.get(), "SETNX")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -22015,7 +21903,7 @@ func (c SSetrange) Key(Key string) SSetrangeKey {
 
 func (b *SBuilder) Setrange() (c SSetrange) {
 	c.cs = append(b.get(), "SETRANGE")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -22053,7 +21941,7 @@ func (c SShutdown) Build() SCompleted {
 
 func (b *SBuilder) Shutdown() (c SShutdown) {
 	c.cs = append(b.get(), "SHUTDOWN")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -22081,7 +21969,7 @@ func (c SSinter) Key(Key ...string) SSinterKey {
 func (b *SBuilder) Sinter() (c SSinter) {
 	c.cs = append(b.get(), "SINTER")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -22110,7 +21998,7 @@ func (c SSintercard) Key(Key ...string) SSintercardKey {
 func (b *SBuilder) Sintercard() (c SSintercard) {
 	c.cs = append(b.get(), "SINTERCARD")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -22136,7 +22024,7 @@ func (c SSinterstore) Destination(Destination string) SSinterstoreDestination {
 
 func (b *SBuilder) Sinterstore() (c SSinterstore) {
 	c.cs = append(b.get(), "SINTERSTORE")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -22172,7 +22060,7 @@ func (c SSismember) Key(Key string) SSismemberKey {
 func (b *SBuilder) Sismember() (c SSismember) {
 	c.cs = append(b.get(), "SISMEMBER")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -22200,7 +22088,7 @@ func (c SSlaveof) Host(Host string) SSlaveofHost {
 
 func (b *SBuilder) Slaveof() (c SSlaveof) {
 	c.cs = append(b.get(), "SLAVEOF")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -22224,7 +22112,7 @@ func (c SSlowlog) Subcommand(Subcommand string) SSlowlogSubcommand {
 
 func (b *SBuilder) Slowlog() (c SSlowlog) {
 	c.cs = append(b.get(), "SLOWLOG")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -22254,7 +22142,7 @@ func (c SSmembers) Key(Key string) SSmembersKey {
 func (b *SBuilder) Smembers() (c SSmembers) {
 	c.cs = append(b.get(), "SMEMBERS")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -22278,7 +22166,7 @@ func (c SSmismember) Key(Key string) SSmismemberKey {
 func (b *SBuilder) Smismember() (c SSmismember) {
 	c.cs = append(b.get(), "SMISMEMBER")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -22311,7 +22199,7 @@ func (c SSmove) Source(Source string) SSmoveSource {
 
 func (b *SBuilder) Smove() (c SSmove) {
 	c.cs = append(b.get(), "SMOVE")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -22343,7 +22231,7 @@ func (c SSort) Key(Key string) SSortKey {
 
 func (b *SBuilder) Sort() (c SSort) {
 	c.cs = append(b.get(), "SORT")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -22510,7 +22398,7 @@ func (c SSortRo) Key(Key string) SSortRoKey {
 func (b *SBuilder) SortRo() (c SSortRo) {
 	c.cs = append(b.get(), "SORT_RO")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -22697,7 +22585,7 @@ func (c SSpop) Key(Key string) SSpopKey {
 
 func (b *SBuilder) Spop() (c SSpop) {
 	c.cs = append(b.get(), "SPOP")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -22727,7 +22615,7 @@ func (c SSrandmember) Key(Key string) SSrandmemberKey {
 func (b *SBuilder) Srandmember() (c SSrandmember) {
 	c.cs = append(b.get(), "SRANDMEMBER")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -22756,7 +22644,7 @@ func (c SSrem) Key(Key string) SSremKey {
 
 func (b *SBuilder) Srem() (c SSrem) {
 	c.cs = append(b.get(), "SREM")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -22786,7 +22674,7 @@ func (c SSscan) Key(Key string) SSscanKey {
 func (b *SBuilder) Sscan() (c SSscan) {
 	c.cs = append(b.get(), "SSCAN")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -22835,7 +22723,7 @@ func (c SStralgo) Lcs() SStralgoAlgorithmLcs {
 func (b *SBuilder) Stralgo() (c SStralgo) {
 	c.cs = append(b.get(), "STRALGO")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -22865,7 +22753,7 @@ func (c SStrlen) Key(Key string) SStrlenKey {
 func (b *SBuilder) Strlen() (c SStrlen) {
 	c.cs = append(b.get(), "STRLEN")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -22888,7 +22776,7 @@ func (c SSubscribe) Channel(Channel ...string) SSubscribeChannel {
 func (b *SBuilder) Subscribe() (c SSubscribe) {
 	c.cs = append(b.get(), "SUBSCRIBE")
 	c.cf = noRetTag
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -22914,7 +22802,7 @@ func (c SSunion) Key(Key ...string) SSunionKey {
 func (b *SBuilder) Sunion() (c SSunion) {
 	c.cs = append(b.get(), "SUNION")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -22940,7 +22828,7 @@ func (c SSunionstore) Destination(Destination string) SSunionstoreDestination {
 
 func (b *SBuilder) Sunionstore() (c SSunionstore) {
 	c.cs = append(b.get(), "SUNIONSTORE")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -22974,7 +22862,7 @@ func (c SSwapdb) Index1(Index1 int64) SSwapdbIndex1 {
 
 func (b *SBuilder) Swapdb() (c SSwapdb) {
 	c.cs = append(b.get(), "SWAPDB")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -22998,7 +22886,7 @@ func (c SSync) Build() SCompleted {
 
 func (b *SBuilder) Sync() (c SSync) {
 	c.cs = append(b.get(), "SYNC")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -23010,7 +22898,7 @@ func (c STime) Build() SCompleted {
 
 func (b *SBuilder) Time() (c STime) {
 	c.cs = append(b.get(), "TIME")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -23026,7 +22914,7 @@ func (c STouch) Key(Key ...string) STouchKey {
 func (b *SBuilder) Touch() (c STouch) {
 	c.cs = append(b.get(), "TOUCH")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -23053,7 +22941,7 @@ func (c STtl) Key(Key string) STtlKey {
 func (b *SBuilder) Ttl() (c STtl) {
 	c.cs = append(b.get(), "TTL")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -23077,7 +22965,7 @@ func (c SType) Key(Key string) STypeKey {
 func (b *SBuilder) Type() (c SType) {
 	c.cs = append(b.get(), "TYPE")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -23102,7 +22990,7 @@ func (c SUnlink) Key(Key ...string) SUnlinkKey {
 
 func (b *SBuilder) Unlink() (c SUnlink) {
 	c.cs = append(b.get(), "UNLINK")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -23132,7 +23020,7 @@ func (c SUnsubscribe) Build() SCompleted {
 func (b *SBuilder) Unsubscribe() (c SUnsubscribe) {
 	c.cs = append(b.get(), "UNSUBSCRIBE")
 	c.cf = noRetTag
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -23154,7 +23042,7 @@ func (c SUnwatch) Build() SCompleted {
 
 func (b *SBuilder) Unwatch() (c SUnwatch) {
 	c.cs = append(b.get(), "UNWATCH")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -23167,7 +23055,7 @@ func (c SWait) Numreplicas(Numreplicas int64) SWaitNumreplicas {
 func (b *SBuilder) Wait() (c SWait) {
 	c.cs = append(b.get(), "WAIT")
 	c.cf = blockTag
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -23194,7 +23082,7 @@ func (c SWatch) Key(Key ...string) SWatchKey {
 
 func (b *SBuilder) Watch() (c SWatch) {
 	c.cs = append(b.get(), "WATCH")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -23220,7 +23108,7 @@ func (c SXack) Key(Key string) SXackKey {
 
 func (b *SBuilder) Xack() (c SXack) {
 	c.cs = append(b.get(), "XACK")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -23255,7 +23143,7 @@ func (c SXadd) Key(Key string) SXaddKey {
 
 func (b *SBuilder) Xadd() (c SXadd) {
 	c.cs = append(b.get(), "XADD")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -23372,7 +23260,7 @@ func (c SXautoclaim) Key(Key string) SXautoclaimKey {
 
 func (b *SBuilder) Xautoclaim() (c SXautoclaim) {
 	c.cs = append(b.get(), "XAUTOCLAIM")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -23439,7 +23327,7 @@ func (c SXclaim) Key(Key string) SXclaimKey {
 
 func (b *SBuilder) Xclaim() (c SXclaim) {
 	c.cs = append(b.get(), "XCLAIM")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -23576,7 +23464,7 @@ func (c SXdel) Key(Key string) SXdelKey {
 
 func (b *SBuilder) Xdel() (c SXdel) {
 	c.cs = append(b.get(), "XDEL")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -23629,7 +23517,7 @@ func (c SXgroup) Build() SCompleted {
 
 func (b *SBuilder) Xgroup() (c SXgroup) {
 	c.cs = append(b.get(), "XGROUP")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -23783,7 +23671,7 @@ func (c SXinfo) Build() SCompleted {
 func (b *SBuilder) Xinfo() (c SXinfo) {
 	c.cs = append(b.get(), "XINFO")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -23848,7 +23736,7 @@ func (c SXlen) Key(Key string) SXlenKey {
 func (b *SBuilder) Xlen() (c SXlen) {
 	c.cs = append(b.get(), "XLEN")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -23868,7 +23756,7 @@ func (c SXpending) Key(Key string) SXpendingKey {
 func (b *SBuilder) Xpending() (c SXpending) {
 	c.cs = append(b.get(), "XPENDING")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -23932,7 +23820,7 @@ func (c SXrange) Key(Key string) SXrangeKey {
 func (b *SBuilder) Xrange() (c SXrange) {
 	c.cs = append(b.get(), "XRANGE")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -23982,7 +23870,7 @@ func (c SXread) Streams() SXreadStreamsStreams {
 func (b *SBuilder) Xread() (c SXread) {
 	c.cs = append(b.get(), "XREAD")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -24043,7 +23931,7 @@ func (c SXreadgroup) Group(Group string, Consumer string) SXreadgroupGroup {
 
 func (b *SBuilder) Xreadgroup() (c SXreadgroup) {
 	c.cs = append(b.get(), "XREADGROUP")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -24139,7 +24027,7 @@ func (c SXrevrange) Key(Key string) SXrevrangeKey {
 func (b *SBuilder) Xrevrange() (c SXrevrange) {
 	c.cs = append(b.get(), "XREVRANGE")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -24180,7 +24068,7 @@ func (c SXtrim) Key(Key string) SXtrimKey {
 
 func (b *SBuilder) Xtrim() (c SXtrim) {
 	c.cs = append(b.get(), "XTRIM")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -24259,7 +24147,7 @@ func (c SZadd) Key(Key string) SZaddKey {
 
 func (b *SBuilder) Zadd() (c SZadd) {
 	c.cs = append(b.get(), "ZADD")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -24401,7 +24289,7 @@ func (c SZcard) Key(Key string) SZcardKey {
 func (b *SBuilder) Zcard() (c SZcard) {
 	c.cs = append(b.get(), "ZCARD")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -24425,7 +24313,7 @@ func (c SZcount) Key(Key string) SZcountKey {
 func (b *SBuilder) Zcount() (c SZcount) {
 	c.cs = append(b.get(), "ZCOUNT")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -24460,7 +24348,7 @@ func (c SZdiff) Numkeys(Numkeys int64) SZdiffNumkeys {
 func (b *SBuilder) Zdiff() (c SZdiff) {
 	c.cs = append(b.get(), "ZDIFF")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -24505,7 +24393,7 @@ func (c SZdiffstore) Destination(Destination string) SZdiffstoreDestination {
 
 func (b *SBuilder) Zdiffstore() (c SZdiffstore) {
 	c.cs = append(b.get(), "ZDIFFSTORE")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -24546,7 +24434,7 @@ func (c SZincrby) Key(Key string) SZincrbyKey {
 
 func (b *SBuilder) Zincrby() (c SZincrby) {
 	c.cs = append(b.get(), "ZINCRBY")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -24577,7 +24465,7 @@ func (c SZinter) Numkeys(Numkeys int64) SZinterNumkeys {
 func (b *SBuilder) Zinter() (c SZinter) {
 	c.cs = append(b.get(), "ZINTER")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -24701,7 +24589,7 @@ func (c SZintercard) Numkeys(Numkeys int64) SZintercardNumkeys {
 func (b *SBuilder) Zintercard() (c SZintercard) {
 	c.cs = append(b.get(), "ZINTERCARD")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -24736,7 +24624,7 @@ func (c SZinterstore) Destination(Destination string) SZinterstoreDestination {
 
 func (b *SBuilder) Zinterstore() (c SZinterstore) {
 	c.cs = append(b.get(), "ZINTERSTORE")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -24841,7 +24729,7 @@ func (c SZlexcount) Key(Key string) SZlexcountKey {
 func (b *SBuilder) Zlexcount() (c SZlexcount) {
 	c.cs = append(b.get(), "ZLEXCOUNT")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -24877,7 +24765,7 @@ func (c SZmscore) Key(Key string) SZmscoreKey {
 func (b *SBuilder) Zmscore() (c SZmscore) {
 	c.cs = append(b.get(), "ZMSCORE")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -24910,7 +24798,7 @@ func (c SZpopmax) Key(Key string) SZpopmaxKey {
 
 func (b *SBuilder) Zpopmax() (c SZpopmax) {
 	c.cs = append(b.get(), "ZPOPMAX")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -24939,7 +24827,7 @@ func (c SZpopmin) Key(Key string) SZpopminKey {
 
 func (b *SBuilder) Zpopmin() (c SZpopmin) {
 	c.cs = append(b.get(), "ZPOPMIN")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -24969,7 +24857,7 @@ func (c SZrandmember) Key(Key string) SZrandmemberKey {
 func (b *SBuilder) Zrandmember() (c SZrandmember) {
 	c.cs = append(b.get(), "ZRANDMEMBER")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -25009,7 +24897,7 @@ func (c SZrange) Key(Key string) SZrangeKey {
 func (b *SBuilder) Zrange() (c SZrange) {
 	c.cs = append(b.get(), "ZRANGE")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -25151,7 +25039,7 @@ func (c SZrangebylex) Key(Key string) SZrangebylexKey {
 func (b *SBuilder) Zrangebylex() (c SZrangebylex) {
 	c.cs = append(b.get(), "ZRANGEBYLEX")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -25201,7 +25089,7 @@ func (c SZrangebyscore) Key(Key string) SZrangebyscoreKey {
 func (b *SBuilder) Zrangebyscore() (c SZrangebyscore) {
 	c.cs = append(b.get(), "ZRANGEBYSCORE")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -25268,7 +25156,7 @@ func (c SZrangestore) Dst(Dst string) SZrangestoreDst {
 
 func (b *SBuilder) Zrangestore() (c SZrangestore) {
 	c.cs = append(b.get(), "ZRANGESTORE")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -25367,7 +25255,7 @@ func (c SZrank) Key(Key string) SZrankKey {
 func (b *SBuilder) Zrank() (c SZrank) {
 	c.cs = append(b.get(), "ZRANK")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -25396,7 +25284,7 @@ func (c SZrem) Key(Key string) SZremKey {
 
 func (b *SBuilder) Zrem() (c SZrem) {
 	c.cs = append(b.get(), "ZREM")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -25425,7 +25313,7 @@ func (c SZremrangebylex) Key(Key string) SZremrangebylexKey {
 
 func (b *SBuilder) Zremrangebylex() (c SZremrangebylex) {
 	c.cs = append(b.get(), "ZREMRANGEBYLEX")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -25456,7 +25344,7 @@ func (c SZremrangebyrank) Key(Key string) SZremrangebyrankKey {
 
 func (b *SBuilder) Zremrangebyrank() (c SZremrangebyrank) {
 	c.cs = append(b.get(), "ZREMRANGEBYRANK")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -25487,7 +25375,7 @@ func (c SZremrangebyscore) Key(Key string) SZremrangebyscoreKey {
 
 func (b *SBuilder) Zremrangebyscore() (c SZremrangebyscore) {
 	c.cs = append(b.get(), "ZREMRANGEBYSCORE")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -25519,7 +25407,7 @@ func (c SZrevrange) Key(Key string) SZrevrangeKey {
 func (b *SBuilder) Zrevrange() (c SZrevrange) {
 	c.cs = append(b.get(), "ZREVRANGE")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -25569,7 +25457,7 @@ func (c SZrevrangebylex) Key(Key string) SZrevrangebylexKey {
 func (b *SBuilder) Zrevrangebylex() (c SZrevrangebylex) {
 	c.cs = append(b.get(), "ZREVRANGEBYLEX")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -25619,7 +25507,7 @@ func (c SZrevrangebyscore) Key(Key string) SZrevrangebyscoreKey {
 func (b *SBuilder) Zrevrangebyscore() (c SZrevrangebyscore) {
 	c.cs = append(b.get(), "ZREVRANGEBYSCORE")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -25687,7 +25575,7 @@ func (c SZrevrank) Key(Key string) SZrevrankKey {
 func (b *SBuilder) Zrevrank() (c SZrevrank) {
 	c.cs = append(b.get(), "ZREVRANK")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -25717,7 +25605,7 @@ func (c SZscan) Key(Key string) SZscanKey {
 func (b *SBuilder) Zscan() (c SZscan) {
 	c.cs = append(b.get(), "ZSCAN")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -25767,7 +25655,7 @@ func (c SZscore) Key(Key string) SZscoreKey {
 func (b *SBuilder) Zscore() (c SZscore) {
 	c.cs = append(b.get(), "ZSCORE")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -25796,7 +25684,7 @@ func (c SZunion) Numkeys(Numkeys int64) SZunionNumkeys {
 func (b *SBuilder) Zunion() (c SZunion) {
 	c.cs = append(b.get(), "ZUNION")
 	c.cf = readonly
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 
@@ -25920,7 +25808,7 @@ func (c SZunionstore) Destination(Destination string) SZunionstoreDestination {
 
 func (b *SBuilder) Zunionstore() (c SZunionstore) {
 	c.cs = append(b.get(), "ZUNIONSTORE")
-	c.ks = initSlot
+	c.ks = InitSlot
 	return
 }
 

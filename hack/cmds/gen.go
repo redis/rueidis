@@ -332,7 +332,7 @@ func generate(prefix string) {
 				if within(node, readOnlyCMDs) {
 					fmt.Printf("\tc.cf = readonly\n")
 				}
-				fmt.Printf("\tc.ks = initSlot\n")
+				fmt.Printf("\tc.ks = InitSlot\n")
 			}
 
 			fmt.Printf("\treturn\n")
@@ -559,8 +559,11 @@ func within(cmd *CmdNode, cmds []string) bool {
 
 func filterArgs(args []Argument, exclude string) (out []Argument) {
 	for _, a := range args {
-		if a.Command != exclude {
-			out = append(out, a)
+		bs, _ := json.Marshal(a)
+		cp := Argument{}
+		json.Unmarshal(bs, &cp)
+		if cp.Command != exclude {
+			out = append(out, cp)
 		}
 	}
 	return out
