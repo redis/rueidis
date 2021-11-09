@@ -44,26 +44,17 @@ func (option ClusterClientOption) connOption() conn.Option {
 	}
 }
 
-type placeholder struct {
-	addr string
-	conn *conn.Conn
-}
-
 type ClusterClient struct {
 	Cmd *cmds.SBuilder
 	opt ClusterClientOption
 
 	mu    sync.RWMutex
 	sg    singleflight.Call
-	slots [16384]placeholder
+	slots [16384]*conn.Conn
 	conns map[string]*conn.Conn
 }
 
 func NewClusterClient(option ClusterClientOption) (client *ClusterClient, err error) {
-	if len(option.InitAddress) == 0 {
-		return nil, ErrNoNodes
-	}
-
 	if option.ShuffleInit {
 		rand.Shuffle(len(option.InitAddress), func(i, j int) {
 			option.InitAddress[i], option.InitAddress[j] = option.InitAddress[j], option.InitAddress[i]
@@ -88,15 +79,19 @@ func NewClusterClient(option ClusterClientOption) (client *ClusterClient, err er
 }
 
 func (c *ClusterClient) initConn() (cc *conn.Conn, err error) {
+	if len(c.opt.InitAddress) == 0 {
+		return nil, ErrNoNodes
+	}
 	for _, addr := range c.opt.InitAddress {
-		if cc, err = conn.NewConn(addr, c.opt.connOption()); err == nil {
+		cc = conn.NewConn(addr, c.opt.connOption())
+		if err = cc.Dialable(); err == nil {
 			c.mu.Lock()
 			c.conns[addr] = cc
 			c.mu.Unlock()
-			break
+			return cc, nil
 		}
 	}
-	return cc, err
+	return nil, err
 }
 
 func (c *ClusterClient) refreshSlots() (err error) {
@@ -105,23 +100,35 @@ func (c *ClusterClient) refreshSlots() (err error) {
 
 func (c *ClusterClient) _refreshSlots() (err error) {
 	var reply proto.Message
+	var dead []string
+
 retry:
 	c.mu.RLock()
 	for addr, cc := range c.conns {
 		if resp := cc.Do(cmds.SlotCmd); resp.Err != nil {
 			err = resp.Err
-			go cc.Close()
-			delete(c.conns, addr)
+			dead = append(dead, addr)
 		} else if resp.Val.Type == '-' || resp.Val.Type == '!' {
 			err = errors.New(resp.Val.String)
-			go cc.Close()
-			delete(c.conns, addr)
+			dead = append(dead, addr)
 		} else {
 			reply = resp.Val
 			break
 		}
 	}
 	c.mu.RUnlock()
+
+	if len(dead) != 0 {
+		c.mu.Lock()
+		for _, addr := range dead {
+			if cc, ok := c.conns[addr]; ok {
+				delete(c.conns, addr)
+				go cc.Close()
+			}
+		}
+		c.mu.Unlock()
+		dead = nil
+	}
 
 	if err != nil {
 		return err
@@ -138,11 +145,10 @@ retry:
 
 	// TODO support read from replicas
 	masters := make(map[string]*conn.Conn, len(groups))
-	for _, g := range groups {
-		masters[g.nodes[0]] = nil
+	for addr := range groups {
+		masters[addr] = conn.NewConn(addr, c.opt.connOption())
 	}
 
-	var pending []string
 	var removes []*conn.Conn
 
 	c.mu.RLock()
@@ -154,17 +160,12 @@ retry:
 		}
 	}
 	c.mu.RUnlock()
-	for addr, cc := range masters {
-		if cc == nil {
-			pending = append(pending, addr)
-		}
-	}
 
-	slots := [16384]placeholder{}
-	for master, g := range groups {
+	slots := [16384]*conn.Conn{}
+	for addr, g := range groups {
 		for _, slot := range g.slots {
 			for i := slot[0]; i <= slot[1]; i++ {
-				slots[i] = placeholder{addr: master}
+				slots[i] = masters[addr]
 			}
 		}
 	}
@@ -173,34 +174,6 @@ retry:
 	c.slots = slots
 	c.conns = masters
 	c.mu.Unlock()
-
-	for _, addr := range pending {
-		go func(addr string, slots [][2]int64) {
-			var cc *conn.Conn
-			var err error
-			for {
-				c.mu.RLock()
-				cc = c.conns[addr]
-				c.mu.RUnlock()
-				if cc != nil {
-					return
-				}
-				if cc, err = conn.NewConn(addr, c.opt.connOption()); err == nil {
-					c.mu.Lock()
-					c.conns[addr] = cc
-					for _, slot := range slots {
-						for i := slot[0]; i <= slot[1]; i++ {
-							if c.slots[i].addr == addr {
-								c.slots[i].conn = cc
-							}
-						}
-					}
-					c.mu.Unlock()
-					return
-				}
-			}
-		}(addr, groups[addr].slots)
-	}
 
 	for _, cc := range removes {
 		go cc.Close()
@@ -233,13 +206,11 @@ func parseSlots(slots proto.Message) map[string]group {
 	return groups
 }
 
-func (c *ClusterClient) pickConn(slot uint16) (*conn.Conn, error) {
-	var p placeholder
-retry:
+func (c *ClusterClient) pick(slot uint16) (p *conn.Conn) {
 	if slot == cmds.InitSlot {
 		c.mu.RLock()
-		for addr, cc := range c.conns {
-			p = placeholder{addr: addr, conn: cc}
+		for _, cc := range c.conns {
+			p = cc
 			break
 		}
 	} else {
@@ -247,23 +218,35 @@ retry:
 		p = c.slots[slot]
 	}
 	c.mu.RUnlock()
+	return p
+}
 
-	if p.addr == "" {
+func (c *ClusterClient) pickConn(slot uint16) (p *conn.Conn, err error) {
+	if p = c.pick(slot); p == nil {
 		if err := c.refreshSlots(); err != nil {
 			return nil, err
 		}
-		c.mu.RLock()
-		p = c.slots[slot]
-		c.mu.RUnlock()
-		if p.addr == "" {
+		if p = c.pick(slot); p == nil {
 			return nil, ErrNoSlot
 		}
 	}
-	if p.conn == nil {
-		runtime.Gosched()
-		goto retry
+	return p, nil
+}
+
+func (c *ClusterClient) pickOrNewConn(addr string) (p *conn.Conn) {
+	c.mu.RLock()
+	p = c.conns[addr]
+	c.mu.RUnlock()
+	if p != nil {
+		return p
 	}
-	return p.conn, nil
+	c.mu.Lock()
+	if p = c.conns[addr]; p == nil {
+		p = conn.NewConn(addr, c.opt.connOption())
+		c.conns[addr] = p
+	}
+	c.mu.Unlock()
+	return p
 }
 
 func (c *ClusterClient) Do(cmd cmds.SCompleted) (resp proto.Result) {
@@ -277,22 +260,13 @@ retry:
 process:
 	if resp.Val.Type == '-' {
 		if strings.HasPrefix(resp.Val.String, "MOVED") {
-			if err := c.refreshSlots(); err != nil {
-				resp.Err = err
-				return
-			}
-			goto retry
+			go c.refreshSlots()
+			addr := strings.Split(resp.Val.String, " ")[2]
+			resp = c.pickOrNewConn(addr).Do(cmds.Completed(cmd))
+			goto process
 		} else if strings.HasPrefix(resp.Val.String, "ASK") {
 			addr := strings.Split(resp.Val.String, " ")[2]
-			// TODO single flight
-			c.mu.RLock()
-			cc = c.conns[addr]
-			c.mu.RUnlock()
-			if cc == nil {
-				runtime.Gosched()
-				goto retry
-			}
-			resp = cc.DoMulti(cmds.AskingCmd, cmds.Completed(cmd))[1]
+			resp = c.pickOrNewConn(addr).DoMulti(cmds.AskingCmd, cmds.Completed(cmd))[1]
 			goto process
 		} else if strings.HasPrefix(resp.Val.String, "TRYAGAIN") {
 			runtime.Gosched()
@@ -303,13 +277,9 @@ process:
 	return resp
 }
 
-func (c *ClusterClient) DoMulti(multi ...cmds.SCompleted) (resp []proto.Result) {
-	ccmd := make([]cmds.Completed, len(multi))
-	resp = make([]proto.Result, len(multi))
-
-	slot := cmds.InitSlot
-	for i, cmd := range multi {
-		ccmd[i] = cmds.Completed(cmd)
+func checkMultiSlot(multi []cmds.SCompleted) (slot uint16) {
+	slot = cmds.InitSlot
+	for _, cmd := range multi {
 		if cmd.Slot() == cmds.InitSlot {
 			continue
 		}
@@ -318,6 +288,18 @@ func (c *ClusterClient) DoMulti(multi ...cmds.SCompleted) (resp []proto.Result) 
 		} else if slot != cmd.Slot() {
 			panic("mixed slot commands are not allowed")
 		}
+	}
+	return
+}
+
+func (c *ClusterClient) DoMulti(multi ...cmds.SCompleted) (resp []proto.Result) {
+	slot := checkMultiSlot(multi)
+
+	resp = make([]proto.Result, len(multi))
+	ccmd := make([]cmds.Completed, len(multi))
+
+	for i, cmd := range multi {
+		ccmd[i] = cmds.Completed(cmd)
 	}
 
 retry:
@@ -333,22 +315,13 @@ process:
 	for _, r := range resp {
 		if r.Val.Type == '-' {
 			if strings.HasPrefix(r.Val.String, "MOVED") {
-				if err := c.refreshSlots(); err != nil {
-					r.Err = err
-					return
-				}
-				goto retry
+				go c.refreshSlots()
+				addr := strings.Split(r.Val.String, " ")[2]
+				resp = c.pickOrNewConn(addr).DoMulti(ccmd...)
+				goto process
 			} else if strings.HasPrefix(r.Val.String, "ASK") {
 				addr := strings.Split(r.Val.String, " ")[2]
-				// TODO single flight
-				c.mu.RLock()
-				cc = c.conns[addr]
-				c.mu.RUnlock()
-				if cc == nil {
-					runtime.Gosched()
-					goto retry
-				}
-				resp = cc.DoMulti(ccmd...)
+				resp = c.pickOrNewConn(addr).DoMulti(append([]cmds.Completed{cmds.AskingCmd}, ccmd...)...)[1:]
 				goto process
 			} else if strings.HasPrefix(r.Val.String, "TRYAGAIN") {
 				runtime.Gosched()
@@ -373,23 +346,14 @@ retry:
 process:
 	if resp.Val.Type == '-' {
 		if strings.HasPrefix(resp.Val.String, "MOVED") {
-			if err := c.refreshSlots(); err != nil {
-				resp.Err = err
-				return
-			}
-			goto retry
+			go c.refreshSlots()
+			addr := strings.Split(resp.Val.String, " ")[2]
+			resp = c.pickOrNewConn(addr).DoCache(cmds.Cacheable(cmd), ttl)
+			goto process
 		} else if strings.HasPrefix(resp.Val.String, "ASK") {
 			addr := strings.Split(resp.Val.String, " ")[2]
-			// TODO single flight
-			c.mu.RLock()
-			cc = c.conns[addr]
-			c.mu.RUnlock()
-			if cc == nil {
-				runtime.Gosched()
-				goto retry
-			}
 			// TODO ASKING OPT-IN Caching
-			resp = cc.DoMulti(cmds.AskingCmd, cmds.Completed(cmd))[1]
+			resp = c.pickOrNewConn(addr).DoMulti(cmds.AskingCmd, cmds.Completed(cmd))[1]
 			goto process
 		} else if strings.HasPrefix(resp.Val.String, "TRYAGAIN") {
 			runtime.Gosched()
@@ -401,11 +365,9 @@ process:
 }
 
 func (c *ClusterClient) Close() {
-	c.mu.Lock()
-	c.slots = [16384]placeholder{}
+	c.mu.RLock()
 	for _, cc := range c.conns {
-		cc.Close()
+		go cc.Close()
 	}
-	c.conns = nil
-	c.mu.Unlock()
+	c.mu.RUnlock()
 }

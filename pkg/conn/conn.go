@@ -83,7 +83,7 @@ retry:
 	goto retry
 }
 
-func (c *Conn) Init() error { // no retry
+func (c *Conn) Dialable() error { // no retry
 	_, err := c.connect()
 	return err
 }
