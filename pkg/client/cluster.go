@@ -254,7 +254,7 @@ retry:
 	cc, err := c.pickConn(cmd.Slot())
 	if err != nil {
 		resp.Err = err
-		return
+		goto ret
 	}
 	resp = cc.Do(cmds.Completed(cmd))
 process:
@@ -273,6 +273,7 @@ process:
 			goto retry
 		}
 	}
+ret:
 	c.Cmd.Put(cmd.Commands())
 	return resp
 }
@@ -308,7 +309,7 @@ retry:
 		for i := range resp {
 			resp[i].Err = err
 		}
-		return
+		goto ret
 	}
 	resp = cc.DoMulti(ccmd...)
 process:
@@ -329,6 +330,7 @@ process:
 			}
 		}
 	}
+ret:
 	for _, cmd := range ccmd {
 		c.Cmd.Put(cmd.Commands())
 	}
@@ -340,7 +342,7 @@ retry:
 	cc, err := c.pickConn(cmd.Slot())
 	if err != nil {
 		resp.Err = err
-		return
+		goto ret
 	}
 	resp = cc.DoCache(cmds.Cacheable(cmd), ttl)
 process:
@@ -360,6 +362,7 @@ process:
 			goto retry
 		}
 	}
+ret:
 	c.Cmd.Put(cmd.Commands())
 	return resp
 }
