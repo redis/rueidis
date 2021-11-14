@@ -249,7 +249,7 @@ func generate(prefix string) {
 			if len(args) == 1 && (child.Multiple || child.Variadic) {
 				if len(appends) == 0 && (args[0][1] == "string" || args[0][1] == "key") {
 					// one line append
-					fmt.Printf("\treturn %s{cf: c.cf, cs: append(c.cs, %s...)}\n", prefix+strings.TrimSuffix(child.StructName, "_nocmd"), args[0][0])
+					fmt.Printf("\treturn %s{cs: append(c.cs, %s...), cf: c.cf, ks: c.ks}\n", prefix+strings.TrimSuffix(child.StructName, "_nocmd"), args[0][0])
 				} else {
 					if len(appends) != 0 {
 						fmt.Printf("\tc.cs = append(c.cs, ")
@@ -262,27 +262,27 @@ func generate(prefix string) {
 						fmt.Printf(")\n")
 					}
 					if args[0][1] == "string" || args[0][1] == "key" {
-						fmt.Printf("\treturn %s{cf: c.cf, cs: append(c.cs, %s...)}\n", prefix+strings.TrimSuffix(child.StructName, "_nocmd"), args[0][0])
+						fmt.Printf("\treturn %s{cs: append(c.cs, %s...), cf: c.cf, ks: c.ks}\n", prefix+strings.TrimSuffix(child.StructName, "_nocmd"), args[0][0])
 					} else {
 						fmt.Printf("\tfor _, n := range %s {\n", args[0][0])
 						fmt.Printf("\t\tc.cs = append(c.cs, strconv.FormatInt(n, 10))\n")
 						fmt.Printf("\t}\n")
-						fmt.Printf("\treturn %s{cf: c.cf, cs: c.cs}\n", prefix+strings.TrimSuffix(child.StructName, "_nocmd"))
+						fmt.Printf("\treturn %s{cs: c.cs, cf: c.cf, ks: c.ks}\n", prefix+strings.TrimSuffix(child.StructName, "_nocmd"))
 					}
 				}
 			} else {
 				// one line append
 				if len(appends) > 0 {
-					fmt.Printf("\treturn %s{cf: c.cf, cs: append(c.cs, ", prefix+strings.TrimSuffix(child.StructName, "_nocmd"))
+					fmt.Printf("\treturn %s{cs: append(c.cs, ", prefix+strings.TrimSuffix(child.StructName, "_nocmd"))
 					for i, ap := range appends {
 						fmt.Printf(ap)
 						if i != len(appends)-1 {
 							fmt.Printf(", ")
 						}
 					}
-					fmt.Printf(")}\n")
+					fmt.Printf("), cf: c.cf, ks: c.ks}\n")
 				} else {
-					fmt.Printf("\treturn %s{cf: c.cf, cs: c.cs}\n", prefix+strings.TrimSuffix(child.StructName, "_nocmd"))
+					fmt.Printf("\treturn %s{cs: c.cs, cf: c.cf, ks: c.ks}\n", prefix+strings.TrimSuffix(child.StructName, "_nocmd"))
 				}
 			}
 			fmt.Printf("}\n\n")

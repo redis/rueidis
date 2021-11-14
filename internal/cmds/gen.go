@@ -7,7 +7,7 @@ import "strconv"
 type AclCat Completed
 
 func (c AclCat) Categoryname(Categoryname string) AclCatCategoryname {
-	return AclCatCategoryname{cf: c.cf, cs: append(c.cs, Categoryname)}
+	return AclCatCategoryname{cs: append(c.cs, Categoryname), cf: c.cf, ks: c.ks}
 }
 
 func (c AclCat) Build() Completed {
@@ -28,7 +28,7 @@ func (c AclCatCategoryname) Build() Completed {
 type AclDeluser Completed
 
 func (c AclDeluser) Username(Username ...string) AclDeluserUsername {
-	return AclDeluserUsername{cf: c.cf, cs: append(c.cs, Username...)}
+	return AclDeluserUsername{cs: append(c.cs, Username...), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) AclDeluser() (c AclDeluser) {
@@ -39,7 +39,7 @@ func (b *Builder) AclDeluser() (c AclDeluser) {
 type AclDeluserUsername Completed
 
 func (c AclDeluserUsername) Username(Username ...string) AclDeluserUsername {
-	return AclDeluserUsername{cf: c.cf, cs: append(c.cs, Username...)}
+	return AclDeluserUsername{cs: append(c.cs, Username...), cf: c.cf, ks: c.ks}
 }
 
 func (c AclDeluserUsername) Build() Completed {
@@ -49,7 +49,7 @@ func (c AclDeluserUsername) Build() Completed {
 type AclGenpass Completed
 
 func (c AclGenpass) Bits(Bits int64) AclGenpassBits {
-	return AclGenpassBits{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Bits, 10))}
+	return AclGenpassBits{cs: append(c.cs, strconv.FormatInt(Bits, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c AclGenpass) Build() Completed {
@@ -70,7 +70,7 @@ func (c AclGenpassBits) Build() Completed {
 type AclGetuser Completed
 
 func (c AclGetuser) Username(Username string) AclGetuserUsername {
-	return AclGetuserUsername{cf: c.cf, cs: append(c.cs, Username)}
+	return AclGetuserUsername{cs: append(c.cs, Username), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) AclGetuser() (c AclGetuser) {
@@ -120,7 +120,7 @@ func (b *Builder) AclLoad() (c AclLoad) {
 type AclLog Completed
 
 func (c AclLog) CountOrReset(CountOrReset string) AclLogCountOrReset {
-	return AclLogCountOrReset{cf: c.cf, cs: append(c.cs, CountOrReset)}
+	return AclLogCountOrReset{cs: append(c.cs, CountOrReset), cf: c.cf, ks: c.ks}
 }
 
 func (c AclLog) Build() Completed {
@@ -152,7 +152,7 @@ func (b *Builder) AclSave() (c AclSave) {
 type AclSetuser Completed
 
 func (c AclSetuser) Username(Username string) AclSetuserUsername {
-	return AclSetuserUsername{cf: c.cf, cs: append(c.cs, Username)}
+	return AclSetuserUsername{cs: append(c.cs, Username), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) AclSetuser() (c AclSetuser) {
@@ -163,7 +163,7 @@ func (b *Builder) AclSetuser() (c AclSetuser) {
 type AclSetuserRule Completed
 
 func (c AclSetuserRule) Rule(Rule ...string) AclSetuserRule {
-	return AclSetuserRule{cf: c.cf, cs: append(c.cs, Rule...)}
+	return AclSetuserRule{cs: append(c.cs, Rule...), cf: c.cf, ks: c.ks}
 }
 
 func (c AclSetuserRule) Build() Completed {
@@ -173,7 +173,7 @@ func (c AclSetuserRule) Build() Completed {
 type AclSetuserUsername Completed
 
 func (c AclSetuserUsername) Rule(Rule ...string) AclSetuserRule {
-	return AclSetuserRule{cf: c.cf, cs: append(c.cs, Rule...)}
+	return AclSetuserRule{cs: append(c.cs, Rule...), cf: c.cf, ks: c.ks}
 }
 
 func (c AclSetuserUsername) Build() Completed {
@@ -205,7 +205,7 @@ func (b *Builder) AclWhoami() (c AclWhoami) {
 type Append Completed
 
 func (c Append) Key(Key string) AppendKey {
-	return AppendKey{cf: c.cf, cs: append(c.cs, Key)}
+	return AppendKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Append() (c Append) {
@@ -216,7 +216,7 @@ func (b *Builder) Append() (c Append) {
 type AppendKey Completed
 
 func (c AppendKey) Value(Value string) AppendValue {
-	return AppendValue{cf: c.cf, cs: append(c.cs, Value)}
+	return AppendValue{cs: append(c.cs, Value), cf: c.cf, ks: c.ks}
 }
 
 type AppendValue Completed
@@ -239,11 +239,11 @@ func (b *Builder) Asking() (c Asking) {
 type Auth Completed
 
 func (c Auth) Username(Username string) AuthUsername {
-	return AuthUsername{cf: c.cf, cs: append(c.cs, Username)}
+	return AuthUsername{cs: append(c.cs, Username), cf: c.cf, ks: c.ks}
 }
 
 func (c Auth) Password(Password string) AuthPassword {
-	return AuthPassword{cf: c.cf, cs: append(c.cs, Password)}
+	return AuthPassword{cs: append(c.cs, Password), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Auth() (c Auth) {
@@ -260,7 +260,7 @@ func (c AuthPassword) Build() Completed {
 type AuthUsername Completed
 
 func (c AuthUsername) Password(Password string) AuthPassword {
-	return AuthPassword{cf: c.cf, cs: append(c.cs, Password)}
+	return AuthPassword{cs: append(c.cs, Password), cf: c.cf, ks: c.ks}
 }
 
 type Bgrewriteaof Completed
@@ -277,7 +277,7 @@ func (b *Builder) Bgrewriteaof() (c Bgrewriteaof) {
 type Bgsave Completed
 
 func (c Bgsave) Schedule() BgsaveScheduleSchedule {
-	return BgsaveScheduleSchedule{cf: c.cf, cs: append(c.cs, "SCHEDULE")}
+	return BgsaveScheduleSchedule{cs: append(c.cs, "SCHEDULE"), cf: c.cf, ks: c.ks}
 }
 
 func (c Bgsave) Build() Completed {
@@ -298,7 +298,7 @@ func (c BgsaveScheduleSchedule) Build() Completed {
 type Bitcount Completed
 
 func (c Bitcount) Key(Key string) BitcountKey {
-	return BitcountKey{cf: c.cf, cs: append(c.cs, Key)}
+	return BitcountKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Bitcount() (c Bitcount) {
@@ -309,7 +309,7 @@ func (b *Builder) Bitcount() (c Bitcount) {
 type BitcountKey Completed
 
 func (c BitcountKey) StartEnd(Start int64, End int64) BitcountStartEnd {
-	return BitcountStartEnd{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Start, 10), strconv.FormatInt(End, 10))}
+	return BitcountStartEnd{cs: append(c.cs, strconv.FormatInt(Start, 10), strconv.FormatInt(End, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c BitcountKey) Build() Completed {
@@ -333,7 +333,7 @@ func (c BitcountStartEnd) Cache() Cacheable {
 type Bitfield Completed
 
 func (c Bitfield) Key(Key string) BitfieldKey {
-	return BitfieldKey{cf: c.cf, cs: append(c.cs, Key)}
+	return BitfieldKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Bitfield() (c Bitfield) {
@@ -350,23 +350,23 @@ func (c BitfieldFail) Build() Completed {
 type BitfieldGet Completed
 
 func (c BitfieldGet) Set(Type string, Offset int64, Value int64) BitfieldSet {
-	return BitfieldSet{cf: c.cf, cs: append(c.cs, "SET", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Value, 10))}
+	return BitfieldSet{cs: append(c.cs, "SET", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Value, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c BitfieldGet) Incrby(Type string, Offset int64, Increment int64) BitfieldIncrby {
-	return BitfieldIncrby{cf: c.cf, cs: append(c.cs, "INCRBY", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Increment, 10))}
+	return BitfieldIncrby{cs: append(c.cs, "INCRBY", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Increment, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c BitfieldGet) Wrap() BitfieldWrap {
-	return BitfieldWrap{cf: c.cf, cs: append(c.cs, "WRAP")}
+	return BitfieldWrap{cs: append(c.cs, "WRAP"), cf: c.cf, ks: c.ks}
 }
 
 func (c BitfieldGet) Sat() BitfieldSat {
-	return BitfieldSat{cf: c.cf, cs: append(c.cs, "SAT")}
+	return BitfieldSat{cs: append(c.cs, "SAT"), cf: c.cf, ks: c.ks}
 }
 
 func (c BitfieldGet) Fail() BitfieldFail {
-	return BitfieldFail{cf: c.cf, cs: append(c.cs, "FAIL")}
+	return BitfieldFail{cs: append(c.cs, "FAIL"), cf: c.cf, ks: c.ks}
 }
 
 func (c BitfieldGet) Build() Completed {
@@ -376,15 +376,15 @@ func (c BitfieldGet) Build() Completed {
 type BitfieldIncrby Completed
 
 func (c BitfieldIncrby) Wrap() BitfieldWrap {
-	return BitfieldWrap{cf: c.cf, cs: append(c.cs, "WRAP")}
+	return BitfieldWrap{cs: append(c.cs, "WRAP"), cf: c.cf, ks: c.ks}
 }
 
 func (c BitfieldIncrby) Sat() BitfieldSat {
-	return BitfieldSat{cf: c.cf, cs: append(c.cs, "SAT")}
+	return BitfieldSat{cs: append(c.cs, "SAT"), cf: c.cf, ks: c.ks}
 }
 
 func (c BitfieldIncrby) Fail() BitfieldFail {
-	return BitfieldFail{cf: c.cf, cs: append(c.cs, "FAIL")}
+	return BitfieldFail{cs: append(c.cs, "FAIL"), cf: c.cf, ks: c.ks}
 }
 
 func (c BitfieldIncrby) Build() Completed {
@@ -394,27 +394,27 @@ func (c BitfieldIncrby) Build() Completed {
 type BitfieldKey Completed
 
 func (c BitfieldKey) Get(Type string, Offset int64) BitfieldGet {
-	return BitfieldGet{cf: c.cf, cs: append(c.cs, "GET", Type, strconv.FormatInt(Offset, 10))}
+	return BitfieldGet{cs: append(c.cs, "GET", Type, strconv.FormatInt(Offset, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c BitfieldKey) Set(Type string, Offset int64, Value int64) BitfieldSet {
-	return BitfieldSet{cf: c.cf, cs: append(c.cs, "SET", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Value, 10))}
+	return BitfieldSet{cs: append(c.cs, "SET", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Value, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c BitfieldKey) Incrby(Type string, Offset int64, Increment int64) BitfieldIncrby {
-	return BitfieldIncrby{cf: c.cf, cs: append(c.cs, "INCRBY", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Increment, 10))}
+	return BitfieldIncrby{cs: append(c.cs, "INCRBY", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Increment, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c BitfieldKey) Wrap() BitfieldWrap {
-	return BitfieldWrap{cf: c.cf, cs: append(c.cs, "WRAP")}
+	return BitfieldWrap{cs: append(c.cs, "WRAP"), cf: c.cf, ks: c.ks}
 }
 
 func (c BitfieldKey) Sat() BitfieldSat {
-	return BitfieldSat{cf: c.cf, cs: append(c.cs, "SAT")}
+	return BitfieldSat{cs: append(c.cs, "SAT"), cf: c.cf, ks: c.ks}
 }
 
 func (c BitfieldKey) Fail() BitfieldFail {
-	return BitfieldFail{cf: c.cf, cs: append(c.cs, "FAIL")}
+	return BitfieldFail{cs: append(c.cs, "FAIL"), cf: c.cf, ks: c.ks}
 }
 
 func (c BitfieldKey) Build() Completed {
@@ -424,7 +424,7 @@ func (c BitfieldKey) Build() Completed {
 type BitfieldRo Completed
 
 func (c BitfieldRo) Key(Key string) BitfieldRoKey {
-	return BitfieldRoKey{cf: c.cf, cs: append(c.cs, Key)}
+	return BitfieldRoKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) BitfieldRo() (c BitfieldRo) {
@@ -445,7 +445,7 @@ func (c BitfieldRoGet) Cache() Cacheable {
 type BitfieldRoKey Completed
 
 func (c BitfieldRoKey) Get(Type string, Offset int64) BitfieldRoGet {
-	return BitfieldRoGet{cf: c.cf, cs: append(c.cs, "GET", Type, strconv.FormatInt(Offset, 10))}
+	return BitfieldRoGet{cs: append(c.cs, "GET", Type, strconv.FormatInt(Offset, 10)), cf: c.cf, ks: c.ks}
 }
 
 type BitfieldSat Completed
@@ -457,19 +457,19 @@ func (c BitfieldSat) Build() Completed {
 type BitfieldSet Completed
 
 func (c BitfieldSet) Incrby(Type string, Offset int64, Increment int64) BitfieldIncrby {
-	return BitfieldIncrby{cf: c.cf, cs: append(c.cs, "INCRBY", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Increment, 10))}
+	return BitfieldIncrby{cs: append(c.cs, "INCRBY", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Increment, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c BitfieldSet) Wrap() BitfieldWrap {
-	return BitfieldWrap{cf: c.cf, cs: append(c.cs, "WRAP")}
+	return BitfieldWrap{cs: append(c.cs, "WRAP"), cf: c.cf, ks: c.ks}
 }
 
 func (c BitfieldSet) Sat() BitfieldSat {
-	return BitfieldSat{cf: c.cf, cs: append(c.cs, "SAT")}
+	return BitfieldSat{cs: append(c.cs, "SAT"), cf: c.cf, ks: c.ks}
 }
 
 func (c BitfieldSet) Fail() BitfieldFail {
-	return BitfieldFail{cf: c.cf, cs: append(c.cs, "FAIL")}
+	return BitfieldFail{cs: append(c.cs, "FAIL"), cf: c.cf, ks: c.ks}
 }
 
 func (c BitfieldSet) Build() Completed {
@@ -485,7 +485,7 @@ func (c BitfieldWrap) Build() Completed {
 type Bitop Completed
 
 func (c Bitop) Operation(Operation string) BitopOperation {
-	return BitopOperation{cf: c.cf, cs: append(c.cs, Operation)}
+	return BitopOperation{cs: append(c.cs, Operation), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Bitop() (c Bitop) {
@@ -496,13 +496,13 @@ func (b *Builder) Bitop() (c Bitop) {
 type BitopDestkey Completed
 
 func (c BitopDestkey) Key(Key ...string) BitopKey {
-	return BitopKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return BitopKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type BitopKey Completed
 
 func (c BitopKey) Key(Key ...string) BitopKey {
-	return BitopKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return BitopKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c BitopKey) Build() Completed {
@@ -512,13 +512,13 @@ func (c BitopKey) Build() Completed {
 type BitopOperation Completed
 
 func (c BitopOperation) Destkey(Destkey string) BitopDestkey {
-	return BitopDestkey{cf: c.cf, cs: append(c.cs, Destkey)}
+	return BitopDestkey{cs: append(c.cs, Destkey), cf: c.cf, ks: c.ks}
 }
 
 type Bitpos Completed
 
 func (c Bitpos) Key(Key string) BitposKey {
-	return BitposKey{cf: c.cf, cs: append(c.cs, Key)}
+	return BitposKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Bitpos() (c Bitpos) {
@@ -529,7 +529,7 @@ func (b *Builder) Bitpos() (c Bitpos) {
 type BitposBit Completed
 
 func (c BitposBit) Start(Start int64) BitposIndexStart {
-	return BitposIndexStart{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Start, 10))}
+	return BitposIndexStart{cs: append(c.cs, strconv.FormatInt(Start, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c BitposBit) Build() Completed {
@@ -553,7 +553,7 @@ func (c BitposIndexEnd) Cache() Cacheable {
 type BitposIndexStart Completed
 
 func (c BitposIndexStart) End(End int64) BitposIndexEnd {
-	return BitposIndexEnd{cf: c.cf, cs: append(c.cs, strconv.FormatInt(End, 10))}
+	return BitposIndexEnd{cs: append(c.cs, strconv.FormatInt(End, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c BitposIndexStart) Build() Completed {
@@ -567,13 +567,13 @@ func (c BitposIndexStart) Cache() Cacheable {
 type BitposKey Completed
 
 func (c BitposKey) Bit(Bit int64) BitposBit {
-	return BitposBit{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Bit, 10))}
+	return BitposBit{cs: append(c.cs, strconv.FormatInt(Bit, 10)), cf: c.cf, ks: c.ks}
 }
 
 type Blmove Completed
 
 func (c Blmove) Source(Source string) BlmoveSource {
-	return BlmoveSource{cf: c.cf, cs: append(c.cs, Source)}
+	return BlmoveSource{cs: append(c.cs, Source), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Blmove() (c Blmove) {
@@ -585,17 +585,17 @@ func (b *Builder) Blmove() (c Blmove) {
 type BlmoveDestination Completed
 
 func (c BlmoveDestination) Left() BlmoveWherefromLeft {
-	return BlmoveWherefromLeft{cf: c.cf, cs: append(c.cs, "LEFT")}
+	return BlmoveWherefromLeft{cs: append(c.cs, "LEFT"), cf: c.cf, ks: c.ks}
 }
 
 func (c BlmoveDestination) Right() BlmoveWherefromRight {
-	return BlmoveWherefromRight{cf: c.cf, cs: append(c.cs, "RIGHT")}
+	return BlmoveWherefromRight{cs: append(c.cs, "RIGHT"), cf: c.cf, ks: c.ks}
 }
 
 type BlmoveSource Completed
 
 func (c BlmoveSource) Destination(Destination string) BlmoveDestination {
-	return BlmoveDestination{cf: c.cf, cs: append(c.cs, Destination)}
+	return BlmoveDestination{cs: append(c.cs, Destination), cf: c.cf, ks: c.ks}
 }
 
 type BlmoveTimeout Completed
@@ -607,39 +607,39 @@ func (c BlmoveTimeout) Build() Completed {
 type BlmoveWherefromLeft Completed
 
 func (c BlmoveWherefromLeft) Left() BlmoveWheretoLeft {
-	return BlmoveWheretoLeft{cf: c.cf, cs: append(c.cs, "LEFT")}
+	return BlmoveWheretoLeft{cs: append(c.cs, "LEFT"), cf: c.cf, ks: c.ks}
 }
 
 func (c BlmoveWherefromLeft) Right() BlmoveWheretoRight {
-	return BlmoveWheretoRight{cf: c.cf, cs: append(c.cs, "RIGHT")}
+	return BlmoveWheretoRight{cs: append(c.cs, "RIGHT"), cf: c.cf, ks: c.ks}
 }
 
 type BlmoveWherefromRight Completed
 
 func (c BlmoveWherefromRight) Left() BlmoveWheretoLeft {
-	return BlmoveWheretoLeft{cf: c.cf, cs: append(c.cs, "LEFT")}
+	return BlmoveWheretoLeft{cs: append(c.cs, "LEFT"), cf: c.cf, ks: c.ks}
 }
 
 func (c BlmoveWherefromRight) Right() BlmoveWheretoRight {
-	return BlmoveWheretoRight{cf: c.cf, cs: append(c.cs, "RIGHT")}
+	return BlmoveWheretoRight{cs: append(c.cs, "RIGHT"), cf: c.cf, ks: c.ks}
 }
 
 type BlmoveWheretoLeft Completed
 
 func (c BlmoveWheretoLeft) Timeout(Timeout float64) BlmoveTimeout {
-	return BlmoveTimeout{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64))}
+	return BlmoveTimeout{cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type BlmoveWheretoRight Completed
 
 func (c BlmoveWheretoRight) Timeout(Timeout float64) BlmoveTimeout {
-	return BlmoveTimeout{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64))}
+	return BlmoveTimeout{cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type Blmpop Completed
 
 func (c Blmpop) Timeout(Timeout float64) BlmpopTimeout {
-	return BlmpopTimeout{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64))}
+	return BlmpopTimeout{cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Blmpop() (c Blmpop) {
@@ -657,41 +657,41 @@ func (c BlmpopCount) Build() Completed {
 type BlmpopKey Completed
 
 func (c BlmpopKey) Left() BlmpopWhereLeft {
-	return BlmpopWhereLeft{cf: c.cf, cs: append(c.cs, "LEFT")}
+	return BlmpopWhereLeft{cs: append(c.cs, "LEFT"), cf: c.cf, ks: c.ks}
 }
 
 func (c BlmpopKey) Right() BlmpopWhereRight {
-	return BlmpopWhereRight{cf: c.cf, cs: append(c.cs, "RIGHT")}
+	return BlmpopWhereRight{cs: append(c.cs, "RIGHT"), cf: c.cf, ks: c.ks}
 }
 
 func (c BlmpopKey) Key(Key ...string) BlmpopKey {
-	return BlmpopKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return BlmpopKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type BlmpopNumkeys Completed
 
 func (c BlmpopNumkeys) Key(Key ...string) BlmpopKey {
-	return BlmpopKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return BlmpopKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c BlmpopNumkeys) Left() BlmpopWhereLeft {
-	return BlmpopWhereLeft{cf: c.cf, cs: append(c.cs, "LEFT")}
+	return BlmpopWhereLeft{cs: append(c.cs, "LEFT"), cf: c.cf, ks: c.ks}
 }
 
 func (c BlmpopNumkeys) Right() BlmpopWhereRight {
-	return BlmpopWhereRight{cf: c.cf, cs: append(c.cs, "RIGHT")}
+	return BlmpopWhereRight{cs: append(c.cs, "RIGHT"), cf: c.cf, ks: c.ks}
 }
 
 type BlmpopTimeout Completed
 
 func (c BlmpopTimeout) Numkeys(Numkeys int64) BlmpopNumkeys {
-	return BlmpopNumkeys{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
+	return BlmpopNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10)), cf: c.cf, ks: c.ks}
 }
 
 type BlmpopWhereLeft Completed
 
 func (c BlmpopWhereLeft) Count(Count int64) BlmpopCount {
-	return BlmpopCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return BlmpopCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c BlmpopWhereLeft) Build() Completed {
@@ -701,7 +701,7 @@ func (c BlmpopWhereLeft) Build() Completed {
 type BlmpopWhereRight Completed
 
 func (c BlmpopWhereRight) Count(Count int64) BlmpopCount {
-	return BlmpopCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return BlmpopCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c BlmpopWhereRight) Build() Completed {
@@ -711,7 +711,7 @@ func (c BlmpopWhereRight) Build() Completed {
 type Blpop Completed
 
 func (c Blpop) Key(Key ...string) BlpopKey {
-	return BlpopKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return BlpopKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Blpop() (c Blpop) {
@@ -723,11 +723,11 @@ func (b *Builder) Blpop() (c Blpop) {
 type BlpopKey Completed
 
 func (c BlpopKey) Timeout(Timeout float64) BlpopTimeout {
-	return BlpopTimeout{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64))}
+	return BlpopTimeout{cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c BlpopKey) Key(Key ...string) BlpopKey {
-	return BlpopKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return BlpopKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type BlpopTimeout Completed
@@ -739,7 +739,7 @@ func (c BlpopTimeout) Build() Completed {
 type Brpop Completed
 
 func (c Brpop) Key(Key ...string) BrpopKey {
-	return BrpopKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return BrpopKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Brpop() (c Brpop) {
@@ -751,11 +751,11 @@ func (b *Builder) Brpop() (c Brpop) {
 type BrpopKey Completed
 
 func (c BrpopKey) Timeout(Timeout float64) BrpopTimeout {
-	return BrpopTimeout{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64))}
+	return BrpopTimeout{cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c BrpopKey) Key(Key ...string) BrpopKey {
-	return BrpopKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return BrpopKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type BrpopTimeout Completed
@@ -767,7 +767,7 @@ func (c BrpopTimeout) Build() Completed {
 type Brpoplpush Completed
 
 func (c Brpoplpush) Source(Source string) BrpoplpushSource {
-	return BrpoplpushSource{cf: c.cf, cs: append(c.cs, Source)}
+	return BrpoplpushSource{cs: append(c.cs, Source), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Brpoplpush() (c Brpoplpush) {
@@ -779,13 +779,13 @@ func (b *Builder) Brpoplpush() (c Brpoplpush) {
 type BrpoplpushDestination Completed
 
 func (c BrpoplpushDestination) Timeout(Timeout float64) BrpoplpushTimeout {
-	return BrpoplpushTimeout{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64))}
+	return BrpoplpushTimeout{cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type BrpoplpushSource Completed
 
 func (c BrpoplpushSource) Destination(Destination string) BrpoplpushDestination {
-	return BrpoplpushDestination{cf: c.cf, cs: append(c.cs, Destination)}
+	return BrpoplpushDestination{cs: append(c.cs, Destination), cf: c.cf, ks: c.ks}
 }
 
 type BrpoplpushTimeout Completed
@@ -797,7 +797,7 @@ func (c BrpoplpushTimeout) Build() Completed {
 type Bzpopmax Completed
 
 func (c Bzpopmax) Key(Key ...string) BzpopmaxKey {
-	return BzpopmaxKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return BzpopmaxKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Bzpopmax() (c Bzpopmax) {
@@ -809,11 +809,11 @@ func (b *Builder) Bzpopmax() (c Bzpopmax) {
 type BzpopmaxKey Completed
 
 func (c BzpopmaxKey) Timeout(Timeout float64) BzpopmaxTimeout {
-	return BzpopmaxTimeout{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64))}
+	return BzpopmaxTimeout{cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c BzpopmaxKey) Key(Key ...string) BzpopmaxKey {
-	return BzpopmaxKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return BzpopmaxKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type BzpopmaxTimeout Completed
@@ -825,7 +825,7 @@ func (c BzpopmaxTimeout) Build() Completed {
 type Bzpopmin Completed
 
 func (c Bzpopmin) Key(Key ...string) BzpopminKey {
-	return BzpopminKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return BzpopminKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Bzpopmin() (c Bzpopmin) {
@@ -837,11 +837,11 @@ func (b *Builder) Bzpopmin() (c Bzpopmin) {
 type BzpopminKey Completed
 
 func (c BzpopminKey) Timeout(Timeout float64) BzpopminTimeout {
-	return BzpopminTimeout{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64))}
+	return BzpopminTimeout{cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c BzpopminKey) Key(Key ...string) BzpopminKey {
-	return BzpopminKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return BzpopminKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type BzpopminTimeout Completed
@@ -853,11 +853,11 @@ func (c BzpopminTimeout) Build() Completed {
 type ClientCaching Completed
 
 func (c ClientCaching) Yes() ClientCachingModeYes {
-	return ClientCachingModeYes{cf: c.cf, cs: append(c.cs, "YES")}
+	return ClientCachingModeYes{cs: append(c.cs, "YES"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientCaching) No() ClientCachingModeNo {
-	return ClientCachingModeNo{cf: c.cf, cs: append(c.cs, "NO")}
+	return ClientCachingModeNo{cs: append(c.cs, "NO"), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) ClientCaching() (c ClientCaching) {
@@ -924,43 +924,43 @@ func (b *Builder) ClientInfo() (c ClientInfo) {
 type ClientKill Completed
 
 func (c ClientKill) IpPort(IpPort string) ClientKillIpPort {
-	return ClientKillIpPort{cf: c.cf, cs: append(c.cs, IpPort)}
+	return ClientKillIpPort{cs: append(c.cs, IpPort), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKill) Id(ClientId int64) ClientKillId {
-	return ClientKillId{cf: c.cf, cs: append(c.cs, "ID", strconv.FormatInt(ClientId, 10))}
+	return ClientKillId{cs: append(c.cs, "ID", strconv.FormatInt(ClientId, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKill) Normal() ClientKillNormal {
-	return ClientKillNormal{cf: c.cf, cs: append(c.cs, "normal")}
+	return ClientKillNormal{cs: append(c.cs, "normal"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKill) Master() ClientKillMaster {
-	return ClientKillMaster{cf: c.cf, cs: append(c.cs, "master")}
+	return ClientKillMaster{cs: append(c.cs, "master"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKill) Slave() ClientKillSlave {
-	return ClientKillSlave{cf: c.cf, cs: append(c.cs, "slave")}
+	return ClientKillSlave{cs: append(c.cs, "slave"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKill) Pubsub() ClientKillPubsub {
-	return ClientKillPubsub{cf: c.cf, cs: append(c.cs, "pubsub")}
+	return ClientKillPubsub{cs: append(c.cs, "pubsub"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKill) User(Username string) ClientKillUser {
-	return ClientKillUser{cf: c.cf, cs: append(c.cs, "USER", Username)}
+	return ClientKillUser{cs: append(c.cs, "USER", Username), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKill) Addr(IpPort string) ClientKillAddr {
-	return ClientKillAddr{cf: c.cf, cs: append(c.cs, "ADDR", IpPort)}
+	return ClientKillAddr{cs: append(c.cs, "ADDR", IpPort), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKill) Laddr(IpPort string) ClientKillLaddr {
-	return ClientKillLaddr{cf: c.cf, cs: append(c.cs, "LADDR", IpPort)}
+	return ClientKillLaddr{cs: append(c.cs, "LADDR", IpPort), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKill) Skipme(YesNo string) ClientKillSkipme {
-	return ClientKillSkipme{cf: c.cf, cs: append(c.cs, "SKIPME", YesNo)}
+	return ClientKillSkipme{cs: append(c.cs, "SKIPME", YesNo), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKill) Build() Completed {
@@ -975,11 +975,11 @@ func (b *Builder) ClientKill() (c ClientKill) {
 type ClientKillAddr Completed
 
 func (c ClientKillAddr) Laddr(IpPort string) ClientKillLaddr {
-	return ClientKillLaddr{cf: c.cf, cs: append(c.cs, "LADDR", IpPort)}
+	return ClientKillLaddr{cs: append(c.cs, "LADDR", IpPort), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKillAddr) Skipme(YesNo string) ClientKillSkipme {
-	return ClientKillSkipme{cf: c.cf, cs: append(c.cs, "SKIPME", YesNo)}
+	return ClientKillSkipme{cs: append(c.cs, "SKIPME", YesNo), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKillAddr) Build() Completed {
@@ -989,35 +989,35 @@ func (c ClientKillAddr) Build() Completed {
 type ClientKillId Completed
 
 func (c ClientKillId) Normal() ClientKillNormal {
-	return ClientKillNormal{cf: c.cf, cs: append(c.cs, "normal")}
+	return ClientKillNormal{cs: append(c.cs, "normal"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKillId) Master() ClientKillMaster {
-	return ClientKillMaster{cf: c.cf, cs: append(c.cs, "master")}
+	return ClientKillMaster{cs: append(c.cs, "master"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKillId) Slave() ClientKillSlave {
-	return ClientKillSlave{cf: c.cf, cs: append(c.cs, "slave")}
+	return ClientKillSlave{cs: append(c.cs, "slave"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKillId) Pubsub() ClientKillPubsub {
-	return ClientKillPubsub{cf: c.cf, cs: append(c.cs, "pubsub")}
+	return ClientKillPubsub{cs: append(c.cs, "pubsub"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKillId) User(Username string) ClientKillUser {
-	return ClientKillUser{cf: c.cf, cs: append(c.cs, "USER", Username)}
+	return ClientKillUser{cs: append(c.cs, "USER", Username), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKillId) Addr(IpPort string) ClientKillAddr {
-	return ClientKillAddr{cf: c.cf, cs: append(c.cs, "ADDR", IpPort)}
+	return ClientKillAddr{cs: append(c.cs, "ADDR", IpPort), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKillId) Laddr(IpPort string) ClientKillLaddr {
-	return ClientKillLaddr{cf: c.cf, cs: append(c.cs, "LADDR", IpPort)}
+	return ClientKillLaddr{cs: append(c.cs, "LADDR", IpPort), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKillId) Skipme(YesNo string) ClientKillSkipme {
-	return ClientKillSkipme{cf: c.cf, cs: append(c.cs, "SKIPME", YesNo)}
+	return ClientKillSkipme{cs: append(c.cs, "SKIPME", YesNo), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKillId) Build() Completed {
@@ -1027,39 +1027,39 @@ func (c ClientKillId) Build() Completed {
 type ClientKillIpPort Completed
 
 func (c ClientKillIpPort) Id(ClientId int64) ClientKillId {
-	return ClientKillId{cf: c.cf, cs: append(c.cs, "ID", strconv.FormatInt(ClientId, 10))}
+	return ClientKillId{cs: append(c.cs, "ID", strconv.FormatInt(ClientId, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKillIpPort) Normal() ClientKillNormal {
-	return ClientKillNormal{cf: c.cf, cs: append(c.cs, "normal")}
+	return ClientKillNormal{cs: append(c.cs, "normal"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKillIpPort) Master() ClientKillMaster {
-	return ClientKillMaster{cf: c.cf, cs: append(c.cs, "master")}
+	return ClientKillMaster{cs: append(c.cs, "master"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKillIpPort) Slave() ClientKillSlave {
-	return ClientKillSlave{cf: c.cf, cs: append(c.cs, "slave")}
+	return ClientKillSlave{cs: append(c.cs, "slave"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKillIpPort) Pubsub() ClientKillPubsub {
-	return ClientKillPubsub{cf: c.cf, cs: append(c.cs, "pubsub")}
+	return ClientKillPubsub{cs: append(c.cs, "pubsub"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKillIpPort) User(Username string) ClientKillUser {
-	return ClientKillUser{cf: c.cf, cs: append(c.cs, "USER", Username)}
+	return ClientKillUser{cs: append(c.cs, "USER", Username), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKillIpPort) Addr(IpPort string) ClientKillAddr {
-	return ClientKillAddr{cf: c.cf, cs: append(c.cs, "ADDR", IpPort)}
+	return ClientKillAddr{cs: append(c.cs, "ADDR", IpPort), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKillIpPort) Laddr(IpPort string) ClientKillLaddr {
-	return ClientKillLaddr{cf: c.cf, cs: append(c.cs, "LADDR", IpPort)}
+	return ClientKillLaddr{cs: append(c.cs, "LADDR", IpPort), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKillIpPort) Skipme(YesNo string) ClientKillSkipme {
-	return ClientKillSkipme{cf: c.cf, cs: append(c.cs, "SKIPME", YesNo)}
+	return ClientKillSkipme{cs: append(c.cs, "SKIPME", YesNo), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKillIpPort) Build() Completed {
@@ -1069,7 +1069,7 @@ func (c ClientKillIpPort) Build() Completed {
 type ClientKillLaddr Completed
 
 func (c ClientKillLaddr) Skipme(YesNo string) ClientKillSkipme {
-	return ClientKillSkipme{cf: c.cf, cs: append(c.cs, "SKIPME", YesNo)}
+	return ClientKillSkipme{cs: append(c.cs, "SKIPME", YesNo), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKillLaddr) Build() Completed {
@@ -1079,19 +1079,19 @@ func (c ClientKillLaddr) Build() Completed {
 type ClientKillMaster Completed
 
 func (c ClientKillMaster) User(Username string) ClientKillUser {
-	return ClientKillUser{cf: c.cf, cs: append(c.cs, "USER", Username)}
+	return ClientKillUser{cs: append(c.cs, "USER", Username), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKillMaster) Addr(IpPort string) ClientKillAddr {
-	return ClientKillAddr{cf: c.cf, cs: append(c.cs, "ADDR", IpPort)}
+	return ClientKillAddr{cs: append(c.cs, "ADDR", IpPort), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKillMaster) Laddr(IpPort string) ClientKillLaddr {
-	return ClientKillLaddr{cf: c.cf, cs: append(c.cs, "LADDR", IpPort)}
+	return ClientKillLaddr{cs: append(c.cs, "LADDR", IpPort), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKillMaster) Skipme(YesNo string) ClientKillSkipme {
-	return ClientKillSkipme{cf: c.cf, cs: append(c.cs, "SKIPME", YesNo)}
+	return ClientKillSkipme{cs: append(c.cs, "SKIPME", YesNo), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKillMaster) Build() Completed {
@@ -1101,19 +1101,19 @@ func (c ClientKillMaster) Build() Completed {
 type ClientKillNormal Completed
 
 func (c ClientKillNormal) User(Username string) ClientKillUser {
-	return ClientKillUser{cf: c.cf, cs: append(c.cs, "USER", Username)}
+	return ClientKillUser{cs: append(c.cs, "USER", Username), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKillNormal) Addr(IpPort string) ClientKillAddr {
-	return ClientKillAddr{cf: c.cf, cs: append(c.cs, "ADDR", IpPort)}
+	return ClientKillAddr{cs: append(c.cs, "ADDR", IpPort), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKillNormal) Laddr(IpPort string) ClientKillLaddr {
-	return ClientKillLaddr{cf: c.cf, cs: append(c.cs, "LADDR", IpPort)}
+	return ClientKillLaddr{cs: append(c.cs, "LADDR", IpPort), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKillNormal) Skipme(YesNo string) ClientKillSkipme {
-	return ClientKillSkipme{cf: c.cf, cs: append(c.cs, "SKIPME", YesNo)}
+	return ClientKillSkipme{cs: append(c.cs, "SKIPME", YesNo), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKillNormal) Build() Completed {
@@ -1123,19 +1123,19 @@ func (c ClientKillNormal) Build() Completed {
 type ClientKillPubsub Completed
 
 func (c ClientKillPubsub) User(Username string) ClientKillUser {
-	return ClientKillUser{cf: c.cf, cs: append(c.cs, "USER", Username)}
+	return ClientKillUser{cs: append(c.cs, "USER", Username), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKillPubsub) Addr(IpPort string) ClientKillAddr {
-	return ClientKillAddr{cf: c.cf, cs: append(c.cs, "ADDR", IpPort)}
+	return ClientKillAddr{cs: append(c.cs, "ADDR", IpPort), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKillPubsub) Laddr(IpPort string) ClientKillLaddr {
-	return ClientKillLaddr{cf: c.cf, cs: append(c.cs, "LADDR", IpPort)}
+	return ClientKillLaddr{cs: append(c.cs, "LADDR", IpPort), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKillPubsub) Skipme(YesNo string) ClientKillSkipme {
-	return ClientKillSkipme{cf: c.cf, cs: append(c.cs, "SKIPME", YesNo)}
+	return ClientKillSkipme{cs: append(c.cs, "SKIPME", YesNo), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKillPubsub) Build() Completed {
@@ -1151,19 +1151,19 @@ func (c ClientKillSkipme) Build() Completed {
 type ClientKillSlave Completed
 
 func (c ClientKillSlave) User(Username string) ClientKillUser {
-	return ClientKillUser{cf: c.cf, cs: append(c.cs, "USER", Username)}
+	return ClientKillUser{cs: append(c.cs, "USER", Username), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKillSlave) Addr(IpPort string) ClientKillAddr {
-	return ClientKillAddr{cf: c.cf, cs: append(c.cs, "ADDR", IpPort)}
+	return ClientKillAddr{cs: append(c.cs, "ADDR", IpPort), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKillSlave) Laddr(IpPort string) ClientKillLaddr {
-	return ClientKillLaddr{cf: c.cf, cs: append(c.cs, "LADDR", IpPort)}
+	return ClientKillLaddr{cs: append(c.cs, "LADDR", IpPort), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKillSlave) Skipme(YesNo string) ClientKillSkipme {
-	return ClientKillSkipme{cf: c.cf, cs: append(c.cs, "SKIPME", YesNo)}
+	return ClientKillSkipme{cs: append(c.cs, "SKIPME", YesNo), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKillSlave) Build() Completed {
@@ -1173,15 +1173,15 @@ func (c ClientKillSlave) Build() Completed {
 type ClientKillUser Completed
 
 func (c ClientKillUser) Addr(IpPort string) ClientKillAddr {
-	return ClientKillAddr{cf: c.cf, cs: append(c.cs, "ADDR", IpPort)}
+	return ClientKillAddr{cs: append(c.cs, "ADDR", IpPort), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKillUser) Laddr(IpPort string) ClientKillLaddr {
-	return ClientKillLaddr{cf: c.cf, cs: append(c.cs, "LADDR", IpPort)}
+	return ClientKillLaddr{cs: append(c.cs, "LADDR", IpPort), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKillUser) Skipme(YesNo string) ClientKillSkipme {
-	return ClientKillSkipme{cf: c.cf, cs: append(c.cs, "SKIPME", YesNo)}
+	return ClientKillSkipme{cs: append(c.cs, "SKIPME", YesNo), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientKillUser) Build() Completed {
@@ -1191,23 +1191,23 @@ func (c ClientKillUser) Build() Completed {
 type ClientList Completed
 
 func (c ClientList) Normal() ClientListNormal {
-	return ClientListNormal{cf: c.cf, cs: append(c.cs, "normal")}
+	return ClientListNormal{cs: append(c.cs, "normal"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientList) Master() ClientListMaster {
-	return ClientListMaster{cf: c.cf, cs: append(c.cs, "master")}
+	return ClientListMaster{cs: append(c.cs, "master"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientList) Replica() ClientListReplica {
-	return ClientListReplica{cf: c.cf, cs: append(c.cs, "replica")}
+	return ClientListReplica{cs: append(c.cs, "replica"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientList) Pubsub() ClientListPubsub {
-	return ClientListPubsub{cf: c.cf, cs: append(c.cs, "pubsub")}
+	return ClientListPubsub{cs: append(c.cs, "pubsub"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientList) Id() ClientListIdId {
-	return ClientListIdId{cf: c.cf, cs: append(c.cs, "ID")}
+	return ClientListIdId{cs: append(c.cs, "ID"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientList) Build() Completed {
@@ -1225,7 +1225,7 @@ func (c ClientListIdClientId) ClientId(ClientId ...int64) ClientListIdClientId {
 	for _, n := range ClientId {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return ClientListIdClientId{cf: c.cf, cs: c.cs}
+	return ClientListIdClientId{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 func (c ClientListIdClientId) Build() Completed {
@@ -1238,13 +1238,13 @@ func (c ClientListIdId) ClientId(ClientId ...int64) ClientListIdClientId {
 	for _, n := range ClientId {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return ClientListIdClientId{cf: c.cf, cs: c.cs}
+	return ClientListIdClientId{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 type ClientListMaster Completed
 
 func (c ClientListMaster) Id() ClientListIdId {
-	return ClientListIdId{cf: c.cf, cs: append(c.cs, "ID")}
+	return ClientListIdId{cs: append(c.cs, "ID"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientListMaster) Build() Completed {
@@ -1254,7 +1254,7 @@ func (c ClientListMaster) Build() Completed {
 type ClientListNormal Completed
 
 func (c ClientListNormal) Id() ClientListIdId {
-	return ClientListIdId{cf: c.cf, cs: append(c.cs, "ID")}
+	return ClientListIdId{cs: append(c.cs, "ID"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientListNormal) Build() Completed {
@@ -1264,7 +1264,7 @@ func (c ClientListNormal) Build() Completed {
 type ClientListPubsub Completed
 
 func (c ClientListPubsub) Id() ClientListIdId {
-	return ClientListIdId{cf: c.cf, cs: append(c.cs, "ID")}
+	return ClientListIdId{cs: append(c.cs, "ID"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientListPubsub) Build() Completed {
@@ -1274,7 +1274,7 @@ func (c ClientListPubsub) Build() Completed {
 type ClientListReplica Completed
 
 func (c ClientListReplica) Id() ClientListIdId {
-	return ClientListIdId{cf: c.cf, cs: append(c.cs, "ID")}
+	return ClientListIdId{cs: append(c.cs, "ID"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientListReplica) Build() Completed {
@@ -1284,11 +1284,11 @@ func (c ClientListReplica) Build() Completed {
 type ClientNoEvict Completed
 
 func (c ClientNoEvict) On() ClientNoEvictEnabledOn {
-	return ClientNoEvictEnabledOn{cf: c.cf, cs: append(c.cs, "ON")}
+	return ClientNoEvictEnabledOn{cs: append(c.cs, "ON"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientNoEvict) Off() ClientNoEvictEnabledOff {
-	return ClientNoEvictEnabledOff{cf: c.cf, cs: append(c.cs, "OFF")}
+	return ClientNoEvictEnabledOff{cs: append(c.cs, "OFF"), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) ClientNoEvict() (c ClientNoEvict) {
@@ -1311,7 +1311,7 @@ func (c ClientNoEvictEnabledOn) Build() Completed {
 type ClientPause Completed
 
 func (c ClientPause) Timeout(Timeout int64) ClientPauseTimeout {
-	return ClientPauseTimeout{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Timeout, 10))}
+	return ClientPauseTimeout{cs: append(c.cs, strconv.FormatInt(Timeout, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) ClientPause() (c ClientPause) {
@@ -1335,11 +1335,11 @@ func (c ClientPauseModeWrite) Build() Completed {
 type ClientPauseTimeout Completed
 
 func (c ClientPauseTimeout) Write() ClientPauseModeWrite {
-	return ClientPauseModeWrite{cf: c.cf, cs: append(c.cs, "WRITE")}
+	return ClientPauseModeWrite{cs: append(c.cs, "WRITE"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientPauseTimeout) All() ClientPauseModeAll {
-	return ClientPauseModeAll{cf: c.cf, cs: append(c.cs, "ALL")}
+	return ClientPauseModeAll{cs: append(c.cs, "ALL"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientPauseTimeout) Build() Completed {
@@ -1349,15 +1349,15 @@ func (c ClientPauseTimeout) Build() Completed {
 type ClientReply Completed
 
 func (c ClientReply) On() ClientReplyReplyModeOn {
-	return ClientReplyReplyModeOn{cf: c.cf, cs: append(c.cs, "ON")}
+	return ClientReplyReplyModeOn{cs: append(c.cs, "ON"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientReply) Off() ClientReplyReplyModeOff {
-	return ClientReplyReplyModeOff{cf: c.cf, cs: append(c.cs, "OFF")}
+	return ClientReplyReplyModeOff{cs: append(c.cs, "OFF"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientReply) Skip() ClientReplyReplyModeSkip {
-	return ClientReplyReplyModeSkip{cf: c.cf, cs: append(c.cs, "SKIP")}
+	return ClientReplyReplyModeSkip{cs: append(c.cs, "SKIP"), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) ClientReply() (c ClientReply) {
@@ -1386,7 +1386,7 @@ func (c ClientReplyReplyModeSkip) Build() Completed {
 type ClientSetname Completed
 
 func (c ClientSetname) ConnectionName(ConnectionName string) ClientSetnameConnectionName {
-	return ClientSetnameConnectionName{cf: c.cf, cs: append(c.cs, ConnectionName)}
+	return ClientSetnameConnectionName{cs: append(c.cs, ConnectionName), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) ClientSetname() (c ClientSetname) {
@@ -1403,11 +1403,11 @@ func (c ClientSetnameConnectionName) Build() Completed {
 type ClientTracking Completed
 
 func (c ClientTracking) On() ClientTrackingStatusOn {
-	return ClientTrackingStatusOn{cf: c.cf, cs: append(c.cs, "ON")}
+	return ClientTrackingStatusOn{cs: append(c.cs, "ON"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientTracking) Off() ClientTrackingStatusOff {
-	return ClientTrackingStatusOff{cf: c.cf, cs: append(c.cs, "OFF")}
+	return ClientTrackingStatusOff{cs: append(c.cs, "OFF"), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) ClientTracking() (c ClientTracking) {
@@ -1418,15 +1418,15 @@ func (b *Builder) ClientTracking() (c ClientTracking) {
 type ClientTrackingBcastBcast Completed
 
 func (c ClientTrackingBcastBcast) Optin() ClientTrackingOptinOptin {
-	return ClientTrackingOptinOptin{cf: c.cf, cs: append(c.cs, "OPTIN")}
+	return ClientTrackingOptinOptin{cs: append(c.cs, "OPTIN"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientTrackingBcastBcast) Optout() ClientTrackingOptoutOptout {
-	return ClientTrackingOptoutOptout{cf: c.cf, cs: append(c.cs, "OPTOUT")}
+	return ClientTrackingOptoutOptout{cs: append(c.cs, "OPTOUT"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientTrackingBcastBcast) Noloop() ClientTrackingNoloopNoloop {
-	return ClientTrackingNoloopNoloop{cf: c.cf, cs: append(c.cs, "NOLOOP")}
+	return ClientTrackingNoloopNoloop{cs: append(c.cs, "NOLOOP"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientTrackingBcastBcast) Build() Completed {
@@ -1442,11 +1442,11 @@ func (c ClientTrackingNoloopNoloop) Build() Completed {
 type ClientTrackingOptinOptin Completed
 
 func (c ClientTrackingOptinOptin) Optout() ClientTrackingOptoutOptout {
-	return ClientTrackingOptoutOptout{cf: c.cf, cs: append(c.cs, "OPTOUT")}
+	return ClientTrackingOptoutOptout{cs: append(c.cs, "OPTOUT"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientTrackingOptinOptin) Noloop() ClientTrackingNoloopNoloop {
-	return ClientTrackingNoloopNoloop{cf: c.cf, cs: append(c.cs, "NOLOOP")}
+	return ClientTrackingNoloopNoloop{cs: append(c.cs, "NOLOOP"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientTrackingOptinOptin) Build() Completed {
@@ -1456,7 +1456,7 @@ func (c ClientTrackingOptinOptin) Build() Completed {
 type ClientTrackingOptoutOptout Completed
 
 func (c ClientTrackingOptoutOptout) Noloop() ClientTrackingNoloopNoloop {
-	return ClientTrackingNoloopNoloop{cf: c.cf, cs: append(c.cs, "NOLOOP")}
+	return ClientTrackingNoloopNoloop{cs: append(c.cs, "NOLOOP"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientTrackingOptoutOptout) Build() Completed {
@@ -1466,23 +1466,23 @@ func (c ClientTrackingOptoutOptout) Build() Completed {
 type ClientTrackingPrefix Completed
 
 func (c ClientTrackingPrefix) Bcast() ClientTrackingBcastBcast {
-	return ClientTrackingBcastBcast{cf: c.cf, cs: append(c.cs, "BCAST")}
+	return ClientTrackingBcastBcast{cs: append(c.cs, "BCAST"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientTrackingPrefix) Optin() ClientTrackingOptinOptin {
-	return ClientTrackingOptinOptin{cf: c.cf, cs: append(c.cs, "OPTIN")}
+	return ClientTrackingOptinOptin{cs: append(c.cs, "OPTIN"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientTrackingPrefix) Optout() ClientTrackingOptoutOptout {
-	return ClientTrackingOptoutOptout{cf: c.cf, cs: append(c.cs, "OPTOUT")}
+	return ClientTrackingOptoutOptout{cs: append(c.cs, "OPTOUT"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientTrackingPrefix) Noloop() ClientTrackingNoloopNoloop {
-	return ClientTrackingNoloopNoloop{cf: c.cf, cs: append(c.cs, "NOLOOP")}
+	return ClientTrackingNoloopNoloop{cs: append(c.cs, "NOLOOP"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientTrackingPrefix) Prefix(Prefix ...string) ClientTrackingPrefix {
-	return ClientTrackingPrefix{cf: c.cf, cs: append(c.cs, Prefix...)}
+	return ClientTrackingPrefix{cs: append(c.cs, Prefix...), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientTrackingPrefix) Build() Completed {
@@ -1493,23 +1493,23 @@ type ClientTrackingRedirect Completed
 
 func (c ClientTrackingRedirect) Prefix(Prefix ...string) ClientTrackingPrefix {
 	c.cs = append(c.cs, "PREFIX")
-	return ClientTrackingPrefix{cf: c.cf, cs: append(c.cs, Prefix...)}
+	return ClientTrackingPrefix{cs: append(c.cs, Prefix...), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientTrackingRedirect) Bcast() ClientTrackingBcastBcast {
-	return ClientTrackingBcastBcast{cf: c.cf, cs: append(c.cs, "BCAST")}
+	return ClientTrackingBcastBcast{cs: append(c.cs, "BCAST"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientTrackingRedirect) Optin() ClientTrackingOptinOptin {
-	return ClientTrackingOptinOptin{cf: c.cf, cs: append(c.cs, "OPTIN")}
+	return ClientTrackingOptinOptin{cs: append(c.cs, "OPTIN"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientTrackingRedirect) Optout() ClientTrackingOptoutOptout {
-	return ClientTrackingOptoutOptout{cf: c.cf, cs: append(c.cs, "OPTOUT")}
+	return ClientTrackingOptoutOptout{cs: append(c.cs, "OPTOUT"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientTrackingRedirect) Noloop() ClientTrackingNoloopNoloop {
-	return ClientTrackingNoloopNoloop{cf: c.cf, cs: append(c.cs, "NOLOOP")}
+	return ClientTrackingNoloopNoloop{cs: append(c.cs, "NOLOOP"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientTrackingRedirect) Build() Completed {
@@ -1519,28 +1519,28 @@ func (c ClientTrackingRedirect) Build() Completed {
 type ClientTrackingStatusOff Completed
 
 func (c ClientTrackingStatusOff) Redirect(ClientId int64) ClientTrackingRedirect {
-	return ClientTrackingRedirect{cf: c.cf, cs: append(c.cs, "REDIRECT", strconv.FormatInt(ClientId, 10))}
+	return ClientTrackingRedirect{cs: append(c.cs, "REDIRECT", strconv.FormatInt(ClientId, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientTrackingStatusOff) Prefix(Prefix ...string) ClientTrackingPrefix {
 	c.cs = append(c.cs, "PREFIX")
-	return ClientTrackingPrefix{cf: c.cf, cs: append(c.cs, Prefix...)}
+	return ClientTrackingPrefix{cs: append(c.cs, Prefix...), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientTrackingStatusOff) Bcast() ClientTrackingBcastBcast {
-	return ClientTrackingBcastBcast{cf: c.cf, cs: append(c.cs, "BCAST")}
+	return ClientTrackingBcastBcast{cs: append(c.cs, "BCAST"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientTrackingStatusOff) Optin() ClientTrackingOptinOptin {
-	return ClientTrackingOptinOptin{cf: c.cf, cs: append(c.cs, "OPTIN")}
+	return ClientTrackingOptinOptin{cs: append(c.cs, "OPTIN"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientTrackingStatusOff) Optout() ClientTrackingOptoutOptout {
-	return ClientTrackingOptoutOptout{cf: c.cf, cs: append(c.cs, "OPTOUT")}
+	return ClientTrackingOptoutOptout{cs: append(c.cs, "OPTOUT"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientTrackingStatusOff) Noloop() ClientTrackingNoloopNoloop {
-	return ClientTrackingNoloopNoloop{cf: c.cf, cs: append(c.cs, "NOLOOP")}
+	return ClientTrackingNoloopNoloop{cs: append(c.cs, "NOLOOP"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientTrackingStatusOff) Build() Completed {
@@ -1550,28 +1550,28 @@ func (c ClientTrackingStatusOff) Build() Completed {
 type ClientTrackingStatusOn Completed
 
 func (c ClientTrackingStatusOn) Redirect(ClientId int64) ClientTrackingRedirect {
-	return ClientTrackingRedirect{cf: c.cf, cs: append(c.cs, "REDIRECT", strconv.FormatInt(ClientId, 10))}
+	return ClientTrackingRedirect{cs: append(c.cs, "REDIRECT", strconv.FormatInt(ClientId, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientTrackingStatusOn) Prefix(Prefix ...string) ClientTrackingPrefix {
 	c.cs = append(c.cs, "PREFIX")
-	return ClientTrackingPrefix{cf: c.cf, cs: append(c.cs, Prefix...)}
+	return ClientTrackingPrefix{cs: append(c.cs, Prefix...), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientTrackingStatusOn) Bcast() ClientTrackingBcastBcast {
-	return ClientTrackingBcastBcast{cf: c.cf, cs: append(c.cs, "BCAST")}
+	return ClientTrackingBcastBcast{cs: append(c.cs, "BCAST"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientTrackingStatusOn) Optin() ClientTrackingOptinOptin {
-	return ClientTrackingOptinOptin{cf: c.cf, cs: append(c.cs, "OPTIN")}
+	return ClientTrackingOptinOptin{cs: append(c.cs, "OPTIN"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientTrackingStatusOn) Optout() ClientTrackingOptoutOptout {
-	return ClientTrackingOptoutOptout{cf: c.cf, cs: append(c.cs, "OPTOUT")}
+	return ClientTrackingOptoutOptout{cs: append(c.cs, "OPTOUT"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientTrackingStatusOn) Noloop() ClientTrackingNoloopNoloop {
-	return ClientTrackingNoloopNoloop{cf: c.cf, cs: append(c.cs, "NOLOOP")}
+	return ClientTrackingNoloopNoloop{cs: append(c.cs, "NOLOOP"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientTrackingStatusOn) Build() Completed {
@@ -1592,7 +1592,7 @@ func (b *Builder) ClientTrackinginfo() (c ClientTrackinginfo) {
 type ClientUnblock Completed
 
 func (c ClientUnblock) ClientId(ClientId int64) ClientUnblockClientId {
-	return ClientUnblockClientId{cf: c.cf, cs: append(c.cs, strconv.FormatInt(ClientId, 10))}
+	return ClientUnblockClientId{cs: append(c.cs, strconv.FormatInt(ClientId, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) ClientUnblock() (c ClientUnblock) {
@@ -1603,11 +1603,11 @@ func (b *Builder) ClientUnblock() (c ClientUnblock) {
 type ClientUnblockClientId Completed
 
 func (c ClientUnblockClientId) Timeout() ClientUnblockUnblockTypeTimeout {
-	return ClientUnblockUnblockTypeTimeout{cf: c.cf, cs: append(c.cs, "TIMEOUT")}
+	return ClientUnblockUnblockTypeTimeout{cs: append(c.cs, "TIMEOUT"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientUnblockClientId) Error() ClientUnblockUnblockTypeError {
-	return ClientUnblockUnblockTypeError{cf: c.cf, cs: append(c.cs, "ERROR")}
+	return ClientUnblockUnblockTypeError{cs: append(c.cs, "ERROR"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClientUnblockClientId) Build() Completed {
@@ -1643,7 +1643,7 @@ func (c ClusterAddslots) Slot(Slot ...int64) ClusterAddslotsSlot {
 	for _, n := range Slot {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return ClusterAddslotsSlot{cf: c.cf, cs: c.cs}
+	return ClusterAddslotsSlot{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) ClusterAddslots() (c ClusterAddslots) {
@@ -1657,7 +1657,7 @@ func (c ClusterAddslotsSlot) Slot(Slot ...int64) ClusterAddslotsSlot {
 	for _, n := range Slot {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return ClusterAddslotsSlot{cf: c.cf, cs: c.cs}
+	return ClusterAddslotsSlot{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 func (c ClusterAddslotsSlot) Build() Completed {
@@ -1678,7 +1678,7 @@ func (b *Builder) ClusterBumpepoch() (c ClusterBumpepoch) {
 type ClusterCountFailureReports Completed
 
 func (c ClusterCountFailureReports) NodeId(NodeId string) ClusterCountFailureReportsNodeId {
-	return ClusterCountFailureReportsNodeId{cf: c.cf, cs: append(c.cs, NodeId)}
+	return ClusterCountFailureReportsNodeId{cs: append(c.cs, NodeId), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) ClusterCountFailureReports() (c ClusterCountFailureReports) {
@@ -1695,7 +1695,7 @@ func (c ClusterCountFailureReportsNodeId) Build() Completed {
 type ClusterCountkeysinslot Completed
 
 func (c ClusterCountkeysinslot) Slot(Slot int64) ClusterCountkeysinslotSlot {
-	return ClusterCountkeysinslotSlot{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Slot, 10))}
+	return ClusterCountkeysinslotSlot{cs: append(c.cs, strconv.FormatInt(Slot, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) ClusterCountkeysinslot() (c ClusterCountkeysinslot) {
@@ -1715,7 +1715,7 @@ func (c ClusterDelslots) Slot(Slot ...int64) ClusterDelslotsSlot {
 	for _, n := range Slot {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return ClusterDelslotsSlot{cf: c.cf, cs: c.cs}
+	return ClusterDelslotsSlot{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) ClusterDelslots() (c ClusterDelslots) {
@@ -1729,7 +1729,7 @@ func (c ClusterDelslotsSlot) Slot(Slot ...int64) ClusterDelslotsSlot {
 	for _, n := range Slot {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return ClusterDelslotsSlot{cf: c.cf, cs: c.cs}
+	return ClusterDelslotsSlot{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 func (c ClusterDelslotsSlot) Build() Completed {
@@ -1739,11 +1739,11 @@ func (c ClusterDelslotsSlot) Build() Completed {
 type ClusterFailover Completed
 
 func (c ClusterFailover) Force() ClusterFailoverOptionsForce {
-	return ClusterFailoverOptionsForce{cf: c.cf, cs: append(c.cs, "FORCE")}
+	return ClusterFailoverOptionsForce{cs: append(c.cs, "FORCE"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClusterFailover) Takeover() ClusterFailoverOptionsTakeover {
-	return ClusterFailoverOptionsTakeover{cf: c.cf, cs: append(c.cs, "TAKEOVER")}
+	return ClusterFailoverOptionsTakeover{cs: append(c.cs, "TAKEOVER"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClusterFailover) Build() Completed {
@@ -1781,7 +1781,7 @@ func (b *Builder) ClusterFlushslots() (c ClusterFlushslots) {
 type ClusterForget Completed
 
 func (c ClusterForget) NodeId(NodeId string) ClusterForgetNodeId {
-	return ClusterForgetNodeId{cf: c.cf, cs: append(c.cs, NodeId)}
+	return ClusterForgetNodeId{cs: append(c.cs, NodeId), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) ClusterForget() (c ClusterForget) {
@@ -1798,7 +1798,7 @@ func (c ClusterForgetNodeId) Build() Completed {
 type ClusterGetkeysinslot Completed
 
 func (c ClusterGetkeysinslot) Slot(Slot int64) ClusterGetkeysinslotSlot {
-	return ClusterGetkeysinslotSlot{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Slot, 10))}
+	return ClusterGetkeysinslotSlot{cs: append(c.cs, strconv.FormatInt(Slot, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) ClusterGetkeysinslot() (c ClusterGetkeysinslot) {
@@ -1815,7 +1815,7 @@ func (c ClusterGetkeysinslotCount) Build() Completed {
 type ClusterGetkeysinslotSlot Completed
 
 func (c ClusterGetkeysinslotSlot) Count(Count int64) ClusterGetkeysinslotCount {
-	return ClusterGetkeysinslotCount{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Count, 10))}
+	return ClusterGetkeysinslotCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 type ClusterInfo Completed
@@ -1832,7 +1832,7 @@ func (b *Builder) ClusterInfo() (c ClusterInfo) {
 type ClusterKeyslot Completed
 
 func (c ClusterKeyslot) Key(Key string) ClusterKeyslotKey {
-	return ClusterKeyslotKey{cf: c.cf, cs: append(c.cs, Key)}
+	return ClusterKeyslotKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) ClusterKeyslot() (c ClusterKeyslot) {
@@ -1849,7 +1849,7 @@ func (c ClusterKeyslotKey) Build() Completed {
 type ClusterMeet Completed
 
 func (c ClusterMeet) Ip(Ip string) ClusterMeetIp {
-	return ClusterMeetIp{cf: c.cf, cs: append(c.cs, Ip)}
+	return ClusterMeetIp{cs: append(c.cs, Ip), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) ClusterMeet() (c ClusterMeet) {
@@ -1860,7 +1860,7 @@ func (b *Builder) ClusterMeet() (c ClusterMeet) {
 type ClusterMeetIp Completed
 
 func (c ClusterMeetIp) Port(Port int64) ClusterMeetPort {
-	return ClusterMeetPort{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Port, 10))}
+	return ClusterMeetPort{cs: append(c.cs, strconv.FormatInt(Port, 10)), cf: c.cf, ks: c.ks}
 }
 
 type ClusterMeetPort Completed
@@ -1894,7 +1894,7 @@ func (b *Builder) ClusterNodes() (c ClusterNodes) {
 type ClusterReplicas Completed
 
 func (c ClusterReplicas) NodeId(NodeId string) ClusterReplicasNodeId {
-	return ClusterReplicasNodeId{cf: c.cf, cs: append(c.cs, NodeId)}
+	return ClusterReplicasNodeId{cs: append(c.cs, NodeId), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) ClusterReplicas() (c ClusterReplicas) {
@@ -1911,7 +1911,7 @@ func (c ClusterReplicasNodeId) Build() Completed {
 type ClusterReplicate Completed
 
 func (c ClusterReplicate) NodeId(NodeId string) ClusterReplicateNodeId {
-	return ClusterReplicateNodeId{cf: c.cf, cs: append(c.cs, NodeId)}
+	return ClusterReplicateNodeId{cs: append(c.cs, NodeId), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) ClusterReplicate() (c ClusterReplicate) {
@@ -1928,11 +1928,11 @@ func (c ClusterReplicateNodeId) Build() Completed {
 type ClusterReset Completed
 
 func (c ClusterReset) Hard() ClusterResetResetTypeHard {
-	return ClusterResetResetTypeHard{cf: c.cf, cs: append(c.cs, "HARD")}
+	return ClusterResetResetTypeHard{cs: append(c.cs, "HARD"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClusterReset) Soft() ClusterResetResetTypeSoft {
-	return ClusterResetResetTypeSoft{cf: c.cf, cs: append(c.cs, "SOFT")}
+	return ClusterResetResetTypeSoft{cs: append(c.cs, "SOFT"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClusterReset) Build() Completed {
@@ -1970,7 +1970,7 @@ func (b *Builder) ClusterSaveconfig() (c ClusterSaveconfig) {
 type ClusterSetConfigEpoch Completed
 
 func (c ClusterSetConfigEpoch) ConfigEpoch(ConfigEpoch int64) ClusterSetConfigEpochConfigEpoch {
-	return ClusterSetConfigEpochConfigEpoch{cf: c.cf, cs: append(c.cs, strconv.FormatInt(ConfigEpoch, 10))}
+	return ClusterSetConfigEpochConfigEpoch{cs: append(c.cs, strconv.FormatInt(ConfigEpoch, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) ClusterSetConfigEpoch() (c ClusterSetConfigEpoch) {
@@ -1987,7 +1987,7 @@ func (c ClusterSetConfigEpochConfigEpoch) Build() Completed {
 type ClusterSetslot Completed
 
 func (c ClusterSetslot) Slot(Slot int64) ClusterSetslotSlot {
-	return ClusterSetslotSlot{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Slot, 10))}
+	return ClusterSetslotSlot{cs: append(c.cs, strconv.FormatInt(Slot, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) ClusterSetslot() (c ClusterSetslot) {
@@ -2004,25 +2004,25 @@ func (c ClusterSetslotNodeId) Build() Completed {
 type ClusterSetslotSlot Completed
 
 func (c ClusterSetslotSlot) Importing() ClusterSetslotSubcommandImporting {
-	return ClusterSetslotSubcommandImporting{cf: c.cf, cs: append(c.cs, "IMPORTING")}
+	return ClusterSetslotSubcommandImporting{cs: append(c.cs, "IMPORTING"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClusterSetslotSlot) Migrating() ClusterSetslotSubcommandMigrating {
-	return ClusterSetslotSubcommandMigrating{cf: c.cf, cs: append(c.cs, "MIGRATING")}
+	return ClusterSetslotSubcommandMigrating{cs: append(c.cs, "MIGRATING"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClusterSetslotSlot) Stable() ClusterSetslotSubcommandStable {
-	return ClusterSetslotSubcommandStable{cf: c.cf, cs: append(c.cs, "STABLE")}
+	return ClusterSetslotSubcommandStable{cs: append(c.cs, "STABLE"), cf: c.cf, ks: c.ks}
 }
 
 func (c ClusterSetslotSlot) Node() ClusterSetslotSubcommandNode {
-	return ClusterSetslotSubcommandNode{cf: c.cf, cs: append(c.cs, "NODE")}
+	return ClusterSetslotSubcommandNode{cs: append(c.cs, "NODE"), cf: c.cf, ks: c.ks}
 }
 
 type ClusterSetslotSubcommandImporting Completed
 
 func (c ClusterSetslotSubcommandImporting) NodeId(NodeId string) ClusterSetslotNodeId {
-	return ClusterSetslotNodeId{cf: c.cf, cs: append(c.cs, NodeId)}
+	return ClusterSetslotNodeId{cs: append(c.cs, NodeId), cf: c.cf, ks: c.ks}
 }
 
 func (c ClusterSetslotSubcommandImporting) Build() Completed {
@@ -2032,7 +2032,7 @@ func (c ClusterSetslotSubcommandImporting) Build() Completed {
 type ClusterSetslotSubcommandMigrating Completed
 
 func (c ClusterSetslotSubcommandMigrating) NodeId(NodeId string) ClusterSetslotNodeId {
-	return ClusterSetslotNodeId{cf: c.cf, cs: append(c.cs, NodeId)}
+	return ClusterSetslotNodeId{cs: append(c.cs, NodeId), cf: c.cf, ks: c.ks}
 }
 
 func (c ClusterSetslotSubcommandMigrating) Build() Completed {
@@ -2042,7 +2042,7 @@ func (c ClusterSetslotSubcommandMigrating) Build() Completed {
 type ClusterSetslotSubcommandNode Completed
 
 func (c ClusterSetslotSubcommandNode) NodeId(NodeId string) ClusterSetslotNodeId {
-	return ClusterSetslotNodeId{cf: c.cf, cs: append(c.cs, NodeId)}
+	return ClusterSetslotNodeId{cs: append(c.cs, NodeId), cf: c.cf, ks: c.ks}
 }
 
 func (c ClusterSetslotSubcommandNode) Build() Completed {
@@ -2052,7 +2052,7 @@ func (c ClusterSetslotSubcommandNode) Build() Completed {
 type ClusterSetslotSubcommandStable Completed
 
 func (c ClusterSetslotSubcommandStable) NodeId(NodeId string) ClusterSetslotNodeId {
-	return ClusterSetslotNodeId{cf: c.cf, cs: append(c.cs, NodeId)}
+	return ClusterSetslotNodeId{cs: append(c.cs, NodeId), cf: c.cf, ks: c.ks}
 }
 
 func (c ClusterSetslotSubcommandStable) Build() Completed {
@@ -2062,7 +2062,7 @@ func (c ClusterSetslotSubcommandStable) Build() Completed {
 type ClusterSlaves Completed
 
 func (c ClusterSlaves) NodeId(NodeId string) ClusterSlavesNodeId {
-	return ClusterSlavesNodeId{cf: c.cf, cs: append(c.cs, NodeId)}
+	return ClusterSlavesNodeId{cs: append(c.cs, NodeId), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) ClusterSlaves() (c ClusterSlaves) {
@@ -2123,7 +2123,7 @@ func (b *Builder) CommandGetkeys() (c CommandGetkeys) {
 type CommandInfo Completed
 
 func (c CommandInfo) CommandName(CommandName ...string) CommandInfoCommandName {
-	return CommandInfoCommandName{cf: c.cf, cs: append(c.cs, CommandName...)}
+	return CommandInfoCommandName{cs: append(c.cs, CommandName...), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) CommandInfo() (c CommandInfo) {
@@ -2134,7 +2134,7 @@ func (b *Builder) CommandInfo() (c CommandInfo) {
 type CommandInfoCommandName Completed
 
 func (c CommandInfoCommandName) CommandName(CommandName ...string) CommandInfoCommandName {
-	return CommandInfoCommandName{cf: c.cf, cs: append(c.cs, CommandName...)}
+	return CommandInfoCommandName{cs: append(c.cs, CommandName...), cf: c.cf, ks: c.ks}
 }
 
 func (c CommandInfoCommandName) Build() Completed {
@@ -2144,7 +2144,7 @@ func (c CommandInfoCommandName) Build() Completed {
 type ConfigGet Completed
 
 func (c ConfigGet) Parameter(Parameter string) ConfigGetParameter {
-	return ConfigGetParameter{cf: c.cf, cs: append(c.cs, Parameter)}
+	return ConfigGetParameter{cs: append(c.cs, Parameter), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) ConfigGet() (c ConfigGet) {
@@ -2183,7 +2183,7 @@ func (b *Builder) ConfigRewrite() (c ConfigRewrite) {
 type ConfigSet Completed
 
 func (c ConfigSet) Parameter(Parameter string) ConfigSetParameter {
-	return ConfigSetParameter{cf: c.cf, cs: append(c.cs, Parameter)}
+	return ConfigSetParameter{cs: append(c.cs, Parameter), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) ConfigSet() (c ConfigSet) {
@@ -2194,7 +2194,7 @@ func (b *Builder) ConfigSet() (c ConfigSet) {
 type ConfigSetParameter Completed
 
 func (c ConfigSetParameter) Value(Value string) ConfigSetValue {
-	return ConfigSetValue{cf: c.cf, cs: append(c.cs, Value)}
+	return ConfigSetValue{cs: append(c.cs, Value), cf: c.cf, ks: c.ks}
 }
 
 type ConfigSetValue Completed
@@ -2206,7 +2206,7 @@ func (c ConfigSetValue) Build() Completed {
 type Copy Completed
 
 func (c Copy) Source(Source string) CopySource {
-	return CopySource{cf: c.cf, cs: append(c.cs, Source)}
+	return CopySource{cs: append(c.cs, Source), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Copy() (c Copy) {
@@ -2217,7 +2217,7 @@ func (b *Builder) Copy() (c Copy) {
 type CopyDb Completed
 
 func (c CopyDb) Replace() CopyReplaceReplace {
-	return CopyReplaceReplace{cf: c.cf, cs: append(c.cs, "REPLACE")}
+	return CopyReplaceReplace{cs: append(c.cs, "REPLACE"), cf: c.cf, ks: c.ks}
 }
 
 func (c CopyDb) Build() Completed {
@@ -2227,11 +2227,11 @@ func (c CopyDb) Build() Completed {
 type CopyDestination Completed
 
 func (c CopyDestination) Db(DestinationDb int64) CopyDb {
-	return CopyDb{cf: c.cf, cs: append(c.cs, "DB", strconv.FormatInt(DestinationDb, 10))}
+	return CopyDb{cs: append(c.cs, "DB", strconv.FormatInt(DestinationDb, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c CopyDestination) Replace() CopyReplaceReplace {
-	return CopyReplaceReplace{cf: c.cf, cs: append(c.cs, "REPLACE")}
+	return CopyReplaceReplace{cs: append(c.cs, "REPLACE"), cf: c.cf, ks: c.ks}
 }
 
 func (c CopyDestination) Build() Completed {
@@ -2247,7 +2247,7 @@ func (c CopyReplaceReplace) Build() Completed {
 type CopySource Completed
 
 func (c CopySource) Destination(Destination string) CopyDestination {
-	return CopyDestination{cf: c.cf, cs: append(c.cs, Destination)}
+	return CopyDestination{cs: append(c.cs, Destination), cf: c.cf, ks: c.ks}
 }
 
 type Dbsize Completed
@@ -2264,7 +2264,7 @@ func (b *Builder) Dbsize() (c Dbsize) {
 type DebugObject Completed
 
 func (c DebugObject) Key(Key string) DebugObjectKey {
-	return DebugObjectKey{cf: c.cf, cs: append(c.cs, Key)}
+	return DebugObjectKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) DebugObject() (c DebugObject) {
@@ -2292,7 +2292,7 @@ func (b *Builder) DebugSegfault() (c DebugSegfault) {
 type Decr Completed
 
 func (c Decr) Key(Key string) DecrKey {
-	return DecrKey{cf: c.cf, cs: append(c.cs, Key)}
+	return DecrKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Decr() (c Decr) {
@@ -2309,7 +2309,7 @@ func (c DecrKey) Build() Completed {
 type Decrby Completed
 
 func (c Decrby) Key(Key string) DecrbyKey {
-	return DecrbyKey{cf: c.cf, cs: append(c.cs, Key)}
+	return DecrbyKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Decrby() (c Decrby) {
@@ -2326,13 +2326,13 @@ func (c DecrbyDecrement) Build() Completed {
 type DecrbyKey Completed
 
 func (c DecrbyKey) Decrement(Decrement int64) DecrbyDecrement {
-	return DecrbyDecrement{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Decrement, 10))}
+	return DecrbyDecrement{cs: append(c.cs, strconv.FormatInt(Decrement, 10)), cf: c.cf, ks: c.ks}
 }
 
 type Del Completed
 
 func (c Del) Key(Key ...string) DelKey {
-	return DelKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return DelKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Del() (c Del) {
@@ -2343,7 +2343,7 @@ func (b *Builder) Del() (c Del) {
 type DelKey Completed
 
 func (c DelKey) Key(Key ...string) DelKey {
-	return DelKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return DelKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c DelKey) Build() Completed {
@@ -2364,7 +2364,7 @@ func (b *Builder) Discard() (c Discard) {
 type Dump Completed
 
 func (c Dump) Key(Key string) DumpKey {
-	return DumpKey{cf: c.cf, cs: append(c.cs, Key)}
+	return DumpKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Dump() (c Dump) {
@@ -2381,7 +2381,7 @@ func (c DumpKey) Build() Completed {
 type Echo Completed
 
 func (c Echo) Message(Message string) EchoMessage {
-	return EchoMessage{cf: c.cf, cs: append(c.cs, Message)}
+	return EchoMessage{cs: append(c.cs, Message), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Echo() (c Echo) {
@@ -2398,7 +2398,7 @@ func (c EchoMessage) Build() Completed {
 type Eval Completed
 
 func (c Eval) Script(Script string) EvalScript {
-	return EvalScript{cf: c.cf, cs: append(c.cs, Script)}
+	return EvalScript{cs: append(c.cs, Script), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Eval() (c Eval) {
@@ -2409,7 +2409,7 @@ func (b *Builder) Eval() (c Eval) {
 type EvalArg Completed
 
 func (c EvalArg) Arg(Arg ...string) EvalArg {
-	return EvalArg{cf: c.cf, cs: append(c.cs, Arg...)}
+	return EvalArg{cs: append(c.cs, Arg...), cf: c.cf, ks: c.ks}
 }
 
 func (c EvalArg) Build() Completed {
@@ -2419,11 +2419,11 @@ func (c EvalArg) Build() Completed {
 type EvalKey Completed
 
 func (c EvalKey) Arg(Arg ...string) EvalArg {
-	return EvalArg{cf: c.cf, cs: append(c.cs, Arg...)}
+	return EvalArg{cs: append(c.cs, Arg...), cf: c.cf, ks: c.ks}
 }
 
 func (c EvalKey) Key(Key ...string) EvalKey {
-	return EvalKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return EvalKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c EvalKey) Build() Completed {
@@ -2433,11 +2433,11 @@ func (c EvalKey) Build() Completed {
 type EvalNumkeys Completed
 
 func (c EvalNumkeys) Key(Key ...string) EvalKey {
-	return EvalKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return EvalKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c EvalNumkeys) Arg(Arg ...string) EvalArg {
-	return EvalArg{cf: c.cf, cs: append(c.cs, Arg...)}
+	return EvalArg{cs: append(c.cs, Arg...), cf: c.cf, ks: c.ks}
 }
 
 func (c EvalNumkeys) Build() Completed {
@@ -2447,7 +2447,7 @@ func (c EvalNumkeys) Build() Completed {
 type EvalRo Completed
 
 func (c EvalRo) Script(Script string) EvalRoScript {
-	return EvalRoScript{cf: c.cf, cs: append(c.cs, Script)}
+	return EvalRoScript{cs: append(c.cs, Script), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) EvalRo() (c EvalRo) {
@@ -2458,7 +2458,7 @@ func (b *Builder) EvalRo() (c EvalRo) {
 type EvalRoArg Completed
 
 func (c EvalRoArg) Arg(Arg ...string) EvalRoArg {
-	return EvalRoArg{cf: c.cf, cs: append(c.cs, Arg...)}
+	return EvalRoArg{cs: append(c.cs, Arg...), cf: c.cf, ks: c.ks}
 }
 
 func (c EvalRoArg) Build() Completed {
@@ -2468,35 +2468,35 @@ func (c EvalRoArg) Build() Completed {
 type EvalRoKey Completed
 
 func (c EvalRoKey) Arg(Arg ...string) EvalRoArg {
-	return EvalRoArg{cf: c.cf, cs: append(c.cs, Arg...)}
+	return EvalRoArg{cs: append(c.cs, Arg...), cf: c.cf, ks: c.ks}
 }
 
 func (c EvalRoKey) Key(Key ...string) EvalRoKey {
-	return EvalRoKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return EvalRoKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type EvalRoNumkeys Completed
 
 func (c EvalRoNumkeys) Key(Key ...string) EvalRoKey {
-	return EvalRoKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return EvalRoKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type EvalRoScript Completed
 
 func (c EvalRoScript) Numkeys(Numkeys int64) EvalRoNumkeys {
-	return EvalRoNumkeys{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
+	return EvalRoNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10)), cf: c.cf, ks: c.ks}
 }
 
 type EvalScript Completed
 
 func (c EvalScript) Numkeys(Numkeys int64) EvalNumkeys {
-	return EvalNumkeys{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
+	return EvalNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10)), cf: c.cf, ks: c.ks}
 }
 
 type Evalsha Completed
 
 func (c Evalsha) Sha1(Sha1 string) EvalshaSha1 {
-	return EvalshaSha1{cf: c.cf, cs: append(c.cs, Sha1)}
+	return EvalshaSha1{cs: append(c.cs, Sha1), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Evalsha() (c Evalsha) {
@@ -2507,7 +2507,7 @@ func (b *Builder) Evalsha() (c Evalsha) {
 type EvalshaArg Completed
 
 func (c EvalshaArg) Arg(Arg ...string) EvalshaArg {
-	return EvalshaArg{cf: c.cf, cs: append(c.cs, Arg...)}
+	return EvalshaArg{cs: append(c.cs, Arg...), cf: c.cf, ks: c.ks}
 }
 
 func (c EvalshaArg) Build() Completed {
@@ -2517,11 +2517,11 @@ func (c EvalshaArg) Build() Completed {
 type EvalshaKey Completed
 
 func (c EvalshaKey) Arg(Arg ...string) EvalshaArg {
-	return EvalshaArg{cf: c.cf, cs: append(c.cs, Arg...)}
+	return EvalshaArg{cs: append(c.cs, Arg...), cf: c.cf, ks: c.ks}
 }
 
 func (c EvalshaKey) Key(Key ...string) EvalshaKey {
-	return EvalshaKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return EvalshaKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c EvalshaKey) Build() Completed {
@@ -2531,11 +2531,11 @@ func (c EvalshaKey) Build() Completed {
 type EvalshaNumkeys Completed
 
 func (c EvalshaNumkeys) Key(Key ...string) EvalshaKey {
-	return EvalshaKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return EvalshaKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c EvalshaNumkeys) Arg(Arg ...string) EvalshaArg {
-	return EvalshaArg{cf: c.cf, cs: append(c.cs, Arg...)}
+	return EvalshaArg{cs: append(c.cs, Arg...), cf: c.cf, ks: c.ks}
 }
 
 func (c EvalshaNumkeys) Build() Completed {
@@ -2545,7 +2545,7 @@ func (c EvalshaNumkeys) Build() Completed {
 type EvalshaRo Completed
 
 func (c EvalshaRo) Sha1(Sha1 string) EvalshaRoSha1 {
-	return EvalshaRoSha1{cf: c.cf, cs: append(c.cs, Sha1)}
+	return EvalshaRoSha1{cs: append(c.cs, Sha1), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) EvalshaRo() (c EvalshaRo) {
@@ -2556,7 +2556,7 @@ func (b *Builder) EvalshaRo() (c EvalshaRo) {
 type EvalshaRoArg Completed
 
 func (c EvalshaRoArg) Arg(Arg ...string) EvalshaRoArg {
-	return EvalshaRoArg{cf: c.cf, cs: append(c.cs, Arg...)}
+	return EvalshaRoArg{cs: append(c.cs, Arg...), cf: c.cf, ks: c.ks}
 }
 
 func (c EvalshaRoArg) Build() Completed {
@@ -2566,29 +2566,29 @@ func (c EvalshaRoArg) Build() Completed {
 type EvalshaRoKey Completed
 
 func (c EvalshaRoKey) Arg(Arg ...string) EvalshaRoArg {
-	return EvalshaRoArg{cf: c.cf, cs: append(c.cs, Arg...)}
+	return EvalshaRoArg{cs: append(c.cs, Arg...), cf: c.cf, ks: c.ks}
 }
 
 func (c EvalshaRoKey) Key(Key ...string) EvalshaRoKey {
-	return EvalshaRoKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return EvalshaRoKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type EvalshaRoNumkeys Completed
 
 func (c EvalshaRoNumkeys) Key(Key ...string) EvalshaRoKey {
-	return EvalshaRoKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return EvalshaRoKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type EvalshaRoSha1 Completed
 
 func (c EvalshaRoSha1) Numkeys(Numkeys int64) EvalshaRoNumkeys {
-	return EvalshaRoNumkeys{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
+	return EvalshaRoNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10)), cf: c.cf, ks: c.ks}
 }
 
 type EvalshaSha1 Completed
 
 func (c EvalshaSha1) Numkeys(Numkeys int64) EvalshaNumkeys {
-	return EvalshaNumkeys{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
+	return EvalshaNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10)), cf: c.cf, ks: c.ks}
 }
 
 type Exec Completed
@@ -2605,7 +2605,7 @@ func (b *Builder) Exec() (c Exec) {
 type Exists Completed
 
 func (c Exists) Key(Key ...string) ExistsKey {
-	return ExistsKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return ExistsKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Exists() (c Exists) {
@@ -2616,7 +2616,7 @@ func (b *Builder) Exists() (c Exists) {
 type ExistsKey Completed
 
 func (c ExistsKey) Key(Key ...string) ExistsKey {
-	return ExistsKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return ExistsKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c ExistsKey) Build() Completed {
@@ -2626,7 +2626,7 @@ func (c ExistsKey) Build() Completed {
 type Expire Completed
 
 func (c Expire) Key(Key string) ExpireKey {
-	return ExpireKey{cf: c.cf, cs: append(c.cs, Key)}
+	return ExpireKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Expire() (c Expire) {
@@ -2661,25 +2661,25 @@ func (c ExpireConditionXx) Build() Completed {
 type ExpireKey Completed
 
 func (c ExpireKey) Seconds(Seconds int64) ExpireSeconds {
-	return ExpireSeconds{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Seconds, 10))}
+	return ExpireSeconds{cs: append(c.cs, strconv.FormatInt(Seconds, 10)), cf: c.cf, ks: c.ks}
 }
 
 type ExpireSeconds Completed
 
 func (c ExpireSeconds) Nx() ExpireConditionNx {
-	return ExpireConditionNx{cf: c.cf, cs: append(c.cs, "NX")}
+	return ExpireConditionNx{cs: append(c.cs, "NX"), cf: c.cf, ks: c.ks}
 }
 
 func (c ExpireSeconds) Xx() ExpireConditionXx {
-	return ExpireConditionXx{cf: c.cf, cs: append(c.cs, "XX")}
+	return ExpireConditionXx{cs: append(c.cs, "XX"), cf: c.cf, ks: c.ks}
 }
 
 func (c ExpireSeconds) Gt() ExpireConditionGt {
-	return ExpireConditionGt{cf: c.cf, cs: append(c.cs, "GT")}
+	return ExpireConditionGt{cs: append(c.cs, "GT"), cf: c.cf, ks: c.ks}
 }
 
 func (c ExpireSeconds) Lt() ExpireConditionLt {
-	return ExpireConditionLt{cf: c.cf, cs: append(c.cs, "LT")}
+	return ExpireConditionLt{cs: append(c.cs, "LT"), cf: c.cf, ks: c.ks}
 }
 
 func (c ExpireSeconds) Build() Completed {
@@ -2689,7 +2689,7 @@ func (c ExpireSeconds) Build() Completed {
 type Expireat Completed
 
 func (c Expireat) Key(Key string) ExpireatKey {
-	return ExpireatKey{cf: c.cf, cs: append(c.cs, Key)}
+	return ExpireatKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Expireat() (c Expireat) {
@@ -2724,25 +2724,25 @@ func (c ExpireatConditionXx) Build() Completed {
 type ExpireatKey Completed
 
 func (c ExpireatKey) Timestamp(Timestamp int64) ExpireatTimestamp {
-	return ExpireatTimestamp{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Timestamp, 10))}
+	return ExpireatTimestamp{cs: append(c.cs, strconv.FormatInt(Timestamp, 10)), cf: c.cf, ks: c.ks}
 }
 
 type ExpireatTimestamp Completed
 
 func (c ExpireatTimestamp) Nx() ExpireatConditionNx {
-	return ExpireatConditionNx{cf: c.cf, cs: append(c.cs, "NX")}
+	return ExpireatConditionNx{cs: append(c.cs, "NX"), cf: c.cf, ks: c.ks}
 }
 
 func (c ExpireatTimestamp) Xx() ExpireatConditionXx {
-	return ExpireatConditionXx{cf: c.cf, cs: append(c.cs, "XX")}
+	return ExpireatConditionXx{cs: append(c.cs, "XX"), cf: c.cf, ks: c.ks}
 }
 
 func (c ExpireatTimestamp) Gt() ExpireatConditionGt {
-	return ExpireatConditionGt{cf: c.cf, cs: append(c.cs, "GT")}
+	return ExpireatConditionGt{cs: append(c.cs, "GT"), cf: c.cf, ks: c.ks}
 }
 
 func (c ExpireatTimestamp) Lt() ExpireatConditionLt {
-	return ExpireatConditionLt{cf: c.cf, cs: append(c.cs, "LT")}
+	return ExpireatConditionLt{cs: append(c.cs, "LT"), cf: c.cf, ks: c.ks}
 }
 
 func (c ExpireatTimestamp) Build() Completed {
@@ -2752,7 +2752,7 @@ func (c ExpireatTimestamp) Build() Completed {
 type Expiretime Completed
 
 func (c Expiretime) Key(Key string) ExpiretimeKey {
-	return ExpiretimeKey{cf: c.cf, cs: append(c.cs, Key)}
+	return ExpiretimeKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Expiretime() (c Expiretime) {
@@ -2773,15 +2773,15 @@ func (c ExpiretimeKey) Cache() Cacheable {
 type Failover Completed
 
 func (c Failover) To() FailoverTargetTo {
-	return FailoverTargetTo{cf: c.cf, cs: append(c.cs, "TO")}
+	return FailoverTargetTo{cs: append(c.cs, "TO"), cf: c.cf, ks: c.ks}
 }
 
 func (c Failover) Abort() FailoverAbort {
-	return FailoverAbort{cf: c.cf, cs: append(c.cs, "ABORT")}
+	return FailoverAbort{cs: append(c.cs, "ABORT"), cf: c.cf, ks: c.ks}
 }
 
 func (c Failover) Timeout(Milliseconds int64) FailoverTimeout {
-	return FailoverTimeout{cf: c.cf, cs: append(c.cs, "TIMEOUT", strconv.FormatInt(Milliseconds, 10))}
+	return FailoverTimeout{cs: append(c.cs, "TIMEOUT", strconv.FormatInt(Milliseconds, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c Failover) Build() Completed {
@@ -2796,7 +2796,7 @@ func (b *Builder) Failover() (c Failover) {
 type FailoverAbort Completed
 
 func (c FailoverAbort) Timeout(Milliseconds int64) FailoverTimeout {
-	return FailoverTimeout{cf: c.cf, cs: append(c.cs, "TIMEOUT", strconv.FormatInt(Milliseconds, 10))}
+	return FailoverTimeout{cs: append(c.cs, "TIMEOUT", strconv.FormatInt(Milliseconds, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c FailoverAbort) Build() Completed {
@@ -2806,11 +2806,11 @@ func (c FailoverAbort) Build() Completed {
 type FailoverTargetForce Completed
 
 func (c FailoverTargetForce) Abort() FailoverAbort {
-	return FailoverAbort{cf: c.cf, cs: append(c.cs, "ABORT")}
+	return FailoverAbort{cs: append(c.cs, "ABORT"), cf: c.cf, ks: c.ks}
 }
 
 func (c FailoverTargetForce) Timeout(Milliseconds int64) FailoverTimeout {
-	return FailoverTimeout{cf: c.cf, cs: append(c.cs, "TIMEOUT", strconv.FormatInt(Milliseconds, 10))}
+	return FailoverTimeout{cs: append(c.cs, "TIMEOUT", strconv.FormatInt(Milliseconds, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c FailoverTargetForce) Build() Completed {
@@ -2820,21 +2820,21 @@ func (c FailoverTargetForce) Build() Completed {
 type FailoverTargetHost Completed
 
 func (c FailoverTargetHost) Port(Port int64) FailoverTargetPort {
-	return FailoverTargetPort{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Port, 10))}
+	return FailoverTargetPort{cs: append(c.cs, strconv.FormatInt(Port, 10)), cf: c.cf, ks: c.ks}
 }
 
 type FailoverTargetPort Completed
 
 func (c FailoverTargetPort) Force() FailoverTargetForce {
-	return FailoverTargetForce{cf: c.cf, cs: append(c.cs, "FORCE")}
+	return FailoverTargetForce{cs: append(c.cs, "FORCE"), cf: c.cf, ks: c.ks}
 }
 
 func (c FailoverTargetPort) Abort() FailoverAbort {
-	return FailoverAbort{cf: c.cf, cs: append(c.cs, "ABORT")}
+	return FailoverAbort{cs: append(c.cs, "ABORT"), cf: c.cf, ks: c.ks}
 }
 
 func (c FailoverTargetPort) Timeout(Milliseconds int64) FailoverTimeout {
-	return FailoverTimeout{cf: c.cf, cs: append(c.cs, "TIMEOUT", strconv.FormatInt(Milliseconds, 10))}
+	return FailoverTimeout{cs: append(c.cs, "TIMEOUT", strconv.FormatInt(Milliseconds, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c FailoverTargetPort) Build() Completed {
@@ -2844,7 +2844,7 @@ func (c FailoverTargetPort) Build() Completed {
 type FailoverTargetTo Completed
 
 func (c FailoverTargetTo) Host(Host string) FailoverTargetHost {
-	return FailoverTargetHost{cf: c.cf, cs: append(c.cs, Host)}
+	return FailoverTargetHost{cs: append(c.cs, Host), cf: c.cf, ks: c.ks}
 }
 
 type FailoverTimeout Completed
@@ -2856,11 +2856,11 @@ func (c FailoverTimeout) Build() Completed {
 type Flushall Completed
 
 func (c Flushall) Async() FlushallAsyncAsync {
-	return FlushallAsyncAsync{cf: c.cf, cs: append(c.cs, "ASYNC")}
+	return FlushallAsyncAsync{cs: append(c.cs, "ASYNC"), cf: c.cf, ks: c.ks}
 }
 
 func (c Flushall) Sync() FlushallAsyncSync {
-	return FlushallAsyncSync{cf: c.cf, cs: append(c.cs, "SYNC")}
+	return FlushallAsyncSync{cs: append(c.cs, "SYNC"), cf: c.cf, ks: c.ks}
 }
 
 func (c Flushall) Build() Completed {
@@ -2887,11 +2887,11 @@ func (c FlushallAsyncSync) Build() Completed {
 type Flushdb Completed
 
 func (c Flushdb) Async() FlushdbAsyncAsync {
-	return FlushdbAsyncAsync{cf: c.cf, cs: append(c.cs, "ASYNC")}
+	return FlushdbAsyncAsync{cs: append(c.cs, "ASYNC"), cf: c.cf, ks: c.ks}
 }
 
 func (c Flushdb) Sync() FlushdbAsyncSync {
-	return FlushdbAsyncSync{cf: c.cf, cs: append(c.cs, "SYNC")}
+	return FlushdbAsyncSync{cs: append(c.cs, "SYNC"), cf: c.cf, ks: c.ks}
 }
 
 func (c Flushdb) Build() Completed {
@@ -2918,7 +2918,7 @@ func (c FlushdbAsyncSync) Build() Completed {
 type Geoadd Completed
 
 func (c Geoadd) Key(Key string) GeoaddKey {
-	return GeoaddKey{cf: c.cf, cs: append(c.cs, Key)}
+	return GeoaddKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Geoadd() (c Geoadd) {
@@ -2929,51 +2929,51 @@ func (b *Builder) Geoadd() (c Geoadd) {
 type GeoaddChangeCh Completed
 
 func (c GeoaddChangeCh) LongitudeLatitudeMember() GeoaddLongitudeLatitudeMember {
-	return GeoaddLongitudeLatitudeMember{cf: c.cf, cs: c.cs}
+	return GeoaddLongitudeLatitudeMember{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 type GeoaddConditionNx Completed
 
 func (c GeoaddConditionNx) Ch() GeoaddChangeCh {
-	return GeoaddChangeCh{cf: c.cf, cs: append(c.cs, "CH")}
+	return GeoaddChangeCh{cs: append(c.cs, "CH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoaddConditionNx) LongitudeLatitudeMember() GeoaddLongitudeLatitudeMember {
-	return GeoaddLongitudeLatitudeMember{cf: c.cf, cs: c.cs}
+	return GeoaddLongitudeLatitudeMember{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 type GeoaddConditionXx Completed
 
 func (c GeoaddConditionXx) Ch() GeoaddChangeCh {
-	return GeoaddChangeCh{cf: c.cf, cs: append(c.cs, "CH")}
+	return GeoaddChangeCh{cs: append(c.cs, "CH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoaddConditionXx) LongitudeLatitudeMember() GeoaddLongitudeLatitudeMember {
-	return GeoaddLongitudeLatitudeMember{cf: c.cf, cs: c.cs}
+	return GeoaddLongitudeLatitudeMember{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 type GeoaddKey Completed
 
 func (c GeoaddKey) Nx() GeoaddConditionNx {
-	return GeoaddConditionNx{cf: c.cf, cs: append(c.cs, "NX")}
+	return GeoaddConditionNx{cs: append(c.cs, "NX"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoaddKey) Xx() GeoaddConditionXx {
-	return GeoaddConditionXx{cf: c.cf, cs: append(c.cs, "XX")}
+	return GeoaddConditionXx{cs: append(c.cs, "XX"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoaddKey) Ch() GeoaddChangeCh {
-	return GeoaddChangeCh{cf: c.cf, cs: append(c.cs, "CH")}
+	return GeoaddChangeCh{cs: append(c.cs, "CH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoaddKey) LongitudeLatitudeMember() GeoaddLongitudeLatitudeMember {
-	return GeoaddLongitudeLatitudeMember{cf: c.cf, cs: c.cs}
+	return GeoaddLongitudeLatitudeMember{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 type GeoaddLongitudeLatitudeMember Completed
 
 func (c GeoaddLongitudeLatitudeMember) LongitudeLatitudeMember(Longitude float64, Latitude float64, Member string) GeoaddLongitudeLatitudeMember {
-	return GeoaddLongitudeLatitudeMember{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Longitude, 'f', -1, 64), strconv.FormatFloat(Latitude, 'f', -1, 64), Member)}
+	return GeoaddLongitudeLatitudeMember{cs: append(c.cs, strconv.FormatFloat(Longitude, 'f', -1, 64), strconv.FormatFloat(Latitude, 'f', -1, 64), Member), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoaddLongitudeLatitudeMember) Build() Completed {
@@ -2983,7 +2983,7 @@ func (c GeoaddLongitudeLatitudeMember) Build() Completed {
 type Geodist Completed
 
 func (c Geodist) Key(Key string) GeodistKey {
-	return GeodistKey{cf: c.cf, cs: append(c.cs, Key)}
+	return GeodistKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Geodist() (c Geodist) {
@@ -2994,31 +2994,31 @@ func (b *Builder) Geodist() (c Geodist) {
 type GeodistKey Completed
 
 func (c GeodistKey) Member1(Member1 string) GeodistMember1 {
-	return GeodistMember1{cf: c.cf, cs: append(c.cs, Member1)}
+	return GeodistMember1{cs: append(c.cs, Member1), cf: c.cf, ks: c.ks}
 }
 
 type GeodistMember1 Completed
 
 func (c GeodistMember1) Member2(Member2 string) GeodistMember2 {
-	return GeodistMember2{cf: c.cf, cs: append(c.cs, Member2)}
+	return GeodistMember2{cs: append(c.cs, Member2), cf: c.cf, ks: c.ks}
 }
 
 type GeodistMember2 Completed
 
 func (c GeodistMember2) M() GeodistUnitM {
-	return GeodistUnitM{cf: c.cf, cs: append(c.cs, "m")}
+	return GeodistUnitM{cs: append(c.cs, "m"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeodistMember2) Km() GeodistUnitKm {
-	return GeodistUnitKm{cf: c.cf, cs: append(c.cs, "km")}
+	return GeodistUnitKm{cs: append(c.cs, "km"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeodistMember2) Ft() GeodistUnitFt {
-	return GeodistUnitFt{cf: c.cf, cs: append(c.cs, "ft")}
+	return GeodistUnitFt{cs: append(c.cs, "ft"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeodistMember2) Mi() GeodistUnitMi {
-	return GeodistUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
+	return GeodistUnitMi{cs: append(c.cs, "mi"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeodistMember2) Build() Completed {
@@ -3072,7 +3072,7 @@ func (c GeodistUnitMi) Cache() Cacheable {
 type Geohash Completed
 
 func (c Geohash) Key(Key string) GeohashKey {
-	return GeohashKey{cf: c.cf, cs: append(c.cs, Key)}
+	return GeohashKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Geohash() (c Geohash) {
@@ -3083,13 +3083,13 @@ func (b *Builder) Geohash() (c Geohash) {
 type GeohashKey Completed
 
 func (c GeohashKey) Member(Member ...string) GeohashMember {
-	return GeohashMember{cf: c.cf, cs: append(c.cs, Member...)}
+	return GeohashMember{cs: append(c.cs, Member...), cf: c.cf, ks: c.ks}
 }
 
 type GeohashMember Completed
 
 func (c GeohashMember) Member(Member ...string) GeohashMember {
-	return GeohashMember{cf: c.cf, cs: append(c.cs, Member...)}
+	return GeohashMember{cs: append(c.cs, Member...), cf: c.cf, ks: c.ks}
 }
 
 func (c GeohashMember) Build() Completed {
@@ -3103,7 +3103,7 @@ func (c GeohashMember) Cache() Cacheable {
 type Geopos Completed
 
 func (c Geopos) Key(Key string) GeoposKey {
-	return GeoposKey{cf: c.cf, cs: append(c.cs, Key)}
+	return GeoposKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Geopos() (c Geopos) {
@@ -3114,13 +3114,13 @@ func (b *Builder) Geopos() (c Geopos) {
 type GeoposKey Completed
 
 func (c GeoposKey) Member(Member ...string) GeoposMember {
-	return GeoposMember{cf: c.cf, cs: append(c.cs, Member...)}
+	return GeoposMember{cs: append(c.cs, Member...), cf: c.cf, ks: c.ks}
 }
 
 type GeoposMember Completed
 
 func (c GeoposMember) Member(Member ...string) GeoposMember {
-	return GeoposMember{cf: c.cf, cs: append(c.cs, Member...)}
+	return GeoposMember{cs: append(c.cs, Member...), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoposMember) Build() Completed {
@@ -3134,7 +3134,7 @@ func (c GeoposMember) Cache() Cacheable {
 type Georadius Completed
 
 func (c Georadius) Key(Key string) GeoradiusKey {
-	return GeoradiusKey{cf: c.cf, cs: append(c.cs, Key)}
+	return GeoradiusKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Georadius() (c Georadius) {
@@ -3145,19 +3145,19 @@ func (b *Builder) Georadius() (c Georadius) {
 type GeoradiusCountAnyAny Completed
 
 func (c GeoradiusCountAnyAny) Asc() GeoradiusOrderAsc {
-	return GeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeoradiusOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusCountAnyAny) Desc() GeoradiusOrderDesc {
-	return GeoradiusOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeoradiusOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusCountAnyAny) Store(Key string) GeoradiusStore {
-	return GeoradiusStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return GeoradiusStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusCountAnyAny) Storedist(Key string) GeoradiusStoredist {
-	return GeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusCountAnyAny) Build() Completed {
@@ -3167,23 +3167,23 @@ func (c GeoradiusCountAnyAny) Build() Completed {
 type GeoradiusCountCount Completed
 
 func (c GeoradiusCountCount) Any() GeoradiusCountAnyAny {
-	return GeoradiusCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
+	return GeoradiusCountAnyAny{cs: append(c.cs, "ANY"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusCountCount) Asc() GeoradiusOrderAsc {
-	return GeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeoradiusOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusCountCount) Desc() GeoradiusOrderDesc {
-	return GeoradiusOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeoradiusOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusCountCount) Store(Key string) GeoradiusStore {
-	return GeoradiusStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return GeoradiusStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusCountCount) Storedist(Key string) GeoradiusStoredist {
-	return GeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusCountCount) Build() Completed {
@@ -3193,29 +3193,29 @@ func (c GeoradiusCountCount) Build() Completed {
 type GeoradiusKey Completed
 
 func (c GeoradiusKey) Longitude(Longitude float64) GeoradiusLongitude {
-	return GeoradiusLongitude{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Longitude, 'f', -1, 64))}
+	return GeoradiusLongitude{cs: append(c.cs, strconv.FormatFloat(Longitude, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type GeoradiusLatitude Completed
 
 func (c GeoradiusLatitude) Radius(Radius float64) GeoradiusRadius {
-	return GeoradiusRadius{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Radius, 'f', -1, 64))}
+	return GeoradiusRadius{cs: append(c.cs, strconv.FormatFloat(Radius, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type GeoradiusLongitude Completed
 
 func (c GeoradiusLongitude) Latitude(Latitude float64) GeoradiusLatitude {
-	return GeoradiusLatitude{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Latitude, 'f', -1, 64))}
+	return GeoradiusLatitude{cs: append(c.cs, strconv.FormatFloat(Latitude, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type GeoradiusOrderAsc Completed
 
 func (c GeoradiusOrderAsc) Store(Key string) GeoradiusStore {
-	return GeoradiusStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return GeoradiusStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusOrderAsc) Storedist(Key string) GeoradiusStoredist {
-	return GeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusOrderAsc) Build() Completed {
@@ -3225,11 +3225,11 @@ func (c GeoradiusOrderAsc) Build() Completed {
 type GeoradiusOrderDesc Completed
 
 func (c GeoradiusOrderDesc) Store(Key string) GeoradiusStore {
-	return GeoradiusStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return GeoradiusStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusOrderDesc) Storedist(Key string) GeoradiusStoredist {
-	return GeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusOrderDesc) Build() Completed {
@@ -3239,25 +3239,25 @@ func (c GeoradiusOrderDesc) Build() Completed {
 type GeoradiusRadius Completed
 
 func (c GeoradiusRadius) M() GeoradiusUnitM {
-	return GeoradiusUnitM{cf: c.cf, cs: append(c.cs, "m")}
+	return GeoradiusUnitM{cs: append(c.cs, "m"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRadius) Km() GeoradiusUnitKm {
-	return GeoradiusUnitKm{cf: c.cf, cs: append(c.cs, "km")}
+	return GeoradiusUnitKm{cs: append(c.cs, "km"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRadius) Ft() GeoradiusUnitFt {
-	return GeoradiusUnitFt{cf: c.cf, cs: append(c.cs, "ft")}
+	return GeoradiusUnitFt{cs: append(c.cs, "ft"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRadius) Mi() GeoradiusUnitMi {
-	return GeoradiusUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
+	return GeoradiusUnitMi{cs: append(c.cs, "mi"), cf: c.cf, ks: c.ks}
 }
 
 type GeoradiusRo Completed
 
 func (c GeoradiusRo) Key(Key string) GeoradiusRoKey {
-	return GeoradiusRoKey{cf: c.cf, cs: append(c.cs, Key)}
+	return GeoradiusRoKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) GeoradiusRo() (c GeoradiusRo) {
@@ -3268,15 +3268,15 @@ func (b *Builder) GeoradiusRo() (c GeoradiusRo) {
 type GeoradiusRoCountAnyAny Completed
 
 func (c GeoradiusRoCountAnyAny) Asc() GeoradiusRoOrderAsc {
-	return GeoradiusRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeoradiusRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoCountAnyAny) Desc() GeoradiusRoOrderDesc {
-	return GeoradiusRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeoradiusRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoCountAnyAny) Storedist(Key string) GeoradiusRoStoredist {
-	return GeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoCountAnyAny) Build() Completed {
@@ -3290,19 +3290,19 @@ func (c GeoradiusRoCountAnyAny) Cache() Cacheable {
 type GeoradiusRoCountCount Completed
 
 func (c GeoradiusRoCountCount) Any() GeoradiusRoCountAnyAny {
-	return GeoradiusRoCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
+	return GeoradiusRoCountAnyAny{cs: append(c.cs, "ANY"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoCountCount) Asc() GeoradiusRoOrderAsc {
-	return GeoradiusRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeoradiusRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoCountCount) Desc() GeoradiusRoOrderDesc {
-	return GeoradiusRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeoradiusRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoCountCount) Storedist(Key string) GeoradiusRoStoredist {
-	return GeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoCountCount) Build() Completed {
@@ -3316,25 +3316,25 @@ func (c GeoradiusRoCountCount) Cache() Cacheable {
 type GeoradiusRoKey Completed
 
 func (c GeoradiusRoKey) Longitude(Longitude float64) GeoradiusRoLongitude {
-	return GeoradiusRoLongitude{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Longitude, 'f', -1, 64))}
+	return GeoradiusRoLongitude{cs: append(c.cs, strconv.FormatFloat(Longitude, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type GeoradiusRoLatitude Completed
 
 func (c GeoradiusRoLatitude) Radius(Radius float64) GeoradiusRoRadius {
-	return GeoradiusRoRadius{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Radius, 'f', -1, 64))}
+	return GeoradiusRoRadius{cs: append(c.cs, strconv.FormatFloat(Radius, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type GeoradiusRoLongitude Completed
 
 func (c GeoradiusRoLongitude) Latitude(Latitude float64) GeoradiusRoLatitude {
-	return GeoradiusRoLatitude{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Latitude, 'f', -1, 64))}
+	return GeoradiusRoLatitude{cs: append(c.cs, strconv.FormatFloat(Latitude, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type GeoradiusRoOrderAsc Completed
 
 func (c GeoradiusRoOrderAsc) Storedist(Key string) GeoradiusRoStoredist {
-	return GeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoOrderAsc) Build() Completed {
@@ -3348,7 +3348,7 @@ func (c GeoradiusRoOrderAsc) Cache() Cacheable {
 type GeoradiusRoOrderDesc Completed
 
 func (c GeoradiusRoOrderDesc) Storedist(Key string) GeoradiusRoStoredist {
-	return GeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoOrderDesc) Build() Completed {
@@ -3362,19 +3362,19 @@ func (c GeoradiusRoOrderDesc) Cache() Cacheable {
 type GeoradiusRoRadius Completed
 
 func (c GeoradiusRoRadius) M() GeoradiusRoUnitM {
-	return GeoradiusRoUnitM{cf: c.cf, cs: append(c.cs, "m")}
+	return GeoradiusRoUnitM{cs: append(c.cs, "m"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoRadius) Km() GeoradiusRoUnitKm {
-	return GeoradiusRoUnitKm{cf: c.cf, cs: append(c.cs, "km")}
+	return GeoradiusRoUnitKm{cs: append(c.cs, "km"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoRadius) Ft() GeoradiusRoUnitFt {
-	return GeoradiusRoUnitFt{cf: c.cf, cs: append(c.cs, "ft")}
+	return GeoradiusRoUnitFt{cs: append(c.cs, "ft"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoRadius) Mi() GeoradiusRoUnitMi {
-	return GeoradiusRoUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
+	return GeoradiusRoUnitMi{cs: append(c.cs, "mi"), cf: c.cf, ks: c.ks}
 }
 
 type GeoradiusRoStoredist Completed
@@ -3390,31 +3390,31 @@ func (c GeoradiusRoStoredist) Cache() Cacheable {
 type GeoradiusRoUnitFt Completed
 
 func (c GeoradiusRoUnitFt) Withcoord() GeoradiusRoWithcoordWithcoord {
-	return GeoradiusRoWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return GeoradiusRoWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoUnitFt) Withdist() GeoradiusRoWithdistWithdist {
-	return GeoradiusRoWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return GeoradiusRoWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoUnitFt) Withhash() GeoradiusRoWithhashWithhash {
-	return GeoradiusRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeoradiusRoWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoUnitFt) Count(Count int64) GeoradiusRoCountCount {
-	return GeoradiusRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusRoCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoUnitFt) Asc() GeoradiusRoOrderAsc {
-	return GeoradiusRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeoradiusRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoUnitFt) Desc() GeoradiusRoOrderDesc {
-	return GeoradiusRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeoradiusRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoUnitFt) Storedist(Key string) GeoradiusRoStoredist {
-	return GeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoUnitFt) Build() Completed {
@@ -3428,31 +3428,31 @@ func (c GeoradiusRoUnitFt) Cache() Cacheable {
 type GeoradiusRoUnitKm Completed
 
 func (c GeoradiusRoUnitKm) Withcoord() GeoradiusRoWithcoordWithcoord {
-	return GeoradiusRoWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return GeoradiusRoWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoUnitKm) Withdist() GeoradiusRoWithdistWithdist {
-	return GeoradiusRoWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return GeoradiusRoWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoUnitKm) Withhash() GeoradiusRoWithhashWithhash {
-	return GeoradiusRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeoradiusRoWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoUnitKm) Count(Count int64) GeoradiusRoCountCount {
-	return GeoradiusRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusRoCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoUnitKm) Asc() GeoradiusRoOrderAsc {
-	return GeoradiusRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeoradiusRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoUnitKm) Desc() GeoradiusRoOrderDesc {
-	return GeoradiusRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeoradiusRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoUnitKm) Storedist(Key string) GeoradiusRoStoredist {
-	return GeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoUnitKm) Build() Completed {
@@ -3466,31 +3466,31 @@ func (c GeoradiusRoUnitKm) Cache() Cacheable {
 type GeoradiusRoUnitM Completed
 
 func (c GeoradiusRoUnitM) Withcoord() GeoradiusRoWithcoordWithcoord {
-	return GeoradiusRoWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return GeoradiusRoWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoUnitM) Withdist() GeoradiusRoWithdistWithdist {
-	return GeoradiusRoWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return GeoradiusRoWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoUnitM) Withhash() GeoradiusRoWithhashWithhash {
-	return GeoradiusRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeoradiusRoWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoUnitM) Count(Count int64) GeoradiusRoCountCount {
-	return GeoradiusRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusRoCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoUnitM) Asc() GeoradiusRoOrderAsc {
-	return GeoradiusRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeoradiusRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoUnitM) Desc() GeoradiusRoOrderDesc {
-	return GeoradiusRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeoradiusRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoUnitM) Storedist(Key string) GeoradiusRoStoredist {
-	return GeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoUnitM) Build() Completed {
@@ -3504,31 +3504,31 @@ func (c GeoradiusRoUnitM) Cache() Cacheable {
 type GeoradiusRoUnitMi Completed
 
 func (c GeoradiusRoUnitMi) Withcoord() GeoradiusRoWithcoordWithcoord {
-	return GeoradiusRoWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return GeoradiusRoWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoUnitMi) Withdist() GeoradiusRoWithdistWithdist {
-	return GeoradiusRoWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return GeoradiusRoWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoUnitMi) Withhash() GeoradiusRoWithhashWithhash {
-	return GeoradiusRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeoradiusRoWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoUnitMi) Count(Count int64) GeoradiusRoCountCount {
-	return GeoradiusRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusRoCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoUnitMi) Asc() GeoradiusRoOrderAsc {
-	return GeoradiusRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeoradiusRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoUnitMi) Desc() GeoradiusRoOrderDesc {
-	return GeoradiusRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeoradiusRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoUnitMi) Storedist(Key string) GeoradiusRoStoredist {
-	return GeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoUnitMi) Build() Completed {
@@ -3542,27 +3542,27 @@ func (c GeoradiusRoUnitMi) Cache() Cacheable {
 type GeoradiusRoWithcoordWithcoord Completed
 
 func (c GeoradiusRoWithcoordWithcoord) Withdist() GeoradiusRoWithdistWithdist {
-	return GeoradiusRoWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return GeoradiusRoWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoWithcoordWithcoord) Withhash() GeoradiusRoWithhashWithhash {
-	return GeoradiusRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeoradiusRoWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoWithcoordWithcoord) Count(Count int64) GeoradiusRoCountCount {
-	return GeoradiusRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusRoCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoWithcoordWithcoord) Asc() GeoradiusRoOrderAsc {
-	return GeoradiusRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeoradiusRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoWithcoordWithcoord) Desc() GeoradiusRoOrderDesc {
-	return GeoradiusRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeoradiusRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoWithcoordWithcoord) Storedist(Key string) GeoradiusRoStoredist {
-	return GeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoWithcoordWithcoord) Build() Completed {
@@ -3576,23 +3576,23 @@ func (c GeoradiusRoWithcoordWithcoord) Cache() Cacheable {
 type GeoradiusRoWithdistWithdist Completed
 
 func (c GeoradiusRoWithdistWithdist) Withhash() GeoradiusRoWithhashWithhash {
-	return GeoradiusRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeoradiusRoWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoWithdistWithdist) Count(Count int64) GeoradiusRoCountCount {
-	return GeoradiusRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusRoCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoWithdistWithdist) Asc() GeoradiusRoOrderAsc {
-	return GeoradiusRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeoradiusRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoWithdistWithdist) Desc() GeoradiusRoOrderDesc {
-	return GeoradiusRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeoradiusRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoWithdistWithdist) Storedist(Key string) GeoradiusRoStoredist {
-	return GeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoWithdistWithdist) Build() Completed {
@@ -3606,19 +3606,19 @@ func (c GeoradiusRoWithdistWithdist) Cache() Cacheable {
 type GeoradiusRoWithhashWithhash Completed
 
 func (c GeoradiusRoWithhashWithhash) Count(Count int64) GeoradiusRoCountCount {
-	return GeoradiusRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusRoCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoWithhashWithhash) Asc() GeoradiusRoOrderAsc {
-	return GeoradiusRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeoradiusRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoWithhashWithhash) Desc() GeoradiusRoOrderDesc {
-	return GeoradiusRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeoradiusRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoWithhashWithhash) Storedist(Key string) GeoradiusRoStoredist {
-	return GeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusRoWithhashWithhash) Build() Completed {
@@ -3632,7 +3632,7 @@ func (c GeoradiusRoWithhashWithhash) Cache() Cacheable {
 type GeoradiusStore Completed
 
 func (c GeoradiusStore) Storedist(Key string) GeoradiusStoredist {
-	return GeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusStore) Build() Completed {
@@ -3648,35 +3648,35 @@ func (c GeoradiusStoredist) Build() Completed {
 type GeoradiusUnitFt Completed
 
 func (c GeoradiusUnitFt) Withcoord() GeoradiusWithcoordWithcoord {
-	return GeoradiusWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return GeoradiusWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusUnitFt) Withdist() GeoradiusWithdistWithdist {
-	return GeoradiusWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return GeoradiusWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusUnitFt) Withhash() GeoradiusWithhashWithhash {
-	return GeoradiusWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeoradiusWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusUnitFt) Count(Count int64) GeoradiusCountCount {
-	return GeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusUnitFt) Asc() GeoradiusOrderAsc {
-	return GeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeoradiusOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusUnitFt) Desc() GeoradiusOrderDesc {
-	return GeoradiusOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeoradiusOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusUnitFt) Store(Key string) GeoradiusStore {
-	return GeoradiusStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return GeoradiusStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusUnitFt) Storedist(Key string) GeoradiusStoredist {
-	return GeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusUnitFt) Build() Completed {
@@ -3686,35 +3686,35 @@ func (c GeoradiusUnitFt) Build() Completed {
 type GeoradiusUnitKm Completed
 
 func (c GeoradiusUnitKm) Withcoord() GeoradiusWithcoordWithcoord {
-	return GeoradiusWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return GeoradiusWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusUnitKm) Withdist() GeoradiusWithdistWithdist {
-	return GeoradiusWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return GeoradiusWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusUnitKm) Withhash() GeoradiusWithhashWithhash {
-	return GeoradiusWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeoradiusWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusUnitKm) Count(Count int64) GeoradiusCountCount {
-	return GeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusUnitKm) Asc() GeoradiusOrderAsc {
-	return GeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeoradiusOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusUnitKm) Desc() GeoradiusOrderDesc {
-	return GeoradiusOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeoradiusOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusUnitKm) Store(Key string) GeoradiusStore {
-	return GeoradiusStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return GeoradiusStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusUnitKm) Storedist(Key string) GeoradiusStoredist {
-	return GeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusUnitKm) Build() Completed {
@@ -3724,35 +3724,35 @@ func (c GeoradiusUnitKm) Build() Completed {
 type GeoradiusUnitM Completed
 
 func (c GeoradiusUnitM) Withcoord() GeoradiusWithcoordWithcoord {
-	return GeoradiusWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return GeoradiusWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusUnitM) Withdist() GeoradiusWithdistWithdist {
-	return GeoradiusWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return GeoradiusWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusUnitM) Withhash() GeoradiusWithhashWithhash {
-	return GeoradiusWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeoradiusWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusUnitM) Count(Count int64) GeoradiusCountCount {
-	return GeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusUnitM) Asc() GeoradiusOrderAsc {
-	return GeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeoradiusOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusUnitM) Desc() GeoradiusOrderDesc {
-	return GeoradiusOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeoradiusOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusUnitM) Store(Key string) GeoradiusStore {
-	return GeoradiusStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return GeoradiusStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusUnitM) Storedist(Key string) GeoradiusStoredist {
-	return GeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusUnitM) Build() Completed {
@@ -3762,35 +3762,35 @@ func (c GeoradiusUnitM) Build() Completed {
 type GeoradiusUnitMi Completed
 
 func (c GeoradiusUnitMi) Withcoord() GeoradiusWithcoordWithcoord {
-	return GeoradiusWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return GeoradiusWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusUnitMi) Withdist() GeoradiusWithdistWithdist {
-	return GeoradiusWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return GeoradiusWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusUnitMi) Withhash() GeoradiusWithhashWithhash {
-	return GeoradiusWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeoradiusWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusUnitMi) Count(Count int64) GeoradiusCountCount {
-	return GeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusUnitMi) Asc() GeoradiusOrderAsc {
-	return GeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeoradiusOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusUnitMi) Desc() GeoradiusOrderDesc {
-	return GeoradiusOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeoradiusOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusUnitMi) Store(Key string) GeoradiusStore {
-	return GeoradiusStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return GeoradiusStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusUnitMi) Storedist(Key string) GeoradiusStoredist {
-	return GeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusUnitMi) Build() Completed {
@@ -3800,31 +3800,31 @@ func (c GeoradiusUnitMi) Build() Completed {
 type GeoradiusWithcoordWithcoord Completed
 
 func (c GeoradiusWithcoordWithcoord) Withdist() GeoradiusWithdistWithdist {
-	return GeoradiusWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return GeoradiusWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusWithcoordWithcoord) Withhash() GeoradiusWithhashWithhash {
-	return GeoradiusWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeoradiusWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusWithcoordWithcoord) Count(Count int64) GeoradiusCountCount {
-	return GeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusWithcoordWithcoord) Asc() GeoradiusOrderAsc {
-	return GeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeoradiusOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusWithcoordWithcoord) Desc() GeoradiusOrderDesc {
-	return GeoradiusOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeoradiusOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusWithcoordWithcoord) Store(Key string) GeoradiusStore {
-	return GeoradiusStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return GeoradiusStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusWithcoordWithcoord) Storedist(Key string) GeoradiusStoredist {
-	return GeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusWithcoordWithcoord) Build() Completed {
@@ -3834,27 +3834,27 @@ func (c GeoradiusWithcoordWithcoord) Build() Completed {
 type GeoradiusWithdistWithdist Completed
 
 func (c GeoradiusWithdistWithdist) Withhash() GeoradiusWithhashWithhash {
-	return GeoradiusWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeoradiusWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusWithdistWithdist) Count(Count int64) GeoradiusCountCount {
-	return GeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusWithdistWithdist) Asc() GeoradiusOrderAsc {
-	return GeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeoradiusOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusWithdistWithdist) Desc() GeoradiusOrderDesc {
-	return GeoradiusOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeoradiusOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusWithdistWithdist) Store(Key string) GeoradiusStore {
-	return GeoradiusStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return GeoradiusStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusWithdistWithdist) Storedist(Key string) GeoradiusStoredist {
-	return GeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusWithdistWithdist) Build() Completed {
@@ -3864,23 +3864,23 @@ func (c GeoradiusWithdistWithdist) Build() Completed {
 type GeoradiusWithhashWithhash Completed
 
 func (c GeoradiusWithhashWithhash) Count(Count int64) GeoradiusCountCount {
-	return GeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusWithhashWithhash) Asc() GeoradiusOrderAsc {
-	return GeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeoradiusOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusWithhashWithhash) Desc() GeoradiusOrderDesc {
-	return GeoradiusOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeoradiusOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusWithhashWithhash) Store(Key string) GeoradiusStore {
-	return GeoradiusStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return GeoradiusStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusWithhashWithhash) Storedist(Key string) GeoradiusStoredist {
-	return GeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusWithhashWithhash) Build() Completed {
@@ -3890,7 +3890,7 @@ func (c GeoradiusWithhashWithhash) Build() Completed {
 type Georadiusbymember Completed
 
 func (c Georadiusbymember) Key(Key string) GeoradiusbymemberKey {
-	return GeoradiusbymemberKey{cf: c.cf, cs: append(c.cs, Key)}
+	return GeoradiusbymemberKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Georadiusbymember() (c Georadiusbymember) {
@@ -3901,19 +3901,19 @@ func (b *Builder) Georadiusbymember() (c Georadiusbymember) {
 type GeoradiusbymemberCountAnyAny Completed
 
 func (c GeoradiusbymemberCountAnyAny) Asc() GeoradiusbymemberOrderAsc {
-	return GeoradiusbymemberOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeoradiusbymemberOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberCountAnyAny) Desc() GeoradiusbymemberOrderDesc {
-	return GeoradiusbymemberOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeoradiusbymemberOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberCountAnyAny) Store(Key string) GeoradiusbymemberStore {
-	return GeoradiusbymemberStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return GeoradiusbymemberStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberCountAnyAny) Storedist(Key string) GeoradiusbymemberStoredist {
-	return GeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberCountAnyAny) Build() Completed {
@@ -3923,23 +3923,23 @@ func (c GeoradiusbymemberCountAnyAny) Build() Completed {
 type GeoradiusbymemberCountCount Completed
 
 func (c GeoradiusbymemberCountCount) Any() GeoradiusbymemberCountAnyAny {
-	return GeoradiusbymemberCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
+	return GeoradiusbymemberCountAnyAny{cs: append(c.cs, "ANY"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberCountCount) Asc() GeoradiusbymemberOrderAsc {
-	return GeoradiusbymemberOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeoradiusbymemberOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberCountCount) Desc() GeoradiusbymemberOrderDesc {
-	return GeoradiusbymemberOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeoradiusbymemberOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberCountCount) Store(Key string) GeoradiusbymemberStore {
-	return GeoradiusbymemberStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return GeoradiusbymemberStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberCountCount) Storedist(Key string) GeoradiusbymemberStoredist {
-	return GeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberCountCount) Build() Completed {
@@ -3949,23 +3949,23 @@ func (c GeoradiusbymemberCountCount) Build() Completed {
 type GeoradiusbymemberKey Completed
 
 func (c GeoradiusbymemberKey) Member(Member string) GeoradiusbymemberMember {
-	return GeoradiusbymemberMember{cf: c.cf, cs: append(c.cs, Member)}
+	return GeoradiusbymemberMember{cs: append(c.cs, Member), cf: c.cf, ks: c.ks}
 }
 
 type GeoradiusbymemberMember Completed
 
 func (c GeoradiusbymemberMember) Radius(Radius float64) GeoradiusbymemberRadius {
-	return GeoradiusbymemberRadius{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Radius, 'f', -1, 64))}
+	return GeoradiusbymemberRadius{cs: append(c.cs, strconv.FormatFloat(Radius, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type GeoradiusbymemberOrderAsc Completed
 
 func (c GeoradiusbymemberOrderAsc) Store(Key string) GeoradiusbymemberStore {
-	return GeoradiusbymemberStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return GeoradiusbymemberStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberOrderAsc) Storedist(Key string) GeoradiusbymemberStoredist {
-	return GeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberOrderAsc) Build() Completed {
@@ -3975,11 +3975,11 @@ func (c GeoradiusbymemberOrderAsc) Build() Completed {
 type GeoradiusbymemberOrderDesc Completed
 
 func (c GeoradiusbymemberOrderDesc) Store(Key string) GeoradiusbymemberStore {
-	return GeoradiusbymemberStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return GeoradiusbymemberStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberOrderDesc) Storedist(Key string) GeoradiusbymemberStoredist {
-	return GeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberOrderDesc) Build() Completed {
@@ -3989,25 +3989,25 @@ func (c GeoradiusbymemberOrderDesc) Build() Completed {
 type GeoradiusbymemberRadius Completed
 
 func (c GeoradiusbymemberRadius) M() GeoradiusbymemberUnitM {
-	return GeoradiusbymemberUnitM{cf: c.cf, cs: append(c.cs, "m")}
+	return GeoradiusbymemberUnitM{cs: append(c.cs, "m"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRadius) Km() GeoradiusbymemberUnitKm {
-	return GeoradiusbymemberUnitKm{cf: c.cf, cs: append(c.cs, "km")}
+	return GeoradiusbymemberUnitKm{cs: append(c.cs, "km"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRadius) Ft() GeoradiusbymemberUnitFt {
-	return GeoradiusbymemberUnitFt{cf: c.cf, cs: append(c.cs, "ft")}
+	return GeoradiusbymemberUnitFt{cs: append(c.cs, "ft"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRadius) Mi() GeoradiusbymemberUnitMi {
-	return GeoradiusbymemberUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
+	return GeoradiusbymemberUnitMi{cs: append(c.cs, "mi"), cf: c.cf, ks: c.ks}
 }
 
 type GeoradiusbymemberRo Completed
 
 func (c GeoradiusbymemberRo) Key(Key string) GeoradiusbymemberRoKey {
-	return GeoradiusbymemberRoKey{cf: c.cf, cs: append(c.cs, Key)}
+	return GeoradiusbymemberRoKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) GeoradiusbymemberRo() (c GeoradiusbymemberRo) {
@@ -4018,15 +4018,15 @@ func (b *Builder) GeoradiusbymemberRo() (c GeoradiusbymemberRo) {
 type GeoradiusbymemberRoCountAnyAny Completed
 
 func (c GeoradiusbymemberRoCountAnyAny) Asc() GeoradiusbymemberRoOrderAsc {
-	return GeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeoradiusbymemberRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoCountAnyAny) Desc() GeoradiusbymemberRoOrderDesc {
-	return GeoradiusbymemberRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeoradiusbymemberRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoCountAnyAny) Storedist(Key string) GeoradiusbymemberRoStoredist {
-	return GeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusbymemberRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoCountAnyAny) Build() Completed {
@@ -4040,19 +4040,19 @@ func (c GeoradiusbymemberRoCountAnyAny) Cache() Cacheable {
 type GeoradiusbymemberRoCountCount Completed
 
 func (c GeoradiusbymemberRoCountCount) Any() GeoradiusbymemberRoCountAnyAny {
-	return GeoradiusbymemberRoCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
+	return GeoradiusbymemberRoCountAnyAny{cs: append(c.cs, "ANY"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoCountCount) Asc() GeoradiusbymemberRoOrderAsc {
-	return GeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeoradiusbymemberRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoCountCount) Desc() GeoradiusbymemberRoOrderDesc {
-	return GeoradiusbymemberRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeoradiusbymemberRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoCountCount) Storedist(Key string) GeoradiusbymemberRoStoredist {
-	return GeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusbymemberRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoCountCount) Build() Completed {
@@ -4066,19 +4066,19 @@ func (c GeoradiusbymemberRoCountCount) Cache() Cacheable {
 type GeoradiusbymemberRoKey Completed
 
 func (c GeoradiusbymemberRoKey) Member(Member string) GeoradiusbymemberRoMember {
-	return GeoradiusbymemberRoMember{cf: c.cf, cs: append(c.cs, Member)}
+	return GeoradiusbymemberRoMember{cs: append(c.cs, Member), cf: c.cf, ks: c.ks}
 }
 
 type GeoradiusbymemberRoMember Completed
 
 func (c GeoradiusbymemberRoMember) Radius(Radius float64) GeoradiusbymemberRoRadius {
-	return GeoradiusbymemberRoRadius{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Radius, 'f', -1, 64))}
+	return GeoradiusbymemberRoRadius{cs: append(c.cs, strconv.FormatFloat(Radius, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type GeoradiusbymemberRoOrderAsc Completed
 
 func (c GeoradiusbymemberRoOrderAsc) Storedist(Key string) GeoradiusbymemberRoStoredist {
-	return GeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusbymemberRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoOrderAsc) Build() Completed {
@@ -4092,7 +4092,7 @@ func (c GeoradiusbymemberRoOrderAsc) Cache() Cacheable {
 type GeoradiusbymemberRoOrderDesc Completed
 
 func (c GeoradiusbymemberRoOrderDesc) Storedist(Key string) GeoradiusbymemberRoStoredist {
-	return GeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusbymemberRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoOrderDesc) Build() Completed {
@@ -4106,19 +4106,19 @@ func (c GeoradiusbymemberRoOrderDesc) Cache() Cacheable {
 type GeoradiusbymemberRoRadius Completed
 
 func (c GeoradiusbymemberRoRadius) M() GeoradiusbymemberRoUnitM {
-	return GeoradiusbymemberRoUnitM{cf: c.cf, cs: append(c.cs, "m")}
+	return GeoradiusbymemberRoUnitM{cs: append(c.cs, "m"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoRadius) Km() GeoradiusbymemberRoUnitKm {
-	return GeoradiusbymemberRoUnitKm{cf: c.cf, cs: append(c.cs, "km")}
+	return GeoradiusbymemberRoUnitKm{cs: append(c.cs, "km"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoRadius) Ft() GeoradiusbymemberRoUnitFt {
-	return GeoradiusbymemberRoUnitFt{cf: c.cf, cs: append(c.cs, "ft")}
+	return GeoradiusbymemberRoUnitFt{cs: append(c.cs, "ft"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoRadius) Mi() GeoradiusbymemberRoUnitMi {
-	return GeoradiusbymemberRoUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
+	return GeoradiusbymemberRoUnitMi{cs: append(c.cs, "mi"), cf: c.cf, ks: c.ks}
 }
 
 type GeoradiusbymemberRoStoredist Completed
@@ -4134,31 +4134,31 @@ func (c GeoradiusbymemberRoStoredist) Cache() Cacheable {
 type GeoradiusbymemberRoUnitFt Completed
 
 func (c GeoradiusbymemberRoUnitFt) Withcoord() GeoradiusbymemberRoWithcoordWithcoord {
-	return GeoradiusbymemberRoWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return GeoradiusbymemberRoWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoUnitFt) Withdist() GeoradiusbymemberRoWithdistWithdist {
-	return GeoradiusbymemberRoWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return GeoradiusbymemberRoWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoUnitFt) Withhash() GeoradiusbymemberRoWithhashWithhash {
-	return GeoradiusbymemberRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeoradiusbymemberRoWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoUnitFt) Count(Count int64) GeoradiusbymemberRoCountCount {
-	return GeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusbymemberRoCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoUnitFt) Asc() GeoradiusbymemberRoOrderAsc {
-	return GeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeoradiusbymemberRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoUnitFt) Desc() GeoradiusbymemberRoOrderDesc {
-	return GeoradiusbymemberRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeoradiusbymemberRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoUnitFt) Storedist(Key string) GeoradiusbymemberRoStoredist {
-	return GeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusbymemberRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoUnitFt) Build() Completed {
@@ -4172,31 +4172,31 @@ func (c GeoradiusbymemberRoUnitFt) Cache() Cacheable {
 type GeoradiusbymemberRoUnitKm Completed
 
 func (c GeoradiusbymemberRoUnitKm) Withcoord() GeoradiusbymemberRoWithcoordWithcoord {
-	return GeoradiusbymemberRoWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return GeoradiusbymemberRoWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoUnitKm) Withdist() GeoradiusbymemberRoWithdistWithdist {
-	return GeoradiusbymemberRoWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return GeoradiusbymemberRoWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoUnitKm) Withhash() GeoradiusbymemberRoWithhashWithhash {
-	return GeoradiusbymemberRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeoradiusbymemberRoWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoUnitKm) Count(Count int64) GeoradiusbymemberRoCountCount {
-	return GeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusbymemberRoCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoUnitKm) Asc() GeoradiusbymemberRoOrderAsc {
-	return GeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeoradiusbymemberRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoUnitKm) Desc() GeoradiusbymemberRoOrderDesc {
-	return GeoradiusbymemberRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeoradiusbymemberRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoUnitKm) Storedist(Key string) GeoradiusbymemberRoStoredist {
-	return GeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusbymemberRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoUnitKm) Build() Completed {
@@ -4210,31 +4210,31 @@ func (c GeoradiusbymemberRoUnitKm) Cache() Cacheable {
 type GeoradiusbymemberRoUnitM Completed
 
 func (c GeoradiusbymemberRoUnitM) Withcoord() GeoradiusbymemberRoWithcoordWithcoord {
-	return GeoradiusbymemberRoWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return GeoradiusbymemberRoWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoUnitM) Withdist() GeoradiusbymemberRoWithdistWithdist {
-	return GeoradiusbymemberRoWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return GeoradiusbymemberRoWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoUnitM) Withhash() GeoradiusbymemberRoWithhashWithhash {
-	return GeoradiusbymemberRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeoradiusbymemberRoWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoUnitM) Count(Count int64) GeoradiusbymemberRoCountCount {
-	return GeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusbymemberRoCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoUnitM) Asc() GeoradiusbymemberRoOrderAsc {
-	return GeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeoradiusbymemberRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoUnitM) Desc() GeoradiusbymemberRoOrderDesc {
-	return GeoradiusbymemberRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeoradiusbymemberRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoUnitM) Storedist(Key string) GeoradiusbymemberRoStoredist {
-	return GeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusbymemberRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoUnitM) Build() Completed {
@@ -4248,31 +4248,31 @@ func (c GeoradiusbymemberRoUnitM) Cache() Cacheable {
 type GeoradiusbymemberRoUnitMi Completed
 
 func (c GeoradiusbymemberRoUnitMi) Withcoord() GeoradiusbymemberRoWithcoordWithcoord {
-	return GeoradiusbymemberRoWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return GeoradiusbymemberRoWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoUnitMi) Withdist() GeoradiusbymemberRoWithdistWithdist {
-	return GeoradiusbymemberRoWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return GeoradiusbymemberRoWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoUnitMi) Withhash() GeoradiusbymemberRoWithhashWithhash {
-	return GeoradiusbymemberRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeoradiusbymemberRoWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoUnitMi) Count(Count int64) GeoradiusbymemberRoCountCount {
-	return GeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusbymemberRoCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoUnitMi) Asc() GeoradiusbymemberRoOrderAsc {
-	return GeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeoradiusbymemberRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoUnitMi) Desc() GeoradiusbymemberRoOrderDesc {
-	return GeoradiusbymemberRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeoradiusbymemberRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoUnitMi) Storedist(Key string) GeoradiusbymemberRoStoredist {
-	return GeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusbymemberRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoUnitMi) Build() Completed {
@@ -4286,27 +4286,27 @@ func (c GeoradiusbymemberRoUnitMi) Cache() Cacheable {
 type GeoradiusbymemberRoWithcoordWithcoord Completed
 
 func (c GeoradiusbymemberRoWithcoordWithcoord) Withdist() GeoradiusbymemberRoWithdistWithdist {
-	return GeoradiusbymemberRoWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return GeoradiusbymemberRoWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoWithcoordWithcoord) Withhash() GeoradiusbymemberRoWithhashWithhash {
-	return GeoradiusbymemberRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeoradiusbymemberRoWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoWithcoordWithcoord) Count(Count int64) GeoradiusbymemberRoCountCount {
-	return GeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusbymemberRoCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoWithcoordWithcoord) Asc() GeoradiusbymemberRoOrderAsc {
-	return GeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeoradiusbymemberRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoWithcoordWithcoord) Desc() GeoradiusbymemberRoOrderDesc {
-	return GeoradiusbymemberRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeoradiusbymemberRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoWithcoordWithcoord) Storedist(Key string) GeoradiusbymemberRoStoredist {
-	return GeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusbymemberRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoWithcoordWithcoord) Build() Completed {
@@ -4320,23 +4320,23 @@ func (c GeoradiusbymemberRoWithcoordWithcoord) Cache() Cacheable {
 type GeoradiusbymemberRoWithdistWithdist Completed
 
 func (c GeoradiusbymemberRoWithdistWithdist) Withhash() GeoradiusbymemberRoWithhashWithhash {
-	return GeoradiusbymemberRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeoradiusbymemberRoWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoWithdistWithdist) Count(Count int64) GeoradiusbymemberRoCountCount {
-	return GeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusbymemberRoCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoWithdistWithdist) Asc() GeoradiusbymemberRoOrderAsc {
-	return GeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeoradiusbymemberRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoWithdistWithdist) Desc() GeoradiusbymemberRoOrderDesc {
-	return GeoradiusbymemberRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeoradiusbymemberRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoWithdistWithdist) Storedist(Key string) GeoradiusbymemberRoStoredist {
-	return GeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusbymemberRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoWithdistWithdist) Build() Completed {
@@ -4350,19 +4350,19 @@ func (c GeoradiusbymemberRoWithdistWithdist) Cache() Cacheable {
 type GeoradiusbymemberRoWithhashWithhash Completed
 
 func (c GeoradiusbymemberRoWithhashWithhash) Count(Count int64) GeoradiusbymemberRoCountCount {
-	return GeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusbymemberRoCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoWithhashWithhash) Asc() GeoradiusbymemberRoOrderAsc {
-	return GeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeoradiusbymemberRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoWithhashWithhash) Desc() GeoradiusbymemberRoOrderDesc {
-	return GeoradiusbymemberRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeoradiusbymemberRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoWithhashWithhash) Storedist(Key string) GeoradiusbymemberRoStoredist {
-	return GeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusbymemberRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoWithhashWithhash) Build() Completed {
@@ -4376,7 +4376,7 @@ func (c GeoradiusbymemberRoWithhashWithhash) Cache() Cacheable {
 type GeoradiusbymemberStore Completed
 
 func (c GeoradiusbymemberStore) Storedist(Key string) GeoradiusbymemberStoredist {
-	return GeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberStore) Build() Completed {
@@ -4392,35 +4392,35 @@ func (c GeoradiusbymemberStoredist) Build() Completed {
 type GeoradiusbymemberUnitFt Completed
 
 func (c GeoradiusbymemberUnitFt) Withcoord() GeoradiusbymemberWithcoordWithcoord {
-	return GeoradiusbymemberWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return GeoradiusbymemberWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberUnitFt) Withdist() GeoradiusbymemberWithdistWithdist {
-	return GeoradiusbymemberWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return GeoradiusbymemberWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberUnitFt) Withhash() GeoradiusbymemberWithhashWithhash {
-	return GeoradiusbymemberWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeoradiusbymemberWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberUnitFt) Count(Count int64) GeoradiusbymemberCountCount {
-	return GeoradiusbymemberCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusbymemberCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberUnitFt) Asc() GeoradiusbymemberOrderAsc {
-	return GeoradiusbymemberOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeoradiusbymemberOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberUnitFt) Desc() GeoradiusbymemberOrderDesc {
-	return GeoradiusbymemberOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeoradiusbymemberOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberUnitFt) Store(Key string) GeoradiusbymemberStore {
-	return GeoradiusbymemberStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return GeoradiusbymemberStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberUnitFt) Storedist(Key string) GeoradiusbymemberStoredist {
-	return GeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberUnitFt) Build() Completed {
@@ -4430,35 +4430,35 @@ func (c GeoradiusbymemberUnitFt) Build() Completed {
 type GeoradiusbymemberUnitKm Completed
 
 func (c GeoradiusbymemberUnitKm) Withcoord() GeoradiusbymemberWithcoordWithcoord {
-	return GeoradiusbymemberWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return GeoradiusbymemberWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberUnitKm) Withdist() GeoradiusbymemberWithdistWithdist {
-	return GeoradiusbymemberWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return GeoradiusbymemberWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberUnitKm) Withhash() GeoradiusbymemberWithhashWithhash {
-	return GeoradiusbymemberWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeoradiusbymemberWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberUnitKm) Count(Count int64) GeoradiusbymemberCountCount {
-	return GeoradiusbymemberCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusbymemberCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberUnitKm) Asc() GeoradiusbymemberOrderAsc {
-	return GeoradiusbymemberOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeoradiusbymemberOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberUnitKm) Desc() GeoradiusbymemberOrderDesc {
-	return GeoradiusbymemberOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeoradiusbymemberOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberUnitKm) Store(Key string) GeoradiusbymemberStore {
-	return GeoradiusbymemberStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return GeoradiusbymemberStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberUnitKm) Storedist(Key string) GeoradiusbymemberStoredist {
-	return GeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberUnitKm) Build() Completed {
@@ -4468,35 +4468,35 @@ func (c GeoradiusbymemberUnitKm) Build() Completed {
 type GeoradiusbymemberUnitM Completed
 
 func (c GeoradiusbymemberUnitM) Withcoord() GeoradiusbymemberWithcoordWithcoord {
-	return GeoradiusbymemberWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return GeoradiusbymemberWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberUnitM) Withdist() GeoradiusbymemberWithdistWithdist {
-	return GeoradiusbymemberWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return GeoradiusbymemberWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberUnitM) Withhash() GeoradiusbymemberWithhashWithhash {
-	return GeoradiusbymemberWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeoradiusbymemberWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberUnitM) Count(Count int64) GeoradiusbymemberCountCount {
-	return GeoradiusbymemberCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusbymemberCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberUnitM) Asc() GeoradiusbymemberOrderAsc {
-	return GeoradiusbymemberOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeoradiusbymemberOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberUnitM) Desc() GeoradiusbymemberOrderDesc {
-	return GeoradiusbymemberOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeoradiusbymemberOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberUnitM) Store(Key string) GeoradiusbymemberStore {
-	return GeoradiusbymemberStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return GeoradiusbymemberStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberUnitM) Storedist(Key string) GeoradiusbymemberStoredist {
-	return GeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberUnitM) Build() Completed {
@@ -4506,35 +4506,35 @@ func (c GeoradiusbymemberUnitM) Build() Completed {
 type GeoradiusbymemberUnitMi Completed
 
 func (c GeoradiusbymemberUnitMi) Withcoord() GeoradiusbymemberWithcoordWithcoord {
-	return GeoradiusbymemberWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return GeoradiusbymemberWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberUnitMi) Withdist() GeoradiusbymemberWithdistWithdist {
-	return GeoradiusbymemberWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return GeoradiusbymemberWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberUnitMi) Withhash() GeoradiusbymemberWithhashWithhash {
-	return GeoradiusbymemberWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeoradiusbymemberWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberUnitMi) Count(Count int64) GeoradiusbymemberCountCount {
-	return GeoradiusbymemberCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusbymemberCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberUnitMi) Asc() GeoradiusbymemberOrderAsc {
-	return GeoradiusbymemberOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeoradiusbymemberOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberUnitMi) Desc() GeoradiusbymemberOrderDesc {
-	return GeoradiusbymemberOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeoradiusbymemberOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberUnitMi) Store(Key string) GeoradiusbymemberStore {
-	return GeoradiusbymemberStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return GeoradiusbymemberStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberUnitMi) Storedist(Key string) GeoradiusbymemberStoredist {
-	return GeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberUnitMi) Build() Completed {
@@ -4544,31 +4544,31 @@ func (c GeoradiusbymemberUnitMi) Build() Completed {
 type GeoradiusbymemberWithcoordWithcoord Completed
 
 func (c GeoradiusbymemberWithcoordWithcoord) Withdist() GeoradiusbymemberWithdistWithdist {
-	return GeoradiusbymemberWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return GeoradiusbymemberWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberWithcoordWithcoord) Withhash() GeoradiusbymemberWithhashWithhash {
-	return GeoradiusbymemberWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeoradiusbymemberWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberWithcoordWithcoord) Count(Count int64) GeoradiusbymemberCountCount {
-	return GeoradiusbymemberCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusbymemberCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberWithcoordWithcoord) Asc() GeoradiusbymemberOrderAsc {
-	return GeoradiusbymemberOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeoradiusbymemberOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberWithcoordWithcoord) Desc() GeoradiusbymemberOrderDesc {
-	return GeoradiusbymemberOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeoradiusbymemberOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberWithcoordWithcoord) Store(Key string) GeoradiusbymemberStore {
-	return GeoradiusbymemberStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return GeoradiusbymemberStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberWithcoordWithcoord) Storedist(Key string) GeoradiusbymemberStoredist {
-	return GeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberWithcoordWithcoord) Build() Completed {
@@ -4578,27 +4578,27 @@ func (c GeoradiusbymemberWithcoordWithcoord) Build() Completed {
 type GeoradiusbymemberWithdistWithdist Completed
 
 func (c GeoradiusbymemberWithdistWithdist) Withhash() GeoradiusbymemberWithhashWithhash {
-	return GeoradiusbymemberWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeoradiusbymemberWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberWithdistWithdist) Count(Count int64) GeoradiusbymemberCountCount {
-	return GeoradiusbymemberCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusbymemberCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberWithdistWithdist) Asc() GeoradiusbymemberOrderAsc {
-	return GeoradiusbymemberOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeoradiusbymemberOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberWithdistWithdist) Desc() GeoradiusbymemberOrderDesc {
-	return GeoradiusbymemberOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeoradiusbymemberOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberWithdistWithdist) Store(Key string) GeoradiusbymemberStore {
-	return GeoradiusbymemberStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return GeoradiusbymemberStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberWithdistWithdist) Storedist(Key string) GeoradiusbymemberStoredist {
-	return GeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberWithdistWithdist) Build() Completed {
@@ -4608,23 +4608,23 @@ func (c GeoradiusbymemberWithdistWithdist) Build() Completed {
 type GeoradiusbymemberWithhashWithhash Completed
 
 func (c GeoradiusbymemberWithhashWithhash) Count(Count int64) GeoradiusbymemberCountCount {
-	return GeoradiusbymemberCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeoradiusbymemberCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberWithhashWithhash) Asc() GeoradiusbymemberOrderAsc {
-	return GeoradiusbymemberOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeoradiusbymemberOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberWithhashWithhash) Desc() GeoradiusbymemberOrderDesc {
-	return GeoradiusbymemberOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeoradiusbymemberOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberWithhashWithhash) Store(Key string) GeoradiusbymemberStore {
-	return GeoradiusbymemberStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return GeoradiusbymemberStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberWithhashWithhash) Storedist(Key string) GeoradiusbymemberStoredist {
-	return GeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return GeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c GeoradiusbymemberWithhashWithhash) Build() Completed {
@@ -4634,7 +4634,7 @@ func (c GeoradiusbymemberWithhashWithhash) Build() Completed {
 type Geosearch Completed
 
 func (c Geosearch) Key(Key string) GeosearchKey {
-	return GeosearchKey{cf: c.cf, cs: append(c.cs, Key)}
+	return GeosearchKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Geosearch() (c Geosearch) {
@@ -4645,51 +4645,51 @@ func (b *Builder) Geosearch() (c Geosearch) {
 type GeosearchBoxBybox Completed
 
 func (c GeosearchBoxBybox) Height(Height float64) GeosearchBoxHeight {
-	return GeosearchBoxHeight{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Height, 'f', -1, 64))}
+	return GeosearchBoxHeight{cs: append(c.cs, strconv.FormatFloat(Height, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type GeosearchBoxHeight Completed
 
 func (c GeosearchBoxHeight) M() GeosearchBoxUnitM {
-	return GeosearchBoxUnitM{cf: c.cf, cs: append(c.cs, "m")}
+	return GeosearchBoxUnitM{cs: append(c.cs, "m"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchBoxHeight) Km() GeosearchBoxUnitKm {
-	return GeosearchBoxUnitKm{cf: c.cf, cs: append(c.cs, "km")}
+	return GeosearchBoxUnitKm{cs: append(c.cs, "km"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchBoxHeight) Ft() GeosearchBoxUnitFt {
-	return GeosearchBoxUnitFt{cf: c.cf, cs: append(c.cs, "ft")}
+	return GeosearchBoxUnitFt{cs: append(c.cs, "ft"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchBoxHeight) Mi() GeosearchBoxUnitMi {
-	return GeosearchBoxUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
+	return GeosearchBoxUnitMi{cs: append(c.cs, "mi"), cf: c.cf, ks: c.ks}
 }
 
 type GeosearchBoxUnitFt Completed
 
 func (c GeosearchBoxUnitFt) Asc() GeosearchOrderAsc {
-	return GeosearchOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeosearchOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchBoxUnitFt) Desc() GeosearchOrderDesc {
-	return GeosearchOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeosearchOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchBoxUnitFt) Count(Count int64) GeosearchCountCount {
-	return GeosearchCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchBoxUnitFt) Withcoord() GeosearchWithcoordWithcoord {
-	return GeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchBoxUnitFt) Withdist() GeosearchWithdistWithdist {
-	return GeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchBoxUnitFt) Withhash() GeosearchWithhashWithhash {
-	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchBoxUnitFt) Build() Completed {
@@ -4703,27 +4703,27 @@ func (c GeosearchBoxUnitFt) Cache() Cacheable {
 type GeosearchBoxUnitKm Completed
 
 func (c GeosearchBoxUnitKm) Asc() GeosearchOrderAsc {
-	return GeosearchOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeosearchOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchBoxUnitKm) Desc() GeosearchOrderDesc {
-	return GeosearchOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeosearchOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchBoxUnitKm) Count(Count int64) GeosearchCountCount {
-	return GeosearchCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchBoxUnitKm) Withcoord() GeosearchWithcoordWithcoord {
-	return GeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchBoxUnitKm) Withdist() GeosearchWithdistWithdist {
-	return GeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchBoxUnitKm) Withhash() GeosearchWithhashWithhash {
-	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchBoxUnitKm) Build() Completed {
@@ -4737,27 +4737,27 @@ func (c GeosearchBoxUnitKm) Cache() Cacheable {
 type GeosearchBoxUnitM Completed
 
 func (c GeosearchBoxUnitM) Asc() GeosearchOrderAsc {
-	return GeosearchOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeosearchOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchBoxUnitM) Desc() GeosearchOrderDesc {
-	return GeosearchOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeosearchOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchBoxUnitM) Count(Count int64) GeosearchCountCount {
-	return GeosearchCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchBoxUnitM) Withcoord() GeosearchWithcoordWithcoord {
-	return GeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchBoxUnitM) Withdist() GeosearchWithdistWithdist {
-	return GeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchBoxUnitM) Withhash() GeosearchWithhashWithhash {
-	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchBoxUnitM) Build() Completed {
@@ -4771,27 +4771,27 @@ func (c GeosearchBoxUnitM) Cache() Cacheable {
 type GeosearchBoxUnitMi Completed
 
 func (c GeosearchBoxUnitMi) Asc() GeosearchOrderAsc {
-	return GeosearchOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeosearchOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchBoxUnitMi) Desc() GeosearchOrderDesc {
-	return GeosearchOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeosearchOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchBoxUnitMi) Count(Count int64) GeosearchCountCount {
-	return GeosearchCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchBoxUnitMi) Withcoord() GeosearchWithcoordWithcoord {
-	return GeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchBoxUnitMi) Withdist() GeosearchWithdistWithdist {
-	return GeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchBoxUnitMi) Withhash() GeosearchWithhashWithhash {
-	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchBoxUnitMi) Build() Completed {
@@ -4805,49 +4805,49 @@ func (c GeosearchBoxUnitMi) Cache() Cacheable {
 type GeosearchCircleByradius Completed
 
 func (c GeosearchCircleByradius) M() GeosearchCircleUnitM {
-	return GeosearchCircleUnitM{cf: c.cf, cs: append(c.cs, "m")}
+	return GeosearchCircleUnitM{cs: append(c.cs, "m"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchCircleByradius) Km() GeosearchCircleUnitKm {
-	return GeosearchCircleUnitKm{cf: c.cf, cs: append(c.cs, "km")}
+	return GeosearchCircleUnitKm{cs: append(c.cs, "km"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchCircleByradius) Ft() GeosearchCircleUnitFt {
-	return GeosearchCircleUnitFt{cf: c.cf, cs: append(c.cs, "ft")}
+	return GeosearchCircleUnitFt{cs: append(c.cs, "ft"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchCircleByradius) Mi() GeosearchCircleUnitMi {
-	return GeosearchCircleUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
+	return GeosearchCircleUnitMi{cs: append(c.cs, "mi"), cf: c.cf, ks: c.ks}
 }
 
 type GeosearchCircleUnitFt Completed
 
 func (c GeosearchCircleUnitFt) Bybox(Width float64) GeosearchBoxBybox {
-	return GeosearchBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return GeosearchBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchCircleUnitFt) Asc() GeosearchOrderAsc {
-	return GeosearchOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeosearchOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchCircleUnitFt) Desc() GeosearchOrderDesc {
-	return GeosearchOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeosearchOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchCircleUnitFt) Count(Count int64) GeosearchCountCount {
-	return GeosearchCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchCircleUnitFt) Withcoord() GeosearchWithcoordWithcoord {
-	return GeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchCircleUnitFt) Withdist() GeosearchWithdistWithdist {
-	return GeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchCircleUnitFt) Withhash() GeosearchWithhashWithhash {
-	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchCircleUnitFt) Build() Completed {
@@ -4861,31 +4861,31 @@ func (c GeosearchCircleUnitFt) Cache() Cacheable {
 type GeosearchCircleUnitKm Completed
 
 func (c GeosearchCircleUnitKm) Bybox(Width float64) GeosearchBoxBybox {
-	return GeosearchBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return GeosearchBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchCircleUnitKm) Asc() GeosearchOrderAsc {
-	return GeosearchOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeosearchOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchCircleUnitKm) Desc() GeosearchOrderDesc {
-	return GeosearchOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeosearchOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchCircleUnitKm) Count(Count int64) GeosearchCountCount {
-	return GeosearchCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchCircleUnitKm) Withcoord() GeosearchWithcoordWithcoord {
-	return GeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchCircleUnitKm) Withdist() GeosearchWithdistWithdist {
-	return GeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchCircleUnitKm) Withhash() GeosearchWithhashWithhash {
-	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchCircleUnitKm) Build() Completed {
@@ -4899,31 +4899,31 @@ func (c GeosearchCircleUnitKm) Cache() Cacheable {
 type GeosearchCircleUnitM Completed
 
 func (c GeosearchCircleUnitM) Bybox(Width float64) GeosearchBoxBybox {
-	return GeosearchBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return GeosearchBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchCircleUnitM) Asc() GeosearchOrderAsc {
-	return GeosearchOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeosearchOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchCircleUnitM) Desc() GeosearchOrderDesc {
-	return GeosearchOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeosearchOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchCircleUnitM) Count(Count int64) GeosearchCountCount {
-	return GeosearchCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchCircleUnitM) Withcoord() GeosearchWithcoordWithcoord {
-	return GeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchCircleUnitM) Withdist() GeosearchWithdistWithdist {
-	return GeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchCircleUnitM) Withhash() GeosearchWithhashWithhash {
-	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchCircleUnitM) Build() Completed {
@@ -4937,31 +4937,31 @@ func (c GeosearchCircleUnitM) Cache() Cacheable {
 type GeosearchCircleUnitMi Completed
 
 func (c GeosearchCircleUnitMi) Bybox(Width float64) GeosearchBoxBybox {
-	return GeosearchBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return GeosearchBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchCircleUnitMi) Asc() GeosearchOrderAsc {
-	return GeosearchOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeosearchOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchCircleUnitMi) Desc() GeosearchOrderDesc {
-	return GeosearchOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeosearchOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchCircleUnitMi) Count(Count int64) GeosearchCountCount {
-	return GeosearchCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchCircleUnitMi) Withcoord() GeosearchWithcoordWithcoord {
-	return GeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchCircleUnitMi) Withdist() GeosearchWithdistWithdist {
-	return GeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchCircleUnitMi) Withhash() GeosearchWithhashWithhash {
-	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchCircleUnitMi) Build() Completed {
@@ -4975,15 +4975,15 @@ func (c GeosearchCircleUnitMi) Cache() Cacheable {
 type GeosearchCountAnyAny Completed
 
 func (c GeosearchCountAnyAny) Withcoord() GeosearchWithcoordWithcoord {
-	return GeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchCountAnyAny) Withdist() GeosearchWithdistWithdist {
-	return GeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchCountAnyAny) Withhash() GeosearchWithhashWithhash {
-	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchCountAnyAny) Build() Completed {
@@ -4997,19 +4997,19 @@ func (c GeosearchCountAnyAny) Cache() Cacheable {
 type GeosearchCountCount Completed
 
 func (c GeosearchCountCount) Any() GeosearchCountAnyAny {
-	return GeosearchCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
+	return GeosearchCountAnyAny{cs: append(c.cs, "ANY"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchCountCount) Withcoord() GeosearchWithcoordWithcoord {
-	return GeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchCountCount) Withdist() GeosearchWithdistWithdist {
-	return GeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchCountCount) Withhash() GeosearchWithhashWithhash {
-	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchCountCount) Build() Completed {
@@ -5023,35 +5023,35 @@ func (c GeosearchCountCount) Cache() Cacheable {
 type GeosearchFromlonlat Completed
 
 func (c GeosearchFromlonlat) Byradius(Radius float64) GeosearchCircleByradius {
-	return GeosearchCircleByradius{cf: c.cf, cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64))}
+	return GeosearchCircleByradius{cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchFromlonlat) Bybox(Width float64) GeosearchBoxBybox {
-	return GeosearchBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return GeosearchBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchFromlonlat) Asc() GeosearchOrderAsc {
-	return GeosearchOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeosearchOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchFromlonlat) Desc() GeosearchOrderDesc {
-	return GeosearchOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeosearchOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchFromlonlat) Count(Count int64) GeosearchCountCount {
-	return GeosearchCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchFromlonlat) Withcoord() GeosearchWithcoordWithcoord {
-	return GeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchFromlonlat) Withdist() GeosearchWithdistWithdist {
-	return GeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchFromlonlat) Withhash() GeosearchWithhashWithhash {
-	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchFromlonlat) Build() Completed {
@@ -5065,39 +5065,39 @@ func (c GeosearchFromlonlat) Cache() Cacheable {
 type GeosearchFrommember Completed
 
 func (c GeosearchFrommember) Fromlonlat(Longitude float64, Latitude float64) GeosearchFromlonlat {
-	return GeosearchFromlonlat{cf: c.cf, cs: append(c.cs, "FROMLONLAT", strconv.FormatFloat(Longitude, 'f', -1, 64), strconv.FormatFloat(Latitude, 'f', -1, 64))}
+	return GeosearchFromlonlat{cs: append(c.cs, "FROMLONLAT", strconv.FormatFloat(Longitude, 'f', -1, 64), strconv.FormatFloat(Latitude, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchFrommember) Byradius(Radius float64) GeosearchCircleByradius {
-	return GeosearchCircleByradius{cf: c.cf, cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64))}
+	return GeosearchCircleByradius{cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchFrommember) Bybox(Width float64) GeosearchBoxBybox {
-	return GeosearchBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return GeosearchBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchFrommember) Asc() GeosearchOrderAsc {
-	return GeosearchOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeosearchOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchFrommember) Desc() GeosearchOrderDesc {
-	return GeosearchOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeosearchOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchFrommember) Count(Count int64) GeosearchCountCount {
-	return GeosearchCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchFrommember) Withcoord() GeosearchWithcoordWithcoord {
-	return GeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchFrommember) Withdist() GeosearchWithdistWithdist {
-	return GeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchFrommember) Withhash() GeosearchWithhashWithhash {
-	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchFrommember) Build() Completed {
@@ -5111,43 +5111,43 @@ func (c GeosearchFrommember) Cache() Cacheable {
 type GeosearchKey Completed
 
 func (c GeosearchKey) Frommember(Member string) GeosearchFrommember {
-	return GeosearchFrommember{cf: c.cf, cs: append(c.cs, "FROMMEMBER", Member)}
+	return GeosearchFrommember{cs: append(c.cs, "FROMMEMBER", Member), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchKey) Fromlonlat(Longitude float64, Latitude float64) GeosearchFromlonlat {
-	return GeosearchFromlonlat{cf: c.cf, cs: append(c.cs, "FROMLONLAT", strconv.FormatFloat(Longitude, 'f', -1, 64), strconv.FormatFloat(Latitude, 'f', -1, 64))}
+	return GeosearchFromlonlat{cs: append(c.cs, "FROMLONLAT", strconv.FormatFloat(Longitude, 'f', -1, 64), strconv.FormatFloat(Latitude, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchKey) Byradius(Radius float64) GeosearchCircleByradius {
-	return GeosearchCircleByradius{cf: c.cf, cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64))}
+	return GeosearchCircleByradius{cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchKey) Bybox(Width float64) GeosearchBoxBybox {
-	return GeosearchBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return GeosearchBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchKey) Asc() GeosearchOrderAsc {
-	return GeosearchOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeosearchOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchKey) Desc() GeosearchOrderDesc {
-	return GeosearchOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeosearchOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchKey) Count(Count int64) GeosearchCountCount {
-	return GeosearchCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchKey) Withcoord() GeosearchWithcoordWithcoord {
-	return GeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchKey) Withdist() GeosearchWithdistWithdist {
-	return GeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchKey) Withhash() GeosearchWithhashWithhash {
-	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchKey) Build() Completed {
@@ -5161,19 +5161,19 @@ func (c GeosearchKey) Cache() Cacheable {
 type GeosearchOrderAsc Completed
 
 func (c GeosearchOrderAsc) Count(Count int64) GeosearchCountCount {
-	return GeosearchCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchOrderAsc) Withcoord() GeosearchWithcoordWithcoord {
-	return GeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchOrderAsc) Withdist() GeosearchWithdistWithdist {
-	return GeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchOrderAsc) Withhash() GeosearchWithhashWithhash {
-	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchOrderAsc) Build() Completed {
@@ -5187,19 +5187,19 @@ func (c GeosearchOrderAsc) Cache() Cacheable {
 type GeosearchOrderDesc Completed
 
 func (c GeosearchOrderDesc) Count(Count int64) GeosearchCountCount {
-	return GeosearchCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchOrderDesc) Withcoord() GeosearchWithcoordWithcoord {
-	return GeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return GeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchOrderDesc) Withdist() GeosearchWithdistWithdist {
-	return GeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchOrderDesc) Withhash() GeosearchWithhashWithhash {
-	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchOrderDesc) Build() Completed {
@@ -5213,11 +5213,11 @@ func (c GeosearchOrderDesc) Cache() Cacheable {
 type GeosearchWithcoordWithcoord Completed
 
 func (c GeosearchWithcoordWithcoord) Withdist() GeosearchWithdistWithdist {
-	return GeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return GeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchWithcoordWithcoord) Withhash() GeosearchWithhashWithhash {
-	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchWithcoordWithcoord) Build() Completed {
@@ -5231,7 +5231,7 @@ func (c GeosearchWithcoordWithcoord) Cache() Cacheable {
 type GeosearchWithdistWithdist Completed
 
 func (c GeosearchWithdistWithdist) Withhash() GeosearchWithhashWithhash {
-	return GeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return GeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchWithdistWithdist) Build() Completed {
@@ -5255,7 +5255,7 @@ func (c GeosearchWithhashWithhash) Cache() Cacheable {
 type Geosearchstore Completed
 
 func (c Geosearchstore) Destination(Destination string) GeosearchstoreDestination {
-	return GeosearchstoreDestination{cf: c.cf, cs: append(c.cs, Destination)}
+	return GeosearchstoreDestination{cs: append(c.cs, Destination), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Geosearchstore() (c Geosearchstore) {
@@ -5266,43 +5266,43 @@ func (b *Builder) Geosearchstore() (c Geosearchstore) {
 type GeosearchstoreBoxBybox Completed
 
 func (c GeosearchstoreBoxBybox) Height(Height float64) GeosearchstoreBoxHeight {
-	return GeosearchstoreBoxHeight{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Height, 'f', -1, 64))}
+	return GeosearchstoreBoxHeight{cs: append(c.cs, strconv.FormatFloat(Height, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type GeosearchstoreBoxHeight Completed
 
 func (c GeosearchstoreBoxHeight) M() GeosearchstoreBoxUnitM {
-	return GeosearchstoreBoxUnitM{cf: c.cf, cs: append(c.cs, "m")}
+	return GeosearchstoreBoxUnitM{cs: append(c.cs, "m"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreBoxHeight) Km() GeosearchstoreBoxUnitKm {
-	return GeosearchstoreBoxUnitKm{cf: c.cf, cs: append(c.cs, "km")}
+	return GeosearchstoreBoxUnitKm{cs: append(c.cs, "km"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreBoxHeight) Ft() GeosearchstoreBoxUnitFt {
-	return GeosearchstoreBoxUnitFt{cf: c.cf, cs: append(c.cs, "ft")}
+	return GeosearchstoreBoxUnitFt{cs: append(c.cs, "ft"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreBoxHeight) Mi() GeosearchstoreBoxUnitMi {
-	return GeosearchstoreBoxUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
+	return GeosearchstoreBoxUnitMi{cs: append(c.cs, "mi"), cf: c.cf, ks: c.ks}
 }
 
 type GeosearchstoreBoxUnitFt Completed
 
 func (c GeosearchstoreBoxUnitFt) Asc() GeosearchstoreOrderAsc {
-	return GeosearchstoreOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeosearchstoreOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreBoxUnitFt) Desc() GeosearchstoreOrderDesc {
-	return GeosearchstoreOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeosearchstoreOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreBoxUnitFt) Count(Count int64) GeosearchstoreCountCount {
-	return GeosearchstoreCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreBoxUnitFt) Storedist() GeosearchstoreStoredistStoredist {
-	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreBoxUnitFt) Build() Completed {
@@ -5312,19 +5312,19 @@ func (c GeosearchstoreBoxUnitFt) Build() Completed {
 type GeosearchstoreBoxUnitKm Completed
 
 func (c GeosearchstoreBoxUnitKm) Asc() GeosearchstoreOrderAsc {
-	return GeosearchstoreOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeosearchstoreOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreBoxUnitKm) Desc() GeosearchstoreOrderDesc {
-	return GeosearchstoreOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeosearchstoreOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreBoxUnitKm) Count(Count int64) GeosearchstoreCountCount {
-	return GeosearchstoreCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreBoxUnitKm) Storedist() GeosearchstoreStoredistStoredist {
-	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreBoxUnitKm) Build() Completed {
@@ -5334,19 +5334,19 @@ func (c GeosearchstoreBoxUnitKm) Build() Completed {
 type GeosearchstoreBoxUnitM Completed
 
 func (c GeosearchstoreBoxUnitM) Asc() GeosearchstoreOrderAsc {
-	return GeosearchstoreOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeosearchstoreOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreBoxUnitM) Desc() GeosearchstoreOrderDesc {
-	return GeosearchstoreOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeosearchstoreOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreBoxUnitM) Count(Count int64) GeosearchstoreCountCount {
-	return GeosearchstoreCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreBoxUnitM) Storedist() GeosearchstoreStoredistStoredist {
-	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreBoxUnitM) Build() Completed {
@@ -5356,19 +5356,19 @@ func (c GeosearchstoreBoxUnitM) Build() Completed {
 type GeosearchstoreBoxUnitMi Completed
 
 func (c GeosearchstoreBoxUnitMi) Asc() GeosearchstoreOrderAsc {
-	return GeosearchstoreOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeosearchstoreOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreBoxUnitMi) Desc() GeosearchstoreOrderDesc {
-	return GeosearchstoreOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeosearchstoreOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreBoxUnitMi) Count(Count int64) GeosearchstoreCountCount {
-	return GeosearchstoreCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreBoxUnitMi) Storedist() GeosearchstoreStoredistStoredist {
-	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreBoxUnitMi) Build() Completed {
@@ -5378,41 +5378,41 @@ func (c GeosearchstoreBoxUnitMi) Build() Completed {
 type GeosearchstoreCircleByradius Completed
 
 func (c GeosearchstoreCircleByradius) M() GeosearchstoreCircleUnitM {
-	return GeosearchstoreCircleUnitM{cf: c.cf, cs: append(c.cs, "m")}
+	return GeosearchstoreCircleUnitM{cs: append(c.cs, "m"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreCircleByradius) Km() GeosearchstoreCircleUnitKm {
-	return GeosearchstoreCircleUnitKm{cf: c.cf, cs: append(c.cs, "km")}
+	return GeosearchstoreCircleUnitKm{cs: append(c.cs, "km"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreCircleByradius) Ft() GeosearchstoreCircleUnitFt {
-	return GeosearchstoreCircleUnitFt{cf: c.cf, cs: append(c.cs, "ft")}
+	return GeosearchstoreCircleUnitFt{cs: append(c.cs, "ft"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreCircleByradius) Mi() GeosearchstoreCircleUnitMi {
-	return GeosearchstoreCircleUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
+	return GeosearchstoreCircleUnitMi{cs: append(c.cs, "mi"), cf: c.cf, ks: c.ks}
 }
 
 type GeosearchstoreCircleUnitFt Completed
 
 func (c GeosearchstoreCircleUnitFt) Bybox(Width float64) GeosearchstoreBoxBybox {
-	return GeosearchstoreBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return GeosearchstoreBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreCircleUnitFt) Asc() GeosearchstoreOrderAsc {
-	return GeosearchstoreOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeosearchstoreOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreCircleUnitFt) Desc() GeosearchstoreOrderDesc {
-	return GeosearchstoreOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeosearchstoreOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreCircleUnitFt) Count(Count int64) GeosearchstoreCountCount {
-	return GeosearchstoreCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreCircleUnitFt) Storedist() GeosearchstoreStoredistStoredist {
-	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreCircleUnitFt) Build() Completed {
@@ -5422,23 +5422,23 @@ func (c GeosearchstoreCircleUnitFt) Build() Completed {
 type GeosearchstoreCircleUnitKm Completed
 
 func (c GeosearchstoreCircleUnitKm) Bybox(Width float64) GeosearchstoreBoxBybox {
-	return GeosearchstoreBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return GeosearchstoreBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreCircleUnitKm) Asc() GeosearchstoreOrderAsc {
-	return GeosearchstoreOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeosearchstoreOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreCircleUnitKm) Desc() GeosearchstoreOrderDesc {
-	return GeosearchstoreOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeosearchstoreOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreCircleUnitKm) Count(Count int64) GeosearchstoreCountCount {
-	return GeosearchstoreCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreCircleUnitKm) Storedist() GeosearchstoreStoredistStoredist {
-	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreCircleUnitKm) Build() Completed {
@@ -5448,23 +5448,23 @@ func (c GeosearchstoreCircleUnitKm) Build() Completed {
 type GeosearchstoreCircleUnitM Completed
 
 func (c GeosearchstoreCircleUnitM) Bybox(Width float64) GeosearchstoreBoxBybox {
-	return GeosearchstoreBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return GeosearchstoreBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreCircleUnitM) Asc() GeosearchstoreOrderAsc {
-	return GeosearchstoreOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeosearchstoreOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreCircleUnitM) Desc() GeosearchstoreOrderDesc {
-	return GeosearchstoreOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeosearchstoreOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreCircleUnitM) Count(Count int64) GeosearchstoreCountCount {
-	return GeosearchstoreCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreCircleUnitM) Storedist() GeosearchstoreStoredistStoredist {
-	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreCircleUnitM) Build() Completed {
@@ -5474,23 +5474,23 @@ func (c GeosearchstoreCircleUnitM) Build() Completed {
 type GeosearchstoreCircleUnitMi Completed
 
 func (c GeosearchstoreCircleUnitMi) Bybox(Width float64) GeosearchstoreBoxBybox {
-	return GeosearchstoreBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return GeosearchstoreBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreCircleUnitMi) Asc() GeosearchstoreOrderAsc {
-	return GeosearchstoreOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeosearchstoreOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreCircleUnitMi) Desc() GeosearchstoreOrderDesc {
-	return GeosearchstoreOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeosearchstoreOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreCircleUnitMi) Count(Count int64) GeosearchstoreCountCount {
-	return GeosearchstoreCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreCircleUnitMi) Storedist() GeosearchstoreStoredistStoredist {
-	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreCircleUnitMi) Build() Completed {
@@ -5500,7 +5500,7 @@ func (c GeosearchstoreCircleUnitMi) Build() Completed {
 type GeosearchstoreCountAnyAny Completed
 
 func (c GeosearchstoreCountAnyAny) Storedist() GeosearchstoreStoredistStoredist {
-	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreCountAnyAny) Build() Completed {
@@ -5510,11 +5510,11 @@ func (c GeosearchstoreCountAnyAny) Build() Completed {
 type GeosearchstoreCountCount Completed
 
 func (c GeosearchstoreCountCount) Any() GeosearchstoreCountAnyAny {
-	return GeosearchstoreCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
+	return GeosearchstoreCountAnyAny{cs: append(c.cs, "ANY"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreCountCount) Storedist() GeosearchstoreStoredistStoredist {
-	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreCountCount) Build() Completed {
@@ -5524,33 +5524,33 @@ func (c GeosearchstoreCountCount) Build() Completed {
 type GeosearchstoreDestination Completed
 
 func (c GeosearchstoreDestination) Source(Source string) GeosearchstoreSource {
-	return GeosearchstoreSource{cf: c.cf, cs: append(c.cs, Source)}
+	return GeosearchstoreSource{cs: append(c.cs, Source), cf: c.cf, ks: c.ks}
 }
 
 type GeosearchstoreFromlonlat Completed
 
 func (c GeosearchstoreFromlonlat) Byradius(Radius float64) GeosearchstoreCircleByradius {
-	return GeosearchstoreCircleByradius{cf: c.cf, cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64))}
+	return GeosearchstoreCircleByradius{cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreFromlonlat) Bybox(Width float64) GeosearchstoreBoxBybox {
-	return GeosearchstoreBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return GeosearchstoreBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreFromlonlat) Asc() GeosearchstoreOrderAsc {
-	return GeosearchstoreOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeosearchstoreOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreFromlonlat) Desc() GeosearchstoreOrderDesc {
-	return GeosearchstoreOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeosearchstoreOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreFromlonlat) Count(Count int64) GeosearchstoreCountCount {
-	return GeosearchstoreCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreFromlonlat) Storedist() GeosearchstoreStoredistStoredist {
-	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreFromlonlat) Build() Completed {
@@ -5560,31 +5560,31 @@ func (c GeosearchstoreFromlonlat) Build() Completed {
 type GeosearchstoreFrommember Completed
 
 func (c GeosearchstoreFrommember) Fromlonlat(Longitude float64, Latitude float64) GeosearchstoreFromlonlat {
-	return GeosearchstoreFromlonlat{cf: c.cf, cs: append(c.cs, "FROMLONLAT", strconv.FormatFloat(Longitude, 'f', -1, 64), strconv.FormatFloat(Latitude, 'f', -1, 64))}
+	return GeosearchstoreFromlonlat{cs: append(c.cs, "FROMLONLAT", strconv.FormatFloat(Longitude, 'f', -1, 64), strconv.FormatFloat(Latitude, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreFrommember) Byradius(Radius float64) GeosearchstoreCircleByradius {
-	return GeosearchstoreCircleByradius{cf: c.cf, cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64))}
+	return GeosearchstoreCircleByradius{cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreFrommember) Bybox(Width float64) GeosearchstoreBoxBybox {
-	return GeosearchstoreBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return GeosearchstoreBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreFrommember) Asc() GeosearchstoreOrderAsc {
-	return GeosearchstoreOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeosearchstoreOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreFrommember) Desc() GeosearchstoreOrderDesc {
-	return GeosearchstoreOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeosearchstoreOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreFrommember) Count(Count int64) GeosearchstoreCountCount {
-	return GeosearchstoreCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreFrommember) Storedist() GeosearchstoreStoredistStoredist {
-	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreFrommember) Build() Completed {
@@ -5594,11 +5594,11 @@ func (c GeosearchstoreFrommember) Build() Completed {
 type GeosearchstoreOrderAsc Completed
 
 func (c GeosearchstoreOrderAsc) Count(Count int64) GeosearchstoreCountCount {
-	return GeosearchstoreCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreOrderAsc) Storedist() GeosearchstoreStoredistStoredist {
-	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreOrderAsc) Build() Completed {
@@ -5608,11 +5608,11 @@ func (c GeosearchstoreOrderAsc) Build() Completed {
 type GeosearchstoreOrderDesc Completed
 
 func (c GeosearchstoreOrderDesc) Count(Count int64) GeosearchstoreCountCount {
-	return GeosearchstoreCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreOrderDesc) Storedist() GeosearchstoreStoredistStoredist {
-	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreOrderDesc) Build() Completed {
@@ -5622,35 +5622,35 @@ func (c GeosearchstoreOrderDesc) Build() Completed {
 type GeosearchstoreSource Completed
 
 func (c GeosearchstoreSource) Frommember(Member string) GeosearchstoreFrommember {
-	return GeosearchstoreFrommember{cf: c.cf, cs: append(c.cs, "FROMMEMBER", Member)}
+	return GeosearchstoreFrommember{cs: append(c.cs, "FROMMEMBER", Member), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreSource) Fromlonlat(Longitude float64, Latitude float64) GeosearchstoreFromlonlat {
-	return GeosearchstoreFromlonlat{cf: c.cf, cs: append(c.cs, "FROMLONLAT", strconv.FormatFloat(Longitude, 'f', -1, 64), strconv.FormatFloat(Latitude, 'f', -1, 64))}
+	return GeosearchstoreFromlonlat{cs: append(c.cs, "FROMLONLAT", strconv.FormatFloat(Longitude, 'f', -1, 64), strconv.FormatFloat(Latitude, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreSource) Byradius(Radius float64) GeosearchstoreCircleByradius {
-	return GeosearchstoreCircleByradius{cf: c.cf, cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64))}
+	return GeosearchstoreCircleByradius{cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreSource) Bybox(Width float64) GeosearchstoreBoxBybox {
-	return GeosearchstoreBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return GeosearchstoreBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreSource) Asc() GeosearchstoreOrderAsc {
-	return GeosearchstoreOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return GeosearchstoreOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreSource) Desc() GeosearchstoreOrderDesc {
-	return GeosearchstoreOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return GeosearchstoreOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreSource) Count(Count int64) GeosearchstoreCountCount {
-	return GeosearchstoreCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return GeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreSource) Storedist() GeosearchstoreStoredistStoredist {
-	return GeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+	return GeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GeosearchstoreSource) Build() Completed {
@@ -5666,7 +5666,7 @@ func (c GeosearchstoreStoredistStoredist) Build() Completed {
 type Get Completed
 
 func (c Get) Key(Key string) GetKey {
-	return GetKey{cf: c.cf, cs: append(c.cs, Key)}
+	return GetKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Get() (c Get) {
@@ -5687,7 +5687,7 @@ func (c GetKey) Cache() Cacheable {
 type Getbit Completed
 
 func (c Getbit) Key(Key string) GetbitKey {
-	return GetbitKey{cf: c.cf, cs: append(c.cs, Key)}
+	return GetbitKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Getbit() (c Getbit) {
@@ -5698,7 +5698,7 @@ func (b *Builder) Getbit() (c Getbit) {
 type GetbitKey Completed
 
 func (c GetbitKey) Offset(Offset int64) GetbitOffset {
-	return GetbitOffset{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Offset, 10))}
+	return GetbitOffset{cs: append(c.cs, strconv.FormatInt(Offset, 10)), cf: c.cf, ks: c.ks}
 }
 
 type GetbitOffset Completed
@@ -5714,7 +5714,7 @@ func (c GetbitOffset) Cache() Cacheable {
 type Getdel Completed
 
 func (c Getdel) Key(Key string) GetdelKey {
-	return GetdelKey{cf: c.cf, cs: append(c.cs, Key)}
+	return GetdelKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Getdel() (c Getdel) {
@@ -5731,7 +5731,7 @@ func (c GetdelKey) Build() Completed {
 type Getex Completed
 
 func (c Getex) Key(Key string) GetexKey {
-	return GetexKey{cf: c.cf, cs: append(c.cs, Key)}
+	return GetexKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Getex() (c Getex) {
@@ -5772,23 +5772,23 @@ func (c GetexExpirationPxat) Build() Completed {
 type GetexKey Completed
 
 func (c GetexKey) Ex(Seconds int64) GetexExpirationEx {
-	return GetexExpirationEx{cf: c.cf, cs: append(c.cs, "EX", strconv.FormatInt(Seconds, 10))}
+	return GetexExpirationEx{cs: append(c.cs, "EX", strconv.FormatInt(Seconds, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GetexKey) Px(Milliseconds int64) GetexExpirationPx {
-	return GetexExpirationPx{cf: c.cf, cs: append(c.cs, "PX", strconv.FormatInt(Milliseconds, 10))}
+	return GetexExpirationPx{cs: append(c.cs, "PX", strconv.FormatInt(Milliseconds, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GetexKey) Exat(Timestamp int64) GetexExpirationExat {
-	return GetexExpirationExat{cf: c.cf, cs: append(c.cs, "EXAT", strconv.FormatInt(Timestamp, 10))}
+	return GetexExpirationExat{cs: append(c.cs, "EXAT", strconv.FormatInt(Timestamp, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GetexKey) Pxat(Millisecondstimestamp int64) GetexExpirationPxat {
-	return GetexExpirationPxat{cf: c.cf, cs: append(c.cs, "PXAT", strconv.FormatInt(Millisecondstimestamp, 10))}
+	return GetexExpirationPxat{cs: append(c.cs, "PXAT", strconv.FormatInt(Millisecondstimestamp, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c GetexKey) Persist() GetexExpirationPersist {
-	return GetexExpirationPersist{cf: c.cf, cs: append(c.cs, "PERSIST")}
+	return GetexExpirationPersist{cs: append(c.cs, "PERSIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c GetexKey) Build() Completed {
@@ -5798,7 +5798,7 @@ func (c GetexKey) Build() Completed {
 type Getrange Completed
 
 func (c Getrange) Key(Key string) GetrangeKey {
-	return GetrangeKey{cf: c.cf, cs: append(c.cs, Key)}
+	return GetrangeKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Getrange() (c Getrange) {
@@ -5819,19 +5819,19 @@ func (c GetrangeEnd) Cache() Cacheable {
 type GetrangeKey Completed
 
 func (c GetrangeKey) Start(Start int64) GetrangeStart {
-	return GetrangeStart{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Start, 10))}
+	return GetrangeStart{cs: append(c.cs, strconv.FormatInt(Start, 10)), cf: c.cf, ks: c.ks}
 }
 
 type GetrangeStart Completed
 
 func (c GetrangeStart) End(End int64) GetrangeEnd {
-	return GetrangeEnd{cf: c.cf, cs: append(c.cs, strconv.FormatInt(End, 10))}
+	return GetrangeEnd{cs: append(c.cs, strconv.FormatInt(End, 10)), cf: c.cf, ks: c.ks}
 }
 
 type Getset Completed
 
 func (c Getset) Key(Key string) GetsetKey {
-	return GetsetKey{cf: c.cf, cs: append(c.cs, Key)}
+	return GetsetKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Getset() (c Getset) {
@@ -5842,7 +5842,7 @@ func (b *Builder) Getset() (c Getset) {
 type GetsetKey Completed
 
 func (c GetsetKey) Value(Value string) GetsetValue {
-	return GetsetValue{cf: c.cf, cs: append(c.cs, Value)}
+	return GetsetValue{cs: append(c.cs, Value), cf: c.cf, ks: c.ks}
 }
 
 type GetsetValue Completed
@@ -5854,7 +5854,7 @@ func (c GetsetValue) Build() Completed {
 type Hdel Completed
 
 func (c Hdel) Key(Key string) HdelKey {
-	return HdelKey{cf: c.cf, cs: append(c.cs, Key)}
+	return HdelKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Hdel() (c Hdel) {
@@ -5865,7 +5865,7 @@ func (b *Builder) Hdel() (c Hdel) {
 type HdelField Completed
 
 func (c HdelField) Field(Field ...string) HdelField {
-	return HdelField{cf: c.cf, cs: append(c.cs, Field...)}
+	return HdelField{cs: append(c.cs, Field...), cf: c.cf, ks: c.ks}
 }
 
 func (c HdelField) Build() Completed {
@@ -5875,13 +5875,13 @@ func (c HdelField) Build() Completed {
 type HdelKey Completed
 
 func (c HdelKey) Field(Field ...string) HdelField {
-	return HdelField{cf: c.cf, cs: append(c.cs, Field...)}
+	return HdelField{cs: append(c.cs, Field...), cf: c.cf, ks: c.ks}
 }
 
 type Hello Completed
 
 func (c Hello) Protover(Protover int64) HelloArgumentsProtover {
-	return HelloArgumentsProtover{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Protover, 10))}
+	return HelloArgumentsProtover{cs: append(c.cs, strconv.FormatInt(Protover, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c Hello) Build() Completed {
@@ -5896,7 +5896,7 @@ func (b *Builder) Hello() (c Hello) {
 type HelloArgumentsAuth Completed
 
 func (c HelloArgumentsAuth) Setname(Clientname string) HelloArgumentsSetname {
-	return HelloArgumentsSetname{cf: c.cf, cs: append(c.cs, "SETNAME", Clientname)}
+	return HelloArgumentsSetname{cs: append(c.cs, "SETNAME", Clientname), cf: c.cf, ks: c.ks}
 }
 
 func (c HelloArgumentsAuth) Build() Completed {
@@ -5906,11 +5906,11 @@ func (c HelloArgumentsAuth) Build() Completed {
 type HelloArgumentsProtover Completed
 
 func (c HelloArgumentsProtover) Auth(Username string, Password string) HelloArgumentsAuth {
-	return HelloArgumentsAuth{cf: c.cf, cs: append(c.cs, "AUTH", Username, Password)}
+	return HelloArgumentsAuth{cs: append(c.cs, "AUTH", Username, Password), cf: c.cf, ks: c.ks}
 }
 
 func (c HelloArgumentsProtover) Setname(Clientname string) HelloArgumentsSetname {
-	return HelloArgumentsSetname{cf: c.cf, cs: append(c.cs, "SETNAME", Clientname)}
+	return HelloArgumentsSetname{cs: append(c.cs, "SETNAME", Clientname), cf: c.cf, ks: c.ks}
 }
 
 func (c HelloArgumentsProtover) Build() Completed {
@@ -5926,7 +5926,7 @@ func (c HelloArgumentsSetname) Build() Completed {
 type Hexists Completed
 
 func (c Hexists) Key(Key string) HexistsKey {
-	return HexistsKey{cf: c.cf, cs: append(c.cs, Key)}
+	return HexistsKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Hexists() (c Hexists) {
@@ -5947,13 +5947,13 @@ func (c HexistsField) Cache() Cacheable {
 type HexistsKey Completed
 
 func (c HexistsKey) Field(Field string) HexistsField {
-	return HexistsField{cf: c.cf, cs: append(c.cs, Field)}
+	return HexistsField{cs: append(c.cs, Field), cf: c.cf, ks: c.ks}
 }
 
 type Hget Completed
 
 func (c Hget) Key(Key string) HgetKey {
-	return HgetKey{cf: c.cf, cs: append(c.cs, Key)}
+	return HgetKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Hget() (c Hget) {
@@ -5974,13 +5974,13 @@ func (c HgetField) Cache() Cacheable {
 type HgetKey Completed
 
 func (c HgetKey) Field(Field string) HgetField {
-	return HgetField{cf: c.cf, cs: append(c.cs, Field)}
+	return HgetField{cs: append(c.cs, Field), cf: c.cf, ks: c.ks}
 }
 
 type Hgetall Completed
 
 func (c Hgetall) Key(Key string) HgetallKey {
-	return HgetallKey{cf: c.cf, cs: append(c.cs, Key)}
+	return HgetallKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Hgetall() (c Hgetall) {
@@ -6001,7 +6001,7 @@ func (c HgetallKey) Cache() Cacheable {
 type Hincrby Completed
 
 func (c Hincrby) Key(Key string) HincrbyKey {
-	return HincrbyKey{cf: c.cf, cs: append(c.cs, Key)}
+	return HincrbyKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Hincrby() (c Hincrby) {
@@ -6012,7 +6012,7 @@ func (b *Builder) Hincrby() (c Hincrby) {
 type HincrbyField Completed
 
 func (c HincrbyField) Increment(Increment int64) HincrbyIncrement {
-	return HincrbyIncrement{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Increment, 10))}
+	return HincrbyIncrement{cs: append(c.cs, strconv.FormatInt(Increment, 10)), cf: c.cf, ks: c.ks}
 }
 
 type HincrbyIncrement Completed
@@ -6024,13 +6024,13 @@ func (c HincrbyIncrement) Build() Completed {
 type HincrbyKey Completed
 
 func (c HincrbyKey) Field(Field string) HincrbyField {
-	return HincrbyField{cf: c.cf, cs: append(c.cs, Field)}
+	return HincrbyField{cs: append(c.cs, Field), cf: c.cf, ks: c.ks}
 }
 
 type Hincrbyfloat Completed
 
 func (c Hincrbyfloat) Key(Key string) HincrbyfloatKey {
-	return HincrbyfloatKey{cf: c.cf, cs: append(c.cs, Key)}
+	return HincrbyfloatKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Hincrbyfloat() (c Hincrbyfloat) {
@@ -6041,7 +6041,7 @@ func (b *Builder) Hincrbyfloat() (c Hincrbyfloat) {
 type HincrbyfloatField Completed
 
 func (c HincrbyfloatField) Increment(Increment float64) HincrbyfloatIncrement {
-	return HincrbyfloatIncrement{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Increment, 'f', -1, 64))}
+	return HincrbyfloatIncrement{cs: append(c.cs, strconv.FormatFloat(Increment, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type HincrbyfloatIncrement Completed
@@ -6053,13 +6053,13 @@ func (c HincrbyfloatIncrement) Build() Completed {
 type HincrbyfloatKey Completed
 
 func (c HincrbyfloatKey) Field(Field string) HincrbyfloatField {
-	return HincrbyfloatField{cf: c.cf, cs: append(c.cs, Field)}
+	return HincrbyfloatField{cs: append(c.cs, Field), cf: c.cf, ks: c.ks}
 }
 
 type Hkeys Completed
 
 func (c Hkeys) Key(Key string) HkeysKey {
-	return HkeysKey{cf: c.cf, cs: append(c.cs, Key)}
+	return HkeysKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Hkeys() (c Hkeys) {
@@ -6080,7 +6080,7 @@ func (c HkeysKey) Cache() Cacheable {
 type Hlen Completed
 
 func (c Hlen) Key(Key string) HlenKey {
-	return HlenKey{cf: c.cf, cs: append(c.cs, Key)}
+	return HlenKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Hlen() (c Hlen) {
@@ -6101,7 +6101,7 @@ func (c HlenKey) Cache() Cacheable {
 type Hmget Completed
 
 func (c Hmget) Key(Key string) HmgetKey {
-	return HmgetKey{cf: c.cf, cs: append(c.cs, Key)}
+	return HmgetKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Hmget() (c Hmget) {
@@ -6112,7 +6112,7 @@ func (b *Builder) Hmget() (c Hmget) {
 type HmgetField Completed
 
 func (c HmgetField) Field(Field ...string) HmgetField {
-	return HmgetField{cf: c.cf, cs: append(c.cs, Field...)}
+	return HmgetField{cs: append(c.cs, Field...), cf: c.cf, ks: c.ks}
 }
 
 func (c HmgetField) Build() Completed {
@@ -6126,13 +6126,13 @@ func (c HmgetField) Cache() Cacheable {
 type HmgetKey Completed
 
 func (c HmgetKey) Field(Field ...string) HmgetField {
-	return HmgetField{cf: c.cf, cs: append(c.cs, Field...)}
+	return HmgetField{cs: append(c.cs, Field...), cf: c.cf, ks: c.ks}
 }
 
 type Hmset Completed
 
 func (c Hmset) Key(Key string) HmsetKey {
-	return HmsetKey{cf: c.cf, cs: append(c.cs, Key)}
+	return HmsetKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Hmset() (c Hmset) {
@@ -6143,7 +6143,7 @@ func (b *Builder) Hmset() (c Hmset) {
 type HmsetFieldValue Completed
 
 func (c HmsetFieldValue) FieldValue(Field string, Value string) HmsetFieldValue {
-	return HmsetFieldValue{cf: c.cf, cs: append(c.cs, Field, Value)}
+	return HmsetFieldValue{cs: append(c.cs, Field, Value), cf: c.cf, ks: c.ks}
 }
 
 func (c HmsetFieldValue) Build() Completed {
@@ -6153,13 +6153,13 @@ func (c HmsetFieldValue) Build() Completed {
 type HmsetKey Completed
 
 func (c HmsetKey) FieldValue() HmsetFieldValue {
-	return HmsetFieldValue{cf: c.cf, cs: c.cs}
+	return HmsetFieldValue{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 type Hrandfield Completed
 
 func (c Hrandfield) Key(Key string) HrandfieldKey {
-	return HrandfieldKey{cf: c.cf, cs: append(c.cs, Key)}
+	return HrandfieldKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Hrandfield() (c Hrandfield) {
@@ -6170,7 +6170,7 @@ func (b *Builder) Hrandfield() (c Hrandfield) {
 type HrandfieldKey Completed
 
 func (c HrandfieldKey) Count(Count int64) HrandfieldOptionsCount {
-	return HrandfieldOptionsCount{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Count, 10))}
+	return HrandfieldOptionsCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c HrandfieldKey) Build() Completed {
@@ -6180,7 +6180,7 @@ func (c HrandfieldKey) Build() Completed {
 type HrandfieldOptionsCount Completed
 
 func (c HrandfieldOptionsCount) Withvalues() HrandfieldOptionsWithvaluesWithvalues {
-	return HrandfieldOptionsWithvaluesWithvalues{cf: c.cf, cs: append(c.cs, "WITHVALUES")}
+	return HrandfieldOptionsWithvaluesWithvalues{cs: append(c.cs, "WITHVALUES"), cf: c.cf, ks: c.ks}
 }
 
 func (c HrandfieldOptionsCount) Build() Completed {
@@ -6196,7 +6196,7 @@ func (c HrandfieldOptionsWithvaluesWithvalues) Build() Completed {
 type Hscan Completed
 
 func (c Hscan) Key(Key string) HscanKey {
-	return HscanKey{cf: c.cf, cs: append(c.cs, Key)}
+	return HscanKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Hscan() (c Hscan) {
@@ -6213,11 +6213,11 @@ func (c HscanCount) Build() Completed {
 type HscanCursor Completed
 
 func (c HscanCursor) Match(Pattern string) HscanMatch {
-	return HscanMatch{cf: c.cf, cs: append(c.cs, "MATCH", Pattern)}
+	return HscanMatch{cs: append(c.cs, "MATCH", Pattern), cf: c.cf, ks: c.ks}
 }
 
 func (c HscanCursor) Count(Count int64) HscanCount {
-	return HscanCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return HscanCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c HscanCursor) Build() Completed {
@@ -6227,13 +6227,13 @@ func (c HscanCursor) Build() Completed {
 type HscanKey Completed
 
 func (c HscanKey) Cursor(Cursor int64) HscanCursor {
-	return HscanCursor{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Cursor, 10))}
+	return HscanCursor{cs: append(c.cs, strconv.FormatInt(Cursor, 10)), cf: c.cf, ks: c.ks}
 }
 
 type HscanMatch Completed
 
 func (c HscanMatch) Count(Count int64) HscanCount {
-	return HscanCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return HscanCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c HscanMatch) Build() Completed {
@@ -6243,7 +6243,7 @@ func (c HscanMatch) Build() Completed {
 type Hset Completed
 
 func (c Hset) Key(Key string) HsetKey {
-	return HsetKey{cf: c.cf, cs: append(c.cs, Key)}
+	return HsetKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Hset() (c Hset) {
@@ -6254,7 +6254,7 @@ func (b *Builder) Hset() (c Hset) {
 type HsetFieldValue Completed
 
 func (c HsetFieldValue) FieldValue(Field string, Value string) HsetFieldValue {
-	return HsetFieldValue{cf: c.cf, cs: append(c.cs, Field, Value)}
+	return HsetFieldValue{cs: append(c.cs, Field, Value), cf: c.cf, ks: c.ks}
 }
 
 func (c HsetFieldValue) Build() Completed {
@@ -6264,13 +6264,13 @@ func (c HsetFieldValue) Build() Completed {
 type HsetKey Completed
 
 func (c HsetKey) FieldValue() HsetFieldValue {
-	return HsetFieldValue{cf: c.cf, cs: c.cs}
+	return HsetFieldValue{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 type Hsetnx Completed
 
 func (c Hsetnx) Key(Key string) HsetnxKey {
-	return HsetnxKey{cf: c.cf, cs: append(c.cs, Key)}
+	return HsetnxKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Hsetnx() (c Hsetnx) {
@@ -6281,13 +6281,13 @@ func (b *Builder) Hsetnx() (c Hsetnx) {
 type HsetnxField Completed
 
 func (c HsetnxField) Value(Value string) HsetnxValue {
-	return HsetnxValue{cf: c.cf, cs: append(c.cs, Value)}
+	return HsetnxValue{cs: append(c.cs, Value), cf: c.cf, ks: c.ks}
 }
 
 type HsetnxKey Completed
 
 func (c HsetnxKey) Field(Field string) HsetnxField {
-	return HsetnxField{cf: c.cf, cs: append(c.cs, Field)}
+	return HsetnxField{cs: append(c.cs, Field), cf: c.cf, ks: c.ks}
 }
 
 type HsetnxValue Completed
@@ -6299,7 +6299,7 @@ func (c HsetnxValue) Build() Completed {
 type Hstrlen Completed
 
 func (c Hstrlen) Key(Key string) HstrlenKey {
-	return HstrlenKey{cf: c.cf, cs: append(c.cs, Key)}
+	return HstrlenKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Hstrlen() (c Hstrlen) {
@@ -6320,13 +6320,13 @@ func (c HstrlenField) Cache() Cacheable {
 type HstrlenKey Completed
 
 func (c HstrlenKey) Field(Field string) HstrlenField {
-	return HstrlenField{cf: c.cf, cs: append(c.cs, Field)}
+	return HstrlenField{cs: append(c.cs, Field), cf: c.cf, ks: c.ks}
 }
 
 type Hvals Completed
 
 func (c Hvals) Key(Key string) HvalsKey {
-	return HvalsKey{cf: c.cf, cs: append(c.cs, Key)}
+	return HvalsKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Hvals() (c Hvals) {
@@ -6347,7 +6347,7 @@ func (c HvalsKey) Cache() Cacheable {
 type Incr Completed
 
 func (c Incr) Key(Key string) IncrKey {
-	return IncrKey{cf: c.cf, cs: append(c.cs, Key)}
+	return IncrKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Incr() (c Incr) {
@@ -6364,7 +6364,7 @@ func (c IncrKey) Build() Completed {
 type Incrby Completed
 
 func (c Incrby) Key(Key string) IncrbyKey {
-	return IncrbyKey{cf: c.cf, cs: append(c.cs, Key)}
+	return IncrbyKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Incrby() (c Incrby) {
@@ -6381,13 +6381,13 @@ func (c IncrbyIncrement) Build() Completed {
 type IncrbyKey Completed
 
 func (c IncrbyKey) Increment(Increment int64) IncrbyIncrement {
-	return IncrbyIncrement{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Increment, 10))}
+	return IncrbyIncrement{cs: append(c.cs, strconv.FormatInt(Increment, 10)), cf: c.cf, ks: c.ks}
 }
 
 type Incrbyfloat Completed
 
 func (c Incrbyfloat) Key(Key string) IncrbyfloatKey {
-	return IncrbyfloatKey{cf: c.cf, cs: append(c.cs, Key)}
+	return IncrbyfloatKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Incrbyfloat() (c Incrbyfloat) {
@@ -6404,13 +6404,13 @@ func (c IncrbyfloatIncrement) Build() Completed {
 type IncrbyfloatKey Completed
 
 func (c IncrbyfloatKey) Increment(Increment float64) IncrbyfloatIncrement {
-	return IncrbyfloatIncrement{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Increment, 'f', -1, 64))}
+	return IncrbyfloatIncrement{cs: append(c.cs, strconv.FormatFloat(Increment, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type Info Completed
 
 func (c Info) Section(Section string) InfoSection {
-	return InfoSection{cf: c.cf, cs: append(c.cs, Section)}
+	return InfoSection{cs: append(c.cs, Section), cf: c.cf, ks: c.ks}
 }
 
 func (c Info) Build() Completed {
@@ -6431,7 +6431,7 @@ func (c InfoSection) Build() Completed {
 type Keys Completed
 
 func (c Keys) Pattern(Pattern string) KeysPattern {
-	return KeysPattern{cf: c.cf, cs: append(c.cs, Pattern)}
+	return KeysPattern{cs: append(c.cs, Pattern), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Keys() (c Keys) {
@@ -6470,7 +6470,7 @@ func (b *Builder) LatencyDoctor() (c LatencyDoctor) {
 type LatencyGraph Completed
 
 func (c LatencyGraph) Event(Event string) LatencyGraphEvent {
-	return LatencyGraphEvent{cf: c.cf, cs: append(c.cs, Event)}
+	return LatencyGraphEvent{cs: append(c.cs, Event), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) LatencyGraph() (c LatencyGraph) {
@@ -6498,7 +6498,7 @@ func (b *Builder) LatencyHelp() (c LatencyHelp) {
 type LatencyHistory Completed
 
 func (c LatencyHistory) Event(Event string) LatencyHistoryEvent {
-	return LatencyHistoryEvent{cf: c.cf, cs: append(c.cs, Event)}
+	return LatencyHistoryEvent{cs: append(c.cs, Event), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) LatencyHistory() (c LatencyHistory) {
@@ -6526,7 +6526,7 @@ func (b *Builder) LatencyLatest() (c LatencyLatest) {
 type LatencyReset Completed
 
 func (c LatencyReset) Event(Event ...string) LatencyResetEvent {
-	return LatencyResetEvent{cf: c.cf, cs: append(c.cs, Event...)}
+	return LatencyResetEvent{cs: append(c.cs, Event...), cf: c.cf, ks: c.ks}
 }
 
 func (c LatencyReset) Build() Completed {
@@ -6541,7 +6541,7 @@ func (b *Builder) LatencyReset() (c LatencyReset) {
 type LatencyResetEvent Completed
 
 func (c LatencyResetEvent) Event(Event ...string) LatencyResetEvent {
-	return LatencyResetEvent{cf: c.cf, cs: append(c.cs, Event...)}
+	return LatencyResetEvent{cs: append(c.cs, Event...), cf: c.cf, ks: c.ks}
 }
 
 func (c LatencyResetEvent) Build() Completed {
@@ -6551,7 +6551,7 @@ func (c LatencyResetEvent) Build() Completed {
 type Lindex Completed
 
 func (c Lindex) Key(Key string) LindexKey {
-	return LindexKey{cf: c.cf, cs: append(c.cs, Key)}
+	return LindexKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Lindex() (c Lindex) {
@@ -6572,13 +6572,13 @@ func (c LindexIndex) Cache() Cacheable {
 type LindexKey Completed
 
 func (c LindexKey) Index(Index int64) LindexIndex {
-	return LindexIndex{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Index, 10))}
+	return LindexIndex{cs: append(c.cs, strconv.FormatInt(Index, 10)), cf: c.cf, ks: c.ks}
 }
 
 type Linsert Completed
 
 func (c Linsert) Key(Key string) LinsertKey {
-	return LinsertKey{cf: c.cf, cs: append(c.cs, Key)}
+	return LinsertKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Linsert() (c Linsert) {
@@ -6595,35 +6595,35 @@ func (c LinsertElement) Build() Completed {
 type LinsertKey Completed
 
 func (c LinsertKey) Before() LinsertWhereBefore {
-	return LinsertWhereBefore{cf: c.cf, cs: append(c.cs, "BEFORE")}
+	return LinsertWhereBefore{cs: append(c.cs, "BEFORE"), cf: c.cf, ks: c.ks}
 }
 
 func (c LinsertKey) After() LinsertWhereAfter {
-	return LinsertWhereAfter{cf: c.cf, cs: append(c.cs, "AFTER")}
+	return LinsertWhereAfter{cs: append(c.cs, "AFTER"), cf: c.cf, ks: c.ks}
 }
 
 type LinsertPivot Completed
 
 func (c LinsertPivot) Element(Element string) LinsertElement {
-	return LinsertElement{cf: c.cf, cs: append(c.cs, Element)}
+	return LinsertElement{cs: append(c.cs, Element), cf: c.cf, ks: c.ks}
 }
 
 type LinsertWhereAfter Completed
 
 func (c LinsertWhereAfter) Pivot(Pivot string) LinsertPivot {
-	return LinsertPivot{cf: c.cf, cs: append(c.cs, Pivot)}
+	return LinsertPivot{cs: append(c.cs, Pivot), cf: c.cf, ks: c.ks}
 }
 
 type LinsertWhereBefore Completed
 
 func (c LinsertWhereBefore) Pivot(Pivot string) LinsertPivot {
-	return LinsertPivot{cf: c.cf, cs: append(c.cs, Pivot)}
+	return LinsertPivot{cs: append(c.cs, Pivot), cf: c.cf, ks: c.ks}
 }
 
 type Llen Completed
 
 func (c Llen) Key(Key string) LlenKey {
-	return LlenKey{cf: c.cf, cs: append(c.cs, Key)}
+	return LlenKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Llen() (c Llen) {
@@ -6644,7 +6644,7 @@ func (c LlenKey) Cache() Cacheable {
 type Lmove Completed
 
 func (c Lmove) Source(Source string) LmoveSource {
-	return LmoveSource{cf: c.cf, cs: append(c.cs, Source)}
+	return LmoveSource{cs: append(c.cs, Source), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Lmove() (c Lmove) {
@@ -6655,37 +6655,37 @@ func (b *Builder) Lmove() (c Lmove) {
 type LmoveDestination Completed
 
 func (c LmoveDestination) Left() LmoveWherefromLeft {
-	return LmoveWherefromLeft{cf: c.cf, cs: append(c.cs, "LEFT")}
+	return LmoveWherefromLeft{cs: append(c.cs, "LEFT"), cf: c.cf, ks: c.ks}
 }
 
 func (c LmoveDestination) Right() LmoveWherefromRight {
-	return LmoveWherefromRight{cf: c.cf, cs: append(c.cs, "RIGHT")}
+	return LmoveWherefromRight{cs: append(c.cs, "RIGHT"), cf: c.cf, ks: c.ks}
 }
 
 type LmoveSource Completed
 
 func (c LmoveSource) Destination(Destination string) LmoveDestination {
-	return LmoveDestination{cf: c.cf, cs: append(c.cs, Destination)}
+	return LmoveDestination{cs: append(c.cs, Destination), cf: c.cf, ks: c.ks}
 }
 
 type LmoveWherefromLeft Completed
 
 func (c LmoveWherefromLeft) Left() LmoveWheretoLeft {
-	return LmoveWheretoLeft{cf: c.cf, cs: append(c.cs, "LEFT")}
+	return LmoveWheretoLeft{cs: append(c.cs, "LEFT"), cf: c.cf, ks: c.ks}
 }
 
 func (c LmoveWherefromLeft) Right() LmoveWheretoRight {
-	return LmoveWheretoRight{cf: c.cf, cs: append(c.cs, "RIGHT")}
+	return LmoveWheretoRight{cs: append(c.cs, "RIGHT"), cf: c.cf, ks: c.ks}
 }
 
 type LmoveWherefromRight Completed
 
 func (c LmoveWherefromRight) Left() LmoveWheretoLeft {
-	return LmoveWheretoLeft{cf: c.cf, cs: append(c.cs, "LEFT")}
+	return LmoveWheretoLeft{cs: append(c.cs, "LEFT"), cf: c.cf, ks: c.ks}
 }
 
 func (c LmoveWherefromRight) Right() LmoveWheretoRight {
-	return LmoveWheretoRight{cf: c.cf, cs: append(c.cs, "RIGHT")}
+	return LmoveWheretoRight{cs: append(c.cs, "RIGHT"), cf: c.cf, ks: c.ks}
 }
 
 type LmoveWheretoLeft Completed
@@ -6703,7 +6703,7 @@ func (c LmoveWheretoRight) Build() Completed {
 type Lmpop Completed
 
 func (c Lmpop) Numkeys(Numkeys int64) LmpopNumkeys {
-	return LmpopNumkeys{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
+	return LmpopNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Lmpop() (c Lmpop) {
@@ -6720,35 +6720,35 @@ func (c LmpopCount) Build() Completed {
 type LmpopKey Completed
 
 func (c LmpopKey) Left() LmpopWhereLeft {
-	return LmpopWhereLeft{cf: c.cf, cs: append(c.cs, "LEFT")}
+	return LmpopWhereLeft{cs: append(c.cs, "LEFT"), cf: c.cf, ks: c.ks}
 }
 
 func (c LmpopKey) Right() LmpopWhereRight {
-	return LmpopWhereRight{cf: c.cf, cs: append(c.cs, "RIGHT")}
+	return LmpopWhereRight{cs: append(c.cs, "RIGHT"), cf: c.cf, ks: c.ks}
 }
 
 func (c LmpopKey) Key(Key ...string) LmpopKey {
-	return LmpopKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return LmpopKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type LmpopNumkeys Completed
 
 func (c LmpopNumkeys) Key(Key ...string) LmpopKey {
-	return LmpopKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return LmpopKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c LmpopNumkeys) Left() LmpopWhereLeft {
-	return LmpopWhereLeft{cf: c.cf, cs: append(c.cs, "LEFT")}
+	return LmpopWhereLeft{cs: append(c.cs, "LEFT"), cf: c.cf, ks: c.ks}
 }
 
 func (c LmpopNumkeys) Right() LmpopWhereRight {
-	return LmpopWhereRight{cf: c.cf, cs: append(c.cs, "RIGHT")}
+	return LmpopWhereRight{cs: append(c.cs, "RIGHT"), cf: c.cf, ks: c.ks}
 }
 
 type LmpopWhereLeft Completed
 
 func (c LmpopWhereLeft) Count(Count int64) LmpopCount {
-	return LmpopCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return LmpopCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c LmpopWhereLeft) Build() Completed {
@@ -6758,7 +6758,7 @@ func (c LmpopWhereLeft) Build() Completed {
 type LmpopWhereRight Completed
 
 func (c LmpopWhereRight) Count(Count int64) LmpopCount {
-	return LmpopCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return LmpopCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c LmpopWhereRight) Build() Completed {
@@ -6768,7 +6768,7 @@ func (c LmpopWhereRight) Build() Completed {
 type Lolwut Completed
 
 func (c Lolwut) Version(Version int64) LolwutVersion {
-	return LolwutVersion{cf: c.cf, cs: append(c.cs, "VERSION", strconv.FormatInt(Version, 10))}
+	return LolwutVersion{cs: append(c.cs, "VERSION", strconv.FormatInt(Version, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c Lolwut) Build() Completed {
@@ -6789,7 +6789,7 @@ func (c LolwutVersion) Build() Completed {
 type Lpop Completed
 
 func (c Lpop) Key(Key string) LpopKey {
-	return LpopKey{cf: c.cf, cs: append(c.cs, Key)}
+	return LpopKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Lpop() (c Lpop) {
@@ -6806,7 +6806,7 @@ func (c LpopCount) Build() Completed {
 type LpopKey Completed
 
 func (c LpopKey) Count(Count int64) LpopCount {
-	return LpopCount{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Count, 10))}
+	return LpopCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c LpopKey) Build() Completed {
@@ -6816,7 +6816,7 @@ func (c LpopKey) Build() Completed {
 type Lpos Completed
 
 func (c Lpos) Key(Key string) LposKey {
-	return LposKey{cf: c.cf, cs: append(c.cs, Key)}
+	return LposKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Lpos() (c Lpos) {
@@ -6827,7 +6827,7 @@ func (b *Builder) Lpos() (c Lpos) {
 type LposCount Completed
 
 func (c LposCount) Maxlen(Len int64) LposMaxlen {
-	return LposMaxlen{cf: c.cf, cs: append(c.cs, "MAXLEN", strconv.FormatInt(Len, 10))}
+	return LposMaxlen{cs: append(c.cs, "MAXLEN", strconv.FormatInt(Len, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c LposCount) Build() Completed {
@@ -6841,15 +6841,15 @@ func (c LposCount) Cache() Cacheable {
 type LposElement Completed
 
 func (c LposElement) Rank(Rank int64) LposRank {
-	return LposRank{cf: c.cf, cs: append(c.cs, "RANK", strconv.FormatInt(Rank, 10))}
+	return LposRank{cs: append(c.cs, "RANK", strconv.FormatInt(Rank, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c LposElement) Count(NumMatches int64) LposCount {
-	return LposCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(NumMatches, 10))}
+	return LposCount{cs: append(c.cs, "COUNT", strconv.FormatInt(NumMatches, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c LposElement) Maxlen(Len int64) LposMaxlen {
-	return LposMaxlen{cf: c.cf, cs: append(c.cs, "MAXLEN", strconv.FormatInt(Len, 10))}
+	return LposMaxlen{cs: append(c.cs, "MAXLEN", strconv.FormatInt(Len, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c LposElement) Build() Completed {
@@ -6863,7 +6863,7 @@ func (c LposElement) Cache() Cacheable {
 type LposKey Completed
 
 func (c LposKey) Element(Element string) LposElement {
-	return LposElement{cf: c.cf, cs: append(c.cs, Element)}
+	return LposElement{cs: append(c.cs, Element), cf: c.cf, ks: c.ks}
 }
 
 type LposMaxlen Completed
@@ -6879,11 +6879,11 @@ func (c LposMaxlen) Cache() Cacheable {
 type LposRank Completed
 
 func (c LposRank) Count(NumMatches int64) LposCount {
-	return LposCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(NumMatches, 10))}
+	return LposCount{cs: append(c.cs, "COUNT", strconv.FormatInt(NumMatches, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c LposRank) Maxlen(Len int64) LposMaxlen {
-	return LposMaxlen{cf: c.cf, cs: append(c.cs, "MAXLEN", strconv.FormatInt(Len, 10))}
+	return LposMaxlen{cs: append(c.cs, "MAXLEN", strconv.FormatInt(Len, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c LposRank) Build() Completed {
@@ -6897,7 +6897,7 @@ func (c LposRank) Cache() Cacheable {
 type Lpush Completed
 
 func (c Lpush) Key(Key string) LpushKey {
-	return LpushKey{cf: c.cf, cs: append(c.cs, Key)}
+	return LpushKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Lpush() (c Lpush) {
@@ -6908,7 +6908,7 @@ func (b *Builder) Lpush() (c Lpush) {
 type LpushElement Completed
 
 func (c LpushElement) Element(Element ...string) LpushElement {
-	return LpushElement{cf: c.cf, cs: append(c.cs, Element...)}
+	return LpushElement{cs: append(c.cs, Element...), cf: c.cf, ks: c.ks}
 }
 
 func (c LpushElement) Build() Completed {
@@ -6918,13 +6918,13 @@ func (c LpushElement) Build() Completed {
 type LpushKey Completed
 
 func (c LpushKey) Element(Element ...string) LpushElement {
-	return LpushElement{cf: c.cf, cs: append(c.cs, Element...)}
+	return LpushElement{cs: append(c.cs, Element...), cf: c.cf, ks: c.ks}
 }
 
 type Lpushx Completed
 
 func (c Lpushx) Key(Key string) LpushxKey {
-	return LpushxKey{cf: c.cf, cs: append(c.cs, Key)}
+	return LpushxKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Lpushx() (c Lpushx) {
@@ -6935,7 +6935,7 @@ func (b *Builder) Lpushx() (c Lpushx) {
 type LpushxElement Completed
 
 func (c LpushxElement) Element(Element ...string) LpushxElement {
-	return LpushxElement{cf: c.cf, cs: append(c.cs, Element...)}
+	return LpushxElement{cs: append(c.cs, Element...), cf: c.cf, ks: c.ks}
 }
 
 func (c LpushxElement) Build() Completed {
@@ -6945,13 +6945,13 @@ func (c LpushxElement) Build() Completed {
 type LpushxKey Completed
 
 func (c LpushxKey) Element(Element ...string) LpushxElement {
-	return LpushxElement{cf: c.cf, cs: append(c.cs, Element...)}
+	return LpushxElement{cs: append(c.cs, Element...), cf: c.cf, ks: c.ks}
 }
 
 type Lrange Completed
 
 func (c Lrange) Key(Key string) LrangeKey {
-	return LrangeKey{cf: c.cf, cs: append(c.cs, Key)}
+	return LrangeKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Lrange() (c Lrange) {
@@ -6962,13 +6962,13 @@ func (b *Builder) Lrange() (c Lrange) {
 type LrangeKey Completed
 
 func (c LrangeKey) Start(Start int64) LrangeStart {
-	return LrangeStart{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Start, 10))}
+	return LrangeStart{cs: append(c.cs, strconv.FormatInt(Start, 10)), cf: c.cf, ks: c.ks}
 }
 
 type LrangeStart Completed
 
 func (c LrangeStart) Stop(Stop int64) LrangeStop {
-	return LrangeStop{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Stop, 10))}
+	return LrangeStop{cs: append(c.cs, strconv.FormatInt(Stop, 10)), cf: c.cf, ks: c.ks}
 }
 
 type LrangeStop Completed
@@ -6984,7 +6984,7 @@ func (c LrangeStop) Cache() Cacheable {
 type Lrem Completed
 
 func (c Lrem) Key(Key string) LremKey {
-	return LremKey{cf: c.cf, cs: append(c.cs, Key)}
+	return LremKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Lrem() (c Lrem) {
@@ -6995,7 +6995,7 @@ func (b *Builder) Lrem() (c Lrem) {
 type LremCount Completed
 
 func (c LremCount) Element(Element string) LremElement {
-	return LremElement{cf: c.cf, cs: append(c.cs, Element)}
+	return LremElement{cs: append(c.cs, Element), cf: c.cf, ks: c.ks}
 }
 
 type LremElement Completed
@@ -7007,13 +7007,13 @@ func (c LremElement) Build() Completed {
 type LremKey Completed
 
 func (c LremKey) Count(Count int64) LremCount {
-	return LremCount{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Count, 10))}
+	return LremCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 type Lset Completed
 
 func (c Lset) Key(Key string) LsetKey {
-	return LsetKey{cf: c.cf, cs: append(c.cs, Key)}
+	return LsetKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Lset() (c Lset) {
@@ -7030,19 +7030,19 @@ func (c LsetElement) Build() Completed {
 type LsetIndex Completed
 
 func (c LsetIndex) Element(Element string) LsetElement {
-	return LsetElement{cf: c.cf, cs: append(c.cs, Element)}
+	return LsetElement{cs: append(c.cs, Element), cf: c.cf, ks: c.ks}
 }
 
 type LsetKey Completed
 
 func (c LsetKey) Index(Index int64) LsetIndex {
-	return LsetIndex{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Index, 10))}
+	return LsetIndex{cs: append(c.cs, strconv.FormatInt(Index, 10)), cf: c.cf, ks: c.ks}
 }
 
 type Ltrim Completed
 
 func (c Ltrim) Key(Key string) LtrimKey {
-	return LtrimKey{cf: c.cf, cs: append(c.cs, Key)}
+	return LtrimKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Ltrim() (c Ltrim) {
@@ -7053,13 +7053,13 @@ func (b *Builder) Ltrim() (c Ltrim) {
 type LtrimKey Completed
 
 func (c LtrimKey) Start(Start int64) LtrimStart {
-	return LtrimStart{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Start, 10))}
+	return LtrimStart{cs: append(c.cs, strconv.FormatInt(Start, 10)), cf: c.cf, ks: c.ks}
 }
 
 type LtrimStart Completed
 
 func (c LtrimStart) Stop(Stop int64) LtrimStop {
-	return LtrimStop{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Stop, 10))}
+	return LtrimStop{cs: append(c.cs, strconv.FormatInt(Stop, 10)), cf: c.cf, ks: c.ks}
 }
 
 type LtrimStop Completed
@@ -7126,7 +7126,7 @@ func (b *Builder) MemoryStats() (c MemoryStats) {
 type MemoryUsage Completed
 
 func (c MemoryUsage) Key(Key string) MemoryUsageKey {
-	return MemoryUsageKey{cf: c.cf, cs: append(c.cs, Key)}
+	return MemoryUsageKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) MemoryUsage() (c MemoryUsage) {
@@ -7137,7 +7137,7 @@ func (b *Builder) MemoryUsage() (c MemoryUsage) {
 type MemoryUsageKey Completed
 
 func (c MemoryUsageKey) Samples(Count int64) MemoryUsageSamples {
-	return MemoryUsageSamples{cf: c.cf, cs: append(c.cs, "SAMPLES", strconv.FormatInt(Count, 10))}
+	return MemoryUsageSamples{cs: append(c.cs, "SAMPLES", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c MemoryUsageKey) Build() Completed {
@@ -7153,7 +7153,7 @@ func (c MemoryUsageSamples) Build() Completed {
 type Mget Completed
 
 func (c Mget) Key(Key ...string) MgetKey {
-	return MgetKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return MgetKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Mget() (c Mget) {
@@ -7164,7 +7164,7 @@ func (b *Builder) Mget() (c Mget) {
 type MgetKey Completed
 
 func (c MgetKey) Key(Key ...string) MgetKey {
-	return MgetKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return MgetKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c MgetKey) Build() Completed {
@@ -7174,7 +7174,7 @@ func (c MgetKey) Build() Completed {
 type Migrate Completed
 
 func (c Migrate) Host(Host string) MigrateHost {
-	return MigrateHost{cf: c.cf, cs: append(c.cs, Host)}
+	return MigrateHost{cs: append(c.cs, Host), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Migrate() (c Migrate) {
@@ -7186,12 +7186,12 @@ func (b *Builder) Migrate() (c Migrate) {
 type MigrateAuth Completed
 
 func (c MigrateAuth) Auth2(UsernamePassword string) MigrateAuth2 {
-	return MigrateAuth2{cf: c.cf, cs: append(c.cs, "AUTH2", UsernamePassword)}
+	return MigrateAuth2{cs: append(c.cs, "AUTH2", UsernamePassword), cf: c.cf, ks: c.ks}
 }
 
 func (c MigrateAuth) Keys(Key ...string) MigrateKeys {
 	c.cs = append(c.cs, "KEYS")
-	return MigrateKeys{cf: c.cf, cs: append(c.cs, Key...)}
+	return MigrateKeys{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c MigrateAuth) Build() Completed {
@@ -7202,7 +7202,7 @@ type MigrateAuth2 Completed
 
 func (c MigrateAuth2) Keys(Key ...string) MigrateKeys {
 	c.cs = append(c.cs, "KEYS")
-	return MigrateKeys{cf: c.cf, cs: append(c.cs, Key...)}
+	return MigrateKeys{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c MigrateAuth2) Build() Completed {
@@ -7212,20 +7212,20 @@ func (c MigrateAuth2) Build() Completed {
 type MigrateCopyCopy Completed
 
 func (c MigrateCopyCopy) Replace() MigrateReplaceReplace {
-	return MigrateReplaceReplace{cf: c.cf, cs: append(c.cs, "REPLACE")}
+	return MigrateReplaceReplace{cs: append(c.cs, "REPLACE"), cf: c.cf, ks: c.ks}
 }
 
 func (c MigrateCopyCopy) Auth(Password string) MigrateAuth {
-	return MigrateAuth{cf: c.cf, cs: append(c.cs, "AUTH", Password)}
+	return MigrateAuth{cs: append(c.cs, "AUTH", Password), cf: c.cf, ks: c.ks}
 }
 
 func (c MigrateCopyCopy) Auth2(UsernamePassword string) MigrateAuth2 {
-	return MigrateAuth2{cf: c.cf, cs: append(c.cs, "AUTH2", UsernamePassword)}
+	return MigrateAuth2{cs: append(c.cs, "AUTH2", UsernamePassword), cf: c.cf, ks: c.ks}
 }
 
 func (c MigrateCopyCopy) Keys(Key ...string) MigrateKeys {
 	c.cs = append(c.cs, "KEYS")
-	return MigrateKeys{cf: c.cf, cs: append(c.cs, Key...)}
+	return MigrateKeys{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c MigrateCopyCopy) Build() Completed {
@@ -7235,31 +7235,31 @@ func (c MigrateCopyCopy) Build() Completed {
 type MigrateDestinationDb Completed
 
 func (c MigrateDestinationDb) Timeout(Timeout int64) MigrateTimeout {
-	return MigrateTimeout{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Timeout, 10))}
+	return MigrateTimeout{cs: append(c.cs, strconv.FormatInt(Timeout, 10)), cf: c.cf, ks: c.ks}
 }
 
 type MigrateHost Completed
 
 func (c MigrateHost) Port(Port string) MigratePort {
-	return MigratePort{cf: c.cf, cs: append(c.cs, Port)}
+	return MigratePort{cs: append(c.cs, Port), cf: c.cf, ks: c.ks}
 }
 
 type MigrateKeyEmpty Completed
 
 func (c MigrateKeyEmpty) DestinationDb(DestinationDb int64) MigrateDestinationDb {
-	return MigrateDestinationDb{cf: c.cf, cs: append(c.cs, strconv.FormatInt(DestinationDb, 10))}
+	return MigrateDestinationDb{cs: append(c.cs, strconv.FormatInt(DestinationDb, 10)), cf: c.cf, ks: c.ks}
 }
 
 type MigrateKeyKey Completed
 
 func (c MigrateKeyKey) DestinationDb(DestinationDb int64) MigrateDestinationDb {
-	return MigrateDestinationDb{cf: c.cf, cs: append(c.cs, strconv.FormatInt(DestinationDb, 10))}
+	return MigrateDestinationDb{cs: append(c.cs, strconv.FormatInt(DestinationDb, 10)), cf: c.cf, ks: c.ks}
 }
 
 type MigrateKeys Completed
 
 func (c MigrateKeys) Keys(Keys ...string) MigrateKeys {
-	return MigrateKeys{cf: c.cf, cs: append(c.cs, Keys...)}
+	return MigrateKeys{cs: append(c.cs, Keys...), cf: c.cf, ks: c.ks}
 }
 
 func (c MigrateKeys) Build() Completed {
@@ -7269,26 +7269,26 @@ func (c MigrateKeys) Build() Completed {
 type MigratePort Completed
 
 func (c MigratePort) Key() MigrateKeyKey {
-	return MigrateKeyKey{cf: c.cf, cs: append(c.cs, "key")}
+	return MigrateKeyKey{cs: append(c.cs, "key"), cf: c.cf, ks: c.ks}
 }
 
 func (c MigratePort) Empty() MigrateKeyEmpty {
-	return MigrateKeyEmpty{cf: c.cf, cs: append(c.cs, "\"\"")}
+	return MigrateKeyEmpty{cs: append(c.cs, "\"\""), cf: c.cf, ks: c.ks}
 }
 
 type MigrateReplaceReplace Completed
 
 func (c MigrateReplaceReplace) Auth(Password string) MigrateAuth {
-	return MigrateAuth{cf: c.cf, cs: append(c.cs, "AUTH", Password)}
+	return MigrateAuth{cs: append(c.cs, "AUTH", Password), cf: c.cf, ks: c.ks}
 }
 
 func (c MigrateReplaceReplace) Auth2(UsernamePassword string) MigrateAuth2 {
-	return MigrateAuth2{cf: c.cf, cs: append(c.cs, "AUTH2", UsernamePassword)}
+	return MigrateAuth2{cs: append(c.cs, "AUTH2", UsernamePassword), cf: c.cf, ks: c.ks}
 }
 
 func (c MigrateReplaceReplace) Keys(Key ...string) MigrateKeys {
 	c.cs = append(c.cs, "KEYS")
-	return MigrateKeys{cf: c.cf, cs: append(c.cs, Key...)}
+	return MigrateKeys{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c MigrateReplaceReplace) Build() Completed {
@@ -7298,24 +7298,24 @@ func (c MigrateReplaceReplace) Build() Completed {
 type MigrateTimeout Completed
 
 func (c MigrateTimeout) Copy() MigrateCopyCopy {
-	return MigrateCopyCopy{cf: c.cf, cs: append(c.cs, "COPY")}
+	return MigrateCopyCopy{cs: append(c.cs, "COPY"), cf: c.cf, ks: c.ks}
 }
 
 func (c MigrateTimeout) Replace() MigrateReplaceReplace {
-	return MigrateReplaceReplace{cf: c.cf, cs: append(c.cs, "REPLACE")}
+	return MigrateReplaceReplace{cs: append(c.cs, "REPLACE"), cf: c.cf, ks: c.ks}
 }
 
 func (c MigrateTimeout) Auth(Password string) MigrateAuth {
-	return MigrateAuth{cf: c.cf, cs: append(c.cs, "AUTH", Password)}
+	return MigrateAuth{cs: append(c.cs, "AUTH", Password), cf: c.cf, ks: c.ks}
 }
 
 func (c MigrateTimeout) Auth2(UsernamePassword string) MigrateAuth2 {
-	return MigrateAuth2{cf: c.cf, cs: append(c.cs, "AUTH2", UsernamePassword)}
+	return MigrateAuth2{cs: append(c.cs, "AUTH2", UsernamePassword), cf: c.cf, ks: c.ks}
 }
 
 func (c MigrateTimeout) Keys(Key ...string) MigrateKeys {
 	c.cs = append(c.cs, "KEYS")
-	return MigrateKeys{cf: c.cf, cs: append(c.cs, Key...)}
+	return MigrateKeys{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c MigrateTimeout) Build() Completed {
@@ -7336,7 +7336,7 @@ func (b *Builder) ModuleList() (c ModuleList) {
 type ModuleLoad Completed
 
 func (c ModuleLoad) Path(Path string) ModuleLoadPath {
-	return ModuleLoadPath{cf: c.cf, cs: append(c.cs, Path)}
+	return ModuleLoadPath{cs: append(c.cs, Path), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) ModuleLoad() (c ModuleLoad) {
@@ -7347,7 +7347,7 @@ func (b *Builder) ModuleLoad() (c ModuleLoad) {
 type ModuleLoadArg Completed
 
 func (c ModuleLoadArg) Arg(Arg ...string) ModuleLoadArg {
-	return ModuleLoadArg{cf: c.cf, cs: append(c.cs, Arg...)}
+	return ModuleLoadArg{cs: append(c.cs, Arg...), cf: c.cf, ks: c.ks}
 }
 
 func (c ModuleLoadArg) Build() Completed {
@@ -7357,7 +7357,7 @@ func (c ModuleLoadArg) Build() Completed {
 type ModuleLoadPath Completed
 
 func (c ModuleLoadPath) Arg(Arg ...string) ModuleLoadArg {
-	return ModuleLoadArg{cf: c.cf, cs: append(c.cs, Arg...)}
+	return ModuleLoadArg{cs: append(c.cs, Arg...), cf: c.cf, ks: c.ks}
 }
 
 func (c ModuleLoadPath) Build() Completed {
@@ -7367,7 +7367,7 @@ func (c ModuleLoadPath) Build() Completed {
 type ModuleUnload Completed
 
 func (c ModuleUnload) Name(Name string) ModuleUnloadName {
-	return ModuleUnloadName{cf: c.cf, cs: append(c.cs, Name)}
+	return ModuleUnloadName{cs: append(c.cs, Name), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) ModuleUnload() (c ModuleUnload) {
@@ -7395,7 +7395,7 @@ func (b *Builder) Monitor() (c Monitor) {
 type Move Completed
 
 func (c Move) Key(Key string) MoveKey {
-	return MoveKey{cf: c.cf, cs: append(c.cs, Key)}
+	return MoveKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Move() (c Move) {
@@ -7412,13 +7412,13 @@ func (c MoveDb) Build() Completed {
 type MoveKey Completed
 
 func (c MoveKey) Db(Db int64) MoveDb {
-	return MoveDb{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Db, 10))}
+	return MoveDb{cs: append(c.cs, strconv.FormatInt(Db, 10)), cf: c.cf, ks: c.ks}
 }
 
 type Mset Completed
 
 func (c Mset) KeyValue() MsetKeyValue {
-	return MsetKeyValue{cf: c.cf, cs: c.cs}
+	return MsetKeyValue{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Mset() (c Mset) {
@@ -7429,7 +7429,7 @@ func (b *Builder) Mset() (c Mset) {
 type MsetKeyValue Completed
 
 func (c MsetKeyValue) KeyValue(Key string, Value string) MsetKeyValue {
-	return MsetKeyValue{cf: c.cf, cs: append(c.cs, Key, Value)}
+	return MsetKeyValue{cs: append(c.cs, Key, Value), cf: c.cf, ks: c.ks}
 }
 
 func (c MsetKeyValue) Build() Completed {
@@ -7439,7 +7439,7 @@ func (c MsetKeyValue) Build() Completed {
 type Msetnx Completed
 
 func (c Msetnx) KeyValue() MsetnxKeyValue {
-	return MsetnxKeyValue{cf: c.cf, cs: c.cs}
+	return MsetnxKeyValue{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Msetnx() (c Msetnx) {
@@ -7450,7 +7450,7 @@ func (b *Builder) Msetnx() (c Msetnx) {
 type MsetnxKeyValue Completed
 
 func (c MsetnxKeyValue) KeyValue(Key string, Value string) MsetnxKeyValue {
-	return MsetnxKeyValue{cf: c.cf, cs: append(c.cs, Key, Value)}
+	return MsetnxKeyValue{cs: append(c.cs, Key, Value), cf: c.cf, ks: c.ks}
 }
 
 func (c MsetnxKeyValue) Build() Completed {
@@ -7471,7 +7471,7 @@ func (b *Builder) Multi() (c Multi) {
 type Object Completed
 
 func (c Object) Subcommand(Subcommand string) ObjectSubcommand {
-	return ObjectSubcommand{cf: c.cf, cs: append(c.cs, Subcommand)}
+	return ObjectSubcommand{cs: append(c.cs, Subcommand), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Object() (c Object) {
@@ -7482,7 +7482,7 @@ func (b *Builder) Object() (c Object) {
 type ObjectArguments Completed
 
 func (c ObjectArguments) Arguments(Arguments ...string) ObjectArguments {
-	return ObjectArguments{cf: c.cf, cs: append(c.cs, Arguments...)}
+	return ObjectArguments{cs: append(c.cs, Arguments...), cf: c.cf, ks: c.ks}
 }
 
 func (c ObjectArguments) Build() Completed {
@@ -7492,7 +7492,7 @@ func (c ObjectArguments) Build() Completed {
 type ObjectSubcommand Completed
 
 func (c ObjectSubcommand) Arguments(Arguments ...string) ObjectArguments {
-	return ObjectArguments{cf: c.cf, cs: append(c.cs, Arguments...)}
+	return ObjectArguments{cs: append(c.cs, Arguments...), cf: c.cf, ks: c.ks}
 }
 
 func (c ObjectSubcommand) Build() Completed {
@@ -7502,7 +7502,7 @@ func (c ObjectSubcommand) Build() Completed {
 type Persist Completed
 
 func (c Persist) Key(Key string) PersistKey {
-	return PersistKey{cf: c.cf, cs: append(c.cs, Key)}
+	return PersistKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Persist() (c Persist) {
@@ -7519,7 +7519,7 @@ func (c PersistKey) Build() Completed {
 type Pexpire Completed
 
 func (c Pexpire) Key(Key string) PexpireKey {
-	return PexpireKey{cf: c.cf, cs: append(c.cs, Key)}
+	return PexpireKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Pexpire() (c Pexpire) {
@@ -7554,25 +7554,25 @@ func (c PexpireConditionXx) Build() Completed {
 type PexpireKey Completed
 
 func (c PexpireKey) Milliseconds(Milliseconds int64) PexpireMilliseconds {
-	return PexpireMilliseconds{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Milliseconds, 10))}
+	return PexpireMilliseconds{cs: append(c.cs, strconv.FormatInt(Milliseconds, 10)), cf: c.cf, ks: c.ks}
 }
 
 type PexpireMilliseconds Completed
 
 func (c PexpireMilliseconds) Nx() PexpireConditionNx {
-	return PexpireConditionNx{cf: c.cf, cs: append(c.cs, "NX")}
+	return PexpireConditionNx{cs: append(c.cs, "NX"), cf: c.cf, ks: c.ks}
 }
 
 func (c PexpireMilliseconds) Xx() PexpireConditionXx {
-	return PexpireConditionXx{cf: c.cf, cs: append(c.cs, "XX")}
+	return PexpireConditionXx{cs: append(c.cs, "XX"), cf: c.cf, ks: c.ks}
 }
 
 func (c PexpireMilliseconds) Gt() PexpireConditionGt {
-	return PexpireConditionGt{cf: c.cf, cs: append(c.cs, "GT")}
+	return PexpireConditionGt{cs: append(c.cs, "GT"), cf: c.cf, ks: c.ks}
 }
 
 func (c PexpireMilliseconds) Lt() PexpireConditionLt {
-	return PexpireConditionLt{cf: c.cf, cs: append(c.cs, "LT")}
+	return PexpireConditionLt{cs: append(c.cs, "LT"), cf: c.cf, ks: c.ks}
 }
 
 func (c PexpireMilliseconds) Build() Completed {
@@ -7582,7 +7582,7 @@ func (c PexpireMilliseconds) Build() Completed {
 type Pexpireat Completed
 
 func (c Pexpireat) Key(Key string) PexpireatKey {
-	return PexpireatKey{cf: c.cf, cs: append(c.cs, Key)}
+	return PexpireatKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Pexpireat() (c Pexpireat) {
@@ -7617,25 +7617,25 @@ func (c PexpireatConditionXx) Build() Completed {
 type PexpireatKey Completed
 
 func (c PexpireatKey) MillisecondsTimestamp(MillisecondsTimestamp int64) PexpireatMillisecondsTimestamp {
-	return PexpireatMillisecondsTimestamp{cf: c.cf, cs: append(c.cs, strconv.FormatInt(MillisecondsTimestamp, 10))}
+	return PexpireatMillisecondsTimestamp{cs: append(c.cs, strconv.FormatInt(MillisecondsTimestamp, 10)), cf: c.cf, ks: c.ks}
 }
 
 type PexpireatMillisecondsTimestamp Completed
 
 func (c PexpireatMillisecondsTimestamp) Nx() PexpireatConditionNx {
-	return PexpireatConditionNx{cf: c.cf, cs: append(c.cs, "NX")}
+	return PexpireatConditionNx{cs: append(c.cs, "NX"), cf: c.cf, ks: c.ks}
 }
 
 func (c PexpireatMillisecondsTimestamp) Xx() PexpireatConditionXx {
-	return PexpireatConditionXx{cf: c.cf, cs: append(c.cs, "XX")}
+	return PexpireatConditionXx{cs: append(c.cs, "XX"), cf: c.cf, ks: c.ks}
 }
 
 func (c PexpireatMillisecondsTimestamp) Gt() PexpireatConditionGt {
-	return PexpireatConditionGt{cf: c.cf, cs: append(c.cs, "GT")}
+	return PexpireatConditionGt{cs: append(c.cs, "GT"), cf: c.cf, ks: c.ks}
 }
 
 func (c PexpireatMillisecondsTimestamp) Lt() PexpireatConditionLt {
-	return PexpireatConditionLt{cf: c.cf, cs: append(c.cs, "LT")}
+	return PexpireatConditionLt{cs: append(c.cs, "LT"), cf: c.cf, ks: c.ks}
 }
 
 func (c PexpireatMillisecondsTimestamp) Build() Completed {
@@ -7645,7 +7645,7 @@ func (c PexpireatMillisecondsTimestamp) Build() Completed {
 type Pexpiretime Completed
 
 func (c Pexpiretime) Key(Key string) PexpiretimeKey {
-	return PexpiretimeKey{cf: c.cf, cs: append(c.cs, Key)}
+	return PexpiretimeKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Pexpiretime() (c Pexpiretime) {
@@ -7666,7 +7666,7 @@ func (c PexpiretimeKey) Cache() Cacheable {
 type Pfadd Completed
 
 func (c Pfadd) Key(Key string) PfaddKey {
-	return PfaddKey{cf: c.cf, cs: append(c.cs, Key)}
+	return PfaddKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Pfadd() (c Pfadd) {
@@ -7677,7 +7677,7 @@ func (b *Builder) Pfadd() (c Pfadd) {
 type PfaddElement Completed
 
 func (c PfaddElement) Element(Element ...string) PfaddElement {
-	return PfaddElement{cf: c.cf, cs: append(c.cs, Element...)}
+	return PfaddElement{cs: append(c.cs, Element...), cf: c.cf, ks: c.ks}
 }
 
 func (c PfaddElement) Build() Completed {
@@ -7687,7 +7687,7 @@ func (c PfaddElement) Build() Completed {
 type PfaddKey Completed
 
 func (c PfaddKey) Element(Element ...string) PfaddElement {
-	return PfaddElement{cf: c.cf, cs: append(c.cs, Element...)}
+	return PfaddElement{cs: append(c.cs, Element...), cf: c.cf, ks: c.ks}
 }
 
 func (c PfaddKey) Build() Completed {
@@ -7697,7 +7697,7 @@ func (c PfaddKey) Build() Completed {
 type Pfcount Completed
 
 func (c Pfcount) Key(Key ...string) PfcountKey {
-	return PfcountKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return PfcountKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Pfcount() (c Pfcount) {
@@ -7708,7 +7708,7 @@ func (b *Builder) Pfcount() (c Pfcount) {
 type PfcountKey Completed
 
 func (c PfcountKey) Key(Key ...string) PfcountKey {
-	return PfcountKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return PfcountKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c PfcountKey) Build() Completed {
@@ -7718,7 +7718,7 @@ func (c PfcountKey) Build() Completed {
 type Pfmerge Completed
 
 func (c Pfmerge) Destkey(Destkey string) PfmergeDestkey {
-	return PfmergeDestkey{cf: c.cf, cs: append(c.cs, Destkey)}
+	return PfmergeDestkey{cs: append(c.cs, Destkey), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Pfmerge() (c Pfmerge) {
@@ -7729,13 +7729,13 @@ func (b *Builder) Pfmerge() (c Pfmerge) {
 type PfmergeDestkey Completed
 
 func (c PfmergeDestkey) Sourcekey(Sourcekey ...string) PfmergeSourcekey {
-	return PfmergeSourcekey{cf: c.cf, cs: append(c.cs, Sourcekey...)}
+	return PfmergeSourcekey{cs: append(c.cs, Sourcekey...), cf: c.cf, ks: c.ks}
 }
 
 type PfmergeSourcekey Completed
 
 func (c PfmergeSourcekey) Sourcekey(Sourcekey ...string) PfmergeSourcekey {
-	return PfmergeSourcekey{cf: c.cf, cs: append(c.cs, Sourcekey...)}
+	return PfmergeSourcekey{cs: append(c.cs, Sourcekey...), cf: c.cf, ks: c.ks}
 }
 
 func (c PfmergeSourcekey) Build() Completed {
@@ -7745,7 +7745,7 @@ func (c PfmergeSourcekey) Build() Completed {
 type Ping Completed
 
 func (c Ping) Message(Message string) PingMessage {
-	return PingMessage{cf: c.cf, cs: append(c.cs, Message)}
+	return PingMessage{cs: append(c.cs, Message), cf: c.cf, ks: c.ks}
 }
 
 func (c Ping) Build() Completed {
@@ -7766,7 +7766,7 @@ func (c PingMessage) Build() Completed {
 type Psetex Completed
 
 func (c Psetex) Key(Key string) PsetexKey {
-	return PsetexKey{cf: c.cf, cs: append(c.cs, Key)}
+	return PsetexKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Psetex() (c Psetex) {
@@ -7777,13 +7777,13 @@ func (b *Builder) Psetex() (c Psetex) {
 type PsetexKey Completed
 
 func (c PsetexKey) Milliseconds(Milliseconds int64) PsetexMilliseconds {
-	return PsetexMilliseconds{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Milliseconds, 10))}
+	return PsetexMilliseconds{cs: append(c.cs, strconv.FormatInt(Milliseconds, 10)), cf: c.cf, ks: c.ks}
 }
 
 type PsetexMilliseconds Completed
 
 func (c PsetexMilliseconds) Value(Value string) PsetexValue {
-	return PsetexValue{cf: c.cf, cs: append(c.cs, Value)}
+	return PsetexValue{cs: append(c.cs, Value), cf: c.cf, ks: c.ks}
 }
 
 type PsetexValue Completed
@@ -7795,7 +7795,7 @@ func (c PsetexValue) Build() Completed {
 type Psubscribe Completed
 
 func (c Psubscribe) Pattern(Pattern ...string) PsubscribePattern {
-	return PsubscribePattern{cf: c.cf, cs: append(c.cs, Pattern...)}
+	return PsubscribePattern{cs: append(c.cs, Pattern...), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Psubscribe() (c Psubscribe) {
@@ -7807,7 +7807,7 @@ func (b *Builder) Psubscribe() (c Psubscribe) {
 type PsubscribePattern Completed
 
 func (c PsubscribePattern) Pattern(Pattern ...string) PsubscribePattern {
-	return PsubscribePattern{cf: c.cf, cs: append(c.cs, Pattern...)}
+	return PsubscribePattern{cs: append(c.cs, Pattern...), cf: c.cf, ks: c.ks}
 }
 
 func (c PsubscribePattern) Build() Completed {
@@ -7817,7 +7817,7 @@ func (c PsubscribePattern) Build() Completed {
 type Psync Completed
 
 func (c Psync) Replicationid(Replicationid int64) PsyncReplicationid {
-	return PsyncReplicationid{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Replicationid, 10))}
+	return PsyncReplicationid{cs: append(c.cs, strconv.FormatInt(Replicationid, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Psync() (c Psync) {
@@ -7834,13 +7834,13 @@ func (c PsyncOffset) Build() Completed {
 type PsyncReplicationid Completed
 
 func (c PsyncReplicationid) Offset(Offset int64) PsyncOffset {
-	return PsyncOffset{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Offset, 10))}
+	return PsyncOffset{cs: append(c.cs, strconv.FormatInt(Offset, 10)), cf: c.cf, ks: c.ks}
 }
 
 type Pttl Completed
 
 func (c Pttl) Key(Key string) PttlKey {
-	return PttlKey{cf: c.cf, cs: append(c.cs, Key)}
+	return PttlKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Pttl() (c Pttl) {
@@ -7861,7 +7861,7 @@ func (c PttlKey) Cache() Cacheable {
 type Publish Completed
 
 func (c Publish) Channel(Channel string) PublishChannel {
-	return PublishChannel{cf: c.cf, cs: append(c.cs, Channel)}
+	return PublishChannel{cs: append(c.cs, Channel), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Publish() (c Publish) {
@@ -7872,7 +7872,7 @@ func (b *Builder) Publish() (c Publish) {
 type PublishChannel Completed
 
 func (c PublishChannel) Message(Message string) PublishMessage {
-	return PublishMessage{cf: c.cf, cs: append(c.cs, Message)}
+	return PublishMessage{cs: append(c.cs, Message), cf: c.cf, ks: c.ks}
 }
 
 type PublishMessage Completed
@@ -7884,7 +7884,7 @@ func (c PublishMessage) Build() Completed {
 type Pubsub Completed
 
 func (c Pubsub) Subcommand(Subcommand string) PubsubSubcommand {
-	return PubsubSubcommand{cf: c.cf, cs: append(c.cs, Subcommand)}
+	return PubsubSubcommand{cs: append(c.cs, Subcommand), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Pubsub() (c Pubsub) {
@@ -7895,7 +7895,7 @@ func (b *Builder) Pubsub() (c Pubsub) {
 type PubsubArgument Completed
 
 func (c PubsubArgument) Argument(Argument ...string) PubsubArgument {
-	return PubsubArgument{cf: c.cf, cs: append(c.cs, Argument...)}
+	return PubsubArgument{cs: append(c.cs, Argument...), cf: c.cf, ks: c.ks}
 }
 
 func (c PubsubArgument) Build() Completed {
@@ -7905,7 +7905,7 @@ func (c PubsubArgument) Build() Completed {
 type PubsubSubcommand Completed
 
 func (c PubsubSubcommand) Argument(Argument ...string) PubsubArgument {
-	return PubsubArgument{cf: c.cf, cs: append(c.cs, Argument...)}
+	return PubsubArgument{cs: append(c.cs, Argument...), cf: c.cf, ks: c.ks}
 }
 
 func (c PubsubSubcommand) Build() Completed {
@@ -7915,7 +7915,7 @@ func (c PubsubSubcommand) Build() Completed {
 type Punsubscribe Completed
 
 func (c Punsubscribe) Pattern(Pattern ...string) PunsubscribePattern {
-	return PunsubscribePattern{cf: c.cf, cs: append(c.cs, Pattern...)}
+	return PunsubscribePattern{cs: append(c.cs, Pattern...), cf: c.cf, ks: c.ks}
 }
 
 func (c Punsubscribe) Build() Completed {
@@ -7931,7 +7931,7 @@ func (b *Builder) Punsubscribe() (c Punsubscribe) {
 type PunsubscribePattern Completed
 
 func (c PunsubscribePattern) Pattern(Pattern ...string) PunsubscribePattern {
-	return PunsubscribePattern{cf: c.cf, cs: append(c.cs, Pattern...)}
+	return PunsubscribePattern{cs: append(c.cs, Pattern...), cf: c.cf, ks: c.ks}
 }
 
 func (c PunsubscribePattern) Build() Completed {
@@ -7985,7 +7985,7 @@ func (b *Builder) Readwrite() (c Readwrite) {
 type Rename Completed
 
 func (c Rename) Key(Key string) RenameKey {
-	return RenameKey{cf: c.cf, cs: append(c.cs, Key)}
+	return RenameKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Rename() (c Rename) {
@@ -7996,7 +7996,7 @@ func (b *Builder) Rename() (c Rename) {
 type RenameKey Completed
 
 func (c RenameKey) Newkey(Newkey string) RenameNewkey {
-	return RenameNewkey{cf: c.cf, cs: append(c.cs, Newkey)}
+	return RenameNewkey{cs: append(c.cs, Newkey), cf: c.cf, ks: c.ks}
 }
 
 type RenameNewkey Completed
@@ -8008,7 +8008,7 @@ func (c RenameNewkey) Build() Completed {
 type Renamenx Completed
 
 func (c Renamenx) Key(Key string) RenamenxKey {
-	return RenamenxKey{cf: c.cf, cs: append(c.cs, Key)}
+	return RenamenxKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Renamenx() (c Renamenx) {
@@ -8019,7 +8019,7 @@ func (b *Builder) Renamenx() (c Renamenx) {
 type RenamenxKey Completed
 
 func (c RenamenxKey) Newkey(Newkey string) RenamenxNewkey {
-	return RenamenxNewkey{cf: c.cf, cs: append(c.cs, Newkey)}
+	return RenamenxNewkey{cs: append(c.cs, Newkey), cf: c.cf, ks: c.ks}
 }
 
 type RenamenxNewkey Completed
@@ -8031,7 +8031,7 @@ func (c RenamenxNewkey) Build() Completed {
 type Replicaof Completed
 
 func (c Replicaof) Host(Host string) ReplicaofHost {
-	return ReplicaofHost{cf: c.cf, cs: append(c.cs, Host)}
+	return ReplicaofHost{cs: append(c.cs, Host), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Replicaof() (c Replicaof) {
@@ -8042,7 +8042,7 @@ func (b *Builder) Replicaof() (c Replicaof) {
 type ReplicaofHost Completed
 
 func (c ReplicaofHost) Port(Port string) ReplicaofPort {
-	return ReplicaofPort{cf: c.cf, cs: append(c.cs, Port)}
+	return ReplicaofPort{cs: append(c.cs, Port), cf: c.cf, ks: c.ks}
 }
 
 type ReplicaofPort Completed
@@ -8065,7 +8065,7 @@ func (b *Builder) Reset() (c Reset) {
 type Restore Completed
 
 func (c Restore) Key(Key string) RestoreKey {
-	return RestoreKey{cf: c.cf, cs: append(c.cs, Key)}
+	return RestoreKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Restore() (c Restore) {
@@ -8076,11 +8076,11 @@ func (b *Builder) Restore() (c Restore) {
 type RestoreAbsttlAbsttl Completed
 
 func (c RestoreAbsttlAbsttl) Idletime(Seconds int64) RestoreIdletime {
-	return RestoreIdletime{cf: c.cf, cs: append(c.cs, "IDLETIME", strconv.FormatInt(Seconds, 10))}
+	return RestoreIdletime{cs: append(c.cs, "IDLETIME", strconv.FormatInt(Seconds, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c RestoreAbsttlAbsttl) Freq(Frequency int64) RestoreFreq {
-	return RestoreFreq{cf: c.cf, cs: append(c.cs, "FREQ", strconv.FormatInt(Frequency, 10))}
+	return RestoreFreq{cs: append(c.cs, "FREQ", strconv.FormatInt(Frequency, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c RestoreAbsttlAbsttl) Build() Completed {
@@ -8096,7 +8096,7 @@ func (c RestoreFreq) Build() Completed {
 type RestoreIdletime Completed
 
 func (c RestoreIdletime) Freq(Frequency int64) RestoreFreq {
-	return RestoreFreq{cf: c.cf, cs: append(c.cs, "FREQ", strconv.FormatInt(Frequency, 10))}
+	return RestoreFreq{cs: append(c.cs, "FREQ", strconv.FormatInt(Frequency, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c RestoreIdletime) Build() Completed {
@@ -8106,21 +8106,21 @@ func (c RestoreIdletime) Build() Completed {
 type RestoreKey Completed
 
 func (c RestoreKey) Ttl(Ttl int64) RestoreTtl {
-	return RestoreTtl{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Ttl, 10))}
+	return RestoreTtl{cs: append(c.cs, strconv.FormatInt(Ttl, 10)), cf: c.cf, ks: c.ks}
 }
 
 type RestoreReplaceReplace Completed
 
 func (c RestoreReplaceReplace) Absttl() RestoreAbsttlAbsttl {
-	return RestoreAbsttlAbsttl{cf: c.cf, cs: append(c.cs, "ABSTTL")}
+	return RestoreAbsttlAbsttl{cs: append(c.cs, "ABSTTL"), cf: c.cf, ks: c.ks}
 }
 
 func (c RestoreReplaceReplace) Idletime(Seconds int64) RestoreIdletime {
-	return RestoreIdletime{cf: c.cf, cs: append(c.cs, "IDLETIME", strconv.FormatInt(Seconds, 10))}
+	return RestoreIdletime{cs: append(c.cs, "IDLETIME", strconv.FormatInt(Seconds, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c RestoreReplaceReplace) Freq(Frequency int64) RestoreFreq {
-	return RestoreFreq{cf: c.cf, cs: append(c.cs, "FREQ", strconv.FormatInt(Frequency, 10))}
+	return RestoreFreq{cs: append(c.cs, "FREQ", strconv.FormatInt(Frequency, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c RestoreReplaceReplace) Build() Completed {
@@ -8130,19 +8130,19 @@ func (c RestoreReplaceReplace) Build() Completed {
 type RestoreSerializedValue Completed
 
 func (c RestoreSerializedValue) Replace() RestoreReplaceReplace {
-	return RestoreReplaceReplace{cf: c.cf, cs: append(c.cs, "REPLACE")}
+	return RestoreReplaceReplace{cs: append(c.cs, "REPLACE"), cf: c.cf, ks: c.ks}
 }
 
 func (c RestoreSerializedValue) Absttl() RestoreAbsttlAbsttl {
-	return RestoreAbsttlAbsttl{cf: c.cf, cs: append(c.cs, "ABSTTL")}
+	return RestoreAbsttlAbsttl{cs: append(c.cs, "ABSTTL"), cf: c.cf, ks: c.ks}
 }
 
 func (c RestoreSerializedValue) Idletime(Seconds int64) RestoreIdletime {
-	return RestoreIdletime{cf: c.cf, cs: append(c.cs, "IDLETIME", strconv.FormatInt(Seconds, 10))}
+	return RestoreIdletime{cs: append(c.cs, "IDLETIME", strconv.FormatInt(Seconds, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c RestoreSerializedValue) Freq(Frequency int64) RestoreFreq {
-	return RestoreFreq{cf: c.cf, cs: append(c.cs, "FREQ", strconv.FormatInt(Frequency, 10))}
+	return RestoreFreq{cs: append(c.cs, "FREQ", strconv.FormatInt(Frequency, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c RestoreSerializedValue) Build() Completed {
@@ -8152,7 +8152,7 @@ func (c RestoreSerializedValue) Build() Completed {
 type RestoreTtl Completed
 
 func (c RestoreTtl) SerializedValue(SerializedValue string) RestoreSerializedValue {
-	return RestoreSerializedValue{cf: c.cf, cs: append(c.cs, SerializedValue)}
+	return RestoreSerializedValue{cs: append(c.cs, SerializedValue), cf: c.cf, ks: c.ks}
 }
 
 type Role Completed
@@ -8169,7 +8169,7 @@ func (b *Builder) Role() (c Role) {
 type Rpop Completed
 
 func (c Rpop) Key(Key string) RpopKey {
-	return RpopKey{cf: c.cf, cs: append(c.cs, Key)}
+	return RpopKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Rpop() (c Rpop) {
@@ -8186,7 +8186,7 @@ func (c RpopCount) Build() Completed {
 type RpopKey Completed
 
 func (c RpopKey) Count(Count int64) RpopCount {
-	return RpopCount{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Count, 10))}
+	return RpopCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c RpopKey) Build() Completed {
@@ -8196,7 +8196,7 @@ func (c RpopKey) Build() Completed {
 type Rpoplpush Completed
 
 func (c Rpoplpush) Source(Source string) RpoplpushSource {
-	return RpoplpushSource{cf: c.cf, cs: append(c.cs, Source)}
+	return RpoplpushSource{cs: append(c.cs, Source), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Rpoplpush() (c Rpoplpush) {
@@ -8213,13 +8213,13 @@ func (c RpoplpushDestination) Build() Completed {
 type RpoplpushSource Completed
 
 func (c RpoplpushSource) Destination(Destination string) RpoplpushDestination {
-	return RpoplpushDestination{cf: c.cf, cs: append(c.cs, Destination)}
+	return RpoplpushDestination{cs: append(c.cs, Destination), cf: c.cf, ks: c.ks}
 }
 
 type Rpush Completed
 
 func (c Rpush) Key(Key string) RpushKey {
-	return RpushKey{cf: c.cf, cs: append(c.cs, Key)}
+	return RpushKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Rpush() (c Rpush) {
@@ -8230,7 +8230,7 @@ func (b *Builder) Rpush() (c Rpush) {
 type RpushElement Completed
 
 func (c RpushElement) Element(Element ...string) RpushElement {
-	return RpushElement{cf: c.cf, cs: append(c.cs, Element...)}
+	return RpushElement{cs: append(c.cs, Element...), cf: c.cf, ks: c.ks}
 }
 
 func (c RpushElement) Build() Completed {
@@ -8240,13 +8240,13 @@ func (c RpushElement) Build() Completed {
 type RpushKey Completed
 
 func (c RpushKey) Element(Element ...string) RpushElement {
-	return RpushElement{cf: c.cf, cs: append(c.cs, Element...)}
+	return RpushElement{cs: append(c.cs, Element...), cf: c.cf, ks: c.ks}
 }
 
 type Rpushx Completed
 
 func (c Rpushx) Key(Key string) RpushxKey {
-	return RpushxKey{cf: c.cf, cs: append(c.cs, Key)}
+	return RpushxKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Rpushx() (c Rpushx) {
@@ -8257,7 +8257,7 @@ func (b *Builder) Rpushx() (c Rpushx) {
 type RpushxElement Completed
 
 func (c RpushxElement) Element(Element ...string) RpushxElement {
-	return RpushxElement{cf: c.cf, cs: append(c.cs, Element...)}
+	return RpushxElement{cs: append(c.cs, Element...), cf: c.cf, ks: c.ks}
 }
 
 func (c RpushxElement) Build() Completed {
@@ -8267,13 +8267,13 @@ func (c RpushxElement) Build() Completed {
 type RpushxKey Completed
 
 func (c RpushxKey) Element(Element ...string) RpushxElement {
-	return RpushxElement{cf: c.cf, cs: append(c.cs, Element...)}
+	return RpushxElement{cs: append(c.cs, Element...), cf: c.cf, ks: c.ks}
 }
 
 type Sadd Completed
 
 func (c Sadd) Key(Key string) SaddKey {
-	return SaddKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SaddKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Sadd() (c Sadd) {
@@ -8284,13 +8284,13 @@ func (b *Builder) Sadd() (c Sadd) {
 type SaddKey Completed
 
 func (c SaddKey) Member(Member ...string) SaddMember {
-	return SaddMember{cf: c.cf, cs: append(c.cs, Member...)}
+	return SaddMember{cs: append(c.cs, Member...), cf: c.cf, ks: c.ks}
 }
 
 type SaddMember Completed
 
 func (c SaddMember) Member(Member ...string) SaddMember {
-	return SaddMember{cf: c.cf, cs: append(c.cs, Member...)}
+	return SaddMember{cs: append(c.cs, Member...), cf: c.cf, ks: c.ks}
 }
 
 func (c SaddMember) Build() Completed {
@@ -8311,7 +8311,7 @@ func (b *Builder) Save() (c Save) {
 type Scan Completed
 
 func (c Scan) Cursor(Cursor int64) ScanCursor {
-	return ScanCursor{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Cursor, 10))}
+	return ScanCursor{cs: append(c.cs, strconv.FormatInt(Cursor, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Scan() (c Scan) {
@@ -8322,7 +8322,7 @@ func (b *Builder) Scan() (c Scan) {
 type ScanCount Completed
 
 func (c ScanCount) Type(Type string) ScanType {
-	return ScanType{cf: c.cf, cs: append(c.cs, "TYPE", Type)}
+	return ScanType{cs: append(c.cs, "TYPE", Type), cf: c.cf, ks: c.ks}
 }
 
 func (c ScanCount) Build() Completed {
@@ -8332,15 +8332,15 @@ func (c ScanCount) Build() Completed {
 type ScanCursor Completed
 
 func (c ScanCursor) Match(Pattern string) ScanMatch {
-	return ScanMatch{cf: c.cf, cs: append(c.cs, "MATCH", Pattern)}
+	return ScanMatch{cs: append(c.cs, "MATCH", Pattern), cf: c.cf, ks: c.ks}
 }
 
 func (c ScanCursor) Count(Count int64) ScanCount {
-	return ScanCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return ScanCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c ScanCursor) Type(Type string) ScanType {
-	return ScanType{cf: c.cf, cs: append(c.cs, "TYPE", Type)}
+	return ScanType{cs: append(c.cs, "TYPE", Type), cf: c.cf, ks: c.ks}
 }
 
 func (c ScanCursor) Build() Completed {
@@ -8350,11 +8350,11 @@ func (c ScanCursor) Build() Completed {
 type ScanMatch Completed
 
 func (c ScanMatch) Count(Count int64) ScanCount {
-	return ScanCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return ScanCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c ScanMatch) Type(Type string) ScanType {
-	return ScanType{cf: c.cf, cs: append(c.cs, "TYPE", Type)}
+	return ScanType{cs: append(c.cs, "TYPE", Type), cf: c.cf, ks: c.ks}
 }
 
 func (c ScanMatch) Build() Completed {
@@ -8370,7 +8370,7 @@ func (c ScanType) Build() Completed {
 type Scard Completed
 
 func (c Scard) Key(Key string) ScardKey {
-	return ScardKey{cf: c.cf, cs: append(c.cs, Key)}
+	return ScardKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Scard() (c Scard) {
@@ -8391,15 +8391,15 @@ func (c ScardKey) Cache() Cacheable {
 type ScriptDebug Completed
 
 func (c ScriptDebug) Yes() ScriptDebugModeYes {
-	return ScriptDebugModeYes{cf: c.cf, cs: append(c.cs, "YES")}
+	return ScriptDebugModeYes{cs: append(c.cs, "YES"), cf: c.cf, ks: c.ks}
 }
 
 func (c ScriptDebug) Sync() ScriptDebugModeSync {
-	return ScriptDebugModeSync{cf: c.cf, cs: append(c.cs, "SYNC")}
+	return ScriptDebugModeSync{cs: append(c.cs, "SYNC"), cf: c.cf, ks: c.ks}
 }
 
 func (c ScriptDebug) No() ScriptDebugModeNo {
-	return ScriptDebugModeNo{cf: c.cf, cs: append(c.cs, "NO")}
+	return ScriptDebugModeNo{cs: append(c.cs, "NO"), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) ScriptDebug() (c ScriptDebug) {
@@ -8428,7 +8428,7 @@ func (c ScriptDebugModeYes) Build() Completed {
 type ScriptExists Completed
 
 func (c ScriptExists) Sha1(Sha1 ...string) ScriptExistsSha1 {
-	return ScriptExistsSha1{cf: c.cf, cs: append(c.cs, Sha1...)}
+	return ScriptExistsSha1{cs: append(c.cs, Sha1...), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) ScriptExists() (c ScriptExists) {
@@ -8439,7 +8439,7 @@ func (b *Builder) ScriptExists() (c ScriptExists) {
 type ScriptExistsSha1 Completed
 
 func (c ScriptExistsSha1) Sha1(Sha1 ...string) ScriptExistsSha1 {
-	return ScriptExistsSha1{cf: c.cf, cs: append(c.cs, Sha1...)}
+	return ScriptExistsSha1{cs: append(c.cs, Sha1...), cf: c.cf, ks: c.ks}
 }
 
 func (c ScriptExistsSha1) Build() Completed {
@@ -8449,11 +8449,11 @@ func (c ScriptExistsSha1) Build() Completed {
 type ScriptFlush Completed
 
 func (c ScriptFlush) Async() ScriptFlushAsyncAsync {
-	return ScriptFlushAsyncAsync{cf: c.cf, cs: append(c.cs, "ASYNC")}
+	return ScriptFlushAsyncAsync{cs: append(c.cs, "ASYNC"), cf: c.cf, ks: c.ks}
 }
 
 func (c ScriptFlush) Sync() ScriptFlushAsyncSync {
-	return ScriptFlushAsyncSync{cf: c.cf, cs: append(c.cs, "SYNC")}
+	return ScriptFlushAsyncSync{cs: append(c.cs, "SYNC"), cf: c.cf, ks: c.ks}
 }
 
 func (c ScriptFlush) Build() Completed {
@@ -8491,7 +8491,7 @@ func (b *Builder) ScriptKill() (c ScriptKill) {
 type ScriptLoad Completed
 
 func (c ScriptLoad) Script(Script string) ScriptLoadScript {
-	return ScriptLoadScript{cf: c.cf, cs: append(c.cs, Script)}
+	return ScriptLoadScript{cs: append(c.cs, Script), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) ScriptLoad() (c ScriptLoad) {
@@ -8508,7 +8508,7 @@ func (c ScriptLoadScript) Build() Completed {
 type Sdiff Completed
 
 func (c Sdiff) Key(Key ...string) SdiffKey {
-	return SdiffKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SdiffKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Sdiff() (c Sdiff) {
@@ -8519,7 +8519,7 @@ func (b *Builder) Sdiff() (c Sdiff) {
 type SdiffKey Completed
 
 func (c SdiffKey) Key(Key ...string) SdiffKey {
-	return SdiffKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SdiffKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c SdiffKey) Build() Completed {
@@ -8529,7 +8529,7 @@ func (c SdiffKey) Build() Completed {
 type Sdiffstore Completed
 
 func (c Sdiffstore) Destination(Destination string) SdiffstoreDestination {
-	return SdiffstoreDestination{cf: c.cf, cs: append(c.cs, Destination)}
+	return SdiffstoreDestination{cs: append(c.cs, Destination), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Sdiffstore() (c Sdiffstore) {
@@ -8540,13 +8540,13 @@ func (b *Builder) Sdiffstore() (c Sdiffstore) {
 type SdiffstoreDestination Completed
 
 func (c SdiffstoreDestination) Key(Key ...string) SdiffstoreKey {
-	return SdiffstoreKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SdiffstoreKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type SdiffstoreKey Completed
 
 func (c SdiffstoreKey) Key(Key ...string) SdiffstoreKey {
-	return SdiffstoreKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SdiffstoreKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c SdiffstoreKey) Build() Completed {
@@ -8556,7 +8556,7 @@ func (c SdiffstoreKey) Build() Completed {
 type Select Completed
 
 func (c Select) Index(Index int64) SelectIndex {
-	return SelectIndex{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Index, 10))}
+	return SelectIndex{cs: append(c.cs, strconv.FormatInt(Index, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Select() (c Select) {
@@ -8573,7 +8573,7 @@ func (c SelectIndex) Build() Completed {
 type Set Completed
 
 func (c Set) Key(Key string) SetKey {
-	return SetKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SetKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Set() (c Set) {
@@ -8584,7 +8584,7 @@ func (b *Builder) Set() (c Set) {
 type SetConditionNx Completed
 
 func (c SetConditionNx) Get() SetGetGet {
-	return SetGetGet{cf: c.cf, cs: append(c.cs, "GET")}
+	return SetGetGet{cs: append(c.cs, "GET"), cf: c.cf, ks: c.ks}
 }
 
 func (c SetConditionNx) Build() Completed {
@@ -8594,7 +8594,7 @@ func (c SetConditionNx) Build() Completed {
 type SetConditionXx Completed
 
 func (c SetConditionXx) Get() SetGetGet {
-	return SetGetGet{cf: c.cf, cs: append(c.cs, "GET")}
+	return SetGetGet{cs: append(c.cs, "GET"), cf: c.cf, ks: c.ks}
 }
 
 func (c SetConditionXx) Build() Completed {
@@ -8604,15 +8604,15 @@ func (c SetConditionXx) Build() Completed {
 type SetExpirationEx Completed
 
 func (c SetExpirationEx) Nx() SetConditionNx {
-	return SetConditionNx{cf: c.cf, cs: append(c.cs, "NX")}
+	return SetConditionNx{cs: append(c.cs, "NX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SetExpirationEx) Xx() SetConditionXx {
-	return SetConditionXx{cf: c.cf, cs: append(c.cs, "XX")}
+	return SetConditionXx{cs: append(c.cs, "XX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SetExpirationEx) Get() SetGetGet {
-	return SetGetGet{cf: c.cf, cs: append(c.cs, "GET")}
+	return SetGetGet{cs: append(c.cs, "GET"), cf: c.cf, ks: c.ks}
 }
 
 func (c SetExpirationEx) Build() Completed {
@@ -8622,15 +8622,15 @@ func (c SetExpirationEx) Build() Completed {
 type SetExpirationExat Completed
 
 func (c SetExpirationExat) Nx() SetConditionNx {
-	return SetConditionNx{cf: c.cf, cs: append(c.cs, "NX")}
+	return SetConditionNx{cs: append(c.cs, "NX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SetExpirationExat) Xx() SetConditionXx {
-	return SetConditionXx{cf: c.cf, cs: append(c.cs, "XX")}
+	return SetConditionXx{cs: append(c.cs, "XX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SetExpirationExat) Get() SetGetGet {
-	return SetGetGet{cf: c.cf, cs: append(c.cs, "GET")}
+	return SetGetGet{cs: append(c.cs, "GET"), cf: c.cf, ks: c.ks}
 }
 
 func (c SetExpirationExat) Build() Completed {
@@ -8640,15 +8640,15 @@ func (c SetExpirationExat) Build() Completed {
 type SetExpirationKeepttl Completed
 
 func (c SetExpirationKeepttl) Nx() SetConditionNx {
-	return SetConditionNx{cf: c.cf, cs: append(c.cs, "NX")}
+	return SetConditionNx{cs: append(c.cs, "NX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SetExpirationKeepttl) Xx() SetConditionXx {
-	return SetConditionXx{cf: c.cf, cs: append(c.cs, "XX")}
+	return SetConditionXx{cs: append(c.cs, "XX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SetExpirationKeepttl) Get() SetGetGet {
-	return SetGetGet{cf: c.cf, cs: append(c.cs, "GET")}
+	return SetGetGet{cs: append(c.cs, "GET"), cf: c.cf, ks: c.ks}
 }
 
 func (c SetExpirationKeepttl) Build() Completed {
@@ -8658,15 +8658,15 @@ func (c SetExpirationKeepttl) Build() Completed {
 type SetExpirationPx Completed
 
 func (c SetExpirationPx) Nx() SetConditionNx {
-	return SetConditionNx{cf: c.cf, cs: append(c.cs, "NX")}
+	return SetConditionNx{cs: append(c.cs, "NX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SetExpirationPx) Xx() SetConditionXx {
-	return SetConditionXx{cf: c.cf, cs: append(c.cs, "XX")}
+	return SetConditionXx{cs: append(c.cs, "XX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SetExpirationPx) Get() SetGetGet {
-	return SetGetGet{cf: c.cf, cs: append(c.cs, "GET")}
+	return SetGetGet{cs: append(c.cs, "GET"), cf: c.cf, ks: c.ks}
 }
 
 func (c SetExpirationPx) Build() Completed {
@@ -8676,15 +8676,15 @@ func (c SetExpirationPx) Build() Completed {
 type SetExpirationPxat Completed
 
 func (c SetExpirationPxat) Nx() SetConditionNx {
-	return SetConditionNx{cf: c.cf, cs: append(c.cs, "NX")}
+	return SetConditionNx{cs: append(c.cs, "NX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SetExpirationPxat) Xx() SetConditionXx {
-	return SetConditionXx{cf: c.cf, cs: append(c.cs, "XX")}
+	return SetConditionXx{cs: append(c.cs, "XX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SetExpirationPxat) Get() SetGetGet {
-	return SetGetGet{cf: c.cf, cs: append(c.cs, "GET")}
+	return SetGetGet{cs: append(c.cs, "GET"), cf: c.cf, ks: c.ks}
 }
 
 func (c SetExpirationPxat) Build() Completed {
@@ -8700,41 +8700,41 @@ func (c SetGetGet) Build() Completed {
 type SetKey Completed
 
 func (c SetKey) Value(Value string) SetValue {
-	return SetValue{cf: c.cf, cs: append(c.cs, Value)}
+	return SetValue{cs: append(c.cs, Value), cf: c.cf, ks: c.ks}
 }
 
 type SetValue Completed
 
 func (c SetValue) Ex(Seconds int64) SetExpirationEx {
-	return SetExpirationEx{cf: c.cf, cs: append(c.cs, "EX", strconv.FormatInt(Seconds, 10))}
+	return SetExpirationEx{cs: append(c.cs, "EX", strconv.FormatInt(Seconds, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SetValue) Px(Milliseconds int64) SetExpirationPx {
-	return SetExpirationPx{cf: c.cf, cs: append(c.cs, "PX", strconv.FormatInt(Milliseconds, 10))}
+	return SetExpirationPx{cs: append(c.cs, "PX", strconv.FormatInt(Milliseconds, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SetValue) Exat(Timestamp int64) SetExpirationExat {
-	return SetExpirationExat{cf: c.cf, cs: append(c.cs, "EXAT", strconv.FormatInt(Timestamp, 10))}
+	return SetExpirationExat{cs: append(c.cs, "EXAT", strconv.FormatInt(Timestamp, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SetValue) Pxat(Millisecondstimestamp int64) SetExpirationPxat {
-	return SetExpirationPxat{cf: c.cf, cs: append(c.cs, "PXAT", strconv.FormatInt(Millisecondstimestamp, 10))}
+	return SetExpirationPxat{cs: append(c.cs, "PXAT", strconv.FormatInt(Millisecondstimestamp, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SetValue) Keepttl() SetExpirationKeepttl {
-	return SetExpirationKeepttl{cf: c.cf, cs: append(c.cs, "KEEPTTL")}
+	return SetExpirationKeepttl{cs: append(c.cs, "KEEPTTL"), cf: c.cf, ks: c.ks}
 }
 
 func (c SetValue) Nx() SetConditionNx {
-	return SetConditionNx{cf: c.cf, cs: append(c.cs, "NX")}
+	return SetConditionNx{cs: append(c.cs, "NX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SetValue) Xx() SetConditionXx {
-	return SetConditionXx{cf: c.cf, cs: append(c.cs, "XX")}
+	return SetConditionXx{cs: append(c.cs, "XX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SetValue) Get() SetGetGet {
-	return SetGetGet{cf: c.cf, cs: append(c.cs, "GET")}
+	return SetGetGet{cs: append(c.cs, "GET"), cf: c.cf, ks: c.ks}
 }
 
 func (c SetValue) Build() Completed {
@@ -8744,7 +8744,7 @@ func (c SetValue) Build() Completed {
 type Setbit Completed
 
 func (c Setbit) Key(Key string) SetbitKey {
-	return SetbitKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SetbitKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Setbit() (c Setbit) {
@@ -8755,13 +8755,13 @@ func (b *Builder) Setbit() (c Setbit) {
 type SetbitKey Completed
 
 func (c SetbitKey) Offset(Offset int64) SetbitOffset {
-	return SetbitOffset{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Offset, 10))}
+	return SetbitOffset{cs: append(c.cs, strconv.FormatInt(Offset, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SetbitOffset Completed
 
 func (c SetbitOffset) Value(Value int64) SetbitValue {
-	return SetbitValue{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Value, 10))}
+	return SetbitValue{cs: append(c.cs, strconv.FormatInt(Value, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SetbitValue Completed
@@ -8773,7 +8773,7 @@ func (c SetbitValue) Build() Completed {
 type Setex Completed
 
 func (c Setex) Key(Key string) SetexKey {
-	return SetexKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SetexKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Setex() (c Setex) {
@@ -8784,13 +8784,13 @@ func (b *Builder) Setex() (c Setex) {
 type SetexKey Completed
 
 func (c SetexKey) Seconds(Seconds int64) SetexSeconds {
-	return SetexSeconds{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Seconds, 10))}
+	return SetexSeconds{cs: append(c.cs, strconv.FormatInt(Seconds, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SetexSeconds Completed
 
 func (c SetexSeconds) Value(Value string) SetexValue {
-	return SetexValue{cf: c.cf, cs: append(c.cs, Value)}
+	return SetexValue{cs: append(c.cs, Value), cf: c.cf, ks: c.ks}
 }
 
 type SetexValue Completed
@@ -8802,7 +8802,7 @@ func (c SetexValue) Build() Completed {
 type Setnx Completed
 
 func (c Setnx) Key(Key string) SetnxKey {
-	return SetnxKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SetnxKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Setnx() (c Setnx) {
@@ -8813,7 +8813,7 @@ func (b *Builder) Setnx() (c Setnx) {
 type SetnxKey Completed
 
 func (c SetnxKey) Value(Value string) SetnxValue {
-	return SetnxValue{cf: c.cf, cs: append(c.cs, Value)}
+	return SetnxValue{cs: append(c.cs, Value), cf: c.cf, ks: c.ks}
 }
 
 type SetnxValue Completed
@@ -8825,7 +8825,7 @@ func (c SetnxValue) Build() Completed {
 type Setrange Completed
 
 func (c Setrange) Key(Key string) SetrangeKey {
-	return SetrangeKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SetrangeKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Setrange() (c Setrange) {
@@ -8836,13 +8836,13 @@ func (b *Builder) Setrange() (c Setrange) {
 type SetrangeKey Completed
 
 func (c SetrangeKey) Offset(Offset int64) SetrangeOffset {
-	return SetrangeOffset{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Offset, 10))}
+	return SetrangeOffset{cs: append(c.cs, strconv.FormatInt(Offset, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SetrangeOffset Completed
 
 func (c SetrangeOffset) Value(Value string) SetrangeValue {
-	return SetrangeValue{cf: c.cf, cs: append(c.cs, Value)}
+	return SetrangeValue{cs: append(c.cs, Value), cf: c.cf, ks: c.ks}
 }
 
 type SetrangeValue Completed
@@ -8854,11 +8854,11 @@ func (c SetrangeValue) Build() Completed {
 type Shutdown Completed
 
 func (c Shutdown) Nosave() ShutdownSaveModeNosave {
-	return ShutdownSaveModeNosave{cf: c.cf, cs: append(c.cs, "NOSAVE")}
+	return ShutdownSaveModeNosave{cs: append(c.cs, "NOSAVE"), cf: c.cf, ks: c.ks}
 }
 
 func (c Shutdown) Save() ShutdownSaveModeSave {
-	return ShutdownSaveModeSave{cf: c.cf, cs: append(c.cs, "SAVE")}
+	return ShutdownSaveModeSave{cs: append(c.cs, "SAVE"), cf: c.cf, ks: c.ks}
 }
 
 func (c Shutdown) Build() Completed {
@@ -8885,7 +8885,7 @@ func (c ShutdownSaveModeSave) Build() Completed {
 type Sinter Completed
 
 func (c Sinter) Key(Key ...string) SinterKey {
-	return SinterKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SinterKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Sinter() (c Sinter) {
@@ -8896,7 +8896,7 @@ func (b *Builder) Sinter() (c Sinter) {
 type SinterKey Completed
 
 func (c SinterKey) Key(Key ...string) SinterKey {
-	return SinterKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SinterKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c SinterKey) Build() Completed {
@@ -8906,7 +8906,7 @@ func (c SinterKey) Build() Completed {
 type Sintercard Completed
 
 func (c Sintercard) Key(Key ...string) SintercardKey {
-	return SintercardKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SintercardKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Sintercard() (c Sintercard) {
@@ -8917,7 +8917,7 @@ func (b *Builder) Sintercard() (c Sintercard) {
 type SintercardKey Completed
 
 func (c SintercardKey) Key(Key ...string) SintercardKey {
-	return SintercardKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SintercardKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c SintercardKey) Build() Completed {
@@ -8927,7 +8927,7 @@ func (c SintercardKey) Build() Completed {
 type Sinterstore Completed
 
 func (c Sinterstore) Destination(Destination string) SinterstoreDestination {
-	return SinterstoreDestination{cf: c.cf, cs: append(c.cs, Destination)}
+	return SinterstoreDestination{cs: append(c.cs, Destination), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Sinterstore() (c Sinterstore) {
@@ -8938,13 +8938,13 @@ func (b *Builder) Sinterstore() (c Sinterstore) {
 type SinterstoreDestination Completed
 
 func (c SinterstoreDestination) Key(Key ...string) SinterstoreKey {
-	return SinterstoreKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SinterstoreKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type SinterstoreKey Completed
 
 func (c SinterstoreKey) Key(Key ...string) SinterstoreKey {
-	return SinterstoreKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SinterstoreKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c SinterstoreKey) Build() Completed {
@@ -8954,7 +8954,7 @@ func (c SinterstoreKey) Build() Completed {
 type Sismember Completed
 
 func (c Sismember) Key(Key string) SismemberKey {
-	return SismemberKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SismemberKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Sismember() (c Sismember) {
@@ -8965,7 +8965,7 @@ func (b *Builder) Sismember() (c Sismember) {
 type SismemberKey Completed
 
 func (c SismemberKey) Member(Member string) SismemberMember {
-	return SismemberMember{cf: c.cf, cs: append(c.cs, Member)}
+	return SismemberMember{cs: append(c.cs, Member), cf: c.cf, ks: c.ks}
 }
 
 type SismemberMember Completed
@@ -8981,7 +8981,7 @@ func (c SismemberMember) Cache() Cacheable {
 type Slaveof Completed
 
 func (c Slaveof) Host(Host string) SlaveofHost {
-	return SlaveofHost{cf: c.cf, cs: append(c.cs, Host)}
+	return SlaveofHost{cs: append(c.cs, Host), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Slaveof() (c Slaveof) {
@@ -8992,7 +8992,7 @@ func (b *Builder) Slaveof() (c Slaveof) {
 type SlaveofHost Completed
 
 func (c SlaveofHost) Port(Port string) SlaveofPort {
-	return SlaveofPort{cf: c.cf, cs: append(c.cs, Port)}
+	return SlaveofPort{cs: append(c.cs, Port), cf: c.cf, ks: c.ks}
 }
 
 type SlaveofPort Completed
@@ -9004,7 +9004,7 @@ func (c SlaveofPort) Build() Completed {
 type Slowlog Completed
 
 func (c Slowlog) Subcommand(Subcommand string) SlowlogSubcommand {
-	return SlowlogSubcommand{cf: c.cf, cs: append(c.cs, Subcommand)}
+	return SlowlogSubcommand{cs: append(c.cs, Subcommand), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Slowlog() (c Slowlog) {
@@ -9021,7 +9021,7 @@ func (c SlowlogArgument) Build() Completed {
 type SlowlogSubcommand Completed
 
 func (c SlowlogSubcommand) Argument(Argument string) SlowlogArgument {
-	return SlowlogArgument{cf: c.cf, cs: append(c.cs, Argument)}
+	return SlowlogArgument{cs: append(c.cs, Argument), cf: c.cf, ks: c.ks}
 }
 
 func (c SlowlogSubcommand) Build() Completed {
@@ -9031,7 +9031,7 @@ func (c SlowlogSubcommand) Build() Completed {
 type Smembers Completed
 
 func (c Smembers) Key(Key string) SmembersKey {
-	return SmembersKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SmembersKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Smembers() (c Smembers) {
@@ -9052,7 +9052,7 @@ func (c SmembersKey) Cache() Cacheable {
 type Smismember Completed
 
 func (c Smismember) Key(Key string) SmismemberKey {
-	return SmismemberKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SmismemberKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Smismember() (c Smismember) {
@@ -9063,13 +9063,13 @@ func (b *Builder) Smismember() (c Smismember) {
 type SmismemberKey Completed
 
 func (c SmismemberKey) Member(Member ...string) SmismemberMember {
-	return SmismemberMember{cf: c.cf, cs: append(c.cs, Member...)}
+	return SmismemberMember{cs: append(c.cs, Member...), cf: c.cf, ks: c.ks}
 }
 
 type SmismemberMember Completed
 
 func (c SmismemberMember) Member(Member ...string) SmismemberMember {
-	return SmismemberMember{cf: c.cf, cs: append(c.cs, Member...)}
+	return SmismemberMember{cs: append(c.cs, Member...), cf: c.cf, ks: c.ks}
 }
 
 func (c SmismemberMember) Build() Completed {
@@ -9083,7 +9083,7 @@ func (c SmismemberMember) Cache() Cacheable {
 type Smove Completed
 
 func (c Smove) Source(Source string) SmoveSource {
-	return SmoveSource{cf: c.cf, cs: append(c.cs, Source)}
+	return SmoveSource{cs: append(c.cs, Source), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Smove() (c Smove) {
@@ -9094,7 +9094,7 @@ func (b *Builder) Smove() (c Smove) {
 type SmoveDestination Completed
 
 func (c SmoveDestination) Member(Member string) SmoveMember {
-	return SmoveMember{cf: c.cf, cs: append(c.cs, Member)}
+	return SmoveMember{cs: append(c.cs, Member), cf: c.cf, ks: c.ks}
 }
 
 type SmoveMember Completed
@@ -9106,13 +9106,13 @@ func (c SmoveMember) Build() Completed {
 type SmoveSource Completed
 
 func (c SmoveSource) Destination(Destination string) SmoveDestination {
-	return SmoveDestination{cf: c.cf, cs: append(c.cs, Destination)}
+	return SmoveDestination{cs: append(c.cs, Destination), cf: c.cf, ks: c.ks}
 }
 
 type Sort Completed
 
 func (c Sort) Key(Key string) SortKey {
-	return SortKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SortKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Sort() (c Sort) {
@@ -9123,28 +9123,28 @@ func (b *Builder) Sort() (c Sort) {
 type SortBy Completed
 
 func (c SortBy) Limit(Offset int64, Count int64) SortLimit {
-	return SortLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return SortLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SortBy) Get(Pattern ...string) SortGet {
 	c.cs = append(c.cs, "GET")
-	return SortGet{cf: c.cf, cs: append(c.cs, Pattern...)}
+	return SortGet{cs: append(c.cs, Pattern...), cf: c.cf, ks: c.ks}
 }
 
 func (c SortBy) Asc() SortOrderAsc {
-	return SortOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SortOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SortBy) Desc() SortOrderDesc {
-	return SortOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SortOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SortBy) Alpha() SortSortingAlpha {
-	return SortSortingAlpha{cf: c.cf, cs: append(c.cs, "ALPHA")}
+	return SortSortingAlpha{cs: append(c.cs, "ALPHA"), cf: c.cf, ks: c.ks}
 }
 
 func (c SortBy) Store(Destination string) SortStore {
-	return SortStore{cf: c.cf, cs: append(c.cs, "STORE", Destination)}
+	return SortStore{cs: append(c.cs, "STORE", Destination), cf: c.cf, ks: c.ks}
 }
 
 func (c SortBy) Build() Completed {
@@ -9154,23 +9154,23 @@ func (c SortBy) Build() Completed {
 type SortGet Completed
 
 func (c SortGet) Asc() SortOrderAsc {
-	return SortOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SortOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SortGet) Desc() SortOrderDesc {
-	return SortOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SortOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SortGet) Alpha() SortSortingAlpha {
-	return SortSortingAlpha{cf: c.cf, cs: append(c.cs, "ALPHA")}
+	return SortSortingAlpha{cs: append(c.cs, "ALPHA"), cf: c.cf, ks: c.ks}
 }
 
 func (c SortGet) Store(Destination string) SortStore {
-	return SortStore{cf: c.cf, cs: append(c.cs, "STORE", Destination)}
+	return SortStore{cs: append(c.cs, "STORE", Destination), cf: c.cf, ks: c.ks}
 }
 
 func (c SortGet) Get(Get ...string) SortGet {
-	return SortGet{cf: c.cf, cs: append(c.cs, Get...)}
+	return SortGet{cs: append(c.cs, Get...), cf: c.cf, ks: c.ks}
 }
 
 func (c SortGet) Build() Completed {
@@ -9180,32 +9180,32 @@ func (c SortGet) Build() Completed {
 type SortKey Completed
 
 func (c SortKey) By(Pattern string) SortBy {
-	return SortBy{cf: c.cf, cs: append(c.cs, "BY", Pattern)}
+	return SortBy{cs: append(c.cs, "BY", Pattern), cf: c.cf, ks: c.ks}
 }
 
 func (c SortKey) Limit(Offset int64, Count int64) SortLimit {
-	return SortLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return SortLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SortKey) Get(Pattern ...string) SortGet {
 	c.cs = append(c.cs, "GET")
-	return SortGet{cf: c.cf, cs: append(c.cs, Pattern...)}
+	return SortGet{cs: append(c.cs, Pattern...), cf: c.cf, ks: c.ks}
 }
 
 func (c SortKey) Asc() SortOrderAsc {
-	return SortOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SortOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SortKey) Desc() SortOrderDesc {
-	return SortOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SortOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SortKey) Alpha() SortSortingAlpha {
-	return SortSortingAlpha{cf: c.cf, cs: append(c.cs, "ALPHA")}
+	return SortSortingAlpha{cs: append(c.cs, "ALPHA"), cf: c.cf, ks: c.ks}
 }
 
 func (c SortKey) Store(Destination string) SortStore {
-	return SortStore{cf: c.cf, cs: append(c.cs, "STORE", Destination)}
+	return SortStore{cs: append(c.cs, "STORE", Destination), cf: c.cf, ks: c.ks}
 }
 
 func (c SortKey) Build() Completed {
@@ -9216,23 +9216,23 @@ type SortLimit Completed
 
 func (c SortLimit) Get(Pattern ...string) SortGet {
 	c.cs = append(c.cs, "GET")
-	return SortGet{cf: c.cf, cs: append(c.cs, Pattern...)}
+	return SortGet{cs: append(c.cs, Pattern...), cf: c.cf, ks: c.ks}
 }
 
 func (c SortLimit) Asc() SortOrderAsc {
-	return SortOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SortOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SortLimit) Desc() SortOrderDesc {
-	return SortOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SortOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SortLimit) Alpha() SortSortingAlpha {
-	return SortSortingAlpha{cf: c.cf, cs: append(c.cs, "ALPHA")}
+	return SortSortingAlpha{cs: append(c.cs, "ALPHA"), cf: c.cf, ks: c.ks}
 }
 
 func (c SortLimit) Store(Destination string) SortStore {
-	return SortStore{cf: c.cf, cs: append(c.cs, "STORE", Destination)}
+	return SortStore{cs: append(c.cs, "STORE", Destination), cf: c.cf, ks: c.ks}
 }
 
 func (c SortLimit) Build() Completed {
@@ -9242,11 +9242,11 @@ func (c SortLimit) Build() Completed {
 type SortOrderAsc Completed
 
 func (c SortOrderAsc) Alpha() SortSortingAlpha {
-	return SortSortingAlpha{cf: c.cf, cs: append(c.cs, "ALPHA")}
+	return SortSortingAlpha{cs: append(c.cs, "ALPHA"), cf: c.cf, ks: c.ks}
 }
 
 func (c SortOrderAsc) Store(Destination string) SortStore {
-	return SortStore{cf: c.cf, cs: append(c.cs, "STORE", Destination)}
+	return SortStore{cs: append(c.cs, "STORE", Destination), cf: c.cf, ks: c.ks}
 }
 
 func (c SortOrderAsc) Build() Completed {
@@ -9256,11 +9256,11 @@ func (c SortOrderAsc) Build() Completed {
 type SortOrderDesc Completed
 
 func (c SortOrderDesc) Alpha() SortSortingAlpha {
-	return SortSortingAlpha{cf: c.cf, cs: append(c.cs, "ALPHA")}
+	return SortSortingAlpha{cs: append(c.cs, "ALPHA"), cf: c.cf, ks: c.ks}
 }
 
 func (c SortOrderDesc) Store(Destination string) SortStore {
-	return SortStore{cf: c.cf, cs: append(c.cs, "STORE", Destination)}
+	return SortStore{cs: append(c.cs, "STORE", Destination), cf: c.cf, ks: c.ks}
 }
 
 func (c SortOrderDesc) Build() Completed {
@@ -9270,7 +9270,7 @@ func (c SortOrderDesc) Build() Completed {
 type SortRo Completed
 
 func (c SortRo) Key(Key string) SortRoKey {
-	return SortRoKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SortRoKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) SortRo() (c SortRo) {
@@ -9281,24 +9281,24 @@ func (b *Builder) SortRo() (c SortRo) {
 type SortRoBy Completed
 
 func (c SortRoBy) Limit(Offset int64, Count int64) SortRoLimit {
-	return SortRoLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return SortRoLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SortRoBy) Get(Pattern ...string) SortRoGet {
 	c.cs = append(c.cs, "GET")
-	return SortRoGet{cf: c.cf, cs: append(c.cs, Pattern...)}
+	return SortRoGet{cs: append(c.cs, Pattern...), cf: c.cf, ks: c.ks}
 }
 
 func (c SortRoBy) Asc() SortRoOrderAsc {
-	return SortRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SortRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SortRoBy) Desc() SortRoOrderDesc {
-	return SortRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SortRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SortRoBy) Alpha() SortRoSortingAlpha {
-	return SortRoSortingAlpha{cf: c.cf, cs: append(c.cs, "ALPHA")}
+	return SortRoSortingAlpha{cs: append(c.cs, "ALPHA"), cf: c.cf, ks: c.ks}
 }
 
 func (c SortRoBy) Build() Completed {
@@ -9312,19 +9312,19 @@ func (c SortRoBy) Cache() Cacheable {
 type SortRoGet Completed
 
 func (c SortRoGet) Asc() SortRoOrderAsc {
-	return SortRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SortRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SortRoGet) Desc() SortRoOrderDesc {
-	return SortRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SortRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SortRoGet) Alpha() SortRoSortingAlpha {
-	return SortRoSortingAlpha{cf: c.cf, cs: append(c.cs, "ALPHA")}
+	return SortRoSortingAlpha{cs: append(c.cs, "ALPHA"), cf: c.cf, ks: c.ks}
 }
 
 func (c SortRoGet) Get(Get ...string) SortRoGet {
-	return SortRoGet{cf: c.cf, cs: append(c.cs, Get...)}
+	return SortRoGet{cs: append(c.cs, Get...), cf: c.cf, ks: c.ks}
 }
 
 func (c SortRoGet) Build() Completed {
@@ -9338,28 +9338,28 @@ func (c SortRoGet) Cache() Cacheable {
 type SortRoKey Completed
 
 func (c SortRoKey) By(Pattern string) SortRoBy {
-	return SortRoBy{cf: c.cf, cs: append(c.cs, "BY", Pattern)}
+	return SortRoBy{cs: append(c.cs, "BY", Pattern), cf: c.cf, ks: c.ks}
 }
 
 func (c SortRoKey) Limit(Offset int64, Count int64) SortRoLimit {
-	return SortRoLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return SortRoLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SortRoKey) Get(Pattern ...string) SortRoGet {
 	c.cs = append(c.cs, "GET")
-	return SortRoGet{cf: c.cf, cs: append(c.cs, Pattern...)}
+	return SortRoGet{cs: append(c.cs, Pattern...), cf: c.cf, ks: c.ks}
 }
 
 func (c SortRoKey) Asc() SortRoOrderAsc {
-	return SortRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SortRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SortRoKey) Desc() SortRoOrderDesc {
-	return SortRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SortRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SortRoKey) Alpha() SortRoSortingAlpha {
-	return SortRoSortingAlpha{cf: c.cf, cs: append(c.cs, "ALPHA")}
+	return SortRoSortingAlpha{cs: append(c.cs, "ALPHA"), cf: c.cf, ks: c.ks}
 }
 
 func (c SortRoKey) Build() Completed {
@@ -9374,19 +9374,19 @@ type SortRoLimit Completed
 
 func (c SortRoLimit) Get(Pattern ...string) SortRoGet {
 	c.cs = append(c.cs, "GET")
-	return SortRoGet{cf: c.cf, cs: append(c.cs, Pattern...)}
+	return SortRoGet{cs: append(c.cs, Pattern...), cf: c.cf, ks: c.ks}
 }
 
 func (c SortRoLimit) Asc() SortRoOrderAsc {
-	return SortRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SortRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SortRoLimit) Desc() SortRoOrderDesc {
-	return SortRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SortRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SortRoLimit) Alpha() SortRoSortingAlpha {
-	return SortRoSortingAlpha{cf: c.cf, cs: append(c.cs, "ALPHA")}
+	return SortRoSortingAlpha{cs: append(c.cs, "ALPHA"), cf: c.cf, ks: c.ks}
 }
 
 func (c SortRoLimit) Build() Completed {
@@ -9400,7 +9400,7 @@ func (c SortRoLimit) Cache() Cacheable {
 type SortRoOrderAsc Completed
 
 func (c SortRoOrderAsc) Alpha() SortRoSortingAlpha {
-	return SortRoSortingAlpha{cf: c.cf, cs: append(c.cs, "ALPHA")}
+	return SortRoSortingAlpha{cs: append(c.cs, "ALPHA"), cf: c.cf, ks: c.ks}
 }
 
 func (c SortRoOrderAsc) Build() Completed {
@@ -9414,7 +9414,7 @@ func (c SortRoOrderAsc) Cache() Cacheable {
 type SortRoOrderDesc Completed
 
 func (c SortRoOrderDesc) Alpha() SortRoSortingAlpha {
-	return SortRoSortingAlpha{cf: c.cf, cs: append(c.cs, "ALPHA")}
+	return SortRoSortingAlpha{cs: append(c.cs, "ALPHA"), cf: c.cf, ks: c.ks}
 }
 
 func (c SortRoOrderDesc) Build() Completed {
@@ -9438,7 +9438,7 @@ func (c SortRoSortingAlpha) Cache() Cacheable {
 type SortSortingAlpha Completed
 
 func (c SortSortingAlpha) Store(Destination string) SortStore {
-	return SortStore{cf: c.cf, cs: append(c.cs, "STORE", Destination)}
+	return SortStore{cs: append(c.cs, "STORE", Destination), cf: c.cf, ks: c.ks}
 }
 
 func (c SortSortingAlpha) Build() Completed {
@@ -9454,7 +9454,7 @@ func (c SortStore) Build() Completed {
 type Spop Completed
 
 func (c Spop) Key(Key string) SpopKey {
-	return SpopKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SpopKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Spop() (c Spop) {
@@ -9471,7 +9471,7 @@ func (c SpopCount) Build() Completed {
 type SpopKey Completed
 
 func (c SpopKey) Count(Count int64) SpopCount {
-	return SpopCount{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Count, 10))}
+	return SpopCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SpopKey) Build() Completed {
@@ -9481,7 +9481,7 @@ func (c SpopKey) Build() Completed {
 type Srandmember Completed
 
 func (c Srandmember) Key(Key string) SrandmemberKey {
-	return SrandmemberKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SrandmemberKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Srandmember() (c Srandmember) {
@@ -9498,7 +9498,7 @@ func (c SrandmemberCount) Build() Completed {
 type SrandmemberKey Completed
 
 func (c SrandmemberKey) Count(Count int64) SrandmemberCount {
-	return SrandmemberCount{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Count, 10))}
+	return SrandmemberCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SrandmemberKey) Build() Completed {
@@ -9508,7 +9508,7 @@ func (c SrandmemberKey) Build() Completed {
 type Srem Completed
 
 func (c Srem) Key(Key string) SremKey {
-	return SremKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SremKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Srem() (c Srem) {
@@ -9519,13 +9519,13 @@ func (b *Builder) Srem() (c Srem) {
 type SremKey Completed
 
 func (c SremKey) Member(Member ...string) SremMember {
-	return SremMember{cf: c.cf, cs: append(c.cs, Member...)}
+	return SremMember{cs: append(c.cs, Member...), cf: c.cf, ks: c.ks}
 }
 
 type SremMember Completed
 
 func (c SremMember) Member(Member ...string) SremMember {
-	return SremMember{cf: c.cf, cs: append(c.cs, Member...)}
+	return SremMember{cs: append(c.cs, Member...), cf: c.cf, ks: c.ks}
 }
 
 func (c SremMember) Build() Completed {
@@ -9535,7 +9535,7 @@ func (c SremMember) Build() Completed {
 type Sscan Completed
 
 func (c Sscan) Key(Key string) SscanKey {
-	return SscanKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SscanKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Sscan() (c Sscan) {
@@ -9552,11 +9552,11 @@ func (c SscanCount) Build() Completed {
 type SscanCursor Completed
 
 func (c SscanCursor) Match(Pattern string) SscanMatch {
-	return SscanMatch{cf: c.cf, cs: append(c.cs, "MATCH", Pattern)}
+	return SscanMatch{cs: append(c.cs, "MATCH", Pattern), cf: c.cf, ks: c.ks}
 }
 
 func (c SscanCursor) Count(Count int64) SscanCount {
-	return SscanCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SscanCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SscanCursor) Build() Completed {
@@ -9566,13 +9566,13 @@ func (c SscanCursor) Build() Completed {
 type SscanKey Completed
 
 func (c SscanKey) Cursor(Cursor int64) SscanCursor {
-	return SscanCursor{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Cursor, 10))}
+	return SscanCursor{cs: append(c.cs, strconv.FormatInt(Cursor, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SscanMatch Completed
 
 func (c SscanMatch) Count(Count int64) SscanCount {
-	return SscanCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SscanCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SscanMatch) Build() Completed {
@@ -9582,7 +9582,7 @@ func (c SscanMatch) Build() Completed {
 type Stralgo Completed
 
 func (c Stralgo) Lcs() StralgoAlgorithmLcs {
-	return StralgoAlgorithmLcs{cf: c.cf, cs: append(c.cs, "LCS")}
+	return StralgoAlgorithmLcs{cs: append(c.cs, "LCS"), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Stralgo() (c Stralgo) {
@@ -9593,7 +9593,7 @@ func (b *Builder) Stralgo() (c Stralgo) {
 type StralgoAlgoSpecificArgument Completed
 
 func (c StralgoAlgoSpecificArgument) AlgoSpecificArgument(AlgoSpecificArgument ...string) StralgoAlgoSpecificArgument {
-	return StralgoAlgoSpecificArgument{cf: c.cf, cs: append(c.cs, AlgoSpecificArgument...)}
+	return StralgoAlgoSpecificArgument{cs: append(c.cs, AlgoSpecificArgument...), cf: c.cf, ks: c.ks}
 }
 
 func (c StralgoAlgoSpecificArgument) Build() Completed {
@@ -9603,13 +9603,13 @@ func (c StralgoAlgoSpecificArgument) Build() Completed {
 type StralgoAlgorithmLcs Completed
 
 func (c StralgoAlgorithmLcs) AlgoSpecificArgument(AlgoSpecificArgument ...string) StralgoAlgoSpecificArgument {
-	return StralgoAlgoSpecificArgument{cf: c.cf, cs: append(c.cs, AlgoSpecificArgument...)}
+	return StralgoAlgoSpecificArgument{cs: append(c.cs, AlgoSpecificArgument...), cf: c.cf, ks: c.ks}
 }
 
 type Strlen Completed
 
 func (c Strlen) Key(Key string) StrlenKey {
-	return StrlenKey{cf: c.cf, cs: append(c.cs, Key)}
+	return StrlenKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Strlen() (c Strlen) {
@@ -9630,7 +9630,7 @@ func (c StrlenKey) Cache() Cacheable {
 type Subscribe Completed
 
 func (c Subscribe) Channel(Channel ...string) SubscribeChannel {
-	return SubscribeChannel{cf: c.cf, cs: append(c.cs, Channel...)}
+	return SubscribeChannel{cs: append(c.cs, Channel...), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Subscribe() (c Subscribe) {
@@ -9642,7 +9642,7 @@ func (b *Builder) Subscribe() (c Subscribe) {
 type SubscribeChannel Completed
 
 func (c SubscribeChannel) Channel(Channel ...string) SubscribeChannel {
-	return SubscribeChannel{cf: c.cf, cs: append(c.cs, Channel...)}
+	return SubscribeChannel{cs: append(c.cs, Channel...), cf: c.cf, ks: c.ks}
 }
 
 func (c SubscribeChannel) Build() Completed {
@@ -9652,7 +9652,7 @@ func (c SubscribeChannel) Build() Completed {
 type Sunion Completed
 
 func (c Sunion) Key(Key ...string) SunionKey {
-	return SunionKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SunionKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Sunion() (c Sunion) {
@@ -9663,7 +9663,7 @@ func (b *Builder) Sunion() (c Sunion) {
 type SunionKey Completed
 
 func (c SunionKey) Key(Key ...string) SunionKey {
-	return SunionKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SunionKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c SunionKey) Build() Completed {
@@ -9673,7 +9673,7 @@ func (c SunionKey) Build() Completed {
 type Sunionstore Completed
 
 func (c Sunionstore) Destination(Destination string) SunionstoreDestination {
-	return SunionstoreDestination{cf: c.cf, cs: append(c.cs, Destination)}
+	return SunionstoreDestination{cs: append(c.cs, Destination), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Sunionstore() (c Sunionstore) {
@@ -9684,13 +9684,13 @@ func (b *Builder) Sunionstore() (c Sunionstore) {
 type SunionstoreDestination Completed
 
 func (c SunionstoreDestination) Key(Key ...string) SunionstoreKey {
-	return SunionstoreKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SunionstoreKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type SunionstoreKey Completed
 
 func (c SunionstoreKey) Key(Key ...string) SunionstoreKey {
-	return SunionstoreKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SunionstoreKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c SunionstoreKey) Build() Completed {
@@ -9700,7 +9700,7 @@ func (c SunionstoreKey) Build() Completed {
 type Swapdb Completed
 
 func (c Swapdb) Index1(Index1 int64) SwapdbIndex1 {
-	return SwapdbIndex1{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Index1, 10))}
+	return SwapdbIndex1{cs: append(c.cs, strconv.FormatInt(Index1, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Swapdb() (c Swapdb) {
@@ -9711,7 +9711,7 @@ func (b *Builder) Swapdb() (c Swapdb) {
 type SwapdbIndex1 Completed
 
 func (c SwapdbIndex1) Index2(Index2 int64) SwapdbIndex2 {
-	return SwapdbIndex2{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Index2, 10))}
+	return SwapdbIndex2{cs: append(c.cs, strconv.FormatInt(Index2, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SwapdbIndex2 Completed
@@ -9745,7 +9745,7 @@ func (b *Builder) Time() (c Time) {
 type Touch Completed
 
 func (c Touch) Key(Key ...string) TouchKey {
-	return TouchKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return TouchKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Touch() (c Touch) {
@@ -9756,7 +9756,7 @@ func (b *Builder) Touch() (c Touch) {
 type TouchKey Completed
 
 func (c TouchKey) Key(Key ...string) TouchKey {
-	return TouchKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return TouchKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c TouchKey) Build() Completed {
@@ -9766,7 +9766,7 @@ func (c TouchKey) Build() Completed {
 type Ttl Completed
 
 func (c Ttl) Key(Key string) TtlKey {
-	return TtlKey{cf: c.cf, cs: append(c.cs, Key)}
+	return TtlKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Ttl() (c Ttl) {
@@ -9787,7 +9787,7 @@ func (c TtlKey) Cache() Cacheable {
 type Type Completed
 
 func (c Type) Key(Key string) TypeKey {
-	return TypeKey{cf: c.cf, cs: append(c.cs, Key)}
+	return TypeKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Type() (c Type) {
@@ -9808,7 +9808,7 @@ func (c TypeKey) Cache() Cacheable {
 type Unlink Completed
 
 func (c Unlink) Key(Key ...string) UnlinkKey {
-	return UnlinkKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return UnlinkKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Unlink() (c Unlink) {
@@ -9819,7 +9819,7 @@ func (b *Builder) Unlink() (c Unlink) {
 type UnlinkKey Completed
 
 func (c UnlinkKey) Key(Key ...string) UnlinkKey {
-	return UnlinkKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return UnlinkKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c UnlinkKey) Build() Completed {
@@ -9829,7 +9829,7 @@ func (c UnlinkKey) Build() Completed {
 type Unsubscribe Completed
 
 func (c Unsubscribe) Channel(Channel ...string) UnsubscribeChannel {
-	return UnsubscribeChannel{cf: c.cf, cs: append(c.cs, Channel...)}
+	return UnsubscribeChannel{cs: append(c.cs, Channel...), cf: c.cf, ks: c.ks}
 }
 
 func (c Unsubscribe) Build() Completed {
@@ -9845,7 +9845,7 @@ func (b *Builder) Unsubscribe() (c Unsubscribe) {
 type UnsubscribeChannel Completed
 
 func (c UnsubscribeChannel) Channel(Channel ...string) UnsubscribeChannel {
-	return UnsubscribeChannel{cf: c.cf, cs: append(c.cs, Channel...)}
+	return UnsubscribeChannel{cs: append(c.cs, Channel...), cf: c.cf, ks: c.ks}
 }
 
 func (c UnsubscribeChannel) Build() Completed {
@@ -9866,7 +9866,7 @@ func (b *Builder) Unwatch() (c Unwatch) {
 type Wait Completed
 
 func (c Wait) Numreplicas(Numreplicas int64) WaitNumreplicas {
-	return WaitNumreplicas{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numreplicas, 10))}
+	return WaitNumreplicas{cs: append(c.cs, strconv.FormatInt(Numreplicas, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Wait() (c Wait) {
@@ -9878,7 +9878,7 @@ func (b *Builder) Wait() (c Wait) {
 type WaitNumreplicas Completed
 
 func (c WaitNumreplicas) Timeout(Timeout int64) WaitTimeout {
-	return WaitTimeout{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Timeout, 10))}
+	return WaitTimeout{cs: append(c.cs, strconv.FormatInt(Timeout, 10)), cf: c.cf, ks: c.ks}
 }
 
 type WaitTimeout Completed
@@ -9890,7 +9890,7 @@ func (c WaitTimeout) Build() Completed {
 type Watch Completed
 
 func (c Watch) Key(Key ...string) WatchKey {
-	return WatchKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return WatchKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Watch() (c Watch) {
@@ -9901,7 +9901,7 @@ func (b *Builder) Watch() (c Watch) {
 type WatchKey Completed
 
 func (c WatchKey) Key(Key ...string) WatchKey {
-	return WatchKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return WatchKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c WatchKey) Build() Completed {
@@ -9911,7 +9911,7 @@ func (c WatchKey) Build() Completed {
 type Xack Completed
 
 func (c Xack) Key(Key string) XackKey {
-	return XackKey{cf: c.cf, cs: append(c.cs, Key)}
+	return XackKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Xack() (c Xack) {
@@ -9922,13 +9922,13 @@ func (b *Builder) Xack() (c Xack) {
 type XackGroup Completed
 
 func (c XackGroup) Id(Id ...string) XackId {
-	return XackId{cf: c.cf, cs: append(c.cs, Id...)}
+	return XackId{cs: append(c.cs, Id...), cf: c.cf, ks: c.ks}
 }
 
 type XackId Completed
 
 func (c XackId) Id(Id ...string) XackId {
-	return XackId{cf: c.cf, cs: append(c.cs, Id...)}
+	return XackId{cs: append(c.cs, Id...), cf: c.cf, ks: c.ks}
 }
 
 func (c XackId) Build() Completed {
@@ -9938,13 +9938,13 @@ func (c XackId) Build() Completed {
 type XackKey Completed
 
 func (c XackKey) Group(Group string) XackGroup {
-	return XackGroup{cf: c.cf, cs: append(c.cs, Group)}
+	return XackGroup{cs: append(c.cs, Group), cf: c.cf, ks: c.ks}
 }
 
 type Xadd Completed
 
 func (c Xadd) Key(Key string) XaddKey {
-	return XaddKey{cf: c.cf, cs: append(c.cs, Key)}
+	return XaddKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Xadd() (c Xadd) {
@@ -9955,7 +9955,7 @@ func (b *Builder) Xadd() (c Xadd) {
 type XaddFieldValue Completed
 
 func (c XaddFieldValue) FieldValue(Field string, Value string) XaddFieldValue {
-	return XaddFieldValue{cf: c.cf, cs: append(c.cs, Field, Value)}
+	return XaddFieldValue{cs: append(c.cs, Field, Value), cf: c.cf, ks: c.ks}
 }
 
 func (c XaddFieldValue) Build() Completed {
@@ -9965,101 +9965,101 @@ func (c XaddFieldValue) Build() Completed {
 type XaddId Completed
 
 func (c XaddId) FieldValue() XaddFieldValue {
-	return XaddFieldValue{cf: c.cf, cs: c.cs}
+	return XaddFieldValue{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 type XaddKey Completed
 
 func (c XaddKey) Nomkstream() XaddNomkstream {
-	return XaddNomkstream{cf: c.cf, cs: append(c.cs, "NOMKSTREAM")}
+	return XaddNomkstream{cs: append(c.cs, "NOMKSTREAM"), cf: c.cf, ks: c.ks}
 }
 
 func (c XaddKey) Maxlen() XaddTrimStrategyMaxlen {
-	return XaddTrimStrategyMaxlen{cf: c.cf, cs: append(c.cs, "MAXLEN")}
+	return XaddTrimStrategyMaxlen{cs: append(c.cs, "MAXLEN"), cf: c.cf, ks: c.ks}
 }
 
 func (c XaddKey) Minid() XaddTrimStrategyMinid {
-	return XaddTrimStrategyMinid{cf: c.cf, cs: append(c.cs, "MINID")}
+	return XaddTrimStrategyMinid{cs: append(c.cs, "MINID"), cf: c.cf, ks: c.ks}
 }
 
 func (c XaddKey) Id(Id string) XaddId {
-	return XaddId{cf: c.cf, cs: append(c.cs, Id)}
+	return XaddId{cs: append(c.cs, Id), cf: c.cf, ks: c.ks}
 }
 
 type XaddNomkstream Completed
 
 func (c XaddNomkstream) Maxlen() XaddTrimStrategyMaxlen {
-	return XaddTrimStrategyMaxlen{cf: c.cf, cs: append(c.cs, "MAXLEN")}
+	return XaddTrimStrategyMaxlen{cs: append(c.cs, "MAXLEN"), cf: c.cf, ks: c.ks}
 }
 
 func (c XaddNomkstream) Minid() XaddTrimStrategyMinid {
-	return XaddTrimStrategyMinid{cf: c.cf, cs: append(c.cs, "MINID")}
+	return XaddTrimStrategyMinid{cs: append(c.cs, "MINID"), cf: c.cf, ks: c.ks}
 }
 
 func (c XaddNomkstream) Id(Id string) XaddId {
-	return XaddId{cf: c.cf, cs: append(c.cs, Id)}
+	return XaddId{cs: append(c.cs, Id), cf: c.cf, ks: c.ks}
 }
 
 type XaddTrimLimit Completed
 
 func (c XaddTrimLimit) Id(Id string) XaddId {
-	return XaddId{cf: c.cf, cs: append(c.cs, Id)}
+	return XaddId{cs: append(c.cs, Id), cf: c.cf, ks: c.ks}
 }
 
 type XaddTrimOperatorAlmost Completed
 
 func (c XaddTrimOperatorAlmost) Threshold(Threshold string) XaddTrimThreshold {
-	return XaddTrimThreshold{cf: c.cf, cs: append(c.cs, Threshold)}
+	return XaddTrimThreshold{cs: append(c.cs, Threshold), cf: c.cf, ks: c.ks}
 }
 
 type XaddTrimOperatorExact Completed
 
 func (c XaddTrimOperatorExact) Threshold(Threshold string) XaddTrimThreshold {
-	return XaddTrimThreshold{cf: c.cf, cs: append(c.cs, Threshold)}
+	return XaddTrimThreshold{cs: append(c.cs, Threshold), cf: c.cf, ks: c.ks}
 }
 
 type XaddTrimStrategyMaxlen Completed
 
 func (c XaddTrimStrategyMaxlen) Exact() XaddTrimOperatorExact {
-	return XaddTrimOperatorExact{cf: c.cf, cs: append(c.cs, "=")}
+	return XaddTrimOperatorExact{cs: append(c.cs, "="), cf: c.cf, ks: c.ks}
 }
 
 func (c XaddTrimStrategyMaxlen) Almost() XaddTrimOperatorAlmost {
-	return XaddTrimOperatorAlmost{cf: c.cf, cs: append(c.cs, "~")}
+	return XaddTrimOperatorAlmost{cs: append(c.cs, "~"), cf: c.cf, ks: c.ks}
 }
 
 func (c XaddTrimStrategyMaxlen) Threshold(Threshold string) XaddTrimThreshold {
-	return XaddTrimThreshold{cf: c.cf, cs: append(c.cs, Threshold)}
+	return XaddTrimThreshold{cs: append(c.cs, Threshold), cf: c.cf, ks: c.ks}
 }
 
 type XaddTrimStrategyMinid Completed
 
 func (c XaddTrimStrategyMinid) Exact() XaddTrimOperatorExact {
-	return XaddTrimOperatorExact{cf: c.cf, cs: append(c.cs, "=")}
+	return XaddTrimOperatorExact{cs: append(c.cs, "="), cf: c.cf, ks: c.ks}
 }
 
 func (c XaddTrimStrategyMinid) Almost() XaddTrimOperatorAlmost {
-	return XaddTrimOperatorAlmost{cf: c.cf, cs: append(c.cs, "~")}
+	return XaddTrimOperatorAlmost{cs: append(c.cs, "~"), cf: c.cf, ks: c.ks}
 }
 
 func (c XaddTrimStrategyMinid) Threshold(Threshold string) XaddTrimThreshold {
-	return XaddTrimThreshold{cf: c.cf, cs: append(c.cs, Threshold)}
+	return XaddTrimThreshold{cs: append(c.cs, Threshold), cf: c.cf, ks: c.ks}
 }
 
 type XaddTrimThreshold Completed
 
 func (c XaddTrimThreshold) Limit(Count int64) XaddTrimLimit {
-	return XaddTrimLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Count, 10))}
+	return XaddTrimLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c XaddTrimThreshold) Id(Id string) XaddId {
-	return XaddId{cf: c.cf, cs: append(c.cs, Id)}
+	return XaddId{cs: append(c.cs, Id), cf: c.cf, ks: c.ks}
 }
 
 type Xautoclaim Completed
 
 func (c Xautoclaim) Key(Key string) XautoclaimKey {
-	return XautoclaimKey{cf: c.cf, cs: append(c.cs, Key)}
+	return XautoclaimKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Xautoclaim() (c Xautoclaim) {
@@ -10070,13 +10070,13 @@ func (b *Builder) Xautoclaim() (c Xautoclaim) {
 type XautoclaimConsumer Completed
 
 func (c XautoclaimConsumer) MinIdleTime(MinIdleTime string) XautoclaimMinIdleTime {
-	return XautoclaimMinIdleTime{cf: c.cf, cs: append(c.cs, MinIdleTime)}
+	return XautoclaimMinIdleTime{cs: append(c.cs, MinIdleTime), cf: c.cf, ks: c.ks}
 }
 
 type XautoclaimCount Completed
 
 func (c XautoclaimCount) Justid() XautoclaimJustidJustid {
-	return XautoclaimJustidJustid{cf: c.cf, cs: append(c.cs, "JUSTID")}
+	return XautoclaimJustidJustid{cs: append(c.cs, "JUSTID"), cf: c.cf, ks: c.ks}
 }
 
 func (c XautoclaimCount) Build() Completed {
@@ -10086,7 +10086,7 @@ func (c XautoclaimCount) Build() Completed {
 type XautoclaimGroup Completed
 
 func (c XautoclaimGroup) Consumer(Consumer string) XautoclaimConsumer {
-	return XautoclaimConsumer{cf: c.cf, cs: append(c.cs, Consumer)}
+	return XautoclaimConsumer{cs: append(c.cs, Consumer), cf: c.cf, ks: c.ks}
 }
 
 type XautoclaimJustidJustid Completed
@@ -10098,23 +10098,23 @@ func (c XautoclaimJustidJustid) Build() Completed {
 type XautoclaimKey Completed
 
 func (c XautoclaimKey) Group(Group string) XautoclaimGroup {
-	return XautoclaimGroup{cf: c.cf, cs: append(c.cs, Group)}
+	return XautoclaimGroup{cs: append(c.cs, Group), cf: c.cf, ks: c.ks}
 }
 
 type XautoclaimMinIdleTime Completed
 
 func (c XautoclaimMinIdleTime) Start(Start string) XautoclaimStart {
-	return XautoclaimStart{cf: c.cf, cs: append(c.cs, Start)}
+	return XautoclaimStart{cs: append(c.cs, Start), cf: c.cf, ks: c.ks}
 }
 
 type XautoclaimStart Completed
 
 func (c XautoclaimStart) Count(Count int64) XautoclaimCount {
-	return XautoclaimCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return XautoclaimCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c XautoclaimStart) Justid() XautoclaimJustidJustid {
-	return XautoclaimJustidJustid{cf: c.cf, cs: append(c.cs, "JUSTID")}
+	return XautoclaimJustidJustid{cs: append(c.cs, "JUSTID"), cf: c.cf, ks: c.ks}
 }
 
 func (c XautoclaimStart) Build() Completed {
@@ -10124,7 +10124,7 @@ func (c XautoclaimStart) Build() Completed {
 type Xclaim Completed
 
 func (c Xclaim) Key(Key string) XclaimKey {
-	return XclaimKey{cf: c.cf, cs: append(c.cs, Key)}
+	return XclaimKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Xclaim() (c Xclaim) {
@@ -10135,13 +10135,13 @@ func (b *Builder) Xclaim() (c Xclaim) {
 type XclaimConsumer Completed
 
 func (c XclaimConsumer) MinIdleTime(MinIdleTime string) XclaimMinIdleTime {
-	return XclaimMinIdleTime{cf: c.cf, cs: append(c.cs, MinIdleTime)}
+	return XclaimMinIdleTime{cs: append(c.cs, MinIdleTime), cf: c.cf, ks: c.ks}
 }
 
 type XclaimForceForce Completed
 
 func (c XclaimForceForce) Justid() XclaimJustidJustid {
-	return XclaimJustidJustid{cf: c.cf, cs: append(c.cs, "JUSTID")}
+	return XclaimJustidJustid{cs: append(c.cs, "JUSTID"), cf: c.cf, ks: c.ks}
 }
 
 func (c XclaimForceForce) Build() Completed {
@@ -10151,33 +10151,33 @@ func (c XclaimForceForce) Build() Completed {
 type XclaimGroup Completed
 
 func (c XclaimGroup) Consumer(Consumer string) XclaimConsumer {
-	return XclaimConsumer{cf: c.cf, cs: append(c.cs, Consumer)}
+	return XclaimConsumer{cs: append(c.cs, Consumer), cf: c.cf, ks: c.ks}
 }
 
 type XclaimId Completed
 
 func (c XclaimId) Idle(Ms int64) XclaimIdle {
-	return XclaimIdle{cf: c.cf, cs: append(c.cs, "IDLE", strconv.FormatInt(Ms, 10))}
+	return XclaimIdle{cs: append(c.cs, "IDLE", strconv.FormatInt(Ms, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c XclaimId) Time(MsUnixTime int64) XclaimTime {
-	return XclaimTime{cf: c.cf, cs: append(c.cs, "TIME", strconv.FormatInt(MsUnixTime, 10))}
+	return XclaimTime{cs: append(c.cs, "TIME", strconv.FormatInt(MsUnixTime, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c XclaimId) Retrycount(Count int64) XclaimRetrycount {
-	return XclaimRetrycount{cf: c.cf, cs: append(c.cs, "RETRYCOUNT", strconv.FormatInt(Count, 10))}
+	return XclaimRetrycount{cs: append(c.cs, "RETRYCOUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c XclaimId) Force() XclaimForceForce {
-	return XclaimForceForce{cf: c.cf, cs: append(c.cs, "FORCE")}
+	return XclaimForceForce{cs: append(c.cs, "FORCE"), cf: c.cf, ks: c.ks}
 }
 
 func (c XclaimId) Justid() XclaimJustidJustid {
-	return XclaimJustidJustid{cf: c.cf, cs: append(c.cs, "JUSTID")}
+	return XclaimJustidJustid{cs: append(c.cs, "JUSTID"), cf: c.cf, ks: c.ks}
 }
 
 func (c XclaimId) Id(Id ...string) XclaimId {
-	return XclaimId{cf: c.cf, cs: append(c.cs, Id...)}
+	return XclaimId{cs: append(c.cs, Id...), cf: c.cf, ks: c.ks}
 }
 
 func (c XclaimId) Build() Completed {
@@ -10187,19 +10187,19 @@ func (c XclaimId) Build() Completed {
 type XclaimIdle Completed
 
 func (c XclaimIdle) Time(MsUnixTime int64) XclaimTime {
-	return XclaimTime{cf: c.cf, cs: append(c.cs, "TIME", strconv.FormatInt(MsUnixTime, 10))}
+	return XclaimTime{cs: append(c.cs, "TIME", strconv.FormatInt(MsUnixTime, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c XclaimIdle) Retrycount(Count int64) XclaimRetrycount {
-	return XclaimRetrycount{cf: c.cf, cs: append(c.cs, "RETRYCOUNT", strconv.FormatInt(Count, 10))}
+	return XclaimRetrycount{cs: append(c.cs, "RETRYCOUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c XclaimIdle) Force() XclaimForceForce {
-	return XclaimForceForce{cf: c.cf, cs: append(c.cs, "FORCE")}
+	return XclaimForceForce{cs: append(c.cs, "FORCE"), cf: c.cf, ks: c.ks}
 }
 
 func (c XclaimIdle) Justid() XclaimJustidJustid {
-	return XclaimJustidJustid{cf: c.cf, cs: append(c.cs, "JUSTID")}
+	return XclaimJustidJustid{cs: append(c.cs, "JUSTID"), cf: c.cf, ks: c.ks}
 }
 
 func (c XclaimIdle) Build() Completed {
@@ -10215,23 +10215,23 @@ func (c XclaimJustidJustid) Build() Completed {
 type XclaimKey Completed
 
 func (c XclaimKey) Group(Group string) XclaimGroup {
-	return XclaimGroup{cf: c.cf, cs: append(c.cs, Group)}
+	return XclaimGroup{cs: append(c.cs, Group), cf: c.cf, ks: c.ks}
 }
 
 type XclaimMinIdleTime Completed
 
 func (c XclaimMinIdleTime) Id(Id ...string) XclaimId {
-	return XclaimId{cf: c.cf, cs: append(c.cs, Id...)}
+	return XclaimId{cs: append(c.cs, Id...), cf: c.cf, ks: c.ks}
 }
 
 type XclaimRetrycount Completed
 
 func (c XclaimRetrycount) Force() XclaimForceForce {
-	return XclaimForceForce{cf: c.cf, cs: append(c.cs, "FORCE")}
+	return XclaimForceForce{cs: append(c.cs, "FORCE"), cf: c.cf, ks: c.ks}
 }
 
 func (c XclaimRetrycount) Justid() XclaimJustidJustid {
-	return XclaimJustidJustid{cf: c.cf, cs: append(c.cs, "JUSTID")}
+	return XclaimJustidJustid{cs: append(c.cs, "JUSTID"), cf: c.cf, ks: c.ks}
 }
 
 func (c XclaimRetrycount) Build() Completed {
@@ -10241,15 +10241,15 @@ func (c XclaimRetrycount) Build() Completed {
 type XclaimTime Completed
 
 func (c XclaimTime) Retrycount(Count int64) XclaimRetrycount {
-	return XclaimRetrycount{cf: c.cf, cs: append(c.cs, "RETRYCOUNT", strconv.FormatInt(Count, 10))}
+	return XclaimRetrycount{cs: append(c.cs, "RETRYCOUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c XclaimTime) Force() XclaimForceForce {
-	return XclaimForceForce{cf: c.cf, cs: append(c.cs, "FORCE")}
+	return XclaimForceForce{cs: append(c.cs, "FORCE"), cf: c.cf, ks: c.ks}
 }
 
 func (c XclaimTime) Justid() XclaimJustidJustid {
-	return XclaimJustidJustid{cf: c.cf, cs: append(c.cs, "JUSTID")}
+	return XclaimJustidJustid{cs: append(c.cs, "JUSTID"), cf: c.cf, ks: c.ks}
 }
 
 func (c XclaimTime) Build() Completed {
@@ -10259,7 +10259,7 @@ func (c XclaimTime) Build() Completed {
 type Xdel Completed
 
 func (c Xdel) Key(Key string) XdelKey {
-	return XdelKey{cf: c.cf, cs: append(c.cs, Key)}
+	return XdelKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Xdel() (c Xdel) {
@@ -10270,7 +10270,7 @@ func (b *Builder) Xdel() (c Xdel) {
 type XdelId Completed
 
 func (c XdelId) Id(Id ...string) XdelId {
-	return XdelId{cf: c.cf, cs: append(c.cs, Id...)}
+	return XdelId{cs: append(c.cs, Id...), cf: c.cf, ks: c.ks}
 }
 
 func (c XdelId) Build() Completed {
@@ -10280,29 +10280,29 @@ func (c XdelId) Build() Completed {
 type XdelKey Completed
 
 func (c XdelKey) Id(Id ...string) XdelId {
-	return XdelId{cf: c.cf, cs: append(c.cs, Id...)}
+	return XdelId{cs: append(c.cs, Id...), cf: c.cf, ks: c.ks}
 }
 
 type Xgroup Completed
 
 func (c Xgroup) Create(Key string, Groupname string) XgroupCreateCreate {
-	return XgroupCreateCreate{cf: c.cf, cs: append(c.cs, "CREATE", Key, Groupname)}
+	return XgroupCreateCreate{cs: append(c.cs, "CREATE", Key, Groupname), cf: c.cf, ks: c.ks}
 }
 
 func (c Xgroup) Setid(Key string, Groupname string) XgroupSetidSetid {
-	return XgroupSetidSetid{cf: c.cf, cs: append(c.cs, "SETID", Key, Groupname)}
+	return XgroupSetidSetid{cs: append(c.cs, "SETID", Key, Groupname), cf: c.cf, ks: c.ks}
 }
 
 func (c Xgroup) Destroy(Key string, Groupname string) XgroupDestroy {
-	return XgroupDestroy{cf: c.cf, cs: append(c.cs, "DESTROY", Key, Groupname)}
+	return XgroupDestroy{cs: append(c.cs, "DESTROY", Key, Groupname), cf: c.cf, ks: c.ks}
 }
 
 func (c Xgroup) Createconsumer(Key string, Groupname string, Consumername string) XgroupCreateconsumer {
-	return XgroupCreateconsumer{cf: c.cf, cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername)}
+	return XgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
 }
 
 func (c Xgroup) Delconsumer(Key string, Groupname string, Consumername string) XgroupDelconsumer {
-	return XgroupDelconsumer{cf: c.cf, cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
+	return XgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
 }
 
 func (c Xgroup) Build() Completed {
@@ -10317,29 +10317,29 @@ func (b *Builder) Xgroup() (c Xgroup) {
 type XgroupCreateCreate Completed
 
 func (c XgroupCreateCreate) Id(Id string) XgroupCreateId {
-	return XgroupCreateId{cf: c.cf, cs: append(c.cs, Id)}
+	return XgroupCreateId{cs: append(c.cs, Id), cf: c.cf, ks: c.ks}
 }
 
 type XgroupCreateId Completed
 
 func (c XgroupCreateId) Mkstream() XgroupCreateMkstream {
-	return XgroupCreateMkstream{cf: c.cf, cs: append(c.cs, "MKSTREAM")}
+	return XgroupCreateMkstream{cs: append(c.cs, "MKSTREAM"), cf: c.cf, ks: c.ks}
 }
 
 func (c XgroupCreateId) Setid(Key string, Groupname string) XgroupSetidSetid {
-	return XgroupSetidSetid{cf: c.cf, cs: append(c.cs, "SETID", Key, Groupname)}
+	return XgroupSetidSetid{cs: append(c.cs, "SETID", Key, Groupname), cf: c.cf, ks: c.ks}
 }
 
 func (c XgroupCreateId) Destroy(Key string, Groupname string) XgroupDestroy {
-	return XgroupDestroy{cf: c.cf, cs: append(c.cs, "DESTROY", Key, Groupname)}
+	return XgroupDestroy{cs: append(c.cs, "DESTROY", Key, Groupname), cf: c.cf, ks: c.ks}
 }
 
 func (c XgroupCreateId) Createconsumer(Key string, Groupname string, Consumername string) XgroupCreateconsumer {
-	return XgroupCreateconsumer{cf: c.cf, cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername)}
+	return XgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
 }
 
 func (c XgroupCreateId) Delconsumer(Key string, Groupname string, Consumername string) XgroupDelconsumer {
-	return XgroupDelconsumer{cf: c.cf, cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
+	return XgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
 }
 
 func (c XgroupCreateId) Build() Completed {
@@ -10349,19 +10349,19 @@ func (c XgroupCreateId) Build() Completed {
 type XgroupCreateMkstream Completed
 
 func (c XgroupCreateMkstream) Setid(Key string, Groupname string) XgroupSetidSetid {
-	return XgroupSetidSetid{cf: c.cf, cs: append(c.cs, "SETID", Key, Groupname)}
+	return XgroupSetidSetid{cs: append(c.cs, "SETID", Key, Groupname), cf: c.cf, ks: c.ks}
 }
 
 func (c XgroupCreateMkstream) Destroy(Key string, Groupname string) XgroupDestroy {
-	return XgroupDestroy{cf: c.cf, cs: append(c.cs, "DESTROY", Key, Groupname)}
+	return XgroupDestroy{cs: append(c.cs, "DESTROY", Key, Groupname), cf: c.cf, ks: c.ks}
 }
 
 func (c XgroupCreateMkstream) Createconsumer(Key string, Groupname string, Consumername string) XgroupCreateconsumer {
-	return XgroupCreateconsumer{cf: c.cf, cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername)}
+	return XgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
 }
 
 func (c XgroupCreateMkstream) Delconsumer(Key string, Groupname string, Consumername string) XgroupDelconsumer {
-	return XgroupDelconsumer{cf: c.cf, cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
+	return XgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
 }
 
 func (c XgroupCreateMkstream) Build() Completed {
@@ -10371,7 +10371,7 @@ func (c XgroupCreateMkstream) Build() Completed {
 type XgroupCreateconsumer Completed
 
 func (c XgroupCreateconsumer) Delconsumer(Key string, Groupname string, Consumername string) XgroupDelconsumer {
-	return XgroupDelconsumer{cf: c.cf, cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
+	return XgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
 }
 
 func (c XgroupCreateconsumer) Build() Completed {
@@ -10387,11 +10387,11 @@ func (c XgroupDelconsumer) Build() Completed {
 type XgroupDestroy Completed
 
 func (c XgroupDestroy) Createconsumer(Key string, Groupname string, Consumername string) XgroupCreateconsumer {
-	return XgroupCreateconsumer{cf: c.cf, cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername)}
+	return XgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
 }
 
 func (c XgroupDestroy) Delconsumer(Key string, Groupname string, Consumername string) XgroupDelconsumer {
-	return XgroupDelconsumer{cf: c.cf, cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
+	return XgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
 }
 
 func (c XgroupDestroy) Build() Completed {
@@ -10401,15 +10401,15 @@ func (c XgroupDestroy) Build() Completed {
 type XgroupSetidId Completed
 
 func (c XgroupSetidId) Destroy(Key string, Groupname string) XgroupDestroy {
-	return XgroupDestroy{cf: c.cf, cs: append(c.cs, "DESTROY", Key, Groupname)}
+	return XgroupDestroy{cs: append(c.cs, "DESTROY", Key, Groupname), cf: c.cf, ks: c.ks}
 }
 
 func (c XgroupSetidId) Createconsumer(Key string, Groupname string, Consumername string) XgroupCreateconsumer {
-	return XgroupCreateconsumer{cf: c.cf, cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername)}
+	return XgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
 }
 
 func (c XgroupSetidId) Delconsumer(Key string, Groupname string, Consumername string) XgroupDelconsumer {
-	return XgroupDelconsumer{cf: c.cf, cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
+	return XgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
 }
 
 func (c XgroupSetidId) Build() Completed {
@@ -10419,25 +10419,25 @@ func (c XgroupSetidId) Build() Completed {
 type XgroupSetidSetid Completed
 
 func (c XgroupSetidSetid) Id(Id string) XgroupSetidId {
-	return XgroupSetidId{cf: c.cf, cs: append(c.cs, Id)}
+	return XgroupSetidId{cs: append(c.cs, Id), cf: c.cf, ks: c.ks}
 }
 
 type Xinfo Completed
 
 func (c Xinfo) Consumers(Key string, Groupname string) XinfoConsumers {
-	return XinfoConsumers{cf: c.cf, cs: append(c.cs, "CONSUMERS", Key, Groupname)}
+	return XinfoConsumers{cs: append(c.cs, "CONSUMERS", Key, Groupname), cf: c.cf, ks: c.ks}
 }
 
 func (c Xinfo) Groups(Key string) XinfoGroups {
-	return XinfoGroups{cf: c.cf, cs: append(c.cs, "GROUPS", Key)}
+	return XinfoGroups{cs: append(c.cs, "GROUPS", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c Xinfo) Stream(Key string) XinfoStream {
-	return XinfoStream{cf: c.cf, cs: append(c.cs, "STREAM", Key)}
+	return XinfoStream{cs: append(c.cs, "STREAM", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c Xinfo) Help() XinfoHelpHelp {
-	return XinfoHelpHelp{cf: c.cf, cs: append(c.cs, "HELP")}
+	return XinfoHelpHelp{cs: append(c.cs, "HELP"), cf: c.cf, ks: c.ks}
 }
 
 func (c Xinfo) Build() Completed {
@@ -10452,15 +10452,15 @@ func (b *Builder) Xinfo() (c Xinfo) {
 type XinfoConsumers Completed
 
 func (c XinfoConsumers) Groups(Key string) XinfoGroups {
-	return XinfoGroups{cf: c.cf, cs: append(c.cs, "GROUPS", Key)}
+	return XinfoGroups{cs: append(c.cs, "GROUPS", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c XinfoConsumers) Stream(Key string) XinfoStream {
-	return XinfoStream{cf: c.cf, cs: append(c.cs, "STREAM", Key)}
+	return XinfoStream{cs: append(c.cs, "STREAM", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c XinfoConsumers) Help() XinfoHelpHelp {
-	return XinfoHelpHelp{cf: c.cf, cs: append(c.cs, "HELP")}
+	return XinfoHelpHelp{cs: append(c.cs, "HELP"), cf: c.cf, ks: c.ks}
 }
 
 func (c XinfoConsumers) Build() Completed {
@@ -10470,11 +10470,11 @@ func (c XinfoConsumers) Build() Completed {
 type XinfoGroups Completed
 
 func (c XinfoGroups) Stream(Key string) XinfoStream {
-	return XinfoStream{cf: c.cf, cs: append(c.cs, "STREAM", Key)}
+	return XinfoStream{cs: append(c.cs, "STREAM", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c XinfoGroups) Help() XinfoHelpHelp {
-	return XinfoHelpHelp{cf: c.cf, cs: append(c.cs, "HELP")}
+	return XinfoHelpHelp{cs: append(c.cs, "HELP"), cf: c.cf, ks: c.ks}
 }
 
 func (c XinfoGroups) Build() Completed {
@@ -10490,7 +10490,7 @@ func (c XinfoHelpHelp) Build() Completed {
 type XinfoStream Completed
 
 func (c XinfoStream) Help() XinfoHelpHelp {
-	return XinfoHelpHelp{cf: c.cf, cs: append(c.cs, "HELP")}
+	return XinfoHelpHelp{cs: append(c.cs, "HELP"), cf: c.cf, ks: c.ks}
 }
 
 func (c XinfoStream) Build() Completed {
@@ -10500,7 +10500,7 @@ func (c XinfoStream) Build() Completed {
 type Xlen Completed
 
 func (c Xlen) Key(Key string) XlenKey {
-	return XlenKey{cf: c.cf, cs: append(c.cs, Key)}
+	return XlenKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Xlen() (c Xlen) {
@@ -10517,7 +10517,7 @@ func (c XlenKey) Build() Completed {
 type Xpending Completed
 
 func (c Xpending) Key(Key string) XpendingKey {
-	return XpendingKey{cf: c.cf, cs: append(c.cs, Key)}
+	return XpendingKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Xpending() (c Xpending) {
@@ -10534,7 +10534,7 @@ func (c XpendingFiltersConsumer) Build() Completed {
 type XpendingFiltersCount Completed
 
 func (c XpendingFiltersCount) Consumer(Consumer string) XpendingFiltersConsumer {
-	return XpendingFiltersConsumer{cf: c.cf, cs: append(c.cs, Consumer)}
+	return XpendingFiltersConsumer{cs: append(c.cs, Consumer), cf: c.cf, ks: c.ks}
 }
 
 func (c XpendingFiltersCount) Build() Completed {
@@ -10544,41 +10544,41 @@ func (c XpendingFiltersCount) Build() Completed {
 type XpendingFiltersEnd Completed
 
 func (c XpendingFiltersEnd) Count(Count int64) XpendingFiltersCount {
-	return XpendingFiltersCount{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Count, 10))}
+	return XpendingFiltersCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 type XpendingFiltersIdle Completed
 
 func (c XpendingFiltersIdle) Start(Start string) XpendingFiltersStart {
-	return XpendingFiltersStart{cf: c.cf, cs: append(c.cs, Start)}
+	return XpendingFiltersStart{cs: append(c.cs, Start), cf: c.cf, ks: c.ks}
 }
 
 type XpendingFiltersStart Completed
 
 func (c XpendingFiltersStart) End(End string) XpendingFiltersEnd {
-	return XpendingFiltersEnd{cf: c.cf, cs: append(c.cs, End)}
+	return XpendingFiltersEnd{cs: append(c.cs, End), cf: c.cf, ks: c.ks}
 }
 
 type XpendingGroup Completed
 
 func (c XpendingGroup) Idle(MinIdleTime int64) XpendingFiltersIdle {
-	return XpendingFiltersIdle{cf: c.cf, cs: append(c.cs, "IDLE", strconv.FormatInt(MinIdleTime, 10))}
+	return XpendingFiltersIdle{cs: append(c.cs, "IDLE", strconv.FormatInt(MinIdleTime, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c XpendingGroup) Start(Start string) XpendingFiltersStart {
-	return XpendingFiltersStart{cf: c.cf, cs: append(c.cs, Start)}
+	return XpendingFiltersStart{cs: append(c.cs, Start), cf: c.cf, ks: c.ks}
 }
 
 type XpendingKey Completed
 
 func (c XpendingKey) Group(Group string) XpendingGroup {
-	return XpendingGroup{cf: c.cf, cs: append(c.cs, Group)}
+	return XpendingGroup{cs: append(c.cs, Group), cf: c.cf, ks: c.ks}
 }
 
 type Xrange Completed
 
 func (c Xrange) Key(Key string) XrangeKey {
-	return XrangeKey{cf: c.cf, cs: append(c.cs, Key)}
+	return XrangeKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Xrange() (c Xrange) {
@@ -10595,7 +10595,7 @@ func (c XrangeCount) Build() Completed {
 type XrangeEnd Completed
 
 func (c XrangeEnd) Count(Count int64) XrangeCount {
-	return XrangeCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return XrangeCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c XrangeEnd) Build() Completed {
@@ -10605,28 +10605,28 @@ func (c XrangeEnd) Build() Completed {
 type XrangeKey Completed
 
 func (c XrangeKey) Start(Start string) XrangeStart {
-	return XrangeStart{cf: c.cf, cs: append(c.cs, Start)}
+	return XrangeStart{cs: append(c.cs, Start), cf: c.cf, ks: c.ks}
 }
 
 type XrangeStart Completed
 
 func (c XrangeStart) End(End string) XrangeEnd {
-	return XrangeEnd{cf: c.cf, cs: append(c.cs, End)}
+	return XrangeEnd{cs: append(c.cs, End), cf: c.cf, ks: c.ks}
 }
 
 type Xread Completed
 
 func (c Xread) Count(Count int64) XreadCount {
-	return XreadCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return XreadCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c Xread) Block(Milliseconds int64) XreadBlock {
 	c.cf = blockTag
-	return XreadBlock{cf: c.cf, cs: append(c.cs, "BLOCK", strconv.FormatInt(Milliseconds, 10))}
+	return XreadBlock{cs: append(c.cs, "BLOCK", strconv.FormatInt(Milliseconds, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c Xread) Streams() XreadStreamsStreams {
-	return XreadStreamsStreams{cf: c.cf, cs: append(c.cs, "STREAMS")}
+	return XreadStreamsStreams{cs: append(c.cs, "STREAMS"), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Xread() (c Xread) {
@@ -10637,24 +10637,24 @@ func (b *Builder) Xread() (c Xread) {
 type XreadBlock Completed
 
 func (c XreadBlock) Streams() XreadStreamsStreams {
-	return XreadStreamsStreams{cf: c.cf, cs: append(c.cs, "STREAMS")}
+	return XreadStreamsStreams{cs: append(c.cs, "STREAMS"), cf: c.cf, ks: c.ks}
 }
 
 type XreadCount Completed
 
 func (c XreadCount) Block(Milliseconds int64) XreadBlock {
 	c.cf = blockTag
-	return XreadBlock{cf: c.cf, cs: append(c.cs, "BLOCK", strconv.FormatInt(Milliseconds, 10))}
+	return XreadBlock{cs: append(c.cs, "BLOCK", strconv.FormatInt(Milliseconds, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c XreadCount) Streams() XreadStreamsStreams {
-	return XreadStreamsStreams{cf: c.cf, cs: append(c.cs, "STREAMS")}
+	return XreadStreamsStreams{cs: append(c.cs, "STREAMS"), cf: c.cf, ks: c.ks}
 }
 
 type XreadId Completed
 
 func (c XreadId) Id(Id ...string) XreadId {
-	return XreadId{cf: c.cf, cs: append(c.cs, Id...)}
+	return XreadId{cs: append(c.cs, Id...), cf: c.cf, ks: c.ks}
 }
 
 func (c XreadId) Build() Completed {
@@ -10664,23 +10664,23 @@ func (c XreadId) Build() Completed {
 type XreadKey Completed
 
 func (c XreadKey) Id(Id ...string) XreadId {
-	return XreadId{cf: c.cf, cs: append(c.cs, Id...)}
+	return XreadId{cs: append(c.cs, Id...), cf: c.cf, ks: c.ks}
 }
 
 func (c XreadKey) Key(Key ...string) XreadKey {
-	return XreadKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return XreadKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type XreadStreamsStreams Completed
 
 func (c XreadStreamsStreams) Key(Key ...string) XreadKey {
-	return XreadKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return XreadKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type Xreadgroup Completed
 
 func (c Xreadgroup) Group(Group string, Consumer string) XreadgroupGroup {
-	return XreadgroupGroup{cf: c.cf, cs: append(c.cs, "GROUP", Group, Consumer)}
+	return XreadgroupGroup{cs: append(c.cs, "GROUP", Group, Consumer), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Xreadgroup() (c Xreadgroup) {
@@ -10691,51 +10691,51 @@ func (b *Builder) Xreadgroup() (c Xreadgroup) {
 type XreadgroupBlock Completed
 
 func (c XreadgroupBlock) Noack() XreadgroupNoackNoack {
-	return XreadgroupNoackNoack{cf: c.cf, cs: append(c.cs, "NOACK")}
+	return XreadgroupNoackNoack{cs: append(c.cs, "NOACK"), cf: c.cf, ks: c.ks}
 }
 
 func (c XreadgroupBlock) Streams() XreadgroupStreamsStreams {
-	return XreadgroupStreamsStreams{cf: c.cf, cs: append(c.cs, "STREAMS")}
+	return XreadgroupStreamsStreams{cs: append(c.cs, "STREAMS"), cf: c.cf, ks: c.ks}
 }
 
 type XreadgroupCount Completed
 
 func (c XreadgroupCount) Block(Milliseconds int64) XreadgroupBlock {
 	c.cf = blockTag
-	return XreadgroupBlock{cf: c.cf, cs: append(c.cs, "BLOCK", strconv.FormatInt(Milliseconds, 10))}
+	return XreadgroupBlock{cs: append(c.cs, "BLOCK", strconv.FormatInt(Milliseconds, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c XreadgroupCount) Noack() XreadgroupNoackNoack {
-	return XreadgroupNoackNoack{cf: c.cf, cs: append(c.cs, "NOACK")}
+	return XreadgroupNoackNoack{cs: append(c.cs, "NOACK"), cf: c.cf, ks: c.ks}
 }
 
 func (c XreadgroupCount) Streams() XreadgroupStreamsStreams {
-	return XreadgroupStreamsStreams{cf: c.cf, cs: append(c.cs, "STREAMS")}
+	return XreadgroupStreamsStreams{cs: append(c.cs, "STREAMS"), cf: c.cf, ks: c.ks}
 }
 
 type XreadgroupGroup Completed
 
 func (c XreadgroupGroup) Count(Count int64) XreadgroupCount {
-	return XreadgroupCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return XreadgroupCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c XreadgroupGroup) Block(Milliseconds int64) XreadgroupBlock {
 	c.cf = blockTag
-	return XreadgroupBlock{cf: c.cf, cs: append(c.cs, "BLOCK", strconv.FormatInt(Milliseconds, 10))}
+	return XreadgroupBlock{cs: append(c.cs, "BLOCK", strconv.FormatInt(Milliseconds, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c XreadgroupGroup) Noack() XreadgroupNoackNoack {
-	return XreadgroupNoackNoack{cf: c.cf, cs: append(c.cs, "NOACK")}
+	return XreadgroupNoackNoack{cs: append(c.cs, "NOACK"), cf: c.cf, ks: c.ks}
 }
 
 func (c XreadgroupGroup) Streams() XreadgroupStreamsStreams {
-	return XreadgroupStreamsStreams{cf: c.cf, cs: append(c.cs, "STREAMS")}
+	return XreadgroupStreamsStreams{cs: append(c.cs, "STREAMS"), cf: c.cf, ks: c.ks}
 }
 
 type XreadgroupId Completed
 
 func (c XreadgroupId) Id(Id ...string) XreadgroupId {
-	return XreadgroupId{cf: c.cf, cs: append(c.cs, Id...)}
+	return XreadgroupId{cs: append(c.cs, Id...), cf: c.cf, ks: c.ks}
 }
 
 func (c XreadgroupId) Build() Completed {
@@ -10745,29 +10745,29 @@ func (c XreadgroupId) Build() Completed {
 type XreadgroupKey Completed
 
 func (c XreadgroupKey) Id(Id ...string) XreadgroupId {
-	return XreadgroupId{cf: c.cf, cs: append(c.cs, Id...)}
+	return XreadgroupId{cs: append(c.cs, Id...), cf: c.cf, ks: c.ks}
 }
 
 func (c XreadgroupKey) Key(Key ...string) XreadgroupKey {
-	return XreadgroupKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return XreadgroupKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type XreadgroupNoackNoack Completed
 
 func (c XreadgroupNoackNoack) Streams() XreadgroupStreamsStreams {
-	return XreadgroupStreamsStreams{cf: c.cf, cs: append(c.cs, "STREAMS")}
+	return XreadgroupStreamsStreams{cs: append(c.cs, "STREAMS"), cf: c.cf, ks: c.ks}
 }
 
 type XreadgroupStreamsStreams Completed
 
 func (c XreadgroupStreamsStreams) Key(Key ...string) XreadgroupKey {
-	return XreadgroupKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return XreadgroupKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type Xrevrange Completed
 
 func (c Xrevrange) Key(Key string) XrevrangeKey {
-	return XrevrangeKey{cf: c.cf, cs: append(c.cs, Key)}
+	return XrevrangeKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Xrevrange() (c Xrevrange) {
@@ -10784,19 +10784,19 @@ func (c XrevrangeCount) Build() Completed {
 type XrevrangeEnd Completed
 
 func (c XrevrangeEnd) Start(Start string) XrevrangeStart {
-	return XrevrangeStart{cf: c.cf, cs: append(c.cs, Start)}
+	return XrevrangeStart{cs: append(c.cs, Start), cf: c.cf, ks: c.ks}
 }
 
 type XrevrangeKey Completed
 
 func (c XrevrangeKey) End(End string) XrevrangeEnd {
-	return XrevrangeEnd{cf: c.cf, cs: append(c.cs, End)}
+	return XrevrangeEnd{cs: append(c.cs, End), cf: c.cf, ks: c.ks}
 }
 
 type XrevrangeStart Completed
 
 func (c XrevrangeStart) Count(Count int64) XrevrangeCount {
-	return XrevrangeCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return XrevrangeCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c XrevrangeStart) Build() Completed {
@@ -10806,7 +10806,7 @@ func (c XrevrangeStart) Build() Completed {
 type Xtrim Completed
 
 func (c Xtrim) Key(Key string) XtrimKey {
-	return XtrimKey{cf: c.cf, cs: append(c.cs, Key)}
+	return XtrimKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Xtrim() (c Xtrim) {
@@ -10817,11 +10817,11 @@ func (b *Builder) Xtrim() (c Xtrim) {
 type XtrimKey Completed
 
 func (c XtrimKey) Maxlen() XtrimTrimStrategyMaxlen {
-	return XtrimTrimStrategyMaxlen{cf: c.cf, cs: append(c.cs, "MAXLEN")}
+	return XtrimTrimStrategyMaxlen{cs: append(c.cs, "MAXLEN"), cf: c.cf, ks: c.ks}
 }
 
 func (c XtrimKey) Minid() XtrimTrimStrategyMinid {
-	return XtrimTrimStrategyMinid{cf: c.cf, cs: append(c.cs, "MINID")}
+	return XtrimTrimStrategyMinid{cs: append(c.cs, "MINID"), cf: c.cf, ks: c.ks}
 }
 
 type XtrimTrimLimit Completed
@@ -10833,47 +10833,47 @@ func (c XtrimTrimLimit) Build() Completed {
 type XtrimTrimOperatorAlmost Completed
 
 func (c XtrimTrimOperatorAlmost) Threshold(Threshold string) XtrimTrimThreshold {
-	return XtrimTrimThreshold{cf: c.cf, cs: append(c.cs, Threshold)}
+	return XtrimTrimThreshold{cs: append(c.cs, Threshold), cf: c.cf, ks: c.ks}
 }
 
 type XtrimTrimOperatorExact Completed
 
 func (c XtrimTrimOperatorExact) Threshold(Threshold string) XtrimTrimThreshold {
-	return XtrimTrimThreshold{cf: c.cf, cs: append(c.cs, Threshold)}
+	return XtrimTrimThreshold{cs: append(c.cs, Threshold), cf: c.cf, ks: c.ks}
 }
 
 type XtrimTrimStrategyMaxlen Completed
 
 func (c XtrimTrimStrategyMaxlen) Exact() XtrimTrimOperatorExact {
-	return XtrimTrimOperatorExact{cf: c.cf, cs: append(c.cs, "=")}
+	return XtrimTrimOperatorExact{cs: append(c.cs, "="), cf: c.cf, ks: c.ks}
 }
 
 func (c XtrimTrimStrategyMaxlen) Almost() XtrimTrimOperatorAlmost {
-	return XtrimTrimOperatorAlmost{cf: c.cf, cs: append(c.cs, "~")}
+	return XtrimTrimOperatorAlmost{cs: append(c.cs, "~"), cf: c.cf, ks: c.ks}
 }
 
 func (c XtrimTrimStrategyMaxlen) Threshold(Threshold string) XtrimTrimThreshold {
-	return XtrimTrimThreshold{cf: c.cf, cs: append(c.cs, Threshold)}
+	return XtrimTrimThreshold{cs: append(c.cs, Threshold), cf: c.cf, ks: c.ks}
 }
 
 type XtrimTrimStrategyMinid Completed
 
 func (c XtrimTrimStrategyMinid) Exact() XtrimTrimOperatorExact {
-	return XtrimTrimOperatorExact{cf: c.cf, cs: append(c.cs, "=")}
+	return XtrimTrimOperatorExact{cs: append(c.cs, "="), cf: c.cf, ks: c.ks}
 }
 
 func (c XtrimTrimStrategyMinid) Almost() XtrimTrimOperatorAlmost {
-	return XtrimTrimOperatorAlmost{cf: c.cf, cs: append(c.cs, "~")}
+	return XtrimTrimOperatorAlmost{cs: append(c.cs, "~"), cf: c.cf, ks: c.ks}
 }
 
 func (c XtrimTrimStrategyMinid) Threshold(Threshold string) XtrimTrimThreshold {
-	return XtrimTrimThreshold{cf: c.cf, cs: append(c.cs, Threshold)}
+	return XtrimTrimThreshold{cs: append(c.cs, Threshold), cf: c.cf, ks: c.ks}
 }
 
 type XtrimTrimThreshold Completed
 
 func (c XtrimTrimThreshold) Limit(Count int64) XtrimTrimLimit {
-	return XtrimTrimLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Count, 10))}
+	return XtrimTrimLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c XtrimTrimThreshold) Build() Completed {
@@ -10883,7 +10883,7 @@ func (c XtrimTrimThreshold) Build() Completed {
 type Zadd Completed
 
 func (c Zadd) Key(Key string) ZaddKey {
-	return ZaddKey{cf: c.cf, cs: append(c.cs, Key)}
+	return ZaddKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Zadd() (c Zadd) {
@@ -10894,125 +10894,125 @@ func (b *Builder) Zadd() (c Zadd) {
 type ZaddChangeCh Completed
 
 func (c ZaddChangeCh) Incr() ZaddIncrementIncr {
-	return ZaddIncrementIncr{cf: c.cf, cs: append(c.cs, "INCR")}
+	return ZaddIncrementIncr{cs: append(c.cs, "INCR"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZaddChangeCh) ScoreMember() ZaddScoreMember {
-	return ZaddScoreMember{cf: c.cf, cs: c.cs}
+	return ZaddScoreMember{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 type ZaddComparisonGt Completed
 
 func (c ZaddComparisonGt) Ch() ZaddChangeCh {
-	return ZaddChangeCh{cf: c.cf, cs: append(c.cs, "CH")}
+	return ZaddChangeCh{cs: append(c.cs, "CH"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZaddComparisonGt) Incr() ZaddIncrementIncr {
-	return ZaddIncrementIncr{cf: c.cf, cs: append(c.cs, "INCR")}
+	return ZaddIncrementIncr{cs: append(c.cs, "INCR"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZaddComparisonGt) ScoreMember() ZaddScoreMember {
-	return ZaddScoreMember{cf: c.cf, cs: c.cs}
+	return ZaddScoreMember{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 type ZaddComparisonLt Completed
 
 func (c ZaddComparisonLt) Ch() ZaddChangeCh {
-	return ZaddChangeCh{cf: c.cf, cs: append(c.cs, "CH")}
+	return ZaddChangeCh{cs: append(c.cs, "CH"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZaddComparisonLt) Incr() ZaddIncrementIncr {
-	return ZaddIncrementIncr{cf: c.cf, cs: append(c.cs, "INCR")}
+	return ZaddIncrementIncr{cs: append(c.cs, "INCR"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZaddComparisonLt) ScoreMember() ZaddScoreMember {
-	return ZaddScoreMember{cf: c.cf, cs: c.cs}
+	return ZaddScoreMember{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 type ZaddConditionNx Completed
 
 func (c ZaddConditionNx) Gt() ZaddComparisonGt {
-	return ZaddComparisonGt{cf: c.cf, cs: append(c.cs, "GT")}
+	return ZaddComparisonGt{cs: append(c.cs, "GT"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZaddConditionNx) Lt() ZaddComparisonLt {
-	return ZaddComparisonLt{cf: c.cf, cs: append(c.cs, "LT")}
+	return ZaddComparisonLt{cs: append(c.cs, "LT"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZaddConditionNx) Ch() ZaddChangeCh {
-	return ZaddChangeCh{cf: c.cf, cs: append(c.cs, "CH")}
+	return ZaddChangeCh{cs: append(c.cs, "CH"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZaddConditionNx) Incr() ZaddIncrementIncr {
-	return ZaddIncrementIncr{cf: c.cf, cs: append(c.cs, "INCR")}
+	return ZaddIncrementIncr{cs: append(c.cs, "INCR"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZaddConditionNx) ScoreMember() ZaddScoreMember {
-	return ZaddScoreMember{cf: c.cf, cs: c.cs}
+	return ZaddScoreMember{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 type ZaddConditionXx Completed
 
 func (c ZaddConditionXx) Gt() ZaddComparisonGt {
-	return ZaddComparisonGt{cf: c.cf, cs: append(c.cs, "GT")}
+	return ZaddComparisonGt{cs: append(c.cs, "GT"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZaddConditionXx) Lt() ZaddComparisonLt {
-	return ZaddComparisonLt{cf: c.cf, cs: append(c.cs, "LT")}
+	return ZaddComparisonLt{cs: append(c.cs, "LT"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZaddConditionXx) Ch() ZaddChangeCh {
-	return ZaddChangeCh{cf: c.cf, cs: append(c.cs, "CH")}
+	return ZaddChangeCh{cs: append(c.cs, "CH"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZaddConditionXx) Incr() ZaddIncrementIncr {
-	return ZaddIncrementIncr{cf: c.cf, cs: append(c.cs, "INCR")}
+	return ZaddIncrementIncr{cs: append(c.cs, "INCR"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZaddConditionXx) ScoreMember() ZaddScoreMember {
-	return ZaddScoreMember{cf: c.cf, cs: c.cs}
+	return ZaddScoreMember{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 type ZaddIncrementIncr Completed
 
 func (c ZaddIncrementIncr) ScoreMember() ZaddScoreMember {
-	return ZaddScoreMember{cf: c.cf, cs: c.cs}
+	return ZaddScoreMember{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 type ZaddKey Completed
 
 func (c ZaddKey) Nx() ZaddConditionNx {
-	return ZaddConditionNx{cf: c.cf, cs: append(c.cs, "NX")}
+	return ZaddConditionNx{cs: append(c.cs, "NX"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZaddKey) Xx() ZaddConditionXx {
-	return ZaddConditionXx{cf: c.cf, cs: append(c.cs, "XX")}
+	return ZaddConditionXx{cs: append(c.cs, "XX"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZaddKey) Gt() ZaddComparisonGt {
-	return ZaddComparisonGt{cf: c.cf, cs: append(c.cs, "GT")}
+	return ZaddComparisonGt{cs: append(c.cs, "GT"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZaddKey) Lt() ZaddComparisonLt {
-	return ZaddComparisonLt{cf: c.cf, cs: append(c.cs, "LT")}
+	return ZaddComparisonLt{cs: append(c.cs, "LT"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZaddKey) Ch() ZaddChangeCh {
-	return ZaddChangeCh{cf: c.cf, cs: append(c.cs, "CH")}
+	return ZaddChangeCh{cs: append(c.cs, "CH"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZaddKey) Incr() ZaddIncrementIncr {
-	return ZaddIncrementIncr{cf: c.cf, cs: append(c.cs, "INCR")}
+	return ZaddIncrementIncr{cs: append(c.cs, "INCR"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZaddKey) ScoreMember() ZaddScoreMember {
-	return ZaddScoreMember{cf: c.cf, cs: c.cs}
+	return ZaddScoreMember{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 type ZaddScoreMember Completed
 
 func (c ZaddScoreMember) ScoreMember(Score float64, Member string) ZaddScoreMember {
-	return ZaddScoreMember{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Score, 'f', -1, 64), Member)}
+	return ZaddScoreMember{cs: append(c.cs, strconv.FormatFloat(Score, 'f', -1, 64), Member), cf: c.cf, ks: c.ks}
 }
 
 func (c ZaddScoreMember) Build() Completed {
@@ -11022,7 +11022,7 @@ func (c ZaddScoreMember) Build() Completed {
 type Zcard Completed
 
 func (c Zcard) Key(Key string) ZcardKey {
-	return ZcardKey{cf: c.cf, cs: append(c.cs, Key)}
+	return ZcardKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Zcard() (c Zcard) {
@@ -11043,7 +11043,7 @@ func (c ZcardKey) Cache() Cacheable {
 type Zcount Completed
 
 func (c Zcount) Key(Key string) ZcountKey {
-	return ZcountKey{cf: c.cf, cs: append(c.cs, Key)}
+	return ZcountKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Zcount() (c Zcount) {
@@ -11054,7 +11054,7 @@ func (b *Builder) Zcount() (c Zcount) {
 type ZcountKey Completed
 
 func (c ZcountKey) Min(Min float64) ZcountMin {
-	return ZcountMin{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Min, 'f', -1, 64))}
+	return ZcountMin{cs: append(c.cs, strconv.FormatFloat(Min, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type ZcountMax Completed
@@ -11070,13 +11070,13 @@ func (c ZcountMax) Cache() Cacheable {
 type ZcountMin Completed
 
 func (c ZcountMin) Max(Max float64) ZcountMax {
-	return ZcountMax{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Max, 'f', -1, 64))}
+	return ZcountMax{cs: append(c.cs, strconv.FormatFloat(Max, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type Zdiff Completed
 
 func (c Zdiff) Numkeys(Numkeys int64) ZdiffNumkeys {
-	return ZdiffNumkeys{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
+	return ZdiffNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Zdiff() (c Zdiff) {
@@ -11087,11 +11087,11 @@ func (b *Builder) Zdiff() (c Zdiff) {
 type ZdiffKey Completed
 
 func (c ZdiffKey) Withscores() ZdiffWithscoresWithscores {
-	return ZdiffWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
+	return ZdiffWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZdiffKey) Key(Key ...string) ZdiffKey {
-	return ZdiffKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return ZdiffKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c ZdiffKey) Build() Completed {
@@ -11101,7 +11101,7 @@ func (c ZdiffKey) Build() Completed {
 type ZdiffNumkeys Completed
 
 func (c ZdiffNumkeys) Key(Key ...string) ZdiffKey {
-	return ZdiffKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return ZdiffKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type ZdiffWithscoresWithscores Completed
@@ -11113,7 +11113,7 @@ func (c ZdiffWithscoresWithscores) Build() Completed {
 type Zdiffstore Completed
 
 func (c Zdiffstore) Destination(Destination string) ZdiffstoreDestination {
-	return ZdiffstoreDestination{cf: c.cf, cs: append(c.cs, Destination)}
+	return ZdiffstoreDestination{cs: append(c.cs, Destination), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Zdiffstore() (c Zdiffstore) {
@@ -11124,13 +11124,13 @@ func (b *Builder) Zdiffstore() (c Zdiffstore) {
 type ZdiffstoreDestination Completed
 
 func (c ZdiffstoreDestination) Numkeys(Numkeys int64) ZdiffstoreNumkeys {
-	return ZdiffstoreNumkeys{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
+	return ZdiffstoreNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10)), cf: c.cf, ks: c.ks}
 }
 
 type ZdiffstoreKey Completed
 
 func (c ZdiffstoreKey) Key(Key ...string) ZdiffstoreKey {
-	return ZdiffstoreKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return ZdiffstoreKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c ZdiffstoreKey) Build() Completed {
@@ -11140,13 +11140,13 @@ func (c ZdiffstoreKey) Build() Completed {
 type ZdiffstoreNumkeys Completed
 
 func (c ZdiffstoreNumkeys) Key(Key ...string) ZdiffstoreKey {
-	return ZdiffstoreKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return ZdiffstoreKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type Zincrby Completed
 
 func (c Zincrby) Key(Key string) ZincrbyKey {
-	return ZincrbyKey{cf: c.cf, cs: append(c.cs, Key)}
+	return ZincrbyKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Zincrby() (c Zincrby) {
@@ -11157,13 +11157,13 @@ func (b *Builder) Zincrby() (c Zincrby) {
 type ZincrbyIncrement Completed
 
 func (c ZincrbyIncrement) Member(Member string) ZincrbyMember {
-	return ZincrbyMember{cf: c.cf, cs: append(c.cs, Member)}
+	return ZincrbyMember{cs: append(c.cs, Member), cf: c.cf, ks: c.ks}
 }
 
 type ZincrbyKey Completed
 
 func (c ZincrbyKey) Increment(Increment int64) ZincrbyIncrement {
-	return ZincrbyIncrement{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Increment, 10))}
+	return ZincrbyIncrement{cs: append(c.cs, strconv.FormatInt(Increment, 10)), cf: c.cf, ks: c.ks}
 }
 
 type ZincrbyMember Completed
@@ -11175,7 +11175,7 @@ func (c ZincrbyMember) Build() Completed {
 type Zinter Completed
 
 func (c Zinter) Numkeys(Numkeys int64) ZinterNumkeys {
-	return ZinterNumkeys{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
+	return ZinterNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Zinter() (c Zinter) {
@@ -11186,7 +11186,7 @@ func (b *Builder) Zinter() (c Zinter) {
 type ZinterAggregateMax Completed
 
 func (c ZinterAggregateMax) Withscores() ZinterWithscoresWithscores {
-	return ZinterWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
+	return ZinterWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZinterAggregateMax) Build() Completed {
@@ -11196,7 +11196,7 @@ func (c ZinterAggregateMax) Build() Completed {
 type ZinterAggregateMin Completed
 
 func (c ZinterAggregateMin) Withscores() ZinterWithscoresWithscores {
-	return ZinterWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
+	return ZinterWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZinterAggregateMin) Build() Completed {
@@ -11206,7 +11206,7 @@ func (c ZinterAggregateMin) Build() Completed {
 type ZinterAggregateSum Completed
 
 func (c ZinterAggregateSum) Withscores() ZinterWithscoresWithscores {
-	return ZinterWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
+	return ZinterWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZinterAggregateSum) Build() Completed {
@@ -11220,27 +11220,27 @@ func (c ZinterKey) Weights(Weight ...int64) ZinterWeights {
 	for _, n := range Weight {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return ZinterWeights{cf: c.cf, cs: c.cs}
+	return ZinterWeights{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 func (c ZinterKey) Sum() ZinterAggregateSum {
-	return ZinterAggregateSum{cf: c.cf, cs: append(c.cs, "SUM")}
+	return ZinterAggregateSum{cs: append(c.cs, "SUM"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZinterKey) Min() ZinterAggregateMin {
-	return ZinterAggregateMin{cf: c.cf, cs: append(c.cs, "MIN")}
+	return ZinterAggregateMin{cs: append(c.cs, "MIN"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZinterKey) Max() ZinterAggregateMax {
-	return ZinterAggregateMax{cf: c.cf, cs: append(c.cs, "MAX")}
+	return ZinterAggregateMax{cs: append(c.cs, "MAX"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZinterKey) Withscores() ZinterWithscoresWithscores {
-	return ZinterWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
+	return ZinterWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZinterKey) Key(Key ...string) ZinterKey {
-	return ZinterKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return ZinterKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c ZinterKey) Build() Completed {
@@ -11250,32 +11250,32 @@ func (c ZinterKey) Build() Completed {
 type ZinterNumkeys Completed
 
 func (c ZinterNumkeys) Key(Key ...string) ZinterKey {
-	return ZinterKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return ZinterKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type ZinterWeights Completed
 
 func (c ZinterWeights) Sum() ZinterAggregateSum {
-	return ZinterAggregateSum{cf: c.cf, cs: append(c.cs, "SUM")}
+	return ZinterAggregateSum{cs: append(c.cs, "SUM"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZinterWeights) Min() ZinterAggregateMin {
-	return ZinterAggregateMin{cf: c.cf, cs: append(c.cs, "MIN")}
+	return ZinterAggregateMin{cs: append(c.cs, "MIN"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZinterWeights) Max() ZinterAggregateMax {
-	return ZinterAggregateMax{cf: c.cf, cs: append(c.cs, "MAX")}
+	return ZinterAggregateMax{cs: append(c.cs, "MAX"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZinterWeights) Withscores() ZinterWithscoresWithscores {
-	return ZinterWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
+	return ZinterWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZinterWeights) Weights(Weights ...int64) ZinterWeights {
 	for _, n := range Weights {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return ZinterWeights{cf: c.cf, cs: c.cs}
+	return ZinterWeights{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 func (c ZinterWeights) Build() Completed {
@@ -11291,7 +11291,7 @@ func (c ZinterWithscoresWithscores) Build() Completed {
 type Zintercard Completed
 
 func (c Zintercard) Numkeys(Numkeys int64) ZintercardNumkeys {
-	return ZintercardNumkeys{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
+	return ZintercardNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Zintercard() (c Zintercard) {
@@ -11302,7 +11302,7 @@ func (b *Builder) Zintercard() (c Zintercard) {
 type ZintercardKey Completed
 
 func (c ZintercardKey) Key(Key ...string) ZintercardKey {
-	return ZintercardKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return ZintercardKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c ZintercardKey) Build() Completed {
@@ -11312,13 +11312,13 @@ func (c ZintercardKey) Build() Completed {
 type ZintercardNumkeys Completed
 
 func (c ZintercardNumkeys) Key(Key ...string) ZintercardKey {
-	return ZintercardKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return ZintercardKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type Zinterstore Completed
 
 func (c Zinterstore) Destination(Destination string) ZinterstoreDestination {
-	return ZinterstoreDestination{cf: c.cf, cs: append(c.cs, Destination)}
+	return ZinterstoreDestination{cs: append(c.cs, Destination), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Zinterstore() (c Zinterstore) {
@@ -11347,7 +11347,7 @@ func (c ZinterstoreAggregateSum) Build() Completed {
 type ZinterstoreDestination Completed
 
 func (c ZinterstoreDestination) Numkeys(Numkeys int64) ZinterstoreNumkeys {
-	return ZinterstoreNumkeys{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
+	return ZinterstoreNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10)), cf: c.cf, ks: c.ks}
 }
 
 type ZinterstoreKey Completed
@@ -11357,23 +11357,23 @@ func (c ZinterstoreKey) Weights(Weight ...int64) ZinterstoreWeights {
 	for _, n := range Weight {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return ZinterstoreWeights{cf: c.cf, cs: c.cs}
+	return ZinterstoreWeights{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 func (c ZinterstoreKey) Sum() ZinterstoreAggregateSum {
-	return ZinterstoreAggregateSum{cf: c.cf, cs: append(c.cs, "SUM")}
+	return ZinterstoreAggregateSum{cs: append(c.cs, "SUM"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZinterstoreKey) Min() ZinterstoreAggregateMin {
-	return ZinterstoreAggregateMin{cf: c.cf, cs: append(c.cs, "MIN")}
+	return ZinterstoreAggregateMin{cs: append(c.cs, "MIN"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZinterstoreKey) Max() ZinterstoreAggregateMax {
-	return ZinterstoreAggregateMax{cf: c.cf, cs: append(c.cs, "MAX")}
+	return ZinterstoreAggregateMax{cs: append(c.cs, "MAX"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZinterstoreKey) Key(Key ...string) ZinterstoreKey {
-	return ZinterstoreKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return ZinterstoreKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c ZinterstoreKey) Build() Completed {
@@ -11383,28 +11383,28 @@ func (c ZinterstoreKey) Build() Completed {
 type ZinterstoreNumkeys Completed
 
 func (c ZinterstoreNumkeys) Key(Key ...string) ZinterstoreKey {
-	return ZinterstoreKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return ZinterstoreKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type ZinterstoreWeights Completed
 
 func (c ZinterstoreWeights) Sum() ZinterstoreAggregateSum {
-	return ZinterstoreAggregateSum{cf: c.cf, cs: append(c.cs, "SUM")}
+	return ZinterstoreAggregateSum{cs: append(c.cs, "SUM"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZinterstoreWeights) Min() ZinterstoreAggregateMin {
-	return ZinterstoreAggregateMin{cf: c.cf, cs: append(c.cs, "MIN")}
+	return ZinterstoreAggregateMin{cs: append(c.cs, "MIN"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZinterstoreWeights) Max() ZinterstoreAggregateMax {
-	return ZinterstoreAggregateMax{cf: c.cf, cs: append(c.cs, "MAX")}
+	return ZinterstoreAggregateMax{cs: append(c.cs, "MAX"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZinterstoreWeights) Weights(Weights ...int64) ZinterstoreWeights {
 	for _, n := range Weights {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return ZinterstoreWeights{cf: c.cf, cs: c.cs}
+	return ZinterstoreWeights{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 func (c ZinterstoreWeights) Build() Completed {
@@ -11414,7 +11414,7 @@ func (c ZinterstoreWeights) Build() Completed {
 type Zlexcount Completed
 
 func (c Zlexcount) Key(Key string) ZlexcountKey {
-	return ZlexcountKey{cf: c.cf, cs: append(c.cs, Key)}
+	return ZlexcountKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Zlexcount() (c Zlexcount) {
@@ -11425,7 +11425,7 @@ func (b *Builder) Zlexcount() (c Zlexcount) {
 type ZlexcountKey Completed
 
 func (c ZlexcountKey) Min(Min string) ZlexcountMin {
-	return ZlexcountMin{cf: c.cf, cs: append(c.cs, Min)}
+	return ZlexcountMin{cs: append(c.cs, Min), cf: c.cf, ks: c.ks}
 }
 
 type ZlexcountMax Completed
@@ -11441,13 +11441,13 @@ func (c ZlexcountMax) Cache() Cacheable {
 type ZlexcountMin Completed
 
 func (c ZlexcountMin) Max(Max string) ZlexcountMax {
-	return ZlexcountMax{cf: c.cf, cs: append(c.cs, Max)}
+	return ZlexcountMax{cs: append(c.cs, Max), cf: c.cf, ks: c.ks}
 }
 
 type Zmscore Completed
 
 func (c Zmscore) Key(Key string) ZmscoreKey {
-	return ZmscoreKey{cf: c.cf, cs: append(c.cs, Key)}
+	return ZmscoreKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Zmscore() (c Zmscore) {
@@ -11458,13 +11458,13 @@ func (b *Builder) Zmscore() (c Zmscore) {
 type ZmscoreKey Completed
 
 func (c ZmscoreKey) Member(Member ...string) ZmscoreMember {
-	return ZmscoreMember{cf: c.cf, cs: append(c.cs, Member...)}
+	return ZmscoreMember{cs: append(c.cs, Member...), cf: c.cf, ks: c.ks}
 }
 
 type ZmscoreMember Completed
 
 func (c ZmscoreMember) Member(Member ...string) ZmscoreMember {
-	return ZmscoreMember{cf: c.cf, cs: append(c.cs, Member...)}
+	return ZmscoreMember{cs: append(c.cs, Member...), cf: c.cf, ks: c.ks}
 }
 
 func (c ZmscoreMember) Build() Completed {
@@ -11478,7 +11478,7 @@ func (c ZmscoreMember) Cache() Cacheable {
 type Zpopmax Completed
 
 func (c Zpopmax) Key(Key string) ZpopmaxKey {
-	return ZpopmaxKey{cf: c.cf, cs: append(c.cs, Key)}
+	return ZpopmaxKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Zpopmax() (c Zpopmax) {
@@ -11495,7 +11495,7 @@ func (c ZpopmaxCount) Build() Completed {
 type ZpopmaxKey Completed
 
 func (c ZpopmaxKey) Count(Count int64) ZpopmaxCount {
-	return ZpopmaxCount{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Count, 10))}
+	return ZpopmaxCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c ZpopmaxKey) Build() Completed {
@@ -11505,7 +11505,7 @@ func (c ZpopmaxKey) Build() Completed {
 type Zpopmin Completed
 
 func (c Zpopmin) Key(Key string) ZpopminKey {
-	return ZpopminKey{cf: c.cf, cs: append(c.cs, Key)}
+	return ZpopminKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Zpopmin() (c Zpopmin) {
@@ -11522,7 +11522,7 @@ func (c ZpopminCount) Build() Completed {
 type ZpopminKey Completed
 
 func (c ZpopminKey) Count(Count int64) ZpopminCount {
-	return ZpopminCount{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Count, 10))}
+	return ZpopminCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c ZpopminKey) Build() Completed {
@@ -11532,7 +11532,7 @@ func (c ZpopminKey) Build() Completed {
 type Zrandmember Completed
 
 func (c Zrandmember) Key(Key string) ZrandmemberKey {
-	return ZrandmemberKey{cf: c.cf, cs: append(c.cs, Key)}
+	return ZrandmemberKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Zrandmember() (c Zrandmember) {
@@ -11543,7 +11543,7 @@ func (b *Builder) Zrandmember() (c Zrandmember) {
 type ZrandmemberKey Completed
 
 func (c ZrandmemberKey) Count(Count int64) ZrandmemberOptionsCount {
-	return ZrandmemberOptionsCount{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Count, 10))}
+	return ZrandmemberOptionsCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c ZrandmemberKey) Build() Completed {
@@ -11553,7 +11553,7 @@ func (c ZrandmemberKey) Build() Completed {
 type ZrandmemberOptionsCount Completed
 
 func (c ZrandmemberOptionsCount) Withscores() ZrandmemberOptionsWithscoresWithscores {
-	return ZrandmemberOptionsWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
+	return ZrandmemberOptionsWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZrandmemberOptionsCount) Build() Completed {
@@ -11569,7 +11569,7 @@ func (c ZrandmemberOptionsWithscoresWithscores) Build() Completed {
 type Zrange Completed
 
 func (c Zrange) Key(Key string) ZrangeKey {
-	return ZrangeKey{cf: c.cf, cs: append(c.cs, Key)}
+	return ZrangeKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Zrange() (c Zrange) {
@@ -11580,13 +11580,13 @@ func (b *Builder) Zrange() (c Zrange) {
 type ZrangeKey Completed
 
 func (c ZrangeKey) Min(Min string) ZrangeMin {
-	return ZrangeMin{cf: c.cf, cs: append(c.cs, Min)}
+	return ZrangeMin{cs: append(c.cs, Min), cf: c.cf, ks: c.ks}
 }
 
 type ZrangeLimit Completed
 
 func (c ZrangeLimit) Withscores() ZrangeWithscoresWithscores {
-	return ZrangeWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
+	return ZrangeWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZrangeLimit) Build() Completed {
@@ -11600,23 +11600,23 @@ func (c ZrangeLimit) Cache() Cacheable {
 type ZrangeMax Completed
 
 func (c ZrangeMax) Byscore() ZrangeSortbyByscore {
-	return ZrangeSortbyByscore{cf: c.cf, cs: append(c.cs, "BYSCORE")}
+	return ZrangeSortbyByscore{cs: append(c.cs, "BYSCORE"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZrangeMax) Bylex() ZrangeSortbyBylex {
-	return ZrangeSortbyBylex{cf: c.cf, cs: append(c.cs, "BYLEX")}
+	return ZrangeSortbyBylex{cs: append(c.cs, "BYLEX"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZrangeMax) Rev() ZrangeRevRev {
-	return ZrangeRevRev{cf: c.cf, cs: append(c.cs, "REV")}
+	return ZrangeRevRev{cs: append(c.cs, "REV"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZrangeMax) Limit(Offset int64, Count int64) ZrangeLimit {
-	return ZrangeLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return ZrangeLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c ZrangeMax) Withscores() ZrangeWithscoresWithscores {
-	return ZrangeWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
+	return ZrangeWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZrangeMax) Build() Completed {
@@ -11630,17 +11630,17 @@ func (c ZrangeMax) Cache() Cacheable {
 type ZrangeMin Completed
 
 func (c ZrangeMin) Max(Max string) ZrangeMax {
-	return ZrangeMax{cf: c.cf, cs: append(c.cs, Max)}
+	return ZrangeMax{cs: append(c.cs, Max), cf: c.cf, ks: c.ks}
 }
 
 type ZrangeRevRev Completed
 
 func (c ZrangeRevRev) Limit(Offset int64, Count int64) ZrangeLimit {
-	return ZrangeLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return ZrangeLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c ZrangeRevRev) Withscores() ZrangeWithscoresWithscores {
-	return ZrangeWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
+	return ZrangeWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZrangeRevRev) Build() Completed {
@@ -11654,15 +11654,15 @@ func (c ZrangeRevRev) Cache() Cacheable {
 type ZrangeSortbyBylex Completed
 
 func (c ZrangeSortbyBylex) Rev() ZrangeRevRev {
-	return ZrangeRevRev{cf: c.cf, cs: append(c.cs, "REV")}
+	return ZrangeRevRev{cs: append(c.cs, "REV"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZrangeSortbyBylex) Limit(Offset int64, Count int64) ZrangeLimit {
-	return ZrangeLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return ZrangeLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c ZrangeSortbyBylex) Withscores() ZrangeWithscoresWithscores {
-	return ZrangeWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
+	return ZrangeWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZrangeSortbyBylex) Build() Completed {
@@ -11676,15 +11676,15 @@ func (c ZrangeSortbyBylex) Cache() Cacheable {
 type ZrangeSortbyByscore Completed
 
 func (c ZrangeSortbyByscore) Rev() ZrangeRevRev {
-	return ZrangeRevRev{cf: c.cf, cs: append(c.cs, "REV")}
+	return ZrangeRevRev{cs: append(c.cs, "REV"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZrangeSortbyByscore) Limit(Offset int64, Count int64) ZrangeLimit {
-	return ZrangeLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return ZrangeLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c ZrangeSortbyByscore) Withscores() ZrangeWithscoresWithscores {
-	return ZrangeWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
+	return ZrangeWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZrangeSortbyByscore) Build() Completed {
@@ -11708,7 +11708,7 @@ func (c ZrangeWithscoresWithscores) Cache() Cacheable {
 type Zrangebylex Completed
 
 func (c Zrangebylex) Key(Key string) ZrangebylexKey {
-	return ZrangebylexKey{cf: c.cf, cs: append(c.cs, Key)}
+	return ZrangebylexKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Zrangebylex() (c Zrangebylex) {
@@ -11719,7 +11719,7 @@ func (b *Builder) Zrangebylex() (c Zrangebylex) {
 type ZrangebylexKey Completed
 
 func (c ZrangebylexKey) Min(Min string) ZrangebylexMin {
-	return ZrangebylexMin{cf: c.cf, cs: append(c.cs, Min)}
+	return ZrangebylexMin{cs: append(c.cs, Min), cf: c.cf, ks: c.ks}
 }
 
 type ZrangebylexLimit Completed
@@ -11735,7 +11735,7 @@ func (c ZrangebylexLimit) Cache() Cacheable {
 type ZrangebylexMax Completed
 
 func (c ZrangebylexMax) Limit(Offset int64, Count int64) ZrangebylexLimit {
-	return ZrangebylexLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return ZrangebylexLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c ZrangebylexMax) Build() Completed {
@@ -11749,13 +11749,13 @@ func (c ZrangebylexMax) Cache() Cacheable {
 type ZrangebylexMin Completed
 
 func (c ZrangebylexMin) Max(Max string) ZrangebylexMax {
-	return ZrangebylexMax{cf: c.cf, cs: append(c.cs, Max)}
+	return ZrangebylexMax{cs: append(c.cs, Max), cf: c.cf, ks: c.ks}
 }
 
 type Zrangebyscore Completed
 
 func (c Zrangebyscore) Key(Key string) ZrangebyscoreKey {
-	return ZrangebyscoreKey{cf: c.cf, cs: append(c.cs, Key)}
+	return ZrangebyscoreKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Zrangebyscore() (c Zrangebyscore) {
@@ -11766,7 +11766,7 @@ func (b *Builder) Zrangebyscore() (c Zrangebyscore) {
 type ZrangebyscoreKey Completed
 
 func (c ZrangebyscoreKey) Min(Min float64) ZrangebyscoreMin {
-	return ZrangebyscoreMin{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Min, 'f', -1, 64))}
+	return ZrangebyscoreMin{cs: append(c.cs, strconv.FormatFloat(Min, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type ZrangebyscoreLimit Completed
@@ -11782,11 +11782,11 @@ func (c ZrangebyscoreLimit) Cache() Cacheable {
 type ZrangebyscoreMax Completed
 
 func (c ZrangebyscoreMax) Withscores() ZrangebyscoreWithscoresWithscores {
-	return ZrangebyscoreWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
+	return ZrangebyscoreWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZrangebyscoreMax) Limit(Offset int64, Count int64) ZrangebyscoreLimit {
-	return ZrangebyscoreLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return ZrangebyscoreLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c ZrangebyscoreMax) Build() Completed {
@@ -11800,13 +11800,13 @@ func (c ZrangebyscoreMax) Cache() Cacheable {
 type ZrangebyscoreMin Completed
 
 func (c ZrangebyscoreMin) Max(Max float64) ZrangebyscoreMax {
-	return ZrangebyscoreMax{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Max, 'f', -1, 64))}
+	return ZrangebyscoreMax{cs: append(c.cs, strconv.FormatFloat(Max, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type ZrangebyscoreWithscoresWithscores Completed
 
 func (c ZrangebyscoreWithscoresWithscores) Limit(Offset int64, Count int64) ZrangebyscoreLimit {
-	return ZrangebyscoreLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return ZrangebyscoreLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c ZrangebyscoreWithscoresWithscores) Build() Completed {
@@ -11820,7 +11820,7 @@ func (c ZrangebyscoreWithscoresWithscores) Cache() Cacheable {
 type Zrangestore Completed
 
 func (c Zrangestore) Dst(Dst string) ZrangestoreDst {
-	return ZrangestoreDst{cf: c.cf, cs: append(c.cs, Dst)}
+	return ZrangestoreDst{cs: append(c.cs, Dst), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Zrangestore() (c Zrangestore) {
@@ -11831,7 +11831,7 @@ func (b *Builder) Zrangestore() (c Zrangestore) {
 type ZrangestoreDst Completed
 
 func (c ZrangestoreDst) Src(Src string) ZrangestoreSrc {
-	return ZrangestoreSrc{cf: c.cf, cs: append(c.cs, Src)}
+	return ZrangestoreSrc{cs: append(c.cs, Src), cf: c.cf, ks: c.ks}
 }
 
 type ZrangestoreLimit Completed
@@ -11843,19 +11843,19 @@ func (c ZrangestoreLimit) Build() Completed {
 type ZrangestoreMax Completed
 
 func (c ZrangestoreMax) Byscore() ZrangestoreSortbyByscore {
-	return ZrangestoreSortbyByscore{cf: c.cf, cs: append(c.cs, "BYSCORE")}
+	return ZrangestoreSortbyByscore{cs: append(c.cs, "BYSCORE"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZrangestoreMax) Bylex() ZrangestoreSortbyBylex {
-	return ZrangestoreSortbyBylex{cf: c.cf, cs: append(c.cs, "BYLEX")}
+	return ZrangestoreSortbyBylex{cs: append(c.cs, "BYLEX"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZrangestoreMax) Rev() ZrangestoreRevRev {
-	return ZrangestoreRevRev{cf: c.cf, cs: append(c.cs, "REV")}
+	return ZrangestoreRevRev{cs: append(c.cs, "REV"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZrangestoreMax) Limit(Offset int64, Count int64) ZrangestoreLimit {
-	return ZrangestoreLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return ZrangestoreLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c ZrangestoreMax) Build() Completed {
@@ -11865,13 +11865,13 @@ func (c ZrangestoreMax) Build() Completed {
 type ZrangestoreMin Completed
 
 func (c ZrangestoreMin) Max(Max string) ZrangestoreMax {
-	return ZrangestoreMax{cf: c.cf, cs: append(c.cs, Max)}
+	return ZrangestoreMax{cs: append(c.cs, Max), cf: c.cf, ks: c.ks}
 }
 
 type ZrangestoreRevRev Completed
 
 func (c ZrangestoreRevRev) Limit(Offset int64, Count int64) ZrangestoreLimit {
-	return ZrangestoreLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return ZrangestoreLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c ZrangestoreRevRev) Build() Completed {
@@ -11881,11 +11881,11 @@ func (c ZrangestoreRevRev) Build() Completed {
 type ZrangestoreSortbyBylex Completed
 
 func (c ZrangestoreSortbyBylex) Rev() ZrangestoreRevRev {
-	return ZrangestoreRevRev{cf: c.cf, cs: append(c.cs, "REV")}
+	return ZrangestoreRevRev{cs: append(c.cs, "REV"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZrangestoreSortbyBylex) Limit(Offset int64, Count int64) ZrangestoreLimit {
-	return ZrangestoreLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return ZrangestoreLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c ZrangestoreSortbyBylex) Build() Completed {
@@ -11895,11 +11895,11 @@ func (c ZrangestoreSortbyBylex) Build() Completed {
 type ZrangestoreSortbyByscore Completed
 
 func (c ZrangestoreSortbyByscore) Rev() ZrangestoreRevRev {
-	return ZrangestoreRevRev{cf: c.cf, cs: append(c.cs, "REV")}
+	return ZrangestoreRevRev{cs: append(c.cs, "REV"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZrangestoreSortbyByscore) Limit(Offset int64, Count int64) ZrangestoreLimit {
-	return ZrangestoreLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return ZrangestoreLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c ZrangestoreSortbyByscore) Build() Completed {
@@ -11909,13 +11909,13 @@ func (c ZrangestoreSortbyByscore) Build() Completed {
 type ZrangestoreSrc Completed
 
 func (c ZrangestoreSrc) Min(Min string) ZrangestoreMin {
-	return ZrangestoreMin{cf: c.cf, cs: append(c.cs, Min)}
+	return ZrangestoreMin{cs: append(c.cs, Min), cf: c.cf, ks: c.ks}
 }
 
 type Zrank Completed
 
 func (c Zrank) Key(Key string) ZrankKey {
-	return ZrankKey{cf: c.cf, cs: append(c.cs, Key)}
+	return ZrankKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Zrank() (c Zrank) {
@@ -11926,7 +11926,7 @@ func (b *Builder) Zrank() (c Zrank) {
 type ZrankKey Completed
 
 func (c ZrankKey) Member(Member string) ZrankMember {
-	return ZrankMember{cf: c.cf, cs: append(c.cs, Member)}
+	return ZrankMember{cs: append(c.cs, Member), cf: c.cf, ks: c.ks}
 }
 
 type ZrankMember Completed
@@ -11942,7 +11942,7 @@ func (c ZrankMember) Cache() Cacheable {
 type Zrem Completed
 
 func (c Zrem) Key(Key string) ZremKey {
-	return ZremKey{cf: c.cf, cs: append(c.cs, Key)}
+	return ZremKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Zrem() (c Zrem) {
@@ -11953,13 +11953,13 @@ func (b *Builder) Zrem() (c Zrem) {
 type ZremKey Completed
 
 func (c ZremKey) Member(Member ...string) ZremMember {
-	return ZremMember{cf: c.cf, cs: append(c.cs, Member...)}
+	return ZremMember{cs: append(c.cs, Member...), cf: c.cf, ks: c.ks}
 }
 
 type ZremMember Completed
 
 func (c ZremMember) Member(Member ...string) ZremMember {
-	return ZremMember{cf: c.cf, cs: append(c.cs, Member...)}
+	return ZremMember{cs: append(c.cs, Member...), cf: c.cf, ks: c.ks}
 }
 
 func (c ZremMember) Build() Completed {
@@ -11969,7 +11969,7 @@ func (c ZremMember) Build() Completed {
 type Zremrangebylex Completed
 
 func (c Zremrangebylex) Key(Key string) ZremrangebylexKey {
-	return ZremrangebylexKey{cf: c.cf, cs: append(c.cs, Key)}
+	return ZremrangebylexKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Zremrangebylex() (c Zremrangebylex) {
@@ -11980,7 +11980,7 @@ func (b *Builder) Zremrangebylex() (c Zremrangebylex) {
 type ZremrangebylexKey Completed
 
 func (c ZremrangebylexKey) Min(Min string) ZremrangebylexMin {
-	return ZremrangebylexMin{cf: c.cf, cs: append(c.cs, Min)}
+	return ZremrangebylexMin{cs: append(c.cs, Min), cf: c.cf, ks: c.ks}
 }
 
 type ZremrangebylexMax Completed
@@ -11992,13 +11992,13 @@ func (c ZremrangebylexMax) Build() Completed {
 type ZremrangebylexMin Completed
 
 func (c ZremrangebylexMin) Max(Max string) ZremrangebylexMax {
-	return ZremrangebylexMax{cf: c.cf, cs: append(c.cs, Max)}
+	return ZremrangebylexMax{cs: append(c.cs, Max), cf: c.cf, ks: c.ks}
 }
 
 type Zremrangebyrank Completed
 
 func (c Zremrangebyrank) Key(Key string) ZremrangebyrankKey {
-	return ZremrangebyrankKey{cf: c.cf, cs: append(c.cs, Key)}
+	return ZremrangebyrankKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Zremrangebyrank() (c Zremrangebyrank) {
@@ -12009,13 +12009,13 @@ func (b *Builder) Zremrangebyrank() (c Zremrangebyrank) {
 type ZremrangebyrankKey Completed
 
 func (c ZremrangebyrankKey) Start(Start int64) ZremrangebyrankStart {
-	return ZremrangebyrankStart{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Start, 10))}
+	return ZremrangebyrankStart{cs: append(c.cs, strconv.FormatInt(Start, 10)), cf: c.cf, ks: c.ks}
 }
 
 type ZremrangebyrankStart Completed
 
 func (c ZremrangebyrankStart) Stop(Stop int64) ZremrangebyrankStop {
-	return ZremrangebyrankStop{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Stop, 10))}
+	return ZremrangebyrankStop{cs: append(c.cs, strconv.FormatInt(Stop, 10)), cf: c.cf, ks: c.ks}
 }
 
 type ZremrangebyrankStop Completed
@@ -12027,7 +12027,7 @@ func (c ZremrangebyrankStop) Build() Completed {
 type Zremrangebyscore Completed
 
 func (c Zremrangebyscore) Key(Key string) ZremrangebyscoreKey {
-	return ZremrangebyscoreKey{cf: c.cf, cs: append(c.cs, Key)}
+	return ZremrangebyscoreKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Zremrangebyscore() (c Zremrangebyscore) {
@@ -12038,7 +12038,7 @@ func (b *Builder) Zremrangebyscore() (c Zremrangebyscore) {
 type ZremrangebyscoreKey Completed
 
 func (c ZremrangebyscoreKey) Min(Min float64) ZremrangebyscoreMin {
-	return ZremrangebyscoreMin{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Min, 'f', -1, 64))}
+	return ZremrangebyscoreMin{cs: append(c.cs, strconv.FormatFloat(Min, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type ZremrangebyscoreMax Completed
@@ -12050,13 +12050,13 @@ func (c ZremrangebyscoreMax) Build() Completed {
 type ZremrangebyscoreMin Completed
 
 func (c ZremrangebyscoreMin) Max(Max float64) ZremrangebyscoreMax {
-	return ZremrangebyscoreMax{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Max, 'f', -1, 64))}
+	return ZremrangebyscoreMax{cs: append(c.cs, strconv.FormatFloat(Max, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type Zrevrange Completed
 
 func (c Zrevrange) Key(Key string) ZrevrangeKey {
-	return ZrevrangeKey{cf: c.cf, cs: append(c.cs, Key)}
+	return ZrevrangeKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Zrevrange() (c Zrevrange) {
@@ -12067,19 +12067,19 @@ func (b *Builder) Zrevrange() (c Zrevrange) {
 type ZrevrangeKey Completed
 
 func (c ZrevrangeKey) Start(Start int64) ZrevrangeStart {
-	return ZrevrangeStart{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Start, 10))}
+	return ZrevrangeStart{cs: append(c.cs, strconv.FormatInt(Start, 10)), cf: c.cf, ks: c.ks}
 }
 
 type ZrevrangeStart Completed
 
 func (c ZrevrangeStart) Stop(Stop int64) ZrevrangeStop {
-	return ZrevrangeStop{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Stop, 10))}
+	return ZrevrangeStop{cs: append(c.cs, strconv.FormatInt(Stop, 10)), cf: c.cf, ks: c.ks}
 }
 
 type ZrevrangeStop Completed
 
 func (c ZrevrangeStop) Withscores() ZrevrangeWithscoresWithscores {
-	return ZrevrangeWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
+	return ZrevrangeWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZrevrangeStop) Build() Completed {
@@ -12103,7 +12103,7 @@ func (c ZrevrangeWithscoresWithscores) Cache() Cacheable {
 type Zrevrangebylex Completed
 
 func (c Zrevrangebylex) Key(Key string) ZrevrangebylexKey {
-	return ZrevrangebylexKey{cf: c.cf, cs: append(c.cs, Key)}
+	return ZrevrangebylexKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Zrevrangebylex() (c Zrevrangebylex) {
@@ -12114,7 +12114,7 @@ func (b *Builder) Zrevrangebylex() (c Zrevrangebylex) {
 type ZrevrangebylexKey Completed
 
 func (c ZrevrangebylexKey) Max(Max string) ZrevrangebylexMax {
-	return ZrevrangebylexMax{cf: c.cf, cs: append(c.cs, Max)}
+	return ZrevrangebylexMax{cs: append(c.cs, Max), cf: c.cf, ks: c.ks}
 }
 
 type ZrevrangebylexLimit Completed
@@ -12130,13 +12130,13 @@ func (c ZrevrangebylexLimit) Cache() Cacheable {
 type ZrevrangebylexMax Completed
 
 func (c ZrevrangebylexMax) Min(Min string) ZrevrangebylexMin {
-	return ZrevrangebylexMin{cf: c.cf, cs: append(c.cs, Min)}
+	return ZrevrangebylexMin{cs: append(c.cs, Min), cf: c.cf, ks: c.ks}
 }
 
 type ZrevrangebylexMin Completed
 
 func (c ZrevrangebylexMin) Limit(Offset int64, Count int64) ZrevrangebylexLimit {
-	return ZrevrangebylexLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return ZrevrangebylexLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c ZrevrangebylexMin) Build() Completed {
@@ -12150,7 +12150,7 @@ func (c ZrevrangebylexMin) Cache() Cacheable {
 type Zrevrangebyscore Completed
 
 func (c Zrevrangebyscore) Key(Key string) ZrevrangebyscoreKey {
-	return ZrevrangebyscoreKey{cf: c.cf, cs: append(c.cs, Key)}
+	return ZrevrangebyscoreKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Zrevrangebyscore() (c Zrevrangebyscore) {
@@ -12161,7 +12161,7 @@ func (b *Builder) Zrevrangebyscore() (c Zrevrangebyscore) {
 type ZrevrangebyscoreKey Completed
 
 func (c ZrevrangebyscoreKey) Max(Max float64) ZrevrangebyscoreMax {
-	return ZrevrangebyscoreMax{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Max, 'f', -1, 64))}
+	return ZrevrangebyscoreMax{cs: append(c.cs, strconv.FormatFloat(Max, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type ZrevrangebyscoreLimit Completed
@@ -12177,17 +12177,17 @@ func (c ZrevrangebyscoreLimit) Cache() Cacheable {
 type ZrevrangebyscoreMax Completed
 
 func (c ZrevrangebyscoreMax) Min(Min float64) ZrevrangebyscoreMin {
-	return ZrevrangebyscoreMin{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Min, 'f', -1, 64))}
+	return ZrevrangebyscoreMin{cs: append(c.cs, strconv.FormatFloat(Min, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type ZrevrangebyscoreMin Completed
 
 func (c ZrevrangebyscoreMin) Withscores() ZrevrangebyscoreWithscoresWithscores {
-	return ZrevrangebyscoreWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
+	return ZrevrangebyscoreWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZrevrangebyscoreMin) Limit(Offset int64, Count int64) ZrevrangebyscoreLimit {
-	return ZrevrangebyscoreLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return ZrevrangebyscoreLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c ZrevrangebyscoreMin) Build() Completed {
@@ -12201,7 +12201,7 @@ func (c ZrevrangebyscoreMin) Cache() Cacheable {
 type ZrevrangebyscoreWithscoresWithscores Completed
 
 func (c ZrevrangebyscoreWithscoresWithscores) Limit(Offset int64, Count int64) ZrevrangebyscoreLimit {
-	return ZrevrangebyscoreLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return ZrevrangebyscoreLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c ZrevrangebyscoreWithscoresWithscores) Build() Completed {
@@ -12215,7 +12215,7 @@ func (c ZrevrangebyscoreWithscoresWithscores) Cache() Cacheable {
 type Zrevrank Completed
 
 func (c Zrevrank) Key(Key string) ZrevrankKey {
-	return ZrevrankKey{cf: c.cf, cs: append(c.cs, Key)}
+	return ZrevrankKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Zrevrank() (c Zrevrank) {
@@ -12226,7 +12226,7 @@ func (b *Builder) Zrevrank() (c Zrevrank) {
 type ZrevrankKey Completed
 
 func (c ZrevrankKey) Member(Member string) ZrevrankMember {
-	return ZrevrankMember{cf: c.cf, cs: append(c.cs, Member)}
+	return ZrevrankMember{cs: append(c.cs, Member), cf: c.cf, ks: c.ks}
 }
 
 type ZrevrankMember Completed
@@ -12242,7 +12242,7 @@ func (c ZrevrankMember) Cache() Cacheable {
 type Zscan Completed
 
 func (c Zscan) Key(Key string) ZscanKey {
-	return ZscanKey{cf: c.cf, cs: append(c.cs, Key)}
+	return ZscanKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Zscan() (c Zscan) {
@@ -12259,11 +12259,11 @@ func (c ZscanCount) Build() Completed {
 type ZscanCursor Completed
 
 func (c ZscanCursor) Match(Pattern string) ZscanMatch {
-	return ZscanMatch{cf: c.cf, cs: append(c.cs, "MATCH", Pattern)}
+	return ZscanMatch{cs: append(c.cs, "MATCH", Pattern), cf: c.cf, ks: c.ks}
 }
 
 func (c ZscanCursor) Count(Count int64) ZscanCount {
-	return ZscanCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return ZscanCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c ZscanCursor) Build() Completed {
@@ -12273,13 +12273,13 @@ func (c ZscanCursor) Build() Completed {
 type ZscanKey Completed
 
 func (c ZscanKey) Cursor(Cursor int64) ZscanCursor {
-	return ZscanCursor{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Cursor, 10))}
+	return ZscanCursor{cs: append(c.cs, strconv.FormatInt(Cursor, 10)), cf: c.cf, ks: c.ks}
 }
 
 type ZscanMatch Completed
 
 func (c ZscanMatch) Count(Count int64) ZscanCount {
-	return ZscanCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return ZscanCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c ZscanMatch) Build() Completed {
@@ -12289,7 +12289,7 @@ func (c ZscanMatch) Build() Completed {
 type Zscore Completed
 
 func (c Zscore) Key(Key string) ZscoreKey {
-	return ZscoreKey{cf: c.cf, cs: append(c.cs, Key)}
+	return ZscoreKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Zscore() (c Zscore) {
@@ -12300,7 +12300,7 @@ func (b *Builder) Zscore() (c Zscore) {
 type ZscoreKey Completed
 
 func (c ZscoreKey) Member(Member string) ZscoreMember {
-	return ZscoreMember{cf: c.cf, cs: append(c.cs, Member)}
+	return ZscoreMember{cs: append(c.cs, Member), cf: c.cf, ks: c.ks}
 }
 
 type ZscoreMember Completed
@@ -12316,7 +12316,7 @@ func (c ZscoreMember) Cache() Cacheable {
 type Zunion Completed
 
 func (c Zunion) Numkeys(Numkeys int64) ZunionNumkeys {
-	return ZunionNumkeys{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
+	return ZunionNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Zunion() (c Zunion) {
@@ -12327,7 +12327,7 @@ func (b *Builder) Zunion() (c Zunion) {
 type ZunionAggregateMax Completed
 
 func (c ZunionAggregateMax) Withscores() ZunionWithscoresWithscores {
-	return ZunionWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
+	return ZunionWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZunionAggregateMax) Build() Completed {
@@ -12337,7 +12337,7 @@ func (c ZunionAggregateMax) Build() Completed {
 type ZunionAggregateMin Completed
 
 func (c ZunionAggregateMin) Withscores() ZunionWithscoresWithscores {
-	return ZunionWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
+	return ZunionWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZunionAggregateMin) Build() Completed {
@@ -12347,7 +12347,7 @@ func (c ZunionAggregateMin) Build() Completed {
 type ZunionAggregateSum Completed
 
 func (c ZunionAggregateSum) Withscores() ZunionWithscoresWithscores {
-	return ZunionWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
+	return ZunionWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZunionAggregateSum) Build() Completed {
@@ -12361,27 +12361,27 @@ func (c ZunionKey) Weights(Weight ...int64) ZunionWeights {
 	for _, n := range Weight {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return ZunionWeights{cf: c.cf, cs: c.cs}
+	return ZunionWeights{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 func (c ZunionKey) Sum() ZunionAggregateSum {
-	return ZunionAggregateSum{cf: c.cf, cs: append(c.cs, "SUM")}
+	return ZunionAggregateSum{cs: append(c.cs, "SUM"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZunionKey) Min() ZunionAggregateMin {
-	return ZunionAggregateMin{cf: c.cf, cs: append(c.cs, "MIN")}
+	return ZunionAggregateMin{cs: append(c.cs, "MIN"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZunionKey) Max() ZunionAggregateMax {
-	return ZunionAggregateMax{cf: c.cf, cs: append(c.cs, "MAX")}
+	return ZunionAggregateMax{cs: append(c.cs, "MAX"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZunionKey) Withscores() ZunionWithscoresWithscores {
-	return ZunionWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
+	return ZunionWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZunionKey) Key(Key ...string) ZunionKey {
-	return ZunionKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return ZunionKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c ZunionKey) Build() Completed {
@@ -12391,32 +12391,32 @@ func (c ZunionKey) Build() Completed {
 type ZunionNumkeys Completed
 
 func (c ZunionNumkeys) Key(Key ...string) ZunionKey {
-	return ZunionKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return ZunionKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type ZunionWeights Completed
 
 func (c ZunionWeights) Sum() ZunionAggregateSum {
-	return ZunionAggregateSum{cf: c.cf, cs: append(c.cs, "SUM")}
+	return ZunionAggregateSum{cs: append(c.cs, "SUM"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZunionWeights) Min() ZunionAggregateMin {
-	return ZunionAggregateMin{cf: c.cf, cs: append(c.cs, "MIN")}
+	return ZunionAggregateMin{cs: append(c.cs, "MIN"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZunionWeights) Max() ZunionAggregateMax {
-	return ZunionAggregateMax{cf: c.cf, cs: append(c.cs, "MAX")}
+	return ZunionAggregateMax{cs: append(c.cs, "MAX"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZunionWeights) Withscores() ZunionWithscoresWithscores {
-	return ZunionWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
+	return ZunionWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZunionWeights) Weights(Weights ...int64) ZunionWeights {
 	for _, n := range Weights {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return ZunionWeights{cf: c.cf, cs: c.cs}
+	return ZunionWeights{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 func (c ZunionWeights) Build() Completed {
@@ -12432,7 +12432,7 @@ func (c ZunionWithscoresWithscores) Build() Completed {
 type Zunionstore Completed
 
 func (c Zunionstore) Destination(Destination string) ZunionstoreDestination {
-	return ZunionstoreDestination{cf: c.cf, cs: append(c.cs, Destination)}
+	return ZunionstoreDestination{cs: append(c.cs, Destination), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Zunionstore() (c Zunionstore) {
@@ -12461,7 +12461,7 @@ func (c ZunionstoreAggregateSum) Build() Completed {
 type ZunionstoreDestination Completed
 
 func (c ZunionstoreDestination) Numkeys(Numkeys int64) ZunionstoreNumkeys {
-	return ZunionstoreNumkeys{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
+	return ZunionstoreNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10)), cf: c.cf, ks: c.ks}
 }
 
 type ZunionstoreKey Completed
@@ -12471,23 +12471,23 @@ func (c ZunionstoreKey) Weights(Weight ...int64) ZunionstoreWeights {
 	for _, n := range Weight {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return ZunionstoreWeights{cf: c.cf, cs: c.cs}
+	return ZunionstoreWeights{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 func (c ZunionstoreKey) Sum() ZunionstoreAggregateSum {
-	return ZunionstoreAggregateSum{cf: c.cf, cs: append(c.cs, "SUM")}
+	return ZunionstoreAggregateSum{cs: append(c.cs, "SUM"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZunionstoreKey) Min() ZunionstoreAggregateMin {
-	return ZunionstoreAggregateMin{cf: c.cf, cs: append(c.cs, "MIN")}
+	return ZunionstoreAggregateMin{cs: append(c.cs, "MIN"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZunionstoreKey) Max() ZunionstoreAggregateMax {
-	return ZunionstoreAggregateMax{cf: c.cf, cs: append(c.cs, "MAX")}
+	return ZunionstoreAggregateMax{cs: append(c.cs, "MAX"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZunionstoreKey) Key(Key ...string) ZunionstoreKey {
-	return ZunionstoreKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return ZunionstoreKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c ZunionstoreKey) Build() Completed {
@@ -12497,28 +12497,28 @@ func (c ZunionstoreKey) Build() Completed {
 type ZunionstoreNumkeys Completed
 
 func (c ZunionstoreNumkeys) Key(Key ...string) ZunionstoreKey {
-	return ZunionstoreKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return ZunionstoreKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type ZunionstoreWeights Completed
 
 func (c ZunionstoreWeights) Sum() ZunionstoreAggregateSum {
-	return ZunionstoreAggregateSum{cf: c.cf, cs: append(c.cs, "SUM")}
+	return ZunionstoreAggregateSum{cs: append(c.cs, "SUM"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZunionstoreWeights) Min() ZunionstoreAggregateMin {
-	return ZunionstoreAggregateMin{cf: c.cf, cs: append(c.cs, "MIN")}
+	return ZunionstoreAggregateMin{cs: append(c.cs, "MIN"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZunionstoreWeights) Max() ZunionstoreAggregateMax {
-	return ZunionstoreAggregateMax{cf: c.cf, cs: append(c.cs, "MAX")}
+	return ZunionstoreAggregateMax{cs: append(c.cs, "MAX"), cf: c.cf, ks: c.ks}
 }
 
 func (c ZunionstoreWeights) Weights(Weights ...int64) ZunionstoreWeights {
 	for _, n := range Weights {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return ZunionstoreWeights{cf: c.cf, cs: c.cs}
+	return ZunionstoreWeights{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 func (c ZunionstoreWeights) Build() Completed {
@@ -12528,7 +12528,7 @@ func (c ZunionstoreWeights) Build() Completed {
 type SAclCat SCompleted
 
 func (c SAclCat) Categoryname(Categoryname string) SAclCatCategoryname {
-	return SAclCatCategoryname{cf: c.cf, cs: append(c.cs, Categoryname)}
+	return SAclCatCategoryname{cs: append(c.cs, Categoryname), cf: c.cf, ks: c.ks}
 }
 
 func (c SAclCat) Build() SCompleted {
@@ -12550,7 +12550,7 @@ func (c SAclCatCategoryname) Build() SCompleted {
 type SAclDeluser SCompleted
 
 func (c SAclDeluser) Username(Username ...string) SAclDeluserUsername {
-	return SAclDeluserUsername{cf: c.cf, cs: append(c.cs, Username...)}
+	return SAclDeluserUsername{cs: append(c.cs, Username...), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) AclDeluser() (c SAclDeluser) {
@@ -12562,7 +12562,7 @@ func (b *SBuilder) AclDeluser() (c SAclDeluser) {
 type SAclDeluserUsername SCompleted
 
 func (c SAclDeluserUsername) Username(Username ...string) SAclDeluserUsername {
-	return SAclDeluserUsername{cf: c.cf, cs: append(c.cs, Username...)}
+	return SAclDeluserUsername{cs: append(c.cs, Username...), cf: c.cf, ks: c.ks}
 }
 
 func (c SAclDeluserUsername) Build() SCompleted {
@@ -12572,7 +12572,7 @@ func (c SAclDeluserUsername) Build() SCompleted {
 type SAclGenpass SCompleted
 
 func (c SAclGenpass) Bits(Bits int64) SAclGenpassBits {
-	return SAclGenpassBits{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Bits, 10))}
+	return SAclGenpassBits{cs: append(c.cs, strconv.FormatInt(Bits, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SAclGenpass) Build() SCompleted {
@@ -12594,7 +12594,7 @@ func (c SAclGenpassBits) Build() SCompleted {
 type SAclGetuser SCompleted
 
 func (c SAclGetuser) Username(Username string) SAclGetuserUsername {
-	return SAclGetuserUsername{cf: c.cf, cs: append(c.cs, Username)}
+	return SAclGetuserUsername{cs: append(c.cs, Username), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) AclGetuser() (c SAclGetuser) {
@@ -12648,7 +12648,7 @@ func (b *SBuilder) AclLoad() (c SAclLoad) {
 type SAclLog SCompleted
 
 func (c SAclLog) CountOrReset(CountOrReset string) SAclLogCountOrReset {
-	return SAclLogCountOrReset{cf: c.cf, cs: append(c.cs, CountOrReset)}
+	return SAclLogCountOrReset{cs: append(c.cs, CountOrReset), cf: c.cf, ks: c.ks}
 }
 
 func (c SAclLog) Build() SCompleted {
@@ -12682,7 +12682,7 @@ func (b *SBuilder) AclSave() (c SAclSave) {
 type SAclSetuser SCompleted
 
 func (c SAclSetuser) Username(Username string) SAclSetuserUsername {
-	return SAclSetuserUsername{cf: c.cf, cs: append(c.cs, Username)}
+	return SAclSetuserUsername{cs: append(c.cs, Username), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) AclSetuser() (c SAclSetuser) {
@@ -12694,7 +12694,7 @@ func (b *SBuilder) AclSetuser() (c SAclSetuser) {
 type SAclSetuserRule SCompleted
 
 func (c SAclSetuserRule) Rule(Rule ...string) SAclSetuserRule {
-	return SAclSetuserRule{cf: c.cf, cs: append(c.cs, Rule...)}
+	return SAclSetuserRule{cs: append(c.cs, Rule...), cf: c.cf, ks: c.ks}
 }
 
 func (c SAclSetuserRule) Build() SCompleted {
@@ -12704,7 +12704,7 @@ func (c SAclSetuserRule) Build() SCompleted {
 type SAclSetuserUsername SCompleted
 
 func (c SAclSetuserUsername) Rule(Rule ...string) SAclSetuserRule {
-	return SAclSetuserRule{cf: c.cf, cs: append(c.cs, Rule...)}
+	return SAclSetuserRule{cs: append(c.cs, Rule...), cf: c.cf, ks: c.ks}
 }
 
 func (c SAclSetuserUsername) Build() SCompleted {
@@ -12739,7 +12739,7 @@ type SAppend SCompleted
 
 func (c SAppend) Key(Key string) SAppendKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SAppendKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SAppendKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Append() (c SAppend) {
@@ -12751,7 +12751,7 @@ func (b *SBuilder) Append() (c SAppend) {
 type SAppendKey SCompleted
 
 func (c SAppendKey) Value(Value string) SAppendValue {
-	return SAppendValue{cf: c.cf, cs: append(c.cs, Value)}
+	return SAppendValue{cs: append(c.cs, Value), cf: c.cf, ks: c.ks}
 }
 
 type SAppendValue SCompleted
@@ -12775,11 +12775,11 @@ func (b *SBuilder) Asking() (c SAsking) {
 type SAuth SCompleted
 
 func (c SAuth) Username(Username string) SAuthUsername {
-	return SAuthUsername{cf: c.cf, cs: append(c.cs, Username)}
+	return SAuthUsername{cs: append(c.cs, Username), cf: c.cf, ks: c.ks}
 }
 
 func (c SAuth) Password(Password string) SAuthPassword {
-	return SAuthPassword{cf: c.cf, cs: append(c.cs, Password)}
+	return SAuthPassword{cs: append(c.cs, Password), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Auth() (c SAuth) {
@@ -12797,7 +12797,7 @@ func (c SAuthPassword) Build() SCompleted {
 type SAuthUsername SCompleted
 
 func (c SAuthUsername) Password(Password string) SAuthPassword {
-	return SAuthPassword{cf: c.cf, cs: append(c.cs, Password)}
+	return SAuthPassword{cs: append(c.cs, Password), cf: c.cf, ks: c.ks}
 }
 
 type SBgrewriteaof SCompleted
@@ -12815,7 +12815,7 @@ func (b *SBuilder) Bgrewriteaof() (c SBgrewriteaof) {
 type SBgsave SCompleted
 
 func (c SBgsave) Schedule() SBgsaveScheduleSchedule {
-	return SBgsaveScheduleSchedule{cf: c.cf, cs: append(c.cs, "SCHEDULE")}
+	return SBgsaveScheduleSchedule{cs: append(c.cs, "SCHEDULE"), cf: c.cf, ks: c.ks}
 }
 
 func (c SBgsave) Build() SCompleted {
@@ -12838,7 +12838,7 @@ type SBitcount SCompleted
 
 func (c SBitcount) Key(Key string) SBitcountKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SBitcountKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SBitcountKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Bitcount() (c SBitcount) {
@@ -12851,7 +12851,7 @@ func (b *SBuilder) Bitcount() (c SBitcount) {
 type SBitcountKey SCompleted
 
 func (c SBitcountKey) StartEnd(Start int64, End int64) SBitcountStartEnd {
-	return SBitcountStartEnd{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Start, 10), strconv.FormatInt(End, 10))}
+	return SBitcountStartEnd{cs: append(c.cs, strconv.FormatInt(Start, 10), strconv.FormatInt(End, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SBitcountKey) Build() SCompleted {
@@ -12876,7 +12876,7 @@ type SBitfield SCompleted
 
 func (c SBitfield) Key(Key string) SBitfieldKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SBitfieldKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SBitfieldKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Bitfield() (c SBitfield) {
@@ -12894,23 +12894,23 @@ func (c SBitfieldFail) Build() SCompleted {
 type SBitfieldGet SCompleted
 
 func (c SBitfieldGet) Set(Type string, Offset int64, Value int64) SBitfieldSet {
-	return SBitfieldSet{cf: c.cf, cs: append(c.cs, "SET", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Value, 10))}
+	return SBitfieldSet{cs: append(c.cs, "SET", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Value, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SBitfieldGet) Incrby(Type string, Offset int64, Increment int64) SBitfieldIncrby {
-	return SBitfieldIncrby{cf: c.cf, cs: append(c.cs, "INCRBY", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Increment, 10))}
+	return SBitfieldIncrby{cs: append(c.cs, "INCRBY", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Increment, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SBitfieldGet) Wrap() SBitfieldWrap {
-	return SBitfieldWrap{cf: c.cf, cs: append(c.cs, "WRAP")}
+	return SBitfieldWrap{cs: append(c.cs, "WRAP"), cf: c.cf, ks: c.ks}
 }
 
 func (c SBitfieldGet) Sat() SBitfieldSat {
-	return SBitfieldSat{cf: c.cf, cs: append(c.cs, "SAT")}
+	return SBitfieldSat{cs: append(c.cs, "SAT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SBitfieldGet) Fail() SBitfieldFail {
-	return SBitfieldFail{cf: c.cf, cs: append(c.cs, "FAIL")}
+	return SBitfieldFail{cs: append(c.cs, "FAIL"), cf: c.cf, ks: c.ks}
 }
 
 func (c SBitfieldGet) Build() SCompleted {
@@ -12920,15 +12920,15 @@ func (c SBitfieldGet) Build() SCompleted {
 type SBitfieldIncrby SCompleted
 
 func (c SBitfieldIncrby) Wrap() SBitfieldWrap {
-	return SBitfieldWrap{cf: c.cf, cs: append(c.cs, "WRAP")}
+	return SBitfieldWrap{cs: append(c.cs, "WRAP"), cf: c.cf, ks: c.ks}
 }
 
 func (c SBitfieldIncrby) Sat() SBitfieldSat {
-	return SBitfieldSat{cf: c.cf, cs: append(c.cs, "SAT")}
+	return SBitfieldSat{cs: append(c.cs, "SAT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SBitfieldIncrby) Fail() SBitfieldFail {
-	return SBitfieldFail{cf: c.cf, cs: append(c.cs, "FAIL")}
+	return SBitfieldFail{cs: append(c.cs, "FAIL"), cf: c.cf, ks: c.ks}
 }
 
 func (c SBitfieldIncrby) Build() SCompleted {
@@ -12938,27 +12938,27 @@ func (c SBitfieldIncrby) Build() SCompleted {
 type SBitfieldKey SCompleted
 
 func (c SBitfieldKey) Get(Type string, Offset int64) SBitfieldGet {
-	return SBitfieldGet{cf: c.cf, cs: append(c.cs, "GET", Type, strconv.FormatInt(Offset, 10))}
+	return SBitfieldGet{cs: append(c.cs, "GET", Type, strconv.FormatInt(Offset, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SBitfieldKey) Set(Type string, Offset int64, Value int64) SBitfieldSet {
-	return SBitfieldSet{cf: c.cf, cs: append(c.cs, "SET", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Value, 10))}
+	return SBitfieldSet{cs: append(c.cs, "SET", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Value, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SBitfieldKey) Incrby(Type string, Offset int64, Increment int64) SBitfieldIncrby {
-	return SBitfieldIncrby{cf: c.cf, cs: append(c.cs, "INCRBY", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Increment, 10))}
+	return SBitfieldIncrby{cs: append(c.cs, "INCRBY", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Increment, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SBitfieldKey) Wrap() SBitfieldWrap {
-	return SBitfieldWrap{cf: c.cf, cs: append(c.cs, "WRAP")}
+	return SBitfieldWrap{cs: append(c.cs, "WRAP"), cf: c.cf, ks: c.ks}
 }
 
 func (c SBitfieldKey) Sat() SBitfieldSat {
-	return SBitfieldSat{cf: c.cf, cs: append(c.cs, "SAT")}
+	return SBitfieldSat{cs: append(c.cs, "SAT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SBitfieldKey) Fail() SBitfieldFail {
-	return SBitfieldFail{cf: c.cf, cs: append(c.cs, "FAIL")}
+	return SBitfieldFail{cs: append(c.cs, "FAIL"), cf: c.cf, ks: c.ks}
 }
 
 func (c SBitfieldKey) Build() SCompleted {
@@ -12969,7 +12969,7 @@ type SBitfieldRo SCompleted
 
 func (c SBitfieldRo) Key(Key string) SBitfieldRoKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SBitfieldRoKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SBitfieldRoKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) BitfieldRo() (c SBitfieldRo) {
@@ -12992,7 +12992,7 @@ func (c SBitfieldRoGet) Cache() SCacheable {
 type SBitfieldRoKey SCompleted
 
 func (c SBitfieldRoKey) Get(Type string, Offset int64) SBitfieldRoGet {
-	return SBitfieldRoGet{cf: c.cf, cs: append(c.cs, "GET", Type, strconv.FormatInt(Offset, 10))}
+	return SBitfieldRoGet{cs: append(c.cs, "GET", Type, strconv.FormatInt(Offset, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SBitfieldSat SCompleted
@@ -13004,19 +13004,19 @@ func (c SBitfieldSat) Build() SCompleted {
 type SBitfieldSet SCompleted
 
 func (c SBitfieldSet) Incrby(Type string, Offset int64, Increment int64) SBitfieldIncrby {
-	return SBitfieldIncrby{cf: c.cf, cs: append(c.cs, "INCRBY", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Increment, 10))}
+	return SBitfieldIncrby{cs: append(c.cs, "INCRBY", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Increment, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SBitfieldSet) Wrap() SBitfieldWrap {
-	return SBitfieldWrap{cf: c.cf, cs: append(c.cs, "WRAP")}
+	return SBitfieldWrap{cs: append(c.cs, "WRAP"), cf: c.cf, ks: c.ks}
 }
 
 func (c SBitfieldSet) Sat() SBitfieldSat {
-	return SBitfieldSat{cf: c.cf, cs: append(c.cs, "SAT")}
+	return SBitfieldSat{cs: append(c.cs, "SAT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SBitfieldSet) Fail() SBitfieldFail {
-	return SBitfieldFail{cf: c.cf, cs: append(c.cs, "FAIL")}
+	return SBitfieldFail{cs: append(c.cs, "FAIL"), cf: c.cf, ks: c.ks}
 }
 
 func (c SBitfieldSet) Build() SCompleted {
@@ -13032,7 +13032,7 @@ func (c SBitfieldWrap) Build() SCompleted {
 type SBitop SCompleted
 
 func (c SBitop) Operation(Operation string) SBitopOperation {
-	return SBitopOperation{cf: c.cf, cs: append(c.cs, Operation)}
+	return SBitopOperation{cs: append(c.cs, Operation), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Bitop() (c SBitop) {
@@ -13047,7 +13047,7 @@ func (c SBitopDestkey) Key(Key ...string) SBitopKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SBitopKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SBitopKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type SBitopKey SCompleted
@@ -13056,7 +13056,7 @@ func (c SBitopKey) Key(Key ...string) SBitopKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SBitopKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SBitopKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c SBitopKey) Build() SCompleted {
@@ -13067,14 +13067,14 @@ type SBitopOperation SCompleted
 
 func (c SBitopOperation) Destkey(Destkey string) SBitopDestkey {
 	c.ks = checkSlot(c.ks, slot(Destkey))
-	return SBitopDestkey{cf: c.cf, cs: append(c.cs, Destkey)}
+	return SBitopDestkey{cs: append(c.cs, Destkey), cf: c.cf, ks: c.ks}
 }
 
 type SBitpos SCompleted
 
 func (c SBitpos) Key(Key string) SBitposKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SBitposKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SBitposKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Bitpos() (c SBitpos) {
@@ -13087,7 +13087,7 @@ func (b *SBuilder) Bitpos() (c SBitpos) {
 type SBitposBit SCompleted
 
 func (c SBitposBit) Start(Start int64) SBitposIndexStart {
-	return SBitposIndexStart{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Start, 10))}
+	return SBitposIndexStart{cs: append(c.cs, strconv.FormatInt(Start, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SBitposBit) Build() SCompleted {
@@ -13111,7 +13111,7 @@ func (c SBitposIndexEnd) Cache() SCacheable {
 type SBitposIndexStart SCompleted
 
 func (c SBitposIndexStart) End(End int64) SBitposIndexEnd {
-	return SBitposIndexEnd{cf: c.cf, cs: append(c.cs, strconv.FormatInt(End, 10))}
+	return SBitposIndexEnd{cs: append(c.cs, strconv.FormatInt(End, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SBitposIndexStart) Build() SCompleted {
@@ -13125,14 +13125,14 @@ func (c SBitposIndexStart) Cache() SCacheable {
 type SBitposKey SCompleted
 
 func (c SBitposKey) Bit(Bit int64) SBitposBit {
-	return SBitposBit{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Bit, 10))}
+	return SBitposBit{cs: append(c.cs, strconv.FormatInt(Bit, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SBlmove SCompleted
 
 func (c SBlmove) Source(Source string) SBlmoveSource {
 	c.ks = checkSlot(c.ks, slot(Source))
-	return SBlmoveSource{cf: c.cf, cs: append(c.cs, Source)}
+	return SBlmoveSource{cs: append(c.cs, Source), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Blmove() (c SBlmove) {
@@ -13145,18 +13145,18 @@ func (b *SBuilder) Blmove() (c SBlmove) {
 type SBlmoveDestination SCompleted
 
 func (c SBlmoveDestination) Left() SBlmoveWherefromLeft {
-	return SBlmoveWherefromLeft{cf: c.cf, cs: append(c.cs, "LEFT")}
+	return SBlmoveWherefromLeft{cs: append(c.cs, "LEFT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SBlmoveDestination) Right() SBlmoveWherefromRight {
-	return SBlmoveWherefromRight{cf: c.cf, cs: append(c.cs, "RIGHT")}
+	return SBlmoveWherefromRight{cs: append(c.cs, "RIGHT"), cf: c.cf, ks: c.ks}
 }
 
 type SBlmoveSource SCompleted
 
 func (c SBlmoveSource) Destination(Destination string) SBlmoveDestination {
 	c.ks = checkSlot(c.ks, slot(Destination))
-	return SBlmoveDestination{cf: c.cf, cs: append(c.cs, Destination)}
+	return SBlmoveDestination{cs: append(c.cs, Destination), cf: c.cf, ks: c.ks}
 }
 
 type SBlmoveTimeout SCompleted
@@ -13168,39 +13168,39 @@ func (c SBlmoveTimeout) Build() SCompleted {
 type SBlmoveWherefromLeft SCompleted
 
 func (c SBlmoveWherefromLeft) Left() SBlmoveWheretoLeft {
-	return SBlmoveWheretoLeft{cf: c.cf, cs: append(c.cs, "LEFT")}
+	return SBlmoveWheretoLeft{cs: append(c.cs, "LEFT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SBlmoveWherefromLeft) Right() SBlmoveWheretoRight {
-	return SBlmoveWheretoRight{cf: c.cf, cs: append(c.cs, "RIGHT")}
+	return SBlmoveWheretoRight{cs: append(c.cs, "RIGHT"), cf: c.cf, ks: c.ks}
 }
 
 type SBlmoveWherefromRight SCompleted
 
 func (c SBlmoveWherefromRight) Left() SBlmoveWheretoLeft {
-	return SBlmoveWheretoLeft{cf: c.cf, cs: append(c.cs, "LEFT")}
+	return SBlmoveWheretoLeft{cs: append(c.cs, "LEFT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SBlmoveWherefromRight) Right() SBlmoveWheretoRight {
-	return SBlmoveWheretoRight{cf: c.cf, cs: append(c.cs, "RIGHT")}
+	return SBlmoveWheretoRight{cs: append(c.cs, "RIGHT"), cf: c.cf, ks: c.ks}
 }
 
 type SBlmoveWheretoLeft SCompleted
 
 func (c SBlmoveWheretoLeft) Timeout(Timeout float64) SBlmoveTimeout {
-	return SBlmoveTimeout{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64))}
+	return SBlmoveTimeout{cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type SBlmoveWheretoRight SCompleted
 
 func (c SBlmoveWheretoRight) Timeout(Timeout float64) SBlmoveTimeout {
-	return SBlmoveTimeout{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64))}
+	return SBlmoveTimeout{cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type SBlmpop SCompleted
 
 func (c SBlmpop) Timeout(Timeout float64) SBlmpopTimeout {
-	return SBlmpopTimeout{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64))}
+	return SBlmpopTimeout{cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Blmpop() (c SBlmpop) {
@@ -13219,18 +13219,18 @@ func (c SBlmpopCount) Build() SCompleted {
 type SBlmpopKey SCompleted
 
 func (c SBlmpopKey) Left() SBlmpopWhereLeft {
-	return SBlmpopWhereLeft{cf: c.cf, cs: append(c.cs, "LEFT")}
+	return SBlmpopWhereLeft{cs: append(c.cs, "LEFT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SBlmpopKey) Right() SBlmpopWhereRight {
-	return SBlmpopWhereRight{cf: c.cf, cs: append(c.cs, "RIGHT")}
+	return SBlmpopWhereRight{cs: append(c.cs, "RIGHT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SBlmpopKey) Key(Key ...string) SBlmpopKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SBlmpopKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SBlmpopKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type SBlmpopNumkeys SCompleted
@@ -13239,27 +13239,27 @@ func (c SBlmpopNumkeys) Key(Key ...string) SBlmpopKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SBlmpopKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SBlmpopKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c SBlmpopNumkeys) Left() SBlmpopWhereLeft {
-	return SBlmpopWhereLeft{cf: c.cf, cs: append(c.cs, "LEFT")}
+	return SBlmpopWhereLeft{cs: append(c.cs, "LEFT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SBlmpopNumkeys) Right() SBlmpopWhereRight {
-	return SBlmpopWhereRight{cf: c.cf, cs: append(c.cs, "RIGHT")}
+	return SBlmpopWhereRight{cs: append(c.cs, "RIGHT"), cf: c.cf, ks: c.ks}
 }
 
 type SBlmpopTimeout SCompleted
 
 func (c SBlmpopTimeout) Numkeys(Numkeys int64) SBlmpopNumkeys {
-	return SBlmpopNumkeys{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
+	return SBlmpopNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SBlmpopWhereLeft SCompleted
 
 func (c SBlmpopWhereLeft) Count(Count int64) SBlmpopCount {
-	return SBlmpopCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SBlmpopCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SBlmpopWhereLeft) Build() SCompleted {
@@ -13269,7 +13269,7 @@ func (c SBlmpopWhereLeft) Build() SCompleted {
 type SBlmpopWhereRight SCompleted
 
 func (c SBlmpopWhereRight) Count(Count int64) SBlmpopCount {
-	return SBlmpopCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SBlmpopCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SBlmpopWhereRight) Build() SCompleted {
@@ -13282,7 +13282,7 @@ func (c SBlpop) Key(Key ...string) SBlpopKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SBlpopKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SBlpopKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Blpop() (c SBlpop) {
@@ -13295,14 +13295,14 @@ func (b *SBuilder) Blpop() (c SBlpop) {
 type SBlpopKey SCompleted
 
 func (c SBlpopKey) Timeout(Timeout float64) SBlpopTimeout {
-	return SBlpopTimeout{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64))}
+	return SBlpopTimeout{cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c SBlpopKey) Key(Key ...string) SBlpopKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SBlpopKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SBlpopKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type SBlpopTimeout SCompleted
@@ -13317,7 +13317,7 @@ func (c SBrpop) Key(Key ...string) SBrpopKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SBrpopKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SBrpopKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Brpop() (c SBrpop) {
@@ -13330,14 +13330,14 @@ func (b *SBuilder) Brpop() (c SBrpop) {
 type SBrpopKey SCompleted
 
 func (c SBrpopKey) Timeout(Timeout float64) SBrpopTimeout {
-	return SBrpopTimeout{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64))}
+	return SBrpopTimeout{cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c SBrpopKey) Key(Key ...string) SBrpopKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SBrpopKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SBrpopKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type SBrpopTimeout SCompleted
@@ -13350,7 +13350,7 @@ type SBrpoplpush SCompleted
 
 func (c SBrpoplpush) Source(Source string) SBrpoplpushSource {
 	c.ks = checkSlot(c.ks, slot(Source))
-	return SBrpoplpushSource{cf: c.cf, cs: append(c.cs, Source)}
+	return SBrpoplpushSource{cs: append(c.cs, Source), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Brpoplpush() (c SBrpoplpush) {
@@ -13363,14 +13363,14 @@ func (b *SBuilder) Brpoplpush() (c SBrpoplpush) {
 type SBrpoplpushDestination SCompleted
 
 func (c SBrpoplpushDestination) Timeout(Timeout float64) SBrpoplpushTimeout {
-	return SBrpoplpushTimeout{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64))}
+	return SBrpoplpushTimeout{cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type SBrpoplpushSource SCompleted
 
 func (c SBrpoplpushSource) Destination(Destination string) SBrpoplpushDestination {
 	c.ks = checkSlot(c.ks, slot(Destination))
-	return SBrpoplpushDestination{cf: c.cf, cs: append(c.cs, Destination)}
+	return SBrpoplpushDestination{cs: append(c.cs, Destination), cf: c.cf, ks: c.ks}
 }
 
 type SBrpoplpushTimeout SCompleted
@@ -13385,7 +13385,7 @@ func (c SBzpopmax) Key(Key ...string) SBzpopmaxKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SBzpopmaxKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SBzpopmaxKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Bzpopmax() (c SBzpopmax) {
@@ -13398,14 +13398,14 @@ func (b *SBuilder) Bzpopmax() (c SBzpopmax) {
 type SBzpopmaxKey SCompleted
 
 func (c SBzpopmaxKey) Timeout(Timeout float64) SBzpopmaxTimeout {
-	return SBzpopmaxTimeout{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64))}
+	return SBzpopmaxTimeout{cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c SBzpopmaxKey) Key(Key ...string) SBzpopmaxKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SBzpopmaxKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SBzpopmaxKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type SBzpopmaxTimeout SCompleted
@@ -13420,7 +13420,7 @@ func (c SBzpopmin) Key(Key ...string) SBzpopminKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SBzpopminKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SBzpopminKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Bzpopmin() (c SBzpopmin) {
@@ -13433,14 +13433,14 @@ func (b *SBuilder) Bzpopmin() (c SBzpopmin) {
 type SBzpopminKey SCompleted
 
 func (c SBzpopminKey) Timeout(Timeout float64) SBzpopminTimeout {
-	return SBzpopminTimeout{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64))}
+	return SBzpopminTimeout{cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c SBzpopminKey) Key(Key ...string) SBzpopminKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SBzpopminKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SBzpopminKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type SBzpopminTimeout SCompleted
@@ -13452,11 +13452,11 @@ func (c SBzpopminTimeout) Build() SCompleted {
 type SClientCaching SCompleted
 
 func (c SClientCaching) Yes() SClientCachingModeYes {
-	return SClientCachingModeYes{cf: c.cf, cs: append(c.cs, "YES")}
+	return SClientCachingModeYes{cs: append(c.cs, "YES"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientCaching) No() SClientCachingModeNo {
-	return SClientCachingModeNo{cf: c.cf, cs: append(c.cs, "NO")}
+	return SClientCachingModeNo{cs: append(c.cs, "NO"), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) ClientCaching() (c SClientCaching) {
@@ -13528,43 +13528,43 @@ func (b *SBuilder) ClientInfo() (c SClientInfo) {
 type SClientKill SCompleted
 
 func (c SClientKill) IpPort(IpPort string) SClientKillIpPort {
-	return SClientKillIpPort{cf: c.cf, cs: append(c.cs, IpPort)}
+	return SClientKillIpPort{cs: append(c.cs, IpPort), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKill) Id(ClientId int64) SClientKillId {
-	return SClientKillId{cf: c.cf, cs: append(c.cs, "ID", strconv.FormatInt(ClientId, 10))}
+	return SClientKillId{cs: append(c.cs, "ID", strconv.FormatInt(ClientId, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKill) Normal() SClientKillNormal {
-	return SClientKillNormal{cf: c.cf, cs: append(c.cs, "normal")}
+	return SClientKillNormal{cs: append(c.cs, "normal"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKill) Master() SClientKillMaster {
-	return SClientKillMaster{cf: c.cf, cs: append(c.cs, "master")}
+	return SClientKillMaster{cs: append(c.cs, "master"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKill) Slave() SClientKillSlave {
-	return SClientKillSlave{cf: c.cf, cs: append(c.cs, "slave")}
+	return SClientKillSlave{cs: append(c.cs, "slave"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKill) Pubsub() SClientKillPubsub {
-	return SClientKillPubsub{cf: c.cf, cs: append(c.cs, "pubsub")}
+	return SClientKillPubsub{cs: append(c.cs, "pubsub"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKill) User(Username string) SClientKillUser {
-	return SClientKillUser{cf: c.cf, cs: append(c.cs, "USER", Username)}
+	return SClientKillUser{cs: append(c.cs, "USER", Username), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKill) Addr(IpPort string) SClientKillAddr {
-	return SClientKillAddr{cf: c.cf, cs: append(c.cs, "ADDR", IpPort)}
+	return SClientKillAddr{cs: append(c.cs, "ADDR", IpPort), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKill) Laddr(IpPort string) SClientKillLaddr {
-	return SClientKillLaddr{cf: c.cf, cs: append(c.cs, "LADDR", IpPort)}
+	return SClientKillLaddr{cs: append(c.cs, "LADDR", IpPort), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKill) Skipme(YesNo string) SClientKillSkipme {
-	return SClientKillSkipme{cf: c.cf, cs: append(c.cs, "SKIPME", YesNo)}
+	return SClientKillSkipme{cs: append(c.cs, "SKIPME", YesNo), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKill) Build() SCompleted {
@@ -13580,11 +13580,11 @@ func (b *SBuilder) ClientKill() (c SClientKill) {
 type SClientKillAddr SCompleted
 
 func (c SClientKillAddr) Laddr(IpPort string) SClientKillLaddr {
-	return SClientKillLaddr{cf: c.cf, cs: append(c.cs, "LADDR", IpPort)}
+	return SClientKillLaddr{cs: append(c.cs, "LADDR", IpPort), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKillAddr) Skipme(YesNo string) SClientKillSkipme {
-	return SClientKillSkipme{cf: c.cf, cs: append(c.cs, "SKIPME", YesNo)}
+	return SClientKillSkipme{cs: append(c.cs, "SKIPME", YesNo), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKillAddr) Build() SCompleted {
@@ -13594,35 +13594,35 @@ func (c SClientKillAddr) Build() SCompleted {
 type SClientKillId SCompleted
 
 func (c SClientKillId) Normal() SClientKillNormal {
-	return SClientKillNormal{cf: c.cf, cs: append(c.cs, "normal")}
+	return SClientKillNormal{cs: append(c.cs, "normal"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKillId) Master() SClientKillMaster {
-	return SClientKillMaster{cf: c.cf, cs: append(c.cs, "master")}
+	return SClientKillMaster{cs: append(c.cs, "master"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKillId) Slave() SClientKillSlave {
-	return SClientKillSlave{cf: c.cf, cs: append(c.cs, "slave")}
+	return SClientKillSlave{cs: append(c.cs, "slave"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKillId) Pubsub() SClientKillPubsub {
-	return SClientKillPubsub{cf: c.cf, cs: append(c.cs, "pubsub")}
+	return SClientKillPubsub{cs: append(c.cs, "pubsub"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKillId) User(Username string) SClientKillUser {
-	return SClientKillUser{cf: c.cf, cs: append(c.cs, "USER", Username)}
+	return SClientKillUser{cs: append(c.cs, "USER", Username), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKillId) Addr(IpPort string) SClientKillAddr {
-	return SClientKillAddr{cf: c.cf, cs: append(c.cs, "ADDR", IpPort)}
+	return SClientKillAddr{cs: append(c.cs, "ADDR", IpPort), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKillId) Laddr(IpPort string) SClientKillLaddr {
-	return SClientKillLaddr{cf: c.cf, cs: append(c.cs, "LADDR", IpPort)}
+	return SClientKillLaddr{cs: append(c.cs, "LADDR", IpPort), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKillId) Skipme(YesNo string) SClientKillSkipme {
-	return SClientKillSkipme{cf: c.cf, cs: append(c.cs, "SKIPME", YesNo)}
+	return SClientKillSkipme{cs: append(c.cs, "SKIPME", YesNo), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKillId) Build() SCompleted {
@@ -13632,39 +13632,39 @@ func (c SClientKillId) Build() SCompleted {
 type SClientKillIpPort SCompleted
 
 func (c SClientKillIpPort) Id(ClientId int64) SClientKillId {
-	return SClientKillId{cf: c.cf, cs: append(c.cs, "ID", strconv.FormatInt(ClientId, 10))}
+	return SClientKillId{cs: append(c.cs, "ID", strconv.FormatInt(ClientId, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKillIpPort) Normal() SClientKillNormal {
-	return SClientKillNormal{cf: c.cf, cs: append(c.cs, "normal")}
+	return SClientKillNormal{cs: append(c.cs, "normal"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKillIpPort) Master() SClientKillMaster {
-	return SClientKillMaster{cf: c.cf, cs: append(c.cs, "master")}
+	return SClientKillMaster{cs: append(c.cs, "master"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKillIpPort) Slave() SClientKillSlave {
-	return SClientKillSlave{cf: c.cf, cs: append(c.cs, "slave")}
+	return SClientKillSlave{cs: append(c.cs, "slave"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKillIpPort) Pubsub() SClientKillPubsub {
-	return SClientKillPubsub{cf: c.cf, cs: append(c.cs, "pubsub")}
+	return SClientKillPubsub{cs: append(c.cs, "pubsub"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKillIpPort) User(Username string) SClientKillUser {
-	return SClientKillUser{cf: c.cf, cs: append(c.cs, "USER", Username)}
+	return SClientKillUser{cs: append(c.cs, "USER", Username), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKillIpPort) Addr(IpPort string) SClientKillAddr {
-	return SClientKillAddr{cf: c.cf, cs: append(c.cs, "ADDR", IpPort)}
+	return SClientKillAddr{cs: append(c.cs, "ADDR", IpPort), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKillIpPort) Laddr(IpPort string) SClientKillLaddr {
-	return SClientKillLaddr{cf: c.cf, cs: append(c.cs, "LADDR", IpPort)}
+	return SClientKillLaddr{cs: append(c.cs, "LADDR", IpPort), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKillIpPort) Skipme(YesNo string) SClientKillSkipme {
-	return SClientKillSkipme{cf: c.cf, cs: append(c.cs, "SKIPME", YesNo)}
+	return SClientKillSkipme{cs: append(c.cs, "SKIPME", YesNo), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKillIpPort) Build() SCompleted {
@@ -13674,7 +13674,7 @@ func (c SClientKillIpPort) Build() SCompleted {
 type SClientKillLaddr SCompleted
 
 func (c SClientKillLaddr) Skipme(YesNo string) SClientKillSkipme {
-	return SClientKillSkipme{cf: c.cf, cs: append(c.cs, "SKIPME", YesNo)}
+	return SClientKillSkipme{cs: append(c.cs, "SKIPME", YesNo), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKillLaddr) Build() SCompleted {
@@ -13684,19 +13684,19 @@ func (c SClientKillLaddr) Build() SCompleted {
 type SClientKillMaster SCompleted
 
 func (c SClientKillMaster) User(Username string) SClientKillUser {
-	return SClientKillUser{cf: c.cf, cs: append(c.cs, "USER", Username)}
+	return SClientKillUser{cs: append(c.cs, "USER", Username), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKillMaster) Addr(IpPort string) SClientKillAddr {
-	return SClientKillAddr{cf: c.cf, cs: append(c.cs, "ADDR", IpPort)}
+	return SClientKillAddr{cs: append(c.cs, "ADDR", IpPort), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKillMaster) Laddr(IpPort string) SClientKillLaddr {
-	return SClientKillLaddr{cf: c.cf, cs: append(c.cs, "LADDR", IpPort)}
+	return SClientKillLaddr{cs: append(c.cs, "LADDR", IpPort), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKillMaster) Skipme(YesNo string) SClientKillSkipme {
-	return SClientKillSkipme{cf: c.cf, cs: append(c.cs, "SKIPME", YesNo)}
+	return SClientKillSkipme{cs: append(c.cs, "SKIPME", YesNo), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKillMaster) Build() SCompleted {
@@ -13706,19 +13706,19 @@ func (c SClientKillMaster) Build() SCompleted {
 type SClientKillNormal SCompleted
 
 func (c SClientKillNormal) User(Username string) SClientKillUser {
-	return SClientKillUser{cf: c.cf, cs: append(c.cs, "USER", Username)}
+	return SClientKillUser{cs: append(c.cs, "USER", Username), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKillNormal) Addr(IpPort string) SClientKillAddr {
-	return SClientKillAddr{cf: c.cf, cs: append(c.cs, "ADDR", IpPort)}
+	return SClientKillAddr{cs: append(c.cs, "ADDR", IpPort), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKillNormal) Laddr(IpPort string) SClientKillLaddr {
-	return SClientKillLaddr{cf: c.cf, cs: append(c.cs, "LADDR", IpPort)}
+	return SClientKillLaddr{cs: append(c.cs, "LADDR", IpPort), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKillNormal) Skipme(YesNo string) SClientKillSkipme {
-	return SClientKillSkipme{cf: c.cf, cs: append(c.cs, "SKIPME", YesNo)}
+	return SClientKillSkipme{cs: append(c.cs, "SKIPME", YesNo), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKillNormal) Build() SCompleted {
@@ -13728,19 +13728,19 @@ func (c SClientKillNormal) Build() SCompleted {
 type SClientKillPubsub SCompleted
 
 func (c SClientKillPubsub) User(Username string) SClientKillUser {
-	return SClientKillUser{cf: c.cf, cs: append(c.cs, "USER", Username)}
+	return SClientKillUser{cs: append(c.cs, "USER", Username), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKillPubsub) Addr(IpPort string) SClientKillAddr {
-	return SClientKillAddr{cf: c.cf, cs: append(c.cs, "ADDR", IpPort)}
+	return SClientKillAddr{cs: append(c.cs, "ADDR", IpPort), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKillPubsub) Laddr(IpPort string) SClientKillLaddr {
-	return SClientKillLaddr{cf: c.cf, cs: append(c.cs, "LADDR", IpPort)}
+	return SClientKillLaddr{cs: append(c.cs, "LADDR", IpPort), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKillPubsub) Skipme(YesNo string) SClientKillSkipme {
-	return SClientKillSkipme{cf: c.cf, cs: append(c.cs, "SKIPME", YesNo)}
+	return SClientKillSkipme{cs: append(c.cs, "SKIPME", YesNo), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKillPubsub) Build() SCompleted {
@@ -13756,19 +13756,19 @@ func (c SClientKillSkipme) Build() SCompleted {
 type SClientKillSlave SCompleted
 
 func (c SClientKillSlave) User(Username string) SClientKillUser {
-	return SClientKillUser{cf: c.cf, cs: append(c.cs, "USER", Username)}
+	return SClientKillUser{cs: append(c.cs, "USER", Username), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKillSlave) Addr(IpPort string) SClientKillAddr {
-	return SClientKillAddr{cf: c.cf, cs: append(c.cs, "ADDR", IpPort)}
+	return SClientKillAddr{cs: append(c.cs, "ADDR", IpPort), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKillSlave) Laddr(IpPort string) SClientKillLaddr {
-	return SClientKillLaddr{cf: c.cf, cs: append(c.cs, "LADDR", IpPort)}
+	return SClientKillLaddr{cs: append(c.cs, "LADDR", IpPort), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKillSlave) Skipme(YesNo string) SClientKillSkipme {
-	return SClientKillSkipme{cf: c.cf, cs: append(c.cs, "SKIPME", YesNo)}
+	return SClientKillSkipme{cs: append(c.cs, "SKIPME", YesNo), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKillSlave) Build() SCompleted {
@@ -13778,15 +13778,15 @@ func (c SClientKillSlave) Build() SCompleted {
 type SClientKillUser SCompleted
 
 func (c SClientKillUser) Addr(IpPort string) SClientKillAddr {
-	return SClientKillAddr{cf: c.cf, cs: append(c.cs, "ADDR", IpPort)}
+	return SClientKillAddr{cs: append(c.cs, "ADDR", IpPort), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKillUser) Laddr(IpPort string) SClientKillLaddr {
-	return SClientKillLaddr{cf: c.cf, cs: append(c.cs, "LADDR", IpPort)}
+	return SClientKillLaddr{cs: append(c.cs, "LADDR", IpPort), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKillUser) Skipme(YesNo string) SClientKillSkipme {
-	return SClientKillSkipme{cf: c.cf, cs: append(c.cs, "SKIPME", YesNo)}
+	return SClientKillSkipme{cs: append(c.cs, "SKIPME", YesNo), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientKillUser) Build() SCompleted {
@@ -13796,23 +13796,23 @@ func (c SClientKillUser) Build() SCompleted {
 type SClientList SCompleted
 
 func (c SClientList) Normal() SClientListNormal {
-	return SClientListNormal{cf: c.cf, cs: append(c.cs, "normal")}
+	return SClientListNormal{cs: append(c.cs, "normal"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientList) Master() SClientListMaster {
-	return SClientListMaster{cf: c.cf, cs: append(c.cs, "master")}
+	return SClientListMaster{cs: append(c.cs, "master"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientList) Replica() SClientListReplica {
-	return SClientListReplica{cf: c.cf, cs: append(c.cs, "replica")}
+	return SClientListReplica{cs: append(c.cs, "replica"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientList) Pubsub() SClientListPubsub {
-	return SClientListPubsub{cf: c.cf, cs: append(c.cs, "pubsub")}
+	return SClientListPubsub{cs: append(c.cs, "pubsub"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientList) Id() SClientListIdId {
-	return SClientListIdId{cf: c.cf, cs: append(c.cs, "ID")}
+	return SClientListIdId{cs: append(c.cs, "ID"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientList) Build() SCompleted {
@@ -13831,7 +13831,7 @@ func (c SClientListIdClientId) ClientId(ClientId ...int64) SClientListIdClientId
 	for _, n := range ClientId {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return SClientListIdClientId{cf: c.cf, cs: c.cs}
+	return SClientListIdClientId{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 func (c SClientListIdClientId) Build() SCompleted {
@@ -13844,13 +13844,13 @@ func (c SClientListIdId) ClientId(ClientId ...int64) SClientListIdClientId {
 	for _, n := range ClientId {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return SClientListIdClientId{cf: c.cf, cs: c.cs}
+	return SClientListIdClientId{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 type SClientListMaster SCompleted
 
 func (c SClientListMaster) Id() SClientListIdId {
-	return SClientListIdId{cf: c.cf, cs: append(c.cs, "ID")}
+	return SClientListIdId{cs: append(c.cs, "ID"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientListMaster) Build() SCompleted {
@@ -13860,7 +13860,7 @@ func (c SClientListMaster) Build() SCompleted {
 type SClientListNormal SCompleted
 
 func (c SClientListNormal) Id() SClientListIdId {
-	return SClientListIdId{cf: c.cf, cs: append(c.cs, "ID")}
+	return SClientListIdId{cs: append(c.cs, "ID"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientListNormal) Build() SCompleted {
@@ -13870,7 +13870,7 @@ func (c SClientListNormal) Build() SCompleted {
 type SClientListPubsub SCompleted
 
 func (c SClientListPubsub) Id() SClientListIdId {
-	return SClientListIdId{cf: c.cf, cs: append(c.cs, "ID")}
+	return SClientListIdId{cs: append(c.cs, "ID"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientListPubsub) Build() SCompleted {
@@ -13880,7 +13880,7 @@ func (c SClientListPubsub) Build() SCompleted {
 type SClientListReplica SCompleted
 
 func (c SClientListReplica) Id() SClientListIdId {
-	return SClientListIdId{cf: c.cf, cs: append(c.cs, "ID")}
+	return SClientListIdId{cs: append(c.cs, "ID"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientListReplica) Build() SCompleted {
@@ -13890,11 +13890,11 @@ func (c SClientListReplica) Build() SCompleted {
 type SClientNoEvict SCompleted
 
 func (c SClientNoEvict) On() SClientNoEvictEnabledOn {
-	return SClientNoEvictEnabledOn{cf: c.cf, cs: append(c.cs, "ON")}
+	return SClientNoEvictEnabledOn{cs: append(c.cs, "ON"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientNoEvict) Off() SClientNoEvictEnabledOff {
-	return SClientNoEvictEnabledOff{cf: c.cf, cs: append(c.cs, "OFF")}
+	return SClientNoEvictEnabledOff{cs: append(c.cs, "OFF"), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) ClientNoEvict() (c SClientNoEvict) {
@@ -13918,7 +13918,7 @@ func (c SClientNoEvictEnabledOn) Build() SCompleted {
 type SClientPause SCompleted
 
 func (c SClientPause) Timeout(Timeout int64) SClientPauseTimeout {
-	return SClientPauseTimeout{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Timeout, 10))}
+	return SClientPauseTimeout{cs: append(c.cs, strconv.FormatInt(Timeout, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) ClientPause() (c SClientPause) {
@@ -13943,11 +13943,11 @@ func (c SClientPauseModeWrite) Build() SCompleted {
 type SClientPauseTimeout SCompleted
 
 func (c SClientPauseTimeout) Write() SClientPauseModeWrite {
-	return SClientPauseModeWrite{cf: c.cf, cs: append(c.cs, "WRITE")}
+	return SClientPauseModeWrite{cs: append(c.cs, "WRITE"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientPauseTimeout) All() SClientPauseModeAll {
-	return SClientPauseModeAll{cf: c.cf, cs: append(c.cs, "ALL")}
+	return SClientPauseModeAll{cs: append(c.cs, "ALL"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientPauseTimeout) Build() SCompleted {
@@ -13957,15 +13957,15 @@ func (c SClientPauseTimeout) Build() SCompleted {
 type SClientReply SCompleted
 
 func (c SClientReply) On() SClientReplyReplyModeOn {
-	return SClientReplyReplyModeOn{cf: c.cf, cs: append(c.cs, "ON")}
+	return SClientReplyReplyModeOn{cs: append(c.cs, "ON"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientReply) Off() SClientReplyReplyModeOff {
-	return SClientReplyReplyModeOff{cf: c.cf, cs: append(c.cs, "OFF")}
+	return SClientReplyReplyModeOff{cs: append(c.cs, "OFF"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientReply) Skip() SClientReplyReplyModeSkip {
-	return SClientReplyReplyModeSkip{cf: c.cf, cs: append(c.cs, "SKIP")}
+	return SClientReplyReplyModeSkip{cs: append(c.cs, "SKIP"), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) ClientReply() (c SClientReply) {
@@ -13995,7 +13995,7 @@ func (c SClientReplyReplyModeSkip) Build() SCompleted {
 type SClientSetname SCompleted
 
 func (c SClientSetname) ConnectionName(ConnectionName string) SClientSetnameConnectionName {
-	return SClientSetnameConnectionName{cf: c.cf, cs: append(c.cs, ConnectionName)}
+	return SClientSetnameConnectionName{cs: append(c.cs, ConnectionName), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) ClientSetname() (c SClientSetname) {
@@ -14013,11 +14013,11 @@ func (c SClientSetnameConnectionName) Build() SCompleted {
 type SClientTracking SCompleted
 
 func (c SClientTracking) On() SClientTrackingStatusOn {
-	return SClientTrackingStatusOn{cf: c.cf, cs: append(c.cs, "ON")}
+	return SClientTrackingStatusOn{cs: append(c.cs, "ON"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientTracking) Off() SClientTrackingStatusOff {
-	return SClientTrackingStatusOff{cf: c.cf, cs: append(c.cs, "OFF")}
+	return SClientTrackingStatusOff{cs: append(c.cs, "OFF"), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) ClientTracking() (c SClientTracking) {
@@ -14029,15 +14029,15 @@ func (b *SBuilder) ClientTracking() (c SClientTracking) {
 type SClientTrackingBcastBcast SCompleted
 
 func (c SClientTrackingBcastBcast) Optin() SClientTrackingOptinOptin {
-	return SClientTrackingOptinOptin{cf: c.cf, cs: append(c.cs, "OPTIN")}
+	return SClientTrackingOptinOptin{cs: append(c.cs, "OPTIN"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientTrackingBcastBcast) Optout() SClientTrackingOptoutOptout {
-	return SClientTrackingOptoutOptout{cf: c.cf, cs: append(c.cs, "OPTOUT")}
+	return SClientTrackingOptoutOptout{cs: append(c.cs, "OPTOUT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientTrackingBcastBcast) Noloop() SClientTrackingNoloopNoloop {
-	return SClientTrackingNoloopNoloop{cf: c.cf, cs: append(c.cs, "NOLOOP")}
+	return SClientTrackingNoloopNoloop{cs: append(c.cs, "NOLOOP"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientTrackingBcastBcast) Build() SCompleted {
@@ -14053,11 +14053,11 @@ func (c SClientTrackingNoloopNoloop) Build() SCompleted {
 type SClientTrackingOptinOptin SCompleted
 
 func (c SClientTrackingOptinOptin) Optout() SClientTrackingOptoutOptout {
-	return SClientTrackingOptoutOptout{cf: c.cf, cs: append(c.cs, "OPTOUT")}
+	return SClientTrackingOptoutOptout{cs: append(c.cs, "OPTOUT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientTrackingOptinOptin) Noloop() SClientTrackingNoloopNoloop {
-	return SClientTrackingNoloopNoloop{cf: c.cf, cs: append(c.cs, "NOLOOP")}
+	return SClientTrackingNoloopNoloop{cs: append(c.cs, "NOLOOP"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientTrackingOptinOptin) Build() SCompleted {
@@ -14067,7 +14067,7 @@ func (c SClientTrackingOptinOptin) Build() SCompleted {
 type SClientTrackingOptoutOptout SCompleted
 
 func (c SClientTrackingOptoutOptout) Noloop() SClientTrackingNoloopNoloop {
-	return SClientTrackingNoloopNoloop{cf: c.cf, cs: append(c.cs, "NOLOOP")}
+	return SClientTrackingNoloopNoloop{cs: append(c.cs, "NOLOOP"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientTrackingOptoutOptout) Build() SCompleted {
@@ -14077,23 +14077,23 @@ func (c SClientTrackingOptoutOptout) Build() SCompleted {
 type SClientTrackingPrefix SCompleted
 
 func (c SClientTrackingPrefix) Bcast() SClientTrackingBcastBcast {
-	return SClientTrackingBcastBcast{cf: c.cf, cs: append(c.cs, "BCAST")}
+	return SClientTrackingBcastBcast{cs: append(c.cs, "BCAST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientTrackingPrefix) Optin() SClientTrackingOptinOptin {
-	return SClientTrackingOptinOptin{cf: c.cf, cs: append(c.cs, "OPTIN")}
+	return SClientTrackingOptinOptin{cs: append(c.cs, "OPTIN"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientTrackingPrefix) Optout() SClientTrackingOptoutOptout {
-	return SClientTrackingOptoutOptout{cf: c.cf, cs: append(c.cs, "OPTOUT")}
+	return SClientTrackingOptoutOptout{cs: append(c.cs, "OPTOUT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientTrackingPrefix) Noloop() SClientTrackingNoloopNoloop {
-	return SClientTrackingNoloopNoloop{cf: c.cf, cs: append(c.cs, "NOLOOP")}
+	return SClientTrackingNoloopNoloop{cs: append(c.cs, "NOLOOP"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientTrackingPrefix) Prefix(Prefix ...string) SClientTrackingPrefix {
-	return SClientTrackingPrefix{cf: c.cf, cs: append(c.cs, Prefix...)}
+	return SClientTrackingPrefix{cs: append(c.cs, Prefix...), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientTrackingPrefix) Build() SCompleted {
@@ -14104,23 +14104,23 @@ type SClientTrackingRedirect SCompleted
 
 func (c SClientTrackingRedirect) Prefix(Prefix ...string) SClientTrackingPrefix {
 	c.cs = append(c.cs, "PREFIX")
-	return SClientTrackingPrefix{cf: c.cf, cs: append(c.cs, Prefix...)}
+	return SClientTrackingPrefix{cs: append(c.cs, Prefix...), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientTrackingRedirect) Bcast() SClientTrackingBcastBcast {
-	return SClientTrackingBcastBcast{cf: c.cf, cs: append(c.cs, "BCAST")}
+	return SClientTrackingBcastBcast{cs: append(c.cs, "BCAST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientTrackingRedirect) Optin() SClientTrackingOptinOptin {
-	return SClientTrackingOptinOptin{cf: c.cf, cs: append(c.cs, "OPTIN")}
+	return SClientTrackingOptinOptin{cs: append(c.cs, "OPTIN"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientTrackingRedirect) Optout() SClientTrackingOptoutOptout {
-	return SClientTrackingOptoutOptout{cf: c.cf, cs: append(c.cs, "OPTOUT")}
+	return SClientTrackingOptoutOptout{cs: append(c.cs, "OPTOUT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientTrackingRedirect) Noloop() SClientTrackingNoloopNoloop {
-	return SClientTrackingNoloopNoloop{cf: c.cf, cs: append(c.cs, "NOLOOP")}
+	return SClientTrackingNoloopNoloop{cs: append(c.cs, "NOLOOP"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientTrackingRedirect) Build() SCompleted {
@@ -14130,28 +14130,28 @@ func (c SClientTrackingRedirect) Build() SCompleted {
 type SClientTrackingStatusOff SCompleted
 
 func (c SClientTrackingStatusOff) Redirect(ClientId int64) SClientTrackingRedirect {
-	return SClientTrackingRedirect{cf: c.cf, cs: append(c.cs, "REDIRECT", strconv.FormatInt(ClientId, 10))}
+	return SClientTrackingRedirect{cs: append(c.cs, "REDIRECT", strconv.FormatInt(ClientId, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientTrackingStatusOff) Prefix(Prefix ...string) SClientTrackingPrefix {
 	c.cs = append(c.cs, "PREFIX")
-	return SClientTrackingPrefix{cf: c.cf, cs: append(c.cs, Prefix...)}
+	return SClientTrackingPrefix{cs: append(c.cs, Prefix...), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientTrackingStatusOff) Bcast() SClientTrackingBcastBcast {
-	return SClientTrackingBcastBcast{cf: c.cf, cs: append(c.cs, "BCAST")}
+	return SClientTrackingBcastBcast{cs: append(c.cs, "BCAST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientTrackingStatusOff) Optin() SClientTrackingOptinOptin {
-	return SClientTrackingOptinOptin{cf: c.cf, cs: append(c.cs, "OPTIN")}
+	return SClientTrackingOptinOptin{cs: append(c.cs, "OPTIN"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientTrackingStatusOff) Optout() SClientTrackingOptoutOptout {
-	return SClientTrackingOptoutOptout{cf: c.cf, cs: append(c.cs, "OPTOUT")}
+	return SClientTrackingOptoutOptout{cs: append(c.cs, "OPTOUT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientTrackingStatusOff) Noloop() SClientTrackingNoloopNoloop {
-	return SClientTrackingNoloopNoloop{cf: c.cf, cs: append(c.cs, "NOLOOP")}
+	return SClientTrackingNoloopNoloop{cs: append(c.cs, "NOLOOP"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientTrackingStatusOff) Build() SCompleted {
@@ -14161,28 +14161,28 @@ func (c SClientTrackingStatusOff) Build() SCompleted {
 type SClientTrackingStatusOn SCompleted
 
 func (c SClientTrackingStatusOn) Redirect(ClientId int64) SClientTrackingRedirect {
-	return SClientTrackingRedirect{cf: c.cf, cs: append(c.cs, "REDIRECT", strconv.FormatInt(ClientId, 10))}
+	return SClientTrackingRedirect{cs: append(c.cs, "REDIRECT", strconv.FormatInt(ClientId, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientTrackingStatusOn) Prefix(Prefix ...string) SClientTrackingPrefix {
 	c.cs = append(c.cs, "PREFIX")
-	return SClientTrackingPrefix{cf: c.cf, cs: append(c.cs, Prefix...)}
+	return SClientTrackingPrefix{cs: append(c.cs, Prefix...), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientTrackingStatusOn) Bcast() SClientTrackingBcastBcast {
-	return SClientTrackingBcastBcast{cf: c.cf, cs: append(c.cs, "BCAST")}
+	return SClientTrackingBcastBcast{cs: append(c.cs, "BCAST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientTrackingStatusOn) Optin() SClientTrackingOptinOptin {
-	return SClientTrackingOptinOptin{cf: c.cf, cs: append(c.cs, "OPTIN")}
+	return SClientTrackingOptinOptin{cs: append(c.cs, "OPTIN"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientTrackingStatusOn) Optout() SClientTrackingOptoutOptout {
-	return SClientTrackingOptoutOptout{cf: c.cf, cs: append(c.cs, "OPTOUT")}
+	return SClientTrackingOptoutOptout{cs: append(c.cs, "OPTOUT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientTrackingStatusOn) Noloop() SClientTrackingNoloopNoloop {
-	return SClientTrackingNoloopNoloop{cf: c.cf, cs: append(c.cs, "NOLOOP")}
+	return SClientTrackingNoloopNoloop{cs: append(c.cs, "NOLOOP"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientTrackingStatusOn) Build() SCompleted {
@@ -14204,7 +14204,7 @@ func (b *SBuilder) ClientTrackinginfo() (c SClientTrackinginfo) {
 type SClientUnblock SCompleted
 
 func (c SClientUnblock) ClientId(ClientId int64) SClientUnblockClientId {
-	return SClientUnblockClientId{cf: c.cf, cs: append(c.cs, strconv.FormatInt(ClientId, 10))}
+	return SClientUnblockClientId{cs: append(c.cs, strconv.FormatInt(ClientId, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) ClientUnblock() (c SClientUnblock) {
@@ -14216,11 +14216,11 @@ func (b *SBuilder) ClientUnblock() (c SClientUnblock) {
 type SClientUnblockClientId SCompleted
 
 func (c SClientUnblockClientId) Timeout() SClientUnblockUnblockTypeTimeout {
-	return SClientUnblockUnblockTypeTimeout{cf: c.cf, cs: append(c.cs, "TIMEOUT")}
+	return SClientUnblockUnblockTypeTimeout{cs: append(c.cs, "TIMEOUT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientUnblockClientId) Error() SClientUnblockUnblockTypeError {
-	return SClientUnblockUnblockTypeError{cf: c.cf, cs: append(c.cs, "ERROR")}
+	return SClientUnblockUnblockTypeError{cs: append(c.cs, "ERROR"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClientUnblockClientId) Build() SCompleted {
@@ -14257,7 +14257,7 @@ func (c SClusterAddslots) Slot(Slot ...int64) SClusterAddslotsSlot {
 	for _, n := range Slot {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return SClusterAddslotsSlot{cf: c.cf, cs: c.cs}
+	return SClusterAddslotsSlot{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) ClusterAddslots() (c SClusterAddslots) {
@@ -14272,7 +14272,7 @@ func (c SClusterAddslotsSlot) Slot(Slot ...int64) SClusterAddslotsSlot {
 	for _, n := range Slot {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return SClusterAddslotsSlot{cf: c.cf, cs: c.cs}
+	return SClusterAddslotsSlot{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 func (c SClusterAddslotsSlot) Build() SCompleted {
@@ -14294,7 +14294,7 @@ func (b *SBuilder) ClusterBumpepoch() (c SClusterBumpepoch) {
 type SClusterCountFailureReports SCompleted
 
 func (c SClusterCountFailureReports) NodeId(NodeId string) SClusterCountFailureReportsNodeId {
-	return SClusterCountFailureReportsNodeId{cf: c.cf, cs: append(c.cs, NodeId)}
+	return SClusterCountFailureReportsNodeId{cs: append(c.cs, NodeId), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) ClusterCountFailureReports() (c SClusterCountFailureReports) {
@@ -14312,7 +14312,7 @@ func (c SClusterCountFailureReportsNodeId) Build() SCompleted {
 type SClusterCountkeysinslot SCompleted
 
 func (c SClusterCountkeysinslot) Slot(Slot int64) SClusterCountkeysinslotSlot {
-	return SClusterCountkeysinslotSlot{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Slot, 10))}
+	return SClusterCountkeysinslotSlot{cs: append(c.cs, strconv.FormatInt(Slot, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) ClusterCountkeysinslot() (c SClusterCountkeysinslot) {
@@ -14333,7 +14333,7 @@ func (c SClusterDelslots) Slot(Slot ...int64) SClusterDelslotsSlot {
 	for _, n := range Slot {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return SClusterDelslotsSlot{cf: c.cf, cs: c.cs}
+	return SClusterDelslotsSlot{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) ClusterDelslots() (c SClusterDelslots) {
@@ -14348,7 +14348,7 @@ func (c SClusterDelslotsSlot) Slot(Slot ...int64) SClusterDelslotsSlot {
 	for _, n := range Slot {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return SClusterDelslotsSlot{cf: c.cf, cs: c.cs}
+	return SClusterDelslotsSlot{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 func (c SClusterDelslotsSlot) Build() SCompleted {
@@ -14358,11 +14358,11 @@ func (c SClusterDelslotsSlot) Build() SCompleted {
 type SClusterFailover SCompleted
 
 func (c SClusterFailover) Force() SClusterFailoverOptionsForce {
-	return SClusterFailoverOptionsForce{cf: c.cf, cs: append(c.cs, "FORCE")}
+	return SClusterFailoverOptionsForce{cs: append(c.cs, "FORCE"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClusterFailover) Takeover() SClusterFailoverOptionsTakeover {
-	return SClusterFailoverOptionsTakeover{cf: c.cf, cs: append(c.cs, "TAKEOVER")}
+	return SClusterFailoverOptionsTakeover{cs: append(c.cs, "TAKEOVER"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClusterFailover) Build() SCompleted {
@@ -14402,7 +14402,7 @@ func (b *SBuilder) ClusterFlushslots() (c SClusterFlushslots) {
 type SClusterForget SCompleted
 
 func (c SClusterForget) NodeId(NodeId string) SClusterForgetNodeId {
-	return SClusterForgetNodeId{cf: c.cf, cs: append(c.cs, NodeId)}
+	return SClusterForgetNodeId{cs: append(c.cs, NodeId), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) ClusterForget() (c SClusterForget) {
@@ -14420,7 +14420,7 @@ func (c SClusterForgetNodeId) Build() SCompleted {
 type SClusterGetkeysinslot SCompleted
 
 func (c SClusterGetkeysinslot) Slot(Slot int64) SClusterGetkeysinslotSlot {
-	return SClusterGetkeysinslotSlot{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Slot, 10))}
+	return SClusterGetkeysinslotSlot{cs: append(c.cs, strconv.FormatInt(Slot, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) ClusterGetkeysinslot() (c SClusterGetkeysinslot) {
@@ -14438,7 +14438,7 @@ func (c SClusterGetkeysinslotCount) Build() SCompleted {
 type SClusterGetkeysinslotSlot SCompleted
 
 func (c SClusterGetkeysinslotSlot) Count(Count int64) SClusterGetkeysinslotCount {
-	return SClusterGetkeysinslotCount{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Count, 10))}
+	return SClusterGetkeysinslotCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SClusterInfo SCompleted
@@ -14456,7 +14456,7 @@ func (b *SBuilder) ClusterInfo() (c SClusterInfo) {
 type SClusterKeyslot SCompleted
 
 func (c SClusterKeyslot) Key(Key string) SClusterKeyslotKey {
-	return SClusterKeyslotKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SClusterKeyslotKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) ClusterKeyslot() (c SClusterKeyslot) {
@@ -14474,7 +14474,7 @@ func (c SClusterKeyslotKey) Build() SCompleted {
 type SClusterMeet SCompleted
 
 func (c SClusterMeet) Ip(Ip string) SClusterMeetIp {
-	return SClusterMeetIp{cf: c.cf, cs: append(c.cs, Ip)}
+	return SClusterMeetIp{cs: append(c.cs, Ip), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) ClusterMeet() (c SClusterMeet) {
@@ -14486,7 +14486,7 @@ func (b *SBuilder) ClusterMeet() (c SClusterMeet) {
 type SClusterMeetIp SCompleted
 
 func (c SClusterMeetIp) Port(Port int64) SClusterMeetPort {
-	return SClusterMeetPort{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Port, 10))}
+	return SClusterMeetPort{cs: append(c.cs, strconv.FormatInt(Port, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SClusterMeetPort SCompleted
@@ -14522,7 +14522,7 @@ func (b *SBuilder) ClusterNodes() (c SClusterNodes) {
 type SClusterReplicas SCompleted
 
 func (c SClusterReplicas) NodeId(NodeId string) SClusterReplicasNodeId {
-	return SClusterReplicasNodeId{cf: c.cf, cs: append(c.cs, NodeId)}
+	return SClusterReplicasNodeId{cs: append(c.cs, NodeId), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) ClusterReplicas() (c SClusterReplicas) {
@@ -14540,7 +14540,7 @@ func (c SClusterReplicasNodeId) Build() SCompleted {
 type SClusterReplicate SCompleted
 
 func (c SClusterReplicate) NodeId(NodeId string) SClusterReplicateNodeId {
-	return SClusterReplicateNodeId{cf: c.cf, cs: append(c.cs, NodeId)}
+	return SClusterReplicateNodeId{cs: append(c.cs, NodeId), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) ClusterReplicate() (c SClusterReplicate) {
@@ -14558,11 +14558,11 @@ func (c SClusterReplicateNodeId) Build() SCompleted {
 type SClusterReset SCompleted
 
 func (c SClusterReset) Hard() SClusterResetResetTypeHard {
-	return SClusterResetResetTypeHard{cf: c.cf, cs: append(c.cs, "HARD")}
+	return SClusterResetResetTypeHard{cs: append(c.cs, "HARD"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClusterReset) Soft() SClusterResetResetTypeSoft {
-	return SClusterResetResetTypeSoft{cf: c.cf, cs: append(c.cs, "SOFT")}
+	return SClusterResetResetTypeSoft{cs: append(c.cs, "SOFT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClusterReset) Build() SCompleted {
@@ -14602,7 +14602,7 @@ func (b *SBuilder) ClusterSaveconfig() (c SClusterSaveconfig) {
 type SClusterSetConfigEpoch SCompleted
 
 func (c SClusterSetConfigEpoch) ConfigEpoch(ConfigEpoch int64) SClusterSetConfigEpochConfigEpoch {
-	return SClusterSetConfigEpochConfigEpoch{cf: c.cf, cs: append(c.cs, strconv.FormatInt(ConfigEpoch, 10))}
+	return SClusterSetConfigEpochConfigEpoch{cs: append(c.cs, strconv.FormatInt(ConfigEpoch, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) ClusterSetConfigEpoch() (c SClusterSetConfigEpoch) {
@@ -14620,7 +14620,7 @@ func (c SClusterSetConfigEpochConfigEpoch) Build() SCompleted {
 type SClusterSetslot SCompleted
 
 func (c SClusterSetslot) Slot(Slot int64) SClusterSetslotSlot {
-	return SClusterSetslotSlot{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Slot, 10))}
+	return SClusterSetslotSlot{cs: append(c.cs, strconv.FormatInt(Slot, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) ClusterSetslot() (c SClusterSetslot) {
@@ -14638,25 +14638,25 @@ func (c SClusterSetslotNodeId) Build() SCompleted {
 type SClusterSetslotSlot SCompleted
 
 func (c SClusterSetslotSlot) Importing() SClusterSetslotSubcommandImporting {
-	return SClusterSetslotSubcommandImporting{cf: c.cf, cs: append(c.cs, "IMPORTING")}
+	return SClusterSetslotSubcommandImporting{cs: append(c.cs, "IMPORTING"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClusterSetslotSlot) Migrating() SClusterSetslotSubcommandMigrating {
-	return SClusterSetslotSubcommandMigrating{cf: c.cf, cs: append(c.cs, "MIGRATING")}
+	return SClusterSetslotSubcommandMigrating{cs: append(c.cs, "MIGRATING"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClusterSetslotSlot) Stable() SClusterSetslotSubcommandStable {
-	return SClusterSetslotSubcommandStable{cf: c.cf, cs: append(c.cs, "STABLE")}
+	return SClusterSetslotSubcommandStable{cs: append(c.cs, "STABLE"), cf: c.cf, ks: c.ks}
 }
 
 func (c SClusterSetslotSlot) Node() SClusterSetslotSubcommandNode {
-	return SClusterSetslotSubcommandNode{cf: c.cf, cs: append(c.cs, "NODE")}
+	return SClusterSetslotSubcommandNode{cs: append(c.cs, "NODE"), cf: c.cf, ks: c.ks}
 }
 
 type SClusterSetslotSubcommandImporting SCompleted
 
 func (c SClusterSetslotSubcommandImporting) NodeId(NodeId string) SClusterSetslotNodeId {
-	return SClusterSetslotNodeId{cf: c.cf, cs: append(c.cs, NodeId)}
+	return SClusterSetslotNodeId{cs: append(c.cs, NodeId), cf: c.cf, ks: c.ks}
 }
 
 func (c SClusterSetslotSubcommandImporting) Build() SCompleted {
@@ -14666,7 +14666,7 @@ func (c SClusterSetslotSubcommandImporting) Build() SCompleted {
 type SClusterSetslotSubcommandMigrating SCompleted
 
 func (c SClusterSetslotSubcommandMigrating) NodeId(NodeId string) SClusterSetslotNodeId {
-	return SClusterSetslotNodeId{cf: c.cf, cs: append(c.cs, NodeId)}
+	return SClusterSetslotNodeId{cs: append(c.cs, NodeId), cf: c.cf, ks: c.ks}
 }
 
 func (c SClusterSetslotSubcommandMigrating) Build() SCompleted {
@@ -14676,7 +14676,7 @@ func (c SClusterSetslotSubcommandMigrating) Build() SCompleted {
 type SClusterSetslotSubcommandNode SCompleted
 
 func (c SClusterSetslotSubcommandNode) NodeId(NodeId string) SClusterSetslotNodeId {
-	return SClusterSetslotNodeId{cf: c.cf, cs: append(c.cs, NodeId)}
+	return SClusterSetslotNodeId{cs: append(c.cs, NodeId), cf: c.cf, ks: c.ks}
 }
 
 func (c SClusterSetslotSubcommandNode) Build() SCompleted {
@@ -14686,7 +14686,7 @@ func (c SClusterSetslotSubcommandNode) Build() SCompleted {
 type SClusterSetslotSubcommandStable SCompleted
 
 func (c SClusterSetslotSubcommandStable) NodeId(NodeId string) SClusterSetslotNodeId {
-	return SClusterSetslotNodeId{cf: c.cf, cs: append(c.cs, NodeId)}
+	return SClusterSetslotNodeId{cs: append(c.cs, NodeId), cf: c.cf, ks: c.ks}
 }
 
 func (c SClusterSetslotSubcommandStable) Build() SCompleted {
@@ -14696,7 +14696,7 @@ func (c SClusterSetslotSubcommandStable) Build() SCompleted {
 type SClusterSlaves SCompleted
 
 func (c SClusterSlaves) NodeId(NodeId string) SClusterSlavesNodeId {
-	return SClusterSlavesNodeId{cf: c.cf, cs: append(c.cs, NodeId)}
+	return SClusterSlavesNodeId{cs: append(c.cs, NodeId), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) ClusterSlaves() (c SClusterSlaves) {
@@ -14762,7 +14762,7 @@ func (b *SBuilder) CommandGetkeys() (c SCommandGetkeys) {
 type SCommandInfo SCompleted
 
 func (c SCommandInfo) CommandName(CommandName ...string) SCommandInfoCommandName {
-	return SCommandInfoCommandName{cf: c.cf, cs: append(c.cs, CommandName...)}
+	return SCommandInfoCommandName{cs: append(c.cs, CommandName...), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) CommandInfo() (c SCommandInfo) {
@@ -14774,7 +14774,7 @@ func (b *SBuilder) CommandInfo() (c SCommandInfo) {
 type SCommandInfoCommandName SCompleted
 
 func (c SCommandInfoCommandName) CommandName(CommandName ...string) SCommandInfoCommandName {
-	return SCommandInfoCommandName{cf: c.cf, cs: append(c.cs, CommandName...)}
+	return SCommandInfoCommandName{cs: append(c.cs, CommandName...), cf: c.cf, ks: c.ks}
 }
 
 func (c SCommandInfoCommandName) Build() SCompleted {
@@ -14784,7 +14784,7 @@ func (c SCommandInfoCommandName) Build() SCompleted {
 type SConfigGet SCompleted
 
 func (c SConfigGet) Parameter(Parameter string) SConfigGetParameter {
-	return SConfigGetParameter{cf: c.cf, cs: append(c.cs, Parameter)}
+	return SConfigGetParameter{cs: append(c.cs, Parameter), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) ConfigGet() (c SConfigGet) {
@@ -14826,7 +14826,7 @@ func (b *SBuilder) ConfigRewrite() (c SConfigRewrite) {
 type SConfigSet SCompleted
 
 func (c SConfigSet) Parameter(Parameter string) SConfigSetParameter {
-	return SConfigSetParameter{cf: c.cf, cs: append(c.cs, Parameter)}
+	return SConfigSetParameter{cs: append(c.cs, Parameter), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) ConfigSet() (c SConfigSet) {
@@ -14838,7 +14838,7 @@ func (b *SBuilder) ConfigSet() (c SConfigSet) {
 type SConfigSetParameter SCompleted
 
 func (c SConfigSetParameter) Value(Value string) SConfigSetValue {
-	return SConfigSetValue{cf: c.cf, cs: append(c.cs, Value)}
+	return SConfigSetValue{cs: append(c.cs, Value), cf: c.cf, ks: c.ks}
 }
 
 type SConfigSetValue SCompleted
@@ -14851,7 +14851,7 @@ type SCopy SCompleted
 
 func (c SCopy) Source(Source string) SCopySource {
 	c.ks = checkSlot(c.ks, slot(Source))
-	return SCopySource{cf: c.cf, cs: append(c.cs, Source)}
+	return SCopySource{cs: append(c.cs, Source), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Copy() (c SCopy) {
@@ -14863,7 +14863,7 @@ func (b *SBuilder) Copy() (c SCopy) {
 type SCopyDb SCompleted
 
 func (c SCopyDb) Replace() SCopyReplaceReplace {
-	return SCopyReplaceReplace{cf: c.cf, cs: append(c.cs, "REPLACE")}
+	return SCopyReplaceReplace{cs: append(c.cs, "REPLACE"), cf: c.cf, ks: c.ks}
 }
 
 func (c SCopyDb) Build() SCompleted {
@@ -14873,11 +14873,11 @@ func (c SCopyDb) Build() SCompleted {
 type SCopyDestination SCompleted
 
 func (c SCopyDestination) Db(DestinationDb int64) SCopyDb {
-	return SCopyDb{cf: c.cf, cs: append(c.cs, "DB", strconv.FormatInt(DestinationDb, 10))}
+	return SCopyDb{cs: append(c.cs, "DB", strconv.FormatInt(DestinationDb, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SCopyDestination) Replace() SCopyReplaceReplace {
-	return SCopyReplaceReplace{cf: c.cf, cs: append(c.cs, "REPLACE")}
+	return SCopyReplaceReplace{cs: append(c.cs, "REPLACE"), cf: c.cf, ks: c.ks}
 }
 
 func (c SCopyDestination) Build() SCompleted {
@@ -14894,7 +14894,7 @@ type SCopySource SCompleted
 
 func (c SCopySource) Destination(Destination string) SCopyDestination {
 	c.ks = checkSlot(c.ks, slot(Destination))
-	return SCopyDestination{cf: c.cf, cs: append(c.cs, Destination)}
+	return SCopyDestination{cs: append(c.cs, Destination), cf: c.cf, ks: c.ks}
 }
 
 type SDbsize SCompleted
@@ -14914,7 +14914,7 @@ type SDebugObject SCompleted
 
 func (c SDebugObject) Key(Key string) SDebugObjectKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SDebugObjectKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SDebugObjectKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) DebugObject() (c SDebugObject) {
@@ -14945,7 +14945,7 @@ type SDecr SCompleted
 
 func (c SDecr) Key(Key string) SDecrKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SDecrKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SDecrKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Decr() (c SDecr) {
@@ -14964,7 +14964,7 @@ type SDecrby SCompleted
 
 func (c SDecrby) Key(Key string) SDecrbyKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SDecrbyKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SDecrbyKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Decrby() (c SDecrby) {
@@ -14982,7 +14982,7 @@ func (c SDecrbyDecrement) Build() SCompleted {
 type SDecrbyKey SCompleted
 
 func (c SDecrbyKey) Decrement(Decrement int64) SDecrbyDecrement {
-	return SDecrbyDecrement{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Decrement, 10))}
+	return SDecrbyDecrement{cs: append(c.cs, strconv.FormatInt(Decrement, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SDel SCompleted
@@ -14991,7 +14991,7 @@ func (c SDel) Key(Key ...string) SDelKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SDelKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SDelKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Del() (c SDel) {
@@ -15006,7 +15006,7 @@ func (c SDelKey) Key(Key ...string) SDelKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SDelKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SDelKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c SDelKey) Build() SCompleted {
@@ -15029,7 +15029,7 @@ type SDump SCompleted
 
 func (c SDump) Key(Key string) SDumpKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SDumpKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SDumpKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Dump() (c SDump) {
@@ -15048,7 +15048,7 @@ func (c SDumpKey) Build() SCompleted {
 type SEcho SCompleted
 
 func (c SEcho) Message(Message string) SEchoMessage {
-	return SEchoMessage{cf: c.cf, cs: append(c.cs, Message)}
+	return SEchoMessage{cs: append(c.cs, Message), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Echo() (c SEcho) {
@@ -15066,7 +15066,7 @@ func (c SEchoMessage) Build() SCompleted {
 type SEval SCompleted
 
 func (c SEval) Script(Script string) SEvalScript {
-	return SEvalScript{cf: c.cf, cs: append(c.cs, Script)}
+	return SEvalScript{cs: append(c.cs, Script), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Eval() (c SEval) {
@@ -15078,7 +15078,7 @@ func (b *SBuilder) Eval() (c SEval) {
 type SEvalArg SCompleted
 
 func (c SEvalArg) Arg(Arg ...string) SEvalArg {
-	return SEvalArg{cf: c.cf, cs: append(c.cs, Arg...)}
+	return SEvalArg{cs: append(c.cs, Arg...), cf: c.cf, ks: c.ks}
 }
 
 func (c SEvalArg) Build() SCompleted {
@@ -15088,14 +15088,14 @@ func (c SEvalArg) Build() SCompleted {
 type SEvalKey SCompleted
 
 func (c SEvalKey) Arg(Arg ...string) SEvalArg {
-	return SEvalArg{cf: c.cf, cs: append(c.cs, Arg...)}
+	return SEvalArg{cs: append(c.cs, Arg...), cf: c.cf, ks: c.ks}
 }
 
 func (c SEvalKey) Key(Key ...string) SEvalKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SEvalKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SEvalKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c SEvalKey) Build() SCompleted {
@@ -15108,11 +15108,11 @@ func (c SEvalNumkeys) Key(Key ...string) SEvalKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SEvalKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SEvalKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c SEvalNumkeys) Arg(Arg ...string) SEvalArg {
-	return SEvalArg{cf: c.cf, cs: append(c.cs, Arg...)}
+	return SEvalArg{cs: append(c.cs, Arg...), cf: c.cf, ks: c.ks}
 }
 
 func (c SEvalNumkeys) Build() SCompleted {
@@ -15122,7 +15122,7 @@ func (c SEvalNumkeys) Build() SCompleted {
 type SEvalRo SCompleted
 
 func (c SEvalRo) Script(Script string) SEvalRoScript {
-	return SEvalRoScript{cf: c.cf, cs: append(c.cs, Script)}
+	return SEvalRoScript{cs: append(c.cs, Script), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) EvalRo() (c SEvalRo) {
@@ -15135,7 +15135,7 @@ func (b *SBuilder) EvalRo() (c SEvalRo) {
 type SEvalRoArg SCompleted
 
 func (c SEvalRoArg) Arg(Arg ...string) SEvalRoArg {
-	return SEvalRoArg{cf: c.cf, cs: append(c.cs, Arg...)}
+	return SEvalRoArg{cs: append(c.cs, Arg...), cf: c.cf, ks: c.ks}
 }
 
 func (c SEvalRoArg) Build() SCompleted {
@@ -15145,14 +15145,14 @@ func (c SEvalRoArg) Build() SCompleted {
 type SEvalRoKey SCompleted
 
 func (c SEvalRoKey) Arg(Arg ...string) SEvalRoArg {
-	return SEvalRoArg{cf: c.cf, cs: append(c.cs, Arg...)}
+	return SEvalRoArg{cs: append(c.cs, Arg...), cf: c.cf, ks: c.ks}
 }
 
 func (c SEvalRoKey) Key(Key ...string) SEvalRoKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SEvalRoKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SEvalRoKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type SEvalRoNumkeys SCompleted
@@ -15161,25 +15161,25 @@ func (c SEvalRoNumkeys) Key(Key ...string) SEvalRoKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SEvalRoKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SEvalRoKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type SEvalRoScript SCompleted
 
 func (c SEvalRoScript) Numkeys(Numkeys int64) SEvalRoNumkeys {
-	return SEvalRoNumkeys{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
+	return SEvalRoNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SEvalScript SCompleted
 
 func (c SEvalScript) Numkeys(Numkeys int64) SEvalNumkeys {
-	return SEvalNumkeys{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
+	return SEvalNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SEvalsha SCompleted
 
 func (c SEvalsha) Sha1(Sha1 string) SEvalshaSha1 {
-	return SEvalshaSha1{cf: c.cf, cs: append(c.cs, Sha1)}
+	return SEvalshaSha1{cs: append(c.cs, Sha1), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Evalsha() (c SEvalsha) {
@@ -15191,7 +15191,7 @@ func (b *SBuilder) Evalsha() (c SEvalsha) {
 type SEvalshaArg SCompleted
 
 func (c SEvalshaArg) Arg(Arg ...string) SEvalshaArg {
-	return SEvalshaArg{cf: c.cf, cs: append(c.cs, Arg...)}
+	return SEvalshaArg{cs: append(c.cs, Arg...), cf: c.cf, ks: c.ks}
 }
 
 func (c SEvalshaArg) Build() SCompleted {
@@ -15201,14 +15201,14 @@ func (c SEvalshaArg) Build() SCompleted {
 type SEvalshaKey SCompleted
 
 func (c SEvalshaKey) Arg(Arg ...string) SEvalshaArg {
-	return SEvalshaArg{cf: c.cf, cs: append(c.cs, Arg...)}
+	return SEvalshaArg{cs: append(c.cs, Arg...), cf: c.cf, ks: c.ks}
 }
 
 func (c SEvalshaKey) Key(Key ...string) SEvalshaKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SEvalshaKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SEvalshaKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c SEvalshaKey) Build() SCompleted {
@@ -15221,11 +15221,11 @@ func (c SEvalshaNumkeys) Key(Key ...string) SEvalshaKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SEvalshaKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SEvalshaKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c SEvalshaNumkeys) Arg(Arg ...string) SEvalshaArg {
-	return SEvalshaArg{cf: c.cf, cs: append(c.cs, Arg...)}
+	return SEvalshaArg{cs: append(c.cs, Arg...), cf: c.cf, ks: c.ks}
 }
 
 func (c SEvalshaNumkeys) Build() SCompleted {
@@ -15235,7 +15235,7 @@ func (c SEvalshaNumkeys) Build() SCompleted {
 type SEvalshaRo SCompleted
 
 func (c SEvalshaRo) Sha1(Sha1 string) SEvalshaRoSha1 {
-	return SEvalshaRoSha1{cf: c.cf, cs: append(c.cs, Sha1)}
+	return SEvalshaRoSha1{cs: append(c.cs, Sha1), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) EvalshaRo() (c SEvalshaRo) {
@@ -15248,7 +15248,7 @@ func (b *SBuilder) EvalshaRo() (c SEvalshaRo) {
 type SEvalshaRoArg SCompleted
 
 func (c SEvalshaRoArg) Arg(Arg ...string) SEvalshaRoArg {
-	return SEvalshaRoArg{cf: c.cf, cs: append(c.cs, Arg...)}
+	return SEvalshaRoArg{cs: append(c.cs, Arg...), cf: c.cf, ks: c.ks}
 }
 
 func (c SEvalshaRoArg) Build() SCompleted {
@@ -15258,14 +15258,14 @@ func (c SEvalshaRoArg) Build() SCompleted {
 type SEvalshaRoKey SCompleted
 
 func (c SEvalshaRoKey) Arg(Arg ...string) SEvalshaRoArg {
-	return SEvalshaRoArg{cf: c.cf, cs: append(c.cs, Arg...)}
+	return SEvalshaRoArg{cs: append(c.cs, Arg...), cf: c.cf, ks: c.ks}
 }
 
 func (c SEvalshaRoKey) Key(Key ...string) SEvalshaRoKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SEvalshaRoKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SEvalshaRoKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type SEvalshaRoNumkeys SCompleted
@@ -15274,19 +15274,19 @@ func (c SEvalshaRoNumkeys) Key(Key ...string) SEvalshaRoKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SEvalshaRoKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SEvalshaRoKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type SEvalshaRoSha1 SCompleted
 
 func (c SEvalshaRoSha1) Numkeys(Numkeys int64) SEvalshaRoNumkeys {
-	return SEvalshaRoNumkeys{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
+	return SEvalshaRoNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SEvalshaSha1 SCompleted
 
 func (c SEvalshaSha1) Numkeys(Numkeys int64) SEvalshaNumkeys {
-	return SEvalshaNumkeys{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
+	return SEvalshaNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SExec SCompleted
@@ -15307,7 +15307,7 @@ func (c SExists) Key(Key ...string) SExistsKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SExistsKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SExistsKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Exists() (c SExists) {
@@ -15323,7 +15323,7 @@ func (c SExistsKey) Key(Key ...string) SExistsKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SExistsKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SExistsKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c SExistsKey) Build() SCompleted {
@@ -15334,7 +15334,7 @@ type SExpire SCompleted
 
 func (c SExpire) Key(Key string) SExpireKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SExpireKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SExpireKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Expire() (c SExpire) {
@@ -15370,25 +15370,25 @@ func (c SExpireConditionXx) Build() SCompleted {
 type SExpireKey SCompleted
 
 func (c SExpireKey) Seconds(Seconds int64) SExpireSeconds {
-	return SExpireSeconds{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Seconds, 10))}
+	return SExpireSeconds{cs: append(c.cs, strconv.FormatInt(Seconds, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SExpireSeconds SCompleted
 
 func (c SExpireSeconds) Nx() SExpireConditionNx {
-	return SExpireConditionNx{cf: c.cf, cs: append(c.cs, "NX")}
+	return SExpireConditionNx{cs: append(c.cs, "NX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SExpireSeconds) Xx() SExpireConditionXx {
-	return SExpireConditionXx{cf: c.cf, cs: append(c.cs, "XX")}
+	return SExpireConditionXx{cs: append(c.cs, "XX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SExpireSeconds) Gt() SExpireConditionGt {
-	return SExpireConditionGt{cf: c.cf, cs: append(c.cs, "GT")}
+	return SExpireConditionGt{cs: append(c.cs, "GT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SExpireSeconds) Lt() SExpireConditionLt {
-	return SExpireConditionLt{cf: c.cf, cs: append(c.cs, "LT")}
+	return SExpireConditionLt{cs: append(c.cs, "LT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SExpireSeconds) Build() SCompleted {
@@ -15399,7 +15399,7 @@ type SExpireat SCompleted
 
 func (c SExpireat) Key(Key string) SExpireatKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SExpireatKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SExpireatKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Expireat() (c SExpireat) {
@@ -15435,25 +15435,25 @@ func (c SExpireatConditionXx) Build() SCompleted {
 type SExpireatKey SCompleted
 
 func (c SExpireatKey) Timestamp(Timestamp int64) SExpireatTimestamp {
-	return SExpireatTimestamp{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Timestamp, 10))}
+	return SExpireatTimestamp{cs: append(c.cs, strconv.FormatInt(Timestamp, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SExpireatTimestamp SCompleted
 
 func (c SExpireatTimestamp) Nx() SExpireatConditionNx {
-	return SExpireatConditionNx{cf: c.cf, cs: append(c.cs, "NX")}
+	return SExpireatConditionNx{cs: append(c.cs, "NX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SExpireatTimestamp) Xx() SExpireatConditionXx {
-	return SExpireatConditionXx{cf: c.cf, cs: append(c.cs, "XX")}
+	return SExpireatConditionXx{cs: append(c.cs, "XX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SExpireatTimestamp) Gt() SExpireatConditionGt {
-	return SExpireatConditionGt{cf: c.cf, cs: append(c.cs, "GT")}
+	return SExpireatConditionGt{cs: append(c.cs, "GT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SExpireatTimestamp) Lt() SExpireatConditionLt {
-	return SExpireatConditionLt{cf: c.cf, cs: append(c.cs, "LT")}
+	return SExpireatConditionLt{cs: append(c.cs, "LT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SExpireatTimestamp) Build() SCompleted {
@@ -15464,7 +15464,7 @@ type SExpiretime SCompleted
 
 func (c SExpiretime) Key(Key string) SExpiretimeKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SExpiretimeKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SExpiretimeKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Expiretime() (c SExpiretime) {
@@ -15487,15 +15487,15 @@ func (c SExpiretimeKey) Cache() SCacheable {
 type SFailover SCompleted
 
 func (c SFailover) To() SFailoverTargetTo {
-	return SFailoverTargetTo{cf: c.cf, cs: append(c.cs, "TO")}
+	return SFailoverTargetTo{cs: append(c.cs, "TO"), cf: c.cf, ks: c.ks}
 }
 
 func (c SFailover) Abort() SFailoverAbort {
-	return SFailoverAbort{cf: c.cf, cs: append(c.cs, "ABORT")}
+	return SFailoverAbort{cs: append(c.cs, "ABORT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SFailover) Timeout(Milliseconds int64) SFailoverTimeout {
-	return SFailoverTimeout{cf: c.cf, cs: append(c.cs, "TIMEOUT", strconv.FormatInt(Milliseconds, 10))}
+	return SFailoverTimeout{cs: append(c.cs, "TIMEOUT", strconv.FormatInt(Milliseconds, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SFailover) Build() SCompleted {
@@ -15511,7 +15511,7 @@ func (b *SBuilder) Failover() (c SFailover) {
 type SFailoverAbort SCompleted
 
 func (c SFailoverAbort) Timeout(Milliseconds int64) SFailoverTimeout {
-	return SFailoverTimeout{cf: c.cf, cs: append(c.cs, "TIMEOUT", strconv.FormatInt(Milliseconds, 10))}
+	return SFailoverTimeout{cs: append(c.cs, "TIMEOUT", strconv.FormatInt(Milliseconds, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SFailoverAbort) Build() SCompleted {
@@ -15521,11 +15521,11 @@ func (c SFailoverAbort) Build() SCompleted {
 type SFailoverTargetForce SCompleted
 
 func (c SFailoverTargetForce) Abort() SFailoverAbort {
-	return SFailoverAbort{cf: c.cf, cs: append(c.cs, "ABORT")}
+	return SFailoverAbort{cs: append(c.cs, "ABORT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SFailoverTargetForce) Timeout(Milliseconds int64) SFailoverTimeout {
-	return SFailoverTimeout{cf: c.cf, cs: append(c.cs, "TIMEOUT", strconv.FormatInt(Milliseconds, 10))}
+	return SFailoverTimeout{cs: append(c.cs, "TIMEOUT", strconv.FormatInt(Milliseconds, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SFailoverTargetForce) Build() SCompleted {
@@ -15535,21 +15535,21 @@ func (c SFailoverTargetForce) Build() SCompleted {
 type SFailoverTargetHost SCompleted
 
 func (c SFailoverTargetHost) Port(Port int64) SFailoverTargetPort {
-	return SFailoverTargetPort{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Port, 10))}
+	return SFailoverTargetPort{cs: append(c.cs, strconv.FormatInt(Port, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SFailoverTargetPort SCompleted
 
 func (c SFailoverTargetPort) Force() SFailoverTargetForce {
-	return SFailoverTargetForce{cf: c.cf, cs: append(c.cs, "FORCE")}
+	return SFailoverTargetForce{cs: append(c.cs, "FORCE"), cf: c.cf, ks: c.ks}
 }
 
 func (c SFailoverTargetPort) Abort() SFailoverAbort {
-	return SFailoverAbort{cf: c.cf, cs: append(c.cs, "ABORT")}
+	return SFailoverAbort{cs: append(c.cs, "ABORT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SFailoverTargetPort) Timeout(Milliseconds int64) SFailoverTimeout {
-	return SFailoverTimeout{cf: c.cf, cs: append(c.cs, "TIMEOUT", strconv.FormatInt(Milliseconds, 10))}
+	return SFailoverTimeout{cs: append(c.cs, "TIMEOUT", strconv.FormatInt(Milliseconds, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SFailoverTargetPort) Build() SCompleted {
@@ -15559,7 +15559,7 @@ func (c SFailoverTargetPort) Build() SCompleted {
 type SFailoverTargetTo SCompleted
 
 func (c SFailoverTargetTo) Host(Host string) SFailoverTargetHost {
-	return SFailoverTargetHost{cf: c.cf, cs: append(c.cs, Host)}
+	return SFailoverTargetHost{cs: append(c.cs, Host), cf: c.cf, ks: c.ks}
 }
 
 type SFailoverTimeout SCompleted
@@ -15571,11 +15571,11 @@ func (c SFailoverTimeout) Build() SCompleted {
 type SFlushall SCompleted
 
 func (c SFlushall) Async() SFlushallAsyncAsync {
-	return SFlushallAsyncAsync{cf: c.cf, cs: append(c.cs, "ASYNC")}
+	return SFlushallAsyncAsync{cs: append(c.cs, "ASYNC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SFlushall) Sync() SFlushallAsyncSync {
-	return SFlushallAsyncSync{cf: c.cf, cs: append(c.cs, "SYNC")}
+	return SFlushallAsyncSync{cs: append(c.cs, "SYNC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SFlushall) Build() SCompleted {
@@ -15603,11 +15603,11 @@ func (c SFlushallAsyncSync) Build() SCompleted {
 type SFlushdb SCompleted
 
 func (c SFlushdb) Async() SFlushdbAsyncAsync {
-	return SFlushdbAsyncAsync{cf: c.cf, cs: append(c.cs, "ASYNC")}
+	return SFlushdbAsyncAsync{cs: append(c.cs, "ASYNC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SFlushdb) Sync() SFlushdbAsyncSync {
-	return SFlushdbAsyncSync{cf: c.cf, cs: append(c.cs, "SYNC")}
+	return SFlushdbAsyncSync{cs: append(c.cs, "SYNC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SFlushdb) Build() SCompleted {
@@ -15636,7 +15636,7 @@ type SGeoadd SCompleted
 
 func (c SGeoadd) Key(Key string) SGeoaddKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoaddKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SGeoaddKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Geoadd() (c SGeoadd) {
@@ -15648,51 +15648,51 @@ func (b *SBuilder) Geoadd() (c SGeoadd) {
 type SGeoaddChangeCh SCompleted
 
 func (c SGeoaddChangeCh) LongitudeLatitudeMember() SGeoaddLongitudeLatitudeMember {
-	return SGeoaddLongitudeLatitudeMember{cf: c.cf, cs: c.cs}
+	return SGeoaddLongitudeLatitudeMember{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 type SGeoaddConditionNx SCompleted
 
 func (c SGeoaddConditionNx) Ch() SGeoaddChangeCh {
-	return SGeoaddChangeCh{cf: c.cf, cs: append(c.cs, "CH")}
+	return SGeoaddChangeCh{cs: append(c.cs, "CH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoaddConditionNx) LongitudeLatitudeMember() SGeoaddLongitudeLatitudeMember {
-	return SGeoaddLongitudeLatitudeMember{cf: c.cf, cs: c.cs}
+	return SGeoaddLongitudeLatitudeMember{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 type SGeoaddConditionXx SCompleted
 
 func (c SGeoaddConditionXx) Ch() SGeoaddChangeCh {
-	return SGeoaddChangeCh{cf: c.cf, cs: append(c.cs, "CH")}
+	return SGeoaddChangeCh{cs: append(c.cs, "CH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoaddConditionXx) LongitudeLatitudeMember() SGeoaddLongitudeLatitudeMember {
-	return SGeoaddLongitudeLatitudeMember{cf: c.cf, cs: c.cs}
+	return SGeoaddLongitudeLatitudeMember{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 type SGeoaddKey SCompleted
 
 func (c SGeoaddKey) Nx() SGeoaddConditionNx {
-	return SGeoaddConditionNx{cf: c.cf, cs: append(c.cs, "NX")}
+	return SGeoaddConditionNx{cs: append(c.cs, "NX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoaddKey) Xx() SGeoaddConditionXx {
-	return SGeoaddConditionXx{cf: c.cf, cs: append(c.cs, "XX")}
+	return SGeoaddConditionXx{cs: append(c.cs, "XX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoaddKey) Ch() SGeoaddChangeCh {
-	return SGeoaddChangeCh{cf: c.cf, cs: append(c.cs, "CH")}
+	return SGeoaddChangeCh{cs: append(c.cs, "CH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoaddKey) LongitudeLatitudeMember() SGeoaddLongitudeLatitudeMember {
-	return SGeoaddLongitudeLatitudeMember{cf: c.cf, cs: c.cs}
+	return SGeoaddLongitudeLatitudeMember{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 type SGeoaddLongitudeLatitudeMember SCompleted
 
 func (c SGeoaddLongitudeLatitudeMember) LongitudeLatitudeMember(Longitude float64, Latitude float64, Member string) SGeoaddLongitudeLatitudeMember {
-	return SGeoaddLongitudeLatitudeMember{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Longitude, 'f', -1, 64), strconv.FormatFloat(Latitude, 'f', -1, 64), Member)}
+	return SGeoaddLongitudeLatitudeMember{cs: append(c.cs, strconv.FormatFloat(Longitude, 'f', -1, 64), strconv.FormatFloat(Latitude, 'f', -1, 64), Member), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoaddLongitudeLatitudeMember) Build() SCompleted {
@@ -15703,7 +15703,7 @@ type SGeodist SCompleted
 
 func (c SGeodist) Key(Key string) SGeodistKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeodistKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SGeodistKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Geodist() (c SGeodist) {
@@ -15716,31 +15716,31 @@ func (b *SBuilder) Geodist() (c SGeodist) {
 type SGeodistKey SCompleted
 
 func (c SGeodistKey) Member1(Member1 string) SGeodistMember1 {
-	return SGeodistMember1{cf: c.cf, cs: append(c.cs, Member1)}
+	return SGeodistMember1{cs: append(c.cs, Member1), cf: c.cf, ks: c.ks}
 }
 
 type SGeodistMember1 SCompleted
 
 func (c SGeodistMember1) Member2(Member2 string) SGeodistMember2 {
-	return SGeodistMember2{cf: c.cf, cs: append(c.cs, Member2)}
+	return SGeodistMember2{cs: append(c.cs, Member2), cf: c.cf, ks: c.ks}
 }
 
 type SGeodistMember2 SCompleted
 
 func (c SGeodistMember2) M() SGeodistUnitM {
-	return SGeodistUnitM{cf: c.cf, cs: append(c.cs, "m")}
+	return SGeodistUnitM{cs: append(c.cs, "m"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeodistMember2) Km() SGeodistUnitKm {
-	return SGeodistUnitKm{cf: c.cf, cs: append(c.cs, "km")}
+	return SGeodistUnitKm{cs: append(c.cs, "km"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeodistMember2) Ft() SGeodistUnitFt {
-	return SGeodistUnitFt{cf: c.cf, cs: append(c.cs, "ft")}
+	return SGeodistUnitFt{cs: append(c.cs, "ft"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeodistMember2) Mi() SGeodistUnitMi {
-	return SGeodistUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
+	return SGeodistUnitMi{cs: append(c.cs, "mi"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeodistMember2) Build() SCompleted {
@@ -15795,7 +15795,7 @@ type SGeohash SCompleted
 
 func (c SGeohash) Key(Key string) SGeohashKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeohashKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SGeohashKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Geohash() (c SGeohash) {
@@ -15808,13 +15808,13 @@ func (b *SBuilder) Geohash() (c SGeohash) {
 type SGeohashKey SCompleted
 
 func (c SGeohashKey) Member(Member ...string) SGeohashMember {
-	return SGeohashMember{cf: c.cf, cs: append(c.cs, Member...)}
+	return SGeohashMember{cs: append(c.cs, Member...), cf: c.cf, ks: c.ks}
 }
 
 type SGeohashMember SCompleted
 
 func (c SGeohashMember) Member(Member ...string) SGeohashMember {
-	return SGeohashMember{cf: c.cf, cs: append(c.cs, Member...)}
+	return SGeohashMember{cs: append(c.cs, Member...), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeohashMember) Build() SCompleted {
@@ -15829,7 +15829,7 @@ type SGeopos SCompleted
 
 func (c SGeopos) Key(Key string) SGeoposKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoposKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SGeoposKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Geopos() (c SGeopos) {
@@ -15842,13 +15842,13 @@ func (b *SBuilder) Geopos() (c SGeopos) {
 type SGeoposKey SCompleted
 
 func (c SGeoposKey) Member(Member ...string) SGeoposMember {
-	return SGeoposMember{cf: c.cf, cs: append(c.cs, Member...)}
+	return SGeoposMember{cs: append(c.cs, Member...), cf: c.cf, ks: c.ks}
 }
 
 type SGeoposMember SCompleted
 
 func (c SGeoposMember) Member(Member ...string) SGeoposMember {
-	return SGeoposMember{cf: c.cf, cs: append(c.cs, Member...)}
+	return SGeoposMember{cs: append(c.cs, Member...), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoposMember) Build() SCompleted {
@@ -15863,7 +15863,7 @@ type SGeoradius SCompleted
 
 func (c SGeoradius) Key(Key string) SGeoradiusKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SGeoradiusKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Georadius() (c SGeoradius) {
@@ -15875,21 +15875,21 @@ func (b *SBuilder) Georadius() (c SGeoradius) {
 type SGeoradiusCountAnyAny SCompleted
 
 func (c SGeoradiusCountAnyAny) Asc() SGeoradiusOrderAsc {
-	return SGeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeoradiusOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusCountAnyAny) Desc() SGeoradiusOrderDesc {
-	return SGeoradiusOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeoradiusOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusCountAnyAny) Store(Key string) SGeoradiusStore {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return SGeoradiusStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusCountAnyAny) Storedist(Key string) SGeoradiusStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusCountAnyAny) Build() SCompleted {
@@ -15899,25 +15899,25 @@ func (c SGeoradiusCountAnyAny) Build() SCompleted {
 type SGeoradiusCountCount SCompleted
 
 func (c SGeoradiusCountCount) Any() SGeoradiusCountAnyAny {
-	return SGeoradiusCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
+	return SGeoradiusCountAnyAny{cs: append(c.cs, "ANY"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusCountCount) Asc() SGeoradiusOrderAsc {
-	return SGeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeoradiusOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusCountCount) Desc() SGeoradiusOrderDesc {
-	return SGeoradiusOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeoradiusOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusCountCount) Store(Key string) SGeoradiusStore {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return SGeoradiusStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusCountCount) Storedist(Key string) SGeoradiusStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusCountCount) Build() SCompleted {
@@ -15927,31 +15927,31 @@ func (c SGeoradiusCountCount) Build() SCompleted {
 type SGeoradiusKey SCompleted
 
 func (c SGeoradiusKey) Longitude(Longitude float64) SGeoradiusLongitude {
-	return SGeoradiusLongitude{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Longitude, 'f', -1, 64))}
+	return SGeoradiusLongitude{cs: append(c.cs, strconv.FormatFloat(Longitude, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type SGeoradiusLatitude SCompleted
 
 func (c SGeoradiusLatitude) Radius(Radius float64) SGeoradiusRadius {
-	return SGeoradiusRadius{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Radius, 'f', -1, 64))}
+	return SGeoradiusRadius{cs: append(c.cs, strconv.FormatFloat(Radius, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type SGeoradiusLongitude SCompleted
 
 func (c SGeoradiusLongitude) Latitude(Latitude float64) SGeoradiusLatitude {
-	return SGeoradiusLatitude{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Latitude, 'f', -1, 64))}
+	return SGeoradiusLatitude{cs: append(c.cs, strconv.FormatFloat(Latitude, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type SGeoradiusOrderAsc SCompleted
 
 func (c SGeoradiusOrderAsc) Store(Key string) SGeoradiusStore {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return SGeoradiusStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusOrderAsc) Storedist(Key string) SGeoradiusStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusOrderAsc) Build() SCompleted {
@@ -15962,12 +15962,12 @@ type SGeoradiusOrderDesc SCompleted
 
 func (c SGeoradiusOrderDesc) Store(Key string) SGeoradiusStore {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return SGeoradiusStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusOrderDesc) Storedist(Key string) SGeoradiusStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusOrderDesc) Build() SCompleted {
@@ -15977,26 +15977,26 @@ func (c SGeoradiusOrderDesc) Build() SCompleted {
 type SGeoradiusRadius SCompleted
 
 func (c SGeoradiusRadius) M() SGeoradiusUnitM {
-	return SGeoradiusUnitM{cf: c.cf, cs: append(c.cs, "m")}
+	return SGeoradiusUnitM{cs: append(c.cs, "m"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRadius) Km() SGeoradiusUnitKm {
-	return SGeoradiusUnitKm{cf: c.cf, cs: append(c.cs, "km")}
+	return SGeoradiusUnitKm{cs: append(c.cs, "km"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRadius) Ft() SGeoradiusUnitFt {
-	return SGeoradiusUnitFt{cf: c.cf, cs: append(c.cs, "ft")}
+	return SGeoradiusUnitFt{cs: append(c.cs, "ft"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRadius) Mi() SGeoradiusUnitMi {
-	return SGeoradiusUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
+	return SGeoradiusUnitMi{cs: append(c.cs, "mi"), cf: c.cf, ks: c.ks}
 }
 
 type SGeoradiusRo SCompleted
 
 func (c SGeoradiusRo) Key(Key string) SGeoradiusRoKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusRoKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SGeoradiusRoKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) GeoradiusRo() (c SGeoradiusRo) {
@@ -16009,16 +16009,16 @@ func (b *SBuilder) GeoradiusRo() (c SGeoradiusRo) {
 type SGeoradiusRoCountAnyAny SCompleted
 
 func (c SGeoradiusRoCountAnyAny) Asc() SGeoradiusRoOrderAsc {
-	return SGeoradiusRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeoradiusRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoCountAnyAny) Desc() SGeoradiusRoOrderDesc {
-	return SGeoradiusRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeoradiusRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoCountAnyAny) Storedist(Key string) SGeoradiusRoStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoCountAnyAny) Build() SCompleted {
@@ -16032,20 +16032,20 @@ func (c SGeoradiusRoCountAnyAny) Cache() SCacheable {
 type SGeoradiusRoCountCount SCompleted
 
 func (c SGeoradiusRoCountCount) Any() SGeoradiusRoCountAnyAny {
-	return SGeoradiusRoCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
+	return SGeoradiusRoCountAnyAny{cs: append(c.cs, "ANY"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoCountCount) Asc() SGeoradiusRoOrderAsc {
-	return SGeoradiusRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeoradiusRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoCountCount) Desc() SGeoradiusRoOrderDesc {
-	return SGeoradiusRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeoradiusRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoCountCount) Storedist(Key string) SGeoradiusRoStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoCountCount) Build() SCompleted {
@@ -16059,26 +16059,26 @@ func (c SGeoradiusRoCountCount) Cache() SCacheable {
 type SGeoradiusRoKey SCompleted
 
 func (c SGeoradiusRoKey) Longitude(Longitude float64) SGeoradiusRoLongitude {
-	return SGeoradiusRoLongitude{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Longitude, 'f', -1, 64))}
+	return SGeoradiusRoLongitude{cs: append(c.cs, strconv.FormatFloat(Longitude, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type SGeoradiusRoLatitude SCompleted
 
 func (c SGeoradiusRoLatitude) Radius(Radius float64) SGeoradiusRoRadius {
-	return SGeoradiusRoRadius{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Radius, 'f', -1, 64))}
+	return SGeoradiusRoRadius{cs: append(c.cs, strconv.FormatFloat(Radius, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type SGeoradiusRoLongitude SCompleted
 
 func (c SGeoradiusRoLongitude) Latitude(Latitude float64) SGeoradiusRoLatitude {
-	return SGeoradiusRoLatitude{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Latitude, 'f', -1, 64))}
+	return SGeoradiusRoLatitude{cs: append(c.cs, strconv.FormatFloat(Latitude, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type SGeoradiusRoOrderAsc SCompleted
 
 func (c SGeoradiusRoOrderAsc) Storedist(Key string) SGeoradiusRoStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoOrderAsc) Build() SCompleted {
@@ -16093,7 +16093,7 @@ type SGeoradiusRoOrderDesc SCompleted
 
 func (c SGeoradiusRoOrderDesc) Storedist(Key string) SGeoradiusRoStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoOrderDesc) Build() SCompleted {
@@ -16107,19 +16107,19 @@ func (c SGeoradiusRoOrderDesc) Cache() SCacheable {
 type SGeoradiusRoRadius SCompleted
 
 func (c SGeoradiusRoRadius) M() SGeoradiusRoUnitM {
-	return SGeoradiusRoUnitM{cf: c.cf, cs: append(c.cs, "m")}
+	return SGeoradiusRoUnitM{cs: append(c.cs, "m"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoRadius) Km() SGeoradiusRoUnitKm {
-	return SGeoradiusRoUnitKm{cf: c.cf, cs: append(c.cs, "km")}
+	return SGeoradiusRoUnitKm{cs: append(c.cs, "km"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoRadius) Ft() SGeoradiusRoUnitFt {
-	return SGeoradiusRoUnitFt{cf: c.cf, cs: append(c.cs, "ft")}
+	return SGeoradiusRoUnitFt{cs: append(c.cs, "ft"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoRadius) Mi() SGeoradiusRoUnitMi {
-	return SGeoradiusRoUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
+	return SGeoradiusRoUnitMi{cs: append(c.cs, "mi"), cf: c.cf, ks: c.ks}
 }
 
 type SGeoradiusRoStoredist SCompleted
@@ -16135,32 +16135,32 @@ func (c SGeoradiusRoStoredist) Cache() SCacheable {
 type SGeoradiusRoUnitFt SCompleted
 
 func (c SGeoradiusRoUnitFt) Withcoord() SGeoradiusRoWithcoordWithcoord {
-	return SGeoradiusRoWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return SGeoradiusRoWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoUnitFt) Withdist() SGeoradiusRoWithdistWithdist {
-	return SGeoradiusRoWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return SGeoradiusRoWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoUnitFt) Withhash() SGeoradiusRoWithhashWithhash {
-	return SGeoradiusRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeoradiusRoWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoUnitFt) Count(Count int64) SGeoradiusRoCountCount {
-	return SGeoradiusRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeoradiusRoCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoUnitFt) Asc() SGeoradiusRoOrderAsc {
-	return SGeoradiusRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeoradiusRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoUnitFt) Desc() SGeoradiusRoOrderDesc {
-	return SGeoradiusRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeoradiusRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoUnitFt) Storedist(Key string) SGeoradiusRoStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoUnitFt) Build() SCompleted {
@@ -16174,32 +16174,32 @@ func (c SGeoradiusRoUnitFt) Cache() SCacheable {
 type SGeoradiusRoUnitKm SCompleted
 
 func (c SGeoradiusRoUnitKm) Withcoord() SGeoradiusRoWithcoordWithcoord {
-	return SGeoradiusRoWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return SGeoradiusRoWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoUnitKm) Withdist() SGeoradiusRoWithdistWithdist {
-	return SGeoradiusRoWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return SGeoradiusRoWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoUnitKm) Withhash() SGeoradiusRoWithhashWithhash {
-	return SGeoradiusRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeoradiusRoWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoUnitKm) Count(Count int64) SGeoradiusRoCountCount {
-	return SGeoradiusRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeoradiusRoCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoUnitKm) Asc() SGeoradiusRoOrderAsc {
-	return SGeoradiusRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeoradiusRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoUnitKm) Desc() SGeoradiusRoOrderDesc {
-	return SGeoradiusRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeoradiusRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoUnitKm) Storedist(Key string) SGeoradiusRoStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoUnitKm) Build() SCompleted {
@@ -16213,32 +16213,32 @@ func (c SGeoradiusRoUnitKm) Cache() SCacheable {
 type SGeoradiusRoUnitM SCompleted
 
 func (c SGeoradiusRoUnitM) Withcoord() SGeoradiusRoWithcoordWithcoord {
-	return SGeoradiusRoWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return SGeoradiusRoWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoUnitM) Withdist() SGeoradiusRoWithdistWithdist {
-	return SGeoradiusRoWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return SGeoradiusRoWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoUnitM) Withhash() SGeoradiusRoWithhashWithhash {
-	return SGeoradiusRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeoradiusRoWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoUnitM) Count(Count int64) SGeoradiusRoCountCount {
-	return SGeoradiusRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeoradiusRoCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoUnitM) Asc() SGeoradiusRoOrderAsc {
-	return SGeoradiusRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeoradiusRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoUnitM) Desc() SGeoradiusRoOrderDesc {
-	return SGeoradiusRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeoradiusRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoUnitM) Storedist(Key string) SGeoradiusRoStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoUnitM) Build() SCompleted {
@@ -16252,32 +16252,32 @@ func (c SGeoradiusRoUnitM) Cache() SCacheable {
 type SGeoradiusRoUnitMi SCompleted
 
 func (c SGeoradiusRoUnitMi) Withcoord() SGeoradiusRoWithcoordWithcoord {
-	return SGeoradiusRoWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return SGeoradiusRoWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoUnitMi) Withdist() SGeoradiusRoWithdistWithdist {
-	return SGeoradiusRoWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return SGeoradiusRoWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoUnitMi) Withhash() SGeoradiusRoWithhashWithhash {
-	return SGeoradiusRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeoradiusRoWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoUnitMi) Count(Count int64) SGeoradiusRoCountCount {
-	return SGeoradiusRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeoradiusRoCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoUnitMi) Asc() SGeoradiusRoOrderAsc {
-	return SGeoradiusRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeoradiusRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoUnitMi) Desc() SGeoradiusRoOrderDesc {
-	return SGeoradiusRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeoradiusRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoUnitMi) Storedist(Key string) SGeoradiusRoStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoUnitMi) Build() SCompleted {
@@ -16291,28 +16291,28 @@ func (c SGeoradiusRoUnitMi) Cache() SCacheable {
 type SGeoradiusRoWithcoordWithcoord SCompleted
 
 func (c SGeoradiusRoWithcoordWithcoord) Withdist() SGeoradiusRoWithdistWithdist {
-	return SGeoradiusRoWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return SGeoradiusRoWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoWithcoordWithcoord) Withhash() SGeoradiusRoWithhashWithhash {
-	return SGeoradiusRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeoradiusRoWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoWithcoordWithcoord) Count(Count int64) SGeoradiusRoCountCount {
-	return SGeoradiusRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeoradiusRoCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoWithcoordWithcoord) Asc() SGeoradiusRoOrderAsc {
-	return SGeoradiusRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeoradiusRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoWithcoordWithcoord) Desc() SGeoradiusRoOrderDesc {
-	return SGeoradiusRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeoradiusRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoWithcoordWithcoord) Storedist(Key string) SGeoradiusRoStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoWithcoordWithcoord) Build() SCompleted {
@@ -16326,24 +16326,24 @@ func (c SGeoradiusRoWithcoordWithcoord) Cache() SCacheable {
 type SGeoradiusRoWithdistWithdist SCompleted
 
 func (c SGeoradiusRoWithdistWithdist) Withhash() SGeoradiusRoWithhashWithhash {
-	return SGeoradiusRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeoradiusRoWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoWithdistWithdist) Count(Count int64) SGeoradiusRoCountCount {
-	return SGeoradiusRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeoradiusRoCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoWithdistWithdist) Asc() SGeoradiusRoOrderAsc {
-	return SGeoradiusRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeoradiusRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoWithdistWithdist) Desc() SGeoradiusRoOrderDesc {
-	return SGeoradiusRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeoradiusRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoWithdistWithdist) Storedist(Key string) SGeoradiusRoStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoWithdistWithdist) Build() SCompleted {
@@ -16357,20 +16357,20 @@ func (c SGeoradiusRoWithdistWithdist) Cache() SCacheable {
 type SGeoradiusRoWithhashWithhash SCompleted
 
 func (c SGeoradiusRoWithhashWithhash) Count(Count int64) SGeoradiusRoCountCount {
-	return SGeoradiusRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeoradiusRoCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoWithhashWithhash) Asc() SGeoradiusRoOrderAsc {
-	return SGeoradiusRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeoradiusRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoWithhashWithhash) Desc() SGeoradiusRoOrderDesc {
-	return SGeoradiusRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeoradiusRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoWithhashWithhash) Storedist(Key string) SGeoradiusRoStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusRoWithhashWithhash) Build() SCompleted {
@@ -16385,7 +16385,7 @@ type SGeoradiusStore SCompleted
 
 func (c SGeoradiusStore) Storedist(Key string) SGeoradiusStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusStore) Build() SCompleted {
@@ -16401,37 +16401,37 @@ func (c SGeoradiusStoredist) Build() SCompleted {
 type SGeoradiusUnitFt SCompleted
 
 func (c SGeoradiusUnitFt) Withcoord() SGeoradiusWithcoordWithcoord {
-	return SGeoradiusWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return SGeoradiusWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusUnitFt) Withdist() SGeoradiusWithdistWithdist {
-	return SGeoradiusWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return SGeoradiusWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusUnitFt) Withhash() SGeoradiusWithhashWithhash {
-	return SGeoradiusWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeoradiusWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusUnitFt) Count(Count int64) SGeoradiusCountCount {
-	return SGeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeoradiusCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusUnitFt) Asc() SGeoradiusOrderAsc {
-	return SGeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeoradiusOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusUnitFt) Desc() SGeoradiusOrderDesc {
-	return SGeoradiusOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeoradiusOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusUnitFt) Store(Key string) SGeoradiusStore {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return SGeoradiusStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusUnitFt) Storedist(Key string) SGeoradiusStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusUnitFt) Build() SCompleted {
@@ -16441,37 +16441,37 @@ func (c SGeoradiusUnitFt) Build() SCompleted {
 type SGeoradiusUnitKm SCompleted
 
 func (c SGeoradiusUnitKm) Withcoord() SGeoradiusWithcoordWithcoord {
-	return SGeoradiusWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return SGeoradiusWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusUnitKm) Withdist() SGeoradiusWithdistWithdist {
-	return SGeoradiusWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return SGeoradiusWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusUnitKm) Withhash() SGeoradiusWithhashWithhash {
-	return SGeoradiusWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeoradiusWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusUnitKm) Count(Count int64) SGeoradiusCountCount {
-	return SGeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeoradiusCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusUnitKm) Asc() SGeoradiusOrderAsc {
-	return SGeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeoradiusOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusUnitKm) Desc() SGeoradiusOrderDesc {
-	return SGeoradiusOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeoradiusOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusUnitKm) Store(Key string) SGeoradiusStore {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return SGeoradiusStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusUnitKm) Storedist(Key string) SGeoradiusStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusUnitKm) Build() SCompleted {
@@ -16481,37 +16481,37 @@ func (c SGeoradiusUnitKm) Build() SCompleted {
 type SGeoradiusUnitM SCompleted
 
 func (c SGeoradiusUnitM) Withcoord() SGeoradiusWithcoordWithcoord {
-	return SGeoradiusWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return SGeoradiusWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusUnitM) Withdist() SGeoradiusWithdistWithdist {
-	return SGeoradiusWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return SGeoradiusWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusUnitM) Withhash() SGeoradiusWithhashWithhash {
-	return SGeoradiusWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeoradiusWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusUnitM) Count(Count int64) SGeoradiusCountCount {
-	return SGeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeoradiusCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusUnitM) Asc() SGeoradiusOrderAsc {
-	return SGeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeoradiusOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusUnitM) Desc() SGeoradiusOrderDesc {
-	return SGeoradiusOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeoradiusOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusUnitM) Store(Key string) SGeoradiusStore {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return SGeoradiusStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusUnitM) Storedist(Key string) SGeoradiusStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusUnitM) Build() SCompleted {
@@ -16521,37 +16521,37 @@ func (c SGeoradiusUnitM) Build() SCompleted {
 type SGeoradiusUnitMi SCompleted
 
 func (c SGeoradiusUnitMi) Withcoord() SGeoradiusWithcoordWithcoord {
-	return SGeoradiusWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return SGeoradiusWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusUnitMi) Withdist() SGeoradiusWithdistWithdist {
-	return SGeoradiusWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return SGeoradiusWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusUnitMi) Withhash() SGeoradiusWithhashWithhash {
-	return SGeoradiusWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeoradiusWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusUnitMi) Count(Count int64) SGeoradiusCountCount {
-	return SGeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeoradiusCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusUnitMi) Asc() SGeoradiusOrderAsc {
-	return SGeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeoradiusOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusUnitMi) Desc() SGeoradiusOrderDesc {
-	return SGeoradiusOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeoradiusOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusUnitMi) Store(Key string) SGeoradiusStore {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return SGeoradiusStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusUnitMi) Storedist(Key string) SGeoradiusStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusUnitMi) Build() SCompleted {
@@ -16561,33 +16561,33 @@ func (c SGeoradiusUnitMi) Build() SCompleted {
 type SGeoradiusWithcoordWithcoord SCompleted
 
 func (c SGeoradiusWithcoordWithcoord) Withdist() SGeoradiusWithdistWithdist {
-	return SGeoradiusWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return SGeoradiusWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusWithcoordWithcoord) Withhash() SGeoradiusWithhashWithhash {
-	return SGeoradiusWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeoradiusWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusWithcoordWithcoord) Count(Count int64) SGeoradiusCountCount {
-	return SGeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeoradiusCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusWithcoordWithcoord) Asc() SGeoradiusOrderAsc {
-	return SGeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeoradiusOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusWithcoordWithcoord) Desc() SGeoradiusOrderDesc {
-	return SGeoradiusOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeoradiusOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusWithcoordWithcoord) Store(Key string) SGeoradiusStore {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return SGeoradiusStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusWithcoordWithcoord) Storedist(Key string) SGeoradiusStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusWithcoordWithcoord) Build() SCompleted {
@@ -16597,29 +16597,29 @@ func (c SGeoradiusWithcoordWithcoord) Build() SCompleted {
 type SGeoradiusWithdistWithdist SCompleted
 
 func (c SGeoradiusWithdistWithdist) Withhash() SGeoradiusWithhashWithhash {
-	return SGeoradiusWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeoradiusWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusWithdistWithdist) Count(Count int64) SGeoradiusCountCount {
-	return SGeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeoradiusCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusWithdistWithdist) Asc() SGeoradiusOrderAsc {
-	return SGeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeoradiusOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusWithdistWithdist) Desc() SGeoradiusOrderDesc {
-	return SGeoradiusOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeoradiusOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusWithdistWithdist) Store(Key string) SGeoradiusStore {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return SGeoradiusStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusWithdistWithdist) Storedist(Key string) SGeoradiusStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusWithdistWithdist) Build() SCompleted {
@@ -16629,25 +16629,25 @@ func (c SGeoradiusWithdistWithdist) Build() SCompleted {
 type SGeoradiusWithhashWithhash SCompleted
 
 func (c SGeoradiusWithhashWithhash) Count(Count int64) SGeoradiusCountCount {
-	return SGeoradiusCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeoradiusCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusWithhashWithhash) Asc() SGeoradiusOrderAsc {
-	return SGeoradiusOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeoradiusOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusWithhashWithhash) Desc() SGeoradiusOrderDesc {
-	return SGeoradiusOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeoradiusOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusWithhashWithhash) Store(Key string) SGeoradiusStore {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return SGeoradiusStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusWithhashWithhash) Storedist(Key string) SGeoradiusStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusWithhashWithhash) Build() SCompleted {
@@ -16658,7 +16658,7 @@ type SGeoradiusbymember SCompleted
 
 func (c SGeoradiusbymember) Key(Key string) SGeoradiusbymemberKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusbymemberKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SGeoradiusbymemberKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Georadiusbymember() (c SGeoradiusbymember) {
@@ -16670,21 +16670,21 @@ func (b *SBuilder) Georadiusbymember() (c SGeoradiusbymember) {
 type SGeoradiusbymemberCountAnyAny SCompleted
 
 func (c SGeoradiusbymemberCountAnyAny) Asc() SGeoradiusbymemberOrderAsc {
-	return SGeoradiusbymemberOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeoradiusbymemberOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberCountAnyAny) Desc() SGeoradiusbymemberOrderDesc {
-	return SGeoradiusbymemberOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeoradiusbymemberOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberCountAnyAny) Store(Key string) SGeoradiusbymemberStore {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusbymemberStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return SGeoradiusbymemberStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberCountAnyAny) Storedist(Key string) SGeoradiusbymemberStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberCountAnyAny) Build() SCompleted {
@@ -16694,25 +16694,25 @@ func (c SGeoradiusbymemberCountAnyAny) Build() SCompleted {
 type SGeoradiusbymemberCountCount SCompleted
 
 func (c SGeoradiusbymemberCountCount) Any() SGeoradiusbymemberCountAnyAny {
-	return SGeoradiusbymemberCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
+	return SGeoradiusbymemberCountAnyAny{cs: append(c.cs, "ANY"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberCountCount) Asc() SGeoradiusbymemberOrderAsc {
-	return SGeoradiusbymemberOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeoradiusbymemberOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberCountCount) Desc() SGeoradiusbymemberOrderDesc {
-	return SGeoradiusbymemberOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeoradiusbymemberOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberCountCount) Store(Key string) SGeoradiusbymemberStore {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusbymemberStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return SGeoradiusbymemberStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberCountCount) Storedist(Key string) SGeoradiusbymemberStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberCountCount) Build() SCompleted {
@@ -16722,25 +16722,25 @@ func (c SGeoradiusbymemberCountCount) Build() SCompleted {
 type SGeoradiusbymemberKey SCompleted
 
 func (c SGeoradiusbymemberKey) Member(Member string) SGeoradiusbymemberMember {
-	return SGeoradiusbymemberMember{cf: c.cf, cs: append(c.cs, Member)}
+	return SGeoradiusbymemberMember{cs: append(c.cs, Member), cf: c.cf, ks: c.ks}
 }
 
 type SGeoradiusbymemberMember SCompleted
 
 func (c SGeoradiusbymemberMember) Radius(Radius float64) SGeoradiusbymemberRadius {
-	return SGeoradiusbymemberRadius{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Radius, 'f', -1, 64))}
+	return SGeoradiusbymemberRadius{cs: append(c.cs, strconv.FormatFloat(Radius, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type SGeoradiusbymemberOrderAsc SCompleted
 
 func (c SGeoradiusbymemberOrderAsc) Store(Key string) SGeoradiusbymemberStore {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusbymemberStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return SGeoradiusbymemberStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberOrderAsc) Storedist(Key string) SGeoradiusbymemberStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberOrderAsc) Build() SCompleted {
@@ -16751,12 +16751,12 @@ type SGeoradiusbymemberOrderDesc SCompleted
 
 func (c SGeoradiusbymemberOrderDesc) Store(Key string) SGeoradiusbymemberStore {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusbymemberStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return SGeoradiusbymemberStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberOrderDesc) Storedist(Key string) SGeoradiusbymemberStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberOrderDesc) Build() SCompleted {
@@ -16766,26 +16766,26 @@ func (c SGeoradiusbymemberOrderDesc) Build() SCompleted {
 type SGeoradiusbymemberRadius SCompleted
 
 func (c SGeoradiusbymemberRadius) M() SGeoradiusbymemberUnitM {
-	return SGeoradiusbymemberUnitM{cf: c.cf, cs: append(c.cs, "m")}
+	return SGeoradiusbymemberUnitM{cs: append(c.cs, "m"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRadius) Km() SGeoradiusbymemberUnitKm {
-	return SGeoradiusbymemberUnitKm{cf: c.cf, cs: append(c.cs, "km")}
+	return SGeoradiusbymemberUnitKm{cs: append(c.cs, "km"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRadius) Ft() SGeoradiusbymemberUnitFt {
-	return SGeoradiusbymemberUnitFt{cf: c.cf, cs: append(c.cs, "ft")}
+	return SGeoradiusbymemberUnitFt{cs: append(c.cs, "ft"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRadius) Mi() SGeoradiusbymemberUnitMi {
-	return SGeoradiusbymemberUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
+	return SGeoradiusbymemberUnitMi{cs: append(c.cs, "mi"), cf: c.cf, ks: c.ks}
 }
 
 type SGeoradiusbymemberRo SCompleted
 
 func (c SGeoradiusbymemberRo) Key(Key string) SGeoradiusbymemberRoKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusbymemberRoKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SGeoradiusbymemberRoKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) GeoradiusbymemberRo() (c SGeoradiusbymemberRo) {
@@ -16798,16 +16798,16 @@ func (b *SBuilder) GeoradiusbymemberRo() (c SGeoradiusbymemberRo) {
 type SGeoradiusbymemberRoCountAnyAny SCompleted
 
 func (c SGeoradiusbymemberRoCountAnyAny) Asc() SGeoradiusbymemberRoOrderAsc {
-	return SGeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeoradiusbymemberRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoCountAnyAny) Desc() SGeoradiusbymemberRoOrderDesc {
-	return SGeoradiusbymemberRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeoradiusbymemberRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoCountAnyAny) Storedist(Key string) SGeoradiusbymemberRoStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusbymemberRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoCountAnyAny) Build() SCompleted {
@@ -16821,20 +16821,20 @@ func (c SGeoradiusbymemberRoCountAnyAny) Cache() SCacheable {
 type SGeoradiusbymemberRoCountCount SCompleted
 
 func (c SGeoradiusbymemberRoCountCount) Any() SGeoradiusbymemberRoCountAnyAny {
-	return SGeoradiusbymemberRoCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
+	return SGeoradiusbymemberRoCountAnyAny{cs: append(c.cs, "ANY"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoCountCount) Asc() SGeoradiusbymemberRoOrderAsc {
-	return SGeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeoradiusbymemberRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoCountCount) Desc() SGeoradiusbymemberRoOrderDesc {
-	return SGeoradiusbymemberRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeoradiusbymemberRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoCountCount) Storedist(Key string) SGeoradiusbymemberRoStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusbymemberRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoCountCount) Build() SCompleted {
@@ -16848,20 +16848,20 @@ func (c SGeoradiusbymemberRoCountCount) Cache() SCacheable {
 type SGeoradiusbymemberRoKey SCompleted
 
 func (c SGeoradiusbymemberRoKey) Member(Member string) SGeoradiusbymemberRoMember {
-	return SGeoradiusbymemberRoMember{cf: c.cf, cs: append(c.cs, Member)}
+	return SGeoradiusbymemberRoMember{cs: append(c.cs, Member), cf: c.cf, ks: c.ks}
 }
 
 type SGeoradiusbymemberRoMember SCompleted
 
 func (c SGeoradiusbymemberRoMember) Radius(Radius float64) SGeoradiusbymemberRoRadius {
-	return SGeoradiusbymemberRoRadius{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Radius, 'f', -1, 64))}
+	return SGeoradiusbymemberRoRadius{cs: append(c.cs, strconv.FormatFloat(Radius, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type SGeoradiusbymemberRoOrderAsc SCompleted
 
 func (c SGeoradiusbymemberRoOrderAsc) Storedist(Key string) SGeoradiusbymemberRoStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusbymemberRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoOrderAsc) Build() SCompleted {
@@ -16876,7 +16876,7 @@ type SGeoradiusbymemberRoOrderDesc SCompleted
 
 func (c SGeoradiusbymemberRoOrderDesc) Storedist(Key string) SGeoradiusbymemberRoStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusbymemberRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoOrderDesc) Build() SCompleted {
@@ -16890,19 +16890,19 @@ func (c SGeoradiusbymemberRoOrderDesc) Cache() SCacheable {
 type SGeoradiusbymemberRoRadius SCompleted
 
 func (c SGeoradiusbymemberRoRadius) M() SGeoradiusbymemberRoUnitM {
-	return SGeoradiusbymemberRoUnitM{cf: c.cf, cs: append(c.cs, "m")}
+	return SGeoradiusbymemberRoUnitM{cs: append(c.cs, "m"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoRadius) Km() SGeoradiusbymemberRoUnitKm {
-	return SGeoradiusbymemberRoUnitKm{cf: c.cf, cs: append(c.cs, "km")}
+	return SGeoradiusbymemberRoUnitKm{cs: append(c.cs, "km"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoRadius) Ft() SGeoradiusbymemberRoUnitFt {
-	return SGeoradiusbymemberRoUnitFt{cf: c.cf, cs: append(c.cs, "ft")}
+	return SGeoradiusbymemberRoUnitFt{cs: append(c.cs, "ft"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoRadius) Mi() SGeoradiusbymemberRoUnitMi {
-	return SGeoradiusbymemberRoUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
+	return SGeoradiusbymemberRoUnitMi{cs: append(c.cs, "mi"), cf: c.cf, ks: c.ks}
 }
 
 type SGeoradiusbymemberRoStoredist SCompleted
@@ -16918,32 +16918,32 @@ func (c SGeoradiusbymemberRoStoredist) Cache() SCacheable {
 type SGeoradiusbymemberRoUnitFt SCompleted
 
 func (c SGeoradiusbymemberRoUnitFt) Withcoord() SGeoradiusbymemberRoWithcoordWithcoord {
-	return SGeoradiusbymemberRoWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return SGeoradiusbymemberRoWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoUnitFt) Withdist() SGeoradiusbymemberRoWithdistWithdist {
-	return SGeoradiusbymemberRoWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return SGeoradiusbymemberRoWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoUnitFt) Withhash() SGeoradiusbymemberRoWithhashWithhash {
-	return SGeoradiusbymemberRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeoradiusbymemberRoWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoUnitFt) Count(Count int64) SGeoradiusbymemberRoCountCount {
-	return SGeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeoradiusbymemberRoCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoUnitFt) Asc() SGeoradiusbymemberRoOrderAsc {
-	return SGeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeoradiusbymemberRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoUnitFt) Desc() SGeoradiusbymemberRoOrderDesc {
-	return SGeoradiusbymemberRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeoradiusbymemberRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoUnitFt) Storedist(Key string) SGeoradiusbymemberRoStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusbymemberRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoUnitFt) Build() SCompleted {
@@ -16957,32 +16957,32 @@ func (c SGeoradiusbymemberRoUnitFt) Cache() SCacheable {
 type SGeoradiusbymemberRoUnitKm SCompleted
 
 func (c SGeoradiusbymemberRoUnitKm) Withcoord() SGeoradiusbymemberRoWithcoordWithcoord {
-	return SGeoradiusbymemberRoWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return SGeoradiusbymemberRoWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoUnitKm) Withdist() SGeoradiusbymemberRoWithdistWithdist {
-	return SGeoradiusbymemberRoWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return SGeoradiusbymemberRoWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoUnitKm) Withhash() SGeoradiusbymemberRoWithhashWithhash {
-	return SGeoradiusbymemberRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeoradiusbymemberRoWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoUnitKm) Count(Count int64) SGeoradiusbymemberRoCountCount {
-	return SGeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeoradiusbymemberRoCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoUnitKm) Asc() SGeoradiusbymemberRoOrderAsc {
-	return SGeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeoradiusbymemberRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoUnitKm) Desc() SGeoradiusbymemberRoOrderDesc {
-	return SGeoradiusbymemberRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeoradiusbymemberRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoUnitKm) Storedist(Key string) SGeoradiusbymemberRoStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusbymemberRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoUnitKm) Build() SCompleted {
@@ -16996,32 +16996,32 @@ func (c SGeoradiusbymemberRoUnitKm) Cache() SCacheable {
 type SGeoradiusbymemberRoUnitM SCompleted
 
 func (c SGeoradiusbymemberRoUnitM) Withcoord() SGeoradiusbymemberRoWithcoordWithcoord {
-	return SGeoradiusbymemberRoWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return SGeoradiusbymemberRoWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoUnitM) Withdist() SGeoradiusbymemberRoWithdistWithdist {
-	return SGeoradiusbymemberRoWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return SGeoradiusbymemberRoWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoUnitM) Withhash() SGeoradiusbymemberRoWithhashWithhash {
-	return SGeoradiusbymemberRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeoradiusbymemberRoWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoUnitM) Count(Count int64) SGeoradiusbymemberRoCountCount {
-	return SGeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeoradiusbymemberRoCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoUnitM) Asc() SGeoradiusbymemberRoOrderAsc {
-	return SGeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeoradiusbymemberRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoUnitM) Desc() SGeoradiusbymemberRoOrderDesc {
-	return SGeoradiusbymemberRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeoradiusbymemberRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoUnitM) Storedist(Key string) SGeoradiusbymemberRoStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusbymemberRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoUnitM) Build() SCompleted {
@@ -17035,32 +17035,32 @@ func (c SGeoradiusbymemberRoUnitM) Cache() SCacheable {
 type SGeoradiusbymemberRoUnitMi SCompleted
 
 func (c SGeoradiusbymemberRoUnitMi) Withcoord() SGeoradiusbymemberRoWithcoordWithcoord {
-	return SGeoradiusbymemberRoWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return SGeoradiusbymemberRoWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoUnitMi) Withdist() SGeoradiusbymemberRoWithdistWithdist {
-	return SGeoradiusbymemberRoWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return SGeoradiusbymemberRoWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoUnitMi) Withhash() SGeoradiusbymemberRoWithhashWithhash {
-	return SGeoradiusbymemberRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeoradiusbymemberRoWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoUnitMi) Count(Count int64) SGeoradiusbymemberRoCountCount {
-	return SGeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeoradiusbymemberRoCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoUnitMi) Asc() SGeoradiusbymemberRoOrderAsc {
-	return SGeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeoradiusbymemberRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoUnitMi) Desc() SGeoradiusbymemberRoOrderDesc {
-	return SGeoradiusbymemberRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeoradiusbymemberRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoUnitMi) Storedist(Key string) SGeoradiusbymemberRoStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusbymemberRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoUnitMi) Build() SCompleted {
@@ -17074,28 +17074,28 @@ func (c SGeoradiusbymemberRoUnitMi) Cache() SCacheable {
 type SGeoradiusbymemberRoWithcoordWithcoord SCompleted
 
 func (c SGeoradiusbymemberRoWithcoordWithcoord) Withdist() SGeoradiusbymemberRoWithdistWithdist {
-	return SGeoradiusbymemberRoWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return SGeoradiusbymemberRoWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoWithcoordWithcoord) Withhash() SGeoradiusbymemberRoWithhashWithhash {
-	return SGeoradiusbymemberRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeoradiusbymemberRoWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoWithcoordWithcoord) Count(Count int64) SGeoradiusbymemberRoCountCount {
-	return SGeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeoradiusbymemberRoCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoWithcoordWithcoord) Asc() SGeoradiusbymemberRoOrderAsc {
-	return SGeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeoradiusbymemberRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoWithcoordWithcoord) Desc() SGeoradiusbymemberRoOrderDesc {
-	return SGeoradiusbymemberRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeoradiusbymemberRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoWithcoordWithcoord) Storedist(Key string) SGeoradiusbymemberRoStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusbymemberRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoWithcoordWithcoord) Build() SCompleted {
@@ -17109,24 +17109,24 @@ func (c SGeoradiusbymemberRoWithcoordWithcoord) Cache() SCacheable {
 type SGeoradiusbymemberRoWithdistWithdist SCompleted
 
 func (c SGeoradiusbymemberRoWithdistWithdist) Withhash() SGeoradiusbymemberRoWithhashWithhash {
-	return SGeoradiusbymemberRoWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeoradiusbymemberRoWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoWithdistWithdist) Count(Count int64) SGeoradiusbymemberRoCountCount {
-	return SGeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeoradiusbymemberRoCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoWithdistWithdist) Asc() SGeoradiusbymemberRoOrderAsc {
-	return SGeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeoradiusbymemberRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoWithdistWithdist) Desc() SGeoradiusbymemberRoOrderDesc {
-	return SGeoradiusbymemberRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeoradiusbymemberRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoWithdistWithdist) Storedist(Key string) SGeoradiusbymemberRoStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusbymemberRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoWithdistWithdist) Build() SCompleted {
@@ -17140,20 +17140,20 @@ func (c SGeoradiusbymemberRoWithdistWithdist) Cache() SCacheable {
 type SGeoradiusbymemberRoWithhashWithhash SCompleted
 
 func (c SGeoradiusbymemberRoWithhashWithhash) Count(Count int64) SGeoradiusbymemberRoCountCount {
-	return SGeoradiusbymemberRoCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeoradiusbymemberRoCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoWithhashWithhash) Asc() SGeoradiusbymemberRoOrderAsc {
-	return SGeoradiusbymemberRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeoradiusbymemberRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoWithhashWithhash) Desc() SGeoradiusbymemberRoOrderDesc {
-	return SGeoradiusbymemberRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeoradiusbymemberRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoWithhashWithhash) Storedist(Key string) SGeoradiusbymemberRoStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusbymemberRoStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusbymemberRoStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberRoWithhashWithhash) Build() SCompleted {
@@ -17168,7 +17168,7 @@ type SGeoradiusbymemberStore SCompleted
 
 func (c SGeoradiusbymemberStore) Storedist(Key string) SGeoradiusbymemberStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberStore) Build() SCompleted {
@@ -17184,37 +17184,37 @@ func (c SGeoradiusbymemberStoredist) Build() SCompleted {
 type SGeoradiusbymemberUnitFt SCompleted
 
 func (c SGeoradiusbymemberUnitFt) Withcoord() SGeoradiusbymemberWithcoordWithcoord {
-	return SGeoradiusbymemberWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return SGeoradiusbymemberWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberUnitFt) Withdist() SGeoradiusbymemberWithdistWithdist {
-	return SGeoradiusbymemberWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return SGeoradiusbymemberWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberUnitFt) Withhash() SGeoradiusbymemberWithhashWithhash {
-	return SGeoradiusbymemberWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeoradiusbymemberWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberUnitFt) Count(Count int64) SGeoradiusbymemberCountCount {
-	return SGeoradiusbymemberCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeoradiusbymemberCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberUnitFt) Asc() SGeoradiusbymemberOrderAsc {
-	return SGeoradiusbymemberOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeoradiusbymemberOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberUnitFt) Desc() SGeoradiusbymemberOrderDesc {
-	return SGeoradiusbymemberOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeoradiusbymemberOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberUnitFt) Store(Key string) SGeoradiusbymemberStore {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusbymemberStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return SGeoradiusbymemberStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberUnitFt) Storedist(Key string) SGeoradiusbymemberStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberUnitFt) Build() SCompleted {
@@ -17224,37 +17224,37 @@ func (c SGeoradiusbymemberUnitFt) Build() SCompleted {
 type SGeoradiusbymemberUnitKm SCompleted
 
 func (c SGeoradiusbymemberUnitKm) Withcoord() SGeoradiusbymemberWithcoordWithcoord {
-	return SGeoradiusbymemberWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return SGeoradiusbymemberWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberUnitKm) Withdist() SGeoradiusbymemberWithdistWithdist {
-	return SGeoradiusbymemberWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return SGeoradiusbymemberWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberUnitKm) Withhash() SGeoradiusbymemberWithhashWithhash {
-	return SGeoradiusbymemberWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeoradiusbymemberWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberUnitKm) Count(Count int64) SGeoradiusbymemberCountCount {
-	return SGeoradiusbymemberCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeoradiusbymemberCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberUnitKm) Asc() SGeoradiusbymemberOrderAsc {
-	return SGeoradiusbymemberOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeoradiusbymemberOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberUnitKm) Desc() SGeoradiusbymemberOrderDesc {
-	return SGeoradiusbymemberOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeoradiusbymemberOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberUnitKm) Store(Key string) SGeoradiusbymemberStore {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusbymemberStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return SGeoradiusbymemberStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberUnitKm) Storedist(Key string) SGeoradiusbymemberStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberUnitKm) Build() SCompleted {
@@ -17264,37 +17264,37 @@ func (c SGeoradiusbymemberUnitKm) Build() SCompleted {
 type SGeoradiusbymemberUnitM SCompleted
 
 func (c SGeoradiusbymemberUnitM) Withcoord() SGeoradiusbymemberWithcoordWithcoord {
-	return SGeoradiusbymemberWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return SGeoradiusbymemberWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberUnitM) Withdist() SGeoradiusbymemberWithdistWithdist {
-	return SGeoradiusbymemberWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return SGeoradiusbymemberWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberUnitM) Withhash() SGeoradiusbymemberWithhashWithhash {
-	return SGeoradiusbymemberWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeoradiusbymemberWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberUnitM) Count(Count int64) SGeoradiusbymemberCountCount {
-	return SGeoradiusbymemberCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeoradiusbymemberCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberUnitM) Asc() SGeoradiusbymemberOrderAsc {
-	return SGeoradiusbymemberOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeoradiusbymemberOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberUnitM) Desc() SGeoradiusbymemberOrderDesc {
-	return SGeoradiusbymemberOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeoradiusbymemberOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberUnitM) Store(Key string) SGeoradiusbymemberStore {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusbymemberStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return SGeoradiusbymemberStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberUnitM) Storedist(Key string) SGeoradiusbymemberStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberUnitM) Build() SCompleted {
@@ -17304,37 +17304,37 @@ func (c SGeoradiusbymemberUnitM) Build() SCompleted {
 type SGeoradiusbymemberUnitMi SCompleted
 
 func (c SGeoradiusbymemberUnitMi) Withcoord() SGeoradiusbymemberWithcoordWithcoord {
-	return SGeoradiusbymemberWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return SGeoradiusbymemberWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberUnitMi) Withdist() SGeoradiusbymemberWithdistWithdist {
-	return SGeoradiusbymemberWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return SGeoradiusbymemberWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberUnitMi) Withhash() SGeoradiusbymemberWithhashWithhash {
-	return SGeoradiusbymemberWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeoradiusbymemberWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberUnitMi) Count(Count int64) SGeoradiusbymemberCountCount {
-	return SGeoradiusbymemberCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeoradiusbymemberCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberUnitMi) Asc() SGeoradiusbymemberOrderAsc {
-	return SGeoradiusbymemberOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeoradiusbymemberOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberUnitMi) Desc() SGeoradiusbymemberOrderDesc {
-	return SGeoradiusbymemberOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeoradiusbymemberOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberUnitMi) Store(Key string) SGeoradiusbymemberStore {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusbymemberStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return SGeoradiusbymemberStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberUnitMi) Storedist(Key string) SGeoradiusbymemberStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberUnitMi) Build() SCompleted {
@@ -17344,33 +17344,33 @@ func (c SGeoradiusbymemberUnitMi) Build() SCompleted {
 type SGeoradiusbymemberWithcoordWithcoord SCompleted
 
 func (c SGeoradiusbymemberWithcoordWithcoord) Withdist() SGeoradiusbymemberWithdistWithdist {
-	return SGeoradiusbymemberWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return SGeoradiusbymemberWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberWithcoordWithcoord) Withhash() SGeoradiusbymemberWithhashWithhash {
-	return SGeoradiusbymemberWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeoradiusbymemberWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberWithcoordWithcoord) Count(Count int64) SGeoradiusbymemberCountCount {
-	return SGeoradiusbymemberCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeoradiusbymemberCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberWithcoordWithcoord) Asc() SGeoradiusbymemberOrderAsc {
-	return SGeoradiusbymemberOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeoradiusbymemberOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberWithcoordWithcoord) Desc() SGeoradiusbymemberOrderDesc {
-	return SGeoradiusbymemberOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeoradiusbymemberOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberWithcoordWithcoord) Store(Key string) SGeoradiusbymemberStore {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusbymemberStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return SGeoradiusbymemberStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberWithcoordWithcoord) Storedist(Key string) SGeoradiusbymemberStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberWithcoordWithcoord) Build() SCompleted {
@@ -17380,29 +17380,29 @@ func (c SGeoradiusbymemberWithcoordWithcoord) Build() SCompleted {
 type SGeoradiusbymemberWithdistWithdist SCompleted
 
 func (c SGeoradiusbymemberWithdistWithdist) Withhash() SGeoradiusbymemberWithhashWithhash {
-	return SGeoradiusbymemberWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeoradiusbymemberWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberWithdistWithdist) Count(Count int64) SGeoradiusbymemberCountCount {
-	return SGeoradiusbymemberCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeoradiusbymemberCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberWithdistWithdist) Asc() SGeoradiusbymemberOrderAsc {
-	return SGeoradiusbymemberOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeoradiusbymemberOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberWithdistWithdist) Desc() SGeoradiusbymemberOrderDesc {
-	return SGeoradiusbymemberOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeoradiusbymemberOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberWithdistWithdist) Store(Key string) SGeoradiusbymemberStore {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusbymemberStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return SGeoradiusbymemberStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberWithdistWithdist) Storedist(Key string) SGeoradiusbymemberStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberWithdistWithdist) Build() SCompleted {
@@ -17412,25 +17412,25 @@ func (c SGeoradiusbymemberWithdistWithdist) Build() SCompleted {
 type SGeoradiusbymemberWithhashWithhash SCompleted
 
 func (c SGeoradiusbymemberWithhashWithhash) Count(Count int64) SGeoradiusbymemberCountCount {
-	return SGeoradiusbymemberCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeoradiusbymemberCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberWithhashWithhash) Asc() SGeoradiusbymemberOrderAsc {
-	return SGeoradiusbymemberOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeoradiusbymemberOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberWithhashWithhash) Desc() SGeoradiusbymemberOrderDesc {
-	return SGeoradiusbymemberOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeoradiusbymemberOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberWithhashWithhash) Store(Key string) SGeoradiusbymemberStore {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusbymemberStore{cf: c.cf, cs: append(c.cs, "STORE", Key)}
+	return SGeoradiusbymemberStore{cs: append(c.cs, "STORE", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberWithhashWithhash) Storedist(Key string) SGeoradiusbymemberStoredist {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeoradiusbymemberStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST", Key)}
+	return SGeoradiusbymemberStoredist{cs: append(c.cs, "STOREDIST", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeoradiusbymemberWithhashWithhash) Build() SCompleted {
@@ -17441,7 +17441,7 @@ type SGeosearch SCompleted
 
 func (c SGeosearch) Key(Key string) SGeosearchKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGeosearchKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SGeosearchKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Geosearch() (c SGeosearch) {
@@ -17454,51 +17454,51 @@ func (b *SBuilder) Geosearch() (c SGeosearch) {
 type SGeosearchBoxBybox SCompleted
 
 func (c SGeosearchBoxBybox) Height(Height float64) SGeosearchBoxHeight {
-	return SGeosearchBoxHeight{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Height, 'f', -1, 64))}
+	return SGeosearchBoxHeight{cs: append(c.cs, strconv.FormatFloat(Height, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type SGeosearchBoxHeight SCompleted
 
 func (c SGeosearchBoxHeight) M() SGeosearchBoxUnitM {
-	return SGeosearchBoxUnitM{cf: c.cf, cs: append(c.cs, "m")}
+	return SGeosearchBoxUnitM{cs: append(c.cs, "m"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchBoxHeight) Km() SGeosearchBoxUnitKm {
-	return SGeosearchBoxUnitKm{cf: c.cf, cs: append(c.cs, "km")}
+	return SGeosearchBoxUnitKm{cs: append(c.cs, "km"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchBoxHeight) Ft() SGeosearchBoxUnitFt {
-	return SGeosearchBoxUnitFt{cf: c.cf, cs: append(c.cs, "ft")}
+	return SGeosearchBoxUnitFt{cs: append(c.cs, "ft"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchBoxHeight) Mi() SGeosearchBoxUnitMi {
-	return SGeosearchBoxUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
+	return SGeosearchBoxUnitMi{cs: append(c.cs, "mi"), cf: c.cf, ks: c.ks}
 }
 
 type SGeosearchBoxUnitFt SCompleted
 
 func (c SGeosearchBoxUnitFt) Asc() SGeosearchOrderAsc {
-	return SGeosearchOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeosearchOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchBoxUnitFt) Desc() SGeosearchOrderDesc {
-	return SGeosearchOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeosearchOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchBoxUnitFt) Count(Count int64) SGeosearchCountCount {
-	return SGeosearchCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchBoxUnitFt) Withcoord() SGeosearchWithcoordWithcoord {
-	return SGeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return SGeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchBoxUnitFt) Withdist() SGeosearchWithdistWithdist {
-	return SGeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return SGeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchBoxUnitFt) Withhash() SGeosearchWithhashWithhash {
-	return SGeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchBoxUnitFt) Build() SCompleted {
@@ -17512,27 +17512,27 @@ func (c SGeosearchBoxUnitFt) Cache() SCacheable {
 type SGeosearchBoxUnitKm SCompleted
 
 func (c SGeosearchBoxUnitKm) Asc() SGeosearchOrderAsc {
-	return SGeosearchOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeosearchOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchBoxUnitKm) Desc() SGeosearchOrderDesc {
-	return SGeosearchOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeosearchOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchBoxUnitKm) Count(Count int64) SGeosearchCountCount {
-	return SGeosearchCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchBoxUnitKm) Withcoord() SGeosearchWithcoordWithcoord {
-	return SGeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return SGeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchBoxUnitKm) Withdist() SGeosearchWithdistWithdist {
-	return SGeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return SGeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchBoxUnitKm) Withhash() SGeosearchWithhashWithhash {
-	return SGeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchBoxUnitKm) Build() SCompleted {
@@ -17546,27 +17546,27 @@ func (c SGeosearchBoxUnitKm) Cache() SCacheable {
 type SGeosearchBoxUnitM SCompleted
 
 func (c SGeosearchBoxUnitM) Asc() SGeosearchOrderAsc {
-	return SGeosearchOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeosearchOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchBoxUnitM) Desc() SGeosearchOrderDesc {
-	return SGeosearchOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeosearchOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchBoxUnitM) Count(Count int64) SGeosearchCountCount {
-	return SGeosearchCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchBoxUnitM) Withcoord() SGeosearchWithcoordWithcoord {
-	return SGeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return SGeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchBoxUnitM) Withdist() SGeosearchWithdistWithdist {
-	return SGeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return SGeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchBoxUnitM) Withhash() SGeosearchWithhashWithhash {
-	return SGeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchBoxUnitM) Build() SCompleted {
@@ -17580,27 +17580,27 @@ func (c SGeosearchBoxUnitM) Cache() SCacheable {
 type SGeosearchBoxUnitMi SCompleted
 
 func (c SGeosearchBoxUnitMi) Asc() SGeosearchOrderAsc {
-	return SGeosearchOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeosearchOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchBoxUnitMi) Desc() SGeosearchOrderDesc {
-	return SGeosearchOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeosearchOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchBoxUnitMi) Count(Count int64) SGeosearchCountCount {
-	return SGeosearchCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchBoxUnitMi) Withcoord() SGeosearchWithcoordWithcoord {
-	return SGeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return SGeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchBoxUnitMi) Withdist() SGeosearchWithdistWithdist {
-	return SGeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return SGeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchBoxUnitMi) Withhash() SGeosearchWithhashWithhash {
-	return SGeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchBoxUnitMi) Build() SCompleted {
@@ -17614,49 +17614,49 @@ func (c SGeosearchBoxUnitMi) Cache() SCacheable {
 type SGeosearchCircleByradius SCompleted
 
 func (c SGeosearchCircleByradius) M() SGeosearchCircleUnitM {
-	return SGeosearchCircleUnitM{cf: c.cf, cs: append(c.cs, "m")}
+	return SGeosearchCircleUnitM{cs: append(c.cs, "m"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchCircleByradius) Km() SGeosearchCircleUnitKm {
-	return SGeosearchCircleUnitKm{cf: c.cf, cs: append(c.cs, "km")}
+	return SGeosearchCircleUnitKm{cs: append(c.cs, "km"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchCircleByradius) Ft() SGeosearchCircleUnitFt {
-	return SGeosearchCircleUnitFt{cf: c.cf, cs: append(c.cs, "ft")}
+	return SGeosearchCircleUnitFt{cs: append(c.cs, "ft"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchCircleByradius) Mi() SGeosearchCircleUnitMi {
-	return SGeosearchCircleUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
+	return SGeosearchCircleUnitMi{cs: append(c.cs, "mi"), cf: c.cf, ks: c.ks}
 }
 
 type SGeosearchCircleUnitFt SCompleted
 
 func (c SGeosearchCircleUnitFt) Bybox(Width float64) SGeosearchBoxBybox {
-	return SGeosearchBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return SGeosearchBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchCircleUnitFt) Asc() SGeosearchOrderAsc {
-	return SGeosearchOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeosearchOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchCircleUnitFt) Desc() SGeosearchOrderDesc {
-	return SGeosearchOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeosearchOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchCircleUnitFt) Count(Count int64) SGeosearchCountCount {
-	return SGeosearchCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchCircleUnitFt) Withcoord() SGeosearchWithcoordWithcoord {
-	return SGeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return SGeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchCircleUnitFt) Withdist() SGeosearchWithdistWithdist {
-	return SGeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return SGeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchCircleUnitFt) Withhash() SGeosearchWithhashWithhash {
-	return SGeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchCircleUnitFt) Build() SCompleted {
@@ -17670,31 +17670,31 @@ func (c SGeosearchCircleUnitFt) Cache() SCacheable {
 type SGeosearchCircleUnitKm SCompleted
 
 func (c SGeosearchCircleUnitKm) Bybox(Width float64) SGeosearchBoxBybox {
-	return SGeosearchBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return SGeosearchBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchCircleUnitKm) Asc() SGeosearchOrderAsc {
-	return SGeosearchOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeosearchOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchCircleUnitKm) Desc() SGeosearchOrderDesc {
-	return SGeosearchOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeosearchOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchCircleUnitKm) Count(Count int64) SGeosearchCountCount {
-	return SGeosearchCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchCircleUnitKm) Withcoord() SGeosearchWithcoordWithcoord {
-	return SGeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return SGeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchCircleUnitKm) Withdist() SGeosearchWithdistWithdist {
-	return SGeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return SGeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchCircleUnitKm) Withhash() SGeosearchWithhashWithhash {
-	return SGeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchCircleUnitKm) Build() SCompleted {
@@ -17708,31 +17708,31 @@ func (c SGeosearchCircleUnitKm) Cache() SCacheable {
 type SGeosearchCircleUnitM SCompleted
 
 func (c SGeosearchCircleUnitM) Bybox(Width float64) SGeosearchBoxBybox {
-	return SGeosearchBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return SGeosearchBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchCircleUnitM) Asc() SGeosearchOrderAsc {
-	return SGeosearchOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeosearchOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchCircleUnitM) Desc() SGeosearchOrderDesc {
-	return SGeosearchOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeosearchOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchCircleUnitM) Count(Count int64) SGeosearchCountCount {
-	return SGeosearchCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchCircleUnitM) Withcoord() SGeosearchWithcoordWithcoord {
-	return SGeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return SGeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchCircleUnitM) Withdist() SGeosearchWithdistWithdist {
-	return SGeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return SGeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchCircleUnitM) Withhash() SGeosearchWithhashWithhash {
-	return SGeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchCircleUnitM) Build() SCompleted {
@@ -17746,31 +17746,31 @@ func (c SGeosearchCircleUnitM) Cache() SCacheable {
 type SGeosearchCircleUnitMi SCompleted
 
 func (c SGeosearchCircleUnitMi) Bybox(Width float64) SGeosearchBoxBybox {
-	return SGeosearchBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return SGeosearchBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchCircleUnitMi) Asc() SGeosearchOrderAsc {
-	return SGeosearchOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeosearchOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchCircleUnitMi) Desc() SGeosearchOrderDesc {
-	return SGeosearchOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeosearchOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchCircleUnitMi) Count(Count int64) SGeosearchCountCount {
-	return SGeosearchCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchCircleUnitMi) Withcoord() SGeosearchWithcoordWithcoord {
-	return SGeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return SGeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchCircleUnitMi) Withdist() SGeosearchWithdistWithdist {
-	return SGeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return SGeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchCircleUnitMi) Withhash() SGeosearchWithhashWithhash {
-	return SGeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchCircleUnitMi) Build() SCompleted {
@@ -17784,15 +17784,15 @@ func (c SGeosearchCircleUnitMi) Cache() SCacheable {
 type SGeosearchCountAnyAny SCompleted
 
 func (c SGeosearchCountAnyAny) Withcoord() SGeosearchWithcoordWithcoord {
-	return SGeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return SGeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchCountAnyAny) Withdist() SGeosearchWithdistWithdist {
-	return SGeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return SGeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchCountAnyAny) Withhash() SGeosearchWithhashWithhash {
-	return SGeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchCountAnyAny) Build() SCompleted {
@@ -17806,19 +17806,19 @@ func (c SGeosearchCountAnyAny) Cache() SCacheable {
 type SGeosearchCountCount SCompleted
 
 func (c SGeosearchCountCount) Any() SGeosearchCountAnyAny {
-	return SGeosearchCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
+	return SGeosearchCountAnyAny{cs: append(c.cs, "ANY"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchCountCount) Withcoord() SGeosearchWithcoordWithcoord {
-	return SGeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return SGeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchCountCount) Withdist() SGeosearchWithdistWithdist {
-	return SGeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return SGeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchCountCount) Withhash() SGeosearchWithhashWithhash {
-	return SGeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchCountCount) Build() SCompleted {
@@ -17832,35 +17832,35 @@ func (c SGeosearchCountCount) Cache() SCacheable {
 type SGeosearchFromlonlat SCompleted
 
 func (c SGeosearchFromlonlat) Byradius(Radius float64) SGeosearchCircleByradius {
-	return SGeosearchCircleByradius{cf: c.cf, cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64))}
+	return SGeosearchCircleByradius{cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchFromlonlat) Bybox(Width float64) SGeosearchBoxBybox {
-	return SGeosearchBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return SGeosearchBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchFromlonlat) Asc() SGeosearchOrderAsc {
-	return SGeosearchOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeosearchOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchFromlonlat) Desc() SGeosearchOrderDesc {
-	return SGeosearchOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeosearchOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchFromlonlat) Count(Count int64) SGeosearchCountCount {
-	return SGeosearchCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchFromlonlat) Withcoord() SGeosearchWithcoordWithcoord {
-	return SGeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return SGeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchFromlonlat) Withdist() SGeosearchWithdistWithdist {
-	return SGeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return SGeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchFromlonlat) Withhash() SGeosearchWithhashWithhash {
-	return SGeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchFromlonlat) Build() SCompleted {
@@ -17874,39 +17874,39 @@ func (c SGeosearchFromlonlat) Cache() SCacheable {
 type SGeosearchFrommember SCompleted
 
 func (c SGeosearchFrommember) Fromlonlat(Longitude float64, Latitude float64) SGeosearchFromlonlat {
-	return SGeosearchFromlonlat{cf: c.cf, cs: append(c.cs, "FROMLONLAT", strconv.FormatFloat(Longitude, 'f', -1, 64), strconv.FormatFloat(Latitude, 'f', -1, 64))}
+	return SGeosearchFromlonlat{cs: append(c.cs, "FROMLONLAT", strconv.FormatFloat(Longitude, 'f', -1, 64), strconv.FormatFloat(Latitude, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchFrommember) Byradius(Radius float64) SGeosearchCircleByradius {
-	return SGeosearchCircleByradius{cf: c.cf, cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64))}
+	return SGeosearchCircleByradius{cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchFrommember) Bybox(Width float64) SGeosearchBoxBybox {
-	return SGeosearchBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return SGeosearchBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchFrommember) Asc() SGeosearchOrderAsc {
-	return SGeosearchOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeosearchOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchFrommember) Desc() SGeosearchOrderDesc {
-	return SGeosearchOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeosearchOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchFrommember) Count(Count int64) SGeosearchCountCount {
-	return SGeosearchCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchFrommember) Withcoord() SGeosearchWithcoordWithcoord {
-	return SGeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return SGeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchFrommember) Withdist() SGeosearchWithdistWithdist {
-	return SGeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return SGeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchFrommember) Withhash() SGeosearchWithhashWithhash {
-	return SGeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchFrommember) Build() SCompleted {
@@ -17920,43 +17920,43 @@ func (c SGeosearchFrommember) Cache() SCacheable {
 type SGeosearchKey SCompleted
 
 func (c SGeosearchKey) Frommember(Member string) SGeosearchFrommember {
-	return SGeosearchFrommember{cf: c.cf, cs: append(c.cs, "FROMMEMBER", Member)}
+	return SGeosearchFrommember{cs: append(c.cs, "FROMMEMBER", Member), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchKey) Fromlonlat(Longitude float64, Latitude float64) SGeosearchFromlonlat {
-	return SGeosearchFromlonlat{cf: c.cf, cs: append(c.cs, "FROMLONLAT", strconv.FormatFloat(Longitude, 'f', -1, 64), strconv.FormatFloat(Latitude, 'f', -1, 64))}
+	return SGeosearchFromlonlat{cs: append(c.cs, "FROMLONLAT", strconv.FormatFloat(Longitude, 'f', -1, 64), strconv.FormatFloat(Latitude, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchKey) Byradius(Radius float64) SGeosearchCircleByradius {
-	return SGeosearchCircleByradius{cf: c.cf, cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64))}
+	return SGeosearchCircleByradius{cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchKey) Bybox(Width float64) SGeosearchBoxBybox {
-	return SGeosearchBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return SGeosearchBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchKey) Asc() SGeosearchOrderAsc {
-	return SGeosearchOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeosearchOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchKey) Desc() SGeosearchOrderDesc {
-	return SGeosearchOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeosearchOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchKey) Count(Count int64) SGeosearchCountCount {
-	return SGeosearchCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchKey) Withcoord() SGeosearchWithcoordWithcoord {
-	return SGeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return SGeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchKey) Withdist() SGeosearchWithdistWithdist {
-	return SGeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return SGeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchKey) Withhash() SGeosearchWithhashWithhash {
-	return SGeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchKey) Build() SCompleted {
@@ -17970,19 +17970,19 @@ func (c SGeosearchKey) Cache() SCacheable {
 type SGeosearchOrderAsc SCompleted
 
 func (c SGeosearchOrderAsc) Count(Count int64) SGeosearchCountCount {
-	return SGeosearchCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchOrderAsc) Withcoord() SGeosearchWithcoordWithcoord {
-	return SGeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return SGeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchOrderAsc) Withdist() SGeosearchWithdistWithdist {
-	return SGeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return SGeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchOrderAsc) Withhash() SGeosearchWithhashWithhash {
-	return SGeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchOrderAsc) Build() SCompleted {
@@ -17996,19 +17996,19 @@ func (c SGeosearchOrderAsc) Cache() SCacheable {
 type SGeosearchOrderDesc SCompleted
 
 func (c SGeosearchOrderDesc) Count(Count int64) SGeosearchCountCount {
-	return SGeosearchCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeosearchCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchOrderDesc) Withcoord() SGeosearchWithcoordWithcoord {
-	return SGeosearchWithcoordWithcoord{cf: c.cf, cs: append(c.cs, "WITHCOORD")}
+	return SGeosearchWithcoordWithcoord{cs: append(c.cs, "WITHCOORD"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchOrderDesc) Withdist() SGeosearchWithdistWithdist {
-	return SGeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return SGeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchOrderDesc) Withhash() SGeosearchWithhashWithhash {
-	return SGeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchOrderDesc) Build() SCompleted {
@@ -18022,11 +18022,11 @@ func (c SGeosearchOrderDesc) Cache() SCacheable {
 type SGeosearchWithcoordWithcoord SCompleted
 
 func (c SGeosearchWithcoordWithcoord) Withdist() SGeosearchWithdistWithdist {
-	return SGeosearchWithdistWithdist{cf: c.cf, cs: append(c.cs, "WITHDIST")}
+	return SGeosearchWithdistWithdist{cs: append(c.cs, "WITHDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchWithcoordWithcoord) Withhash() SGeosearchWithhashWithhash {
-	return SGeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchWithcoordWithcoord) Build() SCompleted {
@@ -18040,7 +18040,7 @@ func (c SGeosearchWithcoordWithcoord) Cache() SCacheable {
 type SGeosearchWithdistWithdist SCompleted
 
 func (c SGeosearchWithdistWithdist) Withhash() SGeosearchWithhashWithhash {
-	return SGeosearchWithhashWithhash{cf: c.cf, cs: append(c.cs, "WITHHASH")}
+	return SGeosearchWithhashWithhash{cs: append(c.cs, "WITHHASH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchWithdistWithdist) Build() SCompleted {
@@ -18065,7 +18065,7 @@ type SGeosearchstore SCompleted
 
 func (c SGeosearchstore) Destination(Destination string) SGeosearchstoreDestination {
 	c.ks = checkSlot(c.ks, slot(Destination))
-	return SGeosearchstoreDestination{cf: c.cf, cs: append(c.cs, Destination)}
+	return SGeosearchstoreDestination{cs: append(c.cs, Destination), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Geosearchstore() (c SGeosearchstore) {
@@ -18077,43 +18077,43 @@ func (b *SBuilder) Geosearchstore() (c SGeosearchstore) {
 type SGeosearchstoreBoxBybox SCompleted
 
 func (c SGeosearchstoreBoxBybox) Height(Height float64) SGeosearchstoreBoxHeight {
-	return SGeosearchstoreBoxHeight{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Height, 'f', -1, 64))}
+	return SGeosearchstoreBoxHeight{cs: append(c.cs, strconv.FormatFloat(Height, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type SGeosearchstoreBoxHeight SCompleted
 
 func (c SGeosearchstoreBoxHeight) M() SGeosearchstoreBoxUnitM {
-	return SGeosearchstoreBoxUnitM{cf: c.cf, cs: append(c.cs, "m")}
+	return SGeosearchstoreBoxUnitM{cs: append(c.cs, "m"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreBoxHeight) Km() SGeosearchstoreBoxUnitKm {
-	return SGeosearchstoreBoxUnitKm{cf: c.cf, cs: append(c.cs, "km")}
+	return SGeosearchstoreBoxUnitKm{cs: append(c.cs, "km"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreBoxHeight) Ft() SGeosearchstoreBoxUnitFt {
-	return SGeosearchstoreBoxUnitFt{cf: c.cf, cs: append(c.cs, "ft")}
+	return SGeosearchstoreBoxUnitFt{cs: append(c.cs, "ft"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreBoxHeight) Mi() SGeosearchstoreBoxUnitMi {
-	return SGeosearchstoreBoxUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
+	return SGeosearchstoreBoxUnitMi{cs: append(c.cs, "mi"), cf: c.cf, ks: c.ks}
 }
 
 type SGeosearchstoreBoxUnitFt SCompleted
 
 func (c SGeosearchstoreBoxUnitFt) Asc() SGeosearchstoreOrderAsc {
-	return SGeosearchstoreOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeosearchstoreOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreBoxUnitFt) Desc() SGeosearchstoreOrderDesc {
-	return SGeosearchstoreOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeosearchstoreOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreBoxUnitFt) Count(Count int64) SGeosearchstoreCountCount {
-	return SGeosearchstoreCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreBoxUnitFt) Storedist() SGeosearchstoreStoredistStoredist {
-	return SGeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+	return SGeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreBoxUnitFt) Build() SCompleted {
@@ -18123,19 +18123,19 @@ func (c SGeosearchstoreBoxUnitFt) Build() SCompleted {
 type SGeosearchstoreBoxUnitKm SCompleted
 
 func (c SGeosearchstoreBoxUnitKm) Asc() SGeosearchstoreOrderAsc {
-	return SGeosearchstoreOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeosearchstoreOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreBoxUnitKm) Desc() SGeosearchstoreOrderDesc {
-	return SGeosearchstoreOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeosearchstoreOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreBoxUnitKm) Count(Count int64) SGeosearchstoreCountCount {
-	return SGeosearchstoreCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreBoxUnitKm) Storedist() SGeosearchstoreStoredistStoredist {
-	return SGeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+	return SGeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreBoxUnitKm) Build() SCompleted {
@@ -18145,19 +18145,19 @@ func (c SGeosearchstoreBoxUnitKm) Build() SCompleted {
 type SGeosearchstoreBoxUnitM SCompleted
 
 func (c SGeosearchstoreBoxUnitM) Asc() SGeosearchstoreOrderAsc {
-	return SGeosearchstoreOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeosearchstoreOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreBoxUnitM) Desc() SGeosearchstoreOrderDesc {
-	return SGeosearchstoreOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeosearchstoreOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreBoxUnitM) Count(Count int64) SGeosearchstoreCountCount {
-	return SGeosearchstoreCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreBoxUnitM) Storedist() SGeosearchstoreStoredistStoredist {
-	return SGeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+	return SGeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreBoxUnitM) Build() SCompleted {
@@ -18167,19 +18167,19 @@ func (c SGeosearchstoreBoxUnitM) Build() SCompleted {
 type SGeosearchstoreBoxUnitMi SCompleted
 
 func (c SGeosearchstoreBoxUnitMi) Asc() SGeosearchstoreOrderAsc {
-	return SGeosearchstoreOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeosearchstoreOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreBoxUnitMi) Desc() SGeosearchstoreOrderDesc {
-	return SGeosearchstoreOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeosearchstoreOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreBoxUnitMi) Count(Count int64) SGeosearchstoreCountCount {
-	return SGeosearchstoreCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreBoxUnitMi) Storedist() SGeosearchstoreStoredistStoredist {
-	return SGeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+	return SGeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreBoxUnitMi) Build() SCompleted {
@@ -18189,41 +18189,41 @@ func (c SGeosearchstoreBoxUnitMi) Build() SCompleted {
 type SGeosearchstoreCircleByradius SCompleted
 
 func (c SGeosearchstoreCircleByradius) M() SGeosearchstoreCircleUnitM {
-	return SGeosearchstoreCircleUnitM{cf: c.cf, cs: append(c.cs, "m")}
+	return SGeosearchstoreCircleUnitM{cs: append(c.cs, "m"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreCircleByradius) Km() SGeosearchstoreCircleUnitKm {
-	return SGeosearchstoreCircleUnitKm{cf: c.cf, cs: append(c.cs, "km")}
+	return SGeosearchstoreCircleUnitKm{cs: append(c.cs, "km"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreCircleByradius) Ft() SGeosearchstoreCircleUnitFt {
-	return SGeosearchstoreCircleUnitFt{cf: c.cf, cs: append(c.cs, "ft")}
+	return SGeosearchstoreCircleUnitFt{cs: append(c.cs, "ft"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreCircleByradius) Mi() SGeosearchstoreCircleUnitMi {
-	return SGeosearchstoreCircleUnitMi{cf: c.cf, cs: append(c.cs, "mi")}
+	return SGeosearchstoreCircleUnitMi{cs: append(c.cs, "mi"), cf: c.cf, ks: c.ks}
 }
 
 type SGeosearchstoreCircleUnitFt SCompleted
 
 func (c SGeosearchstoreCircleUnitFt) Bybox(Width float64) SGeosearchstoreBoxBybox {
-	return SGeosearchstoreBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return SGeosearchstoreBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreCircleUnitFt) Asc() SGeosearchstoreOrderAsc {
-	return SGeosearchstoreOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeosearchstoreOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreCircleUnitFt) Desc() SGeosearchstoreOrderDesc {
-	return SGeosearchstoreOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeosearchstoreOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreCircleUnitFt) Count(Count int64) SGeosearchstoreCountCount {
-	return SGeosearchstoreCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreCircleUnitFt) Storedist() SGeosearchstoreStoredistStoredist {
-	return SGeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+	return SGeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreCircleUnitFt) Build() SCompleted {
@@ -18233,23 +18233,23 @@ func (c SGeosearchstoreCircleUnitFt) Build() SCompleted {
 type SGeosearchstoreCircleUnitKm SCompleted
 
 func (c SGeosearchstoreCircleUnitKm) Bybox(Width float64) SGeosearchstoreBoxBybox {
-	return SGeosearchstoreBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return SGeosearchstoreBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreCircleUnitKm) Asc() SGeosearchstoreOrderAsc {
-	return SGeosearchstoreOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeosearchstoreOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreCircleUnitKm) Desc() SGeosearchstoreOrderDesc {
-	return SGeosearchstoreOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeosearchstoreOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreCircleUnitKm) Count(Count int64) SGeosearchstoreCountCount {
-	return SGeosearchstoreCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreCircleUnitKm) Storedist() SGeosearchstoreStoredistStoredist {
-	return SGeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+	return SGeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreCircleUnitKm) Build() SCompleted {
@@ -18259,23 +18259,23 @@ func (c SGeosearchstoreCircleUnitKm) Build() SCompleted {
 type SGeosearchstoreCircleUnitM SCompleted
 
 func (c SGeosearchstoreCircleUnitM) Bybox(Width float64) SGeosearchstoreBoxBybox {
-	return SGeosearchstoreBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return SGeosearchstoreBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreCircleUnitM) Asc() SGeosearchstoreOrderAsc {
-	return SGeosearchstoreOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeosearchstoreOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreCircleUnitM) Desc() SGeosearchstoreOrderDesc {
-	return SGeosearchstoreOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeosearchstoreOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreCircleUnitM) Count(Count int64) SGeosearchstoreCountCount {
-	return SGeosearchstoreCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreCircleUnitM) Storedist() SGeosearchstoreStoredistStoredist {
-	return SGeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+	return SGeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreCircleUnitM) Build() SCompleted {
@@ -18285,23 +18285,23 @@ func (c SGeosearchstoreCircleUnitM) Build() SCompleted {
 type SGeosearchstoreCircleUnitMi SCompleted
 
 func (c SGeosearchstoreCircleUnitMi) Bybox(Width float64) SGeosearchstoreBoxBybox {
-	return SGeosearchstoreBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return SGeosearchstoreBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreCircleUnitMi) Asc() SGeosearchstoreOrderAsc {
-	return SGeosearchstoreOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeosearchstoreOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreCircleUnitMi) Desc() SGeosearchstoreOrderDesc {
-	return SGeosearchstoreOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeosearchstoreOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreCircleUnitMi) Count(Count int64) SGeosearchstoreCountCount {
-	return SGeosearchstoreCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreCircleUnitMi) Storedist() SGeosearchstoreStoredistStoredist {
-	return SGeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+	return SGeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreCircleUnitMi) Build() SCompleted {
@@ -18311,7 +18311,7 @@ func (c SGeosearchstoreCircleUnitMi) Build() SCompleted {
 type SGeosearchstoreCountAnyAny SCompleted
 
 func (c SGeosearchstoreCountAnyAny) Storedist() SGeosearchstoreStoredistStoredist {
-	return SGeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+	return SGeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreCountAnyAny) Build() SCompleted {
@@ -18321,11 +18321,11 @@ func (c SGeosearchstoreCountAnyAny) Build() SCompleted {
 type SGeosearchstoreCountCount SCompleted
 
 func (c SGeosearchstoreCountCount) Any() SGeosearchstoreCountAnyAny {
-	return SGeosearchstoreCountAnyAny{cf: c.cf, cs: append(c.cs, "ANY")}
+	return SGeosearchstoreCountAnyAny{cs: append(c.cs, "ANY"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreCountCount) Storedist() SGeosearchstoreStoredistStoredist {
-	return SGeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+	return SGeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreCountCount) Build() SCompleted {
@@ -18336,33 +18336,33 @@ type SGeosearchstoreDestination SCompleted
 
 func (c SGeosearchstoreDestination) Source(Source string) SGeosearchstoreSource {
 	c.ks = checkSlot(c.ks, slot(Source))
-	return SGeosearchstoreSource{cf: c.cf, cs: append(c.cs, Source)}
+	return SGeosearchstoreSource{cs: append(c.cs, Source), cf: c.cf, ks: c.ks}
 }
 
 type SGeosearchstoreFromlonlat SCompleted
 
 func (c SGeosearchstoreFromlonlat) Byradius(Radius float64) SGeosearchstoreCircleByradius {
-	return SGeosearchstoreCircleByradius{cf: c.cf, cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64))}
+	return SGeosearchstoreCircleByradius{cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreFromlonlat) Bybox(Width float64) SGeosearchstoreBoxBybox {
-	return SGeosearchstoreBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return SGeosearchstoreBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreFromlonlat) Asc() SGeosearchstoreOrderAsc {
-	return SGeosearchstoreOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeosearchstoreOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreFromlonlat) Desc() SGeosearchstoreOrderDesc {
-	return SGeosearchstoreOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeosearchstoreOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreFromlonlat) Count(Count int64) SGeosearchstoreCountCount {
-	return SGeosearchstoreCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreFromlonlat) Storedist() SGeosearchstoreStoredistStoredist {
-	return SGeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+	return SGeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreFromlonlat) Build() SCompleted {
@@ -18372,31 +18372,31 @@ func (c SGeosearchstoreFromlonlat) Build() SCompleted {
 type SGeosearchstoreFrommember SCompleted
 
 func (c SGeosearchstoreFrommember) Fromlonlat(Longitude float64, Latitude float64) SGeosearchstoreFromlonlat {
-	return SGeosearchstoreFromlonlat{cf: c.cf, cs: append(c.cs, "FROMLONLAT", strconv.FormatFloat(Longitude, 'f', -1, 64), strconv.FormatFloat(Latitude, 'f', -1, 64))}
+	return SGeosearchstoreFromlonlat{cs: append(c.cs, "FROMLONLAT", strconv.FormatFloat(Longitude, 'f', -1, 64), strconv.FormatFloat(Latitude, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreFrommember) Byradius(Radius float64) SGeosearchstoreCircleByradius {
-	return SGeosearchstoreCircleByradius{cf: c.cf, cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64))}
+	return SGeosearchstoreCircleByradius{cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreFrommember) Bybox(Width float64) SGeosearchstoreBoxBybox {
-	return SGeosearchstoreBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return SGeosearchstoreBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreFrommember) Asc() SGeosearchstoreOrderAsc {
-	return SGeosearchstoreOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeosearchstoreOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreFrommember) Desc() SGeosearchstoreOrderDesc {
-	return SGeosearchstoreOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeosearchstoreOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreFrommember) Count(Count int64) SGeosearchstoreCountCount {
-	return SGeosearchstoreCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreFrommember) Storedist() SGeosearchstoreStoredistStoredist {
-	return SGeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+	return SGeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreFrommember) Build() SCompleted {
@@ -18406,11 +18406,11 @@ func (c SGeosearchstoreFrommember) Build() SCompleted {
 type SGeosearchstoreOrderAsc SCompleted
 
 func (c SGeosearchstoreOrderAsc) Count(Count int64) SGeosearchstoreCountCount {
-	return SGeosearchstoreCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreOrderAsc) Storedist() SGeosearchstoreStoredistStoredist {
-	return SGeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+	return SGeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreOrderAsc) Build() SCompleted {
@@ -18420,11 +18420,11 @@ func (c SGeosearchstoreOrderAsc) Build() SCompleted {
 type SGeosearchstoreOrderDesc SCompleted
 
 func (c SGeosearchstoreOrderDesc) Count(Count int64) SGeosearchstoreCountCount {
-	return SGeosearchstoreCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreOrderDesc) Storedist() SGeosearchstoreStoredistStoredist {
-	return SGeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+	return SGeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreOrderDesc) Build() SCompleted {
@@ -18434,35 +18434,35 @@ func (c SGeosearchstoreOrderDesc) Build() SCompleted {
 type SGeosearchstoreSource SCompleted
 
 func (c SGeosearchstoreSource) Frommember(Member string) SGeosearchstoreFrommember {
-	return SGeosearchstoreFrommember{cf: c.cf, cs: append(c.cs, "FROMMEMBER", Member)}
+	return SGeosearchstoreFrommember{cs: append(c.cs, "FROMMEMBER", Member), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreSource) Fromlonlat(Longitude float64, Latitude float64) SGeosearchstoreFromlonlat {
-	return SGeosearchstoreFromlonlat{cf: c.cf, cs: append(c.cs, "FROMLONLAT", strconv.FormatFloat(Longitude, 'f', -1, 64), strconv.FormatFloat(Latitude, 'f', -1, 64))}
+	return SGeosearchstoreFromlonlat{cs: append(c.cs, "FROMLONLAT", strconv.FormatFloat(Longitude, 'f', -1, 64), strconv.FormatFloat(Latitude, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreSource) Byradius(Radius float64) SGeosearchstoreCircleByradius {
-	return SGeosearchstoreCircleByradius{cf: c.cf, cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64))}
+	return SGeosearchstoreCircleByradius{cs: append(c.cs, "BYRADIUS", strconv.FormatFloat(Radius, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreSource) Bybox(Width float64) SGeosearchstoreBoxBybox {
-	return SGeosearchstoreBoxBybox{cf: c.cf, cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64))}
+	return SGeosearchstoreBoxBybox{cs: append(c.cs, "BYBOX", strconv.FormatFloat(Width, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreSource) Asc() SGeosearchstoreOrderAsc {
-	return SGeosearchstoreOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SGeosearchstoreOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreSource) Desc() SGeosearchstoreOrderDesc {
-	return SGeosearchstoreOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SGeosearchstoreOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreSource) Count(Count int64) SGeosearchstoreCountCount {
-	return SGeosearchstoreCountCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SGeosearchstoreCountCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreSource) Storedist() SGeosearchstoreStoredistStoredist {
-	return SGeosearchstoreStoredistStoredist{cf: c.cf, cs: append(c.cs, "STOREDIST")}
+	return SGeosearchstoreStoredistStoredist{cs: append(c.cs, "STOREDIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGeosearchstoreSource) Build() SCompleted {
@@ -18479,7 +18479,7 @@ type SGet SCompleted
 
 func (c SGet) Key(Key string) SGetKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGetKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SGetKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Get() (c SGet) {
@@ -18503,7 +18503,7 @@ type SGetbit SCompleted
 
 func (c SGetbit) Key(Key string) SGetbitKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGetbitKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SGetbitKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Getbit() (c SGetbit) {
@@ -18516,7 +18516,7 @@ func (b *SBuilder) Getbit() (c SGetbit) {
 type SGetbitKey SCompleted
 
 func (c SGetbitKey) Offset(Offset int64) SGetbitOffset {
-	return SGetbitOffset{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Offset, 10))}
+	return SGetbitOffset{cs: append(c.cs, strconv.FormatInt(Offset, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SGetbitOffset SCompleted
@@ -18533,7 +18533,7 @@ type SGetdel SCompleted
 
 func (c SGetdel) Key(Key string) SGetdelKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGetdelKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SGetdelKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Getdel() (c SGetdel) {
@@ -18552,7 +18552,7 @@ type SGetex SCompleted
 
 func (c SGetex) Key(Key string) SGetexKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGetexKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SGetexKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Getex() (c SGetex) {
@@ -18594,23 +18594,23 @@ func (c SGetexExpirationPxat) Build() SCompleted {
 type SGetexKey SCompleted
 
 func (c SGetexKey) Ex(Seconds int64) SGetexExpirationEx {
-	return SGetexExpirationEx{cf: c.cf, cs: append(c.cs, "EX", strconv.FormatInt(Seconds, 10))}
+	return SGetexExpirationEx{cs: append(c.cs, "EX", strconv.FormatInt(Seconds, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGetexKey) Px(Milliseconds int64) SGetexExpirationPx {
-	return SGetexExpirationPx{cf: c.cf, cs: append(c.cs, "PX", strconv.FormatInt(Milliseconds, 10))}
+	return SGetexExpirationPx{cs: append(c.cs, "PX", strconv.FormatInt(Milliseconds, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGetexKey) Exat(Timestamp int64) SGetexExpirationExat {
-	return SGetexExpirationExat{cf: c.cf, cs: append(c.cs, "EXAT", strconv.FormatInt(Timestamp, 10))}
+	return SGetexExpirationExat{cs: append(c.cs, "EXAT", strconv.FormatInt(Timestamp, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGetexKey) Pxat(Millisecondstimestamp int64) SGetexExpirationPxat {
-	return SGetexExpirationPxat{cf: c.cf, cs: append(c.cs, "PXAT", strconv.FormatInt(Millisecondstimestamp, 10))}
+	return SGetexExpirationPxat{cs: append(c.cs, "PXAT", strconv.FormatInt(Millisecondstimestamp, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SGetexKey) Persist() SGetexExpirationPersist {
-	return SGetexExpirationPersist{cf: c.cf, cs: append(c.cs, "PERSIST")}
+	return SGetexExpirationPersist{cs: append(c.cs, "PERSIST"), cf: c.cf, ks: c.ks}
 }
 
 func (c SGetexKey) Build() SCompleted {
@@ -18621,7 +18621,7 @@ type SGetrange SCompleted
 
 func (c SGetrange) Key(Key string) SGetrangeKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGetrangeKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SGetrangeKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Getrange() (c SGetrange) {
@@ -18644,20 +18644,20 @@ func (c SGetrangeEnd) Cache() SCacheable {
 type SGetrangeKey SCompleted
 
 func (c SGetrangeKey) Start(Start int64) SGetrangeStart {
-	return SGetrangeStart{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Start, 10))}
+	return SGetrangeStart{cs: append(c.cs, strconv.FormatInt(Start, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SGetrangeStart SCompleted
 
 func (c SGetrangeStart) End(End int64) SGetrangeEnd {
-	return SGetrangeEnd{cf: c.cf, cs: append(c.cs, strconv.FormatInt(End, 10))}
+	return SGetrangeEnd{cs: append(c.cs, strconv.FormatInt(End, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SGetset SCompleted
 
 func (c SGetset) Key(Key string) SGetsetKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SGetsetKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SGetsetKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Getset() (c SGetset) {
@@ -18669,7 +18669,7 @@ func (b *SBuilder) Getset() (c SGetset) {
 type SGetsetKey SCompleted
 
 func (c SGetsetKey) Value(Value string) SGetsetValue {
-	return SGetsetValue{cf: c.cf, cs: append(c.cs, Value)}
+	return SGetsetValue{cs: append(c.cs, Value), cf: c.cf, ks: c.ks}
 }
 
 type SGetsetValue SCompleted
@@ -18682,7 +18682,7 @@ type SHdel SCompleted
 
 func (c SHdel) Key(Key string) SHdelKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SHdelKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SHdelKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Hdel() (c SHdel) {
@@ -18694,7 +18694,7 @@ func (b *SBuilder) Hdel() (c SHdel) {
 type SHdelField SCompleted
 
 func (c SHdelField) Field(Field ...string) SHdelField {
-	return SHdelField{cf: c.cf, cs: append(c.cs, Field...)}
+	return SHdelField{cs: append(c.cs, Field...), cf: c.cf, ks: c.ks}
 }
 
 func (c SHdelField) Build() SCompleted {
@@ -18704,13 +18704,13 @@ func (c SHdelField) Build() SCompleted {
 type SHdelKey SCompleted
 
 func (c SHdelKey) Field(Field ...string) SHdelField {
-	return SHdelField{cf: c.cf, cs: append(c.cs, Field...)}
+	return SHdelField{cs: append(c.cs, Field...), cf: c.cf, ks: c.ks}
 }
 
 type SHello SCompleted
 
 func (c SHello) Protover(Protover int64) SHelloArgumentsProtover {
-	return SHelloArgumentsProtover{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Protover, 10))}
+	return SHelloArgumentsProtover{cs: append(c.cs, strconv.FormatInt(Protover, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SHello) Build() SCompleted {
@@ -18726,7 +18726,7 @@ func (b *SBuilder) Hello() (c SHello) {
 type SHelloArgumentsAuth SCompleted
 
 func (c SHelloArgumentsAuth) Setname(Clientname string) SHelloArgumentsSetname {
-	return SHelloArgumentsSetname{cf: c.cf, cs: append(c.cs, "SETNAME", Clientname)}
+	return SHelloArgumentsSetname{cs: append(c.cs, "SETNAME", Clientname), cf: c.cf, ks: c.ks}
 }
 
 func (c SHelloArgumentsAuth) Build() SCompleted {
@@ -18736,11 +18736,11 @@ func (c SHelloArgumentsAuth) Build() SCompleted {
 type SHelloArgumentsProtover SCompleted
 
 func (c SHelloArgumentsProtover) Auth(Username string, Password string) SHelloArgumentsAuth {
-	return SHelloArgumentsAuth{cf: c.cf, cs: append(c.cs, "AUTH", Username, Password)}
+	return SHelloArgumentsAuth{cs: append(c.cs, "AUTH", Username, Password), cf: c.cf, ks: c.ks}
 }
 
 func (c SHelloArgumentsProtover) Setname(Clientname string) SHelloArgumentsSetname {
-	return SHelloArgumentsSetname{cf: c.cf, cs: append(c.cs, "SETNAME", Clientname)}
+	return SHelloArgumentsSetname{cs: append(c.cs, "SETNAME", Clientname), cf: c.cf, ks: c.ks}
 }
 
 func (c SHelloArgumentsProtover) Build() SCompleted {
@@ -18757,7 +18757,7 @@ type SHexists SCompleted
 
 func (c SHexists) Key(Key string) SHexistsKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SHexistsKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SHexistsKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Hexists() (c SHexists) {
@@ -18780,14 +18780,14 @@ func (c SHexistsField) Cache() SCacheable {
 type SHexistsKey SCompleted
 
 func (c SHexistsKey) Field(Field string) SHexistsField {
-	return SHexistsField{cf: c.cf, cs: append(c.cs, Field)}
+	return SHexistsField{cs: append(c.cs, Field), cf: c.cf, ks: c.ks}
 }
 
 type SHget SCompleted
 
 func (c SHget) Key(Key string) SHgetKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SHgetKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SHgetKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Hget() (c SHget) {
@@ -18810,14 +18810,14 @@ func (c SHgetField) Cache() SCacheable {
 type SHgetKey SCompleted
 
 func (c SHgetKey) Field(Field string) SHgetField {
-	return SHgetField{cf: c.cf, cs: append(c.cs, Field)}
+	return SHgetField{cs: append(c.cs, Field), cf: c.cf, ks: c.ks}
 }
 
 type SHgetall SCompleted
 
 func (c SHgetall) Key(Key string) SHgetallKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SHgetallKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SHgetallKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Hgetall() (c SHgetall) {
@@ -18841,7 +18841,7 @@ type SHincrby SCompleted
 
 func (c SHincrby) Key(Key string) SHincrbyKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SHincrbyKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SHincrbyKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Hincrby() (c SHincrby) {
@@ -18853,7 +18853,7 @@ func (b *SBuilder) Hincrby() (c SHincrby) {
 type SHincrbyField SCompleted
 
 func (c SHincrbyField) Increment(Increment int64) SHincrbyIncrement {
-	return SHincrbyIncrement{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Increment, 10))}
+	return SHincrbyIncrement{cs: append(c.cs, strconv.FormatInt(Increment, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SHincrbyIncrement SCompleted
@@ -18865,14 +18865,14 @@ func (c SHincrbyIncrement) Build() SCompleted {
 type SHincrbyKey SCompleted
 
 func (c SHincrbyKey) Field(Field string) SHincrbyField {
-	return SHincrbyField{cf: c.cf, cs: append(c.cs, Field)}
+	return SHincrbyField{cs: append(c.cs, Field), cf: c.cf, ks: c.ks}
 }
 
 type SHincrbyfloat SCompleted
 
 func (c SHincrbyfloat) Key(Key string) SHincrbyfloatKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SHincrbyfloatKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SHincrbyfloatKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Hincrbyfloat() (c SHincrbyfloat) {
@@ -18884,7 +18884,7 @@ func (b *SBuilder) Hincrbyfloat() (c SHincrbyfloat) {
 type SHincrbyfloatField SCompleted
 
 func (c SHincrbyfloatField) Increment(Increment float64) SHincrbyfloatIncrement {
-	return SHincrbyfloatIncrement{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Increment, 'f', -1, 64))}
+	return SHincrbyfloatIncrement{cs: append(c.cs, strconv.FormatFloat(Increment, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type SHincrbyfloatIncrement SCompleted
@@ -18896,14 +18896,14 @@ func (c SHincrbyfloatIncrement) Build() SCompleted {
 type SHincrbyfloatKey SCompleted
 
 func (c SHincrbyfloatKey) Field(Field string) SHincrbyfloatField {
-	return SHincrbyfloatField{cf: c.cf, cs: append(c.cs, Field)}
+	return SHincrbyfloatField{cs: append(c.cs, Field), cf: c.cf, ks: c.ks}
 }
 
 type SHkeys SCompleted
 
 func (c SHkeys) Key(Key string) SHkeysKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SHkeysKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SHkeysKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Hkeys() (c SHkeys) {
@@ -18927,7 +18927,7 @@ type SHlen SCompleted
 
 func (c SHlen) Key(Key string) SHlenKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SHlenKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SHlenKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Hlen() (c SHlen) {
@@ -18951,7 +18951,7 @@ type SHmget SCompleted
 
 func (c SHmget) Key(Key string) SHmgetKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SHmgetKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SHmgetKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Hmget() (c SHmget) {
@@ -18964,7 +18964,7 @@ func (b *SBuilder) Hmget() (c SHmget) {
 type SHmgetField SCompleted
 
 func (c SHmgetField) Field(Field ...string) SHmgetField {
-	return SHmgetField{cf: c.cf, cs: append(c.cs, Field...)}
+	return SHmgetField{cs: append(c.cs, Field...), cf: c.cf, ks: c.ks}
 }
 
 func (c SHmgetField) Build() SCompleted {
@@ -18978,14 +18978,14 @@ func (c SHmgetField) Cache() SCacheable {
 type SHmgetKey SCompleted
 
 func (c SHmgetKey) Field(Field ...string) SHmgetField {
-	return SHmgetField{cf: c.cf, cs: append(c.cs, Field...)}
+	return SHmgetField{cs: append(c.cs, Field...), cf: c.cf, ks: c.ks}
 }
 
 type SHmset SCompleted
 
 func (c SHmset) Key(Key string) SHmsetKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SHmsetKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SHmsetKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Hmset() (c SHmset) {
@@ -18997,7 +18997,7 @@ func (b *SBuilder) Hmset() (c SHmset) {
 type SHmsetFieldValue SCompleted
 
 func (c SHmsetFieldValue) FieldValue(Field string, Value string) SHmsetFieldValue {
-	return SHmsetFieldValue{cf: c.cf, cs: append(c.cs, Field, Value)}
+	return SHmsetFieldValue{cs: append(c.cs, Field, Value), cf: c.cf, ks: c.ks}
 }
 
 func (c SHmsetFieldValue) Build() SCompleted {
@@ -19007,14 +19007,14 @@ func (c SHmsetFieldValue) Build() SCompleted {
 type SHmsetKey SCompleted
 
 func (c SHmsetKey) FieldValue() SHmsetFieldValue {
-	return SHmsetFieldValue{cf: c.cf, cs: c.cs}
+	return SHmsetFieldValue{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 type SHrandfield SCompleted
 
 func (c SHrandfield) Key(Key string) SHrandfieldKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SHrandfieldKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SHrandfieldKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Hrandfield() (c SHrandfield) {
@@ -19027,7 +19027,7 @@ func (b *SBuilder) Hrandfield() (c SHrandfield) {
 type SHrandfieldKey SCompleted
 
 func (c SHrandfieldKey) Count(Count int64) SHrandfieldOptionsCount {
-	return SHrandfieldOptionsCount{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Count, 10))}
+	return SHrandfieldOptionsCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SHrandfieldKey) Build() SCompleted {
@@ -19037,7 +19037,7 @@ func (c SHrandfieldKey) Build() SCompleted {
 type SHrandfieldOptionsCount SCompleted
 
 func (c SHrandfieldOptionsCount) Withvalues() SHrandfieldOptionsWithvaluesWithvalues {
-	return SHrandfieldOptionsWithvaluesWithvalues{cf: c.cf, cs: append(c.cs, "WITHVALUES")}
+	return SHrandfieldOptionsWithvaluesWithvalues{cs: append(c.cs, "WITHVALUES"), cf: c.cf, ks: c.ks}
 }
 
 func (c SHrandfieldOptionsCount) Build() SCompleted {
@@ -19054,7 +19054,7 @@ type SHscan SCompleted
 
 func (c SHscan) Key(Key string) SHscanKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SHscanKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SHscanKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Hscan() (c SHscan) {
@@ -19073,11 +19073,11 @@ func (c SHscanCount) Build() SCompleted {
 type SHscanCursor SCompleted
 
 func (c SHscanCursor) Match(Pattern string) SHscanMatch {
-	return SHscanMatch{cf: c.cf, cs: append(c.cs, "MATCH", Pattern)}
+	return SHscanMatch{cs: append(c.cs, "MATCH", Pattern), cf: c.cf, ks: c.ks}
 }
 
 func (c SHscanCursor) Count(Count int64) SHscanCount {
-	return SHscanCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SHscanCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SHscanCursor) Build() SCompleted {
@@ -19087,13 +19087,13 @@ func (c SHscanCursor) Build() SCompleted {
 type SHscanKey SCompleted
 
 func (c SHscanKey) Cursor(Cursor int64) SHscanCursor {
-	return SHscanCursor{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Cursor, 10))}
+	return SHscanCursor{cs: append(c.cs, strconv.FormatInt(Cursor, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SHscanMatch SCompleted
 
 func (c SHscanMatch) Count(Count int64) SHscanCount {
-	return SHscanCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SHscanCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SHscanMatch) Build() SCompleted {
@@ -19104,7 +19104,7 @@ type SHset SCompleted
 
 func (c SHset) Key(Key string) SHsetKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SHsetKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SHsetKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Hset() (c SHset) {
@@ -19116,7 +19116,7 @@ func (b *SBuilder) Hset() (c SHset) {
 type SHsetFieldValue SCompleted
 
 func (c SHsetFieldValue) FieldValue(Field string, Value string) SHsetFieldValue {
-	return SHsetFieldValue{cf: c.cf, cs: append(c.cs, Field, Value)}
+	return SHsetFieldValue{cs: append(c.cs, Field, Value), cf: c.cf, ks: c.ks}
 }
 
 func (c SHsetFieldValue) Build() SCompleted {
@@ -19126,14 +19126,14 @@ func (c SHsetFieldValue) Build() SCompleted {
 type SHsetKey SCompleted
 
 func (c SHsetKey) FieldValue() SHsetFieldValue {
-	return SHsetFieldValue{cf: c.cf, cs: c.cs}
+	return SHsetFieldValue{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 type SHsetnx SCompleted
 
 func (c SHsetnx) Key(Key string) SHsetnxKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SHsetnxKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SHsetnxKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Hsetnx() (c SHsetnx) {
@@ -19145,13 +19145,13 @@ func (b *SBuilder) Hsetnx() (c SHsetnx) {
 type SHsetnxField SCompleted
 
 func (c SHsetnxField) Value(Value string) SHsetnxValue {
-	return SHsetnxValue{cf: c.cf, cs: append(c.cs, Value)}
+	return SHsetnxValue{cs: append(c.cs, Value), cf: c.cf, ks: c.ks}
 }
 
 type SHsetnxKey SCompleted
 
 func (c SHsetnxKey) Field(Field string) SHsetnxField {
-	return SHsetnxField{cf: c.cf, cs: append(c.cs, Field)}
+	return SHsetnxField{cs: append(c.cs, Field), cf: c.cf, ks: c.ks}
 }
 
 type SHsetnxValue SCompleted
@@ -19164,7 +19164,7 @@ type SHstrlen SCompleted
 
 func (c SHstrlen) Key(Key string) SHstrlenKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SHstrlenKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SHstrlenKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Hstrlen() (c SHstrlen) {
@@ -19187,14 +19187,14 @@ func (c SHstrlenField) Cache() SCacheable {
 type SHstrlenKey SCompleted
 
 func (c SHstrlenKey) Field(Field string) SHstrlenField {
-	return SHstrlenField{cf: c.cf, cs: append(c.cs, Field)}
+	return SHstrlenField{cs: append(c.cs, Field), cf: c.cf, ks: c.ks}
 }
 
 type SHvals SCompleted
 
 func (c SHvals) Key(Key string) SHvalsKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SHvalsKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SHvalsKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Hvals() (c SHvals) {
@@ -19218,7 +19218,7 @@ type SIncr SCompleted
 
 func (c SIncr) Key(Key string) SIncrKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SIncrKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SIncrKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Incr() (c SIncr) {
@@ -19237,7 +19237,7 @@ type SIncrby SCompleted
 
 func (c SIncrby) Key(Key string) SIncrbyKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SIncrbyKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SIncrbyKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Incrby() (c SIncrby) {
@@ -19255,14 +19255,14 @@ func (c SIncrbyIncrement) Build() SCompleted {
 type SIncrbyKey SCompleted
 
 func (c SIncrbyKey) Increment(Increment int64) SIncrbyIncrement {
-	return SIncrbyIncrement{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Increment, 10))}
+	return SIncrbyIncrement{cs: append(c.cs, strconv.FormatInt(Increment, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SIncrbyfloat SCompleted
 
 func (c SIncrbyfloat) Key(Key string) SIncrbyfloatKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SIncrbyfloatKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SIncrbyfloatKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Incrbyfloat() (c SIncrbyfloat) {
@@ -19280,13 +19280,13 @@ func (c SIncrbyfloatIncrement) Build() SCompleted {
 type SIncrbyfloatKey SCompleted
 
 func (c SIncrbyfloatKey) Increment(Increment float64) SIncrbyfloatIncrement {
-	return SIncrbyfloatIncrement{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Increment, 'f', -1, 64))}
+	return SIncrbyfloatIncrement{cs: append(c.cs, strconv.FormatFloat(Increment, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type SInfo SCompleted
 
 func (c SInfo) Section(Section string) SInfoSection {
-	return SInfoSection{cf: c.cf, cs: append(c.cs, Section)}
+	return SInfoSection{cs: append(c.cs, Section), cf: c.cf, ks: c.ks}
 }
 
 func (c SInfo) Build() SCompleted {
@@ -19308,7 +19308,7 @@ func (c SInfoSection) Build() SCompleted {
 type SKeys SCompleted
 
 func (c SKeys) Pattern(Pattern string) SKeysPattern {
-	return SKeysPattern{cf: c.cf, cs: append(c.cs, Pattern)}
+	return SKeysPattern{cs: append(c.cs, Pattern), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Keys() (c SKeys) {
@@ -19351,7 +19351,7 @@ func (b *SBuilder) LatencyDoctor() (c SLatencyDoctor) {
 type SLatencyGraph SCompleted
 
 func (c SLatencyGraph) Event(Event string) SLatencyGraphEvent {
-	return SLatencyGraphEvent{cf: c.cf, cs: append(c.cs, Event)}
+	return SLatencyGraphEvent{cs: append(c.cs, Event), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) LatencyGraph() (c SLatencyGraph) {
@@ -19381,7 +19381,7 @@ func (b *SBuilder) LatencyHelp() (c SLatencyHelp) {
 type SLatencyHistory SCompleted
 
 func (c SLatencyHistory) Event(Event string) SLatencyHistoryEvent {
-	return SLatencyHistoryEvent{cf: c.cf, cs: append(c.cs, Event)}
+	return SLatencyHistoryEvent{cs: append(c.cs, Event), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) LatencyHistory() (c SLatencyHistory) {
@@ -19411,7 +19411,7 @@ func (b *SBuilder) LatencyLatest() (c SLatencyLatest) {
 type SLatencyReset SCompleted
 
 func (c SLatencyReset) Event(Event ...string) SLatencyResetEvent {
-	return SLatencyResetEvent{cf: c.cf, cs: append(c.cs, Event...)}
+	return SLatencyResetEvent{cs: append(c.cs, Event...), cf: c.cf, ks: c.ks}
 }
 
 func (c SLatencyReset) Build() SCompleted {
@@ -19427,7 +19427,7 @@ func (b *SBuilder) LatencyReset() (c SLatencyReset) {
 type SLatencyResetEvent SCompleted
 
 func (c SLatencyResetEvent) Event(Event ...string) SLatencyResetEvent {
-	return SLatencyResetEvent{cf: c.cf, cs: append(c.cs, Event...)}
+	return SLatencyResetEvent{cs: append(c.cs, Event...), cf: c.cf, ks: c.ks}
 }
 
 func (c SLatencyResetEvent) Build() SCompleted {
@@ -19438,7 +19438,7 @@ type SLindex SCompleted
 
 func (c SLindex) Key(Key string) SLindexKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SLindexKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SLindexKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Lindex() (c SLindex) {
@@ -19461,14 +19461,14 @@ func (c SLindexIndex) Cache() SCacheable {
 type SLindexKey SCompleted
 
 func (c SLindexKey) Index(Index int64) SLindexIndex {
-	return SLindexIndex{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Index, 10))}
+	return SLindexIndex{cs: append(c.cs, strconv.FormatInt(Index, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SLinsert SCompleted
 
 func (c SLinsert) Key(Key string) SLinsertKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SLinsertKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SLinsertKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Linsert() (c SLinsert) {
@@ -19486,36 +19486,36 @@ func (c SLinsertElement) Build() SCompleted {
 type SLinsertKey SCompleted
 
 func (c SLinsertKey) Before() SLinsertWhereBefore {
-	return SLinsertWhereBefore{cf: c.cf, cs: append(c.cs, "BEFORE")}
+	return SLinsertWhereBefore{cs: append(c.cs, "BEFORE"), cf: c.cf, ks: c.ks}
 }
 
 func (c SLinsertKey) After() SLinsertWhereAfter {
-	return SLinsertWhereAfter{cf: c.cf, cs: append(c.cs, "AFTER")}
+	return SLinsertWhereAfter{cs: append(c.cs, "AFTER"), cf: c.cf, ks: c.ks}
 }
 
 type SLinsertPivot SCompleted
 
 func (c SLinsertPivot) Element(Element string) SLinsertElement {
-	return SLinsertElement{cf: c.cf, cs: append(c.cs, Element)}
+	return SLinsertElement{cs: append(c.cs, Element), cf: c.cf, ks: c.ks}
 }
 
 type SLinsertWhereAfter SCompleted
 
 func (c SLinsertWhereAfter) Pivot(Pivot string) SLinsertPivot {
-	return SLinsertPivot{cf: c.cf, cs: append(c.cs, Pivot)}
+	return SLinsertPivot{cs: append(c.cs, Pivot), cf: c.cf, ks: c.ks}
 }
 
 type SLinsertWhereBefore SCompleted
 
 func (c SLinsertWhereBefore) Pivot(Pivot string) SLinsertPivot {
-	return SLinsertPivot{cf: c.cf, cs: append(c.cs, Pivot)}
+	return SLinsertPivot{cs: append(c.cs, Pivot), cf: c.cf, ks: c.ks}
 }
 
 type SLlen SCompleted
 
 func (c SLlen) Key(Key string) SLlenKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SLlenKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SLlenKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Llen() (c SLlen) {
@@ -19539,7 +19539,7 @@ type SLmove SCompleted
 
 func (c SLmove) Source(Source string) SLmoveSource {
 	c.ks = checkSlot(c.ks, slot(Source))
-	return SLmoveSource{cf: c.cf, cs: append(c.cs, Source)}
+	return SLmoveSource{cs: append(c.cs, Source), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Lmove() (c SLmove) {
@@ -19551,38 +19551,38 @@ func (b *SBuilder) Lmove() (c SLmove) {
 type SLmoveDestination SCompleted
 
 func (c SLmoveDestination) Left() SLmoveWherefromLeft {
-	return SLmoveWherefromLeft{cf: c.cf, cs: append(c.cs, "LEFT")}
+	return SLmoveWherefromLeft{cs: append(c.cs, "LEFT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SLmoveDestination) Right() SLmoveWherefromRight {
-	return SLmoveWherefromRight{cf: c.cf, cs: append(c.cs, "RIGHT")}
+	return SLmoveWherefromRight{cs: append(c.cs, "RIGHT"), cf: c.cf, ks: c.ks}
 }
 
 type SLmoveSource SCompleted
 
 func (c SLmoveSource) Destination(Destination string) SLmoveDestination {
 	c.ks = checkSlot(c.ks, slot(Destination))
-	return SLmoveDestination{cf: c.cf, cs: append(c.cs, Destination)}
+	return SLmoveDestination{cs: append(c.cs, Destination), cf: c.cf, ks: c.ks}
 }
 
 type SLmoveWherefromLeft SCompleted
 
 func (c SLmoveWherefromLeft) Left() SLmoveWheretoLeft {
-	return SLmoveWheretoLeft{cf: c.cf, cs: append(c.cs, "LEFT")}
+	return SLmoveWheretoLeft{cs: append(c.cs, "LEFT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SLmoveWherefromLeft) Right() SLmoveWheretoRight {
-	return SLmoveWheretoRight{cf: c.cf, cs: append(c.cs, "RIGHT")}
+	return SLmoveWheretoRight{cs: append(c.cs, "RIGHT"), cf: c.cf, ks: c.ks}
 }
 
 type SLmoveWherefromRight SCompleted
 
 func (c SLmoveWherefromRight) Left() SLmoveWheretoLeft {
-	return SLmoveWheretoLeft{cf: c.cf, cs: append(c.cs, "LEFT")}
+	return SLmoveWheretoLeft{cs: append(c.cs, "LEFT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SLmoveWherefromRight) Right() SLmoveWheretoRight {
-	return SLmoveWheretoRight{cf: c.cf, cs: append(c.cs, "RIGHT")}
+	return SLmoveWheretoRight{cs: append(c.cs, "RIGHT"), cf: c.cf, ks: c.ks}
 }
 
 type SLmoveWheretoLeft SCompleted
@@ -19600,7 +19600,7 @@ func (c SLmoveWheretoRight) Build() SCompleted {
 type SLmpop SCompleted
 
 func (c SLmpop) Numkeys(Numkeys int64) SLmpopNumkeys {
-	return SLmpopNumkeys{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
+	return SLmpopNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Lmpop() (c SLmpop) {
@@ -19618,18 +19618,18 @@ func (c SLmpopCount) Build() SCompleted {
 type SLmpopKey SCompleted
 
 func (c SLmpopKey) Left() SLmpopWhereLeft {
-	return SLmpopWhereLeft{cf: c.cf, cs: append(c.cs, "LEFT")}
+	return SLmpopWhereLeft{cs: append(c.cs, "LEFT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SLmpopKey) Right() SLmpopWhereRight {
-	return SLmpopWhereRight{cf: c.cf, cs: append(c.cs, "RIGHT")}
+	return SLmpopWhereRight{cs: append(c.cs, "RIGHT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SLmpopKey) Key(Key ...string) SLmpopKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SLmpopKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SLmpopKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type SLmpopNumkeys SCompleted
@@ -19638,21 +19638,21 @@ func (c SLmpopNumkeys) Key(Key ...string) SLmpopKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SLmpopKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SLmpopKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c SLmpopNumkeys) Left() SLmpopWhereLeft {
-	return SLmpopWhereLeft{cf: c.cf, cs: append(c.cs, "LEFT")}
+	return SLmpopWhereLeft{cs: append(c.cs, "LEFT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SLmpopNumkeys) Right() SLmpopWhereRight {
-	return SLmpopWhereRight{cf: c.cf, cs: append(c.cs, "RIGHT")}
+	return SLmpopWhereRight{cs: append(c.cs, "RIGHT"), cf: c.cf, ks: c.ks}
 }
 
 type SLmpopWhereLeft SCompleted
 
 func (c SLmpopWhereLeft) Count(Count int64) SLmpopCount {
-	return SLmpopCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SLmpopCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SLmpopWhereLeft) Build() SCompleted {
@@ -19662,7 +19662,7 @@ func (c SLmpopWhereLeft) Build() SCompleted {
 type SLmpopWhereRight SCompleted
 
 func (c SLmpopWhereRight) Count(Count int64) SLmpopCount {
-	return SLmpopCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SLmpopCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SLmpopWhereRight) Build() SCompleted {
@@ -19672,7 +19672,7 @@ func (c SLmpopWhereRight) Build() SCompleted {
 type SLolwut SCompleted
 
 func (c SLolwut) Version(Version int64) SLolwutVersion {
-	return SLolwutVersion{cf: c.cf, cs: append(c.cs, "VERSION", strconv.FormatInt(Version, 10))}
+	return SLolwutVersion{cs: append(c.cs, "VERSION", strconv.FormatInt(Version, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SLolwut) Build() SCompleted {
@@ -19696,7 +19696,7 @@ type SLpop SCompleted
 
 func (c SLpop) Key(Key string) SLpopKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SLpopKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SLpopKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Lpop() (c SLpop) {
@@ -19714,7 +19714,7 @@ func (c SLpopCount) Build() SCompleted {
 type SLpopKey SCompleted
 
 func (c SLpopKey) Count(Count int64) SLpopCount {
-	return SLpopCount{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Count, 10))}
+	return SLpopCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SLpopKey) Build() SCompleted {
@@ -19725,7 +19725,7 @@ type SLpos SCompleted
 
 func (c SLpos) Key(Key string) SLposKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SLposKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SLposKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Lpos() (c SLpos) {
@@ -19738,7 +19738,7 @@ func (b *SBuilder) Lpos() (c SLpos) {
 type SLposCount SCompleted
 
 func (c SLposCount) Maxlen(Len int64) SLposMaxlen {
-	return SLposMaxlen{cf: c.cf, cs: append(c.cs, "MAXLEN", strconv.FormatInt(Len, 10))}
+	return SLposMaxlen{cs: append(c.cs, "MAXLEN", strconv.FormatInt(Len, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SLposCount) Build() SCompleted {
@@ -19752,15 +19752,15 @@ func (c SLposCount) Cache() SCacheable {
 type SLposElement SCompleted
 
 func (c SLposElement) Rank(Rank int64) SLposRank {
-	return SLposRank{cf: c.cf, cs: append(c.cs, "RANK", strconv.FormatInt(Rank, 10))}
+	return SLposRank{cs: append(c.cs, "RANK", strconv.FormatInt(Rank, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SLposElement) Count(NumMatches int64) SLposCount {
-	return SLposCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(NumMatches, 10))}
+	return SLposCount{cs: append(c.cs, "COUNT", strconv.FormatInt(NumMatches, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SLposElement) Maxlen(Len int64) SLposMaxlen {
-	return SLposMaxlen{cf: c.cf, cs: append(c.cs, "MAXLEN", strconv.FormatInt(Len, 10))}
+	return SLposMaxlen{cs: append(c.cs, "MAXLEN", strconv.FormatInt(Len, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SLposElement) Build() SCompleted {
@@ -19774,7 +19774,7 @@ func (c SLposElement) Cache() SCacheable {
 type SLposKey SCompleted
 
 func (c SLposKey) Element(Element string) SLposElement {
-	return SLposElement{cf: c.cf, cs: append(c.cs, Element)}
+	return SLposElement{cs: append(c.cs, Element), cf: c.cf, ks: c.ks}
 }
 
 type SLposMaxlen SCompleted
@@ -19790,11 +19790,11 @@ func (c SLposMaxlen) Cache() SCacheable {
 type SLposRank SCompleted
 
 func (c SLposRank) Count(NumMatches int64) SLposCount {
-	return SLposCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(NumMatches, 10))}
+	return SLposCount{cs: append(c.cs, "COUNT", strconv.FormatInt(NumMatches, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SLposRank) Maxlen(Len int64) SLposMaxlen {
-	return SLposMaxlen{cf: c.cf, cs: append(c.cs, "MAXLEN", strconv.FormatInt(Len, 10))}
+	return SLposMaxlen{cs: append(c.cs, "MAXLEN", strconv.FormatInt(Len, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SLposRank) Build() SCompleted {
@@ -19809,7 +19809,7 @@ type SLpush SCompleted
 
 func (c SLpush) Key(Key string) SLpushKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SLpushKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SLpushKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Lpush() (c SLpush) {
@@ -19821,7 +19821,7 @@ func (b *SBuilder) Lpush() (c SLpush) {
 type SLpushElement SCompleted
 
 func (c SLpushElement) Element(Element ...string) SLpushElement {
-	return SLpushElement{cf: c.cf, cs: append(c.cs, Element...)}
+	return SLpushElement{cs: append(c.cs, Element...), cf: c.cf, ks: c.ks}
 }
 
 func (c SLpushElement) Build() SCompleted {
@@ -19831,14 +19831,14 @@ func (c SLpushElement) Build() SCompleted {
 type SLpushKey SCompleted
 
 func (c SLpushKey) Element(Element ...string) SLpushElement {
-	return SLpushElement{cf: c.cf, cs: append(c.cs, Element...)}
+	return SLpushElement{cs: append(c.cs, Element...), cf: c.cf, ks: c.ks}
 }
 
 type SLpushx SCompleted
 
 func (c SLpushx) Key(Key string) SLpushxKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SLpushxKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SLpushxKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Lpushx() (c SLpushx) {
@@ -19850,7 +19850,7 @@ func (b *SBuilder) Lpushx() (c SLpushx) {
 type SLpushxElement SCompleted
 
 func (c SLpushxElement) Element(Element ...string) SLpushxElement {
-	return SLpushxElement{cf: c.cf, cs: append(c.cs, Element...)}
+	return SLpushxElement{cs: append(c.cs, Element...), cf: c.cf, ks: c.ks}
 }
 
 func (c SLpushxElement) Build() SCompleted {
@@ -19860,14 +19860,14 @@ func (c SLpushxElement) Build() SCompleted {
 type SLpushxKey SCompleted
 
 func (c SLpushxKey) Element(Element ...string) SLpushxElement {
-	return SLpushxElement{cf: c.cf, cs: append(c.cs, Element...)}
+	return SLpushxElement{cs: append(c.cs, Element...), cf: c.cf, ks: c.ks}
 }
 
 type SLrange SCompleted
 
 func (c SLrange) Key(Key string) SLrangeKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SLrangeKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SLrangeKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Lrange() (c SLrange) {
@@ -19880,13 +19880,13 @@ func (b *SBuilder) Lrange() (c SLrange) {
 type SLrangeKey SCompleted
 
 func (c SLrangeKey) Start(Start int64) SLrangeStart {
-	return SLrangeStart{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Start, 10))}
+	return SLrangeStart{cs: append(c.cs, strconv.FormatInt(Start, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SLrangeStart SCompleted
 
 func (c SLrangeStart) Stop(Stop int64) SLrangeStop {
-	return SLrangeStop{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Stop, 10))}
+	return SLrangeStop{cs: append(c.cs, strconv.FormatInt(Stop, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SLrangeStop SCompleted
@@ -19903,7 +19903,7 @@ type SLrem SCompleted
 
 func (c SLrem) Key(Key string) SLremKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SLremKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SLremKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Lrem() (c SLrem) {
@@ -19915,7 +19915,7 @@ func (b *SBuilder) Lrem() (c SLrem) {
 type SLremCount SCompleted
 
 func (c SLremCount) Element(Element string) SLremElement {
-	return SLremElement{cf: c.cf, cs: append(c.cs, Element)}
+	return SLremElement{cs: append(c.cs, Element), cf: c.cf, ks: c.ks}
 }
 
 type SLremElement SCompleted
@@ -19927,14 +19927,14 @@ func (c SLremElement) Build() SCompleted {
 type SLremKey SCompleted
 
 func (c SLremKey) Count(Count int64) SLremCount {
-	return SLremCount{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Count, 10))}
+	return SLremCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SLset SCompleted
 
 func (c SLset) Key(Key string) SLsetKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SLsetKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SLsetKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Lset() (c SLset) {
@@ -19952,20 +19952,20 @@ func (c SLsetElement) Build() SCompleted {
 type SLsetIndex SCompleted
 
 func (c SLsetIndex) Element(Element string) SLsetElement {
-	return SLsetElement{cf: c.cf, cs: append(c.cs, Element)}
+	return SLsetElement{cs: append(c.cs, Element), cf: c.cf, ks: c.ks}
 }
 
 type SLsetKey SCompleted
 
 func (c SLsetKey) Index(Index int64) SLsetIndex {
-	return SLsetIndex{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Index, 10))}
+	return SLsetIndex{cs: append(c.cs, strconv.FormatInt(Index, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SLtrim SCompleted
 
 func (c SLtrim) Key(Key string) SLtrimKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SLtrimKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SLtrimKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Ltrim() (c SLtrim) {
@@ -19977,13 +19977,13 @@ func (b *SBuilder) Ltrim() (c SLtrim) {
 type SLtrimKey SCompleted
 
 func (c SLtrimKey) Start(Start int64) SLtrimStart {
-	return SLtrimStart{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Start, 10))}
+	return SLtrimStart{cs: append(c.cs, strconv.FormatInt(Start, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SLtrimStart SCompleted
 
 func (c SLtrimStart) Stop(Stop int64) SLtrimStop {
-	return SLtrimStop{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Stop, 10))}
+	return SLtrimStop{cs: append(c.cs, strconv.FormatInt(Stop, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SLtrimStop SCompleted
@@ -20056,7 +20056,7 @@ type SMemoryUsage SCompleted
 
 func (c SMemoryUsage) Key(Key string) SMemoryUsageKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SMemoryUsageKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SMemoryUsageKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) MemoryUsage() (c SMemoryUsage) {
@@ -20068,7 +20068,7 @@ func (b *SBuilder) MemoryUsage() (c SMemoryUsage) {
 type SMemoryUsageKey SCompleted
 
 func (c SMemoryUsageKey) Samples(Count int64) SMemoryUsageSamples {
-	return SMemoryUsageSamples{cf: c.cf, cs: append(c.cs, "SAMPLES", strconv.FormatInt(Count, 10))}
+	return SMemoryUsageSamples{cs: append(c.cs, "SAMPLES", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SMemoryUsageKey) Build() SCompleted {
@@ -20087,7 +20087,7 @@ func (c SMget) Key(Key ...string) SMgetKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SMgetKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SMgetKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Mget() (c SMget) {
@@ -20103,7 +20103,7 @@ func (c SMgetKey) Key(Key ...string) SMgetKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SMgetKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SMgetKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c SMgetKey) Build() SCompleted {
@@ -20113,7 +20113,7 @@ func (c SMgetKey) Build() SCompleted {
 type SMigrate SCompleted
 
 func (c SMigrate) Host(Host string) SMigrateHost {
-	return SMigrateHost{cf: c.cf, cs: append(c.cs, Host)}
+	return SMigrateHost{cs: append(c.cs, Host), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Migrate() (c SMigrate) {
@@ -20126,7 +20126,7 @@ func (b *SBuilder) Migrate() (c SMigrate) {
 type SMigrateAuth SCompleted
 
 func (c SMigrateAuth) Auth2(UsernamePassword string) SMigrateAuth2 {
-	return SMigrateAuth2{cf: c.cf, cs: append(c.cs, "AUTH2", UsernamePassword)}
+	return SMigrateAuth2{cs: append(c.cs, "AUTH2", UsernamePassword), cf: c.cf, ks: c.ks}
 }
 
 func (c SMigrateAuth) Keys(Key ...string) SMigrateKeys {
@@ -20134,7 +20134,7 @@ func (c SMigrateAuth) Keys(Key ...string) SMigrateKeys {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
 	c.cs = append(c.cs, "KEYS")
-	return SMigrateKeys{cf: c.cf, cs: append(c.cs, Key...)}
+	return SMigrateKeys{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c SMigrateAuth) Build() SCompleted {
@@ -20148,7 +20148,7 @@ func (c SMigrateAuth2) Keys(Key ...string) SMigrateKeys {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
 	c.cs = append(c.cs, "KEYS")
-	return SMigrateKeys{cf: c.cf, cs: append(c.cs, Key...)}
+	return SMigrateKeys{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c SMigrateAuth2) Build() SCompleted {
@@ -20158,15 +20158,15 @@ func (c SMigrateAuth2) Build() SCompleted {
 type SMigrateCopyCopy SCompleted
 
 func (c SMigrateCopyCopy) Replace() SMigrateReplaceReplace {
-	return SMigrateReplaceReplace{cf: c.cf, cs: append(c.cs, "REPLACE")}
+	return SMigrateReplaceReplace{cs: append(c.cs, "REPLACE"), cf: c.cf, ks: c.ks}
 }
 
 func (c SMigrateCopyCopy) Auth(Password string) SMigrateAuth {
-	return SMigrateAuth{cf: c.cf, cs: append(c.cs, "AUTH", Password)}
+	return SMigrateAuth{cs: append(c.cs, "AUTH", Password), cf: c.cf, ks: c.ks}
 }
 
 func (c SMigrateCopyCopy) Auth2(UsernamePassword string) SMigrateAuth2 {
-	return SMigrateAuth2{cf: c.cf, cs: append(c.cs, "AUTH2", UsernamePassword)}
+	return SMigrateAuth2{cs: append(c.cs, "AUTH2", UsernamePassword), cf: c.cf, ks: c.ks}
 }
 
 func (c SMigrateCopyCopy) Keys(Key ...string) SMigrateKeys {
@@ -20174,7 +20174,7 @@ func (c SMigrateCopyCopy) Keys(Key ...string) SMigrateKeys {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
 	c.cs = append(c.cs, "KEYS")
-	return SMigrateKeys{cf: c.cf, cs: append(c.cs, Key...)}
+	return SMigrateKeys{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c SMigrateCopyCopy) Build() SCompleted {
@@ -20184,25 +20184,25 @@ func (c SMigrateCopyCopy) Build() SCompleted {
 type SMigrateDestinationDb SCompleted
 
 func (c SMigrateDestinationDb) Timeout(Timeout int64) SMigrateTimeout {
-	return SMigrateTimeout{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Timeout, 10))}
+	return SMigrateTimeout{cs: append(c.cs, strconv.FormatInt(Timeout, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SMigrateHost SCompleted
 
 func (c SMigrateHost) Port(Port string) SMigratePort {
-	return SMigratePort{cf: c.cf, cs: append(c.cs, Port)}
+	return SMigratePort{cs: append(c.cs, Port), cf: c.cf, ks: c.ks}
 }
 
 type SMigrateKeyEmpty SCompleted
 
 func (c SMigrateKeyEmpty) DestinationDb(DestinationDb int64) SMigrateDestinationDb {
-	return SMigrateDestinationDb{cf: c.cf, cs: append(c.cs, strconv.FormatInt(DestinationDb, 10))}
+	return SMigrateDestinationDb{cs: append(c.cs, strconv.FormatInt(DestinationDb, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SMigrateKeyKey SCompleted
 
 func (c SMigrateKeyKey) DestinationDb(DestinationDb int64) SMigrateDestinationDb {
-	return SMigrateDestinationDb{cf: c.cf, cs: append(c.cs, strconv.FormatInt(DestinationDb, 10))}
+	return SMigrateDestinationDb{cs: append(c.cs, strconv.FormatInt(DestinationDb, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SMigrateKeys SCompleted
@@ -20211,7 +20211,7 @@ func (c SMigrateKeys) Keys(Keys ...string) SMigrateKeys {
 	for _, k := range Keys {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SMigrateKeys{cf: c.cf, cs: append(c.cs, Keys...)}
+	return SMigrateKeys{cs: append(c.cs, Keys...), cf: c.cf, ks: c.ks}
 }
 
 func (c SMigrateKeys) Build() SCompleted {
@@ -20221,21 +20221,21 @@ func (c SMigrateKeys) Build() SCompleted {
 type SMigratePort SCompleted
 
 func (c SMigratePort) Key() SMigrateKeyKey {
-	return SMigrateKeyKey{cf: c.cf, cs: append(c.cs, "key")}
+	return SMigrateKeyKey{cs: append(c.cs, "key"), cf: c.cf, ks: c.ks}
 }
 
 func (c SMigratePort) Empty() SMigrateKeyEmpty {
-	return SMigrateKeyEmpty{cf: c.cf, cs: append(c.cs, "\"\"")}
+	return SMigrateKeyEmpty{cs: append(c.cs, "\"\""), cf: c.cf, ks: c.ks}
 }
 
 type SMigrateReplaceReplace SCompleted
 
 func (c SMigrateReplaceReplace) Auth(Password string) SMigrateAuth {
-	return SMigrateAuth{cf: c.cf, cs: append(c.cs, "AUTH", Password)}
+	return SMigrateAuth{cs: append(c.cs, "AUTH", Password), cf: c.cf, ks: c.ks}
 }
 
 func (c SMigrateReplaceReplace) Auth2(UsernamePassword string) SMigrateAuth2 {
-	return SMigrateAuth2{cf: c.cf, cs: append(c.cs, "AUTH2", UsernamePassword)}
+	return SMigrateAuth2{cs: append(c.cs, "AUTH2", UsernamePassword), cf: c.cf, ks: c.ks}
 }
 
 func (c SMigrateReplaceReplace) Keys(Key ...string) SMigrateKeys {
@@ -20243,7 +20243,7 @@ func (c SMigrateReplaceReplace) Keys(Key ...string) SMigrateKeys {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
 	c.cs = append(c.cs, "KEYS")
-	return SMigrateKeys{cf: c.cf, cs: append(c.cs, Key...)}
+	return SMigrateKeys{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c SMigrateReplaceReplace) Build() SCompleted {
@@ -20253,19 +20253,19 @@ func (c SMigrateReplaceReplace) Build() SCompleted {
 type SMigrateTimeout SCompleted
 
 func (c SMigrateTimeout) Copy() SMigrateCopyCopy {
-	return SMigrateCopyCopy{cf: c.cf, cs: append(c.cs, "COPY")}
+	return SMigrateCopyCopy{cs: append(c.cs, "COPY"), cf: c.cf, ks: c.ks}
 }
 
 func (c SMigrateTimeout) Replace() SMigrateReplaceReplace {
-	return SMigrateReplaceReplace{cf: c.cf, cs: append(c.cs, "REPLACE")}
+	return SMigrateReplaceReplace{cs: append(c.cs, "REPLACE"), cf: c.cf, ks: c.ks}
 }
 
 func (c SMigrateTimeout) Auth(Password string) SMigrateAuth {
-	return SMigrateAuth{cf: c.cf, cs: append(c.cs, "AUTH", Password)}
+	return SMigrateAuth{cs: append(c.cs, "AUTH", Password), cf: c.cf, ks: c.ks}
 }
 
 func (c SMigrateTimeout) Auth2(UsernamePassword string) SMigrateAuth2 {
-	return SMigrateAuth2{cf: c.cf, cs: append(c.cs, "AUTH2", UsernamePassword)}
+	return SMigrateAuth2{cs: append(c.cs, "AUTH2", UsernamePassword), cf: c.cf, ks: c.ks}
 }
 
 func (c SMigrateTimeout) Keys(Key ...string) SMigrateKeys {
@@ -20273,7 +20273,7 @@ func (c SMigrateTimeout) Keys(Key ...string) SMigrateKeys {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
 	c.cs = append(c.cs, "KEYS")
-	return SMigrateKeys{cf: c.cf, cs: append(c.cs, Key...)}
+	return SMigrateKeys{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c SMigrateTimeout) Build() SCompleted {
@@ -20295,7 +20295,7 @@ func (b *SBuilder) ModuleList() (c SModuleList) {
 type SModuleLoad SCompleted
 
 func (c SModuleLoad) Path(Path string) SModuleLoadPath {
-	return SModuleLoadPath{cf: c.cf, cs: append(c.cs, Path)}
+	return SModuleLoadPath{cs: append(c.cs, Path), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) ModuleLoad() (c SModuleLoad) {
@@ -20307,7 +20307,7 @@ func (b *SBuilder) ModuleLoad() (c SModuleLoad) {
 type SModuleLoadArg SCompleted
 
 func (c SModuleLoadArg) Arg(Arg ...string) SModuleLoadArg {
-	return SModuleLoadArg{cf: c.cf, cs: append(c.cs, Arg...)}
+	return SModuleLoadArg{cs: append(c.cs, Arg...), cf: c.cf, ks: c.ks}
 }
 
 func (c SModuleLoadArg) Build() SCompleted {
@@ -20317,7 +20317,7 @@ func (c SModuleLoadArg) Build() SCompleted {
 type SModuleLoadPath SCompleted
 
 func (c SModuleLoadPath) Arg(Arg ...string) SModuleLoadArg {
-	return SModuleLoadArg{cf: c.cf, cs: append(c.cs, Arg...)}
+	return SModuleLoadArg{cs: append(c.cs, Arg...), cf: c.cf, ks: c.ks}
 }
 
 func (c SModuleLoadPath) Build() SCompleted {
@@ -20327,7 +20327,7 @@ func (c SModuleLoadPath) Build() SCompleted {
 type SModuleUnload SCompleted
 
 func (c SModuleUnload) Name(Name string) SModuleUnloadName {
-	return SModuleUnloadName{cf: c.cf, cs: append(c.cs, Name)}
+	return SModuleUnloadName{cs: append(c.cs, Name), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) ModuleUnload() (c SModuleUnload) {
@@ -20358,7 +20358,7 @@ type SMove SCompleted
 
 func (c SMove) Key(Key string) SMoveKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SMoveKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SMoveKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Move() (c SMove) {
@@ -20376,13 +20376,13 @@ func (c SMoveDb) Build() SCompleted {
 type SMoveKey SCompleted
 
 func (c SMoveKey) Db(Db int64) SMoveDb {
-	return SMoveDb{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Db, 10))}
+	return SMoveDb{cs: append(c.cs, strconv.FormatInt(Db, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SMset SCompleted
 
 func (c SMset) KeyValue() SMsetKeyValue {
-	return SMsetKeyValue{cf: c.cf, cs: c.cs}
+	return SMsetKeyValue{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Mset() (c SMset) {
@@ -20395,7 +20395,7 @@ type SMsetKeyValue SCompleted
 
 func (c SMsetKeyValue) KeyValue(Key string, Value string) SMsetKeyValue {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SMsetKeyValue{cf: c.cf, cs: append(c.cs, Key, Value)}
+	return SMsetKeyValue{cs: append(c.cs, Key, Value), cf: c.cf, ks: c.ks}
 }
 
 func (c SMsetKeyValue) Build() SCompleted {
@@ -20405,7 +20405,7 @@ func (c SMsetKeyValue) Build() SCompleted {
 type SMsetnx SCompleted
 
 func (c SMsetnx) KeyValue() SMsetnxKeyValue {
-	return SMsetnxKeyValue{cf: c.cf, cs: c.cs}
+	return SMsetnxKeyValue{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Msetnx() (c SMsetnx) {
@@ -20418,7 +20418,7 @@ type SMsetnxKeyValue SCompleted
 
 func (c SMsetnxKeyValue) KeyValue(Key string, Value string) SMsetnxKeyValue {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SMsetnxKeyValue{cf: c.cf, cs: append(c.cs, Key, Value)}
+	return SMsetnxKeyValue{cs: append(c.cs, Key, Value), cf: c.cf, ks: c.ks}
 }
 
 func (c SMsetnxKeyValue) Build() SCompleted {
@@ -20440,7 +20440,7 @@ func (b *SBuilder) Multi() (c SMulti) {
 type SObject SCompleted
 
 func (c SObject) Subcommand(Subcommand string) SObjectSubcommand {
-	return SObjectSubcommand{cf: c.cf, cs: append(c.cs, Subcommand)}
+	return SObjectSubcommand{cs: append(c.cs, Subcommand), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Object() (c SObject) {
@@ -20453,7 +20453,7 @@ func (b *SBuilder) Object() (c SObject) {
 type SObjectArguments SCompleted
 
 func (c SObjectArguments) Arguments(Arguments ...string) SObjectArguments {
-	return SObjectArguments{cf: c.cf, cs: append(c.cs, Arguments...)}
+	return SObjectArguments{cs: append(c.cs, Arguments...), cf: c.cf, ks: c.ks}
 }
 
 func (c SObjectArguments) Build() SCompleted {
@@ -20463,7 +20463,7 @@ func (c SObjectArguments) Build() SCompleted {
 type SObjectSubcommand SCompleted
 
 func (c SObjectSubcommand) Arguments(Arguments ...string) SObjectArguments {
-	return SObjectArguments{cf: c.cf, cs: append(c.cs, Arguments...)}
+	return SObjectArguments{cs: append(c.cs, Arguments...), cf: c.cf, ks: c.ks}
 }
 
 func (c SObjectSubcommand) Build() SCompleted {
@@ -20474,7 +20474,7 @@ type SPersist SCompleted
 
 func (c SPersist) Key(Key string) SPersistKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SPersistKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SPersistKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Persist() (c SPersist) {
@@ -20493,7 +20493,7 @@ type SPexpire SCompleted
 
 func (c SPexpire) Key(Key string) SPexpireKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SPexpireKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SPexpireKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Pexpire() (c SPexpire) {
@@ -20529,25 +20529,25 @@ func (c SPexpireConditionXx) Build() SCompleted {
 type SPexpireKey SCompleted
 
 func (c SPexpireKey) Milliseconds(Milliseconds int64) SPexpireMilliseconds {
-	return SPexpireMilliseconds{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Milliseconds, 10))}
+	return SPexpireMilliseconds{cs: append(c.cs, strconv.FormatInt(Milliseconds, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SPexpireMilliseconds SCompleted
 
 func (c SPexpireMilliseconds) Nx() SPexpireConditionNx {
-	return SPexpireConditionNx{cf: c.cf, cs: append(c.cs, "NX")}
+	return SPexpireConditionNx{cs: append(c.cs, "NX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SPexpireMilliseconds) Xx() SPexpireConditionXx {
-	return SPexpireConditionXx{cf: c.cf, cs: append(c.cs, "XX")}
+	return SPexpireConditionXx{cs: append(c.cs, "XX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SPexpireMilliseconds) Gt() SPexpireConditionGt {
-	return SPexpireConditionGt{cf: c.cf, cs: append(c.cs, "GT")}
+	return SPexpireConditionGt{cs: append(c.cs, "GT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SPexpireMilliseconds) Lt() SPexpireConditionLt {
-	return SPexpireConditionLt{cf: c.cf, cs: append(c.cs, "LT")}
+	return SPexpireConditionLt{cs: append(c.cs, "LT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SPexpireMilliseconds) Build() SCompleted {
@@ -20558,7 +20558,7 @@ type SPexpireat SCompleted
 
 func (c SPexpireat) Key(Key string) SPexpireatKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SPexpireatKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SPexpireatKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Pexpireat() (c SPexpireat) {
@@ -20594,25 +20594,25 @@ func (c SPexpireatConditionXx) Build() SCompleted {
 type SPexpireatKey SCompleted
 
 func (c SPexpireatKey) MillisecondsTimestamp(MillisecondsTimestamp int64) SPexpireatMillisecondsTimestamp {
-	return SPexpireatMillisecondsTimestamp{cf: c.cf, cs: append(c.cs, strconv.FormatInt(MillisecondsTimestamp, 10))}
+	return SPexpireatMillisecondsTimestamp{cs: append(c.cs, strconv.FormatInt(MillisecondsTimestamp, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SPexpireatMillisecondsTimestamp SCompleted
 
 func (c SPexpireatMillisecondsTimestamp) Nx() SPexpireatConditionNx {
-	return SPexpireatConditionNx{cf: c.cf, cs: append(c.cs, "NX")}
+	return SPexpireatConditionNx{cs: append(c.cs, "NX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SPexpireatMillisecondsTimestamp) Xx() SPexpireatConditionXx {
-	return SPexpireatConditionXx{cf: c.cf, cs: append(c.cs, "XX")}
+	return SPexpireatConditionXx{cs: append(c.cs, "XX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SPexpireatMillisecondsTimestamp) Gt() SPexpireatConditionGt {
-	return SPexpireatConditionGt{cf: c.cf, cs: append(c.cs, "GT")}
+	return SPexpireatConditionGt{cs: append(c.cs, "GT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SPexpireatMillisecondsTimestamp) Lt() SPexpireatConditionLt {
-	return SPexpireatConditionLt{cf: c.cf, cs: append(c.cs, "LT")}
+	return SPexpireatConditionLt{cs: append(c.cs, "LT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SPexpireatMillisecondsTimestamp) Build() SCompleted {
@@ -20623,7 +20623,7 @@ type SPexpiretime SCompleted
 
 func (c SPexpiretime) Key(Key string) SPexpiretimeKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SPexpiretimeKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SPexpiretimeKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Pexpiretime() (c SPexpiretime) {
@@ -20647,7 +20647,7 @@ type SPfadd SCompleted
 
 func (c SPfadd) Key(Key string) SPfaddKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SPfaddKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SPfaddKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Pfadd() (c SPfadd) {
@@ -20659,7 +20659,7 @@ func (b *SBuilder) Pfadd() (c SPfadd) {
 type SPfaddElement SCompleted
 
 func (c SPfaddElement) Element(Element ...string) SPfaddElement {
-	return SPfaddElement{cf: c.cf, cs: append(c.cs, Element...)}
+	return SPfaddElement{cs: append(c.cs, Element...), cf: c.cf, ks: c.ks}
 }
 
 func (c SPfaddElement) Build() SCompleted {
@@ -20669,7 +20669,7 @@ func (c SPfaddElement) Build() SCompleted {
 type SPfaddKey SCompleted
 
 func (c SPfaddKey) Element(Element ...string) SPfaddElement {
-	return SPfaddElement{cf: c.cf, cs: append(c.cs, Element...)}
+	return SPfaddElement{cs: append(c.cs, Element...), cf: c.cf, ks: c.ks}
 }
 
 func (c SPfaddKey) Build() SCompleted {
@@ -20682,7 +20682,7 @@ func (c SPfcount) Key(Key ...string) SPfcountKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SPfcountKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SPfcountKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Pfcount() (c SPfcount) {
@@ -20698,7 +20698,7 @@ func (c SPfcountKey) Key(Key ...string) SPfcountKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SPfcountKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SPfcountKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c SPfcountKey) Build() SCompleted {
@@ -20709,7 +20709,7 @@ type SPfmerge SCompleted
 
 func (c SPfmerge) Destkey(Destkey string) SPfmergeDestkey {
 	c.ks = checkSlot(c.ks, slot(Destkey))
-	return SPfmergeDestkey{cf: c.cf, cs: append(c.cs, Destkey)}
+	return SPfmergeDestkey{cs: append(c.cs, Destkey), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Pfmerge() (c SPfmerge) {
@@ -20724,7 +20724,7 @@ func (c SPfmergeDestkey) Sourcekey(Sourcekey ...string) SPfmergeSourcekey {
 	for _, k := range Sourcekey {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SPfmergeSourcekey{cf: c.cf, cs: append(c.cs, Sourcekey...)}
+	return SPfmergeSourcekey{cs: append(c.cs, Sourcekey...), cf: c.cf, ks: c.ks}
 }
 
 type SPfmergeSourcekey SCompleted
@@ -20733,7 +20733,7 @@ func (c SPfmergeSourcekey) Sourcekey(Sourcekey ...string) SPfmergeSourcekey {
 	for _, k := range Sourcekey {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SPfmergeSourcekey{cf: c.cf, cs: append(c.cs, Sourcekey...)}
+	return SPfmergeSourcekey{cs: append(c.cs, Sourcekey...), cf: c.cf, ks: c.ks}
 }
 
 func (c SPfmergeSourcekey) Build() SCompleted {
@@ -20743,7 +20743,7 @@ func (c SPfmergeSourcekey) Build() SCompleted {
 type SPing SCompleted
 
 func (c SPing) Message(Message string) SPingMessage {
-	return SPingMessage{cf: c.cf, cs: append(c.cs, Message)}
+	return SPingMessage{cs: append(c.cs, Message), cf: c.cf, ks: c.ks}
 }
 
 func (c SPing) Build() SCompleted {
@@ -20766,7 +20766,7 @@ type SPsetex SCompleted
 
 func (c SPsetex) Key(Key string) SPsetexKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SPsetexKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SPsetexKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Psetex() (c SPsetex) {
@@ -20778,13 +20778,13 @@ func (b *SBuilder) Psetex() (c SPsetex) {
 type SPsetexKey SCompleted
 
 func (c SPsetexKey) Milliseconds(Milliseconds int64) SPsetexMilliseconds {
-	return SPsetexMilliseconds{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Milliseconds, 10))}
+	return SPsetexMilliseconds{cs: append(c.cs, strconv.FormatInt(Milliseconds, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SPsetexMilliseconds SCompleted
 
 func (c SPsetexMilliseconds) Value(Value string) SPsetexValue {
-	return SPsetexValue{cf: c.cf, cs: append(c.cs, Value)}
+	return SPsetexValue{cs: append(c.cs, Value), cf: c.cf, ks: c.ks}
 }
 
 type SPsetexValue SCompleted
@@ -20796,7 +20796,7 @@ func (c SPsetexValue) Build() SCompleted {
 type SPsubscribe SCompleted
 
 func (c SPsubscribe) Pattern(Pattern ...string) SPsubscribePattern {
-	return SPsubscribePattern{cf: c.cf, cs: append(c.cs, Pattern...)}
+	return SPsubscribePattern{cs: append(c.cs, Pattern...), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Psubscribe() (c SPsubscribe) {
@@ -20809,7 +20809,7 @@ func (b *SBuilder) Psubscribe() (c SPsubscribe) {
 type SPsubscribePattern SCompleted
 
 func (c SPsubscribePattern) Pattern(Pattern ...string) SPsubscribePattern {
-	return SPsubscribePattern{cf: c.cf, cs: append(c.cs, Pattern...)}
+	return SPsubscribePattern{cs: append(c.cs, Pattern...), cf: c.cf, ks: c.ks}
 }
 
 func (c SPsubscribePattern) Build() SCompleted {
@@ -20819,7 +20819,7 @@ func (c SPsubscribePattern) Build() SCompleted {
 type SPsync SCompleted
 
 func (c SPsync) Replicationid(Replicationid int64) SPsyncReplicationid {
-	return SPsyncReplicationid{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Replicationid, 10))}
+	return SPsyncReplicationid{cs: append(c.cs, strconv.FormatInt(Replicationid, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Psync() (c SPsync) {
@@ -20837,14 +20837,14 @@ func (c SPsyncOffset) Build() SCompleted {
 type SPsyncReplicationid SCompleted
 
 func (c SPsyncReplicationid) Offset(Offset int64) SPsyncOffset {
-	return SPsyncOffset{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Offset, 10))}
+	return SPsyncOffset{cs: append(c.cs, strconv.FormatInt(Offset, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SPttl SCompleted
 
 func (c SPttl) Key(Key string) SPttlKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SPttlKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SPttlKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Pttl() (c SPttl) {
@@ -20867,7 +20867,7 @@ func (c SPttlKey) Cache() SCacheable {
 type SPublish SCompleted
 
 func (c SPublish) Channel(Channel string) SPublishChannel {
-	return SPublishChannel{cf: c.cf, cs: append(c.cs, Channel)}
+	return SPublishChannel{cs: append(c.cs, Channel), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Publish() (c SPublish) {
@@ -20879,7 +20879,7 @@ func (b *SBuilder) Publish() (c SPublish) {
 type SPublishChannel SCompleted
 
 func (c SPublishChannel) Message(Message string) SPublishMessage {
-	return SPublishMessage{cf: c.cf, cs: append(c.cs, Message)}
+	return SPublishMessage{cs: append(c.cs, Message), cf: c.cf, ks: c.ks}
 }
 
 type SPublishMessage SCompleted
@@ -20891,7 +20891,7 @@ func (c SPublishMessage) Build() SCompleted {
 type SPubsub SCompleted
 
 func (c SPubsub) Subcommand(Subcommand string) SPubsubSubcommand {
-	return SPubsubSubcommand{cf: c.cf, cs: append(c.cs, Subcommand)}
+	return SPubsubSubcommand{cs: append(c.cs, Subcommand), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Pubsub() (c SPubsub) {
@@ -20903,7 +20903,7 @@ func (b *SBuilder) Pubsub() (c SPubsub) {
 type SPubsubArgument SCompleted
 
 func (c SPubsubArgument) Argument(Argument ...string) SPubsubArgument {
-	return SPubsubArgument{cf: c.cf, cs: append(c.cs, Argument...)}
+	return SPubsubArgument{cs: append(c.cs, Argument...), cf: c.cf, ks: c.ks}
 }
 
 func (c SPubsubArgument) Build() SCompleted {
@@ -20913,7 +20913,7 @@ func (c SPubsubArgument) Build() SCompleted {
 type SPubsubSubcommand SCompleted
 
 func (c SPubsubSubcommand) Argument(Argument ...string) SPubsubArgument {
-	return SPubsubArgument{cf: c.cf, cs: append(c.cs, Argument...)}
+	return SPubsubArgument{cs: append(c.cs, Argument...), cf: c.cf, ks: c.ks}
 }
 
 func (c SPubsubSubcommand) Build() SCompleted {
@@ -20923,7 +20923,7 @@ func (c SPubsubSubcommand) Build() SCompleted {
 type SPunsubscribe SCompleted
 
 func (c SPunsubscribe) Pattern(Pattern ...string) SPunsubscribePattern {
-	return SPunsubscribePattern{cf: c.cf, cs: append(c.cs, Pattern...)}
+	return SPunsubscribePattern{cs: append(c.cs, Pattern...), cf: c.cf, ks: c.ks}
 }
 
 func (c SPunsubscribe) Build() SCompleted {
@@ -20940,7 +20940,7 @@ func (b *SBuilder) Punsubscribe() (c SPunsubscribe) {
 type SPunsubscribePattern SCompleted
 
 func (c SPunsubscribePattern) Pattern(Pattern ...string) SPunsubscribePattern {
-	return SPunsubscribePattern{cf: c.cf, cs: append(c.cs, Pattern...)}
+	return SPunsubscribePattern{cs: append(c.cs, Pattern...), cf: c.cf, ks: c.ks}
 }
 
 func (c SPunsubscribePattern) Build() SCompleted {
@@ -21000,7 +21000,7 @@ type SRename SCompleted
 
 func (c SRename) Key(Key string) SRenameKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SRenameKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SRenameKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Rename() (c SRename) {
@@ -21013,7 +21013,7 @@ type SRenameKey SCompleted
 
 func (c SRenameKey) Newkey(Newkey string) SRenameNewkey {
 	c.ks = checkSlot(c.ks, slot(Newkey))
-	return SRenameNewkey{cf: c.cf, cs: append(c.cs, Newkey)}
+	return SRenameNewkey{cs: append(c.cs, Newkey), cf: c.cf, ks: c.ks}
 }
 
 type SRenameNewkey SCompleted
@@ -21026,7 +21026,7 @@ type SRenamenx SCompleted
 
 func (c SRenamenx) Key(Key string) SRenamenxKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SRenamenxKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SRenamenxKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Renamenx() (c SRenamenx) {
@@ -21039,7 +21039,7 @@ type SRenamenxKey SCompleted
 
 func (c SRenamenxKey) Newkey(Newkey string) SRenamenxNewkey {
 	c.ks = checkSlot(c.ks, slot(Newkey))
-	return SRenamenxNewkey{cf: c.cf, cs: append(c.cs, Newkey)}
+	return SRenamenxNewkey{cs: append(c.cs, Newkey), cf: c.cf, ks: c.ks}
 }
 
 type SRenamenxNewkey SCompleted
@@ -21051,7 +21051,7 @@ func (c SRenamenxNewkey) Build() SCompleted {
 type SReplicaof SCompleted
 
 func (c SReplicaof) Host(Host string) SReplicaofHost {
-	return SReplicaofHost{cf: c.cf, cs: append(c.cs, Host)}
+	return SReplicaofHost{cs: append(c.cs, Host), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Replicaof() (c SReplicaof) {
@@ -21063,7 +21063,7 @@ func (b *SBuilder) Replicaof() (c SReplicaof) {
 type SReplicaofHost SCompleted
 
 func (c SReplicaofHost) Port(Port string) SReplicaofPort {
-	return SReplicaofPort{cf: c.cf, cs: append(c.cs, Port)}
+	return SReplicaofPort{cs: append(c.cs, Port), cf: c.cf, ks: c.ks}
 }
 
 type SReplicaofPort SCompleted
@@ -21088,7 +21088,7 @@ type SRestore SCompleted
 
 func (c SRestore) Key(Key string) SRestoreKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SRestoreKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SRestoreKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Restore() (c SRestore) {
@@ -21100,11 +21100,11 @@ func (b *SBuilder) Restore() (c SRestore) {
 type SRestoreAbsttlAbsttl SCompleted
 
 func (c SRestoreAbsttlAbsttl) Idletime(Seconds int64) SRestoreIdletime {
-	return SRestoreIdletime{cf: c.cf, cs: append(c.cs, "IDLETIME", strconv.FormatInt(Seconds, 10))}
+	return SRestoreIdletime{cs: append(c.cs, "IDLETIME", strconv.FormatInt(Seconds, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SRestoreAbsttlAbsttl) Freq(Frequency int64) SRestoreFreq {
-	return SRestoreFreq{cf: c.cf, cs: append(c.cs, "FREQ", strconv.FormatInt(Frequency, 10))}
+	return SRestoreFreq{cs: append(c.cs, "FREQ", strconv.FormatInt(Frequency, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SRestoreAbsttlAbsttl) Build() SCompleted {
@@ -21120,7 +21120,7 @@ func (c SRestoreFreq) Build() SCompleted {
 type SRestoreIdletime SCompleted
 
 func (c SRestoreIdletime) Freq(Frequency int64) SRestoreFreq {
-	return SRestoreFreq{cf: c.cf, cs: append(c.cs, "FREQ", strconv.FormatInt(Frequency, 10))}
+	return SRestoreFreq{cs: append(c.cs, "FREQ", strconv.FormatInt(Frequency, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SRestoreIdletime) Build() SCompleted {
@@ -21130,21 +21130,21 @@ func (c SRestoreIdletime) Build() SCompleted {
 type SRestoreKey SCompleted
 
 func (c SRestoreKey) Ttl(Ttl int64) SRestoreTtl {
-	return SRestoreTtl{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Ttl, 10))}
+	return SRestoreTtl{cs: append(c.cs, strconv.FormatInt(Ttl, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SRestoreReplaceReplace SCompleted
 
 func (c SRestoreReplaceReplace) Absttl() SRestoreAbsttlAbsttl {
-	return SRestoreAbsttlAbsttl{cf: c.cf, cs: append(c.cs, "ABSTTL")}
+	return SRestoreAbsttlAbsttl{cs: append(c.cs, "ABSTTL"), cf: c.cf, ks: c.ks}
 }
 
 func (c SRestoreReplaceReplace) Idletime(Seconds int64) SRestoreIdletime {
-	return SRestoreIdletime{cf: c.cf, cs: append(c.cs, "IDLETIME", strconv.FormatInt(Seconds, 10))}
+	return SRestoreIdletime{cs: append(c.cs, "IDLETIME", strconv.FormatInt(Seconds, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SRestoreReplaceReplace) Freq(Frequency int64) SRestoreFreq {
-	return SRestoreFreq{cf: c.cf, cs: append(c.cs, "FREQ", strconv.FormatInt(Frequency, 10))}
+	return SRestoreFreq{cs: append(c.cs, "FREQ", strconv.FormatInt(Frequency, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SRestoreReplaceReplace) Build() SCompleted {
@@ -21154,19 +21154,19 @@ func (c SRestoreReplaceReplace) Build() SCompleted {
 type SRestoreSerializedValue SCompleted
 
 func (c SRestoreSerializedValue) Replace() SRestoreReplaceReplace {
-	return SRestoreReplaceReplace{cf: c.cf, cs: append(c.cs, "REPLACE")}
+	return SRestoreReplaceReplace{cs: append(c.cs, "REPLACE"), cf: c.cf, ks: c.ks}
 }
 
 func (c SRestoreSerializedValue) Absttl() SRestoreAbsttlAbsttl {
-	return SRestoreAbsttlAbsttl{cf: c.cf, cs: append(c.cs, "ABSTTL")}
+	return SRestoreAbsttlAbsttl{cs: append(c.cs, "ABSTTL"), cf: c.cf, ks: c.ks}
 }
 
 func (c SRestoreSerializedValue) Idletime(Seconds int64) SRestoreIdletime {
-	return SRestoreIdletime{cf: c.cf, cs: append(c.cs, "IDLETIME", strconv.FormatInt(Seconds, 10))}
+	return SRestoreIdletime{cs: append(c.cs, "IDLETIME", strconv.FormatInt(Seconds, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SRestoreSerializedValue) Freq(Frequency int64) SRestoreFreq {
-	return SRestoreFreq{cf: c.cf, cs: append(c.cs, "FREQ", strconv.FormatInt(Frequency, 10))}
+	return SRestoreFreq{cs: append(c.cs, "FREQ", strconv.FormatInt(Frequency, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SRestoreSerializedValue) Build() SCompleted {
@@ -21176,7 +21176,7 @@ func (c SRestoreSerializedValue) Build() SCompleted {
 type SRestoreTtl SCompleted
 
 func (c SRestoreTtl) SerializedValue(SerializedValue string) SRestoreSerializedValue {
-	return SRestoreSerializedValue{cf: c.cf, cs: append(c.cs, SerializedValue)}
+	return SRestoreSerializedValue{cs: append(c.cs, SerializedValue), cf: c.cf, ks: c.ks}
 }
 
 type SRole SCompleted
@@ -21195,7 +21195,7 @@ type SRpop SCompleted
 
 func (c SRpop) Key(Key string) SRpopKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SRpopKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SRpopKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Rpop() (c SRpop) {
@@ -21213,7 +21213,7 @@ func (c SRpopCount) Build() SCompleted {
 type SRpopKey SCompleted
 
 func (c SRpopKey) Count(Count int64) SRpopCount {
-	return SRpopCount{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Count, 10))}
+	return SRpopCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SRpopKey) Build() SCompleted {
@@ -21224,7 +21224,7 @@ type SRpoplpush SCompleted
 
 func (c SRpoplpush) Source(Source string) SRpoplpushSource {
 	c.ks = checkSlot(c.ks, slot(Source))
-	return SRpoplpushSource{cf: c.cf, cs: append(c.cs, Source)}
+	return SRpoplpushSource{cs: append(c.cs, Source), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Rpoplpush() (c SRpoplpush) {
@@ -21243,14 +21243,14 @@ type SRpoplpushSource SCompleted
 
 func (c SRpoplpushSource) Destination(Destination string) SRpoplpushDestination {
 	c.ks = checkSlot(c.ks, slot(Destination))
-	return SRpoplpushDestination{cf: c.cf, cs: append(c.cs, Destination)}
+	return SRpoplpushDestination{cs: append(c.cs, Destination), cf: c.cf, ks: c.ks}
 }
 
 type SRpush SCompleted
 
 func (c SRpush) Key(Key string) SRpushKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SRpushKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SRpushKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Rpush() (c SRpush) {
@@ -21262,7 +21262,7 @@ func (b *SBuilder) Rpush() (c SRpush) {
 type SRpushElement SCompleted
 
 func (c SRpushElement) Element(Element ...string) SRpushElement {
-	return SRpushElement{cf: c.cf, cs: append(c.cs, Element...)}
+	return SRpushElement{cs: append(c.cs, Element...), cf: c.cf, ks: c.ks}
 }
 
 func (c SRpushElement) Build() SCompleted {
@@ -21272,14 +21272,14 @@ func (c SRpushElement) Build() SCompleted {
 type SRpushKey SCompleted
 
 func (c SRpushKey) Element(Element ...string) SRpushElement {
-	return SRpushElement{cf: c.cf, cs: append(c.cs, Element...)}
+	return SRpushElement{cs: append(c.cs, Element...), cf: c.cf, ks: c.ks}
 }
 
 type SRpushx SCompleted
 
 func (c SRpushx) Key(Key string) SRpushxKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SRpushxKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SRpushxKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Rpushx() (c SRpushx) {
@@ -21291,7 +21291,7 @@ func (b *SBuilder) Rpushx() (c SRpushx) {
 type SRpushxElement SCompleted
 
 func (c SRpushxElement) Element(Element ...string) SRpushxElement {
-	return SRpushxElement{cf: c.cf, cs: append(c.cs, Element...)}
+	return SRpushxElement{cs: append(c.cs, Element...), cf: c.cf, ks: c.ks}
 }
 
 func (c SRpushxElement) Build() SCompleted {
@@ -21301,14 +21301,14 @@ func (c SRpushxElement) Build() SCompleted {
 type SRpushxKey SCompleted
 
 func (c SRpushxKey) Element(Element ...string) SRpushxElement {
-	return SRpushxElement{cf: c.cf, cs: append(c.cs, Element...)}
+	return SRpushxElement{cs: append(c.cs, Element...), cf: c.cf, ks: c.ks}
 }
 
 type SSadd SCompleted
 
 func (c SSadd) Key(Key string) SSaddKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SSaddKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SSaddKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Sadd() (c SSadd) {
@@ -21320,13 +21320,13 @@ func (b *SBuilder) Sadd() (c SSadd) {
 type SSaddKey SCompleted
 
 func (c SSaddKey) Member(Member ...string) SSaddMember {
-	return SSaddMember{cf: c.cf, cs: append(c.cs, Member...)}
+	return SSaddMember{cs: append(c.cs, Member...), cf: c.cf, ks: c.ks}
 }
 
 type SSaddMember SCompleted
 
 func (c SSaddMember) Member(Member ...string) SSaddMember {
-	return SSaddMember{cf: c.cf, cs: append(c.cs, Member...)}
+	return SSaddMember{cs: append(c.cs, Member...), cf: c.cf, ks: c.ks}
 }
 
 func (c SSaddMember) Build() SCompleted {
@@ -21348,7 +21348,7 @@ func (b *SBuilder) Save() (c SSave) {
 type SScan SCompleted
 
 func (c SScan) Cursor(Cursor int64) SScanCursor {
-	return SScanCursor{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Cursor, 10))}
+	return SScanCursor{cs: append(c.cs, strconv.FormatInt(Cursor, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Scan() (c SScan) {
@@ -21361,7 +21361,7 @@ func (b *SBuilder) Scan() (c SScan) {
 type SScanCount SCompleted
 
 func (c SScanCount) Type(Type string) SScanType {
-	return SScanType{cf: c.cf, cs: append(c.cs, "TYPE", Type)}
+	return SScanType{cs: append(c.cs, "TYPE", Type), cf: c.cf, ks: c.ks}
 }
 
 func (c SScanCount) Build() SCompleted {
@@ -21371,15 +21371,15 @@ func (c SScanCount) Build() SCompleted {
 type SScanCursor SCompleted
 
 func (c SScanCursor) Match(Pattern string) SScanMatch {
-	return SScanMatch{cf: c.cf, cs: append(c.cs, "MATCH", Pattern)}
+	return SScanMatch{cs: append(c.cs, "MATCH", Pattern), cf: c.cf, ks: c.ks}
 }
 
 func (c SScanCursor) Count(Count int64) SScanCount {
-	return SScanCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SScanCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SScanCursor) Type(Type string) SScanType {
-	return SScanType{cf: c.cf, cs: append(c.cs, "TYPE", Type)}
+	return SScanType{cs: append(c.cs, "TYPE", Type), cf: c.cf, ks: c.ks}
 }
 
 func (c SScanCursor) Build() SCompleted {
@@ -21389,11 +21389,11 @@ func (c SScanCursor) Build() SCompleted {
 type SScanMatch SCompleted
 
 func (c SScanMatch) Count(Count int64) SScanCount {
-	return SScanCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SScanCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SScanMatch) Type(Type string) SScanType {
-	return SScanType{cf: c.cf, cs: append(c.cs, "TYPE", Type)}
+	return SScanType{cs: append(c.cs, "TYPE", Type), cf: c.cf, ks: c.ks}
 }
 
 func (c SScanMatch) Build() SCompleted {
@@ -21410,7 +21410,7 @@ type SScard SCompleted
 
 func (c SScard) Key(Key string) SScardKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SScardKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SScardKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Scard() (c SScard) {
@@ -21433,15 +21433,15 @@ func (c SScardKey) Cache() SCacheable {
 type SScriptDebug SCompleted
 
 func (c SScriptDebug) Yes() SScriptDebugModeYes {
-	return SScriptDebugModeYes{cf: c.cf, cs: append(c.cs, "YES")}
+	return SScriptDebugModeYes{cs: append(c.cs, "YES"), cf: c.cf, ks: c.ks}
 }
 
 func (c SScriptDebug) Sync() SScriptDebugModeSync {
-	return SScriptDebugModeSync{cf: c.cf, cs: append(c.cs, "SYNC")}
+	return SScriptDebugModeSync{cs: append(c.cs, "SYNC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SScriptDebug) No() SScriptDebugModeNo {
-	return SScriptDebugModeNo{cf: c.cf, cs: append(c.cs, "NO")}
+	return SScriptDebugModeNo{cs: append(c.cs, "NO"), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) ScriptDebug() (c SScriptDebug) {
@@ -21471,7 +21471,7 @@ func (c SScriptDebugModeYes) Build() SCompleted {
 type SScriptExists SCompleted
 
 func (c SScriptExists) Sha1(Sha1 ...string) SScriptExistsSha1 {
-	return SScriptExistsSha1{cf: c.cf, cs: append(c.cs, Sha1...)}
+	return SScriptExistsSha1{cs: append(c.cs, Sha1...), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) ScriptExists() (c SScriptExists) {
@@ -21483,7 +21483,7 @@ func (b *SBuilder) ScriptExists() (c SScriptExists) {
 type SScriptExistsSha1 SCompleted
 
 func (c SScriptExistsSha1) Sha1(Sha1 ...string) SScriptExistsSha1 {
-	return SScriptExistsSha1{cf: c.cf, cs: append(c.cs, Sha1...)}
+	return SScriptExistsSha1{cs: append(c.cs, Sha1...), cf: c.cf, ks: c.ks}
 }
 
 func (c SScriptExistsSha1) Build() SCompleted {
@@ -21493,11 +21493,11 @@ func (c SScriptExistsSha1) Build() SCompleted {
 type SScriptFlush SCompleted
 
 func (c SScriptFlush) Async() SScriptFlushAsyncAsync {
-	return SScriptFlushAsyncAsync{cf: c.cf, cs: append(c.cs, "ASYNC")}
+	return SScriptFlushAsyncAsync{cs: append(c.cs, "ASYNC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SScriptFlush) Sync() SScriptFlushAsyncSync {
-	return SScriptFlushAsyncSync{cf: c.cf, cs: append(c.cs, "SYNC")}
+	return SScriptFlushAsyncSync{cs: append(c.cs, "SYNC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SScriptFlush) Build() SCompleted {
@@ -21537,7 +21537,7 @@ func (b *SBuilder) ScriptKill() (c SScriptKill) {
 type SScriptLoad SCompleted
 
 func (c SScriptLoad) Script(Script string) SScriptLoadScript {
-	return SScriptLoadScript{cf: c.cf, cs: append(c.cs, Script)}
+	return SScriptLoadScript{cs: append(c.cs, Script), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) ScriptLoad() (c SScriptLoad) {
@@ -21558,7 +21558,7 @@ func (c SSdiff) Key(Key ...string) SSdiffKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SSdiffKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SSdiffKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Sdiff() (c SSdiff) {
@@ -21574,7 +21574,7 @@ func (c SSdiffKey) Key(Key ...string) SSdiffKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SSdiffKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SSdiffKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c SSdiffKey) Build() SCompleted {
@@ -21585,7 +21585,7 @@ type SSdiffstore SCompleted
 
 func (c SSdiffstore) Destination(Destination string) SSdiffstoreDestination {
 	c.ks = checkSlot(c.ks, slot(Destination))
-	return SSdiffstoreDestination{cf: c.cf, cs: append(c.cs, Destination)}
+	return SSdiffstoreDestination{cs: append(c.cs, Destination), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Sdiffstore() (c SSdiffstore) {
@@ -21600,7 +21600,7 @@ func (c SSdiffstoreDestination) Key(Key ...string) SSdiffstoreKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SSdiffstoreKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SSdiffstoreKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type SSdiffstoreKey SCompleted
@@ -21609,7 +21609,7 @@ func (c SSdiffstoreKey) Key(Key ...string) SSdiffstoreKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SSdiffstoreKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SSdiffstoreKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c SSdiffstoreKey) Build() SCompleted {
@@ -21619,7 +21619,7 @@ func (c SSdiffstoreKey) Build() SCompleted {
 type SSelect SCompleted
 
 func (c SSelect) Index(Index int64) SSelectIndex {
-	return SSelectIndex{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Index, 10))}
+	return SSelectIndex{cs: append(c.cs, strconv.FormatInt(Index, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Select() (c SSelect) {
@@ -21638,7 +21638,7 @@ type SSet SCompleted
 
 func (c SSet) Key(Key string) SSetKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SSetKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SSetKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Set() (c SSet) {
@@ -21650,7 +21650,7 @@ func (b *SBuilder) Set() (c SSet) {
 type SSetConditionNx SCompleted
 
 func (c SSetConditionNx) Get() SSetGetGet {
-	return SSetGetGet{cf: c.cf, cs: append(c.cs, "GET")}
+	return SSetGetGet{cs: append(c.cs, "GET"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSetConditionNx) Build() SCompleted {
@@ -21660,7 +21660,7 @@ func (c SSetConditionNx) Build() SCompleted {
 type SSetConditionXx SCompleted
 
 func (c SSetConditionXx) Get() SSetGetGet {
-	return SSetGetGet{cf: c.cf, cs: append(c.cs, "GET")}
+	return SSetGetGet{cs: append(c.cs, "GET"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSetConditionXx) Build() SCompleted {
@@ -21670,15 +21670,15 @@ func (c SSetConditionXx) Build() SCompleted {
 type SSetExpirationEx SCompleted
 
 func (c SSetExpirationEx) Nx() SSetConditionNx {
-	return SSetConditionNx{cf: c.cf, cs: append(c.cs, "NX")}
+	return SSetConditionNx{cs: append(c.cs, "NX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSetExpirationEx) Xx() SSetConditionXx {
-	return SSetConditionXx{cf: c.cf, cs: append(c.cs, "XX")}
+	return SSetConditionXx{cs: append(c.cs, "XX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSetExpirationEx) Get() SSetGetGet {
-	return SSetGetGet{cf: c.cf, cs: append(c.cs, "GET")}
+	return SSetGetGet{cs: append(c.cs, "GET"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSetExpirationEx) Build() SCompleted {
@@ -21688,15 +21688,15 @@ func (c SSetExpirationEx) Build() SCompleted {
 type SSetExpirationExat SCompleted
 
 func (c SSetExpirationExat) Nx() SSetConditionNx {
-	return SSetConditionNx{cf: c.cf, cs: append(c.cs, "NX")}
+	return SSetConditionNx{cs: append(c.cs, "NX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSetExpirationExat) Xx() SSetConditionXx {
-	return SSetConditionXx{cf: c.cf, cs: append(c.cs, "XX")}
+	return SSetConditionXx{cs: append(c.cs, "XX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSetExpirationExat) Get() SSetGetGet {
-	return SSetGetGet{cf: c.cf, cs: append(c.cs, "GET")}
+	return SSetGetGet{cs: append(c.cs, "GET"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSetExpirationExat) Build() SCompleted {
@@ -21706,15 +21706,15 @@ func (c SSetExpirationExat) Build() SCompleted {
 type SSetExpirationKeepttl SCompleted
 
 func (c SSetExpirationKeepttl) Nx() SSetConditionNx {
-	return SSetConditionNx{cf: c.cf, cs: append(c.cs, "NX")}
+	return SSetConditionNx{cs: append(c.cs, "NX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSetExpirationKeepttl) Xx() SSetConditionXx {
-	return SSetConditionXx{cf: c.cf, cs: append(c.cs, "XX")}
+	return SSetConditionXx{cs: append(c.cs, "XX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSetExpirationKeepttl) Get() SSetGetGet {
-	return SSetGetGet{cf: c.cf, cs: append(c.cs, "GET")}
+	return SSetGetGet{cs: append(c.cs, "GET"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSetExpirationKeepttl) Build() SCompleted {
@@ -21724,15 +21724,15 @@ func (c SSetExpirationKeepttl) Build() SCompleted {
 type SSetExpirationPx SCompleted
 
 func (c SSetExpirationPx) Nx() SSetConditionNx {
-	return SSetConditionNx{cf: c.cf, cs: append(c.cs, "NX")}
+	return SSetConditionNx{cs: append(c.cs, "NX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSetExpirationPx) Xx() SSetConditionXx {
-	return SSetConditionXx{cf: c.cf, cs: append(c.cs, "XX")}
+	return SSetConditionXx{cs: append(c.cs, "XX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSetExpirationPx) Get() SSetGetGet {
-	return SSetGetGet{cf: c.cf, cs: append(c.cs, "GET")}
+	return SSetGetGet{cs: append(c.cs, "GET"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSetExpirationPx) Build() SCompleted {
@@ -21742,15 +21742,15 @@ func (c SSetExpirationPx) Build() SCompleted {
 type SSetExpirationPxat SCompleted
 
 func (c SSetExpirationPxat) Nx() SSetConditionNx {
-	return SSetConditionNx{cf: c.cf, cs: append(c.cs, "NX")}
+	return SSetConditionNx{cs: append(c.cs, "NX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSetExpirationPxat) Xx() SSetConditionXx {
-	return SSetConditionXx{cf: c.cf, cs: append(c.cs, "XX")}
+	return SSetConditionXx{cs: append(c.cs, "XX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSetExpirationPxat) Get() SSetGetGet {
-	return SSetGetGet{cf: c.cf, cs: append(c.cs, "GET")}
+	return SSetGetGet{cs: append(c.cs, "GET"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSetExpirationPxat) Build() SCompleted {
@@ -21766,41 +21766,41 @@ func (c SSetGetGet) Build() SCompleted {
 type SSetKey SCompleted
 
 func (c SSetKey) Value(Value string) SSetValue {
-	return SSetValue{cf: c.cf, cs: append(c.cs, Value)}
+	return SSetValue{cs: append(c.cs, Value), cf: c.cf, ks: c.ks}
 }
 
 type SSetValue SCompleted
 
 func (c SSetValue) Ex(Seconds int64) SSetExpirationEx {
-	return SSetExpirationEx{cf: c.cf, cs: append(c.cs, "EX", strconv.FormatInt(Seconds, 10))}
+	return SSetExpirationEx{cs: append(c.cs, "EX", strconv.FormatInt(Seconds, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SSetValue) Px(Milliseconds int64) SSetExpirationPx {
-	return SSetExpirationPx{cf: c.cf, cs: append(c.cs, "PX", strconv.FormatInt(Milliseconds, 10))}
+	return SSetExpirationPx{cs: append(c.cs, "PX", strconv.FormatInt(Milliseconds, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SSetValue) Exat(Timestamp int64) SSetExpirationExat {
-	return SSetExpirationExat{cf: c.cf, cs: append(c.cs, "EXAT", strconv.FormatInt(Timestamp, 10))}
+	return SSetExpirationExat{cs: append(c.cs, "EXAT", strconv.FormatInt(Timestamp, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SSetValue) Pxat(Millisecondstimestamp int64) SSetExpirationPxat {
-	return SSetExpirationPxat{cf: c.cf, cs: append(c.cs, "PXAT", strconv.FormatInt(Millisecondstimestamp, 10))}
+	return SSetExpirationPxat{cs: append(c.cs, "PXAT", strconv.FormatInt(Millisecondstimestamp, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SSetValue) Keepttl() SSetExpirationKeepttl {
-	return SSetExpirationKeepttl{cf: c.cf, cs: append(c.cs, "KEEPTTL")}
+	return SSetExpirationKeepttl{cs: append(c.cs, "KEEPTTL"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSetValue) Nx() SSetConditionNx {
-	return SSetConditionNx{cf: c.cf, cs: append(c.cs, "NX")}
+	return SSetConditionNx{cs: append(c.cs, "NX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSetValue) Xx() SSetConditionXx {
-	return SSetConditionXx{cf: c.cf, cs: append(c.cs, "XX")}
+	return SSetConditionXx{cs: append(c.cs, "XX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSetValue) Get() SSetGetGet {
-	return SSetGetGet{cf: c.cf, cs: append(c.cs, "GET")}
+	return SSetGetGet{cs: append(c.cs, "GET"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSetValue) Build() SCompleted {
@@ -21811,7 +21811,7 @@ type SSetbit SCompleted
 
 func (c SSetbit) Key(Key string) SSetbitKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SSetbitKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SSetbitKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Setbit() (c SSetbit) {
@@ -21823,13 +21823,13 @@ func (b *SBuilder) Setbit() (c SSetbit) {
 type SSetbitKey SCompleted
 
 func (c SSetbitKey) Offset(Offset int64) SSetbitOffset {
-	return SSetbitOffset{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Offset, 10))}
+	return SSetbitOffset{cs: append(c.cs, strconv.FormatInt(Offset, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SSetbitOffset SCompleted
 
 func (c SSetbitOffset) Value(Value int64) SSetbitValue {
-	return SSetbitValue{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Value, 10))}
+	return SSetbitValue{cs: append(c.cs, strconv.FormatInt(Value, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SSetbitValue SCompleted
@@ -21842,7 +21842,7 @@ type SSetex SCompleted
 
 func (c SSetex) Key(Key string) SSetexKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SSetexKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SSetexKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Setex() (c SSetex) {
@@ -21854,13 +21854,13 @@ func (b *SBuilder) Setex() (c SSetex) {
 type SSetexKey SCompleted
 
 func (c SSetexKey) Seconds(Seconds int64) SSetexSeconds {
-	return SSetexSeconds{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Seconds, 10))}
+	return SSetexSeconds{cs: append(c.cs, strconv.FormatInt(Seconds, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SSetexSeconds SCompleted
 
 func (c SSetexSeconds) Value(Value string) SSetexValue {
-	return SSetexValue{cf: c.cf, cs: append(c.cs, Value)}
+	return SSetexValue{cs: append(c.cs, Value), cf: c.cf, ks: c.ks}
 }
 
 type SSetexValue SCompleted
@@ -21873,7 +21873,7 @@ type SSetnx SCompleted
 
 func (c SSetnx) Key(Key string) SSetnxKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SSetnxKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SSetnxKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Setnx() (c SSetnx) {
@@ -21885,7 +21885,7 @@ func (b *SBuilder) Setnx() (c SSetnx) {
 type SSetnxKey SCompleted
 
 func (c SSetnxKey) Value(Value string) SSetnxValue {
-	return SSetnxValue{cf: c.cf, cs: append(c.cs, Value)}
+	return SSetnxValue{cs: append(c.cs, Value), cf: c.cf, ks: c.ks}
 }
 
 type SSetnxValue SCompleted
@@ -21898,7 +21898,7 @@ type SSetrange SCompleted
 
 func (c SSetrange) Key(Key string) SSetrangeKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SSetrangeKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SSetrangeKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Setrange() (c SSetrange) {
@@ -21910,13 +21910,13 @@ func (b *SBuilder) Setrange() (c SSetrange) {
 type SSetrangeKey SCompleted
 
 func (c SSetrangeKey) Offset(Offset int64) SSetrangeOffset {
-	return SSetrangeOffset{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Offset, 10))}
+	return SSetrangeOffset{cs: append(c.cs, strconv.FormatInt(Offset, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SSetrangeOffset SCompleted
 
 func (c SSetrangeOffset) Value(Value string) SSetrangeValue {
-	return SSetrangeValue{cf: c.cf, cs: append(c.cs, Value)}
+	return SSetrangeValue{cs: append(c.cs, Value), cf: c.cf, ks: c.ks}
 }
 
 type SSetrangeValue SCompleted
@@ -21928,11 +21928,11 @@ func (c SSetrangeValue) Build() SCompleted {
 type SShutdown SCompleted
 
 func (c SShutdown) Nosave() SShutdownSaveModeNosave {
-	return SShutdownSaveModeNosave{cf: c.cf, cs: append(c.cs, "NOSAVE")}
+	return SShutdownSaveModeNosave{cs: append(c.cs, "NOSAVE"), cf: c.cf, ks: c.ks}
 }
 
 func (c SShutdown) Save() SShutdownSaveModeSave {
-	return SShutdownSaveModeSave{cf: c.cf, cs: append(c.cs, "SAVE")}
+	return SShutdownSaveModeSave{cs: append(c.cs, "SAVE"), cf: c.cf, ks: c.ks}
 }
 
 func (c SShutdown) Build() SCompleted {
@@ -21963,7 +21963,7 @@ func (c SSinter) Key(Key ...string) SSinterKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SSinterKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SSinterKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Sinter() (c SSinter) {
@@ -21979,7 +21979,7 @@ func (c SSinterKey) Key(Key ...string) SSinterKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SSinterKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SSinterKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c SSinterKey) Build() SCompleted {
@@ -21992,7 +21992,7 @@ func (c SSintercard) Key(Key ...string) SSintercardKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SSintercardKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SSintercardKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Sintercard() (c SSintercard) {
@@ -22008,7 +22008,7 @@ func (c SSintercardKey) Key(Key ...string) SSintercardKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SSintercardKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SSintercardKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c SSintercardKey) Build() SCompleted {
@@ -22019,7 +22019,7 @@ type SSinterstore SCompleted
 
 func (c SSinterstore) Destination(Destination string) SSinterstoreDestination {
 	c.ks = checkSlot(c.ks, slot(Destination))
-	return SSinterstoreDestination{cf: c.cf, cs: append(c.cs, Destination)}
+	return SSinterstoreDestination{cs: append(c.cs, Destination), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Sinterstore() (c SSinterstore) {
@@ -22034,7 +22034,7 @@ func (c SSinterstoreDestination) Key(Key ...string) SSinterstoreKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SSinterstoreKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SSinterstoreKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type SSinterstoreKey SCompleted
@@ -22043,7 +22043,7 @@ func (c SSinterstoreKey) Key(Key ...string) SSinterstoreKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SSinterstoreKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SSinterstoreKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c SSinterstoreKey) Build() SCompleted {
@@ -22054,7 +22054,7 @@ type SSismember SCompleted
 
 func (c SSismember) Key(Key string) SSismemberKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SSismemberKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SSismemberKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Sismember() (c SSismember) {
@@ -22067,7 +22067,7 @@ func (b *SBuilder) Sismember() (c SSismember) {
 type SSismemberKey SCompleted
 
 func (c SSismemberKey) Member(Member string) SSismemberMember {
-	return SSismemberMember{cf: c.cf, cs: append(c.cs, Member)}
+	return SSismemberMember{cs: append(c.cs, Member), cf: c.cf, ks: c.ks}
 }
 
 type SSismemberMember SCompleted
@@ -22083,7 +22083,7 @@ func (c SSismemberMember) Cache() SCacheable {
 type SSlaveof SCompleted
 
 func (c SSlaveof) Host(Host string) SSlaveofHost {
-	return SSlaveofHost{cf: c.cf, cs: append(c.cs, Host)}
+	return SSlaveofHost{cs: append(c.cs, Host), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Slaveof() (c SSlaveof) {
@@ -22095,7 +22095,7 @@ func (b *SBuilder) Slaveof() (c SSlaveof) {
 type SSlaveofHost SCompleted
 
 func (c SSlaveofHost) Port(Port string) SSlaveofPort {
-	return SSlaveofPort{cf: c.cf, cs: append(c.cs, Port)}
+	return SSlaveofPort{cs: append(c.cs, Port), cf: c.cf, ks: c.ks}
 }
 
 type SSlaveofPort SCompleted
@@ -22107,7 +22107,7 @@ func (c SSlaveofPort) Build() SCompleted {
 type SSlowlog SCompleted
 
 func (c SSlowlog) Subcommand(Subcommand string) SSlowlogSubcommand {
-	return SSlowlogSubcommand{cf: c.cf, cs: append(c.cs, Subcommand)}
+	return SSlowlogSubcommand{cs: append(c.cs, Subcommand), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Slowlog() (c SSlowlog) {
@@ -22125,7 +22125,7 @@ func (c SSlowlogArgument) Build() SCompleted {
 type SSlowlogSubcommand SCompleted
 
 func (c SSlowlogSubcommand) Argument(Argument string) SSlowlogArgument {
-	return SSlowlogArgument{cf: c.cf, cs: append(c.cs, Argument)}
+	return SSlowlogArgument{cs: append(c.cs, Argument), cf: c.cf, ks: c.ks}
 }
 
 func (c SSlowlogSubcommand) Build() SCompleted {
@@ -22136,7 +22136,7 @@ type SSmembers SCompleted
 
 func (c SSmembers) Key(Key string) SSmembersKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SSmembersKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SSmembersKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Smembers() (c SSmembers) {
@@ -22160,7 +22160,7 @@ type SSmismember SCompleted
 
 func (c SSmismember) Key(Key string) SSmismemberKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SSmismemberKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SSmismemberKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Smismember() (c SSmismember) {
@@ -22173,13 +22173,13 @@ func (b *SBuilder) Smismember() (c SSmismember) {
 type SSmismemberKey SCompleted
 
 func (c SSmismemberKey) Member(Member ...string) SSmismemberMember {
-	return SSmismemberMember{cf: c.cf, cs: append(c.cs, Member...)}
+	return SSmismemberMember{cs: append(c.cs, Member...), cf: c.cf, ks: c.ks}
 }
 
 type SSmismemberMember SCompleted
 
 func (c SSmismemberMember) Member(Member ...string) SSmismemberMember {
-	return SSmismemberMember{cf: c.cf, cs: append(c.cs, Member...)}
+	return SSmismemberMember{cs: append(c.cs, Member...), cf: c.cf, ks: c.ks}
 }
 
 func (c SSmismemberMember) Build() SCompleted {
@@ -22194,7 +22194,7 @@ type SSmove SCompleted
 
 func (c SSmove) Source(Source string) SSmoveSource {
 	c.ks = checkSlot(c.ks, slot(Source))
-	return SSmoveSource{cf: c.cf, cs: append(c.cs, Source)}
+	return SSmoveSource{cs: append(c.cs, Source), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Smove() (c SSmove) {
@@ -22206,7 +22206,7 @@ func (b *SBuilder) Smove() (c SSmove) {
 type SSmoveDestination SCompleted
 
 func (c SSmoveDestination) Member(Member string) SSmoveMember {
-	return SSmoveMember{cf: c.cf, cs: append(c.cs, Member)}
+	return SSmoveMember{cs: append(c.cs, Member), cf: c.cf, ks: c.ks}
 }
 
 type SSmoveMember SCompleted
@@ -22219,14 +22219,14 @@ type SSmoveSource SCompleted
 
 func (c SSmoveSource) Destination(Destination string) SSmoveDestination {
 	c.ks = checkSlot(c.ks, slot(Destination))
-	return SSmoveDestination{cf: c.cf, cs: append(c.cs, Destination)}
+	return SSmoveDestination{cs: append(c.cs, Destination), cf: c.cf, ks: c.ks}
 }
 
 type SSort SCompleted
 
 func (c SSort) Key(Key string) SSortKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SSortKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SSortKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Sort() (c SSort) {
@@ -22238,29 +22238,29 @@ func (b *SBuilder) Sort() (c SSort) {
 type SSortBy SCompleted
 
 func (c SSortBy) Limit(Offset int64, Count int64) SSortLimit {
-	return SSortLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return SSortLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortBy) Get(Pattern ...string) SSortGet {
 	c.cs = append(c.cs, "GET")
-	return SSortGet{cf: c.cf, cs: append(c.cs, Pattern...)}
+	return SSortGet{cs: append(c.cs, Pattern...), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortBy) Asc() SSortOrderAsc {
-	return SSortOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SSortOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortBy) Desc() SSortOrderDesc {
-	return SSortOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SSortOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortBy) Alpha() SSortSortingAlpha {
-	return SSortSortingAlpha{cf: c.cf, cs: append(c.cs, "ALPHA")}
+	return SSortSortingAlpha{cs: append(c.cs, "ALPHA"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortBy) Store(Destination string) SSortStore {
 	c.ks = checkSlot(c.ks, slot(Destination))
-	return SSortStore{cf: c.cf, cs: append(c.cs, "STORE", Destination)}
+	return SSortStore{cs: append(c.cs, "STORE", Destination), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortBy) Build() SCompleted {
@@ -22270,24 +22270,24 @@ func (c SSortBy) Build() SCompleted {
 type SSortGet SCompleted
 
 func (c SSortGet) Asc() SSortOrderAsc {
-	return SSortOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SSortOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortGet) Desc() SSortOrderDesc {
-	return SSortOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SSortOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortGet) Alpha() SSortSortingAlpha {
-	return SSortSortingAlpha{cf: c.cf, cs: append(c.cs, "ALPHA")}
+	return SSortSortingAlpha{cs: append(c.cs, "ALPHA"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortGet) Store(Destination string) SSortStore {
 	c.ks = checkSlot(c.ks, slot(Destination))
-	return SSortStore{cf: c.cf, cs: append(c.cs, "STORE", Destination)}
+	return SSortStore{cs: append(c.cs, "STORE", Destination), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortGet) Get(Get ...string) SSortGet {
-	return SSortGet{cf: c.cf, cs: append(c.cs, Get...)}
+	return SSortGet{cs: append(c.cs, Get...), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortGet) Build() SCompleted {
@@ -22297,33 +22297,33 @@ func (c SSortGet) Build() SCompleted {
 type SSortKey SCompleted
 
 func (c SSortKey) By(Pattern string) SSortBy {
-	return SSortBy{cf: c.cf, cs: append(c.cs, "BY", Pattern)}
+	return SSortBy{cs: append(c.cs, "BY", Pattern), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortKey) Limit(Offset int64, Count int64) SSortLimit {
-	return SSortLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return SSortLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortKey) Get(Pattern ...string) SSortGet {
 	c.cs = append(c.cs, "GET")
-	return SSortGet{cf: c.cf, cs: append(c.cs, Pattern...)}
+	return SSortGet{cs: append(c.cs, Pattern...), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortKey) Asc() SSortOrderAsc {
-	return SSortOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SSortOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortKey) Desc() SSortOrderDesc {
-	return SSortOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SSortOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortKey) Alpha() SSortSortingAlpha {
-	return SSortSortingAlpha{cf: c.cf, cs: append(c.cs, "ALPHA")}
+	return SSortSortingAlpha{cs: append(c.cs, "ALPHA"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortKey) Store(Destination string) SSortStore {
 	c.ks = checkSlot(c.ks, slot(Destination))
-	return SSortStore{cf: c.cf, cs: append(c.cs, "STORE", Destination)}
+	return SSortStore{cs: append(c.cs, "STORE", Destination), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortKey) Build() SCompleted {
@@ -22334,24 +22334,24 @@ type SSortLimit SCompleted
 
 func (c SSortLimit) Get(Pattern ...string) SSortGet {
 	c.cs = append(c.cs, "GET")
-	return SSortGet{cf: c.cf, cs: append(c.cs, Pattern...)}
+	return SSortGet{cs: append(c.cs, Pattern...), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortLimit) Asc() SSortOrderAsc {
-	return SSortOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SSortOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortLimit) Desc() SSortOrderDesc {
-	return SSortOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SSortOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortLimit) Alpha() SSortSortingAlpha {
-	return SSortSortingAlpha{cf: c.cf, cs: append(c.cs, "ALPHA")}
+	return SSortSortingAlpha{cs: append(c.cs, "ALPHA"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortLimit) Store(Destination string) SSortStore {
 	c.ks = checkSlot(c.ks, slot(Destination))
-	return SSortStore{cf: c.cf, cs: append(c.cs, "STORE", Destination)}
+	return SSortStore{cs: append(c.cs, "STORE", Destination), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortLimit) Build() SCompleted {
@@ -22361,12 +22361,12 @@ func (c SSortLimit) Build() SCompleted {
 type SSortOrderAsc SCompleted
 
 func (c SSortOrderAsc) Alpha() SSortSortingAlpha {
-	return SSortSortingAlpha{cf: c.cf, cs: append(c.cs, "ALPHA")}
+	return SSortSortingAlpha{cs: append(c.cs, "ALPHA"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortOrderAsc) Store(Destination string) SSortStore {
 	c.ks = checkSlot(c.ks, slot(Destination))
-	return SSortStore{cf: c.cf, cs: append(c.cs, "STORE", Destination)}
+	return SSortStore{cs: append(c.cs, "STORE", Destination), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortOrderAsc) Build() SCompleted {
@@ -22376,12 +22376,12 @@ func (c SSortOrderAsc) Build() SCompleted {
 type SSortOrderDesc SCompleted
 
 func (c SSortOrderDesc) Alpha() SSortSortingAlpha {
-	return SSortSortingAlpha{cf: c.cf, cs: append(c.cs, "ALPHA")}
+	return SSortSortingAlpha{cs: append(c.cs, "ALPHA"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortOrderDesc) Store(Destination string) SSortStore {
 	c.ks = checkSlot(c.ks, slot(Destination))
-	return SSortStore{cf: c.cf, cs: append(c.cs, "STORE", Destination)}
+	return SSortStore{cs: append(c.cs, "STORE", Destination), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortOrderDesc) Build() SCompleted {
@@ -22392,7 +22392,7 @@ type SSortRo SCompleted
 
 func (c SSortRo) Key(Key string) SSortRoKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SSortRoKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SSortRoKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) SortRo() (c SSortRo) {
@@ -22405,24 +22405,24 @@ func (b *SBuilder) SortRo() (c SSortRo) {
 type SSortRoBy SCompleted
 
 func (c SSortRoBy) Limit(Offset int64, Count int64) SSortRoLimit {
-	return SSortRoLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return SSortRoLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortRoBy) Get(Pattern ...string) SSortRoGet {
 	c.cs = append(c.cs, "GET")
-	return SSortRoGet{cf: c.cf, cs: append(c.cs, Pattern...)}
+	return SSortRoGet{cs: append(c.cs, Pattern...), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortRoBy) Asc() SSortRoOrderAsc {
-	return SSortRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SSortRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortRoBy) Desc() SSortRoOrderDesc {
-	return SSortRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SSortRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortRoBy) Alpha() SSortRoSortingAlpha {
-	return SSortRoSortingAlpha{cf: c.cf, cs: append(c.cs, "ALPHA")}
+	return SSortRoSortingAlpha{cs: append(c.cs, "ALPHA"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortRoBy) Build() SCompleted {
@@ -22436,19 +22436,19 @@ func (c SSortRoBy) Cache() SCacheable {
 type SSortRoGet SCompleted
 
 func (c SSortRoGet) Asc() SSortRoOrderAsc {
-	return SSortRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SSortRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortRoGet) Desc() SSortRoOrderDesc {
-	return SSortRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SSortRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortRoGet) Alpha() SSortRoSortingAlpha {
-	return SSortRoSortingAlpha{cf: c.cf, cs: append(c.cs, "ALPHA")}
+	return SSortRoSortingAlpha{cs: append(c.cs, "ALPHA"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortRoGet) Get(Get ...string) SSortRoGet {
-	return SSortRoGet{cf: c.cf, cs: append(c.cs, Get...)}
+	return SSortRoGet{cs: append(c.cs, Get...), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortRoGet) Build() SCompleted {
@@ -22462,28 +22462,28 @@ func (c SSortRoGet) Cache() SCacheable {
 type SSortRoKey SCompleted
 
 func (c SSortRoKey) By(Pattern string) SSortRoBy {
-	return SSortRoBy{cf: c.cf, cs: append(c.cs, "BY", Pattern)}
+	return SSortRoBy{cs: append(c.cs, "BY", Pattern), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortRoKey) Limit(Offset int64, Count int64) SSortRoLimit {
-	return SSortRoLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return SSortRoLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortRoKey) Get(Pattern ...string) SSortRoGet {
 	c.cs = append(c.cs, "GET")
-	return SSortRoGet{cf: c.cf, cs: append(c.cs, Pattern...)}
+	return SSortRoGet{cs: append(c.cs, Pattern...), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortRoKey) Asc() SSortRoOrderAsc {
-	return SSortRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SSortRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortRoKey) Desc() SSortRoOrderDesc {
-	return SSortRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SSortRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortRoKey) Alpha() SSortRoSortingAlpha {
-	return SSortRoSortingAlpha{cf: c.cf, cs: append(c.cs, "ALPHA")}
+	return SSortRoSortingAlpha{cs: append(c.cs, "ALPHA"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortRoKey) Build() SCompleted {
@@ -22498,19 +22498,19 @@ type SSortRoLimit SCompleted
 
 func (c SSortRoLimit) Get(Pattern ...string) SSortRoGet {
 	c.cs = append(c.cs, "GET")
-	return SSortRoGet{cf: c.cf, cs: append(c.cs, Pattern...)}
+	return SSortRoGet{cs: append(c.cs, Pattern...), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortRoLimit) Asc() SSortRoOrderAsc {
-	return SSortRoOrderAsc{cf: c.cf, cs: append(c.cs, "ASC")}
+	return SSortRoOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortRoLimit) Desc() SSortRoOrderDesc {
-	return SSortRoOrderDesc{cf: c.cf, cs: append(c.cs, "DESC")}
+	return SSortRoOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortRoLimit) Alpha() SSortRoSortingAlpha {
-	return SSortRoSortingAlpha{cf: c.cf, cs: append(c.cs, "ALPHA")}
+	return SSortRoSortingAlpha{cs: append(c.cs, "ALPHA"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortRoLimit) Build() SCompleted {
@@ -22524,7 +22524,7 @@ func (c SSortRoLimit) Cache() SCacheable {
 type SSortRoOrderAsc SCompleted
 
 func (c SSortRoOrderAsc) Alpha() SSortRoSortingAlpha {
-	return SSortRoSortingAlpha{cf: c.cf, cs: append(c.cs, "ALPHA")}
+	return SSortRoSortingAlpha{cs: append(c.cs, "ALPHA"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortRoOrderAsc) Build() SCompleted {
@@ -22538,7 +22538,7 @@ func (c SSortRoOrderAsc) Cache() SCacheable {
 type SSortRoOrderDesc SCompleted
 
 func (c SSortRoOrderDesc) Alpha() SSortRoSortingAlpha {
-	return SSortRoSortingAlpha{cf: c.cf, cs: append(c.cs, "ALPHA")}
+	return SSortRoSortingAlpha{cs: append(c.cs, "ALPHA"), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortRoOrderDesc) Build() SCompleted {
@@ -22563,7 +22563,7 @@ type SSortSortingAlpha SCompleted
 
 func (c SSortSortingAlpha) Store(Destination string) SSortStore {
 	c.ks = checkSlot(c.ks, slot(Destination))
-	return SSortStore{cf: c.cf, cs: append(c.cs, "STORE", Destination)}
+	return SSortStore{cs: append(c.cs, "STORE", Destination), cf: c.cf, ks: c.ks}
 }
 
 func (c SSortSortingAlpha) Build() SCompleted {
@@ -22580,7 +22580,7 @@ type SSpop SCompleted
 
 func (c SSpop) Key(Key string) SSpopKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SSpopKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SSpopKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Spop() (c SSpop) {
@@ -22598,7 +22598,7 @@ func (c SSpopCount) Build() SCompleted {
 type SSpopKey SCompleted
 
 func (c SSpopKey) Count(Count int64) SSpopCount {
-	return SSpopCount{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Count, 10))}
+	return SSpopCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SSpopKey) Build() SCompleted {
@@ -22609,7 +22609,7 @@ type SSrandmember SCompleted
 
 func (c SSrandmember) Key(Key string) SSrandmemberKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SSrandmemberKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SSrandmemberKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Srandmember() (c SSrandmember) {
@@ -22628,7 +22628,7 @@ func (c SSrandmemberCount) Build() SCompleted {
 type SSrandmemberKey SCompleted
 
 func (c SSrandmemberKey) Count(Count int64) SSrandmemberCount {
-	return SSrandmemberCount{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Count, 10))}
+	return SSrandmemberCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SSrandmemberKey) Build() SCompleted {
@@ -22639,7 +22639,7 @@ type SSrem SCompleted
 
 func (c SSrem) Key(Key string) SSremKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SSremKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SSremKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Srem() (c SSrem) {
@@ -22651,13 +22651,13 @@ func (b *SBuilder) Srem() (c SSrem) {
 type SSremKey SCompleted
 
 func (c SSremKey) Member(Member ...string) SSremMember {
-	return SSremMember{cf: c.cf, cs: append(c.cs, Member...)}
+	return SSremMember{cs: append(c.cs, Member...), cf: c.cf, ks: c.ks}
 }
 
 type SSremMember SCompleted
 
 func (c SSremMember) Member(Member ...string) SSremMember {
-	return SSremMember{cf: c.cf, cs: append(c.cs, Member...)}
+	return SSremMember{cs: append(c.cs, Member...), cf: c.cf, ks: c.ks}
 }
 
 func (c SSremMember) Build() SCompleted {
@@ -22668,7 +22668,7 @@ type SSscan SCompleted
 
 func (c SSscan) Key(Key string) SSscanKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SSscanKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SSscanKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Sscan() (c SSscan) {
@@ -22687,11 +22687,11 @@ func (c SSscanCount) Build() SCompleted {
 type SSscanCursor SCompleted
 
 func (c SSscanCursor) Match(Pattern string) SSscanMatch {
-	return SSscanMatch{cf: c.cf, cs: append(c.cs, "MATCH", Pattern)}
+	return SSscanMatch{cs: append(c.cs, "MATCH", Pattern), cf: c.cf, ks: c.ks}
 }
 
 func (c SSscanCursor) Count(Count int64) SSscanCount {
-	return SSscanCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SSscanCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SSscanCursor) Build() SCompleted {
@@ -22701,13 +22701,13 @@ func (c SSscanCursor) Build() SCompleted {
 type SSscanKey SCompleted
 
 func (c SSscanKey) Cursor(Cursor int64) SSscanCursor {
-	return SSscanCursor{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Cursor, 10))}
+	return SSscanCursor{cs: append(c.cs, strconv.FormatInt(Cursor, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SSscanMatch SCompleted
 
 func (c SSscanMatch) Count(Count int64) SSscanCount {
-	return SSscanCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SSscanCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SSscanMatch) Build() SCompleted {
@@ -22717,7 +22717,7 @@ func (c SSscanMatch) Build() SCompleted {
 type SStralgo SCompleted
 
 func (c SStralgo) Lcs() SStralgoAlgorithmLcs {
-	return SStralgoAlgorithmLcs{cf: c.cf, cs: append(c.cs, "LCS")}
+	return SStralgoAlgorithmLcs{cs: append(c.cs, "LCS"), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Stralgo() (c SStralgo) {
@@ -22730,7 +22730,7 @@ func (b *SBuilder) Stralgo() (c SStralgo) {
 type SStralgoAlgoSpecificArgument SCompleted
 
 func (c SStralgoAlgoSpecificArgument) AlgoSpecificArgument(AlgoSpecificArgument ...string) SStralgoAlgoSpecificArgument {
-	return SStralgoAlgoSpecificArgument{cf: c.cf, cs: append(c.cs, AlgoSpecificArgument...)}
+	return SStralgoAlgoSpecificArgument{cs: append(c.cs, AlgoSpecificArgument...), cf: c.cf, ks: c.ks}
 }
 
 func (c SStralgoAlgoSpecificArgument) Build() SCompleted {
@@ -22740,14 +22740,14 @@ func (c SStralgoAlgoSpecificArgument) Build() SCompleted {
 type SStralgoAlgorithmLcs SCompleted
 
 func (c SStralgoAlgorithmLcs) AlgoSpecificArgument(AlgoSpecificArgument ...string) SStralgoAlgoSpecificArgument {
-	return SStralgoAlgoSpecificArgument{cf: c.cf, cs: append(c.cs, AlgoSpecificArgument...)}
+	return SStralgoAlgoSpecificArgument{cs: append(c.cs, AlgoSpecificArgument...), cf: c.cf, ks: c.ks}
 }
 
 type SStrlen SCompleted
 
 func (c SStrlen) Key(Key string) SStrlenKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SStrlenKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SStrlenKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Strlen() (c SStrlen) {
@@ -22770,7 +22770,7 @@ func (c SStrlenKey) Cache() SCacheable {
 type SSubscribe SCompleted
 
 func (c SSubscribe) Channel(Channel ...string) SSubscribeChannel {
-	return SSubscribeChannel{cf: c.cf, cs: append(c.cs, Channel...)}
+	return SSubscribeChannel{cs: append(c.cs, Channel...), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Subscribe() (c SSubscribe) {
@@ -22783,7 +22783,7 @@ func (b *SBuilder) Subscribe() (c SSubscribe) {
 type SSubscribeChannel SCompleted
 
 func (c SSubscribeChannel) Channel(Channel ...string) SSubscribeChannel {
-	return SSubscribeChannel{cf: c.cf, cs: append(c.cs, Channel...)}
+	return SSubscribeChannel{cs: append(c.cs, Channel...), cf: c.cf, ks: c.ks}
 }
 
 func (c SSubscribeChannel) Build() SCompleted {
@@ -22796,7 +22796,7 @@ func (c SSunion) Key(Key ...string) SSunionKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SSunionKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SSunionKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Sunion() (c SSunion) {
@@ -22812,7 +22812,7 @@ func (c SSunionKey) Key(Key ...string) SSunionKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SSunionKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SSunionKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c SSunionKey) Build() SCompleted {
@@ -22823,7 +22823,7 @@ type SSunionstore SCompleted
 
 func (c SSunionstore) Destination(Destination string) SSunionstoreDestination {
 	c.ks = checkSlot(c.ks, slot(Destination))
-	return SSunionstoreDestination{cf: c.cf, cs: append(c.cs, Destination)}
+	return SSunionstoreDestination{cs: append(c.cs, Destination), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Sunionstore() (c SSunionstore) {
@@ -22838,7 +22838,7 @@ func (c SSunionstoreDestination) Key(Key ...string) SSunionstoreKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SSunionstoreKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SSunionstoreKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type SSunionstoreKey SCompleted
@@ -22847,7 +22847,7 @@ func (c SSunionstoreKey) Key(Key ...string) SSunionstoreKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SSunionstoreKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SSunionstoreKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c SSunionstoreKey) Build() SCompleted {
@@ -22857,7 +22857,7 @@ func (c SSunionstoreKey) Build() SCompleted {
 type SSwapdb SCompleted
 
 func (c SSwapdb) Index1(Index1 int64) SSwapdbIndex1 {
-	return SSwapdbIndex1{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Index1, 10))}
+	return SSwapdbIndex1{cs: append(c.cs, strconv.FormatInt(Index1, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Swapdb() (c SSwapdb) {
@@ -22869,7 +22869,7 @@ func (b *SBuilder) Swapdb() (c SSwapdb) {
 type SSwapdbIndex1 SCompleted
 
 func (c SSwapdbIndex1) Index2(Index2 int64) SSwapdbIndex2 {
-	return SSwapdbIndex2{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Index2, 10))}
+	return SSwapdbIndex2{cs: append(c.cs, strconv.FormatInt(Index2, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SSwapdbIndex2 SCompleted
@@ -22908,7 +22908,7 @@ func (c STouch) Key(Key ...string) STouchKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return STouchKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return STouchKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Touch() (c STouch) {
@@ -22924,7 +22924,7 @@ func (c STouchKey) Key(Key ...string) STouchKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return STouchKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return STouchKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c STouchKey) Build() SCompleted {
@@ -22935,7 +22935,7 @@ type STtl SCompleted
 
 func (c STtl) Key(Key string) STtlKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return STtlKey{cf: c.cf, cs: append(c.cs, Key)}
+	return STtlKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Ttl() (c STtl) {
@@ -22959,7 +22959,7 @@ type SType SCompleted
 
 func (c SType) Key(Key string) STypeKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return STypeKey{cf: c.cf, cs: append(c.cs, Key)}
+	return STypeKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Type() (c SType) {
@@ -22985,7 +22985,7 @@ func (c SUnlink) Key(Key ...string) SUnlinkKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SUnlinkKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SUnlinkKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Unlink() (c SUnlink) {
@@ -23000,7 +23000,7 @@ func (c SUnlinkKey) Key(Key ...string) SUnlinkKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SUnlinkKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SUnlinkKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c SUnlinkKey) Build() SCompleted {
@@ -23010,7 +23010,7 @@ func (c SUnlinkKey) Build() SCompleted {
 type SUnsubscribe SCompleted
 
 func (c SUnsubscribe) Channel(Channel ...string) SUnsubscribeChannel {
-	return SUnsubscribeChannel{cf: c.cf, cs: append(c.cs, Channel...)}
+	return SUnsubscribeChannel{cs: append(c.cs, Channel...), cf: c.cf, ks: c.ks}
 }
 
 func (c SUnsubscribe) Build() SCompleted {
@@ -23027,7 +23027,7 @@ func (b *SBuilder) Unsubscribe() (c SUnsubscribe) {
 type SUnsubscribeChannel SCompleted
 
 func (c SUnsubscribeChannel) Channel(Channel ...string) SUnsubscribeChannel {
-	return SUnsubscribeChannel{cf: c.cf, cs: append(c.cs, Channel...)}
+	return SUnsubscribeChannel{cs: append(c.cs, Channel...), cf: c.cf, ks: c.ks}
 }
 
 func (c SUnsubscribeChannel) Build() SCompleted {
@@ -23049,7 +23049,7 @@ func (b *SBuilder) Unwatch() (c SUnwatch) {
 type SWait SCompleted
 
 func (c SWait) Numreplicas(Numreplicas int64) SWaitNumreplicas {
-	return SWaitNumreplicas{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numreplicas, 10))}
+	return SWaitNumreplicas{cs: append(c.cs, strconv.FormatInt(Numreplicas, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Wait() (c SWait) {
@@ -23062,7 +23062,7 @@ func (b *SBuilder) Wait() (c SWait) {
 type SWaitNumreplicas SCompleted
 
 func (c SWaitNumreplicas) Timeout(Timeout int64) SWaitTimeout {
-	return SWaitTimeout{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Timeout, 10))}
+	return SWaitTimeout{cs: append(c.cs, strconv.FormatInt(Timeout, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SWaitTimeout SCompleted
@@ -23077,7 +23077,7 @@ func (c SWatch) Key(Key ...string) SWatchKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SWatchKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SWatchKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Watch() (c SWatch) {
@@ -23092,7 +23092,7 @@ func (c SWatchKey) Key(Key ...string) SWatchKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SWatchKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SWatchKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c SWatchKey) Build() SCompleted {
@@ -23103,7 +23103,7 @@ type SXack SCompleted
 
 func (c SXack) Key(Key string) SXackKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SXackKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SXackKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Xack() (c SXack) {
@@ -23115,13 +23115,13 @@ func (b *SBuilder) Xack() (c SXack) {
 type SXackGroup SCompleted
 
 func (c SXackGroup) Id(Id ...string) SXackId {
-	return SXackId{cf: c.cf, cs: append(c.cs, Id...)}
+	return SXackId{cs: append(c.cs, Id...), cf: c.cf, ks: c.ks}
 }
 
 type SXackId SCompleted
 
 func (c SXackId) Id(Id ...string) SXackId {
-	return SXackId{cf: c.cf, cs: append(c.cs, Id...)}
+	return SXackId{cs: append(c.cs, Id...), cf: c.cf, ks: c.ks}
 }
 
 func (c SXackId) Build() SCompleted {
@@ -23131,14 +23131,14 @@ func (c SXackId) Build() SCompleted {
 type SXackKey SCompleted
 
 func (c SXackKey) Group(Group string) SXackGroup {
-	return SXackGroup{cf: c.cf, cs: append(c.cs, Group)}
+	return SXackGroup{cs: append(c.cs, Group), cf: c.cf, ks: c.ks}
 }
 
 type SXadd SCompleted
 
 func (c SXadd) Key(Key string) SXaddKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SXaddKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SXaddKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Xadd() (c SXadd) {
@@ -23150,7 +23150,7 @@ func (b *SBuilder) Xadd() (c SXadd) {
 type SXaddFieldValue SCompleted
 
 func (c SXaddFieldValue) FieldValue(Field string, Value string) SXaddFieldValue {
-	return SXaddFieldValue{cf: c.cf, cs: append(c.cs, Field, Value)}
+	return SXaddFieldValue{cs: append(c.cs, Field, Value), cf: c.cf, ks: c.ks}
 }
 
 func (c SXaddFieldValue) Build() SCompleted {
@@ -23160,102 +23160,102 @@ func (c SXaddFieldValue) Build() SCompleted {
 type SXaddId SCompleted
 
 func (c SXaddId) FieldValue() SXaddFieldValue {
-	return SXaddFieldValue{cf: c.cf, cs: c.cs}
+	return SXaddFieldValue{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 type SXaddKey SCompleted
 
 func (c SXaddKey) Nomkstream() SXaddNomkstream {
-	return SXaddNomkstream{cf: c.cf, cs: append(c.cs, "NOMKSTREAM")}
+	return SXaddNomkstream{cs: append(c.cs, "NOMKSTREAM"), cf: c.cf, ks: c.ks}
 }
 
 func (c SXaddKey) Maxlen() SXaddTrimStrategyMaxlen {
-	return SXaddTrimStrategyMaxlen{cf: c.cf, cs: append(c.cs, "MAXLEN")}
+	return SXaddTrimStrategyMaxlen{cs: append(c.cs, "MAXLEN"), cf: c.cf, ks: c.ks}
 }
 
 func (c SXaddKey) Minid() SXaddTrimStrategyMinid {
-	return SXaddTrimStrategyMinid{cf: c.cf, cs: append(c.cs, "MINID")}
+	return SXaddTrimStrategyMinid{cs: append(c.cs, "MINID"), cf: c.cf, ks: c.ks}
 }
 
 func (c SXaddKey) Id(Id string) SXaddId {
-	return SXaddId{cf: c.cf, cs: append(c.cs, Id)}
+	return SXaddId{cs: append(c.cs, Id), cf: c.cf, ks: c.ks}
 }
 
 type SXaddNomkstream SCompleted
 
 func (c SXaddNomkstream) Maxlen() SXaddTrimStrategyMaxlen {
-	return SXaddTrimStrategyMaxlen{cf: c.cf, cs: append(c.cs, "MAXLEN")}
+	return SXaddTrimStrategyMaxlen{cs: append(c.cs, "MAXLEN"), cf: c.cf, ks: c.ks}
 }
 
 func (c SXaddNomkstream) Minid() SXaddTrimStrategyMinid {
-	return SXaddTrimStrategyMinid{cf: c.cf, cs: append(c.cs, "MINID")}
+	return SXaddTrimStrategyMinid{cs: append(c.cs, "MINID"), cf: c.cf, ks: c.ks}
 }
 
 func (c SXaddNomkstream) Id(Id string) SXaddId {
-	return SXaddId{cf: c.cf, cs: append(c.cs, Id)}
+	return SXaddId{cs: append(c.cs, Id), cf: c.cf, ks: c.ks}
 }
 
 type SXaddTrimLimit SCompleted
 
 func (c SXaddTrimLimit) Id(Id string) SXaddId {
-	return SXaddId{cf: c.cf, cs: append(c.cs, Id)}
+	return SXaddId{cs: append(c.cs, Id), cf: c.cf, ks: c.ks}
 }
 
 type SXaddTrimOperatorAlmost SCompleted
 
 func (c SXaddTrimOperatorAlmost) Threshold(Threshold string) SXaddTrimThreshold {
-	return SXaddTrimThreshold{cf: c.cf, cs: append(c.cs, Threshold)}
+	return SXaddTrimThreshold{cs: append(c.cs, Threshold), cf: c.cf, ks: c.ks}
 }
 
 type SXaddTrimOperatorExact SCompleted
 
 func (c SXaddTrimOperatorExact) Threshold(Threshold string) SXaddTrimThreshold {
-	return SXaddTrimThreshold{cf: c.cf, cs: append(c.cs, Threshold)}
+	return SXaddTrimThreshold{cs: append(c.cs, Threshold), cf: c.cf, ks: c.ks}
 }
 
 type SXaddTrimStrategyMaxlen SCompleted
 
 func (c SXaddTrimStrategyMaxlen) Exact() SXaddTrimOperatorExact {
-	return SXaddTrimOperatorExact{cf: c.cf, cs: append(c.cs, "=")}
+	return SXaddTrimOperatorExact{cs: append(c.cs, "="), cf: c.cf, ks: c.ks}
 }
 
 func (c SXaddTrimStrategyMaxlen) Almost() SXaddTrimOperatorAlmost {
-	return SXaddTrimOperatorAlmost{cf: c.cf, cs: append(c.cs, "~")}
+	return SXaddTrimOperatorAlmost{cs: append(c.cs, "~"), cf: c.cf, ks: c.ks}
 }
 
 func (c SXaddTrimStrategyMaxlen) Threshold(Threshold string) SXaddTrimThreshold {
-	return SXaddTrimThreshold{cf: c.cf, cs: append(c.cs, Threshold)}
+	return SXaddTrimThreshold{cs: append(c.cs, Threshold), cf: c.cf, ks: c.ks}
 }
 
 type SXaddTrimStrategyMinid SCompleted
 
 func (c SXaddTrimStrategyMinid) Exact() SXaddTrimOperatorExact {
-	return SXaddTrimOperatorExact{cf: c.cf, cs: append(c.cs, "=")}
+	return SXaddTrimOperatorExact{cs: append(c.cs, "="), cf: c.cf, ks: c.ks}
 }
 
 func (c SXaddTrimStrategyMinid) Almost() SXaddTrimOperatorAlmost {
-	return SXaddTrimOperatorAlmost{cf: c.cf, cs: append(c.cs, "~")}
+	return SXaddTrimOperatorAlmost{cs: append(c.cs, "~"), cf: c.cf, ks: c.ks}
 }
 
 func (c SXaddTrimStrategyMinid) Threshold(Threshold string) SXaddTrimThreshold {
-	return SXaddTrimThreshold{cf: c.cf, cs: append(c.cs, Threshold)}
+	return SXaddTrimThreshold{cs: append(c.cs, Threshold), cf: c.cf, ks: c.ks}
 }
 
 type SXaddTrimThreshold SCompleted
 
 func (c SXaddTrimThreshold) Limit(Count int64) SXaddTrimLimit {
-	return SXaddTrimLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Count, 10))}
+	return SXaddTrimLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SXaddTrimThreshold) Id(Id string) SXaddId {
-	return SXaddId{cf: c.cf, cs: append(c.cs, Id)}
+	return SXaddId{cs: append(c.cs, Id), cf: c.cf, ks: c.ks}
 }
 
 type SXautoclaim SCompleted
 
 func (c SXautoclaim) Key(Key string) SXautoclaimKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SXautoclaimKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SXautoclaimKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Xautoclaim() (c SXautoclaim) {
@@ -23267,13 +23267,13 @@ func (b *SBuilder) Xautoclaim() (c SXautoclaim) {
 type SXautoclaimConsumer SCompleted
 
 func (c SXautoclaimConsumer) MinIdleTime(MinIdleTime string) SXautoclaimMinIdleTime {
-	return SXautoclaimMinIdleTime{cf: c.cf, cs: append(c.cs, MinIdleTime)}
+	return SXautoclaimMinIdleTime{cs: append(c.cs, MinIdleTime), cf: c.cf, ks: c.ks}
 }
 
 type SXautoclaimCount SCompleted
 
 func (c SXautoclaimCount) Justid() SXautoclaimJustidJustid {
-	return SXautoclaimJustidJustid{cf: c.cf, cs: append(c.cs, "JUSTID")}
+	return SXautoclaimJustidJustid{cs: append(c.cs, "JUSTID"), cf: c.cf, ks: c.ks}
 }
 
 func (c SXautoclaimCount) Build() SCompleted {
@@ -23283,7 +23283,7 @@ func (c SXautoclaimCount) Build() SCompleted {
 type SXautoclaimGroup SCompleted
 
 func (c SXautoclaimGroup) Consumer(Consumer string) SXautoclaimConsumer {
-	return SXautoclaimConsumer{cf: c.cf, cs: append(c.cs, Consumer)}
+	return SXautoclaimConsumer{cs: append(c.cs, Consumer), cf: c.cf, ks: c.ks}
 }
 
 type SXautoclaimJustidJustid SCompleted
@@ -23295,23 +23295,23 @@ func (c SXautoclaimJustidJustid) Build() SCompleted {
 type SXautoclaimKey SCompleted
 
 func (c SXautoclaimKey) Group(Group string) SXautoclaimGroup {
-	return SXautoclaimGroup{cf: c.cf, cs: append(c.cs, Group)}
+	return SXautoclaimGroup{cs: append(c.cs, Group), cf: c.cf, ks: c.ks}
 }
 
 type SXautoclaimMinIdleTime SCompleted
 
 func (c SXautoclaimMinIdleTime) Start(Start string) SXautoclaimStart {
-	return SXautoclaimStart{cf: c.cf, cs: append(c.cs, Start)}
+	return SXautoclaimStart{cs: append(c.cs, Start), cf: c.cf, ks: c.ks}
 }
 
 type SXautoclaimStart SCompleted
 
 func (c SXautoclaimStart) Count(Count int64) SXautoclaimCount {
-	return SXautoclaimCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SXautoclaimCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SXautoclaimStart) Justid() SXautoclaimJustidJustid {
-	return SXautoclaimJustidJustid{cf: c.cf, cs: append(c.cs, "JUSTID")}
+	return SXautoclaimJustidJustid{cs: append(c.cs, "JUSTID"), cf: c.cf, ks: c.ks}
 }
 
 func (c SXautoclaimStart) Build() SCompleted {
@@ -23322,7 +23322,7 @@ type SXclaim SCompleted
 
 func (c SXclaim) Key(Key string) SXclaimKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SXclaimKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SXclaimKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Xclaim() (c SXclaim) {
@@ -23334,13 +23334,13 @@ func (b *SBuilder) Xclaim() (c SXclaim) {
 type SXclaimConsumer SCompleted
 
 func (c SXclaimConsumer) MinIdleTime(MinIdleTime string) SXclaimMinIdleTime {
-	return SXclaimMinIdleTime{cf: c.cf, cs: append(c.cs, MinIdleTime)}
+	return SXclaimMinIdleTime{cs: append(c.cs, MinIdleTime), cf: c.cf, ks: c.ks}
 }
 
 type SXclaimForceForce SCompleted
 
 func (c SXclaimForceForce) Justid() SXclaimJustidJustid {
-	return SXclaimJustidJustid{cf: c.cf, cs: append(c.cs, "JUSTID")}
+	return SXclaimJustidJustid{cs: append(c.cs, "JUSTID"), cf: c.cf, ks: c.ks}
 }
 
 func (c SXclaimForceForce) Build() SCompleted {
@@ -23350,33 +23350,33 @@ func (c SXclaimForceForce) Build() SCompleted {
 type SXclaimGroup SCompleted
 
 func (c SXclaimGroup) Consumer(Consumer string) SXclaimConsumer {
-	return SXclaimConsumer{cf: c.cf, cs: append(c.cs, Consumer)}
+	return SXclaimConsumer{cs: append(c.cs, Consumer), cf: c.cf, ks: c.ks}
 }
 
 type SXclaimId SCompleted
 
 func (c SXclaimId) Idle(Ms int64) SXclaimIdle {
-	return SXclaimIdle{cf: c.cf, cs: append(c.cs, "IDLE", strconv.FormatInt(Ms, 10))}
+	return SXclaimIdle{cs: append(c.cs, "IDLE", strconv.FormatInt(Ms, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SXclaimId) Time(MsUnixTime int64) SXclaimTime {
-	return SXclaimTime{cf: c.cf, cs: append(c.cs, "TIME", strconv.FormatInt(MsUnixTime, 10))}
+	return SXclaimTime{cs: append(c.cs, "TIME", strconv.FormatInt(MsUnixTime, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SXclaimId) Retrycount(Count int64) SXclaimRetrycount {
-	return SXclaimRetrycount{cf: c.cf, cs: append(c.cs, "RETRYCOUNT", strconv.FormatInt(Count, 10))}
+	return SXclaimRetrycount{cs: append(c.cs, "RETRYCOUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SXclaimId) Force() SXclaimForceForce {
-	return SXclaimForceForce{cf: c.cf, cs: append(c.cs, "FORCE")}
+	return SXclaimForceForce{cs: append(c.cs, "FORCE"), cf: c.cf, ks: c.ks}
 }
 
 func (c SXclaimId) Justid() SXclaimJustidJustid {
-	return SXclaimJustidJustid{cf: c.cf, cs: append(c.cs, "JUSTID")}
+	return SXclaimJustidJustid{cs: append(c.cs, "JUSTID"), cf: c.cf, ks: c.ks}
 }
 
 func (c SXclaimId) Id(Id ...string) SXclaimId {
-	return SXclaimId{cf: c.cf, cs: append(c.cs, Id...)}
+	return SXclaimId{cs: append(c.cs, Id...), cf: c.cf, ks: c.ks}
 }
 
 func (c SXclaimId) Build() SCompleted {
@@ -23386,19 +23386,19 @@ func (c SXclaimId) Build() SCompleted {
 type SXclaimIdle SCompleted
 
 func (c SXclaimIdle) Time(MsUnixTime int64) SXclaimTime {
-	return SXclaimTime{cf: c.cf, cs: append(c.cs, "TIME", strconv.FormatInt(MsUnixTime, 10))}
+	return SXclaimTime{cs: append(c.cs, "TIME", strconv.FormatInt(MsUnixTime, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SXclaimIdle) Retrycount(Count int64) SXclaimRetrycount {
-	return SXclaimRetrycount{cf: c.cf, cs: append(c.cs, "RETRYCOUNT", strconv.FormatInt(Count, 10))}
+	return SXclaimRetrycount{cs: append(c.cs, "RETRYCOUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SXclaimIdle) Force() SXclaimForceForce {
-	return SXclaimForceForce{cf: c.cf, cs: append(c.cs, "FORCE")}
+	return SXclaimForceForce{cs: append(c.cs, "FORCE"), cf: c.cf, ks: c.ks}
 }
 
 func (c SXclaimIdle) Justid() SXclaimJustidJustid {
-	return SXclaimJustidJustid{cf: c.cf, cs: append(c.cs, "JUSTID")}
+	return SXclaimJustidJustid{cs: append(c.cs, "JUSTID"), cf: c.cf, ks: c.ks}
 }
 
 func (c SXclaimIdle) Build() SCompleted {
@@ -23414,23 +23414,23 @@ func (c SXclaimJustidJustid) Build() SCompleted {
 type SXclaimKey SCompleted
 
 func (c SXclaimKey) Group(Group string) SXclaimGroup {
-	return SXclaimGroup{cf: c.cf, cs: append(c.cs, Group)}
+	return SXclaimGroup{cs: append(c.cs, Group), cf: c.cf, ks: c.ks}
 }
 
 type SXclaimMinIdleTime SCompleted
 
 func (c SXclaimMinIdleTime) Id(Id ...string) SXclaimId {
-	return SXclaimId{cf: c.cf, cs: append(c.cs, Id...)}
+	return SXclaimId{cs: append(c.cs, Id...), cf: c.cf, ks: c.ks}
 }
 
 type SXclaimRetrycount SCompleted
 
 func (c SXclaimRetrycount) Force() SXclaimForceForce {
-	return SXclaimForceForce{cf: c.cf, cs: append(c.cs, "FORCE")}
+	return SXclaimForceForce{cs: append(c.cs, "FORCE"), cf: c.cf, ks: c.ks}
 }
 
 func (c SXclaimRetrycount) Justid() SXclaimJustidJustid {
-	return SXclaimJustidJustid{cf: c.cf, cs: append(c.cs, "JUSTID")}
+	return SXclaimJustidJustid{cs: append(c.cs, "JUSTID"), cf: c.cf, ks: c.ks}
 }
 
 func (c SXclaimRetrycount) Build() SCompleted {
@@ -23440,15 +23440,15 @@ func (c SXclaimRetrycount) Build() SCompleted {
 type SXclaimTime SCompleted
 
 func (c SXclaimTime) Retrycount(Count int64) SXclaimRetrycount {
-	return SXclaimRetrycount{cf: c.cf, cs: append(c.cs, "RETRYCOUNT", strconv.FormatInt(Count, 10))}
+	return SXclaimRetrycount{cs: append(c.cs, "RETRYCOUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SXclaimTime) Force() SXclaimForceForce {
-	return SXclaimForceForce{cf: c.cf, cs: append(c.cs, "FORCE")}
+	return SXclaimForceForce{cs: append(c.cs, "FORCE"), cf: c.cf, ks: c.ks}
 }
 
 func (c SXclaimTime) Justid() SXclaimJustidJustid {
-	return SXclaimJustidJustid{cf: c.cf, cs: append(c.cs, "JUSTID")}
+	return SXclaimJustidJustid{cs: append(c.cs, "JUSTID"), cf: c.cf, ks: c.ks}
 }
 
 func (c SXclaimTime) Build() SCompleted {
@@ -23459,7 +23459,7 @@ type SXdel SCompleted
 
 func (c SXdel) Key(Key string) SXdelKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SXdelKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SXdelKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Xdel() (c SXdel) {
@@ -23471,7 +23471,7 @@ func (b *SBuilder) Xdel() (c SXdel) {
 type SXdelId SCompleted
 
 func (c SXdelId) Id(Id ...string) SXdelId {
-	return SXdelId{cf: c.cf, cs: append(c.cs, Id...)}
+	return SXdelId{cs: append(c.cs, Id...), cf: c.cf, ks: c.ks}
 }
 
 func (c SXdelId) Build() SCompleted {
@@ -23481,34 +23481,34 @@ func (c SXdelId) Build() SCompleted {
 type SXdelKey SCompleted
 
 func (c SXdelKey) Id(Id ...string) SXdelId {
-	return SXdelId{cf: c.cf, cs: append(c.cs, Id...)}
+	return SXdelId{cs: append(c.cs, Id...), cf: c.cf, ks: c.ks}
 }
 
 type SXgroup SCompleted
 
 func (c SXgroup) Create(Key string, Groupname string) SXgroupCreateCreate {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SXgroupCreateCreate{cf: c.cf, cs: append(c.cs, "CREATE", Key, Groupname)}
+	return SXgroupCreateCreate{cs: append(c.cs, "CREATE", Key, Groupname), cf: c.cf, ks: c.ks}
 }
 
 func (c SXgroup) Setid(Key string, Groupname string) SXgroupSetidSetid {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SXgroupSetidSetid{cf: c.cf, cs: append(c.cs, "SETID", Key, Groupname)}
+	return SXgroupSetidSetid{cs: append(c.cs, "SETID", Key, Groupname), cf: c.cf, ks: c.ks}
 }
 
 func (c SXgroup) Destroy(Key string, Groupname string) SXgroupDestroy {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SXgroupDestroy{cf: c.cf, cs: append(c.cs, "DESTROY", Key, Groupname)}
+	return SXgroupDestroy{cs: append(c.cs, "DESTROY", Key, Groupname), cf: c.cf, ks: c.ks}
 }
 
 func (c SXgroup) Createconsumer(Key string, Groupname string, Consumername string) SXgroupCreateconsumer {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SXgroupCreateconsumer{cf: c.cf, cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername)}
+	return SXgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
 }
 
 func (c SXgroup) Delconsumer(Key string, Groupname string, Consumername string) SXgroupDelconsumer {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SXgroupDelconsumer{cf: c.cf, cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
+	return SXgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
 }
 
 func (c SXgroup) Build() SCompleted {
@@ -23524,33 +23524,33 @@ func (b *SBuilder) Xgroup() (c SXgroup) {
 type SXgroupCreateCreate SCompleted
 
 func (c SXgroupCreateCreate) Id(Id string) SXgroupCreateId {
-	return SXgroupCreateId{cf: c.cf, cs: append(c.cs, Id)}
+	return SXgroupCreateId{cs: append(c.cs, Id), cf: c.cf, ks: c.ks}
 }
 
 type SXgroupCreateId SCompleted
 
 func (c SXgroupCreateId) Mkstream() SXgroupCreateMkstream {
-	return SXgroupCreateMkstream{cf: c.cf, cs: append(c.cs, "MKSTREAM")}
+	return SXgroupCreateMkstream{cs: append(c.cs, "MKSTREAM"), cf: c.cf, ks: c.ks}
 }
 
 func (c SXgroupCreateId) Setid(Key string, Groupname string) SXgroupSetidSetid {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SXgroupSetidSetid{cf: c.cf, cs: append(c.cs, "SETID", Key, Groupname)}
+	return SXgroupSetidSetid{cs: append(c.cs, "SETID", Key, Groupname), cf: c.cf, ks: c.ks}
 }
 
 func (c SXgroupCreateId) Destroy(Key string, Groupname string) SXgroupDestroy {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SXgroupDestroy{cf: c.cf, cs: append(c.cs, "DESTROY", Key, Groupname)}
+	return SXgroupDestroy{cs: append(c.cs, "DESTROY", Key, Groupname), cf: c.cf, ks: c.ks}
 }
 
 func (c SXgroupCreateId) Createconsumer(Key string, Groupname string, Consumername string) SXgroupCreateconsumer {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SXgroupCreateconsumer{cf: c.cf, cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername)}
+	return SXgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
 }
 
 func (c SXgroupCreateId) Delconsumer(Key string, Groupname string, Consumername string) SXgroupDelconsumer {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SXgroupDelconsumer{cf: c.cf, cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
+	return SXgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
 }
 
 func (c SXgroupCreateId) Build() SCompleted {
@@ -23561,22 +23561,22 @@ type SXgroupCreateMkstream SCompleted
 
 func (c SXgroupCreateMkstream) Setid(Key string, Groupname string) SXgroupSetidSetid {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SXgroupSetidSetid{cf: c.cf, cs: append(c.cs, "SETID", Key, Groupname)}
+	return SXgroupSetidSetid{cs: append(c.cs, "SETID", Key, Groupname), cf: c.cf, ks: c.ks}
 }
 
 func (c SXgroupCreateMkstream) Destroy(Key string, Groupname string) SXgroupDestroy {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SXgroupDestroy{cf: c.cf, cs: append(c.cs, "DESTROY", Key, Groupname)}
+	return SXgroupDestroy{cs: append(c.cs, "DESTROY", Key, Groupname), cf: c.cf, ks: c.ks}
 }
 
 func (c SXgroupCreateMkstream) Createconsumer(Key string, Groupname string, Consumername string) SXgroupCreateconsumer {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SXgroupCreateconsumer{cf: c.cf, cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername)}
+	return SXgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
 }
 
 func (c SXgroupCreateMkstream) Delconsumer(Key string, Groupname string, Consumername string) SXgroupDelconsumer {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SXgroupDelconsumer{cf: c.cf, cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
+	return SXgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
 }
 
 func (c SXgroupCreateMkstream) Build() SCompleted {
@@ -23587,7 +23587,7 @@ type SXgroupCreateconsumer SCompleted
 
 func (c SXgroupCreateconsumer) Delconsumer(Key string, Groupname string, Consumername string) SXgroupDelconsumer {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SXgroupDelconsumer{cf: c.cf, cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
+	return SXgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
 }
 
 func (c SXgroupCreateconsumer) Build() SCompleted {
@@ -23604,12 +23604,12 @@ type SXgroupDestroy SCompleted
 
 func (c SXgroupDestroy) Createconsumer(Key string, Groupname string, Consumername string) SXgroupCreateconsumer {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SXgroupCreateconsumer{cf: c.cf, cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername)}
+	return SXgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
 }
 
 func (c SXgroupDestroy) Delconsumer(Key string, Groupname string, Consumername string) SXgroupDelconsumer {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SXgroupDelconsumer{cf: c.cf, cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
+	return SXgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
 }
 
 func (c SXgroupDestroy) Build() SCompleted {
@@ -23620,17 +23620,17 @@ type SXgroupSetidId SCompleted
 
 func (c SXgroupSetidId) Destroy(Key string, Groupname string) SXgroupDestroy {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SXgroupDestroy{cf: c.cf, cs: append(c.cs, "DESTROY", Key, Groupname)}
+	return SXgroupDestroy{cs: append(c.cs, "DESTROY", Key, Groupname), cf: c.cf, ks: c.ks}
 }
 
 func (c SXgroupSetidId) Createconsumer(Key string, Groupname string, Consumername string) SXgroupCreateconsumer {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SXgroupCreateconsumer{cf: c.cf, cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername)}
+	return SXgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
 }
 
 func (c SXgroupSetidId) Delconsumer(Key string, Groupname string, Consumername string) SXgroupDelconsumer {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SXgroupDelconsumer{cf: c.cf, cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername)}
+	return SXgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
 }
 
 func (c SXgroupSetidId) Build() SCompleted {
@@ -23640,28 +23640,28 @@ func (c SXgroupSetidId) Build() SCompleted {
 type SXgroupSetidSetid SCompleted
 
 func (c SXgroupSetidSetid) Id(Id string) SXgroupSetidId {
-	return SXgroupSetidId{cf: c.cf, cs: append(c.cs, Id)}
+	return SXgroupSetidId{cs: append(c.cs, Id), cf: c.cf, ks: c.ks}
 }
 
 type SXinfo SCompleted
 
 func (c SXinfo) Consumers(Key string, Groupname string) SXinfoConsumers {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SXinfoConsumers{cf: c.cf, cs: append(c.cs, "CONSUMERS", Key, Groupname)}
+	return SXinfoConsumers{cs: append(c.cs, "CONSUMERS", Key, Groupname), cf: c.cf, ks: c.ks}
 }
 
 func (c SXinfo) Groups(Key string) SXinfoGroups {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SXinfoGroups{cf: c.cf, cs: append(c.cs, "GROUPS", Key)}
+	return SXinfoGroups{cs: append(c.cs, "GROUPS", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SXinfo) Stream(Key string) SXinfoStream {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SXinfoStream{cf: c.cf, cs: append(c.cs, "STREAM", Key)}
+	return SXinfoStream{cs: append(c.cs, "STREAM", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SXinfo) Help() SXinfoHelpHelp {
-	return SXinfoHelpHelp{cf: c.cf, cs: append(c.cs, "HELP")}
+	return SXinfoHelpHelp{cs: append(c.cs, "HELP"), cf: c.cf, ks: c.ks}
 }
 
 func (c SXinfo) Build() SCompleted {
@@ -23679,16 +23679,16 @@ type SXinfoConsumers SCompleted
 
 func (c SXinfoConsumers) Groups(Key string) SXinfoGroups {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SXinfoGroups{cf: c.cf, cs: append(c.cs, "GROUPS", Key)}
+	return SXinfoGroups{cs: append(c.cs, "GROUPS", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SXinfoConsumers) Stream(Key string) SXinfoStream {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SXinfoStream{cf: c.cf, cs: append(c.cs, "STREAM", Key)}
+	return SXinfoStream{cs: append(c.cs, "STREAM", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SXinfoConsumers) Help() SXinfoHelpHelp {
-	return SXinfoHelpHelp{cf: c.cf, cs: append(c.cs, "HELP")}
+	return SXinfoHelpHelp{cs: append(c.cs, "HELP"), cf: c.cf, ks: c.ks}
 }
 
 func (c SXinfoConsumers) Build() SCompleted {
@@ -23699,11 +23699,11 @@ type SXinfoGroups SCompleted
 
 func (c SXinfoGroups) Stream(Key string) SXinfoStream {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SXinfoStream{cf: c.cf, cs: append(c.cs, "STREAM", Key)}
+	return SXinfoStream{cs: append(c.cs, "STREAM", Key), cf: c.cf, ks: c.ks}
 }
 
 func (c SXinfoGroups) Help() SXinfoHelpHelp {
-	return SXinfoHelpHelp{cf: c.cf, cs: append(c.cs, "HELP")}
+	return SXinfoHelpHelp{cs: append(c.cs, "HELP"), cf: c.cf, ks: c.ks}
 }
 
 func (c SXinfoGroups) Build() SCompleted {
@@ -23719,7 +23719,7 @@ func (c SXinfoHelpHelp) Build() SCompleted {
 type SXinfoStream SCompleted
 
 func (c SXinfoStream) Help() SXinfoHelpHelp {
-	return SXinfoHelpHelp{cf: c.cf, cs: append(c.cs, "HELP")}
+	return SXinfoHelpHelp{cs: append(c.cs, "HELP"), cf: c.cf, ks: c.ks}
 }
 
 func (c SXinfoStream) Build() SCompleted {
@@ -23730,7 +23730,7 @@ type SXlen SCompleted
 
 func (c SXlen) Key(Key string) SXlenKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SXlenKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SXlenKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Xlen() (c SXlen) {
@@ -23750,7 +23750,7 @@ type SXpending SCompleted
 
 func (c SXpending) Key(Key string) SXpendingKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SXpendingKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SXpendingKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Xpending() (c SXpending) {
@@ -23769,7 +23769,7 @@ func (c SXpendingFiltersConsumer) Build() SCompleted {
 type SXpendingFiltersCount SCompleted
 
 func (c SXpendingFiltersCount) Consumer(Consumer string) SXpendingFiltersConsumer {
-	return SXpendingFiltersConsumer{cf: c.cf, cs: append(c.cs, Consumer)}
+	return SXpendingFiltersConsumer{cs: append(c.cs, Consumer), cf: c.cf, ks: c.ks}
 }
 
 func (c SXpendingFiltersCount) Build() SCompleted {
@@ -23779,42 +23779,42 @@ func (c SXpendingFiltersCount) Build() SCompleted {
 type SXpendingFiltersEnd SCompleted
 
 func (c SXpendingFiltersEnd) Count(Count int64) SXpendingFiltersCount {
-	return SXpendingFiltersCount{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Count, 10))}
+	return SXpendingFiltersCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SXpendingFiltersIdle SCompleted
 
 func (c SXpendingFiltersIdle) Start(Start string) SXpendingFiltersStart {
-	return SXpendingFiltersStart{cf: c.cf, cs: append(c.cs, Start)}
+	return SXpendingFiltersStart{cs: append(c.cs, Start), cf: c.cf, ks: c.ks}
 }
 
 type SXpendingFiltersStart SCompleted
 
 func (c SXpendingFiltersStart) End(End string) SXpendingFiltersEnd {
-	return SXpendingFiltersEnd{cf: c.cf, cs: append(c.cs, End)}
+	return SXpendingFiltersEnd{cs: append(c.cs, End), cf: c.cf, ks: c.ks}
 }
 
 type SXpendingGroup SCompleted
 
 func (c SXpendingGroup) Idle(MinIdleTime int64) SXpendingFiltersIdle {
-	return SXpendingFiltersIdle{cf: c.cf, cs: append(c.cs, "IDLE", strconv.FormatInt(MinIdleTime, 10))}
+	return SXpendingFiltersIdle{cs: append(c.cs, "IDLE", strconv.FormatInt(MinIdleTime, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SXpendingGroup) Start(Start string) SXpendingFiltersStart {
-	return SXpendingFiltersStart{cf: c.cf, cs: append(c.cs, Start)}
+	return SXpendingFiltersStart{cs: append(c.cs, Start), cf: c.cf, ks: c.ks}
 }
 
 type SXpendingKey SCompleted
 
 func (c SXpendingKey) Group(Group string) SXpendingGroup {
-	return SXpendingGroup{cf: c.cf, cs: append(c.cs, Group)}
+	return SXpendingGroup{cs: append(c.cs, Group), cf: c.cf, ks: c.ks}
 }
 
 type SXrange SCompleted
 
 func (c SXrange) Key(Key string) SXrangeKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SXrangeKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SXrangeKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Xrange() (c SXrange) {
@@ -23833,7 +23833,7 @@ func (c SXrangeCount) Build() SCompleted {
 type SXrangeEnd SCompleted
 
 func (c SXrangeEnd) Count(Count int64) SXrangeCount {
-	return SXrangeCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SXrangeCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SXrangeEnd) Build() SCompleted {
@@ -23843,28 +23843,28 @@ func (c SXrangeEnd) Build() SCompleted {
 type SXrangeKey SCompleted
 
 func (c SXrangeKey) Start(Start string) SXrangeStart {
-	return SXrangeStart{cf: c.cf, cs: append(c.cs, Start)}
+	return SXrangeStart{cs: append(c.cs, Start), cf: c.cf, ks: c.ks}
 }
 
 type SXrangeStart SCompleted
 
 func (c SXrangeStart) End(End string) SXrangeEnd {
-	return SXrangeEnd{cf: c.cf, cs: append(c.cs, End)}
+	return SXrangeEnd{cs: append(c.cs, End), cf: c.cf, ks: c.ks}
 }
 
 type SXread SCompleted
 
 func (c SXread) Count(Count int64) SXreadCount {
-	return SXreadCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SXreadCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SXread) Block(Milliseconds int64) SXreadBlock {
 	c.cf = blockTag
-	return SXreadBlock{cf: c.cf, cs: append(c.cs, "BLOCK", strconv.FormatInt(Milliseconds, 10))}
+	return SXreadBlock{cs: append(c.cs, "BLOCK", strconv.FormatInt(Milliseconds, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SXread) Streams() SXreadStreamsStreams {
-	return SXreadStreamsStreams{cf: c.cf, cs: append(c.cs, "STREAMS")}
+	return SXreadStreamsStreams{cs: append(c.cs, "STREAMS"), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Xread() (c SXread) {
@@ -23877,24 +23877,24 @@ func (b *SBuilder) Xread() (c SXread) {
 type SXreadBlock SCompleted
 
 func (c SXreadBlock) Streams() SXreadStreamsStreams {
-	return SXreadStreamsStreams{cf: c.cf, cs: append(c.cs, "STREAMS")}
+	return SXreadStreamsStreams{cs: append(c.cs, "STREAMS"), cf: c.cf, ks: c.ks}
 }
 
 type SXreadCount SCompleted
 
 func (c SXreadCount) Block(Milliseconds int64) SXreadBlock {
 	c.cf = blockTag
-	return SXreadBlock{cf: c.cf, cs: append(c.cs, "BLOCK", strconv.FormatInt(Milliseconds, 10))}
+	return SXreadBlock{cs: append(c.cs, "BLOCK", strconv.FormatInt(Milliseconds, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SXreadCount) Streams() SXreadStreamsStreams {
-	return SXreadStreamsStreams{cf: c.cf, cs: append(c.cs, "STREAMS")}
+	return SXreadStreamsStreams{cs: append(c.cs, "STREAMS"), cf: c.cf, ks: c.ks}
 }
 
 type SXreadId SCompleted
 
 func (c SXreadId) Id(Id ...string) SXreadId {
-	return SXreadId{cf: c.cf, cs: append(c.cs, Id...)}
+	return SXreadId{cs: append(c.cs, Id...), cf: c.cf, ks: c.ks}
 }
 
 func (c SXreadId) Build() SCompleted {
@@ -23904,14 +23904,14 @@ func (c SXreadId) Build() SCompleted {
 type SXreadKey SCompleted
 
 func (c SXreadKey) Id(Id ...string) SXreadId {
-	return SXreadId{cf: c.cf, cs: append(c.cs, Id...)}
+	return SXreadId{cs: append(c.cs, Id...), cf: c.cf, ks: c.ks}
 }
 
 func (c SXreadKey) Key(Key ...string) SXreadKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SXreadKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SXreadKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type SXreadStreamsStreams SCompleted
@@ -23920,13 +23920,13 @@ func (c SXreadStreamsStreams) Key(Key ...string) SXreadKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SXreadKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SXreadKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type SXreadgroup SCompleted
 
 func (c SXreadgroup) Group(Group string, Consumer string) SXreadgroupGroup {
-	return SXreadgroupGroup{cf: c.cf, cs: append(c.cs, "GROUP", Group, Consumer)}
+	return SXreadgroupGroup{cs: append(c.cs, "GROUP", Group, Consumer), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Xreadgroup() (c SXreadgroup) {
@@ -23938,51 +23938,51 @@ func (b *SBuilder) Xreadgroup() (c SXreadgroup) {
 type SXreadgroupBlock SCompleted
 
 func (c SXreadgroupBlock) Noack() SXreadgroupNoackNoack {
-	return SXreadgroupNoackNoack{cf: c.cf, cs: append(c.cs, "NOACK")}
+	return SXreadgroupNoackNoack{cs: append(c.cs, "NOACK"), cf: c.cf, ks: c.ks}
 }
 
 func (c SXreadgroupBlock) Streams() SXreadgroupStreamsStreams {
-	return SXreadgroupStreamsStreams{cf: c.cf, cs: append(c.cs, "STREAMS")}
+	return SXreadgroupStreamsStreams{cs: append(c.cs, "STREAMS"), cf: c.cf, ks: c.ks}
 }
 
 type SXreadgroupCount SCompleted
 
 func (c SXreadgroupCount) Block(Milliseconds int64) SXreadgroupBlock {
 	c.cf = blockTag
-	return SXreadgroupBlock{cf: c.cf, cs: append(c.cs, "BLOCK", strconv.FormatInt(Milliseconds, 10))}
+	return SXreadgroupBlock{cs: append(c.cs, "BLOCK", strconv.FormatInt(Milliseconds, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SXreadgroupCount) Noack() SXreadgroupNoackNoack {
-	return SXreadgroupNoackNoack{cf: c.cf, cs: append(c.cs, "NOACK")}
+	return SXreadgroupNoackNoack{cs: append(c.cs, "NOACK"), cf: c.cf, ks: c.ks}
 }
 
 func (c SXreadgroupCount) Streams() SXreadgroupStreamsStreams {
-	return SXreadgroupStreamsStreams{cf: c.cf, cs: append(c.cs, "STREAMS")}
+	return SXreadgroupStreamsStreams{cs: append(c.cs, "STREAMS"), cf: c.cf, ks: c.ks}
 }
 
 type SXreadgroupGroup SCompleted
 
 func (c SXreadgroupGroup) Count(Count int64) SXreadgroupCount {
-	return SXreadgroupCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SXreadgroupCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SXreadgroupGroup) Block(Milliseconds int64) SXreadgroupBlock {
 	c.cf = blockTag
-	return SXreadgroupBlock{cf: c.cf, cs: append(c.cs, "BLOCK", strconv.FormatInt(Milliseconds, 10))}
+	return SXreadgroupBlock{cs: append(c.cs, "BLOCK", strconv.FormatInt(Milliseconds, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SXreadgroupGroup) Noack() SXreadgroupNoackNoack {
-	return SXreadgroupNoackNoack{cf: c.cf, cs: append(c.cs, "NOACK")}
+	return SXreadgroupNoackNoack{cs: append(c.cs, "NOACK"), cf: c.cf, ks: c.ks}
 }
 
 func (c SXreadgroupGroup) Streams() SXreadgroupStreamsStreams {
-	return SXreadgroupStreamsStreams{cf: c.cf, cs: append(c.cs, "STREAMS")}
+	return SXreadgroupStreamsStreams{cs: append(c.cs, "STREAMS"), cf: c.cf, ks: c.ks}
 }
 
 type SXreadgroupId SCompleted
 
 func (c SXreadgroupId) Id(Id ...string) SXreadgroupId {
-	return SXreadgroupId{cf: c.cf, cs: append(c.cs, Id...)}
+	return SXreadgroupId{cs: append(c.cs, Id...), cf: c.cf, ks: c.ks}
 }
 
 func (c SXreadgroupId) Build() SCompleted {
@@ -23992,20 +23992,20 @@ func (c SXreadgroupId) Build() SCompleted {
 type SXreadgroupKey SCompleted
 
 func (c SXreadgroupKey) Id(Id ...string) SXreadgroupId {
-	return SXreadgroupId{cf: c.cf, cs: append(c.cs, Id...)}
+	return SXreadgroupId{cs: append(c.cs, Id...), cf: c.cf, ks: c.ks}
 }
 
 func (c SXreadgroupKey) Key(Key ...string) SXreadgroupKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SXreadgroupKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SXreadgroupKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type SXreadgroupNoackNoack SCompleted
 
 func (c SXreadgroupNoackNoack) Streams() SXreadgroupStreamsStreams {
-	return SXreadgroupStreamsStreams{cf: c.cf, cs: append(c.cs, "STREAMS")}
+	return SXreadgroupStreamsStreams{cs: append(c.cs, "STREAMS"), cf: c.cf, ks: c.ks}
 }
 
 type SXreadgroupStreamsStreams SCompleted
@@ -24014,14 +24014,14 @@ func (c SXreadgroupStreamsStreams) Key(Key ...string) SXreadgroupKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SXreadgroupKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SXreadgroupKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type SXrevrange SCompleted
 
 func (c SXrevrange) Key(Key string) SXrevrangeKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SXrevrangeKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SXrevrangeKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Xrevrange() (c SXrevrange) {
@@ -24040,19 +24040,19 @@ func (c SXrevrangeCount) Build() SCompleted {
 type SXrevrangeEnd SCompleted
 
 func (c SXrevrangeEnd) Start(Start string) SXrevrangeStart {
-	return SXrevrangeStart{cf: c.cf, cs: append(c.cs, Start)}
+	return SXrevrangeStart{cs: append(c.cs, Start), cf: c.cf, ks: c.ks}
 }
 
 type SXrevrangeKey SCompleted
 
 func (c SXrevrangeKey) End(End string) SXrevrangeEnd {
-	return SXrevrangeEnd{cf: c.cf, cs: append(c.cs, End)}
+	return SXrevrangeEnd{cs: append(c.cs, End), cf: c.cf, ks: c.ks}
 }
 
 type SXrevrangeStart SCompleted
 
 func (c SXrevrangeStart) Count(Count int64) SXrevrangeCount {
-	return SXrevrangeCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SXrevrangeCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SXrevrangeStart) Build() SCompleted {
@@ -24063,7 +24063,7 @@ type SXtrim SCompleted
 
 func (c SXtrim) Key(Key string) SXtrimKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SXtrimKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SXtrimKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Xtrim() (c SXtrim) {
@@ -24075,11 +24075,11 @@ func (b *SBuilder) Xtrim() (c SXtrim) {
 type SXtrimKey SCompleted
 
 func (c SXtrimKey) Maxlen() SXtrimTrimStrategyMaxlen {
-	return SXtrimTrimStrategyMaxlen{cf: c.cf, cs: append(c.cs, "MAXLEN")}
+	return SXtrimTrimStrategyMaxlen{cs: append(c.cs, "MAXLEN"), cf: c.cf, ks: c.ks}
 }
 
 func (c SXtrimKey) Minid() SXtrimTrimStrategyMinid {
-	return SXtrimTrimStrategyMinid{cf: c.cf, cs: append(c.cs, "MINID")}
+	return SXtrimTrimStrategyMinid{cs: append(c.cs, "MINID"), cf: c.cf, ks: c.ks}
 }
 
 type SXtrimTrimLimit SCompleted
@@ -24091,47 +24091,47 @@ func (c SXtrimTrimLimit) Build() SCompleted {
 type SXtrimTrimOperatorAlmost SCompleted
 
 func (c SXtrimTrimOperatorAlmost) Threshold(Threshold string) SXtrimTrimThreshold {
-	return SXtrimTrimThreshold{cf: c.cf, cs: append(c.cs, Threshold)}
+	return SXtrimTrimThreshold{cs: append(c.cs, Threshold), cf: c.cf, ks: c.ks}
 }
 
 type SXtrimTrimOperatorExact SCompleted
 
 func (c SXtrimTrimOperatorExact) Threshold(Threshold string) SXtrimTrimThreshold {
-	return SXtrimTrimThreshold{cf: c.cf, cs: append(c.cs, Threshold)}
+	return SXtrimTrimThreshold{cs: append(c.cs, Threshold), cf: c.cf, ks: c.ks}
 }
 
 type SXtrimTrimStrategyMaxlen SCompleted
 
 func (c SXtrimTrimStrategyMaxlen) Exact() SXtrimTrimOperatorExact {
-	return SXtrimTrimOperatorExact{cf: c.cf, cs: append(c.cs, "=")}
+	return SXtrimTrimOperatorExact{cs: append(c.cs, "="), cf: c.cf, ks: c.ks}
 }
 
 func (c SXtrimTrimStrategyMaxlen) Almost() SXtrimTrimOperatorAlmost {
-	return SXtrimTrimOperatorAlmost{cf: c.cf, cs: append(c.cs, "~")}
+	return SXtrimTrimOperatorAlmost{cs: append(c.cs, "~"), cf: c.cf, ks: c.ks}
 }
 
 func (c SXtrimTrimStrategyMaxlen) Threshold(Threshold string) SXtrimTrimThreshold {
-	return SXtrimTrimThreshold{cf: c.cf, cs: append(c.cs, Threshold)}
+	return SXtrimTrimThreshold{cs: append(c.cs, Threshold), cf: c.cf, ks: c.ks}
 }
 
 type SXtrimTrimStrategyMinid SCompleted
 
 func (c SXtrimTrimStrategyMinid) Exact() SXtrimTrimOperatorExact {
-	return SXtrimTrimOperatorExact{cf: c.cf, cs: append(c.cs, "=")}
+	return SXtrimTrimOperatorExact{cs: append(c.cs, "="), cf: c.cf, ks: c.ks}
 }
 
 func (c SXtrimTrimStrategyMinid) Almost() SXtrimTrimOperatorAlmost {
-	return SXtrimTrimOperatorAlmost{cf: c.cf, cs: append(c.cs, "~")}
+	return SXtrimTrimOperatorAlmost{cs: append(c.cs, "~"), cf: c.cf, ks: c.ks}
 }
 
 func (c SXtrimTrimStrategyMinid) Threshold(Threshold string) SXtrimTrimThreshold {
-	return SXtrimTrimThreshold{cf: c.cf, cs: append(c.cs, Threshold)}
+	return SXtrimTrimThreshold{cs: append(c.cs, Threshold), cf: c.cf, ks: c.ks}
 }
 
 type SXtrimTrimThreshold SCompleted
 
 func (c SXtrimTrimThreshold) Limit(Count int64) SXtrimTrimLimit {
-	return SXtrimTrimLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Count, 10))}
+	return SXtrimTrimLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SXtrimTrimThreshold) Build() SCompleted {
@@ -24142,7 +24142,7 @@ type SZadd SCompleted
 
 func (c SZadd) Key(Key string) SZaddKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SZaddKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SZaddKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Zadd() (c SZadd) {
@@ -24154,125 +24154,125 @@ func (b *SBuilder) Zadd() (c SZadd) {
 type SZaddChangeCh SCompleted
 
 func (c SZaddChangeCh) Incr() SZaddIncrementIncr {
-	return SZaddIncrementIncr{cf: c.cf, cs: append(c.cs, "INCR")}
+	return SZaddIncrementIncr{cs: append(c.cs, "INCR"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZaddChangeCh) ScoreMember() SZaddScoreMember {
-	return SZaddScoreMember{cf: c.cf, cs: c.cs}
+	return SZaddScoreMember{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 type SZaddComparisonGt SCompleted
 
 func (c SZaddComparisonGt) Ch() SZaddChangeCh {
-	return SZaddChangeCh{cf: c.cf, cs: append(c.cs, "CH")}
+	return SZaddChangeCh{cs: append(c.cs, "CH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZaddComparisonGt) Incr() SZaddIncrementIncr {
-	return SZaddIncrementIncr{cf: c.cf, cs: append(c.cs, "INCR")}
+	return SZaddIncrementIncr{cs: append(c.cs, "INCR"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZaddComparisonGt) ScoreMember() SZaddScoreMember {
-	return SZaddScoreMember{cf: c.cf, cs: c.cs}
+	return SZaddScoreMember{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 type SZaddComparisonLt SCompleted
 
 func (c SZaddComparisonLt) Ch() SZaddChangeCh {
-	return SZaddChangeCh{cf: c.cf, cs: append(c.cs, "CH")}
+	return SZaddChangeCh{cs: append(c.cs, "CH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZaddComparisonLt) Incr() SZaddIncrementIncr {
-	return SZaddIncrementIncr{cf: c.cf, cs: append(c.cs, "INCR")}
+	return SZaddIncrementIncr{cs: append(c.cs, "INCR"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZaddComparisonLt) ScoreMember() SZaddScoreMember {
-	return SZaddScoreMember{cf: c.cf, cs: c.cs}
+	return SZaddScoreMember{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 type SZaddConditionNx SCompleted
 
 func (c SZaddConditionNx) Gt() SZaddComparisonGt {
-	return SZaddComparisonGt{cf: c.cf, cs: append(c.cs, "GT")}
+	return SZaddComparisonGt{cs: append(c.cs, "GT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZaddConditionNx) Lt() SZaddComparisonLt {
-	return SZaddComparisonLt{cf: c.cf, cs: append(c.cs, "LT")}
+	return SZaddComparisonLt{cs: append(c.cs, "LT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZaddConditionNx) Ch() SZaddChangeCh {
-	return SZaddChangeCh{cf: c.cf, cs: append(c.cs, "CH")}
+	return SZaddChangeCh{cs: append(c.cs, "CH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZaddConditionNx) Incr() SZaddIncrementIncr {
-	return SZaddIncrementIncr{cf: c.cf, cs: append(c.cs, "INCR")}
+	return SZaddIncrementIncr{cs: append(c.cs, "INCR"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZaddConditionNx) ScoreMember() SZaddScoreMember {
-	return SZaddScoreMember{cf: c.cf, cs: c.cs}
+	return SZaddScoreMember{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 type SZaddConditionXx SCompleted
 
 func (c SZaddConditionXx) Gt() SZaddComparisonGt {
-	return SZaddComparisonGt{cf: c.cf, cs: append(c.cs, "GT")}
+	return SZaddComparisonGt{cs: append(c.cs, "GT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZaddConditionXx) Lt() SZaddComparisonLt {
-	return SZaddComparisonLt{cf: c.cf, cs: append(c.cs, "LT")}
+	return SZaddComparisonLt{cs: append(c.cs, "LT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZaddConditionXx) Ch() SZaddChangeCh {
-	return SZaddChangeCh{cf: c.cf, cs: append(c.cs, "CH")}
+	return SZaddChangeCh{cs: append(c.cs, "CH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZaddConditionXx) Incr() SZaddIncrementIncr {
-	return SZaddIncrementIncr{cf: c.cf, cs: append(c.cs, "INCR")}
+	return SZaddIncrementIncr{cs: append(c.cs, "INCR"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZaddConditionXx) ScoreMember() SZaddScoreMember {
-	return SZaddScoreMember{cf: c.cf, cs: c.cs}
+	return SZaddScoreMember{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 type SZaddIncrementIncr SCompleted
 
 func (c SZaddIncrementIncr) ScoreMember() SZaddScoreMember {
-	return SZaddScoreMember{cf: c.cf, cs: c.cs}
+	return SZaddScoreMember{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 type SZaddKey SCompleted
 
 func (c SZaddKey) Nx() SZaddConditionNx {
-	return SZaddConditionNx{cf: c.cf, cs: append(c.cs, "NX")}
+	return SZaddConditionNx{cs: append(c.cs, "NX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZaddKey) Xx() SZaddConditionXx {
-	return SZaddConditionXx{cf: c.cf, cs: append(c.cs, "XX")}
+	return SZaddConditionXx{cs: append(c.cs, "XX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZaddKey) Gt() SZaddComparisonGt {
-	return SZaddComparisonGt{cf: c.cf, cs: append(c.cs, "GT")}
+	return SZaddComparisonGt{cs: append(c.cs, "GT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZaddKey) Lt() SZaddComparisonLt {
-	return SZaddComparisonLt{cf: c.cf, cs: append(c.cs, "LT")}
+	return SZaddComparisonLt{cs: append(c.cs, "LT"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZaddKey) Ch() SZaddChangeCh {
-	return SZaddChangeCh{cf: c.cf, cs: append(c.cs, "CH")}
+	return SZaddChangeCh{cs: append(c.cs, "CH"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZaddKey) Incr() SZaddIncrementIncr {
-	return SZaddIncrementIncr{cf: c.cf, cs: append(c.cs, "INCR")}
+	return SZaddIncrementIncr{cs: append(c.cs, "INCR"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZaddKey) ScoreMember() SZaddScoreMember {
-	return SZaddScoreMember{cf: c.cf, cs: c.cs}
+	return SZaddScoreMember{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 type SZaddScoreMember SCompleted
 
 func (c SZaddScoreMember) ScoreMember(Score float64, Member string) SZaddScoreMember {
-	return SZaddScoreMember{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Score, 'f', -1, 64), Member)}
+	return SZaddScoreMember{cs: append(c.cs, strconv.FormatFloat(Score, 'f', -1, 64), Member), cf: c.cf, ks: c.ks}
 }
 
 func (c SZaddScoreMember) Build() SCompleted {
@@ -24283,7 +24283,7 @@ type SZcard SCompleted
 
 func (c SZcard) Key(Key string) SZcardKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SZcardKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SZcardKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Zcard() (c SZcard) {
@@ -24307,7 +24307,7 @@ type SZcount SCompleted
 
 func (c SZcount) Key(Key string) SZcountKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SZcountKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SZcountKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Zcount() (c SZcount) {
@@ -24320,7 +24320,7 @@ func (b *SBuilder) Zcount() (c SZcount) {
 type SZcountKey SCompleted
 
 func (c SZcountKey) Min(Min float64) SZcountMin {
-	return SZcountMin{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Min, 'f', -1, 64))}
+	return SZcountMin{cs: append(c.cs, strconv.FormatFloat(Min, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type SZcountMax SCompleted
@@ -24336,13 +24336,13 @@ func (c SZcountMax) Cache() SCacheable {
 type SZcountMin SCompleted
 
 func (c SZcountMin) Max(Max float64) SZcountMax {
-	return SZcountMax{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Max, 'f', -1, 64))}
+	return SZcountMax{cs: append(c.cs, strconv.FormatFloat(Max, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type SZdiff SCompleted
 
 func (c SZdiff) Numkeys(Numkeys int64) SZdiffNumkeys {
-	return SZdiffNumkeys{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
+	return SZdiffNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Zdiff() (c SZdiff) {
@@ -24355,14 +24355,14 @@ func (b *SBuilder) Zdiff() (c SZdiff) {
 type SZdiffKey SCompleted
 
 func (c SZdiffKey) Withscores() SZdiffWithscoresWithscores {
-	return SZdiffWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
+	return SZdiffWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZdiffKey) Key(Key ...string) SZdiffKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SZdiffKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SZdiffKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c SZdiffKey) Build() SCompleted {
@@ -24375,7 +24375,7 @@ func (c SZdiffNumkeys) Key(Key ...string) SZdiffKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SZdiffKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SZdiffKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type SZdiffWithscoresWithscores SCompleted
@@ -24388,7 +24388,7 @@ type SZdiffstore SCompleted
 
 func (c SZdiffstore) Destination(Destination string) SZdiffstoreDestination {
 	c.ks = checkSlot(c.ks, slot(Destination))
-	return SZdiffstoreDestination{cf: c.cf, cs: append(c.cs, Destination)}
+	return SZdiffstoreDestination{cs: append(c.cs, Destination), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Zdiffstore() (c SZdiffstore) {
@@ -24400,7 +24400,7 @@ func (b *SBuilder) Zdiffstore() (c SZdiffstore) {
 type SZdiffstoreDestination SCompleted
 
 func (c SZdiffstoreDestination) Numkeys(Numkeys int64) SZdiffstoreNumkeys {
-	return SZdiffstoreNumkeys{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
+	return SZdiffstoreNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SZdiffstoreKey SCompleted
@@ -24409,7 +24409,7 @@ func (c SZdiffstoreKey) Key(Key ...string) SZdiffstoreKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SZdiffstoreKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SZdiffstoreKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c SZdiffstoreKey) Build() SCompleted {
@@ -24422,14 +24422,14 @@ func (c SZdiffstoreNumkeys) Key(Key ...string) SZdiffstoreKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SZdiffstoreKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SZdiffstoreKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type SZincrby SCompleted
 
 func (c SZincrby) Key(Key string) SZincrbyKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SZincrbyKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SZincrbyKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Zincrby() (c SZincrby) {
@@ -24441,13 +24441,13 @@ func (b *SBuilder) Zincrby() (c SZincrby) {
 type SZincrbyIncrement SCompleted
 
 func (c SZincrbyIncrement) Member(Member string) SZincrbyMember {
-	return SZincrbyMember{cf: c.cf, cs: append(c.cs, Member)}
+	return SZincrbyMember{cs: append(c.cs, Member), cf: c.cf, ks: c.ks}
 }
 
 type SZincrbyKey SCompleted
 
 func (c SZincrbyKey) Increment(Increment int64) SZincrbyIncrement {
-	return SZincrbyIncrement{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Increment, 10))}
+	return SZincrbyIncrement{cs: append(c.cs, strconv.FormatInt(Increment, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SZincrbyMember SCompleted
@@ -24459,7 +24459,7 @@ func (c SZincrbyMember) Build() SCompleted {
 type SZinter SCompleted
 
 func (c SZinter) Numkeys(Numkeys int64) SZinterNumkeys {
-	return SZinterNumkeys{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
+	return SZinterNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Zinter() (c SZinter) {
@@ -24472,7 +24472,7 @@ func (b *SBuilder) Zinter() (c SZinter) {
 type SZinterAggregateMax SCompleted
 
 func (c SZinterAggregateMax) Withscores() SZinterWithscoresWithscores {
-	return SZinterWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
+	return SZinterWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZinterAggregateMax) Build() SCompleted {
@@ -24482,7 +24482,7 @@ func (c SZinterAggregateMax) Build() SCompleted {
 type SZinterAggregateMin SCompleted
 
 func (c SZinterAggregateMin) Withscores() SZinterWithscoresWithscores {
-	return SZinterWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
+	return SZinterWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZinterAggregateMin) Build() SCompleted {
@@ -24492,7 +24492,7 @@ func (c SZinterAggregateMin) Build() SCompleted {
 type SZinterAggregateSum SCompleted
 
 func (c SZinterAggregateSum) Withscores() SZinterWithscoresWithscores {
-	return SZinterWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
+	return SZinterWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZinterAggregateSum) Build() SCompleted {
@@ -24506,30 +24506,30 @@ func (c SZinterKey) Weights(Weight ...int64) SZinterWeights {
 	for _, n := range Weight {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return SZinterWeights{cf: c.cf, cs: c.cs}
+	return SZinterWeights{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 func (c SZinterKey) Sum() SZinterAggregateSum {
-	return SZinterAggregateSum{cf: c.cf, cs: append(c.cs, "SUM")}
+	return SZinterAggregateSum{cs: append(c.cs, "SUM"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZinterKey) Min() SZinterAggregateMin {
-	return SZinterAggregateMin{cf: c.cf, cs: append(c.cs, "MIN")}
+	return SZinterAggregateMin{cs: append(c.cs, "MIN"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZinterKey) Max() SZinterAggregateMax {
-	return SZinterAggregateMax{cf: c.cf, cs: append(c.cs, "MAX")}
+	return SZinterAggregateMax{cs: append(c.cs, "MAX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZinterKey) Withscores() SZinterWithscoresWithscores {
-	return SZinterWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
+	return SZinterWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZinterKey) Key(Key ...string) SZinterKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SZinterKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SZinterKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c SZinterKey) Build() SCompleted {
@@ -24542,32 +24542,32 @@ func (c SZinterNumkeys) Key(Key ...string) SZinterKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SZinterKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SZinterKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type SZinterWeights SCompleted
 
 func (c SZinterWeights) Sum() SZinterAggregateSum {
-	return SZinterAggregateSum{cf: c.cf, cs: append(c.cs, "SUM")}
+	return SZinterAggregateSum{cs: append(c.cs, "SUM"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZinterWeights) Min() SZinterAggregateMin {
-	return SZinterAggregateMin{cf: c.cf, cs: append(c.cs, "MIN")}
+	return SZinterAggregateMin{cs: append(c.cs, "MIN"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZinterWeights) Max() SZinterAggregateMax {
-	return SZinterAggregateMax{cf: c.cf, cs: append(c.cs, "MAX")}
+	return SZinterAggregateMax{cs: append(c.cs, "MAX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZinterWeights) Withscores() SZinterWithscoresWithscores {
-	return SZinterWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
+	return SZinterWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZinterWeights) Weights(Weights ...int64) SZinterWeights {
 	for _, n := range Weights {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return SZinterWeights{cf: c.cf, cs: c.cs}
+	return SZinterWeights{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 func (c SZinterWeights) Build() SCompleted {
@@ -24583,7 +24583,7 @@ func (c SZinterWithscoresWithscores) Build() SCompleted {
 type SZintercard SCompleted
 
 func (c SZintercard) Numkeys(Numkeys int64) SZintercardNumkeys {
-	return SZintercardNumkeys{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
+	return SZintercardNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Zintercard() (c SZintercard) {
@@ -24599,7 +24599,7 @@ func (c SZintercardKey) Key(Key ...string) SZintercardKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SZintercardKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SZintercardKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c SZintercardKey) Build() SCompleted {
@@ -24612,14 +24612,14 @@ func (c SZintercardNumkeys) Key(Key ...string) SZintercardKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SZintercardKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SZintercardKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type SZinterstore SCompleted
 
 func (c SZinterstore) Destination(Destination string) SZinterstoreDestination {
 	c.ks = checkSlot(c.ks, slot(Destination))
-	return SZinterstoreDestination{cf: c.cf, cs: append(c.cs, Destination)}
+	return SZinterstoreDestination{cs: append(c.cs, Destination), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Zinterstore() (c SZinterstore) {
@@ -24649,7 +24649,7 @@ func (c SZinterstoreAggregateSum) Build() SCompleted {
 type SZinterstoreDestination SCompleted
 
 func (c SZinterstoreDestination) Numkeys(Numkeys int64) SZinterstoreNumkeys {
-	return SZinterstoreNumkeys{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
+	return SZinterstoreNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SZinterstoreKey SCompleted
@@ -24659,26 +24659,26 @@ func (c SZinterstoreKey) Weights(Weight ...int64) SZinterstoreWeights {
 	for _, n := range Weight {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return SZinterstoreWeights{cf: c.cf, cs: c.cs}
+	return SZinterstoreWeights{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 func (c SZinterstoreKey) Sum() SZinterstoreAggregateSum {
-	return SZinterstoreAggregateSum{cf: c.cf, cs: append(c.cs, "SUM")}
+	return SZinterstoreAggregateSum{cs: append(c.cs, "SUM"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZinterstoreKey) Min() SZinterstoreAggregateMin {
-	return SZinterstoreAggregateMin{cf: c.cf, cs: append(c.cs, "MIN")}
+	return SZinterstoreAggregateMin{cs: append(c.cs, "MIN"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZinterstoreKey) Max() SZinterstoreAggregateMax {
-	return SZinterstoreAggregateMax{cf: c.cf, cs: append(c.cs, "MAX")}
+	return SZinterstoreAggregateMax{cs: append(c.cs, "MAX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZinterstoreKey) Key(Key ...string) SZinterstoreKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SZinterstoreKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SZinterstoreKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c SZinterstoreKey) Build() SCompleted {
@@ -24691,28 +24691,28 @@ func (c SZinterstoreNumkeys) Key(Key ...string) SZinterstoreKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SZinterstoreKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SZinterstoreKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type SZinterstoreWeights SCompleted
 
 func (c SZinterstoreWeights) Sum() SZinterstoreAggregateSum {
-	return SZinterstoreAggregateSum{cf: c.cf, cs: append(c.cs, "SUM")}
+	return SZinterstoreAggregateSum{cs: append(c.cs, "SUM"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZinterstoreWeights) Min() SZinterstoreAggregateMin {
-	return SZinterstoreAggregateMin{cf: c.cf, cs: append(c.cs, "MIN")}
+	return SZinterstoreAggregateMin{cs: append(c.cs, "MIN"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZinterstoreWeights) Max() SZinterstoreAggregateMax {
-	return SZinterstoreAggregateMax{cf: c.cf, cs: append(c.cs, "MAX")}
+	return SZinterstoreAggregateMax{cs: append(c.cs, "MAX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZinterstoreWeights) Weights(Weights ...int64) SZinterstoreWeights {
 	for _, n := range Weights {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return SZinterstoreWeights{cf: c.cf, cs: c.cs}
+	return SZinterstoreWeights{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 func (c SZinterstoreWeights) Build() SCompleted {
@@ -24723,7 +24723,7 @@ type SZlexcount SCompleted
 
 func (c SZlexcount) Key(Key string) SZlexcountKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SZlexcountKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SZlexcountKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Zlexcount() (c SZlexcount) {
@@ -24736,7 +24736,7 @@ func (b *SBuilder) Zlexcount() (c SZlexcount) {
 type SZlexcountKey SCompleted
 
 func (c SZlexcountKey) Min(Min string) SZlexcountMin {
-	return SZlexcountMin{cf: c.cf, cs: append(c.cs, Min)}
+	return SZlexcountMin{cs: append(c.cs, Min), cf: c.cf, ks: c.ks}
 }
 
 type SZlexcountMax SCompleted
@@ -24752,14 +24752,14 @@ func (c SZlexcountMax) Cache() SCacheable {
 type SZlexcountMin SCompleted
 
 func (c SZlexcountMin) Max(Max string) SZlexcountMax {
-	return SZlexcountMax{cf: c.cf, cs: append(c.cs, Max)}
+	return SZlexcountMax{cs: append(c.cs, Max), cf: c.cf, ks: c.ks}
 }
 
 type SZmscore SCompleted
 
 func (c SZmscore) Key(Key string) SZmscoreKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SZmscoreKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SZmscoreKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Zmscore() (c SZmscore) {
@@ -24772,13 +24772,13 @@ func (b *SBuilder) Zmscore() (c SZmscore) {
 type SZmscoreKey SCompleted
 
 func (c SZmscoreKey) Member(Member ...string) SZmscoreMember {
-	return SZmscoreMember{cf: c.cf, cs: append(c.cs, Member...)}
+	return SZmscoreMember{cs: append(c.cs, Member...), cf: c.cf, ks: c.ks}
 }
 
 type SZmscoreMember SCompleted
 
 func (c SZmscoreMember) Member(Member ...string) SZmscoreMember {
-	return SZmscoreMember{cf: c.cf, cs: append(c.cs, Member...)}
+	return SZmscoreMember{cs: append(c.cs, Member...), cf: c.cf, ks: c.ks}
 }
 
 func (c SZmscoreMember) Build() SCompleted {
@@ -24793,7 +24793,7 @@ type SZpopmax SCompleted
 
 func (c SZpopmax) Key(Key string) SZpopmaxKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SZpopmaxKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SZpopmaxKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Zpopmax() (c SZpopmax) {
@@ -24811,7 +24811,7 @@ func (c SZpopmaxCount) Build() SCompleted {
 type SZpopmaxKey SCompleted
 
 func (c SZpopmaxKey) Count(Count int64) SZpopmaxCount {
-	return SZpopmaxCount{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Count, 10))}
+	return SZpopmaxCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SZpopmaxKey) Build() SCompleted {
@@ -24822,7 +24822,7 @@ type SZpopmin SCompleted
 
 func (c SZpopmin) Key(Key string) SZpopminKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SZpopminKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SZpopminKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Zpopmin() (c SZpopmin) {
@@ -24840,7 +24840,7 @@ func (c SZpopminCount) Build() SCompleted {
 type SZpopminKey SCompleted
 
 func (c SZpopminKey) Count(Count int64) SZpopminCount {
-	return SZpopminCount{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Count, 10))}
+	return SZpopminCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SZpopminKey) Build() SCompleted {
@@ -24851,7 +24851,7 @@ type SZrandmember SCompleted
 
 func (c SZrandmember) Key(Key string) SZrandmemberKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SZrandmemberKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SZrandmemberKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Zrandmember() (c SZrandmember) {
@@ -24864,7 +24864,7 @@ func (b *SBuilder) Zrandmember() (c SZrandmember) {
 type SZrandmemberKey SCompleted
 
 func (c SZrandmemberKey) Count(Count int64) SZrandmemberOptionsCount {
-	return SZrandmemberOptionsCount{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Count, 10))}
+	return SZrandmemberOptionsCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SZrandmemberKey) Build() SCompleted {
@@ -24874,7 +24874,7 @@ func (c SZrandmemberKey) Build() SCompleted {
 type SZrandmemberOptionsCount SCompleted
 
 func (c SZrandmemberOptionsCount) Withscores() SZrandmemberOptionsWithscoresWithscores {
-	return SZrandmemberOptionsWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
+	return SZrandmemberOptionsWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZrandmemberOptionsCount) Build() SCompleted {
@@ -24891,7 +24891,7 @@ type SZrange SCompleted
 
 func (c SZrange) Key(Key string) SZrangeKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SZrangeKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SZrangeKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Zrange() (c SZrange) {
@@ -24904,13 +24904,13 @@ func (b *SBuilder) Zrange() (c SZrange) {
 type SZrangeKey SCompleted
 
 func (c SZrangeKey) Min(Min string) SZrangeMin {
-	return SZrangeMin{cf: c.cf, cs: append(c.cs, Min)}
+	return SZrangeMin{cs: append(c.cs, Min), cf: c.cf, ks: c.ks}
 }
 
 type SZrangeLimit SCompleted
 
 func (c SZrangeLimit) Withscores() SZrangeWithscoresWithscores {
-	return SZrangeWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
+	return SZrangeWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZrangeLimit) Build() SCompleted {
@@ -24924,23 +24924,23 @@ func (c SZrangeLimit) Cache() SCacheable {
 type SZrangeMax SCompleted
 
 func (c SZrangeMax) Byscore() SZrangeSortbyByscore {
-	return SZrangeSortbyByscore{cf: c.cf, cs: append(c.cs, "BYSCORE")}
+	return SZrangeSortbyByscore{cs: append(c.cs, "BYSCORE"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZrangeMax) Bylex() SZrangeSortbyBylex {
-	return SZrangeSortbyBylex{cf: c.cf, cs: append(c.cs, "BYLEX")}
+	return SZrangeSortbyBylex{cs: append(c.cs, "BYLEX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZrangeMax) Rev() SZrangeRevRev {
-	return SZrangeRevRev{cf: c.cf, cs: append(c.cs, "REV")}
+	return SZrangeRevRev{cs: append(c.cs, "REV"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZrangeMax) Limit(Offset int64, Count int64) SZrangeLimit {
-	return SZrangeLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return SZrangeLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SZrangeMax) Withscores() SZrangeWithscoresWithscores {
-	return SZrangeWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
+	return SZrangeWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZrangeMax) Build() SCompleted {
@@ -24954,17 +24954,17 @@ func (c SZrangeMax) Cache() SCacheable {
 type SZrangeMin SCompleted
 
 func (c SZrangeMin) Max(Max string) SZrangeMax {
-	return SZrangeMax{cf: c.cf, cs: append(c.cs, Max)}
+	return SZrangeMax{cs: append(c.cs, Max), cf: c.cf, ks: c.ks}
 }
 
 type SZrangeRevRev SCompleted
 
 func (c SZrangeRevRev) Limit(Offset int64, Count int64) SZrangeLimit {
-	return SZrangeLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return SZrangeLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SZrangeRevRev) Withscores() SZrangeWithscoresWithscores {
-	return SZrangeWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
+	return SZrangeWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZrangeRevRev) Build() SCompleted {
@@ -24978,15 +24978,15 @@ func (c SZrangeRevRev) Cache() SCacheable {
 type SZrangeSortbyBylex SCompleted
 
 func (c SZrangeSortbyBylex) Rev() SZrangeRevRev {
-	return SZrangeRevRev{cf: c.cf, cs: append(c.cs, "REV")}
+	return SZrangeRevRev{cs: append(c.cs, "REV"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZrangeSortbyBylex) Limit(Offset int64, Count int64) SZrangeLimit {
-	return SZrangeLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return SZrangeLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SZrangeSortbyBylex) Withscores() SZrangeWithscoresWithscores {
-	return SZrangeWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
+	return SZrangeWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZrangeSortbyBylex) Build() SCompleted {
@@ -25000,15 +25000,15 @@ func (c SZrangeSortbyBylex) Cache() SCacheable {
 type SZrangeSortbyByscore SCompleted
 
 func (c SZrangeSortbyByscore) Rev() SZrangeRevRev {
-	return SZrangeRevRev{cf: c.cf, cs: append(c.cs, "REV")}
+	return SZrangeRevRev{cs: append(c.cs, "REV"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZrangeSortbyByscore) Limit(Offset int64, Count int64) SZrangeLimit {
-	return SZrangeLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return SZrangeLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SZrangeSortbyByscore) Withscores() SZrangeWithscoresWithscores {
-	return SZrangeWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
+	return SZrangeWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZrangeSortbyByscore) Build() SCompleted {
@@ -25033,7 +25033,7 @@ type SZrangebylex SCompleted
 
 func (c SZrangebylex) Key(Key string) SZrangebylexKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SZrangebylexKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SZrangebylexKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Zrangebylex() (c SZrangebylex) {
@@ -25046,7 +25046,7 @@ func (b *SBuilder) Zrangebylex() (c SZrangebylex) {
 type SZrangebylexKey SCompleted
 
 func (c SZrangebylexKey) Min(Min string) SZrangebylexMin {
-	return SZrangebylexMin{cf: c.cf, cs: append(c.cs, Min)}
+	return SZrangebylexMin{cs: append(c.cs, Min), cf: c.cf, ks: c.ks}
 }
 
 type SZrangebylexLimit SCompleted
@@ -25062,7 +25062,7 @@ func (c SZrangebylexLimit) Cache() SCacheable {
 type SZrangebylexMax SCompleted
 
 func (c SZrangebylexMax) Limit(Offset int64, Count int64) SZrangebylexLimit {
-	return SZrangebylexLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return SZrangebylexLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SZrangebylexMax) Build() SCompleted {
@@ -25076,14 +25076,14 @@ func (c SZrangebylexMax) Cache() SCacheable {
 type SZrangebylexMin SCompleted
 
 func (c SZrangebylexMin) Max(Max string) SZrangebylexMax {
-	return SZrangebylexMax{cf: c.cf, cs: append(c.cs, Max)}
+	return SZrangebylexMax{cs: append(c.cs, Max), cf: c.cf, ks: c.ks}
 }
 
 type SZrangebyscore SCompleted
 
 func (c SZrangebyscore) Key(Key string) SZrangebyscoreKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SZrangebyscoreKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SZrangebyscoreKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Zrangebyscore() (c SZrangebyscore) {
@@ -25096,7 +25096,7 @@ func (b *SBuilder) Zrangebyscore() (c SZrangebyscore) {
 type SZrangebyscoreKey SCompleted
 
 func (c SZrangebyscoreKey) Min(Min float64) SZrangebyscoreMin {
-	return SZrangebyscoreMin{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Min, 'f', -1, 64))}
+	return SZrangebyscoreMin{cs: append(c.cs, strconv.FormatFloat(Min, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type SZrangebyscoreLimit SCompleted
@@ -25112,11 +25112,11 @@ func (c SZrangebyscoreLimit) Cache() SCacheable {
 type SZrangebyscoreMax SCompleted
 
 func (c SZrangebyscoreMax) Withscores() SZrangebyscoreWithscoresWithscores {
-	return SZrangebyscoreWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
+	return SZrangebyscoreWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZrangebyscoreMax) Limit(Offset int64, Count int64) SZrangebyscoreLimit {
-	return SZrangebyscoreLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return SZrangebyscoreLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SZrangebyscoreMax) Build() SCompleted {
@@ -25130,13 +25130,13 @@ func (c SZrangebyscoreMax) Cache() SCacheable {
 type SZrangebyscoreMin SCompleted
 
 func (c SZrangebyscoreMin) Max(Max float64) SZrangebyscoreMax {
-	return SZrangebyscoreMax{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Max, 'f', -1, 64))}
+	return SZrangebyscoreMax{cs: append(c.cs, strconv.FormatFloat(Max, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type SZrangebyscoreWithscoresWithscores SCompleted
 
 func (c SZrangebyscoreWithscoresWithscores) Limit(Offset int64, Count int64) SZrangebyscoreLimit {
-	return SZrangebyscoreLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return SZrangebyscoreLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SZrangebyscoreWithscoresWithscores) Build() SCompleted {
@@ -25151,7 +25151,7 @@ type SZrangestore SCompleted
 
 func (c SZrangestore) Dst(Dst string) SZrangestoreDst {
 	c.ks = checkSlot(c.ks, slot(Dst))
-	return SZrangestoreDst{cf: c.cf, cs: append(c.cs, Dst)}
+	return SZrangestoreDst{cs: append(c.cs, Dst), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Zrangestore() (c SZrangestore) {
@@ -25164,7 +25164,7 @@ type SZrangestoreDst SCompleted
 
 func (c SZrangestoreDst) Src(Src string) SZrangestoreSrc {
 	c.ks = checkSlot(c.ks, slot(Src))
-	return SZrangestoreSrc{cf: c.cf, cs: append(c.cs, Src)}
+	return SZrangestoreSrc{cs: append(c.cs, Src), cf: c.cf, ks: c.ks}
 }
 
 type SZrangestoreLimit SCompleted
@@ -25176,19 +25176,19 @@ func (c SZrangestoreLimit) Build() SCompleted {
 type SZrangestoreMax SCompleted
 
 func (c SZrangestoreMax) Byscore() SZrangestoreSortbyByscore {
-	return SZrangestoreSortbyByscore{cf: c.cf, cs: append(c.cs, "BYSCORE")}
+	return SZrangestoreSortbyByscore{cs: append(c.cs, "BYSCORE"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZrangestoreMax) Bylex() SZrangestoreSortbyBylex {
-	return SZrangestoreSortbyBylex{cf: c.cf, cs: append(c.cs, "BYLEX")}
+	return SZrangestoreSortbyBylex{cs: append(c.cs, "BYLEX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZrangestoreMax) Rev() SZrangestoreRevRev {
-	return SZrangestoreRevRev{cf: c.cf, cs: append(c.cs, "REV")}
+	return SZrangestoreRevRev{cs: append(c.cs, "REV"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZrangestoreMax) Limit(Offset int64, Count int64) SZrangestoreLimit {
-	return SZrangestoreLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return SZrangestoreLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SZrangestoreMax) Build() SCompleted {
@@ -25198,13 +25198,13 @@ func (c SZrangestoreMax) Build() SCompleted {
 type SZrangestoreMin SCompleted
 
 func (c SZrangestoreMin) Max(Max string) SZrangestoreMax {
-	return SZrangestoreMax{cf: c.cf, cs: append(c.cs, Max)}
+	return SZrangestoreMax{cs: append(c.cs, Max), cf: c.cf, ks: c.ks}
 }
 
 type SZrangestoreRevRev SCompleted
 
 func (c SZrangestoreRevRev) Limit(Offset int64, Count int64) SZrangestoreLimit {
-	return SZrangestoreLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return SZrangestoreLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SZrangestoreRevRev) Build() SCompleted {
@@ -25214,11 +25214,11 @@ func (c SZrangestoreRevRev) Build() SCompleted {
 type SZrangestoreSortbyBylex SCompleted
 
 func (c SZrangestoreSortbyBylex) Rev() SZrangestoreRevRev {
-	return SZrangestoreRevRev{cf: c.cf, cs: append(c.cs, "REV")}
+	return SZrangestoreRevRev{cs: append(c.cs, "REV"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZrangestoreSortbyBylex) Limit(Offset int64, Count int64) SZrangestoreLimit {
-	return SZrangestoreLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return SZrangestoreLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SZrangestoreSortbyBylex) Build() SCompleted {
@@ -25228,11 +25228,11 @@ func (c SZrangestoreSortbyBylex) Build() SCompleted {
 type SZrangestoreSortbyByscore SCompleted
 
 func (c SZrangestoreSortbyByscore) Rev() SZrangestoreRevRev {
-	return SZrangestoreRevRev{cf: c.cf, cs: append(c.cs, "REV")}
+	return SZrangestoreRevRev{cs: append(c.cs, "REV"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZrangestoreSortbyByscore) Limit(Offset int64, Count int64) SZrangestoreLimit {
-	return SZrangestoreLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return SZrangestoreLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SZrangestoreSortbyByscore) Build() SCompleted {
@@ -25242,14 +25242,14 @@ func (c SZrangestoreSortbyByscore) Build() SCompleted {
 type SZrangestoreSrc SCompleted
 
 func (c SZrangestoreSrc) Min(Min string) SZrangestoreMin {
-	return SZrangestoreMin{cf: c.cf, cs: append(c.cs, Min)}
+	return SZrangestoreMin{cs: append(c.cs, Min), cf: c.cf, ks: c.ks}
 }
 
 type SZrank SCompleted
 
 func (c SZrank) Key(Key string) SZrankKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SZrankKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SZrankKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Zrank() (c SZrank) {
@@ -25262,7 +25262,7 @@ func (b *SBuilder) Zrank() (c SZrank) {
 type SZrankKey SCompleted
 
 func (c SZrankKey) Member(Member string) SZrankMember {
-	return SZrankMember{cf: c.cf, cs: append(c.cs, Member)}
+	return SZrankMember{cs: append(c.cs, Member), cf: c.cf, ks: c.ks}
 }
 
 type SZrankMember SCompleted
@@ -25279,7 +25279,7 @@ type SZrem SCompleted
 
 func (c SZrem) Key(Key string) SZremKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SZremKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SZremKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Zrem() (c SZrem) {
@@ -25291,13 +25291,13 @@ func (b *SBuilder) Zrem() (c SZrem) {
 type SZremKey SCompleted
 
 func (c SZremKey) Member(Member ...string) SZremMember {
-	return SZremMember{cf: c.cf, cs: append(c.cs, Member...)}
+	return SZremMember{cs: append(c.cs, Member...), cf: c.cf, ks: c.ks}
 }
 
 type SZremMember SCompleted
 
 func (c SZremMember) Member(Member ...string) SZremMember {
-	return SZremMember{cf: c.cf, cs: append(c.cs, Member...)}
+	return SZremMember{cs: append(c.cs, Member...), cf: c.cf, ks: c.ks}
 }
 
 func (c SZremMember) Build() SCompleted {
@@ -25308,7 +25308,7 @@ type SZremrangebylex SCompleted
 
 func (c SZremrangebylex) Key(Key string) SZremrangebylexKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SZremrangebylexKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SZremrangebylexKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Zremrangebylex() (c SZremrangebylex) {
@@ -25320,7 +25320,7 @@ func (b *SBuilder) Zremrangebylex() (c SZremrangebylex) {
 type SZremrangebylexKey SCompleted
 
 func (c SZremrangebylexKey) Min(Min string) SZremrangebylexMin {
-	return SZremrangebylexMin{cf: c.cf, cs: append(c.cs, Min)}
+	return SZremrangebylexMin{cs: append(c.cs, Min), cf: c.cf, ks: c.ks}
 }
 
 type SZremrangebylexMax SCompleted
@@ -25332,14 +25332,14 @@ func (c SZremrangebylexMax) Build() SCompleted {
 type SZremrangebylexMin SCompleted
 
 func (c SZremrangebylexMin) Max(Max string) SZremrangebylexMax {
-	return SZremrangebylexMax{cf: c.cf, cs: append(c.cs, Max)}
+	return SZremrangebylexMax{cs: append(c.cs, Max), cf: c.cf, ks: c.ks}
 }
 
 type SZremrangebyrank SCompleted
 
 func (c SZremrangebyrank) Key(Key string) SZremrangebyrankKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SZremrangebyrankKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SZremrangebyrankKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Zremrangebyrank() (c SZremrangebyrank) {
@@ -25351,13 +25351,13 @@ func (b *SBuilder) Zremrangebyrank() (c SZremrangebyrank) {
 type SZremrangebyrankKey SCompleted
 
 func (c SZremrangebyrankKey) Start(Start int64) SZremrangebyrankStart {
-	return SZremrangebyrankStart{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Start, 10))}
+	return SZremrangebyrankStart{cs: append(c.cs, strconv.FormatInt(Start, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SZremrangebyrankStart SCompleted
 
 func (c SZremrangebyrankStart) Stop(Stop int64) SZremrangebyrankStop {
-	return SZremrangebyrankStop{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Stop, 10))}
+	return SZremrangebyrankStop{cs: append(c.cs, strconv.FormatInt(Stop, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SZremrangebyrankStop SCompleted
@@ -25370,7 +25370,7 @@ type SZremrangebyscore SCompleted
 
 func (c SZremrangebyscore) Key(Key string) SZremrangebyscoreKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SZremrangebyscoreKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SZremrangebyscoreKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Zremrangebyscore() (c SZremrangebyscore) {
@@ -25382,7 +25382,7 @@ func (b *SBuilder) Zremrangebyscore() (c SZremrangebyscore) {
 type SZremrangebyscoreKey SCompleted
 
 func (c SZremrangebyscoreKey) Min(Min float64) SZremrangebyscoreMin {
-	return SZremrangebyscoreMin{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Min, 'f', -1, 64))}
+	return SZremrangebyscoreMin{cs: append(c.cs, strconv.FormatFloat(Min, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type SZremrangebyscoreMax SCompleted
@@ -25394,14 +25394,14 @@ func (c SZremrangebyscoreMax) Build() SCompleted {
 type SZremrangebyscoreMin SCompleted
 
 func (c SZremrangebyscoreMin) Max(Max float64) SZremrangebyscoreMax {
-	return SZremrangebyscoreMax{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Max, 'f', -1, 64))}
+	return SZremrangebyscoreMax{cs: append(c.cs, strconv.FormatFloat(Max, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type SZrevrange SCompleted
 
 func (c SZrevrange) Key(Key string) SZrevrangeKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SZrevrangeKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SZrevrangeKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Zrevrange() (c SZrevrange) {
@@ -25414,19 +25414,19 @@ func (b *SBuilder) Zrevrange() (c SZrevrange) {
 type SZrevrangeKey SCompleted
 
 func (c SZrevrangeKey) Start(Start int64) SZrevrangeStart {
-	return SZrevrangeStart{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Start, 10))}
+	return SZrevrangeStart{cs: append(c.cs, strconv.FormatInt(Start, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SZrevrangeStart SCompleted
 
 func (c SZrevrangeStart) Stop(Stop int64) SZrevrangeStop {
-	return SZrevrangeStop{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Stop, 10))}
+	return SZrevrangeStop{cs: append(c.cs, strconv.FormatInt(Stop, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SZrevrangeStop SCompleted
 
 func (c SZrevrangeStop) Withscores() SZrevrangeWithscoresWithscores {
-	return SZrevrangeWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
+	return SZrevrangeWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZrevrangeStop) Build() SCompleted {
@@ -25451,7 +25451,7 @@ type SZrevrangebylex SCompleted
 
 func (c SZrevrangebylex) Key(Key string) SZrevrangebylexKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SZrevrangebylexKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SZrevrangebylexKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Zrevrangebylex() (c SZrevrangebylex) {
@@ -25464,7 +25464,7 @@ func (b *SBuilder) Zrevrangebylex() (c SZrevrangebylex) {
 type SZrevrangebylexKey SCompleted
 
 func (c SZrevrangebylexKey) Max(Max string) SZrevrangebylexMax {
-	return SZrevrangebylexMax{cf: c.cf, cs: append(c.cs, Max)}
+	return SZrevrangebylexMax{cs: append(c.cs, Max), cf: c.cf, ks: c.ks}
 }
 
 type SZrevrangebylexLimit SCompleted
@@ -25480,13 +25480,13 @@ func (c SZrevrangebylexLimit) Cache() SCacheable {
 type SZrevrangebylexMax SCompleted
 
 func (c SZrevrangebylexMax) Min(Min string) SZrevrangebylexMin {
-	return SZrevrangebylexMin{cf: c.cf, cs: append(c.cs, Min)}
+	return SZrevrangebylexMin{cs: append(c.cs, Min), cf: c.cf, ks: c.ks}
 }
 
 type SZrevrangebylexMin SCompleted
 
 func (c SZrevrangebylexMin) Limit(Offset int64, Count int64) SZrevrangebylexLimit {
-	return SZrevrangebylexLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return SZrevrangebylexLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SZrevrangebylexMin) Build() SCompleted {
@@ -25501,7 +25501,7 @@ type SZrevrangebyscore SCompleted
 
 func (c SZrevrangebyscore) Key(Key string) SZrevrangebyscoreKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SZrevrangebyscoreKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SZrevrangebyscoreKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Zrevrangebyscore() (c SZrevrangebyscore) {
@@ -25514,7 +25514,7 @@ func (b *SBuilder) Zrevrangebyscore() (c SZrevrangebyscore) {
 type SZrevrangebyscoreKey SCompleted
 
 func (c SZrevrangebyscoreKey) Max(Max float64) SZrevrangebyscoreMax {
-	return SZrevrangebyscoreMax{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Max, 'f', -1, 64))}
+	return SZrevrangebyscoreMax{cs: append(c.cs, strconv.FormatFloat(Max, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type SZrevrangebyscoreLimit SCompleted
@@ -25530,17 +25530,17 @@ func (c SZrevrangebyscoreLimit) Cache() SCacheable {
 type SZrevrangebyscoreMax SCompleted
 
 func (c SZrevrangebyscoreMax) Min(Min float64) SZrevrangebyscoreMin {
-	return SZrevrangebyscoreMin{cf: c.cf, cs: append(c.cs, strconv.FormatFloat(Min, 'f', -1, 64))}
+	return SZrevrangebyscoreMin{cs: append(c.cs, strconv.FormatFloat(Min, 'f', -1, 64)), cf: c.cf, ks: c.ks}
 }
 
 type SZrevrangebyscoreMin SCompleted
 
 func (c SZrevrangebyscoreMin) Withscores() SZrevrangebyscoreWithscoresWithscores {
-	return SZrevrangebyscoreWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
+	return SZrevrangebyscoreWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZrevrangebyscoreMin) Limit(Offset int64, Count int64) SZrevrangebyscoreLimit {
-	return SZrevrangebyscoreLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return SZrevrangebyscoreLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SZrevrangebyscoreMin) Build() SCompleted {
@@ -25554,7 +25554,7 @@ func (c SZrevrangebyscoreMin) Cache() SCacheable {
 type SZrevrangebyscoreWithscoresWithscores SCompleted
 
 func (c SZrevrangebyscoreWithscoresWithscores) Limit(Offset int64, Count int64) SZrevrangebyscoreLimit {
-	return SZrevrangebyscoreLimit{cf: c.cf, cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10))}
+	return SZrevrangebyscoreLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Offset, 10), strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SZrevrangebyscoreWithscoresWithscores) Build() SCompleted {
@@ -25569,7 +25569,7 @@ type SZrevrank SCompleted
 
 func (c SZrevrank) Key(Key string) SZrevrankKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SZrevrankKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SZrevrankKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Zrevrank() (c SZrevrank) {
@@ -25582,7 +25582,7 @@ func (b *SBuilder) Zrevrank() (c SZrevrank) {
 type SZrevrankKey SCompleted
 
 func (c SZrevrankKey) Member(Member string) SZrevrankMember {
-	return SZrevrankMember{cf: c.cf, cs: append(c.cs, Member)}
+	return SZrevrankMember{cs: append(c.cs, Member), cf: c.cf, ks: c.ks}
 }
 
 type SZrevrankMember SCompleted
@@ -25599,7 +25599,7 @@ type SZscan SCompleted
 
 func (c SZscan) Key(Key string) SZscanKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SZscanKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SZscanKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Zscan() (c SZscan) {
@@ -25618,11 +25618,11 @@ func (c SZscanCount) Build() SCompleted {
 type SZscanCursor SCompleted
 
 func (c SZscanCursor) Match(Pattern string) SZscanMatch {
-	return SZscanMatch{cf: c.cf, cs: append(c.cs, "MATCH", Pattern)}
+	return SZscanMatch{cs: append(c.cs, "MATCH", Pattern), cf: c.cf, ks: c.ks}
 }
 
 func (c SZscanCursor) Count(Count int64) SZscanCount {
-	return SZscanCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SZscanCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SZscanCursor) Build() SCompleted {
@@ -25632,13 +25632,13 @@ func (c SZscanCursor) Build() SCompleted {
 type SZscanKey SCompleted
 
 func (c SZscanKey) Cursor(Cursor int64) SZscanCursor {
-	return SZscanCursor{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Cursor, 10))}
+	return SZscanCursor{cs: append(c.cs, strconv.FormatInt(Cursor, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SZscanMatch SCompleted
 
 func (c SZscanMatch) Count(Count int64) SZscanCount {
-	return SZscanCount{cf: c.cf, cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10))}
+	return SZscanCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SZscanMatch) Build() SCompleted {
@@ -25649,7 +25649,7 @@ type SZscore SCompleted
 
 func (c SZscore) Key(Key string) SZscoreKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SZscoreKey{cf: c.cf, cs: append(c.cs, Key)}
+	return SZscoreKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Zscore() (c SZscore) {
@@ -25662,7 +25662,7 @@ func (b *SBuilder) Zscore() (c SZscore) {
 type SZscoreKey SCompleted
 
 func (c SZscoreKey) Member(Member string) SZscoreMember {
-	return SZscoreMember{cf: c.cf, cs: append(c.cs, Member)}
+	return SZscoreMember{cs: append(c.cs, Member), cf: c.cf, ks: c.ks}
 }
 
 type SZscoreMember SCompleted
@@ -25678,7 +25678,7 @@ func (c SZscoreMember) Cache() SCacheable {
 type SZunion SCompleted
 
 func (c SZunion) Numkeys(Numkeys int64) SZunionNumkeys {
-	return SZunionNumkeys{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
+	return SZunionNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Zunion() (c SZunion) {
@@ -25691,7 +25691,7 @@ func (b *SBuilder) Zunion() (c SZunion) {
 type SZunionAggregateMax SCompleted
 
 func (c SZunionAggregateMax) Withscores() SZunionWithscoresWithscores {
-	return SZunionWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
+	return SZunionWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZunionAggregateMax) Build() SCompleted {
@@ -25701,7 +25701,7 @@ func (c SZunionAggregateMax) Build() SCompleted {
 type SZunionAggregateMin SCompleted
 
 func (c SZunionAggregateMin) Withscores() SZunionWithscoresWithscores {
-	return SZunionWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
+	return SZunionWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZunionAggregateMin) Build() SCompleted {
@@ -25711,7 +25711,7 @@ func (c SZunionAggregateMin) Build() SCompleted {
 type SZunionAggregateSum SCompleted
 
 func (c SZunionAggregateSum) Withscores() SZunionWithscoresWithscores {
-	return SZunionWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
+	return SZunionWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZunionAggregateSum) Build() SCompleted {
@@ -25725,30 +25725,30 @@ func (c SZunionKey) Weights(Weight ...int64) SZunionWeights {
 	for _, n := range Weight {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return SZunionWeights{cf: c.cf, cs: c.cs}
+	return SZunionWeights{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 func (c SZunionKey) Sum() SZunionAggregateSum {
-	return SZunionAggregateSum{cf: c.cf, cs: append(c.cs, "SUM")}
+	return SZunionAggregateSum{cs: append(c.cs, "SUM"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZunionKey) Min() SZunionAggregateMin {
-	return SZunionAggregateMin{cf: c.cf, cs: append(c.cs, "MIN")}
+	return SZunionAggregateMin{cs: append(c.cs, "MIN"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZunionKey) Max() SZunionAggregateMax {
-	return SZunionAggregateMax{cf: c.cf, cs: append(c.cs, "MAX")}
+	return SZunionAggregateMax{cs: append(c.cs, "MAX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZunionKey) Withscores() SZunionWithscoresWithscores {
-	return SZunionWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
+	return SZunionWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZunionKey) Key(Key ...string) SZunionKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SZunionKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SZunionKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c SZunionKey) Build() SCompleted {
@@ -25761,32 +25761,32 @@ func (c SZunionNumkeys) Key(Key ...string) SZunionKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SZunionKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SZunionKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type SZunionWeights SCompleted
 
 func (c SZunionWeights) Sum() SZunionAggregateSum {
-	return SZunionAggregateSum{cf: c.cf, cs: append(c.cs, "SUM")}
+	return SZunionAggregateSum{cs: append(c.cs, "SUM"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZunionWeights) Min() SZunionAggregateMin {
-	return SZunionAggregateMin{cf: c.cf, cs: append(c.cs, "MIN")}
+	return SZunionAggregateMin{cs: append(c.cs, "MIN"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZunionWeights) Max() SZunionAggregateMax {
-	return SZunionAggregateMax{cf: c.cf, cs: append(c.cs, "MAX")}
+	return SZunionAggregateMax{cs: append(c.cs, "MAX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZunionWeights) Withscores() SZunionWithscoresWithscores {
-	return SZunionWithscoresWithscores{cf: c.cf, cs: append(c.cs, "WITHSCORES")}
+	return SZunionWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZunionWeights) Weights(Weights ...int64) SZunionWeights {
 	for _, n := range Weights {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return SZunionWeights{cf: c.cf, cs: c.cs}
+	return SZunionWeights{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 func (c SZunionWeights) Build() SCompleted {
@@ -25803,7 +25803,7 @@ type SZunionstore SCompleted
 
 func (c SZunionstore) Destination(Destination string) SZunionstoreDestination {
 	c.ks = checkSlot(c.ks, slot(Destination))
-	return SZunionstoreDestination{cf: c.cf, cs: append(c.cs, Destination)}
+	return SZunionstoreDestination{cs: append(c.cs, Destination), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Zunionstore() (c SZunionstore) {
@@ -25833,7 +25833,7 @@ func (c SZunionstoreAggregateSum) Build() SCompleted {
 type SZunionstoreDestination SCompleted
 
 func (c SZunionstoreDestination) Numkeys(Numkeys int64) SZunionstoreNumkeys {
-	return SZunionstoreNumkeys{cf: c.cf, cs: append(c.cs, strconv.FormatInt(Numkeys, 10))}
+	return SZunionstoreNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SZunionstoreKey SCompleted
@@ -25843,26 +25843,26 @@ func (c SZunionstoreKey) Weights(Weight ...int64) SZunionstoreWeights {
 	for _, n := range Weight {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return SZunionstoreWeights{cf: c.cf, cs: c.cs}
+	return SZunionstoreWeights{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 func (c SZunionstoreKey) Sum() SZunionstoreAggregateSum {
-	return SZunionstoreAggregateSum{cf: c.cf, cs: append(c.cs, "SUM")}
+	return SZunionstoreAggregateSum{cs: append(c.cs, "SUM"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZunionstoreKey) Min() SZunionstoreAggregateMin {
-	return SZunionstoreAggregateMin{cf: c.cf, cs: append(c.cs, "MIN")}
+	return SZunionstoreAggregateMin{cs: append(c.cs, "MIN"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZunionstoreKey) Max() SZunionstoreAggregateMax {
-	return SZunionstoreAggregateMax{cf: c.cf, cs: append(c.cs, "MAX")}
+	return SZunionstoreAggregateMax{cs: append(c.cs, "MAX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZunionstoreKey) Key(Key ...string) SZunionstoreKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SZunionstoreKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SZunionstoreKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c SZunionstoreKey) Build() SCompleted {
@@ -25875,28 +25875,28 @@ func (c SZunionstoreNumkeys) Key(Key ...string) SZunionstoreKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
 	}
-	return SZunionstoreKey{cf: c.cf, cs: append(c.cs, Key...)}
+	return SZunionstoreKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type SZunionstoreWeights SCompleted
 
 func (c SZunionstoreWeights) Sum() SZunionstoreAggregateSum {
-	return SZunionstoreAggregateSum{cf: c.cf, cs: append(c.cs, "SUM")}
+	return SZunionstoreAggregateSum{cs: append(c.cs, "SUM"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZunionstoreWeights) Min() SZunionstoreAggregateMin {
-	return SZunionstoreAggregateMin{cf: c.cf, cs: append(c.cs, "MIN")}
+	return SZunionstoreAggregateMin{cs: append(c.cs, "MIN"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZunionstoreWeights) Max() SZunionstoreAggregateMax {
-	return SZunionstoreAggregateMax{cf: c.cf, cs: append(c.cs, "MAX")}
+	return SZunionstoreAggregateMax{cs: append(c.cs, "MAX"), cf: c.cf, ks: c.ks}
 }
 
 func (c SZunionstoreWeights) Weights(Weights ...int64) SZunionstoreWeights {
 	for _, n := range Weights {
 		c.cs = append(c.cs, strconv.FormatInt(n, 10))
 	}
-	return SZunionstoreWeights{cf: c.cf, cs: c.cs}
+	return SZunionstoreWeights{cs: c.cs, cf: c.cf, ks: c.ks}
 }
 
 func (c SZunionstoreWeights) Build() SCompleted {
