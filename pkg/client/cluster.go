@@ -313,7 +313,7 @@ retry:
 	}
 	resp = cc.DoMulti(ccmd...)
 process:
-	for _, r := range resp {
+	for i, r := range resp {
 		if r.Val.Type == '-' {
 			if strings.HasPrefix(r.Val.String, "MOVED") {
 				go c.refreshSlots()
@@ -322,8 +322,7 @@ process:
 				goto process
 			} else if strings.HasPrefix(r.Val.String, "ASK") {
 				addr := strings.Split(r.Val.String, " ")[2]
-				resp = c.pickOrNewConn(addr).DoMulti(append([]cmds.Completed{cmds.AskingCmd}, ccmd...)...)[1:]
-				goto process
+				resp[i] = c.pickOrNewConn(addr).DoMulti(cmds.AskingCmd, ccmd[i])[1]
 			} else if strings.HasPrefix(r.Val.String, "TRYAGAIN") {
 				runtime.Gosched()
 				goto retry
