@@ -18,10 +18,7 @@ func NewSingleClient(dst string, option conn.Option) (*SingleClient, error) {
 	if err := c.Dialable(); err != nil {
 		return nil, err
 	}
-	return &SingleClient{
-		Cmd:  cmds.NewBuilder(),
-		conn: c,
-	}, nil
+	return &SingleClient{Cmd: cmds.NewBuilder(), conn: c}, nil
 }
 
 func (c *SingleClient) Info() proto.Message {
@@ -31,14 +28,6 @@ func (c *SingleClient) Info() proto.Message {
 func (c *SingleClient) Do(cmd cmds.Completed) (resp proto.Result) {
 	resp = c.conn.Do(cmd)
 	c.Cmd.Put(cmd.Commands())
-	return resp
-}
-
-func (c *SingleClient) DoMulti(multi ...cmds.Completed) (resp []proto.Result) {
-	resp = c.conn.DoMulti(multi...)
-	for _, cmd := range multi {
-		c.Cmd.Put(cmd.Commands())
-	}
 	return resp
 }
 

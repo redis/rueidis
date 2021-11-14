@@ -278,64 +278,6 @@ ret:
 	return resp
 }
 
-func checkMultiSlot(multi []cmds.SCompleted) (slot uint16) {
-	slot = cmds.InitSlot
-	for _, cmd := range multi {
-		if cmd.Slot() == cmds.InitSlot {
-			continue
-		}
-		if slot == cmds.InitSlot {
-			slot = cmd.Slot()
-		} else if slot != cmd.Slot() {
-			panic("mixed slot commands are not allowed")
-		}
-	}
-	return
-}
-
-func (c *ClusterClient) DoMulti(multi ...cmds.SCompleted) (resp []proto.Result) {
-	slot := checkMultiSlot(multi)
-
-	resp = make([]proto.Result, len(multi))
-	ccmd := make([]cmds.Completed, len(multi))
-
-	for i, cmd := range multi {
-		ccmd[i] = cmds.Completed(cmd)
-	}
-
-retry:
-	cc, err := c.pickConn(slot)
-	if err != nil {
-		for i := range resp {
-			resp[i].Err = err
-		}
-		goto ret
-	}
-	resp = cc.DoMulti(ccmd...)
-process:
-	for i, r := range resp {
-		if r.Val.Type == '-' {
-			if strings.HasPrefix(r.Val.String, "MOVED") {
-				go c.refreshSlots()
-				addr := strings.Split(r.Val.String, " ")[2]
-				resp = c.pickOrNewConn(addr).DoMulti(ccmd...)
-				goto process
-			} else if strings.HasPrefix(r.Val.String, "ASK") {
-				addr := strings.Split(r.Val.String, " ")[2]
-				resp[i] = c.pickOrNewConn(addr).DoMulti(cmds.AskingCmd, ccmd[i])[1]
-			} else if strings.HasPrefix(r.Val.String, "TRYAGAIN") {
-				runtime.Gosched()
-				goto retry
-			}
-		}
-	}
-ret:
-	for _, cmd := range ccmd {
-		c.Cmd.Put(cmd.Commands())
-	}
-	return resp
-}
-
 func (c *ClusterClient) DoCache(cmd cmds.SCacheable, ttl time.Duration) (resp proto.Result) {
 retry:
 	cc, err := c.pickConn(cmd.Slot())
