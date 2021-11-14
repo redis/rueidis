@@ -132,7 +132,7 @@ retry:
 		}
 	} else {
 		wire := c.acquire()
-		resp := wire.DoMulti(multi...)
+		resp = wire.DoMulti(multi...)
 		for _, r := range resp {
 			if retryable(r.Err) {
 				c.wire.CompareAndSwap(wire, broken)
