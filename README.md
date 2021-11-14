@@ -6,7 +6,7 @@ A Fast Golang Redis RESP3 client that does auto pipelining and supports client s
 * auto pipeline for non-blocking redis commands
 * connection pooling for blocking redis commands
 * opt-in client side caching
-* pub/sub, streams
+* redis cluster, pub/sub, streams
 * IDE friendly redis command builder
 
 ## Auto Pipeline
@@ -162,24 +162,37 @@ conn, _ := client.NewSingleClient("127.0.0.1:6379", conn.Option{
 conn.Do(c.Cmd.Subscribe().Channel("my_channel").Build())
 ```
 
+## Redis Cluster
+
+To connect to a redis cluster, the `NewClusterClient` should be used:
+
+```golang
+conn, _ := client.NewClusterClient(client.ClusterClientOption{
+    InitAddress: []string{"127.0.0.1:7001", "127.0.0.1:7002", "127.0.0.1:7003"},
+    ShuffleInit: false,
+})
+```
+
 ## Command Builder
 
 Redis commands are very complex and their formats are very different from each other.
 
-This library provides a type safe command builder within `SingleClient.Cmd` that can be used as
+This library provides a type safe command builder within `SingleClient.Cmd` and `ClusterClient.Cmd` that can be used as
 an entrypoint to construct a redis command. Once the command is completed, call the `Build()` or `Cache()` to get the actual command.
-And then pass it to either `SingleClient.Do()` or `SingleClient.DoCache()`.
+And then pass it to either `Client.Do()` or `Client.DoCache()`.
 
 ```golang
 c.Do(c.Cmd.Set().Key("mykey").Value("myval").Ex(10).Nx().Build())
 c.DoCache(c.Cmd.Hmget().Key("myhash").Field("1", "2").Cache(), time.Second*30)
 ```
 
-**Once the command is passed to the one of above `SingleClient.DoXXX()`, the command will be recycled and should not be reused.**
+**Once the command is passed to the one of above `Client.DoXXX()`, the command will be recycled and should not be reused.**
+
+**The `ClusterClient.Cmd` also checks if the command contains multiple keys belongs to different slots. If it does, then panic.**
 
 ## Not Yet Implement
 
 The following subjects are not yet implemented.
 
-* Redis Cluster client
+* CAS usage pattern (WATCH + MULTI + EXEC)
 * RESP2
