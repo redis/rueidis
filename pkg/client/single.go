@@ -37,6 +37,32 @@ func (c *SingleClient) DoCache(cmd cmds.Cacheable, ttl time.Duration) (resp prot
 	return resp
 }
 
+func (c *SingleClient) DedicatedWire(fn func(DedicatedSingleClient) error) (err error) {
+	wire := c.conn.Acquire()
+	err = fn(DedicatedSingleClient{cmd: c.Cmd, wire: wire})
+	c.conn.Store(wire)
+	return err
+}
+
 func (c *SingleClient) Close() {
 	c.conn.Close()
+}
+
+type DedicatedSingleClient struct {
+	cmd  *cmds.Builder
+	wire conn.Wire
+}
+
+func (c *DedicatedSingleClient) Do(cmd cmds.Completed) (resp proto.Result) {
+	resp = c.wire.Do(cmd)
+	c.cmd.Put(cmd.Commands())
+	return resp
+}
+
+func (c *DedicatedSingleClient) DoMulti(multi ...cmds.Completed) (resp []proto.Result) {
+	resp = c.wire.DoMulti(multi...)
+	for _, cmd := range multi {
+		c.cmd.Put(cmd.Commands())
+	}
+	return resp
 }

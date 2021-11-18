@@ -154,7 +154,16 @@ retry:
 	return resp
 }
 
+func (c *Conn) Acquire() Wire {
+	return c.blocking.Acquire()
+}
+
+func (c *Conn) Store(w Wire) {
+	c.blocking.Store(w.(*wire))
+}
+
 func (c *Conn) Close() {
+	// TODO close pool
 	c.acquire().Close()
 }
 

@@ -24,6 +24,11 @@ type errWrap struct {
 	error
 }
 
+type Wire interface {
+	Do(cmd cmds.Completed) (resp proto.Result)
+	DoMulti(multi ...cmds.Completed) (resp []proto.Result)
+}
+
 type wire struct {
 	waits int32
 	state int32

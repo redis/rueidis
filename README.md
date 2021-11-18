@@ -162,6 +162,28 @@ conn, _ := client.NewSingleClient("127.0.0.1:6379", conn.Option{
 conn.Do(c.Cmd.Subscribe().Channel("my_channel").Build())
 ```
 
+## CAS Pattern
+
+To do a CAS operation (WATCH + MULTI + EXEC), a dedicated connection should be used.
+The dedicated connection shares the same connection pool with blocking commands.
+
+```golang
+c.DedicatedWire(func(client client.DedicatedSingleClient) error {
+	// watch keys first
+    client.Do(c.Cmd.Watch().Key("k1", "k2").Build())
+	// perform read here
+    client.Do(c.Cmd.Mget().Key("k1", "k2").Build())
+	// perform write with MULTI EXEC
+    client.DoMulti(
+        c.Cmd.Multi().Build(),
+        c.Cmd.Set().Key("k1").Value("1").Build(),
+        c.Cmd.Set().Key("k2").Value("2").Build(),
+        c.Cmd.Exec().Build(),
+    )
+    return nil
+})
+```
+
 ## Redis Cluster
 
 To connect to a redis cluster, the `NewClusterClient` should be used:
@@ -194,5 +216,4 @@ c.DoCache(c.Cmd.Hmget().Key("myhash").Field("1", "2").Cache(), time.Second*30)
 
 The following subjects are not yet implemented.
 
-* CAS usage pattern (WATCH + MULTI + EXEC)
 * RESP2

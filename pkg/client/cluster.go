@@ -308,10 +308,86 @@ ret:
 	return resp
 }
 
+func (c *ClusterClient) DedicatedWire(fn func(DedicatedClusterClient) error) (err error) {
+	dcc := DedicatedClusterClient{client: c, slot: cmds.InitSlot}
+	err = fn(dcc)
+	dcc.release()
+	return err
+}
+
 func (c *ClusterClient) Close() {
 	c.mu.RLock()
 	for _, cc := range c.conns {
 		go cc.Close()
 	}
 	c.mu.RUnlock()
+}
+
+type DedicatedClusterClient struct {
+	client *ClusterClient
+	conn   *conn.Conn
+	wire   conn.Wire
+	slot   uint16
+}
+
+func (c *DedicatedClusterClient) check(slot uint16) {
+	if slot == cmds.InitSlot {
+		return
+	}
+	if c.slot == cmds.InitSlot {
+		c.slot = slot
+	} else if c.slot != slot {
+		panic("cross slot command in DedicatedWire is prohibited")
+	}
+}
+
+func (c *DedicatedClusterClient) acquire() (err error) {
+	if c.wire != nil {
+		return nil
+	}
+	if c.slot == cmds.InitSlot {
+		panic("the first command in DedicatedWire should contain the slot key")
+	}
+	if c.conn, err = c.client.pickConn(c.slot); err != nil {
+		return nil
+	}
+	c.wire = c.conn.Acquire()
+	return nil
+}
+
+func (c *DedicatedClusterClient) release() {
+	if c.wire != nil {
+		c.conn.Store(c.wire)
+	}
+}
+
+func (c *DedicatedClusterClient) Do(cmd cmds.SCompleted) (resp proto.Result) {
+	c.check(cmd.Slot())
+	if resp.Err = c.acquire(); resp.Err == nil {
+		resp = c.wire.Do(cmds.Completed(cmd))
+	}
+	c.client.Cmd.Put(cmd.Commands())
+	return resp
+}
+
+func (c *DedicatedClusterClient) DoMulti(multi ...cmds.SCompleted) (resp []proto.Result) {
+	for _, cmd := range multi {
+		c.check(cmd.Slot())
+	}
+	ms := make([]cmds.Completed, len(multi))
+	for i, cmd := range multi {
+		ms[i] = cmds.Completed(cmd)
+	}
+	if err := c.acquire(); err == nil {
+		resp = c.wire.DoMulti(ms...)
+	} else {
+		resp = make([]proto.Result, len(multi))
+		for i := range resp {
+			resp[i].Err = err
+		}
+	}
+	for _, cmd := range multi {
+		c.client.Cmd.Put(cmd.Commands())
+	}
+	return resp
 }
