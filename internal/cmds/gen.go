@@ -303,6 +303,7 @@ func (c Bitcount) Key(Key string) BitcountKey {
 
 func (b *Builder) Bitcount() (c Bitcount) {
 	c.cs = append(b.get(), "BITCOUNT")
+	c.cf = readonly
 	return
 }
 
@@ -429,6 +430,7 @@ func (c BitfieldRo) Key(Key string) BitfieldRoKey {
 
 func (b *Builder) BitfieldRo() (c BitfieldRo) {
 	c.cs = append(b.get(), "BITFIELD_RO")
+	c.cf = readonly
 	return
 }
 
@@ -523,6 +525,7 @@ func (c Bitpos) Key(Key string) BitposKey {
 
 func (b *Builder) Bitpos() (c Bitpos) {
 	c.cs = append(b.get(), "BITPOS")
+	c.cf = readonly
 	return
 }
 
@@ -2258,6 +2261,7 @@ func (c Dbsize) Build() Completed {
 
 func (b *Builder) Dbsize() (c Dbsize) {
 	c.cs = append(b.get(), "DBSIZE")
+	c.cf = readonly
 	return
 }
 
@@ -2369,6 +2373,7 @@ func (c Dump) Key(Key string) DumpKey {
 
 func (b *Builder) Dump() (c Dump) {
 	c.cs = append(b.get(), "DUMP")
+	c.cf = readonly
 	return
 }
 
@@ -2452,6 +2457,7 @@ func (c EvalRo) Script(Script string) EvalRoScript {
 
 func (b *Builder) EvalRo() (c EvalRo) {
 	c.cs = append(b.get(), "EVAL_RO")
+	c.cf = readonly
 	return
 }
 
@@ -2550,6 +2556,7 @@ func (c EvalshaRo) Sha1(Sha1 string) EvalshaRoSha1 {
 
 func (b *Builder) EvalshaRo() (c EvalshaRo) {
 	c.cs = append(b.get(), "EVALSHA_RO")
+	c.cf = readonly
 	return
 }
 
@@ -2610,6 +2617,7 @@ func (c Exists) Key(Key ...string) ExistsKey {
 
 func (b *Builder) Exists() (c Exists) {
 	c.cs = append(b.get(), "EXISTS")
+	c.cf = readonly
 	return
 }
 
@@ -2757,6 +2765,7 @@ func (c Expiretime) Key(Key string) ExpiretimeKey {
 
 func (b *Builder) Expiretime() (c Expiretime) {
 	c.cs = append(b.get(), "EXPIRETIME")
+	c.cf = readonly
 	return
 }
 
@@ -2988,6 +2997,7 @@ func (c Geodist) Key(Key string) GeodistKey {
 
 func (b *Builder) Geodist() (c Geodist) {
 	c.cs = append(b.get(), "GEODIST")
+	c.cf = readonly
 	return
 }
 
@@ -3077,6 +3087,7 @@ func (c Geohash) Key(Key string) GeohashKey {
 
 func (b *Builder) Geohash() (c Geohash) {
 	c.cs = append(b.get(), "GEOHASH")
+	c.cf = readonly
 	return
 }
 
@@ -3108,6 +3119,7 @@ func (c Geopos) Key(Key string) GeoposKey {
 
 func (b *Builder) Geopos() (c Geopos) {
 	c.cs = append(b.get(), "GEOPOS")
+	c.cf = readonly
 	return
 }
 
@@ -3262,6 +3274,7 @@ func (c GeoradiusRo) Key(Key string) GeoradiusRoKey {
 
 func (b *Builder) GeoradiusRo() (c GeoradiusRo) {
 	c.cs = append(b.get(), "GEORADIUS_RO")
+	c.cf = readonly
 	return
 }
 
@@ -4012,6 +4025,7 @@ func (c GeoradiusbymemberRo) Key(Key string) GeoradiusbymemberRoKey {
 
 func (b *Builder) GeoradiusbymemberRo() (c GeoradiusbymemberRo) {
 	c.cs = append(b.get(), "GEORADIUSBYMEMBER_RO")
+	c.cf = readonly
 	return
 }
 
@@ -4639,6 +4653,7 @@ func (c Geosearch) Key(Key string) GeosearchKey {
 
 func (b *Builder) Geosearch() (c Geosearch) {
 	c.cs = append(b.get(), "GEOSEARCH")
+	c.cf = readonly
 	return
 }
 
@@ -5671,6 +5686,7 @@ func (c Get) Key(Key string) GetKey {
 
 func (b *Builder) Get() (c Get) {
 	c.cs = append(b.get(), "GET")
+	c.cf = readonly
 	return
 }
 
@@ -5692,6 +5708,7 @@ func (c Getbit) Key(Key string) GetbitKey {
 
 func (b *Builder) Getbit() (c Getbit) {
 	c.cs = append(b.get(), "GETBIT")
+	c.cf = readonly
 	return
 }
 
@@ -5803,6 +5820,7 @@ func (c Getrange) Key(Key string) GetrangeKey {
 
 func (b *Builder) Getrange() (c Getrange) {
 	c.cs = append(b.get(), "GETRANGE")
+	c.cf = readonly
 	return
 }
 
@@ -5931,6 +5949,7 @@ func (c Hexists) Key(Key string) HexistsKey {
 
 func (b *Builder) Hexists() (c Hexists) {
 	c.cs = append(b.get(), "HEXISTS")
+	c.cf = readonly
 	return
 }
 
@@ -5958,6 +5977,7 @@ func (c Hget) Key(Key string) HgetKey {
 
 func (b *Builder) Hget() (c Hget) {
 	c.cs = append(b.get(), "HGET")
+	c.cf = readonly
 	return
 }
 
@@ -5985,6 +6005,7 @@ func (c Hgetall) Key(Key string) HgetallKey {
 
 func (b *Builder) Hgetall() (c Hgetall) {
 	c.cs = append(b.get(), "HGETALL")
+	c.cf = readonly
 	return
 }
 
@@ -6064,6 +6085,7 @@ func (c Hkeys) Key(Key string) HkeysKey {
 
 func (b *Builder) Hkeys() (c Hkeys) {
 	c.cs = append(b.get(), "HKEYS")
+	c.cf = readonly
 	return
 }
 
@@ -6085,6 +6107,7 @@ func (c Hlen) Key(Key string) HlenKey {
 
 func (b *Builder) Hlen() (c Hlen) {
 	c.cs = append(b.get(), "HLEN")
+	c.cf = readonly
 	return
 }
 
@@ -6106,6 +6129,7 @@ func (c Hmget) Key(Key string) HmgetKey {
 
 func (b *Builder) Hmget() (c Hmget) {
 	c.cs = append(b.get(), "HMGET")
+	c.cf = readonly
 	return
 }
 
@@ -6164,6 +6188,7 @@ func (c Hrandfield) Key(Key string) HrandfieldKey {
 
 func (b *Builder) Hrandfield() (c Hrandfield) {
 	c.cs = append(b.get(), "HRANDFIELD")
+	c.cf = readonly
 	return
 }
 
@@ -6201,6 +6226,7 @@ func (c Hscan) Key(Key string) HscanKey {
 
 func (b *Builder) Hscan() (c Hscan) {
 	c.cs = append(b.get(), "HSCAN")
+	c.cf = readonly
 	return
 }
 
@@ -6304,6 +6330,7 @@ func (c Hstrlen) Key(Key string) HstrlenKey {
 
 func (b *Builder) Hstrlen() (c Hstrlen) {
 	c.cs = append(b.get(), "HSTRLEN")
+	c.cf = readonly
 	return
 }
 
@@ -6331,6 +6358,7 @@ func (c Hvals) Key(Key string) HvalsKey {
 
 func (b *Builder) Hvals() (c Hvals) {
 	c.cs = append(b.get(), "HVALS")
+	c.cf = readonly
 	return
 }
 
@@ -6436,6 +6464,7 @@ func (c Keys) Pattern(Pattern string) KeysPattern {
 
 func (b *Builder) Keys() (c Keys) {
 	c.cs = append(b.get(), "KEYS")
+	c.cf = readonly
 	return
 }
 
@@ -6556,6 +6585,7 @@ func (c Lindex) Key(Key string) LindexKey {
 
 func (b *Builder) Lindex() (c Lindex) {
 	c.cs = append(b.get(), "LINDEX")
+	c.cf = readonly
 	return
 }
 
@@ -6628,6 +6658,7 @@ func (c Llen) Key(Key string) LlenKey {
 
 func (b *Builder) Llen() (c Llen) {
 	c.cs = append(b.get(), "LLEN")
+	c.cf = readonly
 	return
 }
 
@@ -6777,6 +6808,7 @@ func (c Lolwut) Build() Completed {
 
 func (b *Builder) Lolwut() (c Lolwut) {
 	c.cs = append(b.get(), "LOLWUT")
+	c.cf = readonly
 	return
 }
 
@@ -6821,6 +6853,7 @@ func (c Lpos) Key(Key string) LposKey {
 
 func (b *Builder) Lpos() (c Lpos) {
 	c.cs = append(b.get(), "LPOS")
+	c.cf = readonly
 	return
 }
 
@@ -6956,6 +6989,7 @@ func (c Lrange) Key(Key string) LrangeKey {
 
 func (b *Builder) Lrange() (c Lrange) {
 	c.cs = append(b.get(), "LRANGE")
+	c.cf = readonly
 	return
 }
 
@@ -7158,6 +7192,7 @@ func (c Mget) Key(Key ...string) MgetKey {
 
 func (b *Builder) Mget() (c Mget) {
 	c.cs = append(b.get(), "MGET")
+	c.cf = readonly
 	return
 }
 
@@ -7476,6 +7511,7 @@ func (c Object) Subcommand(Subcommand string) ObjectSubcommand {
 
 func (b *Builder) Object() (c Object) {
 	c.cs = append(b.get(), "OBJECT")
+	c.cf = readonly
 	return
 }
 
@@ -7650,6 +7686,7 @@ func (c Pexpiretime) Key(Key string) PexpiretimeKey {
 
 func (b *Builder) Pexpiretime() (c Pexpiretime) {
 	c.cs = append(b.get(), "PEXPIRETIME")
+	c.cf = readonly
 	return
 }
 
@@ -7702,6 +7739,7 @@ func (c Pfcount) Key(Key ...string) PfcountKey {
 
 func (b *Builder) Pfcount() (c Pfcount) {
 	c.cs = append(b.get(), "PFCOUNT")
+	c.cf = readonly
 	return
 }
 
@@ -7845,6 +7883,7 @@ func (c Pttl) Key(Key string) PttlKey {
 
 func (b *Builder) Pttl() (c Pttl) {
 	c.cs = append(b.get(), "PTTL")
+	c.cf = readonly
 	return
 }
 
@@ -7957,6 +7996,7 @@ func (c Randomkey) Build() Completed {
 
 func (b *Builder) Randomkey() (c Randomkey) {
 	c.cs = append(b.get(), "RANDOMKEY")
+	c.cf = readonly
 	return
 }
 
@@ -8316,6 +8356,7 @@ func (c Scan) Cursor(Cursor int64) ScanCursor {
 
 func (b *Builder) Scan() (c Scan) {
 	c.cs = append(b.get(), "SCAN")
+	c.cf = readonly
 	return
 }
 
@@ -8375,6 +8416,7 @@ func (c Scard) Key(Key string) ScardKey {
 
 func (b *Builder) Scard() (c Scard) {
 	c.cs = append(b.get(), "SCARD")
+	c.cf = readonly
 	return
 }
 
@@ -8513,6 +8555,7 @@ func (c Sdiff) Key(Key ...string) SdiffKey {
 
 func (b *Builder) Sdiff() (c Sdiff) {
 	c.cs = append(b.get(), "SDIFF")
+	c.cf = readonly
 	return
 }
 
@@ -8890,6 +8933,7 @@ func (c Sinter) Key(Key ...string) SinterKey {
 
 func (b *Builder) Sinter() (c Sinter) {
 	c.cs = append(b.get(), "SINTER")
+	c.cf = readonly
 	return
 }
 
@@ -8911,6 +8955,7 @@ func (c Sintercard) Key(Key ...string) SintercardKey {
 
 func (b *Builder) Sintercard() (c Sintercard) {
 	c.cs = append(b.get(), "SINTERCARD")
+	c.cf = readonly
 	return
 }
 
@@ -8959,6 +9004,7 @@ func (c Sismember) Key(Key string) SismemberKey {
 
 func (b *Builder) Sismember() (c Sismember) {
 	c.cs = append(b.get(), "SISMEMBER")
+	c.cf = readonly
 	return
 }
 
@@ -9036,6 +9082,7 @@ func (c Smembers) Key(Key string) SmembersKey {
 
 func (b *Builder) Smembers() (c Smembers) {
 	c.cs = append(b.get(), "SMEMBERS")
+	c.cf = readonly
 	return
 }
 
@@ -9057,6 +9104,7 @@ func (c Smismember) Key(Key string) SmismemberKey {
 
 func (b *Builder) Smismember() (c Smismember) {
 	c.cs = append(b.get(), "SMISMEMBER")
+	c.cf = readonly
 	return
 }
 
@@ -9275,6 +9323,7 @@ func (c SortRo) Key(Key string) SortRoKey {
 
 func (b *Builder) SortRo() (c SortRo) {
 	c.cs = append(b.get(), "SORT_RO")
+	c.cf = readonly
 	return
 }
 
@@ -9486,6 +9535,7 @@ func (c Srandmember) Key(Key string) SrandmemberKey {
 
 func (b *Builder) Srandmember() (c Srandmember) {
 	c.cs = append(b.get(), "SRANDMEMBER")
+	c.cf = readonly
 	return
 }
 
@@ -9540,6 +9590,7 @@ func (c Sscan) Key(Key string) SscanKey {
 
 func (b *Builder) Sscan() (c Sscan) {
 	c.cs = append(b.get(), "SSCAN")
+	c.cf = readonly
 	return
 }
 
@@ -9587,6 +9638,7 @@ func (c Stralgo) Lcs() StralgoAlgorithmLcs {
 
 func (b *Builder) Stralgo() (c Stralgo) {
 	c.cs = append(b.get(), "STRALGO")
+	c.cf = readonly
 	return
 }
 
@@ -9614,6 +9666,7 @@ func (c Strlen) Key(Key string) StrlenKey {
 
 func (b *Builder) Strlen() (c Strlen) {
 	c.cs = append(b.get(), "STRLEN")
+	c.cf = readonly
 	return
 }
 
@@ -9657,6 +9710,7 @@ func (c Sunion) Key(Key ...string) SunionKey {
 
 func (b *Builder) Sunion() (c Sunion) {
 	c.cs = append(b.get(), "SUNION")
+	c.cf = readonly
 	return
 }
 
@@ -9750,6 +9804,7 @@ func (c Touch) Key(Key ...string) TouchKey {
 
 func (b *Builder) Touch() (c Touch) {
 	c.cs = append(b.get(), "TOUCH")
+	c.cf = readonly
 	return
 }
 
@@ -9771,6 +9826,7 @@ func (c Ttl) Key(Key string) TtlKey {
 
 func (b *Builder) Ttl() (c Ttl) {
 	c.cs = append(b.get(), "TTL")
+	c.cf = readonly
 	return
 }
 
@@ -9792,6 +9848,7 @@ func (c Type) Key(Key string) TypeKey {
 
 func (b *Builder) Type() (c Type) {
 	c.cs = append(b.get(), "TYPE")
+	c.cf = readonly
 	return
 }
 
@@ -10446,6 +10503,7 @@ func (c Xinfo) Build() Completed {
 
 func (b *Builder) Xinfo() (c Xinfo) {
 	c.cs = append(b.get(), "XINFO")
+	c.cf = readonly
 	return
 }
 
@@ -10505,6 +10563,7 @@ func (c Xlen) Key(Key string) XlenKey {
 
 func (b *Builder) Xlen() (c Xlen) {
 	c.cs = append(b.get(), "XLEN")
+	c.cf = readonly
 	return
 }
 
@@ -10522,6 +10581,7 @@ func (c Xpending) Key(Key string) XpendingKey {
 
 func (b *Builder) Xpending() (c Xpending) {
 	c.cs = append(b.get(), "XPENDING")
+	c.cf = readonly
 	return
 }
 
@@ -10583,6 +10643,7 @@ func (c Xrange) Key(Key string) XrangeKey {
 
 func (b *Builder) Xrange() (c Xrange) {
 	c.cs = append(b.get(), "XRANGE")
+	c.cf = readonly
 	return
 }
 
@@ -10631,6 +10692,7 @@ func (c Xread) Streams() XreadStreamsStreams {
 
 func (b *Builder) Xread() (c Xread) {
 	c.cs = append(b.get(), "XREAD")
+	c.cf = readonly
 	return
 }
 
@@ -10772,6 +10834,7 @@ func (c Xrevrange) Key(Key string) XrevrangeKey {
 
 func (b *Builder) Xrevrange() (c Xrevrange) {
 	c.cs = append(b.get(), "XREVRANGE")
+	c.cf = readonly
 	return
 }
 
@@ -11027,6 +11090,7 @@ func (c Zcard) Key(Key string) ZcardKey {
 
 func (b *Builder) Zcard() (c Zcard) {
 	c.cs = append(b.get(), "ZCARD")
+	c.cf = readonly
 	return
 }
 
@@ -11048,6 +11112,7 @@ func (c Zcount) Key(Key string) ZcountKey {
 
 func (b *Builder) Zcount() (c Zcount) {
 	c.cs = append(b.get(), "ZCOUNT")
+	c.cf = readonly
 	return
 }
 
@@ -11081,6 +11146,7 @@ func (c Zdiff) Numkeys(Numkeys int64) ZdiffNumkeys {
 
 func (b *Builder) Zdiff() (c Zdiff) {
 	c.cs = append(b.get(), "ZDIFF")
+	c.cf = readonly
 	return
 }
 
@@ -11180,6 +11246,7 @@ func (c Zinter) Numkeys(Numkeys int64) ZinterNumkeys {
 
 func (b *Builder) Zinter() (c Zinter) {
 	c.cs = append(b.get(), "ZINTER")
+	c.cf = readonly
 	return
 }
 
@@ -11296,6 +11363,7 @@ func (c Zintercard) Numkeys(Numkeys int64) ZintercardNumkeys {
 
 func (b *Builder) Zintercard() (c Zintercard) {
 	c.cs = append(b.get(), "ZINTERCARD")
+	c.cf = readonly
 	return
 }
 
@@ -11419,6 +11487,7 @@ func (c Zlexcount) Key(Key string) ZlexcountKey {
 
 func (b *Builder) Zlexcount() (c Zlexcount) {
 	c.cs = append(b.get(), "ZLEXCOUNT")
+	c.cf = readonly
 	return
 }
 
@@ -11452,6 +11521,7 @@ func (c Zmscore) Key(Key string) ZmscoreKey {
 
 func (b *Builder) Zmscore() (c Zmscore) {
 	c.cs = append(b.get(), "ZMSCORE")
+	c.cf = readonly
 	return
 }
 
@@ -11537,6 +11607,7 @@ func (c Zrandmember) Key(Key string) ZrandmemberKey {
 
 func (b *Builder) Zrandmember() (c Zrandmember) {
 	c.cs = append(b.get(), "ZRANDMEMBER")
+	c.cf = readonly
 	return
 }
 
@@ -11574,6 +11645,7 @@ func (c Zrange) Key(Key string) ZrangeKey {
 
 func (b *Builder) Zrange() (c Zrange) {
 	c.cs = append(b.get(), "ZRANGE")
+	c.cf = readonly
 	return
 }
 
@@ -11713,6 +11785,7 @@ func (c Zrangebylex) Key(Key string) ZrangebylexKey {
 
 func (b *Builder) Zrangebylex() (c Zrangebylex) {
 	c.cs = append(b.get(), "ZRANGEBYLEX")
+	c.cf = readonly
 	return
 }
 
@@ -11760,6 +11833,7 @@ func (c Zrangebyscore) Key(Key string) ZrangebyscoreKey {
 
 func (b *Builder) Zrangebyscore() (c Zrangebyscore) {
 	c.cs = append(b.get(), "ZRANGEBYSCORE")
+	c.cf = readonly
 	return
 }
 
@@ -11920,6 +11994,7 @@ func (c Zrank) Key(Key string) ZrankKey {
 
 func (b *Builder) Zrank() (c Zrank) {
 	c.cs = append(b.get(), "ZRANK")
+	c.cf = readonly
 	return
 }
 
@@ -12061,6 +12136,7 @@ func (c Zrevrange) Key(Key string) ZrevrangeKey {
 
 func (b *Builder) Zrevrange() (c Zrevrange) {
 	c.cs = append(b.get(), "ZREVRANGE")
+	c.cf = readonly
 	return
 }
 
@@ -12108,6 +12184,7 @@ func (c Zrevrangebylex) Key(Key string) ZrevrangebylexKey {
 
 func (b *Builder) Zrevrangebylex() (c Zrevrangebylex) {
 	c.cs = append(b.get(), "ZREVRANGEBYLEX")
+	c.cf = readonly
 	return
 }
 
@@ -12155,6 +12232,7 @@ func (c Zrevrangebyscore) Key(Key string) ZrevrangebyscoreKey {
 
 func (b *Builder) Zrevrangebyscore() (c Zrevrangebyscore) {
 	c.cs = append(b.get(), "ZREVRANGEBYSCORE")
+	c.cf = readonly
 	return
 }
 
@@ -12220,6 +12298,7 @@ func (c Zrevrank) Key(Key string) ZrevrankKey {
 
 func (b *Builder) Zrevrank() (c Zrevrank) {
 	c.cs = append(b.get(), "ZREVRANK")
+	c.cf = readonly
 	return
 }
 
@@ -12247,6 +12326,7 @@ func (c Zscan) Key(Key string) ZscanKey {
 
 func (b *Builder) Zscan() (c Zscan) {
 	c.cs = append(b.get(), "ZSCAN")
+	c.cf = readonly
 	return
 }
 
@@ -12294,6 +12374,7 @@ func (c Zscore) Key(Key string) ZscoreKey {
 
 func (b *Builder) Zscore() (c Zscore) {
 	c.cs = append(b.get(), "ZSCORE")
+	c.cf = readonly
 	return
 }
 
@@ -12321,6 +12402,7 @@ func (c Zunion) Numkeys(Numkeys int64) ZunionNumkeys {
 
 func (b *Builder) Zunion() (c Zunion) {
 	c.cs = append(b.get(), "ZUNION")
+	c.cf = readonly
 	return
 }
 

@@ -51,6 +51,14 @@ func (c *Completed) NoReply() bool {
 	return c.cf&noRetTag == noRetTag
 }
 
+func (c *Completed) IsReadOnly() bool {
+	return c.cf&readonly == readonly
+}
+
+func (c *Completed) IsWrite() bool {
+	return !c.IsReadOnly()
+}
+
 func (c *Completed) Commands() []string {
 	return c.cs
 }
@@ -62,7 +70,7 @@ func (c *SCompleted) Commands() []string {
 	return c.cs
 }
 
-func (c *SCompleted) IsReplicaOk() bool {
+func (c *SCompleted) IsReadOnly() bool {
 	return c.cf&readonly == readonly
 }
 

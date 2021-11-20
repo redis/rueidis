@@ -328,10 +328,11 @@ func generate(prefix string) {
 				fmt.Printf("\tc.cf = noRetTag\n")
 			}
 
+			if within(node, readOnlyCMDs) {
+				fmt.Printf("\tc.cf = readonly\n")
+			}
+
 			if prefix == "S" {
-				if within(node, readOnlyCMDs) {
-					fmt.Printf("\tc.cf = readonly\n")
-				}
 				fmt.Printf("\tc.ks = InitSlot\n")
 			}
 

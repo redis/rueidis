@@ -18,13 +18,13 @@ type Conn struct {
 	wire atomic.Value
 	mu   sync.Mutex
 
-	blocking *pool
+	pool *pool
 }
 
 func NewConn(dst string, option Option) *Conn {
 	conn := &Conn{dst: dst, opt: option}
 	conn.wire.Store(broken)
-	conn.blocking = newPool(defaultPoolSize, conn.dialRetry)
+	conn.pool = newPool(defaultPoolSize, conn.dialRetry)
 	return conn
 }
 
@@ -95,49 +95,67 @@ func (c *Conn) Info() proto.Message {
 func (c *Conn) Do(cmd cmds.Completed) (resp proto.Result) {
 retry:
 	if cmd.IsBlock() {
-		wire := c.blocking.Acquire()
-		resp = wire.Do(cmd)
-		c.blocking.Store(wire)
-		if retryable(resp.Err) {
-			goto retry
-		}
+		resp = c.blocking(cmd)
 	} else {
-		wire := c.acquire()
-		resp = wire.Do(cmd)
-		if retryable(resp.Err) {
-			c.wire.CompareAndSwap(wire, broken)
-			goto retry
-		}
+		resp = c.pipeline(cmd)
+	}
+	if cmd.IsReadOnly() && isNetworkErr(resp.Err) {
+		goto retry
 	}
 	return resp
 }
 
 func (c *Conn) DoMulti(multi ...cmds.Completed) (resp []proto.Result) {
-	var blocking bool
-	for i := len(multi) - 1; i >= 0; i-- {
-		if multi[i].IsBlock() {
-			blocking = true
-			break
-		}
+	var block, write bool
+	for _, cmd := range multi {
+		block = block || cmd.IsBlock()
+		write = write || cmd.IsWrite()
 	}
 retry:
-	if blocking {
-		wire := c.blocking.Acquire()
-		resp = wire.DoMulti(multi...)
-		c.blocking.Store(wire)
+	if block {
+		resp = c.blockingMulti(multi)
+	} else {
+		resp = c.pipelineMulti(multi)
+	}
+	if !write {
 		for _, r := range resp {
-			if retryable(r.Err) {
+			if isNetworkErr(r.Err) {
 				goto retry
 			}
 		}
-	} else {
-		wire := c.acquire()
-		resp = wire.DoMulti(multi...)
-		for _, r := range resp {
-			if retryable(r.Err) {
-				c.wire.CompareAndSwap(wire, broken)
-				goto retry
-			}
+	}
+	return resp
+}
+
+func (c *Conn) blocking(cmd cmds.Completed) (resp proto.Result) {
+	wire := c.pool.Acquire()
+	resp = wire.Do(cmd)
+	c.pool.Store(wire)
+	return resp
+}
+
+func (c *Conn) blockingMulti(cmd []cmds.Completed) (resp []proto.Result) {
+	wire := c.pool.Acquire()
+	resp = wire.DoMulti(cmd...)
+	c.pool.Store(wire)
+	return resp
+}
+
+func (c *Conn) pipeline(cmd cmds.Completed) (resp proto.Result) {
+	wire := c.acquire()
+	if resp = wire.Do(cmd); isNetworkErr(resp.Err) {
+		c.wire.CompareAndSwap(wire, broken)
+	}
+	return resp
+}
+
+func (c *Conn) pipelineMulti(cmd []cmds.Completed) (resp []proto.Result) {
+	wire := c.acquire()
+	resp = wire.DoMulti(cmd...)
+	for _, r := range resp {
+		if isNetworkErr(r.Err) {
+			c.wire.CompareAndSwap(wire, broken)
+			return resp
 		}
 	}
 	return resp
@@ -147,7 +165,7 @@ func (c *Conn) DoCache(cmd cmds.Cacheable, ttl time.Duration) proto.Result {
 retry:
 	wire := c.acquire()
 	resp := wire.DoCache(cmd, ttl)
-	if retryable(resp.Err) {
+	if isNetworkErr(resp.Err) {
 		c.wire.CompareAndSwap(wire, broken)
 		goto retry
 	}
@@ -155,11 +173,11 @@ retry:
 }
 
 func (c *Conn) Acquire() Wire {
-	return c.blocking.Acquire()
+	return c.pool.Acquire()
 }
 
 func (c *Conn) Store(w Wire) {
-	c.blocking.Store(w.(*wire))
+	c.pool.Store(w.(*wire))
 }
 
 func (c *Conn) Close() {
@@ -167,6 +185,6 @@ func (c *Conn) Close() {
 	c.acquire().Close()
 }
 
-func retryable(err error) bool {
+func isNetworkErr(err error) bool {
 	return err != nil && err != ErrConnClosing
 }
