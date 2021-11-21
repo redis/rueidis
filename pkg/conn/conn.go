@@ -88,7 +88,7 @@ func (c *Conn) Dialable() error { // no retry
 	return err
 }
 
-func (c *Conn) Info() proto.Message {
+func (c *Conn) Info() map[string]proto.Message {
 	return c.acquire().Info()
 }
 

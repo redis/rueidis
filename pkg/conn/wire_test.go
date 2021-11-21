@@ -122,7 +122,7 @@ func setup(t *testing.T, option Option) (*wire, *redisMock, func(), func()) {
 	if err != nil {
 		t.Fatalf("wire setup failed: %v", err)
 	}
-	if c.Info().Values[0].String != "key" || c.Info().Values[1].String != "value" {
+	if info := c.Info(); info["key"].String != "value" {
 		t.Fatalf("wire setup failed, unexpected hello response: %v", c.Info())
 	}
 	return c, mock, func() {

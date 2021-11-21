@@ -21,7 +21,7 @@ func NewSingleClient(dst string, option conn.Option) (*SingleClient, error) {
 	return &SingleClient{Cmd: cmds.NewBuilder(), conn: c}, nil
 }
 
-func (c *SingleClient) Info() proto.Message {
+func (c *SingleClient) Info() map[string]proto.Message {
 	return c.conn.Info()
 }
 

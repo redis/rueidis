@@ -41,7 +41,7 @@ type wire struct {
 	r *bufio.Reader
 	w *bufio.Writer
 
-	info proto.Message
+	info map[string]proto.Message
 
 	psHandlers PubSubHandlers
 }
@@ -64,12 +64,12 @@ type PubSubHandlers struct {
 	OnUnSubscribed func(channel string, active int64)
 }
 
-func newWire(conn net.Conn, option Option) (*wire, error) {
+func newWire(conn net.Conn, option Option) (c *wire, err error) {
 	if option.CacheSize <= 0 {
 		option.CacheSize = DefaultCacheBytes
 	}
 
-	c := &wire{
+	c = &wire{
 		conn:  conn,
 		queue: queue.NewRing(),
 		cache: cache.NewLRU(option.CacheSize),
@@ -93,15 +93,16 @@ func newWire(conn net.Conn, option Option) (*wire, error) {
 		init = append(init, []string{"SELECT", strconv.Itoa(option.SelectDB)})
 	}
 
-	resp := c.DoMulti(cmds.NewMultiCompleted(init)...)
-	for _, r := range resp {
-		if err := r.Error(); err != nil {
+	for i, r := range c.DoMulti(cmds.NewMultiCompleted(init)...) {
+		if i == 0 {
+			c.info, err = r.ToMap()
+		} else {
+			err = r.Error()
+		}
+		if err != nil {
 			return nil, err
 		}
 	}
-
-	c.info, _ = resp[0].Value()
-
 	return c, nil
 }
 
@@ -241,7 +242,7 @@ func (c *wire) handlePush(values []proto.Message) {
 	}
 }
 
-func (c *wire) Info() proto.Message {
+func (c *wire) Info() map[string]proto.Message {
 	return c.info
 }
 
