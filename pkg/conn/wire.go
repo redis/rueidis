@@ -149,10 +149,11 @@ func (c *wire) reading() {
 		var (
 			err   error
 			msg   proto.Message
+			tmp   proto.Message
 			ones  = make([]cmds.Completed, 1)
 			multi []cmds.Completed
 			ch    chan proto.Result
-			ff    int
+			ff    int // fulfilled count
 		)
 
 		for {
@@ -165,10 +166,15 @@ func (c *wire) reading() {
 				continue
 			}
 			// if unfulfilled multi commands are lead by opt-in and get success response
-			if ff != len(multi) && len(multi) > 1 && multi[0].IsOptIn() && msg.Type != '-' && msg.Type != '!' {
-				cacheable := cmds.Cacheable(multi[ff])
-				ck, cc := cacheable.CacheKey()
-				c.cache.Update(ck, cc, msg)
+			if ff != len(multi) && len(multi) == 3 && multi[0].IsOptIn() {
+				if ff == 1 {
+					tmp = msg
+				} else if ff == 2 {
+					cacheable := cmds.Cacheable(multi[ff-1])
+					ck, cc := cacheable.CacheKey()
+					c.cache.Update(ck, cc, tmp, msg.Integer)
+					tmp = proto.Message{}
+				}
 			}
 		nextCMD:
 			if ff == len(multi) {
@@ -276,15 +282,13 @@ func (c *wire) DoMulti(multi ...cmds.Completed) []proto.Result {
 }
 
 func (c *wire) DoCache(cmd cmds.Cacheable, ttl time.Duration) proto.Result {
-retry:
 	ck, cc := cmd.CacheKey()
-	if v, ch := c.cache.GetOrPrepare(ck, cc, ttl); v.Type != 0 {
+	if v, entry := c.cache.GetOrPrepare(ck, cc, ttl); v.Type != 0 {
 		return proto.NewResult(v, nil)
-	} else if ch != nil {
-		<-ch
-		goto retry
+	} else if entry != nil {
+		return proto.NewResult(entry.Wait(), nil)
 	}
-	return c.DoMulti(cmds.OptInCmd, cmds.Completed(cmd))[1]
+	return c.DoMulti(cmds.OptInCmd, cmds.Completed(cmd), cmds.NewCompleted([]string{"PTTL", ck}))[1]
 }
 
 func (c *wire) Error() error {

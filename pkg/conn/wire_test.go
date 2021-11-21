@@ -61,6 +61,15 @@ func (r *redisExpect) ReplyString(replies ...string) *redisExpect {
 	return r
 }
 
+func (r *redisExpect) ReplyInteger(replies ...int64) *redisExpect {
+	for _, reply := range replies {
+		if r.err == nil {
+			r.Reply(proto.Message{Type: ':', Integer: reply})
+		}
+	}
+	return r
+}
+
 func (r *redisExpect) Reply(replies ...proto.Message) *redisExpect {
 	for _, reply := range replies {
 		if r.err == nil {
@@ -234,8 +243,10 @@ func TestClientSideCaching(t *testing.T) {
 	go func() {
 		mock.Expect("CLIENT", "CACHING", "YES").
 			Expect("GET", "a").
+			Expect("PTTL", "a").
 			ReplyString("OK").
-			ReplyString("1")
+			ReplyString("1").
+			ReplyInteger(-1)
 	}()
 
 	// single flight
@@ -262,8 +273,10 @@ func TestClientSideCaching(t *testing.T) {
 	go func() {
 		mock.Expect("CLIENT", "CACHING", "YES").
 			Expect("GET", "a").
+			Expect("PTTL", "a").
 			ReplyString("OK").
-			ReplyString("2")
+			ReplyString("2").
+			ReplyInteger(-1)
 	}()
 
 	// single flight
