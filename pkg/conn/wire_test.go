@@ -136,11 +136,12 @@ func setup(t *testing.T, option Option) (*wire, *redisMock, func(), func()) {
 }
 
 func ExpectOK(t *testing.T, result proto.Result) {
-	if result.Err != nil {
-		t.Fatalf("unexpected error result: %v", result.Err)
+	val, err := result.Value()
+	if err != nil {
+		t.Fatalf("unexpected error result: %v", err)
 	}
-	if result.Val.Type != '+' || result.Val.String != "OK" {
-		t.Fatalf("unexpected result: %v", fmt.Sprintf("%c%s", result.Val.Type, result.Val.String))
+	if str, _ := val.ToString(); str != "OK" {
+		t.Fatalf("unexpected result: %v", fmt.Sprintf("%s", str))
 	}
 }
 
@@ -213,8 +214,8 @@ func TestResponseSequenceWithPushMessageInjected(t *testing.T) {
 		go func(i int) {
 			defer wg.Done()
 			v := strconv.Itoa(i)
-			if resp := conn.Do(cmds.NewCompleted([]string{"GET", v})).Val.String; resp != v {
-				t.Errorf("out of order response, expected %v, got %v", v, resp)
+			if val, _ := conn.Do(cmds.NewCompleted([]string{"GET", v})).Value(); val.String != v {
+				t.Errorf("out of order response, expected %v, got %v", v, val.String)
 			}
 		}(i)
 	}
@@ -243,8 +244,8 @@ func TestClientSideCaching(t *testing.T) {
 	for i := 0; i < 5000; i++ {
 		go func() {
 			defer wg.Done()
-			if v := conn.DoCache(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), time.Second).Val.String; v != "1" {
-				t.Errorf("unexpected cached result, expected %v, got %v", "1", v)
+			if v, _ := conn.DoCache(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), time.Second).Value(); v.String != "1" {
+				t.Errorf("unexpected cached result, expected %v, got %v", "1", v.String)
 			}
 		}()
 	}
@@ -270,8 +271,8 @@ func TestClientSideCaching(t *testing.T) {
 	for i := 0; i < 5000; i++ {
 		go func() {
 			defer wg.Done()
-			if v := conn.DoCache(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), time.Second).Val.String; v != "2" {
-				t.Errorf("unexpected non cached result, expected %v, got %v", "2", v)
+			if v, _ := conn.DoCache(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), time.Second).Value(); v.String != "2" {
+				t.Errorf("unexpected non cached result, expected %v, got %v", "2", v.String)
 			}
 		}()
 	}
@@ -295,7 +296,7 @@ func TestPubSub(t *testing.T) {
 			conn.Do(c)
 			mock.Expect(c.Commands()...)
 			go func() { mock.Expect("GET", "k").ReplyString("v") }()
-			if resp := conn.Do(builder.Get().Key("k").Build()); resp.Val.String != "v" {
+			if v, _ := conn.Do(builder.Get().Key("k").Build()).Value(); v.String != "v" {
 				t.Fatalf("no-reply commands should not affect nornal commands")
 			}
 		}
@@ -390,11 +391,11 @@ func TestExitAllGoroutineOnWriteError(t *testing.T) {
 	for i := 0; i < 5000; i++ {
 		go func() {
 			defer wg.Done()
-			if v := conn.Do(cmds.NewCompleted([]string{"GET", "a"})); v.Err != io.ErrClosedPipe && v.Err != ErrConnClosing {
-				t.Errorf("unexpected cached result, expected io.ErrClosedPipe or ErrConnClosing, got %v", v.Err)
+			if err := conn.Do(cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); err != io.ErrClosedPipe && err != ErrConnClosing {
+				t.Errorf("unexpected cached result, expected io.ErrClosedPipe or ErrConnClosing, got %v", err)
 			}
-			if v := conn.DoMulti(cmds.NewCompleted([]string{"GET", "a"})); v[0].Err != io.ErrClosedPipe && v[0].Err != ErrConnClosing {
-				t.Errorf("unexpected cached result, expected io.ErrClosedPipe or ErrConnClosing, got %v", v[0].Err)
+			if err := conn.DoMulti(cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); err != io.ErrClosedPipe && err != ErrConnClosing {
+				t.Errorf("unexpected cached result, expected io.ErrClosedPipe or ErrConnClosing, got %v", err)
 			}
 		}()
 	}
@@ -414,11 +415,11 @@ func TestExitAllGoroutineOnReadError(t *testing.T) {
 	for i := 0; i < 5000; i++ {
 		go func() {
 			defer wg.Done()
-			if v := conn.Do(cmds.NewCompleted([]string{"GET", "a"})); v.Err != io.ErrClosedPipe && v.Err != ErrConnClosing {
-				t.Errorf("unexpected cached result, expected io.ErrClosedPipe or ErrConnClosing, got %v", v.Err)
+			if err := conn.Do(cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); err != io.ErrClosedPipe && err != ErrConnClosing {
+				t.Errorf("unexpected cached result, expected io.ErrClosedPipe or ErrConnClosing, got %v", err)
 			}
-			if v := conn.DoMulti(cmds.NewCompleted([]string{"GET", "a"})); v[0].Err != io.ErrClosedPipe && v[0].Err != ErrConnClosing {
-				t.Errorf("unexpected cached result, expected io.ErrClosedPipe or ErrConnClosing, got %v", v[0].Err)
+			if err := conn.DoMulti(cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); err != io.ErrClosedPipe && err != ErrConnClosing {
+				t.Errorf("unexpected cached result, expected io.ErrClosedPipe or ErrConnClosing, got %v", err)
 			}
 		}()
 	}
@@ -434,8 +435,8 @@ func TestCloseAndWaitPendingCMDs(t *testing.T) {
 		go func() {
 			defer wg1.Done()
 			go wg2.Done()
-			if v := conn.Do(cmds.NewCompleted([]string{"GET", "a"})); v.Val.String != "b" {
-				t.Errorf("unexpected GET result %v", v)
+			if v, _ := conn.Do(cmds.NewCompleted([]string{"GET", "a"})).Value(); v.String != "b" {
+				t.Errorf("unexpected GET result %v", v.String)
 			}
 		}()
 	}

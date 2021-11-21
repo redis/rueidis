@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math/rand"
 	"runtime"
-	"strings"
 	"sync"
 	"time"
 
@@ -105,14 +104,9 @@ func (c *ClusterClient) _refreshSlots() (err error) {
 retry:
 	c.mu.RLock()
 	for addr, cc := range c.conns {
-		if resp := cc.Do(cmds.SlotCmd); resp.Err != nil {
-			err = resp.Err
-			dead = append(dead, addr)
-		} else if resp.Val.Type == '-' || resp.Val.Type == '!' {
-			err = errors.New(resp.Val.String)
+		if reply, err = cc.Do(cmds.SlotCmd).Value(); err != nil {
 			dead = append(dead, addr)
 		} else {
-			reply = resp.Val
 			break
 		}
 	}
@@ -253,22 +247,20 @@ func (c *ClusterClient) Do(cmd cmds.SCompleted) (resp proto.Result) {
 retry:
 	cc, err := c.pickConn(cmd.Slot())
 	if err != nil {
-		resp.Err = err
+		resp = proto.NewErrResult(err)
 		goto ret
 	}
 	resp = cc.Do(cmds.Completed(cmd))
 process:
-	if resp.Val.Type == '-' {
-		if strings.HasPrefix(resp.Val.String, "MOVED") {
+	if err := resp.RedisError(); err != nil {
+		if addr, ok := err.IsMoved(); ok {
 			go c.refreshSlots()
-			addr := strings.Split(resp.Val.String, " ")[2]
 			resp = c.pickOrNewConn(addr).Do(cmds.Completed(cmd))
 			goto process
-		} else if strings.HasPrefix(resp.Val.String, "ASK") {
-			addr := strings.Split(resp.Val.String, " ")[2]
+		} else if addr, ok = err.IsAsk(); ok {
 			resp = c.pickOrNewConn(addr).DoMulti(cmds.AskingCmd, cmds.Completed(cmd))[1]
 			goto process
-		} else if strings.HasPrefix(resp.Val.String, "TRYAGAIN") {
+		} else if err.IsTryAgain() {
 			runtime.Gosched()
 			goto retry
 		}
@@ -282,23 +274,21 @@ func (c *ClusterClient) DoCache(cmd cmds.SCacheable, ttl time.Duration) (resp pr
 retry:
 	cc, err := c.pickConn(cmd.Slot())
 	if err != nil {
-		resp.Err = err
+		resp = proto.NewErrResult(err)
 		goto ret
 	}
 	resp = cc.DoCache(cmds.Cacheable(cmd), ttl)
 process:
-	if resp.Val.Type == '-' {
-		if strings.HasPrefix(resp.Val.String, "MOVED") {
+	if err := resp.RedisError(); err != nil {
+		if addr, ok := err.IsMoved(); ok {
 			go c.refreshSlots()
-			addr := strings.Split(resp.Val.String, " ")[2]
 			resp = c.pickOrNewConn(addr).DoCache(cmds.Cacheable(cmd), ttl)
 			goto process
-		} else if strings.HasPrefix(resp.Val.String, "ASK") {
-			addr := strings.Split(resp.Val.String, " ")[2]
+		} else if addr, ok = err.IsAsk(); ok {
 			// TODO ASKING OPT-IN Caching
 			resp = c.pickOrNewConn(addr).DoMulti(cmds.AskingCmd, cmds.Completed(cmd))[1]
 			goto process
-		} else if strings.HasPrefix(resp.Val.String, "TRYAGAIN") {
+		} else if err.IsTryAgain() {
 			runtime.Gosched()
 			goto retry
 		}
@@ -363,7 +353,9 @@ func (c *DedicatedClusterClient) release() {
 
 func (c *DedicatedClusterClient) Do(cmd cmds.SCompleted) (resp proto.Result) {
 	c.check(cmd.Slot())
-	if resp.Err = c.acquire(); resp.Err == nil {
+	if err := c.acquire(); err != nil {
+		return proto.NewErrResult(err)
+	} else {
 		resp = c.wire.Do(cmds.Completed(cmd))
 	}
 	c.client.Cmd.Put(cmd.Commands())
@@ -383,7 +375,7 @@ func (c *DedicatedClusterClient) DoMulti(multi ...cmds.SCompleted) (resp []proto
 	} else {
 		resp = make([]proto.Result, len(multi))
 		for i := range resp {
-			resp[i].Err = err
+			resp[i] = proto.NewErrResult(err)
 		}
 	}
 	for _, cmd := range multi {

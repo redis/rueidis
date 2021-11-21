@@ -46,7 +46,7 @@ func (c *Conn) connect() (*wire, error) {
 	}
 
 	go func() {
-		for resp := wire.Do(cmds.PingCmd); resp.Err == nil; resp = wire.Do(cmds.PingCmd) {
+		for resp := wire.Do(cmds.PingCmd); resp.NonRedisError() == nil; resp = wire.Do(cmds.PingCmd) {
 			time.Sleep(time.Second)
 		}
 	}()
@@ -99,7 +99,7 @@ retry:
 	} else {
 		resp = c.pipeline(cmd)
 	}
-	if cmd.IsReadOnly() && isNetworkErr(resp.Err) {
+	if cmd.IsReadOnly() && isNetworkErr(resp.NonRedisError()) {
 		goto retry
 	}
 	return resp
@@ -119,7 +119,7 @@ retry:
 	}
 	if !write {
 		for _, r := range resp {
-			if isNetworkErr(r.Err) {
+			if isNetworkErr(r.NonRedisError()) {
 				goto retry
 			}
 		}
@@ -143,7 +143,7 @@ func (c *Conn) blockingMulti(cmd []cmds.Completed) (resp []proto.Result) {
 
 func (c *Conn) pipeline(cmd cmds.Completed) (resp proto.Result) {
 	wire := c.acquire()
-	if resp = wire.Do(cmd); isNetworkErr(resp.Err) {
+	if resp = wire.Do(cmd); isNetworkErr(resp.NonRedisError()) {
 		c.wire.CompareAndSwap(wire, broken)
 	}
 	return resp
@@ -153,7 +153,7 @@ func (c *Conn) pipelineMulti(cmd []cmds.Completed) (resp []proto.Result) {
 	wire := c.acquire()
 	resp = wire.DoMulti(cmd...)
 	for _, r := range resp {
-		if isNetworkErr(r.Err) {
+		if isNetworkErr(r.NonRedisError()) {
 			c.wire.CompareAndSwap(wire, broken)
 			return resp
 		}
@@ -165,7 +165,7 @@ func (c *Conn) DoCache(cmd cmds.Cacheable, ttl time.Duration) proto.Result {
 retry:
 	wire := c.acquire()
 	resp := wire.DoCache(cmd, ttl)
-	if isNetworkErr(resp.Err) {
+	if isNetworkErr(resp.NonRedisError()) {
 		c.wire.CompareAndSwap(wire, broken)
 		goto retry
 	}

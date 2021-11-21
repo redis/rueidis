@@ -84,7 +84,7 @@ func (c *LRU) Update(key, cmd string, value proto.Message) {
 		if ele, ok := store[cmd]; ok {
 			e := ele.Value.(*entry)
 			e.val = value
-			e.size = entrySize + elementSize + 2*(stringSSize+len(key)+stringSSize+len(cmd)) + value.Size()
+			e.size = entrySize + elementSize + 2*(stringSSize+len(key)+stringSSize+len(cmd)) + value.ApproximateSize()
 			ch = e.ch
 			e.ch = nil
 

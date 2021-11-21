@@ -95,12 +95,12 @@ func newWire(conn net.Conn, option Option) (*wire, error) {
 
 	resp := c.DoMulti(cmds.NewMultiCompleted(init)...)
 	for _, r := range resp {
-		if r.Err != nil {
-			return nil, r.Err
+		if err := r.Error(); err != nil {
+			return nil, err
 		}
 	}
 
-	c.info = resp[0].Val
+	c.info, _ = resp[0].Value()
 
 	return c, nil
 }
@@ -133,7 +133,7 @@ func (c *wire) reading() {
 			}
 			for _, cmd := range multi {
 				if err = proto.WriteCmd(c.w, cmd.Commands()); cmd.NoReply() {
-					ch <- proto.Result{Err: err}
+					ch <- proto.NewErrResult(err)
 				}
 			}
 			if err != nil {
@@ -182,7 +182,7 @@ func (c *wire) reading() {
 				goto nextCMD
 			} else {
 				ff++
-				ch <- proto.Result{Val: msg, Err: err}
+				ch <- proto.NewResult(msg, err)
 			}
 		}
 	}()
@@ -206,7 +206,7 @@ func (c *wire) reading() {
 			multi = ones
 		}
 		for i := 0; i < len(multi); i++ {
-			ch <- proto.Result{Err: c.Error()}
+			ch <- proto.NewErrResult(c.Error())
 		}
 	}
 	atomic.CompareAndSwapInt32(&c.state, 1, 2)
@@ -250,7 +250,7 @@ func (c *wire) Do(cmd cmds.Completed) (resp proto.Result) {
 	if atomic.LoadInt32(&c.state) == 0 {
 		resp = <-c.queue.PutOne(cmd)
 	} else {
-		resp.Err = c.Error()
+		resp = proto.NewErrResult(c.Error())
 	}
 	atomic.AddInt32(&c.waits, -1)
 	return resp
@@ -267,7 +267,7 @@ func (c *wire) DoMulti(multi ...cmds.Completed) []proto.Result {
 	} else {
 		err := c.Error()
 		for i := 0; i < len(resp); i++ {
-			resp[i].Err = err
+			resp[i] = proto.NewErrResult(err)
 		}
 	}
 	atomic.AddInt32(&c.waits, -1)
@@ -278,7 +278,7 @@ func (c *wire) DoCache(cmd cmds.Cacheable, ttl time.Duration) proto.Result {
 retry:
 	ck, cc := cmd.CacheKey()
 	if v, ch := c.cache.GetOrPrepare(ck, cc, ttl); v.Type != 0 {
-		return proto.Result{Val: v}
+		return proto.NewResult(v, nil)
 	} else if ch != nil {
 		<-ch
 		goto retry
