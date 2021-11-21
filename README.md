@@ -17,15 +17,15 @@ the overall round trip costs, and gets higher throughput.
 ### Benchmark comparison with go-redis v8.11.4
 
 ```shell
-▶ # run redis-server at 127.0.0.1:6379
-▶ docker run -d -p 6379:6379 redis:6-alpine
+▶ # run redis-server 6.2.5 at 127.0.0.1:6379
+▶ ./redis-server
 ▶ go test -bench=. -benchmem ./cmd/bench3/...
 goos: darwin
 goarch: amd64
 pkg: github.com/rueian/rueidis/cmd/bench3
 cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
-BenchmarkRedisClient/RueidisParallel100Get-12    739058     1534 ns/op     25 B/op    2 allocs/op
-BenchmarkRedisClient/GoRedisParallel100Get-12     40605    30867 ns/op    230 B/op    6 allocs/op
+BenchmarkRedisClient/RueidisParallel100Get-12    1559809     744.2 ns/op    104 B/op    2 allocs/op
+BenchmarkRedisClient/GoRedisParallel100Get-12     148611      7915 ns/op    208 B/op    6 allocs/op
 PASS
 ok  	github.com/rueian/rueidis/cmd/bench3	3.589s
 
@@ -67,17 +67,20 @@ a separated client side TTL.
 A separated client side TTL is required because redis server doesn't send invalidation messages in time when
 key expired on the server. Please follow [#6833](https://github.com/redis/redis/issues/6833) and [#6867](https://github.com/redis/redis/issues/6867)
 
+Although an explicit client side TTL is required, the `DoCache()` still sends a `PTTL` command to server and make sure that
+the client side TTL is not longer than the TTL on server side.
+
 ### Benchmark [(source)](./pkg/conn/conn_test.go)
 
 ```shell
-▶ docker run -d -p 6379:6379 redis:6-alpine
+▶ ./redis-server
 ▶ go test -bench=BenchmarkClientSideCaching -benchmem ./pkg/conn
 goos: darwin
 goarch: amd64
 pkg: github.com/rueian/rueidis/pkg/conn
 cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
-BenchmarkClientSideCaching/Do-12          672206     1803 ns/op    25 B/op    2 allocs/op
-BenchmarkClientSideCaching/DoCache-12    3282188    368.3 ns/op    24 B/op    1 allocs/op
+BenchmarkClientSideCaching/Do-12         1378052    866.8 ns/op    0 B/op    0 allocs/op
+BenchmarkClientSideCaching/DoCache-12    3485281    351.1 ns/op    0 B/op    0 allocs/op
 PASS
 ok  	github.com/rueian/rueidis/pkg/conn	3.057s
 ```
