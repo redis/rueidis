@@ -7,6 +7,7 @@ import (
 	"runtime"
 	"sync"
 	"time"
+	"unsafe"
 
 	"github.com/rueian/rueidis/internal/cmds"
 	"github.com/rueian/rueidis/internal/proto"
@@ -363,15 +364,14 @@ func (c *DedicatedClusterClient) Do(cmd cmds.SCompleted) (resp proto.Result) {
 }
 
 func (c *DedicatedClusterClient) DoMulti(multi ...cmds.SCompleted) (resp []proto.Result) {
+	if len(multi) == 0 {
+		return nil
+	}
 	for _, cmd := range multi {
 		c.check(cmd.Slot())
 	}
-	ms := make([]cmds.Completed, len(multi))
-	for i, cmd := range multi {
-		ms[i] = cmds.Completed(cmd)
-	}
 	if err := c.acquire(); err == nil {
-		resp = c.wire.DoMulti(ms...)
+		resp = c.wire.DoMulti(unsafe.Slice((*cmds.Completed)(&multi[0]), len(multi))...)
 	} else {
 		resp = make([]proto.Result, len(multi))
 		for i := range resp {

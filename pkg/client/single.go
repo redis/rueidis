@@ -60,6 +60,9 @@ func (c *DedicatedSingleClient) Do(cmd cmds.Completed) (resp proto.Result) {
 }
 
 func (c *DedicatedSingleClient) DoMulti(multi ...cmds.Completed) (resp []proto.Result) {
+	if len(multi) == 0 {
+		return nil
+	}
 	resp = c.wire.DoMulti(multi...)
 	for _, cmd := range multi {
 		c.cmd.Put(cmd.Commands())
