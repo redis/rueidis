@@ -2,6 +2,7 @@ package cache
 
 import (
 	"github.com/rueian/rueidis/internal/proto"
+
 	"strconv"
 	"testing"
 	"time"
@@ -29,9 +30,9 @@ func TestLRU(t *testing.T) {
 		} else if v.String != "0" {
 			t.Fatalf("got unexpected value from the second GetOrPrepare: %v", v)
 		}
-		time.Sleep(TTL)
+		time.Sleep(PTTL * time.Millisecond)
 		if v, entry := lru.GetOrPrepare("0", "GET", TTL); v.Type != 0 || entry != nil {
-			t.Fatalf("got unexpected value from the GetOrPrepare after ttl: %v %v", v, entry)
+			t.Fatalf("got unexpected value from the GetOrPrepare after pttl: %v %v", v, entry)
 		}
 	})
 
@@ -74,11 +75,29 @@ func TestLRU(t *testing.T) {
 		}
 	})
 
-	t.Run("Cache DeleteAll", func(t *testing.T) {
+	t.Run("Cache FreeAndClose", func(t *testing.T) {
 		lru := setup(t)
-		lru.DeleteAll()
-		if v, _ := lru.GetOrPrepare("0", "GET", TTL); v.Type != 0 {
-			t.Fatalf("got unexpected value from the first GetOrPrepare: %v", v)
+		v, entry := lru.GetOrPrepare("1", "GET", TTL)
+		if v.Type != 0 || entry != nil {
+			t.Fatalf("got unexpected value from the first GetOrPrepare: %v %v", v, entry)
+		}
+		v, entry = lru.GetOrPrepare("1", "GET", TTL)
+		if v.Type != 0 || entry == nil { // entry should not be nil in second call
+			t.Fatalf("got unexpected value from the second GetOrPrepare: %v %v", v, entry)
+		}
+
+		lru.FreeAndClose(proto.Message{Type: '-', String: "closed"})
+
+		if resp := entry.Wait(); resp.Type != '-' || resp.String != "closed" {
+			t.Fatalf("got unexpected value after FreeAndClose: %v", resp)
+		}
+
+		lru.Update("1", "GET", proto.Message{Type: '+', String: "this Update should have no effect"}, PTTL)
+
+		for i := 0; i < 2; i++ { // entry should be always nil after the first call if FreeAndClose
+			if v, entry := lru.GetOrPrepare("1", "GET", TTL); v.Type != 0 || entry != nil {
+				t.Fatalf("got unexpected value from the first GetOrPrepare: %v %v", v, entry)
+			}
 		}
 	})
 }

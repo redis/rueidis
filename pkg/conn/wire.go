@@ -203,6 +203,8 @@ func (c *wire) reading() {
 
 	// clean up write queue and read queue
 	atomic.CompareAndSwapInt32(&c.state, 0, 1)
+	// clean up cache and free pending calls
+	c.cache.FreeAndClose(proto.Message{Type: '-', String: ErrConnClosing.Error()})
 	for atomic.LoadInt32(&c.waits) != 0 {
 		c.queue.NextWriteCmd()
 		if ones[0], multi, ch = c.queue.NextResultCh(); ch == nil {

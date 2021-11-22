@@ -10,5 +10,5 @@ type Cache interface {
 	GetOrPrepare(key, cmd string, ttl time.Duration) (v proto.Message, entry *Entry)
 	Update(key, cmd string, value proto.Message, pttl int64)
 	Delete(keys []proto.Message)
-	DeleteAll()
+	FreeAndClose(notice proto.Message)
 }

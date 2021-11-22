@@ -38,7 +38,7 @@ type keyCache struct {
 type LRU struct {
 	mu sync.Mutex
 
-	store map[string]keyCache
+	store map[string]*keyCache
 	list  *list.List
 
 	size int
@@ -48,7 +48,7 @@ type LRU struct {
 func NewLRU(max int) *LRU {
 	return &LRU{
 		max:   max,
-		store: make(map[string]keyCache),
+		store: make(map[string]*keyCache),
 		list:  list.New(),
 	}
 }
@@ -57,7 +57,7 @@ func (c *LRU) GetOrPrepare(key, cmd string, ttl time.Duration) (v proto.Message,
 	c.mu.Lock()
 	store, ok := c.store[key]
 	if !ok {
-		store = keyCache{cache: make(map[string]*list.Element), ttl: time.Now().Add(ttl)}
+		store = &keyCache{cache: make(map[string]*list.Element), ttl: time.Now().Add(ttl)}
 		c.store[key] = store
 	}
 	if ele, ok := store.cache[cmd]; ok {
@@ -96,8 +96,7 @@ func (c *LRU) Update(key, cmd string, value proto.Message, pttl int64) {
 
 			ele = c.list.Front()
 			for c.size > c.max && ele != nil {
-				e := ele.Value.(*Entry)
-				if e.val.Type != 0 { // do not delete pending entries
+				if e := ele.Value.(*Entry); e.val.Type != 0 { // do not delete pending entries
 					delete(c.store[e.key].cache, e.cmd)
 					c.list.Remove(ele)
 					c.size -= e.size
@@ -109,7 +108,8 @@ func (c *LRU) Update(key, cmd string, value proto.Message, pttl int64) {
 			store.ttl = time.Time{}
 		} else {
 			if pttl != -1 {
-				if ttl := time.Now().Add(time.Duration(pttl) * time.Millisecond); ttl.Before(store.ttl) {
+				ttl := time.Now().Add(time.Duration(pttl) * time.Millisecond)
+				if ttl.Before(store.ttl) {
 					store.ttl = ttl
 				}
 			}
@@ -124,20 +124,30 @@ func (c *LRU) Update(key, cmd string, value proto.Message, pttl int64) {
 func (c *LRU) Delete(keys []proto.Message) {
 	c.mu.Lock()
 	for _, k := range keys {
-		e, ok := c.store[k.String]
-		if ok {
-			delete(c.store, k.String)
-			for _, ele := range e.cache {
-				c.list.Remove(ele)
+		if store, ok := c.store[k.String]; ok {
+			for cmd, ele := range store.cache {
+				if e := ele.Value.(*Entry); e.val.Type != 0 { // do not delete pending entries
+					delete(store.cache, cmd)
+					c.list.Remove(ele)
+					c.size -= e.size
+				}
 			}
 		}
 	}
 	c.mu.Unlock()
 }
 
-func (c *LRU) DeleteAll() {
+func (c *LRU) FreeAndClose(notice proto.Message) {
 	c.mu.Lock()
-	c.store = make(map[string]keyCache)
+	for _, store := range c.store {
+		for _, ele := range store.cache {
+			if e := ele.Value.(*Entry); e.val.Type == 0 {
+				e.val = notice
+				close(e.ch)
+			}
+		}
+	}
+	c.store = make(map[string]*keyCache)
 	c.list = nil
 	c.mu.Unlock()
 }
