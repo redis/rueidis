@@ -8,13 +8,18 @@ import (
 	"github.com/rueian/rueidis/pkg/conn"
 )
 
+type SingleClientOption struct {
+	Address    string
+	ConnOption conn.Option
+}
+
 type SingleClient struct {
 	Cmd  *cmds.Builder
 	conn *conn.Conn
 }
 
-func NewSingleClient(dst string, option conn.Option) (*SingleClient, error) {
-	c := conn.NewConn(dst, option)
+func NewSingleClient(option SingleClientOption) (*SingleClient, error) {
+	c := conn.NewConn(option.Address, option.ConnOption)
 	if err := c.Dialable(); err != nil {
 		return nil, err
 	}

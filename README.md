@@ -6,7 +6,7 @@ A Fast Golang Redis RESP3 client that does auto pipelining and supports client s
 * auto pipeline for non-blocking redis commands
 * connection pooling for blocking redis commands
 * opt-in client side caching
-* redis cluster, pub/sub, streams
+* redis cluster, pub/sub, streams, TLS
 * IDE friendly redis command builder
 
 ## Auto Pipeline
@@ -34,7 +34,7 @@ Benchmark source code:
 ```golang
 func BenchmarkRedisClient(b *testing.B) {
 	b.Run("RueidisParallel100Get", func(b *testing.B) {
-		c, _ := client.NewSingleClient("127.0.0.1:6379", conn.Option{})
+		c, _ := rueidis.NewSingleClient(rueidis.SingleClient{Address: "127.0.0.1:6379"})
 		b.SetParallelism(100)
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
@@ -155,14 +155,17 @@ with non-blocking commands and will not cause the pipeline to be blocked:
 To receive messages from channels, the message handler should be registered when creating the redis connection:
 
 ```golang
-conn, _ := client.NewSingleClient("127.0.0.1:6379", conn.Option{
-    PubSubHandlers: conn.PubSubHandlers{
-        OnMessage: func(channel, message string) {
-            // handle the message
+c, _ := rueidis.NewSingleClient(rueidis.SingleClient{
+	Address: "127.0.0.1:6379",
+	ConnOption: conn.Option{
+		PubSubHandlers: conn.PubSubHandlers{
+			OnMessage: func(channel, message string) {
+				// handle the message
+			},
         },
     },
 })
-conn.Do(c.Cmd.Subscribe().Channel("my_channel").Build())
+c.Do(c.Cmd.Subscribe().Channel("my_channel").Build())
 ```
 
 ## CAS Pattern
@@ -192,7 +195,7 @@ c.DedicatedWire(func(client client.DedicatedSingleClient) error {
 To connect to a redis cluster, the `NewClusterClient` should be used:
 
 ```golang
-conn, _ := client.NewClusterClient(client.ClusterClientOption{
+c, _ := rueidis.NewClusterClient(rueidis.ClusterClientOption{
     InitAddress: []string{"127.0.0.1:7001", "127.0.0.1:7002", "127.0.0.1:7003"},
     ShuffleInit: false,
 })

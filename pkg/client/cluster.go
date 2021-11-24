@@ -23,25 +23,7 @@ var (
 type ClusterClientOption struct {
 	InitAddress []string
 	ShuffleInit bool
-
-	CacheSizeEachConn int
-	Username          string
-	Password          string
-	ClientName        string
-	DialTimeout       time.Duration
-
-	PubSubHandlers conn.PubSubHandlers
-}
-
-func (option ClusterClientOption) connOption() conn.Option {
-	return conn.Option{
-		CacheSize:      option.CacheSizeEachConn,
-		Username:       option.Username,
-		Password:       option.Password,
-		ClientName:     option.ClientName,
-		DialTimeout:    option.DialTimeout,
-		PubSubHandlers: option.PubSubHandlers,
-	}
+	ConnOption  conn.Option
 }
 
 type ClusterClient struct {
@@ -83,7 +65,7 @@ func (c *ClusterClient) initConn() (cc *conn.Conn, err error) {
 		return nil, ErrNoNodes
 	}
 	for _, addr := range c.opt.InitAddress {
-		cc = conn.NewConn(addr, c.opt.connOption())
+		cc = conn.NewConn(addr, c.opt.ConnOption)
 		if err = cc.Dialable(); err == nil {
 			c.mu.Lock()
 			c.conns[addr] = cc
@@ -141,7 +123,7 @@ retry:
 	// TODO support read from replicas
 	masters := make(map[string]*conn.Conn, len(groups))
 	for addr := range groups {
-		masters[addr] = conn.NewConn(addr, c.opt.connOption())
+		masters[addr] = conn.NewConn(addr, c.opt.ConnOption)
 	}
 
 	var removes []*conn.Conn
@@ -237,7 +219,7 @@ func (c *ClusterClient) pickOrNewConn(addr string) (p *conn.Conn) {
 	}
 	c.mu.Lock()
 	if p = c.conns[addr]; p == nil {
-		p = conn.NewConn(addr, c.opt.connOption())
+		p = conn.NewConn(addr, c.opt.ConnOption)
 		c.conns[addr] = p
 	}
 	c.mu.Unlock()

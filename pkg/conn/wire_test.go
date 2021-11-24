@@ -279,17 +279,13 @@ func TestClientSideCaching(t *testing.T) {
 			ReplyInteger(-1)
 	}()
 
-	// single flight
-	wg.Add(5000)
-	for i := 0; i < 5000; i++ {
-		go func() {
-			defer wg.Done()
-			if v, _ := conn.DoCache(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), time.Second).Value(); v.String != "2" {
-				t.Errorf("unexpected non cached result, expected %v, got %v", "2", v.String)
-			}
-		}()
+	for {
+		if v, _ := conn.DoCache(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), time.Second).Value(); v.String != "2" {
+			t.Logf("waiting for invalidating")
+			continue
+		}
+		break
 	}
-	wg.Wait()
 }
 
 func TestPubSub(t *testing.T) {

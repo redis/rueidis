@@ -9,7 +9,7 @@ import (
 
 func BenchmarkClientSideCaching(b *testing.B) {
 	setup := func(b *testing.B) *Conn {
-		c := NewConn("127.0.0.1:6379", Option{CacheSize: DefaultCacheBytes})
+		c := NewConn("127.0.0.1:6379", Option{CacheSizeEachConn: DefaultCacheBytes})
 		if err := c.Dialable(); err != nil {
 			panic(err)
 		}

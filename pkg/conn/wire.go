@@ -2,8 +2,6 @@ package conn
 
 import (
 	"bufio"
-	"crypto/tls"
-	"errors"
 	"net"
 	"runtime"
 	"strconv"
@@ -16,10 +14,6 @@ import (
 	"github.com/rueian/rueidis/internal/proto"
 	"github.com/rueian/rueidis/internal/queue"
 )
-
-const DefaultCacheBytes = 128 * (1 << 20)
-
-var ErrConnClosing = errors.New("connection is closing")
 
 type errWrap struct {
 	error
@@ -47,18 +41,6 @@ type wire struct {
 	psHandlers PubSubHandlers
 }
 
-type Option struct {
-	CacheSize   int
-	SelectDB    int
-	Username    string
-	Password    string
-	ClientName  string
-	DialTimeout time.Duration
-	TLSConfig   *tls.Config
-
-	PubSubHandlers PubSubHandlers
-}
-
 type PubSubHandlers struct {
 	OnMessage      func(channel, message string)
 	OnPMessage     func(pattern, channel, message string)
@@ -67,14 +49,14 @@ type PubSubHandlers struct {
 }
 
 func newWire(conn net.Conn, option Option) (c *wire, err error) {
-	if option.CacheSize <= 0 {
-		option.CacheSize = DefaultCacheBytes
+	if option.CacheSizeEachConn <= 0 {
+		option.CacheSizeEachConn = DefaultCacheBytes
 	}
 
 	c = &wire{
 		conn:  conn,
 		queue: queue.NewRing(),
-		cache: cache.NewLRU(option.CacheSize),
+		cache: cache.NewLRU(option.CacheSizeEachConn),
 		r:     bufio.NewReader(conn),
 		w:     bufio.NewWriter(conn),
 

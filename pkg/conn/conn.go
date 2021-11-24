@@ -2,6 +2,7 @@ package conn
 
 import (
 	"crypto/tls"
+	"errors"
 	"net"
 	"sync"
 	"sync/atomic"
@@ -10,6 +11,30 @@ import (
 	"github.com/rueian/rueidis/internal/cmds"
 	"github.com/rueian/rueidis/internal/proto"
 )
+
+var ErrConnClosing = errors.New("connection is closing")
+
+// DefaultCacheBytes = 128 MiB.
+const DefaultCacheBytes = 128 * (1 << 20)
+
+type Option struct {
+	// CacheSizeEachConn is redis client side cache size that bind to each TCP connection to a single redis instance.
+	// The default is DefaultCacheBytes.
+	CacheSizeEachConn int
+
+	// Redis AUTH parameters
+	Username   string
+	Password   string
+	ClientName string
+	SelectDB   int
+
+	// TCP & TLS
+	DialTimeout time.Duration
+	TLSConfig   *tls.Config
+
+	// Redis PubSub callbacks
+	PubSubHandlers PubSubHandlers
+}
 
 var broken *wire
 
