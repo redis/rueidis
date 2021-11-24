@@ -2,6 +2,7 @@ package conn
 
 import (
 	"bufio"
+	"crypto/tls"
 	"errors"
 	"net"
 	"runtime"
@@ -53,6 +54,7 @@ type Option struct {
 	Password    string
 	ClientName  string
 	DialTimeout time.Duration
+	TLSConfig   *tls.Config
 
 	PubSubHandlers PubSubHandlers
 }

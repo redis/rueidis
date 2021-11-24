@@ -1,6 +1,7 @@
 package conn
 
 import (
+	"crypto/tls"
 	"net"
 	"sync"
 	"sync/atomic"
@@ -55,16 +56,22 @@ func (c *Conn) connect() (*wire, error) {
 	return wire, nil
 }
 
-func (c *Conn) dial() (*wire, error) {
-	conn, err := net.DialTimeout("tcp", c.dst, c.opt.DialTimeout)
+func (c *Conn) dial() (w *wire, err error) {
+	dialer := &net.Dialer{Timeout: c.opt.DialTimeout}
+
+	var conn net.Conn
+	if c.opt.TLSConfig != nil {
+		conn, err = tls.DialWithDialer(dialer, "tcp", c.dst, c.opt.TLSConfig)
+	} else {
+		conn, err = dialer.Dial("tcp", c.dst)
+	}
+	if err == nil {
+		w, err = newWire(conn, c.opt)
+	}
 	if err != nil {
 		return nil, err
 	}
-	wire, err := newWire(conn, c.opt)
-	if err != nil {
-		return nil, err
-	}
-	return wire, nil
+	return w, nil
 }
 
 func (c *Conn) dialRetry() *wire {
