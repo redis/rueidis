@@ -17,10 +17,16 @@ var ErrConnClosing = errors.New("connection is closing")
 // DefaultCacheBytes = 128 MiB.
 const DefaultCacheBytes = 128 * (1 << 20)
 
+const DefaultPoolSize = 1000
+
 type Option struct {
 	// CacheSizeEachConn is redis client side cache size that bind to each TCP connection to a single redis instance.
 	// The default is DefaultCacheBytes.
 	CacheSizeEachConn int
+
+	// BlockingPoolSize is the size of the connection pool shared by blocking commands (ex BLPOP, XREAD with BLOCK).
+	// The default is DefaultPoolSize.
+	BlockingPoolSize int
 
 	// Redis AUTH parameters
 	Username   string
@@ -50,7 +56,7 @@ type Conn struct {
 func NewConn(dst string, option Option) *Conn {
 	conn := &Conn{dst: dst, opt: option}
 	conn.wire.Store(broken)
-	conn.pool = newPool(defaultPoolSize, conn.dialRetry)
+	conn.pool = newPool(option.BlockingPoolSize, conn.dialRetry)
 	return conn
 }
 

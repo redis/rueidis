@@ -2,13 +2,15 @@ package conn
 
 import "sync"
 
-const defaultPoolSize = 100
+func newPool(cap int, makeFn func() *wire) *pool {
+	if cap <= 0 {
+		cap = DefaultPoolSize
+	}
 
-func newPool(size int, makeFn func() *wire) *pool {
 	return &pool{
 		size: 0,
 		make: makeFn,
-		list: make([]*wire, 0, size),
+		list: make([]*wire, 0, cap),
 		cond: sync.NewCond(&sync.Mutex{}),
 	}
 }
