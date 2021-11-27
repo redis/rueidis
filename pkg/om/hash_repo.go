@@ -2,25 +2,31 @@ package om
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"reflect"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/rueian/rueidis/internal/proto"
+	"github.com/rueian/rueidis/pkg/script"
 )
 
-type ObjectSaver func(key string, fields map[string]string) (ver int64, err error)
+var ErrVersionMismatch = errors.New("object version mismatched, please retry")
+
+type ObjectSaver func(key string, fields map[string]string) (err error)
+type ObjectScripter func(script string) *script.Lua
 type ObjectFetcher func(key string) (map[string]proto.Message, error)
 type ObjectCacheFetcher func(key string, ttl time.Duration) (map[string]proto.Message, error)
 
-func NewHashRepository(prefix string, schema interface{}, saver ObjectSaver, fetcher ObjectFetcher, cache ObjectCacheFetcher) *HashRepository {
+func NewHashRepository(prefix string, schema interface{}, saver ObjectSaver, fetcher ObjectFetcher, cache ObjectCacheFetcher, scripter ObjectScripter) *HashRepository {
 	repo := &HashRepository{
 		prefix:  prefix,
 		typ:     reflect.TypeOf(schema),
 		saver:   saver,
 		cache:   cache,
 		fetcher: fetcher,
+		script:  scripter(saveScript),
 	}
 	if _, ok := schema.(HashConverter); !ok {
 		repo.factory = newHashConvFactory(repo.typ)
@@ -36,6 +42,7 @@ type HashRepository struct {
 	saver   ObjectSaver
 	cache   ObjectCacheFetcher
 	fetcher ObjectFetcher
+	script  *script.Lua
 }
 
 func (r *HashRepository) key(id string) (key string) {
@@ -70,9 +77,7 @@ func (r *HashRepository) fromHash(id string, record map[string]proto.Message) (v
 		}
 	}
 
-	ret := reflect.New(r.typ)
-
-	v, conv := r.conv(ret)
+	v, conv := r.conv(reflect.New(r.typ))
 	if err := conv.FromHash(id, fields); err != nil {
 		return nil, err
 	}
@@ -105,10 +110,33 @@ func (r *HashRepository) Save(ctx context.Context, entity interface{}) (err erro
 	}
 
 	id, fields := conv.ToHash()
-	if ver, err := r.saver(r.key(id), fields); err != nil {
-		return err
-	} else {
-		fields[VersionField] = strconv.FormatInt(ver, 10)
+	if ver, ok := fields[VersionField]; ok {
+		args := make([]string, 0, len(fields)*2)
+		args = append(args, VersionField, ver)
+		for f, v := range fields {
+			if f == VersionField {
+				continue
+			}
+			args = append(args, f, v)
+		}
+		fields[VersionField], err = r.script.Exec([]string{r.key(id)}, args).ToString()
+		if proto.IsRedisNil(err) {
+			return ErrVersionMismatch
+		}
+		if err != nil {
+			return err
+		}
+		return conv.FromHash(id, fields)
 	}
-	return conv.FromHash(id, fields)
+	return r.saver(r.key(id), fields)
 }
+
+var saveScript = fmt.Sprintf(`
+local v = redis.call('HGET',KEYS[1],'%s')
+if (not v or v == ARGV[2])
+then
+  ARGV[2] = tostring(tonumber(ARGV[2])+1)
+  if redis.call('HSET',KEYS[1],unpack(ARGV)) then return ARGV[2] end
+end
+return nil
+`, VersionField)

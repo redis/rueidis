@@ -67,20 +67,20 @@ func (c *SingleClient) NewHashRepository(prefix string, schema interface{}) *om.
 	return om.NewHashRepository(
 		prefix,
 		schema,
-		func(key string, fields map[string]string) (ver int64, err error) {
+		func(key string, fields map[string]string) error {
 			cmd := c.Cmd.Hset().Key(key).FieldValue()
 			for f, v := range fields {
 				cmd = cmd.FieldValue(f, v)
 			}
-			_, err = c.Do(cmd.Build()).ToInt64()
-			return
+			return c.Do(cmd.Build()).Error()
 		},
 		func(key string) (map[string]proto.Message, error) {
 			return c.Do(c.Cmd.Hgetall().Key(key).Build()).ToMap()
 		},
 		func(key string, ttl time.Duration) (map[string]proto.Message, error) {
 			return c.DoCache(c.Cmd.Hgetall().Key(key).Cache(), ttl).ToMap()
-		})
+		},
+		c.NewLuaScript)
 }
 
 func (c *SingleClient) Close() {
