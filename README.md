@@ -8,6 +8,7 @@ A Fast Golang Redis RESP3 client that does auto pipelining and supports client s
 * opt-in client side caching
 * redis cluster, pub/sub, streams, TLS
 * IDE friendly redis command builder
+* Hash Object Mapping with client side caching and optimistic locking
 
 ## Requirement
 
