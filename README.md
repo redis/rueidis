@@ -220,7 +220,7 @@ optimistic locking instead.
 
 ## Lua Script
 
-The `NewLuaScript` will create a script which is safe for concurrent usage.
+The `NewLuaScript` or `NewLuaScriptReadOnly` will create a script which is safe for concurrent usage.
 
 When calling the `script.Exec`, it will try sending EVALSHA to the client and if the server returns NOSCRIPT,
 it will send EVAL to try again.

@@ -294,12 +294,24 @@ func (c *ClusterClient) NewLuaScript(body string) *script.Lua {
 	return script.NewLuaScript(body, c.eval, c.evalSha)
 }
 
+func (c *ClusterClient) NewLuaScriptReadyOnly(body string) *script.Lua {
+	return script.NewLuaScript(body, c.evalRo, c.evalShaRo)
+}
+
 func (c *ClusterClient) eval(body string, keys, args []string) proto.Result {
 	return c.Do(c.Cmd.Eval().Script(body).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build())
 }
 
 func (c *ClusterClient) evalSha(sha string, keys, args []string) proto.Result {
 	return c.Do(c.Cmd.Evalsha().Sha1(sha).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build())
+}
+
+func (c *ClusterClient) evalRo(body string, keys, args []string) proto.Result {
+	return c.Do(c.Cmd.EvalRo().Script(body).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build())
+}
+
+func (c *ClusterClient) evalShaRo(sha string, keys, args []string) proto.Result {
+	return c.Do(c.Cmd.EvalshaRo().Sha1(sha).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build())
 }
 
 func (c *ClusterClient) NewHashRepository(prefix string, schema interface{}) *om.HashRepository {

@@ -55,12 +55,24 @@ func (c *SingleClient) NewLuaScript(body string) *script.Lua {
 	return script.NewLuaScript(body, c.eval, c.evalSha)
 }
 
+func (c *SingleClient) NewLuaScriptReadOnly(body string) *script.Lua {
+	return script.NewLuaScript(body, c.evalRo, c.evalShaRo)
+}
+
 func (c *SingleClient) eval(body string, keys, args []string) proto.Result {
 	return c.Do(c.Cmd.Eval().Script(body).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build())
 }
 
 func (c *SingleClient) evalSha(sha string, keys, args []string) proto.Result {
 	return c.Do(c.Cmd.Evalsha().Sha1(sha).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build())
+}
+
+func (c *SingleClient) evalRo(body string, keys, args []string) proto.Result {
+	return c.Do(c.Cmd.EvalRo().Script(body).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build())
+}
+
+func (c *SingleClient) evalShaRo(sha string, keys, args []string) proto.Result {
+	return c.Do(c.Cmd.EvalshaRo().Sha1(sha).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build())
 }
 
 func (c *SingleClient) NewHashRepository(prefix string, schema interface{}) *om.HashRepository {
