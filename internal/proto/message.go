@@ -10,6 +10,13 @@ import (
 
 const MessageStructSize = int(unsafe.Sizeof(Message{}))
 
+func IsRedisNil(err error) bool {
+	if e, ok := err.(*RedisError); ok {
+		return e.IsNil()
+	}
+	return false
+}
+
 type RedisError Message
 
 func (r *RedisError) Error() string {
@@ -39,6 +46,10 @@ func (r *RedisError) IsAsk() (addr string, ok bool) {
 
 func (r *RedisError) IsTryAgain() bool {
 	return strings.HasPrefix(r.String, "TRYAGAIN")
+}
+
+func (r *RedisError) IsNoScript() bool {
+	return strings.HasPrefix(r.String, "NOSCRIPT")
 }
 
 func NewResult(val Message, err error) Result {

@@ -13,6 +13,7 @@ import (
 	"github.com/rueian/rueidis/internal/proto"
 	"github.com/rueian/rueidis/pkg/conn"
 	"github.com/rueian/rueidis/pkg/om"
+	"github.com/rueian/rueidis/pkg/script"
 	"github.com/rueian/rueidis/pkg/singleflight"
 )
 
@@ -287,6 +288,18 @@ func (c *ClusterClient) DedicatedWire(fn func(DedicatedClusterClient) error) (er
 	err = fn(dcc)
 	dcc.release()
 	return err
+}
+
+func (c *ClusterClient) NewLuaScript(body string) *script.Lua {
+	return script.NewLuaScript(body, c.eval, c.evalSha)
+}
+
+func (c *ClusterClient) eval(body string, keys, args []string) proto.Result {
+	return c.Do(c.Cmd.Eval().Script(body).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build())
+}
+
+func (c *ClusterClient) evalSha(sha string, keys, args []string) proto.Result {
+	return c.Do(c.Cmd.Evalsha().Sha1(sha).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build())
 }
 
 func (c *ClusterClient) NewHashRepository(prefix string, schema interface{}) *om.HashRepository {

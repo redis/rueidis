@@ -1,6 +1,7 @@
 package rueidis
 
 import (
+	"github.com/rueian/rueidis/internal/proto"
 	"github.com/rueian/rueidis/pkg/client"
 	"github.com/rueian/rueidis/pkg/conn"
 )
@@ -9,6 +10,8 @@ var (
 	ErrNoSlot      = client.ErrNoSlot
 	ErrNoNodes     = client.ErrNoNodes
 	ErrConnClosing = conn.ErrConnClosing
+
+	IsRedisNil = proto.IsRedisNil
 )
 
 type SingleClientOption client.SingleClientOption

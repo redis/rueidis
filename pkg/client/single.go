@@ -7,6 +7,7 @@ import (
 	"github.com/rueian/rueidis/internal/proto"
 	"github.com/rueian/rueidis/pkg/conn"
 	"github.com/rueian/rueidis/pkg/om"
+	"github.com/rueian/rueidis/pkg/script"
 )
 
 type SingleClientOption struct {
@@ -48,6 +49,18 @@ func (c *SingleClient) DedicatedWire(fn func(DedicatedSingleClient) error) (err 
 	err = fn(DedicatedSingleClient{cmd: c.Cmd, wire: wire})
 	c.conn.Store(wire)
 	return err
+}
+
+func (c *SingleClient) NewLuaScript(body string) *script.Lua {
+	return script.NewLuaScript(body, c.eval, c.evalSha)
+}
+
+func (c *SingleClient) eval(body string, keys, args []string) proto.Result {
+	return c.Do(c.Cmd.Eval().Script(body).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build())
+}
+
+func (c *SingleClient) evalSha(sha string, keys, args []string) proto.Result {
+	return c.Do(c.Cmd.Evalsha().Sha1(sha).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build())
 }
 
 func (c *SingleClient) NewHashRepository(prefix string, schema interface{}) *om.HashRepository {
