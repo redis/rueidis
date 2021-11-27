@@ -10,12 +10,6 @@ import (
 	"github.com/rueian/rueidis/internal/proto"
 )
 
-const (
-	PKField      = "_"
-	VersionField = "_v"
-	SliceSepTag  = "sep"
-)
-
 type ObjectSaver func(key string, fields map[string]string) (ver int64, err error)
 type ObjectFetcher func(key string) (map[string]proto.Message, error)
 type ObjectCacheFetcher func(key string, ttl time.Duration) (map[string]proto.Message, error)
@@ -32,23 +26,6 @@ func NewHashRepository(prefix string, schema interface{}, saver ObjectSaver, fet
 		repo.factory = newHashConvFactory(repo.typ)
 	}
 	return repo
-}
-
-func parseStructTag(tag reflect.StructTag) (name string, options map[string]string, ok bool) {
-	if name, ok = tag.Lookup("redis"); !ok {
-		return "", nil, false
-	}
-	tokens := strings.Split(name, ",")
-	options = make(map[string]string, len(tokens)-1)
-	for _, token := range tokens[1:] {
-		kv := strings.SplitN(token, "=", 2)
-		if len(kv) == 2 {
-			options[kv[0]] = kv[1]
-		} else {
-			options[kv[0]] = ""
-		}
-	}
-	return tokens[0], options, true
 }
 
 type HashRepository struct {
