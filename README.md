@@ -9,6 +9,10 @@ A Fast Golang Redis RESP3 client that does auto pipelining and supports client s
 * redis cluster, pub/sub, streams, TLS
 * IDE friendly redis command builder
 
+## Requirement
+
+* Currently, only supports redis >= 6.x
+
 ## Getting Start
 
 ```golang
