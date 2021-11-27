@@ -9,10 +9,29 @@ A Fast Golang Redis RESP3 client that does auto pipelining and supports client s
 * redis cluster, pub/sub, streams, TLS
 * IDE friendly redis command builder
 
+## Getting Start
+
+```golang
+package main
+
+import "github.com/rueian/rueidis"
+
+func main() {
+	c, _ := rueidis.NewClusterClient(rueidis.ClusterClientOption{
+		InitAddress: []string{"127.0.0.1:6379"},
+	})
+	defer c.Close()
+
+	_ := c.Do(c.Cmd.Set().Key("my_redis_data:1").Value("my_value").Nx().Build()).Error()
+	val, _ := c.Do(c.Cmd.Get().Key("my_redis_data:1").Build()).ToString()
+	// val == "my_value"
+}
+```
+
 ## Auto Pipeline
 
-All non-blocking commands to a single redis are automatically pipelined through one tcp connection, which reduces
-the overall round trip costs, and gets higher throughput.
+All non-blocking commands sending to a single redis instance are automatically pipelined through one tcp connection,
+which reduces the overall round trip costs, and gets higher throughput.
 
 ### Benchmark comparison with go-redis v8.11.4
 
@@ -61,11 +80,11 @@ func BenchmarkRedisClient(b *testing.B) {
 
 ## Client Side Caching
 
-The Opt-In mode of server-assisted client side caching are always enabled, and can be used by calling `DoCache()` with
-a separated client side TTL.
+The Opt-In mode of server-assisted client side caching is always enabled, and can be used by calling `DoCache()` with
+an explicit client side TTL.
 
-A separated client side TTL is required because redis server doesn't send invalidation messages in time when
-key expired on the server. Please follow [#6833](https://github.com/redis/redis/issues/6833) and [#6867](https://github.com/redis/redis/issues/6867)
+An explicit client side TTL is required because redis server may not send invalidation message in time when
+a key is expired on the server. Please follow [#6833](https://github.com/redis/redis/issues/6833) and [#6867](https://github.com/redis/redis/issues/6867)
 
 Although an explicit client side TTL is required, the `DoCache()` still sends a `PTTL` command to server and make sure that
 the client side TTL is not longer than the TTL on server side.
@@ -135,7 +154,7 @@ ok  	github.com/rueian/rueidis/pkg/conn	3.057s
 ## Blocking Commands
 
 The following blocking commands use another connection pool and will not share the same connection
-with non-blocking commands and will not cause the pipeline to be blocked:
+with non-blocking commands and thus will not cause the pipeline to be blocked:
 
 * xread with block
 * xreadgroup with block
@@ -170,16 +189,18 @@ c.Do(c.Cmd.Subscribe().Channel("my_channel").Build())
 
 ## CAS Pattern
 
-To do a CAS operation (WATCH + MULTI + EXEC), a dedicated connection should be used.
+To do a CAS operation (WATCH + MULTI + EXEC), a dedicated connection should be used, because there should be no
+unintentional write commands between WATCH and EXEC. Otherwise, the EXEC may not fail as expected.
+
 The dedicated connection shares the same connection pool with blocking commands.
 
 ```golang
 c.DedicatedWire(func(client client.DedicatedSingleClient) error {
-	// watch keys first
+    // watch keys first
     client.Do(c.Cmd.Watch().Key("k1", "k2").Build())
-	// perform read here
+    // perform read here
     client.Do(c.Cmd.Mget().Key("k1", "k2").Build())
-	// perform write with MULTI EXEC
+    // perform write with MULTI EXEC
     client.DoMulti(
         c.Cmd.Multi().Build(),
         c.Cmd.Set().Key("k1").Value("1").Build(),
@@ -189,6 +210,9 @@ c.DedicatedWire(func(client client.DedicatedSingleClient) error {
     return nil
 })
 ```
+
+However, occupying a connection is not good in terms of throughput. It is better to use LUA script to perform
+optimistic locking instead.
 
 ## Redis Cluster
 
