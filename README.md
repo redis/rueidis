@@ -21,14 +21,14 @@ package main
 import "github.com/rueian/rueidis"
 
 func main() {
-	c, _ := rueidis.NewClusterClient(rueidis.ClusterClientOption{
-		InitAddress: []string{"127.0.0.1:6379"},
-	})
-	defer c.Close()
+    c, _ := rueidis.NewClusterClient(rueidis.ClusterClientOption{
+        InitAddress: []string{"127.0.0.1:6379"},
+    })
+    defer c.Close()
 
-	_ := c.Do(c.Cmd.Set().Key("my_redis_data:1").Value("my_value").Nx().Build()).Error()
-	val, _ := c.Do(c.Cmd.Get().Key("my_redis_data:1").Build()).ToString()
-	// val == "my_value"
+    _ := c.Do(c.Cmd.Set().Key("my_redis_data:1").Value("my_value").Nx().Build()).Error()
+    val, _ := c.Do(c.Cmd.Get().Key("my_redis_data:1").Build()).ToString()
+    // val == "my_value"
 }
 ```
 
@@ -56,29 +56,29 @@ ok  	github.com/rueian/rueidis/cmd/bench3	3.589s
 Benchmark source code:
 ```golang
 func BenchmarkRedisClient(b *testing.B) {
-	b.Run("RueidisParallel100Get", func(b *testing.B) {
-		c, _ := rueidis.NewSingleClient(rueidis.SingleClient{Address: "127.0.0.1:6379"})
-		b.SetParallelism(100)
-		b.ResetTimer()
-		b.RunParallel(func(pb *testing.PB) {
-			for pb.Next() {
-				c.Do(c.Cmd.Get().Key("a").Build())
-			}
-		})
-		c.Close()
-	})
-	b.Run("GoRedisParallel100Get", func(b *testing.B) {
-		rdb := redis.NewClient(&redis.Options{Addr: "127.0.0.1:6379", PoolSize: 100})
-		ctx := context.Background()
-		b.SetParallelism(100)
-		b.ResetTimer()
-		b.RunParallel(func(pb *testing.PB) {
-			for pb.Next() {
-				rdb.Get(ctx, "a")
-			}
-		})
-		rdb.Close()
-	})
+    b.Run("RueidisParallel100Get", func(b *testing.B) {
+        c, _ := rueidis.NewSingleClient(rueidis.SingleClient{Address: "127.0.0.1:6379"})
+        b.SetParallelism(100)
+        b.ResetTimer()
+        b.RunParallel(func(pb *testing.PB) {
+            for pb.Next() {
+                c.Do(c.Cmd.Get().Key("a").Build())
+            }
+        })
+        c.Close()
+    })
+    b.Run("GoRedisParallel100Get", func(b *testing.B) {
+        rdb := redis.NewClient(&redis.Options{Addr: "127.0.0.1:6379", PoolSize: 100})
+        ctx := context.Background()
+        b.SetParallelism(100)
+        b.ResetTimer()
+        b.RunParallel(func(pb *testing.PB) {
+            for pb.Next() {
+                rdb.Get(ctx, "a")
+            }
+        })
+        rdb.Close()
+    })
 }
 ```
 
@@ -179,12 +179,12 @@ To receive messages from channels, the message handler should be registered when
 
 ```golang
 c, _ := rueidis.NewSingleClient(rueidis.SingleClient{
-	Address: "127.0.0.1:6379",
-	ConnOption: conn.Option{
-		PubSubHandlers: conn.PubSubHandlers{
-			OnMessage: func(channel, message string) {
-				// handle the message
-			},
+    Address: "127.0.0.1:6379",
+    ConnOption: conn.Option{
+        PubSubHandlers: conn.PubSubHandlers{
+            OnMessage: func(channel, message string) {
+                // handle the message
+            },
         },
     },
 })
