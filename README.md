@@ -215,8 +215,21 @@ c.DedicatedWire(func(client client.DedicatedSingleClient) error {
 })
 ```
 
-However, occupying a connection is not good in terms of throughput. It is better to use LUA script to perform
+However, occupying a connection is not good in terms of throughput. It is better to use Lua script to perform
 optimistic locking instead.
+
+## Lua Script
+
+The `NewLuaScript` will create a script which is safe for concurrent usage.
+
+When calling the `script.Exec`, it will try sending EVALSHA to the client and if the server returns NOSCRIPT,
+it will send EVAL to try again.
+
+```golang
+script := c.NewLuaScript("return {KEYS[1],KEYS[2],ARGV[1],ARGV[2]}")
+// the script.Exec is safe for concurrent call
+list, err := script.Exec([]string{"k1", "k2"}, []string{"a1", "a2"}).ToArray()
+```
 
 ## Redis Cluster
 
@@ -245,6 +258,51 @@ c.DoCache(c.Cmd.Hmget().Key("myhash").Field("1", "2").Cache(), time.Second*30)
 **Once the command is passed to the one of above `Client.DoXXX()`, the command will be recycled and should not be reused.**
 
 **The `ClusterClient.Cmd` also checks if the command contains multiple keys belongs to different slots. If it does, then panic.**
+
+## Object Mapping
+
+The `NewHashRepository` creates an OM repository backed by redis hash.
+
+```golang
+package main
+
+import (
+    "context"
+    "fmt"
+    "time"
+
+    "github.com/rueian/rueidis"
+)
+
+type Example struct {
+    ID       string   `redis:"-,pk"`     // the pk option indicate that this field is the ULID key
+    Ver      int64    `redis:"_v"`       // the _v field is required for optimistic locking to prevent the lost update
+    MyString string   `redis:"f1"`
+    MyBool   bool     `redis:"f3"`
+    MyArray  []string `redis:"f4,sep=|"` // the sep=<ooo> option is required for converting the slice to/from a string
+}
+
+func main() {
+    ctx := context.Background()
+    c, _ := rueidis.NewSingleClient(rueidis.SingleClientOption{Address: "127.0.0.1:6379"})
+    // create the hash repo.
+    repo := c.NewHashRepository("my_prefix", Example{})
+
+    exp := repo.Make().(*Example)
+    exp.MyArray = []string{"1", "2"}
+    fmt.Println(exp.ID) // output 01FNH4FCXV9JTB9WTVFAAKGSYB
+    repo.Save(ctx, exp) // success
+
+    // lookup "my_prefix:01FNH4FCXV9JTB9WTVFAAKGSYB" through client side caching
+    cache, _ := repo.FetchCache(ctx, exp.ID, time.Second*5)
+    exp2 := cache.(*Example)
+    fmt.Println(exp2.MyArray) // output [1 2], which equals to exp.MyArray
+
+    exp2.Ver = 0         // if someone changes the version during your GET then SET operation,
+    repo.Save(ctx, exp2) // the save will fail with ErrVersionMismatch.
+}
+
+```
 
 ## Not Yet Implement
 
