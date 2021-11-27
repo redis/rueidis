@@ -6,6 +6,7 @@ import (
 	"github.com/rueian/rueidis/internal/cmds"
 	"github.com/rueian/rueidis/internal/proto"
 	"github.com/rueian/rueidis/pkg/conn"
+	"github.com/rueian/rueidis/pkg/om"
 )
 
 type SingleClientOption struct {
@@ -47,6 +48,26 @@ func (c *SingleClient) DedicatedWire(fn func(DedicatedSingleClient) error) (err 
 	err = fn(DedicatedSingleClient{cmd: c.Cmd, wire: wire})
 	c.conn.Store(wire)
 	return err
+}
+
+func (c *SingleClient) NewHashRepository(prefix string, schema interface{}) *om.HashRepository {
+	return om.NewHashRepository(
+		prefix,
+		schema,
+		func(key string, fields map[string]string) (ver int64, err error) {
+			cmd := c.Cmd.Hset().Key(key).FieldValue()
+			for f, v := range fields {
+				cmd = cmd.FieldValue(f, v)
+			}
+			_, err = c.Do(cmd.Build()).ToInt64()
+			return
+		},
+		func(key string) (map[string]proto.Message, error) {
+			return c.Do(c.Cmd.Hgetall().Key(key).Build()).ToMap()
+		},
+		func(key string, ttl time.Duration) (map[string]proto.Message, error) {
+			return c.DoCache(c.Cmd.Hgetall().Key(key).Cache(), ttl).ToMap()
+		})
 }
 
 func (c *SingleClient) Close() {

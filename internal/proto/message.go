@@ -129,6 +129,10 @@ type Message struct {
 	Type    byte
 }
 
+func (m *Message) IsNil() bool {
+	return m.Type == '_'
+}
+
 func (m *Message) Error() error {
 	if m.Type == '-' || m.Type == '_' || m.Type == '!' {
 		return (*RedisError)(m)

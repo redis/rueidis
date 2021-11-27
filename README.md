@@ -13,7 +13,7 @@ A Fast Golang Redis RESP3 client that does auto pipelining and supports client s
 
 * Currently, only supports redis >= 6.x
 
-## Getting Start
+## Getting Started
 
 ```golang
 package main
