@@ -315,23 +315,7 @@ func (c *ClusterClient) evalShaRo(sha string, keys, args []string) proto.Result 
 }
 
 func (c *ClusterClient) NewHashRepository(prefix string, schema interface{}) *om.HashRepository {
-	return om.NewHashRepository(
-		prefix,
-		schema,
-		func(key string, fields map[string]string) error {
-			cmd := c.Cmd.Hset().Key(key).FieldValue()
-			for f, v := range fields {
-				cmd = cmd.FieldValue(f, v)
-			}
-			return c.Do(cmd.Build()).Error()
-		},
-		func(key string) (map[string]proto.Message, error) {
-			return c.Do(c.Cmd.Hgetall().Key(key).Build()).ToMap()
-		},
-		func(key string, ttl time.Duration) (map[string]proto.Message, error) {
-			return c.DoCache(c.Cmd.Hgetall().Key(key).Cache(), ttl).ToMap()
-		},
-		c.NewLuaScript)
+	return om.NewHashRepository(prefix, schema, &HashObjectClusterClientAdapter{c: c}, c.NewLuaScript)
 }
 
 func (c *ClusterClient) Close() {
@@ -410,4 +394,28 @@ func (c *DedicatedClusterClient) DoMulti(multi ...cmds.SCompleted) (resp []proto
 		c.client.Cmd.Put(cmd.Commands())
 	}
 	return resp
+}
+
+type HashObjectClusterClientAdapter struct {
+	c *ClusterClient
+}
+
+func (h *HashObjectClusterClientAdapter) Save(key string, fields map[string]string) error {
+	cmd := h.c.Cmd.Hset().Key(key).FieldValue()
+	for f, v := range fields {
+		cmd = cmd.FieldValue(f, v)
+	}
+	return h.c.Do(cmd.Build()).Error()
+}
+
+func (h *HashObjectClusterClientAdapter) Fetch(key string) (map[string]proto.Message, error) {
+	return h.c.Do(h.c.Cmd.Hgetall().Key(key).Build()).ToMap()
+}
+
+func (h *HashObjectClusterClientAdapter) FetchCache(key string, ttl time.Duration) (map[string]proto.Message, error) {
+	return h.c.DoCache(h.c.Cmd.Hgetall().Key(key).Cache(), ttl).ToMap()
+}
+
+func (h *HashObjectClusterClientAdapter) Remove(key string) error {
+	return h.c.Do(h.c.Cmd.Del().Key(key).Build()).Error()
 }

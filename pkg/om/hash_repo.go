@@ -14,19 +14,21 @@ import (
 
 var ErrVersionMismatch = errors.New("object version mismatched, please retry")
 
-type ObjectSaver func(key string, fields map[string]string) (err error)
-type ObjectScripter func(script string) *script.Lua
-type ObjectFetcher func(key string) (map[string]proto.Message, error)
-type ObjectCacheFetcher func(key string, ttl time.Duration) (map[string]proto.Message, error)
+type ScriptFn func(script string) *script.Lua
 
-func NewHashRepository(prefix string, schema interface{}, saver ObjectSaver, fetcher ObjectFetcher, cache ObjectCacheFetcher, scripter ObjectScripter) *HashRepository {
+type HashObjectAdapter interface {
+	Save(key string, fields map[string]string) error
+	Fetch(key string) (map[string]proto.Message, error)
+	FetchCache(key string, ttl time.Duration) (map[string]proto.Message, error)
+	Remove(key string) error
+}
+
+func NewHashRepository(prefix string, schema interface{}, adapter HashObjectAdapter, scriptFn ScriptFn) *HashRepository {
 	repo := &HashRepository{
 		prefix:  prefix,
 		typ:     reflect.TypeOf(schema),
-		saver:   saver,
-		cache:   cache,
-		fetcher: fetcher,
-		script:  scripter(saveScript),
+		adapter: adapter,
+		script:  scriptFn(saveScript),
 	}
 	if _, ok := schema.(HashConverter); !ok {
 		repo.factory = newHashConvFactory(repo.typ)
@@ -39,9 +41,7 @@ type HashRepository struct {
 	typ     reflect.Type
 	factory *hashConvFactory
 
-	saver   ObjectSaver
-	cache   ObjectCacheFetcher
-	fetcher ObjectFetcher
+	adapter HashObjectAdapter
 	script  *script.Lua
 }
 
@@ -84,23 +84,23 @@ func (r *HashRepository) fromHash(id string, record map[string]proto.Message) (v
 	return v, nil
 }
 
-func (r *HashRepository) Fetch(ctx context.Context, id string) (v interface{}, err error) {
-	record, err := r.fetcher(r.key(id))
+func (r *HashRepository) Fetch(_ context.Context, id string) (v interface{}, err error) {
+	record, err := r.adapter.Fetch(r.key(id))
 	if err != nil {
 		return nil, err
 	}
 	return r.fromHash(id, record)
 }
 
-func (r *HashRepository) FetchCache(ctx context.Context, id string, ttl time.Duration) (v interface{}, err error) {
-	record, err := r.cache(r.key(id), ttl)
+func (r *HashRepository) FetchCache(_ context.Context, id string, ttl time.Duration) (v interface{}, err error) {
+	record, err := r.adapter.FetchCache(r.key(id), ttl)
 	if err != nil {
 		return nil, err
 	}
 	return r.fromHash(id, record)
 }
 
-func (r *HashRepository) Save(ctx context.Context, entity interface{}) (err error) {
+func (r *HashRepository) Save(_ context.Context, entity interface{}) (err error) {
 	var conv HashConverter
 
 	if r.factory != nil {
@@ -128,7 +128,11 @@ func (r *HashRepository) Save(ctx context.Context, entity interface{}) (err erro
 		}
 		return conv.FromHash(id, fields)
 	}
-	return r.saver(r.key(id), fields)
+	return r.adapter.Save(r.key(id), fields)
+}
+
+func (r *HashRepository) Remove(_ context.Context, id string) error {
+	return r.adapter.Remove(r.key(id))
 }
 
 var saveScript = fmt.Sprintf(`

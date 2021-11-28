@@ -76,23 +76,7 @@ func (c *SingleClient) evalShaRo(sha string, keys, args []string) proto.Result {
 }
 
 func (c *SingleClient) NewHashRepository(prefix string, schema interface{}) *om.HashRepository {
-	return om.NewHashRepository(
-		prefix,
-		schema,
-		func(key string, fields map[string]string) error {
-			cmd := c.Cmd.Hset().Key(key).FieldValue()
-			for f, v := range fields {
-				cmd = cmd.FieldValue(f, v)
-			}
-			return c.Do(cmd.Build()).Error()
-		},
-		func(key string) (map[string]proto.Message, error) {
-			return c.Do(c.Cmd.Hgetall().Key(key).Build()).ToMap()
-		},
-		func(key string, ttl time.Duration) (map[string]proto.Message, error) {
-			return c.DoCache(c.Cmd.Hgetall().Key(key).Cache(), ttl).ToMap()
-		},
-		c.NewLuaScript)
+	return om.NewHashRepository(prefix, schema, &HashObjectSingleClientAdapter{c: c}, c.NewLuaScript)
 }
 
 func (c *SingleClient) Close() {
@@ -119,4 +103,28 @@ func (c *DedicatedSingleClient) DoMulti(multi ...cmds.Completed) (resp []proto.R
 		c.cmd.Put(cmd.Commands())
 	}
 	return resp
+}
+
+type HashObjectSingleClientAdapter struct {
+	c *SingleClient
+}
+
+func (h *HashObjectSingleClientAdapter) Save(key string, fields map[string]string) error {
+	cmd := h.c.Cmd.Hset().Key(key).FieldValue()
+	for f, v := range fields {
+		cmd = cmd.FieldValue(f, v)
+	}
+	return h.c.Do(cmd.Build()).Error()
+}
+
+func (h *HashObjectSingleClientAdapter) Fetch(key string) (map[string]proto.Message, error) {
+	return h.c.Do(h.c.Cmd.Hgetall().Key(key).Build()).ToMap()
+}
+
+func (h *HashObjectSingleClientAdapter) FetchCache(key string, ttl time.Duration) (map[string]proto.Message, error) {
+	return h.c.DoCache(h.c.Cmd.Hgetall().Key(key).Cache(), ttl).ToMap()
+}
+
+func (h *HashObjectSingleClientAdapter) Remove(key string) error {
+	return h.c.Do(h.c.Cmd.Del().Key(key).Build()).Error()
 }
