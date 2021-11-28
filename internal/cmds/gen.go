@@ -307,10 +307,54 @@ func (b *Builder) Bitcount() (c Bitcount) {
 	return
 }
 
+type BitcountIndexEnd Completed
+
+func (c BitcountIndexEnd) Byte() BitcountIndexIndexUnitByte {
+	return BitcountIndexIndexUnitByte{cs: append(c.cs, "BYTE"), cf: c.cf, ks: c.ks}
+}
+
+func (c BitcountIndexEnd) Bit() BitcountIndexIndexUnitBit {
+	return BitcountIndexIndexUnitBit{cs: append(c.cs, "BIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c BitcountIndexEnd) Build() Completed {
+	return Completed(c)
+}
+
+func (c BitcountIndexEnd) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type BitcountIndexIndexUnitBit Completed
+
+func (c BitcountIndexIndexUnitBit) Build() Completed {
+	return Completed(c)
+}
+
+func (c BitcountIndexIndexUnitBit) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type BitcountIndexIndexUnitByte Completed
+
+func (c BitcountIndexIndexUnitByte) Build() Completed {
+	return Completed(c)
+}
+
+func (c BitcountIndexIndexUnitByte) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type BitcountIndexStart Completed
+
+func (c BitcountIndexStart) End(End int64) BitcountIndexEnd {
+	return BitcountIndexEnd{cs: append(c.cs, strconv.FormatInt(End, 10)), cf: c.cf, ks: c.ks}
+}
+
 type BitcountKey Completed
 
-func (c BitcountKey) StartEnd(Start int64, End int64) BitcountStartEnd {
-	return BitcountStartEnd{cs: append(c.cs, strconv.FormatInt(Start, 10), strconv.FormatInt(End, 10)), cf: c.cf, ks: c.ks}
+func (c BitcountKey) Start(Start int64) BitcountIndexStart {
+	return BitcountIndexStart{cs: append(c.cs, strconv.FormatInt(Start, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c BitcountKey) Build() Completed {
@@ -318,16 +362,6 @@ func (c BitcountKey) Build() Completed {
 }
 
 func (c BitcountKey) Cache() Cacheable {
-	return Cacheable(c)
-}
-
-type BitcountStartEnd Completed
-
-func (c BitcountStartEnd) Build() Completed {
-	return Completed(c)
-}
-
-func (c BitcountStartEnd) Cache() Cacheable {
 	return Cacheable(c)
 }
 
@@ -350,12 +384,12 @@ func (c BitfieldFail) Build() Completed {
 
 type BitfieldGet Completed
 
-func (c BitfieldGet) Set(Type string, Offset int64, Value int64) BitfieldSet {
-	return BitfieldSet{cs: append(c.cs, "SET", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Value, 10)), cf: c.cf, ks: c.ks}
+func (c BitfieldGet) Set(Encoding string, Offset int64, Value int64) BitfieldSet {
+	return BitfieldSet{cs: append(c.cs, "SET", Encoding, strconv.FormatInt(Offset, 10), strconv.FormatInt(Value, 10)), cf: c.cf, ks: c.ks}
 }
 
-func (c BitfieldGet) Incrby(Type string, Offset int64, Increment int64) BitfieldIncrby {
-	return BitfieldIncrby{cs: append(c.cs, "INCRBY", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Increment, 10)), cf: c.cf, ks: c.ks}
+func (c BitfieldGet) Incrby(Encoding string, Offset int64, Increment int64) BitfieldIncrby {
+	return BitfieldIncrby{cs: append(c.cs, "INCRBY", Encoding, strconv.FormatInt(Offset, 10), strconv.FormatInt(Increment, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c BitfieldGet) Wrap() BitfieldWrap {
@@ -394,16 +428,16 @@ func (c BitfieldIncrby) Build() Completed {
 
 type BitfieldKey Completed
 
-func (c BitfieldKey) Get(Type string, Offset int64) BitfieldGet {
-	return BitfieldGet{cs: append(c.cs, "GET", Type, strconv.FormatInt(Offset, 10)), cf: c.cf, ks: c.ks}
+func (c BitfieldKey) Get(Encoding string, Offset int64) BitfieldGet {
+	return BitfieldGet{cs: append(c.cs, "GET", Encoding, strconv.FormatInt(Offset, 10)), cf: c.cf, ks: c.ks}
 }
 
-func (c BitfieldKey) Set(Type string, Offset int64, Value int64) BitfieldSet {
-	return BitfieldSet{cs: append(c.cs, "SET", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Value, 10)), cf: c.cf, ks: c.ks}
+func (c BitfieldKey) Set(Encoding string, Offset int64, Value int64) BitfieldSet {
+	return BitfieldSet{cs: append(c.cs, "SET", Encoding, strconv.FormatInt(Offset, 10), strconv.FormatInt(Value, 10)), cf: c.cf, ks: c.ks}
 }
 
-func (c BitfieldKey) Incrby(Type string, Offset int64, Increment int64) BitfieldIncrby {
-	return BitfieldIncrby{cs: append(c.cs, "INCRBY", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Increment, 10)), cf: c.cf, ks: c.ks}
+func (c BitfieldKey) Incrby(Encoding string, Offset int64, Increment int64) BitfieldIncrby {
+	return BitfieldIncrby{cs: append(c.cs, "INCRBY", Encoding, strconv.FormatInt(Offset, 10), strconv.FormatInt(Increment, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c BitfieldKey) Wrap() BitfieldWrap {
@@ -446,8 +480,8 @@ func (c BitfieldRoGet) Cache() Cacheable {
 
 type BitfieldRoKey Completed
 
-func (c BitfieldRoKey) Get(Type string, Offset int64) BitfieldRoGet {
-	return BitfieldRoGet{cs: append(c.cs, "GET", Type, strconv.FormatInt(Offset, 10)), cf: c.cf, ks: c.ks}
+func (c BitfieldRoKey) Get(Encoding string, Offset int64) BitfieldRoGet {
+	return BitfieldRoGet{cs: append(c.cs, "GET", Encoding, strconv.FormatInt(Offset, 10)), cf: c.cf, ks: c.ks}
 }
 
 type BitfieldSat Completed
@@ -458,8 +492,8 @@ func (c BitfieldSat) Build() Completed {
 
 type BitfieldSet Completed
 
-func (c BitfieldSet) Incrby(Type string, Offset int64, Increment int64) BitfieldIncrby {
-	return BitfieldIncrby{cs: append(c.cs, "INCRBY", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Increment, 10)), cf: c.cf, ks: c.ks}
+func (c BitfieldSet) Incrby(Encoding string, Offset int64, Increment int64) BitfieldIncrby {
+	return BitfieldIncrby{cs: append(c.cs, "INCRBY", Encoding, strconv.FormatInt(Offset, 10), strconv.FormatInt(Increment, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c BitfieldSet) Wrap() BitfieldWrap {
@@ -543,20 +577,48 @@ func (c BitposBit) Cache() Cacheable {
 	return Cacheable(c)
 }
 
-type BitposIndexEnd Completed
+type BitposIndexEndIndexEnd Completed
 
-func (c BitposIndexEnd) Build() Completed {
+func (c BitposIndexEndIndexEnd) Byte() BitposIndexEndIndexIndexUnitByte {
+	return BitposIndexEndIndexIndexUnitByte{cs: append(c.cs, "BYTE"), cf: c.cf, ks: c.ks}
+}
+
+func (c BitposIndexEndIndexEnd) Bit() BitposIndexEndIndexIndexUnitBit {
+	return BitposIndexEndIndexIndexUnitBit{cs: append(c.cs, "BIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c BitposIndexEndIndexEnd) Build() Completed {
 	return Completed(c)
 }
 
-func (c BitposIndexEnd) Cache() Cacheable {
+func (c BitposIndexEndIndexEnd) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type BitposIndexEndIndexIndexUnitBit Completed
+
+func (c BitposIndexEndIndexIndexUnitBit) Build() Completed {
+	return Completed(c)
+}
+
+func (c BitposIndexEndIndexIndexUnitBit) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type BitposIndexEndIndexIndexUnitByte Completed
+
+func (c BitposIndexEndIndexIndexUnitByte) Build() Completed {
+	return Completed(c)
+}
+
+func (c BitposIndexEndIndexIndexUnitByte) Cache() Cacheable {
 	return Cacheable(c)
 }
 
 type BitposIndexStart Completed
 
-func (c BitposIndexStart) End(End int64) BitposIndexEnd {
-	return BitposIndexEnd{cs: append(c.cs, strconv.FormatInt(End, 10)), cf: c.cf, ks: c.ks}
+func (c BitposIndexStart) End(End int64) BitposIndexEndIndexEnd {
+	return BitposIndexEndIndexEnd{cs: append(c.cs, strconv.FormatInt(End, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c BitposIndexStart) Build() Completed {
@@ -677,14 +739,6 @@ func (c BlmpopNumkeys) Key(Key ...string) BlmpopKey {
 	return BlmpopKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
-func (c BlmpopNumkeys) Left() BlmpopWhereLeft {
-	return BlmpopWhereLeft{cs: append(c.cs, "LEFT"), cf: c.cf, ks: c.ks}
-}
-
-func (c BlmpopNumkeys) Right() BlmpopWhereRight {
-	return BlmpopWhereRight{cs: append(c.cs, "RIGHT"), cf: c.cf, ks: c.ks}
-}
-
 type BlmpopTimeout Completed
 
 func (c BlmpopTimeout) Numkeys(Numkeys int64) BlmpopNumkeys {
@@ -794,6 +848,70 @@ func (c BrpoplpushSource) Destination(Destination string) BrpoplpushDestination 
 type BrpoplpushTimeout Completed
 
 func (c BrpoplpushTimeout) Build() Completed {
+	return Completed(c)
+}
+
+type Bzmpop Completed
+
+func (c Bzmpop) Timeout(Timeout float64) BzmpopTimeout {
+	return BzmpopTimeout{cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) Bzmpop() (c Bzmpop) {
+	c.cs = append(b.get(), "BZMPOP")
+	c.cf = blockTag
+	return
+}
+
+type BzmpopCount Completed
+
+func (c BzmpopCount) Build() Completed {
+	return Completed(c)
+}
+
+type BzmpopKey Completed
+
+func (c BzmpopKey) Min() BzmpopWhereMin {
+	return BzmpopWhereMin{cs: append(c.cs, "MIN"), cf: c.cf, ks: c.ks}
+}
+
+func (c BzmpopKey) Max() BzmpopWhereMax {
+	return BzmpopWhereMax{cs: append(c.cs, "MAX"), cf: c.cf, ks: c.ks}
+}
+
+func (c BzmpopKey) Key(Key ...string) BzmpopKey {
+	return BzmpopKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
+}
+
+type BzmpopNumkeys Completed
+
+func (c BzmpopNumkeys) Key(Key ...string) BzmpopKey {
+	return BzmpopKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
+}
+
+type BzmpopTimeout Completed
+
+func (c BzmpopTimeout) Numkeys(Numkeys int64) BzmpopNumkeys {
+	return BzmpopNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10)), cf: c.cf, ks: c.ks}
+}
+
+type BzmpopWhereMax Completed
+
+func (c BzmpopWhereMax) Count(Count int64) BzmpopCount {
+	return BzmpopCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c BzmpopWhereMax) Build() Completed {
+	return Completed(c)
+}
+
+type BzmpopWhereMin Completed
+
+func (c BzmpopWhereMin) Count(Count int64) BzmpopCount {
+	return BzmpopCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c BzmpopWhereMin) Build() Completed {
 	return Completed(c)
 }
 
@@ -1667,6 +1785,27 @@ func (c ClusterAddslotsSlot) Build() Completed {
 	return Completed(c)
 }
 
+type ClusterAddslotsrange Completed
+
+func (c ClusterAddslotsrange) StartSlotEndSlot() ClusterAddslotsrangeStartSlotEndSlot {
+	return ClusterAddslotsrangeStartSlotEndSlot{cs: c.cs, cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) ClusterAddslotsrange() (c ClusterAddslotsrange) {
+	c.cs = append(b.get(), "CLUSTER", "ADDSLOTSRANGE")
+	return
+}
+
+type ClusterAddslotsrangeStartSlotEndSlot Completed
+
+func (c ClusterAddslotsrangeStartSlotEndSlot) StartSlotEndSlot(StartSlot int64, EndSlot int64) ClusterAddslotsrangeStartSlotEndSlot {
+	return ClusterAddslotsrangeStartSlotEndSlot{cs: append(c.cs, strconv.FormatInt(StartSlot, 10), strconv.FormatInt(EndSlot, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c ClusterAddslotsrangeStartSlotEndSlot) Build() Completed {
+	return Completed(c)
+}
+
 type ClusterBumpepoch Completed
 
 func (c ClusterBumpepoch) Build() Completed {
@@ -1736,6 +1875,27 @@ func (c ClusterDelslotsSlot) Slot(Slot ...int64) ClusterDelslotsSlot {
 }
 
 func (c ClusterDelslotsSlot) Build() Completed {
+	return Completed(c)
+}
+
+type ClusterDelslotsrange Completed
+
+func (c ClusterDelslotsrange) StartSlotEndSlot() ClusterDelslotsrangeStartSlotEndSlot {
+	return ClusterDelslotsrangeStartSlotEndSlot{cs: c.cs, cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) ClusterDelslotsrange() (c ClusterDelslotsrange) {
+	c.cs = append(b.get(), "CLUSTER", "DELSLOTSRANGE")
+	return
+}
+
+type ClusterDelslotsrangeStartSlotEndSlot Completed
+
+func (c ClusterDelslotsrangeStartSlotEndSlot) StartSlotEndSlot(StartSlot int64, EndSlot int64) ClusterDelslotsrangeStartSlotEndSlot {
+	return ClusterDelslotsrangeStartSlotEndSlot{cs: append(c.cs, strconv.FormatInt(StartSlot, 10), strconv.FormatInt(EndSlot, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c ClusterDelslotsrangeStartSlotEndSlot) Build() Completed {
 	return Completed(c)
 }
 
@@ -6768,14 +6928,6 @@ func (c LmpopNumkeys) Key(Key ...string) LmpopKey {
 	return LmpopKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
-func (c LmpopNumkeys) Left() LmpopWhereLeft {
-	return LmpopWhereLeft{cs: append(c.cs, "LEFT"), cf: c.cf, ks: c.ks}
-}
-
-func (c LmpopNumkeys) Right() LmpopWhereRight {
-	return LmpopWhereRight{cs: append(c.cs, "RIGHT"), cf: c.cf, ks: c.ks}
-}
-
 type LmpopWhereLeft Completed
 
 func (c LmpopWhereLeft) Count(Count int64) LmpopCount {
@@ -7503,35 +7655,87 @@ func (b *Builder) Multi() (c Multi) {
 	return
 }
 
-type Object Completed
+type ObjectEncoding Completed
 
-func (c Object) Subcommand(Subcommand string) ObjectSubcommand {
-	return ObjectSubcommand{cs: append(c.cs, Subcommand), cf: c.cf, ks: c.ks}
+func (c ObjectEncoding) Key(Key string) ObjectEncodingKey {
+	return ObjectEncodingKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
-func (b *Builder) Object() (c Object) {
-	c.cs = append(b.get(), "OBJECT")
+func (b *Builder) ObjectEncoding() (c ObjectEncoding) {
+	c.cs = append(b.get(), "OBJECT", "ENCODING")
 	c.cf = readonly
 	return
 }
 
-type ObjectArguments Completed
+type ObjectEncodingKey Completed
 
-func (c ObjectArguments) Arguments(Arguments ...string) ObjectArguments {
-	return ObjectArguments{cs: append(c.cs, Arguments...), cf: c.cf, ks: c.ks}
-}
-
-func (c ObjectArguments) Build() Completed {
+func (c ObjectEncodingKey) Build() Completed {
 	return Completed(c)
 }
 
-type ObjectSubcommand Completed
+type ObjectFreq Completed
 
-func (c ObjectSubcommand) Arguments(Arguments ...string) ObjectArguments {
-	return ObjectArguments{cs: append(c.cs, Arguments...), cf: c.cf, ks: c.ks}
+func (c ObjectFreq) Key(Key string) ObjectFreqKey {
+	return ObjectFreqKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
-func (c ObjectSubcommand) Build() Completed {
+func (b *Builder) ObjectFreq() (c ObjectFreq) {
+	c.cs = append(b.get(), "OBJECT", "FREQ")
+	c.cf = readonly
+	return
+}
+
+type ObjectFreqKey Completed
+
+func (c ObjectFreqKey) Build() Completed {
+	return Completed(c)
+}
+
+type ObjectHelp Completed
+
+func (c ObjectHelp) Build() Completed {
+	return Completed(c)
+}
+
+func (b *Builder) ObjectHelp() (c ObjectHelp) {
+	c.cs = append(b.get(), "OBJECT", "HELP")
+	c.cf = readonly
+	return
+}
+
+type ObjectIdletime Completed
+
+func (c ObjectIdletime) Key(Key string) ObjectIdletimeKey {
+	return ObjectIdletimeKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) ObjectIdletime() (c ObjectIdletime) {
+	c.cs = append(b.get(), "OBJECT", "IDLETIME")
+	c.cf = readonly
+	return
+}
+
+type ObjectIdletimeKey Completed
+
+func (c ObjectIdletimeKey) Build() Completed {
+	return Completed(c)
+}
+
+type ObjectRefcount Completed
+
+func (c ObjectRefcount) Key(Key string) ObjectRefcountKey {
+	return ObjectRefcountKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) ObjectRefcount() (c ObjectRefcount) {
+	c.cs = append(b.get(), "OBJECT", "REFCOUNT")
+	c.cf = readonly
+	return
+}
+
+type ObjectRefcountKey Completed
+
+func (c ObjectRefcountKey) Build() Completed {
 	return Completed(c)
 }
 
@@ -7920,34 +8124,75 @@ func (c PublishMessage) Build() Completed {
 	return Completed(c)
 }
 
-type Pubsub Completed
+type PubsubChannels Completed
 
-func (c Pubsub) Subcommand(Subcommand string) PubsubSubcommand {
-	return PubsubSubcommand{cs: append(c.cs, Subcommand), cf: c.cf, ks: c.ks}
+func (c PubsubChannels) Pattern(Pattern string) PubsubChannelsPattern {
+	return PubsubChannelsPattern{cs: append(c.cs, Pattern), cf: c.cf, ks: c.ks}
 }
 
-func (b *Builder) Pubsub() (c Pubsub) {
-	c.cs = append(b.get(), "PUBSUB")
-	return
-}
-
-type PubsubArgument Completed
-
-func (c PubsubArgument) Argument(Argument ...string) PubsubArgument {
-	return PubsubArgument{cs: append(c.cs, Argument...), cf: c.cf, ks: c.ks}
-}
-
-func (c PubsubArgument) Build() Completed {
+func (c PubsubChannels) Build() Completed {
 	return Completed(c)
 }
 
-type PubsubSubcommand Completed
-
-func (c PubsubSubcommand) Argument(Argument ...string) PubsubArgument {
-	return PubsubArgument{cs: append(c.cs, Argument...), cf: c.cf, ks: c.ks}
+func (b *Builder) PubsubChannels() (c PubsubChannels) {
+	c.cs = append(b.get(), "PUBSUB", "CHANNELS")
+	c.cf = readonly
+	return
 }
 
-func (c PubsubSubcommand) Build() Completed {
+type PubsubChannelsPattern Completed
+
+func (c PubsubChannelsPattern) Build() Completed {
+	return Completed(c)
+}
+
+type PubsubHelp Completed
+
+func (c PubsubHelp) Build() Completed {
+	return Completed(c)
+}
+
+func (b *Builder) PubsubHelp() (c PubsubHelp) {
+	c.cs = append(b.get(), "PUBSUB", "HELP")
+	c.cf = readonly
+	return
+}
+
+type PubsubNumpat Completed
+
+func (c PubsubNumpat) Build() Completed {
+	return Completed(c)
+}
+
+func (b *Builder) PubsubNumpat() (c PubsubNumpat) {
+	c.cs = append(b.get(), "PUBSUB", "NUMPAT")
+	c.cf = readonly
+	return
+}
+
+type PubsubNumsub Completed
+
+func (c PubsubNumsub) Channel(Channel ...string) PubsubNumsubChannel {
+	return PubsubNumsubChannel{cs: append(c.cs, Channel...), cf: c.cf, ks: c.ks}
+}
+
+func (c PubsubNumsub) Build() Completed {
+	return Completed(c)
+}
+
+func (b *Builder) PubsubNumsub() (c PubsubNumsub) {
+	c.cs = append(b.get(), "PUBSUB", "NUMSUB")
+	c.cf = readonly
+	return
+}
+
+type PubsubNumsubChannel Completed
+
+func (c PubsubNumsubChannel) Channel(Channel ...string) PubsubNumsubChannel {
+	return PubsubNumsubChannel{cs: append(c.cs, Channel...), cf: c.cf, ks: c.ks}
+}
+
+func (c PubsubNumsubChannel) Build() Completed {
 	return Completed(c)
 }
 
@@ -8949,8 +9194,8 @@ func (c SinterKey) Build() Completed {
 
 type Sintercard Completed
 
-func (c Sintercard) Key(Key ...string) SintercardKey {
-	return SintercardKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
+func (c Sintercard) Numkeys(Numkeys int64) SintercardNumkeys {
+	return SintercardNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (b *Builder) Sintercard() (c Sintercard) {
@@ -8961,12 +9206,28 @@ func (b *Builder) Sintercard() (c Sintercard) {
 
 type SintercardKey Completed
 
+func (c SintercardKey) Limit(Limit int64) SintercardLimit {
+	return SintercardLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Limit, 10)), cf: c.cf, ks: c.ks}
+}
+
 func (c SintercardKey) Key(Key ...string) SintercardKey {
 	return SintercardKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c SintercardKey) Build() Completed {
 	return Completed(c)
+}
+
+type SintercardLimit Completed
+
+func (c SintercardLimit) Build() Completed {
+	return Completed(c)
+}
+
+type SintercardNumkeys Completed
+
+func (c SintercardNumkeys) Key(Key ...string) SintercardKey {
+	return SintercardKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type Sinterstore Completed
@@ -9047,31 +9308,61 @@ func (c SlaveofPort) Build() Completed {
 	return Completed(c)
 }
 
-type Slowlog Completed
+type SlowlogGet Completed
 
-func (c Slowlog) Subcommand(Subcommand string) SlowlogSubcommand {
-	return SlowlogSubcommand{cs: append(c.cs, Subcommand), cf: c.cf, ks: c.ks}
+func (c SlowlogGet) Count(Count int64) SlowlogGetCount {
+	return SlowlogGetCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
-func (b *Builder) Slowlog() (c Slowlog) {
-	c.cs = append(b.get(), "SLOWLOG")
+func (c SlowlogGet) Build() Completed {
+	return Completed(c)
+}
+
+func (b *Builder) SlowlogGet() (c SlowlogGet) {
+	c.cs = append(b.get(), "SLOWLOG", "GET")
+	c.cf = readonly
 	return
 }
 
-type SlowlogArgument Completed
+type SlowlogGetCount Completed
 
-func (c SlowlogArgument) Build() Completed {
+func (c SlowlogGetCount) Build() Completed {
 	return Completed(c)
 }
 
-type SlowlogSubcommand Completed
+type SlowlogHelp Completed
 
-func (c SlowlogSubcommand) Argument(Argument string) SlowlogArgument {
-	return SlowlogArgument{cs: append(c.cs, Argument), cf: c.cf, ks: c.ks}
+func (c SlowlogHelp) Build() Completed {
+	return Completed(c)
 }
 
-func (c SlowlogSubcommand) Build() Completed {
+func (b *Builder) SlowlogHelp() (c SlowlogHelp) {
+	c.cs = append(b.get(), "SLOWLOG", "HELP")
+	c.cf = readonly
+	return
+}
+
+type SlowlogLen Completed
+
+func (c SlowlogLen) Build() Completed {
 	return Completed(c)
+}
+
+func (b *Builder) SlowlogLen() (c SlowlogLen) {
+	c.cs = append(b.get(), "SLOWLOG", "LEN")
+	c.cf = readonly
+	return
+}
+
+type SlowlogReset Completed
+
+func (c SlowlogReset) Build() Completed {
+	return Completed(c)
+}
+
+func (b *Builder) SlowlogReset() (c SlowlogReset) {
+	c.cs = append(b.get(), "SLOWLOG", "RESET")
+	return
 }
 
 type Smembers Completed
@@ -10340,40 +10631,20 @@ func (c XdelKey) Id(Id ...string) XdelId {
 	return XdelId{cs: append(c.cs, Id...), cf: c.cf, ks: c.ks}
 }
 
-type Xgroup Completed
+type XgroupCreate Completed
 
-func (c Xgroup) Create(Key string, Groupname string) XgroupCreateCreate {
-	return XgroupCreateCreate{cs: append(c.cs, "CREATE", Key, Groupname), cf: c.cf, ks: c.ks}
+func (c XgroupCreate) Key(Key string) XgroupCreateKey {
+	return XgroupCreateKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
-func (c Xgroup) Setid(Key string, Groupname string) XgroupSetidSetid {
-	return XgroupSetidSetid{cs: append(c.cs, "SETID", Key, Groupname), cf: c.cf, ks: c.ks}
-}
-
-func (c Xgroup) Destroy(Key string, Groupname string) XgroupDestroy {
-	return XgroupDestroy{cs: append(c.cs, "DESTROY", Key, Groupname), cf: c.cf, ks: c.ks}
-}
-
-func (c Xgroup) Createconsumer(Key string, Groupname string, Consumername string) XgroupCreateconsumer {
-	return XgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
-}
-
-func (c Xgroup) Delconsumer(Key string, Groupname string, Consumername string) XgroupDelconsumer {
-	return XgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
-}
-
-func (c Xgroup) Build() Completed {
-	return Completed(c)
-}
-
-func (b *Builder) Xgroup() (c Xgroup) {
-	c.cs = append(b.get(), "XGROUP")
+func (b *Builder) XgroupCreate() (c XgroupCreate) {
+	c.cs = append(b.get(), "XGROUP", "CREATE")
 	return
 }
 
-type XgroupCreateCreate Completed
+type XgroupCreateGroupname Completed
 
-func (c XgroupCreateCreate) Id(Id string) XgroupCreateId {
+func (c XgroupCreateGroupname) Id(Id string) XgroupCreateId {
 	return XgroupCreateId{cs: append(c.cs, Id), cf: c.cf, ks: c.ks}
 }
 
@@ -10383,43 +10654,17 @@ func (c XgroupCreateId) Mkstream() XgroupCreateMkstream {
 	return XgroupCreateMkstream{cs: append(c.cs, "MKSTREAM"), cf: c.cf, ks: c.ks}
 }
 
-func (c XgroupCreateId) Setid(Key string, Groupname string) XgroupSetidSetid {
-	return XgroupSetidSetid{cs: append(c.cs, "SETID", Key, Groupname), cf: c.cf, ks: c.ks}
-}
-
-func (c XgroupCreateId) Destroy(Key string, Groupname string) XgroupDestroy {
-	return XgroupDestroy{cs: append(c.cs, "DESTROY", Key, Groupname), cf: c.cf, ks: c.ks}
-}
-
-func (c XgroupCreateId) Createconsumer(Key string, Groupname string, Consumername string) XgroupCreateconsumer {
-	return XgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
-}
-
-func (c XgroupCreateId) Delconsumer(Key string, Groupname string, Consumername string) XgroupDelconsumer {
-	return XgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
-}
-
 func (c XgroupCreateId) Build() Completed {
 	return Completed(c)
 }
 
+type XgroupCreateKey Completed
+
+func (c XgroupCreateKey) Groupname(Groupname string) XgroupCreateGroupname {
+	return XgroupCreateGroupname{cs: append(c.cs, Groupname), cf: c.cf, ks: c.ks}
+}
+
 type XgroupCreateMkstream Completed
-
-func (c XgroupCreateMkstream) Setid(Key string, Groupname string) XgroupSetidSetid {
-	return XgroupSetidSetid{cs: append(c.cs, "SETID", Key, Groupname), cf: c.cf, ks: c.ks}
-}
-
-func (c XgroupCreateMkstream) Destroy(Key string, Groupname string) XgroupDestroy {
-	return XgroupDestroy{cs: append(c.cs, "DESTROY", Key, Groupname), cf: c.cf, ks: c.ks}
-}
-
-func (c XgroupCreateMkstream) Createconsumer(Key string, Groupname string, Consumername string) XgroupCreateconsumer {
-	return XgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
-}
-
-func (c XgroupCreateMkstream) Delconsumer(Key string, Groupname string, Consumername string) XgroupDelconsumer {
-	return XgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
-}
 
 func (c XgroupCreateMkstream) Build() Completed {
 	return Completed(c)
@@ -10427,131 +10672,214 @@ func (c XgroupCreateMkstream) Build() Completed {
 
 type XgroupCreateconsumer Completed
 
-func (c XgroupCreateconsumer) Delconsumer(Key string, Groupname string, Consumername string) XgroupDelconsumer {
-	return XgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
+func (c XgroupCreateconsumer) Key(Key string) XgroupCreateconsumerKey {
+	return XgroupCreateconsumerKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
-func (c XgroupCreateconsumer) Build() Completed {
+func (b *Builder) XgroupCreateconsumer() (c XgroupCreateconsumer) {
+	c.cs = append(b.get(), "XGROUP", "CREATECONSUMER")
+	return
+}
+
+type XgroupCreateconsumerConsumername Completed
+
+func (c XgroupCreateconsumerConsumername) Build() Completed {
 	return Completed(c)
+}
+
+type XgroupCreateconsumerGroupname Completed
+
+func (c XgroupCreateconsumerGroupname) Consumername(Consumername string) XgroupCreateconsumerConsumername {
+	return XgroupCreateconsumerConsumername{cs: append(c.cs, Consumername), cf: c.cf, ks: c.ks}
+}
+
+type XgroupCreateconsumerKey Completed
+
+func (c XgroupCreateconsumerKey) Groupname(Groupname string) XgroupCreateconsumerGroupname {
+	return XgroupCreateconsumerGroupname{cs: append(c.cs, Groupname), cf: c.cf, ks: c.ks}
 }
 
 type XgroupDelconsumer Completed
 
-func (c XgroupDelconsumer) Build() Completed {
+func (c XgroupDelconsumer) Key(Key string) XgroupDelconsumerKey {
+	return XgroupDelconsumerKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) XgroupDelconsumer() (c XgroupDelconsumer) {
+	c.cs = append(b.get(), "XGROUP", "DELCONSUMER")
+	return
+}
+
+type XgroupDelconsumerConsumername Completed
+
+func (c XgroupDelconsumerConsumername) Build() Completed {
 	return Completed(c)
+}
+
+type XgroupDelconsumerGroupname Completed
+
+func (c XgroupDelconsumerGroupname) Consumername(Consumername string) XgroupDelconsumerConsumername {
+	return XgroupDelconsumerConsumername{cs: append(c.cs, Consumername), cf: c.cf, ks: c.ks}
+}
+
+type XgroupDelconsumerKey Completed
+
+func (c XgroupDelconsumerKey) Groupname(Groupname string) XgroupDelconsumerGroupname {
+	return XgroupDelconsumerGroupname{cs: append(c.cs, Groupname), cf: c.cf, ks: c.ks}
 }
 
 type XgroupDestroy Completed
 
-func (c XgroupDestroy) Createconsumer(Key string, Groupname string, Consumername string) XgroupCreateconsumer {
-	return XgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
+func (c XgroupDestroy) Key(Key string) XgroupDestroyKey {
+	return XgroupDestroyKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
-func (c XgroupDestroy) Delconsumer(Key string, Groupname string, Consumername string) XgroupDelconsumer {
-	return XgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
+func (b *Builder) XgroupDestroy() (c XgroupDestroy) {
+	c.cs = append(b.get(), "XGROUP", "DESTROY")
+	return
 }
 
-func (c XgroupDestroy) Build() Completed {
+type XgroupDestroyGroupname Completed
+
+func (c XgroupDestroyGroupname) Build() Completed {
 	return Completed(c)
 }
 
+type XgroupDestroyKey Completed
+
+func (c XgroupDestroyKey) Groupname(Groupname string) XgroupDestroyGroupname {
+	return XgroupDestroyGroupname{cs: append(c.cs, Groupname), cf: c.cf, ks: c.ks}
+}
+
+type XgroupHelp Completed
+
+func (c XgroupHelp) Build() Completed {
+	return Completed(c)
+}
+
+func (b *Builder) XgroupHelp() (c XgroupHelp) {
+	c.cs = append(b.get(), "XGROUP", "HELP")
+	return
+}
+
+type XgroupSetid Completed
+
+func (c XgroupSetid) Key(Key string) XgroupSetidKey {
+	return XgroupSetidKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) XgroupSetid() (c XgroupSetid) {
+	c.cs = append(b.get(), "XGROUP", "SETID")
+	return
+}
+
+type XgroupSetidGroupname Completed
+
+func (c XgroupSetidGroupname) Id(Id string) XgroupSetidId {
+	return XgroupSetidId{cs: append(c.cs, Id), cf: c.cf, ks: c.ks}
+}
+
 type XgroupSetidId Completed
-
-func (c XgroupSetidId) Destroy(Key string, Groupname string) XgroupDestroy {
-	return XgroupDestroy{cs: append(c.cs, "DESTROY", Key, Groupname), cf: c.cf, ks: c.ks}
-}
-
-func (c XgroupSetidId) Createconsumer(Key string, Groupname string, Consumername string) XgroupCreateconsumer {
-	return XgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
-}
-
-func (c XgroupSetidId) Delconsumer(Key string, Groupname string, Consumername string) XgroupDelconsumer {
-	return XgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
-}
 
 func (c XgroupSetidId) Build() Completed {
 	return Completed(c)
 }
 
-type XgroupSetidSetid Completed
+type XgroupSetidKey Completed
 
-func (c XgroupSetidSetid) Id(Id string) XgroupSetidId {
-	return XgroupSetidId{cs: append(c.cs, Id), cf: c.cf, ks: c.ks}
-}
-
-type Xinfo Completed
-
-func (c Xinfo) Consumers(Key string, Groupname string) XinfoConsumers {
-	return XinfoConsumers{cs: append(c.cs, "CONSUMERS", Key, Groupname), cf: c.cf, ks: c.ks}
-}
-
-func (c Xinfo) Groups(Key string) XinfoGroups {
-	return XinfoGroups{cs: append(c.cs, "GROUPS", Key), cf: c.cf, ks: c.ks}
-}
-
-func (c Xinfo) Stream(Key string) XinfoStream {
-	return XinfoStream{cs: append(c.cs, "STREAM", Key), cf: c.cf, ks: c.ks}
-}
-
-func (c Xinfo) Help() XinfoHelpHelp {
-	return XinfoHelpHelp{cs: append(c.cs, "HELP"), cf: c.cf, ks: c.ks}
-}
-
-func (c Xinfo) Build() Completed {
-	return Completed(c)
-}
-
-func (b *Builder) Xinfo() (c Xinfo) {
-	c.cs = append(b.get(), "XINFO")
-	c.cf = readonly
-	return
+func (c XgroupSetidKey) Groupname(Groupname string) XgroupSetidGroupname {
+	return XgroupSetidGroupname{cs: append(c.cs, Groupname), cf: c.cf, ks: c.ks}
 }
 
 type XinfoConsumers Completed
 
-func (c XinfoConsumers) Groups(Key string) XinfoGroups {
-	return XinfoGroups{cs: append(c.cs, "GROUPS", Key), cf: c.cf, ks: c.ks}
+func (c XinfoConsumers) Key(Key string) XinfoConsumersKey {
+	return XinfoConsumersKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
-func (c XinfoConsumers) Stream(Key string) XinfoStream {
-	return XinfoStream{cs: append(c.cs, "STREAM", Key), cf: c.cf, ks: c.ks}
+func (b *Builder) XinfoConsumers() (c XinfoConsumers) {
+	c.cs = append(b.get(), "XINFO", "CONSUMERS")
+	c.cf = readonly
+	return
 }
 
-func (c XinfoConsumers) Help() XinfoHelpHelp {
-	return XinfoHelpHelp{cs: append(c.cs, "HELP"), cf: c.cf, ks: c.ks}
-}
+type XinfoConsumersGroupname Completed
 
-func (c XinfoConsumers) Build() Completed {
+func (c XinfoConsumersGroupname) Build() Completed {
 	return Completed(c)
+}
+
+type XinfoConsumersKey Completed
+
+func (c XinfoConsumersKey) Groupname(Groupname string) XinfoConsumersGroupname {
+	return XinfoConsumersGroupname{cs: append(c.cs, Groupname), cf: c.cf, ks: c.ks}
 }
 
 type XinfoGroups Completed
 
-func (c XinfoGroups) Stream(Key string) XinfoStream {
-	return XinfoStream{cs: append(c.cs, "STREAM", Key), cf: c.cf, ks: c.ks}
+func (c XinfoGroups) Key(Key string) XinfoGroupsKey {
+	return XinfoGroupsKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
-func (c XinfoGroups) Help() XinfoHelpHelp {
-	return XinfoHelpHelp{cs: append(c.cs, "HELP"), cf: c.cf, ks: c.ks}
+func (b *Builder) XinfoGroups() (c XinfoGroups) {
+	c.cs = append(b.get(), "XINFO", "GROUPS")
+	c.cf = readonly
+	return
 }
 
-func (c XinfoGroups) Build() Completed {
+type XinfoGroupsKey Completed
+
+func (c XinfoGroupsKey) Build() Completed {
 	return Completed(c)
 }
 
-type XinfoHelpHelp Completed
+type XinfoHelp Completed
 
-func (c XinfoHelpHelp) Build() Completed {
+func (c XinfoHelp) Build() Completed {
 	return Completed(c)
+}
+
+func (b *Builder) XinfoHelp() (c XinfoHelp) {
+	c.cs = append(b.get(), "XINFO", "HELP")
+	c.cf = readonly
+	return
 }
 
 type XinfoStream Completed
 
-func (c XinfoStream) Help() XinfoHelpHelp {
-	return XinfoHelpHelp{cs: append(c.cs, "HELP"), cf: c.cf, ks: c.ks}
+func (c XinfoStream) Key(Key string) XinfoStreamKey {
+	return XinfoStreamKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
-func (c XinfoStream) Build() Completed {
+func (b *Builder) XinfoStream() (c XinfoStream) {
+	c.cs = append(b.get(), "XINFO", "STREAM")
+	c.cf = readonly
+	return
+}
+
+type XinfoStreamFullCount Completed
+
+func (c XinfoStreamFullCount) Build() Completed {
+	return Completed(c)
+}
+
+type XinfoStreamFullFull Completed
+
+func (c XinfoStreamFullFull) Count(Count int64) XinfoStreamFullCount {
+	return XinfoStreamFullCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c XinfoStreamFullFull) Build() Completed {
+	return Completed(c)
+}
+
+type XinfoStreamKey Completed
+
+func (c XinfoStreamKey) Full() XinfoStreamFullFull {
+	return XinfoStreamFullFull{cs: append(c.cs, "FULL"), cf: c.cf, ks: c.ks}
+}
+
+func (c XinfoStreamKey) Build() Completed {
 	return Completed(c)
 }
 
@@ -11369,11 +11697,21 @@ func (b *Builder) Zintercard() (c Zintercard) {
 
 type ZintercardKey Completed
 
+func (c ZintercardKey) Limit(Limit int64) ZintercardLimit {
+	return ZintercardLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Limit, 10)), cf: c.cf, ks: c.ks}
+}
+
 func (c ZintercardKey) Key(Key ...string) ZintercardKey {
 	return ZintercardKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 func (c ZintercardKey) Build() Completed {
+	return Completed(c)
+}
+
+type ZintercardLimit Completed
+
+func (c ZintercardLimit) Build() Completed {
 	return Completed(c)
 }
 
@@ -11511,6 +11849,63 @@ type ZlexcountMin Completed
 
 func (c ZlexcountMin) Max(Max string) ZlexcountMax {
 	return ZlexcountMax{cs: append(c.cs, Max), cf: c.cf, ks: c.ks}
+}
+
+type Zmpop Completed
+
+func (c Zmpop) Numkeys(Numkeys int64) ZmpopNumkeys {
+	return ZmpopNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) Zmpop() (c Zmpop) {
+	c.cs = append(b.get(), "ZMPOP")
+	return
+}
+
+type ZmpopCount Completed
+
+func (c ZmpopCount) Build() Completed {
+	return Completed(c)
+}
+
+type ZmpopKey Completed
+
+func (c ZmpopKey) Min() ZmpopWhereMin {
+	return ZmpopWhereMin{cs: append(c.cs, "MIN"), cf: c.cf, ks: c.ks}
+}
+
+func (c ZmpopKey) Max() ZmpopWhereMax {
+	return ZmpopWhereMax{cs: append(c.cs, "MAX"), cf: c.cf, ks: c.ks}
+}
+
+func (c ZmpopKey) Key(Key ...string) ZmpopKey {
+	return ZmpopKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
+}
+
+type ZmpopNumkeys Completed
+
+func (c ZmpopNumkeys) Key(Key ...string) ZmpopKey {
+	return ZmpopKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
+}
+
+type ZmpopWhereMax Completed
+
+func (c ZmpopWhereMax) Count(Count int64) ZmpopCount {
+	return ZmpopCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c ZmpopWhereMax) Build() Completed {
+	return Completed(c)
+}
+
+type ZmpopWhereMin Completed
+
+func (c ZmpopWhereMin) Count(Count int64) ZmpopCount {
+	return ZmpopCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c ZmpopWhereMin) Build() Completed {
+	return Completed(c)
 }
 
 type Zmscore Completed
@@ -12930,10 +13325,54 @@ func (b *SBuilder) Bitcount() (c SBitcount) {
 	return
 }
 
+type SBitcountIndexEnd SCompleted
+
+func (c SBitcountIndexEnd) Byte() SBitcountIndexIndexUnitByte {
+	return SBitcountIndexIndexUnitByte{cs: append(c.cs, "BYTE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SBitcountIndexEnd) Bit() SBitcountIndexIndexUnitBit {
+	return SBitcountIndexIndexUnitBit{cs: append(c.cs, "BIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SBitcountIndexEnd) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c SBitcountIndexEnd) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SBitcountIndexIndexUnitBit SCompleted
+
+func (c SBitcountIndexIndexUnitBit) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c SBitcountIndexIndexUnitBit) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SBitcountIndexIndexUnitByte SCompleted
+
+func (c SBitcountIndexIndexUnitByte) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c SBitcountIndexIndexUnitByte) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SBitcountIndexStart SCompleted
+
+func (c SBitcountIndexStart) End(End int64) SBitcountIndexEnd {
+	return SBitcountIndexEnd{cs: append(c.cs, strconv.FormatInt(End, 10)), cf: c.cf, ks: c.ks}
+}
+
 type SBitcountKey SCompleted
 
-func (c SBitcountKey) StartEnd(Start int64, End int64) SBitcountStartEnd {
-	return SBitcountStartEnd{cs: append(c.cs, strconv.FormatInt(Start, 10), strconv.FormatInt(End, 10)), cf: c.cf, ks: c.ks}
+func (c SBitcountKey) Start(Start int64) SBitcountIndexStart {
+	return SBitcountIndexStart{cs: append(c.cs, strconv.FormatInt(Start, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SBitcountKey) Build() SCompleted {
@@ -12941,16 +13380,6 @@ func (c SBitcountKey) Build() SCompleted {
 }
 
 func (c SBitcountKey) Cache() SCacheable {
-	return SCacheable(c)
-}
-
-type SBitcountStartEnd SCompleted
-
-func (c SBitcountStartEnd) Build() SCompleted {
-	return SCompleted(c)
-}
-
-func (c SBitcountStartEnd) Cache() SCacheable {
 	return SCacheable(c)
 }
 
@@ -12975,12 +13404,12 @@ func (c SBitfieldFail) Build() SCompleted {
 
 type SBitfieldGet SCompleted
 
-func (c SBitfieldGet) Set(Type string, Offset int64, Value int64) SBitfieldSet {
-	return SBitfieldSet{cs: append(c.cs, "SET", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Value, 10)), cf: c.cf, ks: c.ks}
+func (c SBitfieldGet) Set(Encoding string, Offset int64, Value int64) SBitfieldSet {
+	return SBitfieldSet{cs: append(c.cs, "SET", Encoding, strconv.FormatInt(Offset, 10), strconv.FormatInt(Value, 10)), cf: c.cf, ks: c.ks}
 }
 
-func (c SBitfieldGet) Incrby(Type string, Offset int64, Increment int64) SBitfieldIncrby {
-	return SBitfieldIncrby{cs: append(c.cs, "INCRBY", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Increment, 10)), cf: c.cf, ks: c.ks}
+func (c SBitfieldGet) Incrby(Encoding string, Offset int64, Increment int64) SBitfieldIncrby {
+	return SBitfieldIncrby{cs: append(c.cs, "INCRBY", Encoding, strconv.FormatInt(Offset, 10), strconv.FormatInt(Increment, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SBitfieldGet) Wrap() SBitfieldWrap {
@@ -13019,16 +13448,16 @@ func (c SBitfieldIncrby) Build() SCompleted {
 
 type SBitfieldKey SCompleted
 
-func (c SBitfieldKey) Get(Type string, Offset int64) SBitfieldGet {
-	return SBitfieldGet{cs: append(c.cs, "GET", Type, strconv.FormatInt(Offset, 10)), cf: c.cf, ks: c.ks}
+func (c SBitfieldKey) Get(Encoding string, Offset int64) SBitfieldGet {
+	return SBitfieldGet{cs: append(c.cs, "GET", Encoding, strconv.FormatInt(Offset, 10)), cf: c.cf, ks: c.ks}
 }
 
-func (c SBitfieldKey) Set(Type string, Offset int64, Value int64) SBitfieldSet {
-	return SBitfieldSet{cs: append(c.cs, "SET", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Value, 10)), cf: c.cf, ks: c.ks}
+func (c SBitfieldKey) Set(Encoding string, Offset int64, Value int64) SBitfieldSet {
+	return SBitfieldSet{cs: append(c.cs, "SET", Encoding, strconv.FormatInt(Offset, 10), strconv.FormatInt(Value, 10)), cf: c.cf, ks: c.ks}
 }
 
-func (c SBitfieldKey) Incrby(Type string, Offset int64, Increment int64) SBitfieldIncrby {
-	return SBitfieldIncrby{cs: append(c.cs, "INCRBY", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Increment, 10)), cf: c.cf, ks: c.ks}
+func (c SBitfieldKey) Incrby(Encoding string, Offset int64, Increment int64) SBitfieldIncrby {
+	return SBitfieldIncrby{cs: append(c.cs, "INCRBY", Encoding, strconv.FormatInt(Offset, 10), strconv.FormatInt(Increment, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SBitfieldKey) Wrap() SBitfieldWrap {
@@ -13073,8 +13502,8 @@ func (c SBitfieldRoGet) Cache() SCacheable {
 
 type SBitfieldRoKey SCompleted
 
-func (c SBitfieldRoKey) Get(Type string, Offset int64) SBitfieldRoGet {
-	return SBitfieldRoGet{cs: append(c.cs, "GET", Type, strconv.FormatInt(Offset, 10)), cf: c.cf, ks: c.ks}
+func (c SBitfieldRoKey) Get(Encoding string, Offset int64) SBitfieldRoGet {
+	return SBitfieldRoGet{cs: append(c.cs, "GET", Encoding, strconv.FormatInt(Offset, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SBitfieldSat SCompleted
@@ -13085,8 +13514,8 @@ func (c SBitfieldSat) Build() SCompleted {
 
 type SBitfieldSet SCompleted
 
-func (c SBitfieldSet) Incrby(Type string, Offset int64, Increment int64) SBitfieldIncrby {
-	return SBitfieldIncrby{cs: append(c.cs, "INCRBY", Type, strconv.FormatInt(Offset, 10), strconv.FormatInt(Increment, 10)), cf: c.cf, ks: c.ks}
+func (c SBitfieldSet) Incrby(Encoding string, Offset int64, Increment int64) SBitfieldIncrby {
+	return SBitfieldIncrby{cs: append(c.cs, "INCRBY", Encoding, strconv.FormatInt(Offset, 10), strconv.FormatInt(Increment, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SBitfieldSet) Wrap() SBitfieldWrap {
@@ -13180,20 +13609,48 @@ func (c SBitposBit) Cache() SCacheable {
 	return SCacheable(c)
 }
 
-type SBitposIndexEnd SCompleted
+type SBitposIndexEndIndexEnd SCompleted
 
-func (c SBitposIndexEnd) Build() SCompleted {
+func (c SBitposIndexEndIndexEnd) Byte() SBitposIndexEndIndexIndexUnitByte {
+	return SBitposIndexEndIndexIndexUnitByte{cs: append(c.cs, "BYTE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SBitposIndexEndIndexEnd) Bit() SBitposIndexEndIndexIndexUnitBit {
+	return SBitposIndexEndIndexIndexUnitBit{cs: append(c.cs, "BIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SBitposIndexEndIndexEnd) Build() SCompleted {
 	return SCompleted(c)
 }
 
-func (c SBitposIndexEnd) Cache() SCacheable {
+func (c SBitposIndexEndIndexEnd) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SBitposIndexEndIndexIndexUnitBit SCompleted
+
+func (c SBitposIndexEndIndexIndexUnitBit) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c SBitposIndexEndIndexIndexUnitBit) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SBitposIndexEndIndexIndexUnitByte SCompleted
+
+func (c SBitposIndexEndIndexIndexUnitByte) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c SBitposIndexEndIndexIndexUnitByte) Cache() SCacheable {
 	return SCacheable(c)
 }
 
 type SBitposIndexStart SCompleted
 
-func (c SBitposIndexStart) End(End int64) SBitposIndexEnd {
-	return SBitposIndexEnd{cs: append(c.cs, strconv.FormatInt(End, 10)), cf: c.cf, ks: c.ks}
+func (c SBitposIndexStart) End(End int64) SBitposIndexEndIndexEnd {
+	return SBitposIndexEndIndexEnd{cs: append(c.cs, strconv.FormatInt(End, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (c SBitposIndexStart) Build() SCompleted {
@@ -13324,14 +13781,6 @@ func (c SBlmpopNumkeys) Key(Key ...string) SBlmpopKey {
 	return SBlmpopKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
-func (c SBlmpopNumkeys) Left() SBlmpopWhereLeft {
-	return SBlmpopWhereLeft{cs: append(c.cs, "LEFT"), cf: c.cf, ks: c.ks}
-}
-
-func (c SBlmpopNumkeys) Right() SBlmpopWhereRight {
-	return SBlmpopWhereRight{cs: append(c.cs, "RIGHT"), cf: c.cf, ks: c.ks}
-}
-
 type SBlmpopTimeout SCompleted
 
 func (c SBlmpopTimeout) Numkeys(Numkeys int64) SBlmpopNumkeys {
@@ -13458,6 +13907,77 @@ func (c SBrpoplpushSource) Destination(Destination string) SBrpoplpushDestinatio
 type SBrpoplpushTimeout SCompleted
 
 func (c SBrpoplpushTimeout) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SBzmpop SCompleted
+
+func (c SBzmpop) Timeout(Timeout float64) SBzmpopTimeout {
+	return SBzmpopTimeout{cs: append(c.cs, strconv.FormatFloat(Timeout, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) Bzmpop() (c SBzmpop) {
+	c.cs = append(b.get(), "BZMPOP")
+	c.cf = blockTag
+	c.ks = InitSlot
+	return
+}
+
+type SBzmpopCount SCompleted
+
+func (c SBzmpopCount) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SBzmpopKey SCompleted
+
+func (c SBzmpopKey) Min() SBzmpopWhereMin {
+	return SBzmpopWhereMin{cs: append(c.cs, "MIN"), cf: c.cf, ks: c.ks}
+}
+
+func (c SBzmpopKey) Max() SBzmpopWhereMax {
+	return SBzmpopWhereMax{cs: append(c.cs, "MAX"), cf: c.cf, ks: c.ks}
+}
+
+func (c SBzmpopKey) Key(Key ...string) SBzmpopKey {
+	for _, k := range Key {
+		c.ks = checkSlot(c.ks, slot(k))
+	}
+	return SBzmpopKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
+}
+
+type SBzmpopNumkeys SCompleted
+
+func (c SBzmpopNumkeys) Key(Key ...string) SBzmpopKey {
+	for _, k := range Key {
+		c.ks = checkSlot(c.ks, slot(k))
+	}
+	return SBzmpopKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
+}
+
+type SBzmpopTimeout SCompleted
+
+func (c SBzmpopTimeout) Numkeys(Numkeys int64) SBzmpopNumkeys {
+	return SBzmpopNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10)), cf: c.cf, ks: c.ks}
+}
+
+type SBzmpopWhereMax SCompleted
+
+func (c SBzmpopWhereMax) Count(Count int64) SBzmpopCount {
+	return SBzmpopCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SBzmpopWhereMax) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SBzmpopWhereMin SCompleted
+
+func (c SBzmpopWhereMin) Count(Count int64) SBzmpopCount {
+	return SBzmpopCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SBzmpopWhereMin) Build() SCompleted {
 	return SCompleted(c)
 }
 
@@ -14361,6 +14881,28 @@ func (c SClusterAddslotsSlot) Build() SCompleted {
 	return SCompleted(c)
 }
 
+type SClusterAddslotsrange SCompleted
+
+func (c SClusterAddslotsrange) StartSlotEndSlot() SClusterAddslotsrangeStartSlotEndSlot {
+	return SClusterAddslotsrangeStartSlotEndSlot{cs: c.cs, cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) ClusterAddslotsrange() (c SClusterAddslotsrange) {
+	c.cs = append(b.get(), "CLUSTER", "ADDSLOTSRANGE")
+	c.ks = InitSlot
+	return
+}
+
+type SClusterAddslotsrangeStartSlotEndSlot SCompleted
+
+func (c SClusterAddslotsrangeStartSlotEndSlot) StartSlotEndSlot(StartSlot int64, EndSlot int64) SClusterAddslotsrangeStartSlotEndSlot {
+	return SClusterAddslotsrangeStartSlotEndSlot{cs: append(c.cs, strconv.FormatInt(StartSlot, 10), strconv.FormatInt(EndSlot, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SClusterAddslotsrangeStartSlotEndSlot) Build() SCompleted {
+	return SCompleted(c)
+}
+
 type SClusterBumpepoch SCompleted
 
 func (c SClusterBumpepoch) Build() SCompleted {
@@ -14434,6 +14976,28 @@ func (c SClusterDelslotsSlot) Slot(Slot ...int64) SClusterDelslotsSlot {
 }
 
 func (c SClusterDelslotsSlot) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SClusterDelslotsrange SCompleted
+
+func (c SClusterDelslotsrange) StartSlotEndSlot() SClusterDelslotsrangeStartSlotEndSlot {
+	return SClusterDelslotsrangeStartSlotEndSlot{cs: c.cs, cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) ClusterDelslotsrange() (c SClusterDelslotsrange) {
+	c.cs = append(b.get(), "CLUSTER", "DELSLOTSRANGE")
+	c.ks = InitSlot
+	return
+}
+
+type SClusterDelslotsrangeStartSlotEndSlot SCompleted
+
+func (c SClusterDelslotsrangeStartSlotEndSlot) StartSlotEndSlot(StartSlot int64, EndSlot int64) SClusterDelslotsrangeStartSlotEndSlot {
+	return SClusterDelslotsrangeStartSlotEndSlot{cs: append(c.cs, strconv.FormatInt(StartSlot, 10), strconv.FormatInt(EndSlot, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SClusterDelslotsrangeStartSlotEndSlot) Build() SCompleted {
 	return SCompleted(c)
 }
 
@@ -19723,14 +20287,6 @@ func (c SLmpopNumkeys) Key(Key ...string) SLmpopKey {
 	return SLmpopKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
-func (c SLmpopNumkeys) Left() SLmpopWhereLeft {
-	return SLmpopWhereLeft{cs: append(c.cs, "LEFT"), cf: c.cf, ks: c.ks}
-}
-
-func (c SLmpopNumkeys) Right() SLmpopWhereRight {
-	return SLmpopWhereRight{cs: append(c.cs, "RIGHT"), cf: c.cf, ks: c.ks}
-}
-
 type SLmpopWhereLeft SCompleted
 
 func (c SLmpopWhereLeft) Count(Count int64) SLmpopCount {
@@ -20519,36 +21075,96 @@ func (b *SBuilder) Multi() (c SMulti) {
 	return
 }
 
-type SObject SCompleted
+type SObjectEncoding SCompleted
 
-func (c SObject) Subcommand(Subcommand string) SObjectSubcommand {
-	return SObjectSubcommand{cs: append(c.cs, Subcommand), cf: c.cf, ks: c.ks}
+func (c SObjectEncoding) Key(Key string) SObjectEncodingKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SObjectEncodingKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
-func (b *SBuilder) Object() (c SObject) {
-	c.cs = append(b.get(), "OBJECT")
+func (b *SBuilder) ObjectEncoding() (c SObjectEncoding) {
+	c.cs = append(b.get(), "OBJECT", "ENCODING")
 	c.cf = readonly
 	c.ks = InitSlot
 	return
 }
 
-type SObjectArguments SCompleted
+type SObjectEncodingKey SCompleted
 
-func (c SObjectArguments) Arguments(Arguments ...string) SObjectArguments {
-	return SObjectArguments{cs: append(c.cs, Arguments...), cf: c.cf, ks: c.ks}
-}
-
-func (c SObjectArguments) Build() SCompleted {
+func (c SObjectEncodingKey) Build() SCompleted {
 	return SCompleted(c)
 }
 
-type SObjectSubcommand SCompleted
+type SObjectFreq SCompleted
 
-func (c SObjectSubcommand) Arguments(Arguments ...string) SObjectArguments {
-	return SObjectArguments{cs: append(c.cs, Arguments...), cf: c.cf, ks: c.ks}
+func (c SObjectFreq) Key(Key string) SObjectFreqKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SObjectFreqKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
-func (c SObjectSubcommand) Build() SCompleted {
+func (b *SBuilder) ObjectFreq() (c SObjectFreq) {
+	c.cs = append(b.get(), "OBJECT", "FREQ")
+	c.cf = readonly
+	c.ks = InitSlot
+	return
+}
+
+type SObjectFreqKey SCompleted
+
+func (c SObjectFreqKey) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SObjectHelp SCompleted
+
+func (c SObjectHelp) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (b *SBuilder) ObjectHelp() (c SObjectHelp) {
+	c.cs = append(b.get(), "OBJECT", "HELP")
+	c.cf = readonly
+	c.ks = InitSlot
+	return
+}
+
+type SObjectIdletime SCompleted
+
+func (c SObjectIdletime) Key(Key string) SObjectIdletimeKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SObjectIdletimeKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) ObjectIdletime() (c SObjectIdletime) {
+	c.cs = append(b.get(), "OBJECT", "IDLETIME")
+	c.cf = readonly
+	c.ks = InitSlot
+	return
+}
+
+type SObjectIdletimeKey SCompleted
+
+func (c SObjectIdletimeKey) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SObjectRefcount SCompleted
+
+func (c SObjectRefcount) Key(Key string) SObjectRefcountKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SObjectRefcountKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) ObjectRefcount() (c SObjectRefcount) {
+	c.cs = append(b.get(), "OBJECT", "REFCOUNT")
+	c.cf = readonly
+	c.ks = InitSlot
+	return
+}
+
+type SObjectRefcountKey SCompleted
+
+func (c SObjectRefcountKey) Build() SCompleted {
 	return SCompleted(c)
 }
 
@@ -20970,35 +21586,79 @@ func (c SPublishMessage) Build() SCompleted {
 	return SCompleted(c)
 }
 
-type SPubsub SCompleted
+type SPubsubChannels SCompleted
 
-func (c SPubsub) Subcommand(Subcommand string) SPubsubSubcommand {
-	return SPubsubSubcommand{cs: append(c.cs, Subcommand), cf: c.cf, ks: c.ks}
+func (c SPubsubChannels) Pattern(Pattern string) SPubsubChannelsPattern {
+	return SPubsubChannelsPattern{cs: append(c.cs, Pattern), cf: c.cf, ks: c.ks}
 }
 
-func (b *SBuilder) Pubsub() (c SPubsub) {
-	c.cs = append(b.get(), "PUBSUB")
+func (c SPubsubChannels) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (b *SBuilder) PubsubChannels() (c SPubsubChannels) {
+	c.cs = append(b.get(), "PUBSUB", "CHANNELS")
+	c.cf = readonly
 	c.ks = InitSlot
 	return
 }
 
-type SPubsubArgument SCompleted
+type SPubsubChannelsPattern SCompleted
 
-func (c SPubsubArgument) Argument(Argument ...string) SPubsubArgument {
-	return SPubsubArgument{cs: append(c.cs, Argument...), cf: c.cf, ks: c.ks}
-}
-
-func (c SPubsubArgument) Build() SCompleted {
+func (c SPubsubChannelsPattern) Build() SCompleted {
 	return SCompleted(c)
 }
 
-type SPubsubSubcommand SCompleted
+type SPubsubHelp SCompleted
 
-func (c SPubsubSubcommand) Argument(Argument ...string) SPubsubArgument {
-	return SPubsubArgument{cs: append(c.cs, Argument...), cf: c.cf, ks: c.ks}
+func (c SPubsubHelp) Build() SCompleted {
+	return SCompleted(c)
 }
 
-func (c SPubsubSubcommand) Build() SCompleted {
+func (b *SBuilder) PubsubHelp() (c SPubsubHelp) {
+	c.cs = append(b.get(), "PUBSUB", "HELP")
+	c.cf = readonly
+	c.ks = InitSlot
+	return
+}
+
+type SPubsubNumpat SCompleted
+
+func (c SPubsubNumpat) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (b *SBuilder) PubsubNumpat() (c SPubsubNumpat) {
+	c.cs = append(b.get(), "PUBSUB", "NUMPAT")
+	c.cf = readonly
+	c.ks = InitSlot
+	return
+}
+
+type SPubsubNumsub SCompleted
+
+func (c SPubsubNumsub) Channel(Channel ...string) SPubsubNumsubChannel {
+	return SPubsubNumsubChannel{cs: append(c.cs, Channel...), cf: c.cf, ks: c.ks}
+}
+
+func (c SPubsubNumsub) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (b *SBuilder) PubsubNumsub() (c SPubsubNumsub) {
+	c.cs = append(b.get(), "PUBSUB", "NUMSUB")
+	c.cf = readonly
+	c.ks = InitSlot
+	return
+}
+
+type SPubsubNumsubChannel SCompleted
+
+func (c SPubsubNumsubChannel) Channel(Channel ...string) SPubsubNumsubChannel {
+	return SPubsubNumsubChannel{cs: append(c.cs, Channel...), cf: c.cf, ks: c.ks}
+}
+
+func (c SPubsubNumsubChannel) Build() SCompleted {
 	return SCompleted(c)
 }
 
@@ -22070,11 +22730,8 @@ func (c SSinterKey) Build() SCompleted {
 
 type SSintercard SCompleted
 
-func (c SSintercard) Key(Key ...string) SSintercardKey {
-	for _, k := range Key {
-		c.ks = checkSlot(c.ks, slot(k))
-	}
-	return SSintercardKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
+func (c SSintercard) Numkeys(Numkeys int64) SSintercardNumkeys {
+	return SSintercardNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10)), cf: c.cf, ks: c.ks}
 }
 
 func (b *SBuilder) Sintercard() (c SSintercard) {
@@ -22086,6 +22743,10 @@ func (b *SBuilder) Sintercard() (c SSintercard) {
 
 type SSintercardKey SCompleted
 
+func (c SSintercardKey) Limit(Limit int64) SSintercardLimit {
+	return SSintercardLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Limit, 10)), cf: c.cf, ks: c.ks}
+}
+
 func (c SSintercardKey) Key(Key ...string) SSintercardKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
@@ -22095,6 +22756,21 @@ func (c SSintercardKey) Key(Key ...string) SSintercardKey {
 
 func (c SSintercardKey) Build() SCompleted {
 	return SCompleted(c)
+}
+
+type SSintercardLimit SCompleted
+
+func (c SSintercardLimit) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SSintercardNumkeys SCompleted
+
+func (c SSintercardNumkeys) Key(Key ...string) SSintercardKey {
+	for _, k := range Key {
+		c.ks = checkSlot(c.ks, slot(k))
+	}
+	return SSintercardKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
 }
 
 type SSinterstore SCompleted
@@ -22186,32 +22862,65 @@ func (c SSlaveofPort) Build() SCompleted {
 	return SCompleted(c)
 }
 
-type SSlowlog SCompleted
+type SSlowlogGet SCompleted
 
-func (c SSlowlog) Subcommand(Subcommand string) SSlowlogSubcommand {
-	return SSlowlogSubcommand{cs: append(c.cs, Subcommand), cf: c.cf, ks: c.ks}
+func (c SSlowlogGet) Count(Count int64) SSlowlogGetCount {
+	return SSlowlogGetCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
 }
 
-func (b *SBuilder) Slowlog() (c SSlowlog) {
-	c.cs = append(b.get(), "SLOWLOG")
+func (c SSlowlogGet) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (b *SBuilder) SlowlogGet() (c SSlowlogGet) {
+	c.cs = append(b.get(), "SLOWLOG", "GET")
+	c.cf = readonly
 	c.ks = InitSlot
 	return
 }
 
-type SSlowlogArgument SCompleted
+type SSlowlogGetCount SCompleted
 
-func (c SSlowlogArgument) Build() SCompleted {
+func (c SSlowlogGetCount) Build() SCompleted {
 	return SCompleted(c)
 }
 
-type SSlowlogSubcommand SCompleted
+type SSlowlogHelp SCompleted
 
-func (c SSlowlogSubcommand) Argument(Argument string) SSlowlogArgument {
-	return SSlowlogArgument{cs: append(c.cs, Argument), cf: c.cf, ks: c.ks}
+func (c SSlowlogHelp) Build() SCompleted {
+	return SCompleted(c)
 }
 
-func (c SSlowlogSubcommand) Build() SCompleted {
+func (b *SBuilder) SlowlogHelp() (c SSlowlogHelp) {
+	c.cs = append(b.get(), "SLOWLOG", "HELP")
+	c.cf = readonly
+	c.ks = InitSlot
+	return
+}
+
+type SSlowlogLen SCompleted
+
+func (c SSlowlogLen) Build() SCompleted {
 	return SCompleted(c)
+}
+
+func (b *SBuilder) SlowlogLen() (c SSlowlogLen) {
+	c.cs = append(b.get(), "SLOWLOG", "LEN")
+	c.cf = readonly
+	c.ks = InitSlot
+	return
+}
+
+type SSlowlogReset SCompleted
+
+func (c SSlowlogReset) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (b *SBuilder) SlowlogReset() (c SSlowlogReset) {
+	c.cs = append(b.get(), "SLOWLOG", "RESET")
+	c.ks = InitSlot
+	return
 }
 
 type SSmembers SCompleted
@@ -23566,46 +24275,22 @@ func (c SXdelKey) Id(Id ...string) SXdelId {
 	return SXdelId{cs: append(c.cs, Id...), cf: c.cf, ks: c.ks}
 }
 
-type SXgroup SCompleted
+type SXgroupCreate SCompleted
 
-func (c SXgroup) Create(Key string, Groupname string) SXgroupCreateCreate {
+func (c SXgroupCreate) Key(Key string) SXgroupCreateKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SXgroupCreateCreate{cs: append(c.cs, "CREATE", Key, Groupname), cf: c.cf, ks: c.ks}
+	return SXgroupCreateKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
-func (c SXgroup) Setid(Key string, Groupname string) SXgroupSetidSetid {
-	c.ks = checkSlot(c.ks, slot(Key))
-	return SXgroupSetidSetid{cs: append(c.cs, "SETID", Key, Groupname), cf: c.cf, ks: c.ks}
-}
-
-func (c SXgroup) Destroy(Key string, Groupname string) SXgroupDestroy {
-	c.ks = checkSlot(c.ks, slot(Key))
-	return SXgroupDestroy{cs: append(c.cs, "DESTROY", Key, Groupname), cf: c.cf, ks: c.ks}
-}
-
-func (c SXgroup) Createconsumer(Key string, Groupname string, Consumername string) SXgroupCreateconsumer {
-	c.ks = checkSlot(c.ks, slot(Key))
-	return SXgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
-}
-
-func (c SXgroup) Delconsumer(Key string, Groupname string, Consumername string) SXgroupDelconsumer {
-	c.ks = checkSlot(c.ks, slot(Key))
-	return SXgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
-}
-
-func (c SXgroup) Build() SCompleted {
-	return SCompleted(c)
-}
-
-func (b *SBuilder) Xgroup() (c SXgroup) {
-	c.cs = append(b.get(), "XGROUP")
+func (b *SBuilder) XgroupCreate() (c SXgroupCreate) {
+	c.cs = append(b.get(), "XGROUP", "CREATE")
 	c.ks = InitSlot
 	return
 }
 
-type SXgroupCreateCreate SCompleted
+type SXgroupCreateGroupname SCompleted
 
-func (c SXgroupCreateCreate) Id(Id string) SXgroupCreateId {
+func (c SXgroupCreateGroupname) Id(Id string) SXgroupCreateId {
 	return SXgroupCreateId{cs: append(c.cs, Id), cf: c.cf, ks: c.ks}
 }
 
@@ -23615,51 +24300,17 @@ func (c SXgroupCreateId) Mkstream() SXgroupCreateMkstream {
 	return SXgroupCreateMkstream{cs: append(c.cs, "MKSTREAM"), cf: c.cf, ks: c.ks}
 }
 
-func (c SXgroupCreateId) Setid(Key string, Groupname string) SXgroupSetidSetid {
-	c.ks = checkSlot(c.ks, slot(Key))
-	return SXgroupSetidSetid{cs: append(c.cs, "SETID", Key, Groupname), cf: c.cf, ks: c.ks}
-}
-
-func (c SXgroupCreateId) Destroy(Key string, Groupname string) SXgroupDestroy {
-	c.ks = checkSlot(c.ks, slot(Key))
-	return SXgroupDestroy{cs: append(c.cs, "DESTROY", Key, Groupname), cf: c.cf, ks: c.ks}
-}
-
-func (c SXgroupCreateId) Createconsumer(Key string, Groupname string, Consumername string) SXgroupCreateconsumer {
-	c.ks = checkSlot(c.ks, slot(Key))
-	return SXgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
-}
-
-func (c SXgroupCreateId) Delconsumer(Key string, Groupname string, Consumername string) SXgroupDelconsumer {
-	c.ks = checkSlot(c.ks, slot(Key))
-	return SXgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
-}
-
 func (c SXgroupCreateId) Build() SCompleted {
 	return SCompleted(c)
 }
 
+type SXgroupCreateKey SCompleted
+
+func (c SXgroupCreateKey) Groupname(Groupname string) SXgroupCreateGroupname {
+	return SXgroupCreateGroupname{cs: append(c.cs, Groupname), cf: c.cf, ks: c.ks}
+}
+
 type SXgroupCreateMkstream SCompleted
-
-func (c SXgroupCreateMkstream) Setid(Key string, Groupname string) SXgroupSetidSetid {
-	c.ks = checkSlot(c.ks, slot(Key))
-	return SXgroupSetidSetid{cs: append(c.cs, "SETID", Key, Groupname), cf: c.cf, ks: c.ks}
-}
-
-func (c SXgroupCreateMkstream) Destroy(Key string, Groupname string) SXgroupDestroy {
-	c.ks = checkSlot(c.ks, slot(Key))
-	return SXgroupDestroy{cs: append(c.cs, "DESTROY", Key, Groupname), cf: c.cf, ks: c.ks}
-}
-
-func (c SXgroupCreateMkstream) Createconsumer(Key string, Groupname string, Consumername string) SXgroupCreateconsumer {
-	c.ks = checkSlot(c.ks, slot(Key))
-	return SXgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
-}
-
-func (c SXgroupCreateMkstream) Delconsumer(Key string, Groupname string, Consumername string) SXgroupDelconsumer {
-	c.ks = checkSlot(c.ks, slot(Key))
-	return SXgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
-}
 
 func (c SXgroupCreateMkstream) Build() SCompleted {
 	return SCompleted(c)
@@ -23667,144 +24318,230 @@ func (c SXgroupCreateMkstream) Build() SCompleted {
 
 type SXgroupCreateconsumer SCompleted
 
-func (c SXgroupCreateconsumer) Delconsumer(Key string, Groupname string, Consumername string) SXgroupDelconsumer {
+func (c SXgroupCreateconsumer) Key(Key string) SXgroupCreateconsumerKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SXgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
+	return SXgroupCreateconsumerKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
-func (c SXgroupCreateconsumer) Build() SCompleted {
+func (b *SBuilder) XgroupCreateconsumer() (c SXgroupCreateconsumer) {
+	c.cs = append(b.get(), "XGROUP", "CREATECONSUMER")
+	c.ks = InitSlot
+	return
+}
+
+type SXgroupCreateconsumerConsumername SCompleted
+
+func (c SXgroupCreateconsumerConsumername) Build() SCompleted {
 	return SCompleted(c)
+}
+
+type SXgroupCreateconsumerGroupname SCompleted
+
+func (c SXgroupCreateconsumerGroupname) Consumername(Consumername string) SXgroupCreateconsumerConsumername {
+	return SXgroupCreateconsumerConsumername{cs: append(c.cs, Consumername), cf: c.cf, ks: c.ks}
+}
+
+type SXgroupCreateconsumerKey SCompleted
+
+func (c SXgroupCreateconsumerKey) Groupname(Groupname string) SXgroupCreateconsumerGroupname {
+	return SXgroupCreateconsumerGroupname{cs: append(c.cs, Groupname), cf: c.cf, ks: c.ks}
 }
 
 type SXgroupDelconsumer SCompleted
 
-func (c SXgroupDelconsumer) Build() SCompleted {
+func (c SXgroupDelconsumer) Key(Key string) SXgroupDelconsumerKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SXgroupDelconsumerKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) XgroupDelconsumer() (c SXgroupDelconsumer) {
+	c.cs = append(b.get(), "XGROUP", "DELCONSUMER")
+	c.ks = InitSlot
+	return
+}
+
+type SXgroupDelconsumerConsumername SCompleted
+
+func (c SXgroupDelconsumerConsumername) Build() SCompleted {
 	return SCompleted(c)
+}
+
+type SXgroupDelconsumerGroupname SCompleted
+
+func (c SXgroupDelconsumerGroupname) Consumername(Consumername string) SXgroupDelconsumerConsumername {
+	return SXgroupDelconsumerConsumername{cs: append(c.cs, Consumername), cf: c.cf, ks: c.ks}
+}
+
+type SXgroupDelconsumerKey SCompleted
+
+func (c SXgroupDelconsumerKey) Groupname(Groupname string) SXgroupDelconsumerGroupname {
+	return SXgroupDelconsumerGroupname{cs: append(c.cs, Groupname), cf: c.cf, ks: c.ks}
 }
 
 type SXgroupDestroy SCompleted
 
-func (c SXgroupDestroy) Createconsumer(Key string, Groupname string, Consumername string) SXgroupCreateconsumer {
+func (c SXgroupDestroy) Key(Key string) SXgroupDestroyKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SXgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
+	return SXgroupDestroyKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
-func (c SXgroupDestroy) Delconsumer(Key string, Groupname string, Consumername string) SXgroupDelconsumer {
-	c.ks = checkSlot(c.ks, slot(Key))
-	return SXgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
+func (b *SBuilder) XgroupDestroy() (c SXgroupDestroy) {
+	c.cs = append(b.get(), "XGROUP", "DESTROY")
+	c.ks = InitSlot
+	return
 }
 
-func (c SXgroupDestroy) Build() SCompleted {
+type SXgroupDestroyGroupname SCompleted
+
+func (c SXgroupDestroyGroupname) Build() SCompleted {
 	return SCompleted(c)
 }
 
+type SXgroupDestroyKey SCompleted
+
+func (c SXgroupDestroyKey) Groupname(Groupname string) SXgroupDestroyGroupname {
+	return SXgroupDestroyGroupname{cs: append(c.cs, Groupname), cf: c.cf, ks: c.ks}
+}
+
+type SXgroupHelp SCompleted
+
+func (c SXgroupHelp) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (b *SBuilder) XgroupHelp() (c SXgroupHelp) {
+	c.cs = append(b.get(), "XGROUP", "HELP")
+	c.ks = InitSlot
+	return
+}
+
+type SXgroupSetid SCompleted
+
+func (c SXgroupSetid) Key(Key string) SXgroupSetidKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SXgroupSetidKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) XgroupSetid() (c SXgroupSetid) {
+	c.cs = append(b.get(), "XGROUP", "SETID")
+	c.ks = InitSlot
+	return
+}
+
+type SXgroupSetidGroupname SCompleted
+
+func (c SXgroupSetidGroupname) Id(Id string) SXgroupSetidId {
+	return SXgroupSetidId{cs: append(c.cs, Id), cf: c.cf, ks: c.ks}
+}
+
 type SXgroupSetidId SCompleted
-
-func (c SXgroupSetidId) Destroy(Key string, Groupname string) SXgroupDestroy {
-	c.ks = checkSlot(c.ks, slot(Key))
-	return SXgroupDestroy{cs: append(c.cs, "DESTROY", Key, Groupname), cf: c.cf, ks: c.ks}
-}
-
-func (c SXgroupSetidId) Createconsumer(Key string, Groupname string, Consumername string) SXgroupCreateconsumer {
-	c.ks = checkSlot(c.ks, slot(Key))
-	return SXgroupCreateconsumer{cs: append(c.cs, "CREATECONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
-}
-
-func (c SXgroupSetidId) Delconsumer(Key string, Groupname string, Consumername string) SXgroupDelconsumer {
-	c.ks = checkSlot(c.ks, slot(Key))
-	return SXgroupDelconsumer{cs: append(c.cs, "DELCONSUMER", Key, Groupname, Consumername), cf: c.cf, ks: c.ks}
-}
 
 func (c SXgroupSetidId) Build() SCompleted {
 	return SCompleted(c)
 }
 
-type SXgroupSetidSetid SCompleted
+type SXgroupSetidKey SCompleted
 
-func (c SXgroupSetidSetid) Id(Id string) SXgroupSetidId {
-	return SXgroupSetidId{cs: append(c.cs, Id), cf: c.cf, ks: c.ks}
+func (c SXgroupSetidKey) Groupname(Groupname string) SXgroupSetidGroupname {
+	return SXgroupSetidGroupname{cs: append(c.cs, Groupname), cf: c.cf, ks: c.ks}
 }
 
-type SXinfo SCompleted
+type SXinfoConsumers SCompleted
 
-func (c SXinfo) Consumers(Key string, Groupname string) SXinfoConsumers {
+func (c SXinfoConsumers) Key(Key string) SXinfoConsumersKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SXinfoConsumers{cs: append(c.cs, "CONSUMERS", Key, Groupname), cf: c.cf, ks: c.ks}
+	return SXinfoConsumersKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
-func (c SXinfo) Groups(Key string) SXinfoGroups {
-	c.ks = checkSlot(c.ks, slot(Key))
-	return SXinfoGroups{cs: append(c.cs, "GROUPS", Key), cf: c.cf, ks: c.ks}
-}
-
-func (c SXinfo) Stream(Key string) SXinfoStream {
-	c.ks = checkSlot(c.ks, slot(Key))
-	return SXinfoStream{cs: append(c.cs, "STREAM", Key), cf: c.cf, ks: c.ks}
-}
-
-func (c SXinfo) Help() SXinfoHelpHelp {
-	return SXinfoHelpHelp{cs: append(c.cs, "HELP"), cf: c.cf, ks: c.ks}
-}
-
-func (c SXinfo) Build() SCompleted {
-	return SCompleted(c)
-}
-
-func (b *SBuilder) Xinfo() (c SXinfo) {
-	c.cs = append(b.get(), "XINFO")
+func (b *SBuilder) XinfoConsumers() (c SXinfoConsumers) {
+	c.cs = append(b.get(), "XINFO", "CONSUMERS")
 	c.cf = readonly
 	c.ks = InitSlot
 	return
 }
 
-type SXinfoConsumers SCompleted
+type SXinfoConsumersGroupname SCompleted
 
-func (c SXinfoConsumers) Groups(Key string) SXinfoGroups {
-	c.ks = checkSlot(c.ks, slot(Key))
-	return SXinfoGroups{cs: append(c.cs, "GROUPS", Key), cf: c.cf, ks: c.ks}
-}
-
-func (c SXinfoConsumers) Stream(Key string) SXinfoStream {
-	c.ks = checkSlot(c.ks, slot(Key))
-	return SXinfoStream{cs: append(c.cs, "STREAM", Key), cf: c.cf, ks: c.ks}
-}
-
-func (c SXinfoConsumers) Help() SXinfoHelpHelp {
-	return SXinfoHelpHelp{cs: append(c.cs, "HELP"), cf: c.cf, ks: c.ks}
-}
-
-func (c SXinfoConsumers) Build() SCompleted {
+func (c SXinfoConsumersGroupname) Build() SCompleted {
 	return SCompleted(c)
+}
+
+type SXinfoConsumersKey SCompleted
+
+func (c SXinfoConsumersKey) Groupname(Groupname string) SXinfoConsumersGroupname {
+	return SXinfoConsumersGroupname{cs: append(c.cs, Groupname), cf: c.cf, ks: c.ks}
 }
 
 type SXinfoGroups SCompleted
 
-func (c SXinfoGroups) Stream(Key string) SXinfoStream {
+func (c SXinfoGroups) Key(Key string) SXinfoGroupsKey {
 	c.ks = checkSlot(c.ks, slot(Key))
-	return SXinfoStream{cs: append(c.cs, "STREAM", Key), cf: c.cf, ks: c.ks}
+	return SXinfoGroupsKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
-func (c SXinfoGroups) Help() SXinfoHelpHelp {
-	return SXinfoHelpHelp{cs: append(c.cs, "HELP"), cf: c.cf, ks: c.ks}
+func (b *SBuilder) XinfoGroups() (c SXinfoGroups) {
+	c.cs = append(b.get(), "XINFO", "GROUPS")
+	c.cf = readonly
+	c.ks = InitSlot
+	return
 }
 
-func (c SXinfoGroups) Build() SCompleted {
+type SXinfoGroupsKey SCompleted
+
+func (c SXinfoGroupsKey) Build() SCompleted {
 	return SCompleted(c)
 }
 
-type SXinfoHelpHelp SCompleted
+type SXinfoHelp SCompleted
 
-func (c SXinfoHelpHelp) Build() SCompleted {
+func (c SXinfoHelp) Build() SCompleted {
 	return SCompleted(c)
+}
+
+func (b *SBuilder) XinfoHelp() (c SXinfoHelp) {
+	c.cs = append(b.get(), "XINFO", "HELP")
+	c.cf = readonly
+	c.ks = InitSlot
+	return
 }
 
 type SXinfoStream SCompleted
 
-func (c SXinfoStream) Help() SXinfoHelpHelp {
-	return SXinfoHelpHelp{cs: append(c.cs, "HELP"), cf: c.cf, ks: c.ks}
+func (c SXinfoStream) Key(Key string) SXinfoStreamKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SXinfoStreamKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
 }
 
-func (c SXinfoStream) Build() SCompleted {
+func (b *SBuilder) XinfoStream() (c SXinfoStream) {
+	c.cs = append(b.get(), "XINFO", "STREAM")
+	c.cf = readonly
+	c.ks = InitSlot
+	return
+}
+
+type SXinfoStreamFullCount SCompleted
+
+func (c SXinfoStreamFullCount) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SXinfoStreamFullFull SCompleted
+
+func (c SXinfoStreamFullFull) Count(Count int64) SXinfoStreamFullCount {
+	return SXinfoStreamFullCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SXinfoStreamFullFull) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SXinfoStreamKey SCompleted
+
+func (c SXinfoStreamKey) Full() SXinfoStreamFullFull {
+	return SXinfoStreamFullFull{cs: append(c.cs, "FULL"), cf: c.cf, ks: c.ks}
+}
+
+func (c SXinfoStreamKey) Build() SCompleted {
 	return SCompleted(c)
 }
 
@@ -24677,6 +25414,10 @@ func (b *SBuilder) Zintercard() (c SZintercard) {
 
 type SZintercardKey SCompleted
 
+func (c SZintercardKey) Limit(Limit int64) SZintercardLimit {
+	return SZintercardLimit{cs: append(c.cs, "LIMIT", strconv.FormatInt(Limit, 10)), cf: c.cf, ks: c.ks}
+}
+
 func (c SZintercardKey) Key(Key ...string) SZintercardKey {
 	for _, k := range Key {
 		c.ks = checkSlot(c.ks, slot(k))
@@ -24685,6 +25426,12 @@ func (c SZintercardKey) Key(Key ...string) SZintercardKey {
 }
 
 func (c SZintercardKey) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SZintercardLimit SCompleted
+
+func (c SZintercardLimit) Build() SCompleted {
 	return SCompleted(c)
 }
 
@@ -24835,6 +25582,70 @@ type SZlexcountMin SCompleted
 
 func (c SZlexcountMin) Max(Max string) SZlexcountMax {
 	return SZlexcountMax{cs: append(c.cs, Max), cf: c.cf, ks: c.ks}
+}
+
+type SZmpop SCompleted
+
+func (c SZmpop) Numkeys(Numkeys int64) SZmpopNumkeys {
+	return SZmpopNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) Zmpop() (c SZmpop) {
+	c.cs = append(b.get(), "ZMPOP")
+	c.ks = InitSlot
+	return
+}
+
+type SZmpopCount SCompleted
+
+func (c SZmpopCount) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SZmpopKey SCompleted
+
+func (c SZmpopKey) Min() SZmpopWhereMin {
+	return SZmpopWhereMin{cs: append(c.cs, "MIN"), cf: c.cf, ks: c.ks}
+}
+
+func (c SZmpopKey) Max() SZmpopWhereMax {
+	return SZmpopWhereMax{cs: append(c.cs, "MAX"), cf: c.cf, ks: c.ks}
+}
+
+func (c SZmpopKey) Key(Key ...string) SZmpopKey {
+	for _, k := range Key {
+		c.ks = checkSlot(c.ks, slot(k))
+	}
+	return SZmpopKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
+}
+
+type SZmpopNumkeys SCompleted
+
+func (c SZmpopNumkeys) Key(Key ...string) SZmpopKey {
+	for _, k := range Key {
+		c.ks = checkSlot(c.ks, slot(k))
+	}
+	return SZmpopKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
+}
+
+type SZmpopWhereMax SCompleted
+
+func (c SZmpopWhereMax) Count(Count int64) SZmpopCount {
+	return SZmpopCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SZmpopWhereMax) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SZmpopWhereMin SCompleted
+
+func (c SZmpopWhereMin) Count(Count int64) SZmpopCount {
+	return SZmpopCount{cs: append(c.cs, "COUNT", strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SZmpopWhereMin) Build() SCompleted {
+	return SCompleted(c)
 }
 
 type SZmscore SCompleted

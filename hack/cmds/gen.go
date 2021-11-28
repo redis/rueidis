@@ -356,7 +356,7 @@ func node(nodes map[string]*CmdNode, root *CmdNode, prefix string, arg Argument,
 		panic("wrong input")
 	}
 	// fix for XGROUP
-	if len(arg.Enum) == 2 && arg.Enum[0] == "ID" && arg.Enum[1] == "$" {
+	if len(arg.Enum) == 2 && (arg.Enum[0] == "ID" || arg.Enum[0] == "id") && arg.Enum[1] == "$" {
 		arg.Name = "id"
 		arg.Type = "string"
 		arg.Enum = nil
@@ -474,7 +474,7 @@ func argIDs(prefix string, arg Argument) (ids []string) {
 		panic("wrong input")
 	}
 	// fix for XGROUP
-	if len(arg.Enum) == 2 && arg.Enum[0] == "ID" && arg.Enum[1] == "$" {
+	if len(arg.Enum) == 2 && (arg.Enum[0] == "ID" || arg.Enum[0] == "id") && arg.Enum[1] == "$" {
 		arg.Name = "id"
 		arg.Type = "string"
 		arg.Enum = nil
@@ -585,6 +585,7 @@ var blockingCMDs = []string{
 	"blmpop",
 	"bzpopmin",
 	"bzpopmax",
+	"bzmpop",
 	"clientpause",
 	"migrate",
 	"wait",
@@ -679,11 +680,19 @@ var readOnlyCMDs = []string{
 	"lrange",
 	"memory",
 	"mget",
-	"object",
+	"objectencoding",
+	"objectfreq",
+	"objecthelp",
+	"objectidletime",
+	"objectrefcount",
 	"pexpiretime",
 	"pfcount",
 	"post",
 	"pttl",
+	"pubsubchannels",
+	"pubsubnumpat",
+	"pubsubnumsub",
+	"pubsubhelp",
 	"randomkey",
 	"scan",
 	"scard",
@@ -691,6 +700,9 @@ var readOnlyCMDs = []string{
 	"sinter",
 	"sintercard",
 	"sismember",
+	"slowlogget",
+	"slowloglen",
+	"slowloghelp",
 	"smembers",
 	"smismember",
 	"sortro",
@@ -703,7 +715,10 @@ var readOnlyCMDs = []string{
 	"touch",
 	"ttl",
 	"type",
-	"xinfo",
+	"xinfoconsumers",
+	"xinfogroups",
+	"xinfostream",
+	"xinfohelp",
 	"xlen",
 	"xpending",
 	"xrange",
