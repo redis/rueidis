@@ -15,6 +15,13 @@ func TestPool(t *testing.T) {
 		}), &count
 	}
 
+	t.Run("DefaultPoolSize", func(t *testing.T) {
+		p := newPool(0, func() *wire { return nil })
+		if cap(p.list) == 0 {
+			t.Fatalf("DefaultPoolSize is not applied")
+		}
+	})
+
 	t.Run("Reuse", func(t *testing.T) {
 		pool, count := setup(100)
 		for i := 0; i < 1000; i++ {
