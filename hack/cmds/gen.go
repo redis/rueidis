@@ -4,13 +4,11 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"os"
 	"sort"
 	"strings"
 	"unicode"
 )
-
-//go:embed commands.json
-var raw []byte
 
 type Argument struct {
 	Name     interface{} `json:"name"`
@@ -74,8 +72,18 @@ func generate(prefix string) {
 		Group     string     `json:"group"`
 		Arguments []Argument `json:"arguments"`
 	}{}
-	if err := json.Unmarshal(raw, &commands); err != nil {
-		panic(err)
+
+	for _, p := range []string{
+		"./commands.json",
+		"./commands_json.json",
+	} {
+		raw, err := os.ReadFile(p)
+		if err != nil {
+			panic(err)
+		}
+		if err := json.Unmarshal(raw, &commands); err != nil {
+			panic(err)
+		}
 	}
 
 	// fis missing GEORADIUS_RO and GEORADIUSBYMEMBER_RO
@@ -526,7 +534,7 @@ func name(n interface{}) (name string) {
 			return "empty"
 		}
 
-		for _, n := range strings.Split(strings.NewReplacer("-", " ", "_", " ", ":", " ", "/", " ").Replace(s), " ") {
+		for _, n := range strings.Split(strings.NewReplacer("-", " ", "_", " ", ":", " ", "/", " ", ".", " ").Replace(s), " ") {
 			name += UcFirst(strings.ToLower(n))
 		}
 		return name
@@ -641,6 +649,15 @@ var cacheableCMDs = []string{
 	"zrevrangebyscore",
 	"zrevrank",
 	"zscore",
+
+	"jsonget",
+	"jsonstrlen",
+	"jsonarrindex",
+	"jsonarrlen",
+	"jsonobjkeys",
+	"jsonobjlen",
+	"jsontype",
+	"jsonresp",
 }
 
 var readOnlyCMDs = []string{
@@ -743,4 +760,14 @@ var readOnlyCMDs = []string{
 	"zscore",
 	"zunion",
 	"zintercard",
+
+	"jsonget",
+	"jsonmget",
+	"jsonstrlen",
+	"jsonarrindex",
+	"jsonarrlen",
+	"jsonobjkeys",
+	"jsonobjlen",
+	"jsontype",
+	"jsonresp",
 }

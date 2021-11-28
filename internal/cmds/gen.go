@@ -6616,6 +6616,754 @@ func (c InfoSection) Build() Completed {
 	return Completed(c)
 }
 
+type JsonArrappend Completed
+
+func (c JsonArrappend) Key(Key string) JsonArrappendKey {
+	return JsonArrappendKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) JsonArrappend() (c JsonArrappend) {
+	c.cs = append(b.get(), "JSON.ARRAPPEND")
+	return
+}
+
+type JsonArrappendKey Completed
+
+func (c JsonArrappendKey) Path(Path string) JsonArrappendPath {
+	return JsonArrappendPath{cs: append(c.cs, Path), cf: c.cf, ks: c.ks}
+}
+
+func (c JsonArrappendKey) Value(Value ...string) JsonArrappendValue {
+	return JsonArrappendValue{cs: append(c.cs, Value...), cf: c.cf, ks: c.ks}
+}
+
+type JsonArrappendPath Completed
+
+func (c JsonArrappendPath) Value(Value ...string) JsonArrappendValue {
+	return JsonArrappendValue{cs: append(c.cs, Value...), cf: c.cf, ks: c.ks}
+}
+
+type JsonArrappendValue Completed
+
+func (c JsonArrappendValue) Value(Value ...string) JsonArrappendValue {
+	return JsonArrappendValue{cs: append(c.cs, Value...), cf: c.cf, ks: c.ks}
+}
+
+func (c JsonArrappendValue) Build() Completed {
+	return Completed(c)
+}
+
+type JsonArrindex Completed
+
+func (c JsonArrindex) Key(Key string) JsonArrindexKey {
+	return JsonArrindexKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) JsonArrindex() (c JsonArrindex) {
+	c.cs = append(b.get(), "JSON.ARRINDEX")
+	c.cf = readonly
+	return
+}
+
+type JsonArrindexKey Completed
+
+func (c JsonArrindexKey) Path(Path string) JsonArrindexPath {
+	return JsonArrindexPath{cs: append(c.cs, Path), cf: c.cf, ks: c.ks}
+}
+
+type JsonArrindexPath Completed
+
+func (c JsonArrindexPath) Value(Value string) JsonArrindexValue {
+	return JsonArrindexValue{cs: append(c.cs, Value), cf: c.cf, ks: c.ks}
+}
+
+type JsonArrindexStart Completed
+
+func (c JsonArrindexStart) Stop(Stop int64) JsonArrindexStop {
+	return JsonArrindexStop{cs: append(c.cs, strconv.FormatInt(Stop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c JsonArrindexStart) Build() Completed {
+	return Completed(c)
+}
+
+func (c JsonArrindexStart) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type JsonArrindexStop Completed
+
+func (c JsonArrindexStop) Build() Completed {
+	return Completed(c)
+}
+
+func (c JsonArrindexStop) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type JsonArrindexValue Completed
+
+func (c JsonArrindexValue) Start(Start int64) JsonArrindexStart {
+	return JsonArrindexStart{cs: append(c.cs, strconv.FormatInt(Start, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c JsonArrindexValue) Build() Completed {
+	return Completed(c)
+}
+
+func (c JsonArrindexValue) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type JsonArrinsert Completed
+
+func (c JsonArrinsert) Key(Key string) JsonArrinsertKey {
+	return JsonArrinsertKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) JsonArrinsert() (c JsonArrinsert) {
+	c.cs = append(b.get(), "JSON.ARRINSERT")
+	return
+}
+
+type JsonArrinsertIndex Completed
+
+func (c JsonArrinsertIndex) Value(Value ...string) JsonArrinsertValue {
+	return JsonArrinsertValue{cs: append(c.cs, Value...), cf: c.cf, ks: c.ks}
+}
+
+type JsonArrinsertKey Completed
+
+func (c JsonArrinsertKey) Path(Path string) JsonArrinsertPath {
+	return JsonArrinsertPath{cs: append(c.cs, Path), cf: c.cf, ks: c.ks}
+}
+
+type JsonArrinsertPath Completed
+
+func (c JsonArrinsertPath) Index(Index int64) JsonArrinsertIndex {
+	return JsonArrinsertIndex{cs: append(c.cs, strconv.FormatInt(Index, 10)), cf: c.cf, ks: c.ks}
+}
+
+type JsonArrinsertValue Completed
+
+func (c JsonArrinsertValue) Value(Value ...string) JsonArrinsertValue {
+	return JsonArrinsertValue{cs: append(c.cs, Value...), cf: c.cf, ks: c.ks}
+}
+
+func (c JsonArrinsertValue) Build() Completed {
+	return Completed(c)
+}
+
+type JsonArrlen Completed
+
+func (c JsonArrlen) Key(Key string) JsonArrlenKey {
+	return JsonArrlenKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) JsonArrlen() (c JsonArrlen) {
+	c.cs = append(b.get(), "JSON.ARRLEN")
+	c.cf = readonly
+	return
+}
+
+type JsonArrlenKey Completed
+
+func (c JsonArrlenKey) Path(Path ...string) JsonArrlenPath {
+	return JsonArrlenPath{cs: append(c.cs, Path...), cf: c.cf, ks: c.ks}
+}
+
+type JsonArrlenPath Completed
+
+func (c JsonArrlenPath) Path(Path ...string) JsonArrlenPath {
+	return JsonArrlenPath{cs: append(c.cs, Path...), cf: c.cf, ks: c.ks}
+}
+
+func (c JsonArrlenPath) Build() Completed {
+	return Completed(c)
+}
+
+func (c JsonArrlenPath) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type JsonArrpop Completed
+
+func (c JsonArrpop) Key(Key string) JsonArrpopKey {
+	return JsonArrpopKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) JsonArrpop() (c JsonArrpop) {
+	c.cs = append(b.get(), "JSON.ARRPOP")
+	return
+}
+
+type JsonArrpopIndex Completed
+
+func (c JsonArrpopIndex) Build() Completed {
+	return Completed(c)
+}
+
+type JsonArrpopKey Completed
+
+func (c JsonArrpopKey) Path(Path string) JsonArrpopPath {
+	return JsonArrpopPath{cs: append(c.cs, Path), cf: c.cf, ks: c.ks}
+}
+
+func (c JsonArrpopKey) Build() Completed {
+	return Completed(c)
+}
+
+type JsonArrpopPath Completed
+
+func (c JsonArrpopPath) Index(Index int64) JsonArrpopIndex {
+	return JsonArrpopIndex{cs: append(c.cs, strconv.FormatInt(Index, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c JsonArrpopPath) Build() Completed {
+	return Completed(c)
+}
+
+type JsonArrtrim Completed
+
+func (c JsonArrtrim) Key(Key string) JsonArrtrimKey {
+	return JsonArrtrimKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) JsonArrtrim() (c JsonArrtrim) {
+	c.cs = append(b.get(), "JSON.ARRTRIM")
+	return
+}
+
+type JsonArrtrimKey Completed
+
+func (c JsonArrtrimKey) Path(Path string) JsonArrtrimPath {
+	return JsonArrtrimPath{cs: append(c.cs, Path), cf: c.cf, ks: c.ks}
+}
+
+type JsonArrtrimPath Completed
+
+func (c JsonArrtrimPath) Start(Start int64) JsonArrtrimStart {
+	return JsonArrtrimStart{cs: append(c.cs, strconv.FormatInt(Start, 10)), cf: c.cf, ks: c.ks}
+}
+
+type JsonArrtrimStart Completed
+
+func (c JsonArrtrimStart) Stop(Stop int64) JsonArrtrimStop {
+	return JsonArrtrimStop{cs: append(c.cs, strconv.FormatInt(Stop, 10)), cf: c.cf, ks: c.ks}
+}
+
+type JsonArrtrimStop Completed
+
+func (c JsonArrtrimStop) Build() Completed {
+	return Completed(c)
+}
+
+type JsonClear Completed
+
+func (c JsonClear) Key(Key string) JsonClearKey {
+	return JsonClearKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) JsonClear() (c JsonClear) {
+	c.cs = append(b.get(), "JSON.CLEAR")
+	return
+}
+
+type JsonClearKey Completed
+
+func (c JsonClearKey) Path(Path string) JsonClearPath {
+	return JsonClearPath{cs: append(c.cs, Path), cf: c.cf, ks: c.ks}
+}
+
+func (c JsonClearKey) Build() Completed {
+	return Completed(c)
+}
+
+type JsonClearPath Completed
+
+func (c JsonClearPath) Build() Completed {
+	return Completed(c)
+}
+
+type JsonDel Completed
+
+func (c JsonDel) Key(Key string) JsonDelKey {
+	return JsonDelKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) JsonDel() (c JsonDel) {
+	c.cs = append(b.get(), "JSON.DEL")
+	return
+}
+
+type JsonDelKey Completed
+
+func (c JsonDelKey) Path(Path string) JsonDelPath {
+	return JsonDelPath{cs: append(c.cs, Path), cf: c.cf, ks: c.ks}
+}
+
+func (c JsonDelKey) Build() Completed {
+	return Completed(c)
+}
+
+type JsonDelPath Completed
+
+func (c JsonDelPath) Build() Completed {
+	return Completed(c)
+}
+
+type JsonGet Completed
+
+func (c JsonGet) Key(Key string) JsonGetKey {
+	return JsonGetKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) JsonGet() (c JsonGet) {
+	c.cs = append(b.get(), "JSON.GET")
+	c.cf = readonly
+	return
+}
+
+type JsonGetIndent Completed
+
+func (c JsonGetIndent) Newline(Newline string) JsonGetNewline {
+	return JsonGetNewline{cs: append(c.cs, "NEWLINE", Newline), cf: c.cf, ks: c.ks}
+}
+
+func (c JsonGetIndent) Space(Space string) JsonGetSpace {
+	return JsonGetSpace{cs: append(c.cs, "SPACE", Space), cf: c.cf, ks: c.ks}
+}
+
+func (c JsonGetIndent) Paths(Paths ...string) JsonGetPaths {
+	return JsonGetPaths{cs: append(c.cs, Paths...), cf: c.cf, ks: c.ks}
+}
+
+func (c JsonGetIndent) Build() Completed {
+	return Completed(c)
+}
+
+func (c JsonGetIndent) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type JsonGetKey Completed
+
+func (c JsonGetKey) Indent(Indent string) JsonGetIndent {
+	return JsonGetIndent{cs: append(c.cs, "INDENT", Indent), cf: c.cf, ks: c.ks}
+}
+
+func (c JsonGetKey) Newline(Newline string) JsonGetNewline {
+	return JsonGetNewline{cs: append(c.cs, "NEWLINE", Newline), cf: c.cf, ks: c.ks}
+}
+
+func (c JsonGetKey) Space(Space string) JsonGetSpace {
+	return JsonGetSpace{cs: append(c.cs, "SPACE", Space), cf: c.cf, ks: c.ks}
+}
+
+func (c JsonGetKey) Paths(Paths ...string) JsonGetPaths {
+	return JsonGetPaths{cs: append(c.cs, Paths...), cf: c.cf, ks: c.ks}
+}
+
+func (c JsonGetKey) Build() Completed {
+	return Completed(c)
+}
+
+func (c JsonGetKey) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type JsonGetNewline Completed
+
+func (c JsonGetNewline) Space(Space string) JsonGetSpace {
+	return JsonGetSpace{cs: append(c.cs, "SPACE", Space), cf: c.cf, ks: c.ks}
+}
+
+func (c JsonGetNewline) Paths(Paths ...string) JsonGetPaths {
+	return JsonGetPaths{cs: append(c.cs, Paths...), cf: c.cf, ks: c.ks}
+}
+
+func (c JsonGetNewline) Build() Completed {
+	return Completed(c)
+}
+
+func (c JsonGetNewline) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type JsonGetPaths Completed
+
+func (c JsonGetPaths) Paths(Paths ...string) JsonGetPaths {
+	return JsonGetPaths{cs: append(c.cs, Paths...), cf: c.cf, ks: c.ks}
+}
+
+func (c JsonGetPaths) Build() Completed {
+	return Completed(c)
+}
+
+func (c JsonGetPaths) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type JsonGetSpace Completed
+
+func (c JsonGetSpace) Paths(Paths ...string) JsonGetPaths {
+	return JsonGetPaths{cs: append(c.cs, Paths...), cf: c.cf, ks: c.ks}
+}
+
+func (c JsonGetSpace) Build() Completed {
+	return Completed(c)
+}
+
+func (c JsonGetSpace) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type JsonMget Completed
+
+func (c JsonMget) Key(Key ...string) JsonMgetKey {
+	return JsonMgetKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) JsonMget() (c JsonMget) {
+	c.cs = append(b.get(), "JSON.MGET")
+	c.cf = readonly
+	return
+}
+
+type JsonMgetKey Completed
+
+func (c JsonMgetKey) Path(Path string) JsonMgetPath {
+	return JsonMgetPath{cs: append(c.cs, Path), cf: c.cf, ks: c.ks}
+}
+
+func (c JsonMgetKey) Key(Key ...string) JsonMgetKey {
+	return JsonMgetKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
+}
+
+type JsonMgetPath Completed
+
+func (c JsonMgetPath) Build() Completed {
+	return Completed(c)
+}
+
+type JsonNumincrby Completed
+
+func (c JsonNumincrby) Key(Key string) JsonNumincrbyKey {
+	return JsonNumincrbyKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) JsonNumincrby() (c JsonNumincrby) {
+	c.cs = append(b.get(), "JSON.NUMINCRBY")
+	return
+}
+
+type JsonNumincrbyKey Completed
+
+func (c JsonNumincrbyKey) Path(Path string) JsonNumincrbyPath {
+	return JsonNumincrbyPath{cs: append(c.cs, Path), cf: c.cf, ks: c.ks}
+}
+
+type JsonNumincrbyPath Completed
+
+func (c JsonNumincrbyPath) Value(Value float64) JsonNumincrbyValue {
+	return JsonNumincrbyValue{cs: append(c.cs, strconv.FormatFloat(Value, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+type JsonNumincrbyValue Completed
+
+func (c JsonNumincrbyValue) Build() Completed {
+	return Completed(c)
+}
+
+type JsonObjkeys Completed
+
+func (c JsonObjkeys) Key(Key string) JsonObjkeysKey {
+	return JsonObjkeysKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) JsonObjkeys() (c JsonObjkeys) {
+	c.cs = append(b.get(), "JSON.OBJKEYS")
+	c.cf = readonly
+	return
+}
+
+type JsonObjkeysKey Completed
+
+func (c JsonObjkeysKey) Path(Path string) JsonObjkeysPath {
+	return JsonObjkeysPath{cs: append(c.cs, Path), cf: c.cf, ks: c.ks}
+}
+
+func (c JsonObjkeysKey) Build() Completed {
+	return Completed(c)
+}
+
+func (c JsonObjkeysKey) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type JsonObjkeysPath Completed
+
+func (c JsonObjkeysPath) Build() Completed {
+	return Completed(c)
+}
+
+func (c JsonObjkeysPath) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type JsonObjlen Completed
+
+func (c JsonObjlen) Key(Key string) JsonObjlenKey {
+	return JsonObjlenKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) JsonObjlen() (c JsonObjlen) {
+	c.cs = append(b.get(), "JSON.OBJLEN")
+	c.cf = readonly
+	return
+}
+
+type JsonObjlenKey Completed
+
+func (c JsonObjlenKey) Path(Path string) JsonObjlenPath {
+	return JsonObjlenPath{cs: append(c.cs, Path), cf: c.cf, ks: c.ks}
+}
+
+func (c JsonObjlenKey) Build() Completed {
+	return Completed(c)
+}
+
+func (c JsonObjlenKey) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type JsonObjlenPath Completed
+
+func (c JsonObjlenPath) Build() Completed {
+	return Completed(c)
+}
+
+func (c JsonObjlenPath) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type JsonResp Completed
+
+func (c JsonResp) Key(Key string) JsonRespKey {
+	return JsonRespKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) JsonResp() (c JsonResp) {
+	c.cs = append(b.get(), "JSON.RESP")
+	c.cf = readonly
+	return
+}
+
+type JsonRespKey Completed
+
+func (c JsonRespKey) Path(Path string) JsonRespPath {
+	return JsonRespPath{cs: append(c.cs, Path), cf: c.cf, ks: c.ks}
+}
+
+func (c JsonRespKey) Build() Completed {
+	return Completed(c)
+}
+
+func (c JsonRespKey) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type JsonRespPath Completed
+
+func (c JsonRespPath) Build() Completed {
+	return Completed(c)
+}
+
+func (c JsonRespPath) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type JsonSet Completed
+
+func (c JsonSet) Key(Key string) JsonSetKey {
+	return JsonSetKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) JsonSet() (c JsonSet) {
+	c.cs = append(b.get(), "JSON.SET")
+	return
+}
+
+type JsonSetConditionNx Completed
+
+func (c JsonSetConditionNx) Build() Completed {
+	return Completed(c)
+}
+
+type JsonSetConditionXx Completed
+
+func (c JsonSetConditionXx) Build() Completed {
+	return Completed(c)
+}
+
+type JsonSetKey Completed
+
+func (c JsonSetKey) Path(Path string) JsonSetPath {
+	return JsonSetPath{cs: append(c.cs, Path), cf: c.cf, ks: c.ks}
+}
+
+type JsonSetPath Completed
+
+func (c JsonSetPath) Value(Value string) JsonSetValue {
+	return JsonSetValue{cs: append(c.cs, Value), cf: c.cf, ks: c.ks}
+}
+
+type JsonSetValue Completed
+
+func (c JsonSetValue) Nx() JsonSetConditionNx {
+	return JsonSetConditionNx{cs: append(c.cs, "NX"), cf: c.cf, ks: c.ks}
+}
+
+func (c JsonSetValue) Xx() JsonSetConditionXx {
+	return JsonSetConditionXx{cs: append(c.cs, "XX"), cf: c.cf, ks: c.ks}
+}
+
+func (c JsonSetValue) Build() Completed {
+	return Completed(c)
+}
+
+type JsonStrappend Completed
+
+func (c JsonStrappend) Key(Key string) JsonStrappendKey {
+	return JsonStrappendKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) JsonStrappend() (c JsonStrappend) {
+	c.cs = append(b.get(), "JSON.STRAPPEND")
+	return
+}
+
+type JsonStrappendKey Completed
+
+func (c JsonStrappendKey) Path(Path string) JsonStrappendPath {
+	return JsonStrappendPath{cs: append(c.cs, Path), cf: c.cf, ks: c.ks}
+}
+
+func (c JsonStrappendKey) Value(Value string) JsonStrappendValue {
+	return JsonStrappendValue{cs: append(c.cs, Value), cf: c.cf, ks: c.ks}
+}
+
+type JsonStrappendPath Completed
+
+func (c JsonStrappendPath) Value(Value string) JsonStrappendValue {
+	return JsonStrappendValue{cs: append(c.cs, Value), cf: c.cf, ks: c.ks}
+}
+
+type JsonStrappendValue Completed
+
+func (c JsonStrappendValue) Build() Completed {
+	return Completed(c)
+}
+
+type JsonStrlen Completed
+
+func (c JsonStrlen) Key(Key string) JsonStrlenKey {
+	return JsonStrlenKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) JsonStrlen() (c JsonStrlen) {
+	c.cs = append(b.get(), "JSON.STRLEN")
+	c.cf = readonly
+	return
+}
+
+type JsonStrlenKey Completed
+
+func (c JsonStrlenKey) Path(Path string) JsonStrlenPath {
+	return JsonStrlenPath{cs: append(c.cs, Path), cf: c.cf, ks: c.ks}
+}
+
+func (c JsonStrlenKey) Build() Completed {
+	return Completed(c)
+}
+
+func (c JsonStrlenKey) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type JsonStrlenPath Completed
+
+func (c JsonStrlenPath) Build() Completed {
+	return Completed(c)
+}
+
+func (c JsonStrlenPath) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type JsonToggle Completed
+
+func (c JsonToggle) Key(Key string) JsonToggleKey {
+	return JsonToggleKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) JsonToggle() (c JsonToggle) {
+	c.cs = append(b.get(), "JSON.TOGGLE")
+	return
+}
+
+type JsonToggleKey Completed
+
+func (c JsonToggleKey) Path(Path string) JsonTogglePath {
+	return JsonTogglePath{cs: append(c.cs, Path), cf: c.cf, ks: c.ks}
+}
+
+func (c JsonToggleKey) Build() Completed {
+	return Completed(c)
+}
+
+type JsonTogglePath Completed
+
+func (c JsonTogglePath) Build() Completed {
+	return Completed(c)
+}
+
+type JsonType Completed
+
+func (c JsonType) Key(Key string) JsonTypeKey {
+	return JsonTypeKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) JsonType() (c JsonType) {
+	c.cs = append(b.get(), "JSON.TYPE")
+	c.cf = readonly
+	return
+}
+
+type JsonTypeKey Completed
+
+func (c JsonTypeKey) Path(Path string) JsonTypePath {
+	return JsonTypePath{cs: append(c.cs, Path), cf: c.cf, ks: c.ks}
+}
+
+func (c JsonTypeKey) Build() Completed {
+	return Completed(c)
+}
+
+func (c JsonTypeKey) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type JsonTypePath Completed
+
+func (c JsonTypePath) Build() Completed {
+	return Completed(c)
+}
+
+func (c JsonTypePath) Cache() Cacheable {
+	return Cacheable(c)
+}
+
 type Keys Completed
 
 func (c Keys) Pattern(Pattern string) KeysPattern {
@@ -19949,6 +20697,797 @@ type SInfoSection SCompleted
 
 func (c SInfoSection) Build() SCompleted {
 	return SCompleted(c)
+}
+
+type SJsonArrappend SCompleted
+
+func (c SJsonArrappend) Key(Key string) SJsonArrappendKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SJsonArrappendKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) JsonArrappend() (c SJsonArrappend) {
+	c.cs = append(b.get(), "JSON.ARRAPPEND")
+	c.ks = InitSlot
+	return
+}
+
+type SJsonArrappendKey SCompleted
+
+func (c SJsonArrappendKey) Path(Path string) SJsonArrappendPath {
+	return SJsonArrappendPath{cs: append(c.cs, Path), cf: c.cf, ks: c.ks}
+}
+
+func (c SJsonArrappendKey) Value(Value ...string) SJsonArrappendValue {
+	return SJsonArrappendValue{cs: append(c.cs, Value...), cf: c.cf, ks: c.ks}
+}
+
+type SJsonArrappendPath SCompleted
+
+func (c SJsonArrappendPath) Value(Value ...string) SJsonArrappendValue {
+	return SJsonArrappendValue{cs: append(c.cs, Value...), cf: c.cf, ks: c.ks}
+}
+
+type SJsonArrappendValue SCompleted
+
+func (c SJsonArrappendValue) Value(Value ...string) SJsonArrappendValue {
+	return SJsonArrappendValue{cs: append(c.cs, Value...), cf: c.cf, ks: c.ks}
+}
+
+func (c SJsonArrappendValue) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SJsonArrindex SCompleted
+
+func (c SJsonArrindex) Key(Key string) SJsonArrindexKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SJsonArrindexKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) JsonArrindex() (c SJsonArrindex) {
+	c.cs = append(b.get(), "JSON.ARRINDEX")
+	c.cf = readonly
+	c.ks = InitSlot
+	return
+}
+
+type SJsonArrindexKey SCompleted
+
+func (c SJsonArrindexKey) Path(Path string) SJsonArrindexPath {
+	return SJsonArrindexPath{cs: append(c.cs, Path), cf: c.cf, ks: c.ks}
+}
+
+type SJsonArrindexPath SCompleted
+
+func (c SJsonArrindexPath) Value(Value string) SJsonArrindexValue {
+	return SJsonArrindexValue{cs: append(c.cs, Value), cf: c.cf, ks: c.ks}
+}
+
+type SJsonArrindexStart SCompleted
+
+func (c SJsonArrindexStart) Stop(Stop int64) SJsonArrindexStop {
+	return SJsonArrindexStop{cs: append(c.cs, strconv.FormatInt(Stop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SJsonArrindexStart) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c SJsonArrindexStart) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SJsonArrindexStop SCompleted
+
+func (c SJsonArrindexStop) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c SJsonArrindexStop) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SJsonArrindexValue SCompleted
+
+func (c SJsonArrindexValue) Start(Start int64) SJsonArrindexStart {
+	return SJsonArrindexStart{cs: append(c.cs, strconv.FormatInt(Start, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SJsonArrindexValue) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c SJsonArrindexValue) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SJsonArrinsert SCompleted
+
+func (c SJsonArrinsert) Key(Key string) SJsonArrinsertKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SJsonArrinsertKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) JsonArrinsert() (c SJsonArrinsert) {
+	c.cs = append(b.get(), "JSON.ARRINSERT")
+	c.ks = InitSlot
+	return
+}
+
+type SJsonArrinsertIndex SCompleted
+
+func (c SJsonArrinsertIndex) Value(Value ...string) SJsonArrinsertValue {
+	return SJsonArrinsertValue{cs: append(c.cs, Value...), cf: c.cf, ks: c.ks}
+}
+
+type SJsonArrinsertKey SCompleted
+
+func (c SJsonArrinsertKey) Path(Path string) SJsonArrinsertPath {
+	return SJsonArrinsertPath{cs: append(c.cs, Path), cf: c.cf, ks: c.ks}
+}
+
+type SJsonArrinsertPath SCompleted
+
+func (c SJsonArrinsertPath) Index(Index int64) SJsonArrinsertIndex {
+	return SJsonArrinsertIndex{cs: append(c.cs, strconv.FormatInt(Index, 10)), cf: c.cf, ks: c.ks}
+}
+
+type SJsonArrinsertValue SCompleted
+
+func (c SJsonArrinsertValue) Value(Value ...string) SJsonArrinsertValue {
+	return SJsonArrinsertValue{cs: append(c.cs, Value...), cf: c.cf, ks: c.ks}
+}
+
+func (c SJsonArrinsertValue) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SJsonArrlen SCompleted
+
+func (c SJsonArrlen) Key(Key string) SJsonArrlenKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SJsonArrlenKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) JsonArrlen() (c SJsonArrlen) {
+	c.cs = append(b.get(), "JSON.ARRLEN")
+	c.cf = readonly
+	c.ks = InitSlot
+	return
+}
+
+type SJsonArrlenKey SCompleted
+
+func (c SJsonArrlenKey) Path(Path ...string) SJsonArrlenPath {
+	return SJsonArrlenPath{cs: append(c.cs, Path...), cf: c.cf, ks: c.ks}
+}
+
+type SJsonArrlenPath SCompleted
+
+func (c SJsonArrlenPath) Path(Path ...string) SJsonArrlenPath {
+	return SJsonArrlenPath{cs: append(c.cs, Path...), cf: c.cf, ks: c.ks}
+}
+
+func (c SJsonArrlenPath) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c SJsonArrlenPath) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SJsonArrpop SCompleted
+
+func (c SJsonArrpop) Key(Key string) SJsonArrpopKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SJsonArrpopKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) JsonArrpop() (c SJsonArrpop) {
+	c.cs = append(b.get(), "JSON.ARRPOP")
+	c.ks = InitSlot
+	return
+}
+
+type SJsonArrpopIndex SCompleted
+
+func (c SJsonArrpopIndex) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SJsonArrpopKey SCompleted
+
+func (c SJsonArrpopKey) Path(Path string) SJsonArrpopPath {
+	return SJsonArrpopPath{cs: append(c.cs, Path), cf: c.cf, ks: c.ks}
+}
+
+func (c SJsonArrpopKey) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SJsonArrpopPath SCompleted
+
+func (c SJsonArrpopPath) Index(Index int64) SJsonArrpopIndex {
+	return SJsonArrpopIndex{cs: append(c.cs, strconv.FormatInt(Index, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SJsonArrpopPath) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SJsonArrtrim SCompleted
+
+func (c SJsonArrtrim) Key(Key string) SJsonArrtrimKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SJsonArrtrimKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) JsonArrtrim() (c SJsonArrtrim) {
+	c.cs = append(b.get(), "JSON.ARRTRIM")
+	c.ks = InitSlot
+	return
+}
+
+type SJsonArrtrimKey SCompleted
+
+func (c SJsonArrtrimKey) Path(Path string) SJsonArrtrimPath {
+	return SJsonArrtrimPath{cs: append(c.cs, Path), cf: c.cf, ks: c.ks}
+}
+
+type SJsonArrtrimPath SCompleted
+
+func (c SJsonArrtrimPath) Start(Start int64) SJsonArrtrimStart {
+	return SJsonArrtrimStart{cs: append(c.cs, strconv.FormatInt(Start, 10)), cf: c.cf, ks: c.ks}
+}
+
+type SJsonArrtrimStart SCompleted
+
+func (c SJsonArrtrimStart) Stop(Stop int64) SJsonArrtrimStop {
+	return SJsonArrtrimStop{cs: append(c.cs, strconv.FormatInt(Stop, 10)), cf: c.cf, ks: c.ks}
+}
+
+type SJsonArrtrimStop SCompleted
+
+func (c SJsonArrtrimStop) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SJsonClear SCompleted
+
+func (c SJsonClear) Key(Key string) SJsonClearKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SJsonClearKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) JsonClear() (c SJsonClear) {
+	c.cs = append(b.get(), "JSON.CLEAR")
+	c.ks = InitSlot
+	return
+}
+
+type SJsonClearKey SCompleted
+
+func (c SJsonClearKey) Path(Path string) SJsonClearPath {
+	return SJsonClearPath{cs: append(c.cs, Path), cf: c.cf, ks: c.ks}
+}
+
+func (c SJsonClearKey) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SJsonClearPath SCompleted
+
+func (c SJsonClearPath) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SJsonDel SCompleted
+
+func (c SJsonDel) Key(Key string) SJsonDelKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SJsonDelKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) JsonDel() (c SJsonDel) {
+	c.cs = append(b.get(), "JSON.DEL")
+	c.ks = InitSlot
+	return
+}
+
+type SJsonDelKey SCompleted
+
+func (c SJsonDelKey) Path(Path string) SJsonDelPath {
+	return SJsonDelPath{cs: append(c.cs, Path), cf: c.cf, ks: c.ks}
+}
+
+func (c SJsonDelKey) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SJsonDelPath SCompleted
+
+func (c SJsonDelPath) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SJsonGet SCompleted
+
+func (c SJsonGet) Key(Key string) SJsonGetKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SJsonGetKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) JsonGet() (c SJsonGet) {
+	c.cs = append(b.get(), "JSON.GET")
+	c.cf = readonly
+	c.ks = InitSlot
+	return
+}
+
+type SJsonGetIndent SCompleted
+
+func (c SJsonGetIndent) Newline(Newline string) SJsonGetNewline {
+	return SJsonGetNewline{cs: append(c.cs, "NEWLINE", Newline), cf: c.cf, ks: c.ks}
+}
+
+func (c SJsonGetIndent) Space(Space string) SJsonGetSpace {
+	return SJsonGetSpace{cs: append(c.cs, "SPACE", Space), cf: c.cf, ks: c.ks}
+}
+
+func (c SJsonGetIndent) Paths(Paths ...string) SJsonGetPaths {
+	return SJsonGetPaths{cs: append(c.cs, Paths...), cf: c.cf, ks: c.ks}
+}
+
+func (c SJsonGetIndent) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c SJsonGetIndent) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SJsonGetKey SCompleted
+
+func (c SJsonGetKey) Indent(Indent string) SJsonGetIndent {
+	return SJsonGetIndent{cs: append(c.cs, "INDENT", Indent), cf: c.cf, ks: c.ks}
+}
+
+func (c SJsonGetKey) Newline(Newline string) SJsonGetNewline {
+	return SJsonGetNewline{cs: append(c.cs, "NEWLINE", Newline), cf: c.cf, ks: c.ks}
+}
+
+func (c SJsonGetKey) Space(Space string) SJsonGetSpace {
+	return SJsonGetSpace{cs: append(c.cs, "SPACE", Space), cf: c.cf, ks: c.ks}
+}
+
+func (c SJsonGetKey) Paths(Paths ...string) SJsonGetPaths {
+	return SJsonGetPaths{cs: append(c.cs, Paths...), cf: c.cf, ks: c.ks}
+}
+
+func (c SJsonGetKey) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c SJsonGetKey) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SJsonGetNewline SCompleted
+
+func (c SJsonGetNewline) Space(Space string) SJsonGetSpace {
+	return SJsonGetSpace{cs: append(c.cs, "SPACE", Space), cf: c.cf, ks: c.ks}
+}
+
+func (c SJsonGetNewline) Paths(Paths ...string) SJsonGetPaths {
+	return SJsonGetPaths{cs: append(c.cs, Paths...), cf: c.cf, ks: c.ks}
+}
+
+func (c SJsonGetNewline) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c SJsonGetNewline) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SJsonGetPaths SCompleted
+
+func (c SJsonGetPaths) Paths(Paths ...string) SJsonGetPaths {
+	return SJsonGetPaths{cs: append(c.cs, Paths...), cf: c.cf, ks: c.ks}
+}
+
+func (c SJsonGetPaths) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c SJsonGetPaths) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SJsonGetSpace SCompleted
+
+func (c SJsonGetSpace) Paths(Paths ...string) SJsonGetPaths {
+	return SJsonGetPaths{cs: append(c.cs, Paths...), cf: c.cf, ks: c.ks}
+}
+
+func (c SJsonGetSpace) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c SJsonGetSpace) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SJsonMget SCompleted
+
+func (c SJsonMget) Key(Key ...string) SJsonMgetKey {
+	for _, k := range Key {
+		c.ks = checkSlot(c.ks, slot(k))
+	}
+	return SJsonMgetKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) JsonMget() (c SJsonMget) {
+	c.cs = append(b.get(), "JSON.MGET")
+	c.cf = readonly
+	c.ks = InitSlot
+	return
+}
+
+type SJsonMgetKey SCompleted
+
+func (c SJsonMgetKey) Path(Path string) SJsonMgetPath {
+	return SJsonMgetPath{cs: append(c.cs, Path), cf: c.cf, ks: c.ks}
+}
+
+func (c SJsonMgetKey) Key(Key ...string) SJsonMgetKey {
+	for _, k := range Key {
+		c.ks = checkSlot(c.ks, slot(k))
+	}
+	return SJsonMgetKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
+}
+
+type SJsonMgetPath SCompleted
+
+func (c SJsonMgetPath) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SJsonNumincrby SCompleted
+
+func (c SJsonNumincrby) Key(Key string) SJsonNumincrbyKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SJsonNumincrbyKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) JsonNumincrby() (c SJsonNumincrby) {
+	c.cs = append(b.get(), "JSON.NUMINCRBY")
+	c.ks = InitSlot
+	return
+}
+
+type SJsonNumincrbyKey SCompleted
+
+func (c SJsonNumincrbyKey) Path(Path string) SJsonNumincrbyPath {
+	return SJsonNumincrbyPath{cs: append(c.cs, Path), cf: c.cf, ks: c.ks}
+}
+
+type SJsonNumincrbyPath SCompleted
+
+func (c SJsonNumincrbyPath) Value(Value float64) SJsonNumincrbyValue {
+	return SJsonNumincrbyValue{cs: append(c.cs, strconv.FormatFloat(Value, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+type SJsonNumincrbyValue SCompleted
+
+func (c SJsonNumincrbyValue) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SJsonObjkeys SCompleted
+
+func (c SJsonObjkeys) Key(Key string) SJsonObjkeysKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SJsonObjkeysKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) JsonObjkeys() (c SJsonObjkeys) {
+	c.cs = append(b.get(), "JSON.OBJKEYS")
+	c.cf = readonly
+	c.ks = InitSlot
+	return
+}
+
+type SJsonObjkeysKey SCompleted
+
+func (c SJsonObjkeysKey) Path(Path string) SJsonObjkeysPath {
+	return SJsonObjkeysPath{cs: append(c.cs, Path), cf: c.cf, ks: c.ks}
+}
+
+func (c SJsonObjkeysKey) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c SJsonObjkeysKey) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SJsonObjkeysPath SCompleted
+
+func (c SJsonObjkeysPath) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c SJsonObjkeysPath) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SJsonObjlen SCompleted
+
+func (c SJsonObjlen) Key(Key string) SJsonObjlenKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SJsonObjlenKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) JsonObjlen() (c SJsonObjlen) {
+	c.cs = append(b.get(), "JSON.OBJLEN")
+	c.cf = readonly
+	c.ks = InitSlot
+	return
+}
+
+type SJsonObjlenKey SCompleted
+
+func (c SJsonObjlenKey) Path(Path string) SJsonObjlenPath {
+	return SJsonObjlenPath{cs: append(c.cs, Path), cf: c.cf, ks: c.ks}
+}
+
+func (c SJsonObjlenKey) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c SJsonObjlenKey) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SJsonObjlenPath SCompleted
+
+func (c SJsonObjlenPath) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c SJsonObjlenPath) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SJsonResp SCompleted
+
+func (c SJsonResp) Key(Key string) SJsonRespKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SJsonRespKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) JsonResp() (c SJsonResp) {
+	c.cs = append(b.get(), "JSON.RESP")
+	c.cf = readonly
+	c.ks = InitSlot
+	return
+}
+
+type SJsonRespKey SCompleted
+
+func (c SJsonRespKey) Path(Path string) SJsonRespPath {
+	return SJsonRespPath{cs: append(c.cs, Path), cf: c.cf, ks: c.ks}
+}
+
+func (c SJsonRespKey) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c SJsonRespKey) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SJsonRespPath SCompleted
+
+func (c SJsonRespPath) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c SJsonRespPath) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SJsonSet SCompleted
+
+func (c SJsonSet) Key(Key string) SJsonSetKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SJsonSetKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) JsonSet() (c SJsonSet) {
+	c.cs = append(b.get(), "JSON.SET")
+	c.ks = InitSlot
+	return
+}
+
+type SJsonSetConditionNx SCompleted
+
+func (c SJsonSetConditionNx) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SJsonSetConditionXx SCompleted
+
+func (c SJsonSetConditionXx) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SJsonSetKey SCompleted
+
+func (c SJsonSetKey) Path(Path string) SJsonSetPath {
+	return SJsonSetPath{cs: append(c.cs, Path), cf: c.cf, ks: c.ks}
+}
+
+type SJsonSetPath SCompleted
+
+func (c SJsonSetPath) Value(Value string) SJsonSetValue {
+	return SJsonSetValue{cs: append(c.cs, Value), cf: c.cf, ks: c.ks}
+}
+
+type SJsonSetValue SCompleted
+
+func (c SJsonSetValue) Nx() SJsonSetConditionNx {
+	return SJsonSetConditionNx{cs: append(c.cs, "NX"), cf: c.cf, ks: c.ks}
+}
+
+func (c SJsonSetValue) Xx() SJsonSetConditionXx {
+	return SJsonSetConditionXx{cs: append(c.cs, "XX"), cf: c.cf, ks: c.ks}
+}
+
+func (c SJsonSetValue) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SJsonStrappend SCompleted
+
+func (c SJsonStrappend) Key(Key string) SJsonStrappendKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SJsonStrappendKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) JsonStrappend() (c SJsonStrappend) {
+	c.cs = append(b.get(), "JSON.STRAPPEND")
+	c.ks = InitSlot
+	return
+}
+
+type SJsonStrappendKey SCompleted
+
+func (c SJsonStrappendKey) Path(Path string) SJsonStrappendPath {
+	return SJsonStrappendPath{cs: append(c.cs, Path), cf: c.cf, ks: c.ks}
+}
+
+func (c SJsonStrappendKey) Value(Value string) SJsonStrappendValue {
+	return SJsonStrappendValue{cs: append(c.cs, Value), cf: c.cf, ks: c.ks}
+}
+
+type SJsonStrappendPath SCompleted
+
+func (c SJsonStrappendPath) Value(Value string) SJsonStrappendValue {
+	return SJsonStrappendValue{cs: append(c.cs, Value), cf: c.cf, ks: c.ks}
+}
+
+type SJsonStrappendValue SCompleted
+
+func (c SJsonStrappendValue) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SJsonStrlen SCompleted
+
+func (c SJsonStrlen) Key(Key string) SJsonStrlenKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SJsonStrlenKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) JsonStrlen() (c SJsonStrlen) {
+	c.cs = append(b.get(), "JSON.STRLEN")
+	c.cf = readonly
+	c.ks = InitSlot
+	return
+}
+
+type SJsonStrlenKey SCompleted
+
+func (c SJsonStrlenKey) Path(Path string) SJsonStrlenPath {
+	return SJsonStrlenPath{cs: append(c.cs, Path), cf: c.cf, ks: c.ks}
+}
+
+func (c SJsonStrlenKey) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c SJsonStrlenKey) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SJsonStrlenPath SCompleted
+
+func (c SJsonStrlenPath) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c SJsonStrlenPath) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SJsonToggle SCompleted
+
+func (c SJsonToggle) Key(Key string) SJsonToggleKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SJsonToggleKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) JsonToggle() (c SJsonToggle) {
+	c.cs = append(b.get(), "JSON.TOGGLE")
+	c.ks = InitSlot
+	return
+}
+
+type SJsonToggleKey SCompleted
+
+func (c SJsonToggleKey) Path(Path string) SJsonTogglePath {
+	return SJsonTogglePath{cs: append(c.cs, Path), cf: c.cf, ks: c.ks}
+}
+
+func (c SJsonToggleKey) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SJsonTogglePath SCompleted
+
+func (c SJsonTogglePath) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SJsonType SCompleted
+
+func (c SJsonType) Key(Key string) SJsonTypeKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SJsonTypeKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) JsonType() (c SJsonType) {
+	c.cs = append(b.get(), "JSON.TYPE")
+	c.cf = readonly
+	c.ks = InitSlot
+	return
+}
+
+type SJsonTypeKey SCompleted
+
+func (c SJsonTypeKey) Path(Path string) SJsonTypePath {
+	return SJsonTypePath{cs: append(c.cs, Path), cf: c.cf, ks: c.ks}
+}
+
+func (c SJsonTypeKey) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c SJsonTypeKey) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SJsonTypePath SCompleted
+
+func (c SJsonTypePath) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c SJsonTypePath) Cache() SCacheable {
+	return SCacheable(c)
 }
 
 type SKeys SCompleted
