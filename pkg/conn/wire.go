@@ -20,8 +20,12 @@ type errWrap struct {
 }
 
 type Wire interface {
-	Do(cmd cmds.Completed) (resp proto.Result)
-	DoMulti(multi ...cmds.Completed) (resp []proto.Result)
+	Do(cmd cmds.Completed) proto.Result
+	DoCache(cmd cmds.Cacheable, ttl time.Duration) proto.Result
+	DoMulti(multi ...cmds.Completed) []proto.Result
+	Info() map[string]proto.Message
+	Error() error
+	Close()
 }
 
 type wire struct {

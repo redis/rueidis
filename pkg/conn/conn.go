@@ -42,33 +42,52 @@ type Option struct {
 	PubSubHandlers PubSubHandlers
 }
 
-var broken *wire
+type dialFn func(dst string, opt Option) (net.Conn, error)
+type wireFn func(conn net.Conn, opt Option) (Wire, error)
+
+var broken Wire = (*wire)(nil)
 
 type Conn struct {
 	dst  string
 	opt  Option
 	wire atomic.Value
 	mu   sync.Mutex
-
 	pool *pool
+
+	dialFn dialFn
+	wireFn wireFn
 }
 
 func NewConn(dst string, option Option) *Conn {
-	conn := &Conn{dst: dst, opt: option}
+	return newConn(dst, option, func(dst string, opt Option) (conn net.Conn, err error) {
+		dialer := &net.Dialer{Timeout: opt.DialTimeout}
+		if opt.TLSConfig != nil {
+			conn, err = tls.DialWithDialer(dialer, "tcp", dst, opt.TLSConfig)
+		} else {
+			conn, err = dialer.Dial("tcp", dst)
+		}
+		return conn, err
+	}, func(conn net.Conn, opt Option) (Wire, error) {
+		return newWire(conn, opt)
+	})
+}
+
+func newConn(dst string, option Option, dialFn dialFn, wireFn wireFn) *Conn {
+	conn := &Conn{dst: dst, opt: option, dialFn: dialFn, wireFn: wireFn}
 	conn.wire.Store(broken)
 	conn.pool = newPool(option.BlockingPoolSize, conn.dialRetry)
 	return conn
 }
 
-func (c *Conn) connect() (*wire, error) {
-	if wire := c.wire.Load().(*wire); wire != broken {
+func (c *Conn) connect() (Wire, error) {
+	if wire := c.wire.Load().(Wire); wire != broken {
 		return wire, nil
 	}
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	if wire := c.wire.Load().(*wire); wire != broken {
+	if wire := c.wire.Load().(Wire); wire != broken {
 		return wire, nil
 	}
 
@@ -87,25 +106,15 @@ func (c *Conn) connect() (*wire, error) {
 	return wire, nil
 }
 
-func (c *Conn) dial() (w *wire, err error) {
-	dialer := &net.Dialer{Timeout: c.opt.DialTimeout}
-
-	var conn net.Conn
-	if c.opt.TLSConfig != nil {
-		conn, err = tls.DialWithDialer(dialer, "tcp", c.dst, c.opt.TLSConfig)
-	} else {
-		conn, err = dialer.Dial("tcp", c.dst)
-	}
+func (c *Conn) dial() (w Wire, err error) {
+	conn, err := c.dialFn(c.dst, c.opt)
 	if err == nil {
-		w, err = newWire(conn, c.opt)
+		w, err = c.wireFn(conn, c.opt)
 	}
-	if err != nil {
-		return nil, err
-	}
-	return w, nil
+	return w, err
 }
 
-func (c *Conn) dialRetry() *wire {
+func (c *Conn) dialRetry() Wire {
 retry:
 	if wire, err := c.dial(); err == nil {
 		return wire
@@ -113,7 +122,7 @@ retry:
 	goto retry
 }
 
-func (c *Conn) acquire() *wire {
+func (c *Conn) acquire() Wire {
 retry:
 	if wire, err := c.connect(); err == nil {
 		return wire
@@ -215,7 +224,7 @@ func (c *Conn) Acquire() Wire {
 }
 
 func (c *Conn) Store(w Wire) {
-	c.pool.Store(w.(*wire))
+	c.pool.Store(w)
 }
 
 func (c *Conn) Close() {

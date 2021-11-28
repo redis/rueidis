@@ -9,14 +9,14 @@ import (
 func TestPool(t *testing.T) {
 	setup := func(size int) (*pool, *int32) {
 		var count int32
-		return newPool(size, func() *wire {
+		return newPool(size, func() Wire {
 			atomic.AddInt32(&count, 1)
 			return &wire{}
 		}), &count
 	}
 
 	t.Run("DefaultPoolSize", func(t *testing.T) {
-		p := newPool(0, func() *wire { return nil })
+		p := newPool(0, func() Wire { return nil })
 		if cap(p.list) == 0 {
 			t.Fatalf("DefaultPoolSize is not applied")
 		}
@@ -33,7 +33,7 @@ func TestPool(t *testing.T) {
 	})
 
 	t.Run("NotExceed", func(t *testing.T) {
-		conn := make([]*wire, 100)
+		conn := make([]Wire, 100)
 		pool, count := setup(len(conn))
 		for i := 0; i < len(conn); i++ {
 			conn[i] = pool.Acquire()
@@ -55,7 +55,7 @@ func TestPool(t *testing.T) {
 	})
 
 	t.Run("NoShare", func(t *testing.T) {
-		conn := make([]*wire, 100)
+		conn := make([]Wire, 100)
 		pool, _ := setup(len(conn))
 		for i := 0; i < len(conn); i++ {
 			w := pool.Acquire()
@@ -77,7 +77,7 @@ func TestPool(t *testing.T) {
 func TestPoolError(t *testing.T) {
 	setup := func(size int) (*pool, *int32) {
 		var count int32
-		return newPool(size, func() *wire {
+		return newPool(size, func() Wire {
 			w := &wire{}
 			c := atomic.AddInt32(&count, 1)
 			if c%2 == 0 {
@@ -88,7 +88,7 @@ func TestPoolError(t *testing.T) {
 	}
 
 	t.Run("NotStoreErrConn", func(t *testing.T) {
-		conn := make([]*wire, 100)
+		conn := make([]Wire, 100)
 		pool, count := setup(len(conn))
 		for i := 0; i < len(conn); i++ {
 			conn[i] = pool.Acquire()
