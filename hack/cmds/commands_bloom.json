@@ -1,0 +1,878 @@
+{
+  "BF.RESERVE": {
+    "summary": "Creates a new Bloom Filter",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "error_rate",
+        "type": "double"
+      },
+      {
+        "name": "capacity",
+        "type": "integer"
+      },
+      {
+        "name": "expansion",
+        "type": "integer",
+        "command": "EXPANSION",
+        "optional": true
+      },
+      {
+        "name": "nonscaling",
+        "type": "enum",
+        "enum": [
+          "NONSCALING"
+        ],
+        "optional": true
+      }
+    ],
+    "since": "1.0.0",
+    "group": "bloom"
+  },
+  "BF.ADD": {
+    "summary": "Adds an item to a Bloom Filter",
+    "complexity": "O(k), where k is the number of hash functions used by the last sub-filter",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "item",
+        "type": "string"
+      }
+    ],
+    "since": "1.0.0",
+    "group": "bloom"
+  },
+  "BF.MADD": {
+    "summary": "Adds one or more items to a Bloom Filter. A filter will be created if it does not exist",
+    "complexity": "O(k * n), where k is the number of hash functions and n is the number of items",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "item",
+        "type": "string",
+        "multiple": true
+      }
+    ],
+    "since": "1.0.0",
+    "group": "bloom"
+  },
+  "BF.INSERT": {
+    "summary": "Adds one or more items to a Bloom Filter. A filter will be created if it does not exist",
+    "complexity": "O(k * n), where k is the number of hash functions and n is the number of items",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "capacity",
+        "type": "integer",
+        "command": "CAPACITY",
+        "optional": true
+      },
+      {
+        "name": "error",
+        "type": "double",
+        "command": "ERROR",
+        "optional": true
+      },
+      {
+        "name": "expansion",
+        "type": "integer",
+        "command": "EXPANSION",
+        "optional": true
+      },
+      {
+        "name": "nocreate",
+        "type": "enum",
+        "enum": [
+          "NOCREATE"
+        ],
+        "optional": true
+      },
+      {
+        "name": "nonscaling",
+        "type": "enum",
+        "enum": [
+          "NONSCALING"
+        ],
+        "optional": true
+      },
+      {
+        "name": "items",
+        "type": "enum",
+        "enum": [
+          "ITEMS"
+        ]
+      },
+      {
+        "name": "item",
+        "type": "string",
+        "multiple": true
+      }
+    ],
+    "since": "1.0.0",
+    "group": "bloom"
+  },
+  "BF.EXIST": {
+    "summary": "Checks whether an item exists in a Bloom Filter",
+    "complexity": "O(k), where k is the number of hash functions used by the last sub-filter",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "item",
+        "type": "string"
+      }
+    ],
+    "since": "1.0.0",
+    "group": "bloom"
+  },
+  "BF.MEXIST": {
+    "summary": "Checks whether one or more items exist in a Bloom Filter",
+    "complexity": "O(k * n), where k is the number of hash functions and n is the number of items",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "item",
+        "type": "string",
+        "multiple": true
+      }
+    ],
+    "since": "1.0.0",
+    "group": "bloom"
+  },
+  "BF.SCANDUMP": {
+    "summary": "Begins an incremental save of the bloom filter",
+    "complexity": "O(n), where n is the capacity",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "iterator",
+        "type": "integer"
+      }
+    ],
+    "since": "1.0.0",
+    "group": "bloom"
+  },
+  "BF.LOADCHUNK": {
+    "summary": "Restores a filter previously saved using SCANDUMP",
+    "complexity": "O(n), where n is the capacity",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "iterator",
+        "type": "integer"
+      },
+      {
+        "name": "data",
+        "type": "string"
+      }
+    ],
+    "since": "1.0.0",
+    "group": "bloom"
+  },
+  "BF.INFO": {
+    "summary": "Returns information about a Bloom Filter",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      }
+    ],
+    "since": "1.0.0",
+    "group": "bloom"
+  },
+
+
+  "CF.RESERVE": {
+    "summary": "Creates a new Cuckoo Filter",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "capacity",
+        "type": "integer"
+      },
+      {
+        "name": "bucketsize",
+        "type": "integer",
+        "command": "BUCKETSIZE",
+        "optional": true
+      },
+      {
+        "name": "maxiterations",
+        "type": "integer",
+        "command": "MAXITERATIONS",
+        "optional": true
+      },
+      {
+        "name": "expansion",
+        "type": "integer",
+        "command": "EXPANSION",
+        "optional": true
+      }
+    ],
+    "since": "1.0.0",
+    "group": "cuckoo"
+  },
+  "CF.ADD": {
+    "summary": "Adds an item to a Cuckoo Filter",
+    "complexity": "O(k + i), where k is the number of sub-filters and i is maxIterations",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "item",
+        "type": "string"
+      }
+    ],
+    "since": "1.0.0",
+    "group": "cuckoo"
+  },
+  "CF.ADDNX": {
+    "summary": "Adds an item to a Cuckoo Filter if the item did not exist previously.",
+    "complexity": "O(k + i), where k is the number of sub-filters and i is maxIterations",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "item",
+        "type": "string",
+        "multiple": true
+      }
+    ],
+    "since": "1.0.0",
+    "group": "cuckoo"
+  },
+  "CF.INSERT": {
+    "summary": "Adds one or more items to a Cuckoo Filter. A filter will be created if it does not exist",
+    "complexity": "O(n * (k + i)), where n is the number of items, k is the number of sub-filters and i is maxIterations",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "capacity",
+        "type": "integer",
+        "command": "CAPACITY",
+        "optional": true
+      },
+      {
+        "name": "nocreate",
+        "type": "enum",
+        "enum": [
+          "NOCREATE"
+        ],
+        "optional": true
+      },
+      {
+        "name": "items",
+        "type": "enum",
+        "enum": [
+          "ITEMS"
+        ]
+      },
+      {
+        "name": "item",
+        "type": "string",
+        "multiple": true
+      }
+    ],
+    "since": "1.0.0",
+    "group": "cuckoo"
+  },
+  "CF.INSERTNX": {
+    "summary": "Adds one or more items to a Cuckoo Filter if the items did not exist previously. A filter will be created if it does not exist",
+    "complexity": "O(n * (k + i)), where n is the number of items, k is the number of sub-filters and i is maxIterations",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "capacity",
+        "type": "integer",
+        "command": "CAPACITY",
+        "optional": true
+      },
+      {
+        "name": "nocreate",
+        "type": "enum",
+        "enum": [
+          "NOCREATE"
+        ],
+        "optional": true
+      },
+      {
+        "name": "items",
+        "type": "enum",
+        "enum": [
+          "ITEMS"
+        ]
+      },
+      {
+        "name": "item",
+        "type": "string",
+        "multiple": true
+      }
+    ],
+    "since": "1.0.0",
+    "group": "cuckoo"
+  },
+  "CF.EXISTS": {
+    "summary": "Checks whether one or more items exist in a Cuckoo Filter",
+    "complexity": "O(k), where k is the number of sub-filters",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "item",
+        "type": "string"
+      }
+    ],
+    "since": "1.0.0",
+    "group": "cuckoo"
+  },
+  "CF.MEXISTS": {
+    "summary": "Checks whether one or more items exist in a Cuckoo Filter",
+    "complexity": "O(k * n), where k is the number of sub-filters and n is the number of items",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "item",
+        "type": "string",
+        "multiple": true
+      }
+    ],
+    "since": "1.0.0",
+    "group": "cuckoo"
+  },
+  "CF.DEL": {
+    "summary": "Deletes an item from a Cuckoo Filter",
+    "complexity": "O(k), where k is the number of sub-filters",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "item",
+        "type": "string"
+      }
+    ],
+    "since": "1.0.0",
+    "group": "cuckoo"
+  },
+  "CF.COUNT": {
+    "summary": "Return the number of times an item might be in a Cuckoo Filter",
+    "complexity": "O(k), where k is the number of sub-filters",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "item",
+        "type": "string"
+      }
+    ],
+    "since": "1.0.0",
+    "group": "cuckoo"
+  },
+  "CF.SCANDUMP": {
+    "summary": "Begins an incremental save of the bloom filter",
+    "complexity": "O(n), where n is the capacity",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "iterator",
+        "type": "integer"
+      }
+    ],
+    "since": "1.0.0",
+    "group": "cuckoo"
+  },
+  "CF.LOADCHUNK": {
+    "summary": "Restores a filter previously saved using SCANDUMP",
+    "complexity": "O(n), where n is the capacity",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "iterator",
+        "type": "integer"
+      },
+      {
+        "name": "data",
+        "type": "string"
+      }
+    ],
+    "since": "1.0.0",
+    "group": "cuckoo"
+  },
+  "CF.INFO": {
+    "summary": "Returns information about a Cuckoo Filter",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      }
+    ],
+    "since": "1.0.0",
+    "group": "cuckoo"
+  },
+
+
+  "CMS.INITBYDIM": {
+    "summary": "Initializes a Count-Min Sketch to dimensions specified by user",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "width",
+        "type": "integer"
+      },
+      {
+        "name": "depth",
+        "type": "integer"
+      }
+    ],
+    "since": "2.0.0",
+    "group": "cms"
+  },
+  "CMS.INITBYPROB": {
+    "summary": "Initializes a Count-Min Sketch to accommodate requested tolerances.",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "error",
+        "type": "double"
+      },
+      {
+        "name": "probability",
+        "type": "double"
+      }
+    ],
+    "since": "2.0.0",
+    "group": "cms"
+  },
+  "CMS.INCRBY": {
+    "summary": "Increases the count of one or more items by increment",
+    "complexity": "O(n) where n is the number of items",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "items",
+        "type": "block",
+        "multiple": true,
+        "block": [
+          {
+            "name": "item",
+            "type": "string"
+          },
+          {
+            "name": "increment",
+            "type": "integer"
+          }
+        ]
+      }
+    ],
+    "since": "2.0.0",
+    "group": "cms"
+  },
+  "CMS.QUERY": {
+    "summary": "Returns the count for one or more items in a sketch",
+    "complexity": "O(n) where n is the number of items",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "item",
+        "type": "string",
+        "multiple": true
+      }
+    ],
+    "since": "2.0.0",
+    "group": "cms"
+  },
+  "CMS.MERGE": {
+    "summary": "Merges several sketches into one sketch",
+    "complexity": "O(n) where n is the number of sketches",
+    "arguments": [
+      {
+        "name": "destination",
+        "type": "key"
+      },
+      {
+        "name": "numKeys",
+        "type": "integer"
+      },
+      {
+        "name": "source",
+        "type": "key",
+        "multiple": true
+      },
+      {
+        "name": "weight",
+        "type": "block",
+        "optional": true,
+        "block": [
+          {
+            "name": "weights",
+            "type": "enum",
+            "enum": [
+              "WEIGHTS"
+            ]
+          },
+          {
+            "name": "weight",
+            "type": "double",
+            "multiple": true
+          }
+        ]
+      }
+    ],
+    "since": "2.0.0",
+    "group": "cms"
+  },
+  "CMS.INFO": {
+    "summary": "Returns information about a sketch",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      }
+    ],
+    "since": "2.0.0",
+    "group": "cms"
+  },
+
+
+  "TOPK.RESERVE": {
+    "summary": "Initializes a TopK with specified parameters",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "topk",
+        "type": "integer"
+      },
+      {
+        "name": "params",
+        "type": "block",
+        "optional": true,
+        "block": [
+          {
+            "name": "width",
+            "type": "integer"
+          },
+          {
+            "name": "depth",
+            "type": "integer"
+          },
+          {
+            "name": "decay",
+            "type": "double"
+          }
+        ]
+      }
+    ],
+    "since": "2.0.0",
+    "group": "topk"
+  },
+  "TOPK.ADD": {
+    "summary": "Increases the count of one or more items by increment",
+    "complexity": "O(n * k) where n is the number of items and k is the depth",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "items",
+        "type": "string",
+        "multiple": true
+      }
+    ],
+    "since": "2.0.0",
+    "group": "topk"
+  },
+  "TOPK.INCRBY": {
+    "summary": "Increases the count of one or more items by increment",
+    "complexity": "O(n * k * incr) where n is the number of items, k is the depth and incr is the increment",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "items",
+        "type": "block",
+        "multiple": true,
+        "block": [
+          {
+            "name": "item",
+            "type": "string"
+          },
+          {
+            "name": "increment",
+            "type": "integer"
+          }
+        ]
+      }
+    ],
+    "since": "2.0.0",
+    "group": "topk"
+  },
+  "TOPK.QUERY": {
+    "summary": "Checks whether one or more items are in a sketch",
+    "complexity": "O(n) where n is the number of items",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "item",
+        "type": "string",
+        "multiple": true
+      }
+    ],
+    "since": "2.0.0",
+    "group": "topk"
+  },
+  "TOPK.LIST": {
+    "summary": "Return full list of items in Top K list",
+    "complexity": "O(k) where k is the value of top-k",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "numKeys",
+        "type": "integer"
+      },
+      {
+        "name": "withcount",
+        "type": "enum",
+        "enum": [
+          "WITHCOUNT"
+        ]
+      }
+    ],
+    "since": "2.0.0",
+    "group": "topk"
+  },
+  "TOPK.INFO": {
+    "summary": "Returns information about a sketch",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      }
+    ],
+    "since": "2.0.0",
+    "group": "topk"
+  },
+
+
+  "TDIGEST.CREATE": {
+    "summary": "Allocate the memory and initialize the t-digest",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "compression",
+        "type": "integer"
+      }
+    ],
+    "since": "2.4.0",
+    "group": "tdigest"
+  },
+  "TDIGEST.RESET": {
+    "summary": "Reset the sketch to zero - empty out the sketch and re-initialize it",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      }
+    ],
+    "since": "2.4.0",
+    "group": "tdigest"
+  },
+  "TDIGEST.ADD": {
+    "summary": "Adds one or more samples to a sketch",
+    "complexity": "O(N) , where N is the number of samples to add",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "values",
+        "type": "block",
+        "multiple": true,
+        "block": [
+          {
+            "name": "value",
+            "type": "double"
+          },
+          {
+            "name": "weight",
+            "type": "double"
+          }
+        ]
+      }
+    ],
+    "since": "2.4.0",
+    "group": "tdigest"
+  },
+  "TDIGEST.MERGE": {
+    "summary": "Merges all of the values from 'from' to 'this' sketch",
+    "complexity": "O(N), where N is the number of centroids",
+    "arguments": [
+      {
+        "name": "to-key",
+        "type": "key"
+      },
+      {
+        "name": "from-key",
+        "type": "key"
+      }
+    ],
+    "since": "2.4.0",
+    "group": "tdigest"
+  },
+  "TDIGEST.MIN": {
+    "summary": "Get minimum value from the sketch",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      }
+    ],
+    "since": "2.4.0",
+    "group": "tdigest"
+  },
+  "TDIGEST.MAX": {
+    "summary": "Get maximum value from the sketch",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      }
+    ],
+    "since": "2.4.0",
+    "group": "tdigest"
+  },
+  "TDIGEST.QUANTILE": {
+    "summary": "Returns an estimate of the cutoff",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "quantile",
+        "type": "double"
+      }
+    ],
+    "since": "2.4.0",
+    "group": "tdigest"
+  },
+  "TDIGEST.CDF": {
+    "summary": "Returns the fraction of all points added which are <= value",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "value",
+        "type": "double"
+      }
+    ],
+    "since": "2.4.0",
+    "group": "tdigest"
+  },
+  "TDIGEST.INFO": {
+    "summary": "Returns information about a sketch",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      }
+    ],
+    "since": "2.4.0",
+    "group": "tdigest"
+  }
+}

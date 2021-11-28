@@ -263,6 +263,357 @@ func (c AuthUsername) Password(Password string) AuthPassword {
 	return AuthPassword{cs: append(c.cs, Password), cf: c.cf, ks: c.ks}
 }
 
+type BfAdd Completed
+
+func (c BfAdd) Key(Key string) BfAddKey {
+	return BfAddKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) BfAdd() (c BfAdd) {
+	c.cs = append(b.get(), "BF.ADD")
+	return
+}
+
+type BfAddItem Completed
+
+func (c BfAddItem) Build() Completed {
+	return Completed(c)
+}
+
+type BfAddKey Completed
+
+func (c BfAddKey) Item(Item string) BfAddItem {
+	return BfAddItem{cs: append(c.cs, Item), cf: c.cf, ks: c.ks}
+}
+
+type BfExist Completed
+
+func (c BfExist) Key(Key string) BfExistKey {
+	return BfExistKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) BfExist() (c BfExist) {
+	c.cs = append(b.get(), "BF.EXIST")
+	return
+}
+
+type BfExistItem Completed
+
+func (c BfExistItem) Build() Completed {
+	return Completed(c)
+}
+
+type BfExistKey Completed
+
+func (c BfExistKey) Item(Item string) BfExistItem {
+	return BfExistItem{cs: append(c.cs, Item), cf: c.cf, ks: c.ks}
+}
+
+type BfInfo Completed
+
+func (c BfInfo) Key(Key string) BfInfoKey {
+	return BfInfoKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) BfInfo() (c BfInfo) {
+	c.cs = append(b.get(), "BF.INFO")
+	c.cf = readonly
+	return
+}
+
+type BfInfoKey Completed
+
+func (c BfInfoKey) Build() Completed {
+	return Completed(c)
+}
+
+func (c BfInfoKey) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type BfInsert Completed
+
+func (c BfInsert) Key(Key string) BfInsertKey {
+	return BfInsertKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) BfInsert() (c BfInsert) {
+	c.cs = append(b.get(), "BF.INSERT")
+	return
+}
+
+type BfInsertCapacity Completed
+
+func (c BfInsertCapacity) Error(Error float64) BfInsertError {
+	return BfInsertError{cs: append(c.cs, "ERROR", strconv.FormatFloat(Error, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+func (c BfInsertCapacity) Expansion(Expansion int64) BfInsertExpansion {
+	return BfInsertExpansion{cs: append(c.cs, "EXPANSION", strconv.FormatInt(Expansion, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c BfInsertCapacity) Nocreate() BfInsertNocreateNocreate {
+	return BfInsertNocreateNocreate{cs: append(c.cs, "NOCREATE"), cf: c.cf, ks: c.ks}
+}
+
+func (c BfInsertCapacity) Nonscaling() BfInsertNonscalingNonscaling {
+	return BfInsertNonscalingNonscaling{cs: append(c.cs, "NONSCALING"), cf: c.cf, ks: c.ks}
+}
+
+func (c BfInsertCapacity) Items() BfInsertItemsItems {
+	return BfInsertItemsItems{cs: append(c.cs, "ITEMS"), cf: c.cf, ks: c.ks}
+}
+
+type BfInsertError Completed
+
+func (c BfInsertError) Expansion(Expansion int64) BfInsertExpansion {
+	return BfInsertExpansion{cs: append(c.cs, "EXPANSION", strconv.FormatInt(Expansion, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c BfInsertError) Nocreate() BfInsertNocreateNocreate {
+	return BfInsertNocreateNocreate{cs: append(c.cs, "NOCREATE"), cf: c.cf, ks: c.ks}
+}
+
+func (c BfInsertError) Nonscaling() BfInsertNonscalingNonscaling {
+	return BfInsertNonscalingNonscaling{cs: append(c.cs, "NONSCALING"), cf: c.cf, ks: c.ks}
+}
+
+func (c BfInsertError) Items() BfInsertItemsItems {
+	return BfInsertItemsItems{cs: append(c.cs, "ITEMS"), cf: c.cf, ks: c.ks}
+}
+
+type BfInsertExpansion Completed
+
+func (c BfInsertExpansion) Nocreate() BfInsertNocreateNocreate {
+	return BfInsertNocreateNocreate{cs: append(c.cs, "NOCREATE"), cf: c.cf, ks: c.ks}
+}
+
+func (c BfInsertExpansion) Nonscaling() BfInsertNonscalingNonscaling {
+	return BfInsertNonscalingNonscaling{cs: append(c.cs, "NONSCALING"), cf: c.cf, ks: c.ks}
+}
+
+func (c BfInsertExpansion) Items() BfInsertItemsItems {
+	return BfInsertItemsItems{cs: append(c.cs, "ITEMS"), cf: c.cf, ks: c.ks}
+}
+
+type BfInsertItem Completed
+
+func (c BfInsertItem) Item(Item ...string) BfInsertItem {
+	return BfInsertItem{cs: append(c.cs, Item...), cf: c.cf, ks: c.ks}
+}
+
+func (c BfInsertItem) Build() Completed {
+	return Completed(c)
+}
+
+type BfInsertItemsItems Completed
+
+func (c BfInsertItemsItems) Item(Item ...string) BfInsertItem {
+	return BfInsertItem{cs: append(c.cs, Item...), cf: c.cf, ks: c.ks}
+}
+
+type BfInsertKey Completed
+
+func (c BfInsertKey) Capacity(Capacity int64) BfInsertCapacity {
+	return BfInsertCapacity{cs: append(c.cs, "CAPACITY", strconv.FormatInt(Capacity, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c BfInsertKey) Error(Error float64) BfInsertError {
+	return BfInsertError{cs: append(c.cs, "ERROR", strconv.FormatFloat(Error, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+func (c BfInsertKey) Expansion(Expansion int64) BfInsertExpansion {
+	return BfInsertExpansion{cs: append(c.cs, "EXPANSION", strconv.FormatInt(Expansion, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c BfInsertKey) Nocreate() BfInsertNocreateNocreate {
+	return BfInsertNocreateNocreate{cs: append(c.cs, "NOCREATE"), cf: c.cf, ks: c.ks}
+}
+
+func (c BfInsertKey) Nonscaling() BfInsertNonscalingNonscaling {
+	return BfInsertNonscalingNonscaling{cs: append(c.cs, "NONSCALING"), cf: c.cf, ks: c.ks}
+}
+
+func (c BfInsertKey) Items() BfInsertItemsItems {
+	return BfInsertItemsItems{cs: append(c.cs, "ITEMS"), cf: c.cf, ks: c.ks}
+}
+
+type BfInsertNocreateNocreate Completed
+
+func (c BfInsertNocreateNocreate) Nonscaling() BfInsertNonscalingNonscaling {
+	return BfInsertNonscalingNonscaling{cs: append(c.cs, "NONSCALING"), cf: c.cf, ks: c.ks}
+}
+
+func (c BfInsertNocreateNocreate) Items() BfInsertItemsItems {
+	return BfInsertItemsItems{cs: append(c.cs, "ITEMS"), cf: c.cf, ks: c.ks}
+}
+
+type BfInsertNonscalingNonscaling Completed
+
+func (c BfInsertNonscalingNonscaling) Items() BfInsertItemsItems {
+	return BfInsertItemsItems{cs: append(c.cs, "ITEMS"), cf: c.cf, ks: c.ks}
+}
+
+type BfLoadchunk Completed
+
+func (c BfLoadchunk) Key(Key string) BfLoadchunkKey {
+	return BfLoadchunkKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) BfLoadchunk() (c BfLoadchunk) {
+	c.cs = append(b.get(), "BF.LOADCHUNK")
+	return
+}
+
+type BfLoadchunkData Completed
+
+func (c BfLoadchunkData) Build() Completed {
+	return Completed(c)
+}
+
+type BfLoadchunkIterator Completed
+
+func (c BfLoadchunkIterator) Data(Data string) BfLoadchunkData {
+	return BfLoadchunkData{cs: append(c.cs, Data), cf: c.cf, ks: c.ks}
+}
+
+type BfLoadchunkKey Completed
+
+func (c BfLoadchunkKey) Iterator(Iterator int64) BfLoadchunkIterator {
+	return BfLoadchunkIterator{cs: append(c.cs, strconv.FormatInt(Iterator, 10)), cf: c.cf, ks: c.ks}
+}
+
+type BfMadd Completed
+
+func (c BfMadd) Key(Key string) BfMaddKey {
+	return BfMaddKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) BfMadd() (c BfMadd) {
+	c.cs = append(b.get(), "BF.MADD")
+	return
+}
+
+type BfMaddItem Completed
+
+func (c BfMaddItem) Item(Item ...string) BfMaddItem {
+	return BfMaddItem{cs: append(c.cs, Item...), cf: c.cf, ks: c.ks}
+}
+
+func (c BfMaddItem) Build() Completed {
+	return Completed(c)
+}
+
+type BfMaddKey Completed
+
+func (c BfMaddKey) Item(Item ...string) BfMaddItem {
+	return BfMaddItem{cs: append(c.cs, Item...), cf: c.cf, ks: c.ks}
+}
+
+type BfMexist Completed
+
+func (c BfMexist) Key(Key string) BfMexistKey {
+	return BfMexistKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) BfMexist() (c BfMexist) {
+	c.cs = append(b.get(), "BF.MEXIST")
+	return
+}
+
+type BfMexistItem Completed
+
+func (c BfMexistItem) Item(Item ...string) BfMexistItem {
+	return BfMexistItem{cs: append(c.cs, Item...), cf: c.cf, ks: c.ks}
+}
+
+func (c BfMexistItem) Build() Completed {
+	return Completed(c)
+}
+
+type BfMexistKey Completed
+
+func (c BfMexistKey) Item(Item ...string) BfMexistItem {
+	return BfMexistItem{cs: append(c.cs, Item...), cf: c.cf, ks: c.ks}
+}
+
+type BfReserve Completed
+
+func (c BfReserve) Key(Key string) BfReserveKey {
+	return BfReserveKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) BfReserve() (c BfReserve) {
+	c.cs = append(b.get(), "BF.RESERVE")
+	return
+}
+
+type BfReserveCapacity Completed
+
+func (c BfReserveCapacity) Expansion(Expansion int64) BfReserveExpansion {
+	return BfReserveExpansion{cs: append(c.cs, "EXPANSION", strconv.FormatInt(Expansion, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c BfReserveCapacity) Nonscaling() BfReserveNonscalingNonscaling {
+	return BfReserveNonscalingNonscaling{cs: append(c.cs, "NONSCALING"), cf: c.cf, ks: c.ks}
+}
+
+func (c BfReserveCapacity) Build() Completed {
+	return Completed(c)
+}
+
+type BfReserveErrorRate Completed
+
+func (c BfReserveErrorRate) Capacity(Capacity int64) BfReserveCapacity {
+	return BfReserveCapacity{cs: append(c.cs, strconv.FormatInt(Capacity, 10)), cf: c.cf, ks: c.ks}
+}
+
+type BfReserveExpansion Completed
+
+func (c BfReserveExpansion) Nonscaling() BfReserveNonscalingNonscaling {
+	return BfReserveNonscalingNonscaling{cs: append(c.cs, "NONSCALING"), cf: c.cf, ks: c.ks}
+}
+
+func (c BfReserveExpansion) Build() Completed {
+	return Completed(c)
+}
+
+type BfReserveKey Completed
+
+func (c BfReserveKey) ErrorRate(ErrorRate float64) BfReserveErrorRate {
+	return BfReserveErrorRate{cs: append(c.cs, strconv.FormatFloat(ErrorRate, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+type BfReserveNonscalingNonscaling Completed
+
+func (c BfReserveNonscalingNonscaling) Build() Completed {
+	return Completed(c)
+}
+
+type BfScandump Completed
+
+func (c BfScandump) Key(Key string) BfScandumpKey {
+	return BfScandumpKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) BfScandump() (c BfScandump) {
+	c.cs = append(b.get(), "BF.SCANDUMP")
+	c.cf = readonly
+	return
+}
+
+type BfScandumpIterator Completed
+
+func (c BfScandumpIterator) Build() Completed {
+	return Completed(c)
+}
+
+type BfScandumpKey Completed
+
+func (c BfScandumpKey) Iterator(Iterator int64) BfScandumpIterator {
+	return BfScandumpIterator{cs: append(c.cs, strconv.FormatInt(Iterator, 10)), cf: c.cf, ks: c.ks}
+}
+
 type Bgrewriteaof Completed
 
 func (c Bgrewriteaof) Build() Completed {
@@ -969,6 +1320,416 @@ type BzpopminTimeout Completed
 
 func (c BzpopminTimeout) Build() Completed {
 	return Completed(c)
+}
+
+type CfAdd Completed
+
+func (c CfAdd) Key(Key string) CfAddKey {
+	return CfAddKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) CfAdd() (c CfAdd) {
+	c.cs = append(b.get(), "CF.ADD")
+	return
+}
+
+type CfAddItem Completed
+
+func (c CfAddItem) Build() Completed {
+	return Completed(c)
+}
+
+type CfAddKey Completed
+
+func (c CfAddKey) Item(Item string) CfAddItem {
+	return CfAddItem{cs: append(c.cs, Item), cf: c.cf, ks: c.ks}
+}
+
+type CfAddnx Completed
+
+func (c CfAddnx) Key(Key string) CfAddnxKey {
+	return CfAddnxKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) CfAddnx() (c CfAddnx) {
+	c.cs = append(b.get(), "CF.ADDNX")
+	return
+}
+
+type CfAddnxItem Completed
+
+func (c CfAddnxItem) Item(Item ...string) CfAddnxItem {
+	return CfAddnxItem{cs: append(c.cs, Item...), cf: c.cf, ks: c.ks}
+}
+
+func (c CfAddnxItem) Build() Completed {
+	return Completed(c)
+}
+
+type CfAddnxKey Completed
+
+func (c CfAddnxKey) Item(Item ...string) CfAddnxItem {
+	return CfAddnxItem{cs: append(c.cs, Item...), cf: c.cf, ks: c.ks}
+}
+
+type CfCount Completed
+
+func (c CfCount) Key(Key string) CfCountKey {
+	return CfCountKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) CfCount() (c CfCount) {
+	c.cs = append(b.get(), "CF.COUNT")
+	c.cf = readonly
+	return
+}
+
+type CfCountItem Completed
+
+func (c CfCountItem) Build() Completed {
+	return Completed(c)
+}
+
+func (c CfCountItem) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type CfCountKey Completed
+
+func (c CfCountKey) Item(Item string) CfCountItem {
+	return CfCountItem{cs: append(c.cs, Item), cf: c.cf, ks: c.ks}
+}
+
+type CfDel Completed
+
+func (c CfDel) Key(Key string) CfDelKey {
+	return CfDelKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) CfDel() (c CfDel) {
+	c.cs = append(b.get(), "CF.DEL")
+	return
+}
+
+type CfDelItem Completed
+
+func (c CfDelItem) Build() Completed {
+	return Completed(c)
+}
+
+type CfDelKey Completed
+
+func (c CfDelKey) Item(Item string) CfDelItem {
+	return CfDelItem{cs: append(c.cs, Item), cf: c.cf, ks: c.ks}
+}
+
+type CfExists Completed
+
+func (c CfExists) Key(Key string) CfExistsKey {
+	return CfExistsKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) CfExists() (c CfExists) {
+	c.cs = append(b.get(), "CF.EXISTS")
+	c.cf = readonly
+	return
+}
+
+type CfExistsItem Completed
+
+func (c CfExistsItem) Build() Completed {
+	return Completed(c)
+}
+
+func (c CfExistsItem) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type CfExistsKey Completed
+
+func (c CfExistsKey) Item(Item string) CfExistsItem {
+	return CfExistsItem{cs: append(c.cs, Item), cf: c.cf, ks: c.ks}
+}
+
+type CfInfo Completed
+
+func (c CfInfo) Key(Key string) CfInfoKey {
+	return CfInfoKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) CfInfo() (c CfInfo) {
+	c.cs = append(b.get(), "CF.INFO")
+	c.cf = readonly
+	return
+}
+
+type CfInfoKey Completed
+
+func (c CfInfoKey) Build() Completed {
+	return Completed(c)
+}
+
+func (c CfInfoKey) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type CfInsert Completed
+
+func (c CfInsert) Key(Key string) CfInsertKey {
+	return CfInsertKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) CfInsert() (c CfInsert) {
+	c.cs = append(b.get(), "CF.INSERT")
+	return
+}
+
+type CfInsertCapacity Completed
+
+func (c CfInsertCapacity) Nocreate() CfInsertNocreateNocreate {
+	return CfInsertNocreateNocreate{cs: append(c.cs, "NOCREATE"), cf: c.cf, ks: c.ks}
+}
+
+func (c CfInsertCapacity) Items() CfInsertItemsItems {
+	return CfInsertItemsItems{cs: append(c.cs, "ITEMS"), cf: c.cf, ks: c.ks}
+}
+
+type CfInsertItem Completed
+
+func (c CfInsertItem) Item(Item ...string) CfInsertItem {
+	return CfInsertItem{cs: append(c.cs, Item...), cf: c.cf, ks: c.ks}
+}
+
+func (c CfInsertItem) Build() Completed {
+	return Completed(c)
+}
+
+type CfInsertItemsItems Completed
+
+func (c CfInsertItemsItems) Item(Item ...string) CfInsertItem {
+	return CfInsertItem{cs: append(c.cs, Item...), cf: c.cf, ks: c.ks}
+}
+
+type CfInsertKey Completed
+
+func (c CfInsertKey) Capacity(Capacity int64) CfInsertCapacity {
+	return CfInsertCapacity{cs: append(c.cs, "CAPACITY", strconv.FormatInt(Capacity, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c CfInsertKey) Nocreate() CfInsertNocreateNocreate {
+	return CfInsertNocreateNocreate{cs: append(c.cs, "NOCREATE"), cf: c.cf, ks: c.ks}
+}
+
+func (c CfInsertKey) Items() CfInsertItemsItems {
+	return CfInsertItemsItems{cs: append(c.cs, "ITEMS"), cf: c.cf, ks: c.ks}
+}
+
+type CfInsertNocreateNocreate Completed
+
+func (c CfInsertNocreateNocreate) Items() CfInsertItemsItems {
+	return CfInsertItemsItems{cs: append(c.cs, "ITEMS"), cf: c.cf, ks: c.ks}
+}
+
+type CfInsertnx Completed
+
+func (c CfInsertnx) Key(Key string) CfInsertnxKey {
+	return CfInsertnxKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) CfInsertnx() (c CfInsertnx) {
+	c.cs = append(b.get(), "CF.INSERTNX")
+	return
+}
+
+type CfInsertnxCapacity Completed
+
+func (c CfInsertnxCapacity) Nocreate() CfInsertnxNocreateNocreate {
+	return CfInsertnxNocreateNocreate{cs: append(c.cs, "NOCREATE"), cf: c.cf, ks: c.ks}
+}
+
+func (c CfInsertnxCapacity) Items() CfInsertnxItemsItems {
+	return CfInsertnxItemsItems{cs: append(c.cs, "ITEMS"), cf: c.cf, ks: c.ks}
+}
+
+type CfInsertnxItem Completed
+
+func (c CfInsertnxItem) Item(Item ...string) CfInsertnxItem {
+	return CfInsertnxItem{cs: append(c.cs, Item...), cf: c.cf, ks: c.ks}
+}
+
+func (c CfInsertnxItem) Build() Completed {
+	return Completed(c)
+}
+
+type CfInsertnxItemsItems Completed
+
+func (c CfInsertnxItemsItems) Item(Item ...string) CfInsertnxItem {
+	return CfInsertnxItem{cs: append(c.cs, Item...), cf: c.cf, ks: c.ks}
+}
+
+type CfInsertnxKey Completed
+
+func (c CfInsertnxKey) Capacity(Capacity int64) CfInsertnxCapacity {
+	return CfInsertnxCapacity{cs: append(c.cs, "CAPACITY", strconv.FormatInt(Capacity, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c CfInsertnxKey) Nocreate() CfInsertnxNocreateNocreate {
+	return CfInsertnxNocreateNocreate{cs: append(c.cs, "NOCREATE"), cf: c.cf, ks: c.ks}
+}
+
+func (c CfInsertnxKey) Items() CfInsertnxItemsItems {
+	return CfInsertnxItemsItems{cs: append(c.cs, "ITEMS"), cf: c.cf, ks: c.ks}
+}
+
+type CfInsertnxNocreateNocreate Completed
+
+func (c CfInsertnxNocreateNocreate) Items() CfInsertnxItemsItems {
+	return CfInsertnxItemsItems{cs: append(c.cs, "ITEMS"), cf: c.cf, ks: c.ks}
+}
+
+type CfLoadchunk Completed
+
+func (c CfLoadchunk) Key(Key string) CfLoadchunkKey {
+	return CfLoadchunkKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) CfLoadchunk() (c CfLoadchunk) {
+	c.cs = append(b.get(), "CF.LOADCHUNK")
+	return
+}
+
+type CfLoadchunkData Completed
+
+func (c CfLoadchunkData) Build() Completed {
+	return Completed(c)
+}
+
+type CfLoadchunkIterator Completed
+
+func (c CfLoadchunkIterator) Data(Data string) CfLoadchunkData {
+	return CfLoadchunkData{cs: append(c.cs, Data), cf: c.cf, ks: c.ks}
+}
+
+type CfLoadchunkKey Completed
+
+func (c CfLoadchunkKey) Iterator(Iterator int64) CfLoadchunkIterator {
+	return CfLoadchunkIterator{cs: append(c.cs, strconv.FormatInt(Iterator, 10)), cf: c.cf, ks: c.ks}
+}
+
+type CfMexists Completed
+
+func (c CfMexists) Key(Key string) CfMexistsKey {
+	return CfMexistsKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) CfMexists() (c CfMexists) {
+	c.cs = append(b.get(), "CF.MEXISTS")
+	return
+}
+
+type CfMexistsItem Completed
+
+func (c CfMexistsItem) Item(Item ...string) CfMexistsItem {
+	return CfMexistsItem{cs: append(c.cs, Item...), cf: c.cf, ks: c.ks}
+}
+
+func (c CfMexistsItem) Build() Completed {
+	return Completed(c)
+}
+
+type CfMexistsKey Completed
+
+func (c CfMexistsKey) Item(Item ...string) CfMexistsItem {
+	return CfMexistsItem{cs: append(c.cs, Item...), cf: c.cf, ks: c.ks}
+}
+
+type CfReserve Completed
+
+func (c CfReserve) Key(Key string) CfReserveKey {
+	return CfReserveKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) CfReserve() (c CfReserve) {
+	c.cs = append(b.get(), "CF.RESERVE")
+	return
+}
+
+type CfReserveBucketsize Completed
+
+func (c CfReserveBucketsize) Maxiterations(Maxiterations int64) CfReserveMaxiterations {
+	return CfReserveMaxiterations{cs: append(c.cs, "MAXITERATIONS", strconv.FormatInt(Maxiterations, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c CfReserveBucketsize) Expansion(Expansion int64) CfReserveExpansion {
+	return CfReserveExpansion{cs: append(c.cs, "EXPANSION", strconv.FormatInt(Expansion, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c CfReserveBucketsize) Build() Completed {
+	return Completed(c)
+}
+
+type CfReserveCapacity Completed
+
+func (c CfReserveCapacity) Bucketsize(Bucketsize int64) CfReserveBucketsize {
+	return CfReserveBucketsize{cs: append(c.cs, "BUCKETSIZE", strconv.FormatInt(Bucketsize, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c CfReserveCapacity) Maxiterations(Maxiterations int64) CfReserveMaxiterations {
+	return CfReserveMaxiterations{cs: append(c.cs, "MAXITERATIONS", strconv.FormatInt(Maxiterations, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c CfReserveCapacity) Expansion(Expansion int64) CfReserveExpansion {
+	return CfReserveExpansion{cs: append(c.cs, "EXPANSION", strconv.FormatInt(Expansion, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c CfReserveCapacity) Build() Completed {
+	return Completed(c)
+}
+
+type CfReserveExpansion Completed
+
+func (c CfReserveExpansion) Build() Completed {
+	return Completed(c)
+}
+
+type CfReserveKey Completed
+
+func (c CfReserveKey) Capacity(Capacity int64) CfReserveCapacity {
+	return CfReserveCapacity{cs: append(c.cs, strconv.FormatInt(Capacity, 10)), cf: c.cf, ks: c.ks}
+}
+
+type CfReserveMaxiterations Completed
+
+func (c CfReserveMaxiterations) Expansion(Expansion int64) CfReserveExpansion {
+	return CfReserveExpansion{cs: append(c.cs, "EXPANSION", strconv.FormatInt(Expansion, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c CfReserveMaxiterations) Build() Completed {
+	return Completed(c)
+}
+
+type CfScandump Completed
+
+func (c CfScandump) Key(Key string) CfScandumpKey {
+	return CfScandumpKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) CfScandump() (c CfScandump) {
+	c.cs = append(b.get(), "CF.SCANDUMP")
+	c.cf = readonly
+	return
+}
+
+type CfScandumpIterator Completed
+
+func (c CfScandumpIterator) Build() Completed {
+	return Completed(c)
+}
+
+type CfScandumpKey Completed
+
+func (c CfScandumpKey) Iterator(Iterator int64) CfScandumpIterator {
+	return CfScandumpIterator{cs: append(c.cs, strconv.FormatInt(Iterator, 10)), cf: c.cf, ks: c.ks}
 }
 
 type ClientCaching Completed
@@ -2248,6 +3009,206 @@ func (c ClusterSlots) Build() Completed {
 func (b *Builder) ClusterSlots() (c ClusterSlots) {
 	c.cs = append(b.get(), "CLUSTER", "SLOTS")
 	return
+}
+
+type CmsIncrby Completed
+
+func (c CmsIncrby) Key(Key string) CmsIncrbyKey {
+	return CmsIncrbyKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) CmsIncrby() (c CmsIncrby) {
+	c.cs = append(b.get(), "CMS.INCRBY")
+	return
+}
+
+type CmsIncrbyItemsIncrement Completed
+
+func (c CmsIncrbyItemsIncrement) Build() Completed {
+	return Completed(c)
+}
+
+type CmsIncrbyItemsItem Completed
+
+func (c CmsIncrbyItemsItem) Increment(Increment int64) CmsIncrbyItemsIncrement {
+	return CmsIncrbyItemsIncrement{cs: append(c.cs, strconv.FormatInt(Increment, 10)), cf: c.cf, ks: c.ks}
+}
+
+type CmsIncrbyKey Completed
+
+func (c CmsIncrbyKey) Item(Item string) CmsIncrbyItemsItem {
+	return CmsIncrbyItemsItem{cs: append(c.cs, Item), cf: c.cf, ks: c.ks}
+}
+
+type CmsInfo Completed
+
+func (c CmsInfo) Key(Key string) CmsInfoKey {
+	return CmsInfoKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) CmsInfo() (c CmsInfo) {
+	c.cs = append(b.get(), "CMS.INFO")
+	c.cf = readonly
+	return
+}
+
+type CmsInfoKey Completed
+
+func (c CmsInfoKey) Build() Completed {
+	return Completed(c)
+}
+
+func (c CmsInfoKey) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type CmsInitbydim Completed
+
+func (c CmsInitbydim) Key(Key string) CmsInitbydimKey {
+	return CmsInitbydimKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) CmsInitbydim() (c CmsInitbydim) {
+	c.cs = append(b.get(), "CMS.INITBYDIM")
+	return
+}
+
+type CmsInitbydimDepth Completed
+
+func (c CmsInitbydimDepth) Build() Completed {
+	return Completed(c)
+}
+
+type CmsInitbydimKey Completed
+
+func (c CmsInitbydimKey) Width(Width int64) CmsInitbydimWidth {
+	return CmsInitbydimWidth{cs: append(c.cs, strconv.FormatInt(Width, 10)), cf: c.cf, ks: c.ks}
+}
+
+type CmsInitbydimWidth Completed
+
+func (c CmsInitbydimWidth) Depth(Depth int64) CmsInitbydimDepth {
+	return CmsInitbydimDepth{cs: append(c.cs, strconv.FormatInt(Depth, 10)), cf: c.cf, ks: c.ks}
+}
+
+type CmsInitbyprob Completed
+
+func (c CmsInitbyprob) Key(Key string) CmsInitbyprobKey {
+	return CmsInitbyprobKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) CmsInitbyprob() (c CmsInitbyprob) {
+	c.cs = append(b.get(), "CMS.INITBYPROB")
+	return
+}
+
+type CmsInitbyprobError Completed
+
+func (c CmsInitbyprobError) Probability(Probability float64) CmsInitbyprobProbability {
+	return CmsInitbyprobProbability{cs: append(c.cs, strconv.FormatFloat(Probability, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+type CmsInitbyprobKey Completed
+
+func (c CmsInitbyprobKey) Error(Error float64) CmsInitbyprobError {
+	return CmsInitbyprobError{cs: append(c.cs, strconv.FormatFloat(Error, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+type CmsInitbyprobProbability Completed
+
+func (c CmsInitbyprobProbability) Build() Completed {
+	return Completed(c)
+}
+
+type CmsMerge Completed
+
+func (c CmsMerge) Destination(Destination string) CmsMergeDestination {
+	return CmsMergeDestination{cs: append(c.cs, Destination), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) CmsMerge() (c CmsMerge) {
+	c.cs = append(b.get(), "CMS.MERGE")
+	return
+}
+
+type CmsMergeDestination Completed
+
+func (c CmsMergeDestination) Numkeys(Numkeys int64) CmsMergeNumkeys {
+	return CmsMergeNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10)), cf: c.cf, ks: c.ks}
+}
+
+type CmsMergeNumkeys Completed
+
+func (c CmsMergeNumkeys) Source(Source ...string) CmsMergeSource {
+	return CmsMergeSource{cs: append(c.cs, Source...), cf: c.cf, ks: c.ks}
+}
+
+type CmsMergeSource Completed
+
+func (c CmsMergeSource) Weights() CmsMergeWeightWeightsWeights {
+	return CmsMergeWeightWeightsWeights{cs: append(c.cs, "WEIGHTS"), cf: c.cf, ks: c.ks}
+}
+
+func (c CmsMergeSource) Source(Source ...string) CmsMergeSource {
+	return CmsMergeSource{cs: append(c.cs, Source...), cf: c.cf, ks: c.ks}
+}
+
+func (c CmsMergeSource) Build() Completed {
+	return Completed(c)
+}
+
+type CmsMergeWeightWeight Completed
+
+func (c CmsMergeWeightWeight) Weight(Weight ...float64) CmsMergeWeightWeight {
+	for _, n := range Weight {
+		c.cs = append(c.cs, strconv.FormatFloat(n, 'f', -1, 64))
+	}
+	return CmsMergeWeightWeight{cs: c.cs, cf: c.cf, ks: c.ks}
+}
+
+func (c CmsMergeWeightWeight) Build() Completed {
+	return Completed(c)
+}
+
+type CmsMergeWeightWeightsWeights Completed
+
+func (c CmsMergeWeightWeightsWeights) Weight(Weight ...float64) CmsMergeWeightWeight {
+	for _, n := range Weight {
+		c.cs = append(c.cs, strconv.FormatFloat(n, 'f', -1, 64))
+	}
+	return CmsMergeWeightWeight{cs: c.cs, cf: c.cf, ks: c.ks}
+}
+
+type CmsQuery Completed
+
+func (c CmsQuery) Key(Key string) CmsQueryKey {
+	return CmsQueryKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) CmsQuery() (c CmsQuery) {
+	c.cs = append(b.get(), "CMS.QUERY")
+	c.cf = readonly
+	return
+}
+
+type CmsQueryItem Completed
+
+func (c CmsQueryItem) Item(Item ...string) CmsQueryItem {
+	return CmsQueryItem{cs: append(c.cs, Item...), cf: c.cf, ks: c.ks}
+}
+
+func (c CmsQueryItem) Build() Completed {
+	return Completed(c)
+}
+
+func (c CmsQueryItem) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type CmsQueryKey Completed
+
+func (c CmsQueryKey) Item(Item ...string) CmsQueryItem {
+	return CmsQueryItem{cs: append(c.cs, Item...), cf: c.cf, ks: c.ks}
 }
 
 type Command Completed
@@ -10824,6 +11785,195 @@ func (b *Builder) Sync() (c Sync) {
 	return
 }
 
+type TdigestAdd Completed
+
+func (c TdigestAdd) Key(Key string) TdigestAddKey {
+	return TdigestAddKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) TdigestAdd() (c TdigestAdd) {
+	c.cs = append(b.get(), "TDIGEST.ADD")
+	return
+}
+
+type TdigestAddKey Completed
+
+func (c TdigestAddKey) Value(Value float64) TdigestAddValuesValue {
+	return TdigestAddValuesValue{cs: append(c.cs, strconv.FormatFloat(Value, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+type TdigestAddValuesValue Completed
+
+func (c TdigestAddValuesValue) Weight(Weight float64) TdigestAddValuesWeight {
+	return TdigestAddValuesWeight{cs: append(c.cs, strconv.FormatFloat(Weight, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+type TdigestAddValuesWeight Completed
+
+func (c TdigestAddValuesWeight) Build() Completed {
+	return Completed(c)
+}
+
+type TdigestCdf Completed
+
+func (c TdigestCdf) Key(Key string) TdigestCdfKey {
+	return TdigestCdfKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) TdigestCdf() (c TdigestCdf) {
+	c.cs = append(b.get(), "TDIGEST.CDF")
+	return
+}
+
+type TdigestCdfKey Completed
+
+func (c TdigestCdfKey) Value(Value float64) TdigestCdfValue {
+	return TdigestCdfValue{cs: append(c.cs, strconv.FormatFloat(Value, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+type TdigestCdfValue Completed
+
+func (c TdigestCdfValue) Build() Completed {
+	return Completed(c)
+}
+
+type TdigestCreate Completed
+
+func (c TdigestCreate) Key(Key string) TdigestCreateKey {
+	return TdigestCreateKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) TdigestCreate() (c TdigestCreate) {
+	c.cs = append(b.get(), "TDIGEST.CREATE")
+	return
+}
+
+type TdigestCreateCompression Completed
+
+func (c TdigestCreateCompression) Build() Completed {
+	return Completed(c)
+}
+
+type TdigestCreateKey Completed
+
+func (c TdigestCreateKey) Compression(Compression int64) TdigestCreateCompression {
+	return TdigestCreateCompression{cs: append(c.cs, strconv.FormatInt(Compression, 10)), cf: c.cf, ks: c.ks}
+}
+
+type TdigestInfo Completed
+
+func (c TdigestInfo) Key(Key string) TdigestInfoKey {
+	return TdigestInfoKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) TdigestInfo() (c TdigestInfo) {
+	c.cs = append(b.get(), "TDIGEST.INFO")
+	return
+}
+
+type TdigestInfoKey Completed
+
+func (c TdigestInfoKey) Build() Completed {
+	return Completed(c)
+}
+
+type TdigestMax Completed
+
+func (c TdigestMax) Key(Key string) TdigestMaxKey {
+	return TdigestMaxKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) TdigestMax() (c TdigestMax) {
+	c.cs = append(b.get(), "TDIGEST.MAX")
+	return
+}
+
+type TdigestMaxKey Completed
+
+func (c TdigestMaxKey) Build() Completed {
+	return Completed(c)
+}
+
+type TdigestMerge Completed
+
+func (c TdigestMerge) ToKey(ToKey string) TdigestMergeToKey {
+	return TdigestMergeToKey{cs: append(c.cs, ToKey), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) TdigestMerge() (c TdigestMerge) {
+	c.cs = append(b.get(), "TDIGEST.MERGE")
+	return
+}
+
+type TdigestMergeFromKey Completed
+
+func (c TdigestMergeFromKey) Build() Completed {
+	return Completed(c)
+}
+
+type TdigestMergeToKey Completed
+
+func (c TdigestMergeToKey) FromKey(FromKey string) TdigestMergeFromKey {
+	return TdigestMergeFromKey{cs: append(c.cs, FromKey), cf: c.cf, ks: c.ks}
+}
+
+type TdigestMin Completed
+
+func (c TdigestMin) Key(Key string) TdigestMinKey {
+	return TdigestMinKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) TdigestMin() (c TdigestMin) {
+	c.cs = append(b.get(), "TDIGEST.MIN")
+	return
+}
+
+type TdigestMinKey Completed
+
+func (c TdigestMinKey) Build() Completed {
+	return Completed(c)
+}
+
+type TdigestQuantile Completed
+
+func (c TdigestQuantile) Key(Key string) TdigestQuantileKey {
+	return TdigestQuantileKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) TdigestQuantile() (c TdigestQuantile) {
+	c.cs = append(b.get(), "TDIGEST.QUANTILE")
+	return
+}
+
+type TdigestQuantileKey Completed
+
+func (c TdigestQuantileKey) Quantile(Quantile float64) TdigestQuantileQuantile {
+	return TdigestQuantileQuantile{cs: append(c.cs, strconv.FormatFloat(Quantile, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+type TdigestQuantileQuantile Completed
+
+func (c TdigestQuantileQuantile) Build() Completed {
+	return Completed(c)
+}
+
+type TdigestReset Completed
+
+func (c TdigestReset) Key(Key string) TdigestResetKey {
+	return TdigestResetKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) TdigestReset() (c TdigestReset) {
+	c.cs = append(b.get(), "TDIGEST.RESET")
+	return
+}
+
+type TdigestResetKey Completed
+
+func (c TdigestResetKey) Build() Completed {
+	return Completed(c)
+}
+
 type Time Completed
 
 func (c Time) Build() Completed {
@@ -10833,6 +11983,195 @@ func (c Time) Build() Completed {
 func (b *Builder) Time() (c Time) {
 	c.cs = append(b.get(), "TIME")
 	return
+}
+
+type TopkAdd Completed
+
+func (c TopkAdd) Key(Key string) TopkAddKey {
+	return TopkAddKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) TopkAdd() (c TopkAdd) {
+	c.cs = append(b.get(), "TOPK.ADD")
+	return
+}
+
+type TopkAddItems Completed
+
+func (c TopkAddItems) Items(Items ...string) TopkAddItems {
+	return TopkAddItems{cs: append(c.cs, Items...), cf: c.cf, ks: c.ks}
+}
+
+func (c TopkAddItems) Build() Completed {
+	return Completed(c)
+}
+
+type TopkAddKey Completed
+
+func (c TopkAddKey) Items(Items ...string) TopkAddItems {
+	return TopkAddItems{cs: append(c.cs, Items...), cf: c.cf, ks: c.ks}
+}
+
+type TopkIncrby Completed
+
+func (c TopkIncrby) Key(Key string) TopkIncrbyKey {
+	return TopkIncrbyKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) TopkIncrby() (c TopkIncrby) {
+	c.cs = append(b.get(), "TOPK.INCRBY")
+	return
+}
+
+type TopkIncrbyItemsIncrement Completed
+
+func (c TopkIncrbyItemsIncrement) Build() Completed {
+	return Completed(c)
+}
+
+type TopkIncrbyItemsItem Completed
+
+func (c TopkIncrbyItemsItem) Increment(Increment int64) TopkIncrbyItemsIncrement {
+	return TopkIncrbyItemsIncrement{cs: append(c.cs, strconv.FormatInt(Increment, 10)), cf: c.cf, ks: c.ks}
+}
+
+type TopkIncrbyKey Completed
+
+func (c TopkIncrbyKey) Item(Item string) TopkIncrbyItemsItem {
+	return TopkIncrbyItemsItem{cs: append(c.cs, Item), cf: c.cf, ks: c.ks}
+}
+
+type TopkInfo Completed
+
+func (c TopkInfo) Key(Key string) TopkInfoKey {
+	return TopkInfoKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) TopkInfo() (c TopkInfo) {
+	c.cs = append(b.get(), "TOPK.INFO")
+	c.cf = readonly
+	return
+}
+
+type TopkInfoKey Completed
+
+func (c TopkInfoKey) Build() Completed {
+	return Completed(c)
+}
+
+func (c TopkInfoKey) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type TopkList Completed
+
+func (c TopkList) Key(Key string) TopkListKey {
+	return TopkListKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) TopkList() (c TopkList) {
+	c.cs = append(b.get(), "TOPK.LIST")
+	c.cf = readonly
+	return
+}
+
+type TopkListKey Completed
+
+func (c TopkListKey) Numkeys(Numkeys int64) TopkListNumkeys {
+	return TopkListNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10)), cf: c.cf, ks: c.ks}
+}
+
+type TopkListNumkeys Completed
+
+func (c TopkListNumkeys) Withcount() TopkListWithcountWithcount {
+	return TopkListWithcountWithcount{cs: append(c.cs, "WITHCOUNT"), cf: c.cf, ks: c.ks}
+}
+
+type TopkListWithcountWithcount Completed
+
+func (c TopkListWithcountWithcount) Build() Completed {
+	return Completed(c)
+}
+
+func (c TopkListWithcountWithcount) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type TopkQuery Completed
+
+func (c TopkQuery) Key(Key string) TopkQueryKey {
+	return TopkQueryKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) TopkQuery() (c TopkQuery) {
+	c.cs = append(b.get(), "TOPK.QUERY")
+	c.cf = readonly
+	return
+}
+
+type TopkQueryItem Completed
+
+func (c TopkQueryItem) Item(Item ...string) TopkQueryItem {
+	return TopkQueryItem{cs: append(c.cs, Item...), cf: c.cf, ks: c.ks}
+}
+
+func (c TopkQueryItem) Build() Completed {
+	return Completed(c)
+}
+
+func (c TopkQueryItem) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type TopkQueryKey Completed
+
+func (c TopkQueryKey) Item(Item ...string) TopkQueryItem {
+	return TopkQueryItem{cs: append(c.cs, Item...), cf: c.cf, ks: c.ks}
+}
+
+type TopkReserve Completed
+
+func (c TopkReserve) Key(Key string) TopkReserveKey {
+	return TopkReserveKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) TopkReserve() (c TopkReserve) {
+	c.cs = append(b.get(), "TOPK.RESERVE")
+	return
+}
+
+type TopkReserveKey Completed
+
+func (c TopkReserveKey) Topk(Topk int64) TopkReserveTopk {
+	return TopkReserveTopk{cs: append(c.cs, strconv.FormatInt(Topk, 10)), cf: c.cf, ks: c.ks}
+}
+
+type TopkReserveParamsDecay Completed
+
+func (c TopkReserveParamsDecay) Build() Completed {
+	return Completed(c)
+}
+
+type TopkReserveParamsDepth Completed
+
+func (c TopkReserveParamsDepth) Decay(Decay float64) TopkReserveParamsDecay {
+	return TopkReserveParamsDecay{cs: append(c.cs, strconv.FormatFloat(Decay, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+type TopkReserveParamsWidth Completed
+
+func (c TopkReserveParamsWidth) Depth(Depth int64) TopkReserveParamsDepth {
+	return TopkReserveParamsDepth{cs: append(c.cs, strconv.FormatInt(Depth, 10)), cf: c.cf, ks: c.ks}
+}
+
+type TopkReserveTopk Completed
+
+func (c TopkReserveTopk) Width(Width int64) TopkReserveParamsWidth {
+	return TopkReserveParamsWidth{cs: append(c.cs, strconv.FormatInt(Width, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c TopkReserveTopk) Build() Completed {
+	return Completed(c)
 }
 
 type Touch Completed
@@ -14025,6 +15364,375 @@ func (c SAuthUsername) Password(Password string) SAuthPassword {
 	return SAuthPassword{cs: append(c.cs, Password), cf: c.cf, ks: c.ks}
 }
 
+type SBfAdd SCompleted
+
+func (c SBfAdd) Key(Key string) SBfAddKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SBfAddKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) BfAdd() (c SBfAdd) {
+	c.cs = append(b.get(), "BF.ADD")
+	c.ks = InitSlot
+	return
+}
+
+type SBfAddItem SCompleted
+
+func (c SBfAddItem) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SBfAddKey SCompleted
+
+func (c SBfAddKey) Item(Item string) SBfAddItem {
+	return SBfAddItem{cs: append(c.cs, Item), cf: c.cf, ks: c.ks}
+}
+
+type SBfExist SCompleted
+
+func (c SBfExist) Key(Key string) SBfExistKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SBfExistKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) BfExist() (c SBfExist) {
+	c.cs = append(b.get(), "BF.EXIST")
+	c.ks = InitSlot
+	return
+}
+
+type SBfExistItem SCompleted
+
+func (c SBfExistItem) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SBfExistKey SCompleted
+
+func (c SBfExistKey) Item(Item string) SBfExistItem {
+	return SBfExistItem{cs: append(c.cs, Item), cf: c.cf, ks: c.ks}
+}
+
+type SBfInfo SCompleted
+
+func (c SBfInfo) Key(Key string) SBfInfoKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SBfInfoKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) BfInfo() (c SBfInfo) {
+	c.cs = append(b.get(), "BF.INFO")
+	c.cf = readonly
+	c.ks = InitSlot
+	return
+}
+
+type SBfInfoKey SCompleted
+
+func (c SBfInfoKey) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c SBfInfoKey) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SBfInsert SCompleted
+
+func (c SBfInsert) Key(Key string) SBfInsertKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SBfInsertKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) BfInsert() (c SBfInsert) {
+	c.cs = append(b.get(), "BF.INSERT")
+	c.ks = InitSlot
+	return
+}
+
+type SBfInsertCapacity SCompleted
+
+func (c SBfInsertCapacity) Error(Error float64) SBfInsertError {
+	return SBfInsertError{cs: append(c.cs, "ERROR", strconv.FormatFloat(Error, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+func (c SBfInsertCapacity) Expansion(Expansion int64) SBfInsertExpansion {
+	return SBfInsertExpansion{cs: append(c.cs, "EXPANSION", strconv.FormatInt(Expansion, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SBfInsertCapacity) Nocreate() SBfInsertNocreateNocreate {
+	return SBfInsertNocreateNocreate{cs: append(c.cs, "NOCREATE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SBfInsertCapacity) Nonscaling() SBfInsertNonscalingNonscaling {
+	return SBfInsertNonscalingNonscaling{cs: append(c.cs, "NONSCALING"), cf: c.cf, ks: c.ks}
+}
+
+func (c SBfInsertCapacity) Items() SBfInsertItemsItems {
+	return SBfInsertItemsItems{cs: append(c.cs, "ITEMS"), cf: c.cf, ks: c.ks}
+}
+
+type SBfInsertError SCompleted
+
+func (c SBfInsertError) Expansion(Expansion int64) SBfInsertExpansion {
+	return SBfInsertExpansion{cs: append(c.cs, "EXPANSION", strconv.FormatInt(Expansion, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SBfInsertError) Nocreate() SBfInsertNocreateNocreate {
+	return SBfInsertNocreateNocreate{cs: append(c.cs, "NOCREATE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SBfInsertError) Nonscaling() SBfInsertNonscalingNonscaling {
+	return SBfInsertNonscalingNonscaling{cs: append(c.cs, "NONSCALING"), cf: c.cf, ks: c.ks}
+}
+
+func (c SBfInsertError) Items() SBfInsertItemsItems {
+	return SBfInsertItemsItems{cs: append(c.cs, "ITEMS"), cf: c.cf, ks: c.ks}
+}
+
+type SBfInsertExpansion SCompleted
+
+func (c SBfInsertExpansion) Nocreate() SBfInsertNocreateNocreate {
+	return SBfInsertNocreateNocreate{cs: append(c.cs, "NOCREATE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SBfInsertExpansion) Nonscaling() SBfInsertNonscalingNonscaling {
+	return SBfInsertNonscalingNonscaling{cs: append(c.cs, "NONSCALING"), cf: c.cf, ks: c.ks}
+}
+
+func (c SBfInsertExpansion) Items() SBfInsertItemsItems {
+	return SBfInsertItemsItems{cs: append(c.cs, "ITEMS"), cf: c.cf, ks: c.ks}
+}
+
+type SBfInsertItem SCompleted
+
+func (c SBfInsertItem) Item(Item ...string) SBfInsertItem {
+	return SBfInsertItem{cs: append(c.cs, Item...), cf: c.cf, ks: c.ks}
+}
+
+func (c SBfInsertItem) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SBfInsertItemsItems SCompleted
+
+func (c SBfInsertItemsItems) Item(Item ...string) SBfInsertItem {
+	return SBfInsertItem{cs: append(c.cs, Item...), cf: c.cf, ks: c.ks}
+}
+
+type SBfInsertKey SCompleted
+
+func (c SBfInsertKey) Capacity(Capacity int64) SBfInsertCapacity {
+	return SBfInsertCapacity{cs: append(c.cs, "CAPACITY", strconv.FormatInt(Capacity, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SBfInsertKey) Error(Error float64) SBfInsertError {
+	return SBfInsertError{cs: append(c.cs, "ERROR", strconv.FormatFloat(Error, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+func (c SBfInsertKey) Expansion(Expansion int64) SBfInsertExpansion {
+	return SBfInsertExpansion{cs: append(c.cs, "EXPANSION", strconv.FormatInt(Expansion, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SBfInsertKey) Nocreate() SBfInsertNocreateNocreate {
+	return SBfInsertNocreateNocreate{cs: append(c.cs, "NOCREATE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SBfInsertKey) Nonscaling() SBfInsertNonscalingNonscaling {
+	return SBfInsertNonscalingNonscaling{cs: append(c.cs, "NONSCALING"), cf: c.cf, ks: c.ks}
+}
+
+func (c SBfInsertKey) Items() SBfInsertItemsItems {
+	return SBfInsertItemsItems{cs: append(c.cs, "ITEMS"), cf: c.cf, ks: c.ks}
+}
+
+type SBfInsertNocreateNocreate SCompleted
+
+func (c SBfInsertNocreateNocreate) Nonscaling() SBfInsertNonscalingNonscaling {
+	return SBfInsertNonscalingNonscaling{cs: append(c.cs, "NONSCALING"), cf: c.cf, ks: c.ks}
+}
+
+func (c SBfInsertNocreateNocreate) Items() SBfInsertItemsItems {
+	return SBfInsertItemsItems{cs: append(c.cs, "ITEMS"), cf: c.cf, ks: c.ks}
+}
+
+type SBfInsertNonscalingNonscaling SCompleted
+
+func (c SBfInsertNonscalingNonscaling) Items() SBfInsertItemsItems {
+	return SBfInsertItemsItems{cs: append(c.cs, "ITEMS"), cf: c.cf, ks: c.ks}
+}
+
+type SBfLoadchunk SCompleted
+
+func (c SBfLoadchunk) Key(Key string) SBfLoadchunkKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SBfLoadchunkKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) BfLoadchunk() (c SBfLoadchunk) {
+	c.cs = append(b.get(), "BF.LOADCHUNK")
+	c.ks = InitSlot
+	return
+}
+
+type SBfLoadchunkData SCompleted
+
+func (c SBfLoadchunkData) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SBfLoadchunkIterator SCompleted
+
+func (c SBfLoadchunkIterator) Data(Data string) SBfLoadchunkData {
+	return SBfLoadchunkData{cs: append(c.cs, Data), cf: c.cf, ks: c.ks}
+}
+
+type SBfLoadchunkKey SCompleted
+
+func (c SBfLoadchunkKey) Iterator(Iterator int64) SBfLoadchunkIterator {
+	return SBfLoadchunkIterator{cs: append(c.cs, strconv.FormatInt(Iterator, 10)), cf: c.cf, ks: c.ks}
+}
+
+type SBfMadd SCompleted
+
+func (c SBfMadd) Key(Key string) SBfMaddKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SBfMaddKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) BfMadd() (c SBfMadd) {
+	c.cs = append(b.get(), "BF.MADD")
+	c.ks = InitSlot
+	return
+}
+
+type SBfMaddItem SCompleted
+
+func (c SBfMaddItem) Item(Item ...string) SBfMaddItem {
+	return SBfMaddItem{cs: append(c.cs, Item...), cf: c.cf, ks: c.ks}
+}
+
+func (c SBfMaddItem) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SBfMaddKey SCompleted
+
+func (c SBfMaddKey) Item(Item ...string) SBfMaddItem {
+	return SBfMaddItem{cs: append(c.cs, Item...), cf: c.cf, ks: c.ks}
+}
+
+type SBfMexist SCompleted
+
+func (c SBfMexist) Key(Key string) SBfMexistKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SBfMexistKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) BfMexist() (c SBfMexist) {
+	c.cs = append(b.get(), "BF.MEXIST")
+	c.ks = InitSlot
+	return
+}
+
+type SBfMexistItem SCompleted
+
+func (c SBfMexistItem) Item(Item ...string) SBfMexistItem {
+	return SBfMexistItem{cs: append(c.cs, Item...), cf: c.cf, ks: c.ks}
+}
+
+func (c SBfMexistItem) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SBfMexistKey SCompleted
+
+func (c SBfMexistKey) Item(Item ...string) SBfMexistItem {
+	return SBfMexistItem{cs: append(c.cs, Item...), cf: c.cf, ks: c.ks}
+}
+
+type SBfReserve SCompleted
+
+func (c SBfReserve) Key(Key string) SBfReserveKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SBfReserveKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) BfReserve() (c SBfReserve) {
+	c.cs = append(b.get(), "BF.RESERVE")
+	c.ks = InitSlot
+	return
+}
+
+type SBfReserveCapacity SCompleted
+
+func (c SBfReserveCapacity) Expansion(Expansion int64) SBfReserveExpansion {
+	return SBfReserveExpansion{cs: append(c.cs, "EXPANSION", strconv.FormatInt(Expansion, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SBfReserveCapacity) Nonscaling() SBfReserveNonscalingNonscaling {
+	return SBfReserveNonscalingNonscaling{cs: append(c.cs, "NONSCALING"), cf: c.cf, ks: c.ks}
+}
+
+func (c SBfReserveCapacity) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SBfReserveErrorRate SCompleted
+
+func (c SBfReserveErrorRate) Capacity(Capacity int64) SBfReserveCapacity {
+	return SBfReserveCapacity{cs: append(c.cs, strconv.FormatInt(Capacity, 10)), cf: c.cf, ks: c.ks}
+}
+
+type SBfReserveExpansion SCompleted
+
+func (c SBfReserveExpansion) Nonscaling() SBfReserveNonscalingNonscaling {
+	return SBfReserveNonscalingNonscaling{cs: append(c.cs, "NONSCALING"), cf: c.cf, ks: c.ks}
+}
+
+func (c SBfReserveExpansion) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SBfReserveKey SCompleted
+
+func (c SBfReserveKey) ErrorRate(ErrorRate float64) SBfReserveErrorRate {
+	return SBfReserveErrorRate{cs: append(c.cs, strconv.FormatFloat(ErrorRate, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+type SBfReserveNonscalingNonscaling SCompleted
+
+func (c SBfReserveNonscalingNonscaling) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SBfScandump SCompleted
+
+func (c SBfScandump) Key(Key string) SBfScandumpKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SBfScandumpKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) BfScandump() (c SBfScandump) {
+	c.cs = append(b.get(), "BF.SCANDUMP")
+	c.cf = readonly
+	c.ks = InitSlot
+	return
+}
+
+type SBfScandumpIterator SCompleted
+
+func (c SBfScandumpIterator) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SBfScandumpKey SCompleted
+
+func (c SBfScandumpKey) Iterator(Iterator int64) SBfScandumpIterator {
+	return SBfScandumpIterator{cs: append(c.cs, strconv.FormatInt(Iterator, 10)), cf: c.cf, ks: c.ks}
+}
+
 type SBgrewriteaof SCompleted
 
 func (c SBgrewriteaof) Build() SCompleted {
@@ -14797,6 +16505,440 @@ type SBzpopminTimeout SCompleted
 
 func (c SBzpopminTimeout) Build() SCompleted {
 	return SCompleted(c)
+}
+
+type SCfAdd SCompleted
+
+func (c SCfAdd) Key(Key string) SCfAddKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SCfAddKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) CfAdd() (c SCfAdd) {
+	c.cs = append(b.get(), "CF.ADD")
+	c.ks = InitSlot
+	return
+}
+
+type SCfAddItem SCompleted
+
+func (c SCfAddItem) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SCfAddKey SCompleted
+
+func (c SCfAddKey) Item(Item string) SCfAddItem {
+	return SCfAddItem{cs: append(c.cs, Item), cf: c.cf, ks: c.ks}
+}
+
+type SCfAddnx SCompleted
+
+func (c SCfAddnx) Key(Key string) SCfAddnxKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SCfAddnxKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) CfAddnx() (c SCfAddnx) {
+	c.cs = append(b.get(), "CF.ADDNX")
+	c.ks = InitSlot
+	return
+}
+
+type SCfAddnxItem SCompleted
+
+func (c SCfAddnxItem) Item(Item ...string) SCfAddnxItem {
+	return SCfAddnxItem{cs: append(c.cs, Item...), cf: c.cf, ks: c.ks}
+}
+
+func (c SCfAddnxItem) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SCfAddnxKey SCompleted
+
+func (c SCfAddnxKey) Item(Item ...string) SCfAddnxItem {
+	return SCfAddnxItem{cs: append(c.cs, Item...), cf: c.cf, ks: c.ks}
+}
+
+type SCfCount SCompleted
+
+func (c SCfCount) Key(Key string) SCfCountKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SCfCountKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) CfCount() (c SCfCount) {
+	c.cs = append(b.get(), "CF.COUNT")
+	c.cf = readonly
+	c.ks = InitSlot
+	return
+}
+
+type SCfCountItem SCompleted
+
+func (c SCfCountItem) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c SCfCountItem) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SCfCountKey SCompleted
+
+func (c SCfCountKey) Item(Item string) SCfCountItem {
+	return SCfCountItem{cs: append(c.cs, Item), cf: c.cf, ks: c.ks}
+}
+
+type SCfDel SCompleted
+
+func (c SCfDel) Key(Key string) SCfDelKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SCfDelKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) CfDel() (c SCfDel) {
+	c.cs = append(b.get(), "CF.DEL")
+	c.ks = InitSlot
+	return
+}
+
+type SCfDelItem SCompleted
+
+func (c SCfDelItem) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SCfDelKey SCompleted
+
+func (c SCfDelKey) Item(Item string) SCfDelItem {
+	return SCfDelItem{cs: append(c.cs, Item), cf: c.cf, ks: c.ks}
+}
+
+type SCfExists SCompleted
+
+func (c SCfExists) Key(Key string) SCfExistsKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SCfExistsKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) CfExists() (c SCfExists) {
+	c.cs = append(b.get(), "CF.EXISTS")
+	c.cf = readonly
+	c.ks = InitSlot
+	return
+}
+
+type SCfExistsItem SCompleted
+
+func (c SCfExistsItem) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c SCfExistsItem) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SCfExistsKey SCompleted
+
+func (c SCfExistsKey) Item(Item string) SCfExistsItem {
+	return SCfExistsItem{cs: append(c.cs, Item), cf: c.cf, ks: c.ks}
+}
+
+type SCfInfo SCompleted
+
+func (c SCfInfo) Key(Key string) SCfInfoKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SCfInfoKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) CfInfo() (c SCfInfo) {
+	c.cs = append(b.get(), "CF.INFO")
+	c.cf = readonly
+	c.ks = InitSlot
+	return
+}
+
+type SCfInfoKey SCompleted
+
+func (c SCfInfoKey) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c SCfInfoKey) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SCfInsert SCompleted
+
+func (c SCfInsert) Key(Key string) SCfInsertKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SCfInsertKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) CfInsert() (c SCfInsert) {
+	c.cs = append(b.get(), "CF.INSERT")
+	c.ks = InitSlot
+	return
+}
+
+type SCfInsertCapacity SCompleted
+
+func (c SCfInsertCapacity) Nocreate() SCfInsertNocreateNocreate {
+	return SCfInsertNocreateNocreate{cs: append(c.cs, "NOCREATE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SCfInsertCapacity) Items() SCfInsertItemsItems {
+	return SCfInsertItemsItems{cs: append(c.cs, "ITEMS"), cf: c.cf, ks: c.ks}
+}
+
+type SCfInsertItem SCompleted
+
+func (c SCfInsertItem) Item(Item ...string) SCfInsertItem {
+	return SCfInsertItem{cs: append(c.cs, Item...), cf: c.cf, ks: c.ks}
+}
+
+func (c SCfInsertItem) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SCfInsertItemsItems SCompleted
+
+func (c SCfInsertItemsItems) Item(Item ...string) SCfInsertItem {
+	return SCfInsertItem{cs: append(c.cs, Item...), cf: c.cf, ks: c.ks}
+}
+
+type SCfInsertKey SCompleted
+
+func (c SCfInsertKey) Capacity(Capacity int64) SCfInsertCapacity {
+	return SCfInsertCapacity{cs: append(c.cs, "CAPACITY", strconv.FormatInt(Capacity, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SCfInsertKey) Nocreate() SCfInsertNocreateNocreate {
+	return SCfInsertNocreateNocreate{cs: append(c.cs, "NOCREATE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SCfInsertKey) Items() SCfInsertItemsItems {
+	return SCfInsertItemsItems{cs: append(c.cs, "ITEMS"), cf: c.cf, ks: c.ks}
+}
+
+type SCfInsertNocreateNocreate SCompleted
+
+func (c SCfInsertNocreateNocreate) Items() SCfInsertItemsItems {
+	return SCfInsertItemsItems{cs: append(c.cs, "ITEMS"), cf: c.cf, ks: c.ks}
+}
+
+type SCfInsertnx SCompleted
+
+func (c SCfInsertnx) Key(Key string) SCfInsertnxKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SCfInsertnxKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) CfInsertnx() (c SCfInsertnx) {
+	c.cs = append(b.get(), "CF.INSERTNX")
+	c.ks = InitSlot
+	return
+}
+
+type SCfInsertnxCapacity SCompleted
+
+func (c SCfInsertnxCapacity) Nocreate() SCfInsertnxNocreateNocreate {
+	return SCfInsertnxNocreateNocreate{cs: append(c.cs, "NOCREATE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SCfInsertnxCapacity) Items() SCfInsertnxItemsItems {
+	return SCfInsertnxItemsItems{cs: append(c.cs, "ITEMS"), cf: c.cf, ks: c.ks}
+}
+
+type SCfInsertnxItem SCompleted
+
+func (c SCfInsertnxItem) Item(Item ...string) SCfInsertnxItem {
+	return SCfInsertnxItem{cs: append(c.cs, Item...), cf: c.cf, ks: c.ks}
+}
+
+func (c SCfInsertnxItem) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SCfInsertnxItemsItems SCompleted
+
+func (c SCfInsertnxItemsItems) Item(Item ...string) SCfInsertnxItem {
+	return SCfInsertnxItem{cs: append(c.cs, Item...), cf: c.cf, ks: c.ks}
+}
+
+type SCfInsertnxKey SCompleted
+
+func (c SCfInsertnxKey) Capacity(Capacity int64) SCfInsertnxCapacity {
+	return SCfInsertnxCapacity{cs: append(c.cs, "CAPACITY", strconv.FormatInt(Capacity, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SCfInsertnxKey) Nocreate() SCfInsertnxNocreateNocreate {
+	return SCfInsertnxNocreateNocreate{cs: append(c.cs, "NOCREATE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SCfInsertnxKey) Items() SCfInsertnxItemsItems {
+	return SCfInsertnxItemsItems{cs: append(c.cs, "ITEMS"), cf: c.cf, ks: c.ks}
+}
+
+type SCfInsertnxNocreateNocreate SCompleted
+
+func (c SCfInsertnxNocreateNocreate) Items() SCfInsertnxItemsItems {
+	return SCfInsertnxItemsItems{cs: append(c.cs, "ITEMS"), cf: c.cf, ks: c.ks}
+}
+
+type SCfLoadchunk SCompleted
+
+func (c SCfLoadchunk) Key(Key string) SCfLoadchunkKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SCfLoadchunkKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) CfLoadchunk() (c SCfLoadchunk) {
+	c.cs = append(b.get(), "CF.LOADCHUNK")
+	c.ks = InitSlot
+	return
+}
+
+type SCfLoadchunkData SCompleted
+
+func (c SCfLoadchunkData) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SCfLoadchunkIterator SCompleted
+
+func (c SCfLoadchunkIterator) Data(Data string) SCfLoadchunkData {
+	return SCfLoadchunkData{cs: append(c.cs, Data), cf: c.cf, ks: c.ks}
+}
+
+type SCfLoadchunkKey SCompleted
+
+func (c SCfLoadchunkKey) Iterator(Iterator int64) SCfLoadchunkIterator {
+	return SCfLoadchunkIterator{cs: append(c.cs, strconv.FormatInt(Iterator, 10)), cf: c.cf, ks: c.ks}
+}
+
+type SCfMexists SCompleted
+
+func (c SCfMexists) Key(Key string) SCfMexistsKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SCfMexistsKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) CfMexists() (c SCfMexists) {
+	c.cs = append(b.get(), "CF.MEXISTS")
+	c.ks = InitSlot
+	return
+}
+
+type SCfMexistsItem SCompleted
+
+func (c SCfMexistsItem) Item(Item ...string) SCfMexistsItem {
+	return SCfMexistsItem{cs: append(c.cs, Item...), cf: c.cf, ks: c.ks}
+}
+
+func (c SCfMexistsItem) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SCfMexistsKey SCompleted
+
+func (c SCfMexistsKey) Item(Item ...string) SCfMexistsItem {
+	return SCfMexistsItem{cs: append(c.cs, Item...), cf: c.cf, ks: c.ks}
+}
+
+type SCfReserve SCompleted
+
+func (c SCfReserve) Key(Key string) SCfReserveKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SCfReserveKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) CfReserve() (c SCfReserve) {
+	c.cs = append(b.get(), "CF.RESERVE")
+	c.ks = InitSlot
+	return
+}
+
+type SCfReserveBucketsize SCompleted
+
+func (c SCfReserveBucketsize) Maxiterations(Maxiterations int64) SCfReserveMaxiterations {
+	return SCfReserveMaxiterations{cs: append(c.cs, "MAXITERATIONS", strconv.FormatInt(Maxiterations, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SCfReserveBucketsize) Expansion(Expansion int64) SCfReserveExpansion {
+	return SCfReserveExpansion{cs: append(c.cs, "EXPANSION", strconv.FormatInt(Expansion, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SCfReserveBucketsize) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SCfReserveCapacity SCompleted
+
+func (c SCfReserveCapacity) Bucketsize(Bucketsize int64) SCfReserveBucketsize {
+	return SCfReserveBucketsize{cs: append(c.cs, "BUCKETSIZE", strconv.FormatInt(Bucketsize, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SCfReserveCapacity) Maxiterations(Maxiterations int64) SCfReserveMaxiterations {
+	return SCfReserveMaxiterations{cs: append(c.cs, "MAXITERATIONS", strconv.FormatInt(Maxiterations, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SCfReserveCapacity) Expansion(Expansion int64) SCfReserveExpansion {
+	return SCfReserveExpansion{cs: append(c.cs, "EXPANSION", strconv.FormatInt(Expansion, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SCfReserveCapacity) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SCfReserveExpansion SCompleted
+
+func (c SCfReserveExpansion) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SCfReserveKey SCompleted
+
+func (c SCfReserveKey) Capacity(Capacity int64) SCfReserveCapacity {
+	return SCfReserveCapacity{cs: append(c.cs, strconv.FormatInt(Capacity, 10)), cf: c.cf, ks: c.ks}
+}
+
+type SCfReserveMaxiterations SCompleted
+
+func (c SCfReserveMaxiterations) Expansion(Expansion int64) SCfReserveExpansion {
+	return SCfReserveExpansion{cs: append(c.cs, "EXPANSION", strconv.FormatInt(Expansion, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SCfReserveMaxiterations) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SCfScandump SCompleted
+
+func (c SCfScandump) Key(Key string) SCfScandumpKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SCfScandumpKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) CfScandump() (c SCfScandump) {
+	c.cs = append(b.get(), "CF.SCANDUMP")
+	c.cf = readonly
+	c.ks = InitSlot
+	return
+}
+
+type SCfScandumpIterator SCompleted
+
+func (c SCfScandumpIterator) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SCfScandumpKey SCompleted
+
+func (c SCfScandumpKey) Iterator(Iterator int64) SCfScandumpIterator {
+	return SCfScandumpIterator{cs: append(c.cs, strconv.FormatInt(Iterator, 10)), cf: c.cf, ks: c.ks}
 }
 
 type SClientCaching SCompleted
@@ -16115,6 +18257,224 @@ func (b *SBuilder) ClusterSlots() (c SClusterSlots) {
 	c.cs = append(b.get(), "CLUSTER", "SLOTS")
 	c.ks = InitSlot
 	return
+}
+
+type SCmsIncrby SCompleted
+
+func (c SCmsIncrby) Key(Key string) SCmsIncrbyKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SCmsIncrbyKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) CmsIncrby() (c SCmsIncrby) {
+	c.cs = append(b.get(), "CMS.INCRBY")
+	c.ks = InitSlot
+	return
+}
+
+type SCmsIncrbyItemsIncrement SCompleted
+
+func (c SCmsIncrbyItemsIncrement) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SCmsIncrbyItemsItem SCompleted
+
+func (c SCmsIncrbyItemsItem) Increment(Increment int64) SCmsIncrbyItemsIncrement {
+	return SCmsIncrbyItemsIncrement{cs: append(c.cs, strconv.FormatInt(Increment, 10)), cf: c.cf, ks: c.ks}
+}
+
+type SCmsIncrbyKey SCompleted
+
+func (c SCmsIncrbyKey) Item(Item string) SCmsIncrbyItemsItem {
+	return SCmsIncrbyItemsItem{cs: append(c.cs, Item), cf: c.cf, ks: c.ks}
+}
+
+type SCmsInfo SCompleted
+
+func (c SCmsInfo) Key(Key string) SCmsInfoKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SCmsInfoKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) CmsInfo() (c SCmsInfo) {
+	c.cs = append(b.get(), "CMS.INFO")
+	c.cf = readonly
+	c.ks = InitSlot
+	return
+}
+
+type SCmsInfoKey SCompleted
+
+func (c SCmsInfoKey) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c SCmsInfoKey) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SCmsInitbydim SCompleted
+
+func (c SCmsInitbydim) Key(Key string) SCmsInitbydimKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SCmsInitbydimKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) CmsInitbydim() (c SCmsInitbydim) {
+	c.cs = append(b.get(), "CMS.INITBYDIM")
+	c.ks = InitSlot
+	return
+}
+
+type SCmsInitbydimDepth SCompleted
+
+func (c SCmsInitbydimDepth) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SCmsInitbydimKey SCompleted
+
+func (c SCmsInitbydimKey) Width(Width int64) SCmsInitbydimWidth {
+	return SCmsInitbydimWidth{cs: append(c.cs, strconv.FormatInt(Width, 10)), cf: c.cf, ks: c.ks}
+}
+
+type SCmsInitbydimWidth SCompleted
+
+func (c SCmsInitbydimWidth) Depth(Depth int64) SCmsInitbydimDepth {
+	return SCmsInitbydimDepth{cs: append(c.cs, strconv.FormatInt(Depth, 10)), cf: c.cf, ks: c.ks}
+}
+
+type SCmsInitbyprob SCompleted
+
+func (c SCmsInitbyprob) Key(Key string) SCmsInitbyprobKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SCmsInitbyprobKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) CmsInitbyprob() (c SCmsInitbyprob) {
+	c.cs = append(b.get(), "CMS.INITBYPROB")
+	c.ks = InitSlot
+	return
+}
+
+type SCmsInitbyprobError SCompleted
+
+func (c SCmsInitbyprobError) Probability(Probability float64) SCmsInitbyprobProbability {
+	return SCmsInitbyprobProbability{cs: append(c.cs, strconv.FormatFloat(Probability, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+type SCmsInitbyprobKey SCompleted
+
+func (c SCmsInitbyprobKey) Error(Error float64) SCmsInitbyprobError {
+	return SCmsInitbyprobError{cs: append(c.cs, strconv.FormatFloat(Error, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+type SCmsInitbyprobProbability SCompleted
+
+func (c SCmsInitbyprobProbability) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SCmsMerge SCompleted
+
+func (c SCmsMerge) Destination(Destination string) SCmsMergeDestination {
+	c.ks = checkSlot(c.ks, slot(Destination))
+	return SCmsMergeDestination{cs: append(c.cs, Destination), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) CmsMerge() (c SCmsMerge) {
+	c.cs = append(b.get(), "CMS.MERGE")
+	c.ks = InitSlot
+	return
+}
+
+type SCmsMergeDestination SCompleted
+
+func (c SCmsMergeDestination) Numkeys(Numkeys int64) SCmsMergeNumkeys {
+	return SCmsMergeNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10)), cf: c.cf, ks: c.ks}
+}
+
+type SCmsMergeNumkeys SCompleted
+
+func (c SCmsMergeNumkeys) Source(Source ...string) SCmsMergeSource {
+	for _, k := range Source {
+		c.ks = checkSlot(c.ks, slot(k))
+	}
+	return SCmsMergeSource{cs: append(c.cs, Source...), cf: c.cf, ks: c.ks}
+}
+
+type SCmsMergeSource SCompleted
+
+func (c SCmsMergeSource) Weights() SCmsMergeWeightWeightsWeights {
+	return SCmsMergeWeightWeightsWeights{cs: append(c.cs, "WEIGHTS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SCmsMergeSource) Source(Source ...string) SCmsMergeSource {
+	for _, k := range Source {
+		c.ks = checkSlot(c.ks, slot(k))
+	}
+	return SCmsMergeSource{cs: append(c.cs, Source...), cf: c.cf, ks: c.ks}
+}
+
+func (c SCmsMergeSource) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SCmsMergeWeightWeight SCompleted
+
+func (c SCmsMergeWeightWeight) Weight(Weight ...float64) SCmsMergeWeightWeight {
+	for _, n := range Weight {
+		c.cs = append(c.cs, strconv.FormatFloat(n, 'f', -1, 64))
+	}
+	return SCmsMergeWeightWeight{cs: c.cs, cf: c.cf, ks: c.ks}
+}
+
+func (c SCmsMergeWeightWeight) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SCmsMergeWeightWeightsWeights SCompleted
+
+func (c SCmsMergeWeightWeightsWeights) Weight(Weight ...float64) SCmsMergeWeightWeight {
+	for _, n := range Weight {
+		c.cs = append(c.cs, strconv.FormatFloat(n, 'f', -1, 64))
+	}
+	return SCmsMergeWeightWeight{cs: c.cs, cf: c.cf, ks: c.ks}
+}
+
+type SCmsQuery SCompleted
+
+func (c SCmsQuery) Key(Key string) SCmsQueryKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return SCmsQueryKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) CmsQuery() (c SCmsQuery) {
+	c.cs = append(b.get(), "CMS.QUERY")
+	c.cf = readonly
+	c.ks = InitSlot
+	return
+}
+
+type SCmsQueryItem SCompleted
+
+func (c SCmsQueryItem) Item(Item ...string) SCmsQueryItem {
+	return SCmsQueryItem{cs: append(c.cs, Item...), cf: c.cf, ks: c.ks}
+}
+
+func (c SCmsQueryItem) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c SCmsQueryItem) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type SCmsQueryKey SCompleted
+
+func (c SCmsQueryKey) Item(Item ...string) SCmsQueryItem {
+	return SCmsQueryItem{cs: append(c.cs, Item...), cf: c.cf, ks: c.ks}
 }
 
 type SCommand SCompleted
@@ -25220,6 +27580,214 @@ func (b *SBuilder) Sync() (c SSync) {
 	return
 }
 
+type STdigestAdd SCompleted
+
+func (c STdigestAdd) Key(Key string) STdigestAddKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return STdigestAddKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) TdigestAdd() (c STdigestAdd) {
+	c.cs = append(b.get(), "TDIGEST.ADD")
+	c.ks = InitSlot
+	return
+}
+
+type STdigestAddKey SCompleted
+
+func (c STdigestAddKey) Value(Value float64) STdigestAddValuesValue {
+	return STdigestAddValuesValue{cs: append(c.cs, strconv.FormatFloat(Value, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+type STdigestAddValuesValue SCompleted
+
+func (c STdigestAddValuesValue) Weight(Weight float64) STdigestAddValuesWeight {
+	return STdigestAddValuesWeight{cs: append(c.cs, strconv.FormatFloat(Weight, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+type STdigestAddValuesWeight SCompleted
+
+func (c STdigestAddValuesWeight) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type STdigestCdf SCompleted
+
+func (c STdigestCdf) Key(Key string) STdigestCdfKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return STdigestCdfKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) TdigestCdf() (c STdigestCdf) {
+	c.cs = append(b.get(), "TDIGEST.CDF")
+	c.ks = InitSlot
+	return
+}
+
+type STdigestCdfKey SCompleted
+
+func (c STdigestCdfKey) Value(Value float64) STdigestCdfValue {
+	return STdigestCdfValue{cs: append(c.cs, strconv.FormatFloat(Value, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+type STdigestCdfValue SCompleted
+
+func (c STdigestCdfValue) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type STdigestCreate SCompleted
+
+func (c STdigestCreate) Key(Key string) STdigestCreateKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return STdigestCreateKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) TdigestCreate() (c STdigestCreate) {
+	c.cs = append(b.get(), "TDIGEST.CREATE")
+	c.ks = InitSlot
+	return
+}
+
+type STdigestCreateCompression SCompleted
+
+func (c STdigestCreateCompression) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type STdigestCreateKey SCompleted
+
+func (c STdigestCreateKey) Compression(Compression int64) STdigestCreateCompression {
+	return STdigestCreateCompression{cs: append(c.cs, strconv.FormatInt(Compression, 10)), cf: c.cf, ks: c.ks}
+}
+
+type STdigestInfo SCompleted
+
+func (c STdigestInfo) Key(Key string) STdigestInfoKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return STdigestInfoKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) TdigestInfo() (c STdigestInfo) {
+	c.cs = append(b.get(), "TDIGEST.INFO")
+	c.ks = InitSlot
+	return
+}
+
+type STdigestInfoKey SCompleted
+
+func (c STdigestInfoKey) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type STdigestMax SCompleted
+
+func (c STdigestMax) Key(Key string) STdigestMaxKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return STdigestMaxKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) TdigestMax() (c STdigestMax) {
+	c.cs = append(b.get(), "TDIGEST.MAX")
+	c.ks = InitSlot
+	return
+}
+
+type STdigestMaxKey SCompleted
+
+func (c STdigestMaxKey) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type STdigestMerge SCompleted
+
+func (c STdigestMerge) ToKey(ToKey string) STdigestMergeToKey {
+	c.ks = checkSlot(c.ks, slot(ToKey))
+	return STdigestMergeToKey{cs: append(c.cs, ToKey), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) TdigestMerge() (c STdigestMerge) {
+	c.cs = append(b.get(), "TDIGEST.MERGE")
+	c.ks = InitSlot
+	return
+}
+
+type STdigestMergeFromKey SCompleted
+
+func (c STdigestMergeFromKey) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type STdigestMergeToKey SCompleted
+
+func (c STdigestMergeToKey) FromKey(FromKey string) STdigestMergeFromKey {
+	c.ks = checkSlot(c.ks, slot(FromKey))
+	return STdigestMergeFromKey{cs: append(c.cs, FromKey), cf: c.cf, ks: c.ks}
+}
+
+type STdigestMin SCompleted
+
+func (c STdigestMin) Key(Key string) STdigestMinKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return STdigestMinKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) TdigestMin() (c STdigestMin) {
+	c.cs = append(b.get(), "TDIGEST.MIN")
+	c.ks = InitSlot
+	return
+}
+
+type STdigestMinKey SCompleted
+
+func (c STdigestMinKey) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type STdigestQuantile SCompleted
+
+func (c STdigestQuantile) Key(Key string) STdigestQuantileKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return STdigestQuantileKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) TdigestQuantile() (c STdigestQuantile) {
+	c.cs = append(b.get(), "TDIGEST.QUANTILE")
+	c.ks = InitSlot
+	return
+}
+
+type STdigestQuantileKey SCompleted
+
+func (c STdigestQuantileKey) Quantile(Quantile float64) STdigestQuantileQuantile {
+	return STdigestQuantileQuantile{cs: append(c.cs, strconv.FormatFloat(Quantile, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+type STdigestQuantileQuantile SCompleted
+
+func (c STdigestQuantileQuantile) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type STdigestReset SCompleted
+
+func (c STdigestReset) Key(Key string) STdigestResetKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return STdigestResetKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) TdigestReset() (c STdigestReset) {
+	c.cs = append(b.get(), "TDIGEST.RESET")
+	c.ks = InitSlot
+	return
+}
+
+type STdigestResetKey SCompleted
+
+func (c STdigestResetKey) Build() SCompleted {
+	return SCompleted(c)
+}
+
 type STime SCompleted
 
 func (c STime) Build() SCompleted {
@@ -25230,6 +27798,207 @@ func (b *SBuilder) Time() (c STime) {
 	c.cs = append(b.get(), "TIME")
 	c.ks = InitSlot
 	return
+}
+
+type STopkAdd SCompleted
+
+func (c STopkAdd) Key(Key string) STopkAddKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return STopkAddKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) TopkAdd() (c STopkAdd) {
+	c.cs = append(b.get(), "TOPK.ADD")
+	c.ks = InitSlot
+	return
+}
+
+type STopkAddItems SCompleted
+
+func (c STopkAddItems) Items(Items ...string) STopkAddItems {
+	return STopkAddItems{cs: append(c.cs, Items...), cf: c.cf, ks: c.ks}
+}
+
+func (c STopkAddItems) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type STopkAddKey SCompleted
+
+func (c STopkAddKey) Items(Items ...string) STopkAddItems {
+	return STopkAddItems{cs: append(c.cs, Items...), cf: c.cf, ks: c.ks}
+}
+
+type STopkIncrby SCompleted
+
+func (c STopkIncrby) Key(Key string) STopkIncrbyKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return STopkIncrbyKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) TopkIncrby() (c STopkIncrby) {
+	c.cs = append(b.get(), "TOPK.INCRBY")
+	c.ks = InitSlot
+	return
+}
+
+type STopkIncrbyItemsIncrement SCompleted
+
+func (c STopkIncrbyItemsIncrement) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type STopkIncrbyItemsItem SCompleted
+
+func (c STopkIncrbyItemsItem) Increment(Increment int64) STopkIncrbyItemsIncrement {
+	return STopkIncrbyItemsIncrement{cs: append(c.cs, strconv.FormatInt(Increment, 10)), cf: c.cf, ks: c.ks}
+}
+
+type STopkIncrbyKey SCompleted
+
+func (c STopkIncrbyKey) Item(Item string) STopkIncrbyItemsItem {
+	return STopkIncrbyItemsItem{cs: append(c.cs, Item), cf: c.cf, ks: c.ks}
+}
+
+type STopkInfo SCompleted
+
+func (c STopkInfo) Key(Key string) STopkInfoKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return STopkInfoKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) TopkInfo() (c STopkInfo) {
+	c.cs = append(b.get(), "TOPK.INFO")
+	c.cf = readonly
+	c.ks = InitSlot
+	return
+}
+
+type STopkInfoKey SCompleted
+
+func (c STopkInfoKey) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c STopkInfoKey) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type STopkList SCompleted
+
+func (c STopkList) Key(Key string) STopkListKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return STopkListKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) TopkList() (c STopkList) {
+	c.cs = append(b.get(), "TOPK.LIST")
+	c.cf = readonly
+	c.ks = InitSlot
+	return
+}
+
+type STopkListKey SCompleted
+
+func (c STopkListKey) Numkeys(Numkeys int64) STopkListNumkeys {
+	return STopkListNumkeys{cs: append(c.cs, strconv.FormatInt(Numkeys, 10)), cf: c.cf, ks: c.ks}
+}
+
+type STopkListNumkeys SCompleted
+
+func (c STopkListNumkeys) Withcount() STopkListWithcountWithcount {
+	return STopkListWithcountWithcount{cs: append(c.cs, "WITHCOUNT"), cf: c.cf, ks: c.ks}
+}
+
+type STopkListWithcountWithcount SCompleted
+
+func (c STopkListWithcountWithcount) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c STopkListWithcountWithcount) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type STopkQuery SCompleted
+
+func (c STopkQuery) Key(Key string) STopkQueryKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return STopkQueryKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) TopkQuery() (c STopkQuery) {
+	c.cs = append(b.get(), "TOPK.QUERY")
+	c.cf = readonly
+	c.ks = InitSlot
+	return
+}
+
+type STopkQueryItem SCompleted
+
+func (c STopkQueryItem) Item(Item ...string) STopkQueryItem {
+	return STopkQueryItem{cs: append(c.cs, Item...), cf: c.cf, ks: c.ks}
+}
+
+func (c STopkQueryItem) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (c STopkQueryItem) Cache() SCacheable {
+	return SCacheable(c)
+}
+
+type STopkQueryKey SCompleted
+
+func (c STopkQueryKey) Item(Item ...string) STopkQueryItem {
+	return STopkQueryItem{cs: append(c.cs, Item...), cf: c.cf, ks: c.ks}
+}
+
+type STopkReserve SCompleted
+
+func (c STopkReserve) Key(Key string) STopkReserveKey {
+	c.ks = checkSlot(c.ks, slot(Key))
+	return STopkReserveKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) TopkReserve() (c STopkReserve) {
+	c.cs = append(b.get(), "TOPK.RESERVE")
+	c.ks = InitSlot
+	return
+}
+
+type STopkReserveKey SCompleted
+
+func (c STopkReserveKey) Topk(Topk int64) STopkReserveTopk {
+	return STopkReserveTopk{cs: append(c.cs, strconv.FormatInt(Topk, 10)), cf: c.cf, ks: c.ks}
+}
+
+type STopkReserveParamsDecay SCompleted
+
+func (c STopkReserveParamsDecay) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type STopkReserveParamsDepth SCompleted
+
+func (c STopkReserveParamsDepth) Decay(Decay float64) STopkReserveParamsDecay {
+	return STopkReserveParamsDecay{cs: append(c.cs, strconv.FormatFloat(Decay, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+type STopkReserveParamsWidth SCompleted
+
+func (c STopkReserveParamsWidth) Depth(Depth int64) STopkReserveParamsDepth {
+	return STopkReserveParamsDepth{cs: append(c.cs, strconv.FormatInt(Depth, 10)), cf: c.cf, ks: c.ks}
+}
+
+type STopkReserveTopk SCompleted
+
+func (c STopkReserveTopk) Width(Width int64) STopkReserveParamsWidth {
+	return STopkReserveParamsWidth{cs: append(c.cs, strconv.FormatInt(Width, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c STopkReserveTopk) Build() SCompleted {
+	return SCompleted(c)
 }
 
 type STouch SCompleted

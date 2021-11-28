@@ -76,6 +76,7 @@ func generate(prefix string) {
 	for _, p := range []string{
 		"./commands.json",
 		"./commands_json.json",
+		"./commands_bloom.json",
 	} {
 		raw, err := os.ReadFile(p)
 		if err != nil {
@@ -273,7 +274,11 @@ func generate(prefix string) {
 						fmt.Printf("\treturn %s{cs: append(c.cs, %s...), cf: c.cf, ks: c.ks}\n", prefix+strings.TrimSuffix(child.StructName, "_nocmd"), args[0][0])
 					} else {
 						fmt.Printf("\tfor _, n := range %s {\n", args[0][0])
-						fmt.Printf("\t\tc.cs = append(c.cs, strconv.FormatInt(n, 10))\n")
+						if args[0][1] == "float64" {
+							fmt.Printf("\t\tc.cs = append(c.cs, strconv.FormatFloat(n, 'f', -1, 64))\n")
+						} else {
+							fmt.Printf("\t\tc.cs = append(c.cs, strconv.FormatInt(n, 10))\n")
+						}
 						fmt.Printf("\t}\n")
 						fmt.Printf("\treturn %s{cs: c.cs, cf: c.cf, ks: c.ks}\n", prefix+strings.TrimSuffix(child.StructName, "_nocmd"))
 					}
@@ -658,6 +663,18 @@ var cacheableCMDs = []string{
 	"jsonobjlen",
 	"jsontype",
 	"jsonresp",
+
+	"bfexists",
+	"bfinfo",
+	"cfexists",
+	"cfcount",
+	"cfinfo",
+	"cmsquery",
+	"cmsinfo",
+	"topkquery",
+	"topkcount",
+	"topklist",
+	"topkinfo",
 }
 
 var readOnlyCMDs = []string{
@@ -770,4 +787,19 @@ var readOnlyCMDs = []string{
 	"jsonobjlen",
 	"jsontype",
 	"jsonresp",
+
+	"bfexists",
+	"bfmexists",
+	"bfscandump",
+	"bfinfo",
+	"cfexists",
+	"cfcount",
+	"cfscandump",
+	"cfinfo",
+	"cmsquery",
+	"cmsinfo",
+	"topkquery",
+	"topkcount",
+	"topklist",
+	"topkinfo",
 }
