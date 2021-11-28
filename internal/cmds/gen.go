@@ -4045,6 +4045,3456 @@ func (c FlushdbAsyncSync) Build() Completed {
 	return Completed(c)
 }
 
+type FtAggregate Completed
+
+func (c FtAggregate) Index(Index string) FtAggregateIndex {
+	return FtAggregateIndex{cs: append(c.cs, Index), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) FtAggregate() (c FtAggregate) {
+	c.cs = append(b.get(), "FT.AGGREGATE")
+	return
+}
+
+type FtAggregateApplyApply Completed
+
+func (c FtAggregateApplyApply) As(Name string) FtAggregateApplyAs {
+	return FtAggregateApplyAs{cs: append(c.cs, "AS", Name), cf: c.cf, ks: c.ks}
+}
+
+type FtAggregateApplyAs Completed
+
+func (c FtAggregateApplyAs) Limit() FtAggregateLimitLimitLimit {
+	return FtAggregateLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateApplyAs) Filter(Filter string) FtAggregateFilter {
+	return FtAggregateFilter{cs: append(c.cs, "FILTER", Filter), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateApplyAs) Build() Completed {
+	return Completed(c)
+}
+
+type FtAggregateFilter Completed
+
+func (c FtAggregateFilter) Build() Completed {
+	return Completed(c)
+}
+
+type FtAggregateGroupbyGroupby Completed
+
+func (c FtAggregateGroupbyGroupby) Property(Property ...string) FtAggregateGroupbyProperty {
+	return FtAggregateGroupbyProperty{cs: append(c.cs, Property...), cf: c.cf, ks: c.ks}
+}
+
+type FtAggregateGroupbyProperty Completed
+
+func (c FtAggregateGroupbyProperty) Reduce(Function string) FtAggregateGroupbyReduceReduce {
+	return FtAggregateGroupbyReduceReduce{cs: append(c.cs, "REDUCE", Function), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateGroupbyProperty) Sortby(Nargs int64) FtAggregateSortbySortby {
+	return FtAggregateSortbySortby{cs: append(c.cs, "SORTBY", strconv.FormatInt(Nargs, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateGroupbyProperty) Apply(Expression string) FtAggregateApplyApply {
+	return FtAggregateApplyApply{cs: append(c.cs, "APPLY", Expression), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateGroupbyProperty) Limit() FtAggregateLimitLimitLimit {
+	return FtAggregateLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateGroupbyProperty) Filter(Filter string) FtAggregateFilter {
+	return FtAggregateFilter{cs: append(c.cs, "FILTER", Filter), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateGroupbyProperty) Property(Property ...string) FtAggregateGroupbyProperty {
+	return FtAggregateGroupbyProperty{cs: append(c.cs, Property...), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateGroupbyProperty) Build() Completed {
+	return Completed(c)
+}
+
+type FtAggregateGroupbyReduceArg Completed
+
+func (c FtAggregateGroupbyReduceArg) As(Name string) FtAggregateGroupbyReduceAs {
+	return FtAggregateGroupbyReduceAs{cs: append(c.cs, "AS", Name), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateGroupbyReduceArg) Arg(Arg ...string) FtAggregateGroupbyReduceArg {
+	return FtAggregateGroupbyReduceArg{cs: append(c.cs, Arg...), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateGroupbyReduceArg) Build() Completed {
+	return Completed(c)
+}
+
+type FtAggregateGroupbyReduceAs Completed
+
+func (c FtAggregateGroupbyReduceAs) Build() Completed {
+	return Completed(c)
+}
+
+type FtAggregateGroupbyReduceNargs Completed
+
+func (c FtAggregateGroupbyReduceNargs) Arg(Arg ...string) FtAggregateGroupbyReduceArg {
+	return FtAggregateGroupbyReduceArg{cs: append(c.cs, Arg...), cf: c.cf, ks: c.ks}
+}
+
+type FtAggregateGroupbyReduceReduce Completed
+
+func (c FtAggregateGroupbyReduceReduce) Nargs(Nargs int64) FtAggregateGroupbyReduceNargs {
+	return FtAggregateGroupbyReduceNargs{cs: append(c.cs, strconv.FormatInt(Nargs, 10)), cf: c.cf, ks: c.ks}
+}
+
+type FtAggregateIndex Completed
+
+func (c FtAggregateIndex) Query(Query string) FtAggregateQuery {
+	return FtAggregateQuery{cs: append(c.cs, Query), cf: c.cf, ks: c.ks}
+}
+
+type FtAggregateLimitLimitLimit Completed
+
+func (c FtAggregateLimitLimitLimit) OffsetNum(Offset int64, Num int64) FtAggregateLimitOffsetNum {
+	return FtAggregateLimitOffsetNum{cs: append(c.cs, strconv.FormatInt(Offset, 10), strconv.FormatInt(Num, 10)), cf: c.cf, ks: c.ks}
+}
+
+type FtAggregateLimitOffsetNum Completed
+
+func (c FtAggregateLimitOffsetNum) Filter(Filter string) FtAggregateFilter {
+	return FtAggregateFilter{cs: append(c.cs, "FILTER", Filter), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateLimitOffsetNum) Build() Completed {
+	return Completed(c)
+}
+
+type FtAggregateLoadField Completed
+
+func (c FtAggregateLoadField) Loadall() FtAggregateLoadall {
+	return FtAggregateLoadall{cs: append(c.cs, "LOAD", "*"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateLoadField) Groupby(Nargs int64) FtAggregateGroupbyGroupby {
+	return FtAggregateGroupbyGroupby{cs: append(c.cs, "GROUPBY", strconv.FormatInt(Nargs, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateLoadField) Sortby(Nargs int64) FtAggregateSortbySortby {
+	return FtAggregateSortbySortby{cs: append(c.cs, "SORTBY", strconv.FormatInt(Nargs, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateLoadField) Apply(Expression string) FtAggregateApplyApply {
+	return FtAggregateApplyApply{cs: append(c.cs, "APPLY", Expression), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateLoadField) Limit() FtAggregateLimitLimitLimit {
+	return FtAggregateLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateLoadField) Filter(Filter string) FtAggregateFilter {
+	return FtAggregateFilter{cs: append(c.cs, "FILTER", Filter), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateLoadField) Field(Field ...string) FtAggregateLoadField {
+	return FtAggregateLoadField{cs: append(c.cs, Field...), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateLoadField) Build() Completed {
+	return Completed(c)
+}
+
+type FtAggregateLoadLoad Completed
+
+func (c FtAggregateLoadLoad) Field(Field ...string) FtAggregateLoadField {
+	return FtAggregateLoadField{cs: append(c.cs, Field...), cf: c.cf, ks: c.ks}
+}
+
+type FtAggregateLoadall Completed
+
+func (c FtAggregateLoadall) Groupby(Nargs int64) FtAggregateGroupbyGroupby {
+	return FtAggregateGroupbyGroupby{cs: append(c.cs, "GROUPBY", strconv.FormatInt(Nargs, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateLoadall) Sortby(Nargs int64) FtAggregateSortbySortby {
+	return FtAggregateSortbySortby{cs: append(c.cs, "SORTBY", strconv.FormatInt(Nargs, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateLoadall) Apply(Expression string) FtAggregateApplyApply {
+	return FtAggregateApplyApply{cs: append(c.cs, "APPLY", Expression), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateLoadall) Limit() FtAggregateLimitLimitLimit {
+	return FtAggregateLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateLoadall) Filter(Filter string) FtAggregateFilter {
+	return FtAggregateFilter{cs: append(c.cs, "FILTER", Filter), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateLoadall) Build() Completed {
+	return Completed(c)
+}
+
+type FtAggregateQuery Completed
+
+func (c FtAggregateQuery) Verbatim() FtAggregateVerbatimVerbatim {
+	return FtAggregateVerbatimVerbatim{cs: append(c.cs, "VERBATIM"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateQuery) Load(Count string) FtAggregateLoadLoad {
+	return FtAggregateLoadLoad{cs: append(c.cs, "LOAD", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateQuery) Loadall() FtAggregateLoadall {
+	return FtAggregateLoadall{cs: append(c.cs, "LOAD", "*"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateQuery) Groupby(Nargs int64) FtAggregateGroupbyGroupby {
+	return FtAggregateGroupbyGroupby{cs: append(c.cs, "GROUPBY", strconv.FormatInt(Nargs, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateQuery) Sortby(Nargs int64) FtAggregateSortbySortby {
+	return FtAggregateSortbySortby{cs: append(c.cs, "SORTBY", strconv.FormatInt(Nargs, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateQuery) Apply(Expression string) FtAggregateApplyApply {
+	return FtAggregateApplyApply{cs: append(c.cs, "APPLY", Expression), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateQuery) Limit() FtAggregateLimitLimitLimit {
+	return FtAggregateLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateQuery) Filter(Filter string) FtAggregateFilter {
+	return FtAggregateFilter{cs: append(c.cs, "FILTER", Filter), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateQuery) Build() Completed {
+	return Completed(c)
+}
+
+type FtAggregateSortbyFieldsOrderAsc Completed
+
+func (c FtAggregateSortbyFieldsOrderAsc) Max(Num int64) FtAggregateSortbyMax {
+	return FtAggregateSortbyMax{cs: append(c.cs, "MAX", strconv.FormatInt(Num, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateSortbyFieldsOrderAsc) Build() Completed {
+	return Completed(c)
+}
+
+type FtAggregateSortbyFieldsOrderDesc Completed
+
+func (c FtAggregateSortbyFieldsOrderDesc) Max(Num int64) FtAggregateSortbyMax {
+	return FtAggregateSortbyMax{cs: append(c.cs, "MAX", strconv.FormatInt(Num, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateSortbyFieldsOrderDesc) Build() Completed {
+	return Completed(c)
+}
+
+type FtAggregateSortbyFieldsProperty Completed
+
+func (c FtAggregateSortbyFieldsProperty) Asc() FtAggregateSortbyFieldsOrderAsc {
+	return FtAggregateSortbyFieldsOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateSortbyFieldsProperty) Desc() FtAggregateSortbyFieldsOrderDesc {
+	return FtAggregateSortbyFieldsOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
+}
+
+type FtAggregateSortbyMax Completed
+
+func (c FtAggregateSortbyMax) Apply(Expression string) FtAggregateApplyApply {
+	return FtAggregateApplyApply{cs: append(c.cs, "APPLY", Expression), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateSortbyMax) Limit() FtAggregateLimitLimitLimit {
+	return FtAggregateLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateSortbyMax) Filter(Filter string) FtAggregateFilter {
+	return FtAggregateFilter{cs: append(c.cs, "FILTER", Filter), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateSortbyMax) Build() Completed {
+	return Completed(c)
+}
+
+type FtAggregateSortbySortby Completed
+
+func (c FtAggregateSortbySortby) Property(Property string) FtAggregateSortbyFieldsProperty {
+	return FtAggregateSortbyFieldsProperty{cs: append(c.cs, Property), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateSortbySortby) Max(Num int64) FtAggregateSortbyMax {
+	return FtAggregateSortbyMax{cs: append(c.cs, "MAX", strconv.FormatInt(Num, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateSortbySortby) Apply(Expression string) FtAggregateApplyApply {
+	return FtAggregateApplyApply{cs: append(c.cs, "APPLY", Expression), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateSortbySortby) Limit() FtAggregateLimitLimitLimit {
+	return FtAggregateLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateSortbySortby) Filter(Filter string) FtAggregateFilter {
+	return FtAggregateFilter{cs: append(c.cs, "FILTER", Filter), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateSortbySortby) Build() Completed {
+	return Completed(c)
+}
+
+type FtAggregateVerbatimVerbatim Completed
+
+func (c FtAggregateVerbatimVerbatim) Load(Count string) FtAggregateLoadLoad {
+	return FtAggregateLoadLoad{cs: append(c.cs, "LOAD", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateVerbatimVerbatim) Loadall() FtAggregateLoadall {
+	return FtAggregateLoadall{cs: append(c.cs, "LOAD", "*"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateVerbatimVerbatim) Groupby(Nargs int64) FtAggregateGroupbyGroupby {
+	return FtAggregateGroupbyGroupby{cs: append(c.cs, "GROUPBY", strconv.FormatInt(Nargs, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateVerbatimVerbatim) Sortby(Nargs int64) FtAggregateSortbySortby {
+	return FtAggregateSortbySortby{cs: append(c.cs, "SORTBY", strconv.FormatInt(Nargs, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateVerbatimVerbatim) Apply(Expression string) FtAggregateApplyApply {
+	return FtAggregateApplyApply{cs: append(c.cs, "APPLY", Expression), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateVerbatimVerbatim) Limit() FtAggregateLimitLimitLimit {
+	return FtAggregateLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateVerbatimVerbatim) Filter(Filter string) FtAggregateFilter {
+	return FtAggregateFilter{cs: append(c.cs, "FILTER", Filter), cf: c.cf, ks: c.ks}
+}
+
+func (c FtAggregateVerbatimVerbatim) Build() Completed {
+	return Completed(c)
+}
+
+type FtAliasadd Completed
+
+func (c FtAliasadd) Alias(Alias string) FtAliasaddAlias {
+	return FtAliasaddAlias{cs: append(c.cs, Alias), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) FtAliasadd() (c FtAliasadd) {
+	c.cs = append(b.get(), "FT.ALIASADD")
+	return
+}
+
+type FtAliasaddAlias Completed
+
+func (c FtAliasaddAlias) Index(Index string) FtAliasaddIndex {
+	return FtAliasaddIndex{cs: append(c.cs, Index), cf: c.cf, ks: c.ks}
+}
+
+type FtAliasaddIndex Completed
+
+func (c FtAliasaddIndex) Build() Completed {
+	return Completed(c)
+}
+
+type FtAliasdel Completed
+
+func (c FtAliasdel) Alias(Alias string) FtAliasdelAlias {
+	return FtAliasdelAlias{cs: append(c.cs, Alias), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) FtAliasdel() (c FtAliasdel) {
+	c.cs = append(b.get(), "FT.ALIASDEL")
+	return
+}
+
+type FtAliasdelAlias Completed
+
+func (c FtAliasdelAlias) Build() Completed {
+	return Completed(c)
+}
+
+type FtAliasupdate Completed
+
+func (c FtAliasupdate) Alias(Alias string) FtAliasupdateAlias {
+	return FtAliasupdateAlias{cs: append(c.cs, Alias), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) FtAliasupdate() (c FtAliasupdate) {
+	c.cs = append(b.get(), "FT.ALIASUPDATE")
+	return
+}
+
+type FtAliasupdateAlias Completed
+
+func (c FtAliasupdateAlias) Index(Index string) FtAliasupdateIndex {
+	return FtAliasupdateIndex{cs: append(c.cs, Index), cf: c.cf, ks: c.ks}
+}
+
+type FtAliasupdateIndex Completed
+
+func (c FtAliasupdateIndex) Build() Completed {
+	return Completed(c)
+}
+
+type FtAlter Completed
+
+func (c FtAlter) Index(Index string) FtAlterIndex {
+	return FtAlterIndex{cs: append(c.cs, Index), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) FtAlter() (c FtAlter) {
+	c.cs = append(b.get(), "FT.ALTER")
+	return
+}
+
+type FtAlterAddAdd Completed
+
+func (c FtAlterAddAdd) Field(Field string) FtAlterField {
+	return FtAlterField{cs: append(c.cs, Field), cf: c.cf, ks: c.ks}
+}
+
+type FtAlterField Completed
+
+func (c FtAlterField) Options(Options string) FtAlterOptions {
+	return FtAlterOptions{cs: append(c.cs, Options), cf: c.cf, ks: c.ks}
+}
+
+type FtAlterIndex Completed
+
+func (c FtAlterIndex) Schema() FtAlterSchemaSchema {
+	return FtAlterSchemaSchema{cs: append(c.cs, "SCHEMA"), cf: c.cf, ks: c.ks}
+}
+
+type FtAlterOptions Completed
+
+func (c FtAlterOptions) Build() Completed {
+	return Completed(c)
+}
+
+type FtAlterSchemaSchema Completed
+
+func (c FtAlterSchemaSchema) Add() FtAlterAddAdd {
+	return FtAlterAddAdd{cs: append(c.cs, "ADD"), cf: c.cf, ks: c.ks}
+}
+
+type FtConfigGet Completed
+
+func (c FtConfigGet) Option(Option string) FtConfigGetOption {
+	return FtConfigGetOption{cs: append(c.cs, Option), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) FtConfigGet() (c FtConfigGet) {
+	c.cs = append(b.get(), "FT.CONFIG", "GET")
+	return
+}
+
+type FtConfigGetOption Completed
+
+func (c FtConfigGetOption) Value(Value string) FtConfigGetValue {
+	return FtConfigGetValue{cs: append(c.cs, Value), cf: c.cf, ks: c.ks}
+}
+
+type FtConfigGetValue Completed
+
+func (c FtConfigGetValue) Build() Completed {
+	return Completed(c)
+}
+
+type FtConfigHelp Completed
+
+func (c FtConfigHelp) Option(Option string) FtConfigHelpOption {
+	return FtConfigHelpOption{cs: append(c.cs, Option), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) FtConfigHelp() (c FtConfigHelp) {
+	c.cs = append(b.get(), "FT.CONFIG", "HELP")
+	return
+}
+
+type FtConfigHelpOption Completed
+
+func (c FtConfigHelpOption) Build() Completed {
+	return Completed(c)
+}
+
+type FtConfigSet Completed
+
+func (c FtConfigSet) Option(Option string) FtConfigSetOption {
+	return FtConfigSetOption{cs: append(c.cs, Option), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) FtConfigSet() (c FtConfigSet) {
+	c.cs = append(b.get(), "FT.CONFIG", "SET")
+	return
+}
+
+type FtConfigSetOption Completed
+
+func (c FtConfigSetOption) Build() Completed {
+	return Completed(c)
+}
+
+type FtCreate Completed
+
+func (c FtCreate) Index(Index string) FtCreateIndex {
+	return FtCreateIndex{cs: append(c.cs, Index), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) FtCreate() (c FtCreate) {
+	c.cs = append(b.get(), "FT.CREATE")
+	return
+}
+
+type FtCreateCount Completed
+
+func (c FtCreateCount) Stopword(Stopword ...string) FtCreateStopword {
+	return FtCreateStopword{cs: append(c.cs, Stopword...), cf: c.cf, ks: c.ks}
+}
+
+type FtCreateDataTypeHash Completed
+
+func (c FtCreateDataTypeHash) Prefix(Prefix ...string) FtCreatePrefix {
+	return FtCreatePrefix{cs: append(c.cs, Prefix...), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateDataTypeHash) Language(DefaultLang string) FtCreateLanguage {
+	return FtCreateLanguage{cs: append(c.cs, "LANGUAGE", DefaultLang), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateDataTypeHash) LanguageField(LangAttribute string) FtCreateLanguageField {
+	return FtCreateLanguageField{cs: append(c.cs, "LANGUAGE_FIELD", LangAttribute), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateDataTypeHash) Score(DefaultScore float64) FtCreateScore {
+	return FtCreateScore{cs: append(c.cs, "SCORE", strconv.FormatFloat(DefaultScore, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateDataTypeHash) ScoreField(ScoreAttribute string) FtCreateScoreField {
+	return FtCreateScoreField{cs: append(c.cs, "SCORE_FIELD", ScoreAttribute), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateDataTypeHash) PayloadField(PayloadAttribute string) FtCreatePayloadField {
+	return FtCreatePayloadField{cs: append(c.cs, "PAYLOAD_FIELD", PayloadAttribute), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateDataTypeHash) Maxtextfields() FtCreateMaxtextfieldsMaxtextfields {
+	return FtCreateMaxtextfieldsMaxtextfields{cs: append(c.cs, "MAXTEXTFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateDataTypeHash) Temporary(Seconds float64) FtCreateTemporary {
+	return FtCreateTemporary{cs: append(c.cs, "TEMPORARY", strconv.FormatFloat(Seconds, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateDataTypeHash) Nooffsets() FtCreateNooffsetsNooffsets {
+	return FtCreateNooffsetsNooffsets{cs: append(c.cs, "NOOFFSETS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateDataTypeHash) Nohl() FtCreateNohlNohl {
+	return FtCreateNohlNohl{cs: append(c.cs, "NOHL"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateDataTypeHash) Nofields() FtCreateNofieldsNofields {
+	return FtCreateNofieldsNofields{cs: append(c.cs, "NOFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateDataTypeHash) Nofreqs() FtCreateNofreqsNofreqs {
+	return FtCreateNofreqsNofreqs{cs: append(c.cs, "NOFREQS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateDataTypeHash) Count(Count int64) FtCreateCount {
+	return FtCreateCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateDataTypeHash) Schema() FtCreateSchemaSchema {
+	return FtCreateSchemaSchema{cs: append(c.cs, "SCHEMA"), cf: c.cf, ks: c.ks}
+}
+
+type FtCreateDataTypeJson Completed
+
+func (c FtCreateDataTypeJson) Prefix(Prefix ...string) FtCreatePrefix {
+	return FtCreatePrefix{cs: append(c.cs, Prefix...), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateDataTypeJson) Language(DefaultLang string) FtCreateLanguage {
+	return FtCreateLanguage{cs: append(c.cs, "LANGUAGE", DefaultLang), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateDataTypeJson) LanguageField(LangAttribute string) FtCreateLanguageField {
+	return FtCreateLanguageField{cs: append(c.cs, "LANGUAGE_FIELD", LangAttribute), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateDataTypeJson) Score(DefaultScore float64) FtCreateScore {
+	return FtCreateScore{cs: append(c.cs, "SCORE", strconv.FormatFloat(DefaultScore, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateDataTypeJson) ScoreField(ScoreAttribute string) FtCreateScoreField {
+	return FtCreateScoreField{cs: append(c.cs, "SCORE_FIELD", ScoreAttribute), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateDataTypeJson) PayloadField(PayloadAttribute string) FtCreatePayloadField {
+	return FtCreatePayloadField{cs: append(c.cs, "PAYLOAD_FIELD", PayloadAttribute), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateDataTypeJson) Maxtextfields() FtCreateMaxtextfieldsMaxtextfields {
+	return FtCreateMaxtextfieldsMaxtextfields{cs: append(c.cs, "MAXTEXTFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateDataTypeJson) Temporary(Seconds float64) FtCreateTemporary {
+	return FtCreateTemporary{cs: append(c.cs, "TEMPORARY", strconv.FormatFloat(Seconds, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateDataTypeJson) Nooffsets() FtCreateNooffsetsNooffsets {
+	return FtCreateNooffsetsNooffsets{cs: append(c.cs, "NOOFFSETS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateDataTypeJson) Nohl() FtCreateNohlNohl {
+	return FtCreateNohlNohl{cs: append(c.cs, "NOHL"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateDataTypeJson) Nofields() FtCreateNofieldsNofields {
+	return FtCreateNofieldsNofields{cs: append(c.cs, "NOFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateDataTypeJson) Nofreqs() FtCreateNofreqsNofreqs {
+	return FtCreateNofreqsNofreqs{cs: append(c.cs, "NOFREQS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateDataTypeJson) Count(Count int64) FtCreateCount {
+	return FtCreateCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateDataTypeJson) Schema() FtCreateSchemaSchema {
+	return FtCreateSchemaSchema{cs: append(c.cs, "SCHEMA"), cf: c.cf, ks: c.ks}
+}
+
+type FtCreateFieldAs Completed
+
+func (c FtCreateFieldAs) Text() FtCreateFieldFieldTypeText {
+	return FtCreateFieldFieldTypeText{cs: append(c.cs, "TEXT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateFieldAs) Tag() FtCreateFieldFieldTypeTag {
+	return FtCreateFieldFieldTypeTag{cs: append(c.cs, "TAG"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateFieldAs) Numeric() FtCreateFieldFieldTypeNumeric {
+	return FtCreateFieldFieldTypeNumeric{cs: append(c.cs, "NUMERIC"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateFieldAs) Geo() FtCreateFieldFieldTypeGeo {
+	return FtCreateFieldFieldTypeGeo{cs: append(c.cs, "GEO"), cf: c.cf, ks: c.ks}
+}
+
+type FtCreateFieldFieldName Completed
+
+func (c FtCreateFieldFieldName) As(Alias string) FtCreateFieldAs {
+	return FtCreateFieldAs{cs: append(c.cs, "AS", Alias), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateFieldFieldName) Text() FtCreateFieldFieldTypeText {
+	return FtCreateFieldFieldTypeText{cs: append(c.cs, "TEXT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateFieldFieldName) Tag() FtCreateFieldFieldTypeTag {
+	return FtCreateFieldFieldTypeTag{cs: append(c.cs, "TAG"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateFieldFieldName) Numeric() FtCreateFieldFieldTypeNumeric {
+	return FtCreateFieldFieldTypeNumeric{cs: append(c.cs, "NUMERIC"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateFieldFieldName) Geo() FtCreateFieldFieldTypeGeo {
+	return FtCreateFieldFieldTypeGeo{cs: append(c.cs, "GEO"), cf: c.cf, ks: c.ks}
+}
+
+type FtCreateFieldFieldTypeGeo Completed
+
+func (c FtCreateFieldFieldTypeGeo) Sortable() FtCreateFieldSortableSortableSortable {
+	return FtCreateFieldSortableSortableSortable{cs: append(c.cs, "SORTABLE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateFieldFieldTypeGeo) Noindex() FtCreateFieldNoindexNoindex {
+	return FtCreateFieldNoindexNoindex{cs: append(c.cs, "NOINDEX"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateFieldFieldTypeGeo) Build() Completed {
+	return Completed(c)
+}
+
+type FtCreateFieldFieldTypeNumeric Completed
+
+func (c FtCreateFieldFieldTypeNumeric) Sortable() FtCreateFieldSortableSortableSortable {
+	return FtCreateFieldSortableSortableSortable{cs: append(c.cs, "SORTABLE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateFieldFieldTypeNumeric) Noindex() FtCreateFieldNoindexNoindex {
+	return FtCreateFieldNoindexNoindex{cs: append(c.cs, "NOINDEX"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateFieldFieldTypeNumeric) Build() Completed {
+	return Completed(c)
+}
+
+type FtCreateFieldFieldTypeTag Completed
+
+func (c FtCreateFieldFieldTypeTag) Sortable() FtCreateFieldSortableSortableSortable {
+	return FtCreateFieldSortableSortableSortable{cs: append(c.cs, "SORTABLE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateFieldFieldTypeTag) Noindex() FtCreateFieldNoindexNoindex {
+	return FtCreateFieldNoindexNoindex{cs: append(c.cs, "NOINDEX"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateFieldFieldTypeTag) Build() Completed {
+	return Completed(c)
+}
+
+type FtCreateFieldFieldTypeText Completed
+
+func (c FtCreateFieldFieldTypeText) Sortable() FtCreateFieldSortableSortableSortable {
+	return FtCreateFieldSortableSortableSortable{cs: append(c.cs, "SORTABLE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateFieldFieldTypeText) Noindex() FtCreateFieldNoindexNoindex {
+	return FtCreateFieldNoindexNoindex{cs: append(c.cs, "NOINDEX"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateFieldFieldTypeText) Build() Completed {
+	return Completed(c)
+}
+
+type FtCreateFieldNoindexNoindex Completed
+
+func (c FtCreateFieldNoindexNoindex) Build() Completed {
+	return Completed(c)
+}
+
+type FtCreateFieldSortableSortableSortable Completed
+
+func (c FtCreateFieldSortableSortableSortable) Unf() FtCreateFieldSortableUnfUnf {
+	return FtCreateFieldSortableUnfUnf{cs: append(c.cs, "UNF"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateFieldSortableSortableSortable) Noindex() FtCreateFieldNoindexNoindex {
+	return FtCreateFieldNoindexNoindex{cs: append(c.cs, "NOINDEX"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateFieldSortableSortableSortable) Build() Completed {
+	return Completed(c)
+}
+
+type FtCreateFieldSortableUnfUnf Completed
+
+func (c FtCreateFieldSortableUnfUnf) Noindex() FtCreateFieldNoindexNoindex {
+	return FtCreateFieldNoindexNoindex{cs: append(c.cs, "NOINDEX"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateFieldSortableUnfUnf) Build() Completed {
+	return Completed(c)
+}
+
+type FtCreateIndex Completed
+
+func (c FtCreateIndex) Hash() FtCreateDataTypeHash {
+	return FtCreateDataTypeHash{cs: append(c.cs, "HASH"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateIndex) Json() FtCreateDataTypeJson {
+	return FtCreateDataTypeJson{cs: append(c.cs, "JSON"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateIndex) Prefix(Prefix ...string) FtCreatePrefix {
+	return FtCreatePrefix{cs: append(c.cs, Prefix...), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateIndex) Language(DefaultLang string) FtCreateLanguage {
+	return FtCreateLanguage{cs: append(c.cs, "LANGUAGE", DefaultLang), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateIndex) LanguageField(LangAttribute string) FtCreateLanguageField {
+	return FtCreateLanguageField{cs: append(c.cs, "LANGUAGE_FIELD", LangAttribute), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateIndex) Score(DefaultScore float64) FtCreateScore {
+	return FtCreateScore{cs: append(c.cs, "SCORE", strconv.FormatFloat(DefaultScore, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateIndex) ScoreField(ScoreAttribute string) FtCreateScoreField {
+	return FtCreateScoreField{cs: append(c.cs, "SCORE_FIELD", ScoreAttribute), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateIndex) PayloadField(PayloadAttribute string) FtCreatePayloadField {
+	return FtCreatePayloadField{cs: append(c.cs, "PAYLOAD_FIELD", PayloadAttribute), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateIndex) Maxtextfields() FtCreateMaxtextfieldsMaxtextfields {
+	return FtCreateMaxtextfieldsMaxtextfields{cs: append(c.cs, "MAXTEXTFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateIndex) Temporary(Seconds float64) FtCreateTemporary {
+	return FtCreateTemporary{cs: append(c.cs, "TEMPORARY", strconv.FormatFloat(Seconds, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateIndex) Nooffsets() FtCreateNooffsetsNooffsets {
+	return FtCreateNooffsetsNooffsets{cs: append(c.cs, "NOOFFSETS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateIndex) Nohl() FtCreateNohlNohl {
+	return FtCreateNohlNohl{cs: append(c.cs, "NOHL"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateIndex) Nofields() FtCreateNofieldsNofields {
+	return FtCreateNofieldsNofields{cs: append(c.cs, "NOFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateIndex) Nofreqs() FtCreateNofreqsNofreqs {
+	return FtCreateNofreqsNofreqs{cs: append(c.cs, "NOFREQS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateIndex) Count(Count int64) FtCreateCount {
+	return FtCreateCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateIndex) Schema() FtCreateSchemaSchema {
+	return FtCreateSchemaSchema{cs: append(c.cs, "SCHEMA"), cf: c.cf, ks: c.ks}
+}
+
+type FtCreateLanguage Completed
+
+func (c FtCreateLanguage) LanguageField(LangAttribute string) FtCreateLanguageField {
+	return FtCreateLanguageField{cs: append(c.cs, "LANGUAGE_FIELD", LangAttribute), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateLanguage) Score(DefaultScore float64) FtCreateScore {
+	return FtCreateScore{cs: append(c.cs, "SCORE", strconv.FormatFloat(DefaultScore, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateLanguage) ScoreField(ScoreAttribute string) FtCreateScoreField {
+	return FtCreateScoreField{cs: append(c.cs, "SCORE_FIELD", ScoreAttribute), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateLanguage) PayloadField(PayloadAttribute string) FtCreatePayloadField {
+	return FtCreatePayloadField{cs: append(c.cs, "PAYLOAD_FIELD", PayloadAttribute), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateLanguage) Maxtextfields() FtCreateMaxtextfieldsMaxtextfields {
+	return FtCreateMaxtextfieldsMaxtextfields{cs: append(c.cs, "MAXTEXTFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateLanguage) Temporary(Seconds float64) FtCreateTemporary {
+	return FtCreateTemporary{cs: append(c.cs, "TEMPORARY", strconv.FormatFloat(Seconds, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateLanguage) Nooffsets() FtCreateNooffsetsNooffsets {
+	return FtCreateNooffsetsNooffsets{cs: append(c.cs, "NOOFFSETS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateLanguage) Nohl() FtCreateNohlNohl {
+	return FtCreateNohlNohl{cs: append(c.cs, "NOHL"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateLanguage) Nofields() FtCreateNofieldsNofields {
+	return FtCreateNofieldsNofields{cs: append(c.cs, "NOFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateLanguage) Nofreqs() FtCreateNofreqsNofreqs {
+	return FtCreateNofreqsNofreqs{cs: append(c.cs, "NOFREQS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateLanguage) Count(Count int64) FtCreateCount {
+	return FtCreateCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateLanguage) Schema() FtCreateSchemaSchema {
+	return FtCreateSchemaSchema{cs: append(c.cs, "SCHEMA"), cf: c.cf, ks: c.ks}
+}
+
+type FtCreateLanguageField Completed
+
+func (c FtCreateLanguageField) Score(DefaultScore float64) FtCreateScore {
+	return FtCreateScore{cs: append(c.cs, "SCORE", strconv.FormatFloat(DefaultScore, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateLanguageField) ScoreField(ScoreAttribute string) FtCreateScoreField {
+	return FtCreateScoreField{cs: append(c.cs, "SCORE_FIELD", ScoreAttribute), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateLanguageField) PayloadField(PayloadAttribute string) FtCreatePayloadField {
+	return FtCreatePayloadField{cs: append(c.cs, "PAYLOAD_FIELD", PayloadAttribute), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateLanguageField) Maxtextfields() FtCreateMaxtextfieldsMaxtextfields {
+	return FtCreateMaxtextfieldsMaxtextfields{cs: append(c.cs, "MAXTEXTFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateLanguageField) Temporary(Seconds float64) FtCreateTemporary {
+	return FtCreateTemporary{cs: append(c.cs, "TEMPORARY", strconv.FormatFloat(Seconds, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateLanguageField) Nooffsets() FtCreateNooffsetsNooffsets {
+	return FtCreateNooffsetsNooffsets{cs: append(c.cs, "NOOFFSETS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateLanguageField) Nohl() FtCreateNohlNohl {
+	return FtCreateNohlNohl{cs: append(c.cs, "NOHL"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateLanguageField) Nofields() FtCreateNofieldsNofields {
+	return FtCreateNofieldsNofields{cs: append(c.cs, "NOFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateLanguageField) Nofreqs() FtCreateNofreqsNofreqs {
+	return FtCreateNofreqsNofreqs{cs: append(c.cs, "NOFREQS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateLanguageField) Count(Count int64) FtCreateCount {
+	return FtCreateCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateLanguageField) Schema() FtCreateSchemaSchema {
+	return FtCreateSchemaSchema{cs: append(c.cs, "SCHEMA"), cf: c.cf, ks: c.ks}
+}
+
+type FtCreateMaxtextfieldsMaxtextfields Completed
+
+func (c FtCreateMaxtextfieldsMaxtextfields) Temporary(Seconds float64) FtCreateTemporary {
+	return FtCreateTemporary{cs: append(c.cs, "TEMPORARY", strconv.FormatFloat(Seconds, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateMaxtextfieldsMaxtextfields) Nooffsets() FtCreateNooffsetsNooffsets {
+	return FtCreateNooffsetsNooffsets{cs: append(c.cs, "NOOFFSETS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateMaxtextfieldsMaxtextfields) Nohl() FtCreateNohlNohl {
+	return FtCreateNohlNohl{cs: append(c.cs, "NOHL"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateMaxtextfieldsMaxtextfields) Nofields() FtCreateNofieldsNofields {
+	return FtCreateNofieldsNofields{cs: append(c.cs, "NOFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateMaxtextfieldsMaxtextfields) Nofreqs() FtCreateNofreqsNofreqs {
+	return FtCreateNofreqsNofreqs{cs: append(c.cs, "NOFREQS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateMaxtextfieldsMaxtextfields) Count(Count int64) FtCreateCount {
+	return FtCreateCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateMaxtextfieldsMaxtextfields) Schema() FtCreateSchemaSchema {
+	return FtCreateSchemaSchema{cs: append(c.cs, "SCHEMA"), cf: c.cf, ks: c.ks}
+}
+
+type FtCreateNofieldsNofields Completed
+
+func (c FtCreateNofieldsNofields) Nofreqs() FtCreateNofreqsNofreqs {
+	return FtCreateNofreqsNofreqs{cs: append(c.cs, "NOFREQS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateNofieldsNofields) Count(Count int64) FtCreateCount {
+	return FtCreateCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateNofieldsNofields) Schema() FtCreateSchemaSchema {
+	return FtCreateSchemaSchema{cs: append(c.cs, "SCHEMA"), cf: c.cf, ks: c.ks}
+}
+
+type FtCreateNofreqsNofreqs Completed
+
+func (c FtCreateNofreqsNofreqs) Count(Count int64) FtCreateCount {
+	return FtCreateCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateNofreqsNofreqs) Schema() FtCreateSchemaSchema {
+	return FtCreateSchemaSchema{cs: append(c.cs, "SCHEMA"), cf: c.cf, ks: c.ks}
+}
+
+type FtCreateNohlNohl Completed
+
+func (c FtCreateNohlNohl) Nofields() FtCreateNofieldsNofields {
+	return FtCreateNofieldsNofields{cs: append(c.cs, "NOFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateNohlNohl) Nofreqs() FtCreateNofreqsNofreqs {
+	return FtCreateNofreqsNofreqs{cs: append(c.cs, "NOFREQS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateNohlNohl) Count(Count int64) FtCreateCount {
+	return FtCreateCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateNohlNohl) Schema() FtCreateSchemaSchema {
+	return FtCreateSchemaSchema{cs: append(c.cs, "SCHEMA"), cf: c.cf, ks: c.ks}
+}
+
+type FtCreateNooffsetsNooffsets Completed
+
+func (c FtCreateNooffsetsNooffsets) Nohl() FtCreateNohlNohl {
+	return FtCreateNohlNohl{cs: append(c.cs, "NOHL"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateNooffsetsNooffsets) Nofields() FtCreateNofieldsNofields {
+	return FtCreateNofieldsNofields{cs: append(c.cs, "NOFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateNooffsetsNooffsets) Nofreqs() FtCreateNofreqsNofreqs {
+	return FtCreateNofreqsNofreqs{cs: append(c.cs, "NOFREQS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateNooffsetsNooffsets) Count(Count int64) FtCreateCount {
+	return FtCreateCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateNooffsetsNooffsets) Schema() FtCreateSchemaSchema {
+	return FtCreateSchemaSchema{cs: append(c.cs, "SCHEMA"), cf: c.cf, ks: c.ks}
+}
+
+type FtCreatePayloadField Completed
+
+func (c FtCreatePayloadField) Maxtextfields() FtCreateMaxtextfieldsMaxtextfields {
+	return FtCreateMaxtextfieldsMaxtextfields{cs: append(c.cs, "MAXTEXTFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreatePayloadField) Temporary(Seconds float64) FtCreateTemporary {
+	return FtCreateTemporary{cs: append(c.cs, "TEMPORARY", strconv.FormatFloat(Seconds, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreatePayloadField) Nooffsets() FtCreateNooffsetsNooffsets {
+	return FtCreateNooffsetsNooffsets{cs: append(c.cs, "NOOFFSETS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreatePayloadField) Nohl() FtCreateNohlNohl {
+	return FtCreateNohlNohl{cs: append(c.cs, "NOHL"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreatePayloadField) Nofields() FtCreateNofieldsNofields {
+	return FtCreateNofieldsNofields{cs: append(c.cs, "NOFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreatePayloadField) Nofreqs() FtCreateNofreqsNofreqs {
+	return FtCreateNofreqsNofreqs{cs: append(c.cs, "NOFREQS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreatePayloadField) Count(Count int64) FtCreateCount {
+	return FtCreateCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreatePayloadField) Schema() FtCreateSchemaSchema {
+	return FtCreateSchemaSchema{cs: append(c.cs, "SCHEMA"), cf: c.cf, ks: c.ks}
+}
+
+type FtCreatePrefix Completed
+
+func (c FtCreatePrefix) Language(DefaultLang string) FtCreateLanguage {
+	return FtCreateLanguage{cs: append(c.cs, "LANGUAGE", DefaultLang), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreatePrefix) LanguageField(LangAttribute string) FtCreateLanguageField {
+	return FtCreateLanguageField{cs: append(c.cs, "LANGUAGE_FIELD", LangAttribute), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreatePrefix) Score(DefaultScore float64) FtCreateScore {
+	return FtCreateScore{cs: append(c.cs, "SCORE", strconv.FormatFloat(DefaultScore, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreatePrefix) ScoreField(ScoreAttribute string) FtCreateScoreField {
+	return FtCreateScoreField{cs: append(c.cs, "SCORE_FIELD", ScoreAttribute), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreatePrefix) PayloadField(PayloadAttribute string) FtCreatePayloadField {
+	return FtCreatePayloadField{cs: append(c.cs, "PAYLOAD_FIELD", PayloadAttribute), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreatePrefix) Maxtextfields() FtCreateMaxtextfieldsMaxtextfields {
+	return FtCreateMaxtextfieldsMaxtextfields{cs: append(c.cs, "MAXTEXTFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreatePrefix) Temporary(Seconds float64) FtCreateTemporary {
+	return FtCreateTemporary{cs: append(c.cs, "TEMPORARY", strconv.FormatFloat(Seconds, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreatePrefix) Nooffsets() FtCreateNooffsetsNooffsets {
+	return FtCreateNooffsetsNooffsets{cs: append(c.cs, "NOOFFSETS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreatePrefix) Nohl() FtCreateNohlNohl {
+	return FtCreateNohlNohl{cs: append(c.cs, "NOHL"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreatePrefix) Nofields() FtCreateNofieldsNofields {
+	return FtCreateNofieldsNofields{cs: append(c.cs, "NOFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreatePrefix) Nofreqs() FtCreateNofreqsNofreqs {
+	return FtCreateNofreqsNofreqs{cs: append(c.cs, "NOFREQS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreatePrefix) Count(Count int64) FtCreateCount {
+	return FtCreateCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreatePrefix) Schema() FtCreateSchemaSchema {
+	return FtCreateSchemaSchema{cs: append(c.cs, "SCHEMA"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreatePrefix) Prefix(Prefix ...string) FtCreatePrefix {
+	return FtCreatePrefix{cs: append(c.cs, Prefix...), cf: c.cf, ks: c.ks}
+}
+
+type FtCreatePrefixCount Completed
+
+func (c FtCreatePrefixCount) Prefix(Prefix ...string) FtCreatePrefix {
+	return FtCreatePrefix{cs: append(c.cs, Prefix...), cf: c.cf, ks: c.ks}
+}
+
+type FtCreateSchemaSchema Completed
+
+func (c FtCreateSchemaSchema) FieldName(FieldName string) FtCreateFieldFieldName {
+	return FtCreateFieldFieldName{cs: append(c.cs, FieldName), cf: c.cf, ks: c.ks}
+}
+
+type FtCreateScore Completed
+
+func (c FtCreateScore) ScoreField(ScoreAttribute string) FtCreateScoreField {
+	return FtCreateScoreField{cs: append(c.cs, "SCORE_FIELD", ScoreAttribute), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateScore) PayloadField(PayloadAttribute string) FtCreatePayloadField {
+	return FtCreatePayloadField{cs: append(c.cs, "PAYLOAD_FIELD", PayloadAttribute), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateScore) Maxtextfields() FtCreateMaxtextfieldsMaxtextfields {
+	return FtCreateMaxtextfieldsMaxtextfields{cs: append(c.cs, "MAXTEXTFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateScore) Temporary(Seconds float64) FtCreateTemporary {
+	return FtCreateTemporary{cs: append(c.cs, "TEMPORARY", strconv.FormatFloat(Seconds, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateScore) Nooffsets() FtCreateNooffsetsNooffsets {
+	return FtCreateNooffsetsNooffsets{cs: append(c.cs, "NOOFFSETS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateScore) Nohl() FtCreateNohlNohl {
+	return FtCreateNohlNohl{cs: append(c.cs, "NOHL"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateScore) Nofields() FtCreateNofieldsNofields {
+	return FtCreateNofieldsNofields{cs: append(c.cs, "NOFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateScore) Nofreqs() FtCreateNofreqsNofreqs {
+	return FtCreateNofreqsNofreqs{cs: append(c.cs, "NOFREQS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateScore) Count(Count int64) FtCreateCount {
+	return FtCreateCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateScore) Schema() FtCreateSchemaSchema {
+	return FtCreateSchemaSchema{cs: append(c.cs, "SCHEMA"), cf: c.cf, ks: c.ks}
+}
+
+type FtCreateScoreField Completed
+
+func (c FtCreateScoreField) PayloadField(PayloadAttribute string) FtCreatePayloadField {
+	return FtCreatePayloadField{cs: append(c.cs, "PAYLOAD_FIELD", PayloadAttribute), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateScoreField) Maxtextfields() FtCreateMaxtextfieldsMaxtextfields {
+	return FtCreateMaxtextfieldsMaxtextfields{cs: append(c.cs, "MAXTEXTFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateScoreField) Temporary(Seconds float64) FtCreateTemporary {
+	return FtCreateTemporary{cs: append(c.cs, "TEMPORARY", strconv.FormatFloat(Seconds, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateScoreField) Nooffsets() FtCreateNooffsetsNooffsets {
+	return FtCreateNooffsetsNooffsets{cs: append(c.cs, "NOOFFSETS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateScoreField) Nohl() FtCreateNohlNohl {
+	return FtCreateNohlNohl{cs: append(c.cs, "NOHL"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateScoreField) Nofields() FtCreateNofieldsNofields {
+	return FtCreateNofieldsNofields{cs: append(c.cs, "NOFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateScoreField) Nofreqs() FtCreateNofreqsNofreqs {
+	return FtCreateNofreqsNofreqs{cs: append(c.cs, "NOFREQS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateScoreField) Count(Count int64) FtCreateCount {
+	return FtCreateCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateScoreField) Schema() FtCreateSchemaSchema {
+	return FtCreateSchemaSchema{cs: append(c.cs, "SCHEMA"), cf: c.cf, ks: c.ks}
+}
+
+type FtCreateStopword Completed
+
+func (c FtCreateStopword) Schema() FtCreateSchemaSchema {
+	return FtCreateSchemaSchema{cs: append(c.cs, "SCHEMA"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateStopword) Stopword(Stopword ...string) FtCreateStopword {
+	return FtCreateStopword{cs: append(c.cs, Stopword...), cf: c.cf, ks: c.ks}
+}
+
+type FtCreateTemporary Completed
+
+func (c FtCreateTemporary) Nooffsets() FtCreateNooffsetsNooffsets {
+	return FtCreateNooffsetsNooffsets{cs: append(c.cs, "NOOFFSETS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateTemporary) Nohl() FtCreateNohlNohl {
+	return FtCreateNohlNohl{cs: append(c.cs, "NOHL"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateTemporary) Nofields() FtCreateNofieldsNofields {
+	return FtCreateNofieldsNofields{cs: append(c.cs, "NOFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateTemporary) Nofreqs() FtCreateNofreqsNofreqs {
+	return FtCreateNofreqsNofreqs{cs: append(c.cs, "NOFREQS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateTemporary) Count(Count int64) FtCreateCount {
+	return FtCreateCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtCreateTemporary) Schema() FtCreateSchemaSchema {
+	return FtCreateSchemaSchema{cs: append(c.cs, "SCHEMA"), cf: c.cf, ks: c.ks}
+}
+
+type FtDictadd Completed
+
+func (c FtDictadd) Dict(Dict string) FtDictaddDict {
+	return FtDictaddDict{cs: append(c.cs, Dict), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) FtDictadd() (c FtDictadd) {
+	c.cs = append(b.get(), "FT.DICTADD")
+	return
+}
+
+type FtDictaddDict Completed
+
+func (c FtDictaddDict) Term(Term ...string) FtDictaddTerm {
+	return FtDictaddTerm{cs: append(c.cs, Term...), cf: c.cf, ks: c.ks}
+}
+
+type FtDictaddTerm Completed
+
+func (c FtDictaddTerm) Term(Term ...string) FtDictaddTerm {
+	return FtDictaddTerm{cs: append(c.cs, Term...), cf: c.cf, ks: c.ks}
+}
+
+func (c FtDictaddTerm) Build() Completed {
+	return Completed(c)
+}
+
+type FtDictdel Completed
+
+func (c FtDictdel) Dict(Dict string) FtDictdelDict {
+	return FtDictdelDict{cs: append(c.cs, Dict), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) FtDictdel() (c FtDictdel) {
+	c.cs = append(b.get(), "FT.DICTDEL")
+	return
+}
+
+type FtDictdelDict Completed
+
+func (c FtDictdelDict) Term(Term ...string) FtDictdelTerm {
+	return FtDictdelTerm{cs: append(c.cs, Term...), cf: c.cf, ks: c.ks}
+}
+
+type FtDictdelTerm Completed
+
+func (c FtDictdelTerm) Term(Term ...string) FtDictdelTerm {
+	return FtDictdelTerm{cs: append(c.cs, Term...), cf: c.cf, ks: c.ks}
+}
+
+func (c FtDictdelTerm) Build() Completed {
+	return Completed(c)
+}
+
+type FtDictdump Completed
+
+func (c FtDictdump) Dict(Dict string) FtDictdumpDict {
+	return FtDictdumpDict{cs: append(c.cs, Dict), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) FtDictdump() (c FtDictdump) {
+	c.cs = append(b.get(), "FT.DICTDUMP")
+	return
+}
+
+type FtDictdumpDict Completed
+
+func (c FtDictdumpDict) Build() Completed {
+	return Completed(c)
+}
+
+type FtDropindex Completed
+
+func (c FtDropindex) Index(Index string) FtDropindexIndex {
+	return FtDropindexIndex{cs: append(c.cs, Index), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) FtDropindex() (c FtDropindex) {
+	c.cs = append(b.get(), "FT.DROPINDEX")
+	return
+}
+
+type FtDropindexDeleteDocsDd Completed
+
+func (c FtDropindexDeleteDocsDd) Build() Completed {
+	return Completed(c)
+}
+
+type FtDropindexIndex Completed
+
+func (c FtDropindexIndex) Dd() FtDropindexDeleteDocsDd {
+	return FtDropindexDeleteDocsDd{cs: append(c.cs, "DD"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtDropindexIndex) Build() Completed {
+	return Completed(c)
+}
+
+type FtExplain Completed
+
+func (c FtExplain) Index(Index string) FtExplainIndex {
+	return FtExplainIndex{cs: append(c.cs, Index), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) FtExplain() (c FtExplain) {
+	c.cs = append(b.get(), "FT.EXPLAIN")
+	return
+}
+
+type FtExplainIndex Completed
+
+func (c FtExplainIndex) Query(Query string) FtExplainQuery {
+	return FtExplainQuery{cs: append(c.cs, Query), cf: c.cf, ks: c.ks}
+}
+
+type FtExplainQuery Completed
+
+func (c FtExplainQuery) Build() Completed {
+	return Completed(c)
+}
+
+type FtExplaincli Completed
+
+func (c FtExplaincli) Index(Index string) FtExplaincliIndex {
+	return FtExplaincliIndex{cs: append(c.cs, Index), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) FtExplaincli() (c FtExplaincli) {
+	c.cs = append(b.get(), "FT.EXPLAINCLI")
+	return
+}
+
+type FtExplaincliIndex Completed
+
+func (c FtExplaincliIndex) Query(Query string) FtExplaincliQuery {
+	return FtExplaincliQuery{cs: append(c.cs, Query), cf: c.cf, ks: c.ks}
+}
+
+type FtExplaincliQuery Completed
+
+func (c FtExplaincliQuery) Build() Completed {
+	return Completed(c)
+}
+
+type FtInfo Completed
+
+func (c FtInfo) Index(Index string) FtInfoIndex {
+	return FtInfoIndex{cs: append(c.cs, Index), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) FtInfo() (c FtInfo) {
+	c.cs = append(b.get(), "FT.INFO")
+	return
+}
+
+type FtInfoIndex Completed
+
+func (c FtInfoIndex) Build() Completed {
+	return Completed(c)
+}
+
+type FtList Completed
+
+func (c FtList) Build() Completed {
+	return Completed(c)
+}
+
+func (b *Builder) FtList() (c FtList) {
+	c.cs = append(b.get(), "FT._LIST")
+	return
+}
+
+type FtSearch Completed
+
+func (c FtSearch) Index(Index string) FtSearchIndex {
+	return FtSearchIndex{cs: append(c.cs, Index), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) FtSearch() (c FtSearch) {
+	c.cs = append(b.get(), "FT.SEARCH")
+	return
+}
+
+type FtSearchExpander Completed
+
+func (c FtSearchExpander) Scorer(Scorer string) FtSearchScorer {
+	return FtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchExpander) Explainscore() FtSearchExplainscoreExplainscore {
+	return FtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchExpander) Payload(Payload string) FtSearchPayload {
+	return FtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchExpander) Sortby(Sortby string) FtSearchSortbySortby {
+	return FtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchExpander) Limit() FtSearchLimitLimitLimit {
+	return FtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchExpander) Build() Completed {
+	return Completed(c)
+}
+
+type FtSearchExplainscoreExplainscore Completed
+
+func (c FtSearchExplainscoreExplainscore) Payload(Payload string) FtSearchPayload {
+	return FtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchExplainscoreExplainscore) Sortby(Sortby string) FtSearchSortbySortby {
+	return FtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchExplainscoreExplainscore) Limit() FtSearchLimitLimitLimit {
+	return FtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchExplainscoreExplainscore) Build() Completed {
+	return Completed(c)
+}
+
+type FtSearchFilterFilter Completed
+
+func (c FtSearchFilterFilter) Min(Min float64) FtSearchFilterMin {
+	return FtSearchFilterMin{cs: append(c.cs, strconv.FormatFloat(Min, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+type FtSearchFilterMax Completed
+
+func (c FtSearchFilterMax) Geofilter(GeoField string) FtSearchGeoFilterGeofilter {
+	return FtSearchGeoFilterGeofilter{cs: append(c.cs, "GEOFILTER", GeoField), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchFilterMax) Inkeys(Count string) FtSearchInKeysInkeys {
+	return FtSearchInKeysInkeys{cs: append(c.cs, "INKEYS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchFilterMax) Infields(Count string) FtSearchInFieldsInfields {
+	return FtSearchInFieldsInfields{cs: append(c.cs, "INFIELDS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchFilterMax) Return(Count string) FtSearchReturnReturn {
+	return FtSearchReturnReturn{cs: append(c.cs, "RETURN", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchFilterMax) Summarize() FtSearchSummarizeSummarizeSummarize {
+	return FtSearchSummarizeSummarizeSummarize{cs: append(c.cs, "SUMMARIZE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchFilterMax) Highlight() FtSearchHighlightHighlightHighlight {
+	return FtSearchHighlightHighlightHighlight{cs: append(c.cs, "HIGHLIGHT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchFilterMax) Slop(Slop int64) FtSearchSlop {
+	return FtSearchSlop{cs: append(c.cs, "SLOP", strconv.FormatInt(Slop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchFilterMax) Inorder() FtSearchTagsInorder {
+	return FtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchFilterMax) Language(Language string) FtSearchLanguage {
+	return FtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchFilterMax) Expander(Expander string) FtSearchExpander {
+	return FtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchFilterMax) Scorer(Scorer string) FtSearchScorer {
+	return FtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchFilterMax) Explainscore() FtSearchExplainscoreExplainscore {
+	return FtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchFilterMax) Payload(Payload string) FtSearchPayload {
+	return FtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchFilterMax) Sortby(Sortby string) FtSearchSortbySortby {
+	return FtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchFilterMax) Limit() FtSearchLimitLimitLimit {
+	return FtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchFilterMax) Build() Completed {
+	return Completed(c)
+}
+
+type FtSearchFilterMin Completed
+
+func (c FtSearchFilterMin) Max(Max float64) FtSearchFilterMax {
+	return FtSearchFilterMax{cs: append(c.cs, strconv.FormatFloat(Max, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+type FtSearchGeoFilterGeofilter Completed
+
+func (c FtSearchGeoFilterGeofilter) Lon(Lon float64) FtSearchGeoFilterLon {
+	return FtSearchGeoFilterLon{cs: append(c.cs, strconv.FormatFloat(Lon, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+type FtSearchGeoFilterLat Completed
+
+func (c FtSearchGeoFilterLat) Radius(Radius float64) FtSearchGeoFilterRadius {
+	return FtSearchGeoFilterRadius{cs: append(c.cs, strconv.FormatFloat(Radius, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+type FtSearchGeoFilterLon Completed
+
+func (c FtSearchGeoFilterLon) Lat(Lat float64) FtSearchGeoFilterLat {
+	return FtSearchGeoFilterLat{cs: append(c.cs, strconv.FormatFloat(Lat, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+type FtSearchGeoFilterRadius Completed
+
+func (c FtSearchGeoFilterRadius) M() FtSearchGeoFilterRadiusTypeM {
+	return FtSearchGeoFilterRadiusTypeM{cs: append(c.cs, "m"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadius) Km() FtSearchGeoFilterRadiusTypeKm {
+	return FtSearchGeoFilterRadiusTypeKm{cs: append(c.cs, "km"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadius) Mi() FtSearchGeoFilterRadiusTypeMi {
+	return FtSearchGeoFilterRadiusTypeMi{cs: append(c.cs, "mi"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadius) Ft() FtSearchGeoFilterRadiusTypeFt {
+	return FtSearchGeoFilterRadiusTypeFt{cs: append(c.cs, "ft"), cf: c.cf, ks: c.ks}
+}
+
+type FtSearchGeoFilterRadiusTypeFt Completed
+
+func (c FtSearchGeoFilterRadiusTypeFt) Inkeys(Count string) FtSearchInKeysInkeys {
+	return FtSearchInKeysInkeys{cs: append(c.cs, "INKEYS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeFt) Infields(Count string) FtSearchInFieldsInfields {
+	return FtSearchInFieldsInfields{cs: append(c.cs, "INFIELDS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeFt) Return(Count string) FtSearchReturnReturn {
+	return FtSearchReturnReturn{cs: append(c.cs, "RETURN", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeFt) Summarize() FtSearchSummarizeSummarizeSummarize {
+	return FtSearchSummarizeSummarizeSummarize{cs: append(c.cs, "SUMMARIZE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeFt) Highlight() FtSearchHighlightHighlightHighlight {
+	return FtSearchHighlightHighlightHighlight{cs: append(c.cs, "HIGHLIGHT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeFt) Slop(Slop int64) FtSearchSlop {
+	return FtSearchSlop{cs: append(c.cs, "SLOP", strconv.FormatInt(Slop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeFt) Inorder() FtSearchTagsInorder {
+	return FtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeFt) Language(Language string) FtSearchLanguage {
+	return FtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeFt) Expander(Expander string) FtSearchExpander {
+	return FtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeFt) Scorer(Scorer string) FtSearchScorer {
+	return FtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeFt) Explainscore() FtSearchExplainscoreExplainscore {
+	return FtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeFt) Payload(Payload string) FtSearchPayload {
+	return FtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeFt) Sortby(Sortby string) FtSearchSortbySortby {
+	return FtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeFt) Limit() FtSearchLimitLimitLimit {
+	return FtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeFt) Build() Completed {
+	return Completed(c)
+}
+
+type FtSearchGeoFilterRadiusTypeKm Completed
+
+func (c FtSearchGeoFilterRadiusTypeKm) Inkeys(Count string) FtSearchInKeysInkeys {
+	return FtSearchInKeysInkeys{cs: append(c.cs, "INKEYS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeKm) Infields(Count string) FtSearchInFieldsInfields {
+	return FtSearchInFieldsInfields{cs: append(c.cs, "INFIELDS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeKm) Return(Count string) FtSearchReturnReturn {
+	return FtSearchReturnReturn{cs: append(c.cs, "RETURN", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeKm) Summarize() FtSearchSummarizeSummarizeSummarize {
+	return FtSearchSummarizeSummarizeSummarize{cs: append(c.cs, "SUMMARIZE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeKm) Highlight() FtSearchHighlightHighlightHighlight {
+	return FtSearchHighlightHighlightHighlight{cs: append(c.cs, "HIGHLIGHT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeKm) Slop(Slop int64) FtSearchSlop {
+	return FtSearchSlop{cs: append(c.cs, "SLOP", strconv.FormatInt(Slop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeKm) Inorder() FtSearchTagsInorder {
+	return FtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeKm) Language(Language string) FtSearchLanguage {
+	return FtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeKm) Expander(Expander string) FtSearchExpander {
+	return FtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeKm) Scorer(Scorer string) FtSearchScorer {
+	return FtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeKm) Explainscore() FtSearchExplainscoreExplainscore {
+	return FtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeKm) Payload(Payload string) FtSearchPayload {
+	return FtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeKm) Sortby(Sortby string) FtSearchSortbySortby {
+	return FtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeKm) Limit() FtSearchLimitLimitLimit {
+	return FtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeKm) Build() Completed {
+	return Completed(c)
+}
+
+type FtSearchGeoFilterRadiusTypeM Completed
+
+func (c FtSearchGeoFilterRadiusTypeM) Inkeys(Count string) FtSearchInKeysInkeys {
+	return FtSearchInKeysInkeys{cs: append(c.cs, "INKEYS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeM) Infields(Count string) FtSearchInFieldsInfields {
+	return FtSearchInFieldsInfields{cs: append(c.cs, "INFIELDS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeM) Return(Count string) FtSearchReturnReturn {
+	return FtSearchReturnReturn{cs: append(c.cs, "RETURN", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeM) Summarize() FtSearchSummarizeSummarizeSummarize {
+	return FtSearchSummarizeSummarizeSummarize{cs: append(c.cs, "SUMMARIZE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeM) Highlight() FtSearchHighlightHighlightHighlight {
+	return FtSearchHighlightHighlightHighlight{cs: append(c.cs, "HIGHLIGHT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeM) Slop(Slop int64) FtSearchSlop {
+	return FtSearchSlop{cs: append(c.cs, "SLOP", strconv.FormatInt(Slop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeM) Inorder() FtSearchTagsInorder {
+	return FtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeM) Language(Language string) FtSearchLanguage {
+	return FtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeM) Expander(Expander string) FtSearchExpander {
+	return FtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeM) Scorer(Scorer string) FtSearchScorer {
+	return FtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeM) Explainscore() FtSearchExplainscoreExplainscore {
+	return FtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeM) Payload(Payload string) FtSearchPayload {
+	return FtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeM) Sortby(Sortby string) FtSearchSortbySortby {
+	return FtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeM) Limit() FtSearchLimitLimitLimit {
+	return FtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeM) Build() Completed {
+	return Completed(c)
+}
+
+type FtSearchGeoFilterRadiusTypeMi Completed
+
+func (c FtSearchGeoFilterRadiusTypeMi) Inkeys(Count string) FtSearchInKeysInkeys {
+	return FtSearchInKeysInkeys{cs: append(c.cs, "INKEYS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeMi) Infields(Count string) FtSearchInFieldsInfields {
+	return FtSearchInFieldsInfields{cs: append(c.cs, "INFIELDS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeMi) Return(Count string) FtSearchReturnReturn {
+	return FtSearchReturnReturn{cs: append(c.cs, "RETURN", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeMi) Summarize() FtSearchSummarizeSummarizeSummarize {
+	return FtSearchSummarizeSummarizeSummarize{cs: append(c.cs, "SUMMARIZE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeMi) Highlight() FtSearchHighlightHighlightHighlight {
+	return FtSearchHighlightHighlightHighlight{cs: append(c.cs, "HIGHLIGHT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeMi) Slop(Slop int64) FtSearchSlop {
+	return FtSearchSlop{cs: append(c.cs, "SLOP", strconv.FormatInt(Slop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeMi) Inorder() FtSearchTagsInorder {
+	return FtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeMi) Language(Language string) FtSearchLanguage {
+	return FtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeMi) Expander(Expander string) FtSearchExpander {
+	return FtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeMi) Scorer(Scorer string) FtSearchScorer {
+	return FtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeMi) Explainscore() FtSearchExplainscoreExplainscore {
+	return FtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeMi) Payload(Payload string) FtSearchPayload {
+	return FtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeMi) Sortby(Sortby string) FtSearchSortbySortby {
+	return FtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeMi) Limit() FtSearchLimitLimitLimit {
+	return FtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchGeoFilterRadiusTypeMi) Build() Completed {
+	return Completed(c)
+}
+
+type FtSearchHighlightFieldsField Completed
+
+func (c FtSearchHighlightFieldsField) Tags() FtSearchHighlightTagsTagsTags {
+	return FtSearchHighlightTagsTagsTags{cs: append(c.cs, "TAGS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchHighlightFieldsField) Field(Field ...string) FtSearchHighlightFieldsField {
+	return FtSearchHighlightFieldsField{cs: append(c.cs, Field...), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchHighlightFieldsField) Build() Completed {
+	return Completed(c)
+}
+
+type FtSearchHighlightFieldsFields Completed
+
+func (c FtSearchHighlightFieldsFields) Field(Field ...string) FtSearchHighlightFieldsField {
+	return FtSearchHighlightFieldsField{cs: append(c.cs, Field...), cf: c.cf, ks: c.ks}
+}
+
+type FtSearchHighlightHighlightHighlight Completed
+
+func (c FtSearchHighlightHighlightHighlight) Fields(Count string) FtSearchHighlightFieldsFields {
+	return FtSearchHighlightFieldsFields{cs: append(c.cs, "FIELDS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchHighlightHighlightHighlight) Tags() FtSearchHighlightTagsTagsTags {
+	return FtSearchHighlightTagsTagsTags{cs: append(c.cs, "TAGS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchHighlightHighlightHighlight) Slop(Slop int64) FtSearchSlop {
+	return FtSearchSlop{cs: append(c.cs, "SLOP", strconv.FormatInt(Slop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchHighlightHighlightHighlight) Inorder() FtSearchTagsInorder {
+	return FtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchHighlightHighlightHighlight) Language(Language string) FtSearchLanguage {
+	return FtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchHighlightHighlightHighlight) Expander(Expander string) FtSearchExpander {
+	return FtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchHighlightHighlightHighlight) Scorer(Scorer string) FtSearchScorer {
+	return FtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchHighlightHighlightHighlight) Explainscore() FtSearchExplainscoreExplainscore {
+	return FtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchHighlightHighlightHighlight) Payload(Payload string) FtSearchPayload {
+	return FtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchHighlightHighlightHighlight) Sortby(Sortby string) FtSearchSortbySortby {
+	return FtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchHighlightHighlightHighlight) Limit() FtSearchLimitLimitLimit {
+	return FtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchHighlightHighlightHighlight) Build() Completed {
+	return Completed(c)
+}
+
+type FtSearchHighlightTagsOpenClose Completed
+
+func (c FtSearchHighlightTagsOpenClose) Build() Completed {
+	return Completed(c)
+}
+
+type FtSearchHighlightTagsTagsTags Completed
+
+func (c FtSearchHighlightTagsTagsTags) OpenClose(Open string, Close string) FtSearchHighlightTagsOpenClose {
+	return FtSearchHighlightTagsOpenClose{cs: append(c.cs, Open, Close), cf: c.cf, ks: c.ks}
+}
+
+type FtSearchInFieldsField Completed
+
+func (c FtSearchInFieldsField) Return(Count string) FtSearchReturnReturn {
+	return FtSearchReturnReturn{cs: append(c.cs, "RETURN", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchInFieldsField) Summarize() FtSearchSummarizeSummarizeSummarize {
+	return FtSearchSummarizeSummarizeSummarize{cs: append(c.cs, "SUMMARIZE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchInFieldsField) Highlight() FtSearchHighlightHighlightHighlight {
+	return FtSearchHighlightHighlightHighlight{cs: append(c.cs, "HIGHLIGHT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchInFieldsField) Slop(Slop int64) FtSearchSlop {
+	return FtSearchSlop{cs: append(c.cs, "SLOP", strconv.FormatInt(Slop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchInFieldsField) Inorder() FtSearchTagsInorder {
+	return FtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchInFieldsField) Language(Language string) FtSearchLanguage {
+	return FtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchInFieldsField) Expander(Expander string) FtSearchExpander {
+	return FtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchInFieldsField) Scorer(Scorer string) FtSearchScorer {
+	return FtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchInFieldsField) Explainscore() FtSearchExplainscoreExplainscore {
+	return FtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchInFieldsField) Payload(Payload string) FtSearchPayload {
+	return FtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchInFieldsField) Sortby(Sortby string) FtSearchSortbySortby {
+	return FtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchInFieldsField) Limit() FtSearchLimitLimitLimit {
+	return FtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchInFieldsField) Field(Field ...string) FtSearchInFieldsField {
+	return FtSearchInFieldsField{cs: append(c.cs, Field...), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchInFieldsField) Build() Completed {
+	return Completed(c)
+}
+
+type FtSearchInFieldsInfields Completed
+
+func (c FtSearchInFieldsInfields) Field(Field ...string) FtSearchInFieldsField {
+	return FtSearchInFieldsField{cs: append(c.cs, Field...), cf: c.cf, ks: c.ks}
+}
+
+type FtSearchInKeysInkeys Completed
+
+func (c FtSearchInKeysInkeys) Key(Key ...string) FtSearchInKeysKey {
+	return FtSearchInKeysKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
+}
+
+type FtSearchInKeysKey Completed
+
+func (c FtSearchInKeysKey) Infields(Count string) FtSearchInFieldsInfields {
+	return FtSearchInFieldsInfields{cs: append(c.cs, "INFIELDS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchInKeysKey) Return(Count string) FtSearchReturnReturn {
+	return FtSearchReturnReturn{cs: append(c.cs, "RETURN", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchInKeysKey) Summarize() FtSearchSummarizeSummarizeSummarize {
+	return FtSearchSummarizeSummarizeSummarize{cs: append(c.cs, "SUMMARIZE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchInKeysKey) Highlight() FtSearchHighlightHighlightHighlight {
+	return FtSearchHighlightHighlightHighlight{cs: append(c.cs, "HIGHLIGHT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchInKeysKey) Slop(Slop int64) FtSearchSlop {
+	return FtSearchSlop{cs: append(c.cs, "SLOP", strconv.FormatInt(Slop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchInKeysKey) Inorder() FtSearchTagsInorder {
+	return FtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchInKeysKey) Language(Language string) FtSearchLanguage {
+	return FtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchInKeysKey) Expander(Expander string) FtSearchExpander {
+	return FtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchInKeysKey) Scorer(Scorer string) FtSearchScorer {
+	return FtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchInKeysKey) Explainscore() FtSearchExplainscoreExplainscore {
+	return FtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchInKeysKey) Payload(Payload string) FtSearchPayload {
+	return FtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchInKeysKey) Sortby(Sortby string) FtSearchSortbySortby {
+	return FtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchInKeysKey) Limit() FtSearchLimitLimitLimit {
+	return FtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchInKeysKey) Key(Key ...string) FtSearchInKeysKey {
+	return FtSearchInKeysKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchInKeysKey) Build() Completed {
+	return Completed(c)
+}
+
+type FtSearchIndex Completed
+
+func (c FtSearchIndex) Query(Query string) FtSearchQuery {
+	return FtSearchQuery{cs: append(c.cs, Query), cf: c.cf, ks: c.ks}
+}
+
+type FtSearchLanguage Completed
+
+func (c FtSearchLanguage) Expander(Expander string) FtSearchExpander {
+	return FtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchLanguage) Scorer(Scorer string) FtSearchScorer {
+	return FtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchLanguage) Explainscore() FtSearchExplainscoreExplainscore {
+	return FtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchLanguage) Payload(Payload string) FtSearchPayload {
+	return FtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchLanguage) Sortby(Sortby string) FtSearchSortbySortby {
+	return FtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchLanguage) Limit() FtSearchLimitLimitLimit {
+	return FtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchLanguage) Build() Completed {
+	return Completed(c)
+}
+
+type FtSearchLimitLimitLimit Completed
+
+func (c FtSearchLimitLimitLimit) OffsetNum(Offset int64, Num int64) FtSearchLimitOffsetNum {
+	return FtSearchLimitOffsetNum{cs: append(c.cs, strconv.FormatInt(Offset, 10), strconv.FormatInt(Num, 10)), cf: c.cf, ks: c.ks}
+}
+
+type FtSearchLimitOffsetNum Completed
+
+func (c FtSearchLimitOffsetNum) Build() Completed {
+	return Completed(c)
+}
+
+type FtSearchNocontentNocontent Completed
+
+func (c FtSearchNocontentNocontent) Verbatim() FtSearchVerbatimVerbatim {
+	return FtSearchVerbatimVerbatim{cs: append(c.cs, "VERBATIM"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchNocontentNocontent) Nostopwords() FtSearchNostopwordsNostopwords {
+	return FtSearchNostopwordsNostopwords{cs: append(c.cs, "NOSTOPWORDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchNocontentNocontent) Withscores() FtSearchWithscoresWithscores {
+	return FtSearchWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchNocontentNocontent) Withpayloads() FtSearchWithpayloadsWithpayloads {
+	return FtSearchWithpayloadsWithpayloads{cs: append(c.cs, "WITHPAYLOADS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchNocontentNocontent) Withsortkeys() FtSearchWithsortkeysWithsortkeys {
+	return FtSearchWithsortkeysWithsortkeys{cs: append(c.cs, "WITHSORTKEYS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchNocontentNocontent) Filter(NumericField string) FtSearchFilterFilter {
+	return FtSearchFilterFilter{cs: append(c.cs, "FILTER", NumericField), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchNocontentNocontent) Geofilter(GeoField string) FtSearchGeoFilterGeofilter {
+	return FtSearchGeoFilterGeofilter{cs: append(c.cs, "GEOFILTER", GeoField), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchNocontentNocontent) Inkeys(Count string) FtSearchInKeysInkeys {
+	return FtSearchInKeysInkeys{cs: append(c.cs, "INKEYS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchNocontentNocontent) Infields(Count string) FtSearchInFieldsInfields {
+	return FtSearchInFieldsInfields{cs: append(c.cs, "INFIELDS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchNocontentNocontent) Return(Count string) FtSearchReturnReturn {
+	return FtSearchReturnReturn{cs: append(c.cs, "RETURN", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchNocontentNocontent) Summarize() FtSearchSummarizeSummarizeSummarize {
+	return FtSearchSummarizeSummarizeSummarize{cs: append(c.cs, "SUMMARIZE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchNocontentNocontent) Highlight() FtSearchHighlightHighlightHighlight {
+	return FtSearchHighlightHighlightHighlight{cs: append(c.cs, "HIGHLIGHT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchNocontentNocontent) Slop(Slop int64) FtSearchSlop {
+	return FtSearchSlop{cs: append(c.cs, "SLOP", strconv.FormatInt(Slop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchNocontentNocontent) Inorder() FtSearchTagsInorder {
+	return FtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchNocontentNocontent) Language(Language string) FtSearchLanguage {
+	return FtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchNocontentNocontent) Expander(Expander string) FtSearchExpander {
+	return FtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchNocontentNocontent) Scorer(Scorer string) FtSearchScorer {
+	return FtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchNocontentNocontent) Explainscore() FtSearchExplainscoreExplainscore {
+	return FtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchNocontentNocontent) Payload(Payload string) FtSearchPayload {
+	return FtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchNocontentNocontent) Sortby(Sortby string) FtSearchSortbySortby {
+	return FtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchNocontentNocontent) Limit() FtSearchLimitLimitLimit {
+	return FtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchNocontentNocontent) Build() Completed {
+	return Completed(c)
+}
+
+type FtSearchNostopwordsNostopwords Completed
+
+func (c FtSearchNostopwordsNostopwords) Withscores() FtSearchWithscoresWithscores {
+	return FtSearchWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchNostopwordsNostopwords) Withpayloads() FtSearchWithpayloadsWithpayloads {
+	return FtSearchWithpayloadsWithpayloads{cs: append(c.cs, "WITHPAYLOADS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchNostopwordsNostopwords) Withsortkeys() FtSearchWithsortkeysWithsortkeys {
+	return FtSearchWithsortkeysWithsortkeys{cs: append(c.cs, "WITHSORTKEYS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchNostopwordsNostopwords) Filter(NumericField string) FtSearchFilterFilter {
+	return FtSearchFilterFilter{cs: append(c.cs, "FILTER", NumericField), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchNostopwordsNostopwords) Geofilter(GeoField string) FtSearchGeoFilterGeofilter {
+	return FtSearchGeoFilterGeofilter{cs: append(c.cs, "GEOFILTER", GeoField), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchNostopwordsNostopwords) Inkeys(Count string) FtSearchInKeysInkeys {
+	return FtSearchInKeysInkeys{cs: append(c.cs, "INKEYS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchNostopwordsNostopwords) Infields(Count string) FtSearchInFieldsInfields {
+	return FtSearchInFieldsInfields{cs: append(c.cs, "INFIELDS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchNostopwordsNostopwords) Return(Count string) FtSearchReturnReturn {
+	return FtSearchReturnReturn{cs: append(c.cs, "RETURN", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchNostopwordsNostopwords) Summarize() FtSearchSummarizeSummarizeSummarize {
+	return FtSearchSummarizeSummarizeSummarize{cs: append(c.cs, "SUMMARIZE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchNostopwordsNostopwords) Highlight() FtSearchHighlightHighlightHighlight {
+	return FtSearchHighlightHighlightHighlight{cs: append(c.cs, "HIGHLIGHT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchNostopwordsNostopwords) Slop(Slop int64) FtSearchSlop {
+	return FtSearchSlop{cs: append(c.cs, "SLOP", strconv.FormatInt(Slop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchNostopwordsNostopwords) Inorder() FtSearchTagsInorder {
+	return FtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchNostopwordsNostopwords) Language(Language string) FtSearchLanguage {
+	return FtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchNostopwordsNostopwords) Expander(Expander string) FtSearchExpander {
+	return FtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchNostopwordsNostopwords) Scorer(Scorer string) FtSearchScorer {
+	return FtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchNostopwordsNostopwords) Explainscore() FtSearchExplainscoreExplainscore {
+	return FtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchNostopwordsNostopwords) Payload(Payload string) FtSearchPayload {
+	return FtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchNostopwordsNostopwords) Sortby(Sortby string) FtSearchSortbySortby {
+	return FtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchNostopwordsNostopwords) Limit() FtSearchLimitLimitLimit {
+	return FtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchNostopwordsNostopwords) Build() Completed {
+	return Completed(c)
+}
+
+type FtSearchPayload Completed
+
+func (c FtSearchPayload) Sortby(Sortby string) FtSearchSortbySortby {
+	return FtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchPayload) Limit() FtSearchLimitLimitLimit {
+	return FtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchPayload) Build() Completed {
+	return Completed(c)
+}
+
+type FtSearchQuery Completed
+
+func (c FtSearchQuery) Nocontent() FtSearchNocontentNocontent {
+	return FtSearchNocontentNocontent{cs: append(c.cs, "NOCONTENT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchQuery) Verbatim() FtSearchVerbatimVerbatim {
+	return FtSearchVerbatimVerbatim{cs: append(c.cs, "VERBATIM"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchQuery) Nostopwords() FtSearchNostopwordsNostopwords {
+	return FtSearchNostopwordsNostopwords{cs: append(c.cs, "NOSTOPWORDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchQuery) Withscores() FtSearchWithscoresWithscores {
+	return FtSearchWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchQuery) Withpayloads() FtSearchWithpayloadsWithpayloads {
+	return FtSearchWithpayloadsWithpayloads{cs: append(c.cs, "WITHPAYLOADS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchQuery) Withsortkeys() FtSearchWithsortkeysWithsortkeys {
+	return FtSearchWithsortkeysWithsortkeys{cs: append(c.cs, "WITHSORTKEYS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchQuery) Filter(NumericField string) FtSearchFilterFilter {
+	return FtSearchFilterFilter{cs: append(c.cs, "FILTER", NumericField), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchQuery) Geofilter(GeoField string) FtSearchGeoFilterGeofilter {
+	return FtSearchGeoFilterGeofilter{cs: append(c.cs, "GEOFILTER", GeoField), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchQuery) Inkeys(Count string) FtSearchInKeysInkeys {
+	return FtSearchInKeysInkeys{cs: append(c.cs, "INKEYS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchQuery) Infields(Count string) FtSearchInFieldsInfields {
+	return FtSearchInFieldsInfields{cs: append(c.cs, "INFIELDS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchQuery) Return(Count string) FtSearchReturnReturn {
+	return FtSearchReturnReturn{cs: append(c.cs, "RETURN", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchQuery) Summarize() FtSearchSummarizeSummarizeSummarize {
+	return FtSearchSummarizeSummarizeSummarize{cs: append(c.cs, "SUMMARIZE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchQuery) Highlight() FtSearchHighlightHighlightHighlight {
+	return FtSearchHighlightHighlightHighlight{cs: append(c.cs, "HIGHLIGHT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchQuery) Slop(Slop int64) FtSearchSlop {
+	return FtSearchSlop{cs: append(c.cs, "SLOP", strconv.FormatInt(Slop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchQuery) Inorder() FtSearchTagsInorder {
+	return FtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchQuery) Language(Language string) FtSearchLanguage {
+	return FtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchQuery) Expander(Expander string) FtSearchExpander {
+	return FtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchQuery) Scorer(Scorer string) FtSearchScorer {
+	return FtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchQuery) Explainscore() FtSearchExplainscoreExplainscore {
+	return FtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchQuery) Payload(Payload string) FtSearchPayload {
+	return FtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchQuery) Sortby(Sortby string) FtSearchSortbySortby {
+	return FtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchQuery) Limit() FtSearchLimitLimitLimit {
+	return FtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchQuery) Build() Completed {
+	return Completed(c)
+}
+
+type FtSearchReturnField Completed
+
+func (c FtSearchReturnField) Summarize() FtSearchSummarizeSummarizeSummarize {
+	return FtSearchSummarizeSummarizeSummarize{cs: append(c.cs, "SUMMARIZE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchReturnField) Highlight() FtSearchHighlightHighlightHighlight {
+	return FtSearchHighlightHighlightHighlight{cs: append(c.cs, "HIGHLIGHT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchReturnField) Slop(Slop int64) FtSearchSlop {
+	return FtSearchSlop{cs: append(c.cs, "SLOP", strconv.FormatInt(Slop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchReturnField) Inorder() FtSearchTagsInorder {
+	return FtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchReturnField) Language(Language string) FtSearchLanguage {
+	return FtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchReturnField) Expander(Expander string) FtSearchExpander {
+	return FtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchReturnField) Scorer(Scorer string) FtSearchScorer {
+	return FtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchReturnField) Explainscore() FtSearchExplainscoreExplainscore {
+	return FtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchReturnField) Payload(Payload string) FtSearchPayload {
+	return FtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchReturnField) Sortby(Sortby string) FtSearchSortbySortby {
+	return FtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchReturnField) Limit() FtSearchLimitLimitLimit {
+	return FtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchReturnField) Field(Field ...string) FtSearchReturnField {
+	return FtSearchReturnField{cs: append(c.cs, Field...), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchReturnField) Build() Completed {
+	return Completed(c)
+}
+
+type FtSearchReturnReturn Completed
+
+func (c FtSearchReturnReturn) Field(Field ...string) FtSearchReturnField {
+	return FtSearchReturnField{cs: append(c.cs, Field...), cf: c.cf, ks: c.ks}
+}
+
+type FtSearchScorer Completed
+
+func (c FtSearchScorer) Explainscore() FtSearchExplainscoreExplainscore {
+	return FtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchScorer) Payload(Payload string) FtSearchPayload {
+	return FtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchScorer) Sortby(Sortby string) FtSearchSortbySortby {
+	return FtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchScorer) Limit() FtSearchLimitLimitLimit {
+	return FtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchScorer) Build() Completed {
+	return Completed(c)
+}
+
+type FtSearchSlop Completed
+
+func (c FtSearchSlop) Inorder() FtSearchTagsInorder {
+	return FtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSlop) Language(Language string) FtSearchLanguage {
+	return FtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSlop) Expander(Expander string) FtSearchExpander {
+	return FtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSlop) Scorer(Scorer string) FtSearchScorer {
+	return FtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSlop) Explainscore() FtSearchExplainscoreExplainscore {
+	return FtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSlop) Payload(Payload string) FtSearchPayload {
+	return FtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSlop) Sortby(Sortby string) FtSearchSortbySortby {
+	return FtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSlop) Limit() FtSearchLimitLimitLimit {
+	return FtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSlop) Build() Completed {
+	return Completed(c)
+}
+
+type FtSearchSortbyOrderAsc Completed
+
+func (c FtSearchSortbyOrderAsc) Limit() FtSearchLimitLimitLimit {
+	return FtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSortbyOrderAsc) Build() Completed {
+	return Completed(c)
+}
+
+type FtSearchSortbyOrderDesc Completed
+
+func (c FtSearchSortbyOrderDesc) Limit() FtSearchLimitLimitLimit {
+	return FtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSortbyOrderDesc) Build() Completed {
+	return Completed(c)
+}
+
+type FtSearchSortbySortby Completed
+
+func (c FtSearchSortbySortby) Asc() FtSearchSortbyOrderAsc {
+	return FtSearchSortbyOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSortbySortby) Desc() FtSearchSortbyOrderDesc {
+	return FtSearchSortbyOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSortbySortby) Limit() FtSearchLimitLimitLimit {
+	return FtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSortbySortby) Build() Completed {
+	return Completed(c)
+}
+
+type FtSearchSummarizeFieldsField Completed
+
+func (c FtSearchSummarizeFieldsField) Frags(Num int64) FtSearchSummarizeFrags {
+	return FtSearchSummarizeFrags{cs: append(c.cs, "FRAGS", strconv.FormatInt(Num, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeFieldsField) Len(Fragsize int64) FtSearchSummarizeLen {
+	return FtSearchSummarizeLen{cs: append(c.cs, "LEN", strconv.FormatInt(Fragsize, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeFieldsField) Separator(Separator string) FtSearchSummarizeSeparator {
+	return FtSearchSummarizeSeparator{cs: append(c.cs, "SEPARATOR", Separator), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeFieldsField) Field(Field ...string) FtSearchSummarizeFieldsField {
+	return FtSearchSummarizeFieldsField{cs: append(c.cs, Field...), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeFieldsField) Build() Completed {
+	return Completed(c)
+}
+
+type FtSearchSummarizeFieldsFields Completed
+
+func (c FtSearchSummarizeFieldsFields) Field(Field ...string) FtSearchSummarizeFieldsField {
+	return FtSearchSummarizeFieldsField{cs: append(c.cs, Field...), cf: c.cf, ks: c.ks}
+}
+
+type FtSearchSummarizeFrags Completed
+
+func (c FtSearchSummarizeFrags) Len(Fragsize int64) FtSearchSummarizeLen {
+	return FtSearchSummarizeLen{cs: append(c.cs, "LEN", strconv.FormatInt(Fragsize, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeFrags) Separator(Separator string) FtSearchSummarizeSeparator {
+	return FtSearchSummarizeSeparator{cs: append(c.cs, "SEPARATOR", Separator), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeFrags) Highlight() FtSearchHighlightHighlightHighlight {
+	return FtSearchHighlightHighlightHighlight{cs: append(c.cs, "HIGHLIGHT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeFrags) Slop(Slop int64) FtSearchSlop {
+	return FtSearchSlop{cs: append(c.cs, "SLOP", strconv.FormatInt(Slop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeFrags) Inorder() FtSearchTagsInorder {
+	return FtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeFrags) Language(Language string) FtSearchLanguage {
+	return FtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeFrags) Expander(Expander string) FtSearchExpander {
+	return FtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeFrags) Scorer(Scorer string) FtSearchScorer {
+	return FtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeFrags) Explainscore() FtSearchExplainscoreExplainscore {
+	return FtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeFrags) Payload(Payload string) FtSearchPayload {
+	return FtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeFrags) Sortby(Sortby string) FtSearchSortbySortby {
+	return FtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeFrags) Limit() FtSearchLimitLimitLimit {
+	return FtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeFrags) Build() Completed {
+	return Completed(c)
+}
+
+type FtSearchSummarizeLen Completed
+
+func (c FtSearchSummarizeLen) Separator(Separator string) FtSearchSummarizeSeparator {
+	return FtSearchSummarizeSeparator{cs: append(c.cs, "SEPARATOR", Separator), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeLen) Highlight() FtSearchHighlightHighlightHighlight {
+	return FtSearchHighlightHighlightHighlight{cs: append(c.cs, "HIGHLIGHT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeLen) Slop(Slop int64) FtSearchSlop {
+	return FtSearchSlop{cs: append(c.cs, "SLOP", strconv.FormatInt(Slop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeLen) Inorder() FtSearchTagsInorder {
+	return FtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeLen) Language(Language string) FtSearchLanguage {
+	return FtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeLen) Expander(Expander string) FtSearchExpander {
+	return FtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeLen) Scorer(Scorer string) FtSearchScorer {
+	return FtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeLen) Explainscore() FtSearchExplainscoreExplainscore {
+	return FtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeLen) Payload(Payload string) FtSearchPayload {
+	return FtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeLen) Sortby(Sortby string) FtSearchSortbySortby {
+	return FtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeLen) Limit() FtSearchLimitLimitLimit {
+	return FtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeLen) Build() Completed {
+	return Completed(c)
+}
+
+type FtSearchSummarizeSeparator Completed
+
+func (c FtSearchSummarizeSeparator) Highlight() FtSearchHighlightHighlightHighlight {
+	return FtSearchHighlightHighlightHighlight{cs: append(c.cs, "HIGHLIGHT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeSeparator) Slop(Slop int64) FtSearchSlop {
+	return FtSearchSlop{cs: append(c.cs, "SLOP", strconv.FormatInt(Slop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeSeparator) Inorder() FtSearchTagsInorder {
+	return FtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeSeparator) Language(Language string) FtSearchLanguage {
+	return FtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeSeparator) Expander(Expander string) FtSearchExpander {
+	return FtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeSeparator) Scorer(Scorer string) FtSearchScorer {
+	return FtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeSeparator) Explainscore() FtSearchExplainscoreExplainscore {
+	return FtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeSeparator) Payload(Payload string) FtSearchPayload {
+	return FtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeSeparator) Sortby(Sortby string) FtSearchSortbySortby {
+	return FtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeSeparator) Limit() FtSearchLimitLimitLimit {
+	return FtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeSeparator) Build() Completed {
+	return Completed(c)
+}
+
+type FtSearchSummarizeSummarizeSummarize Completed
+
+func (c FtSearchSummarizeSummarizeSummarize) Fields(Count string) FtSearchSummarizeFieldsFields {
+	return FtSearchSummarizeFieldsFields{cs: append(c.cs, "FIELDS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeSummarizeSummarize) Frags(Num int64) FtSearchSummarizeFrags {
+	return FtSearchSummarizeFrags{cs: append(c.cs, "FRAGS", strconv.FormatInt(Num, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeSummarizeSummarize) Len(Fragsize int64) FtSearchSummarizeLen {
+	return FtSearchSummarizeLen{cs: append(c.cs, "LEN", strconv.FormatInt(Fragsize, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeSummarizeSummarize) Separator(Separator string) FtSearchSummarizeSeparator {
+	return FtSearchSummarizeSeparator{cs: append(c.cs, "SEPARATOR", Separator), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeSummarizeSummarize) Highlight() FtSearchHighlightHighlightHighlight {
+	return FtSearchHighlightHighlightHighlight{cs: append(c.cs, "HIGHLIGHT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeSummarizeSummarize) Slop(Slop int64) FtSearchSlop {
+	return FtSearchSlop{cs: append(c.cs, "SLOP", strconv.FormatInt(Slop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeSummarizeSummarize) Inorder() FtSearchTagsInorder {
+	return FtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeSummarizeSummarize) Language(Language string) FtSearchLanguage {
+	return FtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeSummarizeSummarize) Expander(Expander string) FtSearchExpander {
+	return FtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeSummarizeSummarize) Scorer(Scorer string) FtSearchScorer {
+	return FtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeSummarizeSummarize) Explainscore() FtSearchExplainscoreExplainscore {
+	return FtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeSummarizeSummarize) Payload(Payload string) FtSearchPayload {
+	return FtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeSummarizeSummarize) Sortby(Sortby string) FtSearchSortbySortby {
+	return FtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeSummarizeSummarize) Limit() FtSearchLimitLimitLimit {
+	return FtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchSummarizeSummarizeSummarize) Build() Completed {
+	return Completed(c)
+}
+
+type FtSearchTagsInorder Completed
+
+func (c FtSearchTagsInorder) Language(Language string) FtSearchLanguage {
+	return FtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchTagsInorder) Expander(Expander string) FtSearchExpander {
+	return FtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchTagsInorder) Scorer(Scorer string) FtSearchScorer {
+	return FtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchTagsInorder) Explainscore() FtSearchExplainscoreExplainscore {
+	return FtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchTagsInorder) Payload(Payload string) FtSearchPayload {
+	return FtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchTagsInorder) Sortby(Sortby string) FtSearchSortbySortby {
+	return FtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchTagsInorder) Limit() FtSearchLimitLimitLimit {
+	return FtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchTagsInorder) Build() Completed {
+	return Completed(c)
+}
+
+type FtSearchVerbatimVerbatim Completed
+
+func (c FtSearchVerbatimVerbatim) Nostopwords() FtSearchNostopwordsNostopwords {
+	return FtSearchNostopwordsNostopwords{cs: append(c.cs, "NOSTOPWORDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchVerbatimVerbatim) Withscores() FtSearchWithscoresWithscores {
+	return FtSearchWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchVerbatimVerbatim) Withpayloads() FtSearchWithpayloadsWithpayloads {
+	return FtSearchWithpayloadsWithpayloads{cs: append(c.cs, "WITHPAYLOADS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchVerbatimVerbatim) Withsortkeys() FtSearchWithsortkeysWithsortkeys {
+	return FtSearchWithsortkeysWithsortkeys{cs: append(c.cs, "WITHSORTKEYS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchVerbatimVerbatim) Filter(NumericField string) FtSearchFilterFilter {
+	return FtSearchFilterFilter{cs: append(c.cs, "FILTER", NumericField), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchVerbatimVerbatim) Geofilter(GeoField string) FtSearchGeoFilterGeofilter {
+	return FtSearchGeoFilterGeofilter{cs: append(c.cs, "GEOFILTER", GeoField), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchVerbatimVerbatim) Inkeys(Count string) FtSearchInKeysInkeys {
+	return FtSearchInKeysInkeys{cs: append(c.cs, "INKEYS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchVerbatimVerbatim) Infields(Count string) FtSearchInFieldsInfields {
+	return FtSearchInFieldsInfields{cs: append(c.cs, "INFIELDS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchVerbatimVerbatim) Return(Count string) FtSearchReturnReturn {
+	return FtSearchReturnReturn{cs: append(c.cs, "RETURN", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchVerbatimVerbatim) Summarize() FtSearchSummarizeSummarizeSummarize {
+	return FtSearchSummarizeSummarizeSummarize{cs: append(c.cs, "SUMMARIZE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchVerbatimVerbatim) Highlight() FtSearchHighlightHighlightHighlight {
+	return FtSearchHighlightHighlightHighlight{cs: append(c.cs, "HIGHLIGHT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchVerbatimVerbatim) Slop(Slop int64) FtSearchSlop {
+	return FtSearchSlop{cs: append(c.cs, "SLOP", strconv.FormatInt(Slop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchVerbatimVerbatim) Inorder() FtSearchTagsInorder {
+	return FtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchVerbatimVerbatim) Language(Language string) FtSearchLanguage {
+	return FtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchVerbatimVerbatim) Expander(Expander string) FtSearchExpander {
+	return FtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchVerbatimVerbatim) Scorer(Scorer string) FtSearchScorer {
+	return FtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchVerbatimVerbatim) Explainscore() FtSearchExplainscoreExplainscore {
+	return FtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchVerbatimVerbatim) Payload(Payload string) FtSearchPayload {
+	return FtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchVerbatimVerbatim) Sortby(Sortby string) FtSearchSortbySortby {
+	return FtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchVerbatimVerbatim) Limit() FtSearchLimitLimitLimit {
+	return FtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchVerbatimVerbatim) Build() Completed {
+	return Completed(c)
+}
+
+type FtSearchWithpayloadsWithpayloads Completed
+
+func (c FtSearchWithpayloadsWithpayloads) Withsortkeys() FtSearchWithsortkeysWithsortkeys {
+	return FtSearchWithsortkeysWithsortkeys{cs: append(c.cs, "WITHSORTKEYS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithpayloadsWithpayloads) Filter(NumericField string) FtSearchFilterFilter {
+	return FtSearchFilterFilter{cs: append(c.cs, "FILTER", NumericField), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithpayloadsWithpayloads) Geofilter(GeoField string) FtSearchGeoFilterGeofilter {
+	return FtSearchGeoFilterGeofilter{cs: append(c.cs, "GEOFILTER", GeoField), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithpayloadsWithpayloads) Inkeys(Count string) FtSearchInKeysInkeys {
+	return FtSearchInKeysInkeys{cs: append(c.cs, "INKEYS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithpayloadsWithpayloads) Infields(Count string) FtSearchInFieldsInfields {
+	return FtSearchInFieldsInfields{cs: append(c.cs, "INFIELDS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithpayloadsWithpayloads) Return(Count string) FtSearchReturnReturn {
+	return FtSearchReturnReturn{cs: append(c.cs, "RETURN", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithpayloadsWithpayloads) Summarize() FtSearchSummarizeSummarizeSummarize {
+	return FtSearchSummarizeSummarizeSummarize{cs: append(c.cs, "SUMMARIZE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithpayloadsWithpayloads) Highlight() FtSearchHighlightHighlightHighlight {
+	return FtSearchHighlightHighlightHighlight{cs: append(c.cs, "HIGHLIGHT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithpayloadsWithpayloads) Slop(Slop int64) FtSearchSlop {
+	return FtSearchSlop{cs: append(c.cs, "SLOP", strconv.FormatInt(Slop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithpayloadsWithpayloads) Inorder() FtSearchTagsInorder {
+	return FtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithpayloadsWithpayloads) Language(Language string) FtSearchLanguage {
+	return FtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithpayloadsWithpayloads) Expander(Expander string) FtSearchExpander {
+	return FtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithpayloadsWithpayloads) Scorer(Scorer string) FtSearchScorer {
+	return FtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithpayloadsWithpayloads) Explainscore() FtSearchExplainscoreExplainscore {
+	return FtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithpayloadsWithpayloads) Payload(Payload string) FtSearchPayload {
+	return FtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithpayloadsWithpayloads) Sortby(Sortby string) FtSearchSortbySortby {
+	return FtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithpayloadsWithpayloads) Limit() FtSearchLimitLimitLimit {
+	return FtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithpayloadsWithpayloads) Build() Completed {
+	return Completed(c)
+}
+
+type FtSearchWithscoresWithscores Completed
+
+func (c FtSearchWithscoresWithscores) Withpayloads() FtSearchWithpayloadsWithpayloads {
+	return FtSearchWithpayloadsWithpayloads{cs: append(c.cs, "WITHPAYLOADS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithscoresWithscores) Withsortkeys() FtSearchWithsortkeysWithsortkeys {
+	return FtSearchWithsortkeysWithsortkeys{cs: append(c.cs, "WITHSORTKEYS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithscoresWithscores) Filter(NumericField string) FtSearchFilterFilter {
+	return FtSearchFilterFilter{cs: append(c.cs, "FILTER", NumericField), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithscoresWithscores) Geofilter(GeoField string) FtSearchGeoFilterGeofilter {
+	return FtSearchGeoFilterGeofilter{cs: append(c.cs, "GEOFILTER", GeoField), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithscoresWithscores) Inkeys(Count string) FtSearchInKeysInkeys {
+	return FtSearchInKeysInkeys{cs: append(c.cs, "INKEYS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithscoresWithscores) Infields(Count string) FtSearchInFieldsInfields {
+	return FtSearchInFieldsInfields{cs: append(c.cs, "INFIELDS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithscoresWithscores) Return(Count string) FtSearchReturnReturn {
+	return FtSearchReturnReturn{cs: append(c.cs, "RETURN", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithscoresWithscores) Summarize() FtSearchSummarizeSummarizeSummarize {
+	return FtSearchSummarizeSummarizeSummarize{cs: append(c.cs, "SUMMARIZE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithscoresWithscores) Highlight() FtSearchHighlightHighlightHighlight {
+	return FtSearchHighlightHighlightHighlight{cs: append(c.cs, "HIGHLIGHT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithscoresWithscores) Slop(Slop int64) FtSearchSlop {
+	return FtSearchSlop{cs: append(c.cs, "SLOP", strconv.FormatInt(Slop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithscoresWithscores) Inorder() FtSearchTagsInorder {
+	return FtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithscoresWithscores) Language(Language string) FtSearchLanguage {
+	return FtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithscoresWithscores) Expander(Expander string) FtSearchExpander {
+	return FtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithscoresWithscores) Scorer(Scorer string) FtSearchScorer {
+	return FtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithscoresWithscores) Explainscore() FtSearchExplainscoreExplainscore {
+	return FtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithscoresWithscores) Payload(Payload string) FtSearchPayload {
+	return FtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithscoresWithscores) Sortby(Sortby string) FtSearchSortbySortby {
+	return FtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithscoresWithscores) Limit() FtSearchLimitLimitLimit {
+	return FtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithscoresWithscores) Build() Completed {
+	return Completed(c)
+}
+
+type FtSearchWithsortkeysWithsortkeys Completed
+
+func (c FtSearchWithsortkeysWithsortkeys) Filter(NumericField string) FtSearchFilterFilter {
+	return FtSearchFilterFilter{cs: append(c.cs, "FILTER", NumericField), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithsortkeysWithsortkeys) Geofilter(GeoField string) FtSearchGeoFilterGeofilter {
+	return FtSearchGeoFilterGeofilter{cs: append(c.cs, "GEOFILTER", GeoField), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithsortkeysWithsortkeys) Inkeys(Count string) FtSearchInKeysInkeys {
+	return FtSearchInKeysInkeys{cs: append(c.cs, "INKEYS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithsortkeysWithsortkeys) Infields(Count string) FtSearchInFieldsInfields {
+	return FtSearchInFieldsInfields{cs: append(c.cs, "INFIELDS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithsortkeysWithsortkeys) Return(Count string) FtSearchReturnReturn {
+	return FtSearchReturnReturn{cs: append(c.cs, "RETURN", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithsortkeysWithsortkeys) Summarize() FtSearchSummarizeSummarizeSummarize {
+	return FtSearchSummarizeSummarizeSummarize{cs: append(c.cs, "SUMMARIZE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithsortkeysWithsortkeys) Highlight() FtSearchHighlightHighlightHighlight {
+	return FtSearchHighlightHighlightHighlight{cs: append(c.cs, "HIGHLIGHT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithsortkeysWithsortkeys) Slop(Slop int64) FtSearchSlop {
+	return FtSearchSlop{cs: append(c.cs, "SLOP", strconv.FormatInt(Slop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithsortkeysWithsortkeys) Inorder() FtSearchTagsInorder {
+	return FtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithsortkeysWithsortkeys) Language(Language string) FtSearchLanguage {
+	return FtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithsortkeysWithsortkeys) Expander(Expander string) FtSearchExpander {
+	return FtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithsortkeysWithsortkeys) Scorer(Scorer string) FtSearchScorer {
+	return FtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithsortkeysWithsortkeys) Explainscore() FtSearchExplainscoreExplainscore {
+	return FtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithsortkeysWithsortkeys) Payload(Payload string) FtSearchPayload {
+	return FtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithsortkeysWithsortkeys) Sortby(Sortby string) FtSearchSortbySortby {
+	return FtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithsortkeysWithsortkeys) Limit() FtSearchLimitLimitLimit {
+	return FtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSearchWithsortkeysWithsortkeys) Build() Completed {
+	return Completed(c)
+}
+
+type FtSpellcheck Completed
+
+func (c FtSpellcheck) Index(Index string) FtSpellcheckIndex {
+	return FtSpellcheckIndex{cs: append(c.cs, Index), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) FtSpellcheck() (c FtSpellcheck) {
+	c.cs = append(b.get(), "FT.SPELLCHECK")
+	return
+}
+
+type FtSpellcheckDistance Completed
+
+func (c FtSpellcheckDistance) Include() FtSpellcheckTermsInclusionInclude {
+	return FtSpellcheckTermsInclusionInclude{cs: append(c.cs, "INCLUDE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSpellcheckDistance) Exclude() FtSpellcheckTermsInclusionExclude {
+	return FtSpellcheckTermsInclusionExclude{cs: append(c.cs, "EXCLUDE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSpellcheckDistance) Build() Completed {
+	return Completed(c)
+}
+
+type FtSpellcheckIndex Completed
+
+func (c FtSpellcheckIndex) Query(Query string) FtSpellcheckQuery {
+	return FtSpellcheckQuery{cs: append(c.cs, Query), cf: c.cf, ks: c.ks}
+}
+
+type FtSpellcheckQuery Completed
+
+func (c FtSpellcheckQuery) Distance(Distance int64) FtSpellcheckDistance {
+	return FtSpellcheckDistance{cs: append(c.cs, "DISTANCE", strconv.FormatInt(Distance, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSpellcheckQuery) Include() FtSpellcheckTermsInclusionInclude {
+	return FtSpellcheckTermsInclusionInclude{cs: append(c.cs, "INCLUDE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSpellcheckQuery) Exclude() FtSpellcheckTermsInclusionExclude {
+	return FtSpellcheckTermsInclusionExclude{cs: append(c.cs, "EXCLUDE"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSpellcheckQuery) Build() Completed {
+	return Completed(c)
+}
+
+type FtSpellcheckTermsDictionary Completed
+
+func (c FtSpellcheckTermsDictionary) Terms(Terms ...string) FtSpellcheckTermsTerms {
+	return FtSpellcheckTermsTerms{cs: append(c.cs, Terms...), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSpellcheckTermsDictionary) Build() Completed {
+	return Completed(c)
+}
+
+type FtSpellcheckTermsInclusionExclude Completed
+
+func (c FtSpellcheckTermsInclusionExclude) Dictionary(Dictionary string) FtSpellcheckTermsDictionary {
+	return FtSpellcheckTermsDictionary{cs: append(c.cs, Dictionary), cf: c.cf, ks: c.ks}
+}
+
+type FtSpellcheckTermsInclusionInclude Completed
+
+func (c FtSpellcheckTermsInclusionInclude) Dictionary(Dictionary string) FtSpellcheckTermsDictionary {
+	return FtSpellcheckTermsDictionary{cs: append(c.cs, Dictionary), cf: c.cf, ks: c.ks}
+}
+
+type FtSpellcheckTermsTerms Completed
+
+func (c FtSpellcheckTermsTerms) Terms(Terms ...string) FtSpellcheckTermsTerms {
+	return FtSpellcheckTermsTerms{cs: append(c.cs, Terms...), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSpellcheckTermsTerms) Build() Completed {
+	return Completed(c)
+}
+
+type FtSugadd Completed
+
+func (c FtSugadd) Key(Key string) FtSugaddKey {
+	return FtSugaddKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) FtSugadd() (c FtSugadd) {
+	c.cs = append(b.get(), "FT.SUGADD")
+	return
+}
+
+type FtSugaddIncrementScoreIncr Completed
+
+func (c FtSugaddIncrementScoreIncr) Payload(Payload string) FtSugaddPayload {
+	return FtSugaddPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSugaddIncrementScoreIncr) Build() Completed {
+	return Completed(c)
+}
+
+type FtSugaddKey Completed
+
+func (c FtSugaddKey) String(String string) FtSugaddString {
+	return FtSugaddString{cs: append(c.cs, String), cf: c.cf, ks: c.ks}
+}
+
+type FtSugaddPayload Completed
+
+func (c FtSugaddPayload) Build() Completed {
+	return Completed(c)
+}
+
+type FtSugaddScore Completed
+
+func (c FtSugaddScore) Incr() FtSugaddIncrementScoreIncr {
+	return FtSugaddIncrementScoreIncr{cs: append(c.cs, "INCR"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSugaddScore) Payload(Payload string) FtSugaddPayload {
+	return FtSugaddPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSugaddScore) Build() Completed {
+	return Completed(c)
+}
+
+type FtSugaddString Completed
+
+func (c FtSugaddString) Score(Score float64) FtSugaddScore {
+	return FtSugaddScore{cs: append(c.cs, strconv.FormatFloat(Score, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+type FtSugdel Completed
+
+func (c FtSugdel) Key(Key string) FtSugdelKey {
+	return FtSugdelKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) FtSugdel() (c FtSugdel) {
+	c.cs = append(b.get(), "FT.SUGDEL")
+	return
+}
+
+type FtSugdelKey Completed
+
+func (c FtSugdelKey) String(String string) FtSugdelString {
+	return FtSugdelString{cs: append(c.cs, String), cf: c.cf, ks: c.ks}
+}
+
+type FtSugdelString Completed
+
+func (c FtSugdelString) Build() Completed {
+	return Completed(c)
+}
+
+type FtSugget Completed
+
+func (c FtSugget) Key(Key string) FtSuggetKey {
+	return FtSuggetKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) FtSugget() (c FtSugget) {
+	c.cs = append(b.get(), "FT.SUGGET")
+	return
+}
+
+type FtSuggetFuzzyFuzzy Completed
+
+func (c FtSuggetFuzzyFuzzy) Withscores() FtSuggetWithscoresWithscores {
+	return FtSuggetWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSuggetFuzzyFuzzy) Withpayloads() FtSuggetWithpayloadsWithpayloads {
+	return FtSuggetWithpayloadsWithpayloads{cs: append(c.cs, "WITHPAYLOADS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSuggetFuzzyFuzzy) Max(Max int64) FtSuggetMax {
+	return FtSuggetMax{cs: append(c.cs, "MAX", strconv.FormatInt(Max, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSuggetFuzzyFuzzy) Build() Completed {
+	return Completed(c)
+}
+
+type FtSuggetKey Completed
+
+func (c FtSuggetKey) Prefix(Prefix string) FtSuggetPrefix {
+	return FtSuggetPrefix{cs: append(c.cs, Prefix), cf: c.cf, ks: c.ks}
+}
+
+type FtSuggetMax Completed
+
+func (c FtSuggetMax) Build() Completed {
+	return Completed(c)
+}
+
+type FtSuggetPrefix Completed
+
+func (c FtSuggetPrefix) Fuzzy() FtSuggetFuzzyFuzzy {
+	return FtSuggetFuzzyFuzzy{cs: append(c.cs, "FUZZY"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSuggetPrefix) Withscores() FtSuggetWithscoresWithscores {
+	return FtSuggetWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSuggetPrefix) Withpayloads() FtSuggetWithpayloadsWithpayloads {
+	return FtSuggetWithpayloadsWithpayloads{cs: append(c.cs, "WITHPAYLOADS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSuggetPrefix) Max(Max int64) FtSuggetMax {
+	return FtSuggetMax{cs: append(c.cs, "MAX", strconv.FormatInt(Max, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSuggetPrefix) Build() Completed {
+	return Completed(c)
+}
+
+type FtSuggetWithpayloadsWithpayloads Completed
+
+func (c FtSuggetWithpayloadsWithpayloads) Max(Max int64) FtSuggetMax {
+	return FtSuggetMax{cs: append(c.cs, "MAX", strconv.FormatInt(Max, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSuggetWithpayloadsWithpayloads) Build() Completed {
+	return Completed(c)
+}
+
+type FtSuggetWithscoresWithscores Completed
+
+func (c FtSuggetWithscoresWithscores) Withpayloads() FtSuggetWithpayloadsWithpayloads {
+	return FtSuggetWithpayloadsWithpayloads{cs: append(c.cs, "WITHPAYLOADS"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSuggetWithscoresWithscores) Max(Max int64) FtSuggetMax {
+	return FtSuggetMax{cs: append(c.cs, "MAX", strconv.FormatInt(Max, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSuggetWithscoresWithscores) Build() Completed {
+	return Completed(c)
+}
+
+type FtSuglen Completed
+
+func (c FtSuglen) Key(Key string) FtSuglenKey {
+	return FtSuglenKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) FtSuglen() (c FtSuglen) {
+	c.cs = append(b.get(), "FT.SUGLEN")
+	return
+}
+
+type FtSuglenKey Completed
+
+func (c FtSuglenKey) Build() Completed {
+	return Completed(c)
+}
+
+type FtSyndump Completed
+
+func (c FtSyndump) Index(Index string) FtSyndumpIndex {
+	return FtSyndumpIndex{cs: append(c.cs, Index), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) FtSyndump() (c FtSyndump) {
+	c.cs = append(b.get(), "FT.SYNDUMP")
+	return
+}
+
+type FtSyndumpIndex Completed
+
+func (c FtSyndumpIndex) Build() Completed {
+	return Completed(c)
+}
+
+type FtSynupdate Completed
+
+func (c FtSynupdate) Index(Index string) FtSynupdateIndex {
+	return FtSynupdateIndex{cs: append(c.cs, Index), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) FtSynupdate() (c FtSynupdate) {
+	c.cs = append(b.get(), "FT.SYNUPDATE")
+	return
+}
+
+type FtSynupdateIndex Completed
+
+func (c FtSynupdateIndex) SynonymGroupId(SynonymGroupId string) FtSynupdateSynonymGroupId {
+	return FtSynupdateSynonymGroupId{cs: append(c.cs, SynonymGroupId), cf: c.cf, ks: c.ks}
+}
+
+type FtSynupdateSkipinitialscanSkipinitialscan Completed
+
+func (c FtSynupdateSkipinitialscanSkipinitialscan) Term(Term ...string) FtSynupdateTerm {
+	return FtSynupdateTerm{cs: append(c.cs, Term...), cf: c.cf, ks: c.ks}
+}
+
+type FtSynupdateSynonymGroupId Completed
+
+func (c FtSynupdateSynonymGroupId) Skipinitialscan() FtSynupdateSkipinitialscanSkipinitialscan {
+	return FtSynupdateSkipinitialscanSkipinitialscan{cs: append(c.cs, "SKIPINITIALSCAN"), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSynupdateSynonymGroupId) Term(Term ...string) FtSynupdateTerm {
+	return FtSynupdateTerm{cs: append(c.cs, Term...), cf: c.cf, ks: c.ks}
+}
+
+type FtSynupdateTerm Completed
+
+func (c FtSynupdateTerm) Term(Term ...string) FtSynupdateTerm {
+	return FtSynupdateTerm{cs: append(c.cs, Term...), cf: c.cf, ks: c.ks}
+}
+
+func (c FtSynupdateTerm) Build() Completed {
+	return Completed(c)
+}
+
+type FtTagvals Completed
+
+func (c FtTagvals) Index(Index string) FtTagvalsIndex {
+	return FtTagvalsIndex{cs: append(c.cs, Index), cf: c.cf, ks: c.ks}
+}
+
+func (b *Builder) FtTagvals() (c FtTagvals) {
+	c.cs = append(b.get(), "FT.TAGVALS")
+	return
+}
+
+type FtTagvalsFieldName Completed
+
+func (c FtTagvalsFieldName) Build() Completed {
+	return Completed(c)
+}
+
+type FtTagvalsIndex Completed
+
+func (c FtTagvalsIndex) FieldName(FieldName string) FtTagvalsFieldName {
+	return FtTagvalsFieldName{cs: append(c.cs, FieldName), cf: c.cf, ks: c.ks}
+}
+
 type Geoadd Completed
 
 func (c Geoadd) Key(Key string) GeoaddKey {
@@ -19384,6 +22834,3482 @@ type SFlushdbAsyncSync SCompleted
 
 func (c SFlushdbAsyncSync) Build() SCompleted {
 	return SCompleted(c)
+}
+
+type SFtAggregate SCompleted
+
+func (c SFtAggregate) Index(Index string) SFtAggregateIndex {
+	return SFtAggregateIndex{cs: append(c.cs, Index), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) FtAggregate() (c SFtAggregate) {
+	c.cs = append(b.get(), "FT.AGGREGATE")
+	c.ks = InitSlot
+	return
+}
+
+type SFtAggregateApplyApply SCompleted
+
+func (c SFtAggregateApplyApply) As(Name string) SFtAggregateApplyAs {
+	return SFtAggregateApplyAs{cs: append(c.cs, "AS", Name), cf: c.cf, ks: c.ks}
+}
+
+type SFtAggregateApplyAs SCompleted
+
+func (c SFtAggregateApplyAs) Limit() SFtAggregateLimitLimitLimit {
+	return SFtAggregateLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateApplyAs) Filter(Filter string) SFtAggregateFilter {
+	return SFtAggregateFilter{cs: append(c.cs, "FILTER", Filter), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateApplyAs) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtAggregateFilter SCompleted
+
+func (c SFtAggregateFilter) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtAggregateGroupbyGroupby SCompleted
+
+func (c SFtAggregateGroupbyGroupby) Property(Property ...string) SFtAggregateGroupbyProperty {
+	return SFtAggregateGroupbyProperty{cs: append(c.cs, Property...), cf: c.cf, ks: c.ks}
+}
+
+type SFtAggregateGroupbyProperty SCompleted
+
+func (c SFtAggregateGroupbyProperty) Reduce(Function string) SFtAggregateGroupbyReduceReduce {
+	return SFtAggregateGroupbyReduceReduce{cs: append(c.cs, "REDUCE", Function), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateGroupbyProperty) Sortby(Nargs int64) SFtAggregateSortbySortby {
+	return SFtAggregateSortbySortby{cs: append(c.cs, "SORTBY", strconv.FormatInt(Nargs, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateGroupbyProperty) Apply(Expression string) SFtAggregateApplyApply {
+	return SFtAggregateApplyApply{cs: append(c.cs, "APPLY", Expression), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateGroupbyProperty) Limit() SFtAggregateLimitLimitLimit {
+	return SFtAggregateLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateGroupbyProperty) Filter(Filter string) SFtAggregateFilter {
+	return SFtAggregateFilter{cs: append(c.cs, "FILTER", Filter), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateGroupbyProperty) Property(Property ...string) SFtAggregateGroupbyProperty {
+	return SFtAggregateGroupbyProperty{cs: append(c.cs, Property...), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateGroupbyProperty) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtAggregateGroupbyReduceArg SCompleted
+
+func (c SFtAggregateGroupbyReduceArg) As(Name string) SFtAggregateGroupbyReduceAs {
+	return SFtAggregateGroupbyReduceAs{cs: append(c.cs, "AS", Name), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateGroupbyReduceArg) Arg(Arg ...string) SFtAggregateGroupbyReduceArg {
+	return SFtAggregateGroupbyReduceArg{cs: append(c.cs, Arg...), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateGroupbyReduceArg) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtAggregateGroupbyReduceAs SCompleted
+
+func (c SFtAggregateGroupbyReduceAs) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtAggregateGroupbyReduceNargs SCompleted
+
+func (c SFtAggregateGroupbyReduceNargs) Arg(Arg ...string) SFtAggregateGroupbyReduceArg {
+	return SFtAggregateGroupbyReduceArg{cs: append(c.cs, Arg...), cf: c.cf, ks: c.ks}
+}
+
+type SFtAggregateGroupbyReduceReduce SCompleted
+
+func (c SFtAggregateGroupbyReduceReduce) Nargs(Nargs int64) SFtAggregateGroupbyReduceNargs {
+	return SFtAggregateGroupbyReduceNargs{cs: append(c.cs, strconv.FormatInt(Nargs, 10)), cf: c.cf, ks: c.ks}
+}
+
+type SFtAggregateIndex SCompleted
+
+func (c SFtAggregateIndex) Query(Query string) SFtAggregateQuery {
+	return SFtAggregateQuery{cs: append(c.cs, Query), cf: c.cf, ks: c.ks}
+}
+
+type SFtAggregateLimitLimitLimit SCompleted
+
+func (c SFtAggregateLimitLimitLimit) OffsetNum(Offset int64, Num int64) SFtAggregateLimitOffsetNum {
+	return SFtAggregateLimitOffsetNum{cs: append(c.cs, strconv.FormatInt(Offset, 10), strconv.FormatInt(Num, 10)), cf: c.cf, ks: c.ks}
+}
+
+type SFtAggregateLimitOffsetNum SCompleted
+
+func (c SFtAggregateLimitOffsetNum) Filter(Filter string) SFtAggregateFilter {
+	return SFtAggregateFilter{cs: append(c.cs, "FILTER", Filter), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateLimitOffsetNum) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtAggregateLoadField SCompleted
+
+func (c SFtAggregateLoadField) Loadall() SFtAggregateLoadall {
+	return SFtAggregateLoadall{cs: append(c.cs, "LOAD", "*"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateLoadField) Groupby(Nargs int64) SFtAggregateGroupbyGroupby {
+	return SFtAggregateGroupbyGroupby{cs: append(c.cs, "GROUPBY", strconv.FormatInt(Nargs, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateLoadField) Sortby(Nargs int64) SFtAggregateSortbySortby {
+	return SFtAggregateSortbySortby{cs: append(c.cs, "SORTBY", strconv.FormatInt(Nargs, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateLoadField) Apply(Expression string) SFtAggregateApplyApply {
+	return SFtAggregateApplyApply{cs: append(c.cs, "APPLY", Expression), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateLoadField) Limit() SFtAggregateLimitLimitLimit {
+	return SFtAggregateLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateLoadField) Filter(Filter string) SFtAggregateFilter {
+	return SFtAggregateFilter{cs: append(c.cs, "FILTER", Filter), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateLoadField) Field(Field ...string) SFtAggregateLoadField {
+	return SFtAggregateLoadField{cs: append(c.cs, Field...), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateLoadField) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtAggregateLoadLoad SCompleted
+
+func (c SFtAggregateLoadLoad) Field(Field ...string) SFtAggregateLoadField {
+	return SFtAggregateLoadField{cs: append(c.cs, Field...), cf: c.cf, ks: c.ks}
+}
+
+type SFtAggregateLoadall SCompleted
+
+func (c SFtAggregateLoadall) Groupby(Nargs int64) SFtAggregateGroupbyGroupby {
+	return SFtAggregateGroupbyGroupby{cs: append(c.cs, "GROUPBY", strconv.FormatInt(Nargs, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateLoadall) Sortby(Nargs int64) SFtAggregateSortbySortby {
+	return SFtAggregateSortbySortby{cs: append(c.cs, "SORTBY", strconv.FormatInt(Nargs, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateLoadall) Apply(Expression string) SFtAggregateApplyApply {
+	return SFtAggregateApplyApply{cs: append(c.cs, "APPLY", Expression), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateLoadall) Limit() SFtAggregateLimitLimitLimit {
+	return SFtAggregateLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateLoadall) Filter(Filter string) SFtAggregateFilter {
+	return SFtAggregateFilter{cs: append(c.cs, "FILTER", Filter), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateLoadall) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtAggregateQuery SCompleted
+
+func (c SFtAggregateQuery) Verbatim() SFtAggregateVerbatimVerbatim {
+	return SFtAggregateVerbatimVerbatim{cs: append(c.cs, "VERBATIM"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateQuery) Load(Count string) SFtAggregateLoadLoad {
+	return SFtAggregateLoadLoad{cs: append(c.cs, "LOAD", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateQuery) Loadall() SFtAggregateLoadall {
+	return SFtAggregateLoadall{cs: append(c.cs, "LOAD", "*"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateQuery) Groupby(Nargs int64) SFtAggregateGroupbyGroupby {
+	return SFtAggregateGroupbyGroupby{cs: append(c.cs, "GROUPBY", strconv.FormatInt(Nargs, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateQuery) Sortby(Nargs int64) SFtAggregateSortbySortby {
+	return SFtAggregateSortbySortby{cs: append(c.cs, "SORTBY", strconv.FormatInt(Nargs, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateQuery) Apply(Expression string) SFtAggregateApplyApply {
+	return SFtAggregateApplyApply{cs: append(c.cs, "APPLY", Expression), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateQuery) Limit() SFtAggregateLimitLimitLimit {
+	return SFtAggregateLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateQuery) Filter(Filter string) SFtAggregateFilter {
+	return SFtAggregateFilter{cs: append(c.cs, "FILTER", Filter), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateQuery) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtAggregateSortbyFieldsOrderAsc SCompleted
+
+func (c SFtAggregateSortbyFieldsOrderAsc) Max(Num int64) SFtAggregateSortbyMax {
+	return SFtAggregateSortbyMax{cs: append(c.cs, "MAX", strconv.FormatInt(Num, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateSortbyFieldsOrderAsc) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtAggregateSortbyFieldsOrderDesc SCompleted
+
+func (c SFtAggregateSortbyFieldsOrderDesc) Max(Num int64) SFtAggregateSortbyMax {
+	return SFtAggregateSortbyMax{cs: append(c.cs, "MAX", strconv.FormatInt(Num, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateSortbyFieldsOrderDesc) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtAggregateSortbyFieldsProperty SCompleted
+
+func (c SFtAggregateSortbyFieldsProperty) Asc() SFtAggregateSortbyFieldsOrderAsc {
+	return SFtAggregateSortbyFieldsOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateSortbyFieldsProperty) Desc() SFtAggregateSortbyFieldsOrderDesc {
+	return SFtAggregateSortbyFieldsOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
+}
+
+type SFtAggregateSortbyMax SCompleted
+
+func (c SFtAggregateSortbyMax) Apply(Expression string) SFtAggregateApplyApply {
+	return SFtAggregateApplyApply{cs: append(c.cs, "APPLY", Expression), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateSortbyMax) Limit() SFtAggregateLimitLimitLimit {
+	return SFtAggregateLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateSortbyMax) Filter(Filter string) SFtAggregateFilter {
+	return SFtAggregateFilter{cs: append(c.cs, "FILTER", Filter), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateSortbyMax) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtAggregateSortbySortby SCompleted
+
+func (c SFtAggregateSortbySortby) Property(Property string) SFtAggregateSortbyFieldsProperty {
+	return SFtAggregateSortbyFieldsProperty{cs: append(c.cs, Property), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateSortbySortby) Max(Num int64) SFtAggregateSortbyMax {
+	return SFtAggregateSortbyMax{cs: append(c.cs, "MAX", strconv.FormatInt(Num, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateSortbySortby) Apply(Expression string) SFtAggregateApplyApply {
+	return SFtAggregateApplyApply{cs: append(c.cs, "APPLY", Expression), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateSortbySortby) Limit() SFtAggregateLimitLimitLimit {
+	return SFtAggregateLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateSortbySortby) Filter(Filter string) SFtAggregateFilter {
+	return SFtAggregateFilter{cs: append(c.cs, "FILTER", Filter), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateSortbySortby) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtAggregateVerbatimVerbatim SCompleted
+
+func (c SFtAggregateVerbatimVerbatim) Load(Count string) SFtAggregateLoadLoad {
+	return SFtAggregateLoadLoad{cs: append(c.cs, "LOAD", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateVerbatimVerbatim) Loadall() SFtAggregateLoadall {
+	return SFtAggregateLoadall{cs: append(c.cs, "LOAD", "*"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateVerbatimVerbatim) Groupby(Nargs int64) SFtAggregateGroupbyGroupby {
+	return SFtAggregateGroupbyGroupby{cs: append(c.cs, "GROUPBY", strconv.FormatInt(Nargs, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateVerbatimVerbatim) Sortby(Nargs int64) SFtAggregateSortbySortby {
+	return SFtAggregateSortbySortby{cs: append(c.cs, "SORTBY", strconv.FormatInt(Nargs, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateVerbatimVerbatim) Apply(Expression string) SFtAggregateApplyApply {
+	return SFtAggregateApplyApply{cs: append(c.cs, "APPLY", Expression), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateVerbatimVerbatim) Limit() SFtAggregateLimitLimitLimit {
+	return SFtAggregateLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateVerbatimVerbatim) Filter(Filter string) SFtAggregateFilter {
+	return SFtAggregateFilter{cs: append(c.cs, "FILTER", Filter), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtAggregateVerbatimVerbatim) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtAliasadd SCompleted
+
+func (c SFtAliasadd) Alias(Alias string) SFtAliasaddAlias {
+	return SFtAliasaddAlias{cs: append(c.cs, Alias), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) FtAliasadd() (c SFtAliasadd) {
+	c.cs = append(b.get(), "FT.ALIASADD")
+	c.ks = InitSlot
+	return
+}
+
+type SFtAliasaddAlias SCompleted
+
+func (c SFtAliasaddAlias) Index(Index string) SFtAliasaddIndex {
+	return SFtAliasaddIndex{cs: append(c.cs, Index), cf: c.cf, ks: c.ks}
+}
+
+type SFtAliasaddIndex SCompleted
+
+func (c SFtAliasaddIndex) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtAliasdel SCompleted
+
+func (c SFtAliasdel) Alias(Alias string) SFtAliasdelAlias {
+	return SFtAliasdelAlias{cs: append(c.cs, Alias), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) FtAliasdel() (c SFtAliasdel) {
+	c.cs = append(b.get(), "FT.ALIASDEL")
+	c.ks = InitSlot
+	return
+}
+
+type SFtAliasdelAlias SCompleted
+
+func (c SFtAliasdelAlias) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtAliasupdate SCompleted
+
+func (c SFtAliasupdate) Alias(Alias string) SFtAliasupdateAlias {
+	return SFtAliasupdateAlias{cs: append(c.cs, Alias), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) FtAliasupdate() (c SFtAliasupdate) {
+	c.cs = append(b.get(), "FT.ALIASUPDATE")
+	c.ks = InitSlot
+	return
+}
+
+type SFtAliasupdateAlias SCompleted
+
+func (c SFtAliasupdateAlias) Index(Index string) SFtAliasupdateIndex {
+	return SFtAliasupdateIndex{cs: append(c.cs, Index), cf: c.cf, ks: c.ks}
+}
+
+type SFtAliasupdateIndex SCompleted
+
+func (c SFtAliasupdateIndex) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtAlter SCompleted
+
+func (c SFtAlter) Index(Index string) SFtAlterIndex {
+	return SFtAlterIndex{cs: append(c.cs, Index), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) FtAlter() (c SFtAlter) {
+	c.cs = append(b.get(), "FT.ALTER")
+	c.ks = InitSlot
+	return
+}
+
+type SFtAlterAddAdd SCompleted
+
+func (c SFtAlterAddAdd) Field(Field string) SFtAlterField {
+	return SFtAlterField{cs: append(c.cs, Field), cf: c.cf, ks: c.ks}
+}
+
+type SFtAlterField SCompleted
+
+func (c SFtAlterField) Options(Options string) SFtAlterOptions {
+	return SFtAlterOptions{cs: append(c.cs, Options), cf: c.cf, ks: c.ks}
+}
+
+type SFtAlterIndex SCompleted
+
+func (c SFtAlterIndex) Schema() SFtAlterSchemaSchema {
+	return SFtAlterSchemaSchema{cs: append(c.cs, "SCHEMA"), cf: c.cf, ks: c.ks}
+}
+
+type SFtAlterOptions SCompleted
+
+func (c SFtAlterOptions) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtAlterSchemaSchema SCompleted
+
+func (c SFtAlterSchemaSchema) Add() SFtAlterAddAdd {
+	return SFtAlterAddAdd{cs: append(c.cs, "ADD"), cf: c.cf, ks: c.ks}
+}
+
+type SFtConfigGet SCompleted
+
+func (c SFtConfigGet) Option(Option string) SFtConfigGetOption {
+	return SFtConfigGetOption{cs: append(c.cs, Option), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) FtConfigGet() (c SFtConfigGet) {
+	c.cs = append(b.get(), "FT.CONFIG", "GET")
+	c.ks = InitSlot
+	return
+}
+
+type SFtConfigGetOption SCompleted
+
+func (c SFtConfigGetOption) Value(Value string) SFtConfigGetValue {
+	return SFtConfigGetValue{cs: append(c.cs, Value), cf: c.cf, ks: c.ks}
+}
+
+type SFtConfigGetValue SCompleted
+
+func (c SFtConfigGetValue) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtConfigHelp SCompleted
+
+func (c SFtConfigHelp) Option(Option string) SFtConfigHelpOption {
+	return SFtConfigHelpOption{cs: append(c.cs, Option), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) FtConfigHelp() (c SFtConfigHelp) {
+	c.cs = append(b.get(), "FT.CONFIG", "HELP")
+	c.ks = InitSlot
+	return
+}
+
+type SFtConfigHelpOption SCompleted
+
+func (c SFtConfigHelpOption) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtConfigSet SCompleted
+
+func (c SFtConfigSet) Option(Option string) SFtConfigSetOption {
+	return SFtConfigSetOption{cs: append(c.cs, Option), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) FtConfigSet() (c SFtConfigSet) {
+	c.cs = append(b.get(), "FT.CONFIG", "SET")
+	c.ks = InitSlot
+	return
+}
+
+type SFtConfigSetOption SCompleted
+
+func (c SFtConfigSetOption) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtCreate SCompleted
+
+func (c SFtCreate) Index(Index string) SFtCreateIndex {
+	return SFtCreateIndex{cs: append(c.cs, Index), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) FtCreate() (c SFtCreate) {
+	c.cs = append(b.get(), "FT.CREATE")
+	c.ks = InitSlot
+	return
+}
+
+type SFtCreateCount SCompleted
+
+func (c SFtCreateCount) Stopword(Stopword ...string) SFtCreateStopword {
+	return SFtCreateStopword{cs: append(c.cs, Stopword...), cf: c.cf, ks: c.ks}
+}
+
+type SFtCreateDataTypeHash SCompleted
+
+func (c SFtCreateDataTypeHash) Prefix(Prefix ...string) SFtCreatePrefix {
+	return SFtCreatePrefix{cs: append(c.cs, Prefix...), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateDataTypeHash) Language(DefaultLang string) SFtCreateLanguage {
+	return SFtCreateLanguage{cs: append(c.cs, "LANGUAGE", DefaultLang), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateDataTypeHash) LanguageField(LangAttribute string) SFtCreateLanguageField {
+	return SFtCreateLanguageField{cs: append(c.cs, "LANGUAGE_FIELD", LangAttribute), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateDataTypeHash) Score(DefaultScore float64) SFtCreateScore {
+	return SFtCreateScore{cs: append(c.cs, "SCORE", strconv.FormatFloat(DefaultScore, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateDataTypeHash) ScoreField(ScoreAttribute string) SFtCreateScoreField {
+	return SFtCreateScoreField{cs: append(c.cs, "SCORE_FIELD", ScoreAttribute), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateDataTypeHash) PayloadField(PayloadAttribute string) SFtCreatePayloadField {
+	return SFtCreatePayloadField{cs: append(c.cs, "PAYLOAD_FIELD", PayloadAttribute), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateDataTypeHash) Maxtextfields() SFtCreateMaxtextfieldsMaxtextfields {
+	return SFtCreateMaxtextfieldsMaxtextfields{cs: append(c.cs, "MAXTEXTFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateDataTypeHash) Temporary(Seconds float64) SFtCreateTemporary {
+	return SFtCreateTemporary{cs: append(c.cs, "TEMPORARY", strconv.FormatFloat(Seconds, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateDataTypeHash) Nooffsets() SFtCreateNooffsetsNooffsets {
+	return SFtCreateNooffsetsNooffsets{cs: append(c.cs, "NOOFFSETS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateDataTypeHash) Nohl() SFtCreateNohlNohl {
+	return SFtCreateNohlNohl{cs: append(c.cs, "NOHL"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateDataTypeHash) Nofields() SFtCreateNofieldsNofields {
+	return SFtCreateNofieldsNofields{cs: append(c.cs, "NOFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateDataTypeHash) Nofreqs() SFtCreateNofreqsNofreqs {
+	return SFtCreateNofreqsNofreqs{cs: append(c.cs, "NOFREQS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateDataTypeHash) Count(Count int64) SFtCreateCount {
+	return SFtCreateCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateDataTypeHash) Schema() SFtCreateSchemaSchema {
+	return SFtCreateSchemaSchema{cs: append(c.cs, "SCHEMA"), cf: c.cf, ks: c.ks}
+}
+
+type SFtCreateDataTypeJson SCompleted
+
+func (c SFtCreateDataTypeJson) Prefix(Prefix ...string) SFtCreatePrefix {
+	return SFtCreatePrefix{cs: append(c.cs, Prefix...), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateDataTypeJson) Language(DefaultLang string) SFtCreateLanguage {
+	return SFtCreateLanguage{cs: append(c.cs, "LANGUAGE", DefaultLang), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateDataTypeJson) LanguageField(LangAttribute string) SFtCreateLanguageField {
+	return SFtCreateLanguageField{cs: append(c.cs, "LANGUAGE_FIELD", LangAttribute), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateDataTypeJson) Score(DefaultScore float64) SFtCreateScore {
+	return SFtCreateScore{cs: append(c.cs, "SCORE", strconv.FormatFloat(DefaultScore, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateDataTypeJson) ScoreField(ScoreAttribute string) SFtCreateScoreField {
+	return SFtCreateScoreField{cs: append(c.cs, "SCORE_FIELD", ScoreAttribute), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateDataTypeJson) PayloadField(PayloadAttribute string) SFtCreatePayloadField {
+	return SFtCreatePayloadField{cs: append(c.cs, "PAYLOAD_FIELD", PayloadAttribute), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateDataTypeJson) Maxtextfields() SFtCreateMaxtextfieldsMaxtextfields {
+	return SFtCreateMaxtextfieldsMaxtextfields{cs: append(c.cs, "MAXTEXTFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateDataTypeJson) Temporary(Seconds float64) SFtCreateTemporary {
+	return SFtCreateTemporary{cs: append(c.cs, "TEMPORARY", strconv.FormatFloat(Seconds, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateDataTypeJson) Nooffsets() SFtCreateNooffsetsNooffsets {
+	return SFtCreateNooffsetsNooffsets{cs: append(c.cs, "NOOFFSETS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateDataTypeJson) Nohl() SFtCreateNohlNohl {
+	return SFtCreateNohlNohl{cs: append(c.cs, "NOHL"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateDataTypeJson) Nofields() SFtCreateNofieldsNofields {
+	return SFtCreateNofieldsNofields{cs: append(c.cs, "NOFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateDataTypeJson) Nofreqs() SFtCreateNofreqsNofreqs {
+	return SFtCreateNofreqsNofreqs{cs: append(c.cs, "NOFREQS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateDataTypeJson) Count(Count int64) SFtCreateCount {
+	return SFtCreateCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateDataTypeJson) Schema() SFtCreateSchemaSchema {
+	return SFtCreateSchemaSchema{cs: append(c.cs, "SCHEMA"), cf: c.cf, ks: c.ks}
+}
+
+type SFtCreateFieldAs SCompleted
+
+func (c SFtCreateFieldAs) Text() SFtCreateFieldFieldTypeText {
+	return SFtCreateFieldFieldTypeText{cs: append(c.cs, "TEXT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateFieldAs) Tag() SFtCreateFieldFieldTypeTag {
+	return SFtCreateFieldFieldTypeTag{cs: append(c.cs, "TAG"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateFieldAs) Numeric() SFtCreateFieldFieldTypeNumeric {
+	return SFtCreateFieldFieldTypeNumeric{cs: append(c.cs, "NUMERIC"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateFieldAs) Geo() SFtCreateFieldFieldTypeGeo {
+	return SFtCreateFieldFieldTypeGeo{cs: append(c.cs, "GEO"), cf: c.cf, ks: c.ks}
+}
+
+type SFtCreateFieldFieldName SCompleted
+
+func (c SFtCreateFieldFieldName) As(Alias string) SFtCreateFieldAs {
+	return SFtCreateFieldAs{cs: append(c.cs, "AS", Alias), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateFieldFieldName) Text() SFtCreateFieldFieldTypeText {
+	return SFtCreateFieldFieldTypeText{cs: append(c.cs, "TEXT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateFieldFieldName) Tag() SFtCreateFieldFieldTypeTag {
+	return SFtCreateFieldFieldTypeTag{cs: append(c.cs, "TAG"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateFieldFieldName) Numeric() SFtCreateFieldFieldTypeNumeric {
+	return SFtCreateFieldFieldTypeNumeric{cs: append(c.cs, "NUMERIC"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateFieldFieldName) Geo() SFtCreateFieldFieldTypeGeo {
+	return SFtCreateFieldFieldTypeGeo{cs: append(c.cs, "GEO"), cf: c.cf, ks: c.ks}
+}
+
+type SFtCreateFieldFieldTypeGeo SCompleted
+
+func (c SFtCreateFieldFieldTypeGeo) Sortable() SFtCreateFieldSortableSortableSortable {
+	return SFtCreateFieldSortableSortableSortable{cs: append(c.cs, "SORTABLE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateFieldFieldTypeGeo) Noindex() SFtCreateFieldNoindexNoindex {
+	return SFtCreateFieldNoindexNoindex{cs: append(c.cs, "NOINDEX"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateFieldFieldTypeGeo) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtCreateFieldFieldTypeNumeric SCompleted
+
+func (c SFtCreateFieldFieldTypeNumeric) Sortable() SFtCreateFieldSortableSortableSortable {
+	return SFtCreateFieldSortableSortableSortable{cs: append(c.cs, "SORTABLE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateFieldFieldTypeNumeric) Noindex() SFtCreateFieldNoindexNoindex {
+	return SFtCreateFieldNoindexNoindex{cs: append(c.cs, "NOINDEX"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateFieldFieldTypeNumeric) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtCreateFieldFieldTypeTag SCompleted
+
+func (c SFtCreateFieldFieldTypeTag) Sortable() SFtCreateFieldSortableSortableSortable {
+	return SFtCreateFieldSortableSortableSortable{cs: append(c.cs, "SORTABLE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateFieldFieldTypeTag) Noindex() SFtCreateFieldNoindexNoindex {
+	return SFtCreateFieldNoindexNoindex{cs: append(c.cs, "NOINDEX"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateFieldFieldTypeTag) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtCreateFieldFieldTypeText SCompleted
+
+func (c SFtCreateFieldFieldTypeText) Sortable() SFtCreateFieldSortableSortableSortable {
+	return SFtCreateFieldSortableSortableSortable{cs: append(c.cs, "SORTABLE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateFieldFieldTypeText) Noindex() SFtCreateFieldNoindexNoindex {
+	return SFtCreateFieldNoindexNoindex{cs: append(c.cs, "NOINDEX"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateFieldFieldTypeText) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtCreateFieldNoindexNoindex SCompleted
+
+func (c SFtCreateFieldNoindexNoindex) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtCreateFieldSortableSortableSortable SCompleted
+
+func (c SFtCreateFieldSortableSortableSortable) Unf() SFtCreateFieldSortableUnfUnf {
+	return SFtCreateFieldSortableUnfUnf{cs: append(c.cs, "UNF"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateFieldSortableSortableSortable) Noindex() SFtCreateFieldNoindexNoindex {
+	return SFtCreateFieldNoindexNoindex{cs: append(c.cs, "NOINDEX"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateFieldSortableSortableSortable) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtCreateFieldSortableUnfUnf SCompleted
+
+func (c SFtCreateFieldSortableUnfUnf) Noindex() SFtCreateFieldNoindexNoindex {
+	return SFtCreateFieldNoindexNoindex{cs: append(c.cs, "NOINDEX"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateFieldSortableUnfUnf) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtCreateIndex SCompleted
+
+func (c SFtCreateIndex) Hash() SFtCreateDataTypeHash {
+	return SFtCreateDataTypeHash{cs: append(c.cs, "HASH"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateIndex) Json() SFtCreateDataTypeJson {
+	return SFtCreateDataTypeJson{cs: append(c.cs, "JSON"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateIndex) Prefix(Prefix ...string) SFtCreatePrefix {
+	return SFtCreatePrefix{cs: append(c.cs, Prefix...), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateIndex) Language(DefaultLang string) SFtCreateLanguage {
+	return SFtCreateLanguage{cs: append(c.cs, "LANGUAGE", DefaultLang), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateIndex) LanguageField(LangAttribute string) SFtCreateLanguageField {
+	return SFtCreateLanguageField{cs: append(c.cs, "LANGUAGE_FIELD", LangAttribute), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateIndex) Score(DefaultScore float64) SFtCreateScore {
+	return SFtCreateScore{cs: append(c.cs, "SCORE", strconv.FormatFloat(DefaultScore, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateIndex) ScoreField(ScoreAttribute string) SFtCreateScoreField {
+	return SFtCreateScoreField{cs: append(c.cs, "SCORE_FIELD", ScoreAttribute), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateIndex) PayloadField(PayloadAttribute string) SFtCreatePayloadField {
+	return SFtCreatePayloadField{cs: append(c.cs, "PAYLOAD_FIELD", PayloadAttribute), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateIndex) Maxtextfields() SFtCreateMaxtextfieldsMaxtextfields {
+	return SFtCreateMaxtextfieldsMaxtextfields{cs: append(c.cs, "MAXTEXTFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateIndex) Temporary(Seconds float64) SFtCreateTemporary {
+	return SFtCreateTemporary{cs: append(c.cs, "TEMPORARY", strconv.FormatFloat(Seconds, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateIndex) Nooffsets() SFtCreateNooffsetsNooffsets {
+	return SFtCreateNooffsetsNooffsets{cs: append(c.cs, "NOOFFSETS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateIndex) Nohl() SFtCreateNohlNohl {
+	return SFtCreateNohlNohl{cs: append(c.cs, "NOHL"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateIndex) Nofields() SFtCreateNofieldsNofields {
+	return SFtCreateNofieldsNofields{cs: append(c.cs, "NOFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateIndex) Nofreqs() SFtCreateNofreqsNofreqs {
+	return SFtCreateNofreqsNofreqs{cs: append(c.cs, "NOFREQS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateIndex) Count(Count int64) SFtCreateCount {
+	return SFtCreateCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateIndex) Schema() SFtCreateSchemaSchema {
+	return SFtCreateSchemaSchema{cs: append(c.cs, "SCHEMA"), cf: c.cf, ks: c.ks}
+}
+
+type SFtCreateLanguage SCompleted
+
+func (c SFtCreateLanguage) LanguageField(LangAttribute string) SFtCreateLanguageField {
+	return SFtCreateLanguageField{cs: append(c.cs, "LANGUAGE_FIELD", LangAttribute), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateLanguage) Score(DefaultScore float64) SFtCreateScore {
+	return SFtCreateScore{cs: append(c.cs, "SCORE", strconv.FormatFloat(DefaultScore, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateLanguage) ScoreField(ScoreAttribute string) SFtCreateScoreField {
+	return SFtCreateScoreField{cs: append(c.cs, "SCORE_FIELD", ScoreAttribute), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateLanguage) PayloadField(PayloadAttribute string) SFtCreatePayloadField {
+	return SFtCreatePayloadField{cs: append(c.cs, "PAYLOAD_FIELD", PayloadAttribute), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateLanguage) Maxtextfields() SFtCreateMaxtextfieldsMaxtextfields {
+	return SFtCreateMaxtextfieldsMaxtextfields{cs: append(c.cs, "MAXTEXTFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateLanguage) Temporary(Seconds float64) SFtCreateTemporary {
+	return SFtCreateTemporary{cs: append(c.cs, "TEMPORARY", strconv.FormatFloat(Seconds, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateLanguage) Nooffsets() SFtCreateNooffsetsNooffsets {
+	return SFtCreateNooffsetsNooffsets{cs: append(c.cs, "NOOFFSETS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateLanguage) Nohl() SFtCreateNohlNohl {
+	return SFtCreateNohlNohl{cs: append(c.cs, "NOHL"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateLanguage) Nofields() SFtCreateNofieldsNofields {
+	return SFtCreateNofieldsNofields{cs: append(c.cs, "NOFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateLanguage) Nofreqs() SFtCreateNofreqsNofreqs {
+	return SFtCreateNofreqsNofreqs{cs: append(c.cs, "NOFREQS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateLanguage) Count(Count int64) SFtCreateCount {
+	return SFtCreateCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateLanguage) Schema() SFtCreateSchemaSchema {
+	return SFtCreateSchemaSchema{cs: append(c.cs, "SCHEMA"), cf: c.cf, ks: c.ks}
+}
+
+type SFtCreateLanguageField SCompleted
+
+func (c SFtCreateLanguageField) Score(DefaultScore float64) SFtCreateScore {
+	return SFtCreateScore{cs: append(c.cs, "SCORE", strconv.FormatFloat(DefaultScore, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateLanguageField) ScoreField(ScoreAttribute string) SFtCreateScoreField {
+	return SFtCreateScoreField{cs: append(c.cs, "SCORE_FIELD", ScoreAttribute), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateLanguageField) PayloadField(PayloadAttribute string) SFtCreatePayloadField {
+	return SFtCreatePayloadField{cs: append(c.cs, "PAYLOAD_FIELD", PayloadAttribute), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateLanguageField) Maxtextfields() SFtCreateMaxtextfieldsMaxtextfields {
+	return SFtCreateMaxtextfieldsMaxtextfields{cs: append(c.cs, "MAXTEXTFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateLanguageField) Temporary(Seconds float64) SFtCreateTemporary {
+	return SFtCreateTemporary{cs: append(c.cs, "TEMPORARY", strconv.FormatFloat(Seconds, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateLanguageField) Nooffsets() SFtCreateNooffsetsNooffsets {
+	return SFtCreateNooffsetsNooffsets{cs: append(c.cs, "NOOFFSETS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateLanguageField) Nohl() SFtCreateNohlNohl {
+	return SFtCreateNohlNohl{cs: append(c.cs, "NOHL"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateLanguageField) Nofields() SFtCreateNofieldsNofields {
+	return SFtCreateNofieldsNofields{cs: append(c.cs, "NOFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateLanguageField) Nofreqs() SFtCreateNofreqsNofreqs {
+	return SFtCreateNofreqsNofreqs{cs: append(c.cs, "NOFREQS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateLanguageField) Count(Count int64) SFtCreateCount {
+	return SFtCreateCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateLanguageField) Schema() SFtCreateSchemaSchema {
+	return SFtCreateSchemaSchema{cs: append(c.cs, "SCHEMA"), cf: c.cf, ks: c.ks}
+}
+
+type SFtCreateMaxtextfieldsMaxtextfields SCompleted
+
+func (c SFtCreateMaxtextfieldsMaxtextfields) Temporary(Seconds float64) SFtCreateTemporary {
+	return SFtCreateTemporary{cs: append(c.cs, "TEMPORARY", strconv.FormatFloat(Seconds, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateMaxtextfieldsMaxtextfields) Nooffsets() SFtCreateNooffsetsNooffsets {
+	return SFtCreateNooffsetsNooffsets{cs: append(c.cs, "NOOFFSETS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateMaxtextfieldsMaxtextfields) Nohl() SFtCreateNohlNohl {
+	return SFtCreateNohlNohl{cs: append(c.cs, "NOHL"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateMaxtextfieldsMaxtextfields) Nofields() SFtCreateNofieldsNofields {
+	return SFtCreateNofieldsNofields{cs: append(c.cs, "NOFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateMaxtextfieldsMaxtextfields) Nofreqs() SFtCreateNofreqsNofreqs {
+	return SFtCreateNofreqsNofreqs{cs: append(c.cs, "NOFREQS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateMaxtextfieldsMaxtextfields) Count(Count int64) SFtCreateCount {
+	return SFtCreateCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateMaxtextfieldsMaxtextfields) Schema() SFtCreateSchemaSchema {
+	return SFtCreateSchemaSchema{cs: append(c.cs, "SCHEMA"), cf: c.cf, ks: c.ks}
+}
+
+type SFtCreateNofieldsNofields SCompleted
+
+func (c SFtCreateNofieldsNofields) Nofreqs() SFtCreateNofreqsNofreqs {
+	return SFtCreateNofreqsNofreqs{cs: append(c.cs, "NOFREQS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateNofieldsNofields) Count(Count int64) SFtCreateCount {
+	return SFtCreateCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateNofieldsNofields) Schema() SFtCreateSchemaSchema {
+	return SFtCreateSchemaSchema{cs: append(c.cs, "SCHEMA"), cf: c.cf, ks: c.ks}
+}
+
+type SFtCreateNofreqsNofreqs SCompleted
+
+func (c SFtCreateNofreqsNofreqs) Count(Count int64) SFtCreateCount {
+	return SFtCreateCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateNofreqsNofreqs) Schema() SFtCreateSchemaSchema {
+	return SFtCreateSchemaSchema{cs: append(c.cs, "SCHEMA"), cf: c.cf, ks: c.ks}
+}
+
+type SFtCreateNohlNohl SCompleted
+
+func (c SFtCreateNohlNohl) Nofields() SFtCreateNofieldsNofields {
+	return SFtCreateNofieldsNofields{cs: append(c.cs, "NOFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateNohlNohl) Nofreqs() SFtCreateNofreqsNofreqs {
+	return SFtCreateNofreqsNofreqs{cs: append(c.cs, "NOFREQS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateNohlNohl) Count(Count int64) SFtCreateCount {
+	return SFtCreateCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateNohlNohl) Schema() SFtCreateSchemaSchema {
+	return SFtCreateSchemaSchema{cs: append(c.cs, "SCHEMA"), cf: c.cf, ks: c.ks}
+}
+
+type SFtCreateNooffsetsNooffsets SCompleted
+
+func (c SFtCreateNooffsetsNooffsets) Nohl() SFtCreateNohlNohl {
+	return SFtCreateNohlNohl{cs: append(c.cs, "NOHL"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateNooffsetsNooffsets) Nofields() SFtCreateNofieldsNofields {
+	return SFtCreateNofieldsNofields{cs: append(c.cs, "NOFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateNooffsetsNooffsets) Nofreqs() SFtCreateNofreqsNofreqs {
+	return SFtCreateNofreqsNofreqs{cs: append(c.cs, "NOFREQS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateNooffsetsNooffsets) Count(Count int64) SFtCreateCount {
+	return SFtCreateCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateNooffsetsNooffsets) Schema() SFtCreateSchemaSchema {
+	return SFtCreateSchemaSchema{cs: append(c.cs, "SCHEMA"), cf: c.cf, ks: c.ks}
+}
+
+type SFtCreatePayloadField SCompleted
+
+func (c SFtCreatePayloadField) Maxtextfields() SFtCreateMaxtextfieldsMaxtextfields {
+	return SFtCreateMaxtextfieldsMaxtextfields{cs: append(c.cs, "MAXTEXTFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreatePayloadField) Temporary(Seconds float64) SFtCreateTemporary {
+	return SFtCreateTemporary{cs: append(c.cs, "TEMPORARY", strconv.FormatFloat(Seconds, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreatePayloadField) Nooffsets() SFtCreateNooffsetsNooffsets {
+	return SFtCreateNooffsetsNooffsets{cs: append(c.cs, "NOOFFSETS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreatePayloadField) Nohl() SFtCreateNohlNohl {
+	return SFtCreateNohlNohl{cs: append(c.cs, "NOHL"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreatePayloadField) Nofields() SFtCreateNofieldsNofields {
+	return SFtCreateNofieldsNofields{cs: append(c.cs, "NOFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreatePayloadField) Nofreqs() SFtCreateNofreqsNofreqs {
+	return SFtCreateNofreqsNofreqs{cs: append(c.cs, "NOFREQS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreatePayloadField) Count(Count int64) SFtCreateCount {
+	return SFtCreateCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreatePayloadField) Schema() SFtCreateSchemaSchema {
+	return SFtCreateSchemaSchema{cs: append(c.cs, "SCHEMA"), cf: c.cf, ks: c.ks}
+}
+
+type SFtCreatePrefix SCompleted
+
+func (c SFtCreatePrefix) Language(DefaultLang string) SFtCreateLanguage {
+	return SFtCreateLanguage{cs: append(c.cs, "LANGUAGE", DefaultLang), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreatePrefix) LanguageField(LangAttribute string) SFtCreateLanguageField {
+	return SFtCreateLanguageField{cs: append(c.cs, "LANGUAGE_FIELD", LangAttribute), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreatePrefix) Score(DefaultScore float64) SFtCreateScore {
+	return SFtCreateScore{cs: append(c.cs, "SCORE", strconv.FormatFloat(DefaultScore, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreatePrefix) ScoreField(ScoreAttribute string) SFtCreateScoreField {
+	return SFtCreateScoreField{cs: append(c.cs, "SCORE_FIELD", ScoreAttribute), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreatePrefix) PayloadField(PayloadAttribute string) SFtCreatePayloadField {
+	return SFtCreatePayloadField{cs: append(c.cs, "PAYLOAD_FIELD", PayloadAttribute), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreatePrefix) Maxtextfields() SFtCreateMaxtextfieldsMaxtextfields {
+	return SFtCreateMaxtextfieldsMaxtextfields{cs: append(c.cs, "MAXTEXTFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreatePrefix) Temporary(Seconds float64) SFtCreateTemporary {
+	return SFtCreateTemporary{cs: append(c.cs, "TEMPORARY", strconv.FormatFloat(Seconds, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreatePrefix) Nooffsets() SFtCreateNooffsetsNooffsets {
+	return SFtCreateNooffsetsNooffsets{cs: append(c.cs, "NOOFFSETS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreatePrefix) Nohl() SFtCreateNohlNohl {
+	return SFtCreateNohlNohl{cs: append(c.cs, "NOHL"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreatePrefix) Nofields() SFtCreateNofieldsNofields {
+	return SFtCreateNofieldsNofields{cs: append(c.cs, "NOFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreatePrefix) Nofreqs() SFtCreateNofreqsNofreqs {
+	return SFtCreateNofreqsNofreqs{cs: append(c.cs, "NOFREQS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreatePrefix) Count(Count int64) SFtCreateCount {
+	return SFtCreateCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreatePrefix) Schema() SFtCreateSchemaSchema {
+	return SFtCreateSchemaSchema{cs: append(c.cs, "SCHEMA"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreatePrefix) Prefix(Prefix ...string) SFtCreatePrefix {
+	return SFtCreatePrefix{cs: append(c.cs, Prefix...), cf: c.cf, ks: c.ks}
+}
+
+type SFtCreatePrefixCount SCompleted
+
+func (c SFtCreatePrefixCount) Prefix(Prefix ...string) SFtCreatePrefix {
+	return SFtCreatePrefix{cs: append(c.cs, Prefix...), cf: c.cf, ks: c.ks}
+}
+
+type SFtCreateSchemaSchema SCompleted
+
+func (c SFtCreateSchemaSchema) FieldName(FieldName string) SFtCreateFieldFieldName {
+	return SFtCreateFieldFieldName{cs: append(c.cs, FieldName), cf: c.cf, ks: c.ks}
+}
+
+type SFtCreateScore SCompleted
+
+func (c SFtCreateScore) ScoreField(ScoreAttribute string) SFtCreateScoreField {
+	return SFtCreateScoreField{cs: append(c.cs, "SCORE_FIELD", ScoreAttribute), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateScore) PayloadField(PayloadAttribute string) SFtCreatePayloadField {
+	return SFtCreatePayloadField{cs: append(c.cs, "PAYLOAD_FIELD", PayloadAttribute), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateScore) Maxtextfields() SFtCreateMaxtextfieldsMaxtextfields {
+	return SFtCreateMaxtextfieldsMaxtextfields{cs: append(c.cs, "MAXTEXTFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateScore) Temporary(Seconds float64) SFtCreateTemporary {
+	return SFtCreateTemporary{cs: append(c.cs, "TEMPORARY", strconv.FormatFloat(Seconds, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateScore) Nooffsets() SFtCreateNooffsetsNooffsets {
+	return SFtCreateNooffsetsNooffsets{cs: append(c.cs, "NOOFFSETS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateScore) Nohl() SFtCreateNohlNohl {
+	return SFtCreateNohlNohl{cs: append(c.cs, "NOHL"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateScore) Nofields() SFtCreateNofieldsNofields {
+	return SFtCreateNofieldsNofields{cs: append(c.cs, "NOFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateScore) Nofreqs() SFtCreateNofreqsNofreqs {
+	return SFtCreateNofreqsNofreqs{cs: append(c.cs, "NOFREQS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateScore) Count(Count int64) SFtCreateCount {
+	return SFtCreateCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateScore) Schema() SFtCreateSchemaSchema {
+	return SFtCreateSchemaSchema{cs: append(c.cs, "SCHEMA"), cf: c.cf, ks: c.ks}
+}
+
+type SFtCreateScoreField SCompleted
+
+func (c SFtCreateScoreField) PayloadField(PayloadAttribute string) SFtCreatePayloadField {
+	return SFtCreatePayloadField{cs: append(c.cs, "PAYLOAD_FIELD", PayloadAttribute), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateScoreField) Maxtextfields() SFtCreateMaxtextfieldsMaxtextfields {
+	return SFtCreateMaxtextfieldsMaxtextfields{cs: append(c.cs, "MAXTEXTFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateScoreField) Temporary(Seconds float64) SFtCreateTemporary {
+	return SFtCreateTemporary{cs: append(c.cs, "TEMPORARY", strconv.FormatFloat(Seconds, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateScoreField) Nooffsets() SFtCreateNooffsetsNooffsets {
+	return SFtCreateNooffsetsNooffsets{cs: append(c.cs, "NOOFFSETS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateScoreField) Nohl() SFtCreateNohlNohl {
+	return SFtCreateNohlNohl{cs: append(c.cs, "NOHL"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateScoreField) Nofields() SFtCreateNofieldsNofields {
+	return SFtCreateNofieldsNofields{cs: append(c.cs, "NOFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateScoreField) Nofreqs() SFtCreateNofreqsNofreqs {
+	return SFtCreateNofreqsNofreqs{cs: append(c.cs, "NOFREQS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateScoreField) Count(Count int64) SFtCreateCount {
+	return SFtCreateCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateScoreField) Schema() SFtCreateSchemaSchema {
+	return SFtCreateSchemaSchema{cs: append(c.cs, "SCHEMA"), cf: c.cf, ks: c.ks}
+}
+
+type SFtCreateStopword SCompleted
+
+func (c SFtCreateStopword) Schema() SFtCreateSchemaSchema {
+	return SFtCreateSchemaSchema{cs: append(c.cs, "SCHEMA"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateStopword) Stopword(Stopword ...string) SFtCreateStopword {
+	return SFtCreateStopword{cs: append(c.cs, Stopword...), cf: c.cf, ks: c.ks}
+}
+
+type SFtCreateTemporary SCompleted
+
+func (c SFtCreateTemporary) Nooffsets() SFtCreateNooffsetsNooffsets {
+	return SFtCreateNooffsetsNooffsets{cs: append(c.cs, "NOOFFSETS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateTemporary) Nohl() SFtCreateNohlNohl {
+	return SFtCreateNohlNohl{cs: append(c.cs, "NOHL"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateTemporary) Nofields() SFtCreateNofieldsNofields {
+	return SFtCreateNofieldsNofields{cs: append(c.cs, "NOFIELDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateTemporary) Nofreqs() SFtCreateNofreqsNofreqs {
+	return SFtCreateNofreqsNofreqs{cs: append(c.cs, "NOFREQS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateTemporary) Count(Count int64) SFtCreateCount {
+	return SFtCreateCount{cs: append(c.cs, strconv.FormatInt(Count, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtCreateTemporary) Schema() SFtCreateSchemaSchema {
+	return SFtCreateSchemaSchema{cs: append(c.cs, "SCHEMA"), cf: c.cf, ks: c.ks}
+}
+
+type SFtDictadd SCompleted
+
+func (c SFtDictadd) Dict(Dict string) SFtDictaddDict {
+	return SFtDictaddDict{cs: append(c.cs, Dict), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) FtDictadd() (c SFtDictadd) {
+	c.cs = append(b.get(), "FT.DICTADD")
+	c.ks = InitSlot
+	return
+}
+
+type SFtDictaddDict SCompleted
+
+func (c SFtDictaddDict) Term(Term ...string) SFtDictaddTerm {
+	return SFtDictaddTerm{cs: append(c.cs, Term...), cf: c.cf, ks: c.ks}
+}
+
+type SFtDictaddTerm SCompleted
+
+func (c SFtDictaddTerm) Term(Term ...string) SFtDictaddTerm {
+	return SFtDictaddTerm{cs: append(c.cs, Term...), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtDictaddTerm) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtDictdel SCompleted
+
+func (c SFtDictdel) Dict(Dict string) SFtDictdelDict {
+	return SFtDictdelDict{cs: append(c.cs, Dict), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) FtDictdel() (c SFtDictdel) {
+	c.cs = append(b.get(), "FT.DICTDEL")
+	c.ks = InitSlot
+	return
+}
+
+type SFtDictdelDict SCompleted
+
+func (c SFtDictdelDict) Term(Term ...string) SFtDictdelTerm {
+	return SFtDictdelTerm{cs: append(c.cs, Term...), cf: c.cf, ks: c.ks}
+}
+
+type SFtDictdelTerm SCompleted
+
+func (c SFtDictdelTerm) Term(Term ...string) SFtDictdelTerm {
+	return SFtDictdelTerm{cs: append(c.cs, Term...), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtDictdelTerm) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtDictdump SCompleted
+
+func (c SFtDictdump) Dict(Dict string) SFtDictdumpDict {
+	return SFtDictdumpDict{cs: append(c.cs, Dict), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) FtDictdump() (c SFtDictdump) {
+	c.cs = append(b.get(), "FT.DICTDUMP")
+	c.ks = InitSlot
+	return
+}
+
+type SFtDictdumpDict SCompleted
+
+func (c SFtDictdumpDict) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtDropindex SCompleted
+
+func (c SFtDropindex) Index(Index string) SFtDropindexIndex {
+	return SFtDropindexIndex{cs: append(c.cs, Index), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) FtDropindex() (c SFtDropindex) {
+	c.cs = append(b.get(), "FT.DROPINDEX")
+	c.ks = InitSlot
+	return
+}
+
+type SFtDropindexDeleteDocsDd SCompleted
+
+func (c SFtDropindexDeleteDocsDd) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtDropindexIndex SCompleted
+
+func (c SFtDropindexIndex) Dd() SFtDropindexDeleteDocsDd {
+	return SFtDropindexDeleteDocsDd{cs: append(c.cs, "DD"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtDropindexIndex) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtExplain SCompleted
+
+func (c SFtExplain) Index(Index string) SFtExplainIndex {
+	return SFtExplainIndex{cs: append(c.cs, Index), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) FtExplain() (c SFtExplain) {
+	c.cs = append(b.get(), "FT.EXPLAIN")
+	c.ks = InitSlot
+	return
+}
+
+type SFtExplainIndex SCompleted
+
+func (c SFtExplainIndex) Query(Query string) SFtExplainQuery {
+	return SFtExplainQuery{cs: append(c.cs, Query), cf: c.cf, ks: c.ks}
+}
+
+type SFtExplainQuery SCompleted
+
+func (c SFtExplainQuery) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtExplaincli SCompleted
+
+func (c SFtExplaincli) Index(Index string) SFtExplaincliIndex {
+	return SFtExplaincliIndex{cs: append(c.cs, Index), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) FtExplaincli() (c SFtExplaincli) {
+	c.cs = append(b.get(), "FT.EXPLAINCLI")
+	c.ks = InitSlot
+	return
+}
+
+type SFtExplaincliIndex SCompleted
+
+func (c SFtExplaincliIndex) Query(Query string) SFtExplaincliQuery {
+	return SFtExplaincliQuery{cs: append(c.cs, Query), cf: c.cf, ks: c.ks}
+}
+
+type SFtExplaincliQuery SCompleted
+
+func (c SFtExplaincliQuery) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtInfo SCompleted
+
+func (c SFtInfo) Index(Index string) SFtInfoIndex {
+	return SFtInfoIndex{cs: append(c.cs, Index), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) FtInfo() (c SFtInfo) {
+	c.cs = append(b.get(), "FT.INFO")
+	c.ks = InitSlot
+	return
+}
+
+type SFtInfoIndex SCompleted
+
+func (c SFtInfoIndex) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtList SCompleted
+
+func (c SFtList) Build() SCompleted {
+	return SCompleted(c)
+}
+
+func (b *SBuilder) FtList() (c SFtList) {
+	c.cs = append(b.get(), "FT._LIST")
+	c.ks = InitSlot
+	return
+}
+
+type SFtSearch SCompleted
+
+func (c SFtSearch) Index(Index string) SFtSearchIndex {
+	return SFtSearchIndex{cs: append(c.cs, Index), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) FtSearch() (c SFtSearch) {
+	c.cs = append(b.get(), "FT.SEARCH")
+	c.ks = InitSlot
+	return
+}
+
+type SFtSearchExpander SCompleted
+
+func (c SFtSearchExpander) Scorer(Scorer string) SFtSearchScorer {
+	return SFtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchExpander) Explainscore() SFtSearchExplainscoreExplainscore {
+	return SFtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchExpander) Payload(Payload string) SFtSearchPayload {
+	return SFtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchExpander) Sortby(Sortby string) SFtSearchSortbySortby {
+	return SFtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchExpander) Limit() SFtSearchLimitLimitLimit {
+	return SFtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchExpander) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSearchExplainscoreExplainscore SCompleted
+
+func (c SFtSearchExplainscoreExplainscore) Payload(Payload string) SFtSearchPayload {
+	return SFtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchExplainscoreExplainscore) Sortby(Sortby string) SFtSearchSortbySortby {
+	return SFtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchExplainscoreExplainscore) Limit() SFtSearchLimitLimitLimit {
+	return SFtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchExplainscoreExplainscore) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSearchFilterFilter SCompleted
+
+func (c SFtSearchFilterFilter) Min(Min float64) SFtSearchFilterMin {
+	return SFtSearchFilterMin{cs: append(c.cs, strconv.FormatFloat(Min, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+type SFtSearchFilterMax SCompleted
+
+func (c SFtSearchFilterMax) Geofilter(GeoField string) SFtSearchGeoFilterGeofilter {
+	return SFtSearchGeoFilterGeofilter{cs: append(c.cs, "GEOFILTER", GeoField), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchFilterMax) Inkeys(Count string) SFtSearchInKeysInkeys {
+	return SFtSearchInKeysInkeys{cs: append(c.cs, "INKEYS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchFilterMax) Infields(Count string) SFtSearchInFieldsInfields {
+	return SFtSearchInFieldsInfields{cs: append(c.cs, "INFIELDS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchFilterMax) Return(Count string) SFtSearchReturnReturn {
+	return SFtSearchReturnReturn{cs: append(c.cs, "RETURN", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchFilterMax) Summarize() SFtSearchSummarizeSummarizeSummarize {
+	return SFtSearchSummarizeSummarizeSummarize{cs: append(c.cs, "SUMMARIZE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchFilterMax) Highlight() SFtSearchHighlightHighlightHighlight {
+	return SFtSearchHighlightHighlightHighlight{cs: append(c.cs, "HIGHLIGHT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchFilterMax) Slop(Slop int64) SFtSearchSlop {
+	return SFtSearchSlop{cs: append(c.cs, "SLOP", strconv.FormatInt(Slop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchFilterMax) Inorder() SFtSearchTagsInorder {
+	return SFtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchFilterMax) Language(Language string) SFtSearchLanguage {
+	return SFtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchFilterMax) Expander(Expander string) SFtSearchExpander {
+	return SFtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchFilterMax) Scorer(Scorer string) SFtSearchScorer {
+	return SFtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchFilterMax) Explainscore() SFtSearchExplainscoreExplainscore {
+	return SFtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchFilterMax) Payload(Payload string) SFtSearchPayload {
+	return SFtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchFilterMax) Sortby(Sortby string) SFtSearchSortbySortby {
+	return SFtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchFilterMax) Limit() SFtSearchLimitLimitLimit {
+	return SFtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchFilterMax) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSearchFilterMin SCompleted
+
+func (c SFtSearchFilterMin) Max(Max float64) SFtSearchFilterMax {
+	return SFtSearchFilterMax{cs: append(c.cs, strconv.FormatFloat(Max, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+type SFtSearchGeoFilterGeofilter SCompleted
+
+func (c SFtSearchGeoFilterGeofilter) Lon(Lon float64) SFtSearchGeoFilterLon {
+	return SFtSearchGeoFilterLon{cs: append(c.cs, strconv.FormatFloat(Lon, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+type SFtSearchGeoFilterLat SCompleted
+
+func (c SFtSearchGeoFilterLat) Radius(Radius float64) SFtSearchGeoFilterRadius {
+	return SFtSearchGeoFilterRadius{cs: append(c.cs, strconv.FormatFloat(Radius, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+type SFtSearchGeoFilterLon SCompleted
+
+func (c SFtSearchGeoFilterLon) Lat(Lat float64) SFtSearchGeoFilterLat {
+	return SFtSearchGeoFilterLat{cs: append(c.cs, strconv.FormatFloat(Lat, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+type SFtSearchGeoFilterRadius SCompleted
+
+func (c SFtSearchGeoFilterRadius) M() SFtSearchGeoFilterRadiusTypeM {
+	return SFtSearchGeoFilterRadiusTypeM{cs: append(c.cs, "m"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadius) Km() SFtSearchGeoFilterRadiusTypeKm {
+	return SFtSearchGeoFilterRadiusTypeKm{cs: append(c.cs, "km"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadius) Mi() SFtSearchGeoFilterRadiusTypeMi {
+	return SFtSearchGeoFilterRadiusTypeMi{cs: append(c.cs, "mi"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadius) Ft() SFtSearchGeoFilterRadiusTypeFt {
+	return SFtSearchGeoFilterRadiusTypeFt{cs: append(c.cs, "ft"), cf: c.cf, ks: c.ks}
+}
+
+type SFtSearchGeoFilterRadiusTypeFt SCompleted
+
+func (c SFtSearchGeoFilterRadiusTypeFt) Inkeys(Count string) SFtSearchInKeysInkeys {
+	return SFtSearchInKeysInkeys{cs: append(c.cs, "INKEYS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeFt) Infields(Count string) SFtSearchInFieldsInfields {
+	return SFtSearchInFieldsInfields{cs: append(c.cs, "INFIELDS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeFt) Return(Count string) SFtSearchReturnReturn {
+	return SFtSearchReturnReturn{cs: append(c.cs, "RETURN", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeFt) Summarize() SFtSearchSummarizeSummarizeSummarize {
+	return SFtSearchSummarizeSummarizeSummarize{cs: append(c.cs, "SUMMARIZE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeFt) Highlight() SFtSearchHighlightHighlightHighlight {
+	return SFtSearchHighlightHighlightHighlight{cs: append(c.cs, "HIGHLIGHT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeFt) Slop(Slop int64) SFtSearchSlop {
+	return SFtSearchSlop{cs: append(c.cs, "SLOP", strconv.FormatInt(Slop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeFt) Inorder() SFtSearchTagsInorder {
+	return SFtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeFt) Language(Language string) SFtSearchLanguage {
+	return SFtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeFt) Expander(Expander string) SFtSearchExpander {
+	return SFtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeFt) Scorer(Scorer string) SFtSearchScorer {
+	return SFtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeFt) Explainscore() SFtSearchExplainscoreExplainscore {
+	return SFtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeFt) Payload(Payload string) SFtSearchPayload {
+	return SFtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeFt) Sortby(Sortby string) SFtSearchSortbySortby {
+	return SFtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeFt) Limit() SFtSearchLimitLimitLimit {
+	return SFtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeFt) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSearchGeoFilterRadiusTypeKm SCompleted
+
+func (c SFtSearchGeoFilterRadiusTypeKm) Inkeys(Count string) SFtSearchInKeysInkeys {
+	return SFtSearchInKeysInkeys{cs: append(c.cs, "INKEYS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeKm) Infields(Count string) SFtSearchInFieldsInfields {
+	return SFtSearchInFieldsInfields{cs: append(c.cs, "INFIELDS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeKm) Return(Count string) SFtSearchReturnReturn {
+	return SFtSearchReturnReturn{cs: append(c.cs, "RETURN", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeKm) Summarize() SFtSearchSummarizeSummarizeSummarize {
+	return SFtSearchSummarizeSummarizeSummarize{cs: append(c.cs, "SUMMARIZE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeKm) Highlight() SFtSearchHighlightHighlightHighlight {
+	return SFtSearchHighlightHighlightHighlight{cs: append(c.cs, "HIGHLIGHT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeKm) Slop(Slop int64) SFtSearchSlop {
+	return SFtSearchSlop{cs: append(c.cs, "SLOP", strconv.FormatInt(Slop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeKm) Inorder() SFtSearchTagsInorder {
+	return SFtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeKm) Language(Language string) SFtSearchLanguage {
+	return SFtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeKm) Expander(Expander string) SFtSearchExpander {
+	return SFtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeKm) Scorer(Scorer string) SFtSearchScorer {
+	return SFtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeKm) Explainscore() SFtSearchExplainscoreExplainscore {
+	return SFtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeKm) Payload(Payload string) SFtSearchPayload {
+	return SFtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeKm) Sortby(Sortby string) SFtSearchSortbySortby {
+	return SFtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeKm) Limit() SFtSearchLimitLimitLimit {
+	return SFtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeKm) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSearchGeoFilterRadiusTypeM SCompleted
+
+func (c SFtSearchGeoFilterRadiusTypeM) Inkeys(Count string) SFtSearchInKeysInkeys {
+	return SFtSearchInKeysInkeys{cs: append(c.cs, "INKEYS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeM) Infields(Count string) SFtSearchInFieldsInfields {
+	return SFtSearchInFieldsInfields{cs: append(c.cs, "INFIELDS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeM) Return(Count string) SFtSearchReturnReturn {
+	return SFtSearchReturnReturn{cs: append(c.cs, "RETURN", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeM) Summarize() SFtSearchSummarizeSummarizeSummarize {
+	return SFtSearchSummarizeSummarizeSummarize{cs: append(c.cs, "SUMMARIZE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeM) Highlight() SFtSearchHighlightHighlightHighlight {
+	return SFtSearchHighlightHighlightHighlight{cs: append(c.cs, "HIGHLIGHT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeM) Slop(Slop int64) SFtSearchSlop {
+	return SFtSearchSlop{cs: append(c.cs, "SLOP", strconv.FormatInt(Slop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeM) Inorder() SFtSearchTagsInorder {
+	return SFtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeM) Language(Language string) SFtSearchLanguage {
+	return SFtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeM) Expander(Expander string) SFtSearchExpander {
+	return SFtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeM) Scorer(Scorer string) SFtSearchScorer {
+	return SFtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeM) Explainscore() SFtSearchExplainscoreExplainscore {
+	return SFtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeM) Payload(Payload string) SFtSearchPayload {
+	return SFtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeM) Sortby(Sortby string) SFtSearchSortbySortby {
+	return SFtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeM) Limit() SFtSearchLimitLimitLimit {
+	return SFtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeM) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSearchGeoFilterRadiusTypeMi SCompleted
+
+func (c SFtSearchGeoFilterRadiusTypeMi) Inkeys(Count string) SFtSearchInKeysInkeys {
+	return SFtSearchInKeysInkeys{cs: append(c.cs, "INKEYS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeMi) Infields(Count string) SFtSearchInFieldsInfields {
+	return SFtSearchInFieldsInfields{cs: append(c.cs, "INFIELDS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeMi) Return(Count string) SFtSearchReturnReturn {
+	return SFtSearchReturnReturn{cs: append(c.cs, "RETURN", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeMi) Summarize() SFtSearchSummarizeSummarizeSummarize {
+	return SFtSearchSummarizeSummarizeSummarize{cs: append(c.cs, "SUMMARIZE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeMi) Highlight() SFtSearchHighlightHighlightHighlight {
+	return SFtSearchHighlightHighlightHighlight{cs: append(c.cs, "HIGHLIGHT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeMi) Slop(Slop int64) SFtSearchSlop {
+	return SFtSearchSlop{cs: append(c.cs, "SLOP", strconv.FormatInt(Slop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeMi) Inorder() SFtSearchTagsInorder {
+	return SFtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeMi) Language(Language string) SFtSearchLanguage {
+	return SFtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeMi) Expander(Expander string) SFtSearchExpander {
+	return SFtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeMi) Scorer(Scorer string) SFtSearchScorer {
+	return SFtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeMi) Explainscore() SFtSearchExplainscoreExplainscore {
+	return SFtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeMi) Payload(Payload string) SFtSearchPayload {
+	return SFtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeMi) Sortby(Sortby string) SFtSearchSortbySortby {
+	return SFtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeMi) Limit() SFtSearchLimitLimitLimit {
+	return SFtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchGeoFilterRadiusTypeMi) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSearchHighlightFieldsField SCompleted
+
+func (c SFtSearchHighlightFieldsField) Tags() SFtSearchHighlightTagsTagsTags {
+	return SFtSearchHighlightTagsTagsTags{cs: append(c.cs, "TAGS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchHighlightFieldsField) Field(Field ...string) SFtSearchHighlightFieldsField {
+	return SFtSearchHighlightFieldsField{cs: append(c.cs, Field...), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchHighlightFieldsField) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSearchHighlightFieldsFields SCompleted
+
+func (c SFtSearchHighlightFieldsFields) Field(Field ...string) SFtSearchHighlightFieldsField {
+	return SFtSearchHighlightFieldsField{cs: append(c.cs, Field...), cf: c.cf, ks: c.ks}
+}
+
+type SFtSearchHighlightHighlightHighlight SCompleted
+
+func (c SFtSearchHighlightHighlightHighlight) Fields(Count string) SFtSearchHighlightFieldsFields {
+	return SFtSearchHighlightFieldsFields{cs: append(c.cs, "FIELDS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchHighlightHighlightHighlight) Tags() SFtSearchHighlightTagsTagsTags {
+	return SFtSearchHighlightTagsTagsTags{cs: append(c.cs, "TAGS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchHighlightHighlightHighlight) Slop(Slop int64) SFtSearchSlop {
+	return SFtSearchSlop{cs: append(c.cs, "SLOP", strconv.FormatInt(Slop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchHighlightHighlightHighlight) Inorder() SFtSearchTagsInorder {
+	return SFtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchHighlightHighlightHighlight) Language(Language string) SFtSearchLanguage {
+	return SFtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchHighlightHighlightHighlight) Expander(Expander string) SFtSearchExpander {
+	return SFtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchHighlightHighlightHighlight) Scorer(Scorer string) SFtSearchScorer {
+	return SFtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchHighlightHighlightHighlight) Explainscore() SFtSearchExplainscoreExplainscore {
+	return SFtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchHighlightHighlightHighlight) Payload(Payload string) SFtSearchPayload {
+	return SFtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchHighlightHighlightHighlight) Sortby(Sortby string) SFtSearchSortbySortby {
+	return SFtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchHighlightHighlightHighlight) Limit() SFtSearchLimitLimitLimit {
+	return SFtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchHighlightHighlightHighlight) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSearchHighlightTagsOpenClose SCompleted
+
+func (c SFtSearchHighlightTagsOpenClose) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSearchHighlightTagsTagsTags SCompleted
+
+func (c SFtSearchHighlightTagsTagsTags) OpenClose(Open string, Close string) SFtSearchHighlightTagsOpenClose {
+	return SFtSearchHighlightTagsOpenClose{cs: append(c.cs, Open, Close), cf: c.cf, ks: c.ks}
+}
+
+type SFtSearchInFieldsField SCompleted
+
+func (c SFtSearchInFieldsField) Return(Count string) SFtSearchReturnReturn {
+	return SFtSearchReturnReturn{cs: append(c.cs, "RETURN", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchInFieldsField) Summarize() SFtSearchSummarizeSummarizeSummarize {
+	return SFtSearchSummarizeSummarizeSummarize{cs: append(c.cs, "SUMMARIZE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchInFieldsField) Highlight() SFtSearchHighlightHighlightHighlight {
+	return SFtSearchHighlightHighlightHighlight{cs: append(c.cs, "HIGHLIGHT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchInFieldsField) Slop(Slop int64) SFtSearchSlop {
+	return SFtSearchSlop{cs: append(c.cs, "SLOP", strconv.FormatInt(Slop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchInFieldsField) Inorder() SFtSearchTagsInorder {
+	return SFtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchInFieldsField) Language(Language string) SFtSearchLanguage {
+	return SFtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchInFieldsField) Expander(Expander string) SFtSearchExpander {
+	return SFtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchInFieldsField) Scorer(Scorer string) SFtSearchScorer {
+	return SFtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchInFieldsField) Explainscore() SFtSearchExplainscoreExplainscore {
+	return SFtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchInFieldsField) Payload(Payload string) SFtSearchPayload {
+	return SFtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchInFieldsField) Sortby(Sortby string) SFtSearchSortbySortby {
+	return SFtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchInFieldsField) Limit() SFtSearchLimitLimitLimit {
+	return SFtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchInFieldsField) Field(Field ...string) SFtSearchInFieldsField {
+	return SFtSearchInFieldsField{cs: append(c.cs, Field...), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchInFieldsField) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSearchInFieldsInfields SCompleted
+
+func (c SFtSearchInFieldsInfields) Field(Field ...string) SFtSearchInFieldsField {
+	return SFtSearchInFieldsField{cs: append(c.cs, Field...), cf: c.cf, ks: c.ks}
+}
+
+type SFtSearchInKeysInkeys SCompleted
+
+func (c SFtSearchInKeysInkeys) Key(Key ...string) SFtSearchInKeysKey {
+	return SFtSearchInKeysKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
+}
+
+type SFtSearchInKeysKey SCompleted
+
+func (c SFtSearchInKeysKey) Infields(Count string) SFtSearchInFieldsInfields {
+	return SFtSearchInFieldsInfields{cs: append(c.cs, "INFIELDS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchInKeysKey) Return(Count string) SFtSearchReturnReturn {
+	return SFtSearchReturnReturn{cs: append(c.cs, "RETURN", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchInKeysKey) Summarize() SFtSearchSummarizeSummarizeSummarize {
+	return SFtSearchSummarizeSummarizeSummarize{cs: append(c.cs, "SUMMARIZE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchInKeysKey) Highlight() SFtSearchHighlightHighlightHighlight {
+	return SFtSearchHighlightHighlightHighlight{cs: append(c.cs, "HIGHLIGHT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchInKeysKey) Slop(Slop int64) SFtSearchSlop {
+	return SFtSearchSlop{cs: append(c.cs, "SLOP", strconv.FormatInt(Slop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchInKeysKey) Inorder() SFtSearchTagsInorder {
+	return SFtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchInKeysKey) Language(Language string) SFtSearchLanguage {
+	return SFtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchInKeysKey) Expander(Expander string) SFtSearchExpander {
+	return SFtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchInKeysKey) Scorer(Scorer string) SFtSearchScorer {
+	return SFtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchInKeysKey) Explainscore() SFtSearchExplainscoreExplainscore {
+	return SFtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchInKeysKey) Payload(Payload string) SFtSearchPayload {
+	return SFtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchInKeysKey) Sortby(Sortby string) SFtSearchSortbySortby {
+	return SFtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchInKeysKey) Limit() SFtSearchLimitLimitLimit {
+	return SFtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchInKeysKey) Key(Key ...string) SFtSearchInKeysKey {
+	return SFtSearchInKeysKey{cs: append(c.cs, Key...), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchInKeysKey) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSearchIndex SCompleted
+
+func (c SFtSearchIndex) Query(Query string) SFtSearchQuery {
+	return SFtSearchQuery{cs: append(c.cs, Query), cf: c.cf, ks: c.ks}
+}
+
+type SFtSearchLanguage SCompleted
+
+func (c SFtSearchLanguage) Expander(Expander string) SFtSearchExpander {
+	return SFtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchLanguage) Scorer(Scorer string) SFtSearchScorer {
+	return SFtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchLanguage) Explainscore() SFtSearchExplainscoreExplainscore {
+	return SFtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchLanguage) Payload(Payload string) SFtSearchPayload {
+	return SFtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchLanguage) Sortby(Sortby string) SFtSearchSortbySortby {
+	return SFtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchLanguage) Limit() SFtSearchLimitLimitLimit {
+	return SFtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchLanguage) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSearchLimitLimitLimit SCompleted
+
+func (c SFtSearchLimitLimitLimit) OffsetNum(Offset int64, Num int64) SFtSearchLimitOffsetNum {
+	return SFtSearchLimitOffsetNum{cs: append(c.cs, strconv.FormatInt(Offset, 10), strconv.FormatInt(Num, 10)), cf: c.cf, ks: c.ks}
+}
+
+type SFtSearchLimitOffsetNum SCompleted
+
+func (c SFtSearchLimitOffsetNum) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSearchNocontentNocontent SCompleted
+
+func (c SFtSearchNocontentNocontent) Verbatim() SFtSearchVerbatimVerbatim {
+	return SFtSearchVerbatimVerbatim{cs: append(c.cs, "VERBATIM"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchNocontentNocontent) Nostopwords() SFtSearchNostopwordsNostopwords {
+	return SFtSearchNostopwordsNostopwords{cs: append(c.cs, "NOSTOPWORDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchNocontentNocontent) Withscores() SFtSearchWithscoresWithscores {
+	return SFtSearchWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchNocontentNocontent) Withpayloads() SFtSearchWithpayloadsWithpayloads {
+	return SFtSearchWithpayloadsWithpayloads{cs: append(c.cs, "WITHPAYLOADS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchNocontentNocontent) Withsortkeys() SFtSearchWithsortkeysWithsortkeys {
+	return SFtSearchWithsortkeysWithsortkeys{cs: append(c.cs, "WITHSORTKEYS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchNocontentNocontent) Filter(NumericField string) SFtSearchFilterFilter {
+	return SFtSearchFilterFilter{cs: append(c.cs, "FILTER", NumericField), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchNocontentNocontent) Geofilter(GeoField string) SFtSearchGeoFilterGeofilter {
+	return SFtSearchGeoFilterGeofilter{cs: append(c.cs, "GEOFILTER", GeoField), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchNocontentNocontent) Inkeys(Count string) SFtSearchInKeysInkeys {
+	return SFtSearchInKeysInkeys{cs: append(c.cs, "INKEYS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchNocontentNocontent) Infields(Count string) SFtSearchInFieldsInfields {
+	return SFtSearchInFieldsInfields{cs: append(c.cs, "INFIELDS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchNocontentNocontent) Return(Count string) SFtSearchReturnReturn {
+	return SFtSearchReturnReturn{cs: append(c.cs, "RETURN", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchNocontentNocontent) Summarize() SFtSearchSummarizeSummarizeSummarize {
+	return SFtSearchSummarizeSummarizeSummarize{cs: append(c.cs, "SUMMARIZE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchNocontentNocontent) Highlight() SFtSearchHighlightHighlightHighlight {
+	return SFtSearchHighlightHighlightHighlight{cs: append(c.cs, "HIGHLIGHT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchNocontentNocontent) Slop(Slop int64) SFtSearchSlop {
+	return SFtSearchSlop{cs: append(c.cs, "SLOP", strconv.FormatInt(Slop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchNocontentNocontent) Inorder() SFtSearchTagsInorder {
+	return SFtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchNocontentNocontent) Language(Language string) SFtSearchLanguage {
+	return SFtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchNocontentNocontent) Expander(Expander string) SFtSearchExpander {
+	return SFtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchNocontentNocontent) Scorer(Scorer string) SFtSearchScorer {
+	return SFtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchNocontentNocontent) Explainscore() SFtSearchExplainscoreExplainscore {
+	return SFtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchNocontentNocontent) Payload(Payload string) SFtSearchPayload {
+	return SFtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchNocontentNocontent) Sortby(Sortby string) SFtSearchSortbySortby {
+	return SFtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchNocontentNocontent) Limit() SFtSearchLimitLimitLimit {
+	return SFtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchNocontentNocontent) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSearchNostopwordsNostopwords SCompleted
+
+func (c SFtSearchNostopwordsNostopwords) Withscores() SFtSearchWithscoresWithscores {
+	return SFtSearchWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchNostopwordsNostopwords) Withpayloads() SFtSearchWithpayloadsWithpayloads {
+	return SFtSearchWithpayloadsWithpayloads{cs: append(c.cs, "WITHPAYLOADS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchNostopwordsNostopwords) Withsortkeys() SFtSearchWithsortkeysWithsortkeys {
+	return SFtSearchWithsortkeysWithsortkeys{cs: append(c.cs, "WITHSORTKEYS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchNostopwordsNostopwords) Filter(NumericField string) SFtSearchFilterFilter {
+	return SFtSearchFilterFilter{cs: append(c.cs, "FILTER", NumericField), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchNostopwordsNostopwords) Geofilter(GeoField string) SFtSearchGeoFilterGeofilter {
+	return SFtSearchGeoFilterGeofilter{cs: append(c.cs, "GEOFILTER", GeoField), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchNostopwordsNostopwords) Inkeys(Count string) SFtSearchInKeysInkeys {
+	return SFtSearchInKeysInkeys{cs: append(c.cs, "INKEYS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchNostopwordsNostopwords) Infields(Count string) SFtSearchInFieldsInfields {
+	return SFtSearchInFieldsInfields{cs: append(c.cs, "INFIELDS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchNostopwordsNostopwords) Return(Count string) SFtSearchReturnReturn {
+	return SFtSearchReturnReturn{cs: append(c.cs, "RETURN", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchNostopwordsNostopwords) Summarize() SFtSearchSummarizeSummarizeSummarize {
+	return SFtSearchSummarizeSummarizeSummarize{cs: append(c.cs, "SUMMARIZE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchNostopwordsNostopwords) Highlight() SFtSearchHighlightHighlightHighlight {
+	return SFtSearchHighlightHighlightHighlight{cs: append(c.cs, "HIGHLIGHT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchNostopwordsNostopwords) Slop(Slop int64) SFtSearchSlop {
+	return SFtSearchSlop{cs: append(c.cs, "SLOP", strconv.FormatInt(Slop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchNostopwordsNostopwords) Inorder() SFtSearchTagsInorder {
+	return SFtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchNostopwordsNostopwords) Language(Language string) SFtSearchLanguage {
+	return SFtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchNostopwordsNostopwords) Expander(Expander string) SFtSearchExpander {
+	return SFtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchNostopwordsNostopwords) Scorer(Scorer string) SFtSearchScorer {
+	return SFtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchNostopwordsNostopwords) Explainscore() SFtSearchExplainscoreExplainscore {
+	return SFtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchNostopwordsNostopwords) Payload(Payload string) SFtSearchPayload {
+	return SFtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchNostopwordsNostopwords) Sortby(Sortby string) SFtSearchSortbySortby {
+	return SFtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchNostopwordsNostopwords) Limit() SFtSearchLimitLimitLimit {
+	return SFtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchNostopwordsNostopwords) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSearchPayload SCompleted
+
+func (c SFtSearchPayload) Sortby(Sortby string) SFtSearchSortbySortby {
+	return SFtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchPayload) Limit() SFtSearchLimitLimitLimit {
+	return SFtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchPayload) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSearchQuery SCompleted
+
+func (c SFtSearchQuery) Nocontent() SFtSearchNocontentNocontent {
+	return SFtSearchNocontentNocontent{cs: append(c.cs, "NOCONTENT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchQuery) Verbatim() SFtSearchVerbatimVerbatim {
+	return SFtSearchVerbatimVerbatim{cs: append(c.cs, "VERBATIM"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchQuery) Nostopwords() SFtSearchNostopwordsNostopwords {
+	return SFtSearchNostopwordsNostopwords{cs: append(c.cs, "NOSTOPWORDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchQuery) Withscores() SFtSearchWithscoresWithscores {
+	return SFtSearchWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchQuery) Withpayloads() SFtSearchWithpayloadsWithpayloads {
+	return SFtSearchWithpayloadsWithpayloads{cs: append(c.cs, "WITHPAYLOADS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchQuery) Withsortkeys() SFtSearchWithsortkeysWithsortkeys {
+	return SFtSearchWithsortkeysWithsortkeys{cs: append(c.cs, "WITHSORTKEYS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchQuery) Filter(NumericField string) SFtSearchFilterFilter {
+	return SFtSearchFilterFilter{cs: append(c.cs, "FILTER", NumericField), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchQuery) Geofilter(GeoField string) SFtSearchGeoFilterGeofilter {
+	return SFtSearchGeoFilterGeofilter{cs: append(c.cs, "GEOFILTER", GeoField), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchQuery) Inkeys(Count string) SFtSearchInKeysInkeys {
+	return SFtSearchInKeysInkeys{cs: append(c.cs, "INKEYS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchQuery) Infields(Count string) SFtSearchInFieldsInfields {
+	return SFtSearchInFieldsInfields{cs: append(c.cs, "INFIELDS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchQuery) Return(Count string) SFtSearchReturnReturn {
+	return SFtSearchReturnReturn{cs: append(c.cs, "RETURN", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchQuery) Summarize() SFtSearchSummarizeSummarizeSummarize {
+	return SFtSearchSummarizeSummarizeSummarize{cs: append(c.cs, "SUMMARIZE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchQuery) Highlight() SFtSearchHighlightHighlightHighlight {
+	return SFtSearchHighlightHighlightHighlight{cs: append(c.cs, "HIGHLIGHT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchQuery) Slop(Slop int64) SFtSearchSlop {
+	return SFtSearchSlop{cs: append(c.cs, "SLOP", strconv.FormatInt(Slop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchQuery) Inorder() SFtSearchTagsInorder {
+	return SFtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchQuery) Language(Language string) SFtSearchLanguage {
+	return SFtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchQuery) Expander(Expander string) SFtSearchExpander {
+	return SFtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchQuery) Scorer(Scorer string) SFtSearchScorer {
+	return SFtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchQuery) Explainscore() SFtSearchExplainscoreExplainscore {
+	return SFtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchQuery) Payload(Payload string) SFtSearchPayload {
+	return SFtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchQuery) Sortby(Sortby string) SFtSearchSortbySortby {
+	return SFtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchQuery) Limit() SFtSearchLimitLimitLimit {
+	return SFtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchQuery) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSearchReturnField SCompleted
+
+func (c SFtSearchReturnField) Summarize() SFtSearchSummarizeSummarizeSummarize {
+	return SFtSearchSummarizeSummarizeSummarize{cs: append(c.cs, "SUMMARIZE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchReturnField) Highlight() SFtSearchHighlightHighlightHighlight {
+	return SFtSearchHighlightHighlightHighlight{cs: append(c.cs, "HIGHLIGHT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchReturnField) Slop(Slop int64) SFtSearchSlop {
+	return SFtSearchSlop{cs: append(c.cs, "SLOP", strconv.FormatInt(Slop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchReturnField) Inorder() SFtSearchTagsInorder {
+	return SFtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchReturnField) Language(Language string) SFtSearchLanguage {
+	return SFtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchReturnField) Expander(Expander string) SFtSearchExpander {
+	return SFtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchReturnField) Scorer(Scorer string) SFtSearchScorer {
+	return SFtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchReturnField) Explainscore() SFtSearchExplainscoreExplainscore {
+	return SFtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchReturnField) Payload(Payload string) SFtSearchPayload {
+	return SFtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchReturnField) Sortby(Sortby string) SFtSearchSortbySortby {
+	return SFtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchReturnField) Limit() SFtSearchLimitLimitLimit {
+	return SFtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchReturnField) Field(Field ...string) SFtSearchReturnField {
+	return SFtSearchReturnField{cs: append(c.cs, Field...), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchReturnField) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSearchReturnReturn SCompleted
+
+func (c SFtSearchReturnReturn) Field(Field ...string) SFtSearchReturnField {
+	return SFtSearchReturnField{cs: append(c.cs, Field...), cf: c.cf, ks: c.ks}
+}
+
+type SFtSearchScorer SCompleted
+
+func (c SFtSearchScorer) Explainscore() SFtSearchExplainscoreExplainscore {
+	return SFtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchScorer) Payload(Payload string) SFtSearchPayload {
+	return SFtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchScorer) Sortby(Sortby string) SFtSearchSortbySortby {
+	return SFtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchScorer) Limit() SFtSearchLimitLimitLimit {
+	return SFtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchScorer) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSearchSlop SCompleted
+
+func (c SFtSearchSlop) Inorder() SFtSearchTagsInorder {
+	return SFtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSlop) Language(Language string) SFtSearchLanguage {
+	return SFtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSlop) Expander(Expander string) SFtSearchExpander {
+	return SFtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSlop) Scorer(Scorer string) SFtSearchScorer {
+	return SFtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSlop) Explainscore() SFtSearchExplainscoreExplainscore {
+	return SFtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSlop) Payload(Payload string) SFtSearchPayload {
+	return SFtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSlop) Sortby(Sortby string) SFtSearchSortbySortby {
+	return SFtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSlop) Limit() SFtSearchLimitLimitLimit {
+	return SFtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSlop) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSearchSortbyOrderAsc SCompleted
+
+func (c SFtSearchSortbyOrderAsc) Limit() SFtSearchLimitLimitLimit {
+	return SFtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSortbyOrderAsc) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSearchSortbyOrderDesc SCompleted
+
+func (c SFtSearchSortbyOrderDesc) Limit() SFtSearchLimitLimitLimit {
+	return SFtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSortbyOrderDesc) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSearchSortbySortby SCompleted
+
+func (c SFtSearchSortbySortby) Asc() SFtSearchSortbyOrderAsc {
+	return SFtSearchSortbyOrderAsc{cs: append(c.cs, "ASC"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSortbySortby) Desc() SFtSearchSortbyOrderDesc {
+	return SFtSearchSortbyOrderDesc{cs: append(c.cs, "DESC"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSortbySortby) Limit() SFtSearchLimitLimitLimit {
+	return SFtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSortbySortby) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSearchSummarizeFieldsField SCompleted
+
+func (c SFtSearchSummarizeFieldsField) Frags(Num int64) SFtSearchSummarizeFrags {
+	return SFtSearchSummarizeFrags{cs: append(c.cs, "FRAGS", strconv.FormatInt(Num, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeFieldsField) Len(Fragsize int64) SFtSearchSummarizeLen {
+	return SFtSearchSummarizeLen{cs: append(c.cs, "LEN", strconv.FormatInt(Fragsize, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeFieldsField) Separator(Separator string) SFtSearchSummarizeSeparator {
+	return SFtSearchSummarizeSeparator{cs: append(c.cs, "SEPARATOR", Separator), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeFieldsField) Field(Field ...string) SFtSearchSummarizeFieldsField {
+	return SFtSearchSummarizeFieldsField{cs: append(c.cs, Field...), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeFieldsField) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSearchSummarizeFieldsFields SCompleted
+
+func (c SFtSearchSummarizeFieldsFields) Field(Field ...string) SFtSearchSummarizeFieldsField {
+	return SFtSearchSummarizeFieldsField{cs: append(c.cs, Field...), cf: c.cf, ks: c.ks}
+}
+
+type SFtSearchSummarizeFrags SCompleted
+
+func (c SFtSearchSummarizeFrags) Len(Fragsize int64) SFtSearchSummarizeLen {
+	return SFtSearchSummarizeLen{cs: append(c.cs, "LEN", strconv.FormatInt(Fragsize, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeFrags) Separator(Separator string) SFtSearchSummarizeSeparator {
+	return SFtSearchSummarizeSeparator{cs: append(c.cs, "SEPARATOR", Separator), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeFrags) Highlight() SFtSearchHighlightHighlightHighlight {
+	return SFtSearchHighlightHighlightHighlight{cs: append(c.cs, "HIGHLIGHT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeFrags) Slop(Slop int64) SFtSearchSlop {
+	return SFtSearchSlop{cs: append(c.cs, "SLOP", strconv.FormatInt(Slop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeFrags) Inorder() SFtSearchTagsInorder {
+	return SFtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeFrags) Language(Language string) SFtSearchLanguage {
+	return SFtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeFrags) Expander(Expander string) SFtSearchExpander {
+	return SFtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeFrags) Scorer(Scorer string) SFtSearchScorer {
+	return SFtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeFrags) Explainscore() SFtSearchExplainscoreExplainscore {
+	return SFtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeFrags) Payload(Payload string) SFtSearchPayload {
+	return SFtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeFrags) Sortby(Sortby string) SFtSearchSortbySortby {
+	return SFtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeFrags) Limit() SFtSearchLimitLimitLimit {
+	return SFtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeFrags) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSearchSummarizeLen SCompleted
+
+func (c SFtSearchSummarizeLen) Separator(Separator string) SFtSearchSummarizeSeparator {
+	return SFtSearchSummarizeSeparator{cs: append(c.cs, "SEPARATOR", Separator), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeLen) Highlight() SFtSearchHighlightHighlightHighlight {
+	return SFtSearchHighlightHighlightHighlight{cs: append(c.cs, "HIGHLIGHT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeLen) Slop(Slop int64) SFtSearchSlop {
+	return SFtSearchSlop{cs: append(c.cs, "SLOP", strconv.FormatInt(Slop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeLen) Inorder() SFtSearchTagsInorder {
+	return SFtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeLen) Language(Language string) SFtSearchLanguage {
+	return SFtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeLen) Expander(Expander string) SFtSearchExpander {
+	return SFtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeLen) Scorer(Scorer string) SFtSearchScorer {
+	return SFtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeLen) Explainscore() SFtSearchExplainscoreExplainscore {
+	return SFtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeLen) Payload(Payload string) SFtSearchPayload {
+	return SFtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeLen) Sortby(Sortby string) SFtSearchSortbySortby {
+	return SFtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeLen) Limit() SFtSearchLimitLimitLimit {
+	return SFtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeLen) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSearchSummarizeSeparator SCompleted
+
+func (c SFtSearchSummarizeSeparator) Highlight() SFtSearchHighlightHighlightHighlight {
+	return SFtSearchHighlightHighlightHighlight{cs: append(c.cs, "HIGHLIGHT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeSeparator) Slop(Slop int64) SFtSearchSlop {
+	return SFtSearchSlop{cs: append(c.cs, "SLOP", strconv.FormatInt(Slop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeSeparator) Inorder() SFtSearchTagsInorder {
+	return SFtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeSeparator) Language(Language string) SFtSearchLanguage {
+	return SFtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeSeparator) Expander(Expander string) SFtSearchExpander {
+	return SFtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeSeparator) Scorer(Scorer string) SFtSearchScorer {
+	return SFtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeSeparator) Explainscore() SFtSearchExplainscoreExplainscore {
+	return SFtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeSeparator) Payload(Payload string) SFtSearchPayload {
+	return SFtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeSeparator) Sortby(Sortby string) SFtSearchSortbySortby {
+	return SFtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeSeparator) Limit() SFtSearchLimitLimitLimit {
+	return SFtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeSeparator) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSearchSummarizeSummarizeSummarize SCompleted
+
+func (c SFtSearchSummarizeSummarizeSummarize) Fields(Count string) SFtSearchSummarizeFieldsFields {
+	return SFtSearchSummarizeFieldsFields{cs: append(c.cs, "FIELDS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeSummarizeSummarize) Frags(Num int64) SFtSearchSummarizeFrags {
+	return SFtSearchSummarizeFrags{cs: append(c.cs, "FRAGS", strconv.FormatInt(Num, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeSummarizeSummarize) Len(Fragsize int64) SFtSearchSummarizeLen {
+	return SFtSearchSummarizeLen{cs: append(c.cs, "LEN", strconv.FormatInt(Fragsize, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeSummarizeSummarize) Separator(Separator string) SFtSearchSummarizeSeparator {
+	return SFtSearchSummarizeSeparator{cs: append(c.cs, "SEPARATOR", Separator), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeSummarizeSummarize) Highlight() SFtSearchHighlightHighlightHighlight {
+	return SFtSearchHighlightHighlightHighlight{cs: append(c.cs, "HIGHLIGHT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeSummarizeSummarize) Slop(Slop int64) SFtSearchSlop {
+	return SFtSearchSlop{cs: append(c.cs, "SLOP", strconv.FormatInt(Slop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeSummarizeSummarize) Inorder() SFtSearchTagsInorder {
+	return SFtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeSummarizeSummarize) Language(Language string) SFtSearchLanguage {
+	return SFtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeSummarizeSummarize) Expander(Expander string) SFtSearchExpander {
+	return SFtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeSummarizeSummarize) Scorer(Scorer string) SFtSearchScorer {
+	return SFtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeSummarizeSummarize) Explainscore() SFtSearchExplainscoreExplainscore {
+	return SFtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeSummarizeSummarize) Payload(Payload string) SFtSearchPayload {
+	return SFtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeSummarizeSummarize) Sortby(Sortby string) SFtSearchSortbySortby {
+	return SFtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeSummarizeSummarize) Limit() SFtSearchLimitLimitLimit {
+	return SFtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchSummarizeSummarizeSummarize) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSearchTagsInorder SCompleted
+
+func (c SFtSearchTagsInorder) Language(Language string) SFtSearchLanguage {
+	return SFtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchTagsInorder) Expander(Expander string) SFtSearchExpander {
+	return SFtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchTagsInorder) Scorer(Scorer string) SFtSearchScorer {
+	return SFtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchTagsInorder) Explainscore() SFtSearchExplainscoreExplainscore {
+	return SFtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchTagsInorder) Payload(Payload string) SFtSearchPayload {
+	return SFtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchTagsInorder) Sortby(Sortby string) SFtSearchSortbySortby {
+	return SFtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchTagsInorder) Limit() SFtSearchLimitLimitLimit {
+	return SFtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchTagsInorder) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSearchVerbatimVerbatim SCompleted
+
+func (c SFtSearchVerbatimVerbatim) Nostopwords() SFtSearchNostopwordsNostopwords {
+	return SFtSearchNostopwordsNostopwords{cs: append(c.cs, "NOSTOPWORDS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchVerbatimVerbatim) Withscores() SFtSearchWithscoresWithscores {
+	return SFtSearchWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchVerbatimVerbatim) Withpayloads() SFtSearchWithpayloadsWithpayloads {
+	return SFtSearchWithpayloadsWithpayloads{cs: append(c.cs, "WITHPAYLOADS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchVerbatimVerbatim) Withsortkeys() SFtSearchWithsortkeysWithsortkeys {
+	return SFtSearchWithsortkeysWithsortkeys{cs: append(c.cs, "WITHSORTKEYS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchVerbatimVerbatim) Filter(NumericField string) SFtSearchFilterFilter {
+	return SFtSearchFilterFilter{cs: append(c.cs, "FILTER", NumericField), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchVerbatimVerbatim) Geofilter(GeoField string) SFtSearchGeoFilterGeofilter {
+	return SFtSearchGeoFilterGeofilter{cs: append(c.cs, "GEOFILTER", GeoField), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchVerbatimVerbatim) Inkeys(Count string) SFtSearchInKeysInkeys {
+	return SFtSearchInKeysInkeys{cs: append(c.cs, "INKEYS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchVerbatimVerbatim) Infields(Count string) SFtSearchInFieldsInfields {
+	return SFtSearchInFieldsInfields{cs: append(c.cs, "INFIELDS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchVerbatimVerbatim) Return(Count string) SFtSearchReturnReturn {
+	return SFtSearchReturnReturn{cs: append(c.cs, "RETURN", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchVerbatimVerbatim) Summarize() SFtSearchSummarizeSummarizeSummarize {
+	return SFtSearchSummarizeSummarizeSummarize{cs: append(c.cs, "SUMMARIZE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchVerbatimVerbatim) Highlight() SFtSearchHighlightHighlightHighlight {
+	return SFtSearchHighlightHighlightHighlight{cs: append(c.cs, "HIGHLIGHT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchVerbatimVerbatim) Slop(Slop int64) SFtSearchSlop {
+	return SFtSearchSlop{cs: append(c.cs, "SLOP", strconv.FormatInt(Slop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchVerbatimVerbatim) Inorder() SFtSearchTagsInorder {
+	return SFtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchVerbatimVerbatim) Language(Language string) SFtSearchLanguage {
+	return SFtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchVerbatimVerbatim) Expander(Expander string) SFtSearchExpander {
+	return SFtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchVerbatimVerbatim) Scorer(Scorer string) SFtSearchScorer {
+	return SFtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchVerbatimVerbatim) Explainscore() SFtSearchExplainscoreExplainscore {
+	return SFtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchVerbatimVerbatim) Payload(Payload string) SFtSearchPayload {
+	return SFtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchVerbatimVerbatim) Sortby(Sortby string) SFtSearchSortbySortby {
+	return SFtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchVerbatimVerbatim) Limit() SFtSearchLimitLimitLimit {
+	return SFtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchVerbatimVerbatim) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSearchWithpayloadsWithpayloads SCompleted
+
+func (c SFtSearchWithpayloadsWithpayloads) Withsortkeys() SFtSearchWithsortkeysWithsortkeys {
+	return SFtSearchWithsortkeysWithsortkeys{cs: append(c.cs, "WITHSORTKEYS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithpayloadsWithpayloads) Filter(NumericField string) SFtSearchFilterFilter {
+	return SFtSearchFilterFilter{cs: append(c.cs, "FILTER", NumericField), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithpayloadsWithpayloads) Geofilter(GeoField string) SFtSearchGeoFilterGeofilter {
+	return SFtSearchGeoFilterGeofilter{cs: append(c.cs, "GEOFILTER", GeoField), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithpayloadsWithpayloads) Inkeys(Count string) SFtSearchInKeysInkeys {
+	return SFtSearchInKeysInkeys{cs: append(c.cs, "INKEYS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithpayloadsWithpayloads) Infields(Count string) SFtSearchInFieldsInfields {
+	return SFtSearchInFieldsInfields{cs: append(c.cs, "INFIELDS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithpayloadsWithpayloads) Return(Count string) SFtSearchReturnReturn {
+	return SFtSearchReturnReturn{cs: append(c.cs, "RETURN", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithpayloadsWithpayloads) Summarize() SFtSearchSummarizeSummarizeSummarize {
+	return SFtSearchSummarizeSummarizeSummarize{cs: append(c.cs, "SUMMARIZE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithpayloadsWithpayloads) Highlight() SFtSearchHighlightHighlightHighlight {
+	return SFtSearchHighlightHighlightHighlight{cs: append(c.cs, "HIGHLIGHT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithpayloadsWithpayloads) Slop(Slop int64) SFtSearchSlop {
+	return SFtSearchSlop{cs: append(c.cs, "SLOP", strconv.FormatInt(Slop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithpayloadsWithpayloads) Inorder() SFtSearchTagsInorder {
+	return SFtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithpayloadsWithpayloads) Language(Language string) SFtSearchLanguage {
+	return SFtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithpayloadsWithpayloads) Expander(Expander string) SFtSearchExpander {
+	return SFtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithpayloadsWithpayloads) Scorer(Scorer string) SFtSearchScorer {
+	return SFtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithpayloadsWithpayloads) Explainscore() SFtSearchExplainscoreExplainscore {
+	return SFtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithpayloadsWithpayloads) Payload(Payload string) SFtSearchPayload {
+	return SFtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithpayloadsWithpayloads) Sortby(Sortby string) SFtSearchSortbySortby {
+	return SFtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithpayloadsWithpayloads) Limit() SFtSearchLimitLimitLimit {
+	return SFtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithpayloadsWithpayloads) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSearchWithscoresWithscores SCompleted
+
+func (c SFtSearchWithscoresWithscores) Withpayloads() SFtSearchWithpayloadsWithpayloads {
+	return SFtSearchWithpayloadsWithpayloads{cs: append(c.cs, "WITHPAYLOADS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithscoresWithscores) Withsortkeys() SFtSearchWithsortkeysWithsortkeys {
+	return SFtSearchWithsortkeysWithsortkeys{cs: append(c.cs, "WITHSORTKEYS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithscoresWithscores) Filter(NumericField string) SFtSearchFilterFilter {
+	return SFtSearchFilterFilter{cs: append(c.cs, "FILTER", NumericField), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithscoresWithscores) Geofilter(GeoField string) SFtSearchGeoFilterGeofilter {
+	return SFtSearchGeoFilterGeofilter{cs: append(c.cs, "GEOFILTER", GeoField), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithscoresWithscores) Inkeys(Count string) SFtSearchInKeysInkeys {
+	return SFtSearchInKeysInkeys{cs: append(c.cs, "INKEYS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithscoresWithscores) Infields(Count string) SFtSearchInFieldsInfields {
+	return SFtSearchInFieldsInfields{cs: append(c.cs, "INFIELDS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithscoresWithscores) Return(Count string) SFtSearchReturnReturn {
+	return SFtSearchReturnReturn{cs: append(c.cs, "RETURN", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithscoresWithscores) Summarize() SFtSearchSummarizeSummarizeSummarize {
+	return SFtSearchSummarizeSummarizeSummarize{cs: append(c.cs, "SUMMARIZE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithscoresWithscores) Highlight() SFtSearchHighlightHighlightHighlight {
+	return SFtSearchHighlightHighlightHighlight{cs: append(c.cs, "HIGHLIGHT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithscoresWithscores) Slop(Slop int64) SFtSearchSlop {
+	return SFtSearchSlop{cs: append(c.cs, "SLOP", strconv.FormatInt(Slop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithscoresWithscores) Inorder() SFtSearchTagsInorder {
+	return SFtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithscoresWithscores) Language(Language string) SFtSearchLanguage {
+	return SFtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithscoresWithscores) Expander(Expander string) SFtSearchExpander {
+	return SFtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithscoresWithscores) Scorer(Scorer string) SFtSearchScorer {
+	return SFtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithscoresWithscores) Explainscore() SFtSearchExplainscoreExplainscore {
+	return SFtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithscoresWithscores) Payload(Payload string) SFtSearchPayload {
+	return SFtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithscoresWithscores) Sortby(Sortby string) SFtSearchSortbySortby {
+	return SFtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithscoresWithscores) Limit() SFtSearchLimitLimitLimit {
+	return SFtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithscoresWithscores) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSearchWithsortkeysWithsortkeys SCompleted
+
+func (c SFtSearchWithsortkeysWithsortkeys) Filter(NumericField string) SFtSearchFilterFilter {
+	return SFtSearchFilterFilter{cs: append(c.cs, "FILTER", NumericField), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithsortkeysWithsortkeys) Geofilter(GeoField string) SFtSearchGeoFilterGeofilter {
+	return SFtSearchGeoFilterGeofilter{cs: append(c.cs, "GEOFILTER", GeoField), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithsortkeysWithsortkeys) Inkeys(Count string) SFtSearchInKeysInkeys {
+	return SFtSearchInKeysInkeys{cs: append(c.cs, "INKEYS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithsortkeysWithsortkeys) Infields(Count string) SFtSearchInFieldsInfields {
+	return SFtSearchInFieldsInfields{cs: append(c.cs, "INFIELDS", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithsortkeysWithsortkeys) Return(Count string) SFtSearchReturnReturn {
+	return SFtSearchReturnReturn{cs: append(c.cs, "RETURN", Count), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithsortkeysWithsortkeys) Summarize() SFtSearchSummarizeSummarizeSummarize {
+	return SFtSearchSummarizeSummarizeSummarize{cs: append(c.cs, "SUMMARIZE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithsortkeysWithsortkeys) Highlight() SFtSearchHighlightHighlightHighlight {
+	return SFtSearchHighlightHighlightHighlight{cs: append(c.cs, "HIGHLIGHT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithsortkeysWithsortkeys) Slop(Slop int64) SFtSearchSlop {
+	return SFtSearchSlop{cs: append(c.cs, "SLOP", strconv.FormatInt(Slop, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithsortkeysWithsortkeys) Inorder() SFtSearchTagsInorder {
+	return SFtSearchTagsInorder{cs: append(c.cs, "INORDER"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithsortkeysWithsortkeys) Language(Language string) SFtSearchLanguage {
+	return SFtSearchLanguage{cs: append(c.cs, "LANGUAGE", Language), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithsortkeysWithsortkeys) Expander(Expander string) SFtSearchExpander {
+	return SFtSearchExpander{cs: append(c.cs, "EXPANDER", Expander), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithsortkeysWithsortkeys) Scorer(Scorer string) SFtSearchScorer {
+	return SFtSearchScorer{cs: append(c.cs, "SCORER", Scorer), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithsortkeysWithsortkeys) Explainscore() SFtSearchExplainscoreExplainscore {
+	return SFtSearchExplainscoreExplainscore{cs: append(c.cs, "EXPLAINSCORE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithsortkeysWithsortkeys) Payload(Payload string) SFtSearchPayload {
+	return SFtSearchPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithsortkeysWithsortkeys) Sortby(Sortby string) SFtSearchSortbySortby {
+	return SFtSearchSortbySortby{cs: append(c.cs, "SORTBY", Sortby), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithsortkeysWithsortkeys) Limit() SFtSearchLimitLimitLimit {
+	return SFtSearchLimitLimitLimit{cs: append(c.cs, "LIMIT"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSearchWithsortkeysWithsortkeys) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSpellcheck SCompleted
+
+func (c SFtSpellcheck) Index(Index string) SFtSpellcheckIndex {
+	return SFtSpellcheckIndex{cs: append(c.cs, Index), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) FtSpellcheck() (c SFtSpellcheck) {
+	c.cs = append(b.get(), "FT.SPELLCHECK")
+	c.ks = InitSlot
+	return
+}
+
+type SFtSpellcheckDistance SCompleted
+
+func (c SFtSpellcheckDistance) Include() SFtSpellcheckTermsInclusionInclude {
+	return SFtSpellcheckTermsInclusionInclude{cs: append(c.cs, "INCLUDE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSpellcheckDistance) Exclude() SFtSpellcheckTermsInclusionExclude {
+	return SFtSpellcheckTermsInclusionExclude{cs: append(c.cs, "EXCLUDE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSpellcheckDistance) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSpellcheckIndex SCompleted
+
+func (c SFtSpellcheckIndex) Query(Query string) SFtSpellcheckQuery {
+	return SFtSpellcheckQuery{cs: append(c.cs, Query), cf: c.cf, ks: c.ks}
+}
+
+type SFtSpellcheckQuery SCompleted
+
+func (c SFtSpellcheckQuery) Distance(Distance int64) SFtSpellcheckDistance {
+	return SFtSpellcheckDistance{cs: append(c.cs, "DISTANCE", strconv.FormatInt(Distance, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSpellcheckQuery) Include() SFtSpellcheckTermsInclusionInclude {
+	return SFtSpellcheckTermsInclusionInclude{cs: append(c.cs, "INCLUDE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSpellcheckQuery) Exclude() SFtSpellcheckTermsInclusionExclude {
+	return SFtSpellcheckTermsInclusionExclude{cs: append(c.cs, "EXCLUDE"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSpellcheckQuery) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSpellcheckTermsDictionary SCompleted
+
+func (c SFtSpellcheckTermsDictionary) Terms(Terms ...string) SFtSpellcheckTermsTerms {
+	return SFtSpellcheckTermsTerms{cs: append(c.cs, Terms...), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSpellcheckTermsDictionary) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSpellcheckTermsInclusionExclude SCompleted
+
+func (c SFtSpellcheckTermsInclusionExclude) Dictionary(Dictionary string) SFtSpellcheckTermsDictionary {
+	return SFtSpellcheckTermsDictionary{cs: append(c.cs, Dictionary), cf: c.cf, ks: c.ks}
+}
+
+type SFtSpellcheckTermsInclusionInclude SCompleted
+
+func (c SFtSpellcheckTermsInclusionInclude) Dictionary(Dictionary string) SFtSpellcheckTermsDictionary {
+	return SFtSpellcheckTermsDictionary{cs: append(c.cs, Dictionary), cf: c.cf, ks: c.ks}
+}
+
+type SFtSpellcheckTermsTerms SCompleted
+
+func (c SFtSpellcheckTermsTerms) Terms(Terms ...string) SFtSpellcheckTermsTerms {
+	return SFtSpellcheckTermsTerms{cs: append(c.cs, Terms...), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSpellcheckTermsTerms) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSugadd SCompleted
+
+func (c SFtSugadd) Key(Key string) SFtSugaddKey {
+	return SFtSugaddKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) FtSugadd() (c SFtSugadd) {
+	c.cs = append(b.get(), "FT.SUGADD")
+	c.ks = InitSlot
+	return
+}
+
+type SFtSugaddIncrementScoreIncr SCompleted
+
+func (c SFtSugaddIncrementScoreIncr) Payload(Payload string) SFtSugaddPayload {
+	return SFtSugaddPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSugaddIncrementScoreIncr) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSugaddKey SCompleted
+
+func (c SFtSugaddKey) String(String string) SFtSugaddString {
+	return SFtSugaddString{cs: append(c.cs, String), cf: c.cf, ks: c.ks}
+}
+
+type SFtSugaddPayload SCompleted
+
+func (c SFtSugaddPayload) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSugaddScore SCompleted
+
+func (c SFtSugaddScore) Incr() SFtSugaddIncrementScoreIncr {
+	return SFtSugaddIncrementScoreIncr{cs: append(c.cs, "INCR"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSugaddScore) Payload(Payload string) SFtSugaddPayload {
+	return SFtSugaddPayload{cs: append(c.cs, "PAYLOAD", Payload), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSugaddScore) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSugaddString SCompleted
+
+func (c SFtSugaddString) Score(Score float64) SFtSugaddScore {
+	return SFtSugaddScore{cs: append(c.cs, strconv.FormatFloat(Score, 'f', -1, 64)), cf: c.cf, ks: c.ks}
+}
+
+type SFtSugdel SCompleted
+
+func (c SFtSugdel) Key(Key string) SFtSugdelKey {
+	return SFtSugdelKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) FtSugdel() (c SFtSugdel) {
+	c.cs = append(b.get(), "FT.SUGDEL")
+	c.ks = InitSlot
+	return
+}
+
+type SFtSugdelKey SCompleted
+
+func (c SFtSugdelKey) String(String string) SFtSugdelString {
+	return SFtSugdelString{cs: append(c.cs, String), cf: c.cf, ks: c.ks}
+}
+
+type SFtSugdelString SCompleted
+
+func (c SFtSugdelString) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSugget SCompleted
+
+func (c SFtSugget) Key(Key string) SFtSuggetKey {
+	return SFtSuggetKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) FtSugget() (c SFtSugget) {
+	c.cs = append(b.get(), "FT.SUGGET")
+	c.ks = InitSlot
+	return
+}
+
+type SFtSuggetFuzzyFuzzy SCompleted
+
+func (c SFtSuggetFuzzyFuzzy) Withscores() SFtSuggetWithscoresWithscores {
+	return SFtSuggetWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSuggetFuzzyFuzzy) Withpayloads() SFtSuggetWithpayloadsWithpayloads {
+	return SFtSuggetWithpayloadsWithpayloads{cs: append(c.cs, "WITHPAYLOADS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSuggetFuzzyFuzzy) Max(Max int64) SFtSuggetMax {
+	return SFtSuggetMax{cs: append(c.cs, "MAX", strconv.FormatInt(Max, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSuggetFuzzyFuzzy) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSuggetKey SCompleted
+
+func (c SFtSuggetKey) Prefix(Prefix string) SFtSuggetPrefix {
+	return SFtSuggetPrefix{cs: append(c.cs, Prefix), cf: c.cf, ks: c.ks}
+}
+
+type SFtSuggetMax SCompleted
+
+func (c SFtSuggetMax) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSuggetPrefix SCompleted
+
+func (c SFtSuggetPrefix) Fuzzy() SFtSuggetFuzzyFuzzy {
+	return SFtSuggetFuzzyFuzzy{cs: append(c.cs, "FUZZY"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSuggetPrefix) Withscores() SFtSuggetWithscoresWithscores {
+	return SFtSuggetWithscoresWithscores{cs: append(c.cs, "WITHSCORES"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSuggetPrefix) Withpayloads() SFtSuggetWithpayloadsWithpayloads {
+	return SFtSuggetWithpayloadsWithpayloads{cs: append(c.cs, "WITHPAYLOADS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSuggetPrefix) Max(Max int64) SFtSuggetMax {
+	return SFtSuggetMax{cs: append(c.cs, "MAX", strconv.FormatInt(Max, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSuggetPrefix) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSuggetWithpayloadsWithpayloads SCompleted
+
+func (c SFtSuggetWithpayloadsWithpayloads) Max(Max int64) SFtSuggetMax {
+	return SFtSuggetMax{cs: append(c.cs, "MAX", strconv.FormatInt(Max, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSuggetWithpayloadsWithpayloads) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSuggetWithscoresWithscores SCompleted
+
+func (c SFtSuggetWithscoresWithscores) Withpayloads() SFtSuggetWithpayloadsWithpayloads {
+	return SFtSuggetWithpayloadsWithpayloads{cs: append(c.cs, "WITHPAYLOADS"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSuggetWithscoresWithscores) Max(Max int64) SFtSuggetMax {
+	return SFtSuggetMax{cs: append(c.cs, "MAX", strconv.FormatInt(Max, 10)), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSuggetWithscoresWithscores) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSuglen SCompleted
+
+func (c SFtSuglen) Key(Key string) SFtSuglenKey {
+	return SFtSuglenKey{cs: append(c.cs, Key), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) FtSuglen() (c SFtSuglen) {
+	c.cs = append(b.get(), "FT.SUGLEN")
+	c.ks = InitSlot
+	return
+}
+
+type SFtSuglenKey SCompleted
+
+func (c SFtSuglenKey) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSyndump SCompleted
+
+func (c SFtSyndump) Index(Index string) SFtSyndumpIndex {
+	return SFtSyndumpIndex{cs: append(c.cs, Index), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) FtSyndump() (c SFtSyndump) {
+	c.cs = append(b.get(), "FT.SYNDUMP")
+	c.ks = InitSlot
+	return
+}
+
+type SFtSyndumpIndex SCompleted
+
+func (c SFtSyndumpIndex) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtSynupdate SCompleted
+
+func (c SFtSynupdate) Index(Index string) SFtSynupdateIndex {
+	return SFtSynupdateIndex{cs: append(c.cs, Index), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) FtSynupdate() (c SFtSynupdate) {
+	c.cs = append(b.get(), "FT.SYNUPDATE")
+	c.ks = InitSlot
+	return
+}
+
+type SFtSynupdateIndex SCompleted
+
+func (c SFtSynupdateIndex) SynonymGroupId(SynonymGroupId string) SFtSynupdateSynonymGroupId {
+	return SFtSynupdateSynonymGroupId{cs: append(c.cs, SynonymGroupId), cf: c.cf, ks: c.ks}
+}
+
+type SFtSynupdateSkipinitialscanSkipinitialscan SCompleted
+
+func (c SFtSynupdateSkipinitialscanSkipinitialscan) Term(Term ...string) SFtSynupdateTerm {
+	return SFtSynupdateTerm{cs: append(c.cs, Term...), cf: c.cf, ks: c.ks}
+}
+
+type SFtSynupdateSynonymGroupId SCompleted
+
+func (c SFtSynupdateSynonymGroupId) Skipinitialscan() SFtSynupdateSkipinitialscanSkipinitialscan {
+	return SFtSynupdateSkipinitialscanSkipinitialscan{cs: append(c.cs, "SKIPINITIALSCAN"), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSynupdateSynonymGroupId) Term(Term ...string) SFtSynupdateTerm {
+	return SFtSynupdateTerm{cs: append(c.cs, Term...), cf: c.cf, ks: c.ks}
+}
+
+type SFtSynupdateTerm SCompleted
+
+func (c SFtSynupdateTerm) Term(Term ...string) SFtSynupdateTerm {
+	return SFtSynupdateTerm{cs: append(c.cs, Term...), cf: c.cf, ks: c.ks}
+}
+
+func (c SFtSynupdateTerm) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtTagvals SCompleted
+
+func (c SFtTagvals) Index(Index string) SFtTagvalsIndex {
+	return SFtTagvalsIndex{cs: append(c.cs, Index), cf: c.cf, ks: c.ks}
+}
+
+func (b *SBuilder) FtTagvals() (c SFtTagvals) {
+	c.cs = append(b.get(), "FT.TAGVALS")
+	c.ks = InitSlot
+	return
+}
+
+type SFtTagvalsFieldName SCompleted
+
+func (c SFtTagvalsFieldName) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type SFtTagvalsIndex SCompleted
+
+func (c SFtTagvalsIndex) FieldName(FieldName string) SFtTagvalsFieldName {
+	return SFtTagvalsFieldName{cs: append(c.cs, FieldName), cf: c.cf, ks: c.ks}
 }
 
 type SGeoadd SCompleted

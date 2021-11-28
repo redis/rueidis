@@ -23,7 +23,7 @@ type Argument struct {
 
 func (a *Argument) FullName() (nn string) {
 	var tokens []string
-	if a.Command != "" {
+	if a.Command != "" && a.Command != "LOAD *" {
 		return UcFirst(name(a.Command))
 	} else {
 		switch n := a.Name.(type) {
@@ -77,6 +77,7 @@ func generate(prefix string) {
 		"./commands.json",
 		"./commands_json.json",
 		"./commands_bloom.json",
+		"./commands_search.json",
 	} {
 		raw, err := os.ReadFile(p)
 		if err != nil {
@@ -380,6 +381,12 @@ func node(nodes map[string]*CmdNode, root *CmdNode, prefix string, arg Argument,
 		arg.Type = "string"
 		arg.Enum = nil
 	}
+	// fix for FT.AGGREGATE
+	if len(arg.Enum) == 1 && arg.Enum[0] == "LOAD *" {
+		arg.Type = nil
+		arg.Command = "LOAD *"
+		arg.Enum = nil
+	}
 	switch arg.Type {
 	case "enum":
 		for _, e := range arg.Enum {
@@ -449,6 +456,10 @@ func node(nodes map[string]*CmdNode, root *CmdNode, prefix string, arg Argument,
 		}
 	default:
 		sn := UcFirst(prefix) + UcFirst(arg.FullName())
+		// fix for FtCreatePrefix
+		if sn == "FtCreatePrefix" && arg.Name == "count" {
+			sn = "FtCreatePrefixCount"
+		}
 		cmd := &CmdNode{Root: root, StructName: sn, Argument: arg}
 		if _, ok := nodes[cmd.StructName]; ok {
 			panic("StructName conflict " + cmd.StructName)
@@ -496,6 +507,12 @@ func argIDs(prefix string, arg Argument) (ids []string) {
 	if len(arg.Enum) == 2 && arg.Enum[0] == "*" && arg.Enum[1] == "ID" {
 		arg.Name = "id"
 		arg.Type = "string"
+		arg.Enum = nil
+	}
+	// fix for FT.AGGREGATE
+	if len(arg.Enum) == 1 && arg.Enum[0] == "LOAD *" {
+		arg.Type = "command"
+		arg.Command = "LOAD *"
 		arg.Enum = nil
 	}
 	switch arg.Type {
