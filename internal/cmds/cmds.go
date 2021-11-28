@@ -120,6 +120,14 @@ func NewCompleted(cs []string) Completed {
 	return Completed{cs: cs}
 }
 
+func NewBlockingCompleted(cs []string) Completed {
+	return Completed{cs: cs, cf: blockTag}
+}
+
+func NewReadOnlyCompleted(cs []string) Completed {
+	return Completed{cs: cs, cf: readonly}
+}
+
 func NewMultiCompleted(cs [][]string) []Completed {
 	ret := make([]Completed, len(cs))
 	for i, c := range cs {

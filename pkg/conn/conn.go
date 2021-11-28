@@ -42,52 +42,43 @@ type Option struct {
 	PubSubHandlers PubSubHandlers
 }
 
-type dialFn func(dst string, opt Option) (net.Conn, error)
+type DialFn func(dst string, opt Option) (net.Conn, error)
 type wireFn func(conn net.Conn, opt Option) (Wire, error)
 
-var broken Wire = (*wire)(nil)
-
 type Conn struct {
-	dst  string
-	opt  Option
-	wire atomic.Value
-	mu   sync.Mutex
-	pool *pool
+	dst    string
+	opt    Option
+	wire   atomic.Value
+	broken Wire
+	mu     sync.Mutex
+	pool   *pool
 
-	dialFn dialFn
+	dialFn DialFn
 	wireFn wireFn
 }
 
-func NewConn(dst string, option Option) *Conn {
-	return newConn(dst, option, func(dst string, opt Option) (conn net.Conn, err error) {
-		dialer := &net.Dialer{Timeout: opt.DialTimeout}
-		if opt.TLSConfig != nil {
-			conn, err = tls.DialWithDialer(dialer, "tcp", dst, opt.TLSConfig)
-		} else {
-			conn, err = dialer.Dial("tcp", dst)
-		}
-		return conn, err
-	}, func(conn net.Conn, opt Option) (Wire, error) {
+func NewConn(dst string, option Option, dialFn DialFn) *Conn {
+	return newConn(dst, option, (*wire)(nil), dialFn, func(conn net.Conn, opt Option) (Wire, error) {
 		return newWire(conn, opt)
 	})
 }
 
-func newConn(dst string, option Option, dialFn dialFn, wireFn wireFn) *Conn {
-	conn := &Conn{dst: dst, opt: option, dialFn: dialFn, wireFn: wireFn}
+func newConn(dst string, option Option, broken Wire, dialFn DialFn, wireFn wireFn) *Conn {
+	conn := &Conn{dst: dst, opt: option, broken: broken, dialFn: dialFn, wireFn: wireFn}
 	conn.wire.Store(broken)
 	conn.pool = newPool(option.BlockingPoolSize, conn.dialRetry)
 	return conn
 }
 
 func (c *Conn) connect() (Wire, error) {
-	if wire := c.wire.Load().(Wire); wire != broken {
+	if wire := c.wire.Load().(Wire); wire != c.broken {
 		return wire, nil
 	}
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	if wire := c.wire.Load().(Wire); wire != broken {
+	if wire := c.wire.Load().(Wire); wire != c.broken {
 		return wire, nil
 	}
 
@@ -191,7 +182,7 @@ func (c *Conn) blockingMulti(cmd []cmds.Completed) (resp []proto.Result) {
 func (c *Conn) pipeline(cmd cmds.Completed) (resp proto.Result) {
 	wire := c.acquire()
 	if resp = wire.Do(cmd); isNetworkErr(resp.NonRedisError()) {
-		c.wire.CompareAndSwap(wire, broken)
+		c.wire.CompareAndSwap(wire, c.broken)
 	}
 	return resp
 }
@@ -201,7 +192,7 @@ func (c *Conn) pipelineMulti(cmd []cmds.Completed) (resp []proto.Result) {
 	resp = wire.DoMulti(cmd...)
 	for _, r := range resp {
 		if isNetworkErr(r.NonRedisError()) {
-			c.wire.CompareAndSwap(wire, broken)
+			c.wire.CompareAndSwap(wire, c.broken)
 			return resp
 		}
 	}
@@ -213,7 +204,7 @@ retry:
 	wire := c.acquire()
 	resp := wire.DoCache(cmd, ttl)
 	if isNetworkErr(resp.NonRedisError()) {
-		c.wire.CompareAndSwap(wire, broken)
+		c.wire.CompareAndSwap(wire, c.broken)
 		goto retry
 	}
 	return resp

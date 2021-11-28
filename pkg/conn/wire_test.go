@@ -154,7 +154,7 @@ func ExpectOK(t *testing.T, result proto.Result) {
 	}
 }
 
-func TestNewConn(t *testing.T) {
+func TestNewWire(t *testing.T) {
 	t.Run("Auth", func(t *testing.T) {
 		n1, n2 := net.Pipe()
 		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2}

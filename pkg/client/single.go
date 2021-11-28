@@ -20,8 +20,8 @@ type SingleClient struct {
 	conn *conn.Conn
 }
 
-func NewSingleClient(option SingleClientOption) (*SingleClient, error) {
-	c := conn.NewConn(option.Address, option.ConnOption)
+func NewSingleClient(option SingleClientOption, dialFn conn.DialFn) (*SingleClient, error) {
+	c := conn.NewConn(option.Address, option.ConnOption, dialFn)
 	if err := c.Dialable(); err != nil {
 		return nil, err
 	}
