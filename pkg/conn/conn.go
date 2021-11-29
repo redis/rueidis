@@ -17,6 +17,7 @@ var ErrConnClosing = errors.New("connection is closing")
 // DefaultCacheBytes = 128 MiB.
 const DefaultCacheBytes = 128 * (1 << 20)
 
+// DefaultPoolSize = 1000
 const DefaultPoolSize = 1000
 
 type Option struct {
@@ -46,12 +47,12 @@ type DialFn func(dst string, opt Option) (net.Conn, error)
 type wireFn func(conn net.Conn, opt Option) (Wire, error)
 
 type Conn struct {
-	dst    string
-	opt    Option
-	wire   atomic.Value
-	broken Wire
-	mu     sync.Mutex
-	pool   *pool
+	dst  string
+	opt  Option
+	pool *pool
+	dead Wire
+	wire atomic.Value
+	mu   sync.Mutex
 
 	dialFn DialFn
 	wireFn wireFn
@@ -63,22 +64,22 @@ func NewConn(dst string, option Option, dialFn DialFn) *Conn {
 	})
 }
 
-func newConn(dst string, option Option, broken Wire, dialFn DialFn, wireFn wireFn) *Conn {
-	conn := &Conn{dst: dst, opt: option, broken: broken, dialFn: dialFn, wireFn: wireFn}
-	conn.wire.Store(broken)
+func newConn(dst string, option Option, dead Wire, dialFn DialFn, wireFn wireFn) *Conn {
+	conn := &Conn{dst: dst, opt: option, dead: dead, dialFn: dialFn, wireFn: wireFn}
+	conn.wire.Store(dead)
 	conn.pool = newPool(option.BlockingPoolSize, conn.dialRetry)
 	return conn
 }
 
 func (c *Conn) connect() (Wire, error) {
-	if wire := c.wire.Load().(Wire); wire != c.broken {
+	if wire := c.wire.Load().(Wire); wire != c.dead {
 		return wire, nil
 	}
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	if wire := c.wire.Load().(Wire); wire != c.broken {
+	if wire := c.wire.Load().(Wire); wire != c.dead {
 		return wire, nil
 	}
 
@@ -182,7 +183,7 @@ func (c *Conn) blockingMulti(cmd []cmds.Completed) (resp []proto.Result) {
 func (c *Conn) pipeline(cmd cmds.Completed) (resp proto.Result) {
 	wire := c.acquire()
 	if resp = wire.Do(cmd); isNetworkErr(resp.NonRedisError()) {
-		c.wire.CompareAndSwap(wire, c.broken)
+		c.wire.CompareAndSwap(wire, c.dead)
 	}
 	return resp
 }
@@ -192,7 +193,7 @@ func (c *Conn) pipelineMulti(cmd []cmds.Completed) (resp []proto.Result) {
 	resp = wire.DoMulti(cmd...)
 	for _, r := range resp {
 		if isNetworkErr(r.NonRedisError()) {
-			c.wire.CompareAndSwap(wire, c.broken)
+			c.wire.CompareAndSwap(wire, c.dead)
 			return resp
 		}
 	}
@@ -204,7 +205,7 @@ retry:
 	wire := c.acquire()
 	resp := wire.DoCache(cmd, ttl)
 	if isNetworkErr(resp.NonRedisError()) {
-		c.wire.CompareAndSwap(wire, c.broken)
+		c.wire.CompareAndSwap(wire, c.dead)
 		goto retry
 	}
 	return resp
