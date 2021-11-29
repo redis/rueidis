@@ -46,6 +46,12 @@ type Option struct {
 type DialFn func(dst string, opt Option) (net.Conn, error)
 type wireFn func(conn net.Conn, opt Option) (Wire, error)
 
+type singleconnect struct {
+	w Wire
+	e error
+	g sync.WaitGroup
+}
+
 type Conn struct {
 	dst  string
 	opt  Option
@@ -53,6 +59,7 @@ type Conn struct {
 	dead Wire
 	wire atomic.Value
 	mu   sync.Mutex
+	sc   *singleconnect
 
 	dialFn DialFn
 	wireFn wireFn
@@ -77,25 +84,38 @@ func (c *Conn) connect() (Wire, error) {
 	}
 
 	c.mu.Lock()
-	defer c.mu.Unlock()
+	sc := c.sc
+	if c.sc == nil {
+		c.sc = &singleconnect{}
+		c.sc.g.Add(1)
+	}
+	c.mu.Unlock()
 
-	if wire := c.wire.Load().(Wire); wire != c.dead {
-		return wire, nil
+	if sc != nil {
+		sc.g.Wait()
+		return sc.w, sc.e
 	}
 
 	wire, err := c.dial()
-	if err != nil {
-		return nil, err
+	if err == nil {
+		go func() {
+			for resp := wire.Do(cmds.PingCmd); resp.NonRedisError() == nil; resp = wire.Do(cmds.PingCmd) {
+				time.Sleep(time.Second)
+			}
+		}()
+		c.wire.Store(wire)
 	}
 
-	go func() {
-		for resp := wire.Do(cmds.PingCmd); resp.NonRedisError() == nil; resp = wire.Do(cmds.PingCmd) {
-			time.Sleep(time.Second)
-		}
-	}()
+	c.mu.Lock()
+	sc = c.sc
+	c.sc = nil
+	c.mu.Unlock()
 
-	c.wire.Store(wire)
-	return wire, nil
+	sc.w = wire
+	sc.e = err
+	sc.g.Done()
+
+	return wire, err
 }
 
 func (c *Conn) dial() (w Wire, err error) {
