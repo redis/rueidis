@@ -11,7 +11,18 @@ func TestPool(t *testing.T) {
 		var count int32
 		return newPool(size, func() Wire {
 			atomic.AddInt32(&count, 1)
-			return &wire{}
+			closed := false
+			return &mockWire{
+				close: func() {
+					closed = true
+				},
+				error: func() error {
+					if closed {
+						return ErrConnClosing
+					}
+					return nil
+				},
+			}
 		}), &count
 	}
 
@@ -70,6 +81,60 @@ func TestPool(t *testing.T) {
 					t.Fatalf("pool must not output acquired connection")
 				}
 			}
+		}
+	})
+
+	t.Run("Close", func(t *testing.T) {
+		pool, count := setup(2)
+		w1 := pool.Acquire()
+		w2 := pool.Acquire()
+		if w1.Error() != nil {
+			t.Fatalf("unexpected err %v", w1.Error())
+		}
+		if w2.Error() != nil {
+			t.Fatalf("unexpected err %v", w2.Error())
+		}
+		if atomic.LoadInt32(count) != 2 {
+			t.Fatalf("pool does not make new conn")
+		}
+		pool.Store(w1)
+		pool.Close()
+		if w1.Error() != ErrConnClosing {
+			t.Fatalf("pool does not close exsiting conn after Close()")
+		}
+		for i := 0; i < 100; i++ {
+			if rw := pool.Acquire(); rw != w1 {
+				t.Fatalf("pool does not return the same conn after Close()")
+			}
+		}
+		pool.Store(w2)
+		if w2.Error() != ErrConnClosing {
+			t.Fatalf("pool does not close stored conn after Close()")
+		}
+	})
+
+	t.Run("Close Empty", func(t *testing.T) {
+		pool, count := setup(2)
+		w1 := pool.Acquire()
+		if w1.Error() != nil {
+			t.Fatalf("unexpected err %v", w1.Error())
+		}
+		pool.Close()
+		w2 := pool.Acquire()
+		if w2.Error() != ErrConnClosing {
+			t.Fatalf("pool does not close new conn after Close()")
+		}
+		if atomic.LoadInt32(count) != 2 {
+			t.Fatalf("pool does not make new conn")
+		}
+		for i := 0; i < 100; i++ {
+			if rw := pool.Acquire(); rw != w2 {
+				t.Fatalf("pool does not return the same conn after Close()")
+			}
+		}
+		pool.Store(w1)
+		if w1.Error() != ErrConnClosing {
+			t.Fatalf("pool does not close exsiting conn after Close()")
 		}
 	})
 }

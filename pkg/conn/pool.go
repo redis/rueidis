@@ -20,6 +20,7 @@ type pool struct {
 	cond *sync.Cond
 	make func() Wire
 	size int
+	down bool
 }
 
 func (p *pool) Acquire() (v Wire) {
@@ -30,13 +31,21 @@ func (p *pool) Acquire() (v Wire) {
 	if len(p.list) == 0 {
 		v = p.make()
 		p.size++
+		if p.down {
+			v.Close()
+			p.list = append(p.list, v)
+		}
 	} else {
 		i := len(p.list) - 1
 		v = p.list[i]
-		p.list = p.list[:i]
+		if p.down {
+			v.Close()
+		} else {
+			p.list = p.list[:i]
+		}
 	}
 	p.cond.L.Unlock()
-	return
+	return v
 }
 
 func (p *pool) Store(v Wire) {
@@ -46,6 +55,18 @@ func (p *pool) Store(v Wire) {
 	} else {
 		p.size--
 	}
+	if p.down {
+		v.Close()
+	}
 	p.cond.L.Unlock()
 	p.cond.Signal()
+}
+
+func (p *pool) Close() {
+	p.cond.L.Lock()
+	p.down = true
+	for _, w := range p.list {
+		w.Close()
+	}
+	p.cond.L.Unlock()
 }

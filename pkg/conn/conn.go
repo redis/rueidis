@@ -219,8 +219,8 @@ func (c *Conn) Store(w Wire) {
 }
 
 func (c *Conn) Close() {
-	// TODO close pool
 	c.acquire().Close()
+	c.pool.Close()
 }
 
 func isNetworkErr(err error) bool {

@@ -20,6 +20,7 @@ type mockWire struct {
 	doMulti func(multi ...cmds.Completed) []proto.Result
 	info    func() map[string]proto.Message
 	error   func() error
+	close   func()
 }
 
 func (m *mockWire) Do(cmd cmds.Completed) proto.Result {
@@ -58,6 +59,9 @@ func (m *mockWire) Error() error {
 }
 
 func (m *mockWire) Close() {
+	if m.close != nil {
+		m.close()
+	}
 }
 
 func setupConn(wires []*mockWire) (conn *Conn, checkClean func(t *testing.T)) {
@@ -210,7 +214,6 @@ func TestConnReuseWire(t *testing.T) {
 }
 
 func TestConnCMDRetry(t *testing.T) {
-
 	t.Run("wire info", func(t *testing.T) {
 		conn, checkClean := setupConn([]*mockWire{
 			{
