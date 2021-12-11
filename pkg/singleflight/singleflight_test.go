@@ -8,18 +8,17 @@ import (
 )
 
 func TestSingleFlight(t *testing.T) {
-	var calls, waits, done, err int64
+	var calls, done, err int64
 
 	sg := Call{}
 
 	for i := 0; i < 1000; i++ {
 		go func() {
-			atomic.AddInt64(&waits, 1)
 
 			if ret := sg.Do(func() error {
 				atomic.AddInt64(&calls, 1)
 				// wait for all goroutine invoked then return
-				for atomic.LoadInt64(&waits) != 1000 {
+				for sg.suppressing() != 1000 {
 					runtime.Gosched()
 				}
 				return errors.New("I should be the only ret")
@@ -39,8 +38,8 @@ func TestSingleFlight(t *testing.T) {
 		t.Fatalf("singleflight not call at all")
 	}
 
-	if atomic.LoadInt64(&calls) != 1 {
-		t.Fatalf("singleflight should supress all concurrent calls")
+	if v := atomic.LoadInt64(&calls); v != 1 {
+		t.Fatalf("singleflight should supress all concurrent calls, got: %v", v)
 	}
 
 	if atomic.LoadInt64(&err) != 1 {

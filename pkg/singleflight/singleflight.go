@@ -7,11 +7,13 @@ import (
 type Call struct {
 	mu sync.Mutex
 	wg *sync.WaitGroup
+	cn int
 }
 
 func (c *Call) Do(fn func() error) error {
 	var wg *sync.WaitGroup
 	c.mu.Lock()
+	c.cn++
 	if c.wg != nil {
 		wg = c.wg
 		c.mu.Unlock()
@@ -26,7 +28,14 @@ func (c *Call) Do(fn func() error) error {
 	err := fn()
 	c.mu.Lock()
 	c.wg = nil
+	c.cn = 0
 	c.mu.Unlock()
 	wg.Done()
 	return err
+}
+
+func (c *Call) suppressing() int {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.cn
 }

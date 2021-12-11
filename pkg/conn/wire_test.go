@@ -7,6 +7,7 @@ import (
 	"net"
 	"strconv"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -437,26 +438,33 @@ func TestExitAllGoroutineOnReadError(t *testing.T) {
 
 func TestCloseAndWaitPendingCMDs(t *testing.T) {
 	conn, mock, _, _ := setup(t, Option{})
-	var wg1, wg2 sync.WaitGroup
-	wg1.Add(5001)
-	wg2.Add(5000)
-	for i := 0; i < 5000; i++ {
+
+	var (
+		loop    = 5000
+		counter = int64(0)
+		wg      sync.WaitGroup
+	)
+
+	wg.Add(loop + 1)
+	for i := 0; i < loop; i++ {
 		go func() {
-			defer wg1.Done()
-			go wg2.Done()
+			defer wg.Done()
+
+			if count := atomic.AddInt64(&counter, 1); count == int64(loop) {
+				go func() {
+					conn.Close()
+					wg.Done()
+				}()
+			}
+
 			if v, _ := conn.Do(cmds.NewCompleted([]string{"GET", "a"})).Value(); v.String != "b" {
 				t.Errorf("unexpected GET result %v", v.String)
 			}
 		}()
 	}
-	wg2.Wait()
-	go func() {
-		conn.Close()
-		wg1.Done()
-	}()
-	for i := 0; i < 5000; i++ {
+	for i := 0; i < loop; i++ {
 		mock.Expect("GET", "a").ReplyString("b")
 	}
 	mock.Expect("QUIT").ReplyString("OK")
-	wg1.Wait()
+	wg.Wait()
 }
