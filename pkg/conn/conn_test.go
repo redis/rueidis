@@ -84,6 +84,7 @@ func setupConn(wires []*mockWire) (conn *Conn, checkClean func(t *testing.T)) {
 func TestNewConn(t *testing.T) {
 	n1, n2 := net.Pipe()
 	mock := &redisMock{t: t, buf: bufio.NewReader(n2), conn: n2}
+	pong := make(chan struct{})
 	go func() {
 		mock.Expect("HELLO", "3").
 			Reply(proto.Message{
@@ -95,6 +96,8 @@ func TestNewConn(t *testing.T) {
 			})
 		mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
 			ReplyString("OK")
+		mock.Expect("PING").ReplyString("OK")
+		close(pong)
 		mock.Expect("QUIT").ReplyString("OK")
 	}()
 	conn := NewConn("", Option{}, func(dst string, opt Option) (net.Conn, error) {
@@ -103,6 +106,7 @@ func TestNewConn(t *testing.T) {
 	if err := conn.Dialable(); err != nil {
 		t.Fatalf("unexpected error %v", err)
 	}
+	<-pong
 	conn.Close()
 }
 
