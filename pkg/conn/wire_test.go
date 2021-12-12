@@ -7,7 +7,6 @@ import (
 	"net"
 	"strconv"
 	"sync"
-	"sync/atomic"
 	"testing"
 	"time"
 
@@ -43,7 +42,7 @@ func (r *redisMock) Expect(expected ...string) *redisExpect {
 		return &redisExpect{redisMock: r, err: err}
 	}
 	if len(expected) != len(m.Values) {
-		r.t.Fatalf("redismock receive unexpected command length: expected %v, got : %v", len(expected), len(m.Values))
+		r.t.Fatalf("redismock receive unexpected command length: expected %v, got : %v", len(expected), m.Values)
 	}
 	for i, expected := range expected {
 		if m.Values[i].String != expected {
@@ -148,10 +147,10 @@ func setup(t *testing.T, option Option) (*wire, *redisMock, func(), func()) {
 func ExpectOK(t *testing.T, result proto.Result) {
 	val, err := result.Value()
 	if err != nil {
-		t.Fatalf("unexpected error result: %v", err)
+		t.Errorf("unexpected error result: %v", err)
 	}
 	if str, _ := val.ToString(); str != "OK" {
-		t.Fatalf("unexpected result: %v", fmt.Sprintf("%s", str))
+		t.Errorf("unexpected result: %v", fmt.Sprintf("%s", str))
 	}
 }
 
@@ -202,6 +201,23 @@ func TestWriteSingleFlush(t *testing.T) {
 	ExpectOK(t, conn.Do(cmds.NewCompleted([]string{"PING"})))
 }
 
+func TestWriteSinglePipelineFlush(t *testing.T) {
+	conn, mock, cancel, _ := setup(t, Option{})
+	defer cancel()
+	times := 5000
+	wg := sync.WaitGroup{}
+	wg.Add(times)
+
+	for i := 0; i < times; i++ {
+		go func() {
+			ExpectOK(t, conn.Do(cmds.NewCompleted([]string{"PING"})))
+		}()
+	}
+	for i := 0; i < times; i++ {
+		mock.Expect("PING").ReplyString("OK")
+	}
+}
+
 func TestWriteMultiFlush(t *testing.T) {
 	conn, mock, cancel, _ := setup(t, Option{})
 	defer cancel()
@@ -210,6 +226,26 @@ func TestWriteMultiFlush(t *testing.T) {
 	}()
 	for _, resp := range conn.DoMulti(cmds.NewCompleted([]string{"PING"}), cmds.NewCompleted([]string{"PING"})) {
 		ExpectOK(t, resp)
+	}
+}
+
+func TestWriteMultiPipelineFlush(t *testing.T) {
+	conn, mock, cancel, _ := setup(t, Option{})
+	defer cancel()
+	times := 5000
+	wg := sync.WaitGroup{}
+	wg.Add(times)
+
+	for i := 0; i < times; i++ {
+		go func() {
+			for _, resp := range conn.DoMulti(cmds.NewCompleted([]string{"PING"}), cmds.NewCompleted([]string{"PING"})) {
+				ExpectOK(t, resp)
+			}
+		}()
+	}
+
+	for i := 0; i < times; i++ {
+		mock.Expect("PING").Expect("PING").ReplyString("OK").ReplyString("OK")
 	}
 }
 
@@ -291,7 +327,7 @@ func TestClientSideCaching(t *testing.T) {
 
 func TestPubSub(t *testing.T) {
 	builder := cmds.NewBuilder()
-	t.Run("NoReply Commands", func(t *testing.T) {
+	t.Run("NoReply Commands In Do", func(t *testing.T) {
 		conn, mock, cancel, _ := setup(t, Option{})
 		defer cancel()
 
@@ -312,9 +348,32 @@ func TestPubSub(t *testing.T) {
 		}
 	})
 
+	t.Run("NoReply Commands In DoMulti", func(t *testing.T) {
+		conn, mock, cancel, _ := setup(t, Option{})
+		defer cancel()
+
+		commands := []cmds.Completed{
+			builder.Subscribe().Channel("a").Build(),
+			builder.Psubscribe().Pattern("b").Build(),
+			builder.Unsubscribe().Channel("c").Build(),
+			builder.Punsubscribe().Pattern("d").Build(),
+		}
+
+		conn.DoMulti(commands...)
+
+		for _, c := range commands {
+			mock.Expect(c.Commands()...)
+		}
+
+		go func() { mock.Expect("GET", "k").ReplyString("v") }()
+		if v, _ := conn.Do(builder.Get().Key("k").Build()).Value(); v.String != "v" {
+			t.Fatalf("no-reply commands should not affect nornal commands")
+		}
+	})
+
 	t.Run("PubSub Push Message", func(t *testing.T) {
 		count := make([]int32, 4)
-		_, mock, cancel, _ := setup(t, Option{
+		conn, mock, cancel, _ := setup(t, Option{
 			PubSubHandlers: PubSubHandlers{
 				OnMessage: func(channel, message string) {
 					if channel != "1" || message != "2" {
@@ -342,7 +401,9 @@ func TestPubSub(t *testing.T) {
 				},
 			},
 		})
-		mock.Expect().Reply(
+		activate := builder.Subscribe().Channel("a").Build()
+		conn.Do(activate)
+		mock.Expect(activate.Commands()...).Reply(
 			proto.Message{Type: '>', Values: []proto.Message{
 				{Type: '+', String: "message"},
 				{Type: '+', String: "1"},
@@ -391,25 +452,81 @@ func TestPubSub(t *testing.T) {
 	})
 }
 
-func TestExitAllGoroutineOnWriteError(t *testing.T) {
+func TestExitOnWriteError(t *testing.T) {
 	conn, _, _, closePipe := setup(t, Option{})
 
 	closePipe()
 
+	for i := 0; i < 2; i++ {
+		if err := conn.Do(cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); err != io.ErrClosedPipe {
+			t.Errorf("unexpected cached result, expected io.ErrClosedPipe, got %v", err)
+		}
+	}
+}
+
+func TestExitOnWriteMultiError(t *testing.T) {
+	conn, _, _, closePipe := setup(t, Option{})
+
+	closePipe()
+
+	for i := 0; i < 2; i++ {
+		if err := conn.DoMulti(cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); err != io.ErrClosedPipe {
+			t.Errorf("unexpected result, expected io.ErrClosedPipe, got %v", err)
+		}
+	}
+}
+
+func TestExitAllGoroutineOnWriteError(t *testing.T) {
+	conn, _, _, closePipe := setup(t, Option{})
+
+	// start the background worker
+	conn.Do(cmds.NewBuilder().Subscribe().Channel("a").Build())
+
+	closePipe()
 	wg := sync.WaitGroup{}
 	wg.Add(5000)
 	for i := 0; i < 5000; i++ {
 		go func() {
 			defer wg.Done()
-			if err := conn.Do(cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); err != io.ErrClosedPipe && err != ErrConnClosing {
-				t.Errorf("unexpected cached result, expected io.ErrClosedPipe or ErrConnClosing, got %v", err)
+			if err := conn.Do(cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); err != io.ErrClosedPipe {
+				t.Errorf("unexpected result, expected io.ErrClosedPipe, got %v", err)
 			}
-			if err := conn.DoMulti(cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); err != io.ErrClosedPipe && err != ErrConnClosing {
-				t.Errorf("unexpected cached result, expected io.ErrClosedPipe or ErrConnClosing, got %v", err)
+			if err := conn.DoMulti(cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); err != io.ErrClosedPipe {
+				t.Errorf("unexpected result, expected io.ErrClosedPipe, got %v", err)
 			}
 		}()
 	}
 	wg.Wait()
+}
+
+func TestExitOnReadError(t *testing.T) {
+	conn, mock, _, closePipe := setup(t, Option{})
+
+	go func() {
+		mock.Expect("GET", "a")
+		closePipe()
+	}()
+
+	for i := 0; i < 2; i++ {
+		if err := conn.Do(cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); err != io.ErrClosedPipe {
+			t.Errorf("unexpected result, expected io.ErrClosedPipe, got %v", err)
+		}
+	}
+}
+
+func TestExitOnReadMultiError(t *testing.T) {
+	conn, mock, _, closePipe := setup(t, Option{})
+
+	go func() {
+		mock.Expect("GET", "a")
+		closePipe()
+	}()
+
+	for i := 0; i < 2; i++ {
+		if err := conn.DoMulti(cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); err != io.ErrClosedPipe {
+			t.Errorf("unexpected result, expected io.ErrClosedPipe, got %v", err)
+		}
+	}
 }
 
 func TestExitAllGoroutineOnReadError(t *testing.T) {
@@ -426,10 +543,10 @@ func TestExitAllGoroutineOnReadError(t *testing.T) {
 		go func() {
 			defer wg.Done()
 			if err := conn.Do(cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); err != io.ErrClosedPipe && err != ErrConnClosing {
-				t.Errorf("unexpected cached result, expected io.ErrClosedPipe or ErrConnClosing, got %v", err)
+				t.Errorf("unexpected result, expected io.ErrClosedPipe or ErrConnClosing, got %v", err)
 			}
 			if err := conn.DoMulti(cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); err != io.ErrClosedPipe && err != ErrConnClosing {
-				t.Errorf("unexpected cached result, expected io.ErrClosedPipe or ErrConnClosing, got %v", err)
+				t.Errorf("unexpected result, expected io.ErrClosedPipe or ErrConnClosing, got %v", err)
 			}
 		}()
 	}
@@ -440,22 +557,14 @@ func TestCloseAndWaitPendingCMDs(t *testing.T) {
 	conn, mock, _, _ := setup(t, Option{})
 
 	var (
-		loop    = 5000
-		counter = int64(0)
-		wg      sync.WaitGroup
+		loop = 5000
+		wg   sync.WaitGroup
 	)
 
-	wg.Add(loop + 1)
+	wg.Add(loop)
 	for i := 0; i < loop; i++ {
 		go func() {
 			defer wg.Done()
-
-			if count := atomic.AddInt64(&counter, 1); count == int64(loop) {
-				go func() {
-					conn.Close()
-					wg.Done()
-				}()
-			}
 
 			if v, _ := conn.Do(cmds.NewCompleted([]string{"GET", "a"})).Value(); v.String != "b" {
 				t.Errorf("unexpected GET result %v", v.String)
@@ -463,7 +572,11 @@ func TestCloseAndWaitPendingCMDs(t *testing.T) {
 		}()
 	}
 	for i := 0; i < loop; i++ {
-		mock.Expect("GET", "a").ReplyString("b")
+		r := mock.Expect("GET", "a")
+		if i == loop-1 {
+			go conn.Close()
+		}
+		r.ReplyString("b")
 	}
 	mock.Expect("QUIT").ReplyString("OK")
 	wg.Wait()
