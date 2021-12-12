@@ -78,9 +78,9 @@ func newConn(dst string, option Option, dead Wire, dialFn DialFn, wireFn wireFn)
 	return conn
 }
 
-func (c *Conn) connect() (Wire, error) {
-	if wire := c.wire.Load().(Wire); wire != c.dead {
-		return wire, nil
+func (c *Conn) connect() (w Wire, err error) {
+	if w = c.wire.Load().(Wire); w != c.dead {
+		return w, nil
 	}
 
 	c.mu.Lock()
@@ -96,14 +96,15 @@ func (c *Conn) connect() (Wire, error) {
 		return sc.w, sc.e
 	}
 
-	wire, err := c.dial()
-	if err == nil {
-		go func() {
-			for resp := wire.Do(cmds.PingCmd); resp.NonRedisError() == nil; resp = wire.Do(cmds.PingCmd) {
-				time.Sleep(time.Second)
-			}
-		}()
-		c.wire.Store(wire)
+	if w = c.wire.Load().(Wire); w == c.dead {
+		if w, err = c.dial(); err == nil {
+			go func() {
+				for resp := w.Do(cmds.PingCmd); resp.NonRedisError() == nil; resp = w.Do(cmds.PingCmd) {
+					time.Sleep(time.Second)
+				}
+			}()
+			c.wire.Store(w)
+		}
 	}
 
 	c.mu.Lock()
@@ -111,11 +112,11 @@ func (c *Conn) connect() (Wire, error) {
 	c.sc = nil
 	c.mu.Unlock()
 
-	sc.w = wire
+	sc.w = w
 	sc.e = err
 	sc.g.Done()
 
-	return wire, err
+	return w, err
 }
 
 func (c *Conn) dial() (w Wire, err error) {
