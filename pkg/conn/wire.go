@@ -116,8 +116,11 @@ func (c *wire) reading() {
 				if !ones[0].IsEmpty() {
 					multi = ones
 				} else {
-					err = c.w.Flush()
-					runtime.Gosched()
+					if c.w.Buffered() == 0 {
+						runtime.Gosched()
+					} else {
+						err = c.w.Flush()
+					}
 				}
 			}
 			for _, cmd := range multi {
