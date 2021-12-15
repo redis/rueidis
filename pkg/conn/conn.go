@@ -98,11 +98,6 @@ func (c *Conn) connect() (w Wire, err error) {
 
 	if w = c.wire.Load().(Wire); w == c.dead {
 		if w, err = c.dial(); err == nil {
-			go func() {
-				for resp := w.Do(cmds.PingCmd); resp.NonRedisError() == nil; resp = w.Do(cmds.PingCmd) {
-					time.Sleep(time.Second)
-				}
-			}()
 			c.wire.Store(w)
 		}
 	}

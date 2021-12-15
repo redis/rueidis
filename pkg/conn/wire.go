@@ -32,6 +32,7 @@ type wire struct {
 	waits int32
 	state int32
 
+	once  sync.Once
 	conn  net.Conn
 	queue queue.Queue
 	cache cache.Cache
@@ -66,7 +67,6 @@ func newWire(conn net.Conn, option Option) (c *wire, err error) {
 
 		psHandlers: option.PubSubHandlers,
 	}
-	go c.reading()
 
 	helloCmd := []string{"HELLO", "3"}
 	if option.Username != "" {
@@ -94,10 +94,19 @@ func newWire(conn net.Conn, option Option) (c *wire, err error) {
 	return c, nil
 }
 
-func (c *wire) reading() {
+func (c *wire) background() {
+	atomic.CompareAndSwapInt32(&c.state, 0, 1)
+	c.once.Do(func() {
+		go c._background()
+	})
+}
+
+func (c *wire) _background() {
 	wg := sync.WaitGroup{}
 	wg.Add(2)
 	exit := func() {
+		// stop accepting new requests
+		atomic.CompareAndSwapInt32(&c.state, 1, 2)
 		_ = c.conn.Close() // force both read & write goroutine to exit
 		wg.Done()
 	}
@@ -111,13 +120,14 @@ func (c *wire) reading() {
 			ch    chan proto.Result
 		)
 
-		for atomic.LoadInt32(&c.state) != 2 {
+		for atomic.LoadInt32(&c.state) != 3 {
 			if ones[0], multi, ch = c.queue.NextWriteCmd(); multi == nil {
 				if !ones[0].IsEmpty() {
 					multi = ones
 				} else {
 					if c.w.Buffered() == 0 {
 						runtime.Gosched()
+						err = c.Error() // check err later
 					} else {
 						err = c.w.Flush()
 					}
@@ -128,7 +138,7 @@ func (c *wire) reading() {
 					ch <- proto.NewErrResult(err)
 				}
 			}
-			if err != nil {
+			if err != nil && err != ErrConnClosing {
 				c.error.CompareAndSwap(nil, &errWrap{error: err})
 				return
 			}
@@ -192,8 +202,6 @@ func (c *wire) reading() {
 		ch    chan proto.Result
 	)
 
-	// clean up write queue and read queue
-	atomic.CompareAndSwapInt32(&c.state, 0, 1)
 	// clean up cache and free pending calls
 	c.cache.FreeAndClose(proto.Message{Type: '-', String: ErrConnClosing.Error()})
 	for atomic.LoadInt32(&c.waits) != 0 {
@@ -209,7 +217,7 @@ func (c *wire) reading() {
 			ch <- proto.NewErrResult(c.Error())
 		}
 	}
-	atomic.CompareAndSwapInt32(&c.state, 1, 2)
+	atomic.CompareAndSwapInt32(&c.state, 2, 3)
 }
 
 func (c *wire) handlePush(values []proto.Message) {
@@ -246,31 +254,116 @@ func (c *wire) Info() map[string]proto.Message {
 }
 
 func (c *wire) Do(cmd cmds.Completed) (resp proto.Result) {
-	atomic.AddInt32(&c.waits, 1)
-	if atomic.LoadInt32(&c.state) == 0 {
-		resp = <-c.queue.PutOne(cmd)
+	waits := atomic.AddInt32(&c.waits, 1) // if this is 1, and background worker is not started, no need to queue
+	state := atomic.LoadInt32(&c.state)
+
+	if state == 1 {
+		goto queue
+	}
+
+	if state == 0 {
+		if waits != 1 {
+			goto queue
+		}
+		if cmd.NoReply() {
+			c.background()
+			goto queue
+		}
+		resp = c.syncDo(cmd)
 	} else {
 		resp = proto.NewErrResult(c.Error())
 	}
+	if left := atomic.AddInt32(&c.waits, -1); state == 0 && waits == 1 && left != 0 {
+		c.background()
+	}
+	return resp
+
+queue:
+	resp = <-c.queue.PutOne(cmd)
 	atomic.AddInt32(&c.waits, -1)
 	return resp
 }
 
 func (c *wire) DoMulti(multi ...cmds.Completed) []proto.Result {
+	waits := atomic.AddInt32(&c.waits, 1) // if this is 1, and background worker is not started, no need to queue
+	state := atomic.LoadInt32(&c.state)
 	resp := make([]proto.Result, len(multi))
-	atomic.AddInt32(&c.waits, 1)
-	if atomic.LoadInt32(&c.state) == 0 {
-		ch := c.queue.PutMulti(multi)
-		for i := range resp {
-			resp[i] = <-ch
+
+	if state == 1 {
+		goto queue
+	}
+
+	if state == 0 {
+		if waits != 1 {
+			goto queue
 		}
+		for _, cmd := range multi {
+			if cmd.IsOptIn() || cmd.NoReply() {
+				c.background()
+				goto queue
+			}
+		}
+		resp = c.syncDoMulti(resp, multi)
 	} else {
 		err := c.Error()
 		for i := 0; i < len(resp); i++ {
 			resp[i] = proto.NewErrResult(err)
 		}
 	}
+	if left := atomic.AddInt32(&c.waits, -1); state == 0 && waits == 1 && left != 0 {
+		c.background()
+	}
+	return resp
+
+queue:
+	ch := c.queue.PutMulti(multi)
+	for i := range resp {
+		resp[i] = <-ch
+	}
 	atomic.AddInt32(&c.waits, -1)
+	return resp
+}
+
+func (c *wire) syncDo(cmd cmds.Completed) (resp proto.Result) {
+	var msg proto.Message
+	err := proto.WriteCmd(c.w, cmd.Commands())
+	if err == nil {
+		if err = c.w.Flush(); err == nil {
+			msg, err = proto.ReadNextMessage(c.r)
+		}
+	}
+	if err != nil {
+		c.error.CompareAndSwap(nil, &errWrap{error: err})
+		c.background()                             // start the background worker
+		atomic.CompareAndSwapInt32(&c.state, 1, 3) // stopping the worker and let it do the cleaning
+	}
+	return proto.NewResult(msg, err)
+}
+
+func (c *wire) syncDoMulti(resp []proto.Result, multi []cmds.Completed) []proto.Result {
+	var err error
+	var msg proto.Message
+
+	for _, cmd := range multi {
+		err = proto.WriteCmd(c.w, cmd.Commands())
+	}
+	if err = c.w.Flush(); err != nil {
+		goto abort
+	}
+	for i := 0; i < len(resp); i++ {
+		if msg, err = proto.ReadNextMessage(c.r); err != nil {
+			goto abort
+		}
+		resp[i] = proto.NewResult(msg, err)
+	}
+	return resp
+abort:
+	c.error.CompareAndSwap(nil, &errWrap{error: err})
+	c.background()                             // start the background worker
+	atomic.CompareAndSwapInt32(&c.state, 1, 3) // stopping the worker and let it do the cleaning
+	for i := 0; i < len(resp); i++ {
+		resp[i] = proto.NewErrResult(err)
+	}
 	return resp
 }
 
@@ -293,12 +386,14 @@ func (c *wire) Error() error {
 
 func (c *wire) Close() {
 	swapped := c.error.CompareAndSwap(nil, &errWrap{error: ErrConnClosing})
-	atomic.CompareAndSwapInt32(&c.state, 0, 1)
+	atomic.CompareAndSwapInt32(&c.state, 0, 2)
+	atomic.CompareAndSwapInt32(&c.state, 1, 2)
 	for atomic.LoadInt32(&c.waits) != 0 {
 		runtime.Gosched()
 	}
 	if swapped {
+		c.background()
 		<-c.queue.PutOne(cmds.QuitCmd)
 	}
-	atomic.CompareAndSwapInt32(&c.state, 1, 2)
+	atomic.CompareAndSwapInt32(&c.state, 2, 3)
 }

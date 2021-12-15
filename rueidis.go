@@ -3,6 +3,7 @@ package rueidis
 import (
 	"crypto/tls"
 	"net"
+	"time"
 
 	"github.com/rueian/rueidis/internal/proto"
 	"github.com/rueian/rueidis/pkg/client"
@@ -30,7 +31,7 @@ func NewSingleClient(option SingleClientOption) (*client.SingleClient, error) {
 }
 
 func dial(dst string, opt conn.Option) (conn net.Conn, err error) {
-	dialer := &net.Dialer{Timeout: opt.DialTimeout}
+	dialer := &net.Dialer{Timeout: opt.DialTimeout, KeepAlive: time.Second}
 	if opt.TLSConfig != nil {
 		conn, err = tls.DialWithDialer(dialer, "tcp", dst, opt.TLSConfig)
 	} else {
