@@ -84,7 +84,6 @@ func setupConn(wires []*mockWire) (conn *Conn, checkClean func(t *testing.T)) {
 func TestNewConn(t *testing.T) {
 	n1, n2 := net.Pipe()
 	mock := &redisMock{t: t, buf: bufio.NewReader(n2), conn: n2}
-	pong := make(chan struct{})
 	go func() {
 		mock.Expect("HELLO", "3").
 			Reply(proto.Message{
@@ -96,8 +95,6 @@ func TestNewConn(t *testing.T) {
 			})
 		mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
 			ReplyString("OK")
-		mock.Expect("PING").ReplyString("OK")
-		close(pong)
 		mock.Expect("QUIT").ReplyString("OK")
 	}()
 	conn := NewConn("", Option{}, func(dst string, opt Option) (net.Conn, error) {
@@ -106,7 +103,6 @@ func TestNewConn(t *testing.T) {
 	if err := conn.Dialable(); err != nil {
 		t.Fatalf("unexpected error %v", err)
 	}
-	<-pong
 	conn.Close()
 }
 
@@ -162,15 +158,11 @@ func TestConnReuseWire(t *testing.T) {
 		conn.Close()
 	})
 	t.Run("reuse blocking pool", func(t *testing.T) {
-		pong := make(chan struct{})
 		blocking := make(chan struct{})
 		response := make(chan proto.Result)
 		conn, checkClean := setupConn([]*mockWire{
-			{ // leave first wire for ping
-				do: func(cmd cmds.Completed) proto.Result {
-					pong <- struct{}{}
-					return proto.NewErrResult(ErrConnClosing)
-				},
+			{
+				// leave first wire for pipeline calls
 			},
 			{
 				do: func(cmd cmds.Completed) proto.Result {
@@ -189,7 +181,6 @@ func TestConnReuseWire(t *testing.T) {
 		if err := conn.Dialable(); err != nil {
 			t.Fatalf("unexpected dial error %v", err)
 		}
-		<-pong
 
 		wire1 := conn.Acquire()
 
@@ -231,27 +222,6 @@ func TestConnCMDRetry(t *testing.T) {
 		if info := conn.Info(); info == nil || info["key"].String != "value" {
 			t.Fatalf("unexpected info %v", info)
 		}
-	})
-
-	t.Run("periodic ping", func(t *testing.T) {
-		pong := make(chan proto.Result)
-		conn, checkClean := setupConn([]*mockWire{
-			{
-				do: func(cmd cmds.Completed) proto.Result {
-					if cmd.Commands()[0] != "PING" {
-						t.Fatalf("command should be ping")
-					}
-					return <-pong
-				},
-			},
-		})
-		defer checkClean(t)
-		defer conn.Close()
-		if err := conn.Dialable(); err != nil {
-			t.Fatalf("unexpected dial error %v", err)
-		}
-		pong <- proto.NewResult(proto.Message{Type: '+', String: "PONG"}, nil)
-		pong <- proto.NewResult(proto.Message{}, ErrConnClosing) // this error should not cause retry
 	})
 
 	t.Run("retry single read", func(t *testing.T) {
@@ -408,20 +378,12 @@ func TestConnCMDRetry(t *testing.T) {
 	})
 
 	t.Run("single blocking", func(t *testing.T) {
-		pong := make(chan struct{})
 		blocked := make(chan struct{})
 		responses := make(chan proto.Result)
 
 		conn, checkClean := setupConn([]*mockWire{
 			{
-				// leave the first wire for ping
-				do: func(cmd cmds.Completed) proto.Result {
-					if cmd.Commands()[0] != "PING" {
-						t.Fatalf("command should be ping")
-					}
-					close(pong)
-					return proto.NewResult(proto.Message{}, ErrConnClosing) // to make just ping once
-				},
+				// leave first wire for pipeline calls
 			},
 			{
 				do: func(cmd cmds.Completed) proto.Result {
@@ -441,7 +403,7 @@ func TestConnCMDRetry(t *testing.T) {
 		if err := conn.Dialable(); err != nil {
 			t.Fatalf("unexpected dial error %v", err)
 		}
-		<-pong
+
 		wg := sync.WaitGroup{}
 		wg.Add(2)
 		for i := 0; i < 2; i++ {
@@ -465,20 +427,12 @@ func TestConnCMDRetry(t *testing.T) {
 	})
 
 	t.Run("multiple blocking", func(t *testing.T) {
-		pong := make(chan struct{})
 		blocked := make(chan struct{})
 		responses := make(chan proto.Result)
 
 		conn, checkClean := setupConn([]*mockWire{
 			{
-				// leave the first wire for ping
-				do: func(cmd cmds.Completed) proto.Result {
-					if cmd.Commands()[0] != "PING" {
-						t.Fatalf("command should be ping")
-					}
-					close(pong)
-					return proto.NewResult(proto.Message{}, ErrConnClosing) // to make just ping once
-				},
+				// leave first wire for pipeline calls
 			},
 			{
 				doMulti: func(cmd ...cmds.Completed) []proto.Result {
@@ -498,7 +452,7 @@ func TestConnCMDRetry(t *testing.T) {
 		if err := conn.Dialable(); err != nil {
 			t.Fatalf("unexpected dial error %v", err)
 		}
-		<-pong
+
 		wg := sync.WaitGroup{}
 		wg.Add(2)
 		for i := 0; i < 2; i++ {
