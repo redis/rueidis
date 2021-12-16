@@ -124,7 +124,7 @@
     "since": "1.0.0",
     "group": "bloom"
   },
-  "BF.EXIST": {
+  "BF.EXISTS": {
     "summary": "Checks whether an item exists in a Bloom Filter",
     "complexity": "O(k), where k is the number of hash functions used by the last sub-filter",
     "arguments": [
@@ -140,7 +140,7 @@
     "since": "1.0.0",
     "group": "bloom"
   },
-  "BF.MEXIST": {
+  "BF.MEXISTS": {
     "summary": "Checks whether one or more items exist in a Bloom Filter",
     "complexity": "O(k * n), where k is the number of hash functions and n is the number of items",
     "arguments": [
