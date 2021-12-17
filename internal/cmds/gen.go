@@ -29110,11 +29110,11 @@ type MemoryDoctor Completed
 type SMemoryDoctor SCompleted
 
 func (b *Builder) MemoryDoctor() MemoryDoctor {
-	return MemoryDoctor{cs: append(b.get(), "MEMORY", "DOCTOR"), ks: InitSlot}
+	return MemoryDoctor{cs: append(b.get(), "MEMORY", "DOCTOR"), ks: InitSlot, cf: readonly}
 }
 
 func (b *SBuilder) MemoryDoctor() SMemoryDoctor {
-	return SMemoryDoctor{cs: append(b.get(), "MEMORY", "DOCTOR"), ks: InitSlot}
+	return SMemoryDoctor{cs: append(b.get(), "MEMORY", "DOCTOR"), ks: InitSlot, cf: readonly}
 }
 
 func (c MemoryDoctor) Build() Completed {
@@ -29150,11 +29150,11 @@ type MemoryMallocStats Completed
 type SMemoryMallocStats SCompleted
 
 func (b *Builder) MemoryMallocStats() MemoryMallocStats {
-	return MemoryMallocStats{cs: append(b.get(), "MEMORY", "MALLOC-STATS"), ks: InitSlot}
+	return MemoryMallocStats{cs: append(b.get(), "MEMORY", "MALLOC-STATS"), ks: InitSlot, cf: readonly}
 }
 
 func (b *SBuilder) MemoryMallocStats() SMemoryMallocStats {
-	return SMemoryMallocStats{cs: append(b.get(), "MEMORY", "MALLOC-STATS"), ks: InitSlot}
+	return SMemoryMallocStats{cs: append(b.get(), "MEMORY", "MALLOC-STATS"), ks: InitSlot, cf: readonly}
 }
 
 func (c MemoryMallocStats) Build() Completed {
@@ -29190,11 +29190,11 @@ type MemoryStats Completed
 type SMemoryStats SCompleted
 
 func (b *Builder) MemoryStats() MemoryStats {
-	return MemoryStats{cs: append(b.get(), "MEMORY", "STATS"), ks: InitSlot}
+	return MemoryStats{cs: append(b.get(), "MEMORY", "STATS"), ks: InitSlot, cf: readonly}
 }
 
 func (b *SBuilder) MemoryStats() SMemoryStats {
-	return SMemoryStats{cs: append(b.get(), "MEMORY", "STATS"), ks: InitSlot}
+	return SMemoryStats{cs: append(b.get(), "MEMORY", "STATS"), ks: InitSlot, cf: readonly}
 }
 
 func (c MemoryStats) Build() Completed {
@@ -29210,11 +29210,11 @@ type MemoryUsage Completed
 type SMemoryUsage SCompleted
 
 func (b *Builder) MemoryUsage() MemoryUsage {
-	return MemoryUsage{cs: append(b.get(), "MEMORY", "USAGE"), ks: InitSlot}
+	return MemoryUsage{cs: append(b.get(), "MEMORY", "USAGE"), ks: InitSlot, cf: readonly}
 }
 
 func (b *SBuilder) MemoryUsage() SMemoryUsage {
-	return SMemoryUsage{cs: append(b.get(), "MEMORY", "USAGE"), ks: InitSlot}
+	return SMemoryUsage{cs: append(b.get(), "MEMORY", "USAGE"), ks: InitSlot, cf: readonly}
 }
 
 func (c MemoryUsage) Key(key string) MemoryUsageKey {
