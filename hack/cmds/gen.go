@@ -291,28 +291,132 @@ func main() {
 		})
 	}
 
-	generate(structs)
+	gf, err := os.Open("../../internal/cmds/gen.go")
+	if err != nil {
+		panic(err)
+	}
+	defer gf.Close()
+	tf, err := os.Open("../../internal/cmds/gen_test.go")
+	if err != nil {
+		panic(err)
+	}
+	defer gf.Close()
+
+	generate(gf, structs)
+	tests(tf, structs)
 }
 
-func generate(structs map[string]GoStruct) {
+func tests(f io.Writer, structs map[string]GoStruct) {
 	var names []string
 	for name := range structs {
 		names = append(names, name)
 	}
 	sort.Strings(names)
 
-	fmt.Fprintf(os.Stdout, "// Code generated DO NOT EDIT\n\npackage cmds\n\n")
-	fmt.Fprintf(os.Stdout, "import %q\n\n", "strconv")
+	var pathes [][]GoStruct
+	for _, name := range names {
+		s := structs[name]
+		if !s.Node.Root {
+			continue
+		}
+		pathes = makePath(s, nil, pathes)
+	}
+
+	fmt.Fprintf(f, "// Code generated DO NOT EDIT\n\npackage cmds\n\n")
+
+	fmt.Fprintf(f, "import \"testing\"\n\n")
+
+	fmt.Fprintf(f, "func TestCommandBuilder(t *testing.T) {\n")
+
+	fmt.Fprintf(f, "\ts := NewBuilder()\n")
+	fmt.Fprintf(f, "\tc := NewSBuilder()\n")
+
+	for _, p := range pathes {
+		printPath(f, "s", p, "Build")
+		printPath(f, "c", p, "Build")
+		if within(p[0], cacheableCMDs) {
+			printPath(f, "s", p, "Cache")
+			printPath(f, "c", p, "Cache")
+		}
+	}
+
+	fmt.Fprintf(f, "}\n")
+}
+
+func makePath(s GoStruct, path []GoStruct, pathes [][]GoStruct) [][]GoStruct {
+	path = append(path, s)
+	nexts := s.Node.NextNodes()
+	if len(path) < 7 {
+		for _, n := range nexts {
+			if s.Node == n {
+				continue
+			}
+			if n.Parent != nil && n.Parent.Child == n {
+				continue
+			}
+			if n.Child != nil {
+				n = n.Child
+			}
+			for _, ss := range n.GoStructs() {
+				clone := make([]GoStruct, len(path))
+				copy(clone, path)
+				pathes = makePath(ss, clone, pathes)
+			}
+		}
+	}
+	if allOptional(s.Node, nexts) {
+		pathes = append(pathes, path)
+	}
+	return pathes
+}
+
+func testParams(defs []Parameter) string {
+	var params []string
+	for _, param := range defs {
+		switch toGoType(param.Type) {
+		case "string":
+			params = append(params, `"1"`)
+		case "int64", "float64":
+			params = append(params, `1`)
+		}
+	}
+	return strings.Join(params, ", ")
+}
+
+func printPath(f io.Writer, receiver string, path []GoStruct, end string) {
+	fmt.Fprintf(f, "\t%s.%s()", receiver, path[0].BuildDef.MethodName)
+	for _, s := range path[1:] {
+		fmt.Fprintf(f, ".%s(", s.BuildDef.MethodName)
+		if len(s.BuildDef.Parameters) != 1 && s.Variadic {
+			fmt.Fprintf(f, ").%s(", s.BuildDef.MethodName)
+		}
+		fmt.Fprintf(f, "%s)", testParams(s.BuildDef.Parameters))
+		if s.Variadic {
+			fmt.Fprintf(f, ".%s(%s)", s.BuildDef.MethodName, testParams(s.BuildDef.Parameters))
+		}
+	}
+	fmt.Fprintf(f, ".%s()\n", end)
+}
+
+func generate(f io.Writer, structs map[string]GoStruct) {
+	var names []string
+	for name := range structs {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+
+	fmt.Fprintf(f, "// Code generated DO NOT EDIT\n\npackage cmds\n\n")
+	fmt.Fprintf(f, "import %q\n\n", "strconv")
 
 	for _, name := range names {
 		s := structs[name]
 
-		fmt.Fprintf(os.Stdout, "type %s Completed\n\n", s.FullName)
-		fmt.Fprintf(os.Stdout, "type %s SCompleted\n\n", "S"+s.FullName)
+		fmt.Fprintf(f, "type %s Completed\n\n", s.FullName)
+		fmt.Fprintf(f, "type %s SCompleted\n\n", "S"+s.FullName)
 
 		if s.Node.Root {
-			printRootBuilder(os.Stdout, s, "")
-			printRootBuilder(os.Stdout, s, "S")
+			printRootBuilder(f, s, "")
+			printRootBuilder(f, s, "S")
 		}
 
 		for _, next := range s.NextNodes {
@@ -320,17 +424,17 @@ func generate(structs map[string]GoStruct) {
 				next = next.Child
 			}
 			for _, ss := range next.GoStructs() {
-				printBuilder(os.Stdout, s, ss, "")
-				printBuilder(os.Stdout, s, ss, "S")
+				printBuilder(f, s, ss, "")
+				printBuilder(f, s, ss, "S")
 			}
 		}
 
 		if allOptional(s.Node, s.NextNodes) {
-			printFinalBuilder(os.Stdout, s, "", "Build", "Completed")
-			printFinalBuilder(os.Stdout, s, "S", "Build", "SCompleted")
+			printFinalBuilder(f, s, "", "Build", "Completed")
+			printFinalBuilder(f, s, "S", "Build", "SCompleted")
 			if within(s.Node.FindRoot().GoStructs()[0], cacheableCMDs) {
-				printFinalBuilder(os.Stdout, s, "", "Cache", "Cacheable")
-				printFinalBuilder(os.Stdout, s, "S", "Cache", "SCacheable")
+				printFinalBuilder(f, s, "", "Cache", "Cacheable")
+				printFinalBuilder(f, s, "S", "Cache", "SCacheable")
 			}
 		}
 	}
@@ -451,9 +555,9 @@ func printBuilder(w io.Writer, parent, next GoStruct, prefix string) {
 	if prefix == "S" {
 		if len(next.BuildDef.Parameters) == 1 && next.Variadic {
 			if next.BuildDef.Parameters[0].Type == "key" {
-				fmt.Printf("\tfor _, k := range %s {\n", toGoName(next.BuildDef.Parameters[0].Name))
-				fmt.Printf("\t\tc.ks = checkSlot(c.ks, slot(k))\n")
-				fmt.Printf("\t}\n")
+				fmt.Fprintf(w, "\tfor _, k := range %s {\n", toGoName(next.BuildDef.Parameters[0].Name))
+				fmt.Fprintf(w, "\t\tc.ks = checkSlot(c.ks, slot(k))\n")
+				fmt.Fprintf(w, "\t}\n")
 			}
 		} else {
 			if len(next.BuildDef.Parameters) != 1 && next.Variadic && parent.FullName != next.FullName {
@@ -461,7 +565,7 @@ func printBuilder(w io.Writer, parent, next GoStruct, prefix string) {
 			} else {
 				for _, arg := range next.BuildDef.Parameters {
 					if arg.Type == "key" {
-						fmt.Printf("\tc.ks = checkSlot(c.ks, slot(%s))\n", toGoName(arg.Name))
+						fmt.Fprintf(w, "\tc.ks = checkSlot(c.ks, slot(%s))\n", toGoName(arg.Name))
 					}
 				}
 			}
@@ -470,7 +574,7 @@ func printBuilder(w io.Writer, parent, next GoStruct, prefix string) {
 
 	for _, cmd := range next.BuildDef.Command {
 		if cmd == "BLOCK" {
-			fmt.Printf("\tc.cf = blockTag\n")
+			fmt.Fprintf(w, "\tc.cf = blockTag\n")
 			break
 		}
 	}
@@ -514,16 +618,16 @@ func printBuilder(w io.Writer, parent, next GoStruct, prefix string) {
 				if toGoType(next.BuildDef.Parameters[0].Type) == "string" {
 					fmt.Fprintf(w, "\tc.cs = append(c.cs, %s...)\n", toGoName(next.BuildDef.Parameters[0].Name))
 				} else {
-					fmt.Printf("\tfor _, n := range %s {\n", toGoName(next.BuildDef.Parameters[0].Name))
+					fmt.Fprintf(w, "\tfor _, n := range %s {\n", toGoName(next.BuildDef.Parameters[0].Name))
 					switch toGoType(next.BuildDef.Parameters[0].Type) {
 					case "float64":
-						fmt.Printf("\t\tc.cs = append(c.cs, strconv.FormatFloat(n, 'f', -1, 64))\n")
+						fmt.Fprintf(w, "\t\tc.cs = append(c.cs, strconv.FormatFloat(n, 'f', -1, 64))\n")
 					case "int64":
-						fmt.Printf("\t\tc.cs = append(c.cs, strconv.FormatInt(n, 10))\n")
+						fmt.Fprintf(w, "\t\tc.cs = append(c.cs, strconv.FormatInt(n, 10))\n")
 					default:
 						panic("unexpected param type " + next.BuildDef.Parameters[0].Type)
 					}
-					fmt.Printf("\t}\n")
+					fmt.Fprintf(w, "\t}\n")
 				}
 			} else {
 				for _, p := range next.BuildDef.Parameters {
