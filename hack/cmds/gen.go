@@ -291,16 +291,16 @@ func main() {
 		})
 	}
 
-	gf, err := os.Open("../../internal/cmds/gen.go")
+	gf, err := os.Create("../../internal/cmds/gen.go")
 	if err != nil {
 		panic(err)
 	}
 	defer gf.Close()
-	tf, err := os.Open("../../internal/cmds/gen_test.go")
+	tf, err := os.Create("../../internal/cmds/gen_test.go")
 	if err != nil {
 		panic(err)
 	}
-	defer gf.Close()
+	defer tf.Close()
 
 	generate(gf, structs)
 	tests(tf, structs)
@@ -326,21 +326,24 @@ func tests(f io.Writer, structs map[string]GoStruct) {
 
 	fmt.Fprintf(f, "import \"testing\"\n\n")
 
-	fmt.Fprintf(f, "func TestCommandBuilder(t *testing.T) {\n")
+	fmt.Fprintf(f, "var s = NewBuilder()\n")
+	fmt.Fprintf(f, "var c = NewSBuilder()\n\n")
 
-	fmt.Fprintf(f, "\ts := NewBuilder()\n")
-	fmt.Fprintf(f, "\tc := NewSBuilder()\n")
-
-	for _, p := range pathes {
+	for i, p := range pathes {
+		if i%100 == 0 {
+			fmt.Fprintf(f, "func TestCommand_%d(t *testing.T) {\n", i/100)
+		}
 		printPath(f, "s", p, "Build")
 		printPath(f, "c", p, "Build")
 		if within(p[0], cacheableCMDs) {
 			printPath(f, "s", p, "Cache")
 			printPath(f, "c", p, "Cache")
 		}
+		if i%100 == 99 || i == len(pathes)-1 {
+			fmt.Fprintf(f, "}\n\n")
+		}
 	}
 
-	fmt.Fprintf(f, "}\n")
 }
 
 func makePath(s GoStruct, path []GoStruct, pathes [][]GoStruct) [][]GoStruct {

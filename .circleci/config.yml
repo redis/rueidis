@@ -1,0 +1,15 @@
+version: 2
+jobs:
+  build:
+    machine:
+      image: ubuntu-2004:202111-01
+    resource_class: large
+    steps:
+      - checkout
+
+      - run: curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+      - run: chmod +x ./cc-test-reporter
+      - run: go get -v -t -d ./...
+      - run: ./cc-test-reporter before-build
+      - run: go test -coverprofile=./c.out -v -race ./...
+      - run: ./cc-test-reporter after-build -p $(go list -m) --exit-code $?

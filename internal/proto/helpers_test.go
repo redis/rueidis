@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-const iteration = 2000
+const iteration = 1000
 
 func init() {
 	rand.Seed(time.Now().UnixNano())

@@ -10,7 +10,7 @@ import (
 func TestRing(t *testing.T) {
 	t.Run("PutOne", func(t *testing.T) {
 		ring := NewRing()
-		size := 8000
+		size := 5000
 		fixture := make(map[string]struct{}, size)
 		for i := 0; i < size; i++ {
 			fixture[strconv.Itoa(i)] = struct{}{}
@@ -39,7 +39,7 @@ func TestRing(t *testing.T) {
 
 	t.Run("PutMulti", func(t *testing.T) {
 		ring := NewRing()
-		size := 8000
+		size := 5000
 		fixture := make(map[string]struct{}, size)
 		for i := 0; i < size; i++ {
 			fixture[strconv.Itoa(i)] = struct{}{}
