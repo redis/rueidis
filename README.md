@@ -1,4 +1,9 @@
 # rueidis
+
+![circleci](https://circleci.com/gh/rueian/rueidis.svg?style=shield)
+[![Maintainability](https://api.codeclimate.com/v1/badges/0d93d524c2b8497aacbe/maintainability)](https://codeclimate.com/github/rueian/rueidis/maintainability)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/0d93d524c2b8497aacbe/test_coverage)](https://codeclimate.com/github/rueian/rueidis/test_coverage)
+
 A Fast Golang Redis RESP3 client that does auto pipelining and supports client side caching.
 
 ## Features
