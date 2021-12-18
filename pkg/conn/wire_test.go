@@ -292,7 +292,7 @@ func TestClientSideCaching(t *testing.T) {
 	for i := 0; i < 5000; i++ {
 		go func() {
 			defer wg.Done()
-			if v, _ := conn.DoCache(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), time.Second).Value(); v.String != "1" {
+			if v, _ := conn.DoCache(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).Value(); v.String != "1" {
 				t.Errorf("unexpected cached result, expected %v, got %v", "1", v.String)
 			}
 		}()

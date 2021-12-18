@@ -61,7 +61,7 @@ func (c *LRU) GetOrPrepare(key, cmd string, ttl time.Duration) (v proto.Message,
 		c.store[key] = store
 	}
 	if ele, ok := store.cache[cmd]; ok {
-		if entry = ele.Value.(*Entry); store.ttl.After(time.Now()) {
+		if entry = ele.Value.(*Entry); entry.val.Type == 0 || store.ttl.After(time.Now()) {
 			v = entry.val
 			c.list.MoveToBack(ele)
 		} else {
