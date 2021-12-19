@@ -11,63 +11,14 @@ import (
 	"time"
 
 	"github.com/rueian/rueidis/internal/cmds"
+	"github.com/rueian/rueidis/internal/mock"
 	"github.com/rueian/rueidis/internal/proto"
 )
 
-type mockWire struct {
-	do      func(cmd cmds.Completed) proto.Result
-	doCache func(cmd cmds.Cacheable, ttl time.Duration) proto.Result
-	doMulti func(multi ...cmds.Completed) []proto.Result
-	info    func() map[string]proto.Message
-	error   func() error
-	close   func()
-}
-
-func (m *mockWire) Do(cmd cmds.Completed) proto.Result {
-	if m.do != nil {
-		return m.do(cmd)
-	}
-	return proto.Result{}
-}
-
-func (m *mockWire) DoCache(cmd cmds.Cacheable, ttl time.Duration) proto.Result {
-	if m.doCache != nil {
-		return m.doCache(cmd, ttl)
-	}
-	return proto.Result{}
-}
-
-func (m *mockWire) DoMulti(multi ...cmds.Completed) []proto.Result {
-	if m.doMulti != nil {
-		return m.doMulti(multi...)
-	}
-	return nil
-}
-
-func (m *mockWire) Info() map[string]proto.Message {
-	if m.info != nil {
-		return m.info()
-	}
-	return nil
-}
-
-func (m *mockWire) Error() error {
-	if m.error != nil {
-		return m.error()
-	}
-	return nil
-}
-
-func (m *mockWire) Close() {
-	if m.close != nil {
-		m.close()
-	}
-}
-
-func setupConn(wires []*mockWire) (conn *conn, checkClean func(t *testing.T)) {
+func setupConn(wires []*mock.Wire) (conn *conn, checkClean func(t *testing.T)) {
 	var mu sync.Mutex
 	var count = -1
-	return newConn("", Option{}, (*mockWire)(nil), func(dst string, opt Option) (net.Conn, error) {
+	return newConn("", Option{}, (*mock.Wire)(nil), func(dst string, opt Option) (net.Conn, error) {
 			return nil, nil
 		}, func(conn net.Conn, opt Option) (Wire, error) {
 			mu.Lock()
@@ -109,13 +60,13 @@ func TestNewConn(t *testing.T) {
 func TestConnDialSuppress(t *testing.T) {
 	var dials, wires, waits, done int64
 	blocking := make(chan struct{})
-	conn := newConn("", Option{}, (*mockWire)(nil), func(dst string, opt Option) (net.Conn, error) {
+	conn := newConn("", Option{}, (*mock.Wire)(nil), func(dst string, opt Option) (net.Conn, error) {
 		atomic.AddInt64(&dials, 1)
 		return nil, nil
 	}, func(conn net.Conn, opt Option) (Wire, error) {
 		atomic.AddInt64(&wires, 1)
 		<-blocking
-		return &mockWire{}, nil
+		return &mock.Wire{}, nil
 	})
 	for i := 0; i < 1000; i++ {
 		go func() {
@@ -141,9 +92,9 @@ func TestConnDialSuppress(t *testing.T) {
 
 func TestConnReuseWire(t *testing.T) {
 	t.Run("reuse wire if no error", func(t *testing.T) {
-		conn, checkClean := setupConn([]*mockWire{
+		conn, checkClean := setupConn([]*mock.Wire{
 			{
-				do: func(cmd cmds.Completed) proto.Result {
+				DoFn: func(cmd cmds.Completed) proto.Result {
 					return proto.NewResult(proto.Message{Type: '+', String: "PONG"}, nil)
 				},
 			},
@@ -160,17 +111,17 @@ func TestConnReuseWire(t *testing.T) {
 	t.Run("reuse blocking pool", func(t *testing.T) {
 		blocking := make(chan struct{})
 		response := make(chan proto.Result)
-		conn, checkClean := setupConn([]*mockWire{
+		conn, checkClean := setupConn([]*mock.Wire{
 			{
 				// leave first wire for pipeline calls
 			},
 			{
-				do: func(cmd cmds.Completed) proto.Result {
+				DoFn: func(cmd cmds.Completed) proto.Result {
 					return proto.NewResult(proto.Message{Type: '+', String: "ACQUIRED"}, nil)
 				},
 			},
 			{
-				do: func(cmd cmds.Completed) proto.Result {
+				DoFn: func(cmd cmds.Completed) proto.Result {
 					blocking <- struct{}{}
 					return <-response
 				},
@@ -210,9 +161,9 @@ func TestConnReuseWire(t *testing.T) {
 
 func TestConnCMDRetry(t *testing.T) {
 	t.Run("wire info", func(t *testing.T) {
-		conn, checkClean := setupConn([]*mockWire{
+		conn, checkClean := setupConn([]*mock.Wire{
 			{
-				info: func() map[string]proto.Message {
+				InfoFn: func() map[string]proto.Message {
 					return map[string]proto.Message{"key": {Type: '+', String: "value"}}
 				},
 			},
@@ -225,9 +176,9 @@ func TestConnCMDRetry(t *testing.T) {
 	})
 
 	t.Run("retry single read", func(t *testing.T) {
-		conn, checkClean := setupConn([]*mockWire{
+		conn, checkClean := setupConn([]*mock.Wire{
 			{
-				do: func(cmd cmds.Completed) proto.Result {
+				DoFn: func(cmd cmds.Completed) proto.Result {
 					if cmd.Commands()[0] == "PING" {
 						return proto.NewResult(proto.Message{Type: '+', String: "PONG"}, nil)
 					}
@@ -238,7 +189,7 @@ func TestConnCMDRetry(t *testing.T) {
 				},
 			},
 			{
-				do: func(cmd cmds.Completed) proto.Result {
+				DoFn: func(cmd cmds.Completed) proto.Result {
 					if cmd.Commands()[0] == "PING" {
 						return proto.NewResult(proto.Message{Type: '+', String: "PONG"}, nil)
 					}
@@ -260,14 +211,14 @@ func TestConnCMDRetry(t *testing.T) {
 	})
 
 	t.Run("retry multi read", func(t *testing.T) {
-		conn, checkClean := setupConn([]*mockWire{
+		conn, checkClean := setupConn([]*mock.Wire{
 			{
-				doMulti: func(multi ...cmds.Completed) []proto.Result {
+				DoMultiFn: func(multi ...cmds.Completed) []proto.Result {
 					return []proto.Result{proto.NewErrResult(errors.New("network error"))}
 				},
 			},
 			{
-				doMulti: func(multi ...cmds.Completed) []proto.Result {
+				DoMultiFn: func(multi ...cmds.Completed) []proto.Result {
 					return []proto.Result{proto.NewResult(proto.Message{Type: '+', String: "MULTI_COMMANDS_RESPONSE"}, nil)}
 				},
 			},
@@ -283,14 +234,14 @@ func TestConnCMDRetry(t *testing.T) {
 	})
 
 	t.Run("retry single read cache", func(t *testing.T) {
-		conn, checkClean := setupConn([]*mockWire{
+		conn, checkClean := setupConn([]*mock.Wire{
 			{
-				doCache: func(cmd cmds.Cacheable, ttl time.Duration) proto.Result {
+				DoCacheFn: func(cmd cmds.Cacheable, ttl time.Duration) proto.Result {
 					return proto.NewErrResult(errors.New("network error"))
 				},
 			},
 			{
-				doCache: func(cmd cmds.Cacheable, ttl time.Duration) proto.Result {
+				DoCacheFn: func(cmd cmds.Cacheable, ttl time.Duration) proto.Result {
 					return proto.NewResult(proto.Message{Type: '+', String: "READONLY_COMMAND_RESPONSE"}, nil)
 				},
 			},
@@ -306,9 +257,9 @@ func TestConnCMDRetry(t *testing.T) {
 	})
 
 	t.Run("not retry single write", func(t *testing.T) {
-		conn, checkClean := setupConn([]*mockWire{
+		conn, checkClean := setupConn([]*mock.Wire{
 			{
-				do: func(cmd cmds.Completed) proto.Result {
+				DoFn: func(cmd cmds.Completed) proto.Result {
 					if cmd.Commands()[0] == "PING" {
 						return proto.NewResult(proto.Message{Type: '+', String: "PONG"}, nil)
 					}
@@ -319,7 +270,7 @@ func TestConnCMDRetry(t *testing.T) {
 				},
 			},
 			{
-				do: func(cmd cmds.Completed) proto.Result {
+				DoFn: func(cmd cmds.Completed) proto.Result {
 					if cmd.Commands()[0] == "PING" {
 						return proto.NewResult(proto.Message{Type: '+', String: "PONG"}, nil)
 					}
@@ -345,14 +296,14 @@ func TestConnCMDRetry(t *testing.T) {
 	})
 
 	t.Run("not retry multi write", func(t *testing.T) {
-		conn, checkClean := setupConn([]*mockWire{
+		conn, checkClean := setupConn([]*mock.Wire{
 			{
-				doMulti: func(multi ...cmds.Completed) []proto.Result {
+				DoMultiFn: func(multi ...cmds.Completed) []proto.Result {
 					return []proto.Result{proto.NewErrResult(errors.New("network error"))}
 				},
 			},
 			{
-				doMulti: func(multi ...cmds.Completed) []proto.Result {
+				DoMultiFn: func(multi ...cmds.Completed) []proto.Result {
 					return []proto.Result{proto.NewResult(proto.Message{Type: '+', String: "MULTI_COMMANDS_RESPONSE"}, nil)}
 				},
 			},
@@ -381,18 +332,18 @@ func TestConnCMDRetry(t *testing.T) {
 		blocked := make(chan struct{})
 		responses := make(chan proto.Result)
 
-		conn, checkClean := setupConn([]*mockWire{
+		conn, checkClean := setupConn([]*mock.Wire{
 			{
 				// leave first wire for pipeline calls
 			},
 			{
-				do: func(cmd cmds.Completed) proto.Result {
+				DoFn: func(cmd cmds.Completed) proto.Result {
 					blocked <- struct{}{}
 					return <-responses
 				},
 			},
 			{
-				do: func(cmd cmds.Completed) proto.Result {
+				DoFn: func(cmd cmds.Completed) proto.Result {
 					blocked <- struct{}{}
 					return <-responses
 				},
@@ -430,18 +381,18 @@ func TestConnCMDRetry(t *testing.T) {
 		blocked := make(chan struct{})
 		responses := make(chan proto.Result)
 
-		conn, checkClean := setupConn([]*mockWire{
+		conn, checkClean := setupConn([]*mock.Wire{
 			{
 				// leave first wire for pipeline calls
 			},
 			{
-				doMulti: func(cmd ...cmds.Completed) []proto.Result {
+				DoMultiFn: func(cmd ...cmds.Completed) []proto.Result {
 					blocked <- struct{}{}
 					return []proto.Result{<-responses}
 				},
 			},
 			{
-				doMulti: func(cmd ...cmds.Completed) []proto.Result {
+				DoMultiFn: func(cmd ...cmds.Completed) []proto.Result {
 					blocked <- struct{}{}
 					return []proto.Result{<-responses}
 				},
@@ -482,15 +433,15 @@ func TestConnCMDRetry(t *testing.T) {
 func TestConnDialRetry(t *testing.T) {
 	setup := func() (*conn, *int64) {
 		var count int64
-		return newConn("", Option{}, (*mockWire)(nil), func(dst string, opt Option) (net.Conn, error) {
+		return newConn("", Option{}, (*mock.Wire)(nil), func(dst string, opt Option) (net.Conn, error) {
 			if count == 1 {
 				return nil, nil
 			}
 			count++
 			return nil, errors.New("network err")
 		}, func(conn net.Conn, opt Option) (Wire, error) {
-			return &mockWire{
-				do: func(cmd cmds.Completed) proto.Result {
+			return &mock.Wire{
+				DoFn: func(cmd cmds.Completed) proto.Result {
 					return proto.NewResult(proto.Message{Type: '+', String: "PONG"}, nil)
 				},
 			}, nil
