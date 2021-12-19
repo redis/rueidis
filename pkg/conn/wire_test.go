@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 	"strconv"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -458,8 +459,8 @@ func TestExitOnWriteError(t *testing.T) {
 	closePipe()
 
 	for i := 0; i < 2; i++ {
-		if err := conn.Do(cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); err != io.ErrClosedPipe {
-			t.Errorf("unexpected cached result, expected io.ErrClosedPipe, got %v", err)
+		if err := conn.Do(cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); !strings.HasPrefix(err.Error(), "io:") {
+			t.Errorf("unexpected cached result, expected io err, got %v", err)
 		}
 	}
 }
@@ -470,8 +471,8 @@ func TestExitOnWriteMultiError(t *testing.T) {
 	closePipe()
 
 	for i := 0; i < 2; i++ {
-		if err := conn.DoMulti(cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); err != io.ErrClosedPipe {
-			t.Errorf("unexpected result, expected io.ErrClosedPipe, got %v", err)
+		if err := conn.DoMulti(cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); !strings.HasPrefix(err.Error(), "io:") {
+			t.Errorf("unexpected result, expected io err, got %v", err)
 		}
 	}
 }
@@ -488,11 +489,11 @@ func TestExitAllGoroutineOnWriteError(t *testing.T) {
 	for i := 0; i < 5000; i++ {
 		go func() {
 			defer wg.Done()
-			if err := conn.Do(cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); err != io.ErrClosedPipe {
-				t.Errorf("unexpected result, expected io.ErrClosedPipe, got %v", err)
+			if err := conn.Do(cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); !strings.HasPrefix(err.Error(), "io:") {
+				t.Errorf("unexpected result, expected io err, got %v", err)
 			}
-			if err := conn.DoMulti(cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); err != io.ErrClosedPipe {
-				t.Errorf("unexpected result, expected io.ErrClosedPipe, got %v", err)
+			if err := conn.DoMulti(cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); !strings.HasPrefix(err.Error(), "io:") {
+				t.Errorf("unexpected result, expected io err, got %v", err)
 			}
 		}()
 	}
@@ -508,8 +509,8 @@ func TestExitOnReadError(t *testing.T) {
 	}()
 
 	for i := 0; i < 2; i++ {
-		if err := conn.Do(cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); err != io.ErrClosedPipe {
-			t.Errorf("unexpected result, expected io.ErrClosedPipe, got %v", err)
+		if err := conn.Do(cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); !strings.HasPrefix(err.Error(), "io:") {
+			t.Errorf("unexpected result, expected io err, got %v", err)
 		}
 	}
 }
@@ -523,8 +524,8 @@ func TestExitOnReadMultiError(t *testing.T) {
 	}()
 
 	for i := 0; i < 2; i++ {
-		if err := conn.DoMulti(cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); err != io.ErrClosedPipe {
-			t.Errorf("unexpected result, expected io.ErrClosedPipe, got %v", err)
+		if err := conn.DoMulti(cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); !strings.HasPrefix(err.Error(), "io:") {
+			t.Errorf("unexpected result, expected io err, got %v", err)
 		}
 	}
 }
@@ -542,11 +543,11 @@ func TestExitAllGoroutineOnReadError(t *testing.T) {
 	for i := 0; i < 5000; i++ {
 		go func() {
 			defer wg.Done()
-			if err := conn.Do(cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); err != io.ErrClosedPipe && err != ErrConnClosing {
-				t.Errorf("unexpected result, expected io.ErrClosedPipe or ErrConnClosing, got %v", err)
+			if err := conn.Do(cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); !strings.HasPrefix(err.Error(), "io:") {
+				t.Errorf("unexpected result, expected io err, got %v", err)
 			}
-			if err := conn.DoMulti(cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); err != io.ErrClosedPipe && err != ErrConnClosing {
-				t.Errorf("unexpected result, expected io.ErrClosedPipe or ErrConnClosing, got %v", err)
+			if err := conn.DoMulti(cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); !strings.HasPrefix(err.Error(), "io:") {
+				t.Errorf("unexpected result, expected io err, got %v", err)
 			}
 		}()
 	}

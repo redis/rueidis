@@ -44,9 +44,9 @@ func (c *SingleClient) DoCache(cmd cmds.Cacheable, ttl time.Duration) (resp prot
 	return resp
 }
 
-func (c *SingleClient) DedicatedWire(fn func(DedicatedSingleClient) error) (err error) {
+func (c *SingleClient) DedicatedWire(fn func(*DedicatedSingleClient) error) (err error) {
 	wire := c.conn.Acquire()
-	err = fn(DedicatedSingleClient{cmd: c.Cmd, wire: wire})
+	err = fn(&DedicatedSingleClient{cmd: c.Cmd, wire: wire})
 	c.conn.Store(wire)
 	return err
 }

@@ -72,6 +72,9 @@ func (c *ClusterClient) initConn() (cc conn.Conn, err error) {
 		cc = c.connFn(addr, c.opt.ConnOption)
 		if err = cc.Dialable(); err == nil {
 			c.mu.Lock()
+			if prev, ok := c.conns[addr]; ok {
+				go prev.Close()
+			}
 			c.conns[addr] = cc
 			c.mu.Unlock()
 			return cc, nil
@@ -163,6 +166,16 @@ retry:
 	return nil
 }
 
+func (c *ClusterClient) nodes() []string {
+	c.mu.RLock()
+	nodes := make([]string, 0, len(c.conns))
+	for addr := range c.conns {
+		nodes = append(nodes, addr)
+	}
+	c.mu.RUnlock()
+	return nodes
+}
+
 type group struct {
 	nodes []string
 	slots [][2]int64
@@ -188,14 +201,13 @@ func parseSlots(slots proto.Message) map[string]group {
 }
 
 func (c *ClusterClient) pick(slot uint16) (p conn.Conn) {
+	c.mu.RLock()
 	if slot == cmds.InitSlot {
-		c.mu.RLock()
 		for _, cc := range c.conns {
 			p = cc
 			break
 		}
 	} else {
-		c.mu.RLock()
 		p = c.slots[slot]
 	}
 	c.mu.RUnlock()
@@ -285,8 +297,8 @@ ret:
 	return resp
 }
 
-func (c *ClusterClient) DedicatedWire(fn func(DedicatedClusterClient) error) (err error) {
-	dcc := DedicatedClusterClient{client: c, slot: cmds.InitSlot}
+func (c *ClusterClient) DedicatedWire(fn func(*DedicatedClusterClient) error) (err error) {
+	dcc := &DedicatedClusterClient{client: c, slot: cmds.InitSlot}
 	err = fn(dcc)
 	dcc.release()
 	return err
@@ -296,7 +308,7 @@ func (c *ClusterClient) NewLuaScript(body string) *script.Lua {
 	return script.NewLuaScript(body, c.eval, c.evalSha)
 }
 
-func (c *ClusterClient) NewLuaScriptReadyOnly(body string) *script.Lua {
+func (c *ClusterClient) NewLuaScriptReadOnly(body string) *script.Lua {
 	return script.NewLuaScript(body, c.evalRo, c.evalShaRo)
 }
 

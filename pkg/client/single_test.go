@@ -142,7 +142,7 @@ func TestSingleClient(t *testing.T) {
 
 	t.Run("DedicatedWire Err", func(t *testing.T) {
 		v := errors.New("fn err")
-		if err := client.DedicatedWire(func(client DedicatedSingleClient) error {
+		if err := client.DedicatedWire(func(client *DedicatedSingleClient) error {
 			return v
 		}); err != v {
 			t.Fatalf("unexpected err %v", err)
@@ -168,7 +168,7 @@ func TestSingleClient(t *testing.T) {
 			}
 			stored = true
 		}
-		if err := client.DedicatedWire(func(c DedicatedSingleClient) error {
+		if err := client.DedicatedWire(func(c *DedicatedSingleClient) error {
 			if v, err := c.Do(client.Cmd.Get().Key("a").Build()).ToString(); err != nil || v != "Delegate" {
 				t.Fatalf("unexpected respone %v %v", v, err)
 			}
