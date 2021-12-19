@@ -52,7 +52,18 @@ type singleconnect struct {
 	g sync.WaitGroup
 }
 
-type Conn struct {
+type Conn interface {
+	Do(cmd cmds.Completed) proto.Result
+	DoMulti(multi ...cmds.Completed) []proto.Result
+	DoCache(cmd cmds.Cacheable, ttl time.Duration) proto.Result
+	Dialable() error
+	Info() map[string]proto.Message
+	Close()
+	Acquire() Wire
+	Store(w Wire)
+}
+
+type conn struct {
 	dst  string
 	opt  Option
 	pool *pool
@@ -65,20 +76,20 @@ type Conn struct {
 	wireFn wireFn
 }
 
-func NewConn(dst string, option Option, dialFn DialFn) *Conn {
+func NewConn(dst string, option Option, dialFn DialFn) *conn {
 	return newConn(dst, option, (*wire)(nil), dialFn, func(conn net.Conn, opt Option) (Wire, error) {
 		return newWire(conn, opt)
 	})
 }
 
-func newConn(dst string, option Option, dead Wire, dialFn DialFn, wireFn wireFn) *Conn {
-	conn := &Conn{dst: dst, opt: option, dead: dead, dialFn: dialFn, wireFn: wireFn}
+func newConn(dst string, option Option, dead Wire, dialFn DialFn, wireFn wireFn) *conn {
+	conn := &conn{dst: dst, opt: option, dead: dead, dialFn: dialFn, wireFn: wireFn}
 	conn.wire.Store(dead)
 	conn.pool = newPool(option.BlockingPoolSize, conn.dialRetry)
 	return conn
 }
 
-func (c *Conn) connect() (w Wire, err error) {
+func (c *conn) connect() (w Wire, err error) {
 	if w = c.wire.Load().(Wire); w != c.dead {
 		return w, nil
 	}
@@ -114,7 +125,7 @@ func (c *Conn) connect() (w Wire, err error) {
 	return w, err
 }
 
-func (c *Conn) dial() (w Wire, err error) {
+func (c *conn) dial() (w Wire, err error) {
 	conn, err := c.dialFn(c.dst, c.opt)
 	if err == nil {
 		w, err = c.wireFn(conn, c.opt)
@@ -122,7 +133,7 @@ func (c *Conn) dial() (w Wire, err error) {
 	return w, err
 }
 
-func (c *Conn) dialRetry() Wire {
+func (c *conn) dialRetry() Wire {
 retry:
 	if wire, err := c.dial(); err == nil {
 		return wire
@@ -130,7 +141,7 @@ retry:
 	goto retry
 }
 
-func (c *Conn) acquire() Wire {
+func (c *conn) acquire() Wire {
 retry:
 	if wire, err := c.connect(); err == nil {
 		return wire
@@ -138,16 +149,16 @@ retry:
 	goto retry
 }
 
-func (c *Conn) Dialable() error { // no retry
+func (c *conn) Dialable() error { // no retry
 	_, err := c.connect()
 	return err
 }
 
-func (c *Conn) Info() map[string]proto.Message {
+func (c *conn) Info() map[string]proto.Message {
 	return c.acquire().Info()
 }
 
-func (c *Conn) Do(cmd cmds.Completed) (resp proto.Result) {
+func (c *conn) Do(cmd cmds.Completed) (resp proto.Result) {
 retry:
 	if cmd.IsBlock() {
 		resp = c.blocking(cmd)
@@ -160,7 +171,7 @@ retry:
 	return resp
 }
 
-func (c *Conn) DoMulti(multi ...cmds.Completed) (resp []proto.Result) {
+func (c *conn) DoMulti(multi ...cmds.Completed) (resp []proto.Result) {
 	var block, write bool
 	for _, cmd := range multi {
 		block = block || cmd.IsBlock()
@@ -182,21 +193,21 @@ retry:
 	return resp
 }
 
-func (c *Conn) blocking(cmd cmds.Completed) (resp proto.Result) {
+func (c *conn) blocking(cmd cmds.Completed) (resp proto.Result) {
 	wire := c.pool.Acquire()
 	resp = wire.Do(cmd)
 	c.pool.Store(wire)
 	return resp
 }
 
-func (c *Conn) blockingMulti(cmd []cmds.Completed) (resp []proto.Result) {
+func (c *conn) blockingMulti(cmd []cmds.Completed) (resp []proto.Result) {
 	wire := c.pool.Acquire()
 	resp = wire.DoMulti(cmd...)
 	c.pool.Store(wire)
 	return resp
 }
 
-func (c *Conn) pipeline(cmd cmds.Completed) (resp proto.Result) {
+func (c *conn) pipeline(cmd cmds.Completed) (resp proto.Result) {
 	wire := c.acquire()
 	if resp = wire.Do(cmd); isNetworkErr(resp.NonRedisError()) {
 		c.wire.CompareAndSwap(wire, c.dead)
@@ -204,7 +215,7 @@ func (c *Conn) pipeline(cmd cmds.Completed) (resp proto.Result) {
 	return resp
 }
 
-func (c *Conn) pipelineMulti(cmd []cmds.Completed) (resp []proto.Result) {
+func (c *conn) pipelineMulti(cmd []cmds.Completed) (resp []proto.Result) {
 	wire := c.acquire()
 	resp = wire.DoMulti(cmd...)
 	for _, r := range resp {
@@ -216,7 +227,7 @@ func (c *Conn) pipelineMulti(cmd []cmds.Completed) (resp []proto.Result) {
 	return resp
 }
 
-func (c *Conn) DoCache(cmd cmds.Cacheable, ttl time.Duration) proto.Result {
+func (c *conn) DoCache(cmd cmds.Cacheable, ttl time.Duration) proto.Result {
 retry:
 	wire := c.acquire()
 	resp := wire.DoCache(cmd, ttl)
@@ -227,15 +238,15 @@ retry:
 	return resp
 }
 
-func (c *Conn) Acquire() Wire {
+func (c *conn) Acquire() Wire {
 	return c.pool.Acquire()
 }
 
-func (c *Conn) Store(w Wire) {
+func (c *conn) Store(w Wire) {
 	c.pool.Store(w)
 }
 
-func (c *Conn) Close() {
+func (c *conn) Close() {
 	c.acquire().Close()
 	c.pool.Close()
 }

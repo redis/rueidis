@@ -35,8 +35,8 @@ type ClusterClient struct {
 
 	mu    sync.RWMutex
 	sg    singleflight.Call
-	slots [16384]*conn.Conn
-	conns map[string]*conn.Conn
+	slots [16384]conn.Conn
+	conns map[string]conn.Conn
 }
 
 func NewClusterClient(option ClusterClientOption, dialFn conn.DialFn) (client *ClusterClient, err error) {
@@ -50,7 +50,7 @@ func NewClusterClient(option ClusterClientOption, dialFn conn.DialFn) (client *C
 		Cmd:    cmds.NewSBuilder(),
 		opt:    option,
 		dialFn: dialFn,
-		conns:  make(map[string]*conn.Conn),
+		conns:  make(map[string]conn.Conn),
 	}
 
 	if _, err = client.initConn(); err != nil {
@@ -64,7 +64,7 @@ func NewClusterClient(option ClusterClientOption, dialFn conn.DialFn) (client *C
 	return client, nil
 }
 
-func (c *ClusterClient) initConn() (cc *conn.Conn, err error) {
+func (c *ClusterClient) initConn() (cc conn.Conn, err error) {
 	if len(c.opt.InitAddress) == 0 {
 		return nil, ErrNoNodes
 	}
@@ -125,12 +125,12 @@ retry:
 	groups := parseSlots(reply)
 
 	// TODO support read from replicas
-	masters := make(map[string]*conn.Conn, len(groups))
+	masters := make(map[string]conn.Conn, len(groups))
 	for addr := range groups {
 		masters[addr] = conn.NewConn(addr, c.opt.ConnOption, c.dialFn)
 	}
 
-	var removes []*conn.Conn
+	var removes []conn.Conn
 
 	c.mu.RLock()
 	for addr, cc := range c.conns {
@@ -142,7 +142,7 @@ retry:
 	}
 	c.mu.RUnlock()
 
-	slots := [16384]*conn.Conn{}
+	slots := [16384]conn.Conn{}
 	for addr, g := range groups {
 		for _, slot := range g.slots {
 			for i := slot[0]; i <= slot[1]; i++ {
@@ -187,7 +187,7 @@ func parseSlots(slots proto.Message) map[string]group {
 	return groups
 }
 
-func (c *ClusterClient) pick(slot uint16) (p *conn.Conn) {
+func (c *ClusterClient) pick(slot uint16) (p conn.Conn) {
 	if slot == cmds.InitSlot {
 		c.mu.RLock()
 		for _, cc := range c.conns {
@@ -202,7 +202,7 @@ func (c *ClusterClient) pick(slot uint16) (p *conn.Conn) {
 	return p
 }
 
-func (c *ClusterClient) pickConn(slot uint16) (p *conn.Conn, err error) {
+func (c *ClusterClient) pickConn(slot uint16) (p conn.Conn, err error) {
 	if p = c.pick(slot); p == nil {
 		if err := c.refreshSlots(); err != nil {
 			return nil, err
@@ -214,7 +214,7 @@ func (c *ClusterClient) pickConn(slot uint16) (p *conn.Conn, err error) {
 	return p, nil
 }
 
-func (c *ClusterClient) pickOrNewConn(addr string) (p *conn.Conn) {
+func (c *ClusterClient) pickOrNewConn(addr string) (p conn.Conn) {
 	c.mu.RLock()
 	p = c.conns[addr]
 	c.mu.RUnlock()
@@ -330,7 +330,7 @@ func (c *ClusterClient) Close() {
 
 type DedicatedClusterClient struct {
 	client *ClusterClient
-	conn   *conn.Conn
+	conn   conn.Conn
 	wire   conn.Wire
 	slot   uint16
 }
@@ -351,10 +351,10 @@ func (c *DedicatedClusterClient) acquire() (err error) {
 		return nil
 	}
 	if c.slot == cmds.InitSlot {
-		panic("the first command in DedicatedWire should contain the slot key")
+		panic("the first command in DedicatedClusterClient should contain the slot key")
 	}
 	if c.conn, err = c.client.pickConn(c.slot); err != nil {
-		return nil
+		return err
 	}
 	c.wire = c.conn.Acquire()
 	return nil

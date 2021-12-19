@@ -70,10 +70,6 @@ func (c *SCompleted) Commands() []string {
 	return c.cs
 }
 
-func (c *SCompleted) IsReadOnly() bool {
-	return c.cf&readonly == readonly
-}
-
 func (c *SCompleted) Slot() uint16 {
 	return c.ks
 }

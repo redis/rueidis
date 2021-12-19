@@ -64,7 +64,7 @@ func (m *mockWire) Close() {
 	}
 }
 
-func setupConn(wires []*mockWire) (conn *Conn, checkClean func(t *testing.T)) {
+func setupConn(wires []*mockWire) (conn *conn, checkClean func(t *testing.T)) {
 	var mu sync.Mutex
 	var count = -1
 	return newConn("", Option{}, (*mockWire)(nil), func(dst string, opt Option) (net.Conn, error) {
@@ -480,7 +480,7 @@ func TestConnCMDRetry(t *testing.T) {
 }
 
 func TestConnDialRetry(t *testing.T) {
-	setup := func() (*Conn, *int64) {
+	setup := func() (*conn, *int64) {
 		var count int64
 		return newConn("", Option{}, (*mockWire)(nil), func(dst string, opt Option) (net.Conn, error) {
 			if count == 1 {
@@ -524,7 +524,7 @@ func TestConnDialRetry(t *testing.T) {
 }
 
 func BenchmarkClientSideCaching(b *testing.B) {
-	setup := func(b *testing.B) *Conn {
+	setup := func(b *testing.B) *conn {
 		c := NewConn("127.0.0.1:6379", Option{CacheSizeEachConn: DefaultCacheBytes}, func(dst string, opt Option) (conn net.Conn, err error) {
 			return net.Dial("tcp", dst)
 		})

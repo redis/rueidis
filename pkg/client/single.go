@@ -17,7 +17,7 @@ type SingleClientOption struct {
 
 type SingleClient struct {
 	Cmd  *cmds.Builder
-	conn *conn.Conn
+	conn conn.Conn
 }
 
 func NewSingleClient(option SingleClientOption, dialFn conn.DialFn) (*SingleClient, error) {
