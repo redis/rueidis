@@ -23,11 +23,15 @@ type SingleClientOption client.SingleClientOption
 type ClusterClientOption client.ClusterClientOption
 
 func NewClusterClient(option ClusterClientOption) (*client.ClusterClient, error) {
-	return client.NewClusterClient(client.ClusterClientOption(option), dial)
+	return client.NewClusterClient(client.ClusterClientOption(option), connFn)
 }
 
 func NewSingleClient(option SingleClientOption) (*client.SingleClient, error) {
-	return client.NewSingleClient(client.SingleClientOption(option), dial)
+	return client.NewSingleClient(client.SingleClientOption(option), connFn)
+}
+
+func connFn(dst string, opt conn.Option) conn.Conn {
+	return conn.NewConn(dst, opt, dial)
 }
 
 func dial(dst string, opt conn.Option) (conn net.Conn, err error) {

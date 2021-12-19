@@ -31,7 +31,7 @@ type ClusterClientOption struct {
 type ClusterClient struct {
 	Cmd    *cmds.SBuilder
 	opt    ClusterClientOption
-	dialFn conn.DialFn
+	connFn conn.ConnFn
 
 	mu    sync.RWMutex
 	sg    singleflight.Call
@@ -39,7 +39,7 @@ type ClusterClient struct {
 	conns map[string]conn.Conn
 }
 
-func NewClusterClient(option ClusterClientOption, dialFn conn.DialFn) (client *ClusterClient, err error) {
+func NewClusterClient(option ClusterClientOption, connFn conn.ConnFn) (client *ClusterClient, err error) {
 	if option.ShuffleInit {
 		rand.Shuffle(len(option.InitAddress), func(i, j int) {
 			option.InitAddress[i], option.InitAddress[j] = option.InitAddress[j], option.InitAddress[i]
@@ -49,7 +49,7 @@ func NewClusterClient(option ClusterClientOption, dialFn conn.DialFn) (client *C
 	client = &ClusterClient{
 		Cmd:    cmds.NewSBuilder(),
 		opt:    option,
-		dialFn: dialFn,
+		connFn: connFn,
 		conns:  make(map[string]conn.Conn),
 	}
 
@@ -69,7 +69,7 @@ func (c *ClusterClient) initConn() (cc conn.Conn, err error) {
 		return nil, ErrNoNodes
 	}
 	for _, addr := range c.opt.InitAddress {
-		cc = conn.NewConn(addr, c.opt.ConnOption, c.dialFn)
+		cc = c.connFn(addr, c.opt.ConnOption)
 		if err = cc.Dialable(); err == nil {
 			c.mu.Lock()
 			c.conns[addr] = cc
@@ -127,7 +127,7 @@ retry:
 	// TODO support read from replicas
 	masters := make(map[string]conn.Conn, len(groups))
 	for addr := range groups {
-		masters[addr] = conn.NewConn(addr, c.opt.ConnOption, c.dialFn)
+		masters[addr] = c.connFn(addr, c.opt.ConnOption)
 	}
 
 	var removes []conn.Conn
@@ -223,7 +223,7 @@ func (c *ClusterClient) pickOrNewConn(addr string) (p conn.Conn) {
 	}
 	c.mu.Lock()
 	if p = c.conns[addr]; p == nil {
-		p = conn.NewConn(addr, c.opt.ConnOption, c.dialFn)
+		p = c.connFn(addr, c.opt.ConnOption)
 		c.conns[addr] = p
 	}
 	c.mu.Unlock()

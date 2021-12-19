@@ -43,6 +43,7 @@ type Option struct {
 	PubSubHandlers PubSubHandlers
 }
 
+type ConnFn func(dst string, opt Option) Conn
 type DialFn func(dst string, opt Option) (net.Conn, error)
 type wireFn func(conn net.Conn, opt Option) (Wire, error)
 
