@@ -24727,6 +24727,374 @@ func (c SGetsetValue) Build() SCompleted {
 	return SCompleted(c)
 }
 
+type GraphConfigGet Completed
+
+type SGraphConfigGet SCompleted
+
+func (b *Builder) GraphConfigGet() GraphConfigGet {
+	return GraphConfigGet{cs: append(b.get(), "GRAPH.CONFIG", "GET"), ks: InitSlot, cf: readonly}
+}
+
+func (b *SBuilder) GraphConfigGet() SGraphConfigGet {
+	return SGraphConfigGet{cs: append(b.get(), "GRAPH.CONFIG", "GET"), ks: InitSlot, cf: readonly}
+}
+
+func (c GraphConfigGet) Name(name string) GraphConfigGetName {
+	c.cs = append(c.cs, name)
+	return (GraphConfigGetName)(c)
+}
+
+func (c SGraphConfigGet) Name(name string) SGraphConfigGetName {
+	c.cs = append(c.cs, name)
+	return (SGraphConfigGetName)(c)
+}
+
+type GraphConfigGetName Completed
+
+type SGraphConfigGetName SCompleted
+
+func (c GraphConfigGetName) Build() Completed {
+	return Completed(c)
+}
+
+func (c SGraphConfigGetName) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type GraphConfigSet Completed
+
+type SGraphConfigSet SCompleted
+
+func (b *Builder) GraphConfigSet() GraphConfigSet {
+	return GraphConfigSet{cs: append(b.get(), "GRAPH.CONFIG", "SET"), ks: InitSlot}
+}
+
+func (b *SBuilder) GraphConfigSet() SGraphConfigSet {
+	return SGraphConfigSet{cs: append(b.get(), "GRAPH.CONFIG", "SET"), ks: InitSlot}
+}
+
+func (c GraphConfigSet) Name(name string) GraphConfigSetName {
+	c.cs = append(c.cs, name)
+	return (GraphConfigSetName)(c)
+}
+
+func (c SGraphConfigSet) Name(name string) SGraphConfigSetName {
+	c.cs = append(c.cs, name)
+	return (SGraphConfigSetName)(c)
+}
+
+type GraphConfigSetName Completed
+
+type SGraphConfigSetName SCompleted
+
+func (c GraphConfigSetName) Value(value string) GraphConfigSetValue {
+	c.cs = append(c.cs, value)
+	return (GraphConfigSetValue)(c)
+}
+
+func (c SGraphConfigSetName) Value(value string) SGraphConfigSetValue {
+	c.cs = append(c.cs, value)
+	return (SGraphConfigSetValue)(c)
+}
+
+type GraphConfigSetValue Completed
+
+type SGraphConfigSetValue SCompleted
+
+func (c GraphConfigSetValue) Build() Completed {
+	return Completed(c)
+}
+
+func (c SGraphConfigSetValue) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type GraphDelete Completed
+
+type SGraphDelete SCompleted
+
+func (b *Builder) GraphDelete() GraphDelete {
+	return GraphDelete{cs: append(b.get(), "GRAPH.DELETE"), ks: InitSlot}
+}
+
+func (b *SBuilder) GraphDelete() SGraphDelete {
+	return SGraphDelete{cs: append(b.get(), "GRAPH.DELETE"), ks: InitSlot}
+}
+
+func (c GraphDelete) Graph(graph string) GraphDeleteGraph {
+	c.cs = append(c.cs, graph)
+	return (GraphDeleteGraph)(c)
+}
+
+func (c SGraphDelete) Graph(graph string) SGraphDeleteGraph {
+	c.ks = checkSlot(c.ks, slot(graph))
+	c.cs = append(c.cs, graph)
+	return (SGraphDeleteGraph)(c)
+}
+
+type GraphDeleteGraph Completed
+
+type SGraphDeleteGraph SCompleted
+
+func (c GraphDeleteGraph) Build() Completed {
+	return Completed(c)
+}
+
+func (c SGraphDeleteGraph) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type GraphExplain Completed
+
+type SGraphExplain SCompleted
+
+func (b *Builder) GraphExplain() GraphExplain {
+	return GraphExplain{cs: append(b.get(), "GRAPH.EXPLAIN"), ks: InitSlot, cf: readonly}
+}
+
+func (b *SBuilder) GraphExplain() SGraphExplain {
+	return SGraphExplain{cs: append(b.get(), "GRAPH.EXPLAIN"), ks: InitSlot, cf: readonly}
+}
+
+func (c GraphExplain) Graph(graph string) GraphExplainGraph {
+	c.cs = append(c.cs, graph)
+	return (GraphExplainGraph)(c)
+}
+
+func (c SGraphExplain) Graph(graph string) SGraphExplainGraph {
+	c.ks = checkSlot(c.ks, slot(graph))
+	c.cs = append(c.cs, graph)
+	return (SGraphExplainGraph)(c)
+}
+
+type GraphExplainGraph Completed
+
+type SGraphExplainGraph SCompleted
+
+func (c GraphExplainGraph) Query(query string) GraphExplainQuery {
+	c.cs = append(c.cs, query)
+	return (GraphExplainQuery)(c)
+}
+
+func (c SGraphExplainGraph) Query(query string) SGraphExplainQuery {
+	c.cs = append(c.cs, query)
+	return (SGraphExplainQuery)(c)
+}
+
+type GraphExplainQuery Completed
+
+type SGraphExplainQuery SCompleted
+
+func (c GraphExplainQuery) Build() Completed {
+	return Completed(c)
+}
+
+func (c SGraphExplainQuery) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type GraphList Completed
+
+type SGraphList SCompleted
+
+func (b *Builder) GraphList() GraphList {
+	return GraphList{cs: append(b.get(), "GRAPH.LIST"), ks: InitSlot, cf: readonly}
+}
+
+func (b *SBuilder) GraphList() SGraphList {
+	return SGraphList{cs: append(b.get(), "GRAPH.LIST"), ks: InitSlot, cf: readonly}
+}
+
+func (c GraphList) Build() Completed {
+	return Completed(c)
+}
+
+func (c SGraphList) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type GraphProfile Completed
+
+type SGraphProfile SCompleted
+
+func (b *Builder) GraphProfile() GraphProfile {
+	return GraphProfile{cs: append(b.get(), "GRAPH.PROFILE"), ks: InitSlot}
+}
+
+func (b *SBuilder) GraphProfile() SGraphProfile {
+	return SGraphProfile{cs: append(b.get(), "GRAPH.PROFILE"), ks: InitSlot}
+}
+
+func (c GraphProfile) Graph(graph string) GraphProfileGraph {
+	c.cs = append(c.cs, graph)
+	return (GraphProfileGraph)(c)
+}
+
+func (c SGraphProfile) Graph(graph string) SGraphProfileGraph {
+	c.ks = checkSlot(c.ks, slot(graph))
+	c.cs = append(c.cs, graph)
+	return (SGraphProfileGraph)(c)
+}
+
+type GraphProfileGraph Completed
+
+type SGraphProfileGraph SCompleted
+
+func (c GraphProfileGraph) Query(query string) GraphProfileQuery {
+	c.cs = append(c.cs, query)
+	return (GraphProfileQuery)(c)
+}
+
+func (c SGraphProfileGraph) Query(query string) SGraphProfileQuery {
+	c.cs = append(c.cs, query)
+	return (SGraphProfileQuery)(c)
+}
+
+type GraphProfileQuery Completed
+
+type SGraphProfileQuery SCompleted
+
+func (c GraphProfileQuery) Build() Completed {
+	return Completed(c)
+}
+
+func (c SGraphProfileQuery) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type GraphQuery Completed
+
+type SGraphQuery SCompleted
+
+func (b *Builder) GraphQuery() GraphQuery {
+	return GraphQuery{cs: append(b.get(), "GRAPH.QUERY"), ks: InitSlot}
+}
+
+func (b *SBuilder) GraphQuery() SGraphQuery {
+	return SGraphQuery{cs: append(b.get(), "GRAPH.QUERY"), ks: InitSlot}
+}
+
+func (c GraphQuery) Graph(graph string) GraphQueryGraph {
+	c.cs = append(c.cs, graph)
+	return (GraphQueryGraph)(c)
+}
+
+func (c SGraphQuery) Graph(graph string) SGraphQueryGraph {
+	c.ks = checkSlot(c.ks, slot(graph))
+	c.cs = append(c.cs, graph)
+	return (SGraphQueryGraph)(c)
+}
+
+type GraphQueryGraph Completed
+
+type SGraphQueryGraph SCompleted
+
+func (c GraphQueryGraph) Query(query string) GraphQueryQuery {
+	c.cs = append(c.cs, query)
+	return (GraphQueryQuery)(c)
+}
+
+func (c SGraphQueryGraph) Query(query string) SGraphQueryQuery {
+	c.cs = append(c.cs, query)
+	return (SGraphQueryQuery)(c)
+}
+
+type GraphQueryQuery Completed
+
+type SGraphQueryQuery SCompleted
+
+func (c GraphQueryQuery) Build() Completed {
+	return Completed(c)
+}
+
+func (c SGraphQueryQuery) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type GraphRoQuery Completed
+
+type SGraphRoQuery SCompleted
+
+func (b *Builder) GraphRoQuery() GraphRoQuery {
+	return GraphRoQuery{cs: append(b.get(), "GRAPH.RO_QUERY"), ks: InitSlot, cf: readonly}
+}
+
+func (b *SBuilder) GraphRoQuery() SGraphRoQuery {
+	return SGraphRoQuery{cs: append(b.get(), "GRAPH.RO_QUERY"), ks: InitSlot, cf: readonly}
+}
+
+func (c GraphRoQuery) Graph(graph string) GraphRoQueryGraph {
+	c.cs = append(c.cs, graph)
+	return (GraphRoQueryGraph)(c)
+}
+
+func (c SGraphRoQuery) Graph(graph string) SGraphRoQueryGraph {
+	c.ks = checkSlot(c.ks, slot(graph))
+	c.cs = append(c.cs, graph)
+	return (SGraphRoQueryGraph)(c)
+}
+
+type GraphRoQueryGraph Completed
+
+type SGraphRoQueryGraph SCompleted
+
+func (c GraphRoQueryGraph) Query(query string) GraphRoQueryQuery {
+	c.cs = append(c.cs, query)
+	return (GraphRoQueryQuery)(c)
+}
+
+func (c SGraphRoQueryGraph) Query(query string) SGraphRoQueryQuery {
+	c.cs = append(c.cs, query)
+	return (SGraphRoQueryQuery)(c)
+}
+
+type GraphRoQueryQuery Completed
+
+type SGraphRoQueryQuery SCompleted
+
+func (c GraphRoQueryQuery) Build() Completed {
+	return Completed(c)
+}
+
+func (c SGraphRoQueryQuery) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type GraphSlowlog Completed
+
+type SGraphSlowlog SCompleted
+
+func (b *Builder) GraphSlowlog() GraphSlowlog {
+	return GraphSlowlog{cs: append(b.get(), "GRAPH.SLOWLOG"), ks: InitSlot, cf: readonly}
+}
+
+func (b *SBuilder) GraphSlowlog() SGraphSlowlog {
+	return SGraphSlowlog{cs: append(b.get(), "GRAPH.SLOWLOG"), ks: InitSlot, cf: readonly}
+}
+
+func (c GraphSlowlog) Graph(graph string) GraphSlowlogGraph {
+	c.cs = append(c.cs, graph)
+	return (GraphSlowlogGraph)(c)
+}
+
+func (c SGraphSlowlog) Graph(graph string) SGraphSlowlogGraph {
+	c.ks = checkSlot(c.ks, slot(graph))
+	c.cs = append(c.cs, graph)
+	return (SGraphSlowlogGraph)(c)
+}
+
+type GraphSlowlogGraph Completed
+
+type SGraphSlowlogGraph SCompleted
+
+func (c GraphSlowlogGraph) Build() Completed {
+	return Completed(c)
+}
+
+func (c SGraphSlowlogGraph) Build() SCompleted {
+	return SCompleted(c)
+}
+
 type Hdel Completed
 
 type SHdel SCompleted
@@ -35993,6 +36361,7729 @@ func (c TouchKey) Build() Completed {
 }
 
 func (c STouchKey) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsAdd Completed
+
+type STsAdd SCompleted
+
+func (b *Builder) TsAdd() TsAdd {
+	return TsAdd{cs: append(b.get(), "TS.ADD"), ks: InitSlot}
+}
+
+func (b *SBuilder) TsAdd() STsAdd {
+	return STsAdd{cs: append(b.get(), "TS.ADD"), ks: InitSlot}
+}
+
+func (c TsAdd) Key(key string) TsAddKey {
+	c.cs = append(c.cs, key)
+	return (TsAddKey)(c)
+}
+
+func (c STsAdd) Key(key string) STsAddKey {
+	c.ks = checkSlot(c.ks, slot(key))
+	c.cs = append(c.cs, key)
+	return (STsAddKey)(c)
+}
+
+type TsAddChunkSize Completed
+
+type STsAddChunkSize SCompleted
+
+func (c TsAddChunkSize) OnDuplicateBlock() TsAddOnDuplicateBlock {
+	c.cf = blockTag
+	c.cs = append(c.cs, "ON_DUPLICATE", "BLOCK")
+	return (TsAddOnDuplicateBlock)(c)
+}
+
+func (c STsAddChunkSize) OnDuplicateBlock() STsAddOnDuplicateBlock {
+	c.cf = blockTag
+	c.cs = append(c.cs, "ON_DUPLICATE", "BLOCK")
+	return (STsAddOnDuplicateBlock)(c)
+}
+
+func (c TsAddChunkSize) OnDuplicateFirst() TsAddOnDuplicateFirst {
+	c.cs = append(c.cs, "ON_DUPLICATE", "FIRST")
+	return (TsAddOnDuplicateFirst)(c)
+}
+
+func (c STsAddChunkSize) OnDuplicateFirst() STsAddOnDuplicateFirst {
+	c.cs = append(c.cs, "ON_DUPLICATE", "FIRST")
+	return (STsAddOnDuplicateFirst)(c)
+}
+
+func (c TsAddChunkSize) OnDuplicateLast() TsAddOnDuplicateLast {
+	c.cs = append(c.cs, "ON_DUPLICATE", "LAST")
+	return (TsAddOnDuplicateLast)(c)
+}
+
+func (c STsAddChunkSize) OnDuplicateLast() STsAddOnDuplicateLast {
+	c.cs = append(c.cs, "ON_DUPLICATE", "LAST")
+	return (STsAddOnDuplicateLast)(c)
+}
+
+func (c TsAddChunkSize) OnDuplicateMin() TsAddOnDuplicateMin {
+	c.cs = append(c.cs, "ON_DUPLICATE", "MIN")
+	return (TsAddOnDuplicateMin)(c)
+}
+
+func (c STsAddChunkSize) OnDuplicateMin() STsAddOnDuplicateMin {
+	c.cs = append(c.cs, "ON_DUPLICATE", "MIN")
+	return (STsAddOnDuplicateMin)(c)
+}
+
+func (c TsAddChunkSize) OnDuplicateMax() TsAddOnDuplicateMax {
+	c.cs = append(c.cs, "ON_DUPLICATE", "MAX")
+	return (TsAddOnDuplicateMax)(c)
+}
+
+func (c STsAddChunkSize) OnDuplicateMax() STsAddOnDuplicateMax {
+	c.cs = append(c.cs, "ON_DUPLICATE", "MAX")
+	return (STsAddOnDuplicateMax)(c)
+}
+
+func (c TsAddChunkSize) OnDuplicateSum() TsAddOnDuplicateSum {
+	c.cs = append(c.cs, "ON_DUPLICATE", "SUM")
+	return (TsAddOnDuplicateSum)(c)
+}
+
+func (c STsAddChunkSize) OnDuplicateSum() STsAddOnDuplicateSum {
+	c.cs = append(c.cs, "ON_DUPLICATE", "SUM")
+	return (STsAddOnDuplicateSum)(c)
+}
+
+func (c TsAddChunkSize) Labels() TsAddLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (TsAddLabels)(c)
+}
+
+func (c STsAddChunkSize) Labels() STsAddLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (STsAddLabels)(c)
+}
+
+func (c TsAddChunkSize) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsAddChunkSize) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsAddEncodingCompressed Completed
+
+type STsAddEncodingCompressed SCompleted
+
+func (c TsAddEncodingCompressed) ChunkSize(size int64) TsAddChunkSize {
+	c.cs = append(c.cs, "CHUNK_SIZE", strconv.FormatInt(size, 10))
+	return (TsAddChunkSize)(c)
+}
+
+func (c STsAddEncodingCompressed) ChunkSize(size int64) STsAddChunkSize {
+	c.cs = append(c.cs, "CHUNK_SIZE", strconv.FormatInt(size, 10))
+	return (STsAddChunkSize)(c)
+}
+
+func (c TsAddEncodingCompressed) OnDuplicateBlock() TsAddOnDuplicateBlock {
+	c.cf = blockTag
+	c.cs = append(c.cs, "ON_DUPLICATE", "BLOCK")
+	return (TsAddOnDuplicateBlock)(c)
+}
+
+func (c STsAddEncodingCompressed) OnDuplicateBlock() STsAddOnDuplicateBlock {
+	c.cf = blockTag
+	c.cs = append(c.cs, "ON_DUPLICATE", "BLOCK")
+	return (STsAddOnDuplicateBlock)(c)
+}
+
+func (c TsAddEncodingCompressed) OnDuplicateFirst() TsAddOnDuplicateFirst {
+	c.cs = append(c.cs, "ON_DUPLICATE", "FIRST")
+	return (TsAddOnDuplicateFirst)(c)
+}
+
+func (c STsAddEncodingCompressed) OnDuplicateFirst() STsAddOnDuplicateFirst {
+	c.cs = append(c.cs, "ON_DUPLICATE", "FIRST")
+	return (STsAddOnDuplicateFirst)(c)
+}
+
+func (c TsAddEncodingCompressed) OnDuplicateLast() TsAddOnDuplicateLast {
+	c.cs = append(c.cs, "ON_DUPLICATE", "LAST")
+	return (TsAddOnDuplicateLast)(c)
+}
+
+func (c STsAddEncodingCompressed) OnDuplicateLast() STsAddOnDuplicateLast {
+	c.cs = append(c.cs, "ON_DUPLICATE", "LAST")
+	return (STsAddOnDuplicateLast)(c)
+}
+
+func (c TsAddEncodingCompressed) OnDuplicateMin() TsAddOnDuplicateMin {
+	c.cs = append(c.cs, "ON_DUPLICATE", "MIN")
+	return (TsAddOnDuplicateMin)(c)
+}
+
+func (c STsAddEncodingCompressed) OnDuplicateMin() STsAddOnDuplicateMin {
+	c.cs = append(c.cs, "ON_DUPLICATE", "MIN")
+	return (STsAddOnDuplicateMin)(c)
+}
+
+func (c TsAddEncodingCompressed) OnDuplicateMax() TsAddOnDuplicateMax {
+	c.cs = append(c.cs, "ON_DUPLICATE", "MAX")
+	return (TsAddOnDuplicateMax)(c)
+}
+
+func (c STsAddEncodingCompressed) OnDuplicateMax() STsAddOnDuplicateMax {
+	c.cs = append(c.cs, "ON_DUPLICATE", "MAX")
+	return (STsAddOnDuplicateMax)(c)
+}
+
+func (c TsAddEncodingCompressed) OnDuplicateSum() TsAddOnDuplicateSum {
+	c.cs = append(c.cs, "ON_DUPLICATE", "SUM")
+	return (TsAddOnDuplicateSum)(c)
+}
+
+func (c STsAddEncodingCompressed) OnDuplicateSum() STsAddOnDuplicateSum {
+	c.cs = append(c.cs, "ON_DUPLICATE", "SUM")
+	return (STsAddOnDuplicateSum)(c)
+}
+
+func (c TsAddEncodingCompressed) Labels() TsAddLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (TsAddLabels)(c)
+}
+
+func (c STsAddEncodingCompressed) Labels() STsAddLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (STsAddLabels)(c)
+}
+
+func (c TsAddEncodingCompressed) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsAddEncodingCompressed) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsAddEncodingUncompressed Completed
+
+type STsAddEncodingUncompressed SCompleted
+
+func (c TsAddEncodingUncompressed) ChunkSize(size int64) TsAddChunkSize {
+	c.cs = append(c.cs, "CHUNK_SIZE", strconv.FormatInt(size, 10))
+	return (TsAddChunkSize)(c)
+}
+
+func (c STsAddEncodingUncompressed) ChunkSize(size int64) STsAddChunkSize {
+	c.cs = append(c.cs, "CHUNK_SIZE", strconv.FormatInt(size, 10))
+	return (STsAddChunkSize)(c)
+}
+
+func (c TsAddEncodingUncompressed) OnDuplicateBlock() TsAddOnDuplicateBlock {
+	c.cf = blockTag
+	c.cs = append(c.cs, "ON_DUPLICATE", "BLOCK")
+	return (TsAddOnDuplicateBlock)(c)
+}
+
+func (c STsAddEncodingUncompressed) OnDuplicateBlock() STsAddOnDuplicateBlock {
+	c.cf = blockTag
+	c.cs = append(c.cs, "ON_DUPLICATE", "BLOCK")
+	return (STsAddOnDuplicateBlock)(c)
+}
+
+func (c TsAddEncodingUncompressed) OnDuplicateFirst() TsAddOnDuplicateFirst {
+	c.cs = append(c.cs, "ON_DUPLICATE", "FIRST")
+	return (TsAddOnDuplicateFirst)(c)
+}
+
+func (c STsAddEncodingUncompressed) OnDuplicateFirst() STsAddOnDuplicateFirst {
+	c.cs = append(c.cs, "ON_DUPLICATE", "FIRST")
+	return (STsAddOnDuplicateFirst)(c)
+}
+
+func (c TsAddEncodingUncompressed) OnDuplicateLast() TsAddOnDuplicateLast {
+	c.cs = append(c.cs, "ON_DUPLICATE", "LAST")
+	return (TsAddOnDuplicateLast)(c)
+}
+
+func (c STsAddEncodingUncompressed) OnDuplicateLast() STsAddOnDuplicateLast {
+	c.cs = append(c.cs, "ON_DUPLICATE", "LAST")
+	return (STsAddOnDuplicateLast)(c)
+}
+
+func (c TsAddEncodingUncompressed) OnDuplicateMin() TsAddOnDuplicateMin {
+	c.cs = append(c.cs, "ON_DUPLICATE", "MIN")
+	return (TsAddOnDuplicateMin)(c)
+}
+
+func (c STsAddEncodingUncompressed) OnDuplicateMin() STsAddOnDuplicateMin {
+	c.cs = append(c.cs, "ON_DUPLICATE", "MIN")
+	return (STsAddOnDuplicateMin)(c)
+}
+
+func (c TsAddEncodingUncompressed) OnDuplicateMax() TsAddOnDuplicateMax {
+	c.cs = append(c.cs, "ON_DUPLICATE", "MAX")
+	return (TsAddOnDuplicateMax)(c)
+}
+
+func (c STsAddEncodingUncompressed) OnDuplicateMax() STsAddOnDuplicateMax {
+	c.cs = append(c.cs, "ON_DUPLICATE", "MAX")
+	return (STsAddOnDuplicateMax)(c)
+}
+
+func (c TsAddEncodingUncompressed) OnDuplicateSum() TsAddOnDuplicateSum {
+	c.cs = append(c.cs, "ON_DUPLICATE", "SUM")
+	return (TsAddOnDuplicateSum)(c)
+}
+
+func (c STsAddEncodingUncompressed) OnDuplicateSum() STsAddOnDuplicateSum {
+	c.cs = append(c.cs, "ON_DUPLICATE", "SUM")
+	return (STsAddOnDuplicateSum)(c)
+}
+
+func (c TsAddEncodingUncompressed) Labels() TsAddLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (TsAddLabels)(c)
+}
+
+func (c STsAddEncodingUncompressed) Labels() STsAddLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (STsAddLabels)(c)
+}
+
+func (c TsAddEncodingUncompressed) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsAddEncodingUncompressed) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsAddKey Completed
+
+type STsAddKey SCompleted
+
+func (c TsAddKey) Timestamp(timestamp int64) TsAddTimestamp {
+	c.cs = append(c.cs, strconv.FormatInt(timestamp, 10))
+	return (TsAddTimestamp)(c)
+}
+
+func (c STsAddKey) Timestamp(timestamp int64) STsAddTimestamp {
+	c.cs = append(c.cs, strconv.FormatInt(timestamp, 10))
+	return (STsAddTimestamp)(c)
+}
+
+type TsAddLabels Completed
+
+type STsAddLabels SCompleted
+
+func (c TsAddLabels) Labels(label string, value string) TsAddLabels {
+	c.cs = append(c.cs, label, value)
+	return c
+}
+
+func (c STsAddLabels) Labels(label string, value string) STsAddLabels {
+	c.cs = append(c.cs, label, value)
+	return c
+}
+
+func (c TsAddLabels) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsAddLabels) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsAddOnDuplicateBlock Completed
+
+type STsAddOnDuplicateBlock SCompleted
+
+func (c TsAddOnDuplicateBlock) Labels() TsAddLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (TsAddLabels)(c)
+}
+
+func (c STsAddOnDuplicateBlock) Labels() STsAddLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (STsAddLabels)(c)
+}
+
+func (c TsAddOnDuplicateBlock) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsAddOnDuplicateBlock) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsAddOnDuplicateFirst Completed
+
+type STsAddOnDuplicateFirst SCompleted
+
+func (c TsAddOnDuplicateFirst) Labels() TsAddLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (TsAddLabels)(c)
+}
+
+func (c STsAddOnDuplicateFirst) Labels() STsAddLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (STsAddLabels)(c)
+}
+
+func (c TsAddOnDuplicateFirst) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsAddOnDuplicateFirst) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsAddOnDuplicateLast Completed
+
+type STsAddOnDuplicateLast SCompleted
+
+func (c TsAddOnDuplicateLast) Labels() TsAddLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (TsAddLabels)(c)
+}
+
+func (c STsAddOnDuplicateLast) Labels() STsAddLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (STsAddLabels)(c)
+}
+
+func (c TsAddOnDuplicateLast) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsAddOnDuplicateLast) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsAddOnDuplicateMax Completed
+
+type STsAddOnDuplicateMax SCompleted
+
+func (c TsAddOnDuplicateMax) Labels() TsAddLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (TsAddLabels)(c)
+}
+
+func (c STsAddOnDuplicateMax) Labels() STsAddLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (STsAddLabels)(c)
+}
+
+func (c TsAddOnDuplicateMax) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsAddOnDuplicateMax) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsAddOnDuplicateMin Completed
+
+type STsAddOnDuplicateMin SCompleted
+
+func (c TsAddOnDuplicateMin) Labels() TsAddLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (TsAddLabels)(c)
+}
+
+func (c STsAddOnDuplicateMin) Labels() STsAddLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (STsAddLabels)(c)
+}
+
+func (c TsAddOnDuplicateMin) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsAddOnDuplicateMin) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsAddOnDuplicateSum Completed
+
+type STsAddOnDuplicateSum SCompleted
+
+func (c TsAddOnDuplicateSum) Labels() TsAddLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (TsAddLabels)(c)
+}
+
+func (c STsAddOnDuplicateSum) Labels() STsAddLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (STsAddLabels)(c)
+}
+
+func (c TsAddOnDuplicateSum) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsAddOnDuplicateSum) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsAddRetention Completed
+
+type STsAddRetention SCompleted
+
+func (c TsAddRetention) EncodingUncompressed() TsAddEncodingUncompressed {
+	c.cs = append(c.cs, "ENCODING", "UNCOMPRESSED")
+	return (TsAddEncodingUncompressed)(c)
+}
+
+func (c STsAddRetention) EncodingUncompressed() STsAddEncodingUncompressed {
+	c.cs = append(c.cs, "ENCODING", "UNCOMPRESSED")
+	return (STsAddEncodingUncompressed)(c)
+}
+
+func (c TsAddRetention) EncodingCompressed() TsAddEncodingCompressed {
+	c.cs = append(c.cs, "ENCODING", "COMPRESSED")
+	return (TsAddEncodingCompressed)(c)
+}
+
+func (c STsAddRetention) EncodingCompressed() STsAddEncodingCompressed {
+	c.cs = append(c.cs, "ENCODING", "COMPRESSED")
+	return (STsAddEncodingCompressed)(c)
+}
+
+func (c TsAddRetention) ChunkSize(size int64) TsAddChunkSize {
+	c.cs = append(c.cs, "CHUNK_SIZE", strconv.FormatInt(size, 10))
+	return (TsAddChunkSize)(c)
+}
+
+func (c STsAddRetention) ChunkSize(size int64) STsAddChunkSize {
+	c.cs = append(c.cs, "CHUNK_SIZE", strconv.FormatInt(size, 10))
+	return (STsAddChunkSize)(c)
+}
+
+func (c TsAddRetention) OnDuplicateBlock() TsAddOnDuplicateBlock {
+	c.cf = blockTag
+	c.cs = append(c.cs, "ON_DUPLICATE", "BLOCK")
+	return (TsAddOnDuplicateBlock)(c)
+}
+
+func (c STsAddRetention) OnDuplicateBlock() STsAddOnDuplicateBlock {
+	c.cf = blockTag
+	c.cs = append(c.cs, "ON_DUPLICATE", "BLOCK")
+	return (STsAddOnDuplicateBlock)(c)
+}
+
+func (c TsAddRetention) OnDuplicateFirst() TsAddOnDuplicateFirst {
+	c.cs = append(c.cs, "ON_DUPLICATE", "FIRST")
+	return (TsAddOnDuplicateFirst)(c)
+}
+
+func (c STsAddRetention) OnDuplicateFirst() STsAddOnDuplicateFirst {
+	c.cs = append(c.cs, "ON_DUPLICATE", "FIRST")
+	return (STsAddOnDuplicateFirst)(c)
+}
+
+func (c TsAddRetention) OnDuplicateLast() TsAddOnDuplicateLast {
+	c.cs = append(c.cs, "ON_DUPLICATE", "LAST")
+	return (TsAddOnDuplicateLast)(c)
+}
+
+func (c STsAddRetention) OnDuplicateLast() STsAddOnDuplicateLast {
+	c.cs = append(c.cs, "ON_DUPLICATE", "LAST")
+	return (STsAddOnDuplicateLast)(c)
+}
+
+func (c TsAddRetention) OnDuplicateMin() TsAddOnDuplicateMin {
+	c.cs = append(c.cs, "ON_DUPLICATE", "MIN")
+	return (TsAddOnDuplicateMin)(c)
+}
+
+func (c STsAddRetention) OnDuplicateMin() STsAddOnDuplicateMin {
+	c.cs = append(c.cs, "ON_DUPLICATE", "MIN")
+	return (STsAddOnDuplicateMin)(c)
+}
+
+func (c TsAddRetention) OnDuplicateMax() TsAddOnDuplicateMax {
+	c.cs = append(c.cs, "ON_DUPLICATE", "MAX")
+	return (TsAddOnDuplicateMax)(c)
+}
+
+func (c STsAddRetention) OnDuplicateMax() STsAddOnDuplicateMax {
+	c.cs = append(c.cs, "ON_DUPLICATE", "MAX")
+	return (STsAddOnDuplicateMax)(c)
+}
+
+func (c TsAddRetention) OnDuplicateSum() TsAddOnDuplicateSum {
+	c.cs = append(c.cs, "ON_DUPLICATE", "SUM")
+	return (TsAddOnDuplicateSum)(c)
+}
+
+func (c STsAddRetention) OnDuplicateSum() STsAddOnDuplicateSum {
+	c.cs = append(c.cs, "ON_DUPLICATE", "SUM")
+	return (STsAddOnDuplicateSum)(c)
+}
+
+func (c TsAddRetention) Labels() TsAddLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (TsAddLabels)(c)
+}
+
+func (c STsAddRetention) Labels() STsAddLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (STsAddLabels)(c)
+}
+
+func (c TsAddRetention) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsAddRetention) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsAddTimestamp Completed
+
+type STsAddTimestamp SCompleted
+
+func (c TsAddTimestamp) Value(value float64) TsAddValue {
+	c.cs = append(c.cs, strconv.FormatFloat(value, 'f', -1, 64))
+	return (TsAddValue)(c)
+}
+
+func (c STsAddTimestamp) Value(value float64) STsAddValue {
+	c.cs = append(c.cs, strconv.FormatFloat(value, 'f', -1, 64))
+	return (STsAddValue)(c)
+}
+
+type TsAddValue Completed
+
+type STsAddValue SCompleted
+
+func (c TsAddValue) Retention(retentiontime int64) TsAddRetention {
+	c.cs = append(c.cs, "RETENTION", strconv.FormatInt(retentiontime, 10))
+	return (TsAddRetention)(c)
+}
+
+func (c STsAddValue) Retention(retentiontime int64) STsAddRetention {
+	c.cs = append(c.cs, "RETENTION", strconv.FormatInt(retentiontime, 10))
+	return (STsAddRetention)(c)
+}
+
+func (c TsAddValue) EncodingUncompressed() TsAddEncodingUncompressed {
+	c.cs = append(c.cs, "ENCODING", "UNCOMPRESSED")
+	return (TsAddEncodingUncompressed)(c)
+}
+
+func (c STsAddValue) EncodingUncompressed() STsAddEncodingUncompressed {
+	c.cs = append(c.cs, "ENCODING", "UNCOMPRESSED")
+	return (STsAddEncodingUncompressed)(c)
+}
+
+func (c TsAddValue) EncodingCompressed() TsAddEncodingCompressed {
+	c.cs = append(c.cs, "ENCODING", "COMPRESSED")
+	return (TsAddEncodingCompressed)(c)
+}
+
+func (c STsAddValue) EncodingCompressed() STsAddEncodingCompressed {
+	c.cs = append(c.cs, "ENCODING", "COMPRESSED")
+	return (STsAddEncodingCompressed)(c)
+}
+
+func (c TsAddValue) ChunkSize(size int64) TsAddChunkSize {
+	c.cs = append(c.cs, "CHUNK_SIZE", strconv.FormatInt(size, 10))
+	return (TsAddChunkSize)(c)
+}
+
+func (c STsAddValue) ChunkSize(size int64) STsAddChunkSize {
+	c.cs = append(c.cs, "CHUNK_SIZE", strconv.FormatInt(size, 10))
+	return (STsAddChunkSize)(c)
+}
+
+func (c TsAddValue) OnDuplicateBlock() TsAddOnDuplicateBlock {
+	c.cf = blockTag
+	c.cs = append(c.cs, "ON_DUPLICATE", "BLOCK")
+	return (TsAddOnDuplicateBlock)(c)
+}
+
+func (c STsAddValue) OnDuplicateBlock() STsAddOnDuplicateBlock {
+	c.cf = blockTag
+	c.cs = append(c.cs, "ON_DUPLICATE", "BLOCK")
+	return (STsAddOnDuplicateBlock)(c)
+}
+
+func (c TsAddValue) OnDuplicateFirst() TsAddOnDuplicateFirst {
+	c.cs = append(c.cs, "ON_DUPLICATE", "FIRST")
+	return (TsAddOnDuplicateFirst)(c)
+}
+
+func (c STsAddValue) OnDuplicateFirst() STsAddOnDuplicateFirst {
+	c.cs = append(c.cs, "ON_DUPLICATE", "FIRST")
+	return (STsAddOnDuplicateFirst)(c)
+}
+
+func (c TsAddValue) OnDuplicateLast() TsAddOnDuplicateLast {
+	c.cs = append(c.cs, "ON_DUPLICATE", "LAST")
+	return (TsAddOnDuplicateLast)(c)
+}
+
+func (c STsAddValue) OnDuplicateLast() STsAddOnDuplicateLast {
+	c.cs = append(c.cs, "ON_DUPLICATE", "LAST")
+	return (STsAddOnDuplicateLast)(c)
+}
+
+func (c TsAddValue) OnDuplicateMin() TsAddOnDuplicateMin {
+	c.cs = append(c.cs, "ON_DUPLICATE", "MIN")
+	return (TsAddOnDuplicateMin)(c)
+}
+
+func (c STsAddValue) OnDuplicateMin() STsAddOnDuplicateMin {
+	c.cs = append(c.cs, "ON_DUPLICATE", "MIN")
+	return (STsAddOnDuplicateMin)(c)
+}
+
+func (c TsAddValue) OnDuplicateMax() TsAddOnDuplicateMax {
+	c.cs = append(c.cs, "ON_DUPLICATE", "MAX")
+	return (TsAddOnDuplicateMax)(c)
+}
+
+func (c STsAddValue) OnDuplicateMax() STsAddOnDuplicateMax {
+	c.cs = append(c.cs, "ON_DUPLICATE", "MAX")
+	return (STsAddOnDuplicateMax)(c)
+}
+
+func (c TsAddValue) OnDuplicateSum() TsAddOnDuplicateSum {
+	c.cs = append(c.cs, "ON_DUPLICATE", "SUM")
+	return (TsAddOnDuplicateSum)(c)
+}
+
+func (c STsAddValue) OnDuplicateSum() STsAddOnDuplicateSum {
+	c.cs = append(c.cs, "ON_DUPLICATE", "SUM")
+	return (STsAddOnDuplicateSum)(c)
+}
+
+func (c TsAddValue) Labels() TsAddLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (TsAddLabels)(c)
+}
+
+func (c STsAddValue) Labels() STsAddLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (STsAddLabels)(c)
+}
+
+func (c TsAddValue) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsAddValue) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsAlter Completed
+
+type STsAlter SCompleted
+
+func (b *Builder) TsAlter() TsAlter {
+	return TsAlter{cs: append(b.get(), "TS.ALTER"), ks: InitSlot}
+}
+
+func (b *SBuilder) TsAlter() STsAlter {
+	return STsAlter{cs: append(b.get(), "TS.ALTER"), ks: InitSlot}
+}
+
+func (c TsAlter) Key(key string) TsAlterKey {
+	c.cs = append(c.cs, key)
+	return (TsAlterKey)(c)
+}
+
+func (c STsAlter) Key(key string) STsAlterKey {
+	c.ks = checkSlot(c.ks, slot(key))
+	c.cs = append(c.cs, key)
+	return (STsAlterKey)(c)
+}
+
+type TsAlterKey Completed
+
+type STsAlterKey SCompleted
+
+func (c TsAlterKey) Retention(retentiontime int64) TsAlterRetention {
+	c.cs = append(c.cs, "RETENTION", strconv.FormatInt(retentiontime, 10))
+	return (TsAlterRetention)(c)
+}
+
+func (c STsAlterKey) Retention(retentiontime int64) STsAlterRetention {
+	c.cs = append(c.cs, "RETENTION", strconv.FormatInt(retentiontime, 10))
+	return (STsAlterRetention)(c)
+}
+
+func (c TsAlterKey) Labels() TsAlterLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (TsAlterLabels)(c)
+}
+
+func (c STsAlterKey) Labels() STsAlterLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (STsAlterLabels)(c)
+}
+
+func (c TsAlterKey) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsAlterKey) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsAlterLabels Completed
+
+type STsAlterLabels SCompleted
+
+func (c TsAlterLabels) Labels(label string, value string) TsAlterLabels {
+	c.cs = append(c.cs, label, value)
+	return c
+}
+
+func (c STsAlterLabels) Labels(label string, value string) STsAlterLabels {
+	c.cs = append(c.cs, label, value)
+	return c
+}
+
+func (c TsAlterLabels) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsAlterLabels) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsAlterRetention Completed
+
+type STsAlterRetention SCompleted
+
+func (c TsAlterRetention) Labels() TsAlterLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (TsAlterLabels)(c)
+}
+
+func (c STsAlterRetention) Labels() STsAlterLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (STsAlterLabels)(c)
+}
+
+func (c TsAlterRetention) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsAlterRetention) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsCreate Completed
+
+type STsCreate SCompleted
+
+func (b *Builder) TsCreate() TsCreate {
+	return TsCreate{cs: append(b.get(), "TS.CREATE"), ks: InitSlot}
+}
+
+func (b *SBuilder) TsCreate() STsCreate {
+	return STsCreate{cs: append(b.get(), "TS.CREATE"), ks: InitSlot}
+}
+
+func (c TsCreate) Key(key string) TsCreateKey {
+	c.cs = append(c.cs, key)
+	return (TsCreateKey)(c)
+}
+
+func (c STsCreate) Key(key string) STsCreateKey {
+	c.ks = checkSlot(c.ks, slot(key))
+	c.cs = append(c.cs, key)
+	return (STsCreateKey)(c)
+}
+
+type TsCreateChunkSize Completed
+
+type STsCreateChunkSize SCompleted
+
+func (c TsCreateChunkSize) DuplicatePolicyBlock() TsCreateDuplicatePolicyBlock {
+	c.cf = blockTag
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "BLOCK")
+	return (TsCreateDuplicatePolicyBlock)(c)
+}
+
+func (c STsCreateChunkSize) DuplicatePolicyBlock() STsCreateDuplicatePolicyBlock {
+	c.cf = blockTag
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "BLOCK")
+	return (STsCreateDuplicatePolicyBlock)(c)
+}
+
+func (c TsCreateChunkSize) DuplicatePolicyFirst() TsCreateDuplicatePolicyFirst {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "FIRST")
+	return (TsCreateDuplicatePolicyFirst)(c)
+}
+
+func (c STsCreateChunkSize) DuplicatePolicyFirst() STsCreateDuplicatePolicyFirst {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "FIRST")
+	return (STsCreateDuplicatePolicyFirst)(c)
+}
+
+func (c TsCreateChunkSize) DuplicatePolicyLast() TsCreateDuplicatePolicyLast {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "LAST")
+	return (TsCreateDuplicatePolicyLast)(c)
+}
+
+func (c STsCreateChunkSize) DuplicatePolicyLast() STsCreateDuplicatePolicyLast {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "LAST")
+	return (STsCreateDuplicatePolicyLast)(c)
+}
+
+func (c TsCreateChunkSize) DuplicatePolicyMin() TsCreateDuplicatePolicyMin {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "MIN")
+	return (TsCreateDuplicatePolicyMin)(c)
+}
+
+func (c STsCreateChunkSize) DuplicatePolicyMin() STsCreateDuplicatePolicyMin {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "MIN")
+	return (STsCreateDuplicatePolicyMin)(c)
+}
+
+func (c TsCreateChunkSize) DuplicatePolicyMax() TsCreateDuplicatePolicyMax {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "MAX")
+	return (TsCreateDuplicatePolicyMax)(c)
+}
+
+func (c STsCreateChunkSize) DuplicatePolicyMax() STsCreateDuplicatePolicyMax {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "MAX")
+	return (STsCreateDuplicatePolicyMax)(c)
+}
+
+func (c TsCreateChunkSize) DuplicatePolicySum() TsCreateDuplicatePolicySum {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "SUM")
+	return (TsCreateDuplicatePolicySum)(c)
+}
+
+func (c STsCreateChunkSize) DuplicatePolicySum() STsCreateDuplicatePolicySum {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "SUM")
+	return (STsCreateDuplicatePolicySum)(c)
+}
+
+func (c TsCreateChunkSize) Labels() TsCreateLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (TsCreateLabels)(c)
+}
+
+func (c STsCreateChunkSize) Labels() STsCreateLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (STsCreateLabels)(c)
+}
+
+func (c TsCreateChunkSize) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsCreateChunkSize) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsCreateDuplicatePolicyBlock Completed
+
+type STsCreateDuplicatePolicyBlock SCompleted
+
+func (c TsCreateDuplicatePolicyBlock) Labels() TsCreateLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (TsCreateLabels)(c)
+}
+
+func (c STsCreateDuplicatePolicyBlock) Labels() STsCreateLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (STsCreateLabels)(c)
+}
+
+func (c TsCreateDuplicatePolicyBlock) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsCreateDuplicatePolicyBlock) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsCreateDuplicatePolicyFirst Completed
+
+type STsCreateDuplicatePolicyFirst SCompleted
+
+func (c TsCreateDuplicatePolicyFirst) Labels() TsCreateLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (TsCreateLabels)(c)
+}
+
+func (c STsCreateDuplicatePolicyFirst) Labels() STsCreateLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (STsCreateLabels)(c)
+}
+
+func (c TsCreateDuplicatePolicyFirst) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsCreateDuplicatePolicyFirst) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsCreateDuplicatePolicyLast Completed
+
+type STsCreateDuplicatePolicyLast SCompleted
+
+func (c TsCreateDuplicatePolicyLast) Labels() TsCreateLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (TsCreateLabels)(c)
+}
+
+func (c STsCreateDuplicatePolicyLast) Labels() STsCreateLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (STsCreateLabels)(c)
+}
+
+func (c TsCreateDuplicatePolicyLast) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsCreateDuplicatePolicyLast) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsCreateDuplicatePolicyMax Completed
+
+type STsCreateDuplicatePolicyMax SCompleted
+
+func (c TsCreateDuplicatePolicyMax) Labels() TsCreateLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (TsCreateLabels)(c)
+}
+
+func (c STsCreateDuplicatePolicyMax) Labels() STsCreateLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (STsCreateLabels)(c)
+}
+
+func (c TsCreateDuplicatePolicyMax) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsCreateDuplicatePolicyMax) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsCreateDuplicatePolicyMin Completed
+
+type STsCreateDuplicatePolicyMin SCompleted
+
+func (c TsCreateDuplicatePolicyMin) Labels() TsCreateLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (TsCreateLabels)(c)
+}
+
+func (c STsCreateDuplicatePolicyMin) Labels() STsCreateLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (STsCreateLabels)(c)
+}
+
+func (c TsCreateDuplicatePolicyMin) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsCreateDuplicatePolicyMin) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsCreateDuplicatePolicySum Completed
+
+type STsCreateDuplicatePolicySum SCompleted
+
+func (c TsCreateDuplicatePolicySum) Labels() TsCreateLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (TsCreateLabels)(c)
+}
+
+func (c STsCreateDuplicatePolicySum) Labels() STsCreateLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (STsCreateLabels)(c)
+}
+
+func (c TsCreateDuplicatePolicySum) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsCreateDuplicatePolicySum) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsCreateEncodingCompressed Completed
+
+type STsCreateEncodingCompressed SCompleted
+
+func (c TsCreateEncodingCompressed) ChunkSize(size int64) TsCreateChunkSize {
+	c.cs = append(c.cs, "CHUNK_SIZE", strconv.FormatInt(size, 10))
+	return (TsCreateChunkSize)(c)
+}
+
+func (c STsCreateEncodingCompressed) ChunkSize(size int64) STsCreateChunkSize {
+	c.cs = append(c.cs, "CHUNK_SIZE", strconv.FormatInt(size, 10))
+	return (STsCreateChunkSize)(c)
+}
+
+func (c TsCreateEncodingCompressed) DuplicatePolicyBlock() TsCreateDuplicatePolicyBlock {
+	c.cf = blockTag
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "BLOCK")
+	return (TsCreateDuplicatePolicyBlock)(c)
+}
+
+func (c STsCreateEncodingCompressed) DuplicatePolicyBlock() STsCreateDuplicatePolicyBlock {
+	c.cf = blockTag
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "BLOCK")
+	return (STsCreateDuplicatePolicyBlock)(c)
+}
+
+func (c TsCreateEncodingCompressed) DuplicatePolicyFirst() TsCreateDuplicatePolicyFirst {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "FIRST")
+	return (TsCreateDuplicatePolicyFirst)(c)
+}
+
+func (c STsCreateEncodingCompressed) DuplicatePolicyFirst() STsCreateDuplicatePolicyFirst {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "FIRST")
+	return (STsCreateDuplicatePolicyFirst)(c)
+}
+
+func (c TsCreateEncodingCompressed) DuplicatePolicyLast() TsCreateDuplicatePolicyLast {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "LAST")
+	return (TsCreateDuplicatePolicyLast)(c)
+}
+
+func (c STsCreateEncodingCompressed) DuplicatePolicyLast() STsCreateDuplicatePolicyLast {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "LAST")
+	return (STsCreateDuplicatePolicyLast)(c)
+}
+
+func (c TsCreateEncodingCompressed) DuplicatePolicyMin() TsCreateDuplicatePolicyMin {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "MIN")
+	return (TsCreateDuplicatePolicyMin)(c)
+}
+
+func (c STsCreateEncodingCompressed) DuplicatePolicyMin() STsCreateDuplicatePolicyMin {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "MIN")
+	return (STsCreateDuplicatePolicyMin)(c)
+}
+
+func (c TsCreateEncodingCompressed) DuplicatePolicyMax() TsCreateDuplicatePolicyMax {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "MAX")
+	return (TsCreateDuplicatePolicyMax)(c)
+}
+
+func (c STsCreateEncodingCompressed) DuplicatePolicyMax() STsCreateDuplicatePolicyMax {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "MAX")
+	return (STsCreateDuplicatePolicyMax)(c)
+}
+
+func (c TsCreateEncodingCompressed) DuplicatePolicySum() TsCreateDuplicatePolicySum {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "SUM")
+	return (TsCreateDuplicatePolicySum)(c)
+}
+
+func (c STsCreateEncodingCompressed) DuplicatePolicySum() STsCreateDuplicatePolicySum {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "SUM")
+	return (STsCreateDuplicatePolicySum)(c)
+}
+
+func (c TsCreateEncodingCompressed) Labels() TsCreateLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (TsCreateLabels)(c)
+}
+
+func (c STsCreateEncodingCompressed) Labels() STsCreateLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (STsCreateLabels)(c)
+}
+
+func (c TsCreateEncodingCompressed) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsCreateEncodingCompressed) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsCreateEncodingUncompressed Completed
+
+type STsCreateEncodingUncompressed SCompleted
+
+func (c TsCreateEncodingUncompressed) ChunkSize(size int64) TsCreateChunkSize {
+	c.cs = append(c.cs, "CHUNK_SIZE", strconv.FormatInt(size, 10))
+	return (TsCreateChunkSize)(c)
+}
+
+func (c STsCreateEncodingUncompressed) ChunkSize(size int64) STsCreateChunkSize {
+	c.cs = append(c.cs, "CHUNK_SIZE", strconv.FormatInt(size, 10))
+	return (STsCreateChunkSize)(c)
+}
+
+func (c TsCreateEncodingUncompressed) DuplicatePolicyBlock() TsCreateDuplicatePolicyBlock {
+	c.cf = blockTag
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "BLOCK")
+	return (TsCreateDuplicatePolicyBlock)(c)
+}
+
+func (c STsCreateEncodingUncompressed) DuplicatePolicyBlock() STsCreateDuplicatePolicyBlock {
+	c.cf = blockTag
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "BLOCK")
+	return (STsCreateDuplicatePolicyBlock)(c)
+}
+
+func (c TsCreateEncodingUncompressed) DuplicatePolicyFirst() TsCreateDuplicatePolicyFirst {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "FIRST")
+	return (TsCreateDuplicatePolicyFirst)(c)
+}
+
+func (c STsCreateEncodingUncompressed) DuplicatePolicyFirst() STsCreateDuplicatePolicyFirst {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "FIRST")
+	return (STsCreateDuplicatePolicyFirst)(c)
+}
+
+func (c TsCreateEncodingUncompressed) DuplicatePolicyLast() TsCreateDuplicatePolicyLast {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "LAST")
+	return (TsCreateDuplicatePolicyLast)(c)
+}
+
+func (c STsCreateEncodingUncompressed) DuplicatePolicyLast() STsCreateDuplicatePolicyLast {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "LAST")
+	return (STsCreateDuplicatePolicyLast)(c)
+}
+
+func (c TsCreateEncodingUncompressed) DuplicatePolicyMin() TsCreateDuplicatePolicyMin {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "MIN")
+	return (TsCreateDuplicatePolicyMin)(c)
+}
+
+func (c STsCreateEncodingUncompressed) DuplicatePolicyMin() STsCreateDuplicatePolicyMin {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "MIN")
+	return (STsCreateDuplicatePolicyMin)(c)
+}
+
+func (c TsCreateEncodingUncompressed) DuplicatePolicyMax() TsCreateDuplicatePolicyMax {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "MAX")
+	return (TsCreateDuplicatePolicyMax)(c)
+}
+
+func (c STsCreateEncodingUncompressed) DuplicatePolicyMax() STsCreateDuplicatePolicyMax {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "MAX")
+	return (STsCreateDuplicatePolicyMax)(c)
+}
+
+func (c TsCreateEncodingUncompressed) DuplicatePolicySum() TsCreateDuplicatePolicySum {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "SUM")
+	return (TsCreateDuplicatePolicySum)(c)
+}
+
+func (c STsCreateEncodingUncompressed) DuplicatePolicySum() STsCreateDuplicatePolicySum {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "SUM")
+	return (STsCreateDuplicatePolicySum)(c)
+}
+
+func (c TsCreateEncodingUncompressed) Labels() TsCreateLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (TsCreateLabels)(c)
+}
+
+func (c STsCreateEncodingUncompressed) Labels() STsCreateLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (STsCreateLabels)(c)
+}
+
+func (c TsCreateEncodingUncompressed) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsCreateEncodingUncompressed) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsCreateKey Completed
+
+type STsCreateKey SCompleted
+
+func (c TsCreateKey) Retention(retentiontime int64) TsCreateRetention {
+	c.cs = append(c.cs, "RETENTION", strconv.FormatInt(retentiontime, 10))
+	return (TsCreateRetention)(c)
+}
+
+func (c STsCreateKey) Retention(retentiontime int64) STsCreateRetention {
+	c.cs = append(c.cs, "RETENTION", strconv.FormatInt(retentiontime, 10))
+	return (STsCreateRetention)(c)
+}
+
+func (c TsCreateKey) EncodingUncompressed() TsCreateEncodingUncompressed {
+	c.cs = append(c.cs, "ENCODING", "UNCOMPRESSED")
+	return (TsCreateEncodingUncompressed)(c)
+}
+
+func (c STsCreateKey) EncodingUncompressed() STsCreateEncodingUncompressed {
+	c.cs = append(c.cs, "ENCODING", "UNCOMPRESSED")
+	return (STsCreateEncodingUncompressed)(c)
+}
+
+func (c TsCreateKey) EncodingCompressed() TsCreateEncodingCompressed {
+	c.cs = append(c.cs, "ENCODING", "COMPRESSED")
+	return (TsCreateEncodingCompressed)(c)
+}
+
+func (c STsCreateKey) EncodingCompressed() STsCreateEncodingCompressed {
+	c.cs = append(c.cs, "ENCODING", "COMPRESSED")
+	return (STsCreateEncodingCompressed)(c)
+}
+
+func (c TsCreateKey) ChunkSize(size int64) TsCreateChunkSize {
+	c.cs = append(c.cs, "CHUNK_SIZE", strconv.FormatInt(size, 10))
+	return (TsCreateChunkSize)(c)
+}
+
+func (c STsCreateKey) ChunkSize(size int64) STsCreateChunkSize {
+	c.cs = append(c.cs, "CHUNK_SIZE", strconv.FormatInt(size, 10))
+	return (STsCreateChunkSize)(c)
+}
+
+func (c TsCreateKey) DuplicatePolicyBlock() TsCreateDuplicatePolicyBlock {
+	c.cf = blockTag
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "BLOCK")
+	return (TsCreateDuplicatePolicyBlock)(c)
+}
+
+func (c STsCreateKey) DuplicatePolicyBlock() STsCreateDuplicatePolicyBlock {
+	c.cf = blockTag
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "BLOCK")
+	return (STsCreateDuplicatePolicyBlock)(c)
+}
+
+func (c TsCreateKey) DuplicatePolicyFirst() TsCreateDuplicatePolicyFirst {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "FIRST")
+	return (TsCreateDuplicatePolicyFirst)(c)
+}
+
+func (c STsCreateKey) DuplicatePolicyFirst() STsCreateDuplicatePolicyFirst {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "FIRST")
+	return (STsCreateDuplicatePolicyFirst)(c)
+}
+
+func (c TsCreateKey) DuplicatePolicyLast() TsCreateDuplicatePolicyLast {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "LAST")
+	return (TsCreateDuplicatePolicyLast)(c)
+}
+
+func (c STsCreateKey) DuplicatePolicyLast() STsCreateDuplicatePolicyLast {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "LAST")
+	return (STsCreateDuplicatePolicyLast)(c)
+}
+
+func (c TsCreateKey) DuplicatePolicyMin() TsCreateDuplicatePolicyMin {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "MIN")
+	return (TsCreateDuplicatePolicyMin)(c)
+}
+
+func (c STsCreateKey) DuplicatePolicyMin() STsCreateDuplicatePolicyMin {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "MIN")
+	return (STsCreateDuplicatePolicyMin)(c)
+}
+
+func (c TsCreateKey) DuplicatePolicyMax() TsCreateDuplicatePolicyMax {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "MAX")
+	return (TsCreateDuplicatePolicyMax)(c)
+}
+
+func (c STsCreateKey) DuplicatePolicyMax() STsCreateDuplicatePolicyMax {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "MAX")
+	return (STsCreateDuplicatePolicyMax)(c)
+}
+
+func (c TsCreateKey) DuplicatePolicySum() TsCreateDuplicatePolicySum {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "SUM")
+	return (TsCreateDuplicatePolicySum)(c)
+}
+
+func (c STsCreateKey) DuplicatePolicySum() STsCreateDuplicatePolicySum {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "SUM")
+	return (STsCreateDuplicatePolicySum)(c)
+}
+
+func (c TsCreateKey) Labels() TsCreateLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (TsCreateLabels)(c)
+}
+
+func (c STsCreateKey) Labels() STsCreateLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (STsCreateLabels)(c)
+}
+
+func (c TsCreateKey) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsCreateKey) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsCreateLabels Completed
+
+type STsCreateLabels SCompleted
+
+func (c TsCreateLabels) Labels(label string, value string) TsCreateLabels {
+	c.cs = append(c.cs, label, value)
+	return c
+}
+
+func (c STsCreateLabels) Labels(label string, value string) STsCreateLabels {
+	c.cs = append(c.cs, label, value)
+	return c
+}
+
+func (c TsCreateLabels) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsCreateLabels) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsCreateRetention Completed
+
+type STsCreateRetention SCompleted
+
+func (c TsCreateRetention) EncodingUncompressed() TsCreateEncodingUncompressed {
+	c.cs = append(c.cs, "ENCODING", "UNCOMPRESSED")
+	return (TsCreateEncodingUncompressed)(c)
+}
+
+func (c STsCreateRetention) EncodingUncompressed() STsCreateEncodingUncompressed {
+	c.cs = append(c.cs, "ENCODING", "UNCOMPRESSED")
+	return (STsCreateEncodingUncompressed)(c)
+}
+
+func (c TsCreateRetention) EncodingCompressed() TsCreateEncodingCompressed {
+	c.cs = append(c.cs, "ENCODING", "COMPRESSED")
+	return (TsCreateEncodingCompressed)(c)
+}
+
+func (c STsCreateRetention) EncodingCompressed() STsCreateEncodingCompressed {
+	c.cs = append(c.cs, "ENCODING", "COMPRESSED")
+	return (STsCreateEncodingCompressed)(c)
+}
+
+func (c TsCreateRetention) ChunkSize(size int64) TsCreateChunkSize {
+	c.cs = append(c.cs, "CHUNK_SIZE", strconv.FormatInt(size, 10))
+	return (TsCreateChunkSize)(c)
+}
+
+func (c STsCreateRetention) ChunkSize(size int64) STsCreateChunkSize {
+	c.cs = append(c.cs, "CHUNK_SIZE", strconv.FormatInt(size, 10))
+	return (STsCreateChunkSize)(c)
+}
+
+func (c TsCreateRetention) DuplicatePolicyBlock() TsCreateDuplicatePolicyBlock {
+	c.cf = blockTag
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "BLOCK")
+	return (TsCreateDuplicatePolicyBlock)(c)
+}
+
+func (c STsCreateRetention) DuplicatePolicyBlock() STsCreateDuplicatePolicyBlock {
+	c.cf = blockTag
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "BLOCK")
+	return (STsCreateDuplicatePolicyBlock)(c)
+}
+
+func (c TsCreateRetention) DuplicatePolicyFirst() TsCreateDuplicatePolicyFirst {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "FIRST")
+	return (TsCreateDuplicatePolicyFirst)(c)
+}
+
+func (c STsCreateRetention) DuplicatePolicyFirst() STsCreateDuplicatePolicyFirst {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "FIRST")
+	return (STsCreateDuplicatePolicyFirst)(c)
+}
+
+func (c TsCreateRetention) DuplicatePolicyLast() TsCreateDuplicatePolicyLast {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "LAST")
+	return (TsCreateDuplicatePolicyLast)(c)
+}
+
+func (c STsCreateRetention) DuplicatePolicyLast() STsCreateDuplicatePolicyLast {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "LAST")
+	return (STsCreateDuplicatePolicyLast)(c)
+}
+
+func (c TsCreateRetention) DuplicatePolicyMin() TsCreateDuplicatePolicyMin {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "MIN")
+	return (TsCreateDuplicatePolicyMin)(c)
+}
+
+func (c STsCreateRetention) DuplicatePolicyMin() STsCreateDuplicatePolicyMin {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "MIN")
+	return (STsCreateDuplicatePolicyMin)(c)
+}
+
+func (c TsCreateRetention) DuplicatePolicyMax() TsCreateDuplicatePolicyMax {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "MAX")
+	return (TsCreateDuplicatePolicyMax)(c)
+}
+
+func (c STsCreateRetention) DuplicatePolicyMax() STsCreateDuplicatePolicyMax {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "MAX")
+	return (STsCreateDuplicatePolicyMax)(c)
+}
+
+func (c TsCreateRetention) DuplicatePolicySum() TsCreateDuplicatePolicySum {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "SUM")
+	return (TsCreateDuplicatePolicySum)(c)
+}
+
+func (c STsCreateRetention) DuplicatePolicySum() STsCreateDuplicatePolicySum {
+	c.cs = append(c.cs, "DUPLICATE_POLICY", "SUM")
+	return (STsCreateDuplicatePolicySum)(c)
+}
+
+func (c TsCreateRetention) Labels() TsCreateLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (TsCreateLabels)(c)
+}
+
+func (c STsCreateRetention) Labels() STsCreateLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (STsCreateLabels)(c)
+}
+
+func (c TsCreateRetention) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsCreateRetention) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsCreaterule Completed
+
+type STsCreaterule SCompleted
+
+func (b *Builder) TsCreaterule() TsCreaterule {
+	return TsCreaterule{cs: append(b.get(), "TS.CREATERULE"), ks: InitSlot}
+}
+
+func (b *SBuilder) TsCreaterule() STsCreaterule {
+	return STsCreaterule{cs: append(b.get(), "TS.CREATERULE"), ks: InitSlot}
+}
+
+func (c TsCreaterule) Sourcekey(sourcekey string) TsCreateruleSourcekey {
+	c.cs = append(c.cs, sourcekey)
+	return (TsCreateruleSourcekey)(c)
+}
+
+func (c STsCreaterule) Sourcekey(sourcekey string) STsCreateruleSourcekey {
+	c.ks = checkSlot(c.ks, slot(sourcekey))
+	c.cs = append(c.cs, sourcekey)
+	return (STsCreateruleSourcekey)(c)
+}
+
+type TsCreateruleAggregationAvg Completed
+
+type STsCreateruleAggregationAvg SCompleted
+
+func (c TsCreateruleAggregationAvg) Timebucket(timebucket int64) TsCreateruleTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsCreateruleTimebucket)(c)
+}
+
+func (c STsCreateruleAggregationAvg) Timebucket(timebucket int64) STsCreateruleTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsCreateruleTimebucket)(c)
+}
+
+type TsCreateruleAggregationCount Completed
+
+type STsCreateruleAggregationCount SCompleted
+
+func (c TsCreateruleAggregationCount) Timebucket(timebucket int64) TsCreateruleTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsCreateruleTimebucket)(c)
+}
+
+func (c STsCreateruleAggregationCount) Timebucket(timebucket int64) STsCreateruleTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsCreateruleTimebucket)(c)
+}
+
+type TsCreateruleAggregationFirst Completed
+
+type STsCreateruleAggregationFirst SCompleted
+
+func (c TsCreateruleAggregationFirst) Timebucket(timebucket int64) TsCreateruleTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsCreateruleTimebucket)(c)
+}
+
+func (c STsCreateruleAggregationFirst) Timebucket(timebucket int64) STsCreateruleTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsCreateruleTimebucket)(c)
+}
+
+type TsCreateruleAggregationLast Completed
+
+type STsCreateruleAggregationLast SCompleted
+
+func (c TsCreateruleAggregationLast) Timebucket(timebucket int64) TsCreateruleTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsCreateruleTimebucket)(c)
+}
+
+func (c STsCreateruleAggregationLast) Timebucket(timebucket int64) STsCreateruleTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsCreateruleTimebucket)(c)
+}
+
+type TsCreateruleAggregationMax Completed
+
+type STsCreateruleAggregationMax SCompleted
+
+func (c TsCreateruleAggregationMax) Timebucket(timebucket int64) TsCreateruleTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsCreateruleTimebucket)(c)
+}
+
+func (c STsCreateruleAggregationMax) Timebucket(timebucket int64) STsCreateruleTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsCreateruleTimebucket)(c)
+}
+
+type TsCreateruleAggregationMin Completed
+
+type STsCreateruleAggregationMin SCompleted
+
+func (c TsCreateruleAggregationMin) Timebucket(timebucket int64) TsCreateruleTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsCreateruleTimebucket)(c)
+}
+
+func (c STsCreateruleAggregationMin) Timebucket(timebucket int64) STsCreateruleTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsCreateruleTimebucket)(c)
+}
+
+type TsCreateruleAggregationRange Completed
+
+type STsCreateruleAggregationRange SCompleted
+
+func (c TsCreateruleAggregationRange) Timebucket(timebucket int64) TsCreateruleTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsCreateruleTimebucket)(c)
+}
+
+func (c STsCreateruleAggregationRange) Timebucket(timebucket int64) STsCreateruleTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsCreateruleTimebucket)(c)
+}
+
+type TsCreateruleAggregationStdP Completed
+
+type STsCreateruleAggregationStdP SCompleted
+
+func (c TsCreateruleAggregationStdP) Timebucket(timebucket int64) TsCreateruleTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsCreateruleTimebucket)(c)
+}
+
+func (c STsCreateruleAggregationStdP) Timebucket(timebucket int64) STsCreateruleTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsCreateruleTimebucket)(c)
+}
+
+type TsCreateruleAggregationStdS Completed
+
+type STsCreateruleAggregationStdS SCompleted
+
+func (c TsCreateruleAggregationStdS) Timebucket(timebucket int64) TsCreateruleTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsCreateruleTimebucket)(c)
+}
+
+func (c STsCreateruleAggregationStdS) Timebucket(timebucket int64) STsCreateruleTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsCreateruleTimebucket)(c)
+}
+
+type TsCreateruleAggregationSum Completed
+
+type STsCreateruleAggregationSum SCompleted
+
+func (c TsCreateruleAggregationSum) Timebucket(timebucket int64) TsCreateruleTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsCreateruleTimebucket)(c)
+}
+
+func (c STsCreateruleAggregationSum) Timebucket(timebucket int64) STsCreateruleTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsCreateruleTimebucket)(c)
+}
+
+type TsCreateruleAggregationVarP Completed
+
+type STsCreateruleAggregationVarP SCompleted
+
+func (c TsCreateruleAggregationVarP) Timebucket(timebucket int64) TsCreateruleTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsCreateruleTimebucket)(c)
+}
+
+func (c STsCreateruleAggregationVarP) Timebucket(timebucket int64) STsCreateruleTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsCreateruleTimebucket)(c)
+}
+
+type TsCreateruleAggregationVarS Completed
+
+type STsCreateruleAggregationVarS SCompleted
+
+func (c TsCreateruleAggregationVarS) Timebucket(timebucket int64) TsCreateruleTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsCreateruleTimebucket)(c)
+}
+
+func (c STsCreateruleAggregationVarS) Timebucket(timebucket int64) STsCreateruleTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsCreateruleTimebucket)(c)
+}
+
+type TsCreateruleDestkey Completed
+
+type STsCreateruleDestkey SCompleted
+
+func (c TsCreateruleDestkey) AggregationAvg() TsCreateruleAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (TsCreateruleAggregationAvg)(c)
+}
+
+func (c STsCreateruleDestkey) AggregationAvg() STsCreateruleAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (STsCreateruleAggregationAvg)(c)
+}
+
+func (c TsCreateruleDestkey) AggregationSum() TsCreateruleAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (TsCreateruleAggregationSum)(c)
+}
+
+func (c STsCreateruleDestkey) AggregationSum() STsCreateruleAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (STsCreateruleAggregationSum)(c)
+}
+
+func (c TsCreateruleDestkey) AggregationMin() TsCreateruleAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (TsCreateruleAggregationMin)(c)
+}
+
+func (c STsCreateruleDestkey) AggregationMin() STsCreateruleAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (STsCreateruleAggregationMin)(c)
+}
+
+func (c TsCreateruleDestkey) AggregationMax() TsCreateruleAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (TsCreateruleAggregationMax)(c)
+}
+
+func (c STsCreateruleDestkey) AggregationMax() STsCreateruleAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (STsCreateruleAggregationMax)(c)
+}
+
+func (c TsCreateruleDestkey) AggregationRange() TsCreateruleAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (TsCreateruleAggregationRange)(c)
+}
+
+func (c STsCreateruleDestkey) AggregationRange() STsCreateruleAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (STsCreateruleAggregationRange)(c)
+}
+
+func (c TsCreateruleDestkey) AggregationCount() TsCreateruleAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (TsCreateruleAggregationCount)(c)
+}
+
+func (c STsCreateruleDestkey) AggregationCount() STsCreateruleAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (STsCreateruleAggregationCount)(c)
+}
+
+func (c TsCreateruleDestkey) AggregationFirst() TsCreateruleAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (TsCreateruleAggregationFirst)(c)
+}
+
+func (c STsCreateruleDestkey) AggregationFirst() STsCreateruleAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (STsCreateruleAggregationFirst)(c)
+}
+
+func (c TsCreateruleDestkey) AggregationLast() TsCreateruleAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (TsCreateruleAggregationLast)(c)
+}
+
+func (c STsCreateruleDestkey) AggregationLast() STsCreateruleAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (STsCreateruleAggregationLast)(c)
+}
+
+func (c TsCreateruleDestkey) AggregationStdP() TsCreateruleAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (TsCreateruleAggregationStdP)(c)
+}
+
+func (c STsCreateruleDestkey) AggregationStdP() STsCreateruleAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (STsCreateruleAggregationStdP)(c)
+}
+
+func (c TsCreateruleDestkey) AggregationStdS() TsCreateruleAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (TsCreateruleAggregationStdS)(c)
+}
+
+func (c STsCreateruleDestkey) AggregationStdS() STsCreateruleAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (STsCreateruleAggregationStdS)(c)
+}
+
+func (c TsCreateruleDestkey) AggregationVarP() TsCreateruleAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (TsCreateruleAggregationVarP)(c)
+}
+
+func (c STsCreateruleDestkey) AggregationVarP() STsCreateruleAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (STsCreateruleAggregationVarP)(c)
+}
+
+func (c TsCreateruleDestkey) AggregationVarS() TsCreateruleAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (TsCreateruleAggregationVarS)(c)
+}
+
+func (c STsCreateruleDestkey) AggregationVarS() STsCreateruleAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (STsCreateruleAggregationVarS)(c)
+}
+
+type TsCreateruleSourcekey Completed
+
+type STsCreateruleSourcekey SCompleted
+
+func (c TsCreateruleSourcekey) Destkey(destkey string) TsCreateruleDestkey {
+	c.cs = append(c.cs, destkey)
+	return (TsCreateruleDestkey)(c)
+}
+
+func (c STsCreateruleSourcekey) Destkey(destkey string) STsCreateruleDestkey {
+	c.ks = checkSlot(c.ks, slot(destkey))
+	c.cs = append(c.cs, destkey)
+	return (STsCreateruleDestkey)(c)
+}
+
+type TsCreateruleTimebucket Completed
+
+type STsCreateruleTimebucket SCompleted
+
+func (c TsCreateruleTimebucket) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsCreateruleTimebucket) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsDecrby Completed
+
+type STsDecrby SCompleted
+
+func (b *Builder) TsDecrby() TsDecrby {
+	return TsDecrby{cs: append(b.get(), "TS.DECRBY"), ks: InitSlot}
+}
+
+func (b *SBuilder) TsDecrby() STsDecrby {
+	return STsDecrby{cs: append(b.get(), "TS.DECRBY"), ks: InitSlot}
+}
+
+func (c TsDecrby) Key(key string) TsDecrbyKey {
+	c.cs = append(c.cs, key)
+	return (TsDecrbyKey)(c)
+}
+
+func (c STsDecrby) Key(key string) STsDecrbyKey {
+	c.ks = checkSlot(c.ks, slot(key))
+	c.cs = append(c.cs, key)
+	return (STsDecrbyKey)(c)
+}
+
+type TsDecrbyChunkSize Completed
+
+type STsDecrbyChunkSize SCompleted
+
+func (c TsDecrbyChunkSize) Labels() TsDecrbyLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (TsDecrbyLabels)(c)
+}
+
+func (c STsDecrbyChunkSize) Labels() STsDecrbyLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (STsDecrbyLabels)(c)
+}
+
+func (c TsDecrbyChunkSize) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsDecrbyChunkSize) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsDecrbyKey Completed
+
+type STsDecrbyKey SCompleted
+
+func (c TsDecrbyKey) Value(value float64) TsDecrbyValue {
+	c.cs = append(c.cs, strconv.FormatFloat(value, 'f', -1, 64))
+	return (TsDecrbyValue)(c)
+}
+
+func (c STsDecrbyKey) Value(value float64) STsDecrbyValue {
+	c.cs = append(c.cs, strconv.FormatFloat(value, 'f', -1, 64))
+	return (STsDecrbyValue)(c)
+}
+
+type TsDecrbyLabels Completed
+
+type STsDecrbyLabels SCompleted
+
+func (c TsDecrbyLabels) Labels(label string, value string) TsDecrbyLabels {
+	c.cs = append(c.cs, label, value)
+	return c
+}
+
+func (c STsDecrbyLabels) Labels(label string, value string) STsDecrbyLabels {
+	c.cs = append(c.cs, label, value)
+	return c
+}
+
+func (c TsDecrbyLabels) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsDecrbyLabels) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsDecrbyRetention Completed
+
+type STsDecrbyRetention SCompleted
+
+func (c TsDecrbyRetention) Uncompressed() TsDecrbyUncompressed {
+	c.cs = append(c.cs, "UNCOMPRESSED")
+	return (TsDecrbyUncompressed)(c)
+}
+
+func (c STsDecrbyRetention) Uncompressed() STsDecrbyUncompressed {
+	c.cs = append(c.cs, "UNCOMPRESSED")
+	return (STsDecrbyUncompressed)(c)
+}
+
+func (c TsDecrbyRetention) ChunkSize(size int64) TsDecrbyChunkSize {
+	c.cs = append(c.cs, "CHUNK_SIZE", strconv.FormatInt(size, 10))
+	return (TsDecrbyChunkSize)(c)
+}
+
+func (c STsDecrbyRetention) ChunkSize(size int64) STsDecrbyChunkSize {
+	c.cs = append(c.cs, "CHUNK_SIZE", strconv.FormatInt(size, 10))
+	return (STsDecrbyChunkSize)(c)
+}
+
+func (c TsDecrbyRetention) Labels() TsDecrbyLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (TsDecrbyLabels)(c)
+}
+
+func (c STsDecrbyRetention) Labels() STsDecrbyLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (STsDecrbyLabels)(c)
+}
+
+func (c TsDecrbyRetention) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsDecrbyRetention) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsDecrbyTimestamp Completed
+
+type STsDecrbyTimestamp SCompleted
+
+func (c TsDecrbyTimestamp) Retention(retentiontime int64) TsDecrbyRetention {
+	c.cs = append(c.cs, "RETENTION", strconv.FormatInt(retentiontime, 10))
+	return (TsDecrbyRetention)(c)
+}
+
+func (c STsDecrbyTimestamp) Retention(retentiontime int64) STsDecrbyRetention {
+	c.cs = append(c.cs, "RETENTION", strconv.FormatInt(retentiontime, 10))
+	return (STsDecrbyRetention)(c)
+}
+
+func (c TsDecrbyTimestamp) Uncompressed() TsDecrbyUncompressed {
+	c.cs = append(c.cs, "UNCOMPRESSED")
+	return (TsDecrbyUncompressed)(c)
+}
+
+func (c STsDecrbyTimestamp) Uncompressed() STsDecrbyUncompressed {
+	c.cs = append(c.cs, "UNCOMPRESSED")
+	return (STsDecrbyUncompressed)(c)
+}
+
+func (c TsDecrbyTimestamp) ChunkSize(size int64) TsDecrbyChunkSize {
+	c.cs = append(c.cs, "CHUNK_SIZE", strconv.FormatInt(size, 10))
+	return (TsDecrbyChunkSize)(c)
+}
+
+func (c STsDecrbyTimestamp) ChunkSize(size int64) STsDecrbyChunkSize {
+	c.cs = append(c.cs, "CHUNK_SIZE", strconv.FormatInt(size, 10))
+	return (STsDecrbyChunkSize)(c)
+}
+
+func (c TsDecrbyTimestamp) Labels() TsDecrbyLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (TsDecrbyLabels)(c)
+}
+
+func (c STsDecrbyTimestamp) Labels() STsDecrbyLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (STsDecrbyLabels)(c)
+}
+
+func (c TsDecrbyTimestamp) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsDecrbyTimestamp) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsDecrbyUncompressed Completed
+
+type STsDecrbyUncompressed SCompleted
+
+func (c TsDecrbyUncompressed) ChunkSize(size int64) TsDecrbyChunkSize {
+	c.cs = append(c.cs, "CHUNK_SIZE", strconv.FormatInt(size, 10))
+	return (TsDecrbyChunkSize)(c)
+}
+
+func (c STsDecrbyUncompressed) ChunkSize(size int64) STsDecrbyChunkSize {
+	c.cs = append(c.cs, "CHUNK_SIZE", strconv.FormatInt(size, 10))
+	return (STsDecrbyChunkSize)(c)
+}
+
+func (c TsDecrbyUncompressed) Labels() TsDecrbyLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (TsDecrbyLabels)(c)
+}
+
+func (c STsDecrbyUncompressed) Labels() STsDecrbyLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (STsDecrbyLabels)(c)
+}
+
+func (c TsDecrbyUncompressed) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsDecrbyUncompressed) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsDecrbyValue Completed
+
+type STsDecrbyValue SCompleted
+
+func (c TsDecrbyValue) Timestamp(timestamp int64) TsDecrbyTimestamp {
+	c.cs = append(c.cs, strconv.FormatInt(timestamp, 10))
+	return (TsDecrbyTimestamp)(c)
+}
+
+func (c STsDecrbyValue) Timestamp(timestamp int64) STsDecrbyTimestamp {
+	c.cs = append(c.cs, strconv.FormatInt(timestamp, 10))
+	return (STsDecrbyTimestamp)(c)
+}
+
+func (c TsDecrbyValue) Retention(retentiontime int64) TsDecrbyRetention {
+	c.cs = append(c.cs, "RETENTION", strconv.FormatInt(retentiontime, 10))
+	return (TsDecrbyRetention)(c)
+}
+
+func (c STsDecrbyValue) Retention(retentiontime int64) STsDecrbyRetention {
+	c.cs = append(c.cs, "RETENTION", strconv.FormatInt(retentiontime, 10))
+	return (STsDecrbyRetention)(c)
+}
+
+func (c TsDecrbyValue) Uncompressed() TsDecrbyUncompressed {
+	c.cs = append(c.cs, "UNCOMPRESSED")
+	return (TsDecrbyUncompressed)(c)
+}
+
+func (c STsDecrbyValue) Uncompressed() STsDecrbyUncompressed {
+	c.cs = append(c.cs, "UNCOMPRESSED")
+	return (STsDecrbyUncompressed)(c)
+}
+
+func (c TsDecrbyValue) ChunkSize(size int64) TsDecrbyChunkSize {
+	c.cs = append(c.cs, "CHUNK_SIZE", strconv.FormatInt(size, 10))
+	return (TsDecrbyChunkSize)(c)
+}
+
+func (c STsDecrbyValue) ChunkSize(size int64) STsDecrbyChunkSize {
+	c.cs = append(c.cs, "CHUNK_SIZE", strconv.FormatInt(size, 10))
+	return (STsDecrbyChunkSize)(c)
+}
+
+func (c TsDecrbyValue) Labels() TsDecrbyLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (TsDecrbyLabels)(c)
+}
+
+func (c STsDecrbyValue) Labels() STsDecrbyLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (STsDecrbyLabels)(c)
+}
+
+func (c TsDecrbyValue) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsDecrbyValue) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsDel Completed
+
+type STsDel SCompleted
+
+func (b *Builder) TsDel() TsDel {
+	return TsDel{cs: append(b.get(), "TS.DEL"), ks: InitSlot}
+}
+
+func (b *SBuilder) TsDel() STsDel {
+	return STsDel{cs: append(b.get(), "TS.DEL"), ks: InitSlot}
+}
+
+func (c TsDel) Key(key string) TsDelKey {
+	c.cs = append(c.cs, key)
+	return (TsDelKey)(c)
+}
+
+func (c STsDel) Key(key string) STsDelKey {
+	c.ks = checkSlot(c.ks, slot(key))
+	c.cs = append(c.cs, key)
+	return (STsDelKey)(c)
+}
+
+type TsDelFromTimestamp Completed
+
+type STsDelFromTimestamp SCompleted
+
+func (c TsDelFromTimestamp) ToTimestamp(toTimestamp int64) TsDelToTimestamp {
+	c.cs = append(c.cs, strconv.FormatInt(toTimestamp, 10))
+	return (TsDelToTimestamp)(c)
+}
+
+func (c STsDelFromTimestamp) ToTimestamp(toTimestamp int64) STsDelToTimestamp {
+	c.cs = append(c.cs, strconv.FormatInt(toTimestamp, 10))
+	return (STsDelToTimestamp)(c)
+}
+
+type TsDelKey Completed
+
+type STsDelKey SCompleted
+
+func (c TsDelKey) FromTimestamp(fromTimestamp int64) TsDelFromTimestamp {
+	c.cs = append(c.cs, strconv.FormatInt(fromTimestamp, 10))
+	return (TsDelFromTimestamp)(c)
+}
+
+func (c STsDelKey) FromTimestamp(fromTimestamp int64) STsDelFromTimestamp {
+	c.cs = append(c.cs, strconv.FormatInt(fromTimestamp, 10))
+	return (STsDelFromTimestamp)(c)
+}
+
+type TsDelToTimestamp Completed
+
+type STsDelToTimestamp SCompleted
+
+func (c TsDelToTimestamp) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsDelToTimestamp) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsDeleterule Completed
+
+type STsDeleterule SCompleted
+
+func (b *Builder) TsDeleterule() TsDeleterule {
+	return TsDeleterule{cs: append(b.get(), "TS.DELETERULE"), ks: InitSlot}
+}
+
+func (b *SBuilder) TsDeleterule() STsDeleterule {
+	return STsDeleterule{cs: append(b.get(), "TS.DELETERULE"), ks: InitSlot}
+}
+
+func (c TsDeleterule) Sourcekey(sourcekey string) TsDeleteruleSourcekey {
+	c.cs = append(c.cs, sourcekey)
+	return (TsDeleteruleSourcekey)(c)
+}
+
+func (c STsDeleterule) Sourcekey(sourcekey string) STsDeleteruleSourcekey {
+	c.ks = checkSlot(c.ks, slot(sourcekey))
+	c.cs = append(c.cs, sourcekey)
+	return (STsDeleteruleSourcekey)(c)
+}
+
+type TsDeleteruleDestkey Completed
+
+type STsDeleteruleDestkey SCompleted
+
+func (c TsDeleteruleDestkey) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsDeleteruleDestkey) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsDeleteruleSourcekey Completed
+
+type STsDeleteruleSourcekey SCompleted
+
+func (c TsDeleteruleSourcekey) Destkey(destkey string) TsDeleteruleDestkey {
+	c.cs = append(c.cs, destkey)
+	return (TsDeleteruleDestkey)(c)
+}
+
+func (c STsDeleteruleSourcekey) Destkey(destkey string) STsDeleteruleDestkey {
+	c.ks = checkSlot(c.ks, slot(destkey))
+	c.cs = append(c.cs, destkey)
+	return (STsDeleteruleDestkey)(c)
+}
+
+type TsGet Completed
+
+type STsGet SCompleted
+
+func (b *Builder) TsGet() TsGet {
+	return TsGet{cs: append(b.get(), "TS.GET"), ks: InitSlot, cf: readonly}
+}
+
+func (b *SBuilder) TsGet() STsGet {
+	return STsGet{cs: append(b.get(), "TS.GET"), ks: InitSlot, cf: readonly}
+}
+
+func (c TsGet) Key(key string) TsGetKey {
+	c.cs = append(c.cs, key)
+	return (TsGetKey)(c)
+}
+
+func (c STsGet) Key(key string) STsGetKey {
+	c.ks = checkSlot(c.ks, slot(key))
+	c.cs = append(c.cs, key)
+	return (STsGetKey)(c)
+}
+
+type TsGetKey Completed
+
+type STsGetKey SCompleted
+
+func (c TsGetKey) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsGetKey) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsIncrby Completed
+
+type STsIncrby SCompleted
+
+func (b *Builder) TsIncrby() TsIncrby {
+	return TsIncrby{cs: append(b.get(), "TS.INCRBY"), ks: InitSlot}
+}
+
+func (b *SBuilder) TsIncrby() STsIncrby {
+	return STsIncrby{cs: append(b.get(), "TS.INCRBY"), ks: InitSlot}
+}
+
+func (c TsIncrby) Key(key string) TsIncrbyKey {
+	c.cs = append(c.cs, key)
+	return (TsIncrbyKey)(c)
+}
+
+func (c STsIncrby) Key(key string) STsIncrbyKey {
+	c.ks = checkSlot(c.ks, slot(key))
+	c.cs = append(c.cs, key)
+	return (STsIncrbyKey)(c)
+}
+
+type TsIncrbyChunkSize Completed
+
+type STsIncrbyChunkSize SCompleted
+
+func (c TsIncrbyChunkSize) Labels() TsIncrbyLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (TsIncrbyLabels)(c)
+}
+
+func (c STsIncrbyChunkSize) Labels() STsIncrbyLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (STsIncrbyLabels)(c)
+}
+
+func (c TsIncrbyChunkSize) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsIncrbyChunkSize) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsIncrbyKey Completed
+
+type STsIncrbyKey SCompleted
+
+func (c TsIncrbyKey) Value(value float64) TsIncrbyValue {
+	c.cs = append(c.cs, strconv.FormatFloat(value, 'f', -1, 64))
+	return (TsIncrbyValue)(c)
+}
+
+func (c STsIncrbyKey) Value(value float64) STsIncrbyValue {
+	c.cs = append(c.cs, strconv.FormatFloat(value, 'f', -1, 64))
+	return (STsIncrbyValue)(c)
+}
+
+type TsIncrbyLabels Completed
+
+type STsIncrbyLabels SCompleted
+
+func (c TsIncrbyLabels) Labels(label string, value string) TsIncrbyLabels {
+	c.cs = append(c.cs, label, value)
+	return c
+}
+
+func (c STsIncrbyLabels) Labels(label string, value string) STsIncrbyLabels {
+	c.cs = append(c.cs, label, value)
+	return c
+}
+
+func (c TsIncrbyLabels) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsIncrbyLabels) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsIncrbyRetention Completed
+
+type STsIncrbyRetention SCompleted
+
+func (c TsIncrbyRetention) Uncompressed() TsIncrbyUncompressed {
+	c.cs = append(c.cs, "UNCOMPRESSED")
+	return (TsIncrbyUncompressed)(c)
+}
+
+func (c STsIncrbyRetention) Uncompressed() STsIncrbyUncompressed {
+	c.cs = append(c.cs, "UNCOMPRESSED")
+	return (STsIncrbyUncompressed)(c)
+}
+
+func (c TsIncrbyRetention) ChunkSize(size int64) TsIncrbyChunkSize {
+	c.cs = append(c.cs, "CHUNK_SIZE", strconv.FormatInt(size, 10))
+	return (TsIncrbyChunkSize)(c)
+}
+
+func (c STsIncrbyRetention) ChunkSize(size int64) STsIncrbyChunkSize {
+	c.cs = append(c.cs, "CHUNK_SIZE", strconv.FormatInt(size, 10))
+	return (STsIncrbyChunkSize)(c)
+}
+
+func (c TsIncrbyRetention) Labels() TsIncrbyLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (TsIncrbyLabels)(c)
+}
+
+func (c STsIncrbyRetention) Labels() STsIncrbyLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (STsIncrbyLabels)(c)
+}
+
+func (c TsIncrbyRetention) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsIncrbyRetention) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsIncrbyTimestamp Completed
+
+type STsIncrbyTimestamp SCompleted
+
+func (c TsIncrbyTimestamp) Retention(retentiontime int64) TsIncrbyRetention {
+	c.cs = append(c.cs, "RETENTION", strconv.FormatInt(retentiontime, 10))
+	return (TsIncrbyRetention)(c)
+}
+
+func (c STsIncrbyTimestamp) Retention(retentiontime int64) STsIncrbyRetention {
+	c.cs = append(c.cs, "RETENTION", strconv.FormatInt(retentiontime, 10))
+	return (STsIncrbyRetention)(c)
+}
+
+func (c TsIncrbyTimestamp) Uncompressed() TsIncrbyUncompressed {
+	c.cs = append(c.cs, "UNCOMPRESSED")
+	return (TsIncrbyUncompressed)(c)
+}
+
+func (c STsIncrbyTimestamp) Uncompressed() STsIncrbyUncompressed {
+	c.cs = append(c.cs, "UNCOMPRESSED")
+	return (STsIncrbyUncompressed)(c)
+}
+
+func (c TsIncrbyTimestamp) ChunkSize(size int64) TsIncrbyChunkSize {
+	c.cs = append(c.cs, "CHUNK_SIZE", strconv.FormatInt(size, 10))
+	return (TsIncrbyChunkSize)(c)
+}
+
+func (c STsIncrbyTimestamp) ChunkSize(size int64) STsIncrbyChunkSize {
+	c.cs = append(c.cs, "CHUNK_SIZE", strconv.FormatInt(size, 10))
+	return (STsIncrbyChunkSize)(c)
+}
+
+func (c TsIncrbyTimestamp) Labels() TsIncrbyLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (TsIncrbyLabels)(c)
+}
+
+func (c STsIncrbyTimestamp) Labels() STsIncrbyLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (STsIncrbyLabels)(c)
+}
+
+func (c TsIncrbyTimestamp) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsIncrbyTimestamp) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsIncrbyUncompressed Completed
+
+type STsIncrbyUncompressed SCompleted
+
+func (c TsIncrbyUncompressed) ChunkSize(size int64) TsIncrbyChunkSize {
+	c.cs = append(c.cs, "CHUNK_SIZE", strconv.FormatInt(size, 10))
+	return (TsIncrbyChunkSize)(c)
+}
+
+func (c STsIncrbyUncompressed) ChunkSize(size int64) STsIncrbyChunkSize {
+	c.cs = append(c.cs, "CHUNK_SIZE", strconv.FormatInt(size, 10))
+	return (STsIncrbyChunkSize)(c)
+}
+
+func (c TsIncrbyUncompressed) Labels() TsIncrbyLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (TsIncrbyLabels)(c)
+}
+
+func (c STsIncrbyUncompressed) Labels() STsIncrbyLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (STsIncrbyLabels)(c)
+}
+
+func (c TsIncrbyUncompressed) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsIncrbyUncompressed) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsIncrbyValue Completed
+
+type STsIncrbyValue SCompleted
+
+func (c TsIncrbyValue) Timestamp(timestamp int64) TsIncrbyTimestamp {
+	c.cs = append(c.cs, strconv.FormatInt(timestamp, 10))
+	return (TsIncrbyTimestamp)(c)
+}
+
+func (c STsIncrbyValue) Timestamp(timestamp int64) STsIncrbyTimestamp {
+	c.cs = append(c.cs, strconv.FormatInt(timestamp, 10))
+	return (STsIncrbyTimestamp)(c)
+}
+
+func (c TsIncrbyValue) Retention(retentiontime int64) TsIncrbyRetention {
+	c.cs = append(c.cs, "RETENTION", strconv.FormatInt(retentiontime, 10))
+	return (TsIncrbyRetention)(c)
+}
+
+func (c STsIncrbyValue) Retention(retentiontime int64) STsIncrbyRetention {
+	c.cs = append(c.cs, "RETENTION", strconv.FormatInt(retentiontime, 10))
+	return (STsIncrbyRetention)(c)
+}
+
+func (c TsIncrbyValue) Uncompressed() TsIncrbyUncompressed {
+	c.cs = append(c.cs, "UNCOMPRESSED")
+	return (TsIncrbyUncompressed)(c)
+}
+
+func (c STsIncrbyValue) Uncompressed() STsIncrbyUncompressed {
+	c.cs = append(c.cs, "UNCOMPRESSED")
+	return (STsIncrbyUncompressed)(c)
+}
+
+func (c TsIncrbyValue) ChunkSize(size int64) TsIncrbyChunkSize {
+	c.cs = append(c.cs, "CHUNK_SIZE", strconv.FormatInt(size, 10))
+	return (TsIncrbyChunkSize)(c)
+}
+
+func (c STsIncrbyValue) ChunkSize(size int64) STsIncrbyChunkSize {
+	c.cs = append(c.cs, "CHUNK_SIZE", strconv.FormatInt(size, 10))
+	return (STsIncrbyChunkSize)(c)
+}
+
+func (c TsIncrbyValue) Labels() TsIncrbyLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (TsIncrbyLabels)(c)
+}
+
+func (c STsIncrbyValue) Labels() STsIncrbyLabels {
+	c.cs = append(c.cs, "LABELS")
+	return (STsIncrbyLabels)(c)
+}
+
+func (c TsIncrbyValue) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsIncrbyValue) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsInfo Completed
+
+type STsInfo SCompleted
+
+func (b *Builder) TsInfo() TsInfo {
+	return TsInfo{cs: append(b.get(), "TS.INFO"), ks: InitSlot, cf: readonly}
+}
+
+func (b *SBuilder) TsInfo() STsInfo {
+	return STsInfo{cs: append(b.get(), "TS.INFO"), ks: InitSlot, cf: readonly}
+}
+
+func (c TsInfo) Key(key string) TsInfoKey {
+	c.cs = append(c.cs, key)
+	return (TsInfoKey)(c)
+}
+
+func (c STsInfo) Key(key string) STsInfoKey {
+	c.ks = checkSlot(c.ks, slot(key))
+	c.cs = append(c.cs, key)
+	return (STsInfoKey)(c)
+}
+
+type TsInfoDebug Completed
+
+type STsInfoDebug SCompleted
+
+func (c TsInfoDebug) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsInfoDebug) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsInfoKey Completed
+
+type STsInfoKey SCompleted
+
+func (c TsInfoKey) Debug(debug string) TsInfoDebug {
+	c.cs = append(c.cs, debug)
+	return (TsInfoDebug)(c)
+}
+
+func (c STsInfoKey) Debug(debug string) STsInfoDebug {
+	c.cs = append(c.cs, debug)
+	return (STsInfoDebug)(c)
+}
+
+func (c TsInfoKey) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsInfoKey) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsMadd Completed
+
+type STsMadd SCompleted
+
+func (b *Builder) TsMadd() TsMadd {
+	return TsMadd{cs: append(b.get(), "TS.MADD"), ks: InitSlot}
+}
+
+func (b *SBuilder) TsMadd() STsMadd {
+	return STsMadd{cs: append(b.get(), "TS.MADD"), ks: InitSlot}
+}
+
+func (c TsMadd) KeyTimestampValue() TsMaddKeyTimestampValue {
+	return (TsMaddKeyTimestampValue)(c)
+}
+
+func (c STsMadd) KeyTimestampValue() STsMaddKeyTimestampValue {
+	return (STsMaddKeyTimestampValue)(c)
+}
+
+type TsMaddKeyTimestampValue Completed
+
+type STsMaddKeyTimestampValue SCompleted
+
+func (c TsMaddKeyTimestampValue) KeyTimestampValue(key string, timestamp int64, value float64) TsMaddKeyTimestampValue {
+	c.cs = append(c.cs, key, strconv.FormatInt(timestamp, 10), strconv.FormatFloat(value, 'f', -1, 64))
+	return c
+}
+
+func (c STsMaddKeyTimestampValue) KeyTimestampValue(key string, timestamp int64, value float64) STsMaddKeyTimestampValue {
+	c.ks = checkSlot(c.ks, slot(key))
+	c.cs = append(c.cs, key, strconv.FormatInt(timestamp, 10), strconv.FormatFloat(value, 'f', -1, 64))
+	return c
+}
+
+func (c TsMaddKeyTimestampValue) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsMaddKeyTimestampValue) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsMget Completed
+
+type STsMget SCompleted
+
+func (b *Builder) TsMget() TsMget {
+	return TsMget{cs: append(b.get(), "TS.MGET"), ks: InitSlot}
+}
+
+func (b *SBuilder) TsMget() STsMget {
+	return STsMget{cs: append(b.get(), "TS.MGET"), ks: InitSlot}
+}
+
+func (c TsMget) Withlabels() TsMgetWithlabels {
+	c.cs = append(c.cs, "WITHLABELS")
+	return (TsMgetWithlabels)(c)
+}
+
+func (c STsMget) Withlabels() STsMgetWithlabels {
+	c.cs = append(c.cs, "WITHLABELS")
+	return (STsMgetWithlabels)(c)
+}
+
+func (c TsMget) SelectedLabels(labels []string) TsMgetSelectedLabels {
+	c.cs = append(c.cs, "SELECTED_LABELS")
+	c.cs = append(c.cs, labels...)
+	return (TsMgetSelectedLabels)(c)
+}
+
+func (c STsMget) SelectedLabels(labels []string) STsMgetSelectedLabels {
+	c.cs = append(c.cs, "SELECTED_LABELS")
+	c.cs = append(c.cs, labels...)
+	return (STsMgetSelectedLabels)(c)
+}
+
+func (c TsMget) Filter(filter ...string) TsMgetFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return (TsMgetFilter)(c)
+}
+
+func (c STsMget) Filter(filter ...string) STsMgetFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return (STsMgetFilter)(c)
+}
+
+type TsMgetFilter Completed
+
+type STsMgetFilter SCompleted
+
+func (c TsMgetFilter) Filter(filter ...string) TsMgetFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return c
+}
+
+func (c STsMgetFilter) Filter(filter ...string) STsMgetFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return c
+}
+
+func (c TsMgetFilter) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsMgetFilter) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsMgetSelectedLabels Completed
+
+type STsMgetSelectedLabels SCompleted
+
+func (c TsMgetSelectedLabels) Filter(filter ...string) TsMgetFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return (TsMgetFilter)(c)
+}
+
+func (c STsMgetSelectedLabels) Filter(filter ...string) STsMgetFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return (STsMgetFilter)(c)
+}
+
+type TsMgetWithlabels Completed
+
+type STsMgetWithlabels SCompleted
+
+func (c TsMgetWithlabels) Filter(filter ...string) TsMgetFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return (TsMgetFilter)(c)
+}
+
+func (c STsMgetWithlabels) Filter(filter ...string) STsMgetFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return (STsMgetFilter)(c)
+}
+
+type TsMrange Completed
+
+type STsMrange SCompleted
+
+func (b *Builder) TsMrange() TsMrange {
+	return TsMrange{cs: append(b.get(), "TS.MRANGE"), ks: InitSlot}
+}
+
+func (b *SBuilder) TsMrange() STsMrange {
+	return STsMrange{cs: append(b.get(), "TS.MRANGE"), ks: InitSlot}
+}
+
+func (c TsMrange) Key(key string) TsMrangeKey {
+	c.cs = append(c.cs, key)
+	return (TsMrangeKey)(c)
+}
+
+func (c STsMrange) Key(key string) STsMrangeKey {
+	c.ks = checkSlot(c.ks, slot(key))
+	c.cs = append(c.cs, key)
+	return (STsMrangeKey)(c)
+}
+
+type TsMrangeAggregationAggregationAvg Completed
+
+type STsMrangeAggregationAggregationAvg SCompleted
+
+func (c TsMrangeAggregationAggregationAvg) Timebucket(timebucket int64) TsMrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsMrangeAggregationTimebucket)(c)
+}
+
+func (c STsMrangeAggregationAggregationAvg) Timebucket(timebucket int64) STsMrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsMrangeAggregationTimebucket)(c)
+}
+
+type TsMrangeAggregationAggregationCount Completed
+
+type STsMrangeAggregationAggregationCount SCompleted
+
+func (c TsMrangeAggregationAggregationCount) Timebucket(timebucket int64) TsMrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsMrangeAggregationTimebucket)(c)
+}
+
+func (c STsMrangeAggregationAggregationCount) Timebucket(timebucket int64) STsMrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsMrangeAggregationTimebucket)(c)
+}
+
+type TsMrangeAggregationAggregationFirst Completed
+
+type STsMrangeAggregationAggregationFirst SCompleted
+
+func (c TsMrangeAggregationAggregationFirst) Timebucket(timebucket int64) TsMrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsMrangeAggregationTimebucket)(c)
+}
+
+func (c STsMrangeAggregationAggregationFirst) Timebucket(timebucket int64) STsMrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsMrangeAggregationTimebucket)(c)
+}
+
+type TsMrangeAggregationAggregationLast Completed
+
+type STsMrangeAggregationAggregationLast SCompleted
+
+func (c TsMrangeAggregationAggregationLast) Timebucket(timebucket int64) TsMrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsMrangeAggregationTimebucket)(c)
+}
+
+func (c STsMrangeAggregationAggregationLast) Timebucket(timebucket int64) STsMrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsMrangeAggregationTimebucket)(c)
+}
+
+type TsMrangeAggregationAggregationMax Completed
+
+type STsMrangeAggregationAggregationMax SCompleted
+
+func (c TsMrangeAggregationAggregationMax) Timebucket(timebucket int64) TsMrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsMrangeAggregationTimebucket)(c)
+}
+
+func (c STsMrangeAggregationAggregationMax) Timebucket(timebucket int64) STsMrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsMrangeAggregationTimebucket)(c)
+}
+
+type TsMrangeAggregationAggregationMin Completed
+
+type STsMrangeAggregationAggregationMin SCompleted
+
+func (c TsMrangeAggregationAggregationMin) Timebucket(timebucket int64) TsMrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsMrangeAggregationTimebucket)(c)
+}
+
+func (c STsMrangeAggregationAggregationMin) Timebucket(timebucket int64) STsMrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsMrangeAggregationTimebucket)(c)
+}
+
+type TsMrangeAggregationAggregationRange Completed
+
+type STsMrangeAggregationAggregationRange SCompleted
+
+func (c TsMrangeAggregationAggregationRange) Timebucket(timebucket int64) TsMrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsMrangeAggregationTimebucket)(c)
+}
+
+func (c STsMrangeAggregationAggregationRange) Timebucket(timebucket int64) STsMrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsMrangeAggregationTimebucket)(c)
+}
+
+type TsMrangeAggregationAggregationStdP Completed
+
+type STsMrangeAggregationAggregationStdP SCompleted
+
+func (c TsMrangeAggregationAggregationStdP) Timebucket(timebucket int64) TsMrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsMrangeAggregationTimebucket)(c)
+}
+
+func (c STsMrangeAggregationAggregationStdP) Timebucket(timebucket int64) STsMrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsMrangeAggregationTimebucket)(c)
+}
+
+type TsMrangeAggregationAggregationStdS Completed
+
+type STsMrangeAggregationAggregationStdS SCompleted
+
+func (c TsMrangeAggregationAggregationStdS) Timebucket(timebucket int64) TsMrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsMrangeAggregationTimebucket)(c)
+}
+
+func (c STsMrangeAggregationAggregationStdS) Timebucket(timebucket int64) STsMrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsMrangeAggregationTimebucket)(c)
+}
+
+type TsMrangeAggregationAggregationSum Completed
+
+type STsMrangeAggregationAggregationSum SCompleted
+
+func (c TsMrangeAggregationAggregationSum) Timebucket(timebucket int64) TsMrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsMrangeAggregationTimebucket)(c)
+}
+
+func (c STsMrangeAggregationAggregationSum) Timebucket(timebucket int64) STsMrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsMrangeAggregationTimebucket)(c)
+}
+
+type TsMrangeAggregationAggregationVarP Completed
+
+type STsMrangeAggregationAggregationVarP SCompleted
+
+func (c TsMrangeAggregationAggregationVarP) Timebucket(timebucket int64) TsMrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsMrangeAggregationTimebucket)(c)
+}
+
+func (c STsMrangeAggregationAggregationVarP) Timebucket(timebucket int64) STsMrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsMrangeAggregationTimebucket)(c)
+}
+
+type TsMrangeAggregationAggregationVarS Completed
+
+type STsMrangeAggregationAggregationVarS SCompleted
+
+func (c TsMrangeAggregationAggregationVarS) Timebucket(timebucket int64) TsMrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsMrangeAggregationTimebucket)(c)
+}
+
+func (c STsMrangeAggregationAggregationVarS) Timebucket(timebucket int64) STsMrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsMrangeAggregationTimebucket)(c)
+}
+
+type TsMrangeAggregationTimebucket Completed
+
+type STsMrangeAggregationTimebucket SCompleted
+
+func (c TsMrangeAggregationTimebucket) Filter(filter ...string) TsMrangeFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return (TsMrangeFilter)(c)
+}
+
+func (c STsMrangeAggregationTimebucket) Filter(filter ...string) STsMrangeFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return (STsMrangeFilter)(c)
+}
+
+type TsMrangeAlign Completed
+
+type STsMrangeAlign SCompleted
+
+func (c TsMrangeAlign) AggregationAvg() TsMrangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (TsMrangeAggregationAggregationAvg)(c)
+}
+
+func (c STsMrangeAlign) AggregationAvg() STsMrangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (STsMrangeAggregationAggregationAvg)(c)
+}
+
+func (c TsMrangeAlign) AggregationSum() TsMrangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (TsMrangeAggregationAggregationSum)(c)
+}
+
+func (c STsMrangeAlign) AggregationSum() STsMrangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (STsMrangeAggregationAggregationSum)(c)
+}
+
+func (c TsMrangeAlign) AggregationMin() TsMrangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (TsMrangeAggregationAggregationMin)(c)
+}
+
+func (c STsMrangeAlign) AggregationMin() STsMrangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (STsMrangeAggregationAggregationMin)(c)
+}
+
+func (c TsMrangeAlign) AggregationMax() TsMrangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (TsMrangeAggregationAggregationMax)(c)
+}
+
+func (c STsMrangeAlign) AggregationMax() STsMrangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (STsMrangeAggregationAggregationMax)(c)
+}
+
+func (c TsMrangeAlign) AggregationRange() TsMrangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (TsMrangeAggregationAggregationRange)(c)
+}
+
+func (c STsMrangeAlign) AggregationRange() STsMrangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (STsMrangeAggregationAggregationRange)(c)
+}
+
+func (c TsMrangeAlign) AggregationCount() TsMrangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (TsMrangeAggregationAggregationCount)(c)
+}
+
+func (c STsMrangeAlign) AggregationCount() STsMrangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (STsMrangeAggregationAggregationCount)(c)
+}
+
+func (c TsMrangeAlign) AggregationFirst() TsMrangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (TsMrangeAggregationAggregationFirst)(c)
+}
+
+func (c STsMrangeAlign) AggregationFirst() STsMrangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (STsMrangeAggregationAggregationFirst)(c)
+}
+
+func (c TsMrangeAlign) AggregationLast() TsMrangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (TsMrangeAggregationAggregationLast)(c)
+}
+
+func (c STsMrangeAlign) AggregationLast() STsMrangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (STsMrangeAggregationAggregationLast)(c)
+}
+
+func (c TsMrangeAlign) AggregationStdP() TsMrangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (TsMrangeAggregationAggregationStdP)(c)
+}
+
+func (c STsMrangeAlign) AggregationStdP() STsMrangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (STsMrangeAggregationAggregationStdP)(c)
+}
+
+func (c TsMrangeAlign) AggregationStdS() TsMrangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (TsMrangeAggregationAggregationStdS)(c)
+}
+
+func (c STsMrangeAlign) AggregationStdS() STsMrangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (STsMrangeAggregationAggregationStdS)(c)
+}
+
+func (c TsMrangeAlign) AggregationVarP() TsMrangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (TsMrangeAggregationAggregationVarP)(c)
+}
+
+func (c STsMrangeAlign) AggregationVarP() STsMrangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (STsMrangeAggregationAggregationVarP)(c)
+}
+
+func (c TsMrangeAlign) AggregationVarS() TsMrangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (TsMrangeAggregationAggregationVarS)(c)
+}
+
+func (c STsMrangeAlign) AggregationVarS() STsMrangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (STsMrangeAggregationAggregationVarS)(c)
+}
+
+func (c TsMrangeAlign) Filter(filter ...string) TsMrangeFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return (TsMrangeFilter)(c)
+}
+
+func (c STsMrangeAlign) Filter(filter ...string) STsMrangeFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return (STsMrangeFilter)(c)
+}
+
+type TsMrangeCount Completed
+
+type STsMrangeCount SCompleted
+
+func (c TsMrangeCount) Align(value int64) TsMrangeAlign {
+	c.cs = append(c.cs, "ALIGN", strconv.FormatInt(value, 10))
+	return (TsMrangeAlign)(c)
+}
+
+func (c STsMrangeCount) Align(value int64) STsMrangeAlign {
+	c.cs = append(c.cs, "ALIGN", strconv.FormatInt(value, 10))
+	return (STsMrangeAlign)(c)
+}
+
+func (c TsMrangeCount) AggregationAvg() TsMrangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (TsMrangeAggregationAggregationAvg)(c)
+}
+
+func (c STsMrangeCount) AggregationAvg() STsMrangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (STsMrangeAggregationAggregationAvg)(c)
+}
+
+func (c TsMrangeCount) AggregationSum() TsMrangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (TsMrangeAggregationAggregationSum)(c)
+}
+
+func (c STsMrangeCount) AggregationSum() STsMrangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (STsMrangeAggregationAggregationSum)(c)
+}
+
+func (c TsMrangeCount) AggregationMin() TsMrangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (TsMrangeAggregationAggregationMin)(c)
+}
+
+func (c STsMrangeCount) AggregationMin() STsMrangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (STsMrangeAggregationAggregationMin)(c)
+}
+
+func (c TsMrangeCount) AggregationMax() TsMrangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (TsMrangeAggregationAggregationMax)(c)
+}
+
+func (c STsMrangeCount) AggregationMax() STsMrangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (STsMrangeAggregationAggregationMax)(c)
+}
+
+func (c TsMrangeCount) AggregationRange() TsMrangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (TsMrangeAggregationAggregationRange)(c)
+}
+
+func (c STsMrangeCount) AggregationRange() STsMrangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (STsMrangeAggregationAggregationRange)(c)
+}
+
+func (c TsMrangeCount) AggregationCount() TsMrangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (TsMrangeAggregationAggregationCount)(c)
+}
+
+func (c STsMrangeCount) AggregationCount() STsMrangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (STsMrangeAggregationAggregationCount)(c)
+}
+
+func (c TsMrangeCount) AggregationFirst() TsMrangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (TsMrangeAggregationAggregationFirst)(c)
+}
+
+func (c STsMrangeCount) AggregationFirst() STsMrangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (STsMrangeAggregationAggregationFirst)(c)
+}
+
+func (c TsMrangeCount) AggregationLast() TsMrangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (TsMrangeAggregationAggregationLast)(c)
+}
+
+func (c STsMrangeCount) AggregationLast() STsMrangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (STsMrangeAggregationAggregationLast)(c)
+}
+
+func (c TsMrangeCount) AggregationStdP() TsMrangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (TsMrangeAggregationAggregationStdP)(c)
+}
+
+func (c STsMrangeCount) AggregationStdP() STsMrangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (STsMrangeAggregationAggregationStdP)(c)
+}
+
+func (c TsMrangeCount) AggregationStdS() TsMrangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (TsMrangeAggregationAggregationStdS)(c)
+}
+
+func (c STsMrangeCount) AggregationStdS() STsMrangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (STsMrangeAggregationAggregationStdS)(c)
+}
+
+func (c TsMrangeCount) AggregationVarP() TsMrangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (TsMrangeAggregationAggregationVarP)(c)
+}
+
+func (c STsMrangeCount) AggregationVarP() STsMrangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (STsMrangeAggregationAggregationVarP)(c)
+}
+
+func (c TsMrangeCount) AggregationVarS() TsMrangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (TsMrangeAggregationAggregationVarS)(c)
+}
+
+func (c STsMrangeCount) AggregationVarS() STsMrangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (STsMrangeAggregationAggregationVarS)(c)
+}
+
+func (c TsMrangeCount) Filter(filter ...string) TsMrangeFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return (TsMrangeFilter)(c)
+}
+
+func (c STsMrangeCount) Filter(filter ...string) STsMrangeFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return (STsMrangeFilter)(c)
+}
+
+type TsMrangeFilter Completed
+
+type STsMrangeFilter SCompleted
+
+func (c TsMrangeFilter) Filter(filter ...string) TsMrangeFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return c
+}
+
+func (c STsMrangeFilter) Filter(filter ...string) STsMrangeFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return c
+}
+
+func (c TsMrangeFilter) Groupby(label string, reduce string, reducer string) TsMrangeGroupby {
+	c.cs = append(c.cs, "GROUPBY", label, reduce, reducer)
+	return (TsMrangeGroupby)(c)
+}
+
+func (c STsMrangeFilter) Groupby(label string, reduce string, reducer string) STsMrangeGroupby {
+	c.cs = append(c.cs, "GROUPBY", label, reduce, reducer)
+	return (STsMrangeGroupby)(c)
+}
+
+func (c TsMrangeFilter) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsMrangeFilter) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsMrangeFilterByTs Completed
+
+type STsMrangeFilterByTs SCompleted
+
+func (c TsMrangeFilterByTs) FilterByTs(timestamp ...int64) TsMrangeFilterByTs {
+	c.cs = append(c.cs, "FILTER_BY_TS")
+	for _, n := range timestamp {
+		c.cs = append(c.cs, strconv.FormatInt(n, 10))
+	}
+	return c
+}
+
+func (c STsMrangeFilterByTs) FilterByTs(timestamp ...int64) STsMrangeFilterByTs {
+	c.cs = append(c.cs, "FILTER_BY_TS")
+	for _, n := range timestamp {
+		c.cs = append(c.cs, strconv.FormatInt(n, 10))
+	}
+	return c
+}
+
+func (c TsMrangeFilterByTs) FilterByValue(min float64, max float64) TsMrangeFilterByValue {
+	c.cs = append(c.cs, "FILTER_BY_VALUE", strconv.FormatFloat(min, 'f', -1, 64), strconv.FormatFloat(max, 'f', -1, 64))
+	return (TsMrangeFilterByValue)(c)
+}
+
+func (c STsMrangeFilterByTs) FilterByValue(min float64, max float64) STsMrangeFilterByValue {
+	c.cs = append(c.cs, "FILTER_BY_VALUE", strconv.FormatFloat(min, 'f', -1, 64), strconv.FormatFloat(max, 'f', -1, 64))
+	return (STsMrangeFilterByValue)(c)
+}
+
+func (c TsMrangeFilterByTs) Withlabels() TsMrangeWithlabels {
+	c.cs = append(c.cs, "WITHLABELS")
+	return (TsMrangeWithlabels)(c)
+}
+
+func (c STsMrangeFilterByTs) Withlabels() STsMrangeWithlabels {
+	c.cs = append(c.cs, "WITHLABELS")
+	return (STsMrangeWithlabels)(c)
+}
+
+func (c TsMrangeFilterByTs) SelectedLabels(labels []string) TsMrangeSelectedLabels {
+	c.cs = append(c.cs, "SELECTED_LABELS")
+	c.cs = append(c.cs, labels...)
+	return (TsMrangeSelectedLabels)(c)
+}
+
+func (c STsMrangeFilterByTs) SelectedLabels(labels []string) STsMrangeSelectedLabels {
+	c.cs = append(c.cs, "SELECTED_LABELS")
+	c.cs = append(c.cs, labels...)
+	return (STsMrangeSelectedLabels)(c)
+}
+
+func (c TsMrangeFilterByTs) Count(count int64) TsMrangeCount {
+	c.cs = append(c.cs, "COUNT", strconv.FormatInt(count, 10))
+	return (TsMrangeCount)(c)
+}
+
+func (c STsMrangeFilterByTs) Count(count int64) STsMrangeCount {
+	c.cs = append(c.cs, "COUNT", strconv.FormatInt(count, 10))
+	return (STsMrangeCount)(c)
+}
+
+func (c TsMrangeFilterByTs) Align(value int64) TsMrangeAlign {
+	c.cs = append(c.cs, "ALIGN", strconv.FormatInt(value, 10))
+	return (TsMrangeAlign)(c)
+}
+
+func (c STsMrangeFilterByTs) Align(value int64) STsMrangeAlign {
+	c.cs = append(c.cs, "ALIGN", strconv.FormatInt(value, 10))
+	return (STsMrangeAlign)(c)
+}
+
+func (c TsMrangeFilterByTs) AggregationAvg() TsMrangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (TsMrangeAggregationAggregationAvg)(c)
+}
+
+func (c STsMrangeFilterByTs) AggregationAvg() STsMrangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (STsMrangeAggregationAggregationAvg)(c)
+}
+
+func (c TsMrangeFilterByTs) AggregationSum() TsMrangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (TsMrangeAggregationAggregationSum)(c)
+}
+
+func (c STsMrangeFilterByTs) AggregationSum() STsMrangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (STsMrangeAggregationAggregationSum)(c)
+}
+
+func (c TsMrangeFilterByTs) AggregationMin() TsMrangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (TsMrangeAggregationAggregationMin)(c)
+}
+
+func (c STsMrangeFilterByTs) AggregationMin() STsMrangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (STsMrangeAggregationAggregationMin)(c)
+}
+
+func (c TsMrangeFilterByTs) AggregationMax() TsMrangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (TsMrangeAggregationAggregationMax)(c)
+}
+
+func (c STsMrangeFilterByTs) AggregationMax() STsMrangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (STsMrangeAggregationAggregationMax)(c)
+}
+
+func (c TsMrangeFilterByTs) AggregationRange() TsMrangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (TsMrangeAggregationAggregationRange)(c)
+}
+
+func (c STsMrangeFilterByTs) AggregationRange() STsMrangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (STsMrangeAggregationAggregationRange)(c)
+}
+
+func (c TsMrangeFilterByTs) AggregationCount() TsMrangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (TsMrangeAggregationAggregationCount)(c)
+}
+
+func (c STsMrangeFilterByTs) AggregationCount() STsMrangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (STsMrangeAggregationAggregationCount)(c)
+}
+
+func (c TsMrangeFilterByTs) AggregationFirst() TsMrangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (TsMrangeAggregationAggregationFirst)(c)
+}
+
+func (c STsMrangeFilterByTs) AggregationFirst() STsMrangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (STsMrangeAggregationAggregationFirst)(c)
+}
+
+func (c TsMrangeFilterByTs) AggregationLast() TsMrangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (TsMrangeAggregationAggregationLast)(c)
+}
+
+func (c STsMrangeFilterByTs) AggregationLast() STsMrangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (STsMrangeAggregationAggregationLast)(c)
+}
+
+func (c TsMrangeFilterByTs) AggregationStdP() TsMrangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (TsMrangeAggregationAggregationStdP)(c)
+}
+
+func (c STsMrangeFilterByTs) AggregationStdP() STsMrangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (STsMrangeAggregationAggregationStdP)(c)
+}
+
+func (c TsMrangeFilterByTs) AggregationStdS() TsMrangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (TsMrangeAggregationAggregationStdS)(c)
+}
+
+func (c STsMrangeFilterByTs) AggregationStdS() STsMrangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (STsMrangeAggregationAggregationStdS)(c)
+}
+
+func (c TsMrangeFilterByTs) AggregationVarP() TsMrangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (TsMrangeAggregationAggregationVarP)(c)
+}
+
+func (c STsMrangeFilterByTs) AggregationVarP() STsMrangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (STsMrangeAggregationAggregationVarP)(c)
+}
+
+func (c TsMrangeFilterByTs) AggregationVarS() TsMrangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (TsMrangeAggregationAggregationVarS)(c)
+}
+
+func (c STsMrangeFilterByTs) AggregationVarS() STsMrangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (STsMrangeAggregationAggregationVarS)(c)
+}
+
+func (c TsMrangeFilterByTs) Filter(filter ...string) TsMrangeFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return (TsMrangeFilter)(c)
+}
+
+func (c STsMrangeFilterByTs) Filter(filter ...string) STsMrangeFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return (STsMrangeFilter)(c)
+}
+
+type TsMrangeFilterByValue Completed
+
+type STsMrangeFilterByValue SCompleted
+
+func (c TsMrangeFilterByValue) Withlabels() TsMrangeWithlabels {
+	c.cs = append(c.cs, "WITHLABELS")
+	return (TsMrangeWithlabels)(c)
+}
+
+func (c STsMrangeFilterByValue) Withlabels() STsMrangeWithlabels {
+	c.cs = append(c.cs, "WITHLABELS")
+	return (STsMrangeWithlabels)(c)
+}
+
+func (c TsMrangeFilterByValue) SelectedLabels(labels []string) TsMrangeSelectedLabels {
+	c.cs = append(c.cs, "SELECTED_LABELS")
+	c.cs = append(c.cs, labels...)
+	return (TsMrangeSelectedLabels)(c)
+}
+
+func (c STsMrangeFilterByValue) SelectedLabels(labels []string) STsMrangeSelectedLabels {
+	c.cs = append(c.cs, "SELECTED_LABELS")
+	c.cs = append(c.cs, labels...)
+	return (STsMrangeSelectedLabels)(c)
+}
+
+func (c TsMrangeFilterByValue) Count(count int64) TsMrangeCount {
+	c.cs = append(c.cs, "COUNT", strconv.FormatInt(count, 10))
+	return (TsMrangeCount)(c)
+}
+
+func (c STsMrangeFilterByValue) Count(count int64) STsMrangeCount {
+	c.cs = append(c.cs, "COUNT", strconv.FormatInt(count, 10))
+	return (STsMrangeCount)(c)
+}
+
+func (c TsMrangeFilterByValue) Align(value int64) TsMrangeAlign {
+	c.cs = append(c.cs, "ALIGN", strconv.FormatInt(value, 10))
+	return (TsMrangeAlign)(c)
+}
+
+func (c STsMrangeFilterByValue) Align(value int64) STsMrangeAlign {
+	c.cs = append(c.cs, "ALIGN", strconv.FormatInt(value, 10))
+	return (STsMrangeAlign)(c)
+}
+
+func (c TsMrangeFilterByValue) AggregationAvg() TsMrangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (TsMrangeAggregationAggregationAvg)(c)
+}
+
+func (c STsMrangeFilterByValue) AggregationAvg() STsMrangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (STsMrangeAggregationAggregationAvg)(c)
+}
+
+func (c TsMrangeFilterByValue) AggregationSum() TsMrangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (TsMrangeAggregationAggregationSum)(c)
+}
+
+func (c STsMrangeFilterByValue) AggregationSum() STsMrangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (STsMrangeAggregationAggregationSum)(c)
+}
+
+func (c TsMrangeFilterByValue) AggregationMin() TsMrangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (TsMrangeAggregationAggregationMin)(c)
+}
+
+func (c STsMrangeFilterByValue) AggregationMin() STsMrangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (STsMrangeAggregationAggregationMin)(c)
+}
+
+func (c TsMrangeFilterByValue) AggregationMax() TsMrangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (TsMrangeAggregationAggregationMax)(c)
+}
+
+func (c STsMrangeFilterByValue) AggregationMax() STsMrangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (STsMrangeAggregationAggregationMax)(c)
+}
+
+func (c TsMrangeFilterByValue) AggregationRange() TsMrangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (TsMrangeAggregationAggregationRange)(c)
+}
+
+func (c STsMrangeFilterByValue) AggregationRange() STsMrangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (STsMrangeAggregationAggregationRange)(c)
+}
+
+func (c TsMrangeFilterByValue) AggregationCount() TsMrangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (TsMrangeAggregationAggregationCount)(c)
+}
+
+func (c STsMrangeFilterByValue) AggregationCount() STsMrangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (STsMrangeAggregationAggregationCount)(c)
+}
+
+func (c TsMrangeFilterByValue) AggregationFirst() TsMrangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (TsMrangeAggregationAggregationFirst)(c)
+}
+
+func (c STsMrangeFilterByValue) AggregationFirst() STsMrangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (STsMrangeAggregationAggregationFirst)(c)
+}
+
+func (c TsMrangeFilterByValue) AggregationLast() TsMrangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (TsMrangeAggregationAggregationLast)(c)
+}
+
+func (c STsMrangeFilterByValue) AggregationLast() STsMrangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (STsMrangeAggregationAggregationLast)(c)
+}
+
+func (c TsMrangeFilterByValue) AggregationStdP() TsMrangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (TsMrangeAggregationAggregationStdP)(c)
+}
+
+func (c STsMrangeFilterByValue) AggregationStdP() STsMrangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (STsMrangeAggregationAggregationStdP)(c)
+}
+
+func (c TsMrangeFilterByValue) AggregationStdS() TsMrangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (TsMrangeAggregationAggregationStdS)(c)
+}
+
+func (c STsMrangeFilterByValue) AggregationStdS() STsMrangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (STsMrangeAggregationAggregationStdS)(c)
+}
+
+func (c TsMrangeFilterByValue) AggregationVarP() TsMrangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (TsMrangeAggregationAggregationVarP)(c)
+}
+
+func (c STsMrangeFilterByValue) AggregationVarP() STsMrangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (STsMrangeAggregationAggregationVarP)(c)
+}
+
+func (c TsMrangeFilterByValue) AggregationVarS() TsMrangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (TsMrangeAggregationAggregationVarS)(c)
+}
+
+func (c STsMrangeFilterByValue) AggregationVarS() STsMrangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (STsMrangeAggregationAggregationVarS)(c)
+}
+
+func (c TsMrangeFilterByValue) Filter(filter ...string) TsMrangeFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return (TsMrangeFilter)(c)
+}
+
+func (c STsMrangeFilterByValue) Filter(filter ...string) STsMrangeFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return (STsMrangeFilter)(c)
+}
+
+type TsMrangeFromtimestamp Completed
+
+type STsMrangeFromtimestamp SCompleted
+
+func (c TsMrangeFromtimestamp) Totimestamp(totimestamp int64) TsMrangeTotimestamp {
+	c.cs = append(c.cs, strconv.FormatInt(totimestamp, 10))
+	return (TsMrangeTotimestamp)(c)
+}
+
+func (c STsMrangeFromtimestamp) Totimestamp(totimestamp int64) STsMrangeTotimestamp {
+	c.cs = append(c.cs, strconv.FormatInt(totimestamp, 10))
+	return (STsMrangeTotimestamp)(c)
+}
+
+type TsMrangeGroupby Completed
+
+type STsMrangeGroupby SCompleted
+
+func (c TsMrangeGroupby) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsMrangeGroupby) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsMrangeKey Completed
+
+type STsMrangeKey SCompleted
+
+func (c TsMrangeKey) Fromtimestamp(fromtimestamp int64) TsMrangeFromtimestamp {
+	c.cs = append(c.cs, strconv.FormatInt(fromtimestamp, 10))
+	return (TsMrangeFromtimestamp)(c)
+}
+
+func (c STsMrangeKey) Fromtimestamp(fromtimestamp int64) STsMrangeFromtimestamp {
+	c.cs = append(c.cs, strconv.FormatInt(fromtimestamp, 10))
+	return (STsMrangeFromtimestamp)(c)
+}
+
+type TsMrangeSelectedLabels Completed
+
+type STsMrangeSelectedLabels SCompleted
+
+func (c TsMrangeSelectedLabels) Count(count int64) TsMrangeCount {
+	c.cs = append(c.cs, "COUNT", strconv.FormatInt(count, 10))
+	return (TsMrangeCount)(c)
+}
+
+func (c STsMrangeSelectedLabels) Count(count int64) STsMrangeCount {
+	c.cs = append(c.cs, "COUNT", strconv.FormatInt(count, 10))
+	return (STsMrangeCount)(c)
+}
+
+func (c TsMrangeSelectedLabels) Align(value int64) TsMrangeAlign {
+	c.cs = append(c.cs, "ALIGN", strconv.FormatInt(value, 10))
+	return (TsMrangeAlign)(c)
+}
+
+func (c STsMrangeSelectedLabels) Align(value int64) STsMrangeAlign {
+	c.cs = append(c.cs, "ALIGN", strconv.FormatInt(value, 10))
+	return (STsMrangeAlign)(c)
+}
+
+func (c TsMrangeSelectedLabels) AggregationAvg() TsMrangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (TsMrangeAggregationAggregationAvg)(c)
+}
+
+func (c STsMrangeSelectedLabels) AggregationAvg() STsMrangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (STsMrangeAggregationAggregationAvg)(c)
+}
+
+func (c TsMrangeSelectedLabels) AggregationSum() TsMrangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (TsMrangeAggregationAggregationSum)(c)
+}
+
+func (c STsMrangeSelectedLabels) AggregationSum() STsMrangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (STsMrangeAggregationAggregationSum)(c)
+}
+
+func (c TsMrangeSelectedLabels) AggregationMin() TsMrangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (TsMrangeAggregationAggregationMin)(c)
+}
+
+func (c STsMrangeSelectedLabels) AggregationMin() STsMrangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (STsMrangeAggregationAggregationMin)(c)
+}
+
+func (c TsMrangeSelectedLabels) AggregationMax() TsMrangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (TsMrangeAggregationAggregationMax)(c)
+}
+
+func (c STsMrangeSelectedLabels) AggregationMax() STsMrangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (STsMrangeAggregationAggregationMax)(c)
+}
+
+func (c TsMrangeSelectedLabels) AggregationRange() TsMrangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (TsMrangeAggregationAggregationRange)(c)
+}
+
+func (c STsMrangeSelectedLabels) AggregationRange() STsMrangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (STsMrangeAggregationAggregationRange)(c)
+}
+
+func (c TsMrangeSelectedLabels) AggregationCount() TsMrangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (TsMrangeAggregationAggregationCount)(c)
+}
+
+func (c STsMrangeSelectedLabels) AggregationCount() STsMrangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (STsMrangeAggregationAggregationCount)(c)
+}
+
+func (c TsMrangeSelectedLabels) AggregationFirst() TsMrangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (TsMrangeAggregationAggregationFirst)(c)
+}
+
+func (c STsMrangeSelectedLabels) AggregationFirst() STsMrangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (STsMrangeAggregationAggregationFirst)(c)
+}
+
+func (c TsMrangeSelectedLabels) AggregationLast() TsMrangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (TsMrangeAggregationAggregationLast)(c)
+}
+
+func (c STsMrangeSelectedLabels) AggregationLast() STsMrangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (STsMrangeAggregationAggregationLast)(c)
+}
+
+func (c TsMrangeSelectedLabels) AggregationStdP() TsMrangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (TsMrangeAggregationAggregationStdP)(c)
+}
+
+func (c STsMrangeSelectedLabels) AggregationStdP() STsMrangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (STsMrangeAggregationAggregationStdP)(c)
+}
+
+func (c TsMrangeSelectedLabels) AggregationStdS() TsMrangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (TsMrangeAggregationAggregationStdS)(c)
+}
+
+func (c STsMrangeSelectedLabels) AggregationStdS() STsMrangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (STsMrangeAggregationAggregationStdS)(c)
+}
+
+func (c TsMrangeSelectedLabels) AggregationVarP() TsMrangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (TsMrangeAggregationAggregationVarP)(c)
+}
+
+func (c STsMrangeSelectedLabels) AggregationVarP() STsMrangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (STsMrangeAggregationAggregationVarP)(c)
+}
+
+func (c TsMrangeSelectedLabels) AggregationVarS() TsMrangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (TsMrangeAggregationAggregationVarS)(c)
+}
+
+func (c STsMrangeSelectedLabels) AggregationVarS() STsMrangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (STsMrangeAggregationAggregationVarS)(c)
+}
+
+func (c TsMrangeSelectedLabels) Filter(filter ...string) TsMrangeFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return (TsMrangeFilter)(c)
+}
+
+func (c STsMrangeSelectedLabels) Filter(filter ...string) STsMrangeFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return (STsMrangeFilter)(c)
+}
+
+type TsMrangeTotimestamp Completed
+
+type STsMrangeTotimestamp SCompleted
+
+func (c TsMrangeTotimestamp) FilterByTs(timestamp ...int64) TsMrangeFilterByTs {
+	c.cs = append(c.cs, "FILTER_BY_TS")
+	for _, n := range timestamp {
+		c.cs = append(c.cs, strconv.FormatInt(n, 10))
+	}
+	return (TsMrangeFilterByTs)(c)
+}
+
+func (c STsMrangeTotimestamp) FilterByTs(timestamp ...int64) STsMrangeFilterByTs {
+	c.cs = append(c.cs, "FILTER_BY_TS")
+	for _, n := range timestamp {
+		c.cs = append(c.cs, strconv.FormatInt(n, 10))
+	}
+	return (STsMrangeFilterByTs)(c)
+}
+
+func (c TsMrangeTotimestamp) FilterByValue(min float64, max float64) TsMrangeFilterByValue {
+	c.cs = append(c.cs, "FILTER_BY_VALUE", strconv.FormatFloat(min, 'f', -1, 64), strconv.FormatFloat(max, 'f', -1, 64))
+	return (TsMrangeFilterByValue)(c)
+}
+
+func (c STsMrangeTotimestamp) FilterByValue(min float64, max float64) STsMrangeFilterByValue {
+	c.cs = append(c.cs, "FILTER_BY_VALUE", strconv.FormatFloat(min, 'f', -1, 64), strconv.FormatFloat(max, 'f', -1, 64))
+	return (STsMrangeFilterByValue)(c)
+}
+
+func (c TsMrangeTotimestamp) Withlabels() TsMrangeWithlabels {
+	c.cs = append(c.cs, "WITHLABELS")
+	return (TsMrangeWithlabels)(c)
+}
+
+func (c STsMrangeTotimestamp) Withlabels() STsMrangeWithlabels {
+	c.cs = append(c.cs, "WITHLABELS")
+	return (STsMrangeWithlabels)(c)
+}
+
+func (c TsMrangeTotimestamp) SelectedLabels(labels []string) TsMrangeSelectedLabels {
+	c.cs = append(c.cs, "SELECTED_LABELS")
+	c.cs = append(c.cs, labels...)
+	return (TsMrangeSelectedLabels)(c)
+}
+
+func (c STsMrangeTotimestamp) SelectedLabels(labels []string) STsMrangeSelectedLabels {
+	c.cs = append(c.cs, "SELECTED_LABELS")
+	c.cs = append(c.cs, labels...)
+	return (STsMrangeSelectedLabels)(c)
+}
+
+func (c TsMrangeTotimestamp) Count(count int64) TsMrangeCount {
+	c.cs = append(c.cs, "COUNT", strconv.FormatInt(count, 10))
+	return (TsMrangeCount)(c)
+}
+
+func (c STsMrangeTotimestamp) Count(count int64) STsMrangeCount {
+	c.cs = append(c.cs, "COUNT", strconv.FormatInt(count, 10))
+	return (STsMrangeCount)(c)
+}
+
+func (c TsMrangeTotimestamp) Align(value int64) TsMrangeAlign {
+	c.cs = append(c.cs, "ALIGN", strconv.FormatInt(value, 10))
+	return (TsMrangeAlign)(c)
+}
+
+func (c STsMrangeTotimestamp) Align(value int64) STsMrangeAlign {
+	c.cs = append(c.cs, "ALIGN", strconv.FormatInt(value, 10))
+	return (STsMrangeAlign)(c)
+}
+
+func (c TsMrangeTotimestamp) AggregationAvg() TsMrangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (TsMrangeAggregationAggregationAvg)(c)
+}
+
+func (c STsMrangeTotimestamp) AggregationAvg() STsMrangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (STsMrangeAggregationAggregationAvg)(c)
+}
+
+func (c TsMrangeTotimestamp) AggregationSum() TsMrangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (TsMrangeAggregationAggregationSum)(c)
+}
+
+func (c STsMrangeTotimestamp) AggregationSum() STsMrangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (STsMrangeAggregationAggregationSum)(c)
+}
+
+func (c TsMrangeTotimestamp) AggregationMin() TsMrangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (TsMrangeAggregationAggregationMin)(c)
+}
+
+func (c STsMrangeTotimestamp) AggregationMin() STsMrangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (STsMrangeAggregationAggregationMin)(c)
+}
+
+func (c TsMrangeTotimestamp) AggregationMax() TsMrangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (TsMrangeAggregationAggregationMax)(c)
+}
+
+func (c STsMrangeTotimestamp) AggregationMax() STsMrangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (STsMrangeAggregationAggregationMax)(c)
+}
+
+func (c TsMrangeTotimestamp) AggregationRange() TsMrangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (TsMrangeAggregationAggregationRange)(c)
+}
+
+func (c STsMrangeTotimestamp) AggregationRange() STsMrangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (STsMrangeAggregationAggregationRange)(c)
+}
+
+func (c TsMrangeTotimestamp) AggregationCount() TsMrangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (TsMrangeAggregationAggregationCount)(c)
+}
+
+func (c STsMrangeTotimestamp) AggregationCount() STsMrangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (STsMrangeAggregationAggregationCount)(c)
+}
+
+func (c TsMrangeTotimestamp) AggregationFirst() TsMrangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (TsMrangeAggregationAggregationFirst)(c)
+}
+
+func (c STsMrangeTotimestamp) AggregationFirst() STsMrangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (STsMrangeAggregationAggregationFirst)(c)
+}
+
+func (c TsMrangeTotimestamp) AggregationLast() TsMrangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (TsMrangeAggregationAggregationLast)(c)
+}
+
+func (c STsMrangeTotimestamp) AggregationLast() STsMrangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (STsMrangeAggregationAggregationLast)(c)
+}
+
+func (c TsMrangeTotimestamp) AggregationStdP() TsMrangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (TsMrangeAggregationAggregationStdP)(c)
+}
+
+func (c STsMrangeTotimestamp) AggregationStdP() STsMrangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (STsMrangeAggregationAggregationStdP)(c)
+}
+
+func (c TsMrangeTotimestamp) AggregationStdS() TsMrangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (TsMrangeAggregationAggregationStdS)(c)
+}
+
+func (c STsMrangeTotimestamp) AggregationStdS() STsMrangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (STsMrangeAggregationAggregationStdS)(c)
+}
+
+func (c TsMrangeTotimestamp) AggregationVarP() TsMrangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (TsMrangeAggregationAggregationVarP)(c)
+}
+
+func (c STsMrangeTotimestamp) AggregationVarP() STsMrangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (STsMrangeAggregationAggregationVarP)(c)
+}
+
+func (c TsMrangeTotimestamp) AggregationVarS() TsMrangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (TsMrangeAggregationAggregationVarS)(c)
+}
+
+func (c STsMrangeTotimestamp) AggregationVarS() STsMrangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (STsMrangeAggregationAggregationVarS)(c)
+}
+
+func (c TsMrangeTotimestamp) Filter(filter ...string) TsMrangeFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return (TsMrangeFilter)(c)
+}
+
+func (c STsMrangeTotimestamp) Filter(filter ...string) STsMrangeFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return (STsMrangeFilter)(c)
+}
+
+type TsMrangeWithlabels Completed
+
+type STsMrangeWithlabels SCompleted
+
+func (c TsMrangeWithlabels) Count(count int64) TsMrangeCount {
+	c.cs = append(c.cs, "COUNT", strconv.FormatInt(count, 10))
+	return (TsMrangeCount)(c)
+}
+
+func (c STsMrangeWithlabels) Count(count int64) STsMrangeCount {
+	c.cs = append(c.cs, "COUNT", strconv.FormatInt(count, 10))
+	return (STsMrangeCount)(c)
+}
+
+func (c TsMrangeWithlabels) Align(value int64) TsMrangeAlign {
+	c.cs = append(c.cs, "ALIGN", strconv.FormatInt(value, 10))
+	return (TsMrangeAlign)(c)
+}
+
+func (c STsMrangeWithlabels) Align(value int64) STsMrangeAlign {
+	c.cs = append(c.cs, "ALIGN", strconv.FormatInt(value, 10))
+	return (STsMrangeAlign)(c)
+}
+
+func (c TsMrangeWithlabels) AggregationAvg() TsMrangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (TsMrangeAggregationAggregationAvg)(c)
+}
+
+func (c STsMrangeWithlabels) AggregationAvg() STsMrangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (STsMrangeAggregationAggregationAvg)(c)
+}
+
+func (c TsMrangeWithlabels) AggregationSum() TsMrangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (TsMrangeAggregationAggregationSum)(c)
+}
+
+func (c STsMrangeWithlabels) AggregationSum() STsMrangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (STsMrangeAggregationAggregationSum)(c)
+}
+
+func (c TsMrangeWithlabels) AggregationMin() TsMrangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (TsMrangeAggregationAggregationMin)(c)
+}
+
+func (c STsMrangeWithlabels) AggregationMin() STsMrangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (STsMrangeAggregationAggregationMin)(c)
+}
+
+func (c TsMrangeWithlabels) AggregationMax() TsMrangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (TsMrangeAggregationAggregationMax)(c)
+}
+
+func (c STsMrangeWithlabels) AggregationMax() STsMrangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (STsMrangeAggregationAggregationMax)(c)
+}
+
+func (c TsMrangeWithlabels) AggregationRange() TsMrangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (TsMrangeAggregationAggregationRange)(c)
+}
+
+func (c STsMrangeWithlabels) AggregationRange() STsMrangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (STsMrangeAggregationAggregationRange)(c)
+}
+
+func (c TsMrangeWithlabels) AggregationCount() TsMrangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (TsMrangeAggregationAggregationCount)(c)
+}
+
+func (c STsMrangeWithlabels) AggregationCount() STsMrangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (STsMrangeAggregationAggregationCount)(c)
+}
+
+func (c TsMrangeWithlabels) AggregationFirst() TsMrangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (TsMrangeAggregationAggregationFirst)(c)
+}
+
+func (c STsMrangeWithlabels) AggregationFirst() STsMrangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (STsMrangeAggregationAggregationFirst)(c)
+}
+
+func (c TsMrangeWithlabels) AggregationLast() TsMrangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (TsMrangeAggregationAggregationLast)(c)
+}
+
+func (c STsMrangeWithlabels) AggregationLast() STsMrangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (STsMrangeAggregationAggregationLast)(c)
+}
+
+func (c TsMrangeWithlabels) AggregationStdP() TsMrangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (TsMrangeAggregationAggregationStdP)(c)
+}
+
+func (c STsMrangeWithlabels) AggregationStdP() STsMrangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (STsMrangeAggregationAggregationStdP)(c)
+}
+
+func (c TsMrangeWithlabels) AggregationStdS() TsMrangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (TsMrangeAggregationAggregationStdS)(c)
+}
+
+func (c STsMrangeWithlabels) AggregationStdS() STsMrangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (STsMrangeAggregationAggregationStdS)(c)
+}
+
+func (c TsMrangeWithlabels) AggregationVarP() TsMrangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (TsMrangeAggregationAggregationVarP)(c)
+}
+
+func (c STsMrangeWithlabels) AggregationVarP() STsMrangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (STsMrangeAggregationAggregationVarP)(c)
+}
+
+func (c TsMrangeWithlabels) AggregationVarS() TsMrangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (TsMrangeAggregationAggregationVarS)(c)
+}
+
+func (c STsMrangeWithlabels) AggregationVarS() STsMrangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (STsMrangeAggregationAggregationVarS)(c)
+}
+
+func (c TsMrangeWithlabels) Filter(filter ...string) TsMrangeFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return (TsMrangeFilter)(c)
+}
+
+func (c STsMrangeWithlabels) Filter(filter ...string) STsMrangeFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return (STsMrangeFilter)(c)
+}
+
+type TsMrevrange Completed
+
+type STsMrevrange SCompleted
+
+func (b *Builder) TsMrevrange() TsMrevrange {
+	return TsMrevrange{cs: append(b.get(), "TS.MREVRANGE"), ks: InitSlot}
+}
+
+func (b *SBuilder) TsMrevrange() STsMrevrange {
+	return STsMrevrange{cs: append(b.get(), "TS.MREVRANGE"), ks: InitSlot}
+}
+
+func (c TsMrevrange) Key(key string) TsMrevrangeKey {
+	c.cs = append(c.cs, key)
+	return (TsMrevrangeKey)(c)
+}
+
+func (c STsMrevrange) Key(key string) STsMrevrangeKey {
+	c.ks = checkSlot(c.ks, slot(key))
+	c.cs = append(c.cs, key)
+	return (STsMrevrangeKey)(c)
+}
+
+type TsMrevrangeAggregationAggregationAvg Completed
+
+type STsMrevrangeAggregationAggregationAvg SCompleted
+
+func (c TsMrevrangeAggregationAggregationAvg) Timebucket(timebucket int64) TsMrevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsMrevrangeAggregationTimebucket)(c)
+}
+
+func (c STsMrevrangeAggregationAggregationAvg) Timebucket(timebucket int64) STsMrevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsMrevrangeAggregationTimebucket)(c)
+}
+
+type TsMrevrangeAggregationAggregationCount Completed
+
+type STsMrevrangeAggregationAggregationCount SCompleted
+
+func (c TsMrevrangeAggregationAggregationCount) Timebucket(timebucket int64) TsMrevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsMrevrangeAggregationTimebucket)(c)
+}
+
+func (c STsMrevrangeAggregationAggregationCount) Timebucket(timebucket int64) STsMrevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsMrevrangeAggregationTimebucket)(c)
+}
+
+type TsMrevrangeAggregationAggregationFirst Completed
+
+type STsMrevrangeAggregationAggregationFirst SCompleted
+
+func (c TsMrevrangeAggregationAggregationFirst) Timebucket(timebucket int64) TsMrevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsMrevrangeAggregationTimebucket)(c)
+}
+
+func (c STsMrevrangeAggregationAggregationFirst) Timebucket(timebucket int64) STsMrevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsMrevrangeAggregationTimebucket)(c)
+}
+
+type TsMrevrangeAggregationAggregationLast Completed
+
+type STsMrevrangeAggregationAggregationLast SCompleted
+
+func (c TsMrevrangeAggregationAggregationLast) Timebucket(timebucket int64) TsMrevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsMrevrangeAggregationTimebucket)(c)
+}
+
+func (c STsMrevrangeAggregationAggregationLast) Timebucket(timebucket int64) STsMrevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsMrevrangeAggregationTimebucket)(c)
+}
+
+type TsMrevrangeAggregationAggregationMax Completed
+
+type STsMrevrangeAggregationAggregationMax SCompleted
+
+func (c TsMrevrangeAggregationAggregationMax) Timebucket(timebucket int64) TsMrevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsMrevrangeAggregationTimebucket)(c)
+}
+
+func (c STsMrevrangeAggregationAggregationMax) Timebucket(timebucket int64) STsMrevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsMrevrangeAggregationTimebucket)(c)
+}
+
+type TsMrevrangeAggregationAggregationMin Completed
+
+type STsMrevrangeAggregationAggregationMin SCompleted
+
+func (c TsMrevrangeAggregationAggregationMin) Timebucket(timebucket int64) TsMrevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsMrevrangeAggregationTimebucket)(c)
+}
+
+func (c STsMrevrangeAggregationAggregationMin) Timebucket(timebucket int64) STsMrevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsMrevrangeAggregationTimebucket)(c)
+}
+
+type TsMrevrangeAggregationAggregationRange Completed
+
+type STsMrevrangeAggregationAggregationRange SCompleted
+
+func (c TsMrevrangeAggregationAggregationRange) Timebucket(timebucket int64) TsMrevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsMrevrangeAggregationTimebucket)(c)
+}
+
+func (c STsMrevrangeAggregationAggregationRange) Timebucket(timebucket int64) STsMrevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsMrevrangeAggregationTimebucket)(c)
+}
+
+type TsMrevrangeAggregationAggregationStdP Completed
+
+type STsMrevrangeAggregationAggregationStdP SCompleted
+
+func (c TsMrevrangeAggregationAggregationStdP) Timebucket(timebucket int64) TsMrevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsMrevrangeAggregationTimebucket)(c)
+}
+
+func (c STsMrevrangeAggregationAggregationStdP) Timebucket(timebucket int64) STsMrevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsMrevrangeAggregationTimebucket)(c)
+}
+
+type TsMrevrangeAggregationAggregationStdS Completed
+
+type STsMrevrangeAggregationAggregationStdS SCompleted
+
+func (c TsMrevrangeAggregationAggregationStdS) Timebucket(timebucket int64) TsMrevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsMrevrangeAggregationTimebucket)(c)
+}
+
+func (c STsMrevrangeAggregationAggregationStdS) Timebucket(timebucket int64) STsMrevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsMrevrangeAggregationTimebucket)(c)
+}
+
+type TsMrevrangeAggregationAggregationSum Completed
+
+type STsMrevrangeAggregationAggregationSum SCompleted
+
+func (c TsMrevrangeAggregationAggregationSum) Timebucket(timebucket int64) TsMrevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsMrevrangeAggregationTimebucket)(c)
+}
+
+func (c STsMrevrangeAggregationAggregationSum) Timebucket(timebucket int64) STsMrevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsMrevrangeAggregationTimebucket)(c)
+}
+
+type TsMrevrangeAggregationAggregationVarP Completed
+
+type STsMrevrangeAggregationAggregationVarP SCompleted
+
+func (c TsMrevrangeAggregationAggregationVarP) Timebucket(timebucket int64) TsMrevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsMrevrangeAggregationTimebucket)(c)
+}
+
+func (c STsMrevrangeAggregationAggregationVarP) Timebucket(timebucket int64) STsMrevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsMrevrangeAggregationTimebucket)(c)
+}
+
+type TsMrevrangeAggregationAggregationVarS Completed
+
+type STsMrevrangeAggregationAggregationVarS SCompleted
+
+func (c TsMrevrangeAggregationAggregationVarS) Timebucket(timebucket int64) TsMrevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsMrevrangeAggregationTimebucket)(c)
+}
+
+func (c STsMrevrangeAggregationAggregationVarS) Timebucket(timebucket int64) STsMrevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsMrevrangeAggregationTimebucket)(c)
+}
+
+type TsMrevrangeAggregationTimebucket Completed
+
+type STsMrevrangeAggregationTimebucket SCompleted
+
+func (c TsMrevrangeAggregationTimebucket) Filter(filter ...string) TsMrevrangeFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return (TsMrevrangeFilter)(c)
+}
+
+func (c STsMrevrangeAggregationTimebucket) Filter(filter ...string) STsMrevrangeFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return (STsMrevrangeFilter)(c)
+}
+
+type TsMrevrangeAlign Completed
+
+type STsMrevrangeAlign SCompleted
+
+func (c TsMrevrangeAlign) AggregationAvg() TsMrevrangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (TsMrevrangeAggregationAggregationAvg)(c)
+}
+
+func (c STsMrevrangeAlign) AggregationAvg() STsMrevrangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (STsMrevrangeAggregationAggregationAvg)(c)
+}
+
+func (c TsMrevrangeAlign) AggregationSum() TsMrevrangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (TsMrevrangeAggregationAggregationSum)(c)
+}
+
+func (c STsMrevrangeAlign) AggregationSum() STsMrevrangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (STsMrevrangeAggregationAggregationSum)(c)
+}
+
+func (c TsMrevrangeAlign) AggregationMin() TsMrevrangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (TsMrevrangeAggregationAggregationMin)(c)
+}
+
+func (c STsMrevrangeAlign) AggregationMin() STsMrevrangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (STsMrevrangeAggregationAggregationMin)(c)
+}
+
+func (c TsMrevrangeAlign) AggregationMax() TsMrevrangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (TsMrevrangeAggregationAggregationMax)(c)
+}
+
+func (c STsMrevrangeAlign) AggregationMax() STsMrevrangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (STsMrevrangeAggregationAggregationMax)(c)
+}
+
+func (c TsMrevrangeAlign) AggregationRange() TsMrevrangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (TsMrevrangeAggregationAggregationRange)(c)
+}
+
+func (c STsMrevrangeAlign) AggregationRange() STsMrevrangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (STsMrevrangeAggregationAggregationRange)(c)
+}
+
+func (c TsMrevrangeAlign) AggregationCount() TsMrevrangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (TsMrevrangeAggregationAggregationCount)(c)
+}
+
+func (c STsMrevrangeAlign) AggregationCount() STsMrevrangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (STsMrevrangeAggregationAggregationCount)(c)
+}
+
+func (c TsMrevrangeAlign) AggregationFirst() TsMrevrangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (TsMrevrangeAggregationAggregationFirst)(c)
+}
+
+func (c STsMrevrangeAlign) AggregationFirst() STsMrevrangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (STsMrevrangeAggregationAggregationFirst)(c)
+}
+
+func (c TsMrevrangeAlign) AggregationLast() TsMrevrangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (TsMrevrangeAggregationAggregationLast)(c)
+}
+
+func (c STsMrevrangeAlign) AggregationLast() STsMrevrangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (STsMrevrangeAggregationAggregationLast)(c)
+}
+
+func (c TsMrevrangeAlign) AggregationStdP() TsMrevrangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (TsMrevrangeAggregationAggregationStdP)(c)
+}
+
+func (c STsMrevrangeAlign) AggregationStdP() STsMrevrangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (STsMrevrangeAggregationAggregationStdP)(c)
+}
+
+func (c TsMrevrangeAlign) AggregationStdS() TsMrevrangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (TsMrevrangeAggregationAggregationStdS)(c)
+}
+
+func (c STsMrevrangeAlign) AggregationStdS() STsMrevrangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (STsMrevrangeAggregationAggregationStdS)(c)
+}
+
+func (c TsMrevrangeAlign) AggregationVarP() TsMrevrangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (TsMrevrangeAggregationAggregationVarP)(c)
+}
+
+func (c STsMrevrangeAlign) AggregationVarP() STsMrevrangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (STsMrevrangeAggregationAggregationVarP)(c)
+}
+
+func (c TsMrevrangeAlign) AggregationVarS() TsMrevrangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (TsMrevrangeAggregationAggregationVarS)(c)
+}
+
+func (c STsMrevrangeAlign) AggregationVarS() STsMrevrangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (STsMrevrangeAggregationAggregationVarS)(c)
+}
+
+func (c TsMrevrangeAlign) Filter(filter ...string) TsMrevrangeFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return (TsMrevrangeFilter)(c)
+}
+
+func (c STsMrevrangeAlign) Filter(filter ...string) STsMrevrangeFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return (STsMrevrangeFilter)(c)
+}
+
+type TsMrevrangeCount Completed
+
+type STsMrevrangeCount SCompleted
+
+func (c TsMrevrangeCount) Align(value int64) TsMrevrangeAlign {
+	c.cs = append(c.cs, "ALIGN", strconv.FormatInt(value, 10))
+	return (TsMrevrangeAlign)(c)
+}
+
+func (c STsMrevrangeCount) Align(value int64) STsMrevrangeAlign {
+	c.cs = append(c.cs, "ALIGN", strconv.FormatInt(value, 10))
+	return (STsMrevrangeAlign)(c)
+}
+
+func (c TsMrevrangeCount) AggregationAvg() TsMrevrangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (TsMrevrangeAggregationAggregationAvg)(c)
+}
+
+func (c STsMrevrangeCount) AggregationAvg() STsMrevrangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (STsMrevrangeAggregationAggregationAvg)(c)
+}
+
+func (c TsMrevrangeCount) AggregationSum() TsMrevrangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (TsMrevrangeAggregationAggregationSum)(c)
+}
+
+func (c STsMrevrangeCount) AggregationSum() STsMrevrangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (STsMrevrangeAggregationAggregationSum)(c)
+}
+
+func (c TsMrevrangeCount) AggregationMin() TsMrevrangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (TsMrevrangeAggregationAggregationMin)(c)
+}
+
+func (c STsMrevrangeCount) AggregationMin() STsMrevrangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (STsMrevrangeAggregationAggregationMin)(c)
+}
+
+func (c TsMrevrangeCount) AggregationMax() TsMrevrangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (TsMrevrangeAggregationAggregationMax)(c)
+}
+
+func (c STsMrevrangeCount) AggregationMax() STsMrevrangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (STsMrevrangeAggregationAggregationMax)(c)
+}
+
+func (c TsMrevrangeCount) AggregationRange() TsMrevrangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (TsMrevrangeAggregationAggregationRange)(c)
+}
+
+func (c STsMrevrangeCount) AggregationRange() STsMrevrangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (STsMrevrangeAggregationAggregationRange)(c)
+}
+
+func (c TsMrevrangeCount) AggregationCount() TsMrevrangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (TsMrevrangeAggregationAggregationCount)(c)
+}
+
+func (c STsMrevrangeCount) AggregationCount() STsMrevrangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (STsMrevrangeAggregationAggregationCount)(c)
+}
+
+func (c TsMrevrangeCount) AggregationFirst() TsMrevrangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (TsMrevrangeAggregationAggregationFirst)(c)
+}
+
+func (c STsMrevrangeCount) AggregationFirst() STsMrevrangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (STsMrevrangeAggregationAggregationFirst)(c)
+}
+
+func (c TsMrevrangeCount) AggregationLast() TsMrevrangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (TsMrevrangeAggregationAggregationLast)(c)
+}
+
+func (c STsMrevrangeCount) AggregationLast() STsMrevrangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (STsMrevrangeAggregationAggregationLast)(c)
+}
+
+func (c TsMrevrangeCount) AggregationStdP() TsMrevrangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (TsMrevrangeAggregationAggregationStdP)(c)
+}
+
+func (c STsMrevrangeCount) AggregationStdP() STsMrevrangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (STsMrevrangeAggregationAggregationStdP)(c)
+}
+
+func (c TsMrevrangeCount) AggregationStdS() TsMrevrangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (TsMrevrangeAggregationAggregationStdS)(c)
+}
+
+func (c STsMrevrangeCount) AggregationStdS() STsMrevrangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (STsMrevrangeAggregationAggregationStdS)(c)
+}
+
+func (c TsMrevrangeCount) AggregationVarP() TsMrevrangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (TsMrevrangeAggregationAggregationVarP)(c)
+}
+
+func (c STsMrevrangeCount) AggregationVarP() STsMrevrangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (STsMrevrangeAggregationAggregationVarP)(c)
+}
+
+func (c TsMrevrangeCount) AggregationVarS() TsMrevrangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (TsMrevrangeAggregationAggregationVarS)(c)
+}
+
+func (c STsMrevrangeCount) AggregationVarS() STsMrevrangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (STsMrevrangeAggregationAggregationVarS)(c)
+}
+
+func (c TsMrevrangeCount) Filter(filter ...string) TsMrevrangeFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return (TsMrevrangeFilter)(c)
+}
+
+func (c STsMrevrangeCount) Filter(filter ...string) STsMrevrangeFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return (STsMrevrangeFilter)(c)
+}
+
+type TsMrevrangeFilter Completed
+
+type STsMrevrangeFilter SCompleted
+
+func (c TsMrevrangeFilter) Filter(filter ...string) TsMrevrangeFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return c
+}
+
+func (c STsMrevrangeFilter) Filter(filter ...string) STsMrevrangeFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return c
+}
+
+func (c TsMrevrangeFilter) Groupby(label string, reduce string, reducer string) TsMrevrangeGroupby {
+	c.cs = append(c.cs, "GROUPBY", label, reduce, reducer)
+	return (TsMrevrangeGroupby)(c)
+}
+
+func (c STsMrevrangeFilter) Groupby(label string, reduce string, reducer string) STsMrevrangeGroupby {
+	c.cs = append(c.cs, "GROUPBY", label, reduce, reducer)
+	return (STsMrevrangeGroupby)(c)
+}
+
+func (c TsMrevrangeFilter) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsMrevrangeFilter) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsMrevrangeFilterByTs Completed
+
+type STsMrevrangeFilterByTs SCompleted
+
+func (c TsMrevrangeFilterByTs) FilterByTs(timestamp ...int64) TsMrevrangeFilterByTs {
+	c.cs = append(c.cs, "FILTER_BY_TS")
+	for _, n := range timestamp {
+		c.cs = append(c.cs, strconv.FormatInt(n, 10))
+	}
+	return c
+}
+
+func (c STsMrevrangeFilterByTs) FilterByTs(timestamp ...int64) STsMrevrangeFilterByTs {
+	c.cs = append(c.cs, "FILTER_BY_TS")
+	for _, n := range timestamp {
+		c.cs = append(c.cs, strconv.FormatInt(n, 10))
+	}
+	return c
+}
+
+func (c TsMrevrangeFilterByTs) FilterByValue(min float64, max float64) TsMrevrangeFilterByValue {
+	c.cs = append(c.cs, "FILTER_BY_VALUE", strconv.FormatFloat(min, 'f', -1, 64), strconv.FormatFloat(max, 'f', -1, 64))
+	return (TsMrevrangeFilterByValue)(c)
+}
+
+func (c STsMrevrangeFilterByTs) FilterByValue(min float64, max float64) STsMrevrangeFilterByValue {
+	c.cs = append(c.cs, "FILTER_BY_VALUE", strconv.FormatFloat(min, 'f', -1, 64), strconv.FormatFloat(max, 'f', -1, 64))
+	return (STsMrevrangeFilterByValue)(c)
+}
+
+func (c TsMrevrangeFilterByTs) Withlabels() TsMrevrangeWithlabels {
+	c.cs = append(c.cs, "WITHLABELS")
+	return (TsMrevrangeWithlabels)(c)
+}
+
+func (c STsMrevrangeFilterByTs) Withlabels() STsMrevrangeWithlabels {
+	c.cs = append(c.cs, "WITHLABELS")
+	return (STsMrevrangeWithlabels)(c)
+}
+
+func (c TsMrevrangeFilterByTs) SelectedLabels(labels []string) TsMrevrangeSelectedLabels {
+	c.cs = append(c.cs, "SELECTED_LABELS")
+	c.cs = append(c.cs, labels...)
+	return (TsMrevrangeSelectedLabels)(c)
+}
+
+func (c STsMrevrangeFilterByTs) SelectedLabels(labels []string) STsMrevrangeSelectedLabels {
+	c.cs = append(c.cs, "SELECTED_LABELS")
+	c.cs = append(c.cs, labels...)
+	return (STsMrevrangeSelectedLabels)(c)
+}
+
+func (c TsMrevrangeFilterByTs) Count(count int64) TsMrevrangeCount {
+	c.cs = append(c.cs, "COUNT", strconv.FormatInt(count, 10))
+	return (TsMrevrangeCount)(c)
+}
+
+func (c STsMrevrangeFilterByTs) Count(count int64) STsMrevrangeCount {
+	c.cs = append(c.cs, "COUNT", strconv.FormatInt(count, 10))
+	return (STsMrevrangeCount)(c)
+}
+
+func (c TsMrevrangeFilterByTs) Align(value int64) TsMrevrangeAlign {
+	c.cs = append(c.cs, "ALIGN", strconv.FormatInt(value, 10))
+	return (TsMrevrangeAlign)(c)
+}
+
+func (c STsMrevrangeFilterByTs) Align(value int64) STsMrevrangeAlign {
+	c.cs = append(c.cs, "ALIGN", strconv.FormatInt(value, 10))
+	return (STsMrevrangeAlign)(c)
+}
+
+func (c TsMrevrangeFilterByTs) AggregationAvg() TsMrevrangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (TsMrevrangeAggregationAggregationAvg)(c)
+}
+
+func (c STsMrevrangeFilterByTs) AggregationAvg() STsMrevrangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (STsMrevrangeAggregationAggregationAvg)(c)
+}
+
+func (c TsMrevrangeFilterByTs) AggregationSum() TsMrevrangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (TsMrevrangeAggregationAggregationSum)(c)
+}
+
+func (c STsMrevrangeFilterByTs) AggregationSum() STsMrevrangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (STsMrevrangeAggregationAggregationSum)(c)
+}
+
+func (c TsMrevrangeFilterByTs) AggregationMin() TsMrevrangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (TsMrevrangeAggregationAggregationMin)(c)
+}
+
+func (c STsMrevrangeFilterByTs) AggregationMin() STsMrevrangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (STsMrevrangeAggregationAggregationMin)(c)
+}
+
+func (c TsMrevrangeFilterByTs) AggregationMax() TsMrevrangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (TsMrevrangeAggregationAggregationMax)(c)
+}
+
+func (c STsMrevrangeFilterByTs) AggregationMax() STsMrevrangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (STsMrevrangeAggregationAggregationMax)(c)
+}
+
+func (c TsMrevrangeFilterByTs) AggregationRange() TsMrevrangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (TsMrevrangeAggregationAggregationRange)(c)
+}
+
+func (c STsMrevrangeFilterByTs) AggregationRange() STsMrevrangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (STsMrevrangeAggregationAggregationRange)(c)
+}
+
+func (c TsMrevrangeFilterByTs) AggregationCount() TsMrevrangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (TsMrevrangeAggregationAggregationCount)(c)
+}
+
+func (c STsMrevrangeFilterByTs) AggregationCount() STsMrevrangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (STsMrevrangeAggregationAggregationCount)(c)
+}
+
+func (c TsMrevrangeFilterByTs) AggregationFirst() TsMrevrangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (TsMrevrangeAggregationAggregationFirst)(c)
+}
+
+func (c STsMrevrangeFilterByTs) AggregationFirst() STsMrevrangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (STsMrevrangeAggregationAggregationFirst)(c)
+}
+
+func (c TsMrevrangeFilterByTs) AggregationLast() TsMrevrangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (TsMrevrangeAggregationAggregationLast)(c)
+}
+
+func (c STsMrevrangeFilterByTs) AggregationLast() STsMrevrangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (STsMrevrangeAggregationAggregationLast)(c)
+}
+
+func (c TsMrevrangeFilterByTs) AggregationStdP() TsMrevrangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (TsMrevrangeAggregationAggregationStdP)(c)
+}
+
+func (c STsMrevrangeFilterByTs) AggregationStdP() STsMrevrangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (STsMrevrangeAggregationAggregationStdP)(c)
+}
+
+func (c TsMrevrangeFilterByTs) AggregationStdS() TsMrevrangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (TsMrevrangeAggregationAggregationStdS)(c)
+}
+
+func (c STsMrevrangeFilterByTs) AggregationStdS() STsMrevrangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (STsMrevrangeAggregationAggregationStdS)(c)
+}
+
+func (c TsMrevrangeFilterByTs) AggregationVarP() TsMrevrangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (TsMrevrangeAggregationAggregationVarP)(c)
+}
+
+func (c STsMrevrangeFilterByTs) AggregationVarP() STsMrevrangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (STsMrevrangeAggregationAggregationVarP)(c)
+}
+
+func (c TsMrevrangeFilterByTs) AggregationVarS() TsMrevrangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (TsMrevrangeAggregationAggregationVarS)(c)
+}
+
+func (c STsMrevrangeFilterByTs) AggregationVarS() STsMrevrangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (STsMrevrangeAggregationAggregationVarS)(c)
+}
+
+func (c TsMrevrangeFilterByTs) Filter(filter ...string) TsMrevrangeFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return (TsMrevrangeFilter)(c)
+}
+
+func (c STsMrevrangeFilterByTs) Filter(filter ...string) STsMrevrangeFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return (STsMrevrangeFilter)(c)
+}
+
+type TsMrevrangeFilterByValue Completed
+
+type STsMrevrangeFilterByValue SCompleted
+
+func (c TsMrevrangeFilterByValue) Withlabels() TsMrevrangeWithlabels {
+	c.cs = append(c.cs, "WITHLABELS")
+	return (TsMrevrangeWithlabels)(c)
+}
+
+func (c STsMrevrangeFilterByValue) Withlabels() STsMrevrangeWithlabels {
+	c.cs = append(c.cs, "WITHLABELS")
+	return (STsMrevrangeWithlabels)(c)
+}
+
+func (c TsMrevrangeFilterByValue) SelectedLabels(labels []string) TsMrevrangeSelectedLabels {
+	c.cs = append(c.cs, "SELECTED_LABELS")
+	c.cs = append(c.cs, labels...)
+	return (TsMrevrangeSelectedLabels)(c)
+}
+
+func (c STsMrevrangeFilterByValue) SelectedLabels(labels []string) STsMrevrangeSelectedLabels {
+	c.cs = append(c.cs, "SELECTED_LABELS")
+	c.cs = append(c.cs, labels...)
+	return (STsMrevrangeSelectedLabels)(c)
+}
+
+func (c TsMrevrangeFilterByValue) Count(count int64) TsMrevrangeCount {
+	c.cs = append(c.cs, "COUNT", strconv.FormatInt(count, 10))
+	return (TsMrevrangeCount)(c)
+}
+
+func (c STsMrevrangeFilterByValue) Count(count int64) STsMrevrangeCount {
+	c.cs = append(c.cs, "COUNT", strconv.FormatInt(count, 10))
+	return (STsMrevrangeCount)(c)
+}
+
+func (c TsMrevrangeFilterByValue) Align(value int64) TsMrevrangeAlign {
+	c.cs = append(c.cs, "ALIGN", strconv.FormatInt(value, 10))
+	return (TsMrevrangeAlign)(c)
+}
+
+func (c STsMrevrangeFilterByValue) Align(value int64) STsMrevrangeAlign {
+	c.cs = append(c.cs, "ALIGN", strconv.FormatInt(value, 10))
+	return (STsMrevrangeAlign)(c)
+}
+
+func (c TsMrevrangeFilterByValue) AggregationAvg() TsMrevrangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (TsMrevrangeAggregationAggregationAvg)(c)
+}
+
+func (c STsMrevrangeFilterByValue) AggregationAvg() STsMrevrangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (STsMrevrangeAggregationAggregationAvg)(c)
+}
+
+func (c TsMrevrangeFilterByValue) AggregationSum() TsMrevrangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (TsMrevrangeAggregationAggregationSum)(c)
+}
+
+func (c STsMrevrangeFilterByValue) AggregationSum() STsMrevrangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (STsMrevrangeAggregationAggregationSum)(c)
+}
+
+func (c TsMrevrangeFilterByValue) AggregationMin() TsMrevrangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (TsMrevrangeAggregationAggregationMin)(c)
+}
+
+func (c STsMrevrangeFilterByValue) AggregationMin() STsMrevrangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (STsMrevrangeAggregationAggregationMin)(c)
+}
+
+func (c TsMrevrangeFilterByValue) AggregationMax() TsMrevrangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (TsMrevrangeAggregationAggregationMax)(c)
+}
+
+func (c STsMrevrangeFilterByValue) AggregationMax() STsMrevrangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (STsMrevrangeAggregationAggregationMax)(c)
+}
+
+func (c TsMrevrangeFilterByValue) AggregationRange() TsMrevrangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (TsMrevrangeAggregationAggregationRange)(c)
+}
+
+func (c STsMrevrangeFilterByValue) AggregationRange() STsMrevrangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (STsMrevrangeAggregationAggregationRange)(c)
+}
+
+func (c TsMrevrangeFilterByValue) AggregationCount() TsMrevrangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (TsMrevrangeAggregationAggregationCount)(c)
+}
+
+func (c STsMrevrangeFilterByValue) AggregationCount() STsMrevrangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (STsMrevrangeAggregationAggregationCount)(c)
+}
+
+func (c TsMrevrangeFilterByValue) AggregationFirst() TsMrevrangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (TsMrevrangeAggregationAggregationFirst)(c)
+}
+
+func (c STsMrevrangeFilterByValue) AggregationFirst() STsMrevrangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (STsMrevrangeAggregationAggregationFirst)(c)
+}
+
+func (c TsMrevrangeFilterByValue) AggregationLast() TsMrevrangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (TsMrevrangeAggregationAggregationLast)(c)
+}
+
+func (c STsMrevrangeFilterByValue) AggregationLast() STsMrevrangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (STsMrevrangeAggregationAggregationLast)(c)
+}
+
+func (c TsMrevrangeFilterByValue) AggregationStdP() TsMrevrangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (TsMrevrangeAggregationAggregationStdP)(c)
+}
+
+func (c STsMrevrangeFilterByValue) AggregationStdP() STsMrevrangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (STsMrevrangeAggregationAggregationStdP)(c)
+}
+
+func (c TsMrevrangeFilterByValue) AggregationStdS() TsMrevrangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (TsMrevrangeAggregationAggregationStdS)(c)
+}
+
+func (c STsMrevrangeFilterByValue) AggregationStdS() STsMrevrangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (STsMrevrangeAggregationAggregationStdS)(c)
+}
+
+func (c TsMrevrangeFilterByValue) AggregationVarP() TsMrevrangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (TsMrevrangeAggregationAggregationVarP)(c)
+}
+
+func (c STsMrevrangeFilterByValue) AggregationVarP() STsMrevrangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (STsMrevrangeAggregationAggregationVarP)(c)
+}
+
+func (c TsMrevrangeFilterByValue) AggregationVarS() TsMrevrangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (TsMrevrangeAggregationAggregationVarS)(c)
+}
+
+func (c STsMrevrangeFilterByValue) AggregationVarS() STsMrevrangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (STsMrevrangeAggregationAggregationVarS)(c)
+}
+
+func (c TsMrevrangeFilterByValue) Filter(filter ...string) TsMrevrangeFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return (TsMrevrangeFilter)(c)
+}
+
+func (c STsMrevrangeFilterByValue) Filter(filter ...string) STsMrevrangeFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return (STsMrevrangeFilter)(c)
+}
+
+type TsMrevrangeFromtimestamp Completed
+
+type STsMrevrangeFromtimestamp SCompleted
+
+func (c TsMrevrangeFromtimestamp) Totimestamp(totimestamp int64) TsMrevrangeTotimestamp {
+	c.cs = append(c.cs, strconv.FormatInt(totimestamp, 10))
+	return (TsMrevrangeTotimestamp)(c)
+}
+
+func (c STsMrevrangeFromtimestamp) Totimestamp(totimestamp int64) STsMrevrangeTotimestamp {
+	c.cs = append(c.cs, strconv.FormatInt(totimestamp, 10))
+	return (STsMrevrangeTotimestamp)(c)
+}
+
+type TsMrevrangeGroupby Completed
+
+type STsMrevrangeGroupby SCompleted
+
+func (c TsMrevrangeGroupby) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsMrevrangeGroupby) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsMrevrangeKey Completed
+
+type STsMrevrangeKey SCompleted
+
+func (c TsMrevrangeKey) Fromtimestamp(fromtimestamp int64) TsMrevrangeFromtimestamp {
+	c.cs = append(c.cs, strconv.FormatInt(fromtimestamp, 10))
+	return (TsMrevrangeFromtimestamp)(c)
+}
+
+func (c STsMrevrangeKey) Fromtimestamp(fromtimestamp int64) STsMrevrangeFromtimestamp {
+	c.cs = append(c.cs, strconv.FormatInt(fromtimestamp, 10))
+	return (STsMrevrangeFromtimestamp)(c)
+}
+
+type TsMrevrangeSelectedLabels Completed
+
+type STsMrevrangeSelectedLabels SCompleted
+
+func (c TsMrevrangeSelectedLabels) Count(count int64) TsMrevrangeCount {
+	c.cs = append(c.cs, "COUNT", strconv.FormatInt(count, 10))
+	return (TsMrevrangeCount)(c)
+}
+
+func (c STsMrevrangeSelectedLabels) Count(count int64) STsMrevrangeCount {
+	c.cs = append(c.cs, "COUNT", strconv.FormatInt(count, 10))
+	return (STsMrevrangeCount)(c)
+}
+
+func (c TsMrevrangeSelectedLabels) Align(value int64) TsMrevrangeAlign {
+	c.cs = append(c.cs, "ALIGN", strconv.FormatInt(value, 10))
+	return (TsMrevrangeAlign)(c)
+}
+
+func (c STsMrevrangeSelectedLabels) Align(value int64) STsMrevrangeAlign {
+	c.cs = append(c.cs, "ALIGN", strconv.FormatInt(value, 10))
+	return (STsMrevrangeAlign)(c)
+}
+
+func (c TsMrevrangeSelectedLabels) AggregationAvg() TsMrevrangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (TsMrevrangeAggregationAggregationAvg)(c)
+}
+
+func (c STsMrevrangeSelectedLabels) AggregationAvg() STsMrevrangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (STsMrevrangeAggregationAggregationAvg)(c)
+}
+
+func (c TsMrevrangeSelectedLabels) AggregationSum() TsMrevrangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (TsMrevrangeAggregationAggregationSum)(c)
+}
+
+func (c STsMrevrangeSelectedLabels) AggregationSum() STsMrevrangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (STsMrevrangeAggregationAggregationSum)(c)
+}
+
+func (c TsMrevrangeSelectedLabels) AggregationMin() TsMrevrangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (TsMrevrangeAggregationAggregationMin)(c)
+}
+
+func (c STsMrevrangeSelectedLabels) AggregationMin() STsMrevrangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (STsMrevrangeAggregationAggregationMin)(c)
+}
+
+func (c TsMrevrangeSelectedLabels) AggregationMax() TsMrevrangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (TsMrevrangeAggregationAggregationMax)(c)
+}
+
+func (c STsMrevrangeSelectedLabels) AggregationMax() STsMrevrangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (STsMrevrangeAggregationAggregationMax)(c)
+}
+
+func (c TsMrevrangeSelectedLabels) AggregationRange() TsMrevrangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (TsMrevrangeAggregationAggregationRange)(c)
+}
+
+func (c STsMrevrangeSelectedLabels) AggregationRange() STsMrevrangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (STsMrevrangeAggregationAggregationRange)(c)
+}
+
+func (c TsMrevrangeSelectedLabels) AggregationCount() TsMrevrangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (TsMrevrangeAggregationAggregationCount)(c)
+}
+
+func (c STsMrevrangeSelectedLabels) AggregationCount() STsMrevrangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (STsMrevrangeAggregationAggregationCount)(c)
+}
+
+func (c TsMrevrangeSelectedLabels) AggregationFirst() TsMrevrangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (TsMrevrangeAggregationAggregationFirst)(c)
+}
+
+func (c STsMrevrangeSelectedLabels) AggregationFirst() STsMrevrangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (STsMrevrangeAggregationAggregationFirst)(c)
+}
+
+func (c TsMrevrangeSelectedLabels) AggregationLast() TsMrevrangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (TsMrevrangeAggregationAggregationLast)(c)
+}
+
+func (c STsMrevrangeSelectedLabels) AggregationLast() STsMrevrangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (STsMrevrangeAggregationAggregationLast)(c)
+}
+
+func (c TsMrevrangeSelectedLabels) AggregationStdP() TsMrevrangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (TsMrevrangeAggregationAggregationStdP)(c)
+}
+
+func (c STsMrevrangeSelectedLabels) AggregationStdP() STsMrevrangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (STsMrevrangeAggregationAggregationStdP)(c)
+}
+
+func (c TsMrevrangeSelectedLabels) AggregationStdS() TsMrevrangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (TsMrevrangeAggregationAggregationStdS)(c)
+}
+
+func (c STsMrevrangeSelectedLabels) AggregationStdS() STsMrevrangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (STsMrevrangeAggregationAggregationStdS)(c)
+}
+
+func (c TsMrevrangeSelectedLabels) AggregationVarP() TsMrevrangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (TsMrevrangeAggregationAggregationVarP)(c)
+}
+
+func (c STsMrevrangeSelectedLabels) AggregationVarP() STsMrevrangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (STsMrevrangeAggregationAggregationVarP)(c)
+}
+
+func (c TsMrevrangeSelectedLabels) AggregationVarS() TsMrevrangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (TsMrevrangeAggregationAggregationVarS)(c)
+}
+
+func (c STsMrevrangeSelectedLabels) AggregationVarS() STsMrevrangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (STsMrevrangeAggregationAggregationVarS)(c)
+}
+
+func (c TsMrevrangeSelectedLabels) Filter(filter ...string) TsMrevrangeFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return (TsMrevrangeFilter)(c)
+}
+
+func (c STsMrevrangeSelectedLabels) Filter(filter ...string) STsMrevrangeFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return (STsMrevrangeFilter)(c)
+}
+
+type TsMrevrangeTotimestamp Completed
+
+type STsMrevrangeTotimestamp SCompleted
+
+func (c TsMrevrangeTotimestamp) FilterByTs(timestamp ...int64) TsMrevrangeFilterByTs {
+	c.cs = append(c.cs, "FILTER_BY_TS")
+	for _, n := range timestamp {
+		c.cs = append(c.cs, strconv.FormatInt(n, 10))
+	}
+	return (TsMrevrangeFilterByTs)(c)
+}
+
+func (c STsMrevrangeTotimestamp) FilterByTs(timestamp ...int64) STsMrevrangeFilterByTs {
+	c.cs = append(c.cs, "FILTER_BY_TS")
+	for _, n := range timestamp {
+		c.cs = append(c.cs, strconv.FormatInt(n, 10))
+	}
+	return (STsMrevrangeFilterByTs)(c)
+}
+
+func (c TsMrevrangeTotimestamp) FilterByValue(min float64, max float64) TsMrevrangeFilterByValue {
+	c.cs = append(c.cs, "FILTER_BY_VALUE", strconv.FormatFloat(min, 'f', -1, 64), strconv.FormatFloat(max, 'f', -1, 64))
+	return (TsMrevrangeFilterByValue)(c)
+}
+
+func (c STsMrevrangeTotimestamp) FilterByValue(min float64, max float64) STsMrevrangeFilterByValue {
+	c.cs = append(c.cs, "FILTER_BY_VALUE", strconv.FormatFloat(min, 'f', -1, 64), strconv.FormatFloat(max, 'f', -1, 64))
+	return (STsMrevrangeFilterByValue)(c)
+}
+
+func (c TsMrevrangeTotimestamp) Withlabels() TsMrevrangeWithlabels {
+	c.cs = append(c.cs, "WITHLABELS")
+	return (TsMrevrangeWithlabels)(c)
+}
+
+func (c STsMrevrangeTotimestamp) Withlabels() STsMrevrangeWithlabels {
+	c.cs = append(c.cs, "WITHLABELS")
+	return (STsMrevrangeWithlabels)(c)
+}
+
+func (c TsMrevrangeTotimestamp) SelectedLabels(labels []string) TsMrevrangeSelectedLabels {
+	c.cs = append(c.cs, "SELECTED_LABELS")
+	c.cs = append(c.cs, labels...)
+	return (TsMrevrangeSelectedLabels)(c)
+}
+
+func (c STsMrevrangeTotimestamp) SelectedLabels(labels []string) STsMrevrangeSelectedLabels {
+	c.cs = append(c.cs, "SELECTED_LABELS")
+	c.cs = append(c.cs, labels...)
+	return (STsMrevrangeSelectedLabels)(c)
+}
+
+func (c TsMrevrangeTotimestamp) Count(count int64) TsMrevrangeCount {
+	c.cs = append(c.cs, "COUNT", strconv.FormatInt(count, 10))
+	return (TsMrevrangeCount)(c)
+}
+
+func (c STsMrevrangeTotimestamp) Count(count int64) STsMrevrangeCount {
+	c.cs = append(c.cs, "COUNT", strconv.FormatInt(count, 10))
+	return (STsMrevrangeCount)(c)
+}
+
+func (c TsMrevrangeTotimestamp) Align(value int64) TsMrevrangeAlign {
+	c.cs = append(c.cs, "ALIGN", strconv.FormatInt(value, 10))
+	return (TsMrevrangeAlign)(c)
+}
+
+func (c STsMrevrangeTotimestamp) Align(value int64) STsMrevrangeAlign {
+	c.cs = append(c.cs, "ALIGN", strconv.FormatInt(value, 10))
+	return (STsMrevrangeAlign)(c)
+}
+
+func (c TsMrevrangeTotimestamp) AggregationAvg() TsMrevrangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (TsMrevrangeAggregationAggregationAvg)(c)
+}
+
+func (c STsMrevrangeTotimestamp) AggregationAvg() STsMrevrangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (STsMrevrangeAggregationAggregationAvg)(c)
+}
+
+func (c TsMrevrangeTotimestamp) AggregationSum() TsMrevrangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (TsMrevrangeAggregationAggregationSum)(c)
+}
+
+func (c STsMrevrangeTotimestamp) AggregationSum() STsMrevrangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (STsMrevrangeAggregationAggregationSum)(c)
+}
+
+func (c TsMrevrangeTotimestamp) AggregationMin() TsMrevrangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (TsMrevrangeAggregationAggregationMin)(c)
+}
+
+func (c STsMrevrangeTotimestamp) AggregationMin() STsMrevrangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (STsMrevrangeAggregationAggregationMin)(c)
+}
+
+func (c TsMrevrangeTotimestamp) AggregationMax() TsMrevrangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (TsMrevrangeAggregationAggregationMax)(c)
+}
+
+func (c STsMrevrangeTotimestamp) AggregationMax() STsMrevrangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (STsMrevrangeAggregationAggregationMax)(c)
+}
+
+func (c TsMrevrangeTotimestamp) AggregationRange() TsMrevrangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (TsMrevrangeAggregationAggregationRange)(c)
+}
+
+func (c STsMrevrangeTotimestamp) AggregationRange() STsMrevrangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (STsMrevrangeAggregationAggregationRange)(c)
+}
+
+func (c TsMrevrangeTotimestamp) AggregationCount() TsMrevrangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (TsMrevrangeAggregationAggregationCount)(c)
+}
+
+func (c STsMrevrangeTotimestamp) AggregationCount() STsMrevrangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (STsMrevrangeAggregationAggregationCount)(c)
+}
+
+func (c TsMrevrangeTotimestamp) AggregationFirst() TsMrevrangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (TsMrevrangeAggregationAggregationFirst)(c)
+}
+
+func (c STsMrevrangeTotimestamp) AggregationFirst() STsMrevrangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (STsMrevrangeAggregationAggregationFirst)(c)
+}
+
+func (c TsMrevrangeTotimestamp) AggregationLast() TsMrevrangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (TsMrevrangeAggregationAggregationLast)(c)
+}
+
+func (c STsMrevrangeTotimestamp) AggregationLast() STsMrevrangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (STsMrevrangeAggregationAggregationLast)(c)
+}
+
+func (c TsMrevrangeTotimestamp) AggregationStdP() TsMrevrangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (TsMrevrangeAggregationAggregationStdP)(c)
+}
+
+func (c STsMrevrangeTotimestamp) AggregationStdP() STsMrevrangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (STsMrevrangeAggregationAggregationStdP)(c)
+}
+
+func (c TsMrevrangeTotimestamp) AggregationStdS() TsMrevrangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (TsMrevrangeAggregationAggregationStdS)(c)
+}
+
+func (c STsMrevrangeTotimestamp) AggregationStdS() STsMrevrangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (STsMrevrangeAggregationAggregationStdS)(c)
+}
+
+func (c TsMrevrangeTotimestamp) AggregationVarP() TsMrevrangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (TsMrevrangeAggregationAggregationVarP)(c)
+}
+
+func (c STsMrevrangeTotimestamp) AggregationVarP() STsMrevrangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (STsMrevrangeAggregationAggregationVarP)(c)
+}
+
+func (c TsMrevrangeTotimestamp) AggregationVarS() TsMrevrangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (TsMrevrangeAggregationAggregationVarS)(c)
+}
+
+func (c STsMrevrangeTotimestamp) AggregationVarS() STsMrevrangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (STsMrevrangeAggregationAggregationVarS)(c)
+}
+
+func (c TsMrevrangeTotimestamp) Filter(filter ...string) TsMrevrangeFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return (TsMrevrangeFilter)(c)
+}
+
+func (c STsMrevrangeTotimestamp) Filter(filter ...string) STsMrevrangeFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return (STsMrevrangeFilter)(c)
+}
+
+type TsMrevrangeWithlabels Completed
+
+type STsMrevrangeWithlabels SCompleted
+
+func (c TsMrevrangeWithlabels) Count(count int64) TsMrevrangeCount {
+	c.cs = append(c.cs, "COUNT", strconv.FormatInt(count, 10))
+	return (TsMrevrangeCount)(c)
+}
+
+func (c STsMrevrangeWithlabels) Count(count int64) STsMrevrangeCount {
+	c.cs = append(c.cs, "COUNT", strconv.FormatInt(count, 10))
+	return (STsMrevrangeCount)(c)
+}
+
+func (c TsMrevrangeWithlabels) Align(value int64) TsMrevrangeAlign {
+	c.cs = append(c.cs, "ALIGN", strconv.FormatInt(value, 10))
+	return (TsMrevrangeAlign)(c)
+}
+
+func (c STsMrevrangeWithlabels) Align(value int64) STsMrevrangeAlign {
+	c.cs = append(c.cs, "ALIGN", strconv.FormatInt(value, 10))
+	return (STsMrevrangeAlign)(c)
+}
+
+func (c TsMrevrangeWithlabels) AggregationAvg() TsMrevrangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (TsMrevrangeAggregationAggregationAvg)(c)
+}
+
+func (c STsMrevrangeWithlabels) AggregationAvg() STsMrevrangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (STsMrevrangeAggregationAggregationAvg)(c)
+}
+
+func (c TsMrevrangeWithlabels) AggregationSum() TsMrevrangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (TsMrevrangeAggregationAggregationSum)(c)
+}
+
+func (c STsMrevrangeWithlabels) AggregationSum() STsMrevrangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (STsMrevrangeAggregationAggregationSum)(c)
+}
+
+func (c TsMrevrangeWithlabels) AggregationMin() TsMrevrangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (TsMrevrangeAggregationAggregationMin)(c)
+}
+
+func (c STsMrevrangeWithlabels) AggregationMin() STsMrevrangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (STsMrevrangeAggregationAggregationMin)(c)
+}
+
+func (c TsMrevrangeWithlabels) AggregationMax() TsMrevrangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (TsMrevrangeAggregationAggregationMax)(c)
+}
+
+func (c STsMrevrangeWithlabels) AggregationMax() STsMrevrangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (STsMrevrangeAggregationAggregationMax)(c)
+}
+
+func (c TsMrevrangeWithlabels) AggregationRange() TsMrevrangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (TsMrevrangeAggregationAggregationRange)(c)
+}
+
+func (c STsMrevrangeWithlabels) AggregationRange() STsMrevrangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (STsMrevrangeAggregationAggregationRange)(c)
+}
+
+func (c TsMrevrangeWithlabels) AggregationCount() TsMrevrangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (TsMrevrangeAggregationAggregationCount)(c)
+}
+
+func (c STsMrevrangeWithlabels) AggregationCount() STsMrevrangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (STsMrevrangeAggregationAggregationCount)(c)
+}
+
+func (c TsMrevrangeWithlabels) AggregationFirst() TsMrevrangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (TsMrevrangeAggregationAggregationFirst)(c)
+}
+
+func (c STsMrevrangeWithlabels) AggregationFirst() STsMrevrangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (STsMrevrangeAggregationAggregationFirst)(c)
+}
+
+func (c TsMrevrangeWithlabels) AggregationLast() TsMrevrangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (TsMrevrangeAggregationAggregationLast)(c)
+}
+
+func (c STsMrevrangeWithlabels) AggregationLast() STsMrevrangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (STsMrevrangeAggregationAggregationLast)(c)
+}
+
+func (c TsMrevrangeWithlabels) AggregationStdP() TsMrevrangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (TsMrevrangeAggregationAggregationStdP)(c)
+}
+
+func (c STsMrevrangeWithlabels) AggregationStdP() STsMrevrangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (STsMrevrangeAggregationAggregationStdP)(c)
+}
+
+func (c TsMrevrangeWithlabels) AggregationStdS() TsMrevrangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (TsMrevrangeAggregationAggregationStdS)(c)
+}
+
+func (c STsMrevrangeWithlabels) AggregationStdS() STsMrevrangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (STsMrevrangeAggregationAggregationStdS)(c)
+}
+
+func (c TsMrevrangeWithlabels) AggregationVarP() TsMrevrangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (TsMrevrangeAggregationAggregationVarP)(c)
+}
+
+func (c STsMrevrangeWithlabels) AggregationVarP() STsMrevrangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (STsMrevrangeAggregationAggregationVarP)(c)
+}
+
+func (c TsMrevrangeWithlabels) AggregationVarS() TsMrevrangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (TsMrevrangeAggregationAggregationVarS)(c)
+}
+
+func (c STsMrevrangeWithlabels) AggregationVarS() STsMrevrangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (STsMrevrangeAggregationAggregationVarS)(c)
+}
+
+func (c TsMrevrangeWithlabels) Filter(filter ...string) TsMrevrangeFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return (TsMrevrangeFilter)(c)
+}
+
+func (c STsMrevrangeWithlabels) Filter(filter ...string) STsMrevrangeFilter {
+	c.cs = append(c.cs, "FILTER")
+	c.cs = append(c.cs, filter...)
+	return (STsMrevrangeFilter)(c)
+}
+
+type TsQueryindex Completed
+
+type STsQueryindex SCompleted
+
+func (b *Builder) TsQueryindex() TsQueryindex {
+	return TsQueryindex{cs: append(b.get(), "TS.QUERYINDEX"), ks: InitSlot, cf: readonly}
+}
+
+func (b *SBuilder) TsQueryindex() STsQueryindex {
+	return STsQueryindex{cs: append(b.get(), "TS.QUERYINDEX"), ks: InitSlot, cf: readonly}
+}
+
+func (c TsQueryindex) Filter(filter ...string) TsQueryindexFilter {
+	c.cs = append(c.cs, filter...)
+	return (TsQueryindexFilter)(c)
+}
+
+func (c STsQueryindex) Filter(filter ...string) STsQueryindexFilter {
+	c.cs = append(c.cs, filter...)
+	return (STsQueryindexFilter)(c)
+}
+
+type TsQueryindexFilter Completed
+
+type STsQueryindexFilter SCompleted
+
+func (c TsQueryindexFilter) Filter(filter ...string) TsQueryindexFilter {
+	c.cs = append(c.cs, filter...)
+	return c
+}
+
+func (c STsQueryindexFilter) Filter(filter ...string) STsQueryindexFilter {
+	c.cs = append(c.cs, filter...)
+	return c
+}
+
+func (c TsQueryindexFilter) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsQueryindexFilter) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsRange Completed
+
+type STsRange SCompleted
+
+func (b *Builder) TsRange() TsRange {
+	return TsRange{cs: append(b.get(), "TS.RANGE"), ks: InitSlot, cf: readonly}
+}
+
+func (b *SBuilder) TsRange() STsRange {
+	return STsRange{cs: append(b.get(), "TS.RANGE"), ks: InitSlot, cf: readonly}
+}
+
+func (c TsRange) Key(key string) TsRangeKey {
+	c.cs = append(c.cs, key)
+	return (TsRangeKey)(c)
+}
+
+func (c STsRange) Key(key string) STsRangeKey {
+	c.ks = checkSlot(c.ks, slot(key))
+	c.cs = append(c.cs, key)
+	return (STsRangeKey)(c)
+}
+
+type TsRangeAggregationAggregationAvg Completed
+
+type STsRangeAggregationAggregationAvg SCompleted
+
+func (c TsRangeAggregationAggregationAvg) Timebucket(timebucket int64) TsRangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsRangeAggregationTimebucket)(c)
+}
+
+func (c STsRangeAggregationAggregationAvg) Timebucket(timebucket int64) STsRangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsRangeAggregationTimebucket)(c)
+}
+
+type TsRangeAggregationAggregationCount Completed
+
+type STsRangeAggregationAggregationCount SCompleted
+
+func (c TsRangeAggregationAggregationCount) Timebucket(timebucket int64) TsRangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsRangeAggregationTimebucket)(c)
+}
+
+func (c STsRangeAggregationAggregationCount) Timebucket(timebucket int64) STsRangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsRangeAggregationTimebucket)(c)
+}
+
+type TsRangeAggregationAggregationFirst Completed
+
+type STsRangeAggregationAggregationFirst SCompleted
+
+func (c TsRangeAggregationAggregationFirst) Timebucket(timebucket int64) TsRangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsRangeAggregationTimebucket)(c)
+}
+
+func (c STsRangeAggregationAggregationFirst) Timebucket(timebucket int64) STsRangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsRangeAggregationTimebucket)(c)
+}
+
+type TsRangeAggregationAggregationLast Completed
+
+type STsRangeAggregationAggregationLast SCompleted
+
+func (c TsRangeAggregationAggregationLast) Timebucket(timebucket int64) TsRangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsRangeAggregationTimebucket)(c)
+}
+
+func (c STsRangeAggregationAggregationLast) Timebucket(timebucket int64) STsRangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsRangeAggregationTimebucket)(c)
+}
+
+type TsRangeAggregationAggregationMax Completed
+
+type STsRangeAggregationAggregationMax SCompleted
+
+func (c TsRangeAggregationAggregationMax) Timebucket(timebucket int64) TsRangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsRangeAggregationTimebucket)(c)
+}
+
+func (c STsRangeAggregationAggregationMax) Timebucket(timebucket int64) STsRangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsRangeAggregationTimebucket)(c)
+}
+
+type TsRangeAggregationAggregationMin Completed
+
+type STsRangeAggregationAggregationMin SCompleted
+
+func (c TsRangeAggregationAggregationMin) Timebucket(timebucket int64) TsRangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsRangeAggregationTimebucket)(c)
+}
+
+func (c STsRangeAggregationAggregationMin) Timebucket(timebucket int64) STsRangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsRangeAggregationTimebucket)(c)
+}
+
+type TsRangeAggregationAggregationRange Completed
+
+type STsRangeAggregationAggregationRange SCompleted
+
+func (c TsRangeAggregationAggregationRange) Timebucket(timebucket int64) TsRangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsRangeAggregationTimebucket)(c)
+}
+
+func (c STsRangeAggregationAggregationRange) Timebucket(timebucket int64) STsRangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsRangeAggregationTimebucket)(c)
+}
+
+type TsRangeAggregationAggregationStdP Completed
+
+type STsRangeAggregationAggregationStdP SCompleted
+
+func (c TsRangeAggregationAggregationStdP) Timebucket(timebucket int64) TsRangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsRangeAggregationTimebucket)(c)
+}
+
+func (c STsRangeAggregationAggregationStdP) Timebucket(timebucket int64) STsRangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsRangeAggregationTimebucket)(c)
+}
+
+type TsRangeAggregationAggregationStdS Completed
+
+type STsRangeAggregationAggregationStdS SCompleted
+
+func (c TsRangeAggregationAggregationStdS) Timebucket(timebucket int64) TsRangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsRangeAggregationTimebucket)(c)
+}
+
+func (c STsRangeAggregationAggregationStdS) Timebucket(timebucket int64) STsRangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsRangeAggregationTimebucket)(c)
+}
+
+type TsRangeAggregationAggregationSum Completed
+
+type STsRangeAggregationAggregationSum SCompleted
+
+func (c TsRangeAggregationAggregationSum) Timebucket(timebucket int64) TsRangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsRangeAggregationTimebucket)(c)
+}
+
+func (c STsRangeAggregationAggregationSum) Timebucket(timebucket int64) STsRangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsRangeAggregationTimebucket)(c)
+}
+
+type TsRangeAggregationAggregationVarP Completed
+
+type STsRangeAggregationAggregationVarP SCompleted
+
+func (c TsRangeAggregationAggregationVarP) Timebucket(timebucket int64) TsRangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsRangeAggregationTimebucket)(c)
+}
+
+func (c STsRangeAggregationAggregationVarP) Timebucket(timebucket int64) STsRangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsRangeAggregationTimebucket)(c)
+}
+
+type TsRangeAggregationAggregationVarS Completed
+
+type STsRangeAggregationAggregationVarS SCompleted
+
+func (c TsRangeAggregationAggregationVarS) Timebucket(timebucket int64) TsRangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsRangeAggregationTimebucket)(c)
+}
+
+func (c STsRangeAggregationAggregationVarS) Timebucket(timebucket int64) STsRangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsRangeAggregationTimebucket)(c)
+}
+
+type TsRangeAggregationTimebucket Completed
+
+type STsRangeAggregationTimebucket SCompleted
+
+func (c TsRangeAggregationTimebucket) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsRangeAggregationTimebucket) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsRangeAlign Completed
+
+type STsRangeAlign SCompleted
+
+func (c TsRangeAlign) AggregationAvg() TsRangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (TsRangeAggregationAggregationAvg)(c)
+}
+
+func (c STsRangeAlign) AggregationAvg() STsRangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (STsRangeAggregationAggregationAvg)(c)
+}
+
+func (c TsRangeAlign) AggregationSum() TsRangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (TsRangeAggregationAggregationSum)(c)
+}
+
+func (c STsRangeAlign) AggregationSum() STsRangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (STsRangeAggregationAggregationSum)(c)
+}
+
+func (c TsRangeAlign) AggregationMin() TsRangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (TsRangeAggregationAggregationMin)(c)
+}
+
+func (c STsRangeAlign) AggregationMin() STsRangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (STsRangeAggregationAggregationMin)(c)
+}
+
+func (c TsRangeAlign) AggregationMax() TsRangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (TsRangeAggregationAggregationMax)(c)
+}
+
+func (c STsRangeAlign) AggregationMax() STsRangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (STsRangeAggregationAggregationMax)(c)
+}
+
+func (c TsRangeAlign) AggregationRange() TsRangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (TsRangeAggregationAggregationRange)(c)
+}
+
+func (c STsRangeAlign) AggregationRange() STsRangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (STsRangeAggregationAggregationRange)(c)
+}
+
+func (c TsRangeAlign) AggregationCount() TsRangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (TsRangeAggregationAggregationCount)(c)
+}
+
+func (c STsRangeAlign) AggregationCount() STsRangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (STsRangeAggregationAggregationCount)(c)
+}
+
+func (c TsRangeAlign) AggregationFirst() TsRangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (TsRangeAggregationAggregationFirst)(c)
+}
+
+func (c STsRangeAlign) AggregationFirst() STsRangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (STsRangeAggregationAggregationFirst)(c)
+}
+
+func (c TsRangeAlign) AggregationLast() TsRangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (TsRangeAggregationAggregationLast)(c)
+}
+
+func (c STsRangeAlign) AggregationLast() STsRangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (STsRangeAggregationAggregationLast)(c)
+}
+
+func (c TsRangeAlign) AggregationStdP() TsRangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (TsRangeAggregationAggregationStdP)(c)
+}
+
+func (c STsRangeAlign) AggregationStdP() STsRangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (STsRangeAggregationAggregationStdP)(c)
+}
+
+func (c TsRangeAlign) AggregationStdS() TsRangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (TsRangeAggregationAggregationStdS)(c)
+}
+
+func (c STsRangeAlign) AggregationStdS() STsRangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (STsRangeAggregationAggregationStdS)(c)
+}
+
+func (c TsRangeAlign) AggregationVarP() TsRangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (TsRangeAggregationAggregationVarP)(c)
+}
+
+func (c STsRangeAlign) AggregationVarP() STsRangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (STsRangeAggregationAggregationVarP)(c)
+}
+
+func (c TsRangeAlign) AggregationVarS() TsRangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (TsRangeAggregationAggregationVarS)(c)
+}
+
+func (c STsRangeAlign) AggregationVarS() STsRangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (STsRangeAggregationAggregationVarS)(c)
+}
+
+func (c TsRangeAlign) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsRangeAlign) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsRangeCount Completed
+
+type STsRangeCount SCompleted
+
+func (c TsRangeCount) Align(value int64) TsRangeAlign {
+	c.cs = append(c.cs, "ALIGN", strconv.FormatInt(value, 10))
+	return (TsRangeAlign)(c)
+}
+
+func (c STsRangeCount) Align(value int64) STsRangeAlign {
+	c.cs = append(c.cs, "ALIGN", strconv.FormatInt(value, 10))
+	return (STsRangeAlign)(c)
+}
+
+func (c TsRangeCount) AggregationAvg() TsRangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (TsRangeAggregationAggregationAvg)(c)
+}
+
+func (c STsRangeCount) AggregationAvg() STsRangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (STsRangeAggregationAggregationAvg)(c)
+}
+
+func (c TsRangeCount) AggregationSum() TsRangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (TsRangeAggregationAggregationSum)(c)
+}
+
+func (c STsRangeCount) AggregationSum() STsRangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (STsRangeAggregationAggregationSum)(c)
+}
+
+func (c TsRangeCount) AggregationMin() TsRangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (TsRangeAggregationAggregationMin)(c)
+}
+
+func (c STsRangeCount) AggregationMin() STsRangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (STsRangeAggregationAggregationMin)(c)
+}
+
+func (c TsRangeCount) AggregationMax() TsRangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (TsRangeAggregationAggregationMax)(c)
+}
+
+func (c STsRangeCount) AggregationMax() STsRangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (STsRangeAggregationAggregationMax)(c)
+}
+
+func (c TsRangeCount) AggregationRange() TsRangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (TsRangeAggregationAggregationRange)(c)
+}
+
+func (c STsRangeCount) AggregationRange() STsRangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (STsRangeAggregationAggregationRange)(c)
+}
+
+func (c TsRangeCount) AggregationCount() TsRangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (TsRangeAggregationAggregationCount)(c)
+}
+
+func (c STsRangeCount) AggregationCount() STsRangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (STsRangeAggregationAggregationCount)(c)
+}
+
+func (c TsRangeCount) AggregationFirst() TsRangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (TsRangeAggregationAggregationFirst)(c)
+}
+
+func (c STsRangeCount) AggregationFirst() STsRangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (STsRangeAggregationAggregationFirst)(c)
+}
+
+func (c TsRangeCount) AggregationLast() TsRangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (TsRangeAggregationAggregationLast)(c)
+}
+
+func (c STsRangeCount) AggregationLast() STsRangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (STsRangeAggregationAggregationLast)(c)
+}
+
+func (c TsRangeCount) AggregationStdP() TsRangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (TsRangeAggregationAggregationStdP)(c)
+}
+
+func (c STsRangeCount) AggregationStdP() STsRangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (STsRangeAggregationAggregationStdP)(c)
+}
+
+func (c TsRangeCount) AggregationStdS() TsRangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (TsRangeAggregationAggregationStdS)(c)
+}
+
+func (c STsRangeCount) AggregationStdS() STsRangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (STsRangeAggregationAggregationStdS)(c)
+}
+
+func (c TsRangeCount) AggregationVarP() TsRangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (TsRangeAggregationAggregationVarP)(c)
+}
+
+func (c STsRangeCount) AggregationVarP() STsRangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (STsRangeAggregationAggregationVarP)(c)
+}
+
+func (c TsRangeCount) AggregationVarS() TsRangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (TsRangeAggregationAggregationVarS)(c)
+}
+
+func (c STsRangeCount) AggregationVarS() STsRangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (STsRangeAggregationAggregationVarS)(c)
+}
+
+func (c TsRangeCount) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsRangeCount) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsRangeFilterByTs Completed
+
+type STsRangeFilterByTs SCompleted
+
+func (c TsRangeFilterByTs) FilterByTs(timestamp ...int64) TsRangeFilterByTs {
+	c.cs = append(c.cs, "FILTER_BY_TS")
+	for _, n := range timestamp {
+		c.cs = append(c.cs, strconv.FormatInt(n, 10))
+	}
+	return c
+}
+
+func (c STsRangeFilterByTs) FilterByTs(timestamp ...int64) STsRangeFilterByTs {
+	c.cs = append(c.cs, "FILTER_BY_TS")
+	for _, n := range timestamp {
+		c.cs = append(c.cs, strconv.FormatInt(n, 10))
+	}
+	return c
+}
+
+func (c TsRangeFilterByTs) FilterByValue(min float64, max float64) TsRangeFilterByValue {
+	c.cs = append(c.cs, "FILTER_BY_VALUE", strconv.FormatFloat(min, 'f', -1, 64), strconv.FormatFloat(max, 'f', -1, 64))
+	return (TsRangeFilterByValue)(c)
+}
+
+func (c STsRangeFilterByTs) FilterByValue(min float64, max float64) STsRangeFilterByValue {
+	c.cs = append(c.cs, "FILTER_BY_VALUE", strconv.FormatFloat(min, 'f', -1, 64), strconv.FormatFloat(max, 'f', -1, 64))
+	return (STsRangeFilterByValue)(c)
+}
+
+func (c TsRangeFilterByTs) Count(count int64) TsRangeCount {
+	c.cs = append(c.cs, "COUNT", strconv.FormatInt(count, 10))
+	return (TsRangeCount)(c)
+}
+
+func (c STsRangeFilterByTs) Count(count int64) STsRangeCount {
+	c.cs = append(c.cs, "COUNT", strconv.FormatInt(count, 10))
+	return (STsRangeCount)(c)
+}
+
+func (c TsRangeFilterByTs) Align(value int64) TsRangeAlign {
+	c.cs = append(c.cs, "ALIGN", strconv.FormatInt(value, 10))
+	return (TsRangeAlign)(c)
+}
+
+func (c STsRangeFilterByTs) Align(value int64) STsRangeAlign {
+	c.cs = append(c.cs, "ALIGN", strconv.FormatInt(value, 10))
+	return (STsRangeAlign)(c)
+}
+
+func (c TsRangeFilterByTs) AggregationAvg() TsRangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (TsRangeAggregationAggregationAvg)(c)
+}
+
+func (c STsRangeFilterByTs) AggregationAvg() STsRangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (STsRangeAggregationAggregationAvg)(c)
+}
+
+func (c TsRangeFilterByTs) AggregationSum() TsRangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (TsRangeAggregationAggregationSum)(c)
+}
+
+func (c STsRangeFilterByTs) AggregationSum() STsRangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (STsRangeAggregationAggregationSum)(c)
+}
+
+func (c TsRangeFilterByTs) AggregationMin() TsRangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (TsRangeAggregationAggregationMin)(c)
+}
+
+func (c STsRangeFilterByTs) AggregationMin() STsRangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (STsRangeAggregationAggregationMin)(c)
+}
+
+func (c TsRangeFilterByTs) AggregationMax() TsRangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (TsRangeAggregationAggregationMax)(c)
+}
+
+func (c STsRangeFilterByTs) AggregationMax() STsRangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (STsRangeAggregationAggregationMax)(c)
+}
+
+func (c TsRangeFilterByTs) AggregationRange() TsRangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (TsRangeAggregationAggregationRange)(c)
+}
+
+func (c STsRangeFilterByTs) AggregationRange() STsRangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (STsRangeAggregationAggregationRange)(c)
+}
+
+func (c TsRangeFilterByTs) AggregationCount() TsRangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (TsRangeAggregationAggregationCount)(c)
+}
+
+func (c STsRangeFilterByTs) AggregationCount() STsRangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (STsRangeAggregationAggregationCount)(c)
+}
+
+func (c TsRangeFilterByTs) AggregationFirst() TsRangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (TsRangeAggregationAggregationFirst)(c)
+}
+
+func (c STsRangeFilterByTs) AggregationFirst() STsRangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (STsRangeAggregationAggregationFirst)(c)
+}
+
+func (c TsRangeFilterByTs) AggregationLast() TsRangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (TsRangeAggregationAggregationLast)(c)
+}
+
+func (c STsRangeFilterByTs) AggregationLast() STsRangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (STsRangeAggregationAggregationLast)(c)
+}
+
+func (c TsRangeFilterByTs) AggregationStdP() TsRangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (TsRangeAggregationAggregationStdP)(c)
+}
+
+func (c STsRangeFilterByTs) AggregationStdP() STsRangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (STsRangeAggregationAggregationStdP)(c)
+}
+
+func (c TsRangeFilterByTs) AggregationStdS() TsRangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (TsRangeAggregationAggregationStdS)(c)
+}
+
+func (c STsRangeFilterByTs) AggregationStdS() STsRangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (STsRangeAggregationAggregationStdS)(c)
+}
+
+func (c TsRangeFilterByTs) AggregationVarP() TsRangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (TsRangeAggregationAggregationVarP)(c)
+}
+
+func (c STsRangeFilterByTs) AggregationVarP() STsRangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (STsRangeAggregationAggregationVarP)(c)
+}
+
+func (c TsRangeFilterByTs) AggregationVarS() TsRangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (TsRangeAggregationAggregationVarS)(c)
+}
+
+func (c STsRangeFilterByTs) AggregationVarS() STsRangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (STsRangeAggregationAggregationVarS)(c)
+}
+
+func (c TsRangeFilterByTs) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsRangeFilterByTs) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsRangeFilterByValue Completed
+
+type STsRangeFilterByValue SCompleted
+
+func (c TsRangeFilterByValue) Count(count int64) TsRangeCount {
+	c.cs = append(c.cs, "COUNT", strconv.FormatInt(count, 10))
+	return (TsRangeCount)(c)
+}
+
+func (c STsRangeFilterByValue) Count(count int64) STsRangeCount {
+	c.cs = append(c.cs, "COUNT", strconv.FormatInt(count, 10))
+	return (STsRangeCount)(c)
+}
+
+func (c TsRangeFilterByValue) Align(value int64) TsRangeAlign {
+	c.cs = append(c.cs, "ALIGN", strconv.FormatInt(value, 10))
+	return (TsRangeAlign)(c)
+}
+
+func (c STsRangeFilterByValue) Align(value int64) STsRangeAlign {
+	c.cs = append(c.cs, "ALIGN", strconv.FormatInt(value, 10))
+	return (STsRangeAlign)(c)
+}
+
+func (c TsRangeFilterByValue) AggregationAvg() TsRangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (TsRangeAggregationAggregationAvg)(c)
+}
+
+func (c STsRangeFilterByValue) AggregationAvg() STsRangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (STsRangeAggregationAggregationAvg)(c)
+}
+
+func (c TsRangeFilterByValue) AggregationSum() TsRangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (TsRangeAggregationAggregationSum)(c)
+}
+
+func (c STsRangeFilterByValue) AggregationSum() STsRangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (STsRangeAggregationAggregationSum)(c)
+}
+
+func (c TsRangeFilterByValue) AggregationMin() TsRangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (TsRangeAggregationAggregationMin)(c)
+}
+
+func (c STsRangeFilterByValue) AggregationMin() STsRangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (STsRangeAggregationAggregationMin)(c)
+}
+
+func (c TsRangeFilterByValue) AggregationMax() TsRangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (TsRangeAggregationAggregationMax)(c)
+}
+
+func (c STsRangeFilterByValue) AggregationMax() STsRangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (STsRangeAggregationAggregationMax)(c)
+}
+
+func (c TsRangeFilterByValue) AggregationRange() TsRangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (TsRangeAggregationAggregationRange)(c)
+}
+
+func (c STsRangeFilterByValue) AggregationRange() STsRangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (STsRangeAggregationAggregationRange)(c)
+}
+
+func (c TsRangeFilterByValue) AggregationCount() TsRangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (TsRangeAggregationAggregationCount)(c)
+}
+
+func (c STsRangeFilterByValue) AggregationCount() STsRangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (STsRangeAggregationAggregationCount)(c)
+}
+
+func (c TsRangeFilterByValue) AggregationFirst() TsRangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (TsRangeAggregationAggregationFirst)(c)
+}
+
+func (c STsRangeFilterByValue) AggregationFirst() STsRangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (STsRangeAggregationAggregationFirst)(c)
+}
+
+func (c TsRangeFilterByValue) AggregationLast() TsRangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (TsRangeAggregationAggregationLast)(c)
+}
+
+func (c STsRangeFilterByValue) AggregationLast() STsRangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (STsRangeAggregationAggregationLast)(c)
+}
+
+func (c TsRangeFilterByValue) AggregationStdP() TsRangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (TsRangeAggregationAggregationStdP)(c)
+}
+
+func (c STsRangeFilterByValue) AggregationStdP() STsRangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (STsRangeAggregationAggregationStdP)(c)
+}
+
+func (c TsRangeFilterByValue) AggregationStdS() TsRangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (TsRangeAggregationAggregationStdS)(c)
+}
+
+func (c STsRangeFilterByValue) AggregationStdS() STsRangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (STsRangeAggregationAggregationStdS)(c)
+}
+
+func (c TsRangeFilterByValue) AggregationVarP() TsRangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (TsRangeAggregationAggregationVarP)(c)
+}
+
+func (c STsRangeFilterByValue) AggregationVarP() STsRangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (STsRangeAggregationAggregationVarP)(c)
+}
+
+func (c TsRangeFilterByValue) AggregationVarS() TsRangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (TsRangeAggregationAggregationVarS)(c)
+}
+
+func (c STsRangeFilterByValue) AggregationVarS() STsRangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (STsRangeAggregationAggregationVarS)(c)
+}
+
+func (c TsRangeFilterByValue) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsRangeFilterByValue) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsRangeFromtimestamp Completed
+
+type STsRangeFromtimestamp SCompleted
+
+func (c TsRangeFromtimestamp) Totimestamp(totimestamp int64) TsRangeTotimestamp {
+	c.cs = append(c.cs, strconv.FormatInt(totimestamp, 10))
+	return (TsRangeTotimestamp)(c)
+}
+
+func (c STsRangeFromtimestamp) Totimestamp(totimestamp int64) STsRangeTotimestamp {
+	c.cs = append(c.cs, strconv.FormatInt(totimestamp, 10))
+	return (STsRangeTotimestamp)(c)
+}
+
+type TsRangeKey Completed
+
+type STsRangeKey SCompleted
+
+func (c TsRangeKey) Fromtimestamp(fromtimestamp int64) TsRangeFromtimestamp {
+	c.cs = append(c.cs, strconv.FormatInt(fromtimestamp, 10))
+	return (TsRangeFromtimestamp)(c)
+}
+
+func (c STsRangeKey) Fromtimestamp(fromtimestamp int64) STsRangeFromtimestamp {
+	c.cs = append(c.cs, strconv.FormatInt(fromtimestamp, 10))
+	return (STsRangeFromtimestamp)(c)
+}
+
+type TsRangeTotimestamp Completed
+
+type STsRangeTotimestamp SCompleted
+
+func (c TsRangeTotimestamp) FilterByTs(timestamp ...int64) TsRangeFilterByTs {
+	c.cs = append(c.cs, "FILTER_BY_TS")
+	for _, n := range timestamp {
+		c.cs = append(c.cs, strconv.FormatInt(n, 10))
+	}
+	return (TsRangeFilterByTs)(c)
+}
+
+func (c STsRangeTotimestamp) FilterByTs(timestamp ...int64) STsRangeFilterByTs {
+	c.cs = append(c.cs, "FILTER_BY_TS")
+	for _, n := range timestamp {
+		c.cs = append(c.cs, strconv.FormatInt(n, 10))
+	}
+	return (STsRangeFilterByTs)(c)
+}
+
+func (c TsRangeTotimestamp) FilterByValue(min float64, max float64) TsRangeFilterByValue {
+	c.cs = append(c.cs, "FILTER_BY_VALUE", strconv.FormatFloat(min, 'f', -1, 64), strconv.FormatFloat(max, 'f', -1, 64))
+	return (TsRangeFilterByValue)(c)
+}
+
+func (c STsRangeTotimestamp) FilterByValue(min float64, max float64) STsRangeFilterByValue {
+	c.cs = append(c.cs, "FILTER_BY_VALUE", strconv.FormatFloat(min, 'f', -1, 64), strconv.FormatFloat(max, 'f', -1, 64))
+	return (STsRangeFilterByValue)(c)
+}
+
+func (c TsRangeTotimestamp) Count(count int64) TsRangeCount {
+	c.cs = append(c.cs, "COUNT", strconv.FormatInt(count, 10))
+	return (TsRangeCount)(c)
+}
+
+func (c STsRangeTotimestamp) Count(count int64) STsRangeCount {
+	c.cs = append(c.cs, "COUNT", strconv.FormatInt(count, 10))
+	return (STsRangeCount)(c)
+}
+
+func (c TsRangeTotimestamp) Align(value int64) TsRangeAlign {
+	c.cs = append(c.cs, "ALIGN", strconv.FormatInt(value, 10))
+	return (TsRangeAlign)(c)
+}
+
+func (c STsRangeTotimestamp) Align(value int64) STsRangeAlign {
+	c.cs = append(c.cs, "ALIGN", strconv.FormatInt(value, 10))
+	return (STsRangeAlign)(c)
+}
+
+func (c TsRangeTotimestamp) AggregationAvg() TsRangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (TsRangeAggregationAggregationAvg)(c)
+}
+
+func (c STsRangeTotimestamp) AggregationAvg() STsRangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (STsRangeAggregationAggregationAvg)(c)
+}
+
+func (c TsRangeTotimestamp) AggregationSum() TsRangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (TsRangeAggregationAggregationSum)(c)
+}
+
+func (c STsRangeTotimestamp) AggregationSum() STsRangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (STsRangeAggregationAggregationSum)(c)
+}
+
+func (c TsRangeTotimestamp) AggregationMin() TsRangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (TsRangeAggregationAggregationMin)(c)
+}
+
+func (c STsRangeTotimestamp) AggregationMin() STsRangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (STsRangeAggregationAggregationMin)(c)
+}
+
+func (c TsRangeTotimestamp) AggregationMax() TsRangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (TsRangeAggregationAggregationMax)(c)
+}
+
+func (c STsRangeTotimestamp) AggregationMax() STsRangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (STsRangeAggregationAggregationMax)(c)
+}
+
+func (c TsRangeTotimestamp) AggregationRange() TsRangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (TsRangeAggregationAggregationRange)(c)
+}
+
+func (c STsRangeTotimestamp) AggregationRange() STsRangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (STsRangeAggregationAggregationRange)(c)
+}
+
+func (c TsRangeTotimestamp) AggregationCount() TsRangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (TsRangeAggregationAggregationCount)(c)
+}
+
+func (c STsRangeTotimestamp) AggregationCount() STsRangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (STsRangeAggregationAggregationCount)(c)
+}
+
+func (c TsRangeTotimestamp) AggregationFirst() TsRangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (TsRangeAggregationAggregationFirst)(c)
+}
+
+func (c STsRangeTotimestamp) AggregationFirst() STsRangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (STsRangeAggregationAggregationFirst)(c)
+}
+
+func (c TsRangeTotimestamp) AggregationLast() TsRangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (TsRangeAggregationAggregationLast)(c)
+}
+
+func (c STsRangeTotimestamp) AggregationLast() STsRangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (STsRangeAggregationAggregationLast)(c)
+}
+
+func (c TsRangeTotimestamp) AggregationStdP() TsRangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (TsRangeAggregationAggregationStdP)(c)
+}
+
+func (c STsRangeTotimestamp) AggregationStdP() STsRangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (STsRangeAggregationAggregationStdP)(c)
+}
+
+func (c TsRangeTotimestamp) AggregationStdS() TsRangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (TsRangeAggregationAggregationStdS)(c)
+}
+
+func (c STsRangeTotimestamp) AggregationStdS() STsRangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (STsRangeAggregationAggregationStdS)(c)
+}
+
+func (c TsRangeTotimestamp) AggregationVarP() TsRangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (TsRangeAggregationAggregationVarP)(c)
+}
+
+func (c STsRangeTotimestamp) AggregationVarP() STsRangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (STsRangeAggregationAggregationVarP)(c)
+}
+
+func (c TsRangeTotimestamp) AggregationVarS() TsRangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (TsRangeAggregationAggregationVarS)(c)
+}
+
+func (c STsRangeTotimestamp) AggregationVarS() STsRangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (STsRangeAggregationAggregationVarS)(c)
+}
+
+func (c TsRangeTotimestamp) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsRangeTotimestamp) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsRevrange Completed
+
+type STsRevrange SCompleted
+
+func (b *Builder) TsRevrange() TsRevrange {
+	return TsRevrange{cs: append(b.get(), "TS.REVRANGE"), ks: InitSlot, cf: readonly}
+}
+
+func (b *SBuilder) TsRevrange() STsRevrange {
+	return STsRevrange{cs: append(b.get(), "TS.REVRANGE"), ks: InitSlot, cf: readonly}
+}
+
+func (c TsRevrange) Key(key string) TsRevrangeKey {
+	c.cs = append(c.cs, key)
+	return (TsRevrangeKey)(c)
+}
+
+func (c STsRevrange) Key(key string) STsRevrangeKey {
+	c.ks = checkSlot(c.ks, slot(key))
+	c.cs = append(c.cs, key)
+	return (STsRevrangeKey)(c)
+}
+
+type TsRevrangeAggregationAggregationAvg Completed
+
+type STsRevrangeAggregationAggregationAvg SCompleted
+
+func (c TsRevrangeAggregationAggregationAvg) Timebucket(timebucket int64) TsRevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsRevrangeAggregationTimebucket)(c)
+}
+
+func (c STsRevrangeAggregationAggregationAvg) Timebucket(timebucket int64) STsRevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsRevrangeAggregationTimebucket)(c)
+}
+
+type TsRevrangeAggregationAggregationCount Completed
+
+type STsRevrangeAggregationAggregationCount SCompleted
+
+func (c TsRevrangeAggregationAggregationCount) Timebucket(timebucket int64) TsRevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsRevrangeAggregationTimebucket)(c)
+}
+
+func (c STsRevrangeAggregationAggregationCount) Timebucket(timebucket int64) STsRevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsRevrangeAggregationTimebucket)(c)
+}
+
+type TsRevrangeAggregationAggregationFirst Completed
+
+type STsRevrangeAggregationAggregationFirst SCompleted
+
+func (c TsRevrangeAggregationAggregationFirst) Timebucket(timebucket int64) TsRevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsRevrangeAggregationTimebucket)(c)
+}
+
+func (c STsRevrangeAggregationAggregationFirst) Timebucket(timebucket int64) STsRevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsRevrangeAggregationTimebucket)(c)
+}
+
+type TsRevrangeAggregationAggregationLast Completed
+
+type STsRevrangeAggregationAggregationLast SCompleted
+
+func (c TsRevrangeAggregationAggregationLast) Timebucket(timebucket int64) TsRevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsRevrangeAggregationTimebucket)(c)
+}
+
+func (c STsRevrangeAggregationAggregationLast) Timebucket(timebucket int64) STsRevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsRevrangeAggregationTimebucket)(c)
+}
+
+type TsRevrangeAggregationAggregationMax Completed
+
+type STsRevrangeAggregationAggregationMax SCompleted
+
+func (c TsRevrangeAggregationAggregationMax) Timebucket(timebucket int64) TsRevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsRevrangeAggregationTimebucket)(c)
+}
+
+func (c STsRevrangeAggregationAggregationMax) Timebucket(timebucket int64) STsRevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsRevrangeAggregationTimebucket)(c)
+}
+
+type TsRevrangeAggregationAggregationMin Completed
+
+type STsRevrangeAggregationAggregationMin SCompleted
+
+func (c TsRevrangeAggregationAggregationMin) Timebucket(timebucket int64) TsRevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsRevrangeAggregationTimebucket)(c)
+}
+
+func (c STsRevrangeAggregationAggregationMin) Timebucket(timebucket int64) STsRevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsRevrangeAggregationTimebucket)(c)
+}
+
+type TsRevrangeAggregationAggregationRange Completed
+
+type STsRevrangeAggregationAggregationRange SCompleted
+
+func (c TsRevrangeAggregationAggregationRange) Timebucket(timebucket int64) TsRevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsRevrangeAggregationTimebucket)(c)
+}
+
+func (c STsRevrangeAggregationAggregationRange) Timebucket(timebucket int64) STsRevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsRevrangeAggregationTimebucket)(c)
+}
+
+type TsRevrangeAggregationAggregationStdP Completed
+
+type STsRevrangeAggregationAggregationStdP SCompleted
+
+func (c TsRevrangeAggregationAggregationStdP) Timebucket(timebucket int64) TsRevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsRevrangeAggregationTimebucket)(c)
+}
+
+func (c STsRevrangeAggregationAggregationStdP) Timebucket(timebucket int64) STsRevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsRevrangeAggregationTimebucket)(c)
+}
+
+type TsRevrangeAggregationAggregationStdS Completed
+
+type STsRevrangeAggregationAggregationStdS SCompleted
+
+func (c TsRevrangeAggregationAggregationStdS) Timebucket(timebucket int64) TsRevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsRevrangeAggregationTimebucket)(c)
+}
+
+func (c STsRevrangeAggregationAggregationStdS) Timebucket(timebucket int64) STsRevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsRevrangeAggregationTimebucket)(c)
+}
+
+type TsRevrangeAggregationAggregationSum Completed
+
+type STsRevrangeAggregationAggregationSum SCompleted
+
+func (c TsRevrangeAggregationAggregationSum) Timebucket(timebucket int64) TsRevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsRevrangeAggregationTimebucket)(c)
+}
+
+func (c STsRevrangeAggregationAggregationSum) Timebucket(timebucket int64) STsRevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsRevrangeAggregationTimebucket)(c)
+}
+
+type TsRevrangeAggregationAggregationVarP Completed
+
+type STsRevrangeAggregationAggregationVarP SCompleted
+
+func (c TsRevrangeAggregationAggregationVarP) Timebucket(timebucket int64) TsRevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsRevrangeAggregationTimebucket)(c)
+}
+
+func (c STsRevrangeAggregationAggregationVarP) Timebucket(timebucket int64) STsRevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsRevrangeAggregationTimebucket)(c)
+}
+
+type TsRevrangeAggregationAggregationVarS Completed
+
+type STsRevrangeAggregationAggregationVarS SCompleted
+
+func (c TsRevrangeAggregationAggregationVarS) Timebucket(timebucket int64) TsRevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (TsRevrangeAggregationTimebucket)(c)
+}
+
+func (c STsRevrangeAggregationAggregationVarS) Timebucket(timebucket int64) STsRevrangeAggregationTimebucket {
+	c.cs = append(c.cs, strconv.FormatInt(timebucket, 10))
+	return (STsRevrangeAggregationTimebucket)(c)
+}
+
+type TsRevrangeAggregationTimebucket Completed
+
+type STsRevrangeAggregationTimebucket SCompleted
+
+func (c TsRevrangeAggregationTimebucket) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsRevrangeAggregationTimebucket) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsRevrangeAlign Completed
+
+type STsRevrangeAlign SCompleted
+
+func (c TsRevrangeAlign) AggregationAvg() TsRevrangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (TsRevrangeAggregationAggregationAvg)(c)
+}
+
+func (c STsRevrangeAlign) AggregationAvg() STsRevrangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (STsRevrangeAggregationAggregationAvg)(c)
+}
+
+func (c TsRevrangeAlign) AggregationSum() TsRevrangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (TsRevrangeAggregationAggregationSum)(c)
+}
+
+func (c STsRevrangeAlign) AggregationSum() STsRevrangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (STsRevrangeAggregationAggregationSum)(c)
+}
+
+func (c TsRevrangeAlign) AggregationMin() TsRevrangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (TsRevrangeAggregationAggregationMin)(c)
+}
+
+func (c STsRevrangeAlign) AggregationMin() STsRevrangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (STsRevrangeAggregationAggregationMin)(c)
+}
+
+func (c TsRevrangeAlign) AggregationMax() TsRevrangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (TsRevrangeAggregationAggregationMax)(c)
+}
+
+func (c STsRevrangeAlign) AggregationMax() STsRevrangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (STsRevrangeAggregationAggregationMax)(c)
+}
+
+func (c TsRevrangeAlign) AggregationRange() TsRevrangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (TsRevrangeAggregationAggregationRange)(c)
+}
+
+func (c STsRevrangeAlign) AggregationRange() STsRevrangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (STsRevrangeAggregationAggregationRange)(c)
+}
+
+func (c TsRevrangeAlign) AggregationCount() TsRevrangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (TsRevrangeAggregationAggregationCount)(c)
+}
+
+func (c STsRevrangeAlign) AggregationCount() STsRevrangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (STsRevrangeAggregationAggregationCount)(c)
+}
+
+func (c TsRevrangeAlign) AggregationFirst() TsRevrangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (TsRevrangeAggregationAggregationFirst)(c)
+}
+
+func (c STsRevrangeAlign) AggregationFirst() STsRevrangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (STsRevrangeAggregationAggregationFirst)(c)
+}
+
+func (c TsRevrangeAlign) AggregationLast() TsRevrangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (TsRevrangeAggregationAggregationLast)(c)
+}
+
+func (c STsRevrangeAlign) AggregationLast() STsRevrangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (STsRevrangeAggregationAggregationLast)(c)
+}
+
+func (c TsRevrangeAlign) AggregationStdP() TsRevrangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (TsRevrangeAggregationAggregationStdP)(c)
+}
+
+func (c STsRevrangeAlign) AggregationStdP() STsRevrangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (STsRevrangeAggregationAggregationStdP)(c)
+}
+
+func (c TsRevrangeAlign) AggregationStdS() TsRevrangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (TsRevrangeAggregationAggregationStdS)(c)
+}
+
+func (c STsRevrangeAlign) AggregationStdS() STsRevrangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (STsRevrangeAggregationAggregationStdS)(c)
+}
+
+func (c TsRevrangeAlign) AggregationVarP() TsRevrangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (TsRevrangeAggregationAggregationVarP)(c)
+}
+
+func (c STsRevrangeAlign) AggregationVarP() STsRevrangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (STsRevrangeAggregationAggregationVarP)(c)
+}
+
+func (c TsRevrangeAlign) AggregationVarS() TsRevrangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (TsRevrangeAggregationAggregationVarS)(c)
+}
+
+func (c STsRevrangeAlign) AggregationVarS() STsRevrangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (STsRevrangeAggregationAggregationVarS)(c)
+}
+
+func (c TsRevrangeAlign) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsRevrangeAlign) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsRevrangeCount Completed
+
+type STsRevrangeCount SCompleted
+
+func (c TsRevrangeCount) Align(value int64) TsRevrangeAlign {
+	c.cs = append(c.cs, "ALIGN", strconv.FormatInt(value, 10))
+	return (TsRevrangeAlign)(c)
+}
+
+func (c STsRevrangeCount) Align(value int64) STsRevrangeAlign {
+	c.cs = append(c.cs, "ALIGN", strconv.FormatInt(value, 10))
+	return (STsRevrangeAlign)(c)
+}
+
+func (c TsRevrangeCount) AggregationAvg() TsRevrangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (TsRevrangeAggregationAggregationAvg)(c)
+}
+
+func (c STsRevrangeCount) AggregationAvg() STsRevrangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (STsRevrangeAggregationAggregationAvg)(c)
+}
+
+func (c TsRevrangeCount) AggregationSum() TsRevrangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (TsRevrangeAggregationAggregationSum)(c)
+}
+
+func (c STsRevrangeCount) AggregationSum() STsRevrangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (STsRevrangeAggregationAggregationSum)(c)
+}
+
+func (c TsRevrangeCount) AggregationMin() TsRevrangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (TsRevrangeAggregationAggregationMin)(c)
+}
+
+func (c STsRevrangeCount) AggregationMin() STsRevrangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (STsRevrangeAggregationAggregationMin)(c)
+}
+
+func (c TsRevrangeCount) AggregationMax() TsRevrangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (TsRevrangeAggregationAggregationMax)(c)
+}
+
+func (c STsRevrangeCount) AggregationMax() STsRevrangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (STsRevrangeAggregationAggregationMax)(c)
+}
+
+func (c TsRevrangeCount) AggregationRange() TsRevrangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (TsRevrangeAggregationAggregationRange)(c)
+}
+
+func (c STsRevrangeCount) AggregationRange() STsRevrangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (STsRevrangeAggregationAggregationRange)(c)
+}
+
+func (c TsRevrangeCount) AggregationCount() TsRevrangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (TsRevrangeAggregationAggregationCount)(c)
+}
+
+func (c STsRevrangeCount) AggregationCount() STsRevrangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (STsRevrangeAggregationAggregationCount)(c)
+}
+
+func (c TsRevrangeCount) AggregationFirst() TsRevrangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (TsRevrangeAggregationAggregationFirst)(c)
+}
+
+func (c STsRevrangeCount) AggregationFirst() STsRevrangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (STsRevrangeAggregationAggregationFirst)(c)
+}
+
+func (c TsRevrangeCount) AggregationLast() TsRevrangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (TsRevrangeAggregationAggregationLast)(c)
+}
+
+func (c STsRevrangeCount) AggregationLast() STsRevrangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (STsRevrangeAggregationAggregationLast)(c)
+}
+
+func (c TsRevrangeCount) AggregationStdP() TsRevrangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (TsRevrangeAggregationAggregationStdP)(c)
+}
+
+func (c STsRevrangeCount) AggregationStdP() STsRevrangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (STsRevrangeAggregationAggregationStdP)(c)
+}
+
+func (c TsRevrangeCount) AggregationStdS() TsRevrangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (TsRevrangeAggregationAggregationStdS)(c)
+}
+
+func (c STsRevrangeCount) AggregationStdS() STsRevrangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (STsRevrangeAggregationAggregationStdS)(c)
+}
+
+func (c TsRevrangeCount) AggregationVarP() TsRevrangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (TsRevrangeAggregationAggregationVarP)(c)
+}
+
+func (c STsRevrangeCount) AggregationVarP() STsRevrangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (STsRevrangeAggregationAggregationVarP)(c)
+}
+
+func (c TsRevrangeCount) AggregationVarS() TsRevrangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (TsRevrangeAggregationAggregationVarS)(c)
+}
+
+func (c STsRevrangeCount) AggregationVarS() STsRevrangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (STsRevrangeAggregationAggregationVarS)(c)
+}
+
+func (c TsRevrangeCount) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsRevrangeCount) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsRevrangeFilterByTs Completed
+
+type STsRevrangeFilterByTs SCompleted
+
+func (c TsRevrangeFilterByTs) FilterByTs(timestamp ...int64) TsRevrangeFilterByTs {
+	c.cs = append(c.cs, "FILTER_BY_TS")
+	for _, n := range timestamp {
+		c.cs = append(c.cs, strconv.FormatInt(n, 10))
+	}
+	return c
+}
+
+func (c STsRevrangeFilterByTs) FilterByTs(timestamp ...int64) STsRevrangeFilterByTs {
+	c.cs = append(c.cs, "FILTER_BY_TS")
+	for _, n := range timestamp {
+		c.cs = append(c.cs, strconv.FormatInt(n, 10))
+	}
+	return c
+}
+
+func (c TsRevrangeFilterByTs) FilterByValue(min float64, max float64) TsRevrangeFilterByValue {
+	c.cs = append(c.cs, "FILTER_BY_VALUE", strconv.FormatFloat(min, 'f', -1, 64), strconv.FormatFloat(max, 'f', -1, 64))
+	return (TsRevrangeFilterByValue)(c)
+}
+
+func (c STsRevrangeFilterByTs) FilterByValue(min float64, max float64) STsRevrangeFilterByValue {
+	c.cs = append(c.cs, "FILTER_BY_VALUE", strconv.FormatFloat(min, 'f', -1, 64), strconv.FormatFloat(max, 'f', -1, 64))
+	return (STsRevrangeFilterByValue)(c)
+}
+
+func (c TsRevrangeFilterByTs) Count(count int64) TsRevrangeCount {
+	c.cs = append(c.cs, "COUNT", strconv.FormatInt(count, 10))
+	return (TsRevrangeCount)(c)
+}
+
+func (c STsRevrangeFilterByTs) Count(count int64) STsRevrangeCount {
+	c.cs = append(c.cs, "COUNT", strconv.FormatInt(count, 10))
+	return (STsRevrangeCount)(c)
+}
+
+func (c TsRevrangeFilterByTs) Align(value int64) TsRevrangeAlign {
+	c.cs = append(c.cs, "ALIGN", strconv.FormatInt(value, 10))
+	return (TsRevrangeAlign)(c)
+}
+
+func (c STsRevrangeFilterByTs) Align(value int64) STsRevrangeAlign {
+	c.cs = append(c.cs, "ALIGN", strconv.FormatInt(value, 10))
+	return (STsRevrangeAlign)(c)
+}
+
+func (c TsRevrangeFilterByTs) AggregationAvg() TsRevrangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (TsRevrangeAggregationAggregationAvg)(c)
+}
+
+func (c STsRevrangeFilterByTs) AggregationAvg() STsRevrangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (STsRevrangeAggregationAggregationAvg)(c)
+}
+
+func (c TsRevrangeFilterByTs) AggregationSum() TsRevrangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (TsRevrangeAggregationAggregationSum)(c)
+}
+
+func (c STsRevrangeFilterByTs) AggregationSum() STsRevrangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (STsRevrangeAggregationAggregationSum)(c)
+}
+
+func (c TsRevrangeFilterByTs) AggregationMin() TsRevrangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (TsRevrangeAggregationAggregationMin)(c)
+}
+
+func (c STsRevrangeFilterByTs) AggregationMin() STsRevrangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (STsRevrangeAggregationAggregationMin)(c)
+}
+
+func (c TsRevrangeFilterByTs) AggregationMax() TsRevrangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (TsRevrangeAggregationAggregationMax)(c)
+}
+
+func (c STsRevrangeFilterByTs) AggregationMax() STsRevrangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (STsRevrangeAggregationAggregationMax)(c)
+}
+
+func (c TsRevrangeFilterByTs) AggregationRange() TsRevrangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (TsRevrangeAggregationAggregationRange)(c)
+}
+
+func (c STsRevrangeFilterByTs) AggregationRange() STsRevrangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (STsRevrangeAggregationAggregationRange)(c)
+}
+
+func (c TsRevrangeFilterByTs) AggregationCount() TsRevrangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (TsRevrangeAggregationAggregationCount)(c)
+}
+
+func (c STsRevrangeFilterByTs) AggregationCount() STsRevrangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (STsRevrangeAggregationAggregationCount)(c)
+}
+
+func (c TsRevrangeFilterByTs) AggregationFirst() TsRevrangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (TsRevrangeAggregationAggregationFirst)(c)
+}
+
+func (c STsRevrangeFilterByTs) AggregationFirst() STsRevrangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (STsRevrangeAggregationAggregationFirst)(c)
+}
+
+func (c TsRevrangeFilterByTs) AggregationLast() TsRevrangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (TsRevrangeAggregationAggregationLast)(c)
+}
+
+func (c STsRevrangeFilterByTs) AggregationLast() STsRevrangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (STsRevrangeAggregationAggregationLast)(c)
+}
+
+func (c TsRevrangeFilterByTs) AggregationStdP() TsRevrangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (TsRevrangeAggregationAggregationStdP)(c)
+}
+
+func (c STsRevrangeFilterByTs) AggregationStdP() STsRevrangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (STsRevrangeAggregationAggregationStdP)(c)
+}
+
+func (c TsRevrangeFilterByTs) AggregationStdS() TsRevrangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (TsRevrangeAggregationAggregationStdS)(c)
+}
+
+func (c STsRevrangeFilterByTs) AggregationStdS() STsRevrangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (STsRevrangeAggregationAggregationStdS)(c)
+}
+
+func (c TsRevrangeFilterByTs) AggregationVarP() TsRevrangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (TsRevrangeAggregationAggregationVarP)(c)
+}
+
+func (c STsRevrangeFilterByTs) AggregationVarP() STsRevrangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (STsRevrangeAggregationAggregationVarP)(c)
+}
+
+func (c TsRevrangeFilterByTs) AggregationVarS() TsRevrangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (TsRevrangeAggregationAggregationVarS)(c)
+}
+
+func (c STsRevrangeFilterByTs) AggregationVarS() STsRevrangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (STsRevrangeAggregationAggregationVarS)(c)
+}
+
+func (c TsRevrangeFilterByTs) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsRevrangeFilterByTs) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsRevrangeFilterByValue Completed
+
+type STsRevrangeFilterByValue SCompleted
+
+func (c TsRevrangeFilterByValue) Count(count int64) TsRevrangeCount {
+	c.cs = append(c.cs, "COUNT", strconv.FormatInt(count, 10))
+	return (TsRevrangeCount)(c)
+}
+
+func (c STsRevrangeFilterByValue) Count(count int64) STsRevrangeCount {
+	c.cs = append(c.cs, "COUNT", strconv.FormatInt(count, 10))
+	return (STsRevrangeCount)(c)
+}
+
+func (c TsRevrangeFilterByValue) Align(value int64) TsRevrangeAlign {
+	c.cs = append(c.cs, "ALIGN", strconv.FormatInt(value, 10))
+	return (TsRevrangeAlign)(c)
+}
+
+func (c STsRevrangeFilterByValue) Align(value int64) STsRevrangeAlign {
+	c.cs = append(c.cs, "ALIGN", strconv.FormatInt(value, 10))
+	return (STsRevrangeAlign)(c)
+}
+
+func (c TsRevrangeFilterByValue) AggregationAvg() TsRevrangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (TsRevrangeAggregationAggregationAvg)(c)
+}
+
+func (c STsRevrangeFilterByValue) AggregationAvg() STsRevrangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (STsRevrangeAggregationAggregationAvg)(c)
+}
+
+func (c TsRevrangeFilterByValue) AggregationSum() TsRevrangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (TsRevrangeAggregationAggregationSum)(c)
+}
+
+func (c STsRevrangeFilterByValue) AggregationSum() STsRevrangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (STsRevrangeAggregationAggregationSum)(c)
+}
+
+func (c TsRevrangeFilterByValue) AggregationMin() TsRevrangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (TsRevrangeAggregationAggregationMin)(c)
+}
+
+func (c STsRevrangeFilterByValue) AggregationMin() STsRevrangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (STsRevrangeAggregationAggregationMin)(c)
+}
+
+func (c TsRevrangeFilterByValue) AggregationMax() TsRevrangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (TsRevrangeAggregationAggregationMax)(c)
+}
+
+func (c STsRevrangeFilterByValue) AggregationMax() STsRevrangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (STsRevrangeAggregationAggregationMax)(c)
+}
+
+func (c TsRevrangeFilterByValue) AggregationRange() TsRevrangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (TsRevrangeAggregationAggregationRange)(c)
+}
+
+func (c STsRevrangeFilterByValue) AggregationRange() STsRevrangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (STsRevrangeAggregationAggregationRange)(c)
+}
+
+func (c TsRevrangeFilterByValue) AggregationCount() TsRevrangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (TsRevrangeAggregationAggregationCount)(c)
+}
+
+func (c STsRevrangeFilterByValue) AggregationCount() STsRevrangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (STsRevrangeAggregationAggregationCount)(c)
+}
+
+func (c TsRevrangeFilterByValue) AggregationFirst() TsRevrangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (TsRevrangeAggregationAggregationFirst)(c)
+}
+
+func (c STsRevrangeFilterByValue) AggregationFirst() STsRevrangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (STsRevrangeAggregationAggregationFirst)(c)
+}
+
+func (c TsRevrangeFilterByValue) AggregationLast() TsRevrangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (TsRevrangeAggregationAggregationLast)(c)
+}
+
+func (c STsRevrangeFilterByValue) AggregationLast() STsRevrangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (STsRevrangeAggregationAggregationLast)(c)
+}
+
+func (c TsRevrangeFilterByValue) AggregationStdP() TsRevrangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (TsRevrangeAggregationAggregationStdP)(c)
+}
+
+func (c STsRevrangeFilterByValue) AggregationStdP() STsRevrangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (STsRevrangeAggregationAggregationStdP)(c)
+}
+
+func (c TsRevrangeFilterByValue) AggregationStdS() TsRevrangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (TsRevrangeAggregationAggregationStdS)(c)
+}
+
+func (c STsRevrangeFilterByValue) AggregationStdS() STsRevrangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (STsRevrangeAggregationAggregationStdS)(c)
+}
+
+func (c TsRevrangeFilterByValue) AggregationVarP() TsRevrangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (TsRevrangeAggregationAggregationVarP)(c)
+}
+
+func (c STsRevrangeFilterByValue) AggregationVarP() STsRevrangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (STsRevrangeAggregationAggregationVarP)(c)
+}
+
+func (c TsRevrangeFilterByValue) AggregationVarS() TsRevrangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (TsRevrangeAggregationAggregationVarS)(c)
+}
+
+func (c STsRevrangeFilterByValue) AggregationVarS() STsRevrangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (STsRevrangeAggregationAggregationVarS)(c)
+}
+
+func (c TsRevrangeFilterByValue) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsRevrangeFilterByValue) Build() SCompleted {
+	return SCompleted(c)
+}
+
+type TsRevrangeFromtimestamp Completed
+
+type STsRevrangeFromtimestamp SCompleted
+
+func (c TsRevrangeFromtimestamp) Totimestamp(totimestamp int64) TsRevrangeTotimestamp {
+	c.cs = append(c.cs, strconv.FormatInt(totimestamp, 10))
+	return (TsRevrangeTotimestamp)(c)
+}
+
+func (c STsRevrangeFromtimestamp) Totimestamp(totimestamp int64) STsRevrangeTotimestamp {
+	c.cs = append(c.cs, strconv.FormatInt(totimestamp, 10))
+	return (STsRevrangeTotimestamp)(c)
+}
+
+type TsRevrangeKey Completed
+
+type STsRevrangeKey SCompleted
+
+func (c TsRevrangeKey) Fromtimestamp(fromtimestamp int64) TsRevrangeFromtimestamp {
+	c.cs = append(c.cs, strconv.FormatInt(fromtimestamp, 10))
+	return (TsRevrangeFromtimestamp)(c)
+}
+
+func (c STsRevrangeKey) Fromtimestamp(fromtimestamp int64) STsRevrangeFromtimestamp {
+	c.cs = append(c.cs, strconv.FormatInt(fromtimestamp, 10))
+	return (STsRevrangeFromtimestamp)(c)
+}
+
+type TsRevrangeTotimestamp Completed
+
+type STsRevrangeTotimestamp SCompleted
+
+func (c TsRevrangeTotimestamp) FilterByTs(timestamp ...int64) TsRevrangeFilterByTs {
+	c.cs = append(c.cs, "FILTER_BY_TS")
+	for _, n := range timestamp {
+		c.cs = append(c.cs, strconv.FormatInt(n, 10))
+	}
+	return (TsRevrangeFilterByTs)(c)
+}
+
+func (c STsRevrangeTotimestamp) FilterByTs(timestamp ...int64) STsRevrangeFilterByTs {
+	c.cs = append(c.cs, "FILTER_BY_TS")
+	for _, n := range timestamp {
+		c.cs = append(c.cs, strconv.FormatInt(n, 10))
+	}
+	return (STsRevrangeFilterByTs)(c)
+}
+
+func (c TsRevrangeTotimestamp) FilterByValue(min float64, max float64) TsRevrangeFilterByValue {
+	c.cs = append(c.cs, "FILTER_BY_VALUE", strconv.FormatFloat(min, 'f', -1, 64), strconv.FormatFloat(max, 'f', -1, 64))
+	return (TsRevrangeFilterByValue)(c)
+}
+
+func (c STsRevrangeTotimestamp) FilterByValue(min float64, max float64) STsRevrangeFilterByValue {
+	c.cs = append(c.cs, "FILTER_BY_VALUE", strconv.FormatFloat(min, 'f', -1, 64), strconv.FormatFloat(max, 'f', -1, 64))
+	return (STsRevrangeFilterByValue)(c)
+}
+
+func (c TsRevrangeTotimestamp) Count(count int64) TsRevrangeCount {
+	c.cs = append(c.cs, "COUNT", strconv.FormatInt(count, 10))
+	return (TsRevrangeCount)(c)
+}
+
+func (c STsRevrangeTotimestamp) Count(count int64) STsRevrangeCount {
+	c.cs = append(c.cs, "COUNT", strconv.FormatInt(count, 10))
+	return (STsRevrangeCount)(c)
+}
+
+func (c TsRevrangeTotimestamp) Align(value int64) TsRevrangeAlign {
+	c.cs = append(c.cs, "ALIGN", strconv.FormatInt(value, 10))
+	return (TsRevrangeAlign)(c)
+}
+
+func (c STsRevrangeTotimestamp) Align(value int64) STsRevrangeAlign {
+	c.cs = append(c.cs, "ALIGN", strconv.FormatInt(value, 10))
+	return (STsRevrangeAlign)(c)
+}
+
+func (c TsRevrangeTotimestamp) AggregationAvg() TsRevrangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (TsRevrangeAggregationAggregationAvg)(c)
+}
+
+func (c STsRevrangeTotimestamp) AggregationAvg() STsRevrangeAggregationAggregationAvg {
+	c.cs = append(c.cs, "AGGREGATION", "avg")
+	return (STsRevrangeAggregationAggregationAvg)(c)
+}
+
+func (c TsRevrangeTotimestamp) AggregationSum() TsRevrangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (TsRevrangeAggregationAggregationSum)(c)
+}
+
+func (c STsRevrangeTotimestamp) AggregationSum() STsRevrangeAggregationAggregationSum {
+	c.cs = append(c.cs, "AGGREGATION", "sum")
+	return (STsRevrangeAggregationAggregationSum)(c)
+}
+
+func (c TsRevrangeTotimestamp) AggregationMin() TsRevrangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (TsRevrangeAggregationAggregationMin)(c)
+}
+
+func (c STsRevrangeTotimestamp) AggregationMin() STsRevrangeAggregationAggregationMin {
+	c.cs = append(c.cs, "AGGREGATION", "min")
+	return (STsRevrangeAggregationAggregationMin)(c)
+}
+
+func (c TsRevrangeTotimestamp) AggregationMax() TsRevrangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (TsRevrangeAggregationAggregationMax)(c)
+}
+
+func (c STsRevrangeTotimestamp) AggregationMax() STsRevrangeAggregationAggregationMax {
+	c.cs = append(c.cs, "AGGREGATION", "max")
+	return (STsRevrangeAggregationAggregationMax)(c)
+}
+
+func (c TsRevrangeTotimestamp) AggregationRange() TsRevrangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (TsRevrangeAggregationAggregationRange)(c)
+}
+
+func (c STsRevrangeTotimestamp) AggregationRange() STsRevrangeAggregationAggregationRange {
+	c.cs = append(c.cs, "AGGREGATION", "range")
+	return (STsRevrangeAggregationAggregationRange)(c)
+}
+
+func (c TsRevrangeTotimestamp) AggregationCount() TsRevrangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (TsRevrangeAggregationAggregationCount)(c)
+}
+
+func (c STsRevrangeTotimestamp) AggregationCount() STsRevrangeAggregationAggregationCount {
+	c.cs = append(c.cs, "AGGREGATION", "count")
+	return (STsRevrangeAggregationAggregationCount)(c)
+}
+
+func (c TsRevrangeTotimestamp) AggregationFirst() TsRevrangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (TsRevrangeAggregationAggregationFirst)(c)
+}
+
+func (c STsRevrangeTotimestamp) AggregationFirst() STsRevrangeAggregationAggregationFirst {
+	c.cs = append(c.cs, "AGGREGATION", "first")
+	return (STsRevrangeAggregationAggregationFirst)(c)
+}
+
+func (c TsRevrangeTotimestamp) AggregationLast() TsRevrangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (TsRevrangeAggregationAggregationLast)(c)
+}
+
+func (c STsRevrangeTotimestamp) AggregationLast() STsRevrangeAggregationAggregationLast {
+	c.cs = append(c.cs, "AGGREGATION", "last")
+	return (STsRevrangeAggregationAggregationLast)(c)
+}
+
+func (c TsRevrangeTotimestamp) AggregationStdP() TsRevrangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (TsRevrangeAggregationAggregationStdP)(c)
+}
+
+func (c STsRevrangeTotimestamp) AggregationStdP() STsRevrangeAggregationAggregationStdP {
+	c.cs = append(c.cs, "AGGREGATION", "std.p")
+	return (STsRevrangeAggregationAggregationStdP)(c)
+}
+
+func (c TsRevrangeTotimestamp) AggregationStdS() TsRevrangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (TsRevrangeAggregationAggregationStdS)(c)
+}
+
+func (c STsRevrangeTotimestamp) AggregationStdS() STsRevrangeAggregationAggregationStdS {
+	c.cs = append(c.cs, "AGGREGATION", "std.s")
+	return (STsRevrangeAggregationAggregationStdS)(c)
+}
+
+func (c TsRevrangeTotimestamp) AggregationVarP() TsRevrangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (TsRevrangeAggregationAggregationVarP)(c)
+}
+
+func (c STsRevrangeTotimestamp) AggregationVarP() STsRevrangeAggregationAggregationVarP {
+	c.cs = append(c.cs, "AGGREGATION", "var.p")
+	return (STsRevrangeAggregationAggregationVarP)(c)
+}
+
+func (c TsRevrangeTotimestamp) AggregationVarS() TsRevrangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (TsRevrangeAggregationAggregationVarS)(c)
+}
+
+func (c STsRevrangeTotimestamp) AggregationVarS() STsRevrangeAggregationAggregationVarS {
+	c.cs = append(c.cs, "AGGREGATION", "var.s")
+	return (STsRevrangeAggregationAggregationVarS)(c)
+}
+
+func (c TsRevrangeTotimestamp) Build() Completed {
+	return Completed(c)
+}
+
+func (c STsRevrangeTotimestamp) Build() SCompleted {
 	return SCompleted(c)
 }
 

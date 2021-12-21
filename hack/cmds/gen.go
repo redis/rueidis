@@ -75,6 +75,16 @@ func (n *Node) GoStructs() (out []GoStruct) {
 		}
 	}
 
+	// fix for TS.MRANGE, TS.MREVRANGE, TS.MGET, TS.QUERYINDEX
+	if len(n.Arg.Enum) >= 2 && (n.Arg.Enum[0] == "l=v" && n.Arg.Enum[1] == "l!=v") {
+		n.Arg.Enum = nil
+		n.Arg.Name = "filter"
+		n.Arg.Type = "string"
+		if !strings.HasSuffix(fn, "Filter") {
+			fn += "Filter"
+		}
+	}
+
 	if len(n.Arg.Block) > 0 {
 		panic("GoStructs should not be called on Block Node")
 	} else if len(n.Arg.Enum) > 0 {
@@ -110,12 +120,21 @@ func (n *Node) GoStructs() (out []GoStruct) {
 					s.BuildDef.Command = append(s.BuildDef.Command, cmds[:1]...)
 					s.BuildDef.Parameters = []Parameter{{Name: LcFirst(name(cmds[1])), Type: "integer"}}
 				case "*":
+					// fix for FT.AGGREGATE
 					if cmds[0] == "LOAD" {
 						s.BuildDef.Command = append(s.BuildDef.Command, cmds...)
 						s.BuildDef.Parameters = nil
 					}
+				case "label1":
+					// fix for TS.MRANGE, TS.MREVRANGE, TS.MGET
+					if cmds[0] == "SELECTED_LABELS" {
+						s.FullName = strings.TrimRight(s.FullName, "Label1")
+						s.BuildDef.MethodName = strings.TrimRight(s.BuildDef.MethodName, "Label1")
+						s.BuildDef.Command = append(s.BuildDef.Command, cmds[0])
+						s.BuildDef.Parameters = []Parameter{{Name: "labels", Type: "[]string"}}
+					}
 				default:
-					panic("unknown enum")
+					panic("unknown enum " + cmds[1])
 				}
 			}
 			out = append(out, s)
@@ -254,6 +273,8 @@ func main() {
 		"./commands_json.json",
 		"./commands_bloom.json",
 		"./commands_search.json",
+		"./commands_graph.json",
+		"./commands_timeseries.json",
 	} {
 		raw, err := os.ReadFile(p)
 		if err != nil {
@@ -377,6 +398,8 @@ func testParams(defs []Parameter) string {
 	var params []string
 	for _, param := range defs {
 		switch toGoType(param.Type) {
+		case "[]string":
+			params = append(params, `[]string{"1"}`)
 		case "string":
 			params = append(params, `"1"`)
 		case "int64", "float64":
@@ -473,6 +496,8 @@ func allOptional(s *Node, nodes []*Node) bool {
 
 func toGoType(paramType string) string {
 	switch paramType {
+	case "[]string": // TODO hack for TS.MRANGE, TS.MREVRANGE, TS.MGET
+		return "[]string"
 	case "key", "string", "pattern", "type":
 		return "string"
 	case "double":
@@ -564,7 +589,7 @@ func printBuilder(w io.Writer, parent, next GoStruct, prefix string) {
 			}
 		} else {
 			if len(next.BuildDef.Parameters) != 1 && next.Variadic && parent.FullName != next.FullName {
-				// no param
+				// no parameter
 			} else {
 				for _, arg := range next.BuildDef.Parameters {
 					if arg.Type == "key" {
@@ -591,7 +616,9 @@ func printBuilder(w io.Writer, parent, next GoStruct, prefix string) {
 		if cmd == `""` {
 			appends = append(appends, `""`)
 		} else {
-			appends = append(appends, fmt.Sprintf(`"%s"`, cmd))
+			if !(len(next.BuildDef.Parameters) != 1 && next.Variadic && parent.FullName == next.FullName) {
+				appends = append(appends, fmt.Sprintf(`"%s"`, cmd))
+			}
 		}
 	}
 
@@ -600,6 +627,9 @@ func printBuilder(w io.Writer, parent, next GoStruct, prefix string) {
 		fmt.Fprintf(w, "\tc.cs = append(c.cs, %s)\n", strings.Join(appends, ", "))
 	} else if len(next.BuildDef.Parameters) != 1 && next.Variadic && parent.FullName != next.FullName {
 		// no parameter
+		if len(appends) != 0 {
+			fmt.Fprintf(w, "\tc.cs = append(c.cs, %s)\n", strings.Join(appends, ", "))
+		}
 	} else {
 		allstring := true
 		for _, p := range next.BuildDef.Parameters {
@@ -633,6 +663,7 @@ func printBuilder(w io.Writer, parent, next GoStruct, prefix string) {
 					fmt.Fprintf(w, "\t}\n")
 				}
 			} else {
+				var follows []string
 				for _, p := range next.BuildDef.Parameters {
 					switch toGoType(p.Type) {
 					case "float64":
@@ -641,11 +672,16 @@ func printBuilder(w io.Writer, parent, next GoStruct, prefix string) {
 						appends = append(appends, fmt.Sprintf("strconv.FormatInt(%s, 10)", toGoName(p.Name)))
 					case "string":
 						appends = append(appends, toGoName(p.Name))
+					case "[]string": // TODO hack for TS.MRANGE, TS.MREVRANGE, TS.MGET
+						follows = append(follows, toGoName(p.Name)+"...")
 					default:
 						panic("unexpected param type " + next.BuildDef.Parameters[0].Type)
 					}
 				}
 				fmt.Fprintf(w, "\tc.cs = append(c.cs, %s)\n", strings.Join(appends, ", "))
+				for _, follow := range follows {
+					fmt.Fprintf(w, "\tc.cs = append(c.cs, %s)\n", follow)
+				}
 			}
 		}
 	}
@@ -947,4 +983,14 @@ var readOnlyCMDs = map[string]bool{
 	"topkquery":           false,
 	"topklist":            false,
 	"topkinfo":            false,
+	"tsrange":             false,
+	"tsrevrange":          false,
+	"tsget":               false,
+	"tsinfo":              false,
+	"tsqueryindex":        false,
+	"graphroquery":        false,
+	"graphexplain":        false,
+	"graphslowlog":        false,
+	"graphconfigget":      false,
+	"graphlist":           false,
 }
