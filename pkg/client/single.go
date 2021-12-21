@@ -22,7 +22,7 @@ type SingleClient struct {
 
 func NewSingleClient(option SingleClientOption, connFn conn.ConnFn) (*SingleClient, error) {
 	c := connFn(option.Address, option.ConnOption)
-	if err := c.Dialable(); err != nil {
+	if err := c.Dial(); err != nil {
 		return nil, err
 	}
 	return &SingleClient{Cmd: cmds.NewBuilder(), conn: c}, nil

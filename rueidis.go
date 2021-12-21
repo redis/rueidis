@@ -31,7 +31,7 @@ func NewSingleClient(option SingleClientOption) (*client.SingleClient, error) {
 }
 
 func connFn(dst string, opt conn.Option) conn.Conn {
-	return conn.NewConn(dst, opt, dial)
+	return conn.NewMux(dst, opt, dial)
 }
 
 func dial(dst string, opt conn.Option) (conn net.Conn, err error) {

@@ -97,21 +97,21 @@ func TestPool(t *testing.T) {
 			t.Fatalf("unexpected err %v", w2.Error())
 		}
 		if atomic.LoadInt32(count) != 2 {
-			t.Fatalf("pool does not make new conn")
+			t.Fatalf("pool does not make new wire")
 		}
 		pool.Store(w1)
 		pool.Close()
 		if w1.Error() != ErrConnClosing {
-			t.Fatalf("pool does not close exsiting conn after Close()")
+			t.Fatalf("pool does not close exsiting wire after Close()")
 		}
 		for i := 0; i < 100; i++ {
 			if rw := pool.Acquire(); rw != w1 {
-				t.Fatalf("pool does not return the same conn after Close()")
+				t.Fatalf("pool does not return the same wire after Close()")
 			}
 		}
 		pool.Store(w2)
 		if w2.Error() != ErrConnClosing {
-			t.Fatalf("pool does not close stored conn after Close()")
+			t.Fatalf("pool does not close stored wire after Close()")
 		}
 	})
 
@@ -124,19 +124,19 @@ func TestPool(t *testing.T) {
 		pool.Close()
 		w2 := pool.Acquire()
 		if w2.Error() != ErrConnClosing {
-			t.Fatalf("pool does not close new conn after Close()")
+			t.Fatalf("pool does not close new wire after Close()")
 		}
 		if atomic.LoadInt32(count) != 2 {
-			t.Fatalf("pool does not make new conn")
+			t.Fatalf("pool does not make new wire")
 		}
 		for i := 0; i < 100; i++ {
 			if rw := pool.Acquire(); rw != w2 {
-				t.Fatalf("pool does not return the same conn after Close()")
+				t.Fatalf("pool does not return the same wire after Close()")
 			}
 		}
 		pool.Store(w1)
 		if w1.Error() != ErrConnClosing {
-			t.Fatalf("pool does not close exsiting conn after Close()")
+			t.Fatalf("pool does not close exsiting wire after Close()")
 		}
 	})
 }

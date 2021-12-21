@@ -15,10 +15,10 @@ import (
 	"github.com/rueian/rueidis/internal/proto"
 )
 
-func setupConn(wires []*mock.Wire) (conn *conn, checkClean func(t *testing.T)) {
+func setupMux(wires []*mock.Wire) (conn *mux, checkClean func(t *testing.T)) {
 	var mu sync.Mutex
 	var count = -1
-	return newConn("", Option{}, (*mock.Wire)(nil), func(dst string, opt Option) (net.Conn, error) {
+	return newMux("", Option{}, (*mock.Wire)(nil), func(dst string, opt Option) (net.Conn, error) {
 			return nil, nil
 		}, func(conn net.Conn, opt Option) (Wire, error) {
 			mu.Lock()
@@ -32,7 +32,7 @@ func setupConn(wires []*mock.Wire) (conn *conn, checkClean func(t *testing.T)) {
 		}
 }
 
-func TestNewConn(t *testing.T) {
+func TestNewMux(t *testing.T) {
 	n1, n2 := net.Pipe()
 	mock := &redisMock{t: t, buf: bufio.NewReader(n2), conn: n2}
 	go func() {
@@ -48,19 +48,19 @@ func TestNewConn(t *testing.T) {
 			ReplyString("OK")
 		mock.Expect("QUIT").ReplyString("OK")
 	}()
-	conn := NewConn("", Option{}, func(dst string, opt Option) (net.Conn, error) {
+	m := NewMux("", Option{}, func(dst string, opt Option) (net.Conn, error) {
 		return n1, nil
 	})
-	if err := conn.Dialable(); err != nil {
+	if err := m.Dial(); err != nil {
 		t.Fatalf("unexpected error %v", err)
 	}
-	conn.Close()
+	m.Close()
 }
 
-func TestConnDialSuppress(t *testing.T) {
+func TestMuxDialSuppress(t *testing.T) {
 	var dials, wires, waits, done int64
 	blocking := make(chan struct{})
-	conn := newConn("", Option{}, (*mock.Wire)(nil), func(dst string, opt Option) (net.Conn, error) {
+	m := newMux("", Option{}, (*mock.Wire)(nil), func(dst string, opt Option) (net.Conn, error) {
 		atomic.AddInt64(&dials, 1)
 		return nil, nil
 	}, func(conn net.Conn, opt Option) (Wire, error) {
@@ -71,7 +71,7 @@ func TestConnDialSuppress(t *testing.T) {
 	for i := 0; i < 1000; i++ {
 		go func() {
 			atomic.AddInt64(&waits, 1)
-			conn.Info()
+			m.Info()
 			atomic.AddInt64(&done, 1)
 		}()
 	}
@@ -90,9 +90,9 @@ func TestConnDialSuppress(t *testing.T) {
 	}
 }
 
-func TestConnReuseWire(t *testing.T) {
+func TestMuxReuseWire(t *testing.T) {
 	t.Run("reuse wire if no error", func(t *testing.T) {
-		conn, checkClean := setupConn([]*mock.Wire{
+		m, checkClean := setupMux([]*mock.Wire{
 			{
 				DoFn: func(cmd cmds.Completed) proto.Result {
 					return proto.NewResult(proto.Message{Type: '+', String: "PONG"}, nil)
@@ -100,18 +100,18 @@ func TestConnReuseWire(t *testing.T) {
 			},
 		})
 		defer checkClean(t)
-		defer conn.Close()
+		defer m.Close()
 		for i := 0; i < 2; i++ {
-			if err := conn.Do(cmds.NewCompleted([]string{"PING"})).Error(); err != nil {
+			if err := m.Do(cmds.NewCompleted([]string{"PING"})).Error(); err != nil {
 				t.Fatalf("unexpected error %v", err)
 			}
 		}
-		conn.Close()
+		m.Close()
 	})
 	t.Run("reuse blocking pool", func(t *testing.T) {
 		blocking := make(chan struct{})
 		response := make(chan proto.Result)
-		conn, checkClean := setupConn([]*mock.Wire{
+		m, checkClean := setupMux([]*mock.Wire{
 			{
 				// leave first wire for pipeline calls
 			},
@@ -128,16 +128,16 @@ func TestConnReuseWire(t *testing.T) {
 			},
 		})
 		defer checkClean(t)
-		defer conn.Close()
-		if err := conn.Dialable(); err != nil {
+		defer m.Close()
+		if err := m.Dial(); err != nil {
 			t.Fatalf("unexpected dial error %v", err)
 		}
 
-		wire1 := conn.Acquire()
+		wire1 := m.Acquire()
 
 		go func() {
 			// this should use the second wire
-			if val, err := conn.Do(cmds.NewBlockingCompleted([]string{"PING"})).ToString(); err != nil {
+			if val, err := m.Do(cmds.NewBlockingCompleted([]string{"PING"})).ToString(); err != nil {
 				t.Errorf("unexpected error %v", err)
 			} else if val != "BLOCK_RESPONSE" {
 				t.Errorf("unexpected response %v", val)
@@ -146,9 +146,9 @@ func TestConnReuseWire(t *testing.T) {
 		}()
 		<-blocking
 
-		conn.Store(wire1)
+		m.Store(wire1)
 		// this should use the first wire
-		if val, err := conn.Do(cmds.NewBlockingCompleted([]string{"PING"})).ToString(); err != nil {
+		if val, err := m.Do(cmds.NewBlockingCompleted([]string{"PING"})).ToString(); err != nil {
 			t.Fatalf("unexpected error %v", err)
 		} else if val != "ACQUIRED" {
 			t.Fatalf("unexpected response %v", val)
@@ -159,9 +159,9 @@ func TestConnReuseWire(t *testing.T) {
 	})
 }
 
-func TestConnCMDRetry(t *testing.T) {
+func TestMuxCMDRetry(t *testing.T) {
 	t.Run("wire info", func(t *testing.T) {
-		conn, checkClean := setupConn([]*mock.Wire{
+		m, checkClean := setupMux([]*mock.Wire{
 			{
 				InfoFn: func() map[string]proto.Message {
 					return map[string]proto.Message{"key": {Type: '+', String: "value"}}
@@ -169,14 +169,30 @@ func TestConnCMDRetry(t *testing.T) {
 			},
 		})
 		defer checkClean(t)
-		defer conn.Close()
-		if info := conn.Info(); info == nil || info["key"].String != "value" {
+		defer m.Close()
+		if info := m.Info(); info == nil || info["key"].String != "value" {
 			t.Fatalf("unexpected info %v", info)
 		}
 	})
 
+	t.Run("wire err", func(t *testing.T) {
+		e := errors.New("err")
+		m, checkClean := setupMux([]*mock.Wire{
+			{
+				ErrorFn: func() error {
+					return e
+				},
+			},
+		})
+		defer checkClean(t)
+		defer m.Close()
+		if err := m.Error(); err != e {
+			t.Fatalf("unexpected err %v", err)
+		}
+	})
+
 	t.Run("retry single read", func(t *testing.T) {
-		conn, checkClean := setupConn([]*mock.Wire{
+		m, checkClean := setupMux([]*mock.Wire{
 			{
 				DoFn: func(cmd cmds.Completed) proto.Result {
 					if cmd.Commands()[0] == "PING" {
@@ -201,9 +217,9 @@ func TestConnCMDRetry(t *testing.T) {
 			},
 		})
 		defer checkClean(t)
-		defer conn.Close()
+		defer m.Close()
 		// this should automatically use the second wire
-		if val, err := conn.Do(cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"})).ToString(); err != nil {
+		if val, err := m.Do(cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"})).ToString(); err != nil {
 			t.Fatalf("unexpected error %v", err)
 		} else if val != "READONLY_COMMAND_RESPONSE" {
 			t.Fatalf("unexpected response %v", val)
@@ -211,7 +227,7 @@ func TestConnCMDRetry(t *testing.T) {
 	})
 
 	t.Run("retry multi read", func(t *testing.T) {
-		conn, checkClean := setupConn([]*mock.Wire{
+		m, checkClean := setupMux([]*mock.Wire{
 			{
 				DoMultiFn: func(multi ...cmds.Completed) []proto.Result {
 					return []proto.Result{proto.NewErrResult(errors.New("network error"))}
@@ -224,9 +240,9 @@ func TestConnCMDRetry(t *testing.T) {
 			},
 		})
 		defer checkClean(t)
-		defer conn.Close()
+		defer m.Close()
 		// this should automatically use the second wire
-		if val, err := conn.DoMulti(cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"}))[0].ToString(); err != nil {
+		if val, err := m.DoMulti(cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"}))[0].ToString(); err != nil {
 			t.Fatalf("unexpected error %v", err)
 		} else if val != "MULTI_COMMANDS_RESPONSE" {
 			t.Fatalf("unexpected response %v", val)
@@ -234,7 +250,7 @@ func TestConnCMDRetry(t *testing.T) {
 	})
 
 	t.Run("retry single read cache", func(t *testing.T) {
-		conn, checkClean := setupConn([]*mock.Wire{
+		m, checkClean := setupMux([]*mock.Wire{
 			{
 				DoCacheFn: func(cmd cmds.Cacheable, ttl time.Duration) proto.Result {
 					return proto.NewErrResult(errors.New("network error"))
@@ -247,9 +263,9 @@ func TestConnCMDRetry(t *testing.T) {
 			},
 		})
 		defer checkClean(t)
-		defer conn.Close()
+		defer m.Close()
 		// this should automatically use the second wire
-		if val, err := conn.DoCache(cmds.Cacheable(cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"})), time.Second).ToString(); err != nil {
+		if val, err := m.DoCache(cmds.Cacheable(cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"})), time.Second).ToString(); err != nil {
 			t.Fatalf("unexpected error %v", err)
 		} else if val != "READONLY_COMMAND_RESPONSE" {
 			t.Fatalf("unexpected response %v", val)
@@ -257,7 +273,7 @@ func TestConnCMDRetry(t *testing.T) {
 	})
 
 	t.Run("not retry single write", func(t *testing.T) {
-		conn, checkClean := setupConn([]*mock.Wire{
+		m, checkClean := setupMux([]*mock.Wire{
 			{
 				DoFn: func(cmd cmds.Completed) proto.Result {
 					if cmd.Commands()[0] == "PING" {
@@ -282,13 +298,13 @@ func TestConnCMDRetry(t *testing.T) {
 			},
 		})
 		defer checkClean(t)
-		defer conn.Close()
+		defer m.Close()
 		// this should only use the first wire
-		if _, err := conn.Do(cmds.NewCompleted([]string{"WRITE_COMMAND"})).ToString(); err == nil || err.Error() != "network error" {
+		if _, err := m.Do(cmds.NewCompleted([]string{"WRITE_COMMAND"})).ToString(); err == nil || err.Error() != "network error" {
 			t.Fatalf("unexpected error %v", err)
 		}
 		// this should use the second wire
-		if val, err := conn.Do(cmds.NewCompleted([]string{"WRITE_COMMAND"})).ToString(); err != nil {
+		if val, err := m.Do(cmds.NewCompleted([]string{"WRITE_COMMAND"})).ToString(); err != nil {
 			t.Fatalf("unexpected error %v", err)
 		} else if val != "WRITE_COMMAND_RESPONSE" {
 			t.Fatalf("unexpected response %v", val)
@@ -296,7 +312,7 @@ func TestConnCMDRetry(t *testing.T) {
 	})
 
 	t.Run("not retry multi write", func(t *testing.T) {
-		conn, checkClean := setupConn([]*mock.Wire{
+		m, checkClean := setupMux([]*mock.Wire{
 			{
 				DoMultiFn: func(multi ...cmds.Completed) []proto.Result {
 					return []proto.Result{proto.NewErrResult(errors.New("network error"))}
@@ -309,16 +325,16 @@ func TestConnCMDRetry(t *testing.T) {
 			},
 		})
 		defer checkClean(t)
-		defer conn.Close()
+		defer m.Close()
 		// this should only use the first wire
-		if _, err := conn.DoMulti(
+		if _, err := m.DoMulti(
 			cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"}),
 			cmds.NewCompleted([]string{"WRITE_COMMAND"}),
 		)[0].ToString(); err == nil || err.Error() != "network error" {
 			t.Fatalf("unexpected error %v", err)
 		}
 		// this should use the second wire
-		if val, err := conn.DoMulti(
+		if val, err := m.DoMulti(
 			cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"}),
 			cmds.NewCompleted([]string{"WRITE_COMMAND"}),
 		)[0].ToString(); err != nil {
@@ -332,7 +348,7 @@ func TestConnCMDRetry(t *testing.T) {
 		blocked := make(chan struct{})
 		responses := make(chan proto.Result)
 
-		conn, checkClean := setupConn([]*mock.Wire{
+		m, checkClean := setupMux([]*mock.Wire{
 			{
 				// leave first wire for pipeline calls
 			},
@@ -350,8 +366,8 @@ func TestConnCMDRetry(t *testing.T) {
 			},
 		})
 		defer checkClean(t)
-		defer conn.Close()
-		if err := conn.Dialable(); err != nil {
+		defer m.Close()
+		if err := m.Dial(); err != nil {
 			t.Fatalf("unexpected dial error %v", err)
 		}
 
@@ -359,7 +375,7 @@ func TestConnCMDRetry(t *testing.T) {
 		wg.Add(2)
 		for i := 0; i < 2; i++ {
 			go func() {
-				if val, err := conn.Do(cmds.NewBlockingCompleted([]string{"BLOCK"})).ToString(); err != nil {
+				if val, err := m.Do(cmds.NewBlockingCompleted([]string{"BLOCK"})).ToString(); err != nil {
 					t.Errorf("unexpected error %v", err)
 				} else if val != "BLOCK_COMMANDS_RESPONSE" {
 					t.Errorf("unexpected response %v", val)
@@ -381,7 +397,7 @@ func TestConnCMDRetry(t *testing.T) {
 		blocked := make(chan struct{})
 		responses := make(chan proto.Result)
 
-		conn, checkClean := setupConn([]*mock.Wire{
+		m, checkClean := setupMux([]*mock.Wire{
 			{
 				// leave first wire for pipeline calls
 			},
@@ -399,8 +415,8 @@ func TestConnCMDRetry(t *testing.T) {
 			},
 		})
 		defer checkClean(t)
-		defer conn.Close()
-		if err := conn.Dialable(); err != nil {
+		defer m.Close()
+		if err := m.Dial(); err != nil {
 			t.Fatalf("unexpected dial error %v", err)
 		}
 
@@ -408,7 +424,7 @@ func TestConnCMDRetry(t *testing.T) {
 		wg.Add(2)
 		for i := 0; i < 2; i++ {
 			go func() {
-				if val, err := conn.DoMulti(
+				if val, err := m.DoMulti(
 					cmds.NewReadOnlyCompleted([]string{"READONLY"}),
 					cmds.NewBlockingCompleted([]string{"BLOCK"}),
 				)[0].ToString(); err != nil {
@@ -430,10 +446,10 @@ func TestConnCMDRetry(t *testing.T) {
 	})
 }
 
-func TestConnDialRetry(t *testing.T) {
-	setup := func() (*conn, *int64) {
+func TestMuxDialRetry(t *testing.T) {
+	setup := func() (*mux, *int64) {
 		var count int64
-		return newConn("", Option{}, (*mock.Wire)(nil), func(dst string, opt Option) (net.Conn, error) {
+		return newMux("", Option{}, (*mock.Wire)(nil), func(dst string, opt Option) (net.Conn, error) {
 			if count == 1 {
 				return nil, nil
 			}
@@ -448,9 +464,9 @@ func TestConnDialRetry(t *testing.T) {
 		}), &count
 	}
 	t.Run("retry on auto pipeline", func(t *testing.T) {
-		conn, count := setup()
-		defer conn.Close()
-		if val, err := conn.Do(cmds.NewCompleted([]string{"PING"})).ToString(); err != nil {
+		m, count := setup()
+		defer m.Close()
+		if val, err := m.Do(cmds.NewCompleted([]string{"PING"})).ToString(); err != nil {
 			t.Fatalf("unexpected err %v", err)
 		} else if val != "PONG" {
 			t.Fatalf("unexpected response %v", val)
@@ -461,9 +477,9 @@ func TestConnDialRetry(t *testing.T) {
 	})
 
 	t.Run("retry on blocking pool", func(t *testing.T) {
-		conn, count := setup()
-		defer conn.Close()
-		if val, err := conn.Do(cmds.NewBlockingCompleted([]string{"PING"})).ToString(); err != nil {
+		m, count := setup()
+		defer m.Close()
+		if val, err := m.Do(cmds.NewBlockingCompleted([]string{"PING"})).ToString(); err != nil {
 			t.Fatalf("unexpected err %v", err)
 		} else if val != "PONG" {
 			t.Fatalf("unexpected response %v", val)
@@ -475,11 +491,11 @@ func TestConnDialRetry(t *testing.T) {
 }
 
 func BenchmarkClientSideCaching(b *testing.B) {
-	setup := func(b *testing.B) *conn {
-		c := NewConn("127.0.0.1:6379", Option{CacheSizeEachConn: DefaultCacheBytes}, func(dst string, opt Option) (conn net.Conn, err error) {
+	setup := func(b *testing.B) *mux {
+		c := NewMux("127.0.0.1:6379", Option{CacheSizeEachConn: DefaultCacheBytes}, func(dst string, opt Option) (conn net.Conn, err error) {
 			return net.Dial("tcp", dst)
 		})
-		if err := c.Dialable(); err != nil {
+		if err := c.Dial(); err != nil {
 			panic(err)
 		}
 		b.SetParallelism(100)
@@ -487,20 +503,20 @@ func BenchmarkClientSideCaching(b *testing.B) {
 		return c
 	}
 	b.Run("Do", func(b *testing.B) {
-		c := setup(b)
+		m := setup(b)
 		cmd := cmds.NewCompleted([]string{"GET", "a"})
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
-				c.Do(cmd)
+				m.Do(cmd)
 			}
 		})
 	})
 	b.Run("DoCache", func(b *testing.B) {
-		c := setup(b)
+		m := setup(b)
 		cmd := cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"}))
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
-				c.DoCache(cmd, time.Second*5)
+				m.DoCache(cmd, time.Second*5)
 			}
 		})
 	})

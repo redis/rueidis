@@ -70,7 +70,7 @@ func (c *ClusterClient) initConn() (cc conn.Conn, err error) {
 	}
 	for _, addr := range c.opt.InitAddress {
 		cc = c.connFn(addr, c.opt.ConnOption)
-		if err = cc.Dialable(); err == nil {
+		if err = cc.Dial(); err == nil {
 			c.mu.Lock()
 			if prev, ok := c.conns[addr]; ok {
 				go prev.Close()

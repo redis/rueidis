@@ -54,17 +54,13 @@ type singleconnect struct {
 }
 
 type Conn interface {
-	Do(cmd cmds.Completed) proto.Result
-	DoMulti(multi ...cmds.Completed) []proto.Result
-	DoCache(cmd cmds.Cacheable, ttl time.Duration) proto.Result
-	Dialable() error
-	Info() map[string]proto.Message
-	Close()
+	Wire
+	Dial() error
 	Acquire() Wire
 	Store(w Wire)
 }
 
-type conn struct {
+type mux struct {
 	dst  string
 	opt  Option
 	pool *pool
@@ -77,47 +73,47 @@ type conn struct {
 	wireFn wireFn
 }
 
-func NewConn(dst string, option Option, dialFn DialFn) *conn {
-	return newConn(dst, option, (*wire)(nil), dialFn, func(conn net.Conn, opt Option) (Wire, error) {
+func NewMux(dst string, option Option, dialFn DialFn) *mux {
+	return newMux(dst, option, (*wire)(nil), dialFn, func(conn net.Conn, opt Option) (Wire, error) {
 		return newWire(conn, opt)
 	})
 }
 
-func newConn(dst string, option Option, dead Wire, dialFn DialFn, wireFn wireFn) *conn {
-	conn := &conn{dst: dst, opt: option, dead: dead, dialFn: dialFn, wireFn: wireFn}
+func newMux(dst string, option Option, dead Wire, dialFn DialFn, wireFn wireFn) *mux {
+	conn := &mux{dst: dst, opt: option, dead: dead, dialFn: dialFn, wireFn: wireFn}
 	conn.wire.Store(dead)
 	conn.pool = newPool(option.BlockingPoolSize, conn.dialRetry)
 	return conn
 }
 
-func (c *conn) connect() (w Wire, err error) {
-	if w = c.wire.Load().(Wire); w != c.dead {
+func (m *mux) connect() (w Wire, err error) {
+	if w = m.wire.Load().(Wire); w != m.dead {
 		return w, nil
 	}
 
-	c.mu.Lock()
-	sc := c.sc
-	if c.sc == nil {
-		c.sc = &singleconnect{}
-		c.sc.g.Add(1)
+	m.mu.Lock()
+	sc := m.sc
+	if m.sc == nil {
+		m.sc = &singleconnect{}
+		m.sc.g.Add(1)
 	}
-	c.mu.Unlock()
+	m.mu.Unlock()
 
 	if sc != nil {
 		sc.g.Wait()
 		return sc.w, sc.e
 	}
 
-	if w = c.wire.Load().(Wire); w == c.dead {
-		if w, err = c.dial(); err == nil {
-			c.wire.Store(w)
+	if w = m.wire.Load().(Wire); w == m.dead {
+		if w, err = m.dial(); err == nil {
+			m.wire.Store(w)
 		}
 	}
 
-	c.mu.Lock()
-	sc = c.sc
-	c.sc = nil
-	c.mu.Unlock()
+	m.mu.Lock()
+	sc = m.sc
+	m.sc = nil
+	m.mu.Unlock()
 
 	sc.w = w
 	sc.e = err
@@ -126,45 +122,49 @@ func (c *conn) connect() (w Wire, err error) {
 	return w, err
 }
 
-func (c *conn) dial() (w Wire, err error) {
-	conn, err := c.dialFn(c.dst, c.opt)
+func (m *mux) dial() (w Wire, err error) {
+	conn, err := m.dialFn(m.dst, m.opt)
 	if err == nil {
-		w, err = c.wireFn(conn, c.opt)
+		w, err = m.wireFn(conn, m.opt)
 	}
 	return w, err
 }
 
-func (c *conn) dialRetry() Wire {
+func (m *mux) dialRetry() Wire {
 retry:
-	if wire, err := c.dial(); err == nil {
+	if wire, err := m.dial(); err == nil {
 		return wire
 	}
 	goto retry
 }
 
-func (c *conn) acquire() Wire {
+func (m *mux) acquire() Wire {
 retry:
-	if wire, err := c.connect(); err == nil {
+	if wire, err := m.connect(); err == nil {
 		return wire
 	}
 	goto retry
 }
 
-func (c *conn) Dialable() error { // no retry
-	_, err := c.connect()
+func (m *mux) Dial() error { // no retry
+	_, err := m.connect()
 	return err
 }
 
-func (c *conn) Info() map[string]proto.Message {
-	return c.acquire().Info()
+func (m *mux) Info() map[string]proto.Message {
+	return m.acquire().Info()
 }
 
-func (c *conn) Do(cmd cmds.Completed) (resp proto.Result) {
+func (m *mux) Error() error {
+	return m.acquire().Error()
+}
+
+func (m *mux) Do(cmd cmds.Completed) (resp proto.Result) {
 retry:
 	if cmd.IsBlock() {
-		resp = c.blocking(cmd)
+		resp = m.blocking(cmd)
 	} else {
-		resp = c.pipeline(cmd)
+		resp = m.pipeline(cmd)
 	}
 	if cmd.IsReadOnly() && isNetworkErr(resp.NonRedisError()) {
 		goto retry
@@ -172,7 +172,7 @@ retry:
 	return resp
 }
 
-func (c *conn) DoMulti(multi ...cmds.Completed) (resp []proto.Result) {
+func (m *mux) DoMulti(multi ...cmds.Completed) (resp []proto.Result) {
 	var block, write bool
 	for _, cmd := range multi {
 		block = block || cmd.IsBlock()
@@ -180,9 +180,9 @@ func (c *conn) DoMulti(multi ...cmds.Completed) (resp []proto.Result) {
 	}
 retry:
 	if block {
-		resp = c.blockingMulti(multi)
+		resp = m.blockingMulti(multi)
 	} else {
-		resp = c.pipelineMulti(multi)
+		resp = m.pipelineMulti(multi)
 	}
 	if !write {
 		for _, r := range resp {
@@ -194,62 +194,62 @@ retry:
 	return resp
 }
 
-func (c *conn) blocking(cmd cmds.Completed) (resp proto.Result) {
-	wire := c.pool.Acquire()
+func (m *mux) blocking(cmd cmds.Completed) (resp proto.Result) {
+	wire := m.pool.Acquire()
 	resp = wire.Do(cmd)
-	c.pool.Store(wire)
+	m.pool.Store(wire)
 	return resp
 }
 
-func (c *conn) blockingMulti(cmd []cmds.Completed) (resp []proto.Result) {
-	wire := c.pool.Acquire()
+func (m *mux) blockingMulti(cmd []cmds.Completed) (resp []proto.Result) {
+	wire := m.pool.Acquire()
 	resp = wire.DoMulti(cmd...)
-	c.pool.Store(wire)
+	m.pool.Store(wire)
 	return resp
 }
 
-func (c *conn) pipeline(cmd cmds.Completed) (resp proto.Result) {
-	wire := c.acquire()
+func (m *mux) pipeline(cmd cmds.Completed) (resp proto.Result) {
+	wire := m.acquire()
 	if resp = wire.Do(cmd); isNetworkErr(resp.NonRedisError()) {
-		c.wire.CompareAndSwap(wire, c.dead)
+		m.wire.CompareAndSwap(wire, m.dead)
 	}
 	return resp
 }
 
-func (c *conn) pipelineMulti(cmd []cmds.Completed) (resp []proto.Result) {
-	wire := c.acquire()
+func (m *mux) pipelineMulti(cmd []cmds.Completed) (resp []proto.Result) {
+	wire := m.acquire()
 	resp = wire.DoMulti(cmd...)
 	for _, r := range resp {
 		if isNetworkErr(r.NonRedisError()) {
-			c.wire.CompareAndSwap(wire, c.dead)
+			m.wire.CompareAndSwap(wire, m.dead)
 			return resp
 		}
 	}
 	return resp
 }
 
-func (c *conn) DoCache(cmd cmds.Cacheable, ttl time.Duration) proto.Result {
+func (m *mux) DoCache(cmd cmds.Cacheable, ttl time.Duration) proto.Result {
 retry:
-	wire := c.acquire()
+	wire := m.acquire()
 	resp := wire.DoCache(cmd, ttl)
 	if isNetworkErr(resp.NonRedisError()) {
-		c.wire.CompareAndSwap(wire, c.dead)
+		m.wire.CompareAndSwap(wire, m.dead)
 		goto retry
 	}
 	return resp
 }
 
-func (c *conn) Acquire() Wire {
-	return c.pool.Acquire()
+func (m *mux) Acquire() Wire {
+	return m.pool.Acquire()
 }
 
-func (c *conn) Store(w Wire) {
-	c.pool.Store(w)
+func (m *mux) Store(w Wire) {
+	m.pool.Store(w)
 }
 
-func (c *conn) Close() {
-	c.acquire().Close()
-	c.pool.Close()
+func (m *mux) Close() {
+	m.acquire().Close()
+	m.pool.Close()
 }
 
 func isNetworkErr(err error) bool {

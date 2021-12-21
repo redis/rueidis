@@ -18,13 +18,14 @@ type MockConn struct {
 	DoCacheFn  func(cmd cmds.Cacheable, ttl time.Duration) proto.Result
 	DoMultiFn  func(multi ...cmds.Completed) []proto.Result
 	InfoFn     func() map[string]proto.Message
+	ErrorFn    func() error
 	CloseFn    func()
 	DialableFn func() error
 	AcquireFn  func() conn.Wire
 	StoreFn    func(w conn.Wire)
 }
 
-func (m *MockConn) Dialable() error {
+func (m *MockConn) Dial() error {
 	if m.DialableFn != nil {
 		return m.DialableFn()
 	}
@@ -68,6 +69,13 @@ func (m *MockConn) DoMulti(multi ...cmds.Completed) []proto.Result {
 func (m *MockConn) Info() map[string]proto.Message {
 	if m.InfoFn != nil {
 		return m.InfoFn()
+	}
+	return nil
+}
+
+func (m *MockConn) Error() error {
+	if m.ErrorFn != nil {
+		return m.ErrorFn()
 	}
 	return nil
 }
