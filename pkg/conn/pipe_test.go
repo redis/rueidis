@@ -109,7 +109,7 @@ func write(o io.Writer, m proto.Message) (err error) {
 	return err
 }
 
-func setup(t *testing.T, option Option) (*wire, *redisMock, func(), func()) {
+func setup(t *testing.T, option Option) (*pipe, *redisMock, func(), func()) {
 	n1, n2 := net.Pipe()
 	mock := &redisMock{
 		t:    t,
@@ -128,16 +128,16 @@ func setup(t *testing.T, option Option) (*wire, *redisMock, func(), func()) {
 		mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
 			ReplyString("OK")
 	}()
-	c, err := newWire(n1, option)
+	p, err := newPipe(n1, option)
 	if err != nil {
-		t.Fatalf("wire setup failed: %v", err)
+		t.Fatalf("pipe setup failed: %v", err)
 	}
-	if info := c.Info(); info["key"].String != "value" {
-		t.Fatalf("wire setup failed, unexpected hello response: %v", c.Info())
+	if info := p.Info(); info["key"].String != "value" {
+		t.Fatalf("pipe setup failed, unexpected hello response: %v", p.Info())
 	}
-	return c, mock, func() {
+	return p, mock, func() {
 			go func() { mock.Expect("QUIT").ReplyString("OK") }()
-			c.Close()
+			p.Close()
 			mock.Close()
 		}, func() {
 			n1.Close()
@@ -155,7 +155,7 @@ func ExpectOK(t *testing.T, result proto.Result) {
 	}
 }
 
-func TestNewWire(t *testing.T) {
+func TestNewPipe(t *testing.T) {
 	t.Run("Auth", func(t *testing.T) {
 		n1, n2 := net.Pipe()
 		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2}
@@ -170,17 +170,17 @@ func TestNewWire(t *testing.T) {
 			mock.Expect("SELECT", "1").
 				ReplyString("OK")
 		}()
-		c, err := newWire(n1, Option{
+		p, err := newPipe(n1, Option{
 			SelectDB:   1,
 			Username:   "un",
 			Password:   "pa",
 			ClientName: "cn",
 		})
 		if err != nil {
-			t.Fatalf("wire setup failed: %v", err)
+			t.Fatalf("pipe setup failed: %v", err)
 		}
 		go func() { mock.Expect("QUIT").ReplyString("OK") }()
-		c.Close()
+		p.Close()
 		mock.Close()
 		n1.Close()
 		n2.Close()
@@ -189,21 +189,21 @@ func TestNewWire(t *testing.T) {
 		n1, n2 := net.Pipe()
 		n1.Close()
 		n2.Close()
-		if _, err := newWire(n1, Option{}); err != io.ErrClosedPipe {
-			t.Fatalf("wire setup should failed with io.ErrClosedPipe, but got %v", err)
+		if _, err := newPipe(n1, Option{}); err != io.ErrClosedPipe {
+			t.Fatalf("pipe setup should failed with io.ErrClosedPipe, but got %v", err)
 		}
 	})
 }
 
 func TestWriteSingleFlush(t *testing.T) {
-	conn, mock, cancel, _ := setup(t, Option{})
+	p, mock, cancel, _ := setup(t, Option{})
 	defer cancel()
 	go func() { mock.Expect("PING").ReplyString("OK") }()
-	ExpectOK(t, conn.Do(cmds.NewCompleted([]string{"PING"})))
+	ExpectOK(t, p.Do(cmds.NewCompleted([]string{"PING"})))
 }
 
 func TestWriteSinglePipelineFlush(t *testing.T) {
-	conn, mock, cancel, _ := setup(t, Option{})
+	p, mock, cancel, _ := setup(t, Option{})
 	defer cancel()
 	times := 5000
 	wg := sync.WaitGroup{}
@@ -211,7 +211,7 @@ func TestWriteSinglePipelineFlush(t *testing.T) {
 
 	for i := 0; i < times; i++ {
 		go func() {
-			ExpectOK(t, conn.Do(cmds.NewCompleted([]string{"PING"})))
+			ExpectOK(t, p.Do(cmds.NewCompleted([]string{"PING"})))
 		}()
 	}
 	for i := 0; i < times; i++ {
@@ -220,18 +220,18 @@ func TestWriteSinglePipelineFlush(t *testing.T) {
 }
 
 func TestWriteMultiFlush(t *testing.T) {
-	conn, mock, cancel, _ := setup(t, Option{})
+	p, mock, cancel, _ := setup(t, Option{})
 	defer cancel()
 	go func() {
 		mock.Expect("PING").Expect("PING").ReplyString("OK").ReplyString("OK")
 	}()
-	for _, resp := range conn.DoMulti(cmds.NewCompleted([]string{"PING"}), cmds.NewCompleted([]string{"PING"})) {
+	for _, resp := range p.DoMulti(cmds.NewCompleted([]string{"PING"}), cmds.NewCompleted([]string{"PING"})) {
 		ExpectOK(t, resp)
 	}
 }
 
 func TestWriteMultiPipelineFlush(t *testing.T) {
-	conn, mock, cancel, _ := setup(t, Option{})
+	p, mock, cancel, _ := setup(t, Option{})
 	defer cancel()
 	times := 5000
 	wg := sync.WaitGroup{}
@@ -239,7 +239,7 @@ func TestWriteMultiPipelineFlush(t *testing.T) {
 
 	for i := 0; i < times; i++ {
 		go func() {
-			for _, resp := range conn.DoMulti(cmds.NewCompleted([]string{"PING"}), cmds.NewCompleted([]string{"PING"})) {
+			for _, resp := range p.DoMulti(cmds.NewCompleted([]string{"PING"}), cmds.NewCompleted([]string{"PING"})) {
 				ExpectOK(t, resp)
 			}
 		}()
@@ -251,7 +251,7 @@ func TestWriteMultiPipelineFlush(t *testing.T) {
 }
 
 func TestResponseSequenceWithPushMessageInjected(t *testing.T) {
-	conn, mock, cancel, _ := setup(t, Option{})
+	p, mock, cancel, _ := setup(t, Option{})
 	defer cancel()
 
 	times := 5000
@@ -261,7 +261,7 @@ func TestResponseSequenceWithPushMessageInjected(t *testing.T) {
 		go func(i int) {
 			defer wg.Done()
 			v := strconv.Itoa(i)
-			if val, _ := conn.Do(cmds.NewCompleted([]string{"GET", v})).Value(); val.String != v {
+			if val, _ := p.Do(cmds.NewCompleted([]string{"GET", v})).Value(); val.String != v {
 				t.Errorf("out of order response, expected %v, got %v", v, val.String)
 			}
 		}(i)
@@ -275,7 +275,7 @@ func TestResponseSequenceWithPushMessageInjected(t *testing.T) {
 }
 
 func TestClientSideCaching(t *testing.T) {
-	conn, mock, cancel, _ := setup(t, Option{})
+	p, mock, cancel, _ := setup(t, Option{})
 	defer cancel()
 
 	go func() {
@@ -293,7 +293,7 @@ func TestClientSideCaching(t *testing.T) {
 	for i := 0; i < 5000; i++ {
 		go func() {
 			defer wg.Done()
-			if v, _ := conn.DoCache(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).Value(); v.String != "1" {
+			if v, _ := p.DoCache(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).Value(); v.String != "1" {
 				t.Errorf("unexpected cached result, expected %v, got %v", "1", v.String)
 			}
 		}()
@@ -318,7 +318,7 @@ func TestClientSideCaching(t *testing.T) {
 	}()
 
 	for {
-		if v, _ := conn.DoCache(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), time.Second).Value(); v.String != "2" {
+		if v, _ := p.DoCache(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), time.Second).Value(); v.String != "2" {
 			t.Logf("waiting for invalidating")
 			continue
 		}
@@ -329,7 +329,7 @@ func TestClientSideCaching(t *testing.T) {
 func TestPubSub(t *testing.T) {
 	builder := cmds.NewBuilder()
 	t.Run("NoReply Commands In Do", func(t *testing.T) {
-		conn, mock, cancel, _ := setup(t, Option{})
+		p, mock, cancel, _ := setup(t, Option{})
 		defer cancel()
 
 		commands := []cmds.Completed{
@@ -340,17 +340,17 @@ func TestPubSub(t *testing.T) {
 		}
 
 		for _, c := range commands {
-			conn.Do(c)
+			p.Do(c)
 			mock.Expect(c.Commands()...)
 			go func() { mock.Expect("GET", "k").ReplyString("v") }()
-			if v, _ := conn.Do(builder.Get().Key("k").Build()).Value(); v.String != "v" {
+			if v, _ := p.Do(builder.Get().Key("k").Build()).Value(); v.String != "v" {
 				t.Fatalf("no-reply commands should not affect nornal commands")
 			}
 		}
 	})
 
 	t.Run("NoReply Commands In DoMulti", func(t *testing.T) {
-		conn, mock, cancel, _ := setup(t, Option{})
+		p, mock, cancel, _ := setup(t, Option{})
 		defer cancel()
 
 		commands := []cmds.Completed{
@@ -360,21 +360,21 @@ func TestPubSub(t *testing.T) {
 			builder.Punsubscribe().Pattern("d").Build(),
 		}
 
-		conn.DoMulti(commands...)
+		p.DoMulti(commands...)
 
 		for _, c := range commands {
 			mock.Expect(c.Commands()...)
 		}
 
 		go func() { mock.Expect("GET", "k").ReplyString("v") }()
-		if v, _ := conn.Do(builder.Get().Key("k").Build()).Value(); v.String != "v" {
+		if v, _ := p.Do(builder.Get().Key("k").Build()).Value(); v.String != "v" {
 			t.Fatalf("no-reply commands should not affect nornal commands")
 		}
 	})
 
 	t.Run("PubSub Push Message", func(t *testing.T) {
 		count := make([]int32, 4)
-		conn, mock, cancel, _ := setup(t, Option{
+		p, mock, cancel, _ := setup(t, Option{
 			PubSubHandlers: PubSubHandlers{
 				OnMessage: func(channel, message string) {
 					if channel != "1" || message != "2" {
@@ -403,7 +403,7 @@ func TestPubSub(t *testing.T) {
 			},
 		})
 		activate := builder.Subscribe().Channel("a").Build()
-		conn.Do(activate)
+		p.Do(activate)
 		mock.Expect(activate.Commands()...).Reply(
 			proto.Message{Type: '>', Values: []proto.Message{
 				{Type: '+', String: "message"},
@@ -454,36 +454,36 @@ func TestPubSub(t *testing.T) {
 }
 
 func TestExitOnWriteError(t *testing.T) {
-	conn, _, _, closePipe := setup(t, Option{})
+	p, _, _, closeConn := setup(t, Option{})
 
-	closePipe()
+	closeConn()
 
 	for i := 0; i < 2; i++ {
-		if err := conn.Do(cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); !strings.HasPrefix(err.Error(), "io:") {
+		if err := p.Do(cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); !strings.HasPrefix(err.Error(), "io:") {
 			t.Errorf("unexpected cached result, expected io err, got %v", err)
 		}
 	}
 }
 
 func TestExitOnWriteMultiError(t *testing.T) {
-	conn, _, _, closePipe := setup(t, Option{})
+	p, _, _, closeConn := setup(t, Option{})
 
-	closePipe()
+	closeConn()
 
 	for i := 0; i < 2; i++ {
-		if err := conn.DoMulti(cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); !strings.HasPrefix(err.Error(), "io:") {
+		if err := p.DoMulti(cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); !strings.HasPrefix(err.Error(), "io:") {
 			t.Errorf("unexpected result, expected io err, got %v", err)
 		}
 	}
 }
 
 func TestExitAllGoroutineOnWriteError(t *testing.T) {
-	conn, _, _, closePipe := setup(t, Option{})
+	conn, _, _, closeConn := setup(t, Option{})
 
 	// start the background worker
 	conn.Do(cmds.NewBuilder().Subscribe().Channel("a").Build())
 
-	closePipe()
+	closeConn()
 	wg := sync.WaitGroup{}
 	wg.Add(5000)
 	for i := 0; i < 5000; i++ {
@@ -501,41 +501,41 @@ func TestExitAllGoroutineOnWriteError(t *testing.T) {
 }
 
 func TestExitOnReadError(t *testing.T) {
-	conn, mock, _, closePipe := setup(t, Option{})
+	p, mock, _, closeConn := setup(t, Option{})
 
 	go func() {
 		mock.Expect("GET", "a")
-		closePipe()
+		closeConn()
 	}()
 
 	for i := 0; i < 2; i++ {
-		if err := conn.Do(cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); !strings.HasPrefix(err.Error(), "io:") {
+		if err := p.Do(cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); !strings.HasPrefix(err.Error(), "io:") {
 			t.Errorf("unexpected result, expected io err, got %v", err)
 		}
 	}
 }
 
 func TestExitOnReadMultiError(t *testing.T) {
-	conn, mock, _, closePipe := setup(t, Option{})
+	p, mock, _, closeConn := setup(t, Option{})
 
 	go func() {
 		mock.Expect("GET", "a")
-		closePipe()
+		closeConn()
 	}()
 
 	for i := 0; i < 2; i++ {
-		if err := conn.DoMulti(cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); !strings.HasPrefix(err.Error(), "io:") {
+		if err := p.DoMulti(cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); !strings.HasPrefix(err.Error(), "io:") {
 			t.Errorf("unexpected result, expected io err, got %v", err)
 		}
 	}
 }
 
 func TestExitAllGoroutineOnReadError(t *testing.T) {
-	conn, mock, _, closePipe := setup(t, Option{})
+	p, mock, _, closeConn := setup(t, Option{})
 
 	go func() {
 		mock.Expect("GET", "a")
-		closePipe()
+		closeConn()
 	}()
 
 	wg := sync.WaitGroup{}
@@ -543,10 +543,10 @@ func TestExitAllGoroutineOnReadError(t *testing.T) {
 	for i := 0; i < 5000; i++ {
 		go func() {
 			defer wg.Done()
-			if err := conn.Do(cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); !strings.HasPrefix(err.Error(), "io:") {
+			if err := p.Do(cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); !strings.HasPrefix(err.Error(), "io:") {
 				t.Errorf("unexpected result, expected io err, got %v", err)
 			}
-			if err := conn.DoMulti(cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); !strings.HasPrefix(err.Error(), "io:") {
+			if err := p.DoMulti(cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); !strings.HasPrefix(err.Error(), "io:") {
 				t.Errorf("unexpected result, expected io err, got %v", err)
 			}
 		}()
@@ -555,7 +555,7 @@ func TestExitAllGoroutineOnReadError(t *testing.T) {
 }
 
 func TestCloseAndWaitPendingCMDs(t *testing.T) {
-	conn, mock, _, _ := setup(t, Option{})
+	p, mock, _, _ := setup(t, Option{})
 
 	var (
 		loop = 5000
@@ -567,7 +567,7 @@ func TestCloseAndWaitPendingCMDs(t *testing.T) {
 		go func() {
 			defer wg.Done()
 
-			if v, _ := conn.Do(cmds.NewCompleted([]string{"GET", "a"})).Value(); v.String != "b" {
+			if v, _ := p.Do(cmds.NewCompleted([]string{"GET", "a"})).Value(); v.String != "b" {
 				t.Errorf("unexpected GET result %v", v.String)
 			}
 		}()
@@ -575,7 +575,7 @@ func TestCloseAndWaitPendingCMDs(t *testing.T) {
 	for i := 0; i < loop; i++ {
 		r := mock.Expect("GET", "a")
 		if i == loop-1 {
-			go conn.Close()
+			go p.Close()
 		}
 		r.ReplyString("b")
 	}

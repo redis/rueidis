@@ -145,10 +145,10 @@ func TestPoolError(t *testing.T) {
 	setup := func(size int) (*pool, *int32) {
 		var count int32
 		return newPool(size, func() Wire {
-			w := &wire{}
+			w := &pipe{}
 			c := atomic.AddInt32(&count, 1)
 			if c%2 == 0 {
-				w.error.Store(&errWrap{error: errors.New("any")})
+				w.error.Store(&errs{error: errors.New("any")})
 			}
 			return w
 		}), &count

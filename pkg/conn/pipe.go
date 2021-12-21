@@ -15,7 +15,7 @@ import (
 	"github.com/rueian/rueidis/internal/queue"
 )
 
-type errWrap struct {
+type errs struct {
 	error
 }
 
@@ -28,7 +28,9 @@ type Wire interface {
 	Close()
 }
 
-type wire struct {
+var _ Wire = (*pipe)(nil)
+
+type pipe struct {
 	waits int32
 	state int32
 
@@ -43,7 +45,7 @@ type wire struct {
 
 	info map[string]proto.Message
 
-	psHandlers PubSubHandlers
+	cbs PubSubHandlers
 }
 
 type PubSubHandlers struct {
@@ -53,19 +55,19 @@ type PubSubHandlers struct {
 	OnUnSubscribed func(channel string, active int64)
 }
 
-func newWire(conn net.Conn, option Option) (c *wire, err error) {
+func newPipe(conn net.Conn, option Option) (p *pipe, err error) {
 	if option.CacheSizeEachConn <= 0 {
 		option.CacheSizeEachConn = DefaultCacheBytes
 	}
 
-	c = &wire{
+	p = &pipe{
 		conn:  conn,
 		queue: queue.NewRing(),
 		cache: cache.NewLRU(option.CacheSizeEachConn),
 		r:     bufio.NewReader(conn),
 		w:     bufio.NewWriter(conn),
 
-		psHandlers: option.PubSubHandlers,
+		cbs: option.PubSubHandlers,
 	}
 
 	helloCmd := []string{"HELLO", "3"}
@@ -81,9 +83,9 @@ func newWire(conn net.Conn, option Option) (c *wire, err error) {
 		init = append(init, []string{"SELECT", strconv.Itoa(option.SelectDB)})
 	}
 
-	for i, r := range c.DoMulti(cmds.NewMultiCompleted(init)...) {
+	for i, r := range p.DoMulti(cmds.NewMultiCompleted(init)...) {
 		if i == 0 {
-			c.info, err = r.ToMap()
+			p.info, err = r.ToMap()
 		} else {
 			err = r.Error()
 		}
@@ -91,23 +93,21 @@ func newWire(conn net.Conn, option Option) (c *wire, err error) {
 			return nil, err
 		}
 	}
-	return c, nil
+	return p, nil
 }
 
-func (c *wire) background() {
-	atomic.CompareAndSwapInt32(&c.state, 0, 1)
-	c.once.Do(func() {
-		go c._background()
-	})
+func (p *pipe) background() {
+	atomic.CompareAndSwapInt32(&p.state, 0, 1)
+	p.once.Do(func() { go p._background() })
 }
 
-func (c *wire) _background() {
+func (p *pipe) _background() {
 	wg := sync.WaitGroup{}
 	wg.Add(2)
 	exit := func() {
 		// stop accepting new requests
-		atomic.CompareAndSwapInt32(&c.state, 1, 2)
-		_ = c.conn.Close() // force both read & write goroutine to exit
+		atomic.CompareAndSwapInt32(&p.state, 1, 2)
+		_ = p.conn.Close() // force both read & write goroutine to exit
 		wg.Done()
 	}
 	go func() { // write goroutine
@@ -120,26 +120,26 @@ func (c *wire) _background() {
 			ch    chan proto.Result
 		)
 
-		for atomic.LoadInt32(&c.state) != 3 {
-			if ones[0], multi, ch = c.queue.NextWriteCmd(); multi == nil {
+		for atomic.LoadInt32(&p.state) != 3 {
+			if ones[0], multi, ch = p.queue.NextWriteCmd(); multi == nil {
 				if !ones[0].IsEmpty() {
 					multi = ones
 				} else {
-					if c.w.Buffered() == 0 {
+					if p.w.Buffered() == 0 {
 						runtime.Gosched()
-						err = c.Error() // check err later
+						err = p.Error() // check err later
 					} else {
-						err = c.w.Flush()
+						err = p.w.Flush()
 					}
 				}
 			}
 			for _, cmd := range multi {
-				if err = proto.WriteCmd(c.w, cmd.Commands()); cmd.NoReply() {
+				if err = proto.WriteCmd(p.w, cmd.Commands()); cmd.NoReply() {
 					ch <- proto.NewErrResult(err)
 				}
 			}
 			if err != nil && err != ErrConnClosing {
-				c.error.CompareAndSwap(nil, &errWrap{error: err})
+				p.error.CompareAndSwap(nil, &errs{error: err})
 				return
 			}
 		}
@@ -158,12 +158,12 @@ func (c *wire) _background() {
 		)
 
 		for {
-			if msg, err = proto.ReadNextMessage(c.r); err != nil {
-				c.error.CompareAndSwap(nil, &errWrap{error: err})
+			if msg, err = proto.ReadNextMessage(p.r); err != nil {
+				p.error.CompareAndSwap(nil, &errs{error: err})
 				return
 			}
 			if msg.Type == '>' {
-				c.handlePush(msg.Values)
+				p.handlePush(msg.Values)
 				continue
 			}
 			// if unfulfilled multi commands are lead by opt-in and get success response
@@ -173,14 +173,14 @@ func (c *wire) _background() {
 				} else if ff == 2 {
 					cacheable := cmds.Cacheable(multi[ff-1])
 					ck, cc := cacheable.CacheKey()
-					c.cache.Update(ck, cc, tmp, msg.Integer)
+					p.cache.Update(ck, cc, tmp, msg.Integer)
 					tmp = proto.Message{}
 				}
 			}
 		nextCMD:
 			if ff == len(multi) {
 				ff = 0
-				ones[0], multi, ch = c.queue.NextResultCh() // ch should not be nil, otherwise it must be a protocol bug
+				ones[0], multi, ch = p.queue.NextResultCh() // ch should not be nil, otherwise it must be a protocol bug
 			}
 			if multi == nil {
 				multi = ones
@@ -203,10 +203,10 @@ func (c *wire) _background() {
 	)
 
 	// clean up cache and free pending calls
-	c.cache.FreeAndClose(proto.Message{Type: '-', String: ErrConnClosing.Error()})
-	for atomic.LoadInt32(&c.waits) != 0 {
-		c.queue.NextWriteCmd()
-		if ones[0], multi, ch = c.queue.NextResultCh(); ch == nil {
+	p.cache.FreeAndClose(proto.Message{Type: '-', String: ErrConnClosing.Error()})
+	for atomic.LoadInt32(&p.waits) != 0 {
+		p.queue.NextWriteCmd()
+		if ones[0], multi, ch = p.queue.NextResultCh(); ch == nil {
 			runtime.Gosched()
 			continue
 		}
@@ -214,13 +214,13 @@ func (c *wire) _background() {
 			multi = ones
 		}
 		for i := 0; i < len(multi); i++ {
-			ch <- proto.NewErrResult(c.Error())
+			ch <- proto.NewErrResult(p.Error())
 		}
 	}
-	atomic.CompareAndSwapInt32(&c.state, 2, 3)
+	atomic.CompareAndSwapInt32(&p.state, 2, 3)
 }
 
-func (c *wire) handlePush(values []proto.Message) {
+func (p *pipe) handlePush(values []proto.Message) {
 	if len(values) < 2 {
 		return
 	}
@@ -229,33 +229,33 @@ func (c *wire) handlePush(values []proto.Message) {
 	// server-cpu-usage
 	switch values[0].String {
 	case "invalidate":
-		c.cache.Delete(values[1].Values)
+		p.cache.Delete(values[1].Values)
 	case "message":
-		if c.psHandlers.OnMessage != nil {
-			c.psHandlers.OnMessage(values[1].String, values[2].String)
+		if p.cbs.OnMessage != nil {
+			p.cbs.OnMessage(values[1].String, values[2].String)
 		}
 	case "pmessage":
-		if c.psHandlers.OnPMessage != nil {
-			c.psHandlers.OnPMessage(values[1].String, values[2].String, values[3].String)
+		if p.cbs.OnPMessage != nil {
+			p.cbs.OnPMessage(values[1].String, values[2].String, values[3].String)
 		}
 	case "subscribe", "psubscribe":
-		if c.psHandlers.OnSubscribed != nil {
-			c.psHandlers.OnSubscribed(values[1].String, values[2].Integer)
+		if p.cbs.OnSubscribed != nil {
+			p.cbs.OnSubscribed(values[1].String, values[2].Integer)
 		}
 	case "unsubscribe", "punsubscribe":
-		if c.psHandlers.OnUnSubscribed != nil {
-			c.psHandlers.OnUnSubscribed(values[1].String, values[2].Integer)
+		if p.cbs.OnUnSubscribed != nil {
+			p.cbs.OnUnSubscribed(values[1].String, values[2].Integer)
 		}
 	}
 }
 
-func (c *wire) Info() map[string]proto.Message {
-	return c.info
+func (p *pipe) Info() map[string]proto.Message {
+	return p.info
 }
 
-func (c *wire) Do(cmd cmds.Completed) (resp proto.Result) {
-	waits := atomic.AddInt32(&c.waits, 1) // if this is 1, and background worker is not started, no need to queue
-	state := atomic.LoadInt32(&c.state)
+func (p *pipe) Do(cmd cmds.Completed) (resp proto.Result) {
+	waits := atomic.AddInt32(&p.waits, 1) // if this is 1, and background worker is not started, no need to queue
+	state := atomic.LoadInt32(&p.state)
 
 	if state == 1 {
 		goto queue
@@ -266,27 +266,27 @@ func (c *wire) Do(cmd cmds.Completed) (resp proto.Result) {
 			goto queue
 		}
 		if cmd.NoReply() {
-			c.background()
+			p.background()
 			goto queue
 		}
-		resp = c.syncDo(cmd)
+		resp = p.syncDo(cmd)
 	} else {
-		resp = proto.NewErrResult(c.Error())
+		resp = proto.NewErrResult(p.Error())
 	}
-	if left := atomic.AddInt32(&c.waits, -1); state == 0 && waits == 1 && left != 0 {
-		c.background()
+	if left := atomic.AddInt32(&p.waits, -1); state == 0 && waits == 1 && left != 0 {
+		p.background()
 	}
 	return resp
 
 queue:
-	resp = <-c.queue.PutOne(cmd)
-	atomic.AddInt32(&c.waits, -1)
+	resp = <-p.queue.PutOne(cmd)
+	atomic.AddInt32(&p.waits, -1)
 	return resp
 }
 
-func (c *wire) DoMulti(multi ...cmds.Completed) []proto.Result {
-	waits := atomic.AddInt32(&c.waits, 1) // if this is 1, and background worker is not started, no need to queue
-	state := atomic.LoadInt32(&c.state)
+func (p *pipe) DoMulti(multi ...cmds.Completed) []proto.Result {
+	waits := atomic.AddInt32(&p.waits, 1) // if this is 1, and background worker is not started, no need to queue
+	state := atomic.LoadInt32(&p.state)
 	resp := make([]proto.Result, len(multi))
 
 	if state == 1 {
@@ -299,101 +299,101 @@ func (c *wire) DoMulti(multi ...cmds.Completed) []proto.Result {
 		}
 		for _, cmd := range multi {
 			if cmd.IsOptIn() || cmd.NoReply() {
-				c.background()
+				p.background()
 				goto queue
 			}
 		}
-		resp = c.syncDoMulti(resp, multi)
+		resp = p.syncDoMulti(resp, multi)
 	} else {
-		err := c.Error()
+		err := p.Error()
 		for i := 0; i < len(resp); i++ {
 			resp[i] = proto.NewErrResult(err)
 		}
 	}
-	if left := atomic.AddInt32(&c.waits, -1); state == 0 && waits == 1 && left != 0 {
-		c.background()
+	if left := atomic.AddInt32(&p.waits, -1); state == 0 && waits == 1 && left != 0 {
+		p.background()
 	}
 	return resp
 
 queue:
-	ch := c.queue.PutMulti(multi)
+	ch := p.queue.PutMulti(multi)
 	for i := range resp {
 		resp[i] = <-ch
 	}
-	atomic.AddInt32(&c.waits, -1)
+	atomic.AddInt32(&p.waits, -1)
 	return resp
 }
 
-func (c *wire) syncDo(cmd cmds.Completed) (resp proto.Result) {
+func (p *pipe) syncDo(cmd cmds.Completed) (resp proto.Result) {
 	var msg proto.Message
-	err := proto.WriteCmd(c.w, cmd.Commands())
+	err := proto.WriteCmd(p.w, cmd.Commands())
 	if err == nil {
-		if err = c.w.Flush(); err == nil {
-			msg, err = proto.ReadNextMessage(c.r)
+		if err = p.w.Flush(); err == nil {
+			msg, err = proto.ReadNextMessage(p.r)
 		}
 	}
 	if err != nil {
-		c.error.CompareAndSwap(nil, &errWrap{error: err})
-		c.background()                             // start the background worker
-		atomic.CompareAndSwapInt32(&c.state, 1, 3) // stopping the worker and let it do the cleaning
+		p.error.CompareAndSwap(nil, &errs{error: err})
+		p.background()                             // start the background worker
+		atomic.CompareAndSwapInt32(&p.state, 1, 3) // stopping the worker and let it do the cleaning
 	}
 	return proto.NewResult(msg, err)
 }
 
-func (c *wire) syncDoMulti(resp []proto.Result, multi []cmds.Completed) []proto.Result {
+func (p *pipe) syncDoMulti(resp []proto.Result, multi []cmds.Completed) []proto.Result {
 	var err error
 	var msg proto.Message
 
 	for _, cmd := range multi {
-		err = proto.WriteCmd(c.w, cmd.Commands())
+		err = proto.WriteCmd(p.w, cmd.Commands())
 	}
-	if err = c.w.Flush(); err != nil {
+	if err = p.w.Flush(); err != nil {
 		goto abort
 	}
 	for i := 0; i < len(resp); i++ {
-		if msg, err = proto.ReadNextMessage(c.r); err != nil {
+		if msg, err = proto.ReadNextMessage(p.r); err != nil {
 			goto abort
 		}
 		resp[i] = proto.NewResult(msg, err)
 	}
 	return resp
 abort:
-	c.error.CompareAndSwap(nil, &errWrap{error: err})
-	c.background()                             // start the background worker
-	atomic.CompareAndSwapInt32(&c.state, 1, 3) // stopping the worker and let it do the cleaning
+	p.error.CompareAndSwap(nil, &errs{error: err})
+	p.background()                             // start the background worker
+	atomic.CompareAndSwapInt32(&p.state, 1, 3) // stopping the worker and let it do the cleaning
 	for i := 0; i < len(resp); i++ {
 		resp[i] = proto.NewErrResult(err)
 	}
 	return resp
 }
 
-func (c *wire) DoCache(cmd cmds.Cacheable, ttl time.Duration) proto.Result {
+func (p *pipe) DoCache(cmd cmds.Cacheable, ttl time.Duration) proto.Result {
 	ck, cc := cmd.CacheKey()
-	if v, entry := c.cache.GetOrPrepare(ck, cc, ttl); v.Type != 0 {
+	if v, entry := p.cache.GetOrPrepare(ck, cc, ttl); v.Type != 0 {
 		return proto.NewResult(v, nil)
 	} else if entry != nil {
 		return proto.NewResult(entry.Wait(), nil)
 	}
-	return c.DoMulti(cmds.OptInCmd, cmds.Completed(cmd), cmds.NewCompleted([]string{"PTTL", ck}))[1]
+	return p.DoMulti(cmds.OptInCmd, cmds.Completed(cmd), cmds.NewCompleted([]string{"PTTL", ck}))[1]
 }
 
-func (c *wire) Error() error {
-	if err, ok := c.error.Load().(*errWrap); ok {
+func (p *pipe) Error() error {
+	if err, ok := p.error.Load().(*errs); ok {
 		return err.error
 	}
 	return nil
 }
 
-func (c *wire) Close() {
-	swapped := c.error.CompareAndSwap(nil, &errWrap{error: ErrConnClosing})
-	atomic.CompareAndSwapInt32(&c.state, 0, 2)
-	atomic.CompareAndSwapInt32(&c.state, 1, 2)
-	for atomic.LoadInt32(&c.waits) != 0 {
+func (p *pipe) Close() {
+	swapped := p.error.CompareAndSwap(nil, &errs{error: ErrConnClosing})
+	atomic.CompareAndSwapInt32(&p.state, 0, 2)
+	atomic.CompareAndSwapInt32(&p.state, 1, 2)
+	for atomic.LoadInt32(&p.waits) != 0 {
 		runtime.Gosched()
 	}
 	if swapped {
-		c.background()
-		<-c.queue.PutOne(cmds.QuitCmd)
+		p.background()
+		<-p.queue.PutOne(cmds.QuitCmd)
 	}
-	atomic.CompareAndSwapInt32(&c.state, 2, 3)
+	atomic.CompareAndSwapInt32(&p.state, 2, 3)
 }

@@ -60,6 +60,8 @@ type Conn interface {
 	Store(w Wire)
 }
 
+var _ Conn = (*mux)(nil)
+
 type mux struct {
 	dst  string
 	opt  Option
@@ -74,8 +76,8 @@ type mux struct {
 }
 
 func NewMux(dst string, option Option, dialFn DialFn) *mux {
-	return newMux(dst, option, (*wire)(nil), dialFn, func(conn net.Conn, opt Option) (Wire, error) {
-		return newWire(conn, opt)
+	return newMux(dst, option, (*pipe)(nil), dialFn, func(conn net.Conn, opt Option) (Wire, error) {
+		return newPipe(conn, opt)
 	})
 }
 
