@@ -1,4 +1,4 @@
-package singleflight
+package rueidis
 
 import (
 	"errors"
@@ -10,7 +10,7 @@ import (
 func TestSingleFlight(t *testing.T) {
 	var calls, done, err int64
 
-	sg := Call{}
+	sg := call{}
 
 	for i := 0; i < 1000; i++ {
 		go func() {

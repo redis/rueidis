@@ -1,8 +1,8 @@
-package conn
+package rueidis
 
 import "sync"
 
-func newPool(cap int, makeFn func() Wire) *pool {
+func newPool(cap int, makeFn func() wire) *pool {
 	if cap <= 0 {
 		cap = DefaultPoolSize
 	}
@@ -10,20 +10,20 @@ func newPool(cap int, makeFn func() Wire) *pool {
 	return &pool{
 		size: 0,
 		make: makeFn,
-		list: make([]Wire, 0, cap),
+		list: make([]wire, 0, cap),
 		cond: sync.NewCond(&sync.Mutex{}),
 	}
 }
 
 type pool struct {
-	list []Wire
+	list []wire
 	cond *sync.Cond
-	make func() Wire
+	make func() wire
 	size int
 	down bool
 }
 
-func (p *pool) Acquire() (v Wire) {
+func (p *pool) Acquire() (v wire) {
 	p.cond.L.Lock()
 	for len(p.list) == 0 && p.size == cap(p.list) {
 		p.cond.Wait()
@@ -48,7 +48,7 @@ func (p *pool) Acquire() (v Wire) {
 	return v
 }
 
-func (p *pool) Store(v Wire) {
+func (p *pool) Store(v wire) {
 	p.cond.L.Lock()
 	if v.Error() == nil {
 		p.list = append(p.list, v)

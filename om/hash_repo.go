@@ -9,12 +9,12 @@ import (
 	"time"
 
 	"github.com/rueian/rueidis/internal/proto"
-	"github.com/rueian/rueidis/pkg/script"
 )
 
 var ErrVersionMismatch = errors.New("object version mismatched, please retry")
 
-type ScriptFn func(script string) *script.Lua
+type ExecFn func(keys, args []string) proto.Result
+type ScriptExecFn func(script string) ExecFn
 
 type HashObjectAdapter interface {
 	Save(key string, fields map[string]string) error
@@ -23,12 +23,12 @@ type HashObjectAdapter interface {
 	Remove(key string) error
 }
 
-func NewHashRepository(prefix string, schema interface{}, adapter HashObjectAdapter, scriptFn ScriptFn) *HashRepository {
+func NewHashRepository(prefix string, schema interface{}, adapter HashObjectAdapter, scriptExecFn ScriptExecFn) *HashRepository {
 	repo := &HashRepository{
 		prefix:  prefix,
 		typ:     reflect.TypeOf(schema),
 		adapter: adapter,
-		script:  scriptFn(saveScript),
+		execFn:  scriptExecFn(saveScript),
 	}
 	if _, ok := schema.(HashConverter); !ok {
 		repo.factory = newHashConvFactory(repo.typ)
@@ -42,7 +42,7 @@ type HashRepository struct {
 	factory *hashConvFactory
 
 	adapter HashObjectAdapter
-	script  *script.Lua
+	execFn  ExecFn
 }
 
 func (r *HashRepository) key(id string) (key string) {
@@ -119,7 +119,7 @@ func (r *HashRepository) Save(_ context.Context, entity interface{}) (err error)
 			}
 			args = append(args, f, v)
 		}
-		fields[VersionField], err = r.script.Exec([]string{r.key(id)}, args).ToString()
+		fields[VersionField], err = r.execFn([]string{r.key(id)}, args).ToString()
 		if proto.IsRedisNil(err) {
 			return ErrVersionMismatch
 		}

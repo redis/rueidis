@@ -1,26 +1,24 @@
-package client
+package rueidis
 
 import (
 	"time"
 
 	"github.com/rueian/rueidis/internal/cmds"
 	"github.com/rueian/rueidis/internal/proto"
-	"github.com/rueian/rueidis/pkg/conn"
-	"github.com/rueian/rueidis/pkg/om"
-	"github.com/rueian/rueidis/pkg/script"
+	"github.com/rueian/rueidis/om"
 )
 
 type SingleClientOption struct {
 	Address    string
-	ConnOption conn.Option
+	ConnOption ConnOption
 }
 
 type SingleClient struct {
 	Cmd  *cmds.Builder
-	conn conn.Conn
+	conn conn
 }
 
-func NewSingleClient(option SingleClientOption, connFn conn.ConnFn) (*SingleClient, error) {
+func newSingleClient(option SingleClientOption, connFn connFn) (*SingleClient, error) {
 	c := connFn(option.Address, option.ConnOption)
 	if err := c.Dial(); err != nil {
 		return nil, err
@@ -51,12 +49,12 @@ func (c *SingleClient) DedicatedWire(fn func(*DedicatedSingleClient) error) (err
 	return err
 }
 
-func (c *SingleClient) NewLuaScript(body string) *script.Lua {
-	return script.NewLuaScript(body, c.eval, c.evalSha)
+func (c *SingleClient) NewLuaScript(body string) *Lua {
+	return newLuaScript(body, c.eval, c.evalSha)
 }
 
-func (c *SingleClient) NewLuaScriptReadOnly(body string) *script.Lua {
-	return script.NewLuaScript(body, c.evalRo, c.evalShaRo)
+func (c *SingleClient) NewLuaScriptReadOnly(body string) *Lua {
+	return newLuaScript(body, c.evalRo, c.evalShaRo)
 }
 
 func (c *SingleClient) eval(body string, keys, args []string) proto.Result {
@@ -76,7 +74,9 @@ func (c *SingleClient) evalShaRo(sha string, keys, args []string) proto.Result {
 }
 
 func (c *SingleClient) NewHashRepository(prefix string, schema interface{}) *om.HashRepository {
-	return om.NewHashRepository(prefix, schema, &HashObjectSingleClientAdapter{c: c}, c.NewLuaScript)
+	return om.NewHashRepository(prefix, schema, &hashObjectSingleClientAdapter{c: c}, func(script string) om.ExecFn {
+		return c.NewLuaScript(script).Exec
+	})
 }
 
 func (c *SingleClient) Close() {
@@ -85,7 +85,7 @@ func (c *SingleClient) Close() {
 
 type DedicatedSingleClient struct {
 	cmd  *cmds.Builder
-	wire conn.Wire
+	wire wire
 }
 
 func (c *DedicatedSingleClient) Do(cmd cmds.Completed) (resp proto.Result) {
@@ -105,11 +105,11 @@ func (c *DedicatedSingleClient) DoMulti(multi ...cmds.Completed) (resp []proto.R
 	return resp
 }
 
-type HashObjectSingleClientAdapter struct {
+type hashObjectSingleClientAdapter struct {
 	c *SingleClient
 }
 
-func (h *HashObjectSingleClientAdapter) Save(key string, fields map[string]string) error {
+func (h *hashObjectSingleClientAdapter) Save(key string, fields map[string]string) error {
 	cmd := h.c.Cmd.Hset().Key(key).FieldValue()
 	for f, v := range fields {
 		cmd = cmd.FieldValue(f, v)
@@ -117,14 +117,14 @@ func (h *HashObjectSingleClientAdapter) Save(key string, fields map[string]strin
 	return h.c.Do(cmd.Build()).Error()
 }
 
-func (h *HashObjectSingleClientAdapter) Fetch(key string) (map[string]proto.Message, error) {
+func (h *hashObjectSingleClientAdapter) Fetch(key string) (map[string]proto.Message, error) {
 	return h.c.Do(h.c.Cmd.Hgetall().Key(key).Build()).ToMap()
 }
 
-func (h *HashObjectSingleClientAdapter) FetchCache(key string, ttl time.Duration) (map[string]proto.Message, error) {
+func (h *hashObjectSingleClientAdapter) FetchCache(key string, ttl time.Duration) (map[string]proto.Message, error) {
 	return h.c.DoCache(h.c.Cmd.Hgetall().Key(key).Cache(), ttl).ToMap()
 }
 
-func (h *HashObjectSingleClientAdapter) Remove(key string) error {
+func (h *hashObjectSingleClientAdapter) Remove(key string) error {
 	return h.c.Do(h.c.Cmd.Del().Key(key).Build()).Error()
 }

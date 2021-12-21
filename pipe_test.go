@@ -1,4 +1,4 @@
-package conn
+package rueidis
 
 import (
 	"bufio"
@@ -109,7 +109,7 @@ func write(o io.Writer, m proto.Message) (err error) {
 	return err
 }
 
-func setup(t *testing.T, option Option) (*pipe, *redisMock, func(), func()) {
+func setup(t *testing.T, option ConnOption) (*pipe, *redisMock, func(), func()) {
 	n1, n2 := net.Pipe()
 	mock := &redisMock{
 		t:    t,
@@ -170,7 +170,7 @@ func TestNewPipe(t *testing.T) {
 			mock.Expect("SELECT", "1").
 				ReplyString("OK")
 		}()
-		p, err := newPipe(n1, Option{
+		p, err := newPipe(n1, ConnOption{
 			SelectDB:   1,
 			Username:   "un",
 			Password:   "pa",
@@ -189,21 +189,21 @@ func TestNewPipe(t *testing.T) {
 		n1, n2 := net.Pipe()
 		n1.Close()
 		n2.Close()
-		if _, err := newPipe(n1, Option{}); err != io.ErrClosedPipe {
+		if _, err := newPipe(n1, ConnOption{}); err != io.ErrClosedPipe {
 			t.Fatalf("pipe setup should failed with io.ErrClosedPipe, but got %v", err)
 		}
 	})
 }
 
 func TestWriteSingleFlush(t *testing.T) {
-	p, mock, cancel, _ := setup(t, Option{})
+	p, mock, cancel, _ := setup(t, ConnOption{})
 	defer cancel()
 	go func() { mock.Expect("PING").ReplyString("OK") }()
 	ExpectOK(t, p.Do(cmds.NewCompleted([]string{"PING"})))
 }
 
 func TestWriteSinglePipelineFlush(t *testing.T) {
-	p, mock, cancel, _ := setup(t, Option{})
+	p, mock, cancel, _ := setup(t, ConnOption{})
 	defer cancel()
 	times := 5000
 	wg := sync.WaitGroup{}
@@ -220,7 +220,7 @@ func TestWriteSinglePipelineFlush(t *testing.T) {
 }
 
 func TestWriteMultiFlush(t *testing.T) {
-	p, mock, cancel, _ := setup(t, Option{})
+	p, mock, cancel, _ := setup(t, ConnOption{})
 	defer cancel()
 	go func() {
 		mock.Expect("PING").Expect("PING").ReplyString("OK").ReplyString("OK")
@@ -231,7 +231,7 @@ func TestWriteMultiFlush(t *testing.T) {
 }
 
 func TestWriteMultiPipelineFlush(t *testing.T) {
-	p, mock, cancel, _ := setup(t, Option{})
+	p, mock, cancel, _ := setup(t, ConnOption{})
 	defer cancel()
 	times := 5000
 	wg := sync.WaitGroup{}
@@ -251,7 +251,7 @@ func TestWriteMultiPipelineFlush(t *testing.T) {
 }
 
 func TestResponseSequenceWithPushMessageInjected(t *testing.T) {
-	p, mock, cancel, _ := setup(t, Option{})
+	p, mock, cancel, _ := setup(t, ConnOption{})
 	defer cancel()
 
 	times := 5000
@@ -275,7 +275,7 @@ func TestResponseSequenceWithPushMessageInjected(t *testing.T) {
 }
 
 func TestClientSideCaching(t *testing.T) {
-	p, mock, cancel, _ := setup(t, Option{})
+	p, mock, cancel, _ := setup(t, ConnOption{})
 	defer cancel()
 
 	go func() {
@@ -329,7 +329,7 @@ func TestClientSideCaching(t *testing.T) {
 func TestPubSub(t *testing.T) {
 	builder := cmds.NewBuilder()
 	t.Run("NoReply Commands In Do", func(t *testing.T) {
-		p, mock, cancel, _ := setup(t, Option{})
+		p, mock, cancel, _ := setup(t, ConnOption{})
 		defer cancel()
 
 		commands := []cmds.Completed{
@@ -350,7 +350,7 @@ func TestPubSub(t *testing.T) {
 	})
 
 	t.Run("NoReply Commands In DoMulti", func(t *testing.T) {
-		p, mock, cancel, _ := setup(t, Option{})
+		p, mock, cancel, _ := setup(t, ConnOption{})
 		defer cancel()
 
 		commands := []cmds.Completed{
@@ -374,7 +374,7 @@ func TestPubSub(t *testing.T) {
 
 	t.Run("PubSub Push Message", func(t *testing.T) {
 		count := make([]int32, 4)
-		p, mock, cancel, _ := setup(t, Option{
+		p, mock, cancel, _ := setup(t, ConnOption{
 			PubSubHandlers: PubSubHandlers{
 				OnMessage: func(channel, message string) {
 					if channel != "1" || message != "2" {
@@ -454,7 +454,7 @@ func TestPubSub(t *testing.T) {
 }
 
 func TestExitOnWriteError(t *testing.T) {
-	p, _, _, closeConn := setup(t, Option{})
+	p, _, _, closeConn := setup(t, ConnOption{})
 
 	closeConn()
 
@@ -466,7 +466,7 @@ func TestExitOnWriteError(t *testing.T) {
 }
 
 func TestExitOnWriteMultiError(t *testing.T) {
-	p, _, _, closeConn := setup(t, Option{})
+	p, _, _, closeConn := setup(t, ConnOption{})
 
 	closeConn()
 
@@ -478,7 +478,7 @@ func TestExitOnWriteMultiError(t *testing.T) {
 }
 
 func TestExitAllGoroutineOnWriteError(t *testing.T) {
-	conn, _, _, closeConn := setup(t, Option{})
+	conn, _, _, closeConn := setup(t, ConnOption{})
 
 	// start the background worker
 	conn.Do(cmds.NewBuilder().Subscribe().Channel("a").Build())
@@ -501,7 +501,7 @@ func TestExitAllGoroutineOnWriteError(t *testing.T) {
 }
 
 func TestExitOnReadError(t *testing.T) {
-	p, mock, _, closeConn := setup(t, Option{})
+	p, mock, _, closeConn := setup(t, ConnOption{})
 
 	go func() {
 		mock.Expect("GET", "a")
@@ -516,7 +516,7 @@ func TestExitOnReadError(t *testing.T) {
 }
 
 func TestExitOnReadMultiError(t *testing.T) {
-	p, mock, _, closeConn := setup(t, Option{})
+	p, mock, _, closeConn := setup(t, ConnOption{})
 
 	go func() {
 		mock.Expect("GET", "a")
@@ -531,7 +531,7 @@ func TestExitOnReadMultiError(t *testing.T) {
 }
 
 func TestExitAllGoroutineOnReadError(t *testing.T) {
-	p, mock, _, closeConn := setup(t, Option{})
+	p, mock, _, closeConn := setup(t, ConnOption{})
 
 	go func() {
 		mock.Expect("GET", "a")
@@ -555,7 +555,7 @@ func TestExitAllGoroutineOnReadError(t *testing.T) {
 }
 
 func TestCloseAndWaitPendingCMDs(t *testing.T) {
-	p, mock, _, _ := setup(t, Option{})
+	p, mock, _, _ := setup(t, ConnOption{})
 
 	var (
 		loop = 5000

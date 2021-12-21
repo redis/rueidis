@@ -1,4 +1,4 @@
-package client
+package rueidis
 
 import (
 	"errors"
@@ -11,10 +11,7 @@ import (
 
 	"github.com/rueian/rueidis/internal/cmds"
 	"github.com/rueian/rueidis/internal/proto"
-	"github.com/rueian/rueidis/pkg/conn"
-	"github.com/rueian/rueidis/pkg/om"
-	"github.com/rueian/rueidis/pkg/script"
-	"github.com/rueian/rueidis/pkg/singleflight"
+	"github.com/rueian/rueidis/om"
 )
 
 var (
@@ -25,21 +22,21 @@ var (
 type ClusterClientOption struct {
 	InitAddress []string
 	ShuffleInit bool
-	ConnOption  conn.Option
+	ConnOption  ConnOption
 }
 
 type ClusterClient struct {
 	Cmd    *cmds.SBuilder
 	opt    ClusterClientOption
-	connFn conn.ConnFn
+	connFn connFn
 
 	mu    sync.RWMutex
-	sg    singleflight.Call
-	slots [16384]conn.Conn
-	conns map[string]conn.Conn
+	sg    call
+	slots [16384]conn
+	conns map[string]conn
 }
 
-func NewClusterClient(option ClusterClientOption, connFn conn.ConnFn) (client *ClusterClient, err error) {
+func newClusterClient(option ClusterClientOption, connFn connFn) (client *ClusterClient, err error) {
 	if option.ShuffleInit {
 		rand.Shuffle(len(option.InitAddress), func(i, j int) {
 			option.InitAddress[i], option.InitAddress[j] = option.InitAddress[j], option.InitAddress[i]
@@ -50,7 +47,7 @@ func NewClusterClient(option ClusterClientOption, connFn conn.ConnFn) (client *C
 		Cmd:    cmds.NewSBuilder(),
 		opt:    option,
 		connFn: connFn,
-		conns:  make(map[string]conn.Conn),
+		conns:  make(map[string]conn),
 	}
 
 	if _, err = client.initConn(); err != nil {
@@ -64,7 +61,7 @@ func NewClusterClient(option ClusterClientOption, connFn conn.ConnFn) (client *C
 	return client, nil
 }
 
-func (c *ClusterClient) initConn() (cc conn.Conn, err error) {
+func (c *ClusterClient) initConn() (cc conn, err error) {
 	if len(c.opt.InitAddress) == 0 {
 		return nil, ErrNoNodes
 	}
@@ -128,12 +125,12 @@ retry:
 	groups := parseSlots(reply)
 
 	// TODO support read from replicas
-	masters := make(map[string]conn.Conn, len(groups))
+	masters := make(map[string]conn, len(groups))
 	for addr := range groups {
 		masters[addr] = c.connFn(addr, c.opt.ConnOption)
 	}
 
-	var removes []conn.Conn
+	var removes []conn
 
 	c.mu.RLock()
 	for addr, cc := range c.conns {
@@ -145,7 +142,7 @@ retry:
 	}
 	c.mu.RUnlock()
 
-	slots := [16384]conn.Conn{}
+	slots := [16384]conn{}
 	for addr, g := range groups {
 		for _, slot := range g.slots {
 			for i := slot[0]; i <= slot[1]; i++ {
@@ -200,7 +197,7 @@ func parseSlots(slots proto.Message) map[string]group {
 	return groups
 }
 
-func (c *ClusterClient) pick(slot uint16) (p conn.Conn) {
+func (c *ClusterClient) pick(slot uint16) (p conn) {
 	c.mu.RLock()
 	if slot == cmds.InitSlot {
 		for _, cc := range c.conns {
@@ -214,7 +211,7 @@ func (c *ClusterClient) pick(slot uint16) (p conn.Conn) {
 	return p
 }
 
-func (c *ClusterClient) pickConn(slot uint16) (p conn.Conn, err error) {
+func (c *ClusterClient) pickConn(slot uint16) (p conn, err error) {
 	if p = c.pick(slot); p == nil {
 		if err := c.refreshSlots(); err != nil {
 			return nil, err
@@ -226,7 +223,7 @@ func (c *ClusterClient) pickConn(slot uint16) (p conn.Conn, err error) {
 	return p, nil
 }
 
-func (c *ClusterClient) pickOrNewConn(addr string) (p conn.Conn) {
+func (c *ClusterClient) pickOrNewConn(addr string) (p conn) {
 	c.mu.RLock()
 	p = c.conns[addr]
 	c.mu.RUnlock()
@@ -304,12 +301,12 @@ func (c *ClusterClient) DedicatedWire(fn func(*DedicatedClusterClient) error) (e
 	return err
 }
 
-func (c *ClusterClient) NewLuaScript(body string) *script.Lua {
-	return script.NewLuaScript(body, c.eval, c.evalSha)
+func (c *ClusterClient) NewLuaScript(body string) *Lua {
+	return newLuaScript(body, c.eval, c.evalSha)
 }
 
-func (c *ClusterClient) NewLuaScriptReadOnly(body string) *script.Lua {
-	return script.NewLuaScript(body, c.evalRo, c.evalShaRo)
+func (c *ClusterClient) NewLuaScriptReadOnly(body string) *Lua {
+	return newLuaScript(body, c.evalRo, c.evalShaRo)
 }
 
 func (c *ClusterClient) eval(body string, keys, args []string) proto.Result {
@@ -329,7 +326,9 @@ func (c *ClusterClient) evalShaRo(sha string, keys, args []string) proto.Result 
 }
 
 func (c *ClusterClient) NewHashRepository(prefix string, schema interface{}) *om.HashRepository {
-	return om.NewHashRepository(prefix, schema, &HashObjectClusterClientAdapter{c: c}, c.NewLuaScript)
+	return om.NewHashRepository(prefix, schema, &hashObjectClusterClientAdapter{c: c}, func(script string) om.ExecFn {
+		return c.NewLuaScript(script).Exec
+	})
 }
 
 func (c *ClusterClient) Close() {
@@ -342,8 +341,8 @@ func (c *ClusterClient) Close() {
 
 type DedicatedClusterClient struct {
 	client *ClusterClient
-	conn   conn.Conn
-	wire   conn.Wire
+	conn   conn
+	wire   wire
 	slot   uint16
 }
 
@@ -410,11 +409,11 @@ func (c *DedicatedClusterClient) DoMulti(multi ...cmds.SCompleted) (resp []proto
 	return resp
 }
 
-type HashObjectClusterClientAdapter struct {
+type hashObjectClusterClientAdapter struct {
 	c *ClusterClient
 }
 
-func (h *HashObjectClusterClientAdapter) Save(key string, fields map[string]string) error {
+func (h *hashObjectClusterClientAdapter) Save(key string, fields map[string]string) error {
 	cmd := h.c.Cmd.Hset().Key(key).FieldValue()
 	for f, v := range fields {
 		cmd = cmd.FieldValue(f, v)
@@ -422,14 +421,14 @@ func (h *HashObjectClusterClientAdapter) Save(key string, fields map[string]stri
 	return h.c.Do(cmd.Build()).Error()
 }
 
-func (h *HashObjectClusterClientAdapter) Fetch(key string) (map[string]proto.Message, error) {
+func (h *hashObjectClusterClientAdapter) Fetch(key string) (map[string]proto.Message, error) {
 	return h.c.Do(h.c.Cmd.Hgetall().Key(key).Build()).ToMap()
 }
 
-func (h *HashObjectClusterClientAdapter) FetchCache(key string, ttl time.Duration) (map[string]proto.Message, error) {
+func (h *hashObjectClusterClientAdapter) FetchCache(key string, ttl time.Duration) (map[string]proto.Message, error) {
 	return h.c.DoCache(h.c.Cmd.Hgetall().Key(key).Cache(), ttl).ToMap()
 }
 
-func (h *HashObjectClusterClientAdapter) Remove(key string) error {
+func (h *hashObjectClusterClientAdapter) Remove(key string) error {
 	return h.c.Do(h.c.Cmd.Del().Key(key).Build()).Error()
 }

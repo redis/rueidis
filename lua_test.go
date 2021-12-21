@@ -1,4 +1,4 @@
-package script
+package rueidis
 
 import (
 	"crypto/sha1"
@@ -22,7 +22,7 @@ func TestNewLuaScript(t *testing.T) {
 	eval := false
 	evalSha := false
 
-	script := NewLuaScript(body, func(in string, keys []string, args []string) proto.Result {
+	script := newLuaScript(body, func(in string, keys []string, args []string) proto.Result {
 		eval = true
 		if in != body {
 			t.Fatalf("input should be %q", body)

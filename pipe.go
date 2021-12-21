@@ -1,4 +1,4 @@
-package conn
+package rueidis
 
 import (
 	"bufio"
@@ -19,7 +19,7 @@ type errs struct {
 	error
 }
 
-type Wire interface {
+type wire interface {
 	Do(cmd cmds.Completed) proto.Result
 	DoCache(cmd cmds.Cacheable, ttl time.Duration) proto.Result
 	DoMulti(multi ...cmds.Completed) []proto.Result
@@ -28,7 +28,7 @@ type Wire interface {
 	Close()
 }
 
-var _ Wire = (*pipe)(nil)
+var _ wire = (*pipe)(nil)
 
 type pipe struct {
 	waits int32
@@ -55,7 +55,7 @@ type PubSubHandlers struct {
 	OnUnSubscribed func(channel string, active int64)
 }
 
-func newPipe(conn net.Conn, option Option) (p *pipe, err error) {
+func newPipe(conn net.Conn, option ConnOption) (p *pipe, err error) {
 	if option.CacheSizeEachConn <= 0 {
 		option.CacheSizeEachConn = DefaultCacheBytes
 	}

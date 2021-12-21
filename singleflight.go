@@ -1,16 +1,16 @@
-package singleflight
+package rueidis
 
 import (
 	"sync"
 )
 
-type Call struct {
+type call struct {
 	mu sync.Mutex
 	wg *sync.WaitGroup
 	cn int
 }
 
-func (c *Call) Do(fn func() error) error {
+func (c *call) Do(fn func() error) error {
 	var wg *sync.WaitGroup
 	c.mu.Lock()
 	c.cn++
@@ -34,7 +34,7 @@ func (c *Call) Do(fn func() error) error {
 	return err
 }
 
-func (c *Call) suppressing() int {
+func (c *call) suppressing() int {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	return c.cn

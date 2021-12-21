@@ -1,4 +1,4 @@
-package conn
+package rueidis
 
 import (
 	"bufio"
@@ -18,9 +18,9 @@ import (
 func setupMux(wires []*mock.Wire) (conn *mux, checkClean func(t *testing.T)) {
 	var mu sync.Mutex
 	var count = -1
-	return newMux("", Option{}, (*mock.Wire)(nil), func(dst string, opt Option) (net.Conn, error) {
+	return newMux("", ConnOption{}, (*mock.Wire)(nil), func(dst string, opt ConnOption) (net.Conn, error) {
 			return nil, nil
-		}, func(conn net.Conn, opt Option) (Wire, error) {
+		}, func(conn net.Conn, opt ConnOption) (wire, error) {
 			mu.Lock()
 			defer mu.Unlock()
 			count++
@@ -48,7 +48,7 @@ func TestNewMux(t *testing.T) {
 			ReplyString("OK")
 		mock.Expect("QUIT").ReplyString("OK")
 	}()
-	m := NewMux("", Option{}, func(dst string, opt Option) (net.Conn, error) {
+	m := makeMux("", ConnOption{}, func(dst string, opt ConnOption) (net.Conn, error) {
 		return n1, nil
 	})
 	if err := m.Dial(); err != nil {
@@ -60,10 +60,10 @@ func TestNewMux(t *testing.T) {
 func TestMuxDialSuppress(t *testing.T) {
 	var dials, wires, waits, done int64
 	blocking := make(chan struct{})
-	m := newMux("", Option{}, (*mock.Wire)(nil), func(dst string, opt Option) (net.Conn, error) {
+	m := newMux("", ConnOption{}, (*mock.Wire)(nil), func(dst string, opt ConnOption) (net.Conn, error) {
 		atomic.AddInt64(&dials, 1)
 		return nil, nil
-	}, func(conn net.Conn, opt Option) (Wire, error) {
+	}, func(conn net.Conn, opt ConnOption) (wire, error) {
 		atomic.AddInt64(&wires, 1)
 		<-blocking
 		return &mock.Wire{}, nil
@@ -449,13 +449,13 @@ func TestMuxCMDRetry(t *testing.T) {
 func TestMuxDialRetry(t *testing.T) {
 	setup := func() (*mux, *int64) {
 		var count int64
-		return newMux("", Option{}, (*mock.Wire)(nil), func(dst string, opt Option) (net.Conn, error) {
+		return newMux("", ConnOption{}, (*mock.Wire)(nil), func(dst string, opt ConnOption) (net.Conn, error) {
 			if count == 1 {
 				return nil, nil
 			}
 			count++
 			return nil, errors.New("network err")
-		}, func(conn net.Conn, opt Option) (Wire, error) {
+		}, func(conn net.Conn, opt ConnOption) (wire, error) {
 			return &mock.Wire{
 				DoFn: func(cmd cmds.Completed) proto.Result {
 					return proto.NewResult(proto.Message{Type: '+', String: "PONG"}, nil)
@@ -492,7 +492,7 @@ func TestMuxDialRetry(t *testing.T) {
 
 func BenchmarkClientSideCaching(b *testing.B) {
 	setup := func(b *testing.B) *mux {
-		c := NewMux("127.0.0.1:6379", Option{CacheSizeEachConn: DefaultCacheBytes}, func(dst string, opt Option) (conn net.Conn, err error) {
+		c := makeMux("127.0.0.1:6379", ConnOption{CacheSizeEachConn: DefaultCacheBytes}, func(dst string, opt ConnOption) (conn net.Conn, err error) {
 			return net.Dial("tcp", dst)
 		})
 		if err := c.Dial(); err != nil {

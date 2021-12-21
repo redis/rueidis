@@ -1,4 +1,4 @@
-package client
+package rueidis
 
 import (
 	"errors"
@@ -10,7 +10,6 @@ import (
 	"github.com/rueian/rueidis/internal/cmds"
 	"github.com/rueian/rueidis/internal/mock"
 	"github.com/rueian/rueidis/internal/proto"
-	"github.com/rueian/rueidis/pkg/conn"
 )
 
 var slotsResp = proto.NewResult(proto.Message{Type: '*', Values: []proto.Message{
@@ -44,15 +43,15 @@ var singleSlotResp = proto.NewResult(proto.Message{Type: '*', Values: []proto.Me
 
 func TestClusterClientInit(t *testing.T) {
 	t.Run("Init no nodes", func(t *testing.T) {
-		if _, err := NewClusterClient(ClusterClientOption{InitAddress: []string{}}, func(dst string, opt conn.Option) conn.Conn { return nil }); err != ErrNoNodes {
+		if _, err := newClusterClient(ClusterClientOption{InitAddress: []string{}}, func(dst string, opt ConnOption) conn { return nil }); err != ErrNoNodes {
 			t.Fatalf("unexpected err %v", err)
 		}
 	})
 
 	t.Run("Init no dialable", func(t *testing.T) {
 		v := errors.New("dial err")
-		if _, err := NewClusterClient(ClusterClientOption{InitAddress: []string{":0"}}, func(dst string, opt conn.Option) conn.Conn {
-			return &MockConn{DialableFn: func() error { return v }}
+		if _, err := newClusterClient(ClusterClientOption{InitAddress: []string{":0"}}, func(dst string, opt ConnOption) conn {
+			return &MockConn{DialFn: func() error { return v }}
 		}); err != v {
 			t.Fatalf("unexpected err %v", err)
 		}
@@ -60,7 +59,7 @@ func TestClusterClientInit(t *testing.T) {
 
 	t.Run("Refresh err", func(t *testing.T) {
 		v := errors.New("refresh err")
-		if _, err := NewClusterClient(ClusterClientOption{InitAddress: []string{":0"}}, func(dst string, opt conn.Option) conn.Conn {
+		if _, err := newClusterClient(ClusterClientOption{InitAddress: []string{":0"}}, func(dst string, opt ConnOption) conn {
 			return &MockConn{DoFn: func(cmd cmds.Completed) proto.Result { return proto.NewErrResult(v) }}
 		}); err != v {
 			t.Fatalf("unexpected err %v", err)
@@ -69,7 +68,7 @@ func TestClusterClientInit(t *testing.T) {
 
 	t.Run("Refresh retry", func(t *testing.T) {
 		first := true
-		if _, err := NewClusterClient(ClusterClientOption{InitAddress: []string{":0"}}, func(dst string, opt conn.Option) conn.Conn {
+		if _, err := newClusterClient(ClusterClientOption{InitAddress: []string{":0"}}, func(dst string, opt ConnOption) conn {
 			return &MockConn{
 				DoFn: func(cmd cmds.Completed) proto.Result {
 					if first {
@@ -87,12 +86,12 @@ func TestClusterClientInit(t *testing.T) {
 	t.Run("Refresh retry err", func(t *testing.T) {
 		v := errors.New("dial err")
 		first := true
-		if _, err := NewClusterClient(ClusterClientOption{InitAddress: []string{":0"}}, func(dst string, opt conn.Option) conn.Conn {
+		if _, err := newClusterClient(ClusterClientOption{InitAddress: []string{":0"}}, func(dst string, opt ConnOption) conn {
 			return &MockConn{
 				DoFn: func(cmd cmds.Completed) proto.Result {
 					return proto.NewResult(proto.Message{Type: '*', Values: []proto.Message{}}, nil)
 				},
-				DialableFn: func() error {
+				DialFn: func() error {
 					if first {
 						first = false
 						return nil
@@ -106,7 +105,7 @@ func TestClusterClientInit(t *testing.T) {
 	})
 
 	t.Run("Refresh replace", func(t *testing.T) {
-		if client, err := NewClusterClient(ClusterClientOption{InitAddress: []string{":1", ":2"}, ShuffleInit: true}, func(dst string, opt conn.Option) conn.Conn {
+		if client, err := newClusterClient(ClusterClientOption{InitAddress: []string{":1", ":2"}, ShuffleInit: true}, func(dst string, opt ConnOption) conn {
 			return &MockConn{
 				DoFn: func(cmd cmds.Completed) proto.Result {
 					return slotsResp
@@ -130,7 +129,7 @@ func TestClusterClient(t *testing.T) {
 		},
 	}
 
-	client, err := NewClusterClient(ClusterClientOption{InitAddress: []string{":0"}, ShuffleInit: true}, func(dst string, opt conn.Option) conn.Conn {
+	client, err := newClusterClient(ClusterClientOption{InitAddress: []string{":0"}, ShuffleInit: true}, func(dst string, opt ConnOption) conn {
 		return m
 	})
 	if err != nil {
@@ -211,7 +210,7 @@ func TestClusterClient(t *testing.T) {
 				t.Errorf("DedicatedWire should panic if cross slots is used")
 			}
 		}()
-		m.AcquireFn = func() conn.Wire { return &mock.Wire{} }
+		m.AcquireFn = func() wire { return &mock.Wire{} }
 		client.DedicatedWire(func(c *DedicatedClusterClient) error {
 			c.Do(client.Cmd.Get().Key("a").Build()).Error()
 			return c.Do(client.Cmd.Get().Key("b").Build()).Error()
@@ -227,11 +226,11 @@ func TestClusterClient(t *testing.T) {
 				return []proto.Result{proto.NewResult(proto.Message{Type: '+', String: "Delegate"}, nil)}
 			},
 		}
-		m.AcquireFn = func() conn.Wire {
+		m.AcquireFn = func() wire {
 			return w
 		}
 		stored := false
-		m.StoreFn = func(ww conn.Wire) {
+		m.StoreFn = func(ww wire) {
 			if ww != w {
 				t.Fatalf("received unexpected wire %v", ww)
 			}
@@ -258,7 +257,7 @@ func TestClusterClient(t *testing.T) {
 		}
 	})
 
-	t.Run("NewLuaScript Delegate", func(t *testing.T) {
+	t.Run("newLuaScript Delegate", func(t *testing.T) {
 		m.DoFn = func(cmd cmds.Completed) proto.Result {
 			if cmd.Commands()[0] == "EVALSHA" {
 				return proto.NewResult(proto.Message{Type: '-', String: "NOSCRIPT"}, nil)
@@ -268,7 +267,7 @@ func TestClusterClient(t *testing.T) {
 			}
 			return proto.NewResult(proto.Message{Type: '+', String: strings.Join(cmd.Commands(), " ")}, nil)
 		}
-		if v, err := client.NewLuaScript("NewLuaScript").Exec([]string{"1"}, []string{"2", "3"}).ToString(); err != nil || v != "EVAL NewLuaScript 1 1 2 3" {
+		if v, err := client.NewLuaScript("newLuaScript").Exec([]string{"1"}, []string{"2", "3"}).ToString(); err != nil || v != "EVAL newLuaScript 1 1 2 3" {
 			t.Fatalf("unexpected respone %v %v", v, err)
 		}
 	})
@@ -309,7 +308,7 @@ func TestClusterClientErr(t *testing.T) {
 				return proto.NewErrResult(v)
 			},
 		}
-		client, err := NewClusterClient(ClusterClientOption{InitAddress: []string{":0"}, ShuffleInit: true}, func(dst string, opt conn.Option) conn.Conn {
+		client, err := newClusterClient(ClusterClientOption{InitAddress: []string{":0"}, ShuffleInit: true}, func(dst string, opt ConnOption) conn {
 			return m
 		})
 		if err != nil {
@@ -327,7 +326,7 @@ func TestClusterClientErr(t *testing.T) {
 		m := &MockConn{DoFn: func(cmd cmds.Completed) proto.Result {
 			return singleSlotResp
 		}}
-		client, err := NewClusterClient(ClusterClientOption{InitAddress: []string{":0"}, ShuffleInit: true}, func(dst string, opt conn.Option) conn.Conn {
+		client, err := newClusterClient(ClusterClientOption{InitAddress: []string{":0"}, ShuffleInit: true}, func(dst string, opt ConnOption) conn {
 			return m
 		})
 		if err != nil {
@@ -342,7 +341,7 @@ func TestClusterClientErr(t *testing.T) {
 		m := &MockConn{DoFn: func(cmd cmds.Completed) proto.Result {
 			return singleSlotResp
 		}}
-		client, err := NewClusterClient(ClusterClientOption{InitAddress: []string{":0"}, ShuffleInit: true}, func(dst string, opt conn.Option) conn.Conn {
+		client, err := newClusterClient(ClusterClientOption{InitAddress: []string{":0"}, ShuffleInit: true}, func(dst string, opt ConnOption) conn {
 			return m
 		})
 		if err != nil {
@@ -359,7 +358,7 @@ func TestClusterClientErr(t *testing.T) {
 		m := &MockConn{DoFn: func(cmd cmds.Completed) proto.Result {
 			return singleSlotResp
 		}}
-		client, err := NewClusterClient(ClusterClientOption{InitAddress: []string{":0"}, ShuffleInit: true}, func(dst string, opt conn.Option) conn.Conn {
+		client, err := newClusterClient(ClusterClientOption{InitAddress: []string{":0"}, ShuffleInit: true}, func(dst string, opt ConnOption) conn {
 			return m
 		})
 		if err != nil {
@@ -389,7 +388,7 @@ func TestClusterClientErr(t *testing.T) {
 			}
 			return proto.NewResult(proto.Message{Type: '+', String: "b"}, nil)
 		}}
-		client, err := NewClusterClient(ClusterClientOption{InitAddress: []string{":0"}}, func(dst string, opt conn.Option) conn.Conn {
+		client, err := newClusterClient(ClusterClientOption{InitAddress: []string{":0"}}, func(dst string, opt ConnOption) conn {
 			return m
 		})
 		if err != nil {
@@ -414,7 +413,7 @@ func TestClusterClientErr(t *testing.T) {
 				return proto.NewResult(proto.Message{Type: '+', String: "b"}, nil)
 			},
 		}
-		client, err := NewClusterClient(ClusterClientOption{InitAddress: []string{":0"}}, func(dst string, opt conn.Option) conn.Conn {
+		client, err := newClusterClient(ClusterClientOption{InitAddress: []string{":0"}}, func(dst string, opt ConnOption) conn {
 			return m
 		})
 		if err != nil {
@@ -442,7 +441,7 @@ func TestClusterClientErr(t *testing.T) {
 				return []proto.Result{{}, proto.NewResult(proto.Message{Type: '+', String: "b"}, nil)}
 			},
 		}
-		client, err := NewClusterClient(ClusterClientOption{InitAddress: []string{":0"}}, func(dst string, opt conn.Option) conn.Conn {
+		client, err := newClusterClient(ClusterClientOption{InitAddress: []string{":0"}}, func(dst string, opt ConnOption) conn {
 			return m
 		})
 		if err != nil {
@@ -470,7 +469,7 @@ func TestClusterClientErr(t *testing.T) {
 				return []proto.Result{{}, proto.NewResult(proto.Message{Type: '+', String: "b"}, nil)}
 			},
 		}
-		client, err := NewClusterClient(ClusterClientOption{InitAddress: []string{":0"}}, func(dst string, opt conn.Option) conn.Conn {
+		client, err := newClusterClient(ClusterClientOption{InitAddress: []string{":0"}}, func(dst string, opt ConnOption) conn {
 			return m
 		})
 		if err != nil {
@@ -493,7 +492,7 @@ func TestClusterClientErr(t *testing.T) {
 			}
 			return proto.NewResult(proto.Message{Type: '+', String: "b"}, nil)
 		}}
-		client, err := NewClusterClient(ClusterClientOption{InitAddress: []string{":0"}}, func(dst string, opt conn.Option) conn.Conn {
+		client, err := newClusterClient(ClusterClientOption{InitAddress: []string{":0"}}, func(dst string, opt ConnOption) conn {
 			return m
 		})
 		if err != nil {
@@ -518,7 +517,7 @@ func TestClusterClientErr(t *testing.T) {
 				return proto.NewResult(proto.Message{Type: '+', String: "b"}, nil)
 			},
 		}
-		client, err := NewClusterClient(ClusterClientOption{InitAddress: []string{":0"}}, func(dst string, opt conn.Option) conn.Conn {
+		client, err := newClusterClient(ClusterClientOption{InitAddress: []string{":0"}}, func(dst string, opt ConnOption) conn {
 			return m
 		})
 		if err != nil {
@@ -539,13 +538,13 @@ func TestHashObjectClusterClientAdapter(t *testing.T) {
 			return proto.Result{}
 		},
 	}
-	client, err := NewClusterClient(ClusterClientOption{InitAddress: []string{":0"}}, func(dst string, opt conn.Option) conn.Conn {
+	client, err := newClusterClient(ClusterClientOption{InitAddress: []string{":0"}}, func(dst string, opt ConnOption) conn {
 		return m
 	})
 	if err != nil {
 		t.Fatalf("unexpected err %v", err)
 	}
-	adapter := &HashObjectClusterClientAdapter{c: client}
+	adapter := &hashObjectClusterClientAdapter{c: client}
 
 	t.Run("Save Delegate", func(t *testing.T) {
 		m.DoFn = func(cmd cmds.Completed) proto.Result {

@@ -1,4 +1,4 @@
-package script
+package rueidis
 
 import (
 	"crypto/sha1"
@@ -7,14 +7,14 @@ import (
 	"github.com/rueian/rueidis/internal/proto"
 )
 
-type EvalFn func(script string, keys []string, args []string) proto.Result
+type evalFn func(script string, keys []string, args []string) proto.Result
 
 type Lua struct {
 	script string
 	sha1   string
 
-	eval    EvalFn
-	evalSha EvalFn
+	eval    evalFn
+	evalSha evalFn
 }
 
 func (s *Lua) Exec(keys, args []string) proto.Result {
@@ -25,7 +25,7 @@ func (s *Lua) Exec(keys, args []string) proto.Result {
 	return r
 }
 
-func NewLuaScript(body string, eval, evalSha EvalFn) *Lua {
+func newLuaScript(body string, eval, evalSha evalFn) *Lua {
 	sum := sha1.Sum([]byte(body))
 	return &Lua{
 		script:  body,

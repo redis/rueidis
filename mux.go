@@ -1,4 +1,4 @@
-package conn
+package rueidis
 
 import (
 	"crypto/tls"
@@ -20,7 +20,7 @@ const DefaultCacheBytes = 128 * (1 << 20)
 // DefaultPoolSize = 1000
 const DefaultPoolSize = 1000
 
-type Option struct {
+type ConnOption struct {
 	// CacheSizeEachConn is redis client side cache size that bind to each TCP connection to a single redis instance.
 	// The default is DefaultCacheBytes.
 	CacheSizeEachConn int
@@ -43,53 +43,53 @@ type Option struct {
 	PubSubHandlers PubSubHandlers
 }
 
-type ConnFn func(dst string, opt Option) Conn
-type DialFn func(dst string, opt Option) (net.Conn, error)
-type wireFn func(conn net.Conn, opt Option) (Wire, error)
+type connFn func(dst string, opt ConnOption) conn
+type dialFn func(dst string, opt ConnOption) (net.Conn, error)
+type wireFn func(conn net.Conn, opt ConnOption) (wire, error)
 
 type singleconnect struct {
-	w Wire
+	w wire
 	e error
 	g sync.WaitGroup
 }
 
-type Conn interface {
-	Wire
+type conn interface {
+	wire
 	Dial() error
-	Acquire() Wire
-	Store(w Wire)
+	Acquire() wire
+	Store(w wire)
 }
 
-var _ Conn = (*mux)(nil)
+var _ conn = (*mux)(nil)
 
 type mux struct {
 	dst  string
-	opt  Option
+	opt  ConnOption
 	pool *pool
-	dead Wire
+	dead wire
 	wire atomic.Value
 	mu   sync.Mutex
 	sc   *singleconnect
 
-	dialFn DialFn
+	dialFn dialFn
 	wireFn wireFn
 }
 
-func NewMux(dst string, option Option, dialFn DialFn) *mux {
-	return newMux(dst, option, (*pipe)(nil), dialFn, func(conn net.Conn, opt Option) (Wire, error) {
+func makeMux(dst string, option ConnOption, dialFn dialFn) *mux {
+	return newMux(dst, option, (*pipe)(nil), dialFn, func(conn net.Conn, opt ConnOption) (wire, error) {
 		return newPipe(conn, opt)
 	})
 }
 
-func newMux(dst string, option Option, dead Wire, dialFn DialFn, wireFn wireFn) *mux {
+func newMux(dst string, option ConnOption, dead wire, dialFn dialFn, wireFn wireFn) *mux {
 	conn := &mux{dst: dst, opt: option, dead: dead, dialFn: dialFn, wireFn: wireFn}
 	conn.wire.Store(dead)
 	conn.pool = newPool(option.BlockingPoolSize, conn.dialRetry)
 	return conn
 }
 
-func (m *mux) connect() (w Wire, err error) {
-	if w = m.wire.Load().(Wire); w != m.dead {
+func (m *mux) connect() (w wire, err error) {
+	if w = m.wire.Load().(wire); w != m.dead {
 		return w, nil
 	}
 
@@ -106,7 +106,7 @@ func (m *mux) connect() (w Wire, err error) {
 		return sc.w, sc.e
 	}
 
-	if w = m.wire.Load().(Wire); w == m.dead {
+	if w = m.wire.Load().(wire); w == m.dead {
 		if w, err = m.dial(); err == nil {
 			m.wire.Store(w)
 		}
@@ -124,7 +124,7 @@ func (m *mux) connect() (w Wire, err error) {
 	return w, err
 }
 
-func (m *mux) dial() (w Wire, err error) {
+func (m *mux) dial() (w wire, err error) {
 	conn, err := m.dialFn(m.dst, m.opt)
 	if err == nil {
 		w, err = m.wireFn(conn, m.opt)
@@ -132,7 +132,7 @@ func (m *mux) dial() (w Wire, err error) {
 	return w, err
 }
 
-func (m *mux) dialRetry() Wire {
+func (m *mux) dialRetry() wire {
 retry:
 	if wire, err := m.dial(); err == nil {
 		return wire
@@ -140,7 +140,7 @@ retry:
 	goto retry
 }
 
-func (m *mux) acquire() Wire {
+func (m *mux) acquire() wire {
 retry:
 	if wire, err := m.connect(); err == nil {
 		return wire
@@ -241,11 +241,11 @@ retry:
 	return resp
 }
 
-func (m *mux) Acquire() Wire {
+func (m *mux) Acquire() wire {
 	return m.pool.Acquire()
 }
 
-func (m *mux) Store(w Wire) {
+func (m *mux) Store(w wire) {
 	m.pool.Store(w)
 }
 

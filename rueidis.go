@@ -6,35 +6,25 @@ import (
 	"time"
 
 	"github.com/rueian/rueidis/internal/proto"
-	"github.com/rueian/rueidis/pkg/client"
-	"github.com/rueian/rueidis/pkg/conn"
 )
 
 var (
-	ErrNoSlot      = client.ErrNoSlot
-	ErrNoNodes     = client.ErrNoNodes
-	ErrConnClosing = conn.ErrConnClosing
-
 	IsRedisNil = proto.IsRedisNil
 )
 
-type SingleClientOption client.SingleClientOption
-
-type ClusterClientOption client.ClusterClientOption
-
-func NewClusterClient(option ClusterClientOption) (*client.ClusterClient, error) {
-	return client.NewClusterClient(client.ClusterClientOption(option), connFn)
+func NewClusterClient(option ClusterClientOption) (*ClusterClient, error) {
+	return newClusterClient(option, makeConn)
 }
 
-func NewSingleClient(option SingleClientOption) (*client.SingleClient, error) {
-	return client.NewSingleClient(client.SingleClientOption(option), connFn)
+func NewSingleClient(option SingleClientOption) (*SingleClient, error) {
+	return newSingleClient(option, makeConn)
 }
 
-func connFn(dst string, opt conn.Option) conn.Conn {
-	return conn.NewMux(dst, opt, dial)
+func makeConn(dst string, opt ConnOption) conn {
+	return makeMux(dst, opt, dial)
 }
 
-func dial(dst string, opt conn.Option) (conn net.Conn, err error) {
+func dial(dst string, opt ConnOption) (conn net.Conn, err error) {
 	dialer := &net.Dialer{Timeout: opt.DialTimeout, KeepAlive: time.Second}
 	if opt.TLSConfig != nil {
 		conn, err = tls.DialWithDialer(dialer, "tcp", dst, opt.TLSConfig)

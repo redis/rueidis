@@ -1,4 +1,4 @@
-package client
+package rueidis
 
 import (
 	"errors"
@@ -10,36 +10,35 @@ import (
 	"github.com/rueian/rueidis/internal/cmds"
 	"github.com/rueian/rueidis/internal/mock"
 	"github.com/rueian/rueidis/internal/proto"
-	"github.com/rueian/rueidis/pkg/conn"
 )
 
 type MockConn struct {
-	DoFn       func(cmd cmds.Completed) proto.Result
-	DoCacheFn  func(cmd cmds.Cacheable, ttl time.Duration) proto.Result
-	DoMultiFn  func(multi ...cmds.Completed) []proto.Result
-	InfoFn     func() map[string]proto.Message
-	ErrorFn    func() error
-	CloseFn    func()
-	DialableFn func() error
-	AcquireFn  func() conn.Wire
-	StoreFn    func(w conn.Wire)
+	DoFn      func(cmd cmds.Completed) proto.Result
+	DoCacheFn func(cmd cmds.Cacheable, ttl time.Duration) proto.Result
+	DoMultiFn func(multi ...cmds.Completed) []proto.Result
+	InfoFn    func() map[string]proto.Message
+	ErrorFn   func() error
+	CloseFn   func()
+	DialFn    func() error
+	AcquireFn func() wire
+	StoreFn   func(w wire)
 }
 
 func (m *MockConn) Dial() error {
-	if m.DialableFn != nil {
-		return m.DialableFn()
+	if m.DialFn != nil {
+		return m.DialFn()
 	}
 	return nil
 }
 
-func (m *MockConn) Acquire() conn.Wire {
+func (m *MockConn) Acquire() wire {
 	if m.AcquireFn != nil {
 		return m.AcquireFn()
 	}
 	return nil
 }
 
-func (m *MockConn) Store(w conn.Wire) {
+func (m *MockConn) Store(w wire) {
 	if m.StoreFn != nil {
 		m.StoreFn(w)
 	}
@@ -88,8 +87,8 @@ func (m *MockConn) Close() {
 
 func TestNewSingleClientError(t *testing.T) {
 	v := errors.New("dail err")
-	if _, err := NewSingleClient(SingleClientOption{}, func(dst string, opt conn.Option) conn.Conn {
-		return &MockConn{DialableFn: func() error { return v }}
+	if _, err := newSingleClient(SingleClientOption{}, func(dst string, opt ConnOption) conn {
+		return &MockConn{DialFn: func() error { return v }}
 	}); err != v {
 		t.Fatalf("unexpected err %v", err)
 	}
@@ -97,7 +96,7 @@ func TestNewSingleClientError(t *testing.T) {
 
 func TestSingleClient(t *testing.T) {
 	m := &MockConn{}
-	client, err := NewSingleClient(SingleClientOption{}, func(dst string, opt conn.Option) conn.Conn {
+	client, err := newSingleClient(SingleClientOption{}, func(dst string, opt ConnOption) conn {
 		return m
 	})
 	if err != nil {
@@ -166,11 +165,11 @@ func TestSingleClient(t *testing.T) {
 				return []proto.Result{proto.NewResult(proto.Message{Type: '+', String: "Delegate"}, nil)}
 			},
 		}
-		m.AcquireFn = func() conn.Wire {
+		m.AcquireFn = func() wire {
 			return w
 		}
 		stored := false
-		m.StoreFn = func(ww conn.Wire) {
+		m.StoreFn = func(ww wire) {
 			if ww != w {
 				t.Fatalf("received unexpected wire %v", ww)
 			}
@@ -197,7 +196,7 @@ func TestSingleClient(t *testing.T) {
 		}
 	})
 
-	t.Run("NewLuaScript Delegate", func(t *testing.T) {
+	t.Run("newLuaScript Delegate", func(t *testing.T) {
 		m.DoFn = func(cmd cmds.Completed) proto.Result {
 			if cmd.Commands()[0] == "EVALSHA" {
 				return proto.NewResult(proto.Message{Type: '-', String: "NOSCRIPT"}, nil)
@@ -207,7 +206,7 @@ func TestSingleClient(t *testing.T) {
 			}
 			return proto.NewResult(proto.Message{Type: '+', String: strings.Join(cmd.Commands(), " ")}, nil)
 		}
-		if v, err := client.NewLuaScript("NewLuaScript").Exec([]string{"1", "2"}, []string{"3", "4"}).ToString(); err != nil || v != "EVAL NewLuaScript 2 1 2 3 4" {
+		if v, err := client.NewLuaScript("newLuaScript").Exec([]string{"1", "2"}, []string{"3", "4"}).ToString(); err != nil || v != "EVAL newLuaScript 2 1 2 3 4" {
 			t.Fatalf("unexpected respone %v %v", v, err)
 		}
 	})
@@ -237,13 +236,13 @@ func TestSingleClient(t *testing.T) {
 
 func TestHashObjectSingleClientAdapter(t *testing.T) {
 	m := &MockConn{}
-	client, err := NewSingleClient(SingleClientOption{}, func(dst string, opt conn.Option) conn.Conn {
+	client, err := newSingleClient(SingleClientOption{}, func(dst string, opt ConnOption) conn {
 		return m
 	})
 	if err != nil {
 		t.Fatalf("unexpected err %v", err)
 	}
-	adapter := &HashObjectSingleClientAdapter{c: client}
+	adapter := &hashObjectSingleClientAdapter{c: client}
 
 	t.Run("Save Delegate", func(t *testing.T) {
 		m.DoFn = func(cmd cmds.Completed) proto.Result {
