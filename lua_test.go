@@ -1,6 +1,7 @@
 package rueidis
 
 import (
+	"context"
 	"crypto/sha1"
 	"encoding/hex"
 	"math/rand"
@@ -22,7 +23,7 @@ func TestNewLuaScript(t *testing.T) {
 	eval := false
 	evalSha := false
 
-	script := newLuaScript(body, func(in string, keys []string, args []string) proto.Result {
+	script := newLuaScript(body, func(ctx context.Context, in string, keys []string, args []string) proto.Result {
 		eval = true
 		if in != body {
 			t.Fatalf("input should be %q", body)
@@ -31,7 +32,7 @@ func TestNewLuaScript(t *testing.T) {
 			t.Fatalf("parameter mistmatch")
 		}
 		return proto.NewResult(proto.Message{Type: '_'}, nil)
-	}, func(in string, keys []string, args []string) proto.Result {
+	}, func(ctx context.Context, in string, keys []string, args []string) proto.Result {
 		evalSha = true
 		if in != sha {
 			t.Fatalf("input should be %q", sha)
@@ -42,7 +43,7 @@ func TestNewLuaScript(t *testing.T) {
 		return proto.NewResult(proto.Message{Type: '-', String: "NOSCRIPT"}, nil)
 	})
 
-	if !script.Exec(k, a).RedisError().IsNil() {
+	if !script.Exec(context.Background(), k, a).RedisError().IsNil() {
 		t.Fatalf("ret mistmatch")
 	}
 	if !eval {

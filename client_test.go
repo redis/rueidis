@@ -1,6 +1,7 @@
 package rueidis
 
 import (
+	"context"
 	"errors"
 	"reflect"
 	"strings"
@@ -111,7 +112,7 @@ func TestSingleClient(t *testing.T) {
 			}
 			return proto.NewResult(proto.Message{Type: '+', String: "Do"}, nil)
 		}
-		if v, err := client.Do(c).ToString(); err != nil || v != "Do" {
+		if v, err := client.Do(context.Background(), c).ToString(); err != nil || v != "Do" {
 			t.Fatalf("unexpected response %v %v", v, err)
 		}
 	})
@@ -124,7 +125,7 @@ func TestSingleClient(t *testing.T) {
 			}
 			return proto.NewResult(proto.Message{Type: '+', String: "DoCache"}, nil)
 		}
-		if v, err := client.DoCache(c, 100).ToString(); err != nil || v != "DoCache" {
+		if v, err := client.DoCache(context.Background(), c, 100).ToString(); err != nil || v != "DoCache" {
 			t.Fatalf("unexpected response %v %v", v, err)
 		}
 	})
@@ -176,13 +177,13 @@ func TestSingleClient(t *testing.T) {
 			stored = true
 		}
 		if err := client.DedicatedWire(func(c *DedicatedSingleClient) error {
-			if v, err := c.Do(client.Cmd.Get().Key("a").Build()).ToString(); err != nil || v != "Delegate" {
+			if v, err := c.Do(context.Background(), client.Cmd.Get().Key("a").Build()).ToString(); err != nil || v != "Delegate" {
 				t.Fatalf("unexpected respone %v %v", v, err)
 			}
-			if v := c.DoMulti(); len(v) != 0 {
+			if v := c.DoMulti(context.Background()); len(v) != 0 {
 				t.Fatalf("received unexpected respone %v", v)
 			}
-			for _, resp := range c.DoMulti(client.Cmd.Get().Key("a").Build()) {
+			for _, resp := range c.DoMulti(context.Background(), client.Cmd.Get().Key("a").Build()) {
 				if v, err := resp.ToString(); err != nil || v != "Delegate" {
 					t.Fatalf("unexpected respone %v %v", v, err)
 				}
@@ -206,7 +207,7 @@ func TestSingleClient(t *testing.T) {
 			}
 			return proto.NewResult(proto.Message{Type: '+', String: strings.Join(cmd.Commands(), " ")}, nil)
 		}
-		if v, err := client.NewLuaScript("newLuaScript").Exec([]string{"1", "2"}, []string{"3", "4"}).ToString(); err != nil || v != "EVAL newLuaScript 2 1 2 3 4" {
+		if v, err := client.NewLuaScript("newLuaScript").Exec(context.Background(), []string{"1", "2"}, []string{"3", "4"}).ToString(); err != nil || v != "EVAL newLuaScript 2 1 2 3 4" {
 			t.Fatalf("unexpected respone %v %v", v, err)
 		}
 	})
@@ -221,7 +222,7 @@ func TestSingleClient(t *testing.T) {
 			}
 			return proto.NewResult(proto.Message{Type: '+', String: strings.Join(cmd.Commands(), " ")}, nil)
 		}
-		if v, err := client.NewLuaScriptReadOnly("NewLuaScriptReadOnly").Exec([]string{"1", "2"}, []string{"3", "4"}).ToString(); err != nil || v != "EVAL_RO NewLuaScriptReadOnly 2 1 2 3 4" {
+		if v, err := client.NewLuaScriptReadOnly("NewLuaScriptReadOnly").Exec(context.Background(), []string{"1", "2"}, []string{"3", "4"}).ToString(); err != nil || v != "EVAL_RO NewLuaScriptReadOnly 2 1 2 3 4" {
 			t.Fatalf("unexpected respone %v %v", v, err)
 		}
 	})
@@ -251,7 +252,7 @@ func TestHashObjectSingleClientAdapter(t *testing.T) {
 			}
 			return proto.NewResult(proto.Message{Type: '+', String: "OK"}, nil)
 		}
-		if err := adapter.Save("k", map[string]string{"a": "b"}); err != nil {
+		if err := adapter.Save(context.Background(), "k", map[string]string{"a": "b"}); err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
 	})
@@ -266,7 +267,7 @@ func TestHashObjectSingleClientAdapter(t *testing.T) {
 				{Type: '+', String: "b"},
 			}}, nil)
 		}
-		if v, err := adapter.Fetch("k"); err != nil || v["a"].String != "b" {
+		if v, err := adapter.Fetch(context.Background(), "k"); err != nil || v["a"].String != "b" {
 			t.Fatalf("unexpected response %v", err)
 		}
 	})
@@ -281,7 +282,7 @@ func TestHashObjectSingleClientAdapter(t *testing.T) {
 				{Type: '+', String: "b"},
 			}}, nil)
 		}
-		if v, err := adapter.FetchCache("k", 100); err != nil || v["a"].String != "b" {
+		if v, err := adapter.FetchCache(context.Background(), "k", 100); err != nil || v["a"].String != "b" {
 			t.Fatalf("unexpected response %v", err)
 		}
 	})
@@ -293,7 +294,7 @@ func TestHashObjectSingleClientAdapter(t *testing.T) {
 			}
 			return proto.NewResult(proto.Message{Type: '+', String: "OK"}, nil)
 		}
-		if err := adapter.Remove("k"); err != nil {
+		if err := adapter.Remove(context.Background(), "k"); err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
 	})

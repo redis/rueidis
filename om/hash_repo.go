@@ -13,14 +13,14 @@ import (
 
 var ErrVersionMismatch = errors.New("object version mismatched, please retry")
 
-type ExecFn func(keys, args []string) proto.Result
+type ExecFn func(ctx context.Context, keys, args []string) proto.Result
 type ScriptExecFn func(script string) ExecFn
 
 type HashObjectAdapter interface {
-	Save(key string, fields map[string]string) error
-	Fetch(key string) (map[string]proto.Message, error)
-	FetchCache(key string, ttl time.Duration) (map[string]proto.Message, error)
-	Remove(key string) error
+	Save(ctx context.Context, key string, fields map[string]string) error
+	Fetch(ctx context.Context, key string) (map[string]proto.Message, error)
+	FetchCache(ctx context.Context, key string, ttl time.Duration) (map[string]proto.Message, error)
+	Remove(ctx context.Context, key string) error
 }
 
 func NewHashRepository(prefix string, schema interface{}, adapter HashObjectAdapter, scriptExecFn ScriptExecFn) *HashRepository {
@@ -84,23 +84,23 @@ func (r *HashRepository) fromHash(id string, record map[string]proto.Message) (v
 	return v, nil
 }
 
-func (r *HashRepository) Fetch(_ context.Context, id string) (v interface{}, err error) {
-	record, err := r.adapter.Fetch(r.key(id))
+func (r *HashRepository) Fetch(ctx context.Context, id string) (v interface{}, err error) {
+	record, err := r.adapter.Fetch(ctx, r.key(id))
 	if err != nil {
 		return nil, err
 	}
 	return r.fromHash(id, record)
 }
 
-func (r *HashRepository) FetchCache(_ context.Context, id string, ttl time.Duration) (v interface{}, err error) {
-	record, err := r.adapter.FetchCache(r.key(id), ttl)
+func (r *HashRepository) FetchCache(ctx context.Context, id string, ttl time.Duration) (v interface{}, err error) {
+	record, err := r.adapter.FetchCache(ctx, r.key(id), ttl)
 	if err != nil {
 		return nil, err
 	}
 	return r.fromHash(id, record)
 }
 
-func (r *HashRepository) Save(_ context.Context, entity interface{}) (err error) {
+func (r *HashRepository) Save(ctx context.Context, entity interface{}) (err error) {
 	var conv HashConverter
 
 	if r.factory != nil {
@@ -119,7 +119,7 @@ func (r *HashRepository) Save(_ context.Context, entity interface{}) (err error)
 			}
 			args = append(args, f, v)
 		}
-		fields[VersionField], err = r.execFn([]string{r.key(id)}, args).ToString()
+		fields[VersionField], err = r.execFn(ctx, []string{r.key(id)}, args).ToString()
 		if proto.IsRedisNil(err) {
 			return ErrVersionMismatch
 		}
@@ -128,11 +128,11 @@ func (r *HashRepository) Save(_ context.Context, entity interface{}) (err error)
 		}
 		return conv.FromHash(id, fields)
 	}
-	return r.adapter.Save(r.key(id), fields)
+	return r.adapter.Save(ctx, r.key(id), fields)
 }
 
-func (r *HashRepository) Remove(_ context.Context, id string) error {
-	return r.adapter.Remove(r.key(id))
+func (r *HashRepository) Remove(ctx context.Context, id string) error {
+	return r.adapter.Remove(ctx, r.key(id))
 }
 
 var saveScript = fmt.Sprintf(`

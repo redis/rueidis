@@ -24,17 +24,22 @@ A Fast Golang Redis RESP3 client that does auto pipelining and supports client s
 ```golang
 package main
 
-import "github.com/rueian/rueidis"
+import (
+	"context"
+	"github.com/rueian/rueidis"
+)
 
 func main() {
-    c, _ := rueidis.NewClusterClient(rueidis.ClusterClientOption{
-        InitAddress: []string{"127.0.0.1:6379"},
-    })
-    defer c.Close()
+	c, _ := rueidis.NewClusterClient(rueidis.ClusterClientOption{
+		InitAddress: []string{"127.0.0.1:6379"},
+	})
+	defer c.Close()
 
-    _ := c.Do(c.Cmd.Set().Key("my_redis_data:1").Value("my_value").Nx().Build()).Error()
-    val, _ := c.Do(c.Cmd.Get().Key("my_redis_data:1").Build()).ToString()
-    // val == "my_value"
+	ctx := context.Background()
+
+	_ := c.Do(ctx, c.Cmd.Set().Key("my_data").Value("my_value").Nx().Build()).Error()
+	val, _ := c.Do(ctx, c.Cmd.Get().Key("my_data").Build()).ToString()
+	// val == "my_value"
 }
 ```
 
@@ -62,20 +67,20 @@ ok  	github.com/rueian/rueidis/cmd/bench3	3.589s
 Benchmark source code:
 ```golang
 func BenchmarkRedisClient(b *testing.B) {
+    ctx := context.Background()
     b.Run("RueidisParallel100Get", func(b *testing.B) {
         c, _ := rueidis.NewSingleClient(rueidis.SingleClient{Address: "127.0.0.1:6379"})
         b.SetParallelism(100)
         b.ResetTimer()
         b.RunParallel(func(pb *testing.PB) {
             for pb.Next() {
-                c.Do(c.Cmd.Get().Key("a").Build())
+                c.Do(ctx, c.Cmd.Get().Key("a").Build())
             }
         })
         c.Close()
     })
     b.Run("GoRedisParallel100Get", func(b *testing.B) {
         rdb := redis.NewClient(&redis.Options{Addr: "127.0.0.1:6379", PoolSize: 100})
-        ctx := context.Background()
         b.SetParallelism(100)
         b.ResetTimer()
         b.RunParallel(func(pb *testing.PB) {
@@ -217,7 +222,7 @@ c, _ := rueidis.NewSingleClient(rueidis.SingleClient{
         },
     },
 })
-c.Do(c.Cmd.Subscribe().Channel("my_channel").Build())
+c.Do(ctx, c.Cmd.Subscribe().Channel("my_channel").Build())
 ```
 
 ## CAS Pattern
@@ -230,11 +235,12 @@ The dedicated connection shares the same connection pool with blocking commands.
 ```golang
 c.DedicatedWire(func(client client.DedicatedSingleClient) error {
     // watch keys first
-    client.Do(c.Cmd.Watch().Key("k1", "k2").Build())
+    client.Do(ctx, c.Cmd.Watch().Key("k1", "k2").Build())
     // perform read here
-    client.Do(c.Cmd.Mget().Key("k1", "k2").Build())
+    client.Do(ctx, c.Cmd.Mget().Key("k1", "k2").Build())
     // perform write with MULTI EXEC
     client.DoMulti(
+        ctx,
         c.Cmd.Multi().Build(),
         c.Cmd.Set().Key("k1").Value("1").Build(),
         c.Cmd.Set().Key("k2").Value("2").Build(),
@@ -257,7 +263,7 @@ it will send EVAL to try again.
 ```golang
 script := c.NewLuaScript("return {KEYS[1],KEYS[2],ARGV[1],ARGV[2]}")
 // the script.Exec is safe for concurrent call
-list, err := script.Exec([]string{"k1", "k2"}, []string{"a1", "a2"}).ToArray()
+list, err := script.Exec(ctx, []string{"k1", "k2"}, []string{"a1", "a2"}).ToArray()
 ```
 
 ## Redis Cluster
@@ -280,8 +286,8 @@ an entrypoint to construct a redis command. Once the command is completed, call 
 And then pass it to either `Client.Do()` or `Client.DoCache()`.
 
 ```golang
-c.Do(c.Cmd.Set().Key("mykey").Value("myval").Ex(10).Nx().Build())
-c.DoCache(c.Cmd.Hmget().Key("myhash").Field("1", "2").Cache(), time.Second*30)
+c.Do(ctx, c.Cmd.Set().Key("mykey").Value("myval").Ex(10).Nx().Build())
+c.DoCache(ctx, c.Cmd.Hmget().Key("myhash").Field("1", "2").Cache(), time.Second*30)
 ```
 
 **Once the command is passed to the one of above `Client.DoXXX()`, the command will be recycled and should not be reused.**

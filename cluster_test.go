@@ -1,6 +1,7 @@
 package rueidis
 
 import (
+	"context"
 	"errors"
 	"reflect"
 	"strings"
@@ -144,7 +145,7 @@ func TestClusterClient(t *testing.T) {
 			}
 			return proto.NewResult(proto.Message{Type: '+', String: "Do"}, nil)
 		}
-		if v, err := client.Do(c).ToString(); err != nil || v != "Do" {
+		if v, err := client.Do(context.Background(), c).ToString(); err != nil || v != "Do" {
 			t.Fatalf("unexpected response %v %v", v, err)
 		}
 	})
@@ -157,7 +158,7 @@ func TestClusterClient(t *testing.T) {
 			}
 			return proto.NewResult(proto.Message{Type: '+', String: "Do"}, nil)
 		}
-		if v, err := client.Do(c).ToString(); err != nil || v != "Do" {
+		if v, err := client.Do(context.Background(), c).ToString(); err != nil || v != "Do" {
 			t.Fatalf("unexpected response %v %v", v, err)
 		}
 	})
@@ -170,7 +171,7 @@ func TestClusterClient(t *testing.T) {
 			}
 			return proto.NewResult(proto.Message{Type: '+', String: "DoCache"}, nil)
 		}
-		if v, err := client.DoCache(c, 100).ToString(); err != nil || v != "DoCache" {
+		if v, err := client.DoCache(context.Background(), c, 100).ToString(); err != nil || v != "DoCache" {
 			t.Fatalf("unexpected response %v %v", v, err)
 		}
 	})
@@ -200,7 +201,7 @@ func TestClusterClient(t *testing.T) {
 			}
 		}()
 		client.DedicatedWire(func(c *DedicatedClusterClient) error {
-			return c.Do(client.Cmd.Info().Build()).Error()
+			return c.Do(context.Background(), client.Cmd.Info().Build()).Error()
 		})
 	})
 
@@ -212,8 +213,8 @@ func TestClusterClient(t *testing.T) {
 		}()
 		m.AcquireFn = func() wire { return &mock.Wire{} }
 		client.DedicatedWire(func(c *DedicatedClusterClient) error {
-			c.Do(client.Cmd.Get().Key("a").Build()).Error()
-			return c.Do(client.Cmd.Get().Key("b").Build()).Error()
+			c.Do(context.Background(), client.Cmd.Get().Key("a").Build()).Error()
+			return c.Do(context.Background(), client.Cmd.Get().Key("b").Build()).Error()
 		})
 	})
 
@@ -237,13 +238,13 @@ func TestClusterClient(t *testing.T) {
 			stored = true
 		}
 		if err := client.DedicatedWire(func(c *DedicatedClusterClient) error {
-			if v, err := c.Do(client.Cmd.Get().Key("a").Build()).ToString(); err != nil || v != "Delegate" {
+			if v, err := c.Do(context.Background(), client.Cmd.Get().Key("a").Build()).ToString(); err != nil || v != "Delegate" {
 				t.Fatalf("unexpected respone %v %v", v, err)
 			}
-			if v := c.DoMulti(); len(v) != 0 {
+			if v := c.DoMulti(context.Background()); len(v) != 0 {
 				t.Fatalf("received unexpected respone %v", v)
 			}
-			for _, resp := range c.DoMulti(client.Cmd.Get().Key("a").Build()) {
+			for _, resp := range c.DoMulti(context.Background(), client.Cmd.Get().Key("a").Build()) {
 				if v, err := resp.ToString(); err != nil || v != "Delegate" {
 					t.Fatalf("unexpected respone %v %v", v, err)
 				}
@@ -267,7 +268,7 @@ func TestClusterClient(t *testing.T) {
 			}
 			return proto.NewResult(proto.Message{Type: '+', String: strings.Join(cmd.Commands(), " ")}, nil)
 		}
-		if v, err := client.NewLuaScript("newLuaScript").Exec([]string{"1"}, []string{"2", "3"}).ToString(); err != nil || v != "EVAL newLuaScript 1 1 2 3" {
+		if v, err := client.NewLuaScript("newLuaScript").Exec(context.Background(), []string{"1"}, []string{"2", "3"}).ToString(); err != nil || v != "EVAL newLuaScript 1 1 2 3" {
 			t.Fatalf("unexpected respone %v %v", v, err)
 		}
 	})
@@ -282,7 +283,7 @@ func TestClusterClient(t *testing.T) {
 			}
 			return proto.NewResult(proto.Message{Type: '+', String: strings.Join(cmd.Commands(), " ")}, nil)
 		}
-		if v, err := client.NewLuaScriptReadOnly("NewLuaScriptReadOnly").Exec([]string{"1"}, []string{"2", "3"}).ToString(); err != nil || v != "EVAL_RO NewLuaScriptReadOnly 1 1 2 3" {
+		if v, err := client.NewLuaScriptReadOnly("NewLuaScriptReadOnly").Exec(context.Background(), []string{"1"}, []string{"2", "3"}).ToString(); err != nil || v != "EVAL_RO NewLuaScriptReadOnly 1 1 2 3" {
 			t.Fatalf("unexpected respone %v %v", v, err)
 		}
 	})
@@ -314,10 +315,10 @@ func TestClusterClientErr(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
-		if err := client.Do(client.Cmd.Get().Key("a").Build()).Error(); err != v {
+		if err := client.Do(context.Background(), client.Cmd.Get().Key("a").Build()).Error(); err != v {
 			t.Fatalf("unexpected err %v", err)
 		}
-		if err := client.DoCache(client.Cmd.Get().Key("a").Cache(), 100).Error(); err != v {
+		if err := client.DoCache(context.Background(), client.Cmd.Get().Key("a").Cache(), 100).Error(); err != v {
 			t.Fatalf("unexpected err %v", err)
 		}
 	})
@@ -332,7 +333,7 @@ func TestClusterClientErr(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
-		if err := client.Do(client.Cmd.Get().Key("a").Build()).Error(); err != ErrNoSlot {
+		if err := client.Do(context.Background(), client.Cmd.Get().Key("a").Build()).Error(); err != ErrNoSlot {
 			t.Fatalf("unexpected err %v", err)
 		}
 	})
@@ -348,7 +349,7 @@ func TestClusterClientErr(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 		if err := client.DedicatedWire(func(c *DedicatedClusterClient) error {
-			return c.Do(client.Cmd.Get().Key("a").Build()).Error()
+			return c.Do(context.Background(), client.Cmd.Get().Key("a").Build()).Error()
 		}); err != ErrNoSlot {
 			t.Fatalf("unexpected err %v", err)
 		}
@@ -365,7 +366,7 @@ func TestClusterClientErr(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 		if err := client.DedicatedWire(func(c *DedicatedClusterClient) error {
-			for _, v := range c.DoMulti(client.Cmd.Get().Key("a").Build()) {
+			for _, v := range c.DoMulti(context.Background(), client.Cmd.Get().Key("a").Build()) {
 				if err := v.Error(); err != nil {
 					return err
 				}
@@ -394,7 +395,7 @@ func TestClusterClientErr(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
-		if v, err := client.Do(client.Cmd.Get().Key("a").Build()).ToString(); err != nil || v != "b" {
+		if v, err := client.Do(context.Background(), client.Cmd.Get().Key("a").Build()).ToString(); err != nil || v != "b" {
 			t.Fatalf("unexpected resp %v %v", v, err)
 		}
 	})
@@ -419,7 +420,7 @@ func TestClusterClientErr(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
-		if v, err := client.DoCache(client.Cmd.Get().Key("a").Cache(), 100).ToString(); err != nil || v != "b" {
+		if v, err := client.DoCache(context.Background(), client.Cmd.Get().Key("a").Cache(), 100).ToString(); err != nil || v != "b" {
 			t.Fatalf("unexpected resp %v %v", v, err)
 		}
 	})
@@ -447,7 +448,7 @@ func TestClusterClientErr(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
-		if v, err := client.Do(client.Cmd.Get().Key("a").Build()).ToString(); err != nil || v != "b" {
+		if v, err := client.Do(context.Background(), client.Cmd.Get().Key("a").Build()).ToString(); err != nil || v != "b" {
 			t.Fatalf("unexpected resp %v %v", v, err)
 		}
 	})
@@ -475,7 +476,7 @@ func TestClusterClientErr(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
-		if v, err := client.DoCache(client.Cmd.Get().Key("a").Cache(), 100).ToString(); err != nil || v != "b" {
+		if v, err := client.DoCache(context.Background(), client.Cmd.Get().Key("a").Cache(), 100).ToString(); err != nil || v != "b" {
 			t.Fatalf("unexpected resp %v %v", v, err)
 		}
 	})
@@ -498,7 +499,7 @@ func TestClusterClientErr(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
-		if v, err := client.Do(client.Cmd.Get().Key("a").Build()).ToString(); err != nil || v != "b" {
+		if v, err := client.Do(context.Background(), client.Cmd.Get().Key("a").Build()).ToString(); err != nil || v != "b" {
 			t.Fatalf("unexpected resp %v %v", v, err)
 		}
 	})
@@ -523,7 +524,7 @@ func TestClusterClientErr(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
-		if v, err := client.DoCache(client.Cmd.Get().Key("a").Cache(), 100).ToString(); err != nil || v != "b" {
+		if v, err := client.DoCache(context.Background(), client.Cmd.Get().Key("a").Cache(), 100).ToString(); err != nil || v != "b" {
 			t.Fatalf("unexpected resp %v %v", v, err)
 		}
 	})
@@ -553,7 +554,7 @@ func TestHashObjectClusterClientAdapter(t *testing.T) {
 			}
 			return proto.NewResult(proto.Message{Type: '+', String: "OK"}, nil)
 		}
-		if err := adapter.Save("k", map[string]string{"a": "b"}); err != nil {
+		if err := adapter.Save(context.Background(), "k", map[string]string{"a": "b"}); err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
 	})
@@ -568,7 +569,7 @@ func TestHashObjectClusterClientAdapter(t *testing.T) {
 				{Type: '+', String: "b"},
 			}}, nil)
 		}
-		if v, err := adapter.Fetch("k"); err != nil || v["a"].String != "b" {
+		if v, err := adapter.Fetch(context.Background(), "k"); err != nil || v["a"].String != "b" {
 			t.Fatalf("unexpected response %v", err)
 		}
 	})
@@ -583,7 +584,7 @@ func TestHashObjectClusterClientAdapter(t *testing.T) {
 				{Type: '+', String: "b"},
 			}}, nil)
 		}
-		if v, err := adapter.FetchCache("k", 100); err != nil || v["a"].String != "b" {
+		if v, err := adapter.FetchCache(context.Background(), "k", 100); err != nil || v["a"].String != "b" {
 			t.Fatalf("unexpected response %v", err)
 		}
 	})
@@ -595,7 +596,7 @@ func TestHashObjectClusterClientAdapter(t *testing.T) {
 			}
 			return proto.NewResult(proto.Message{Type: '+', String: "OK"}, nil)
 		}
-		if err := adapter.Remove("k"); err != nil {
+		if err := adapter.Remove(context.Background(), "k"); err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
 	})

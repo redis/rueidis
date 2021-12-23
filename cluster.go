@@ -1,6 +1,7 @@
 package rueidis
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -239,7 +240,7 @@ func (c *ClusterClient) pickOrNewConn(addr string) (p conn) {
 	return p
 }
 
-func (c *ClusterClient) Do(cmd cmds.SCompleted) (resp proto.Result) {
+func (c *ClusterClient) Do(ctx context.Context, cmd cmds.SCompleted) (resp proto.Result) {
 retry:
 	cc, err := c.pickConn(cmd.Slot())
 	if err != nil {
@@ -266,7 +267,7 @@ ret:
 	return resp
 }
 
-func (c *ClusterClient) DoCache(cmd cmds.SCacheable, ttl time.Duration) (resp proto.Result) {
+func (c *ClusterClient) DoCache(ctx context.Context, cmd cmds.SCacheable, ttl time.Duration) (resp proto.Result) {
 retry:
 	cc, err := c.pickConn(cmd.Slot())
 	if err != nil {
@@ -309,20 +310,20 @@ func (c *ClusterClient) NewLuaScriptReadOnly(body string) *Lua {
 	return newLuaScript(body, c.evalRo, c.evalShaRo)
 }
 
-func (c *ClusterClient) eval(body string, keys, args []string) proto.Result {
-	return c.Do(c.Cmd.Eval().Script(body).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build())
+func (c *ClusterClient) eval(ctx context.Context, body string, keys, args []string) proto.Result {
+	return c.Do(ctx, c.Cmd.Eval().Script(body).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build())
 }
 
-func (c *ClusterClient) evalSha(sha string, keys, args []string) proto.Result {
-	return c.Do(c.Cmd.Evalsha().Sha1(sha).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build())
+func (c *ClusterClient) evalSha(ctx context.Context, sha string, keys, args []string) proto.Result {
+	return c.Do(ctx, c.Cmd.Evalsha().Sha1(sha).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build())
 }
 
-func (c *ClusterClient) evalRo(body string, keys, args []string) proto.Result {
-	return c.Do(c.Cmd.EvalRo().Script(body).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build())
+func (c *ClusterClient) evalRo(ctx context.Context, body string, keys, args []string) proto.Result {
+	return c.Do(ctx, c.Cmd.EvalRo().Script(body).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build())
 }
 
-func (c *ClusterClient) evalShaRo(sha string, keys, args []string) proto.Result {
-	return c.Do(c.Cmd.EvalshaRo().Sha1(sha).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build())
+func (c *ClusterClient) evalShaRo(ctx context.Context, sha string, keys, args []string) proto.Result {
+	return c.Do(ctx, c.Cmd.EvalshaRo().Sha1(sha).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build())
 }
 
 func (c *ClusterClient) NewHashRepository(prefix string, schema interface{}) *om.HashRepository {
@@ -377,7 +378,7 @@ func (c *DedicatedClusterClient) release() {
 	}
 }
 
-func (c *DedicatedClusterClient) Do(cmd cmds.SCompleted) (resp proto.Result) {
+func (c *DedicatedClusterClient) Do(ctx context.Context, cmd cmds.SCompleted) (resp proto.Result) {
 	c.check(cmd.Slot())
 	if err := c.acquire(); err != nil {
 		return proto.NewErrResult(err)
@@ -388,7 +389,7 @@ func (c *DedicatedClusterClient) Do(cmd cmds.SCompleted) (resp proto.Result) {
 	return resp
 }
 
-func (c *DedicatedClusterClient) DoMulti(multi ...cmds.SCompleted) (resp []proto.Result) {
+func (c *DedicatedClusterClient) DoMulti(ctx context.Context, multi ...cmds.SCompleted) (resp []proto.Result) {
 	if len(multi) == 0 {
 		return nil
 	}
@@ -413,22 +414,22 @@ type hashObjectClusterClientAdapter struct {
 	c *ClusterClient
 }
 
-func (h *hashObjectClusterClientAdapter) Save(key string, fields map[string]string) error {
+func (h *hashObjectClusterClientAdapter) Save(ctx context.Context, key string, fields map[string]string) error {
 	cmd := h.c.Cmd.Hset().Key(key).FieldValue()
 	for f, v := range fields {
 		cmd = cmd.FieldValue(f, v)
 	}
-	return h.c.Do(cmd.Build()).Error()
+	return h.c.Do(ctx, cmd.Build()).Error()
 }
 
-func (h *hashObjectClusterClientAdapter) Fetch(key string) (map[string]proto.Message, error) {
-	return h.c.Do(h.c.Cmd.Hgetall().Key(key).Build()).ToMap()
+func (h *hashObjectClusterClientAdapter) Fetch(ctx context.Context, key string) (map[string]proto.Message, error) {
+	return h.c.Do(ctx, h.c.Cmd.Hgetall().Key(key).Build()).ToMap()
 }
 
-func (h *hashObjectClusterClientAdapter) FetchCache(key string, ttl time.Duration) (map[string]proto.Message, error) {
-	return h.c.DoCache(h.c.Cmd.Hgetall().Key(key).Cache(), ttl).ToMap()
+func (h *hashObjectClusterClientAdapter) FetchCache(ctx context.Context, key string, ttl time.Duration) (map[string]proto.Message, error) {
+	return h.c.DoCache(ctx, h.c.Cmd.Hgetall().Key(key).Cache(), ttl).ToMap()
 }
 
-func (h *hashObjectClusterClientAdapter) Remove(key string) error {
-	return h.c.Do(h.c.Cmd.Del().Key(key).Build()).Error()
+func (h *hashObjectClusterClientAdapter) Remove(ctx context.Context, key string) error {
+	return h.c.Do(ctx, h.c.Cmd.Del().Key(key).Build()).Error()
 }
