@@ -46,16 +46,11 @@ type pipe struct {
 	info map[string]proto.Message
 
 	cbs PubSubHandlers
+
+	onDisconnected func(err error)
 }
 
-type PubSubHandlers struct {
-	OnMessage      func(channel, message string)
-	OnPMessage     func(pattern, channel, message string)
-	OnSubscribed   func(channel string, active int64)
-	OnUnSubscribed func(channel string, active int64)
-}
-
-func newPipe(conn net.Conn, option ConnOption) (p *pipe, err error) {
+func newPipe(conn net.Conn, option ConnOption, onDisconnected func(err error)) (p *pipe, err error) {
 	if option.CacheSizeEachConn <= 0 {
 		option.CacheSizeEachConn = DefaultCacheBytes
 	}
@@ -67,7 +62,8 @@ func newPipe(conn net.Conn, option ConnOption) (p *pipe, err error) {
 		r:     bufio.NewReader(conn),
 		w:     bufio.NewWriter(conn),
 
-		cbs: option.PubSubHandlers,
+		cbs:            option.PubSubHandlers,
+		onDisconnected: onDisconnected,
 	}
 
 	helloCmd := []string{"HELLO", "3"}
@@ -90,6 +86,7 @@ func newPipe(conn net.Conn, option ConnOption) (p *pipe, err error) {
 			err = r.Error()
 		}
 		if err != nil {
+			p.Close()
 			return nil, err
 		}
 	}
@@ -196,6 +193,10 @@ func (p *pipe) _background() {
 	}()
 	wg.Wait()
 
+	if p.onDisconnected != nil {
+		go p.onDisconnected(p.Error())
+	}
+
 	var (
 		ones  = make([]cmds.Completed, 1)
 		multi []cmds.Completed
@@ -231,20 +232,20 @@ func (p *pipe) handlePush(values []proto.Message) {
 	case "invalidate":
 		p.cache.Delete(values[1].Values)
 	case "message":
-		if p.cbs.OnMessage != nil {
-			p.cbs.OnMessage(values[1].String, values[2].String)
+		if p.cbs.onMessage != nil {
+			p.cbs.onMessage(values[1].String, values[2].String)
 		}
 	case "pmessage":
-		if p.cbs.OnPMessage != nil {
-			p.cbs.OnPMessage(values[1].String, values[2].String, values[3].String)
+		if p.cbs.onPMessage != nil {
+			p.cbs.onPMessage(values[1].String, values[2].String, values[3].String)
 		}
 	case "subscribe", "psubscribe":
-		if p.cbs.OnSubscribed != nil {
-			p.cbs.OnSubscribed(values[1].String, values[2].Integer)
+		if p.cbs.onSubscribed != nil {
+			p.cbs.onSubscribed(values[1].String, values[2].Integer)
 		}
 	case "unsubscribe", "punsubscribe":
-		if p.cbs.OnUnSubscribed != nil {
-			p.cbs.OnUnSubscribed(values[1].String, values[2].Integer)
+		if p.cbs.onUnSubscribed != nil {
+			p.cbs.onUnSubscribed(values[1].String, values[2].Integer)
 		}
 	}
 }

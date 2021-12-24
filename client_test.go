@@ -23,6 +23,8 @@ type MockConn struct {
 	DialFn    func() error
 	AcquireFn func() wire
 	StoreFn   func(w wire)
+
+	disconnectedFn func(err error)
 }
 
 func (m *MockConn) Dial() error {
@@ -83,6 +85,16 @@ func (m *MockConn) Error() error {
 func (m *MockConn) Close() {
 	if m.CloseFn != nil {
 		m.CloseFn()
+	}
+}
+
+func (m *MockConn) OnDisconnected(fn func(err error)) {
+	m.disconnectedFn = fn
+}
+
+func (m *MockConn) TriggerDisconnect(err error) {
+	if m.disconnectedFn != nil {
+		m.disconnectedFn(err)
 	}
 }
 
