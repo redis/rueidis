@@ -45,7 +45,7 @@ func (c *SingleClient) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time
 
 func (c *SingleClient) DedicatedWire(fn func(*DedicatedSingleClient) error) (err error) {
 	wire := c.conn.Acquire()
-	err = fn(&DedicatedSingleClient{cmd: c.Cmd, wire: wire})
+	err = fn(&DedicatedSingleClient{Cmd: c.Cmd, wire: wire})
 	c.conn.Store(wire)
 	return err
 }
@@ -85,23 +85,23 @@ func (c *SingleClient) Close() {
 }
 
 type DedicatedSingleClient struct {
-	cmd  *cmds.Builder
+	Cmd  *cmds.Builder
 	wire wire
 }
 
-func (c *DedicatedSingleClient) Do(_ context.Context, cmd cmds.Completed) (resp proto.Result) {
+func (c *DedicatedSingleClient) Do(ctx context.Context, cmd cmds.Completed) (resp proto.Result) {
 	resp = c.wire.Do(cmd)
-	c.cmd.Put(cmd.Commands())
+	c.Cmd.Put(cmd.Commands())
 	return resp
 }
 
-func (c *DedicatedSingleClient) DoMulti(_ context.Context, multi ...cmds.Completed) (resp []proto.Result) {
+func (c *DedicatedSingleClient) DoMulti(ctx context.Context, multi ...cmds.Completed) (resp []proto.Result) {
 	if len(multi) == 0 {
 		return nil
 	}
 	resp = c.wire.DoMulti(multi...)
 	for _, cmd := range multi {
-		c.cmd.Put(cmd.Commands())
+		c.Cmd.Put(cmd.Commands())
 	}
 	return resp
 }
