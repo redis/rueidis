@@ -20,7 +20,7 @@ func setupMux(wires []*mock.Wire) (conn *mux, checkClean func(t *testing.T)) {
 	var count = -1
 	return newMux("", ConnOption{}, (*mock.Wire)(nil), func(dst string, opt ConnOption) (net.Conn, error) {
 			return nil, nil
-		}, func(conn net.Conn, opt ConnOption) (wire, error) {
+		}, func(conn net.Conn, opt ConnOption, fn func(err error)) (wire, error) {
 			mu.Lock()
 			defer mu.Unlock()
 			count++
@@ -57,13 +57,44 @@ func TestNewMux(t *testing.T) {
 	m.Close()
 }
 
+func TestMuxOnDisconnected(t *testing.T) {
+	var trigger func(err error)
+	m := newMux("", ConnOption{}, (*mock.Wire)(nil), func(dst string, opt ConnOption) (net.Conn, error) {
+		return nil, nil
+	}, func(conn net.Conn, opt ConnOption, fn func(err error)) (wire, error) {
+		trigger = fn
+		return &mock.Wire{}, nil
+	})
+	if err := m.Dial(); err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+
+	count := int64(0)
+
+	trigger(errors.New("should have no effect before registering callback"))
+
+	e := errors.New("should trigger")
+	m.OnDisconnected(func(err error) {
+		if err != e {
+			t.Errorf("unexpected error %v", err)
+		}
+		atomic.AddInt64(&count, 1)
+	})
+
+	trigger(e)
+
+	if atomic.LoadInt64(&count) != 1 {
+		t.Fatalf("unxpected callback call count %d", atomic.LoadInt64(&count))
+	}
+}
+
 func TestMuxDialSuppress(t *testing.T) {
 	var dials, wires, waits, done int64
 	blocking := make(chan struct{})
 	m := newMux("", ConnOption{}, (*mock.Wire)(nil), func(dst string, opt ConnOption) (net.Conn, error) {
 		atomic.AddInt64(&dials, 1)
 		return nil, nil
-	}, func(conn net.Conn, opt ConnOption) (wire, error) {
+	}, func(conn net.Conn, opt ConnOption, fn func(err error)) (wire, error) {
 		atomic.AddInt64(&wires, 1)
 		<-blocking
 		return &mock.Wire{}, nil
@@ -455,7 +486,7 @@ func TestMuxDialRetry(t *testing.T) {
 			}
 			count++
 			return nil, errors.New("network err")
-		}, func(conn net.Conn, opt ConnOption) (wire, error) {
+		}, func(conn net.Conn, opt ConnOption, fn func(err error)) (wire, error) {
 			return &mock.Wire{
 				DoFn: func(cmd cmds.Completed) proto.Result {
 					return proto.NewResult(proto.Message{Type: '+', String: "PONG"}, nil)

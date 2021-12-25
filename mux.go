@@ -1,8 +1,6 @@
 package rueidis
 
 import (
-	"crypto/tls"
-	"errors"
 	"net"
 	"sync"
 	"sync/atomic"
@@ -12,40 +10,9 @@ import (
 	"github.com/rueian/rueidis/internal/proto"
 )
 
-var ErrConnClosing = errors.New("connection is closing")
-
-// DefaultCacheBytes = 128 MiB.
-const DefaultCacheBytes = 128 * (1 << 20)
-
-// DefaultPoolSize = 1000
-const DefaultPoolSize = 1000
-
-type ConnOption struct {
-	// CacheSizeEachConn is redis client side cache size that bind to each TCP connection to a single redis instance.
-	// The default is DefaultCacheBytes.
-	CacheSizeEachConn int
-
-	// BlockingPoolSize is the size of the connection pool shared by blocking commands (ex BLPOP, XREAD with BLOCK).
-	// The default is DefaultPoolSize.
-	BlockingPoolSize int
-
-	// Redis AUTH parameters
-	Username   string
-	Password   string
-	ClientName string
-	SelectDB   int
-
-	// TCP & TLS
-	DialTimeout time.Duration
-	TLSConfig   *tls.Config
-
-	// Redis PubSub callbacks
-	PubSubHandlers PubSubHandlers
-}
-
 type connFn func(dst string, opt ConnOption) conn
 type dialFn func(dst string, opt ConnOption) (net.Conn, error)
-type wireFn func(conn net.Conn, opt ConnOption) (wire, error)
+type wireFn func(conn net.Conn, opt ConnOption, onDisconnected func(err error)) (wire, error)
 
 type singleconnect struct {
 	w wire
@@ -58,6 +25,7 @@ type conn interface {
 	Dial() error
 	Acquire() wire
 	Store(w wire)
+	OnDisconnected(func(err error))
 }
 
 var _ conn = (*mux)(nil)
@@ -73,19 +41,21 @@ type mux struct {
 
 	dialFn dialFn
 	wireFn wireFn
+
+	onDisconnected atomic.Value
 }
 
 func makeMux(dst string, option ConnOption, dialFn dialFn) *mux {
-	return newMux(dst, option, (*pipe)(nil), dialFn, func(conn net.Conn, opt ConnOption) (wire, error) {
-		return newPipe(conn, opt)
+	return newMux(dst, option, (*pipe)(nil), dialFn, func(conn net.Conn, opt ConnOption, onDisconnected func(err error)) (wire, error) {
+		return newPipe(conn, opt, onDisconnected)
 	})
 }
 
 func newMux(dst string, option ConnOption, dead wire, dialFn dialFn, wireFn wireFn) *mux {
-	conn := &mux{dst: dst, opt: option, dead: dead, dialFn: dialFn, wireFn: wireFn}
-	conn.wire.Store(dead)
-	conn.pool = newPool(option.BlockingPoolSize, conn.dialRetry)
-	return conn
+	m := &mux{dst: dst, opt: option, dead: dead, dialFn: dialFn, wireFn: wireFn}
+	m.wire.Store(dead)
+	m.pool = newPool(option.BlockingPoolSize, m.dialRetry)
+	return m
 }
 
 func (m *mux) connect() (w wire, err error) {
@@ -127,9 +97,19 @@ func (m *mux) connect() (w wire, err error) {
 func (m *mux) dial() (w wire, err error) {
 	conn, err := m.dialFn(m.dst, m.opt)
 	if err == nil {
-		w, err = m.wireFn(conn, m.opt)
+		w, err = m.wireFn(conn, m.opt, m.disconnected)
 	}
 	return w, err
+}
+
+func (m *mux) disconnected(err error) {
+	if fn := m.onDisconnected.Load(); fn != nil {
+		fn.(func(err error))(err)
+	}
+}
+
+func (m *mux) OnDisconnected(fn func(err error)) {
+	m.onDisconnected.CompareAndSwap(nil, fn)
 }
 
 func (m *mux) dialRetry() wire {

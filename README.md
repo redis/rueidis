@@ -215,14 +215,17 @@ To receive messages from channels, the message handler should be registered when
 c, _ := rueidis.NewSingleClient(rueidis.SingleClient{
     Address: "127.0.0.1:6379",
     ConnOption: conn.Option{
-        PubSubHandlers: conn.PubSubHandlers{
+        PubSubHandlers: rueidis.NewPubSubHandlers(func(prev error, client *rueidis.DedicatedSingleClient) {
+            // Subscribe channels in this PubSubSetup hook for auto reconnecting after disconnected.
+            // The "prev" err is previous disconnect error.
+            err := client.Do(ctx, client.Cmd.Subscribe().Channel("my_channel").Build()).Error()
+        }, rueidis.PubSubOption{
             OnMessage: func(channel, message string) {
                 // handle the message
             },
         },
     },
 })
-c.Do(ctx, c.Cmd.Subscribe().Channel("my_channel").Build())
 ```
 
 ## CAS Pattern

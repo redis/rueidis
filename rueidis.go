@@ -2,15 +2,45 @@ package rueidis
 
 import (
 	"crypto/tls"
+	"errors"
 	"net"
 	"time"
 
 	"github.com/rueian/rueidis/internal/proto"
 )
 
-var (
-	IsRedisNil = proto.IsRedisNil
+const (
+	DefaultCacheBytes = 128 * (1 << 20) // 128 MiB
+	DefaultPoolSize   = 1000
 )
+
+var (
+	IsRedisNil     = proto.IsRedisNil
+	ErrConnClosing = errors.New("connection is closing")
+)
+
+type ConnOption struct {
+	// CacheSizeEachConn is redis client side cache size that bind to each TCP connection to a single redis instance.
+	// The default is DefaultCacheBytes.
+	CacheSizeEachConn int
+
+	// BlockingPoolSize is the size of the connection pool shared by blocking commands (ex BLPOP, XREAD with BLOCK).
+	// The default is DefaultPoolSize.
+	BlockingPoolSize int
+
+	// Redis AUTH parameters
+	Username   string
+	Password   string
+	ClientName string
+	SelectDB   int
+
+	// TCP & TLS
+	DialTimeout time.Duration
+	TLSConfig   *tls.Config
+
+	// Redis PubSub callbacks
+	PubSubHandlers PubSubHandlers
+}
 
 func NewClusterClient(option ClusterClientOption) (*ClusterClient, error) {
 	return newClusterClient(option, makeConn)

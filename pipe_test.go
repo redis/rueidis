@@ -110,6 +110,10 @@ func write(o io.Writer, m proto.Message) (err error) {
 }
 
 func setup(t *testing.T, option ConnOption) (*pipe, *redisMock, func(), func()) {
+	return setupWithDisconnectedFn(t, option, nil)
+}
+
+func setupWithDisconnectedFn(t *testing.T, option ConnOption, onDisconnected func(err error)) (*pipe, *redisMock, func(), func()) {
 	n1, n2 := net.Pipe()
 	mock := &redisMock{
 		t:    t,
@@ -128,7 +132,7 @@ func setup(t *testing.T, option ConnOption) (*pipe, *redisMock, func(), func()) 
 		mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
 			ReplyString("OK")
 	}()
-	p, err := newPipe(n1, option)
+	p, err := newPipe(n1, option, onDisconnected)
 	if err != nil {
 		t.Fatalf("pipe setup failed: %v", err)
 	}
@@ -175,7 +179,7 @@ func TestNewPipe(t *testing.T) {
 			Username:   "un",
 			Password:   "pa",
 			ClientName: "cn",
-		})
+		}, nil)
 		if err != nil {
 			t.Fatalf("pipe setup failed: %v", err)
 		}
@@ -189,10 +193,25 @@ func TestNewPipe(t *testing.T) {
 		n1, n2 := net.Pipe()
 		n1.Close()
 		n2.Close()
-		if _, err := newPipe(n1, ConnOption{}); err != io.ErrClosedPipe {
+		if _, err := newPipe(n1, ConnOption{}, nil); err != io.ErrClosedPipe {
 			t.Fatalf("pipe setup should failed with io.ErrClosedPipe, but got %v", err)
 		}
 	})
+}
+
+func TestOnDisconnectedHook(t *testing.T) {
+	done := make(chan struct{})
+	p, _, _, closeConn := setupWithDisconnectedFn(t, ConnOption{}, func(err error) {
+		if !strings.HasPrefix(err.Error(), "io:") {
+			t.Errorf("unexpected err %v", err)
+		}
+		close(done)
+	})
+	closeConn()
+	if err := p.Do(cmds.NewCompleted([]string{"PING"})).Error(); !strings.HasPrefix(err.Error(), "io:") {
+		t.Errorf("unexpected err %v", err)
+	}
+	<-done
 }
 
 func TestWriteSingleFlush(t *testing.T) {
@@ -376,27 +395,27 @@ func TestPubSub(t *testing.T) {
 		count := make([]int32, 4)
 		p, mock, cancel, _ := setup(t, ConnOption{
 			PubSubHandlers: PubSubHandlers{
-				OnMessage: func(channel, message string) {
+				onMessage: func(channel, message string) {
 					if channel != "1" || message != "2" {
-						t.Fatalf("unexpected OnMessage")
+						t.Fatalf("unexpected onMessage")
 					}
 					count[0]++
 				},
-				OnPMessage: func(pattern, channel, message string) {
+				onPMessage: func(pattern, channel, message string) {
 					if pattern != "3" || channel != "4" || message != "5" {
-						t.Fatalf("unexpected OnPMessage")
+						t.Fatalf("unexpected onPMessage")
 					}
 					count[1]++
 				},
-				OnSubscribed: func(channel string, active int64) {
+				onSubscribed: func(channel string, active int64) {
 					if channel != "6" || active != 7 {
-						t.Fatalf("unexpected OnSubscribed")
+						t.Fatalf("unexpected onSubscribed")
 					}
 					count[2]++
 				},
-				OnUnSubscribed: func(channel string, active int64) {
+				onUnSubscribed: func(channel string, active int64) {
 					if channel != "8" || active != 9 {
-						t.Fatalf("unexpected OnUnSubscribed")
+						t.Fatalf("unexpected onUnSubscribed")
 					}
 					count[3]++
 				},
@@ -439,16 +458,16 @@ func TestPubSub(t *testing.T) {
 		)
 		cancel()
 		if count[0] != 1 {
-			t.Fatalf("unexpected OnMessage count")
+			t.Fatalf("unexpected onMessage count")
 		}
 		if count[1] != 1 {
-			t.Fatalf("unexpected OnPMessage count")
+			t.Fatalf("unexpected onPMessage count")
 		}
 		if count[2] != 2 {
-			t.Fatalf("unexpected OnSubscribed count")
+			t.Fatalf("unexpected onSubscribed count")
 		}
 		if count[3] != 2 {
-			t.Fatalf("unexpected OnUnSubscribed count")
+			t.Fatalf("unexpected onUnSubscribed count")
 		}
 	})
 }

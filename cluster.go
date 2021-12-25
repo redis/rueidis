@@ -59,6 +59,14 @@ func newClusterClient(option ClusterClientOption, connFn connFn) (client *Cluste
 		return nil, err
 	}
 
+	option.ConnOption.PubSubHandlers.installHook((*cmds.Builder)(client.Cmd), func() (cc conn) {
+		var err error
+		for cc == nil && err != ErrConnClosing {
+			cc, err = client.pickConn(cmds.InitSlot)
+		}
+		return cc
+	})
+
 	return client, nil
 }
 
@@ -296,7 +304,7 @@ ret:
 }
 
 func (c *ClusterClient) DedicatedWire(fn func(*DedicatedClusterClient) error) (err error) {
-	dcc := &DedicatedClusterClient{client: c, slot: cmds.InitSlot}
+	dcc := &DedicatedClusterClient{Cmd: c.Cmd, client: c, slot: cmds.InitSlot}
 	err = fn(dcc)
 	dcc.release()
 	return err
@@ -341,6 +349,7 @@ func (c *ClusterClient) Close() {
 }
 
 type DedicatedClusterClient struct {
+	Cmd    *cmds.SBuilder
 	client *ClusterClient
 	conn   conn
 	wire   wire
@@ -385,7 +394,7 @@ func (c *DedicatedClusterClient) Do(ctx context.Context, cmd cmds.SCompleted) (r
 	} else {
 		resp = c.wire.Do(cmds.Completed(cmd))
 	}
-	c.client.Cmd.Put(cmd.Commands())
+	c.Cmd.Put(cmd.Commands())
 	return resp
 }
 
@@ -405,7 +414,7 @@ func (c *DedicatedClusterClient) DoMulti(ctx context.Context, multi ...cmds.SCom
 		}
 	}
 	for _, cmd := range multi {
-		c.client.Cmd.Put(cmd.Commands())
+		c.Cmd.Put(cmd.Commands())
 	}
 	return resp
 }
