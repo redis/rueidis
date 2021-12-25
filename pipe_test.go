@@ -221,6 +221,15 @@ func TestWriteSingleFlush(t *testing.T) {
 	ExpectOK(t, p.Do(cmds.NewCompleted([]string{"PING"})))
 }
 
+func TestIgnoreOutOfBandDataDuringSyncMode(t *testing.T) {
+	p, mock, cancel, _ := setup(t, ConnOption{})
+	defer cancel()
+	go func() {
+		mock.Expect("PING").Reply(proto.Message{Type: '>', String: "This should be ignore"}).ReplyString("OK")
+	}()
+	ExpectOK(t, p.Do(cmds.NewCompleted([]string{"PING"})))
+}
+
 func TestWriteSinglePipelineFlush(t *testing.T) {
 	p, mock, cancel, _ := setup(t, ConnOption{})
 	defer cancel()
@@ -267,6 +276,22 @@ func TestWriteMultiPipelineFlush(t *testing.T) {
 	for i := 0; i < times; i++ {
 		mock.Expect("PING").Expect("PING").ReplyString("OK").ReplyString("OK")
 	}
+}
+
+func TestPanicOnProtocolBug(t *testing.T) {
+	p, mock, _, _ := setup(t, ConnOption{})
+
+	go func() {
+		mock.Expect().ReplyString("cause panic")
+	}()
+
+	defer func() {
+		if v := recover(); v != protocolbug {
+			t.Fatalf("should panic on protocolbug")
+		}
+	}()
+
+	p._backgroundRead()
 }
 
 func TestResponseSequenceWithPushMessageInjected(t *testing.T) {

@@ -107,89 +107,13 @@ func (p *pipe) _background() {
 		_ = p.conn.Close() // force both read & write goroutine to exit
 		wg.Done()
 	}
-	go func() { // write goroutine
-		defer exit()
-
-		var (
-			err   error
-			ones  = make([]cmds.Completed, 1)
-			multi []cmds.Completed
-			ch    chan proto.Result
-		)
-
-		for atomic.LoadInt32(&p.state) != 3 {
-			if ones[0], multi, ch = p.queue.NextWriteCmd(); multi == nil {
-				if !ones[0].IsEmpty() {
-					multi = ones
-				} else {
-					if p.w.Buffered() == 0 {
-						runtime.Gosched()
-						err = p.Error() // check err later
-					} else {
-						err = p.w.Flush()
-					}
-				}
-			}
-			for _, cmd := range multi {
-				if err = proto.WriteCmd(p.w, cmd.Commands()); cmd.NoReply() {
-					ch <- proto.NewErrResult(err)
-				}
-			}
-			if err != nil && err != ErrConnClosing {
-				p.error.CompareAndSwap(nil, &errs{error: err})
-				return
-			}
-		}
+	go func() {
+		p._backgroundWrite()
+		exit()
 	}()
-	go func() { // read goroutine
-		defer exit()
-
-		var (
-			err   error
-			msg   proto.Message
-			tmp   proto.Message
-			ones  = make([]cmds.Completed, 1)
-			multi []cmds.Completed
-			ch    chan proto.Result
-			ff    int // fulfilled count
-		)
-
-		for {
-			if msg, err = proto.ReadNextMessage(p.r); err != nil {
-				p.error.CompareAndSwap(nil, &errs{error: err})
-				return
-			}
-			if msg.Type == '>' {
-				p.handlePush(msg.Values)
-				continue
-			}
-			// if unfulfilled multi commands are lead by opt-in and get success response
-			if ff != len(multi) && len(multi) == 3 && multi[0].IsOptIn() {
-				if ff == 1 {
-					tmp = msg
-				} else if ff == 2 {
-					cacheable := cmds.Cacheable(multi[ff-1])
-					ck, cc := cacheable.CacheKey()
-					p.cache.Update(ck, cc, tmp, msg.Integer)
-					tmp = proto.Message{}
-				}
-			}
-		nextCMD:
-			if ff == len(multi) {
-				ff = 0
-				ones[0], multi, ch = p.queue.NextResultCh() // ch should not be nil, otherwise it must be a protocol bug
-			}
-			if multi == nil {
-				multi = ones
-			}
-			if multi[ff].NoReply() {
-				ff++
-				goto nextCMD
-			} else {
-				ff++
-				ch <- proto.NewResult(msg, err)
-			}
-		}
+	go func() {
+		p._backgroundRead()
+		exit()
 	}()
 	wg.Wait()
 
@@ -219,6 +143,91 @@ func (p *pipe) _background() {
 		}
 	}
 	atomic.CompareAndSwapInt32(&p.state, 2, 3)
+}
+
+func (p *pipe) _backgroundWrite() {
+	var (
+		err   error
+		ones  = make([]cmds.Completed, 1)
+		multi []cmds.Completed
+		ch    chan proto.Result
+	)
+
+	for atomic.LoadInt32(&p.state) != 3 {
+		if ones[0], multi, ch = p.queue.NextWriteCmd(); multi == nil {
+			if !ones[0].IsEmpty() {
+				multi = ones
+			} else {
+				if p.w.Buffered() == 0 {
+					runtime.Gosched()
+					err = p.Error() // check err later
+				} else {
+					err = p.w.Flush()
+				}
+			}
+		}
+		for _, cmd := range multi {
+			if err = proto.WriteCmd(p.w, cmd.Commands()); cmd.NoReply() {
+				ch <- proto.NewErrResult(err)
+			}
+		}
+		if err != nil && err != ErrConnClosing {
+			p.error.CompareAndSwap(nil, &errs{error: err})
+			return
+		}
+	}
+}
+
+func (p *pipe) _backgroundRead() {
+	var (
+		err   error
+		msg   proto.Message
+		tmp   proto.Message
+		ones  = make([]cmds.Completed, 1)
+		multi []cmds.Completed
+		ch    chan proto.Result
+		ff    int // fulfilled count
+	)
+
+	for {
+		if msg, err = proto.ReadNextMessage(p.r); err != nil {
+			p.error.CompareAndSwap(nil, &errs{error: err})
+			return
+		}
+		if msg.Type == '>' {
+			p.handlePush(msg.Values)
+			continue
+		}
+		// if unfulfilled multi commands are lead by opt-in and get success response
+		if ff != len(multi) && len(multi) == 3 && multi[0].IsOptIn() {
+			if ff == 1 {
+				tmp = msg
+			} else if ff == 2 {
+				cacheable := cmds.Cacheable(multi[ff-1])
+				ck, cc := cacheable.CacheKey()
+				p.cache.Update(ck, cc, tmp, msg.Integer)
+				tmp = proto.Message{}
+			}
+		}
+	nextCMD:
+		if ff == len(multi) {
+			ff = 0
+			ones[0], multi, ch = p.queue.NextResultCh() // ch should not be nil, otherwise it must be a protocol bug
+			if ch == nil {
+				panic(protocolbug)
+			}
+		}
+		if multi == nil {
+			multi = ones
+		}
+		if multi[ff].NoReply() {
+			ff++
+			goto nextCMD
+		} else {
+			ff++
+			ch <- proto.NewResult(msg, err)
+		}
+	}
 }
 
 func (p *pipe) handlePush(values []proto.Message) {
@@ -330,7 +339,7 @@ func (p *pipe) syncDo(cmd cmds.Completed) (resp proto.Result) {
 	err := proto.WriteCmd(p.w, cmd.Commands())
 	if err == nil {
 		if err = p.w.Flush(); err == nil {
-			msg, err = proto.ReadNextMessage(p.r)
+			msg, err = syncRead(p.r)
 		}
 	}
 	if err != nil {
@@ -352,7 +361,7 @@ func (p *pipe) syncDoMulti(resp []proto.Result, multi []cmds.Completed) []proto.
 		goto abort
 	}
 	for i := 0; i < len(resp); i++ {
-		if msg, err = proto.ReadNextMessage(p.r); err != nil {
+		if msg, err = syncRead(p.r); err != nil {
 			goto abort
 		}
 		resp[i] = proto.NewResult(msg, err)
@@ -366,6 +375,17 @@ abort:
 		resp[i] = proto.NewErrResult(err)
 	}
 	return resp
+}
+
+func syncRead(r *bufio.Reader) (m proto.Message, err error) {
+next:
+	if m, err = proto.ReadNextMessage(r); err != nil {
+		return m, err
+	}
+	if m.Type == '>' {
+		goto next
+	}
+	return m, nil
 }
 
 func (p *pipe) DoCache(cmd cmds.Cacheable, ttl time.Duration) proto.Result {
@@ -398,3 +418,5 @@ func (p *pipe) Close() {
 	}
 	atomic.CompareAndSwapInt32(&p.state, 2, 3)
 }
+
+var protocolbug = "protocol bug, message handled out of order"
