@@ -50,48 +50,13 @@ which reduces the overall round trip costs, and gets higher throughput.
 
 ### Benchmark comparison with go-redis v8.11.4
 
-```shell
-▶ # run redis-server 6.2.5 at 127.0.0.1:6379
-▶ ./redis-server
-▶ go test -bench=. -benchmem ./cmd/bench3/...
-goos: darwin
-goarch: amd64
-pkg: github.com/rueian/rueidis/cmd/bench3
-cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
-BenchmarkRedisClient/RueidisParallel100Get-12    1559809     744.2 ns/op    104 B/op    2 allocs/op
-BenchmarkRedisClient/GoRedisParallel100Get-12     148611      7915 ns/op    208 B/op    6 allocs/op
-PASS
-ok  	github.com/rueian/rueidis/cmd/bench3	3.589s
+Rueidis has higher throughput than go-redis v8.11.4 across 1, 8, 64, and 128 parallelism settings.
 
-```
-Benchmark source code:
-```golang
-func BenchmarkRedisClient(b *testing.B) {
-    ctx := context.Background()
-    b.Run("RueidisParallel100Get", func(b *testing.B) {
-        c, _ := rueidis.NewSingleClient(rueidis.SingleClient{Address: "127.0.0.1:6379"})
-        b.SetParallelism(100)
-        b.ResetTimer()
-        b.RunParallel(func(pb *testing.PB) {
-            for pb.Next() {
-                c.Do(ctx, c.Cmd.Get().Key("a").Build())
-            }
-        })
-        c.Close()
-    })
-    b.Run("GoRedisParallel100Get", func(b *testing.B) {
-        rdb := redis.NewClient(&redis.Options{Addr: "127.0.0.1:6379", PoolSize: 100})
-        b.SetParallelism(100)
-        b.ResetTimer()
-        b.RunParallel(func(pb *testing.PB) {
-            for pb.Next() {
-                rdb.Get(ctx, "a")
-            }
-        })
-        rdb.Close()
-    })
-}
-```
+In some case, it is even able to achieve ~10x throughput over go-redis in a local benchmark. (parallel(128)-key(16)-value(64)-10)
+
+![single client](https://github.com/rueian/rueidis-benchmark/blob/master/single_client_2.png)
+
+Benchmark source code: https://github.com/rueian/rueidis-benchmark
 
 ## Client Side Caching
 
