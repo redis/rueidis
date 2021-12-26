@@ -14,10 +14,7 @@ const (
 	DefaultPoolSize   = 1000
 )
 
-var (
-	IsRedisNil     = proto.IsRedisNil
-	ErrConnClosing = errors.New("connection is closing")
-)
+var ErrConnClosing = errors.New("connection is closing")
 
 type ConnOption struct {
 	// CacheSizeEachConn is redis client side cache size that bind to each TCP connection to a single redis instance.
@@ -48,6 +45,10 @@ func NewClusterClient(option ClusterClientOption) (*ClusterClient, error) {
 
 func NewSingleClient(option SingleClientOption) (*SingleClient, error) {
 	return newSingleClient(option, makeConn)
+}
+
+func IsRedisNil(err error) bool {
+	return proto.IsRedisNil(err)
 }
 
 func makeConn(dst string, opt ConnOption) conn {
