@@ -1,8 +1,6 @@
 package rueidis
 
-import (
-	"sync"
-)
+import "sync"
 
 type call struct {
 	mu sync.Mutex

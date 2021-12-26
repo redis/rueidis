@@ -19,14 +19,14 @@ type SingleClient struct {
 	conn conn
 }
 
-func newSingleClient(option SingleClientOption, connFn connFn) (*SingleClient, error) {
-	s := &SingleClient{Cmd: cmds.NewBuilder(), conn: connFn(option.Address, option.ConnOption)}
+func newSingleClient(opt SingleClientOption, connFn connFn) (*SingleClient, error) {
+	s := &SingleClient{Cmd: cmds.NewBuilder(), conn: connFn(opt.Address, opt.ConnOption)}
 
 	if err := s.conn.Dial(); err != nil {
 		return nil, err
 	}
 
-	option.ConnOption.PubSubHandlers.installHook(s.Cmd, func() conn { return s.conn })
+	opt.ConnOption.PubSubHandlers.installHook(s.Cmd, func() conn { return s.conn })
 
 	return s, nil
 }
