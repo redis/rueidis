@@ -18,9 +18,7 @@ import (
 func setupMux(wires []*mock.Wire) (conn *mux, checkClean func(t *testing.T)) {
 	var mu sync.Mutex
 	var count = -1
-	return newMux("", ConnOption{}, (*mock.Wire)(nil), func(dst string, opt ConnOption) (net.Conn, error) {
-			return nil, nil
-		}, func(conn net.Conn, opt ConnOption, fn func(err error)) (wire, error) {
+	return newMux("", ConnOption{}, (*mock.Wire)(nil), func(fn func(err error)) (wire, error) {
 			mu.Lock()
 			defer mu.Unlock()
 			count++
@@ -59,9 +57,7 @@ func TestNewMux(t *testing.T) {
 
 func TestMuxOnDisconnected(t *testing.T) {
 	var trigger func(err error)
-	m := newMux("", ConnOption{}, (*mock.Wire)(nil), func(dst string, opt ConnOption) (net.Conn, error) {
-		return nil, nil
-	}, func(conn net.Conn, opt ConnOption, fn func(err error)) (wire, error) {
+	m := newMux("", ConnOption{}, (*mock.Wire)(nil), func(fn func(err error)) (wire, error) {
 		trigger = fn
 		return &mock.Wire{}, nil
 	})
@@ -89,12 +85,9 @@ func TestMuxOnDisconnected(t *testing.T) {
 }
 
 func TestMuxDialSuppress(t *testing.T) {
-	var dials, wires, waits, done int64
+	var wires, waits, done int64
 	blocking := make(chan struct{})
-	m := newMux("", ConnOption{}, (*mock.Wire)(nil), func(dst string, opt ConnOption) (net.Conn, error) {
-		atomic.AddInt64(&dials, 1)
-		return nil, nil
-	}, func(conn net.Conn, opt ConnOption, fn func(err error)) (wire, error) {
+	m := newMux("", ConnOption{}, (*mock.Wire)(nil), func(fn func(err error)) (wire, error) {
 		atomic.AddInt64(&wires, 1)
 		<-blocking
 		return &mock.Wire{}, nil
@@ -112,9 +105,6 @@ func TestMuxDialSuppress(t *testing.T) {
 	close(blocking)
 	for atomic.LoadInt64(&done) != 1000 {
 		runtime.Gosched()
-	}
-	if atomic.LoadInt64(&dials) != 1 {
-		t.Fatalf("dailFn is not suppressed")
 	}
 	if atomic.LoadInt64(&wires) != 1 {
 		t.Fatalf("wireFn is not suppressed")
@@ -480,18 +470,16 @@ func TestMuxCMDRetry(t *testing.T) {
 func TestMuxDialRetry(t *testing.T) {
 	setup := func() (*mux, *int64) {
 		var count int64
-		return newMux("", ConnOption{}, (*mock.Wire)(nil), func(dst string, opt ConnOption) (net.Conn, error) {
+		return newMux("", ConnOption{}, (*mock.Wire)(nil), func(fn func(err error)) (wire, error) {
 			if count == 1 {
-				return nil, nil
+				return &mock.Wire{
+					DoFn: func(cmd cmds.Completed) proto.Result {
+						return proto.NewResult(proto.Message{Type: '+', String: "PONG"}, nil)
+					},
+				}, nil
 			}
 			count++
 			return nil, errors.New("network err")
-		}, func(conn net.Conn, opt ConnOption, fn func(err error)) (wire, error) {
-			return &mock.Wire{
-				DoFn: func(cmd cmds.Completed) proto.Result {
-					return proto.NewResult(proto.Message{Type: '+', String: "PONG"}, nil)
-				},
-			}, nil
 		}), &count
 	}
 	t.Run("retry on auto pipeline", func(t *testing.T) {
