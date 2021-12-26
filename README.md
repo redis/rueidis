@@ -50,11 +50,14 @@ which reduces the overall round trip costs, and gets higher throughput.
 
 ### Benchmark comparison with go-redis v8.11.4
 
-Rueidis has higher throughput than go-redis v8.11.4 across 1, 8, 64, and 128 parallelism settings.
+Rueidis has higher throughput than go-redis v8.11.4 across 1, 8, and 64 parallelism settings.
 
-In some case, it is even able to achieve ~10x throughput over go-redis in a local benchmark. (parallel(128)-key(16)-value(64)-10)
+It is even able to achieve ~14x throughput over go-redis in a local benchmark. (see `parallelism(64)-key(16)-value(64)-10`)
 
-![single client](https://github.com/rueian/rueidis-benchmark/blob/master/single_client_2.png)
+#### Single Client
+![client_test_set](https://github.com/rueian/rueidis-benchmark/blob/master/client_test_set.png)
+#### Cluster Client
+![cluster_test_set](https://github.com/rueian/rueidis-benchmark/blob/master/cluster_test_set.png)
 
 Benchmark source code: https://github.com/rueian/rueidis-benchmark
 
@@ -69,20 +72,11 @@ a key is expired on the server. Please follow [#6833](https://github.com/redis/r
 Although an explicit client side TTL is required, the `DoCache()` still sends a `PTTL` command to server and make sure that
 the client side TTL is not longer than the TTL on server side.
 
-### Benchmark [(source)](./pkg/conn/conn_test.go)
+### Benchmark
 
-```shell
-▶ ./redis-server
-▶ go test -bench=BenchmarkClientSideCaching -benchmem ./pkg/conn
-goos: darwin
-goarch: amd64
-pkg: github.com/rueian/rueidis/pkg/conn
-cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
-BenchmarkClientSideCaching/Do-12         1378052    866.8 ns/op    0 B/op    0 allocs/op
-BenchmarkClientSideCaching/DoCache-12    3485281    351.1 ns/op    0 B/op    0 allocs/op
-PASS
-ok  	github.com/rueian/rueidis/pkg/conn	3.057s
-```
+![client_test_get](https://github.com/rueian/rueidis-benchmark/blob/master/client_test_get_2.png)
+
+Benchmark source code: https://github.com/rueian/rueidis-benchmark
 
 ### Supported Commands for Client Side Caching
 
