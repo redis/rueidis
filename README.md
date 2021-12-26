@@ -55,9 +55,9 @@ Rueidis has higher throughput than go-redis v8.11.4 across 1, 8, and 64 parallel
 It is even able to achieve ~14x throughput over go-redis in a local benchmark. (see `parallelism(64)-key(16)-value(64)-10`)
 
 #### Single Client
-![client_test_set](https://github.com/rueian/rueidis-benchmark/blob/master/client_test_set.png)
+![client_test_set](https://github.com/rueian/rueidis-benchmark/blob/master/client_test_set_4.png)
 #### Cluster Client
-![cluster_test_set](https://github.com/rueian/rueidis-benchmark/blob/master/cluster_test_set_3.png)
+![cluster_test_set](https://github.com/rueian/rueidis-benchmark/blob/master/cluster_test_set_4.png)
 
 Benchmark source code: https://github.com/rueian/rueidis-benchmark
 
@@ -74,7 +74,7 @@ the client side TTL is not longer than the TTL on server side.
 
 ### Benchmark
 
-![client_test_get](https://github.com/rueian/rueidis-benchmark/blob/master/client_test_get_2.png)
+![client_test_get](https://github.com/rueian/rueidis-benchmark/blob/master/client_test_get_4.png)
 
 Benchmark source code: https://github.com/rueian/rueidis-benchmark
 
