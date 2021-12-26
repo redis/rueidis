@@ -185,40 +185,40 @@ func TestClusterClient(t *testing.T) {
 		<-called
 	})
 
-	t.Run("DedicatedWire Err", func(t *testing.T) {
+	t.Run("Dedicated Err", func(t *testing.T) {
 		v := errors.New("fn err")
-		if err := client.DedicatedWire(func(client *DedicatedClusterClient) error {
+		if err := client.Dedicated(func(client *DedicatedClusterClient) error {
 			return v
 		}); err != v {
 			t.Fatalf("unexpected err %v", err)
 		}
 	})
 
-	t.Run("DedicatedWire No Slot Err", func(t *testing.T) {
+	t.Run("Dedicated No Slot Err", func(t *testing.T) {
 		defer func() {
 			if err := recover(); err != "the first command in DedicatedClusterClient should contain the slot key" {
-				t.Errorf("DedicatedWire should panic if no slot is selected")
+				t.Errorf("Dedicated should panic if no slot is selected")
 			}
 		}()
-		client.DedicatedWire(func(c *DedicatedClusterClient) error {
+		client.Dedicated(func(c *DedicatedClusterClient) error {
 			return c.Do(context.Background(), client.Cmd.Info().Build()).Error()
 		})
 	})
 
-	t.Run("DedicatedWire Cross Slot Err", func(t *testing.T) {
+	t.Run("Dedicated Cross Slot Err", func(t *testing.T) {
 		defer func() {
-			if err := recover(); err != "cross slot command in DedicatedWire is prohibited" {
-				t.Errorf("DedicatedWire should panic if cross slots is used")
+			if err := recover(); err != "cross slot command in Dedicated is prohibited" {
+				t.Errorf("Dedicated should panic if cross slots is used")
 			}
 		}()
 		m.AcquireFn = func() wire { return &mock.Wire{} }
-		client.DedicatedWire(func(c *DedicatedClusterClient) error {
+		client.Dedicated(func(c *DedicatedClusterClient) error {
 			c.Do(context.Background(), client.Cmd.Get().Key("a").Build()).Error()
 			return c.Do(context.Background(), client.Cmd.Get().Key("b").Build()).Error()
 		})
 	})
 
-	t.Run("DedicatedWire Delegate", func(t *testing.T) {
+	t.Run("Dedicated Delegate", func(t *testing.T) {
 		w := &mock.Wire{
 			DoFn: func(cmd cmds.Completed) proto.Result {
 				return proto.NewResult(proto.Message{Type: '+', String: "Delegate"}, nil)
@@ -237,7 +237,7 @@ func TestClusterClient(t *testing.T) {
 			}
 			stored = true
 		}
-		if err := client.DedicatedWire(func(c *DedicatedClusterClient) error {
+		if err := client.Dedicated(func(c *DedicatedClusterClient) error {
 			if v, err := c.Do(context.Background(), client.Cmd.Get().Key("a").Build()).ToString(); err != nil || v != "Delegate" {
 				t.Fatalf("unexpected respone %v %v", v, err)
 			}
@@ -254,7 +254,7 @@ func TestClusterClient(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 		if !stored {
-			t.Fatalf("DedicatedWire desn't put back the wire")
+			t.Fatalf("Dedicated desn't put back the wire")
 		}
 	})
 
@@ -348,7 +348,7 @@ func TestClusterClientErr(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
-		if err := client.DedicatedWire(func(c *DedicatedClusterClient) error {
+		if err := client.Dedicated(func(c *DedicatedClusterClient) error {
 			return c.Do(context.Background(), client.Cmd.Get().Key("a").Build()).Error()
 		}); err != ErrNoSlot {
 			t.Fatalf("unexpected err %v", err)
@@ -365,7 +365,7 @@ func TestClusterClientErr(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
-		if err := client.DedicatedWire(func(c *DedicatedClusterClient) error {
+		if err := client.Dedicated(func(c *DedicatedClusterClient) error {
 			for _, v := range c.DoMulti(context.Background(), client.Cmd.Get().Key("a").Build()) {
 				if err := v.Error(); err != nil {
 					return err

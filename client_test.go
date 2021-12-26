@@ -160,16 +160,16 @@ func TestSingleClient(t *testing.T) {
 		}
 	})
 
-	t.Run("DedicatedWire Err", func(t *testing.T) {
+	t.Run("Dedicated Err", func(t *testing.T) {
 		v := errors.New("fn err")
-		if err := client.DedicatedWire(func(client *DedicatedSingleClient) error {
+		if err := client.Dedicated(func(client *DedicatedSingleClient) error {
 			return v
 		}); err != v {
 			t.Fatalf("unexpected err %v", err)
 		}
 	})
 
-	t.Run("DedicatedWire Delegate", func(t *testing.T) {
+	t.Run("Dedicated Delegate", func(t *testing.T) {
 		w := &mock.Wire{
 			DoFn: func(cmd cmds.Completed) proto.Result {
 				return proto.NewResult(proto.Message{Type: '+', String: "Delegate"}, nil)
@@ -188,7 +188,7 @@ func TestSingleClient(t *testing.T) {
 			}
 			stored = true
 		}
-		if err := client.DedicatedWire(func(c *DedicatedSingleClient) error {
+		if err := client.Dedicated(func(c *DedicatedSingleClient) error {
 			if v, err := c.Do(context.Background(), client.Cmd.Get().Key("a").Build()).ToString(); err != nil || v != "Delegate" {
 				t.Fatalf("unexpected respone %v %v", v, err)
 			}
@@ -205,7 +205,7 @@ func TestSingleClient(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 		if !stored {
-			t.Fatalf("DedicatedWire desn't put back the wire")
+			t.Fatalf("Dedicated desn't put back the wire")
 		}
 	})
 

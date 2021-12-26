@@ -195,18 +195,18 @@ unintentional write commands between WATCH and EXEC. Otherwise, the EXEC may not
 The dedicated connection shares the same connection pool with blocking commands.
 
 ```golang
-c.DedicatedWire(func(client client.DedicatedSingleClient) error {
+c.Dedicated(func(client *client.DedicatedSingleClient) error {
     // watch keys first
-    client.Do(ctx, c.Cmd.Watch().Key("k1", "k2").Build())
+    client.Do(ctx, client.Cmd.Watch().Key("k1", "k2").Build())
     // perform read here
-    client.Do(ctx, c.Cmd.Mget().Key("k1", "k2").Build())
+    client.Do(ctx, client.Cmd.Mget().Key("k1", "k2").Build())
     // perform write with MULTI EXEC
     client.DoMulti(
         ctx,
-        c.Cmd.Multi().Build(),
-        c.Cmd.Set().Key("k1").Value("1").Build(),
-        c.Cmd.Set().Key("k2").Value("2").Build(),
-        c.Cmd.Exec().Build(),
+        client.Cmd.Multi().Build(),
+        client.Cmd.Set().Key("k1").Value("1").Build(),
+        client.Cmd.Set().Key("k2").Value("2").Build(),
+        client.Cmd.Exec().Build(),
     )
     return nil
 })

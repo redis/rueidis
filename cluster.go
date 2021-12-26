@@ -303,7 +303,7 @@ ret:
 	return resp
 }
 
-func (c *ClusterClient) DedicatedWire(fn func(*DedicatedClusterClient) error) (err error) {
+func (c *ClusterClient) Dedicated(fn func(*DedicatedClusterClient) error) (err error) {
 	dcc := &DedicatedClusterClient{Cmd: c.Cmd, client: c, slot: cmds.InitSlot}
 	err = fn(dcc)
 	dcc.release()
@@ -363,7 +363,7 @@ func (c *DedicatedClusterClient) check(slot uint16) {
 	if c.slot == cmds.InitSlot {
 		c.slot = slot
 	} else if c.slot != slot {
-		panic("cross slot command in DedicatedWire is prohibited")
+		panic("cross slot command in Dedicated is prohibited")
 	}
 }
 
