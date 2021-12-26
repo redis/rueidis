@@ -57,7 +57,7 @@ It is even able to achieve ~14x throughput over go-redis in a local benchmark. (
 #### Single Client
 ![client_test_set](https://github.com/rueian/rueidis-benchmark/blob/master/client_test_set.png)
 #### Cluster Client
-![cluster_test_set](https://github.com/rueian/rueidis-benchmark/blob/master/cluster_test_set.png)
+![cluster_test_set](https://github.com/rueian/rueidis-benchmark/blob/master/cluster_test_set_3.png)
 
 Benchmark source code: https://github.com/rueian/rueidis-benchmark
 
