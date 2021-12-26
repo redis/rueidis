@@ -517,7 +517,7 @@ func toGoName(paramName string) string {
 }
 
 func printRootBuilder(w io.Writer, root GoStruct, prefix string) {
-	fmt.Fprintf(w, "func (b *%sBuilder) %s() %s%s {\n", prefix, root.FullName, prefix, root.FullName)
+	fmt.Fprintf(w, "func (b *%sBuilder) %s() (c %s%s) {\n", prefix, root.FullName, prefix, root.FullName)
 
 	var appends []string
 	for _, cmd := range root.BuildDef.Command {
@@ -525,11 +525,12 @@ func printRootBuilder(w io.Writer, root GoStruct, prefix string) {
 	}
 
 	if tag := rootCf(root); tag != "" {
-		fmt.Fprintf(w, "\treturn %s%s{cs: append(b.get(), %s), ks: InitSlot, cf: %s}\n", prefix, root.FullName, strings.Join(appends, ", "), tag)
+		fmt.Fprintf(w, "\tc = %s%s{cs: b.get(), ks: InitSlot, cf: %s}\n", prefix, root.FullName, tag)
 	} else {
-		fmt.Fprintf(w, "\treturn %s%s{cs: append(b.get(), %s), ks: InitSlot}\n", prefix, root.FullName, strings.Join(appends, ", "))
+		fmt.Fprintf(w, "\tc = %s%s{cs: b.get(), ks: InitSlot}\n", prefix, root.FullName)
 	}
-
+	fmt.Fprintf(w, "\tc.cs.s = append(c.cs.s, %s)\n", strings.Join(appends, ", "))
+	fmt.Fprintf(w, "\treturn c\n")
 	fmt.Fprintf(w, "}\n\n")
 }
 
@@ -624,11 +625,11 @@ func printBuilder(w io.Writer, parent, next GoStruct, prefix string) {
 
 	if len(appends) == 0 && next.Variadic && len(next.BuildDef.Parameters) == 1 && toGoType(next.BuildDef.Parameters[0].Type) == "string" {
 		appends = append(appends, toGoName(next.BuildDef.Parameters[0].Name)+"...")
-		fmt.Fprintf(w, "\tc.cs = append(c.cs, %s)\n", strings.Join(appends, ", "))
+		fmt.Fprintf(w, "\tc.cs.s = append(c.cs.s, %s)\n", strings.Join(appends, ", "))
 	} else if len(next.BuildDef.Parameters) != 1 && next.Variadic && parent.FullName != next.FullName {
 		// no parameter
 		if len(appends) != 0 {
-			fmt.Fprintf(w, "\tc.cs = append(c.cs, %s)\n", strings.Join(appends, ", "))
+			fmt.Fprintf(w, "\tc.cs.s = append(c.cs.s, %s)\n", strings.Join(appends, ", "))
 		}
 	} else {
 		allstring := true
@@ -642,21 +643,21 @@ func printBuilder(w io.Writer, parent, next GoStruct, prefix string) {
 			for _, p := range next.BuildDef.Parameters {
 				appends = append(appends, toGoName(p.Name))
 			}
-			fmt.Fprintf(w, "\tc.cs = append(c.cs, %s)\n", strings.Join(appends, ", "))
+			fmt.Fprintf(w, "\tc.cs.s = append(c.cs.s, %s)\n", strings.Join(appends, ", "))
 		} else {
 			if len(next.BuildDef.Parameters) == 1 && next.Variadic {
 				if len(appends) != 0 {
-					fmt.Fprintf(w, "\tc.cs = append(c.cs, %s)\n", strings.Join(appends, ", "))
+					fmt.Fprintf(w, "\tc.cs.s = append(c.cs.s, %s)\n", strings.Join(appends, ", "))
 				}
 				if toGoType(next.BuildDef.Parameters[0].Type) == "string" {
-					fmt.Fprintf(w, "\tc.cs = append(c.cs, %s...)\n", toGoName(next.BuildDef.Parameters[0].Name))
+					fmt.Fprintf(w, "\tc.cs.s = append(c.cs.s, %s...)\n", toGoName(next.BuildDef.Parameters[0].Name))
 				} else {
 					fmt.Fprintf(w, "\tfor _, n := range %s {\n", toGoName(next.BuildDef.Parameters[0].Name))
 					switch toGoType(next.BuildDef.Parameters[0].Type) {
 					case "float64":
-						fmt.Fprintf(w, "\t\tc.cs = append(c.cs, strconv.FormatFloat(n, 'f', -1, 64))\n")
+						fmt.Fprintf(w, "\t\tc.cs.s = append(c.cs.s, strconv.FormatFloat(n, 'f', -1, 64))\n")
 					case "int64":
-						fmt.Fprintf(w, "\t\tc.cs = append(c.cs, strconv.FormatInt(n, 10))\n")
+						fmt.Fprintf(w, "\t\tc.cs.s = append(c.cs.s, strconv.FormatInt(n, 10))\n")
 					default:
 						panic("unexpected param type " + next.BuildDef.Parameters[0].Type)
 					}
@@ -678,9 +679,9 @@ func printBuilder(w io.Writer, parent, next GoStruct, prefix string) {
 						panic("unexpected param type " + next.BuildDef.Parameters[0].Type)
 					}
 				}
-				fmt.Fprintf(w, "\tc.cs = append(c.cs, %s)\n", strings.Join(appends, ", "))
+				fmt.Fprintf(w, "\tc.cs.s = append(c.cs.s, %s)\n", strings.Join(appends, ", "))
 				for _, follow := range follows {
-					fmt.Fprintf(w, "\tc.cs = append(c.cs, %s)\n", follow)
+					fmt.Fprintf(w, "\tc.cs.s = append(c.cs.s, %s)\n", follow)
 				}
 			}
 		}

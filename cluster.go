@@ -271,7 +271,7 @@ process:
 		}
 	}
 ret:
-	c.Cmd.Put(cmd.Commands())
+	c.Cmd.Put(cmd.CommandSlice())
 	return resp
 }
 
@@ -299,7 +299,7 @@ process:
 		}
 	}
 ret:
-	c.Cmd.Put(cmd.Commands())
+	c.Cmd.Put(cmd.CommandSlice())
 	return resp
 }
 
@@ -394,7 +394,7 @@ func (c *DedicatedClusterClient) Do(ctx context.Context, cmd cmds.SCompleted) (r
 	} else {
 		resp = c.wire.Do(cmds.Completed(cmd))
 	}
-	c.Cmd.Put(cmd.Commands())
+	c.Cmd.Put(cmd.CommandSlice())
 	return resp
 }
 
@@ -414,7 +414,7 @@ func (c *DedicatedClusterClient) DoMulti(ctx context.Context, multi ...cmds.SCom
 		}
 	}
 	for _, cmd := range multi {
-		c.Cmd.Put(cmd.Commands())
+		c.Cmd.Put(cmd.CommandSlice())
 	}
 	return resp
 }

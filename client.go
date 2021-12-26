@@ -37,13 +37,13 @@ func (c *SingleClient) Info() map[string]proto.Message {
 
 func (c *SingleClient) Do(ctx context.Context, cmd cmds.Completed) (resp proto.Result) {
 	resp = c.conn.Do(cmd)
-	c.Cmd.Put(cmd.Commands())
+	c.Cmd.Put(cmd.CommandSlice())
 	return resp
 }
 
 func (c *SingleClient) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp proto.Result) {
 	resp = c.conn.DoCache(cmd, ttl)
-	c.Cmd.Put(cmd.Commands())
+	c.Cmd.Put(cmd.CommandSlice())
 	return resp
 }
 
@@ -95,7 +95,7 @@ type DedicatedSingleClient struct {
 
 func (c *DedicatedSingleClient) Do(ctx context.Context, cmd cmds.Completed) (resp proto.Result) {
 	resp = c.wire.Do(cmd)
-	c.Cmd.Put(cmd.Commands())
+	c.Cmd.Put(cmd.CommandSlice())
 	return resp
 }
 
@@ -105,7 +105,7 @@ func (c *DedicatedSingleClient) DoMulti(ctx context.Context, multi ...cmds.Compl
 	}
 	resp = c.wire.DoMulti(multi...)
 	for _, cmd := range multi {
-		c.Cmd.Put(cmd.Commands())
+		c.Cmd.Put(cmd.CommandSlice())
 	}
 	return resp
 }

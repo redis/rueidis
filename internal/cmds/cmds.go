@@ -12,31 +12,31 @@ const (
 
 var (
 	OptInCmd = Completed{
-		cs: []string{"CLIENT", "CACHING", "YES"},
+		cs: &CommandSlice{s: []string{"CLIENT", "CACHING", "YES"}},
 		cf: optInTag,
 	}
 	PingCmd = Completed{
-		cs: []string{"PING"},
+		cs: &CommandSlice{s: []string{"PING"}},
 	}
 	QuitCmd = Completed{
-		cs: []string{"QUIT"},
+		cs: &CommandSlice{s: []string{"QUIT"}},
 	}
 	SlotCmd = Completed{
-		cs: []string{"CLUSTER", "SLOTS"},
+		cs: &CommandSlice{s: []string{"CLUSTER", "SLOTS"}},
 	}
 	AskingCmd = Completed{
-		cs: []string{"ASKING"},
+		cs: &CommandSlice{s: []string{"ASKING"}},
 	}
 )
 
 type Completed struct {
-	cs []string
+	cs *CommandSlice
 	cf uint16
 	ks uint16
 }
 
 func (c *Completed) IsEmpty() bool {
-	return len(c.cs) == 0
+	return c.cs == nil || len(c.cs.s) == 0
 }
 
 func (c *Completed) IsOptIn() bool {
@@ -60,6 +60,10 @@ func (c *Completed) IsWrite() bool {
 }
 
 func (c *Completed) Commands() []string {
+	return c.cs.s
+}
+
+func (c *Completed) CommandSlice() *CommandSlice {
 	return c.cs
 }
 
@@ -67,6 +71,10 @@ type Cacheable Completed
 type SCompleted Completed
 
 func (c *SCompleted) Commands() []string {
+	return c.cs.s
+}
+
+func (c *SCompleted) CommandSlice() *CommandSlice {
 	return c.cs
 }
 
@@ -81,20 +89,28 @@ func (c *SCacheable) Slot() uint16 {
 }
 
 func (c *SCacheable) Commands() []string {
+	return c.cs.s
+}
+
+func (c *SCacheable) CommandSlice() *CommandSlice {
 	return c.cs
 }
 
 func (c *Cacheable) Commands() []string {
+	return c.cs.s
+}
+
+func (c *Cacheable) CommandSlice() *CommandSlice {
 	return c.cs
 }
 
 func (c *Cacheable) CacheKey() (key, command string) {
-	if len(c.cs) == 2 {
-		return c.cs[1], c.cs[0]
+	if len(c.cs.s) == 2 {
+		return c.cs.s[1], c.cs.s[0]
 	}
 
 	length := 0
-	for i, v := range c.cs {
+	for i, v := range c.cs.s {
 		if i == 1 {
 			continue
 		}
@@ -102,7 +118,7 @@ func (c *Cacheable) CacheKey() (key, command string) {
 	}
 	sb := strings.Builder{}
 	sb.Grow(length)
-	for i, v := range c.cs {
+	for i, v := range c.cs.s {
 		if i == 1 {
 			key = v
 		} else {
@@ -112,16 +128,16 @@ func (c *Cacheable) CacheKey() (key, command string) {
 	return key, sb.String()
 }
 
-func NewCompleted(cs []string) Completed {
-	return Completed{cs: cs}
+func NewCompleted(ss []string) Completed {
+	return Completed{cs: &CommandSlice{s: ss}}
 }
 
-func NewBlockingCompleted(cs []string) Completed {
-	return Completed{cs: cs, cf: blockTag}
+func NewBlockingCompleted(ss []string) Completed {
+	return Completed{cs: &CommandSlice{s: ss}, cf: blockTag}
 }
 
-func NewReadOnlyCompleted(cs []string) Completed {
-	return Completed{cs: cs, cf: readonly}
+func NewReadOnlyCompleted(ss []string) Completed {
+	return Completed{cs: &CommandSlice{s: ss}, cf: readonly}
 }
 
 func NewMultiCompleted(cs [][]string) []Completed {
