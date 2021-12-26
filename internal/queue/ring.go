@@ -40,7 +40,10 @@ type node struct {
 }
 
 func (r *Ring) PutOne(m cmds.Completed) chan proto.Result {
-	n := r.acquire(atomic.AddUint64(&r.write, 1) & r.mask)
+	n := &r.store[atomic.AddUint64(&r.write, 1)&r.mask]
+	for !atomic.CompareAndSwapUint32(&n.mark, 0, 1) {
+		runtime.Gosched()
+	}
 	n.one = m
 	n.multi = nil
 	atomic.StoreUint32(&n.mark, 2)
@@ -48,19 +51,14 @@ func (r *Ring) PutOne(m cmds.Completed) chan proto.Result {
 }
 
 func (r *Ring) PutMulti(m []cmds.Completed) chan proto.Result {
-	n := r.acquire(atomic.AddUint64(&r.write, 1) & r.mask)
+	n := &r.store[atomic.AddUint64(&r.write, 1)&r.mask]
+	for !atomic.CompareAndSwapUint32(&n.mark, 0, 1) {
+		runtime.Gosched()
+	}
 	n.one = cmds.Completed{}
 	n.multi = m
 	atomic.StoreUint32(&n.mark, 2)
 	return n.ch
-}
-
-func (r *Ring) acquire(position uint64) *node {
-	n := &r.store[position]
-	for !atomic.CompareAndSwapUint32(&n.mark, 0, 1) {
-		runtime.Gosched()
-	}
-	return n
 }
 
 // NextWriteCmd should be only called by one dedicated thread
