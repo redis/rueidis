@@ -56,6 +56,7 @@ func newClusterClient(opt ClusterClientOption, connFn connFn) (client *ClusterCl
 	}
 
 	if err = client.refresh(); err != nil {
+		client.Close()
 		return nil, err
 	}
 
