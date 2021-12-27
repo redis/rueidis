@@ -20,15 +20,15 @@ type SingleClient struct {
 }
 
 func newSingleClient(opt SingleClientOption, connFn connFn) (*SingleClient, error) {
-	s := &SingleClient{Cmd: cmds.NewBuilder(), conn: connFn(opt.Address, opt.ConnOption)}
+	client := &SingleClient{Cmd: cmds.NewBuilder(), conn: connFn(opt.Address, opt.ConnOption)}
 
-	if err := s.conn.Dial(); err != nil {
+	if err := client.conn.Dial(); err != nil {
 		return nil, err
 	}
 
-	opt.ConnOption.PubSubHandlers.installHook(s.Cmd, func() conn { return s.conn })
+	opt.ConnOption.PubSubHandlers.installHook(client.Cmd, func() conn { return client.conn })
 
-	return s, nil
+	return client, nil
 }
 
 func (c *SingleClient) Info() map[string]proto.Message {
