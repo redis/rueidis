@@ -8,7 +8,6 @@ import (
 	"runtime"
 	"sync"
 	"time"
-	"unsafe"
 
 	"github.com/rueian/rueidis/internal/cmds"
 	"github.com/rueian/rueidis/internal/proto"
@@ -27,7 +26,7 @@ type ClusterClientOption struct {
 }
 
 type ClusterClient struct {
-	Cmd *cmds.Builder
+	cmd *cmds.Builder
 	opt ClusterClientOption
 
 	mu     sync.RWMutex
@@ -45,7 +44,7 @@ func newClusterClient(opt ClusterClientOption, connFn connFn) (client *ClusterCl
 	}
 
 	client = &ClusterClient{
-		Cmd:    cmds.NewBuilder(cmds.InitSlot),
+		cmd:    cmds.NewBuilder(cmds.InitSlot),
 		opt:    opt,
 		connFn: connFn,
 		conns:  make(map[string]conn),
@@ -60,7 +59,7 @@ func newClusterClient(opt ClusterClientOption, connFn connFn) (client *ClusterCl
 		return nil, err
 	}
 
-	opt.ConnOption.PubSubHandlers.installHook((*cmds.Builder)(client.Cmd), func() (cc conn) {
+	opt.ConnOption.PubSubHandlers.installHook(client.cmd, func() (cc conn) {
 		var err error
 		for cc == nil && err != ErrConnClosing {
 			cc, err = client.pick(cmds.InitSlot)
@@ -249,6 +248,10 @@ func (c *ClusterClient) pickOrNew(addr string) (p conn) {
 	return p
 }
 
+func (c *ClusterClient) B() *cmds.Builder {
+	return c.cmd
+}
+
 func (c *ClusterClient) Do(ctx context.Context, cmd cmds.Completed) (resp proto.Result) {
 retry:
 	cc, err := c.pick(cmd.Slot())
@@ -256,15 +259,15 @@ retry:
 		resp = proto.NewErrResult(err)
 		goto ret
 	}
-	resp = cc.Do(cmds.Completed(cmd))
+	resp = cc.Do(cmd)
 process:
 	if err := resp.RedisError(); err != nil {
 		if addr, ok := err.IsMoved(); ok {
 			go c.refresh()
-			resp = c.pickOrNew(addr).Do(cmds.Completed(cmd))
+			resp = c.pickOrNew(addr).Do(cmd)
 			goto process
 		} else if addr, ok = err.IsAsk(); ok {
-			resp = c.pickOrNew(addr).DoMulti(cmds.AskingCmd, cmds.Completed(cmd))[1]
+			resp = c.pickOrNew(addr).DoMulti(cmds.AskingCmd, cmd)[1]
 			goto process
 		} else if err.IsTryAgain() {
 			runtime.Gosched()
@@ -272,7 +275,7 @@ process:
 		}
 	}
 ret:
-	c.Cmd.Put(cmd.CommandSlice())
+	c.cmd.Put(cmd.CommandSlice())
 	return resp
 }
 
@@ -283,12 +286,12 @@ retry:
 		resp = proto.NewErrResult(err)
 		goto ret
 	}
-	resp = cc.DoCache(cmds.Cacheable(cmd), ttl)
+	resp = cc.DoCache(cmd, ttl)
 process:
 	if err := resp.RedisError(); err != nil {
 		if addr, ok := err.IsMoved(); ok {
 			go c.refresh()
-			resp = c.pickOrNew(addr).DoCache(cmds.Cacheable(cmd), ttl)
+			resp = c.pickOrNew(addr).DoCache(cmd, ttl)
 			goto process
 		} else if addr, ok = err.IsAsk(); ok {
 			// TODO ASKING OPT-IN Caching
@@ -300,12 +303,12 @@ process:
 		}
 	}
 ret:
-	c.Cmd.Put(cmd.CommandSlice())
+	c.cmd.Put(cmd.CommandSlice())
 	return resp
 }
 
-func (c *ClusterClient) Dedicated(fn func(*DedicatedClusterClient) error) (err error) {
-	dcc := &DedicatedClusterClient{Cmd: c.Cmd, client: c, slot: cmds.InitSlot}
+func (c *ClusterClient) Dedicated(fn func(DedicatedClient) error) (err error) {
+	dcc := &dedicatedClusterClient{cmd: c.cmd, client: c, slot: cmds.InitSlot}
 	err = fn(dcc)
 	dcc.release()
 	return err
@@ -320,19 +323,19 @@ func (c *ClusterClient) NewLuaScriptReadOnly(body string) *Lua {
 }
 
 func (c *ClusterClient) eval(ctx context.Context, body string, keys, args []string) proto.Result {
-	return c.Do(ctx, c.Cmd.Eval().Script(body).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build())
+	return c.Do(ctx, c.cmd.Eval().Script(body).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build())
 }
 
 func (c *ClusterClient) evalSha(ctx context.Context, sha string, keys, args []string) proto.Result {
-	return c.Do(ctx, c.Cmd.Evalsha().Sha1(sha).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build())
+	return c.Do(ctx, c.cmd.Evalsha().Sha1(sha).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build())
 }
 
 func (c *ClusterClient) evalRo(ctx context.Context, body string, keys, args []string) proto.Result {
-	return c.Do(ctx, c.Cmd.EvalRo().Script(body).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build())
+	return c.Do(ctx, c.cmd.EvalRo().Script(body).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build())
 }
 
 func (c *ClusterClient) evalShaRo(ctx context.Context, sha string, keys, args []string) proto.Result {
-	return c.Do(ctx, c.Cmd.EvalshaRo().Sha1(sha).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build())
+	return c.Do(ctx, c.cmd.EvalshaRo().Sha1(sha).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build())
 }
 
 func (c *ClusterClient) NewHashRepository(prefix string, schema interface{}) *om.HashRepository {
@@ -349,31 +352,31 @@ func (c *ClusterClient) Close() {
 	c.mu.RUnlock()
 }
 
-type DedicatedClusterClient struct {
-	Cmd    *cmds.Builder
+type dedicatedClusterClient struct {
+	cmd    *cmds.Builder
 	client *ClusterClient
 	conn   conn
 	wire   wire
 	slot   uint16
 }
 
-func (c *DedicatedClusterClient) check(slot uint16) {
+func (c *dedicatedClusterClient) check(slot uint16) {
 	if slot == cmds.InitSlot {
 		return
 	}
 	if c.slot == cmds.InitSlot {
 		c.slot = slot
 	} else if c.slot != slot {
-		panic("cross slot command in Dedicated is prohibited")
+		panic(panicMsgCxSlot)
 	}
 }
 
-func (c *DedicatedClusterClient) acquire() (err error) {
+func (c *dedicatedClusterClient) acquire() (err error) {
 	if c.wire != nil {
 		return nil
 	}
 	if c.slot == cmds.InitSlot {
-		panic("the first command in DedicatedClusterClient should contain the slot key")
+		panic(panicMsgNoSlot)
 	}
 	if c.conn, err = c.client.pick(c.slot); err != nil {
 		return err
@@ -382,24 +385,28 @@ func (c *DedicatedClusterClient) acquire() (err error) {
 	return nil
 }
 
-func (c *DedicatedClusterClient) release() {
+func (c *dedicatedClusterClient) release() {
 	if c.wire != nil {
 		c.conn.Store(c.wire)
 	}
 }
 
-func (c *DedicatedClusterClient) Do(ctx context.Context, cmd cmds.Completed) (resp proto.Result) {
+func (c *dedicatedClusterClient) B() *cmds.Builder {
+	return c.cmd
+}
+
+func (c *dedicatedClusterClient) Do(ctx context.Context, cmd cmds.Completed) (resp proto.Result) {
 	c.check(cmd.Slot())
 	if err := c.acquire(); err != nil {
 		return proto.NewErrResult(err)
 	} else {
-		resp = c.wire.Do(cmds.Completed(cmd))
+		resp = c.wire.Do(cmd)
 	}
-	c.Cmd.Put(cmd.CommandSlice())
+	c.cmd.Put(cmd.CommandSlice())
 	return resp
 }
 
-func (c *DedicatedClusterClient) DoMulti(ctx context.Context, multi ...cmds.Completed) (resp []proto.Result) {
+func (c *dedicatedClusterClient) DoMulti(ctx context.Context, multi ...cmds.Completed) (resp []proto.Result) {
 	if len(multi) == 0 {
 		return nil
 	}
@@ -407,7 +414,7 @@ func (c *DedicatedClusterClient) DoMulti(ctx context.Context, multi ...cmds.Comp
 		c.check(cmd.Slot())
 	}
 	if err := c.acquire(); err == nil {
-		resp = c.wire.DoMulti(unsafe.Slice((*cmds.Completed)(&multi[0]), len(multi))...)
+		resp = c.wire.DoMulti(multi...)
 	} else {
 		resp = make([]proto.Result, len(multi))
 		for i := range resp {
@@ -415,7 +422,7 @@ func (c *DedicatedClusterClient) DoMulti(ctx context.Context, multi ...cmds.Comp
 		}
 	}
 	for _, cmd := range multi {
-		c.Cmd.Put(cmd.CommandSlice())
+		c.cmd.Put(cmd.CommandSlice())
 	}
 	return resp
 }
@@ -425,7 +432,7 @@ type hashObjectClusterClientAdapter struct {
 }
 
 func (h *hashObjectClusterClientAdapter) Save(ctx context.Context, key string, fields map[string]string) error {
-	cmd := h.c.Cmd.Hset().Key(key).FieldValue()
+	cmd := h.c.cmd.Hset().Key(key).FieldValue()
 	for f, v := range fields {
 		cmd = cmd.FieldValue(f, v)
 	}
@@ -433,13 +440,18 @@ func (h *hashObjectClusterClientAdapter) Save(ctx context.Context, key string, f
 }
 
 func (h *hashObjectClusterClientAdapter) Fetch(ctx context.Context, key string) (map[string]proto.Message, error) {
-	return h.c.Do(ctx, h.c.Cmd.Hgetall().Key(key).Build()).ToMap()
+	return h.c.Do(ctx, h.c.cmd.Hgetall().Key(key).Build()).ToMap()
 }
 
 func (h *hashObjectClusterClientAdapter) FetchCache(ctx context.Context, key string, ttl time.Duration) (map[string]proto.Message, error) {
-	return h.c.DoCache(ctx, h.c.Cmd.Hgetall().Key(key).Cache(), ttl).ToMap()
+	return h.c.DoCache(ctx, h.c.cmd.Hgetall().Key(key).Cache(), ttl).ToMap()
 }
 
 func (h *hashObjectClusterClientAdapter) Remove(ctx context.Context, key string) error {
-	return h.c.Do(ctx, h.c.Cmd.Del().Key(key).Build()).Error()
+	return h.c.Do(ctx, h.c.cmd.Del().Key(key).Build()).Error()
 }
+
+const (
+	panicMsgCxSlot = "cross slot command in Dedicated is prohibited"
+	panicMsgNoSlot = "the first command should contain the slot key"
+)

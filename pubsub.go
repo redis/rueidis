@@ -12,7 +12,7 @@ func NewPubSubHandlers(onConnected PubSubSetup, opt PubSubOption) PubSubHandlers
 	}
 }
 
-type PubSubSetup func(prev error, client *DedicatedSingleClient)
+type PubSubSetup func(prev error, client DedicatedClient)
 
 type PubSubOption struct {
 	OnMessage      func(channel, message string)
@@ -36,7 +36,7 @@ func (h PubSubHandlers) _install(prev error, builder *cmds.Builder, pick func() 
 				h._install(err, builder, pick)
 			}
 		})
-		go h.onConnected(prev, &DedicatedSingleClient{Cmd: builder, wire: cc})
+		go h.onConnected(prev, &dedicatedSingleClient{cmd: builder, wire: cc})
 	}
 }
 func (h PubSubHandlers) installHook(builder *cmds.Builder, pick func() conn) {

@@ -1,11 +1,13 @@
 package rueidis
 
 import (
+	"context"
 	"crypto/tls"
 	"errors"
 	"net"
 	"time"
 
+	"github.com/rueian/rueidis/internal/cmds"
 	"github.com/rueian/rueidis/internal/proto"
 )
 
@@ -39,11 +41,25 @@ type ConnOption struct {
 	PubSubHandlers PubSubHandlers
 }
 
-func NewClusterClient(option ClusterClientOption) (*ClusterClient, error) {
+type Client interface {
+	B() *cmds.Builder
+	Do(ctx context.Context, cmd cmds.Completed) (resp proto.Result)
+	DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp proto.Result)
+	Dedicated(fn func(DedicatedClient) error) (err error)
+	Close()
+}
+
+type DedicatedClient interface {
+	B() *cmds.Builder
+	Do(ctx context.Context, cmd cmds.Completed) (resp proto.Result)
+	DoMulti(ctx context.Context, multi ...cmds.Completed) (resp []proto.Result)
+}
+
+func NewClusterClient(option ClusterClientOption) (Client, error) {
 	return newClusterClient(option, makeConn)
 }
 
-func NewSingleClient(option SingleClientOption) (*SingleClient, error) {
+func NewSingleClient(option SingleClientOption) (Client, error) {
 	return newSingleClient(option, makeConn)
 }
 

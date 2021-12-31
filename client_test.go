@@ -117,7 +117,7 @@ func TestSingleClient(t *testing.T) {
 	}
 
 	t.Run("Delegate Do", func(t *testing.T) {
-		c := client.Cmd.Get().Key("Do").Build()
+		c := client.B().Get().Key("Do").Build()
 		m.DoFn = func(cmd cmds.Completed) proto.Result {
 			if !reflect.DeepEqual(cmd.Commands(), c.Commands()) {
 				t.Fatalf("unexpected command %v", cmd)
@@ -130,7 +130,7 @@ func TestSingleClient(t *testing.T) {
 	})
 
 	t.Run("Delegate DoCache", func(t *testing.T) {
-		c := client.Cmd.Get().Key("DoCache").Cache()
+		c := client.B().Get().Key("DoCache").Cache()
 		m.DoCacheFn = func(cmd cmds.Cacheable, ttl time.Duration) proto.Result {
 			if !reflect.DeepEqual(cmd.Commands(), c.Commands()) || ttl != 100 {
 				t.Fatalf("unexpected command %v, %v", cmd, ttl)
@@ -139,15 +139,6 @@ func TestSingleClient(t *testing.T) {
 		}
 		if v, err := client.DoCache(context.Background(), c, 100).ToString(); err != nil || v != "DoCache" {
 			t.Fatalf("unexpected response %v %v", v, err)
-		}
-	})
-
-	t.Run("Delegate Info", func(t *testing.T) {
-		m.InfoFn = func() map[string]proto.Message {
-			return map[string]proto.Message{}
-		}
-		if client.Info() == nil {
-			t.Fatalf("unexpected nil info")
 		}
 	})
 
@@ -162,7 +153,7 @@ func TestSingleClient(t *testing.T) {
 
 	t.Run("Dedicated Err", func(t *testing.T) {
 		v := errors.New("fn err")
-		if err := client.Dedicated(func(client *DedicatedSingleClient) error {
+		if err := client.Dedicated(func(client DedicatedClient) error {
 			return v
 		}); err != v {
 			t.Fatalf("unexpected err %v", err)
@@ -188,14 +179,14 @@ func TestSingleClient(t *testing.T) {
 			}
 			stored = true
 		}
-		if err := client.Dedicated(func(c *DedicatedSingleClient) error {
-			if v, err := c.Do(context.Background(), client.Cmd.Get().Key("a").Build()).ToString(); err != nil || v != "Delegate" {
+		if err := client.Dedicated(func(c DedicatedClient) error {
+			if v, err := c.Do(context.Background(), c.B().Get().Key("a").Build()).ToString(); err != nil || v != "Delegate" {
 				t.Fatalf("unexpected respone %v %v", v, err)
 			}
 			if v := c.DoMulti(context.Background()); len(v) != 0 {
 				t.Fatalf("received unexpected respone %v", v)
 			}
-			for _, resp := range c.DoMulti(context.Background(), client.Cmd.Get().Key("a").Build()) {
+			for _, resp := range c.DoMulti(context.Background(), c.B().Get().Key("a").Build()) {
 				if v, err := resp.ToString(); err != nil || v != "Delegate" {
 					t.Fatalf("unexpected respone %v %v", v, err)
 				}

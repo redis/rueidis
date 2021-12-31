@@ -37,8 +37,8 @@ func main() {
 
 	ctx := context.Background()
 
-	_ := c.Do(ctx, c.Cmd.Set().Key("my_data").Value("my_value").Nx().Build()).Error()
-	val, _ := c.Do(ctx, c.Cmd.Get().Key("my_data").Build()).ToString()
+	_ := c.Do(ctx, c.B().Set().Key("my_data").Value("my_value").Nx().Build()).Error()
+	val, _ := c.Do(ctx, c.B().Get().Key("my_data").Build()).ToString()
 	// val == "my_value"
 }
 ```
@@ -177,7 +177,7 @@ c, _ := rueidis.NewSingleClient(rueidis.SingleClient{
         PubSubHandlers: rueidis.NewPubSubHandlers(func(prev error, client *rueidis.DedicatedSingleClient) {
             // Subscribe channels in this PubSubSetup hook for auto reconnecting after disconnected.
             // The "prev" err is previous disconnect error.
-            err := client.Do(ctx, client.Cmd.Subscribe().Channel("my_channel").Build()).Error()
+            err := client.Do(ctx, client.B().Subscribe().Channel("my_channel").Build()).Error()
         }, rueidis.PubSubOption{
             OnMessage: func(channel, message string) {
                 // handle the message
@@ -197,16 +197,16 @@ The dedicated connection shares the same connection pool with blocking commands.
 ```golang
 c.Dedicated(func(client *client.DedicatedSingleClient) error {
     // watch keys first
-    client.Do(ctx, client.Cmd.Watch().Key("k1", "k2").Build())
+    client.Do(ctx, client.B().Watch().Key("k1", "k2").Build())
     // perform read here
-    client.Do(ctx, client.Cmd.Mget().Key("k1", "k2").Build())
+    client.Do(ctx, client.B().Mget().Key("k1", "k2").Build())
     // perform write with MULTI EXEC
     client.DoMulti(
         ctx,
-        client.Cmd.Multi().Build(),
-        client.Cmd.Set().Key("k1").Value("1").Build(),
-        client.Cmd.Set().Key("k2").Value("2").Build(),
-        client.Cmd.Exec().Build(),
+        client.B().Multi().Build(),
+        client.B().Set().Key("k1").Value("1").Build(),
+        client.B().Set().Key("k2").Value("2").Build(),
+        client.B().Exec().Build(),
     )
     return nil
 })
@@ -248,8 +248,8 @@ an entrypoint to construct a redis command. Once the command is completed, call 
 And then pass it to either `Client.Do()` or `Client.DoCache()`.
 
 ```golang
-c.Do(ctx, c.Cmd.Set().Key("mykey").Value("myval").Ex(10).Nx().Build())
-c.DoCache(ctx, c.Cmd.Hmget().Key("myhash").Field("1", "2").Cache(), time.Second*30)
+c.Do(ctx, c.B().Set().Key("mykey").Value("myval").Ex(10).Nx().Build())
+c.DoCache(ctx, c.B().Hmget().Key("myhash").Field("1", "2").Cache(), time.Second*30)
 ```
 
 **Once the command is passed to the one of above `Client.DoXXX()`, the command will be recycled and should not be reused.**

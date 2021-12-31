@@ -138,7 +138,7 @@ func TestClusterClient(t *testing.T) {
 	}
 
 	t.Run("Delegate Do with no slot", func(t *testing.T) {
-		c := client.Cmd.Info().Build()
+		c := client.B().Info().Build()
 		m.DoFn = func(cmd cmds.Completed) proto.Result {
 			if !reflect.DeepEqual(cmd.Commands(), c.Commands()) {
 				t.Fatalf("unexpected command %v", cmd)
@@ -151,7 +151,7 @@ func TestClusterClient(t *testing.T) {
 	})
 
 	t.Run("Delegate Do", func(t *testing.T) {
-		c := client.Cmd.Get().Key("Do").Build()
+		c := client.B().Get().Key("Do").Build()
 		m.DoFn = func(cmd cmds.Completed) proto.Result {
 			if !reflect.DeepEqual(cmd.Commands(), c.Commands()) {
 				t.Fatalf("unexpected command %v", cmd)
@@ -164,7 +164,7 @@ func TestClusterClient(t *testing.T) {
 	})
 
 	t.Run("Delegate DoCache", func(t *testing.T) {
-		c := client.Cmd.Get().Key("DoCache").Cache()
+		c := client.B().Get().Key("DoCache").Cache()
 		m.DoCacheFn = func(cmd cmds.Cacheable, ttl time.Duration) proto.Result {
 			if !reflect.DeepEqual(cmd.Commands(), c.Commands()) || ttl != 100 {
 				t.Fatalf("unexpected command %v, %v", cmd, ttl)
@@ -187,7 +187,7 @@ func TestClusterClient(t *testing.T) {
 
 	t.Run("Dedicated Err", func(t *testing.T) {
 		v := errors.New("fn err")
-		if err := client.Dedicated(func(client *DedicatedClusterClient) error {
+		if err := client.Dedicated(func(client DedicatedClient) error {
 			return v
 		}); err != v {
 			t.Fatalf("unexpected err %v", err)
@@ -196,25 +196,25 @@ func TestClusterClient(t *testing.T) {
 
 	t.Run("Dedicated No Slot Err", func(t *testing.T) {
 		defer func() {
-			if err := recover(); err != "the first command in DedicatedClusterClient should contain the slot key" {
+			if err := recover(); err != panicMsgNoSlot {
 				t.Errorf("Dedicated should panic if no slot is selected")
 			}
 		}()
-		client.Dedicated(func(c *DedicatedClusterClient) error {
-			return c.Do(context.Background(), client.Cmd.Info().Build()).Error()
+		client.Dedicated(func(c DedicatedClient) error {
+			return c.Do(context.Background(), c.B().Info().Build()).Error()
 		})
 	})
 
 	t.Run("Dedicated Cross Slot Err", func(t *testing.T) {
 		defer func() {
-			if err := recover(); err != "cross slot command in Dedicated is prohibited" {
+			if err := recover(); err != panicMsgCxSlot {
 				t.Errorf("Dedicated should panic if cross slots is used")
 			}
 		}()
 		m.AcquireFn = func() wire { return &mock.Wire{} }
-		client.Dedicated(func(c *DedicatedClusterClient) error {
-			c.Do(context.Background(), client.Cmd.Get().Key("a").Build()).Error()
-			return c.Do(context.Background(), client.Cmd.Get().Key("b").Build()).Error()
+		client.Dedicated(func(c DedicatedClient) error {
+			c.Do(context.Background(), c.B().Get().Key("a").Build()).Error()
+			return c.Do(context.Background(), c.B().Get().Key("b").Build()).Error()
 		})
 	})
 
@@ -237,14 +237,14 @@ func TestClusterClient(t *testing.T) {
 			}
 			stored = true
 		}
-		if err := client.Dedicated(func(c *DedicatedClusterClient) error {
-			if v, err := c.Do(context.Background(), client.Cmd.Get().Key("a").Build()).ToString(); err != nil || v != "Delegate" {
+		if err := client.Dedicated(func(c DedicatedClient) error {
+			if v, err := c.Do(context.Background(), c.B().Get().Key("a").Build()).ToString(); err != nil || v != "Delegate" {
 				t.Fatalf("unexpected respone %v %v", v, err)
 			}
 			if v := c.DoMulti(context.Background()); len(v) != 0 {
 				t.Fatalf("received unexpected respone %v", v)
 			}
-			for _, resp := range c.DoMulti(context.Background(), client.Cmd.Get().Key("a").Build()) {
+			for _, resp := range c.DoMulti(context.Background(), c.B().Get().Key("a").Build()) {
 				if v, err := resp.ToString(); err != nil || v != "Delegate" {
 					t.Fatalf("unexpected respone %v %v", v, err)
 				}
@@ -315,10 +315,10 @@ func TestClusterClientErr(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
-		if err := client.Do(context.Background(), client.Cmd.Get().Key("a").Build()).Error(); err != v {
+		if err := client.Do(context.Background(), client.B().Get().Key("a").Build()).Error(); err != v {
 			t.Fatalf("unexpected err %v", err)
 		}
-		if err := client.DoCache(context.Background(), client.Cmd.Get().Key("a").Cache(), 100).Error(); err != v {
+		if err := client.DoCache(context.Background(), client.B().Get().Key("a").Cache(), 100).Error(); err != v {
 			t.Fatalf("unexpected err %v", err)
 		}
 	})
@@ -333,7 +333,7 @@ func TestClusterClientErr(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
-		if err := client.Do(context.Background(), client.Cmd.Get().Key("a").Build()).Error(); err != ErrNoSlot {
+		if err := client.Do(context.Background(), client.B().Get().Key("a").Build()).Error(); err != ErrNoSlot {
 			t.Fatalf("unexpected err %v", err)
 		}
 	})
@@ -348,8 +348,8 @@ func TestClusterClientErr(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
-		if err := client.Dedicated(func(c *DedicatedClusterClient) error {
-			return c.Do(context.Background(), client.Cmd.Get().Key("a").Build()).Error()
+		if err := client.Dedicated(func(c DedicatedClient) error {
+			return c.Do(context.Background(), c.B().Get().Key("a").Build()).Error()
 		}); err != ErrNoSlot {
 			t.Fatalf("unexpected err %v", err)
 		}
@@ -365,8 +365,8 @@ func TestClusterClientErr(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
-		if err := client.Dedicated(func(c *DedicatedClusterClient) error {
-			for _, v := range c.DoMulti(context.Background(), client.Cmd.Get().Key("a").Build()) {
+		if err := client.Dedicated(func(c DedicatedClient) error {
+			for _, v := range c.DoMulti(context.Background(), c.B().Get().Key("a").Build()) {
 				if err := v.Error(); err != nil {
 					return err
 				}
@@ -395,7 +395,7 @@ func TestClusterClientErr(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
-		if v, err := client.Do(context.Background(), client.Cmd.Get().Key("a").Build()).ToString(); err != nil || v != "b" {
+		if v, err := client.Do(context.Background(), client.B().Get().Key("a").Build()).ToString(); err != nil || v != "b" {
 			t.Fatalf("unexpected resp %v %v", v, err)
 		}
 	})
@@ -420,7 +420,7 @@ func TestClusterClientErr(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
-		if v, err := client.DoCache(context.Background(), client.Cmd.Get().Key("a").Cache(), 100).ToString(); err != nil || v != "b" {
+		if v, err := client.DoCache(context.Background(), client.B().Get().Key("a").Cache(), 100).ToString(); err != nil || v != "b" {
 			t.Fatalf("unexpected resp %v %v", v, err)
 		}
 	})
@@ -448,7 +448,7 @@ func TestClusterClientErr(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
-		if v, err := client.Do(context.Background(), client.Cmd.Get().Key("a").Build()).ToString(); err != nil || v != "b" {
+		if v, err := client.Do(context.Background(), client.B().Get().Key("a").Build()).ToString(); err != nil || v != "b" {
 			t.Fatalf("unexpected resp %v %v", v, err)
 		}
 	})
@@ -476,7 +476,7 @@ func TestClusterClientErr(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
-		if v, err := client.DoCache(context.Background(), client.Cmd.Get().Key("a").Cache(), 100).ToString(); err != nil || v != "b" {
+		if v, err := client.DoCache(context.Background(), client.B().Get().Key("a").Cache(), 100).ToString(); err != nil || v != "b" {
 			t.Fatalf("unexpected resp %v %v", v, err)
 		}
 	})
@@ -499,7 +499,7 @@ func TestClusterClientErr(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
-		if v, err := client.Do(context.Background(), client.Cmd.Get().Key("a").Build()).ToString(); err != nil || v != "b" {
+		if v, err := client.Do(context.Background(), client.B().Get().Key("a").Build()).ToString(); err != nil || v != "b" {
 			t.Fatalf("unexpected resp %v %v", v, err)
 		}
 	})
@@ -524,7 +524,7 @@ func TestClusterClientErr(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
-		if v, err := client.DoCache(context.Background(), client.Cmd.Get().Key("a").Cache(), 100).ToString(); err != nil || v != "b" {
+		if v, err := client.DoCache(context.Background(), client.B().Get().Key("a").Cache(), 100).ToString(); err != nil || v != "b" {
 			t.Fatalf("unexpected resp %v %v", v, err)
 		}
 	})

@@ -20,11 +20,11 @@ func TestSingleClientPubSubReconnect(t *testing.T) {
 		DoFn:   func(cmd cmds.Completed) proto.Result { return proto.Result{} },
 	}
 	_, err := newSingleClient(SingleClientOption{
-		ConnOption: ConnOption{PubSubHandlers: NewPubSubHandlers(func(prev error, client *DedicatedSingleClient) {
+		ConnOption: ConnOption{PubSubHandlers: NewPubSubHandlers(func(prev error, client DedicatedClient) {
 			if prev != nil {
 				atomic.AddInt64(&errs, 1)
 			}
-			if err := client.Do(context.Background(), client.Cmd.Subscribe().Channel("a").Build()).Error(); err != nil {
+			if err := client.Do(context.Background(), client.B().Subscribe().Channel("a").Build()).Error(); err != nil {
 				t.Errorf("unexpected subscribe err %v", err)
 			}
 			atomic.AddInt64(&count, 1)
@@ -57,11 +57,11 @@ func TestClusterClientPubSubReconnect(t *testing.T) {
 	}
 	_, err := newClusterClient(ClusterClientOption{
 		InitAddress: []string{":0"},
-		ConnOption: ConnOption{PubSubHandlers: NewPubSubHandlers(func(prev error, client *DedicatedSingleClient) {
+		ConnOption: ConnOption{PubSubHandlers: NewPubSubHandlers(func(prev error, client DedicatedClient) {
 			if prev != nil {
 				atomic.AddInt64(&errs, 1)
 			}
-			if err := client.Do(context.Background(), client.Cmd.Subscribe().Channel("a").Build()).Error(); err != nil {
+			if err := client.Do(context.Background(), client.B().Subscribe().Channel("a").Build()).Error(); err != nil {
 				t.Errorf("unexpected subscribe err %v", err)
 			}
 			atomic.AddInt64(&count, 1)
