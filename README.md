@@ -269,7 +269,7 @@ import (
     "time"
 
     "github.com/rueian/rueidis"
-	"github.com/rueian/rueidis/om"
+    "github.com/rueian/rueidis/om"
 )
 
 type Example struct {
