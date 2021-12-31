@@ -109,11 +109,11 @@ func write(o io.Writer, m proto.Message) (err error) {
 	return err
 }
 
-func setup(t *testing.T, option ConnOption) (*pipe, *redisMock, func(), func()) {
+func setup(t *testing.T, option ClientOption) (*pipe, *redisMock, func(), func()) {
 	return setupWithDisconnectedFn(t, option, nil)
 }
 
-func setupWithDisconnectedFn(t *testing.T, option ConnOption, onDisconnected func(err error)) (*pipe, *redisMock, func(), func()) {
+func setupWithDisconnectedFn(t *testing.T, option ClientOption, onDisconnected func(err error)) (*pipe, *redisMock, func(), func()) {
 	n1, n2 := net.Pipe()
 	mock := &redisMock{
 		t:    t,
@@ -174,7 +174,7 @@ func TestNewPipe(t *testing.T) {
 			mock.Expect("SELECT", "1").
 				ReplyString("OK")
 		}()
-		p, err := newPipe(n1, ConnOption{
+		p, err := newPipe(n1, ClientOption{
 			SelectDB:   1,
 			Username:   "un",
 			Password:   "pa",
@@ -193,7 +193,7 @@ func TestNewPipe(t *testing.T) {
 		n1, n2 := net.Pipe()
 		n1.Close()
 		n2.Close()
-		if _, err := newPipe(n1, ConnOption{}, nil); err != io.ErrClosedPipe {
+		if _, err := newPipe(n1, ClientOption{}, nil); err != io.ErrClosedPipe {
 			t.Fatalf("pipe setup should failed with io.ErrClosedPipe, but got %v", err)
 		}
 	})
@@ -201,7 +201,7 @@ func TestNewPipe(t *testing.T) {
 
 func TestOnDisconnectedHook(t *testing.T) {
 	done := make(chan struct{})
-	p, _, _, closeConn := setupWithDisconnectedFn(t, ConnOption{}, func(err error) {
+	p, _, _, closeConn := setupWithDisconnectedFn(t, ClientOption{}, func(err error) {
 		if !strings.HasPrefix(err.Error(), "io:") {
 			t.Errorf("unexpected err %v", err)
 		}
@@ -215,14 +215,14 @@ func TestOnDisconnectedHook(t *testing.T) {
 }
 
 func TestWriteSingleFlush(t *testing.T) {
-	p, mock, cancel, _ := setup(t, ConnOption{})
+	p, mock, cancel, _ := setup(t, ClientOption{})
 	defer cancel()
 	go func() { mock.Expect("PING").ReplyString("OK") }()
 	ExpectOK(t, p.Do(cmds.NewCompleted([]string{"PING"})))
 }
 
 func TestIgnoreOutOfBandDataDuringSyncMode(t *testing.T) {
-	p, mock, cancel, _ := setup(t, ConnOption{})
+	p, mock, cancel, _ := setup(t, ClientOption{})
 	defer cancel()
 	go func() {
 		mock.Expect("PING").Reply(proto.Message{Type: '>', String: "This should be ignore"}).ReplyString("OK")
@@ -231,7 +231,7 @@ func TestIgnoreOutOfBandDataDuringSyncMode(t *testing.T) {
 }
 
 func TestWriteSinglePipelineFlush(t *testing.T) {
-	p, mock, cancel, _ := setup(t, ConnOption{})
+	p, mock, cancel, _ := setup(t, ClientOption{})
 	defer cancel()
 	times := 5000
 	wg := sync.WaitGroup{}
@@ -248,7 +248,7 @@ func TestWriteSinglePipelineFlush(t *testing.T) {
 }
 
 func TestWriteMultiFlush(t *testing.T) {
-	p, mock, cancel, _ := setup(t, ConnOption{})
+	p, mock, cancel, _ := setup(t, ClientOption{})
 	defer cancel()
 	go func() {
 		mock.Expect("PING").Expect("PING").ReplyString("OK").ReplyString("OK")
@@ -259,7 +259,7 @@ func TestWriteMultiFlush(t *testing.T) {
 }
 
 func TestWriteMultiPipelineFlush(t *testing.T) {
-	p, mock, cancel, _ := setup(t, ConnOption{})
+	p, mock, cancel, _ := setup(t, ClientOption{})
 	defer cancel()
 	times := 5000
 	wg := sync.WaitGroup{}
@@ -279,7 +279,7 @@ func TestWriteMultiPipelineFlush(t *testing.T) {
 }
 
 func TestPanicOnProtocolBug(t *testing.T) {
-	p, mock, _, _ := setup(t, ConnOption{})
+	p, mock, _, _ := setup(t, ClientOption{})
 
 	go func() {
 		mock.Expect().ReplyString("cause panic")
@@ -295,7 +295,7 @@ func TestPanicOnProtocolBug(t *testing.T) {
 }
 
 func TestResponseSequenceWithPushMessageInjected(t *testing.T) {
-	p, mock, cancel, _ := setup(t, ConnOption{})
+	p, mock, cancel, _ := setup(t, ClientOption{})
 	defer cancel()
 
 	times := 5000
@@ -319,7 +319,7 @@ func TestResponseSequenceWithPushMessageInjected(t *testing.T) {
 }
 
 func TestClientSideCaching(t *testing.T) {
-	p, mock, cancel, _ := setup(t, ConnOption{})
+	p, mock, cancel, _ := setup(t, ClientOption{})
 	defer cancel()
 
 	go func() {
@@ -373,7 +373,7 @@ func TestClientSideCaching(t *testing.T) {
 func TestPubSub(t *testing.T) {
 	builder := cmds.NewBuilder(cmds.NoSlot)
 	t.Run("NoReply Commands In Do", func(t *testing.T) {
-		p, mock, cancel, _ := setup(t, ConnOption{})
+		p, mock, cancel, _ := setup(t, ClientOption{})
 		defer cancel()
 
 		commands := []cmds.Completed{
@@ -394,7 +394,7 @@ func TestPubSub(t *testing.T) {
 	})
 
 	t.Run("NoReply Commands In DoMulti", func(t *testing.T) {
-		p, mock, cancel, _ := setup(t, ConnOption{})
+		p, mock, cancel, _ := setup(t, ClientOption{})
 		defer cancel()
 
 		commands := []cmds.Completed{
@@ -418,7 +418,7 @@ func TestPubSub(t *testing.T) {
 
 	t.Run("PubSub Push Message", func(t *testing.T) {
 		count := make([]int32, 4)
-		p, mock, cancel, _ := setup(t, ConnOption{
+		p, mock, cancel, _ := setup(t, ClientOption{
 			PubSubHandlers: PubSubHandlers{
 				onMessage: func(channel, message string) {
 					if channel != "1" || message != "2" {
@@ -498,7 +498,7 @@ func TestPubSub(t *testing.T) {
 }
 
 func TestExitOnWriteError(t *testing.T) {
-	p, _, _, closeConn := setup(t, ConnOption{})
+	p, _, _, closeConn := setup(t, ClientOption{})
 
 	closeConn()
 
@@ -510,7 +510,7 @@ func TestExitOnWriteError(t *testing.T) {
 }
 
 func TestExitOnWriteMultiError(t *testing.T) {
-	p, _, _, closeConn := setup(t, ConnOption{})
+	p, _, _, closeConn := setup(t, ClientOption{})
 
 	closeConn()
 
@@ -522,7 +522,7 @@ func TestExitOnWriteMultiError(t *testing.T) {
 }
 
 func TestExitAllGoroutineOnWriteError(t *testing.T) {
-	conn, _, _, closeConn := setup(t, ConnOption{})
+	conn, _, _, closeConn := setup(t, ClientOption{})
 
 	// start the background worker
 	conn.Do(cmds.NewBuilder(cmds.NoSlot).Subscribe().Channel("a").Build())
@@ -545,7 +545,7 @@ func TestExitAllGoroutineOnWriteError(t *testing.T) {
 }
 
 func TestExitOnReadError(t *testing.T) {
-	p, mock, _, closeConn := setup(t, ConnOption{})
+	p, mock, _, closeConn := setup(t, ClientOption{})
 
 	go func() {
 		mock.Expect("GET", "a")
@@ -560,7 +560,7 @@ func TestExitOnReadError(t *testing.T) {
 }
 
 func TestExitOnReadMultiError(t *testing.T) {
-	p, mock, _, closeConn := setup(t, ConnOption{})
+	p, mock, _, closeConn := setup(t, ClientOption{})
 
 	go func() {
 		mock.Expect("GET", "a")
@@ -575,7 +575,7 @@ func TestExitOnReadMultiError(t *testing.T) {
 }
 
 func TestExitAllGoroutineOnReadError(t *testing.T) {
-	p, mock, _, closeConn := setup(t, ConnOption{})
+	p, mock, _, closeConn := setup(t, ClientOption{})
 
 	go func() {
 		mock.Expect("GET", "a")
@@ -599,7 +599,7 @@ func TestExitAllGoroutineOnReadError(t *testing.T) {
 }
 
 func TestCloseAndWaitPendingCMDs(t *testing.T) {
-	p, mock, _, _ := setup(t, ConnOption{})
+	p, mock, _, _ := setup(t, ClientOption{})
 
 	var (
 		loop = 5000

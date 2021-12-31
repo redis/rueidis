@@ -12,7 +12,7 @@ import (
 	"github.com/rueian/rueidis/internal/proto"
 )
 
-type MockConn struct {
+type mockConn struct {
 	DoFn      func(cmd cmds.Completed) proto.Result
 	DoCacheFn func(cmd cmds.Cacheable, ttl time.Duration) proto.Result
 	DoMultiFn func(multi ...cmds.Completed) []proto.Result
@@ -26,89 +26,97 @@ type MockConn struct {
 	disconnectedFn func(err error)
 }
 
-func (m *MockConn) Dial() error {
+func (m *mockConn) Dial() error {
 	if m.DialFn != nil {
 		return m.DialFn()
 	}
 	return nil
 }
 
-func (m *MockConn) Acquire() wire {
+func (m *mockConn) Acquire() wire {
 	if m.AcquireFn != nil {
 		return m.AcquireFn()
 	}
 	return nil
 }
 
-func (m *MockConn) Store(w wire) {
+func (m *mockConn) Store(w wire) {
 	if m.StoreFn != nil {
 		m.StoreFn(w)
 	}
 }
 
-func (m *MockConn) Do(cmd cmds.Completed) proto.Result {
+func (m *mockConn) Do(cmd cmds.Completed) proto.Result {
 	if m.DoFn != nil {
 		return m.DoFn(cmd)
 	}
 	return proto.Result{}
 }
 
-func (m *MockConn) DoCache(cmd cmds.Cacheable, ttl time.Duration) proto.Result {
+func (m *mockConn) DoCache(cmd cmds.Cacheable, ttl time.Duration) proto.Result {
 	if m.DoCacheFn != nil {
 		return m.DoCacheFn(cmd, ttl)
 	}
 	return proto.Result{}
 }
 
-func (m *MockConn) DoMulti(multi ...cmds.Completed) []proto.Result {
+func (m *mockConn) DoMulti(multi ...cmds.Completed) []proto.Result {
 	if m.DoMultiFn != nil {
 		return m.DoMultiFn(multi...)
 	}
 	return nil
 }
 
-func (m *MockConn) Info() map[string]proto.Message {
+func (m *mockConn) Info() map[string]proto.Message {
 	if m.InfoFn != nil {
 		return m.InfoFn()
 	}
 	return nil
 }
 
-func (m *MockConn) Error() error {
+func (m *mockConn) Error() error {
 	if m.ErrorFn != nil {
 		return m.ErrorFn()
 	}
 	return nil
 }
 
-func (m *MockConn) Close() {
+func (m *mockConn) Close() {
 	if m.CloseFn != nil {
 		m.CloseFn()
 	}
 }
 
-func (m *MockConn) OnDisconnected(fn func(err error)) {
+func (m *mockConn) OnDisconnected(fn func(err error)) {
 	m.disconnectedFn = fn
 }
 
-func (m *MockConn) TriggerDisconnect(err error) {
+func (m *mockConn) TriggerDisconnect(err error) {
 	if m.disconnectedFn != nil {
 		m.disconnectedFn(err)
 	}
 }
 
+func TestNewSingleClientNoNode(t *testing.T) {
+	if _, err := newSingleClient(ClientOption{}, func(dst string, opt ClientOption) conn {
+		return nil
+	}); err != ErrNoNodes {
+		t.Fatalf("unexpected err %v", err)
+	}
+}
+
 func TestNewSingleClientError(t *testing.T) {
 	v := errors.New("dail err")
-	if _, err := newSingleClient(SingleClientOption{}, func(dst string, opt ConnOption) conn {
-		return &MockConn{DialFn: func() error { return v }}
+	if _, err := newSingleClient(ClientOption{InitAddress: []string{""}}, func(dst string, opt ClientOption) conn {
+		return &mockConn{DialFn: func() error { return v }}
 	}); err != v {
 		t.Fatalf("unexpected err %v", err)
 	}
 }
 
 func TestSingleClient(t *testing.T) {
-	m := &MockConn{}
-	client, err := newSingleClient(SingleClientOption{}, func(dst string, opt ConnOption) conn {
+	m := &mockConn{}
+	client, err := newSingleClient(ClientOption{InitAddress: []string{""}}, func(dst string, opt ClientOption) conn {
 		return m
 	})
 	if err != nil {

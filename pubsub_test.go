@@ -15,12 +15,13 @@ import (
 func TestSingleClientPubSubReconnect(t *testing.T) {
 	count := int64(0)
 	errs := int64(0)
-	m := &MockConn{
+	m := &mockConn{
 		DialFn: func() error { return nil },
 		DoFn:   func(cmd cmds.Completed) proto.Result { return proto.Result{} },
 	}
-	_, err := newSingleClient(SingleClientOption{
-		ConnOption: ConnOption{PubSubHandlers: NewPubSubHandlers(func(prev error, client DedicatedClient) {
+	_, err := newSingleClient(ClientOption{
+		InitAddress: []string{""},
+		PubSubHandlers: NewPubSubHandlers(func(prev error, client DedicatedClient) {
 			if prev != nil {
 				atomic.AddInt64(&errs, 1)
 			}
@@ -28,8 +29,7 @@ func TestSingleClientPubSubReconnect(t *testing.T) {
 				t.Errorf("unexpected subscribe err %v", err)
 			}
 			atomic.AddInt64(&count, 1)
-		}, PubSubOption{})},
-	}, func(dst string, opt ConnOption) conn {
+		}, PubSubOption{})}, func(dst string, opt ClientOption) conn {
 		return m
 	})
 	if err != nil {
@@ -51,13 +51,13 @@ func TestSingleClientPubSubReconnect(t *testing.T) {
 func TestClusterClientPubSubReconnect(t *testing.T) {
 	count := int64(0)
 	errs := int64(0)
-	m := &MockConn{
+	m := &mockConn{
 		DialFn: func() error { return nil },
 		DoFn:   func(cmd cmds.Completed) proto.Result { return slotsResp },
 	}
-	_, err := newClusterClient(ClusterClientOption{
+	_, err := newClusterClient(ClientOption{
 		InitAddress: []string{":0"},
-		ConnOption: ConnOption{PubSubHandlers: NewPubSubHandlers(func(prev error, client DedicatedClient) {
+		PubSubHandlers: NewPubSubHandlers(func(prev error, client DedicatedClient) {
 			if prev != nil {
 				atomic.AddInt64(&errs, 1)
 			}
@@ -65,8 +65,8 @@ func TestClusterClientPubSubReconnect(t *testing.T) {
 				t.Errorf("unexpected subscribe err %v", err)
 			}
 			atomic.AddInt64(&count, 1)
-		}, PubSubOption{})},
-	}, func(dst string, opt ConnOption) conn {
+		}, PubSubOption{}),
+	}, func(dst string, opt ClientOption) conn {
 		return m
 	})
 	if err != nil {

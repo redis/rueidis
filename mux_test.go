@@ -18,7 +18,7 @@ import (
 func setupMux(wires []*mock.Wire) (conn *mux, checkClean func(t *testing.T)) {
 	var mu sync.Mutex
 	var count = -1
-	return newMux("", ConnOption{}, (*mock.Wire)(nil), func(fn func(err error)) (wire, error) {
+	return newMux("", ClientOption{}, (*mock.Wire)(nil), func(fn func(err error)) (wire, error) {
 			mu.Lock()
 			defer mu.Unlock()
 			count++
@@ -46,7 +46,7 @@ func TestNewMux(t *testing.T) {
 			ReplyString("OK")
 		mock.Expect("QUIT").ReplyString("OK")
 	}()
-	m := makeMux("", ConnOption{}, func(dst string, opt ConnOption) (net.Conn, error) {
+	m := makeMux("", ClientOption{}, func(dst string, opt ClientOption) (net.Conn, error) {
 		return n1, nil
 	})
 	if err := m.Dial(); err != nil {
@@ -57,7 +57,7 @@ func TestNewMux(t *testing.T) {
 
 func TestMuxOnDisconnected(t *testing.T) {
 	var trigger func(err error)
-	m := newMux("", ConnOption{}, (*mock.Wire)(nil), func(fn func(err error)) (wire, error) {
+	m := newMux("", ClientOption{}, (*mock.Wire)(nil), func(fn func(err error)) (wire, error) {
 		trigger = fn
 		return &mock.Wire{}, nil
 	})
@@ -87,7 +87,7 @@ func TestMuxOnDisconnected(t *testing.T) {
 func TestMuxDialSuppress(t *testing.T) {
 	var wires, waits, done int64
 	blocking := make(chan struct{})
-	m := newMux("", ConnOption{}, (*mock.Wire)(nil), func(fn func(err error)) (wire, error) {
+	m := newMux("", ClientOption{}, (*mock.Wire)(nil), func(fn func(err error)) (wire, error) {
 		atomic.AddInt64(&wires, 1)
 		<-blocking
 		return &mock.Wire{}, nil
@@ -470,7 +470,7 @@ func TestMuxCMDRetry(t *testing.T) {
 func TestMuxDialRetry(t *testing.T) {
 	setup := func() (*mux, *int64) {
 		var count int64
-		return newMux("", ConnOption{}, (*mock.Wire)(nil), func(fn func(err error)) (wire, error) {
+		return newMux("", ClientOption{}, (*mock.Wire)(nil), func(fn func(err error)) (wire, error) {
 			if count == 1 {
 				return &mock.Wire{
 					DoFn: func(cmd cmds.Completed) proto.Result {
@@ -511,7 +511,7 @@ func TestMuxDialRetry(t *testing.T) {
 
 func BenchmarkClientSideCaching(b *testing.B) {
 	setup := func(b *testing.B) *mux {
-		c := makeMux("127.0.0.1:6379", ConnOption{CacheSizeEachConn: DefaultCacheBytes}, func(dst string, opt ConnOption) (conn net.Conn, err error) {
+		c := makeMux("127.0.0.1:6379", ClientOption{CacheSizeEachConn: DefaultCacheBytes}, func(dst string, opt ClientOption) (conn net.Conn, err error) {
 			return net.Dial("tcp", dst)
 		})
 		if err := c.Dial(); err != nil {

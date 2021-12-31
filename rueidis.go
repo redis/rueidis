@@ -18,7 +18,14 @@ const (
 
 var ErrConnClosing = errors.New("connection is closing")
 
-type ConnOption struct {
+type ClientOption struct {
+	// InitAddress point to redis nodes.
+	// Rueidis will connect to them one by one and issue CLUSTER SLOT command to initialize the cluster client until success.
+	// If len(InitAddress) == 1 and the address is not running in cluster mode, rueidis will fall back to the single client mode.
+	InitAddress []string
+	// ShuffleInit is a handy flag that shuffles the InitAddress after passing to NewClient
+	ShuffleInit bool
+
 	// CacheSizeEachConn is redis client side cache size that bind to each TCP connection to a single redis instance.
 	// The default is DefaultCacheBytes.
 	CacheSizeEachConn int
@@ -49,29 +56,29 @@ type Client interface {
 	Close()
 }
 
+func NewClient(option ClientOption) (client Client, err error) {
+	client, err = newClusterClient(option, makeConn)
+	if err != nil && len(option.InitAddress) == 1 && err.Error() == redisErrMsgClusterDisabled {
+		client, err = newSingleClient(option, makeConn)
+	}
+	return client, err
+}
+
 type DedicatedClient interface {
 	B() *cmds.Builder
 	Do(ctx context.Context, cmd cmds.Completed) (resp proto.Result)
 	DoMulti(ctx context.Context, multi ...cmds.Completed) (resp []proto.Result)
 }
 
-func NewClusterClient(option ClusterClientOption) (Client, error) {
-	return newClusterClient(option, makeConn)
-}
-
-func NewSingleClient(option SingleClientOption) (Client, error) {
-	return newSingleClient(option, makeConn)
-}
-
 func IsRedisNil(err error) bool {
 	return proto.IsRedisNil(err)
 }
 
-func makeConn(dst string, opt ConnOption) conn {
+func makeConn(dst string, opt ClientOption) conn {
 	return makeMux(dst, opt, dial)
 }
 
-func dial(dst string, opt ConnOption) (conn net.Conn, err error) {
+func dial(dst string, opt ClientOption) (conn net.Conn, err error) {
 	dialer := &net.Dialer{Timeout: opt.DialTimeout, KeepAlive: time.Second}
 	if opt.TLSConfig != nil {
 		conn, err = tls.DialWithDialer(dialer, "tcp", dst, opt.TLSConfig)
@@ -80,3 +87,5 @@ func dial(dst string, opt ConnOption) (conn net.Conn, err error) {
 	}
 	return conn, err
 }
+
+const redisErrMsgClusterDisabled = "ERR This instance has cluster support disabled"

@@ -18,15 +18,9 @@ var (
 	ErrNoSlot  = errors.New("slot not covered")
 )
 
-type ClusterClientOption struct {
-	InitAddress []string
-	ShuffleInit bool
-	ConnOption  ConnOption
-}
-
-type ClusterClient struct {
+type clusterClient struct {
 	cmd *cmds.Builder
-	opt ClusterClientOption
+	opt ClientOption
 
 	mu     sync.RWMutex
 	sc     call
@@ -35,14 +29,14 @@ type ClusterClient struct {
 	connFn connFn
 }
 
-func newClusterClient(opt ClusterClientOption, connFn connFn) (client *ClusterClient, err error) {
+func newClusterClient(opt ClientOption, connFn connFn) (client *clusterClient, err error) {
 	if opt.ShuffleInit {
 		rand.Shuffle(len(opt.InitAddress), func(i, j int) {
 			opt.InitAddress[i], opt.InitAddress[j] = opt.InitAddress[j], opt.InitAddress[i]
 		})
 	}
 
-	client = &ClusterClient{
+	client = &clusterClient{
 		cmd:    cmds.NewBuilder(cmds.InitSlot),
 		opt:    opt,
 		connFn: connFn,
@@ -58,7 +52,7 @@ func newClusterClient(opt ClusterClientOption, connFn connFn) (client *ClusterCl
 		return nil, err
 	}
 
-	opt.ConnOption.PubSubHandlers.installHook(client.cmd, func() (cc conn) {
+	opt.PubSubHandlers.installHook(client.cmd, func() (cc conn) {
 		var err error
 		for cc == nil && err != ErrConnClosing {
 			cc, err = client.pick(cmds.InitSlot)
@@ -69,12 +63,12 @@ func newClusterClient(opt ClusterClientOption, connFn connFn) (client *ClusterCl
 	return client, nil
 }
 
-func (c *ClusterClient) init() (cc conn, err error) {
+func (c *clusterClient) init() (cc conn, err error) {
 	if len(c.opt.InitAddress) == 0 {
 		return nil, ErrNoNodes
 	}
 	for _, addr := range c.opt.InitAddress {
-		cc = c.connFn(addr, c.opt.ConnOption)
+		cc = c.connFn(addr, c.opt)
 		if err = cc.Dial(); err == nil {
 			c.mu.Lock()
 			if prev, ok := c.conns[addr]; ok {
@@ -88,11 +82,11 @@ func (c *ClusterClient) init() (cc conn, err error) {
 	return nil, err
 }
 
-func (c *ClusterClient) refresh() (err error) {
+func (c *clusterClient) refresh() (err error) {
 	return c.sc.Do(c._refresh)
 }
 
-func (c *ClusterClient) _refresh() (err error) {
+func (c *clusterClient) _refresh() (err error) {
 	var reply proto.Message
 	var dead []string
 
@@ -135,7 +129,7 @@ retry:
 	// TODO support read from replicas
 	masters := make(map[string]conn, len(groups))
 	for addr := range groups {
-		masters[addr] = c.connFn(addr, c.opt.ConnOption)
+		masters[addr] = c.connFn(addr, c.opt)
 	}
 
 	var removes []conn
@@ -171,7 +165,7 @@ retry:
 	return nil
 }
 
-func (c *ClusterClient) nodes() []string {
+func (c *clusterClient) nodes() []string {
 	c.mu.RLock()
 	nodes := make([]string, 0, len(c.conns))
 	for addr := range c.conns {
@@ -205,7 +199,7 @@ func parseSlots(slots proto.Message) map[string]group {
 	return groups
 }
 
-func (c *ClusterClient) _pick(slot uint16) (p conn) {
+func (c *clusterClient) _pick(slot uint16) (p conn) {
 	c.mu.RLock()
 	if slot == cmds.InitSlot {
 		for _, cc := range c.conns {
@@ -219,7 +213,7 @@ func (c *ClusterClient) _pick(slot uint16) (p conn) {
 	return p
 }
 
-func (c *ClusterClient) pick(slot uint16) (p conn, err error) {
+func (c *clusterClient) pick(slot uint16) (p conn, err error) {
 	if p = c._pick(slot); p == nil {
 		if err := c.refresh(); err != nil {
 			return nil, err
@@ -231,7 +225,7 @@ func (c *ClusterClient) pick(slot uint16) (p conn, err error) {
 	return p, nil
 }
 
-func (c *ClusterClient) pickOrNew(addr string) (p conn) {
+func (c *clusterClient) pickOrNew(addr string) (p conn) {
 	c.mu.RLock()
 	p = c.conns[addr]
 	c.mu.RUnlock()
@@ -240,18 +234,18 @@ func (c *ClusterClient) pickOrNew(addr string) (p conn) {
 	}
 	c.mu.Lock()
 	if p = c.conns[addr]; p == nil {
-		p = c.connFn(addr, c.opt.ConnOption)
+		p = c.connFn(addr, c.opt)
 		c.conns[addr] = p
 	}
 	c.mu.Unlock()
 	return p
 }
 
-func (c *ClusterClient) B() *cmds.Builder {
+func (c *clusterClient) B() *cmds.Builder {
 	return c.cmd
 }
 
-func (c *ClusterClient) Do(ctx context.Context, cmd cmds.Completed) (resp proto.Result) {
+func (c *clusterClient) Do(ctx context.Context, cmd cmds.Completed) (resp proto.Result) {
 retry:
 	cc, err := c.pick(cmd.Slot())
 	if err != nil {
@@ -278,7 +272,7 @@ ret:
 	return resp
 }
 
-func (c *ClusterClient) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp proto.Result) {
+func (c *clusterClient) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp proto.Result) {
 retry:
 	cc, err := c.pick(cmd.Slot())
 	if err != nil {
@@ -306,14 +300,14 @@ ret:
 	return resp
 }
 
-func (c *ClusterClient) Dedicated(fn func(DedicatedClient) error) (err error) {
+func (c *clusterClient) Dedicated(fn func(DedicatedClient) error) (err error) {
 	dcc := &dedicatedClusterClient{cmd: c.cmd, client: c, slot: cmds.InitSlot}
 	err = fn(dcc)
 	dcc.release()
 	return err
 }
 
-func (c *ClusterClient) Close() {
+func (c *clusterClient) Close() {
 	c.mu.RLock()
 	for _, cc := range c.conns {
 		go cc.Close()
@@ -323,7 +317,7 @@ func (c *ClusterClient) Close() {
 
 type dedicatedClusterClient struct {
 	cmd    *cmds.Builder
-	client *ClusterClient
+	client *clusterClient
 	conn   conn
 	wire   wire
 	slot   uint16

@@ -44,15 +44,15 @@ var singleSlotResp = proto.NewResult(proto.Message{Type: '*', Values: []proto.Me
 
 func TestClusterClientInit(t *testing.T) {
 	t.Run("Init no nodes", func(t *testing.T) {
-		if _, err := newClusterClient(ClusterClientOption{InitAddress: []string{}}, func(dst string, opt ConnOption) conn { return nil }); err != ErrNoNodes {
+		if _, err := newClusterClient(ClientOption{InitAddress: []string{}}, func(dst string, opt ClientOption) conn { return nil }); err != ErrNoNodes {
 			t.Fatalf("unexpected err %v", err)
 		}
 	})
 
 	t.Run("Init no dialable", func(t *testing.T) {
 		v := errors.New("dial err")
-		if _, err := newClusterClient(ClusterClientOption{InitAddress: []string{":0"}}, func(dst string, opt ConnOption) conn {
-			return &MockConn{DialFn: func() error { return v }}
+		if _, err := newClusterClient(ClientOption{InitAddress: []string{":0"}}, func(dst string, opt ClientOption) conn {
+			return &mockConn{DialFn: func() error { return v }}
 		}); err != v {
 			t.Fatalf("unexpected err %v", err)
 		}
@@ -60,8 +60,8 @@ func TestClusterClientInit(t *testing.T) {
 
 	t.Run("Refresh err", func(t *testing.T) {
 		v := errors.New("refresh err")
-		if _, err := newClusterClient(ClusterClientOption{InitAddress: []string{":0"}}, func(dst string, opt ConnOption) conn {
-			return &MockConn{DoFn: func(cmd cmds.Completed) proto.Result { return proto.NewErrResult(v) }}
+		if _, err := newClusterClient(ClientOption{InitAddress: []string{":0"}}, func(dst string, opt ClientOption) conn {
+			return &mockConn{DoFn: func(cmd cmds.Completed) proto.Result { return proto.NewErrResult(v) }}
 		}); err != v {
 			t.Fatalf("unexpected err %v", err)
 		}
@@ -69,8 +69,8 @@ func TestClusterClientInit(t *testing.T) {
 
 	t.Run("Refresh retry", func(t *testing.T) {
 		first := true
-		if _, err := newClusterClient(ClusterClientOption{InitAddress: []string{":0"}}, func(dst string, opt ConnOption) conn {
-			return &MockConn{
+		if _, err := newClusterClient(ClientOption{InitAddress: []string{":0"}}, func(dst string, opt ClientOption) conn {
+			return &mockConn{
 				DoFn: func(cmd cmds.Completed) proto.Result {
 					if first {
 						first = false
@@ -87,8 +87,8 @@ func TestClusterClientInit(t *testing.T) {
 	t.Run("Refresh retry err", func(t *testing.T) {
 		v := errors.New("dial err")
 		first := true
-		if _, err := newClusterClient(ClusterClientOption{InitAddress: []string{":0"}}, func(dst string, opt ConnOption) conn {
-			return &MockConn{
+		if _, err := newClusterClient(ClientOption{InitAddress: []string{":0"}}, func(dst string, opt ClientOption) conn {
+			return &mockConn{
 				DoFn: func(cmd cmds.Completed) proto.Result {
 					return proto.NewResult(proto.Message{Type: '*', Values: []proto.Message{}}, nil)
 				},
@@ -106,8 +106,8 @@ func TestClusterClientInit(t *testing.T) {
 	})
 
 	t.Run("Refresh replace", func(t *testing.T) {
-		if client, err := newClusterClient(ClusterClientOption{InitAddress: []string{":1", ":2"}, ShuffleInit: true}, func(dst string, opt ConnOption) conn {
-			return &MockConn{
+		if client, err := newClusterClient(ClientOption{InitAddress: []string{":1", ":2"}, ShuffleInit: true}, func(dst string, opt ClientOption) conn {
+			return &mockConn{
 				DoFn: func(cmd cmds.Completed) proto.Result {
 					return slotsResp
 				},
@@ -121,7 +121,7 @@ func TestClusterClientInit(t *testing.T) {
 }
 
 func TestClusterClient(t *testing.T) {
-	m := &MockConn{
+	m := &mockConn{
 		DoFn: func(cmd cmds.Completed) proto.Result {
 			if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
 				return slotsResp
@@ -130,7 +130,7 @@ func TestClusterClient(t *testing.T) {
 		},
 	}
 
-	client, err := newClusterClient(ClusterClientOption{InitAddress: []string{":0"}, ShuffleInit: true}, func(dst string, opt ConnOption) conn {
+	client, err := newClusterClient(ClientOption{InitAddress: []string{":0"}, ShuffleInit: true}, func(dst string, opt ClientOption) conn {
 		return m
 	})
 	if err != nil {
@@ -263,7 +263,7 @@ func TestClusterClientErr(t *testing.T) {
 	t.Run("refresh err on pick", func(t *testing.T) {
 		first := true
 		v := errors.New("refresh err")
-		m := &MockConn{
+		m := &mockConn{
 			DoFn: func(cmd cmds.Completed) proto.Result {
 				if first {
 					first = false
@@ -272,7 +272,7 @@ func TestClusterClientErr(t *testing.T) {
 				return proto.NewErrResult(v)
 			},
 		}
-		client, err := newClusterClient(ClusterClientOption{InitAddress: []string{":0"}, ShuffleInit: true}, func(dst string, opt ConnOption) conn {
+		client, err := newClusterClient(ClientOption{InitAddress: []string{":0"}, ShuffleInit: true}, func(dst string, opt ClientOption) conn {
 			return m
 		})
 		if err != nil {
@@ -287,10 +287,10 @@ func TestClusterClientErr(t *testing.T) {
 	})
 
 	t.Run("refresh empty on pick", func(t *testing.T) {
-		m := &MockConn{DoFn: func(cmd cmds.Completed) proto.Result {
+		m := &mockConn{DoFn: func(cmd cmds.Completed) proto.Result {
 			return singleSlotResp
 		}}
-		client, err := newClusterClient(ClusterClientOption{InitAddress: []string{":0"}, ShuffleInit: true}, func(dst string, opt ConnOption) conn {
+		client, err := newClusterClient(ClientOption{InitAddress: []string{":0"}, ShuffleInit: true}, func(dst string, opt ClientOption) conn {
 			return m
 		})
 		if err != nil {
@@ -302,10 +302,10 @@ func TestClusterClientErr(t *testing.T) {
 	})
 
 	t.Run("refresh empty on pick in dedicated wire", func(t *testing.T) {
-		m := &MockConn{DoFn: func(cmd cmds.Completed) proto.Result {
+		m := &mockConn{DoFn: func(cmd cmds.Completed) proto.Result {
 			return singleSlotResp
 		}}
-		client, err := newClusterClient(ClusterClientOption{InitAddress: []string{":0"}, ShuffleInit: true}, func(dst string, opt ConnOption) conn {
+		client, err := newClusterClient(ClientOption{InitAddress: []string{":0"}, ShuffleInit: true}, func(dst string, opt ClientOption) conn {
 			return m
 		})
 		if err != nil {
@@ -319,10 +319,10 @@ func TestClusterClientErr(t *testing.T) {
 	})
 
 	t.Run("refresh empty on pick in dedicated wire (multi)", func(t *testing.T) {
-		m := &MockConn{DoFn: func(cmd cmds.Completed) proto.Result {
+		m := &mockConn{DoFn: func(cmd cmds.Completed) proto.Result {
 			return singleSlotResp
 		}}
-		client, err := newClusterClient(ClusterClientOption{InitAddress: []string{":0"}, ShuffleInit: true}, func(dst string, opt ConnOption) conn {
+		client, err := newClusterClient(ClientOption{InitAddress: []string{":0"}, ShuffleInit: true}, func(dst string, opt ClientOption) conn {
 			return m
 		})
 		if err != nil {
@@ -342,7 +342,7 @@ func TestClusterClientErr(t *testing.T) {
 
 	t.Run("slot moved", func(t *testing.T) {
 		count := 0
-		m := &MockConn{DoFn: func(cmd cmds.Completed) proto.Result {
+		m := &mockConn{DoFn: func(cmd cmds.Completed) proto.Result {
 			if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
 				return slotsResp
 			}
@@ -352,7 +352,7 @@ func TestClusterClientErr(t *testing.T) {
 			}
 			return proto.NewResult(proto.Message{Type: '+', String: "b"}, nil)
 		}}
-		client, err := newClusterClient(ClusterClientOption{InitAddress: []string{":0"}}, func(dst string, opt ConnOption) conn {
+		client, err := newClusterClient(ClientOption{InitAddress: []string{":0"}}, func(dst string, opt ClientOption) conn {
 			return m
 		})
 		if err != nil {
@@ -365,7 +365,7 @@ func TestClusterClientErr(t *testing.T) {
 
 	t.Run("slot moved (cache)", func(t *testing.T) {
 		count := 0
-		m := &MockConn{
+		m := &mockConn{
 			DoFn: func(cmd cmds.Completed) proto.Result {
 				return slotsResp
 			},
@@ -377,7 +377,7 @@ func TestClusterClientErr(t *testing.T) {
 				return proto.NewResult(proto.Message{Type: '+', String: "b"}, nil)
 			},
 		}
-		client, err := newClusterClient(ClusterClientOption{InitAddress: []string{":0"}}, func(dst string, opt ConnOption) conn {
+		client, err := newClusterClient(ClientOption{InitAddress: []string{":0"}}, func(dst string, opt ClientOption) conn {
 			return m
 		})
 		if err != nil {
@@ -390,7 +390,7 @@ func TestClusterClientErr(t *testing.T) {
 
 	t.Run("slot asking", func(t *testing.T) {
 		count := 0
-		m := &MockConn{
+		m := &mockConn{
 			DoFn: func(cmd cmds.Completed) proto.Result {
 				if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
 					return slotsResp
@@ -405,7 +405,7 @@ func TestClusterClientErr(t *testing.T) {
 				return []proto.Result{{}, proto.NewResult(proto.Message{Type: '+', String: "b"}, nil)}
 			},
 		}
-		client, err := newClusterClient(ClusterClientOption{InitAddress: []string{":0"}}, func(dst string, opt ConnOption) conn {
+		client, err := newClusterClient(ClientOption{InitAddress: []string{":0"}}, func(dst string, opt ClientOption) conn {
 			return m
 		})
 		if err != nil {
@@ -418,7 +418,7 @@ func TestClusterClientErr(t *testing.T) {
 
 	t.Run("slot asking (cache)", func(t *testing.T) {
 		count := 0
-		m := &MockConn{
+		m := &mockConn{
 			DoFn: func(cmd cmds.Completed) proto.Result {
 				return slotsResp
 			},
@@ -433,7 +433,7 @@ func TestClusterClientErr(t *testing.T) {
 				return []proto.Result{{}, proto.NewResult(proto.Message{Type: '+', String: "b"}, nil)}
 			},
 		}
-		client, err := newClusterClient(ClusterClientOption{InitAddress: []string{":0"}}, func(dst string, opt ConnOption) conn {
+		client, err := newClusterClient(ClientOption{InitAddress: []string{":0"}}, func(dst string, opt ClientOption) conn {
 			return m
 		})
 		if err != nil {
@@ -446,7 +446,7 @@ func TestClusterClientErr(t *testing.T) {
 
 	t.Run("slot try again", func(t *testing.T) {
 		count := 0
-		m := &MockConn{DoFn: func(cmd cmds.Completed) proto.Result {
+		m := &mockConn{DoFn: func(cmd cmds.Completed) proto.Result {
 			if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
 				return slotsResp
 			}
@@ -456,7 +456,7 @@ func TestClusterClientErr(t *testing.T) {
 			}
 			return proto.NewResult(proto.Message{Type: '+', String: "b"}, nil)
 		}}
-		client, err := newClusterClient(ClusterClientOption{InitAddress: []string{":0"}}, func(dst string, opt ConnOption) conn {
+		client, err := newClusterClient(ClientOption{InitAddress: []string{":0"}}, func(dst string, opt ClientOption) conn {
 			return m
 		})
 		if err != nil {
@@ -469,7 +469,7 @@ func TestClusterClientErr(t *testing.T) {
 
 	t.Run("slot try again (cache)", func(t *testing.T) {
 		count := 0
-		m := &MockConn{
+		m := &mockConn{
 			DoFn: func(cmd cmds.Completed) proto.Result {
 				return slotsResp
 			},
@@ -481,7 +481,7 @@ func TestClusterClientErr(t *testing.T) {
 				return proto.NewResult(proto.Message{Type: '+', String: "b"}, nil)
 			},
 		}
-		client, err := newClusterClient(ClusterClientOption{InitAddress: []string{":0"}}, func(dst string, opt ConnOption) conn {
+		client, err := newClusterClient(ClientOption{InitAddress: []string{":0"}}, func(dst string, opt ClientOption) conn {
 			return m
 		})
 		if err != nil {

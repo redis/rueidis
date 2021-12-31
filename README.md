@@ -30,7 +30,7 @@ import (
 )
 
 func main() {
-	c, _ := rueidis.NewClusterClient(rueidis.ClusterClientOption{
+	c, _ := rueidis.NewClient(rueidis.ClientOption{
 		InitAddress: []string{"127.0.0.1:6379"},
 	})
 	defer c.Close()
@@ -171,17 +171,15 @@ with non-blocking commands and thus will not cause the pipeline to be blocked:
 To receive messages from channels, the message handler should be registered when creating the redis connection:
 
 ```golang
-c, _ := rueidis.NewSingleClient(rueidis.SingleClient{
-    Address: "127.0.0.1:6379",
-    ConnOption: conn.Option{
-        PubSubHandlers: rueidis.NewPubSubHandlers(func(prev error, client rueidis.DedicatedClient) {
-            // Subscribe channels in this PubSubSetup hook for auto reconnecting after disconnected.
-            // The "prev" err is previous disconnect error.
-            err := client.Do(ctx, client.B().Subscribe().Channel("my_channel").Build()).Error()
-        }, rueidis.PubSubOption{
-            OnMessage: func(channel, message string) {
-                // handle the message
-            },
+c, _ := rueidis.NewClient(rueidis.ClientOption{
+    InitAddress: []string{"127.0.0.1:6379"},
+    PubSubHandlers: rueidis.NewPubSubHandlers(func(prev error, client rueidis.DedicatedClient) {
+        // Subscribe channels in this PubSubSetup hook for auto reconnecting after disconnected.
+        // The "prev" err is previous disconnect error.
+        err := client.Do(ctx, client.B().Subscribe().Channel("my_channel").Build()).Error()
+    }, rueidis.PubSubOption{
+        OnMessage: func(channel, message string) {
+            // handle the message
         },
     },
 })
@@ -228,16 +226,18 @@ script := rueidis.NewLuaScript("return {KEYS[1],KEYS[2],ARGV[1],ARGV[2]}")
 list, err := script.Exec(ctx, client, []string{"k1", "k2"}, []string{"a1", "a2"}).ToArray()
 ```
 
-## Redis Cluster
+## Redis Cluster and Single Redis
 
-To connect to a redis cluster, the `NewClusterClient` should be used:
+To connect to a redis cluster, the `NewClient` should be used:
 
 ```golang
-c, _ := rueidis.NewClusterClient(rueidis.ClusterClientOption{
+c, _ := rueidis.NewClient(rueidis.ClientOption{
     InitAddress: []string{"127.0.0.1:7001", "127.0.0.1:7002", "127.0.0.1:7003"},
-    ShuffleInit: false,
+    ShuffleInit: true,
 })
 ```
+
+To connect to a single redis node, still use the `NewClient` with one InitAddress
 
 ## Command Builder
 
@@ -281,7 +281,7 @@ type Example struct {
 
 func main() {
     ctx := context.Background()
-    c, _ := rueidis.NewSingleClient(rueidis.SingleClientOption{Address: "127.0.0.1:6379"})
+    c, _ := rueidis.NewClient(rueidis.ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
     // create the hash repo.
     repo := om.NewHashRepository("my_prefix", Example{}, c)
 

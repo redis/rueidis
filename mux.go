@@ -10,8 +10,8 @@ import (
 	"github.com/rueian/rueidis/internal/proto"
 )
 
-type connFn func(dst string, opt ConnOption) conn
-type dialFn func(dst string, opt ConnOption) (net.Conn, error)
+type connFn func(dst string, opt ClientOption) conn
+type dialFn func(dst string, opt ClientOption) (net.Conn, error)
 type wireFn func(onDisconnected func(err error)) (wire, error)
 
 type singleconnect struct {
@@ -43,7 +43,7 @@ type mux struct {
 	onDisconnected atomic.Value
 }
 
-func makeMux(dst string, option ConnOption, dialFn dialFn) *mux {
+func makeMux(dst string, option ClientOption, dialFn dialFn) *mux {
 	return newMux(dst, option, (*pipe)(nil), func(onDisconnected func(err error)) (w wire, err error) {
 		conn, err := dialFn(dst, option)
 		if err == nil {
@@ -53,7 +53,7 @@ func makeMux(dst string, option ConnOption, dialFn dialFn) *mux {
 	})
 }
 
-func newMux(dst string, option ConnOption, dead wire, wireFn wireFn) *mux {
+func newMux(dst string, option ClientOption, dead wire, wireFn wireFn) *mux {
 	m := &mux{dst: dst, dead: dead, wireFn: wireFn}
 	m.wire.Store(dead)
 	m.pool = newPool(option.BlockingPoolSize, m._newPooledWire)

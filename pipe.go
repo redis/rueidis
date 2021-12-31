@@ -50,7 +50,7 @@ type pipe struct {
 	onDisconnected func(err error)
 }
 
-func newPipe(conn net.Conn, option ConnOption, onDisconnected func(err error)) (p *pipe, err error) {
+func newPipe(conn net.Conn, option ClientOption, onDisconnected func(err error)) (p *pipe, err error) {
 	if option.CacheSizeEachConn <= 0 {
 		option.CacheSizeEachConn = DefaultCacheBytes
 	}
