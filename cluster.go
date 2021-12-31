@@ -27,7 +27,7 @@ type ClusterClientOption struct {
 }
 
 type ClusterClient struct {
-	Cmd *cmds.SBuilder
+	Cmd *cmds.Builder
 	opt ClusterClientOption
 
 	mu     sync.RWMutex
@@ -45,7 +45,7 @@ func newClusterClient(opt ClusterClientOption, connFn connFn) (client *ClusterCl
 	}
 
 	client = &ClusterClient{
-		Cmd:    cmds.NewSBuilder(),
+		Cmd:    cmds.NewBuilder(cmds.InitSlot),
 		opt:    opt,
 		connFn: connFn,
 		conns:  make(map[string]conn),
@@ -249,7 +249,7 @@ func (c *ClusterClient) pickOrNew(addr string) (p conn) {
 	return p
 }
 
-func (c *ClusterClient) Do(ctx context.Context, cmd cmds.SCompleted) (resp proto.Result) {
+func (c *ClusterClient) Do(ctx context.Context, cmd cmds.Completed) (resp proto.Result) {
 retry:
 	cc, err := c.pick(cmd.Slot())
 	if err != nil {
@@ -276,7 +276,7 @@ ret:
 	return resp
 }
 
-func (c *ClusterClient) DoCache(ctx context.Context, cmd cmds.SCacheable, ttl time.Duration) (resp proto.Result) {
+func (c *ClusterClient) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp proto.Result) {
 retry:
 	cc, err := c.pick(cmd.Slot())
 	if err != nil {
@@ -350,7 +350,7 @@ func (c *ClusterClient) Close() {
 }
 
 type DedicatedClusterClient struct {
-	Cmd    *cmds.SBuilder
+	Cmd    *cmds.Builder
 	client *ClusterClient
 	conn   conn
 	wire   wire
@@ -388,7 +388,7 @@ func (c *DedicatedClusterClient) release() {
 	}
 }
 
-func (c *DedicatedClusterClient) Do(ctx context.Context, cmd cmds.SCompleted) (resp proto.Result) {
+func (c *DedicatedClusterClient) Do(ctx context.Context, cmd cmds.Completed) (resp proto.Result) {
 	c.check(cmd.Slot())
 	if err := c.acquire(); err != nil {
 		return proto.NewErrResult(err)
@@ -399,7 +399,7 @@ func (c *DedicatedClusterClient) Do(ctx context.Context, cmd cmds.SCompleted) (r
 	return resp
 }
 
-func (c *DedicatedClusterClient) DoMulti(ctx context.Context, multi ...cmds.SCompleted) (resp []proto.Result) {
+func (c *DedicatedClusterClient) DoMulti(ctx context.Context, multi ...cmds.Completed) (resp []proto.Result) {
 	if len(multi) == 0 {
 		return nil
 	}

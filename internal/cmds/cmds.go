@@ -8,6 +8,7 @@ const (
 	noRetTag = uint16(1 << 13)
 	readonly = uint16(1 << 12)
 	InitSlot = uint16(1 << 15)
+	NoSlot   = InitSlot + 1
 )
 
 var (
@@ -67,33 +68,14 @@ func (c *Completed) CommandSlice() *CommandSlice {
 	return c.cs
 }
 
+func (c *Completed) Slot() uint16 {
+	return c.ks
+}
+
 type Cacheable Completed
-type SCompleted Completed
 
-func (c *SCompleted) Commands() []string {
-	return c.cs.s
-}
-
-func (c *SCompleted) CommandSlice() *CommandSlice {
-	return c.cs
-}
-
-func (c *SCompleted) Slot() uint16 {
+func (c *Cacheable) Slot() uint16 {
 	return c.ks
-}
-
-type SCacheable Completed
-
-func (c *SCacheable) Slot() uint16 {
-	return c.ks
-}
-
-func (c *SCacheable) Commands() []string {
-	return c.cs.s
-}
-
-func (c *SCacheable) CommandSlice() *CommandSlice {
-	return c.cs
 }
 
 func (c *Cacheable) Commands() []string {
@@ -148,7 +130,7 @@ func NewMultiCompleted(cs [][]string) []Completed {
 	return ret
 }
 
-func checkSlot(prev, new uint16) uint16 {
+func check(prev, new uint16) uint16 {
 	if prev == InitSlot || prev == new {
 		return new
 	}

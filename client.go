@@ -20,7 +20,7 @@ type SingleClient struct {
 }
 
 func newSingleClient(opt SingleClientOption, connFn connFn) (*SingleClient, error) {
-	client := &SingleClient{Cmd: cmds.NewBuilder(), conn: connFn(opt.Address, opt.ConnOption)}
+	client := &SingleClient{Cmd: cmds.NewBuilder(cmds.NoSlot), conn: connFn(opt.Address, opt.ConnOption)}
 
 	if err := client.conn.Dial(); err != nil {
 		return nil, err

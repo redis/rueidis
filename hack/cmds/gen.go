@@ -347,18 +347,15 @@ func tests(f io.Writer, structs map[string]GoStruct) {
 
 	fmt.Fprintf(f, "import \"testing\"\n\n")
 
-	fmt.Fprintf(f, "var s = NewBuilder()\n")
-	fmt.Fprintf(f, "var c = NewSBuilder()\n\n")
+	fmt.Fprintf(f, "var s = NewBuilder(InitSlot)\n\n")
 
 	for i, p := range pathes {
 		if i%100 == 0 {
 			fmt.Fprintf(f, "func TestCommand_%d(t *testing.T) {\n", i/100)
 		}
 		printPath(f, "s", p, "Build")
-		printPath(f, "c", p, "Build")
 		if within(p[0], cacheableCMDs) {
 			printPath(f, "s", p, "Cache")
-			printPath(f, "c", p, "Cache")
 		}
 		if i%100 == 99 || i == len(pathes)-1 {
 			fmt.Fprintf(f, "}\n\n")
@@ -438,11 +435,9 @@ func generate(f io.Writer, structs map[string]GoStruct) {
 		s := structs[name]
 
 		fmt.Fprintf(f, "type %s Completed\n\n", s.FullName)
-		fmt.Fprintf(f, "type %s SCompleted\n\n", "S"+s.FullName)
 
 		if s.Node.Root {
-			printRootBuilder(f, s, "")
-			printRootBuilder(f, s, "S")
+			printRootBuilder(f, s)
 		}
 
 		for _, next := range s.NextNodes {
@@ -450,17 +445,14 @@ func generate(f io.Writer, structs map[string]GoStruct) {
 				next = next.Child
 			}
 			for _, ss := range next.GoStructs() {
-				printBuilder(f, s, ss, "")
-				printBuilder(f, s, ss, "S")
+				printBuilder(f, s, ss)
 			}
 		}
 
 		if allOptional(s.Node, s.NextNodes) {
-			printFinalBuilder(f, s, "", "Build", "Completed")
-			printFinalBuilder(f, s, "S", "Build", "SCompleted")
+			printFinalBuilder(f, s, "Build", "Completed")
 			if within(s.Node.FindRoot().GoStructs()[0], cacheableCMDs) {
-				printFinalBuilder(f, s, "", "Cache", "Cacheable")
-				printFinalBuilder(f, s, "S", "Cache", "SCacheable")
+				printFinalBuilder(f, s, "Cache", "Cacheable")
 			}
 		}
 	}
@@ -516,8 +508,8 @@ func toGoName(paramName string) string {
 	return paramName
 }
 
-func printRootBuilder(w io.Writer, root GoStruct, prefix string) {
-	fmt.Fprintf(w, "func (b *%sBuilder) %s() (c %s%s) {\n", prefix, root.FullName, prefix, root.FullName)
+func printRootBuilder(w io.Writer, root GoStruct) {
+	fmt.Fprintf(w, "func (b *Builder) %s() (c %s) {\n", root.FullName, root.FullName)
 
 	var appends []string
 	for _, cmd := range root.BuildDef.Command {
@@ -525,9 +517,9 @@ func printRootBuilder(w io.Writer, root GoStruct, prefix string) {
 	}
 
 	if tag := rootCf(root); tag != "" {
-		fmt.Fprintf(w, "\tc = %s%s{cs: b.get(), ks: InitSlot, cf: %s}\n", prefix, root.FullName, tag)
+		fmt.Fprintf(w, "\tc = %s{cs: b.get(), ks: b.ks, cf: %s}\n", root.FullName, tag)
 	} else {
-		fmt.Fprintf(w, "\tc = %s%s{cs: b.get(), ks: InitSlot}\n", prefix, root.FullName)
+		fmt.Fprintf(w, "\tc = %s{cs: b.get(), ks: b.ks}\n", root.FullName)
 	}
 	fmt.Fprintf(w, "\tc.cs.s = append(c.cs.s, %s)\n", strings.Join(appends, ", "))
 	fmt.Fprintf(w, "\treturn c\n")
@@ -559,14 +551,14 @@ func rootCf(root GoStruct) (tag string) {
 	return tag
 }
 
-func printFinalBuilder(w io.Writer, parent GoStruct, prefix, method, ss string) {
-	fmt.Fprintf(w, "func (c %s%s) %s() %s {\n", prefix, parent.FullName, method, ss)
+func printFinalBuilder(w io.Writer, parent GoStruct, method, ss string) {
+	fmt.Fprintf(w, "func (c %s) %s() %s {\n", parent.FullName, method, ss)
 	fmt.Fprintf(w, "\treturn %s(c)\n", ss)
 	fmt.Fprintf(w, "}\n\n")
 }
 
-func printBuilder(w io.Writer, parent, next GoStruct, prefix string) {
-	fmt.Fprintf(w, "func (c %s%s) %s(", prefix, parent.FullName, next.BuildDef.MethodName)
+func printBuilder(w io.Writer, parent, next GoStruct) {
+	fmt.Fprintf(w, "func (c %s) %s(", parent.FullName, next.BuildDef.MethodName)
 	if len(next.BuildDef.Parameters) == 1 && next.Variadic {
 		fmt.Fprintf(w, "%s ...%s", toGoName(next.BuildDef.Parameters[0].Name), toGoType(next.BuildDef.Parameters[0].Type))
 	} else if next.Variadic && parent.FullName != next.FullName {
@@ -579,23 +571,25 @@ func printBuilder(w io.Writer, parent, next GoStruct, prefix string) {
 			}
 		}
 	}
-	fmt.Fprintf(w, ") %s%s {\n", prefix, next.FullName)
+	fmt.Fprintf(w, ") %s {\n", next.FullName)
 
-	if prefix == "S" {
-		if len(next.BuildDef.Parameters) == 1 && next.Variadic {
-			if next.BuildDef.Parameters[0].Type == "key" {
-				fmt.Fprintf(w, "\tfor _, k := range %s {\n", toGoName(next.BuildDef.Parameters[0].Name))
-				fmt.Fprintf(w, "\t\tc.ks = checkSlot(c.ks, slot(k))\n")
-				fmt.Fprintf(w, "\t}\n")
-			}
+	if len(next.BuildDef.Parameters) == 1 && next.Variadic {
+		if next.BuildDef.Parameters[0].Type == "key" {
+			fmt.Fprintf(w, "\tif c.ks != NoSlot {\n")
+			fmt.Fprintf(w, "\t\tfor _, k := range %s {\n", toGoName(next.BuildDef.Parameters[0].Name))
+			fmt.Fprintf(w, "\t\t\tc.ks = check(c.ks, slot(k))\n")
+			fmt.Fprintf(w, "\t\t}\n")
+			fmt.Fprintf(w, "\t}\n")
+		}
+	} else {
+		if len(next.BuildDef.Parameters) != 1 && next.Variadic && parent.FullName != next.FullName {
+			// no parameter
 		} else {
-			if len(next.BuildDef.Parameters) != 1 && next.Variadic && parent.FullName != next.FullName {
-				// no parameter
-			} else {
-				for _, arg := range next.BuildDef.Parameters {
-					if arg.Type == "key" {
-						fmt.Fprintf(w, "\tc.ks = checkSlot(c.ks, slot(%s))\n", toGoName(arg.Name))
-					}
+			for _, arg := range next.BuildDef.Parameters {
+				if arg.Type == "key" {
+					fmt.Fprintf(w, "\tif c.ks != NoSlot {\n")
+					fmt.Fprintf(w, "\t\tc.ks = check(c.ks, slot(%s))\n", toGoName(arg.Name))
+					fmt.Fprintf(w, "\t}\n")
 				}
 			}
 		}
@@ -690,7 +684,7 @@ func printBuilder(w io.Writer, parent, next GoStruct, prefix string) {
 	if parent.FullName == next.FullName {
 		fmt.Fprintf(w, "\treturn c\n")
 	} else {
-		fmt.Fprintf(w, "\treturn (%s%s)(c)\n", prefix, next.FullName)
+		fmt.Fprintf(w, "\treturn (%s)(c)\n", next.FullName)
 	}
 	fmt.Fprintf(w, "}\n\n")
 }

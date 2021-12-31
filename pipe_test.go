@@ -371,7 +371,7 @@ func TestClientSideCaching(t *testing.T) {
 }
 
 func TestPubSub(t *testing.T) {
-	builder := cmds.NewBuilder()
+	builder := cmds.NewBuilder(cmds.NoSlot)
 	t.Run("NoReply Commands In Do", func(t *testing.T) {
 		p, mock, cancel, _ := setup(t, ConnOption{})
 		defer cancel()
@@ -525,7 +525,7 @@ func TestExitAllGoroutineOnWriteError(t *testing.T) {
 	conn, _, _, closeConn := setup(t, ConnOption{})
 
 	// start the background worker
-	conn.Do(cmds.NewBuilder().Subscribe().Channel("a").Build())
+	conn.Do(cmds.NewBuilder(cmds.NoSlot).Subscribe().Channel("a").Build())
 
 	closeConn()
 	wg := sync.WaitGroup{}
