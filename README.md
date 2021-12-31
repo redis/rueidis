@@ -243,7 +243,7 @@ c, _ := rueidis.NewClusterClient(rueidis.ClusterClientOption{
 
 Redis commands are very complex and their formats are very different from each other.
 
-This library provides a type safe command builder within `SingleClient.Cmd` and `ClusterClient.Cmd` that can be used as
+This library provides a type safe command builder within `client.B()` that can be used as
 an entrypoint to construct a redis command. Once the command is completed, call the `Build()` or `Cache()` to get the actual command.
 And then pass it to either `Client.Do()` or `Client.DoCache()`.
 
@@ -254,7 +254,7 @@ c.DoCache(ctx, c.B().Hmget().Key("myhash").Field("1", "2").Cache(), time.Second*
 
 **Once the command is passed to the one of above `Client.DoXXX()`, the command will be recycled and should not be reused.**
 
-**The `ClusterClient.Cmd` also checks if the command contains multiple keys belongs to different slots. If it does, then panic.**
+**The `ClusterClient.B()` also checks if the command contains multiple keys belongs to different slots. If it does, then panic.**
 
 ## Object Mapping
 
