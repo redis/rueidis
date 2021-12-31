@@ -367,7 +367,7 @@ func tests(f io.Writer, structs map[string]GoStruct) {
 func makePath(s GoStruct, path []GoStruct, pathes [][]GoStruct) [][]GoStruct {
 	path = append(path, s)
 	nexts := s.Node.NextNodes()
-	if len(path) < 7 {
+	if len(path) < 8 {
 		for _, n := range nexts {
 			if s.Node == n {
 				continue
