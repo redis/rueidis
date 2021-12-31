@@ -8,7 +8,9 @@ import (
 	"reflect"
 	"strconv"
 	"testing"
+	"time"
 
+	"github.com/rueian/rueidis/internal/cmds"
 	"github.com/rueian/rueidis/internal/proto"
 )
 
@@ -21,35 +23,101 @@ func TestNewLuaScript(t *testing.T) {
 	a := []string{"3", "4"}
 
 	eval := false
-	evalSha := false
 
-	script := newLuaScript(body, func(ctx context.Context, in string, keys []string, args []string) proto.Result {
-		eval = true
-		if in != body {
-			t.Fatalf("input should be %q", body)
-		}
-		if !reflect.DeepEqual(k, keys) || !reflect.DeepEqual(a, args) {
-			t.Fatalf("parameter mistmatch")
-		}
-		return proto.NewResult(proto.Message{Type: '_'}, nil)
-	}, func(ctx context.Context, in string, keys []string, args []string) proto.Result {
-		evalSha = true
-		if in != sha {
-			t.Fatalf("input should be %q", sha)
-		}
-		if !reflect.DeepEqual(k, keys) || !reflect.DeepEqual(a, args) {
-			t.Fatalf("parameter mistmatch")
-		}
-		return proto.NewResult(proto.Message{Type: '-', String: "NOSCRIPT"}, nil)
-	})
+	c := &client{
+		BFn: func() *cmds.Builder {
+			return cmds.NewBuilder(cmds.NoSlot)
+		},
+		DoFn: func(ctx context.Context, cmd cmds.Completed) (resp proto.Result) {
+			if reflect.DeepEqual(cmd.Commands(), []string{"EVALSHA", sha, "2", "1", "2", "3", "4"}) {
+				eval = true
+				return proto.NewResult(proto.Message{Type: '-', String: "NOSCRIPT"}, nil)
+			}
+			if eval && reflect.DeepEqual(cmd.Commands(), []string{"EVAL", body, "2", "1", "2", "3", "4"}) {
+				return proto.NewResult(proto.Message{Type: '_'}, nil)
+			}
+			return proto.NewResult(proto.Message{Type: '+', String: "unexpected"}, nil)
+		},
+	}
 
-	if !script.Exec(context.Background(), k, a).RedisError().IsNil() {
+	script := NewLuaScript(body)
+
+	if !script.Exec(context.Background(), c, k, a).RedisError().IsNil() {
 		t.Fatalf("ret mistmatch")
 	}
-	if !eval {
-		t.Fatalf("eval fn not called")
+}
+
+func TestNewLuaScriptReadOnly(t *testing.T) {
+	body := strconv.Itoa(rand.Int())
+	sum := sha1.Sum([]byte(body))
+	sha := hex.EncodeToString(sum[:])
+
+	k := []string{"1", "2"}
+	a := []string{"3", "4"}
+
+	eval := false
+
+	c := &client{
+		BFn: func() *cmds.Builder {
+			return cmds.NewBuilder(cmds.NoSlot)
+		},
+		DoFn: func(ctx context.Context, cmd cmds.Completed) (resp proto.Result) {
+			if reflect.DeepEqual(cmd.Commands(), []string{"EVALSHA_RO", sha, "2", "1", "2", "3", "4"}) {
+				eval = true
+				return proto.NewResult(proto.Message{Type: '-', String: "NOSCRIPT"}, nil)
+			}
+			if eval && reflect.DeepEqual(cmd.Commands(), []string{"EVAL_RO", body, "2", "1", "2", "3", "4"}) {
+				return proto.NewResult(proto.Message{Type: '_'}, nil)
+			}
+			return proto.NewResult(proto.Message{Type: '+', String: "unexpected"}, nil)
+		},
 	}
-	if !evalSha {
-		t.Fatalf("evalSha fn not called")
+
+	script := NewLuaScriptReadOnly(body)
+
+	if !script.Exec(context.Background(), c, k, a).RedisError().IsNil() {
+		t.Fatalf("ret mistmatch")
+	}
+}
+
+type client struct {
+	BFn         func() *cmds.Builder
+	DoFn        func(ctx context.Context, cmd cmds.Completed) (resp proto.Result)
+	DoCacheFn   func(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp proto.Result)
+	DedicatedFn func(fn func(DedicatedClient) error) (err error)
+	CloseFn     func()
+}
+
+func (c *client) B() *cmds.Builder {
+	if c.BFn != nil {
+		return c.BFn()
+	}
+	return nil
+}
+
+func (c *client) Do(ctx context.Context, cmd cmds.Completed) (resp proto.Result) {
+	if c.DoFn != nil {
+		return c.DoFn(ctx, cmd)
+	}
+	return proto.Result{}
+}
+
+func (c *client) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp proto.Result) {
+	if c.DoCacheFn != nil {
+		return c.DoCacheFn(ctx, cmd, ttl)
+	}
+	return proto.Result{}
+}
+
+func (c *client) Dedicated(fn func(DedicatedClient) error) (err error) {
+	if c.DedicatedFn != nil {
+		return c.DedicatedFn(fn)
+	}
+	return nil
+}
+
+func (c *client) Close() {
+	if c.CloseFn != nil {
+		c.CloseFn()
 	}
 }

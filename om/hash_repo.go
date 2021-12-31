@@ -8,27 +8,17 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rueian/rueidis"
 	"github.com/rueian/rueidis/internal/proto"
 )
 
 var ErrVersionMismatch = errors.New("object version mismatched, please retry")
 
-type ExecFn func(ctx context.Context, keys, args []string) proto.Result
-type ScriptExecFn func(script string) ExecFn
-
-type HashObjectAdapter interface {
-	Save(ctx context.Context, key string, fields map[string]string) error
-	Fetch(ctx context.Context, key string) (map[string]proto.Message, error)
-	FetchCache(ctx context.Context, key string, ttl time.Duration) (map[string]proto.Message, error)
-	Remove(ctx context.Context, key string) error
-}
-
-func NewHashRepository(prefix string, schema interface{}, adapter HashObjectAdapter, scriptExecFn ScriptExecFn) *HashRepository {
+func NewHashRepository(prefix string, schema interface{}, client rueidis.Client) *HashRepository {
 	repo := &HashRepository{
-		prefix:  prefix,
-		typ:     reflect.TypeOf(schema),
-		adapter: adapter,
-		execFn:  scriptExecFn(saveScript),
+		prefix: prefix,
+		typ:    reflect.TypeOf(schema),
+		client: client,
 	}
 	if _, ok := schema.(HashConverter); !ok {
 		repo.factory = newHashConvFactory(repo.typ)
@@ -40,9 +30,7 @@ type HashRepository struct {
 	prefix  string
 	typ     reflect.Type
 	factory *hashConvFactory
-
-	adapter HashObjectAdapter
-	execFn  ExecFn
+	client  rueidis.Client
 }
 
 func (r *HashRepository) key(id string) (key string) {
@@ -85,7 +73,7 @@ func (r *HashRepository) fromHash(id string, record map[string]proto.Message) (v
 }
 
 func (r *HashRepository) Fetch(ctx context.Context, id string) (v interface{}, err error) {
-	record, err := r.adapter.Fetch(ctx, r.key(id))
+	record, err := r.client.Do(ctx, r.client.B().Hgetall().Key(r.key(id)).Build()).ToMap()
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +81,7 @@ func (r *HashRepository) Fetch(ctx context.Context, id string) (v interface{}, e
 }
 
 func (r *HashRepository) FetchCache(ctx context.Context, id string, ttl time.Duration) (v interface{}, err error) {
-	record, err := r.adapter.FetchCache(ctx, r.key(id), ttl)
+	record, err := r.client.DoCache(ctx, r.client.B().Hgetall().Key(r.key(id)).Cache(), ttl).ToMap()
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +107,7 @@ func (r *HashRepository) Save(ctx context.Context, entity interface{}) (err erro
 			}
 			args = append(args, f, v)
 		}
-		fields[VersionField], err = r.execFn(ctx, []string{r.key(id)}, args).ToString()
+		fields[VersionField], err = saveScript.Exec(ctx, r.client, []string{r.key(id)}, args).ToString()
 		if proto.IsRedisNil(err) {
 			return ErrVersionMismatch
 		}
@@ -128,14 +116,18 @@ func (r *HashRepository) Save(ctx context.Context, entity interface{}) (err erro
 		}
 		return conv.FromHash(id, fields)
 	}
-	return r.adapter.Save(ctx, r.key(id), fields)
+	cmd := r.client.B().Hset().Key(r.key(id)).FieldValue()
+	for f, v := range fields {
+		cmd = cmd.FieldValue(f, v)
+	}
+	return r.client.Do(ctx, cmd.Build()).Error()
 }
 
 func (r *HashRepository) Remove(ctx context.Context, id string) error {
-	return r.adapter.Remove(ctx, r.key(id))
+	return r.client.Do(ctx, r.client.B().Del().Key(r.key(id)).Build()).Error()
 }
 
-var saveScript = fmt.Sprintf(`
+var saveScript = rueidis.NewLuaScript(fmt.Sprintf(`
 local v = redis.call('HGET',KEYS[1],'%s')
 if (not v or v == ARGV[2])
 then
@@ -143,4 +135,4 @@ then
   if redis.call('HSET',KEYS[1],unpack(ARGV)) then return ARGV[2] end
 end
 return nil
-`, VersionField)
+`, VersionField))

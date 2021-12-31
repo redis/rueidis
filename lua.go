@@ -8,30 +8,35 @@ import (
 	"github.com/rueian/rueidis/internal/proto"
 )
 
-type evalFn func(ctx context.Context, script string, keys []string, args []string) proto.Result
+func NewLuaScript(script string) *Lua {
+	sum := sha1.Sum([]byte(script))
+	return &Lua{script: script, sha1: hex.EncodeToString(sum[:])}
+}
+
+func NewLuaScriptReadOnly(script string) *Lua {
+	lua := NewLuaScript(script)
+	lua.readonly = true
+	return lua
+}
 
 type Lua struct {
-	script string
-	sha1   string
-
-	eval    evalFn
-	evalSha evalFn
+	script   string
+	sha1     string
+	readonly bool
 }
 
-func (s *Lua) Exec(ctx context.Context, keys, args []string) proto.Result {
-	r := s.evalSha(ctx, s.sha1, keys, args)
-	if err := r.RedisError(); err != nil && err.IsNoScript() {
-		r = s.eval(ctx, s.script, keys, args)
+func (s *Lua) Exec(ctx context.Context, c Client, keys, args []string) (resp proto.Result) {
+	if s.readonly {
+		resp = c.Do(ctx, c.B().EvalshaRo().Sha1(s.sha1).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build())
+	} else {
+		resp = c.Do(ctx, c.B().Evalsha().Sha1(s.sha1).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build())
 	}
-	return r
-}
-
-func newLuaScript(body string, eval, evalSha evalFn) *Lua {
-	sum := sha1.Sum([]byte(body))
-	return &Lua{
-		script:  body,
-		sha1:    hex.EncodeToString(sum[:]),
-		eval:    eval,
-		evalSha: evalSha,
+	if err := resp.RedisError(); err != nil && err.IsNoScript() {
+		if s.readonly {
+			resp = c.Do(ctx, c.B().EvalRo().Script(s.script).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build())
+		} else {
+			resp = c.Do(ctx, c.B().Eval().Script(s.script).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build())
+		}
 	}
+	return resp
 }

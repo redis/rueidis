@@ -174,7 +174,7 @@ To receive messages from channels, the message handler should be registered when
 c, _ := rueidis.NewSingleClient(rueidis.SingleClient{
     Address: "127.0.0.1:6379",
     ConnOption: conn.Option{
-        PubSubHandlers: rueidis.NewPubSubHandlers(func(prev error, client *rueidis.DedicatedSingleClient) {
+        PubSubHandlers: rueidis.NewPubSubHandlers(func(prev error, client rueidis.DedicatedClient) {
             // Subscribe channels in this PubSubSetup hook for auto reconnecting after disconnected.
             // The "prev" err is previous disconnect error.
             err := client.Do(ctx, client.B().Subscribe().Channel("my_channel").Build()).Error()
@@ -195,7 +195,7 @@ unintentional write commands between WATCH and EXEC. Otherwise, the EXEC may not
 The dedicated connection shares the same connection pool with blocking commands.
 
 ```golang
-c.Dedicated(func(client *client.DedicatedSingleClient) error {
+c.Dedicated(func(client client.DedicatedClient) error {
     // watch keys first
     client.Do(ctx, client.B().Watch().Key("k1", "k2").Build())
     // perform read here
@@ -223,9 +223,9 @@ When calling the `script.Exec`, it will try sending EVALSHA to the client and if
 it will send EVAL to try again.
 
 ```golang
-script := c.NewLuaScript("return {KEYS[1],KEYS[2],ARGV[1],ARGV[2]}")
+script := rueidis.NewLuaScript("return {KEYS[1],KEYS[2],ARGV[1],ARGV[2]}")
 // the script.Exec is safe for concurrent call
-list, err := script.Exec(ctx, []string{"k1", "k2"}, []string{"a1", "a2"}).ToArray()
+list, err := script.Exec(ctx, client, []string{"k1", "k2"}, []string{"a1", "a2"}).ToArray()
 ```
 
 ## Redis Cluster
@@ -269,31 +269,31 @@ import (
     "time"
 
     "github.com/rueian/rueidis"
+	"github.com/rueian/rueidis/om"
 )
 
 type Example struct {
-    ID       string   `redis:"-,pk"`     // the pk option indicate that this field is the ULID key
-    Ver      int64    `redis:"_v"`       // the _v field is required for optimistic locking to prevent the lost update
-    MyString string   `redis:"f1"`
-    MyBool   bool     `redis:"f3"`
-    MyArray  []string `redis:"f4,sep=|"` // the sep=<ooo> option is required for converting the slice to/from a string
+    ID     string   `redis:"-,pk"`     // the pk option indicate that this field is the ULID key
+    Ver    int64    `redis:"_v"`       // the _v field is required for optimistic locking to prevent the lost update
+    MyStr  string   `redis:"f1"`
+    MyArr  []string `redis:"f2,sep=|"` // the sep=<ooo> option is required for converting the slice to/from a string
 }
 
 func main() {
     ctx := context.Background()
     c, _ := rueidis.NewSingleClient(rueidis.SingleClientOption{Address: "127.0.0.1:6379"})
     // create the hash repo.
-    repo := c.NewHashRepository("my_prefix", Example{})
+    repo := om.NewHashRepository("my_prefix", Example{}, c)
 
     exp := repo.Make().(*Example)
-    exp.MyArray = []string{"1", "2"}
+    exp.MyArr = []string{"1", "2"}
     fmt.Println(exp.ID) // output 01FNH4FCXV9JTB9WTVFAAKGSYB
     repo.Save(ctx, exp) // success
 
     // lookup "my_prefix:01FNH4FCXV9JTB9WTVFAAKGSYB" through client side caching
     cache, _ := repo.FetchCache(ctx, exp.ID, time.Second*5)
     exp2 := cache.(*Example)
-    fmt.Println(exp2.MyArray) // output [1 2], which equals to exp.MyArray
+    fmt.Println(exp2.MyArr) // output [1 2], which equals to exp.MyArray
 
     exp2.Ver = 0         // if someone changes the version during your GET then SET operation,
     repo.Save(ctx, exp2) // the save will fail with ErrVersionMismatch.

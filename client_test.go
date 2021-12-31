@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"reflect"
-	"strings"
 	"testing"
 	"time"
 
@@ -199,111 +198,4 @@ func TestSingleClient(t *testing.T) {
 			t.Fatalf("Dedicated desn't put back the wire")
 		}
 	})
-
-	t.Run("newLuaScript Delegate", func(t *testing.T) {
-		m.DoFn = func(cmd cmds.Completed) proto.Result {
-			if cmd.Commands()[0] == "EVALSHA" {
-				return proto.NewResult(proto.Message{Type: '-', String: "NOSCRIPT"}, nil)
-			}
-			if cmd.Commands()[0] != "EVAL" {
-				t.Fatalf("unexpected command %v", cmd.Commands())
-			}
-			return proto.NewResult(proto.Message{Type: '+', String: strings.Join(cmd.Commands(), " ")}, nil)
-		}
-		if v, err := client.NewLuaScript("newLuaScript").Exec(context.Background(), []string{"1", "2"}, []string{"3", "4"}).ToString(); err != nil || v != "EVAL newLuaScript 2 1 2 3 4" {
-			t.Fatalf("unexpected respone %v %v", v, err)
-		}
-	})
-
-	t.Run("NewLuaScriptReadOnly Delegate", func(t *testing.T) {
-		m.DoFn = func(cmd cmds.Completed) proto.Result {
-			if cmd.Commands()[0] == "EVALSHA_RO" {
-				return proto.NewResult(proto.Message{Type: '-', String: "NOSCRIPT"}, nil)
-			}
-			if cmd.Commands()[0] != "EVAL_RO" {
-				t.Fatalf("unexpected command %v", cmd.Commands())
-			}
-			return proto.NewResult(proto.Message{Type: '+', String: strings.Join(cmd.Commands(), " ")}, nil)
-		}
-		if v, err := client.NewLuaScriptReadOnly("NewLuaScriptReadOnly").Exec(context.Background(), []string{"1", "2"}, []string{"3", "4"}).ToString(); err != nil || v != "EVAL_RO NewLuaScriptReadOnly 2 1 2 3 4" {
-			t.Fatalf("unexpected respone %v %v", v, err)
-		}
-	})
-
-	t.Run("NewHashRepository Delegate", func(t *testing.T) {
-		repo := client.NewHashRepository("", schema{})
-		if repo == nil {
-			t.Fatalf("unexpected nil repo")
-		}
-	})
-}
-
-func TestHashObjectSingleClientAdapter(t *testing.T) {
-	m := &MockConn{}
-	client, err := newSingleClient(SingleClientOption{}, func(dst string, opt ConnOption) conn {
-		return m
-	})
-	if err != nil {
-		t.Fatalf("unexpected err %v", err)
-	}
-	adapter := &hashObjectSingleClientAdapter{c: client}
-
-	t.Run("Save Delegate", func(t *testing.T) {
-		m.DoFn = func(cmd cmds.Completed) proto.Result {
-			if v := strings.Join(cmd.Commands(), " "); v != "HSET k a b" {
-				return proto.NewResult(proto.Message{Type: '-', String: "wrong command " + v}, nil)
-			}
-			return proto.NewResult(proto.Message{Type: '+', String: "OK"}, nil)
-		}
-		if err := adapter.Save(context.Background(), "k", map[string]string{"a": "b"}); err != nil {
-			t.Fatalf("unexpected err %v", err)
-		}
-	})
-
-	t.Run("Fetch Delegate", func(t *testing.T) {
-		m.DoFn = func(cmd cmds.Completed) proto.Result {
-			if v := strings.Join(cmd.Commands(), " "); v != "HGETALL k" {
-				return proto.NewResult(proto.Message{Type: '-', String: "wrong command " + v}, nil)
-			}
-			return proto.NewResult(proto.Message{Type: '%', Values: []proto.Message{
-				{Type: '+', String: "a"},
-				{Type: '+', String: "b"},
-			}}, nil)
-		}
-		if v, err := adapter.Fetch(context.Background(), "k"); err != nil || v["a"].String != "b" {
-			t.Fatalf("unexpected response %v", err)
-		}
-	})
-
-	t.Run("FetchCache Delegate", func(t *testing.T) {
-		m.DoCacheFn = func(cmd cmds.Cacheable, ttl time.Duration) proto.Result {
-			if v := strings.Join(cmd.Commands(), " "); v != "HGETALL k" || ttl != 100 {
-				return proto.NewResult(proto.Message{Type: '-', String: "wrong command " + v}, nil)
-			}
-			return proto.NewResult(proto.Message{Type: '%', Values: []proto.Message{
-				{Type: '+', String: "a"},
-				{Type: '+', String: "b"},
-			}}, nil)
-		}
-		if v, err := adapter.FetchCache(context.Background(), "k", 100); err != nil || v["a"].String != "b" {
-			t.Fatalf("unexpected response %v", err)
-		}
-	})
-
-	t.Run("Remove Delegate", func(t *testing.T) {
-		m.DoFn = func(cmd cmds.Completed) proto.Result {
-			if v := strings.Join(cmd.Commands(), " "); v != "DEL k" {
-				return proto.NewResult(proto.Message{Type: '-', String: "wrong command " + v}, nil)
-			}
-			return proto.NewResult(proto.Message{Type: '+', String: "OK"}, nil)
-		}
-		if err := adapter.Remove(context.Background(), "k"); err != nil {
-			t.Fatalf("unexpected err %v", err)
-		}
-	})
-}
-
-type schema struct {
-	ID  string `redis:"-,pk"`
-	Ver int64  `redis:"_v"`
 }
