@@ -1,6 +1,7 @@
 # rueidis
 
-![circleci](https://circleci.com/gh/rueian/rueidis.svg?style=shield)
+[![Go Reference](https://pkg.go.dev/badge/github.com/rueian/rueidis.svg)](https://pkg.go.dev/github.com/rueian/rueidis)
+[![circleci](https://circleci.com/gh/rueian/rueidis.svg?style=shield)](https://app.circleci.com/pipelines/github/rueian/rueidis)
 [![Maintainability](https://api.codeclimate.com/v1/badges/0d93d524c2b8497aacbe/maintainability)](https://codeclimate.com/github/rueian/rueidis/maintainability)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/0d93d524c2b8497aacbe/test_coverage)](https://codeclimate.com/github/rueian/rueidis/test_coverage)
 
