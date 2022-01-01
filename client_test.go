@@ -100,7 +100,7 @@ func (m *mockConn) TriggerDisconnect(err error) {
 func TestNewSingleClientNoNode(t *testing.T) {
 	if _, err := newSingleClient(ClientOption{}, func(dst string, opt ClientOption) conn {
 		return nil
-	}); err != ErrNoNodes {
+	}); err != ErrNoAddr {
 		t.Fatalf("unexpected err %v", err)
 	}
 }

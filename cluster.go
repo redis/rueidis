@@ -13,10 +13,7 @@ import (
 	"github.com/rueian/rueidis/internal/proto"
 )
 
-var (
-	ErrNoNodes = errors.New("no node to retrieve cluster slots")
-	ErrNoSlot  = errors.New("slot not covered")
-)
+var ErrNoSlot = errors.New("the slot has no redis node")
 
 type clusterClient struct {
 	cmd *cmds.Builder
@@ -54,7 +51,7 @@ func newClusterClient(opt ClientOption, connFn connFn) (client *clusterClient, e
 
 	opt.PubSubOption.installHook(client.cmd, func() (cc conn) {
 		var err error
-		for cc == nil && err != ErrConnClosing {
+		for cc == nil && err != ErrClosing {
 			cc, err = client.pick(cmds.InitSlot)
 		}
 		return cc
@@ -65,7 +62,7 @@ func newClusterClient(opt ClientOption, connFn connFn) (client *clusterClient, e
 
 func (c *clusterClient) init() (cc conn, err error) {
 	if len(c.opt.InitAddress) == 0 {
-		return nil, ErrNoNodes
+		return nil, ErrNoAddr
 	}
 	for _, addr := range c.opt.InitAddress {
 		cc = c.connFn(addr, c.opt)

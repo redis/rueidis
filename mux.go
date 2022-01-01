@@ -229,5 +229,5 @@ func (m *mux) Close() {
 }
 
 func isNetworkErr(err error) bool {
-	return err != nil && err != ErrConnClosing
+	return err != nil && err != ErrClosing
 }

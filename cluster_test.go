@@ -44,7 +44,7 @@ var singleSlotResp = proto.NewResult(proto.Message{Type: '*', Values: []proto.Me
 
 func TestClusterClientInit(t *testing.T) {
 	t.Run("Init no nodes", func(t *testing.T) {
-		if _, err := newClusterClient(ClientOption{InitAddress: []string{}}, func(dst string, opt ClientOption) conn { return nil }); err != ErrNoNodes {
+		if _, err := newClusterClient(ClientOption{InitAddress: []string{}}, func(dst string, opt ClientOption) conn { return nil }); err != ErrNoAddr {
 			t.Fatalf("unexpected err %v", err)
 		}
 	})

@@ -19,12 +19,16 @@ func NewLuaScriptReadOnly(script string) *Lua {
 	return lua
 }
 
+// Lua represents a redis lua script. It should be created from the NewLuaScript() or NewLuaScriptReadOnly()
 type Lua struct {
 	script   string
 	sha1     string
 	readonly bool
 }
 
+// Exec the script to the given Client.
+// It will first try with the EVALSHA/EVALSHA_RO and then EVAL/EVAL_RO if first try failed.
+// Cross slot keys are prohibited if the Client is a cluster client.
 func (s *Lua) Exec(ctx context.Context, c Client, keys, args []string) (resp proto.Result) {
 	if s.readonly {
 		resp = c.Do(ctx, c.B().EvalshaRo().Sha1(s.sha1).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build())

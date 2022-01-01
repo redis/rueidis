@@ -20,7 +20,7 @@ func TestPool(t *testing.T) {
 				},
 				ErrorFn: func() error {
 					if closed {
-						return ErrConnClosing
+						return ErrClosing
 					}
 					return nil
 				},
@@ -101,7 +101,7 @@ func TestPool(t *testing.T) {
 		}
 		pool.Store(w1)
 		pool.Close()
-		if w1.Error() != ErrConnClosing {
+		if w1.Error() != ErrClosing {
 			t.Fatalf("pool does not close exsiting wire after Close()")
 		}
 		for i := 0; i < 100; i++ {
@@ -110,7 +110,7 @@ func TestPool(t *testing.T) {
 			}
 		}
 		pool.Store(w2)
-		if w2.Error() != ErrConnClosing {
+		if w2.Error() != ErrClosing {
 			t.Fatalf("pool does not close stored wire after Close()")
 		}
 	})
@@ -123,7 +123,7 @@ func TestPool(t *testing.T) {
 		}
 		pool.Close()
 		w2 := pool.Acquire()
-		if w2.Error() != ErrConnClosing {
+		if w2.Error() != ErrClosing {
 			t.Fatalf("pool does not close new wire after Close()")
 		}
 		if atomic.LoadInt32(count) != 2 {
@@ -135,7 +135,7 @@ func TestPool(t *testing.T) {
 			}
 		}
 		pool.Store(w1)
-		if w1.Error() != ErrConnClosing {
+		if w1.Error() != ErrClosing {
 			t.Fatalf("pool does not close exsiting wire after Close()")
 		}
 	})

@@ -1,3 +1,4 @@
+// Package rueidis is a fast Golang Redis RESP3 client that does auto pipelining and supports client side caching.
 package rueidis
 
 import (
@@ -18,14 +19,17 @@ const (
 	DefaultTCPKeepAlive = 1 * time.Second
 )
 
-var ErrConnClosing = errors.New("connection is closing")
+var (
+	ErrClosing = errors.New("rueidis client is closing")
+	ErrNoAddr  = errors.New("no address in InitAddress")
+)
 
 type ClientOption struct {
 	// InitAddress point to redis nodes.
 	// Rueidis will connect to them one by one and issue CLUSTER SLOT command to initialize the cluster client until success.
 	// If len(InitAddress) == 1 and the address is not running in cluster mode, rueidis will fall back to the single client mode.
 	InitAddress []string
-	// ShuffleInit is a handy flag that shuffles the InitAddress after passing to NewClient
+	// ShuffleInit is a handy flag that shuffles the InitAddress after passing to the NewClient() if it is true
 	ShuffleInit bool
 
 	// CacheSizeEachConn is redis client side cache size that bind to each TCP connection to a single redis instance.
@@ -53,14 +57,51 @@ type ClientOption struct {
 	PubSubOption PubSubOption
 }
 
+// Client is the redis client interface for both single redis instance and redis cluster. It should be created from the NewClient()
 type Client interface {
+	// B is the getter function to the command builder for the client
+	// If the client is a cluster client, the command builder also prohibits cross key slots in one command.
 	B() *cmds.Builder
+	// Do is the method sending user's redis command building from the B() to a redis node.
+	//  client.Do(ctx, client.B().Get().Key("k").Build()).ToString()
+	// All concurrent non-blocking commands will be pipelined automatically and have better throughput.
+	// Blocking commands will use another separated connection pool.
 	Do(ctx context.Context, cmd cmds.Completed) (resp proto.Result)
+	// DoCache is similar to Do, but it uses opt-in client side caching and requires a client side TTL.
+	// The explicit client side TTL specifies the maximum TTL on the client side.
+	// If the key's TTL on the server is smaller than the client side TTL, the client side TTL will be capped.
+	//  client.Do(ctx, client.B().Get().Key("k").Cache(), time.Minute).ToString()
+	// The above example will send the following command to redis if cache miss:
+	//  CLIENT CACHING YES
+	//  GET k
+	//  PTTL k
+	// The in-memory cache size is configured by ClientOption.CacheSizeEachConn
 	DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp proto.Result)
+	// Dedicated acquire a connection from the blocking connection pool, no one else can use the connection
+	// during Dedicated. The main usage of Dedicated is CAS operation, which is WATCH + MULTI + EXEC.
+	// However, one should try to avoid CAS operation but use Lua script instead, because occupying a connection
+	// is not good for performance.
 	Dedicated(fn func(DedicatedClient) error) (err error)
+	// Close will make further calls to the client be rejected with ErrClosing,
+	// and Close will wait until all pending calls finished.
 	Close()
 }
 
+// DedicatedClient is obtained from Client.Dedicated() and it will be bound to single redis connection and
+// no other commands can be pipelined in to this connection during Client.Dedicated().
+// If the DedicatedClient is obtained from cluster client, the first command to it must have a Key() to identify the redis node.
+type DedicatedClient interface {
+	// B is inherited from the Client
+	B() *cmds.Builder
+	// Do is the same as Client
+	Do(ctx context.Context, cmd cmds.Completed) (resp proto.Result)
+	// DoMulti takes multiple redis commands and sends them together, reducing RTT from the user code.
+	DoMulti(ctx context.Context, multi ...cmds.Completed) (resp []proto.Result)
+}
+
+// NewClient uses ClientOption to initialize the Client for both cluster client and single client.
+// It will first try to connect as cluster client. If the len(ClientOption.InitAddress) == 1 and
+// the address does not enable cluster mode, the NewClient() will use single client instead.
 func NewClient(option ClientOption) (client Client, err error) {
 	client, err = newClusterClient(option, makeConn)
 	if err != nil && len(option.InitAddress) == 1 && err.Error() == redisErrMsgClusterDisabled {
@@ -69,12 +110,8 @@ func NewClient(option ClientOption) (client Client, err error) {
 	return client, err
 }
 
-type DedicatedClient interface {
-	B() *cmds.Builder
-	Do(ctx context.Context, cmd cmds.Completed) (resp proto.Result)
-	DoMulti(ctx context.Context, multi ...cmds.Completed) (resp []proto.Result)
-}
-
+// IsRedisNil is a handy method to check if error is redis nil response.
+// All redis nil response returns as an error.
 func IsRedisNil(err error) bool {
 	return proto.IsRedisNil(err)
 }

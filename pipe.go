@@ -128,7 +128,7 @@ func (p *pipe) _background() {
 	)
 
 	// clean up cache and free pending calls
-	p.cache.FreeAndClose(proto.Message{Type: '-', String: ErrConnClosing.Error()})
+	p.cache.FreeAndClose(proto.Message{Type: '-', String: ErrClosing.Error()})
 	for atomic.LoadInt32(&p.waits) != 0 {
 		p.queue.NextWriteCmd()
 		if ones[0], multi, ch = p.queue.NextResultCh(); ch == nil {
@@ -171,7 +171,7 @@ func (p *pipe) _backgroundWrite() {
 				ch <- proto.NewErrResult(err)
 			}
 		}
-		if err != nil && err != ErrConnClosing {
+		if err != nil && err != ErrClosing {
 			p.error.CompareAndSwap(nil, &errs{error: err})
 			return
 		}
@@ -406,7 +406,7 @@ func (p *pipe) Error() error {
 }
 
 func (p *pipe) Close() {
-	swapped := p.error.CompareAndSwap(nil, &errs{error: ErrConnClosing})
+	swapped := p.error.CompareAndSwap(nil, &errs{error: ErrClosing})
 	atomic.CompareAndSwapInt32(&p.state, 0, 2)
 	atomic.CompareAndSwapInt32(&p.state, 1, 2)
 	for atomic.LoadInt32(&p.waits) != 0 {
