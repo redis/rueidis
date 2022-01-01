@@ -12,8 +12,10 @@ import (
 )
 
 const (
-	DefaultCacheBytes = 128 * (1 << 20) // 128 MiB
-	DefaultPoolSize   = 1000
+	DefaultCacheBytes   = 128 * (1 << 20) // 128 MiB
+	DefaultPoolSize     = 1000
+	DefaultDialTimeout  = 5 * time.Second
+	DefaultTCPKeepAlive = 1 * time.Second
 )
 
 var ErrConnClosing = errors.New("connection is closing")
@@ -41,8 +43,11 @@ type ClientOption struct {
 	SelectDB   int
 
 	// TCP & TLS
-	DialTimeout time.Duration
-	TLSConfig   *tls.Config
+	// Dialer can be used to customized how rueidis connect to a redis instance via TCP, including:
+	// - Timeout, the default is DefaultDialTimeout
+	// - KeepAlive, the default is DefaultTCPKeepAlive
+	Dialer    net.Dialer
+	TLSConfig *tls.Config
 
 	// Redis PubSub callbacks, should be created from NewPubSubOption
 	PubSubOption PubSubOption
@@ -79,11 +84,16 @@ func makeConn(dst string, opt ClientOption) conn {
 }
 
 func dial(dst string, opt ClientOption) (conn net.Conn, err error) {
-	dialer := &net.Dialer{Timeout: opt.DialTimeout, KeepAlive: time.Second}
+	if opt.Dialer.Timeout == 0 {
+		opt.Dialer.Timeout = DefaultDialTimeout
+	}
+	if opt.Dialer.KeepAlive == 0 {
+		opt.Dialer.KeepAlive = DefaultTCPKeepAlive
+	}
 	if opt.TLSConfig != nil {
-		conn, err = tls.DialWithDialer(dialer, "tcp", dst, opt.TLSConfig)
+		conn, err = tls.DialWithDialer(&opt.Dialer, "tcp", dst, opt.TLSConfig)
 	} else {
-		conn, err = dialer.Dial("tcp", dst)
+		conn, err = opt.Dialer.Dial("tcp", dst)
 	}
 	return conn, err
 }
