@@ -44,8 +44,8 @@ type ClientOption struct {
 	DialTimeout time.Duration
 	TLSConfig   *tls.Config
 
-	// Redis PubSub callbacks
-	PubSubHandlers PubSubHandlers
+	// Redis PubSub callbacks, should be created from NewPubSubOption
+	PubSubOption PubSubOption
 }
 
 type Client interface {

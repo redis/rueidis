@@ -52,7 +52,7 @@ func newClusterClient(opt ClientOption, connFn connFn) (client *clusterClient, e
 		return nil, err
 	}
 
-	opt.PubSubHandlers.installHook(client.cmd, func() (cc conn) {
+	opt.PubSubOption.installHook(client.cmd, func() (cc conn) {
 		var err error
 		for cc == nil && err != ErrConnClosing {
 			cc, err = client.pick(cmds.InitSlot)

@@ -45,7 +45,7 @@ type pipe struct {
 
 	info map[string]proto.Message
 
-	cbs PubSubHandlers
+	cbs PubSubOption
 
 	onDisconnected func(err error)
 }
@@ -62,7 +62,7 @@ func newPipe(conn net.Conn, option ClientOption, onDisconnected func(err error))
 		r:     bufio.NewReader(conn),
 		w:     bufio.NewWriter(conn),
 
-		cbs:            option.PubSubHandlers,
+		cbs:            option.PubSubOption,
 		onDisconnected: onDisconnected,
 	}
 

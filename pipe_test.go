@@ -419,7 +419,7 @@ func TestPubSub(t *testing.T) {
 	t.Run("PubSub Push Message", func(t *testing.T) {
 		count := make([]int32, 4)
 		p, mock, cancel, _ := setup(t, ClientOption{
-			PubSubHandlers: PubSubHandlers{
+			PubSubOption: PubSubOption{
 				onMessage: func(channel, message string) {
 					if channel != "1" || message != "2" {
 						t.Fatalf("unexpected onMessage")

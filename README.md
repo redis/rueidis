@@ -173,11 +173,11 @@ To receive messages from channels, the message handler should be registered when
 ```golang
 c, _ := rueidis.NewClient(rueidis.ClientOption{
     InitAddress: []string{"127.0.0.1:6379"},
-    PubSubHandlers: rueidis.NewPubSubHandlers(func(prev error, client rueidis.DedicatedClient) {
+    PubSubOption: rueidis.NewPubSubOption(func(prev error, client rueidis.DedicatedClient) {
         // Subscribe channels in this PubSubSetup hook for auto reconnecting after disconnected.
         // The "prev" err is previous disconnect error.
         err := client.Do(ctx, client.B().Subscribe().Channel("my_channel").Build()).Error()
-    }, rueidis.PubSubOption{
+    }, rueidis.PubSubHandler{
         OnMessage: func(channel, message string) {
             // handle the message
         },

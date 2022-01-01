@@ -24,7 +24,7 @@ func newSingleClient(opt ClientOption, connFn connFn) (*singleClient, error) {
 		return nil, err
 	}
 
-	opt.PubSubHandlers.installHook(client.cmd, func() conn { return client.conn })
+	opt.PubSubOption.installHook(client.cmd, func() conn { return client.conn })
 
 	return client, nil
 }

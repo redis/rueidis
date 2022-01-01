@@ -21,7 +21,7 @@ func TestSingleClientPubSubReconnect(t *testing.T) {
 	}
 	_, err := newSingleClient(ClientOption{
 		InitAddress: []string{""},
-		PubSubHandlers: NewPubSubHandlers(func(prev error, client DedicatedClient) {
+		PubSubOption: NewPubSubOption(func(prev error, client DedicatedClient) {
 			if prev != nil {
 				atomic.AddInt64(&errs, 1)
 			}
@@ -29,7 +29,7 @@ func TestSingleClientPubSubReconnect(t *testing.T) {
 				t.Errorf("unexpected subscribe err %v", err)
 			}
 			atomic.AddInt64(&count, 1)
-		}, PubSubOption{})}, func(dst string, opt ClientOption) conn {
+		}, PubSubHandler{})}, func(dst string, opt ClientOption) conn {
 		return m
 	})
 	if err != nil {
@@ -57,7 +57,7 @@ func TestClusterClientPubSubReconnect(t *testing.T) {
 	}
 	_, err := newClusterClient(ClientOption{
 		InitAddress: []string{":0"},
-		PubSubHandlers: NewPubSubHandlers(func(prev error, client DedicatedClient) {
+		PubSubOption: NewPubSubOption(func(prev error, client DedicatedClient) {
 			if prev != nil {
 				atomic.AddInt64(&errs, 1)
 			}
@@ -65,7 +65,7 @@ func TestClusterClientPubSubReconnect(t *testing.T) {
 				t.Errorf("unexpected subscribe err %v", err)
 			}
 			atomic.AddInt64(&count, 1)
-		}, PubSubOption{}),
+		}, PubSubHandler{}),
 	}, func(dst string, opt ClientOption) conn {
 		return m
 	})
