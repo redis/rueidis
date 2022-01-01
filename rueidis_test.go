@@ -2,8 +2,11 @@ package rueidis
 
 import (
 	"bufio"
+	"context"
+	"fmt"
 	"net"
 	"testing"
+	"time"
 
 	"github.com/rueian/rueidis/internal/proto"
 )
@@ -94,4 +97,90 @@ func TestIsRedisNil(t *testing.T) {
 	if !IsRedisNil(&proto.RedisError{Type: '_'}) {
 		t.Fatal("IsRedisNil fail")
 	}
+}
+
+func ExampleIsRedisNil() {
+	client, err := NewClient(ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
+	if err != nil {
+		panic(err)
+	}
+	defer client.Close()
+
+	_, err = client.Do(context.Background(), client.B().Get().Key("not_exists").Build()).ToString()
+	if err != nil && IsRedisNil(err) {
+		fmt.Printf("it is a nil response")
+	}
+}
+
+func ExampleClient_do() {
+	client, err := NewClient(ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
+	if err != nil {
+		panic(err)
+	}
+	defer client.Close()
+
+	ctx := context.Background()
+
+	client.Do(ctx, client.B().Set().Key("k").Value("v").Build()).Error()
+
+	client.Do(ctx, client.B().Get().Key("k").Build()).ToString()
+
+	client.Do(ctx, client.B().Hmget().Key("h").Field("a", "b").Build()).ToMap()
+
+	client.Do(ctx, client.B().Scard().Key("s").Build()).ToInt64()
+
+	client.Do(ctx, client.B().Smembers().Key("s").Build()).ToArray()
+}
+
+func ExampleClient_doCache() {
+	client, err := NewClient(ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
+	if err != nil {
+		panic(err)
+	}
+	defer client.Close()
+
+	ctx := context.Background()
+
+	client.DoCache(ctx, client.B().Get().Key("k").Cache(), time.Minute).ToString()
+
+	client.DoCache(ctx, client.B().Hmget().Key("h").Field("a", "b").Cache(), time.Minute).ToMap()
+
+	client.DoCache(ctx, client.B().Scard().Key("s").Cache(), time.Minute).ToInt64()
+
+	client.DoCache(ctx, client.B().Smembers().Key("s").Cache(), time.Minute).ToArray()
+}
+
+func ExampleClient_dedicated() {
+	client, err := NewClient(ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
+	if err != nil {
+		panic(err)
+	}
+	defer client.Close()
+
+	ctx := context.Background()
+
+	client.Dedicated(func(client DedicatedClient) error {
+		// watch keys first
+		if err := client.Do(ctx, client.B().Watch().Key("k1", "k2").Build()).Error(); err != nil {
+			return err
+		}
+		// perform read here
+		values, err := client.Do(ctx, client.B().Mget().Key("k1", "k2").Build()).ToArray()
+		if err != nil {
+			return err
+		}
+		// perform write with MULTI EXEC
+		for _, resp := range client.DoMulti(
+			ctx,
+			client.B().Multi().Build(),
+			client.B().Set().Key("k1").Value(values[0].String).Build(),
+			client.B().Set().Key("k2").Value(values[1].String).Build(),
+			client.B().Exec().Build(),
+		) {
+			if err := resp.Error(); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }

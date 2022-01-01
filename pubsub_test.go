@@ -3,6 +3,7 @@ package rueidis
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"sync/atomic"
 	"testing"
@@ -82,5 +83,36 @@ func TestClusterClientPubSubReconnect(t *testing.T) {
 
 	if atomic.LoadInt64(&errs) != 1 {
 		t.Fatalf("errs count should be 1")
+	}
+}
+
+func ExampleNewPubSubOption_subscribe() {
+	messages := make(chan string, 100)
+
+	ctx := context.Background()
+
+	client, err := NewClient(ClientOption{
+		InitAddress: []string{"127.0.0.1:6379"},
+		PubSubOption: NewPubSubOption(func(prev error, client DedicatedClient) {
+			if prev != nil {
+				fmt.Printf("auto reconnected, previous err: %v\n", prev)
+			}
+			// do subscribe here
+			client.Do(ctx, client.B().Subscribe().Channel("ch").Build())
+		}, PubSubHandler{
+			OnMessage: func(channel, message string) {
+				// Users should avoid OnMessage blocking too long,
+				// otherwise Client performance will decrease.
+				messages <- message
+			},
+		}),
+	})
+	if err != nil {
+		panic(err)
+	}
+	defer client.Close()
+
+	for msg := range messages {
+		fmt.Println(msg)
 	}
 }

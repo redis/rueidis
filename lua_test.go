@@ -121,3 +121,17 @@ func (c *client) Close() {
 		c.CloseFn()
 	}
 }
+
+func ExampleLua_exec() {
+	client, err := NewClient(ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
+	if err != nil {
+		panic(err)
+	}
+	defer client.Close()
+
+	ctx := context.Background()
+
+	script := NewLuaScript("return {KEYS[1],KEYS[2],ARGV[1],ARGV[2]}")
+
+	script.Exec(ctx, client, []string{"k1", "k2"}, []string{"a1", "a2"}).ToArray()
+}
