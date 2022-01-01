@@ -130,16 +130,27 @@ func (p *pipe) _background() {
 	// clean up cache and free pending calls
 	p.cache.FreeAndClose(proto.Message{Type: '-', String: ErrClosing.Error()})
 	for atomic.LoadInt32(&p.waits) != 0 {
-		p.queue.NextWriteCmd()
-		if ones[0], multi, ch = p.queue.NextResultCh(); ch == nil {
+		if ones[0], multi, ch = p.queue.NextWriteCmd(); ch != nil {
+			if multi == nil {
+				multi = ones
+			}
+			for _, one := range multi {
+				if one.NoReply() {
+					ch <- proto.NewErrResult(p.Error())
+				}
+			}
+		}
+		if ones[0], multi, ch = p.queue.NextResultCh(); ch != nil {
+			if multi == nil {
+				multi = ones
+			}
+			for _, one := range multi {
+				if !one.NoReply() {
+					ch <- proto.NewErrResult(p.Error())
+				}
+			}
+		} else {
 			runtime.Gosched()
-			continue
-		}
-		if multi == nil {
-			multi = ones
-		}
-		for i := 0; i < len(multi); i++ {
-			ch <- proto.NewErrResult(p.Error())
 		}
 	}
 	atomic.CompareAndSwapInt32(&p.state, 2, 3)
@@ -168,6 +179,9 @@ func (p *pipe) _backgroundWrite() {
 		}
 		for _, cmd := range multi {
 			if err = proto.WriteCmd(p.w, cmd.Commands()); cmd.NoReply() {
+				if err == nil && p.w.Buffered() != 0 {
+					err = p.w.Flush()
+				}
 				ch <- proto.NewErrResult(err)
 			}
 		}

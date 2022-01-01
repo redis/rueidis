@@ -5,8 +5,8 @@ import "strings"
 const (
 	optInTag = uint16(1 << 15)
 	blockTag = uint16(1 << 14)
-	noRetTag = uint16(1 << 13)
-	readonly = uint16(1 << 12)
+	readonly = uint16(1 << 13)
+	noRetTag = uint16(1<<12) | readonly // make noRetTag can also be retried
 	InitSlot = uint16(1 << 15)
 	NoSlot   = InitSlot + 1
 )

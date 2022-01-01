@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -383,10 +385,15 @@ func TestPubSub(t *testing.T) {
 			builder.Punsubscribe().Pattern("d").Build(),
 		}
 
+		go func() {
+			for _, c := range commands {
+				mock.Expect(c.Commands()...)
+				mock.Expect("GET", "k").ReplyString("v")
+			}
+		}()
+
 		for _, c := range commands {
 			p.Do(c)
-			mock.Expect(c.Commands()...)
-			go func() { mock.Expect("GET", "k").ReplyString("v") }()
 			if v, _ := p.Do(builder.Get().Key("k").Build()).Value(); v.String != "v" {
 				t.Fatalf("no-reply commands should not affect nornal commands")
 			}
@@ -404,13 +411,14 @@ func TestPubSub(t *testing.T) {
 			builder.Punsubscribe().Pattern("d").Build(),
 		}
 
+		go func() {
+			for _, c := range commands {
+				mock.Expect(c.Commands()...)
+			}
+			mock.Expect("GET", "k").ReplyString("v")
+		}()
+
 		p.DoMulti(commands...)
-
-		for _, c := range commands {
-			mock.Expect(c.Commands()...)
-		}
-
-		go func() { mock.Expect("GET", "k").ReplyString("v") }()
 		if v, _ := p.Do(builder.Get().Key("k").Build()).Value(); v.String != "v" {
 			t.Fatalf("no-reply commands should not affect nornal commands")
 		}
@@ -447,7 +455,7 @@ func TestPubSub(t *testing.T) {
 			},
 		})
 		activate := builder.Subscribe().Channel("a").Build()
-		p.Do(activate)
+		go p.Do(activate)
 		mock.Expect(activate.Commands()...).Reply(
 			proto.Message{Type: '>', Values: []proto.Message{
 				{Type: '+', String: "message"},
@@ -509,6 +517,30 @@ func TestExitOnWriteError(t *testing.T) {
 	}
 }
 
+func TestExitOnPubSubSubscribeWriteError(t *testing.T) {
+	p, _, _, closeConn := setup(t, ClientOption{})
+
+	activate := cmds.NewBuilder(cmds.NoSlot).Subscribe().Channel("a").Build()
+
+	count := int64(0)
+	wg := sync.WaitGroup{}
+	wg.Add(5000)
+	for i := 0; i < 5000; i++ {
+		go func() {
+			defer wg.Done()
+			atomic.AddInt64(&count, 1)
+			if err := p.Do(activate).NonRedisError(); !strings.HasPrefix(err.Error(), "io:") {
+				t.Errorf("unexpected result, expected io err, got %v", err)
+			}
+		}()
+	}
+	for atomic.LoadInt64(&count) != 5000 {
+		runtime.Gosched()
+	}
+	closeConn()
+	wg.Wait()
+}
+
 func TestExitOnWriteMultiError(t *testing.T) {
 	p, _, _, closeConn := setup(t, ClientOption{})
 
@@ -522,10 +554,12 @@ func TestExitOnWriteMultiError(t *testing.T) {
 }
 
 func TestExitAllGoroutineOnWriteError(t *testing.T) {
-	conn, _, _, closeConn := setup(t, ClientOption{})
+	conn, mock, _, closeConn := setup(t, ClientOption{})
 
 	// start the background worker
-	conn.Do(cmds.NewBuilder(cmds.NoSlot).Subscribe().Channel("a").Build())
+	activate := cmds.NewBuilder(cmds.NoSlot).Subscribe().Channel("a").Build()
+	go conn.Do(activate)
+	mock.Expect(activate.Commands()...)
 
 	closeConn()
 	wg := sync.WaitGroup{}
