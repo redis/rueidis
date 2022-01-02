@@ -204,13 +204,13 @@ func TestNewPipe(t *testing.T) {
 func TestOnDisconnectedHook(t *testing.T) {
 	done := make(chan struct{})
 	p, _, _, closeConn := setupWithDisconnectedFn(t, ClientOption{}, func(err error) {
-		if !strings.HasPrefix(err.Error(), "io:") {
+		if err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 			t.Errorf("unexpected err %v", err)
 		}
 		close(done)
 	})
 	closeConn()
-	if err := p.Do(cmds.NewCompleted([]string{"PING"})).Error(); !strings.HasPrefix(err.Error(), "io:") {
+	if err := p.Do(cmds.NewCompleted([]string{"PING"})).Error(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 		t.Errorf("unexpected err %v", err)
 	}
 	<-done
@@ -511,7 +511,7 @@ func TestExitOnWriteError(t *testing.T) {
 	closeConn()
 
 	for i := 0; i < 2; i++ {
-		if err := p.Do(cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); !strings.HasPrefix(err.Error(), "io:") {
+		if err := p.Do(cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 			t.Errorf("unexpected cached result, expected io err, got %v", err)
 		}
 	}
@@ -529,7 +529,7 @@ func TestExitOnPubSubSubscribeWriteError(t *testing.T) {
 		go func() {
 			defer wg.Done()
 			atomic.AddInt64(&count, 1)
-			if err := p.Do(activate).NonRedisError(); !strings.HasPrefix(err.Error(), "io:") {
+			if err := p.Do(activate).NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 				t.Errorf("unexpected result, expected io err, got %v", err)
 			}
 		}()
@@ -547,7 +547,7 @@ func TestExitOnWriteMultiError(t *testing.T) {
 	closeConn()
 
 	for i := 0; i < 2; i++ {
-		if err := p.DoMulti(cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); !strings.HasPrefix(err.Error(), "io:") {
+		if err := p.DoMulti(cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 			t.Errorf("unexpected result, expected io err, got %v", err)
 		}
 	}
@@ -567,10 +567,10 @@ func TestExitAllGoroutineOnWriteError(t *testing.T) {
 	for i := 0; i < 5000; i++ {
 		go func() {
 			defer wg.Done()
-			if err := conn.Do(cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); !strings.HasPrefix(err.Error(), "io:") {
+			if err := conn.Do(cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 				t.Errorf("unexpected result, expected io err, got %v", err)
 			}
-			if err := conn.DoMulti(cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); !strings.HasPrefix(err.Error(), "io:") {
+			if err := conn.DoMulti(cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 				t.Errorf("unexpected result, expected io err, got %v", err)
 			}
 		}()
@@ -587,7 +587,7 @@ func TestExitOnReadError(t *testing.T) {
 	}()
 
 	for i := 0; i < 2; i++ {
-		if err := p.Do(cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); !strings.HasPrefix(err.Error(), "io:") {
+		if err := p.Do(cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 			t.Errorf("unexpected result, expected io err, got %v", err)
 		}
 	}
@@ -602,7 +602,7 @@ func TestExitOnReadMultiError(t *testing.T) {
 	}()
 
 	for i := 0; i < 2; i++ {
-		if err := p.DoMulti(cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); !strings.HasPrefix(err.Error(), "io:") {
+		if err := p.DoMulti(cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 			t.Errorf("unexpected result, expected io err, got %v", err)
 		}
 	}
@@ -621,10 +621,10 @@ func TestExitAllGoroutineOnReadError(t *testing.T) {
 	for i := 0; i < 5000; i++ {
 		go func() {
 			defer wg.Done()
-			if err := p.Do(cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); !strings.HasPrefix(err.Error(), "io:") {
+			if err := p.Do(cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 				t.Errorf("unexpected result, expected io err, got %v", err)
 			}
-			if err := p.DoMulti(cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); !strings.HasPrefix(err.Error(), "io:") {
+			if err := p.DoMulti(cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 				t.Errorf("unexpected result, expected io err, got %v", err)
 			}
 		}()

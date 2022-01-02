@@ -15,10 +15,6 @@ import (
 	"github.com/rueian/rueidis/internal/queue"
 )
 
-type errs struct {
-	error
-}
-
 type wire interface {
 	Do(cmd cmds.Completed) proto.Result
 	DoCache(cmd cmds.Cacheable, ttl time.Duration) proto.Result
@@ -35,6 +31,7 @@ type pipe struct {
 	state int32
 
 	once  sync.Once
+	cond  sync.Cond
 	conn  net.Conn
 	queue queue.Queue
 	cache cache.Cache
@@ -57,6 +54,7 @@ func newPipe(conn net.Conn, option ClientOption, onDisconnected func(err error))
 
 	p = &pipe{
 		conn:  conn,
+		cond:  sync.Cond{L: noLock{}},
 		queue: queue.NewRing(),
 		cache: cache.NewLRU(option.CacheSizeEachConn),
 		r:     bufio.NewReader(conn),
@@ -114,6 +112,7 @@ func (p *pipe) _background() {
 	go func() {
 		p._backgroundRead()
 		exit()
+		p.cond.Broadcast()
 	}()
 	wg.Wait()
 
@@ -164,30 +163,36 @@ func (p *pipe) _backgroundWrite() {
 		ch    chan proto.Result
 	)
 
+	go func() {
+		for atomic.LoadInt32(&p.state) != 3 {
+			time.Sleep(time.Millisecond)
+			p.cond.Broadcast()
+		}
+	}()
+
 	for atomic.LoadInt32(&p.state) != 3 {
-		if ones[0], multi, ch = p.queue.NextWriteCmd(); multi == nil {
-			if !ones[0].IsEmpty() {
-				multi = ones
+		if ones[0], multi, ch = p.queue.NextWriteCmd(); ch == nil {
+			if p.w.Buffered() == 0 {
+				err = p.Error()
 			} else {
-				if p.w.Buffered() == 0 {
-					runtime.Gosched()
-					err = p.Error() // check err later
-				} else {
-					err = p.w.Flush()
-				}
+				err = p.w.Flush()
 			}
+		} else if multi == nil {
+			multi = ones
 		}
 		for _, cmd := range multi {
 			if err = proto.WriteCmd(p.w, cmd.Commands()); cmd.NoReply() {
-				if err == nil && p.w.Buffered() != 0 {
-					err = p.w.Flush()
-				}
+				err = p.w.Flush()
 				ch <- proto.NewErrResult(err)
 			}
 		}
-		if err != nil && err != ErrClosing {
-			p.error.CompareAndSwap(nil, &errs{error: err})
-			return
+		if err != nil {
+			if err != ErrClosing {
+				p.error.CompareAndSwap(nil, &errs{error: err})
+				return
+			}
+		} else if ch == nil {
+			p.cond.Wait()
 		}
 	}
 }
@@ -303,7 +308,9 @@ func (p *pipe) Do(cmd cmds.Completed) (resp proto.Result) {
 	return resp
 
 queue:
-	resp = <-p.queue.PutOne(cmd)
+	ch := p.queue.PutOne(cmd)
+	p.cond.Broadcast()
+	resp = <-ch
 	atomic.AddInt32(&p.waits, -1)
 	return resp
 }
@@ -341,6 +348,7 @@ func (p *pipe) DoMulti(multi ...cmds.Completed) []proto.Result {
 
 queue:
 	ch := p.queue.PutMulti(multi)
+	p.cond.Broadcast()
 	for i := range resp {
 		resp[i] = <-ch
 	}
@@ -358,8 +366,8 @@ func (p *pipe) syncDo(cmd cmds.Completed) (resp proto.Result) {
 	}
 	if err != nil {
 		p.error.CompareAndSwap(nil, &errs{error: err})
-		p.background()                             // start the background worker
 		atomic.CompareAndSwapInt32(&p.state, 1, 3) // stopping the worker and let it do the cleaning
+		p.background()                             // start the background worker
 	}
 	return proto.NewResult(msg, err)
 }
@@ -383,8 +391,8 @@ func (p *pipe) syncDoMulti(resp []proto.Result, multi []cmds.Completed) []proto.
 	return resp
 abort:
 	p.error.CompareAndSwap(nil, &errs{error: err})
-	p.background()                             // start the background worker
 	atomic.CompareAndSwapInt32(&p.state, 1, 3) // stopping the worker and let it do the cleaning
+	p.background()                             // start the background worker
 	for i := 0; i < len(resp); i++ {
 		resp[i] = proto.NewErrResult(err)
 	}
@@ -434,3 +442,11 @@ func (p *pipe) Close() {
 }
 
 var protocolbug = "protocol bug, message handled out of order"
+
+type errs struct{ error }
+
+type noLock struct{}
+
+func (n noLock) Lock() {}
+
+func (n noLock) Unlock() {}
