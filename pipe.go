@@ -197,7 +197,7 @@ func (p *pipe) _backgroundWrite() {
 			}
 		}
 		if err != nil {
-			if err != ErrClosing {
+			if err != ErrClosing { // ignore ErrClosing to allow final QUIT command to be sent
 				p.error.CompareAndSwap(nil, &errs{error: err})
 				return
 			}
