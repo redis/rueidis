@@ -29,6 +29,7 @@ var _ wire = (*pipe)(nil)
 type pipe struct {
 	waits int32
 	state int32
+	sleep int32
 
 	once  sync.Once
 	cond  sync.Cond
@@ -91,6 +92,22 @@ func newPipe(conn net.Conn, option ClientOption, onDisconnected func(err error))
 	return p, nil
 }
 
+func (p *pipe) _sleep() (slept bool) {
+	atomic.AddInt32(&p.sleep, 1) // create barrier
+	if slept = atomic.LoadInt32(&p.state) == 1 && atomic.LoadInt32(&p.waits) == 0; slept {
+		p.cond.Wait()
+	}
+	atomic.AddInt32(&p.sleep, -1)
+	return slept
+}
+
+func (p *pipe) _awake() {
+	for atomic.LoadInt32(&p.sleep) != 0 {
+		p.cond.Broadcast()
+		runtime.Gosched()
+	}
+}
+
 func (p *pipe) background() {
 	atomic.CompareAndSwapInt32(&p.state, 0, 1)
 	p.once.Do(func() { go p._background() })
@@ -112,7 +129,7 @@ func (p *pipe) _background() {
 	go func() {
 		p._backgroundRead()
 		exit()
-		p.cond.Broadcast()
+		p._awake()
 	}()
 	wg.Wait()
 
@@ -163,13 +180,6 @@ func (p *pipe) _backgroundWrite() {
 		ch    chan proto.Result
 	)
 
-	go func() {
-		for atomic.LoadInt32(&p.state) != 3 {
-			time.Sleep(time.Millisecond)
-			p.cond.Broadcast()
-		}
-	}()
-
 	for atomic.LoadInt32(&p.state) != 3 {
 		if ones[0], multi, ch = p.queue.NextWriteCmd(); ch == nil {
 			if p.w.Buffered() == 0 {
@@ -191,8 +201,9 @@ func (p *pipe) _backgroundWrite() {
 				p.error.CompareAndSwap(nil, &errs{error: err})
 				return
 			}
-		} else if ch == nil {
-			p.cond.Wait()
+			runtime.Gosched()
+		} else if ch == nil && !p._sleep() {
+			runtime.Gosched()
 		}
 	}
 }
@@ -309,7 +320,9 @@ func (p *pipe) Do(cmd cmds.Completed) (resp proto.Result) {
 
 queue:
 	ch := p.queue.PutOne(cmd)
-	p.cond.Broadcast()
+	if waits == 1 {
+		p._awake()
+	}
 	resp = <-ch
 	atomic.AddInt32(&p.waits, -1)
 	return resp
@@ -348,7 +361,9 @@ func (p *pipe) DoMulti(multi ...cmds.Completed) []proto.Result {
 
 queue:
 	ch := p.queue.PutMulti(multi)
-	p.cond.Broadcast()
+	if waits == 1 {
+		p._awake()
+	}
 	for i := range resp {
 		resp[i] = <-ch
 	}
@@ -431,6 +446,7 @@ func (p *pipe) Close() {
 	swapped := p.error.CompareAndSwap(nil, &errs{error: ErrClosing})
 	atomic.CompareAndSwapInt32(&p.state, 0, 2)
 	atomic.CompareAndSwapInt32(&p.state, 1, 2)
+	p._awake()
 	for atomic.LoadInt32(&p.waits) != 0 {
 		runtime.Gosched()
 	}
