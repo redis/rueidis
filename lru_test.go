@@ -1,8 +1,6 @@
-package cache
+package rueidis
 
 import (
-	"github.com/rueian/rueidis/internal/proto"
-
 	"strconv"
 	"testing"
 	"time"
@@ -14,39 +12,39 @@ const Entries = 3
 
 func TestLRU(t *testing.T) {
 
-	setup := func(t *testing.T) *LRU {
-		lru := NewLRU(EntryMinSize * Entries)
-		if v, entry := lru.GetOrPrepare("0", "GET", TTL); v.Type != 0 || entry != nil {
+	setup := func(t *testing.T) *lru {
+		lru := newLRU(entryMinSize * Entries)
+		if v, entry := lru.GetOrPrepare("0", "GET", TTL); v.typ != 0 || entry != nil {
 			t.Fatalf("got unexpected value from the first GetOrPrepare: %v %v", v, entry)
 		}
-		lru.Update("0", "GET", proto.Message{Type: '+', String: "0"}, PTTL)
+		lru.Update("0", "GET", RedisMessage{typ: '+', string: "0"}, PTTL)
 		return lru
 	}
 
 	t.Run("Cache Hit & Expire", func(t *testing.T) {
 		lru := setup(t)
-		if v, _ := lru.GetOrPrepare("0", "GET", TTL); v.Type == 0 {
+		if v, _ := lru.GetOrPrepare("0", "GET", TTL); v.typ == 0 {
 			t.Fatalf("did not get the value from the second GetOrPrepare")
-		} else if v.String != "0" {
+		} else if v.string != "0" {
 			t.Fatalf("got unexpected value from the second GetOrPrepare: %v", v)
 		}
 		time.Sleep(PTTL * time.Millisecond)
-		if v, entry := lru.GetOrPrepare("0", "GET", TTL); v.Type != 0 || entry != nil {
+		if v, entry := lru.GetOrPrepare("0", "GET", TTL); v.typ != 0 || entry != nil {
 			t.Fatalf("got unexpected value from the GetOrPrepare after pttl: %v %v", v, entry)
 		}
 	})
 
 	t.Run("Cache Expire By PTTL -2", func(t *testing.T) {
 		lru := setup(t)
-		lru.Update("0", "GET", proto.Message{Type: '+', String: "0"}, -2)
-		if v, _ := lru.GetOrPrepare("1", "GET", TTL); v.Type != 0 {
+		lru.Update("0", "GET", RedisMessage{typ: '+', string: "0"}, -2)
+		if v, _ := lru.GetOrPrepare("1", "GET", TTL); v.typ != 0 {
 			t.Fatalf("got unexpected value from the first GetOrPrepare: %v", v)
 		}
 	})
 
 	t.Run("Cache Miss", func(t *testing.T) {
 		lru := setup(t)
-		if v, _ := lru.GetOrPrepare("1", "GET", TTL); v.Type != 0 {
+		if v, _ := lru.GetOrPrepare("1", "GET", TTL); v.typ != 0 {
 			t.Fatalf("got unexpected value from the first GetOrPrepare: %v", v)
 		}
 	})
@@ -55,22 +53,22 @@ func TestLRU(t *testing.T) {
 		lru := setup(t)
 		for i := 1; i <= Entries; i++ {
 			lru.GetOrPrepare(strconv.Itoa(i), "GET", TTL)
-			lru.Update(strconv.Itoa(i), "GET", proto.Message{Type: '+', String: strconv.Itoa(i)}, PTTL)
+			lru.Update(strconv.Itoa(i), "GET", RedisMessage{typ: '+', string: strconv.Itoa(i)}, PTTL)
 		}
-		if v, entry := lru.GetOrPrepare("1", "GET", TTL); v.Type != 0 {
+		if v, entry := lru.GetOrPrepare("1", "GET", TTL); v.typ != 0 {
 			t.Fatalf("got evicted value from the first GetOrPrepare: %v %v", v, entry)
 		}
-		if v, _ := lru.GetOrPrepare(strconv.Itoa(Entries), "GET", TTL); v.Type == 0 {
+		if v, _ := lru.GetOrPrepare(strconv.Itoa(Entries), "GET", TTL); v.typ == 0 {
 			t.Fatalf("did not get the latest value from the GetOrPrepare")
-		} else if v.String != strconv.Itoa(Entries) {
+		} else if v.string != strconv.Itoa(Entries) {
 			t.Fatalf("got unexpected value from the GetOrPrepare: %v", v)
 		}
 	})
 
 	t.Run("Cache Delete", func(t *testing.T) {
 		lru := setup(t)
-		lru.Delete([]proto.Message{{String: "0"}})
-		if v, _ := lru.GetOrPrepare("0", "GET", TTL); v.Type != 0 {
+		lru.Delete([]RedisMessage{{string: "0"}})
+		if v, _ := lru.GetOrPrepare("0", "GET", TTL); v.typ != 0 {
 			t.Fatalf("got unexpected value from the first GetOrPrepare: %v", v)
 		}
 	})
@@ -78,24 +76,24 @@ func TestLRU(t *testing.T) {
 	t.Run("Cache FreeAndClose", func(t *testing.T) {
 		lru := setup(t)
 		v, entry := lru.GetOrPrepare("1", "GET", TTL)
-		if v.Type != 0 || entry != nil {
+		if v.typ != 0 || entry != nil {
 			t.Fatalf("got unexpected value from the first GetOrPrepare: %v %v", v, entry)
 		}
 		v, entry = lru.GetOrPrepare("1", "GET", TTL)
-		if v.Type != 0 || entry == nil { // entry should not be nil in second call
+		if v.typ != 0 || entry == nil { // entry should not be nil in second call
 			t.Fatalf("got unexpected value from the second GetOrPrepare: %v %v", v, entry)
 		}
 
-		lru.FreeAndClose(proto.Message{Type: '-', String: "closed"})
+		lru.FreeAndClose(RedisMessage{typ: '-', string: "closed"})
 
-		if resp := entry.Wait(); resp.Type != '-' || resp.String != "closed" {
+		if resp := entry.Wait(); resp.typ != '-' || resp.string != "closed" {
 			t.Fatalf("got unexpected value after FreeAndClose: %v", resp)
 		}
 
-		lru.Update("1", "GET", proto.Message{Type: '+', String: "this Update should have no effect"}, PTTL)
+		lru.Update("1", "GET", RedisMessage{typ: '+', string: "this Update should have no effect"}, PTTL)
 
 		for i := 0; i < 2; i++ { // entry should be always nil after the first call if FreeAndClose
-			if v, entry := lru.GetOrPrepare("1", "GET", TTL); v.Type != 0 || entry != nil {
+			if v, entry := lru.GetOrPrepare("1", "GET", TTL); v.typ != 0 || entry != nil {
 				t.Fatalf("got unexpected value from the first GetOrPrepare: %v %v", v, entry)
 			}
 		}
@@ -103,7 +101,7 @@ func TestLRU(t *testing.T) {
 }
 
 func BenchmarkLRU(b *testing.B) {
-	lru := NewLRU(EntryMinSize * Entries)
+	lru := newLRU(entryMinSize * Entries)
 	b.Run("GetOrPrepare", func(b *testing.B) {
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
@@ -115,20 +113,20 @@ func BenchmarkLRU(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			key := strconv.Itoa(i)
 			lru.GetOrPrepare(key, "GET", TTL)
-			lru.Update(key, "GET", proto.Message{}, PTTL)
+			lru.Update(key, "GET", RedisMessage{}, PTTL)
 		}
 	})
 }
 
 func TestEntry(t *testing.T) {
 	t.Run("Wait", func(t *testing.T) {
-		e := Entry{ch: make(chan struct{}, 1)}
+		e := entry{ch: make(chan struct{}, 1)}
 		go func() {
-			e.val = proto.Message{Type: 1}
+			e.val = RedisMessage{typ: 1}
 			close(e.ch)
 		}()
-		if v := e.Wait(); v.Type != 1 {
-			t.Fatalf("got unexpected value from the Wait: %v", v.Type)
+		if v := e.Wait(); v.typ != 1 {
+			t.Fatalf("got unexpected value from the Wait: %v", v.typ)
 		}
 	})
 }

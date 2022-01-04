@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/rueian/rueidis/internal/cmds"
-	"github.com/rueian/rueidis/internal/proto"
 )
 
 var ErrNoSlot = errors.New("the slot has no redis node")
@@ -84,7 +83,7 @@ func (c *clusterClient) refresh() (err error) {
 }
 
 func (c *clusterClient) _refresh() (err error) {
-	var reply proto.Message
+	var reply RedisMessage
 	var dead []string
 
 retry:
@@ -114,7 +113,7 @@ retry:
 		return err
 	}
 
-	if len(reply.Values) == 0 {
+	if len(reply.values) == 0 {
 		if _, err = c.init(); err != nil {
 			return err
 		}
@@ -177,20 +176,20 @@ type group struct {
 	slots [][2]int64
 }
 
-func parseSlots(slots proto.Message) map[string]group {
-	groups := make(map[string]group, len(slots.Values))
-	for _, v := range slots.Values {
-		master := fmt.Sprintf("%s:%d", v.Values[2].Values[0].String, v.Values[2].Values[1].Integer)
+func parseSlots(slots RedisMessage) map[string]group {
+	groups := make(map[string]group, len(slots.values))
+	for _, v := range slots.values {
+		master := fmt.Sprintf("%s:%d", v.values[2].values[0].string, v.values[2].values[1].integer)
 		g, ok := groups[master]
 		if !ok {
 			g.slots = make([][2]int64, 0)
-			g.nodes = make([]string, 0, len(v.Values)-2)
-			for i := 2; i < len(v.Values); i++ {
-				dst := fmt.Sprintf("%s:%d", v.Values[i].Values[0].String, v.Values[i].Values[1].Integer)
+			g.nodes = make([]string, 0, len(v.values)-2)
+			for i := 2; i < len(v.values); i++ {
+				dst := fmt.Sprintf("%s:%d", v.values[i].values[0].string, v.values[i].values[1].integer)
 				g.nodes = append(g.nodes, dst)
 			}
 		}
-		g.slots = append(g.slots, [2]int64{v.Values[0].Integer, v.Values[1].Integer})
+		g.slots = append(g.slots, [2]int64{v.values[0].integer, v.values[1].integer})
 		groups[master] = g
 	}
 	return groups
@@ -242,11 +241,11 @@ func (c *clusterClient) B() *cmds.Builder {
 	return c.cmd
 }
 
-func (c *clusterClient) Do(ctx context.Context, cmd cmds.Completed) (resp proto.Result) {
+func (c *clusterClient) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
 retry:
 	cc, err := c.pick(cmd.Slot())
 	if err != nil {
-		resp = proto.NewErrResult(err)
+		resp = newErrResult(err)
 		goto ret
 	}
 	resp = cc.Do(cmd)
@@ -269,11 +268,11 @@ ret:
 	return resp
 }
 
-func (c *clusterClient) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp proto.Result) {
+func (c *clusterClient) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp RedisResult) {
 retry:
 	cc, err := c.pick(cmd.Slot())
 	if err != nil {
-		resp = proto.NewErrResult(err)
+		resp = newErrResult(err)
 		goto ret
 	}
 	resp = cc.DoCache(cmd, ttl)
@@ -355,10 +354,10 @@ func (c *dedicatedClusterClient) B() *cmds.Builder {
 	return c.cmd
 }
 
-func (c *dedicatedClusterClient) Do(ctx context.Context, cmd cmds.Completed) (resp proto.Result) {
+func (c *dedicatedClusterClient) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
 	c.check(cmd.Slot())
 	if err := c.acquire(); err != nil {
-		return proto.NewErrResult(err)
+		return newErrResult(err)
 	} else {
 		resp = c.wire.Do(cmd)
 	}
@@ -366,7 +365,7 @@ func (c *dedicatedClusterClient) Do(ctx context.Context, cmd cmds.Completed) (re
 	return resp
 }
 
-func (c *dedicatedClusterClient) DoMulti(ctx context.Context, multi ...cmds.Completed) (resp []proto.Result) {
+func (c *dedicatedClusterClient) DoMulti(ctx context.Context, multi ...cmds.Completed) (resp []RedisResult) {
 	if len(multi) == 0 {
 		return nil
 	}
@@ -376,9 +375,9 @@ func (c *dedicatedClusterClient) DoMulti(ctx context.Context, multi ...cmds.Comp
 	if err := c.acquire(); err == nil {
 		resp = c.wire.DoMulti(multi...)
 	} else {
-		resp = make([]proto.Result, len(multi))
+		resp = make([]RedisResult, len(multi))
 		for i := range resp {
-			resp[i] = proto.NewErrResult(err)
+			resp[i] = newErrResult(err)
 		}
 	}
 	for _, cmd := range multi {

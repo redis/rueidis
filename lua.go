@@ -4,8 +4,6 @@ import (
 	"context"
 	"crypto/sha1"
 	"encoding/hex"
-
-	"github.com/rueian/rueidis/internal/proto"
 )
 
 func NewLuaScript(script string) *Lua {
@@ -29,7 +27,7 @@ type Lua struct {
 // Exec the script to the given Client.
 // It will first try with the EVALSHA/EVALSHA_RO and then EVAL/EVAL_RO if first try failed.
 // Cross slot keys are prohibited if the Client is a cluster client.
-func (s *Lua) Exec(ctx context.Context, c Client, keys, args []string) (resp proto.Result) {
+func (s *Lua) Exec(ctx context.Context, c Client, keys, args []string) (resp RedisResult) {
 	if s.readonly {
 		resp = c.Do(ctx, c.B().EvalshaRo().Sha1(s.sha1).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build())
 	} else {

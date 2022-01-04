@@ -1,25 +1,33 @@
-package queue
+package rueidis
 
 import (
 	"runtime"
 	"sync/atomic"
 
 	"github.com/rueian/rueidis/internal/cmds"
-	"github.com/rueian/rueidis/internal/proto"
 )
 
-const RingSize = 4096
+type queue interface {
+	PutOne(m cmds.Completed) chan RedisResult
+	PutMulti(m []cmds.Completed) chan RedisResult
+	NextWriteCmd() (cmds.Completed, []cmds.Completed, chan RedisResult)
+	NextResultCh() (cmds.Completed, []cmds.Completed, chan RedisResult)
+}
 
-func NewRing() *Ring {
-	r := &Ring{}
+const ringSize = 4096
+
+var _ queue = (*ring)(nil)
+
+func newRing() *ring {
+	r := &ring{}
 	r.mask = uint64(len(r.store) - 1)
 	for i := range r.store {
-		r.store[i].ch = make(chan proto.Result, 1)
+		r.store[i].ch = make(chan RedisResult, 1)
 	}
 	return r
 }
 
-type Ring struct {
+type ring struct {
 	_     [8]uint64
 	write uint64
 	_     [7]uint64
@@ -29,17 +37,17 @@ type Ring struct {
 	_     [7]uint64
 	mask  uint64
 	_     [7]uint64
-	store [RingSize]node // store's size must be 2^N to work with the mask
+	store [ringSize]node // store's size must be 2^N to work with the mask
 }
 
 type node struct {
 	mark  uint32
 	one   cmds.Completed
 	multi []cmds.Completed
-	ch    chan proto.Result
+	ch    chan RedisResult
 }
 
-func (r *Ring) PutOne(m cmds.Completed) chan proto.Result {
+func (r *ring) PutOne(m cmds.Completed) chan RedisResult {
 	n := &r.store[atomic.AddUint64(&r.write, 1)&r.mask]
 	for !atomic.CompareAndSwapUint32(&n.mark, 0, 1) {
 		runtime.Gosched()
@@ -50,7 +58,7 @@ func (r *Ring) PutOne(m cmds.Completed) chan proto.Result {
 	return n.ch
 }
 
-func (r *Ring) PutMulti(m []cmds.Completed) chan proto.Result {
+func (r *ring) PutMulti(m []cmds.Completed) chan RedisResult {
 	n := &r.store[atomic.AddUint64(&r.write, 1)&r.mask]
 	for !atomic.CompareAndSwapUint32(&n.mark, 0, 1) {
 		runtime.Gosched()
@@ -62,7 +70,7 @@ func (r *Ring) PutMulti(m []cmds.Completed) chan proto.Result {
 }
 
 // NextWriteCmd should be only called by one dedicated thread
-func (r *Ring) NextWriteCmd() (cmds.Completed, []cmds.Completed, chan proto.Result) {
+func (r *ring) NextWriteCmd() (cmds.Completed, []cmds.Completed, chan RedisResult) {
 	r.read1++
 	p := r.read1 & r.mask
 	n := &r.store[p]
@@ -74,7 +82,7 @@ func (r *Ring) NextWriteCmd() (cmds.Completed, []cmds.Completed, chan proto.Resu
 }
 
 // NextResultCh should be only called by one dedicated thread
-func (r *Ring) NextResultCh() (one cmds.Completed, multi []cmds.Completed, ch chan proto.Result) {
+func (r *ring) NextResultCh() (one cmds.Completed, multi []cmds.Completed, ch chan RedisResult) {
 	r.read2++
 	p := r.read2 & r.mask
 	n := &r.store[p]

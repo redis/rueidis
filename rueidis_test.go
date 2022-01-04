@@ -7,8 +7,6 @@ import (
 	"net"
 	"testing"
 	"time"
-
-	"github.com/rueian/rueidis/internal/proto"
 )
 
 func accept(t *testing.T, ln net.Listener) (*redisMock, error) {
@@ -23,11 +21,11 @@ func accept(t *testing.T, ln net.Listener) (*redisMock, error) {
 		conn: conn,
 	}
 	mock.Expect("HELLO", "3").
-		Reply(proto.Message{
-			Type: '%',
-			Values: []proto.Message{
-				{Type: '+', String: "key"},
-				{Type: '+', String: "value"},
+		Reply(RedisMessage{
+			typ: '%',
+			values: []RedisMessage{
+				{typ: '+', string: "key"},
+				{typ: '+', string: "value"},
 			},
 		})
 	mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
@@ -73,7 +71,7 @@ func TestFallBackSingleClient(t *testing.T) {
 		if err != nil {
 			return
 		}
-		mock.Expect("CLUSTER", "SLOTS").Reply(proto.Message{Type: '-', String: redisErrMsgClusterDisabled})
+		mock.Expect("CLUSTER", "SLOTS").Reply(RedisMessage{typ: '-', string: redisErrMsgClusterDisabled})
 		mock.Expect("QUIT").ReplyString("OK")
 		mock, err = accept(t, ln)
 		if err != nil {
@@ -94,7 +92,7 @@ func TestFallBackSingleClient(t *testing.T) {
 }
 
 func TestIsRedisNil(t *testing.T) {
-	if !IsRedisNil(&proto.RedisError{Type: '_'}) {
+	if !IsRedisNil(&RedisError{typ: '_'}) {
 		t.Fatal("IsRedisNil fail")
 	}
 }
@@ -150,7 +148,7 @@ func ExampleClient_doCache() {
 	client.DoCache(ctx, client.B().Smembers().Key("s").Cache(), time.Minute).ToArray()
 }
 
-func ExampleClient_dedicated() {
+func ExampleClient_dedicatedCAS() {
 	client, err := NewClient(ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
 	if err != nil {
 		panic(err)
@@ -169,12 +167,14 @@ func ExampleClient_dedicated() {
 		if err != nil {
 			return err
 		}
+		v1, _ := values[0].ToString()
+		v2, _ := values[1].ToString()
 		// perform write with MULTI EXEC
 		for _, resp := range client.DoMulti(
 			ctx,
 			client.B().Multi().Build(),
-			client.B().Set().Key("k1").Value(values[0].String).Build(),
-			client.B().Set().Key("k2").Value(values[1].String).Build(),
+			client.B().Set().Key("k1").Value(v1+"1").Build(),
+			client.B().Set().Key("k2").Value(v2+"2").Build(),
 			client.B().Exec().Build(),
 		) {
 			if err := resp.Error(); err != nil {

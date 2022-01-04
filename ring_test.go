@@ -1,15 +1,16 @@
-package queue
+package rueidis
 
 import (
-	"github.com/rueian/rueidis/internal/cmds"
 	"runtime"
 	"strconv"
 	"testing"
+
+	"github.com/rueian/rueidis/internal/cmds"
 )
 
 func TestRing(t *testing.T) {
 	t.Run("PutOne", func(t *testing.T) {
-		ring := NewRing()
+		ring := newRing()
 		size := 5000
 		fixture := make(map[string]struct{}, size)
 		for i := 0; i < size; i++ {
@@ -38,7 +39,7 @@ func TestRing(t *testing.T) {
 	})
 
 	t.Run("PutMulti", func(t *testing.T) {
-		ring := NewRing()
+		ring := newRing()
 		size := 5000
 		fixture := make(map[string]struct{}, size)
 		for i := 0; i < size; i++ {
@@ -70,7 +71,7 @@ func TestRing(t *testing.T) {
 	})
 
 	t.Run("NextWriteCmd & NextResultCh", func(t *testing.T) {
-		ring := NewRing()
+		ring := newRing()
 		if one, multi, _ := ring.NextWriteCmd(); !one.IsEmpty() || multi != nil {
 			t.Fatalf("NextWriteCmd should returns nil if empty")
 		}

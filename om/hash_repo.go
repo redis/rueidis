@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/rueian/rueidis"
-	"github.com/rueian/rueidis/internal/proto"
 )
 
 var ErrVersionMismatch = errors.New("object version mismatched, please retry")
@@ -57,11 +56,11 @@ func (r *HashRepository) Make() (entity interface{}) {
 	return entity
 }
 
-func (r *HashRepository) fromHash(id string, record map[string]proto.Message) (v interface{}, err error) {
+func (r *HashRepository) fromHash(id string, record map[string]rueidis.RedisMessage) (v interface{}, err error) {
 	fields := make(map[string]string, len(record))
 	for k, v := range record {
-		if !v.IsNil() {
-			fields[k] = v.String
+		if s, err := v.ToString(); err == nil {
+			fields[k] = s
 		}
 	}
 
@@ -108,7 +107,7 @@ func (r *HashRepository) Save(ctx context.Context, entity interface{}) (err erro
 			args = append(args, f, v)
 		}
 		fields[VersionField], err = saveScript.Exec(ctx, r.client, []string{r.key(id)}, args).ToString()
-		if proto.IsRedisNil(err) {
+		if rueidis.IsRedisNil(err) {
 			return ErrVersionMismatch
 		}
 		if err != nil {

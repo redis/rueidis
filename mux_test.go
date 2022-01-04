@@ -11,14 +11,12 @@ import (
 	"time"
 
 	"github.com/rueian/rueidis/internal/cmds"
-	"github.com/rueian/rueidis/internal/mock"
-	"github.com/rueian/rueidis/internal/proto"
 )
 
-func setupMux(wires []*mock.Wire) (conn *mux, checkClean func(t *testing.T)) {
+func setupMux(wires []*mockWire) (conn *mux, checkClean func(t *testing.T)) {
 	var mu sync.Mutex
 	var count = -1
-	return newMux("", ClientOption{}, (*mock.Wire)(nil), func(fn func(err error)) (wire, error) {
+	return newMux("", ClientOption{}, (*mockWire)(nil), func(fn func(err error)) (wire, error) {
 			mu.Lock()
 			defer mu.Unlock()
 			count++
@@ -35,11 +33,11 @@ func TestNewMux(t *testing.T) {
 	mock := &redisMock{t: t, buf: bufio.NewReader(n2), conn: n2}
 	go func() {
 		mock.Expect("HELLO", "3").
-			Reply(proto.Message{
-				Type: '%',
-				Values: []proto.Message{
-					{Type: '+', String: "key"},
-					{Type: '+', String: "value"},
+			Reply(RedisMessage{
+				typ: '%',
+				values: []RedisMessage{
+					{typ: '+', string: "key"},
+					{typ: '+', string: "value"},
 				},
 			})
 		mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
@@ -57,9 +55,9 @@ func TestNewMux(t *testing.T) {
 
 func TestMuxOnDisconnected(t *testing.T) {
 	var trigger func(err error)
-	m := newMux("", ClientOption{}, (*mock.Wire)(nil), func(fn func(err error)) (wire, error) {
+	m := newMux("", ClientOption{}, (*mockWire)(nil), func(fn func(err error)) (wire, error) {
 		trigger = fn
-		return &mock.Wire{}, nil
+		return &mockWire{}, nil
 	})
 	if err := m.Dial(); err != nil {
 		t.Fatalf("unexpected err %v", err)
@@ -87,10 +85,10 @@ func TestMuxOnDisconnected(t *testing.T) {
 func TestMuxDialSuppress(t *testing.T) {
 	var wires, waits, done int64
 	blocking := make(chan struct{})
-	m := newMux("", ClientOption{}, (*mock.Wire)(nil), func(fn func(err error)) (wire, error) {
+	m := newMux("", ClientOption{}, (*mockWire)(nil), func(fn func(err error)) (wire, error) {
 		atomic.AddInt64(&wires, 1)
 		<-blocking
-		return &mock.Wire{}, nil
+		return &mockWire{}, nil
 	})
 	for i := 0; i < 1000; i++ {
 		go func() {
@@ -113,10 +111,10 @@ func TestMuxDialSuppress(t *testing.T) {
 
 func TestMuxReuseWire(t *testing.T) {
 	t.Run("reuse wire if no error", func(t *testing.T) {
-		m, checkClean := setupMux([]*mock.Wire{
+		m, checkClean := setupMux([]*mockWire{
 			{
-				DoFn: func(cmd cmds.Completed) proto.Result {
-					return proto.NewResult(proto.Message{Type: '+', String: "PONG"}, nil)
+				DoFn: func(cmd cmds.Completed) RedisResult {
+					return newResult(RedisMessage{typ: '+', string: "PONG"}, nil)
 				},
 			},
 		})
@@ -131,18 +129,18 @@ func TestMuxReuseWire(t *testing.T) {
 	})
 	t.Run("reuse blocking pool", func(t *testing.T) {
 		blocking := make(chan struct{})
-		response := make(chan proto.Result)
-		m, checkClean := setupMux([]*mock.Wire{
+		response := make(chan RedisResult)
+		m, checkClean := setupMux([]*mockWire{
 			{
 				// leave first wire for pipeline calls
 			},
 			{
-				DoFn: func(cmd cmds.Completed) proto.Result {
-					return proto.NewResult(proto.Message{Type: '+', String: "ACQUIRED"}, nil)
+				DoFn: func(cmd cmds.Completed) RedisResult {
+					return newResult(RedisMessage{typ: '+', string: "ACQUIRED"}, nil)
 				},
 			},
 			{
-				DoFn: func(cmd cmds.Completed) proto.Result {
+				DoFn: func(cmd cmds.Completed) RedisResult {
 					blocking <- struct{}{}
 					return <-response
 				},
@@ -175,30 +173,30 @@ func TestMuxReuseWire(t *testing.T) {
 			t.Fatalf("unexpected response %v", val)
 		}
 
-		response <- proto.NewResult(proto.Message{Type: '+', String: "BLOCK_RESPONSE"}, nil)
+		response <- newResult(RedisMessage{typ: '+', string: "BLOCK_RESPONSE"}, nil)
 		<-blocking
 	})
 }
 
 func TestMuxCMDRetry(t *testing.T) {
 	t.Run("wire info", func(t *testing.T) {
-		m, checkClean := setupMux([]*mock.Wire{
+		m, checkClean := setupMux([]*mockWire{
 			{
-				InfoFn: func() map[string]proto.Message {
-					return map[string]proto.Message{"key": {Type: '+', String: "value"}}
+				InfoFn: func() map[string]RedisMessage {
+					return map[string]RedisMessage{"key": {typ: '+', string: "value"}}
 				},
 			},
 		})
 		defer checkClean(t)
 		defer m.Close()
-		if info := m.Info(); info == nil || info["key"].String != "value" {
+		if info := m.Info(); info == nil || info["key"].string != "value" {
 			t.Fatalf("unexpected info %v", info)
 		}
 	})
 
 	t.Run("wire err", func(t *testing.T) {
 		e := errors.New("err")
-		m, checkClean := setupMux([]*mock.Wire{
+		m, checkClean := setupMux([]*mockWire{
 			{
 				ErrorFn: func() error {
 					return e
@@ -213,27 +211,27 @@ func TestMuxCMDRetry(t *testing.T) {
 	})
 
 	t.Run("retry single read", func(t *testing.T) {
-		m, checkClean := setupMux([]*mock.Wire{
+		m, checkClean := setupMux([]*mockWire{
 			{
-				DoFn: func(cmd cmds.Completed) proto.Result {
+				DoFn: func(cmd cmds.Completed) RedisResult {
 					if cmd.Commands()[0] == "PING" {
-						return proto.NewResult(proto.Message{Type: '+', String: "PONG"}, nil)
+						return newResult(RedisMessage{typ: '+', string: "PONG"}, nil)
 					}
 					if cmd.Commands()[0] != "READONLY_COMMAND" {
 						t.Fatalf("command should be READONLY_COMMAND")
 					}
-					return proto.NewErrResult(errors.New("network error"))
+					return newErrResult(errors.New("network error"))
 				},
 			},
 			{
-				DoFn: func(cmd cmds.Completed) proto.Result {
+				DoFn: func(cmd cmds.Completed) RedisResult {
 					if cmd.Commands()[0] == "PING" {
-						return proto.NewResult(proto.Message{Type: '+', String: "PONG"}, nil)
+						return newResult(RedisMessage{typ: '+', string: "PONG"}, nil)
 					}
 					if cmd.Commands()[0] != "READONLY_COMMAND" {
 						t.Fatalf("command should be READONLY_COMMAND")
 					}
-					return proto.NewResult(proto.Message{Type: '+', String: "READONLY_COMMAND_RESPONSE"}, nil)
+					return newResult(RedisMessage{typ: '+', string: "READONLY_COMMAND_RESPONSE"}, nil)
 				},
 			},
 		})
@@ -248,15 +246,15 @@ func TestMuxCMDRetry(t *testing.T) {
 	})
 
 	t.Run("retry multi read", func(t *testing.T) {
-		m, checkClean := setupMux([]*mock.Wire{
+		m, checkClean := setupMux([]*mockWire{
 			{
-				DoMultiFn: func(multi ...cmds.Completed) []proto.Result {
-					return []proto.Result{proto.NewErrResult(errors.New("network error"))}
+				DoMultiFn: func(multi ...cmds.Completed) []RedisResult {
+					return []RedisResult{newErrResult(errors.New("network error"))}
 				},
 			},
 			{
-				DoMultiFn: func(multi ...cmds.Completed) []proto.Result {
-					return []proto.Result{proto.NewResult(proto.Message{Type: '+', String: "MULTI_COMMANDS_RESPONSE"}, nil)}
+				DoMultiFn: func(multi ...cmds.Completed) []RedisResult {
+					return []RedisResult{newResult(RedisMessage{typ: '+', string: "MULTI_COMMANDS_RESPONSE"}, nil)}
 				},
 			},
 		})
@@ -271,15 +269,15 @@ func TestMuxCMDRetry(t *testing.T) {
 	})
 
 	t.Run("retry single read cache", func(t *testing.T) {
-		m, checkClean := setupMux([]*mock.Wire{
+		m, checkClean := setupMux([]*mockWire{
 			{
-				DoCacheFn: func(cmd cmds.Cacheable, ttl time.Duration) proto.Result {
-					return proto.NewErrResult(errors.New("network error"))
+				DoCacheFn: func(cmd cmds.Cacheable, ttl time.Duration) RedisResult {
+					return newErrResult(errors.New("network error"))
 				},
 			},
 			{
-				DoCacheFn: func(cmd cmds.Cacheable, ttl time.Duration) proto.Result {
-					return proto.NewResult(proto.Message{Type: '+', String: "READONLY_COMMAND_RESPONSE"}, nil)
+				DoCacheFn: func(cmd cmds.Cacheable, ttl time.Duration) RedisResult {
+					return newResult(RedisMessage{typ: '+', string: "READONLY_COMMAND_RESPONSE"}, nil)
 				},
 			},
 		})
@@ -294,27 +292,27 @@ func TestMuxCMDRetry(t *testing.T) {
 	})
 
 	t.Run("not retry single write", func(t *testing.T) {
-		m, checkClean := setupMux([]*mock.Wire{
+		m, checkClean := setupMux([]*mockWire{
 			{
-				DoFn: func(cmd cmds.Completed) proto.Result {
+				DoFn: func(cmd cmds.Completed) RedisResult {
 					if cmd.Commands()[0] == "PING" {
-						return proto.NewResult(proto.Message{Type: '+', String: "PONG"}, nil)
+						return newResult(RedisMessage{typ: '+', string: "PONG"}, nil)
 					}
 					if cmd.Commands()[0] != "WRITE_COMMAND" {
 						t.Fatalf("command should be WRITE_COMMAND")
 					}
-					return proto.NewErrResult(errors.New("network error"))
+					return newErrResult(errors.New("network error"))
 				},
 			},
 			{
-				DoFn: func(cmd cmds.Completed) proto.Result {
+				DoFn: func(cmd cmds.Completed) RedisResult {
 					if cmd.Commands()[0] == "PING" {
-						return proto.NewResult(proto.Message{Type: '+', String: "PONG"}, nil)
+						return newResult(RedisMessage{typ: '+', string: "PONG"}, nil)
 					}
 					if cmd.Commands()[0] != "WRITE_COMMAND" {
 						t.Fatalf("command should be WRITE_COMMAND")
 					}
-					return proto.NewResult(proto.Message{Type: '+', String: "WRITE_COMMAND_RESPONSE"}, nil)
+					return newResult(RedisMessage{typ: '+', string: "WRITE_COMMAND_RESPONSE"}, nil)
 				},
 			},
 		})
@@ -333,15 +331,15 @@ func TestMuxCMDRetry(t *testing.T) {
 	})
 
 	t.Run("not retry multi write", func(t *testing.T) {
-		m, checkClean := setupMux([]*mock.Wire{
+		m, checkClean := setupMux([]*mockWire{
 			{
-				DoMultiFn: func(multi ...cmds.Completed) []proto.Result {
-					return []proto.Result{proto.NewErrResult(errors.New("network error"))}
+				DoMultiFn: func(multi ...cmds.Completed) []RedisResult {
+					return []RedisResult{newErrResult(errors.New("network error"))}
 				},
 			},
 			{
-				DoMultiFn: func(multi ...cmds.Completed) []proto.Result {
-					return []proto.Result{proto.NewResult(proto.Message{Type: '+', String: "MULTI_COMMANDS_RESPONSE"}, nil)}
+				DoMultiFn: func(multi ...cmds.Completed) []RedisResult {
+					return []RedisResult{newResult(RedisMessage{typ: '+', string: "MULTI_COMMANDS_RESPONSE"}, nil)}
 				},
 			},
 		})
@@ -367,20 +365,20 @@ func TestMuxCMDRetry(t *testing.T) {
 
 	t.Run("single blocking", func(t *testing.T) {
 		blocked := make(chan struct{})
-		responses := make(chan proto.Result)
+		responses := make(chan RedisResult)
 
-		m, checkClean := setupMux([]*mock.Wire{
+		m, checkClean := setupMux([]*mockWire{
 			{
 				// leave first wire for pipeline calls
 			},
 			{
-				DoFn: func(cmd cmds.Completed) proto.Result {
+				DoFn: func(cmd cmds.Completed) RedisResult {
 					blocked <- struct{}{}
 					return <-responses
 				},
 			},
 			{
-				DoFn: func(cmd cmds.Completed) proto.Result {
+				DoFn: func(cmd cmds.Completed) RedisResult {
 					blocked <- struct{}{}
 					return <-responses
 				},
@@ -409,29 +407,29 @@ func TestMuxCMDRetry(t *testing.T) {
 			<-blocked
 		}
 		for i := 0; i < 2; i++ {
-			responses <- proto.NewResult(proto.Message{Type: '+', String: "BLOCK_COMMANDS_RESPONSE"}, nil)
+			responses <- newResult(RedisMessage{typ: '+', string: "BLOCK_COMMANDS_RESPONSE"}, nil)
 		}
 		wg.Wait()
 	})
 
 	t.Run("multiple blocking", func(t *testing.T) {
 		blocked := make(chan struct{})
-		responses := make(chan proto.Result)
+		responses := make(chan RedisResult)
 
-		m, checkClean := setupMux([]*mock.Wire{
+		m, checkClean := setupMux([]*mockWire{
 			{
 				// leave first wire for pipeline calls
 			},
 			{
-				DoMultiFn: func(cmd ...cmds.Completed) []proto.Result {
+				DoMultiFn: func(cmd ...cmds.Completed) []RedisResult {
 					blocked <- struct{}{}
-					return []proto.Result{<-responses}
+					return []RedisResult{<-responses}
 				},
 			},
 			{
-				DoMultiFn: func(cmd ...cmds.Completed) []proto.Result {
+				DoMultiFn: func(cmd ...cmds.Completed) []RedisResult {
 					blocked <- struct{}{}
-					return []proto.Result{<-responses}
+					return []RedisResult{<-responses}
 				},
 			},
 		})
@@ -461,7 +459,7 @@ func TestMuxCMDRetry(t *testing.T) {
 			<-blocked
 		}
 		for i := 0; i < 2; i++ {
-			responses <- proto.NewResult(proto.Message{Type: '+', String: "BLOCK_COMMANDS_RESPONSE"}, nil)
+			responses <- newResult(RedisMessage{typ: '+', string: "BLOCK_COMMANDS_RESPONSE"}, nil)
 		}
 		wg.Wait()
 	})
@@ -470,11 +468,11 @@ func TestMuxCMDRetry(t *testing.T) {
 func TestMuxDialRetry(t *testing.T) {
 	setup := func() (*mux, *int64) {
 		var count int64
-		return newMux("", ClientOption{}, (*mock.Wire)(nil), func(fn func(err error)) (wire, error) {
+		return newMux("", ClientOption{}, (*mockWire)(nil), func(fn func(err error)) (wire, error) {
 			if count == 1 {
-				return &mock.Wire{
-					DoFn: func(cmd cmds.Completed) proto.Result {
-						return proto.NewResult(proto.Message{Type: '+', String: "PONG"}, nil)
+				return &mockWire{
+					DoFn: func(cmd cmds.Completed) RedisResult {
+						return newResult(RedisMessage{typ: '+', string: "PONG"}, nil)
 					},
 				}, nil
 			}
@@ -539,4 +537,54 @@ func BenchmarkClientSideCaching(b *testing.B) {
 			}
 		})
 	})
+}
+
+type mockWire struct {
+	DoFn      func(cmd cmds.Completed) RedisResult
+	DoCacheFn func(cmd cmds.Cacheable, ttl time.Duration) RedisResult
+	DoMultiFn func(multi ...cmds.Completed) []RedisResult
+	InfoFn    func() map[string]RedisMessage
+	ErrorFn   func() error
+	CloseFn   func()
+}
+
+func (m *mockWire) Do(cmd cmds.Completed) RedisResult {
+	if m.DoFn != nil {
+		return m.DoFn(cmd)
+	}
+	return RedisResult{}
+}
+
+func (m *mockWire) DoCache(cmd cmds.Cacheable, ttl time.Duration) RedisResult {
+	if m.DoCacheFn != nil {
+		return m.DoCacheFn(cmd, ttl)
+	}
+	return RedisResult{}
+}
+
+func (m *mockWire) DoMulti(multi ...cmds.Completed) []RedisResult {
+	if m.DoMultiFn != nil {
+		return m.DoMultiFn(multi...)
+	}
+	return nil
+}
+
+func (m *mockWire) Info() map[string]RedisMessage {
+	if m.InfoFn != nil {
+		return m.InfoFn()
+	}
+	return nil
+}
+
+func (m *mockWire) Error() error {
+	if m.ErrorFn != nil {
+		return m.ErrorFn()
+	}
+	return nil
+}
+
+func (m *mockWire) Close() {
+	if m.CloseFn != nil {
+		m.CloseFn()
+	}
 }

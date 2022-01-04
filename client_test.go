@@ -8,15 +8,13 @@ import (
 	"time"
 
 	"github.com/rueian/rueidis/internal/cmds"
-	"github.com/rueian/rueidis/internal/mock"
-	"github.com/rueian/rueidis/internal/proto"
 )
 
 type mockConn struct {
-	DoFn      func(cmd cmds.Completed) proto.Result
-	DoCacheFn func(cmd cmds.Cacheable, ttl time.Duration) proto.Result
-	DoMultiFn func(multi ...cmds.Completed) []proto.Result
-	InfoFn    func() map[string]proto.Message
+	DoFn      func(cmd cmds.Completed) RedisResult
+	DoCacheFn func(cmd cmds.Cacheable, ttl time.Duration) RedisResult
+	DoMultiFn func(multi ...cmds.Completed) []RedisResult
+	InfoFn    func() map[string]RedisMessage
 	ErrorFn   func() error
 	CloseFn   func()
 	DialFn    func() error
@@ -46,28 +44,28 @@ func (m *mockConn) Store(w wire) {
 	}
 }
 
-func (m *mockConn) Do(cmd cmds.Completed) proto.Result {
+func (m *mockConn) Do(cmd cmds.Completed) RedisResult {
 	if m.DoFn != nil {
 		return m.DoFn(cmd)
 	}
-	return proto.Result{}
+	return RedisResult{}
 }
 
-func (m *mockConn) DoCache(cmd cmds.Cacheable, ttl time.Duration) proto.Result {
+func (m *mockConn) DoCache(cmd cmds.Cacheable, ttl time.Duration) RedisResult {
 	if m.DoCacheFn != nil {
 		return m.DoCacheFn(cmd, ttl)
 	}
-	return proto.Result{}
+	return RedisResult{}
 }
 
-func (m *mockConn) DoMulti(multi ...cmds.Completed) []proto.Result {
+func (m *mockConn) DoMulti(multi ...cmds.Completed) []RedisResult {
 	if m.DoMultiFn != nil {
 		return m.DoMultiFn(multi...)
 	}
 	return nil
 }
 
-func (m *mockConn) Info() map[string]proto.Message {
+func (m *mockConn) Info() map[string]RedisMessage {
 	if m.InfoFn != nil {
 		return m.InfoFn()
 	}
@@ -125,11 +123,11 @@ func TestSingleClient(t *testing.T) {
 
 	t.Run("Delegate Do", func(t *testing.T) {
 		c := client.B().Get().Key("Do").Build()
-		m.DoFn = func(cmd cmds.Completed) proto.Result {
+		m.DoFn = func(cmd cmds.Completed) RedisResult {
 			if !reflect.DeepEqual(cmd.Commands(), c.Commands()) {
 				t.Fatalf("unexpected command %v", cmd)
 			}
-			return proto.NewResult(proto.Message{Type: '+', String: "Do"}, nil)
+			return newResult(RedisMessage{typ: '+', string: "Do"}, nil)
 		}
 		if v, err := client.Do(context.Background(), c).ToString(); err != nil || v != "Do" {
 			t.Fatalf("unexpected response %v %v", v, err)
@@ -138,11 +136,11 @@ func TestSingleClient(t *testing.T) {
 
 	t.Run("Delegate DoCache", func(t *testing.T) {
 		c := client.B().Get().Key("DoCache").Cache()
-		m.DoCacheFn = func(cmd cmds.Cacheable, ttl time.Duration) proto.Result {
+		m.DoCacheFn = func(cmd cmds.Cacheable, ttl time.Duration) RedisResult {
 			if !reflect.DeepEqual(cmd.Commands(), c.Commands()) || ttl != 100 {
 				t.Fatalf("unexpected command %v, %v", cmd, ttl)
 			}
-			return proto.NewResult(proto.Message{Type: '+', String: "DoCache"}, nil)
+			return newResult(RedisMessage{typ: '+', string: "DoCache"}, nil)
 		}
 		if v, err := client.DoCache(context.Background(), c, 100).ToString(); err != nil || v != "DoCache" {
 			t.Fatalf("unexpected response %v %v", v, err)
@@ -168,12 +166,12 @@ func TestSingleClient(t *testing.T) {
 	})
 
 	t.Run("Dedicated Delegate", func(t *testing.T) {
-		w := &mock.Wire{
-			DoFn: func(cmd cmds.Completed) proto.Result {
-				return proto.NewResult(proto.Message{Type: '+', String: "Delegate"}, nil)
+		w := &mockWire{
+			DoFn: func(cmd cmds.Completed) RedisResult {
+				return newResult(RedisMessage{typ: '+', string: "Delegate"}, nil)
 			},
-			DoMultiFn: func(cmd ...cmds.Completed) []proto.Result {
-				return []proto.Result{proto.NewResult(proto.Message{Type: '+', String: "Delegate"}, nil)}
+			DoMultiFn: func(cmd ...cmds.Completed) []RedisResult {
+				return []RedisResult{newResult(RedisMessage{typ: '+', string: "Delegate"}, nil)}
 			},
 		}
 		m.AcquireFn = func() wire {

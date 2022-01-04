@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/rueian/rueidis/internal/cmds"
-	"github.com/rueian/rueidis/internal/proto"
 )
 
 type singleClient struct {
@@ -33,13 +32,13 @@ func (c *singleClient) B() *cmds.Builder {
 	return c.cmd
 }
 
-func (c *singleClient) Do(ctx context.Context, cmd cmds.Completed) (resp proto.Result) {
+func (c *singleClient) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
 	resp = c.conn.Do(cmd)
 	c.cmd.Put(cmd.CommandSlice())
 	return resp
 }
 
-func (c *singleClient) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp proto.Result) {
+func (c *singleClient) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp RedisResult) {
 	resp = c.conn.DoCache(cmd, ttl)
 	c.cmd.Put(cmd.CommandSlice())
 	return resp
@@ -65,13 +64,13 @@ func (c *dedicatedSingleClient) B() *cmds.Builder {
 	return c.cmd
 }
 
-func (c *dedicatedSingleClient) Do(ctx context.Context, cmd cmds.Completed) (resp proto.Result) {
+func (c *dedicatedSingleClient) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
 	resp = c.wire.Do(cmd)
 	c.cmd.Put(cmd.CommandSlice())
 	return resp
 }
 
-func (c *dedicatedSingleClient) DoMulti(ctx context.Context, multi ...cmds.Completed) (resp []proto.Result) {
+func (c *dedicatedSingleClient) DoMulti(ctx context.Context, multi ...cmds.Completed) (resp []RedisResult) {
 	if len(multi) == 0 {
 		return nil
 	}

@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/rueian/rueidis/internal/cmds"
-	"github.com/rueian/rueidis/internal/proto"
 )
 
 func TestSingleClientPubSubReconnect(t *testing.T) {
@@ -18,7 +17,7 @@ func TestSingleClientPubSubReconnect(t *testing.T) {
 	errs := int64(0)
 	m := &mockConn{
 		DialFn: func() error { return nil },
-		DoFn:   func(cmd cmds.Completed) proto.Result { return proto.Result{} },
+		DoFn:   func(cmd cmds.Completed) RedisResult { return RedisResult{} },
 	}
 	_, err := newSingleClient(ClientOption{
 		InitAddress: []string{""},
@@ -54,7 +53,7 @@ func TestClusterClientPubSubReconnect(t *testing.T) {
 	errs := int64(0)
 	m := &mockConn{
 		DialFn: func() error { return nil },
-		DoFn:   func(cmd cmds.Completed) proto.Result { return slotsResp },
+		DoFn:   func(cmd cmds.Completed) RedisResult { return slotsResp },
 	}
 	_, err := newClusterClient(ClientOption{
 		InitAddress: []string{":0"},

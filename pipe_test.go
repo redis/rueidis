@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/rueian/rueidis/internal/cmds"
-	"github.com/rueian/rueidis/internal/proto"
 )
 
 type redisExpect struct {
@@ -28,10 +27,10 @@ type redisMock struct {
 	conn net.Conn
 }
 
-func (r *redisMock) ReadMessage() (proto.Message, error) {
-	m, err := proto.ReadNextMessage(r.buf)
+func (r *redisMock) ReadMessage() (RedisMessage, error) {
+	m, err := readNextMessage(r.buf)
 	if err != nil {
-		return proto.Message{}, err
+		return RedisMessage{}, err
 	}
 	return m, nil
 }
@@ -44,12 +43,12 @@ func (r *redisMock) Expect(expected ...string) *redisExpect {
 	if err != nil {
 		return &redisExpect{redisMock: r, err: err}
 	}
-	if len(expected) != len(m.Values) {
-		r.t.Fatalf("redismock receive unexpected command length: expected %v, got : %v", len(expected), m.Values)
+	if len(expected) != len(m.values) {
+		r.t.Fatalf("redismock receive unexpected command length: expected %v, got : %v", len(expected), m.values)
 	}
 	for i, expected := range expected {
-		if m.Values[i].String != expected {
-			r.t.Fatalf("redismock receive unexpected command: expected %v, got : %v", expected, m.Values[i])
+		if m.values[i].string != expected {
+			r.t.Fatalf("redismock receive unexpected command: expected %v, got : %v", expected, m.values[i])
 		}
 	}
 	return &redisExpect{redisMock: r}
@@ -58,7 +57,7 @@ func (r *redisMock) Expect(expected ...string) *redisExpect {
 func (r *redisExpect) ReplyString(replies ...string) *redisExpect {
 	for _, reply := range replies {
 		if r.err == nil {
-			r.Reply(proto.Message{Type: '+', String: reply})
+			r.Reply(RedisMessage{typ: '+', string: reply})
 		}
 	}
 	return r
@@ -67,13 +66,13 @@ func (r *redisExpect) ReplyString(replies ...string) *redisExpect {
 func (r *redisExpect) ReplyInteger(replies ...int64) *redisExpect {
 	for _, reply := range replies {
 		if r.err == nil {
-			r.Reply(proto.Message{Type: ':', Integer: reply})
+			r.Reply(RedisMessage{typ: ':', integer: reply})
 		}
 	}
 	return r
 }
 
-func (r *redisExpect) Reply(replies ...proto.Message) *redisExpect {
+func (r *redisExpect) Reply(replies ...RedisMessage) *redisExpect {
 	for _, reply := range replies {
 		if r.err == nil {
 			r.err = write(r.conn, reply)
@@ -86,23 +85,23 @@ func (r *redisMock) Close() {
 	r.conn.Close()
 }
 
-func write(o io.Writer, m proto.Message) (err error) {
-	_, err = o.Write([]byte{m.Type})
-	switch m.Type {
+func write(o io.Writer, m RedisMessage) (err error) {
+	_, err = o.Write([]byte{m.typ})
+	switch m.typ {
 	case '+', '-':
-		_, err = o.Write(append([]byte(m.String), '\r', '\n'))
+		_, err = o.Write(append([]byte(m.string), '\r', '\n'))
 	case ':':
-		_, err = o.Write(append([]byte(strconv.FormatInt(m.Integer, 10)), '\r', '\n'))
+		_, err = o.Write(append([]byte(strconv.FormatInt(m.integer, 10)), '\r', '\n'))
 	case '%', '>', '*':
-		size := int64(len(m.Values))
-		if m.Type == '%' {
+		size := int64(len(m.values))
+		if m.typ == '%' {
 			if size%2 != 0 {
 				panic("map message with wrong value length")
 			}
 			size /= 2
 		}
 		_, err = o.Write(append([]byte(strconv.FormatInt(size, 10)), '\r', '\n'))
-		for _, v := range m.Values {
+		for _, v := range m.values {
 			err = write(o, v)
 		}
 	default:
@@ -124,11 +123,11 @@ func setupWithDisconnectedFn(t *testing.T, option ClientOption, onDisconnected f
 	}
 	go func() {
 		mock.Expect("HELLO", "3").
-			Reply(proto.Message{
-				Type: '%',
-				Values: []proto.Message{
-					{Type: '+', String: "key"},
-					{Type: '+', String: "value"},
+			Reply(RedisMessage{
+				typ: '%',
+				values: []RedisMessage{
+					{typ: '+', string: "key"},
+					{typ: '+', string: "value"},
 				},
 			})
 		mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
@@ -138,7 +137,7 @@ func setupWithDisconnectedFn(t *testing.T, option ClientOption, onDisconnected f
 	if err != nil {
 		t.Fatalf("pipe setup failed: %v", err)
 	}
-	if info := p.Info(); info["key"].String != "value" {
+	if info := p.Info(); info["key"].string != "value" {
 		t.Fatalf("pipe setup failed, unexpected hello response: %v", p.Info())
 	}
 	return p, mock, func() {
@@ -151,7 +150,7 @@ func setupWithDisconnectedFn(t *testing.T, option ClientOption, onDisconnected f
 		}
 }
 
-func ExpectOK(t *testing.T, result proto.Result) {
+func ExpectOK(t *testing.T, result RedisResult) {
 	val, err := result.Value()
 	if err != nil {
 		t.Errorf("unexpected error result: %v", err)
@@ -167,9 +166,9 @@ func TestNewPipe(t *testing.T) {
 		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2}
 		go func() {
 			mock.Expect("HELLO", "3", "AUTH", "un", "pa", "SETNAME", "cn").
-				Reply(proto.Message{
-					Type:   '%',
-					Values: []proto.Message{{Type: '+', String: "key"}, {Type: '+', String: "value"}},
+				Reply(RedisMessage{
+					typ:    '%',
+					values: []RedisMessage{{typ: '+', string: "key"}, {typ: '+', string: "value"}},
 				})
 			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
 				ReplyString("OK")
@@ -227,7 +226,7 @@ func TestIgnoreOutOfBandDataDuringSyncMode(t *testing.T) {
 	p, mock, cancel, _ := setup(t, ClientOption{})
 	defer cancel()
 	go func() {
-		mock.Expect("PING").Reply(proto.Message{Type: '>', String: "This should be ignore"}).ReplyString("OK")
+		mock.Expect("PING").Reply(RedisMessage{typ: '>', string: "This should be ignore"}).ReplyString("OK")
 	}()
 	ExpectOK(t, p.Do(cmds.NewCompleted([]string{"PING"})))
 }
@@ -307,15 +306,15 @@ func TestResponseSequenceWithPushMessageInjected(t *testing.T) {
 		go func(i int) {
 			defer wg.Done()
 			v := strconv.Itoa(i)
-			if val, _ := p.Do(cmds.NewCompleted([]string{"GET", v})).Value(); val.String != v {
-				t.Errorf("out of order response, expected %v, got %v", v, val.String)
+			if val, _ := p.Do(cmds.NewCompleted([]string{"GET", v})).Value(); val.string != v {
+				t.Errorf("out of order response, expected %v, got %v", v, val.string)
 			}
 		}(i)
 	}
 	for i := 0; i < times; i++ {
 		m, _ := mock.ReadMessage()
-		mock.Expect().ReplyString(m.Values[1].String).
-			Reply(proto.Message{Type: '>', Values: []proto.Message{{Type: '+', String: "should be ignore"}}})
+		mock.Expect().ReplyString(m.values[1].string).
+			Reply(RedisMessage{typ: '>', values: []RedisMessage{{typ: '+', string: "should be ignore"}}})
 	}
 	wg.Wait()
 }
@@ -339,19 +338,19 @@ func TestClientSideCaching(t *testing.T) {
 	for i := 0; i < 5000; i++ {
 		go func() {
 			defer wg.Done()
-			if v, _ := p.DoCache(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).Value(); v.String != "1" {
-				t.Errorf("unexpected cached result, expected %v, got %v", "1", v.String)
+			if v, _ := p.DoCache(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).Value(); v.string != "1" {
+				t.Errorf("unexpected cached result, expected %v, got %v", "1", v.string)
 			}
 		}()
 	}
 	wg.Wait()
 
 	// cache invalidation
-	mock.Expect().Reply(proto.Message{
-		Type: '>',
-		Values: []proto.Message{
-			{Type: '+', String: "invalidate"},
-			{Type: '*', Values: []proto.Message{{Type: '+', String: "a"}}},
+	mock.Expect().Reply(RedisMessage{
+		typ: '>',
+		values: []RedisMessage{
+			{typ: '+', string: "invalidate"},
+			{typ: '*', values: []RedisMessage{{typ: '+', string: "a"}}},
 		},
 	})
 	go func() {
@@ -364,7 +363,7 @@ func TestClientSideCaching(t *testing.T) {
 	}()
 
 	for {
-		if v, _ := p.DoCache(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), time.Second).Value(); v.String != "2" {
+		if v, _ := p.DoCache(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), time.Second).Value(); v.string != "2" {
 			t.Logf("waiting for invalidating")
 			continue
 		}
@@ -394,7 +393,7 @@ func TestPubSub(t *testing.T) {
 
 		for _, c := range commands {
 			p.Do(c)
-			if v, _ := p.Do(builder.Get().Key("k").Build()).Value(); v.String != "v" {
+			if v, _ := p.Do(builder.Get().Key("k").Build()).Value(); v.string != "v" {
 				t.Fatalf("no-reply commands should not affect nornal commands")
 			}
 		}
@@ -419,12 +418,12 @@ func TestPubSub(t *testing.T) {
 		}()
 
 		p.DoMulti(commands...)
-		if v, _ := p.Do(builder.Get().Key("k").Build()).Value(); v.String != "v" {
+		if v, _ := p.Do(builder.Get().Key("k").Build()).Value(); v.string != "v" {
 			t.Fatalf("no-reply commands should not affect nornal commands")
 		}
 	})
 
-	t.Run("PubSub Push Message", func(t *testing.T) {
+	t.Run("PubSub Push RedisMessage", func(t *testing.T) {
 		count := make([]int32, 4)
 		p, mock, cancel, _ := setup(t, ClientOption{
 			PubSubOption: PubSubOption{
@@ -457,36 +456,36 @@ func TestPubSub(t *testing.T) {
 		activate := builder.Subscribe().Channel("a").Build()
 		go p.Do(activate)
 		mock.Expect(activate.Commands()...).Reply(
-			proto.Message{Type: '>', Values: []proto.Message{
-				{Type: '+', String: "message"},
-				{Type: '+', String: "1"},
-				{Type: '+', String: "2"},
+			RedisMessage{typ: '>', values: []RedisMessage{
+				{typ: '+', string: "message"},
+				{typ: '+', string: "1"},
+				{typ: '+', string: "2"},
 			}},
-			proto.Message{Type: '>', Values: []proto.Message{
-				{Type: '+', String: "pmessage"},
-				{Type: '+', String: "3"},
-				{Type: '+', String: "4"},
-				{Type: '+', String: "5"},
+			RedisMessage{typ: '>', values: []RedisMessage{
+				{typ: '+', string: "pmessage"},
+				{typ: '+', string: "3"},
+				{typ: '+', string: "4"},
+				{typ: '+', string: "5"},
 			}},
-			proto.Message{Type: '>', Values: []proto.Message{
-				{Type: '+', String: "subscribe"},
-				{Type: '+', String: "6"},
-				{Type: ':', Integer: 7},
+			RedisMessage{typ: '>', values: []RedisMessage{
+				{typ: '+', string: "subscribe"},
+				{typ: '+', string: "6"},
+				{typ: ':', integer: 7},
 			}},
-			proto.Message{Type: '>', Values: []proto.Message{
-				{Type: '+', String: "psubscribe"},
-				{Type: '+', String: "6"},
-				{Type: ':', Integer: 7},
+			RedisMessage{typ: '>', values: []RedisMessage{
+				{typ: '+', string: "psubscribe"},
+				{typ: '+', string: "6"},
+				{typ: ':', integer: 7},
 			}},
-			proto.Message{Type: '>', Values: []proto.Message{
-				{Type: '+', String: "unsubscribe"},
-				{Type: '+', String: "8"},
-				{Type: ':', Integer: 9},
+			RedisMessage{typ: '>', values: []RedisMessage{
+				{typ: '+', string: "unsubscribe"},
+				{typ: '+', string: "8"},
+				{typ: ':', integer: 9},
 			}},
-			proto.Message{Type: '>', Values: []proto.Message{
-				{Type: '+', String: "punsubscribe"},
-				{Type: '+', String: "8"},
-				{Type: ':', Integer: 9},
+			RedisMessage{typ: '>', values: []RedisMessage{
+				{typ: '+', string: "punsubscribe"},
+				{typ: '+', string: "8"},
+				{typ: ':', integer: 9},
 			}},
 		)
 		cancel()
@@ -645,8 +644,8 @@ func TestCloseAndWaitPendingCMDs(t *testing.T) {
 		go func() {
 			defer wg.Done()
 
-			if v, _ := p.Do(cmds.NewCompleted([]string{"GET", "a"})).Value(); v.String != "b" {
-				t.Errorf("unexpected GET result %v", v.String)
+			if v, _ := p.Do(cmds.NewCompleted([]string{"GET", "a"})).Value(); v.string != "b" {
+				t.Errorf("unexpected GET result %v", v.string)
 			}
 		}()
 	}

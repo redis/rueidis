@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/rueian/rueidis/internal/cmds"
-	"github.com/rueian/rueidis/internal/proto"
 )
 
 const (
@@ -66,7 +65,7 @@ type Client interface {
 	//  client.Do(ctx, client.B().Get().Key("k").Build()).ToString()
 	// All concurrent non-blocking commands will be pipelined automatically and have better throughput.
 	// Blocking commands will use another separated connection pool.
-	Do(ctx context.Context, cmd cmds.Completed) (resp proto.Result)
+	Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult)
 	// DoCache is similar to Do, but it uses opt-in client side caching and requires a client side TTL.
 	// The explicit client side TTL specifies the maximum TTL on the client side.
 	// If the key's TTL on the server is smaller than the client side TTL, the client side TTL will be capped.
@@ -76,7 +75,7 @@ type Client interface {
 	//  GET k
 	//  PTTL k
 	// The in-memory cache size is configured by ClientOption.CacheSizeEachConn
-	DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp proto.Result)
+	DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp RedisResult)
 	// Dedicated acquire a connection from the blocking connection pool, no one else can use the connection
 	// during Dedicated. The main usage of Dedicated is CAS operation, which is WATCH + MULTI + EXEC.
 	// However, one should try to avoid CAS operation but use Lua script instead, because occupying a connection
@@ -94,9 +93,9 @@ type DedicatedClient interface {
 	// B is inherited from the Client
 	B() *cmds.Builder
 	// Do is the same as Client
-	Do(ctx context.Context, cmd cmds.Completed) (resp proto.Result)
+	Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult)
 	// DoMulti takes multiple redis commands and sends them together, reducing RTT from the user code.
-	DoMulti(ctx context.Context, multi ...cmds.Completed) (resp []proto.Result)
+	DoMulti(ctx context.Context, multi ...cmds.Completed) (resp []RedisResult)
 }
 
 // NewClient uses ClientOption to initialize the Client for both cluster client and single client.
@@ -108,12 +107,6 @@ func NewClient(option ClientOption) (client Client, err error) {
 		client, err = newSingleClient(option, makeConn)
 	}
 	return client, err
-}
-
-// IsRedisNil is a handy method to check if error is redis nil response.
-// All redis nil response returns as an error.
-func IsRedisNil(err error) bool {
-	return proto.IsRedisNil(err)
 }
 
 func makeConn(dst string, opt ClientOption) conn {

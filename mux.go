@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/rueian/rueidis/internal/cmds"
-	"github.com/rueian/rueidis/internal/proto"
 )
 
 type connFn func(dst string, opt ClientOption) conn
@@ -127,7 +126,7 @@ func (m *mux) Dial() error { // no retry
 	return err
 }
 
-func (m *mux) Info() map[string]proto.Message {
+func (m *mux) Info() map[string]RedisMessage {
 	return m.pipe().Info()
 }
 
@@ -135,7 +134,7 @@ func (m *mux) Error() error {
 	return m.pipe().Error()
 }
 
-func (m *mux) Do(cmd cmds.Completed) (resp proto.Result) {
+func (m *mux) Do(cmd cmds.Completed) (resp RedisResult) {
 retry:
 	if cmd.IsBlock() {
 		resp = m.blocking(cmd)
@@ -148,7 +147,7 @@ retry:
 	return resp
 }
 
-func (m *mux) DoMulti(multi ...cmds.Completed) (resp []proto.Result) {
+func (m *mux) DoMulti(multi ...cmds.Completed) (resp []RedisResult) {
 	var block, write bool
 	for _, cmd := range multi {
 		block = block || cmd.IsBlock()
@@ -170,21 +169,21 @@ retry:
 	return resp
 }
 
-func (m *mux) blocking(cmd cmds.Completed) (resp proto.Result) {
+func (m *mux) blocking(cmd cmds.Completed) (resp RedisResult) {
 	wire := m.pool.Acquire()
 	resp = wire.Do(cmd)
 	m.pool.Store(wire)
 	return resp
 }
 
-func (m *mux) blockingMulti(cmd []cmds.Completed) (resp []proto.Result) {
+func (m *mux) blockingMulti(cmd []cmds.Completed) (resp []RedisResult) {
 	wire := m.pool.Acquire()
 	resp = wire.DoMulti(cmd...)
 	m.pool.Store(wire)
 	return resp
 }
 
-func (m *mux) pipeline(cmd cmds.Completed) (resp proto.Result) {
+func (m *mux) pipeline(cmd cmds.Completed) (resp RedisResult) {
 	wire := m.pipe()
 	if resp = wire.Do(cmd); isNetworkErr(resp.NonRedisError()) {
 		m.wire.CompareAndSwap(wire, m.dead)
@@ -192,7 +191,7 @@ func (m *mux) pipeline(cmd cmds.Completed) (resp proto.Result) {
 	return resp
 }
 
-func (m *mux) pipelineMulti(cmd []cmds.Completed) (resp []proto.Result) {
+func (m *mux) pipelineMulti(cmd []cmds.Completed) (resp []RedisResult) {
 	wire := m.pipe()
 	resp = wire.DoMulti(cmd...)
 	for _, r := range resp {
@@ -204,7 +203,7 @@ func (m *mux) pipelineMulti(cmd []cmds.Completed) (resp []proto.Result) {
 	return resp
 }
 
-func (m *mux) DoCache(cmd cmds.Cacheable, ttl time.Duration) proto.Result {
+func (m *mux) DoCache(cmd cmds.Cacheable, ttl time.Duration) RedisResult {
 retry:
 	wire := m.pipe()
 	resp := wire.DoCache(cmd, ttl)

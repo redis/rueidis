@@ -1,4 +1,4 @@
-package proto
+package rueidis
 
 import (
 	"bufio"
@@ -100,12 +100,12 @@ func TestReadNextMessage(t *testing.T) {
 		for k, g := range generators {
 			b.WriteByte(k)
 			b.WriteString(g(rand.Int63(), rand.Float64(), random(k == '+' || k == '-' || k == '(')))
-			msg, err := ReadNextMessage(r)
+			msg, err := readNextMessage(r)
 			if err != nil {
 				t.Fatalf("unexpected error %v", err)
 			}
-			if msg.Type != k {
-				t.Fatalf("unexpected msg type, expected %v, got %v", k, msg.Type)
+			if msg.typ != k {
+				t.Fatalf("unexpected msg type, expected %v, got %v", k, msg.typ)
 			}
 			// TODO test msg value
 		}
@@ -120,23 +120,23 @@ func TestWriteCmdAndRead(t *testing.T) {
 		for i := range cmd {
 			cmd[i] = random(false)
 		}
-		if err := WriteCmd(o, cmd); err != nil {
+		if err := writeCmd(o, cmd); err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
 		_ = o.Flush()
-		if m, err := ReadNextMessage(bufio.NewReader(b)); err != nil {
+		if m, err := readNextMessage(bufio.NewReader(b)); err != nil {
 			t.Fatalf("unexpected err %v", err)
-		} else if m.Type != '*' {
-			t.Fatalf("unexpected m.Type: expected *, got %v", m.Type)
-		} else if len(m.Values) != len(cmd) {
-			t.Fatalf("unexpected m.Values: expected %v, got %v", len(cmd), len(m.Values))
+		} else if m.typ != '*' {
+			t.Fatalf("unexpected m.typ: expected *, got %v", m.typ)
+		} else if len(m.values) != len(cmd) {
+			t.Fatalf("unexpected m.values: expected %v, got %v", len(cmd), len(m.values))
 		} else {
-			for i, v := range m.Values {
-				if v.Type != '$' {
-					t.Fatalf("unexpected v.Values: expected $, got %v", v.Type)
+			for i, v := range m.values {
+				if v.typ != '$' {
+					t.Fatalf("unexpected v.values: expected $, got %v", v.typ)
 				}
-				if v.String != cmd[i] {
-					t.Fatalf("unexpected v.String\n expected %v \n got %v", cmd[i], v.String)
+				if v.string != cmd[i] {
+					t.Fatalf("unexpected v.string\n expected %v \n got %v", cmd[i], v.string)
 				}
 			}
 		}

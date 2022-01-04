@@ -1,31 +1,36 @@
-package cache
+package rueidis
 
 import (
 	"container/list"
 	"sync"
 	"time"
 	"unsafe"
-
-	"github.com/rueian/rueidis/internal/proto"
 )
 
 const (
-	entrySize   = int(unsafe.Sizeof(Entry{})) + int(unsafe.Sizeof(&Entry{}))
+	entrySize   = int(unsafe.Sizeof(entry{})) + int(unsafe.Sizeof(&entry{}))
 	elementSize = int(unsafe.Sizeof(list.Element{})) + int(unsafe.Sizeof(&list.Element{}))
 	stringSSize = int(unsafe.Sizeof(""))
 
-	EntryMinSize = entrySize + elementSize + stringSSize*2 + proto.MessageStructSize
+	entryMinSize = entrySize + elementSize + stringSSize*2 + messageStructSize
 )
 
-type Entry struct {
-	val  proto.Message
+type cache interface {
+	GetOrPrepare(key, cmd string, ttl time.Duration) (v RedisMessage, entry *entry)
+	Update(key, cmd string, value RedisMessage, pttl int64)
+	Delete(keys []RedisMessage)
+	FreeAndClose(notice RedisMessage)
+}
+
+type entry struct {
+	val  RedisMessage
 	key  string
 	cmd  string
 	ch   chan struct{}
 	size int
 }
 
-func (e *Entry) Wait() proto.Message {
+func (e *entry) Wait() RedisMessage {
 	<-e.ch
 	return e.val
 }
@@ -35,7 +40,9 @@ type keyCache struct {
 	ttl   time.Time
 }
 
-type LRU struct {
+var _ cache = (*lru)(nil)
+
+type lru struct {
 	mu sync.Mutex
 
 	store map[string]*keyCache
@@ -45,15 +52,15 @@ type LRU struct {
 	max  int
 }
 
-func NewLRU(max int) *LRU {
-	return &LRU{
+func newLRU(max int) *lru {
+	return &lru{
 		max:   max,
 		store: make(map[string]*keyCache),
 		list:  list.New(),
 	}
 }
 
-func (c *LRU) GetOrPrepare(key, cmd string, ttl time.Duration) (v proto.Message, entry *Entry) {
+func (c *lru) GetOrPrepare(key, cmd string, ttl time.Duration) (v RedisMessage, e *entry) {
 	c.mu.Lock()
 	store, ok := c.store[key]
 	if !ok {
@@ -61,17 +68,17 @@ func (c *LRU) GetOrPrepare(key, cmd string, ttl time.Duration) (v proto.Message,
 		c.store[key] = store
 	}
 	if ele, ok := store.cache[cmd]; ok {
-		if entry = ele.Value.(*Entry); entry.val.Type == 0 || store.ttl.After(time.Now()) {
-			v = entry.val
+		if e = ele.Value.(*entry); e.val.typ == 0 || store.ttl.After(time.Now()) {
+			v = e.val
 			c.list.MoveToBack(ele)
 		} else {
-			entry = nil
+			e = nil
 			c.list.Remove(ele)
 			store.ttl = time.Now().Add(ttl)
 		}
 	}
-	if entry == nil && c.list != nil {
-		c.list.PushBack(&Entry{
+	if e == nil && c.list != nil {
+		c.list.PushBack(&entry{
 			key: key,
 			cmd: cmd,
 			ch:  make(chan struct{}, 1),
@@ -79,24 +86,24 @@ func (c *LRU) GetOrPrepare(key, cmd string, ttl time.Duration) (v proto.Message,
 		store.cache[cmd] = c.list.Back()
 	}
 	c.mu.Unlock()
-	return v, entry
+	return v, e
 }
 
-func (c *LRU) Update(key, cmd string, value proto.Message, pttl int64) {
+func (c *lru) Update(key, cmd string, value RedisMessage, pttl int64) {
 	var ch chan struct{}
 	c.mu.Lock()
 	if store, ok := c.store[key]; ok {
 		if ele, ok := store.cache[cmd]; ok {
-			if e := ele.Value.(*Entry); e.val.Type == 0 {
+			if e := ele.Value.(*entry); e.val.typ == 0 {
 				e.val = value
-				e.size = entrySize + elementSize + 2*(stringSSize+len(key)+stringSSize+len(cmd)) + value.ApproximateSize()
+				e.size = entrySize + elementSize + 2*(stringSSize+len(key)+stringSSize+len(cmd)) + value.approximateSize()
 				c.size += e.size
 				ch = e.ch
 			}
 
 			ele = c.list.Front()
 			for c.size > c.max && ele != nil {
-				if e := ele.Value.(*Entry); e.val.Type != 0 { // do not delete pending entries
+				if e := ele.Value.(*entry); e.val.typ != 0 { // do not delete pending entries
 					delete(c.store[e.key].cache, e.cmd)
 					c.list.Remove(ele)
 					c.size -= e.size
@@ -121,12 +128,12 @@ func (c *LRU) Update(key, cmd string, value proto.Message, pttl int64) {
 	}
 }
 
-func (c *LRU) Delete(keys []proto.Message) {
+func (c *lru) Delete(keys []RedisMessage) {
 	c.mu.Lock()
 	for _, k := range keys {
-		if store, ok := c.store[k.String]; ok {
+		if store, ok := c.store[k.string]; ok {
 			for cmd, ele := range store.cache {
-				if e := ele.Value.(*Entry); e.val.Type != 0 { // do not delete pending entries
+				if e := ele.Value.(*entry); e.val.typ != 0 { // do not delete pending entries
 					delete(store.cache, cmd)
 					c.list.Remove(ele)
 					c.size -= e.size
@@ -137,11 +144,11 @@ func (c *LRU) Delete(keys []proto.Message) {
 	c.mu.Unlock()
 }
 
-func (c *LRU) FreeAndClose(notice proto.Message) {
+func (c *lru) FreeAndClose(notice RedisMessage) {
 	c.mu.Lock()
 	for _, store := range c.store {
 		for _, ele := range store.cache {
-			if e := ele.Value.(*Entry); e.val.Type == 0 {
+			if e := ele.Value.(*entry); e.val.typ == 0 {
 				e.val = notice
 				close(e.ch)
 			}

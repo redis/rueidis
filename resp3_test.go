@@ -1,4 +1,4 @@
-package proto
+package rueidis
 
 import (
 	"bufio"
@@ -19,22 +19,22 @@ func init() {
 func TestReadI(t *testing.T) {
 	for i := 0; i < iteration; i++ {
 		int1 := rand.Int63() - rand.Int63()
-		int2, err := ReadI(source(strconv.FormatInt(int1, 10)))
+		int2, err := readI(source(strconv.FormatInt(int1, 10)))
 		if err != nil {
 			t.Fatalf("unexpected err: %v", err)
 		}
 		if int1 != int2 {
-			t.Fatalf("ReadI fail to read the int: \n expected: %v \n got: %v", int1, int2)
+			t.Fatalf("readI fail to read the int: \n expected: %v \n got: %v", int1, int2)
 		}
 	}
 }
 
 func TestWriteBReadB(t *testing.T) {
-	TWriterAndReader(t, WriteB, ReadB, false)
+	TWriterAndReader(t, writeB, readB, false)
 }
 
 func TestWriteSReadS(t *testing.T) {
-	TWriterAndReader(t, WriteS, ReadS, true)
+	TWriterAndReader(t, writeS, readS, true)
 }
 
 func TWriterAndReader(t *testing.T, writer func(*bufio.Writer, byte, string) error, reader func(*bufio.Reader) (string, error), trim bool) {

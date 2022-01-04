@@ -4,8 +4,6 @@ import (
 	"errors"
 	"sync/atomic"
 	"testing"
-
-	"github.com/rueian/rueidis/internal/mock"
 )
 
 func TestPool(t *testing.T) {
@@ -14,7 +12,7 @@ func TestPool(t *testing.T) {
 		return newPool(size, func() wire {
 			atomic.AddInt32(&count, 1)
 			closed := false
-			return &mock.Wire{
+			return &mockWire{
 				CloseFn: func() {
 					closed = true
 				},

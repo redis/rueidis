@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/rueian/rueidis/internal/cmds"
-	"github.com/rueian/rueidis/internal/proto"
 )
 
 func TestNewLuaScript(t *testing.T) {
@@ -28,15 +27,15 @@ func TestNewLuaScript(t *testing.T) {
 		BFn: func() *cmds.Builder {
 			return cmds.NewBuilder(cmds.NoSlot)
 		},
-		DoFn: func(ctx context.Context, cmd cmds.Completed) (resp proto.Result) {
+		DoFn: func(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
 			if reflect.DeepEqual(cmd.Commands(), []string{"EVALSHA", sha, "2", "1", "2", "3", "4"}) {
 				eval = true
-				return proto.NewResult(proto.Message{Type: '-', String: "NOSCRIPT"}, nil)
+				return newResult(RedisMessage{typ: '-', string: "NOSCRIPT"}, nil)
 			}
 			if eval && reflect.DeepEqual(cmd.Commands(), []string{"EVAL", body, "2", "1", "2", "3", "4"}) {
-				return proto.NewResult(proto.Message{Type: '_'}, nil)
+				return newResult(RedisMessage{typ: '_'}, nil)
 			}
-			return proto.NewResult(proto.Message{Type: '+', String: "unexpected"}, nil)
+			return newResult(RedisMessage{typ: '+', string: "unexpected"}, nil)
 		},
 	}
 
@@ -61,15 +60,15 @@ func TestNewLuaScriptReadOnly(t *testing.T) {
 		BFn: func() *cmds.Builder {
 			return cmds.NewBuilder(cmds.NoSlot)
 		},
-		DoFn: func(ctx context.Context, cmd cmds.Completed) (resp proto.Result) {
+		DoFn: func(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
 			if reflect.DeepEqual(cmd.Commands(), []string{"EVALSHA_RO", sha, "2", "1", "2", "3", "4"}) {
 				eval = true
-				return proto.NewResult(proto.Message{Type: '-', String: "NOSCRIPT"}, nil)
+				return newResult(RedisMessage{typ: '-', string: "NOSCRIPT"}, nil)
 			}
 			if eval && reflect.DeepEqual(cmd.Commands(), []string{"EVAL_RO", body, "2", "1", "2", "3", "4"}) {
-				return proto.NewResult(proto.Message{Type: '_'}, nil)
+				return newResult(RedisMessage{typ: '_'}, nil)
 			}
-			return proto.NewResult(proto.Message{Type: '+', String: "unexpected"}, nil)
+			return newResult(RedisMessage{typ: '+', string: "unexpected"}, nil)
 		},
 	}
 
@@ -82,8 +81,8 @@ func TestNewLuaScriptReadOnly(t *testing.T) {
 
 type client struct {
 	BFn         func() *cmds.Builder
-	DoFn        func(ctx context.Context, cmd cmds.Completed) (resp proto.Result)
-	DoCacheFn   func(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp proto.Result)
+	DoFn        func(ctx context.Context, cmd cmds.Completed) (resp RedisResult)
+	DoCacheFn   func(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp RedisResult)
 	DedicatedFn func(fn func(DedicatedClient) error) (err error)
 	CloseFn     func()
 }
@@ -95,18 +94,18 @@ func (c *client) B() *cmds.Builder {
 	return nil
 }
 
-func (c *client) Do(ctx context.Context, cmd cmds.Completed) (resp proto.Result) {
+func (c *client) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
 	if c.DoFn != nil {
 		return c.DoFn(ctx, cmd)
 	}
-	return proto.Result{}
+	return RedisResult{}
 }
 
-func (c *client) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp proto.Result) {
+func (c *client) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp RedisResult) {
 	if c.DoCacheFn != nil {
 		return c.DoCacheFn(ctx, cmd, ttl)
 	}
-	return proto.Result{}
+	return RedisResult{}
 }
 
 func (c *client) Dedicated(fn func(DedicatedClient) error) (err error) {
