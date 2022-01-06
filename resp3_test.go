@@ -65,12 +65,16 @@ func source(str string) *bufio.Reader {
 }
 
 func random(trim bool) string {
+retry:
 	bs := make([]byte, randN(5000))
 	if _, err := rand.Read(bs); err != nil {
 		panic(err)
 	}
 	if trim {
-		return strings.NewReplacer("\r", "", "\n", "").Replace(string(bs))
+		if v := strings.NewReplacer("\r", "", "\n", "").Replace(string(bs)); len(v) != 0 {
+			return v
+		}
+		goto retry
 	}
 	return string(bs)
 }
