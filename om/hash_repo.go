@@ -9,13 +9,19 @@ import (
 	"time"
 
 	"github.com/rueian/rueidis"
+	"github.com/rueian/rueidis/internal/cmds"
 )
+
+type FtCreateSchema = cmds.FtCreateSchema
+type FtSearchIndex = cmds.FtSearchIndex
+type Completed = cmds.Completed
 
 var ErrVersionMismatch = errors.New("object version mismatched, please retry")
 
 func NewHashRepository(prefix string, schema interface{}, client rueidis.Client) *HashRepository {
 	repo := &HashRepository{
 		prefix: prefix,
+		idx:    "idx:" + prefix,
 		typ:    reflect.TypeOf(schema),
 		client: client,
 	}
@@ -27,6 +33,7 @@ func NewHashRepository(prefix string, schema interface{}, client rueidis.Client)
 
 type HashRepository struct {
 	prefix  string
+	idx     string
 	typ     reflect.Type
 	factory *hashConvFactory
 	client  rueidis.Client
@@ -41,22 +48,20 @@ func (r *HashRepository) key(id string) (key string) {
 	return sb.String()
 }
 
-func (r *HashRepository) conv(v reflect.Value) (entity interface{}, conv HashConverter) {
+func (r *HashRepository) converter(v reflect.Value) (conv HashConverter) {
 	if r.factory != nil {
-		return v.Interface(), r.factory.NewConverter(v)
+		return r.factory.NewConverter(v)
 	}
-	entity = v.Interface()
-	return entity, entity.(HashConverter)
+	return v.Interface().(HashConverter)
 }
 
-func (r *HashRepository) Make() (entity interface{}) {
+func (r *HashRepository) NewEntity() (entity interface{}) {
 	v := reflect.New(r.typ)
-	entity, conv := r.conv(v)
-	_ = conv.FromHash(id(), nil)
-	return entity
+	_ = r.converter(v).FromHash(id(), nil)
+	return v.Interface()
 }
 
-func (r *HashRepository) fromHash(id string, record map[string]rueidis.RedisMessage) (v interface{}, err error) {
+func (r *HashRepository) fromHash(id string, record map[string]rueidis.RedisMessage) (v reflect.Value, err error) {
 	fields := make(map[string]string, len(record))
 	for k, v := range record {
 		if s, err := v.ToString(); err == nil {
@@ -64,9 +69,25 @@ func (r *HashRepository) fromHash(id string, record map[string]rueidis.RedisMess
 		}
 	}
 
-	v, conv := r.conv(reflect.New(r.typ))
-	if err := conv.FromHash(id, fields); err != nil {
-		return nil, err
+	v = reflect.New(r.typ)
+	if err := r.converter(v).FromHash(id, fields); err != nil {
+		return reflect.Value{}, err
+	}
+	return v, nil
+}
+
+func (r *HashRepository) fromArray(id string, record []rueidis.RedisMessage) (v reflect.Value, err error) {
+	fields := make(map[string]string, len(record)/2)
+	for i := 0; i < len(record); i += 2 {
+		k, _ := record[i].ToString()
+		if s, err := record[i+1].ToString(); err == nil {
+			fields[k] = s
+		}
+	}
+
+	v = reflect.New(r.typ)
+	if err := r.converter(v).FromHash(id, fields); err != nil {
+		return reflect.Value{}, err
 	}
 	return v, nil
 }
@@ -76,7 +97,11 @@ func (r *HashRepository) Fetch(ctx context.Context, id string) (v interface{}, e
 	if err != nil {
 		return nil, err
 	}
-	return r.fromHash(id, record)
+	val, err := r.fromHash(id, record)
+	if err != nil {
+		return nil, err
+	}
+	return val.Interface(), nil
 }
 
 func (r *HashRepository) FetchCache(ctx context.Context, id string, ttl time.Duration) (v interface{}, err error) {
@@ -84,7 +109,11 @@ func (r *HashRepository) FetchCache(ctx context.Context, id string, ttl time.Dur
 	if err != nil {
 		return nil, err
 	}
-	return r.fromHash(id, record)
+	val, err := r.fromHash(id, record)
+	if err != nil {
+		return nil, err
+	}
+	return val.Interface(), nil
 }
 
 func (r *HashRepository) Save(ctx context.Context, entity interface{}) (err error) {
@@ -124,6 +153,36 @@ func (r *HashRepository) Save(ctx context.Context, entity interface{}) (err erro
 
 func (r *HashRepository) Remove(ctx context.Context, id string) error {
 	return r.client.Do(ctx, r.client.B().Del().Key(r.key(id)).Build()).Error()
+}
+
+func (r *HashRepository) CreateIndex(ctx context.Context, cmdFn func(schema FtCreateSchema) Completed) error {
+	return r.client.Do(ctx, cmdFn(r.client.B().FtCreate().Index(r.idx).OnHash().Prefix(1).Prefix(r.prefix+":").Schema())).Error()
+}
+
+func (r *HashRepository) DropIndex(ctx context.Context) error {
+	return r.client.Do(ctx, r.client.B().FtDropindex().Index(r.idx).Build()).Error()
+}
+
+func (r *HashRepository) Search(ctx context.Context, cmdFn func(search FtSearchIndex) Completed) (int64, interface{}, error) {
+	resp, err := r.client.Do(ctx, cmdFn(r.client.B().FtSearch().Index(r.idx))).ToArray()
+	if err != nil {
+		return 0, nil, err
+	}
+	prefix := r.prefix + ":"
+
+	n, _ := resp[0].ToInt64()
+	s := reflect.MakeSlice(reflect.SliceOf(reflect.PtrTo(r.typ)), 0, len(resp[1:])/2)
+	for i := 1; i < len(resp); i += 2 {
+		id, _ := resp[i].ToString()
+		kv, _ := resp[i+1].ToArray()
+
+		v, err := r.fromArray(strings.TrimPrefix(id, prefix), kv)
+		if err != nil {
+			return 0, nil, err
+		}
+		s = reflect.Append(s, v)
+	}
+	return n, s.Interface(), nil
 }
 
 var saveScript = rueidis.NewLuaScript(fmt.Sprintf(`

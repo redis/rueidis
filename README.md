@@ -286,7 +286,7 @@ func main() {
     // create the hash repo.
     repo := om.NewHashRepository("my_prefix", Example{}, c)
 
-    exp := repo.Make().(*Example)
+    exp := repo.NewEntity().(*Example)
     exp.MyArr = []string{"1", "2"}
     fmt.Println(exp.ID) // output 01FNH4FCXV9JTB9WTVFAAKGSYB
     repo.Save(ctx, exp) // success
@@ -300,6 +300,31 @@ func main() {
     repo.Save(ctx, exp2) // the save will fail with ErrVersionMismatch.
 }
 
+```
+
+### Object Mapping + RediSearch
+
+If you have RediSearch, you can create and search the repository against the index.
+
+```golang
+
+repo.CreateIndex(ctx, func(schema om.FtCreateSchema) om.Completed {
+    return schema.FieldName("f1").Text().Build() // you have full index capability by building the command from om.FtCreateSchema
+})
+
+exp := repo.NewEntity().(*Example)
+exp.MyStr = "foo" // Note that MyStr is mapped to "f1" in redis by the `redis:"f1"` tag
+repo.Save(ctx, exp)
+
+n, records, _ := repo.Search(ctx, func(search om.FtSearchIndex) om.Completed {
+    return search.Query("foo").Build() // you have full query capability by building the command from om.FtSearchIndex
+})
+
+fmt.Println("total", n) // n is total number of results matched in redis, which is >= len(records)
+
+for _, v := range records.([]*Example) {
+    fmt.Println(v.MyStr) // print "foo"
+}
 ```
 
 ## Not Yet Implement
