@@ -259,7 +259,7 @@ c.DoCache(ctx, c.B().Hmget().Key("myhash").Field("1", "2").Cache(), time.Second*
 
 ## Object Mapping
 
-The `NewHashRepository` creates an OM repository backed by redis hash.
+The `NewHashRepository` and `NewJSONRepository` creates an OM repository backed by redis hash or RedisJSON.
 
 ```golang
 package main
@@ -274,27 +274,26 @@ import (
 )
 
 type Example struct {
-    ID     string   `redis:"-,pk"`     // the pk option indicate that this field is the ULID key
-    Ver    int64    `redis:"_v"`       // the _v field is required for optimistic locking to prevent the lost update
-    MyStr  string   `redis:"f1"`
-    MyArr  []string `redis:"f2,sep=|"` // the sep=<ooo> option is required for converting the slice to/from a string
+    Key string `json:"key" redis:",key"` // the redis:",key" is required to indicate which field is the ULID key
+    Ver int64  `json:"ver" redis:",ver"` // the redis:",ver" is required to do optimistic locking to prevent lost update
+    Str string `json:"myStr"`            // both NewHashRepository and NewJSONRepository use json tag as field name
 }
 
 func main() {
     ctx := context.Background()
     c, _ := rueidis.NewClient(rueidis.ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
-    // create the hash repo.
+    // create the repo with NewHashRepository or NewJSONRepository
     repo := om.NewHashRepository("my_prefix", Example{}, c)
 
     exp := repo.NewEntity().(*Example)
-    exp.MyArr = []string{"1", "2"}
-    fmt.Println(exp.ID) // output 01FNH4FCXV9JTB9WTVFAAKGSYB
+    exp.Str = "mystr"
+    fmt.Println(exp.Key) // output 01FNH4FCXV9JTB9WTVFAAKGSYB
     repo.Save(ctx, exp) // success
 
     // lookup "my_prefix:01FNH4FCXV9JTB9WTVFAAKGSYB" through client side caching
-    cache, _ := repo.FetchCache(ctx, exp.ID, time.Second*5)
+    cache, _ := repo.FetchCache(ctx, exp.Key, time.Second*5)
     exp2 := cache.(*Example)
-    fmt.Println(exp2.MyArr) // output [1 2], which equals to exp.MyArray
+    fmt.Println(exp2.Str) // output "mystr", which equals to exp.Str
 
     exp2.Ver = 0         // if someone changes the version during your GET then SET operation,
     repo.Save(ctx, exp2) // the save will fail with ErrVersionMismatch.
@@ -308,12 +307,20 @@ If you have RediSearch, you can create and search the repository against the ind
 
 ```golang
 
-repo.CreateIndex(ctx, func(schema om.FtCreateSchema) om.Completed {
-    return schema.FieldName("f1").Text().Build() // you have full index capability by building the command from om.FtCreateSchema
-})
+if _, ok := repo.(*om.HashRepository); ok {
+    repo.CreateIndex(ctx, func(schema om.FtCreateSchema) om.Completed {
+        return schema.FieldName("myStr").Text().Build() // Note that the Example.Str field is mapped to myStr on redis by its json tag
+    })
+}
+
+if _, ok := repo.(*om.JSONRepository); ok {
+    repo.CreateIndex(ctx, func(schema om.FtCreateSchema) om.Completed {
+        return schema.FieldName("$.myStr").Text().Build() // the field name of json index should be a json path syntax
+    })
+}
 
 exp := repo.NewEntity().(*Example)
-exp.MyStr = "foo" // Note that MyStr is mapped to "f1" in redis by the `redis:"f1"` tag
+exp.Str = "foo"
 repo.Save(ctx, exp)
 
 n, records, _ := repo.Search(ctx, func(search om.FtSearchIndex) om.Completed {
@@ -323,9 +330,19 @@ n, records, _ := repo.Search(ctx, func(search om.FtSearchIndex) om.Completed {
 fmt.Println("total", n) // n is total number of results matched in redis, which is >= len(records)
 
 for _, v := range records.([]*Example) {
-    fmt.Println(v.MyStr) // print "foo"
+    fmt.Println(v.Str) // print "foo"
 }
 ```
+
+### Object Mapping Limitation
+
+`NewHashRepository` only accepts these field types:
+* string, *string
+* int64, *int64
+* bool, *bool
+* []byte
+
+Field projection by RediSearch is not supported.
 
 ## Not Yet Implement
 
