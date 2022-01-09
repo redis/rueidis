@@ -11,5 +11,5 @@ jobs:
       - run: chmod +x ./cc-test-reporter
       - run: go get -v -t -d ./...
       - run: ./cc-test-reporter before-build
-      - run: go test -coverprofile=./c.out -v -race ./...
+      - run: ./dockertest.sh
       - run: ./cc-test-reporter after-build -p $(go list -m) --exit-code $?
