@@ -3,6 +3,7 @@ package om
 import (
 	"context"
 	"errors"
+	"github.com/rueian/rueidis"
 	"time"
 
 	"github.com/rueian/rueidis/internal/cmds"
@@ -14,7 +15,14 @@ type (
 	Completed      = cmds.Completed
 )
 
-var ErrVersionMismatch = errors.New("object version mismatched, please retry")
+var (
+	ErrVersionMismatch = errors.New("object version mismatched, please retry")
+	ErrEmptyHashRecord = errors.New("hash object not found")
+)
+
+func IsRecordNotFound(err error) bool {
+	return rueidis.IsRedisNil(err) || err == ErrEmptyHashRecord
+}
 
 type Repository interface {
 	NewEntity() (entity interface{})

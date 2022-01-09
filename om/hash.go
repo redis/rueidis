@@ -125,6 +125,9 @@ func (r *HashRepository) Search(ctx context.Context, cmdFn func(search FtSearchI
 }
 
 func (r *HashRepository) fromHash(record map[string]rueidis.RedisMessage) (v reflect.Value, err error) {
+	if len(record) == 0 {
+		return reflect.Value{}, ErrEmptyHashRecord
+	}
 	fields := make(map[string]string, len(record))
 	for k, v := range record {
 		if s, err := v.ToString(); err == nil {
