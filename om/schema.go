@@ -9,7 +9,7 @@ import (
 	"github.com/rueian/rueidis/internal/cmds"
 )
 
-const IgnoreField = "-"
+const ignoreField = "-"
 
 type FtCreateSchema = cmds.FtCreateSchema
 type FtSearchIndex = cmds.FtSearchIndex
@@ -44,7 +44,7 @@ func newSchema(t reflect.Type) schema {
 			continue
 		}
 		field := parse(f)
-		if field.name == IgnoreField {
+		if field.name == ignoreField {
 			continue
 		}
 		field.idx = i
