@@ -70,15 +70,17 @@ func (r *ring) PutMulti(m []cmds.Completed) chan RedisResult {
 }
 
 // NextWriteCmd should be only called by one dedicated thread
-func (r *ring) NextWriteCmd() (cmds.Completed, []cmds.Completed, chan RedisResult) {
+func (r *ring) NextWriteCmd() (one cmds.Completed, multi []cmds.Completed, ch chan RedisResult) {
 	r.read1++
 	p := r.read1 & r.mask
 	n := &r.store[p]
-	if !atomic.CompareAndSwapUint32(&n.mark, 2, 3) {
-		r.read1--
-		return cmds.Completed{}, nil, nil
+	if atomic.LoadUint32(&n.mark) == 2 {
+		one, multi, ch = n.one, n.multi, n.ch
+		atomic.StoreUint32(&n.mark, 3)
+		return
 	}
-	return n.one, n.multi, n.ch
+	r.read1--
+	return cmds.Completed{}, nil, nil
 }
 
 // NextResultCh should be only called by one dedicated thread
@@ -86,8 +88,9 @@ func (r *ring) NextResultCh() (one cmds.Completed, multi []cmds.Completed, ch ch
 	r.read2++
 	p := r.read2 & r.mask
 	n := &r.store[p]
-	one, multi, ch = n.one, n.multi, n.ch
-	if atomic.CompareAndSwapUint32(&n.mark, 3, 0) {
+	if atomic.LoadUint32(&n.mark) == 3 {
+		one, multi, ch = n.one, n.multi, n.ch
+		atomic.StoreUint32(&n.mark, 0)
 		return
 	}
 	r.read2--
