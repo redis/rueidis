@@ -8,32 +8,28 @@ import (
 )
 
 func newHashConvFactory(t reflect.Type, schema schema) *hashConvFactory {
-	factory := &hashConvFactory{converters: make(map[string]conv, len(schema.fields))}
+	factory := &hashConvFactory{fields: make(map[string]fieldConv, len(schema.fields))}
 	for name, f := range schema.fields {
-		var converter converter
-		var ok bool
-
+		conv, ok := converters.val[f.typ.Kind()]
 		switch f.typ.Kind() {
 		case reflect.Ptr:
-			converter, ok = converters.ptr[f.typ.Elem().Kind()]
+			conv, ok = converters.ptr[f.typ.Elem().Kind()]
 		case reflect.Slice:
-			converter, ok = converters.slice[f.typ.Elem().Kind()]
-		default:
-			converter, ok = converters.val[f.typ.Kind()]
+			conv, ok = converters.slice[f.typ.Elem().Kind()]
 		}
 		if !ok {
 			panic(fmt.Sprintf("schema %q should not contain unsupported field type %s.", t, f.typ.Kind()))
 		}
-		factory.converters[name] = conv{conv: converter, idx: f.idx}
+		factory.fields[name] = fieldConv{conv: conv, idx: f.idx}
 	}
 	return factory
 }
 
 type hashConvFactory struct {
-	converters map[string]conv
+	fields map[string]fieldConv
 }
 
-type conv struct {
+type fieldConv struct {
 	idx  int
 	conv converter
 }
@@ -48,27 +44,27 @@ type hashConv struct {
 }
 
 func (r hashConv) ToHash() (fields map[string]string) {
-	fields = make(map[string]string, len(r.factory.converters))
-	for f, converter := range r.factory.converters {
-		ref := r.entity.Field(converter.idx)
-		if v, ok := converter.conv.ValueToString(ref); ok {
-			fields[f] = v
+	fields = make(map[string]string, len(r.factory.fields))
+	for k, f := range r.factory.fields {
+		ref := r.entity.Field(f.idx)
+		if v, ok := f.conv.ValueToString(ref); ok {
+			fields[k] = v
 		}
 	}
 	return fields
 }
 
 func (r hashConv) FromHash(fields map[string]string) error {
-	for f, field := range r.factory.converters {
-		v, ok := fields[f]
+	for k, f := range r.factory.fields {
+		v, ok := fields[k]
 		if !ok {
 			continue
 		}
-		val, err := field.conv.StringToValue(v)
+		val, err := f.conv.StringToValue(v)
 		if err != nil {
 			return err
 		}
-		r.entity.Field(field.idx).Set(val)
+		r.entity.Field(f.idx).Set(val)
 	}
 	return nil
 }

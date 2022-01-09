@@ -1,34 +1,25 @@
 package om
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 	"strings"
-
-	"github.com/rueian/rueidis/internal/cmds"
 )
 
 const ignoreField = "-"
 
-type FtCreateSchema = cmds.FtCreateSchema
-type FtSearchIndex = cmds.FtSearchIndex
-type Completed = cmds.Completed
-
-var ErrVersionMismatch = errors.New("object version mismatched, please retry")
-
 type schema struct {
-	keyField *field
-	verField *field
-	fields   map[string]*field
+	key    *field
+	ver    *field
+	fields map[string]*field
 }
 
 type field struct {
-	name       string
-	idx        int
-	typ        reflect.Type
-	isKeyField bool
-	isVerField bool
+	name  string
+	idx   int
+	typ   reflect.Type
+	isKey bool
+	isVer bool
 }
 
 func newSchema(t reflect.Type) schema {
@@ -36,42 +27,42 @@ func newSchema(t reflect.Type) schema {
 		panic(fmt.Sprintf("schema %q should be a struct", t))
 	}
 
-	schema := schema{fields: make(map[string]*field, t.NumField())}
+	s := schema{fields: make(map[string]*field, t.NumField())}
 
 	for i := 0; i < t.NumField(); i++ {
-		f := t.Field(i)
-		if !f.IsExported() {
+		sf := t.Field(i)
+		if !sf.IsExported() {
 			continue
 		}
-		field := parse(f)
-		if field.name == ignoreField {
+		f := parse(sf)
+		if f.name == ignoreField {
 			continue
 		}
-		field.idx = i
-		schema.fields[field.name] = &field
+		f.idx = i
+		s.fields[f.name] = &f
 
-		if field.isKeyField {
-			if f.Type.Kind() != reflect.String {
+		if f.isKey {
+			if sf.Type.Kind() != reflect.String {
 				panic(fmt.Sprintf("field with tag `redis:\",key\"` in schema %q should be a string", t))
 			}
-			schema.keyField = &field
+			s.key = &f
 		}
-		if field.isVerField {
-			if f.Type.Kind() != reflect.Int64 {
+		if f.isVer {
+			if sf.Type.Kind() != reflect.Int64 {
 				panic(fmt.Sprintf("field with tag `redis:\",ver\"` in schema %q should be a int64", t))
 			}
-			schema.verField = &field
+			s.ver = &f
 		}
 	}
 
-	if schema.keyField == nil {
+	if s.key == nil {
 		panic(fmt.Sprintf("schema %q should have one field with `redis:\",key\"` tag", t))
 	}
-	if schema.verField == nil {
+	if s.ver == nil {
 		panic(fmt.Sprintf("schema %q should have one field with `redis:\",ver\"` tag", t))
 	}
 
-	return schema
+	return s
 }
 
 func parse(f reflect.StructField) (field field) {
@@ -84,8 +75,8 @@ func parse(f reflect.StructField) (field field) {
 	}
 
 	v, _ = f.Tag.Lookup("redis")
-	field.isKeyField = strings.Contains(v, ",key")
-	field.isVerField = strings.Contains(v, ",ver")
+	field.isKey = strings.Contains(v, ",key")
+	field.isVer = strings.Contains(v, ",ver")
 	field.typ = f.Type
 	return field
 }

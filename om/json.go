@@ -12,7 +12,7 @@ import (
 	"github.com/rueian/rueidis"
 )
 
-func NewJSONRepository(prefix string, schema interface{}, client rueidis.Client) *JSONRepository {
+func NewJSONRepository(prefix string, schema interface{}, client rueidis.Client) Repository {
 	repo := &JSONRepository{
 		prefix: prefix,
 		idx:    "jsonidx:" + prefix,
@@ -22,6 +22,8 @@ func NewJSONRepository(prefix string, schema interface{}, client rueidis.Client)
 	repo.schema = newSchema(repo.typ)
 	return repo
 }
+
+var _ Repository = (*JSONRepository)(nil)
 
 type JSONRepository struct {
 	prefix string
@@ -33,7 +35,7 @@ type JSONRepository struct {
 
 func (r *JSONRepository) NewEntity() (entity interface{}) {
 	v := reflect.New(r.typ)
-	v.Elem().Field(r.schema.keyField.idx).Set(reflect.ValueOf(id()))
+	v.Elem().Field(r.schema.key.idx).Set(reflect.ValueOf(id()))
 	return v.Interface()
 }
 
@@ -70,8 +72,8 @@ func (r *JSONRepository) Save(ctx context.Context, entity interface{}) (err erro
 		panic(fmt.Sprintf("input entity should be a pointer to %v", r.typ))
 	}
 
-	keyField := val.Field(r.schema.keyField.idx)
-	verField := val.Field(r.schema.verField.idx)
+	keyField := val.Field(r.schema.key.idx)
+	verField := val.Field(r.schema.ver.idx)
 
 	sb := strings.Builder{}
 	if err = json.NewEncoder(&sb).Encode(entity); err != nil {
@@ -79,12 +81,13 @@ func (r *JSONRepository) Save(ctx context.Context, entity interface{}) (err erro
 	}
 
 	str, err := jsonSaveScript.Exec(ctx, r.client, []string{key(r.prefix, keyField.String())}, []string{
-		r.schema.verField.name,
-		strconv.FormatInt(verField.Int(), 10),
-		sb.String(),
+		r.schema.ver.name, strconv.FormatInt(verField.Int(), 10), sb.String(),
 	}).ToString()
 	if rueidis.IsRedisNil(err) {
 		return ErrVersionMismatch
+	}
+	if err != nil {
+		return err
 	}
 	ver, _ := strconv.ParseInt(str, 10, 64)
 	verField.SetInt(ver)

@@ -10,7 +10,7 @@ import (
 	"github.com/rueian/rueidis"
 )
 
-func NewHashRepository(prefix string, schema interface{}, client rueidis.Client) *HashRepository {
+func NewHashRepository(prefix string, schema interface{}, client rueidis.Client) Repository {
 	repo := &HashRepository{
 		prefix: prefix,
 		idx:    "hashidx:" + prefix,
@@ -21,6 +21,8 @@ func NewHashRepository(prefix string, schema interface{}, client rueidis.Client)
 	repo.factory = newHashConvFactory(repo.typ, repo.schema)
 	return repo
 }
+
+var _ Repository = (*HashRepository)(nil)
 
 type HashRepository struct {
 	prefix  string
@@ -33,7 +35,7 @@ type HashRepository struct {
 
 func (r *HashRepository) NewEntity() (entity interface{}) {
 	v := reflect.New(r.typ)
-	v.Elem().Field(r.schema.keyField.idx).Set(reflect.ValueOf(id()))
+	v.Elem().Field(r.schema.key.idx).Set(reflect.ValueOf(id()))
 	return v.Interface()
 }
 
@@ -69,12 +71,12 @@ func (r *HashRepository) Save(ctx context.Context, entity interface{}) (err erro
 
 	fields := r.factory.NewConverter(val).ToHash()
 
-	keyVal := fields[r.schema.keyField.name]
-	verVal := fields[r.schema.verField.name]
+	keyVal := fields[r.schema.key.name]
+	verVal := fields[r.schema.ver.name]
 
 	args := make([]string, 0, len(fields)*2)
-	args = append(args, r.schema.verField.name, verVal) // keep the ver field be the first pair for the hashSaveScript
-	delete(fields, r.schema.verField.name)
+	args = append(args, r.schema.ver.name, verVal) // keep the ver field be the first pair for the hashSaveScript
+	delete(fields, r.schema.ver.name)
 	for k, v := range fields {
 		args = append(args, k, v)
 	}
@@ -83,8 +85,11 @@ func (r *HashRepository) Save(ctx context.Context, entity interface{}) (err erro
 	if rueidis.IsRedisNil(err) {
 		return ErrVersionMismatch
 	}
+	if err != nil {
+		return err
+	}
 	ver, _ := strconv.ParseInt(str, 10, 64)
-	val.Field(r.schema.verField.idx).SetInt(ver)
+	val.Field(r.schema.ver.idx).SetInt(ver)
 	return nil
 }
 
