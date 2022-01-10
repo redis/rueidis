@@ -130,6 +130,14 @@ func (r RedisResult) ToString() (string, error) {
 	return r.val.ToString()
 }
 
+// AsInt64 delegates to RedisMessage.AsInt64
+func (r RedisResult) AsInt64() (int64, error) {
+	if err := r.Error(); err != nil {
+		return 0, err
+	}
+	return r.val.AsInt64()
+}
+
 // ToArray delegates to RedisMessage.ToArray
 func (r RedisResult) ToArray() ([]RedisMessage, error) {
 	if err := r.Error(); err != nil {
@@ -177,6 +185,15 @@ func (m *RedisMessage) ToString() (val string, err error) {
 		panic(fmt.Sprintf("redis message type %c is not a string", m.typ))
 	}
 	return m.string, m.Error()
+}
+
+// AsInt64 check if message is a redis string response, and parse it as int64
+func (m *RedisMessage) AsInt64() (val int64, err error) {
+	v, err := m.ToString()
+	if err != nil {
+		return 0, err
+	}
+	return strconv.ParseInt(v, 10, 64)
 }
 
 // ToInt64 check if message is a redis int response, and return it
