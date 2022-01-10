@@ -91,12 +91,6 @@ func TestFallBackSingleClient(t *testing.T) {
 	}
 }
 
-func TestIsRedisNil(t *testing.T) {
-	if !IsRedisNil(&RedisError{typ: '_'}) {
-		t.Fatal("IsRedisNil fail")
-	}
-}
-
 func ExampleIsRedisNil() {
 	client, err := NewClient(ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
 	if err != nil {
