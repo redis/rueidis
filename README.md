@@ -15,6 +15,7 @@ A Fast Golang Redis RESP3 client that does auto pipelining and supports client s
 * redis cluster, pub/sub, streams, TLS, RedisJSON, RedisBloom, RediSearch, RedisGraph, RedisTimeseries
 * IDE friendly redis command builder
 * Hash/RedisJSON Object Mapping with client side caching and optimistic locking
+* OpenTelemetry tracing
 
 ## Requirement
 
@@ -343,6 +344,25 @@ for _, v := range records.([]*Example) {
 * []byte
 
 Field projection by RediSearch is not supported.
+
+## OpenTelemetry Tracing
+
+Use `rueidisotel.WithClient` to create a client with OpenTelemetry Tracing enabled.
+
+```golang
+package main
+
+import (
+    "github.com/rueian/rueidis"
+    "github.com/rueian/rueidis/rueidisotel"
+)
+
+func main() {
+    client, _ := rueidis.NewClient(rueidis.ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
+    client = rueidisotel.WithClient(client)
+    defer client.Close()
+}
+```
 
 ## Not Yet Implement
 
