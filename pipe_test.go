@@ -151,7 +151,7 @@ func setupWithDisconnectedFn(t *testing.T, option ClientOption, onDisconnected f
 }
 
 func ExpectOK(t *testing.T, result RedisResult) {
-	val, err := result.Value()
+	val, err := result.ToMessage()
 	if err != nil {
 		t.Errorf("unexpected error result: %v", err)
 	}
@@ -306,7 +306,7 @@ func TestResponseSequenceWithPushMessageInjected(t *testing.T) {
 		go func(i int) {
 			defer wg.Done()
 			v := strconv.Itoa(i)
-			if val, _ := p.Do(cmds.NewCompleted([]string{"GET", v})).Value(); val.string != v {
+			if val, _ := p.Do(cmds.NewCompleted([]string{"GET", v})).ToMessage(); val.string != v {
 				t.Errorf("out of order response, expected %v, got %v", v, val.string)
 			}
 		}(i)
@@ -338,7 +338,7 @@ func TestClientSideCaching(t *testing.T) {
 	for i := 0; i < 5000; i++ {
 		go func() {
 			defer wg.Done()
-			if v, _ := p.DoCache(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).Value(); v.string != "1" {
+			if v, _ := p.DoCache(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage(); v.string != "1" {
 				t.Errorf("unexpected cached result, expected %v, got %v", "1", v.string)
 			}
 		}()
@@ -363,7 +363,7 @@ func TestClientSideCaching(t *testing.T) {
 	}()
 
 	for {
-		if v, _ := p.DoCache(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), time.Second).Value(); v.string != "2" {
+		if v, _ := p.DoCache(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), time.Second).ToMessage(); v.string != "2" {
 			t.Logf("waiting for invalidating")
 			continue
 		}
@@ -393,7 +393,7 @@ func TestPubSub(t *testing.T) {
 
 		for _, c := range commands {
 			p.Do(c)
-			if v, _ := p.Do(builder.Get().Key("k").Build()).Value(); v.string != "v" {
+			if v, _ := p.Do(builder.Get().Key("k").Build()).ToMessage(); v.string != "v" {
 				t.Fatalf("no-reply commands should not affect nornal commands")
 			}
 		}
@@ -418,7 +418,7 @@ func TestPubSub(t *testing.T) {
 		}()
 
 		p.DoMulti(commands...)
-		if v, _ := p.Do(builder.Get().Key("k").Build()).Value(); v.string != "v" {
+		if v, _ := p.Do(builder.Get().Key("k").Build()).ToMessage(); v.string != "v" {
 			t.Fatalf("no-reply commands should not affect nornal commands")
 		}
 	})
@@ -644,7 +644,7 @@ func TestCloseAndWaitPendingCMDs(t *testing.T) {
 		go func() {
 			defer wg.Done()
 
-			if v, _ := p.Do(cmds.NewCompleted([]string{"GET", "a"})).Value(); v.string != "b" {
+			if v, _ := p.Do(cmds.NewCompleted([]string{"GET", "a"})).ToMessage(); v.string != "b" {
 				t.Errorf("unexpected GET result %v", v.string)
 			}
 		}()

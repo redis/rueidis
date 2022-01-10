@@ -44,7 +44,7 @@ func TestNewClusterClient(t *testing.T) {
 		if err != nil {
 			return
 		}
-		slots, _ := slotsResp.Value()
+		slots, _ := slotsResp.ToMessage()
 		mock.Expect("CLUSTER", "SLOTS").Reply(slots)
 		mock.Expect("QUIT").ReplyString("OK")
 	}()

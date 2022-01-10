@@ -93,8 +93,8 @@ func (r RedisResult) Error() error {
 	return nil
 }
 
-// Value retrieves the RedisMessage
-func (r RedisResult) Value() (RedisMessage, error) {
+// ToMessage retrieves the RedisMessage
+func (r RedisResult) ToMessage() (RedisMessage, error) {
 	return r.val, r.Error()
 }
 

@@ -89,7 +89,7 @@ func (c *clusterClient) _refresh() (err error) {
 retry:
 	c.mu.RLock()
 	for addr, cc := range c.conns {
-		if reply, err = cc.Do(cmds.SlotCmd).Value(); err != nil {
+		if reply, err = cc.Do(cmds.SlotCmd).ToMessage(); err != nil {
 			dead = append(dead, addr)
 		} else {
 			break
