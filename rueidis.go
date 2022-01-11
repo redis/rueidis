@@ -65,6 +65,7 @@ type Client interface {
 	//  client.Do(ctx, client.B().Get().Key("k").Build()).ToString()
 	// All concurrent non-blocking commands will be pipelined automatically and have better throughput.
 	// Blocking commands will use another separated connection pool.
+	// The cmd parameter is recycled after passing into Do() and should not be reused.
 	Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult)
 	// DoCache is similar to Do, but it uses opt-in client side caching and requires a client side TTL.
 	// The explicit client side TTL specifies the maximum TTL on the client side.
@@ -74,7 +75,8 @@ type Client interface {
 	//  CLIENT CACHING YES
 	//  GET k
 	//  PTTL k
-	// The in-memory cache size is configured by ClientOption.CacheSizeEachConn
+	// The in-memory cache size is configured by ClientOption.CacheSizeEachConn.
+	// The cmd parameter is recycled after passing into DoCache() and should not be reused.
 	DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp RedisResult)
 	// Dedicated acquire a connection from the blocking connection pool, no one else can use the connection
 	// during Dedicated. The main usage of Dedicated is CAS operation, which is WATCH + MULTI + EXEC.
@@ -93,8 +95,10 @@ type DedicatedClient interface {
 	// B is inherited from the Client
 	B() *cmds.Builder
 	// Do is the same as Client
+	// The cmd parameter is recycled after passing into Do() and should not be reused.
 	Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult)
 	// DoMulti takes multiple redis commands and sends them together, reducing RTT from the user code.
+	// The multi parameters are recycled after passing into DoMulti() and should not be reused.
 	DoMulti(ctx context.Context, multi ...cmds.Completed) (resp []RedisResult)
 }
 

@@ -68,6 +68,10 @@ Benchmark source code: https://github.com/rueian/rueidis-benchmark
 The Opt-In mode of server-assisted client side caching is always enabled, and can be used by calling `DoCache()` with
 an explicit client side TTL.
 
+```golang
+c.DoCache(ctx, c.B().Hmget().Key("myhash").Field("1", "2").Cache(), time.Minute).AsMap()
+```
+
 An explicit client side TTL is required because redis server may not send invalidation message in time when
 a key is expired on the server. Please follow [#6833](https://github.com/redis/redis/issues/6833) and [#6867](https://github.com/redis/redis/issues/6867)
 
@@ -251,10 +255,9 @@ And then pass it to either `Client.Do()` or `Client.DoCache()`.
 
 ```golang
 c.Do(ctx, c.B().Set().Key("mykey").Value("myval").Ex(10).Nx().Build())
-c.DoCache(ctx, c.B().Hmget().Key("myhash").Field("1", "2").Cache(), time.Second*30)
 ```
 
-**Once the command is passed to the one of above `Client.DoXXX()`, the command will be recycled and should not be reused.**
+**Once the command is passed to the `Client.Do()`, `Client.DoCache()`, the command will be recycled and should not be reused.**
 
 **The `ClusterClient.B()` also checks if the command contains multiple keys belongs to different slots. If it does, then panic.**
 
@@ -338,10 +341,10 @@ for _, v := range records.([]*Example) {
 ### Object Mapping Limitation
 
 `NewHashRepository` only accepts these field types:
-* string, *string
-* int64, *int64
-* bool, *bool
-* []byte
+* `string`, `*string`
+* `int64`, `*int64`
+* `bool`, `*bool`
+* `[]byte`
 
 Field projection by RediSearch is not supported.
 
