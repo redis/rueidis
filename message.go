@@ -146,6 +146,14 @@ func (r RedisResult) ToArray() ([]RedisMessage, error) {
 	return r.val.ToArray()
 }
 
+// AsMap delegates to RedisMessage.AsMap
+func (r RedisResult) AsMap() (map[string]RedisMessage, error) {
+	if err := r.Error(); err != nil {
+		return nil, err
+	}
+	return r.val.AsMap()
+}
+
 // ToMap delegates to RedisMessage.ToMap
 func (r RedisResult) ToMap() (map[string]RedisMessage, error) {
 	if err := r.Error(); err != nil {
@@ -240,23 +248,36 @@ func (m *RedisMessage) ToArray() ([]RedisMessage, error) {
 	panic(fmt.Sprintf("redis message type %c is not a array", m.typ))
 }
 
+// AsMap check if message is a redis array/set response, and convert to map[string]RedisMessage
+func (m *RedisMessage) AsMap() (map[string]RedisMessage, error) {
+	values, err := m.ToArray()
+	if err != nil {
+		return nil, err
+	}
+	return toMap(values), nil
+}
+
 // ToMap check if message is a redis map response, and return it
 func (m *RedisMessage) ToMap() (map[string]RedisMessage, error) {
 	if m.typ == '%' {
-		r := make(map[string]RedisMessage, len(m.values)/2)
-		for i := 0; i < len(m.values); i += 2 {
-			if m.values[i].typ == '$' || m.values[i].typ == '+' {
-				r[m.values[i].string] = m.values[i+1]
-				continue
-			}
-			panic(fmt.Sprintf("redis message type %c as map key is not supported by ToMap", m.values[i].typ))
-		}
-		return r, nil
+		return toMap(m.values), nil
 	}
 	if err := m.Error(); err != nil {
 		return nil, err
 	}
 	panic(fmt.Sprintf("redis message type %c is not a map", m.typ))
+}
+
+func toMap(values []RedisMessage) map[string]RedisMessage {
+	r := make(map[string]RedisMessage, len(values)/2)
+	for i := 0; i < len(values); i += 2 {
+		if values[i].typ == '$' || values[i].typ == '+' {
+			r[values[i].string] = values[i+1]
+			continue
+		}
+		panic(fmt.Sprintf("redis message type %c as map key is not supported", values[i].typ))
+	}
+	return r
 }
 
 func (m *RedisMessage) approximateSize() (s int) {

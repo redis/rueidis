@@ -117,7 +117,7 @@ func ExampleClient_do() {
 
 	client.Do(ctx, client.B().Get().Key("k").Build()).ToString()
 
-	client.Do(ctx, client.B().Hmget().Key("h").Field("a", "b").Build()).ToMap()
+	client.Do(ctx, client.B().Hmget().Key("h").Field("a", "b").Build()).AsMap()
 
 	client.Do(ctx, client.B().Scard().Key("s").Build()).ToInt64()
 

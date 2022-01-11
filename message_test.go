@@ -94,6 +94,21 @@ func TestRedisResult(t *testing.T) {
 		}
 	})
 
+	t.Run("AsMap", func(t *testing.T) {
+		if _, err := (RedisResult{err: errors.New("other")}).AsMap(); err == nil {
+			t.Fatal("AsMap not failed as expected")
+		}
+		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsMap(); err == nil {
+			t.Fatal("AsMap not failed as expected")
+		}
+		values := []RedisMessage{{string: "key", typ: '+'}, {string: "value", typ: '+'}}
+		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: values}}).AsMap(); !reflect.DeepEqual(map[string]RedisMessage{
+			values[0].string: values[1],
+		}, ret) {
+			t.Fatal("AsMap not get value as expected")
+		}
+	})
+
 	t.Run("ToMap", func(t *testing.T) {
 		if _, err := (RedisResult{err: errors.New("other")}).ToMap(); err == nil {
 			t.Fatal("ToMap not failed as expected")
@@ -174,7 +189,7 @@ func TestRedisMessage(t *testing.T) {
 		}
 		defer func() {
 			if !strings.Contains(recover().(string), "redis message type : is not a string") {
-				t.Fatal("ToString not panic as expected")
+				t.Fatal("AsInt64 not panic as expected")
 			}
 		}()
 		(&RedisMessage{typ: ':'}).AsInt64()
@@ -187,10 +202,23 @@ func TestRedisMessage(t *testing.T) {
 
 		defer func() {
 			if !strings.Contains(recover().(string), "redis message type t is not a array") {
-				t.Fatal("ToString not panic as expected")
+				t.Fatal("ToArray not panic as expected")
 			}
 		}()
 		(&RedisMessage{typ: 't'}).ToArray()
+	})
+
+	t.Run("AsMap", func(t *testing.T) {
+		if _, err := (&RedisMessage{typ: '_'}).AsMap(); err == nil {
+			t.Fatal("AsMap not failed as expected")
+		}
+
+		defer func() {
+			if !strings.Contains(recover().(string), "redis message type t is not a array") {
+				t.Fatal("AsMap not panic as expected")
+			}
+		}()
+		(&RedisMessage{typ: 't'}).AsMap()
 	})
 
 	t.Run("ToMap", func(t *testing.T) {
