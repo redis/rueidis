@@ -35,14 +35,14 @@ func (o *otelclient) B() *cmds.Builder {
 }
 
 func (o *otelclient) Do(ctx context.Context, cmd cmds.Completed) (resp rueidis.RedisResult) {
-	ctx, span := tracer.Start(ctx, first(cmd.Commands()), kind, attr(sum(cmd.Commands())))
+	ctx, span := start(ctx, first(cmd.Commands()), sum(cmd.Commands()))
 	resp = o.client.Do(ctx, cmd)
 	end(span, resp.Error())
 	return
 }
 
 func (o *otelclient) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp rueidis.RedisResult) {
-	ctx, span := tracer.Start(ctx, first(cmd.Commands()), kind, attr(sum(cmd.Commands())))
+	ctx, span := start(ctx, first(cmd.Commands()), sum(cmd.Commands()))
 	resp = o.client.DoCache(ctx, cmd, ttl)
 	end(span, resp.Error())
 	return
@@ -67,14 +67,14 @@ func (d *dedicated) B() *cmds.Builder {
 }
 
 func (d *dedicated) Do(ctx context.Context, cmd cmds.Completed) (resp rueidis.RedisResult) {
-	ctx, span := tracer.Start(ctx, first(cmd.Commands()), kind, attr(sum(cmd.Commands())))
+	ctx, span := start(ctx, first(cmd.Commands()), sum(cmd.Commands()))
 	resp = d.client.Do(ctx, cmd)
 	end(span, resp.Error())
 	return
 }
 
 func (d *dedicated) DoMulti(ctx context.Context, multi ...cmds.Completed) (resp []rueidis.RedisResult) {
-	ctx, span := tracer.Start(ctx, multiFirst(multi), kind, attr(multiSum(multi)))
+	ctx, span := start(ctx, multiFirst(multi), multiSum(multi))
 	resp = d.client.DoMulti(ctx, multi...)
 	end(span, firstError(resp))
 	return
@@ -122,6 +122,10 @@ func multiFirst(multi []cmds.Completed) string {
 	return sb.String()
 }
 
+func start(ctx context.Context, op string, size int) (context.Context, trace.Span) {
+	return tracer.Start(ctx, op, kind, attr(op, size))
+}
+
 func end(span trace.Span, err error) {
 	if err != nil && !rueidis.IsRedisNil(err) {
 		span.RecordError(err)
@@ -130,6 +134,6 @@ func end(span trace.Span, err error) {
 	span.End()
 }
 
-func attr(size int) trace.SpanStartEventOption {
-	return trace.WithAttributes(dbattr, attribute.Int("db.statement_size", size))
+func attr(op string, size int) trace.SpanStartEventOption {
+	return trace.WithAttributes(dbattr, attribute.String("db.operation", op), attribute.Int("db.statement_size", size))
 }
