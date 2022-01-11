@@ -81,10 +81,7 @@ func (d *dedicated) DoMulti(ctx context.Context, multi ...cmds.Completed) (resp 
 }
 
 func first(s []string) string {
-	if len(s) != 0 {
-		return s[0]
-	}
-	return ""
+	return s[0]
 }
 
 func sum(s []string) (v int) {
@@ -111,13 +108,22 @@ func multiSum(multi []cmds.Completed) (v int) {
 }
 
 func multiFirst(multi []cmds.Completed) string {
+	if len(multi) > 5 {
+		multi = multi[:5]
+	}
+	size := 0
+	for _, cmd := range multi {
+		size += len(first(cmd.Commands()))
+	}
+	size += len(multi) - 1
+
 	sb := strings.Builder{}
+	sb.Grow(size)
 	for i, cmd := range multi {
-		if i == 5 {
-			break
-		}
 		sb.WriteString(first(cmd.Commands()))
-		sb.WriteString(" ")
+		if i != len(multi)-1 {
+			sb.WriteString(" ")
+		}
 	}
 	return sb.String()
 }
@@ -130,10 +136,13 @@ func end(span trace.Span, err error) {
 	if err != nil && !rueidis.IsRedisNil(err) {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
+	} else {
+		span.SetStatus(codes.Ok, "")
 	}
 	span.End()
 }
 
+// do not record full db.statement to avoid collecting sensitive data
 func attr(op string, size int) trace.SpanStartEventOption {
-	return trace.WithAttributes(dbattr, attribute.String("db.operation", op), attribute.Int("db.statement_size", size))
+	return trace.WithAttributes(dbattr, attribute.String("db.operation", op), attribute.Int("db.stmt_size", size))
 }
