@@ -3,9 +3,9 @@ package om
 import (
 	"context"
 	"errors"
-	"github.com/rueian/rueidis"
 	"time"
 
+	"github.com/rueian/rueidis"
 	"github.com/rueian/rueidis/internal/cmds"
 )
 

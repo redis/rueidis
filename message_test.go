@@ -81,6 +81,18 @@ func TestRedisResult(t *testing.T) {
 		}
 	})
 
+	t.Run("AsFloat64", func(t *testing.T) {
+		if _, err := (RedisResult{err: errors.New("other")}).AsFloat64(); err == nil {
+			t.Fatal("AsFloat64 not failed as expected")
+		}
+		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsFloat64(); err == nil {
+			t.Fatal("AsFloat64 not failed as expected")
+		}
+		if v, _ := (RedisResult{val: RedisMessage{typ: '+', string: "1"}}).AsFloat64(); v != 1 {
+			t.Fatal("AsFloat64 not get value as expected")
+		}
+	})
+
 	t.Run("ToArray", func(t *testing.T) {
 		if _, err := (RedisResult{err: errors.New("other")}).ToArray(); err == nil {
 			t.Fatal("ToArray not failed as expected")
@@ -91,6 +103,19 @@ func TestRedisResult(t *testing.T) {
 		values := []RedisMessage{{string: "item", typ: '+'}}
 		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: values}}).ToArray(); !reflect.DeepEqual(ret, values) {
 			t.Fatal("ToArray not get value as expected")
+		}
+	})
+
+	t.Run("AsStrSlice", func(t *testing.T) {
+		if _, err := (RedisResult{err: errors.New("other")}).AsStrSlice(); err == nil {
+			t.Fatal("AsStrSlice not failed as expected")
+		}
+		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsStrSlice(); err == nil {
+			t.Fatal("AsStrSlice not failed as expected")
+		}
+		values := []RedisMessage{{string: "item", typ: '+'}}
+		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: values}}).AsStrSlice(); !reflect.DeepEqual(ret, []string{"item"}) {
+			t.Fatal("AsStrSlice not get value as expected")
 		}
 	})
 
@@ -106,6 +131,21 @@ func TestRedisResult(t *testing.T) {
 			values[0].string: values[1],
 		}, ret) {
 			t.Fatal("AsMap not get value as expected")
+		}
+	})
+
+	t.Run("AsStrMap", func(t *testing.T) {
+		if _, err := (RedisResult{err: errors.New("other")}).AsStrMap(); err == nil {
+			t.Fatal("AsStrMap not failed as expected")
+		}
+		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsStrMap(); err == nil {
+			t.Fatal("AsStrMap not failed as expected")
+		}
+		values := []RedisMessage{{string: "key", typ: '+'}, {string: "value", typ: '+'}}
+		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: values}}).AsStrMap(); !reflect.DeepEqual(map[string]string{
+			values[0].string: values[1].string,
+		}, ret) {
+			t.Fatal("AsStrMap not get value as expected")
 		}
 	})
 
@@ -195,6 +235,18 @@ func TestRedisMessage(t *testing.T) {
 		(&RedisMessage{typ: ':'}).AsInt64()
 	})
 
+	t.Run("AsFloat64", func(t *testing.T) {
+		if _, err := (&RedisMessage{typ: '_'}).AsFloat64(); err == nil {
+			t.Fatal("AsFloat64 not failed as expected")
+		}
+		defer func() {
+			if !strings.Contains(recover().(string), "redis message type : is not a string") {
+				t.Fatal("AsFloat64 not panic as expected")
+			}
+		}()
+		(&RedisMessage{typ: ':'}).AsFloat64()
+	})
+
 	t.Run("ToArray", func(t *testing.T) {
 		if _, err := (&RedisMessage{typ: '_'}).ToArray(); err == nil {
 			t.Fatal("ToArray not failed as expected")
@@ -208,6 +260,19 @@ func TestRedisMessage(t *testing.T) {
 		(&RedisMessage{typ: 't'}).ToArray()
 	})
 
+	t.Run("AsStrSlice", func(t *testing.T) {
+		if _, err := (&RedisMessage{typ: '_'}).AsStrSlice(); err == nil {
+			t.Fatal("AsStrSlice not failed as expected")
+		}
+
+		defer func() {
+			if !strings.Contains(recover().(string), "redis message type t is not a array") {
+				t.Fatal("AsStrSlice not panic as expected")
+			}
+		}()
+		(&RedisMessage{typ: 't'}).AsStrSlice()
+	})
+
 	t.Run("AsMap", func(t *testing.T) {
 		if _, err := (&RedisMessage{typ: '_'}).AsMap(); err == nil {
 			t.Fatal("AsMap not failed as expected")
@@ -219,6 +284,19 @@ func TestRedisMessage(t *testing.T) {
 			}
 		}()
 		(&RedisMessage{typ: 't'}).AsMap()
+	})
+
+	t.Run("AsStrMap", func(t *testing.T) {
+		if _, err := (&RedisMessage{typ: '_'}).AsStrMap(); err == nil {
+			t.Fatal("AsStrMap not failed as expected")
+		}
+
+		defer func() {
+			if !strings.Contains(recover().(string), "redis message type t is not a array") {
+				t.Fatal("AsMap not panic as expected")
+			}
+		}()
+		(&RedisMessage{typ: 't'}).AsStrMap()
 	})
 
 	t.Run("ToMap", func(t *testing.T) {
