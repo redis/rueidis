@@ -326,6 +326,15 @@ queue:
 }
 
 func (p *pipe) DoMulti(multi ...cmds.Completed) []RedisResult {
+	isOptIn := multi[0].IsOptIn() // len(multi) > 0 should have already been checked by upper layer
+	noReply := multi[0].NoReply()
+
+	for _, cmd := range multi[1:] {
+		if noReply != cmd.NoReply() {
+			panic(prohibitmix)
+		}
+	}
+
 	waits := atomic.AddInt32(&p.waits, 1) // if this is 1, and background worker is not started, no need to queue
 	state := atomic.LoadInt32(&p.state)
 	resp := make([]RedisResult, len(multi))
@@ -338,11 +347,9 @@ func (p *pipe) DoMulti(multi ...cmds.Completed) []RedisResult {
 		if waits != 1 {
 			goto queue
 		}
-		for _, cmd := range multi {
-			if cmd.IsOptIn() || cmd.NoReply() {
-				p.background()
-				goto queue
-			}
+		if isOptIn || noReply {
+			p.background()
+			goto queue
 		}
 		resp = p.syncDoMulti(resp, multi)
 	} else {
@@ -454,7 +461,10 @@ func (p *pipe) Close() {
 	atomic.CompareAndSwapInt32(&p.state, 2, 3)
 }
 
-var protocolbug = "protocol bug, message handled out of order"
+const (
+	protocolbug = "protocol bug, message handled out of order"
+	prohibitmix = "mixing SUBSCRIBE, PSUBSCRIBE, UNSUBSCRIBE, PUNSUBSCRIBE with other commands in DoMulti is prohibited"
+)
 
 type errs struct{ error }
 

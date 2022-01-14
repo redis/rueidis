@@ -135,7 +135,7 @@ func ExampleClient_doCache() {
 
 	client.DoCache(ctx, client.B().Get().Key("k").Cache(), time.Minute).ToString()
 
-	client.DoCache(ctx, client.B().Hmget().Key("h").Field("a", "b").Cache(), time.Minute).ToMap()
+	client.DoCache(ctx, client.B().Hmget().Key("h").Field("a", "b").Cache(), time.Minute).AsMap()
 
 	client.DoCache(ctx, client.B().Scard().Key("s").Cache(), time.Minute).ToInt64()
 

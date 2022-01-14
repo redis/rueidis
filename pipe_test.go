@@ -423,6 +423,33 @@ func TestPubSub(t *testing.T) {
 		}
 	})
 
+	t.Run("Prohibit NoReply with other commands In DoMulti", func(t *testing.T) {
+		p, _, cancel, _ := setup(t, ClientOption{})
+		defer cancel()
+
+		commands := []cmds.Completed{
+			builder.Subscribe().Channel("a").Build(),
+			builder.Psubscribe().Pattern("b").Build(),
+			builder.Unsubscribe().Channel("c").Build(),
+			builder.Punsubscribe().Pattern("d").Build(),
+		}
+
+		for _, cmd := range commands {
+			done := make(chan struct{})
+			go func() {
+				defer func() {
+					if msg := recover(); msg != prohibitmix {
+						t.Errorf("unexpected panic msg %s", msg)
+					} else {
+						close(done)
+					}
+				}()
+				p.DoMulti(cmd, builder.Get().Key("any").Build())
+			}()
+			<-done
+		}
+	})
+
 	t.Run("PubSub Push RedisMessage", func(t *testing.T) {
 		count := make([]int32, 4)
 		p, mock, cancel, _ := setup(t, ClientOption{
