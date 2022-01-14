@@ -16,9 +16,6 @@ var (
 		cs: &CommandSlice{s: []string{"CLIENT", "CACHING", "YES"}},
 		cf: optInTag,
 	}
-	PingCmd = Completed{
-		cs: &CommandSlice{s: []string{"PING"}},
-	}
 	QuitCmd = Completed{
 		cs: &CommandSlice{s: []string{"QUIT"}},
 	}
