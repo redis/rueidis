@@ -91,7 +91,7 @@ func newPipe(conn net.Conn, option ClientOption, onDisconnected func(err error))
 
 func (p *pipe) _sleep() (slept bool) {
 	atomic.AddInt32(&p.sleep, 1) // create barrier
-	if slept = atomic.LoadInt32(&p.state) == 1 && atomic.LoadInt32(&p.waits) == 0; slept {
+	if slept = atomic.LoadInt32(&p.waits) == 0 && atomic.LoadInt32(&p.state) == 1; slept {
 		p.cond.Wait()
 	}
 	atomic.AddInt32(&p.sleep, -1)
