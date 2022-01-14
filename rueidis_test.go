@@ -113,15 +113,17 @@ func ExampleClient_do() {
 
 	ctx := context.Background()
 
-	client.Do(ctx, client.B().Set().Key("k").Value("v").Build()).Error()
+	client.Do(ctx, client.B().Set().Key("k").Value("1").Build()).Error()
 
 	client.Do(ctx, client.B().Get().Key("k").Build()).ToString()
 
-	client.Do(ctx, client.B().Hmget().Key("h").Field("a", "b").Build()).AsMap()
+	client.Do(ctx, client.B().Get().Key("k").Build()).AsInt64()
+
+	client.Do(ctx, client.B().Hmget().Key("h").Field("a", "b").Build()).AsStrMap()
 
 	client.Do(ctx, client.B().Scard().Key("s").Build()).ToInt64()
 
-	client.Do(ctx, client.B().Smembers().Key("s").Build()).ToArray()
+	client.Do(ctx, client.B().Smembers().Key("s").Build()).AsStrSlice()
 }
 
 func ExampleClient_doCache() {
@@ -135,11 +137,13 @@ func ExampleClient_doCache() {
 
 	client.DoCache(ctx, client.B().Get().Key("k").Cache(), time.Minute).ToString()
 
-	client.DoCache(ctx, client.B().Hmget().Key("h").Field("a", "b").Cache(), time.Minute).AsMap()
+	client.DoCache(ctx, client.B().Get().Key("k").Cache(), time.Minute).AsInt64()
+
+	client.DoCache(ctx, client.B().Hmget().Key("h").Field("a", "b").Cache(), time.Minute).AsStrMap()
 
 	client.DoCache(ctx, client.B().Scard().Key("s").Cache(), time.Minute).ToInt64()
 
-	client.DoCache(ctx, client.B().Smembers().Key("s").Cache(), time.Minute).ToArray()
+	client.DoCache(ctx, client.B().Smembers().Key("s").Cache(), time.Minute).AsStrSlice()
 }
 
 func ExampleClient_dedicatedCAS() {

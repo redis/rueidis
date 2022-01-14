@@ -69,7 +69,7 @@ The Opt-In mode of server-assisted client side caching is always enabled, and ca
 an explicit client side TTL.
 
 ```golang
-c.DoCache(ctx, c.B().Hmget().Key("myhash").Field("1", "2").Cache(), time.Minute).AsMap()
+c.DoCache(ctx, c.B().Hmget().Key("myhash").Field("1", "2").Cache(), time.Minute).AsStrMap()
 ```
 
 An explicit client side TTL is required because redis server may not send invalidation message in time when
