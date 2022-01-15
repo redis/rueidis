@@ -87,24 +87,16 @@ func (c *Cacheable) CacheKey() (key, command string) {
 	if len(c.cs.s) == 2 {
 		return c.cs.s[1], c.cs.s[0]
 	}
-
 	length := 0
-	for i, v := range c.cs.s {
-		if i == 1 {
-			continue
-		}
+	for _, v := range c.cs.s[1:] { // len(c.cs.s) > 0 should be guaranteed
 		length += len(v)
 	}
 	sb := strings.Builder{}
 	sb.Grow(length)
-	for i, v := range c.cs.s {
-		if i == 1 {
-			key = v
-		} else {
-			sb.WriteString(v)
-		}
+	for _, v := range c.cs.s[1:] {
+		sb.WriteString(v)
 	}
-	return key, sb.String()
+	return c.cs.s[0], sb.String()
 }
 
 func NewCompleted(ss []string) Completed {
