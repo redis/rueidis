@@ -186,6 +186,11 @@ func (r RedisResult) ToMap() (map[string]RedisMessage, error) {
 	return r.val.ToMap()
 }
 
+// IsCacheHit delegates to RedisMessage.IsCacheHit
+func (r RedisResult) IsCacheHit() bool {
+	return r.val.IsCacheHit()
+}
+
 // RedisMessage is a redis response message, it may be a nil response
 type RedisMessage struct {
 	string  string
@@ -337,6 +342,11 @@ func (m *RedisMessage) ToMap() (map[string]RedisMessage, error) {
 	panic(fmt.Sprintf("redis message type %c is not a map", m.typ))
 }
 
+// IsCacheHit check if message is from client side cache
+func (m *RedisMessage) IsCacheHit() bool {
+	return m.attrs == cacheMark
+}
+
 func toMap(values []RedisMessage) map[string]RedisMessage {
 	r := make(map[string]RedisMessage, len(values)/2)
 	for i := 0; i < len(values); i += 2 {
@@ -354,9 +364,6 @@ func (m *RedisMessage) approximateSize() (s int) {
 	s += len(m.string)
 	for _, v := range m.values {
 		s += v.approximateSize()
-	}
-	if m.attrs != nil {
-		s += m.attrs.approximateSize()
 	}
 	return
 }

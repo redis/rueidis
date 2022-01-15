@@ -232,6 +232,7 @@ func (p *pipe) _backgroundRead() {
 			} else if ff == 2 {
 				cacheable := cmds.Cacheable(multi[ff-1])
 				ck, cc := cacheable.CacheKey()
+				tmp.attrs = cacheMark
 				p.cache.Update(ck, cc, tmp, msg.integer)
 				tmp = RedisMessage{}
 			}
@@ -465,6 +466,8 @@ const (
 	protocolbug = "protocol bug, message handled out of order"
 	prohibitmix = "mixing SUBSCRIBE, PSUBSCRIBE, UNSUBSCRIBE, PUNSUBSCRIBE with other commands in DoMulti is prohibited"
 )
+
+var cacheMark = &(RedisMessage{})
 
 type errs struct{ error }
 

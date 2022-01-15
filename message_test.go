@@ -163,6 +163,15 @@ func TestRedisResult(t *testing.T) {
 			t.Fatal("ToMap not get value as expected")
 		}
 	})
+
+	t.Run("IsCacheHit", func(t *testing.T) {
+		if (RedisResult{err: errors.New("other")}).IsCacheHit() {
+			t.Fatal("IsCacheHit not as expected")
+		}
+		if !(RedisResult{val: RedisMessage{attrs: cacheMark}}).IsCacheHit() {
+			t.Fatal("IsCacheHit not as expected")
+		}
+	})
 }
 
 func TestRedisMessage(t *testing.T) {
@@ -310,5 +319,14 @@ func TestRedisMessage(t *testing.T) {
 			}
 		}()
 		(&RedisMessage{typ: 't'}).ToMap()
+	})
+
+	t.Run("IsCacheHit", func(t *testing.T) {
+		if (&RedisMessage{typ: '_'}).IsCacheHit() {
+			t.Fatal("IsCacheHit not as expected")
+		}
+		if !(&RedisMessage{typ: '_', attrs: cacheMark}).IsCacheHit() {
+			t.Fatal("IsCacheHit not as expected")
+		}
 	})
 }
