@@ -2,6 +2,8 @@ package rueidis
 
 import (
 	"strconv"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -17,7 +19,7 @@ func TestLRU(t *testing.T) {
 		if v, entry := lru.GetOrPrepare("0", "GET", TTL); v.typ != 0 || entry != nil {
 			t.Fatalf("got unexpected value from the first GetOrPrepare: %v %v", v, entry)
 		}
-		lru.Update("0", "GET", RedisMessage{typ: '+', string: "0"}, PTTL)
+		lru.Update("0", "GET", RedisMessage{typ: '+', string: "0", values: []RedisMessage{{}}}, PTTL)
 		return lru
 	}
 
@@ -42,10 +44,38 @@ func TestLRU(t *testing.T) {
 		}
 	})
 
-	t.Run("Cache Miss", func(t *testing.T) {
+	t.Run("Cache Miss Suppress", func(t *testing.T) {
+		count := 5000
 		lru := setup(t)
-		if v, _ := lru.GetOrPrepare("1", "GET", TTL); v.typ != 0 {
-			t.Fatalf("got unexpected value from the first GetOrPrepare: %v", v)
+		wg := sync.WaitGroup{}
+		wg.Add(count)
+		for i := 0; i < count; i++ {
+			go func() {
+				defer wg.Done()
+				if v, _ := lru.GetOrPrepare("1", "GET", TTL); v.typ != 0 {
+					t.Errorf("got unexpected value from the first GetOrPrepare: %v", v)
+				}
+				if v, _ := lru.GetOrPrepare("2", "GET", TTL); v.typ != 0 {
+					t.Errorf("got unexpected value from the first GetOrPrepare: %v", v)
+				}
+			}()
+		}
+		wg.Wait()
+		lru.mu.RLock()
+		store1 := lru.store["1"]
+		store2 := lru.store["2"]
+		lru.mu.RUnlock()
+		if miss := atomic.LoadUint64(&store1.miss); miss != 1 {
+			t.Fatalf("unexpected miss count %v", miss)
+		}
+		if hits := atomic.LoadUint64(&store1.hits); hits != uint64(count-1) {
+			t.Fatalf("unexpected hits count %v", hits)
+		}
+		if miss := atomic.LoadUint64(&store2.miss); miss != 1 {
+			t.Fatalf("unexpected miss count %v", miss)
+		}
+		if hits := atomic.LoadUint64(&store2.hits); hits != uint64(count-1) {
+			t.Fatalf("unexpected hits count %v", hits)
 		}
 	})
 

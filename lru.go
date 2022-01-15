@@ -3,6 +3,7 @@ package rueidis
 import (
 	"container/list"
 	"sync"
+	"sync/atomic"
 	"time"
 	"unsafe"
 )
@@ -13,6 +14,8 @@ const (
 	stringSSize = int(unsafe.Sizeof(""))
 
 	entryMinSize = entrySize + elementSize + stringSSize*2 + messageStructSize
+
+	moveThreshold = uint64(1024 - 1)
 )
 
 type cache interface {
@@ -38,12 +41,14 @@ func (e *entry) Wait() RedisMessage {
 type keyCache struct {
 	cache map[string]*list.Element
 	ttl   time.Time
+	hits  uint64
+	miss  uint64
 }
 
 var _ cache = (*lru)(nil)
 
 type lru struct {
-	mu sync.Mutex
+	mu sync.RWMutex
 
 	store map[string]*keyCache
 	list  *list.List
@@ -61,23 +66,57 @@ func newLRU(max int) *lru {
 }
 
 func (c *lru) GetOrPrepare(key, cmd string, ttl time.Duration) (v RedisMessage, e *entry) {
-	c.mu.Lock()
-	store, ok := c.store[key]
-	if !ok {
-		store = &keyCache{cache: make(map[string]*list.Element), ttl: time.Now().Add(ttl)}
-		c.store[key] = store
+	var ok bool
+	var store *keyCache
+	var now = time.Now()
+	var storeTTL time.Time
+	var ele, back *list.Element
+
+	c.mu.RLock()
+	if store, ok = c.store[key]; ok {
+		storeTTL = store.ttl
+		if ele, ok = store.cache[cmd]; ok {
+			e = ele.Value.(*entry)
+			v = e.val
+			back = c.list.Back()
+		}
 	}
-	if ele, ok := store.cache[cmd]; ok {
-		if e = ele.Value.(*entry); e.val.typ == 0 || store.ttl.After(time.Now()) {
+	c.mu.RUnlock()
+
+	if e != nil && (v.typ == 0 || storeTTL.After(now)) {
+		hits := atomic.AddUint64(&store.hits, 1)
+		if ele != back && hits&moveThreshold == 0 {
+			c.mu.Lock()
+			c.list.MoveToBack(ele)
+			c.mu.Unlock()
+		}
+		return v, e
+	}
+
+	v = RedisMessage{}
+	e = nil
+
+	c.mu.Lock()
+	if store == nil {
+		if store, ok = c.store[key]; !ok {
+			store = &keyCache{cache: make(map[string]*list.Element), ttl: now.Add(ttl)}
+			c.store[key] = store
+		}
+	}
+	if ele, ok = store.cache[cmd]; ok {
+		if e = ele.Value.(*entry); e.val.typ == 0 || store.ttl.After(now) {
+			atomic.AddUint64(&store.hits, 1)
 			v = e.val
 			c.list.MoveToBack(ele)
 		} else {
-			e = nil
 			c.list.Remove(ele)
-			store.ttl = time.Now().Add(ttl)
+			c.size -= e.size
+			store.ttl = now.Add(ttl)
+			e = nil
 		}
 	}
 	if e == nil && c.list != nil {
+		atomic.AddUint64(&store.miss, 1)
 		c.list.PushBack(&entry{
 			key: key,
 			cmd: cmd,
