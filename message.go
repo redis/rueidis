@@ -295,7 +295,7 @@ func (m *RedisMessage) AsStrSlice() ([]string, error) {
 	}
 	s := make([]string, 0, len(values))
 	for _, v := range values {
-		if v.typ == '$' || v.typ == '+' {
+		if v.typ == '$' || v.typ == '+' || len(v.string) != 0 {
 			s = append(s, v.string)
 		}
 	}
@@ -322,7 +322,7 @@ func (m *RedisMessage) AsStrMap() (map[string]string, error) {
 	for i := 0; i < len(values); i += 2 {
 		k := values[i]
 		v := values[i+1]
-		if (k.typ == '$' || k.typ == '+') && (v.typ == '$' || v.typ == '+') {
+		if (k.typ == '$' || k.typ == '+') && (v.typ == '$' || v.typ == '+' || len(v.string) != 0) {
 			r[k.string] = v.string
 			continue
 		}
