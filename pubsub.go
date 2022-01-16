@@ -41,7 +41,7 @@ func (h PubSubOption) _install(prev error, builder *cmds.Builder, pick func() co
 				h._install(err, builder, pick)
 			}
 		})
-		go h.onConnected(prev, &dedicatedSingleClient{cmd: builder, wire: cc})
+		h.onConnected(prev, &dedicatedSingleClient{cmd: builder, wire: cc})
 	}
 }
 func (h PubSubOption) installHook(builder *cmds.Builder, pick func() conn) {
