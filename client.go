@@ -23,7 +23,17 @@ func newSingleClient(opt ClientOption, connFn connFn) (*singleClient, error) {
 		return nil, err
 	}
 
-	opt.PubSubOption.installHook(client.cmd, func() conn { return client.conn })
+	if opt.PubSubOption.onConnected != nil {
+		var install func(error)
+		install = func(prev error) {
+			if prev != ErrClosing {
+				dcc := &dedicatedSingleClient{cmd: client.cmd, wire: client.conn}
+				client.conn.OnDisconnected(install)
+				opt.PubSubOption.onConnected(prev, dcc)
+			}
+		}
+		install(nil)
+	}
 
 	return client, nil
 }

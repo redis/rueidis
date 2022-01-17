@@ -198,8 +198,9 @@ func TestClusterClient(t *testing.T) {
 				t.Errorf("Dedicated should panic if no slot is selected")
 			}
 		}()
+		builder := cmds.NewBuilder(cmds.NoSlot)
 		client.Dedicated(func(c DedicatedClient) error {
-			return c.Do(context.Background(), c.B().Info().Build()).Error()
+			return c.Do(context.Background(), builder.Info().Build()).Error()
 		})
 	})
 

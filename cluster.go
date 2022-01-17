@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"runtime"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/rueian/rueidis/internal/cmds"
@@ -23,6 +24,8 @@ type clusterClient struct {
 	slots  [16384]conn
 	conns  map[string]conn
 	connFn connFn
+
+	closed uint32
 }
 
 func newClusterClient(opt ClientOption, connFn connFn) (client *clusterClient, err error) {
@@ -48,13 +51,18 @@ func newClusterClient(opt ClientOption, connFn connFn) (client *clusterClient, e
 		return nil, err
 	}
 
-	opt.PubSubOption.installHook(client.cmd, func() (cc conn) {
-		var err error
-		for cc == nil && err != ErrClosing {
-			cc, err = client.pick(cmds.InitSlot)
+	if opt.PubSubOption.onConnected != nil {
+		var install func(error)
+		install = func(prev error) {
+			if atomic.LoadUint32(&client.closed) == 0 {
+				dcc := &dedicatedClusterClient{cmd: client.cmd, client: client, slot: cmds.InitSlot, pool: false, onDisconnect: install}
+				for cc := (conn)(nil); cc == nil; cc = dcc.getConn() {
+					opt.PubSubOption.onConnected(prev, dcc)
+				}
+			}
 		}
-		return cc
-	})
+		install(nil)
+	}
 
 	return client, nil
 }
@@ -250,6 +258,9 @@ retry:
 	}
 	resp = cc.Do(cmd)
 process:
+	if c.shouldRefreshRetry(resp.NonRedisError()) {
+		goto retry
+	}
 	if err := resp.RedisError(); err != nil {
 		if addr, ok := err.IsMoved(); ok {
 			go c.refresh()
@@ -277,6 +288,9 @@ retry:
 	}
 	resp = cc.DoCache(cmd, ttl)
 process:
+	if c.shouldRefreshRetry(resp.NonRedisError()) {
+		goto retry
+	}
 	if err := resp.RedisError(); err != nil {
 		if addr, ok := err.IsMoved(); ok {
 			go c.refresh()
@@ -297,13 +311,14 @@ ret:
 }
 
 func (c *clusterClient) Dedicated(fn func(DedicatedClient) error) (err error) {
-	dcc := &dedicatedClusterClient{cmd: c.cmd, client: c, slot: cmds.InitSlot}
+	dcc := &dedicatedClusterClient{cmd: c.cmd, client: c, slot: cmds.NoSlot, pool: true}
 	err = fn(dcc)
 	dcc.release()
 	return err
 }
 
 func (c *clusterClient) Close() {
+	atomic.StoreUint32(&c.closed, 1)
 	c.mu.RLock()
 	for _, cc := range c.conns {
 		go cc.Close()
@@ -311,37 +326,61 @@ func (c *clusterClient) Close() {
 	c.mu.RUnlock()
 }
 
+func (c *clusterClient) shouldRefreshRetry(err error) (should bool) {
+	if should = err == ErrClosing && atomic.LoadUint32(&c.closed) == 0; should {
+		c.refresh()
+	}
+	return should
+}
+
 type dedicatedClusterClient struct {
+	mu     sync.Mutex
 	cmd    *cmds.Builder
 	client *clusterClient
 	conn   conn
 	wire   wire
 	slot   uint16
+	pool   bool
+
+	onDisconnect func(error)
 }
 
 func (c *dedicatedClusterClient) check(slot uint16) {
-	if slot == cmds.InitSlot {
-		return
-	}
-	if c.slot == cmds.InitSlot {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.slot == cmds.NoSlot {
 		c.slot = slot
 	} else if c.slot != slot {
 		panic(panicMsgCxSlot)
 	}
 }
 
-func (c *dedicatedClusterClient) acquire() (err error) {
+func (c *dedicatedClusterClient) getConn() conn {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.conn
+}
+
+func (c *dedicatedClusterClient) acquire() (wire wire, err error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	if c.wire != nil {
-		return nil
+		return c.wire, nil
 	}
-	if c.slot == cmds.InitSlot {
+	if c.slot == cmds.NoSlot {
 		panic(panicMsgNoSlot)
 	}
 	if c.conn, err = c.client.pick(c.slot); err != nil {
-		return err
+		return nil, err
+	}
+	if c.onDisconnect != nil {
+		c.conn.OnDisconnected(c.onDisconnect)
+	}
+	if !c.pool {
+		return c.conn, nil
 	}
 	c.wire = c.conn.Acquire()
-	return nil
+	return c.wire, nil
 }
 
 func (c *dedicatedClusterClient) release() {
@@ -356,10 +395,14 @@ func (c *dedicatedClusterClient) B() *cmds.Builder {
 
 func (c *dedicatedClusterClient) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
 	c.check(cmd.Slot())
-	if err := c.acquire(); err != nil {
+retry:
+	if wire, err := c.acquire(); err != nil {
 		return newErrResult(err)
 	} else {
-		resp = c.wire.Do(cmd)
+		resp = wire.Do(cmd)
+		if c.client.shouldRefreshRetry(resp.NonRedisError()) {
+			goto retry
+		}
 	}
 	c.cmd.Put(cmd.CommandSlice())
 	return resp
@@ -372,8 +415,14 @@ func (c *dedicatedClusterClient) DoMulti(ctx context.Context, multi ...cmds.Comp
 	for _, cmd := range multi {
 		c.check(cmd.Slot())
 	}
-	if err := c.acquire(); err == nil {
-		resp = c.wire.DoMulti(multi...)
+retry:
+	if wire, err := c.acquire(); err == nil {
+		resp = wire.DoMulti(multi...)
+		for _, resp := range resp {
+			if c.client.shouldRefreshRetry(resp.NonRedisError()) {
+				goto retry
+			}
+		}
 	} else {
 		resp = make([]RedisResult, len(multi))
 		for i := range resp {

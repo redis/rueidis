@@ -42,11 +42,15 @@ type mux struct {
 	onDisconnected atomic.Value
 }
 
-func makeMux(dst string, option ClientOption, dialFn dialFn) *mux {
+func makeMux(dst string, option ClientOption, dialFn dialFn, retryOnRefuse bool) *mux {
 	return newMux(dst, option, (*pipe)(nil), func(onDisconnected func(err error)) (w wire, err error) {
 		conn, err := dialFn(dst, option)
 		if err == nil {
 			w, err = newPipe(conn, option, onDisconnected)
+		} else if !retryOnRefuse {
+			if e, ok := err.(*net.OpError); ok && !e.Timeout() && !e.Temporary() {
+				return dead, nil
+			}
 		}
 		return w, err
 	})

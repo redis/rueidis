@@ -73,15 +73,15 @@ func TestClusterClientPubSubReconnect(t *testing.T) {
 		t.Fatalf("unexpected err %v", err)
 	}
 	m.TriggerDisconnect(errors.New("network")) // should trigger reconnect
-	m.TriggerDisconnect(ErrClosing)            // should not trigger reconnect
+	m.TriggerDisconnect(ErrClosing)            // ErrClosing for cluster client should trigger reconnect
 
-	for atomic.LoadInt64(&count) != 2 {
-		log.Printf("wait for pubsub reconnect count to be 2, got: %d\n", atomic.LoadInt64(&count))
+	for atomic.LoadInt64(&count) != 3 {
+		log.Printf("wait for pubsub reconnect count to be 3, got: %d\n", atomic.LoadInt64(&count))
 		time.Sleep(time.Millisecond * 100)
 	}
 
-	if atomic.LoadInt64(&errs) != 1 {
-		t.Fatalf("errs count should be 1")
+	if atomic.LoadInt64(&errs) != 2 {
+		t.Fatalf("errs count should be 2")
 	}
 }
 

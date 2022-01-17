@@ -46,7 +46,7 @@ func TestNewMux(t *testing.T) {
 	}()
 	m := makeMux("", ClientOption{}, func(dst string, opt ClientOption) (net.Conn, error) {
 		return n1, nil
-	})
+	}, true)
 	if err := m.Dial(); err != nil {
 		t.Fatalf("unexpected error %v", err)
 	}
@@ -511,7 +511,7 @@ func BenchmarkClientSideCaching(b *testing.B) {
 	setup := func(b *testing.B) *mux {
 		c := makeMux("127.0.0.1:6379", ClientOption{CacheSizeEachConn: DefaultCacheBytes}, func(dst string, opt ClientOption) (conn net.Conn, err error) {
 			return net.Dial("tcp", dst)
-		})
+		}, true)
 		if err := c.Dial(); err != nil {
 			panic(err)
 		}

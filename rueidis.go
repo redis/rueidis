@@ -106,15 +106,19 @@ type DedicatedClient interface {
 // It will first try to connect as cluster client. If the len(ClientOption.InitAddress) == 1 and
 // the address does not enable cluster mode, the NewClient() will use single client instead.
 func NewClient(option ClientOption) (client Client, err error) {
-	client, err = newClusterClient(option, makeConn)
+	client, err = newClusterClient(option, makeClusterConn)
 	if err != nil && len(option.InitAddress) == 1 && err.Error() == redisErrMsgClusterDisabled {
-		client, err = newSingleClient(option, makeConn)
+		client, err = newSingleClient(option, makeSingleConn)
 	}
 	return client, err
 }
 
-func makeConn(dst string, opt ClientOption) conn {
-	return makeMux(dst, opt, dial)
+func makeClusterConn(dst string, opt ClientOption) conn {
+	return makeMux(dst, opt, dial, false)
+}
+
+func makeSingleConn(dst string, opt ClientOption) conn {
+	return makeMux(dst, opt, dial, true)
 }
 
 func dial(dst string, opt ClientOption) (conn net.Conn, err error) {

@@ -448,7 +448,7 @@ func (p *pipe) Error() error {
 }
 
 func (p *pipe) Close() {
-	swapped := p.error.CompareAndSwap(nil, &errs{error: ErrClosing})
+	swapped := p.error.CompareAndSwap(nil, errClosing)
 	atomic.CompareAndSwapInt32(&p.state, 0, 2)
 	atomic.CompareAndSwapInt32(&p.state, 1, 2)
 	p._awake()
@@ -462,12 +462,20 @@ func (p *pipe) Close() {
 	atomic.CompareAndSwapInt32(&p.state, 2, 3)
 }
 
+var dead *pipe
+
+func init() {
+	dead = &pipe{state: 3}
+	dead.error.Store(errClosing)
+}
+
 const (
 	protocolbug = "protocol bug, message handled out of order"
 	prohibitmix = "mixing SUBSCRIBE, PSUBSCRIBE, UNSUBSCRIBE, PUNSUBSCRIBE with other commands in DoMulti is prohibited"
 )
 
 var cacheMark = &(RedisMessage{})
+var errClosing = &errs{error: ErrClosing}
 
 type errs struct{ error }
 

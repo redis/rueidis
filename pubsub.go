@@ -1,7 +1,5 @@
 package rueidis
 
-import "github.com/rueian/rueidis/internal/cmds"
-
 // NewPubSubOption creates a PubSubOption for client initialization.
 // The onConnected callback is called when the connection to a redis node established including auto reconnect.
 // One should subscribe to channel in the onConnected callback to have it resubscribe after auto reconnection.
@@ -32,20 +30,4 @@ type PubSubOption struct {
 	onSubscribed   func(channel string, active int64)
 	onUnSubscribed func(channel string, active int64)
 	onConnected    func(prev error, client DedicatedClient)
-}
-
-func (h PubSubOption) _install(prev error, builder *cmds.Builder, pick func() conn) {
-	if cc := pick(); cc != nil {
-		cc.OnDisconnected(func(err error) {
-			if err != ErrClosing {
-				h._install(err, builder, pick)
-			}
-		})
-		h.onConnected(prev, &dedicatedSingleClient{cmd: builder, wire: cc})
-	}
-}
-func (h PubSubOption) installHook(builder *cmds.Builder, pick func() conn) {
-	if h.onConnected != nil {
-		h._install(nil, builder, pick)
-	}
 }
