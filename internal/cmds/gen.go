@@ -3295,6 +3295,18 @@ func (c ClusterKeyslotKey) Build() Completed {
 	return Completed(c)
 }
 
+type ClusterLinks Completed
+
+func (b *Builder) ClusterLinks() (c ClusterLinks) {
+	c = ClusterLinks{cs: b.get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "CLUSTER", "LINKS")
+	return c
+}
+
+func (c ClusterLinks) Build() Completed {
+	return Completed(c)
+}
+
 type ClusterMeet Completed
 
 func (b *Builder) ClusterMeet() (c ClusterMeet) {
