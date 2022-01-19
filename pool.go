@@ -2,13 +2,14 @@ package rueidis
 
 import "sync"
 
-func newPool(cap int, makeFn func() wire) *pool {
+func newPool(cap int, dead wire, makeFn func() wire) *pool {
 	if cap <= 0 {
 		cap = DefaultPoolSize
 	}
 
 	return &pool{
 		size: 0,
+		dead: dead,
 		make: makeFn,
 		list: make([]wire, 0, cap),
 		cond: sync.NewCond(&sync.Mutex{}),
@@ -17,6 +18,7 @@ func newPool(cap int, makeFn func() wire) *pool {
 
 type pool struct {
 	list []wire
+	dead wire
 	cond *sync.Cond
 	make func() wire
 	size int
@@ -28,21 +30,15 @@ func (p *pool) Acquire() (v wire) {
 	for len(p.list) == 0 && p.size == cap(p.list) {
 		p.cond.Wait()
 	}
-	if len(p.list) == 0 {
-		v = p.make()
+	if p.down {
+		v = p.dead
+	} else if len(p.list) == 0 {
 		p.size++
-		if p.down {
-			v.Close()
-			p.list = append(p.list, v)
-		}
+		v = p.make()
 	} else {
 		i := len(p.list) - 1
 		v = p.list[i]
-		if p.down {
-			v.Close()
-		} else {
-			p.list = p.list[:i]
-		}
+		p.list = p.list[:i]
 	}
 	p.cond.L.Unlock()
 	return v
@@ -50,12 +46,10 @@ func (p *pool) Acquire() (v wire) {
 
 func (p *pool) Store(v wire) {
 	p.cond.L.Lock()
-	if v.Error() == nil {
+	if !p.down && v.Error() == nil {
 		p.list = append(p.list, v)
 	} else {
 		p.size--
-	}
-	if p.down {
 		v.Close()
 	}
 	p.cond.L.Unlock()

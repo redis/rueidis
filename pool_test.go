@@ -9,7 +9,7 @@ import (
 func TestPool(t *testing.T) {
 	setup := func(size int) (*pool, *int32) {
 		var count int32
-		return newPool(size, func() wire {
+		return newPool(size, dead, func() wire {
 			atomic.AddInt32(&count, 1)
 			closed := false
 			return &mockWire{
@@ -27,7 +27,7 @@ func TestPool(t *testing.T) {
 	}
 
 	t.Run("DefaultPoolSize", func(t *testing.T) {
-		p := newPool(0, func() wire { return nil })
+		p := newPool(0, dead, func() wire { return nil })
 		if cap(p.list) == 0 {
 			t.Fatalf("DefaultPoolSize is not applied")
 		}
@@ -103,8 +103,8 @@ func TestPool(t *testing.T) {
 			t.Fatalf("pool does not close exsiting wire after Close()")
 		}
 		for i := 0; i < 100; i++ {
-			if rw := pool.Acquire(); rw != w1 {
-				t.Fatalf("pool does not return the same wire after Close()")
+			if rw := pool.Acquire(); rw != dead {
+				t.Fatalf("pool does not return the dead wire after Close()")
 			}
 		}
 		pool.Store(w2)
@@ -122,14 +122,14 @@ func TestPool(t *testing.T) {
 		pool.Close()
 		w2 := pool.Acquire()
 		if w2.Error() != ErrClosing {
-			t.Fatalf("pool does not close new wire after Close()")
+			t.Fatalf("pool does not close wire after Close()")
 		}
-		if atomic.LoadInt32(count) != 2 {
-			t.Fatalf("pool does not make new wire")
+		if atomic.LoadInt32(count) != 1 {
+			t.Fatalf("pool should not make new wire")
 		}
 		for i := 0; i < 100; i++ {
-			if rw := pool.Acquire(); rw != w2 {
-				t.Fatalf("pool does not return the same wire after Close()")
+			if rw := pool.Acquire(); rw != dead {
+				t.Fatalf("pool does not return the dead wire after Close()")
 			}
 		}
 		pool.Store(w1)
@@ -142,7 +142,7 @@ func TestPool(t *testing.T) {
 func TestPoolError(t *testing.T) {
 	setup := func(size int) (*pool, *int32) {
 		var count int32
-		return newPool(size, func() wire {
+		return newPool(size, dead, func() wire {
 			w := &pipe{}
 			c := atomic.AddInt32(&count, 1)
 			if c%2 == 0 {

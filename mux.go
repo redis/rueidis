@@ -32,6 +32,7 @@ var _ conn = (*mux)(nil)
 type mux struct {
 	dst  string
 	pool *pool
+	init wire
 	dead wire
 	wire atomic.Value
 	mu   sync.Mutex
@@ -43,12 +44,12 @@ type mux struct {
 }
 
 func makeMux(dst string, option ClientOption, dialFn dialFn, retryOnRefuse bool) *mux {
-	return newMux(dst, option, (*pipe)(nil), func(onDisconnected func(err error)) (w wire, err error) {
+	return newMux(dst, option, (*pipe)(nil), dead, func(onDisconnected func(err error)) (w wire, err error) {
 		conn, err := dialFn(dst, option)
 		if err == nil {
 			w, err = newPipe(conn, option, onDisconnected)
 		} else if !retryOnRefuse {
-			if e, ok := err.(*net.OpError); ok && !e.Timeout() && !e.Temporary() {
+			if e, ok := err.(net.Error); ok && !e.Timeout() && !e.Temporary() {
 				return dead, nil
 			}
 		}
@@ -56,10 +57,10 @@ func makeMux(dst string, option ClientOption, dialFn dialFn, retryOnRefuse bool)
 	})
 }
 
-func newMux(dst string, option ClientOption, dead wire, wireFn wireFn) *mux {
-	m := &mux{dst: dst, dead: dead, wireFn: wireFn}
-	m.wire.Store(dead)
-	m.pool = newPool(option.BlockingPoolSize, m._newPooledWire)
+func newMux(dst string, option ClientOption, init, dead wire, wireFn wireFn) *mux {
+	m := &mux{dst: dst, init: init, dead: dead, wireFn: wireFn}
+	m.wire.Store(init)
+	m.pool = newPool(option.BlockingPoolSize, dead, m._newPooledWire)
 	return m
 }
 
@@ -71,8 +72,16 @@ retry:
 	goto retry
 }
 
+func (m *mux) pipe() wire {
+retry:
+	if wire, err := m._pipe(); err == nil {
+		return wire
+	}
+	goto retry
+}
+
 func (m *mux) _pipe() (w wire, err error) {
-	if w = m.wire.Load().(wire); w != m.dead {
+	if w = m.wire.Load().(wire); w != m.init {
 		return w, nil
 	}
 
@@ -89,7 +98,7 @@ func (m *mux) _pipe() (w wire, err error) {
 		return sc.w, sc.e
 	}
 
-	if w = m.wire.Load().(wire); w == m.dead {
+	if w = m.wire.Load().(wire); w == m.init {
 		if w, err = m.wireFn(m.disconnected); err == nil {
 			m.wire.Store(w)
 		}
@@ -115,14 +124,6 @@ func (m *mux) disconnected(err error) {
 
 func (m *mux) OnDisconnected(fn func(err error)) {
 	m.onDisconnected.CompareAndSwap(nil, fn)
-}
-
-func (m *mux) pipe() wire {
-retry:
-	if wire, err := m._pipe(); err == nil {
-		return wire
-	}
-	goto retry
 }
 
 func (m *mux) Dial() error { // no retry
@@ -190,7 +191,7 @@ func (m *mux) blockingMulti(cmd []cmds.Completed) (resp []RedisResult) {
 func (m *mux) pipeline(cmd cmds.Completed) (resp RedisResult) {
 	wire := m.pipe()
 	if resp = wire.Do(cmd); isNetworkErr(resp.NonRedisError()) {
-		m.wire.CompareAndSwap(wire, m.dead)
+		m.wire.CompareAndSwap(wire, m.init)
 	}
 	return resp
 }
@@ -200,7 +201,7 @@ func (m *mux) pipelineMulti(cmd []cmds.Completed) (resp []RedisResult) {
 	resp = wire.DoMulti(cmd...)
 	for _, r := range resp {
 		if isNetworkErr(r.NonRedisError()) {
-			m.wire.CompareAndSwap(wire, m.dead)
+			m.wire.CompareAndSwap(wire, m.init)
 			return resp
 		}
 	}
@@ -212,7 +213,7 @@ retry:
 	wire := m.pipe()
 	resp := wire.DoCache(cmd, ttl)
 	if isNetworkErr(resp.NonRedisError()) {
-		m.wire.CompareAndSwap(wire, m.dead)
+		m.wire.CompareAndSwap(wire, m.init)
 		goto retry
 	}
 	return resp
@@ -227,7 +228,9 @@ func (m *mux) Store(w wire) {
 }
 
 func (m *mux) Close() {
-	m.pipe().Close()
+	if prev := m.wire.Swap(m.dead).(wire); prev != m.init {
+		prev.Close()
+	}
 	m.pool.Close()
 }
 

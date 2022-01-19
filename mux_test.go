@@ -16,7 +16,7 @@ import (
 func setupMux(wires []*mockWire) (conn *mux, checkClean func(t *testing.T)) {
 	var mu sync.Mutex
 	var count = -1
-	return newMux("", ClientOption{}, (*mockWire)(nil), func(fn func(err error)) (wire, error) {
+	return newMux("", ClientOption{}, (*mockWire)(nil), (*mockWire)(nil), func(fn func(err error)) (wire, error) {
 			mu.Lock()
 			defer mu.Unlock()
 			count++
@@ -55,7 +55,7 @@ func TestNewMux(t *testing.T) {
 
 func TestMuxOnDisconnected(t *testing.T) {
 	var trigger func(err error)
-	m := newMux("", ClientOption{}, (*mockWire)(nil), func(fn func(err error)) (wire, error) {
+	m := newMux("", ClientOption{}, (*mockWire)(nil), (*mockWire)(nil), func(fn func(err error)) (wire, error) {
 		trigger = fn
 		return &mockWire{}, nil
 	})
@@ -85,7 +85,7 @@ func TestMuxOnDisconnected(t *testing.T) {
 func TestMuxDialSuppress(t *testing.T) {
 	var wires, waits, done int64
 	blocking := make(chan struct{})
-	m := newMux("", ClientOption{}, (*mockWire)(nil), func(fn func(err error)) (wire, error) {
+	m := newMux("", ClientOption{}, (*mockWire)(nil), (*mockWire)(nil), func(fn func(err error)) (wire, error) {
 		atomic.AddInt64(&wires, 1)
 		<-blocking
 		return &mockWire{}, nil
@@ -468,7 +468,7 @@ func TestMuxCMDRetry(t *testing.T) {
 func TestMuxDialRetry(t *testing.T) {
 	setup := func() (*mux, *int64) {
 		var count int64
-		return newMux("", ClientOption{}, (*mockWire)(nil), func(fn func(err error)) (wire, error) {
+		return newMux("", ClientOption{}, (*mockWire)(nil), (*mockWire)(nil), func(fn func(err error)) (wire, error) {
 			if count == 1 {
 				return &mockWire{
 					DoFn: func(cmd cmds.Completed) RedisResult {
@@ -577,6 +577,9 @@ func (m *mockWire) Info() map[string]RedisMessage {
 }
 
 func (m *mockWire) Error() error {
+	if m == nil {
+		return ErrClosing
+	}
 	if m.ErrorFn != nil {
 		return m.ErrorFn()
 	}
@@ -584,6 +587,9 @@ func (m *mockWire) Error() error {
 }
 
 func (m *mockWire) Close() {
+	if m == nil {
+		return
+	}
 	if m.CloseFn != nil {
 		m.CloseFn()
 	}
