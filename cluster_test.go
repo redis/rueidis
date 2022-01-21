@@ -238,14 +238,14 @@ func TestClusterClient(t *testing.T) {
 		}
 		if err := client.Dedicated(func(c DedicatedClient) error {
 			if v, err := c.Do(context.Background(), c.B().Get().Key("a").Build()).ToString(); err != nil || v != "Delegate" {
-				t.Fatalf("unexpected respone %v %v", v, err)
+				t.Fatalf("unexpected response %v %v", v, err)
 			}
 			if v := c.DoMulti(context.Background()); len(v) != 0 {
-				t.Fatalf("received unexpected respone %v", v)
+				t.Fatalf("received unexpected response %v", v)
 			}
 			for _, resp := range c.DoMulti(context.Background(), c.B().Get().Key("a").Build()) {
 				if v, err := resp.ToString(); err != nil || v != "Delegate" {
-					t.Fatalf("unexpected respone %v %v", v, err)
+					t.Fatalf("unexpected response %v %v", v, err)
 				}
 			}
 			return nil

@@ -39,7 +39,7 @@ func TestSingleFlight(t *testing.T) {
 	}
 
 	if v := atomic.LoadInt64(&calls); v != 1 {
-		t.Fatalf("singleflight should supress all concurrent calls, got: %v", v)
+		t.Fatalf("singleflight should suppress all concurrent calls, got: %v", v)
 	}
 
 	if atomic.LoadInt64(&err) != 1 {

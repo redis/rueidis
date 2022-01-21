@@ -100,7 +100,7 @@ func TestPool(t *testing.T) {
 		pool.Store(w1)
 		pool.Close()
 		if w1.Error() != ErrClosing {
-			t.Fatalf("pool does not close exsiting wire after Close()")
+			t.Fatalf("pool does not close existing wire after Close()")
 		}
 		for i := 0; i < 100; i++ {
 			if rw := pool.Acquire(); rw != dead {
@@ -134,7 +134,7 @@ func TestPool(t *testing.T) {
 		}
 		pool.Store(w1)
 		if w1.Error() != ErrClosing {
-			t.Fatalf("pool does not close exsiting wire after Close()")
+			t.Fatalf("pool does not close existing wire after Close()")
 		}
 	})
 }
