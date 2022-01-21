@@ -13,16 +13,20 @@ import (
 
 const (
 	// DefaultCacheBytes is the default value of ClientOption.CacheSizeEachConn, which is 128 MiB
-	DefaultCacheBytes   = 128 * (1 << 20)
-	DefaultPoolSize     = 1000
-	DefaultDialTimeout  = 5 * time.Second
+	DefaultCacheBytes = 128 * (1 << 20)
+	// DefaultPoolSize is the default value of ClientOption.BlockingPoolSize
+	DefaultPoolSize = 1000
+	// DefaultDialTimeout is the default value of ClientOption.Dialer.Timeout
+	DefaultDialTimeout = 5 * time.Second
+	// DefaultTCPKeepAlive is the default value of ClientOption.Dialer.KeepAlive
 	DefaultTCPKeepAlive = 1 * time.Second
 )
 
 var (
 	// ErrClosing means the Client.Close had been called
 	ErrClosing = errors.New("rueidis client is closing")
-	ErrNoAddr  = errors.New("no address in InitAddress")
+	// ErrNoAddr means the ClientOption.InitAddress is empty
+	ErrNoAddr = errors.New("no address in InitAddress")
 )
 
 // ClientOption should be passed to NewClient to construct a Client

@@ -123,7 +123,7 @@ func TestNewHashRepository(t *testing.T) {
 			if !IsRecordNotFound(err) {
 				t.Fatalf("should not be found, but got %v", ei)
 			}
-			ei, err = repo.FetchCache(ctx, e.Key, time.Minute)
+			_, err = repo.FetchCache(ctx, e.Key, time.Minute)
 			if !IsRecordNotFound(err) {
 				t.Fatalf("should not be found, but got %v", e)
 			}
