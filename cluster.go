@@ -13,6 +13,7 @@ import (
 	"github.com/rueian/rueidis/internal/cmds"
 )
 
+// ErrNoSlot indicates that there is no redis node owns the key slot.
 var ErrNoSlot = errors.New("the slot has no redis node")
 
 type clusterClient struct {
@@ -396,7 +397,7 @@ func (c *dedicatedClusterClient) Do(ctx context.Context, cmd cmds.Completed) (re
 	c.check(cmd.Slot())
 retry:
 	if wire, err := c.acquire(); err != nil {
-		return newErrResult(err)
+		resp = newErrResult(err)
 	} else {
 		resp = wire.Do(cmd)
 		if c.client.shouldRefreshRetry(resp.NonRedisError()) {

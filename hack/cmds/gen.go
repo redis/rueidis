@@ -10,32 +10,32 @@ import (
 	"unicode"
 )
 
-type GoStruct struct {
-	Node      *Node
+type goStruct struct {
+	Node      *node
 	FullName  string
-	BuildDef  BuildDef
+	BuildDef  buildDef
 	Variadic  bool
-	NextNodes []*Node
+	NextNodes []*node
 }
 
-type BuildDef struct {
+type buildDef struct {
 	MethodName string
 	Command    []string
-	Parameters []Parameter
+	Parameters []parameter
 }
 
-type Parameter struct {
+type parameter struct {
 	Name string
 	Type string
 }
 
-type Command struct {
+type command struct {
 	Group     string     `json:"group"`
 	Since     string     `json:"since"`
-	Arguments []Argument `json:"arguments"`
+	Arguments []argument `json:"arguments"`
 }
 
-type Argument struct {
+type argument struct {
 	Name     interface{} `json:"name"`
 	Type     interface{} `json:"type"`
 	Command  string      `json:"command"`
@@ -43,19 +43,19 @@ type Argument struct {
 	Multiple bool        `json:"multiple"`
 	Optional bool        `json:"optional"`
 	Variadic bool        `json:"variadic"`
-	Block    []Argument  `json:"block"`
+	Block    []argument  `json:"block"`
 }
 
-type Node struct {
-	Parent *Node
-	Child  *Node
-	Next   *Node
-	Cmd    Command
-	Arg    Argument
+type node struct {
+	Parent *node
+	Child  *node
+	Next   *node
+	Cmd    command
+	Arg    argument
 	Root   bool
 }
 
-func (n *Node) FindRoot() (root *Node) {
+func (n *node) FindRoot() (root *node) {
 	root = n
 	for root.Parent != nil {
 		root = root.Parent
@@ -63,7 +63,7 @@ func (n *Node) FindRoot() (root *Node) {
 	return
 }
 
-func (n *Node) GoStructs() (out []GoStruct) {
+func (n *node) GoStructs() (out []goStruct) {
 	fn := n.FullName()
 	// fix for XGROUP and XADD
 	if len(n.Arg.Enum) == 2 && ((n.Arg.Enum[0] == "id" && n.Arg.Enum[1] == "$") || (n.Arg.Enum[0] == "*" && n.Arg.Enum[1] == "ID")) {
@@ -86,13 +86,13 @@ func (n *Node) GoStructs() (out []GoStruct) {
 	}
 
 	if len(n.Arg.Block) > 0 {
-		panic("GoStructs should not be called on Block Node")
+		panic("GoStructs should not be called on Block node")
 	} else if len(n.Arg.Enum) > 0 {
 		for _, e := range n.Arg.Enum {
-			s := GoStruct{
+			s := goStruct{
 				Node:     n,
 				FullName: fn,
-				BuildDef: BuildDef{
+				BuildDef: buildDef{
 					MethodName: name(e),
 					Command:    nil,
 					Parameters: nil,
@@ -118,7 +118,7 @@ func (n *Node) GoStructs() (out []GoStruct) {
 				switch cmds[1] {
 				case "seconds", "milliseconds", "timestamp", "milliseconds-timestamp":
 					s.BuildDef.Command = append(s.BuildDef.Command, cmds[:1]...)
-					s.BuildDef.Parameters = []Parameter{{Name: LcFirst(name(cmds[1])), Type: "integer"}}
+					s.BuildDef.Parameters = []parameter{{Name: lcFirst(name(cmds[1])), Type: "integer"}}
 				case "*":
 					// fix for FT.AGGREGATE
 					if cmds[0] == "LOAD" {
@@ -131,7 +131,7 @@ func (n *Node) GoStructs() (out []GoStruct) {
 						s.FullName = strings.TrimRight(s.FullName, "Label1")
 						s.BuildDef.MethodName = strings.TrimRight(s.BuildDef.MethodName, "Label1")
 						s.BuildDef.Command = append(s.BuildDef.Command, cmds[0])
-						s.BuildDef.Parameters = []Parameter{{Name: "labels", Type: "[]string"}}
+						s.BuildDef.Parameters = []parameter{{Name: "labels", Type: "[]string"}}
 					}
 				default:
 					panic("unknown enum " + cmds[1])
@@ -141,10 +141,10 @@ func (n *Node) GoStructs() (out []GoStruct) {
 		}
 		return
 	} else {
-		s := GoStruct{
+		s := goStruct{
 			Node:     n,
 			FullName: fn,
-			BuildDef: BuildDef{
+			BuildDef: buildDef{
 				MethodName: n.Name(),
 				Parameters: nil,
 			},
@@ -160,10 +160,10 @@ func (n *Node) GoStructs() (out []GoStruct) {
 			if s.FullName == "FtCreatePrefixPrefix" && nm == "count" && n.Arg.Command == "PREFIX" {
 				s.FullName = "FtCreatePrefixCount"
 			}
-			s.BuildDef.Parameters = []Parameter{{Name: LcFirst(name(nm)), Type: n.Arg.Type.(string)}} // not change to go type here, change at render
+			s.BuildDef.Parameters = []parameter{{Name: lcFirst(name(nm)), Type: n.Arg.Type.(string)}} // not change to go type here, change at render
 		case []interface{}:
 			for i, nn := range nm {
-				s.BuildDef.Parameters = append(s.BuildDef.Parameters, Parameter{Name: LcFirst(name(nn.(string))), Type: n.Arg.Type.([]interface{})[i].(string)})
+				s.BuildDef.Parameters = append(s.BuildDef.Parameters, parameter{Name: lcFirst(name(nn.(string))), Type: n.Arg.Type.([]interface{})[i].(string)})
 			}
 		default:
 			if n.Arg.Type == nil || (n.Arg.Type != nil && n.Arg.Type.(string) == "command") {
@@ -177,18 +177,18 @@ func (n *Node) GoStructs() (out []GoStruct) {
 	return
 }
 
-func (n *Node) Variadic() bool {
+func (n *node) Variadic() bool {
 	return n.Arg.Multiple || n.Arg.Variadic
 }
 
-func (n *Node) FullName() (out string) {
+func (n *node) FullName() (out string) {
 	if n.Parent != nil {
 		return n.Parent.FullName() + n.Name()
 	}
 	return n.Name()
 }
 
-func (n *Node) Name() (out string) {
+func (n *node) Name() (out string) {
 	var tokens []string
 	if n.Arg.Command != "" {
 		tokens = append(tokens, name(n.Arg.Command))
@@ -219,8 +219,8 @@ func (n *Node) Name() (out string) {
 	return
 }
 
-func (n *Node) NextNodes() []*Node {
-	var nodes []*Node
+func (n *node) NextNodes() []*node {
+	var nodes []*node
 
 	if n.Child == nil && n.Variadic() {
 		nodes = append(nodes, n)
@@ -253,7 +253,7 @@ func (n *Node) NextNodes() []*Node {
 	return nodes
 }
 
-func (n *Node) Walk(fn func(node *Node)) {
+func (n *node) Walk(fn func(node *node)) {
 	next := n
 	for next != nil {
 		if next.Child != nil {
@@ -266,7 +266,7 @@ func (n *Node) Walk(fn func(node *Node)) {
 }
 
 func main() {
-	var commands = map[string]Command{}
+	var commands = map[string]command{}
 
 	for _, p := range []string{
 		"./commands.json",
@@ -286,23 +286,23 @@ func main() {
 	}
 
 	// fis missing GEORADIUS_RO and GEORADIUSBYMEMBER_RO
-	commands["GEORADIUS_RO"] = Command{Arguments: filterArgs(commands["GEORADIUS"].Arguments, "STORE")}
-	commands["GEORADIUSBYMEMBER_RO"] = Command{Arguments: filterArgs(commands["GEORADIUSBYMEMBER"].Arguments, "STORE")}
+	commands["GEORADIUS_RO"] = command{Arguments: filterArgs(commands["GEORADIUS"].Arguments, "STORE")}
+	commands["GEORADIUSBYMEMBER_RO"] = command{Arguments: filterArgs(commands["GEORADIUSBYMEMBER"].Arguments, "STORE")}
 
 	var roots []string
-	nodes := map[string]*Node{}
+	nodes := map[string]*node{}
 	for k, cmd := range commands {
-		root := &Node{Cmd: cmd, Arg: Argument{Name: k, Command: k, Type: "command"}, Root: true}
+		root := &node{Cmd: cmd, Arg: argument{Name: k, Command: k, Type: "command"}, Root: true}
 		root.Next = makeChildNodes(root, cmd.Arguments)
 		roots = append(roots, k)
 		nodes[k] = root
 	}
 	sort.Strings(roots)
 
-	var structs = map[string]GoStruct{}
+	var structs = map[string]goStruct{}
 	for _, name := range roots {
-		node := nodes[name]
-		node.Walk(func(n *Node) {
+		n := nodes[name]
+		n.Walk(func(n *node) {
 			for _, s := range n.GoStructs() {
 				if v, ok := structs[s.FullName]; ok {
 					panic("struct conflict " + v.FullName)
@@ -327,14 +327,14 @@ func main() {
 	tests(tf, structs)
 }
 
-func tests(f io.Writer, structs map[string]GoStruct) {
+func tests(f io.Writer, structs map[string]goStruct) {
 	var names []string
 	for name := range structs {
 		names = append(names, name)
 	}
 	sort.Strings(names)
 
-	var pathes [][]GoStruct
+	var pathes [][]goStruct
 	for _, name := range names {
 		s := structs[name]
 		if !s.Node.Root {
@@ -364,7 +364,7 @@ func tests(f io.Writer, structs map[string]GoStruct) {
 
 }
 
-func makePath(s GoStruct, path []GoStruct, pathes [][]GoStruct) [][]GoStruct {
+func makePath(s goStruct, path []goStruct, pathes [][]goStruct) [][]goStruct {
 	path = append(path, s)
 	nexts := s.Node.NextNodes()
 	if len(path) < 8 {
@@ -379,7 +379,7 @@ func makePath(s GoStruct, path []GoStruct, pathes [][]GoStruct) [][]GoStruct {
 				n = n.Child
 			}
 			for _, ss := range n.GoStructs() {
-				clone := make([]GoStruct, len(path))
+				clone := make([]goStruct, len(path))
 				copy(clone, path)
 				pathes = makePath(ss, clone, pathes)
 			}
@@ -391,7 +391,7 @@ func makePath(s GoStruct, path []GoStruct, pathes [][]GoStruct) [][]GoStruct {
 	return pathes
 }
 
-func testParams(defs []Parameter) string {
+func testParams(defs []parameter) string {
 	var params []string
 	for _, param := range defs {
 		switch toGoType(param.Type) {
@@ -406,7 +406,7 @@ func testParams(defs []Parameter) string {
 	return strings.Join(params, ", ")
 }
 
-func printPath(f io.Writer, receiver string, path []GoStruct, end string) {
+func printPath(f io.Writer, receiver string, path []goStruct, end string) {
 	fmt.Fprintf(f, "\t%s.%s()", receiver, path[0].BuildDef.MethodName)
 	for _, s := range path[1:] {
 		fmt.Fprintf(f, ".%s(", s.BuildDef.MethodName)
@@ -421,7 +421,7 @@ func printPath(f io.Writer, receiver string, path []GoStruct, end string) {
 	fmt.Fprintf(f, ".%s()\n", end)
 }
 
-func generate(f io.Writer, structs map[string]GoStruct) {
+func generate(f io.Writer, structs map[string]goStruct) {
 	var names []string
 	for name := range structs {
 		names = append(names, name)
@@ -471,7 +471,7 @@ func checkAllUsed(name string, tags map[string]bool) {
 	}
 }
 
-func allOptional(s *Node, nodes []*Node) bool {
+func allOptional(s *node, nodes []*node) bool {
 	for _, n := range nodes {
 		if s == n {
 			continue
@@ -508,7 +508,7 @@ func toGoName(paramName string) string {
 	return paramName
 }
 
-func printRootBuilder(w io.Writer, root GoStruct) {
+func printRootBuilder(w io.Writer, root goStruct) {
 	fmt.Fprintf(w, "func (b *Builder) %s() (c %s) {\n", root.FullName, root.FullName)
 
 	var appends []string
@@ -526,7 +526,7 @@ func printRootBuilder(w io.Writer, root GoStruct) {
 	fmt.Fprintf(w, "}\n\n")
 }
 
-func rootCf(root GoStruct) (tag string) {
+func rootCf(root goStruct) (tag string) {
 	if within(root, blockingCMDs) {
 		if tag != "" {
 			panic("root cf collision")
@@ -551,13 +551,13 @@ func rootCf(root GoStruct) (tag string) {
 	return tag
 }
 
-func printFinalBuilder(w io.Writer, parent GoStruct, method, ss string) {
+func printFinalBuilder(w io.Writer, parent goStruct, method, ss string) {
 	fmt.Fprintf(w, "func (c %s) %s() %s {\n", parent.FullName, method, ss)
 	fmt.Fprintf(w, "\treturn %s(c)\n", ss)
 	fmt.Fprintf(w, "}\n\n")
 }
 
-func printBuilder(w io.Writer, parent, next GoStruct) {
+func printBuilder(w io.Writer, parent, next goStruct) {
 	fmt.Fprintf(w, "func (c %s) %s(", parent.FullName, next.BuildDef.MethodName)
 	if len(next.BuildDef.Parameters) == 1 && next.Variadic {
 		fmt.Fprintf(w, "%s ...%s", toGoName(next.BuildDef.Parameters[0].Name), toGoType(next.BuildDef.Parameters[0].Type))
@@ -689,13 +689,13 @@ func printBuilder(w io.Writer, parent, next GoStruct) {
 	fmt.Fprintf(w, "}\n\n")
 }
 
-func makeChildNodes(parent *Node, args []Argument) (first *Node) {
+func makeChildNodes(parent *node, args []argument) (first *node) {
 	if len(args) == 0 {
 		return nil
 	}
-	var nodes []*Node
+	var nodes []*node
 	for _, arg := range args {
-		nodes = append(nodes, &Node{Parent: parent, Arg: arg})
+		nodes = append(nodes, &node{Parent: parent, Arg: arg})
 	}
 	for i, node := range nodes {
 		node.Child = makeChildNodes(node, node.Arg.Block)
@@ -716,7 +716,7 @@ func makeChildNodes(parent *Node, args []Argument) (first *Node) {
 	return nodes[0]
 }
 
-func filterArgs(args []Argument, exclude string) (out []Argument) {
+func filterArgs(args []argument, exclude string) (out []argument) {
 	for _, a := range args {
 		if a.Command != exclude {
 			out = append(out, a)
@@ -737,26 +737,26 @@ func name(s string) (name string) {
 		return "Empty"
 	}
 	for _, n := range strings.Split(strings.NewReplacer("-", " ", "_", " ", ":", " ", "/", " ", ".", " ", "*", "all").Replace(s), " ") {
-		name += UcFirst(strings.ToLower(n))
+		name += ucFirst(strings.ToLower(n))
 	}
 	return name
 }
 
-func UcFirst(str string) string {
+func ucFirst(str string) string {
 	for i, v := range str {
 		return string(unicode.ToUpper(v)) + str[i+1:]
 	}
 	return ""
 }
 
-func LcFirst(str string) string {
+func lcFirst(str string) string {
 	for i, v := range str {
 		return string(unicode.ToLower(v)) + str[i+1:]
 	}
 	return ""
 }
 
-func within(cmd GoStruct, cmds map[string]bool) bool {
+func within(cmd goStruct, cmds map[string]bool) bool {
 	n := strings.ToLower(cmd.FullName)
 	if _, ok := cmds[n]; ok {
 		cmds[n] = true

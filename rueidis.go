@@ -12,17 +12,20 @@ import (
 )
 
 const (
-	DefaultCacheBytes   = 128 * (1 << 20) // 128 MiB
+	// DefaultCacheBytes is the default value of ClientOption.CacheSizeEachConn, which is 128 MiB
+	DefaultCacheBytes   = 128 * (1 << 20)
 	DefaultPoolSize     = 1000
 	DefaultDialTimeout  = 5 * time.Second
 	DefaultTCPKeepAlive = 1 * time.Second
 )
 
 var (
+	// ErrClosing means the Client.Close had been called
 	ErrClosing = errors.New("rueidis client is closing")
 	ErrNoAddr  = errors.New("no address in InitAddress")
 )
 
+// ClientOption should be passed to NewClient to construct a Client
 type ClientOption struct {
 	// InitAddress point to redis nodes.
 	// Rueidis will connect to them one by one and issue CLUSTER SLOT command to initialize the cluster client until success.

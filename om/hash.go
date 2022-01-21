@@ -10,6 +10,9 @@ import (
 	"github.com/rueian/rueidis"
 )
 
+// NewHashRepository creates an HashRepository.
+// The prefix parameter is used as redis key prefix. The entity stored by the repository will be named in the form of `{prefix}:{id}`
+// The schema parameter should be a struct with fields tagged with `redis:",key"` and `redis:",ver"`
 func NewHashRepository(prefix string, schema interface{}, client rueidis.Client) Repository {
 	repo := &HashRepository{
 		prefix: prefix,
@@ -24,6 +27,7 @@ func NewHashRepository(prefix string, schema interface{}, client rueidis.Client)
 
 var _ Repository = (*HashRepository)(nil)
 
+// HashRepository is an OM repository backed by redis hash.
 type HashRepository struct {
 	prefix  string
 	idx     string
@@ -33,12 +37,14 @@ type HashRepository struct {
 	client  rueidis.Client
 }
 
+// NewEntity returns an empty entity which type is `*{schema}` and will have the `redis:",key"` field be set with ULID automatically.
 func (r *HashRepository) NewEntity() (entity interface{}) {
 	v := reflect.New(r.typ)
 	v.Elem().Field(r.schema.key.idx).Set(reflect.ValueOf(id()))
 	return v.Interface()
 }
 
+// Fetch an entity whose name is `{prefix}:{id}` and returns as `*{schema}`
 func (r *HashRepository) Fetch(ctx context.Context, id string) (v interface{}, err error) {
 	record, err := r.client.Do(ctx, r.client.B().Hgetall().Key(key(r.prefix, id)).Build()).ToMap()
 	if err != nil {
@@ -51,6 +57,7 @@ func (r *HashRepository) Fetch(ctx context.Context, id string) (v interface{}, e
 	return val.Interface(), nil
 }
 
+// FetchCache is like Fetch, but it uses client side caching mechanism.
 func (r *HashRepository) FetchCache(ctx context.Context, id string, ttl time.Duration) (v interface{}, err error) {
 	record, err := r.client.DoCache(ctx, r.client.B().Hgetall().Key(key(r.prefix, id)).Cache(), ttl).ToMap()
 	if err != nil {
@@ -63,6 +70,8 @@ func (r *HashRepository) FetchCache(ctx context.Context, id string, ttl time.Dur
 	return val.Interface(), nil
 }
 
+// Save the entity under the redis key of `{prefix}:{id}`.
+// It also uses the `redis:",ver"` field and lua script to perform optimistic locking and prevent lost update.
 func (r *HashRepository) Save(ctx context.Context, entity interface{}) (err error) {
 	val, ok := ptrValueOf(entity, r.typ)
 	if !ok {
@@ -93,18 +102,28 @@ func (r *HashRepository) Save(ctx context.Context, entity interface{}) (err erro
 	return nil
 }
 
+// Remove the entity under the redis key of `{prefix}:{id}`.
 func (r *HashRepository) Remove(ctx context.Context, id string) error {
 	return r.client.Do(ctx, r.client.B().Del().Key(key(r.prefix, id)).Build()).Error()
 }
 
+// CreateIndex uses FT.CREATE from the RediSearch module to create inverted index under the name `hashidx:{prefix}`
+// You can use the cmdFn parameter to mutate the index construction command.
 func (r *HashRepository) CreateIndex(ctx context.Context, cmdFn func(schema FtCreateSchema) Completed) error {
 	return r.client.Do(ctx, cmdFn(r.client.B().FtCreate().Index(r.idx).OnHash().Prefix(1).Prefix(r.prefix+":").Schema())).Error()
 }
 
+// DropIndex uses FT.DROPINDEX from the RediSearch module to drop index whose name is `hashidx:{prefix}`
 func (r *HashRepository) DropIndex(ctx context.Context) error {
 	return r.client.Do(ctx, r.client.B().FtDropindex().Index(r.idx).Build()).Error()
 }
 
+// Search uses FT.SEARCH from the RediSearch module to search the index whose name is `hashidx:{prefix}`
+// It returns three values:
+// 1. total count of match results inside the redis, and note that it might be larger than returned search result.
+// 2. search result, which type is []*{schema}, and note that its length might smaller than the first return value.
+// 3. error if any
+// You can use the cmdFn parameter to mutate the search command.
 func (r *HashRepository) Search(ctx context.Context, cmdFn func(search FtSearchIndex) Completed) (int64, interface{}, error) {
 	resp, err := r.client.Do(ctx, cmdFn(r.client.B().FtSearch().Index(r.idx))).ToArray()
 	if err != nil {

@@ -6,11 +6,13 @@ import (
 	"encoding/hex"
 )
 
+// NewLuaScript creates a Lua instance whose Lua.Exec uses EVALSHA and EVAL.
 func NewLuaScript(script string) *Lua {
 	sum := sha1.Sum([]byte(script))
 	return &Lua{script: script, sha1: hex.EncodeToString(sum[:])}
 }
 
+// NewLuaScriptReadOnly creates a Lua instance whose Lua.Exec uses EVALSHA_RO and EVAL_RO.
 func NewLuaScriptReadOnly(script string) *Lua {
 	lua := NewLuaScript(script)
 	lua.readonly = true

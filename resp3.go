@@ -9,7 +9,7 @@ import (
 	"unsafe"
 )
 
-var chunked = errors.New("unbounded redis message")
+var errChunked = errors.New("unbounded redis message")
 
 type reader func(i *bufio.Reader) (RedisMessage, error)
 
@@ -41,7 +41,7 @@ func readSimpleString(i *bufio.Reader) (m RedisMessage, err error) {
 
 func readBlobString(i *bufio.Reader) (m RedisMessage, err error) {
 	m.string, err = readB(i)
-	if err == chunked {
+	if err == errChunked {
 		sb := strings.Builder{}
 		for {
 			if _, err = i.Discard(1); err != nil { // discard the ';'
@@ -90,7 +90,7 @@ func readNull(i *bufio.Reader) (m RedisMessage, err error) {
 
 func readArray(i *bufio.Reader) (m RedisMessage, err error) {
 	length, err := readI(i)
-	if err == chunked {
+	if err == errChunked {
 		m.values, err = readE(i)
 	}
 	if err != nil {
@@ -102,7 +102,7 @@ func readArray(i *bufio.Reader) (m RedisMessage, err error) {
 
 func readMap(i *bufio.Reader) (m RedisMessage, err error) {
 	length, err := readI(i)
-	if err == chunked {
+	if err == errChunked {
 		m.values, err = readE(i)
 	}
 	if err != nil {
@@ -145,7 +145,7 @@ func readI(i *bufio.Reader) (int64, error) {
 		case '-' == c:
 			neg = true
 		case '?' == c:
-			return 0, chunked
+			return 0, errChunked
 		default:
 			panic("received unexpected number byte: " + string(c))
 		}

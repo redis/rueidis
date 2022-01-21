@@ -28,10 +28,12 @@ func (r *RedisError) Error() string {
 	return r.string
 }
 
+// IsNil checks if it is a redis nil message.
 func (r *RedisError) IsNil() bool {
 	return r.typ == '_'
 }
 
+// IsMoved checks if it is a redis MOVED message and returns moved address.
 func (r *RedisError) IsMoved() (addr string, ok bool) {
 	if ok = strings.HasPrefix(r.string, "MOVED"); ok {
 		addr = strings.Split(r.string, " ")[2]
@@ -39,6 +41,7 @@ func (r *RedisError) IsMoved() (addr string, ok bool) {
 	return
 }
 
+// IsAsk checks if it is a redis ASK message and returns ask address.
 func (r *RedisError) IsAsk() (addr string, ok bool) {
 	if ok = strings.HasPrefix(r.string, "ASK"); ok {
 		addr = strings.Split(r.string, " ")[2]
@@ -46,10 +49,12 @@ func (r *RedisError) IsAsk() (addr string, ok bool) {
 	return
 }
 
+// IsTryAgain checks if it is a redis TRYAGAIN message and returns ask address.
 func (r *RedisError) IsTryAgain() bool {
 	return strings.HasPrefix(r.string, "TRYAGAIN")
 }
 
+// IsNoScript checks if it is a redis NOSCRIPT message.
 func (r *RedisError) IsNoScript() bool {
 	return strings.HasPrefix(r.string, "NOSCRIPT")
 }
