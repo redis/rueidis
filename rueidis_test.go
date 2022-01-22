@@ -119,7 +119,7 @@ func ExampleClient_do() {
 
 	client.Do(ctx, client.B().Get().Key("k").Build()).AsInt64()
 
-	client.Do(ctx, client.B().Hmget().Key("h").Field("a", "b").Build()).AsStrMap()
+	client.Do(ctx, client.B().Hmget().Key("h").Field("a", "b").Build()).ToArray()
 
 	client.Do(ctx, client.B().Scard().Key("s").Build()).ToInt64()
 
@@ -139,7 +139,7 @@ func ExampleClient_doCache() {
 
 	client.DoCache(ctx, client.B().Get().Key("k").Cache(), time.Minute).AsInt64()
 
-	client.DoCache(ctx, client.B().Hmget().Key("h").Field("a", "b").Cache(), time.Minute).AsStrMap()
+	client.DoCache(ctx, client.B().Hmget().Key("h").Field("a", "b").Cache(), time.Minute).ToArray()
 
 	client.DoCache(ctx, client.B().Scard().Key("s").Cache(), time.Minute).ToInt64()
 

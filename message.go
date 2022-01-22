@@ -316,22 +316,24 @@ func (m *RedisMessage) AsMap() (map[string]RedisMessage, error) {
 	return toMap(values), nil
 }
 
-// AsStrMap check if message is a redis array/set response, and convert to map[string]string.
+// AsStrMap check if message is a redis map/array/set response, and convert to map[string]string.
 // Non string value will be ignored, including nil value.
 func (m *RedisMessage) AsStrMap() (map[string]string, error) {
-	values, err := m.ToArray()
-	if err != nil {
+	if err := m.Error(); err != nil {
 		return nil, err
 	}
-	r := make(map[string]string, len(values)/2)
-	for i := 0; i < len(values); i += 2 {
-		k := values[i]
-		v := values[i+1]
-		if (k.typ == '$' || k.typ == '+') && (v.typ == '$' || v.typ == '+' || len(v.string) != 0) {
-			r[k.string] = v.string
+	if m.typ == '%' || m.typ == '*' || m.typ == '~' {
+		r := make(map[string]string, len(m.values)/2)
+		for i := 0; i < len(m.values); i += 2 {
+			k := m.values[i]
+			v := m.values[i+1]
+			if (k.typ == '$' || k.typ == '+') && (v.typ == '$' || v.typ == '+' || len(v.string) != 0) {
+				r[k.string] = v.string
+			}
 		}
+		return r, nil
 	}
-	return r, nil
+	panic(fmt.Sprintf("redis message type %c is not a map/array/set", m.typ))
 }
 
 // ToMap check if message is a redis map response, and return it

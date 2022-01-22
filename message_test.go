@@ -301,7 +301,7 @@ func TestRedisMessage(t *testing.T) {
 		}
 
 		defer func() {
-			if !strings.Contains(recover().(string), "redis message type t is not a array") {
+			if !strings.Contains(recover().(string), "redis message type t is not a map/array/set") {
 				t.Fatal("AsMap not panic as expected")
 			}
 		}()
