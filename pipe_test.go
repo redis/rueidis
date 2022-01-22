@@ -333,17 +333,33 @@ func TestClientSideCaching(t *testing.T) {
 	}()
 
 	// single flight
+	miss := uint64(0)
+	hits := uint64(0)
 	wg := sync.WaitGroup{}
 	wg.Add(5000)
 	for i := 0; i < 5000; i++ {
 		go func() {
 			defer wg.Done()
-			if v, _ := p.DoCache(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage(); v.string != "1" {
+			v, _ := p.DoCache(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage()
+			if v.string != "1" {
 				t.Errorf("unexpected cached result, expected %v, got %v", "1", v.string)
+			}
+			if v.IsCacheHit() {
+				atomic.AddUint64(&hits, 1)
+			} else {
+				atomic.AddUint64(&miss, 1)
 			}
 		}()
 	}
 	wg.Wait()
+
+	if v := atomic.LoadUint64(&miss); v != 1 {
+		t.Fatalf("unexpected cache miss count %v", v)
+	}
+
+	if v := atomic.LoadUint64(&hits); v != 4999 {
+		t.Fatalf("unexpected cache hits count %v", v)
+	}
 
 	// cache invalidation
 	mock.Expect().Reply(RedisMessage{
