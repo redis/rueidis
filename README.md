@@ -16,7 +16,7 @@ A Fast Golang Redis RESP3 client that does auto pipelining and supports client s
 * redis cluster, pub/sub, streams, TLS, RedisJSON, RedisBloom, RediSearch, RedisGraph, RedisTimeseries
 * IDE friendly redis command builder
 * Hash/RedisJSON Object Mapping with client side caching and optimistic locking
-* OpenTelemetry tracing
+* OpenTelemetry tracing and metrics
 
 ## Requirement
 
@@ -78,6 +78,16 @@ a key is expired on the server. Please follow [#6833](https://github.com/redis/r
 
 Although an explicit client side TTL is required, the `DoCache()` still sends a `PTTL` command to server and make sure that
 the client side TTL is not longer than the TTL on server side.
+
+Users can use `IsCacheHit()` to verify that if the response came from the client side memory.
+
+```golang
+c.DoCache(ctx, c.B().Hmget().Key("myhash").Field("1", "2").Cache(), time.Minute).IsCacheHit() == true
+```
+
+If the OpenTelemetry is enabled by the `rueidisotel.WithClient(client)`, then there are also two metrics instrumented:
+* rueidis_do_cache_miss
+* rueidis_do_cache_hits
 
 ### Benchmark
 
