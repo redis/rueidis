@@ -36,11 +36,16 @@ func TestLRU(t *testing.T) {
 		}
 	})
 
-	t.Run("Cache Expire By PTTL -2", func(t *testing.T) {
+	t.Run("Cache Should Not Expire By PTTL -2", func(t *testing.T) {
 		lru := setup(t)
-		lru.Update("0", "GET", RedisMessage{typ: '+', string: "0"}, -2)
-		if v, _ := lru.GetOrPrepare("1", "GET", TTL); v.typ != 0 {
-			t.Fatalf("got unexpected value from the first GetOrPrepare: %v", v)
+		if v, entry := lru.GetOrPrepare("1", "GET", TTL); v.typ != 0 || entry != nil {
+			t.Fatalf("got unexpected value from the GetOrPrepare after pttl: %v %v", v, entry)
+		}
+		lru.Update("1", "GET", RedisMessage{typ: '+', string: "1"}, -2)
+		if v, _ := lru.GetOrPrepare("1", "GET", TTL); v.typ == 0 {
+			t.Fatalf("did not get the value from the second GetOrPrepare")
+		} else if v.string != "1" {
+			t.Fatalf("got unexpected value from the second GetOrPrepare: %v", v)
 		}
 	})
 

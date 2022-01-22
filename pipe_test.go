@@ -325,11 +325,18 @@ func TestClientSideCaching(t *testing.T) {
 
 	go func() {
 		mock.Expect("CLIENT", "CACHING", "YES").
-			Expect("GET", "a").
+			Expect("MULTI").
 			Expect("PTTL", "a").
+			Expect("GET", "a").
+			Expect("EXEC").
 			ReplyString("OK").
-			ReplyString("1").
-			ReplyInteger(-1)
+			ReplyString("OK").
+			ReplyString("OK").
+			ReplyString("OK").
+			Reply(RedisMessage{typ: '*', values: []RedisMessage{
+				{typ: ':', integer: -1},
+				{typ: '+', string: "1"},
+			}})
 	}()
 
 	// single flight
@@ -371,11 +378,18 @@ func TestClientSideCaching(t *testing.T) {
 	})
 	go func() {
 		mock.Expect("CLIENT", "CACHING", "YES").
-			Expect("GET", "a").
+			Expect("MULTI").
 			Expect("PTTL", "a").
+			Expect("GET", "a").
+			Expect("EXEC").
 			ReplyString("OK").
-			ReplyString("2").
-			ReplyInteger(-1)
+			ReplyString("OK").
+			ReplyString("OK").
+			ReplyString("OK").
+			Reply(RedisMessage{typ: '*', values: []RedisMessage{
+				{typ: ':', integer: -1},
+				{typ: '+', string: "2"},
+			}})
 	}()
 
 	for {

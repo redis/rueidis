@@ -150,14 +150,9 @@ func (c *lru) Update(key, cmd string, value RedisMessage, pttl int64) {
 				ele = ele.Next()
 			}
 		}
-		if pttl == -2 {
-			store.ttl = time.Time{}
-		} else {
-			if pttl != -1 {
-				ttl := time.Now().Add(time.Duration(pttl) * time.Millisecond)
-				if ttl.Before(store.ttl) {
-					store.ttl = ttl
-				}
+		if pttl >= 0 {
+			if ttl := time.Now().Add(time.Duration(pttl) * time.Millisecond); ttl.Before(store.ttl) {
+				store.ttl = ttl
 			}
 		}
 	}

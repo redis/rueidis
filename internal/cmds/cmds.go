@@ -16,6 +16,12 @@ var (
 		cs: &CommandSlice{s: []string{"CLIENT", "CACHING", "YES"}},
 		cf: optInTag,
 	}
+	MultiCmd = Completed{
+		cs: &CommandSlice{s: []string{"MULTI"}},
+	}
+	ExecCmd = Completed{
+		cs: &CommandSlice{s: []string{"EXEC"}},
+	}
 	QuitCmd = Completed{
 		cs: &CommandSlice{s: []string{"QUIT"}},
 	}

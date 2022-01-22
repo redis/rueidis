@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"strconv"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -64,16 +65,26 @@ func testSETGET(t *testing.T, client Client) {
 
 	t.Logf("testing client side caching with %d interations and %d parallelism\n", keys*5, para)
 	jobs, wait = parallel(para)
-	for i := 0; i < keys*5; i++ {
+	hits, miss := int64(0), int64(0)
+	for i := 0; i < keys*10; i++ {
 		key := strconv.Itoa(rand.Intn(keys / 100))
 		jobs <- func() {
-			val, err := client.DoCache(ctx, client.B().Get().Key(key).Cache(), time.Minute).ToString()
+			resp := client.DoCache(ctx, client.B().Get().Key(key).Cache(), time.Minute)
+			val, err := resp.ToString()
 			if v, ok := kvs[key]; !((ok && val == v) || (!ok && IsRedisNil(err))) {
 				t.Errorf("unexpected set response %v %v %v", val, err, ok)
+			}
+			if resp.IsCacheHit() {
+				atomic.AddInt64(&hits, 1)
+			} else {
+				atomic.AddInt64(&miss, 1)
 			}
 		}
 	}
 	wait()
+	if atomic.LoadInt64(&miss) != 100 || atomic.LoadInt64(&hits) != int64(keys*10-100) {
+		t.Fatalf("unexpected client side caching hits and miss %v %v", atomic.LoadInt64(&hits), atomic.LoadInt64(&miss))
+	}
 
 	t.Logf("testing DEL caching with %d keys and %d parallelism\n", keys*2, para)
 	jobs, wait = parallel(para)

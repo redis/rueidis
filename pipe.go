@@ -209,7 +209,6 @@ func (p *pipe) _backgroundRead() {
 	var (
 		err   error
 		msg   RedisMessage
-		tmp   RedisMessage
 		ones  = make([]cmds.Completed, 1)
 		multi []cmds.Completed
 		ch    chan RedisResult
@@ -226,15 +225,13 @@ func (p *pipe) _backgroundRead() {
 			continue
 		}
 		// if unfulfilled multi commands are lead by opt-in and get success response
-		if ff != len(multi) && len(multi) == 3 && multi[0].IsOptIn() {
-			if ff == 1 {
-				tmp = msg
-			} else if ff == 2 {
-				cacheable := cmds.Cacheable(multi[ff-1])
+		if ff != len(multi) && len(multi) == 5 && multi[0].IsOptIn() {
+			if ff == 4 {
+				cacheable := cmds.Cacheable(multi[3])
 				ck, cc := cacheable.CacheKey()
-				tmp.attrs = cacheMark
-				p.cache.Update(ck, cc, tmp, msg.integer)
-				tmp = RedisMessage{}
+				cp := msg.values[1]
+				cp.attrs = cacheMark
+				p.cache.Update(ck, cc, cp, msg.values[0].integer)
 			}
 		}
 	nextCMD:
@@ -437,7 +434,17 @@ func (p *pipe) DoCache(cmd cmds.Cacheable, ttl time.Duration) RedisResult {
 	} else if entry != nil {
 		return newResult(entry.Wait(), nil)
 	}
-	return p.DoMulti(cmds.OptInCmd, cmds.Completed(cmd), cmds.NewCompleted([]string{"PTTL", ck}))[1]
+	exec, err := p.DoMulti(
+		cmds.OptInCmd,
+		cmds.MultiCmd,
+		cmds.NewCompleted([]string{"PTTL", ck}),
+		cmds.Completed(cmd),
+		cmds.ExecCmd,
+	)[4].ToArray()
+	if err != nil {
+		return newErrResult(err)
+	}
+	return newResult(exec[1], nil)
 }
 
 func (p *pipe) Error() error {
