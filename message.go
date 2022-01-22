@@ -329,9 +329,7 @@ func (m *RedisMessage) AsStrMap() (map[string]string, error) {
 		v := values[i+1]
 		if (k.typ == '$' || k.typ == '+') && (v.typ == '$' || v.typ == '+' || len(v.string) != 0) {
 			r[k.string] = v.string
-			continue
 		}
-		panic(fmt.Sprintf("redis message type %c as map key is not supported", values[i].typ))
 	}
 	return r, nil
 }
