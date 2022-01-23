@@ -7,8 +7,10 @@ const (
 	blockTag = uint16(1 << 14)
 	readonly = uint16(1 << 13)
 	noRetTag = uint16(1<<12) | readonly // make noRetTag can also be retried
+	// InitSlot indicates that the command be sent to any redis node in cluster
 	InitSlot = uint16(1 << 15)
-	NoSlot   = InitSlot + 1
+	// NoSlot indicates that the command has no key slot specified
+	NoSlot = InitSlot + 1
 )
 
 var (
