@@ -29,8 +29,8 @@ var (
 var _ rueidis.Client = (*otelclient)(nil)
 
 // WithClient creates a new rueidis.Client with OpenTelemetry tracing enabled
-func WithClient(client rueidis.Client, opts ...Option) (o *otelclient) {
-	o = &otelclient{client: client}
+func WithClient(client rueidis.Client, opts ...Option) rueidis.Client {
+	o := &otelclient{client: client}
 	for _, fn := range opts {
 		fn(o)
 	}

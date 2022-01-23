@@ -394,7 +394,7 @@ func (p *pipe) syncDoMulti(resp []RedisResult, multi []cmds.Completed) []RedisRe
 	var msg RedisMessage
 
 	for _, cmd := range multi {
-		err = writeCmd(p.w, cmd.Commands())
+		_ = writeCmd(p.w, cmd.Commands())
 	}
 	if err = p.w.Flush(); err != nil {
 		goto abort
