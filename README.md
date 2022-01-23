@@ -378,6 +378,43 @@ func main() {
 }
 ```
 
+## Command Response Cheatsheet
+
+It is hard to remember what message type is returned from redis and which parsing method should be used with. So, here is some common examples:
+
+```golang
+// GET
+client.Do(ctx, client.B().Get().Key("k").Build()).ToString()
+client.Do(ctx, client.B().Get().Key("k").Build()).AsInt64()
+// MGET
+client.Do(ctx, client.B().Mget().Key("k1", "k2").Build()).ToArray()
+// SET
+client.Do(ctx, client.B().Set().Key("k").Value("v").Build()).Error()
+// INCR
+client.Do(ctx, client.B().Incr().Key("k").Build()).ToInt64()
+// HGET
+client.Do(ctx, client.B().Hget().Key("k").Field("f").Build()).ToString()
+// HMGET
+client.Do(ctx, client.B().Hmget().Key("h").Field("a", "b").Build()).ToArray()
+// HGETALL
+client.Do(ctx, client.B().Hgetall().Key("h").Build()).AsStrMap()
+// ZRANGE
+client.Do(ctx, client.B().Zrange().Key("k").Min("1").Max("2").Build()).AsStrSlice()
+// ZRANK
+client.Do(ctx, client.B().Zrank().Key("k").Member("m").Build()).ToInt64()
+// ZSCORE
+client.Do(ctx, client.B().Zscore().Key("k").Member("m").Build()).ToFloat64()
+// SCARD
+client.Do(ctx, client.B().Scard().Key("k").Build()).ToInt64()
+// SMEMBERS
+client.Do(ctx, client.B().Smembers().Key("k").Build()).AsStrSlice()
+// LINDEX
+client.Do(ctx, client.B().Lindex().Key("k").Index(0).Build()).ToString()
+// LPOP
+client.Do(ctx, client.B().Lpop().Key("k").Build()).ToString()
+client.Do(ctx, client.B().Lpop().Key("k").Count(2).Build()).AsStrSlice()
+```
+
 ## Not Yet Implement
 
 The following subjects are not yet implemented.
