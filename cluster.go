@@ -93,29 +93,15 @@ func (c *clusterClient) refresh() (err error) {
 
 func (c *clusterClient) _refresh() (err error) {
 	var reply RedisMessage
-	var dead []string
 
 retry:
 	c.mu.RLock()
-	for addr, cc := range c.conns {
+	for _, cc := range c.conns {
 		if reply, err = cc.Do(cmds.SlotCmd).ToMessage(); err == nil {
 			break
 		}
-		dead = append(dead, addr)
 	}
 	c.mu.RUnlock()
-
-	if len(dead) != 0 {
-		c.mu.Lock()
-		for _, addr := range dead {
-			if cc, ok := c.conns[addr]; ok {
-				delete(c.conns, addr)
-				go cc.Close()
-			}
-		}
-		c.mu.Unlock()
-		dead = nil
-	}
 
 	if err != nil {
 		return err
@@ -150,9 +136,10 @@ retry:
 
 	slots := [16384]conn{}
 	for addr, g := range groups {
+		cc := masters[addr]
 		for _, slot := range g.slots {
 			for i := slot[0]; i <= slot[1]; i++ {
-				slots[i] = masters[addr]
+				slots[i] = cc
 			}
 		}
 	}
