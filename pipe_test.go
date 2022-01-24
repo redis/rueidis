@@ -401,6 +401,7 @@ func TestClientSideCaching(t *testing.T) {
 	}
 }
 
+//gocyclo:ignore
 func TestPubSub(t *testing.T) {
 	builder := cmds.NewBuilder(cmds.NoSlot)
 	t.Run("NoReply Commands In Do", func(t *testing.T) {

@@ -63,6 +63,7 @@ func (n *node) FindRoot() (root *node) {
 	return
 }
 
+//gocyclo:ignore
 func (n *node) GoStructs() (out []goStruct) {
 	fn := n.FullName()
 	// fix for XGROUP and XADD
@@ -557,6 +558,7 @@ func printFinalBuilder(w io.Writer, parent goStruct, method, ss string) {
 	fmt.Fprintf(w, "}\n\n")
 }
 
+//gocyclo:ignore
 func printBuilder(w io.Writer, parent, next goStruct) {
 	fmt.Fprintf(w, "func (c %s) %s(", parent.FullName, next.BuildDef.MethodName)
 	if len(next.BuildDef.Parameters) == 1 && next.Variadic {

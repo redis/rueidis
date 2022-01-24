@@ -6,6 +6,7 @@ import (
 	"testing"
 )
 
+//gocyclo:ignore
 func TestPool(t *testing.T) {
 	setup := func(size int) (*pool, *int32) {
 		var count int32

@@ -12,6 +12,7 @@ const PTTL = 50
 const TTL = 100 * time.Millisecond
 const Entries = 3
 
+//gocyclo:ignore
 func TestLRU(t *testing.T) {
 
 	setup := func(t *testing.T) *lru {

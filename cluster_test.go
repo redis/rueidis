@@ -40,6 +40,7 @@ var singleSlotResp = newResult(RedisMessage{typ: '*', values: []RedisMessage{
 	}},
 }}, nil)
 
+//gocyclo:ignore
 func TestClusterClientInit(t *testing.T) {
 	t.Run("Init no nodes", func(t *testing.T) {
 		if _, err := newClusterClient(ClientOption{InitAddress: []string{}}, func(dst string, opt ClientOption) conn { return nil }); err != ErrNoAddr {
@@ -118,6 +119,7 @@ func TestClusterClientInit(t *testing.T) {
 	})
 }
 
+//gocyclo:ignore
 func TestClusterClient(t *testing.T) {
 	m := &mockConn{
 		DoFn: func(cmd cmds.Completed) RedisResult {
@@ -258,6 +260,7 @@ func TestClusterClient(t *testing.T) {
 	})
 }
 
+//gocyclo:ignore
 func TestClusterClientErr(t *testing.T) {
 	t.Run("refresh err on pick", func(t *testing.T) {
 		first := true

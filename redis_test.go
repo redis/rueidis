@@ -27,6 +27,8 @@ func parallel(p int) (chan func(), func()) {
 		wg.Wait()
 	}
 }
+
+//gocyclo:ignore
 func testSETGET(t *testing.T, client Client) {
 	ctx := context.Background()
 	keys := 10000

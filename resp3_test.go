@@ -14,6 +14,7 @@ const iteration = 1000
 
 var generators = map[byte]func(i int64, f float64, str string) string{}
 
+//gocyclo:ignore
 func init() {
 	rand.Seed(time.Now().UnixNano())
 

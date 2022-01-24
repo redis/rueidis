@@ -20,6 +20,7 @@ type HashTestStruct struct {
 	F4  *int64
 }
 
+//gocyclo:ignore
 func TestNewHashRepository(t *testing.T) {
 	ctx := context.Background()
 

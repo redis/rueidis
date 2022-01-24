@@ -16,6 +16,7 @@ type JSONTestStruct struct {
 	Nested struct{ F1 string }
 }
 
+//gocyclo:ignore
 func TestNewJSONRepository(t *testing.T) {
 	ctx := context.Background()
 

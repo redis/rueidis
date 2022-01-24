@@ -112,6 +112,7 @@ func TestNewSingleClientError(t *testing.T) {
 	}
 }
 
+//gocyclo:ignore
 func TestSingleClient(t *testing.T) {
 	m := &mockConn{}
 	client, err := newSingleClient(ClientOption{InitAddress: []string{""}}, func(dst string, opt ClientOption) conn {

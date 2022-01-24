@@ -20,6 +20,7 @@ func TestIsRedisNil(t *testing.T) {
 	}
 }
 
+//gocyclo:ignore
 func TestRedisResult(t *testing.T) {
 	t.Run("ToInt64", func(t *testing.T) {
 		if _, err := (RedisResult{err: errors.New("other")}).ToInt64(); err == nil {
@@ -174,6 +175,7 @@ func TestRedisResult(t *testing.T) {
 	})
 }
 
+//gocyclo:ignore
 func TestRedisMessage(t *testing.T) {
 	t.Run("IsNil", func(t *testing.T) {
 		if !(&RedisMessage{typ: '_'}).IsNil() {

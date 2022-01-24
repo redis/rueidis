@@ -8,6 +8,7 @@ import (
 	"github.com/rueian/rueidis/internal/cmds"
 )
 
+//gocyclo:ignore
 func TestRing(t *testing.T) {
 	t.Run("PutOne", func(t *testing.T) {
 		ring := newRing()

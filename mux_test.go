@@ -178,6 +178,7 @@ func TestMuxReuseWire(t *testing.T) {
 	})
 }
 
+//gocyclo:ignore
 func TestMuxCMDRetry(t *testing.T) {
 	t.Run("wire info", func(t *testing.T) {
 		m, checkClean := setupMux([]*mockWire{
