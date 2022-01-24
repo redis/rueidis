@@ -40,9 +40,10 @@ func main() {
 
 	ctx := context.Background()
 
-	_ := c.Do(ctx, c.B().Set().Key("my_data").Value("my_value").Nx().Build()).Error()
-	val, _ := c.Do(ctx, c.B().Get().Key("my_data").Build()).ToString()
-	// val == "my_value"
+	// SET key val NX
+	c.Do(ctx, c.B().Set().Key("key").Value("val").Nx().Build()).Error()
+	// GET key
+	c.Do(ctx, c.B().Get().Key("key").Build()).ToString()
 }
 ```
 
