@@ -418,5 +418,5 @@ client.Do(ctx, client.B().Lpop().Key("k").Count(2).Build()).AsStrSlice()
 ## Not Yet Implement
 
 The following subjects are not yet implemented.
-
+* go-redis like api layer
 * RESP2
