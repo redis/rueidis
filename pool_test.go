@@ -2,6 +2,7 @@ package rueidis
 
 import (
 	"errors"
+	"runtime"
 	"sync/atomic"
 	"testing"
 )
@@ -132,6 +133,38 @@ func TestPool(t *testing.T) {
 			if rw := pool.Acquire(); rw != dead {
 				t.Fatalf("pool does not return the dead wire after Close()")
 			}
+		}
+		pool.Store(w1)
+		if w1.Error() != ErrClosing {
+			t.Fatalf("pool does not close existing wire after Close()")
+		}
+	})
+
+	t.Run("Close Waiting", func(t *testing.T) {
+		pool, count := setup(1)
+		w1 := pool.Acquire()
+		if w1.Error() != nil {
+			t.Fatalf("unexpected err %v", w1.Error())
+		}
+		pending := int64(0)
+		for i := 0; i < 100; i++ {
+			go func() {
+				atomic.AddInt64(&pending, 1)
+				if rw := pool.Acquire(); rw != dead {
+					t.Errorf("pool does not return the dead wire after Close()")
+				}
+				atomic.AddInt64(&pending, -1)
+			}()
+		}
+		for atomic.LoadInt64(&pending) != 100 {
+			runtime.Gosched()
+		}
+		if atomic.LoadInt32(count) != 1 {
+			t.Fatalf("pool should not make new wire")
+		}
+		pool.Close()
+		for atomic.LoadInt64(&pending) != 0 {
+			runtime.Gosched()
 		}
 		pool.Store(w1)
 		if w1.Error() != ErrClosing {

@@ -27,7 +27,7 @@ type pool struct {
 
 func (p *pool) Acquire() (v wire) {
 	p.cond.L.Lock()
-	for len(p.list) == 0 && p.size == cap(p.list) {
+	for len(p.list) == 0 && p.size == cap(p.list) && !p.down {
 		p.cond.Wait()
 	}
 	if p.down {
@@ -63,4 +63,5 @@ func (p *pool) Close() {
 		w.Close()
 	}
 	p.cond.L.Unlock()
+	p.cond.Broadcast()
 }
