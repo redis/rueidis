@@ -39,6 +39,7 @@ func TestNewClusterClient(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer ln.Close()
+	done := make(chan struct{})
 	go func() {
 		mock, err := accept(t, ln)
 		if err != nil {
@@ -47,6 +48,7 @@ func TestNewClusterClient(t *testing.T) {
 		slots, _ := slotsResp.ToMessage()
 		mock.Expect("CLUSTER", "SLOTS").Reply(slots)
 		mock.Expect("QUIT").ReplyString("OK")
+		close(done)
 	}()
 
 	_, port, _ := net.SplitHostPort(ln.Addr().String())
@@ -56,8 +58,33 @@ func TestNewClusterClient(t *testing.T) {
 	}
 	defer client.Close()
 	if _, ok := client.(*clusterClient); !ok {
-		t.Fatal("client should be a singleClient")
+		t.Fatal("client should be a clusterClient")
 	}
+	<-done
+}
+
+func TestNewClusterClientError(t *testing.T) {
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ln.Close()
+	done := make(chan struct{})
+	go func() {
+		mock, err := accept(t, ln)
+		if err != nil {
+			return
+		}
+		mock.Expect("CLUSTER", "SLOTS").Reply(RedisMessage{typ: '-', string: "other error"})
+		mock.Expect("QUIT").ReplyString("OK")
+		close(done)
+	}()
+	_, port, _ := net.SplitHostPort(ln.Addr().String())
+	client, err := NewClient(ClientOption{InitAddress: []string{"127.0.0.1:" + port}})
+	if client != nil || err == nil {
+		t.Errorf("unexpected return %v %v", client, err)
+	}
+	<-done
 }
 
 func TestFallBackSingleClient(t *testing.T) {
@@ -66,6 +93,7 @@ func TestFallBackSingleClient(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer ln.Close()
+	done := make(chan struct{})
 	go func() {
 		mock, err := accept(t, ln)
 		if err != nil {
@@ -73,11 +101,7 @@ func TestFallBackSingleClient(t *testing.T) {
 		}
 		mock.Expect("CLUSTER", "SLOTS").Reply(RedisMessage{typ: '-', string: redisErrMsgClusterDisabled})
 		mock.Expect("QUIT").ReplyString("OK")
-		mock, err = accept(t, ln)
-		if err != nil {
-			return
-		}
-		mock.Expect("QUIT").ReplyString("OK")
+		close(done)
 	}()
 
 	_, port, _ := net.SplitHostPort(ln.Addr().String())
@@ -85,10 +109,11 @@ func TestFallBackSingleClient(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer client.Close()
 	if _, ok := client.(*singleClient); !ok {
 		t.Fatal("client should be a singleClient")
 	}
+	client.Close()
+	<-done
 }
 
 func ExampleIsRedisNil() {

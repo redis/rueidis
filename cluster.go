@@ -48,8 +48,7 @@ func newClusterClient(opt ClientOption, connFn connFn) (client *clusterClient, e
 	}
 
 	if err = client.refresh(); err != nil {
-		client.Close()
-		return nil, err
+		return client, err
 	}
 
 	if opt.PubSubOption.onConnected != nil {
@@ -154,6 +153,10 @@ retry:
 	}
 
 	return nil
+}
+
+func (c *clusterClient) single() conn {
+	return c._pick(cmds.InitSlot)
 }
 
 func (c *clusterClient) nodes() []string {

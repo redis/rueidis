@@ -12,12 +12,15 @@ type singleClient struct {
 	conn conn
 }
 
-func newSingleClient(opt ClientOption, connFn connFn) (*singleClient, error) {
+func newSingleClient(opt ClientOption, prev conn, connFn connFn) (*singleClient, error) {
 	if len(opt.InitAddress) == 0 {
 		return nil, ErrNoAddr
 	}
 
-	client := &singleClient{cmd: cmds.NewBuilder(cmds.NoSlot), conn: connFn(opt.InitAddress[0], opt)}
+	conn := connFn(opt.InitAddress[0], opt)
+	conn.Override(prev)
+
+	client := &singleClient{cmd: cmds.NewBuilder(cmds.NoSlot), conn: conn}
 
 	if err := client.conn.Dial(); err != nil {
 		return nil, err

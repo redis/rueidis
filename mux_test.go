@@ -50,7 +50,17 @@ func TestNewMux(t *testing.T) {
 	if err := m.Dial(); err != nil {
 		t.Fatalf("unexpected error %v", err)
 	}
-	m.Close()
+
+	t.Run("Override with previous mux", func(t *testing.T) {
+		m2 := makeMux("", ClientOption{}, func(dst string, opt ClientOption) (net.Conn, error) {
+			return n1, nil
+		}, true)
+		m2.Override(m)
+		if err := m2.Dial(); err != nil {
+			t.Fatalf("unexpected error %v", err)
+		}
+		m2.Close()
+	})
 }
 
 func TestMuxOnDisconnected(t *testing.T) {
@@ -109,6 +119,7 @@ func TestMuxDialSuppress(t *testing.T) {
 	}
 }
 
+//gocyclo:ignore
 func TestMuxReuseWire(t *testing.T) {
 	t.Run("reuse wire if no error", func(t *testing.T) {
 		m, checkClean := setupMux([]*mockWire{
@@ -127,6 +138,7 @@ func TestMuxReuseWire(t *testing.T) {
 		}
 		m.Close()
 	})
+
 	t.Run("reuse blocking pool", func(t *testing.T) {
 		blocking := make(chan struct{})
 		response := make(chan RedisResult)

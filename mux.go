@@ -22,6 +22,7 @@ type singleconnect struct {
 type conn interface {
 	wire
 	Dial() error
+	Override(conn)
 	Acquire() wire
 	Store(w wire)
 	OnDisconnected(func(err error))
@@ -70,6 +71,12 @@ retry:
 		return wire
 	}
 	goto retry
+}
+
+func (m *mux) Override(cc conn) {
+	if m2, ok := cc.(*mux); ok {
+		m.wire.CompareAndSwap(m.init, m2.wire.Load())
+	}
 }
 
 func (m *mux) pipe() wire {

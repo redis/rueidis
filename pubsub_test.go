@@ -29,7 +29,7 @@ func TestSingleClientPubSubReconnect(t *testing.T) {
 				t.Errorf("unexpected subscribe err %v", err)
 			}
 			atomic.AddInt64(&count, 1)
-		}, PubSubHandler{})}, func(dst string, opt ClientOption) conn {
+		}, PubSubHandler{})}, nil, func(dst string, opt ClientOption) conn {
 		return m
 	})
 	if err != nil {
