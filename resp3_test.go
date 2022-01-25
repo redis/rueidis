@@ -162,6 +162,90 @@ func TestReadI(t *testing.T) {
 	}
 }
 
+func TestReadChunkedString(t *testing.T) {
+	m, err := readNextMessage(bufio.NewReader(strings.NewReader("$?\r\n;4\r\nHell\r\n;5\r\no wor\r\n;1\r\nd\r\n;0\r\n")))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if m.typ != '$' {
+		t.Fatalf("unexpected msg type %v", m.typ)
+	}
+	if m.string != "Hello word" {
+		t.Fatalf("unexpected msg string %v", m.string)
+	}
+}
+
+func TestReadChunkedArray(t *testing.T) {
+	m, err := readNextMessage(bufio.NewReader(strings.NewReader("*?\r\n:1\r\n:2\r\n:3\r\n.\r\n")))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if m.typ != '*' {
+		t.Fatalf("unexpected msg type %v", m.typ)
+	}
+	if len(m.values) != 3 {
+		t.Fatalf("unexpected msg values length %v", len(m.values))
+	}
+	for i, v := range m.values {
+		if v.typ != ':' || v.integer != int64(i+1) {
+			t.Fatalf("unexpected msg values %v", m.values)
+		}
+	}
+}
+
+func TestReadChunkedMap(t *testing.T) {
+	m, err := readNextMessage(bufio.NewReader(strings.NewReader("%?\r\n:1\r\n:2\r\n:3\r\n:4\r\n.\r\n")))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if m.typ != '%' {
+		t.Fatalf("unexpected msg type %v", m.typ)
+	}
+	if len(m.values) != 4 {
+		t.Fatalf("unexpected msg values length %v", len(m.values))
+	}
+	for i, v := range m.values {
+		if v.typ != ':' || v.integer != int64(i+1) {
+			t.Fatalf("unexpected msg values %v", m.values)
+		}
+	}
+}
+
+// https://github.com/redis/redis-specifications/blob/master/protocol/RESP3.md#attribute-type
+func TestReadAttr(t *testing.T) {
+	m, err := readNextMessage(bufio.NewReader(strings.NewReader("|1\r\n+key-popularity\r\n%2\r\n$1\r\na\r\n,0.1923\r\n$1\r\nb\r\n,0.0012\r\n*2\r\n:2039123\r\n:9543892\r\n")))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if m.typ != '*' {
+		t.Fatalf("unexpected msg type %v", m.typ)
+	}
+	if len(m.values) != 2 {
+		t.Fatalf("unexpected msg values length %v", len(m.values))
+	}
+	if m.values[0].typ != ':' || m.values[0].integer != 2039123 {
+		t.Fatalf("unexpected msg values[0] %v", m.values[0])
+	}
+	if m.values[1].typ != ':' || m.values[1].integer != 9543892 {
+		t.Fatalf("unexpected msg values[0] %v", m.values[1])
+	}
+	if m.attrs == nil || m.attrs.typ != '|' || len(m.attrs.values) != 2 {
+		t.Fatalf("unexpected msg attr %v", m.attrs)
+	}
+	if m.attrs.values[0].typ != '+' || m.attrs.values[0].string != "key-popularity" {
+		t.Fatalf("unexpected attr values[0] %v", m.attrs.values[0])
+	}
+	if m.attrs.values[1].typ != '%' || len(m.attrs.values[1].values) != 4 {
+		t.Fatalf("unexpected attr values[1] %v", m.attrs.values[1])
+	}
+	if m.attrs.values[1].values[0].string != "a" || m.attrs.values[1].values[1].string != "0.1923" {
+		t.Fatalf("unexpected attr values[1] %v", m.attrs.values[1])
+	}
+	if m.attrs.values[1].values[2].string != "b" || m.attrs.values[1].values[3].string != "0.0012" {
+		t.Fatalf("unexpected attr values[1] %v", m.attrs.values[1])
+	}
+}
+
 func TestWriteBReadB(t *testing.T) {
 	TWriterAndReader(t, writeB, readB, false)
 }

@@ -323,6 +323,15 @@ func TestRedisMessage(t *testing.T) {
 		(&RedisMessage{typ: 't'}).ToMap()
 	})
 
+	t.Run("ToMap with non string key", func(t *testing.T) {
+		defer func() {
+			if !strings.Contains(recover().(string), "redis message type : as map key is not supported") {
+				t.Fatal("ToString not panic as expected")
+			}
+		}()
+		(&RedisMessage{typ: '%', values: []RedisMessage{{typ: ':'}, {typ: ':'}}}).ToMap()
+	})
+
 	t.Run("IsCacheHit", func(t *testing.T) {
 		if (&RedisMessage{typ: '_'}).IsCacheHit() {
 			t.Fatal("IsCacheHit not as expected")

@@ -92,11 +92,12 @@ func readArray(i *bufio.Reader) (m RedisMessage, err error) {
 	length, err := readI(i)
 	if err == errChunked {
 		m.values, err = readE(i)
+	} else {
+		m.values, err = readA(i, int(length))
 	}
 	if err != nil {
 		return RedisMessage{}, err
 	}
-	m.values, err = readA(i, int(length))
 	return
 }
 
@@ -104,11 +105,12 @@ func readMap(i *bufio.Reader) (m RedisMessage, err error) {
 	length, err := readI(i)
 	if err == errChunked {
 		m.values, err = readE(i)
+	} else {
+		m.values, err = readA(i, int(length*2))
 	}
 	if err != nil {
 		return RedisMessage{}, err
 	}
-	m.values, err = readA(i, int(length*2))
 	return
 }
 
@@ -145,7 +147,10 @@ func readI(i *bufio.Reader) (int64, error) {
 		case '-' == c:
 			neg = true
 		case '?' == c:
-			return 0, errChunked
+			if _, err = i.Discard(2); err == nil {
+				err = errChunked
+			}
+			return 0, err
 		default:
 			panic("received unexpected number byte: " + string(c))
 		}

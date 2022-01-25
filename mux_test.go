@@ -28,6 +28,57 @@ func setupMux(wires []*mockWire) (conn *mux, checkClean func(t *testing.T)) {
 		}
 }
 
+type refuseError struct{}
+
+func (n *refuseError) Error() string {
+	return ""
+}
+
+func (n *refuseError) Timeout() bool {
+	return false
+}
+
+func (n *refuseError) Temporary() bool {
+	return false
+}
+
+func TestNewMuxWithoutRetryOnRefuse(t *testing.T) {
+	c := 0
+	m := makeMux("", ClientOption{}, func(dst string, opt ClientOption) (net.Conn, error) {
+		c++
+		return nil, &refuseError{}
+	}, false)
+	if err := m.Dial(); err != nil {
+		t.Fatalf("unexpected return %v", err)
+	}
+	if c != 1 {
+		t.Fatalf("dialFn not called")
+	}
+	if w := m.pipe(); w != m.dead {
+		t.Fatalf("unexpected wire %v", w)
+	}
+}
+
+func TestNewMuxWithRetryOnRefuse(t *testing.T) {
+	c := 0
+	m := makeMux("", ClientOption{}, func(dst string, opt ClientOption) (net.Conn, error) {
+		c++
+		return nil, &refuseError{}
+	}, true)
+	if err := m.Dial(); err == nil {
+		t.Fatalf("unexpected return %v", err)
+	}
+	if c != 1 {
+		t.Fatalf("dialFn not called")
+	}
+	if err := m.Dial(); err == nil {
+		t.Fatalf("unexpected return %v", err)
+	}
+	if c != 2 {
+		t.Fatalf("dialFn not called")
+	}
+}
+
 func TestNewMux(t *testing.T) {
 	n1, n2 := net.Pipe()
 	mock := &redisMock{t: t, buf: bufio.NewReader(n2), conn: n2}
