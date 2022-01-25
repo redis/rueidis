@@ -88,7 +88,7 @@ func (r *redisMock) Close() {
 func write(o io.Writer, m RedisMessage) (err error) {
 	_, err = o.Write([]byte{m.typ})
 	switch m.typ {
-	case '+', '-':
+	case '+', '-', '_':
 		_, err = o.Write(append([]byte(m.string), '\r', '\n'))
 	case ':':
 		_, err = o.Write(append([]byte(strconv.FormatInt(m.integer, 10)), '\r', '\n'))
@@ -398,6 +398,32 @@ func TestClientSideCaching(t *testing.T) {
 			continue
 		}
 		break
+	}
+}
+
+func TestClientSideCachingExecFailWith(t *testing.T) {
+	p, mock, cancel, _ := setup(t, ClientOption{})
+	defer cancel()
+
+	go func() {
+		mock.Expect("CLIENT", "CACHING", "YES").
+			Expect("MULTI").
+			Expect("PTTL", "a").
+			Expect("GET", "a").
+			Expect("EXEC").
+			ReplyString("OK").
+			ReplyString("OK").
+			ReplyString("OK").
+			ReplyString("OK").
+			Reply(RedisMessage{typ: '_'})
+	}()
+
+	v, err := p.DoCache(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage()
+	if !IsRedisNil(err) {
+		t.Errorf("unexpected err, got %v", err)
+	}
+	if v.IsCacheHit() {
+		t.Errorf("unexpected cache hit")
 	}
 }
 

@@ -229,9 +229,13 @@ func (p *pipe) _backgroundRead() {
 			if ff == 4 {
 				cacheable := cmds.Cacheable(multi[3])
 				ck, cc := cacheable.CacheKey()
-				cp := msg.values[1]
-				cp.attrs = cacheMark
-				p.cache.Update(ck, cc, cp, msg.values[0].integer)
+				if len(msg.values) != 2 { // EXEC aborted
+					p.cache.Update(ck, cc, msg, 0)
+				} else {
+					cp := msg.values[1]
+					cp.attrs = cacheMark
+					p.cache.Update(ck, cc, cp, msg.values[0].integer)
+				}
 			}
 		}
 	nextCMD:
