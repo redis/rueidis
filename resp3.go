@@ -120,7 +120,7 @@ func readS(i *bufio.Reader) (string, error) {
 		return "", err
 	}
 	if trim := len(bs) - 2; trim < 0 {
-		panic("received unexpected simple string message ending without CRLF")
+		panic(unexpectedNoCRLF)
 	} else {
 		bs = bs[:trim]
 	}
@@ -152,7 +152,7 @@ func readI(i *bufio.Reader) (int64, error) {
 			}
 			return 0, err
 		default:
-			panic("received unexpected number byte: " + string(c))
+			panic(unexpectedNumByte + string(c))
 		}
 	}
 }
@@ -215,11 +215,11 @@ func readNextMessage(i *bufio.Reader) (m RedisMessage, err error) {
 	var typ byte
 	for {
 		if typ, err = i.ReadByte(); err != nil {
-			return m, err
+			return RedisMessage{}, err
 		}
 		fn := readers[typ]
 		if fn == nil {
-			panic("received unknown message type: " + string(typ))
+			panic(unknownMessageType + string(typ))
 		}
 		if m, err = fn(i); err != nil {
 			return RedisMessage{}, err
@@ -243,3 +243,9 @@ func writeCmd(o *bufio.Writer, cmd []string) (err error) {
 	}
 	return err
 }
+
+const (
+	unexpectedNoCRLF   = "received unexpected simple string message ending without CRLF"
+	unexpectedNumByte  = "received unexpected number byte: "
+	unknownMessageType = "received unknown message type: "
+)

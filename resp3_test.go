@@ -3,7 +3,9 @@ package rueidis
 import (
 	"bufio"
 	"bytes"
+	"io"
 	"math/rand"
+	"reflect"
 	"strconv"
 	"strings"
 	"testing"
@@ -176,73 +178,84 @@ func TestReadChunkedString(t *testing.T) {
 }
 
 func TestReadChunkedArray(t *testing.T) {
-	m, err := readNextMessage(bufio.NewReader(strings.NewReader("*?\r\n:1\r\n:2\r\n:3\r\n.\r\n")))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if m.typ != '*' {
-		t.Fatalf("unexpected msg type %v", m.typ)
-	}
-	if len(m.values) != 3 {
-		t.Fatalf("unexpected msg values length %v", len(m.values))
-	}
-	for i, v := range m.values {
-		if v.typ != ':' || v.integer != int64(i+1) {
-			t.Fatalf("unexpected msg values %v", m.values)
+	data := "*?\r\n:1\r\n:2\r\n:3\r\n.\r\n"
+	data += data
+	in := bufio.NewReader(strings.NewReader(data))
+
+	for i := 0; i < 2; i++ {
+		m, err := readNextMessage(in)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if m.typ != '*' {
+			t.Fatalf("unexpected msg type %v", m.typ)
+		}
+		if len(m.values) != 3 {
+			t.Fatalf("unexpected msg values length %v", len(m.values))
+		}
+		for i, v := range m.values {
+			if v.typ != ':' || v.integer != int64(i+1) {
+				t.Fatalf("unexpected msg values %v", m.values)
+			}
 		}
 	}
 }
 
 func TestReadChunkedMap(t *testing.T) {
-	m, err := readNextMessage(bufio.NewReader(strings.NewReader("%?\r\n:1\r\n:2\r\n:3\r\n:4\r\n.\r\n")))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if m.typ != '%' {
-		t.Fatalf("unexpected msg type %v", m.typ)
-	}
-	if len(m.values) != 4 {
-		t.Fatalf("unexpected msg values length %v", len(m.values))
-	}
-	for i, v := range m.values {
-		if v.typ != ':' || v.integer != int64(i+1) {
-			t.Fatalf("unexpected msg values %v", m.values)
+	data := "%?\r\n:1\r\n:2\r\n:3\r\n:4\r\n.\r\n"
+	data += data
+	in := bufio.NewReader(strings.NewReader(data))
+
+	for i := 0; i < 2; i++ {
+		m, err := readNextMessage(in)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if m.typ != '%' {
+			t.Fatalf("unexpected msg type %v", m.typ)
+		}
+		if len(m.values) != 4 {
+			t.Fatalf("unexpected msg values length %v", len(m.values))
+		}
+		for i, v := range m.values {
+			if v.typ != ':' || v.integer != int64(i+1) {
+				t.Fatalf("unexpected msg values %v", m.values)
+			}
 		}
 	}
 }
 
 // https://github.com/redis/redis-specifications/blob/master/protocol/RESP3.md#attribute-type
 func TestReadAttr(t *testing.T) {
-	m, err := readNextMessage(bufio.NewReader(strings.NewReader("|1\r\n+key-popularity\r\n%2\r\n$1\r\na\r\n,0.1923\r\n$1\r\nb\r\n,0.0012\r\n*2\r\n:2039123\r\n:9543892\r\n")))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if m.typ != '*' {
-		t.Fatalf("unexpected msg type %v", m.typ)
-	}
-	if len(m.values) != 2 {
-		t.Fatalf("unexpected msg values length %v", len(m.values))
-	}
-	if m.values[0].typ != ':' || m.values[0].integer != 2039123 {
-		t.Fatalf("unexpected msg values[0] %v", m.values[0])
-	}
-	if m.values[1].typ != ':' || m.values[1].integer != 9543892 {
-		t.Fatalf("unexpected msg values[0] %v", m.values[1])
-	}
-	if m.attrs == nil || m.attrs.typ != '|' || len(m.attrs.values) != 2 {
-		t.Fatalf("unexpected msg attr %v", m.attrs)
-	}
-	if m.attrs.values[0].typ != '+' || m.attrs.values[0].string != "key-popularity" {
-		t.Fatalf("unexpected attr values[0] %v", m.attrs.values[0])
-	}
-	if m.attrs.values[1].typ != '%' || len(m.attrs.values[1].values) != 4 {
-		t.Fatalf("unexpected attr values[1] %v", m.attrs.values[1])
-	}
-	if m.attrs.values[1].values[0].string != "a" || m.attrs.values[1].values[1].string != "0.1923" {
-		t.Fatalf("unexpected attr values[1] %v", m.attrs.values[1])
-	}
-	if m.attrs.values[1].values[2].string != "b" || m.attrs.values[1].values[3].string != "0.0012" {
-		t.Fatalf("unexpected attr values[1] %v", m.attrs.values[1])
+	data := "|1\r\n+key-popularity\r\n%2\r\n$1\r\na\r\n,0.1923\r\n$1\r\nb\r\n,0.0012\r\n*2\r\n:2039123\r\n:9543892\r\n"
+	data += data
+	in := bufio.NewReader(strings.NewReader(data))
+
+	for i := 0; i < 2; i++ {
+		m, err := readNextMessage(in)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if m.typ != '*' {
+			t.Fatalf("unexpected msg type %v", m.typ)
+		}
+		if m.values[0].integer != 2039123 {
+			t.Fatalf("unexpected msg values[0] %v", m.values[0])
+		}
+		if m.values[1].integer != 9543892 {
+			t.Fatalf("unexpected msg values[0] %v", m.values[1])
+		}
+		if !reflect.DeepEqual(*m.attrs, RedisMessage{typ: '|', values: []RedisMessage{
+			{typ: '+', string: "key-popularity"},
+			{typ: '%', values: []RedisMessage{
+				{typ: '$', string: "a"},
+				{typ: ',', string: "0.1923"},
+				{typ: '$', string: "b"},
+				{typ: ',', string: "0.0012"},
+			}},
+		}}) {
+			t.Fatalf("unexpected msg attr %v", m.attrs)
+		}
 	}
 }
 
@@ -273,6 +286,31 @@ func TWriterAndReader(t *testing.T, writer func(*bufio.Writer, byte, string) err
 			t.Fatalf("unexpected err: %v", err)
 		} else if str1 != str2 {
 			t.Fatalf("fail to read the string: \n expected: %v \n got: %v", str1, str2)
+		}
+	}
+}
+
+func TestRand(t *testing.T) {
+	read := func(in *bufio.Reader) (m RedisMessage, err error) {
+		defer func() {
+			if err == nil {
+				rec := recover()
+				msg, ok := rec.(string)
+				if ok && !strings.HasPrefix(msg, unexpectedNoCRLF) &&
+					!strings.HasPrefix(msg, unexpectedNumByte) &&
+					!strings.HasPrefix(msg, unknownMessageType) {
+					t.Fatalf("unexpected panic %v", msg)
+				}
+			}
+		}()
+		m, err = readNextMessage(in)
+		return
+	}
+	for i := 0; i < iteration; i++ {
+		if _, err := read(bufio.NewReader(strings.NewReader(random(false)))); err != nil {
+			if err != io.EOF {
+				t.Fatalf("unexpected err %v", err)
+			}
 		}
 	}
 }
