@@ -28,6 +28,68 @@ func parallel(p int) (chan func(), func()) {
 	}
 }
 
+func testFlush(t *testing.T, client Client) {
+	ctx := context.Background()
+
+	keys := 1000
+	para := 10
+
+	kvs := make(map[string]string, keys)
+	for i := 0; i < keys; i++ {
+		kvs[strconv.Itoa(i)] = strconv.FormatInt(rand.Int63(), 10)
+	}
+
+	t.Logf("prepare %d keys for FLUSH\n", keys)
+	jobs, wait := parallel(para)
+	for i := 0; i < keys; i++ {
+		key := strconv.Itoa(i)
+		jobs <- func() {
+			val, err := client.Do(ctx, client.B().Set().Key(key).Value(kvs[key]).Build()).ToString()
+			if err != nil || val != "OK" {
+				t.Errorf("unexpected set response %v %v", val, err)
+			}
+		}
+	}
+	wait()
+
+	t.Logf("testing client side caching before flush\n")
+	jobs, wait = parallel(para)
+	for i := 0; i < keys; i++ {
+		key := strconv.Itoa(i)
+		jobs <- func() {
+			resp := client.DoCache(ctx, client.B().Get().Key(key).Cache(), time.Minute)
+			val, err := resp.ToString()
+			if val != kvs[key] {
+				t.Errorf("unexpected csc get response %v %v", val, err)
+			}
+			if resp.IsCacheHit() {
+				t.Errorf("unexpected csc cache hit")
+			}
+		}
+	}
+	wait()
+
+	if err := client.Do(ctx, client.B().Flushall().Build()).Error(); err != nil {
+		t.Errorf("unexpected flush err %v", err)
+	}
+
+	t.Logf("testing client side caching after flush\n")
+	jobs, wait = parallel(para)
+	for i := 0; i < keys; i++ {
+		key := strconv.Itoa(i)
+		jobs <- func() {
+			resp := client.DoCache(ctx, client.B().Get().Key(key).Cache(), time.Minute)
+			if !IsRedisNil(resp.Error()) {
+				t.Errorf("unexpected csc get response after flush %v", resp)
+			}
+			if resp.IsCacheHit() {
+				t.Errorf("unexpected csc cache hit after flush")
+			}
+		}
+	}
+	wait()
+}
+
 //gocyclo:ignore
 func testSETGET(t *testing.T, client Client) {
 	ctx := context.Background()
@@ -59,7 +121,7 @@ func testSETGET(t *testing.T, client Client) {
 		jobs <- func() {
 			val, err := client.Do(ctx, client.B().Get().Key(key).Build()).ToString()
 			if v, ok := kvs[key]; !((ok && val == v) || (!ok && IsRedisNil(err))) {
-				t.Errorf("unexpected set response %v %v %v", val, err, ok)
+				t.Errorf("unexpected get response %v %v %v", val, err, ok)
 			}
 		}
 	}
@@ -74,7 +136,7 @@ func testSETGET(t *testing.T, client Client) {
 			resp := client.DoCache(ctx, client.B().Get().Key(key).Cache(), time.Minute)
 			val, err := resp.ToString()
 			if v, ok := kvs[key]; !((ok && val == v) || (!ok && IsRedisNil(err))) {
-				t.Errorf("unexpected set response %v %v %v", val, err, ok)
+				t.Errorf("unexpected csc get response %v %v %v", val, err, ok)
 			}
 			if resp.IsCacheHit() {
 				atomic.AddInt64(&hits, 1)
@@ -88,7 +150,7 @@ func testSETGET(t *testing.T, client Client) {
 		t.Fatalf("unexpected client side caching hits and miss %v %v", atomic.LoadInt64(&hits), atomic.LoadInt64(&miss))
 	}
 
-	t.Logf("testing DEL caching with %d keys and %d parallelism\n", keys*2, para)
+	t.Logf("testing DEL with %d keys and %d parallelism\n", keys*2, para)
 	jobs, wait = parallel(para)
 	for i := 0; i < keys*2; i++ {
 		key := strconv.Itoa(i)
@@ -96,6 +158,22 @@ func testSETGET(t *testing.T, client Client) {
 			val, err := client.Do(ctx, client.B().Del().Key(key).Build()).ToInt64()
 			if _, ok := kvs[key]; !((val == 1 && ok) || (val == 0 && !ok)) {
 				t.Errorf("unexpected del response %v %v %v", val, err, ok)
+			}
+		}
+	}
+	wait()
+
+	t.Logf("testing client side caching after delete\n")
+	jobs, wait = parallel(para)
+	for i := 0; i < keys/100; i++ {
+		key := strconv.Itoa(i)
+		jobs <- func() {
+			resp := client.DoCache(ctx, client.B().Get().Key(key).Cache(), time.Minute)
+			if !IsRedisNil(resp.Error()) {
+				t.Errorf("unexpected csc get response after delete %v", resp)
+			}
+			if resp.IsCacheHit() {
+				t.Errorf("unexpected csc cache hit after delete")
 			}
 		}
 	}
@@ -243,6 +321,7 @@ func TestSingleClientIntegration(t *testing.T) {
 	defer client.Close()
 
 	run(t, client, testSETGET, testBlockingZPOP, testBlockingXREAD, testPubSub)
+	run(t, client, testFlush)
 }
 
 func TestClusterClientIntegration(t *testing.T) {

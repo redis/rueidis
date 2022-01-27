@@ -268,7 +268,11 @@ func (p *pipe) handlePush(values []RedisMessage) {
 	// server-cpu-usage
 	switch values[0].string {
 	case "invalidate":
-		p.cache.Delete(values[1].values)
+		if values[1].IsNil() {
+			p.cache.Delete(nil)
+		} else {
+			p.cache.Delete(values[1].values)
+		}
 	case "message":
 		if p.cbs.onMessage != nil {
 			p.cbs.onMessage(values[1].string, values[2].string)

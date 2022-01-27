@@ -162,17 +162,27 @@ func (c *lru) Update(key, cmd string, value RedisMessage, pttl int64) {
 	}
 }
 
+func (c *lru) purge(store *keyCache) {
+	if store != nil {
+		for cmd, ele := range store.cache {
+			if e := ele.Value.(*entry); e.val.typ != 0 { // do not delete pending entries
+				delete(store.cache, cmd)
+				c.list.Remove(ele)
+				c.size -= e.size
+			}
+		}
+	}
+}
+
 func (c *lru) Delete(keys []RedisMessage) {
 	c.mu.Lock()
-	for _, k := range keys {
-		if store, ok := c.store[k.string]; ok {
-			for cmd, ele := range store.cache {
-				if e := ele.Value.(*entry); e.val.typ != 0 { // do not delete pending entries
-					delete(store.cache, cmd)
-					c.list.Remove(ele)
-					c.size -= e.size
-				}
-			}
+	if keys == nil {
+		for _, store := range c.store {
+			c.purge(store)
+		}
+	} else {
+		for _, k := range keys {
+			c.purge(c.store[k.string])
 		}
 	}
 	c.mu.Unlock()

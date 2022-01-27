@@ -323,7 +323,7 @@ func TestClientSideCaching(t *testing.T) {
 	p, mock, cancel, _ := setup(t, ClientOption{})
 	defer cancel()
 
-	go func() {
+	expectCSC := func(ttl int64, resp string) {
 		mock.Expect("CLIENT", "CACHING", "YES").
 			Expect("MULTI").
 			Expect("PTTL", "a").
@@ -334,11 +334,23 @@ func TestClientSideCaching(t *testing.T) {
 			ReplyString("OK").
 			ReplyString("OK").
 			Reply(RedisMessage{typ: '*', values: []RedisMessage{
-				{typ: ':', integer: -1},
-				{typ: '+', string: "1"},
+				{typ: ':', integer: ttl},
+				{typ: '+', string: resp},
 			}})
-	}()
+	}
+	invalidateCSC := func(keys RedisMessage) {
+		mock.Expect().Reply(RedisMessage{
+			typ: '>',
+			values: []RedisMessage{
+				{typ: '+', string: "invalidate"},
+				keys,
+			},
+		})
+	}
 
+	go func() {
+		expectCSC(-1, "1")
+	}()
 	// single flight
 	miss := uint64(0)
 	hits := uint64(0)
@@ -369,39 +381,33 @@ func TestClientSideCaching(t *testing.T) {
 	}
 
 	// cache invalidation
-	mock.Expect().Reply(RedisMessage{
-		typ: '>',
-		values: []RedisMessage{
-			{typ: '+', string: "invalidate"},
-			{typ: '*', values: []RedisMessage{{typ: '+', string: "a"}}},
-		},
-	})
+	invalidateCSC(RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "a"}}})
 	go func() {
-		mock.Expect("CLIENT", "CACHING", "YES").
-			Expect("MULTI").
-			Expect("PTTL", "a").
-			Expect("GET", "a").
-			Expect("EXEC").
-			ReplyString("OK").
-			ReplyString("OK").
-			ReplyString("OK").
-			ReplyString("OK").
-			Reply(RedisMessage{typ: '*', values: []RedisMessage{
-				{typ: ':', integer: -1},
-				{typ: '+', string: "2"},
-			}})
+		expectCSC(-1, "2")
 	}()
 
 	for {
-		if v, _ := p.DoCache(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), time.Second).ToMessage(); v.string != "2" {
-			t.Logf("waiting for invalidating")
-			continue
+		if v, _ := p.DoCache(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), time.Second).ToMessage(); v.string == "2" {
+			break
 		}
-		break
+		t.Logf("waiting for invalidating")
+	}
+
+	// cache flush invalidation
+	invalidateCSC(RedisMessage{typ: '_'})
+	go func() {
+		expectCSC(-1, "3")
+	}()
+
+	for {
+		if v, _ := p.DoCache(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), time.Second).ToMessage(); v.string == "3" {
+			break
+		}
+		t.Logf("waiting for invalidating")
 	}
 }
 
-func TestClientSideCachingExecFailWith(t *testing.T) {
+func TestClientSideCachingExecAbort(t *testing.T) {
 	p, mock, cancel, _ := setup(t, ClientOption{})
 	defer cancel()
 

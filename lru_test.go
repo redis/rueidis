@@ -109,6 +109,25 @@ func TestLRU(t *testing.T) {
 		}
 	})
 
+	t.Run("Cache Flush", func(t *testing.T) {
+		lru := setup(t)
+		for i := 1; i < Entries; i++ {
+			lru.GetOrPrepare(strconv.Itoa(i), "GET", TTL)
+			lru.Update(strconv.Itoa(i), "GET", RedisMessage{typ: '+', string: strconv.Itoa(i)}, -1)
+		}
+		for i := 1; i < Entries; i++ {
+			if v, _ := lru.GetOrPrepare(strconv.Itoa(i), "GET", TTL); v.string != strconv.Itoa(i) {
+				t.Fatalf("got unexpected value before flush all: %v", v)
+			}
+		}
+		lru.Delete(nil)
+		for i := 1; i <= Entries; i++ {
+			if v, _ := lru.GetOrPrepare(strconv.Itoa(i), "GET", TTL); v.typ != 0 {
+				t.Fatalf("got unexpected value after flush all: %v", v)
+			}
+		}
+	})
+
 	t.Run("Cache FreeAndClose", func(t *testing.T) {
 		lru := setup(t)
 		v, entry := lru.GetOrPrepare("1", "GET", TTL)
