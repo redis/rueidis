@@ -3,6 +3,7 @@ package rueidis
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"io"
 	"math/rand"
 	"reflect"
@@ -301,6 +302,7 @@ func TestRand(t *testing.T) {
 					!strings.HasPrefix(msg, unknownMessageType) {
 					t.Fatalf("unexpected panic %v", msg)
 				}
+				err = errors.New("panic as expected")
 			}
 		}()
 		m, err = readNextMessage(in)
@@ -308,9 +310,38 @@ func TestRand(t *testing.T) {
 	}
 	for i := 0; i < iteration; i++ {
 		if _, err := read(bufio.NewReader(strings.NewReader(random(false)))); err != nil {
-			if err != io.EOF {
+			if err != io.EOF && err.Error() != "panic as expected" {
 				t.Fatalf("unexpected err %v", err)
 			}
+		}
+	}
+}
+
+func TestChunkedStringRand(t *testing.T) {
+	chunkedPrefix := "$?\n;"
+
+	read := func(in *bufio.Reader) (m RedisMessage, err error) {
+		defer func() {
+			if err == nil {
+				rec := recover()
+				msg, ok := rec.(string)
+				if ok && !strings.HasPrefix(msg, unexpectedNoCRLF) &&
+					!strings.HasPrefix(msg, unexpectedNumByte) &&
+					!strings.HasPrefix(msg, unknownMessageType) {
+					t.Fatalf("unexpected panic %v", msg)
+				}
+				err = errors.New("panic as expected")
+			}
+		}()
+		m, err = readNextMessage(in)
+		return
+	}
+
+	for i := 0; i < iteration; i++ {
+		if m, err := read(bufio.NewReader(strings.NewReader(chunkedPrefix + random(false)))); err == nil {
+			t.Fatalf("unexpected no err %v", m)
+		} else if err != io.EOF && err != errChunked && err.Error() != "panic as expected" {
+			t.Fatalf("unexpected err %v", err)
 		}
 	}
 }
