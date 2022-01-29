@@ -13,3 +13,4 @@ jobs:
       - run: ./cc-test-reporter before-build
       - run: ./dockertest.sh
       - run: ./cc-test-reporter after-build -p $(go list -m) --exit-code $?
+      - run: bash <(curl -s https://codecov.io/bash)
