@@ -49,7 +49,7 @@ func main() {
 
 ## Auto Pipeline
 
-All non-blocking commands sending to a single redis instance are automatically pipelined through one tcp connection,
+All non-blocking commands sending to a single redis node are automatically pipelined through one tcp connection,
 which reduces the overall round trip costs, and gets higher throughput.
 
 ### Benchmark comparison with go-redis v8.11.4
@@ -96,7 +96,7 @@ If the OpenTelemetry is enabled by the `rueidisotel.WithClient(client)`, then th
 
 Benchmark source code: https://github.com/rueian/rueidis-benchmark
 
-### Supported Commands for Client Side Caching
+### Supported Commands by Client Side Caching
 
 * bitcount
 * bitfieldro
@@ -244,7 +244,7 @@ script := rueidis.NewLuaScript("return {KEYS[1],KEYS[2],ARGV[1],ARGV[2]}")
 list, err := script.Exec(ctx, client, []string{"k1", "k2"}, []string{"a1", "a2"}).ToArray()
 ```
 
-## Redis Cluster and Single Redis
+## Redis Cluster, Single Redis and Sentinel
 
 To connect to a redis cluster, the `NewClient` should be used:
 
@@ -256,6 +256,17 @@ c, _ := rueidis.NewClient(rueidis.ClientOption{
 ```
 
 To connect to a single redis node, still use the `NewClient` with one InitAddress
+
+To connect to sentinels, specify the required master set name:
+
+```golang
+c, _ := rueidis.NewClient(rueidis.ClientOption{
+    InitAddress: []string{"127.0.0.1:26379", "127.0.0.1:26380", "127.0.0.1:26381"},
+    Sentinel: rueidis.SentinelOption{
+        MasterSet: "my_master",
+    },
+})
+```
 
 ## Command Builder
 

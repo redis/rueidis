@@ -207,3 +207,28 @@ func ExampleClient_dedicatedCAS() {
 		return nil
 	})
 }
+
+func ExampleNewClient_cluster() {
+	client, _ := NewClient(ClientOption{
+		InitAddress: []string{"127.0.0.1:7001", "127.0.0.1:7002", "127.0.0.1:7003"},
+		ShuffleInit: true,
+	})
+	defer client.Close()
+}
+
+func ExampleNewClient_single() {
+	client, _ := NewClient(ClientOption{
+		InitAddress: []string{"127.0.0.1:6379"},
+	})
+	defer client.Close()
+}
+
+func ExampleNewClient_sentinel() {
+	client, _ := NewClient(ClientOption{
+		InitAddress: []string{"127.0.0.1:26379", "127.0.0.1:26380", "127.0.0.1:26381"},
+		Sentinel: SentinelOption{
+			MasterSet: "my_master",
+		},
+	})
+	defer client.Close()
+}
