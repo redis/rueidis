@@ -45,7 +45,7 @@ var (
 	}
 	// SentinelSubscribe is predefined SUBSCRIBE ASKING
 	SentinelSubscribe = Completed{
-		cs: &CommandSlice{s: []string{"SUBSCRIBE", "+sentinel", "+switch-master"}},
+		cs: &CommandSlice{s: []string{"SUBSCRIBE", "+sentinel", "+switch-master", "+reboot"}},
 		cf: noRetTag,
 	}
 )

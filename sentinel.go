@@ -42,6 +42,13 @@ func newSentinelClient(opt ClientOption, connFn connFn) (client *sentinelClient,
 						go client.refreshRetry()
 					}
 				}
+			case "+reboot":
+				m := strings.SplitN(event.message, " ", 4)
+				if m[0] == "master" && m[1] == opt.Sentinel.MasterSet {
+					if err := client.switchMaster(fmt.Sprintf("%s:%s", m[2], m[3])); err != nil {
+						go client.refreshRetry()
+					}
+				}
 			}
 		}
 	}()

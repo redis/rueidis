@@ -567,7 +567,7 @@ func TestSentinelClientDelegateRetry(t *testing.T) {
 
 //gocyclo:ignore
 func TestSentinelClientPubSub(t *testing.T) {
-	var s0count, s0close, m1close, m2close int32
+	var s0count, s0close, m1close, m2close, m4close int32
 
 	s0 := &mockConn{
 		DoFn: func(cmd cmds.Completed) RedisResult { return RedisResult{} },
@@ -608,6 +608,15 @@ func TestSentinelClientPubSub(t *testing.T) {
 	s3 := &mockConn{
 		DoFn: func(cmd cmds.Completed) RedisResult { return newErrResult(errClosing) },
 	}
+	m4 := &mockConn{
+		DoFn: func(cmd cmds.Completed) RedisResult {
+			if cmd == cmds.RoleCmd {
+				return RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "master"}}}}
+			}
+			return RedisResult{val: RedisMessage{typ: '+', string: "OK4"}}
+		},
+		CloseFn: func() { atomic.AddInt32(&m4close, 1) },
+	}
 
 	var onMessage func(channel, message string)
 
@@ -629,6 +638,9 @@ func TestSentinelClientPubSub(t *testing.T) {
 		}
 		if dst == ":3" {
 			return s3
+		}
+		if dst == ":4" {
+			return m4
 		}
 		return nil
 	})
@@ -665,13 +677,26 @@ func TestSentinelClientPubSub(t *testing.T) {
 		t.Fatalf("unexpected resp %v %v", v, err)
 	}
 
+	// switch to master by reboot
+	onMessage("+reboot", "master test  4")
+
+	for atomic.LoadInt32(&m1close) != 1 {
+		t.Log("wait old m1 to be close", atomic.LoadInt32(&m1close))
+		time.Sleep(time.Millisecond * 100)
+	}
+
+	v, err = client.Do(context.Background(), client.B().Get().Key("k").Build()).ToString()
+	if err != nil || v != "OK4" {
+		t.Fatalf("unexpected resp %v %v", v, err)
+	}
+
 	client.Close()
 
 	for atomic.LoadInt32(&s0close) != 4 {
 		t.Log("wait old s0 to be close", atomic.LoadInt32(&s0close))
 		time.Sleep(time.Millisecond * 100)
 	}
-	for atomic.LoadInt32(&m1close) != 1 {
+	for atomic.LoadInt32(&m4close) != 1 {
 		t.Log("wait old m1 to be close", atomic.LoadInt32(&m1close))
 		time.Sleep(time.Millisecond * 100)
 	}
