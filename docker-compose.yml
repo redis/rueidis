@@ -5,6 +5,18 @@ services:
     image: redislabs/rejson:2.0.6
     ports:
       - "6379:6379"
+  sentinel:
+    image: redislabs/rejson:2.0.6
+    entrypoint:
+      - /bin/bash
+      - -c
+      - |
+        redis-server --save "" --appendonly no --port 6380 &
+        echo "sentinel monitor test 127.0.0.1 6380 2\n" > sentinel.conf
+        redis-server sentinel.conf --sentinel
+    ports:
+      - "6380:6380"
+      - "26379:26379"
   cluster:
     image: redislabs/rejson:2.0.6
     entrypoint:

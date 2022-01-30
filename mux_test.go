@@ -44,11 +44,12 @@ func (n *refuseError) Temporary() bool {
 
 func TestNewMuxWithoutRetryOnRefuse(t *testing.T) {
 	c := 0
+	e := &refuseError{}
 	m := makeMux("", ClientOption{}, func(dst string, opt ClientOption) (net.Conn, error) {
 		c++
-		return nil, &refuseError{}
+		return nil, e
 	}, false)
-	if err := m.Dial(); err != nil {
+	if err := m.Dial(); err != e {
 		t.Fatalf("unexpected return %v", err)
 	}
 	if c != 1 {

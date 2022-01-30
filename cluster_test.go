@@ -105,7 +105,7 @@ func TestClusterClientInit(t *testing.T) {
 	})
 
 	t.Run("Refresh replace", func(t *testing.T) {
-		if client, err := newClusterClient(ClientOption{InitAddress: []string{":1", ":2"}, ShuffleInit: true}, func(dst string, opt ClientOption) conn {
+		if client, err := newClusterClient(ClientOption{InitAddress: []string{":1", ":2"}}, func(dst string, opt ClientOption) conn {
 			return &mockConn{
 				DoFn: func(cmd cmds.Completed) RedisResult {
 					return slotsResp
@@ -130,7 +130,7 @@ func TestClusterClient(t *testing.T) {
 		},
 	}
 
-	client, err := newClusterClient(ClientOption{InitAddress: []string{":0"}, ShuffleInit: true}, func(dst string, opt ClientOption) conn {
+	client, err := newClusterClient(ClientOption{InitAddress: []string{":0"}}, func(dst string, opt ClientOption) conn {
 		return m
 	})
 	if err != nil {
@@ -274,7 +274,7 @@ func TestClusterClientErr(t *testing.T) {
 				return newErrResult(v)
 			},
 		}
-		client, err := newClusterClient(ClientOption{InitAddress: []string{":0"}, ShuffleInit: true}, func(dst string, opt ClientOption) conn {
+		client, err := newClusterClient(ClientOption{InitAddress: []string{":0"}}, func(dst string, opt ClientOption) conn {
 			return m
 		})
 		if err != nil {
@@ -292,7 +292,7 @@ func TestClusterClientErr(t *testing.T) {
 		m := &mockConn{DoFn: func(cmd cmds.Completed) RedisResult {
 			return singleSlotResp
 		}}
-		client, err := newClusterClient(ClientOption{InitAddress: []string{":0"}, ShuffleInit: true}, func(dst string, opt ClientOption) conn {
+		client, err := newClusterClient(ClientOption{InitAddress: []string{":0"}}, func(dst string, opt ClientOption) conn {
 			return m
 		})
 		if err != nil {
@@ -307,7 +307,7 @@ func TestClusterClientErr(t *testing.T) {
 		m := &mockConn{DoFn: func(cmd cmds.Completed) RedisResult {
 			return singleSlotResp
 		}}
-		client, err := newClusterClient(ClientOption{InitAddress: []string{":0"}, ShuffleInit: true}, func(dst string, opt ClientOption) conn {
+		client, err := newClusterClient(ClientOption{InitAddress: []string{":0"}}, func(dst string, opt ClientOption) conn {
 			return m
 		})
 		if err != nil {
@@ -324,7 +324,7 @@ func TestClusterClientErr(t *testing.T) {
 		m := &mockConn{DoFn: func(cmd cmds.Completed) RedisResult {
 			return singleSlotResp
 		}}
-		client, err := newClusterClient(ClientOption{InitAddress: []string{":0"}, ShuffleInit: true}, func(dst string, opt ClientOption) conn {
+		client, err := newClusterClient(ClientOption{InitAddress: []string{":0"}}, func(dst string, opt ClientOption) conn {
 			return m
 		})
 		if err != nil {

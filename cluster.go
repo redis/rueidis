@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math/rand"
 	"runtime"
 	"sync"
 	"sync/atomic"
@@ -30,12 +29,6 @@ type clusterClient struct {
 }
 
 func newClusterClient(opt ClientOption, connFn connFn) (client *clusterClient, err error) {
-	if opt.ShuffleInit {
-		rand.Shuffle(len(opt.InitAddress), func(i, j int) {
-			opt.InitAddress[i], opt.InitAddress[j] = opt.InitAddress[j], opt.InitAddress[i]
-		})
-	}
-
 	client = &clusterClient{
 		cmd:    cmds.NewBuilder(cmds.InitSlot),
 		opt:    opt,

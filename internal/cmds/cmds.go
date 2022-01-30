@@ -27,6 +27,10 @@ var (
 	ExecCmd = Completed{
 		cs: &CommandSlice{s: []string{"EXEC"}},
 	}
+	// RoleCmd is predefined ROLE
+	RoleCmd = Completed{
+		cs: &CommandSlice{s: []string{"ROLE"}},
+	}
 	// QuitCmd is predefined QUIT
 	QuitCmd = Completed{
 		cs: &CommandSlice{s: []string{"QUIT"}},
@@ -38,6 +42,11 @@ var (
 	// AskingCmd is predefined CLUSTER ASKING
 	AskingCmd = Completed{
 		cs: &CommandSlice{s: []string{"ASKING"}},
+	}
+	// SentinelSubscribe is predefined SUBSCRIBE ASKING
+	SentinelSubscribe = Completed{
+		cs: &CommandSlice{s: []string{"SUBSCRIBE", "+sentinel", "+switch-master"}},
+		cf: noRetTag,
 	}
 )
 

@@ -22,23 +22,31 @@ func newSingleClient(opt ClientOption, prev conn, connFn connFn) (*singleClient,
 
 	client := &singleClient{cmd: cmds.NewBuilder(cmds.NoSlot), conn: conn}
 
-	if err := client.conn.Dial(); err != nil {
+	if err := setupSingleConn(client.cmd, client.conn, opt); err != nil {
 		return nil, err
+	}
+
+	return client, nil
+}
+
+func setupSingleConn(cmd *cmds.Builder, conn conn, opt ClientOption) error {
+	if err := conn.Dial(); err != nil {
+		return err
 	}
 
 	if opt.PubSubOption.onConnected != nil {
 		var install func(error)
 		install = func(prev error) {
 			if prev != ErrClosing {
-				dcc := &dedicatedSingleClient{cmd: client.cmd, wire: client.conn}
-				client.conn.OnDisconnected(install)
+				dcc := &dedicatedSingleClient{cmd: cmd, wire: conn}
+				conn.OnDisconnected(install)
 				opt.PubSubOption.onConnected(prev, dcc)
 			}
 		}
 		install(nil)
 	}
 
-	return client, nil
+	return nil
 }
 
 func (c *singleClient) B() *cmds.Builder {

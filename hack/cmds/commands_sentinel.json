@@ -1,0 +1,26 @@
+{
+  "SENTINEL GET-MASTER-ADDR-BY-NAME": {
+    "arguments": [
+      {
+        "name": "master",
+        "type": "string"
+      }
+    ]
+  },
+  "SENTINEL SENTINELS": {
+    "arguments": [
+      {
+        "name": "master",
+        "type": "string"
+      }
+    ]
+  },
+  "SENTINEL FAILOVER": {
+    "arguments": [
+      {
+        "name": "master",
+        "type": "string"
+      }
+    ]
+  }
+}

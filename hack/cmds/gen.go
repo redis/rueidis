@@ -271,6 +271,7 @@ func main() {
 
 	for _, p := range []string{
 		"./commands.json",
+		"./commands_sentinel.json",
 		"./commands_json.json",
 		"./commands_bloom.json",
 		"./commands_search.json",

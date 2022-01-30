@@ -23700,6 +23700,9 @@ func TestCommand_211(t *testing.T) {
 	s.Sdiff().Key("1").Key("1").Build()
 	s.Sdiffstore().Destination("1").Key("1").Key("1").Build()
 	s.Select().Index(1).Build()
+	s.SentinelFailover().Master("1").Build()
+	s.SentinelGetMasterAddrByName().Master("1").Build()
+	s.SentinelSentinels().Master("1").Build()
 	s.Set().Key("1").Value("1").ExSeconds(1).Nx().Get().Build()
 	s.Set().Key("1").Value("1").ExSeconds(1).Nx().Build()
 	s.Set().Key("1").Value("1").ExSeconds(1).Xx().Get().Build()
@@ -23765,12 +23768,12 @@ func TestCommand_211(t *testing.T) {
 	s.Sort().Key("1").By("1").Limit(1, 1).Get("1").Get("1").Asc().Store("1").Build()
 	s.Sort().Key("1").By("1").Limit(1, 1).Get("1").Get("1").Asc().Build()
 	s.Sort().Key("1").By("1").Limit(1, 1).Get("1").Get("1").Desc().Alpha().Store("1").Build()
-	s.Sort().Key("1").By("1").Limit(1, 1).Get("1").Get("1").Desc().Alpha().Build()
-	s.Sort().Key("1").By("1").Limit(1, 1).Get("1").Get("1").Desc().Store("1").Build()
-	s.Sort().Key("1").By("1").Limit(1, 1).Get("1").Get("1").Desc().Build()
 }
 
 func TestCommand_212(t *testing.T) {
+	s.Sort().Key("1").By("1").Limit(1, 1).Get("1").Get("1").Desc().Alpha().Build()
+	s.Sort().Key("1").By("1").Limit(1, 1).Get("1").Get("1").Desc().Store("1").Build()
+	s.Sort().Key("1").By("1").Limit(1, 1).Get("1").Get("1").Desc().Build()
 	s.Sort().Key("1").By("1").Limit(1, 1).Get("1").Get("1").Alpha().Store("1").Build()
 	s.Sort().Key("1").By("1").Limit(1, 1).Get("1").Get("1").Alpha().Build()
 	s.Sort().Key("1").By("1").Limit(1, 1).Get("1").Get("1").Store("1").Build()
@@ -23877,15 +23880,15 @@ func TestCommand_212(t *testing.T) {
 	s.SortRo().Key("1").By("1").Limit(1, 1).Asc().Cache()
 	s.SortRo().Key("1").By("1").Limit(1, 1).Desc().Alpha().Build()
 	s.SortRo().Key("1").By("1").Limit(1, 1).Desc().Alpha().Cache()
+}
+
+func TestCommand_213(t *testing.T) {
 	s.SortRo().Key("1").By("1").Limit(1, 1).Desc().Build()
 	s.SortRo().Key("1").By("1").Limit(1, 1).Desc().Cache()
 	s.SortRo().Key("1").By("1").Limit(1, 1).Alpha().Build()
 	s.SortRo().Key("1").By("1").Limit(1, 1).Alpha().Cache()
 	s.SortRo().Key("1").By("1").Limit(1, 1).Build()
 	s.SortRo().Key("1").By("1").Limit(1, 1).Cache()
-}
-
-func TestCommand_213(t *testing.T) {
 	s.SortRo().Key("1").By("1").Get("1").Get("1").Asc().Alpha().Build()
 	s.SortRo().Key("1").By("1").Get("1").Get("1").Asc().Alpha().Cache()
 	s.SortRo().Key("1").By("1").Get("1").Get("1").Asc().Build()
@@ -24023,12 +24026,12 @@ func TestCommand_213(t *testing.T) {
 	s.TsAdd().Key("1").Timestamp(1).Value(1).Retention(1).EncodingCompressed().ChunkSize(1).OnDuplicateMin().Build()
 	s.TsAdd().Key("1").Timestamp(1).Value(1).Retention(1).EncodingCompressed().ChunkSize(1).OnDuplicateMax().Build()
 	s.TsAdd().Key("1").Timestamp(1).Value(1).Retention(1).EncodingCompressed().ChunkSize(1).OnDuplicateSum().Build()
-	s.TsAdd().Key("1").Timestamp(1).Value(1).Retention(1).EncodingCompressed().ChunkSize(1).Labels().Labels("1", "1").Labels("1", "1").Build()
-	s.TsAdd().Key("1").Timestamp(1).Value(1).Retention(1).EncodingCompressed().ChunkSize(1).Build()
-	s.TsAdd().Key("1").Timestamp(1).Value(1).Retention(1).EncodingCompressed().OnDuplicateBlock().Labels().Labels("1", "1").Labels("1", "1").Build()
 }
 
 func TestCommand_214(t *testing.T) {
+	s.TsAdd().Key("1").Timestamp(1).Value(1).Retention(1).EncodingCompressed().ChunkSize(1).Labels().Labels("1", "1").Labels("1", "1").Build()
+	s.TsAdd().Key("1").Timestamp(1).Value(1).Retention(1).EncodingCompressed().ChunkSize(1).Build()
+	s.TsAdd().Key("1").Timestamp(1).Value(1).Retention(1).EncodingCompressed().OnDuplicateBlock().Labels().Labels("1", "1").Labels("1", "1").Build()
 	s.TsAdd().Key("1").Timestamp(1).Value(1).Retention(1).EncodingCompressed().OnDuplicateBlock().Build()
 	s.TsAdd().Key("1").Timestamp(1).Value(1).Retention(1).EncodingCompressed().OnDuplicateFirst().Labels().Labels("1", "1").Labels("1", "1").Build()
 	s.TsAdd().Key("1").Timestamp(1).Value(1).Retention(1).EncodingCompressed().OnDuplicateFirst().Build()
@@ -24126,12 +24129,12 @@ func TestCommand_214(t *testing.T) {
 	s.TsAdd().Key("1").Timestamp(1).Value(1).EncodingCompressed().OnDuplicateSum().Build()
 	s.TsAdd().Key("1").Timestamp(1).Value(1).EncodingCompressed().Labels().Labels("1", "1").Labels("1", "1").Build()
 	s.TsAdd().Key("1").Timestamp(1).Value(1).EncodingCompressed().Build()
-	s.TsAdd().Key("1").Timestamp(1).Value(1).ChunkSize(1).OnDuplicateBlock().Labels().Labels("1", "1").Labels("1", "1").Build()
-	s.TsAdd().Key("1").Timestamp(1).Value(1).ChunkSize(1).OnDuplicateBlock().Build()
-	s.TsAdd().Key("1").Timestamp(1).Value(1).ChunkSize(1).OnDuplicateFirst().Labels().Labels("1", "1").Labels("1", "1").Build()
 }
 
 func TestCommand_215(t *testing.T) {
+	s.TsAdd().Key("1").Timestamp(1).Value(1).ChunkSize(1).OnDuplicateBlock().Labels().Labels("1", "1").Labels("1", "1").Build()
+	s.TsAdd().Key("1").Timestamp(1).Value(1).ChunkSize(1).OnDuplicateBlock().Build()
+	s.TsAdd().Key("1").Timestamp(1).Value(1).ChunkSize(1).OnDuplicateFirst().Labels().Labels("1", "1").Labels("1", "1").Build()
 	s.TsAdd().Key("1").Timestamp(1).Value(1).ChunkSize(1).OnDuplicateFirst().Build()
 	s.TsAdd().Key("1").Timestamp(1).Value(1).ChunkSize(1).OnDuplicateLast().Labels().Labels("1", "1").Labels("1", "1").Build()
 	s.TsAdd().Key("1").Timestamp(1).Value(1).ChunkSize(1).OnDuplicateLast().Build()
@@ -24229,12 +24232,12 @@ func TestCommand_215(t *testing.T) {
 	s.TsCreate().Key("1").Retention(1).ChunkSize(1).DuplicatePolicyMax().Build()
 	s.TsCreate().Key("1").Retention(1).ChunkSize(1).DuplicatePolicySum().Labels().Labels("1", "1").Labels("1", "1").Build()
 	s.TsCreate().Key("1").Retention(1).ChunkSize(1).DuplicatePolicySum().Build()
-	s.TsCreate().Key("1").Retention(1).ChunkSize(1).Labels().Labels("1", "1").Labels("1", "1").Build()
-	s.TsCreate().Key("1").Retention(1).ChunkSize(1).Build()
-	s.TsCreate().Key("1").Retention(1).DuplicatePolicyBlock().Labels().Labels("1", "1").Labels("1", "1").Build()
 }
 
 func TestCommand_216(t *testing.T) {
+	s.TsCreate().Key("1").Retention(1).ChunkSize(1).Labels().Labels("1", "1").Labels("1", "1").Build()
+	s.TsCreate().Key("1").Retention(1).ChunkSize(1).Build()
+	s.TsCreate().Key("1").Retention(1).DuplicatePolicyBlock().Labels().Labels("1", "1").Labels("1", "1").Build()
 	s.TsCreate().Key("1").Retention(1).DuplicatePolicyBlock().Build()
 	s.TsCreate().Key("1").Retention(1).DuplicatePolicyFirst().Labels().Labels("1", "1").Labels("1", "1").Build()
 	s.TsCreate().Key("1").Retention(1).DuplicatePolicyFirst().Build()
@@ -24332,12 +24335,12 @@ func TestCommand_216(t *testing.T) {
 	s.TsCreate().Key("1").DuplicatePolicySum().Build()
 	s.TsCreate().Key("1").Labels().Labels("1", "1").Labels("1", "1").Build()
 	s.TsCreate().Key("1").Build()
-	s.TsCreaterule().Sourcekey("1").Destkey("1").AggregationAvg().Timebucket(1).Build()
-	s.TsCreaterule().Sourcekey("1").Destkey("1").AggregationSum().Timebucket(1).Build()
-	s.TsCreaterule().Sourcekey("1").Destkey("1").AggregationMin().Timebucket(1).Build()
 }
 
 func TestCommand_217(t *testing.T) {
+	s.TsCreaterule().Sourcekey("1").Destkey("1").AggregationAvg().Timebucket(1).Build()
+	s.TsCreaterule().Sourcekey("1").Destkey("1").AggregationSum().Timebucket(1).Build()
+	s.TsCreaterule().Sourcekey("1").Destkey("1").AggregationMin().Timebucket(1).Build()
 	s.TsCreaterule().Sourcekey("1").Destkey("1").AggregationMax().Timebucket(1).Build()
 	s.TsCreaterule().Sourcekey("1").Destkey("1").AggregationRange().Timebucket(1).Build()
 	s.TsCreaterule().Sourcekey("1").Destkey("1").AggregationCount().Timebucket(1).Build()
@@ -24435,12 +24438,12 @@ func TestCommand_217(t *testing.T) {
 	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).SelectedLabels([]string{"1"}).Filter("1").Filter("1").Groupby("1", "1", "1").Build()
 	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).SelectedLabels([]string{"1"}).Filter("1").Filter("1").Build()
 	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).Count(1).Align(1).Filter("1").Filter("1").Build()
-	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).Count(1).Filter("1").Filter("1").Groupby("1", "1", "1").Build()
-	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).Count(1).Filter("1").Filter("1").Build()
-	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).Align(1).Filter("1").Filter("1").Groupby("1", "1", "1").Build()
 }
 
 func TestCommand_218(t *testing.T) {
+	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).Count(1).Filter("1").Filter("1").Groupby("1", "1", "1").Build()
+	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).Count(1).Filter("1").Filter("1").Build()
+	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).Align(1).Filter("1").Filter("1").Groupby("1", "1", "1").Build()
 	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).Align(1).Filter("1").Filter("1").Build()
 	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).AggregationAvg().Timebucket(1).Filter("1").Filter("1").Build()
 	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).AggregationSum().Timebucket(1).Filter("1").Filter("1").Build()
@@ -24538,12 +24541,12 @@ func TestCommand_218(t *testing.T) {
 	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).Count(1).Filter("1").Filter("1").Groupby("1", "1", "1").Build()
 	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).Count(1).Filter("1").Filter("1").Build()
 	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).Align(1).AggregationAvg().Timebucket(1).Filter("1").Filter("1").Build()
-	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).Align(1).AggregationSum().Timebucket(1).Filter("1").Filter("1").Build()
-	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).Align(1).AggregationMin().Timebucket(1).Filter("1").Filter("1").Build()
-	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).Align(1).AggregationMax().Timebucket(1).Filter("1").Filter("1").Build()
 }
 
 func TestCommand_219(t *testing.T) {
+	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).Align(1).AggregationSum().Timebucket(1).Filter("1").Filter("1").Build()
+	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).Align(1).AggregationMin().Timebucket(1).Filter("1").Filter("1").Build()
+	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).Align(1).AggregationMax().Timebucket(1).Filter("1").Filter("1").Build()
 	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).Align(1).AggregationRange().Timebucket(1).Filter("1").Filter("1").Build()
 	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).Align(1).AggregationCount().Timebucket(1).Filter("1").Filter("1").Build()
 	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).Align(1).AggregationFirst().Timebucket(1).Filter("1").Filter("1").Build()
@@ -24641,12 +24644,12 @@ func TestCommand_219(t *testing.T) {
 	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).Filter("1").Filter("1").Groupby("1", "1", "1").Build()
 	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).Filter("1").Filter("1").Build()
 	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).Withlabels().Count(1).Align(1).Filter("1").Filter("1").Build()
-	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).Withlabels().Count(1).Filter("1").Filter("1").Groupby("1", "1", "1").Build()
-	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).Withlabels().Count(1).Filter("1").Filter("1").Build()
-	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).Withlabels().Align(1).Filter("1").Filter("1").Groupby("1", "1", "1").Build()
 }
 
 func TestCommand_220(t *testing.T) {
+	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).Withlabels().Count(1).Filter("1").Filter("1").Groupby("1", "1", "1").Build()
+	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).Withlabels().Count(1).Filter("1").Filter("1").Build()
+	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).Withlabels().Align(1).Filter("1").Filter("1").Groupby("1", "1", "1").Build()
 	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).Withlabels().Align(1).Filter("1").Filter("1").Build()
 	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).Withlabels().AggregationAvg().Timebucket(1).Filter("1").Filter("1").Build()
 	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).Withlabels().AggregationSum().Timebucket(1).Filter("1").Filter("1").Build()
@@ -24744,12 +24747,12 @@ func TestCommand_220(t *testing.T) {
 	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).FilterByValue(1, 1).AggregationAvg().Timebucket(1).Build()
 	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).FilterByValue(1, 1).AggregationSum().Timebucket(1).Build()
 	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).FilterByValue(1, 1).AggregationMin().Timebucket(1).Build()
-	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).FilterByValue(1, 1).AggregationMax().Timebucket(1).Build()
-	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).FilterByValue(1, 1).AggregationRange().Timebucket(1).Build()
-	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).FilterByValue(1, 1).AggregationCount().Timebucket(1).Build()
 }
 
 func TestCommand_221(t *testing.T) {
+	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).FilterByValue(1, 1).AggregationMax().Timebucket(1).Build()
+	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).FilterByValue(1, 1).AggregationRange().Timebucket(1).Build()
+	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).FilterByValue(1, 1).AggregationCount().Timebucket(1).Build()
 	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).FilterByValue(1, 1).AggregationFirst().Timebucket(1).Build()
 	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).FilterByValue(1, 1).AggregationLast().Timebucket(1).Build()
 	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).FilterByValue(1, 1).AggregationStdP().Timebucket(1).Build()
@@ -24847,12 +24850,12 @@ func TestCommand_221(t *testing.T) {
 	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).Count(1).Align(1).AggregationLast().Timebucket(1).Build()
 	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).Count(1).Align(1).AggregationStdP().Timebucket(1).Build()
 	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).Count(1).Align(1).AggregationStdS().Timebucket(1).Build()
-	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).Count(1).Align(1).AggregationVarP().Timebucket(1).Build()
-	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).Count(1).Align(1).AggregationVarS().Timebucket(1).Build()
-	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).Count(1).Align(1).Build()
 }
 
 func TestCommand_222(t *testing.T) {
+	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).Count(1).Align(1).AggregationVarP().Timebucket(1).Build()
+	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).Count(1).Align(1).AggregationVarS().Timebucket(1).Build()
+	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).Count(1).Align(1).Build()
 	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).Count(1).AggregationAvg().Timebucket(1).Build()
 	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).Count(1).AggregationSum().Timebucket(1).Build()
 	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).Count(1).AggregationMin().Timebucket(1).Build()
@@ -24950,12 +24953,12 @@ func TestCommand_222(t *testing.T) {
 	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).Build()
 	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).Count(1).Align(1).Build()
 	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).Count(1).AggregationAvg().Timebucket(1).Build()
-	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).Count(1).AggregationSum().Timebucket(1).Build()
-	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).Count(1).AggregationMin().Timebucket(1).Build()
-	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).Count(1).AggregationMax().Timebucket(1).Build()
 }
 
 func TestCommand_223(t *testing.T) {
+	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).Count(1).AggregationSum().Timebucket(1).Build()
+	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).Count(1).AggregationMin().Timebucket(1).Build()
+	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).Count(1).AggregationMax().Timebucket(1).Build()
 	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).Count(1).AggregationRange().Timebucket(1).Build()
 	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).Count(1).AggregationCount().Timebucket(1).Build()
 	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).Count(1).AggregationFirst().Timebucket(1).Build()
@@ -25055,12 +25058,12 @@ func TestCommand_223(t *testing.T) {
 	s.Watch().Key("1").Key("1").Build()
 	s.Xack().Key("1").Group("1").Id("1").Id("1").Build()
 	s.Xadd().Key("1").Nomkstream().Maxlen().Exact().Threshold("1").Id("1").FieldValue().FieldValue("1", "1").FieldValue("1", "1").Build()
-	s.Xadd().Key("1").Nomkstream().Maxlen().Almost().Threshold("1").Id("1").FieldValue().FieldValue("1", "1").FieldValue("1", "1").Build()
-	s.Xadd().Key("1").Nomkstream().Maxlen().Threshold("1").Limit(1).Id("1").FieldValue().FieldValue("1", "1").FieldValue("1", "1").Build()
-	s.Xadd().Key("1").Nomkstream().Maxlen().Threshold("1").Id("1").FieldValue().FieldValue("1", "1").FieldValue("1", "1").Build()
 }
 
 func TestCommand_224(t *testing.T) {
+	s.Xadd().Key("1").Nomkstream().Maxlen().Almost().Threshold("1").Id("1").FieldValue().FieldValue("1", "1").FieldValue("1", "1").Build()
+	s.Xadd().Key("1").Nomkstream().Maxlen().Threshold("1").Limit(1).Id("1").FieldValue().FieldValue("1", "1").FieldValue("1", "1").Build()
+	s.Xadd().Key("1").Nomkstream().Maxlen().Threshold("1").Id("1").FieldValue().FieldValue("1", "1").FieldValue("1", "1").Build()
 	s.Xadd().Key("1").Nomkstream().Minid().Exact().Threshold("1").Id("1").FieldValue().FieldValue("1", "1").FieldValue("1", "1").Build()
 	s.Xadd().Key("1").Nomkstream().Minid().Almost().Threshold("1").Id("1").FieldValue().FieldValue("1", "1").FieldValue("1", "1").Build()
 	s.Xadd().Key("1").Nomkstream().Minid().Threshold("1").Limit(1).Id("1").FieldValue().FieldValue("1", "1").FieldValue("1", "1").Build()
@@ -25158,12 +25161,12 @@ func TestCommand_224(t *testing.T) {
 	s.Zadd().Key("1").Nx().Incr().ScoreMember().ScoreMember(1, "1").ScoreMember(1, "1").Build()
 	s.Zadd().Key("1").Nx().ScoreMember().ScoreMember(1, "1").ScoreMember(1, "1").Build()
 	s.Zadd().Key("1").Xx().Gt().Ch().Incr().ScoreMember().ScoreMember(1, "1").ScoreMember(1, "1").Build()
-	s.Zadd().Key("1").Xx().Gt().Ch().ScoreMember().ScoreMember(1, "1").ScoreMember(1, "1").Build()
-	s.Zadd().Key("1").Xx().Gt().Incr().ScoreMember().ScoreMember(1, "1").ScoreMember(1, "1").Build()
-	s.Zadd().Key("1").Xx().Gt().ScoreMember().ScoreMember(1, "1").ScoreMember(1, "1").Build()
 }
 
 func TestCommand_225(t *testing.T) {
+	s.Zadd().Key("1").Xx().Gt().Ch().ScoreMember().ScoreMember(1, "1").ScoreMember(1, "1").Build()
+	s.Zadd().Key("1").Xx().Gt().Incr().ScoreMember().ScoreMember(1, "1").ScoreMember(1, "1").Build()
+	s.Zadd().Key("1").Xx().Gt().ScoreMember().ScoreMember(1, "1").ScoreMember(1, "1").Build()
 	s.Zadd().Key("1").Xx().Lt().Ch().Incr().ScoreMember().ScoreMember(1, "1").ScoreMember(1, "1").Build()
 	s.Zadd().Key("1").Xx().Lt().Ch().ScoreMember().ScoreMember(1, "1").ScoreMember(1, "1").Build()
 	s.Zadd().Key("1").Xx().Lt().Incr().ScoreMember().ScoreMember(1, "1").ScoreMember(1, "1").Build()
@@ -25295,12 +25298,12 @@ func TestCommand_225(t *testing.T) {
 	s.Zrangebyscore().Key("1").Min(1).Max(1).Cache()
 	s.Zrangestore().Dst("1").Src("1").Min("1").Max("1").Byscore().Rev().Limit(1, 1).Build()
 	s.Zrangestore().Dst("1").Src("1").Min("1").Max("1").Byscore().Rev().Build()
-	s.Zrangestore().Dst("1").Src("1").Min("1").Max("1").Byscore().Limit(1, 1).Build()
-	s.Zrangestore().Dst("1").Src("1").Min("1").Max("1").Byscore().Build()
-	s.Zrangestore().Dst("1").Src("1").Min("1").Max("1").Bylex().Rev().Limit(1, 1).Build()
 }
 
 func TestCommand_226(t *testing.T) {
+	s.Zrangestore().Dst("1").Src("1").Min("1").Max("1").Byscore().Limit(1, 1).Build()
+	s.Zrangestore().Dst("1").Src("1").Min("1").Max("1").Byscore().Build()
+	s.Zrangestore().Dst("1").Src("1").Min("1").Max("1").Bylex().Rev().Limit(1, 1).Build()
 	s.Zrangestore().Dst("1").Src("1").Min("1").Max("1").Bylex().Rev().Build()
 	s.Zrangestore().Dst("1").Src("1").Min("1").Max("1").Bylex().Limit(1, 1).Build()
 	s.Zrangestore().Dst("1").Src("1").Min("1").Max("1").Bylex().Build()

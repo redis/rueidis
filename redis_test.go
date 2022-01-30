@@ -324,11 +324,31 @@ func TestSingleClientIntegration(t *testing.T) {
 	run(t, client, testFlush)
 }
 
+func TestSentinelClientIntegration(t *testing.T) {
+	option, testPubSub := prepareTestPubSub(t)
+
+	client, err := NewClient(ClientOption{
+		InitAddress: []string{"127.0.0.1:26379"},
+		Sentinel: SentinelOption{
+			MasterSet: "test",
+		},
+		PubSubOption: option,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer client.Close()
+
+	run(t, client, testSETGET, testBlockingZPOP, testBlockingXREAD, testPubSub)
+	run(t, client, testFlush)
+}
+
 func TestClusterClientIntegration(t *testing.T) {
 	option, testPubSub := prepareTestPubSub(t)
 
 	client, err := NewClient(ClientOption{
 		InitAddress:  []string{"127.0.0.1:7001", "127.0.0.1:7002", "127.0.0.1:7003"},
+		ShuffleInit:  true,
 		PubSubOption: option,
 	})
 	if err != nil {

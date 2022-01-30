@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
+	"math/rand"
 	"net"
 	"time"
 
@@ -26,7 +27,7 @@ var (
 	// ErrClosing means the Client.Close had been called
 	ErrClosing = errors.New("rueidis client is closing")
 	// ErrNoAddr means the ClientOption.InitAddress is empty
-	ErrNoAddr = errors.New("no address in InitAddress")
+	ErrNoAddr = errors.New("no alive address in InitAddress")
 )
 
 // ClientOption should be passed to NewClient to construct a Client
@@ -34,9 +35,12 @@ type ClientOption struct {
 	// InitAddress point to redis nodes.
 	// Rueidis will connect to them one by one and issue CLUSTER SLOT command to initialize the cluster client until success.
 	// If len(InitAddress) == 1 and the address is not running in cluster mode, rueidis will fall back to the single client mode.
+	// If ClientOption.Sentinel.MasterSet is set, then InitAddress will be used to connect sentinels
 	InitAddress []string
 	// ShuffleInit is a handy flag that shuffles the InitAddress after passing to the NewClient() if it is true
 	ShuffleInit bool
+	// Sentinel options, including MasterSet and Auth options
+	Sentinel SentinelOption
 
 	// CacheSizeEachConn is redis client side cache size that bind to each TCP connection to a single redis instance.
 	// The default is DefaultCacheBytes.
@@ -61,6 +65,22 @@ type ClientOption struct {
 
 	// Redis PubSub callbacks, should be created from NewPubSubOption
 	PubSubOption PubSubOption
+}
+
+// SentinelOption contains MasterSet,
+type SentinelOption struct {
+	// MasterSet is the redis master set name monitored by sentinel cluster.
+	// If this field is set, then ClientOption.InitAddress will be used to connect to sentinel cluster.
+	MasterSet string
+
+	// Redis AUTH parameters for sentinel
+	Username   string
+	Password   string
+	ClientName string
+
+	// TCP & TLS, same as ClientOption but for connecting sentinel
+	Dialer    net.Dialer
+	TLSConfig *tls.Config
 }
 
 // Client is the redis client interface for both single redis instance and redis cluster. It should be created from the NewClient()
@@ -113,9 +133,17 @@ type DedicatedClient interface {
 // It will first try to connect as cluster client. If the len(ClientOption.InitAddress) == 1 and
 // the address does not enable cluster mode, the NewClient() will use single client instead.
 func NewClient(option ClientOption) (client Client, err error) {
-	if client, err = newClusterClient(option, makeClusterConn); err != nil {
+	if option.ShuffleInit {
+		rand.Shuffle(len(option.InitAddress), func(i, j int) {
+			option.InitAddress[i], option.InitAddress[j] = option.InitAddress[j], option.InitAddress[i]
+		})
+	}
+	if option.Sentinel.MasterSet != "" {
+		return newSentinelClient(option, makeNonRetryConn)
+	}
+	if client, err = newClusterClient(option, makeNonRetryConn); err != nil {
 		if len(option.InitAddress) == 1 && err.Error() == redisErrMsgClusterDisabled {
-			client, err = newSingleClient(option, client.(*clusterClient).single(), makeSingleConn)
+			client, err = newSingleClient(option, client.(*clusterClient).single(), makeRetryConn)
 		} else if client != nil {
 			client.Close()
 			return nil, err
@@ -124,11 +152,11 @@ func NewClient(option ClientOption) (client Client, err error) {
 	return client, err
 }
 
-func makeClusterConn(dst string, opt ClientOption) conn {
+func makeNonRetryConn(dst string, opt ClientOption) conn {
 	return makeMux(dst, opt, dial, false)
 }
 
-func makeSingleConn(dst string, opt ClientOption) conn {
+func makeRetryConn(dst string, opt ClientOption) conn {
 	return makeMux(dst, opt, dial, true)
 }
 

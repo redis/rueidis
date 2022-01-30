@@ -51,7 +51,7 @@ func makeMux(dst string, option ClientOption, dialFn dialFn, retryOnRefuse bool)
 			w, err = newPipe(conn, option, onDisconnected)
 		} else if !retryOnRefuse {
 			if e, ok := err.(net.Error); ok && !e.Timeout() && !e.Temporary() {
-				return dead, nil
+				return dead, err
 			}
 		}
 		return w, err
@@ -67,7 +67,7 @@ func newMux(dst string, option ClientOption, init, dead wire, wireFn wireFn) *mu
 
 func (m *mux) _newPooledWire() wire {
 retry:
-	if wire, err := m.wireFn(nil); err == nil {
+	if wire, err := m.wireFn(nil); err == nil || wire == m.dead {
 		return wire
 	}
 	goto retry
@@ -81,7 +81,7 @@ func (m *mux) Override(cc conn) {
 
 func (m *mux) pipe() wire {
 retry:
-	if wire, err := m._pipe(); err == nil {
+	if wire, err := m._pipe(); err == nil || wire == m.dead {
 		return wire
 	}
 	goto retry
@@ -106,7 +106,7 @@ func (m *mux) _pipe() (w wire, err error) {
 	}
 
 	if w = m.wire.Load().(wire); w == m.init {
-		if w, err = m.wireFn(m.disconnected); err == nil {
+		if w, err = m.wireFn(m.disconnected); err == nil || w == m.dead {
 			m.wire.Store(w)
 		}
 	}
