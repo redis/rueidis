@@ -623,7 +623,7 @@ func TestExitOnPubSubSubscribeWriteError(t *testing.T) {
 			}
 		}()
 	}
-	for atomic.LoadInt64(&count) != 5000 {
+	for atomic.LoadInt64(&count) < 1000 {
 		runtime.Gosched()
 	}
 	closeConn()

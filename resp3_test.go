@@ -310,7 +310,7 @@ func TestRand(t *testing.T) {
 	}
 	for i := 0; i < iteration; i++ {
 		if _, err := read(bufio.NewReader(strings.NewReader(random(false)))); err != nil {
-			if err != io.EOF && err.Error() != "panic as expected" {
+			if err != io.EOF && err.Error() != "panic as expected" && err.Error() != "unbounded redis message" {
 				t.Fatalf("unexpected err %v", err)
 			}
 		}
