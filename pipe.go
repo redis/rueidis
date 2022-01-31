@@ -331,15 +331,20 @@ queue:
 	if waits == 1 {
 		p._awake()
 	}
-	select {
-	case <-ctx.Done():
-		resp = newErrResult(ctx.Err())
-		go func() {
-			<-ch
-			atomic.AddInt32(&p.waits, -1)
-		}()
-	case resp = <-ch:
+	if ctxCh := ctx.Done(); ctxCh == nil {
+		resp = <-ch
 		atomic.AddInt32(&p.waits, -1)
+	} else {
+		select {
+		case resp = <-ch:
+			atomic.AddInt32(&p.waits, -1)
+		case <-ctxCh:
+			resp = newErrResult(ctx.Err())
+			go func() {
+				<-ch
+				atomic.AddInt32(&p.waits, -1)
+			}()
+		}
 	}
 	return resp
 }
@@ -395,11 +400,17 @@ queue:
 		p._awake()
 	}
 	var i int
-	for ; i < len(resp); i++ {
-		select {
-		case <-ctx.Done():
-			goto abort
-		case resp[i] = <-ch:
+	if ctxCh := ctx.Done(); ctxCh == nil {
+		for ; i < len(resp); i++ {
+			resp[i] = <-ch
+		}
+	} else {
+		for ; i < len(resp); i++ {
+			select {
+			case resp[i] = <-ch:
+			case <-ctxCh:
+				goto abort
+			}
 		}
 	}
 	atomic.AddInt32(&p.waits, -1)
@@ -411,7 +422,8 @@ abort:
 		}
 		atomic.AddInt32(&p.waits, -1)
 	}(i)
-	for err := newErrResult(ctx.Err()); i < len(resp); i++ {
+	err := newErrResult(ctx.Err())
+	for ; i < len(resp); i++ {
 		resp[i] = err
 	}
 	return resp
