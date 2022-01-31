@@ -298,6 +298,10 @@ func (p *pipe) Info() map[string]RedisMessage {
 }
 
 func (p *pipe) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
+	if err := ctx.Err(); err != nil {
+		return newErrResult(ctx.Err())
+	}
+
 	waits := atomic.AddInt32(&p.waits, 1) // if this is 1, and background worker is not started, no need to queue
 	state := atomic.LoadInt32(&p.state)
 
@@ -341,6 +345,14 @@ queue:
 }
 
 func (p *pipe) DoMulti(ctx context.Context, multi ...cmds.Completed) []RedisResult {
+	resp := make([]RedisResult, len(multi))
+	if err := ctx.Err(); err != nil {
+		for i := 0; i < len(resp); i++ {
+			resp[i] = newErrResult(err)
+		}
+		return resp
+	}
+
 	isOptIn := multi[0].IsOptIn() // len(multi) > 0 should have already been checked by upper layer
 	noReply := multi[0].NoReply()
 
@@ -352,7 +364,6 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...cmds.Completed) []RedisResu
 
 	waits := atomic.AddInt32(&p.waits, 1) // if this is 1, and background worker is not started, no need to queue
 	state := atomic.LoadInt32(&p.state)
-	resp := make([]RedisResult, len(multi))
 
 	if state == 1 {
 		goto queue
@@ -407,14 +418,9 @@ abort:
 }
 
 func (p *pipe) syncDo(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
-	select {
-	case <-ctx.Done():
-		return newErrResult(ctx.Err())
-	default:
-		if dl, ok := ctx.Deadline(); ok {
-			p.conn.SetDeadline(dl)
-			defer p.conn.SetDeadline(time.Time{})
-		}
+	if dl, ok := ctx.Deadline(); ok {
+		p.conn.SetDeadline(dl)
+		defer p.conn.SetDeadline(time.Time{})
 	}
 
 	var msg RedisMessage
@@ -433,17 +439,9 @@ func (p *pipe) syncDo(ctx context.Context, cmd cmds.Completed) (resp RedisResult
 }
 
 func (p *pipe) syncDoMulti(ctx context.Context, resp []RedisResult, multi []cmds.Completed) []RedisResult {
-	select {
-	case <-ctx.Done():
-		for i := 0; i < len(resp); i++ {
-			resp[i] = newErrResult(ctx.Err())
-		}
-		return resp
-	default:
-		if dl, ok := ctx.Deadline(); ok {
-			p.conn.SetDeadline(dl)
-			defer p.conn.SetDeadline(time.Time{})
-		}
+	if dl, ok := ctx.Deadline(); ok {
+		p.conn.SetDeadline(dl)
+		defer p.conn.SetDeadline(time.Time{})
 	}
 
 	var err error
