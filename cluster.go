@@ -17,7 +17,7 @@ var ErrNoSlot = errors.New("the slot has no redis node")
 
 type clusterClient struct {
 	cmd *cmds.Builder
-	opt ClientOption
+	opt *ClientOption
 
 	mu     sync.RWMutex
 	sc     call
@@ -28,7 +28,7 @@ type clusterClient struct {
 	closed uint32
 }
 
-func newClusterClient(opt ClientOption, connFn connFn) (client *clusterClient, err error) {
+func newClusterClient(opt *ClientOption, connFn connFn) (client *clusterClient, err error) {
 	client = &clusterClient{
 		cmd:    cmds.NewBuilder(cmds.InitSlot),
 		opt:    opt,
@@ -322,10 +322,11 @@ type dedicatedClusterClient struct {
 	client *clusterClient
 	conn   conn
 	wire   wire
-	slot   uint16
-	pool   bool
 
 	onDisconnect func(error)
+
+	slot uint16
+	pool bool
 }
 
 func (c *dedicatedClusterClient) check(slot uint16) {

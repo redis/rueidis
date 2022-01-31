@@ -103,7 +103,7 @@ func (m *mockConn) TriggerDisconnect(err error) {
 }
 
 func TestNewSingleClientNoNode(t *testing.T) {
-	if _, err := newSingleClient(ClientOption{}, nil, func(dst string, opt ClientOption) conn {
+	if _, err := newSingleClient(&ClientOption{}, nil, func(dst string, opt *ClientOption) conn {
 		return nil
 	}); err != ErrNoAddr {
 		t.Fatalf("unexpected err %v", err)
@@ -112,7 +112,7 @@ func TestNewSingleClientNoNode(t *testing.T) {
 
 func TestNewSingleClientError(t *testing.T) {
 	v := errors.New("dail err")
-	if _, err := newSingleClient(ClientOption{InitAddress: []string{""}}, nil, func(dst string, opt ClientOption) conn {
+	if _, err := newSingleClient(&ClientOption{InitAddress: []string{""}}, nil, func(dst string, opt *ClientOption) conn {
 		return &mockConn{DialFn: func() error { return v }}
 	}); err != v {
 		t.Fatalf("unexpected err %v", err)
@@ -122,7 +122,7 @@ func TestNewSingleClientError(t *testing.T) {
 func TestNewSingleClientOverride(t *testing.T) {
 	m1 := &mockConn{}
 	var m2 conn
-	if _, err := newSingleClient(ClientOption{InitAddress: []string{""}}, m1, func(dst string, opt ClientOption) conn {
+	if _, err := newSingleClient(&ClientOption{InitAddress: []string{""}}, m1, func(dst string, opt *ClientOption) conn {
 		return &mockConn{OverrideFn: func(c conn) { m2 = c }}
 	}); err != nil {
 		t.Fatalf("unexpected err %v", err)
@@ -135,7 +135,7 @@ func TestNewSingleClientOverride(t *testing.T) {
 //gocyclo:ignore
 func TestSingleClient(t *testing.T) {
 	m := &mockConn{}
-	client, err := newSingleClient(ClientOption{InitAddress: []string{""}}, m, func(dst string, opt ClientOption) conn {
+	client, err := newSingleClient(&ClientOption{InitAddress: []string{""}}, m, func(dst string, opt *ClientOption) conn {
 		return m
 	})
 	if err != nil {

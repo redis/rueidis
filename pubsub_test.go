@@ -19,7 +19,7 @@ func TestSingleClientPubSubReconnect(t *testing.T) {
 		DialFn: func() error { return nil },
 		DoFn:   func(cmd cmds.Completed) RedisResult { return RedisResult{} },
 	}
-	_, err := newSingleClient(ClientOption{
+	_, err := newSingleClient(&ClientOption{
 		InitAddress: []string{""},
 		PubSubOption: NewPubSubOption(func(prev error, client DedicatedClient) {
 			if prev != nil {
@@ -29,7 +29,7 @@ func TestSingleClientPubSubReconnect(t *testing.T) {
 				t.Errorf("unexpected subscribe err %v", err)
 			}
 			atomic.AddInt64(&count, 1)
-		}, PubSubHandler{})}, nil, func(dst string, opt ClientOption) conn {
+		}, PubSubHandler{})}, nil, func(dst string, opt *ClientOption) conn {
 		return m
 	})
 	if err != nil {
@@ -55,7 +55,7 @@ func TestClusterClientPubSubReconnect(t *testing.T) {
 		DialFn: func() error { return nil },
 		DoFn:   func(cmd cmds.Completed) RedisResult { return slotsResp },
 	}
-	_, err := newClusterClient(ClientOption{
+	_, err := newClusterClient(&ClientOption{
 		InitAddress: []string{":0"},
 		PubSubOption: NewPubSubOption(func(prev error, client DedicatedClient) {
 			if prev != nil {
@@ -66,7 +66,7 @@ func TestClusterClientPubSubReconnect(t *testing.T) {
 			}
 			atomic.AddInt64(&count, 1)
 		}, PubSubHandler{}),
-	}, func(dst string, opt ClientOption) conn {
+	}, func(dst string, opt *ClientOption) conn {
 		return m
 	})
 	if err != nil {

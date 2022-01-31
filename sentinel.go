@@ -14,12 +14,13 @@ import (
 	"github.com/rueian/rueidis/internal/cmds"
 )
 
-func newSentinelClient(opt ClientOption, connFn connFn) (client *sentinelClient, err error) {
+func newSentinelClient(opt *ClientOption, connFn connFn) (client *sentinelClient, err error) {
 	events := make(chan sentinelEvent, 1)
 
 	client = &sentinelClient{
 		cmd:       cmds.NewBuilder(cmds.NoSlot),
 		opt:       opt,
+		sopt:      newSentinelOpt(opt, events),
 		connFn:    connFn,
 		events:    events,
 		sentinels: list.New(),
@@ -58,8 +59,9 @@ func newSentinelClient(opt ClientOption, connFn connFn) (client *sentinelClient,
 }
 
 type sentinelClient struct {
-	cmd *cmds.Builder
-	opt ClientOption
+	cmd  *cmds.Builder
+	opt  *ClientOption
+	sopt *ClientOption
 
 	connFn connFn
 	events chan sentinelEvent
@@ -67,13 +69,12 @@ type sentinelClient struct {
 	masterAddr string
 	masterConn atomic.Value
 
+	sc        call
 	mu        sync.Mutex
 	sentinels *list.List
 	conn      conn
 	addr      string
 	closed    uint32
-
-	sc call
 }
 
 func (c *sentinelClient) B() *cmds.Builder {
@@ -203,7 +204,6 @@ func (c *sentinelClient) refresh() (err error) {
 func (c *sentinelClient) _refresh() (err error) {
 	var master string
 	var sentinels []string
-	var opt = c.sentinelOpt(c.events)
 
 	c.mu.Lock()
 	head := c.sentinels.Front()
@@ -219,7 +219,7 @@ func (c *sentinelClient) _refresh() (err error) {
 				c.conn.Close()
 			}
 			c.addr = addr
-			c.conn = c.connFn(addr, opt)
+			c.conn = c.connFn(addr, c.sopt)
 			err = c.conn.Dial()
 		}
 		if err == nil {
@@ -255,19 +255,6 @@ func (c *sentinelClient) _refresh() (err error) {
 	return err
 }
 
-func (c *sentinelClient) sentinelOpt(ch chan sentinelEvent) (o ClientOption) {
-	o = c.opt
-	o.Username = o.Sentinel.Username
-	o.Password = o.Sentinel.Password
-	o.ClientName = o.Sentinel.ClientName
-	o.Dialer = o.Sentinel.Dialer
-	o.TLSConfig = o.Sentinel.TLSConfig
-	o.PubSubOption.onMessage = func(channel, message string) {
-		ch <- sentinelEvent{channel: channel, message: message}
-	}
-	return o
-}
-
 func (c *sentinelClient) listWatch(cc conn) (master string, sentinels []string, err error) {
 	sentinelsCMD := c.cmd.SentinelSentinels().Master(c.opt.Sentinel.MasterSet).Build()
 	getMasterCMD := c.cmd.SentinelGetMasterAddrByName().Master(c.opt.Sentinel.MasterSet).Build()
@@ -294,6 +281,19 @@ func (c *sentinelClient) listWatch(cc conn) (master string, sentinels []string, 
 		return "", nil, err
 	}
 	return fmt.Sprintf("%s:%s", m[0], m[1]), sentinels, nil
+}
+
+func newSentinelOpt(opt *ClientOption, ch chan sentinelEvent) *ClientOption {
+	o := *opt
+	o.Username = o.Sentinel.Username
+	o.Password = o.Sentinel.Password
+	o.ClientName = o.Sentinel.ClientName
+	o.Dialer = o.Sentinel.Dialer
+	o.TLSConfig = o.Sentinel.TLSConfig
+	o.PubSubOption.onMessage = func(channel, message string) {
+		ch <- sentinelEvent{channel: channel, message: message}
+	}
+	return &o
 }
 
 type sentinelEvent struct {

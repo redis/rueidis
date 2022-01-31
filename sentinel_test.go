@@ -13,14 +13,14 @@ import (
 //gocyclo:ignore
 func TestSentinelClientInit(t *testing.T) {
 	t.Run("Init no nodes", func(t *testing.T) {
-		if _, err := newSentinelClient(ClientOption{InitAddress: []string{}}, func(dst string, opt ClientOption) conn { return nil }); err != ErrNoAddr {
+		if _, err := newSentinelClient(&ClientOption{InitAddress: []string{}}, func(dst string, opt *ClientOption) conn { return nil }); err != ErrNoAddr {
 			t.Fatalf("unexpected err %v", err)
 		}
 	})
 
 	t.Run("Init no dialable", func(t *testing.T) {
 		v := errors.New("dial err")
-		if _, err := newSentinelClient(ClientOption{InitAddress: []string{":0"}}, func(dst string, opt ClientOption) conn {
+		if _, err := newSentinelClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
 			return &mockConn{DialFn: func() error { return v }}
 		}); err != v {
 			t.Fatalf("unexpected err %v", err)
@@ -29,7 +29,7 @@ func TestSentinelClientInit(t *testing.T) {
 
 	t.Run("Refresh err", func(t *testing.T) {
 		v := errors.New("refresh err")
-		if _, err := newSentinelClient(ClientOption{InitAddress: []string{":0"}}, func(dst string, opt ClientOption) conn {
+		if _, err := newSentinelClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
 			return &mockConn{DoFn: func(cmd cmds.Completed) RedisResult { return newErrResult(v) }}
 		}); err != v {
 			t.Fatalf("unexpected err %v", err)
@@ -109,7 +109,7 @@ func TestSentinelClientInit(t *testing.T) {
 				}
 			},
 		}
-		client, err := newSentinelClient(ClientOption{InitAddress: []string{":0", ":1", ":2"}}, func(dst string, opt ClientOption) conn {
+		client, err := newSentinelClient(&ClientOption{InitAddress: []string{":0", ":1", ":2"}}, func(dst string, opt *ClientOption) conn {
 			if dst == ":0" {
 				return s0
 			}
@@ -192,7 +192,7 @@ func TestSentinelClientInit(t *testing.T) {
 				}
 			},
 		}
-		client, err := newSentinelClient(ClientOption{InitAddress: []string{":0"}}, func(dst string, opt ClientOption) conn {
+		client, err := newSentinelClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
 			if dst == ":0" {
 				return s0
 			}
@@ -307,7 +307,7 @@ func TestSentinelClientInit(t *testing.T) {
 				return RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "master"}}}}
 			},
 		}
-		client, err := newSentinelClient(ClientOption{InitAddress: []string{":0"}}, func(dst string, opt ClientOption) conn {
+		client, err := newSentinelClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
 			if dst == ":0" {
 				return s0
 			}
@@ -364,7 +364,7 @@ func TestSentinelClientDelegate(t *testing.T) {
 			return RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "master"}}}}
 		},
 	}
-	client, err := newSentinelClient(ClientOption{InitAddress: []string{":0"}}, func(dst string, opt ClientOption) conn {
+	client, err := newSentinelClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
 		if dst == ":0" {
 			return s0
 		}
@@ -511,7 +511,7 @@ func TestSentinelClientDelegateRetry(t *testing.T) {
 				return RedisResult{val: RedisMessage{typ: '+', string: "OK"}}
 			},
 		}
-		client, err := newSentinelClient(ClientOption{InitAddress: []string{":0"}}, func(dst string, opt ClientOption) conn {
+		client, err := newSentinelClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
 			if dst == ":0" {
 				return s0
 			}
@@ -620,12 +620,12 @@ func TestSentinelClientPubSub(t *testing.T) {
 
 	var onMessage func(channel, message string)
 
-	client, err := newSentinelClient(ClientOption{
+	client, err := newSentinelClient(&ClientOption{
 		InitAddress: []string{":0"},
 		Sentinel: SentinelOption{
 			MasterSet: "test",
 		},
-	}, func(dst string, opt ClientOption) conn {
+	}, func(dst string, opt *ClientOption) conn {
 		if dst == ":0" {
 			onMessage = opt.PubSubOption.onMessage
 			return s0

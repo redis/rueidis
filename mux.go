@@ -9,8 +9,8 @@ import (
 	"github.com/rueian/rueidis/internal/cmds"
 )
 
-type connFn func(dst string, opt ClientOption) conn
-type dialFn func(dst string, opt ClientOption) (net.Conn, error)
+type connFn func(dst string, opt *ClientOption) conn
+type dialFn func(dst string, opt *ClientOption) (net.Conn, error)
 type wireFn func(onDisconnected func(err error)) (wire, error)
 
 type singleconnect struct {
@@ -44,7 +44,7 @@ type mux struct {
 	onDisconnected atomic.Value
 }
 
-func makeMux(dst string, option ClientOption, dialFn dialFn, retryOnRefuse bool) *mux {
+func makeMux(dst string, option *ClientOption, dialFn dialFn, retryOnRefuse bool) *mux {
 	return newMux(dst, option, (*pipe)(nil), dead, func(onDisconnected func(err error)) (w wire, err error) {
 		conn, err := dialFn(dst, option)
 		if err == nil {
@@ -58,7 +58,7 @@ func makeMux(dst string, option ClientOption, dialFn dialFn, retryOnRefuse bool)
 	})
 }
 
-func newMux(dst string, option ClientOption, init, dead wire, wireFn wireFn) *mux {
+func newMux(dst string, option *ClientOption, init, dead wire, wireFn wireFn) *mux {
 	m := &mux{dst: dst, init: init, dead: dead, wireFn: wireFn}
 	m.wire.Store(init)
 	m.pool = newPool(option.BlockingPoolSize, dead, m._newPooledWire)

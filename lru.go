@@ -39,10 +39,10 @@ func (e *entry) Wait() RedisMessage {
 }
 
 type keyCache struct {
-	cache map[string]*list.Element
-	ttl   time.Time
 	hits  uint64
 	miss  uint64
+	cache map[string]*list.Element
+	ttl   time.Time
 }
 
 var _ cache = (*lru)(nil)

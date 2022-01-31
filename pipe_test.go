@@ -110,10 +110,10 @@ func write(o io.Writer, m RedisMessage) (err error) {
 }
 
 func setup(t *testing.T, option ClientOption) (*pipe, *redisMock, func(), func()) {
-	return setupWithDisconnectedFn(t, option, nil)
+	return setupWithDisconnectedFn(t, &option, nil)
 }
 
-func setupWithDisconnectedFn(t *testing.T, option ClientOption, onDisconnected func(err error)) (*pipe, *redisMock, func(), func()) {
+func setupWithDisconnectedFn(t *testing.T, option *ClientOption, onDisconnected func(err error)) (*pipe, *redisMock, func(), func()) {
 	n1, n2 := net.Pipe()
 	mock := &redisMock{
 		t:    t,
@@ -174,7 +174,7 @@ func TestNewPipe(t *testing.T) {
 			mock.Expect("SELECT", "1").
 				ReplyString("OK")
 		}()
-		p, err := newPipe(n1, ClientOption{
+		p, err := newPipe(n1, &ClientOption{
 			SelectDB:   1,
 			Username:   "un",
 			Password:   "pa",
@@ -193,7 +193,7 @@ func TestNewPipe(t *testing.T) {
 		n1, n2 := net.Pipe()
 		n1.Close()
 		n2.Close()
-		if _, err := newPipe(n1, ClientOption{}, nil); err != io.ErrClosedPipe {
+		if _, err := newPipe(n1, &ClientOption{}, nil); err != io.ErrClosedPipe {
 			t.Fatalf("pipe setup should failed with io.ErrClosedPipe, but got %v", err)
 		}
 	})
@@ -201,7 +201,7 @@ func TestNewPipe(t *testing.T) {
 
 func TestOnDisconnectedHook(t *testing.T) {
 	done := make(chan struct{})
-	p, _, _, closeConn := setupWithDisconnectedFn(t, ClientOption{}, func(err error) {
+	p, _, _, closeConn := setupWithDisconnectedFn(t, &ClientOption{}, func(err error) {
 		if err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 			t.Errorf("unexpected err %v", err)
 		}

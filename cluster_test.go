@@ -43,14 +43,14 @@ var singleSlotResp = newResult(RedisMessage{typ: '*', values: []RedisMessage{
 //gocyclo:ignore
 func TestClusterClientInit(t *testing.T) {
 	t.Run("Init no nodes", func(t *testing.T) {
-		if _, err := newClusterClient(ClientOption{InitAddress: []string{}}, func(dst string, opt ClientOption) conn { return nil }); err != ErrNoAddr {
+		if _, err := newClusterClient(&ClientOption{InitAddress: []string{}}, func(dst string, opt *ClientOption) conn { return nil }); err != ErrNoAddr {
 			t.Fatalf("unexpected err %v", err)
 		}
 	})
 
 	t.Run("Init no dialable", func(t *testing.T) {
 		v := errors.New("dial err")
-		if _, err := newClusterClient(ClientOption{InitAddress: []string{":0"}}, func(dst string, opt ClientOption) conn {
+		if _, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
 			return &mockConn{DialFn: func() error { return v }}
 		}); err != v {
 			t.Fatalf("unexpected err %v", err)
@@ -59,7 +59,7 @@ func TestClusterClientInit(t *testing.T) {
 
 	t.Run("Refresh err", func(t *testing.T) {
 		v := errors.New("refresh err")
-		if _, err := newClusterClient(ClientOption{InitAddress: []string{":0"}}, func(dst string, opt ClientOption) conn {
+		if _, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
 			return &mockConn{DoFn: func(cmd cmds.Completed) RedisResult { return newErrResult(v) }}
 		}); err != v {
 			t.Fatalf("unexpected err %v", err)
@@ -68,7 +68,7 @@ func TestClusterClientInit(t *testing.T) {
 
 	t.Run("Refresh retry", func(t *testing.T) {
 		first := true
-		if _, err := newClusterClient(ClientOption{InitAddress: []string{":0"}}, func(dst string, opt ClientOption) conn {
+		if _, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
 			return &mockConn{
 				DoFn: func(cmd cmds.Completed) RedisResult {
 					if first {
@@ -86,7 +86,7 @@ func TestClusterClientInit(t *testing.T) {
 	t.Run("Refresh retry err", func(t *testing.T) {
 		v := errors.New("dial err")
 		first := true
-		if _, err := newClusterClient(ClientOption{InitAddress: []string{":0"}}, func(dst string, opt ClientOption) conn {
+		if _, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
 			return &mockConn{
 				DoFn: func(cmd cmds.Completed) RedisResult {
 					return newResult(RedisMessage{typ: '*', values: []RedisMessage{}}, nil)
@@ -105,7 +105,7 @@ func TestClusterClientInit(t *testing.T) {
 	})
 
 	t.Run("Refresh replace", func(t *testing.T) {
-		if client, err := newClusterClient(ClientOption{InitAddress: []string{":1", ":2"}}, func(dst string, opt ClientOption) conn {
+		if client, err := newClusterClient(&ClientOption{InitAddress: []string{":1", ":2"}}, func(dst string, opt *ClientOption) conn {
 			return &mockConn{
 				DoFn: func(cmd cmds.Completed) RedisResult {
 					return slotsResp
@@ -130,7 +130,7 @@ func TestClusterClient(t *testing.T) {
 		},
 	}
 
-	client, err := newClusterClient(ClientOption{InitAddress: []string{":0"}}, func(dst string, opt ClientOption) conn {
+	client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
 		return m
 	})
 	if err != nil {
@@ -274,7 +274,7 @@ func TestClusterClientErr(t *testing.T) {
 				return newErrResult(v)
 			},
 		}
-		client, err := newClusterClient(ClientOption{InitAddress: []string{":0"}}, func(dst string, opt ClientOption) conn {
+		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
 			return m
 		})
 		if err != nil {
@@ -292,7 +292,7 @@ func TestClusterClientErr(t *testing.T) {
 		m := &mockConn{DoFn: func(cmd cmds.Completed) RedisResult {
 			return singleSlotResp
 		}}
-		client, err := newClusterClient(ClientOption{InitAddress: []string{":0"}}, func(dst string, opt ClientOption) conn {
+		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
 			return m
 		})
 		if err != nil {
@@ -307,7 +307,7 @@ func TestClusterClientErr(t *testing.T) {
 		m := &mockConn{DoFn: func(cmd cmds.Completed) RedisResult {
 			return singleSlotResp
 		}}
-		client, err := newClusterClient(ClientOption{InitAddress: []string{":0"}}, func(dst string, opt ClientOption) conn {
+		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
 			return m
 		})
 		if err != nil {
@@ -324,7 +324,7 @@ func TestClusterClientErr(t *testing.T) {
 		m := &mockConn{DoFn: func(cmd cmds.Completed) RedisResult {
 			return singleSlotResp
 		}}
-		client, err := newClusterClient(ClientOption{InitAddress: []string{":0"}}, func(dst string, opt ClientOption) conn {
+		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
 			return m
 		})
 		if err != nil {
@@ -354,7 +354,7 @@ func TestClusterClientErr(t *testing.T) {
 			}
 			return newResult(RedisMessage{typ: '+', string: "b"}, nil)
 		}}
-		client, err := newClusterClient(ClientOption{InitAddress: []string{":0"}}, func(dst string, opt ClientOption) conn {
+		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
 			return m
 		})
 		if err != nil {
@@ -379,7 +379,7 @@ func TestClusterClientErr(t *testing.T) {
 				return newResult(RedisMessage{typ: '+', string: "b"}, nil)
 			},
 		}
-		client, err := newClusterClient(ClientOption{InitAddress: []string{":0"}}, func(dst string, opt ClientOption) conn {
+		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
 			return m
 		})
 		if err != nil {
@@ -407,7 +407,7 @@ func TestClusterClientErr(t *testing.T) {
 				return []RedisResult{{}, newResult(RedisMessage{typ: '+', string: "b"}, nil)}
 			},
 		}
-		client, err := newClusterClient(ClientOption{InitAddress: []string{":0"}}, func(dst string, opt ClientOption) conn {
+		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
 			return m
 		})
 		if err != nil {
@@ -435,7 +435,7 @@ func TestClusterClientErr(t *testing.T) {
 				return []RedisResult{{}, newResult(RedisMessage{typ: '+', string: "b"}, nil)}
 			},
 		}
-		client, err := newClusterClient(ClientOption{InitAddress: []string{":0"}}, func(dst string, opt ClientOption) conn {
+		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
 			return m
 		})
 		if err != nil {
@@ -458,7 +458,7 @@ func TestClusterClientErr(t *testing.T) {
 			}
 			return newResult(RedisMessage{typ: '+', string: "b"}, nil)
 		}}
-		client, err := newClusterClient(ClientOption{InitAddress: []string{":0"}}, func(dst string, opt ClientOption) conn {
+		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
 			return m
 		})
 		if err != nil {
@@ -483,7 +483,7 @@ func TestClusterClientErr(t *testing.T) {
 				return newResult(RedisMessage{typ: '+', string: "b"}, nil)
 			},
 		}
-		client, err := newClusterClient(ClientOption{InitAddress: []string{":0"}}, func(dst string, opt ClientOption) conn {
+		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
 			return m
 		})
 		if err != nil {

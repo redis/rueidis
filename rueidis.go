@@ -37,8 +37,6 @@ type ClientOption struct {
 	// If len(InitAddress) == 1 and the address is not running in cluster mode, rueidis will fall back to the single client mode.
 	// If ClientOption.Sentinel.MasterSet is set, then InitAddress will be used to connect sentinels
 	InitAddress []string
-	// ShuffleInit is a handy flag that shuffles the InitAddress after passing to the NewClient() if it is true
-	ShuffleInit bool
 	// Sentinel options, including MasterSet and Auth options
 	Sentinel SentinelOption
 
@@ -65,6 +63,9 @@ type ClientOption struct {
 
 	// Redis PubSub callbacks, should be created from NewPubSubOption
 	PubSubOption PubSubOption
+
+	// ShuffleInit is a handy flag that shuffles the InitAddress after passing to the NewClient() if it is true
+	ShuffleInit bool
 }
 
 // SentinelOption contains MasterSet,
@@ -139,11 +140,11 @@ func NewClient(option ClientOption) (client Client, err error) {
 		})
 	}
 	if option.Sentinel.MasterSet != "" {
-		return newSentinelClient(option, makeNonRetryConn)
+		return newSentinelClient(&option, makeNonRetryConn)
 	}
-	if client, err = newClusterClient(option, makeNonRetryConn); err != nil {
+	if client, err = newClusterClient(&option, makeNonRetryConn); err != nil {
 		if len(option.InitAddress) == 1 && err.Error() == redisErrMsgClusterDisabled {
-			client, err = newSingleClient(option, client.(*clusterClient).single(), makeRetryConn)
+			client, err = newSingleClient(&option, client.(*clusterClient).single(), makeRetryConn)
 		} else if client != (*clusterClient)(nil) {
 			client.Close()
 			return nil, err
@@ -152,15 +153,15 @@ func NewClient(option ClientOption) (client Client, err error) {
 	return client, err
 }
 
-func makeNonRetryConn(dst string, opt ClientOption) conn {
+func makeNonRetryConn(dst string, opt *ClientOption) conn {
 	return makeMux(dst, opt, dial, false)
 }
 
-func makeRetryConn(dst string, opt ClientOption) conn {
+func makeRetryConn(dst string, opt *ClientOption) conn {
 	return makeMux(dst, opt, dial, true)
 }
 
-func dial(dst string, opt ClientOption) (conn net.Conn, err error) {
+func dial(dst string, opt *ClientOption) (conn net.Conn, err error) {
 	if opt.Dialer.Timeout == 0 {
 		opt.Dialer.Timeout = DefaultDialTimeout
 	}

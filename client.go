@@ -12,7 +12,7 @@ type singleClient struct {
 	conn conn
 }
 
-func newSingleClient(opt ClientOption, prev conn, connFn connFn) (*singleClient, error) {
+func newSingleClient(opt *ClientOption, prev conn, connFn connFn) (*singleClient, error) {
 	if len(opt.InitAddress) == 0 {
 		return nil, ErrNoAddr
 	}
@@ -29,7 +29,7 @@ func newSingleClient(opt ClientOption, prev conn, connFn connFn) (*singleClient,
 	return client, nil
 }
 
-func setupSingleConn(cmd *cmds.Builder, conn conn, opt ClientOption) error {
+func setupSingleConn(cmd *cmds.Builder, conn conn, opt *ClientOption) error {
 	if err := conn.Dial(); err != nil {
 		return err
 	}

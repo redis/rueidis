@@ -16,7 +16,7 @@ import (
 func setupMux(wires []*mockWire) (conn *mux, checkClean func(t *testing.T)) {
 	var mu sync.Mutex
 	var count = -1
-	return newMux("", ClientOption{}, (*mockWire)(nil), (*mockWire)(nil), func(fn func(err error)) (wire, error) {
+	return newMux("", &ClientOption{}, (*mockWire)(nil), (*mockWire)(nil), func(fn func(err error)) (wire, error) {
 			mu.Lock()
 			defer mu.Unlock()
 			count++
@@ -45,7 +45,7 @@ func (n *refuseError) Temporary() bool {
 func TestNewMuxWithoutRetryOnRefuse(t *testing.T) {
 	c := 0
 	e := &refuseError{}
-	m := makeMux("", ClientOption{}, func(dst string, opt ClientOption) (net.Conn, error) {
+	m := makeMux("", &ClientOption{}, func(dst string, opt *ClientOption) (net.Conn, error) {
 		c++
 		return nil, e
 	}, false)
@@ -62,7 +62,7 @@ func TestNewMuxWithoutRetryOnRefuse(t *testing.T) {
 
 func TestNewMuxWithRetryOnRefuse(t *testing.T) {
 	c := 0
-	m := makeMux("", ClientOption{}, func(dst string, opt ClientOption) (net.Conn, error) {
+	m := makeMux("", &ClientOption{}, func(dst string, opt *ClientOption) (net.Conn, error) {
 		c++
 		return nil, &refuseError{}
 	}, true)
@@ -96,7 +96,7 @@ func TestNewMux(t *testing.T) {
 			ReplyString("OK")
 		mock.Expect("QUIT").ReplyString("OK")
 	}()
-	m := makeMux("", ClientOption{}, func(dst string, opt ClientOption) (net.Conn, error) {
+	m := makeMux("", &ClientOption{}, func(dst string, opt *ClientOption) (net.Conn, error) {
 		return n1, nil
 	}, true)
 	if err := m.Dial(); err != nil {
@@ -104,7 +104,7 @@ func TestNewMux(t *testing.T) {
 	}
 
 	t.Run("Override with previous mux", func(t *testing.T) {
-		m2 := makeMux("", ClientOption{}, func(dst string, opt ClientOption) (net.Conn, error) {
+		m2 := makeMux("", &ClientOption{}, func(dst string, opt *ClientOption) (net.Conn, error) {
 			return n1, nil
 		}, true)
 		m2.Override(m)
@@ -117,7 +117,7 @@ func TestNewMux(t *testing.T) {
 
 func TestMuxOnDisconnected(t *testing.T) {
 	var trigger func(err error)
-	m := newMux("", ClientOption{}, (*mockWire)(nil), (*mockWire)(nil), func(fn func(err error)) (wire, error) {
+	m := newMux("", &ClientOption{}, (*mockWire)(nil), (*mockWire)(nil), func(fn func(err error)) (wire, error) {
 		trigger = fn
 		return &mockWire{}, nil
 	})
@@ -147,7 +147,7 @@ func TestMuxOnDisconnected(t *testing.T) {
 func TestMuxDialSuppress(t *testing.T) {
 	var wires, waits, done int64
 	blocking := make(chan struct{})
-	m := newMux("", ClientOption{}, (*mockWire)(nil), (*mockWire)(nil), func(fn func(err error)) (wire, error) {
+	m := newMux("", &ClientOption{}, (*mockWire)(nil), (*mockWire)(nil), func(fn func(err error)) (wire, error) {
 		atomic.AddInt64(&wires, 1)
 		<-blocking
 		return &mockWire{}, nil
@@ -533,7 +533,7 @@ func TestMuxCMDRetry(t *testing.T) {
 func TestMuxDialRetry(t *testing.T) {
 	setup := func() (*mux, *int64) {
 		var count int64
-		return newMux("", ClientOption{}, (*mockWire)(nil), (*mockWire)(nil), func(fn func(err error)) (wire, error) {
+		return newMux("", &ClientOption{}, (*mockWire)(nil), (*mockWire)(nil), func(fn func(err error)) (wire, error) {
 			if count == 1 {
 				return &mockWire{
 					DoFn: func(cmd cmds.Completed) RedisResult {
@@ -574,7 +574,7 @@ func TestMuxDialRetry(t *testing.T) {
 
 func BenchmarkClientSideCaching(b *testing.B) {
 	setup := func(b *testing.B) *mux {
-		c := makeMux("127.0.0.1:6379", ClientOption{CacheSizeEachConn: DefaultCacheBytes}, func(dst string, opt ClientOption) (conn net.Conn, err error) {
+		c := makeMux("127.0.0.1:6379", &ClientOption{CacheSizeEachConn: DefaultCacheBytes}, func(dst string, opt *ClientOption) (conn net.Conn, err error) {
 			return net.Dial("tcp", dst)
 		}, true)
 		if err := c.Dial(); err != nil {
