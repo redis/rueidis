@@ -198,11 +198,11 @@ func (r RedisResult) IsCacheHit() bool {
 
 // RedisMessage is a redis response message, it may be a nil response
 type RedisMessage struct {
+	typ     byte
 	string  string
 	integer int64
 	values  []RedisMessage
 	attrs   *RedisMessage
-	typ     byte
 }
 
 // IsNil check if message is a redis nil response
