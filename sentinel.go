@@ -38,16 +38,12 @@ func newSentinelClient(opt ClientOption, connFn connFn) (client *sentinelClient,
 			case "+switch-master":
 				m := strings.SplitN(event.message, " ", 5)
 				if m[0] == opt.Sentinel.MasterSet {
-					if err := client.switchMaster(fmt.Sprintf("%s:%s", m[3], m[4])); err != nil {
-						go client.refreshRetry()
-					}
+					client.switchMasterRetry(fmt.Sprintf("%s:%s", m[3], m[4]))
 				}
 			case "+reboot":
 				m := strings.SplitN(event.message, " ", 4)
 				if m[0] == "master" && m[1] == opt.Sentinel.MasterSet {
-					if err := client.switchMaster(fmt.Sprintf("%s:%s", m[2], m[3])); err != nil {
-						go client.refreshRetry()
-					}
+					client.switchMasterRetry(fmt.Sprintf("%s:%s", m[2], m[3]))
 				}
 			}
 		}
@@ -151,10 +147,13 @@ func (c *sentinelClient) _addSentinel(addr string) {
 	c.sentinels.PushFront(addr)
 }
 
-func (c *sentinelClient) switchMaster(addr string) (err error) {
+func (c *sentinelClient) switchMasterRetry(addr string) {
 	c.mu.Lock()
-	defer c.mu.Unlock()
-	return c._switchMaster(addr)
+	err := c._switchMaster(addr)
+	c.mu.Unlock()
+	if err != nil {
+		go c.refreshRetry()
+	}
 }
 
 func (c *sentinelClient) _switchMaster(addr string) (err error) {
