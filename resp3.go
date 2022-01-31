@@ -136,17 +136,17 @@ func readI(i *bufio.Reader) (int64, error) {
 			return 0, err
 		}
 		switch {
-		case '0' <= c && c <= '9':
+		case c >= '0' && c <= '9':
 			v = v*10 + int64(c-'0')
-		case '\r' == c:
+		case c == '\r':
 			_, err = i.Discard(1)
 			if neg {
 				return v * -1, err
 			}
 			return v, err
-		case '-' == c:
+		case c == '-':
 			neg = true
-		case '?' == c:
+		case c == '?':
 			if _, err = i.Discard(2); err == nil {
 				err = errChunked
 			}

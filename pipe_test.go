@@ -2,7 +2,6 @@ package rueidis
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"net"
 	"runtime"
@@ -156,7 +155,7 @@ func ExpectOK(t *testing.T, result RedisResult) {
 		t.Errorf("unexpected error result: %v", err)
 	}
 	if str, _ := val.ToString(); str != "OK" {
-		t.Errorf("unexpected result: %v", fmt.Sprintf("%s", str))
+		t.Errorf("unexpected result: %v", str)
 	}
 }
 

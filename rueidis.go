@@ -144,7 +144,7 @@ func NewClient(option ClientOption) (client Client, err error) {
 	if client, err = newClusterClient(option, makeNonRetryConn); err != nil {
 		if len(option.InitAddress) == 1 && err.Error() == redisErrMsgClusterDisabled {
 			client, err = newSingleClient(option, client.(*clusterClient).single(), makeRetryConn)
-		} else if client != nil {
+		} else if client != (*clusterClient)(nil) {
 			client.Close()
 			return nil, err
 		}
