@@ -30,11 +30,11 @@ var _ Repository = (*JSONRepository)(nil)
 
 // JSONRepository is an OM repository backed by RedisJSON.
 type JSONRepository struct {
+	schema schema
+	typ    reflect.Type
+	client rueidis.Client
 	prefix string
 	idx    string
-	typ    reflect.Type
-	schema schema
-	client rueidis.Client
 }
 
 // NewEntity returns an empty entity which type is `*{schema}` and will have the `redis:",key"` field be set with ULID automatically.

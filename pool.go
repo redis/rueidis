@@ -17,10 +17,10 @@ func newPool(cap int, dead wire, makeFn func() wire) *pool {
 }
 
 type pool struct {
-	list []wire
 	dead wire
 	cond *sync.Cond
 	make func() wire
+	list []wire
 	size int
 	down bool
 }

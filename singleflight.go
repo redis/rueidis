@@ -3,8 +3,8 @@ package rueidis
 import "sync"
 
 type call struct {
-	mu sync.Mutex
 	wg *sync.WaitGroup
+	mu sync.Mutex
 	cn int
 }
 

@@ -149,10 +149,10 @@ func TestSentinelClientInit(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
-		if client.conn == nil {
+		if client.sConn == nil {
 			t.Fatalf("unexpected nil sentinel conn")
 		}
-		if client.masterConn.Load() == nil {
+		if client.mConn.Load() == nil {
 			t.Fatalf("unexpected nil master conn")
 		}
 		client.Close()
@@ -216,10 +216,10 @@ func TestSentinelClientInit(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
-		if client.conn == nil {
+		if client.sConn == nil {
 			t.Fatalf("unexpected nil sentinel conn")
 		}
-		if client.masterConn.Load() == nil {
+		if client.mConn.Load() == nil {
 			t.Fatalf("unexpected nil master conn")
 		}
 		client.Close()
@@ -332,7 +332,7 @@ func TestSentinelClientInit(t *testing.T) {
 		s0.TriggerDisconnect(errors.New("reconnect"))
 		for {
 			t.Log("wait switch master")
-			if client.masterConn.Load().(*mockConn) == r4 {
+			if client.mConn.Load().(*mockConn) == r4 {
 				break
 			}
 		}

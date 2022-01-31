@@ -12,12 +12,12 @@ import (
 
 type HashTestStruct struct {
 	Key string `redis:",key"`
-	Ver int64  `redis:",ver"`
-	Val []byte
-	F1  bool
 	F2  *bool
 	F3  *string
 	F4  *int64
+	Val []byte
+	Ver int64 `redis:",ver"`
+	F1  bool
 }
 
 //gocyclo:ignore

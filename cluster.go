@@ -16,15 +16,13 @@ import (
 var ErrNoSlot = errors.New("the slot has no redis node")
 
 type clusterClient struct {
-	cmd *cmds.Builder
-	opt *ClientOption
-
-	mu     sync.RWMutex
-	sc     call
 	slots  [16384]conn
+	cmd    *cmds.Builder
+	opt    *ClientOption
 	conns  map[string]conn
 	connFn connFn
-
+	sc     call
+	mu     sync.RWMutex
 	closed uint32
 }
 
@@ -317,7 +315,6 @@ func (c *clusterClient) shouldRefreshRetry(err error) (should bool) {
 }
 
 type dedicatedClusterClient struct {
-	mu     sync.Mutex
 	cmd    *cmds.Builder
 	client *clusterClient
 	conn   conn
@@ -325,6 +322,7 @@ type dedicatedClusterClient struct {
 
 	onDisconnect func(error)
 
+	mu   sync.Mutex
 	slot uint16
 	pool bool
 }

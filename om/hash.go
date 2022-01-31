@@ -29,12 +29,12 @@ var _ Repository = (*HashRepository)(nil)
 
 // HashRepository is an OM repository backed by redis hash.
 type HashRepository struct {
+	schema  schema
+	typ     reflect.Type
+	client  rueidis.Client
+	factory *hashConvFactory
 	prefix  string
 	idx     string
-	typ     reflect.Type
-	schema  schema
-	factory *hashConvFactory
-	client  rueidis.Client
 }
 
 // NewEntity returns an empty entity which type is `*{schema}` and will have the `redis:",key"` field be set with ULID automatically.

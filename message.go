@@ -70,8 +70,8 @@ func newErrResult(err error) RedisResult {
 // RedisResult is the return struct from Client.Do or Client.DoCache
 // it contains either a redis response or an underlying error (ex. network timeout).
 type RedisResult struct {
-	val RedisMessage
 	err error
+	val RedisMessage
 }
 
 // RedisError can be used to check if the redis response is an error message.
@@ -200,9 +200,9 @@ func (r RedisResult) IsCacheHit() bool {
 type RedisMessage struct {
 	typ     byte
 	string  string
-	integer int64
 	values  []RedisMessage
 	attrs   *RedisMessage
+	integer int64
 }
 
 // IsNil check if message is a redis nil response

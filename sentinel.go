@@ -19,8 +19,8 @@ func newSentinelClient(opt *ClientOption, connFn connFn) (client *sentinelClient
 
 	client = &sentinelClient{
 		cmd:       cmds.NewBuilder(cmds.NoSlot),
-		opt:       opt,
-		sopt:      newSentinelOpt(opt, events),
+		mOpt:      opt,
+		sOpt:      newSentinelOpt(opt, events),
 		connFn:    connFn,
 		events:    events,
 		sentinels: list.New(),
@@ -59,21 +59,18 @@ func newSentinelClient(opt *ClientOption, connFn connFn) (client *sentinelClient
 }
 
 type sentinelClient struct {
-	cmd  *cmds.Builder
-	opt  *ClientOption
-	sopt *ClientOption
-
-	connFn connFn
-	events chan sentinelEvent
-
-	masterAddr string
-	masterConn atomic.Value
-
+	mConn     atomic.Value
+	sConn     conn
+	mOpt      *ClientOption
+	sOpt      *ClientOption
+	connFn    connFn
+	events    chan sentinelEvent
+	sentinels *list.List
+	cmd       *cmds.Builder
+	mAddr     string
+	sAddr     string
 	sc        call
 	mu        sync.Mutex
-	sentinels *list.List
-	conn      conn
-	addr      string
 	closed    uint32
 }
 
@@ -83,7 +80,7 @@ func (c *sentinelClient) B() *cmds.Builder {
 
 func (c *sentinelClient) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
 retry:
-	resp = c.masterConn.Load().(conn).Do(cmd)
+	resp = c.mConn.Load().(conn).Do(cmd)
 	if c.shouldRetry(resp.NonRedisError()) {
 		goto retry
 	}
@@ -93,7 +90,7 @@ retry:
 
 func (c *sentinelClient) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp RedisResult) {
 retry:
-	resp = c.masterConn.Load().(conn).DoCache(cmd, ttl)
+	resp = c.mConn.Load().(conn).DoCache(cmd, ttl)
 	if c.shouldRetry(resp.NonRedisError()) {
 		goto retry
 	}
@@ -102,7 +99,7 @@ retry:
 }
 
 func (c *sentinelClient) Dedicated(fn func(DedicatedClient) error) (err error) {
-	master := c.masterConn.Load().(conn)
+	master := c.mConn.Load().(conn)
 	wire := master.Acquire()
 	err = fn(&dedicatedSingleClient{cmd: c.cmd, wire: wire})
 	master.Store(wire)
@@ -112,10 +109,10 @@ func (c *sentinelClient) Dedicated(fn func(DedicatedClient) error) (err error) {
 func (c *sentinelClient) Close() {
 	atomic.StoreUint32(&c.closed, 1)
 	c.mu.Lock()
-	if c.conn != nil {
-		c.conn.Close()
+	if c.sConn != nil {
+		c.sConn.Close()
 	}
-	if master := c.masterConn.Load(); master != nil {
+	if master := c.mConn.Load(); master != nil {
 		master.(conn).Close()
 	}
 	if c.events != nil {
@@ -162,15 +159,15 @@ func (c *sentinelClient) _switchMaster(addr string) (err error) {
 	if atomic.LoadUint32(&c.closed) == 1 {
 		return nil
 	}
-	if c.masterAddr == addr {
-		master = c.masterConn.Load().(conn)
+	if c.mAddr == addr {
+		master = c.mConn.Load().(conn)
 		if master.Error() != nil {
 			master = nil
 		}
 	}
 	if master == nil {
-		master = c.connFn(addr, c.opt)
-		if err = setupSingleConn(c.cmd, master, c.opt); err != nil {
+		master = c.connFn(addr, c.mOpt)
+		if err = setupSingleConn(c.cmd, master, c.mOpt); err != nil {
 			return err
 		}
 	}
@@ -181,8 +178,8 @@ func (c *sentinelClient) _switchMaster(addr string) (err error) {
 		master.Close()
 		return errNotMaster
 	}
-	c.masterAddr = addr
-	if old := c.masterConn.Swap(master); old != nil {
+	c.mAddr = addr
+	if old := c.mConn.Swap(master); old != nil {
 		if prev := old.(conn); prev != master {
 			prev.Close()
 		}
@@ -214,17 +211,17 @@ func (c *sentinelClient) _refresh() (err error) {
 		}
 		addr := e.Value.(string)
 
-		if c.addr != addr || c.conn == nil || c.conn.Error() != nil {
-			if c.conn != nil {
-				c.conn.Close()
+		if c.sAddr != addr || c.sConn == nil || c.sConn.Error() != nil {
+			if c.sConn != nil {
+				c.sConn.Close()
 			}
-			c.addr = addr
-			c.conn = c.connFn(addr, c.sopt)
-			err = c.conn.Dial()
+			c.sAddr = addr
+			c.sConn = c.connFn(addr, c.sOpt)
+			err = c.sConn.Dial()
 		}
 		if err == nil {
-			if master, sentinels, err = c.listWatch(c.conn); err == nil {
-				c.conn.OnDisconnected(func(prev error) {
+			if master, sentinels, err = c.listWatch(c.sConn); err == nil {
+				c.sConn.OnDisconnected(func(prev error) {
 					if prev != ErrClosing {
 						c.refreshRetry()
 					}
@@ -236,7 +233,7 @@ func (c *sentinelClient) _refresh() (err error) {
 					break
 				}
 			}
-			c.conn.Close()
+			c.sConn.Close()
 		}
 		c.sentinels.MoveToBack(e)
 		if e = c.sentinels.Front(); e == head {
@@ -246,7 +243,7 @@ func (c *sentinelClient) _refresh() (err error) {
 	c.mu.Unlock()
 
 	if err == nil {
-		if master := c.masterConn.Load(); master == nil {
+		if master := c.mConn.Load(); master == nil {
 			err = ErrNoAddr
 		} else {
 			err = master.(conn).Error()
@@ -256,8 +253,8 @@ func (c *sentinelClient) _refresh() (err error) {
 }
 
 func (c *sentinelClient) listWatch(cc conn) (master string, sentinels []string, err error) {
-	sentinelsCMD := c.cmd.SentinelSentinels().Master(c.opt.Sentinel.MasterSet).Build()
-	getMasterCMD := c.cmd.SentinelGetMasterAddrByName().Master(c.opt.Sentinel.MasterSet).Build()
+	sentinelsCMD := c.cmd.SentinelSentinels().Master(c.mOpt.Sentinel.MasterSet).Build()
+	getMasterCMD := c.cmd.SentinelGetMasterAddrByName().Master(c.mOpt.Sentinel.MasterSet).Build()
 	defer func() {
 		c.cmd.Put(sentinelsCMD.CommandSlice())
 		c.cmd.Put(getMasterCMD.CommandSlice())

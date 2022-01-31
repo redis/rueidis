@@ -30,8 +30,8 @@ type hashConvFactory struct {
 }
 
 type fieldConv struct {
-	idx  int
 	conv converter
+	idx  int
 }
 
 func (f hashConvFactory) NewConverter(entity reflect.Value) hashConv {

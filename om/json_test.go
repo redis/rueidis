@@ -11,9 +11,9 @@ import (
 
 type JSONTestStruct struct {
 	Key    string `redis:",key"`
-	Ver    int64  `redis:",ver"`
-	Val    []byte
 	Nested struct{ F1 string }
+	Val    []byte
+	Ver    int64 `redis:",ver"`
 }
 
 //gocyclo:ignore

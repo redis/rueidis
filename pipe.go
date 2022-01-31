@@ -42,7 +42,7 @@ type pipe struct {
 
 	cbs PubSubOption
 
-	onDisconnected func(err error)
+	doneFn func(err error)
 }
 
 func newPipe(conn net.Conn, option *ClientOption, onDisconnected func(err error)) (p *pipe, err error) {
@@ -58,8 +58,8 @@ func newPipe(conn net.Conn, option *ClientOption, onDisconnected func(err error)
 		r:     bufio.NewReader(conn),
 		w:     bufio.NewWriter(conn),
 
-		cbs:            option.PubSubOption,
-		onDisconnected: onDisconnected,
+		cbs:    option.PubSubOption,
+		doneFn: onDisconnected,
 	}
 
 	helloCmd := []string{"HELLO", "3"}
@@ -130,8 +130,8 @@ func (p *pipe) _background() {
 	}()
 	wg.Wait()
 
-	if p.onDisconnected != nil {
-		go p.onDisconnected(p.Error())
+	if p.doneFn != nil {
+		go p.doneFn(p.Error())
 	}
 
 	var (

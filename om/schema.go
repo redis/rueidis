@@ -15,9 +15,9 @@ type schema struct {
 }
 
 type field struct {
+	typ   reflect.Type
 	name  string
 	idx   int
-	typ   reflect.Type
 	isKey bool
 	isVer bool
 }

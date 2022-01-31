@@ -14,8 +14,8 @@ type goStruct struct {
 	Node      *node
 	FullName  string
 	BuildDef  buildDef
-	Variadic  bool
 	NextNodes []*node
+	Variadic  bool
 }
 
 type buildDef struct {
@@ -40,10 +40,10 @@ type argument struct {
 	Type     interface{} `json:"type"`
 	Command  string      `json:"command"`
 	Enum     []string    `json:"enum"`
+	Block    []argument  `json:"block"`
 	Multiple bool        `json:"multiple"`
 	Optional bool        `json:"optional"`
 	Variadic bool        `json:"variadic"`
-	Block    []argument  `json:"block"`
 }
 
 type node struct {

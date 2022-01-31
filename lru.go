@@ -26,10 +26,10 @@ type cache interface {
 }
 
 type entry struct {
-	val  RedisMessage
+	ch   chan struct{}
 	key  string
 	cmd  string
-	ch   chan struct{}
+	val  RedisMessage
 	size int
 }
 
@@ -48,13 +48,11 @@ type keyCache struct {
 var _ cache = (*lru)(nil)
 
 type lru struct {
-	mu sync.RWMutex
-
 	store map[string]*keyCache
 	list  *list.List
-
-	size int
-	max  int
+	mu    sync.RWMutex
+	size  int
+	max   int
 }
 
 func newLRU(max int) *lru {

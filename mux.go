@@ -31,17 +31,15 @@ type conn interface {
 var _ conn = (*mux)(nil)
 
 type mux struct {
-	dst  string
-	pool *pool
-	init wire
-	dead wire
-	wire atomic.Value
-	mu   sync.Mutex
-	sc   *singleconnect
-
+	init   wire
+	dead   wire
+	wire   atomic.Value
+	doneFn atomic.Value
+	sc     *singleconnect
+	pool   *pool
 	wireFn wireFn
-
-	onDisconnected atomic.Value
+	dst    string
+	mu     sync.Mutex
 }
 
 func makeMux(dst string, option *ClientOption, dialFn dialFn, retryOnRefuse bool) *mux {
@@ -124,13 +122,13 @@ func (m *mux) _pipe() (w wire, err error) {
 }
 
 func (m *mux) disconnected(err error) {
-	if fn := m.onDisconnected.Load(); fn != nil {
+	if fn := m.doneFn.Load(); fn != nil {
 		fn.(func(err error))(err)
 	}
 }
 
 func (m *mux) OnDisconnected(fn func(err error)) {
-	m.onDisconnected.CompareAndSwap(nil, fn)
+	m.doneFn.CompareAndSwap(nil, fn)
 }
 
 func (m *mux) Dial() error { // no retry
