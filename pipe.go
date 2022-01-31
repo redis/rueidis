@@ -2,6 +2,7 @@ package rueidis
 
 import (
 	"bufio"
+	"context"
 	"net"
 	"runtime"
 	"strconv"
@@ -13,9 +14,9 @@ import (
 )
 
 type wire interface {
-	Do(cmd cmds.Completed) RedisResult
-	DoCache(cmd cmds.Cacheable, ttl time.Duration) RedisResult
-	DoMulti(multi ...cmds.Completed) []RedisResult
+	Do(ctx context.Context, cmd cmds.Completed) RedisResult
+	DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) RedisResult
+	DoMulti(ctx context.Context, multi ...cmds.Completed) []RedisResult
 	Info() map[string]RedisMessage
 	Error() error
 	Close()
@@ -75,7 +76,7 @@ func newPipe(conn net.Conn, option *ClientOption, onDisconnected func(err error)
 		init = append(init, []string{"SELECT", strconv.Itoa(option.SelectDB)})
 	}
 
-	for i, r := range p.DoMulti(cmds.NewMultiCompleted(init)...) {
+	for i, r := range p.DoMulti(context.Background(), cmds.NewMultiCompleted(init)...) {
 		if i == 0 {
 			p.info, err = r.ToMap()
 		} else {
@@ -296,7 +297,7 @@ func (p *pipe) Info() map[string]RedisMessage {
 	return p.info
 }
 
-func (p *pipe) Do(cmd cmds.Completed) (resp RedisResult) {
+func (p *pipe) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
 	waits := atomic.AddInt32(&p.waits, 1) // if this is 1, and background worker is not started, no need to queue
 	state := atomic.LoadInt32(&p.state)
 
@@ -326,12 +327,20 @@ queue:
 	if waits == 1 {
 		p._awake()
 	}
-	resp = <-ch
-	atomic.AddInt32(&p.waits, -1)
+	select {
+	case <-ctx.Done():
+		resp = newErrResult(ctx.Err())
+		go func() {
+			<-ch
+			atomic.AddInt32(&p.waits, -1)
+		}()
+	case resp = <-ch:
+		atomic.AddInt32(&p.waits, -1)
+	}
 	return resp
 }
 
-func (p *pipe) DoMulti(multi ...cmds.Completed) []RedisResult {
+func (p *pipe) DoMulti(ctx context.Context, multi ...cmds.Completed) []RedisResult {
 	isOptIn := multi[0].IsOptIn() // len(multi) > 0 should have already been checked by upper layer
 	noReply := multi[0].NoReply()
 
@@ -359,9 +368,9 @@ func (p *pipe) DoMulti(multi ...cmds.Completed) []RedisResult {
 		}
 		resp = p.syncDoMulti(resp, multi)
 	} else {
-		err := p.Error()
+		err := newErrResult(p.Error())
 		for i := 0; i < len(resp); i++ {
-			resp[i] = newErrResult(err)
+			resp[i] = err
 		}
 	}
 	if left := atomic.AddInt32(&p.waits, -1); state == 0 && waits == 1 && left != 0 {
@@ -374,10 +383,26 @@ queue:
 	if waits == 1 {
 		p._awake()
 	}
-	for i := range resp {
-		resp[i] = <-ch
+	var i int
+	for ; i < len(resp); i++ {
+		select {
+		case <-ctx.Done():
+			goto abort
+		case resp[i] = <-ch:
+		}
 	}
 	atomic.AddInt32(&p.waits, -1)
+	return resp
+abort:
+	go func(i int) {
+		for ; i < len(resp); i++ {
+			<-ch
+		}
+		atomic.AddInt32(&p.waits, -1)
+	}(i)
+	for err := newErrResult(ctx.Err()); i < len(resp); i++ {
+		resp[i] = err
+	}
 	return resp
 }
 
@@ -435,20 +460,14 @@ next:
 	return m, nil
 }
 
-func (p *pipe) DoCache(cmd cmds.Cacheable, ttl time.Duration) RedisResult {
+func (p *pipe) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) RedisResult {
 	ck, cc := cmd.CacheKey()
 	if v, entry := p.cache.GetOrPrepare(ck, cc, ttl); v.typ != 0 {
 		return newResult(v, nil)
 	} else if entry != nil {
 		return newResult(entry.Wait(), nil)
 	}
-	exec, err := p.DoMulti(
-		cmds.OptInCmd,
-		cmds.MultiCmd,
-		cmds.NewCompleted([]string{"PTTL", ck}),
-		cmds.Completed(cmd),
-		cmds.ExecCmd,
-	)[4].ToArray()
+	exec, err := p.DoMulti(ctx, cmds.OptInCmd, cmds.MultiCmd, cmds.NewCompleted([]string{"PTTL", ck}), cmds.Completed(cmd), cmds.ExecCmd)[4].ToArray()
 	if err != nil {
 		return newErrResult(err)
 	}

@@ -80,7 +80,7 @@ func (c *sentinelClient) B() *cmds.Builder {
 
 func (c *sentinelClient) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
 retry:
-	resp = c.mConn.Load().(conn).Do(cmd)
+	resp = c.mConn.Load().(conn).Do(ctx, cmd)
 	if c.shouldRetry(resp.NonRedisError()) {
 		goto retry
 	}
@@ -90,7 +90,7 @@ retry:
 
 func (c *sentinelClient) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp RedisResult) {
 retry:
-	resp = c.mConn.Load().(conn).DoCache(cmd, ttl)
+	resp = c.mConn.Load().(conn).DoCache(ctx, cmd, ttl)
 	if c.shouldRetry(resp.NonRedisError()) {
 		goto retry
 	}
@@ -171,7 +171,7 @@ func (c *sentinelClient) _switchMaster(addr string) (err error) {
 			return err
 		}
 	}
-	if resp, err := master.Do(cmds.RoleCmd).ToArray(); err != nil {
+	if resp, err := master.Do(context.Background(), cmds.RoleCmd).ToArray(); err != nil {
 		master.Close()
 		return err
 	} else if resp[0].string != "master" {
@@ -253,6 +253,7 @@ func (c *sentinelClient) _refresh() (err error) {
 }
 
 func (c *sentinelClient) listWatch(cc conn) (master string, sentinels []string, err error) {
+	ctx := context.Background()
 	sentinelsCMD := c.cmd.SentinelSentinels().Master(c.mOpt.Sentinel.MasterSet).Build()
 	getMasterCMD := c.cmd.SentinelGetMasterAddrByName().Master(c.mOpt.Sentinel.MasterSet).Build()
 	defer func() {
@@ -260,10 +261,10 @@ func (c *sentinelClient) listWatch(cc conn) (master string, sentinels []string, 
 		c.cmd.Put(getMasterCMD.CommandSlice())
 	}()
 
-	if err = cc.Do(cmds.SentinelSubscribe).Error(); err != nil {
+	if err = cc.Do(ctx, cmds.SentinelSubscribe).Error(); err != nil {
 		return "", nil, err
 	}
-	resp := cc.DoMulti(sentinelsCMD, getMasterCMD)
+	resp := cc.DoMulti(ctx, sentinelsCMD, getMasterCMD)
 	others, err := resp[0].ToArray()
 	if err != nil {
 		return "", nil, err
