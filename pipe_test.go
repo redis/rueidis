@@ -3,10 +3,8 @@ package rueidis
 import (
 	"bufio"
 	"context"
-	"errors"
 	"io"
 	"net"
-	"os"
 	"runtime"
 	"strconv"
 	"strings"
@@ -785,7 +783,7 @@ func TestOngoingDeadlineContextInSyncMode_Do(t *testing.T) {
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1*time.Second/2))
 	defer cancel()
 
-	if err := p.Do(ctx, cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); !errors.Is(err, os.ErrDeadlineExceeded) {
+	if err := p.Do(ctx, cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); err != context.DeadlineExceeded {
 		t.Fatalf("unexpected err %v", err)
 	}
 	p.Close()
@@ -798,7 +796,7 @@ func TestOngoingDeadlineContextInSyncMode_DoMulti(t *testing.T) {
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1*time.Second/2))
 	defer cancel()
 
-	if err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); !errors.Is(err, os.ErrDeadlineExceeded) {
+	if err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); err != context.DeadlineExceeded {
 		t.Fatalf("unexpected err %v", err)
 	}
 	p.Close()

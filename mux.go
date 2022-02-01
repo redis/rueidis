@@ -2,9 +2,7 @@ package rueidis
 
 import (
 	"context"
-	"errors"
 	"net"
-	"os"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -246,6 +244,5 @@ func isNetworkErr(err error) bool {
 	return err != nil &&
 		err != ErrClosing &&
 		err != context.Canceled &&
-		err != context.DeadlineExceeded &&
-		!errors.Is(err, os.ErrDeadlineExceeded)
+		err != context.DeadlineExceeded
 }

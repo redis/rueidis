@@ -3,7 +3,9 @@ package rueidis
 import (
 	"bufio"
 	"context"
+	"errors"
 	"net"
+	"os"
 	"runtime"
 	"strconv"
 	"sync"
@@ -443,6 +445,9 @@ func (p *pipe) syncDo(ctx context.Context, cmd cmds.Completed) (resp RedisResult
 		}
 	}
 	if err != nil {
+		if errors.Is(err, os.ErrDeadlineExceeded) {
+			err = context.DeadlineExceeded
+		}
 		p.error.CompareAndSwap(nil, &errs{error: err})
 		atomic.CompareAndSwapInt32(&p.state, 1, 3) // stopping the worker and let it do the cleaning
 		p.background()                             // start the background worker
@@ -473,6 +478,9 @@ func (p *pipe) syncDoMulti(ctx context.Context, resp []RedisResult, multi []cmds
 	}
 	return resp
 abort:
+	if errors.Is(err, os.ErrDeadlineExceeded) {
+		err = context.DeadlineExceeded
+	}
 	p.error.CompareAndSwap(nil, &errs{error: err})
 	atomic.CompareAndSwapInt32(&p.state, 1, 3) // stopping the worker and let it do the cleaning
 	p.background()                             // start the background worker
