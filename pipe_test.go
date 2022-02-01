@@ -3,8 +3,10 @@ package rueidis
 import (
 	"bufio"
 	"context"
+	"errors"
 	"io"
 	"net"
+	"os"
 	"runtime"
 	"strconv"
 	"strings"
@@ -733,7 +735,6 @@ func TestCloseAndWaitPendingCMDs(t *testing.T) {
 	for i := 0; i < loop; i++ {
 		go func() {
 			defer wg.Done()
-
 			if v, _ := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).ToMessage(); v.string != "b" {
 				t.Errorf("unexpected GET result %v", v.string)
 			}
@@ -743,9 +744,140 @@ func TestCloseAndWaitPendingCMDs(t *testing.T) {
 		r := mock.Expect("GET", "a")
 		if i == loop-1 {
 			go p.Close()
+			time.Sleep(time.Second / 2)
 		}
 		r.ReplyString("b")
 	}
 	mock.Expect("QUIT").ReplyString("OK")
 	wg.Wait()
+}
+
+func TestAlreadyCanceledContext(t *testing.T) {
+	p, _, close, closeConn := setup(t, ClientOption{})
+	defer closeConn()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	if err := p.Do(ctx, cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); err != context.Canceled {
+		t.Fatalf("unexpected err %v", err)
+	}
+	if err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); err != context.Canceled {
+		t.Fatalf("unexpected err %v", err)
+	}
+
+	ctx, cancel = context.WithDeadline(context.Background(), time.Now().Add(-1*time.Second))
+	cancel()
+
+	if err := p.Do(ctx, cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); err != context.DeadlineExceeded {
+		t.Fatalf("unexpected err %v", err)
+	}
+	if err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); err != context.DeadlineExceeded {
+		t.Fatalf("unexpected err %v", err)
+	}
+	close()
+}
+
+func TestOngoingDeadlineContextInSyncMode_Do(t *testing.T) {
+	p, _, _, closeConn := setup(t, ClientOption{})
+	defer closeConn()
+
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1*time.Second/2))
+	defer cancel()
+
+	if err := p.Do(ctx, cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); !errors.Is(err, os.ErrDeadlineExceeded) {
+		t.Fatalf("unexpected err %v", err)
+	}
+	p.Close()
+}
+
+func TestOngoingDeadlineContextInSyncMode_DoMulti(t *testing.T) {
+	p, _, _, closeConn := setup(t, ClientOption{})
+	defer closeConn()
+
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1*time.Second/2))
+	defer cancel()
+
+	if err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); !errors.Is(err, os.ErrDeadlineExceeded) {
+		t.Fatalf("unexpected err %v", err)
+	}
+	p.Close()
+}
+
+func TestOngoingCancelContextInPipelineMode_Do(t *testing.T) {
+	p, mock, close, closeConn := setup(t, ClientOption{})
+	defer closeConn()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	success := int32(0)
+	canceled := int32(0)
+
+	for i := 0; i < 100; i++ {
+		go func() {
+			s, err := p.Do(ctx, cmds.NewCompleted([]string{"GET", "a"})).ToString()
+			if s == "OK" {
+				atomic.AddInt32(&success, 1)
+			} else if err == context.Canceled {
+				atomic.AddInt32(&canceled, 1)
+			}
+		}()
+	}
+	for i := 0; i < 50; i++ {
+		mock.Expect("GET", "a").ReplyString("OK")
+	}
+	for atomic.LoadInt32(&success) != 50 {
+		t.Logf("wait success count to be 50 %v", atomic.LoadInt32(&success))
+		time.Sleep(time.Millisecond * 100)
+	}
+	cancel()
+	if atomic.LoadInt32(&canceled) != 50 {
+		t.Logf("wait canceled count to be 50 %v", atomic.LoadInt32(&canceled))
+		time.Sleep(time.Millisecond * 100)
+	}
+	// the rest command is still send
+	for i := 0; i < 50; i++ {
+		mock.Expect("GET", "a").ReplyString("OK")
+	}
+	close()
+}
+
+func TestOngoingCancelContextInPipelineMode_DoMulti(t *testing.T) {
+	p, mock, close, closeConn := setup(t, ClientOption{})
+	defer closeConn()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	success := int32(0)
+	canceled := int32(0)
+
+	for i := 0; i < 100; i++ {
+		go func() {
+			s, err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"}))[0].ToString()
+			if s == "OK" {
+				atomic.AddInt32(&success, 1)
+			} else if err == context.Canceled {
+				atomic.AddInt32(&canceled, 1)
+			}
+		}()
+	}
+	for i := 0; i < 50; i++ {
+		mock.Expect("GET", "a").ReplyString("OK")
+	}
+	for atomic.LoadInt32(&success) != 50 {
+		t.Logf("wait success count to be 50 %v", atomic.LoadInt32(&success))
+		time.Sleep(time.Millisecond * 100)
+	}
+	cancel()
+	if atomic.LoadInt32(&canceled) != 50 {
+		t.Logf("wait canceled count to be 50 %v", atomic.LoadInt32(&canceled))
+		time.Sleep(time.Millisecond * 100)
+	}
+	// the rest command is still send
+	for i := 0; i < 50; i++ {
+		mock.Expect("GET", "a").ReplyString("OK")
+	}
+	close()
 }

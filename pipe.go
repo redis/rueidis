@@ -500,7 +500,14 @@ func (p *pipe) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duratio
 	} else if entry != nil {
 		return newResult(entry.Wait(), nil)
 	}
-	exec, err := p.DoMulti(ctx, cmds.OptInCmd, cmds.MultiCmd, cmds.NewCompleted([]string{"PTTL", ck}), cmds.Completed(cmd), cmds.ExecCmd)[4].ToArray()
+	exec, err := p.DoMulti(
+		ctx,
+		cmds.OptInCmd,
+		cmds.MultiCmd,
+		cmds.NewCompleted([]string{"PTTL", ck}),
+		cmds.Completed(cmd),
+		cmds.ExecCmd,
+	)[4].ToArray()
 	if err != nil {
 		return newErrResult(err)
 	}

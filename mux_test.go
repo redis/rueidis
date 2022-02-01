@@ -4,7 +4,9 @@ import (
 	"bufio"
 	"context"
 	"errors"
+	"fmt"
 	"net"
+	"os"
 	"runtime"
 	"sync"
 	"sync/atomic"
@@ -280,9 +282,6 @@ func TestMuxCMDRetry(t *testing.T) {
 		m, checkClean := setupMux([]*mockWire{
 			{
 				DoFn: func(cmd cmds.Completed) RedisResult {
-					if cmd.Commands()[0] == "PING" {
-						return newResult(RedisMessage{typ: '+', string: "PONG"}, nil)
-					}
 					if cmd.Commands()[0] != "READONLY_COMMAND" {
 						t.Fatalf("command should be READONLY_COMMAND")
 					}
@@ -291,9 +290,6 @@ func TestMuxCMDRetry(t *testing.T) {
 			},
 			{
 				DoFn: func(cmd cmds.Completed) RedisResult {
-					if cmd.Commands()[0] == "PING" {
-						return newResult(RedisMessage{typ: '+', string: "PONG"}, nil)
-					}
 					if cmd.Commands()[0] != "READONLY_COMMAND" {
 						t.Fatalf("command should be READONLY_COMMAND")
 					}
@@ -308,6 +304,54 @@ func TestMuxCMDRetry(t *testing.T) {
 			t.Fatalf("unexpected error %v", err)
 		} else if val != "READONLY_COMMAND_RESPONSE" {
 			t.Fatalf("unexpected response %v", val)
+		}
+	})
+
+	t.Run("not retry read with context.Canceled", func(t *testing.T) {
+		e := context.Canceled
+		m, checkClean := setupMux([]*mockWire{{
+			DoFn:      func(cmd cmds.Completed) RedisResult { return newErrResult(e) },
+			DoMultiFn: func(cmd ...cmds.Completed) []RedisResult { return []RedisResult{newErrResult(e)} },
+		}})
+		defer checkClean(t)
+		defer m.Close()
+		if _, err := m.Do(context.Background(), cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"})).ToString(); err != e {
+			t.Fatalf("unexpected error %v", err)
+		}
+		if _, err := m.DoMulti(context.Background(), cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"}))[0].ToString(); err != e {
+			t.Fatalf("unexpected error %v", err)
+		}
+	})
+
+	t.Run("not retry read with context.DeadlineExceeded", func(t *testing.T) {
+		e := context.DeadlineExceeded
+		m, checkClean := setupMux([]*mockWire{{
+			DoFn:      func(cmd cmds.Completed) RedisResult { return newErrResult(e) },
+			DoMultiFn: func(cmd ...cmds.Completed) []RedisResult { return []RedisResult{newErrResult(e)} },
+		}})
+		defer checkClean(t)
+		defer m.Close()
+		if _, err := m.Do(context.Background(), cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"})).ToString(); err != e {
+			t.Fatalf("unexpected error %v", err)
+		}
+		if _, err := m.DoMulti(context.Background(), cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"}))[0].ToString(); err != e {
+			t.Fatalf("unexpected error %v", err)
+		}
+	})
+
+	t.Run("not retry read with os.DeadlineExceeded", func(t *testing.T) {
+		e := fmt.Errorf("%w", os.ErrDeadlineExceeded)
+		m, checkClean := setupMux([]*mockWire{{
+			DoFn:      func(cmd cmds.Completed) RedisResult { return newErrResult(e) },
+			DoMultiFn: func(cmd ...cmds.Completed) []RedisResult { return []RedisResult{newErrResult(e)} },
+		}})
+		defer checkClean(t)
+		defer m.Close()
+		if _, err := m.Do(context.Background(), cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"})).ToString(); err != e {
+			t.Fatalf("unexpected error %v", err)
+		}
+		if _, err := m.DoMulti(context.Background(), cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"}))[0].ToString(); err != e {
+			t.Fatalf("unexpected error %v", err)
 		}
 	})
 
@@ -361,9 +405,6 @@ func TestMuxCMDRetry(t *testing.T) {
 		m, checkClean := setupMux([]*mockWire{
 			{
 				DoFn: func(cmd cmds.Completed) RedisResult {
-					if cmd.Commands()[0] == "PING" {
-						return newResult(RedisMessage{typ: '+', string: "PONG"}, nil)
-					}
 					if cmd.Commands()[0] != "WRITE_COMMAND" {
 						t.Fatalf("command should be WRITE_COMMAND")
 					}
@@ -372,9 +413,6 @@ func TestMuxCMDRetry(t *testing.T) {
 			},
 			{
 				DoFn: func(cmd cmds.Completed) RedisResult {
-					if cmd.Commands()[0] == "PING" {
-						return newResult(RedisMessage{typ: '+', string: "PONG"}, nil)
-					}
 					if cmd.Commands()[0] != "WRITE_COMMAND" {
 						t.Fatalf("command should be WRITE_COMMAND")
 					}
