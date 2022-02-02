@@ -1,7 +1,9 @@
 package rueidis
 
 import (
+	"bytes"
 	"errors"
+	"io"
 	"reflect"
 	"strings"
 	"testing"
@@ -67,6 +69,33 @@ func TestRedisResult(t *testing.T) {
 		}
 		if v, _ := (RedisResult{val: RedisMessage{typ: '+', string: "0.1"}}).ToString(); v != "0.1" {
 			t.Fatal("ToString not get value as expected")
+		}
+	})
+
+	t.Run("AsReader", func(t *testing.T) {
+		if _, err := (RedisResult{err: errors.New("other")}).AsReader(); err == nil {
+			t.Fatal("AsReader not failed as expected")
+		}
+		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsReader(); err == nil {
+			t.Fatal("AsReader not failed as expected")
+		}
+		r, _ := (RedisResult{val: RedisMessage{typ: '+', string: "0.1"}}).AsReader()
+		bs, _ := io.ReadAll(r)
+		if !bytes.Equal(bs, []byte("0.1")) {
+			t.Fatalf("AsReader not get value as expected %v", bs)
+		}
+	})
+
+	t.Run("DecodeJSON", func(t *testing.T) {
+		v := map[string]string{}
+		if err := (RedisResult{err: errors.New("other")}).DecodeJSON(&v); err == nil {
+			t.Fatal("AsReader not failed as expected")
+		}
+		if err := (RedisResult{val: RedisMessage{typ: '-'}}).DecodeJSON(&v); err == nil {
+			t.Fatal("AsReader not failed as expected")
+		}
+		if _ = (RedisResult{val: RedisMessage{typ: '+', string: `{"k":"v"}`}}).DecodeJSON(&v); v["k"] != "v" {
+			t.Fatalf("AsReader not get value as expected %v", v)
 		}
 	})
 
@@ -232,6 +261,32 @@ func TestRedisMessage(t *testing.T) {
 			}
 		}()
 		(&RedisMessage{typ: ':'}).ToString()
+	})
+
+	t.Run("AsReader", func(t *testing.T) {
+		if _, err := (&RedisMessage{typ: '_'}).AsReader(); err == nil {
+			t.Fatal("AsReader not failed as expected")
+		}
+
+		defer func() {
+			if !strings.Contains(recover().(string), "redis message type : is not a string") {
+				t.Fatal("AsReader not panic as expected")
+			}
+		}()
+		(&RedisMessage{typ: ':'}).AsReader()
+	})
+
+	t.Run("DecodeJSON", func(t *testing.T) {
+		if err := (&RedisMessage{typ: '_'}).DecodeJSON(nil); err == nil {
+			t.Fatal("DecodeJSON not failed as expected")
+		}
+
+		defer func() {
+			if !strings.Contains(recover().(string), "redis message type : is not a string") {
+				t.Fatal("DecodeJSON not panic as expected")
+			}
+		}()
+		(&RedisMessage{typ: ':'}).DecodeJSON(nil)
 	})
 
 	t.Run("AsInt64", func(t *testing.T) {

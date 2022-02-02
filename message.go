@@ -1,7 +1,9 @@
 package rueidis
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"strconv"
 	"strings"
 	"unsafe"
@@ -135,6 +137,22 @@ func (r RedisResult) ToString() (string, error) {
 	return r.val.ToString()
 }
 
+// AsReader delegates to RedisMessage.AsReader
+func (r RedisResult) AsReader() (reader io.Reader, err error) {
+	if err := r.Error(); err != nil {
+		return nil, err
+	}
+	return r.val.AsReader()
+}
+
+// DecodeJSON delegates to RedisMessage.DecodeJSON
+func (r RedisResult) DecodeJSON(v interface{}) error {
+	if err := r.Error(); err != nil {
+		return err
+	}
+	return r.val.DecodeJSON(v)
+}
+
 // AsInt64 delegates to RedisMessage.AsInt64
 func (r RedisResult) AsInt64() (int64, error) {
 	if err := r.Error(); err != nil {
@@ -227,6 +245,24 @@ func (m *RedisMessage) ToString() (val string, err error) {
 		panic(fmt.Sprintf("redis message type %c is not a string", m.typ))
 	}
 	return m.string, m.Error()
+}
+
+// AsReader check if message is a redis string response and wrap it with the strings.NewReader
+func (m *RedisMessage) AsReader() (reader io.Reader, err error) {
+	str, err := m.ToString()
+	if err != nil {
+		return nil, err
+	}
+	return strings.NewReader(str), nil
+}
+
+// DecodeJSON check if message is a redis string response and treat it as json, then unmarshal it into provided value
+func (m *RedisMessage) DecodeJSON(v interface{}) (err error) {
+	str, err := m.ToString()
+	if err != nil {
+		return err
+	}
+	return json.NewDecoder(strings.NewReader(str)).Decode(v)
 }
 
 // AsInt64 check if message is a redis string response, and parse it as int64
