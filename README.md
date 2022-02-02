@@ -269,6 +269,12 @@ c, _ := rueidis.NewClient(rueidis.ClientOption{
 
 To connect to a single redis node, still use the `NewClient` with one InitAddress
 
+```golang
+c, _ := rueidis.NewClient(rueidis.ClientOption{
+    InitAddress: []string{"127.0.0.1:6379"},
+})
+```
+
 To connect to sentinels, specify the required master set name:
 
 ```golang
