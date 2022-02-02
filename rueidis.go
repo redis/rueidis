@@ -58,12 +58,16 @@ type ClientOption struct {
 	// Dialer can be used to customized how rueidis connect to a redis instance via TCP, including:
 	// - Timeout, the default is DefaultDialTimeout
 	// - KeepAlive, the default is DefaultTCPKeepAlive
-	// The Dialer.KeepAlive interval is used to detect an unresponsive tcp connection.
-	// OS takes at least (tcp_keepalive_probes+1)*Dialer.KeepAlive time to conclude a connection to be unresponsive.
+	// The Dialer.KeepAlive interval is used to detect an unresponsive idle tcp connection.
+	// OS takes at least (tcp_keepalive_probes+1)*Dialer.KeepAlive time to conclude an idle connection to be unresponsive.
 	// For example: DefaultTCPKeepAlive = 1s and the default of tcp_keepalive_probes on Linux is 9.
-	// Therefore, it takes at least 10s to kill an unresponsive tcp connection on Linux by default.
-	Dialer    net.Dialer
-	TLSConfig *tls.Config
+	// Therefore, it takes at least 10s to kill an idle and unresponsive tcp connection on Linux by default.
+	Dialer net.Dialer
+	// ConnWriteTimeout is used to apply net.Conn.SetWriteDeadline
+	// Since the Dialer.KeepAlive will not be triggered if there is data in the outgoing buffer,
+	// ConnWriteTimeout should be set in order to detect local congestion or unresponsive redis server.
+	ConnWriteTimeout time.Duration
+	TLSConfig        *tls.Config
 
 	// Redis PubSub callbacks, should be created from NewPubSubOption
 	PubSubOption PubSubOption

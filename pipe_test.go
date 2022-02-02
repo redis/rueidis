@@ -3,8 +3,10 @@ package rueidis
 import (
 	"bufio"
 	"context"
+	"errors"
 	"io"
 	"net"
+	"os"
 	"runtime"
 	"strconv"
 	"strings"
@@ -841,6 +843,38 @@ func TestOngoingCancelContextInPipelineMode_Do(t *testing.T) {
 	close()
 }
 
+func TestOngoingWriteTimeoutInPipelineMode_Do(t *testing.T) {
+	p, mock, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: time.Second / 2})
+	defer closeConn()
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	success := int32(0)
+	timeout := int32(0)
+
+	for i := 0; i < 100; i++ {
+		go func() {
+			s, err := p.Do(ctx, cmds.NewCompleted([]string{"GET", "a"})).ToString()
+			if s == "OK" {
+				atomic.AddInt32(&success, 1)
+			} else if errors.Is(err, os.ErrDeadlineExceeded) {
+				atomic.AddInt32(&timeout, 1)
+			}
+		}()
+	}
+	mock.Expect("GET", "a").ReplyString("OK")
+	for atomic.LoadInt32(&success) != 1 {
+		t.Logf("wait success count to be 1 %v", atomic.LoadInt32(&success))
+		time.Sleep(time.Millisecond * 100)
+	}
+	if atomic.LoadInt32(&timeout) != 99 {
+		t.Logf("wait timeout count to be 99 %v", atomic.LoadInt32(&timeout))
+		time.Sleep(time.Millisecond * 100)
+	}
+	p.Close()
+}
+
 func TestOngoingCancelContextInPipelineMode_DoMulti(t *testing.T) {
 	p, mock, close, closeConn := setup(t, ClientOption{})
 	defer closeConn()
@@ -878,4 +912,36 @@ func TestOngoingCancelContextInPipelineMode_DoMulti(t *testing.T) {
 		mock.Expect("GET", "a").ReplyString("OK")
 	}
 	close()
+}
+
+func TestOngoingWriteTimeoutInPipelineMode_DoMulti(t *testing.T) {
+	p, mock, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: time.Second / 2})
+	defer closeConn()
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	success := int32(0)
+	timeout := int32(0)
+
+	for i := 0; i < 100; i++ {
+		go func() {
+			s, err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"}))[0].ToString()
+			if s == "OK" {
+				atomic.AddInt32(&success, 1)
+			} else if errors.Is(err, os.ErrDeadlineExceeded) {
+				atomic.AddInt32(&timeout, 1)
+			}
+		}()
+	}
+	mock.Expect("GET", "a").ReplyString("OK")
+	for atomic.LoadInt32(&success) != 1 {
+		t.Logf("wait success count to be 1 %v", atomic.LoadInt32(&success))
+		time.Sleep(time.Millisecond * 100)
+	}
+	if atomic.LoadInt32(&timeout) != 99 {
+		t.Logf("wait timeout count to be 99 %v", atomic.LoadInt32(&timeout))
+		time.Sleep(time.Millisecond * 100)
+	}
+	p.Close()
 }

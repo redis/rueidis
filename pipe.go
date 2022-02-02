@@ -53,6 +53,10 @@ func newPipe(conn net.Conn, option *ClientOption, onDisconnected func(err error)
 		option.CacheSizeEachConn = DefaultCacheBytes
 	}
 
+	if option.ConnWriteTimeout > 0 {
+		conn = &writeTimeoutConn{Conn: conn, timeout: option.ConnWriteTimeout}
+	}
+
 	p = &pipe{
 		conn:  conn,
 		cond:  sync.Cond{L: noLock{}},
@@ -530,17 +534,19 @@ func (p *pipe) Error() error {
 }
 
 func (p *pipe) Close() {
-	swapped := p.error.CompareAndSwap(nil, errClosing)
+	p.error.CompareAndSwap(nil, errClosing)
 	atomic.CompareAndSwapInt32(&p.state, 0, 2)
 	atomic.CompareAndSwapInt32(&p.state, 1, 2)
-	p._awake()
-	for atomic.LoadInt32(&p.waits) != 0 {
-		runtime.Gosched()
-	}
-	if swapped {
+	atomic.AddInt32(&p.waits, 1)
+	if p.queue != nil {
 		p.background()
+		p._awake()
+		for atomic.LoadInt32(&p.waits) != 1 {
+			runtime.Gosched()
+		}
 		<-p.queue.PutOne(cmds.QuitCmd)
 	}
+	atomic.AddInt32(&p.waits, -1)
 	atomic.CompareAndSwapInt32(&p.state, 2, 3)
 }
 
@@ -566,3 +572,26 @@ type noLock struct{}
 func (n noLock) Lock() {}
 
 func (n noLock) Unlock() {}
+
+type writeTimeoutConn struct {
+	net.Conn
+	current time.Time
+	timeout time.Duration
+}
+
+// automatically apply the write-deadline in Write call only when necessary,
+// since the net.Conn is used behind the bufio.Writer
+func (c *writeTimeoutConn) Write(b []byte) (n int, err error) {
+	if c.current.IsZero() {
+		_ = c.Conn.SetWriteDeadline(time.Now().Add(c.timeout))
+		n, err = c.Conn.Write(b)
+		_ = c.Conn.SetWriteDeadline(time.Time{})
+		return
+	}
+	return c.Conn.Write(b)
+}
+
+func (c *writeTimeoutConn) SetDeadline(t time.Time) error {
+	c.current = t
+	return c.Conn.SetDeadline(t)
+}
