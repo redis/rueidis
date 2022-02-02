@@ -54,13 +54,13 @@ func (c *singleClient) B() *cmds.Builder {
 }
 
 func (c *singleClient) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
-	resp = c.conn.Do(cmd)
+	resp = c.conn.Do(ctx, cmd)
 	c.cmd.Put(cmd.CommandSlice())
 	return resp
 }
 
 func (c *singleClient) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp RedisResult) {
-	resp = c.conn.DoCache(cmd, ttl)
+	resp = c.conn.DoCache(ctx, cmd, ttl)
 	c.cmd.Put(cmd.CommandSlice())
 	return resp
 }
@@ -86,7 +86,7 @@ func (c *dedicatedSingleClient) B() *cmds.Builder {
 }
 
 func (c *dedicatedSingleClient) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
-	resp = c.wire.Do(cmd)
+	resp = c.wire.Do(ctx, cmd)
 	c.cmd.Put(cmd.CommandSlice())
 	return resp
 }
@@ -95,7 +95,7 @@ func (c *dedicatedSingleClient) DoMulti(ctx context.Context, multi ...cmds.Compl
 	if len(multi) == 0 {
 		return nil
 	}
-	resp = c.wire.DoMulti(multi...)
+	resp = c.wire.DoMulti(ctx, multi...)
 	for _, cmd := range multi {
 		c.cmd.Put(cmd.CommandSlice())
 	}

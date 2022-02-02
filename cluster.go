@@ -87,7 +87,7 @@ func (c *clusterClient) _refresh() (err error) {
 retry:
 	c.mu.RLock()
 	for _, cc := range c.conns {
-		if reply, err = cc.Do(cmds.SlotCmd).ToMessage(); err == nil {
+		if reply, err = cc.Do(context.Background(), cmds.SlotCmd).ToMessage(); err == nil {
 			break
 		}
 	}
@@ -237,7 +237,7 @@ retry:
 		resp = newErrResult(err)
 		goto ret
 	}
-	resp = cc.Do(cmd)
+	resp = cc.Do(ctx, cmd)
 process:
 	if c.shouldRefreshRetry(resp.NonRedisError()) {
 		goto retry
@@ -245,10 +245,10 @@ process:
 	if err := resp.RedisError(); err != nil {
 		if addr, ok := err.IsMoved(); ok {
 			go c.refresh()
-			resp = c.pickOrNew(addr).Do(cmd)
+			resp = c.pickOrNew(addr).Do(ctx, cmd)
 			goto process
 		} else if addr, ok = err.IsAsk(); ok {
-			resp = c.pickOrNew(addr).DoMulti(cmds.AskingCmd, cmd)[1]
+			resp = c.pickOrNew(addr).DoMulti(ctx, cmds.AskingCmd, cmd)[1]
 			goto process
 		} else if err.IsTryAgain() {
 			runtime.Gosched()
@@ -267,7 +267,7 @@ retry:
 		resp = newErrResult(err)
 		goto ret
 	}
-	resp = cc.DoCache(cmd, ttl)
+	resp = cc.DoCache(ctx, cmd, ttl)
 process:
 	if c.shouldRefreshRetry(resp.NonRedisError()) {
 		goto retry
@@ -275,11 +275,11 @@ process:
 	if err := resp.RedisError(); err != nil {
 		if addr, ok := err.IsMoved(); ok {
 			go c.refresh()
-			resp = c.pickOrNew(addr).DoCache(cmd, ttl)
+			resp = c.pickOrNew(addr).DoCache(ctx, cmd, ttl)
 			goto process
 		} else if addr, ok = err.IsAsk(); ok {
 			// TODO ASKING OPT-IN Caching
-			resp = c.pickOrNew(addr).DoMulti(cmds.AskingCmd, cmds.Completed(cmd))[1]
+			resp = c.pickOrNew(addr).DoMulti(ctx, cmds.AskingCmd, cmds.Completed(cmd))[1]
 			goto process
 		} else if err.IsTryAgain() {
 			runtime.Gosched()
@@ -381,7 +381,7 @@ retry:
 	if wire, err := c.acquire(); err != nil {
 		resp = newErrResult(err)
 	} else {
-		resp = wire.Do(cmd)
+		resp = wire.Do(ctx, cmd)
 		if c.client.shouldRefreshRetry(resp.NonRedisError()) {
 			goto retry
 		}
@@ -399,7 +399,7 @@ func (c *dedicatedClusterClient) DoMulti(ctx context.Context, multi ...cmds.Comp
 	}
 retry:
 	if wire, err := c.acquire(); err == nil {
-		resp = wire.DoMulti(multi...)
+		resp = wire.DoMulti(ctx, multi...)
 		for _, resp := range resp {
 			if c.client.shouldRefreshRetry(resp.NonRedisError()) {
 				goto retry

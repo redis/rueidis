@@ -2,6 +2,7 @@ package rueidis
 
 import (
 	"bufio"
+	"context"
 	"io"
 	"net"
 	"runtime"
@@ -208,7 +209,7 @@ func TestOnDisconnectedHook(t *testing.T) {
 		close(done)
 	})
 	closeConn()
-	if err := p.Do(cmds.NewCompleted([]string{"PING"})).Error(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
+	if err := p.Do(context.Background(), cmds.NewCompleted([]string{"PING"})).Error(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 		t.Errorf("unexpected err %v", err)
 	}
 	<-done
@@ -218,7 +219,7 @@ func TestWriteSingleFlush(t *testing.T) {
 	p, mock, cancel, _ := setup(t, ClientOption{})
 	defer cancel()
 	go func() { mock.Expect("PING").ReplyString("OK") }()
-	ExpectOK(t, p.Do(cmds.NewCompleted([]string{"PING"})))
+	ExpectOK(t, p.Do(context.Background(), cmds.NewCompleted([]string{"PING"})))
 }
 
 func TestIgnoreOutOfBandDataDuringSyncMode(t *testing.T) {
@@ -227,7 +228,7 @@ func TestIgnoreOutOfBandDataDuringSyncMode(t *testing.T) {
 	go func() {
 		mock.Expect("PING").Reply(RedisMessage{typ: '>', string: "This should be ignore"}).ReplyString("OK")
 	}()
-	ExpectOK(t, p.Do(cmds.NewCompleted([]string{"PING"})))
+	ExpectOK(t, p.Do(context.Background(), cmds.NewCompleted([]string{"PING"})))
 }
 
 func TestWriteSinglePipelineFlush(t *testing.T) {
@@ -239,7 +240,7 @@ func TestWriteSinglePipelineFlush(t *testing.T) {
 
 	for i := 0; i < times; i++ {
 		go func() {
-			ExpectOK(t, p.Do(cmds.NewCompleted([]string{"PING"})))
+			ExpectOK(t, p.Do(context.Background(), cmds.NewCompleted([]string{"PING"})))
 		}()
 	}
 	for i := 0; i < times; i++ {
@@ -253,7 +254,7 @@ func TestWriteMultiFlush(t *testing.T) {
 	go func() {
 		mock.Expect("PING").Expect("PING").ReplyString("OK").ReplyString("OK")
 	}()
-	for _, resp := range p.DoMulti(cmds.NewCompleted([]string{"PING"}), cmds.NewCompleted([]string{"PING"})) {
+	for _, resp := range p.DoMulti(context.Background(), cmds.NewCompleted([]string{"PING"}), cmds.NewCompleted([]string{"PING"})) {
 		ExpectOK(t, resp)
 	}
 }
@@ -267,7 +268,7 @@ func TestWriteMultiPipelineFlush(t *testing.T) {
 
 	for i := 0; i < times; i++ {
 		go func() {
-			for _, resp := range p.DoMulti(cmds.NewCompleted([]string{"PING"}), cmds.NewCompleted([]string{"PING"})) {
+			for _, resp := range p.DoMulti(context.Background(), cmds.NewCompleted([]string{"PING"}), cmds.NewCompleted([]string{"PING"})) {
 				ExpectOK(t, resp)
 			}
 		}()
@@ -305,7 +306,7 @@ func TestResponseSequenceWithPushMessageInjected(t *testing.T) {
 		go func(i int) {
 			defer wg.Done()
 			v := strconv.Itoa(i)
-			if val, _ := p.Do(cmds.NewCompleted([]string{"GET", v})).ToMessage(); val.string != v {
+			if val, _ := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", v})).ToMessage(); val.string != v {
 				t.Errorf("out of order response, expected %v, got %v", v, val.string)
 			}
 		}(i)
@@ -358,7 +359,7 @@ func TestClientSideCaching(t *testing.T) {
 	for i := 0; i < 5000; i++ {
 		go func() {
 			defer wg.Done()
-			v, _ := p.DoCache(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage()
+			v, _ := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage()
 			if v.string != "1" {
 				t.Errorf("unexpected cached result, expected %v, got %v", "1", v.string)
 			}
@@ -386,7 +387,7 @@ func TestClientSideCaching(t *testing.T) {
 	}()
 
 	for {
-		if v, _ := p.DoCache(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), time.Second).ToMessage(); v.string == "2" {
+		if v, _ := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), time.Second).ToMessage(); v.string == "2" {
 			break
 		}
 		t.Logf("waiting for invalidating")
@@ -399,7 +400,7 @@ func TestClientSideCaching(t *testing.T) {
 	}()
 
 	for {
-		if v, _ := p.DoCache(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), time.Second).ToMessage(); v.string == "3" {
+		if v, _ := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), time.Second).ToMessage(); v.string == "3" {
 			break
 		}
 		t.Logf("waiting for invalidating")
@@ -423,7 +424,7 @@ func TestClientSideCachingExecAbort(t *testing.T) {
 			Reply(RedisMessage{typ: '_'})
 	}()
 
-	v, err := p.DoCache(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage()
+	v, err := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage()
 	if !IsRedisNil(err) {
 		t.Errorf("unexpected err, got %v", err)
 	}
@@ -454,8 +455,8 @@ func TestPubSub(t *testing.T) {
 		}()
 
 		for _, c := range commands {
-			p.Do(c)
-			if v, _ := p.Do(builder.Get().Key("k").Build()).ToMessage(); v.string != "v" {
+			p.Do(context.Background(), c)
+			if v, _ := p.Do(context.Background(), builder.Get().Key("k").Build()).ToMessage(); v.string != "v" {
 				t.Fatalf("no-reply commands should not affect nornal commands")
 			}
 		}
@@ -479,8 +480,8 @@ func TestPubSub(t *testing.T) {
 			mock.Expect("GET", "k").ReplyString("v")
 		}()
 
-		p.DoMulti(commands...)
-		if v, _ := p.Do(builder.Get().Key("k").Build()).ToMessage(); v.string != "v" {
+		p.DoMulti(context.Background(), commands...)
+		if v, _ := p.Do(context.Background(), builder.Get().Key("k").Build()).ToMessage(); v.string != "v" {
 			t.Fatalf("no-reply commands should not affect nornal commands")
 		}
 	})
@@ -506,7 +507,7 @@ func TestPubSub(t *testing.T) {
 						close(done)
 					}
 				}()
-				p.DoMulti(cmd, builder.Get().Key("any").Build())
+				p.DoMulti(context.Background(), cmd, builder.Get().Key("any").Build())
 			}()
 			<-done
 		}
@@ -543,7 +544,7 @@ func TestPubSub(t *testing.T) {
 			},
 		})
 		activate := builder.Subscribe().Channel("a").Build()
-		go p.Do(activate)
+		go p.Do(context.Background(), activate)
 		mock.Expect(activate.Commands()...).Reply(
 			RedisMessage{typ: '>', values: []RedisMessage{
 				{typ: '+', string: "message"},
@@ -599,7 +600,7 @@ func TestExitOnWriteError(t *testing.T) {
 	closeConn()
 
 	for i := 0; i < 2; i++ {
-		if err := p.Do(cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
+		if err := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 			t.Errorf("unexpected cached result, expected io err, got %v", err)
 		}
 	}
@@ -617,7 +618,7 @@ func TestExitOnPubSubSubscribeWriteError(t *testing.T) {
 		go func() {
 			defer wg.Done()
 			atomic.AddInt64(&count, 1)
-			if err := p.Do(activate).NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
+			if err := p.Do(context.Background(), activate).NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 				t.Errorf("unexpected result, expected io err, got %v", err)
 			}
 		}()
@@ -635,7 +636,7 @@ func TestExitOnWriteMultiError(t *testing.T) {
 	closeConn()
 
 	for i := 0; i < 2; i++ {
-		if err := p.DoMulti(cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
+		if err := p.DoMulti(context.Background(), cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 			t.Errorf("unexpected result, expected io err, got %v", err)
 		}
 	}
@@ -646,7 +647,7 @@ func TestExitAllGoroutineOnWriteError(t *testing.T) {
 
 	// start the background worker
 	activate := cmds.NewBuilder(cmds.NoSlot).Subscribe().Channel("a").Build()
-	go conn.Do(activate)
+	go conn.Do(context.Background(), activate)
 	mock.Expect(activate.Commands()...)
 
 	closeConn()
@@ -655,10 +656,10 @@ func TestExitAllGoroutineOnWriteError(t *testing.T) {
 	for i := 0; i < 5000; i++ {
 		go func() {
 			defer wg.Done()
-			if err := conn.Do(cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
+			if err := conn.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 				t.Errorf("unexpected result, expected io err, got %v", err)
 			}
-			if err := conn.DoMulti(cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
+			if err := conn.DoMulti(context.Background(), cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 				t.Errorf("unexpected result, expected io err, got %v", err)
 			}
 		}()
@@ -675,7 +676,7 @@ func TestExitOnReadError(t *testing.T) {
 	}()
 
 	for i := 0; i < 2; i++ {
-		if err := p.Do(cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
+		if err := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 			t.Errorf("unexpected result, expected io err, got %v", err)
 		}
 	}
@@ -690,7 +691,7 @@ func TestExitOnReadMultiError(t *testing.T) {
 	}()
 
 	for i := 0; i < 2; i++ {
-		if err := p.DoMulti(cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
+		if err := p.DoMulti(context.Background(), cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 			t.Errorf("unexpected result, expected io err, got %v", err)
 		}
 	}
@@ -709,10 +710,10 @@ func TestExitAllGoroutineOnReadError(t *testing.T) {
 	for i := 0; i < 5000; i++ {
 		go func() {
 			defer wg.Done()
-			if err := p.Do(cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
+			if err := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 				t.Errorf("unexpected result, expected io err, got %v", err)
 			}
-			if err := p.DoMulti(cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
+			if err := p.DoMulti(context.Background(), cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 				t.Errorf("unexpected result, expected io err, got %v", err)
 			}
 		}()
@@ -732,8 +733,7 @@ func TestCloseAndWaitPendingCMDs(t *testing.T) {
 	for i := 0; i < loop; i++ {
 		go func() {
 			defer wg.Done()
-
-			if v, _ := p.Do(cmds.NewCompleted([]string{"GET", "a"})).ToMessage(); v.string != "b" {
+			if v, _ := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).ToMessage(); v.string != "b" {
 				t.Errorf("unexpected GET result %v", v.string)
 			}
 		}()
@@ -742,9 +742,140 @@ func TestCloseAndWaitPendingCMDs(t *testing.T) {
 		r := mock.Expect("GET", "a")
 		if i == loop-1 {
 			go p.Close()
+			time.Sleep(time.Second / 2)
 		}
 		r.ReplyString("b")
 	}
 	mock.Expect("QUIT").ReplyString("OK")
 	wg.Wait()
+}
+
+func TestAlreadyCanceledContext(t *testing.T) {
+	p, _, close, closeConn := setup(t, ClientOption{})
+	defer closeConn()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	if err := p.Do(ctx, cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); err != context.Canceled {
+		t.Fatalf("unexpected err %v", err)
+	}
+	if err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); err != context.Canceled {
+		t.Fatalf("unexpected err %v", err)
+	}
+
+	ctx, cancel = context.WithDeadline(context.Background(), time.Now().Add(-1*time.Second))
+	cancel()
+
+	if err := p.Do(ctx, cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); err != context.DeadlineExceeded {
+		t.Fatalf("unexpected err %v", err)
+	}
+	if err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); err != context.DeadlineExceeded {
+		t.Fatalf("unexpected err %v", err)
+	}
+	close()
+}
+
+func TestOngoingDeadlineContextInSyncMode_Do(t *testing.T) {
+	p, _, _, closeConn := setup(t, ClientOption{})
+	defer closeConn()
+
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1*time.Second/2))
+	defer cancel()
+
+	if err := p.Do(ctx, cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); err != context.DeadlineExceeded {
+		t.Fatalf("unexpected err %v", err)
+	}
+	p.Close()
+}
+
+func TestOngoingDeadlineContextInSyncMode_DoMulti(t *testing.T) {
+	p, _, _, closeConn := setup(t, ClientOption{})
+	defer closeConn()
+
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1*time.Second/2))
+	defer cancel()
+
+	if err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); err != context.DeadlineExceeded {
+		t.Fatalf("unexpected err %v", err)
+	}
+	p.Close()
+}
+
+func TestOngoingCancelContextInPipelineMode_Do(t *testing.T) {
+	p, mock, close, closeConn := setup(t, ClientOption{})
+	defer closeConn()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	success := int32(0)
+	canceled := int32(0)
+
+	for i := 0; i < 100; i++ {
+		go func() {
+			s, err := p.Do(ctx, cmds.NewCompleted([]string{"GET", "a"})).ToString()
+			if s == "OK" {
+				atomic.AddInt32(&success, 1)
+			} else if err == context.Canceled {
+				atomic.AddInt32(&canceled, 1)
+			}
+		}()
+	}
+	for i := 0; i < 50; i++ {
+		mock.Expect("GET", "a").ReplyString("OK")
+	}
+	for atomic.LoadInt32(&success) != 50 {
+		t.Logf("wait success count to be 50 %v", atomic.LoadInt32(&success))
+		time.Sleep(time.Millisecond * 100)
+	}
+	cancel()
+	if atomic.LoadInt32(&canceled) != 50 {
+		t.Logf("wait canceled count to be 50 %v", atomic.LoadInt32(&canceled))
+		time.Sleep(time.Millisecond * 100)
+	}
+	// the rest command is still send
+	for i := 0; i < 50; i++ {
+		mock.Expect("GET", "a").ReplyString("OK")
+	}
+	close()
+}
+
+func TestOngoingCancelContextInPipelineMode_DoMulti(t *testing.T) {
+	p, mock, close, closeConn := setup(t, ClientOption{})
+	defer closeConn()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	success := int32(0)
+	canceled := int32(0)
+
+	for i := 0; i < 100; i++ {
+		go func() {
+			s, err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"}))[0].ToString()
+			if s == "OK" {
+				atomic.AddInt32(&success, 1)
+			} else if err == context.Canceled {
+				atomic.AddInt32(&canceled, 1)
+			}
+		}()
+	}
+	for i := 0; i < 50; i++ {
+		mock.Expect("GET", "a").ReplyString("OK")
+	}
+	for atomic.LoadInt32(&success) != 50 {
+		t.Logf("wait success count to be 50 %v", atomic.LoadInt32(&success))
+		time.Sleep(time.Millisecond * 100)
+	}
+	cancel()
+	if atomic.LoadInt32(&canceled) != 50 {
+		t.Logf("wait canceled count to be 50 %v", atomic.LoadInt32(&canceled))
+		time.Sleep(time.Millisecond * 100)
+	}
+	// the rest command is still send
+	for i := 0; i < 50; i++ {
+		mock.Expect("GET", "a").ReplyString("OK")
+	}
+	close()
 }

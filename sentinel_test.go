@@ -477,13 +477,12 @@ func TestSentinelClientDelegateRetry(t *testing.T) {
 							{typ: '+', string: ""}, {typ: '+', string: "1"},
 						}}},
 					}
-				} else {
-					return []RedisResult{
-						{val: RedisMessage{typ: '*', values: []RedisMessage{}}},
-						{val: RedisMessage{typ: '*', values: []RedisMessage{
-							{typ: '+', string: ""}, {typ: '+', string: "2"},
-						}}},
-					}
+				}
+				return []RedisResult{
+					{val: RedisMessage{typ: '*', values: []RedisMessage{}}},
+					{val: RedisMessage{typ: '*', values: []RedisMessage{
+						{typ: '+', string: ""}, {typ: '+', string: "2"},
+					}}},
 				}
 			},
 		}

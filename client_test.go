@@ -51,21 +51,21 @@ func (m *mockConn) Store(w wire) {
 	}
 }
 
-func (m *mockConn) Do(cmd cmds.Completed) RedisResult {
+func (m *mockConn) Do(ctx context.Context, cmd cmds.Completed) RedisResult {
 	if m.DoFn != nil {
 		return m.DoFn(cmd)
 	}
 	return RedisResult{}
 }
 
-func (m *mockConn) DoCache(cmd cmds.Cacheable, ttl time.Duration) RedisResult {
+func (m *mockConn) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) RedisResult {
 	if m.DoCacheFn != nil {
 		return m.DoCacheFn(cmd, ttl)
 	}
 	return RedisResult{}
 }
 
-func (m *mockConn) DoMulti(multi ...cmds.Completed) []RedisResult {
+func (m *mockConn) DoMulti(ctx context.Context, multi ...cmds.Completed) []RedisResult {
 	if m.DoMultiFn != nil {
 		return m.DoMultiFn(multi...)
 	}

@@ -2,6 +2,7 @@ package rueidis
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"net"
 	"runtime"
@@ -184,7 +185,7 @@ func TestMuxReuseWire(t *testing.T) {
 		defer checkClean(t)
 		defer m.Close()
 		for i := 0; i < 2; i++ {
-			if err := m.Do(cmds.NewCompleted([]string{"PING"})).Error(); err != nil {
+			if err := m.Do(context.Background(), cmds.NewCompleted([]string{"PING"})).Error(); err != nil {
 				t.Fatalf("unexpected error %v", err)
 			}
 		}
@@ -220,7 +221,7 @@ func TestMuxReuseWire(t *testing.T) {
 
 		go func() {
 			// this should use the second wire
-			if val, err := m.Do(cmds.NewBlockingCompleted([]string{"PING"})).ToString(); err != nil {
+			if val, err := m.Do(context.Background(), cmds.NewBlockingCompleted([]string{"PING"})).ToString(); err != nil {
 				t.Errorf("unexpected error %v", err)
 			} else if val != "BLOCK_RESPONSE" {
 				t.Errorf("unexpected response %v", val)
@@ -231,7 +232,7 @@ func TestMuxReuseWire(t *testing.T) {
 
 		m.Store(wire1)
 		// this should use the first wire
-		if val, err := m.Do(cmds.NewBlockingCompleted([]string{"PING"})).ToString(); err != nil {
+		if val, err := m.Do(context.Background(), cmds.NewBlockingCompleted([]string{"PING"})).ToString(); err != nil {
 			t.Fatalf("unexpected error %v", err)
 		} else if val != "ACQUIRED" {
 			t.Fatalf("unexpected response %v", val)
@@ -279,9 +280,6 @@ func TestMuxCMDRetry(t *testing.T) {
 		m, checkClean := setupMux([]*mockWire{
 			{
 				DoFn: func(cmd cmds.Completed) RedisResult {
-					if cmd.Commands()[0] == "PING" {
-						return newResult(RedisMessage{typ: '+', string: "PONG"}, nil)
-					}
 					if cmd.Commands()[0] != "READONLY_COMMAND" {
 						t.Fatalf("command should be READONLY_COMMAND")
 					}
@@ -290,9 +288,6 @@ func TestMuxCMDRetry(t *testing.T) {
 			},
 			{
 				DoFn: func(cmd cmds.Completed) RedisResult {
-					if cmd.Commands()[0] == "PING" {
-						return newResult(RedisMessage{typ: '+', string: "PONG"}, nil)
-					}
 					if cmd.Commands()[0] != "READONLY_COMMAND" {
 						t.Fatalf("command should be READONLY_COMMAND")
 					}
@@ -303,10 +298,42 @@ func TestMuxCMDRetry(t *testing.T) {
 		defer checkClean(t)
 		defer m.Close()
 		// this should automatically use the second wire
-		if val, err := m.Do(cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"})).ToString(); err != nil {
+		if val, err := m.Do(context.Background(), cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"})).ToString(); err != nil {
 			t.Fatalf("unexpected error %v", err)
 		} else if val != "READONLY_COMMAND_RESPONSE" {
 			t.Fatalf("unexpected response %v", val)
+		}
+	})
+
+	t.Run("not retry read with context.Canceled", func(t *testing.T) {
+		e := context.Canceled
+		m, checkClean := setupMux([]*mockWire{{
+			DoFn:      func(cmd cmds.Completed) RedisResult { return newErrResult(e) },
+			DoMultiFn: func(cmd ...cmds.Completed) []RedisResult { return []RedisResult{newErrResult(e)} },
+		}})
+		defer checkClean(t)
+		defer m.Close()
+		if _, err := m.Do(context.Background(), cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"})).ToString(); err != e {
+			t.Fatalf("unexpected error %v", err)
+		}
+		if _, err := m.DoMulti(context.Background(), cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"}))[0].ToString(); err != e {
+			t.Fatalf("unexpected error %v", err)
+		}
+	})
+
+	t.Run("not retry read with context.DeadlineExceeded", func(t *testing.T) {
+		e := context.DeadlineExceeded
+		m, checkClean := setupMux([]*mockWire{{
+			DoFn:      func(cmd cmds.Completed) RedisResult { return newErrResult(e) },
+			DoMultiFn: func(cmd ...cmds.Completed) []RedisResult { return []RedisResult{newErrResult(e)} },
+		}})
+		defer checkClean(t)
+		defer m.Close()
+		if _, err := m.Do(context.Background(), cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"})).ToString(); err != e {
+			t.Fatalf("unexpected error %v", err)
+		}
+		if _, err := m.DoMulti(context.Background(), cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"}))[0].ToString(); err != e {
+			t.Fatalf("unexpected error %v", err)
 		}
 	})
 
@@ -326,7 +353,7 @@ func TestMuxCMDRetry(t *testing.T) {
 		defer checkClean(t)
 		defer m.Close()
 		// this should automatically use the second wire
-		if val, err := m.DoMulti(cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"}))[0].ToString(); err != nil {
+		if val, err := m.DoMulti(context.Background(), cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"}))[0].ToString(); err != nil {
 			t.Fatalf("unexpected error %v", err)
 		} else if val != "MULTI_COMMANDS_RESPONSE" {
 			t.Fatalf("unexpected response %v", val)
@@ -349,7 +376,7 @@ func TestMuxCMDRetry(t *testing.T) {
 		defer checkClean(t)
 		defer m.Close()
 		// this should automatically use the second wire
-		if val, err := m.DoCache(cmds.Cacheable(cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"})), time.Second).ToString(); err != nil {
+		if val, err := m.DoCache(context.Background(), cmds.Cacheable(cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"})), time.Second).ToString(); err != nil {
 			t.Fatalf("unexpected error %v", err)
 		} else if val != "READONLY_COMMAND_RESPONSE" {
 			t.Fatalf("unexpected response %v", val)
@@ -360,9 +387,6 @@ func TestMuxCMDRetry(t *testing.T) {
 		m, checkClean := setupMux([]*mockWire{
 			{
 				DoFn: func(cmd cmds.Completed) RedisResult {
-					if cmd.Commands()[0] == "PING" {
-						return newResult(RedisMessage{typ: '+', string: "PONG"}, nil)
-					}
 					if cmd.Commands()[0] != "WRITE_COMMAND" {
 						t.Fatalf("command should be WRITE_COMMAND")
 					}
@@ -371,9 +395,6 @@ func TestMuxCMDRetry(t *testing.T) {
 			},
 			{
 				DoFn: func(cmd cmds.Completed) RedisResult {
-					if cmd.Commands()[0] == "PING" {
-						return newResult(RedisMessage{typ: '+', string: "PONG"}, nil)
-					}
 					if cmd.Commands()[0] != "WRITE_COMMAND" {
 						t.Fatalf("command should be WRITE_COMMAND")
 					}
@@ -384,11 +405,11 @@ func TestMuxCMDRetry(t *testing.T) {
 		defer checkClean(t)
 		defer m.Close()
 		// this should only use the first wire
-		if _, err := m.Do(cmds.NewCompleted([]string{"WRITE_COMMAND"})).ToString(); err == nil || err.Error() != "network error" {
+		if _, err := m.Do(context.Background(), cmds.NewCompleted([]string{"WRITE_COMMAND"})).ToString(); err == nil || err.Error() != "network error" {
 			t.Fatalf("unexpected error %v", err)
 		}
 		// this should use the second wire
-		if val, err := m.Do(cmds.NewCompleted([]string{"WRITE_COMMAND"})).ToString(); err != nil {
+		if val, err := m.Do(context.Background(), cmds.NewCompleted([]string{"WRITE_COMMAND"})).ToString(); err != nil {
 			t.Fatalf("unexpected error %v", err)
 		} else if val != "WRITE_COMMAND_RESPONSE" {
 			t.Fatalf("unexpected response %v", val)
@@ -412,6 +433,7 @@ func TestMuxCMDRetry(t *testing.T) {
 		defer m.Close()
 		// this should only use the first wire
 		if _, err := m.DoMulti(
+			context.Background(),
 			cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"}),
 			cmds.NewCompleted([]string{"WRITE_COMMAND"}),
 		)[0].ToString(); err == nil || err.Error() != "network error" {
@@ -419,6 +441,7 @@ func TestMuxCMDRetry(t *testing.T) {
 		}
 		// this should use the second wire
 		if val, err := m.DoMulti(
+			context.Background(),
 			cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"}),
 			cmds.NewCompleted([]string{"WRITE_COMMAND"}),
 		)[0].ToString(); err != nil {
@@ -459,7 +482,7 @@ func TestMuxCMDRetry(t *testing.T) {
 		wg.Add(2)
 		for i := 0; i < 2; i++ {
 			go func() {
-				if val, err := m.Do(cmds.NewBlockingCompleted([]string{"BLOCK"})).ToString(); err != nil {
+				if val, err := m.Do(context.Background(), cmds.NewBlockingCompleted([]string{"BLOCK"})).ToString(); err != nil {
 					t.Errorf("unexpected error %v", err)
 				} else if val != "BLOCK_COMMANDS_RESPONSE" {
 					t.Errorf("unexpected response %v", val)
@@ -509,6 +532,7 @@ func TestMuxCMDRetry(t *testing.T) {
 		for i := 0; i < 2; i++ {
 			go func() {
 				if val, err := m.DoMulti(
+					context.Background(),
 					cmds.NewReadOnlyCompleted([]string{"READONLY"}),
 					cmds.NewBlockingCompleted([]string{"BLOCK"}),
 				)[0].ToString(); err != nil {
@@ -548,7 +572,7 @@ func TestMuxDialRetry(t *testing.T) {
 	t.Run("retry on auto pipeline", func(t *testing.T) {
 		m, count := setup()
 		defer m.Close()
-		if val, err := m.Do(cmds.NewCompleted([]string{"PING"})).ToString(); err != nil {
+		if val, err := m.Do(context.Background(), cmds.NewCompleted([]string{"PING"})).ToString(); err != nil {
 			t.Fatalf("unexpected err %v", err)
 		} else if val != "PONG" {
 			t.Fatalf("unexpected response %v", val)
@@ -561,7 +585,7 @@ func TestMuxDialRetry(t *testing.T) {
 	t.Run("retry on blocking pool", func(t *testing.T) {
 		m, count := setup()
 		defer m.Close()
-		if val, err := m.Do(cmds.NewBlockingCompleted([]string{"PING"})).ToString(); err != nil {
+		if val, err := m.Do(context.Background(), cmds.NewBlockingCompleted([]string{"PING"})).ToString(); err != nil {
 			t.Fatalf("unexpected err %v", err)
 		} else if val != "PONG" {
 			t.Fatalf("unexpected response %v", val)
@@ -589,7 +613,7 @@ func BenchmarkClientSideCaching(b *testing.B) {
 		cmd := cmds.NewCompleted([]string{"GET", "a"})
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
-				m.Do(cmd)
+				m.Do(context.Background(), cmd)
 			}
 		})
 	})
@@ -598,7 +622,7 @@ func BenchmarkClientSideCaching(b *testing.B) {
 		cmd := cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"}))
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
-				m.DoCache(cmd, time.Second*5)
+				m.DoCache(context.Background(), cmd, time.Second*5)
 			}
 		})
 	})
@@ -613,21 +637,21 @@ type mockWire struct {
 	CloseFn   func()
 }
 
-func (m *mockWire) Do(cmd cmds.Completed) RedisResult {
+func (m *mockWire) Do(ctx context.Context, cmd cmds.Completed) RedisResult {
 	if m.DoFn != nil {
 		return m.DoFn(cmd)
 	}
 	return RedisResult{}
 }
 
-func (m *mockWire) DoCache(cmd cmds.Cacheable, ttl time.Duration) RedisResult {
+func (m *mockWire) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) RedisResult {
 	if m.DoCacheFn != nil {
 		return m.DoCacheFn(cmd, ttl)
 	}
 	return RedisResult{}
 }
 
-func (m *mockWire) DoMulti(multi ...cmds.Completed) []RedisResult {
+func (m *mockWire) DoMulti(ctx context.Context, multi ...cmds.Completed) []RedisResult {
 	if m.DoMultiFn != nil {
 		return m.DoMultiFn(multi...)
 	}

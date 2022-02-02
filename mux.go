@@ -1,6 +1,7 @@
 package rueidis
 
 import (
+	"context"
 	"net"
 	"sync"
 	"sync/atomic"
@@ -144,12 +145,12 @@ func (m *mux) Error() error {
 	return m.pipe().Error()
 }
 
-func (m *mux) Do(cmd cmds.Completed) (resp RedisResult) {
+func (m *mux) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
 retry:
 	if cmd.IsBlock() {
-		resp = m.blocking(cmd)
+		resp = m.blocking(ctx, cmd)
 	} else {
-		resp = m.pipeline(cmd)
+		resp = m.pipeline(ctx, cmd)
 	}
 	if cmd.IsReadOnly() && isNetworkErr(resp.NonRedisError()) {
 		goto retry
@@ -157,7 +158,7 @@ retry:
 	return resp
 }
 
-func (m *mux) DoMulti(multi ...cmds.Completed) (resp []RedisResult) {
+func (m *mux) DoMulti(ctx context.Context, multi ...cmds.Completed) (resp []RedisResult) {
 	var block, write bool
 	for _, cmd := range multi {
 		block = block || cmd.IsBlock()
@@ -165,9 +166,9 @@ func (m *mux) DoMulti(multi ...cmds.Completed) (resp []RedisResult) {
 	}
 retry:
 	if block {
-		resp = m.blockingMulti(multi)
+		resp = m.blockingMulti(ctx, multi)
 	} else {
-		resp = m.pipelineMulti(multi)
+		resp = m.pipelineMulti(ctx, multi)
 	}
 	if !write {
 		for _, r := range resp {
@@ -179,31 +180,31 @@ retry:
 	return resp
 }
 
-func (m *mux) blocking(cmd cmds.Completed) (resp RedisResult) {
+func (m *mux) blocking(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
 	wire := m.pool.Acquire()
-	resp = wire.Do(cmd)
+	resp = wire.Do(ctx, cmd)
 	m.pool.Store(wire)
 	return resp
 }
 
-func (m *mux) blockingMulti(cmd []cmds.Completed) (resp []RedisResult) {
+func (m *mux) blockingMulti(ctx context.Context, cmd []cmds.Completed) (resp []RedisResult) {
 	wire := m.pool.Acquire()
-	resp = wire.DoMulti(cmd...)
+	resp = wire.DoMulti(ctx, cmd...)
 	m.pool.Store(wire)
 	return resp
 }
 
-func (m *mux) pipeline(cmd cmds.Completed) (resp RedisResult) {
+func (m *mux) pipeline(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
 	wire := m.pipe()
-	if resp = wire.Do(cmd); isNetworkErr(resp.NonRedisError()) {
+	if resp = wire.Do(ctx, cmd); isNetworkErr(resp.NonRedisError()) {
 		m.wire.CompareAndSwap(wire, m.init)
 	}
 	return resp
 }
 
-func (m *mux) pipelineMulti(cmd []cmds.Completed) (resp []RedisResult) {
+func (m *mux) pipelineMulti(ctx context.Context, cmd []cmds.Completed) (resp []RedisResult) {
 	wire := m.pipe()
-	resp = wire.DoMulti(cmd...)
+	resp = wire.DoMulti(ctx, cmd...)
 	for _, r := range resp {
 		if isNetworkErr(r.NonRedisError()) {
 			m.wire.CompareAndSwap(wire, m.init)
@@ -213,10 +214,10 @@ func (m *mux) pipelineMulti(cmd []cmds.Completed) (resp []RedisResult) {
 	return resp
 }
 
-func (m *mux) DoCache(cmd cmds.Cacheable, ttl time.Duration) RedisResult {
+func (m *mux) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) RedisResult {
 retry:
 	wire := m.pipe()
-	resp := wire.DoCache(cmd, ttl)
+	resp := wire.DoCache(ctx, cmd, ttl)
 	if isNetworkErr(resp.NonRedisError()) {
 		m.wire.CompareAndSwap(wire, m.init)
 		goto retry
@@ -240,5 +241,8 @@ func (m *mux) Close() {
 }
 
 func isNetworkErr(err error) bool {
-	return err != nil && err != ErrClosing
+	return err != nil &&
+		err != ErrClosing &&
+		err != context.Canceled &&
+		err != context.DeadlineExceeded
 }

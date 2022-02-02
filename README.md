@@ -184,6 +184,18 @@ with non-blocking commands and thus will not cause the pipeline to be blocked:
 * migrate
 * wait
 
+## Context Deadline
+
+`Client.Do()` and `Client.DoCache()` can return early if the deadline of context is reached.
+
+```golang
+ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+defer cancel()
+c.Do(ctx, c.B().Set().Key("key").Value("val").Nx().Build()).Error() == context.DeadlineExceeded
+```
+
+Please note that though operations can return early, the command is likely sent already.
+
 ## Pub/Sub
 
 To receive messages from channels, the message handler should be registered when creating the redis connection:

@@ -2,7 +2,10 @@ package rueidis
 
 import (
 	"bufio"
+	"context"
+	"errors"
 	"net"
+	"os"
 	"runtime"
 	"strconv"
 	"sync"
@@ -13,9 +16,9 @@ import (
 )
 
 type wire interface {
-	Do(cmd cmds.Completed) RedisResult
-	DoCache(cmd cmds.Cacheable, ttl time.Duration) RedisResult
-	DoMulti(multi ...cmds.Completed) []RedisResult
+	Do(ctx context.Context, cmd cmds.Completed) RedisResult
+	DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) RedisResult
+	DoMulti(ctx context.Context, multi ...cmds.Completed) []RedisResult
 	Info() map[string]RedisMessage
 	Error() error
 	Close()
@@ -75,7 +78,7 @@ func newPipe(conn net.Conn, option *ClientOption, onDisconnected func(err error)
 		init = append(init, []string{"SELECT", strconv.Itoa(option.SelectDB)})
 	}
 
-	for i, r := range p.DoMulti(cmds.NewMultiCompleted(init)...) {
+	for i, r := range p.DoMulti(context.Background(), cmds.NewMultiCompleted(init)...) {
 		if i == 0 {
 			p.info, err = r.ToMap()
 		} else {
@@ -296,7 +299,11 @@ func (p *pipe) Info() map[string]RedisMessage {
 	return p.info
 }
 
-func (p *pipe) Do(cmd cmds.Completed) (resp RedisResult) {
+func (p *pipe) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
+	if err := ctx.Err(); err != nil {
+		return newErrResult(ctx.Err())
+	}
+
 	waits := atomic.AddInt32(&p.waits, 1) // if this is 1, and background worker is not started, no need to queue
 	state := atomic.LoadInt32(&p.state)
 
@@ -312,7 +319,7 @@ func (p *pipe) Do(cmd cmds.Completed) (resp RedisResult) {
 			p.background()
 			goto queue
 		}
-		resp = p.syncDo(cmd)
+		resp = p.syncDo(ctx, cmd)
 	} else {
 		resp = newErrResult(p.Error())
 	}
@@ -326,12 +333,33 @@ queue:
 	if waits == 1 {
 		p._awake()
 	}
-	resp = <-ch
-	atomic.AddInt32(&p.waits, -1)
+	if ctxCh := ctx.Done(); ctxCh == nil {
+		resp = <-ch
+		atomic.AddInt32(&p.waits, -1)
+	} else {
+		select {
+		case resp = <-ch:
+			atomic.AddInt32(&p.waits, -1)
+		case <-ctxCh:
+			resp = newErrResult(ctx.Err())
+			go func() {
+				<-ch
+				atomic.AddInt32(&p.waits, -1)
+			}()
+		}
+	}
 	return resp
 }
 
-func (p *pipe) DoMulti(multi ...cmds.Completed) []RedisResult {
+func (p *pipe) DoMulti(ctx context.Context, multi ...cmds.Completed) []RedisResult {
+	resp := make([]RedisResult, len(multi))
+	if err := ctx.Err(); err != nil {
+		for i := 0; i < len(resp); i++ {
+			resp[i] = newErrResult(err)
+		}
+		return resp
+	}
+
 	isOptIn := multi[0].IsOptIn() // len(multi) > 0 should have already been checked by upper layer
 	noReply := multi[0].NoReply()
 
@@ -343,7 +371,6 @@ func (p *pipe) DoMulti(multi ...cmds.Completed) []RedisResult {
 
 	waits := atomic.AddInt32(&p.waits, 1) // if this is 1, and background worker is not started, no need to queue
 	state := atomic.LoadInt32(&p.state)
-	resp := make([]RedisResult, len(multi))
 
 	if state == 1 {
 		goto queue
@@ -357,11 +384,11 @@ func (p *pipe) DoMulti(multi ...cmds.Completed) []RedisResult {
 			p.background()
 			goto queue
 		}
-		resp = p.syncDoMulti(resp, multi)
+		resp = p.syncDoMulti(ctx, resp, multi)
 	} else {
-		err := p.Error()
+		err := newErrResult(p.Error())
 		for i := 0; i < len(resp); i++ {
-			resp[i] = newErrResult(err)
+			resp[i] = err
 		}
 	}
 	if left := atomic.AddInt32(&p.waits, -1); state == 0 && waits == 1 && left != 0 {
@@ -374,14 +401,42 @@ queue:
 	if waits == 1 {
 		p._awake()
 	}
-	for i := range resp {
-		resp[i] = <-ch
+	var i int
+	if ctxCh := ctx.Done(); ctxCh == nil {
+		for ; i < len(resp); i++ {
+			resp[i] = <-ch
+		}
+	} else {
+		for ; i < len(resp); i++ {
+			select {
+			case resp[i] = <-ch:
+			case <-ctxCh:
+				goto abort
+			}
+		}
 	}
 	atomic.AddInt32(&p.waits, -1)
 	return resp
+abort:
+	go func(i int) {
+		for ; i < len(resp); i++ {
+			<-ch
+		}
+		atomic.AddInt32(&p.waits, -1)
+	}(i)
+	err := newErrResult(ctx.Err())
+	for ; i < len(resp); i++ {
+		resp[i] = err
+	}
+	return resp
 }
 
-func (p *pipe) syncDo(cmd cmds.Completed) (resp RedisResult) {
+func (p *pipe) syncDo(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
+	if dl, ok := ctx.Deadline(); ok {
+		p.conn.SetDeadline(dl)
+		defer p.conn.SetDeadline(time.Time{})
+	}
+
 	var msg RedisMessage
 	err := writeCmd(p.w, cmd.Commands())
 	if err == nil {
@@ -390,6 +445,9 @@ func (p *pipe) syncDo(cmd cmds.Completed) (resp RedisResult) {
 		}
 	}
 	if err != nil {
+		if errors.Is(err, os.ErrDeadlineExceeded) {
+			err = context.DeadlineExceeded
+		}
 		p.error.CompareAndSwap(nil, &errs{error: err})
 		atomic.CompareAndSwapInt32(&p.state, 1, 3) // stopping the worker and let it do the cleaning
 		p.background()                             // start the background worker
@@ -397,7 +455,12 @@ func (p *pipe) syncDo(cmd cmds.Completed) (resp RedisResult) {
 	return newResult(msg, err)
 }
 
-func (p *pipe) syncDoMulti(resp []RedisResult, multi []cmds.Completed) []RedisResult {
+func (p *pipe) syncDoMulti(ctx context.Context, resp []RedisResult, multi []cmds.Completed) []RedisResult {
+	if dl, ok := ctx.Deadline(); ok {
+		p.conn.SetDeadline(dl)
+		defer p.conn.SetDeadline(time.Time{})
+	}
+
 	var err error
 	var msg RedisMessage
 
@@ -415,6 +478,9 @@ func (p *pipe) syncDoMulti(resp []RedisResult, multi []cmds.Completed) []RedisRe
 	}
 	return resp
 abort:
+	if errors.Is(err, os.ErrDeadlineExceeded) {
+		err = context.DeadlineExceeded
+	}
 	p.error.CompareAndSwap(nil, &errs{error: err})
 	atomic.CompareAndSwapInt32(&p.state, 1, 3) // stopping the worker and let it do the cleaning
 	p.background()                             // start the background worker
@@ -435,7 +501,7 @@ next:
 	return m, nil
 }
 
-func (p *pipe) DoCache(cmd cmds.Cacheable, ttl time.Duration) RedisResult {
+func (p *pipe) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) RedisResult {
 	ck, cc := cmd.CacheKey()
 	if v, entry := p.cache.GetOrPrepare(ck, cc, ttl); v.typ != 0 {
 		return newResult(v, nil)
@@ -443,6 +509,7 @@ func (p *pipe) DoCache(cmd cmds.Cacheable, ttl time.Duration) RedisResult {
 		return newResult(entry.Wait(), nil)
 	}
 	exec, err := p.DoMulti(
+		ctx,
 		cmds.OptInCmd,
 		cmds.MultiCmd,
 		cmds.NewCompleted([]string{"PTTL", ck}),
