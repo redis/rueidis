@@ -32,13 +32,35 @@ var (
 
 // ClientOption should be passed to NewClient to construct a Client
 type ClientOption struct {
+	// TCP & TLS
+	// Dialer can be used to customized how rueidis connect to a redis instance via TCP, including:
+	// - Timeout, the default is DefaultDialTimeout
+	// - KeepAlive, the default is DefaultTCPKeepAlive
+	// The Dialer.KeepAlive interval is used to detect an unresponsive idle tcp connection.
+	// OS takes at least (tcp_keepalive_probes+1)*Dialer.KeepAlive time to conclude an idle connection to be unresponsive.
+	// For example: DefaultTCPKeepAlive = 1s and the default of tcp_keepalive_probes on Linux is 9.
+	// Therefore, it takes at least 10s to kill an idle and unresponsive tcp connection on Linux by default.
+	Dialer    net.Dialer
+	TLSConfig *tls.Config
+
+	// Sentinel options, including MasterSet and Auth options
+	Sentinel SentinelOption
+
+	// Redis PubSub callbacks, should be created from NewPubSubOption
+	PubSubOption PubSubOption
+
+	// Redis AUTH parameters
+	Username   string
+	Password   string
+	ClientName string
+
 	// InitAddress point to redis nodes.
 	// Rueidis will connect to them one by one and issue CLUSTER SLOT command to initialize the cluster client until success.
 	// If len(InitAddress) == 1 and the address is not running in cluster mode, rueidis will fall back to the single client mode.
 	// If ClientOption.Sentinel.MasterSet is set, then InitAddress will be used to connect sentinels
 	InitAddress []string
-	// Sentinel options, including MasterSet and Auth options
-	Sentinel SentinelOption
+
+	SelectDB int
 
 	// CacheSizeEachConn is redis client side cache size that bind to each TCP connection to a single redis instance.
 	// The default is DefaultCacheBytes.
@@ -48,29 +70,10 @@ type ClientOption struct {
 	// The default is DefaultPoolSize.
 	BlockingPoolSize int
 
-	// Redis AUTH parameters
-	Username   string
-	Password   string
-	ClientName string
-	SelectDB   int
-
-	// TCP & TLS
-	// Dialer can be used to customized how rueidis connect to a redis instance via TCP, including:
-	// - Timeout, the default is DefaultDialTimeout
-	// - KeepAlive, the default is DefaultTCPKeepAlive
-	// The Dialer.KeepAlive interval is used to detect an unresponsive idle tcp connection.
-	// OS takes at least (tcp_keepalive_probes+1)*Dialer.KeepAlive time to conclude an idle connection to be unresponsive.
-	// For example: DefaultTCPKeepAlive = 1s and the default of tcp_keepalive_probes on Linux is 9.
-	// Therefore, it takes at least 10s to kill an idle and unresponsive tcp connection on Linux by default.
-	Dialer net.Dialer
 	// ConnWriteTimeout is used to apply net.Conn.SetWriteDeadline
 	// Since the Dialer.KeepAlive will not be triggered if there is data in the outgoing buffer,
 	// ConnWriteTimeout should be set in order to detect local congestion or unresponsive redis server.
 	ConnWriteTimeout time.Duration
-	TLSConfig        *tls.Config
-
-	// Redis PubSub callbacks, should be created from NewPubSubOption
-	PubSubOption PubSubOption
 
 	// ShuffleInit is a handy flag that shuffles the InitAddress after passing to the NewClient() if it is true
 	ShuffleInit bool
@@ -78,6 +81,10 @@ type ClientOption struct {
 
 // SentinelOption contains MasterSet,
 type SentinelOption struct {
+	// TCP & TLS, same as ClientOption but for connecting sentinel
+	Dialer    net.Dialer
+	TLSConfig *tls.Config
+
 	// MasterSet is the redis master set name monitored by sentinel cluster.
 	// If this field is set, then ClientOption.InitAddress will be used to connect to sentinel cluster.
 	MasterSet string
@@ -86,10 +93,6 @@ type SentinelOption struct {
 	Username   string
 	Password   string
 	ClientName string
-
-	// TCP & TLS, same as ClientOption but for connecting sentinel
-	Dialer    net.Dialer
-	TLSConfig *tls.Config
 }
 
 // Client is the redis client interface for both single redis instance and redis cluster. It should be created from the NewClient()

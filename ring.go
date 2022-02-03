@@ -42,11 +42,11 @@ type ring struct {
 }
 
 type node struct {
-	mark  uint32
 	cond  sync.Cond
+	ch    chan RedisResult
 	one   cmds.Completed
 	multi []cmds.Completed
-	ch    chan RedisResult
+	mark  uint32
 }
 
 func (r *ring) PutOne(m cmds.Completed) chan RedisResult {
