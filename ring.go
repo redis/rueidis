@@ -1,7 +1,7 @@
 package rueidis
 
 import (
-	"runtime"
+	"sync"
 	"sync/atomic"
 
 	"github.com/rueian/rueidis/internal/cmds"
@@ -14,7 +14,7 @@ type queue interface {
 	NextResultCh() (cmds.Completed, []cmds.Completed, chan RedisResult)
 }
 
-const ringSize = 4096
+const ringSize = 1024
 
 var _ queue = (*ring)(nil)
 
@@ -23,6 +23,7 @@ func newRing() *ring {
 	r.mask = uint64(len(r.store) - 1)
 	for i := range r.store {
 		r.store[i].ch = make(chan RedisResult, 1)
+		r.store[i].cond.L = &sync.Mutex{}
 	}
 	return r
 }
@@ -42,6 +43,7 @@ type ring struct {
 
 type node struct {
 	mark  uint32
+	cond  sync.Cond
 	one   cmds.Completed
 	multi []cmds.Completed
 	ch    chan RedisResult
@@ -49,23 +51,27 @@ type node struct {
 
 func (r *ring) PutOne(m cmds.Completed) chan RedisResult {
 	n := &r.store[atomic.AddUint64(&r.write, 1)&r.mask]
-	for !atomic.CompareAndSwapUint32(&n.mark, 0, 1) {
-		runtime.Gosched()
+	n.cond.L.Lock()
+	for n.mark != 0 {
+		n.cond.Wait()
 	}
 	n.one = m
 	n.multi = nil
-	atomic.StoreUint32(&n.mark, 2)
+	n.mark = 1
+	n.cond.L.Unlock()
 	return n.ch
 }
 
 func (r *ring) PutMulti(m []cmds.Completed) chan RedisResult {
 	n := &r.store[atomic.AddUint64(&r.write, 1)&r.mask]
-	for !atomic.CompareAndSwapUint32(&n.mark, 0, 1) {
-		runtime.Gosched()
+	n.cond.L.Lock()
+	for n.mark != 0 {
+		n.cond.Wait()
 	}
 	n.one = cmds.Completed{}
 	n.multi = m
-	atomic.StoreUint32(&n.mark, 2)
+	n.mark = 1
+	n.cond.L.Unlock()
 	return n.ch
 }
 
@@ -74,13 +80,15 @@ func (r *ring) NextWriteCmd() (one cmds.Completed, multi []cmds.Completed, ch ch
 	r.read1++
 	p := r.read1 & r.mask
 	n := &r.store[p]
-	if atomic.LoadUint32(&n.mark) == 2 {
+	n.cond.L.Lock()
+	if n.mark == 1 {
 		one, multi, ch = n.one, n.multi, n.ch
-		atomic.StoreUint32(&n.mark, 3)
-		return
+		n.mark = 2
+	} else {
+		r.read1--
 	}
-	r.read1--
-	return cmds.Completed{}, nil, nil
+	n.cond.L.Unlock()
+	return
 }
 
 // NextResultCh should be only called by one dedicated thread
@@ -88,11 +96,14 @@ func (r *ring) NextResultCh() (one cmds.Completed, multi []cmds.Completed, ch ch
 	r.read2++
 	p := r.read2 & r.mask
 	n := &r.store[p]
-	if atomic.LoadUint32(&n.mark) == 3 {
+	n.cond.L.Lock()
+	if n.mark == 2 {
 		one, multi, ch = n.one, n.multi, n.ch
-		atomic.StoreUint32(&n.mark, 0)
-		return
+		n.mark = 0
+		n.cond.Signal()
+	} else {
+		r.read2--
 	}
-	r.read2--
-	return cmds.Completed{}, nil, nil
+	n.cond.L.Unlock()
+	return
 }
