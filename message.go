@@ -242,7 +242,8 @@ func (m *RedisMessage) ToString() (val string, err error) {
 		return m.string, nil
 	}
 	if m.typ == ':' || m.values != nil {
-		panic(fmt.Sprintf("redis message type %c is not a string", m.typ))
+		typ := m.typ
+		panic(fmt.Sprintf("redis message type %c is not a string", typ))
 	}
 	return m.string, m.Error()
 }
@@ -262,7 +263,8 @@ func (m *RedisMessage) DecodeJSON(v interface{}) (err error) {
 	if err != nil {
 		return err
 	}
-	return json.NewDecoder(strings.NewReader(str)).Decode(v)
+	decoder := json.NewDecoder(strings.NewReader(str))
+	return decoder.Decode(v)
 }
 
 // AsInt64 check if message is a redis string response, and parse it as int64
@@ -291,7 +293,8 @@ func (m *RedisMessage) ToInt64() (val int64, err error) {
 	if err = m.Error(); err != nil {
 		return 0, err
 	}
-	panic(fmt.Sprintf("redis message type %c is not a int64", m.typ))
+	typ := m.typ
+	panic(fmt.Sprintf("redis message type %c is not a int64", typ))
 }
 
 // ToBool check if message is a redis bool response, and return it
@@ -302,7 +305,8 @@ func (m *RedisMessage) ToBool() (val bool, err error) {
 	if err = m.Error(); err != nil {
 		return false, err
 	}
-	panic(fmt.Sprintf("redis message type %c is not a bool", m.typ))
+	typ := m.typ
+	panic(fmt.Sprintf("redis message type %c is not a bool", typ))
 }
 
 // ToFloat64 check if message is a redis double response, and return it
@@ -313,7 +317,8 @@ func (m *RedisMessage) ToFloat64() (val float64, err error) {
 	if err = m.Error(); err != nil {
 		return 0, err
 	}
-	panic(fmt.Sprintf("redis message type %c is not a float64", m.typ))
+	typ := m.typ
+	panic(fmt.Sprintf("redis message type %c is not a float64", typ))
 }
 
 // ToArray check if message is a redis array/set response, and return it
@@ -324,7 +329,8 @@ func (m *RedisMessage) ToArray() ([]RedisMessage, error) {
 	if err := m.Error(); err != nil {
 		return nil, err
 	}
-	panic(fmt.Sprintf("redis message type %c is not a array", m.typ))
+	typ := m.typ
+	panic(fmt.Sprintf("redis message type %c is not a array", typ))
 }
 
 // AsStrSlice check if message is a redis array/set response, and convert to []string.
@@ -369,7 +375,8 @@ func (m *RedisMessage) AsStrMap() (map[string]string, error) {
 		}
 		return r, nil
 	}
-	panic(fmt.Sprintf("redis message type %c is not a map/array/set", m.typ))
+	typ := m.typ
+	panic(fmt.Sprintf("redis message type %c is not a map/array/set", typ))
 }
 
 // ToMap check if message is a redis map response, and return it
@@ -380,7 +387,8 @@ func (m *RedisMessage) ToMap() (map[string]RedisMessage, error) {
 	if err := m.Error(); err != nil {
 		return nil, err
 	}
-	panic(fmt.Sprintf("redis message type %c is not a map", m.typ))
+	typ := m.typ
+	panic(fmt.Sprintf("redis message type %c is not a map", typ))
 }
 
 // IsCacheHit check if message is from client side cache
@@ -395,7 +403,8 @@ func toMap(values []RedisMessage) map[string]RedisMessage {
 			r[values[i].string] = values[i+1]
 			continue
 		}
-		panic(fmt.Sprintf("redis message type %c as map key is not supported", values[i].typ))
+		typ := values[i].typ
+		panic(fmt.Sprintf("redis message type %c as map key is not supported", typ))
 	}
 	return r
 }

@@ -18,7 +18,8 @@ func newHashConvFactory(t reflect.Type, schema schema) *hashConvFactory {
 			conv, ok = converters.slice[f.typ.Elem().Kind()]
 		}
 		if !ok {
-			panic(fmt.Sprintf("schema %q should not contain unsupported field type %s.", t, f.typ.Kind()))
+			k := f.typ.Kind()
+			panic(fmt.Sprintf("schema %q should not contain unsupported field type %s.", t, k))
 		}
 		factory.fields[name] = fieldConv{conv: conv, idx: f.idx}
 	}

@@ -152,7 +152,8 @@ func readI(i *bufio.Reader) (int64, error) {
 			}
 			return 0, err
 		default:
-			panic(unexpectedNumByte + string(c))
+			cStr := string(c)
+			panic(unexpectedNumByte + cStr)
 		}
 	}
 }
@@ -219,7 +220,8 @@ func readNextMessage(i *bufio.Reader) (m RedisMessage, err error) {
 		}
 		fn := readers[typ]
 		if fn == nil {
-			panic(unknownMessageType + string(typ))
+			typStr := string(typ)
+			panic(unknownMessageType + typStr)
 		}
 		if m, err = fn(i); err != nil {
 			return RedisMessage{}, err

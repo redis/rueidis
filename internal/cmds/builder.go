@@ -7,11 +7,13 @@ type CommandSlice struct {
 	s []string
 }
 
+func newCommandSlice() interface{} {
+	return &CommandSlice{s: make([]string, 0, 2)}
+}
+
 // NewBuilder creates a Builder and initializes the internal sync.Pool
 func NewBuilder(initSlot uint16) *Builder {
-	return &Builder{ks: initSlot, sp: sync.Pool{New: func() interface{} {
-		return &CommandSlice{s: make([]string, 0, 2)}
-	}}}
+	return &Builder{ks: initSlot, sp: sync.Pool{New: newCommandSlice}}
 }
 
 // Builder builds commands by reusing CommandSlice from the sync.Pool
