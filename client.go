@@ -8,8 +8,8 @@ import (
 )
 
 type singleClient struct {
-	cmd  *cmds.Builder
 	conn conn
+	cmd  cmds.Builder
 }
 
 func newSingleClient(opt *ClientOption, prev conn, connFn connFn) (*singleClient, error) {
@@ -29,7 +29,7 @@ func newSingleClient(opt *ClientOption, prev conn, connFn connFn) (*singleClient
 	return client, nil
 }
 
-func setupSingleConn(cmd *cmds.Builder, conn conn, opt *ClientOption) error {
+func setupSingleConn(cmd cmds.Builder, conn conn, opt *ClientOption) error {
 	if err := conn.Dial(); err != nil {
 		return err
 	}
@@ -49,19 +49,19 @@ func setupSingleConn(cmd *cmds.Builder, conn conn, opt *ClientOption) error {
 	return nil
 }
 
-func (c *singleClient) B() *cmds.Builder {
+func (c *singleClient) B() cmds.Builder {
 	return c.cmd
 }
 
 func (c *singleClient) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
 	resp = c.conn.Do(ctx, cmd)
-	c.cmd.Put(cmd.CommandSlice())
+	cmds.Put(cmd.CommandSlice())
 	return resp
 }
 
 func (c *singleClient) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp RedisResult) {
 	resp = c.conn.DoCache(ctx, cmd, ttl)
-	c.cmd.Put(cmd.CommandSlice())
+	cmds.Put(cmd.CommandSlice())
 	return resp
 }
 
@@ -77,17 +77,17 @@ func (c *singleClient) Close() {
 }
 
 type dedicatedSingleClient struct {
-	cmd  *cmds.Builder
 	wire wire
+	cmd  cmds.Builder
 }
 
-func (c *dedicatedSingleClient) B() *cmds.Builder {
+func (c *dedicatedSingleClient) B() cmds.Builder {
 	return c.cmd
 }
 
 func (c *dedicatedSingleClient) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
 	resp = c.wire.Do(ctx, cmd)
-	c.cmd.Put(cmd.CommandSlice())
+	cmds.Put(cmd.CommandSlice())
 	return resp
 }
 
@@ -97,7 +97,7 @@ func (c *dedicatedSingleClient) DoMulti(ctx context.Context, multi ...cmds.Compl
 	}
 	resp = c.wire.DoMulti(ctx, multi...)
 	for _, cmd := range multi {
-		c.cmd.Put(cmd.CommandSlice())
+		cmds.Put(cmd.CommandSlice())
 	}
 	return resp
 }

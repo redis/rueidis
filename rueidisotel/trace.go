@@ -60,7 +60,7 @@ type otelclient struct {
 	tAttrs []attribute.KeyValue
 }
 
-func (o *otelclient) B() *cmds.Builder {
+func (o *otelclient) B() cmds.Builder {
 	return o.client.B()
 }
 
@@ -103,7 +103,7 @@ type dedicated struct {
 	tAttrs []attribute.KeyValue
 }
 
-func (d *dedicated) B() *cmds.Builder {
+func (d *dedicated) B() cmds.Builder {
 	return d.client.B()
 }
 

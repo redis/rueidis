@@ -6,8 +6,8 @@ import "strconv"
 
 type AclCat Completed
 
-func (b *Builder) AclCat() (c AclCat) {
-	c = AclCat{cs: b.get(), ks: b.ks}
+func (b Builder) AclCat() (c AclCat) {
+	c = AclCat{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "ACL", "CAT")
 	return c
 }
@@ -29,8 +29,8 @@ func (c AclCatCategoryname) Build() Completed {
 
 type AclDeluser Completed
 
-func (b *Builder) AclDeluser() (c AclDeluser) {
-	c = AclDeluser{cs: b.get(), ks: b.ks}
+func (b Builder) AclDeluser() (c AclDeluser) {
+	c = AclDeluser{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "ACL", "DELUSER")
 	return c
 }
@@ -53,8 +53,8 @@ func (c AclDeluserUsername) Build() Completed {
 
 type AclGenpass Completed
 
-func (b *Builder) AclGenpass() (c AclGenpass) {
-	c = AclGenpass{cs: b.get(), ks: b.ks}
+func (b Builder) AclGenpass() (c AclGenpass) {
+	c = AclGenpass{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "ACL", "GENPASS")
 	return c
 }
@@ -76,8 +76,8 @@ func (c AclGenpassBits) Build() Completed {
 
 type AclGetuser Completed
 
-func (b *Builder) AclGetuser() (c AclGetuser) {
-	c = AclGetuser{cs: b.get(), ks: b.ks}
+func (b Builder) AclGetuser() (c AclGetuser) {
+	c = AclGetuser{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "ACL", "GETUSER")
 	return c
 }
@@ -95,8 +95,8 @@ func (c AclGetuserUsername) Build() Completed {
 
 type AclHelp Completed
 
-func (b *Builder) AclHelp() (c AclHelp) {
-	c = AclHelp{cs: b.get(), ks: b.ks}
+func (b Builder) AclHelp() (c AclHelp) {
+	c = AclHelp{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "ACL", "HELP")
 	return c
 }
@@ -107,8 +107,8 @@ func (c AclHelp) Build() Completed {
 
 type AclList Completed
 
-func (b *Builder) AclList() (c AclList) {
-	c = AclList{cs: b.get(), ks: b.ks}
+func (b Builder) AclList() (c AclList) {
+	c = AclList{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "ACL", "LIST")
 	return c
 }
@@ -119,8 +119,8 @@ func (c AclList) Build() Completed {
 
 type AclLoad Completed
 
-func (b *Builder) AclLoad() (c AclLoad) {
-	c = AclLoad{cs: b.get(), ks: b.ks}
+func (b Builder) AclLoad() (c AclLoad) {
+	c = AclLoad{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "ACL", "LOAD")
 	return c
 }
@@ -131,8 +131,8 @@ func (c AclLoad) Build() Completed {
 
 type AclLog Completed
 
-func (b *Builder) AclLog() (c AclLog) {
-	c = AclLog{cs: b.get(), ks: b.ks}
+func (b Builder) AclLog() (c AclLog) {
+	c = AclLog{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "ACL", "LOG")
 	return c
 }
@@ -154,8 +154,8 @@ func (c AclLogCountOrReset) Build() Completed {
 
 type AclSave Completed
 
-func (b *Builder) AclSave() (c AclSave) {
-	c = AclSave{cs: b.get(), ks: b.ks}
+func (b Builder) AclSave() (c AclSave) {
+	c = AclSave{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "ACL", "SAVE")
 	return c
 }
@@ -166,8 +166,8 @@ func (c AclSave) Build() Completed {
 
 type AclSetuser Completed
 
-func (b *Builder) AclSetuser() (c AclSetuser) {
-	c = AclSetuser{cs: b.get(), ks: b.ks}
+func (b Builder) AclSetuser() (c AclSetuser) {
+	c = AclSetuser{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "ACL", "SETUSER")
 	return c
 }
@@ -201,8 +201,8 @@ func (c AclSetuserUsername) Build() Completed {
 
 type AclUsers Completed
 
-func (b *Builder) AclUsers() (c AclUsers) {
-	c = AclUsers{cs: b.get(), ks: b.ks}
+func (b Builder) AclUsers() (c AclUsers) {
+	c = AclUsers{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "ACL", "USERS")
 	return c
 }
@@ -213,8 +213,8 @@ func (c AclUsers) Build() Completed {
 
 type AclWhoami Completed
 
-func (b *Builder) AclWhoami() (c AclWhoami) {
-	c = AclWhoami{cs: b.get(), ks: b.ks}
+func (b Builder) AclWhoami() (c AclWhoami) {
+	c = AclWhoami{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "ACL", "WHOAMI")
 	return c
 }
@@ -225,8 +225,8 @@ func (c AclWhoami) Build() Completed {
 
 type Append Completed
 
-func (b *Builder) Append() (c Append) {
-	c = Append{cs: b.get(), ks: b.ks}
+func (b Builder) Append() (c Append) {
+	c = Append{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "APPEND")
 	return c
 }
@@ -254,8 +254,8 @@ func (c AppendValue) Build() Completed {
 
 type Asking Completed
 
-func (b *Builder) Asking() (c Asking) {
-	c = Asking{cs: b.get(), ks: b.ks}
+func (b Builder) Asking() (c Asking) {
+	c = Asking{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "ASKING")
 	return c
 }
@@ -266,8 +266,8 @@ func (c Asking) Build() Completed {
 
 type Auth Completed
 
-func (b *Builder) Auth() (c Auth) {
-	c = Auth{cs: b.get(), ks: b.ks}
+func (b Builder) Auth() (c Auth) {
+	c = Auth{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "AUTH")
 	return c
 }
@@ -297,8 +297,8 @@ func (c AuthUsername) Password(password string) AuthPassword {
 
 type BfAdd Completed
 
-func (b *Builder) BfAdd() (c BfAdd) {
-	c = BfAdd{cs: b.get(), ks: b.ks}
+func (b Builder) BfAdd() (c BfAdd) {
+	c = BfAdd{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "BF.ADD")
 	return c
 }
@@ -326,8 +326,8 @@ func (c BfAddKey) Item(item string) BfAddItem {
 
 type BfExists Completed
 
-func (b *Builder) BfExists() (c BfExists) {
-	c = BfExists{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) BfExists() (c BfExists) {
+	c = BfExists{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "BF.EXISTS")
 	return c
 }
@@ -359,8 +359,8 @@ func (c BfExistsKey) Item(item string) BfExistsItem {
 
 type BfInfo Completed
 
-func (b *Builder) BfInfo() (c BfInfo) {
-	c = BfInfo{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) BfInfo() (c BfInfo) {
+	c = BfInfo{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "BF.INFO")
 	return c
 }
@@ -385,8 +385,8 @@ func (c BfInfoKey) Cache() Cacheable {
 
 type BfInsert Completed
 
-func (b *Builder) BfInsert() (c BfInsert) {
-	c = BfInsert{cs: b.get(), ks: b.ks}
+func (b Builder) BfInsert() (c BfInsert) {
+	c = BfInsert{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "BF.INSERT")
 	return c
 }
@@ -536,8 +536,8 @@ func (c BfInsertNonscaling) Items() BfInsertItems {
 
 type BfLoadchunk Completed
 
-func (b *Builder) BfLoadchunk() (c BfLoadchunk) {
-	c = BfLoadchunk{cs: b.get(), ks: b.ks}
+func (b Builder) BfLoadchunk() (c BfLoadchunk) {
+	c = BfLoadchunk{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "BF.LOADCHUNK")
 	return c
 }
@@ -572,8 +572,8 @@ func (c BfLoadchunkKey) Iterator(iterator int64) BfLoadchunkIterator {
 
 type BfMadd Completed
 
-func (b *Builder) BfMadd() (c BfMadd) {
-	c = BfMadd{cs: b.get(), ks: b.ks}
+func (b Builder) BfMadd() (c BfMadd) {
+	c = BfMadd{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "BF.MADD")
 	return c
 }
@@ -606,8 +606,8 @@ func (c BfMaddKey) Item(item ...string) BfMaddItem {
 
 type BfMexists Completed
 
-func (b *Builder) BfMexists() (c BfMexists) {
-	c = BfMexists{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) BfMexists() (c BfMexists) {
+	c = BfMexists{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "BF.MEXISTS")
 	return c
 }
@@ -640,8 +640,8 @@ func (c BfMexistsKey) Item(item ...string) BfMexistsItem {
 
 type BfReserve Completed
 
-func (b *Builder) BfReserve() (c BfReserve) {
-	c = BfReserve{cs: b.get(), ks: b.ks}
+func (b Builder) BfReserve() (c BfReserve) {
+	c = BfReserve{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "BF.RESERVE")
 	return c
 }
@@ -703,8 +703,8 @@ func (c BfReserveNonscaling) Build() Completed {
 
 type BfScandump Completed
 
-func (b *Builder) BfScandump() (c BfScandump) {
-	c = BfScandump{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) BfScandump() (c BfScandump) {
+	c = BfScandump{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "BF.SCANDUMP")
 	return c
 }
@@ -732,8 +732,8 @@ func (c BfScandumpKey) Iterator(iterator int64) BfScandumpIterator {
 
 type Bgrewriteaof Completed
 
-func (b *Builder) Bgrewriteaof() (c Bgrewriteaof) {
-	c = Bgrewriteaof{cs: b.get(), ks: b.ks}
+func (b Builder) Bgrewriteaof() (c Bgrewriteaof) {
+	c = Bgrewriteaof{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "BGREWRITEAOF")
 	return c
 }
@@ -744,8 +744,8 @@ func (c Bgrewriteaof) Build() Completed {
 
 type Bgsave Completed
 
-func (b *Builder) Bgsave() (c Bgsave) {
-	c = Bgsave{cs: b.get(), ks: b.ks}
+func (b Builder) Bgsave() (c Bgsave) {
+	c = Bgsave{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "BGSAVE")
 	return c
 }
@@ -767,8 +767,8 @@ func (c BgsaveSchedule) Build() Completed {
 
 type Bitcount Completed
 
-func (b *Builder) Bitcount() (c Bitcount) {
-	c = Bitcount{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Bitcount() (c Bitcount) {
+	c = Bitcount{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "BITCOUNT")
 	return c
 }
@@ -845,8 +845,8 @@ func (c BitcountKey) Cache() Cacheable {
 
 type Bitfield Completed
 
-func (b *Builder) Bitfield() (c Bitfield) {
-	c = Bitfield{cs: b.get(), ks: b.ks}
+func (b Builder) Bitfield() (c Bitfield) {
+	c = Bitfield{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "BITFIELD")
 	return c
 }
@@ -967,8 +967,8 @@ func (c BitfieldOverflowWrap) Build() Completed {
 
 type BitfieldRo Completed
 
-func (b *Builder) BitfieldRo() (c BitfieldRo) {
-	c = BitfieldRo{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) BitfieldRo() (c BitfieldRo) {
+	c = BitfieldRo{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "BITFIELD_RO")
 	return c
 }
@@ -1026,8 +1026,8 @@ func (c BitfieldSet) Build() Completed {
 
 type Bitop Completed
 
-func (b *Builder) Bitop() (c Bitop) {
-	c = Bitop{cs: b.get(), ks: b.ks}
+func (b Builder) Bitop() (c Bitop) {
+	c = Bitop{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "BITOP")
 	return c
 }
@@ -1077,8 +1077,8 @@ func (c BitopOperation) Destkey(destkey string) BitopDestkey {
 
 type Bitpos Completed
 
-func (b *Builder) Bitpos() (c Bitpos) {
-	c = Bitpos{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Bitpos() (c Bitpos) {
+	c = Bitpos{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "BITPOS")
 	return c
 }
@@ -1170,8 +1170,8 @@ func (c BitposKey) Bit(bit int64) BitposBit {
 
 type Blmove Completed
 
-func (b *Builder) Blmove() (c Blmove) {
-	c = Blmove{cs: b.get(), ks: b.ks, cf: blockTag}
+func (b Builder) Blmove() (c Blmove) {
+	c = Blmove{cs: get(), ks: b.ks, cf: blockTag}
 	c.cs.s = append(c.cs.s, "BLMOVE")
 	return c
 }
@@ -1252,8 +1252,8 @@ func (c BlmoveWheretoRight) Timeout(timeout float64) BlmoveTimeout {
 
 type Blmpop Completed
 
-func (b *Builder) Blmpop() (c Blmpop) {
-	c = Blmpop{cs: b.get(), ks: b.ks, cf: blockTag}
+func (b Builder) Blmpop() (c Blmpop) {
+	c = Blmpop{cs: get(), ks: b.ks, cf: blockTag}
 	c.cs.s = append(c.cs.s, "BLMPOP")
 	return c
 }
@@ -1334,8 +1334,8 @@ func (c BlmpopWhereRight) Build() Completed {
 
 type Blpop Completed
 
-func (b *Builder) Blpop() (c Blpop) {
-	c = Blpop{cs: b.get(), ks: b.ks, cf: blockTag}
+func (b Builder) Blpop() (c Blpop) {
+	c = Blpop{cs: get(), ks: b.ks, cf: blockTag}
 	c.cs.s = append(c.cs.s, "BLPOP")
 	return c
 }
@@ -1375,8 +1375,8 @@ func (c BlpopTimeout) Build() Completed {
 
 type Brpop Completed
 
-func (b *Builder) Brpop() (c Brpop) {
-	c = Brpop{cs: b.get(), ks: b.ks, cf: blockTag}
+func (b Builder) Brpop() (c Brpop) {
+	c = Brpop{cs: get(), ks: b.ks, cf: blockTag}
 	c.cs.s = append(c.cs.s, "BRPOP")
 	return c
 }
@@ -1416,8 +1416,8 @@ func (c BrpopTimeout) Build() Completed {
 
 type Brpoplpush Completed
 
-func (b *Builder) Brpoplpush() (c Brpoplpush) {
-	c = Brpoplpush{cs: b.get(), ks: b.ks, cf: blockTag}
+func (b Builder) Brpoplpush() (c Brpoplpush) {
+	c = Brpoplpush{cs: get(), ks: b.ks, cf: blockTag}
 	c.cs.s = append(c.cs.s, "BRPOPLPUSH")
 	return c
 }
@@ -1455,8 +1455,8 @@ func (c BrpoplpushTimeout) Build() Completed {
 
 type Bzmpop Completed
 
-func (b *Builder) Bzmpop() (c Bzmpop) {
-	c = Bzmpop{cs: b.get(), ks: b.ks, cf: blockTag}
+func (b Builder) Bzmpop() (c Bzmpop) {
+	c = Bzmpop{cs: get(), ks: b.ks, cf: blockTag}
 	c.cs.s = append(c.cs.s, "BZMPOP")
 	return c
 }
@@ -1537,8 +1537,8 @@ func (c BzmpopWhereMin) Build() Completed {
 
 type Bzpopmax Completed
 
-func (b *Builder) Bzpopmax() (c Bzpopmax) {
-	c = Bzpopmax{cs: b.get(), ks: b.ks, cf: blockTag}
+func (b Builder) Bzpopmax() (c Bzpopmax) {
+	c = Bzpopmax{cs: get(), ks: b.ks, cf: blockTag}
 	c.cs.s = append(c.cs.s, "BZPOPMAX")
 	return c
 }
@@ -1578,8 +1578,8 @@ func (c BzpopmaxTimeout) Build() Completed {
 
 type Bzpopmin Completed
 
-func (b *Builder) Bzpopmin() (c Bzpopmin) {
-	c = Bzpopmin{cs: b.get(), ks: b.ks, cf: blockTag}
+func (b Builder) Bzpopmin() (c Bzpopmin) {
+	c = Bzpopmin{cs: get(), ks: b.ks, cf: blockTag}
 	c.cs.s = append(c.cs.s, "BZPOPMIN")
 	return c
 }
@@ -1619,8 +1619,8 @@ func (c BzpopminTimeout) Build() Completed {
 
 type CfAdd Completed
 
-func (b *Builder) CfAdd() (c CfAdd) {
-	c = CfAdd{cs: b.get(), ks: b.ks}
+func (b Builder) CfAdd() (c CfAdd) {
+	c = CfAdd{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CF.ADD")
 	return c
 }
@@ -1648,8 +1648,8 @@ func (c CfAddKey) Item(item string) CfAddItem {
 
 type CfAddnx Completed
 
-func (b *Builder) CfAddnx() (c CfAddnx) {
-	c = CfAddnx{cs: b.get(), ks: b.ks}
+func (b Builder) CfAddnx() (c CfAddnx) {
+	c = CfAddnx{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CF.ADDNX")
 	return c
 }
@@ -1682,8 +1682,8 @@ func (c CfAddnxKey) Item(item ...string) CfAddnxItem {
 
 type CfCount Completed
 
-func (b *Builder) CfCount() (c CfCount) {
-	c = CfCount{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) CfCount() (c CfCount) {
+	c = CfCount{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "CF.COUNT")
 	return c
 }
@@ -1715,8 +1715,8 @@ func (c CfCountKey) Item(item string) CfCountItem {
 
 type CfDel Completed
 
-func (b *Builder) CfDel() (c CfDel) {
-	c = CfDel{cs: b.get(), ks: b.ks}
+func (b Builder) CfDel() (c CfDel) {
+	c = CfDel{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CF.DEL")
 	return c
 }
@@ -1744,8 +1744,8 @@ func (c CfDelKey) Item(item string) CfDelItem {
 
 type CfExists Completed
 
-func (b *Builder) CfExists() (c CfExists) {
-	c = CfExists{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) CfExists() (c CfExists) {
+	c = CfExists{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "CF.EXISTS")
 	return c
 }
@@ -1777,8 +1777,8 @@ func (c CfExistsKey) Item(item string) CfExistsItem {
 
 type CfInfo Completed
 
-func (b *Builder) CfInfo() (c CfInfo) {
-	c = CfInfo{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) CfInfo() (c CfInfo) {
+	c = CfInfo{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "CF.INFO")
 	return c
 }
@@ -1803,8 +1803,8 @@ func (c CfInfoKey) Cache() Cacheable {
 
 type CfInsert Completed
 
-func (b *Builder) CfInsert() (c CfInsert) {
-	c = CfInsert{cs: b.get(), ks: b.ks}
+func (b Builder) CfInsert() (c CfInsert) {
+	c = CfInsert{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CF.INSERT")
 	return c
 }
@@ -1873,8 +1873,8 @@ func (c CfInsertNocreate) Items() CfInsertItems {
 
 type CfInsertnx Completed
 
-func (b *Builder) CfInsertnx() (c CfInsertnx) {
-	c = CfInsertnx{cs: b.get(), ks: b.ks}
+func (b Builder) CfInsertnx() (c CfInsertnx) {
+	c = CfInsertnx{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CF.INSERTNX")
 	return c
 }
@@ -1943,8 +1943,8 @@ func (c CfInsertnxNocreate) Items() CfInsertnxItems {
 
 type CfLoadchunk Completed
 
-func (b *Builder) CfLoadchunk() (c CfLoadchunk) {
-	c = CfLoadchunk{cs: b.get(), ks: b.ks}
+func (b Builder) CfLoadchunk() (c CfLoadchunk) {
+	c = CfLoadchunk{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CF.LOADCHUNK")
 	return c
 }
@@ -1979,8 +1979,8 @@ func (c CfLoadchunkKey) Iterator(iterator int64) CfLoadchunkIterator {
 
 type CfMexists Completed
 
-func (b *Builder) CfMexists() (c CfMexists) {
-	c = CfMexists{cs: b.get(), ks: b.ks}
+func (b Builder) CfMexists() (c CfMexists) {
+	c = CfMexists{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CF.MEXISTS")
 	return c
 }
@@ -2013,8 +2013,8 @@ func (c CfMexistsKey) Item(item ...string) CfMexistsItem {
 
 type CfReserve Completed
 
-func (b *Builder) CfReserve() (c CfReserve) {
-	c = CfReserve{cs: b.get(), ks: b.ks}
+func (b Builder) CfReserve() (c CfReserve) {
+	c = CfReserve{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CF.RESERVE")
 	return c
 }
@@ -2090,8 +2090,8 @@ func (c CfReserveMaxiterations) Build() Completed {
 
 type CfScandump Completed
 
-func (b *Builder) CfScandump() (c CfScandump) {
-	c = CfScandump{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) CfScandump() (c CfScandump) {
+	c = CfScandump{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "CF.SCANDUMP")
 	return c
 }
@@ -2119,8 +2119,8 @@ func (c CfScandumpKey) Iterator(iterator int64) CfScandumpIterator {
 
 type ClientCaching Completed
 
-func (b *Builder) ClientCaching() (c ClientCaching) {
-	c = ClientCaching{cs: b.get(), ks: b.ks}
+func (b Builder) ClientCaching() (c ClientCaching) {
+	c = ClientCaching{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CLIENT", "CACHING")
 	return c
 }
@@ -2149,8 +2149,8 @@ func (c ClientCachingModeYes) Build() Completed {
 
 type ClientGetname Completed
 
-func (b *Builder) ClientGetname() (c ClientGetname) {
-	c = ClientGetname{cs: b.get(), ks: b.ks}
+func (b Builder) ClientGetname() (c ClientGetname) {
+	c = ClientGetname{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CLIENT", "GETNAME")
 	return c
 }
@@ -2161,8 +2161,8 @@ func (c ClientGetname) Build() Completed {
 
 type ClientGetredir Completed
 
-func (b *Builder) ClientGetredir() (c ClientGetredir) {
-	c = ClientGetredir{cs: b.get(), ks: b.ks}
+func (b Builder) ClientGetredir() (c ClientGetredir) {
+	c = ClientGetredir{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CLIENT", "GETREDIR")
 	return c
 }
@@ -2173,8 +2173,8 @@ func (c ClientGetredir) Build() Completed {
 
 type ClientId Completed
 
-func (b *Builder) ClientId() (c ClientId) {
-	c = ClientId{cs: b.get(), ks: b.ks}
+func (b Builder) ClientId() (c ClientId) {
+	c = ClientId{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CLIENT", "ID")
 	return c
 }
@@ -2185,8 +2185,8 @@ func (c ClientId) Build() Completed {
 
 type ClientInfo Completed
 
-func (b *Builder) ClientInfo() (c ClientInfo) {
-	c = ClientInfo{cs: b.get(), ks: b.ks}
+func (b Builder) ClientInfo() (c ClientInfo) {
+	c = ClientInfo{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CLIENT", "INFO")
 	return c
 }
@@ -2197,8 +2197,8 @@ func (c ClientInfo) Build() Completed {
 
 type ClientKill Completed
 
-func (b *Builder) ClientKill() (c ClientKill) {
-	c = ClientKill{cs: b.get(), ks: b.ks}
+func (b Builder) ClientKill() (c ClientKill) {
+	c = ClientKill{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CLIENT", "KILL")
 	return c
 }
@@ -2514,8 +2514,8 @@ func (c ClientKillUser) Build() Completed {
 
 type ClientList Completed
 
-func (b *Builder) ClientList() (c ClientList) {
-	c = ClientList{cs: b.get(), ks: b.ks}
+func (b Builder) ClientList() (c ClientList) {
+	c = ClientList{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CLIENT", "LIST")
 	return c
 }
@@ -2617,8 +2617,8 @@ func (c ClientListTypeReplica) Build() Completed {
 
 type ClientNoEvict Completed
 
-func (b *Builder) ClientNoEvict() (c ClientNoEvict) {
-	c = ClientNoEvict{cs: b.get(), ks: b.ks}
+func (b Builder) ClientNoEvict() (c ClientNoEvict) {
+	c = ClientNoEvict{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CLIENT", "NO-EVICT")
 	return c
 }
@@ -2647,8 +2647,8 @@ func (c ClientNoEvictEnabledOn) Build() Completed {
 
 type ClientPause Completed
 
-func (b *Builder) ClientPause() (c ClientPause) {
-	c = ClientPause{cs: b.get(), ks: b.ks, cf: blockTag}
+func (b Builder) ClientPause() (c ClientPause) {
+	c = ClientPause{cs: get(), ks: b.ks, cf: blockTag}
 	c.cs.s = append(c.cs.s, "CLIENT", "PAUSE")
 	return c
 }
@@ -2688,8 +2688,8 @@ func (c ClientPauseTimeout) Build() Completed {
 
 type ClientReply Completed
 
-func (b *Builder) ClientReply() (c ClientReply) {
-	c = ClientReply{cs: b.get(), ks: b.ks}
+func (b Builder) ClientReply() (c ClientReply) {
+	c = ClientReply{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CLIENT", "REPLY")
 	return c
 }
@@ -2729,8 +2729,8 @@ func (c ClientReplyReplyModeSkip) Build() Completed {
 
 type ClientSetname Completed
 
-func (b *Builder) ClientSetname() (c ClientSetname) {
-	c = ClientSetname{cs: b.get(), ks: b.ks}
+func (b Builder) ClientSetname() (c ClientSetname) {
+	c = ClientSetname{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CLIENT", "SETNAME")
 	return c
 }
@@ -2748,8 +2748,8 @@ func (c ClientSetnameConnectionName) Build() Completed {
 
 type ClientTracking Completed
 
-func (b *Builder) ClientTracking() (c ClientTracking) {
-	c = ClientTracking{cs: b.get(), ks: b.ks}
+func (b Builder) ClientTracking() (c ClientTracking) {
+	c = ClientTracking{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CLIENT", "TRACKING")
 	return c
 }
@@ -2958,8 +2958,8 @@ func (c ClientTrackingStatusOn) Build() Completed {
 
 type ClientTrackinginfo Completed
 
-func (b *Builder) ClientTrackinginfo() (c ClientTrackinginfo) {
-	c = ClientTrackinginfo{cs: b.get(), ks: b.ks}
+func (b Builder) ClientTrackinginfo() (c ClientTrackinginfo) {
+	c = ClientTrackinginfo{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CLIENT", "TRACKINGINFO")
 	return c
 }
@@ -2970,8 +2970,8 @@ func (c ClientTrackinginfo) Build() Completed {
 
 type ClientUnblock Completed
 
-func (b *Builder) ClientUnblock() (c ClientUnblock) {
-	c = ClientUnblock{cs: b.get(), ks: b.ks}
+func (b Builder) ClientUnblock() (c ClientUnblock) {
+	c = ClientUnblock{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CLIENT", "UNBLOCK")
 	return c
 }
@@ -3011,8 +3011,8 @@ func (c ClientUnblockUnblockTypeTimeout) Build() Completed {
 
 type ClientUnpause Completed
 
-func (b *Builder) ClientUnpause() (c ClientUnpause) {
-	c = ClientUnpause{cs: b.get(), ks: b.ks}
+func (b Builder) ClientUnpause() (c ClientUnpause) {
+	c = ClientUnpause{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CLIENT", "UNPAUSE")
 	return c
 }
@@ -3023,8 +3023,8 @@ func (c ClientUnpause) Build() Completed {
 
 type ClusterAddslots Completed
 
-func (b *Builder) ClusterAddslots() (c ClusterAddslots) {
-	c = ClusterAddslots{cs: b.get(), ks: b.ks}
+func (b Builder) ClusterAddslots() (c ClusterAddslots) {
+	c = ClusterAddslots{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CLUSTER", "ADDSLOTS")
 	return c
 }
@@ -3051,8 +3051,8 @@ func (c ClusterAddslotsSlot) Build() Completed {
 
 type ClusterAddslotsrange Completed
 
-func (b *Builder) ClusterAddslotsrange() (c ClusterAddslotsrange) {
-	c = ClusterAddslotsrange{cs: b.get(), ks: b.ks}
+func (b Builder) ClusterAddslotsrange() (c ClusterAddslotsrange) {
+	c = ClusterAddslotsrange{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CLUSTER", "ADDSLOTSRANGE")
 	return c
 }
@@ -3074,8 +3074,8 @@ func (c ClusterAddslotsrangeStartSlotEndSlot) Build() Completed {
 
 type ClusterBumpepoch Completed
 
-func (b *Builder) ClusterBumpepoch() (c ClusterBumpepoch) {
-	c = ClusterBumpepoch{cs: b.get(), ks: b.ks}
+func (b Builder) ClusterBumpepoch() (c ClusterBumpepoch) {
+	c = ClusterBumpepoch{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CLUSTER", "BUMPEPOCH")
 	return c
 }
@@ -3086,8 +3086,8 @@ func (c ClusterBumpepoch) Build() Completed {
 
 type ClusterCountFailureReports Completed
 
-func (b *Builder) ClusterCountFailureReports() (c ClusterCountFailureReports) {
-	c = ClusterCountFailureReports{cs: b.get(), ks: b.ks}
+func (b Builder) ClusterCountFailureReports() (c ClusterCountFailureReports) {
+	c = ClusterCountFailureReports{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CLUSTER", "COUNT-FAILURE-REPORTS")
 	return c
 }
@@ -3105,8 +3105,8 @@ func (c ClusterCountFailureReportsNodeId) Build() Completed {
 
 type ClusterCountkeysinslot Completed
 
-func (b *Builder) ClusterCountkeysinslot() (c ClusterCountkeysinslot) {
-	c = ClusterCountkeysinslot{cs: b.get(), ks: b.ks}
+func (b Builder) ClusterCountkeysinslot() (c ClusterCountkeysinslot) {
+	c = ClusterCountkeysinslot{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CLUSTER", "COUNTKEYSINSLOT")
 	return c
 }
@@ -3124,8 +3124,8 @@ func (c ClusterCountkeysinslotSlot) Build() Completed {
 
 type ClusterDelslots Completed
 
-func (b *Builder) ClusterDelslots() (c ClusterDelslots) {
-	c = ClusterDelslots{cs: b.get(), ks: b.ks}
+func (b Builder) ClusterDelslots() (c ClusterDelslots) {
+	c = ClusterDelslots{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CLUSTER", "DELSLOTS")
 	return c
 }
@@ -3152,8 +3152,8 @@ func (c ClusterDelslotsSlot) Build() Completed {
 
 type ClusterDelslotsrange Completed
 
-func (b *Builder) ClusterDelslotsrange() (c ClusterDelslotsrange) {
-	c = ClusterDelslotsrange{cs: b.get(), ks: b.ks}
+func (b Builder) ClusterDelslotsrange() (c ClusterDelslotsrange) {
+	c = ClusterDelslotsrange{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CLUSTER", "DELSLOTSRANGE")
 	return c
 }
@@ -3175,8 +3175,8 @@ func (c ClusterDelslotsrangeStartSlotEndSlot) Build() Completed {
 
 type ClusterFailover Completed
 
-func (b *Builder) ClusterFailover() (c ClusterFailover) {
-	c = ClusterFailover{cs: b.get(), ks: b.ks}
+func (b Builder) ClusterFailover() (c ClusterFailover) {
+	c = ClusterFailover{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CLUSTER", "FAILOVER")
 	return c
 }
@@ -3209,8 +3209,8 @@ func (c ClusterFailoverOptionsTakeover) Build() Completed {
 
 type ClusterFlushslots Completed
 
-func (b *Builder) ClusterFlushslots() (c ClusterFlushslots) {
-	c = ClusterFlushslots{cs: b.get(), ks: b.ks}
+func (b Builder) ClusterFlushslots() (c ClusterFlushslots) {
+	c = ClusterFlushslots{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CLUSTER", "FLUSHSLOTS")
 	return c
 }
@@ -3221,8 +3221,8 @@ func (c ClusterFlushslots) Build() Completed {
 
 type ClusterForget Completed
 
-func (b *Builder) ClusterForget() (c ClusterForget) {
-	c = ClusterForget{cs: b.get(), ks: b.ks}
+func (b Builder) ClusterForget() (c ClusterForget) {
+	c = ClusterForget{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CLUSTER", "FORGET")
 	return c
 }
@@ -3240,8 +3240,8 @@ func (c ClusterForgetNodeId) Build() Completed {
 
 type ClusterGetkeysinslot Completed
 
-func (b *Builder) ClusterGetkeysinslot() (c ClusterGetkeysinslot) {
-	c = ClusterGetkeysinslot{cs: b.get(), ks: b.ks}
+func (b Builder) ClusterGetkeysinslot() (c ClusterGetkeysinslot) {
+	c = ClusterGetkeysinslot{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CLUSTER", "GETKEYSINSLOT")
 	return c
 }
@@ -3266,8 +3266,8 @@ func (c ClusterGetkeysinslotSlot) Count(count int64) ClusterGetkeysinslotCount {
 
 type ClusterInfo Completed
 
-func (b *Builder) ClusterInfo() (c ClusterInfo) {
-	c = ClusterInfo{cs: b.get(), ks: b.ks}
+func (b Builder) ClusterInfo() (c ClusterInfo) {
+	c = ClusterInfo{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CLUSTER", "INFO")
 	return c
 }
@@ -3278,8 +3278,8 @@ func (c ClusterInfo) Build() Completed {
 
 type ClusterKeyslot Completed
 
-func (b *Builder) ClusterKeyslot() (c ClusterKeyslot) {
-	c = ClusterKeyslot{cs: b.get(), ks: b.ks}
+func (b Builder) ClusterKeyslot() (c ClusterKeyslot) {
+	c = ClusterKeyslot{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CLUSTER", "KEYSLOT")
 	return c
 }
@@ -3297,8 +3297,8 @@ func (c ClusterKeyslotKey) Build() Completed {
 
 type ClusterLinks Completed
 
-func (b *Builder) ClusterLinks() (c ClusterLinks) {
-	c = ClusterLinks{cs: b.get(), ks: b.ks}
+func (b Builder) ClusterLinks() (c ClusterLinks) {
+	c = ClusterLinks{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CLUSTER", "LINKS")
 	return c
 }
@@ -3309,8 +3309,8 @@ func (c ClusterLinks) Build() Completed {
 
 type ClusterMeet Completed
 
-func (b *Builder) ClusterMeet() (c ClusterMeet) {
-	c = ClusterMeet{cs: b.get(), ks: b.ks}
+func (b Builder) ClusterMeet() (c ClusterMeet) {
+	c = ClusterMeet{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CLUSTER", "MEET")
 	return c
 }
@@ -3335,8 +3335,8 @@ func (c ClusterMeetPort) Build() Completed {
 
 type ClusterMyid Completed
 
-func (b *Builder) ClusterMyid() (c ClusterMyid) {
-	c = ClusterMyid{cs: b.get(), ks: b.ks}
+func (b Builder) ClusterMyid() (c ClusterMyid) {
+	c = ClusterMyid{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CLUSTER", "MYID")
 	return c
 }
@@ -3347,8 +3347,8 @@ func (c ClusterMyid) Build() Completed {
 
 type ClusterNodes Completed
 
-func (b *Builder) ClusterNodes() (c ClusterNodes) {
-	c = ClusterNodes{cs: b.get(), ks: b.ks}
+func (b Builder) ClusterNodes() (c ClusterNodes) {
+	c = ClusterNodes{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CLUSTER", "NODES")
 	return c
 }
@@ -3359,8 +3359,8 @@ func (c ClusterNodes) Build() Completed {
 
 type ClusterReplicas Completed
 
-func (b *Builder) ClusterReplicas() (c ClusterReplicas) {
-	c = ClusterReplicas{cs: b.get(), ks: b.ks}
+func (b Builder) ClusterReplicas() (c ClusterReplicas) {
+	c = ClusterReplicas{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CLUSTER", "REPLICAS")
 	return c
 }
@@ -3378,8 +3378,8 @@ func (c ClusterReplicasNodeId) Build() Completed {
 
 type ClusterReplicate Completed
 
-func (b *Builder) ClusterReplicate() (c ClusterReplicate) {
-	c = ClusterReplicate{cs: b.get(), ks: b.ks}
+func (b Builder) ClusterReplicate() (c ClusterReplicate) {
+	c = ClusterReplicate{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CLUSTER", "REPLICATE")
 	return c
 }
@@ -3397,8 +3397,8 @@ func (c ClusterReplicateNodeId) Build() Completed {
 
 type ClusterReset Completed
 
-func (b *Builder) ClusterReset() (c ClusterReset) {
-	c = ClusterReset{cs: b.get(), ks: b.ks}
+func (b Builder) ClusterReset() (c ClusterReset) {
+	c = ClusterReset{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CLUSTER", "RESET")
 	return c
 }
@@ -3431,8 +3431,8 @@ func (c ClusterResetResetTypeSoft) Build() Completed {
 
 type ClusterSaveconfig Completed
 
-func (b *Builder) ClusterSaveconfig() (c ClusterSaveconfig) {
-	c = ClusterSaveconfig{cs: b.get(), ks: b.ks}
+func (b Builder) ClusterSaveconfig() (c ClusterSaveconfig) {
+	c = ClusterSaveconfig{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CLUSTER", "SAVECONFIG")
 	return c
 }
@@ -3443,8 +3443,8 @@ func (c ClusterSaveconfig) Build() Completed {
 
 type ClusterSetConfigEpoch Completed
 
-func (b *Builder) ClusterSetConfigEpoch() (c ClusterSetConfigEpoch) {
-	c = ClusterSetConfigEpoch{cs: b.get(), ks: b.ks}
+func (b Builder) ClusterSetConfigEpoch() (c ClusterSetConfigEpoch) {
+	c = ClusterSetConfigEpoch{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CLUSTER", "SET-CONFIG-EPOCH")
 	return c
 }
@@ -3462,8 +3462,8 @@ func (c ClusterSetConfigEpochConfigEpoch) Build() Completed {
 
 type ClusterSetslot Completed
 
-func (b *Builder) ClusterSetslot() (c ClusterSetslot) {
-	c = ClusterSetslot{cs: b.get(), ks: b.ks}
+func (b Builder) ClusterSetslot() (c ClusterSetslot) {
+	c = ClusterSetslot{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CLUSTER", "SETSLOT")
 	return c
 }
@@ -3547,8 +3547,8 @@ func (c ClusterSetslotSubcommandStable) Build() Completed {
 
 type ClusterSlaves Completed
 
-func (b *Builder) ClusterSlaves() (c ClusterSlaves) {
-	c = ClusterSlaves{cs: b.get(), ks: b.ks}
+func (b Builder) ClusterSlaves() (c ClusterSlaves) {
+	c = ClusterSlaves{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CLUSTER", "SLAVES")
 	return c
 }
@@ -3566,8 +3566,8 @@ func (c ClusterSlavesNodeId) Build() Completed {
 
 type ClusterSlots Completed
 
-func (b *Builder) ClusterSlots() (c ClusterSlots) {
-	c = ClusterSlots{cs: b.get(), ks: b.ks}
+func (b Builder) ClusterSlots() (c ClusterSlots) {
+	c = ClusterSlots{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CLUSTER", "SLOTS")
 	return c
 }
@@ -3578,8 +3578,8 @@ func (c ClusterSlots) Build() Completed {
 
 type CmsIncrby Completed
 
-func (b *Builder) CmsIncrby() (c CmsIncrby) {
-	c = CmsIncrby{cs: b.get(), ks: b.ks}
+func (b Builder) CmsIncrby() (c CmsIncrby) {
+	c = CmsIncrby{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CMS.INCRBY")
 	return c
 }
@@ -3619,8 +3619,8 @@ func (c CmsIncrbyKey) Item(item string) CmsIncrbyItemsItem {
 
 type CmsInfo Completed
 
-func (b *Builder) CmsInfo() (c CmsInfo) {
-	c = CmsInfo{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) CmsInfo() (c CmsInfo) {
+	c = CmsInfo{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "CMS.INFO")
 	return c
 }
@@ -3645,8 +3645,8 @@ func (c CmsInfoKey) Cache() Cacheable {
 
 type CmsInitbydim Completed
 
-func (b *Builder) CmsInitbydim() (c CmsInitbydim) {
-	c = CmsInitbydim{cs: b.get(), ks: b.ks}
+func (b Builder) CmsInitbydim() (c CmsInitbydim) {
+	c = CmsInitbydim{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CMS.INITBYDIM")
 	return c
 }
@@ -3681,8 +3681,8 @@ func (c CmsInitbydimWidth) Depth(depth int64) CmsInitbydimDepth {
 
 type CmsInitbyprob Completed
 
-func (b *Builder) CmsInitbyprob() (c CmsInitbyprob) {
-	c = CmsInitbyprob{cs: b.get(), ks: b.ks}
+func (b Builder) CmsInitbyprob() (c CmsInitbyprob) {
+	c = CmsInitbyprob{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CMS.INITBYPROB")
 	return c
 }
@@ -3717,8 +3717,8 @@ func (c CmsInitbyprobProbability) Build() Completed {
 
 type CmsMerge Completed
 
-func (b *Builder) CmsMerge() (c CmsMerge) {
-	c = CmsMerge{cs: b.get(), ks: b.ks}
+func (b Builder) CmsMerge() (c CmsMerge) {
+	c = CmsMerge{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CMS.MERGE")
 	return c
 }
@@ -3795,8 +3795,8 @@ func (c CmsMergeWeightWeights) Weight(weight ...float64) CmsMergeWeightWeight {
 
 type CmsQuery Completed
 
-func (b *Builder) CmsQuery() (c CmsQuery) {
-	c = CmsQuery{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) CmsQuery() (c CmsQuery) {
+	c = CmsQuery{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "CMS.QUERY")
 	return c
 }
@@ -3833,8 +3833,8 @@ func (c CmsQueryKey) Item(item ...string) CmsQueryItem {
 
 type Command Completed
 
-func (b *Builder) Command() (c Command) {
-	c = Command{cs: b.get(), ks: b.ks}
+func (b Builder) Command() (c Command) {
+	c = Command{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "COMMAND")
 	return c
 }
@@ -3845,8 +3845,8 @@ func (c Command) Build() Completed {
 
 type CommandCount Completed
 
-func (b *Builder) CommandCount() (c CommandCount) {
-	c = CommandCount{cs: b.get(), ks: b.ks}
+func (b Builder) CommandCount() (c CommandCount) {
+	c = CommandCount{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "COMMAND", "COUNT")
 	return c
 }
@@ -3857,8 +3857,8 @@ func (c CommandCount) Build() Completed {
 
 type CommandGetkeys Completed
 
-func (b *Builder) CommandGetkeys() (c CommandGetkeys) {
-	c = CommandGetkeys{cs: b.get(), ks: b.ks}
+func (b Builder) CommandGetkeys() (c CommandGetkeys) {
+	c = CommandGetkeys{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "COMMAND", "GETKEYS")
 	return c
 }
@@ -3869,8 +3869,8 @@ func (c CommandGetkeys) Build() Completed {
 
 type CommandInfo Completed
 
-func (b *Builder) CommandInfo() (c CommandInfo) {
-	c = CommandInfo{cs: b.get(), ks: b.ks}
+func (b Builder) CommandInfo() (c CommandInfo) {
+	c = CommandInfo{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "COMMAND", "INFO")
 	return c
 }
@@ -3893,8 +3893,8 @@ func (c CommandInfoCommandName) Build() Completed {
 
 type ConfigGet Completed
 
-func (b *Builder) ConfigGet() (c ConfigGet) {
-	c = ConfigGet{cs: b.get(), ks: b.ks}
+func (b Builder) ConfigGet() (c ConfigGet) {
+	c = ConfigGet{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CONFIG", "GET")
 	return c
 }
@@ -3917,8 +3917,8 @@ func (c ConfigGetParameter) Build() Completed {
 
 type ConfigResetstat Completed
 
-func (b *Builder) ConfigResetstat() (c ConfigResetstat) {
-	c = ConfigResetstat{cs: b.get(), ks: b.ks}
+func (b Builder) ConfigResetstat() (c ConfigResetstat) {
+	c = ConfigResetstat{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CONFIG", "RESETSTAT")
 	return c
 }
@@ -3929,8 +3929,8 @@ func (c ConfigResetstat) Build() Completed {
 
 type ConfigRewrite Completed
 
-func (b *Builder) ConfigRewrite() (c ConfigRewrite) {
-	c = ConfigRewrite{cs: b.get(), ks: b.ks}
+func (b Builder) ConfigRewrite() (c ConfigRewrite) {
+	c = ConfigRewrite{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CONFIG", "REWRITE")
 	return c
 }
@@ -3941,8 +3941,8 @@ func (c ConfigRewrite) Build() Completed {
 
 type ConfigSet Completed
 
-func (b *Builder) ConfigSet() (c ConfigSet) {
-	c = ConfigSet{cs: b.get(), ks: b.ks}
+func (b Builder) ConfigSet() (c ConfigSet) {
+	c = ConfigSet{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "CONFIG", "SET")
 	return c
 }
@@ -3964,8 +3964,8 @@ func (c ConfigSetParameterValue) Build() Completed {
 
 type Copy Completed
 
-func (b *Builder) Copy() (c Copy) {
-	c = Copy{cs: b.get(), ks: b.ks}
+func (b Builder) Copy() (c Copy) {
+	c = Copy{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "COPY")
 	return c
 }
@@ -4023,8 +4023,8 @@ func (c CopySource) Destination(destination string) CopyDestination {
 
 type Dbsize Completed
 
-func (b *Builder) Dbsize() (c Dbsize) {
-	c = Dbsize{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Dbsize() (c Dbsize) {
+	c = Dbsize{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "DBSIZE")
 	return c
 }
@@ -4035,8 +4035,8 @@ func (c Dbsize) Build() Completed {
 
 type DebugObject Completed
 
-func (b *Builder) DebugObject() (c DebugObject) {
-	c = DebugObject{cs: b.get(), ks: b.ks}
+func (b Builder) DebugObject() (c DebugObject) {
+	c = DebugObject{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "DEBUG", "OBJECT")
 	return c
 }
@@ -4057,8 +4057,8 @@ func (c DebugObjectKey) Build() Completed {
 
 type DebugSegfault Completed
 
-func (b *Builder) DebugSegfault() (c DebugSegfault) {
-	c = DebugSegfault{cs: b.get(), ks: b.ks}
+func (b Builder) DebugSegfault() (c DebugSegfault) {
+	c = DebugSegfault{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "DEBUG", "SEGFAULT")
 	return c
 }
@@ -4069,8 +4069,8 @@ func (c DebugSegfault) Build() Completed {
 
 type Decr Completed
 
-func (b *Builder) Decr() (c Decr) {
-	c = Decr{cs: b.get(), ks: b.ks}
+func (b Builder) Decr() (c Decr) {
+	c = Decr{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "DECR")
 	return c
 }
@@ -4091,8 +4091,8 @@ func (c DecrKey) Build() Completed {
 
 type Decrby Completed
 
-func (b *Builder) Decrby() (c Decrby) {
-	c = Decrby{cs: b.get(), ks: b.ks}
+func (b Builder) Decrby() (c Decrby) {
+	c = Decrby{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "DECRBY")
 	return c
 }
@@ -4120,8 +4120,8 @@ func (c DecrbyKey) Decrement(decrement int64) DecrbyDecrement {
 
 type Del Completed
 
-func (b *Builder) Del() (c Del) {
-	c = Del{cs: b.get(), ks: b.ks}
+func (b Builder) Del() (c Del) {
+	c = Del{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "DEL")
 	return c
 }
@@ -4154,8 +4154,8 @@ func (c DelKey) Build() Completed {
 
 type Discard Completed
 
-func (b *Builder) Discard() (c Discard) {
-	c = Discard{cs: b.get(), ks: b.ks}
+func (b Builder) Discard() (c Discard) {
+	c = Discard{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "DISCARD")
 	return c
 }
@@ -4166,8 +4166,8 @@ func (c Discard) Build() Completed {
 
 type Dump Completed
 
-func (b *Builder) Dump() (c Dump) {
-	c = Dump{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Dump() (c Dump) {
+	c = Dump{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "DUMP")
 	return c
 }
@@ -4188,8 +4188,8 @@ func (c DumpKey) Build() Completed {
 
 type Echo Completed
 
-func (b *Builder) Echo() (c Echo) {
-	c = Echo{cs: b.get(), ks: b.ks}
+func (b Builder) Echo() (c Echo) {
+	c = Echo{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "ECHO")
 	return c
 }
@@ -4207,8 +4207,8 @@ func (c EchoMessage) Build() Completed {
 
 type Eval Completed
 
-func (b *Builder) Eval() (c Eval) {
-	c = Eval{cs: b.get(), ks: b.ks}
+func (b Builder) Eval() (c Eval) {
+	c = Eval{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "EVAL")
 	return c
 }
@@ -4273,8 +4273,8 @@ func (c EvalNumkeys) Build() Completed {
 
 type EvalRo Completed
 
-func (b *Builder) EvalRo() (c EvalRo) {
-	c = EvalRo{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) EvalRo() (c EvalRo) {
+	c = EvalRo{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "EVAL_RO")
 	return c
 }
@@ -4340,8 +4340,8 @@ func (c EvalScript) Numkeys(numkeys int64) EvalNumkeys {
 
 type Evalsha Completed
 
-func (b *Builder) Evalsha() (c Evalsha) {
-	c = Evalsha{cs: b.get(), ks: b.ks}
+func (b Builder) Evalsha() (c Evalsha) {
+	c = Evalsha{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "EVALSHA")
 	return c
 }
@@ -4406,8 +4406,8 @@ func (c EvalshaNumkeys) Build() Completed {
 
 type EvalshaRo Completed
 
-func (b *Builder) EvalshaRo() (c EvalshaRo) {
-	c = EvalshaRo{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) EvalshaRo() (c EvalshaRo) {
+	c = EvalshaRo{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "EVALSHA_RO")
 	return c
 }
@@ -4473,8 +4473,8 @@ func (c EvalshaSha1) Numkeys(numkeys int64) EvalshaNumkeys {
 
 type Exec Completed
 
-func (b *Builder) Exec() (c Exec) {
-	c = Exec{cs: b.get(), ks: b.ks}
+func (b Builder) Exec() (c Exec) {
+	c = Exec{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "EXEC")
 	return c
 }
@@ -4485,8 +4485,8 @@ func (c Exec) Build() Completed {
 
 type Exists Completed
 
-func (b *Builder) Exists() (c Exists) {
-	c = Exists{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Exists() (c Exists) {
+	c = Exists{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "EXISTS")
 	return c
 }
@@ -4519,8 +4519,8 @@ func (c ExistsKey) Build() Completed {
 
 type Expire Completed
 
-func (b *Builder) Expire() (c Expire) {
-	c = Expire{cs: b.get(), ks: b.ks}
+func (b Builder) Expire() (c Expire) {
+	c = Expire{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "EXPIRE")
 	return c
 }
@@ -4592,8 +4592,8 @@ func (c ExpireSeconds) Build() Completed {
 
 type Expireat Completed
 
-func (b *Builder) Expireat() (c Expireat) {
-	c = Expireat{cs: b.get(), ks: b.ks}
+func (b Builder) Expireat() (c Expireat) {
+	c = Expireat{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "EXPIREAT")
 	return c
 }
@@ -4665,8 +4665,8 @@ func (c ExpireatTimestamp) Build() Completed {
 
 type Expiretime Completed
 
-func (b *Builder) Expiretime() (c Expiretime) {
-	c = Expiretime{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Expiretime() (c Expiretime) {
+	c = Expiretime{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "EXPIRETIME")
 	return c
 }
@@ -4691,8 +4691,8 @@ func (c ExpiretimeKey) Cache() Cacheable {
 
 type Failover Completed
 
-func (b *Builder) Failover() (c Failover) {
-	c = Failover{cs: b.get(), ks: b.ks}
+func (b Builder) Failover() (c Failover) {
+	c = Failover{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "FAILOVER")
 	return c
 }
@@ -4786,8 +4786,8 @@ func (c FailoverTimeout) Build() Completed {
 
 type Flushall Completed
 
-func (b *Builder) Flushall() (c Flushall) {
-	c = Flushall{cs: b.get(), ks: b.ks}
+func (b Builder) Flushall() (c Flushall) {
+	c = Flushall{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "FLUSHALL")
 	return c
 }
@@ -4820,8 +4820,8 @@ func (c FlushallAsyncSync) Build() Completed {
 
 type Flushdb Completed
 
-func (b *Builder) Flushdb() (c Flushdb) {
-	c = Flushdb{cs: b.get(), ks: b.ks}
+func (b Builder) Flushdb() (c Flushdb) {
+	c = Flushdb{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "FLUSHDB")
 	return c
 }
@@ -4854,8 +4854,8 @@ func (c FlushdbAsyncSync) Build() Completed {
 
 type FtAggregate Completed
 
-func (b *Builder) FtAggregate() (c FtAggregate) {
-	c = FtAggregate{cs: b.get(), ks: b.ks}
+func (b Builder) FtAggregate() (c FtAggregate) {
+	c = FtAggregate{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "FT.AGGREGATE")
 	return c
 }
@@ -5465,8 +5465,8 @@ func (c FtAggregateVerbatim) Build() Completed {
 
 type FtAliasadd Completed
 
-func (b *Builder) FtAliasadd() (c FtAliasadd) {
-	c = FtAliasadd{cs: b.get(), ks: b.ks}
+func (b Builder) FtAliasadd() (c FtAliasadd) {
+	c = FtAliasadd{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "FT.ALIASADD")
 	return c
 }
@@ -5491,8 +5491,8 @@ func (c FtAliasaddIndex) Build() Completed {
 
 type FtAliasdel Completed
 
-func (b *Builder) FtAliasdel() (c FtAliasdel) {
-	c = FtAliasdel{cs: b.get(), ks: b.ks}
+func (b Builder) FtAliasdel() (c FtAliasdel) {
+	c = FtAliasdel{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "FT.ALIASDEL")
 	return c
 }
@@ -5510,8 +5510,8 @@ func (c FtAliasdelAlias) Build() Completed {
 
 type FtAliasupdate Completed
 
-func (b *Builder) FtAliasupdate() (c FtAliasupdate) {
-	c = FtAliasupdate{cs: b.get(), ks: b.ks}
+func (b Builder) FtAliasupdate() (c FtAliasupdate) {
+	c = FtAliasupdate{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "FT.ALIASUPDATE")
 	return c
 }
@@ -5536,8 +5536,8 @@ func (c FtAliasupdateIndex) Build() Completed {
 
 type FtAlter Completed
 
-func (b *Builder) FtAlter() (c FtAlter) {
-	c = FtAlter{cs: b.get(), ks: b.ks}
+func (b Builder) FtAlter() (c FtAlter) {
+	c = FtAlter{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "FT.ALTER")
 	return c
 }
@@ -5583,8 +5583,8 @@ func (c FtAlterSchema) Add() FtAlterAdd {
 
 type FtConfigGet Completed
 
-func (b *Builder) FtConfigGet() (c FtConfigGet) {
-	c = FtConfigGet{cs: b.get(), ks: b.ks}
+func (b Builder) FtConfigGet() (c FtConfigGet) {
+	c = FtConfigGet{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "FT.CONFIG", "GET")
 	return c
 }
@@ -5609,8 +5609,8 @@ func (c FtConfigGetValue) Build() Completed {
 
 type FtConfigHelp Completed
 
-func (b *Builder) FtConfigHelp() (c FtConfigHelp) {
-	c = FtConfigHelp{cs: b.get(), ks: b.ks}
+func (b Builder) FtConfigHelp() (c FtConfigHelp) {
+	c = FtConfigHelp{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "FT.CONFIG", "HELP")
 	return c
 }
@@ -5628,8 +5628,8 @@ func (c FtConfigHelpOption) Build() Completed {
 
 type FtConfigSet Completed
 
-func (b *Builder) FtConfigSet() (c FtConfigSet) {
-	c = FtConfigSet{cs: b.get(), ks: b.ks}
+func (b Builder) FtConfigSet() (c FtConfigSet) {
+	c = FtConfigSet{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "FT.CONFIG", "SET")
 	return c
 }
@@ -5647,8 +5647,8 @@ func (c FtConfigSetOption) Build() Completed {
 
 type FtCreate Completed
 
-func (b *Builder) FtCreate() (c FtCreate) {
-	c = FtCreate{cs: b.get(), ks: b.ks}
+func (b Builder) FtCreate() (c FtCreate) {
+	c = FtCreate{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "FT.CREATE")
 	return c
 }
@@ -6579,8 +6579,8 @@ func (c FtCreateTemporary) Schema() FtCreateSchema {
 
 type FtCursorDel Completed
 
-func (b *Builder) FtCursorDel() (c FtCursorDel) {
-	c = FtCursorDel{cs: b.get(), ks: b.ks}
+func (b Builder) FtCursorDel() (c FtCursorDel) {
+	c = FtCursorDel{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "FT.CURSOR", "DEL")
 	return c
 }
@@ -6605,8 +6605,8 @@ func (c FtCursorDelIndex) CursorId(cursorId int64) FtCursorDelCursorId {
 
 type FtCursorRead Completed
 
-func (b *Builder) FtCursorRead() (c FtCursorRead) {
-	c = FtCursorRead{cs: b.get(), ks: b.ks}
+func (b Builder) FtCursorRead() (c FtCursorRead) {
+	c = FtCursorRead{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "FT.CURSOR", "READ")
 	return c
 }
@@ -6642,8 +6642,8 @@ func (c FtCursorReadIndex) CursorId(cursorId int64) FtCursorReadCursorId {
 
 type FtDictadd Completed
 
-func (b *Builder) FtDictadd() (c FtDictadd) {
-	c = FtDictadd{cs: b.get(), ks: b.ks}
+func (b Builder) FtDictadd() (c FtDictadd) {
+	c = FtDictadd{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "FT.DICTADD")
 	return c
 }
@@ -6673,8 +6673,8 @@ func (c FtDictaddTerm) Build() Completed {
 
 type FtDictdel Completed
 
-func (b *Builder) FtDictdel() (c FtDictdel) {
-	c = FtDictdel{cs: b.get(), ks: b.ks}
+func (b Builder) FtDictdel() (c FtDictdel) {
+	c = FtDictdel{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "FT.DICTDEL")
 	return c
 }
@@ -6704,8 +6704,8 @@ func (c FtDictdelTerm) Build() Completed {
 
 type FtDictdump Completed
 
-func (b *Builder) FtDictdump() (c FtDictdump) {
-	c = FtDictdump{cs: b.get(), ks: b.ks}
+func (b Builder) FtDictdump() (c FtDictdump) {
+	c = FtDictdump{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "FT.DICTDUMP")
 	return c
 }
@@ -6723,8 +6723,8 @@ func (c FtDictdumpDict) Build() Completed {
 
 type FtDropindex Completed
 
-func (b *Builder) FtDropindex() (c FtDropindex) {
-	c = FtDropindex{cs: b.get(), ks: b.ks}
+func (b Builder) FtDropindex() (c FtDropindex) {
+	c = FtDropindex{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "FT.DROPINDEX")
 	return c
 }
@@ -6753,8 +6753,8 @@ func (c FtDropindexIndex) Build() Completed {
 
 type FtExplain Completed
 
-func (b *Builder) FtExplain() (c FtExplain) {
-	c = FtExplain{cs: b.get(), ks: b.ks}
+func (b Builder) FtExplain() (c FtExplain) {
+	c = FtExplain{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "FT.EXPLAIN")
 	return c
 }
@@ -6779,8 +6779,8 @@ func (c FtExplainQuery) Build() Completed {
 
 type FtExplaincli Completed
 
-func (b *Builder) FtExplaincli() (c FtExplaincli) {
-	c = FtExplaincli{cs: b.get(), ks: b.ks}
+func (b Builder) FtExplaincli() (c FtExplaincli) {
+	c = FtExplaincli{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "FT.EXPLAINCLI")
 	return c
 }
@@ -6805,8 +6805,8 @@ func (c FtExplaincliQuery) Build() Completed {
 
 type FtInfo Completed
 
-func (b *Builder) FtInfo() (c FtInfo) {
-	c = FtInfo{cs: b.get(), ks: b.ks}
+func (b Builder) FtInfo() (c FtInfo) {
+	c = FtInfo{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "FT.INFO")
 	return c
 }
@@ -6824,8 +6824,8 @@ func (c FtInfoIndex) Build() Completed {
 
 type FtList Completed
 
-func (b *Builder) FtList() (c FtList) {
-	c = FtList{cs: b.get(), ks: b.ks}
+func (b Builder) FtList() (c FtList) {
+	c = FtList{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "FT._LIST")
 	return c
 }
@@ -6836,8 +6836,8 @@ func (c FtList) Build() Completed {
 
 type FtSearch Completed
 
-func (b *Builder) FtSearch() (c FtSearch) {
-	c = FtSearch{cs: b.get(), ks: b.ks}
+func (b Builder) FtSearch() (c FtSearch) {
+	c = FtSearch{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "FT.SEARCH")
 	return c
 }
@@ -9066,8 +9066,8 @@ func (c FtSearchWithsortkeys) Build() Completed {
 
 type FtSpellcheck Completed
 
-func (b *Builder) FtSpellcheck() (c FtSpellcheck) {
-	c = FtSpellcheck{cs: b.get(), ks: b.ks}
+func (b Builder) FtSpellcheck() (c FtSpellcheck) {
+	c = FtSpellcheck{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "FT.SPELLCHECK")
 	return c
 }
@@ -9159,8 +9159,8 @@ func (c FtSpellcheckTermsTermsInclude) Dictionary(dictionary string) FtSpellchec
 
 type FtSugadd Completed
 
-func (b *Builder) FtSugadd() (c FtSugadd) {
-	c = FtSugadd{cs: b.get(), ks: b.ks}
+func (b Builder) FtSugadd() (c FtSugadd) {
+	c = FtSugadd{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "FT.SUGADD")
 	return c
 }
@@ -9219,8 +9219,8 @@ func (c FtSugaddString) Score(score float64) FtSugaddScore {
 
 type FtSugdel Completed
 
-func (b *Builder) FtSugdel() (c FtSugdel) {
-	c = FtSugdel{cs: b.get(), ks: b.ks}
+func (b Builder) FtSugdel() (c FtSugdel) {
+	c = FtSugdel{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "FT.SUGDEL")
 	return c
 }
@@ -9245,8 +9245,8 @@ func (c FtSugdelString) Build() Completed {
 
 type FtSugget Completed
 
-func (b *Builder) FtSugget() (c FtSugget) {
-	c = FtSugget{cs: b.get(), ks: b.ks}
+func (b Builder) FtSugget() (c FtSugget) {
+	c = FtSugget{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "FT.SUGGET")
 	return c
 }
@@ -9345,8 +9345,8 @@ func (c FtSuggetWithscores) Build() Completed {
 
 type FtSuglen Completed
 
-func (b *Builder) FtSuglen() (c FtSuglen) {
-	c = FtSuglen{cs: b.get(), ks: b.ks}
+func (b Builder) FtSuglen() (c FtSuglen) {
+	c = FtSuglen{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "FT.SUGLEN")
 	return c
 }
@@ -9364,8 +9364,8 @@ func (c FtSuglenKey) Build() Completed {
 
 type FtSyndump Completed
 
-func (b *Builder) FtSyndump() (c FtSyndump) {
-	c = FtSyndump{cs: b.get(), ks: b.ks}
+func (b Builder) FtSyndump() (c FtSyndump) {
+	c = FtSyndump{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "FT.SYNDUMP")
 	return c
 }
@@ -9383,8 +9383,8 @@ func (c FtSyndumpIndex) Build() Completed {
 
 type FtSynupdate Completed
 
-func (b *Builder) FtSynupdate() (c FtSynupdate) {
-	c = FtSynupdate{cs: b.get(), ks: b.ks}
+func (b Builder) FtSynupdate() (c FtSynupdate) {
+	c = FtSynupdate{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "FT.SYNUPDATE")
 	return c
 }
@@ -9433,8 +9433,8 @@ func (c FtSynupdateTerm) Build() Completed {
 
 type FtTagvals Completed
 
-func (b *Builder) FtTagvals() (c FtTagvals) {
-	c = FtTagvals{cs: b.get(), ks: b.ks}
+func (b Builder) FtTagvals() (c FtTagvals) {
+	c = FtTagvals{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "FT.TAGVALS")
 	return c
 }
@@ -9459,8 +9459,8 @@ func (c FtTagvalsIndex) FieldName(fieldName string) FtTagvalsFieldName {
 
 type Geoadd Completed
 
-func (b *Builder) Geoadd() (c Geoadd) {
-	c = Geoadd{cs: b.get(), ks: b.ks}
+func (b Builder) Geoadd() (c Geoadd) {
+	c = Geoadd{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "GEOADD")
 	return c
 }
@@ -9535,8 +9535,8 @@ func (c GeoaddLongitudeLatitudeMember) Build() Completed {
 
 type Geodist Completed
 
-func (b *Builder) Geodist() (c Geodist) {
-	c = Geodist{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Geodist() (c Geodist) {
+	c = Geodist{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "GEODIST")
 	return c
 }
@@ -9635,8 +9635,8 @@ func (c GeodistUnitMi) Cache() Cacheable {
 
 type Geohash Completed
 
-func (b *Builder) Geohash() (c Geohash) {
-	c = Geohash{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Geohash() (c Geohash) {
+	c = Geohash{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "GEOHASH")
 	return c
 }
@@ -9673,8 +9673,8 @@ func (c GeohashMember) Cache() Cacheable {
 
 type Geopos Completed
 
-func (b *Builder) Geopos() (c Geopos) {
-	c = Geopos{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Geopos() (c Geopos) {
+	c = Geopos{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "GEOPOS")
 	return c
 }
@@ -9711,8 +9711,8 @@ func (c GeoposMember) Cache() Cacheable {
 
 type Georadius Completed
 
-func (b *Builder) Georadius() (c Georadius) {
-	c = Georadius{cs: b.get(), ks: b.ks}
+func (b Builder) Georadius() (c Georadius) {
+	c = Georadius{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "GEORADIUS")
 	return c
 }
@@ -9883,8 +9883,8 @@ func (c GeoradiusRadius) Mi() GeoradiusUnitMi {
 
 type GeoradiusRo Completed
 
-func (b *Builder) GeoradiusRo() (c GeoradiusRo) {
-	c = GeoradiusRo{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) GeoradiusRo() (c GeoradiusRo) {
+	c = GeoradiusRo{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "GEORADIUS_RO")
 	return c
 }
@@ -10709,8 +10709,8 @@ func (c GeoradiusWithhash) Build() Completed {
 
 type Georadiusbymember Completed
 
-func (b *Builder) Georadiusbymember() (c Georadiusbymember) {
-	c = Georadiusbymember{cs: b.get(), ks: b.ks}
+func (b Builder) Georadiusbymember() (c Georadiusbymember) {
+	c = Georadiusbymember{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "GEORADIUSBYMEMBER")
 	return c
 }
@@ -10874,8 +10874,8 @@ func (c GeoradiusbymemberRadius) Mi() GeoradiusbymemberUnitMi {
 
 type GeoradiusbymemberRo Completed
 
-func (b *Builder) GeoradiusbymemberRo() (c GeoradiusbymemberRo) {
-	c = GeoradiusbymemberRo{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) GeoradiusbymemberRo() (c GeoradiusbymemberRo) {
+	c = GeoradiusbymemberRo{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "GEORADIUSBYMEMBER_RO")
 	return c
 }
@@ -11693,8 +11693,8 @@ func (c GeoradiusbymemberWithhash) Build() Completed {
 
 type Geosearch Completed
 
-func (b *Builder) Geosearch() (c Geosearch) {
-	c = Geosearch{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Geosearch() (c Geosearch) {
+	c = Geosearch{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "GEOSEARCH")
 	return c
 }
@@ -12425,8 +12425,8 @@ func (c GeosearchWithhash) Cache() Cacheable {
 
 type Geosearchstore Completed
 
-func (b *Builder) Geosearchstore() (c Geosearchstore) {
-	c = Geosearchstore{cs: b.get(), ks: b.ks}
+func (b Builder) Geosearchstore() (c Geosearchstore) {
+	c = Geosearchstore{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "GEOSEARCHSTORE")
 	return c
 }
@@ -12918,8 +12918,8 @@ func (c GeosearchstoreStoredist) Build() Completed {
 
 type Get Completed
 
-func (b *Builder) Get() (c Get) {
-	c = Get{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Get() (c Get) {
+	c = Get{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "GET")
 	return c
 }
@@ -12944,8 +12944,8 @@ func (c GetKey) Cache() Cacheable {
 
 type Getbit Completed
 
-func (b *Builder) Getbit() (c Getbit) {
-	c = Getbit{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Getbit() (c Getbit) {
+	c = Getbit{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "GETBIT")
 	return c
 }
@@ -12977,8 +12977,8 @@ func (c GetbitOffset) Cache() Cacheable {
 
 type Getdel Completed
 
-func (b *Builder) Getdel() (c Getdel) {
-	c = Getdel{cs: b.get(), ks: b.ks}
+func (b Builder) Getdel() (c Getdel) {
+	c = Getdel{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "GETDEL")
 	return c
 }
@@ -12999,8 +12999,8 @@ func (c GetdelKey) Build() Completed {
 
 type Getex Completed
 
-func (b *Builder) Getex() (c Getex) {
-	c = Getex{cs: b.get(), ks: b.ks}
+func (b Builder) Getex() (c Getex) {
+	c = Getex{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "GETEX")
 	return c
 }
@@ -13076,8 +13076,8 @@ func (c GetexKey) Build() Completed {
 
 type Getrange Completed
 
-func (b *Builder) Getrange() (c Getrange) {
-	c = Getrange{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Getrange() (c Getrange) {
+	c = Getrange{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "GETRANGE")
 	return c
 }
@@ -13116,8 +13116,8 @@ func (c GetrangeStart) End(end int64) GetrangeEnd {
 
 type Getset Completed
 
-func (b *Builder) Getset() (c Getset) {
-	c = Getset{cs: b.get(), ks: b.ks}
+func (b Builder) Getset() (c Getset) {
+	c = Getset{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "GETSET")
 	return c
 }
@@ -13145,8 +13145,8 @@ func (c GetsetValue) Build() Completed {
 
 type GraphConfigGet Completed
 
-func (b *Builder) GraphConfigGet() (c GraphConfigGet) {
-	c = GraphConfigGet{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) GraphConfigGet() (c GraphConfigGet) {
+	c = GraphConfigGet{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "GRAPH.CONFIG", "GET")
 	return c
 }
@@ -13164,8 +13164,8 @@ func (c GraphConfigGetName) Build() Completed {
 
 type GraphConfigSet Completed
 
-func (b *Builder) GraphConfigSet() (c GraphConfigSet) {
-	c = GraphConfigSet{cs: b.get(), ks: b.ks}
+func (b Builder) GraphConfigSet() (c GraphConfigSet) {
+	c = GraphConfigSet{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "GRAPH.CONFIG", "SET")
 	return c
 }
@@ -13190,8 +13190,8 @@ func (c GraphConfigSetValue) Build() Completed {
 
 type GraphDelete Completed
 
-func (b *Builder) GraphDelete() (c GraphDelete) {
-	c = GraphDelete{cs: b.get(), ks: b.ks}
+func (b Builder) GraphDelete() (c GraphDelete) {
+	c = GraphDelete{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "GRAPH.DELETE")
 	return c
 }
@@ -13212,8 +13212,8 @@ func (c GraphDeleteGraph) Build() Completed {
 
 type GraphExplain Completed
 
-func (b *Builder) GraphExplain() (c GraphExplain) {
-	c = GraphExplain{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) GraphExplain() (c GraphExplain) {
+	c = GraphExplain{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "GRAPH.EXPLAIN")
 	return c
 }
@@ -13241,8 +13241,8 @@ func (c GraphExplainQuery) Build() Completed {
 
 type GraphList Completed
 
-func (b *Builder) GraphList() (c GraphList) {
-	c = GraphList{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) GraphList() (c GraphList) {
+	c = GraphList{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "GRAPH.LIST")
 	return c
 }
@@ -13253,8 +13253,8 @@ func (c GraphList) Build() Completed {
 
 type GraphProfile Completed
 
-func (b *Builder) GraphProfile() (c GraphProfile) {
-	c = GraphProfile{cs: b.get(), ks: b.ks}
+func (b Builder) GraphProfile() (c GraphProfile) {
+	c = GraphProfile{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "GRAPH.PROFILE")
 	return c
 }
@@ -13282,8 +13282,8 @@ func (c GraphProfileQuery) Build() Completed {
 
 type GraphQuery Completed
 
-func (b *Builder) GraphQuery() (c GraphQuery) {
-	c = GraphQuery{cs: b.get(), ks: b.ks}
+func (b Builder) GraphQuery() (c GraphQuery) {
+	c = GraphQuery{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "GRAPH.QUERY")
 	return c
 }
@@ -13311,8 +13311,8 @@ func (c GraphQueryQuery) Build() Completed {
 
 type GraphRoQuery Completed
 
-func (b *Builder) GraphRoQuery() (c GraphRoQuery) {
-	c = GraphRoQuery{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) GraphRoQuery() (c GraphRoQuery) {
+	c = GraphRoQuery{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "GRAPH.RO_QUERY")
 	return c
 }
@@ -13340,8 +13340,8 @@ func (c GraphRoQueryQuery) Build() Completed {
 
 type GraphSlowlog Completed
 
-func (b *Builder) GraphSlowlog() (c GraphSlowlog) {
-	c = GraphSlowlog{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) GraphSlowlog() (c GraphSlowlog) {
+	c = GraphSlowlog{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "GRAPH.SLOWLOG")
 	return c
 }
@@ -13362,8 +13362,8 @@ func (c GraphSlowlogGraph) Build() Completed {
 
 type Hdel Completed
 
-func (b *Builder) Hdel() (c Hdel) {
-	c = Hdel{cs: b.get(), ks: b.ks}
+func (b Builder) Hdel() (c Hdel) {
+	c = Hdel{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "HDEL")
 	return c
 }
@@ -13396,8 +13396,8 @@ func (c HdelKey) Field(field ...string) HdelField {
 
 type Hello Completed
 
-func (b *Builder) Hello() (c Hello) {
-	c = Hello{cs: b.get(), ks: b.ks}
+func (b Builder) Hello() (c Hello) {
+	c = Hello{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "HELLO")
 	return c
 }
@@ -13446,8 +13446,8 @@ func (c HelloArgumentsSetname) Build() Completed {
 
 type Hexists Completed
 
-func (b *Builder) Hexists() (c Hexists) {
-	c = Hexists{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Hexists() (c Hexists) {
+	c = Hexists{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "HEXISTS")
 	return c
 }
@@ -13479,8 +13479,8 @@ func (c HexistsKey) Field(field string) HexistsField {
 
 type Hget Completed
 
-func (b *Builder) Hget() (c Hget) {
-	c = Hget{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Hget() (c Hget) {
+	c = Hget{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "HGET")
 	return c
 }
@@ -13512,8 +13512,8 @@ func (c HgetKey) Field(field string) HgetField {
 
 type Hgetall Completed
 
-func (b *Builder) Hgetall() (c Hgetall) {
-	c = Hgetall{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Hgetall() (c Hgetall) {
+	c = Hgetall{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "HGETALL")
 	return c
 }
@@ -13538,8 +13538,8 @@ func (c HgetallKey) Cache() Cacheable {
 
 type Hincrby Completed
 
-func (b *Builder) Hincrby() (c Hincrby) {
-	c = Hincrby{cs: b.get(), ks: b.ks}
+func (b Builder) Hincrby() (c Hincrby) {
+	c = Hincrby{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "HINCRBY")
 	return c
 }
@@ -13574,8 +13574,8 @@ func (c HincrbyKey) Field(field string) HincrbyField {
 
 type Hincrbyfloat Completed
 
-func (b *Builder) Hincrbyfloat() (c Hincrbyfloat) {
-	c = Hincrbyfloat{cs: b.get(), ks: b.ks}
+func (b Builder) Hincrbyfloat() (c Hincrbyfloat) {
+	c = Hincrbyfloat{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "HINCRBYFLOAT")
 	return c
 }
@@ -13610,8 +13610,8 @@ func (c HincrbyfloatKey) Field(field string) HincrbyfloatField {
 
 type Hkeys Completed
 
-func (b *Builder) Hkeys() (c Hkeys) {
-	c = Hkeys{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Hkeys() (c Hkeys) {
+	c = Hkeys{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "HKEYS")
 	return c
 }
@@ -13636,8 +13636,8 @@ func (c HkeysKey) Cache() Cacheable {
 
 type Hlen Completed
 
-func (b *Builder) Hlen() (c Hlen) {
-	c = Hlen{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Hlen() (c Hlen) {
+	c = Hlen{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "HLEN")
 	return c
 }
@@ -13662,8 +13662,8 @@ func (c HlenKey) Cache() Cacheable {
 
 type Hmget Completed
 
-func (b *Builder) Hmget() (c Hmget) {
-	c = Hmget{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Hmget() (c Hmget) {
+	c = Hmget{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "HMGET")
 	return c
 }
@@ -13700,8 +13700,8 @@ func (c HmgetKey) Field(field ...string) HmgetField {
 
 type Hmset Completed
 
-func (b *Builder) Hmset() (c Hmset) {
-	c = Hmset{cs: b.get(), ks: b.ks}
+func (b Builder) Hmset() (c Hmset) {
+	c = Hmset{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "HMSET")
 	return c
 }
@@ -13733,8 +13733,8 @@ func (c HmsetKey) FieldValue() HmsetFieldValue {
 
 type Hrandfield Completed
 
-func (b *Builder) Hrandfield() (c Hrandfield) {
-	c = Hrandfield{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Hrandfield() (c Hrandfield) {
+	c = Hrandfield{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "HRANDFIELD")
 	return c
 }
@@ -13777,8 +13777,8 @@ func (c HrandfieldOptionsWithvalues) Build() Completed {
 
 type Hscan Completed
 
-func (b *Builder) Hscan() (c Hscan) {
-	c = Hscan{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Hscan() (c Hscan) {
+	c = Hscan{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "HSCAN")
 	return c
 }
@@ -13833,8 +13833,8 @@ func (c HscanMatch) Build() Completed {
 
 type Hset Completed
 
-func (b *Builder) Hset() (c Hset) {
-	c = Hset{cs: b.get(), ks: b.ks}
+func (b Builder) Hset() (c Hset) {
+	c = Hset{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "HSET")
 	return c
 }
@@ -13866,8 +13866,8 @@ func (c HsetKey) FieldValue() HsetFieldValue {
 
 type Hsetnx Completed
 
-func (b *Builder) Hsetnx() (c Hsetnx) {
-	c = Hsetnx{cs: b.get(), ks: b.ks}
+func (b Builder) Hsetnx() (c Hsetnx) {
+	c = Hsetnx{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "HSETNX")
 	return c
 }
@@ -13902,8 +13902,8 @@ func (c HsetnxValue) Build() Completed {
 
 type Hstrlen Completed
 
-func (b *Builder) Hstrlen() (c Hstrlen) {
-	c = Hstrlen{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Hstrlen() (c Hstrlen) {
+	c = Hstrlen{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "HSTRLEN")
 	return c
 }
@@ -13935,8 +13935,8 @@ func (c HstrlenKey) Field(field string) HstrlenField {
 
 type Hvals Completed
 
-func (b *Builder) Hvals() (c Hvals) {
-	c = Hvals{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Hvals() (c Hvals) {
+	c = Hvals{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "HVALS")
 	return c
 }
@@ -13961,8 +13961,8 @@ func (c HvalsKey) Cache() Cacheable {
 
 type Incr Completed
 
-func (b *Builder) Incr() (c Incr) {
-	c = Incr{cs: b.get(), ks: b.ks}
+func (b Builder) Incr() (c Incr) {
+	c = Incr{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "INCR")
 	return c
 }
@@ -13983,8 +13983,8 @@ func (c IncrKey) Build() Completed {
 
 type Incrby Completed
 
-func (b *Builder) Incrby() (c Incrby) {
-	c = Incrby{cs: b.get(), ks: b.ks}
+func (b Builder) Incrby() (c Incrby) {
+	c = Incrby{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "INCRBY")
 	return c
 }
@@ -14012,8 +14012,8 @@ func (c IncrbyKey) Increment(increment int64) IncrbyIncrement {
 
 type Incrbyfloat Completed
 
-func (b *Builder) Incrbyfloat() (c Incrbyfloat) {
-	c = Incrbyfloat{cs: b.get(), ks: b.ks}
+func (b Builder) Incrbyfloat() (c Incrbyfloat) {
+	c = Incrbyfloat{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "INCRBYFLOAT")
 	return c
 }
@@ -14041,8 +14041,8 @@ func (c IncrbyfloatKey) Increment(increment float64) IncrbyfloatIncrement {
 
 type Info Completed
 
-func (b *Builder) Info() (c Info) {
-	c = Info{cs: b.get(), ks: b.ks}
+func (b Builder) Info() (c Info) {
+	c = Info{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "INFO")
 	return c
 }
@@ -14064,8 +14064,8 @@ func (c InfoSection) Build() Completed {
 
 type JsonArrappend Completed
 
-func (b *Builder) JsonArrappend() (c JsonArrappend) {
-	c = JsonArrappend{cs: b.get(), ks: b.ks}
+func (b Builder) JsonArrappend() (c JsonArrappend) {
+	c = JsonArrappend{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "JSON.ARRAPPEND")
 	return c
 }
@@ -14110,8 +14110,8 @@ func (c JsonArrappendValue) Build() Completed {
 
 type JsonArrindex Completed
 
-func (b *Builder) JsonArrindex() (c JsonArrindex) {
-	c = JsonArrindex{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) JsonArrindex() (c JsonArrindex) {
+	c = JsonArrindex{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "JSON.ARRINDEX")
 	return c
 }
@@ -14180,8 +14180,8 @@ func (c JsonArrindexValue) Cache() Cacheable {
 
 type JsonArrinsert Completed
 
-func (b *Builder) JsonArrinsert() (c JsonArrinsert) {
-	c = JsonArrinsert{cs: b.get(), ks: b.ks}
+func (b Builder) JsonArrinsert() (c JsonArrinsert) {
+	c = JsonArrinsert{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "JSON.ARRINSERT")
 	return c
 }
@@ -14228,8 +14228,8 @@ func (c JsonArrinsertValue) Build() Completed {
 
 type JsonArrlen Completed
 
-func (b *Builder) JsonArrlen() (c JsonArrlen) {
-	c = JsonArrlen{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) JsonArrlen() (c JsonArrlen) {
+	c = JsonArrlen{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "JSON.ARRLEN")
 	return c
 }
@@ -14266,8 +14266,8 @@ func (c JsonArrlenPath) Cache() Cacheable {
 
 type JsonArrpop Completed
 
-func (b *Builder) JsonArrpop() (c JsonArrpop) {
-	c = JsonArrpop{cs: b.get(), ks: b.ks}
+func (b Builder) JsonArrpop() (c JsonArrpop) {
+	c = JsonArrpop{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "JSON.ARRPOP")
 	return c
 }
@@ -14310,8 +14310,8 @@ func (c JsonArrpopPathPath) Build() Completed {
 
 type JsonArrtrim Completed
 
-func (b *Builder) JsonArrtrim() (c JsonArrtrim) {
-	c = JsonArrtrim{cs: b.get(), ks: b.ks}
+func (b Builder) JsonArrtrim() (c JsonArrtrim) {
+	c = JsonArrtrim{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "JSON.ARRTRIM")
 	return c
 }
@@ -14353,8 +14353,8 @@ func (c JsonArrtrimStop) Build() Completed {
 
 type JsonClear Completed
 
-func (b *Builder) JsonClear() (c JsonClear) {
-	c = JsonClear{cs: b.get(), ks: b.ks}
+func (b Builder) JsonClear() (c JsonClear) {
+	c = JsonClear{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "JSON.CLEAR")
 	return c
 }
@@ -14386,8 +14386,8 @@ func (c JsonClearPath) Build() Completed {
 
 type JsonDel Completed
 
-func (b *Builder) JsonDel() (c JsonDel) {
-	c = JsonDel{cs: b.get(), ks: b.ks}
+func (b Builder) JsonDel() (c JsonDel) {
+	c = JsonDel{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "JSON.DEL")
 	return c
 }
@@ -14419,8 +14419,8 @@ func (c JsonDelPath) Build() Completed {
 
 type JsonGet Completed
 
-func (b *Builder) JsonGet() (c JsonGet) {
-	c = JsonGet{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) JsonGet() (c JsonGet) {
+	c = JsonGet{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "JSON.GET")
 	return c
 }
@@ -14540,8 +14540,8 @@ func (c JsonGetSpace) Cache() Cacheable {
 
 type JsonMget Completed
 
-func (b *Builder) JsonMget() (c JsonMget) {
-	c = JsonMget{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) JsonMget() (c JsonMget) {
+	c = JsonMget{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "JSON.MGET")
 	return c
 }
@@ -14581,8 +14581,8 @@ func (c JsonMgetPath) Build() Completed {
 
 type JsonNumincrby Completed
 
-func (b *Builder) JsonNumincrby() (c JsonNumincrby) {
-	c = JsonNumincrby{cs: b.get(), ks: b.ks}
+func (b Builder) JsonNumincrby() (c JsonNumincrby) {
+	c = JsonNumincrby{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "JSON.NUMINCRBY")
 	return c
 }
@@ -14617,8 +14617,8 @@ func (c JsonNumincrbyValue) Build() Completed {
 
 type JsonObjkeys Completed
 
-func (b *Builder) JsonObjkeys() (c JsonObjkeys) {
-	c = JsonObjkeys{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) JsonObjkeys() (c JsonObjkeys) {
+	c = JsonObjkeys{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "JSON.OBJKEYS")
 	return c
 }
@@ -14658,8 +14658,8 @@ func (c JsonObjkeysPath) Cache() Cacheable {
 
 type JsonObjlen Completed
 
-func (b *Builder) JsonObjlen() (c JsonObjlen) {
-	c = JsonObjlen{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) JsonObjlen() (c JsonObjlen) {
+	c = JsonObjlen{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "JSON.OBJLEN")
 	return c
 }
@@ -14699,8 +14699,8 @@ func (c JsonObjlenPath) Cache() Cacheable {
 
 type JsonResp Completed
 
-func (b *Builder) JsonResp() (c JsonResp) {
-	c = JsonResp{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) JsonResp() (c JsonResp) {
+	c = JsonResp{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "JSON.RESP")
 	return c
 }
@@ -14740,8 +14740,8 @@ func (c JsonRespPath) Cache() Cacheable {
 
 type JsonSet Completed
 
-func (b *Builder) JsonSet() (c JsonSet) {
-	c = JsonSet{cs: b.get(), ks: b.ks}
+func (b Builder) JsonSet() (c JsonSet) {
+	c = JsonSet{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "JSON.SET")
 	return c
 }
@@ -14798,8 +14798,8 @@ func (c JsonSetValue) Build() Completed {
 
 type JsonStrappend Completed
 
-func (b *Builder) JsonStrappend() (c JsonStrappend) {
-	c = JsonStrappend{cs: b.get(), ks: b.ks}
+func (b Builder) JsonStrappend() (c JsonStrappend) {
+	c = JsonStrappend{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "JSON.STRAPPEND")
 	return c
 }
@@ -14839,8 +14839,8 @@ func (c JsonStrappendValue) Build() Completed {
 
 type JsonStrlen Completed
 
-func (b *Builder) JsonStrlen() (c JsonStrlen) {
-	c = JsonStrlen{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) JsonStrlen() (c JsonStrlen) {
+	c = JsonStrlen{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "JSON.STRLEN")
 	return c
 }
@@ -14880,8 +14880,8 @@ func (c JsonStrlenPath) Cache() Cacheable {
 
 type JsonToggle Completed
 
-func (b *Builder) JsonToggle() (c JsonToggle) {
-	c = JsonToggle{cs: b.get(), ks: b.ks}
+func (b Builder) JsonToggle() (c JsonToggle) {
+	c = JsonToggle{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "JSON.TOGGLE")
 	return c
 }
@@ -14913,8 +14913,8 @@ func (c JsonTogglePath) Build() Completed {
 
 type JsonType Completed
 
-func (b *Builder) JsonType() (c JsonType) {
-	c = JsonType{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) JsonType() (c JsonType) {
+	c = JsonType{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "JSON.TYPE")
 	return c
 }
@@ -14954,8 +14954,8 @@ func (c JsonTypePath) Cache() Cacheable {
 
 type Keys Completed
 
-func (b *Builder) Keys() (c Keys) {
-	c = Keys{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Keys() (c Keys) {
+	c = Keys{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "KEYS")
 	return c
 }
@@ -14973,8 +14973,8 @@ func (c KeysPattern) Build() Completed {
 
 type Lastsave Completed
 
-func (b *Builder) Lastsave() (c Lastsave) {
-	c = Lastsave{cs: b.get(), ks: b.ks}
+func (b Builder) Lastsave() (c Lastsave) {
+	c = Lastsave{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "LASTSAVE")
 	return c
 }
@@ -14985,8 +14985,8 @@ func (c Lastsave) Build() Completed {
 
 type LatencyDoctor Completed
 
-func (b *Builder) LatencyDoctor() (c LatencyDoctor) {
-	c = LatencyDoctor{cs: b.get(), ks: b.ks}
+func (b Builder) LatencyDoctor() (c LatencyDoctor) {
+	c = LatencyDoctor{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "LATENCY", "DOCTOR")
 	return c
 }
@@ -14997,8 +14997,8 @@ func (c LatencyDoctor) Build() Completed {
 
 type LatencyGraph Completed
 
-func (b *Builder) LatencyGraph() (c LatencyGraph) {
-	c = LatencyGraph{cs: b.get(), ks: b.ks}
+func (b Builder) LatencyGraph() (c LatencyGraph) {
+	c = LatencyGraph{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "LATENCY", "GRAPH")
 	return c
 }
@@ -15016,8 +15016,8 @@ func (c LatencyGraphEvent) Build() Completed {
 
 type LatencyHelp Completed
 
-func (b *Builder) LatencyHelp() (c LatencyHelp) {
-	c = LatencyHelp{cs: b.get(), ks: b.ks}
+func (b Builder) LatencyHelp() (c LatencyHelp) {
+	c = LatencyHelp{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "LATENCY", "HELP")
 	return c
 }
@@ -15028,8 +15028,8 @@ func (c LatencyHelp) Build() Completed {
 
 type LatencyHistory Completed
 
-func (b *Builder) LatencyHistory() (c LatencyHistory) {
-	c = LatencyHistory{cs: b.get(), ks: b.ks}
+func (b Builder) LatencyHistory() (c LatencyHistory) {
+	c = LatencyHistory{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "LATENCY", "HISTORY")
 	return c
 }
@@ -15047,8 +15047,8 @@ func (c LatencyHistoryEvent) Build() Completed {
 
 type LatencyLatest Completed
 
-func (b *Builder) LatencyLatest() (c LatencyLatest) {
-	c = LatencyLatest{cs: b.get(), ks: b.ks}
+func (b Builder) LatencyLatest() (c LatencyLatest) {
+	c = LatencyLatest{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "LATENCY", "LATEST")
 	return c
 }
@@ -15059,8 +15059,8 @@ func (c LatencyLatest) Build() Completed {
 
 type LatencyReset Completed
 
-func (b *Builder) LatencyReset() (c LatencyReset) {
-	c = LatencyReset{cs: b.get(), ks: b.ks}
+func (b Builder) LatencyReset() (c LatencyReset) {
+	c = LatencyReset{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "LATENCY", "RESET")
 	return c
 }
@@ -15087,8 +15087,8 @@ func (c LatencyResetEvent) Build() Completed {
 
 type Lcs Completed
 
-func (b *Builder) Lcs() (c Lcs) {
-	c = Lcs{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Lcs() (c Lcs) {
+	c = Lcs{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "LCS")
 	return c
 }
@@ -15193,8 +15193,8 @@ func (c LcsWithmatchlen) Build() Completed {
 
 type Lindex Completed
 
-func (b *Builder) Lindex() (c Lindex) {
-	c = Lindex{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Lindex() (c Lindex) {
+	c = Lindex{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "LINDEX")
 	return c
 }
@@ -15226,8 +15226,8 @@ func (c LindexKey) Index(index int64) LindexIndex {
 
 type Linsert Completed
 
-func (b *Builder) Linsert() (c Linsert) {
-	c = Linsert{cs: b.get(), ks: b.ks}
+func (b Builder) Linsert() (c Linsert) {
+	c = Linsert{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "LINSERT")
 	return c
 }
@@ -15281,8 +15281,8 @@ func (c LinsertWhereBefore) Pivot(pivot string) LinsertPivot {
 
 type Llen Completed
 
-func (b *Builder) Llen() (c Llen) {
-	c = Llen{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Llen() (c Llen) {
+	c = Llen{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "LLEN")
 	return c
 }
@@ -15307,8 +15307,8 @@ func (c LlenKey) Cache() Cacheable {
 
 type Lmove Completed
 
-func (b *Builder) Lmove() (c Lmove) {
-	c = Lmove{cs: b.get(), ks: b.ks}
+func (b Builder) Lmove() (c Lmove) {
+	c = Lmove{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "LMOVE")
 	return c
 }
@@ -15381,8 +15381,8 @@ func (c LmoveWheretoRight) Build() Completed {
 
 type Lmpop Completed
 
-func (b *Builder) Lmpop() (c Lmpop) {
-	c = Lmpop{cs: b.get(), ks: b.ks}
+func (b Builder) Lmpop() (c Lmpop) {
+	c = Lmpop{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "LMPOP")
 	return c
 }
@@ -15456,8 +15456,8 @@ func (c LmpopWhereRight) Build() Completed {
 
 type Lolwut Completed
 
-func (b *Builder) Lolwut() (c Lolwut) {
-	c = Lolwut{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Lolwut() (c Lolwut) {
+	c = Lolwut{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "LOLWUT")
 	return c
 }
@@ -15479,8 +15479,8 @@ func (c LolwutVersion) Build() Completed {
 
 type Lpop Completed
 
-func (b *Builder) Lpop() (c Lpop) {
-	c = Lpop{cs: b.get(), ks: b.ks}
+func (b Builder) Lpop() (c Lpop) {
+	c = Lpop{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "LPOP")
 	return c
 }
@@ -15512,8 +15512,8 @@ func (c LpopKey) Build() Completed {
 
 type Lpos Completed
 
-func (b *Builder) Lpos() (c Lpos) {
-	c = Lpos{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Lpos() (c Lpos) {
+	c = Lpos{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "LPOS")
 	return c
 }
@@ -15605,8 +15605,8 @@ func (c LposRank) Cache() Cacheable {
 
 type Lpush Completed
 
-func (b *Builder) Lpush() (c Lpush) {
-	c = Lpush{cs: b.get(), ks: b.ks}
+func (b Builder) Lpush() (c Lpush) {
+	c = Lpush{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "LPUSH")
 	return c
 }
@@ -15639,8 +15639,8 @@ func (c LpushKey) Element(element ...string) LpushElement {
 
 type Lpushx Completed
 
-func (b *Builder) Lpushx() (c Lpushx) {
-	c = Lpushx{cs: b.get(), ks: b.ks}
+func (b Builder) Lpushx() (c Lpushx) {
+	c = Lpushx{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "LPUSHX")
 	return c
 }
@@ -15673,8 +15673,8 @@ func (c LpushxKey) Element(element ...string) LpushxElement {
 
 type Lrange Completed
 
-func (b *Builder) Lrange() (c Lrange) {
-	c = Lrange{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Lrange() (c Lrange) {
+	c = Lrange{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "LRANGE")
 	return c
 }
@@ -15713,8 +15713,8 @@ func (c LrangeStop) Cache() Cacheable {
 
 type Lrem Completed
 
-func (b *Builder) Lrem() (c Lrem) {
-	c = Lrem{cs: b.get(), ks: b.ks}
+func (b Builder) Lrem() (c Lrem) {
+	c = Lrem{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "LREM")
 	return c
 }
@@ -15749,8 +15749,8 @@ func (c LremKey) Count(count int64) LremCount {
 
 type Lset Completed
 
-func (b *Builder) Lset() (c Lset) {
-	c = Lset{cs: b.get(), ks: b.ks}
+func (b Builder) Lset() (c Lset) {
+	c = Lset{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "LSET")
 	return c
 }
@@ -15785,8 +15785,8 @@ func (c LsetKey) Index(index int64) LsetIndex {
 
 type Ltrim Completed
 
-func (b *Builder) Ltrim() (c Ltrim) {
-	c = Ltrim{cs: b.get(), ks: b.ks}
+func (b Builder) Ltrim() (c Ltrim) {
+	c = Ltrim{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "LTRIM")
 	return c
 }
@@ -15821,8 +15821,8 @@ func (c LtrimStop) Build() Completed {
 
 type MemoryDoctor Completed
 
-func (b *Builder) MemoryDoctor() (c MemoryDoctor) {
-	c = MemoryDoctor{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) MemoryDoctor() (c MemoryDoctor) {
+	c = MemoryDoctor{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "MEMORY", "DOCTOR")
 	return c
 }
@@ -15833,8 +15833,8 @@ func (c MemoryDoctor) Build() Completed {
 
 type MemoryHelp Completed
 
-func (b *Builder) MemoryHelp() (c MemoryHelp) {
-	c = MemoryHelp{cs: b.get(), ks: b.ks}
+func (b Builder) MemoryHelp() (c MemoryHelp) {
+	c = MemoryHelp{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "MEMORY", "HELP")
 	return c
 }
@@ -15845,8 +15845,8 @@ func (c MemoryHelp) Build() Completed {
 
 type MemoryMallocStats Completed
 
-func (b *Builder) MemoryMallocStats() (c MemoryMallocStats) {
-	c = MemoryMallocStats{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) MemoryMallocStats() (c MemoryMallocStats) {
+	c = MemoryMallocStats{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "MEMORY", "MALLOC-STATS")
 	return c
 }
@@ -15857,8 +15857,8 @@ func (c MemoryMallocStats) Build() Completed {
 
 type MemoryPurge Completed
 
-func (b *Builder) MemoryPurge() (c MemoryPurge) {
-	c = MemoryPurge{cs: b.get(), ks: b.ks}
+func (b Builder) MemoryPurge() (c MemoryPurge) {
+	c = MemoryPurge{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "MEMORY", "PURGE")
 	return c
 }
@@ -15869,8 +15869,8 @@ func (c MemoryPurge) Build() Completed {
 
 type MemoryStats Completed
 
-func (b *Builder) MemoryStats() (c MemoryStats) {
-	c = MemoryStats{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) MemoryStats() (c MemoryStats) {
+	c = MemoryStats{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "MEMORY", "STATS")
 	return c
 }
@@ -15881,8 +15881,8 @@ func (c MemoryStats) Build() Completed {
 
 type MemoryUsage Completed
 
-func (b *Builder) MemoryUsage() (c MemoryUsage) {
-	c = MemoryUsage{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) MemoryUsage() (c MemoryUsage) {
+	c = MemoryUsage{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "MEMORY", "USAGE")
 	return c
 }
@@ -15914,8 +15914,8 @@ func (c MemoryUsageSamples) Build() Completed {
 
 type Mget Completed
 
-func (b *Builder) Mget() (c Mget) {
-	c = Mget{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Mget() (c Mget) {
+	c = Mget{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "MGET")
 	return c
 }
@@ -15948,8 +15948,8 @@ func (c MgetKey) Build() Completed {
 
 type Migrate Completed
 
-func (b *Builder) Migrate() (c Migrate) {
-	c = Migrate{cs: b.get(), ks: b.ks, cf: blockTag}
+func (b Builder) Migrate() (c Migrate) {
+	c = Migrate{cs: get(), ks: b.ks, cf: blockTag}
 	c.cs.s = append(c.cs.s, "MIGRATE")
 	return c
 }
@@ -16153,8 +16153,8 @@ func (c MigrateTimeout) Build() Completed {
 
 type ModuleList Completed
 
-func (b *Builder) ModuleList() (c ModuleList) {
-	c = ModuleList{cs: b.get(), ks: b.ks}
+func (b Builder) ModuleList() (c ModuleList) {
+	c = ModuleList{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "MODULE", "LIST")
 	return c
 }
@@ -16165,8 +16165,8 @@ func (c ModuleList) Build() Completed {
 
 type ModuleLoad Completed
 
-func (b *Builder) ModuleLoad() (c ModuleLoad) {
-	c = ModuleLoad{cs: b.get(), ks: b.ks}
+func (b Builder) ModuleLoad() (c ModuleLoad) {
+	c = ModuleLoad{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "MODULE", "LOAD")
 	return c
 }
@@ -16200,8 +16200,8 @@ func (c ModuleLoadPath) Build() Completed {
 
 type ModuleUnload Completed
 
-func (b *Builder) ModuleUnload() (c ModuleUnload) {
-	c = ModuleUnload{cs: b.get(), ks: b.ks}
+func (b Builder) ModuleUnload() (c ModuleUnload) {
+	c = ModuleUnload{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "MODULE", "UNLOAD")
 	return c
 }
@@ -16219,8 +16219,8 @@ func (c ModuleUnloadName) Build() Completed {
 
 type Monitor Completed
 
-func (b *Builder) Monitor() (c Monitor) {
-	c = Monitor{cs: b.get(), ks: b.ks}
+func (b Builder) Monitor() (c Monitor) {
+	c = Monitor{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "MONITOR")
 	return c
 }
@@ -16231,8 +16231,8 @@ func (c Monitor) Build() Completed {
 
 type Move Completed
 
-func (b *Builder) Move() (c Move) {
-	c = Move{cs: b.get(), ks: b.ks}
+func (b Builder) Move() (c Move) {
+	c = Move{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "MOVE")
 	return c
 }
@@ -16260,8 +16260,8 @@ func (c MoveKey) Db(db int64) MoveDb {
 
 type Mset Completed
 
-func (b *Builder) Mset() (c Mset) {
-	c = Mset{cs: b.get(), ks: b.ks}
+func (b Builder) Mset() (c Mset) {
+	c = Mset{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "MSET")
 	return c
 }
@@ -16286,8 +16286,8 @@ func (c MsetKeyValue) Build() Completed {
 
 type Msetnx Completed
 
-func (b *Builder) Msetnx() (c Msetnx) {
-	c = Msetnx{cs: b.get(), ks: b.ks}
+func (b Builder) Msetnx() (c Msetnx) {
+	c = Msetnx{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "MSETNX")
 	return c
 }
@@ -16312,8 +16312,8 @@ func (c MsetnxKeyValue) Build() Completed {
 
 type Multi Completed
 
-func (b *Builder) Multi() (c Multi) {
-	c = Multi{cs: b.get(), ks: b.ks}
+func (b Builder) Multi() (c Multi) {
+	c = Multi{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "MULTI")
 	return c
 }
@@ -16324,8 +16324,8 @@ func (c Multi) Build() Completed {
 
 type ObjectEncoding Completed
 
-func (b *Builder) ObjectEncoding() (c ObjectEncoding) {
-	c = ObjectEncoding{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) ObjectEncoding() (c ObjectEncoding) {
+	c = ObjectEncoding{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "OBJECT", "ENCODING")
 	return c
 }
@@ -16346,8 +16346,8 @@ func (c ObjectEncodingKey) Build() Completed {
 
 type ObjectFreq Completed
 
-func (b *Builder) ObjectFreq() (c ObjectFreq) {
-	c = ObjectFreq{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) ObjectFreq() (c ObjectFreq) {
+	c = ObjectFreq{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "OBJECT", "FREQ")
 	return c
 }
@@ -16368,8 +16368,8 @@ func (c ObjectFreqKey) Build() Completed {
 
 type ObjectHelp Completed
 
-func (b *Builder) ObjectHelp() (c ObjectHelp) {
-	c = ObjectHelp{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) ObjectHelp() (c ObjectHelp) {
+	c = ObjectHelp{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "OBJECT", "HELP")
 	return c
 }
@@ -16380,8 +16380,8 @@ func (c ObjectHelp) Build() Completed {
 
 type ObjectIdletime Completed
 
-func (b *Builder) ObjectIdletime() (c ObjectIdletime) {
-	c = ObjectIdletime{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) ObjectIdletime() (c ObjectIdletime) {
+	c = ObjectIdletime{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "OBJECT", "IDLETIME")
 	return c
 }
@@ -16402,8 +16402,8 @@ func (c ObjectIdletimeKey) Build() Completed {
 
 type ObjectRefcount Completed
 
-func (b *Builder) ObjectRefcount() (c ObjectRefcount) {
-	c = ObjectRefcount{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) ObjectRefcount() (c ObjectRefcount) {
+	c = ObjectRefcount{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "OBJECT", "REFCOUNT")
 	return c
 }
@@ -16424,8 +16424,8 @@ func (c ObjectRefcountKey) Build() Completed {
 
 type Persist Completed
 
-func (b *Builder) Persist() (c Persist) {
-	c = Persist{cs: b.get(), ks: b.ks}
+func (b Builder) Persist() (c Persist) {
+	c = Persist{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "PERSIST")
 	return c
 }
@@ -16446,8 +16446,8 @@ func (c PersistKey) Build() Completed {
 
 type Pexpire Completed
 
-func (b *Builder) Pexpire() (c Pexpire) {
-	c = Pexpire{cs: b.get(), ks: b.ks}
+func (b Builder) Pexpire() (c Pexpire) {
+	c = Pexpire{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "PEXPIRE")
 	return c
 }
@@ -16519,8 +16519,8 @@ func (c PexpireMilliseconds) Build() Completed {
 
 type Pexpireat Completed
 
-func (b *Builder) Pexpireat() (c Pexpireat) {
-	c = Pexpireat{cs: b.get(), ks: b.ks}
+func (b Builder) Pexpireat() (c Pexpireat) {
+	c = Pexpireat{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "PEXPIREAT")
 	return c
 }
@@ -16592,8 +16592,8 @@ func (c PexpireatMillisecondsTimestamp) Build() Completed {
 
 type Pexpiretime Completed
 
-func (b *Builder) Pexpiretime() (c Pexpiretime) {
-	c = Pexpiretime{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Pexpiretime() (c Pexpiretime) {
+	c = Pexpiretime{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "PEXPIRETIME")
 	return c
 }
@@ -16618,8 +16618,8 @@ func (c PexpiretimeKey) Cache() Cacheable {
 
 type Pfadd Completed
 
-func (b *Builder) Pfadd() (c Pfadd) {
-	c = Pfadd{cs: b.get(), ks: b.ks}
+func (b Builder) Pfadd() (c Pfadd) {
+	c = Pfadd{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "PFADD")
 	return c
 }
@@ -16656,8 +16656,8 @@ func (c PfaddKey) Build() Completed {
 
 type Pfcount Completed
 
-func (b *Builder) Pfcount() (c Pfcount) {
-	c = Pfcount{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Pfcount() (c Pfcount) {
+	c = Pfcount{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "PFCOUNT")
 	return c
 }
@@ -16690,8 +16690,8 @@ func (c PfcountKey) Build() Completed {
 
 type Pfmerge Completed
 
-func (b *Builder) Pfmerge() (c Pfmerge) {
-	c = Pfmerge{cs: b.get(), ks: b.ks}
+func (b Builder) Pfmerge() (c Pfmerge) {
+	c = Pfmerge{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "PFMERGE")
 	return c
 }
@@ -16734,8 +16734,8 @@ func (c PfmergeSourcekey) Build() Completed {
 
 type Ping Completed
 
-func (b *Builder) Ping() (c Ping) {
-	c = Ping{cs: b.get(), ks: b.ks}
+func (b Builder) Ping() (c Ping) {
+	c = Ping{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "PING")
 	return c
 }
@@ -16757,8 +16757,8 @@ func (c PingMessage) Build() Completed {
 
 type Psetex Completed
 
-func (b *Builder) Psetex() (c Psetex) {
-	c = Psetex{cs: b.get(), ks: b.ks}
+func (b Builder) Psetex() (c Psetex) {
+	c = Psetex{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "PSETEX")
 	return c
 }
@@ -16793,8 +16793,8 @@ func (c PsetexValue) Build() Completed {
 
 type Psubscribe Completed
 
-func (b *Builder) Psubscribe() (c Psubscribe) {
-	c = Psubscribe{cs: b.get(), ks: b.ks, cf: noRetTag}
+func (b Builder) Psubscribe() (c Psubscribe) {
+	c = Psubscribe{cs: get(), ks: b.ks, cf: noRetTag}
 	c.cs.s = append(c.cs.s, "PSUBSCRIBE")
 	return c
 }
@@ -16817,8 +16817,8 @@ func (c PsubscribePattern) Build() Completed {
 
 type Psync Completed
 
-func (b *Builder) Psync() (c Psync) {
-	c = Psync{cs: b.get(), ks: b.ks}
+func (b Builder) Psync() (c Psync) {
+	c = Psync{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "PSYNC")
 	return c
 }
@@ -16843,8 +16843,8 @@ func (c PsyncReplicationid) Offset(offset int64) PsyncOffset {
 
 type Pttl Completed
 
-func (b *Builder) Pttl() (c Pttl) {
-	c = Pttl{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Pttl() (c Pttl) {
+	c = Pttl{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "PTTL")
 	return c
 }
@@ -16869,8 +16869,8 @@ func (c PttlKey) Cache() Cacheable {
 
 type Publish Completed
 
-func (b *Builder) Publish() (c Publish) {
-	c = Publish{cs: b.get(), ks: b.ks}
+func (b Builder) Publish() (c Publish) {
+	c = Publish{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "PUBLISH")
 	return c
 }
@@ -16895,8 +16895,8 @@ func (c PublishMessage) Build() Completed {
 
 type PubsubChannels Completed
 
-func (b *Builder) PubsubChannels() (c PubsubChannels) {
-	c = PubsubChannels{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) PubsubChannels() (c PubsubChannels) {
+	c = PubsubChannels{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "PUBSUB", "CHANNELS")
 	return c
 }
@@ -16918,8 +16918,8 @@ func (c PubsubChannelsPattern) Build() Completed {
 
 type PubsubHelp Completed
 
-func (b *Builder) PubsubHelp() (c PubsubHelp) {
-	c = PubsubHelp{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) PubsubHelp() (c PubsubHelp) {
+	c = PubsubHelp{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "PUBSUB", "HELP")
 	return c
 }
@@ -16930,8 +16930,8 @@ func (c PubsubHelp) Build() Completed {
 
 type PubsubNumpat Completed
 
-func (b *Builder) PubsubNumpat() (c PubsubNumpat) {
-	c = PubsubNumpat{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) PubsubNumpat() (c PubsubNumpat) {
+	c = PubsubNumpat{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "PUBSUB", "NUMPAT")
 	return c
 }
@@ -16942,8 +16942,8 @@ func (c PubsubNumpat) Build() Completed {
 
 type PubsubNumsub Completed
 
-func (b *Builder) PubsubNumsub() (c PubsubNumsub) {
-	c = PubsubNumsub{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) PubsubNumsub() (c PubsubNumsub) {
+	c = PubsubNumsub{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "PUBSUB", "NUMSUB")
 	return c
 }
@@ -16970,8 +16970,8 @@ func (c PubsubNumsubChannel) Build() Completed {
 
 type Punsubscribe Completed
 
-func (b *Builder) Punsubscribe() (c Punsubscribe) {
-	c = Punsubscribe{cs: b.get(), ks: b.ks, cf: noRetTag}
+func (b Builder) Punsubscribe() (c Punsubscribe) {
+	c = Punsubscribe{cs: get(), ks: b.ks, cf: noRetTag}
 	c.cs.s = append(c.cs.s, "PUNSUBSCRIBE")
 	return c
 }
@@ -16998,8 +16998,8 @@ func (c PunsubscribePattern) Build() Completed {
 
 type Quit Completed
 
-func (b *Builder) Quit() (c Quit) {
-	c = Quit{cs: b.get(), ks: b.ks}
+func (b Builder) Quit() (c Quit) {
+	c = Quit{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "QUIT")
 	return c
 }
@@ -17010,8 +17010,8 @@ func (c Quit) Build() Completed {
 
 type Randomkey Completed
 
-func (b *Builder) Randomkey() (c Randomkey) {
-	c = Randomkey{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Randomkey() (c Randomkey) {
+	c = Randomkey{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "RANDOMKEY")
 	return c
 }
@@ -17022,8 +17022,8 @@ func (c Randomkey) Build() Completed {
 
 type Readonly Completed
 
-func (b *Builder) Readonly() (c Readonly) {
-	c = Readonly{cs: b.get(), ks: b.ks}
+func (b Builder) Readonly() (c Readonly) {
+	c = Readonly{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "READONLY")
 	return c
 }
@@ -17034,8 +17034,8 @@ func (c Readonly) Build() Completed {
 
 type Readwrite Completed
 
-func (b *Builder) Readwrite() (c Readwrite) {
-	c = Readwrite{cs: b.get(), ks: b.ks}
+func (b Builder) Readwrite() (c Readwrite) {
+	c = Readwrite{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "READWRITE")
 	return c
 }
@@ -17046,8 +17046,8 @@ func (c Readwrite) Build() Completed {
 
 type Rename Completed
 
-func (b *Builder) Rename() (c Rename) {
-	c = Rename{cs: b.get(), ks: b.ks}
+func (b Builder) Rename() (c Rename) {
+	c = Rename{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "RENAME")
 	return c
 }
@@ -17078,8 +17078,8 @@ func (c RenameNewkey) Build() Completed {
 
 type Renamenx Completed
 
-func (b *Builder) Renamenx() (c Renamenx) {
-	c = Renamenx{cs: b.get(), ks: b.ks}
+func (b Builder) Renamenx() (c Renamenx) {
+	c = Renamenx{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "RENAMENX")
 	return c
 }
@@ -17110,8 +17110,8 @@ func (c RenamenxNewkey) Build() Completed {
 
 type Replicaof Completed
 
-func (b *Builder) Replicaof() (c Replicaof) {
-	c = Replicaof{cs: b.get(), ks: b.ks}
+func (b Builder) Replicaof() (c Replicaof) {
+	c = Replicaof{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "REPLICAOF")
 	return c
 }
@@ -17136,8 +17136,8 @@ func (c ReplicaofPort) Build() Completed {
 
 type Reset Completed
 
-func (b *Builder) Reset() (c Reset) {
-	c = Reset{cs: b.get(), ks: b.ks}
+func (b Builder) Reset() (c Reset) {
+	c = Reset{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "RESET")
 	return c
 }
@@ -17148,8 +17148,8 @@ func (c Reset) Build() Completed {
 
 type Restore Completed
 
-func (b *Builder) Restore() (c Restore) {
-	c = Restore{cs: b.get(), ks: b.ks}
+func (b Builder) Restore() (c Restore) {
+	c = Restore{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "RESTORE")
 	return c
 }
@@ -17258,8 +17258,8 @@ func (c RestoreTtl) SerializedValue(serializedValue string) RestoreSerializedVal
 
 type Role Completed
 
-func (b *Builder) Role() (c Role) {
-	c = Role{cs: b.get(), ks: b.ks}
+func (b Builder) Role() (c Role) {
+	c = Role{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "ROLE")
 	return c
 }
@@ -17270,8 +17270,8 @@ func (c Role) Build() Completed {
 
 type Rpop Completed
 
-func (b *Builder) Rpop() (c Rpop) {
-	c = Rpop{cs: b.get(), ks: b.ks}
+func (b Builder) Rpop() (c Rpop) {
+	c = Rpop{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "RPOP")
 	return c
 }
@@ -17303,8 +17303,8 @@ func (c RpopKey) Build() Completed {
 
 type Rpoplpush Completed
 
-func (b *Builder) Rpoplpush() (c Rpoplpush) {
-	c = Rpoplpush{cs: b.get(), ks: b.ks}
+func (b Builder) Rpoplpush() (c Rpoplpush) {
+	c = Rpoplpush{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "RPOPLPUSH")
 	return c
 }
@@ -17335,8 +17335,8 @@ func (c RpoplpushSource) Destination(destination string) RpoplpushDestination {
 
 type Rpush Completed
 
-func (b *Builder) Rpush() (c Rpush) {
-	c = Rpush{cs: b.get(), ks: b.ks}
+func (b Builder) Rpush() (c Rpush) {
+	c = Rpush{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "RPUSH")
 	return c
 }
@@ -17369,8 +17369,8 @@ func (c RpushKey) Element(element ...string) RpushElement {
 
 type Rpushx Completed
 
-func (b *Builder) Rpushx() (c Rpushx) {
-	c = Rpushx{cs: b.get(), ks: b.ks}
+func (b Builder) Rpushx() (c Rpushx) {
+	c = Rpushx{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "RPUSHX")
 	return c
 }
@@ -17403,8 +17403,8 @@ func (c RpushxKey) Element(element ...string) RpushxElement {
 
 type Sadd Completed
 
-func (b *Builder) Sadd() (c Sadd) {
-	c = Sadd{cs: b.get(), ks: b.ks}
+func (b Builder) Sadd() (c Sadd) {
+	c = Sadd{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "SADD")
 	return c
 }
@@ -17437,8 +17437,8 @@ func (c SaddMember) Build() Completed {
 
 type Save Completed
 
-func (b *Builder) Save() (c Save) {
-	c = Save{cs: b.get(), ks: b.ks}
+func (b Builder) Save() (c Save) {
+	c = Save{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "SAVE")
 	return c
 }
@@ -17449,8 +17449,8 @@ func (c Save) Build() Completed {
 
 type Scan Completed
 
-func (b *Builder) Scan() (c Scan) {
-	c = Scan{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Scan() (c Scan) {
+	c = Scan{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "SCAN")
 	return c
 }
@@ -17516,8 +17516,8 @@ func (c ScanType) Build() Completed {
 
 type Scard Completed
 
-func (b *Builder) Scard() (c Scard) {
-	c = Scard{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Scard() (c Scard) {
+	c = Scard{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "SCARD")
 	return c
 }
@@ -17542,8 +17542,8 @@ func (c ScardKey) Cache() Cacheable {
 
 type ScriptDebug Completed
 
-func (b *Builder) ScriptDebug() (c ScriptDebug) {
-	c = ScriptDebug{cs: b.get(), ks: b.ks}
+func (b Builder) ScriptDebug() (c ScriptDebug) {
+	c = ScriptDebug{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "SCRIPT", "DEBUG")
 	return c
 }
@@ -17583,8 +17583,8 @@ func (c ScriptDebugModeYes) Build() Completed {
 
 type ScriptExists Completed
 
-func (b *Builder) ScriptExists() (c ScriptExists) {
-	c = ScriptExists{cs: b.get(), ks: b.ks}
+func (b Builder) ScriptExists() (c ScriptExists) {
+	c = ScriptExists{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "SCRIPT", "EXISTS")
 	return c
 }
@@ -17607,8 +17607,8 @@ func (c ScriptExistsSha1) Build() Completed {
 
 type ScriptFlush Completed
 
-func (b *Builder) ScriptFlush() (c ScriptFlush) {
-	c = ScriptFlush{cs: b.get(), ks: b.ks}
+func (b Builder) ScriptFlush() (c ScriptFlush) {
+	c = ScriptFlush{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "SCRIPT", "FLUSH")
 	return c
 }
@@ -17641,8 +17641,8 @@ func (c ScriptFlushAsyncSync) Build() Completed {
 
 type ScriptKill Completed
 
-func (b *Builder) ScriptKill() (c ScriptKill) {
-	c = ScriptKill{cs: b.get(), ks: b.ks}
+func (b Builder) ScriptKill() (c ScriptKill) {
+	c = ScriptKill{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "SCRIPT", "KILL")
 	return c
 }
@@ -17653,8 +17653,8 @@ func (c ScriptKill) Build() Completed {
 
 type ScriptLoad Completed
 
-func (b *Builder) ScriptLoad() (c ScriptLoad) {
-	c = ScriptLoad{cs: b.get(), ks: b.ks}
+func (b Builder) ScriptLoad() (c ScriptLoad) {
+	c = ScriptLoad{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "SCRIPT", "LOAD")
 	return c
 }
@@ -17672,8 +17672,8 @@ func (c ScriptLoadScript) Build() Completed {
 
 type Sdiff Completed
 
-func (b *Builder) Sdiff() (c Sdiff) {
-	c = Sdiff{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Sdiff() (c Sdiff) {
+	c = Sdiff{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "SDIFF")
 	return c
 }
@@ -17706,8 +17706,8 @@ func (c SdiffKey) Build() Completed {
 
 type Sdiffstore Completed
 
-func (b *Builder) Sdiffstore() (c Sdiffstore) {
-	c = Sdiffstore{cs: b.get(), ks: b.ks}
+func (b Builder) Sdiffstore() (c Sdiffstore) {
+	c = Sdiffstore{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "SDIFFSTORE")
 	return c
 }
@@ -17750,8 +17750,8 @@ func (c SdiffstoreKey) Build() Completed {
 
 type Select Completed
 
-func (b *Builder) Select() (c Select) {
-	c = Select{cs: b.get(), ks: b.ks}
+func (b Builder) Select() (c Select) {
+	c = Select{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "SELECT")
 	return c
 }
@@ -17769,8 +17769,8 @@ func (c SelectIndex) Build() Completed {
 
 type SentinelFailover Completed
 
-func (b *Builder) SentinelFailover() (c SentinelFailover) {
-	c = SentinelFailover{cs: b.get(), ks: b.ks}
+func (b Builder) SentinelFailover() (c SentinelFailover) {
+	c = SentinelFailover{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "SENTINEL", "FAILOVER")
 	return c
 }
@@ -17788,8 +17788,8 @@ func (c SentinelFailoverMaster) Build() Completed {
 
 type SentinelGetMasterAddrByName Completed
 
-func (b *Builder) SentinelGetMasterAddrByName() (c SentinelGetMasterAddrByName) {
-	c = SentinelGetMasterAddrByName{cs: b.get(), ks: b.ks}
+func (b Builder) SentinelGetMasterAddrByName() (c SentinelGetMasterAddrByName) {
+	c = SentinelGetMasterAddrByName{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "SENTINEL", "GET-MASTER-ADDR-BY-NAME")
 	return c
 }
@@ -17807,8 +17807,8 @@ func (c SentinelGetMasterAddrByNameMaster) Build() Completed {
 
 type SentinelSentinels Completed
 
-func (b *Builder) SentinelSentinels() (c SentinelSentinels) {
-	c = SentinelSentinels{cs: b.get(), ks: b.ks}
+func (b Builder) SentinelSentinels() (c SentinelSentinels) {
+	c = SentinelSentinels{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "SENTINEL", "SENTINELS")
 	return c
 }
@@ -17826,8 +17826,8 @@ func (c SentinelSentinelsMaster) Build() Completed {
 
 type Set Completed
 
-func (b *Builder) Set() (c Set) {
-	c = Set{cs: b.get(), ks: b.ks}
+func (b Builder) Set() (c Set) {
+	c = Set{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "SET")
 	return c
 }
@@ -18028,8 +18028,8 @@ func (c SetValue) Build() Completed {
 
 type Setbit Completed
 
-func (b *Builder) Setbit() (c Setbit) {
-	c = Setbit{cs: b.get(), ks: b.ks}
+func (b Builder) Setbit() (c Setbit) {
+	c = Setbit{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "SETBIT")
 	return c
 }
@@ -18064,8 +18064,8 @@ func (c SetbitValue) Build() Completed {
 
 type Setex Completed
 
-func (b *Builder) Setex() (c Setex) {
-	c = Setex{cs: b.get(), ks: b.ks}
+func (b Builder) Setex() (c Setex) {
+	c = Setex{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "SETEX")
 	return c
 }
@@ -18100,8 +18100,8 @@ func (c SetexValue) Build() Completed {
 
 type Setnx Completed
 
-func (b *Builder) Setnx() (c Setnx) {
-	c = Setnx{cs: b.get(), ks: b.ks}
+func (b Builder) Setnx() (c Setnx) {
+	c = Setnx{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "SETNX")
 	return c
 }
@@ -18129,8 +18129,8 @@ func (c SetnxValue) Build() Completed {
 
 type Setrange Completed
 
-func (b *Builder) Setrange() (c Setrange) {
-	c = Setrange{cs: b.get(), ks: b.ks}
+func (b Builder) Setrange() (c Setrange) {
+	c = Setrange{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "SETRANGE")
 	return c
 }
@@ -18165,8 +18165,8 @@ func (c SetrangeValue) Build() Completed {
 
 type Shutdown Completed
 
-func (b *Builder) Shutdown() (c Shutdown) {
-	c = Shutdown{cs: b.get(), ks: b.ks}
+func (b Builder) Shutdown() (c Shutdown) {
+	c = Shutdown{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "SHUTDOWN")
 	return c
 }
@@ -18199,8 +18199,8 @@ func (c ShutdownSaveModeSave) Build() Completed {
 
 type Sinter Completed
 
-func (b *Builder) Sinter() (c Sinter) {
-	c = Sinter{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Sinter() (c Sinter) {
+	c = Sinter{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "SINTER")
 	return c
 }
@@ -18233,8 +18233,8 @@ func (c SinterKey) Build() Completed {
 
 type Sintercard Completed
 
-func (b *Builder) Sintercard() (c Sintercard) {
-	c = Sintercard{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Sintercard() (c Sintercard) {
+	c = Sintercard{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "SINTERCARD")
 	return c
 }
@@ -18285,8 +18285,8 @@ func (c SintercardNumkeys) Key(key ...string) SintercardKey {
 
 type Sinterstore Completed
 
-func (b *Builder) Sinterstore() (c Sinterstore) {
-	c = Sinterstore{cs: b.get(), ks: b.ks}
+func (b Builder) Sinterstore() (c Sinterstore) {
+	c = Sinterstore{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "SINTERSTORE")
 	return c
 }
@@ -18329,8 +18329,8 @@ func (c SinterstoreKey) Build() Completed {
 
 type Sismember Completed
 
-func (b *Builder) Sismember() (c Sismember) {
-	c = Sismember{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Sismember() (c Sismember) {
+	c = Sismember{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "SISMEMBER")
 	return c
 }
@@ -18362,8 +18362,8 @@ func (c SismemberMember) Cache() Cacheable {
 
 type Slaveof Completed
 
-func (b *Builder) Slaveof() (c Slaveof) {
-	c = Slaveof{cs: b.get(), ks: b.ks}
+func (b Builder) Slaveof() (c Slaveof) {
+	c = Slaveof{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "SLAVEOF")
 	return c
 }
@@ -18388,8 +18388,8 @@ func (c SlaveofPort) Build() Completed {
 
 type SlowlogGet Completed
 
-func (b *Builder) SlowlogGet() (c SlowlogGet) {
-	c = SlowlogGet{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) SlowlogGet() (c SlowlogGet) {
+	c = SlowlogGet{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "SLOWLOG", "GET")
 	return c
 }
@@ -18411,8 +18411,8 @@ func (c SlowlogGetCount) Build() Completed {
 
 type SlowlogHelp Completed
 
-func (b *Builder) SlowlogHelp() (c SlowlogHelp) {
-	c = SlowlogHelp{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) SlowlogHelp() (c SlowlogHelp) {
+	c = SlowlogHelp{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "SLOWLOG", "HELP")
 	return c
 }
@@ -18423,8 +18423,8 @@ func (c SlowlogHelp) Build() Completed {
 
 type SlowlogLen Completed
 
-func (b *Builder) SlowlogLen() (c SlowlogLen) {
-	c = SlowlogLen{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) SlowlogLen() (c SlowlogLen) {
+	c = SlowlogLen{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "SLOWLOG", "LEN")
 	return c
 }
@@ -18435,8 +18435,8 @@ func (c SlowlogLen) Build() Completed {
 
 type SlowlogReset Completed
 
-func (b *Builder) SlowlogReset() (c SlowlogReset) {
-	c = SlowlogReset{cs: b.get(), ks: b.ks}
+func (b Builder) SlowlogReset() (c SlowlogReset) {
+	c = SlowlogReset{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "SLOWLOG", "RESET")
 	return c
 }
@@ -18447,8 +18447,8 @@ func (c SlowlogReset) Build() Completed {
 
 type Smembers Completed
 
-func (b *Builder) Smembers() (c Smembers) {
-	c = Smembers{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Smembers() (c Smembers) {
+	c = Smembers{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "SMEMBERS")
 	return c
 }
@@ -18473,8 +18473,8 @@ func (c SmembersKey) Cache() Cacheable {
 
 type Smismember Completed
 
-func (b *Builder) Smismember() (c Smismember) {
-	c = Smismember{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Smismember() (c Smismember) {
+	c = Smismember{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "SMISMEMBER")
 	return c
 }
@@ -18511,8 +18511,8 @@ func (c SmismemberMember) Cache() Cacheable {
 
 type Smove Completed
 
-func (b *Builder) Smove() (c Smove) {
-	c = Smove{cs: b.get(), ks: b.ks}
+func (b Builder) Smove() (c Smove) {
+	c = Smove{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "SMOVE")
 	return c
 }
@@ -18550,8 +18550,8 @@ func (c SmoveSource) Destination(destination string) SmoveDestination {
 
 type Sort Completed
 
-func (b *Builder) Sort() (c Sort) {
-	c = Sort{cs: b.get(), ks: b.ks}
+func (b Builder) Sort() (c Sort) {
+	c = Sort{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "SORT")
 	return c
 }
@@ -18759,8 +18759,8 @@ func (c SortOrderDesc) Build() Completed {
 
 type SortRo Completed
 
-func (b *Builder) SortRo() (c SortRo) {
-	c = SortRo{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) SortRo() (c SortRo) {
+	c = SortRo{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "SORT_RO")
 	return c
 }
@@ -18974,8 +18974,8 @@ func (c SortStore) Build() Completed {
 
 type Spop Completed
 
-func (b *Builder) Spop() (c Spop) {
-	c = Spop{cs: b.get(), ks: b.ks}
+func (b Builder) Spop() (c Spop) {
+	c = Spop{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "SPOP")
 	return c
 }
@@ -19007,8 +19007,8 @@ func (c SpopKey) Build() Completed {
 
 type Srandmember Completed
 
-func (b *Builder) Srandmember() (c Srandmember) {
-	c = Srandmember{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Srandmember() (c Srandmember) {
+	c = Srandmember{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "SRANDMEMBER")
 	return c
 }
@@ -19040,8 +19040,8 @@ func (c SrandmemberKey) Build() Completed {
 
 type Srem Completed
 
-func (b *Builder) Srem() (c Srem) {
-	c = Srem{cs: b.get(), ks: b.ks}
+func (b Builder) Srem() (c Srem) {
+	c = Srem{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "SREM")
 	return c
 }
@@ -19074,8 +19074,8 @@ func (c SremMember) Build() Completed {
 
 type Sscan Completed
 
-func (b *Builder) Sscan() (c Sscan) {
-	c = Sscan{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Sscan() (c Sscan) {
+	c = Sscan{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "SSCAN")
 	return c
 }
@@ -19130,8 +19130,8 @@ func (c SscanMatch) Build() Completed {
 
 type Strlen Completed
 
-func (b *Builder) Strlen() (c Strlen) {
-	c = Strlen{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Strlen() (c Strlen) {
+	c = Strlen{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "STRLEN")
 	return c
 }
@@ -19156,8 +19156,8 @@ func (c StrlenKey) Cache() Cacheable {
 
 type Subscribe Completed
 
-func (b *Builder) Subscribe() (c Subscribe) {
-	c = Subscribe{cs: b.get(), ks: b.ks, cf: noRetTag}
+func (b Builder) Subscribe() (c Subscribe) {
+	c = Subscribe{cs: get(), ks: b.ks, cf: noRetTag}
 	c.cs.s = append(c.cs.s, "SUBSCRIBE")
 	return c
 }
@@ -19180,8 +19180,8 @@ func (c SubscribeChannel) Build() Completed {
 
 type Sunion Completed
 
-func (b *Builder) Sunion() (c Sunion) {
-	c = Sunion{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Sunion() (c Sunion) {
+	c = Sunion{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "SUNION")
 	return c
 }
@@ -19214,8 +19214,8 @@ func (c SunionKey) Build() Completed {
 
 type Sunionstore Completed
 
-func (b *Builder) Sunionstore() (c Sunionstore) {
-	c = Sunionstore{cs: b.get(), ks: b.ks}
+func (b Builder) Sunionstore() (c Sunionstore) {
+	c = Sunionstore{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "SUNIONSTORE")
 	return c
 }
@@ -19258,8 +19258,8 @@ func (c SunionstoreKey) Build() Completed {
 
 type Swapdb Completed
 
-func (b *Builder) Swapdb() (c Swapdb) {
-	c = Swapdb{cs: b.get(), ks: b.ks}
+func (b Builder) Swapdb() (c Swapdb) {
+	c = Swapdb{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "SWAPDB")
 	return c
 }
@@ -19284,8 +19284,8 @@ func (c SwapdbIndex2) Build() Completed {
 
 type Sync Completed
 
-func (b *Builder) Sync() (c Sync) {
-	c = Sync{cs: b.get(), ks: b.ks}
+func (b Builder) Sync() (c Sync) {
+	c = Sync{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "SYNC")
 	return c
 }
@@ -19296,8 +19296,8 @@ func (c Sync) Build() Completed {
 
 type TdigestAdd Completed
 
-func (b *Builder) TdigestAdd() (c TdigestAdd) {
-	c = TdigestAdd{cs: b.get(), ks: b.ks}
+func (b Builder) TdigestAdd() (c TdigestAdd) {
+	c = TdigestAdd{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "TDIGEST.ADD")
 	return c
 }
@@ -19337,8 +19337,8 @@ func (c TdigestAddValuesWeight) Build() Completed {
 
 type TdigestCdf Completed
 
-func (b *Builder) TdigestCdf() (c TdigestCdf) {
-	c = TdigestCdf{cs: b.get(), ks: b.ks}
+func (b Builder) TdigestCdf() (c TdigestCdf) {
+	c = TdigestCdf{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "TDIGEST.CDF")
 	return c
 }
@@ -19366,8 +19366,8 @@ func (c TdigestCdfValue) Build() Completed {
 
 type TdigestCreate Completed
 
-func (b *Builder) TdigestCreate() (c TdigestCreate) {
-	c = TdigestCreate{cs: b.get(), ks: b.ks}
+func (b Builder) TdigestCreate() (c TdigestCreate) {
+	c = TdigestCreate{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "TDIGEST.CREATE")
 	return c
 }
@@ -19395,8 +19395,8 @@ func (c TdigestCreateKey) Compression(compression int64) TdigestCreateCompressio
 
 type TdigestInfo Completed
 
-func (b *Builder) TdigestInfo() (c TdigestInfo) {
-	c = TdigestInfo{cs: b.get(), ks: b.ks}
+func (b Builder) TdigestInfo() (c TdigestInfo) {
+	c = TdigestInfo{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "TDIGEST.INFO")
 	return c
 }
@@ -19417,8 +19417,8 @@ func (c TdigestInfoKey) Build() Completed {
 
 type TdigestMax Completed
 
-func (b *Builder) TdigestMax() (c TdigestMax) {
-	c = TdigestMax{cs: b.get(), ks: b.ks}
+func (b Builder) TdigestMax() (c TdigestMax) {
+	c = TdigestMax{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "TDIGEST.MAX")
 	return c
 }
@@ -19439,8 +19439,8 @@ func (c TdigestMaxKey) Build() Completed {
 
 type TdigestMerge Completed
 
-func (b *Builder) TdigestMerge() (c TdigestMerge) {
-	c = TdigestMerge{cs: b.get(), ks: b.ks}
+func (b Builder) TdigestMerge() (c TdigestMerge) {
+	c = TdigestMerge{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "TDIGEST.MERGE")
 	return c
 }
@@ -19471,8 +19471,8 @@ func (c TdigestMergeToKey) FromKey(fromKey string) TdigestMergeFromKey {
 
 type TdigestMin Completed
 
-func (b *Builder) TdigestMin() (c TdigestMin) {
-	c = TdigestMin{cs: b.get(), ks: b.ks}
+func (b Builder) TdigestMin() (c TdigestMin) {
+	c = TdigestMin{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "TDIGEST.MIN")
 	return c
 }
@@ -19493,8 +19493,8 @@ func (c TdigestMinKey) Build() Completed {
 
 type TdigestQuantile Completed
 
-func (b *Builder) TdigestQuantile() (c TdigestQuantile) {
-	c = TdigestQuantile{cs: b.get(), ks: b.ks}
+func (b Builder) TdigestQuantile() (c TdigestQuantile) {
+	c = TdigestQuantile{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "TDIGEST.QUANTILE")
 	return c
 }
@@ -19522,8 +19522,8 @@ func (c TdigestQuantileQuantile) Build() Completed {
 
 type TdigestReset Completed
 
-func (b *Builder) TdigestReset() (c TdigestReset) {
-	c = TdigestReset{cs: b.get(), ks: b.ks}
+func (b Builder) TdigestReset() (c TdigestReset) {
+	c = TdigestReset{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "TDIGEST.RESET")
 	return c
 }
@@ -19544,8 +19544,8 @@ func (c TdigestResetKey) Build() Completed {
 
 type Time Completed
 
-func (b *Builder) Time() (c Time) {
-	c = Time{cs: b.get(), ks: b.ks}
+func (b Builder) Time() (c Time) {
+	c = Time{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "TIME")
 	return c
 }
@@ -19556,8 +19556,8 @@ func (c Time) Build() Completed {
 
 type TopkAdd Completed
 
-func (b *Builder) TopkAdd() (c TopkAdd) {
-	c = TopkAdd{cs: b.get(), ks: b.ks}
+func (b Builder) TopkAdd() (c TopkAdd) {
+	c = TopkAdd{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "TOPK.ADD")
 	return c
 }
@@ -19590,8 +19590,8 @@ func (c TopkAddKey) Items(items ...string) TopkAddItems {
 
 type TopkIncrby Completed
 
-func (b *Builder) TopkIncrby() (c TopkIncrby) {
-	c = TopkIncrby{cs: b.get(), ks: b.ks}
+func (b Builder) TopkIncrby() (c TopkIncrby) {
+	c = TopkIncrby{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "TOPK.INCRBY")
 	return c
 }
@@ -19631,8 +19631,8 @@ func (c TopkIncrbyKey) Item(item string) TopkIncrbyItemsItem {
 
 type TopkInfo Completed
 
-func (b *Builder) TopkInfo() (c TopkInfo) {
-	c = TopkInfo{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) TopkInfo() (c TopkInfo) {
+	c = TopkInfo{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "TOPK.INFO")
 	return c
 }
@@ -19657,8 +19657,8 @@ func (c TopkInfoKey) Cache() Cacheable {
 
 type TopkList Completed
 
-func (b *Builder) TopkList() (c TopkList) {
-	c = TopkList{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) TopkList() (c TopkList) {
+	c = TopkList{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "TOPK.LIST")
 	return c
 }
@@ -19697,8 +19697,8 @@ func (c TopkListWithcount) Cache() Cacheable {
 
 type TopkQuery Completed
 
-func (b *Builder) TopkQuery() (c TopkQuery) {
-	c = TopkQuery{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) TopkQuery() (c TopkQuery) {
+	c = TopkQuery{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "TOPK.QUERY")
 	return c
 }
@@ -19735,8 +19735,8 @@ func (c TopkQueryKey) Item(item ...string) TopkQueryItem {
 
 type TopkReserve Completed
 
-func (b *Builder) TopkReserve() (c TopkReserve) {
-	c = TopkReserve{cs: b.get(), ks: b.ks}
+func (b Builder) TopkReserve() (c TopkReserve) {
+	c = TopkReserve{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "TOPK.RESERVE")
 	return c
 }
@@ -19789,8 +19789,8 @@ func (c TopkReserveTopk) Build() Completed {
 
 type Touch Completed
 
-func (b *Builder) Touch() (c Touch) {
-	c = Touch{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Touch() (c Touch) {
+	c = Touch{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "TOUCH")
 	return c
 }
@@ -19823,8 +19823,8 @@ func (c TouchKey) Build() Completed {
 
 type TsAdd Completed
 
-func (b *Builder) TsAdd() (c TsAdd) {
-	c = TsAdd{cs: b.get(), ks: b.ks}
+func (b Builder) TsAdd() (c TsAdd) {
+	c = TsAdd{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "TS.ADD")
 	return c
 }
@@ -20185,8 +20185,8 @@ func (c TsAddValue) Build() Completed {
 
 type TsAlter Completed
 
-func (b *Builder) TsAlter() (c TsAlter) {
-	c = TsAlter{cs: b.get(), ks: b.ks}
+func (b Builder) TsAlter() (c TsAlter) {
+	c = TsAlter{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "TS.ALTER")
 	return c
 }
@@ -20239,8 +20239,8 @@ func (c TsAlterRetention) Build() Completed {
 
 type TsCreate Completed
 
-func (b *Builder) TsCreate() (c TsCreate) {
-	c = TsCreate{cs: b.get(), ks: b.ks}
+func (b Builder) TsCreate() (c TsCreate) {
+	c = TsCreate{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "TS.CREATE")
 	return c
 }
@@ -20587,8 +20587,8 @@ func (c TsCreateRetention) Build() Completed {
 
 type TsCreaterule Completed
 
-func (b *Builder) TsCreaterule() (c TsCreaterule) {
-	c = TsCreaterule{cs: b.get(), ks: b.ks}
+func (b Builder) TsCreaterule() (c TsCreaterule) {
+	c = TsCreaterule{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "TS.CREATERULE")
 	return c
 }
@@ -20765,8 +20765,8 @@ func (c TsCreateruleTimebucket) Build() Completed {
 
 type TsDecrby Completed
 
-func (b *Builder) TsDecrby() (c TsDecrby) {
-	c = TsDecrby{cs: b.get(), ks: b.ks}
+func (b Builder) TsDecrby() (c TsDecrby) {
+	c = TsDecrby{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "TS.DECRBY")
 	return c
 }
@@ -20904,8 +20904,8 @@ func (c TsDecrbyValue) Build() Completed {
 
 type TsDel Completed
 
-func (b *Builder) TsDel() (c TsDel) {
-	c = TsDel{cs: b.get(), ks: b.ks}
+func (b Builder) TsDel() (c TsDel) {
+	c = TsDel{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "TS.DEL")
 	return c
 }
@@ -20940,8 +20940,8 @@ func (c TsDelToTimestamp) Build() Completed {
 
 type TsDeleterule Completed
 
-func (b *Builder) TsDeleterule() (c TsDeleterule) {
-	c = TsDeleterule{cs: b.get(), ks: b.ks}
+func (b Builder) TsDeleterule() (c TsDeleterule) {
+	c = TsDeleterule{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "TS.DELETERULE")
 	return c
 }
@@ -20972,8 +20972,8 @@ func (c TsDeleteruleSourcekey) Destkey(destkey string) TsDeleteruleDestkey {
 
 type TsGet Completed
 
-func (b *Builder) TsGet() (c TsGet) {
-	c = TsGet{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) TsGet() (c TsGet) {
+	c = TsGet{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "TS.GET")
 	return c
 }
@@ -20994,8 +20994,8 @@ func (c TsGetKey) Build() Completed {
 
 type TsIncrby Completed
 
-func (b *Builder) TsIncrby() (c TsIncrby) {
-	c = TsIncrby{cs: b.get(), ks: b.ks}
+func (b Builder) TsIncrby() (c TsIncrby) {
+	c = TsIncrby{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "TS.INCRBY")
 	return c
 }
@@ -21133,8 +21133,8 @@ func (c TsIncrbyValue) Build() Completed {
 
 type TsInfo Completed
 
-func (b *Builder) TsInfo() (c TsInfo) {
-	c = TsInfo{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) TsInfo() (c TsInfo) {
+	c = TsInfo{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "TS.INFO")
 	return c
 }
@@ -21166,8 +21166,8 @@ func (c TsInfoKey) Build() Completed {
 
 type TsMadd Completed
 
-func (b *Builder) TsMadd() (c TsMadd) {
-	c = TsMadd{cs: b.get(), ks: b.ks}
+func (b Builder) TsMadd() (c TsMadd) {
+	c = TsMadd{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "TS.MADD")
 	return c
 }
@@ -21192,8 +21192,8 @@ func (c TsMaddKeyTimestampValue) Build() Completed {
 
 type TsMget Completed
 
-func (b *Builder) TsMget() (c TsMget) {
-	c = TsMget{cs: b.get(), ks: b.ks}
+func (b Builder) TsMget() (c TsMget) {
+	c = TsMget{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "TS.MGET")
 	return c
 }
@@ -21245,8 +21245,8 @@ func (c TsMgetWithlabels) Filter(filter ...string) TsMgetFilter {
 
 type TsMrange Completed
 
-func (b *Builder) TsMrange() (c TsMrange) {
-	c = TsMrange{cs: b.get(), ks: b.ks}
+func (b Builder) TsMrange() (c TsMrange) {
+	c = TsMrange{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "TS.MRANGE")
 	return c
 }
@@ -21980,8 +21980,8 @@ func (c TsMrangeWithlabels) Filter(filter ...string) TsMrangeFilter {
 
 type TsMrevrange Completed
 
-func (b *Builder) TsMrevrange() (c TsMrevrange) {
-	c = TsMrevrange{cs: b.get(), ks: b.ks}
+func (b Builder) TsMrevrange() (c TsMrevrange) {
+	c = TsMrevrange{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "TS.MREVRANGE")
 	return c
 }
@@ -22715,8 +22715,8 @@ func (c TsMrevrangeWithlabels) Filter(filter ...string) TsMrevrangeFilter {
 
 type TsQueryindex Completed
 
-func (b *Builder) TsQueryindex() (c TsQueryindex) {
-	c = TsQueryindex{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) TsQueryindex() (c TsQueryindex) {
+	c = TsQueryindex{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "TS.QUERYINDEX")
 	return c
 }
@@ -22739,8 +22739,8 @@ func (c TsQueryindexFilter) Build() Completed {
 
 type TsRange Completed
 
-func (b *Builder) TsRange() (c TsRange) {
-	c = TsRange{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) TsRange() (c TsRange) {
+	c = TsRange{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "TS.RANGE")
 	return c
 }
@@ -23250,8 +23250,8 @@ func (c TsRangeTotimestamp) Build() Completed {
 
 type TsRevrange Completed
 
-func (b *Builder) TsRevrange() (c TsRevrange) {
-	c = TsRevrange{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) TsRevrange() (c TsRevrange) {
+	c = TsRevrange{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "TS.REVRANGE")
 	return c
 }
@@ -23761,8 +23761,8 @@ func (c TsRevrangeTotimestamp) Build() Completed {
 
 type Ttl Completed
 
-func (b *Builder) Ttl() (c Ttl) {
-	c = Ttl{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Ttl() (c Ttl) {
+	c = Ttl{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "TTL")
 	return c
 }
@@ -23787,8 +23787,8 @@ func (c TtlKey) Cache() Cacheable {
 
 type Type Completed
 
-func (b *Builder) Type() (c Type) {
-	c = Type{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Type() (c Type) {
+	c = Type{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "TYPE")
 	return c
 }
@@ -23813,8 +23813,8 @@ func (c TypeKey) Cache() Cacheable {
 
 type Unlink Completed
 
-func (b *Builder) Unlink() (c Unlink) {
-	c = Unlink{cs: b.get(), ks: b.ks}
+func (b Builder) Unlink() (c Unlink) {
+	c = Unlink{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "UNLINK")
 	return c
 }
@@ -23847,8 +23847,8 @@ func (c UnlinkKey) Build() Completed {
 
 type Unsubscribe Completed
 
-func (b *Builder) Unsubscribe() (c Unsubscribe) {
-	c = Unsubscribe{cs: b.get(), ks: b.ks, cf: noRetTag}
+func (b Builder) Unsubscribe() (c Unsubscribe) {
+	c = Unsubscribe{cs: get(), ks: b.ks, cf: noRetTag}
 	c.cs.s = append(c.cs.s, "UNSUBSCRIBE")
 	return c
 }
@@ -23875,8 +23875,8 @@ func (c UnsubscribeChannel) Build() Completed {
 
 type Unwatch Completed
 
-func (b *Builder) Unwatch() (c Unwatch) {
-	c = Unwatch{cs: b.get(), ks: b.ks}
+func (b Builder) Unwatch() (c Unwatch) {
+	c = Unwatch{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "UNWATCH")
 	return c
 }
@@ -23887,8 +23887,8 @@ func (c Unwatch) Build() Completed {
 
 type Wait Completed
 
-func (b *Builder) Wait() (c Wait) {
-	c = Wait{cs: b.get(), ks: b.ks, cf: blockTag}
+func (b Builder) Wait() (c Wait) {
+	c = Wait{cs: get(), ks: b.ks, cf: blockTag}
 	c.cs.s = append(c.cs.s, "WAIT")
 	return c
 }
@@ -23913,8 +23913,8 @@ func (c WaitTimeout) Build() Completed {
 
 type Watch Completed
 
-func (b *Builder) Watch() (c Watch) {
-	c = Watch{cs: b.get(), ks: b.ks}
+func (b Builder) Watch() (c Watch) {
+	c = Watch{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "WATCH")
 	return c
 }
@@ -23947,8 +23947,8 @@ func (c WatchKey) Build() Completed {
 
 type Xack Completed
 
-func (b *Builder) Xack() (c Xack) {
-	c = Xack{cs: b.get(), ks: b.ks}
+func (b Builder) Xack() (c Xack) {
+	c = Xack{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "XACK")
 	return c
 }
@@ -23988,8 +23988,8 @@ func (c XackKey) Group(group string) XackGroup {
 
 type Xadd Completed
 
-func (b *Builder) Xadd() (c Xadd) {
-	c = Xadd{cs: b.get(), ks: b.ks}
+func (b Builder) Xadd() (c Xadd) {
+	c = Xadd{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "XADD")
 	return c
 }
@@ -24127,8 +24127,8 @@ func (c XaddTrimThreshold) Id(id string) XaddId {
 
 type Xautoclaim Completed
 
-func (b *Builder) Xautoclaim() (c Xautoclaim) {
-	c = Xautoclaim{cs: b.get(), ks: b.ks}
+func (b Builder) Xautoclaim() (c Xautoclaim) {
+	c = Xautoclaim{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "XAUTOCLAIM")
 	return c
 }
@@ -24204,8 +24204,8 @@ func (c XautoclaimStart) Build() Completed {
 
 type Xclaim Completed
 
-func (b *Builder) Xclaim() (c Xclaim) {
-	c = Xclaim{cs: b.get(), ks: b.ks}
+func (b Builder) Xclaim() (c Xclaim) {
+	c = Xclaim{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "XCLAIM")
 	return c
 }
@@ -24364,8 +24364,8 @@ func (c XclaimTime) Build() Completed {
 
 type Xdel Completed
 
-func (b *Builder) Xdel() (c Xdel) {
-	c = Xdel{cs: b.get(), ks: b.ks}
+func (b Builder) Xdel() (c Xdel) {
+	c = Xdel{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "XDEL")
 	return c
 }
@@ -24398,8 +24398,8 @@ func (c XdelKey) Id(id ...string) XdelId {
 
 type XgroupCreate Completed
 
-func (b *Builder) XgroupCreate() (c XgroupCreate) {
-	c = XgroupCreate{cs: b.get(), ks: b.ks}
+func (b Builder) XgroupCreate() (c XgroupCreate) {
+	c = XgroupCreate{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "XGROUP", "CREATE")
 	return c
 }
@@ -24445,8 +24445,8 @@ func (c XgroupCreateMkstream) Build() Completed {
 
 type XgroupCreateconsumer Completed
 
-func (b *Builder) XgroupCreateconsumer() (c XgroupCreateconsumer) {
-	c = XgroupCreateconsumer{cs: b.get(), ks: b.ks}
+func (b Builder) XgroupCreateconsumer() (c XgroupCreateconsumer) {
+	c = XgroupCreateconsumer{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "XGROUP", "CREATECONSUMER")
 	return c
 }
@@ -24481,8 +24481,8 @@ func (c XgroupCreateconsumerKey) Groupname(groupname string) XgroupCreateconsume
 
 type XgroupDelconsumer Completed
 
-func (b *Builder) XgroupDelconsumer() (c XgroupDelconsumer) {
-	c = XgroupDelconsumer{cs: b.get(), ks: b.ks}
+func (b Builder) XgroupDelconsumer() (c XgroupDelconsumer) {
+	c = XgroupDelconsumer{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "XGROUP", "DELCONSUMER")
 	return c
 }
@@ -24517,8 +24517,8 @@ func (c XgroupDelconsumerKey) Groupname(groupname string) XgroupDelconsumerGroup
 
 type XgroupDestroy Completed
 
-func (b *Builder) XgroupDestroy() (c XgroupDestroy) {
-	c = XgroupDestroy{cs: b.get(), ks: b.ks}
+func (b Builder) XgroupDestroy() (c XgroupDestroy) {
+	c = XgroupDestroy{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "XGROUP", "DESTROY")
 	return c
 }
@@ -24546,8 +24546,8 @@ func (c XgroupDestroyKey) Groupname(groupname string) XgroupDestroyGroupname {
 
 type XgroupHelp Completed
 
-func (b *Builder) XgroupHelp() (c XgroupHelp) {
-	c = XgroupHelp{cs: b.get(), ks: b.ks}
+func (b Builder) XgroupHelp() (c XgroupHelp) {
+	c = XgroupHelp{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "XGROUP", "HELP")
 	return c
 }
@@ -24558,8 +24558,8 @@ func (c XgroupHelp) Build() Completed {
 
 type XgroupSetid Completed
 
-func (b *Builder) XgroupSetid() (c XgroupSetid) {
-	c = XgroupSetid{cs: b.get(), ks: b.ks}
+func (b Builder) XgroupSetid() (c XgroupSetid) {
+	c = XgroupSetid{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "XGROUP", "SETID")
 	return c
 }
@@ -24594,8 +24594,8 @@ func (c XgroupSetidKey) Groupname(groupname string) XgroupSetidGroupname {
 
 type XinfoConsumers Completed
 
-func (b *Builder) XinfoConsumers() (c XinfoConsumers) {
-	c = XinfoConsumers{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) XinfoConsumers() (c XinfoConsumers) {
+	c = XinfoConsumers{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "XINFO", "CONSUMERS")
 	return c
 }
@@ -24623,8 +24623,8 @@ func (c XinfoConsumersKey) Groupname(groupname string) XinfoConsumersGroupname {
 
 type XinfoGroups Completed
 
-func (b *Builder) XinfoGroups() (c XinfoGroups) {
-	c = XinfoGroups{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) XinfoGroups() (c XinfoGroups) {
+	c = XinfoGroups{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "XINFO", "GROUPS")
 	return c
 }
@@ -24645,8 +24645,8 @@ func (c XinfoGroupsKey) Build() Completed {
 
 type XinfoHelp Completed
 
-func (b *Builder) XinfoHelp() (c XinfoHelp) {
-	c = XinfoHelp{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) XinfoHelp() (c XinfoHelp) {
+	c = XinfoHelp{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "XINFO", "HELP")
 	return c
 }
@@ -24657,8 +24657,8 @@ func (c XinfoHelp) Build() Completed {
 
 type XinfoStream Completed
 
-func (b *Builder) XinfoStream() (c XinfoStream) {
-	c = XinfoStream{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) XinfoStream() (c XinfoStream) {
+	c = XinfoStream{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "XINFO", "STREAM")
 	return c
 }
@@ -24701,8 +24701,8 @@ func (c XinfoStreamKey) Build() Completed {
 
 type Xlen Completed
 
-func (b *Builder) Xlen() (c Xlen) {
-	c = Xlen{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Xlen() (c Xlen) {
+	c = Xlen{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "XLEN")
 	return c
 }
@@ -24723,8 +24723,8 @@ func (c XlenKey) Build() Completed {
 
 type Xpending Completed
 
-func (b *Builder) Xpending() (c Xpending) {
-	c = Xpending{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Xpending() (c Xpending) {
+	c = Xpending{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "XPENDING")
 	return c
 }
@@ -24795,8 +24795,8 @@ func (c XpendingKey) Group(group string) XpendingGroup {
 
 type Xrange Completed
 
-func (b *Builder) Xrange() (c Xrange) {
-	c = Xrange{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Xrange() (c Xrange) {
+	c = Xrange{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "XRANGE")
 	return c
 }
@@ -24842,8 +24842,8 @@ func (c XrangeStart) End(end string) XrangeEnd {
 
 type Xread Completed
 
-func (b *Builder) Xread() (c Xread) {
-	c = Xread{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Xread() (c Xread) {
+	c = Xread{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "XREAD")
 	return c
 }
@@ -24926,8 +24926,8 @@ func (c XreadStreams) Key(key ...string) XreadKey {
 
 type Xreadgroup Completed
 
-func (b *Builder) Xreadgroup() (c Xreadgroup) {
-	c = Xreadgroup{cs: b.get(), ks: b.ks}
+func (b Builder) Xreadgroup() (c Xreadgroup) {
+	c = Xreadgroup{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "XREADGROUP")
 	return c
 }
@@ -25039,8 +25039,8 @@ func (c XreadgroupStreams) Key(key ...string) XreadgroupKey {
 
 type Xrevrange Completed
 
-func (b *Builder) Xrevrange() (c Xrevrange) {
-	c = Xrevrange{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Xrevrange() (c Xrevrange) {
+	c = Xrevrange{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "XREVRANGE")
 	return c
 }
@@ -25086,8 +25086,8 @@ func (c XrevrangeStart) Build() Completed {
 
 type Xtrim Completed
 
-func (b *Builder) Xtrim() (c Xtrim) {
-	c = Xtrim{cs: b.get(), ks: b.ks}
+func (b Builder) Xtrim() (c Xtrim) {
+	c = Xtrim{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "XTRIM")
 	return c
 }
@@ -25179,8 +25179,8 @@ func (c XtrimTrimThreshold) Build() Completed {
 
 type Zadd Completed
 
-func (b *Builder) Zadd() (c Zadd) {
-	c = Zadd{cs: b.get(), ks: b.ks}
+func (b Builder) Zadd() (c Zadd) {
+	c = Zadd{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "ZADD")
 	return c
 }
@@ -25343,8 +25343,8 @@ func (c ZaddScoreMember) Build() Completed {
 
 type Zcard Completed
 
-func (b *Builder) Zcard() (c Zcard) {
-	c = Zcard{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Zcard() (c Zcard) {
+	c = Zcard{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "ZCARD")
 	return c
 }
@@ -25369,8 +25369,8 @@ func (c ZcardKey) Cache() Cacheable {
 
 type Zcount Completed
 
-func (b *Builder) Zcount() (c Zcount) {
-	c = Zcount{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Zcount() (c Zcount) {
+	c = Zcount{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "ZCOUNT")
 	return c
 }
@@ -25409,8 +25409,8 @@ func (c ZcountMin) Max(max float64) ZcountMax {
 
 type Zdiff Completed
 
-func (b *Builder) Zdiff() (c Zdiff) {
-	c = Zdiff{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Zdiff() (c Zdiff) {
+	c = Zdiff{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "ZDIFF")
 	return c
 }
@@ -25461,8 +25461,8 @@ func (c ZdiffWithscores) Build() Completed {
 
 type Zdiffstore Completed
 
-func (b *Builder) Zdiffstore() (c Zdiffstore) {
-	c = Zdiffstore{cs: b.get(), ks: b.ks}
+func (b Builder) Zdiffstore() (c Zdiffstore) {
+	c = Zdiffstore{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "ZDIFFSTORE")
 	return c
 }
@@ -25512,8 +25512,8 @@ func (c ZdiffstoreNumkeys) Key(key ...string) ZdiffstoreKey {
 
 type Zincrby Completed
 
-func (b *Builder) Zincrby() (c Zincrby) {
-	c = Zincrby{cs: b.get(), ks: b.ks}
+func (b Builder) Zincrby() (c Zincrby) {
+	c = Zincrby{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "ZINCRBY")
 	return c
 }
@@ -25548,8 +25548,8 @@ func (c ZincrbyMember) Build() Completed {
 
 type Zinter Completed
 
-func (b *Builder) Zinter() (c Zinter) {
-	c = Zinter{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Zinter() (c Zinter) {
+	c = Zinter{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "ZINTER")
 	return c
 }
@@ -25690,8 +25690,8 @@ func (c ZinterWithscores) Build() Completed {
 
 type Zintercard Completed
 
-func (b *Builder) Zintercard() (c Zintercard) {
-	c = Zintercard{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Zintercard() (c Zintercard) {
+	c = Zintercard{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "ZINTERCARD")
 	return c
 }
@@ -25742,8 +25742,8 @@ func (c ZintercardNumkeys) Key(key ...string) ZintercardKey {
 
 type Zinterstore Completed
 
-func (b *Builder) Zinterstore() (c Zinterstore) {
-	c = Zinterstore{cs: b.get(), ks: b.ks}
+func (b Builder) Zinterstore() (c Zinterstore) {
+	c = Zinterstore{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "ZINTERSTORE")
 	return c
 }
@@ -25863,8 +25863,8 @@ func (c ZinterstoreWeights) Build() Completed {
 
 type Zlexcount Completed
 
-func (b *Builder) Zlexcount() (c Zlexcount) {
-	c = Zlexcount{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Zlexcount() (c Zlexcount) {
+	c = Zlexcount{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "ZLEXCOUNT")
 	return c
 }
@@ -25903,8 +25903,8 @@ func (c ZlexcountMin) Max(max string) ZlexcountMax {
 
 type Zmpop Completed
 
-func (b *Builder) Zmpop() (c Zmpop) {
-	c = Zmpop{cs: b.get(), ks: b.ks}
+func (b Builder) Zmpop() (c Zmpop) {
+	c = Zmpop{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "ZMPOP")
 	return c
 }
@@ -25978,8 +25978,8 @@ func (c ZmpopWhereMin) Build() Completed {
 
 type Zmscore Completed
 
-func (b *Builder) Zmscore() (c Zmscore) {
-	c = Zmscore{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Zmscore() (c Zmscore) {
+	c = Zmscore{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "ZMSCORE")
 	return c
 }
@@ -26016,8 +26016,8 @@ func (c ZmscoreMember) Cache() Cacheable {
 
 type Zpopmax Completed
 
-func (b *Builder) Zpopmax() (c Zpopmax) {
-	c = Zpopmax{cs: b.get(), ks: b.ks}
+func (b Builder) Zpopmax() (c Zpopmax) {
+	c = Zpopmax{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "ZPOPMAX")
 	return c
 }
@@ -26049,8 +26049,8 @@ func (c ZpopmaxKey) Build() Completed {
 
 type Zpopmin Completed
 
-func (b *Builder) Zpopmin() (c Zpopmin) {
-	c = Zpopmin{cs: b.get(), ks: b.ks}
+func (b Builder) Zpopmin() (c Zpopmin) {
+	c = Zpopmin{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "ZPOPMIN")
 	return c
 }
@@ -26082,8 +26082,8 @@ func (c ZpopminKey) Build() Completed {
 
 type Zrandmember Completed
 
-func (b *Builder) Zrandmember() (c Zrandmember) {
-	c = Zrandmember{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Zrandmember() (c Zrandmember) {
+	c = Zrandmember{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "ZRANDMEMBER")
 	return c
 }
@@ -26126,8 +26126,8 @@ func (c ZrandmemberOptionsWithscores) Build() Completed {
 
 type Zrange Completed
 
-func (b *Builder) Zrange() (c Zrange) {
-	c = Zrange{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Zrange() (c Zrange) {
+	c = Zrange{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "ZRANGE")
 	return c
 }
@@ -26286,8 +26286,8 @@ func (c ZrangeWithscores) Cache() Cacheable {
 
 type Zrangebylex Completed
 
-func (b *Builder) Zrangebylex() (c Zrangebylex) {
-	c = Zrangebylex{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Zrangebylex() (c Zrangebylex) {
+	c = Zrangebylex{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "ZRANGEBYLEX")
 	return c
 }
@@ -26341,8 +26341,8 @@ func (c ZrangebylexMin) Max(max string) ZrangebylexMax {
 
 type Zrangebyscore Completed
 
-func (b *Builder) Zrangebyscore() (c Zrangebyscore) {
-	c = Zrangebyscore{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Zrangebyscore() (c Zrangebyscore) {
+	c = Zrangebyscore{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "ZRANGEBYSCORE")
 	return c
 }
@@ -26416,8 +26416,8 @@ func (c ZrangebyscoreWithscores) Cache() Cacheable {
 
 type Zrangestore Completed
 
-func (b *Builder) Zrangestore() (c Zrangestore) {
-	c = Zrangestore{cs: b.get(), ks: b.ks}
+func (b Builder) Zrangestore() (c Zrangestore) {
+	c = Zrangestore{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "ZRANGESTORE")
 	return c
 }
@@ -26531,8 +26531,8 @@ func (c ZrangestoreSrc) Min(min string) ZrangestoreMin {
 
 type Zrank Completed
 
-func (b *Builder) Zrank() (c Zrank) {
-	c = Zrank{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Zrank() (c Zrank) {
+	c = Zrank{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "ZRANK")
 	return c
 }
@@ -26564,8 +26564,8 @@ func (c ZrankMember) Cache() Cacheable {
 
 type Zrem Completed
 
-func (b *Builder) Zrem() (c Zrem) {
-	c = Zrem{cs: b.get(), ks: b.ks}
+func (b Builder) Zrem() (c Zrem) {
+	c = Zrem{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "ZREM")
 	return c
 }
@@ -26598,8 +26598,8 @@ func (c ZremMember) Build() Completed {
 
 type Zremrangebylex Completed
 
-func (b *Builder) Zremrangebylex() (c Zremrangebylex) {
-	c = Zremrangebylex{cs: b.get(), ks: b.ks}
+func (b Builder) Zremrangebylex() (c Zremrangebylex) {
+	c = Zremrangebylex{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "ZREMRANGEBYLEX")
 	return c
 }
@@ -26634,8 +26634,8 @@ func (c ZremrangebylexMin) Max(max string) ZremrangebylexMax {
 
 type Zremrangebyrank Completed
 
-func (b *Builder) Zremrangebyrank() (c Zremrangebyrank) {
-	c = Zremrangebyrank{cs: b.get(), ks: b.ks}
+func (b Builder) Zremrangebyrank() (c Zremrangebyrank) {
+	c = Zremrangebyrank{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "ZREMRANGEBYRANK")
 	return c
 }
@@ -26670,8 +26670,8 @@ func (c ZremrangebyrankStop) Build() Completed {
 
 type Zremrangebyscore Completed
 
-func (b *Builder) Zremrangebyscore() (c Zremrangebyscore) {
-	c = Zremrangebyscore{cs: b.get(), ks: b.ks}
+func (b Builder) Zremrangebyscore() (c Zremrangebyscore) {
+	c = Zremrangebyscore{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "ZREMRANGEBYSCORE")
 	return c
 }
@@ -26706,8 +26706,8 @@ func (c ZremrangebyscoreMin) Max(max float64) ZremrangebyscoreMax {
 
 type Zrevrange Completed
 
-func (b *Builder) Zrevrange() (c Zrevrange) {
-	c = Zrevrange{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Zrevrange() (c Zrevrange) {
+	c = Zrevrange{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "ZREVRANGE")
 	return c
 }
@@ -26761,8 +26761,8 @@ func (c ZrevrangeWithscores) Cache() Cacheable {
 
 type Zrevrangebylex Completed
 
-func (b *Builder) Zrevrangebylex() (c Zrevrangebylex) {
-	c = Zrevrangebylex{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Zrevrangebylex() (c Zrevrangebylex) {
+	c = Zrevrangebylex{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "ZREVRANGEBYLEX")
 	return c
 }
@@ -26816,8 +26816,8 @@ func (c ZrevrangebylexMin) Cache() Cacheable {
 
 type Zrevrangebyscore Completed
 
-func (b *Builder) Zrevrangebyscore() (c Zrevrangebyscore) {
-	c = Zrevrangebyscore{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Zrevrangebyscore() (c Zrevrangebyscore) {
+	c = Zrevrangebyscore{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "ZREVRANGEBYSCORE")
 	return c
 }
@@ -26891,8 +26891,8 @@ func (c ZrevrangebyscoreWithscores) Cache() Cacheable {
 
 type Zrevrank Completed
 
-func (b *Builder) Zrevrank() (c Zrevrank) {
-	c = Zrevrank{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Zrevrank() (c Zrevrank) {
+	c = Zrevrank{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "ZREVRANK")
 	return c
 }
@@ -26924,8 +26924,8 @@ func (c ZrevrankMember) Cache() Cacheable {
 
 type Zscan Completed
 
-func (b *Builder) Zscan() (c Zscan) {
-	c = Zscan{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Zscan() (c Zscan) {
+	c = Zscan{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "ZSCAN")
 	return c
 }
@@ -26980,8 +26980,8 @@ func (c ZscanMatch) Build() Completed {
 
 type Zscore Completed
 
-func (b *Builder) Zscore() (c Zscore) {
-	c = Zscore{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Zscore() (c Zscore) {
+	c = Zscore{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "ZSCORE")
 	return c
 }
@@ -27013,8 +27013,8 @@ func (c ZscoreMember) Cache() Cacheable {
 
 type Zunion Completed
 
-func (b *Builder) Zunion() (c Zunion) {
-	c = Zunion{cs: b.get(), ks: b.ks, cf: readonly}
+func (b Builder) Zunion() (c Zunion) {
+	c = Zunion{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "ZUNION")
 	return c
 }
@@ -27155,8 +27155,8 @@ func (c ZunionWithscores) Build() Completed {
 
 type Zunionstore Completed
 
-func (b *Builder) Zunionstore() (c Zunionstore) {
-	c = Zunionstore{cs: b.get(), ks: b.ks}
+func (b Builder) Zunionstore() (c Zunionstore) {
+	c = Zunionstore{cs: get(), ks: b.ks}
 	c.cs.s = append(c.cs.s, "ZUNIONSTORE")
 	return c
 }

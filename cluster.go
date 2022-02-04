@@ -17,13 +17,13 @@ var ErrNoSlot = errors.New("the slot has no redis node")
 
 type clusterClient struct {
 	slots  [16384]conn
-	cmd    *cmds.Builder
 	opt    *ClientOption
 	conns  map[string]conn
 	connFn connFn
 	sc     call
 	mu     sync.RWMutex
 	closed uint32
+	cmd    cmds.Builder
 }
 
 func newClusterClient(opt *ClientOption, connFn connFn) (client *clusterClient, err error) {
@@ -226,7 +226,7 @@ func (c *clusterClient) pickOrNew(addr string) (p conn) {
 	return p
 }
 
-func (c *clusterClient) B() *cmds.Builder {
+func (c *clusterClient) B() cmds.Builder {
 	return c.cmd
 }
 
@@ -256,7 +256,7 @@ process:
 		}
 	}
 ret:
-	c.cmd.Put(cmd.CommandSlice())
+	cmds.Put(cmd.CommandSlice())
 	return resp
 }
 
@@ -287,7 +287,7 @@ process:
 		}
 	}
 ret:
-	c.cmd.Put(cmd.CommandSlice())
+	cmds.Put(cmd.CommandSlice())
 	return resp
 }
 
@@ -315,7 +315,6 @@ func (c *clusterClient) shouldRefreshRetry(err error) (should bool) {
 }
 
 type dedicatedClusterClient struct {
-	cmd    *cmds.Builder
 	client *clusterClient
 	conn   conn
 	wire   wire
@@ -323,6 +322,7 @@ type dedicatedClusterClient struct {
 	onDisconnect func(error)
 
 	mu   sync.Mutex
+	cmd  cmds.Builder
 	slot uint16
 	pool bool
 }
@@ -371,7 +371,7 @@ func (c *dedicatedClusterClient) release() {
 	}
 }
 
-func (c *dedicatedClusterClient) B() *cmds.Builder {
+func (c *dedicatedClusterClient) B() cmds.Builder {
 	return c.cmd
 }
 
@@ -386,7 +386,7 @@ retry:
 			goto retry
 		}
 	}
-	c.cmd.Put(cmd.CommandSlice())
+	cmds.Put(cmd.CommandSlice())
 	return resp
 }
 
@@ -412,7 +412,7 @@ retry:
 		}
 	}
 	for _, cmd := range multi {
-		c.cmd.Put(cmd.CommandSlice())
+		cmds.Put(cmd.CommandSlice())
 	}
 	return resp
 }

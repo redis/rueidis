@@ -66,15 +66,15 @@ type sentinelClient struct {
 	connFn    connFn
 	events    chan sentinelEvent
 	sentinels *list.List
-	cmd       *cmds.Builder
 	mAddr     string
 	sAddr     string
 	sc        call
 	mu        sync.Mutex
 	closed    uint32
+	cmd       cmds.Builder
 }
 
-func (c *sentinelClient) B() *cmds.Builder {
+func (c *sentinelClient) B() cmds.Builder {
 	return c.cmd
 }
 
@@ -84,7 +84,7 @@ retry:
 	if c.shouldRetry(resp.NonRedisError()) {
 		goto retry
 	}
-	c.cmd.Put(cmd.CommandSlice())
+	cmds.Put(cmd.CommandSlice())
 	return resp
 }
 
@@ -94,7 +94,7 @@ retry:
 	if c.shouldRetry(resp.NonRedisError()) {
 		goto retry
 	}
-	c.cmd.Put(cmd.CommandSlice())
+	cmds.Put(cmd.CommandSlice())
 	return resp
 }
 
@@ -257,8 +257,8 @@ func (c *sentinelClient) listWatch(cc conn) (master string, sentinels []string, 
 	sentinelsCMD := c.cmd.SentinelSentinels().Master(c.mOpt.Sentinel.MasterSet).Build()
 	getMasterCMD := c.cmd.SentinelGetMasterAddrByName().Master(c.mOpt.Sentinel.MasterSet).Build()
 	defer func() {
-		c.cmd.Put(sentinelsCMD.CommandSlice())
-		c.cmd.Put(getMasterCMD.CommandSlice())
+		cmds.Put(sentinelsCMD.CommandSlice())
+		cmds.Put(getMasterCMD.CommandSlice())
 	}()
 
 	if err = cc.Do(ctx, cmds.SentinelSubscribe).Error(); err != nil {

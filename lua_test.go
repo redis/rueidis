@@ -24,7 +24,7 @@ func TestNewLuaScript(t *testing.T) {
 	eval := false
 
 	c := &client{
-		BFn: func() *cmds.Builder {
+		BFn: func() cmds.Builder {
 			return cmds.NewBuilder(cmds.NoSlot)
 		},
 		DoFn: func(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
@@ -57,7 +57,7 @@ func TestNewLuaScriptReadOnly(t *testing.T) {
 	eval := false
 
 	c := &client{
-		BFn: func() *cmds.Builder {
+		BFn: func() cmds.Builder {
 			return cmds.NewBuilder(cmds.NoSlot)
 		},
 		DoFn: func(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
@@ -80,18 +80,18 @@ func TestNewLuaScriptReadOnly(t *testing.T) {
 }
 
 type client struct {
-	BFn         func() *cmds.Builder
+	BFn         func() cmds.Builder
 	DoFn        func(ctx context.Context, cmd cmds.Completed) (resp RedisResult)
 	DoCacheFn   func(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp RedisResult)
 	DedicatedFn func(fn func(DedicatedClient) error) (err error)
 	CloseFn     func()
 }
 
-func (c *client) B() *cmds.Builder {
+func (c *client) B() cmds.Builder {
 	if c.BFn != nil {
 		return c.BFn()
 	}
-	return nil
+	return cmds.Builder{}
 }
 
 func (c *client) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {

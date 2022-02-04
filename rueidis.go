@@ -99,7 +99,7 @@ type SentinelOption struct {
 type Client interface {
 	// B is the getter function to the command builder for the client
 	// If the client is a cluster client, the command builder also prohibits cross key slots in one command.
-	B() *cmds.Builder
+	B() cmds.Builder
 	// Do is the method sending user's redis command building from the B() to a redis node.
 	//  client.Do(ctx, client.B().Get().Key("k").Build()).ToString()
 	// All concurrent non-blocking commands will be pipelined automatically and have better throughput.
@@ -122,6 +122,7 @@ type Client interface {
 	// However, one should try to avoid CAS operation but use Lua script instead, because occupying a connection
 	// is not good for performance.
 	Dedicated(fn func(DedicatedClient) error) (err error)
+
 	// Close will make further calls to the client be rejected with ErrClosing,
 	// and Close will wait until all pending calls finished.
 	Close()
@@ -132,7 +133,7 @@ type Client interface {
 // If the DedicatedClient is obtained from cluster client, the first command to it must have a Key() to identify the redis node.
 type DedicatedClient interface {
 	// B is inherited from the Client
-	B() *cmds.Builder
+	B() cmds.Builder
 	// Do is the same as Client
 	// The cmd parameter is recycled after passing into Do() and should not be reused.
 	Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult)

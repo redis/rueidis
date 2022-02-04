@@ -511,7 +511,7 @@ func toGoName(paramName string) string {
 }
 
 func printRootBuilder(w io.Writer, root goStruct) {
-	fmt.Fprintf(w, "func (b *Builder) %s() (c %s) {\n", root.FullName, root.FullName)
+	fmt.Fprintf(w, "func (b Builder) %s() (c %s) {\n", root.FullName, root.FullName)
 
 	var appends []string
 	for _, cmd := range root.BuildDef.Command {
@@ -519,9 +519,9 @@ func printRootBuilder(w io.Writer, root goStruct) {
 	}
 
 	if tag := rootCf(root); tag != "" {
-		fmt.Fprintf(w, "\tc = %s{cs: b.get(), ks: b.ks, cf: %s}\n", root.FullName, tag)
+		fmt.Fprintf(w, "\tc = %s{cs: get(), ks: b.ks, cf: %s}\n", root.FullName, tag)
 	} else {
-		fmt.Fprintf(w, "\tc = %s{cs: b.get(), ks: b.ks}\n", root.FullName)
+		fmt.Fprintf(w, "\tc = %s{cs: get(), ks: b.ks}\n", root.FullName)
 	}
 	fmt.Fprintf(w, "\tc.cs.s = append(c.cs.s, %s)\n", strings.Join(appends, ", "))
 	fmt.Fprintf(w, "\treturn c\n")
