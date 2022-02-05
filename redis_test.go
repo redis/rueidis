@@ -32,7 +32,7 @@ func testFlush(t *testing.T, client Client) {
 	ctx := context.Background()
 
 	keys := 1000
-	para := 10
+	para := 8
 
 	kvs := make(map[string]string, keys)
 	for i := 0; i < keys; i++ {
@@ -94,7 +94,7 @@ func testFlush(t *testing.T, client Client) {
 func testSETGET(t *testing.T, client Client) {
 	ctx := context.Background()
 	keys := 10000
-	para := 10
+	para := 8
 
 	kvs := make(map[string]string, keys)
 	for i := 0; i < keys; i++ {

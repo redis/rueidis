@@ -236,7 +236,7 @@ func TestIgnoreOutOfBandDataDuringSyncMode(t *testing.T) {
 func TestWriteSinglePipelineFlush(t *testing.T) {
 	p, mock, cancel, _ := setup(t, ClientOption{})
 	defer cancel()
-	times := 5000
+	times := 2000
 	wg := sync.WaitGroup{}
 	wg.Add(times)
 
@@ -264,7 +264,7 @@ func TestWriteMultiFlush(t *testing.T) {
 func TestWriteMultiPipelineFlush(t *testing.T) {
 	p, mock, cancel, _ := setup(t, ClientOption{})
 	defer cancel()
-	times := 5000
+	times := 2000
 	wg := sync.WaitGroup{}
 	wg.Add(times)
 
@@ -301,7 +301,7 @@ func TestResponseSequenceWithPushMessageInjected(t *testing.T) {
 	p, mock, cancel, _ := setup(t, ClientOption{})
 	defer cancel()
 
-	times := 5000
+	times := 2000
 	wg := sync.WaitGroup{}
 	wg.Add(times)
 	for i := 0; i < times; i++ {
@@ -356,9 +356,10 @@ func TestClientSideCaching(t *testing.T) {
 	// single flight
 	miss := uint64(0)
 	hits := uint64(0)
+	times := 2000
 	wg := sync.WaitGroup{}
-	wg.Add(5000)
-	for i := 0; i < 5000; i++ {
+	wg.Add(times)
+	for i := 0; i < times; i++ {
 		go func() {
 			defer wg.Done()
 			v, _ := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage()
@@ -378,7 +379,7 @@ func TestClientSideCaching(t *testing.T) {
 		t.Fatalf("unexpected cache miss count %v", v)
 	}
 
-	if v := atomic.LoadUint64(&hits); v != 4999 {
+	if v := atomic.LoadUint64(&hits); v != uint64(times-1) {
 		t.Fatalf("unexpected cache hits count %v", v)
 	}
 
@@ -615,8 +616,9 @@ func TestExitOnPubSubSubscribeWriteError(t *testing.T) {
 
 	count := int64(0)
 	wg := sync.WaitGroup{}
-	wg.Add(5000)
-	for i := 0; i < 5000; i++ {
+	times := 2000
+	wg.Add(times)
+	for i := 0; i < times; i++ {
 		go func() {
 			defer wg.Done()
 			atomic.AddInt64(&count, 1)
@@ -654,8 +656,9 @@ func TestExitAllGoroutineOnWriteError(t *testing.T) {
 
 	closeConn()
 	wg := sync.WaitGroup{}
-	wg.Add(5000)
-	for i := 0; i < 5000; i++ {
+	times := 2000
+	wg.Add(times)
+	for i := 0; i < times; i++ {
 		go func() {
 			defer wg.Done()
 			if err := conn.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
@@ -708,8 +711,9 @@ func TestExitAllGoroutineOnReadError(t *testing.T) {
 	}()
 
 	wg := sync.WaitGroup{}
-	wg.Add(5000)
-	for i := 0; i < 5000; i++ {
+	times := 2000
+	wg.Add(times)
+	for i := 0; i < times; i++ {
 		go func() {
 			defer wg.Done()
 			if err := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
@@ -727,7 +731,7 @@ func TestCloseAndWaitPendingCMDs(t *testing.T) {
 	p, mock, _, _ := setup(t, ClientOption{})
 
 	var (
-		loop = 5000
+		loop = 2000
 		wg   sync.WaitGroup
 	)
 
