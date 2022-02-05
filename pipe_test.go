@@ -448,6 +448,8 @@ func TestPubSub(t *testing.T) {
 			builder.Psubscribe().Pattern("b").Build(),
 			builder.Unsubscribe().Channel("c").Build(),
 			builder.Punsubscribe().Pattern("d").Build(),
+			builder.Ssubscribe().Channel("c").Build(),
+			builder.Sunsubscribe().Channel("d").Build(),
 		}
 
 		go func() {

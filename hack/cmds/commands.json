@@ -3923,6 +3923,33 @@
           "SAVE"
         ],
         "optional": true
+      },
+      {
+        "name": "now",
+        "type": "enum",
+        "enum": [
+          "NOW"
+        ],
+        "since": "7.0.0",
+        "optional": true
+      },
+      {
+        "name": "force",
+        "type": "enum",
+        "enum": [
+          "FORCE"
+        ],
+        "since": "7.0.0",
+        "optional": true
+      },
+      {
+        "name": "abort",
+        "type": "enum",
+        "enum": [
+          "ABORT"
+        ],
+        "since": "7.0.0",
+        "optional": true
       }
     ],
     "since": "1.0.0",
@@ -6195,5 +6222,244 @@
     "summary": "Show helpful text about the different subcommands.",
     "since": "2.8.13",
     "group": "server"
+  },
+  "ACL DRYRUN": {
+    "arguments": [
+      {
+        "name": "username",
+        "type": "string"
+      },
+      {
+        "name": "command",
+        "type": "string"
+      },
+      {
+        "name": "arg",
+        "type": "string",
+        "optional": true,
+        "multiple": true
+      }
+    ]
+  },
+  "COMMAND DOCS": {
+    "arguments": [
+      {
+        "name": "command-name",
+        "type": "string",
+        "optional": true,
+        "multiple": true
+      }
+    ]
+  },
+  "COMMAND LIST": {
+    "arguments": [
+      {
+        "name": "filterby",
+        "type": "enum",
+        "command": "FILTERBY",
+        "optional": true,
+        "enum": [
+          "MODULE name",
+          "ACLCAT category",
+          "PATTERN pattern"
+        ]
+      }
+    ]
+  },
+  "FCALL": {
+    "arguments": [
+      {
+        "name": "function",
+        "type": "string"
+      },
+      {
+        "name": "numkeys",
+        "type": "integer"
+      },
+      {
+        "name": "key",
+        "type": "key",
+        "multiple": true
+      },
+      {
+        "name": "arg",
+        "type": "string",
+        "multiple": true
+      }
+    ]
+  },
+  "FCALL_RO": {
+    "arguments": [
+      {
+        "name": "function",
+        "type": "string"
+      },
+      {
+        "name": "numkeys",
+        "type": "integer"
+      },
+      {
+        "name": "key",
+        "type": "key",
+        "multiple": true
+      },
+      {
+        "name": "arg",
+        "type": "string",
+        "multiple": true
+      }
+    ]
+  },
+  "FUNCTION DELETE": {
+    "arguments": [
+      {
+        "name": "function-name",
+        "type": "string"
+      }
+    ]
+  },
+  "FUNCTION DUMP": {
+
+  },
+  "FUNCTION FLUSH": {
+    "arguments": [
+      {
+        "name": "async",
+        "type": "enum",
+        "optional": true,
+        "enum": [
+          "ASYNC",
+          "SYNC"
+        ]
+      }
+    ]
+  },
+  "FUNCTION HELP": {
+
+  },
+  "FUNCTION KILL": {
+
+  },
+  "FUNCTION LIST": {
+    "arguments": [
+      {
+        "name": "library-name-pattern",
+        "type": "string",
+        "command": "LIBRARYNAME",
+        "optional": true
+      },
+      {
+        "name": "withcode",
+        "type": "enum",
+        "enum": [
+          "WITHCODE"
+        ],
+        "optional": true
+      }
+    ]
+  },
+  "FUNCTION LOAD": {
+    "arguments": [
+      {
+        "name": "engine-name",
+        "type": "string"
+      },
+      {
+        "name": "library-name",
+        "type": "string"
+      },
+      {
+        "name": "replace",
+        "type": "enum",
+        "enum": [
+          "REPLACE"
+        ],
+        "optional": true
+      },
+      {
+        "name": "library-description",
+        "type": "string",
+        "command": "DESC",
+        "optional": true
+      },
+      {
+        "name": "function-code",
+        "type": "string"
+      }
+    ]
+  },
+  "FUNCTION RESTORE": {
+    "arguments": [
+      {
+        "name": "serialized-value",
+        "type": "string"
+      },
+      {
+        "name": "policy",
+        "type": "enum",
+        "optional": true,
+        "enum": [
+          "FLUSH",
+          "APPEND",
+          "REPLACE"
+        ]
+      }
+    ]
+  },
+  "FUNCTION STATS": {
+
+  },
+  "LATENCY HISTOGRAM": {
+    "arguments": [
+      {
+        "name": "command",
+        "type": "string",
+        "optional": true,
+        "multiple": true
+      }
+    ]
+  },
+  "PUBSUB SHARDCHANNELS": {
+    "arguments": [
+      {
+        "name": "pattern",
+        "type": "string",
+        "optional": true
+      }
+    ]
+  },
+  "PUBSUB SHARDNUMSUB": {
+
+  },
+  "SPUBLISH": {
+    "arguments": [
+      {
+        "name": "channel",
+        "type": "key"
+      },
+      {
+        "name": "message",
+        "type": "string"
+      }
+    ]
+  },
+  "SSUBSCRIBE": {
+    "arguments": [
+      {
+        "name": "channel",
+        "type": "key",
+        "multiple": true
+      }
+    ]
+  },
+  "SUNSUBSCRIBE": {
+    "arguments": [
+      {
+        "name": "channel",
+        "type": "key",
+        "optional": true,
+        "multiple": true
+      }
+    ]
   }
 }

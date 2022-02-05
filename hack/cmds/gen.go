@@ -117,6 +117,9 @@ func (n *node) GoStructs() (out []goStruct) {
 				s.BuildDef.Parameters = nil
 			} else {
 				switch cmds[1] {
+				case "name", "category", "pattern":
+					s.BuildDef.Command = append(s.BuildDef.Command, cmds[:1]...)
+					s.BuildDef.Parameters = []parameter{{Name: lcFirst(name(cmds[1])), Type: "string"}}
 				case "seconds", "milliseconds", "timestamp", "milliseconds-timestamp":
 					s.BuildDef.Command = append(s.BuildDef.Command, cmds[:1]...)
 					s.BuildDef.Parameters = []parameter{{Name: lcFirst(name(cmds[1])), Type: "integer"}}
@@ -773,6 +776,8 @@ var noRetCMDs = map[string]bool{
 	"psubscribe":   false,
 	"unsubscribe":  false,
 	"punsubscribe": false,
+	"ssubscribe":   false,
+	"sunsubscribe": false,
 }
 
 var blockingCMDs = map[string]bool{
@@ -856,6 +861,7 @@ var cacheableCMDs = map[string]bool{
 	"topkquery":           false,
 	"topklist":            false,
 	"topkinfo":            false,
+	"fcallro":             false,
 }
 
 var readOnlyCMDs = map[string]bool{
@@ -991,4 +997,5 @@ var readOnlyCMDs = map[string]bool{
 	"graphslowlog":        false,
 	"graphconfigget":      false,
 	"graphlist":           false,
+	"fcallro":             false,
 }

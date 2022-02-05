@@ -51,6 +51,48 @@ func (c AclDeluserUsername) Build() Completed {
 	return Completed(c)
 }
 
+type AclDryrun Completed
+
+func (b Builder) AclDryrun() (c AclDryrun) {
+	c = AclDryrun{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "ACL", "DRYRUN")
+	return c
+}
+
+func (c AclDryrun) Username(username string) AclDryrunUsername {
+	c.cs.s = append(c.cs.s, username)
+	return (AclDryrunUsername)(c)
+}
+
+type AclDryrunArg Completed
+
+func (c AclDryrunArg) Arg(arg ...string) AclDryrunArg {
+	c.cs.s = append(c.cs.s, arg...)
+	return c
+}
+
+func (c AclDryrunArg) Build() Completed {
+	return Completed(c)
+}
+
+type AclDryrunCommand Completed
+
+func (c AclDryrunCommand) Arg(arg ...string) AclDryrunArg {
+	c.cs.s = append(c.cs.s, arg...)
+	return (AclDryrunArg)(c)
+}
+
+func (c AclDryrunCommand) Build() Completed {
+	return Completed(c)
+}
+
+type AclDryrunUsername Completed
+
+func (c AclDryrunUsername) Command(command string) AclDryrunCommand {
+	c.cs.s = append(c.cs.s, command)
+	return (AclDryrunCommand)(c)
+}
+
 type AclGenpass Completed
 
 func (b Builder) AclGenpass() (c AclGenpass) {
@@ -3855,6 +3897,34 @@ func (c CommandCount) Build() Completed {
 	return Completed(c)
 }
 
+type CommandDocs Completed
+
+func (b Builder) CommandDocs() (c CommandDocs) {
+	c = CommandDocs{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "COMMAND", "DOCS")
+	return c
+}
+
+func (c CommandDocs) CommandName(commandName ...string) CommandDocsCommandName {
+	c.cs.s = append(c.cs.s, commandName...)
+	return (CommandDocsCommandName)(c)
+}
+
+func (c CommandDocs) Build() Completed {
+	return Completed(c)
+}
+
+type CommandDocsCommandName Completed
+
+func (c CommandDocsCommandName) CommandName(commandName ...string) CommandDocsCommandName {
+	c.cs.s = append(c.cs.s, commandName...)
+	return c
+}
+
+func (c CommandDocsCommandName) Build() Completed {
+	return Completed(c)
+}
+
 type CommandGetkeys Completed
 
 func (b Builder) CommandGetkeys() (c CommandGetkeys) {
@@ -3888,6 +3958,51 @@ func (c CommandInfoCommandName) CommandName(commandName ...string) CommandInfoCo
 }
 
 func (c CommandInfoCommandName) Build() Completed {
+	return Completed(c)
+}
+
+type CommandList Completed
+
+func (b Builder) CommandList() (c CommandList) {
+	c = CommandList{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "COMMAND", "LIST")
+	return c
+}
+
+func (c CommandList) FilterbyModuleName(name string) CommandListFilterbyModuleName {
+	c.cs.s = append(c.cs.s, "FILTERBY", "MODULE", name)
+	return (CommandListFilterbyModuleName)(c)
+}
+
+func (c CommandList) FilterbyAclcatCategory(category string) CommandListFilterbyAclcatCategory {
+	c.cs.s = append(c.cs.s, "FILTERBY", "ACLCAT", category)
+	return (CommandListFilterbyAclcatCategory)(c)
+}
+
+func (c CommandList) FilterbyPatternPattern(pattern string) CommandListFilterbyPatternPattern {
+	c.cs.s = append(c.cs.s, "FILTERBY", "PATTERN", pattern)
+	return (CommandListFilterbyPatternPattern)(c)
+}
+
+func (c CommandList) Build() Completed {
+	return Completed(c)
+}
+
+type CommandListFilterbyAclcatCategory Completed
+
+func (c CommandListFilterbyAclcatCategory) Build() Completed {
+	return Completed(c)
+}
+
+type CommandListFilterbyModuleName Completed
+
+func (c CommandListFilterbyModuleName) Build() Completed {
+	return Completed(c)
+}
+
+type CommandListFilterbyPatternPattern Completed
+
+func (c CommandListFilterbyPatternPattern) Build() Completed {
 	return Completed(c)
 }
 
@@ -4782,6 +4897,130 @@ type FailoverTimeout Completed
 
 func (c FailoverTimeout) Build() Completed {
 	return Completed(c)
+}
+
+type Fcall Completed
+
+func (b Builder) Fcall() (c Fcall) {
+	c = Fcall{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "FCALL")
+	return c
+}
+
+func (c Fcall) Function(function string) FcallFunction {
+	c.cs.s = append(c.cs.s, function)
+	return (FcallFunction)(c)
+}
+
+type FcallArg Completed
+
+func (c FcallArg) Arg(arg ...string) FcallArg {
+	c.cs.s = append(c.cs.s, arg...)
+	return c
+}
+
+func (c FcallArg) Build() Completed {
+	return Completed(c)
+}
+
+type FcallFunction Completed
+
+func (c FcallFunction) Numkeys(numkeys int64) FcallNumkeys {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(numkeys, 10))
+	return (FcallNumkeys)(c)
+}
+
+type FcallKey Completed
+
+func (c FcallKey) Key(key ...string) FcallKey {
+	if c.ks != NoSlot {
+		for _, k := range key {
+			c.ks = check(c.ks, slot(k))
+		}
+	}
+	c.cs.s = append(c.cs.s, key...)
+	return c
+}
+
+func (c FcallKey) Arg(arg ...string) FcallArg {
+	c.cs.s = append(c.cs.s, arg...)
+	return (FcallArg)(c)
+}
+
+type FcallNumkeys Completed
+
+func (c FcallNumkeys) Key(key ...string) FcallKey {
+	if c.ks != NoSlot {
+		for _, k := range key {
+			c.ks = check(c.ks, slot(k))
+		}
+	}
+	c.cs.s = append(c.cs.s, key...)
+	return (FcallKey)(c)
+}
+
+type FcallRo Completed
+
+func (b Builder) FcallRo() (c FcallRo) {
+	c = FcallRo{cs: get(), ks: b.ks, cf: readonly}
+	c.cs.s = append(c.cs.s, "FCALL_RO")
+	return c
+}
+
+func (c FcallRo) Function(function string) FcallRoFunction {
+	c.cs.s = append(c.cs.s, function)
+	return (FcallRoFunction)(c)
+}
+
+type FcallRoArg Completed
+
+func (c FcallRoArg) Arg(arg ...string) FcallRoArg {
+	c.cs.s = append(c.cs.s, arg...)
+	return c
+}
+
+func (c FcallRoArg) Build() Completed {
+	return Completed(c)
+}
+
+func (c FcallRoArg) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type FcallRoFunction Completed
+
+func (c FcallRoFunction) Numkeys(numkeys int64) FcallRoNumkeys {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(numkeys, 10))
+	return (FcallRoNumkeys)(c)
+}
+
+type FcallRoKey Completed
+
+func (c FcallRoKey) Key(key ...string) FcallRoKey {
+	if c.ks != NoSlot {
+		for _, k := range key {
+			c.ks = check(c.ks, slot(k))
+		}
+	}
+	c.cs.s = append(c.cs.s, key...)
+	return c
+}
+
+func (c FcallRoKey) Arg(arg ...string) FcallRoArg {
+	c.cs.s = append(c.cs.s, arg...)
+	return (FcallRoArg)(c)
+}
+
+type FcallRoNumkeys Completed
+
+func (c FcallRoNumkeys) Key(key ...string) FcallRoKey {
+	if c.ks != NoSlot {
+		for _, k := range key {
+			c.ks = check(c.ks, slot(k))
+		}
+	}
+	c.cs.s = append(c.cs.s, key...)
+	return (FcallRoKey)(c)
 }
 
 type Flushall Completed
@@ -9455,6 +9694,260 @@ type FtTagvalsIndex Completed
 func (c FtTagvalsIndex) FieldName(fieldName string) FtTagvalsFieldName {
 	c.cs.s = append(c.cs.s, fieldName)
 	return (FtTagvalsFieldName)(c)
+}
+
+type FunctionDelete Completed
+
+func (b Builder) FunctionDelete() (c FunctionDelete) {
+	c = FunctionDelete{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "FUNCTION", "DELETE")
+	return c
+}
+
+func (c FunctionDelete) FunctionName(functionName string) FunctionDeleteFunctionName {
+	c.cs.s = append(c.cs.s, functionName)
+	return (FunctionDeleteFunctionName)(c)
+}
+
+type FunctionDeleteFunctionName Completed
+
+func (c FunctionDeleteFunctionName) Build() Completed {
+	return Completed(c)
+}
+
+type FunctionDump Completed
+
+func (b Builder) FunctionDump() (c FunctionDump) {
+	c = FunctionDump{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "FUNCTION", "DUMP")
+	return c
+}
+
+func (c FunctionDump) Build() Completed {
+	return Completed(c)
+}
+
+type FunctionFlush Completed
+
+func (b Builder) FunctionFlush() (c FunctionFlush) {
+	c = FunctionFlush{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "FUNCTION", "FLUSH")
+	return c
+}
+
+func (c FunctionFlush) Async() FunctionFlushAsync {
+	c.cs.s = append(c.cs.s, "ASYNC")
+	return (FunctionFlushAsync)(c)
+}
+
+func (c FunctionFlush) Sync() FunctionFlushAsyncSync {
+	c.cs.s = append(c.cs.s, "SYNC")
+	return (FunctionFlushAsyncSync)(c)
+}
+
+func (c FunctionFlush) Build() Completed {
+	return Completed(c)
+}
+
+type FunctionFlushAsync Completed
+
+func (c FunctionFlushAsync) Build() Completed {
+	return Completed(c)
+}
+
+type FunctionFlushAsyncSync Completed
+
+func (c FunctionFlushAsyncSync) Build() Completed {
+	return Completed(c)
+}
+
+type FunctionHelp Completed
+
+func (b Builder) FunctionHelp() (c FunctionHelp) {
+	c = FunctionHelp{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "FUNCTION", "HELP")
+	return c
+}
+
+func (c FunctionHelp) Build() Completed {
+	return Completed(c)
+}
+
+type FunctionKill Completed
+
+func (b Builder) FunctionKill() (c FunctionKill) {
+	c = FunctionKill{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "FUNCTION", "KILL")
+	return c
+}
+
+func (c FunctionKill) Build() Completed {
+	return Completed(c)
+}
+
+type FunctionList Completed
+
+func (b Builder) FunctionList() (c FunctionList) {
+	c = FunctionList{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "FUNCTION", "LIST")
+	return c
+}
+
+func (c FunctionList) Libraryname(libraryNamePattern string) FunctionListLibraryname {
+	c.cs.s = append(c.cs.s, "LIBRARYNAME", libraryNamePattern)
+	return (FunctionListLibraryname)(c)
+}
+
+func (c FunctionList) Withcode() FunctionListWithcode {
+	c.cs.s = append(c.cs.s, "WITHCODE")
+	return (FunctionListWithcode)(c)
+}
+
+func (c FunctionList) Build() Completed {
+	return Completed(c)
+}
+
+type FunctionListLibraryname Completed
+
+func (c FunctionListLibraryname) Withcode() FunctionListWithcode {
+	c.cs.s = append(c.cs.s, "WITHCODE")
+	return (FunctionListWithcode)(c)
+}
+
+func (c FunctionListLibraryname) Build() Completed {
+	return Completed(c)
+}
+
+type FunctionListWithcode Completed
+
+func (c FunctionListWithcode) Build() Completed {
+	return Completed(c)
+}
+
+type FunctionLoad Completed
+
+func (b Builder) FunctionLoad() (c FunctionLoad) {
+	c = FunctionLoad{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "FUNCTION", "LOAD")
+	return c
+}
+
+func (c FunctionLoad) EngineName(engineName string) FunctionLoadEngineName {
+	c.cs.s = append(c.cs.s, engineName)
+	return (FunctionLoadEngineName)(c)
+}
+
+type FunctionLoadDesc Completed
+
+func (c FunctionLoadDesc) FunctionCode(functionCode string) FunctionLoadFunctionCode {
+	c.cs.s = append(c.cs.s, functionCode)
+	return (FunctionLoadFunctionCode)(c)
+}
+
+type FunctionLoadEngineName Completed
+
+func (c FunctionLoadEngineName) LibraryName(libraryName string) FunctionLoadLibraryName {
+	c.cs.s = append(c.cs.s, libraryName)
+	return (FunctionLoadLibraryName)(c)
+}
+
+type FunctionLoadFunctionCode Completed
+
+func (c FunctionLoadFunctionCode) Build() Completed {
+	return Completed(c)
+}
+
+type FunctionLoadLibraryName Completed
+
+func (c FunctionLoadLibraryName) Replace() FunctionLoadReplace {
+	c.cs.s = append(c.cs.s, "REPLACE")
+	return (FunctionLoadReplace)(c)
+}
+
+func (c FunctionLoadLibraryName) Desc(libraryDescription string) FunctionLoadDesc {
+	c.cs.s = append(c.cs.s, "DESC", libraryDescription)
+	return (FunctionLoadDesc)(c)
+}
+
+func (c FunctionLoadLibraryName) FunctionCode(functionCode string) FunctionLoadFunctionCode {
+	c.cs.s = append(c.cs.s, functionCode)
+	return (FunctionLoadFunctionCode)(c)
+}
+
+type FunctionLoadReplace Completed
+
+func (c FunctionLoadReplace) Desc(libraryDescription string) FunctionLoadDesc {
+	c.cs.s = append(c.cs.s, "DESC", libraryDescription)
+	return (FunctionLoadDesc)(c)
+}
+
+func (c FunctionLoadReplace) FunctionCode(functionCode string) FunctionLoadFunctionCode {
+	c.cs.s = append(c.cs.s, functionCode)
+	return (FunctionLoadFunctionCode)(c)
+}
+
+type FunctionRestore Completed
+
+func (b Builder) FunctionRestore() (c FunctionRestore) {
+	c = FunctionRestore{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "FUNCTION", "RESTORE")
+	return c
+}
+
+func (c FunctionRestore) SerializedValue(serializedValue string) FunctionRestoreSerializedValue {
+	c.cs.s = append(c.cs.s, serializedValue)
+	return (FunctionRestoreSerializedValue)(c)
+}
+
+type FunctionRestorePolicyAppend Completed
+
+func (c FunctionRestorePolicyAppend) Build() Completed {
+	return Completed(c)
+}
+
+type FunctionRestorePolicyFlush Completed
+
+func (c FunctionRestorePolicyFlush) Build() Completed {
+	return Completed(c)
+}
+
+type FunctionRestorePolicyReplace Completed
+
+func (c FunctionRestorePolicyReplace) Build() Completed {
+	return Completed(c)
+}
+
+type FunctionRestoreSerializedValue Completed
+
+func (c FunctionRestoreSerializedValue) Flush() FunctionRestorePolicyFlush {
+	c.cs.s = append(c.cs.s, "FLUSH")
+	return (FunctionRestorePolicyFlush)(c)
+}
+
+func (c FunctionRestoreSerializedValue) Append() FunctionRestorePolicyAppend {
+	c.cs.s = append(c.cs.s, "APPEND")
+	return (FunctionRestorePolicyAppend)(c)
+}
+
+func (c FunctionRestoreSerializedValue) Replace() FunctionRestorePolicyReplace {
+	c.cs.s = append(c.cs.s, "REPLACE")
+	return (FunctionRestorePolicyReplace)(c)
+}
+
+func (c FunctionRestoreSerializedValue) Build() Completed {
+	return Completed(c)
+}
+
+type FunctionStats Completed
+
+func (b Builder) FunctionStats() (c FunctionStats) {
+	c = FunctionStats{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "FUNCTION", "STATS")
+	return c
+}
+
+func (c FunctionStats) Build() Completed {
+	return Completed(c)
 }
 
 type Geoadd Completed
@@ -15026,6 +15519,34 @@ func (c LatencyHelp) Build() Completed {
 	return Completed(c)
 }
 
+type LatencyHistogram Completed
+
+func (b Builder) LatencyHistogram() (c LatencyHistogram) {
+	c = LatencyHistogram{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "LATENCY", "HISTOGRAM")
+	return c
+}
+
+func (c LatencyHistogram) Command(command ...string) LatencyHistogramCommand {
+	c.cs.s = append(c.cs.s, command...)
+	return (LatencyHistogramCommand)(c)
+}
+
+func (c LatencyHistogram) Build() Completed {
+	return Completed(c)
+}
+
+type LatencyHistogramCommand Completed
+
+func (c LatencyHistogramCommand) Command(command ...string) LatencyHistogramCommand {
+	c.cs.s = append(c.cs.s, command...)
+	return c
+}
+
+func (c LatencyHistogramCommand) Build() Completed {
+	return Completed(c)
+}
+
 type LatencyHistory Completed
 
 func (b Builder) LatencyHistory() (c LatencyHistory) {
@@ -16968,6 +17489,41 @@ func (c PubsubNumsubChannel) Build() Completed {
 	return Completed(c)
 }
 
+type PubsubShardchannels Completed
+
+func (b Builder) PubsubShardchannels() (c PubsubShardchannels) {
+	c = PubsubShardchannels{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "PUBSUB", "SHARDCHANNELS")
+	return c
+}
+
+func (c PubsubShardchannels) Pattern(pattern string) PubsubShardchannelsPattern {
+	c.cs.s = append(c.cs.s, pattern)
+	return (PubsubShardchannelsPattern)(c)
+}
+
+func (c PubsubShardchannels) Build() Completed {
+	return Completed(c)
+}
+
+type PubsubShardchannelsPattern Completed
+
+func (c PubsubShardchannelsPattern) Build() Completed {
+	return Completed(c)
+}
+
+type PubsubShardnumsub Completed
+
+func (b Builder) PubsubShardnumsub() (c PubsubShardnumsub) {
+	c = PubsubShardnumsub{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "PUBSUB", "SHARDNUMSUB")
+	return c
+}
+
+func (c PubsubShardnumsub) Build() Completed {
+	return Completed(c)
+}
+
 type Punsubscribe Completed
 
 func (b Builder) Punsubscribe() (c Punsubscribe) {
@@ -18181,17 +18737,95 @@ func (c Shutdown) Save() ShutdownSaveModeSave {
 	return (ShutdownSaveModeSave)(c)
 }
 
+func (c Shutdown) Now() ShutdownNow {
+	c.cs.s = append(c.cs.s, "NOW")
+	return (ShutdownNow)(c)
+}
+
+func (c Shutdown) Force() ShutdownForce {
+	c.cs.s = append(c.cs.s, "FORCE")
+	return (ShutdownForce)(c)
+}
+
+func (c Shutdown) Abort() ShutdownAbort {
+	c.cs.s = append(c.cs.s, "ABORT")
+	return (ShutdownAbort)(c)
+}
+
 func (c Shutdown) Build() Completed {
 	return Completed(c)
 }
 
+type ShutdownAbort Completed
+
+func (c ShutdownAbort) Build() Completed {
+	return Completed(c)
+}
+
+type ShutdownForce Completed
+
+func (c ShutdownForce) Abort() ShutdownAbort {
+	c.cs.s = append(c.cs.s, "ABORT")
+	return (ShutdownAbort)(c)
+}
+
+func (c ShutdownForce) Build() Completed {
+	return Completed(c)
+}
+
+type ShutdownNow Completed
+
+func (c ShutdownNow) Force() ShutdownForce {
+	c.cs.s = append(c.cs.s, "FORCE")
+	return (ShutdownForce)(c)
+}
+
+func (c ShutdownNow) Abort() ShutdownAbort {
+	c.cs.s = append(c.cs.s, "ABORT")
+	return (ShutdownAbort)(c)
+}
+
+func (c ShutdownNow) Build() Completed {
+	return Completed(c)
+}
+
 type ShutdownSaveModeNosave Completed
+
+func (c ShutdownSaveModeNosave) Now() ShutdownNow {
+	c.cs.s = append(c.cs.s, "NOW")
+	return (ShutdownNow)(c)
+}
+
+func (c ShutdownSaveModeNosave) Force() ShutdownForce {
+	c.cs.s = append(c.cs.s, "FORCE")
+	return (ShutdownForce)(c)
+}
+
+func (c ShutdownSaveModeNosave) Abort() ShutdownAbort {
+	c.cs.s = append(c.cs.s, "ABORT")
+	return (ShutdownAbort)(c)
+}
 
 func (c ShutdownSaveModeNosave) Build() Completed {
 	return Completed(c)
 }
 
 type ShutdownSaveModeSave Completed
+
+func (c ShutdownSaveModeSave) Now() ShutdownNow {
+	c.cs.s = append(c.cs.s, "NOW")
+	return (ShutdownNow)(c)
+}
+
+func (c ShutdownSaveModeSave) Force() ShutdownForce {
+	c.cs.s = append(c.cs.s, "FORCE")
+	return (ShutdownForce)(c)
+}
+
+func (c ShutdownSaveModeSave) Abort() ShutdownAbort {
+	c.cs.s = append(c.cs.s, "ABORT")
+	return (ShutdownAbort)(c)
+}
 
 func (c ShutdownSaveModeSave) Build() Completed {
 	return Completed(c)
@@ -19005,6 +19639,35 @@ func (c SpopKey) Build() Completed {
 	return Completed(c)
 }
 
+type Spublish Completed
+
+func (b Builder) Spublish() (c Spublish) {
+	c = Spublish{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "SPUBLISH")
+	return c
+}
+
+func (c Spublish) Channel(channel string) SpublishChannel {
+	if c.ks != NoSlot {
+		c.ks = check(c.ks, slot(channel))
+	}
+	c.cs.s = append(c.cs.s, channel)
+	return (SpublishChannel)(c)
+}
+
+type SpublishChannel Completed
+
+func (c SpublishChannel) Message(message string) SpublishMessage {
+	c.cs.s = append(c.cs.s, message)
+	return (SpublishMessage)(c)
+}
+
+type SpublishMessage Completed
+
+func (c SpublishMessage) Build() Completed {
+	return Completed(c)
+}
+
 type Srandmember Completed
 
 func (b Builder) Srandmember() (c Srandmember) {
@@ -19125,6 +19788,40 @@ func (c SscanMatch) Count(count int64) SscanCount {
 }
 
 func (c SscanMatch) Build() Completed {
+	return Completed(c)
+}
+
+type Ssubscribe Completed
+
+func (b Builder) Ssubscribe() (c Ssubscribe) {
+	c = Ssubscribe{cs: get(), ks: b.ks, cf: noRetTag}
+	c.cs.s = append(c.cs.s, "SSUBSCRIBE")
+	return c
+}
+
+func (c Ssubscribe) Channel(channel ...string) SsubscribeChannel {
+	if c.ks != NoSlot {
+		for _, k := range channel {
+			c.ks = check(c.ks, slot(k))
+		}
+	}
+	c.cs.s = append(c.cs.s, channel...)
+	return (SsubscribeChannel)(c)
+}
+
+type SsubscribeChannel Completed
+
+func (c SsubscribeChannel) Channel(channel ...string) SsubscribeChannel {
+	if c.ks != NoSlot {
+		for _, k := range channel {
+			c.ks = check(c.ks, slot(k))
+		}
+	}
+	c.cs.s = append(c.cs.s, channel...)
+	return c
+}
+
+func (c SsubscribeChannel) Build() Completed {
 	return Completed(c)
 }
 
@@ -19253,6 +19950,44 @@ func (c SunionstoreKey) Key(key ...string) SunionstoreKey {
 }
 
 func (c SunionstoreKey) Build() Completed {
+	return Completed(c)
+}
+
+type Sunsubscribe Completed
+
+func (b Builder) Sunsubscribe() (c Sunsubscribe) {
+	c = Sunsubscribe{cs: get(), ks: b.ks, cf: noRetTag}
+	c.cs.s = append(c.cs.s, "SUNSUBSCRIBE")
+	return c
+}
+
+func (c Sunsubscribe) Channel(channel ...string) SunsubscribeChannel {
+	if c.ks != NoSlot {
+		for _, k := range channel {
+			c.ks = check(c.ks, slot(k))
+		}
+	}
+	c.cs.s = append(c.cs.s, channel...)
+	return (SunsubscribeChannel)(c)
+}
+
+func (c Sunsubscribe) Build() Completed {
+	return Completed(c)
+}
+
+type SunsubscribeChannel Completed
+
+func (c SunsubscribeChannel) Channel(channel ...string) SunsubscribeChannel {
+	if c.ks != NoSlot {
+		for _, k := range channel {
+			c.ks = check(c.ks, slot(k))
+		}
+	}
+	c.cs.s = append(c.cs.s, channel...)
+	return c
+}
+
+func (c SunsubscribeChannel) Build() Completed {
 	return Completed(c)
 }
 
