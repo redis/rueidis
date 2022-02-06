@@ -238,17 +238,15 @@ func (p *pipe) _backgroundRead() {
 			continue
 		}
 		// if unfulfilled multi commands are lead by opt-in and get success response
-		if ff != len(multi) && len(multi) == 5 && multi[0].IsOptIn() {
-			if ff == 4 {
-				cacheable := cmds.Cacheable(multi[3])
-				ck, cc := cacheable.CacheKey()
-				if len(msg.values) != 2 { // EXEC aborted
-					p.cache.Update(ck, cc, msg, 0)
-				} else {
-					cp := msg.values[1]
-					cp.attrs = cacheMark
-					p.cache.Update(ck, cc, cp, msg.values[0].integer)
-				}
+		if ff == 4 && len(multi) == 5 && multi[0].IsOptIn() {
+			cacheable := cmds.Cacheable(multi[3])
+			ck, cc := cacheable.CacheKey()
+			if len(msg.values) != 2 { // EXEC aborted
+				p.cache.Update(ck, cc, msg, 0)
+			} else {
+				cp := msg.values[1]
+				cp.attrs = cacheMark
+				p.cache.Update(ck, cc, cp, msg.values[0].integer)
 			}
 		}
 	nextCMD:
@@ -258,9 +256,9 @@ func (p *pipe) _backgroundRead() {
 			if ch == nil {
 				panic(protocolbug)
 			}
-		}
-		if multi == nil {
-			multi = ones
+			if multi == nil {
+				multi = ones
+			}
 		}
 		if multi[ff].NoReply() {
 			ff++
