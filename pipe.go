@@ -145,6 +145,7 @@ func (p *pipe) _background() {
 		ones  = make([]cmds.Completed, 1)
 		multi []cmds.Completed
 		ch    chan RedisResult
+		cond  *sync.Cond
 	)
 
 	// clean up cache and free pending calls
@@ -160,7 +161,7 @@ func (p *pipe) _background() {
 				}
 			}
 		}
-		if ones[0], multi, ch = p.queue.NextResultCh(); ch != nil {
+		if ones[0], multi, ch, cond = p.queue.NextResultCh(); ch != nil {
 			if multi == nil {
 				multi = ones
 			}
@@ -169,7 +170,11 @@ func (p *pipe) _background() {
 					ch <- newErrResult(p.Error())
 				}
 			}
+			cond.L.Unlock()
+			cond.Signal()
 		} else {
+			cond.L.Unlock()
+			cond.Signal()
 			runtime.Gosched()
 		}
 	}
@@ -216,6 +221,7 @@ func (p *pipe) _backgroundRead() {
 	var (
 		err   error
 		msg   RedisMessage
+		cond  *sync.Cond
 		ones  = make([]cmds.Completed, 1)
 		multi []cmds.Completed
 		ch    chan RedisResult
@@ -248,7 +254,7 @@ func (p *pipe) _backgroundRead() {
 	nextCMD:
 		if ff == len(multi) {
 			ff = 0
-			ones[0], multi, ch = p.queue.NextResultCh() // ch should not be nil, otherwise it must be a protocol bug
+			ones[0], multi, ch, cond = p.queue.NextResultCh() // ch should not be nil, otherwise it must be a protocol bug
 			if ch == nil {
 				panic(protocolbug)
 			}
@@ -258,10 +264,18 @@ func (p *pipe) _backgroundRead() {
 		}
 		if multi[ff].NoReply() {
 			ff++
+			if ff == len(multi) {
+				cond.L.Unlock()
+				cond.Signal()
+			}
 			goto nextCMD
 		} else {
 			ff++
 			ch <- newResult(msg, err)
+			if ff == len(multi) {
+				cond.L.Unlock()
+				cond.Signal()
+			}
 		}
 	}
 }

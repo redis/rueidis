@@ -11,7 +11,7 @@ type queue interface {
 	PutOne(m cmds.Completed) chan RedisResult
 	PutMulti(m []cmds.Completed) chan RedisResult
 	NextWriteCmd() (cmds.Completed, []cmds.Completed, chan RedisResult)
-	NextResultCh() (cmds.Completed, []cmds.Completed, chan RedisResult)
+	NextResultCh() (cmds.Completed, []cmds.Completed, chan RedisResult, *sync.Cond)
 }
 
 const ringSize = 1024
@@ -22,8 +22,8 @@ func newRing() *ring {
 	r := &ring{}
 	r.mask = uint64(len(r.store) - 1)
 	for i := range r.store {
-		r.store[i].ch = make(chan RedisResult, 1)
-		r.store[i].cond.L = &sync.Mutex{}
+		r.store[i].ch = make(chan RedisResult, 0) // this channel can't be buffered
+		r.store[i].cond = sync.NewCond(&sync.Mutex{})
 	}
 	return r
 }
@@ -42,7 +42,7 @@ type ring struct {
 }
 
 type node struct {
-	cond  sync.Cond
+	cond  *sync.Cond
 	ch    chan RedisResult
 	one   cmds.Completed
 	multi []cmds.Completed
@@ -92,18 +92,17 @@ func (r *ring) NextWriteCmd() (one cmds.Completed, multi []cmds.Completed, ch ch
 }
 
 // NextResultCh should be only called by one dedicated thread
-func (r *ring) NextResultCh() (one cmds.Completed, multi []cmds.Completed, ch chan RedisResult) {
+func (r *ring) NextResultCh() (one cmds.Completed, multi []cmds.Completed, ch chan RedisResult, cond *sync.Cond) {
 	r.read2++
 	p := r.read2 & r.mask
 	n := &r.store[p]
+	cond = n.cond
 	n.cond.L.Lock()
 	if n.mark == 2 {
 		one, multi, ch = n.one, n.multi, n.ch
 		n.mark = 0
-		n.cond.Signal()
 	} else {
 		r.read2--
 	}
-	n.cond.L.Unlock()
 	return
 }
