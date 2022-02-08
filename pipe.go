@@ -19,6 +19,7 @@ type wire interface {
 	Do(ctx context.Context, cmd cmds.Completed) RedisResult
 	DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) RedisResult
 	DoMulti(ctx context.Context, multi ...cmds.Completed) []RedisResult
+	Receive(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error
 	Info() map[string]RedisMessage
 	Error() error
 	Close()
@@ -41,14 +42,12 @@ type pipe struct {
 	r *bufio.Reader
 	w *bufio.Writer
 
-	info map[string]RedisMessage
-
-	cbs PubSubOption
-
-	doneFn func(err error)
+	info  map[string]RedisMessage
+	subs  *subs
+	psubs *subs
 }
 
-func newPipe(conn net.Conn, option *ClientOption, onDisconnected func(err error)) (p *pipe, err error) {
+func newPipe(conn net.Conn, option *ClientOption) (p *pipe, err error) {
 	if option.CacheSizeEachConn <= 0 {
 		option.CacheSizeEachConn = DefaultCacheBytes
 	}
@@ -65,8 +64,8 @@ func newPipe(conn net.Conn, option *ClientOption, onDisconnected func(err error)
 		r:     bufio.NewReader(conn),
 		w:     bufio.NewWriter(conn),
 
-		cbs:    option.PubSubOption,
-		doneFn: onDisconnected,
+		subs:  newSubs(),
+		psubs: newSubs(),
 	}
 
 	helloCmd := []string{"HELLO", "3"}
@@ -137,9 +136,8 @@ func (p *pipe) _background() {
 	}()
 	wg.Wait()
 
-	if p.doneFn != nil {
-		go p.doneFn(p.Error())
-	}
+	p.subs.Close()
+	p.psubs.Close()
 
 	var (
 		ones  = make([]cmds.Completed, 1)
@@ -285,6 +283,8 @@ func (p *pipe) handlePush(values []RedisMessage) {
 	// TODO: handle other push data
 	// tracking-redir-broken
 	// server-cpu-usage
+	// subscribe
+	// psubscribe
 	switch values[0].string {
 	case "invalidate":
 		if values[1].IsNil() {
@@ -293,22 +293,57 @@ func (p *pipe) handlePush(values []RedisMessage) {
 			p.cache.Delete(values[1].values)
 		}
 	case "message":
-		if p.cbs.onMessage != nil {
-			p.cbs.onMessage(values[1].string, values[2].string)
-		}
+		p.subs.Publish(values[1].string, PubSubMessage{Channel: values[1].string, Message: values[2].string})
 	case "pmessage":
-		if p.cbs.onPMessage != nil {
-			p.cbs.onPMessage(values[1].string, values[2].string, values[3].string)
+		p.psubs.Publish(values[1].string, PubSubMessage{Pattern: values[1].string, Channel: values[2].string, Message: values[3].string})
+	case "unsubscribe":
+		p.subs.Unsubscribe(values[1].string)
+	case "punsubscribe":
+		p.psubs.Unsubscribe(values[1].string)
+	}
+}
+
+func (p *pipe) Receive(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
+	var sb *subs
+	cmd, args := subscribe.Commands()[0], subscribe.Commands()[1:]
+
+	switch cmd {
+	case "SUBSCRIBE", "SSUBSCRIBE":
+		sb = p.subs
+	case "PSUBSCRIBE":
+		sb = p.psubs
+	default:
+		panic(wrongreceive)
+	}
+
+	if id, ch := sb.Subscribe(args); ch != nil {
+		defer sb.Remove(args, id)
+
+		if err := p.Do(ctx, subscribe).Error(); err != nil {
+			return err
 		}
-	case "subscribe", "psubscribe":
-		if p.cbs.onSubscribed != nil {
-			p.cbs.onSubscribed(values[1].string, values[2].integer)
-		}
-	case "unsubscribe", "punsubscribe":
-		if p.cbs.onUnSubscribed != nil {
-			p.cbs.onUnSubscribed(values[1].string, values[2].integer)
+		if ctxCh := ctx.Done(); ctxCh == nil {
+			for msg := range ch {
+				fn(msg)
+			}
+		} else {
+		next:
+			select {
+			case msg, ok := <-ch:
+				if ok {
+					fn(msg)
+					goto next
+				}
+			case <-ctx.Done():
+				go func() {
+					for range ch {
+					}
+				}()
+				return ctx.Err()
+			}
 		}
 	}
+	return p.Error()
 }
 
 func (p *pipe) Info() map[string]RedisMessage {
@@ -570,8 +605,9 @@ func init() {
 }
 
 const (
-	protocolbug = "protocol bug, message handled out of order"
-	prohibitmix = "mixing SUBSCRIBE, PSUBSCRIBE, UNSUBSCRIBE, PUNSUBSCRIBE with other commands in DoMulti is prohibited"
+	protocolbug  = "protocol bug, message handled out of order"
+	prohibitmix  = "mixing SUBSCRIBE, PSUBSCRIBE, UNSUBSCRIBE, PUNSUBSCRIBE with other commands in DoMulti is prohibited"
+	wrongreceive = `only SUBSCRIBE, SSUBSCRIBE, or PSUBSCRIBE command are allowed in Receive`
 )
 
 var cacheMark = &(RedisMessage{})
