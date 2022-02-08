@@ -317,7 +317,7 @@ func (p *pipe) Receive(ctx context.Context, subscribe cmds.Completed, fn func(me
 	}
 
 	if id, ch := sb.Subscribe(args); ch != nil {
-		defer sb.Remove(args, id)
+		defer sb.Remove(id)
 
 		if err := p.Do(ctx, subscribe).Error(); err != nil {
 			return err
