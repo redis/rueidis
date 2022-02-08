@@ -15,40 +15,18 @@ import (
 )
 
 func newSentinelClient(opt *ClientOption, connFn connFn) (client *sentinelClient, err error) {
-	events := make(chan sentinelEvent, 1)
 
 	client = &sentinelClient{
 		cmd:       cmds.NewBuilder(cmds.NoSlot),
 		mOpt:      opt,
-		sOpt:      newSentinelOpt(opt, events),
+		sOpt:      newSentinelOpt(opt),
 		connFn:    connFn,
-		events:    events,
 		sentinels: list.New(),
 	}
 
 	for _, sentinel := range opt.InitAddress {
 		client.sentinels.PushBack(sentinel)
 	}
-
-	go func() {
-		for event := range events {
-			switch event.channel {
-			case "+sentinel":
-				m := strings.SplitN(event.message, " ", 4)
-				client.addSentinel(fmt.Sprintf("%s:%s", m[2], m[3]))
-			case "+switch-master":
-				m := strings.SplitN(event.message, " ", 5)
-				if m[0] == opt.Sentinel.MasterSet {
-					client.switchMasterRetry(fmt.Sprintf("%s:%s", m[3], m[4]))
-				}
-			case "+reboot":
-				m := strings.SplitN(event.message, " ", 4)
-				if m[0] == "master" && m[1] == opt.Sentinel.MasterSet {
-					client.switchMasterRetry(fmt.Sprintf("%s:%s", m[2], m[3]))
-				}
-			}
-		}
-	}()
 
 	if err = client.refresh(); err != nil {
 		client.Close()
@@ -64,7 +42,6 @@ type sentinelClient struct {
 	mOpt      *ClientOption
 	sOpt      *ClientOption
 	connFn    connFn
-	events    chan sentinelEvent
 	sentinels *list.List
 	mAddr     string
 	sAddr     string
@@ -115,12 +92,7 @@ func (c *sentinelClient) Close() {
 	if master := c.mConn.Load(); master != nil {
 		master.(conn).Close()
 	}
-	if c.events != nil {
-		close(c.events)
-		c.events = nil
-	}
 	c.mu.Unlock()
-
 }
 
 func (c *sentinelClient) shouldRetry(err error) (should bool) {
@@ -167,7 +139,7 @@ func (c *sentinelClient) _switchMaster(addr string) (err error) {
 	}
 	if master == nil {
 		master = c.connFn(addr, c.mOpt)
-		if err = setupSingleConn(c.cmd, master, c.mOpt); err != nil {
+		if err = master.Dial(); err != nil {
 			return err
 		}
 	}
@@ -221,11 +193,6 @@ func (c *sentinelClient) _refresh() (err error) {
 		}
 		if err == nil {
 			if master, sentinels, err = c.listWatch(c.sConn); err == nil {
-				c.sConn.OnDisconnected(func(prev error) {
-					if prev != ErrClosing {
-						c.refreshRetry()
-					}
-				})
 				for _, sentinel := range sentinels {
 					c._addSentinel(sentinel)
 				}
@@ -261,9 +228,28 @@ func (c *sentinelClient) listWatch(cc conn) (master string, sentinels []string, 
 		cmds.Put(getMasterCMD.CommandSlice())
 	}()
 
-	if err = cc.Do(ctx, cmds.SentinelSubscribe).Error(); err != nil {
-		return "", nil, err
-	}
+	go func() {
+		if err := cc.Receive(ctx, cmds.SentinelSubscribe, func(event PubSubMessage) {
+			switch event.Channel {
+			case "+sentinel":
+				m := strings.SplitN(event.Message, " ", 4)
+				c.addSentinel(fmt.Sprintf("%s:%s", m[2], m[3]))
+			case "+switch-master":
+				m := strings.SplitN(event.Message, " ", 5)
+				if m[0] == c.sOpt.Sentinel.MasterSet {
+					c.switchMasterRetry(fmt.Sprintf("%s:%s", m[3], m[4]))
+				}
+			case "+reboot":
+				m := strings.SplitN(event.Message, " ", 4)
+				if m[0] == "master" && m[1] == c.sOpt.Sentinel.MasterSet {
+					c.switchMasterRetry(fmt.Sprintf("%s:%s", m[2], m[3]))
+				}
+			}
+		}); err != nil && err != ErrClosing {
+			c.refreshRetry()
+		}
+	}()
+
 	resp := cc.DoMulti(ctx, sentinelsCMD, getMasterCMD)
 	others, err := resp[0].ToArray()
 	if err != nil {
@@ -281,22 +267,14 @@ func (c *sentinelClient) listWatch(cc conn) (master string, sentinels []string, 
 	return fmt.Sprintf("%s:%s", m[0], m[1]), sentinels, nil
 }
 
-func newSentinelOpt(opt *ClientOption, ch chan sentinelEvent) *ClientOption {
+func newSentinelOpt(opt *ClientOption) *ClientOption {
 	o := *opt
 	o.Username = o.Sentinel.Username
 	o.Password = o.Sentinel.Password
 	o.ClientName = o.Sentinel.ClientName
 	o.Dialer = o.Sentinel.Dialer
 	o.TLSConfig = o.Sentinel.TLSConfig
-	o.PubSubOption.onMessage = func(channel, message string) {
-		ch <- sentinelEvent{channel: channel, message: message}
-	}
 	return &o
-}
-
-type sentinelEvent struct {
-	channel string
-	message string
 }
 
 var errNotMaster = errors.New("the redis is not master")

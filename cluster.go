@@ -42,19 +42,6 @@ func newClusterClient(opt *ClientOption, connFn connFn) (client *clusterClient, 
 		return client, err
 	}
 
-	if opt.PubSubOption.onConnected != nil {
-		var install func(error)
-		install = func(prev error) {
-			if atomic.LoadUint32(&client.closed) == 0 {
-				dcc := &dedicatedClusterClient{cmd: client.cmd, client: client, slot: cmds.InitSlot, pool: false, onDisconnect: install}
-				for cc := (conn)(nil); cc == nil; cc = dcc.getConn() {
-					opt.PubSubOption.onConnected(prev, dcc)
-				}
-			}
-		}
-		install(nil)
-	}
-
 	return client, nil
 }
 
@@ -292,7 +279,7 @@ ret:
 }
 
 func (c *clusterClient) Dedicated(fn func(DedicatedClient) error) (err error) {
-	dcc := &dedicatedClusterClient{cmd: c.cmd, client: c, slot: cmds.NoSlot, pool: true}
+	dcc := &dedicatedClusterClient{cmd: c.cmd, client: c, slot: cmds.NoSlot}
 	err = fn(dcc)
 	dcc.release()
 	return err
@@ -319,12 +306,9 @@ type dedicatedClusterClient struct {
 	conn   conn
 	wire   wire
 
-	onDisconnect func(error)
-
 	mu   sync.Mutex
 	cmd  cmds.Builder
 	slot uint16
-	pool bool
 }
 
 func (c *dedicatedClusterClient) check(slot uint16) {
@@ -354,12 +338,6 @@ func (c *dedicatedClusterClient) acquire() (wire wire, err error) {
 	}
 	if c.conn, err = c.client.pick(c.slot); err != nil {
 		return nil, err
-	}
-	if c.onDisconnect != nil {
-		c.conn.OnDisconnected(c.onDisconnect)
-	}
-	if !c.pool {
-		return c.conn, nil
 	}
 	c.wire = c.conn.Acquire()
 	return c.wire, nil

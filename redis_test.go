@@ -238,63 +238,6 @@ func testBlockingXREAD(t *testing.T, client Client) {
 	client.Do(ctx, client.B().Del().Key(key).Build())
 }
 
-func prepareTestPubSub(t *testing.T) (PubSubOption, func(t *testing.T, client Client)) {
-	messages := make(chan string, 10)
-	options := NewPubSubOption(
-		func(prev error, client DedicatedClient) {
-			for _, resp := range client.DoMulti(
-				context.Background(),
-				client.B().Subscribe().Channel("ch1").Build(),
-				client.B().Psubscribe().Pattern("pat*").Build(),
-			) {
-				if err := resp.Error(); err != nil {
-					t.Errorf("unexpected subscribe response %v", err)
-				}
-			}
-		},
-		PubSubHandler{
-			OnMessage: func(channel, message string) {
-				messages <- message
-			},
-			OnPMessage: func(pattern, channel, message string) {
-				messages <- message
-			},
-		},
-	)
-	return options, func(t *testing.T, client Client) {
-		msgs := 10000
-		mmap := make(map[string]struct{})
-		for i := 0; i < msgs; i++ {
-			mmap[strconv.Itoa(i)] = struct{}{}
-		}
-		t.Logf("testing pubsub with %v messages\n", msgs)
-
-		jobs, wait := parallel(10)
-		go func() {
-			for i := 0; i < msgs; i++ {
-				msg := strconv.Itoa(i)
-				ch := "ch1"
-				if i%10 == 0 {
-					ch = "pat1"
-				}
-				jobs <- func() {
-					if err := client.Do(context.Background(), client.B().Publish().Channel(ch).Message(msg).Build()).Error(); err != nil {
-						t.Errorf("unexpected publish response %v", err)
-					}
-				}
-			}
-			wait()
-		}()
-
-		for message := range messages {
-			delete(mmap, message)
-			if len(mmap) == 0 {
-				close(messages)
-			}
-		}
-	}
-}
-
 func run(t *testing.T, client Client, cases ...func(*testing.T, Client)) {
 	wg := sync.WaitGroup{}
 	wg.Add(len(cases))
@@ -309,52 +252,41 @@ func run(t *testing.T, client Client, cases ...func(*testing.T, Client)) {
 }
 
 func TestSingleClientIntegration(t *testing.T) {
-	option, testPubSub := prepareTestPubSub(t)
-
-	client, err := NewClient(ClientOption{
-		InitAddress:  []string{"127.0.0.1:6379"},
-		PubSubOption: option,
-	})
+	client, err := NewClient(ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer client.Close()
 
-	run(t, client, testSETGET, testBlockingZPOP, testBlockingXREAD, testPubSub)
+	run(t, client, testSETGET, testBlockingZPOP, testBlockingXREAD)
 	run(t, client, testFlush)
 }
 
 func TestSentinelClientIntegration(t *testing.T) {
-	option, testPubSub := prepareTestPubSub(t)
-
 	client, err := NewClient(ClientOption{
 		InitAddress: []string{"127.0.0.1:26379"},
 		Sentinel: SentinelOption{
 			MasterSet: "test",
 		},
-		PubSubOption: option,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer client.Close()
 
-	run(t, client, testSETGET, testBlockingZPOP, testBlockingXREAD, testPubSub)
+	run(t, client, testSETGET, testBlockingZPOP, testBlockingXREAD)
 	run(t, client, testFlush)
 }
 
 func TestClusterClientIntegration(t *testing.T) {
-	option, testPubSub := prepareTestPubSub(t)
-
 	client, err := NewClient(ClientOption{
-		InitAddress:  []string{"127.0.0.1:7001", "127.0.0.1:7002", "127.0.0.1:7003"},
-		ShuffleInit:  true,
-		PubSubOption: option,
+		InitAddress: []string{"127.0.0.1:7001", "127.0.0.1:7002", "127.0.0.1:7003"},
+		ShuffleInit: true,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer client.Close()
 
-	run(t, client, testSETGET, testBlockingZPOP, testBlockingXREAD, testPubSub)
+	run(t, client, testSETGET, testBlockingZPOP, testBlockingXREAD)
 }

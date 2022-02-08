@@ -19,34 +19,11 @@ func newSingleClient(opt *ClientOption, prev conn, connFn connFn) (*singleClient
 
 	conn := connFn(opt.InitAddress[0], opt)
 	conn.Override(prev)
-
-	client := &singleClient{cmd: cmds.NewBuilder(cmds.NoSlot), conn: conn}
-
-	if err := setupSingleConn(client.cmd, client.conn, opt); err != nil {
+	if err := conn.Dial(); err != nil {
 		return nil, err
 	}
 
-	return client, nil
-}
-
-func setupSingleConn(cmd cmds.Builder, conn conn, opt *ClientOption) error {
-	if err := conn.Dial(); err != nil {
-		return err
-	}
-
-	if opt.PubSubOption.onConnected != nil {
-		var install func(error)
-		install = func(prev error) {
-			if prev != ErrClosing {
-				dcc := &dedicatedSingleClient{cmd: cmd, wire: conn}
-				conn.OnDisconnected(install)
-				opt.PubSubOption.onConnected(prev, dcc)
-			}
-		}
-		install(nil)
-	}
-
-	return nil
+	return &singleClient{cmd: cmds.NewBuilder(cmds.NoSlot), conn: conn}, nil
 }
 
 func (c *singleClient) B() cmds.Builder {

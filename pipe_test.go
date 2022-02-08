@@ -113,10 +113,6 @@ func write(o io.Writer, m RedisMessage) (err error) {
 }
 
 func setup(t *testing.T, option ClientOption) (*pipe, *redisMock, func(), func()) {
-	return setupWithDisconnectedFn(t, &option, nil)
-}
-
-func setupWithDisconnectedFn(t *testing.T, option *ClientOption, onDisconnected func(err error)) (*pipe, *redisMock, func(), func()) {
 	n1, n2 := net.Pipe()
 	mock := &redisMock{
 		t:    t,
@@ -135,7 +131,7 @@ func setupWithDisconnectedFn(t *testing.T, option *ClientOption, onDisconnected 
 		mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
 			ReplyString("OK")
 	}()
-	p, err := newPipe(n1, option)
+	p, err := newPipe(n1, &option)
 	if err != nil {
 		t.Fatalf("pipe setup failed: %v", err)
 	}
@@ -200,21 +196,6 @@ func TestNewPipe(t *testing.T) {
 			t.Fatalf("pipe setup should failed with io.ErrClosedPipe, but got %v", err)
 		}
 	})
-}
-
-func TestOnDisconnectedHook(t *testing.T) {
-	done := make(chan struct{})
-	p, _, _, closeConn := setupWithDisconnectedFn(t, &ClientOption{}, func(err error) {
-		if err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
-			t.Errorf("unexpected err %v", err)
-		}
-		close(done)
-	})
-	closeConn()
-	if err := p.Do(context.Background(), cmds.NewCompleted([]string{"PING"})).Error(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
-		t.Errorf("unexpected err %v", err)
-	}
-	<-done
 }
 
 func TestWriteSingleFlush(t *testing.T) {

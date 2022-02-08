@@ -46,9 +46,6 @@ type ClientOption struct {
 	// Sentinel options, including MasterSet and Auth options
 	Sentinel SentinelOption
 
-	// Redis PubSub callbacks, should be created from NewPubSubOption
-	PubSubOption PubSubOption
-
 	// Redis AUTH parameters
 	Username   string
 	Password   string

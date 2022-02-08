@@ -14,6 +14,7 @@ type mockConn struct {
 	DoFn       func(cmd cmds.Completed) RedisResult
 	DoCacheFn  func(cmd cmds.Cacheable, ttl time.Duration) RedisResult
 	DoMultiFn  func(multi ...cmds.Completed) []RedisResult
+	ReceiveFn  func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error
 	InfoFn     func() map[string]RedisMessage
 	ErrorFn    func() error
 	CloseFn    func()
@@ -21,8 +22,6 @@ type mockConn struct {
 	AcquireFn  func() wire
 	StoreFn    func(w wire)
 	OverrideFn func(c conn)
-
-	disconnectedFn func(err error)
 }
 
 func (m *mockConn) Override(c conn) {
@@ -72,6 +71,13 @@ func (m *mockConn) DoMulti(ctx context.Context, multi ...cmds.Completed) []Redis
 	return nil
 }
 
+func (m *mockConn) Receive(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
+	if m.ReceiveFn != nil {
+		return m.ReceiveFn(ctx, subscribe, fn)
+	}
+	return nil
+}
+
 func (m *mockConn) Info() map[string]RedisMessage {
 	if m.InfoFn != nil {
 		return m.InfoFn()
@@ -89,16 +95,6 @@ func (m *mockConn) Error() error {
 func (m *mockConn) Close() {
 	if m.CloseFn != nil {
 		m.CloseFn()
-	}
-}
-
-func (m *mockConn) OnDisconnected(fn func(err error)) {
-	m.disconnectedFn = fn
-}
-
-func (m *mockConn) TriggerDisconnect(err error) {
-	if m.disconnectedFn != nil {
-		m.disconnectedFn(err)
 	}
 }
 
