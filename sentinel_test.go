@@ -30,7 +30,9 @@ func TestSentinelClientInit(t *testing.T) {
 	t.Run("Refresh err", func(t *testing.T) {
 		v := errors.New("refresh err")
 		if _, err := newSentinelClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
-			return &mockConn{DoFn: func(cmd cmds.Completed) RedisResult { return newErrResult(v) }}
+			return &mockConn{
+				DoMultiFn: func(cmd ...cmds.Completed) []RedisResult { return []RedisResult{newErrResult(v)} },
+			}
 		}); err != v {
 			t.Fatalf("unexpected err %v", err)
 		}
@@ -226,6 +228,7 @@ func TestSentinelClientInit(t *testing.T) {
 	})
 
 	t.Run("sentinel disconnect", func(t *testing.T) {
+		trigger := make(chan error)
 		disconnect := int32(0)
 		s0closed := int32(0)
 		r3closed := int32(0)
@@ -248,6 +251,12 @@ func TestSentinelClientInit(t *testing.T) {
 						{typ: '+', string: ""}, {typ: '+', string: "3"},
 					}}},
 				}
+			},
+			ReceiveFn: func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
+				if err, ok := <-trigger; ok {
+					return err
+				}
+				return ErrClosing
 			},
 			CloseFn: func() {
 				atomic.StoreInt32(&s0closed, 1)
@@ -329,7 +338,8 @@ func TestSentinelClientInit(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 		atomic.StoreInt32(&disconnect, 1)
-		s0.TriggerDisconnect(errors.New("reconnect"))
+		trigger <- errors.New("reconnect")
+		close(trigger)
 		for {
 			t.Log("wait switch master")
 			if client.mConn.Load().(*mockConn) == r4 {
@@ -404,6 +414,20 @@ func TestSentinelClientDelegate(t *testing.T) {
 		}
 	})
 
+	t.Run("Delegate Receive", func(t *testing.T) {
+		c := client.B().Subscribe().Channel("ch").Build()
+		hdl := func(message PubSubMessage) {}
+		m.ReceiveFn = func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
+			if !reflect.DeepEqual(subscribe.Commands(), c.Commands()) {
+				t.Fatalf("unexpected command %v", subscribe)
+			}
+			return nil
+		}
+		if err := client.Receive(context.Background(), c, hdl); err != nil {
+			t.Fatalf("unexpected response %v", err)
+		}
+	})
+
 	t.Run("Delegate Close", func(t *testing.T) {
 		called := false
 		m.CloseFn = func() { called = true }
@@ -467,6 +491,7 @@ func TestSentinelClientDelegate(t *testing.T) {
 func TestSentinelClientDelegateRetry(t *testing.T) {
 	setup := func() (client *sentinelClient, cb func()) {
 		retry := uint32(0)
+		trigger := make(chan error)
 		s0 := &mockConn{
 			DoFn: func(cmd cmds.Completed) RedisResult { return RedisResult{} },
 			DoMultiFn: func(multi ...cmds.Completed) []RedisResult {
@@ -485,6 +510,12 @@ func TestSentinelClientDelegateRetry(t *testing.T) {
 					}}},
 				}
 			},
+			ReceiveFn: func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
+				if err, ok := <-trigger; ok {
+					return err
+				}
+				return ErrClosing
+			},
 		}
 		m1 := &mockConn{
 			DoFn: func(cmd cmds.Completed) RedisResult {
@@ -498,6 +529,10 @@ func TestSentinelClientDelegateRetry(t *testing.T) {
 				atomic.AddUint32(&retry, 1)
 				return newErrResult(ErrClosing)
 			},
+			ReceiveFn: func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
+				atomic.AddUint32(&retry, 1)
+				return ErrClosing
+			},
 		}
 		m2 := &mockConn{
 			DoFn: func(cmd cmds.Completed) RedisResult {
@@ -508,6 +543,9 @@ func TestSentinelClientDelegateRetry(t *testing.T) {
 			},
 			DoCacheFn: func(cmd cmds.Cacheable, ttl time.Duration) RedisResult {
 				return RedisResult{val: RedisMessage{typ: '+', string: "OK"}}
+			},
+			ReceiveFn: func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
+				return nil
 			},
 		}
 		client, err := newSentinelClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
@@ -529,7 +567,8 @@ func TestSentinelClientDelegateRetry(t *testing.T) {
 			for atomic.LoadUint32(&retry) >= 10 {
 				break
 			}
-			s0.TriggerDisconnect(errors.New("die"))
+			trigger <- errors.New("die")
+			close(trigger)
 		}
 	}
 
@@ -562,11 +601,30 @@ func TestSentinelClientDelegateRetry(t *testing.T) {
 
 		client.Close()
 	})
+
+	t.Run("Delegate Receive", func(t *testing.T) {
+		client, cb := setup()
+
+		go func() {
+			cb()
+		}()
+
+		err := client.Receive(context.Background(), client.B().Subscribe().Channel("k").Build(), func(msg PubSubMessage) {
+
+		})
+		if err != nil {
+			t.Fatalf("unexpected resp %v", err)
+		}
+
+		client.Close()
+	})
 }
 
 //gocyclo:ignore
 func TestSentinelClientPubSub(t *testing.T) {
 	var s0count, s0close, m1close, m2close, m4close int32
+
+	messages := make(chan PubSubMessage)
 
 	s0 := &mockConn{
 		DoFn: func(cmd cmds.Completed) RedisResult { return RedisResult{} },
@@ -587,6 +645,12 @@ func TestSentinelClientPubSub(t *testing.T) {
 				}}},
 			}
 		},
+		ReceiveFn: func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
+			for msg := range messages {
+				fn(msg)
+			}
+			return ErrClosing
+		},
 		CloseFn: func() { atomic.AddInt32(&s0close, 1) },
 	}
 	m1 := &mockConn{
@@ -596,7 +660,9 @@ func TestSentinelClientPubSub(t *testing.T) {
 			}
 			return RedisResult{val: RedisMessage{typ: '+', string: "OK"}}
 		},
-		CloseFn: func() { atomic.AddInt32(&m1close, 1) },
+		CloseFn: func() {
+			atomic.AddInt32(&m1close, 1)
+		},
 	}
 	m2 := &mockConn{
 		DoFn: func(cmd cmds.Completed) RedisResult {
@@ -605,7 +671,7 @@ func TestSentinelClientPubSub(t *testing.T) {
 		CloseFn: func() { atomic.AddInt32(&m2close, 1) },
 	}
 	s3 := &mockConn{
-		DoFn: func(cmd cmds.Completed) RedisResult { return newErrResult(errClosing) },
+		DoMultiFn: func(cmd ...cmds.Completed) []RedisResult { return []RedisResult{newErrResult(errClosing)} },
 	}
 	m4 := &mockConn{
 		DoFn: func(cmd cmds.Completed) RedisResult {
@@ -617,8 +683,6 @@ func TestSentinelClientPubSub(t *testing.T) {
 		CloseFn: func() { atomic.AddInt32(&m4close, 1) },
 	}
 
-	var onMessage func(channel, message string)
-
 	client, err := newSentinelClient(&ClientOption{
 		InitAddress: []string{":0"},
 		Sentinel: SentinelOption{
@@ -626,7 +690,6 @@ func TestSentinelClientPubSub(t *testing.T) {
 		},
 	}, func(dst string, opt *ClientOption) conn {
 		if dst == ":0" {
-			onMessage = opt.PubSubOption.onMessage
 			return s0
 		}
 		if dst == ":1" {
@@ -647,7 +710,7 @@ func TestSentinelClientPubSub(t *testing.T) {
 		t.Fatalf("unexpected err %v", err)
 	}
 
-	onMessage("+sentinel", "sentinel 000000  3")
+	messages <- PubSubMessage{Channel: "+sentinel", Message: "sentinel 000000  3"}
 
 	var added bool
 	for !added {
@@ -659,7 +722,7 @@ func TestSentinelClientPubSub(t *testing.T) {
 	}
 
 	// switch to false master
-	onMessage("+switch-master", "test  1  2")
+	messages <- PubSubMessage{Channel: "+switch-master", Message: "test  1  2"}
 
 	for atomic.LoadInt32(&m2close) != 2 {
 		t.Log("wait false m2 to be close", atomic.LoadInt32(&m2close))
@@ -677,7 +740,7 @@ func TestSentinelClientPubSub(t *testing.T) {
 	}
 
 	// switch to master by reboot
-	onMessage("+reboot", "master test  4")
+	messages <- PubSubMessage{Channel: "+reboot", Message: "master test  4"}
 
 	for atomic.LoadInt32(&m1close) != 1 {
 		t.Log("wait old m1 to be close", atomic.LoadInt32(&m1close))
@@ -689,6 +752,7 @@ func TestSentinelClientPubSub(t *testing.T) {
 		t.Fatalf("unexpected resp %v %v", v, err)
 	}
 
+	close(messages)
 	client.Close()
 
 	for atomic.LoadInt32(&s0close) != 4 {
@@ -696,7 +760,7 @@ func TestSentinelClientPubSub(t *testing.T) {
 		time.Sleep(time.Millisecond * 100)
 	}
 	for atomic.LoadInt32(&m4close) != 1 {
-		t.Log("wait old m1 to be close", atomic.LoadInt32(&m1close))
+		t.Log("wait old m1 to be close", atomic.LoadInt32(&m4close))
 		time.Sleep(time.Millisecond * 100)
 	}
 }

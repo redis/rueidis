@@ -17,7 +17,7 @@ import (
 func setupMux(wires []*mockWire) (conn *mux, checkClean func(t *testing.T)) {
 	var mu sync.Mutex
 	var count = -1
-	return newMux("", &ClientOption{}, (*mockWire)(nil), (*mockWire)(nil), func(fn func(err error)) (wire, error) {
+	return newMux("", &ClientOption{}, (*mockWire)(nil), (*mockWire)(nil), func() (wire, error) {
 			mu.Lock()
 			defer mu.Unlock()
 			count++
@@ -116,39 +116,10 @@ func TestNewMux(t *testing.T) {
 	})
 }
 
-func TestMuxOnDisconnected(t *testing.T) {
-	var trigger func(err error)
-	m := newMux("", &ClientOption{}, (*mockWire)(nil), (*mockWire)(nil), func(fn func(err error)) (wire, error) {
-		trigger = fn
-		return &mockWire{}, nil
-	})
-	if err := m.Dial(); err != nil {
-		t.Fatalf("unexpected err %v", err)
-	}
-
-	count := int64(0)
-
-	trigger(errors.New("should have no effect before registering callback"))
-
-	e := errors.New("should trigger")
-	m.OnDisconnected(func(err error) {
-		if err != e {
-			t.Errorf("unexpected error %v", err)
-		}
-		atomic.AddInt64(&count, 1)
-	})
-
-	trigger(e)
-
-	if atomic.LoadInt64(&count) != 1 {
-		t.Fatalf("unxpected callback call count %d", atomic.LoadInt64(&count))
-	}
-}
-
 func TestMuxDialSuppress(t *testing.T) {
 	var wires, waits, done int64
 	blocking := make(chan struct{})
-	m := newMux("", &ClientOption{}, (*mockWire)(nil), (*mockWire)(nil), func(fn func(err error)) (wire, error) {
+	m := newMux("", &ClientOption{}, (*mockWire)(nil), (*mockWire)(nil), func() (wire, error) {
 		atomic.AddInt64(&wires, 1)
 		<-blocking
 		return &mockWire{}, nil
@@ -302,6 +273,33 @@ func TestMuxCMDRetry(t *testing.T) {
 			t.Fatalf("unexpected error %v", err)
 		} else if val != "READONLY_COMMAND_RESPONSE" {
 			t.Fatalf("unexpected response %v", val)
+		}
+	})
+
+	t.Run("retry receive", func(t *testing.T) {
+		m, checkClean := setupMux([]*mockWire{
+			{
+				ReceiveFn: func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
+					if subscribe.Commands()[0] != "SUBSCRIBE" {
+						t.Fatalf("command should be SUBSCRIBE")
+					}
+					return errors.New("network error")
+				},
+			},
+			{
+				ReceiveFn: func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
+					if subscribe.Commands()[0] != "SUBSCRIBE" {
+						t.Fatalf("command should be SUBSCRIBE")
+					}
+					return nil
+				},
+			},
+		})
+		defer checkClean(t)
+		defer m.Close()
+		// this should automatically use the second wire
+		if err := m.Receive(context.Background(), cmds.NewCompleted([]string{"SUBSCRIBE"}), func(message PubSubMessage) {}); err != nil {
+			t.Fatalf("unexpected error %v", err)
 		}
 	})
 
@@ -557,7 +555,7 @@ func TestMuxCMDRetry(t *testing.T) {
 func TestMuxDialRetry(t *testing.T) {
 	setup := func() (*mux, *int64) {
 		var count int64
-		return newMux("", &ClientOption{}, (*mockWire)(nil), (*mockWire)(nil), func(fn func(err error)) (wire, error) {
+		return newMux("", &ClientOption{}, (*mockWire)(nil), (*mockWire)(nil), func() (wire, error) {
 			if count == 1 {
 				return &mockWire{
 					DoFn: func(cmd cmds.Completed) RedisResult {
@@ -632,6 +630,7 @@ type mockWire struct {
 	DoFn      func(cmd cmds.Completed) RedisResult
 	DoCacheFn func(cmd cmds.Cacheable, ttl time.Duration) RedisResult
 	DoMultiFn func(multi ...cmds.Completed) []RedisResult
+	ReceiveFn func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error
 	InfoFn    func() map[string]RedisMessage
 	ErrorFn   func() error
 	CloseFn   func()
@@ -654,6 +653,13 @@ func (m *mockWire) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Dur
 func (m *mockWire) DoMulti(ctx context.Context, multi ...cmds.Completed) []RedisResult {
 	if m.DoMultiFn != nil {
 		return m.DoMultiFn(multi...)
+	}
+	return nil
+}
+
+func (m *mockWire) Receive(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
+	if m.ReceiveFn != nil {
+		return m.ReceiveFn(ctx, subscribe, fn)
 	}
 	return nil
 }

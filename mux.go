@@ -12,7 +12,7 @@ import (
 
 type connFn func(dst string, opt *ClientOption) conn
 type dialFn func(dst string, opt *ClientOption) (net.Conn, error)
-type wireFn func(onDisconnected func(err error)) (wire, error)
+type wireFn func() (wire, error)
 
 type singleconnect struct {
 	w wire
@@ -26,7 +26,6 @@ type conn interface {
 	Override(conn)
 	Acquire() wire
 	Store(w wire)
-	OnDisconnected(func(err error))
 }
 
 var _ conn = (*mux)(nil)
@@ -44,10 +43,10 @@ type mux struct {
 }
 
 func makeMux(dst string, option *ClientOption, dialFn dialFn, retryOnRefuse bool) *mux {
-	return newMux(dst, option, (*pipe)(nil), dead, func(onDisconnected func(err error)) (w wire, err error) {
+	return newMux(dst, option, (*pipe)(nil), dead, func() (w wire, err error) {
 		conn, err := dialFn(dst, option)
 		if err == nil {
-			w, err = newPipe(conn, option, onDisconnected)
+			w, err = newPipe(conn, option)
 		} else if !retryOnRefuse {
 			if e, ok := err.(net.Error); ok && !e.Timeout() && !e.Temporary() {
 				return dead, err
@@ -66,7 +65,7 @@ func newMux(dst string, option *ClientOption, init, dead wire, wireFn wireFn) *m
 
 func (m *mux) _newPooledWire() wire {
 retry:
-	if wire, err := m.wireFn(nil); err == nil || wire == m.dead {
+	if wire, err := m.wireFn(); err == nil || wire == m.dead {
 		return wire
 	}
 	goto retry
@@ -105,7 +104,7 @@ func (m *mux) _pipe() (w wire, err error) {
 	}
 
 	if w = m.wire.Load().(wire); w == m.init {
-		if w, err = m.wireFn(m.disconnected); err == nil || w == m.dead {
+		if w, err = m.wireFn(); err == nil || w == m.dead {
 			m.wire.Store(w)
 		}
 	}
@@ -120,16 +119,6 @@ func (m *mux) _pipe() (w wire, err error) {
 	sc.g.Done()
 
 	return w, err
-}
-
-func (m *mux) disconnected(err error) {
-	if fn := m.doneFn.Load(); fn != nil {
-		fn.(func(err error))(err)
-	}
-}
-
-func (m *mux) OnDisconnected(fn func(err error)) {
-	m.doneFn.CompareAndSwap(nil, fn)
 }
 
 func (m *mux) Dial() error { // no retry
@@ -223,6 +212,17 @@ retry:
 		goto retry
 	}
 	return resp
+}
+
+func (m *mux) Receive(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
+retry:
+	wire := m.pipe()
+	err := wire.Receive(ctx, subscribe, fn)
+	if isNetworkErr(err) {
+		m.wire.CompareAndSwap(wire, m.init)
+		goto retry
+	}
+	return err
 }
 
 func (m *mux) Acquire() wire {

@@ -176,6 +176,20 @@ func TestClusterClient(t *testing.T) {
 		}
 	})
 
+	t.Run("Delegate Receive", func(t *testing.T) {
+		c := client.B().Subscribe().Channel("ch").Build()
+		hdl := func(message PubSubMessage) {}
+		m.ReceiveFn = func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
+			if !reflect.DeepEqual(subscribe.Commands(), c.Commands()) {
+				t.Fatalf("unexpected command %v", subscribe)
+			}
+			return nil
+		}
+		if err := client.Receive(context.Background(), c, hdl); err != nil {
+			t.Fatalf("unexpected response %v", err)
+		}
+	})
+
 	t.Run("Delegate Close", func(t *testing.T) {
 		called := make(chan struct{})
 		m.CloseFn = func() {
@@ -227,6 +241,9 @@ func TestClusterClient(t *testing.T) {
 			DoMultiFn: func(cmd ...cmds.Completed) []RedisResult {
 				return []RedisResult{newResult(RedisMessage{typ: '+', string: "Delegate"}, nil)}
 			},
+			ReceiveFn: func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
+				return errors.New("delegated")
+			},
 		}
 		m.AcquireFn = func() wire {
 			return w
@@ -249,6 +266,9 @@ func TestClusterClient(t *testing.T) {
 				if v, err := resp.ToString(); err != nil || v != "Delegate" {
 					t.Fatalf("unexpected response %v %v", v, err)
 				}
+			}
+			if err := c.Receive(context.Background(), c.B().Ssubscribe().Channel("a").Build(), func(msg PubSubMessage) {}); err == nil {
+				t.Fatalf("unexpected ret %v", err)
 			}
 			return nil
 		}); err != nil {
@@ -273,6 +293,9 @@ func TestClusterClientErr(t *testing.T) {
 				}
 				return newErrResult(v)
 			},
+			ReceiveFn: func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
+				return v
+			},
 		}
 		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
 			return m
@@ -284,6 +307,9 @@ func TestClusterClientErr(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 		if err := client.DoCache(context.Background(), client.B().Get().Key("a").Cache(), 100).Error(); err != v {
+			t.Fatalf("unexpected err %v", err)
+		}
+		if err := client.Receive(context.Background(), client.B().Ssubscribe().Channel("a").Build(), func(msg PubSubMessage) {}); err != v {
 			t.Fatalf("unexpected err %v", err)
 		}
 	})

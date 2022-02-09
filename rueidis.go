@@ -46,9 +46,6 @@ type ClientOption struct {
 	// Sentinel options, including MasterSet and Auth options
 	Sentinel SentinelOption
 
-	// Redis PubSub callbacks, should be created from NewPubSubOption
-	PubSubOption PubSubOption
-
 	// Redis AUTH parameters
 	Username   string
 	Password   string
@@ -117,6 +114,14 @@ type Client interface {
 	// The in-memory cache size is configured by ClientOption.CacheSizeEachConn.
 	// The cmd parameter is recycled after passing into DoCache() and should not be reused.
 	DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp RedisResult)
+
+	// Receive accepts SUBSCRIBE, SSUBSCRIBE, PSUBSCRIBE command and a message handler.
+	// Receive will block and then return value only when the following cases:
+	//   1. nil, when received any unsubscribe/punsubscribe message related to the provided `subscribe` command.
+	//   2. ErrClosing, when the client is closed manually.
+	//   3. ctx.Err(), when the deadline of `ctx` is exceeded.
+	Receive(ctx context.Context, subscribe cmds.Completed, fn func(msg PubSubMessage)) error
+
 	// Dedicated acquire a connection from the blocking connection pool, no one else can use the connection
 	// during Dedicated. The main usage of Dedicated is CAS operation, which is WATCH + MULTI + EXEC.
 	// However, one should try to avoid CAS operation but use Lua script instead, because occupying a connection
@@ -134,12 +139,14 @@ type Client interface {
 type DedicatedClient interface {
 	// B is inherited from the Client
 	B() cmds.Builder
-	// Do is the same as Client
+	// Do is the same as Client's
 	// The cmd parameter is recycled after passing into Do() and should not be reused.
 	Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult)
 	// DoMulti takes multiple redis commands and sends them together, reducing RTT from the user code.
 	// The multi parameters are recycled after passing into DoMulti() and should not be reused.
 	DoMulti(ctx context.Context, multi ...cmds.Completed) (resp []RedisResult)
+	// Receive is the same as Client's
+	Receive(ctx context.Context, subscribe cmds.Completed, fn func(msg PubSubMessage)) error
 }
 
 // NewClient uses ClientOption to initialize the Client for both cluster client and single client.

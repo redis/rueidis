@@ -47,6 +47,11 @@ func TestWithClient(t *testing.T) {
 	validateMetrics(t, mxp, 0, cscMiss.SyncImpl().Descriptor().Name(), 1)
 	validateMetrics(t, mxp, 1, cscHits.SyncImpl().Descriptor().Name(), 1)
 
+	ctx2, cancel := context.WithTimeout(ctx, time.Second/2)
+	client.Receive(ctx2, client.B().Subscribe().Channel("ch").Build(), func(msg rueidis.PubSubMessage) {})
+	cancel()
+	validateTrace(t, exp, "SUBSCRIBE", codes.Error)
+
 	client.Dedicated(func(client rueidis.DedicatedClient) error {
 		client.Do(ctx, client.B().Set().Key("key").Value("val").Build())
 		validateTrace(t, exp, "SET", codes.Ok)
@@ -67,6 +72,11 @@ func TestWithClient(t *testing.T) {
 
 		client.DoMulti(ctx, cmds.NewCompleted([]string{"unknown", "command"}))
 		validateTrace(t, exp, "unknown", codes.Error)
+
+		ctx2, cancel := context.WithTimeout(ctx, time.Second/2)
+		client.Receive(ctx2, client.B().Subscribe().Channel("ch").Build(), func(msg rueidis.PubSubMessage) {})
+		cancel()
+		validateTrace(t, exp, "SUBSCRIBE", codes.Error)
 
 		return nil
 	})

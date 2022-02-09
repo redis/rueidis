@@ -14,6 +14,7 @@ type mockConn struct {
 	DoFn       func(cmd cmds.Completed) RedisResult
 	DoCacheFn  func(cmd cmds.Cacheable, ttl time.Duration) RedisResult
 	DoMultiFn  func(multi ...cmds.Completed) []RedisResult
+	ReceiveFn  func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error
 	InfoFn     func() map[string]RedisMessage
 	ErrorFn    func() error
 	CloseFn    func()
@@ -21,8 +22,6 @@ type mockConn struct {
 	AcquireFn  func() wire
 	StoreFn    func(w wire)
 	OverrideFn func(c conn)
-
-	disconnectedFn func(err error)
 }
 
 func (m *mockConn) Override(c conn) {
@@ -72,6 +71,13 @@ func (m *mockConn) DoMulti(ctx context.Context, multi ...cmds.Completed) []Redis
 	return nil
 }
 
+func (m *mockConn) Receive(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
+	if m.ReceiveFn != nil {
+		return m.ReceiveFn(ctx, subscribe, fn)
+	}
+	return nil
+}
+
 func (m *mockConn) Info() map[string]RedisMessage {
 	if m.InfoFn != nil {
 		return m.InfoFn()
@@ -89,16 +95,6 @@ func (m *mockConn) Error() error {
 func (m *mockConn) Close() {
 	if m.CloseFn != nil {
 		m.CloseFn()
-	}
-}
-
-func (m *mockConn) OnDisconnected(fn func(err error)) {
-	m.disconnectedFn = fn
-}
-
-func (m *mockConn) TriggerDisconnect(err error) {
-	if m.disconnectedFn != nil {
-		m.disconnectedFn(err)
 	}
 }
 
@@ -168,6 +164,20 @@ func TestSingleClient(t *testing.T) {
 		}
 	})
 
+	t.Run("Delegate Receive", func(t *testing.T) {
+		c := client.B().Subscribe().Channel("ch").Build()
+		hdl := func(message PubSubMessage) {}
+		m.ReceiveFn = func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
+			if !reflect.DeepEqual(subscribe.Commands(), c.Commands()) {
+				t.Fatalf("unexpected command %v", subscribe)
+			}
+			return nil
+		}
+		if err := client.Receive(context.Background(), c, hdl); err != nil {
+			t.Fatalf("unexpected response %v", err)
+		}
+	})
+
 	t.Run("Delegate Close", func(t *testing.T) {
 		called := false
 		m.CloseFn = func() { called = true }
@@ -194,6 +204,9 @@ func TestSingleClient(t *testing.T) {
 			DoMultiFn: func(cmd ...cmds.Completed) []RedisResult {
 				return []RedisResult{newResult(RedisMessage{typ: '+', string: "Delegate"}, nil)}
 			},
+			ReceiveFn: func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
+				return errors.New("delegated")
+			},
 		}
 		m.AcquireFn = func() wire {
 			return w
@@ -216,6 +229,9 @@ func TestSingleClient(t *testing.T) {
 				if v, err := resp.ToString(); err != nil || v != "Delegate" {
 					t.Fatalf("unexpected response %v %v", v, err)
 				}
+			}
+			if err := c.Receive(context.Background(), c.B().Subscribe().Channel("a").Build(), func(msg PubSubMessage) {}); err == nil {
+				t.Fatalf("unexpected ret %v", err)
 			}
 			return nil
 		}); err != nil {

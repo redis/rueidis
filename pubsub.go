@@ -1,33 +1,105 @@
 package rueidis
 
-// NewPubSubOption creates a PubSubOption for client initialization.
-// The onConnected callback is called when the connection to a redis node established including auto reconnect.
-// One should subscribe to channel in the onConnected callback to have it resubscribe after auto reconnection.
-func NewPubSubOption(onConnected func(prev error, client DedicatedClient), cbs PubSubHandler) PubSubOption {
-	return PubSubOption{
-		onMessage:      cbs.OnMessage,
-		onPMessage:     cbs.OnPMessage,
-		onSubscribed:   cbs.OnSubscribed,
-		onUnSubscribed: cbs.OnUnSubscribed,
-		onConnected:    onConnected,
+import "sync"
+
+// PubSubMessage represent a pubsub message from redis
+type PubSubMessage struct {
+	// Pattern is only available with pmessage.
+	Pattern string
+	// Channel is the channel the message belongs to
+	Channel string
+	// Message is the message content
+	Message string
+}
+
+func newSubs() *subs {
+	return &subs{chs: make(map[string]map[int]*sub), sub: make(map[int]*sub)}
+}
+
+type subs struct {
+	mu  sync.RWMutex
+	chs map[string]map[int]*sub
+	sub map[int]*sub
+	cnt int
+}
+
+type sub struct {
+	cs []string
+	ch chan PubSubMessage
+}
+
+func (s *subs) Publish(channel string, msg PubSubMessage) {
+	s.mu.RLock()
+	if s.chs != nil {
+		for _, sb := range s.chs[channel] {
+			sb.ch <- msg
+		}
+	}
+	s.mu.RUnlock()
+}
+
+func (s *subs) Subscribe(channels []string) (id int, ch chan PubSubMessage) {
+	s.mu.Lock()
+	if s.chs != nil {
+		s.cnt++
+		id = s.cnt
+		ch = make(chan PubSubMessage, 1)
+		sb := &sub{cs: channels, ch: ch}
+		s.sub[id] = sb
+		for _, channel := range channels {
+			c := s.chs[channel]
+			if c == nil {
+				c = make(map[int]*sub)
+				s.chs[channel] = c
+			}
+			c[id] = sb
+		}
+	}
+	s.mu.Unlock()
+	return id, ch
+}
+
+func (s *subs) Remove(id int) {
+	s.mu.Lock()
+	if s.chs != nil {
+		s.remove(id)
+	}
+	s.mu.Unlock()
+}
+
+func (s *subs) remove(id int) {
+	if sb := s.sub[id]; sb != nil {
+		for _, channel := range sb.cs {
+			if c := s.chs[channel]; c != nil {
+				delete(c, id)
+				if len(c) == 0 {
+					delete(s.chs, channel)
+				}
+			}
+		}
+		close(sb.ch)
+		delete(s.sub, id)
 	}
 }
 
-// PubSubHandler is called in single thread when receiving corresponding PubSub messages from the redis node.
-// These callbacks must not take too long to complete, otherwise it will impact Client performance.
-// They usually just put message to other golang channels.
-type PubSubHandler struct {
-	OnMessage      func(channel, message string)
-	OnPMessage     func(pattern, channel, message string)
-	OnSubscribed   func(channel string, active int64)
-	OnUnSubscribed func(channel string, active int64)
+func (s *subs) Unsubscribe(channel string) {
+	s.mu.Lock()
+	if s.chs != nil {
+		for id := range s.chs[channel] {
+			s.remove(id)
+		}
+	}
+	s.mu.Unlock()
 }
 
-// PubSubOption should be created from the NewPubSubOption()
-type PubSubOption struct {
-	onMessage      func(channel, message string)
-	onPMessage     func(pattern, channel, message string)
-	onSubscribed   func(channel string, active int64)
-	onUnSubscribed func(channel string, active int64)
-	onConnected    func(prev error, client DedicatedClient)
+func (s *subs) Close() {
+	var sbs map[int]*sub
+	s.mu.Lock()
+	sbs = s.sub
+	s.chs = nil
+	s.sub = nil
+	s.mu.Unlock()
+	for _, sb := range sbs {
+		close(sb.ch)
+	}
 }

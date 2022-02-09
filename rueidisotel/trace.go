@@ -91,6 +91,13 @@ func (o *otelclient) Dedicated(fn func(rueidis.DedicatedClient) error) (err erro
 	})
 }
 
+func (o *otelclient) Receive(ctx context.Context, subscribe cmds.Completed, fn func(msg rueidis.PubSubMessage)) (err error) {
+	ctx, span := start(ctx, first(subscribe.Commands()), sum(subscribe.Commands()), o.tAttrs)
+	err = o.client.Receive(ctx, subscribe, fn)
+	end(span, err)
+	return
+}
+
 func (o *otelclient) Close() {
 	o.client.Close()
 }
@@ -118,6 +125,13 @@ func (d *dedicated) DoMulti(ctx context.Context, multi ...cmds.Completed) (resp 
 	ctx, span := start(ctx, multiFirst(multi), multiSum(multi), d.tAttrs)
 	resp = d.client.DoMulti(ctx, multi...)
 	end(span, firstError(resp))
+	return
+}
+
+func (d *dedicated) Receive(ctx context.Context, subscribe cmds.Completed, fn func(msg rueidis.PubSubMessage)) (err error) {
+	ctx, span := start(ctx, first(subscribe.Commands()), sum(subscribe.Commands()), d.tAttrs)
+	err = d.client.Receive(ctx, subscribe, fn)
+	end(span, err)
 	return
 }
 

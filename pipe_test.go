@@ -113,10 +113,6 @@ func write(o io.Writer, m RedisMessage) (err error) {
 }
 
 func setup(t *testing.T, option ClientOption) (*pipe, *redisMock, func(), func()) {
-	return setupWithDisconnectedFn(t, &option, nil)
-}
-
-func setupWithDisconnectedFn(t *testing.T, option *ClientOption, onDisconnected func(err error)) (*pipe, *redisMock, func(), func()) {
 	n1, n2 := net.Pipe()
 	mock := &redisMock{
 		t:    t,
@@ -135,7 +131,7 @@ func setupWithDisconnectedFn(t *testing.T, option *ClientOption, onDisconnected 
 		mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
 			ReplyString("OK")
 	}()
-	p, err := newPipe(n1, option, onDisconnected)
+	p, err := newPipe(n1, &option)
 	if err != nil {
 		t.Fatalf("pipe setup failed: %v", err)
 	}
@@ -182,7 +178,7 @@ func TestNewPipe(t *testing.T) {
 			Username:   "un",
 			Password:   "pa",
 			ClientName: "cn",
-		}, nil)
+		})
 		if err != nil {
 			t.Fatalf("pipe setup failed: %v", err)
 		}
@@ -196,25 +192,10 @@ func TestNewPipe(t *testing.T) {
 		n1, n2 := net.Pipe()
 		n1.Close()
 		n2.Close()
-		if _, err := newPipe(n1, &ClientOption{}, nil); err != io.ErrClosedPipe {
+		if _, err := newPipe(n1, &ClientOption{}); err != io.ErrClosedPipe {
 			t.Fatalf("pipe setup should failed with io.ErrClosedPipe, but got %v", err)
 		}
 	})
-}
-
-func TestOnDisconnectedHook(t *testing.T) {
-	done := make(chan struct{})
-	p, _, _, closeConn := setupWithDisconnectedFn(t, &ClientOption{}, func(err error) {
-		if err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
-			t.Errorf("unexpected err %v", err)
-		}
-		close(done)
-	})
-	closeConn()
-	if err := p.Do(context.Background(), cmds.NewCompleted([]string{"PING"})).Error(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
-		t.Errorf("unexpected err %v", err)
-	}
-	<-done
 }
 
 func TestWriteSingleFlush(t *testing.T) {
@@ -518,84 +499,159 @@ func TestPubSub(t *testing.T) {
 		}
 	})
 
-	t.Run("PubSub Push RedisMessage", func(t *testing.T) {
-		count := make([]int32, 4)
-		p, mock, cancel, _ := setup(t, ClientOption{
-			PubSubOption: PubSubOption{
-				onMessage: func(channel, message string) {
-					if channel != "1" || message != "2" {
-						t.Fatalf("unexpected onMessage")
-					}
-					count[0]++
-				},
-				onPMessage: func(pattern, channel, message string) {
-					if pattern != "3" || channel != "4" || message != "5" {
-						t.Fatalf("unexpected onPMessage")
-					}
-					count[1]++
-				},
-				onSubscribed: func(channel string, active int64) {
-					if channel != "6" || active != 7 {
-						t.Fatalf("unexpected onSubscribed")
-					}
-					count[2]++
-				},
-				onUnSubscribed: func(channel string, active int64) {
-					if channel != "8" || active != 9 {
-						t.Fatalf("unexpected onUnSubscribed")
-					}
-					count[3]++
-				},
-			},
-		})
-		activate := builder.Subscribe().Channel("a").Build()
-		go p.Do(context.Background(), activate)
-		mock.Expect(activate.Commands()...).Reply(
-			RedisMessage{typ: '>', values: []RedisMessage{
-				{typ: '+', string: "message"},
-				{typ: '+', string: "1"},
-				{typ: '+', string: "2"},
-			}},
-			RedisMessage{typ: '>', values: []RedisMessage{
-				{typ: '+', string: "pmessage"},
-				{typ: '+', string: "3"},
-				{typ: '+', string: "4"},
-				{typ: '+', string: "5"},
-			}},
-			RedisMessage{typ: '>', values: []RedisMessage{
-				{typ: '+', string: "subscribe"},
-				{typ: '+', string: "6"},
-				{typ: ':', integer: 7},
-			}},
-			RedisMessage{typ: '>', values: []RedisMessage{
-				{typ: '+', string: "psubscribe"},
-				{typ: '+', string: "6"},
-				{typ: ':', integer: 7},
-			}},
-			RedisMessage{typ: '>', values: []RedisMessage{
-				{typ: '+', string: "unsubscribe"},
-				{typ: '+', string: "8"},
-				{typ: ':', integer: 9},
-			}},
-			RedisMessage{typ: '>', values: []RedisMessage{
-				{typ: '+', string: "punsubscribe"},
-				{typ: '+', string: "8"},
-				{typ: ':', integer: 9},
-			}},
-		)
+	t.Run("PubSub Subscribe RedisMessage", func(t *testing.T) {
+		ctx := context.Background()
+		p, mock, cancel, _ := setup(t, ClientOption{})
+
+		activate := builder.Subscribe().Channel("1").Build()
+		go func() {
+			mock.Expect(activate.Commands()...).Reply(
+				RedisMessage{typ: '>', values: []RedisMessage{
+					{typ: '+', string: "message"},
+					{typ: '+', string: "1"},
+					{typ: '+', string: "2"},
+				}},
+				RedisMessage{typ: '>', values: []RedisMessage{
+					{typ: '+', string: "unsubscribe"},
+					{typ: '+', string: "1"},
+					{typ: ':', integer: 0},
+				}},
+			)
+		}()
+
+		received := make(chan struct{})
+
+		if err := p.Receive(ctx, activate, func(msg PubSubMessage) {
+			if msg.Channel == "1" && msg.Message == "2" {
+				close(received)
+			}
+		}); err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+
+		<-received
+
 		cancel()
-		if count[0] != 1 {
-			t.Fatalf("unexpected onMessage count")
+	})
+
+	t.Run("PubSub SSubscribe RedisMessage", func(t *testing.T) {
+		ctx := context.Background()
+		p, mock, cancel, _ := setup(t, ClientOption{})
+
+		activate := builder.Ssubscribe().Channel("1").Build()
+		go func() {
+			mock.Expect(activate.Commands()...).Reply(
+				RedisMessage{typ: '>', values: []RedisMessage{
+					{typ: '+', string: "message"},
+					{typ: '+', string: "1"},
+					{typ: '+', string: "2"},
+				}},
+				RedisMessage{typ: '>', values: []RedisMessage{
+					{typ: '+', string: "unsubscribe"},
+					{typ: '+', string: "1"},
+					{typ: ':', integer: 0},
+				}},
+			)
+		}()
+
+		received := make(chan struct{})
+
+		if err := p.Receive(ctx, activate, func(msg PubSubMessage) {
+			if msg.Channel == "1" && msg.Message == "2" {
+				close(received)
+			}
+		}); err != nil {
+			t.Fatalf("unexpected err %v", err)
 		}
-		if count[1] != 1 {
-			t.Fatalf("unexpected onPMessage count")
+
+		<-received
+
+		cancel()
+	})
+
+	t.Run("PubSub PSubscribe RedisMessage", func(t *testing.T) {
+		ctx := context.Background()
+		p, mock, cancel, _ := setup(t, ClientOption{})
+
+		activate := builder.Psubscribe().Pattern("1").Build()
+		go func() {
+			mock.Expect(activate.Commands()...).Reply(
+				RedisMessage{typ: '>', values: []RedisMessage{
+					{typ: '+', string: "pmessage"},
+					{typ: '+', string: "1"},
+					{typ: '+', string: "2"},
+					{typ: '+', string: "3"},
+				}},
+				RedisMessage{typ: '>', values: []RedisMessage{
+					{typ: '+', string: "punsubscribe"},
+					{typ: '+', string: "1"},
+					{typ: ':', integer: 0},
+				}},
+			)
+		}()
+
+		received := make(chan struct{})
+
+		if err := p.Receive(ctx, activate, func(msg PubSubMessage) {
+			if msg.Pattern == "1" && msg.Channel == "2" && msg.Message == "3" {
+				close(received)
+			}
+		}); err != nil {
+			t.Fatalf("unexpected err %v", err)
 		}
-		if count[2] != 2 {
-			t.Fatalf("unexpected onSubscribed count")
+
+		<-received
+
+		cancel()
+	})
+
+	t.Run("PubSub Wrong Command RedisMessage", func(t *testing.T) {
+		p, _, cancel, _ := setup(t, ClientOption{})
+		defer cancel()
+
+		defer func() {
+			if !strings.Contains(recover().(string), wrongreceive) {
+				t.Fatal("Receive not panic as expected")
+			}
+		}()
+
+		_ = p.Receive(context.Background(), builder.Get().Key("wrong").Build(), func(msg PubSubMessage) {})
+	})
+
+	t.Run("PubSub Subscribe fail", func(t *testing.T) {
+		ctx := context.Background()
+		p, _, _, closePipe := setup(t, ClientOption{})
+		closePipe()
+
+		if err := p.Receive(ctx, builder.Psubscribe().Pattern("1").Build(), func(msg PubSubMessage) {}); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
+			t.Fatalf("unexpected err %v", err)
 		}
-		if count[3] != 2 {
-			t.Fatalf("unexpected onUnSubscribed count")
+	})
+
+	t.Run("PubSub Subscribe context cancel", func(t *testing.T) {
+		ctx, ctxCancel := context.WithCancel(context.Background())
+		p, mock, cancel, _ := setup(t, ClientOption{})
+
+		activate := builder.Subscribe().Channel("1").Build()
+		go func() {
+			mock.Expect(activate.Commands()...).Reply(
+				RedisMessage{typ: '>', values: []RedisMessage{
+					{typ: '+', string: "message"},
+					{typ: '+', string: "1"},
+					{typ: '+', string: "2"},
+				}},
+			)
+		}()
+
+		if err := p.Receive(ctx, activate, func(msg PubSubMessage) {
+			if msg.Channel == "1" && msg.Message == "2" {
+				ctxCancel()
+			}
+		}); err != context.Canceled {
+			t.Fatalf("unexpected err %v", err)
 		}
+
+		cancel()
 	})
 }
 
