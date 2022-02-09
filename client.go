@@ -42,6 +42,12 @@ func (c *singleClient) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time
 	return resp
 }
 
+func (c *singleClient) Receive(ctx context.Context, subscribe cmds.Completed, fn func(msg PubSubMessage)) (err error) {
+	err = c.conn.Receive(ctx, subscribe, fn)
+	cmds.Put(subscribe.CommandSlice())
+	return err
+}
+
 func (c *singleClient) Dedicated(fn func(DedicatedClient) error) (err error) {
 	wire := c.conn.Acquire()
 	err = fn(&dedicatedSingleClient{cmd: c.cmd, wire: wire})
@@ -77,4 +83,10 @@ func (c *dedicatedSingleClient) DoMulti(ctx context.Context, multi ...cmds.Compl
 		cmds.Put(cmd.CommandSlice())
 	}
 	return resp
+}
+
+func (c *dedicatedSingleClient) Receive(ctx context.Context, subscribe cmds.Completed, fn func(msg PubSubMessage)) (err error) {
+	err = c.wire.Receive(ctx, subscribe, fn)
+	cmds.Put(subscribe.CommandSlice())
+	return err
 }

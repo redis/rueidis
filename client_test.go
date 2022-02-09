@@ -164,6 +164,20 @@ func TestSingleClient(t *testing.T) {
 		}
 	})
 
+	t.Run("Delegate Receive", func(t *testing.T) {
+		c := client.B().Subscribe().Channel("ch").Build()
+		hdl := func(message PubSubMessage) {}
+		m.ReceiveFn = func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
+			if !reflect.DeepEqual(subscribe.Commands(), c.Commands()) {
+				t.Fatalf("unexpected command %v", subscribe)
+			}
+			return nil
+		}
+		if err := client.Receive(context.Background(), c, hdl); err != nil {
+			t.Fatalf("unexpected response %v", err)
+		}
+	})
+
 	t.Run("Delegate Close", func(t *testing.T) {
 		called := false
 		m.CloseFn = func() { called = true }
@@ -190,6 +204,9 @@ func TestSingleClient(t *testing.T) {
 			DoMultiFn: func(cmd ...cmds.Completed) []RedisResult {
 				return []RedisResult{newResult(RedisMessage{typ: '+', string: "Delegate"}, nil)}
 			},
+			ReceiveFn: func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
+				return errors.New("delegated")
+			},
 		}
 		m.AcquireFn = func() wire {
 			return w
@@ -212,6 +229,9 @@ func TestSingleClient(t *testing.T) {
 				if v, err := resp.ToString(); err != nil || v != "Delegate" {
 					t.Fatalf("unexpected response %v %v", v, err)
 				}
+			}
+			if err := c.Receive(context.Background(), c.B().Subscribe().Channel("a").Build(), func(msg PubSubMessage) {}); err == nil {
+				t.Fatalf("unexpected ret %v", err)
 			}
 			return nil
 		}); err != nil {

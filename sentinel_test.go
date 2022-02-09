@@ -414,6 +414,20 @@ func TestSentinelClientDelegate(t *testing.T) {
 		}
 	})
 
+	t.Run("Delegate Receive", func(t *testing.T) {
+		c := client.B().Subscribe().Channel("ch").Build()
+		hdl := func(message PubSubMessage) {}
+		m.ReceiveFn = func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
+			if !reflect.DeepEqual(subscribe.Commands(), c.Commands()) {
+				t.Fatalf("unexpected command %v", subscribe)
+			}
+			return nil
+		}
+		if err := client.Receive(context.Background(), c, hdl); err != nil {
+			t.Fatalf("unexpected response %v", err)
+		}
+	})
+
 	t.Run("Delegate Close", func(t *testing.T) {
 		called := false
 		m.CloseFn = func() { called = true }
@@ -515,6 +529,10 @@ func TestSentinelClientDelegateRetry(t *testing.T) {
 				atomic.AddUint32(&retry, 1)
 				return newErrResult(ErrClosing)
 			},
+			ReceiveFn: func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
+				atomic.AddUint32(&retry, 1)
+				return ErrClosing
+			},
 		}
 		m2 := &mockConn{
 			DoFn: func(cmd cmds.Completed) RedisResult {
@@ -525,6 +543,9 @@ func TestSentinelClientDelegateRetry(t *testing.T) {
 			},
 			DoCacheFn: func(cmd cmds.Cacheable, ttl time.Duration) RedisResult {
 				return RedisResult{val: RedisMessage{typ: '+', string: "OK"}}
+			},
+			ReceiveFn: func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
+				return nil
 			},
 		}
 		client, err := newSentinelClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
@@ -576,6 +597,23 @@ func TestSentinelClientDelegateRetry(t *testing.T) {
 		v, err := client.DoCache(context.Background(), client.B().Get().Key("k").Cache(), time.Minute).ToString()
 		if err != nil || v != "OK" {
 			t.Fatalf("unexpected resp %v %v", v, err)
+		}
+
+		client.Close()
+	})
+
+	t.Run("Delegate Receive", func(t *testing.T) {
+		client, cb := setup()
+
+		go func() {
+			cb()
+		}()
+
+		err := client.Receive(context.Background(), client.B().Subscribe().Channel("k").Build(), func(msg PubSubMessage) {
+
+		})
+		if err != nil {
+			t.Fatalf("unexpected resp %v", err)
 		}
 
 		client.Close()

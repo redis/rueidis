@@ -238,6 +238,61 @@ func testBlockingXREAD(t *testing.T, client Client) {
 	client.Do(ctx, client.B().Del().Key(key).Build())
 }
 
+func testPubSub(t *testing.T, client Client) {
+	msgs := 10000
+	mmap := make(map[string]struct{})
+	for i := 0; i < msgs; i++ {
+		mmap[strconv.Itoa(i)] = struct{}{}
+	}
+	t.Logf("testing pubsub with %v messages\n", msgs)
+	jobs, wait := parallel(10)
+
+	ctx := context.Background()
+
+	messages := make(chan string, 10)
+	go func() {
+		err := client.Receive(ctx, client.B().Subscribe().Channel("ch1").Build(), func(msg PubSubMessage) {
+			messages <- msg.Message
+		})
+		if err != ErrClosing {
+			t.Errorf("unexpected subscribe response %v", err)
+		}
+	}()
+
+	go func() {
+		err := client.Receive(ctx, client.B().Psubscribe().Pattern("pat*").Build(), func(msg PubSubMessage) {
+			messages <- msg.Message
+		})
+		if err != ErrClosing {
+			t.Errorf("unexpected subscribe response %v", err)
+		}
+	}()
+
+	go func() {
+		time.Sleep(time.Second)
+		for i := 0; i < msgs; i++ {
+			msg := strconv.Itoa(i)
+			ch := "ch1"
+			if i%10 == 0 {
+				ch = "pat1"
+			}
+			jobs <- func() {
+				if err := client.Do(context.Background(), client.B().Publish().Channel(ch).Message(msg).Build()).Error(); err != nil {
+					t.Errorf("unexpected publish response %v", err)
+				}
+			}
+		}
+		wait()
+	}()
+
+	for message := range messages {
+		delete(mmap, message)
+		if len(mmap) == 0 {
+			close(messages)
+		}
+	}
+}
+
 func run(t *testing.T, client Client, cases ...func(*testing.T, Client)) {
 	wg := sync.WaitGroup{}
 	wg.Add(len(cases))
@@ -258,7 +313,7 @@ func TestSingleClientIntegration(t *testing.T) {
 	}
 	defer client.Close()
 
-	run(t, client, testSETGET, testBlockingZPOP, testBlockingXREAD)
+	run(t, client, testSETGET, testBlockingZPOP, testBlockingXREAD, testPubSub)
 	run(t, client, testFlush)
 }
 
@@ -274,7 +329,7 @@ func TestSentinelClientIntegration(t *testing.T) {
 	}
 	defer client.Close()
 
-	run(t, client, testSETGET, testBlockingZPOP, testBlockingXREAD)
+	run(t, client, testSETGET, testBlockingZPOP, testBlockingXREAD, testPubSub)
 	run(t, client, testFlush)
 }
 
@@ -288,5 +343,5 @@ func TestClusterClientIntegration(t *testing.T) {
 	}
 	defer client.Close()
 
-	run(t, client, testSETGET, testBlockingZPOP, testBlockingXREAD)
+	run(t, client, testSETGET, testBlockingZPOP, testBlockingXREAD, testPubSub)
 }

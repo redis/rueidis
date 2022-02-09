@@ -75,6 +75,15 @@ retry:
 	return resp
 }
 
+func (c *sentinelClient) Receive(ctx context.Context, subscribe cmds.Completed, fn func(msg PubSubMessage)) (err error) {
+retry:
+	if err = c.mConn.Load().(conn).Receive(ctx, subscribe, fn); c.shouldRetry(err) {
+		goto retry
+	}
+	cmds.Put(subscribe.CommandSlice())
+	return err
+}
+
 func (c *sentinelClient) Dedicated(fn func(DedicatedClient) error) (err error) {
 	master := c.mConn.Load().(conn)
 	wire := master.Acquire()

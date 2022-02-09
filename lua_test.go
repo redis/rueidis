@@ -87,6 +87,10 @@ type client struct {
 	CloseFn     func()
 }
 
+func (c *client) Receive(ctx context.Context, subscribe cmds.Completed, fn func(msg PubSubMessage)) error {
+	return nil
+}
+
 func (c *client) B() cmds.Builder {
 	if c.BFn != nil {
 		return c.BFn()

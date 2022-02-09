@@ -278,6 +278,20 @@ ret:
 	return resp
 }
 
+func (c *clusterClient) Receive(ctx context.Context, subscribe cmds.Completed, fn func(msg PubSubMessage)) (err error) {
+retry:
+	cc, err := c.pick(subscribe.Slot())
+	if err != nil {
+		goto ret
+	}
+	if err = cc.Receive(ctx, subscribe, fn); c.shouldRefreshRetry(err) {
+		goto retry
+	}
+ret:
+	cmds.Put(subscribe.CommandSlice())
+	return err
+}
+
 func (c *clusterClient) Dedicated(fn func(DedicatedClient) error) (err error) {
 	dcc := &dedicatedClusterClient{cmd: c.cmd, client: c, slot: cmds.NoSlot}
 	err = fn(dcc)
@@ -393,6 +407,19 @@ retry:
 		cmds.Put(cmd.CommandSlice())
 	}
 	return resp
+}
+
+func (c *dedicatedClusterClient) Receive(ctx context.Context, subscribe cmds.Completed, fn func(msg PubSubMessage)) (err error) {
+	c.check(subscribe.Slot())
+	var wire wire
+retry:
+	if wire, err = c.acquire(); err == nil {
+		if err = wire.Receive(ctx, subscribe, fn); c.client.shouldRefreshRetry(err) {
+			goto retry
+		}
+	}
+	cmds.Put(subscribe.CommandSlice())
+	return err
 }
 
 const (
