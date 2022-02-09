@@ -116,8 +116,8 @@ type Client interface {
 	DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp RedisResult)
 
 	// Receive accepts SUBSCRIBE, SSUBSCRIBE, PSUBSCRIBE command and a message handler.
-	// Receive will block and return value only when the following cases:
-	//   1. nil, when received any unsubscribe/punsubscribe message related to the `subscribe` command.
+	// Receive will block and then return value only when the following cases:
+	//   1. nil, when received any unsubscribe/punsubscribe message related to the provided `subscribe` command.
 	//   2. ErrClosing, when the client is closed manually.
 	//   3. ctx.Err(), when the deadline of `ctx` is exceeded.
 	Receive(ctx context.Context, subscribe cmds.Completed, fn func(msg PubSubMessage)) error

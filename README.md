@@ -198,22 +198,22 @@ Please note that though operations can return early, the command is likely sent 
 
 ## Pub/Sub
 
-To receive messages from channels, the message handler should be registered when creating the redis connection:
+To receive messages from channels, `Client.Receive()` should be used. It supports `SUBSCRIBE`, `PSUBSCRIBE` and Redis 7.0's `SSUBSCRIBE`:
 
 ```golang
-c, _ := rueidis.NewClient(rueidis.ClientOption{
-    InitAddress: []string{"127.0.0.1:6379"},
-    PubSubOption: rueidis.NewPubSubOption(func(prev error, client rueidis.DedicatedClient) {
-        // Subscribe channels in this PubSubSetup hook for auto reconnecting after disconnected.
-        // The "prev" err is previous disconnect error.
-        err := client.Do(ctx, client.B().Subscribe().Channel("my_channel").Build()).Error()
-    }, rueidis.PubSubHandler{
-        OnMessage: func(channel, message string) {
-            // handle the message
-        },
-    },
+err = c.Receive(context.Background(), c.B().Subscribe().Channel("ch1", "ch2").Build(), func(msg rueidis.PubSubMessage) {
+    // handle the msg
 })
 ```
+
+The provided message handler will be called once message is received.
+
+It is important to note that `Client.Receive()` will block and then return value only when the following cases:
+1. nil, when received any unsubscribe/punsubscribe message related to the provided `subscribe` command.
+2. ErrClosing, when the client is closed manually.
+3. ctx.Err(), when the deadline of `ctx` is exceeded.
+
+`Client.Receive()` is also available inside the `Client.Dedicated()`.
 
 ## CAS Pattern
 

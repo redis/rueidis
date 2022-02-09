@@ -2,9 +2,13 @@ package rueidis
 
 import "sync"
 
+// PubSubMessage represent a pubsub message from redis
 type PubSubMessage struct {
+	// Pattern is only available with pmessage.
 	Pattern string
+	// Channel is the channel the message belongs to
 	Channel string
+	// Message is the message content
 	Message string
 }
 
