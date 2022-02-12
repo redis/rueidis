@@ -104,7 +104,7 @@ func (m *mux) _pipe() (w wire, err error) {
 	}
 
 	if w = m.wire.Load().(wire); w == m.init {
-		if w, err = m.wireFn(); err == nil || w == m.dead {
+		if w, err = m.wireFn(); err == nil {
 			m.wire.Store(w)
 		}
 	}

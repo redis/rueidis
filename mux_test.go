@@ -56,8 +56,14 @@ func TestNewMuxWithoutRetryOnRefuse(t *testing.T) {
 	if c != 1 {
 		t.Fatalf("dialFn not called")
 	}
-	if w := m.pipe(); w != m.dead {
+	if w := m.pipe(); w != m.dead { // c = 2
 		t.Fatalf("unexpected wire %v", w)
+	}
+	if err := m.Dial(); err != e { // c = 3
+		t.Fatalf("unexpected return %v", err)
+	}
+	if c != 3 {
+		t.Fatalf("dialFn not called %v", c)
 	}
 }
 
