@@ -1007,3 +1007,22 @@ func TestOngoingWriteTimeoutInPipelineMode_DoMulti(t *testing.T) {
 	}
 	p.Close()
 }
+
+func TestDeadPipe(t *testing.T) {
+	ctx := context.Background()
+	if err := dead.Error(); err != ErrClosing {
+		t.Fatalf("unexpected err %v", err)
+	}
+	if err := dead.Do(ctx, cmds.NewCompleted(nil)).Error(); err != ErrClosing {
+		t.Fatalf("unexpected err %v", err)
+	}
+	if err := dead.DoMulti(ctx, cmds.NewCompleted(nil))[0].Error(); err != ErrClosing {
+		t.Fatalf("unexpected err %v", err)
+	}
+	if err := dead.DoCache(ctx, cmds.Cacheable(cmds.NewCompleted(nil)), time.Second).Error(); err != ErrClosing {
+		t.Fatalf("unexpected err %v", err)
+	}
+	if err := dead.Receive(ctx, cmds.NewCompleted(nil), func(message PubSubMessage) {}); err != ErrClosing {
+		t.Fatalf("unexpected err %v", err)
+	}
+}

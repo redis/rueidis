@@ -304,6 +304,10 @@ func (p *pipe) handlePush(values []RedisMessage) {
 }
 
 func (p *pipe) Receive(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
+	if p.subs == nil || p.psubs == nil {
+		return ErrClosing
+	}
+
 	var sb *subs
 	cmd, args := subscribe.Commands()[0], subscribe.Commands()[1:]
 
@@ -553,6 +557,9 @@ next:
 }
 
 func (p *pipe) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) RedisResult {
+	if p.cache == nil {
+		return newErrResult(ErrClosing)
+	}
 	ck, cc := cmd.CacheKey()
 	if v, entry := p.cache.GetOrPrepare(ck, cc, ttl); v.typ != 0 {
 		return newResult(v, nil)
