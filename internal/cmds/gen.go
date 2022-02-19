@@ -265,6 +265,1101 @@ func (c AclWhoami) Build() Completed {
 	return Completed(c)
 }
 
+type AiModeldel Completed
+
+func (b Builder) AiModeldel() (c AiModeldel) {
+	c = AiModeldel{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "AI.MODELDEL")
+	return c
+}
+
+func (c AiModeldel) Key(key string) AiModeldelKey {
+	if c.ks != NoSlot {
+		c.ks = check(c.ks, slot(key))
+	}
+	c.cs.s = append(c.cs.s, key)
+	return (AiModeldelKey)(c)
+}
+
+type AiModeldelKey Completed
+
+func (c AiModeldelKey) Build() Completed {
+	return Completed(c)
+}
+
+type AiModelexecute Completed
+
+func (b Builder) AiModelexecute() (c AiModelexecute) {
+	c = AiModelexecute{cs: get(), ks: b.ks, cf: readonly}
+	c.cs.s = append(c.cs.s, "AI.MODELEXECUTE")
+	return c
+}
+
+func (c AiModelexecute) Key(key string) AiModelexecuteKey {
+	if c.ks != NoSlot {
+		c.ks = check(c.ks, slot(key))
+	}
+	c.cs.s = append(c.cs.s, key)
+	return (AiModelexecuteKey)(c)
+}
+
+type AiModelexecuteInputsInput Completed
+
+func (c AiModelexecuteInputsInput) Input(input ...string) AiModelexecuteInputsInput {
+	c.cs.s = append(c.cs.s, input...)
+	return c
+}
+
+func (c AiModelexecuteInputsInput) Outputs(outputCount int64) AiModelexecuteOutputsOutputs {
+	c.cs.s = append(c.cs.s, "OUTPUTS", strconv.FormatInt(outputCount, 10))
+	return (AiModelexecuteOutputsOutputs)(c)
+}
+
+type AiModelexecuteInputsInputs Completed
+
+func (c AiModelexecuteInputsInputs) Input(input ...string) AiModelexecuteInputsInput {
+	c.cs.s = append(c.cs.s, input...)
+	return (AiModelexecuteInputsInput)(c)
+}
+
+type AiModelexecuteKey Completed
+
+func (c AiModelexecuteKey) Inputs(inputCount int64) AiModelexecuteInputsInputs {
+	c.cs.s = append(c.cs.s, "INPUTS", strconv.FormatInt(inputCount, 10))
+	return (AiModelexecuteInputsInputs)(c)
+}
+
+type AiModelexecuteOutputsOutput Completed
+
+func (c AiModelexecuteOutputsOutput) Output(output ...string) AiModelexecuteOutputsOutput {
+	c.cs.s = append(c.cs.s, output...)
+	return c
+}
+
+func (c AiModelexecuteOutputsOutput) Timeout(timeout int64) AiModelexecuteTimeout {
+	c.cs.s = append(c.cs.s, "TIMEOUT", strconv.FormatInt(timeout, 10))
+	return (AiModelexecuteTimeout)(c)
+}
+
+func (c AiModelexecuteOutputsOutput) Build() Completed {
+	return Completed(c)
+}
+
+func (c AiModelexecuteOutputsOutput) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type AiModelexecuteOutputsOutputs Completed
+
+func (c AiModelexecuteOutputsOutputs) Output(output ...string) AiModelexecuteOutputsOutput {
+	c.cs.s = append(c.cs.s, output...)
+	return (AiModelexecuteOutputsOutput)(c)
+}
+
+type AiModelexecuteTimeout Completed
+
+func (c AiModelexecuteTimeout) Build() Completed {
+	return Completed(c)
+}
+
+func (c AiModelexecuteTimeout) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type AiModelget Completed
+
+func (b Builder) AiModelget() (c AiModelget) {
+	c = AiModelget{cs: get(), ks: b.ks, cf: readonly}
+	c.cs.s = append(c.cs.s, "AI.MODELGET")
+	return c
+}
+
+func (c AiModelget) Key(key string) AiModelgetKey {
+	if c.ks != NoSlot {
+		c.ks = check(c.ks, slot(key))
+	}
+	c.cs.s = append(c.cs.s, key)
+	return (AiModelgetKey)(c)
+}
+
+type AiModelgetBlob Completed
+
+func (c AiModelgetBlob) Build() Completed {
+	return Completed(c)
+}
+
+func (c AiModelgetBlob) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type AiModelgetKey Completed
+
+func (c AiModelgetKey) Meta() AiModelgetMeta {
+	c.cs.s = append(c.cs.s, "META")
+	return (AiModelgetMeta)(c)
+}
+
+func (c AiModelgetKey) Blob() AiModelgetBlob {
+	c.cs.s = append(c.cs.s, "BLOB")
+	return (AiModelgetBlob)(c)
+}
+
+func (c AiModelgetKey) Build() Completed {
+	return Completed(c)
+}
+
+func (c AiModelgetKey) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type AiModelgetMeta Completed
+
+func (c AiModelgetMeta) Blob() AiModelgetBlob {
+	c.cs.s = append(c.cs.s, "BLOB")
+	return (AiModelgetBlob)(c)
+}
+
+func (c AiModelgetMeta) Build() Completed {
+	return Completed(c)
+}
+
+func (c AiModelgetMeta) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type AiModelstore Completed
+
+func (b Builder) AiModelstore() (c AiModelstore) {
+	c = AiModelstore{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "AI.MODELSTORE")
+	return c
+}
+
+func (c AiModelstore) Key(key string) AiModelstoreKey {
+	if c.ks != NoSlot {
+		c.ks = check(c.ks, slot(key))
+	}
+	c.cs.s = append(c.cs.s, key)
+	return (AiModelstoreKey)(c)
+}
+
+type AiModelstoreBackendOnnx Completed
+
+func (c AiModelstoreBackendOnnx) Cpu() AiModelstoreDeviceCpu {
+	c.cs.s = append(c.cs.s, "CPU")
+	return (AiModelstoreDeviceCpu)(c)
+}
+
+func (c AiModelstoreBackendOnnx) Gpu() AiModelstoreDeviceGpu {
+	c.cs.s = append(c.cs.s, "GPU")
+	return (AiModelstoreDeviceGpu)(c)
+}
+
+type AiModelstoreBackendTf Completed
+
+func (c AiModelstoreBackendTf) Cpu() AiModelstoreDeviceCpu {
+	c.cs.s = append(c.cs.s, "CPU")
+	return (AiModelstoreDeviceCpu)(c)
+}
+
+func (c AiModelstoreBackendTf) Gpu() AiModelstoreDeviceGpu {
+	c.cs.s = append(c.cs.s, "GPU")
+	return (AiModelstoreDeviceGpu)(c)
+}
+
+type AiModelstoreBackendTorch Completed
+
+func (c AiModelstoreBackendTorch) Cpu() AiModelstoreDeviceCpu {
+	c.cs.s = append(c.cs.s, "CPU")
+	return (AiModelstoreDeviceCpu)(c)
+}
+
+func (c AiModelstoreBackendTorch) Gpu() AiModelstoreDeviceGpu {
+	c.cs.s = append(c.cs.s, "GPU")
+	return (AiModelstoreDeviceGpu)(c)
+}
+
+type AiModelstoreBatchsize Completed
+
+func (c AiModelstoreBatchsize) Minbatchsize(minbatchsize int64) AiModelstoreMinbatchsize {
+	c.cs.s = append(c.cs.s, "MINBATCHSIZE", strconv.FormatInt(minbatchsize, 10))
+	return (AiModelstoreMinbatchsize)(c)
+}
+
+func (c AiModelstoreBatchsize) Minbatchtimeout(minbatchtimeout int64) AiModelstoreMinbatchtimeout {
+	c.cs.s = append(c.cs.s, "MINBATCHTIMEOUT", strconv.FormatInt(minbatchtimeout, 10))
+	return (AiModelstoreMinbatchtimeout)(c)
+}
+
+func (c AiModelstoreBatchsize) Inputs(inputCount int64) AiModelstoreInputsInputs {
+	c.cs.s = append(c.cs.s, "INPUTS", strconv.FormatInt(inputCount, 10))
+	return (AiModelstoreInputsInputs)(c)
+}
+
+func (c AiModelstoreBatchsize) Outputs(outputCount int64) AiModelstoreOutputsOutputs {
+	c.cs.s = append(c.cs.s, "OUTPUTS", strconv.FormatInt(outputCount, 10))
+	return (AiModelstoreOutputsOutputs)(c)
+}
+
+func (c AiModelstoreBatchsize) Blob(blob string) AiModelstoreBlob {
+	c.cs.s = append(c.cs.s, "BLOB", blob)
+	return (AiModelstoreBlob)(c)
+}
+
+func (c AiModelstoreBatchsize) Build() Completed {
+	return Completed(c)
+}
+
+type AiModelstoreBlob Completed
+
+func (c AiModelstoreBlob) Build() Completed {
+	return Completed(c)
+}
+
+type AiModelstoreDeviceCpu Completed
+
+func (c AiModelstoreDeviceCpu) Tag(tag string) AiModelstoreTag {
+	c.cs.s = append(c.cs.s, "TAG", tag)
+	return (AiModelstoreTag)(c)
+}
+
+func (c AiModelstoreDeviceCpu) Batchsize(batchsize int64) AiModelstoreBatchsize {
+	c.cs.s = append(c.cs.s, "BATCHSIZE", strconv.FormatInt(batchsize, 10))
+	return (AiModelstoreBatchsize)(c)
+}
+
+func (c AiModelstoreDeviceCpu) Minbatchsize(minbatchsize int64) AiModelstoreMinbatchsize {
+	c.cs.s = append(c.cs.s, "MINBATCHSIZE", strconv.FormatInt(minbatchsize, 10))
+	return (AiModelstoreMinbatchsize)(c)
+}
+
+func (c AiModelstoreDeviceCpu) Minbatchtimeout(minbatchtimeout int64) AiModelstoreMinbatchtimeout {
+	c.cs.s = append(c.cs.s, "MINBATCHTIMEOUT", strconv.FormatInt(minbatchtimeout, 10))
+	return (AiModelstoreMinbatchtimeout)(c)
+}
+
+func (c AiModelstoreDeviceCpu) Inputs(inputCount int64) AiModelstoreInputsInputs {
+	c.cs.s = append(c.cs.s, "INPUTS", strconv.FormatInt(inputCount, 10))
+	return (AiModelstoreInputsInputs)(c)
+}
+
+func (c AiModelstoreDeviceCpu) Outputs(outputCount int64) AiModelstoreOutputsOutputs {
+	c.cs.s = append(c.cs.s, "OUTPUTS", strconv.FormatInt(outputCount, 10))
+	return (AiModelstoreOutputsOutputs)(c)
+}
+
+func (c AiModelstoreDeviceCpu) Blob(blob string) AiModelstoreBlob {
+	c.cs.s = append(c.cs.s, "BLOB", blob)
+	return (AiModelstoreBlob)(c)
+}
+
+func (c AiModelstoreDeviceCpu) Build() Completed {
+	return Completed(c)
+}
+
+type AiModelstoreDeviceGpu Completed
+
+func (c AiModelstoreDeviceGpu) Tag(tag string) AiModelstoreTag {
+	c.cs.s = append(c.cs.s, "TAG", tag)
+	return (AiModelstoreTag)(c)
+}
+
+func (c AiModelstoreDeviceGpu) Batchsize(batchsize int64) AiModelstoreBatchsize {
+	c.cs.s = append(c.cs.s, "BATCHSIZE", strconv.FormatInt(batchsize, 10))
+	return (AiModelstoreBatchsize)(c)
+}
+
+func (c AiModelstoreDeviceGpu) Minbatchsize(minbatchsize int64) AiModelstoreMinbatchsize {
+	c.cs.s = append(c.cs.s, "MINBATCHSIZE", strconv.FormatInt(minbatchsize, 10))
+	return (AiModelstoreMinbatchsize)(c)
+}
+
+func (c AiModelstoreDeviceGpu) Minbatchtimeout(minbatchtimeout int64) AiModelstoreMinbatchtimeout {
+	c.cs.s = append(c.cs.s, "MINBATCHTIMEOUT", strconv.FormatInt(minbatchtimeout, 10))
+	return (AiModelstoreMinbatchtimeout)(c)
+}
+
+func (c AiModelstoreDeviceGpu) Inputs(inputCount int64) AiModelstoreInputsInputs {
+	c.cs.s = append(c.cs.s, "INPUTS", strconv.FormatInt(inputCount, 10))
+	return (AiModelstoreInputsInputs)(c)
+}
+
+func (c AiModelstoreDeviceGpu) Outputs(outputCount int64) AiModelstoreOutputsOutputs {
+	c.cs.s = append(c.cs.s, "OUTPUTS", strconv.FormatInt(outputCount, 10))
+	return (AiModelstoreOutputsOutputs)(c)
+}
+
+func (c AiModelstoreDeviceGpu) Blob(blob string) AiModelstoreBlob {
+	c.cs.s = append(c.cs.s, "BLOB", blob)
+	return (AiModelstoreBlob)(c)
+}
+
+func (c AiModelstoreDeviceGpu) Build() Completed {
+	return Completed(c)
+}
+
+type AiModelstoreInputsInput Completed
+
+func (c AiModelstoreInputsInput) Input(input ...string) AiModelstoreInputsInput {
+	c.cs.s = append(c.cs.s, input...)
+	return c
+}
+
+func (c AiModelstoreInputsInput) Outputs(outputCount int64) AiModelstoreOutputsOutputs {
+	c.cs.s = append(c.cs.s, "OUTPUTS", strconv.FormatInt(outputCount, 10))
+	return (AiModelstoreOutputsOutputs)(c)
+}
+
+func (c AiModelstoreInputsInput) Blob(blob string) AiModelstoreBlob {
+	c.cs.s = append(c.cs.s, "BLOB", blob)
+	return (AiModelstoreBlob)(c)
+}
+
+func (c AiModelstoreInputsInput) Build() Completed {
+	return Completed(c)
+}
+
+type AiModelstoreInputsInputs Completed
+
+func (c AiModelstoreInputsInputs) Input(input ...string) AiModelstoreInputsInput {
+	c.cs.s = append(c.cs.s, input...)
+	return (AiModelstoreInputsInput)(c)
+}
+
+type AiModelstoreKey Completed
+
+func (c AiModelstoreKey) Tf() AiModelstoreBackendTf {
+	c.cs.s = append(c.cs.s, "TF")
+	return (AiModelstoreBackendTf)(c)
+}
+
+func (c AiModelstoreKey) Torch() AiModelstoreBackendTorch {
+	c.cs.s = append(c.cs.s, "TORCH")
+	return (AiModelstoreBackendTorch)(c)
+}
+
+func (c AiModelstoreKey) Onnx() AiModelstoreBackendOnnx {
+	c.cs.s = append(c.cs.s, "ONNX")
+	return (AiModelstoreBackendOnnx)(c)
+}
+
+type AiModelstoreMinbatchsize Completed
+
+func (c AiModelstoreMinbatchsize) Minbatchtimeout(minbatchtimeout int64) AiModelstoreMinbatchtimeout {
+	c.cs.s = append(c.cs.s, "MINBATCHTIMEOUT", strconv.FormatInt(minbatchtimeout, 10))
+	return (AiModelstoreMinbatchtimeout)(c)
+}
+
+func (c AiModelstoreMinbatchsize) Inputs(inputCount int64) AiModelstoreInputsInputs {
+	c.cs.s = append(c.cs.s, "INPUTS", strconv.FormatInt(inputCount, 10))
+	return (AiModelstoreInputsInputs)(c)
+}
+
+func (c AiModelstoreMinbatchsize) Outputs(outputCount int64) AiModelstoreOutputsOutputs {
+	c.cs.s = append(c.cs.s, "OUTPUTS", strconv.FormatInt(outputCount, 10))
+	return (AiModelstoreOutputsOutputs)(c)
+}
+
+func (c AiModelstoreMinbatchsize) Blob(blob string) AiModelstoreBlob {
+	c.cs.s = append(c.cs.s, "BLOB", blob)
+	return (AiModelstoreBlob)(c)
+}
+
+func (c AiModelstoreMinbatchsize) Build() Completed {
+	return Completed(c)
+}
+
+type AiModelstoreMinbatchtimeout Completed
+
+func (c AiModelstoreMinbatchtimeout) Inputs(inputCount int64) AiModelstoreInputsInputs {
+	c.cs.s = append(c.cs.s, "INPUTS", strconv.FormatInt(inputCount, 10))
+	return (AiModelstoreInputsInputs)(c)
+}
+
+func (c AiModelstoreMinbatchtimeout) Outputs(outputCount int64) AiModelstoreOutputsOutputs {
+	c.cs.s = append(c.cs.s, "OUTPUTS", strconv.FormatInt(outputCount, 10))
+	return (AiModelstoreOutputsOutputs)(c)
+}
+
+func (c AiModelstoreMinbatchtimeout) Blob(blob string) AiModelstoreBlob {
+	c.cs.s = append(c.cs.s, "BLOB", blob)
+	return (AiModelstoreBlob)(c)
+}
+
+func (c AiModelstoreMinbatchtimeout) Build() Completed {
+	return Completed(c)
+}
+
+type AiModelstoreOutputsOutput Completed
+
+func (c AiModelstoreOutputsOutput) Output(output ...string) AiModelstoreOutputsOutput {
+	c.cs.s = append(c.cs.s, output...)
+	return c
+}
+
+func (c AiModelstoreOutputsOutput) Blob(blob string) AiModelstoreBlob {
+	c.cs.s = append(c.cs.s, "BLOB", blob)
+	return (AiModelstoreBlob)(c)
+}
+
+func (c AiModelstoreOutputsOutput) Build() Completed {
+	return Completed(c)
+}
+
+type AiModelstoreOutputsOutputs Completed
+
+func (c AiModelstoreOutputsOutputs) Output(output ...string) AiModelstoreOutputsOutput {
+	c.cs.s = append(c.cs.s, output...)
+	return (AiModelstoreOutputsOutput)(c)
+}
+
+type AiModelstoreTag Completed
+
+func (c AiModelstoreTag) Batchsize(batchsize int64) AiModelstoreBatchsize {
+	c.cs.s = append(c.cs.s, "BATCHSIZE", strconv.FormatInt(batchsize, 10))
+	return (AiModelstoreBatchsize)(c)
+}
+
+func (c AiModelstoreTag) Minbatchsize(minbatchsize int64) AiModelstoreMinbatchsize {
+	c.cs.s = append(c.cs.s, "MINBATCHSIZE", strconv.FormatInt(minbatchsize, 10))
+	return (AiModelstoreMinbatchsize)(c)
+}
+
+func (c AiModelstoreTag) Minbatchtimeout(minbatchtimeout int64) AiModelstoreMinbatchtimeout {
+	c.cs.s = append(c.cs.s, "MINBATCHTIMEOUT", strconv.FormatInt(minbatchtimeout, 10))
+	return (AiModelstoreMinbatchtimeout)(c)
+}
+
+func (c AiModelstoreTag) Inputs(inputCount int64) AiModelstoreInputsInputs {
+	c.cs.s = append(c.cs.s, "INPUTS", strconv.FormatInt(inputCount, 10))
+	return (AiModelstoreInputsInputs)(c)
+}
+
+func (c AiModelstoreTag) Outputs(outputCount int64) AiModelstoreOutputsOutputs {
+	c.cs.s = append(c.cs.s, "OUTPUTS", strconv.FormatInt(outputCount, 10))
+	return (AiModelstoreOutputsOutputs)(c)
+}
+
+func (c AiModelstoreTag) Blob(blob string) AiModelstoreBlob {
+	c.cs.s = append(c.cs.s, "BLOB", blob)
+	return (AiModelstoreBlob)(c)
+}
+
+func (c AiModelstoreTag) Build() Completed {
+	return Completed(c)
+}
+
+type AiScriptdel Completed
+
+func (b Builder) AiScriptdel() (c AiScriptdel) {
+	c = AiScriptdel{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "AI.SCRIPTDEL")
+	return c
+}
+
+func (c AiScriptdel) Key(key string) AiScriptdelKey {
+	if c.ks != NoSlot {
+		c.ks = check(c.ks, slot(key))
+	}
+	c.cs.s = append(c.cs.s, key)
+	return (AiScriptdelKey)(c)
+}
+
+type AiScriptdelKey Completed
+
+func (c AiScriptdelKey) Build() Completed {
+	return Completed(c)
+}
+
+type AiScriptexecute Completed
+
+func (b Builder) AiScriptexecute() (c AiScriptexecute) {
+	c = AiScriptexecute{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "AI.SCRIPTEXECUTE")
+	return c
+}
+
+func (c AiScriptexecute) Key(key string) AiScriptexecuteKey {
+	if c.ks != NoSlot {
+		c.ks = check(c.ks, slot(key))
+	}
+	c.cs.s = append(c.cs.s, key)
+	return (AiScriptexecuteKey)(c)
+}
+
+type AiScriptexecuteArgsArg Completed
+
+func (c AiScriptexecuteArgsArg) Arg(arg ...string) AiScriptexecuteArgsArg {
+	c.cs.s = append(c.cs.s, arg...)
+	return c
+}
+
+func (c AiScriptexecuteArgsArg) Outputs(outputCount int64) AiScriptexecuteOutputsOutputs {
+	c.cs.s = append(c.cs.s, "OUTPUTS", strconv.FormatInt(outputCount, 10))
+	return (AiScriptexecuteOutputsOutputs)(c)
+}
+
+func (c AiScriptexecuteArgsArg) Timeout(timeout int64) AiScriptexecuteTimeout {
+	c.cs.s = append(c.cs.s, "TIMEOUT", strconv.FormatInt(timeout, 10))
+	return (AiScriptexecuteTimeout)(c)
+}
+
+func (c AiScriptexecuteArgsArg) Build() Completed {
+	return Completed(c)
+}
+
+type AiScriptexecuteArgsArgs Completed
+
+func (c AiScriptexecuteArgsArgs) Arg(arg ...string) AiScriptexecuteArgsArg {
+	c.cs.s = append(c.cs.s, arg...)
+	return (AiScriptexecuteArgsArg)(c)
+}
+
+type AiScriptexecuteFunction Completed
+
+func (c AiScriptexecuteFunction) Keys(keyCount int64) AiScriptexecuteKeysKeys {
+	c.cs.s = append(c.cs.s, "KEYS", strconv.FormatInt(keyCount, 10))
+	return (AiScriptexecuteKeysKeys)(c)
+}
+
+func (c AiScriptexecuteFunction) Inputs(inputCount int64) AiScriptexecuteInputsInputs {
+	c.cs.s = append(c.cs.s, "INPUTS", strconv.FormatInt(inputCount, 10))
+	return (AiScriptexecuteInputsInputs)(c)
+}
+
+func (c AiScriptexecuteFunction) Args(argCount int64) AiScriptexecuteArgsArgs {
+	c.cs.s = append(c.cs.s, "ARGS", strconv.FormatInt(argCount, 10))
+	return (AiScriptexecuteArgsArgs)(c)
+}
+
+func (c AiScriptexecuteFunction) Outputs(outputCount int64) AiScriptexecuteOutputsOutputs {
+	c.cs.s = append(c.cs.s, "OUTPUTS", strconv.FormatInt(outputCount, 10))
+	return (AiScriptexecuteOutputsOutputs)(c)
+}
+
+func (c AiScriptexecuteFunction) Timeout(timeout int64) AiScriptexecuteTimeout {
+	c.cs.s = append(c.cs.s, "TIMEOUT", strconv.FormatInt(timeout, 10))
+	return (AiScriptexecuteTimeout)(c)
+}
+
+func (c AiScriptexecuteFunction) Build() Completed {
+	return Completed(c)
+}
+
+type AiScriptexecuteInputsInput Completed
+
+func (c AiScriptexecuteInputsInput) Input(input ...string) AiScriptexecuteInputsInput {
+	c.cs.s = append(c.cs.s, input...)
+	return c
+}
+
+func (c AiScriptexecuteInputsInput) Args(argCount int64) AiScriptexecuteArgsArgs {
+	c.cs.s = append(c.cs.s, "ARGS", strconv.FormatInt(argCount, 10))
+	return (AiScriptexecuteArgsArgs)(c)
+}
+
+func (c AiScriptexecuteInputsInput) Outputs(outputCount int64) AiScriptexecuteOutputsOutputs {
+	c.cs.s = append(c.cs.s, "OUTPUTS", strconv.FormatInt(outputCount, 10))
+	return (AiScriptexecuteOutputsOutputs)(c)
+}
+
+func (c AiScriptexecuteInputsInput) Timeout(timeout int64) AiScriptexecuteTimeout {
+	c.cs.s = append(c.cs.s, "TIMEOUT", strconv.FormatInt(timeout, 10))
+	return (AiScriptexecuteTimeout)(c)
+}
+
+func (c AiScriptexecuteInputsInput) Build() Completed {
+	return Completed(c)
+}
+
+type AiScriptexecuteInputsInputs Completed
+
+func (c AiScriptexecuteInputsInputs) Input(input ...string) AiScriptexecuteInputsInput {
+	c.cs.s = append(c.cs.s, input...)
+	return (AiScriptexecuteInputsInput)(c)
+}
+
+type AiScriptexecuteKey Completed
+
+func (c AiScriptexecuteKey) Function(function string) AiScriptexecuteFunction {
+	c.cs.s = append(c.cs.s, function)
+	return (AiScriptexecuteFunction)(c)
+}
+
+type AiScriptexecuteKeysKey Completed
+
+func (c AiScriptexecuteKeysKey) Key(key ...string) AiScriptexecuteKeysKey {
+	c.cs.s = append(c.cs.s, key...)
+	return c
+}
+
+func (c AiScriptexecuteKeysKey) Inputs(inputCount int64) AiScriptexecuteInputsInputs {
+	c.cs.s = append(c.cs.s, "INPUTS", strconv.FormatInt(inputCount, 10))
+	return (AiScriptexecuteInputsInputs)(c)
+}
+
+func (c AiScriptexecuteKeysKey) Args(argCount int64) AiScriptexecuteArgsArgs {
+	c.cs.s = append(c.cs.s, "ARGS", strconv.FormatInt(argCount, 10))
+	return (AiScriptexecuteArgsArgs)(c)
+}
+
+func (c AiScriptexecuteKeysKey) Outputs(outputCount int64) AiScriptexecuteOutputsOutputs {
+	c.cs.s = append(c.cs.s, "OUTPUTS", strconv.FormatInt(outputCount, 10))
+	return (AiScriptexecuteOutputsOutputs)(c)
+}
+
+func (c AiScriptexecuteKeysKey) Timeout(timeout int64) AiScriptexecuteTimeout {
+	c.cs.s = append(c.cs.s, "TIMEOUT", strconv.FormatInt(timeout, 10))
+	return (AiScriptexecuteTimeout)(c)
+}
+
+func (c AiScriptexecuteKeysKey) Build() Completed {
+	return Completed(c)
+}
+
+type AiScriptexecuteKeysKeys Completed
+
+func (c AiScriptexecuteKeysKeys) Key(key ...string) AiScriptexecuteKeysKey {
+	c.cs.s = append(c.cs.s, key...)
+	return (AiScriptexecuteKeysKey)(c)
+}
+
+type AiScriptexecuteOutputsOutput Completed
+
+func (c AiScriptexecuteOutputsOutput) Output(output ...string) AiScriptexecuteOutputsOutput {
+	c.cs.s = append(c.cs.s, output...)
+	return c
+}
+
+func (c AiScriptexecuteOutputsOutput) Timeout(timeout int64) AiScriptexecuteTimeout {
+	c.cs.s = append(c.cs.s, "TIMEOUT", strconv.FormatInt(timeout, 10))
+	return (AiScriptexecuteTimeout)(c)
+}
+
+func (c AiScriptexecuteOutputsOutput) Build() Completed {
+	return Completed(c)
+}
+
+type AiScriptexecuteOutputsOutputs Completed
+
+func (c AiScriptexecuteOutputsOutputs) Output(output ...string) AiScriptexecuteOutputsOutput {
+	c.cs.s = append(c.cs.s, output...)
+	return (AiScriptexecuteOutputsOutput)(c)
+}
+
+type AiScriptexecuteTimeout Completed
+
+func (c AiScriptexecuteTimeout) Build() Completed {
+	return Completed(c)
+}
+
+type AiScriptget Completed
+
+func (b Builder) AiScriptget() (c AiScriptget) {
+	c = AiScriptget{cs: get(), ks: b.ks, cf: readonly}
+	c.cs.s = append(c.cs.s, "AI.SCRIPTGET")
+	return c
+}
+
+func (c AiScriptget) Key(key string) AiScriptgetKey {
+	if c.ks != NoSlot {
+		c.ks = check(c.ks, slot(key))
+	}
+	c.cs.s = append(c.cs.s, key)
+	return (AiScriptgetKey)(c)
+}
+
+type AiScriptgetKey Completed
+
+func (c AiScriptgetKey) Meta() AiScriptgetMeta {
+	c.cs.s = append(c.cs.s, "META")
+	return (AiScriptgetMeta)(c)
+}
+
+func (c AiScriptgetKey) Source() AiScriptgetSource {
+	c.cs.s = append(c.cs.s, "SOURCE")
+	return (AiScriptgetSource)(c)
+}
+
+func (c AiScriptgetKey) Build() Completed {
+	return Completed(c)
+}
+
+func (c AiScriptgetKey) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type AiScriptgetMeta Completed
+
+func (c AiScriptgetMeta) Source() AiScriptgetSource {
+	c.cs.s = append(c.cs.s, "SOURCE")
+	return (AiScriptgetSource)(c)
+}
+
+func (c AiScriptgetMeta) Build() Completed {
+	return Completed(c)
+}
+
+func (c AiScriptgetMeta) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type AiScriptgetSource Completed
+
+func (c AiScriptgetSource) Build() Completed {
+	return Completed(c)
+}
+
+func (c AiScriptgetSource) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type AiScriptstore Completed
+
+func (b Builder) AiScriptstore() (c AiScriptstore) {
+	c = AiScriptstore{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "AI.SCRIPTSTORE")
+	return c
+}
+
+func (c AiScriptstore) Key(key string) AiScriptstoreKey {
+	if c.ks != NoSlot {
+		c.ks = check(c.ks, slot(key))
+	}
+	c.cs.s = append(c.cs.s, key)
+	return (AiScriptstoreKey)(c)
+}
+
+type AiScriptstoreDeviceCpu Completed
+
+func (c AiScriptstoreDeviceCpu) Tag(tag string) AiScriptstoreTag {
+	c.cs.s = append(c.cs.s, "TAG", tag)
+	return (AiScriptstoreTag)(c)
+}
+
+func (c AiScriptstoreDeviceCpu) EntryPoints(entryPointCount int64) AiScriptstoreEntryPointsEntryPoints {
+	c.cs.s = append(c.cs.s, "ENTRY_POINTS", strconv.FormatInt(entryPointCount, 10))
+	return (AiScriptstoreEntryPointsEntryPoints)(c)
+}
+
+type AiScriptstoreDeviceGpu Completed
+
+func (c AiScriptstoreDeviceGpu) Tag(tag string) AiScriptstoreTag {
+	c.cs.s = append(c.cs.s, "TAG", tag)
+	return (AiScriptstoreTag)(c)
+}
+
+func (c AiScriptstoreDeviceGpu) EntryPoints(entryPointCount int64) AiScriptstoreEntryPointsEntryPoints {
+	c.cs.s = append(c.cs.s, "ENTRY_POINTS", strconv.FormatInt(entryPointCount, 10))
+	return (AiScriptstoreEntryPointsEntryPoints)(c)
+}
+
+type AiScriptstoreEntryPointsEntryPoint Completed
+
+func (c AiScriptstoreEntryPointsEntryPoint) EntryPoint(entryPoint ...string) AiScriptstoreEntryPointsEntryPoint {
+	c.cs.s = append(c.cs.s, entryPoint...)
+	return c
+}
+
+func (c AiScriptstoreEntryPointsEntryPoint) Build() Completed {
+	return Completed(c)
+}
+
+type AiScriptstoreEntryPointsEntryPoints Completed
+
+func (c AiScriptstoreEntryPointsEntryPoints) EntryPoint(entryPoint ...string) AiScriptstoreEntryPointsEntryPoint {
+	c.cs.s = append(c.cs.s, entryPoint...)
+	return (AiScriptstoreEntryPointsEntryPoint)(c)
+}
+
+type AiScriptstoreKey Completed
+
+func (c AiScriptstoreKey) Cpu() AiScriptstoreDeviceCpu {
+	c.cs.s = append(c.cs.s, "CPU")
+	return (AiScriptstoreDeviceCpu)(c)
+}
+
+func (c AiScriptstoreKey) Gpu() AiScriptstoreDeviceGpu {
+	c.cs.s = append(c.cs.s, "GPU")
+	return (AiScriptstoreDeviceGpu)(c)
+}
+
+type AiScriptstoreTag Completed
+
+func (c AiScriptstoreTag) EntryPoints(entryPointCount int64) AiScriptstoreEntryPointsEntryPoints {
+	c.cs.s = append(c.cs.s, "ENTRY_POINTS", strconv.FormatInt(entryPointCount, 10))
+	return (AiScriptstoreEntryPointsEntryPoints)(c)
+}
+
+type AiTensorget Completed
+
+func (b Builder) AiTensorget() (c AiTensorget) {
+	c = AiTensorget{cs: get(), ks: b.ks, cf: readonly}
+	c.cs.s = append(c.cs.s, "AI.TENSORGET")
+	return c
+}
+
+func (c AiTensorget) Key(key string) AiTensorgetKey {
+	if c.ks != NoSlot {
+		c.ks = check(c.ks, slot(key))
+	}
+	c.cs.s = append(c.cs.s, key)
+	return (AiTensorgetKey)(c)
+}
+
+type AiTensorgetFormatBlob Completed
+
+func (c AiTensorgetFormatBlob) Build() Completed {
+	return Completed(c)
+}
+
+func (c AiTensorgetFormatBlob) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type AiTensorgetFormatValues Completed
+
+func (c AiTensorgetFormatValues) Build() Completed {
+	return Completed(c)
+}
+
+func (c AiTensorgetFormatValues) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type AiTensorgetKey Completed
+
+func (c AiTensorgetKey) Meta() AiTensorgetMeta {
+	c.cs.s = append(c.cs.s, "META")
+	return (AiTensorgetMeta)(c)
+}
+
+type AiTensorgetMeta Completed
+
+func (c AiTensorgetMeta) Blob() AiTensorgetFormatBlob {
+	c.cs.s = append(c.cs.s, "BLOB")
+	return (AiTensorgetFormatBlob)(c)
+}
+
+func (c AiTensorgetMeta) Values() AiTensorgetFormatValues {
+	c.cs.s = append(c.cs.s, "VALUES")
+	return (AiTensorgetFormatValues)(c)
+}
+
+func (c AiTensorgetMeta) Build() Completed {
+	return Completed(c)
+}
+
+func (c AiTensorgetMeta) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type AiTensorset Completed
+
+func (b Builder) AiTensorset() (c AiTensorset) {
+	c = AiTensorset{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "AI.TENSORSET")
+	return c
+}
+
+func (c AiTensorset) Key(key string) AiTensorsetKey {
+	if c.ks != NoSlot {
+		c.ks = check(c.ks, slot(key))
+	}
+	c.cs.s = append(c.cs.s, key)
+	return (AiTensorsetKey)(c)
+}
+
+type AiTensorsetBlob Completed
+
+func (c AiTensorsetBlob) Values(value ...string) AiTensorsetValues {
+	c.cs.s = append(c.cs.s, "VALUES")
+	c.cs.s = append(c.cs.s, value...)
+	return (AiTensorsetValues)(c)
+}
+
+func (c AiTensorsetBlob) Build() Completed {
+	return Completed(c)
+}
+
+type AiTensorsetKey Completed
+
+func (c AiTensorsetKey) Float() AiTensorsetTypeFloat {
+	c.cs.s = append(c.cs.s, "FLOAT")
+	return (AiTensorsetTypeFloat)(c)
+}
+
+func (c AiTensorsetKey) Double() AiTensorsetTypeDouble {
+	c.cs.s = append(c.cs.s, "DOUBLE")
+	return (AiTensorsetTypeDouble)(c)
+}
+
+func (c AiTensorsetKey) Int8() AiTensorsetTypeInt8 {
+	c.cs.s = append(c.cs.s, "INT8")
+	return (AiTensorsetTypeInt8)(c)
+}
+
+func (c AiTensorsetKey) Int16() AiTensorsetTypeInt16 {
+	c.cs.s = append(c.cs.s, "INT16")
+	return (AiTensorsetTypeInt16)(c)
+}
+
+func (c AiTensorsetKey) Int32() AiTensorsetTypeInt32 {
+	c.cs.s = append(c.cs.s, "INT32")
+	return (AiTensorsetTypeInt32)(c)
+}
+
+func (c AiTensorsetKey) Int64() AiTensorsetTypeInt64 {
+	c.cs.s = append(c.cs.s, "INT64")
+	return (AiTensorsetTypeInt64)(c)
+}
+
+func (c AiTensorsetKey) Uint8() AiTensorsetTypeUint8 {
+	c.cs.s = append(c.cs.s, "UINT8")
+	return (AiTensorsetTypeUint8)(c)
+}
+
+func (c AiTensorsetKey) Uint16() AiTensorsetTypeUint16 {
+	c.cs.s = append(c.cs.s, "UINT16")
+	return (AiTensorsetTypeUint16)(c)
+}
+
+func (c AiTensorsetKey) String() AiTensorsetTypeString {
+	c.cs.s = append(c.cs.s, "STRING")
+	return (AiTensorsetTypeString)(c)
+}
+
+func (c AiTensorsetKey) Bool() AiTensorsetTypeBool {
+	c.cs.s = append(c.cs.s, "BOOL")
+	return (AiTensorsetTypeBool)(c)
+}
+
+type AiTensorsetShape Completed
+
+func (c AiTensorsetShape) Shape(shape ...int64) AiTensorsetShape {
+	for _, n := range shape {
+		c.cs.s = append(c.cs.s, strconv.FormatInt(n, 10))
+	}
+	return c
+}
+
+func (c AiTensorsetShape) Blob(blob string) AiTensorsetBlob {
+	c.cs.s = append(c.cs.s, "BLOB", blob)
+	return (AiTensorsetBlob)(c)
+}
+
+func (c AiTensorsetShape) Values(value ...string) AiTensorsetValues {
+	c.cs.s = append(c.cs.s, "VALUES")
+	c.cs.s = append(c.cs.s, value...)
+	return (AiTensorsetValues)(c)
+}
+
+func (c AiTensorsetShape) Build() Completed {
+	return Completed(c)
+}
+
+type AiTensorsetTypeBool Completed
+
+func (c AiTensorsetTypeBool) Shape(shape ...int64) AiTensorsetShape {
+	for _, n := range shape {
+		c.cs.s = append(c.cs.s, strconv.FormatInt(n, 10))
+	}
+	return (AiTensorsetShape)(c)
+}
+
+type AiTensorsetTypeDouble Completed
+
+func (c AiTensorsetTypeDouble) Shape(shape ...int64) AiTensorsetShape {
+	for _, n := range shape {
+		c.cs.s = append(c.cs.s, strconv.FormatInt(n, 10))
+	}
+	return (AiTensorsetShape)(c)
+}
+
+type AiTensorsetTypeFloat Completed
+
+func (c AiTensorsetTypeFloat) Shape(shape ...int64) AiTensorsetShape {
+	for _, n := range shape {
+		c.cs.s = append(c.cs.s, strconv.FormatInt(n, 10))
+	}
+	return (AiTensorsetShape)(c)
+}
+
+type AiTensorsetTypeInt16 Completed
+
+func (c AiTensorsetTypeInt16) Shape(shape ...int64) AiTensorsetShape {
+	for _, n := range shape {
+		c.cs.s = append(c.cs.s, strconv.FormatInt(n, 10))
+	}
+	return (AiTensorsetShape)(c)
+}
+
+type AiTensorsetTypeInt32 Completed
+
+func (c AiTensorsetTypeInt32) Shape(shape ...int64) AiTensorsetShape {
+	for _, n := range shape {
+		c.cs.s = append(c.cs.s, strconv.FormatInt(n, 10))
+	}
+	return (AiTensorsetShape)(c)
+}
+
+type AiTensorsetTypeInt64 Completed
+
+func (c AiTensorsetTypeInt64) Shape(shape ...int64) AiTensorsetShape {
+	for _, n := range shape {
+		c.cs.s = append(c.cs.s, strconv.FormatInt(n, 10))
+	}
+	return (AiTensorsetShape)(c)
+}
+
+type AiTensorsetTypeInt8 Completed
+
+func (c AiTensorsetTypeInt8) Shape(shape ...int64) AiTensorsetShape {
+	for _, n := range shape {
+		c.cs.s = append(c.cs.s, strconv.FormatInt(n, 10))
+	}
+	return (AiTensorsetShape)(c)
+}
+
+type AiTensorsetTypeString Completed
+
+func (c AiTensorsetTypeString) Shape(shape ...int64) AiTensorsetShape {
+	for _, n := range shape {
+		c.cs.s = append(c.cs.s, strconv.FormatInt(n, 10))
+	}
+	return (AiTensorsetShape)(c)
+}
+
+type AiTensorsetTypeUint16 Completed
+
+func (c AiTensorsetTypeUint16) Shape(shape ...int64) AiTensorsetShape {
+	for _, n := range shape {
+		c.cs.s = append(c.cs.s, strconv.FormatInt(n, 10))
+	}
+	return (AiTensorsetShape)(c)
+}
+
+type AiTensorsetTypeUint8 Completed
+
+func (c AiTensorsetTypeUint8) Shape(shape ...int64) AiTensorsetShape {
+	for _, n := range shape {
+		c.cs.s = append(c.cs.s, strconv.FormatInt(n, 10))
+	}
+	return (AiTensorsetShape)(c)
+}
+
+type AiTensorsetValues Completed
+
+func (c AiTensorsetValues) Values(value ...string) AiTensorsetValues {
+	c.cs.s = append(c.cs.s, "VALUES")
+	c.cs.s = append(c.cs.s, value...)
+	return c
+}
+
+func (c AiTensorsetValues) Build() Completed {
+	return Completed(c)
+}
+
 type Append Completed
 
 func (b Builder) Append() (c Append) {

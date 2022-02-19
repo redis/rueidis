@@ -280,6 +280,7 @@ func main() {
 		"./commands_search.json",
 		"./commands_graph.json",
 		"./commands_timeseries.json",
+		"./commands_ai.json",
 	} {
 		raw, err := os.ReadFile(p)
 		if err != nil {
@@ -862,6 +863,10 @@ var cacheableCMDs = map[string]bool{
 	"topklist":            false,
 	"topkinfo":            false,
 	"fcallro":             false,
+	"aitensorget":         false,
+	"aimodelget":          false,
+	"aimodelexecute":      false,
+	"aiscriptget":         false,
 }
 
 var readOnlyCMDs = map[string]bool{
@@ -998,4 +1003,8 @@ var readOnlyCMDs = map[string]bool{
 	"graphconfigget":      false,
 	"graphlist":           false,
 	"fcallro":             false,
+	"aitensorget":         false,
+	"aimodelget":          false,
+	"aimodelexecute":      false,
+	"aiscriptget":         false,
 }
