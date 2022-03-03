@@ -417,6 +417,128 @@ func TestClientSideCachingExecAbort(t *testing.T) {
 	}
 }
 
+// https://github.com/redis/redis/issues/8935
+func TestClientSideCachingRedis6InvalidationBug1(t *testing.T) {
+	p, mock, cancel, _ := setup(t, ClientOption{})
+	defer cancel()
+
+	expectCSC := func() {
+		mock.Expect("CLIENT", "CACHING", "YES").
+			Expect("MULTI").
+			Expect("PTTL", "a").
+			Expect("GET", "a").
+			Expect("EXEC").
+			ReplyString("OK").
+			ReplyString("OK").
+			ReplyString("OK").
+			ReplyString("OK").
+			Reply(RedisMessage{typ: '*', values: []RedisMessage{
+				{
+					typ: '>',
+					values: []RedisMessage{
+						{typ: '+', string: "invalidate"},
+						{typ: '*', values: []RedisMessage{{typ: '+', string: "a"}}},
+					},
+				},
+				{typ: ':', integer: -2},
+			}}).Reply(RedisMessage{typ: '_'})
+	}
+
+	go func() {
+		expectCSC()
+	}()
+	// single flight
+	miss := uint64(0)
+	hits := uint64(0)
+	times := 2000
+	wg := sync.WaitGroup{}
+	wg.Add(times)
+	for i := 0; i < times; i++ {
+		go func() {
+			defer wg.Done()
+			v, _ := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage()
+			if v.typ != '_' {
+				t.Errorf("unexpected cached result, expected null, got %v", v.string)
+			}
+			if v.IsCacheHit() {
+				atomic.AddUint64(&hits, 1)
+			} else {
+				atomic.AddUint64(&miss, 1)
+			}
+		}()
+	}
+	wg.Wait()
+
+	if v := atomic.LoadUint64(&miss); v != 1 {
+		t.Fatalf("unexpected cache miss count %v", v)
+	}
+
+	if v := atomic.LoadUint64(&hits); v != uint64(times-1) {
+		t.Fatalf("unexpected cache hits count %v", v)
+	}
+}
+
+// https://github.com/redis/redis/issues/8935
+func TestClientSideCachingRedis6InvalidationBug2(t *testing.T) {
+	p, mock, cancel, _ := setup(t, ClientOption{})
+	defer cancel()
+
+	expectCSC := func() {
+		mock.Expect("CLIENT", "CACHING", "YES").
+			Expect("MULTI").
+			Expect("PTTL", "a").
+			Expect("GET", "a").
+			Expect("EXEC").
+			ReplyString("OK").
+			ReplyString("OK").
+			ReplyString("OK").
+			ReplyString("OK").
+			Reply(RedisMessage{typ: '*', values: []RedisMessage{
+				{typ: ':', integer: -2},
+				{
+					typ: '>',
+					values: []RedisMessage{
+						{typ: '+', string: "invalidate"},
+						{typ: '*', values: []RedisMessage{{typ: '+', string: "a"}}},
+					},
+				},
+			}}).Reply(RedisMessage{typ: '_'})
+	}
+
+	go func() {
+		expectCSC()
+	}()
+	// single flight
+	miss := uint64(0)
+	hits := uint64(0)
+	times := 2000
+	wg := sync.WaitGroup{}
+	wg.Add(times)
+	for i := 0; i < times; i++ {
+		go func() {
+			defer wg.Done()
+			v, _ := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage()
+			if v.typ != '_' {
+				t.Errorf("unexpected cached result, expected null, got %v", v.string)
+			}
+			if v.IsCacheHit() {
+				atomic.AddUint64(&hits, 1)
+			} else {
+				atomic.AddUint64(&miss, 1)
+			}
+		}()
+	}
+	wg.Wait()
+
+	if v := atomic.LoadUint64(&miss); v != 1 {
+		t.Fatalf("unexpected cache miss count %v", v)
+	}
+
+	if v := atomic.LoadUint64(&hits); v != uint64(times-1) {
+		t.Fatalf("unexpected cache hits count %v", v)
+	}
+}
+
 //gocyclo:ignore
 func TestPubSub(t *testing.T) {
 	builder := cmds.NewBuilder(cmds.NoSlot)
