@@ -308,6 +308,15 @@ c.Do(ctx, c.B().Set().Key("mykey").Value("myval").Ex(10).Nx().Build())
 
 **The `ClusterClient.B()` also checks if the command contains multiple keys belongs to different slots. If it does, then panic.**
 
+### Arbitrary command
+
+If you want to construct commands that are not yet supported, you can use `c.B().Arbitrary()`:
+
+```golang
+// This will result into [ANY CMD k1 k2 a1 a2]
+c.B().Arbitrary("ANY", "CMD").Keys("k1", "k2").Args("a1", "a2").Build()
+```
+
 ## Object Mapping
 
 The `NewHashRepository` and `NewJSONRepository` creates an OM repository backed by redis hash or RedisJSON.
