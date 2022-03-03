@@ -8,6 +8,7 @@ import (
 	"os"
 	"runtime"
 	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -28,9 +29,10 @@ type wire interface {
 var _ wire = (*pipe)(nil)
 
 type pipe struct {
-	waits int32
-	state int32
-	slept int32
+	waits   int32
+	state   int32
+	slept   int32
+	version int32
 
 	once  sync.Once
 	cond  sync.Cond
@@ -92,6 +94,14 @@ func newPipe(conn net.Conn, option *ClientOption) (p *pipe, err error) {
 			return nil, err
 		}
 	}
+
+	if ver, ok := p.info["version"]; ok {
+		if v := strings.Split(ver.string, "."); len(v) != 0 {
+			vv, _ := strconv.ParseInt(v[0], 10, 64)
+			p.version = int32(vv)
+		}
+	}
+
 	return p, nil
 }
 
@@ -230,6 +240,7 @@ func (p *pipe) _backgroundRead() {
 		multi []cmds.Completed
 		ch    chan RedisResult
 		ff    int // fulfilled count
+		ver   = p.version
 	)
 
 	for {
@@ -240,6 +251,28 @@ func (p *pipe) _backgroundRead() {
 		if msg.typ == '>' {
 			p.handlePush(msg.values)
 			continue
+		} else if ver < 7 && len(msg.values) != 0 {
+			// This is a workaround for Redis 6's broken invalidation protocol: https://github.com/redis/redis/issues/8935
+			// When Redis 6 handles MULTI, MGET, or other multi-keys command,
+			// it will send invalidation message immediately if it finds the keys are expired, thus causing the multi-keys command response to be broken.
+			// We fix this by fetching the next message and patch it back to the response.
+			i := 0
+			for j, v := range msg.values {
+				if v.typ == '>' {
+					p.handlePush(v.values)
+				} else {
+					if i != j {
+						msg.values[i] = v
+					}
+					i++
+				}
+			}
+			for ; i < len(msg.values); i++ {
+				if msg.values[i], err = readNextMessage(p.r); err != nil {
+					p.error.CompareAndSwap(nil, &errs{error: err})
+					return
+				}
+			}
 		}
 		// if unfulfilled multi commands are lead by opt-in and get success response
 		if ff == 4 && len(multi) == 5 && multi[0].IsOptIn() {
@@ -248,23 +281,6 @@ func (p *pipe) _backgroundRead() {
 			if len(msg.values) != 2 { // EXEC aborted
 				p.cache.Update(ck, cc, msg, 0)
 			} else {
-				if msg.values[0].typ == '>' || msg.values[1].typ == '>' {
-					// This is a workaround for Redis 6's broken invalidation protocol: https://github.com/redis/redis/issues/8935
-					// We implement client side caching by issuing [MULTI,PTTL,CACHEABLE,EXEC]. In our case, when Redis 6 handles PTTL or CACHEABLE,
-					// it will send invalidation message immediately if it finds the key is expired, thus causing the EXEC response to be broken.
-					// We fix this by fetching the next message and patch it back into the EXEC response.
-					if msg.values[0].typ == '>' {
-						p.handlePush(msg.values[0].values)
-						msg.values[0] = msg.values[1]
-					} else {
-						p.handlePush(msg.values[1].values)
-					}
-					if msg.values[1], err = readNextMessage(p.r); err != nil {
-						p.error.CompareAndSwap(nil, &errs{error: err})
-						return
-					}
-				}
-
 				cp := msg.values[1]
 				cp.attrs = cacheMark
 				p.cache.Update(ck, cc, cp, msg.values[0].integer)
