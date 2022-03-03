@@ -1213,6 +1213,7 @@ func TestCommand_11(t *testing.T) {
 	s.CommandDocs().CommandName("1").CommandName("1").Build()
 	s.CommandDocs().Build()
 	s.CommandGetkeys().Build()
+	s.CommandGetkeysandflags().Build()
 	s.CommandInfo().CommandName("1").CommandName("1").Build()
 	s.CommandList().FilterbyModuleName("1").Build()
 	s.CommandList().FilterbyAclcatCategory("1").Build()
@@ -1270,10 +1271,10 @@ func TestCommand_11(t *testing.T) {
 	s.Failover().Abort().Timeout(1).Build()
 	s.Failover().Abort().Build()
 	s.Failover().Timeout(1).Build()
-	s.Failover().Build()
 }
 
 func TestCommand_12(t *testing.T) {
+	s.Failover().Build()
 	s.Fcall().Function("1").Numkeys(1).Key("1").Key("1").Arg("1").Arg("1").Build()
 	s.FcallRo().Function("1").Numkeys(1).Key("1").Key("1").Arg("1").Arg("1").Build()
 	s.FcallRo().Function("1").Numkeys(1).Key("1").Key("1").Arg("1").Arg("1").Cache()
@@ -1374,10 +1375,10 @@ func TestCommand_12(t *testing.T) {
 	s.FtAggregate().Index("1").Query("1").Verbatim().Sortby(1).Withcursor().Count(1).Build()
 	s.FtAggregate().Index("1").Query("1").Verbatim().Sortby(1).Withcursor().Maxidle(1).Build()
 	s.FtAggregate().Index("1").Query("1").Verbatim().Sortby(1).Withcursor().Build()
-	s.FtAggregate().Index("1").Query("1").Verbatim().Sortby(1).Build()
 }
 
 func TestCommand_13(t *testing.T) {
+	s.FtAggregate().Index("1").Query("1").Verbatim().Sortby(1).Build()
 	s.FtAggregate().Index("1").Query("1").Verbatim().Apply("1").As("1").Limit().OffsetNum(1, 1).Build()
 	s.FtAggregate().Index("1").Query("1").Verbatim().Apply("1").As("1").Filter("1").Withcursor().Build()
 	s.FtAggregate().Index("1").Query("1").Verbatim().Apply("1").As("1").Filter("1").Build()
@@ -1477,10 +1478,10 @@ func TestCommand_13(t *testing.T) {
 	s.FtAggregate().Index("1").Query("1").LoadAll().Sortby(1).Apply("1").As("1").Filter("1").Build()
 	s.FtAggregate().Index("1").Query("1").LoadAll().Sortby(1).Apply("1").As("1").Withcursor().Build()
 	s.FtAggregate().Index("1").Query("1").LoadAll().Sortby(1).Apply("1").As("1").Build()
-	s.FtAggregate().Index("1").Query("1").LoadAll().Sortby(1).Limit().OffsetNum(1, 1).Filter("1").Build()
 }
 
 func TestCommand_14(t *testing.T) {
+	s.FtAggregate().Index("1").Query("1").LoadAll().Sortby(1).Limit().OffsetNum(1, 1).Filter("1").Build()
 	s.FtAggregate().Index("1").Query("1").LoadAll().Sortby(1).Limit().OffsetNum(1, 1).Withcursor().Build()
 	s.FtAggregate().Index("1").Query("1").LoadAll().Sortby(1).Limit().OffsetNum(1, 1).Build()
 	s.FtAggregate().Index("1").Query("1").LoadAll().Sortby(1).Filter("1").Withcursor().Count(1).Build()
@@ -1580,10 +1581,10 @@ func TestCommand_14(t *testing.T) {
 	s.FtAggregate().Index("1").Query("1").Sortby(1).Max(1).Withcursor().Count(1).Build()
 	s.FtAggregate().Index("1").Query("1").Sortby(1).Max(1).Withcursor().Maxidle(1).Build()
 	s.FtAggregate().Index("1").Query("1").Sortby(1).Max(1).Withcursor().Build()
-	s.FtAggregate().Index("1").Query("1").Sortby(1).Max(1).Build()
 }
 
 func TestCommand_15(t *testing.T) {
+	s.FtAggregate().Index("1").Query("1").Sortby(1).Max(1).Build()
 	s.FtAggregate().Index("1").Query("1").Sortby(1).Apply("1").As("1").Limit().OffsetNum(1, 1).Build()
 	s.FtAggregate().Index("1").Query("1").Sortby(1).Apply("1").As("1").Filter("1").Withcursor().Build()
 	s.FtAggregate().Index("1").Query("1").Sortby(1).Apply("1").As("1").Filter("1").Build()
@@ -1683,10 +1684,10 @@ func TestCommand_15(t *testing.T) {
 	s.FtCreate().Index("1").OnHash().Language("1").Nohl().Schema().FieldName("1").Geo().Build()
 	s.FtCreate().Index("1").OnHash().Language("1").Nofields().Schema().FieldName("1").Text().Build()
 	s.FtCreate().Index("1").OnHash().Language("1").Nofields().Schema().FieldName("1").Tag().Build()
-	s.FtCreate().Index("1").OnHash().Language("1").Nofields().Schema().FieldName("1").Numeric().Build()
 }
 
 func TestCommand_16(t *testing.T) {
+	s.FtCreate().Index("1").OnHash().Language("1").Nofields().Schema().FieldName("1").Numeric().Build()
 	s.FtCreate().Index("1").OnHash().Language("1").Nofields().Schema().FieldName("1").Geo().Build()
 	s.FtCreate().Index("1").OnHash().Language("1").Nofreqs().Schema().FieldName("1").Text().Build()
 	s.FtCreate().Index("1").OnHash().Language("1").Nofreqs().Schema().FieldName("1").Tag().Build()
@@ -1786,10 +1787,10 @@ func TestCommand_16(t *testing.T) {
 	s.FtCreate().Index("1").OnHash().Score(1).Nohl().Schema().FieldName("1").Geo().Build()
 	s.FtCreate().Index("1").OnHash().Score(1).Nofields().Schema().FieldName("1").Text().Build()
 	s.FtCreate().Index("1").OnHash().Score(1).Nofields().Schema().FieldName("1").Tag().Build()
-	s.FtCreate().Index("1").OnHash().Score(1).Nofields().Schema().FieldName("1").Numeric().Build()
 }
 
 func TestCommand_17(t *testing.T) {
+	s.FtCreate().Index("1").OnHash().Score(1).Nofields().Schema().FieldName("1").Numeric().Build()
 	s.FtCreate().Index("1").OnHash().Score(1).Nofields().Schema().FieldName("1").Geo().Build()
 	s.FtCreate().Index("1").OnHash().Score(1).Nofreqs().Schema().FieldName("1").Text().Build()
 	s.FtCreate().Index("1").OnHash().Score(1).Nofreqs().Schema().FieldName("1").Tag().Build()
@@ -1889,10 +1890,10 @@ func TestCommand_17(t *testing.T) {
 	s.FtCreate().Index("1").OnHash().PayloadField("1").Schema().FieldName("1").Tag().Sortable().Build()
 	s.FtCreate().Index("1").OnHash().PayloadField("1").Schema().FieldName("1").Tag().Noindex().Build()
 	s.FtCreate().Index("1").OnHash().PayloadField("1").Schema().FieldName("1").Tag().Build()
-	s.FtCreate().Index("1").OnHash().PayloadField("1").Schema().FieldName("1").Numeric().Sortable().Build()
 }
 
 func TestCommand_18(t *testing.T) {
+	s.FtCreate().Index("1").OnHash().PayloadField("1").Schema().FieldName("1").Numeric().Sortable().Build()
 	s.FtCreate().Index("1").OnHash().PayloadField("1").Schema().FieldName("1").Numeric().Noindex().Build()
 	s.FtCreate().Index("1").OnHash().PayloadField("1").Schema().FieldName("1").Numeric().Build()
 	s.FtCreate().Index("1").OnHash().PayloadField("1").Schema().FieldName("1").Geo().Sortable().Build()
@@ -1992,10 +1993,10 @@ func TestCommand_18(t *testing.T) {
 	s.FtCreate().Index("1").OnHash().Nooffsets().Schema().FieldName("1").Numeric().Noindex().Build()
 	s.FtCreate().Index("1").OnHash().Nooffsets().Schema().FieldName("1").Numeric().Build()
 	s.FtCreate().Index("1").OnHash().Nooffsets().Schema().FieldName("1").Geo().Sortable().Build()
-	s.FtCreate().Index("1").OnHash().Nooffsets().Schema().FieldName("1").Geo().Noindex().Build()
 }
 
 func TestCommand_19(t *testing.T) {
+	s.FtCreate().Index("1").OnHash().Nooffsets().Schema().FieldName("1").Geo().Noindex().Build()
 	s.FtCreate().Index("1").OnHash().Nooffsets().Schema().FieldName("1").Geo().Build()
 	s.FtCreate().Index("1").OnHash().Nohl().Nofields().Schema().FieldName("1").Text().Build()
 	s.FtCreate().Index("1").OnHash().Nohl().Nofields().Schema().FieldName("1").Tag().Build()
@@ -2095,10 +2096,10 @@ func TestCommand_19(t *testing.T) {
 	s.FtCreate().Index("1").OnHash().Schema().FieldName("1").Geo().Build()
 	s.FtCreate().Index("1").OnJson().Prefix(1).Prefix("1").Prefix("1").Schema().FieldName("1").Text().Build()
 	s.FtCreate().Index("1").OnJson().Prefix(1).Prefix("1").Prefix("1").Schema().FieldName("1").Tag().Build()
-	s.FtCreate().Index("1").OnJson().Prefix(1).Prefix("1").Prefix("1").Schema().FieldName("1").Numeric().Build()
 }
 
 func TestCommand_20(t *testing.T) {
+	s.FtCreate().Index("1").OnJson().Prefix(1).Prefix("1").Prefix("1").Schema().FieldName("1").Numeric().Build()
 	s.FtCreate().Index("1").OnJson().Prefix(1).Prefix("1").Prefix("1").Schema().FieldName("1").Geo().Build()
 	s.FtCreate().Index("1").OnJson().Language("1").LanguageField("1").Schema().FieldName("1").Text().Build()
 	s.FtCreate().Index("1").OnJson().Language("1").LanguageField("1").Schema().FieldName("1").Tag().Build()
@@ -2198,10 +2199,10 @@ func TestCommand_20(t *testing.T) {
 	s.FtCreate().Index("1").OnJson().LanguageField("1").Schema().FieldName("1").As("1").Geo().Build()
 	s.FtCreate().Index("1").OnJson().LanguageField("1").Schema().FieldName("1").Text().Sortable().Build()
 	s.FtCreate().Index("1").OnJson().LanguageField("1").Schema().FieldName("1").Text().Noindex().Build()
-	s.FtCreate().Index("1").OnJson().LanguageField("1").Schema().FieldName("1").Text().Build()
 }
 
 func TestCommand_21(t *testing.T) {
+	s.FtCreate().Index("1").OnJson().LanguageField("1").Schema().FieldName("1").Text().Build()
 	s.FtCreate().Index("1").OnJson().LanguageField("1").Schema().FieldName("1").Tag().Sortable().Build()
 	s.FtCreate().Index("1").OnJson().LanguageField("1").Schema().FieldName("1").Tag().Noindex().Build()
 	s.FtCreate().Index("1").OnJson().LanguageField("1").Schema().FieldName("1").Tag().Build()
@@ -2301,10 +2302,10 @@ func TestCommand_21(t *testing.T) {
 	s.FtCreate().Index("1").OnJson().ScoreField("1").Schema().FieldName("1").Numeric().Noindex().Build()
 	s.FtCreate().Index("1").OnJson().ScoreField("1").Schema().FieldName("1").Numeric().Build()
 	s.FtCreate().Index("1").OnJson().ScoreField("1").Schema().FieldName("1").Geo().Sortable().Build()
-	s.FtCreate().Index("1").OnJson().ScoreField("1").Schema().FieldName("1").Geo().Noindex().Build()
 }
 
 func TestCommand_22(t *testing.T) {
+	s.FtCreate().Index("1").OnJson().ScoreField("1").Schema().FieldName("1").Geo().Noindex().Build()
 	s.FtCreate().Index("1").OnJson().ScoreField("1").Schema().FieldName("1").Geo().Build()
 	s.FtCreate().Index("1").OnJson().PayloadField("1").Maxtextfields().Schema().FieldName("1").Text().Build()
 	s.FtCreate().Index("1").OnJson().PayloadField("1").Maxtextfields().Schema().FieldName("1").Tag().Build()
@@ -2404,10 +2405,10 @@ func TestCommand_22(t *testing.T) {
 	s.FtCreate().Index("1").OnJson().Temporary(1).Schema().FieldName("1").As("1").Geo().Build()
 	s.FtCreate().Index("1").OnJson().Temporary(1).Schema().FieldName("1").Text().Sortable().Build()
 	s.FtCreate().Index("1").OnJson().Temporary(1).Schema().FieldName("1").Text().Noindex().Build()
-	s.FtCreate().Index("1").OnJson().Temporary(1).Schema().FieldName("1").Text().Build()
 }
 
 func TestCommand_23(t *testing.T) {
+	s.FtCreate().Index("1").OnJson().Temporary(1).Schema().FieldName("1").Text().Build()
 	s.FtCreate().Index("1").OnJson().Temporary(1).Schema().FieldName("1").Tag().Sortable().Build()
 	s.FtCreate().Index("1").OnJson().Temporary(1).Schema().FieldName("1").Tag().Noindex().Build()
 	s.FtCreate().Index("1").OnJson().Temporary(1).Schema().FieldName("1").Tag().Build()
@@ -2507,10 +2508,10 @@ func TestCommand_23(t *testing.T) {
 	s.FtCreate().Index("1").OnJson().Nofreqs().Schema().FieldName("1").Geo().Build()
 	s.FtCreate().Index("1").OnJson().Stopwords(1).Stopword("1").Stopword("1").Schema().FieldName("1").Text().Build()
 	s.FtCreate().Index("1").OnJson().Stopwords(1).Stopword("1").Stopword("1").Schema().FieldName("1").Tag().Build()
-	s.FtCreate().Index("1").OnJson().Stopwords(1).Stopword("1").Stopword("1").Schema().FieldName("1").Numeric().Build()
 }
 
 func TestCommand_24(t *testing.T) {
+	s.FtCreate().Index("1").OnJson().Stopwords(1).Stopword("1").Stopword("1").Schema().FieldName("1").Numeric().Build()
 	s.FtCreate().Index("1").OnJson().Stopwords(1).Stopword("1").Stopword("1").Schema().FieldName("1").Geo().Build()
 	s.FtCreate().Index("1").OnJson().Schema().FieldName("1").As("1").Text().Sortable().Build()
 	s.FtCreate().Index("1").OnJson().Schema().FieldName("1").As("1").Text().Noindex().Build()
@@ -2610,10 +2611,10 @@ func TestCommand_24(t *testing.T) {
 	s.FtCreate().Index("1").Language("1").LanguageField("1").Score(1).Schema().FieldName("1").Geo().Build()
 	s.FtCreate().Index("1").Language("1").LanguageField("1").ScoreField("1").Schema().FieldName("1").Text().Build()
 	s.FtCreate().Index("1").Language("1").LanguageField("1").ScoreField("1").Schema().FieldName("1").Tag().Build()
-	s.FtCreate().Index("1").Language("1").LanguageField("1").ScoreField("1").Schema().FieldName("1").Numeric().Build()
 }
 
 func TestCommand_25(t *testing.T) {
+	s.FtCreate().Index("1").Language("1").LanguageField("1").ScoreField("1").Schema().FieldName("1").Numeric().Build()
 	s.FtCreate().Index("1").Language("1").LanguageField("1").ScoreField("1").Schema().FieldName("1").Geo().Build()
 	s.FtCreate().Index("1").Language("1").LanguageField("1").PayloadField("1").Schema().FieldName("1").Text().Build()
 	s.FtCreate().Index("1").Language("1").LanguageField("1").PayloadField("1").Schema().FieldName("1").Tag().Build()
@@ -2713,10 +2714,10 @@ func TestCommand_25(t *testing.T) {
 	s.FtCreate().Index("1").Language("1").ScoreField("1").PayloadField("1").Schema().FieldName("1").Geo().Build()
 	s.FtCreate().Index("1").Language("1").ScoreField("1").Maxtextfields().Schema().FieldName("1").Text().Build()
 	s.FtCreate().Index("1").Language("1").ScoreField("1").Maxtextfields().Schema().FieldName("1").Tag().Build()
-	s.FtCreate().Index("1").Language("1").ScoreField("1").Maxtextfields().Schema().FieldName("1").Numeric().Build()
 }
 
 func TestCommand_26(t *testing.T) {
+	s.FtCreate().Index("1").Language("1").ScoreField("1").Maxtextfields().Schema().FieldName("1").Numeric().Build()
 	s.FtCreate().Index("1").Language("1").ScoreField("1").Maxtextfields().Schema().FieldName("1").Geo().Build()
 	s.FtCreate().Index("1").Language("1").ScoreField("1").Temporary(1).Schema().FieldName("1").Text().Build()
 	s.FtCreate().Index("1").Language("1").ScoreField("1").Temporary(1).Schema().FieldName("1").Tag().Build()
@@ -2816,10 +2817,10 @@ func TestCommand_26(t *testing.T) {
 	s.FtCreate().Index("1").Language("1").Maxtextfields().Nofreqs().Schema().FieldName("1").Geo().Build()
 	s.FtCreate().Index("1").Language("1").Maxtextfields().Schema().FieldName("1").As("1").Text().Build()
 	s.FtCreate().Index("1").Language("1").Maxtextfields().Schema().FieldName("1").As("1").Tag().Build()
-	s.FtCreate().Index("1").Language("1").Maxtextfields().Schema().FieldName("1").As("1").Numeric().Build()
 }
 
 func TestCommand_27(t *testing.T) {
+	s.FtCreate().Index("1").Language("1").Maxtextfields().Schema().FieldName("1").As("1").Numeric().Build()
 	s.FtCreate().Index("1").Language("1").Maxtextfields().Schema().FieldName("1").As("1").Geo().Build()
 	s.FtCreate().Index("1").Language("1").Maxtextfields().Schema().FieldName("1").Text().Sortable().Build()
 	s.FtCreate().Index("1").Language("1").Maxtextfields().Schema().FieldName("1").Text().Noindex().Build()
@@ -2919,10 +2920,10 @@ func TestCommand_27(t *testing.T) {
 	s.FtCreate().Index("1").Language("1").Nohl().Schema().FieldName("1").Geo().Build()
 	s.FtCreate().Index("1").Language("1").Nofields().Nofreqs().Schema().FieldName("1").Text().Build()
 	s.FtCreate().Index("1").Language("1").Nofields().Nofreqs().Schema().FieldName("1").Tag().Build()
-	s.FtCreate().Index("1").Language("1").Nofields().Nofreqs().Schema().FieldName("1").Numeric().Build()
 }
 
 func TestCommand_28(t *testing.T) {
+	s.FtCreate().Index("1").Language("1").Nofields().Nofreqs().Schema().FieldName("1").Numeric().Build()
 	s.FtCreate().Index("1").Language("1").Nofields().Nofreqs().Schema().FieldName("1").Geo().Build()
 	s.FtCreate().Index("1").Language("1").Nofields().Schema().FieldName("1").As("1").Text().Build()
 	s.FtCreate().Index("1").Language("1").Nofields().Schema().FieldName("1").As("1").Tag().Build()
@@ -3022,10 +3023,10 @@ func TestCommand_28(t *testing.T) {
 	s.FtCreate().Index("1").LanguageField("1").Score(1).Nofields().Schema().FieldName("1").Geo().Build()
 	s.FtCreate().Index("1").LanguageField("1").Score(1).Nofreqs().Schema().FieldName("1").Text().Build()
 	s.FtCreate().Index("1").LanguageField("1").Score(1).Nofreqs().Schema().FieldName("1").Tag().Build()
-	s.FtCreate().Index("1").LanguageField("1").Score(1).Nofreqs().Schema().FieldName("1").Numeric().Build()
 }
 
 func TestCommand_29(t *testing.T) {
+	s.FtCreate().Index("1").LanguageField("1").Score(1).Nofreqs().Schema().FieldName("1").Numeric().Build()
 	s.FtCreate().Index("1").LanguageField("1").Score(1).Nofreqs().Schema().FieldName("1").Geo().Build()
 	s.FtCreate().Index("1").LanguageField("1").Score(1).Schema().FieldName("1").As("1").Text().Build()
 	s.FtCreate().Index("1").LanguageField("1").Score(1).Schema().FieldName("1").As("1").Tag().Build()
@@ -3125,10 +3126,10 @@ func TestCommand_29(t *testing.T) {
 	s.FtCreate().Index("1").LanguageField("1").PayloadField("1").Schema().FieldName("1").Numeric().Noindex().Build()
 	s.FtCreate().Index("1").LanguageField("1").PayloadField("1").Schema().FieldName("1").Numeric().Build()
 	s.FtCreate().Index("1").LanguageField("1").PayloadField("1").Schema().FieldName("1").Geo().Sortable().Build()
-	s.FtCreate().Index("1").LanguageField("1").PayloadField("1").Schema().FieldName("1").Geo().Noindex().Build()
 }
 
 func TestCommand_30(t *testing.T) {
+	s.FtCreate().Index("1").LanguageField("1").PayloadField("1").Schema().FieldName("1").Geo().Noindex().Build()
 	s.FtCreate().Index("1").LanguageField("1").PayloadField("1").Schema().FieldName("1").Geo().Build()
 	s.FtCreate().Index("1").LanguageField("1").Maxtextfields().Temporary(1).Schema().FieldName("1").Text().Build()
 	s.FtCreate().Index("1").LanguageField("1").Maxtextfields().Temporary(1).Schema().FieldName("1").Tag().Build()
@@ -3228,10 +3229,10 @@ func TestCommand_30(t *testing.T) {
 	s.FtCreate().Index("1").LanguageField("1").Nooffsets().Schema().FieldName("1").Geo().Build()
 	s.FtCreate().Index("1").LanguageField("1").Nohl().Nofields().Schema().FieldName("1").Text().Build()
 	s.FtCreate().Index("1").LanguageField("1").Nohl().Nofields().Schema().FieldName("1").Tag().Build()
-	s.FtCreate().Index("1").LanguageField("1").Nohl().Nofields().Schema().FieldName("1").Numeric().Build()
 }
 
 func TestCommand_31(t *testing.T) {
+	s.FtCreate().Index("1").LanguageField("1").Nohl().Nofields().Schema().FieldName("1").Numeric().Build()
 	s.FtCreate().Index("1").LanguageField("1").Nohl().Nofields().Schema().FieldName("1").Geo().Build()
 	s.FtCreate().Index("1").LanguageField("1").Nohl().Nofreqs().Schema().FieldName("1").Text().Build()
 	s.FtCreate().Index("1").LanguageField("1").Nohl().Nofreqs().Schema().FieldName("1").Tag().Build()
@@ -3331,10 +3332,10 @@ func TestCommand_31(t *testing.T) {
 	s.FtCreate().Index("1").Score(1).ScoreField("1").PayloadField("1").Schema().FieldName("1").Geo().Build()
 	s.FtCreate().Index("1").Score(1).ScoreField("1").Maxtextfields().Schema().FieldName("1").Text().Build()
 	s.FtCreate().Index("1").Score(1).ScoreField("1").Maxtextfields().Schema().FieldName("1").Tag().Build()
-	s.FtCreate().Index("1").Score(1).ScoreField("1").Maxtextfields().Schema().FieldName("1").Numeric().Build()
 }
 
 func TestCommand_32(t *testing.T) {
+	s.FtCreate().Index("1").Score(1).ScoreField("1").Maxtextfields().Schema().FieldName("1").Numeric().Build()
 	s.FtCreate().Index("1").Score(1).ScoreField("1").Maxtextfields().Schema().FieldName("1").Geo().Build()
 	s.FtCreate().Index("1").Score(1).ScoreField("1").Temporary(1).Schema().FieldName("1").Text().Build()
 	s.FtCreate().Index("1").Score(1).ScoreField("1").Temporary(1).Schema().FieldName("1").Tag().Build()
@@ -3434,10 +3435,10 @@ func TestCommand_32(t *testing.T) {
 	s.FtCreate().Index("1").Score(1).Maxtextfields().Nofreqs().Schema().FieldName("1").Geo().Build()
 	s.FtCreate().Index("1").Score(1).Maxtextfields().Schema().FieldName("1").As("1").Text().Build()
 	s.FtCreate().Index("1").Score(1).Maxtextfields().Schema().FieldName("1").As("1").Tag().Build()
-	s.FtCreate().Index("1").Score(1).Maxtextfields().Schema().FieldName("1").As("1").Numeric().Build()
 }
 
 func TestCommand_33(t *testing.T) {
+	s.FtCreate().Index("1").Score(1).Maxtextfields().Schema().FieldName("1").As("1").Numeric().Build()
 	s.FtCreate().Index("1").Score(1).Maxtextfields().Schema().FieldName("1").As("1").Geo().Build()
 	s.FtCreate().Index("1").Score(1).Maxtextfields().Schema().FieldName("1").Text().Sortable().Build()
 	s.FtCreate().Index("1").Score(1).Maxtextfields().Schema().FieldName("1").Text().Noindex().Build()
@@ -3537,10 +3538,10 @@ func TestCommand_33(t *testing.T) {
 	s.FtCreate().Index("1").Score(1).Nohl().Schema().FieldName("1").Geo().Build()
 	s.FtCreate().Index("1").Score(1).Nofields().Nofreqs().Schema().FieldName("1").Text().Build()
 	s.FtCreate().Index("1").Score(1).Nofields().Nofreqs().Schema().FieldName("1").Tag().Build()
-	s.FtCreate().Index("1").Score(1).Nofields().Nofreqs().Schema().FieldName("1").Numeric().Build()
 }
 
 func TestCommand_34(t *testing.T) {
+	s.FtCreate().Index("1").Score(1).Nofields().Nofreqs().Schema().FieldName("1").Numeric().Build()
 	s.FtCreate().Index("1").Score(1).Nofields().Nofreqs().Schema().FieldName("1").Geo().Build()
 	s.FtCreate().Index("1").Score(1).Nofields().Schema().FieldName("1").As("1").Text().Build()
 	s.FtCreate().Index("1").Score(1).Nofields().Schema().FieldName("1").As("1").Tag().Build()
@@ -3640,10 +3641,10 @@ func TestCommand_34(t *testing.T) {
 	s.FtCreate().Index("1").ScoreField("1").PayloadField("1").Schema().FieldName("1").As("1").Geo().Build()
 	s.FtCreate().Index("1").ScoreField("1").PayloadField("1").Schema().FieldName("1").Text().Sortable().Build()
 	s.FtCreate().Index("1").ScoreField("1").PayloadField("1").Schema().FieldName("1").Text().Noindex().Build()
-	s.FtCreate().Index("1").ScoreField("1").PayloadField("1").Schema().FieldName("1").Text().Build()
 }
 
 func TestCommand_35(t *testing.T) {
+	s.FtCreate().Index("1").ScoreField("1").PayloadField("1").Schema().FieldName("1").Text().Build()
 	s.FtCreate().Index("1").ScoreField("1").PayloadField("1").Schema().FieldName("1").Tag().Sortable().Build()
 	s.FtCreate().Index("1").ScoreField("1").PayloadField("1").Schema().FieldName("1").Tag().Noindex().Build()
 	s.FtCreate().Index("1").ScoreField("1").PayloadField("1").Schema().FieldName("1").Tag().Build()
@@ -3743,10 +3744,10 @@ func TestCommand_35(t *testing.T) {
 	s.FtCreate().Index("1").ScoreField("1").Nooffsets().Schema().FieldName("1").Tag().Sortable().Build()
 	s.FtCreate().Index("1").ScoreField("1").Nooffsets().Schema().FieldName("1").Tag().Noindex().Build()
 	s.FtCreate().Index("1").ScoreField("1").Nooffsets().Schema().FieldName("1").Tag().Build()
-	s.FtCreate().Index("1").ScoreField("1").Nooffsets().Schema().FieldName("1").Numeric().Sortable().Build()
 }
 
 func TestCommand_36(t *testing.T) {
+	s.FtCreate().Index("1").ScoreField("1").Nooffsets().Schema().FieldName("1").Numeric().Sortable().Build()
 	s.FtCreate().Index("1").ScoreField("1").Nooffsets().Schema().FieldName("1").Numeric().Noindex().Build()
 	s.FtCreate().Index("1").ScoreField("1").Nooffsets().Schema().FieldName("1").Numeric().Build()
 	s.FtCreate().Index("1").ScoreField("1").Nooffsets().Schema().FieldName("1").Geo().Sortable().Build()
@@ -3846,10 +3847,10 @@ func TestCommand_36(t *testing.T) {
 	s.FtCreate().Index("1").ScoreField("1").Schema().FieldName("1").Geo().Sortable().Unf().Build()
 	s.FtCreate().Index("1").ScoreField("1").Schema().FieldName("1").Geo().Sortable().Noindex().Build()
 	s.FtCreate().Index("1").ScoreField("1").Schema().FieldName("1").Geo().Sortable().Build()
-	s.FtCreate().Index("1").ScoreField("1").Schema().FieldName("1").Geo().Noindex().Build()
 }
 
 func TestCommand_37(t *testing.T) {
+	s.FtCreate().Index("1").ScoreField("1").Schema().FieldName("1").Geo().Noindex().Build()
 	s.FtCreate().Index("1").ScoreField("1").Schema().FieldName("1").Geo().Build()
 	s.FtCreate().Index("1").PayloadField("1").Maxtextfields().Temporary(1).Schema().FieldName("1").Text().Build()
 	s.FtCreate().Index("1").PayloadField("1").Maxtextfields().Temporary(1).Schema().FieldName("1").Tag().Build()
@@ -3949,10 +3950,10 @@ func TestCommand_37(t *testing.T) {
 	s.FtCreate().Index("1").PayloadField("1").Nooffsets().Schema().FieldName("1").Geo().Build()
 	s.FtCreate().Index("1").PayloadField("1").Nohl().Nofields().Schema().FieldName("1").Text().Build()
 	s.FtCreate().Index("1").PayloadField("1").Nohl().Nofields().Schema().FieldName("1").Tag().Build()
-	s.FtCreate().Index("1").PayloadField("1").Nohl().Nofields().Schema().FieldName("1").Numeric().Build()
 }
 
 func TestCommand_38(t *testing.T) {
+	s.FtCreate().Index("1").PayloadField("1").Nohl().Nofields().Schema().FieldName("1").Numeric().Build()
 	s.FtCreate().Index("1").PayloadField("1").Nohl().Nofields().Schema().FieldName("1").Geo().Build()
 	s.FtCreate().Index("1").PayloadField("1").Nohl().Nofreqs().Schema().FieldName("1").Text().Build()
 	s.FtCreate().Index("1").PayloadField("1").Nohl().Nofreqs().Schema().FieldName("1").Tag().Build()
@@ -4052,10 +4053,10 @@ func TestCommand_38(t *testing.T) {
 	s.FtCreate().Index("1").Maxtextfields().Temporary(1).Nooffsets().Schema().FieldName("1").Geo().Build()
 	s.FtCreate().Index("1").Maxtextfields().Temporary(1).Nohl().Schema().FieldName("1").Text().Build()
 	s.FtCreate().Index("1").Maxtextfields().Temporary(1).Nohl().Schema().FieldName("1").Tag().Build()
-	s.FtCreate().Index("1").Maxtextfields().Temporary(1).Nohl().Schema().FieldName("1").Numeric().Build()
 }
 
 func TestCommand_39(t *testing.T) {
+	s.FtCreate().Index("1").Maxtextfields().Temporary(1).Nohl().Schema().FieldName("1").Numeric().Build()
 	s.FtCreate().Index("1").Maxtextfields().Temporary(1).Nohl().Schema().FieldName("1").Geo().Build()
 	s.FtCreate().Index("1").Maxtextfields().Temporary(1).Nofields().Schema().FieldName("1").Text().Build()
 	s.FtCreate().Index("1").Maxtextfields().Temporary(1).Nofields().Schema().FieldName("1").Tag().Build()
@@ -4155,10 +4156,10 @@ func TestCommand_39(t *testing.T) {
 	s.FtCreate().Index("1").Maxtextfields().Nofields().Schema().FieldName("1").Geo().Build()
 	s.FtCreate().Index("1").Maxtextfields().Nofreqs().Schema().FieldName("1").As("1").Text().Build()
 	s.FtCreate().Index("1").Maxtextfields().Nofreqs().Schema().FieldName("1").As("1").Tag().Build()
-	s.FtCreate().Index("1").Maxtextfields().Nofreqs().Schema().FieldName("1").As("1").Numeric().Build()
 }
 
 func TestCommand_40(t *testing.T) {
+	s.FtCreate().Index("1").Maxtextfields().Nofreqs().Schema().FieldName("1").As("1").Numeric().Build()
 	s.FtCreate().Index("1").Maxtextfields().Nofreqs().Schema().FieldName("1").As("1").Geo().Build()
 	s.FtCreate().Index("1").Maxtextfields().Nofreqs().Schema().FieldName("1").Text().Sortable().Build()
 	s.FtCreate().Index("1").Maxtextfields().Nofreqs().Schema().FieldName("1").Text().Noindex().Build()
@@ -4258,10 +4259,10 @@ func TestCommand_40(t *testing.T) {
 	s.FtCreate().Index("1").Temporary(1).Nohl().Schema().FieldName("1").Numeric().Noindex().Build()
 	s.FtCreate().Index("1").Temporary(1).Nohl().Schema().FieldName("1").Numeric().Build()
 	s.FtCreate().Index("1").Temporary(1).Nohl().Schema().FieldName("1").Geo().Sortable().Build()
-	s.FtCreate().Index("1").Temporary(1).Nohl().Schema().FieldName("1").Geo().Noindex().Build()
 }
 
 func TestCommand_41(t *testing.T) {
+	s.FtCreate().Index("1").Temporary(1).Nohl().Schema().FieldName("1").Geo().Noindex().Build()
 	s.FtCreate().Index("1").Temporary(1).Nohl().Schema().FieldName("1").Geo().Build()
 	s.FtCreate().Index("1").Temporary(1).Nofields().Nofreqs().Schema().FieldName("1").Text().Build()
 	s.FtCreate().Index("1").Temporary(1).Nofields().Nofreqs().Schema().FieldName("1").Tag().Build()
@@ -4361,10 +4362,10 @@ func TestCommand_41(t *testing.T) {
 	s.FtCreate().Index("1").Nooffsets().Nohl().Schema().FieldName("1").Geo().Build()
 	s.FtCreate().Index("1").Nooffsets().Nofields().Nofreqs().Schema().FieldName("1").Text().Build()
 	s.FtCreate().Index("1").Nooffsets().Nofields().Nofreqs().Schema().FieldName("1").Tag().Build()
-	s.FtCreate().Index("1").Nooffsets().Nofields().Nofreqs().Schema().FieldName("1").Numeric().Build()
 }
 
 func TestCommand_42(t *testing.T) {
+	s.FtCreate().Index("1").Nooffsets().Nofields().Nofreqs().Schema().FieldName("1").Numeric().Build()
 	s.FtCreate().Index("1").Nooffsets().Nofields().Nofreqs().Schema().FieldName("1").Geo().Build()
 	s.FtCreate().Index("1").Nooffsets().Nofields().Schema().FieldName("1").As("1").Text().Build()
 	s.FtCreate().Index("1").Nooffsets().Nofields().Schema().FieldName("1").As("1").Tag().Build()
@@ -4464,10 +4465,10 @@ func TestCommand_42(t *testing.T) {
 	s.FtCreate().Index("1").Nohl().Nofreqs().Schema().FieldName("1").Tag().Sortable().Build()
 	s.FtCreate().Index("1").Nohl().Nofreqs().Schema().FieldName("1").Tag().Noindex().Build()
 	s.FtCreate().Index("1").Nohl().Nofreqs().Schema().FieldName("1").Tag().Build()
-	s.FtCreate().Index("1").Nohl().Nofreqs().Schema().FieldName("1").Numeric().Sortable().Build()
 }
 
 func TestCommand_43(t *testing.T) {
+	s.FtCreate().Index("1").Nohl().Nofreqs().Schema().FieldName("1").Numeric().Sortable().Build()
 	s.FtCreate().Index("1").Nohl().Nofreqs().Schema().FieldName("1").Numeric().Noindex().Build()
 	s.FtCreate().Index("1").Nohl().Nofreqs().Schema().FieldName("1").Numeric().Build()
 	s.FtCreate().Index("1").Nohl().Nofreqs().Schema().FieldName("1").Geo().Sortable().Build()
@@ -4567,10 +4568,10 @@ func TestCommand_43(t *testing.T) {
 	s.FtCreate().Index("1").Nofreqs().Stopwords(1).Stopword("1").Stopword("1").Schema().FieldName("1").Geo().Build()
 	s.FtCreate().Index("1").Nofreqs().Schema().FieldName("1").As("1").Text().Sortable().Build()
 	s.FtCreate().Index("1").Nofreqs().Schema().FieldName("1").As("1").Text().Noindex().Build()
-	s.FtCreate().Index("1").Nofreqs().Schema().FieldName("1").As("1").Text().Build()
 }
 
 func TestCommand_44(t *testing.T) {
+	s.FtCreate().Index("1").Nofreqs().Schema().FieldName("1").As("1").Text().Build()
 	s.FtCreate().Index("1").Nofreqs().Schema().FieldName("1").As("1").Tag().Sortable().Build()
 	s.FtCreate().Index("1").Nofreqs().Schema().FieldName("1").As("1").Tag().Noindex().Build()
 	s.FtCreate().Index("1").Nofreqs().Schema().FieldName("1").As("1").Tag().Build()
@@ -4670,10 +4671,10 @@ func TestCommand_44(t *testing.T) {
 	s.FtDropindex().Index("1").Build()
 	s.FtExplain().Index("1").Query("1").Build()
 	s.FtExplaincli().Index("1").Query("1").Build()
-	s.FtInfo().Index("1").Build()
 }
 
 func TestCommand_45(t *testing.T) {
+	s.FtInfo().Index("1").Build()
 	s.FtList().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Nostopwords().Withscores().Withpayloads().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Nostopwords().Withscores().Withsortkeys().Build()
@@ -4773,10 +4774,10 @@ func TestCommand_45(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Nostopwords().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Nostopwords().Sortby("1").Asc().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Nostopwords().Sortby("1").Desc().Build()
-	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Nostopwords().Sortby("1").Build()
 }
 
 func TestCommand_46(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Nostopwords().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Nostopwords().Limit().OffsetNum(1, 1).Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Nostopwords().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Withscores().Withpayloads().Withsortkeys().Build()
@@ -4876,10 +4877,10 @@ func TestCommand_46(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Withpayloads().Withsortkeys().Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Withpayloads().Withsortkeys().Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Withpayloads().Withsortkeys().Payload("1").Build()
-	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Withpayloads().Withsortkeys().Sortby("1").Build()
 }
 
 func TestCommand_47(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Withpayloads().Withsortkeys().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Withpayloads().Withsortkeys().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Withpayloads().Inkeys("1").Key("1").Key("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Withpayloads().Infields("1").Field("1").Field("1").Build()
@@ -4979,10 +4980,10 @@ func TestCommand_47(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Withsortkeys().Slop(1).Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Withsortkeys().Slop(1).Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Withsortkeys().Slop(1).Build()
-	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Withsortkeys().Inorder().Language("1").Build()
 }
 
 func TestCommand_48(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Withsortkeys().Inorder().Language("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Withsortkeys().Inorder().Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Withsortkeys().Inorder().Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Withsortkeys().Inorder().Explainscore().Build()
@@ -5082,10 +5083,10 @@ func TestCommand_48(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Summarize().Separator("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Summarize().Separator("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Summarize().Separator("1").Build()
-	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Summarize().Highlight().Slop(1).Build()
 }
 
 func TestCommand_49(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Summarize().Highlight().Slop(1).Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Summarize().Highlight().Inorder().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Summarize().Highlight().Language("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Summarize().Highlight().Expander("1").Build()
@@ -5185,10 +5186,10 @@ func TestCommand_49(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Slop(1).Inorder().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Slop(1).Language("1").Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Slop(1).Language("1").Scorer("1").Build()
-	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Slop(1).Language("1").Explainscore().Build()
 }
 
 func TestCommand_50(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Slop(1).Language("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Slop(1).Language("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Slop(1).Language("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Slop(1).Language("1").Build()
@@ -5288,10 +5289,10 @@ func TestCommand_50(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Payload("1").Sortby("1").Asc().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Payload("1").Sortby("1").Desc().Build()
-	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Payload("1").Sortby("1").Build()
 }
 
 func TestCommand_51(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Payload("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Payload("1").Limit().OffsetNum(1, 1).Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Verbatim().Sortby("1").Asc().Build()
@@ -5391,10 +5392,10 @@ func TestCommand_51(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nocontent().Nostopwords().Withpayloads().Withsortkeys().Summarize().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Nostopwords().Withpayloads().Withsortkeys().Highlight().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Nostopwords().Withpayloads().Withsortkeys().Slop(1).Build()
-	s.FtSearch().Index("1").Query("1").Nocontent().Nostopwords().Withpayloads().Withsortkeys().Inorder().Build()
 }
 
 func TestCommand_52(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nocontent().Nostopwords().Withpayloads().Withsortkeys().Inorder().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Nostopwords().Withpayloads().Withsortkeys().Language("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Nostopwords().Withpayloads().Withsortkeys().Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Nostopwords().Withpayloads().Withsortkeys().Scorer("1").Build()
@@ -5494,10 +5495,10 @@ func TestCommand_52(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nocontent().Nostopwords().Withsortkeys().Highlight().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Nostopwords().Withsortkeys().Slop(1).Inorder().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Nostopwords().Withsortkeys().Slop(1).Language("1").Build()
-	s.FtSearch().Index("1").Query("1").Nocontent().Nostopwords().Withsortkeys().Slop(1).Expander("1").Build()
 }
 
 func TestCommand_53(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nocontent().Nostopwords().Withsortkeys().Slop(1).Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Nostopwords().Withsortkeys().Slop(1).Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Nostopwords().Withsortkeys().Slop(1).Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Nostopwords().Withsortkeys().Slop(1).Payload("1").Build()
@@ -5597,10 +5598,10 @@ func TestCommand_53(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nocontent().Nostopwords().Summarize().Separator("1").Slop(1).Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Nostopwords().Summarize().Separator("1").Inorder().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Nostopwords().Summarize().Separator("1").Language("1").Build()
-	s.FtSearch().Index("1").Query("1").Nocontent().Nostopwords().Summarize().Separator("1").Expander("1").Build()
 }
 
 func TestCommand_54(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nocontent().Nostopwords().Summarize().Separator("1").Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Nostopwords().Summarize().Separator("1").Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Nostopwords().Summarize().Separator("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Nostopwords().Summarize().Separator("1").Payload("1").Build()
@@ -5700,10 +5701,10 @@ func TestCommand_54(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nocontent().Nostopwords().Slop(1).Inorder().Language("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Nostopwords().Slop(1).Inorder().Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Nostopwords().Slop(1).Inorder().Scorer("1").Build()
-	s.FtSearch().Index("1").Query("1").Nocontent().Nostopwords().Slop(1).Inorder().Explainscore().Build()
 }
 
 func TestCommand_55(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nocontent().Nostopwords().Slop(1).Inorder().Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Nostopwords().Slop(1).Inorder().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Nostopwords().Slop(1).Inorder().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Nostopwords().Slop(1).Inorder().Build()
@@ -5803,10 +5804,10 @@ func TestCommand_55(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nocontent().Nostopwords().Explainscore().Payload("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Nostopwords().Explainscore().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Nostopwords().Explainscore().Sortby("1").Asc().Build()
-	s.FtSearch().Index("1").Query("1").Nocontent().Nostopwords().Explainscore().Sortby("1").Desc().Build()
 }
 
 func TestCommand_56(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nocontent().Nostopwords().Explainscore().Sortby("1").Desc().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Nostopwords().Explainscore().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Nostopwords().Explainscore().Limit().OffsetNum(1, 1).Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Nostopwords().Explainscore().Build()
@@ -5906,10 +5907,10 @@ func TestCommand_56(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nocontent().Withscores().Withsortkeys().Summarize().Highlight().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withscores().Withsortkeys().Summarize().Slop(1).Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withscores().Withsortkeys().Summarize().Inorder().Build()
-	s.FtSearch().Index("1").Query("1").Nocontent().Withscores().Withsortkeys().Summarize().Language("1").Build()
 }
 
 func TestCommand_57(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nocontent().Withscores().Withsortkeys().Summarize().Language("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withscores().Withsortkeys().Summarize().Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withscores().Withsortkeys().Summarize().Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withscores().Withsortkeys().Summarize().Explainscore().Build()
@@ -6009,10 +6010,10 @@ func TestCommand_57(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nocontent().Withscores().Summarize().Frags(1).Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withscores().Summarize().Frags(1).Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withscores().Summarize().Frags(1).Explainscore().Build()
-	s.FtSearch().Index("1").Query("1").Nocontent().Withscores().Summarize().Frags(1).Payload("1").Build()
 }
 
 func TestCommand_58(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nocontent().Withscores().Summarize().Frags(1).Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withscores().Summarize().Frags(1).Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withscores().Summarize().Frags(1).Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withscores().Summarize().Len(1).Separator("1").Build()
@@ -6112,10 +6113,10 @@ func TestCommand_58(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nocontent().Withscores().Highlight().Expander("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withscores().Highlight().Expander("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withscores().Highlight().Expander("1").Sortby("1").Build()
-	s.FtSearch().Index("1").Query("1").Nocontent().Withscores().Highlight().Expander("1").Build()
 }
 
 func TestCommand_59(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nocontent().Withscores().Highlight().Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withscores().Highlight().Scorer("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withscores().Highlight().Scorer("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withscores().Highlight().Scorer("1").Sortby("1").Build()
@@ -6215,10 +6216,10 @@ func TestCommand_59(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nocontent().Withscores().Expander("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withscores().Expander("1").Payload("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withscores().Expander("1").Payload("1").Build()
-	s.FtSearch().Index("1").Query("1").Nocontent().Withscores().Expander("1").Sortby("1").Asc().Build()
 }
 
 func TestCommand_60(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nocontent().Withscores().Expander("1").Sortby("1").Asc().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withscores().Expander("1").Sortby("1").Desc().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withscores().Expander("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withscores().Expander("1").Limit().OffsetNum(1, 1).Build()
@@ -6318,10 +6319,10 @@ func TestCommand_60(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nocontent().Withpayloads().Withsortkeys().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withpayloads().Filter("1").Min(1).Max(1).Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withpayloads().Inkeys("1").Key("1").Key("1").Summarize().Build()
-	s.FtSearch().Index("1").Query("1").Nocontent().Withpayloads().Inkeys("1").Key("1").Key("1").Highlight().Build()
 }
 
 func TestCommand_61(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nocontent().Withpayloads().Inkeys("1").Key("1").Key("1").Highlight().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withpayloads().Inkeys("1").Key("1").Key("1").Slop(1).Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withpayloads().Inkeys("1").Key("1").Key("1").Inorder().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withpayloads().Inkeys("1").Key("1").Key("1").Language("1").Build()
@@ -6421,10 +6422,10 @@ func TestCommand_61(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nocontent().Withpayloads().Summarize().Expander("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withpayloads().Summarize().Expander("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withpayloads().Summarize().Expander("1").Sortby("1").Build()
-	s.FtSearch().Index("1").Query("1").Nocontent().Withpayloads().Summarize().Expander("1").Build()
 }
 
 func TestCommand_62(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nocontent().Withpayloads().Summarize().Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withpayloads().Summarize().Scorer("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withpayloads().Summarize().Scorer("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withpayloads().Summarize().Scorer("1").Sortby("1").Build()
@@ -6524,10 +6525,10 @@ func TestCommand_62(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nocontent().Withpayloads().Inorder().Expander("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withpayloads().Inorder().Expander("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withpayloads().Inorder().Expander("1").Build()
-	s.FtSearch().Index("1").Query("1").Nocontent().Withpayloads().Inorder().Scorer("1").Explainscore().Build()
 }
 
 func TestCommand_63(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nocontent().Withpayloads().Inorder().Scorer("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withpayloads().Inorder().Scorer("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withpayloads().Inorder().Scorer("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withpayloads().Inorder().Scorer("1").Build()
@@ -6627,10 +6628,10 @@ func TestCommand_63(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nocontent().Withsortkeys().Infields("1").Field("1").Field("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withsortkeys().Return("1").Field("1").Field("1").Summarize().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withsortkeys().Return("1").Field("1").Field("1").Highlight().Build()
-	s.FtSearch().Index("1").Query("1").Nocontent().Withsortkeys().Return("1").Field("1").Field("1").Slop(1).Build()
 }
 
 func TestCommand_64(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nocontent().Withsortkeys().Return("1").Field("1").Field("1").Slop(1).Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withsortkeys().Return("1").Field("1").Field("1").Inorder().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withsortkeys().Return("1").Field("1").Field("1").Language("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withsortkeys().Return("1").Field("1").Field("1").Expander("1").Build()
@@ -6730,10 +6731,10 @@ func TestCommand_64(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nocontent().Withsortkeys().Highlight().Slop(1).Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withsortkeys().Highlight().Slop(1).Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withsortkeys().Highlight().Slop(1).Payload("1").Build()
-	s.FtSearch().Index("1").Query("1").Nocontent().Withsortkeys().Highlight().Slop(1).Sortby("1").Build()
 }
 
 func TestCommand_65(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nocontent().Withsortkeys().Highlight().Slop(1).Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withsortkeys().Highlight().Slop(1).Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withsortkeys().Highlight().Inorder().Language("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withsortkeys().Highlight().Inorder().Expander("1").Build()
@@ -6833,10 +6834,10 @@ func TestCommand_65(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nocontent().Withsortkeys().Language("1").Scorer("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withsortkeys().Language("1").Scorer("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withsortkeys().Language("1").Scorer("1").Build()
-	s.FtSearch().Index("1").Query("1").Nocontent().Withsortkeys().Language("1").Explainscore().Payload("1").Build()
 }
 
 func TestCommand_66(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nocontent().Withsortkeys().Language("1").Explainscore().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withsortkeys().Language("1").Explainscore().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withsortkeys().Language("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Withsortkeys().Language("1").Payload("1").Sortby("1").Build()
@@ -6936,10 +6937,10 @@ func TestCommand_66(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nocontent().Inkeys("1").Key("1").Key("1").Inorder().Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Inkeys("1").Key("1").Key("1").Inorder().Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Inkeys("1").Key("1").Key("1").Inorder().Payload("1").Build()
-	s.FtSearch().Index("1").Query("1").Nocontent().Inkeys("1").Key("1").Key("1").Inorder().Sortby("1").Build()
 }
 
 func TestCommand_67(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nocontent().Inkeys("1").Key("1").Key("1").Inorder().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Inkeys("1").Key("1").Key("1").Inorder().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Inkeys("1").Key("1").Key("1").Language("1").Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Inkeys("1").Key("1").Key("1").Language("1").Scorer("1").Build()
@@ -7039,10 +7040,10 @@ func TestCommand_67(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nocontent().Return("1").Field("1").Field("1").Summarize().Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Return("1").Field("1").Field("1").Summarize().Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Return("1").Field("1").Field("1").Summarize().Explainscore().Build()
-	s.FtSearch().Index("1").Query("1").Nocontent().Return("1").Field("1").Field("1").Summarize().Payload("1").Build()
 }
 
 func TestCommand_68(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nocontent().Return("1").Field("1").Field("1").Summarize().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Return("1").Field("1").Field("1").Summarize().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Return("1").Field("1").Field("1").Summarize().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Return("1").Field("1").Field("1").Highlight().Slop(1).Build()
@@ -7142,10 +7143,10 @@ func TestCommand_68(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nocontent().Summarize().Frags(1).Slop(1).Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Summarize().Frags(1).Slop(1).Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Summarize().Frags(1).Slop(1).Explainscore().Build()
-	s.FtSearch().Index("1").Query("1").Nocontent().Summarize().Frags(1).Slop(1).Payload("1").Build()
 }
 
 func TestCommand_69(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nocontent().Summarize().Frags(1).Slop(1).Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Summarize().Frags(1).Slop(1).Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Summarize().Frags(1).Slop(1).Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Summarize().Frags(1).Inorder().Language("1").Build()
@@ -7245,10 +7246,10 @@ func TestCommand_69(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nocontent().Summarize().Separator("1").Highlight().Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Summarize().Separator("1").Highlight().Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Summarize().Separator("1").Highlight().Explainscore().Build()
-	s.FtSearch().Index("1").Query("1").Nocontent().Summarize().Separator("1").Highlight().Payload("1").Build()
 }
 
 func TestCommand_70(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nocontent().Summarize().Separator("1").Highlight().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Summarize().Separator("1").Highlight().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Summarize().Separator("1").Highlight().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Summarize().Separator("1").Slop(1).Inorder().Build()
@@ -7348,10 +7349,10 @@ func TestCommand_70(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nocontent().Summarize().Slop(1).Language("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Summarize().Slop(1).Expander("1").Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Summarize().Slop(1).Expander("1").Explainscore().Build()
-	s.FtSearch().Index("1").Query("1").Nocontent().Summarize().Slop(1).Expander("1").Payload("1").Build()
 }
 
 func TestCommand_71(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nocontent().Summarize().Slop(1).Expander("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Summarize().Slop(1).Expander("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Summarize().Slop(1).Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Summarize().Slop(1).Scorer("1").Explainscore().Build()
@@ -7451,10 +7452,10 @@ func TestCommand_71(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nocontent().Summarize().Sortby("1").Asc().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Summarize().Sortby("1").Desc().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Summarize().Sortby("1").Limit().OffsetNum(1, 1).Build()
-	s.FtSearch().Index("1").Query("1").Nocontent().Summarize().Sortby("1").Build()
 }
 
 func TestCommand_72(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nocontent().Summarize().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Summarize().Limit().OffsetNum(1, 1).Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Summarize().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Highlight().Fields("1").Field("1").Field("1").Slop(1).Build()
@@ -7554,10 +7555,10 @@ func TestCommand_72(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nocontent().Highlight().Expander("1").Scorer("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Highlight().Expander("1").Scorer("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Highlight().Expander("1").Scorer("1").Sortby("1").Build()
-	s.FtSearch().Index("1").Query("1").Nocontent().Highlight().Expander("1").Scorer("1").Build()
 }
 
 func TestCommand_73(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nocontent().Highlight().Expander("1").Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Highlight().Expander("1").Explainscore().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Highlight().Expander("1").Explainscore().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Highlight().Expander("1").Explainscore().Build()
@@ -7657,10 +7658,10 @@ func TestCommand_73(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nocontent().Slop(1).Scorer("1").Explainscore().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Slop(1).Scorer("1").Explainscore().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Slop(1).Scorer("1").Explainscore().Build()
-	s.FtSearch().Index("1").Query("1").Nocontent().Slop(1).Scorer("1").Payload("1").Sortby("1").Build()
 }
 
 func TestCommand_74(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nocontent().Slop(1).Scorer("1").Payload("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Slop(1).Scorer("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Slop(1).Scorer("1").Sortby("1").Asc().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Slop(1).Scorer("1").Sortby("1").Desc().Build()
@@ -7760,10 +7761,10 @@ func TestCommand_74(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nocontent().Language("1").Expander("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Language("1").Expander("1").Limit().OffsetNum(1, 1).Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Language("1").Expander("1").Build()
-	s.FtSearch().Index("1").Query("1").Nocontent().Language("1").Scorer("1").Explainscore().Payload("1").Build()
 }
 
 func TestCommand_75(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nocontent().Language("1").Scorer("1").Explainscore().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Language("1").Scorer("1").Explainscore().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Language("1").Scorer("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Language("1").Scorer("1").Payload("1").Sortby("1").Build()
@@ -7863,10 +7864,10 @@ func TestCommand_75(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nocontent().Limit().OffsetNum(1, 1).Build()
 	s.FtSearch().Index("1").Query("1").Nocontent().Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Withscores().Withpayloads().Withsortkeys().Build()
-	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Withscores().Withpayloads().Summarize().Build()
 }
 
 func TestCommand_76(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Withscores().Withpayloads().Summarize().Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Withscores().Withpayloads().Highlight().Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Withscores().Withpayloads().Slop(1).Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Withscores().Withpayloads().Inorder().Build()
@@ -7966,10 +7967,10 @@ func TestCommand_76(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Withpayloads().Withsortkeys().Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Withpayloads().Inkeys("1").Key("1").Key("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Withpayloads().Infields("1").Field("1").Field("1").Build()
-	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Withpayloads().Return("1").Field("1").Field("1").Build()
 }
 
 func TestCommand_77(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Withpayloads().Return("1").Field("1").Field("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Withpayloads().Summarize().Frags(1).Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Withpayloads().Summarize().Len(1).Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Withpayloads().Summarize().Separator("1").Build()
@@ -8069,10 +8070,10 @@ func TestCommand_77(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Withsortkeys().Inorder().Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Withsortkeys().Inorder().Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Withsortkeys().Inorder().Explainscore().Build()
-	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Withsortkeys().Inorder().Payload("1").Build()
 }
 
 func TestCommand_78(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Withsortkeys().Inorder().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Withsortkeys().Inorder().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Withsortkeys().Inorder().Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Withsortkeys().Language("1").Expander("1").Build()
@@ -8172,10 +8173,10 @@ func TestCommand_78(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Summarize().Highlight().Inorder().Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Summarize().Highlight().Language("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Summarize().Highlight().Expander("1").Build()
-	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Summarize().Highlight().Scorer("1").Build()
 }
 
 func TestCommand_79(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Summarize().Highlight().Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Summarize().Highlight().Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Summarize().Highlight().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Summarize().Highlight().Sortby("1").Build()
@@ -8275,10 +8276,10 @@ func TestCommand_79(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Slop(1).Language("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Slop(1).Language("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Slop(1).Language("1").Build()
-	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Slop(1).Expander("1").Scorer("1").Build()
 }
 
 func TestCommand_80(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Slop(1).Expander("1").Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Slop(1).Expander("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Slop(1).Expander("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Slop(1).Expander("1").Sortby("1").Build()
@@ -8378,10 +8379,10 @@ func TestCommand_80(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Payload("1").Limit().OffsetNum(1, 1).Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Sortby("1").Asc().Build()
-	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Sortby("1").Desc().Build()
 }
 
 func TestCommand_81(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Sortby("1").Desc().Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Sortby("1").Limit().OffsetNum(1, 1).Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Nostopwords().Limit().OffsetNum(1, 1).Build()
@@ -8481,10 +8482,10 @@ func TestCommand_81(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Verbatim().Withscores().Withsortkeys().Highlight().Slop(1).Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withscores().Withsortkeys().Highlight().Inorder().Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withscores().Withsortkeys().Highlight().Language("1").Build()
-	s.FtSearch().Index("1").Query("1").Verbatim().Withscores().Withsortkeys().Highlight().Expander("1").Build()
 }
 
 func TestCommand_82(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Verbatim().Withscores().Withsortkeys().Highlight().Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withscores().Withsortkeys().Highlight().Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withscores().Withsortkeys().Highlight().Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withscores().Withsortkeys().Highlight().Payload("1").Build()
@@ -8584,10 +8585,10 @@ func TestCommand_82(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Verbatim().Withscores().Summarize().Len(1).Language("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withscores().Summarize().Len(1).Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withscores().Summarize().Len(1).Scorer("1").Build()
-	s.FtSearch().Index("1").Query("1").Verbatim().Withscores().Summarize().Len(1).Explainscore().Build()
 }
 
 func TestCommand_83(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Verbatim().Withscores().Summarize().Len(1).Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withscores().Summarize().Len(1).Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withscores().Summarize().Len(1).Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withscores().Summarize().Len(1).Build()
@@ -8687,10 +8688,10 @@ func TestCommand_83(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Verbatim().Withscores().Highlight().Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withscores().Highlight().Payload("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withscores().Highlight().Payload("1").Build()
-	s.FtSearch().Index("1").Query("1").Verbatim().Withscores().Highlight().Sortby("1").Asc().Build()
 }
 
 func TestCommand_84(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Verbatim().Withscores().Highlight().Sortby("1").Asc().Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withscores().Highlight().Sortby("1").Desc().Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withscores().Highlight().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withscores().Highlight().Limit().OffsetNum(1, 1).Build()
@@ -8790,10 +8791,10 @@ func TestCommand_84(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Verbatim().Withscores().Scorer("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withscores().Scorer("1").Payload("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withscores().Scorer("1").Payload("1").Build()
-	s.FtSearch().Index("1").Query("1").Verbatim().Withscores().Scorer("1").Sortby("1").Asc().Build()
 }
 
 func TestCommand_85(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Verbatim().Withscores().Scorer("1").Sortby("1").Asc().Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withscores().Scorer("1").Sortby("1").Desc().Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withscores().Scorer("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withscores().Scorer("1").Limit().OffsetNum(1, 1).Build()
@@ -8893,10 +8894,10 @@ func TestCommand_85(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Verbatim().Withpayloads().Inkeys("1").Key("1").Key("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withpayloads().Inkeys("1").Key("1").Key("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withpayloads().Inkeys("1").Key("1").Key("1").Build()
-	s.FtSearch().Index("1").Query("1").Verbatim().Withpayloads().Infields("1").Field("1").Field("1").Summarize().Build()
 }
 
 func TestCommand_86(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Verbatim().Withpayloads().Infields("1").Field("1").Field("1").Summarize().Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withpayloads().Infields("1").Field("1").Field("1").Highlight().Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withpayloads().Infields("1").Field("1").Field("1").Slop(1).Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withpayloads().Infields("1").Field("1").Field("1").Inorder().Build()
@@ -8996,10 +8997,10 @@ func TestCommand_86(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Verbatim().Withpayloads().Summarize().Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withpayloads().Summarize().Payload("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withpayloads().Summarize().Payload("1").Build()
-	s.FtSearch().Index("1").Query("1").Verbatim().Withpayloads().Summarize().Sortby("1").Asc().Build()
 }
 
 func TestCommand_87(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Verbatim().Withpayloads().Summarize().Sortby("1").Asc().Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withpayloads().Summarize().Sortby("1").Desc().Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withpayloads().Summarize().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withpayloads().Summarize().Limit().OffsetNum(1, 1).Build()
@@ -9099,10 +9100,10 @@ func TestCommand_87(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Verbatim().Withpayloads().Inorder().Payload("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withpayloads().Inorder().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withpayloads().Inorder().Sortby("1").Asc().Build()
-	s.FtSearch().Index("1").Query("1").Verbatim().Withpayloads().Inorder().Sortby("1").Desc().Build()
 }
 
 func TestCommand_88(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Verbatim().Withpayloads().Inorder().Sortby("1").Desc().Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withpayloads().Inorder().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withpayloads().Inorder().Limit().OffsetNum(1, 1).Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withpayloads().Inorder().Build()
@@ -9202,10 +9203,10 @@ func TestCommand_88(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Verbatim().Withsortkeys().Return("1").Field("1").Field("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withsortkeys().Return("1").Field("1").Field("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withsortkeys().Summarize().Fields("1").Field("1").Field("1").Build()
-	s.FtSearch().Index("1").Query("1").Verbatim().Withsortkeys().Summarize().Frags(1).Len(1).Build()
 }
 
 func TestCommand_89(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Verbatim().Withsortkeys().Summarize().Frags(1).Len(1).Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withsortkeys().Summarize().Frags(1).Separator("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withsortkeys().Summarize().Frags(1).Highlight().Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withsortkeys().Summarize().Frags(1).Slop(1).Build()
@@ -9305,10 +9306,10 @@ func TestCommand_89(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Verbatim().Withsortkeys().Highlight().Inorder().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withsortkeys().Highlight().Inorder().Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withsortkeys().Highlight().Language("1").Expander("1").Build()
-	s.FtSearch().Index("1").Query("1").Verbatim().Withsortkeys().Highlight().Language("1").Scorer("1").Build()
 }
 
 func TestCommand_90(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Verbatim().Withsortkeys().Highlight().Language("1").Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withsortkeys().Highlight().Language("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withsortkeys().Highlight().Language("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withsortkeys().Highlight().Language("1").Sortby("1").Build()
@@ -9408,10 +9409,10 @@ func TestCommand_90(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Verbatim().Withsortkeys().Language("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withsortkeys().Language("1").Limit().OffsetNum(1, 1).Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withsortkeys().Language("1").Build()
-	s.FtSearch().Index("1").Query("1").Verbatim().Withsortkeys().Expander("1").Scorer("1").Explainscore().Build()
 }
 
 func TestCommand_91(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Verbatim().Withsortkeys().Expander("1").Scorer("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withsortkeys().Expander("1").Scorer("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withsortkeys().Expander("1").Scorer("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Withsortkeys().Expander("1").Scorer("1").Build()
@@ -9511,10 +9512,10 @@ func TestCommand_91(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Verbatim().Inkeys("1").Key("1").Key("1").Language("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Inkeys("1").Key("1").Key("1").Expander("1").Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Inkeys("1").Key("1").Key("1").Expander("1").Explainscore().Build()
-	s.FtSearch().Index("1").Query("1").Verbatim().Inkeys("1").Key("1").Key("1").Expander("1").Payload("1").Build()
 }
 
 func TestCommand_92(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Verbatim().Inkeys("1").Key("1").Key("1").Expander("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Inkeys("1").Key("1").Key("1").Expander("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Inkeys("1").Key("1").Key("1").Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Inkeys("1").Key("1").Key("1").Scorer("1").Explainscore().Build()
@@ -9614,10 +9615,10 @@ func TestCommand_92(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Verbatim().Return("1").Field("1").Field("1").Highlight().Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Return("1").Field("1").Field("1").Highlight().Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Return("1").Field("1").Field("1").Highlight().Payload("1").Build()
-	s.FtSearch().Index("1").Query("1").Verbatim().Return("1").Field("1").Field("1").Highlight().Sortby("1").Build()
 }
 
 func TestCommand_93(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Verbatim().Return("1").Field("1").Field("1").Highlight().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Return("1").Field("1").Field("1").Highlight().Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Return("1").Field("1").Field("1").Slop(1).Inorder().Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Return("1").Field("1").Field("1").Slop(1).Language("1").Build()
@@ -9717,10 +9718,10 @@ func TestCommand_93(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Verbatim().Summarize().Frags(1).Inorder().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Summarize().Frags(1).Inorder().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Summarize().Frags(1).Inorder().Build()
-	s.FtSearch().Index("1").Query("1").Verbatim().Summarize().Frags(1).Language("1").Expander("1").Build()
 }
 
 func TestCommand_94(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Verbatim().Summarize().Frags(1).Language("1").Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Summarize().Frags(1).Language("1").Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Summarize().Frags(1).Language("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Summarize().Frags(1).Language("1").Payload("1").Build()
@@ -9820,10 +9821,10 @@ func TestCommand_94(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Verbatim().Summarize().Separator("1").Slop(1).Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Summarize().Separator("1").Slop(1).Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Summarize().Separator("1").Slop(1).Sortby("1").Build()
-	s.FtSearch().Index("1").Query("1").Verbatim().Summarize().Separator("1").Slop(1).Build()
 }
 
 func TestCommand_95(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Verbatim().Summarize().Separator("1").Slop(1).Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Summarize().Separator("1").Inorder().Language("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Summarize().Separator("1").Inorder().Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Summarize().Separator("1").Inorder().Scorer("1").Build()
@@ -9923,10 +9924,10 @@ func TestCommand_95(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Verbatim().Summarize().Slop(1).Explainscore().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Summarize().Slop(1).Explainscore().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Summarize().Slop(1).Explainscore().Build()
-	s.FtSearch().Index("1").Query("1").Verbatim().Summarize().Slop(1).Payload("1").Sortby("1").Build()
 }
 
 func TestCommand_96(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Verbatim().Summarize().Slop(1).Payload("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Summarize().Slop(1).Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Summarize().Slop(1).Sortby("1").Asc().Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Summarize().Slop(1).Sortby("1").Desc().Build()
@@ -10026,10 +10027,10 @@ func TestCommand_96(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Verbatim().Highlight().Fields("1").Field("1").Field("1").Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Highlight().Fields("1").Field("1").Field("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Highlight().Fields("1").Field("1").Field("1").Payload("1").Build()
-	s.FtSearch().Index("1").Query("1").Verbatim().Highlight().Fields("1").Field("1").Field("1").Sortby("1").Build()
 }
 
 func TestCommand_97(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Verbatim().Highlight().Fields("1").Field("1").Field("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Highlight().Fields("1").Field("1").Field("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Highlight().Tags().OpenClose("1", "1").Slop(1).Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Highlight().Tags().OpenClose("1", "1").Inorder().Build()
@@ -10129,10 +10130,10 @@ func TestCommand_97(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Verbatim().Highlight().Expander("1").Sortby("1").Desc().Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Highlight().Expander("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Highlight().Expander("1").Limit().OffsetNum(1, 1).Build()
-	s.FtSearch().Index("1").Query("1").Verbatim().Highlight().Expander("1").Build()
 }
 
 func TestCommand_98(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Verbatim().Highlight().Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Highlight().Scorer("1").Explainscore().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Highlight().Scorer("1").Explainscore().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Highlight().Scorer("1").Explainscore().Build()
@@ -10232,10 +10233,10 @@ func TestCommand_98(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Verbatim().Slop(1).Explainscore().Payload("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Slop(1).Explainscore().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Slop(1).Explainscore().Sortby("1").Asc().Build()
-	s.FtSearch().Index("1").Query("1").Verbatim().Slop(1).Explainscore().Sortby("1").Desc().Build()
 }
 
 func TestCommand_99(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Verbatim().Slop(1).Explainscore().Sortby("1").Desc().Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Slop(1).Explainscore().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Slop(1).Explainscore().Limit().OffsetNum(1, 1).Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Slop(1).Explainscore().Build()
@@ -10335,10 +10336,10 @@ func TestCommand_99(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Verbatim().Language("1").Scorer("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Language("1").Scorer("1").Limit().OffsetNum(1, 1).Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Language("1").Scorer("1").Build()
-	s.FtSearch().Index("1").Query("1").Verbatim().Language("1").Explainscore().Payload("1").Sortby("1").Build()
 }
 
 func TestCommand_100(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Verbatim().Language("1").Explainscore().Payload("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Language("1").Explainscore().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Language("1").Explainscore().Sortby("1").Asc().Build()
 	s.FtSearch().Index("1").Query("1").Verbatim().Language("1").Explainscore().Sortby("1").Desc().Build()
@@ -10438,10 +10439,10 @@ func TestCommand_100(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withscores().Withpayloads().Withsortkeys().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withscores().Withpayloads().Withsortkeys().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withscores().Withpayloads().Withsortkeys().Build()
-	s.FtSearch().Index("1").Query("1").Nostopwords().Withscores().Withpayloads().Inkeys("1").Key("1").Key("1").Build()
 }
 
 func TestCommand_101(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nostopwords().Withscores().Withpayloads().Inkeys("1").Key("1").Key("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withscores().Withpayloads().Infields("1").Field("1").Field("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withscores().Withpayloads().Return("1").Field("1").Field("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withscores().Withpayloads().Summarize().Frags(1).Build()
@@ -10541,10 +10542,10 @@ func TestCommand_101(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withscores().Withsortkeys().Slop(1).Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withscores().Withsortkeys().Inorder().Language("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withscores().Withsortkeys().Inorder().Expander("1").Build()
-	s.FtSearch().Index("1").Query("1").Nostopwords().Withscores().Withsortkeys().Inorder().Scorer("1").Build()
 }
 
 func TestCommand_102(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nostopwords().Withscores().Withsortkeys().Inorder().Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withscores().Withsortkeys().Inorder().Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withscores().Withsortkeys().Inorder().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withscores().Withsortkeys().Inorder().Sortby("1").Build()
@@ -10644,10 +10645,10 @@ func TestCommand_102(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withscores().Summarize().Separator("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withscores().Summarize().Highlight().Slop(1).Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withscores().Summarize().Highlight().Inorder().Build()
-	s.FtSearch().Index("1").Query("1").Nostopwords().Withscores().Summarize().Highlight().Language("1").Build()
 }
 
 func TestCommand_103(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nostopwords().Withscores().Summarize().Highlight().Language("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withscores().Summarize().Highlight().Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withscores().Summarize().Highlight().Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withscores().Summarize().Highlight().Explainscore().Build()
@@ -10747,10 +10748,10 @@ func TestCommand_103(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withscores().Slop(1).Language("1").Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withscores().Slop(1).Language("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withscores().Slop(1).Language("1").Payload("1").Build()
-	s.FtSearch().Index("1").Query("1").Nostopwords().Withscores().Slop(1).Language("1").Sortby("1").Build()
 }
 
 func TestCommand_104(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nostopwords().Withscores().Slop(1).Language("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withscores().Slop(1).Language("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withscores().Slop(1).Expander("1").Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withscores().Slop(1).Expander("1").Explainscore().Build()
@@ -10850,10 +10851,10 @@ func TestCommand_104(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withscores().Payload("1").Sortby("1").Desc().Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withscores().Payload("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withscores().Payload("1").Limit().OffsetNum(1, 1).Build()
-	s.FtSearch().Index("1").Query("1").Nostopwords().Withscores().Payload("1").Build()
 }
 
 func TestCommand_105(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nostopwords().Withscores().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withscores().Sortby("1").Asc().Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withscores().Sortby("1").Desc().Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withscores().Sortby("1").Limit().OffsetNum(1, 1).Build()
@@ -10953,10 +10954,10 @@ func TestCommand_105(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withpayloads().Return("1").Field("1").Field("1").Slop(1).Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withpayloads().Return("1").Field("1").Field("1").Inorder().Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withpayloads().Return("1").Field("1").Field("1").Language("1").Build()
-	s.FtSearch().Index("1").Query("1").Nostopwords().Withpayloads().Return("1").Field("1").Field("1").Expander("1").Build()
 }
 
 func TestCommand_106(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nostopwords().Withpayloads().Return("1").Field("1").Field("1").Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withpayloads().Return("1").Field("1").Field("1").Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withpayloads().Return("1").Field("1").Field("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withpayloads().Return("1").Field("1").Field("1").Payload("1").Build()
@@ -11056,10 +11057,10 @@ func TestCommand_106(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withpayloads().Highlight().Slop(1).Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withpayloads().Highlight().Slop(1).Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withpayloads().Highlight().Inorder().Language("1").Build()
-	s.FtSearch().Index("1").Query("1").Nostopwords().Withpayloads().Highlight().Inorder().Expander("1").Build()
 }
 
 func TestCommand_107(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nostopwords().Withpayloads().Highlight().Inorder().Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withpayloads().Highlight().Inorder().Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withpayloads().Highlight().Inorder().Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withpayloads().Highlight().Inorder().Payload("1").Build()
@@ -11159,10 +11160,10 @@ func TestCommand_107(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withpayloads().Language("1").Explainscore().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withpayloads().Language("1").Explainscore().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withpayloads().Language("1").Explainscore().Build()
-	s.FtSearch().Index("1").Query("1").Nostopwords().Withpayloads().Language("1").Payload("1").Sortby("1").Build()
 }
 
 func TestCommand_108(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nostopwords().Withpayloads().Language("1").Payload("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withpayloads().Language("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withpayloads().Language("1").Sortby("1").Asc().Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withpayloads().Language("1").Sortby("1").Desc().Build()
@@ -11262,10 +11263,10 @@ func TestCommand_108(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withsortkeys().Summarize().Len(1).Highlight().Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withsortkeys().Summarize().Len(1).Slop(1).Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withsortkeys().Summarize().Len(1).Inorder().Build()
-	s.FtSearch().Index("1").Query("1").Nostopwords().Withsortkeys().Summarize().Len(1).Language("1").Build()
 }
 
 func TestCommand_109(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nostopwords().Withsortkeys().Summarize().Len(1).Language("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withsortkeys().Summarize().Len(1).Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withsortkeys().Summarize().Len(1).Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withsortkeys().Summarize().Len(1).Explainscore().Build()
@@ -11365,10 +11366,10 @@ func TestCommand_109(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withsortkeys().Highlight().Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withsortkeys().Highlight().Explainscore().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withsortkeys().Highlight().Explainscore().Sortby("1").Build()
-	s.FtSearch().Index("1").Query("1").Nostopwords().Withsortkeys().Highlight().Explainscore().Build()
 }
 
 func TestCommand_110(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nostopwords().Withsortkeys().Highlight().Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withsortkeys().Highlight().Payload("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withsortkeys().Highlight().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withsortkeys().Highlight().Sortby("1").Asc().Build()
@@ -11468,10 +11469,10 @@ func TestCommand_110(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withsortkeys().Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withsortkeys().Scorer("1").Explainscore().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withsortkeys().Scorer("1").Explainscore().Sortby("1").Build()
-	s.FtSearch().Index("1").Query("1").Nostopwords().Withsortkeys().Scorer("1").Explainscore().Build()
 }
 
 func TestCommand_111(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nostopwords().Withsortkeys().Scorer("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withsortkeys().Scorer("1").Payload("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withsortkeys().Scorer("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Withsortkeys().Scorer("1").Sortby("1").Asc().Build()
@@ -11571,10 +11572,10 @@ func TestCommand_111(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nostopwords().Inkeys("1").Key("1").Key("1").Sortby("1").Desc().Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Inkeys("1").Key("1").Key("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Inkeys("1").Key("1").Key("1").Limit().OffsetNum(1, 1).Build()
-	s.FtSearch().Index("1").Query("1").Nostopwords().Inkeys("1").Key("1").Key("1").Build()
 }
 
 func TestCommand_112(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nostopwords().Inkeys("1").Key("1").Key("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Infields("1").Field("1").Field("1").Return("1").Field("1").Field("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Infields("1").Field("1").Field("1").Summarize().Frags(1).Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Infields("1").Field("1").Field("1").Summarize().Len(1).Build()
@@ -11674,10 +11675,10 @@ func TestCommand_112(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nostopwords().Return("1").Field("1").Field("1").Inorder().Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Return("1").Field("1").Field("1").Inorder().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Return("1").Field("1").Field("1").Inorder().Sortby("1").Build()
-	s.FtSearch().Index("1").Query("1").Nostopwords().Return("1").Field("1").Field("1").Inorder().Build()
 }
 
 func TestCommand_113(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nostopwords().Return("1").Field("1").Field("1").Inorder().Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Return("1").Field("1").Field("1").Language("1").Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Return("1").Field("1").Field("1").Language("1").Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Return("1").Field("1").Field("1").Language("1").Explainscore().Build()
@@ -11777,10 +11778,10 @@ func TestCommand_113(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nostopwords().Summarize().Frags(1).Scorer("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Summarize().Frags(1).Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Summarize().Frags(1).Explainscore().Payload("1").Build()
-	s.FtSearch().Index("1").Query("1").Nostopwords().Summarize().Frags(1).Explainscore().Sortby("1").Build()
 }
 
 func TestCommand_114(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nostopwords().Summarize().Frags(1).Explainscore().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Summarize().Frags(1).Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Summarize().Frags(1).Payload("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Summarize().Frags(1).Payload("1").Build()
@@ -11880,10 +11881,10 @@ func TestCommand_114(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nostopwords().Summarize().Separator("1").Language("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Summarize().Separator("1").Expander("1").Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Summarize().Separator("1").Expander("1").Explainscore().Build()
-	s.FtSearch().Index("1").Query("1").Nostopwords().Summarize().Separator("1").Expander("1").Payload("1").Build()
 }
 
 func TestCommand_115(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nostopwords().Summarize().Separator("1").Expander("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Summarize().Separator("1").Expander("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Summarize().Separator("1").Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Summarize().Separator("1").Scorer("1").Explainscore().Build()
@@ -11983,10 +11984,10 @@ func TestCommand_115(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nostopwords().Summarize().Inorder().Expander("1").Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Summarize().Inorder().Expander("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Summarize().Inorder().Expander("1").Payload("1").Build()
-	s.FtSearch().Index("1").Query("1").Nostopwords().Summarize().Inorder().Expander("1").Sortby("1").Build()
 }
 
 func TestCommand_116(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nostopwords().Summarize().Inorder().Expander("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Summarize().Inorder().Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Summarize().Inorder().Scorer("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Summarize().Inorder().Scorer("1").Payload("1").Build()
@@ -12086,10 +12087,10 @@ func TestCommand_116(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nostopwords().Highlight().Slop(1).Inorder().Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Highlight().Slop(1).Inorder().Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Highlight().Slop(1).Inorder().Payload("1").Build()
-	s.FtSearch().Index("1").Query("1").Nostopwords().Highlight().Slop(1).Inorder().Sortby("1").Build()
 }
 
 func TestCommand_117(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nostopwords().Highlight().Slop(1).Inorder().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Highlight().Slop(1).Inorder().Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Highlight().Slop(1).Language("1").Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Highlight().Slop(1).Language("1").Scorer("1").Build()
@@ -12189,10 +12190,10 @@ func TestCommand_117(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nostopwords().Highlight().Explainscore().Sortby("1").Asc().Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Highlight().Explainscore().Sortby("1").Desc().Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Highlight().Explainscore().Sortby("1").Build()
-	s.FtSearch().Index("1").Query("1").Nostopwords().Highlight().Explainscore().Limit().OffsetNum(1, 1).Build()
 }
 
 func TestCommand_118(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nostopwords().Highlight().Explainscore().Limit().OffsetNum(1, 1).Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Highlight().Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Highlight().Payload("1").Sortby("1").Asc().Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Highlight().Payload("1").Sortby("1").Desc().Build()
@@ -12292,10 +12293,10 @@ func TestCommand_118(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nostopwords().Slop(1).Limit().OffsetNum(1, 1).Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Slop(1).Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Inorder().Language("1").Expander("1").Scorer("1").Build()
-	s.FtSearch().Index("1").Query("1").Nostopwords().Inorder().Language("1").Expander("1").Explainscore().Build()
 }
 
 func TestCommand_119(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nostopwords().Inorder().Language("1").Expander("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Inorder().Language("1").Expander("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Inorder().Language("1").Expander("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Inorder().Language("1").Expander("1").Build()
@@ -12395,10 +12396,10 @@ func TestCommand_119(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Nostopwords().Language("1").Sortby("1").Desc().Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Language("1").Sortby("1").Limit().OffsetNum(1, 1).Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Language("1").Sortby("1").Build()
-	s.FtSearch().Index("1").Query("1").Nostopwords().Language("1").Limit().OffsetNum(1, 1).Build()
 }
 
 func TestCommand_120(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Nostopwords().Language("1").Limit().OffsetNum(1, 1).Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Language("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Expander("1").Scorer("1").Explainscore().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Nostopwords().Expander("1").Scorer("1").Explainscore().Sortby("1").Build()
@@ -12498,10 +12499,10 @@ func TestCommand_120(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Withscores().Withpayloads().Withsortkeys().Highlight().Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Withpayloads().Withsortkeys().Slop(1).Inorder().Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Withpayloads().Withsortkeys().Slop(1).Language("1").Build()
-	s.FtSearch().Index("1").Query("1").Withscores().Withpayloads().Withsortkeys().Slop(1).Expander("1").Build()
 }
 
 func TestCommand_121(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Withscores().Withpayloads().Withsortkeys().Slop(1).Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Withpayloads().Withsortkeys().Slop(1).Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Withpayloads().Withsortkeys().Slop(1).Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Withpayloads().Withsortkeys().Slop(1).Payload("1").Build()
@@ -12601,10 +12602,10 @@ func TestCommand_121(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Withscores().Withpayloads().Summarize().Separator("1").Slop(1).Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Withpayloads().Summarize().Separator("1").Inorder().Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Withpayloads().Summarize().Separator("1").Language("1").Build()
-	s.FtSearch().Index("1").Query("1").Withscores().Withpayloads().Summarize().Separator("1").Expander("1").Build()
 }
 
 func TestCommand_122(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Withscores().Withpayloads().Summarize().Separator("1").Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Withpayloads().Summarize().Separator("1").Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Withpayloads().Summarize().Separator("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Withpayloads().Summarize().Separator("1").Payload("1").Build()
@@ -12704,10 +12705,10 @@ func TestCommand_122(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Withscores().Withpayloads().Slop(1).Inorder().Language("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Withpayloads().Slop(1).Inorder().Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Withpayloads().Slop(1).Inorder().Scorer("1").Build()
-	s.FtSearch().Index("1").Query("1").Withscores().Withpayloads().Slop(1).Inorder().Explainscore().Build()
 }
 
 func TestCommand_123(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Withscores().Withpayloads().Slop(1).Inorder().Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Withpayloads().Slop(1).Inorder().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Withpayloads().Slop(1).Inorder().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Withpayloads().Slop(1).Inorder().Build()
@@ -12807,10 +12808,10 @@ func TestCommand_123(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Withscores().Withpayloads().Explainscore().Payload("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Withpayloads().Explainscore().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Withpayloads().Explainscore().Sortby("1").Asc().Build()
-	s.FtSearch().Index("1").Query("1").Withscores().Withpayloads().Explainscore().Sortby("1").Desc().Build()
 }
 
 func TestCommand_124(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Withscores().Withpayloads().Explainscore().Sortby("1").Desc().Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Withpayloads().Explainscore().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Withpayloads().Explainscore().Limit().OffsetNum(1, 1).Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Withpayloads().Explainscore().Build()
@@ -12910,10 +12911,10 @@ func TestCommand_124(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Withscores().Withsortkeys().Summarize().Slop(1).Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Withsortkeys().Summarize().Slop(1).Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Withsortkeys().Summarize().Slop(1).Build()
-	s.FtSearch().Index("1").Query("1").Withscores().Withsortkeys().Summarize().Inorder().Language("1").Build()
 }
 
 func TestCommand_125(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Withscores().Withsortkeys().Summarize().Inorder().Language("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Withsortkeys().Summarize().Inorder().Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Withsortkeys().Summarize().Inorder().Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Withsortkeys().Summarize().Inorder().Explainscore().Build()
@@ -13013,10 +13014,10 @@ func TestCommand_125(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Withscores().Withsortkeys().Slop(1).Explainscore().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Withsortkeys().Slop(1).Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Withsortkeys().Slop(1).Payload("1").Sortby("1").Build()
-	s.FtSearch().Index("1").Query("1").Withscores().Withsortkeys().Slop(1).Payload("1").Build()
 }
 
 func TestCommand_126(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Withscores().Withsortkeys().Slop(1).Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Withsortkeys().Slop(1).Sortby("1").Asc().Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Withsortkeys().Slop(1).Sortby("1").Desc().Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Withsortkeys().Slop(1).Sortby("1").Build()
@@ -13116,10 +13117,10 @@ func TestCommand_126(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Withscores().Filter("1").Min(1).Max(1).Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Filter("1").Min(1).Max(1).Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Filter("1").Min(1).Max(1).Explainscore().Build()
-	s.FtSearch().Index("1").Query("1").Withscores().Filter("1").Min(1).Max(1).Payload("1").Build()
 }
 
 func TestCommand_127(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Withscores().Filter("1").Min(1).Max(1).Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Filter("1").Min(1).Max(1).Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Filter("1").Min(1).Max(1).Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Inkeys("1").Key("1").Key("1").Infields("1").Field("1").Field("1").Build()
@@ -13219,10 +13220,10 @@ func TestCommand_127(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Withscores().Infields("1").Field("1").Field("1").Slop(1).Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Infields("1").Field("1").Field("1").Inorder().Language("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Infields("1").Field("1").Field("1").Inorder().Expander("1").Build()
-	s.FtSearch().Index("1").Query("1").Withscores().Infields("1").Field("1").Field("1").Inorder().Scorer("1").Build()
 }
 
 func TestCommand_128(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Withscores().Infields("1").Field("1").Field("1").Inorder().Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Infields("1").Field("1").Field("1").Inorder().Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Infields("1").Field("1").Field("1").Inorder().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Infields("1").Field("1").Field("1").Inorder().Sortby("1").Build()
@@ -13322,10 +13323,10 @@ func TestCommand_128(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Withscores().Summarize().Fields("1").Field("1").Field("1").Inorder().Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Summarize().Fields("1").Field("1").Field("1").Language("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Summarize().Fields("1").Field("1").Field("1").Expander("1").Build()
-	s.FtSearch().Index("1").Query("1").Withscores().Summarize().Fields("1").Field("1").Field("1").Scorer("1").Build()
 }
 
 func TestCommand_129(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Withscores().Summarize().Fields("1").Field("1").Field("1").Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Summarize().Fields("1").Field("1").Field("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Summarize().Fields("1").Field("1").Field("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Summarize().Fields("1").Field("1").Field("1").Sortby("1").Build()
@@ -13425,10 +13426,10 @@ func TestCommand_129(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Withscores().Summarize().Len(1).Slop(1).Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Summarize().Len(1).Slop(1).Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Summarize().Len(1).Slop(1).Payload("1").Build()
-	s.FtSearch().Index("1").Query("1").Withscores().Summarize().Len(1).Slop(1).Sortby("1").Build()
 }
 
 func TestCommand_130(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Withscores().Summarize().Len(1).Slop(1).Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Summarize().Len(1).Slop(1).Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Summarize().Len(1).Inorder().Language("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Summarize().Len(1).Inorder().Expander("1").Build()
@@ -13528,10 +13529,10 @@ func TestCommand_130(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Withscores().Summarize().Highlight().Inorder().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Summarize().Highlight().Inorder().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Summarize().Highlight().Inorder().Build()
-	s.FtSearch().Index("1").Query("1").Withscores().Summarize().Highlight().Language("1").Expander("1").Build()
 }
 
 func TestCommand_131(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Withscores().Summarize().Highlight().Language("1").Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Summarize().Highlight().Language("1").Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Summarize().Highlight().Language("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Summarize().Highlight().Language("1").Payload("1").Build()
@@ -13631,10 +13632,10 @@ func TestCommand_131(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Withscores().Summarize().Language("1").Sortby("1").Desc().Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Summarize().Language("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Summarize().Language("1").Limit().OffsetNum(1, 1).Build()
-	s.FtSearch().Index("1").Query("1").Withscores().Summarize().Language("1").Build()
 }
 
 func TestCommand_132(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Withscores().Summarize().Language("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Summarize().Expander("1").Scorer("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Summarize().Expander("1").Scorer("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Summarize().Expander("1").Scorer("1").Sortby("1").Build()
@@ -13734,10 +13735,10 @@ func TestCommand_132(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Withscores().Highlight().Inorder().Language("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Highlight().Inorder().Language("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Highlight().Inorder().Expander("1").Scorer("1").Build()
-	s.FtSearch().Index("1").Query("1").Withscores().Highlight().Inorder().Expander("1").Explainscore().Build()
 }
 
 func TestCommand_133(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Withscores().Highlight().Inorder().Expander("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Highlight().Inorder().Expander("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Highlight().Inorder().Expander("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Highlight().Inorder().Expander("1").Build()
@@ -13837,10 +13838,10 @@ func TestCommand_133(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Withscores().Slop(1).Inorder().Payload("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Slop(1).Inorder().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Slop(1).Inorder().Sortby("1").Asc().Build()
-	s.FtSearch().Index("1").Query("1").Withscores().Slop(1).Inorder().Sortby("1").Desc().Build()
 }
 
 func TestCommand_134(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Withscores().Slop(1).Inorder().Sortby("1").Desc().Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Slop(1).Inorder().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Slop(1).Inorder().Limit().OffsetNum(1, 1).Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Slop(1).Inorder().Build()
@@ -13940,10 +13941,10 @@ func TestCommand_134(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Withscores().Inorder().Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Inorder().Scorer("1").Explainscore().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Inorder().Scorer("1").Explainscore().Sortby("1").Build()
-	s.FtSearch().Index("1").Query("1").Withscores().Inorder().Scorer("1").Explainscore().Build()
 }
 
 func TestCommand_135(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Withscores().Inorder().Scorer("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Inorder().Scorer("1").Payload("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Inorder().Scorer("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Inorder().Scorer("1").Sortby("1").Asc().Build()
@@ -14043,10 +14044,10 @@ func TestCommand_135(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Withscores().Scorer("1").Explainscore().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Scorer("1").Explainscore().Sortby("1").Asc().Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Scorer("1").Explainscore().Sortby("1").Desc().Build()
-	s.FtSearch().Index("1").Query("1").Withscores().Scorer("1").Explainscore().Sortby("1").Build()
 }
 
 func TestCommand_136(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Withscores().Scorer("1").Explainscore().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Scorer("1").Explainscore().Limit().OffsetNum(1, 1).Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Scorer("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Withscores().Scorer("1").Payload("1").Sortby("1").Asc().Build()
@@ -14146,10 +14147,10 @@ func TestCommand_136(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Withpayloads().Withsortkeys().Summarize().Separator("1").Highlight().Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Withsortkeys().Summarize().Separator("1").Slop(1).Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Withsortkeys().Summarize().Separator("1").Inorder().Build()
-	s.FtSearch().Index("1").Query("1").Withpayloads().Withsortkeys().Summarize().Separator("1").Language("1").Build()
 }
 
 func TestCommand_137(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Withpayloads().Withsortkeys().Summarize().Separator("1").Language("1").Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Withsortkeys().Summarize().Separator("1").Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Withsortkeys().Summarize().Separator("1").Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Withsortkeys().Summarize().Separator("1").Explainscore().Build()
@@ -14249,10 +14250,10 @@ func TestCommand_137(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Withpayloads().Withsortkeys().Highlight().Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Withsortkeys().Slop(1).Inorder().Language("1").Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Withsortkeys().Slop(1).Inorder().Expander("1").Build()
-	s.FtSearch().Index("1").Query("1").Withpayloads().Withsortkeys().Slop(1).Inorder().Scorer("1").Build()
 }
 
 func TestCommand_138(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Withpayloads().Withsortkeys().Slop(1).Inorder().Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Withsortkeys().Slop(1).Inorder().Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Withsortkeys().Slop(1).Inorder().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Withsortkeys().Slop(1).Inorder().Sortby("1").Build()
@@ -14352,10 +14353,10 @@ func TestCommand_138(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Withpayloads().Withsortkeys().Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Withsortkeys().Explainscore().Payload("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Withsortkeys().Explainscore().Payload("1").Build()
-	s.FtSearch().Index("1").Query("1").Withpayloads().Withsortkeys().Explainscore().Sortby("1").Asc().Build()
 }
 
 func TestCommand_139(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Withpayloads().Withsortkeys().Explainscore().Sortby("1").Asc().Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Withsortkeys().Explainscore().Sortby("1").Desc().Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Withsortkeys().Explainscore().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Withsortkeys().Explainscore().Limit().OffsetNum(1, 1).Build()
@@ -14455,10 +14456,10 @@ func TestCommand_139(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Withpayloads().Infields("1").Field("1").Field("1").Summarize().Inorder().Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Infields("1").Field("1").Field("1").Summarize().Language("1").Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Infields("1").Field("1").Field("1").Summarize().Expander("1").Build()
-	s.FtSearch().Index("1").Query("1").Withpayloads().Infields("1").Field("1").Field("1").Summarize().Scorer("1").Build()
 }
 
 func TestCommand_140(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Withpayloads().Infields("1").Field("1").Field("1").Summarize().Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Infields("1").Field("1").Field("1").Summarize().Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Infields("1").Field("1").Field("1").Summarize().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Infields("1").Field("1").Field("1").Summarize().Sortby("1").Build()
@@ -14558,10 +14559,10 @@ func TestCommand_140(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Withpayloads().Return("1").Field("1").Field("1").Expander("1").Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Return("1").Field("1").Field("1").Expander("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Return("1").Field("1").Field("1").Expander("1").Payload("1").Build()
-	s.FtSearch().Index("1").Query("1").Withpayloads().Return("1").Field("1").Field("1").Expander("1").Sortby("1").Build()
 }
 
 func TestCommand_141(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Withpayloads().Return("1").Field("1").Field("1").Expander("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Return("1").Field("1").Field("1").Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Return("1").Field("1").Field("1").Scorer("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Return("1").Field("1").Field("1").Scorer("1").Payload("1").Build()
@@ -14661,10 +14662,10 @@ func TestCommand_141(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Withpayloads().Summarize().Frags(1).Limit().OffsetNum(1, 1).Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Summarize().Frags(1).Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Summarize().Len(1).Separator("1").Highlight().Build()
-	s.FtSearch().Index("1").Query("1").Withpayloads().Summarize().Len(1).Separator("1").Slop(1).Build()
 }
 
 func TestCommand_142(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Withpayloads().Summarize().Len(1).Separator("1").Slop(1).Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Summarize().Len(1).Separator("1").Inorder().Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Summarize().Len(1).Separator("1").Language("1").Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Summarize().Len(1).Separator("1").Expander("1").Build()
@@ -14764,10 +14765,10 @@ func TestCommand_142(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Withpayloads().Summarize().Separator("1").Explainscore().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Summarize().Separator("1").Explainscore().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Summarize().Separator("1").Explainscore().Build()
-	s.FtSearch().Index("1").Query("1").Withpayloads().Summarize().Separator("1").Payload("1").Sortby("1").Build()
 }
 
 func TestCommand_143(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Withpayloads().Summarize().Separator("1").Payload("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Summarize().Separator("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Summarize().Separator("1").Sortby("1").Asc().Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Summarize().Separator("1").Sortby("1").Desc().Build()
@@ -14867,10 +14868,10 @@ func TestCommand_143(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Withpayloads().Summarize().Inorder().Explainscore().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Summarize().Inorder().Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Summarize().Inorder().Payload("1").Sortby("1").Build()
-	s.FtSearch().Index("1").Query("1").Withpayloads().Summarize().Inorder().Payload("1").Build()
 }
 
 func TestCommand_144(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Withpayloads().Summarize().Inorder().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Summarize().Inorder().Sortby("1").Asc().Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Summarize().Inorder().Sortby("1").Desc().Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Summarize().Inorder().Sortby("1").Build()
@@ -14970,10 +14971,10 @@ func TestCommand_144(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Withpayloads().Highlight().Slop(1).Language("1").Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Highlight().Slop(1).Expander("1").Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Highlight().Slop(1).Expander("1").Explainscore().Build()
-	s.FtSearch().Index("1").Query("1").Withpayloads().Highlight().Slop(1).Expander("1").Payload("1").Build()
 }
 
 func TestCommand_145(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Withpayloads().Highlight().Slop(1).Expander("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Highlight().Slop(1).Expander("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Highlight().Slop(1).Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Highlight().Slop(1).Scorer("1").Explainscore().Build()
@@ -15073,10 +15074,10 @@ func TestCommand_145(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Withpayloads().Highlight().Sortby("1").Asc().Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Highlight().Sortby("1").Desc().Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Highlight().Sortby("1").Limit().OffsetNum(1, 1).Build()
-	s.FtSearch().Index("1").Query("1").Withpayloads().Highlight().Sortby("1").Build()
 }
 
 func TestCommand_146(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Withpayloads().Highlight().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Highlight().Limit().OffsetNum(1, 1).Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Highlight().Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Slop(1).Inorder().Language("1").Expander("1").Build()
@@ -15176,10 +15177,10 @@ func TestCommand_146(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Withpayloads().Inorder().Language("1").Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Inorder().Language("1").Explainscore().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Inorder().Language("1").Explainscore().Sortby("1").Build()
-	s.FtSearch().Index("1").Query("1").Withpayloads().Inorder().Language("1").Explainscore().Build()
 }
 
 func TestCommand_147(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Withpayloads().Inorder().Language("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Inorder().Language("1").Payload("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Inorder().Language("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Inorder().Language("1").Sortby("1").Asc().Build()
@@ -15279,10 +15280,10 @@ func TestCommand_147(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Withpayloads().Expander("1").Scorer("1").Sortby("1").Asc().Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Expander("1").Scorer("1").Sortby("1").Desc().Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Expander("1").Scorer("1").Sortby("1").Build()
-	s.FtSearch().Index("1").Query("1").Withpayloads().Expander("1").Scorer("1").Limit().OffsetNum(1, 1).Build()
 }
 
 func TestCommand_148(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Withpayloads().Expander("1").Scorer("1").Limit().OffsetNum(1, 1).Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Expander("1").Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Expander("1").Explainscore().Payload("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Withpayloads().Expander("1").Explainscore().Payload("1").Build()
@@ -15382,10 +15383,10 @@ func TestCommand_148(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Inkeys("1").Key("1").Key("1").Highlight().Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Inkeys("1").Key("1").Key("1").Slop(1).Inorder().Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Inkeys("1").Key("1").Key("1").Slop(1).Language("1").Build()
-	s.FtSearch().Index("1").Query("1").Withsortkeys().Inkeys("1").Key("1").Key("1").Slop(1).Expander("1").Build()
 }
 
 func TestCommand_149(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Withsortkeys().Inkeys("1").Key("1").Key("1").Slop(1).Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Inkeys("1").Key("1").Key("1").Slop(1).Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Inkeys("1").Key("1").Key("1").Slop(1).Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Inkeys("1").Key("1").Key("1").Slop(1).Payload("1").Build()
@@ -15485,10 +15486,10 @@ func TestCommand_149(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Infields("1").Field("1").Field("1").Sortby("1").Desc().Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Infields("1").Field("1").Field("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Infields("1").Field("1").Field("1").Limit().OffsetNum(1, 1).Build()
-	s.FtSearch().Index("1").Query("1").Withsortkeys().Infields("1").Field("1").Field("1").Build()
 }
 
 func TestCommand_150(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Withsortkeys().Infields("1").Field("1").Field("1").Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Return("1").Field("1").Field("1").Summarize().Frags(1).Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Return("1").Field("1").Field("1").Summarize().Len(1).Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Return("1").Field("1").Field("1").Summarize().Separator("1").Build()
@@ -15588,10 +15589,10 @@ func TestCommand_150(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Summarize().Frags(1).Highlight().Slop(1).Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Summarize().Frags(1).Highlight().Inorder().Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Summarize().Frags(1).Highlight().Language("1").Build()
-	s.FtSearch().Index("1").Query("1").Withsortkeys().Summarize().Frags(1).Highlight().Expander("1").Build()
 }
 
 func TestCommand_151(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Withsortkeys().Summarize().Frags(1).Highlight().Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Summarize().Frags(1).Highlight().Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Summarize().Frags(1).Highlight().Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Summarize().Frags(1).Highlight().Payload("1").Build()
@@ -15691,10 +15692,10 @@ func TestCommand_151(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Summarize().Len(1).Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Summarize().Len(1).Payload("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Summarize().Len(1).Payload("1").Build()
-	s.FtSearch().Index("1").Query("1").Withsortkeys().Summarize().Len(1).Sortby("1").Asc().Build()
 }
 
 func TestCommand_152(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Withsortkeys().Summarize().Len(1).Sortby("1").Asc().Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Summarize().Len(1).Sortby("1").Desc().Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Summarize().Len(1).Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Summarize().Len(1).Limit().OffsetNum(1, 1).Build()
@@ -15794,10 +15795,10 @@ func TestCommand_152(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Summarize().Slop(1).Inorder().Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Summarize().Slop(1).Inorder().Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Summarize().Slop(1).Inorder().Explainscore().Build()
-	s.FtSearch().Index("1").Query("1").Withsortkeys().Summarize().Slop(1).Inorder().Payload("1").Build()
 }
 
 func TestCommand_153(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Withsortkeys().Summarize().Slop(1).Inorder().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Summarize().Slop(1).Inorder().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Summarize().Slop(1).Inorder().Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Summarize().Slop(1).Language("1").Expander("1").Build()
@@ -15897,10 +15898,10 @@ func TestCommand_153(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Summarize().Explainscore().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Summarize().Explainscore().Sortby("1").Asc().Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Summarize().Explainscore().Sortby("1").Desc().Build()
-	s.FtSearch().Index("1").Query("1").Withsortkeys().Summarize().Explainscore().Sortby("1").Build()
 }
 
 func TestCommand_154(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Withsortkeys().Summarize().Explainscore().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Summarize().Explainscore().Limit().OffsetNum(1, 1).Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Summarize().Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Summarize().Payload("1").Sortby("1").Asc().Build()
@@ -16000,10 +16001,10 @@ func TestCommand_154(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Highlight().Language("1").Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Highlight().Language("1").Explainscore().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Highlight().Language("1").Explainscore().Sortby("1").Build()
-	s.FtSearch().Index("1").Query("1").Withsortkeys().Highlight().Language("1").Explainscore().Build()
 }
 
 func TestCommand_155(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Withsortkeys().Highlight().Language("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Highlight().Language("1").Payload("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Highlight().Language("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Highlight().Language("1").Sortby("1").Asc().Build()
@@ -16103,10 +16104,10 @@ func TestCommand_155(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Slop(1).Expander("1").Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Slop(1).Expander("1").Explainscore().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Slop(1).Expander("1").Explainscore().Sortby("1").Build()
-	s.FtSearch().Index("1").Query("1").Withsortkeys().Slop(1).Expander("1").Explainscore().Build()
 }
 
 func TestCommand_156(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Withsortkeys().Slop(1).Expander("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Slop(1).Expander("1").Payload("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Slop(1).Expander("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Slop(1).Expander("1").Sortby("1").Asc().Build()
@@ -16206,10 +16207,10 @@ func TestCommand_156(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Language("1").Expander("1").Scorer("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Language("1").Expander("1").Scorer("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Language("1").Expander("1").Scorer("1").Sortby("1").Build()
-	s.FtSearch().Index("1").Query("1").Withsortkeys().Language("1").Expander("1").Scorer("1").Build()
 }
 
 func TestCommand_157(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Withsortkeys().Language("1").Expander("1").Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Language("1").Expander("1").Explainscore().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Language("1").Expander("1").Explainscore().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Language("1").Expander("1").Explainscore().Build()
@@ -16309,10 +16310,10 @@ func TestCommand_157(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Payload("1").Sortby("1").Desc().Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Payload("1").Sortby("1").Limit().OffsetNum(1, 1).Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Payload("1").Sortby("1").Build()
-	s.FtSearch().Index("1").Query("1").Withsortkeys().Payload("1").Limit().OffsetNum(1, 1).Build()
 }
 
 func TestCommand_158(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Withsortkeys().Payload("1").Limit().OffsetNum(1, 1).Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Sortby("1").Asc().Limit().OffsetNum(1, 1).Build()
 	s.FtSearch().Index("1").Query("1").Withsortkeys().Sortby("1").Asc().Build()
@@ -16412,10 +16413,10 @@ func TestCommand_158(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Inkeys("1").Key("1").Key("1").Return("1").Field("1").Field("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Inkeys("1").Key("1").Key("1").Return("1").Field("1").Field("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Inkeys("1").Key("1").Key("1").Return("1").Field("1").Field("1").Sortby("1").Build()
-	s.FtSearch().Index("1").Query("1").Inkeys("1").Key("1").Key("1").Return("1").Field("1").Field("1").Build()
 }
 
 func TestCommand_159(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Inkeys("1").Key("1").Key("1").Return("1").Field("1").Field("1").Build()
 	s.FtSearch().Index("1").Query("1").Inkeys("1").Key("1").Key("1").Summarize().Fields("1").Field("1").Field("1").Build()
 	s.FtSearch().Index("1").Query("1").Inkeys("1").Key("1").Key("1").Summarize().Frags(1).Len(1).Build()
 	s.FtSearch().Index("1").Query("1").Inkeys("1").Key("1").Key("1").Summarize().Frags(1).Separator("1").Build()
@@ -16515,10 +16516,10 @@ func TestCommand_159(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Inkeys("1").Key("1").Key("1").Highlight().Inorder().Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Inkeys("1").Key("1").Key("1").Highlight().Inorder().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Inkeys("1").Key("1").Key("1").Highlight().Inorder().Sortby("1").Build()
-	s.FtSearch().Index("1").Query("1").Inkeys("1").Key("1").Key("1").Highlight().Inorder().Build()
 }
 
 func TestCommand_160(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Inkeys("1").Key("1").Key("1").Highlight().Inorder().Build()
 	s.FtSearch().Index("1").Query("1").Inkeys("1").Key("1").Key("1").Highlight().Language("1").Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Inkeys("1").Key("1").Key("1").Highlight().Language("1").Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Inkeys("1").Key("1").Key("1").Highlight().Language("1").Explainscore().Build()
@@ -16618,10 +16619,10 @@ func TestCommand_160(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Inkeys("1").Key("1").Key("1").Language("1").Sortby("1").Asc().Build()
 	s.FtSearch().Index("1").Query("1").Inkeys("1").Key("1").Key("1").Language("1").Sortby("1").Desc().Build()
 	s.FtSearch().Index("1").Query("1").Inkeys("1").Key("1").Key("1").Language("1").Sortby("1").Build()
-	s.FtSearch().Index("1").Query("1").Inkeys("1").Key("1").Key("1").Language("1").Limit().OffsetNum(1, 1).Build()
 }
 
 func TestCommand_161(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Inkeys("1").Key("1").Key("1").Language("1").Limit().OffsetNum(1, 1).Build()
 	s.FtSearch().Index("1").Query("1").Inkeys("1").Key("1").Key("1").Language("1").Build()
 	s.FtSearch().Index("1").Query("1").Inkeys("1").Key("1").Key("1").Expander("1").Scorer("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Inkeys("1").Key("1").Key("1").Expander("1").Scorer("1").Payload("1").Build()
@@ -16721,10 +16722,10 @@ func TestCommand_161(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Infields("1").Field("1").Field("1").Summarize().Highlight().Build()
 	s.FtSearch().Index("1").Query("1").Infields("1").Field("1").Field("1").Summarize().Slop(1).Inorder().Build()
 	s.FtSearch().Index("1").Query("1").Infields("1").Field("1").Field("1").Summarize().Slop(1).Language("1").Build()
-	s.FtSearch().Index("1").Query("1").Infields("1").Field("1").Field("1").Summarize().Slop(1).Expander("1").Build()
 }
 
 func TestCommand_162(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Infields("1").Field("1").Field("1").Summarize().Slop(1).Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Infields("1").Field("1").Field("1").Summarize().Slop(1).Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Infields("1").Field("1").Field("1").Summarize().Slop(1).Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Infields("1").Field("1").Field("1").Summarize().Slop(1).Payload("1").Build()
@@ -16824,10 +16825,10 @@ func TestCommand_162(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Infields("1").Field("1").Field("1").Slop(1).Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Infields("1").Field("1").Field("1").Slop(1).Scorer("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Infields("1").Field("1").Field("1").Slop(1).Scorer("1").Payload("1").Build()
-	s.FtSearch().Index("1").Query("1").Infields("1").Field("1").Field("1").Slop(1).Scorer("1").Sortby("1").Build()
 }
 
 func TestCommand_163(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Infields("1").Field("1").Field("1").Slop(1).Scorer("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Infields("1").Field("1").Field("1").Slop(1).Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Infields("1").Field("1").Field("1").Slop(1).Explainscore().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Infields("1").Field("1").Field("1").Slop(1).Explainscore().Sortby("1").Build()
@@ -16927,10 +16928,10 @@ func TestCommand_163(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Infields("1").Field("1").Field("1").Build()
 	s.FtSearch().Index("1").Query("1").Return("1").Field("1").Field("1").Summarize().Fields("1").Field("1").Field("1").Build()
 	s.FtSearch().Index("1").Query("1").Return("1").Field("1").Field("1").Summarize().Frags(1).Len(1).Build()
-	s.FtSearch().Index("1").Query("1").Return("1").Field("1").Field("1").Summarize().Frags(1).Separator("1").Build()
 }
 
 func TestCommand_164(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Return("1").Field("1").Field("1").Summarize().Frags(1).Separator("1").Build()
 	s.FtSearch().Index("1").Query("1").Return("1").Field("1").Field("1").Summarize().Frags(1).Highlight().Build()
 	s.FtSearch().Index("1").Query("1").Return("1").Field("1").Field("1").Summarize().Frags(1).Slop(1).Build()
 	s.FtSearch().Index("1").Query("1").Return("1").Field("1").Field("1").Summarize().Frags(1).Inorder().Build()
@@ -17030,10 +17031,10 @@ func TestCommand_164(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Return("1").Field("1").Field("1").Highlight().Inorder().Build()
 	s.FtSearch().Index("1").Query("1").Return("1").Field("1").Field("1").Highlight().Language("1").Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Return("1").Field("1").Field("1").Highlight().Language("1").Scorer("1").Build()
-	s.FtSearch().Index("1").Query("1").Return("1").Field("1").Field("1").Highlight().Language("1").Explainscore().Build()
 }
 
 func TestCommand_165(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Return("1").Field("1").Field("1").Highlight().Language("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Return("1").Field("1").Field("1").Highlight().Language("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Return("1").Field("1").Field("1").Highlight().Language("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Return("1").Field("1").Field("1").Highlight().Language("1").Build()
@@ -17133,10 +17134,10 @@ func TestCommand_165(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Return("1").Field("1").Field("1").Language("1").Limit().OffsetNum(1, 1).Build()
 	s.FtSearch().Index("1").Query("1").Return("1").Field("1").Field("1").Language("1").Build()
 	s.FtSearch().Index("1").Query("1").Return("1").Field("1").Field("1").Expander("1").Scorer("1").Explainscore().Build()
-	s.FtSearch().Index("1").Query("1").Return("1").Field("1").Field("1").Expander("1").Scorer("1").Payload("1").Build()
 }
 
 func TestCommand_166(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Return("1").Field("1").Field("1").Expander("1").Scorer("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Return("1").Field("1").Field("1").Expander("1").Scorer("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Return("1").Field("1").Field("1").Expander("1").Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Return("1").Field("1").Field("1").Expander("1").Explainscore().Payload("1").Build()
@@ -17236,10 +17237,10 @@ func TestCommand_166(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Summarize().Fields("1").Field("1").Field("1").Inorder().Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Fields("1").Field("1").Field("1").Language("1").Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Fields("1").Field("1").Field("1").Language("1").Scorer("1").Build()
-	s.FtSearch().Index("1").Query("1").Summarize().Fields("1").Field("1").Field("1").Language("1").Explainscore().Build()
 }
 
 func TestCommand_167(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Summarize().Fields("1").Field("1").Field("1").Language("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Fields("1").Field("1").Field("1").Language("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Fields("1").Field("1").Field("1").Language("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Fields("1").Field("1").Field("1").Language("1").Build()
@@ -17339,10 +17340,10 @@ func TestCommand_167(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Summarize().Frags(1).Separator("1").Slop(1).Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Frags(1).Separator("1").Slop(1).Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Frags(1).Separator("1").Inorder().Language("1").Build()
-	s.FtSearch().Index("1").Query("1").Summarize().Frags(1).Separator("1").Inorder().Expander("1").Build()
 }
 
 func TestCommand_168(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Summarize().Frags(1).Separator("1").Inorder().Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Frags(1).Separator("1").Inorder().Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Frags(1).Separator("1").Inorder().Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Frags(1).Separator("1").Inorder().Payload("1").Build()
@@ -17442,10 +17443,10 @@ func TestCommand_168(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Summarize().Frags(1).Slop(1).Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Frags(1).Slop(1).Payload("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Frags(1).Slop(1).Payload("1").Build()
-	s.FtSearch().Index("1").Query("1").Summarize().Frags(1).Slop(1).Sortby("1").Asc().Build()
 }
 
 func TestCommand_169(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Summarize().Frags(1).Slop(1).Sortby("1").Asc().Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Frags(1).Slop(1).Sortby("1").Desc().Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Frags(1).Slop(1).Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Frags(1).Slop(1).Limit().OffsetNum(1, 1).Build()
@@ -17545,10 +17546,10 @@ func TestCommand_169(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Summarize().Len(1).Separator("1").Highlight().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Len(1).Separator("1").Highlight().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Len(1).Separator("1").Highlight().Build()
-	s.FtSearch().Index("1").Query("1").Summarize().Len(1).Separator("1").Slop(1).Inorder().Build()
 }
 
 func TestCommand_170(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Summarize().Len(1).Separator("1").Slop(1).Inorder().Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Len(1).Separator("1").Slop(1).Language("1").Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Len(1).Separator("1").Slop(1).Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Len(1).Separator("1").Slop(1).Scorer("1").Build()
@@ -17648,10 +17649,10 @@ func TestCommand_170(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Summarize().Len(1).Slop(1).Expander("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Len(1).Slop(1).Expander("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Len(1).Slop(1).Expander("1").Build()
-	s.FtSearch().Index("1").Query("1").Summarize().Len(1).Slop(1).Scorer("1").Explainscore().Build()
 }
 
 func TestCommand_171(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Summarize().Len(1).Slop(1).Scorer("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Len(1).Slop(1).Scorer("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Len(1).Slop(1).Scorer("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Len(1).Slop(1).Scorer("1").Build()
@@ -17751,10 +17752,10 @@ func TestCommand_171(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Summarize().Len(1).Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Len(1).Limit().OffsetNum(1, 1).Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Len(1).Build()
-	s.FtSearch().Index("1").Query("1").Summarize().Separator("1").Highlight().Fields("1").Field("1").Field("1").Build()
 }
 
 func TestCommand_172(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Summarize().Separator("1").Highlight().Fields("1").Field("1").Field("1").Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Separator("1").Highlight().Tags().OpenClose("1", "1").Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Separator("1").Highlight().Slop(1).Inorder().Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Separator("1").Highlight().Slop(1).Language("1").Build()
@@ -17854,10 +17855,10 @@ func TestCommand_172(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Summarize().Separator("1").Inorder().Limit().OffsetNum(1, 1).Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Separator("1").Inorder().Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Separator("1").Language("1").Expander("1").Scorer("1").Build()
-	s.FtSearch().Index("1").Query("1").Summarize().Separator("1").Language("1").Expander("1").Explainscore().Build()
 }
 
 func TestCommand_173(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Summarize().Separator("1").Language("1").Expander("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Separator("1").Language("1").Expander("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Separator("1").Language("1").Expander("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Separator("1").Language("1").Expander("1").Build()
@@ -17957,10 +17958,10 @@ func TestCommand_173(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Summarize().Highlight().Slop(1).Scorer("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Highlight().Slop(1).Scorer("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Highlight().Slop(1).Scorer("1").Build()
-	s.FtSearch().Index("1").Query("1").Summarize().Highlight().Slop(1).Explainscore().Payload("1").Build()
 }
 
 func TestCommand_174(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Summarize().Highlight().Slop(1).Explainscore().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Highlight().Slop(1).Explainscore().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Highlight().Slop(1).Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Highlight().Slop(1).Payload("1").Sortby("1").Build()
@@ -18060,10 +18061,10 @@ func TestCommand_174(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Summarize().Slop(1).Inorder().Language("1").Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Slop(1).Inorder().Language("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Slop(1).Inorder().Language("1").Payload("1").Build()
-	s.FtSearch().Index("1").Query("1").Summarize().Slop(1).Inorder().Language("1").Sortby("1").Build()
 }
 
 func TestCommand_175(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Summarize().Slop(1).Inorder().Language("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Slop(1).Inorder().Language("1").Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Slop(1).Inorder().Expander("1").Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Slop(1).Inorder().Expander("1").Explainscore().Build()
@@ -18163,10 +18164,10 @@ func TestCommand_175(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Summarize().Inorder().Language("1").Sortby("1").Desc().Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Inorder().Language("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Inorder().Language("1").Limit().OffsetNum(1, 1).Build()
-	s.FtSearch().Index("1").Query("1").Summarize().Inorder().Language("1").Build()
 }
 
 func TestCommand_176(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Summarize().Inorder().Language("1").Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Inorder().Expander("1").Scorer("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Inorder().Expander("1").Scorer("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Inorder().Expander("1").Scorer("1").Sortby("1").Build()
@@ -18266,10 +18267,10 @@ func TestCommand_176(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Summarize().Expander("1").Explainscore().Sortby("1").Asc().Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Expander("1").Explainscore().Sortby("1").Desc().Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Expander("1").Explainscore().Sortby("1").Build()
-	s.FtSearch().Index("1").Query("1").Summarize().Expander("1").Explainscore().Limit().OffsetNum(1, 1).Build()
 }
 
 func TestCommand_177(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Summarize().Expander("1").Explainscore().Limit().OffsetNum(1, 1).Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Expander("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Expander("1").Payload("1").Sortby("1").Asc().Build()
 	s.FtSearch().Index("1").Query("1").Summarize().Expander("1").Payload("1").Sortby("1").Desc().Build()
@@ -18369,10 +18370,10 @@ func TestCommand_177(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Highlight().Tags().OpenClose("1", "1").Slop(1).Inorder().Build()
 	s.FtSearch().Index("1").Query("1").Highlight().Tags().OpenClose("1", "1").Slop(1).Language("1").Build()
 	s.FtSearch().Index("1").Query("1").Highlight().Tags().OpenClose("1", "1").Slop(1).Expander("1").Build()
-	s.FtSearch().Index("1").Query("1").Highlight().Tags().OpenClose("1", "1").Slop(1).Scorer("1").Build()
 }
 
 func TestCommand_178(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Highlight().Tags().OpenClose("1", "1").Slop(1).Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Highlight().Tags().OpenClose("1", "1").Slop(1).Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Highlight().Tags().OpenClose("1", "1").Slop(1).Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Highlight().Tags().OpenClose("1", "1").Slop(1).Sortby("1").Build()
@@ -18472,10 +18473,10 @@ func TestCommand_178(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Highlight().Slop(1).Scorer("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Highlight().Slop(1).Scorer("1").Payload("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Highlight().Slop(1).Scorer("1").Payload("1").Build()
-	s.FtSearch().Index("1").Query("1").Highlight().Slop(1).Scorer("1").Sortby("1").Asc().Build()
 }
 
 func TestCommand_179(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Highlight().Slop(1).Scorer("1").Sortby("1").Asc().Build()
 	s.FtSearch().Index("1").Query("1").Highlight().Slop(1).Scorer("1").Sortby("1").Desc().Build()
 	s.FtSearch().Index("1").Query("1").Highlight().Slop(1).Scorer("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Highlight().Slop(1).Scorer("1").Limit().OffsetNum(1, 1).Build()
@@ -18575,10 +18576,10 @@ func TestCommand_179(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Highlight().Language("1").Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Highlight().Language("1").Scorer("1").Explainscore().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Highlight().Language("1").Scorer("1").Explainscore().Sortby("1").Build()
-	s.FtSearch().Index("1").Query("1").Highlight().Language("1").Scorer("1").Explainscore().Build()
 }
 
 func TestCommand_180(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Highlight().Language("1").Scorer("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Highlight().Language("1").Scorer("1").Payload("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Highlight().Language("1").Scorer("1").Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Highlight().Language("1").Scorer("1").Sortby("1").Asc().Build()
@@ -18678,10 +18679,10 @@ func TestCommand_180(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Slop(1).Inorder().Language("1").Expander("1").Scorer("1").Build()
 	s.FtSearch().Index("1").Query("1").Slop(1).Inorder().Language("1").Expander("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Slop(1).Inorder().Language("1").Expander("1").Payload("1").Build()
-	s.FtSearch().Index("1").Query("1").Slop(1).Inorder().Language("1").Expander("1").Sortby("1").Build()
 }
 
 func TestCommand_181(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Slop(1).Inorder().Language("1").Expander("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Slop(1).Inorder().Language("1").Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Slop(1).Inorder().Language("1").Scorer("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Slop(1).Inorder().Language("1").Scorer("1").Payload("1").Build()
@@ -18781,10 +18782,10 @@ func TestCommand_181(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Slop(1).Language("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Slop(1).Language("1").Limit().OffsetNum(1, 1).Build()
 	s.FtSearch().Index("1").Query("1").Slop(1).Language("1").Build()
-	s.FtSearch().Index("1").Query("1").Slop(1).Expander("1").Scorer("1").Explainscore().Payload("1").Build()
 }
 
 func TestCommand_182(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Slop(1).Expander("1").Scorer("1").Explainscore().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Slop(1).Expander("1").Scorer("1").Explainscore().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Slop(1).Expander("1").Scorer("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Slop(1).Expander("1").Scorer("1").Payload("1").Sortby("1").Build()
@@ -18884,10 +18885,10 @@ func TestCommand_182(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Inorder().Language("1").Explainscore().Sortby("1").Asc().Build()
 	s.FtSearch().Index("1").Query("1").Inorder().Language("1").Explainscore().Sortby("1").Desc().Build()
 	s.FtSearch().Index("1").Query("1").Inorder().Language("1").Explainscore().Sortby("1").Build()
-	s.FtSearch().Index("1").Query("1").Inorder().Language("1").Explainscore().Limit().OffsetNum(1, 1).Build()
 }
 
 func TestCommand_183(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Inorder().Language("1").Explainscore().Limit().OffsetNum(1, 1).Build()
 	s.FtSearch().Index("1").Query("1").Inorder().Language("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Inorder().Language("1").Payload("1").Sortby("1").Asc().Build()
 	s.FtSearch().Index("1").Query("1").Inorder().Language("1").Payload("1").Sortby("1").Desc().Build()
@@ -18987,10 +18988,10 @@ func TestCommand_183(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Language("1").Expander("1").Explainscore().Sortby("1").Desc().Build()
 	s.FtSearch().Index("1").Query("1").Language("1").Expander("1").Explainscore().Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Language("1").Expander("1").Explainscore().Limit().OffsetNum(1, 1).Build()
-	s.FtSearch().Index("1").Query("1").Language("1").Expander("1").Explainscore().Build()
 }
 
 func TestCommand_184(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Language("1").Expander("1").Explainscore().Build()
 	s.FtSearch().Index("1").Query("1").Language("1").Expander("1").Payload("1").Sortby("1").Asc().Build()
 	s.FtSearch().Index("1").Query("1").Language("1").Expander("1").Payload("1").Sortby("1").Desc().Build()
 	s.FtSearch().Index("1").Query("1").Language("1").Expander("1").Payload("1").Sortby("1").Build()
@@ -19090,10 +19091,10 @@ func TestCommand_184(t *testing.T) {
 	s.FtSearch().Index("1").Query("1").Expander("1").Build()
 	s.FtSearch().Index("1").Query("1").Scorer("1").Explainscore().Payload("1").Sortby("1").Asc().Build()
 	s.FtSearch().Index("1").Query("1").Scorer("1").Explainscore().Payload("1").Sortby("1").Desc().Build()
-	s.FtSearch().Index("1").Query("1").Scorer("1").Explainscore().Payload("1").Sortby("1").Build()
 }
 
 func TestCommand_185(t *testing.T) {
+	s.FtSearch().Index("1").Query("1").Scorer("1").Explainscore().Payload("1").Sortby("1").Build()
 	s.FtSearch().Index("1").Query("1").Scorer("1").Explainscore().Payload("1").Limit().OffsetNum(1, 1).Build()
 	s.FtSearch().Index("1").Query("1").Scorer("1").Explainscore().Payload("1").Build()
 	s.FtSearch().Index("1").Query("1").Scorer("1").Explainscore().Sortby("1").Asc().Build()
@@ -19193,10 +19194,10 @@ func TestCommand_185(t *testing.T) {
 	s.FunctionList().Libraryname("1").Build()
 	s.FunctionList().Withcode().Build()
 	s.FunctionList().Build()
-	s.FunctionLoad().EngineName("1").LibraryName("1").Replace().Desc("1").FunctionCode("1").Build()
 }
 
 func TestCommand_186(t *testing.T) {
+	s.FunctionLoad().EngineName("1").LibraryName("1").Replace().Desc("1").FunctionCode("1").Build()
 	s.FunctionLoad().EngineName("1").LibraryName("1").Replace().FunctionCode("1").Build()
 	s.FunctionLoad().EngineName("1").LibraryName("1").Desc("1").FunctionCode("1").Build()
 	s.FunctionLoad().EngineName("1").LibraryName("1").FunctionCode("1").Build()
@@ -19303,10 +19304,10 @@ func TestCommand_186(t *testing.T) {
 	s.Georadius().Key("1").Longitude(1).Latitude(1).Radius(1).Ft().Withcoord().Withhash().Build()
 	s.Georadius().Key("1").Longitude(1).Latitude(1).Radius(1).Ft().Withcoord().Count(1).Build()
 	s.Georadius().Key("1").Longitude(1).Latitude(1).Radius(1).Ft().Withcoord().Asc().Build()
-	s.Georadius().Key("1").Longitude(1).Latitude(1).Radius(1).Ft().Withcoord().Desc().Build()
 }
 
 func TestCommand_187(t *testing.T) {
+	s.Georadius().Key("1").Longitude(1).Latitude(1).Radius(1).Ft().Withcoord().Desc().Build()
 	s.Georadius().Key("1").Longitude(1).Latitude(1).Radius(1).Ft().Withcoord().Store("1").Build()
 	s.Georadius().Key("1").Longitude(1).Latitude(1).Radius(1).Ft().Withcoord().Storedist("1").Build()
 	s.Georadius().Key("1").Longitude(1).Latitude(1).Radius(1).Ft().Withcoord().Build()
@@ -19436,11 +19437,11 @@ func TestCommand_187(t *testing.T) {
 	s.GeoradiusRo().Key("1").Longitude(1).Latitude(1).Radius(1).M().Cache()
 	s.GeoradiusRo().Key("1").Longitude(1).Latitude(1).Radius(1).Km().Withcoord().Withdist().Build()
 	s.GeoradiusRo().Key("1").Longitude(1).Latitude(1).Radius(1).Km().Withcoord().Withdist().Cache()
-	s.GeoradiusRo().Key("1").Longitude(1).Latitude(1).Radius(1).Km().Withcoord().Withhash().Build()
-	s.GeoradiusRo().Key("1").Longitude(1).Latitude(1).Radius(1).Km().Withcoord().Withhash().Cache()
 }
 
 func TestCommand_188(t *testing.T) {
+	s.GeoradiusRo().Key("1").Longitude(1).Latitude(1).Radius(1).Km().Withcoord().Withhash().Build()
+	s.GeoradiusRo().Key("1").Longitude(1).Latitude(1).Radius(1).Km().Withcoord().Withhash().Cache()
 	s.GeoradiusRo().Key("1").Longitude(1).Latitude(1).Radius(1).Km().Withcoord().Count(1).Build()
 	s.GeoradiusRo().Key("1").Longitude(1).Latitude(1).Radius(1).Km().Withcoord().Count(1).Cache()
 	s.GeoradiusRo().Key("1").Longitude(1).Latitude(1).Radius(1).Km().Withcoord().Asc().Build()
@@ -19625,10 +19626,10 @@ func TestCommand_188(t *testing.T) {
 	s.Georadiusbymember().Key("1").Member("1").Radius(1).M().Withcoord().Withhash().Storedist("1").Build()
 	s.Georadiusbymember().Key("1").Member("1").Radius(1).M().Withcoord().Withhash().Build()
 	s.Georadiusbymember().Key("1").Member("1").Radius(1).M().Withcoord().Count(1).Any().Build()
-	s.Georadiusbymember().Key("1").Member("1").Radius(1).M().Withcoord().Count(1).Asc().Build()
 }
 
 func TestCommand_189(t *testing.T) {
+	s.Georadiusbymember().Key("1").Member("1").Radius(1).M().Withcoord().Count(1).Asc().Build()
 	s.Georadiusbymember().Key("1").Member("1").Radius(1).M().Withcoord().Count(1).Desc().Build()
 	s.Georadiusbymember().Key("1").Member("1").Radius(1).M().Withcoord().Count(1).Store("1").Build()
 	s.Georadiusbymember().Key("1").Member("1").Radius(1).M().Withcoord().Count(1).Storedist("1").Build()
@@ -19728,10 +19729,10 @@ func TestCommand_189(t *testing.T) {
 	s.Georadiusbymember().Key("1").Member("1").Radius(1).Km().Withcoord().Count(1).Storedist("1").Build()
 	s.Georadiusbymember().Key("1").Member("1").Radius(1).Km().Withcoord().Count(1).Build()
 	s.Georadiusbymember().Key("1").Member("1").Radius(1).Km().Withcoord().Asc().Store("1").Build()
-	s.Georadiusbymember().Key("1").Member("1").Radius(1).Km().Withcoord().Asc().Storedist("1").Build()
 }
 
 func TestCommand_190(t *testing.T) {
+	s.Georadiusbymember().Key("1").Member("1").Radius(1).Km().Withcoord().Asc().Storedist("1").Build()
 	s.Georadiusbymember().Key("1").Member("1").Radius(1).Km().Withcoord().Asc().Build()
 	s.Georadiusbymember().Key("1").Member("1").Radius(1).Km().Withcoord().Desc().Store("1").Build()
 	s.Georadiusbymember().Key("1").Member("1").Radius(1).Km().Withcoord().Desc().Storedist("1").Build()
@@ -19831,10 +19832,10 @@ func TestCommand_190(t *testing.T) {
 	s.Georadiusbymember().Key("1").Member("1").Radius(1).Ft().Withcoord().Desc().Storedist("1").Build()
 	s.Georadiusbymember().Key("1").Member("1").Radius(1).Ft().Withcoord().Desc().Build()
 	s.Georadiusbymember().Key("1").Member("1").Radius(1).Ft().Withcoord().Store("1").Storedist("1").Build()
-	s.Georadiusbymember().Key("1").Member("1").Radius(1).Ft().Withcoord().Store("1").Build()
 }
 
 func TestCommand_191(t *testing.T) {
+	s.Georadiusbymember().Key("1").Member("1").Radius(1).Ft().Withcoord().Store("1").Build()
 	s.Georadiusbymember().Key("1").Member("1").Radius(1).Ft().Withcoord().Storedist("1").Build()
 	s.Georadiusbymember().Key("1").Member("1").Radius(1).Ft().Withcoord().Build()
 	s.Georadiusbymember().Key("1").Member("1").Radius(1).Ft().Withdist().Withhash().Count(1).Build()
@@ -19934,10 +19935,10 @@ func TestCommand_191(t *testing.T) {
 	s.Georadiusbymember().Key("1").Member("1").Radius(1).Mi().Withdist().Withhash().Count(1).Build()
 	s.Georadiusbymember().Key("1").Member("1").Radius(1).Mi().Withdist().Withhash().Asc().Build()
 	s.Georadiusbymember().Key("1").Member("1").Radius(1).Mi().Withdist().Withhash().Desc().Build()
-	s.Georadiusbymember().Key("1").Member("1").Radius(1).Mi().Withdist().Withhash().Store("1").Build()
 }
 
 func TestCommand_192(t *testing.T) {
+	s.Georadiusbymember().Key("1").Member("1").Radius(1).Mi().Withdist().Withhash().Store("1").Build()
 	s.Georadiusbymember().Key("1").Member("1").Radius(1).Mi().Withdist().Withhash().Storedist("1").Build()
 	s.Georadiusbymember().Key("1").Member("1").Radius(1).Mi().Withdist().Withhash().Build()
 	s.Georadiusbymember().Key("1").Member("1").Radius(1).Mi().Withdist().Count(1).Any().Build()
@@ -20075,11 +20076,11 @@ func TestCommand_192(t *testing.T) {
 	s.GeoradiusbymemberRo().Key("1").Member("1").Radius(1).M().Withdist().Storedist("1").Cache()
 	s.GeoradiusbymemberRo().Key("1").Member("1").Radius(1).M().Withdist().Build()
 	s.GeoradiusbymemberRo().Key("1").Member("1").Radius(1).M().Withdist().Cache()
-	s.GeoradiusbymemberRo().Key("1").Member("1").Radius(1).M().Withhash().Count(1).Any().Build()
-	s.GeoradiusbymemberRo().Key("1").Member("1").Radius(1).M().Withhash().Count(1).Any().Cache()
 }
 
 func TestCommand_193(t *testing.T) {
+	s.GeoradiusbymemberRo().Key("1").Member("1").Radius(1).M().Withhash().Count(1).Any().Build()
+	s.GeoradiusbymemberRo().Key("1").Member("1").Radius(1).M().Withhash().Count(1).Any().Cache()
 	s.GeoradiusbymemberRo().Key("1").Member("1").Radius(1).M().Withhash().Count(1).Asc().Build()
 	s.GeoradiusbymemberRo().Key("1").Member("1").Radius(1).M().Withhash().Count(1).Asc().Cache()
 	s.GeoradiusbymemberRo().Key("1").Member("1").Radius(1).M().Withhash().Count(1).Desc().Build()
@@ -20278,11 +20279,11 @@ func TestCommand_193(t *testing.T) {
 	s.GeoradiusbymemberRo().Key("1").Member("1").Radius(1).Ft().Withcoord().Withhash().Count(1).Cache()
 	s.GeoradiusbymemberRo().Key("1").Member("1").Radius(1).Ft().Withcoord().Withhash().Asc().Build()
 	s.GeoradiusbymemberRo().Key("1").Member("1").Radius(1).Ft().Withcoord().Withhash().Asc().Cache()
-	s.GeoradiusbymemberRo().Key("1").Member("1").Radius(1).Ft().Withcoord().Withhash().Desc().Build()
-	s.GeoradiusbymemberRo().Key("1").Member("1").Radius(1).Ft().Withcoord().Withhash().Desc().Cache()
 }
 
 func TestCommand_194(t *testing.T) {
+	s.GeoradiusbymemberRo().Key("1").Member("1").Radius(1).Ft().Withcoord().Withhash().Desc().Build()
+	s.GeoradiusbymemberRo().Key("1").Member("1").Radius(1).Ft().Withcoord().Withhash().Desc().Cache()
 	s.GeoradiusbymemberRo().Key("1").Member("1").Radius(1).Ft().Withcoord().Withhash().Storedist("1").Build()
 	s.GeoradiusbymemberRo().Key("1").Member("1").Radius(1).Ft().Withcoord().Withhash().Storedist("1").Cache()
 	s.GeoradiusbymemberRo().Key("1").Member("1").Radius(1).Ft().Withcoord().Withhash().Build()
@@ -20481,11 +20482,11 @@ func TestCommand_194(t *testing.T) {
 	s.GeoradiusbymemberRo().Key("1").Member("1").Radius(1).Mi().Withhash().Count(1).Storedist("1").Cache()
 	s.GeoradiusbymemberRo().Key("1").Member("1").Radius(1).Mi().Withhash().Count(1).Build()
 	s.GeoradiusbymemberRo().Key("1").Member("1").Radius(1).Mi().Withhash().Count(1).Cache()
-	s.GeoradiusbymemberRo().Key("1").Member("1").Radius(1).Mi().Withhash().Asc().Storedist("1").Build()
-	s.GeoradiusbymemberRo().Key("1").Member("1").Radius(1).Mi().Withhash().Asc().Storedist("1").Cache()
 }
 
 func TestCommand_195(t *testing.T) {
+	s.GeoradiusbymemberRo().Key("1").Member("1").Radius(1).Mi().Withhash().Asc().Storedist("1").Build()
+	s.GeoradiusbymemberRo().Key("1").Member("1").Radius(1).Mi().Withhash().Asc().Storedist("1").Cache()
 	s.GeoradiusbymemberRo().Key("1").Member("1").Radius(1).Mi().Withhash().Asc().Build()
 	s.GeoradiusbymemberRo().Key("1").Member("1").Radius(1).Mi().Withhash().Asc().Cache()
 	s.GeoradiusbymemberRo().Key("1").Member("1").Radius(1).Mi().Withhash().Desc().Storedist("1").Build()
@@ -20684,11 +20685,11 @@ func TestCommand_195(t *testing.T) {
 	s.Geosearch().Key("1").Frommember("1").Fromlonlat(1, 1).Byradius(1).Mi().Count(1).Any().Cache()
 	s.Geosearch().Key("1").Frommember("1").Fromlonlat(1, 1).Byradius(1).Mi().Count(1).Withcoord().Build()
 	s.Geosearch().Key("1").Frommember("1").Fromlonlat(1, 1).Byradius(1).Mi().Count(1).Withcoord().Cache()
-	s.Geosearch().Key("1").Frommember("1").Fromlonlat(1, 1).Byradius(1).Mi().Count(1).Withdist().Build()
-	s.Geosearch().Key("1").Frommember("1").Fromlonlat(1, 1).Byradius(1).Mi().Count(1).Withdist().Cache()
 }
 
 func TestCommand_196(t *testing.T) {
+	s.Geosearch().Key("1").Frommember("1").Fromlonlat(1, 1).Byradius(1).Mi().Count(1).Withdist().Build()
+	s.Geosearch().Key("1").Frommember("1").Fromlonlat(1, 1).Byradius(1).Mi().Count(1).Withdist().Cache()
 	s.Geosearch().Key("1").Frommember("1").Fromlonlat(1, 1).Byradius(1).Mi().Count(1).Withhash().Build()
 	s.Geosearch().Key("1").Frommember("1").Fromlonlat(1, 1).Byradius(1).Mi().Count(1).Withhash().Cache()
 	s.Geosearch().Key("1").Frommember("1").Fromlonlat(1, 1).Byradius(1).Mi().Count(1).Build()
@@ -20887,11 +20888,11 @@ func TestCommand_196(t *testing.T) {
 	s.Geosearch().Key("1").Frommember("1").Fromlonlat(1, 1).Cache()
 	s.Geosearch().Key("1").Frommember("1").Byradius(1).M().Bybox(1).Height(1).M().Build()
 	s.Geosearch().Key("1").Frommember("1").Byradius(1).M().Bybox(1).Height(1).M().Cache()
-	s.Geosearch().Key("1").Frommember("1").Byradius(1).M().Bybox(1).Height(1).Km().Build()
-	s.Geosearch().Key("1").Frommember("1").Byradius(1).M().Bybox(1).Height(1).Km().Cache()
 }
 
 func TestCommand_197(t *testing.T) {
+	s.Geosearch().Key("1").Frommember("1").Byradius(1).M().Bybox(1).Height(1).Km().Build()
+	s.Geosearch().Key("1").Frommember("1").Byradius(1).M().Bybox(1).Height(1).Km().Cache()
 	s.Geosearch().Key("1").Frommember("1").Byradius(1).M().Bybox(1).Height(1).Ft().Build()
 	s.Geosearch().Key("1").Frommember("1").Byradius(1).M().Bybox(1).Height(1).Ft().Cache()
 	s.Geosearch().Key("1").Frommember("1").Byradius(1).M().Bybox(1).Height(1).Mi().Build()
@@ -21090,11 +21091,11 @@ func TestCommand_197(t *testing.T) {
 	s.Geosearch().Key("1").Frommember("1").Byradius(1).Ft().Asc().Count(1).Withcoord().Cache()
 	s.Geosearch().Key("1").Frommember("1").Byradius(1).Ft().Asc().Count(1).Withdist().Build()
 	s.Geosearch().Key("1").Frommember("1").Byradius(1).Ft().Asc().Count(1).Withdist().Cache()
-	s.Geosearch().Key("1").Frommember("1").Byradius(1).Ft().Asc().Count(1).Withhash().Build()
-	s.Geosearch().Key("1").Frommember("1").Byradius(1).Ft().Asc().Count(1).Withhash().Cache()
 }
 
 func TestCommand_198(t *testing.T) {
+	s.Geosearch().Key("1").Frommember("1").Byradius(1).Ft().Asc().Count(1).Withhash().Build()
+	s.Geosearch().Key("1").Frommember("1").Byradius(1).Ft().Asc().Count(1).Withhash().Cache()
 	s.Geosearch().Key("1").Frommember("1").Byradius(1).Ft().Asc().Count(1).Build()
 	s.Geosearch().Key("1").Frommember("1").Byradius(1).Ft().Asc().Count(1).Cache()
 	s.Geosearch().Key("1").Frommember("1").Byradius(1).Ft().Asc().Withcoord().Withdist().Build()
@@ -21293,11 +21294,11 @@ func TestCommand_198(t *testing.T) {
 	s.Geosearch().Key("1").Frommember("1").Bybox(1).Height(1).M().Count(1).Withcoord().Cache()
 	s.Geosearch().Key("1").Frommember("1").Bybox(1).Height(1).M().Count(1).Withdist().Build()
 	s.Geosearch().Key("1").Frommember("1").Bybox(1).Height(1).M().Count(1).Withdist().Cache()
-	s.Geosearch().Key("1").Frommember("1").Bybox(1).Height(1).M().Count(1).Withhash().Build()
-	s.Geosearch().Key("1").Frommember("1").Bybox(1).Height(1).M().Count(1).Withhash().Cache()
 }
 
 func TestCommand_199(t *testing.T) {
+	s.Geosearch().Key("1").Frommember("1").Bybox(1).Height(1).M().Count(1).Withhash().Build()
+	s.Geosearch().Key("1").Frommember("1").Bybox(1).Height(1).M().Count(1).Withhash().Cache()
 	s.Geosearch().Key("1").Frommember("1").Bybox(1).Height(1).M().Count(1).Build()
 	s.Geosearch().Key("1").Frommember("1").Bybox(1).Height(1).M().Count(1).Cache()
 	s.Geosearch().Key("1").Frommember("1").Bybox(1).Height(1).M().Withcoord().Withdist().Build()
@@ -21496,11 +21497,11 @@ func TestCommand_199(t *testing.T) {
 	s.Geosearch().Key("1").Frommember("1").Desc().Count(1).Any().Withcoord().Withdist().Cache()
 	s.Geosearch().Key("1").Frommember("1").Desc().Count(1).Any().Withcoord().Withhash().Build()
 	s.Geosearch().Key("1").Frommember("1").Desc().Count(1).Any().Withcoord().Withhash().Cache()
-	s.Geosearch().Key("1").Frommember("1").Desc().Count(1).Any().Withcoord().Build()
-	s.Geosearch().Key("1").Frommember("1").Desc().Count(1).Any().Withcoord().Cache()
 }
 
 func TestCommand_200(t *testing.T) {
+	s.Geosearch().Key("1").Frommember("1").Desc().Count(1).Any().Withcoord().Build()
+	s.Geosearch().Key("1").Frommember("1").Desc().Count(1).Any().Withcoord().Cache()
 	s.Geosearch().Key("1").Frommember("1").Desc().Count(1).Any().Withdist().Withhash().Build()
 	s.Geosearch().Key("1").Frommember("1").Desc().Count(1).Any().Withdist().Withhash().Cache()
 	s.Geosearch().Key("1").Frommember("1").Desc().Count(1).Any().Withdist().Build()
@@ -21699,11 +21700,11 @@ func TestCommand_200(t *testing.T) {
 	s.Geosearch().Key("1").Fromlonlat(1, 1).Byradius(1).Km().Asc().Count(1).Withdist().Cache()
 	s.Geosearch().Key("1").Fromlonlat(1, 1).Byradius(1).Km().Asc().Count(1).Withhash().Build()
 	s.Geosearch().Key("1").Fromlonlat(1, 1).Byradius(1).Km().Asc().Count(1).Withhash().Cache()
-	s.Geosearch().Key("1").Fromlonlat(1, 1).Byradius(1).Km().Asc().Count(1).Build()
-	s.Geosearch().Key("1").Fromlonlat(1, 1).Byradius(1).Km().Asc().Count(1).Cache()
 }
 
 func TestCommand_201(t *testing.T) {
+	s.Geosearch().Key("1").Fromlonlat(1, 1).Byradius(1).Km().Asc().Count(1).Build()
+	s.Geosearch().Key("1").Fromlonlat(1, 1).Byradius(1).Km().Asc().Count(1).Cache()
 	s.Geosearch().Key("1").Fromlonlat(1, 1).Byradius(1).Km().Asc().Withcoord().Withdist().Build()
 	s.Geosearch().Key("1").Fromlonlat(1, 1).Byradius(1).Km().Asc().Withcoord().Withdist().Cache()
 	s.Geosearch().Key("1").Fromlonlat(1, 1).Byradius(1).Km().Asc().Withcoord().Withhash().Build()
@@ -21902,11 +21903,11 @@ func TestCommand_201(t *testing.T) {
 	s.Geosearch().Key("1").Fromlonlat(1, 1).Byradius(1).Mi().Asc().Withdist().Withhash().Cache()
 	s.Geosearch().Key("1").Fromlonlat(1, 1).Byradius(1).Mi().Asc().Withdist().Build()
 	s.Geosearch().Key("1").Fromlonlat(1, 1).Byradius(1).Mi().Asc().Withdist().Cache()
-	s.Geosearch().Key("1").Fromlonlat(1, 1).Byradius(1).Mi().Asc().Withhash().Build()
-	s.Geosearch().Key("1").Fromlonlat(1, 1).Byradius(1).Mi().Asc().Withhash().Cache()
 }
 
 func TestCommand_202(t *testing.T) {
+	s.Geosearch().Key("1").Fromlonlat(1, 1).Byradius(1).Mi().Asc().Withhash().Build()
+	s.Geosearch().Key("1").Fromlonlat(1, 1).Byradius(1).Mi().Asc().Withhash().Cache()
 	s.Geosearch().Key("1").Fromlonlat(1, 1).Byradius(1).Mi().Asc().Build()
 	s.Geosearch().Key("1").Fromlonlat(1, 1).Byradius(1).Mi().Asc().Cache()
 	s.Geosearch().Key("1").Fromlonlat(1, 1).Byradius(1).Mi().Desc().Count(1).Any().Build()
@@ -22105,11 +22106,11 @@ func TestCommand_202(t *testing.T) {
 	s.Geosearch().Key("1").Fromlonlat(1, 1).Bybox(1).Height(1).Ft().Cache()
 	s.Geosearch().Key("1").Fromlonlat(1, 1).Bybox(1).Height(1).Mi().Asc().Count(1).Build()
 	s.Geosearch().Key("1").Fromlonlat(1, 1).Bybox(1).Height(1).Mi().Asc().Count(1).Cache()
-	s.Geosearch().Key("1").Fromlonlat(1, 1).Bybox(1).Height(1).Mi().Asc().Withcoord().Build()
-	s.Geosearch().Key("1").Fromlonlat(1, 1).Bybox(1).Height(1).Mi().Asc().Withcoord().Cache()
 }
 
 func TestCommand_203(t *testing.T) {
+	s.Geosearch().Key("1").Fromlonlat(1, 1).Bybox(1).Height(1).Mi().Asc().Withcoord().Build()
+	s.Geosearch().Key("1").Fromlonlat(1, 1).Bybox(1).Height(1).Mi().Asc().Withcoord().Cache()
 	s.Geosearch().Key("1").Fromlonlat(1, 1).Bybox(1).Height(1).Mi().Asc().Withdist().Build()
 	s.Geosearch().Key("1").Fromlonlat(1, 1).Bybox(1).Height(1).Mi().Asc().Withdist().Cache()
 	s.Geosearch().Key("1").Fromlonlat(1, 1).Bybox(1).Height(1).Mi().Asc().Withhash().Build()
@@ -22308,11 +22309,11 @@ func TestCommand_203(t *testing.T) {
 	s.Geosearch().Key("1").Byradius(1).M().Bybox(1).Height(1).Km().Asc().Cache()
 	s.Geosearch().Key("1").Byradius(1).M().Bybox(1).Height(1).Km().Desc().Build()
 	s.Geosearch().Key("1").Byradius(1).M().Bybox(1).Height(1).Km().Desc().Cache()
-	s.Geosearch().Key("1").Byradius(1).M().Bybox(1).Height(1).Km().Count(1).Build()
-	s.Geosearch().Key("1").Byradius(1).M().Bybox(1).Height(1).Km().Count(1).Cache()
 }
 
 func TestCommand_204(t *testing.T) {
+	s.Geosearch().Key("1").Byradius(1).M().Bybox(1).Height(1).Km().Count(1).Build()
+	s.Geosearch().Key("1").Byradius(1).M().Bybox(1).Height(1).Km().Count(1).Cache()
 	s.Geosearch().Key("1").Byradius(1).M().Bybox(1).Height(1).Km().Withcoord().Build()
 	s.Geosearch().Key("1").Byradius(1).M().Bybox(1).Height(1).Km().Withcoord().Cache()
 	s.Geosearch().Key("1").Byradius(1).M().Bybox(1).Height(1).Km().Withdist().Build()
@@ -22511,11 +22512,11 @@ func TestCommand_204(t *testing.T) {
 	s.Geosearch().Key("1").Byradius(1).Km().Bybox(1).Height(1).Ft().Withdist().Cache()
 	s.Geosearch().Key("1").Byradius(1).Km().Bybox(1).Height(1).Ft().Withhash().Build()
 	s.Geosearch().Key("1").Byradius(1).Km().Bybox(1).Height(1).Ft().Withhash().Cache()
-	s.Geosearch().Key("1").Byradius(1).Km().Bybox(1).Height(1).Ft().Build()
-	s.Geosearch().Key("1").Byradius(1).Km().Bybox(1).Height(1).Ft().Cache()
 }
 
 func TestCommand_205(t *testing.T) {
+	s.Geosearch().Key("1").Byradius(1).Km().Bybox(1).Height(1).Ft().Build()
+	s.Geosearch().Key("1").Byradius(1).Km().Bybox(1).Height(1).Ft().Cache()
 	s.Geosearch().Key("1").Byradius(1).Km().Bybox(1).Height(1).Mi().Asc().Build()
 	s.Geosearch().Key("1").Byradius(1).Km().Bybox(1).Height(1).Mi().Asc().Cache()
 	s.Geosearch().Key("1").Byradius(1).Km().Bybox(1).Height(1).Mi().Desc().Build()
@@ -22714,11 +22715,11 @@ func TestCommand_205(t *testing.T) {
 	s.Geosearch().Key("1").Byradius(1).Ft().Asc().Count(1).Any().Withdist().Cache()
 	s.Geosearch().Key("1").Byradius(1).Ft().Asc().Count(1).Any().Withhash().Build()
 	s.Geosearch().Key("1").Byradius(1).Ft().Asc().Count(1).Any().Withhash().Cache()
-	s.Geosearch().Key("1").Byradius(1).Ft().Asc().Count(1).Any().Build()
-	s.Geosearch().Key("1").Byradius(1).Ft().Asc().Count(1).Any().Cache()
 }
 
 func TestCommand_206(t *testing.T) {
+	s.Geosearch().Key("1").Byradius(1).Ft().Asc().Count(1).Any().Build()
+	s.Geosearch().Key("1").Byradius(1).Ft().Asc().Count(1).Any().Cache()
 	s.Geosearch().Key("1").Byradius(1).Ft().Asc().Count(1).Withcoord().Withdist().Build()
 	s.Geosearch().Key("1").Byradius(1).Ft().Asc().Count(1).Withcoord().Withdist().Cache()
 	s.Geosearch().Key("1").Byradius(1).Ft().Asc().Count(1).Withcoord().Withhash().Build()
@@ -22917,11 +22918,11 @@ func TestCommand_206(t *testing.T) {
 	s.Geosearch().Key("1").Byradius(1).Mi().Asc().Withcoord().Withdist().Cache()
 	s.Geosearch().Key("1").Byradius(1).Mi().Asc().Withcoord().Withhash().Build()
 	s.Geosearch().Key("1").Byradius(1).Mi().Asc().Withcoord().Withhash().Cache()
-	s.Geosearch().Key("1").Byradius(1).Mi().Asc().Withcoord().Build()
-	s.Geosearch().Key("1").Byradius(1).Mi().Asc().Withcoord().Cache()
 }
 
 func TestCommand_207(t *testing.T) {
+	s.Geosearch().Key("1").Byradius(1).Mi().Asc().Withcoord().Build()
+	s.Geosearch().Key("1").Byradius(1).Mi().Asc().Withcoord().Cache()
 	s.Geosearch().Key("1").Byradius(1).Mi().Asc().Withdist().Withhash().Build()
 	s.Geosearch().Key("1").Byradius(1).Mi().Asc().Withdist().Withhash().Cache()
 	s.Geosearch().Key("1").Byradius(1).Mi().Asc().Withdist().Build()
@@ -23120,11 +23121,11 @@ func TestCommand_207(t *testing.T) {
 	s.Geosearch().Key("1").Bybox(1).Height(1).Km().Asc().Withdist().Withhash().Cache()
 	s.Geosearch().Key("1").Bybox(1).Height(1).Km().Asc().Withdist().Build()
 	s.Geosearch().Key("1").Bybox(1).Height(1).Km().Asc().Withdist().Cache()
-	s.Geosearch().Key("1").Bybox(1).Height(1).Km().Asc().Withhash().Build()
-	s.Geosearch().Key("1").Bybox(1).Height(1).Km().Asc().Withhash().Cache()
 }
 
 func TestCommand_208(t *testing.T) {
+	s.Geosearch().Key("1").Bybox(1).Height(1).Km().Asc().Withhash().Build()
+	s.Geosearch().Key("1").Bybox(1).Height(1).Km().Asc().Withhash().Cache()
 	s.Geosearch().Key("1").Bybox(1).Height(1).Km().Asc().Build()
 	s.Geosearch().Key("1").Bybox(1).Height(1).Km().Asc().Cache()
 	s.Geosearch().Key("1").Bybox(1).Height(1).Km().Desc().Count(1).Any().Build()
@@ -23323,11 +23324,11 @@ func TestCommand_208(t *testing.T) {
 	s.Geosearch().Key("1").Bybox(1).Height(1).Mi().Desc().Withhash().Cache()
 	s.Geosearch().Key("1").Bybox(1).Height(1).Mi().Desc().Build()
 	s.Geosearch().Key("1").Bybox(1).Height(1).Mi().Desc().Cache()
-	s.Geosearch().Key("1").Bybox(1).Height(1).Mi().Count(1).Any().Withcoord().Build()
-	s.Geosearch().Key("1").Bybox(1).Height(1).Mi().Count(1).Any().Withcoord().Cache()
 }
 
 func TestCommand_209(t *testing.T) {
+	s.Geosearch().Key("1").Bybox(1).Height(1).Mi().Count(1).Any().Withcoord().Build()
+	s.Geosearch().Key("1").Bybox(1).Height(1).Mi().Count(1).Any().Withcoord().Cache()
 	s.Geosearch().Key("1").Bybox(1).Height(1).Mi().Count(1).Any().Withdist().Build()
 	s.Geosearch().Key("1").Bybox(1).Height(1).Mi().Count(1).Any().Withdist().Cache()
 	s.Geosearch().Key("1").Bybox(1).Height(1).Mi().Count(1).Any().Withhash().Build()
@@ -23517,10 +23518,10 @@ func TestCommand_209(t *testing.T) {
 	s.Geosearchstore().Destination("1").Source("1").Frommember("1").Fromlonlat(1, 1).Byradius(1).Km().Desc().Build()
 	s.Geosearchstore().Destination("1").Source("1").Frommember("1").Fromlonlat(1, 1).Byradius(1).Km().Count(1).Build()
 	s.Geosearchstore().Destination("1").Source("1").Frommember("1").Fromlonlat(1, 1).Byradius(1).Km().Storedist().Build()
-	s.Geosearchstore().Destination("1").Source("1").Frommember("1").Fromlonlat(1, 1).Byradius(1).Km().Build()
 }
 
 func TestCommand_210(t *testing.T) {
+	s.Geosearchstore().Destination("1").Source("1").Frommember("1").Fromlonlat(1, 1).Byradius(1).Km().Build()
 	s.Geosearchstore().Destination("1").Source("1").Frommember("1").Fromlonlat(1, 1).Byradius(1).Ft().Asc().Build()
 	s.Geosearchstore().Destination("1").Source("1").Frommember("1").Fromlonlat(1, 1).Byradius(1).Ft().Desc().Build()
 	s.Geosearchstore().Destination("1").Source("1").Frommember("1").Fromlonlat(1, 1).Byradius(1).Ft().Count(1).Build()
@@ -23620,10 +23621,10 @@ func TestCommand_210(t *testing.T) {
 	s.Geosearchstore().Destination("1").Source("1").Frommember("1").Asc().Count(1).Storedist().Build()
 	s.Geosearchstore().Destination("1").Source("1").Frommember("1").Asc().Count(1).Build()
 	s.Geosearchstore().Destination("1").Source("1").Frommember("1").Asc().Storedist().Build()
-	s.Geosearchstore().Destination("1").Source("1").Frommember("1").Asc().Build()
 }
 
 func TestCommand_211(t *testing.T) {
+	s.Geosearchstore().Destination("1").Source("1").Frommember("1").Asc().Build()
 	s.Geosearchstore().Destination("1").Source("1").Frommember("1").Desc().Count(1).Any().Storedist().Build()
 	s.Geosearchstore().Destination("1").Source("1").Frommember("1").Desc().Count(1).Any().Build()
 	s.Geosearchstore().Destination("1").Source("1").Frommember("1").Desc().Count(1).Storedist().Build()
@@ -23723,10 +23724,10 @@ func TestCommand_211(t *testing.T) {
 	s.Geosearchstore().Destination("1").Source("1").Byradius(1).M().Bybox(1).Height(1).Ft().Build()
 	s.Geosearchstore().Destination("1").Source("1").Byradius(1).M().Bybox(1).Height(1).Mi().Build()
 	s.Geosearchstore().Destination("1").Source("1").Byradius(1).M().Asc().Count(1).Any().Build()
-	s.Geosearchstore().Destination("1").Source("1").Byradius(1).M().Asc().Count(1).Storedist().Build()
 }
 
 func TestCommand_212(t *testing.T) {
+	s.Geosearchstore().Destination("1").Source("1").Byradius(1).M().Asc().Count(1).Storedist().Build()
 	s.Geosearchstore().Destination("1").Source("1").Byradius(1).M().Asc().Count(1).Build()
 	s.Geosearchstore().Destination("1").Source("1").Byradius(1).M().Asc().Storedist().Build()
 	s.Geosearchstore().Destination("1").Source("1").Byradius(1).M().Asc().Build()
@@ -23826,10 +23827,10 @@ func TestCommand_212(t *testing.T) {
 	s.Geosearchstore().Destination("1").Source("1").Bybox(1).Height(1).Ft().Asc().Count(1).Build()
 	s.Geosearchstore().Destination("1").Source("1").Bybox(1).Height(1).Ft().Asc().Storedist().Build()
 	s.Geosearchstore().Destination("1").Source("1").Bybox(1).Height(1).Ft().Asc().Build()
-	s.Geosearchstore().Destination("1").Source("1").Bybox(1).Height(1).Ft().Desc().Count(1).Build()
 }
 
 func TestCommand_213(t *testing.T) {
+	s.Geosearchstore().Destination("1").Source("1").Bybox(1).Height(1).Ft().Desc().Count(1).Build()
 	s.Geosearchstore().Destination("1").Source("1").Bybox(1).Height(1).Ft().Desc().Storedist().Build()
 	s.Geosearchstore().Destination("1").Source("1").Bybox(1).Height(1).Ft().Desc().Build()
 	s.Geosearchstore().Destination("1").Source("1").Bybox(1).Height(1).Ft().Count(1).Any().Build()
@@ -23926,7 +23927,7 @@ func TestCommand_213(t *testing.T) {
 	s.Incr().Key("1").Build()
 	s.Incrby().Key("1").Increment(1).Build()
 	s.Incrbyfloat().Key("1").Increment(1).Build()
-	s.Info().Section("1").Build()
+	s.Info().Section("1").Section("1").Build()
 	s.Info().Build()
 	s.JsonArrappend().Key("1").Path("1").Value("1").Value("1").Build()
 	s.JsonArrappend().Key("1").Value("1").Value("1").Build()
@@ -23944,10 +23945,10 @@ func TestCommand_213(t *testing.T) {
 	s.JsonArrpop().Key("1").Build()
 	s.JsonArrtrim().Key("1").Path("1").Start(1).Stop(1).Build()
 	s.JsonClear().Key("1").Path("1").Build()
-	s.JsonClear().Key("1").Build()
 }
 
 func TestCommand_214(t *testing.T) {
+	s.JsonClear().Key("1").Build()
 	s.JsonDel().Key("1").Path("1").Build()
 	s.JsonDel().Key("1").Build()
 	s.JsonGet().Key("1").Indent("1").Newline("1").Space("1").Paths("1").Paths("1").Build()
@@ -24084,10 +24085,10 @@ func TestCommand_214(t *testing.T) {
 	s.MemoryMallocStats().Build()
 	s.MemoryPurge().Build()
 	s.MemoryStats().Build()
-	s.MemoryUsage().Key("1").Samples(1).Build()
 }
 
 func TestCommand_215(t *testing.T) {
+	s.MemoryUsage().Key("1").Samples(1).Build()
 	s.MemoryUsage().Key("1").Build()
 	s.Mget().Key("1").Key("1").Build()
 	s.Migrate().Host("1").Port("1").Key().DestinationDb(1).Timeout(1).Copy().Replace().Build()
@@ -24189,10 +24190,10 @@ func TestCommand_215(t *testing.T) {
 	s.Restore().Key("1").Ttl(1).SerializedValue("1").Replace().Freq(1).Build()
 	s.Restore().Key("1").Ttl(1).SerializedValue("1").Replace().Build()
 	s.Restore().Key("1").Ttl(1).SerializedValue("1").Absttl().Idletime(1).Freq(1).Build()
-	s.Restore().Key("1").Ttl(1).SerializedValue("1").Absttl().Idletime(1).Build()
 }
 
 func TestCommand_216(t *testing.T) {
+	s.Restore().Key("1").Ttl(1).SerializedValue("1").Absttl().Idletime(1).Build()
 	s.Restore().Key("1").Ttl(1).SerializedValue("1").Absttl().Freq(1).Build()
 	s.Restore().Key("1").Ttl(1).SerializedValue("1").Absttl().Build()
 	s.Restore().Key("1").Ttl(1).SerializedValue("1").Idletime(1).Freq(1).Build()
@@ -24293,10 +24294,10 @@ func TestCommand_216(t *testing.T) {
 	s.Shutdown().Now().Abort().Build()
 	s.Shutdown().Now().Build()
 	s.Shutdown().Force().Abort().Build()
-	s.Shutdown().Force().Build()
 }
 
 func TestCommand_217(t *testing.T) {
+	s.Shutdown().Force().Build()
 	s.Shutdown().Abort().Build()
 	s.Shutdown().Build()
 	s.Sinter().Key("1").Key("1").Build()
@@ -24399,10 +24400,10 @@ func TestCommand_217(t *testing.T) {
 	s.Sort().Key("1").Get("1").Get("1").Alpha().Store("1").Build()
 	s.Sort().Key("1").Get("1").Get("1").Alpha().Build()
 	s.Sort().Key("1").Get("1").Get("1").Store("1").Build()
-	s.Sort().Key("1").Get("1").Get("1").Build()
 }
 
 func TestCommand_218(t *testing.T) {
+	s.Sort().Key("1").Get("1").Get("1").Build()
 	s.Sort().Key("1").Asc().Alpha().Store("1").Build()
 	s.Sort().Key("1").Asc().Alpha().Build()
 	s.Sort().Key("1").Asc().Store("1").Build()
@@ -24554,10 +24555,10 @@ func TestCommand_218(t *testing.T) {
 	s.Touch().Key("1").Key("1").Build()
 	s.TsAdd().Key("1").Timestamp(1).Value(1).Retention(1).EncodingUncompressed().ChunkSize(1).OnDuplicateBlock().Build()
 	s.TsAdd().Key("1").Timestamp(1).Value(1).Retention(1).EncodingUncompressed().ChunkSize(1).OnDuplicateFirst().Build()
-	s.TsAdd().Key("1").Timestamp(1).Value(1).Retention(1).EncodingUncompressed().ChunkSize(1).OnDuplicateLast().Build()
 }
 
 func TestCommand_219(t *testing.T) {
+	s.TsAdd().Key("1").Timestamp(1).Value(1).Retention(1).EncodingUncompressed().ChunkSize(1).OnDuplicateLast().Build()
 	s.TsAdd().Key("1").Timestamp(1).Value(1).Retention(1).EncodingUncompressed().ChunkSize(1).OnDuplicateMin().Build()
 	s.TsAdd().Key("1").Timestamp(1).Value(1).Retention(1).EncodingUncompressed().ChunkSize(1).OnDuplicateMax().Build()
 	s.TsAdd().Key("1").Timestamp(1).Value(1).Retention(1).EncodingUncompressed().ChunkSize(1).OnDuplicateSum().Build()
@@ -24657,10 +24658,10 @@ func TestCommand_219(t *testing.T) {
 	s.TsAdd().Key("1").Timestamp(1).Value(1).EncodingUncompressed().Build()
 	s.TsAdd().Key("1").Timestamp(1).Value(1).EncodingCompressed().ChunkSize(1).OnDuplicateBlock().Labels().Labels("1", "1").Labels("1", "1").Build()
 	s.TsAdd().Key("1").Timestamp(1).Value(1).EncodingCompressed().ChunkSize(1).OnDuplicateBlock().Build()
-	s.TsAdd().Key("1").Timestamp(1).Value(1).EncodingCompressed().ChunkSize(1).OnDuplicateFirst().Labels().Labels("1", "1").Labels("1", "1").Build()
 }
 
 func TestCommand_220(t *testing.T) {
+	s.TsAdd().Key("1").Timestamp(1).Value(1).EncodingCompressed().ChunkSize(1).OnDuplicateFirst().Labels().Labels("1", "1").Labels("1", "1").Build()
 	s.TsAdd().Key("1").Timestamp(1).Value(1).EncodingCompressed().ChunkSize(1).OnDuplicateFirst().Build()
 	s.TsAdd().Key("1").Timestamp(1).Value(1).EncodingCompressed().ChunkSize(1).OnDuplicateLast().Labels().Labels("1", "1").Labels("1", "1").Build()
 	s.TsAdd().Key("1").Timestamp(1).Value(1).EncodingCompressed().ChunkSize(1).OnDuplicateLast().Build()
@@ -24760,10 +24761,10 @@ func TestCommand_220(t *testing.T) {
 	s.TsCreate().Key("1").Retention(1).EncodingCompressed().ChunkSize(1).DuplicatePolicySum().Build()
 	s.TsCreate().Key("1").Retention(1).EncodingCompressed().ChunkSize(1).Labels().Labels("1", "1").Labels("1", "1").Build()
 	s.TsCreate().Key("1").Retention(1).EncodingCompressed().ChunkSize(1).Build()
-	s.TsCreate().Key("1").Retention(1).EncodingCompressed().DuplicatePolicyBlock().Labels().Labels("1", "1").Labels("1", "1").Build()
 }
 
 func TestCommand_221(t *testing.T) {
+	s.TsCreate().Key("1").Retention(1).EncodingCompressed().DuplicatePolicyBlock().Labels().Labels("1", "1").Labels("1", "1").Build()
 	s.TsCreate().Key("1").Retention(1).EncodingCompressed().DuplicatePolicyBlock().Build()
 	s.TsCreate().Key("1").Retention(1).EncodingCompressed().DuplicatePolicyFirst().Labels().Labels("1", "1").Labels("1", "1").Build()
 	s.TsCreate().Key("1").Retention(1).EncodingCompressed().DuplicatePolicyFirst().Build()
@@ -24863,10 +24864,10 @@ func TestCommand_221(t *testing.T) {
 	s.TsCreate().Key("1").EncodingCompressed().Build()
 	s.TsCreate().Key("1").ChunkSize(1).DuplicatePolicyBlock().Labels().Labels("1", "1").Labels("1", "1").Build()
 	s.TsCreate().Key("1").ChunkSize(1).DuplicatePolicyBlock().Build()
-	s.TsCreate().Key("1").ChunkSize(1).DuplicatePolicyFirst().Labels().Labels("1", "1").Labels("1", "1").Build()
 }
 
 func TestCommand_222(t *testing.T) {
+	s.TsCreate().Key("1").ChunkSize(1).DuplicatePolicyFirst().Labels().Labels("1", "1").Labels("1", "1").Build()
 	s.TsCreate().Key("1").ChunkSize(1).DuplicatePolicyFirst().Build()
 	s.TsCreate().Key("1").ChunkSize(1).DuplicatePolicyLast().Labels().Labels("1", "1").Labels("1", "1").Build()
 	s.TsCreate().Key("1").ChunkSize(1).DuplicatePolicyLast().Build()
@@ -24966,10 +24967,10 @@ func TestCommand_222(t *testing.T) {
 	s.TsIncrby().Key("1").Value(1).Uncompressed().ChunkSize(1).Labels().Labels("1", "1").Labels("1", "1").Build()
 	s.TsIncrby().Key("1").Value(1).Uncompressed().ChunkSize(1).Build()
 	s.TsIncrby().Key("1").Value(1).Uncompressed().Labels().Labels("1", "1").Labels("1", "1").Build()
-	s.TsIncrby().Key("1").Value(1).Uncompressed().Build()
 }
 
 func TestCommand_223(t *testing.T) {
+	s.TsIncrby().Key("1").Value(1).Uncompressed().Build()
 	s.TsIncrby().Key("1").Value(1).ChunkSize(1).Labels().Labels("1", "1").Labels("1", "1").Build()
 	s.TsIncrby().Key("1").Value(1).ChunkSize(1).Build()
 	s.TsIncrby().Key("1").Value(1).Labels().Labels("1", "1").Labels("1", "1").Build()
@@ -25069,10 +25070,10 @@ func TestCommand_223(t *testing.T) {
 	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).SelectedLabels([]string{"1"}).AggregationMin().Timebucket(1).Filter("1").Filter("1").Build()
 	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).SelectedLabels([]string{"1"}).AggregationMax().Timebucket(1).Filter("1").Filter("1").Build()
 	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).SelectedLabels([]string{"1"}).AggregationRange().Timebucket(1).Filter("1").Filter("1").Build()
-	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).SelectedLabels([]string{"1"}).AggregationCount().Timebucket(1).Filter("1").Filter("1").Build()
 }
 
 func TestCommand_224(t *testing.T) {
+	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).SelectedLabels([]string{"1"}).AggregationCount().Timebucket(1).Filter("1").Filter("1").Build()
 	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).SelectedLabels([]string{"1"}).AggregationFirst().Timebucket(1).Filter("1").Filter("1").Build()
 	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).SelectedLabels([]string{"1"}).AggregationLast().Timebucket(1).Filter("1").Filter("1").Build()
 	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).SelectedLabels([]string{"1"}).AggregationStdP().Timebucket(1).Filter("1").Filter("1").Build()
@@ -25172,10 +25173,10 @@ func TestCommand_224(t *testing.T) {
 	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).Filter("1").Filter("1").Build()
 	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).Withlabels().Count(1).Filter("1").Filter("1").Build()
 	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).Withlabels().Align(1).Filter("1").Filter("1").Build()
-	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).Withlabels().Filter("1").Filter("1").Groupby("1", "1", "1").Build()
 }
 
 func TestCommand_225(t *testing.T) {
+	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).Withlabels().Filter("1").Filter("1").Groupby("1", "1", "1").Build()
 	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).Withlabels().Filter("1").Filter("1").Build()
 	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).SelectedLabels([]string{"1"}).Count(1).Filter("1").Filter("1").Build()
 	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).SelectedLabels([]string{"1"}).Align(1).Filter("1").Filter("1").Build()
@@ -25275,10 +25276,10 @@ func TestCommand_225(t *testing.T) {
 	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).AggregationMin().Timebucket(1).Filter("1").Filter("1").Groupby("1", "1", "1").Build()
 	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).AggregationMin().Timebucket(1).Filter("1").Filter("1").Build()
 	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).AggregationMax().Timebucket(1).Filter("1").Filter("1").Groupby("1", "1", "1").Build()
-	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).AggregationMax().Timebucket(1).Filter("1").Filter("1").Build()
 }
 
 func TestCommand_226(t *testing.T) {
+	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).AggregationMax().Timebucket(1).Filter("1").Filter("1").Build()
 	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).AggregationRange().Timebucket(1).Filter("1").Filter("1").Groupby("1", "1", "1").Build()
 	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).AggregationRange().Timebucket(1).Filter("1").Filter("1").Build()
 	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).AggregationCount().Timebucket(1).Filter("1").Filter("1").Groupby("1", "1", "1").Build()
@@ -25378,10 +25379,10 @@ func TestCommand_226(t *testing.T) {
 	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).Align(1).AggregationLast().Timebucket(1).Build()
 	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).Align(1).AggregationStdP().Timebucket(1).Build()
 	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).Align(1).AggregationStdS().Timebucket(1).Build()
-	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).Align(1).AggregationVarP().Timebucket(1).Build()
 }
 
 func TestCommand_227(t *testing.T) {
+	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).Align(1).AggregationVarP().Timebucket(1).Build()
 	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).Align(1).AggregationVarS().Timebucket(1).Build()
 	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).Align(1).Build()
 	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).AggregationAvg().Timebucket(1).Build()
@@ -25481,10 +25482,10 @@ func TestCommand_227(t *testing.T) {
 	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).Count(1).Build()
 	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).Align(1).AggregationAvg().Timebucket(1).Build()
 	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).Align(1).AggregationSum().Timebucket(1).Build()
-	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).Align(1).AggregationMin().Timebucket(1).Build()
 }
 
 func TestCommand_228(t *testing.T) {
+	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).Align(1).AggregationMin().Timebucket(1).Build()
 	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).Align(1).AggregationMax().Timebucket(1).Build()
 	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).Align(1).AggregationRange().Timebucket(1).Build()
 	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).Align(1).AggregationCount().Timebucket(1).Build()
@@ -25584,10 +25585,10 @@ func TestCommand_228(t *testing.T) {
 	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).Align(1).AggregationLast().Timebucket(1).Build()
 	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).Align(1).AggregationStdP().Timebucket(1).Build()
 	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).Align(1).AggregationStdS().Timebucket(1).Build()
-	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).Align(1).AggregationVarP().Timebucket(1).Build()
 }
 
 func TestCommand_229(t *testing.T) {
+	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).Align(1).AggregationVarP().Timebucket(1).Build()
 	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).Align(1).AggregationVarS().Timebucket(1).Build()
 	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).Align(1).Build()
 	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).AggregationAvg().Timebucket(1).Build()
@@ -25657,12 +25658,15 @@ func TestCommand_229(t *testing.T) {
 	s.Xclaim().Key("1").Group("1").Consumer("1").MinIdleTime("1").Id("1").Id("1").Justid().Build()
 	s.Xclaim().Key("1").Group("1").Consumer("1").MinIdleTime("1").Id("1").Id("1").Build()
 	s.Xdel().Key("1").Id("1").Id("1").Build()
+	s.XgroupCreate().Key("1").Groupname("1").Id("1").Mkstream().Entriesread(1).Build()
 	s.XgroupCreate().Key("1").Groupname("1").Id("1").Mkstream().Build()
+	s.XgroupCreate().Key("1").Groupname("1").Id("1").Entriesread(1).Build()
 	s.XgroupCreate().Key("1").Groupname("1").Id("1").Build()
 	s.XgroupCreateconsumer().Key("1").Groupname("1").Consumername("1").Build()
 	s.XgroupDelconsumer().Key("1").Groupname("1").Consumername("1").Build()
 	s.XgroupDestroy().Key("1").Groupname("1").Build()
 	s.XgroupHelp().Build()
+	s.XgroupSetid().Key("1").Groupname("1").Id("1").Entriesread(1).Build()
 	s.XgroupSetid().Key("1").Groupname("1").Id("1").Build()
 	s.XinfoConsumers().Key("1").Groupname("1").Build()
 	s.XinfoGroups().Key("1").Build()
@@ -25686,13 +25690,17 @@ func TestCommand_229(t *testing.T) {
 	s.Xreadgroup().Group("1", "1").Count(1).Streams().Key("1").Key("1").Id("1").Id("1").Build()
 	s.Xreadgroup().Group("1", "1").Block(1).Noack().Streams().Key("1").Key("1").Id("1").Id("1").Build()
 	s.Xreadgroup().Group("1", "1").Block(1).Streams().Key("1").Key("1").Id("1").Id("1").Build()
+}
+
+func TestCommand_230(t *testing.T) {
 	s.Xreadgroup().Group("1", "1").Noack().Streams().Key("1").Key("1").Id("1").Id("1").Build()
 	s.Xreadgroup().Group("1", "1").Streams().Key("1").Key("1").Id("1").Id("1").Build()
 	s.Xrevrange().Key("1").End("1").Start("1").Count(1).Build()
 	s.Xrevrange().Key("1").End("1").Start("1").Build()
-}
-
-func TestCommand_230(t *testing.T) {
+	s.Xsetid().Key("1").LastId("1").Entriesadded(1).Maxdeletedid("1").Build()
+	s.Xsetid().Key("1").LastId("1").Entriesadded(1).Build()
+	s.Xsetid().Key("1").LastId("1").Maxdeletedid("1").Build()
+	s.Xsetid().Key("1").LastId("1").Build()
 	s.Xtrim().Key("1").Maxlen().Exact().Threshold("1").Limit(1).Build()
 	s.Xtrim().Key("1").Maxlen().Exact().Threshold("1").Build()
 	s.Xtrim().Key("1").Maxlen().Almost().Threshold("1").Limit(1).Build()
@@ -25789,6 +25797,9 @@ func TestCommand_230(t *testing.T) {
 	s.Zpopmin().Key("1").Build()
 	s.Zrandmember().Key("1").Count(1).Withscores().Build()
 	s.Zrandmember().Key("1").Count(1).Build()
+}
+
+func TestCommand_231(t *testing.T) {
 	s.Zrandmember().Key("1").Build()
 	s.Zrange().Key("1").Min("1").Max("1").Byscore().Rev().Limit(1, 1).Withscores().Build()
 	s.Zrange().Key("1").Min("1").Max("1").Byscore().Rev().Limit(1, 1).Withscores().Cache()
@@ -25804,9 +25815,6 @@ func TestCommand_230(t *testing.T) {
 	s.Zrange().Key("1").Min("1").Max("1").Byscore().Limit(1, 1).Cache()
 	s.Zrange().Key("1").Min("1").Max("1").Byscore().Withscores().Build()
 	s.Zrange().Key("1").Min("1").Max("1").Byscore().Withscores().Cache()
-}
-
-func TestCommand_231(t *testing.T) {
 	s.Zrange().Key("1").Min("1").Max("1").Byscore().Build()
 	s.Zrange().Key("1").Min("1").Max("1").Byscore().Cache()
 	s.Zrange().Key("1").Min("1").Max("1").Bylex().Rev().Limit(1, 1).Withscores().Build()

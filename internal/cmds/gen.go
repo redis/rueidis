@@ -5032,6 +5032,18 @@ func (c CommandGetkeys) Build() Completed {
 	return Completed(c)
 }
 
+type CommandGetkeysandflags Completed
+
+func (b Builder) CommandGetkeysandflags() (c CommandGetkeysandflags) {
+	c = CommandGetkeysandflags{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "COMMAND", "GETKEYSANDFLAGS")
+	return c
+}
+
+func (c CommandGetkeysandflags) Build() Completed {
+	return Completed(c)
+}
+
 type CommandInfo Completed
 
 func (b Builder) CommandInfo() (c CommandInfo) {
@@ -15635,8 +15647,8 @@ func (b Builder) Info() (c Info) {
 	return c
 }
 
-func (c Info) Section(section string) InfoSection {
-	c.cs.s = append(c.cs.s, section)
+func (c Info) Section(section ...string) InfoSection {
+	c.cs.s = append(c.cs.s, section...)
 	return (InfoSection)(c)
 }
 
@@ -15645,6 +15657,11 @@ func (c Info) Build() Completed {
 }
 
 type InfoSection Completed
+
+func (c InfoSection) Section(section ...string) InfoSection {
+	c.cs.s = append(c.cs.s, section...)
+	return c
+}
 
 func (c InfoSection) Build() Completed {
 	return Completed(c)
@@ -26242,6 +26259,12 @@ func (c XgroupCreate) Key(key string) XgroupCreateKey {
 	return (XgroupCreateKey)(c)
 }
 
+type XgroupCreateEntriesread Completed
+
+func (c XgroupCreateEntriesread) Build() Completed {
+	return Completed(c)
+}
+
 type XgroupCreateGroupname Completed
 
 func (c XgroupCreateGroupname) Id(id string) XgroupCreateId {
@@ -26256,6 +26279,11 @@ func (c XgroupCreateId) Mkstream() XgroupCreateMkstream {
 	return (XgroupCreateMkstream)(c)
 }
 
+func (c XgroupCreateId) Entriesread(entriesRead int64) XgroupCreateEntriesread {
+	c.cs.s = append(c.cs.s, "ENTRIESREAD", strconv.FormatInt(entriesRead, 10))
+	return (XgroupCreateEntriesread)(c)
+}
+
 func (c XgroupCreateId) Build() Completed {
 	return Completed(c)
 }
@@ -26268,6 +26296,11 @@ func (c XgroupCreateKey) Groupname(groupname string) XgroupCreateGroupname {
 }
 
 type XgroupCreateMkstream Completed
+
+func (c XgroupCreateMkstream) Entriesread(entriesRead int64) XgroupCreateEntriesread {
+	c.cs.s = append(c.cs.s, "ENTRIESREAD", strconv.FormatInt(entriesRead, 10))
+	return (XgroupCreateEntriesread)(c)
+}
 
 func (c XgroupCreateMkstream) Build() Completed {
 	return Completed(c)
@@ -26402,6 +26435,12 @@ func (c XgroupSetid) Key(key string) XgroupSetidKey {
 	return (XgroupSetidKey)(c)
 }
 
+type XgroupSetidEntriesread Completed
+
+func (c XgroupSetidEntriesread) Build() Completed {
+	return Completed(c)
+}
+
 type XgroupSetidGroupname Completed
 
 func (c XgroupSetidGroupname) Id(id string) XgroupSetidId {
@@ -26410,6 +26449,11 @@ func (c XgroupSetidGroupname) Id(id string) XgroupSetidId {
 }
 
 type XgroupSetidId Completed
+
+func (c XgroupSetidId) Entriesread(entriesRead int64) XgroupSetidEntriesread {
+	c.cs.s = append(c.cs.s, "ENTRIESREAD", strconv.FormatInt(entriesRead, 10))
+	return (XgroupSetidEntriesread)(c)
+}
 
 func (c XgroupSetidId) Build() Completed {
 	return Completed(c)
@@ -26911,6 +26955,62 @@ func (c XrevrangeStart) Count(count int64) XrevrangeCount {
 }
 
 func (c XrevrangeStart) Build() Completed {
+	return Completed(c)
+}
+
+type Xsetid Completed
+
+func (b Builder) Xsetid() (c Xsetid) {
+	c = Xsetid{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "XSETID")
+	return c
+}
+
+func (c Xsetid) Key(key string) XsetidKey {
+	if c.ks != NoSlot {
+		c.ks = check(c.ks, slot(key))
+	}
+	c.cs.s = append(c.cs.s, key)
+	return (XsetidKey)(c)
+}
+
+type XsetidEntriesadded Completed
+
+func (c XsetidEntriesadded) Maxdeletedid(maxDeletedEntryId string) XsetidMaxdeletedid {
+	c.cs.s = append(c.cs.s, "MAXDELETEDID", maxDeletedEntryId)
+	return (XsetidMaxdeletedid)(c)
+}
+
+func (c XsetidEntriesadded) Build() Completed {
+	return Completed(c)
+}
+
+type XsetidKey Completed
+
+func (c XsetidKey) LastId(lastId string) XsetidLastId {
+	c.cs.s = append(c.cs.s, lastId)
+	return (XsetidLastId)(c)
+}
+
+type XsetidLastId Completed
+
+func (c XsetidLastId) Entriesadded(entriesAdded int64) XsetidEntriesadded {
+	c.cs.s = append(c.cs.s, "ENTRIESADDED", strconv.FormatInt(entriesAdded, 10))
+	return (XsetidEntriesadded)(c)
+}
+
+func (c XsetidLastId) Maxdeletedid(maxDeletedEntryId string) XsetidMaxdeletedid {
+	c.cs.s = append(c.cs.s, "MAXDELETEDID", maxDeletedEntryId)
+	return (XsetidMaxdeletedid)(c)
+}
+
+func (c XsetidLastId) Build() Completed {
+	return Completed(c)
+}
+
+type XsetidMaxdeletedid Completed
+
+func (c XsetidMaxdeletedid) Build() Completed {
 	return Completed(c)
 }
 

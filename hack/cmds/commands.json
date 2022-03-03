@@ -1198,6 +1198,12 @@
     "since": "2.8.13",
     "group": "server"
   },
+  "COMMAND GETKEYSANDFLAGS": {
+    "summary": "Extract keys given a full Redis command",
+    "since": "7.0.0",
+    "group": "server",
+    "complexity": "O(N) where N is the number of arguments to the command"
+  },
   "COMMAND INFO": {
     "summary": "Get array of specific Redis command details",
     "complexity": "O(N) when N is number of commands to look up",
@@ -2649,7 +2655,8 @@
       {
         "name": "section",
         "type": "string",
-        "optional": true
+        "optional": true,
+        "multiple": true
       }
     ],
     "since": "1.0.0",
@@ -5782,6 +5789,34 @@
     "since": "5.0.0",
     "group": "stream"
   },
+  "XSETID": {
+    "summary": "An internal command for replicating stream values",
+    "since": "5.0.0",
+    "group": "stream",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "last-id",
+        "type": "string"
+      },
+      {
+        "name": "entries_added",
+        "type": "integer",
+        "command": "ENTRIESADDED",
+        "optional": true
+      },
+      {
+        "name": "max_deleted_entry_id",
+        "type": "string",
+        "command": "MAXDELETEDID",
+        "optional": true
+      }
+    ]
+  },
   "XLEN": {
     "summary": "Return the number of entries in a stream",
     "complexity": "O(1)",
@@ -5853,6 +5888,12 @@
       },
       {
         "command": "MKSTREAM",
+        "optional": true
+      },
+      {
+        "name": "entries_read",
+        "type": "integer",
+        "command": "ENTRIESREAD",
         "optional": true
       }
     ],
@@ -5934,6 +5975,12 @@
           "id",
           "$"
         ]
+      },
+      {
+        "name": "entries_read",
+        "type": "integer",
+        "command": "ENTRIESREAD",
+        "optional": true
       }
     ],
     "since": "5.0.0",
