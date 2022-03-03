@@ -248,6 +248,23 @@ func (p *pipe) _backgroundRead() {
 			if len(msg.values) != 2 { // EXEC aborted
 				p.cache.Update(ck, cc, msg, 0)
 			} else {
+				if msg.values[0].typ == '>' || msg.values[1].typ == '>' {
+					// This is a workaround for Redis 6's broken invalidation protocol: https://github.com/redis/redis/issues/8935
+					// We implement client side caching by issuing [MULTI,PTTL,CACHEABLE,EXEC]. In our case, when Redis 6 handles PTTL or CACHEABLE,
+					// it will send invalidation message immediately if it finds the key is expired, thus causing the EXEC response to be broken.
+					// We fix this by fetching the next message and patch it back into the EXEC response.
+					if msg.values[0].typ == '>' {
+						p.handlePush(msg.values[0].values)
+						msg.values[0] = msg.values[1]
+					} else {
+						p.handlePush(msg.values[1].values)
+					}
+					if msg.values[1], err = readNextMessage(p.r); err != nil {
+						p.error.CompareAndSwap(nil, &errs{error: err})
+						return
+					}
+				}
+
 				cp := msg.values[1]
 				cp.attrs = cacheMark
 				p.cache.Update(ck, cc, cp, msg.values[0].integer)
