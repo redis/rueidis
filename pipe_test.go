@@ -124,8 +124,8 @@ func setup(t *testing.T, option ClientOption) (*pipe, *redisMock, func(), func()
 			Reply(RedisMessage{
 				typ: '%',
 				values: []RedisMessage{
-					{typ: '+', string: "key"},
-					{typ: '+', string: "value"},
+					{typ: '+', string: "version"},
+					{typ: '+', string: "6.0.0"},
 				},
 			})
 		mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
@@ -135,7 +135,7 @@ func setup(t *testing.T, option ClientOption) (*pipe, *redisMock, func(), func()
 	if err != nil {
 		t.Fatalf("pipe setup failed: %v", err)
 	}
-	if info := p.Info(); info["key"].string != "value" {
+	if info := p.Info(); info["version"].string != "6.0.0" {
 		t.Fatalf("pipe setup failed, unexpected hello response: %v", p.Info())
 	}
 	return p, mock, func() {
