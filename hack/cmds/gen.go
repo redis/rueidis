@@ -534,9 +534,6 @@ func printRootBuilder(w io.Writer, root goStruct) {
 
 func rootCf(root goStruct) (tag string) {
 	if within(root, blockingCMDs) {
-		if tag != "" {
-			panic("root cf collision")
-		}
 		tag = "blockTag"
 	}
 

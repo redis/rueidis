@@ -4,6 +4,7 @@
 [![circleci](https://circleci.com/gh/rueian/rueidis.svg?style=shield)](https://app.circleci.com/pipelines/github/rueian/rueidis)
 [![Go Report Card](https://goreportcard.com/badge/github.com/rueian/rueidis)](https://goreportcard.com/report/github.com/rueian/rueidis)
 [![codecov](https://codecov.io/gh/rueian/rueidis/branch/master/graph/badge.svg?token=wGTB8GdY06)](https://codecov.io/gh/rueian/rueidis)
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/rueian/rueidis.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/rueian/rueidis/alerts/)
 [![Maintainability](https://api.codeclimate.com/v1/badges/0d93d524c2b8497aacbe/maintainability)](https://codeclimate.com/github/rueian/rueidis/maintainability)
 
 A Fast Golang Redis RESP3 client that does auto pipelining and supports client side caching.

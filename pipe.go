@@ -97,7 +97,7 @@ func newPipe(conn net.Conn, option *ClientOption) (p *pipe, err error) {
 
 	if ver, ok := p.info["version"]; ok {
 		if v := strings.Split(ver.string, "."); len(v) != 0 {
-			vv, _ := strconv.ParseInt(v[0], 10, 64)
+			vv, _ := strconv.ParseInt(v[0], 10, 32)
 			p.version = int32(vv)
 		}
 	}
@@ -332,9 +332,13 @@ func (p *pipe) handlePush(values []RedisMessage) {
 			p.cache.Delete(values[1].values)
 		}
 	case "message":
-		p.subs.Publish(values[1].string, PubSubMessage{Channel: values[1].string, Message: values[2].string})
+		if len(values) >= 3 {
+			p.subs.Publish(values[1].string, PubSubMessage{Channel: values[1].string, Message: values[2].string})
+		}
 	case "pmessage":
-		p.psubs.Publish(values[1].string, PubSubMessage{Pattern: values[1].string, Channel: values[2].string, Message: values[3].string})
+		if len(values) >= 4 {
+			p.psubs.Publish(values[1].string, PubSubMessage{Pattern: values[1].string, Channel: values[2].string, Message: values[3].string})
+		}
 	case "unsubscribe":
 		p.subs.Unsubscribe(values[1].string)
 	case "punsubscribe":
