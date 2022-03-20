@@ -8,7 +8,8 @@
       },
       {
         "name": "query",
-        "type": "string"
+        "type": "string",
+        "dsl": "cypher"
       }
     ],
     "since": "1.0.0",
@@ -23,7 +24,8 @@
       },
       {
         "name": "query",
-        "type": "string"
+        "type": "string",
+        "dsl": "cypher"
       }
     ],
     "since": "2.2.8",
@@ -49,7 +51,8 @@
       },
       {
         "name": "query",
-        "type": "string"
+        "type": "string",
+        "dsl": "cypher"
       }
     ],
     "since": "2.0.0",
@@ -64,7 +67,8 @@
       },
       {
         "name": "query",
-        "type": "string"
+        "type": "string",
+        "dsl": "cypher"
       }
     ],
     "since": "2.0.0",
