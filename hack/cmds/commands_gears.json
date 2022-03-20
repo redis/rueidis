@@ -1,0 +1,259 @@
+{
+  "RG.PYEXECUTE": {
+    "summary": "The RG.PYEXECUTE command executes a Python function.",
+    "complexity": [
+      "Depends on what the python code does"
+    ],
+    "arguments": [
+      {
+        "name": "function",
+        "type": "string"
+      },
+      {
+        "name": "UNBLOCKING",
+        "type": "enum",
+        "enum": [
+          "UNBLOCKING"
+        ],
+        "optional": true
+      },
+      {
+        "name": "id",
+        "command": "ID",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "description",
+        "command": "DESCRIPTION",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "UPGRADE",
+        "type": "enum",
+        "enum": [
+          "UPGRADE"
+        ],
+        "optional": true
+      },
+      {
+        "name": "REPLACE_WITH",
+        "command": "REPLACE_WITH",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "REQUIREMENTS",
+        "command": "REQUIREMENTS",
+        "optional": true,
+        "type": "string",
+        "block": [
+          {
+            "name": "requirement",
+            "type": "string",
+            "multiple": true
+          }
+        ]
+      }
+    ],
+    "since": "1.0.0",
+    "group": "gears"
+  },
+  "RG.ABORTEXECUTION": {
+    "summary": "The RG.ABORTEXECUTION command aborts the execution of a function in mid-flight.",
+    "complexity": [
+      "O(1)"
+    ],
+    "arguments": [
+      {
+        "name": "id",
+        "type": "string"
+      }
+    ],
+    "since": "1.0.0",
+    "group": "gears"
+  },
+  "RG.CONFIGGET": {
+    "summary": "The RG.CONFIGGET command returns the value of one or more built-in configuration or a user-defined options.",
+    "complexity": [
+      "O(1)"
+    ],
+    "arguments": [
+      {
+        "name": "key",
+        "type": "string",
+        "multiple": true
+      }
+    ],
+    "since": "1.0.0",
+    "group": "gears"
+  },
+  "RG.CONFIGSET": {
+    "summary": "The RG.CONFIGGET command sets the value of one ore more built-in configuration or a user-defined options.",
+    "complexity": [
+      "O(1)"
+    ],
+    "arguments": [
+      {
+        "name": [
+          "key",
+          "value"
+        ],
+        "type": [
+          "string",
+          "string"
+        ],
+        "multiple": true
+      }
+    ],
+    "since": "1.0.0",
+    "group": "gears"
+  },
+  "RG.DROPEXECUTION": {
+    "summary": "The RG.DROPEXECUTION command removes the execution of a function from the executions list.",
+    "complexity": [
+      "O(1)"
+    ],
+    "arguments": [
+      {
+        "name": "id",
+        "type": "string"
+      }
+    ],
+    "since": "1.0.0",
+    "group": "gears"
+  },
+  "RG.DUMPEXECUTIONS": {
+    "summary": "The RG.DUMPEXECUTIONS command outputs the list of function executions. The executions list's length is capped by the MaxExecutions configuration option.",
+    "complexity": [
+      "O(n) where n is the number of executions returned"
+    ],
+    "since": "1.0.0",
+    "group": "gears"
+  },
+  "RG.DUMPREGISTRATIONS": {
+    "summary": "The RG.DUMPREGISTRATIONS command outputs the list of function registrations.",
+    "complexity": [
+      "O(n) where n is the number of registrations returned"
+    ],
+    "since": "1.0.0",
+    "group": "gears"
+  },
+  "RG.GETEXECUTION": {
+    "summary": "The RG.GETEXECUTION command returns the execution details of a function that's in the executions list.",
+    "complexity": [
+      "O(1)"
+    ],
+    "arguments": [
+      {
+        "name": "id",
+        "type": "string"
+      },
+      {
+        "name": "mode",
+        "type": "enum",
+        "enum": [
+          "SHARD",
+          "CLUSTER"
+        ],
+        "optional": true
+      }
+    ],
+    "since": "1.0.0",
+    "group": "gears"
+  },
+  "RG.GETRESULTS": {
+    "summary": "The RG.GETRESULTS command returns the results and errors from of the execution execution details of a function that's in the executions list.",
+    "complexity": [
+      "O(1)"
+    ],
+    "arguments": [
+      {
+        "name": "id",
+        "type": "string"
+      }
+    ],
+    "since": "1.0.0",
+    "group": "gears"
+  },
+  "RG.GETRESULTSBLOCKING": {
+    "summary": "The RG.GETRESULTSBLOCKING command cancels the UNBLOCKING argument of the RG.PYEXECUTE command. The calling client is blocked until execution ends and is sent with any results and errors then.",
+    "complexity": [
+      "O(1)"
+    ],
+    "arguments": [
+      {
+        "name": "id",
+        "type": "string"
+      }
+    ],
+    "since": "1.0.0",
+    "group": "gears"
+  },
+  "RG.INFOCLUSTER": {
+    "summary": "The RG.INFOCLUSTER command outputs information about the cluster.",
+    "complexity": [
+      "O(1)"
+    ],
+    "since": "1.0.0",
+    "group": "gears"
+  },
+  "RG.PYSTATS": {
+    "summary": "The RG.PYSTATS command returns memory usage statistics from the Python interpreter.",
+    "complexity": [
+      "O(1)"
+    ],
+    "since": "1.0.0",
+    "group": "gears"
+  },
+  "RG.PYDUMPREQS": {
+    "summary": "The RG.PYDUMPREQS command returns a list of all the python requirements available (with information about each requirement).",
+    "complexity": [
+      "O(n) when n is the number of requirements"
+    ],
+    "since": "1.0.1",
+    "group": "gears"
+  },
+  "RG.REFRESHCLUSTER": {
+    "summary": "The RG.REFRESHCLUSTER command refreshes the node's view of the cluster's topology.",
+    "complexity": [
+      "O(1)"
+    ],
+    "since": "1.0.0",
+    "group": "gears"
+  },
+  "RG.TRIGGER": {
+    "summary": "The RG.TRIGGER command triggers the execution of a registered CommandReader function.",
+    "complexity": [
+      "Depends on the function triggered"
+    ],
+    "arguments": [
+      {
+        "name": "trigger",
+        "type": "string"
+      },
+      {
+        "name": "argument",
+        "type": "string",
+        "multiple": true
+      }
+    ],
+    "since": "1.0.0",
+    "group": "gears"
+  },
+  "RG.UNREGISTER": {
+    "summary": "The RG.UNREGISTER command removes the registration of a function.",
+    "complexity": [
+      "O(1)"
+    ],
+    "arguments": [
+      {
+        "name": "id",
+        "type": "string"
+      }
+    ],
+    "since": "1.0.0",
+    "group": "gears"
+  }
+}

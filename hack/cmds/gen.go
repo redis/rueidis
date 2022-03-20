@@ -281,6 +281,7 @@ func main() {
 		"./commands_graph.json",
 		"./commands_timeseries.json",
 		"./commands_ai.json",
+		"./commands_gears.json",
 	} {
 		raw, err := os.ReadFile(p)
 		if err != nil {

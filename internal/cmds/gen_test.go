@@ -24200,6 +24200,87 @@ func TestCommand_216(t *testing.T) {
 	s.Restore().Key("1").Ttl(1).SerializedValue("1").Idletime(1).Build()
 	s.Restore().Key("1").Ttl(1).SerializedValue("1").Freq(1).Build()
 	s.Restore().Key("1").Ttl(1).SerializedValue("1").Build()
+	s.RgAbortexecution().Id("1").Build()
+	s.RgConfigget().Key("1").Key("1").Build()
+	s.RgConfigset().KeyValue().KeyValue("1", "1").KeyValue("1", "1").Build()
+	s.RgDropexecution().Id("1").Build()
+	s.RgDumpexecutions().Build()
+	s.RgDumpregistrations().Build()
+	s.RgGetexecution().Id("1").Shard().Build()
+	s.RgGetexecution().Id("1").Cluster().Build()
+	s.RgGetexecution().Id("1").Build()
+	s.RgGetresults().Id("1").Build()
+	s.RgGetresultsblocking().Id("1").Build()
+	s.RgInfocluster().Build()
+	s.RgPydumpreqs().Build()
+	s.RgPyexecute().Function("1").Unblocking().Id("1").Description("1").Upgrade().ReplaceWith("1").Requirements("1").Requirements("1").Build()
+	s.RgPyexecute().Function("1").Unblocking().Id("1").Description("1").Upgrade().ReplaceWith("1").Build()
+	s.RgPyexecute().Function("1").Unblocking().Id("1").Description("1").Upgrade().Requirements("1").Requirements("1").Build()
+	s.RgPyexecute().Function("1").Unblocking().Id("1").Description("1").Upgrade().Build()
+	s.RgPyexecute().Function("1").Unblocking().Id("1").Description("1").ReplaceWith("1").Requirements("1").Requirements("1").Build()
+	s.RgPyexecute().Function("1").Unblocking().Id("1").Description("1").ReplaceWith("1").Build()
+	s.RgPyexecute().Function("1").Unblocking().Id("1").Description("1").Requirements("1").Requirements("1").Build()
+	s.RgPyexecute().Function("1").Unblocking().Id("1").Description("1").Build()
+	s.RgPyexecute().Function("1").Unblocking().Id("1").Upgrade().ReplaceWith("1").Requirements("1").Requirements("1").Build()
+	s.RgPyexecute().Function("1").Unblocking().Id("1").Upgrade().ReplaceWith("1").Build()
+	s.RgPyexecute().Function("1").Unblocking().Id("1").Upgrade().Requirements("1").Requirements("1").Build()
+	s.RgPyexecute().Function("1").Unblocking().Id("1").Upgrade().Build()
+	s.RgPyexecute().Function("1").Unblocking().Id("1").ReplaceWith("1").Requirements("1").Requirements("1").Build()
+	s.RgPyexecute().Function("1").Unblocking().Id("1").ReplaceWith("1").Build()
+	s.RgPyexecute().Function("1").Unblocking().Id("1").Requirements("1").Requirements("1").Build()
+	s.RgPyexecute().Function("1").Unblocking().Id("1").Build()
+	s.RgPyexecute().Function("1").Unblocking().Description("1").Upgrade().ReplaceWith("1").Requirements("1").Requirements("1").Build()
+	s.RgPyexecute().Function("1").Unblocking().Description("1").Upgrade().ReplaceWith("1").Build()
+	s.RgPyexecute().Function("1").Unblocking().Description("1").Upgrade().Requirements("1").Requirements("1").Build()
+	s.RgPyexecute().Function("1").Unblocking().Description("1").Upgrade().Build()
+	s.RgPyexecute().Function("1").Unblocking().Description("1").ReplaceWith("1").Requirements("1").Requirements("1").Build()
+	s.RgPyexecute().Function("1").Unblocking().Description("1").ReplaceWith("1").Build()
+	s.RgPyexecute().Function("1").Unblocking().Description("1").Requirements("1").Requirements("1").Build()
+	s.RgPyexecute().Function("1").Unblocking().Description("1").Build()
+	s.RgPyexecute().Function("1").Unblocking().Upgrade().ReplaceWith("1").Requirements("1").Requirements("1").Build()
+	s.RgPyexecute().Function("1").Unblocking().Upgrade().ReplaceWith("1").Build()
+	s.RgPyexecute().Function("1").Unblocking().Upgrade().Requirements("1").Requirements("1").Build()
+	s.RgPyexecute().Function("1").Unblocking().Upgrade().Build()
+	s.RgPyexecute().Function("1").Unblocking().ReplaceWith("1").Requirements("1").Requirements("1").Build()
+	s.RgPyexecute().Function("1").Unblocking().ReplaceWith("1").Build()
+	s.RgPyexecute().Function("1").Unblocking().Requirements("1").Requirements("1").Build()
+	s.RgPyexecute().Function("1").Unblocking().Build()
+	s.RgPyexecute().Function("1").Id("1").Description("1").Upgrade().ReplaceWith("1").Requirements("1").Requirements("1").Build()
+	s.RgPyexecute().Function("1").Id("1").Description("1").Upgrade().ReplaceWith("1").Build()
+	s.RgPyexecute().Function("1").Id("1").Description("1").Upgrade().Requirements("1").Requirements("1").Build()
+	s.RgPyexecute().Function("1").Id("1").Description("1").Upgrade().Build()
+	s.RgPyexecute().Function("1").Id("1").Description("1").ReplaceWith("1").Requirements("1").Requirements("1").Build()
+	s.RgPyexecute().Function("1").Id("1").Description("1").ReplaceWith("1").Build()
+	s.RgPyexecute().Function("1").Id("1").Description("1").Requirements("1").Requirements("1").Build()
+	s.RgPyexecute().Function("1").Id("1").Description("1").Build()
+	s.RgPyexecute().Function("1").Id("1").Upgrade().ReplaceWith("1").Requirements("1").Requirements("1").Build()
+	s.RgPyexecute().Function("1").Id("1").Upgrade().ReplaceWith("1").Build()
+	s.RgPyexecute().Function("1").Id("1").Upgrade().Requirements("1").Requirements("1").Build()
+	s.RgPyexecute().Function("1").Id("1").Upgrade().Build()
+	s.RgPyexecute().Function("1").Id("1").ReplaceWith("1").Requirements("1").Requirements("1").Build()
+	s.RgPyexecute().Function("1").Id("1").ReplaceWith("1").Build()
+	s.RgPyexecute().Function("1").Id("1").Requirements("1").Requirements("1").Build()
+	s.RgPyexecute().Function("1").Id("1").Build()
+	s.RgPyexecute().Function("1").Description("1").Upgrade().ReplaceWith("1").Requirements("1").Requirements("1").Build()
+	s.RgPyexecute().Function("1").Description("1").Upgrade().ReplaceWith("1").Build()
+	s.RgPyexecute().Function("1").Description("1").Upgrade().Requirements("1").Requirements("1").Build()
+	s.RgPyexecute().Function("1").Description("1").Upgrade().Build()
+	s.RgPyexecute().Function("1").Description("1").ReplaceWith("1").Requirements("1").Requirements("1").Build()
+	s.RgPyexecute().Function("1").Description("1").ReplaceWith("1").Build()
+	s.RgPyexecute().Function("1").Description("1").Requirements("1").Requirements("1").Build()
+	s.RgPyexecute().Function("1").Description("1").Build()
+	s.RgPyexecute().Function("1").Upgrade().ReplaceWith("1").Requirements("1").Requirements("1").Build()
+	s.RgPyexecute().Function("1").Upgrade().ReplaceWith("1").Build()
+	s.RgPyexecute().Function("1").Upgrade().Requirements("1").Requirements("1").Build()
+	s.RgPyexecute().Function("1").Upgrade().Build()
+	s.RgPyexecute().Function("1").ReplaceWith("1").Requirements("1").Requirements("1").Build()
+	s.RgPyexecute().Function("1").ReplaceWith("1").Build()
+	s.RgPyexecute().Function("1").Requirements("1").Requirements("1").Build()
+	s.RgPyexecute().Function("1").Build()
+	s.RgPystats().Build()
+	s.RgRefreshcluster().Build()
+	s.RgTrigger().Trigger("1").Argument("1").Argument("1").Build()
+	s.RgUnregister().Id("1").Build()
 	s.Role().Build()
 	s.Rpop().Key("1").Count(1).Build()
 	s.Rpop().Key("1").Build()
@@ -24212,6 +24293,9 @@ func TestCommand_216(t *testing.T) {
 	s.Scan().Cursor(1).Match("1").Count(1).Build()
 	s.Scan().Cursor(1).Match("1").Type("1").Build()
 	s.Scan().Cursor(1).Match("1").Build()
+}
+
+func TestCommand_217(t *testing.T) {
 	s.Scan().Cursor(1).Count(1).Type("1").Build()
 	s.Scan().Cursor(1).Count(1).Build()
 	s.Scan().Cursor(1).Type("1").Build()
@@ -24294,9 +24378,6 @@ func TestCommand_216(t *testing.T) {
 	s.Shutdown().Now().Abort().Build()
 	s.Shutdown().Now().Build()
 	s.Shutdown().Force().Abort().Build()
-}
-
-func TestCommand_217(t *testing.T) {
 	s.Shutdown().Force().Build()
 	s.Shutdown().Abort().Build()
 	s.Shutdown().Build()
@@ -24319,6 +24400,9 @@ func TestCommand_217(t *testing.T) {
 	s.Smove().Source("1").Destination("1").Member("1").Build()
 	s.Sort().Key("1").By("1").Limit(1, 1).Get("1").Get("1").Asc().Alpha().Store("1").Build()
 	s.Sort().Key("1").By("1").Limit(1, 1).Get("1").Get("1").Asc().Alpha().Build()
+}
+
+func TestCommand_218(t *testing.T) {
 	s.Sort().Key("1").By("1").Limit(1, 1).Get("1").Get("1").Asc().Store("1").Build()
 	s.Sort().Key("1").By("1").Limit(1, 1).Get("1").Get("1").Asc().Build()
 	s.Sort().Key("1").By("1").Limit(1, 1).Get("1").Get("1").Desc().Alpha().Store("1").Build()
@@ -24400,9 +24484,6 @@ func TestCommand_217(t *testing.T) {
 	s.Sort().Key("1").Get("1").Get("1").Alpha().Store("1").Build()
 	s.Sort().Key("1").Get("1").Get("1").Alpha().Build()
 	s.Sort().Key("1").Get("1").Get("1").Store("1").Build()
-}
-
-func TestCommand_218(t *testing.T) {
 	s.Sort().Key("1").Get("1").Get("1").Build()
 	s.Sort().Key("1").Asc().Alpha().Store("1").Build()
 	s.Sort().Key("1").Asc().Alpha().Build()
@@ -24428,6 +24509,9 @@ func TestCommand_218(t *testing.T) {
 	s.SortRo().Key("1").By("1").Limit(1, 1).Get("1").Get("1").Alpha().Cache()
 	s.SortRo().Key("1").By("1").Limit(1, 1).Get("1").Get("1").Build()
 	s.SortRo().Key("1").By("1").Limit(1, 1).Get("1").Get("1").Cache()
+}
+
+func TestCommand_219(t *testing.T) {
 	s.SortRo().Key("1").By("1").Limit(1, 1).Asc().Alpha().Build()
 	s.SortRo().Key("1").By("1").Limit(1, 1).Asc().Alpha().Cache()
 	s.SortRo().Key("1").By("1").Limit(1, 1).Asc().Build()
@@ -24555,9 +24639,6 @@ func TestCommand_218(t *testing.T) {
 	s.Touch().Key("1").Key("1").Build()
 	s.TsAdd().Key("1").Timestamp(1).Value(1).Retention(1).EncodingUncompressed().ChunkSize(1).OnDuplicateBlock().Build()
 	s.TsAdd().Key("1").Timestamp(1).Value(1).Retention(1).EncodingUncompressed().ChunkSize(1).OnDuplicateFirst().Build()
-}
-
-func TestCommand_219(t *testing.T) {
 	s.TsAdd().Key("1").Timestamp(1).Value(1).Retention(1).EncodingUncompressed().ChunkSize(1).OnDuplicateLast().Build()
 	s.TsAdd().Key("1").Timestamp(1).Value(1).Retention(1).EncodingUncompressed().ChunkSize(1).OnDuplicateMin().Build()
 	s.TsAdd().Key("1").Timestamp(1).Value(1).Retention(1).EncodingUncompressed().ChunkSize(1).OnDuplicateMax().Build()
@@ -24577,6 +24658,9 @@ func TestCommand_219(t *testing.T) {
 	s.TsAdd().Key("1").Timestamp(1).Value(1).Retention(1).EncodingUncompressed().OnDuplicateSum().Labels().Labels("1", "1").Labels("1", "1").Build()
 	s.TsAdd().Key("1").Timestamp(1).Value(1).Retention(1).EncodingUncompressed().OnDuplicateSum().Build()
 	s.TsAdd().Key("1").Timestamp(1).Value(1).Retention(1).EncodingUncompressed().Labels().Labels("1", "1").Labels("1", "1").Build()
+}
+
+func TestCommand_220(t *testing.T) {
 	s.TsAdd().Key("1").Timestamp(1).Value(1).Retention(1).EncodingUncompressed().Build()
 	s.TsAdd().Key("1").Timestamp(1).Value(1).Retention(1).EncodingCompressed().ChunkSize(1).OnDuplicateBlock().Build()
 	s.TsAdd().Key("1").Timestamp(1).Value(1).Retention(1).EncodingCompressed().ChunkSize(1).OnDuplicateFirst().Build()
@@ -24658,9 +24742,6 @@ func TestCommand_219(t *testing.T) {
 	s.TsAdd().Key("1").Timestamp(1).Value(1).EncodingUncompressed().Build()
 	s.TsAdd().Key("1").Timestamp(1).Value(1).EncodingCompressed().ChunkSize(1).OnDuplicateBlock().Labels().Labels("1", "1").Labels("1", "1").Build()
 	s.TsAdd().Key("1").Timestamp(1).Value(1).EncodingCompressed().ChunkSize(1).OnDuplicateBlock().Build()
-}
-
-func TestCommand_220(t *testing.T) {
 	s.TsAdd().Key("1").Timestamp(1).Value(1).EncodingCompressed().ChunkSize(1).OnDuplicateFirst().Labels().Labels("1", "1").Labels("1", "1").Build()
 	s.TsAdd().Key("1").Timestamp(1).Value(1).EncodingCompressed().ChunkSize(1).OnDuplicateFirst().Build()
 	s.TsAdd().Key("1").Timestamp(1).Value(1).EncodingCompressed().ChunkSize(1).OnDuplicateLast().Labels().Labels("1", "1").Labels("1", "1").Build()
@@ -24680,6 +24761,9 @@ func TestCommand_220(t *testing.T) {
 	s.TsAdd().Key("1").Timestamp(1).Value(1).EncodingCompressed().OnDuplicateLast().Labels().Labels("1", "1").Labels("1", "1").Build()
 	s.TsAdd().Key("1").Timestamp(1).Value(1).EncodingCompressed().OnDuplicateLast().Build()
 	s.TsAdd().Key("1").Timestamp(1).Value(1).EncodingCompressed().OnDuplicateMin().Labels().Labels("1", "1").Labels("1", "1").Build()
+}
+
+func TestCommand_221(t *testing.T) {
 	s.TsAdd().Key("1").Timestamp(1).Value(1).EncodingCompressed().OnDuplicateMin().Build()
 	s.TsAdd().Key("1").Timestamp(1).Value(1).EncodingCompressed().OnDuplicateMax().Labels().Labels("1", "1").Labels("1", "1").Build()
 	s.TsAdd().Key("1").Timestamp(1).Value(1).EncodingCompressed().OnDuplicateMax().Build()
@@ -24761,9 +24845,6 @@ func TestCommand_220(t *testing.T) {
 	s.TsAlter().Key("1").DuplicatePolicyBlock().Build()
 	s.TsAlter().Key("1").DuplicatePolicyFirst().Labels().Labels("1", "1").Labels("1", "1").Build()
 	s.TsAlter().Key("1").DuplicatePolicyFirst().Build()
-}
-
-func TestCommand_221(t *testing.T) {
 	s.TsAlter().Key("1").DuplicatePolicyLast().Labels().Labels("1", "1").Labels("1", "1").Build()
 	s.TsAlter().Key("1").DuplicatePolicyLast().Build()
 	s.TsAlter().Key("1").DuplicatePolicyMin().Labels().Labels("1", "1").Labels("1", "1").Build()
@@ -24783,6 +24864,9 @@ func TestCommand_221(t *testing.T) {
 	s.TsCreate().Key("1").Retention(1).EncodingUncompressed().ChunkSize(1).DuplicatePolicyMin().Labels().Labels("1", "1").Labels("1", "1").Build()
 	s.TsCreate().Key("1").Retention(1).EncodingUncompressed().ChunkSize(1).DuplicatePolicyMin().Build()
 	s.TsCreate().Key("1").Retention(1).EncodingUncompressed().ChunkSize(1).DuplicatePolicyMax().Labels().Labels("1", "1").Labels("1", "1").Build()
+}
+
+func TestCommand_222(t *testing.T) {
 	s.TsCreate().Key("1").Retention(1).EncodingUncompressed().ChunkSize(1).DuplicatePolicyMax().Build()
 	s.TsCreate().Key("1").Retention(1).EncodingUncompressed().ChunkSize(1).DuplicatePolicySum().Labels().Labels("1", "1").Labels("1", "1").Build()
 	s.TsCreate().Key("1").Retention(1).EncodingUncompressed().ChunkSize(1).DuplicatePolicySum().Build()
@@ -24864,9 +24948,6 @@ func TestCommand_221(t *testing.T) {
 	s.TsCreate().Key("1").EncodingUncompressed().ChunkSize(1).DuplicatePolicyFirst().Build()
 	s.TsCreate().Key("1").EncodingUncompressed().ChunkSize(1).DuplicatePolicyLast().Labels().Labels("1", "1").Labels("1", "1").Build()
 	s.TsCreate().Key("1").EncodingUncompressed().ChunkSize(1).DuplicatePolicyLast().Build()
-}
-
-func TestCommand_222(t *testing.T) {
 	s.TsCreate().Key("1").EncodingUncompressed().ChunkSize(1).DuplicatePolicyMin().Labels().Labels("1", "1").Labels("1", "1").Build()
 	s.TsCreate().Key("1").EncodingUncompressed().ChunkSize(1).DuplicatePolicyMin().Build()
 	s.TsCreate().Key("1").EncodingUncompressed().ChunkSize(1).DuplicatePolicyMax().Labels().Labels("1", "1").Labels("1", "1").Build()
@@ -24886,6 +24967,9 @@ func TestCommand_222(t *testing.T) {
 	s.TsCreate().Key("1").EncodingUncompressed().DuplicatePolicyMax().Labels().Labels("1", "1").Labels("1", "1").Build()
 	s.TsCreate().Key("1").EncodingUncompressed().DuplicatePolicyMax().Build()
 	s.TsCreate().Key("1").EncodingUncompressed().DuplicatePolicySum().Labels().Labels("1", "1").Labels("1", "1").Build()
+}
+
+func TestCommand_223(t *testing.T) {
 	s.TsCreate().Key("1").EncodingUncompressed().DuplicatePolicySum().Build()
 	s.TsCreate().Key("1").EncodingUncompressed().Labels().Labels("1", "1").Labels("1", "1").Build()
 	s.TsCreate().Key("1").EncodingUncompressed().Build()
@@ -24967,9 +25051,6 @@ func TestCommand_222(t *testing.T) {
 	s.TsDecrby().Key("1").Value(1).Timestamp(1).Retention(1).Build()
 	s.TsDecrby().Key("1").Value(1).Timestamp(1).Uncompressed().ChunkSize(1).Labels().Labels("1", "1").Labels("1", "1").Build()
 	s.TsDecrby().Key("1").Value(1).Timestamp(1).Uncompressed().ChunkSize(1).Build()
-}
-
-func TestCommand_223(t *testing.T) {
 	s.TsDecrby().Key("1").Value(1).Timestamp(1).Uncompressed().Labels().Labels("1", "1").Labels("1", "1").Build()
 	s.TsDecrby().Key("1").Value(1).Timestamp(1).Uncompressed().Build()
 	s.TsDecrby().Key("1").Value(1).Timestamp(1).ChunkSize(1).Labels().Labels("1", "1").Labels("1", "1").Build()
@@ -24989,6 +25070,9 @@ func TestCommand_223(t *testing.T) {
 	s.TsDecrby().Key("1").Value(1).Uncompressed().Labels().Labels("1", "1").Labels("1", "1").Build()
 	s.TsDecrby().Key("1").Value(1).Uncompressed().Build()
 	s.TsDecrby().Key("1").Value(1).ChunkSize(1).Labels().Labels("1", "1").Labels("1", "1").Build()
+}
+
+func TestCommand_224(t *testing.T) {
 	s.TsDecrby().Key("1").Value(1).ChunkSize(1).Build()
 	s.TsDecrby().Key("1").Value(1).Labels().Labels("1", "1").Labels("1", "1").Build()
 	s.TsDecrby().Key("1").Value(1).Build()
@@ -25070,9 +25154,6 @@ func TestCommand_223(t *testing.T) {
 	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).Withlabels().Align(1).Filter("1").Filter("1").Build()
 	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).Withlabels().Filter("1").Filter("1").Groupby("1", "1", "1").Build()
 	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).Withlabels().Filter("1").Filter("1").Build()
-}
-
-func TestCommand_224(t *testing.T) {
 	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).SelectedLabels([]string{"1"}).Count(1).Filter("1").Filter("1").Build()
 	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).SelectedLabels([]string{"1"}).Align(1).Filter("1").Filter("1").Build()
 	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).SelectedLabels([]string{"1"}).Filter("1").Filter("1").Groupby("1", "1", "1").Build()
@@ -25092,6 +25173,9 @@ func TestCommand_224(t *testing.T) {
 	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).AggregationLast().Bucketduration(1).Filter("1").Filter("1").Build()
 	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).AggregationStdP().Bucketduration(1).Filter("1").Filter("1").Build()
 	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).AggregationStdS().Bucketduration(1).Filter("1").Filter("1").Build()
+}
+
+func TestCommand_225(t *testing.T) {
 	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).AggregationVarP().Bucketduration(1).Filter("1").Filter("1").Build()
 	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).AggregationVarS().Bucketduration(1).Filter("1").Filter("1").Build()
 	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).Filter("1").Filter("1").Groupby("1", "1", "1").Build()
@@ -25173,9 +25257,6 @@ func TestCommand_224(t *testing.T) {
 	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).AggregationMax().Bucketduration(1).Filter("1").Filter("1").Groupby("1", "1", "1").Build()
 	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).AggregationMax().Bucketduration(1).Filter("1").Filter("1").Build()
 	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).AggregationRange().Bucketduration(1).Filter("1").Filter("1").Groupby("1", "1", "1").Build()
-}
-
-func TestCommand_225(t *testing.T) {
 	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).AggregationRange().Bucketduration(1).Filter("1").Filter("1").Build()
 	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).AggregationCount().Bucketduration(1).Filter("1").Filter("1").Groupby("1", "1", "1").Build()
 	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).AggregationCount().Bucketduration(1).Filter("1").Filter("1").Build()
@@ -25195,6 +25276,9 @@ func TestCommand_225(t *testing.T) {
 	s.TsMrange().Key("1").Fromtimestamp(1).Totimestamp(1).Filter("1").Filter("1").Build()
 	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).FilterByValue(1, 1).Withlabels().Filter("1").Filter("1").Build()
 	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).FilterByValue(1, 1).SelectedLabels([]string{"1"}).Filter("1").Filter("1").Build()
+}
+
+func TestCommand_226(t *testing.T) {
 	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).FilterByValue(1, 1).Count(1).Filter("1").Filter("1").Build()
 	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).FilterByValue(1, 1).Align(1).Filter("1").Filter("1").Build()
 	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).FilterByValue(1, 1).Filter("1").Filter("1").Groupby("1", "1", "1").Build()
@@ -25276,9 +25360,6 @@ func TestCommand_225(t *testing.T) {
 	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).SelectedLabels([]string{"1"}).Count(1).Filter("1").Filter("1").Groupby("1", "1", "1").Build()
 	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).SelectedLabels([]string{"1"}).Count(1).Filter("1").Filter("1").Build()
 	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).SelectedLabels([]string{"1"}).Align(1).Filter("1").Filter("1").Groupby("1", "1", "1").Build()
-}
-
-func TestCommand_226(t *testing.T) {
 	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).SelectedLabels([]string{"1"}).Align(1).Filter("1").Filter("1").Build()
 	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).SelectedLabels([]string{"1"}).AggregationAvg().Bucketduration(1).Filter("1").Filter("1").Build()
 	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).SelectedLabels([]string{"1"}).AggregationSum().Bucketduration(1).Filter("1").Filter("1").Build()
@@ -25298,6 +25379,9 @@ func TestCommand_226(t *testing.T) {
 	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).Count(1).Align(1).Filter("1").Filter("1").Build()
 	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).Count(1).AggregationAvg().Bucketduration(1).Filter("1").Filter("1").Build()
 	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).Count(1).AggregationSum().Bucketduration(1).Filter("1").Filter("1").Build()
+}
+
+func TestCommand_227(t *testing.T) {
 	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).Count(1).AggregationMin().Bucketduration(1).Filter("1").Filter("1").Build()
 	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).Count(1).AggregationMax().Bucketduration(1).Filter("1").Filter("1").Build()
 	s.TsMrevrange().Key("1").Fromtimestamp(1).Totimestamp(1).Count(1).AggregationRange().Bucketduration(1).Filter("1").Filter("1").Build()
@@ -25379,9 +25463,6 @@ func TestCommand_226(t *testing.T) {
 	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).Count(1).AggregationStdP().Bucketduration(1).Build()
 	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).Count(1).AggregationStdS().Bucketduration(1).Build()
 	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).Count(1).AggregationVarP().Bucketduration(1).Build()
-}
-
-func TestCommand_227(t *testing.T) {
 	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).Count(1).AggregationVarS().Bucketduration(1).Build()
 	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).Count(1).Build()
 	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).Align(1).AggregationAvg().Bucketduration(1).Build()
@@ -25401,6 +25482,9 @@ func TestCommand_227(t *testing.T) {
 	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).AggregationSum().Bucketduration(1).Build()
 	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).AggregationMin().Bucketduration(1).Build()
 	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).AggregationMax().Bucketduration(1).Build()
+}
+
+func TestCommand_228(t *testing.T) {
 	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).AggregationRange().Bucketduration(1).Build()
 	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).AggregationCount().Bucketduration(1).Build()
 	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).AggregationFirst().Bucketduration(1).Build()
@@ -25482,9 +25566,6 @@ func TestCommand_227(t *testing.T) {
 	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).Align(1).AggregationMax().Bucketduration(1).Build()
 	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).Align(1).AggregationRange().Bucketduration(1).Build()
 	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).Align(1).AggregationCount().Bucketduration(1).Build()
-}
-
-func TestCommand_228(t *testing.T) {
 	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).Align(1).AggregationFirst().Bucketduration(1).Build()
 	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).Align(1).AggregationLast().Bucketduration(1).Build()
 	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).Align(1).AggregationStdP().Bucketduration(1).Build()
@@ -25504,6 +25585,9 @@ func TestCommand_228(t *testing.T) {
 	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).AggregationStdS().Bucketduration(1).Build()
 	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).AggregationVarP().Bucketduration(1).Build()
 	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).AggregationVarS().Bucketduration(1).Build()
+}
+
+func TestCommand_229(t *testing.T) {
 	s.TsRange().Key("1").Fromtimestamp(1).Totimestamp(1).Build()
 	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).FilterByValue(1, 1).Count(1).Align(1).Build()
 	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByTs(1).FilterByTs(1).FilterByValue(1, 1).Count(1).Build()
@@ -25585,9 +25669,6 @@ func TestCommand_228(t *testing.T) {
 	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).Align(1).AggregationLast().Bucketduration(1).Build()
 	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).Align(1).AggregationStdP().Bucketduration(1).Build()
 	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).Align(1).AggregationStdS().Bucketduration(1).Build()
-}
-
-func TestCommand_229(t *testing.T) {
 	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).Align(1).AggregationVarP().Bucketduration(1).Build()
 	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).Align(1).AggregationVarS().Bucketduration(1).Build()
 	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).FilterByValue(1, 1).Align(1).Build()
@@ -25607,6 +25688,9 @@ func TestCommand_229(t *testing.T) {
 	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).Count(1).Align(1).AggregationAvg().Bucketduration(1).Build()
 	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).Count(1).Align(1).AggregationSum().Bucketduration(1).Build()
 	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).Count(1).Align(1).AggregationMin().Bucketduration(1).Build()
+}
+
+func TestCommand_230(t *testing.T) {
 	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).Count(1).Align(1).AggregationMax().Bucketduration(1).Build()
 	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).Count(1).Align(1).AggregationRange().Bucketduration(1).Build()
 	s.TsRevrange().Key("1").Fromtimestamp(1).Totimestamp(1).Count(1).Align(1).AggregationCount().Bucketduration(1).Build()
@@ -25690,9 +25774,6 @@ func TestCommand_229(t *testing.T) {
 	s.Xadd().Key("1").Minid().Threshold("1").Id("1").FieldValue().FieldValue("1", "1").FieldValue("1", "1").Build()
 	s.Xadd().Key("1").Id("1").FieldValue().FieldValue("1", "1").FieldValue("1", "1").Build()
 	s.Xautoclaim().Key("1").Group("1").Consumer("1").MinIdleTime("1").Start("1").Count(1).Justid().Build()
-}
-
-func TestCommand_230(t *testing.T) {
 	s.Xautoclaim().Key("1").Group("1").Consumer("1").MinIdleTime("1").Start("1").Count(1).Build()
 	s.Xautoclaim().Key("1").Group("1").Consumer("1").MinIdleTime("1").Start("1").Justid().Build()
 	s.Xautoclaim().Key("1").Group("1").Consumer("1").MinIdleTime("1").Start("1").Build()
@@ -25712,6 +25793,9 @@ func TestCommand_230(t *testing.T) {
 	s.Xclaim().Key("1").Group("1").Consumer("1").MinIdleTime("1").Id("1").Id("1").Force().Build()
 	s.Xclaim().Key("1").Group("1").Consumer("1").MinIdleTime("1").Id("1").Id("1").Justid().Build()
 	s.Xclaim().Key("1").Group("1").Consumer("1").MinIdleTime("1").Id("1").Id("1").Build()
+}
+
+func TestCommand_231(t *testing.T) {
 	s.Xdel().Key("1").Id("1").Id("1").Build()
 	s.XgroupCreate().Key("1").Groupname("1").Id("1").Mkstream().Entriesread(1).Build()
 	s.XgroupCreate().Key("1").Groupname("1").Id("1").Mkstream().Build()
@@ -25793,9 +25877,6 @@ func TestCommand_230(t *testing.T) {
 	s.Zadd().Key("1").Gt().Ch().ScoreMember().ScoreMember(1, "1").ScoreMember(1, "1").Build()
 	s.Zadd().Key("1").Gt().Incr().ScoreMember().ScoreMember(1, "1").ScoreMember(1, "1").Build()
 	s.Zadd().Key("1").Gt().ScoreMember().ScoreMember(1, "1").ScoreMember(1, "1").Build()
-}
-
-func TestCommand_231(t *testing.T) {
 	s.Zadd().Key("1").Lt().Ch().Incr().ScoreMember().ScoreMember(1, "1").ScoreMember(1, "1").Build()
 	s.Zadd().Key("1").Lt().Ch().ScoreMember().ScoreMember(1, "1").ScoreMember(1, "1").Build()
 	s.Zadd().Key("1").Lt().Incr().ScoreMember().ScoreMember(1, "1").ScoreMember(1, "1").Build()
@@ -25817,6 +25898,9 @@ func TestCommand_231(t *testing.T) {
 	s.Zinter().Numkeys(1).Key("1").Key("1").Weights(1).Weights(1).AggregateMin().Withscores().Build()
 	s.Zinter().Numkeys(1).Key("1").Key("1").Weights(1).Weights(1).AggregateMin().Build()
 	s.Zinter().Numkeys(1).Key("1").Key("1").Weights(1).Weights(1).AggregateMax().Withscores().Build()
+}
+
+func TestCommand_232(t *testing.T) {
 	s.Zinter().Numkeys(1).Key("1").Key("1").Weights(1).Weights(1).AggregateMax().Build()
 	s.Zinter().Numkeys(1).Key("1").Key("1").Weights(1).Weights(1).Withscores().Build()
 	s.Zinter().Numkeys(1).Key("1").Key("1").Weights(1).Weights(1).Build()
@@ -25931,9 +26015,6 @@ func TestCommand_231(t *testing.T) {
 	s.Zremrangebylex().Key("1").Min("1").Max("1").Build()
 	s.Zremrangebyrank().Key("1").Start(1).Stop(1).Build()
 	s.Zremrangebyscore().Key("1").Min(1).Max(1).Build()
-}
-
-func TestCommand_232(t *testing.T) {
 	s.Zrevrange().Key("1").Start(1).Stop(1).Withscores().Build()
 	s.Zrevrange().Key("1").Start(1).Stop(1).Withscores().Cache()
 	s.Zrevrange().Key("1").Start(1).Stop(1).Build()
@@ -25963,6 +26044,9 @@ func TestCommand_232(t *testing.T) {
 	s.Zunion().Numkeys(1).Key("1").Key("1").Weights(1).Weights(1).AggregateMin().Withscores().Build()
 	s.Zunion().Numkeys(1).Key("1").Key("1").Weights(1).Weights(1).AggregateMin().Build()
 	s.Zunion().Numkeys(1).Key("1").Key("1").Weights(1).Weights(1).AggregateMax().Withscores().Build()
+}
+
+func TestCommand_233(t *testing.T) {
 	s.Zunion().Numkeys(1).Key("1").Key("1").Weights(1).Weights(1).AggregateMax().Build()
 	s.Zunion().Numkeys(1).Key("1").Key("1").Weights(1).Weights(1).Withscores().Build()
 	s.Zunion().Numkeys(1).Key("1").Key("1").Weights(1).Weights(1).Build()
