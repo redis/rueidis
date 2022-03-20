@@ -33,6 +33,7 @@ func Put(cs *CommandSlice) {
 	pool.Put(cs)
 }
 
+// Arbitrary allows user to build an arbitrary redis command with Builder.Arbitrary
 type Arbitrary Completed
 
 // Arbitrary allows user to build an arbitrary redis command by following Arbitrary.Keys and Arbitrary.Args
