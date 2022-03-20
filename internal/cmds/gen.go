@@ -22046,11 +22046,155 @@ func (c TsAlter) Key(key string) TsAlterKey {
 	return (TsAlterKey)(c)
 }
 
+type TsAlterChunkSize Completed
+
+func (c TsAlterChunkSize) DuplicatePolicyBlock() TsAlterDuplicatePolicyBlock {
+	c.cf = blockTag
+	c.cs.s = append(c.cs.s, "DUPLICATE_POLICY", "BLOCK")
+	return (TsAlterDuplicatePolicyBlock)(c)
+}
+
+func (c TsAlterChunkSize) DuplicatePolicyFirst() TsAlterDuplicatePolicyFirst {
+	c.cs.s = append(c.cs.s, "DUPLICATE_POLICY", "FIRST")
+	return (TsAlterDuplicatePolicyFirst)(c)
+}
+
+func (c TsAlterChunkSize) DuplicatePolicyLast() TsAlterDuplicatePolicyLast {
+	c.cs.s = append(c.cs.s, "DUPLICATE_POLICY", "LAST")
+	return (TsAlterDuplicatePolicyLast)(c)
+}
+
+func (c TsAlterChunkSize) DuplicatePolicyMin() TsAlterDuplicatePolicyMin {
+	c.cs.s = append(c.cs.s, "DUPLICATE_POLICY", "MIN")
+	return (TsAlterDuplicatePolicyMin)(c)
+}
+
+func (c TsAlterChunkSize) DuplicatePolicyMax() TsAlterDuplicatePolicyMax {
+	c.cs.s = append(c.cs.s, "DUPLICATE_POLICY", "MAX")
+	return (TsAlterDuplicatePolicyMax)(c)
+}
+
+func (c TsAlterChunkSize) DuplicatePolicySum() TsAlterDuplicatePolicySum {
+	c.cs.s = append(c.cs.s, "DUPLICATE_POLICY", "SUM")
+	return (TsAlterDuplicatePolicySum)(c)
+}
+
+func (c TsAlterChunkSize) Labels() TsAlterLabels {
+	c.cs.s = append(c.cs.s, "LABELS")
+	return (TsAlterLabels)(c)
+}
+
+func (c TsAlterChunkSize) Build() Completed {
+	return Completed(c)
+}
+
+type TsAlterDuplicatePolicyBlock Completed
+
+func (c TsAlterDuplicatePolicyBlock) Labels() TsAlterLabels {
+	c.cs.s = append(c.cs.s, "LABELS")
+	return (TsAlterLabels)(c)
+}
+
+func (c TsAlterDuplicatePolicyBlock) Build() Completed {
+	return Completed(c)
+}
+
+type TsAlterDuplicatePolicyFirst Completed
+
+func (c TsAlterDuplicatePolicyFirst) Labels() TsAlterLabels {
+	c.cs.s = append(c.cs.s, "LABELS")
+	return (TsAlterLabels)(c)
+}
+
+func (c TsAlterDuplicatePolicyFirst) Build() Completed {
+	return Completed(c)
+}
+
+type TsAlterDuplicatePolicyLast Completed
+
+func (c TsAlterDuplicatePolicyLast) Labels() TsAlterLabels {
+	c.cs.s = append(c.cs.s, "LABELS")
+	return (TsAlterLabels)(c)
+}
+
+func (c TsAlterDuplicatePolicyLast) Build() Completed {
+	return Completed(c)
+}
+
+type TsAlterDuplicatePolicyMax Completed
+
+func (c TsAlterDuplicatePolicyMax) Labels() TsAlterLabels {
+	c.cs.s = append(c.cs.s, "LABELS")
+	return (TsAlterLabels)(c)
+}
+
+func (c TsAlterDuplicatePolicyMax) Build() Completed {
+	return Completed(c)
+}
+
+type TsAlterDuplicatePolicyMin Completed
+
+func (c TsAlterDuplicatePolicyMin) Labels() TsAlterLabels {
+	c.cs.s = append(c.cs.s, "LABELS")
+	return (TsAlterLabels)(c)
+}
+
+func (c TsAlterDuplicatePolicyMin) Build() Completed {
+	return Completed(c)
+}
+
+type TsAlterDuplicatePolicySum Completed
+
+func (c TsAlterDuplicatePolicySum) Labels() TsAlterLabels {
+	c.cs.s = append(c.cs.s, "LABELS")
+	return (TsAlterLabels)(c)
+}
+
+func (c TsAlterDuplicatePolicySum) Build() Completed {
+	return Completed(c)
+}
+
 type TsAlterKey Completed
 
 func (c TsAlterKey) Retention(retentiontime int64) TsAlterRetention {
 	c.cs.s = append(c.cs.s, "RETENTION", strconv.FormatInt(retentiontime, 10))
 	return (TsAlterRetention)(c)
+}
+
+func (c TsAlterKey) ChunkSize(size int64) TsAlterChunkSize {
+	c.cs.s = append(c.cs.s, "CHUNK_SIZE", strconv.FormatInt(size, 10))
+	return (TsAlterChunkSize)(c)
+}
+
+func (c TsAlterKey) DuplicatePolicyBlock() TsAlterDuplicatePolicyBlock {
+	c.cf = blockTag
+	c.cs.s = append(c.cs.s, "DUPLICATE_POLICY", "BLOCK")
+	return (TsAlterDuplicatePolicyBlock)(c)
+}
+
+func (c TsAlterKey) DuplicatePolicyFirst() TsAlterDuplicatePolicyFirst {
+	c.cs.s = append(c.cs.s, "DUPLICATE_POLICY", "FIRST")
+	return (TsAlterDuplicatePolicyFirst)(c)
+}
+
+func (c TsAlterKey) DuplicatePolicyLast() TsAlterDuplicatePolicyLast {
+	c.cs.s = append(c.cs.s, "DUPLICATE_POLICY", "LAST")
+	return (TsAlterDuplicatePolicyLast)(c)
+}
+
+func (c TsAlterKey) DuplicatePolicyMin() TsAlterDuplicatePolicyMin {
+	c.cs.s = append(c.cs.s, "DUPLICATE_POLICY", "MIN")
+	return (TsAlterDuplicatePolicyMin)(c)
+}
+
+func (c TsAlterKey) DuplicatePolicyMax() TsAlterDuplicatePolicyMax {
+	c.cs.s = append(c.cs.s, "DUPLICATE_POLICY", "MAX")
+	return (TsAlterDuplicatePolicyMax)(c)
+}
+
+func (c TsAlterKey) DuplicatePolicySum() TsAlterDuplicatePolicySum {
+	c.cs.s = append(c.cs.s, "DUPLICATE_POLICY", "SUM")
+	return (TsAlterDuplicatePolicySum)(c)
 }
 
 func (c TsAlterKey) Labels() TsAlterLabels {
@@ -22074,6 +22218,42 @@ func (c TsAlterLabels) Build() Completed {
 }
 
 type TsAlterRetention Completed
+
+func (c TsAlterRetention) ChunkSize(size int64) TsAlterChunkSize {
+	c.cs.s = append(c.cs.s, "CHUNK_SIZE", strconv.FormatInt(size, 10))
+	return (TsAlterChunkSize)(c)
+}
+
+func (c TsAlterRetention) DuplicatePolicyBlock() TsAlterDuplicatePolicyBlock {
+	c.cf = blockTag
+	c.cs.s = append(c.cs.s, "DUPLICATE_POLICY", "BLOCK")
+	return (TsAlterDuplicatePolicyBlock)(c)
+}
+
+func (c TsAlterRetention) DuplicatePolicyFirst() TsAlterDuplicatePolicyFirst {
+	c.cs.s = append(c.cs.s, "DUPLICATE_POLICY", "FIRST")
+	return (TsAlterDuplicatePolicyFirst)(c)
+}
+
+func (c TsAlterRetention) DuplicatePolicyLast() TsAlterDuplicatePolicyLast {
+	c.cs.s = append(c.cs.s, "DUPLICATE_POLICY", "LAST")
+	return (TsAlterDuplicatePolicyLast)(c)
+}
+
+func (c TsAlterRetention) DuplicatePolicyMin() TsAlterDuplicatePolicyMin {
+	c.cs.s = append(c.cs.s, "DUPLICATE_POLICY", "MIN")
+	return (TsAlterDuplicatePolicyMin)(c)
+}
+
+func (c TsAlterRetention) DuplicatePolicyMax() TsAlterDuplicatePolicyMax {
+	c.cs.s = append(c.cs.s, "DUPLICATE_POLICY", "MAX")
+	return (TsAlterDuplicatePolicyMax)(c)
+}
+
+func (c TsAlterRetention) DuplicatePolicySum() TsAlterDuplicatePolicySum {
+	c.cs.s = append(c.cs.s, "DUPLICATE_POLICY", "SUM")
+	return (TsAlterDuplicatePolicySum)(c)
+}
 
 func (c TsAlterRetention) Labels() TsAlterLabels {
 	c.cs.s = append(c.cs.s, "LABELS")
@@ -22450,86 +22630,92 @@ func (c TsCreaterule) Sourcekey(sourcekey string) TsCreateruleSourcekey {
 
 type TsCreateruleAggregationAvg Completed
 
-func (c TsCreateruleAggregationAvg) Timebucket(timebucket int64) TsCreateruleTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsCreateruleTimebucket)(c)
+func (c TsCreateruleAggregationAvg) Bucketduration(bucketduration int64) TsCreateruleBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsCreateruleBucketduration)(c)
 }
 
 type TsCreateruleAggregationCount Completed
 
-func (c TsCreateruleAggregationCount) Timebucket(timebucket int64) TsCreateruleTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsCreateruleTimebucket)(c)
+func (c TsCreateruleAggregationCount) Bucketduration(bucketduration int64) TsCreateruleBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsCreateruleBucketduration)(c)
 }
 
 type TsCreateruleAggregationFirst Completed
 
-func (c TsCreateruleAggregationFirst) Timebucket(timebucket int64) TsCreateruleTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsCreateruleTimebucket)(c)
+func (c TsCreateruleAggregationFirst) Bucketduration(bucketduration int64) TsCreateruleBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsCreateruleBucketduration)(c)
 }
 
 type TsCreateruleAggregationLast Completed
 
-func (c TsCreateruleAggregationLast) Timebucket(timebucket int64) TsCreateruleTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsCreateruleTimebucket)(c)
+func (c TsCreateruleAggregationLast) Bucketduration(bucketduration int64) TsCreateruleBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsCreateruleBucketduration)(c)
 }
 
 type TsCreateruleAggregationMax Completed
 
-func (c TsCreateruleAggregationMax) Timebucket(timebucket int64) TsCreateruleTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsCreateruleTimebucket)(c)
+func (c TsCreateruleAggregationMax) Bucketduration(bucketduration int64) TsCreateruleBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsCreateruleBucketduration)(c)
 }
 
 type TsCreateruleAggregationMin Completed
 
-func (c TsCreateruleAggregationMin) Timebucket(timebucket int64) TsCreateruleTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsCreateruleTimebucket)(c)
+func (c TsCreateruleAggregationMin) Bucketduration(bucketduration int64) TsCreateruleBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsCreateruleBucketduration)(c)
 }
 
 type TsCreateruleAggregationRange Completed
 
-func (c TsCreateruleAggregationRange) Timebucket(timebucket int64) TsCreateruleTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsCreateruleTimebucket)(c)
+func (c TsCreateruleAggregationRange) Bucketduration(bucketduration int64) TsCreateruleBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsCreateruleBucketduration)(c)
 }
 
 type TsCreateruleAggregationStdP Completed
 
-func (c TsCreateruleAggregationStdP) Timebucket(timebucket int64) TsCreateruleTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsCreateruleTimebucket)(c)
+func (c TsCreateruleAggregationStdP) Bucketduration(bucketduration int64) TsCreateruleBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsCreateruleBucketduration)(c)
 }
 
 type TsCreateruleAggregationStdS Completed
 
-func (c TsCreateruleAggregationStdS) Timebucket(timebucket int64) TsCreateruleTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsCreateruleTimebucket)(c)
+func (c TsCreateruleAggregationStdS) Bucketduration(bucketduration int64) TsCreateruleBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsCreateruleBucketduration)(c)
 }
 
 type TsCreateruleAggregationSum Completed
 
-func (c TsCreateruleAggregationSum) Timebucket(timebucket int64) TsCreateruleTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsCreateruleTimebucket)(c)
+func (c TsCreateruleAggregationSum) Bucketduration(bucketduration int64) TsCreateruleBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsCreateruleBucketduration)(c)
 }
 
 type TsCreateruleAggregationVarP Completed
 
-func (c TsCreateruleAggregationVarP) Timebucket(timebucket int64) TsCreateruleTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsCreateruleTimebucket)(c)
+func (c TsCreateruleAggregationVarP) Bucketduration(bucketduration int64) TsCreateruleBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsCreateruleBucketduration)(c)
 }
 
 type TsCreateruleAggregationVarS Completed
 
-func (c TsCreateruleAggregationVarS) Timebucket(timebucket int64) TsCreateruleTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsCreateruleTimebucket)(c)
+func (c TsCreateruleAggregationVarS) Bucketduration(bucketduration int64) TsCreateruleBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsCreateruleBucketduration)(c)
+}
+
+type TsCreateruleBucketduration Completed
+
+func (c TsCreateruleBucketduration) Build() Completed {
+	return Completed(c)
 }
 
 type TsCreateruleDestkey Completed
@@ -22602,12 +22788,6 @@ func (c TsCreateruleSourcekey) Destkey(destkey string) TsCreateruleDestkey {
 	}
 	c.cs.s = append(c.cs.s, destkey)
 	return (TsCreateruleDestkey)(c)
-}
-
-type TsCreateruleTimebucket Completed
-
-func (c TsCreateruleTimebucket) Build() Completed {
-	return Completed(c)
 }
 
 type TsDecrby Completed
@@ -23108,91 +23288,91 @@ func (c TsMrange) Key(key string) TsMrangeKey {
 
 type TsMrangeAggregationAggregationAvg Completed
 
-func (c TsMrangeAggregationAggregationAvg) Timebucket(timebucket int64) TsMrangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsMrangeAggregationTimebucket)(c)
+func (c TsMrangeAggregationAggregationAvg) Bucketduration(bucketduration int64) TsMrangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsMrangeAggregationBucketduration)(c)
 }
 
 type TsMrangeAggregationAggregationCount Completed
 
-func (c TsMrangeAggregationAggregationCount) Timebucket(timebucket int64) TsMrangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsMrangeAggregationTimebucket)(c)
+func (c TsMrangeAggregationAggregationCount) Bucketduration(bucketduration int64) TsMrangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsMrangeAggregationBucketduration)(c)
 }
 
 type TsMrangeAggregationAggregationFirst Completed
 
-func (c TsMrangeAggregationAggregationFirst) Timebucket(timebucket int64) TsMrangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsMrangeAggregationTimebucket)(c)
+func (c TsMrangeAggregationAggregationFirst) Bucketduration(bucketduration int64) TsMrangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsMrangeAggregationBucketduration)(c)
 }
 
 type TsMrangeAggregationAggregationLast Completed
 
-func (c TsMrangeAggregationAggregationLast) Timebucket(timebucket int64) TsMrangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsMrangeAggregationTimebucket)(c)
+func (c TsMrangeAggregationAggregationLast) Bucketduration(bucketduration int64) TsMrangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsMrangeAggregationBucketduration)(c)
 }
 
 type TsMrangeAggregationAggregationMax Completed
 
-func (c TsMrangeAggregationAggregationMax) Timebucket(timebucket int64) TsMrangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsMrangeAggregationTimebucket)(c)
+func (c TsMrangeAggregationAggregationMax) Bucketduration(bucketduration int64) TsMrangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsMrangeAggregationBucketduration)(c)
 }
 
 type TsMrangeAggregationAggregationMin Completed
 
-func (c TsMrangeAggregationAggregationMin) Timebucket(timebucket int64) TsMrangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsMrangeAggregationTimebucket)(c)
+func (c TsMrangeAggregationAggregationMin) Bucketduration(bucketduration int64) TsMrangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsMrangeAggregationBucketduration)(c)
 }
 
 type TsMrangeAggregationAggregationRange Completed
 
-func (c TsMrangeAggregationAggregationRange) Timebucket(timebucket int64) TsMrangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsMrangeAggregationTimebucket)(c)
+func (c TsMrangeAggregationAggregationRange) Bucketduration(bucketduration int64) TsMrangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsMrangeAggregationBucketduration)(c)
 }
 
 type TsMrangeAggregationAggregationStdP Completed
 
-func (c TsMrangeAggregationAggregationStdP) Timebucket(timebucket int64) TsMrangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsMrangeAggregationTimebucket)(c)
+func (c TsMrangeAggregationAggregationStdP) Bucketduration(bucketduration int64) TsMrangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsMrangeAggregationBucketduration)(c)
 }
 
 type TsMrangeAggregationAggregationStdS Completed
 
-func (c TsMrangeAggregationAggregationStdS) Timebucket(timebucket int64) TsMrangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsMrangeAggregationTimebucket)(c)
+func (c TsMrangeAggregationAggregationStdS) Bucketduration(bucketduration int64) TsMrangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsMrangeAggregationBucketduration)(c)
 }
 
 type TsMrangeAggregationAggregationSum Completed
 
-func (c TsMrangeAggregationAggregationSum) Timebucket(timebucket int64) TsMrangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsMrangeAggregationTimebucket)(c)
+func (c TsMrangeAggregationAggregationSum) Bucketduration(bucketduration int64) TsMrangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsMrangeAggregationBucketduration)(c)
 }
 
 type TsMrangeAggregationAggregationVarP Completed
 
-func (c TsMrangeAggregationAggregationVarP) Timebucket(timebucket int64) TsMrangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsMrangeAggregationTimebucket)(c)
+func (c TsMrangeAggregationAggregationVarP) Bucketduration(bucketduration int64) TsMrangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsMrangeAggregationBucketduration)(c)
 }
 
 type TsMrangeAggregationAggregationVarS Completed
 
-func (c TsMrangeAggregationAggregationVarS) Timebucket(timebucket int64) TsMrangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsMrangeAggregationTimebucket)(c)
+func (c TsMrangeAggregationAggregationVarS) Bucketduration(bucketduration int64) TsMrangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsMrangeAggregationBucketduration)(c)
 }
 
-type TsMrangeAggregationTimebucket Completed
+type TsMrangeAggregationBucketduration Completed
 
-func (c TsMrangeAggregationTimebucket) Filter(filter ...string) TsMrangeFilter {
+func (c TsMrangeAggregationBucketduration) Filter(filter ...string) TsMrangeFilter {
 	c.cs.s = append(c.cs.s, "FILTER")
 	c.cs.s = append(c.cs.s, filter...)
 	return (TsMrangeFilter)(c)
@@ -23843,91 +24023,91 @@ func (c TsMrevrange) Key(key string) TsMrevrangeKey {
 
 type TsMrevrangeAggregationAggregationAvg Completed
 
-func (c TsMrevrangeAggregationAggregationAvg) Timebucket(timebucket int64) TsMrevrangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsMrevrangeAggregationTimebucket)(c)
+func (c TsMrevrangeAggregationAggregationAvg) Bucketduration(bucketduration int64) TsMrevrangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsMrevrangeAggregationBucketduration)(c)
 }
 
 type TsMrevrangeAggregationAggregationCount Completed
 
-func (c TsMrevrangeAggregationAggregationCount) Timebucket(timebucket int64) TsMrevrangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsMrevrangeAggregationTimebucket)(c)
+func (c TsMrevrangeAggregationAggregationCount) Bucketduration(bucketduration int64) TsMrevrangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsMrevrangeAggregationBucketduration)(c)
 }
 
 type TsMrevrangeAggregationAggregationFirst Completed
 
-func (c TsMrevrangeAggregationAggregationFirst) Timebucket(timebucket int64) TsMrevrangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsMrevrangeAggregationTimebucket)(c)
+func (c TsMrevrangeAggregationAggregationFirst) Bucketduration(bucketduration int64) TsMrevrangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsMrevrangeAggregationBucketduration)(c)
 }
 
 type TsMrevrangeAggregationAggregationLast Completed
 
-func (c TsMrevrangeAggregationAggregationLast) Timebucket(timebucket int64) TsMrevrangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsMrevrangeAggregationTimebucket)(c)
+func (c TsMrevrangeAggregationAggregationLast) Bucketduration(bucketduration int64) TsMrevrangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsMrevrangeAggregationBucketduration)(c)
 }
 
 type TsMrevrangeAggregationAggregationMax Completed
 
-func (c TsMrevrangeAggregationAggregationMax) Timebucket(timebucket int64) TsMrevrangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsMrevrangeAggregationTimebucket)(c)
+func (c TsMrevrangeAggregationAggregationMax) Bucketduration(bucketduration int64) TsMrevrangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsMrevrangeAggregationBucketduration)(c)
 }
 
 type TsMrevrangeAggregationAggregationMin Completed
 
-func (c TsMrevrangeAggregationAggregationMin) Timebucket(timebucket int64) TsMrevrangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsMrevrangeAggregationTimebucket)(c)
+func (c TsMrevrangeAggregationAggregationMin) Bucketduration(bucketduration int64) TsMrevrangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsMrevrangeAggregationBucketduration)(c)
 }
 
 type TsMrevrangeAggregationAggregationRange Completed
 
-func (c TsMrevrangeAggregationAggregationRange) Timebucket(timebucket int64) TsMrevrangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsMrevrangeAggregationTimebucket)(c)
+func (c TsMrevrangeAggregationAggregationRange) Bucketduration(bucketduration int64) TsMrevrangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsMrevrangeAggregationBucketduration)(c)
 }
 
 type TsMrevrangeAggregationAggregationStdP Completed
 
-func (c TsMrevrangeAggregationAggregationStdP) Timebucket(timebucket int64) TsMrevrangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsMrevrangeAggregationTimebucket)(c)
+func (c TsMrevrangeAggregationAggregationStdP) Bucketduration(bucketduration int64) TsMrevrangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsMrevrangeAggregationBucketduration)(c)
 }
 
 type TsMrevrangeAggregationAggregationStdS Completed
 
-func (c TsMrevrangeAggregationAggregationStdS) Timebucket(timebucket int64) TsMrevrangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsMrevrangeAggregationTimebucket)(c)
+func (c TsMrevrangeAggregationAggregationStdS) Bucketduration(bucketduration int64) TsMrevrangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsMrevrangeAggregationBucketduration)(c)
 }
 
 type TsMrevrangeAggregationAggregationSum Completed
 
-func (c TsMrevrangeAggregationAggregationSum) Timebucket(timebucket int64) TsMrevrangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsMrevrangeAggregationTimebucket)(c)
+func (c TsMrevrangeAggregationAggregationSum) Bucketduration(bucketduration int64) TsMrevrangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsMrevrangeAggregationBucketduration)(c)
 }
 
 type TsMrevrangeAggregationAggregationVarP Completed
 
-func (c TsMrevrangeAggregationAggregationVarP) Timebucket(timebucket int64) TsMrevrangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsMrevrangeAggregationTimebucket)(c)
+func (c TsMrevrangeAggregationAggregationVarP) Bucketduration(bucketduration int64) TsMrevrangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsMrevrangeAggregationBucketduration)(c)
 }
 
 type TsMrevrangeAggregationAggregationVarS Completed
 
-func (c TsMrevrangeAggregationAggregationVarS) Timebucket(timebucket int64) TsMrevrangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsMrevrangeAggregationTimebucket)(c)
+func (c TsMrevrangeAggregationAggregationVarS) Bucketduration(bucketduration int64) TsMrevrangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsMrevrangeAggregationBucketduration)(c)
 }
 
-type TsMrevrangeAggregationTimebucket Completed
+type TsMrevrangeAggregationBucketduration Completed
 
-func (c TsMrevrangeAggregationTimebucket) Filter(filter ...string) TsMrevrangeFilter {
+func (c TsMrevrangeAggregationBucketduration) Filter(filter ...string) TsMrevrangeFilter {
 	c.cs.s = append(c.cs.s, "FILTER")
 	c.cs.s = append(c.cs.s, filter...)
 	return (TsMrevrangeFilter)(c)
@@ -24602,91 +24782,91 @@ func (c TsRange) Key(key string) TsRangeKey {
 
 type TsRangeAggregationAggregationAvg Completed
 
-func (c TsRangeAggregationAggregationAvg) Timebucket(timebucket int64) TsRangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsRangeAggregationTimebucket)(c)
+func (c TsRangeAggregationAggregationAvg) Bucketduration(bucketduration int64) TsRangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsRangeAggregationBucketduration)(c)
 }
 
 type TsRangeAggregationAggregationCount Completed
 
-func (c TsRangeAggregationAggregationCount) Timebucket(timebucket int64) TsRangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsRangeAggregationTimebucket)(c)
+func (c TsRangeAggregationAggregationCount) Bucketduration(bucketduration int64) TsRangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsRangeAggregationBucketduration)(c)
 }
 
 type TsRangeAggregationAggregationFirst Completed
 
-func (c TsRangeAggregationAggregationFirst) Timebucket(timebucket int64) TsRangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsRangeAggregationTimebucket)(c)
+func (c TsRangeAggregationAggregationFirst) Bucketduration(bucketduration int64) TsRangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsRangeAggregationBucketduration)(c)
 }
 
 type TsRangeAggregationAggregationLast Completed
 
-func (c TsRangeAggregationAggregationLast) Timebucket(timebucket int64) TsRangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsRangeAggregationTimebucket)(c)
+func (c TsRangeAggregationAggregationLast) Bucketduration(bucketduration int64) TsRangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsRangeAggregationBucketduration)(c)
 }
 
 type TsRangeAggregationAggregationMax Completed
 
-func (c TsRangeAggregationAggregationMax) Timebucket(timebucket int64) TsRangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsRangeAggregationTimebucket)(c)
+func (c TsRangeAggregationAggregationMax) Bucketduration(bucketduration int64) TsRangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsRangeAggregationBucketduration)(c)
 }
 
 type TsRangeAggregationAggregationMin Completed
 
-func (c TsRangeAggregationAggregationMin) Timebucket(timebucket int64) TsRangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsRangeAggregationTimebucket)(c)
+func (c TsRangeAggregationAggregationMin) Bucketduration(bucketduration int64) TsRangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsRangeAggregationBucketduration)(c)
 }
 
 type TsRangeAggregationAggregationRange Completed
 
-func (c TsRangeAggregationAggregationRange) Timebucket(timebucket int64) TsRangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsRangeAggregationTimebucket)(c)
+func (c TsRangeAggregationAggregationRange) Bucketduration(bucketduration int64) TsRangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsRangeAggregationBucketduration)(c)
 }
 
 type TsRangeAggregationAggregationStdP Completed
 
-func (c TsRangeAggregationAggregationStdP) Timebucket(timebucket int64) TsRangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsRangeAggregationTimebucket)(c)
+func (c TsRangeAggregationAggregationStdP) Bucketduration(bucketduration int64) TsRangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsRangeAggregationBucketduration)(c)
 }
 
 type TsRangeAggregationAggregationStdS Completed
 
-func (c TsRangeAggregationAggregationStdS) Timebucket(timebucket int64) TsRangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsRangeAggregationTimebucket)(c)
+func (c TsRangeAggregationAggregationStdS) Bucketduration(bucketduration int64) TsRangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsRangeAggregationBucketduration)(c)
 }
 
 type TsRangeAggregationAggregationSum Completed
 
-func (c TsRangeAggregationAggregationSum) Timebucket(timebucket int64) TsRangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsRangeAggregationTimebucket)(c)
+func (c TsRangeAggregationAggregationSum) Bucketduration(bucketduration int64) TsRangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsRangeAggregationBucketduration)(c)
 }
 
 type TsRangeAggregationAggregationVarP Completed
 
-func (c TsRangeAggregationAggregationVarP) Timebucket(timebucket int64) TsRangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsRangeAggregationTimebucket)(c)
+func (c TsRangeAggregationAggregationVarP) Bucketduration(bucketduration int64) TsRangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsRangeAggregationBucketduration)(c)
 }
 
 type TsRangeAggregationAggregationVarS Completed
 
-func (c TsRangeAggregationAggregationVarS) Timebucket(timebucket int64) TsRangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsRangeAggregationTimebucket)(c)
+func (c TsRangeAggregationAggregationVarS) Bucketduration(bucketduration int64) TsRangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsRangeAggregationBucketduration)(c)
 }
 
-type TsRangeAggregationTimebucket Completed
+type TsRangeAggregationBucketduration Completed
 
-func (c TsRangeAggregationTimebucket) Build() Completed {
+func (c TsRangeAggregationBucketduration) Build() Completed {
 	return Completed(c)
 }
 
@@ -25113,91 +25293,91 @@ func (c TsRevrange) Key(key string) TsRevrangeKey {
 
 type TsRevrangeAggregationAggregationAvg Completed
 
-func (c TsRevrangeAggregationAggregationAvg) Timebucket(timebucket int64) TsRevrangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsRevrangeAggregationTimebucket)(c)
+func (c TsRevrangeAggregationAggregationAvg) Bucketduration(bucketduration int64) TsRevrangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsRevrangeAggregationBucketduration)(c)
 }
 
 type TsRevrangeAggregationAggregationCount Completed
 
-func (c TsRevrangeAggregationAggregationCount) Timebucket(timebucket int64) TsRevrangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsRevrangeAggregationTimebucket)(c)
+func (c TsRevrangeAggregationAggregationCount) Bucketduration(bucketduration int64) TsRevrangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsRevrangeAggregationBucketduration)(c)
 }
 
 type TsRevrangeAggregationAggregationFirst Completed
 
-func (c TsRevrangeAggregationAggregationFirst) Timebucket(timebucket int64) TsRevrangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsRevrangeAggregationTimebucket)(c)
+func (c TsRevrangeAggregationAggregationFirst) Bucketduration(bucketduration int64) TsRevrangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsRevrangeAggregationBucketduration)(c)
 }
 
 type TsRevrangeAggregationAggregationLast Completed
 
-func (c TsRevrangeAggregationAggregationLast) Timebucket(timebucket int64) TsRevrangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsRevrangeAggregationTimebucket)(c)
+func (c TsRevrangeAggregationAggregationLast) Bucketduration(bucketduration int64) TsRevrangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsRevrangeAggregationBucketduration)(c)
 }
 
 type TsRevrangeAggregationAggregationMax Completed
 
-func (c TsRevrangeAggregationAggregationMax) Timebucket(timebucket int64) TsRevrangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsRevrangeAggregationTimebucket)(c)
+func (c TsRevrangeAggregationAggregationMax) Bucketduration(bucketduration int64) TsRevrangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsRevrangeAggregationBucketduration)(c)
 }
 
 type TsRevrangeAggregationAggregationMin Completed
 
-func (c TsRevrangeAggregationAggregationMin) Timebucket(timebucket int64) TsRevrangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsRevrangeAggregationTimebucket)(c)
+func (c TsRevrangeAggregationAggregationMin) Bucketduration(bucketduration int64) TsRevrangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsRevrangeAggregationBucketduration)(c)
 }
 
 type TsRevrangeAggregationAggregationRange Completed
 
-func (c TsRevrangeAggregationAggregationRange) Timebucket(timebucket int64) TsRevrangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsRevrangeAggregationTimebucket)(c)
+func (c TsRevrangeAggregationAggregationRange) Bucketduration(bucketduration int64) TsRevrangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsRevrangeAggregationBucketduration)(c)
 }
 
 type TsRevrangeAggregationAggregationStdP Completed
 
-func (c TsRevrangeAggregationAggregationStdP) Timebucket(timebucket int64) TsRevrangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsRevrangeAggregationTimebucket)(c)
+func (c TsRevrangeAggregationAggregationStdP) Bucketduration(bucketduration int64) TsRevrangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsRevrangeAggregationBucketduration)(c)
 }
 
 type TsRevrangeAggregationAggregationStdS Completed
 
-func (c TsRevrangeAggregationAggregationStdS) Timebucket(timebucket int64) TsRevrangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsRevrangeAggregationTimebucket)(c)
+func (c TsRevrangeAggregationAggregationStdS) Bucketduration(bucketduration int64) TsRevrangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsRevrangeAggregationBucketduration)(c)
 }
 
 type TsRevrangeAggregationAggregationSum Completed
 
-func (c TsRevrangeAggregationAggregationSum) Timebucket(timebucket int64) TsRevrangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsRevrangeAggregationTimebucket)(c)
+func (c TsRevrangeAggregationAggregationSum) Bucketduration(bucketduration int64) TsRevrangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsRevrangeAggregationBucketduration)(c)
 }
 
 type TsRevrangeAggregationAggregationVarP Completed
 
-func (c TsRevrangeAggregationAggregationVarP) Timebucket(timebucket int64) TsRevrangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsRevrangeAggregationTimebucket)(c)
+func (c TsRevrangeAggregationAggregationVarP) Bucketduration(bucketduration int64) TsRevrangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsRevrangeAggregationBucketduration)(c)
 }
 
 type TsRevrangeAggregationAggregationVarS Completed
 
-func (c TsRevrangeAggregationAggregationVarS) Timebucket(timebucket int64) TsRevrangeAggregationTimebucket {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timebucket, 10))
-	return (TsRevrangeAggregationTimebucket)(c)
+func (c TsRevrangeAggregationAggregationVarS) Bucketduration(bucketduration int64) TsRevrangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsRevrangeAggregationBucketduration)(c)
 }
 
-type TsRevrangeAggregationTimebucket Completed
+type TsRevrangeAggregationBucketduration Completed
 
-func (c TsRevrangeAggregationTimebucket) Build() Completed {
+func (c TsRevrangeAggregationBucketduration) Build() Completed {
 	return Completed(c)
 }
 
