@@ -1162,6 +1162,9 @@
     "since": "3.0.0",
     "group": "cluster"
   },
+  "CLUSTER SHARDS":  {
+
+  },
   "CLUSTER REPLICAS": {
     "summary": "List replica nodes of the specified master node",
     "complexity": "O(1)",
@@ -2979,7 +2982,7 @@
       },
       {
         "name": "port",
-        "type": "string"
+        "type": "integer"
       },
       {
         "name": "key",
@@ -3059,6 +3062,28 @@
     ],
     "since": "4.0.0",
     "group": "server"
+  },
+  "MODULE LOADEX": {
+    "arguments": [
+      {
+        "name": "path",
+        "type": "string"
+      },
+      {
+        "name": "config",
+        "command": "CONFIG",
+        "type": "string",
+        "variadic": true,
+        "optional": true
+      },
+      {
+        "name": "args",
+        "command": "ARGS",
+        "type": "string",
+        "variadic": true,
+        "optional": true
+      }
+    ]
   },
   "MODULE UNLOAD": {
     "summary": "Unload a module",
@@ -4057,7 +4082,7 @@
       },
       {
         "name": "port",
-        "type": "string"
+        "type": "integer"
       }
     ],
     "since": "1.0.0",
@@ -4072,7 +4097,7 @@
       },
       {
         "name": "port",
-        "type": "string"
+        "type": "integer"
       }
     ],
     "since": "5.0.0",
@@ -4433,7 +4458,7 @@
     "arguments": [
       {
         "name": "replicationid",
-        "type": "integer"
+        "type": "string"
       },
       {
         "name": "offset",
@@ -6408,25 +6433,11 @@
   "FUNCTION LOAD": {
     "arguments": [
       {
-        "name": "engine-name",
-        "type": "string"
-      },
-      {
-        "name": "library-name",
-        "type": "string"
-      },
-      {
         "name": "replace",
         "type": "enum",
         "enum": [
           "REPLACE"
         ],
-        "optional": true
-      },
-      {
-        "name": "library-description",
-        "type": "string",
-        "command": "DESC",
         "optional": true
       },
       {
@@ -6476,7 +6487,14 @@
     ]
   },
   "PUBSUB SHARDNUMSUB": {
-
+    "arguments": [
+      {
+        "name": "channel",
+        "type": "string",
+        "optional": true,
+        "multiple": true
+      }
+    ]
   },
   "SPUBLISH": {
     "arguments": [

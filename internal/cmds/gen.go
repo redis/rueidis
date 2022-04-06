@@ -4682,6 +4682,18 @@ func (c ClusterSetslotSubcommandStable) Build() Completed {
 	return Completed(c)
 }
 
+type ClusterShards Completed
+
+func (b Builder) ClusterShards() (c ClusterShards) {
+	c = ClusterShards{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "CLUSTER", "SHARDS")
+	return c
+}
+
+func (c ClusterShards) Build() Completed {
+	return Completed(c)
+}
+
 type ClusterSlaves Completed
 
 func (b Builder) ClusterSlaves() (c ClusterSlaves) {
@@ -10939,23 +10951,14 @@ func (b Builder) FunctionLoad() (c FunctionLoad) {
 	return c
 }
 
-func (c FunctionLoad) EngineName(engineName string) FunctionLoadEngineName {
-	c.cs.s = append(c.cs.s, engineName)
-	return (FunctionLoadEngineName)(c)
+func (c FunctionLoad) Replace() FunctionLoadReplace {
+	c.cs.s = append(c.cs.s, "REPLACE")
+	return (FunctionLoadReplace)(c)
 }
 
-type FunctionLoadDesc Completed
-
-func (c FunctionLoadDesc) FunctionCode(functionCode string) FunctionLoadFunctionCode {
+func (c FunctionLoad) FunctionCode(functionCode string) FunctionLoadFunctionCode {
 	c.cs.s = append(c.cs.s, functionCode)
 	return (FunctionLoadFunctionCode)(c)
-}
-
-type FunctionLoadEngineName Completed
-
-func (c FunctionLoadEngineName) LibraryName(libraryName string) FunctionLoadLibraryName {
-	c.cs.s = append(c.cs.s, libraryName)
-	return (FunctionLoadLibraryName)(c)
 }
 
 type FunctionLoadFunctionCode Completed
@@ -10964,29 +10967,7 @@ func (c FunctionLoadFunctionCode) Build() Completed {
 	return Completed(c)
 }
 
-type FunctionLoadLibraryName Completed
-
-func (c FunctionLoadLibraryName) Replace() FunctionLoadReplace {
-	c.cs.s = append(c.cs.s, "REPLACE")
-	return (FunctionLoadReplace)(c)
-}
-
-func (c FunctionLoadLibraryName) Desc(libraryDescription string) FunctionLoadDesc {
-	c.cs.s = append(c.cs.s, "DESC", libraryDescription)
-	return (FunctionLoadDesc)(c)
-}
-
-func (c FunctionLoadLibraryName) FunctionCode(functionCode string) FunctionLoadFunctionCode {
-	c.cs.s = append(c.cs.s, functionCode)
-	return (FunctionLoadFunctionCode)(c)
-}
-
 type FunctionLoadReplace Completed
-
-func (c FunctionLoadReplace) Desc(libraryDescription string) FunctionLoadDesc {
-	c.cs.s = append(c.cs.s, "DESC", libraryDescription)
-	return (FunctionLoadDesc)(c)
-}
 
 func (c FunctionLoadReplace) FunctionCode(functionCode string) FunctionLoadFunctionCode {
 	c.cs.s = append(c.cs.s, functionCode)
@@ -17672,8 +17653,8 @@ func (c MigrateDestinationDb) Timeout(timeout int64) MigrateTimeout {
 
 type MigrateHost Completed
 
-func (c MigrateHost) Port(port string) MigratePort {
-	c.cs.s = append(c.cs.s, port)
+func (c MigrateHost) Port(port int64) MigratePort {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(port, 10))
 	return (MigratePort)(c)
 }
 
@@ -17828,6 +17809,67 @@ func (c ModuleLoadPath) Arg(arg ...string) ModuleLoadArg {
 }
 
 func (c ModuleLoadPath) Build() Completed {
+	return Completed(c)
+}
+
+type ModuleLoadex Completed
+
+func (b Builder) ModuleLoadex() (c ModuleLoadex) {
+	c = ModuleLoadex{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "MODULE", "LOADEX")
+	return c
+}
+
+func (c ModuleLoadex) Path(path string) ModuleLoadexPath {
+	c.cs.s = append(c.cs.s, path)
+	return (ModuleLoadexPath)(c)
+}
+
+type ModuleLoadexArgs Completed
+
+func (c ModuleLoadexArgs) Args(args ...string) ModuleLoadexArgs {
+	c.cs.s = append(c.cs.s, "ARGS")
+	c.cs.s = append(c.cs.s, args...)
+	return c
+}
+
+func (c ModuleLoadexArgs) Build() Completed {
+	return Completed(c)
+}
+
+type ModuleLoadexConfig Completed
+
+func (c ModuleLoadexConfig) Config(config ...string) ModuleLoadexConfig {
+	c.cs.s = append(c.cs.s, "CONFIG")
+	c.cs.s = append(c.cs.s, config...)
+	return c
+}
+
+func (c ModuleLoadexConfig) Args(args ...string) ModuleLoadexArgs {
+	c.cs.s = append(c.cs.s, "ARGS")
+	c.cs.s = append(c.cs.s, args...)
+	return (ModuleLoadexArgs)(c)
+}
+
+func (c ModuleLoadexConfig) Build() Completed {
+	return Completed(c)
+}
+
+type ModuleLoadexPath Completed
+
+func (c ModuleLoadexPath) Config(config ...string) ModuleLoadexConfig {
+	c.cs.s = append(c.cs.s, "CONFIG")
+	c.cs.s = append(c.cs.s, config...)
+	return (ModuleLoadexConfig)(c)
+}
+
+func (c ModuleLoadexPath) Args(args ...string) ModuleLoadexArgs {
+	c.cs.s = append(c.cs.s, "ARGS")
+	c.cs.s = append(c.cs.s, args...)
+	return (ModuleLoadexArgs)(c)
+}
+
+func (c ModuleLoadexPath) Build() Completed {
 	return Completed(c)
 }
 
@@ -18456,8 +18498,8 @@ func (b Builder) Psync() (c Psync) {
 	return c
 }
 
-func (c Psync) Replicationid(replicationid int64) PsyncReplicationid {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(replicationid, 10))
+func (c Psync) Replicationid(replicationid string) PsyncReplicationid {
+	c.cs.s = append(c.cs.s, replicationid)
 	return (PsyncReplicationid)(c)
 }
 
@@ -18632,7 +18674,23 @@ func (b Builder) PubsubShardnumsub() (c PubsubShardnumsub) {
 	return c
 }
 
+func (c PubsubShardnumsub) Channel(channel ...string) PubsubShardnumsubChannel {
+	c.cs.s = append(c.cs.s, channel...)
+	return (PubsubShardnumsubChannel)(c)
+}
+
 func (c PubsubShardnumsub) Build() Completed {
+	return Completed(c)
+}
+
+type PubsubShardnumsubChannel Completed
+
+func (c PubsubShardnumsubChannel) Channel(channel ...string) PubsubShardnumsubChannel {
+	c.cs.s = append(c.cs.s, channel...)
+	return c
+}
+
+func (c PubsubShardnumsubChannel) Build() Completed {
 	return Completed(c)
 }
 
@@ -18791,8 +18849,8 @@ func (c Replicaof) Host(host string) ReplicaofHost {
 
 type ReplicaofHost Completed
 
-func (c ReplicaofHost) Port(port string) ReplicaofPort {
-	c.cs.s = append(c.cs.s, port)
+func (c ReplicaofHost) Port(port int64) ReplicaofPort {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(port, 10))
 	return (ReplicaofPort)(c)
 }
 
@@ -20579,8 +20637,8 @@ func (c Slaveof) Host(host string) SlaveofHost {
 
 type SlaveofHost Completed
 
-func (c SlaveofHost) Port(port string) SlaveofPort {
-	c.cs.s = append(c.cs.s, port)
+func (c SlaveofHost) Port(port int64) SlaveofPort {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(port, 10))
 	return (SlaveofPort)(c)
 }
 
