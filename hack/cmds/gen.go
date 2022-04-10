@@ -861,6 +861,7 @@ var cacheableCMDs = map[string]bool{
 	"topklist":            false,
 	"topkinfo":            false,
 	"fcallro":             false,
+	"graphroquery":        false,
 	"aitensorget":         false,
 	"aimodelget":          false,
 	"aimodelexecute":      false,

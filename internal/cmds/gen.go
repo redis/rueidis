@@ -6252,6 +6252,11 @@ func (c FtAggregateApplyAs) Withcursor() FtAggregateCursorWithcursor {
 	return (FtAggregateCursorWithcursor)(c)
 }
 
+func (c FtAggregateApplyAs) Dialect(dialect int64) FtAggregateDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtAggregateDialect)(c)
+}
+
 func (c FtAggregateApplyAs) Build() Completed {
 	return Completed(c)
 }
@@ -6263,11 +6268,21 @@ func (c FtAggregateCursorCount) Maxidle(idleTime int64) FtAggregateCursorMaxidle
 	return (FtAggregateCursorMaxidle)(c)
 }
 
+func (c FtAggregateCursorCount) Dialect(dialect int64) FtAggregateDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtAggregateDialect)(c)
+}
+
 func (c FtAggregateCursorCount) Build() Completed {
 	return Completed(c)
 }
 
 type FtAggregateCursorMaxidle Completed
+
+func (c FtAggregateCursorMaxidle) Dialect(dialect int64) FtAggregateDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtAggregateDialect)(c)
+}
 
 func (c FtAggregateCursorMaxidle) Build() Completed {
 	return Completed(c)
@@ -6285,7 +6300,18 @@ func (c FtAggregateCursorWithcursor) Maxidle(idleTime int64) FtAggregateCursorMa
 	return (FtAggregateCursorMaxidle)(c)
 }
 
+func (c FtAggregateCursorWithcursor) Dialect(dialect int64) FtAggregateDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtAggregateDialect)(c)
+}
+
 func (c FtAggregateCursorWithcursor) Build() Completed {
+	return Completed(c)
+}
+
+type FtAggregateDialect Completed
+
+func (c FtAggregateDialect) Build() Completed {
 	return Completed(c)
 }
 
@@ -6294,6 +6320,11 @@ type FtAggregateFilter Completed
 func (c FtAggregateFilter) Withcursor() FtAggregateCursorWithcursor {
 	c.cs.s = append(c.cs.s, "WITHCURSOR")
 	return (FtAggregateCursorWithcursor)(c)
+}
+
+func (c FtAggregateFilter) Dialect(dialect int64) FtAggregateDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtAggregateDialect)(c)
 }
 
 func (c FtAggregateFilter) Build() Completed {
@@ -6349,6 +6380,11 @@ func (c FtAggregateGroupbyProperty) Withcursor() FtAggregateCursorWithcursor {
 	return (FtAggregateCursorWithcursor)(c)
 }
 
+func (c FtAggregateGroupbyProperty) Dialect(dialect int64) FtAggregateDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtAggregateDialect)(c)
+}
+
 func (c FtAggregateGroupbyProperty) Build() Completed {
 	return Completed(c)
 }
@@ -6400,6 +6436,11 @@ func (c FtAggregateGroupbyReduceArg) Withcursor() FtAggregateCursorWithcursor {
 	return (FtAggregateCursorWithcursor)(c)
 }
 
+func (c FtAggregateGroupbyReduceArg) Dialect(dialect int64) FtAggregateDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtAggregateDialect)(c)
+}
+
 func (c FtAggregateGroupbyReduceArg) Build() Completed {
 	return Completed(c)
 }
@@ -6439,6 +6480,11 @@ func (c FtAggregateGroupbyReduceAs) Filter(filter string) FtAggregateFilter {
 func (c FtAggregateGroupbyReduceAs) Withcursor() FtAggregateCursorWithcursor {
 	c.cs.s = append(c.cs.s, "WITHCURSOR")
 	return (FtAggregateCursorWithcursor)(c)
+}
+
+func (c FtAggregateGroupbyReduceAs) Dialect(dialect int64) FtAggregateDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtAggregateDialect)(c)
 }
 
 func (c FtAggregateGroupbyReduceAs) Build() Completed {
@@ -6483,6 +6529,11 @@ func (c FtAggregateLimitOffsetNum) Filter(filter string) FtAggregateFilter {
 func (c FtAggregateLimitOffsetNum) Withcursor() FtAggregateCursorWithcursor {
 	c.cs.s = append(c.cs.s, "WITHCURSOR")
 	return (FtAggregateCursorWithcursor)(c)
+}
+
+func (c FtAggregateLimitOffsetNum) Dialect(dialect int64) FtAggregateDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtAggregateDialect)(c)
 }
 
 func (c FtAggregateLimitOffsetNum) Build() Completed {
@@ -6531,6 +6582,11 @@ func (c FtAggregateLoadField) Withcursor() FtAggregateCursorWithcursor {
 	return (FtAggregateCursorWithcursor)(c)
 }
 
+func (c FtAggregateLoadField) Dialect(dialect int64) FtAggregateDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtAggregateDialect)(c)
+}
+
 func (c FtAggregateLoadField) Build() Completed {
 	return Completed(c)
 }
@@ -6572,6 +6628,11 @@ func (c FtAggregateLoadallLoadAll) Filter(filter string) FtAggregateFilter {
 func (c FtAggregateLoadallLoadAll) Withcursor() FtAggregateCursorWithcursor {
 	c.cs.s = append(c.cs.s, "WITHCURSOR")
 	return (FtAggregateCursorWithcursor)(c)
+}
+
+func (c FtAggregateLoadallLoadAll) Dialect(dialect int64) FtAggregateDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtAggregateDialect)(c)
 }
 
 func (c FtAggregateLoadallLoadAll) Build() Completed {
@@ -6625,6 +6686,11 @@ func (c FtAggregateQuery) Withcursor() FtAggregateCursorWithcursor {
 	return (FtAggregateCursorWithcursor)(c)
 }
 
+func (c FtAggregateQuery) Dialect(dialect int64) FtAggregateDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtAggregateDialect)(c)
+}
+
 func (c FtAggregateQuery) Build() Completed {
 	return Completed(c)
 }
@@ -6661,6 +6727,11 @@ func (c FtAggregateSortbyFieldsOrderAsc) Withcursor() FtAggregateCursorWithcurso
 	return (FtAggregateCursorWithcursor)(c)
 }
 
+func (c FtAggregateSortbyFieldsOrderAsc) Dialect(dialect int64) FtAggregateDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtAggregateDialect)(c)
+}
+
 func (c FtAggregateSortbyFieldsOrderAsc) Build() Completed {
 	return Completed(c)
 }
@@ -6695,6 +6766,11 @@ func (c FtAggregateSortbyFieldsOrderDesc) Filter(filter string) FtAggregateFilte
 func (c FtAggregateSortbyFieldsOrderDesc) Withcursor() FtAggregateCursorWithcursor {
 	c.cs.s = append(c.cs.s, "WITHCURSOR")
 	return (FtAggregateCursorWithcursor)(c)
+}
+
+func (c FtAggregateSortbyFieldsOrderDesc) Dialect(dialect int64) FtAggregateDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtAggregateDialect)(c)
 }
 
 func (c FtAggregateSortbyFieldsOrderDesc) Build() Completed {
@@ -6735,6 +6811,11 @@ func (c FtAggregateSortbyMax) Withcursor() FtAggregateCursorWithcursor {
 	return (FtAggregateCursorWithcursor)(c)
 }
 
+func (c FtAggregateSortbyMax) Dialect(dialect int64) FtAggregateDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtAggregateDialect)(c)
+}
+
 func (c FtAggregateSortbyMax) Build() Completed {
 	return Completed(c)
 }
@@ -6769,6 +6850,11 @@ func (c FtAggregateSortbySortby) Filter(filter string) FtAggregateFilter {
 func (c FtAggregateSortbySortby) Withcursor() FtAggregateCursorWithcursor {
 	c.cs.s = append(c.cs.s, "WITHCURSOR")
 	return (FtAggregateCursorWithcursor)(c)
+}
+
+func (c FtAggregateSortbySortby) Dialect(dialect int64) FtAggregateDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtAggregateDialect)(c)
 }
 
 func (c FtAggregateSortbySortby) Build() Completed {
@@ -6815,6 +6901,11 @@ func (c FtAggregateVerbatim) Filter(filter string) FtAggregateFilter {
 func (c FtAggregateVerbatim) Withcursor() FtAggregateCursorWithcursor {
 	c.cs.s = append(c.cs.s, "WITHCURSOR")
 	return (FtAggregateCursorWithcursor)(c)
+}
+
+func (c FtAggregateVerbatim) Dialect(dialect int64) FtAggregateDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtAggregateDialect)(c)
 }
 
 func (c FtAggregateVerbatim) Build() Completed {
@@ -8122,6 +8213,12 @@ func (c FtExplain) Index(index string) FtExplainIndex {
 	return (FtExplainIndex)(c)
 }
 
+type FtExplainDialect Completed
+
+func (c FtExplainDialect) Build() Completed {
+	return Completed(c)
+}
+
 type FtExplainIndex Completed
 
 func (c FtExplainIndex) Query(query string) FtExplainQuery {
@@ -8130,6 +8227,11 @@ func (c FtExplainIndex) Query(query string) FtExplainQuery {
 }
 
 type FtExplainQuery Completed
+
+func (c FtExplainQuery) Dialect(dialect int64) FtExplainDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtExplainDialect)(c)
+}
 
 func (c FtExplainQuery) Build() Completed {
 	return Completed(c)
@@ -8148,6 +8250,12 @@ func (c FtExplaincli) Index(index string) FtExplaincliIndex {
 	return (FtExplaincliIndex)(c)
 }
 
+type FtExplaincliDialect Completed
+
+func (c FtExplaincliDialect) Build() Completed {
+	return Completed(c)
+}
+
 type FtExplaincliIndex Completed
 
 func (c FtExplaincliIndex) Query(query string) FtExplaincliQuery {
@@ -8156,6 +8264,11 @@ func (c FtExplaincliIndex) Query(query string) FtExplaincliQuery {
 }
 
 type FtExplaincliQuery Completed
+
+func (c FtExplaincliQuery) Dialect(dialect int64) FtExplaincliDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtExplaincliDialect)(c)
+}
 
 func (c FtExplaincliQuery) Build() Completed {
 	return Completed(c)
@@ -8205,6 +8318,12 @@ func (c FtSearch) Index(index string) FtSearchIndex {
 	return (FtSearchIndex)(c)
 }
 
+type FtSearchDialect Completed
+
+func (c FtSearchDialect) Build() Completed {
+	return Completed(c)
+}
+
 type FtSearchExpander Completed
 
 func (c FtSearchExpander) Scorer(scorer string) FtSearchScorer {
@@ -8232,6 +8351,11 @@ func (c FtSearchExpander) Limit() FtSearchLimitLimit {
 	return (FtSearchLimitLimit)(c)
 }
 
+func (c FtSearchExpander) Dialect(dialect int64) FtSearchDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSearchDialect)(c)
+}
+
 func (c FtSearchExpander) Build() Completed {
 	return Completed(c)
 }
@@ -8251,6 +8375,11 @@ func (c FtSearchExplainscore) Sortby(sortby string) FtSearchSortbySortby {
 func (c FtSearchExplainscore) Limit() FtSearchLimitLimit {
 	c.cs.s = append(c.cs.s, "LIMIT")
 	return (FtSearchLimitLimit)(c)
+}
+
+func (c FtSearchExplainscore) Dialect(dialect int64) FtSearchDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSearchDialect)(c)
 }
 
 func (c FtSearchExplainscore) Build() Completed {
@@ -8344,6 +8473,11 @@ func (c FtSearchFilterMax) Sortby(sortby string) FtSearchSortbySortby {
 func (c FtSearchFilterMax) Limit() FtSearchLimitLimit {
 	c.cs.s = append(c.cs.s, "LIMIT")
 	return (FtSearchLimitLimit)(c)
+}
+
+func (c FtSearchFilterMax) Dialect(dialect int64) FtSearchDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSearchDialect)(c)
 }
 
 func (c FtSearchFilterMax) Build() Completed {
@@ -8477,6 +8611,11 @@ func (c FtSearchGeoFilterRadiusTypeFt) Limit() FtSearchLimitLimit {
 	return (FtSearchLimitLimit)(c)
 }
 
+func (c FtSearchGeoFilterRadiusTypeFt) Dialect(dialect int64) FtSearchDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSearchDialect)(c)
+}
+
 func (c FtSearchGeoFilterRadiusTypeFt) Build() Completed {
 	return Completed(c)
 }
@@ -8556,6 +8695,11 @@ func (c FtSearchGeoFilterRadiusTypeKm) Sortby(sortby string) FtSearchSortbySortb
 func (c FtSearchGeoFilterRadiusTypeKm) Limit() FtSearchLimitLimit {
 	c.cs.s = append(c.cs.s, "LIMIT")
 	return (FtSearchLimitLimit)(c)
+}
+
+func (c FtSearchGeoFilterRadiusTypeKm) Dialect(dialect int64) FtSearchDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSearchDialect)(c)
 }
 
 func (c FtSearchGeoFilterRadiusTypeKm) Build() Completed {
@@ -8639,6 +8783,11 @@ func (c FtSearchGeoFilterRadiusTypeM) Limit() FtSearchLimitLimit {
 	return (FtSearchLimitLimit)(c)
 }
 
+func (c FtSearchGeoFilterRadiusTypeM) Dialect(dialect int64) FtSearchDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSearchDialect)(c)
+}
+
 func (c FtSearchGeoFilterRadiusTypeM) Build() Completed {
 	return Completed(c)
 }
@@ -8720,6 +8869,11 @@ func (c FtSearchGeoFilterRadiusTypeMi) Limit() FtSearchLimitLimit {
 	return (FtSearchLimitLimit)(c)
 }
 
+func (c FtSearchGeoFilterRadiusTypeMi) Dialect(dialect int64) FtSearchDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSearchDialect)(c)
+}
+
 func (c FtSearchGeoFilterRadiusTypeMi) Build() Completed {
 	return Completed(c)
 }
@@ -8779,6 +8933,11 @@ func (c FtSearchHighlightFieldsField) Sortby(sortby string) FtSearchSortbySortby
 func (c FtSearchHighlightFieldsField) Limit() FtSearchLimitLimit {
 	c.cs.s = append(c.cs.s, "LIMIT")
 	return (FtSearchLimitLimit)(c)
+}
+
+func (c FtSearchHighlightFieldsField) Dialect(dialect int64) FtSearchDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSearchDialect)(c)
 }
 
 func (c FtSearchHighlightFieldsField) Build() Completed {
@@ -8849,6 +9008,11 @@ func (c FtSearchHighlightHighlight) Limit() FtSearchLimitLimit {
 	return (FtSearchLimitLimit)(c)
 }
 
+func (c FtSearchHighlightHighlight) Dialect(dialect int64) FtSearchDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSearchDialect)(c)
+}
+
 func (c FtSearchHighlightHighlight) Build() Completed {
 	return Completed(c)
 }
@@ -8898,6 +9062,11 @@ func (c FtSearchHighlightTagsOpenClose) Sortby(sortby string) FtSearchSortbySort
 func (c FtSearchHighlightTagsOpenClose) Limit() FtSearchLimitLimit {
 	c.cs.s = append(c.cs.s, "LIMIT")
 	return (FtSearchLimitLimit)(c)
+}
+
+func (c FtSearchHighlightTagsOpenClose) Dialect(dialect int64) FtSearchDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSearchDialect)(c)
 }
 
 func (c FtSearchHighlightTagsOpenClose) Build() Completed {
@@ -8976,6 +9145,11 @@ func (c FtSearchInFieldsField) Sortby(sortby string) FtSearchSortbySortby {
 func (c FtSearchInFieldsField) Limit() FtSearchLimitLimit {
 	c.cs.s = append(c.cs.s, "LIMIT")
 	return (FtSearchLimitLimit)(c)
+}
+
+func (c FtSearchInFieldsField) Dialect(dialect int64) FtSearchDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSearchDialect)(c)
 }
 
 func (c FtSearchInFieldsField) Build() Completed {
@@ -9068,6 +9242,11 @@ func (c FtSearchInKeysKey) Limit() FtSearchLimitLimit {
 	return (FtSearchLimitLimit)(c)
 }
 
+func (c FtSearchInKeysKey) Dialect(dialect int64) FtSearchDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSearchDialect)(c)
+}
+
 func (c FtSearchInKeysKey) Build() Completed {
 	return Completed(c)
 }
@@ -9111,6 +9290,11 @@ func (c FtSearchLanguage) Limit() FtSearchLimitLimit {
 	return (FtSearchLimitLimit)(c)
 }
 
+func (c FtSearchLanguage) Dialect(dialect int64) FtSearchDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSearchDialect)(c)
+}
+
 func (c FtSearchLanguage) Build() Completed {
 	return Completed(c)
 }
@@ -9123,6 +9307,11 @@ func (c FtSearchLimitLimit) OffsetNum(offset int64, num int64) FtSearchLimitOffs
 }
 
 type FtSearchLimitOffsetNum Completed
+
+func (c FtSearchLimitOffsetNum) Dialect(dialect int64) FtSearchDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSearchDialect)(c)
+}
 
 func (c FtSearchLimitOffsetNum) Build() Completed {
 	return Completed(c)
@@ -9235,6 +9424,11 @@ func (c FtSearchNocontent) Limit() FtSearchLimitLimit {
 	return (FtSearchLimitLimit)(c)
 }
 
+func (c FtSearchNocontent) Dialect(dialect int64) FtSearchDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSearchDialect)(c)
+}
+
 func (c FtSearchNocontent) Build() Completed {
 	return Completed(c)
 }
@@ -9336,6 +9530,11 @@ func (c FtSearchNostopwords) Limit() FtSearchLimitLimit {
 	return (FtSearchLimitLimit)(c)
 }
 
+func (c FtSearchNostopwords) Dialect(dialect int64) FtSearchDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSearchDialect)(c)
+}
+
 func (c FtSearchNostopwords) Build() Completed {
 	return Completed(c)
 }
@@ -9350,6 +9549,11 @@ func (c FtSearchPayload) Sortby(sortby string) FtSearchSortbySortby {
 func (c FtSearchPayload) Limit() FtSearchLimitLimit {
 	c.cs.s = append(c.cs.s, "LIMIT")
 	return (FtSearchLimitLimit)(c)
+}
+
+func (c FtSearchPayload) Dialect(dialect int64) FtSearchDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSearchDialect)(c)
 }
 
 func (c FtSearchPayload) Build() Completed {
@@ -9468,6 +9672,11 @@ func (c FtSearchQuery) Limit() FtSearchLimitLimit {
 	return (FtSearchLimitLimit)(c)
 }
 
+func (c FtSearchQuery) Dialect(dialect int64) FtSearchDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSearchDialect)(c)
+}
+
 func (c FtSearchQuery) Build() Completed {
 	return Completed(c)
 }
@@ -9534,6 +9743,11 @@ func (c FtSearchReturnField) Limit() FtSearchLimitLimit {
 	return (FtSearchLimitLimit)(c)
 }
 
+func (c FtSearchReturnField) Dialect(dialect int64) FtSearchDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSearchDialect)(c)
+}
+
 func (c FtSearchReturnField) Build() Completed {
 	return Completed(c)
 }
@@ -9565,6 +9779,11 @@ func (c FtSearchScorer) Sortby(sortby string) FtSearchSortbySortby {
 func (c FtSearchScorer) Limit() FtSearchLimitLimit {
 	c.cs.s = append(c.cs.s, "LIMIT")
 	return (FtSearchLimitLimit)(c)
+}
+
+func (c FtSearchScorer) Dialect(dialect int64) FtSearchDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSearchDialect)(c)
 }
 
 func (c FtSearchScorer) Build() Completed {
@@ -9613,6 +9832,11 @@ func (c FtSearchSlop) Limit() FtSearchLimitLimit {
 	return (FtSearchLimitLimit)(c)
 }
 
+func (c FtSearchSlop) Dialect(dialect int64) FtSearchDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSearchDialect)(c)
+}
+
 func (c FtSearchSlop) Build() Completed {
 	return Completed(c)
 }
@@ -9624,6 +9848,11 @@ func (c FtSearchSortbyOrderAsc) Limit() FtSearchLimitLimit {
 	return (FtSearchLimitLimit)(c)
 }
 
+func (c FtSearchSortbyOrderAsc) Dialect(dialect int64) FtSearchDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSearchDialect)(c)
+}
+
 func (c FtSearchSortbyOrderAsc) Build() Completed {
 	return Completed(c)
 }
@@ -9633,6 +9862,11 @@ type FtSearchSortbyOrderDesc Completed
 func (c FtSearchSortbyOrderDesc) Limit() FtSearchLimitLimit {
 	c.cs.s = append(c.cs.s, "LIMIT")
 	return (FtSearchLimitLimit)(c)
+}
+
+func (c FtSearchSortbyOrderDesc) Dialect(dialect int64) FtSearchDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSearchDialect)(c)
 }
 
 func (c FtSearchSortbyOrderDesc) Build() Completed {
@@ -9654,6 +9888,11 @@ func (c FtSearchSortbySortby) Desc() FtSearchSortbyOrderDesc {
 func (c FtSearchSortbySortby) Limit() FtSearchLimitLimit {
 	c.cs.s = append(c.cs.s, "LIMIT")
 	return (FtSearchLimitLimit)(c)
+}
+
+func (c FtSearchSortbySortby) Dialect(dialect int64) FtSearchDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSearchDialect)(c)
 }
 
 func (c FtSearchSortbySortby) Build() Completed {
@@ -9732,6 +9971,11 @@ func (c FtSearchSummarizeFieldsField) Limit() FtSearchLimitLimit {
 	return (FtSearchLimitLimit)(c)
 }
 
+func (c FtSearchSummarizeFieldsField) Dialect(dialect int64) FtSearchDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSearchDialect)(c)
+}
+
 func (c FtSearchSummarizeFieldsField) Build() Completed {
 	return Completed(c)
 }
@@ -9805,6 +10049,11 @@ func (c FtSearchSummarizeFrags) Limit() FtSearchLimitLimit {
 	return (FtSearchLimitLimit)(c)
 }
 
+func (c FtSearchSummarizeFrags) Dialect(dialect int64) FtSearchDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSearchDialect)(c)
+}
+
 func (c FtSearchSummarizeFrags) Build() Completed {
 	return Completed(c)
 }
@@ -9866,6 +10115,11 @@ func (c FtSearchSummarizeLen) Limit() FtSearchLimitLimit {
 	return (FtSearchLimitLimit)(c)
 }
 
+func (c FtSearchSummarizeLen) Dialect(dialect int64) FtSearchDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSearchDialect)(c)
+}
+
 func (c FtSearchSummarizeLen) Build() Completed {
 	return Completed(c)
 }
@@ -9920,6 +10174,11 @@ func (c FtSearchSummarizeSeparator) Sortby(sortby string) FtSearchSortbySortby {
 func (c FtSearchSummarizeSeparator) Limit() FtSearchLimitLimit {
 	c.cs.s = append(c.cs.s, "LIMIT")
 	return (FtSearchLimitLimit)(c)
+}
+
+func (c FtSearchSummarizeSeparator) Dialect(dialect int64) FtSearchDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSearchDialect)(c)
 }
 
 func (c FtSearchSummarizeSeparator) Build() Completed {
@@ -9998,6 +10257,11 @@ func (c FtSearchSummarizeSummarize) Limit() FtSearchLimitLimit {
 	return (FtSearchLimitLimit)(c)
 }
 
+func (c FtSearchSummarizeSummarize) Dialect(dialect int64) FtSearchDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSearchDialect)(c)
+}
+
 func (c FtSearchSummarizeSummarize) Build() Completed {
 	return Completed(c)
 }
@@ -10037,6 +10301,11 @@ func (c FtSearchTagsInorder) Sortby(sortby string) FtSearchSortbySortby {
 func (c FtSearchTagsInorder) Limit() FtSearchLimitLimit {
 	c.cs.s = append(c.cs.s, "LIMIT")
 	return (FtSearchLimitLimit)(c)
+}
+
+func (c FtSearchTagsInorder) Dialect(dialect int64) FtSearchDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSearchDialect)(c)
 }
 
 func (c FtSearchTagsInorder) Build() Completed {
@@ -10145,6 +10414,11 @@ func (c FtSearchVerbatim) Limit() FtSearchLimitLimit {
 	return (FtSearchLimitLimit)(c)
 }
 
+func (c FtSearchVerbatim) Dialect(dialect int64) FtSearchDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSearchDialect)(c)
+}
+
 func (c FtSearchVerbatim) Build() Completed {
 	return Completed(c)
 }
@@ -10234,6 +10508,11 @@ func (c FtSearchWithpayloads) Sortby(sortby string) FtSearchSortbySortby {
 func (c FtSearchWithpayloads) Limit() FtSearchLimitLimit {
 	c.cs.s = append(c.cs.s, "LIMIT")
 	return (FtSearchLimitLimit)(c)
+}
+
+func (c FtSearchWithpayloads) Dialect(dialect int64) FtSearchDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSearchDialect)(c)
 }
 
 func (c FtSearchWithpayloads) Build() Completed {
@@ -10332,6 +10611,11 @@ func (c FtSearchWithscores) Limit() FtSearchLimitLimit {
 	return (FtSearchLimitLimit)(c)
 }
 
+func (c FtSearchWithscores) Dialect(dialect int64) FtSearchDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSearchDialect)(c)
+}
+
 func (c FtSearchWithscores) Build() Completed {
 	return Completed(c)
 }
@@ -10418,6 +10702,11 @@ func (c FtSearchWithsortkeys) Limit() FtSearchLimitLimit {
 	return (FtSearchLimitLimit)(c)
 }
 
+func (c FtSearchWithsortkeys) Dialect(dialect int64) FtSearchDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSearchDialect)(c)
+}
+
 func (c FtSearchWithsortkeys) Build() Completed {
 	return Completed(c)
 }
@@ -10435,6 +10724,12 @@ func (c FtSpellcheck) Index(index string) FtSpellcheckIndex {
 	return (FtSpellcheckIndex)(c)
 }
 
+type FtSpellcheckDialect Completed
+
+func (c FtSpellcheckDialect) Build() Completed {
+	return Completed(c)
+}
+
 type FtSpellcheckDistance Completed
 
 func (c FtSpellcheckDistance) TermsInclude() FtSpellcheckTermsTermsInclude {
@@ -10445,6 +10740,11 @@ func (c FtSpellcheckDistance) TermsInclude() FtSpellcheckTermsTermsInclude {
 func (c FtSpellcheckDistance) TermsExclude() FtSpellcheckTermsTermsExclude {
 	c.cs.s = append(c.cs.s, "TERMS", "EXCLUDE")
 	return (FtSpellcheckTermsTermsExclude)(c)
+}
+
+func (c FtSpellcheckDistance) Dialect(dialect int64) FtSpellcheckDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSpellcheckDialect)(c)
 }
 
 func (c FtSpellcheckDistance) Build() Completed {
@@ -10475,6 +10775,11 @@ func (c FtSpellcheckQuery) TermsExclude() FtSpellcheckTermsTermsExclude {
 	return (FtSpellcheckTermsTermsExclude)(c)
 }
 
+func (c FtSpellcheckQuery) Dialect(dialect int64) FtSpellcheckDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSpellcheckDialect)(c)
+}
+
 func (c FtSpellcheckQuery) Build() Completed {
 	return Completed(c)
 }
@@ -10486,6 +10791,11 @@ func (c FtSpellcheckTermsDictionary) Terms(terms ...string) FtSpellcheckTermsTer
 	return (FtSpellcheckTermsTerms)(c)
 }
 
+func (c FtSpellcheckTermsDictionary) Dialect(dialect int64) FtSpellcheckDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSpellcheckDialect)(c)
+}
+
 func (c FtSpellcheckTermsDictionary) Build() Completed {
 	return Completed(c)
 }
@@ -10495,6 +10805,11 @@ type FtSpellcheckTermsTerms Completed
 func (c FtSpellcheckTermsTerms) Terms(terms ...string) FtSpellcheckTermsTerms {
 	c.cs.s = append(c.cs.s, terms...)
 	return c
+}
+
+func (c FtSpellcheckTermsTerms) Dialect(dialect int64) FtSpellcheckDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSpellcheckDialect)(c)
 }
 
 func (c FtSpellcheckTermsTerms) Build() Completed {
@@ -14917,6 +15232,10 @@ type GraphRoQueryQuery Completed
 
 func (c GraphRoQueryQuery) Build() Completed {
 	return Completed(c)
+}
+
+func (c GraphRoQueryQuery) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type GraphSlowlog Completed
