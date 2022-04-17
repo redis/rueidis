@@ -161,6 +161,14 @@ func (r RedisResult) AsInt64() (int64, error) {
 	return r.val.AsInt64()
 }
 
+// AsBool delegates to RedisMessage.AsBool
+func (r RedisResult) AsBool() (bool, error) {
+	if err := r.Error(); err != nil {
+		return false, err
+	}
+	return r.val.AsBool()
+}
+
 // AsFloat64 delegates to RedisMessage.AsFloat64
 func (r RedisResult) AsFloat64() (float64, error) {
 	if err := r.Error(); err != nil {
