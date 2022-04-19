@@ -164,10 +164,184 @@ func (cmd *IntCmd) String() (string, error) {
 	return cmd.ToString()
 }
 
+type StatusCmd struct {
+	baseCmd
+	val string
+}
+
+func NewStatusCmd(ctx context.Context, result rueidis.RedisResult) *StatusCmd {
+	v, err := result.ToString()
+	return &StatusCmd{
+		baseCmd: baseCmd{
+			RedisResult: result,
+			ctx:         ctx,
+			err:         err,
+		},
+		val: v,
+	}
+}
+
+func (cmd *StatusCmd) SetVal(val string) {
+	cmd.val = val
+}
+
+func (cmd *StatusCmd) Val() string {
+	return cmd.val
+}
+
+func (cmd *StatusCmd) Result() (string, error) {
+	return cmd.val, cmd.err
+}
+
+func (cmd *StatusCmd) String() (string, error) {
+	return cmd.ToString()
+}
+
+type SliceCmd struct {
+	baseCmd
+	val []rueidis.RedisMessage
+}
+
+func NewSliceCmd(ctx context.Context, result rueidis.RedisResult) *SliceCmd {
+	v, err := result.ToArray()
+	return &SliceCmd{
+		baseCmd: baseCmd{
+			RedisResult: result,
+			ctx:         ctx,
+			err:         err,
+		},
+		val: v,
+	}
+}
+
+func (cmd *SliceCmd) SetVal(val []rueidis.RedisMessage) {
+	cmd.val = val
+}
+
+func (cmd *SliceCmd) Val() []rueidis.RedisMessage {
+	return cmd.val
+}
+
+func (cmd *SliceCmd) Result() ([]rueidis.RedisMessage, error) {
+	return cmd.val, cmd.err
+}
+
+func (cmd *SliceCmd) String() (string, error) {
+	return cmd.ToString()
+}
+
+type StringSliceCmd struct {
+	baseCmd
+	val []string
+}
+
+func NewStringSliceCmd(ctx context.Context, result rueidis.RedisResult) *StringSliceCmd {
+	v, err := result.AsStrSlice()
+	return &StringSliceCmd{
+		baseCmd: baseCmd{
+			RedisResult: result,
+			ctx:         ctx,
+			err:         err,
+		},
+		val: v,
+	}
+}
+
+func (cmd *StringSliceCmd) SetVal(val []string) {
+	cmd.val = val
+}
+
+func (cmd *StringSliceCmd) Val() []string {
+	return cmd.val
+}
+
+func (cmd *StringSliceCmd) Result() ([]string, error) {
+	return cmd.val, cmd.err
+}
+
+func (cmd *StringSliceCmd) String() (string, error) {
+	return cmd.ToString()
+}
+
+type FloatCmd struct {
+	baseCmd
+	val float64
+}
+
+func NewFloatCmd(ctx context.Context, result rueidis.RedisResult) *FloatCmd {
+	v, err := result.ToFloat64()
+	return &FloatCmd{
+		baseCmd: baseCmd{
+			RedisResult: result,
+			ctx:         ctx,
+			err:         err,
+		},
+		val: v,
+	}
+}
+
+func (cmd *FloatCmd) SetVal(val float64) {
+	cmd.val = val
+}
+
+func (cmd *FloatCmd) Val() float64 {
+	return cmd.val
+}
+
+func (cmd *FloatCmd) Result() (float64, error) {
+	return cmd.val, cmd.err
+}
+
+func (cmd *FloatCmd) String() (string, error) {
+	cmd.ToArray()
+	return cmd.ToString()
+}
+
 type Sort struct {
 	By            string
 	Offset, Count int64
 	Get           []string
 	Order         string
 	Alpha         bool
+}
+
+// SetArgs provides arguments for the SetArgs function.
+type SetArgs struct {
+	// Mode can be `NX` or `XX` or empty.
+	Mode string
+
+	// Zero `TTL` or `Expiration` means that the key has no expiration time.
+	TTL      time.Duration
+	ExpireAt time.Time
+
+	// When Get is true, the command returns the old value stored at key, or nil when key did not exist.
+	Get bool
+
+	// KeepTTL is a Redis KEEPTTL option to keep existing TTL, it requires your redis-server version >= 6.0,
+	// otherwise you will receive an error: (error) ERR syntax error.
+	KeepTTL bool
+}
+
+type BitCount struct {
+	Start, End int64
+}
+
+func usePrecise(dur time.Duration) bool {
+	return dur < time.Second || dur%time.Second != 0
+}
+
+func formatMs(dur time.Duration) int64 {
+	if dur > 0 && dur < time.Millisecond {
+		// too small, truncate too 1ms
+		return 1
+	}
+	return int64(dur / time.Millisecond)
+}
+
+func formatSec(dur time.Duration) int64 {
+	if dur > 0 && dur < time.Second {
+		// too small ,truncate too 1s
+		return 1
+	}
+	return int64(dur / time.Second)
 }
