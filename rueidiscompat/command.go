@@ -326,6 +326,11 @@ type BitCount struct {
 	Start, End int64
 }
 
+type BitPos struct {
+	BitCount
+	Byte bool
+}
+
 func usePrecise(dur time.Duration) bool {
 	return dur < time.Second || dur%time.Second != 0
 }
