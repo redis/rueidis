@@ -325,7 +325,6 @@ type Cmdable interface {
 
 type Compat struct {
 	client rueidis.Client
-	ttl    time.Duration
 }
 
 func NewAdapter(client rueidis.Client) Cmdable {
