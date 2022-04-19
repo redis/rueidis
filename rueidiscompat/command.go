@@ -19,7 +19,7 @@ type StringCmd struct {
 	val string
 }
 
-func NewStringCmd(ctx context.Context, result rueidis.RedisResult) *StringCmd {
+func newStringCmd(ctx context.Context, result rueidis.RedisResult) *StringCmd {
 	val, err := result.ToString()
 	return &StringCmd{
 		baseCmd: baseCmd{
@@ -95,7 +95,7 @@ type BoolCmd struct {
 	val bool
 }
 
-func NewBoolCmd(ctx context.Context, result rueidis.RedisResult) *BoolCmd {
+func newBoolCmd(ctx context.Context, result rueidis.RedisResult) *BoolCmd {
 	v, err := result.AsBool()
 	if rueidis.IsRedisNil(err) {
 		v = false
@@ -132,7 +132,7 @@ type IntCmd struct {
 	val int64
 }
 
-func NewIntCmd(ctx context.Context, result rueidis.RedisResult) *IntCmd {
+func newIntCmd(ctx context.Context, result rueidis.RedisResult) *IntCmd {
 	v, err := result.AsInt64()
 	return &IntCmd{
 		baseCmd: baseCmd{
@@ -169,7 +169,7 @@ type StatusCmd struct {
 	val string
 }
 
-func NewStatusCmd(ctx context.Context, result rueidis.RedisResult) *StatusCmd {
+func newStatusCmd(ctx context.Context, result rueidis.RedisResult) *StatusCmd {
 	v, err := result.ToString()
 	return &StatusCmd{
 		baseCmd: baseCmd{
@@ -202,7 +202,7 @@ type SliceCmd struct {
 	val []rueidis.RedisMessage
 }
 
-func NewSliceCmd(ctx context.Context, result rueidis.RedisResult) *SliceCmd {
+func newSliceCmd(ctx context.Context, result rueidis.RedisResult) *SliceCmd {
 	v, err := result.ToArray()
 	return &SliceCmd{
 		baseCmd: baseCmd{
@@ -235,7 +235,7 @@ type StringSliceCmd struct {
 	val []string
 }
 
-func NewStringSliceCmd(ctx context.Context, result rueidis.RedisResult) *StringSliceCmd {
+func newStringSliceCmd(ctx context.Context, result rueidis.RedisResult) *StringSliceCmd {
 	v, err := result.AsStrSlice()
 	return &StringSliceCmd{
 		baseCmd: baseCmd{
@@ -268,7 +268,7 @@ type FloatCmd struct {
 	val float64
 }
 
-func NewFloatCmd(ctx context.Context, result rueidis.RedisResult) *FloatCmd {
+func newFloatCmd(ctx context.Context, result rueidis.RedisResult) *FloatCmd {
 	v, err := result.ToFloat64()
 	return &FloatCmd{
 		baseCmd: baseCmd{

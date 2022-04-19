@@ -334,85 +334,85 @@ func NewAdapter(client rueidis.Client) Cmdable {
 func (c *Compat) Echo(ctx context.Context, message string) *StringCmd {
 	cmd := c.client.B().Echo().Message(message).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewStringCmd(ctx, resp)
+	return newStringCmd(ctx, resp)
 }
 
 func (c *Compat) Ping(ctx context.Context, message string) *StatusCmd {
 	cmd := c.client.B().Ping().Message(message).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewStatusCmd(ctx, resp)
+	return newStatusCmd(ctx, resp)
 }
 
 func (c *Compat) Quit(ctx context.Context) *StatusCmd {
 	cmd := c.client.B().Quit().Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewStatusCmd(ctx, resp)
+	return newStatusCmd(ctx, resp)
 }
 
 func (c *Compat) Del(ctx context.Context, keys ...string) *IntCmd {
 	cmd := c.client.B().Del().Key(keys...).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewIntCmd(ctx, resp)
+	return newIntCmd(ctx, resp)
 }
 
 func (c *Compat) Unlink(ctx context.Context, keys ...string) *IntCmd {
 	cmd := c.client.B().Unlink().Key(keys...).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewIntCmd(ctx, resp)
+	return newIntCmd(ctx, resp)
 }
 
 func (c *Compat) Dump(ctx context.Context, key string) *StringCmd {
 	cmd := c.client.B().Dump().Key(key).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewStringCmd(ctx, resp)
+	return newStringCmd(ctx, resp)
 }
 
 func (c *Compat) Exists(ctx context.Context, keys ...string) *IntCmd {
 	cmd := c.client.B().Exists().Key(keys...).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewIntCmd(ctx, resp)
+	return newIntCmd(ctx, resp)
 }
 
 func (c *Compat) Expire(ctx context.Context, key string, seconds time.Duration) *BoolCmd {
 	cmd := c.client.B().Expire().Key(key).Seconds(formatSec(seconds)).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewBoolCmd(ctx, resp)
+	return newBoolCmd(ctx, resp)
 }
 
 func (c *Compat) ExpireAt(ctx context.Context, key string, timestamp time.Time) *BoolCmd {
 	cmd := c.client.B().Expireat().Key(key).Timestamp(timestamp.Unix()).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewBoolCmd(ctx, resp)
+	return newBoolCmd(ctx, resp)
 }
 
 func (c *Compat) ExpireNX(ctx context.Context, key string, seconds time.Duration) *BoolCmd {
 	cmd := c.client.B().Expire().Key(key).Seconds(formatSec(seconds)).Nx().Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewBoolCmd(ctx, resp)
+	return newBoolCmd(ctx, resp)
 }
 
 func (c *Compat) ExpireXX(ctx context.Context, key string, seconds time.Duration) *BoolCmd {
 	cmd := c.client.B().Expire().Key(key).Seconds(formatSec(seconds)).Xx().Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewBoolCmd(ctx, resp)
+	return newBoolCmd(ctx, resp)
 }
 
 func (c *Compat) ExpireGT(ctx context.Context, key string, seconds time.Duration) *BoolCmd {
 	cmd := c.client.B().Expire().Key(key).Seconds(formatSec(seconds)).Gt().Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewBoolCmd(ctx, resp)
+	return newBoolCmd(ctx, resp)
 }
 
 func (c *Compat) ExpireLT(ctx context.Context, key string, seconds time.Duration) *BoolCmd {
 	cmd := c.client.B().Expire().Key(key).Seconds(formatSec(seconds)).Lt().Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewBoolCmd(ctx, resp)
+	return newBoolCmd(ctx, resp)
 }
 
 func (c *Compat) Keys(ctx context.Context, pattern string) *StringSliceCmd {
 	cmd := c.client.B().Keys().Pattern(pattern).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewStringSliceCmd(ctx, resp)
+	return newStringSliceCmd(ctx, resp)
 }
 
 func (c *Compat) Migrate(ctx context.Context, host string, port int64, key bool, db int64, timeout time.Duration) *StatusCmd {
@@ -423,84 +423,84 @@ func (c *Compat) Migrate(ctx context.Context, host string, port int64, key bool,
 		cmd = c.client.B().Migrate().Host(host).Port(port).Empty().DestinationDb(db).Timeout(formatSec(timeout)).Build()
 	}
 	resp := c.client.Do(ctx, cmd)
-	return NewStatusCmd(ctx, resp)
+	return newStatusCmd(ctx, resp)
 }
 
 func (c *Compat) Move(ctx context.Context, key string, db int64) *BoolCmd {
 	cmd := c.client.B().Move().Key(key).Db(db).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewBoolCmd(ctx, resp)
+	return newBoolCmd(ctx, resp)
 }
 
 func (c *Compat) ObjectRefCount(ctx context.Context, key string) *IntCmd {
 	cmd := c.client.B().ObjectRefcount().Key(key).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewIntCmd(ctx, resp)
+	return newIntCmd(ctx, resp)
 }
 
 func (c *Compat) ObjectEncoding(ctx context.Context, key string) *StringCmd {
 	cmd := c.client.B().ObjectEncoding().Key(key).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewStringCmd(ctx, resp)
+	return newStringCmd(ctx, resp)
 }
 
 func (c *Compat) ObjectIdleTime(ctx context.Context, key string) *IntCmd {
 	cmd := c.client.B().ObjectIdletime().Key(key).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewIntCmd(ctx, resp)
+	return newIntCmd(ctx, resp)
 }
 func (c *Compat) Persist(ctx context.Context, key string) *BoolCmd {
 	cmd := c.client.B().Persist().Key(key).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewBoolCmd(ctx, resp)
+	return newBoolCmd(ctx, resp)
 }
 
 func (c *Compat) PExpire(ctx context.Context, key string, milliseconds time.Duration) *BoolCmd {
 	cmd := c.client.B().Pexpire().Key(key).Milliseconds(formatMs(milliseconds)).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewBoolCmd(ctx, resp)
+	return newBoolCmd(ctx, resp)
 }
 
 func (c *Compat) PExpireAt(ctx context.Context, key string, millisecondsTimestamp time.Time) *BoolCmd {
 	cmd := c.client.B().Pexpireat().Key(key).MillisecondsTimestamp(millisecondsTimestamp.UnixNano() / int64(time.Millisecond)).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewBoolCmd(ctx, resp)
+	return newBoolCmd(ctx, resp)
 }
 
 func (c *Compat) PTTL(ctx context.Context, key string) *IntCmd {
 	cmd := c.client.B().Pttl().Key(key).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewIntCmd(ctx, resp)
+	return newIntCmd(ctx, resp)
 }
 
 func (c *Compat) RandomKey(ctx context.Context) *StringCmd {
 	cmd := c.client.B().Randomkey().Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewStringCmd(ctx, resp)
+	return newStringCmd(ctx, resp)
 }
 
 func (c *Compat) Rename(ctx context.Context, key, newkey string) *StatusCmd {
 	cmd := c.client.B().Rename().Key(key).Newkey(newkey).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewStatusCmd(ctx, resp)
+	return newStatusCmd(ctx, resp)
 }
 
 func (c *Compat) RenameNX(ctx context.Context, key, newkey string) *BoolCmd {
 	cmd := c.client.B().Renamenx().Key(key).Newkey(newkey).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewBoolCmd(ctx, resp)
+	return newBoolCmd(ctx, resp)
 }
 
 func (c *Compat) Restore(ctx context.Context, key string, ttl time.Duration, serializedValue string) *StatusCmd {
 	cmd := c.client.B().Restore().Key(key).Ttl(formatMs(ttl)).SerializedValue(serializedValue).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewStatusCmd(ctx, resp)
+	return newStatusCmd(ctx, resp)
 }
 
 func (c *Compat) RestoreReplace(ctx context.Context, key string, ttl time.Duration, serializedValue string) *StatusCmd {
 	cmd := c.client.B().Restore().Key(key).Ttl(formatMs(ttl)).SerializedValue(serializedValue).Replace().Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewStatusCmd(ctx, resp)
+	return newStatusCmd(ctx, resp)
 }
 
 func (c *Compat) Sort(ctx context.Context, key string, sort Sort) *StringSliceCmd {
@@ -530,7 +530,7 @@ func (c *Compat) Sort(ctx context.Context, key string, sort Sort) *StringSliceCm
 	}
 	cmd = partial.(*cmds.SortKey).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewStringSliceCmd(ctx, resp)
+	return newStringSliceCmd(ctx, resp)
 }
 
 func (c *Compat) SortStore(ctx context.Context, key, store string, sort Sort) *IntCmd {
@@ -560,61 +560,61 @@ func (c *Compat) SortStore(ctx context.Context, key, store string, sort Sort) *I
 	}
 	cmd = partial.(*cmds.SortKey).Store(store).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewIntCmd(ctx, resp)
+	return newIntCmd(ctx, resp)
 }
 
 func (c *Compat) Touch(ctx context.Context, keys ...string) *IntCmd {
 	cmd := c.client.B().Touch().Key(keys...).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewIntCmd(ctx, resp)
+	return newIntCmd(ctx, resp)
 }
 
 func (c *Compat) TTL(ctx context.Context, key string) *IntCmd {
 	cmd := c.client.B().Ttl().Key(key).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewIntCmd(ctx, resp)
+	return newIntCmd(ctx, resp)
 }
 
 func (c *Compat) Type(ctx context.Context, key string) *StatusCmd {
 	cmd := c.client.B().Type().Key(key).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewStatusCmd(ctx, resp)
+	return newStatusCmd(ctx, resp)
 }
 
 func (c *Compat) Append(ctx context.Context, key, value string) *IntCmd {
 	cmd := c.client.B().Append().Key(key).Value(value).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewIntCmd(ctx, resp)
+	return newIntCmd(ctx, resp)
 }
 
 func (c *Compat) Decr(ctx context.Context, key string) *IntCmd {
 	cmd := c.client.B().Decr().Key(key).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewIntCmd(ctx, resp)
+	return newIntCmd(ctx, resp)
 }
 
 func (c *Compat) DecrBy(ctx context.Context, key string, decrement int64) *IntCmd {
 	cmd := c.client.B().Decrby().Key(key).Decrement(decrement).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewIntCmd(ctx, resp)
+	return newIntCmd(ctx, resp)
 }
 
 func (c *Compat) Get(ctx context.Context, key string) *StringCmd {
 	cmd := c.client.B().Get().Key(key).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewStringCmd(ctx, resp)
+	return newStringCmd(ctx, resp)
 }
 
 func (c *Compat) GetRange(ctx context.Context, key string, start, end int64) *StringCmd {
 	cmd := c.client.B().Getrange().Key(key).Start(start).End(end).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewStringCmd(ctx, resp)
+	return newStringCmd(ctx, resp)
 }
 
 func (c *Compat) GetSet(ctx context.Context, key, value string) *StringCmd {
 	cmd := c.client.B().Getset().Key(key).Value(value).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewStringCmd(ctx, resp)
+	return newStringCmd(ctx, resp)
 }
 
 // GetEx An expiration of zero removes the TTL associated with the key (i.e. GETEX key persist).
@@ -631,37 +631,37 @@ func (c *Compat) GetEx(ctx context.Context, key string, expiration time.Duration
 	}
 	cmd := partial.(*cmds.GetexKey).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewStringCmd(ctx, resp)
+	return newStringCmd(ctx, resp)
 }
 
 func (c *Compat) GetDel(ctx context.Context, key string) *StringCmd {
 	cmd := c.client.B().Getdel().Key(key).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewStringCmd(ctx, resp)
+	return newStringCmd(ctx, resp)
 }
 
 func (c *Compat) Incr(ctx context.Context, key string) *IntCmd {
 	cmd := c.client.B().Incr().Key(key).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewIntCmd(ctx, resp)
+	return newIntCmd(ctx, resp)
 }
 
 func (c *Compat) IncrBy(ctx context.Context, key string, increment int64) *IntCmd {
 	cmd := c.client.B().Incrby().Key(key).Increment(increment).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewIntCmd(ctx, resp)
+	return newIntCmd(ctx, resp)
 }
 
 func (c *Compat) IncrByFloat(ctx context.Context, key string, increment float64) *FloatCmd {
 	cmd := c.client.B().Incrbyfloat().Key(key).Increment(increment).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewFloatCmd(ctx, resp)
+	return newFloatCmd(ctx, resp)
 }
 
 func (c *Compat) MGet(ctx context.Context, keys ...string) *SliceCmd {
 	cmd := c.client.B().Mget().Key(keys...).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewSliceCmd(ctx, resp)
+	return newSliceCmd(ctx, resp)
 }
 
 func (c *Compat) MSet(ctx context.Context, keys []string, values []string) *StatusCmd {
@@ -674,7 +674,7 @@ func (c *Compat) MSet(ctx context.Context, keys []string, values []string) *Stat
 	}
 	cmd := partial.Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewStatusCmd(ctx, resp)
+	return newStatusCmd(ctx, resp)
 }
 
 func (c *Compat) MSetNX(ctx context.Context, keys []string, values []string) *BoolCmd {
@@ -687,7 +687,7 @@ func (c *Compat) MSetNX(ctx context.Context, keys []string, values []string) *Bo
 	}
 	cmd := partial.Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewBoolCmd(ctx, resp)
+	return newBoolCmd(ctx, resp)
 }
 
 // SET key value [expiration]
@@ -711,7 +711,7 @@ func (c *Compat) Set(ctx context.Context, key string, value string, expiration t
 	}
 	cmd := partial.(*cmds.SetValue).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewStatusCmd(ctx, resp)
+	return newStatusCmd(ctx, resp)
 }
 
 func (c *Compat) SetArgs(ctx context.Context, key string, value string, a SetArgs) *StatusCmd {
@@ -744,19 +744,19 @@ func (c *Compat) SetArgs(ctx context.Context, key string, value string, a SetArg
 	}
 	cmd := partial.(*cmds.SetValue).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewStatusCmd(ctx, resp)
+	return newStatusCmd(ctx, resp)
 }
 
 func (c *Compat) SetEx(ctx context.Context, key string, value string, expiration time.Duration) *StatusCmd {
 	cmd := c.client.B().Setex().Key(key).Seconds(formatSec(expiration)).Value(value).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewStatusCmd(ctx, resp)
+	return newStatusCmd(ctx, resp)
 }
 
 func (c *Compat) SetNX(ctx context.Context, key string, value string) *BoolCmd {
 	cmd := c.client.B().Setnx().Key(key).Value(value).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewBoolCmd(ctx, resp)
+	return newBoolCmd(ctx, resp)
 }
 
 func (c *Compat) SetXX(ctx context.Context, key string, value string, expiration time.Duration) *BoolCmd {
@@ -773,19 +773,19 @@ func (c *Compat) SetXX(ctx context.Context, key string, value string, expiration
 	}
 	cmd := partial.(*cmds.SetValue).Xx().Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewBoolCmd(ctx, resp)
+	return newBoolCmd(ctx, resp)
 }
 
 func (c *Compat) SetRange(ctx context.Context, key string, offset int64, value string) *IntCmd {
 	cmd := c.client.B().Setrange().Key(key).Offset(offset).Value(value).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewIntCmd(ctx, resp)
+	return newIntCmd(ctx, resp)
 }
 
 func (c *Compat) StrLen(ctx context.Context, key string) *IntCmd {
 	cmd := c.client.B().Strlen().Key(key).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewIntCmd(ctx, resp)
+	return newIntCmd(ctx, resp)
 }
 
 func (c *Compat) Copy(ctx context.Context, source string, destination string, db int64, replace bool) *IntCmd {
@@ -796,49 +796,49 @@ func (c *Compat) Copy(ctx context.Context, source string, destination string, db
 	}
 	cmd := partial.(*cmds.CopyDb).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewIntCmd(ctx, resp)
+	return newIntCmd(ctx, resp)
 }
 
 func (c *Compat) GetBit(ctx context.Context, key string, offset int64) *IntCmd {
 	cmd := c.client.B().Getbit().Key(key).Offset(offset).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewIntCmd(ctx, resp)
+	return newIntCmd(ctx, resp)
 }
 
 func (c *Compat) SetBit(ctx context.Context, key string, offset int64, value int64) *IntCmd {
 	cmd := c.client.B().Setbit().Key(key).Offset(offset).Value(value).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewIntCmd(ctx, resp)
+	return newIntCmd(ctx, resp)
 }
 
 func (c *Compat) BitCount(ctx context.Context, key string, bitCount BitCount) *IntCmd {
 	cmd := c.client.B().Bitcount().Key(key).Start(bitCount.Start).End(bitCount.End).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewIntCmd(ctx, resp)
+	return newIntCmd(ctx, resp)
 }
 
 func (c *Compat) BitOpAnd(ctx context.Context, destKey string, keys ...string) *IntCmd {
 	cmd := c.client.B().Bitop().Operation("AND").Destkey(destKey).Key(keys...).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewIntCmd(ctx, resp)
+	return newIntCmd(ctx, resp)
 }
 
 func (c *Compat) BitOpOr(ctx context.Context, destKey string, keys ...string) *IntCmd {
 	cmd := c.client.B().Bitop().Operation("OR").Destkey(destKey).Key(keys...).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewIntCmd(ctx, resp)
+	return newIntCmd(ctx, resp)
 }
 
 func (c *Compat) BitOpXor(ctx context.Context, destKey string, keys ...string) *IntCmd {
 	cmd := c.client.B().Bitop().Operation("XOR").Destkey(destKey).Key(keys...).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewIntCmd(ctx, resp)
+	return newIntCmd(ctx, resp)
 }
 
 func (c *Compat) BitOpNot(ctx context.Context, destKey string, key string) *IntCmd {
 	cmd := c.client.B().Bitop().Operation("NOT").Destkey(destKey).Key(key).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewIntCmd(ctx, resp)
+	return newIntCmd(ctx, resp)
 }
 
 func (c *Compat) BitPos(ctx context.Context, key string, bit int64, bitPos BitPos) *IntCmd {
@@ -851,5 +851,5 @@ func (c *Compat) BitPos(ctx context.Context, key string, bit int64, bitPos BitPo
 	}
 	cmd := partial.(*cmds.BitposIndexEndIndexEnd).Build()
 	resp := c.client.Do(ctx, cmd)
-	return NewIntCmd(ctx, resp)
+	return newIntCmd(ctx, resp)
 }
