@@ -3,6 +3,7 @@ package rueidiscompat
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -504,62 +505,58 @@ func (c *Compat) RestoreReplace(ctx context.Context, key string, ttl time.Durati
 }
 
 func (c *Compat) Sort(ctx context.Context, key string, sort Sort) *StringSliceCmd {
-	var cmd cmds.Completed
-	var partial interface{}
-	partial = c.client.B().Sort().Key(key)
+	cmd := c.client.B().Arbitrary("SORT").Keys(key)
 	if sort.By != "" {
-		partial = partial.(*cmds.SortKey).By(sort.By)
+		cmd = cmd.Args("BY", sort.By)
 	}
 	if sort.Offset != 0 || sort.Count != 0 {
-		partial = partial.(*cmds.SortKey).Limit(sort.Offset, sort.Count)
+		cmd = cmd.Args("LIMIT", strconv.FormatInt(sort.Offset, 10), strconv.FormatInt(sort.Count, 10))
 	}
 	if len(sort.Get) > 0 {
-		partial = partial.(*cmds.SortKey).Get(sort.Get...)
+		cmd = cmd.Args("GET")
+		cmd = cmd.Args(sort.Get...)
 	}
 	switch strings.ToLower(sort.Order) {
 	case "asc":
-		partial = partial.(*cmds.SortKey).Asc()
+		cmd = cmd.Args("ASC")
 	case "desc":
-		partial = partial.(*cmds.SortKey).Desc()
+		cmd = cmd.Args("DESC")
 	case "":
 	default:
 		panic(fmt.Sprintf("invalid sort order %s", sort.Order))
 	}
 	if sort.Alpha {
-		partial = partial.(*cmds.SortKey).Alpha()
+		cmd = cmd.Args("ALPHA")
 	}
-	cmd = partial.(*cmds.SortKey).Build()
-	resp := c.client.Do(ctx, cmd)
+	resp := c.client.Do(ctx, cmd.Build())
 	return newStringSliceCmd(resp)
 }
 
 func (c *Compat) SortStore(ctx context.Context, key, store string, sort Sort) *IntCmd {
-	var cmd cmds.Completed
-	var partial interface{}
-	partial = c.client.B().Sort().Key(key)
+	cmd := c.client.B().Arbitrary("SORT").Keys(key)
 	if sort.By != "" {
-		partial = partial.(*cmds.SortKey).By(sort.By)
+		cmd = cmd.Args("BY", sort.By)
 	}
 	if sort.Offset != 0 || sort.Count != 0 {
-		partial = partial.(*cmds.SortKey).Limit(sort.Offset, sort.Count)
+		cmd = cmd.Args("LIMIT", strconv.FormatInt(sort.Offset, 10), strconv.FormatInt(sort.Count, 10))
 	}
 	if len(sort.Get) > 0 {
-		partial = partial.(*cmds.SortKey).Get(sort.Get...)
+		cmd = cmd.Args("GET")
+		cmd = cmd.Args(sort.Get...)
 	}
 	switch strings.ToLower(sort.Order) {
 	case "asc":
-		partial = partial.(*cmds.SortKey).Asc()
+		cmd = cmd.Args("ASC")
 	case "desc":
-		partial = partial.(*cmds.SortKey).Desc()
+		cmd = cmd.Args("DESC")
 	case "":
 	default:
 		panic(fmt.Sprintf("invalid sort order %s", sort.Order))
 	}
 	if sort.Alpha {
-		partial = partial.(*cmds.SortKey).Alpha()
+		cmd = cmd.Args("ALPHA")
 	}
-	cmd = partial.(*cmds.SortKey).Store(store).Build()
-	resp := c.client.Do(ctx, cmd)
+	resp := c.client.Do(ctx, cmd.Args("STORE", store).Build())
 	return newIntCmd(resp)
 }
 
@@ -620,17 +617,16 @@ func (c *Compat) GetSet(ctx context.Context, key, value string) *StringCmd {
 // GetEx An expiration of zero removes the TTL associated with the key (i.e. GETEX key persist).
 // Requires Redis >= 6.2.0.
 func (c *Compat) GetEx(ctx context.Context, key string, expiration time.Duration) *StringCmd {
-	var partial interface{}
-	partial = c.client.B().Getex().Key(key)
+	var resp rueidis.RedisResult
 	if expiration > 0 {
 		if usePrecise(expiration) {
-			partial = partial.(*cmds.GetexKey).PxMilliseconds(formatMs(expiration))
+			resp = c.client.Do(ctx, c.client.B().Getex().Key(key).PxMilliseconds(formatMs(expiration)).Build())
 		} else {
-			partial = partial.(*cmds.GetexKey).ExSeconds(formatSec(expiration))
+			resp = c.client.Do(ctx, c.client.B().Getex().Key(key).ExSeconds(formatSec(expiration)).Build())
 		}
+	} else {
+		resp = c.client.Do(ctx, c.client.B().Getex().Key(key).Build())
 	}
-	cmd := partial.(*cmds.GetexKey).Build()
-	resp := c.client.Do(ctx, cmd)
 	return newStringCmd(resp)
 }
 
@@ -698,52 +694,49 @@ func (c *Compat) MSetNX(ctx context.Context, keys []string, values []string) *Bo
 //
 // For more options, use SetArgs.
 func (c *Compat) Set(ctx context.Context, key string, value string, expiration time.Duration) *StatusCmd {
-	var partial interface{}
-	partial = c.client.B().Set().Key(key).Value(value)
+	var resp rueidis.RedisResult
 	if expiration > 0 {
 		if usePrecise(expiration) {
-			partial = partial.(*cmds.SetValue).PxMilliseconds(formatMs(expiration))
+			resp = c.client.Do(ctx, c.client.B().Set().Key(key).Value(value).PxMilliseconds(formatMs(expiration)).Build())
 		} else {
-			partial = partial.(*cmds.SetValue).ExSeconds(formatSec(expiration))
+			resp = c.client.Do(ctx, c.client.B().Set().Key(key).Value(value).ExSeconds(formatSec(expiration)).Build())
 		}
 	} else if expiration == -1 {
-		partial = partial.(*cmds.SetValue).Keepttl()
+		resp = c.client.Do(ctx, c.client.B().Set().Key(key).Value(value).Keepttl().Build())
+	} else {
+		resp = c.client.Do(ctx, c.client.B().Set().Key(key).Value(value).Build())
 	}
-	cmd := partial.(*cmds.SetValue).Build()
-	resp := c.client.Do(ctx, cmd)
 	return newStatusCmd(resp)
 }
 
 func (c *Compat) SetArgs(ctx context.Context, key string, value string, a SetArgs) *StatusCmd {
-	var partial interface{}
-	partial = c.client.B().Set().Key(key).Value(value)
+	cmd := c.client.B().Arbitrary("SET").Keys(key).Args(value)
 	if a.KeepTTL {
-		partial = partial.(*cmds.SetValue).Keepttl()
+		cmd = cmd.Args("KEEPTTL")
 	}
 	if !a.ExpireAt.IsZero() {
-		partial = partial.(*cmds.SetValue).ExatTimestamp(a.ExpireAt.Unix())
+		cmd = cmd.Args("EXAT", strconv.FormatInt(a.ExpireAt.Unix(), 10))
 	}
 	if a.TTL > 0 {
 		if usePrecise(a.TTL) {
-			partial = partial.(*cmds.SetValue).PxMilliseconds(formatMs(a.TTL))
+			cmd = cmd.Args("PX", strconv.FormatInt(formatMs(a.TTL), 10))
 		} else {
-			partial = partial.(*cmds.SetValue).ExSeconds(formatSec(a.TTL))
+			cmd = cmd.Args("EX", strconv.FormatInt(formatSec(a.TTL), 10))
 		}
 	}
 	switch strings.ToLower(a.Mode) {
 	case "xx":
-		partial = partial.(*cmds.SetValue).Xx()
+		cmd = cmd.Args("XX")
 	case "nx":
-		partial = partial.(*cmds.SetValue).Nx()
+		cmd = cmd.Args("NX")
 	default:
 		panic(fmt.Sprintf("invalid mode for SET: %s", a.Mode))
 
 	}
 	if a.Get {
-		partial = partial.(*cmds.SetValue).Get()
+		cmd = cmd.Args("GET")
 	}
-	cmd := partial.(*cmds.SetValue).Build()
-	resp := c.client.Do(ctx, cmd)
+	resp := c.client.Do(ctx, cmd.Build())
 	return newStatusCmd(resp)
 }
 
@@ -760,19 +753,18 @@ func (c *Compat) SetNX(ctx context.Context, key string, value string) *BoolCmd {
 }
 
 func (c *Compat) SetXX(ctx context.Context, key string, value string, expiration time.Duration) *BoolCmd {
-	var partial interface{}
-	partial = c.client.B().Set().Key(key).Value(value)
+	var resp rueidis.RedisResult
 	if expiration > 0 {
 		if usePrecise(expiration) {
-			partial = partial.(*cmds.SetValue).PxMilliseconds(formatMs(expiration))
+			resp = c.client.Do(ctx, c.client.B().Set().Key(key).Value(value).PxMilliseconds(formatMs(expiration)).Build())
 		} else {
-			partial = partial.(*cmds.SetValue).ExSeconds(formatSec(expiration))
+			resp = c.client.Do(ctx, c.client.B().Set().Key(key).Value(value).ExSeconds(formatSec(expiration)).Build())
 		}
 	} else if expiration == -1 {
-		partial = partial.(*cmds.SetValue).Keepttl()
+		resp = c.client.Do(ctx, c.client.B().Set().Key(key).Value(value).Keepttl().Build())
+	} else {
+		resp = c.client.Do(ctx, c.client.B().Set().Key(key).Value(value).Build())
 	}
-	cmd := partial.(*cmds.SetValue).Xx().Build()
-	resp := c.client.Do(ctx, cmd)
 	return newBoolCmd(resp)
 }
 
@@ -789,13 +781,12 @@ func (c *Compat) StrLen(ctx context.Context, key string) *IntCmd {
 }
 
 func (c *Compat) Copy(ctx context.Context, source string, destination string, db int64, replace bool) *IntCmd {
-	var partial interface{}
-	partial = c.client.B().Copy().Source(source).Destination(destination).Db(db)
+	var resp rueidis.RedisResult
 	if replace {
-		partial = partial.(*cmds.CopyDb).Replace()
+		resp = c.client.Do(ctx, c.client.B().Copy().Source(source).Destination(destination).Db(db).Replace().Build())
+	} else {
+		resp = c.client.Do(ctx, c.client.B().Copy().Source(source).Destination(destination).Db(db).Build())
 	}
-	cmd := partial.(*cmds.CopyDb).Build()
-	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
 }
 
@@ -842,14 +833,11 @@ func (c *Compat) BitOpNot(ctx context.Context, destKey string, key string) *IntC
 }
 
 func (c *Compat) BitPos(ctx context.Context, key string, bit int64, bitPos BitPos) *IntCmd {
-	var partial interface{}
-	partial = c.client.B().Bitpos().Key(key).Bit(bit).Start(bitPos.Start).End(bitPos.End)
+	var resp rueidis.RedisResult
 	if bitPos.Byte {
-		partial = partial.(*cmds.BitposIndexEndIndexEnd).Byte()
+		resp = c.client.Do(ctx, c.client.B().Bitpos().Key(key).Bit(bit).Start(bitPos.Start).End(bitPos.End).Byte().Build())
 	} else {
-		partial = partial.(*cmds.BitposIndexEndIndexEnd).Bit()
+		resp = c.client.Do(ctx, c.client.B().Bitpos().Key(key).Bit(bit).Start(bitPos.Start).End(bitPos.End).Bit().Build())
 	}
-	cmd := partial.(*cmds.BitposIndexEndIndexEnd).Build()
-	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
 }
