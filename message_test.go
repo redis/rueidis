@@ -48,6 +48,27 @@ func TestRedisResult(t *testing.T) {
 		}
 	})
 
+	t.Run("AsBool", func(t *testing.T) {
+		if _, err := (RedisResult{err: errors.New("other")}).AsBool(); err == nil {
+			t.Fatal("ToBool not failed as expected")
+		}
+		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsBool(); err == nil {
+			t.Fatal("ToBool not failed as expected")
+		}
+		if v, _ := (RedisResult{val: RedisMessage{typ: '#', integer: 1}}).AsBool(); !v {
+			t.Fatal("ToBool not get value as expected")
+		}
+		if v, _ := (RedisResult{val: RedisMessage{typ: ':', integer: 1}}).AsBool(); !v {
+			t.Fatal("ToBool not get value as expected")
+		}
+		if v, _ := (RedisResult{val: RedisMessage{typ: '+', string: "OK"}}).AsBool(); !v {
+			t.Fatal("ToBool not get value as expected")
+		}
+		if v, _ := (RedisResult{val: RedisMessage{typ: '$', string: "OK"}}).AsBool(); !v {
+			t.Fatal("ToBool not get value as expected")
+		}
+	})
+
 	t.Run("ToFloat64", func(t *testing.T) {
 		if _, err := (RedisResult{err: errors.New("other")}).ToFloat64(); err == nil {
 			t.Fatal("ToFloat64 not failed as expected")
@@ -235,6 +256,19 @@ func TestRedisMessage(t *testing.T) {
 			}
 		}()
 		(&RedisMessage{typ: 't'}).ToBool()
+	})
+
+	t.Run("AsBool", func(t *testing.T) {
+		if _, err := (&RedisMessage{typ: '_'}).AsBool(); err == nil {
+			t.Fatal("AsBool not failed as expected")
+		}
+
+		defer func() {
+			if !strings.Contains(recover().(string), "redis message type t is not a int, string or bool") {
+				t.Fatal("AsBool not panic as expected")
+			}
+		}()
+		(&RedisMessage{typ: 't'}).AsBool()
 	})
 
 	t.Run("ToFloat64", func(t *testing.T) {

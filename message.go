@@ -286,9 +286,7 @@ func (m *RedisMessage) AsInt64() (val int64, err error) {
 
 // AsBool checks if message is non-nil redis response, and parses it as bool
 func (m *RedisMessage) AsBool() (val bool, err error) {
-	val = false
-	err = m.Error()
-	if err != nil {
+	if err = m.Error(); err != nil {
 		return
 	}
 	switch m.typ {

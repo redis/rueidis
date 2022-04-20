@@ -1,34 +1,21 @@
 package rueidiscompat
 
 import (
-	"context"
 	"strconv"
 	"time"
 
 	"github.com/rueian/rueidis"
 )
 
-type baseCmd struct {
-	rueidis.RedisResult
-	ctx context.Context
+type StringCmd struct {
+	res rueidis.RedisResult
+	val string
 	err error
 }
 
-type StringCmd struct {
-	baseCmd
-	val string
-}
-
-func NewStringCmd(ctx context.Context, result rueidis.RedisResult) *StringCmd {
-	val, err := result.ToString()
-	return &StringCmd{
-		baseCmd: baseCmd{
-			RedisResult: result,
-			ctx:         ctx,
-			err:         err,
-		},
-		val: val,
-	}
+func newStringCmd(res rueidis.RedisResult) *StringCmd {
+	val, err := res.ToString()
+	return &StringCmd{res: res, val: val, err: err}
 }
 
 func (cmd *StringCmd) SetVal(val string) {
@@ -48,16 +35,16 @@ func (cmd *StringCmd) Bytes() ([]byte, error) {
 }
 
 func (cmd *StringCmd) Bool() (bool, error) {
-	return cmd.ToBool()
+	return cmd.res.ToBool()
 }
 
 func (cmd *StringCmd) Int() (int, error) {
-	i, err := cmd.ToInt64()
+	i, err := cmd.res.ToInt64()
 	return int(i), err
 }
 
 func (cmd *StringCmd) Int64() (int64, error) {
-	return cmd.ToInt64()
+	return cmd.res.ToInt64()
 }
 
 func (cmd *StringCmd) Uint64() (uint64, error) {
@@ -68,7 +55,7 @@ func (cmd *StringCmd) Uint64() (uint64, error) {
 }
 
 func (cmd *StringCmd) Float32() (float32, error) {
-	f, err := cmd.ToFloat64()
+	f, err := cmd.res.ToFloat64()
 	if err != nil {
 		return 0, err
 	}
@@ -76,7 +63,7 @@ func (cmd *StringCmd) Float32() (float32, error) {
 }
 
 func (cmd *StringCmd) Float64() (float64, error) {
-	return cmd.ToFloat64()
+	return cmd.res.ToFloat64()
 }
 
 func (cmd *StringCmd) Time() (time.Time, error) {
@@ -91,24 +78,18 @@ func (cmd *StringCmd) String() string {
 }
 
 type BoolCmd struct {
-	baseCmd
+	res rueidis.RedisResult
 	val bool
+	err error
 }
 
-func NewBoolCmd(ctx context.Context, result rueidis.RedisResult) *BoolCmd {
-	v, err := result.AsBool()
+func newBoolCmd(res rueidis.RedisResult) *BoolCmd {
+	val, err := res.AsBool()
 	if rueidis.IsRedisNil(err) {
-		v = false
+		val = false
 		err = nil
 	}
-	return &BoolCmd{
-		baseCmd: baseCmd{
-			RedisResult: result,
-			ctx:         ctx,
-			err:         err,
-		},
-		val: v,
-	}
+	return &BoolCmd{res: res, val: val, err: err}
 }
 
 func (cmd *BoolCmd) SetVal(val bool) {
@@ -124,24 +105,18 @@ func (cmd *BoolCmd) Result() (bool, error) {
 }
 
 func (cmd *BoolCmd) String() (string, error) {
-	return cmd.ToString()
+	return cmd.res.ToString()
 }
 
 type IntCmd struct {
-	baseCmd
+	res rueidis.RedisResult
 	val int64
+	err error
 }
 
-func NewIntCmd(ctx context.Context, result rueidis.RedisResult) *IntCmd {
-	v, err := result.AsInt64()
-	return &IntCmd{
-		baseCmd: baseCmd{
-			RedisResult: result,
-			ctx:         ctx,
-			err:         err,
-		},
-		val: v,
-	}
+func newIntCmd(res rueidis.RedisResult) *IntCmd {
+	val, err := res.AsInt64()
+	return &IntCmd{res: res, val: val, err: err}
 }
 
 func (cmd *IntCmd) SetVal(val int64) {
@@ -161,24 +136,18 @@ func (cmd *IntCmd) Uint64() (uint64, error) {
 }
 
 func (cmd *IntCmd) String() (string, error) {
-	return cmd.ToString()
+	return cmd.res.ToString()
 }
 
 type StatusCmd struct {
-	baseCmd
+	res rueidis.RedisResult
 	val string
+	err error
 }
 
-func NewStatusCmd(ctx context.Context, result rueidis.RedisResult) *StatusCmd {
-	v, err := result.ToString()
-	return &StatusCmd{
-		baseCmd: baseCmd{
-			RedisResult: result,
-			ctx:         ctx,
-			err:         err,
-		},
-		val: v,
-	}
+func newStatusCmd(res rueidis.RedisResult) *StatusCmd {
+	val, err := res.ToString()
+	return &StatusCmd{res: res, val: val, err: err}
 }
 
 func (cmd *StatusCmd) SetVal(val string) {
@@ -194,24 +163,18 @@ func (cmd *StatusCmd) Result() (string, error) {
 }
 
 func (cmd *StatusCmd) String() (string, error) {
-	return cmd.ToString()
+	return cmd.res.ToString()
 }
 
 type SliceCmd struct {
-	baseCmd
+	res rueidis.RedisResult
 	val []rueidis.RedisMessage
+	err error
 }
 
-func NewSliceCmd(ctx context.Context, result rueidis.RedisResult) *SliceCmd {
-	v, err := result.ToArray()
-	return &SliceCmd{
-		baseCmd: baseCmd{
-			RedisResult: result,
-			ctx:         ctx,
-			err:         err,
-		},
-		val: v,
-	}
+func newSliceCmd(res rueidis.RedisResult) *SliceCmd {
+	val, err := res.ToArray()
+	return &SliceCmd{res: res, val: val, err: err}
 }
 
 func (cmd *SliceCmd) SetVal(val []rueidis.RedisMessage) {
@@ -227,24 +190,18 @@ func (cmd *SliceCmd) Result() ([]rueidis.RedisMessage, error) {
 }
 
 func (cmd *SliceCmd) String() (string, error) {
-	return cmd.ToString()
+	return cmd.res.ToString()
 }
 
 type StringSliceCmd struct {
-	baseCmd
+	res rueidis.RedisResult
 	val []string
+	err error
 }
 
-func NewStringSliceCmd(ctx context.Context, result rueidis.RedisResult) *StringSliceCmd {
-	v, err := result.AsStrSlice()
-	return &StringSliceCmd{
-		baseCmd: baseCmd{
-			RedisResult: result,
-			ctx:         ctx,
-			err:         err,
-		},
-		val: v,
-	}
+func newStringSliceCmd(res rueidis.RedisResult) *StringSliceCmd {
+	val, err := res.AsStrSlice()
+	return &StringSliceCmd{res: res, val: val, err: err}
 }
 
 func (cmd *StringSliceCmd) SetVal(val []string) {
@@ -260,24 +217,18 @@ func (cmd *StringSliceCmd) Result() ([]string, error) {
 }
 
 func (cmd *StringSliceCmd) String() (string, error) {
-	return cmd.ToString()
+	return cmd.res.ToString()
 }
 
 type FloatCmd struct {
-	baseCmd
+	res rueidis.RedisResult
 	val float64
+	err error
 }
 
-func NewFloatCmd(ctx context.Context, result rueidis.RedisResult) *FloatCmd {
-	v, err := result.ToFloat64()
-	return &FloatCmd{
-		baseCmd: baseCmd{
-			RedisResult: result,
-			ctx:         ctx,
-			err:         err,
-		},
-		val: v,
-	}
+func newFloatCmd(res rueidis.RedisResult) *FloatCmd {
+	val, err := res.ToFloat64()
+	return &FloatCmd{res: res, val: val, err: err}
 }
 
 func (cmd *FloatCmd) SetVal(val float64) {
@@ -293,8 +244,7 @@ func (cmd *FloatCmd) Result() (float64, error) {
 }
 
 func (cmd *FloatCmd) String() (string, error) {
-	cmd.ToArray()
-	return cmd.ToString()
+	return cmd.res.ToString()
 }
 
 type Sort struct {
