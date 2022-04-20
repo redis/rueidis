@@ -193,6 +193,14 @@ func (r RedisResult) AsStrSlice() ([]string, error) {
 	return r.val.AsStrSlice()
 }
 
+// AsIntSlice delegates to RedisMessage.AsIntSlice
+func (r RedisResult) AsIntSlice() ([]int64, error) {
+	if err := r.Error(); err != nil {
+		return nil, err
+	}
+	return r.val.AsIntSlice()
+}
+
 // AsMap delegates to RedisMessage.AsMap
 func (r RedisResult) AsMap() (map[string]RedisMessage, error) {
 	if err := r.Error(); err != nil {
@@ -373,6 +381,22 @@ func (m *RedisMessage) AsStrSlice() ([]string, error) {
 	for _, v := range values {
 		if v.typ == '$' || v.typ == '+' || len(v.string) != 0 {
 			s = append(s, v.string)
+		}
+	}
+	return s, nil
+}
+
+// AsIntSlice check if message is a redis array/set response, and convert to []int64.
+// Non int value will be ignored, including nil value.
+func (m *RedisMessage) AsIntSlice() ([]int64, error) {
+	values, err := m.ToArray()
+	if err != nil {
+		return nil, err
+	}
+	s := make([]int64, 0, len(values))
+	for _, v := range values {
+		if v.typ == ':' {
+			s = append(s, v.integer)
 		}
 	}
 	return s, nil
