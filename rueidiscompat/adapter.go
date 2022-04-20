@@ -514,11 +514,9 @@ func (c *Compat) Sort(ctx context.Context, key string, sort Sort) *StringSliceCm
 		cmd = cmd.Args("GET")
 		cmd = cmd.Args(sort.Get...)
 	}
-	switch strings.ToLower(sort.Order) {
-	case "asc":
-		cmd = cmd.Args("ASC")
-	case "desc":
-		cmd = cmd.Args("DESC")
+	switch order := strings.ToUpper(sort.Order); order {
+	case "ASC", "DESC":
+		cmd = cmd.Args(order)
 	case "":
 	default:
 		panic(fmt.Sprintf("invalid sort order %s", sort.Order))
@@ -542,11 +540,9 @@ func (c *Compat) SortStore(ctx context.Context, key, store string, sort Sort) *I
 		cmd = cmd.Args("GET")
 		cmd = cmd.Args(sort.Get...)
 	}
-	switch strings.ToLower(sort.Order) {
-	case "asc":
-		cmd = cmd.Args("ASC")
-	case "desc":
-		cmd = cmd.Args("DESC")
+	switch order := strings.ToUpper(sort.Order); order {
+	case "ASC", "DESC":
+		cmd = cmd.Args(order)
 	case "":
 	default:
 		panic(fmt.Sprintf("invalid sort order %s", sort.Order))
@@ -722,14 +718,11 @@ func (c *Compat) SetArgs(ctx context.Context, key string, value string, a SetArg
 			cmd = cmd.Args("EX", strconv.FormatInt(formatSec(a.TTL), 10))
 		}
 	}
-	switch strings.ToUpper(a.Mode) {
-	case "XX":
-		cmd = cmd.Args(a.Mode)
-	case "NX":
-		cmd = cmd.Args(a.Mode)
+	switch mode := strings.ToUpper(a.Mode); mode {
+	case "XX", "NX":
+		cmd = cmd.Args(mode)
 	default:
 		panic(fmt.Sprintf("invalid mode for SET: %s", a.Mode))
-
 	}
 	if a.Get {
 		cmd = cmd.Args("GET")
@@ -852,14 +845,9 @@ func (c *Compat) BitField(ctx context.Context, key string, bitField []BitField) 
 		if a.IncrBy != nil {
 			cmd = cmd.Args("INCRBY", a.IncrBy.Encoding, strconv.FormatInt(a.IncrBy.Offset, 10), strconv.FormatInt(a.Increment, 10))
 		}
-		switch strings.ToUpper(a.Overflow) {
-		case "WRAP":
-			cmd = cmd.Args("OVERFLOW", a.Overflow)
-		case "SAT":
-			cmd = cmd.Args("OVERFLOW", a.Overflow)
-		case "FAIL":
-			cmd = cmd.Args("OVERFLOW", a.Overflow)
-		case "":
+		switch overflow := strings.ToUpper(a.Overflow); overflow {
+		case "WRAP", "SAT", "FAIL":
+			cmd = cmd.Args("OVERFLOW", overflow)
 		default:
 			panic(fmt.Sprintf("Invalid OVERFLOW argument value: %s", a.Overflow))
 		}
