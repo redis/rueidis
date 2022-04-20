@@ -76,58 +76,57 @@ type Cmdable interface {
 	BitOpXor(ctx context.Context, destKey string, keys ...string) *IntCmd
 	BitOpNot(ctx context.Context, destKey string, key string) *IntCmd
 	BitPos(ctx context.Context, key string, bit int64, bitPos BitPos) *IntCmd
+	BitField(ctx context.Context, key string, bitField []BitField) *IntSliceCmd
+
+	Scan(ctx context.Context, cursor uint64, match string, count int64) *ScanCmd
+	ScanType(ctx context.Context, cursor uint64, match string, count int64, keyType string) *ScanCmd
+	SScan(ctx context.Context, key string, cursor uint64, match string, count int64) *ScanCmd
+	HScan(ctx context.Context, key string, cursor uint64, match string, count int64) *ScanCmd
+	ZScan(ctx context.Context, key string, cursor uint64, match string, count int64) *ScanCmd
+
+	HDel(ctx context.Context, key string, fields ...string) *IntCmd
+	HExists(ctx context.Context, key, field string) *BoolCmd
+	HGet(ctx context.Context, key, field string) *StringCmd
+	HGetAll(ctx context.Context, key string) *StringStringMapCmd
+	HIncrBy(ctx context.Context, key, field string, incr int64) *IntCmd
+	HIncrByFloat(ctx context.Context, key, field string, incr float64) *FloatCmd
+	HKeys(ctx context.Context, key string) *StringSliceCmd
+	HLen(ctx context.Context, key string) *IntCmd
+	HMGet(ctx context.Context, key string, fields ...string) *SliceCmd
+	HSet(ctx context.Context, key string, keys []string, values []string) *IntCmd
+	HMSet(ctx context.Context, key string, keys []string, values []string) *BoolCmd
+	HSetNX(ctx context.Context, key, field string, value string) *BoolCmd
+	HVals(ctx context.Context, key string) *StringSliceCmd
+	HRandField(ctx context.Context, key string, count int64, withValues bool) *StringSliceCmd
+
+	BLPop(ctx context.Context, timeout time.Duration, key string, keys ...string) *StringSliceCmd
+	BRPop(ctx context.Context, timeout time.Duration, key string, keys ...string) *StringSliceCmd
+	BRPopLPush(ctx context.Context, source, destination string, timeout time.Duration) *StringCmd
+	LIndex(ctx context.Context, key string, index int64) *StringCmd
+	LInsert(ctx context.Context, key, op, pivot, element string) *IntCmd
+	LInsertBefore(ctx context.Context, key, pivot, element string) *IntCmd
+	LInsertAfter(ctx context.Context, key, pivot, element string) *IntCmd
+	LLen(ctx context.Context, key string) *IntCmd
+	LPop(ctx context.Context, key string) *StringCmd
+	LPopCount(ctx context.Context, key string, count int64) *StringSliceCmd
+	LPos(ctx context.Context, key string, value string, a LPosArgs) *IntCmd
+	LPosCount(ctx context.Context, key string, value string, count int64, args LPosArgs) *IntSliceCmd
+	LPush(ctx context.Context, key string, elements ...string) *IntCmd
+	LPushX(ctx context.Context, key string, elements ...string) *IntCmd
+	LRange(ctx context.Context, key string, start, stop int64) *StringSliceCmd
+	LRem(ctx context.Context, key string, count int64, element string) *IntCmd
+	LSet(ctx context.Context, key string, index int64, element string) *StatusCmd
+	LTrim(ctx context.Context, key string, start, stop int64) *StatusCmd
+	RPop(ctx context.Context, key string) *StringCmd
+	RPopCount(ctx context.Context, key string, count int64) *StringSliceCmd
+	RPopLPush(ctx context.Context, source, destination string) *StringCmd
+	RPush(ctx context.Context, key string, elements ...string) *IntCmd
+	RPushX(ctx context.Context, key string, elements ...string) *IntCmd
+	LMove(ctx context.Context, source, destination, srcpos, destpos string) *StringCmd
+	BLMove(ctx context.Context, source, destination, srcpos, destpos string, timeout time.Duration) *StringCmd
 	// Implemented until here.
 	// TODO:
 	//
-	// BitField(ctx context.Context, key string, args ...interface{}) *IntSliceCmd
-
-	// Scan(ctx context.Context, cursor uint64, match string, count int64) *ScanCmd
-	// ScanType(ctx context.Context, cursor uint64, match string, count int64, keyType string) *ScanCmd
-	// SScan(ctx context.Context, key string, cursor uint64, match string, count int64) *ScanCmd
-	// HScan(ctx context.Context, key string, cursor uint64, match string, count int64) *ScanCmd
-	// ZScan(ctx context.Context, key string, cursor uint64, match string, count int64) *ScanCmd
-
-	// HDel(ctx context.Context, key string, fields ...string) *IntCmd
-	// HExists(ctx context.Context, key, field string) *BoolCmd
-	// HGet(ctx context.Context, key, field string) *StringCmd
-	// HGetAll(ctx context.Context, key string) *StringStringMapCmd
-	// HIncrBy(ctx context.Context, key, field string, incr int64) *IntCmd
-	// HIncrByFloat(ctx context.Context, key, field string, incr float64) *FloatCmd
-	// HKeys(ctx context.Context, key string) *StringSliceCmd
-	// HLen(ctx context.Context, key string) *IntCmd
-	// HMGet(ctx context.Context, key string, fields ...string) *SliceCmd
-	// HSet(ctx context.Context, key string, values ...interface{}) *IntCmd
-	// HMSet(ctx context.Context, key string, values ...interface{}) *BoolCmd
-	// HSetNX(ctx context.Context, key, field string, value interface{}) *BoolCmd
-	// HVals(ctx context.Context, key string) *StringSliceCmd
-	// HRandField(ctx context.Context, key string, count int, withValues bool) *StringSliceCmd
-
-	// BLPop(ctx context.Context, timeout time.Duration, keys ...string) *StringSliceCmd
-	// BRPop(ctx context.Context, timeout time.Duration, keys ...string) *StringSliceCmd
-	// BRPopLPush(ctx context.Context, source, destination string, timeout time.Duration) *StringCmd
-	// LIndex(ctx context.Context, key string, index int64) *StringCmd
-	// LInsert(ctx context.Context, key, op string, pivot, value interface{}) *IntCmd
-	// LInsertBefore(ctx context.Context, key string, pivot, value interface{}) *IntCmd
-	// LInsertAfter(ctx context.Context, key string, pivot, value interface{}) *IntCmd
-	// LLen(ctx context.Context, key string) *IntCmd
-	// LPop(ctx context.Context, key string) *StringCmd
-	// LPopCount(ctx context.Context, key string, count int) *StringSliceCmd
-	// LPos(ctx context.Context, key string, value string, args LPosArgs) *IntCmd
-	// LPosCount(ctx context.Context, key string, value string, count int64, args LPosArgs) *IntSliceCmd
-	// LPush(ctx context.Context, key string, values ...interface{}) *IntCmd
-	// LPushX(ctx context.Context, key string, values ...interface{}) *IntCmd
-	// LRange(ctx context.Context, key string, start, stop int64) *StringSliceCmd
-	// LRem(ctx context.Context, key string, count int64, value interface{}) *IntCmd
-	// LSet(ctx context.Context, key string, index int64, value interface{}) *StatusCmd
-	// LTrim(ctx context.Context, key string, start, stop int64) *StatusCmd
-	// RPop(ctx context.Context, key string) *StringCmd
-	// RPopCount(ctx context.Context, key string, count int) *StringSliceCmd
-	// RPopLPush(ctx context.Context, source, destination string) *StringCmd
-	// RPush(ctx context.Context, key string, values ...interface{}) *IntCmd
-	// RPushX(ctx context.Context, key string, values ...interface{}) *IntCmd
-	// LMove(ctx context.Context, source, destination, srcpos, destpos string) *StringCmd
-	// BLMove(ctx context.Context, source, destination, srcpos, destpos string, timeout time.Duration) *StringCmd
-
 	// SAdd(ctx context.Context, key string, members ...interface{}) *IntCmd
 	// SCard(ctx context.Context, key string) *IntCmd
 	// SDiff(ctx context.Context, keys ...string) *StringSliceCmd
@@ -674,7 +673,7 @@ func (c *Compat) MSet(ctx context.Context, keys []string, values []string) *Stat
 
 func (c *Compat) MSetNX(ctx context.Context, keys []string, values []string) *BoolCmd {
 	if len(keys) != len(values) {
-		panic(fmt.Sprintf("keys and values must be same lengthL %d != %d", len(keys), len(values)))
+		panic(fmt.Sprintf("keys and values must be same length %d != %d", len(keys), len(values)))
 	}
 	partial := c.client.B().Msetnx().KeyValue()
 	for i := 0; i < len(keys); i++ {
@@ -723,11 +722,11 @@ func (c *Compat) SetArgs(ctx context.Context, key string, value string, a SetArg
 			cmd = cmd.Args("EX", strconv.FormatInt(formatSec(a.TTL), 10))
 		}
 	}
-	switch strings.ToLower(a.Mode) {
-	case "xx":
-		cmd = cmd.Args("XX")
-	case "nx":
-		cmd = cmd.Args("NX")
+	switch strings.ToUpper(a.Mode) {
+	case "XX":
+		cmd = cmd.Args(a.Mode)
+	case "NX":
+		cmd = cmd.Args(a.Mode)
 	default:
 		panic(fmt.Sprintf("invalid mode for SET: %s", a.Mode))
 
@@ -839,4 +838,357 @@ func (c *Compat) BitPos(ctx context.Context, key string, bit int64, bitPos BitPo
 		resp = c.client.Do(ctx, c.client.B().Bitpos().Key(key).Bit(bit).Start(bitPos.Start).End(bitPos.End).Bit().Build())
 	}
 	return newIntCmd(resp)
+}
+
+func (c *Compat) BitField(ctx context.Context, key string, bitField []BitField) *IntSliceCmd {
+	cmd := c.client.B().Arbitrary("BITFIELD").Keys(key)
+	for _, a := range bitField {
+		if a.Get != nil {
+			cmd = cmd.Args("GET", a.Get.Encoding, strconv.FormatInt(a.Get.Offset, 10))
+		}
+		if a.Set != nil {
+			cmd = cmd.Args("SET", a.Set.Encoding, strconv.FormatInt(a.Set.Offset, 10))
+		}
+		if a.IncrBy != nil {
+			cmd = cmd.Args("INCRBY", a.IncrBy.Encoding, strconv.FormatInt(a.IncrBy.Offset, 10), strconv.FormatInt(a.Increment, 10))
+		}
+		switch strings.ToUpper(a.Overflow) {
+		case "WRAP":
+			cmd = cmd.Args("OVERFLOW", a.Overflow)
+		case "SAT":
+			cmd = cmd.Args("OVERFLOW", a.Overflow)
+		case "FAIL":
+			cmd = cmd.Args("OVERFLOW", a.Overflow)
+		case "":
+		default:
+			panic(fmt.Sprintf("Invalid OVERFLOW argument value: %s", a.Overflow))
+		}
+	}
+	resp := c.client.Do(ctx, cmd.Build())
+	return newIntSliceCmd(resp)
+}
+
+func (c *Compat) Scan(ctx context.Context, cursor uint64, match string, count int64) *ScanCmd {
+	cmd := c.client.B().Scan().Cursor(int64(cursor)).Match(match).Count(count).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newScanCmd(resp)
+}
+
+func (c *Compat) ScanType(ctx context.Context, cursor uint64, match string, count int64, keyType string) *ScanCmd {
+	cmd := c.client.B().Scan().Cursor(int64(cursor)).Match(match).Count(count).Type(keyType).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newScanCmd(resp)
+}
+
+func (c *Compat) SScan(ctx context.Context, key string, cursor uint64, match string, count int64) *ScanCmd {
+	cmd := c.client.B().Sscan().Key(key).Cursor(int64(cursor)).Match(match).Count(count).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newScanCmd(resp)
+}
+
+func (c *Compat) HScan(ctx context.Context, key string, cursor uint64, match string, count int64) *ScanCmd {
+	cmd := c.client.B().Hscan().Key(key).Cursor(int64(cursor)).Match(match).Count(count).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newScanCmd(resp)
+}
+
+func (c *Compat) ZScan(ctx context.Context, key string, cursor uint64, match string, count int64) *ScanCmd {
+	cmd := c.client.B().Zscan().Key(key).Cursor(int64(cursor)).Match(match).Count(count).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newScanCmd(resp)
+}
+
+func (c *Compat) HDel(ctx context.Context, key string, fields ...string) *IntCmd {
+	cmd := c.client.B().Hdel().Key(key).Field(fields...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) HExists(ctx context.Context, key, field string) *BoolCmd {
+	cmd := c.client.B().Hexists().Key(key).Field(field).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newBoolCmd(resp)
+}
+
+func (c *Compat) HGet(ctx context.Context, key, field string) *StringCmd {
+	cmd := c.client.B().Hget().Key(key).Field(field).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringCmd(resp)
+}
+
+func (c *Compat) HGetAll(ctx context.Context, key string) *StringStringMapCmd {
+	cmd := c.client.B().Hgetall().Key(key).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringStringMapCmd(resp)
+}
+
+func (c *Compat) HIncrBy(ctx context.Context, key, field string, incr int64) *IntCmd {
+	cmd := c.client.B().Hincrby().Key(key).Field(field).Increment(incr).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) HIncrByFloat(ctx context.Context, key, field string, incr float64) *FloatCmd {
+	cmd := c.client.B().Hincrbyfloat().Key(key).Field(field).Increment(incr).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newFloatCmd(resp)
+}
+
+func (c *Compat) HKeys(ctx context.Context, key string) *StringSliceCmd {
+	cmd := c.client.B().Hkeys().Key(key).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) HLen(ctx context.Context, key string) *IntCmd {
+	cmd := c.client.B().Hlen().Key(key).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) HMGet(ctx context.Context, key string, fields ...string) *SliceCmd {
+	cmd := c.client.B().Hmget().Key(key).Field(fields...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newSliceCmd(resp)
+}
+
+// HSet requires Redis v4 for multiple field/value pairs support.
+func (c *Compat) HSet(ctx context.Context, key string, keys []string, values []string) *IntCmd {
+	if len(keys) != len(values) {
+		panic(fmt.Sprintf("keys and values must be same lengthL %d != %d", len(keys), len(values)))
+	}
+	partial := c.client.B().Hset().Key(key).FieldValue()
+	for i := 0; i < len(keys); i++ {
+		partial = partial.FieldValue(keys[i], values[i])
+	}
+	cmd := partial.Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+// HMSet is a deprecated version of HSet left for compatibility with Redis 3.
+func (c *Compat) HMSet(ctx context.Context, key string, keys []string, values []string) *BoolCmd {
+	if len(keys) != len(values) {
+		panic(fmt.Sprintf("keys and values must be same lengthL %d != %d", len(keys), len(values)))
+	}
+	partial := c.client.B().Hset().Key(key).FieldValue()
+	for i := 0; i < len(keys); i++ {
+		partial = partial.FieldValue(keys[i], values[i])
+	}
+	cmd := partial.Build()
+	resp := c.client.Do(ctx, cmd)
+	return newBoolCmd(resp)
+}
+
+func (c *Compat) HSetNX(ctx context.Context, key, field string, value string) *BoolCmd {
+	cmd := c.client.B().Hsetnx().Key(key).Field(field).Value(value).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newBoolCmd(resp)
+}
+
+func (c *Compat) HVals(ctx context.Context, key string) *StringSliceCmd {
+	cmd := c.client.B().Hvals().Key(key).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) HRandField(ctx context.Context, key string, count int64, withValues bool) *StringSliceCmd {
+	var resp rueidis.RedisResult
+	if withValues {
+		resp = c.client.Do(ctx, c.client.B().Hrandfield().Key(key).Count(count).Build())
+	} else {
+		resp = c.client.Do(ctx, c.client.B().Hrandfield().Key(key).Count(count).Withvalues().Build())
+	}
+	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) BLPop(ctx context.Context, timeout time.Duration, key string, keys ...string) *StringSliceCmd {
+	cmd := c.client.B().Blpop().Key(key).Key(keys...).Timeout(float64(formatSec(timeout))).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) BRPop(ctx context.Context, timeout time.Duration, key string, keys ...string) *StringSliceCmd {
+	cmd := c.client.B().Brpop().Key(key).Key(keys...).Timeout(float64(formatSec(timeout))).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) BRPopLPush(ctx context.Context, source, destination string, timeout time.Duration) *StringCmd {
+	cmd := c.client.B().Brpoplpush().Source(source).Destination(destination).Timeout(float64(formatSec(timeout))).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringCmd(resp)
+}
+
+func (c *Compat) LIndex(ctx context.Context, key string, index int64) *StringCmd {
+	cmd := c.client.B().Lindex().Key(key).Index(index).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringCmd(resp)
+}
+
+func (c *Compat) LInsert(ctx context.Context, key, op, pivot, element string) *IntCmd {
+	var resp rueidis.RedisResult
+	switch strings.ToUpper(op) {
+	case "BEFORE":
+		resp = c.client.Do(ctx, c.client.B().Linsert().Key(key).Before().Pivot(pivot).Element(element).Build())
+	case "AFTER":
+		resp = c.client.Do(ctx, c.client.B().Linsert().Key(key).After().Pivot(pivot).Element(element).Build())
+	default:
+		panic(fmt.Sprintf("Invalid op argument value: %s", op))
+	}
+	return newIntCmd(resp)
+}
+
+func (c *Compat) LInsertBefore(ctx context.Context, key, pivot, element string) *IntCmd {
+	cmd := c.client.B().Linsert().Key(key).Before().Pivot(pivot).Element(element).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) LInsertAfter(ctx context.Context, key, pivot, element string) *IntCmd {
+	cmd := c.client.B().Linsert().Key(key).After().Pivot(pivot).Element(element).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) LLen(ctx context.Context, key string) *IntCmd {
+	cmd := c.client.B().Llen().Key(key).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) LPop(ctx context.Context, key string) *StringCmd {
+	cmd := c.client.B().Lpop().Key(key).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringCmd(resp)
+}
+
+func (c *Compat) LPopCount(ctx context.Context, key string, count int64) *StringSliceCmd {
+	cmd := c.client.B().Lpop().Key(key).Count(count).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) LPos(ctx context.Context, key string, element string, a LPosArgs) *IntCmd {
+	cmd := c.client.B().Arbitrary("LPOS").Keys(key).Args("ELEMENT", element)
+	if a.Rank != 0 {
+		cmd = cmd.Args("RANK", strconv.FormatInt(a.Rank, 10))
+	}
+	if a.MaxLen != 0 {
+		cmd = cmd.Args("MAXLEN", strconv.FormatInt(a.MaxLen, 10))
+	}
+	resp := c.client.Do(ctx, cmd.Build())
+	return newIntCmd(resp)
+}
+
+func (c *Compat) LPosCount(ctx context.Context, key string, element string, count int64, a LPosArgs) *IntSliceCmd {
+	cmd := c.client.B().Arbitrary("LPOS").Keys(key).Args("ELEMENT", element).Args("COUNT", strconv.FormatInt(count, 10))
+	if a.Rank != 0 {
+		cmd = cmd.Args("RANK", strconv.FormatInt(a.Rank, 10))
+	}
+	if a.MaxLen != 0 {
+		cmd = cmd.Args("MAXLEN", strconv.FormatInt(a.MaxLen, 10))
+	}
+	resp := c.client.Do(ctx, cmd.Build())
+	return newIntSliceCmd(resp)
+}
+
+func (c *Compat) LPush(ctx context.Context, key string, elements ...string) *IntCmd {
+	cmd := c.client.B().Lpush().Key(key).Element(elements...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) LPushX(ctx context.Context, key string, elements ...string) *IntCmd {
+	cmd := c.client.B().Lpushx().Key(key).Element(elements...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) LRange(ctx context.Context, key string, start, stop int64) *StringSliceCmd {
+	cmd := c.client.B().Lrange().Key(key).Start(start).Stop(stop).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) LRem(ctx context.Context, key string, count int64, element string) *IntCmd {
+	cmd := c.client.B().Lrem().Key(key).Count(count).Element(element).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) LSet(ctx context.Context, key string, index int64, element string) *StatusCmd {
+	cmd := c.client.B().Lset().Key(key).Index(index).Element(element).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) LTrim(ctx context.Context, key string, start, stop int64) *StatusCmd {
+	cmd := c.client.B().Ltrim().Key(key).Start(start).Stop(stop).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) RPop(ctx context.Context, key string) *StringCmd {
+	cmd := c.client.B().Rpop().Key(key).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringCmd(resp)
+}
+
+func (c *Compat) RPopCount(ctx context.Context, key string, count int64) *StringSliceCmd {
+	cmd := c.client.B().Rpop().Key(key).Count(count).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) RPopLPush(ctx context.Context, source, destination string) *StringCmd {
+	cmd := c.client.B().Rpoplpush().Source(source).Destination(destination).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringCmd(resp)
+}
+
+func (c *Compat) RPush(ctx context.Context, key string, elements ...string) *IntCmd {
+	cmd := c.client.B().Rpush().Key(key).Element(elements...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) RPushX(ctx context.Context, key string, elements ...string) *IntCmd {
+	cmd := c.client.B().Rpushx().Key(key).Element(elements...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) LMove(ctx context.Context, source, destination, srcpos, destpos string) *StringCmd {
+	var resp rueidis.RedisResult
+	switch strings.ToUpper(srcpos + destpos) {
+	case "LEFTLEFT":
+		resp = c.client.Do(ctx, c.client.B().Lmove().Source(source).Destination(destination).Left().Left().Build())
+	case "LEFTRIGHT":
+		resp = c.client.Do(ctx, c.client.B().Lmove().Source(source).Destination(destination).Left().Right().Build())
+	case "RIGHTLEFT":
+		resp = c.client.Do(ctx, c.client.B().Lmove().Source(source).Destination(destination).Right().Left().Build())
+	case "RIGHTRIGHT":
+		resp = c.client.Do(ctx, c.client.B().Lmove().Source(source).Destination(destination).Right().Right().Build())
+	default:
+		panic(fmt.Sprintf("Invalid srcpost + destpos argument value: %s", srcpos+destpos))
+	}
+	return newStringCmd(resp)
+}
+
+func (c *Compat) BLMove(ctx context.Context, source, destination, srcpos, destpos string, timeout time.Duration) *StringCmd {
+	var resp rueidis.RedisResult
+	switch strings.ToUpper(srcpos + destpos) {
+	case "LEFTLEFT":
+		resp = c.client.Do(ctx, c.client.B().Blmove().Source(source).Destination(destination).Left().Left().Timeout(float64(formatSec(timeout))).Build())
+	case "LEFTRIGHT":
+		resp = c.client.Do(ctx, c.client.B().Blmove().Source(source).Destination(destination).Left().Right().Timeout(float64(formatSec(timeout))).Build())
+	case "RIGHTLEFT":
+		resp = c.client.Do(ctx, c.client.B().Blmove().Source(source).Destination(destination).Right().Left().Timeout(float64(formatSec(timeout))).Build())
+	case "RIGHTRIGHT":
+		resp = c.client.Do(ctx, c.client.B().Blmove().Source(source).Destination(destination).Right().Right().Timeout(float64(formatSec(timeout))).Build())
+	default:
+		panic(fmt.Sprintf("Invalid srcpost + destpos argument value: %s", srcpos+destpos))
+	}
+	return newStringCmd(resp)
 }
