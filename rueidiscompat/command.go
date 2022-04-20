@@ -220,6 +220,33 @@ func (cmd *StringSliceCmd) String() (string, error) {
 	return cmd.res.ToString()
 }
 
+type IntSliceCmd struct {
+	res rueidis.RedisResult
+	val []int64
+	err error
+}
+
+func newIntSliceCmd(res rueidis.RedisResult) *IntSliceCmd {
+	val, err := res.AsIntSlice()
+	return &IntSliceCmd{res: res, val: val, err: err}
+}
+
+func (cmd *IntSliceCmd) SetVal(val []int64) {
+	cmd.val = val
+}
+
+func (cmd *IntSliceCmd) Val() []int64 {
+	return cmd.val
+}
+
+func (cmd *IntSliceCmd) Result() ([]int64, error) {
+	return cmd.val, cmd.err
+}
+
+func (cmd *IntSliceCmd) String() (string, error) {
+	return cmd.res.ToString()
+}
+
 type FloatCmd struct {
 	res rueidis.RedisResult
 	val float64
@@ -244,6 +271,71 @@ func (cmd *FloatCmd) Result() (float64, error) {
 }
 
 func (cmd *FloatCmd) String() (string, error) {
+	return cmd.res.ToString()
+}
+
+type ScanCmd struct {
+	res    rueidis.RedisResult
+	cursor uint64
+	page   []string
+	err    error
+}
+
+func newScanCmd(res rueidis.RedisResult) *ScanCmd {
+	cursor_list, err := res.ToArray()
+	if err != nil {
+		return &ScanCmd{res: res, err: err}
+	}
+	raw_cursor, raw_page := cursor_list[0], cursor_list[1]
+	cursor, err := raw_cursor.ToInt64()
+	if err != nil {
+		return &ScanCmd{res: res, err: err}
+	}
+	page, err := raw_page.AsStrSlice()
+	return &ScanCmd{res: res, cursor: uint64(cursor), page: page, err: err}
+}
+
+func (cmd *ScanCmd) SetVal(page []string, cursor uint64) {
+	cmd.page = page
+	cmd.cursor = cursor
+}
+
+func (cmd *ScanCmd) Val() (keys []string, cursor uint64) {
+	return cmd.page, cmd.cursor
+}
+
+func (cmd *ScanCmd) Result() (keys []string, cursor uint64, err error) {
+	return cmd.page, cmd.cursor, cmd.err
+}
+
+func (cmd *ScanCmd) String() (string, error) {
+	return cmd.res.ToString()
+}
+
+type StringStringMapCmd struct {
+	res rueidis.RedisResult
+	val map[string]string
+	err error
+}
+
+func newStringStringMapCmd(res rueidis.RedisResult) *StringStringMapCmd {
+	val, err := res.AsStrMap()
+	return &StringStringMapCmd{res: res, val: val, err: err}
+}
+
+func (cmd *StringStringMapCmd) SetVal(val map[string]string) {
+	cmd.val = val
+}
+
+func (cmd *StringStringMapCmd) Val() map[string]string {
+	return cmd.val
+}
+
+func (cmd *StringStringMapCmd) Result() (map[string]string, error) {
+	return cmd.val, cmd.err
+}
+
+func (cmd *StringStringMapCmd) String() (string, error) {
 	return cmd.res.ToString()
 }
 
@@ -279,6 +371,23 @@ type BitCount struct {
 type BitPos struct {
 	BitCount
 	Byte bool
+}
+
+type BitFieldArg struct {
+	Encoding string
+	Offset   int64
+}
+
+type BitField struct {
+	Get       *BitFieldArg
+	Set       *BitFieldArg
+	IncrBy    *BitFieldArg
+	Increment int64
+	Overflow  string
+}
+
+type LPosArgs struct {
+	Rank, MaxLen int64
 }
 
 func usePrecise(dur time.Duration) bool {
