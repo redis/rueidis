@@ -464,5 +464,5 @@ client.Do(ctx, client.B().Lpop().Key("k").Count(2).Build()).AsStrSlice()
 ## Not Yet Implement
 
 The following subjects are not yet implemented.
-* go-redis like api layer
+* go-redis like api layer (In progress as [`rueidiscompat`](https://github.com/rueian/rueidis/tree/master/rueidiscompat), Thanks to [@418Coffee](https://github.com/418Coffee))
 * RESP2
