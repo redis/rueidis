@@ -277,35 +277,34 @@ func (cmd *FloatCmd) String() (string, error) {
 type ScanCmd struct {
 	res    rueidis.RedisResult
 	cursor uint64
-	page   []string
+	keys   []string
 	err    error
 }
 
 func newScanCmd(res rueidis.RedisResult) *ScanCmd {
-	cursor_list, err := res.ToArray()
+	ret, err := res.ToArray()
 	if err != nil {
 		return &ScanCmd{res: res, err: err}
 	}
-	raw_cursor, raw_page := cursor_list[0], cursor_list[1]
-	cursor, err := raw_cursor.ToInt64()
+	cursor, err := ret[0].ToInt64()
 	if err != nil {
 		return &ScanCmd{res: res, err: err}
 	}
-	page, err := raw_page.AsStrSlice()
-	return &ScanCmd{res: res, cursor: uint64(cursor), page: page, err: err}
+	keys, err := ret[1].AsStrSlice()
+	return &ScanCmd{res: res, cursor: uint64(cursor), keys: keys, err: err}
 }
 
-func (cmd *ScanCmd) SetVal(page []string, cursor uint64) {
-	cmd.page = page
+func (cmd *ScanCmd) SetVal(keys []string, cursor uint64) {
+	cmd.keys = keys
 	cmd.cursor = cursor
 }
 
 func (cmd *ScanCmd) Val() (keys []string, cursor uint64) {
-	return cmd.page, cmd.cursor
+	return cmd.keys, cmd.cursor
 }
 
 func (cmd *ScanCmd) Result() (keys []string, cursor uint64, err error) {
-	return cmd.page, cmd.cursor, cmd.err
+	return cmd.keys, cmd.cursor, cmd.err
 }
 
 func (cmd *ScanCmd) String() (string, error) {
