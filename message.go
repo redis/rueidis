@@ -201,6 +201,22 @@ func (r RedisResult) AsIntSlice() ([]int64, error) {
 	return r.val.AsIntSlice()
 }
 
+// AsXMessage delegates to RedisMessage.AsXMessage
+func (r RedisResult) AsXMessage() (XMessage, error) {
+	if err := r.Error(); err != nil {
+		return XMessage{}, err
+	}
+	return r.val.AsXMessage()
+}
+
+// AsXMessageSlice delegates to RedisMessage.AsXMessageSlice
+func (r RedisResult) AsXMessageSlice() ([]XMessage, error) {
+	if err := r.Error(); err != nil {
+		return nil, err
+	}
+	return r.val.AsXMessageSlice()
+}
+
 // AsMap delegates to RedisMessage.AsMap
 func (r RedisResult) AsMap() (map[string]RedisMessage, error) {
 	if err := r.Error(); err != nil {
@@ -400,6 +416,52 @@ func (m *RedisMessage) AsIntSlice() ([]int64, error) {
 		}
 	}
 	return s, nil
+}
+
+type XMessage struct {
+	ID        string
+	KeyValues map[string]string
+}
+
+// AsXMessage check if message is a redis array/set response of length 2, and convert to XMessage
+func (m *RedisMessage) AsXMessage() (XMessage, error) {
+	values, err := m.ToArray()
+	if err != nil {
+		return XMessage{}, err
+	}
+	if len(values) != 2 {
+		return XMessage{}, fmt.Errorf("got %d, wanted 2", len(values))
+	}
+	id, err := values[0].ToString()
+	if err != nil {
+		return XMessage{}, err
+	}
+	keyValues, err := values[1].AsStrMap()
+	if err != nil {
+		return XMessage{}, err
+	}
+	return XMessage{
+		ID:        id,
+		KeyValues: keyValues,
+	}, nil
+}
+
+// AsXMessageSlice check if message is a redis array/set response, and convert to []XMessage
+func (m *RedisMessage) AsXMessageSlice() ([]XMessage, error) {
+	values, err := m.ToArray()
+	if err != nil {
+		return nil, err
+	}
+	msgs := make([]XMessage, 0, len(values))
+	for _, v := range values {
+		msg, err := v.AsXMessage()
+		if err != nil {
+			return nil, err
+		}
+		msgs = append(msgs, msg)
+	}
+	return msgs, nil
+
 }
 
 // AsMap check if message is a redis array/set response, and convert to map[string]RedisMessage
