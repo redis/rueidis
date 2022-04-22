@@ -201,20 +201,20 @@ func (r RedisResult) AsIntSlice() ([]int64, error) {
 	return r.val.AsIntSlice()
 }
 
-// AsXMessage delegates to RedisMessage.AsXMessage
-func (r RedisResult) AsXMessage() (XMessage, error) {
+// AsXRange delegates to RedisMessage.AsXRange
+func (r RedisResult) AsXRange() (XRange, error) {
 	if err := r.Error(); err != nil {
-		return XMessage{}, err
+		return XRange{}, err
 	}
-	return r.val.AsXMessage()
+	return r.val.AsXRange()
 }
 
-// AsXMessageSlice delegates to RedisMessage.AsXMessageSlice
-func (r RedisResult) AsXMessageSlice() ([]XMessage, error) {
+// AsXRangeSlice delegates to RedisMessage.AsXRangeSlice
+func (r RedisResult) AsXRangeSlice() ([]XRange, error) {
 	if err := r.Error(); err != nil {
 		return nil, err
 	}
-	return r.val.AsXMessageSlice()
+	return r.val.AsXRangeSlice()
 }
 
 // AsMap delegates to RedisMessage.AsMap
@@ -418,43 +418,44 @@ func (m *RedisMessage) AsIntSlice() ([]int64, error) {
 	return s, nil
 }
 
-type XMessage struct {
-	ID        string
-	KeyValues map[string]string
+// XRange is the element type of both XRANGE and XREVRANGE command response array
+type XRange struct {
+	ID          string
+	FieldValues map[string]string
 }
 
-// AsXMessage check if message is a redis array/set response of length 2, and convert to XMessage
-func (m *RedisMessage) AsXMessage() (XMessage, error) {
+// AsXRange check if message is a redis array/set response of length 2, and convert to XRange
+func (m *RedisMessage) AsXRange() (XRange, error) {
 	values, err := m.ToArray()
 	if err != nil {
-		return XMessage{}, err
+		return XRange{}, err
 	}
 	if len(values) != 2 {
-		return XMessage{}, fmt.Errorf("got %d, wanted 2", len(values))
+		return XRange{}, fmt.Errorf("got %d, wanted 2", len(values))
 	}
 	id, err := values[0].ToString()
 	if err != nil {
-		return XMessage{}, err
+		return XRange{}, err
 	}
-	keyValues, err := values[1].AsStrMap()
+	fieldValues, err := values[1].AsStrMap()
 	if err != nil {
-		return XMessage{}, err
+		return XRange{}, err
 	}
-	return XMessage{
-		ID:        id,
-		KeyValues: keyValues,
+	return XRange{
+		ID:          id,
+		FieldValues: fieldValues,
 	}, nil
 }
 
-// AsXMessageSlice check if message is a redis array/set response, and convert to []XMessage
-func (m *RedisMessage) AsXMessageSlice() ([]XMessage, error) {
+// AsXRangeSlice check if message is a redis array/set response, and convert to []XRange
+func (m *RedisMessage) AsXRangeSlice() ([]XRange, error) {
 	values, err := m.ToArray()
 	if err != nil {
 		return nil, err
 	}
-	msgs := make([]XMessage, 0, len(values))
+	msgs := make([]XRange, 0, len(values))
 	for _, v := range values {
-		msg, err := v.AsXMessage()
+		msg, err := v.AsXRange()
 		if err != nil {
 			return nil, err
 		}

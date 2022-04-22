@@ -409,24 +409,24 @@ func (cmd *StringStructMapCmd) String() (string, error) {
 
 type XMessageSliceCmd struct {
 	res rueidis.RedisResult
-	val []rueidis.XMessage
+	val []rueidis.XRange
 	err error
 }
 
 func newXMessageSliceCmd(res rueidis.RedisResult) *XMessageSliceCmd {
-	val, err := res.AsXMessageSlice()
+	val, err := res.AsXRangeSlice()
 	return &XMessageSliceCmd{res: res, val: val, err: err}
 }
 
-func (cmd *XMessageSliceCmd) SetVal(val []rueidis.XMessage) {
+func (cmd *XMessageSliceCmd) SetVal(val []rueidis.XRange) {
 	cmd.val = val
 }
 
-func (cmd *XMessageSliceCmd) Val() []rueidis.XMessage {
+func (cmd *XMessageSliceCmd) Val() []rueidis.XRange {
 	return cmd.val
 }
 
-func (cmd *XMessageSliceCmd) Result() ([]rueidis.XMessage, error) {
+func (cmd *XMessageSliceCmd) Result() ([]rueidis.XRange, error) {
 	return cmd.val, cmd.err
 }
 
@@ -436,7 +436,7 @@ func (cmd *XMessageSliceCmd) String() (string, error) {
 
 type XStream struct {
 	Stream   string
-	Messages []rueidis.XMessage
+	Messages []rueidis.XRange
 }
 
 type XStreamSliceCmd struct {
@@ -463,7 +463,7 @@ func newXStreamSliceCmd(res rueidis.RedisResult) *XStreamSliceCmd {
 		if err != nil {
 			return &XStreamSliceCmd{res: res, err: err}
 		}
-		msgs, err := arr[1].AsXMessageSlice()
+		msgs, err := arr[1].AsXRangeSlice()
 		if err != nil {
 			return &XStreamSliceCmd{res: res, err: err}
 		}
@@ -642,7 +642,7 @@ func (cmd *XPendingExtCmd) String() (string, error) {
 type XAutoClaimCmd struct {
 	res   rueidis.RedisResult
 	start string
-	val   []rueidis.XMessage
+	val   []rueidis.XRange
 	err   error
 }
 
@@ -658,23 +658,23 @@ func newXAutoClaimCmd(res rueidis.RedisResult) *XAutoClaimCmd {
 	if err != nil {
 		return &XAutoClaimCmd{res: res, err: err}
 	}
-	val, err := arr[1].AsXMessageSlice()
+	val, err := arr[1].AsXRangeSlice()
 	if err != nil {
 		return &XAutoClaimCmd{res: res, err: err}
 	}
 	return &XAutoClaimCmd{res: res, val: val, start: start, err: err}
 }
 
-func (cmd *XAutoClaimCmd) SetVal(val []rueidis.XMessage, start string) {
+func (cmd *XAutoClaimCmd) SetVal(val []rueidis.XRange, start string) {
 	cmd.val = val
 	cmd.start = start
 }
 
-func (cmd *XAutoClaimCmd) Val() (messages []rueidis.XMessage, start string) {
+func (cmd *XAutoClaimCmd) Val() (messages []rueidis.XRange, start string) {
 	return cmd.val, cmd.start
 }
 
-func (cmd *XAutoClaimCmd) Result() (messages []rueidis.XMessage, start string, err error) {
+func (cmd *XAutoClaimCmd) Result() (messages []rueidis.XRange, start string, err error) {
 	return cmd.val, cmd.start, cmd.err
 }
 

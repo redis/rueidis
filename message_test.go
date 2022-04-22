@@ -228,6 +228,38 @@ func TestRedisResult(t *testing.T) {
 		}
 	})
 
+	t.Run("AsXRange", func(t *testing.T) {
+		if _, err := (RedisResult{err: errors.New("other")}).AsXRange(); err == nil {
+			t.Fatal("AsXRange not failed as expected")
+		}
+		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsXRange(); err == nil {
+			t.Fatal("AsXRange not failed as expected")
+		}
+		values := []RedisMessage{{string: "id", typ: '+'}, {typ: '*', values: []RedisMessage{{typ: '+', string: "a"}, {typ: '+', string: "b"}}}}
+		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: values}}).AsXRange(); !reflect.DeepEqual(XRange{
+			ID:          "id",
+			FieldValues: map[string]string{"a": "b"},
+		}, ret) {
+			t.Fatal("AsXRange not get value as expected")
+		}
+	})
+
+	t.Run("AsXRangeSlice", func(t *testing.T) {
+		if _, err := (RedisResult{err: errors.New("other")}).AsXRangeSlice(); err == nil {
+			t.Fatal("AsXRangeSlice not failed as expected")
+		}
+		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsXRangeSlice(); err == nil {
+			t.Fatal("AsXRangeSlice not failed as expected")
+		}
+		values := []RedisMessage{{string: "id", typ: '+'}, {typ: '*', values: []RedisMessage{{typ: '+', string: "a"}, {typ: '+', string: "b"}}}}
+		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{typ: '*', values: values}}}}).AsXRangeSlice(); !reflect.DeepEqual([]XRange{{
+			ID:          "id",
+			FieldValues: map[string]string{"a": "b"},
+		}}, ret) {
+			t.Fatal("AsXRangeSlice not get value as expected")
+		}
+	})
+
 	t.Run("IsCacheHit", func(t *testing.T) {
 		if (RedisResult{err: errors.New("other")}).IsCacheHit() {
 			t.Fatal("IsCacheHit not as expected")
@@ -436,6 +468,58 @@ func TestRedisMessage(t *testing.T) {
 			}
 		}()
 		(&RedisMessage{typ: 't'}).ToMap()
+	})
+
+	t.Run("AsXRange - no range id", func(t *testing.T) {
+		if _, err := (&RedisMessage{typ: '_'}).AsXRange(); err == nil {
+			t.Fatal("AsXRange not failed as expected")
+		}
+
+		if _, err := (&RedisMessage{typ: '*'}).AsXRange(); err == nil {
+			t.Fatal("AsXRange not failed as expected")
+		}
+
+		if _, err := (&RedisMessage{typ: '*', values: []RedisMessage{{typ: '_'}, {typ: '%'}}}).AsXRange(); err == nil {
+			t.Fatal("AsXRange not failed as expected")
+		}
+
+		defer func() {
+			if !strings.Contains(recover().(string), "redis message type : is not a string") {
+				t.Fatal("AsXRange not panic as expected")
+			}
+		}()
+		(&RedisMessage{typ: '*', values: []RedisMessage{{typ: ':'}, {typ: '%'}}}).AsXRange()
+	})
+
+	t.Run("AsXRange - no range field values", func(t *testing.T) {
+		if _, err := (&RedisMessage{typ: '_'}).AsXRange(); err == nil {
+			t.Fatal("AsXRange not failed as expected")
+		}
+
+		if _, err := (&RedisMessage{typ: '*'}).AsXRange(); err == nil {
+			t.Fatal("AsXRange not failed as expected")
+		}
+
+		if _, err := (&RedisMessage{typ: '*', values: []RedisMessage{{typ: '+'}, {typ: '_'}}}).AsXRange(); err == nil {
+			t.Fatal("AsXRange not failed as expected")
+		}
+
+		defer func() {
+			if !strings.Contains(recover().(string), "redis message type t is not a map/array/set") {
+				t.Fatal("AsXRange not panic as expected")
+			}
+		}()
+		(&RedisMessage{typ: '*', values: []RedisMessage{{typ: '+'}, {typ: 't'}}}).AsXRange()
+	})
+
+	t.Run("AsXRangeSlice", func(t *testing.T) {
+		if _, err := (&RedisMessage{typ: '_'}).AsXRangeSlice(); err == nil {
+			t.Fatal("AsXRangeSlice not failed as expected")
+		}
+
+		if _, err := (&RedisMessage{typ: '*', values: []RedisMessage{{typ: '_'}}}).AsXRangeSlice(); err == nil {
+			t.Fatal("AsXRangeSlice not failed as expected")
+		}
 	})
 
 	t.Run("ToMap with non string key", func(t *testing.T) {
