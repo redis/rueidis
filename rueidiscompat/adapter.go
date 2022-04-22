@@ -1294,7 +1294,7 @@ func (c *Compat) XAdd(ctx context.Context, a XAddArgs) *StringCmd {
 	if len(a.Fields) != len(a.Values) {
 		panic(fmt.Sprintf("fields and values must be same length %d != %d", len(a.Fields), len(a.Values)))
 	}
-	cmd := c.client.B().Arbitrary("XADD", a.Stream)
+	cmd := c.client.B().Arbitrary("XADD").Keys(a.Stream)
 	if a.NoMkStream {
 		cmd = cmd.Args("NOMKSTREAM")
 	}
@@ -1427,7 +1427,8 @@ func (c *Compat) XReadGroup(ctx context.Context, a XReadGroupArgs) *XStreamSlice
 	if len(a.Streams) != len(a.IDs) {
 		panic(fmt.Sprintf("streams and ids must be same length %d != %d", len(a.Streams), len(a.IDs)))
 	}
-	cmd := c.client.B().Arbitrary("XREADGROUP", "GROUP", a.Group, a.Consumer)
+	cmd := c.client.B().Arbitrary("XREADGROUP")
+	cmd = cmd.Args("GROUP", a.Group, a.Consumer)
 	if a.Count > 0 {
 		cmd = cmd.Args("COUNT", strconv.FormatInt(a.Count, 10))
 	}
@@ -1458,7 +1459,7 @@ func (c *Compat) XPending(ctx context.Context, stream, group string) *XPendingCm
 }
 
 func (c *Compat) XPendingExt(ctx context.Context, a XPendingExtArgs) *XPendingExtCmd {
-	cmd := c.client.B().Arbitrary("XPENDING", a.Stream, a.Group)
+	cmd := c.client.B().Arbitrary("XPENDING").Keys(a.Stream, a.Group)
 	if a.Idle != 0 {
 		cmd = cmd.Args("IDLE", strconv.FormatInt(formatMs(a.Idle), 10))
 	}
