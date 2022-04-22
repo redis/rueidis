@@ -657,7 +657,7 @@ func (c *Compat) MGet(ctx context.Context, keys ...string) *SliceCmd {
 
 func (c *Compat) MSet(ctx context.Context, keys []string, values []string) *StatusCmd {
 	if len(keys) != len(values) {
-		panic(fmt.Sprintf("keys and values must be same lengthL %d != %d", len(keys), len(values)))
+		panic(fmt.Sprintf("keys and values must be same length %d != %d", len(keys), len(values)))
 	}
 	partial := c.client.B().Mset().KeyValue()
 	for i, v := range keys {
@@ -944,7 +944,7 @@ func (c *Compat) HMGet(ctx context.Context, key string, fields ...string) *Slice
 // HSet requires Redis v4 for multiple field/value pairs support.
 func (c *Compat) HSet(ctx context.Context, key string, keys []string, values []string) *IntCmd {
 	if len(keys) != len(values) {
-		panic(fmt.Sprintf("keys and values must be same lengthL %d != %d", len(keys), len(values)))
+		panic(fmt.Sprintf("keys and values must be same length %d != %d", len(keys), len(values)))
 	}
 	partial := c.client.B().Hset().Key(key).FieldValue()
 	for i := 0; i < len(keys); i++ {
@@ -958,7 +958,7 @@ func (c *Compat) HSet(ctx context.Context, key string, keys []string, values []s
 // HMSet is a deprecated version of HSet left for compatibility with Redis 3.
 func (c *Compat) HMSet(ctx context.Context, key string, keys []string, values []string) *BoolCmd {
 	if len(keys) != len(values) {
-		panic(fmt.Sprintf("keys and values must be same lengthL %d != %d", len(keys), len(values)))
+		panic(fmt.Sprintf("keys and values must be same length %d != %d", len(keys), len(values)))
 	}
 	partial := c.client.B().Hset().Key(key).FieldValue()
 	for i := 0; i < len(keys); i++ {

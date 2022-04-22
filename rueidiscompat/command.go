@@ -317,21 +317,20 @@ type ScanCmd struct {
 }
 
 func newScanCmd(res rueidis.RedisResult) *ScanCmd {
-	cursorSlice, err := res.ToArray()
+	ret, err := res.ToArray()
 	if err != nil {
 		return &ScanCmd{res: res, err: err}
 	}
-	rawCursor, rawPage := cursorSlice[0], cursorSlice[1]
-	cursor, err := rawCursor.ToInt64()
+	cursor, err := ret[0].ToInt64()
 	if err != nil {
 		return &ScanCmd{res: res, err: err}
 	}
-	page, err := rawPage.AsStrSlice()
-	return &ScanCmd{res: res, cursor: uint64(cursor), keys: page, err: err}
+	keys, err := ret[1].AsStrSlice()
+	return &ScanCmd{res: res, cursor: uint64(cursor), keys: keys, err: err}
 }
 
-func (cmd *ScanCmd) SetVal(page []string, cursor uint64) {
-	cmd.keys = page
+func (cmd *ScanCmd) SetVal(keys []string, cursor uint64) {
+	cmd.keys = keys
 	cmd.cursor = cursor
 }
 
