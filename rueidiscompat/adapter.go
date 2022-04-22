@@ -1375,9 +1375,7 @@ func (c *Compat) XRead(ctx context.Context, a XReadArgs) *XStreamSliceCmd {
 		cmd = cmd.Args("BLOCK", strconv.FormatInt(formatMs(a.Block), 10))
 	}
 	cmd = cmd.Args("STREAMS")
-	for i, v := range a.Streams {
-		cmd = cmd.Args(v, a.IDs[i])
-	}
+	cmd = cmd.Keys(a.Streams...).Args(a.IDs...)
 	resp := c.client.Do(ctx, cmd.Build())
 	return newXStreamSliceCmd(resp)
 }
@@ -1439,9 +1437,7 @@ func (c *Compat) XReadGroup(ctx context.Context, a XReadGroupArgs) *XStreamSlice
 		cmd = cmd.Args("NOACK")
 	}
 	cmd = cmd.Args("STREAMS")
-	for i, v := range a.Streams {
-		cmd = cmd.Args(v, a.IDs[i])
-	}
+	cmd = cmd.Keys(a.Streams...).Args(a.IDs...)
 	resp := c.client.Do(ctx, cmd.Build())
 	return newXStreamSliceCmd(resp)
 }
@@ -1459,7 +1455,7 @@ func (c *Compat) XPending(ctx context.Context, stream, group string) *XPendingCm
 }
 
 func (c *Compat) XPendingExt(ctx context.Context, a XPendingExtArgs) *XPendingExtCmd {
-	cmd := c.client.B().Arbitrary("XPENDING").Keys(a.Stream, a.Group)
+	cmd := c.client.B().Arbitrary("XPENDING").Keys(a.Stream).Args(a.Group)
 	if a.Idle != 0 {
 		cmd = cmd.Args("IDLE", strconv.FormatInt(formatMs(a.Idle), 10))
 	}
