@@ -1,6 +1,7 @@
 package rueidiscompat
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
@@ -247,6 +248,40 @@ func (cmd *IntSliceCmd) String() (string, error) {
 	return cmd.res.ToString()
 }
 
+type BoolSliceCmd struct {
+	res rueidis.RedisResult
+	val []bool
+	err error
+}
+
+func newBoolSliceCmd(res rueidis.RedisResult) *BoolSliceCmd {
+	ints, err := res.AsIntSlice()
+	if err != nil {
+		return &BoolSliceCmd{res: res, err: err}
+	}
+	val := make([]bool, 0, len(ints))
+	for i := 0; i < len(ints); i++ {
+		val = append(val, i == 1)
+	}
+	return &BoolSliceCmd{res: res, val: val, err: err}
+}
+
+func (cmd *BoolSliceCmd) SetVal(val []bool) {
+	cmd.val = val
+}
+
+func (cmd *BoolSliceCmd) Val() []bool {
+	return cmd.val
+}
+
+func (cmd *BoolSliceCmd) Result() ([]bool, error) {
+	return cmd.val, cmd.err
+}
+
+func (cmd *BoolSliceCmd) String() (string, error) {
+	return cmd.res.ToString()
+}
+
 type FloatCmd struct {
 	res rueidis.RedisResult
 	val float64
@@ -338,6 +373,358 @@ func (cmd *StringStringMapCmd) String() (string, error) {
 	return cmd.res.ToString()
 }
 
+type StringStructMapCmd struct {
+	res rueidis.RedisResult
+	val map[string]struct{}
+	err error
+}
+
+func newStringStructMapCmd(res rueidis.RedisResult) *StringStructMapCmd {
+	strSlice, err := res.AsStrSlice()
+	if err != nil {
+		return &StringStructMapCmd{res: res, err: err}
+	}
+	val := make(map[string]struct{}, len(strSlice))
+	for _, v := range strSlice {
+		val[v] = struct{}{}
+	}
+	return &StringStructMapCmd{res: res, val: val, err: err}
+}
+
+func (cmd *StringStructMapCmd) SetVal(val map[string]struct{}) {
+	cmd.val = val
+}
+
+func (cmd *StringStructMapCmd) Val() map[string]struct{} {
+	return cmd.val
+}
+
+func (cmd *StringStructMapCmd) Result() (map[string]struct{}, error) {
+	return cmd.val, cmd.err
+}
+
+func (cmd *StringStructMapCmd) String() (string, error) {
+	return cmd.res.ToString()
+}
+
+type XMessageSliceCmd struct {
+	res rueidis.RedisResult
+	val []rueidis.XRange
+	err error
+}
+
+func newXMessageSliceCmd(res rueidis.RedisResult) *XMessageSliceCmd {
+	val, err := res.AsXRangeSlice()
+	return &XMessageSliceCmd{res: res, val: val, err: err}
+}
+
+func (cmd *XMessageSliceCmd) SetVal(val []rueidis.XRange) {
+	cmd.val = val
+}
+
+func (cmd *XMessageSliceCmd) Val() []rueidis.XRange {
+	return cmd.val
+}
+
+func (cmd *XMessageSliceCmd) Result() ([]rueidis.XRange, error) {
+	return cmd.val, cmd.err
+}
+
+func (cmd *XMessageSliceCmd) String() (string, error) {
+	return cmd.res.ToString()
+}
+
+type XStream struct {
+	Stream   string
+	Messages []rueidis.XRange
+}
+
+type XStreamSliceCmd struct {
+	res rueidis.RedisResult
+	val []XStream
+	err error
+}
+
+func newXStreamSliceCmd(res rueidis.RedisResult) *XStreamSliceCmd {
+	arrs, err := res.ToArray()
+	if err != nil {
+		return &XStreamSliceCmd{res: res, err: err}
+	}
+	val := make([]XStream, 0, len(arrs))
+	for _, v := range arrs {
+		arr, err := v.ToArray()
+		if err != nil {
+			return &XStreamSliceCmd{res: res, err: err}
+		}
+		if len(arr) != 2 {
+			return &XStreamSliceCmd{res: res, err: fmt.Errorf("got %d, wanted 2", len(arr))}
+		}
+		stream, err := arr[0].ToString()
+		if err != nil {
+			return &XStreamSliceCmd{res: res, err: err}
+		}
+		msgs, err := arr[1].AsXRangeSlice()
+		if err != nil {
+			return &XStreamSliceCmd{res: res, err: err}
+		}
+		val = append(val, XStream{Stream: stream, Messages: msgs})
+	}
+	return &XStreamSliceCmd{res: res, val: val, err: err}
+}
+
+func (cmd *XStreamSliceCmd) SetVal(val []XStream) {
+	cmd.val = val
+}
+
+func (cmd *XStreamSliceCmd) Val() []XStream {
+	return cmd.val
+}
+
+func (cmd *XStreamSliceCmd) Result() ([]XStream, error) {
+	return cmd.val, cmd.err
+}
+
+func (cmd *XStreamSliceCmd) String() (string, error) {
+	return cmd.res.ToString()
+}
+
+type XPending struct {
+	Count     int64
+	Lower     string
+	Higher    string
+	Consumers map[string]int64
+}
+
+type XPendingCmd struct {
+	res rueidis.RedisResult
+	val XPending
+	err error
+}
+
+func newXPendingCmd(res rueidis.RedisResult) *XPendingCmd {
+	arr, err := res.ToArray()
+	if err != nil {
+		return &XPendingCmd{res: res, err: err}
+	}
+	if len(arr) != 4 {
+		return &XPendingCmd{res: res, err: fmt.Errorf("got %d, wanted 4", len(arr))}
+	}
+	count, err := arr[0].ToInt64()
+	if err != nil {
+		return &XPendingCmd{res: res, err: err}
+	}
+	lower, err := arr[1].ToString()
+	if err != nil {
+		return &XPendingCmd{res: res, err: err}
+	}
+	higher, err := arr[2].ToString()
+	if err != nil {
+		return &XPendingCmd{res: res, err: err}
+	}
+	val := XPending{
+		Count:  count,
+		Lower:  lower,
+		Higher: higher,
+	}
+	consumerArr, err := arr[3].ToArray()
+	if err != nil {
+		return &XPendingCmd{res: res, err: err}
+	}
+	for _, v := range consumerArr {
+		consumer, err := v.ToArray()
+		if err != nil {
+			return &XPendingCmd{res: res, err: err}
+		}
+		if len(arr) != 2 {
+			return &XPendingCmd{res: res, err: fmt.Errorf("got %d, wanted 2", len(arr))}
+		}
+		consumerName, err := consumer[0].ToString()
+		if err != nil {
+			return &XPendingCmd{res: res, err: err}
+		}
+		consumerPending, err := consumer[1].AsInt64()
+		if err != nil {
+			return &XPendingCmd{res: res, err: err}
+		}
+		if val.Consumers == nil {
+			val.Consumers = make(map[string]int64)
+		}
+		val.Consumers[consumerName] = consumerPending
+	}
+	return &XPendingCmd{res: res, val: val, err: err}
+}
+
+func (cmd *XPendingCmd) SetVal(val XPending) {
+	cmd.val = val
+}
+
+func (cmd *XPendingCmd) Val() XPending {
+	return cmd.val
+}
+
+func (cmd *XPendingCmd) Result() (XPending, error) {
+	return cmd.val, cmd.err
+}
+
+func (cmd *XPendingCmd) String() (string, error) {
+	return cmd.res.ToString()
+}
+
+type XPendingExt struct {
+	ID         string
+	Consumer   string
+	Idle       time.Duration
+	RetryCount int64
+}
+
+type XPendingExtCmd struct {
+	res rueidis.RedisResult
+	val []XPendingExt
+	err error
+}
+
+func newXPendingExtCmd(res rueidis.RedisResult) *XPendingExtCmd {
+	arrs, err := res.ToArray()
+	if err != nil {
+		return &XPendingExtCmd{res: res, err: err}
+	}
+	val := make([]XPendingExt, 0, len(arrs))
+	for _, v := range arrs {
+		arr, err := v.ToArray()
+		if err != nil {
+			return &XPendingExtCmd{res: res, err: err}
+		}
+		if len(arr) != 4 {
+			return &XPendingExtCmd{res: res, err: fmt.Errorf("got %d, wanted 4", len(arr))}
+		}
+		id, err := arr[0].ToString()
+		if err != nil {
+			return &XPendingExtCmd{res: res, err: err}
+		}
+		consumer, err := arr[1].ToString()
+		if err != nil {
+			return &XPendingExtCmd{res: res, err: err}
+		}
+		idle, err := arr[2].ToInt64()
+		if err != nil {
+			return &XPendingExtCmd{res: res, err: err}
+		}
+		retryCount, err := arr[3].ToInt64()
+		if err != nil {
+			return &XPendingExtCmd{res: res, err: err}
+		}
+		val = append(val, XPendingExt{
+			ID:         id,
+			Consumer:   consumer,
+			Idle:       time.Duration(idle) * time.Millisecond,
+			RetryCount: retryCount,
+		})
+	}
+	return &XPendingExtCmd{res: res, val: val, err: err}
+}
+
+func (cmd *XPendingExtCmd) SetVal(val []XPendingExt) {
+	cmd.val = val
+}
+
+func (cmd *XPendingExtCmd) Val() []XPendingExt {
+	return cmd.val
+}
+
+func (cmd *XPendingExtCmd) Result() ([]XPendingExt, error) {
+	return cmd.val, cmd.err
+}
+
+func (cmd *XPendingExtCmd) String() (string, error) {
+	return cmd.res.ToString()
+}
+
+type XAutoClaimCmd struct {
+	res   rueidis.RedisResult
+	start string
+	val   []rueidis.XRange
+	err   error
+}
+
+func newXAutoClaimCmd(res rueidis.RedisResult) *XAutoClaimCmd {
+	arr, err := res.ToArray()
+	if err != nil {
+		return &XAutoClaimCmd{res: res, err: err}
+	}
+	if len(arr) != 2 {
+		return &XAutoClaimCmd{res: res, err: fmt.Errorf("got %d, wanted 2", len(arr))}
+	}
+	start, err := arr[0].ToString()
+	if err != nil {
+		return &XAutoClaimCmd{res: res, err: err}
+	}
+	val, err := arr[1].AsXRangeSlice()
+	if err != nil {
+		return &XAutoClaimCmd{res: res, err: err}
+	}
+	return &XAutoClaimCmd{res: res, val: val, start: start, err: err}
+}
+
+func (cmd *XAutoClaimCmd) SetVal(val []rueidis.XRange, start string) {
+	cmd.val = val
+	cmd.start = start
+}
+
+func (cmd *XAutoClaimCmd) Val() (messages []rueidis.XRange, start string) {
+	return cmd.val, cmd.start
+}
+
+func (cmd *XAutoClaimCmd) Result() (messages []rueidis.XRange, start string, err error) {
+	return cmd.val, cmd.start, cmd.err
+}
+
+func (cmd *XAutoClaimCmd) String() (string, error) {
+	return cmd.res.ToString()
+}
+
+type XAutoClaimJustIDCmd struct {
+	res   rueidis.RedisResult
+	start string
+	val   []string
+	err   error
+}
+
+func newXAutoClaimJustIDCmd(res rueidis.RedisResult) *XAutoClaimJustIDCmd {
+	arr, err := res.ToArray()
+	if err != nil {
+		return &XAutoClaimJustIDCmd{res: res, err: err}
+	}
+	if len(arr) != 2 {
+		return &XAutoClaimJustIDCmd{res: res, err: fmt.Errorf("got %d, wanted 2", len(arr))}
+	}
+	start, err := arr[0].ToString()
+	if err != nil {
+		return &XAutoClaimJustIDCmd{res: res, err: err}
+	}
+	val, err := arr[1].AsStrSlice()
+	if err != nil {
+		return &XAutoClaimJustIDCmd{res: res, err: err}
+	}
+	return &XAutoClaimJustIDCmd{res: res, val: val, start: start, err: err}
+}
+
+func (cmd *XAutoClaimJustIDCmd) SetVal(val []string, start string) {
+	cmd.val = val
+	cmd.start = start
+}
+
+func (cmd *XAutoClaimJustIDCmd) Val() (ids []string, start string) {
+	return cmd.val, cmd.start
+}
+
+func (cmd *XAutoClaimJustIDCmd) Result() (ids []string, start string, err error) {
+	return cmd.val, cmd.start, cmd.err
+}
+
+func (cmd *XAutoClaimJustIDCmd) String() (string, error) {
+	return cmd.res.ToString()
+}
+
 type Sort struct {
 	By            string
 	Offset, Count int64
@@ -387,6 +774,68 @@ type BitField struct {
 
 type LPosArgs struct {
 	Rank, MaxLen int64
+}
+
+// Note: len(Fields) and len(Values) must be the same.
+// MaxLen/MaxLenApprox and MinID are in conflict, only one of them can be used.
+type XAddArgs struct {
+	Stream     string
+	NoMkStream bool
+	MaxLen     int64 // MAXLEN N
+
+	MinID string
+	// Approx causes MaxLen and MinID to use "~" matcher (instead of "=").
+	Approx bool
+	Limit  int64
+	ID     string
+	Fields []string
+	Values []string
+}
+
+// Note: len(Streams) and len(IDs) must be the same.
+type XReadArgs struct {
+	Streams []string // list of streams
+	IDs     []string // list of ids
+	Count   int64
+	Block   time.Duration
+}
+
+// Note: len(Streams) and len(IDs) must be the same.
+type XReadGroupArgs struct {
+	Group    string
+	Consumer string
+	Streams  []string // list of streams
+	IDs      []string // list of ids
+	Count    int64
+	Block    time.Duration
+	NoAck    bool
+}
+
+type XPendingExtArgs struct {
+	Stream   string
+	Group    string
+	Idle     time.Duration
+	Start    string
+	End      string
+	Count    int64
+	Consumer string
+}
+
+type XClaimArgs struct {
+	Stream   string
+	Group    string
+	Consumer string
+	MinIdle  time.Duration
+	Messages []string
+}
+
+type XAutoClaimArgs struct {
+	Stream   string
+	Group    string
+	MinIdle  time.Duration
+	Start    string
+	Count    int64
+	Consumer string
 }
 
 func usePrecise(dur time.Duration) bool {

@@ -124,52 +124,53 @@ type Cmdable interface {
 	RPushX(ctx context.Context, key string, elements ...string) *IntCmd
 	LMove(ctx context.Context, source, destination, srcpos, destpos string) *StringCmd
 	BLMove(ctx context.Context, source, destination, srcpos, destpos string, timeout time.Duration) *StringCmd
+
+	SAdd(ctx context.Context, key string, members ...string) *IntCmd
+	SCard(ctx context.Context, key string) *IntCmd
+	SDiff(ctx context.Context, keys ...string) *StringSliceCmd
+	SDiffStore(ctx context.Context, destination string, keys ...string) *IntCmd
+	SInter(ctx context.Context, keys ...string) *StringSliceCmd
+	SInterStore(ctx context.Context, destination string, keys ...string) *IntCmd
+	SIsMember(ctx context.Context, key string, member string) *BoolCmd
+	SMIsMember(ctx context.Context, key string, members ...string) *BoolSliceCmd
+	SMembers(ctx context.Context, key string) *StringSliceCmd
+	SMembersMap(ctx context.Context, key string) *StringStructMapCmd
+	SMove(ctx context.Context, source, destination string, member string) *BoolCmd
+	SPop(ctx context.Context, key string) *StringCmd
+	SPopN(ctx context.Context, key string, count int64) *StringSliceCmd
+	SRandMember(ctx context.Context, key string) *StringCmd
+	SRandMemberN(ctx context.Context, key string, count int64) *StringSliceCmd
+	SRem(ctx context.Context, key string, members ...string) *IntCmd
+	SUnion(ctx context.Context, keys ...string) *StringSliceCmd
+	SUnionStore(ctx context.Context, destination string, keys ...string) *IntCmd
+
+	XAdd(ctx context.Context, a XAddArgs) *StringCmd
+	XDel(ctx context.Context, stream string, ids ...string) *IntCmd
+	XLen(ctx context.Context, stream string) *IntCmd
+	XRange(ctx context.Context, stream, start, stop string) *XMessageSliceCmd
+	XRangeN(ctx context.Context, stream, start, stop string, count int64) *XMessageSliceCmd
+	XRevRange(ctx context.Context, stream, start, stop string) *XMessageSliceCmd
+	XRevRangeN(ctx context.Context, stream string, start, stop string, count int64) *XMessageSliceCmd
+	XRead(ctx context.Context, a XReadArgs) *XStreamSliceCmd
+	XReadStreams(ctx context.Context, streams []string, ids []string) *XStreamSliceCmd
+	XGroupCreate(ctx context.Context, stream, group, start string) *StatusCmd
+	XGroupCreateMkStream(ctx context.Context, stream, group, start string) *StatusCmd
+	XGroupSetID(ctx context.Context, stream, group, start string) *StatusCmd
+	XGroupDestroy(ctx context.Context, stream, group string) *IntCmd
+	XGroupCreateConsumer(ctx context.Context, stream, group, consumer string) *IntCmd
+	XGroupDelConsumer(ctx context.Context, stream, group, consumer string) *IntCmd
+	XReadGroup(ctx context.Context, a XReadGroupArgs) *XStreamSliceCmd
+	XAck(ctx context.Context, stream, group string, ids ...string) *IntCmd
+	XPending(ctx context.Context, stream, group string) *XPendingCmd
+	XPendingExt(ctx context.Context, a XPendingExtArgs) *XPendingExtCmd
+	XClaim(ctx context.Context, a XClaimArgs) *XMessageSliceCmd
+	XClaimJustID(ctx context.Context, a XClaimArgs) *StringSliceCmd
+	XAutoClaim(ctx context.Context, a XAutoClaimArgs) *XAutoClaimCmd
+	XAutoClaimJustID(ctx context.Context, a XAutoClaimArgs) *XAutoClaimJustIDCmd
+
 	// Implemented until here.
 	// TODO:
 	//
-	// SAdd(ctx context.Context, key string, members ...interface{}) *IntCmd
-	// SCard(ctx context.Context, key string) *IntCmd
-	// SDiff(ctx context.Context, keys ...string) *StringSliceCmd
-	// SDiffStore(ctx context.Context, destination string, keys ...string) *IntCmd
-	// SInter(ctx context.Context, keys ...string) *StringSliceCmd
-	// SInterStore(ctx context.Context, destination string, keys ...string) *IntCmd
-	// SIsMember(ctx context.Context, key string, member interface{}) *BoolCmd
-	// SMIsMember(ctx context.Context, key string, members ...interface{}) *BoolSliceCmd
-	// SMembers(ctx context.Context, key string) *StringSliceCmd
-	// SMembersMap(ctx context.Context, key string) *StringStructMapCmd
-	// SMove(ctx context.Context, source, destination string, member interface{}) *BoolCmd
-	// SPop(ctx context.Context, key string) *StringCmd
-	// SPopN(ctx context.Context, key string, count int64) *StringSliceCmd
-	// SRandMember(ctx context.Context, key string) *StringCmd
-	// SRandMemberN(ctx context.Context, key string, count int64) *StringSliceCmd
-	// SRem(ctx context.Context, key string, members ...interface{}) *IntCmd
-	// SUnion(ctx context.Context, keys ...string) *StringSliceCmd
-	// SUnionStore(ctx context.Context, destination string, keys ...string) *IntCmd
-
-	// XAdd(ctx context.Context, a *XAddArgs) *StringCmd
-	// XDel(ctx context.Context, stream string, ids ...string) *IntCmd
-	// XLen(ctx context.Context, stream string) *IntCmd
-	// XRange(ctx context.Context, stream, start, stop string) *XMessageSliceCmd
-	// XRangeN(ctx context.Context, stream, start, stop string, count int64) *XMessageSliceCmd
-	// XRevRange(ctx context.Context, stream string, start, stop string) *XMessageSliceCmd
-	// XRevRangeN(ctx context.Context, stream string, start, stop string, count int64) *XMessageSliceCmd
-	// XRead(ctx context.Context, a *XReadArgs) *XStreamSliceCmd
-	// XReadStreams(ctx context.Context, streams ...string) *XStreamSliceCmd
-	// XGroupCreate(ctx context.Context, stream, group, start string) *StatusCmd
-	// XGroupCreateMkStream(ctx context.Context, stream, group, start string) *StatusCmd
-	// XGroupSetID(ctx context.Context, stream, group, start string) *StatusCmd
-	// XGroupDestroy(ctx context.Context, stream, group string) *IntCmd
-	// XGroupCreateConsumer(ctx context.Context, stream, group, consumer string) *IntCmd
-	// XGroupDelConsumer(ctx context.Context, stream, group, consumer string) *IntCmd
-	// XReadGroup(ctx context.Context, a *XReadGroupArgs) *XStreamSliceCmd
-	// XAck(ctx context.Context, stream, group string, ids ...string) *IntCmd
-	// XPending(ctx context.Context, stream, group string) *XPendingCmd
-	// XPendingExt(ctx context.Context, a *XPendingExtArgs) *XPendingExtCmd
-	// XClaim(ctx context.Context, a *XClaimArgs) *XMessageSliceCmd
-	// XClaimJustID(ctx context.Context, a *XClaimArgs) *StringSliceCmd
-	// XAutoClaim(ctx context.Context, a *XAutoClaimArgs) *XAutoClaimCmd
-	// XAutoClaimJustID(ctx context.Context, a *XAutoClaimArgs) *XAutoClaimJustIDCmd
-
 	// // TODO: XTrim and XTrimApprox remove in v9.
 	// XTrim(ctx context.Context, key string, maxLen int64) *IntCmd
 	// XTrimApprox(ctx context.Context, key string, maxLen int64) *IntCmd
@@ -659,8 +660,8 @@ func (c *Compat) MSet(ctx context.Context, keys []string, values []string) *Stat
 		panic(fmt.Sprintf("keys and values must be same length %d != %d", len(keys), len(values)))
 	}
 	partial := c.client.B().Mset().KeyValue()
-	for i := 0; i < len(keys); i++ {
-		partial = partial.KeyValue(keys[i], values[i])
+	for i, v := range keys {
+		partial = partial.KeyValue(v, values[i])
 	}
 	cmd := partial.Build()
 	resp := c.client.Do(ctx, cmd)
@@ -672,8 +673,8 @@ func (c *Compat) MSetNX(ctx context.Context, keys []string, values []string) *Bo
 		panic(fmt.Sprintf("keys and values must be same length %d != %d", len(keys), len(values)))
 	}
 	partial := c.client.B().Msetnx().KeyValue()
-	for i := 0; i < len(keys); i++ {
-		partial = partial.KeyValue(keys[i], values[i])
+	for i, v := range keys {
+		partial = partial.KeyValue(v, values[i])
 	}
 	cmd := partial.Build()
 	resp := c.client.Do(ctx, cmd)
@@ -1179,4 +1180,321 @@ func (c *Compat) BLMove(ctx context.Context, source, destination, srcpos, destpo
 		panic(fmt.Sprintf("Invalid srcpost + destpos argument value: %s", srcpos+destpos))
 	}
 	return newStringCmd(resp)
+}
+
+func (c *Compat) SAdd(ctx context.Context, key string, members ...string) *IntCmd {
+	cmd := c.client.B().Sadd().Key(key).Member(members...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) SCard(ctx context.Context, key string) *IntCmd {
+	cmd := c.client.B().Scard().Key(key).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) SDiff(ctx context.Context, keys ...string) *StringSliceCmd {
+	cmd := c.client.B().Sdiff().Key(keys...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) SDiffStore(ctx context.Context, destination string, keys ...string) *IntCmd {
+	cmd := c.client.B().Sdiffstore().Destination(destination).Key(keys...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) SInter(ctx context.Context, keys ...string) *StringSliceCmd {
+	cmd := c.client.B().Sinter().Key(keys...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) SInterStore(ctx context.Context, destination string, keys ...string) *IntCmd {
+	cmd := c.client.B().Sinterstore().Destination(destination).Key(keys...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) SIsMember(ctx context.Context, key string, member string) *BoolCmd {
+	cmd := c.client.B().Sismember().Key(key).Member(member).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newBoolCmd(resp)
+}
+
+func (c *Compat) SMIsMember(ctx context.Context, key string, members ...string) *BoolSliceCmd {
+	cmd := c.client.B().Smismember().Key(key).Member(members...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newBoolSliceCmd(resp)
+}
+
+func (c *Compat) SMembers(ctx context.Context, key string) *StringSliceCmd {
+	cmd := c.client.B().Smembers().Key(key).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) SMembersMap(ctx context.Context, key string) *StringStructMapCmd {
+	cmd := c.client.B().Smembers().Key(key).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringStructMapCmd(resp)
+}
+
+func (c *Compat) SMove(ctx context.Context, source, destination string, member string) *BoolCmd {
+	cmd := c.client.B().Smove().Source(source).Destination(destination).Member(member).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newBoolCmd(resp)
+}
+
+func (c *Compat) SPop(ctx context.Context, key string) *StringCmd {
+	cmd := c.client.B().Spop().Key(key).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringCmd(resp)
+}
+
+func (c *Compat) SPopN(ctx context.Context, key string, count int64) *StringSliceCmd {
+	cmd := c.client.B().Spop().Key(key).Count(count).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) SRandMember(ctx context.Context, key string) *StringCmd {
+	cmd := c.client.B().Srandmember().Key(key).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringCmd(resp)
+}
+
+func (c *Compat) SRandMemberN(ctx context.Context, key string, count int64) *StringSliceCmd {
+	cmd := c.client.B().Srandmember().Key(key).Count(count).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) SRem(ctx context.Context, key string, members ...string) *IntCmd {
+	cmd := c.client.B().Srem().Key(key).Member(members...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) SUnion(ctx context.Context, keys ...string) *StringSliceCmd {
+	cmd := c.client.B().Sunion().Key(keys...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) SUnionStore(ctx context.Context, destination string, keys ...string) *IntCmd {
+	cmd := c.client.B().Sunionstore().Destination(destination).Key(keys...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) XAdd(ctx context.Context, a XAddArgs) *StringCmd {
+	if len(a.Fields) != len(a.Values) {
+		panic(fmt.Sprintf("fields and values must be same length %d != %d", len(a.Fields), len(a.Values)))
+	}
+	cmd := c.client.B().Arbitrary("XADD").Keys(a.Stream)
+	if a.NoMkStream {
+		cmd = cmd.Args("NOMKSTREAM")
+	}
+	switch {
+	case a.MaxLen > 0:
+		if a.Approx {
+			cmd = cmd.Args("MAXLEN", "~", strconv.FormatInt(a.MaxLen, 10))
+		} else {
+			cmd = cmd.Args("MAXLEN", strconv.FormatInt(a.MaxLen, 10))
+		}
+	case a.MinID != "":
+		if a.Approx {
+			cmd = cmd.Args("MINID", "~", a.MinID)
+		} else {
+			cmd = cmd.Args("MINID", a.MinID)
+		}
+	}
+	if a.Limit > 0 {
+		cmd = cmd.Args("LIMIT", strconv.FormatInt(a.Limit, 10))
+	}
+	if a.ID != "" {
+		cmd = cmd.Args(a.ID)
+	} else {
+		cmd = cmd.Args("*")
+	}
+	for i, v := range a.Fields {
+		cmd = cmd.Args(v, a.Values[i])
+	}
+	resp := c.client.Do(ctx, cmd.Build())
+	return newStringCmd(resp)
+}
+
+func (c *Compat) XDel(ctx context.Context, stream string, ids ...string) *IntCmd {
+	cmd := c.client.B().Xdel().Key(stream).Id(ids...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) XLen(ctx context.Context, stream string) *IntCmd {
+	cmd := c.client.B().Xlen().Key(stream).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) XRange(ctx context.Context, stream, start, stop string) *XMessageSliceCmd {
+	cmd := c.client.B().Xrange().Key(stream).Start(start).End(stop).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newXMessageSliceCmd(resp)
+}
+
+func (c *Compat) XRangeN(ctx context.Context, stream, start, stop string, count int64) *XMessageSliceCmd {
+	cmd := c.client.B().Xrange().Key(stream).Start(start).End(stop).Count(count).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newXMessageSliceCmd(resp)
+}
+
+func (c *Compat) XRevRange(ctx context.Context, stream, start, stop string) *XMessageSliceCmd {
+	cmd := c.client.B().Xrevrange().Key(stream).End(stop).Start(start).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newXMessageSliceCmd(resp)
+}
+
+func (c *Compat) XRevRangeN(ctx context.Context, stream, start, stop string, count int64) *XMessageSliceCmd {
+	cmd := c.client.B().Xrevrange().Key(stream).End(stop).Start(start).Count(count).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newXMessageSliceCmd(resp)
+}
+
+func (c *Compat) XRead(ctx context.Context, a XReadArgs) *XStreamSliceCmd {
+	if len(a.Streams) != len(a.IDs) {
+		panic(fmt.Sprintf("streams and ids must be same length %d != %d", len(a.Streams), len(a.IDs)))
+	}
+	cmd := c.client.B().Arbitrary("XREAD")
+	if a.Count > 0 {
+		cmd = cmd.Args("COUNT", strconv.FormatInt(a.Count, 10))
+	}
+	if a.Block >= 0 {
+		cmd = cmd.Args("BLOCK", strconv.FormatInt(formatMs(a.Block), 10))
+	}
+	cmd = cmd.Args("STREAMS")
+	cmd = cmd.Keys(a.Streams...).Args(a.IDs...)
+	resp := c.client.Do(ctx, cmd.Build())
+	return newXStreamSliceCmd(resp)
+}
+
+func (c *Compat) XReadStreams(ctx context.Context, streams []string, ids []string) *XStreamSliceCmd {
+	// XRead handles len(streams) != len(ids)
+	return c.XRead(ctx, XReadArgs{Streams: streams, IDs: ids, Block: -1})
+}
+
+func (c *Compat) XGroupCreate(ctx context.Context, stream, group, start string) *StatusCmd {
+	cmd := c.client.B().XgroupCreate().Key(stream).Groupname(group).Id(start).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) XGroupCreateMkStream(ctx context.Context, stream, group, start string) *StatusCmd {
+	cmd := c.client.B().XgroupCreate().Key(stream).Groupname(group).Id(start).Mkstream().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) XGroupSetID(ctx context.Context, stream, group, start string) *StatusCmd {
+	cmd := c.client.B().XgroupSetid().Key(stream).Groupname(group).Id(start).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) XGroupDestroy(ctx context.Context, stream, group string) *IntCmd {
+	cmd := c.client.B().XgroupDestroy().Key(stream).Groupname(group).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) XGroupCreateConsumer(ctx context.Context, stream, group, consumer string) *IntCmd {
+	cmd := c.client.B().XgroupCreateconsumer().Key(stream).Groupname(group).Consumername(consumer).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) XGroupDelConsumer(ctx context.Context, stream, group, consumer string) *IntCmd {
+	cmd := c.client.B().XgroupDelconsumer().Key(stream).Groupname(group).Consumername(consumer).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) XReadGroup(ctx context.Context, a XReadGroupArgs) *XStreamSliceCmd {
+	if len(a.Streams) != len(a.IDs) {
+		panic(fmt.Sprintf("streams and ids must be same length %d != %d", len(a.Streams), len(a.IDs)))
+	}
+	cmd := c.client.B().Arbitrary("XREADGROUP")
+	cmd = cmd.Args("GROUP", a.Group, a.Consumer)
+	if a.Count > 0 {
+		cmd = cmd.Args("COUNT", strconv.FormatInt(a.Count, 10))
+	}
+	if a.Block >= 0 {
+		cmd = cmd.Args("BLOCK", strconv.FormatInt(formatMs(a.Block), 10))
+	}
+	if a.NoAck {
+		cmd = cmd.Args("NOACK")
+	}
+	cmd = cmd.Args("STREAMS")
+	cmd = cmd.Keys(a.Streams...).Args(a.IDs...)
+	resp := c.client.Do(ctx, cmd.Build())
+	return newXStreamSliceCmd(resp)
+}
+
+func (c *Compat) XAck(ctx context.Context, stream, group string, ids ...string) *IntCmd {
+	cmd := c.client.B().Xack().Key(stream).Group(group).Id(ids...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) XPending(ctx context.Context, stream, group string) *XPendingCmd {
+	cmd := c.client.B().Xpending().Key(stream).Group(group).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newXPendingCmd(resp)
+}
+
+func (c *Compat) XPendingExt(ctx context.Context, a XPendingExtArgs) *XPendingExtCmd {
+	cmd := c.client.B().Arbitrary("XPENDING").Keys(a.Stream).Args(a.Group)
+	if a.Idle != 0 {
+		cmd = cmd.Args("IDLE", strconv.FormatInt(formatMs(a.Idle), 10))
+	}
+	cmd = cmd.Args(a.Start, a.End, strconv.FormatInt(a.Count, 10))
+	if a.Consumer != "" {
+		cmd = cmd.Args(a.Consumer)
+	}
+	resp := c.client.Do(ctx, cmd.Build())
+	return newXPendingExtCmd(resp)
+}
+
+func (c *Compat) XClaim(ctx context.Context, a XClaimArgs) *XMessageSliceCmd {
+	cmd := c.client.B().Xclaim().Key(a.Stream).Group(a.Group).Consumer(a.Consumer).MinIdleTime(strconv.FormatInt(formatMs(a.MinIdle), 10)).Id(a.Messages...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newXMessageSliceCmd(resp)
+}
+
+func (c *Compat) XClaimJustID(ctx context.Context, a XClaimArgs) *StringSliceCmd {
+	cmd := c.client.B().Xclaim().Key(a.Stream).Group(a.Group).Consumer(a.Consumer).MinIdleTime(strconv.FormatInt(formatMs(a.MinIdle), 10)).Id(a.Messages...).Justid().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) XAutoClaim(ctx context.Context, a XAutoClaimArgs) *XAutoClaimCmd {
+	var resp rueidis.RedisResult
+	if a.Count > 0 {
+		resp = c.client.Do(ctx, c.client.B().Xautoclaim().Key(a.Stream).Group(a.Group).Consumer(a.Consumer).MinIdleTime(strconv.FormatInt(formatMs(a.MinIdle), 10)).Start(a.Start).Count(a.Count).Build())
+	} else {
+		resp = c.client.Do(ctx, c.client.B().Xautoclaim().Key(a.Stream).Group(a.Group).Consumer(a.Consumer).MinIdleTime(strconv.FormatInt(formatMs(a.MinIdle), 10)).Start(a.Start).Build())
+	}
+	return newXAutoClaimCmd(resp)
+}
+
+func (c *Compat) XAutoClaimJustID(ctx context.Context, a XAutoClaimArgs) *XAutoClaimJustIDCmd {
+	var resp rueidis.RedisResult
+	if a.Count > 0 {
+		resp = c.client.Do(ctx, c.client.B().Xautoclaim().Key(a.Stream).Group(a.Group).Consumer(a.Consumer).MinIdleTime(strconv.FormatInt(formatMs(a.MinIdle), 10)).Start(a.Start).Count(a.Count).Justid().Build())
+	} else {
+		resp = c.client.Do(ctx, c.client.B().Xautoclaim().Key(a.Stream).Group(a.Group).Consumer(a.Consumer).MinIdleTime(strconv.FormatInt(formatMs(a.MinIdle), 10)).Start(a.Start).Justid().Build())
+	}
+	return newXAutoClaimJustIDCmd(resp)
 }
