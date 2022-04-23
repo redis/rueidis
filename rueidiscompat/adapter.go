@@ -171,17 +171,14 @@ type Cmdable interface {
 	// Implemented until here.
 	// TODO:
 	//
-	// // TODO: XTrim and XTrimApprox remove in v9.
-	// XTrim(ctx context.Context, key string, maxLen int64) *IntCmd
-	// XTrimApprox(ctx context.Context, key string, maxLen int64) *IntCmd
-	// XTrimMaxLen(ctx context.Context, key string, maxLen int64) *IntCmd
-	// XTrimMaxLenApprox(ctx context.Context, key string, maxLen, limit int64) *IntCmd
-	// XTrimMinID(ctx context.Context, key string, minID string) *IntCmd
-	// XTrimMinIDApprox(ctx context.Context, key string, minID string, limit int64) *IntCmd
-	// XInfoGroups(ctx context.Context, key string) *XInfoGroupsCmd
-	// XInfoStream(ctx context.Context, key string) *XInfoStreamCmd
-	// XInfoStreamFull(ctx context.Context, key string, count int) *XInfoStreamFullCmd
-	// XInfoConsumers(ctx context.Context, key string, group string) *XInfoConsumersCmd
+	XTrimMaxLen(ctx context.Context, key string, maxLen int64) *IntCmd
+	XTrimMaxLenApprox(ctx context.Context, key string, maxLen, limit int64) *IntCmd
+	XTrimMinID(ctx context.Context, key string, minID int64) *IntCmd
+	XTrimMinIDApprox(ctx context.Context, key string, minID int64, limit int64) *IntCmd
+	XInfoGroups(ctx context.Context, key string) *XInfoGroupsCmd
+	XInfoStream(ctx context.Context, key string) *XInfoStreamCmd
+	XInfoStreamFull(ctx context.Context, key string, count int64) *XInfoStreamFullCmd
+	XInfoConsumers(ctx context.Context, key string, group string) *XInfoConsumersCmd
 
 	// BZPopMax(ctx context.Context, timeout time.Duration, keys ...string) *ZWithKeyCmd
 	// BZPopMin(ctx context.Context, timeout time.Duration, keys ...string) *ZWithKeyCmd
@@ -1497,4 +1494,73 @@ func (c *Compat) XAutoClaimJustID(ctx context.Context, a XAutoClaimArgs) *XAutoC
 		resp = c.client.Do(ctx, c.client.B().Xautoclaim().Key(a.Stream).Group(a.Group).Consumer(a.Consumer).MinIdleTime(strconv.FormatInt(formatMs(a.MinIdle), 10)).Start(a.Start).Justid().Build())
 	}
 	return newXAutoClaimJustIDCmd(resp)
+}
+
+// xTrim If approx is true, add the "~" parameter, otherwise it is the default "=" (redis default).
+// example:
+//		XTRIM key MAXLEN/MINID threshold LIMIT limit.
+//		XTRIM key MAXLEN/MINID ~ threshold LIMIT limit.
+// The redis-server version is lower than 6.2, please set limit to 0.
+func (c *Compat) xTrim(ctx context.Context, key, strategy string,
+	approx bool, threshold int64, limit int64) *IntCmd {
+	cmd := c.client.B().Arbitrary("XTRIM").Keys(key).Args(strategy)
+	if approx {
+		cmd = cmd.Args("~")
+	}
+	cmd = cmd.Args(strconv.FormatInt(threshold, 10))
+	if limit > 0 {
+		cmd = cmd.Args("LIMIT", strconv.FormatInt(limit, 10))
+	}
+	resp := c.client.Do(ctx, cmd.Build())
+	return newIntCmd(resp)
+}
+
+// XTrimMaxLen No `~` rules are used, `limit` cannot be used.
+// cmd: XTRIM key MAXLEN maxLen
+func (c *Compat) XTrimMaxLen(ctx context.Context, key string, maxLen int64) *IntCmd {
+	return c.xTrim(ctx, key, "MAXLEN", false, maxLen, 0)
+}
+
+// XTrimMaxLenApprox LIMIT has a bug, please confirm it and use it.
+// issue: https://github.com/redis/redis/issues/9046
+// cmd: XTRIM key MAXLEN ~ maxLen LIMIT limit
+func (c *Compat) XTrimMaxLenApprox(ctx context.Context, key string, maxLen, limit int64) *IntCmd {
+	return c.xTrim(ctx, key, "MAXLEN", true, maxLen, limit)
+}
+
+// XTrimMinID No `~` rules are used, `limit` cannot be used.
+// cmd: XTRIM key MINID minID
+func (c *Compat) XTrimMinID(ctx context.Context, key string, minID int64) *IntCmd {
+	return c.xTrim(ctx, key, "MINID", false, minID, 0)
+}
+
+// XTrimMinIDApprox LIMIT has a bug, please confirm it and use it.
+// issue: https://github.com/redis/redis/issues/9046
+// cmd: XTRIM key MINID ~ minID LIMIT limit
+func (c *Compat) XTrimMinIDApprox(ctx context.Context, key string, minID int64, limit int64) *IntCmd {
+	return c.xTrim(ctx, key, "MINID", true, minID, limit)
+}
+
+func (c *Compat) XInfoGroups(ctx context.Context, key string) *XInfoGroupsCmd {
+	cmd := c.client.B().XinfoGroups().Key(key).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newXInfoGroupsCmd(resp)
+}
+
+func (c *Compat) XInfoStream(ctx context.Context, key string) *XInfoStreamCmd {
+	cmd := c.client.B().XinfoStream().Key(key).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newXInfoStreamCmd(resp)
+}
+
+func (c *Compat) XInfoStreamFull(ctx context.Context, key string, count int64) *XInfoStreamFullCmd {
+	cmd := c.client.B().XinfoStream().Key(key).Full().Count(count).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newXInfoStreamFullCmd(resp)
+}
+
+func (c *Compat) XInfoConsumers(ctx context.Context, key, group string) *XInfoConsumersCmd {
+	cmd := c.client.B().XinfoConsumers().Key(key).Groupname(group).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newXInfoConsumersCmd(resp)
 }

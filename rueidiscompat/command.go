@@ -321,7 +321,7 @@ func newScanCmd(res rueidis.RedisResult) *ScanCmd {
 	if err != nil {
 		return &ScanCmd{res: res, err: err}
 	}
-	cursor, err := ret[0].ToInt64()
+	cursor, err := ret[0].AsInt64()
 	if err != nil {
 		return &ScanCmd{res: res, err: err}
 	}
@@ -722,6 +722,483 @@ func (cmd *XAutoClaimJustIDCmd) Result() (ids []string, start string, err error)
 }
 
 func (cmd *XAutoClaimJustIDCmd) String() (string, error) {
+	return cmd.res.ToString()
+}
+
+type XInfoGroup struct {
+	Name            string
+	Consumers       int64
+	Pending         int64
+	LastDeliveredID string
+}
+
+type XInfoGroupsCmd struct {
+	res rueidis.RedisResult
+	val []XInfoGroup
+	err error
+}
+
+func newXInfoGroupsCmd(res rueidis.RedisResult) *XInfoGroupsCmd {
+	arr, err := res.ToArray()
+	if err != nil {
+		return &XInfoGroupsCmd{res: res, err: err}
+	}
+	groupInfos := make([]XInfoGroup, 0, len(arr))
+	for _, v := range arr {
+		info, err := v.ToArray()
+		if err != nil {
+			return &XInfoGroupsCmd{res: res, err: err}
+		}
+		if len(info) != 8 {
+			return &XInfoGroupsCmd{res: res, err: fmt.Errorf("got %d, wanted 8", len(arr))}
+		}
+		var group XInfoGroup
+		for i, j := 0, 1; i < 8; i, j = i+2, j+2 {
+			key, err := info[i].ToString()
+			if err != nil {
+				return &XInfoGroupsCmd{res: res, err: err}
+			}
+			val, err := info[j].ToString()
+			if err != nil {
+				return &XInfoGroupsCmd{res: res, err: err}
+			}
+			switch key {
+			case "name":
+				group.Name = val
+			case "consumers":
+				group.Consumers, err = strconv.ParseInt(val, 0, 64)
+				if err != nil {
+					return &XInfoGroupsCmd{res: res, err: err}
+				}
+			case "pending":
+				group.Pending, err = strconv.ParseInt(val, 0, 64)
+				if err != nil {
+					return &XInfoGroupsCmd{res: res, err: err}
+				}
+			case "last-delivered-id":
+				group.LastDeliveredID = val
+			default:
+				return &XInfoGroupsCmd{res: res, err: fmt.Errorf("unexpected content %s", key)}
+			}
+		}
+
+		groupInfos = append(groupInfos, group)
+	}
+	return &XInfoGroupsCmd{res: res, val: groupInfos, err: err}
+}
+
+func (cmd *XInfoGroupsCmd) SetVal(val []XInfoGroup) {
+	cmd.val = val
+}
+
+func (cmd *XInfoGroupsCmd) Val() []XInfoGroup {
+	return cmd.val
+}
+
+func (cmd *XInfoGroupsCmd) Result() ([]XInfoGroup, error) {
+	return cmd.val, cmd.err
+}
+
+func (cmd *XInfoGroupsCmd) String() (string, error) {
+	return cmd.res.ToString()
+}
+
+type XInfoStream struct {
+	Length          int64
+	RadixTreeKeys   int64
+	RadixTreeNodes  int64
+	Groups          int64
+	LastGeneratedID string
+	FirstEntry      rueidis.XRange
+	LastEntry       rueidis.XRange
+}
+type XInfoStreamCmd struct {
+	res rueidis.RedisResult
+	val XInfoStream
+	err error
+}
+
+func newXInfoStreamCmd(res rueidis.RedisResult) *XInfoStreamCmd {
+	arr, err := res.ToArray()
+	if err != nil {
+		return &XInfoStreamCmd{res: res, err: err}
+	}
+	if len(arr) != 14 {
+		return &XInfoStreamCmd{res: res, err: fmt.Errorf("got %d, wanted 14", len(arr))}
+	}
+	var val XInfoStream
+	for i, j := 0, 1; i < 14; i, j = i+2, j+2 {
+		key, err := arr[i].ToString()
+		if err != nil {
+			return &XInfoStreamCmd{res: res, err: err}
+		}
+		switch key {
+		case "length":
+			val.Length, err = arr[j].ToInt64()
+		case "radix-tree-keys":
+			val.RadixTreeKeys, err = arr[j].ToInt64()
+		case "radix-tree-nodes":
+			val.RadixTreeNodes, err = arr[j].ToInt64()
+		case "groups":
+			val.Groups, err = arr[j].ToInt64()
+		case "last-generated-id":
+			val.LastGeneratedID, err = arr[j].ToString()
+		case "first-entry":
+			val.FirstEntry, err = arr[j].AsXRange()
+			if rueidis.IsRedisNil(err) {
+				err = nil
+			}
+		case "last-entry":
+			val.LastEntry, err = arr[j].AsXRange()
+			if rueidis.IsRedisNil(err) {
+				err = nil
+			}
+		default:
+			err = fmt.Errorf("unexpected content %s", key)
+		}
+		if err != nil {
+			return &XInfoStreamCmd{res: res, err: err}
+		}
+	}
+	return &XInfoStreamCmd{res: res, val: val, err: err}
+}
+
+func (cmd *XInfoStreamCmd) SetVal(val XInfoStream) {
+	cmd.val = val
+}
+
+func (cmd *XInfoStreamCmd) Val() XInfoStream {
+	return cmd.val
+}
+
+func (cmd *XInfoStreamCmd) Result() (XInfoStream, error) {
+	return cmd.val, cmd.err
+}
+
+func (cmd *XInfoStreamCmd) String() (string, error) {
+	return cmd.res.ToString()
+}
+
+type XInfoStreamConsumerPending struct {
+	ID            string
+	DeliveryTime  time.Time
+	DeliveryCount int64
+}
+
+type XInfoStreamGroupPending struct {
+	ID            string
+	Consumer      string
+	DeliveryTime  time.Time
+	DeliveryCount int64
+}
+
+type XInfoStreamConsumer struct {
+	Name     string
+	SeenTime time.Time
+	PelCount int64
+	Pending  []XInfoStreamConsumerPending
+}
+
+type XInfoStreamGroup struct {
+	Name            string
+	LastDeliveredID string
+	PelCount        int64
+	Pending         []XInfoStreamGroupPending
+	Consumers       []XInfoStreamConsumer
+}
+
+type XInfoStreamFull struct {
+	Length          int64
+	RadixTreeKeys   int64
+	RadixTreeNodes  int64
+	LastGeneratedID string
+	Entries         []rueidis.XRange
+	Groups          []XInfoStreamGroup
+}
+
+type XInfoStreamFullCmd struct {
+	res rueidis.RedisResult
+	val XInfoStreamFull
+	err error
+}
+
+func newXInfoStreamFullCmd(res rueidis.RedisResult) *XInfoStreamFullCmd {
+	arr, err := res.ToArray()
+	if err != nil {
+		return &XInfoStreamFullCmd{res: res, err: err}
+	}
+	if len(arr) != 12 {
+		return &XInfoStreamFullCmd{res: res, err: fmt.Errorf("got %d, wanted 12", len(arr))}
+	}
+	var val XInfoStreamFull
+	for i, j := 0, 1; i < 12; i, j = i+2, j+2 {
+		key, err := arr[i].ToString()
+		if err != nil {
+			return &XInfoStreamFullCmd{res: res, err: err}
+		}
+		switch key {
+		case "length":
+			val.Length, err = arr[j].ToInt64()
+		case "radix-tree-keys":
+			val.RadixTreeKeys, err = arr[j].ToInt64()
+		case "radix-tree-nodes":
+			val.RadixTreeNodes, err = arr[j].ToInt64()
+		case "last-generated-id":
+			val.LastGeneratedID, err = arr[j].ToString()
+		case "entries":
+			val.Entries, err = arr[j].AsXRangeSlice()
+		case "groups":
+			val.Groups, err = readStreamGroups(arr[j])
+		default:
+			err = fmt.Errorf("unexpected content %s", key)
+		}
+		if err != nil {
+			return &XInfoStreamFullCmd{res: res, err: err}
+		}
+	}
+
+	return &XInfoStreamFullCmd{res: res, val: val, err: err}
+}
+
+func (cmd *XInfoStreamFullCmd) SetVal(val XInfoStreamFull) {
+	cmd.val = val
+}
+
+func (cmd *XInfoStreamFullCmd) Val() XInfoStreamFull {
+	return cmd.val
+}
+
+func (cmd *XInfoStreamFullCmd) Result() (XInfoStreamFull, error) {
+	return cmd.val, cmd.err
+}
+
+func (cmd *XInfoStreamFullCmd) String() (string, error) {
+	return cmd.res.ToString()
+}
+
+func readStreamGroups(res rueidis.RedisMessage) ([]XInfoStreamGroup, error) {
+	arr, err := res.ToArray()
+	if err != nil {
+		return nil, err
+	}
+	groups := make([]XInfoStreamGroup, 0, len(arr))
+	for _, v := range arr {
+		info, err := v.ToArray()
+		if err != nil {
+			return nil, err
+		}
+		if len(info) != 10 {
+			return nil, fmt.Errorf("got %d, wanted 10", len(arr))
+		}
+		var group XInfoStreamGroup
+		for i, j := 0, 1; i < 10; i, j = i+2, j+2 {
+			key, err := info[i].ToString()
+			if err != nil {
+				return nil, err
+			}
+			switch key {
+			case "name":
+				group.Name, err = info[j].ToString()
+			case "last-delivered-id":
+				group.LastDeliveredID, err = info[j].ToString()
+			case "pel-count":
+				group.PelCount, err = info[j].ToInt64()
+			case "pending":
+				group.Pending, err = readXInfoStreamGroupPending(info[j])
+			case "consumers":
+				group.Consumers, err = readXInfoStreamConsumers(info[j])
+			default:
+				err = fmt.Errorf("unexpected content %s", key)
+			}
+			if err != nil {
+				return nil, err
+			}
+		}
+		groups = append(groups, group)
+	}
+	return groups, nil
+}
+
+func readXInfoStreamGroupPending(res rueidis.RedisMessage) ([]XInfoStreamGroupPending, error) {
+	arr, err := res.ToArray()
+	if err != nil {
+		return nil, err
+	}
+	pending := make([]XInfoStreamGroupPending, 0, len(arr))
+	for _, v := range arr {
+		info, err := v.ToArray()
+		if err != nil {
+			return nil, err
+		}
+		if len(info) != 4 {
+			return nil, fmt.Errorf("got %d, wanted 4", len(arr))
+		}
+		var p XInfoStreamGroupPending
+		p.ID, err = info[0].ToString()
+		if err != nil {
+			return nil, err
+		}
+		p.Consumer, err = info[1].ToString()
+		if err != nil {
+			return nil, err
+		}
+		delivery, err := info[2].ToInt64()
+		if err != nil {
+			return nil, err
+		}
+		p.DeliveryTime = time.Unix(delivery/1000, delivery%1000*int64(time.Millisecond))
+		p.DeliveryCount, err = info[3].ToInt64()
+		if err != nil {
+			return nil, err
+		}
+		pending = append(pending, p)
+	}
+	return pending, nil
+}
+
+func readXInfoStreamConsumers(res rueidis.RedisMessage) ([]XInfoStreamConsumer, error) {
+	arr, err := res.ToArray()
+	if err != nil {
+		return nil, err
+	}
+	consumer := make([]XInfoStreamConsumer, 0, len(arr))
+	for _, v := range arr {
+		info, err := v.ToArray()
+		if err != nil {
+			return nil, err
+		}
+		if len(info) != 8 {
+			return nil, fmt.Errorf("got %d, wanted 8", len(arr))
+		}
+		var c XInfoStreamConsumer
+		for i, j := 0, 1; i < 8; i, j = i+2, j+2 {
+			cKey, err := info[i].ToString()
+			if err != nil {
+				return nil, err
+			}
+			switch cKey {
+			case "name":
+				c.Name, err = info[j].ToString()
+			case "seen-time":
+				seen, err := info[j].ToInt64()
+				if err != nil {
+					return nil, err
+				}
+				c.SeenTime = time.Unix(seen/1000, seen%1000*int64(time.Millisecond))
+			case "pel-count":
+				c.PelCount, err = info[j].ToInt64()
+			case "pending":
+				pending, err := info[j].ToArray()
+				if err != nil {
+					return nil, err
+				}
+				c.Pending = make([]XInfoStreamConsumerPending, 0, len(pending))
+				for _, v := range pending {
+					pendingInfo, err := v.ToArray()
+					if err != nil {
+						return nil, err
+					}
+					if len(pendingInfo) != 3 {
+						return nil, fmt.Errorf("got %d, wanted 3", len(arr))
+					}
+					var p XInfoStreamConsumerPending
+					p.ID, err = pendingInfo[0].ToString()
+					if err != nil {
+						return nil, err
+					}
+					delivery, err := pendingInfo[1].ToInt64()
+					if err != nil {
+						return nil, err
+					}
+					p.DeliveryTime = time.Unix(delivery/1000, delivery%1000*int64(time.Millisecond))
+					p.DeliveryCount, err = pendingInfo[2].ToInt64()
+					if err != nil {
+						return nil, err
+					}
+					c.Pending = append(c.Pending, p)
+				}
+			default:
+				err = fmt.Errorf("unexpected content %s", cKey)
+			}
+			if err != nil {
+				return nil, err
+			}
+		}
+		consumer = append(consumer, c)
+	}
+	return consumer, nil
+}
+
+type XInfoConsumer struct {
+	Name    string
+	Pending int64
+	Idle    int64
+}
+type XInfoConsumersCmd struct {
+	res rueidis.RedisResult
+	val []XInfoConsumer
+	err error
+}
+
+func newXInfoConsumersCmd(res rueidis.RedisResult) *XInfoConsumersCmd {
+	arr, err := res.ToArray()
+	if err != nil {
+		return &XInfoConsumersCmd{res: res, err: err}
+	}
+	val := make([]XInfoConsumer, 0, len(arr))
+	for _, v := range arr {
+		info, err := v.ToArray()
+		if err != nil {
+			return &XInfoConsumersCmd{res: res, err: err}
+		}
+		if len(info) != 6 {
+			return &XInfoConsumersCmd{res: res, err: fmt.Errorf("got %d, wanted 6", len(arr))}
+		}
+		var consumer XInfoConsumer
+		for i, j := 0, 1; i < 6; i, j = i+2, j+2 {
+			key, err := info[i].ToString()
+			if err != nil {
+				return &XInfoConsumersCmd{res: res, err: err}
+			}
+			val, err := info[j].ToString()
+			if err != nil {
+				return &XInfoConsumersCmd{res: res, err: err}
+			}
+			switch key {
+			case "name":
+				consumer.Name = val
+			case "pending":
+				consumer.Pending, err = strconv.ParseInt(val, 0, 64)
+				if err != nil {
+					return &XInfoConsumersCmd{res: res, err: err}
+				}
+			case "idle":
+				consumer.Idle, err = strconv.ParseInt(val, 0, 64)
+				if err != nil {
+					return &XInfoConsumersCmd{res: res, err: err}
+				}
+			default:
+				return &XInfoConsumersCmd{res: res, err: fmt.Errorf("unexpected content %s", key)}
+			}
+		}
+		val = append(val, consumer)
+	}
+	return &XInfoConsumersCmd{res: res, val: val, err: err}
+}
+
+func (cmd *XInfoConsumersCmd) SetVal(val []XInfoConsumer) {
+	cmd.val = val
+}
+
+func (cmd *XInfoConsumersCmd) Val() []XInfoConsumer {
+	return cmd.val
+}
+
+func (cmd *XInfoConsumersCmd) Result() ([]XInfoConsumer, error) {
+	return cmd.val, cmd.err
+}
+
+func (cmd *XInfoConsumersCmd) String() (string, error) {
 	return cmd.res.ToString()
 }
 
