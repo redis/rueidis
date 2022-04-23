@@ -717,6 +717,7 @@ func (c *Compat) SetArgs(ctx context.Context, key string, value string, a SetArg
 	switch mode := strings.ToUpper(a.Mode); mode {
 	case "XX", "NX":
 		cmd = cmd.Args(mode)
+	case "":
 	default:
 		panic(fmt.Sprintf("invalid mode for SET: %s", a.Mode))
 	}
@@ -844,6 +845,7 @@ func (c *Compat) BitField(ctx context.Context, key string, bitField []BitField) 
 		switch overflow := strings.ToUpper(a.Overflow); overflow {
 		case "WRAP", "SAT", "FAIL":
 			cmd = cmd.Args("OVERFLOW", overflow)
+		case "":
 		default:
 			panic(fmt.Sprintf("Invalid OVERFLOW argument value: %s", a.Overflow))
 		}
