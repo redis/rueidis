@@ -168,9 +168,6 @@ type Cmdable interface {
 	XAutoClaim(ctx context.Context, a XAutoClaimArgs) *XAutoClaimCmd
 	XAutoClaimJustID(ctx context.Context, a XAutoClaimArgs) *XAutoClaimJustIDCmd
 
-	// Implemented until here.
-	// TODO:
-	//
 	XTrimMaxLen(ctx context.Context, key string, maxLen int64) *IntCmd
 	XTrimMaxLenApprox(ctx context.Context, key string, maxLen, limit int64) *IntCmd
 	XTrimMinID(ctx context.Context, key string, minID int64) *IntCmd
@@ -180,6 +177,9 @@ type Cmdable interface {
 	XInfoStreamFull(ctx context.Context, key string, count int64) *XInfoStreamFullCmd
 	XInfoConsumers(ctx context.Context, key string, group string) *XInfoConsumersCmd
 
+	// Implemented until here.
+	// TODO:
+	//
 	// BZPopMax(ctx context.Context, timeout time.Duration, keys ...string) *ZWithKeyCmd
 	// BZPopMin(ctx context.Context, timeout time.Duration, keys ...string) *ZWithKeyCmd
 
@@ -509,8 +509,7 @@ func (c *Compat) Sort(ctx context.Context, key string, sort Sort) *StringSliceCm
 		cmd = cmd.Args("LIMIT", strconv.FormatInt(sort.Offset, 10), strconv.FormatInt(sort.Count, 10))
 	}
 	if len(sort.Get) > 0 {
-		cmd = cmd.Args("GET")
-		cmd = cmd.Args(sort.Get...)
+		cmd = cmd.Args("GET").Args(sort.Get...)
 	}
 	switch order := strings.ToUpper(sort.Order); order {
 	case "ASC", "DESC":
@@ -535,8 +534,7 @@ func (c *Compat) SortStore(ctx context.Context, key, store string, sort Sort) *I
 		cmd = cmd.Args("LIMIT", strconv.FormatInt(sort.Offset, 10), strconv.FormatInt(sort.Count, 10))
 	}
 	if len(sort.Get) > 0 {
-		cmd = cmd.Args("GET")
-		cmd = cmd.Args(sort.Get...)
+		cmd = cmd.Args("GET").Args(sort.Get...)
 	}
 	switch order := strings.ToUpper(sort.Order); order {
 	case "ASC", "DESC":
