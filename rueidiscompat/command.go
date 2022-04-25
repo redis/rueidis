@@ -260,7 +260,7 @@ func newBoolSliceCmd(res rueidis.RedisResult) *BoolSliceCmd {
 		return &BoolSliceCmd{res: res, err: err}
 	}
 	val := make([]bool, 0, len(ints))
-	for i := 0; i < len(ints); i++ {
+	for _, i := range ints {
 		val = append(val, i == 1)
 	}
 	return &BoolSliceCmd{res: res, val: val, err: err}
@@ -279,6 +279,78 @@ func (cmd *BoolSliceCmd) Result() ([]bool, error) {
 }
 
 func (cmd *BoolSliceCmd) String() (string, error) {
+	return cmd.res.ToString()
+}
+
+type FloatSliceCmd struct {
+	res rueidis.RedisResult
+	val []float64
+	err error
+}
+
+func newFloatSliceCmd(res rueidis.RedisResult) *FloatSliceCmd {
+	val, err := res.AsFloatSlice()
+	return &FloatSliceCmd{res: res, val: val, err: err}
+}
+
+func (cmd *FloatSliceCmd) SetVal(val []float64) {
+	cmd.val = val
+}
+
+func (cmd *FloatSliceCmd) Val() []float64 {
+	return cmd.val
+}
+
+func (cmd *FloatSliceCmd) Result() ([]float64, error) {
+	return cmd.val, cmd.err
+}
+
+func (cmd *FloatSliceCmd) String() (string, error) {
+	return cmd.res.ToString()
+}
+
+type ZSliceCmd struct {
+	res rueidis.RedisResult
+	val []Z
+	err error
+}
+
+func newZSliceCmd(res rueidis.RedisResult) *ZSliceCmd {
+	arr, err := res.ToArray()
+	if err != nil {
+		return &ZSliceCmd{res: res, err: err}
+	}
+	val := make([]Z, 0, len(arr)/2)
+	for i, j := 0, 1; i < len(arr); i, j = i+2, j+2 {
+		member, err := arr[i].ToString()
+		if err != nil {
+			return &ZSliceCmd{res: res, err: err}
+		}
+		score, err := arr[j].AsFloat64()
+		if err != nil {
+			return &ZSliceCmd{res: res, err: err}
+		}
+		val = append(val, Z{
+			Member: member,
+			Score:  score,
+		})
+	}
+	return &ZSliceCmd{res: res, val: val, err: err}
+}
+
+func (cmd *ZSliceCmd) SetVal(val []Z) {
+	cmd.val = val
+}
+
+func (cmd *ZSliceCmd) Val() []Z {
+	return cmd.val
+}
+
+func (cmd *ZSliceCmd) Result() ([]Z, error) {
+	return cmd.val, cmd.err
+}
+
+func (cmd *ZSliceCmd) String() (string, error) {
 	return cmd.res.ToString()
 }
 
@@ -1202,6 +1274,72 @@ func (cmd *XInfoConsumersCmd) String() (string, error) {
 	return cmd.res.ToString()
 }
 
+// Z represents sorted set member.
+type Z struct {
+	Score  float64
+	Member string
+}
+
+// ZWithKey represents sorted set member including the name of the key where it was popped.
+type ZWithKey struct {
+	Z
+	Key string
+}
+
+// ZStore is used as an arg to ZInter/ZInterStore and ZUnion/ZUnionStore.
+type ZStore struct {
+	Keys    []string
+	Weights []int64
+	// Can be SUM, MIN or MAX.
+	Aggregate string
+}
+
+type ZWithKeyCmd struct {
+	res rueidis.RedisResult
+	val ZWithKey
+	err error
+}
+
+func newZWithKeyCmd(res rueidis.RedisResult) *ZWithKeyCmd {
+	arr, err := res.ToArray()
+	if err != nil {
+		return &ZWithKeyCmd{res: res, err: err}
+	}
+	if len(arr) != 3 {
+		return &ZWithKeyCmd{res: res, err: fmt.Errorf("got %d, wanted 3", len(arr))}
+	}
+	val := ZWithKey{}
+	val.Key, err = arr[0].ToString()
+	if err != nil {
+		return &ZWithKeyCmd{res: res, err: err}
+	}
+	val.Member, err = arr[0].ToString()
+	if err != nil {
+		return &ZWithKeyCmd{res: res, err: err}
+	}
+	val.Score, err = arr[0].AsFloat64()
+	if err != nil {
+		return &ZWithKeyCmd{res: res, err: err}
+	}
+	return &ZWithKeyCmd{res: res, val: val, err: err}
+}
+
+func (cmd *ZWithKeyCmd) SetVal(val ZWithKey) {
+	cmd.val = val
+}
+
+func (cmd *ZWithKeyCmd) Val() ZWithKey {
+	return cmd.val
+}
+
+func (cmd *ZWithKeyCmd) Result() (ZWithKey, error) {
+	return cmd.val, cmd.err
+}
+
+func (cmd *ZWithKeyCmd) String() (string, error) {
+	return cmd.res.ToString()
+}
+
 type Sort struct {
 	By            string
 	Offset, Count int64
@@ -1313,6 +1451,48 @@ type XAutoClaimArgs struct {
 	Start    string
 	Count    int64
 	Consumer string
+}
+
+// Note: The GT, LT and NX options are mutually exclusive.
+type ZAddArgs struct {
+	NX      bool
+	XX      bool
+	LT      bool
+	GT      bool
+	Ch      bool
+	Incr    bool
+	Members []Z
+}
+
+// ZRangeArgs is all the options of the ZRange command.
+// In version> 6.2.0, you can replace the(cmd):
+//		ZREVRANGE,
+//		ZRANGEBYSCORE,
+//		ZREVRANGEBYSCORE,
+//		ZRANGEBYLEX,
+//		ZREVRANGEBYLEX.
+// Please pay attention to your redis-server version.
+//
+// Rev, ByScore, ByLex and Offset+Count options require redis-server 6.2.0 and higher.
+type ZRangeArgs struct {
+	Key string
+
+	Start string
+	Stop  string
+
+	// The ByScore and ByLex options are mutually exclusive.
+	ByScore bool
+	ByLex   bool
+
+	Rev bool
+
+	// limit offset count.
+	Offset int64
+	Count  int64
+}
+
+type ZRangeBy struct {
+	Offset, Count int64
 }
 
 func usePrecise(dur time.Duration) bool {
