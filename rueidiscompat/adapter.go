@@ -168,83 +168,63 @@ type Cmdable interface {
 	XAutoClaim(ctx context.Context, a XAutoClaimArgs) *XAutoClaimCmd
 	XAutoClaimJustID(ctx context.Context, a XAutoClaimArgs) *XAutoClaimJustIDCmd
 
+	XTrimMaxLen(ctx context.Context, key string, maxLen int64) *IntCmd
+	XTrimMaxLenApprox(ctx context.Context, key string, maxLen, limit int64) *IntCmd
+	XTrimMinID(ctx context.Context, key string, minID int64) *IntCmd
+	XTrimMinIDApprox(ctx context.Context, key string, minID int64, limit int64) *IntCmd
+	XInfoGroups(ctx context.Context, key string) *XInfoGroupsCmd
+	XInfoStream(ctx context.Context, key string) *XInfoStreamCmd
+	XInfoStreamFull(ctx context.Context, key string, count int64) *XInfoStreamFullCmd
+	XInfoConsumers(ctx context.Context, key string, group string) *XInfoConsumersCmd
+
+	BZPopMax(ctx context.Context, timeout time.Duration, keys ...string) *ZWithKeyCmd
+	BZPopMin(ctx context.Context, timeout time.Duration, keys ...string) *ZWithKeyCmd
+
+	ZAdd(ctx context.Context, key string, members ...Z) *IntCmd
+	ZAddNX(ctx context.Context, key string, members ...Z) *IntCmd
+	ZAddXX(ctx context.Context, key string, members ...Z) *IntCmd
+	ZAddArgs(ctx context.Context, key string, args ZAddArgs) *IntCmd
+	ZAddArgsIncr(ctx context.Context, key string, args ZAddArgs) *FloatCmd
+	ZCard(ctx context.Context, key string) *IntCmd
+	ZCount(ctx context.Context, key string, min, max float64) *IntCmd
+	ZLexCount(ctx context.Context, key, min, max string) *IntCmd
+	ZIncrBy(ctx context.Context, key string, increment int64, member string) *FloatCmd
+	ZInter(ctx context.Context, store ZStore) *StringSliceCmd
+	ZInterWithScores(ctx context.Context, store ZStore) *ZSliceCmd
+	ZInterStore(ctx context.Context, destination string, store ZStore) *IntCmd
+	ZMScore(ctx context.Context, key string, members ...string) *FloatSliceCmd
+	ZPopMax(ctx context.Context, key string, count ...int64) *ZSliceCmd
+	ZPopMin(ctx context.Context, key string, count ...int64) *ZSliceCmd
+	ZRange(ctx context.Context, key string, start, stop string) *StringSliceCmd
+	ZRangeWithScores(ctx context.Context, key string, start, stop string) *ZSliceCmd
+	ZRangeByScore(ctx context.Context, key string, min, max float64, opt ZRangeBy) *StringSliceCmd
+	ZRangeByLex(ctx context.Context, key string, min, max string, opt ZRangeBy) *StringSliceCmd
+	ZRangeByScoreWithScores(ctx context.Context, key string, min, max float64, opt ZRangeBy) *ZSliceCmd
+	ZRangeArgs(ctx context.Context, z ZRangeArgs) *StringSliceCmd
+	ZRangeArgsWithScores(ctx context.Context, z ZRangeArgs) *ZSliceCmd
+	ZRangeStore(ctx context.Context, dst string, z ZRangeArgs) *IntCmd
+	ZRank(ctx context.Context, key, member string) *IntCmd
+	ZRem(ctx context.Context, key string, members ...string) *IntCmd
+	ZRemRangeByRank(ctx context.Context, key string, start, stop int64) *IntCmd
+	ZRemRangeByScore(ctx context.Context, key string, min, max float64) *IntCmd
+	ZRemRangeByLex(ctx context.Context, key, min, max string) *IntCmd
+	ZRevRange(ctx context.Context, key string, start, stop int64) *StringSliceCmd
+	ZRevRangeWithScores(ctx context.Context, key string, start, stop int64) *ZSliceCmd
+	ZRevRangeByScore(ctx context.Context, key string, min, max float64, opt ZRangeBy) *StringSliceCmd
+	ZRevRangeByLex(ctx context.Context, key string, min, max string, opt ZRangeBy) *StringSliceCmd
+	ZRevRangeByScoreWithScores(ctx context.Context, key string, min, max float64, opt ZRangeBy) *ZSliceCmd
+	ZRevRank(ctx context.Context, key, member string) *IntCmd
+	ZScore(ctx context.Context, key, member string) *FloatCmd
+	ZUnionStore(ctx context.Context, dest string, store ZStore) *IntCmd
+	ZUnion(ctx context.Context, store ZStore) *StringSliceCmd
+	ZUnionWithScores(ctx context.Context, store ZStore) *ZSliceCmd
+	ZRandMember(ctx context.Context, key string, count int64, withScores bool) *StringSliceCmd
+	ZDiff(ctx context.Context, keys ...string) *StringSliceCmd
+	ZDiffWithScores(ctx context.Context, keys ...string) *ZSliceCmd
+	ZDiffStore(ctx context.Context, destination string, keys ...string) *IntCmd
 	// Implemented until here.
 	// TODO:
 	//
-	// // TODO: XTrim and XTrimApprox remove in v9.
-	// XTrim(ctx context.Context, key string, maxLen int64) *IntCmd
-	// XTrimApprox(ctx context.Context, key string, maxLen int64) *IntCmd
-	// XTrimMaxLen(ctx context.Context, key string, maxLen int64) *IntCmd
-	// XTrimMaxLenApprox(ctx context.Context, key string, maxLen, limit int64) *IntCmd
-	// XTrimMinID(ctx context.Context, key string, minID string) *IntCmd
-	// XTrimMinIDApprox(ctx context.Context, key string, minID string, limit int64) *IntCmd
-	// XInfoGroups(ctx context.Context, key string) *XInfoGroupsCmd
-	// XInfoStream(ctx context.Context, key string) *XInfoStreamCmd
-	// XInfoStreamFull(ctx context.Context, key string, count int) *XInfoStreamFullCmd
-	// XInfoConsumers(ctx context.Context, key string, group string) *XInfoConsumersCmd
-
-	// BZPopMax(ctx context.Context, timeout time.Duration, keys ...string) *ZWithKeyCmd
-	// BZPopMin(ctx context.Context, timeout time.Duration, keys ...string) *ZWithKeyCmd
-
-	// // TODO: remove
-	// //		ZAddCh
-	// //		ZIncr
-	// //		ZAddNXCh
-	// //		ZAddXXCh
-	// //		ZIncrNX
-	// //		ZIncrXX
-	// // 	in v9.
-	// // 	use ZAddArgs and ZAddArgsIncr.
-
-	// ZAdd(ctx context.Context, key string, members ...*Z) *IntCmd
-	// ZAddNX(ctx context.Context, key string, members ...*Z) *IntCmd
-	// ZAddXX(ctx context.Context, key string, members ...*Z) *IntCmd
-	// ZAddCh(ctx context.Context, key string, members ...*Z) *IntCmd
-	// ZAddNXCh(ctx context.Context, key string, members ...*Z) *IntCmd
-	// ZAddXXCh(ctx context.Context, key string, members ...*Z) *IntCmd
-	// ZAddArgs(ctx context.Context, key string, args ZAddArgs) *IntCmd
-	// ZAddArgsIncr(ctx context.Context, key string, args ZAddArgs) *FloatCmd
-	// ZIncr(ctx context.Context, key string, member *Z) *FloatCmd
-	// ZIncrNX(ctx context.Context, key string, member *Z) *FloatCmd
-	// ZIncrXX(ctx context.Context, key string, member *Z) *FloatCmd
-	// ZCard(ctx context.Context, key string) *IntCmd
-	// ZCount(ctx context.Context, key, min, max string) *IntCmd
-	// ZLexCount(ctx context.Context, key, min, max string) *IntCmd
-	// ZIncrBy(ctx context.Context, key string, increment float64, member string) *FloatCmd
-	// ZInter(ctx context.Context, store *ZStore) *StringSliceCmd
-	// ZInterWithScores(ctx context.Context, store *ZStore) *ZSliceCmd
-	// ZInterStore(ctx context.Context, destination string, store *ZStore) *IntCmd
-	// ZMScore(ctx context.Context, key string, members ...string) *FloatSliceCmd
-	// ZPopMax(ctx context.Context, key string, count ...int64) *ZSliceCmd
-	// ZPopMin(ctx context.Context, key string, count ...int64) *ZSliceCmd
-	// ZRange(ctx context.Context, key string, start, stop int64) *StringSliceCmd
-	// ZRangeWithScores(ctx context.Context, key string, start, stop int64) *ZSliceCmd
-	// ZRangeByScore(ctx context.Context, key string, opt *ZRangeBy) *StringSliceCmd
-	// ZRangeByLex(ctx context.Context, key string, opt *ZRangeBy) *StringSliceCmd
-	// ZRangeByScoreWithScores(ctx context.Context, key string, opt *ZRangeBy) *ZSliceCmd
-	// ZRangeArgs(ctx context.Context, z ZRangeArgs) *StringSliceCmd
-	// ZRangeArgsWithScores(ctx context.Context, z ZRangeArgs) *ZSliceCmd
-	// ZRangeStore(ctx context.Context, dst string, z ZRangeArgs) *IntCmd
-	// ZRank(ctx context.Context, key, member string) *IntCmd
-	// ZRem(ctx context.Context, key string, members ...interface{}) *IntCmd
-	// ZRemRangeByRank(ctx context.Context, key string, start, stop int64) *IntCmd
-	// ZRemRangeByScore(ctx context.Context, key, min, max string) *IntCmd
-	// ZRemRangeByLex(ctx context.Context, key, min, max string) *IntCmd
-	// ZRevRange(ctx context.Context, key string, start, stop int64) *StringSliceCmd
-	// ZRevRangeWithScores(ctx context.Context, key string, start, stop int64) *ZSliceCmd
-	// ZRevRangeByScore(ctx context.Context, key string, opt *ZRangeBy) *StringSliceCmd
-	// ZRevRangeByLex(ctx context.Context, key string, opt *ZRangeBy) *StringSliceCmd
-	// ZRevRangeByScoreWithScores(ctx context.Context, key string, opt *ZRangeBy) *ZSliceCmd
-	// ZRevRank(ctx context.Context, key, member string) *IntCmd
-	// ZScore(ctx context.Context, key, member string) *FloatCmd
-	// ZUnionStore(ctx context.Context, dest string, store *ZStore) *IntCmd
-	// ZUnion(ctx context.Context, store ZStore) *StringSliceCmd
-	// ZUnionWithScores(ctx context.Context, store ZStore) *ZSliceCmd
-	// ZRandMember(ctx context.Context, key string, count int, withScores bool) *StringSliceCmd
-	// ZDiff(ctx context.Context, keys ...string) *StringSliceCmd
-	// ZDiffWithScores(ctx context.Context, keys ...string) *ZSliceCmd
-	// ZDiffStore(ctx context.Context, destination string, keys ...string) *IntCmd
-
 	// PFAdd(ctx context.Context, key string, els ...interface{}) *IntCmd
 	// PFCount(ctx context.Context, keys ...string) *IntCmd
 	// PFMerge(ctx context.Context, dest string, keys ...string) *StatusCmd
@@ -512,8 +492,7 @@ func (c *Compat) Sort(ctx context.Context, key string, sort Sort) *StringSliceCm
 		cmd = cmd.Args("LIMIT", strconv.FormatInt(sort.Offset, 10), strconv.FormatInt(sort.Count, 10))
 	}
 	if len(sort.Get) > 0 {
-		cmd = cmd.Args("GET")
-		cmd = cmd.Args(sort.Get...)
+		cmd = cmd.Args("GET").Args(sort.Get...)
 	}
 	switch order := strings.ToUpper(sort.Order); order {
 	case "ASC", "DESC":
@@ -538,8 +517,7 @@ func (c *Compat) SortStore(ctx context.Context, key, store string, sort Sort) *I
 		cmd = cmd.Args("LIMIT", strconv.FormatInt(sort.Offset, 10), strconv.FormatInt(sort.Count, 10))
 	}
 	if len(sort.Get) > 0 {
-		cmd = cmd.Args("GET")
-		cmd = cmd.Args(sort.Get...)
+		cmd = cmd.Args("GET").Args(sort.Get...)
 	}
 	switch order := strings.ToUpper(sort.Order); order {
 	case "ASC", "DESC":
@@ -722,6 +700,7 @@ func (c *Compat) SetArgs(ctx context.Context, key string, value string, a SetArg
 	switch mode := strings.ToUpper(a.Mode); mode {
 	case "XX", "NX":
 		cmd = cmd.Args(mode)
+	case "":
 	default:
 		panic(fmt.Sprintf("invalid mode for SET: %s", a.Mode))
 	}
@@ -849,6 +828,7 @@ func (c *Compat) BitField(ctx context.Context, key string, bitField []BitField) 
 		switch overflow := strings.ToUpper(a.Overflow); overflow {
 		case "WRAP", "SAT", "FAIL":
 			cmd = cmd.Args("OVERFLOW", overflow)
+		case "":
 		default:
 			panic(fmt.Sprintf("Invalid OVERFLOW argument value: %s", a.Overflow))
 		}
@@ -1497,4 +1477,531 @@ func (c *Compat) XAutoClaimJustID(ctx context.Context, a XAutoClaimArgs) *XAutoC
 		resp = c.client.Do(ctx, c.client.B().Xautoclaim().Key(a.Stream).Group(a.Group).Consumer(a.Consumer).MinIdleTime(strconv.FormatInt(formatMs(a.MinIdle), 10)).Start(a.Start).Justid().Build())
 	}
 	return newXAutoClaimJustIDCmd(resp)
+}
+
+// xTrim If approx is true, add the "~" parameter, otherwise it is the default "=" (redis default).
+// example:
+//		XTRIM key MAXLEN/MINID threshold LIMIT limit.
+//		XTRIM key MAXLEN/MINID ~ threshold LIMIT limit.
+// The redis-server version is lower than 6.2, please set limit to 0.
+func (c *Compat) xTrim(ctx context.Context, key, strategy string,
+	approx bool, threshold int64, limit int64) *IntCmd {
+	cmd := c.client.B().Arbitrary("XTRIM").Keys(key).Args(strategy)
+	if approx {
+		cmd = cmd.Args("~")
+	}
+	cmd = cmd.Args(strconv.FormatInt(threshold, 10))
+	if limit > 0 {
+		cmd = cmd.Args("LIMIT", strconv.FormatInt(limit, 10))
+	}
+	resp := c.client.Do(ctx, cmd.Build())
+	return newIntCmd(resp)
+}
+
+// XTrimMaxLen No `~` rules are used, `limit` cannot be used.
+// cmd: XTRIM key MAXLEN maxLen
+func (c *Compat) XTrimMaxLen(ctx context.Context, key string, maxLen int64) *IntCmd {
+	return c.xTrim(ctx, key, "MAXLEN", false, maxLen, 0)
+}
+
+// XTrimMaxLenApprox LIMIT has a bug, please confirm it and use it.
+// issue: https://github.com/redis/redis/issues/9046
+// cmd: XTRIM key MAXLEN ~ maxLen LIMIT limit
+func (c *Compat) XTrimMaxLenApprox(ctx context.Context, key string, maxLen, limit int64) *IntCmd {
+	return c.xTrim(ctx, key, "MAXLEN", true, maxLen, limit)
+}
+
+// XTrimMinID No `~` rules are used, `limit` cannot be used.
+// cmd: XTRIM key MINID minID
+func (c *Compat) XTrimMinID(ctx context.Context, key string, minID int64) *IntCmd {
+	return c.xTrim(ctx, key, "MINID", false, minID, 0)
+}
+
+// XTrimMinIDApprox LIMIT has a bug, please confirm it and use it.
+// issue: https://github.com/redis/redis/issues/9046
+// cmd: XTRIM key MINID ~ minID LIMIT limit
+func (c *Compat) XTrimMinIDApprox(ctx context.Context, key string, minID int64, limit int64) *IntCmd {
+	return c.xTrim(ctx, key, "MINID", true, minID, limit)
+}
+
+func (c *Compat) XInfoGroups(ctx context.Context, key string) *XInfoGroupsCmd {
+	cmd := c.client.B().XinfoGroups().Key(key).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newXInfoGroupsCmd(resp)
+}
+
+func (c *Compat) XInfoStream(ctx context.Context, key string) *XInfoStreamCmd {
+	cmd := c.client.B().XinfoStream().Key(key).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newXInfoStreamCmd(resp)
+}
+
+func (c *Compat) XInfoStreamFull(ctx context.Context, key string, count int64) *XInfoStreamFullCmd {
+	cmd := c.client.B().XinfoStream().Key(key).Full().Count(count).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newXInfoStreamFullCmd(resp)
+}
+
+func (c *Compat) XInfoConsumers(ctx context.Context, key, group string) *XInfoConsumersCmd {
+	cmd := c.client.B().XinfoConsumers().Key(key).Groupname(group).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newXInfoConsumersCmd(resp)
+}
+
+// BZPopMax Redis `BZPOPMAX key [key ...] timeout` command.
+func (c *Compat) BZPopMax(ctx context.Context, timeout time.Duration, keys ...string) *ZWithKeyCmd {
+	cmd := c.client.B().Bzpopmax().Key(keys...).Timeout(float64(formatSec(timeout))).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newZWithKeyCmd(resp)
+}
+
+// BZPopMin Redis `BZPOPMIN key [key ...] timeout` command.
+func (c *Compat) BZPopMin(ctx context.Context, timeout time.Duration, keys ...string) *ZWithKeyCmd {
+	cmd := c.client.B().Bzpopmin().Key(keys...).Timeout(float64(formatSec(timeout))).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newZWithKeyCmd(resp)
+}
+
+// ZAdd Redis `ZADD key score member [score member ...]` command.
+func (c *Compat) ZAdd(ctx context.Context, key string, members ...Z) *IntCmd {
+	cmd := c.client.B().Zadd().Key(key).ScoreMember()
+	for _, v := range members {
+		cmd = cmd.ScoreMember(v.Score, v.Member)
+	}
+	resp := c.client.Do(ctx, cmd.Build())
+	return newIntCmd(resp)
+}
+
+// ZAddNX Redis `ZADD key NX score member [score member ...]` command.
+func (c *Compat) ZAddNX(ctx context.Context, key string, members ...Z) *IntCmd {
+	cmd := c.client.B().Zadd().Key(key).Nx().ScoreMember()
+	for _, v := range members {
+		cmd = cmd.ScoreMember(v.Score, v.Member)
+	}
+	resp := c.client.Do(ctx, cmd.Build())
+	return newIntCmd(resp)
+}
+
+// ZAddXX Redis `ZADD key XX score member [score member ...]` command.
+func (c *Compat) ZAddXX(ctx context.Context, key string, members ...Z) *IntCmd {
+	cmd := c.client.B().Zadd().Key(key).Xx().ScoreMember()
+	for _, v := range members {
+		cmd = cmd.ScoreMember(v.Score, v.Member)
+	}
+	resp := c.client.Do(ctx, cmd.Build())
+	return newIntCmd(resp)
+}
+
+func (c *Compat) zAddArgs(ctx context.Context, key string, incr bool, args ZAddArgs) rueidis.RedisResult {
+	cmd := c.client.B().Arbitrary("ZADD").Keys(key)
+	// The GT, LT and NX options are mutually exclusive.
+	if args.NX {
+		cmd = cmd.Args("NX")
+	} else {
+		if args.XX {
+			cmd = cmd.Args("XX")
+		}
+		if args.GT {
+			cmd = cmd.Args("GT")
+		} else if args.LT {
+			cmd = cmd.Args("LT")
+		}
+	}
+	if args.Ch {
+		cmd = cmd.Args("CH")
+	}
+	if incr {
+		cmd = cmd.Args("INCR")
+	}
+	for _, v := range args.Members {
+		cmd = cmd.Args(strconv.FormatFloat(v.Score, 'f', -1, 64), v.Member)
+	}
+	resp := c.client.Do(ctx, cmd.Build())
+	return resp
+}
+
+func (c *Compat) ZAddArgs(ctx context.Context, key string, args ZAddArgs) *IntCmd {
+	return newIntCmd(c.zAddArgs(ctx, key, false, args))
+}
+
+func (c *Compat) ZAddArgsIncr(ctx context.Context, key string, args ZAddArgs) *FloatCmd {
+	return newFloatCmd(c.zAddArgs(ctx, key, true, args))
+}
+
+func (c *Compat) ZCard(ctx context.Context, key string) *IntCmd {
+	cmd := c.client.B().Zcard().Key(key).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) ZCount(ctx context.Context, key string, min, max float64) *IntCmd {
+	cmd := c.client.B().Zcount().Key(key).Min(min).Max(max).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) ZLexCount(ctx context.Context, key, min, max string) *IntCmd {
+	cmd := c.client.B().Zlexcount().Key(key).Min(min).Max(max).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) ZIncrBy(ctx context.Context, key string, increment int64, member string) *FloatCmd {
+	cmd := c.client.B().Zincrby().Key(key).Increment(increment).Member(member).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newFloatCmd(resp)
+}
+
+func (c *Compat) ZInter(ctx context.Context, store ZStore) *StringSliceCmd {
+	var resp rueidis.RedisResult
+	switch strings.ToUpper(store.Aggregate) {
+	case "SUM":
+		resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateSum().Build())
+	case "MIN":
+		resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateMin().Build())
+	case "MAX":
+		resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateMax().Build())
+	case "":
+		resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).Build())
+	default:
+		panic(fmt.Sprintf("invalid aggregate argument value %s", store.Aggregate))
+	}
+	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) ZInterWithScores(ctx context.Context, store ZStore) *ZSliceCmd {
+	var resp rueidis.RedisResult
+	switch strings.ToUpper(store.Aggregate) {
+	case "SUM":
+		resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateSum().Withscores().Build())
+	case "MIN":
+		resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateMin().Withscores().Build())
+	case "MAX":
+		resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateMax().Withscores().Build())
+	case "":
+		resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).Withscores().Build())
+	default:
+		panic(fmt.Sprintf("invalid aggregate argument value %s", store.Aggregate))
+	}
+	return newZSliceCmd(resp)
+}
+
+func (c *Compat) ZInterStore(ctx context.Context, destination string, store ZStore) *IntCmd {
+	var resp rueidis.RedisResult
+	switch strings.ToUpper(store.Aggregate) {
+	case "SUM":
+		resp = c.client.Do(ctx, c.client.B().Zinterstore().Destination(destination).Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateSum().Build())
+	case "MIN":
+		resp = c.client.Do(ctx, c.client.B().Zinterstore().Destination(destination).Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateMin().Build())
+	case "MAX":
+		resp = c.client.Do(ctx, c.client.B().Zinterstore().Destination(destination).Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateMax().Build())
+	case "":
+		resp = c.client.Do(ctx, c.client.B().Zinterstore().Destination(destination).Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).Build())
+	default:
+		panic(fmt.Sprintf("invalid aggregate argument value %s", store.Aggregate))
+	}
+	return newIntCmd(resp)
+}
+
+func (c *Compat) ZMScore(ctx context.Context, key string, members ...string) *FloatSliceCmd {
+	cmd := c.client.B().Zmscore().Key(key).Member(members...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newFloatSliceCmd(resp)
+}
+
+func (c *Compat) ZPopMax(ctx context.Context, key string, count ...int64) *ZSliceCmd {
+	var resp rueidis.RedisResult
+	switch len(count) {
+	case 0:
+		resp = c.client.Do(ctx, c.client.B().Zpopmax().Key(key).Build())
+	case 1:
+		resp = c.client.Do(ctx, c.client.B().Zpopmax().Key(key).Count(count[0]).Build())
+	default:
+		panic("too many arguments")
+	}
+
+	return newZSliceCmd(resp)
+}
+
+func (c *Compat) ZPopMin(ctx context.Context, key string, count ...int64) *ZSliceCmd {
+	var resp rueidis.RedisResult
+	switch len(count) {
+	case 0:
+		resp = c.client.Do(ctx, c.client.B().Zpopmin().Key(key).Build())
+	case 1:
+		resp = c.client.Do(ctx, c.client.B().Zpopmin().Key(key).Count(count[0]).Build())
+	default:
+		panic("too many arguments")
+	}
+	return newZSliceCmd(resp)
+}
+
+func (c *Compat) zRangeArgs(withScores bool, z ZRangeArgs) cmds.Completed {
+	cmd := c.client.B().Arbitrary("ZRANGE").Keys(z.Key)
+	if z.Rev && (z.ByScore || z.ByLex) {
+		cmd = cmd.Args(z.Stop, z.Start)
+	} else {
+		cmd = cmd.Args(z.Start, z.Stop)
+	}
+	if z.ByScore {
+		cmd = cmd.Args("BYSCORE")
+	} else if z.ByLex {
+		cmd = cmd.Args("BYLEX")
+	}
+	if z.Rev {
+		cmd = cmd.Args("REV")
+	}
+	if z.Offset != 0 || z.Count != 0 {
+		cmd = cmd.Args("LIMIT", strconv.FormatInt(z.Offset, 10), strconv.FormatInt(z.Count, 10))
+	}
+	if withScores {
+		cmd = cmd.Args("WITHSCORES")
+	}
+	return cmd.Build()
+}
+
+func (c *Compat) ZRange(ctx context.Context, key, start, stop string) *StringSliceCmd {
+	cmd := c.zRangeArgs(false, ZRangeArgs{
+		Key:   key,
+		Start: start,
+		Stop:  stop,
+	})
+	resp := c.client.Do(ctx, cmd)
+	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) ZRangeWithScores(ctx context.Context, key, start, stop string) *ZSliceCmd {
+	cmd := c.zRangeArgs(true, ZRangeArgs{
+		Key:   key,
+		Start: start,
+		Stop:  stop,
+	})
+	resp := c.client.Do(ctx, cmd)
+	return newZSliceCmd(resp)
+}
+
+func (c *Compat) ZRangeByScore(ctx context.Context, key string, min, max float64, opt ZRangeBy) *StringSliceCmd {
+	var resp rueidis.RedisResult
+	if opt.Offset != 0 || opt.Count != 0 {
+		resp = c.client.Do(ctx, c.client.B().Zrangebyscore().Key(key).Min(min).Max(max).Limit(opt.Offset, opt.Count).Build())
+	} else {
+		resp = c.client.Do(ctx, c.client.B().Zrangebyscore().Key(key).Min(min).Max(max).Build())
+	}
+	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) ZRangeByLex(ctx context.Context, key, min, max string, opt ZRangeBy) *StringSliceCmd {
+	var resp rueidis.RedisResult
+	if opt.Offset != 0 || opt.Count != 0 {
+		resp = c.client.Do(ctx, c.client.B().Zrangebylex().Key(key).Min(min).Max(max).Limit(opt.Offset, opt.Count).Build())
+	} else {
+		resp = c.client.Do(ctx, c.client.B().Zrangebylex().Key(key).Min(min).Max(max).Build())
+	}
+	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) ZRangeByScoreWithScores(ctx context.Context, key string, min, max float64, opt ZRangeBy) *ZSliceCmd {
+	var resp rueidis.RedisResult
+	if opt.Offset != 0 || opt.Count != 0 {
+		resp = c.client.Do(ctx, c.client.B().Zrangebyscore().Key(key).Min(min).Max(max).Withscores().Limit(opt.Offset, opt.Count).Build())
+	} else {
+		resp = c.client.Do(ctx, c.client.B().Zrangebyscore().Key(key).Min(min).Max(max).Withscores().Build())
+	}
+	return newZSliceCmd(resp)
+}
+
+func (c *Compat) ZRangeArgs(ctx context.Context, z ZRangeArgs) *StringSliceCmd {
+	cmd := c.zRangeArgs(false, z)
+	resp := c.client.Do(ctx, cmd)
+	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) ZRangeArgsWithScores(ctx context.Context, z ZRangeArgs) *ZSliceCmd {
+	cmd := c.zRangeArgs(true, z)
+	resp := c.client.Do(ctx, cmd)
+	return newZSliceCmd(resp)
+}
+
+func (c *Compat) ZRangeStore(ctx context.Context, dst string, z ZRangeArgs) *IntCmd {
+	cmd := c.client.B().Arbitrary("ZRANGESTORE").Keys(dst, z.Key)
+	if z.Rev && (z.ByScore || z.ByLex) {
+		cmd = cmd.Args(z.Stop, z.Start)
+	} else {
+		cmd = cmd.Args(z.Start, z.Stop)
+	}
+	if z.ByScore {
+		cmd = cmd.Args("BYSCORE")
+	} else if z.ByLex {
+		cmd = cmd.Args("BYLEX")
+	}
+	if z.Rev {
+		cmd = cmd.Args("REV")
+	}
+	if z.Offset != 0 || z.Count != 0 {
+		cmd = cmd.Args("LIMIT", strconv.FormatInt(z.Offset, 10), strconv.FormatInt(z.Count, 10))
+	}
+	resp := c.client.Do(ctx, cmd.Build())
+	return newIntCmd(resp)
+}
+
+func (c *Compat) ZRank(ctx context.Context, key, member string) *IntCmd {
+	cmd := c.client.B().Zrank().Key(key).Member(member).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) ZRem(ctx context.Context, key string, members ...string) *IntCmd {
+	cmd := c.client.B().Zrem().Key(key).Member(members...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) ZRemRangeByRank(ctx context.Context, key string, start, stop int64) *IntCmd {
+	cmd := c.client.B().Zremrangebyrank().Key(key).Start(start).Stop(stop).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+func (c *Compat) ZRemRangeByScore(ctx context.Context, key string, min, max float64) *IntCmd {
+	cmd := c.client.B().Zremrangebyscore().Key(key).Min(min).Max(max).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) ZRemRangeByLex(ctx context.Context, key string, min, max string) *IntCmd {
+	cmd := c.client.B().Zremrangebylex().Key(key).Min(min).Max(max).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) ZRevRange(ctx context.Context, key string, start, stop int64) *StringSliceCmd {
+	cmd := c.client.B().Zrevrange().Key(key).Start(start).Stop(stop).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) ZRevRangeWithScores(ctx context.Context, key string, start, stop int64) *ZSliceCmd {
+	cmd := c.client.B().Zrevrange().Key(key).Start(start).Stop(stop).Withscores().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newZSliceCmd(resp)
+}
+
+func (c *Compat) ZRevRangeByScore(ctx context.Context, key string, min, max float64, opt ZRangeBy) *StringSliceCmd {
+	var resp rueidis.RedisResult
+	if opt.Offset != 0 || opt.Count != 0 {
+		resp = c.client.Do(ctx, c.client.B().Zrevrangebyscore().Key(key).Max(max).Min(min).Limit(opt.Offset, opt.Count).Build())
+	} else {
+		resp = c.client.Do(ctx, c.client.B().Zrevrangebyscore().Key(key).Max(max).Min(min).Build())
+	}
+	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) ZRevRangeByLex(ctx context.Context, key string, min, max string, opt ZRangeBy) *StringSliceCmd {
+	var resp rueidis.RedisResult
+	if opt.Offset != 0 || opt.Count != 0 {
+		resp = c.client.Do(ctx, c.client.B().Zrevrangebylex().Key(key).Max(max).Min(min).Limit(opt.Offset, opt.Count).Build())
+	} else {
+		resp = c.client.Do(ctx, c.client.B().Zrevrangebylex().Key(key).Max(max).Min(min).Build())
+	}
+	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) ZRevRangeByScoreWithScores(ctx context.Context, key string, min, max float64, opt ZRangeBy) *ZSliceCmd {
+	var resp rueidis.RedisResult
+	if opt.Offset != 0 || opt.Count != 0 {
+		resp = c.client.Do(ctx, c.client.B().Zrevrangebyscore().Key(key).Max(max).Min(min).Withscores().Limit(opt.Offset, opt.Count).Build())
+	} else {
+		resp = c.client.Do(ctx, c.client.B().Zrevrangebyscore().Key(key).Max(max).Min(min).Withscores().Build())
+	}
+	return newZSliceCmd(resp)
+}
+
+func (c *Compat) ZRevRank(ctx context.Context, key, member string) *IntCmd {
+	cmd := c.client.B().Zrevrank().Key(key).Member(member).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) ZScore(ctx context.Context, key, member string) *FloatCmd {
+	cmd := c.client.B().Zscore().Key(key).Member(member).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newFloatCmd(resp)
+}
+
+func (c *Compat) ZUnionStore(ctx context.Context, dest string, store ZStore) *IntCmd {
+	var resp rueidis.RedisResult
+	switch strings.ToUpper(store.Aggregate) {
+	case "SUM":
+		resp = c.client.Do(ctx, c.client.B().Zunionstore().Destination(dest).Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateSum().Build())
+	case "MIN":
+		resp = c.client.Do(ctx, c.client.B().Zunionstore().Destination(dest).Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateMin().Build())
+	case "MAX":
+		resp = c.client.Do(ctx, c.client.B().Zunionstore().Destination(dest).Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateMax().Build())
+	case "":
+		resp = c.client.Do(ctx, c.client.B().Zunionstore().Destination(dest).Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).Build())
+	default:
+		panic(fmt.Sprintf("invalid aggregate argument value %s", store.Aggregate))
+	}
+	return newIntCmd(resp)
+}
+
+func (c *Compat) ZUnion(ctx context.Context, store ZStore) *StringSliceCmd {
+	var resp rueidis.RedisResult
+	switch strings.ToUpper(store.Aggregate) {
+	case "SUM":
+		resp = c.client.Do(ctx, c.client.B().Zunion().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateSum().Build())
+	case "MIN":
+		resp = c.client.Do(ctx, c.client.B().Zunion().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateMin().Build())
+	case "MAX":
+		resp = c.client.Do(ctx, c.client.B().Zunion().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateMax().Build())
+	case "":
+		resp = c.client.Do(ctx, c.client.B().Zunion().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).Build())
+	default:
+		panic(fmt.Sprintf("invalid aggregate argument value %s", store.Aggregate))
+	}
+	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) ZUnionWithScores(ctx context.Context, store ZStore) *ZSliceCmd {
+	var resp rueidis.RedisResult
+	switch strings.ToUpper(store.Aggregate) {
+	case "SUM":
+		resp = c.client.Do(ctx, c.client.B().Zunion().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateSum().Withscores().Build())
+	case "MIN":
+		resp = c.client.Do(ctx, c.client.B().Zunion().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateMin().Withscores().Build())
+	case "MAX":
+		resp = c.client.Do(ctx, c.client.B().Zunion().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateMax().Withscores().Build())
+	case "":
+		resp = c.client.Do(ctx, c.client.B().Zunion().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).Withscores().Build())
+	default:
+		panic(fmt.Sprintf("invalid aggregate argument value %s", store.Aggregate))
+	}
+	return newZSliceCmd(resp)
+}
+
+func (c *Compat) ZRandMember(ctx context.Context, key string, count int64, withScores bool) *StringSliceCmd {
+	var resp rueidis.RedisResult
+	if withScores {
+		resp = c.client.Do(ctx, c.client.B().Zrandmember().Key(key).Count(count).Withscores().Build())
+	} else {
+		resp = c.client.Do(ctx, c.client.B().Zrandmember().Key(key).Count(count).Build())
+	}
+	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) ZDiff(ctx context.Context, keys ...string) *StringSliceCmd {
+	cmd := c.client.B().Zdiff().Numkeys(int64(len(keys))).Key(keys...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) ZDiffWithScores(ctx context.Context, keys ...string) *ZSliceCmd {
+	cmd := c.client.B().Zdiff().Numkeys(int64(len(keys))).Key(keys...).Withscores().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newZSliceCmd(resp)
+}
+
+func (c *Compat) ZDiffStore(ctx context.Context, destination string, keys ...string) *IntCmd {
+	cmd := c.client.B().Zdiffstore().Destination(destination).Numkeys(int64(len(keys))).Key(keys...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
 }
