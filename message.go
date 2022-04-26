@@ -427,7 +427,7 @@ func (m *RedisMessage) AsIntSlice() ([]int64, error) {
 }
 
 // AsFloatSlice check if message is a redis array/set response, and convert to []float64.
-// Non int or string value will be ignored, including nil value.
+// Non float, int or string value will be ignored, including nil value.
 func (m *RedisMessage) AsFloatSlice() ([]float64, error) {
 	values, err := m.ToArray()
 	if err != nil {
@@ -438,7 +438,7 @@ func (m *RedisMessage) AsFloatSlice() ([]float64, error) {
 		switch v.typ {
 		case ':':
 			s = append(s, float64(v.integer))
-		case '$', '+':
+		case ',', '$', '+':
 			i, err := strconv.ParseFloat(v.string, 64)
 			if err != nil {
 				return nil, err
