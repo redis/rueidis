@@ -12,6 +12,8 @@ import (
 )
 
 type Cmdable interface {
+	Command(ctx context.Context) *CommandsInfoCmd
+	ClientGetName(ctx context.Context) *StringCmd
 	Echo(ctx context.Context, message string) *StringCmd
 	Ping(ctx context.Context, message string) *StatusCmd
 	Quit(ctx context.Context) *StatusCmd
@@ -222,85 +224,83 @@ type Cmdable interface {
 	ZDiff(ctx context.Context, keys ...string) *StringSliceCmd
 	ZDiffWithScores(ctx context.Context, keys ...string) *ZSliceCmd
 	ZDiffStore(ctx context.Context, destination string, keys ...string) *IntCmd
-	// Implemented until here.
-	// TODO:
-	//
-	// PFAdd(ctx context.Context, key string, els ...interface{}) *IntCmd
-	// PFCount(ctx context.Context, keys ...string) *IntCmd
-	// PFMerge(ctx context.Context, dest string, keys ...string) *StatusCmd
 
-	// BgRewriteAOF(ctx context.Context) *StatusCmd
-	// BgSave(ctx context.Context) *StatusCmd
-	// ClientKill(ctx context.Context, ipPort string) *StatusCmd
-	// ClientKillByFilter(ctx context.Context, keys ...string) *IntCmd
-	// ClientList(ctx context.Context) *StringCmd
-	// ClientPause(ctx context.Context, dur time.Duration) *BoolCmd
-	// ClientID(ctx context.Context) *IntCmd
-	// ConfigGet(ctx context.Context, parameter string) *SliceCmd
-	// ConfigResetStat(ctx context.Context) *StatusCmd
-	// ConfigSet(ctx context.Context, parameter, value string) *StatusCmd
-	// ConfigRewrite(ctx context.Context) *StatusCmd
-	// DBSize(ctx context.Context) *IntCmd
-	// FlushAll(ctx context.Context) *StatusCmd
-	// FlushAllAsync(ctx context.Context) *StatusCmd
-	// FlushDB(ctx context.Context) *StatusCmd
-	// FlushDBAsync(ctx context.Context) *StatusCmd
-	// Info(ctx context.Context, section ...string) *StringCmd
-	// LastSave(ctx context.Context) *IntCmd
-	// Save(ctx context.Context) *StatusCmd
-	// Shutdown(ctx context.Context) *StatusCmd
-	// ShutdownSave(ctx context.Context) *StatusCmd
-	// ShutdownNoSave(ctx context.Context) *StatusCmd
-	// SlaveOf(ctx context.Context, host, port string) *StatusCmd
-	// Time(ctx context.Context) *TimeCmd
-	// DebugObject(ctx context.Context, key string) *StringCmd
-	// ReadOnly(ctx context.Context) *StatusCmd
-	// ReadWrite(ctx context.Context) *StatusCmd
-	// MemoryUsage(ctx context.Context, key string, samples ...int) *IntCmd
+	PFAdd(ctx context.Context, key string, els ...string) *IntCmd
+	PFCount(ctx context.Context, key string, keys ...string) *IntCmd
+	PFMerge(ctx context.Context, dest string, src string, keys ...string) *StatusCmd
 
-	// Eval(ctx context.Context, script string, keys []string, args ...interface{}) *Cmd
-	// EvalSha(ctx context.Context, sha1 string, keys []string, args ...interface{}) *Cmd
-	// ScriptExists(ctx context.Context, hashes ...string) *BoolSliceCmd
-	// ScriptFlush(ctx context.Context) *StatusCmd
-	// ScriptKill(ctx context.Context) *StatusCmd
-	// ScriptLoad(ctx context.Context, script string) *StringCmd
+	BgRewriteAOF(ctx context.Context) *StatusCmd
+	BgSave(ctx context.Context) *StatusCmd
+	ClientKill(ctx context.Context, ipPort string) *StatusCmd
+	ClientKillByFilter(ctx context.Context, keys ...string) *IntCmd
+	ClientList(ctx context.Context) *StringCmd
+	ClientPause(ctx context.Context, dur time.Duration) *BoolCmd
+	ClientID(ctx context.Context) *IntCmd
+	ConfigGet(ctx context.Context, parameter string) *SliceCmd
+	ConfigResetStat(ctx context.Context) *StatusCmd
+	ConfigSet(ctx context.Context, parameter, value string) *StatusCmd
+	ConfigRewrite(ctx context.Context) *StatusCmd
+	DBSize(ctx context.Context) *IntCmd
+	FlushAll(ctx context.Context) *StatusCmd
+	FlushAllAsync(ctx context.Context) *StatusCmd
+	FlushDB(ctx context.Context) *StatusCmd
+	FlushDBAsync(ctx context.Context) *StatusCmd
+	Info(ctx context.Context, section ...string) *StringCmd
+	LastSave(ctx context.Context) *IntCmd
+	Save(ctx context.Context) *StatusCmd
+	Shutdown(ctx context.Context) *StatusCmd
+	ShutdownSave(ctx context.Context) *StatusCmd
+	ShutdownNoSave(ctx context.Context) *StatusCmd
+	SlaveOf(ctx context.Context, host string, port int64) *StatusCmd
+	Time(ctx context.Context) *TimeCmd
+	DebugObject(ctx context.Context, key string) *StringCmd
+	ReadOnly(ctx context.Context) *StatusCmd
+	ReadWrite(ctx context.Context) *StatusCmd
+	MemoryUsage(ctx context.Context, key string, samples ...int64) *IntCmd
 
-	// Publish(ctx context.Context, channel string, message interface{}) *IntCmd
-	// PubSubChannels(ctx context.Context, pattern string) *StringSliceCmd
-	// PubSubNumSub(ctx context.Context, channels ...string) *StringIntMapCmd
-	// PubSubNumPat(ctx context.Context) *IntCmd
+	Eval(ctx context.Context, script string, keys []string, args ...string) rueidis.RedisResult
+	EvalSha(ctx context.Context, sha1 string, keys []string, args ...string) rueidis.RedisResult
+	ScriptExists(ctx context.Context, hashes ...string) *BoolSliceCmd
+	ScriptFlush(ctx context.Context) *StatusCmd
+	ScriptKill(ctx context.Context) *StatusCmd
+	ScriptLoad(ctx context.Context, script string) *StringCmd
 
-	// ClusterSlots(ctx context.Context) *ClusterSlotsCmd
-	// ClusterNodes(ctx context.Context) *StringCmd
-	// ClusterMeet(ctx context.Context, host, port string) *StatusCmd
-	// ClusterForget(ctx context.Context, nodeID string) *StatusCmd
-	// ClusterReplicate(ctx context.Context, nodeID string) *StatusCmd
-	// ClusterResetSoft(ctx context.Context) *StatusCmd
-	// ClusterResetHard(ctx context.Context) *StatusCmd
-	// ClusterInfo(ctx context.Context) *StringCmd
-	// ClusterKeySlot(ctx context.Context, key string) *IntCmd
-	// ClusterGetKeysInSlot(ctx context.Context, slot int, count int) *StringSliceCmd
-	// ClusterCountFailureReports(ctx context.Context, nodeID string) *IntCmd
-	// ClusterCountKeysInSlot(ctx context.Context, slot int) *IntCmd
-	// ClusterDelSlots(ctx context.Context, slots ...int) *StatusCmd
-	// ClusterDelSlotsRange(ctx context.Context, min, max int) *StatusCmd
-	// ClusterSaveConfig(ctx context.Context) *StatusCmd
-	// ClusterSlaves(ctx context.Context, nodeID string) *StringSliceCmd
-	// ClusterFailover(ctx context.Context) *StatusCmd
-	// ClusterAddSlots(ctx context.Context, slots ...int) *StatusCmd
-	// ClusterAddSlotsRange(ctx context.Context, min, max int) *StatusCmd
+	Publish(ctx context.Context, channel string, message string) *IntCmd
+	PubSubChannels(ctx context.Context, pattern string) *StringSliceCmd
+	PubSubNumSub(ctx context.Context, channels ...string) *StringIntMapCmd
+	PubSubNumPat(ctx context.Context) *IntCmd
 
-	// GeoAdd(ctx context.Context, key string, geoLocation ...*GeoLocation) *IntCmd
-	// GeoPos(ctx context.Context, key string, members ...string) *GeoPosCmd
-	// GeoRadius(ctx context.Context, key string, longitude, latitude float64, query *GeoRadiusQuery) *GeoLocationCmd
-	// GeoRadiusStore(ctx context.Context, key string, longitude, latitude float64, query *GeoRadiusQuery) *IntCmd
-	// GeoRadiusByMember(ctx context.Context, key, member string, query *GeoRadiusQuery) *GeoLocationCmd
-	// GeoRadiusByMemberStore(ctx context.Context, key, member string, query *GeoRadiusQuery) *IntCmd
-	// GeoSearch(ctx context.Context, key string, q *GeoSearchQuery) *StringSliceCmd
-	// GeoSearchLocation(ctx context.Context, key string, q *GeoSearchLocationQuery) *GeoSearchLocationCmd
-	// GeoSearchStore(ctx context.Context, key, store string, q *GeoSearchStoreQuery) *IntCmd
-	// GeoDist(ctx context.Context, key string, member1, member2, unit string) *FloatCmd
-	// GeoHash(ctx context.Context, key string, members ...string) *StringSliceCmd
+	ClusterSlots(ctx context.Context) *ClusterSlotsCmd
+	ClusterNodes(ctx context.Context) *StringCmd
+	ClusterMeet(ctx context.Context, host string, port int64) *StatusCmd
+	ClusterForget(ctx context.Context, nodeID string) *StatusCmd
+	ClusterReplicate(ctx context.Context, nodeID string) *StatusCmd
+	ClusterResetSoft(ctx context.Context) *StatusCmd
+	ClusterResetHard(ctx context.Context) *StatusCmd
+	ClusterInfo(ctx context.Context) *StringCmd
+	ClusterKeySlot(ctx context.Context, key string) *IntCmd
+	ClusterGetKeysInSlot(ctx context.Context, slot int64, count int64) *StringSliceCmd
+	ClusterCountFailureReports(ctx context.Context, nodeID string) *IntCmd
+	ClusterCountKeysInSlot(ctx context.Context, slot int64) *IntCmd
+	ClusterDelSlots(ctx context.Context, slots ...int64) *StatusCmd
+	ClusterDelSlotsRange(ctx context.Context, min, max int64) *StatusCmd
+	ClusterSaveConfig(ctx context.Context) *StatusCmd
+	ClusterSlaves(ctx context.Context, nodeID string) *StringSliceCmd
+	ClusterFailover(ctx context.Context) *StatusCmd
+	ClusterAddSlots(ctx context.Context, slots ...int64) *StatusCmd
+	ClusterAddSlotsRange(ctx context.Context, min, max int64) *StatusCmd
+
+	GeoAdd(ctx context.Context, key string, geoLocation ...*GeoLocation) *IntCmd
+	GeoPos(ctx context.Context, key string, members ...string) *GeoPosCmd
+	GeoRadius(ctx context.Context, key string, longitude, latitude float64, query GeoRadiusQuery) *GeoLocationCmd
+	GeoRadiusStore(ctx context.Context, key string, longitude, latitude float64, query GeoRadiusQuery) *IntCmd
+	GeoRadiusByMember(ctx context.Context, key, member string, query GeoRadiusQuery) *GeoLocationCmd
+	GeoRadiusByMemberStore(ctx context.Context, key, member string, query GeoRadiusQuery) *IntCmd
+	GeoSearch(ctx context.Context, key string, q GeoSearchQuery) *StringSliceCmd
+	GeoSearchLocation(ctx context.Context, key string, q GeoSearchLocationQuery) *GeoLocationCmd
+	GeoSearchStore(ctx context.Context, dest, src string, q GeoSearchStoreQuery) *IntCmd
+	GeoDist(ctx context.Context, key string, member1, member2, unit string) *FloatCmd
+	GeoHash(ctx context.Context, key string, members ...string) *StringSliceCmd
 }
 
 type Compat struct {
@@ -309,6 +309,18 @@ type Compat struct {
 
 func NewAdapter(client rueidis.Client) Cmdable {
 	return &Compat{client: client}
+}
+
+func (c *Compat) Command(ctx context.Context) *CommandsInfoCmd {
+	cmd := c.client.B().Command().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newCommandsInfoCmd(resp)
+}
+
+func (c *Compat) ClientGetName(ctx context.Context) *StringCmd {
+	cmd := c.client.B().ClientGetname().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringCmd(resp)
 }
 
 func (c *Compat) Echo(ctx context.Context, message string) *StringCmd {
@@ -2004,4 +2016,478 @@ func (c *Compat) ZDiffStore(ctx context.Context, destination string, keys ...str
 	cmd := c.client.B().Zdiffstore().Destination(destination).Numkeys(int64(len(keys))).Key(keys...).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
+}
+
+func (c *Compat) PFAdd(ctx context.Context, key string, els ...string) *IntCmd {
+	cmd := c.client.B().Pfadd().Key(key).Element(els...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) PFCount(ctx context.Context, key string, keys ...string) *IntCmd {
+	cmd := c.client.B().Pfcount().Key(key).Key(keys...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) PFMerge(ctx context.Context, dest string, src string, keys ...string) *StatusCmd {
+	cmd := c.client.B().Pfmerge().Destkey(dest).Sourcekey(src).Sourcekey(keys...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) BgRewriteAOF(ctx context.Context) *StatusCmd {
+	cmd := c.client.B().Bgrewriteaof().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) BgSave(ctx context.Context) *StatusCmd {
+	cmd := c.client.B().Bgsave().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) ClientKill(ctx context.Context, ipPort string) *StatusCmd {
+	cmd := c.client.B().ClientKill().IpPort(ipPort).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+// ClientKillByFilter is new style syntax, while the ClientKill is old
+//
+//   CLIENT KILL <option> [value] ... <option> [value]
+func (c *Compat) ClientKillByFilter(ctx context.Context, keys ...string) *IntCmd {
+	cmd := c.client.B().Arbitrary("CLIENT KILL").Args(keys...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) ClientList(ctx context.Context) *StringCmd {
+	cmd := c.client.B().ClientList().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringCmd(resp)
+}
+
+func (c *Compat) ClientPause(ctx context.Context, dur time.Duration) *BoolCmd {
+	cmd := c.client.B().ClientPause().Timeout(formatSec(dur)).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newBoolCmd(resp)
+}
+
+func (c *Compat) ClientID(ctx context.Context) *IntCmd {
+	cmd := c.client.B().ClientId().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) ConfigGet(ctx context.Context, parameter string) *SliceCmd {
+	cmd := c.client.B().ConfigGet().Parameter(parameter).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newSliceCmd(resp)
+}
+
+func (c *Compat) ConfigResetStat(ctx context.Context) *StatusCmd {
+	cmd := c.client.B().ConfigResetstat().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) ConfigSet(ctx context.Context, parameter, value string) *StatusCmd {
+	cmd := c.client.B().ConfigSet().ParameterValue().ParameterValue(parameter, value).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) ConfigRewrite(ctx context.Context) *StatusCmd {
+	cmd := c.client.B().ConfigRewrite().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) DBSize(ctx context.Context) *IntCmd {
+	cmd := c.client.B().Dbsize().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) FlushAll(ctx context.Context) *StatusCmd {
+	cmd := c.client.B().Flushall().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) FlushAllAsync(ctx context.Context) *StatusCmd {
+	cmd := c.client.B().Flushall().Async().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) FlushDB(ctx context.Context) *StatusCmd {
+	cmd := c.client.B().Flushdb().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) FlushDBAsync(ctx context.Context) *StatusCmd {
+	cmd := c.client.B().Flushdb().Async().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) Info(ctx context.Context, section ...string) *StringCmd {
+	cmd := c.client.B().Info().Section(section...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringCmd(resp)
+}
+
+func (c *Compat) LastSave(ctx context.Context) *IntCmd {
+	cmd := c.client.B().Lastsave().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) Save(ctx context.Context) *StatusCmd {
+	cmd := c.client.B().Save().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) Shutdown(ctx context.Context) *StatusCmd {
+	cmd := c.client.B().Shutdown().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) ShutdownSave(ctx context.Context) *StatusCmd {
+	cmd := c.client.B().Shutdown().Save().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) ShutdownNoSave(ctx context.Context) *StatusCmd {
+	cmd := c.client.B().Shutdown().Nosave().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) SlaveOf(ctx context.Context, host string, port int64) *StatusCmd {
+	cmd := c.client.B().Slaveof().Host(host).Port(port).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) Time(ctx context.Context) *TimeCmd {
+	cmd := c.client.B().Time().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newTimeCmd(resp)
+}
+
+func (c *Compat) DebugObject(ctx context.Context, key string) *StringCmd {
+	cmd := c.client.B().DebugObject().Key(key).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringCmd(resp)
+}
+
+func (c *Compat) ReadOnly(ctx context.Context) *StatusCmd {
+	cmd := c.client.B().Readonly().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) ReadWrite(ctx context.Context) *StatusCmd {
+	cmd := c.client.B().Readwrite().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) MemoryUsage(ctx context.Context, key string, samples ...int64) *IntCmd {
+	var resp rueidis.RedisResult
+	switch len(samples) {
+	case 0:
+		resp = c.client.Do(ctx, c.client.B().MemoryUsage().Key(key).Build())
+	case 1:
+		resp = c.client.Do(ctx, c.client.B().MemoryUsage().Key(key).Samples(samples[0]).Build())
+	default:
+		panic("too many arguments")
+	}
+	return newIntCmd(resp)
+}
+
+func (c *Compat) Eval(ctx context.Context, script string, keys []string, args ...string) rueidis.RedisResult {
+	cmd := c.client.B().Eval().Script(script).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build()
+	return c.client.Do(ctx, cmd)
+}
+
+func (c *Compat) EvalSha(ctx context.Context, sha1 string, keys []string, args ...string) rueidis.RedisResult {
+	cmd := c.client.B().Evalsha().Sha1(sha1).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build()
+	return c.client.Do(ctx, cmd)
+}
+
+func (c *Compat) ScriptExists(ctx context.Context, hashes ...string) *BoolSliceCmd {
+	cmd := c.client.B().ScriptExists().Sha1(hashes...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newBoolSliceCmd(resp)
+}
+
+func (c *Compat) ScriptFlush(ctx context.Context) *StatusCmd {
+	cmd := c.client.B().ScriptFlush().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) ScriptKill(ctx context.Context) *StatusCmd {
+	cmd := c.client.B().ScriptKill().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) ScriptLoad(ctx context.Context, script string) *StringCmd {
+	cmd := c.client.B().ScriptLoad().Script(script).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringCmd(resp)
+}
+
+func (c *Compat) Publish(ctx context.Context, channel string, message string) *IntCmd {
+	cmd := c.client.B().Publish().Channel(channel).Message(message).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) PubSubChannels(ctx context.Context, pattern string) *StringSliceCmd {
+	cmd := c.client.B().PubsubChannels().Pattern(pattern).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) PubSubNumSub(ctx context.Context, channels ...string) *StringIntMapCmd {
+	cmd := c.client.B().PubsubNumsub().Channel(channels...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringIntMapCmd(resp)
+}
+
+func (c *Compat) PubSubNumPat(ctx context.Context) *IntCmd {
+	cmd := c.client.B().PubsubNumpat().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) ClusterSlots(ctx context.Context) *ClusterSlotsCmd {
+	cmd := c.client.B().ClusterSlots().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newClusterSlotsCmd(resp)
+}
+
+func (c *Compat) ClusterNodes(ctx context.Context) *StringCmd {
+	cmd := c.client.B().ClusterNodes().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringCmd(resp)
+}
+
+func (c *Compat) ClusterMeet(ctx context.Context, host string, port int64) *StatusCmd {
+	cmd := c.client.B().ClusterMeet().Ip(host).Port(port).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) ClusterForget(ctx context.Context, nodeID string) *StatusCmd {
+	cmd := c.client.B().ClusterForget().NodeId(nodeID).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) ClusterReplicate(ctx context.Context, nodeID string) *StatusCmd {
+	cmd := c.client.B().ClusterReplicate().NodeId(nodeID).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) ClusterResetSoft(ctx context.Context) *StatusCmd {
+	cmd := c.client.B().ClusterReset().Soft().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) ClusterResetHard(ctx context.Context) *StatusCmd {
+	cmd := c.client.B().ClusterReset().Hard().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) ClusterInfo(ctx context.Context) *StringCmd {
+	cmd := c.client.B().ClusterInfo().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringCmd(resp)
+}
+
+func (c *Compat) ClusterKeySlot(ctx context.Context, key string) *IntCmd {
+	cmd := c.client.B().ClusterKeyslot().Key(key).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) ClusterGetKeysInSlot(ctx context.Context, slot int64, count int64) *StringSliceCmd {
+	cmd := c.client.B().ClusterGetkeysinslot().Slot(slot).Count(count).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) ClusterCountFailureReports(ctx context.Context, nodeID string) *IntCmd {
+	cmd := c.client.B().ClusterCountFailureReports().NodeId(nodeID).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) ClusterCountKeysInSlot(ctx context.Context, slot int64) *IntCmd {
+	cmd := c.client.B().ClusterCountkeysinslot().Slot(slot).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) ClusterDelSlots(ctx context.Context, slots ...int64) *StatusCmd {
+	cmd := c.client.B().ClusterDelslots().Slot(slots...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) ClusterDelSlotsRange(ctx context.Context, min, max int64) *StatusCmd {
+	cmd := c.client.B().ClusterDelslotsrange().StartSlotEndSlot().StartSlotEndSlot(min, max).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) ClusterSaveConfig(ctx context.Context) *StatusCmd {
+	cmd := c.client.B().ClusterSaveconfig().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) ClusterSlaves(ctx context.Context, nodeID string) *StringSliceCmd {
+	cmd := c.client.B().ClusterSlaves().NodeId(nodeID).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) ClusterFailover(ctx context.Context) *StatusCmd {
+	cmd := c.client.B().ClusterFailover().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) ClusterAddSlots(ctx context.Context, slots ...int64) *StatusCmd {
+	cmd := c.client.B().ClusterAddslots().Slot(slots...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) ClusterAddSlotsRange(ctx context.Context, min, max int64) *StatusCmd {
+	cmd := c.client.B().ClusterAddslotsrange().StartSlotEndSlot().StartSlotEndSlot(min, max).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) GeoAdd(ctx context.Context, key string, geoLocation ...*GeoLocation) *IntCmd {
+	cmd := c.client.B().Geoadd().Key(key).LongitudeLatitudeMember()
+	for _, loc := range geoLocation {
+		cmd = cmd.LongitudeLatitudeMember(loc.Longitude, loc.Latitude, loc.Name)
+	}
+	resp := c.client.Do(ctx, cmd.Build())
+	return newIntCmd(resp)
+}
+
+func (c *Compat) GeoPos(ctx context.Context, key string, members ...string) *GeoPosCmd {
+	cmd := c.client.B().Geopos().Key(key).Member(members...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newGeoPosCmd(resp)
+}
+
+// GeoRadius is a read-only GEORADIUS_RO command.
+func (c *Compat) GeoRadius(ctx context.Context, key string, longitude, latitude float64, query GeoRadiusQuery) *GeoLocationCmd {
+	cmd := c.client.B().Arbitrary("GEORADIUS_RO").Keys(key).Args(strconv.FormatFloat(longitude, 'f', -1, 64), strconv.FormatFloat(latitude, 'f', -1, 64))
+	if query.Store != "" || query.StoreDist != "" {
+		panic("GeoRadius does not support Store or StoreDist")
+	}
+	cmd = cmd.Args(query.args()...)
+	resp := c.client.Do(ctx, cmd.Build())
+	return newGeoLocationCmd(resp, query.WithDist, query.WithGeoHash, query.WithCoord)
+}
+
+// GeoRadiusStore is a writing GEORADIUS command.
+func (c *Compat) GeoRadiusStore(ctx context.Context, key string, longitude, latitude float64, query GeoRadiusQuery) *IntCmd {
+	cmd := c.client.B().Arbitrary("GEORADIUS").Keys(key).Args(strconv.FormatFloat(longitude, 'f', -1, 64), strconv.FormatFloat(latitude, 'f', -1, 64))
+	if query.Store == "" && query.StoreDist == "" {
+		panic("GeoRadiusStore requires Store or StoreDist")
+	}
+	cmd = cmd.Args(query.args()...)
+	resp := c.client.Do(ctx, cmd.Build())
+	return newIntCmd(resp)
+}
+
+// GeoRadiusByMember is a read-only GEORADIUSBYMEMBER_RO command.
+func (c *Compat) GeoRadiusByMember(ctx context.Context, key, member string, query GeoRadiusQuery) *GeoLocationCmd {
+	cmd := c.client.B().Arbitrary("GEORADIUSBYMEMBER_RO").Keys(key).Args(member)
+	if query.Store != "" || query.StoreDist != "" {
+		panic("GeoRadiusByMember does not support Store or StoreDist")
+	}
+	cmd = cmd.Args(query.args()...)
+	resp := c.client.Do(ctx, cmd.Build())
+	return newGeoLocationCmd(resp, query.WithDist, query.WithGeoHash, query.WithCoord)
+}
+
+// GeoRadiusByMemberStore is a writing GEORADIUSBYMEMBER command.
+func (c *Compat) GeoRadiusByMemberStore(ctx context.Context, key, member string, query GeoRadiusQuery) *IntCmd {
+	cmd := c.client.B().Arbitrary("GEORADIUSBYMEMBER_RO").Keys(key).Args(member)
+	if query.Store != "" && query.StoreDist != "" {
+		panic("GeoRadiusByMemberStore requires Store or StoreDist")
+	}
+	cmd = cmd.Args(query.args()...)
+	resp := c.client.Do(ctx, cmd.Build())
+	return newIntCmd(resp)
+}
+
+func (c *Compat) GeoSearch(ctx context.Context, key string, q GeoSearchQuery) *StringSliceCmd {
+	cmd := c.client.B().Arbitrary("GEOSEARCH").Keys(key)
+	cmd = cmd.Args(q.args()...)
+	resp := c.client.Do(ctx, cmd.Build())
+	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) GeoSearchLocation(ctx context.Context, key string, q GeoSearchLocationQuery) *GeoLocationCmd {
+	cmd := c.client.B().Arbitrary("GEOSEARCH").Keys(key)
+	cmd = cmd.Args(q.args()...)
+	resp := c.client.Do(ctx, cmd.Build())
+	return newGeoLocationCmd(resp, q.WithDist, q.WithHash, q.WithCoord)
+}
+
+func (c *Compat) GeoSearchStore(ctx context.Context, dest, src string, q GeoSearchStoreQuery) *IntCmd {
+	cmd := c.client.B().Arbitrary("GEOSEARCHSTORE").Keys(dest, src)
+	cmd = cmd.Args(q.args()...)
+	if q.StoreDist {
+		cmd = cmd.Args("STOREDIST")
+	}
+	resp := c.client.Do(ctx, cmd.Build())
+	return newIntCmd(resp)
+}
+
+func (c *Compat) GeoDist(ctx context.Context, key, member1, member2, unit string) *FloatCmd {
+	var resp rueidis.RedisResult
+	switch strings.ToUpper(unit) {
+	case "M":
+		resp = c.client.Do(ctx, c.client.B().Geodist().Key(key).Member1(member1).Member2(member2).M().Build())
+	case "MI":
+		resp = c.client.Do(ctx, c.client.B().Geodist().Key(key).Member1(member1).Member2(member2).Mi().Build())
+	case "FT":
+		resp = c.client.Do(ctx, c.client.B().Geodist().Key(key).Member1(member1).Member2(member2).Ft().Build())
+	case "KM", "":
+		resp = c.client.Do(ctx, c.client.B().Geodist().Key(key).Member1(member1).Member2(member2).Km().Build())
+	default:
+		panic(fmt.Sprintf("invalid unit  %s", unit))
+	}
+	return newFloatCmd(resp)
+}
+
+func (c *Compat) GeoHash(ctx context.Context, key string, members ...string) *StringSliceCmd {
+	cmd := c.client.B().Geohash().Key(key).Member(members...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringSliceCmd(resp)
 }
