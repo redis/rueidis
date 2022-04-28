@@ -2436,7 +2436,7 @@ func (c *Compat) GeoRadiusByMember(ctx context.Context, key, member string, quer
 
 // GeoRadiusByMemberStore is a writing GEORADIUSBYMEMBER command.
 func (c *Compat) GeoRadiusByMemberStore(ctx context.Context, key, member string, query GeoRadiusQuery) *IntCmd {
-	cmd := c.client.B().Arbitrary("GEORADIUSBYMEMBER_RO").Keys(key).Args(member)
+	cmd := c.client.B().Arbitrary("GEORADIUSBYMEMBER").Keys(key).Args(member)
 	if query.Store != "" && query.StoreDist != "" {
 		panic("GeoRadiusByMemberStore requires Store or StoreDist")
 	}
@@ -2481,7 +2481,7 @@ func (c *Compat) GeoDist(ctx context.Context, key, member1, member2, unit string
 	case "KM", "":
 		resp = c.client.Do(ctx, c.client.B().Geodist().Key(key).Member1(member1).Member2(member2).Km().Build())
 	default:
-		panic(fmt.Sprintf("invalid unit  %s", unit))
+		panic(fmt.Sprintf("invalid unit %s", unit))
 	}
 	return newFloatCmd(resp)
 }
