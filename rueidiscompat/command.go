@@ -2,6 +2,7 @@ package rueidiscompat
 
 import (
 	"fmt"
+	"net"
 	"strconv"
 	"time"
 
@@ -442,6 +443,33 @@ func (cmd *StringStringMapCmd) Result() (map[string]string, error) {
 }
 
 func (cmd *StringStringMapCmd) String() (string, error) {
+	return cmd.res.ToString()
+}
+
+type StringIntMapCmd struct {
+	res rueidis.RedisResult
+	val map[string]int64
+	err error
+}
+
+func newStringIntMapCmd(res rueidis.RedisResult) *StringIntMapCmd {
+	val, err := res.AsIntMap()
+	return &StringIntMapCmd{res: res, val: val, err: err}
+}
+
+func (cmd *StringIntMapCmd) SetVal(val map[string]int64) {
+	cmd.val = val
+}
+
+func (cmd *StringIntMapCmd) Val() map[string]int64 {
+	return cmd.val
+}
+
+func (cmd *StringIntMapCmd) Result() (map[string]int64, error) {
+	return cmd.val, cmd.err
+}
+
+func (cmd *StringIntMapCmd) String() (string, error) {
 	return cmd.res.ToString()
 }
 
@@ -1340,6 +1368,378 @@ func (cmd *ZWithKeyCmd) String() (string, error) {
 	return cmd.res.ToString()
 }
 
+type TimeCmd struct {
+	res rueidis.RedisResult
+	val time.Time
+	err error
+}
+
+func newTimeCmd(res rueidis.RedisResult) *TimeCmd {
+	arr, err := res.ToArray()
+	if err != nil {
+		return &TimeCmd{res: res, err: err}
+	}
+	if len(arr) != 2 {
+		return &TimeCmd{res: res, err: fmt.Errorf("got %d, wanted 2", len(arr))}
+	}
+	sec, err := arr[0].AsInt64()
+	if err != nil {
+		return &TimeCmd{res: res, err: err}
+	}
+	microSec, err := arr[1].AsInt64()
+	if err != nil {
+		return &TimeCmd{res: res, err: err}
+	}
+	return &TimeCmd{res: res, val: time.Unix(sec, microSec*1000), err: err}
+}
+
+func (cmd *TimeCmd) SetVal(val time.Time) {
+	cmd.val = val
+}
+
+func (cmd *TimeCmd) Val() time.Time {
+	return cmd.val
+}
+
+func (cmd *TimeCmd) Result() (time.Time, error) {
+	return cmd.val, cmd.err
+}
+
+func (cmd *TimeCmd) String() (string, error) {
+	return cmd.res.ToString()
+}
+
+type ClusterNode struct {
+	ID   string
+	Addr string
+}
+
+type ClusterSlot struct {
+	Start int64
+	End   int64
+	Nodes []ClusterNode
+}
+
+type ClusterSlotsCmd struct {
+	res rueidis.RedisResult
+	val []ClusterSlot
+	err error
+}
+
+func newClusterSlotsCmd(res rueidis.RedisResult) *ClusterSlotsCmd {
+	arr, err := res.ToArray()
+	if err != nil {
+		return &ClusterSlotsCmd{res: res, err: err}
+	}
+	val := make([]ClusterSlot, 0, len(arr))
+	for _, v := range arr {
+		slot, err := v.ToArray()
+		if err != nil {
+			return &ClusterSlotsCmd{res: res, err: err}
+		}
+		if len(slot) < 2 {
+			return &ClusterSlotsCmd{res: res, err: fmt.Errorf("got %d, excpected atleast 2", len(slot))}
+		}
+		start, err := slot[0].ToInt64()
+		if err != nil {
+			return &ClusterSlotsCmd{res: res, err: err}
+		}
+		end, err := slot[1].ToInt64()
+		if err != nil {
+			return &ClusterSlotsCmd{res: res, err: err}
+		}
+		nodes := make([]ClusterNode, len(slot)-2)
+		for i, j := 2, 0; i < len(nodes); i, j = i+1, j+1 {
+			node, err := slot[i].ToArray()
+			if err != nil {
+				return &ClusterSlotsCmd{res: res, err: err}
+			}
+			if len(node) != 2 && len(node) != 3 {
+				return &ClusterSlotsCmd{res: res, err: fmt.Errorf("got %d, expected 2 or 3", len(node))}
+			}
+			ip, err := node[0].ToString()
+			if err != nil {
+				return &ClusterSlotsCmd{res: res, err: err}
+			}
+			port, err := node[1].ToInt64()
+			if err != nil {
+				return &ClusterSlotsCmd{res: res, err: err}
+			}
+			nodes[j].Addr = net.JoinHostPort(ip, strconv.FormatInt(port, 10))
+			if len(node) == 3 {
+				id, err := node[2].ToString()
+				if err != nil {
+					return &ClusterSlotsCmd{res: res, err: err}
+				}
+				nodes[j].ID = id
+			}
+		}
+		val = append(val, ClusterSlot{
+			Start: start,
+			End:   end,
+			Nodes: nodes,
+		})
+	}
+	return &ClusterSlotsCmd{res: res, val: val, err: err}
+}
+
+func (cmd *ClusterSlotsCmd) SetVal(val []ClusterSlot) {
+	cmd.val = val
+}
+
+func (cmd *ClusterSlotsCmd) Val() []ClusterSlot {
+	return cmd.val
+}
+
+func (cmd *ClusterSlotsCmd) Result() ([]ClusterSlot, error) {
+	return cmd.val, cmd.err
+}
+
+func (cmd *ClusterSlotsCmd) String() (string, error) {
+	return cmd.res.ToString()
+}
+
+type GeoPos struct {
+	Longitude, Latitude float64
+}
+
+type GeoPosCmd struct {
+	res rueidis.RedisResult
+	val []*GeoPos
+	err error
+}
+
+func newGeoPosCmd(res rueidis.RedisResult) *GeoPosCmd {
+	arr, err := res.ToArray()
+	if err != nil {
+		return &GeoPosCmd{res: res, err: err}
+	}
+	val := make([]*GeoPos, 0, len(arr))
+	for _, v := range arr {
+		loc, err := v.ToArray()
+		if err != nil {
+			if rueidis.IsRedisNil(err) {
+				val = append(val, nil)
+				continue
+			}
+			return &GeoPosCmd{res: res, err: err}
+		}
+		if len(loc) != 2 {
+			return &GeoPosCmd{res: res, err: fmt.Errorf("got %d, expected 2", len(loc))}
+		}
+		long, err := loc[0].AsFloat64()
+		if err != nil {
+			return &GeoPosCmd{res: res, err: err}
+		}
+		lat, err := loc[1].AsFloat64()
+		if err != nil {
+			return &GeoPosCmd{res: res, err: err}
+		}
+		val = append(val, &GeoPos{
+			Longitude: long,
+			Latitude:  lat,
+		})
+	}
+	return &GeoPosCmd{res: res, val: val, err: err}
+}
+
+func (cmd *GeoPosCmd) SetVal(val []*GeoPos) {
+	cmd.val = val
+}
+
+func (cmd *GeoPosCmd) Val() []*GeoPos {
+	return cmd.val
+}
+
+func (cmd *GeoPosCmd) Result() ([]*GeoPos, error) {
+	return cmd.val, cmd.err
+}
+
+func (cmd *GeoPosCmd) String() (string, error) {
+	return cmd.res.ToString()
+}
+
+type GeoLocationCmd struct {
+	res rueidis.RedisResult
+	val []GeoLocation
+	err error
+}
+
+func newGeoLocationCmd(res rueidis.RedisResult, withDist, withGeoHash, withCoord bool) *GeoLocationCmd {
+	arr, err := res.ToArray()
+	if err != nil {
+		return &GeoLocationCmd{res: res, err: err}
+	}
+	val := make([]GeoLocation, 0, len(arr))
+	for _, v := range arr {
+		info, err := v.ToArray()
+		if err != nil {
+			return &GeoLocationCmd{res: res, err: err}
+		}
+		var loc GeoLocation
+		var i int
+		loc.Name, err = info[i].ToString()
+		i++
+		if err != nil {
+			return &GeoLocationCmd{res: res, err: err}
+		}
+		if withDist {
+			loc.Dist, err = info[i].AsFloat64()
+			i++
+			if err != nil {
+				return &GeoLocationCmd{res: res, err: err}
+			}
+		}
+		if withGeoHash {
+			loc.GeoHash, err = info[i].AsInt64()
+			i++
+			if err != nil {
+				return &GeoLocationCmd{res: res, err: err}
+			}
+		}
+		if withCoord {
+			cord, err := info[i].ToArray()
+			if err != nil {
+				return &GeoLocationCmd{res: res, err: err}
+			}
+			if len(cord) != 2 {
+				return &GeoLocationCmd{res: res, err: fmt.Errorf("got %d, expected 2", len(info))}
+			}
+			loc.Longitude, err = cord[0].AsFloat64()
+			if err != nil {
+				return &GeoLocationCmd{res: res, err: err}
+			}
+			loc.Latitude, err = cord[1].AsFloat64()
+			if err != nil {
+				return &GeoLocationCmd{res: res, err: err}
+			}
+		}
+		val = append(val, loc)
+	}
+	return &GeoLocationCmd{res: res, val: val, err: err}
+}
+
+func (cmd *GeoLocationCmd) SetVal(val []GeoLocation) {
+	cmd.val = val
+}
+
+func (cmd *GeoLocationCmd) Val() []GeoLocation {
+	return cmd.val
+}
+
+func (cmd *GeoLocationCmd) Result() ([]GeoLocation, error) {
+	return cmd.val, cmd.err
+}
+
+func (cmd *GeoLocationCmd) String() (string, error) {
+	return cmd.res.ToString()
+}
+
+type CommandInfo struct {
+	Name        string
+	Arity       int8
+	Flags       []string
+	ACLFlags    []string
+	FirstKeyPos int8
+	LastKeyPos  int8
+	StepCount   int8
+	ReadOnly    bool
+}
+
+type CommandsInfoCmd struct {
+	res rueidis.RedisResult
+	val map[string]CommandInfo
+	err error
+}
+
+func newCommandsInfoCmd(res rueidis.RedisResult) *CommandsInfoCmd {
+	arr, err := res.ToArray()
+	if err != nil {
+		return &CommandsInfoCmd{res: res, err: err}
+	}
+	val := make(map[string]CommandInfo, len(arr))
+	for _, v := range arr {
+		info, err := v.ToArray()
+		if err != nil {
+			return &CommandsInfoCmd{res: res, err: err}
+		}
+		switch len(info) {
+		case 6, 7:
+		default:
+			return &CommandsInfoCmd{res: res, err: fmt.Errorf("got %d, wanted 7", len(info))}
+		}
+		var cmd CommandInfo
+		cmd.Name, err = info[0].ToString()
+		if err != nil {
+			return &CommandsInfoCmd{res: res, err: err}
+		}
+		arity, err := info[1].ToInt64()
+		if err != nil {
+			return &CommandsInfoCmd{res: res, err: err}
+		}
+		cmd.Arity = int8(arity)
+		cmd.Flags, err = info[2].AsStrSlice()
+		if err != nil {
+			if rueidis.IsRedisNil(err) {
+				cmd.Flags = []string{}
+			} else {
+				return &CommandsInfoCmd{res: res, err: err}
+			}
+		}
+		firstKeyPos, err := info[3].ToInt64()
+		if err != nil {
+			return &CommandsInfoCmd{res: res, err: err}
+		}
+		cmd.FirstKeyPos = int8(firstKeyPos)
+		lastKeyPos, err := info[4].ToInt64()
+		if err != nil {
+			return &CommandsInfoCmd{res: res, err: err}
+		}
+		cmd.LastKeyPos = int8(lastKeyPos)
+		stepCount, err := info[5].ToInt64()
+		if err != nil {
+			return &CommandsInfoCmd{res: res, err: err}
+		}
+		cmd.StepCount = int8(stepCount)
+		for _, flag := range cmd.Flags {
+			if flag == "readonly" {
+				cmd.ReadOnly = true
+				break
+			}
+		}
+		if len(arr) == 6 {
+			val[cmd.Name] = cmd
+			continue
+		}
+		cmd.ACLFlags, err = info[6].AsStrSlice()
+		if err != nil {
+			if rueidis.IsRedisNil(err) {
+				cmd.ACLFlags = []string{}
+			} else {
+				return &CommandsInfoCmd{res: res, err: err}
+			}
+		}
+		val[cmd.Name] = cmd
+	}
+	return &CommandsInfoCmd{res: res, val: val, err: err}
+}
+
+func (cmd *CommandsInfoCmd) SetVal(val map[string]CommandInfo) {
+	cmd.val = val
+}
+
+func (cmd *CommandsInfoCmd) Val() map[string]CommandInfo {
+	return cmd.val
+}
+
+func (cmd *CommandsInfoCmd) Result() (map[string]CommandInfo, error) {
+	return cmd.val, cmd.err
+}
+
+func (cmd *CommandsInfoCmd) String() (string, error) {
+	return cmd.res.ToString()
+}
+
 type Sort struct {
 	By            string
 	Offset, Count int64
@@ -1493,6 +1893,147 @@ type ZRangeArgs struct {
 
 type ZRangeBy struct {
 	Offset, Count int64
+}
+
+type GeoLocation struct {
+	Name                      string
+	Longitude, Latitude, Dist float64
+	GeoHash                   int64
+}
+
+// GeoRadiusQuery is used with GeoRadius to query geospatial index.
+type GeoRadiusQuery struct {
+	Radius float64
+	// Can be m, km, ft, or mi. Default is km.
+	Unit        string
+	WithCoord   bool
+	WithDist    bool
+	WithGeoHash bool
+	Count       int64
+	// Can be ASC or DESC. Default is no sort order.
+	Sort      string
+	Store     string
+	StoreDist string
+}
+
+// GeoSearchQuery is used for GEOSearch/GEOSearchStore command query.
+type GeoSearchQuery struct {
+	Member string
+
+	// Latitude and Longitude when using FromLonLat option.
+	Longitude float64
+	Latitude  float64
+
+	// Distance and unit when using ByRadius option.
+	// Can use m, km, ft, or mi. Default is km.
+	Radius     float64
+	RadiusUnit string
+
+	// Height, width and unit when using ByBox option.
+	// Can be m, km, ft, or mi. Default is km.
+	BoxWidth  float64
+	BoxHeight float64
+	BoxUnit   string
+
+	// Can be ASC or DESC. Default is no sort order.
+	Sort     string
+	Count    int64
+	CountAny bool
+}
+
+type GeoSearchLocationQuery struct {
+	GeoSearchQuery
+
+	WithCoord bool
+	WithDist  bool
+	WithHash  bool
+}
+
+type GeoSearchStoreQuery struct {
+	GeoSearchQuery
+
+	// When using the StoreDist option, the command stores the items in a
+	// sorted set populated with their distance from the center of the circle or box,
+	// as a floating-point number, in the same unit specified for that shape.
+	StoreDist bool
+}
+
+func (q *GeoRadiusQuery) args() []string {
+	args := make([]string, 0, 2)
+	args = append(args, strconv.FormatFloat(q.Radius, 'f', -1, 64))
+	if q.Unit != "" {
+		args = append(args, q.Unit)
+	} else {
+		args = append(args, "KM")
+	}
+	if q.WithCoord {
+		args = append(args, "WITHCOORD")
+	}
+	if q.WithDist {
+		args = append(args, "WITHDIST")
+	}
+	if q.WithGeoHash {
+		args = append(args, "WITHASH")
+	}
+	if q.Count > 0 {
+		args = append(args, "COUNT", strconv.FormatInt(q.Count, 10))
+	}
+	if q.Sort != "" {
+		args = append(args, q.Sort)
+	}
+	if q.Store != "" {
+		args = append(args, "STORE")
+		args = append(args, q.Store)
+	}
+	if q.StoreDist != "" {
+		args = append(args, "STOREDIST")
+		args = append(args, q.StoreDist)
+	}
+	return args
+}
+
+func (q *GeoSearchQuery) args() []string {
+	args := make([]string, 0, 2)
+	if q.Member != "" {
+		args = append(args, "FROMMEMBER", q.Member)
+	} else {
+		args = append(args, "FROMLONLAT", strconv.FormatFloat(q.Longitude, 'f', -1, 64), strconv.FormatFloat(q.Latitude, 'f', -1, 64))
+	}
+	if q.Radius > 0 {
+		if q.RadiusUnit == "" {
+			q.RadiusUnit = "KM"
+		}
+		args = append(args, "BYRADIUS", strconv.FormatFloat(q.Radius, 'f', -1, 64), q.RadiusUnit)
+	} else {
+		if q.BoxUnit == "" {
+			q.BoxUnit = "KM"
+		}
+		args = append(args, "BYXBOX", strconv.FormatFloat(q.BoxWidth, 'f', -1, 64), strconv.FormatFloat(q.BoxHeight, 'f', -1, 64), q.BoxUnit)
+	}
+	if q.Sort != "" {
+		args = append(args, q.Sort)
+	}
+	if q.Count > 0 {
+		args = append(args, "COUNT", strconv.FormatInt(q.Count, 10))
+		if q.CountAny {
+			args = append(args, "ANY")
+		}
+	}
+	return args
+}
+
+func (q *GeoSearchLocationQuery) args() []string {
+	args := q.GeoSearchQuery.args()
+	if q.WithCoord {
+		args = append(args, "WITHCOORD")
+	}
+	if q.WithDist {
+		args = append(args, "WITHDIST")
+	}
+	if q.WithHash {
+		args = append(args, "WITHASH")
+	}
+	return args
 }
 
 func usePrecise(dur time.Duration) bool {
