@@ -534,7 +534,7 @@ func (m *RedisMessage) AsStrMap() (map[string]string, error) {
 	panic(fmt.Sprintf("redis message type %c is not a map/array/set", typ))
 }
 
-// AsStrMap check if message is a redis map/array/set response, and convert to map[string]int64.
+// AsIntMap check if message is a redis map/array/set response, and convert to map[string]int64.
 // Non int or string value will be ignored, including nil value.
 func (m *RedisMessage) AsIntMap() (map[string]int64, error) {
 	if err := m.Error(); err != nil {
@@ -546,13 +546,14 @@ func (m *RedisMessage) AsIntMap() (map[string]int64, error) {
 		for i := 0; i < len(m.values); i += 2 {
 			k := m.values[i]
 			v := m.values[i+1]
-			if (k.typ == '$' || k.typ == '+') && (v.typ == '$' || v.typ == '+' || len(v.string) != 0) {
-				r[k.string], err = strconv.ParseInt(v.string, 0, 64)
-				if err != nil {
-					return nil, err
+			if k.typ == '$' || k.typ == '+' {
+				if v.typ == '$' || v.typ == '+' || len(v.string) != 0 {
+					if r[k.string], err = strconv.ParseInt(v.string, 0, 64); err != nil {
+						return nil, err
+					}
+				} else if v.typ == ':' {
+					r[k.string] = v.integer
 				}
-			} else if k.typ == ':' {
-				r[k.string] = v.integer
 			}
 		}
 		return r, nil

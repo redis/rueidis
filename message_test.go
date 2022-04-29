@@ -229,6 +229,25 @@ func TestRedisResult(t *testing.T) {
 		}
 	})
 
+	t.Run("AsIntMap", func(t *testing.T) {
+		if _, err := (RedisResult{err: errors.New("other")}).AsIntMap(); err == nil {
+			t.Fatal("AsIntMap not failed as expected")
+		}
+		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsIntMap(); err == nil {
+			t.Fatal("AsIntMap not failed as expected")
+		}
+		if _, err := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{string: "key", typ: '+'}, {string: "value", typ: '+'}}}}).AsIntMap(); err == nil {
+			t.Fatal("AsIntMap not failed as expected")
+		}
+		values := []RedisMessage{{string: "k1", typ: '+'}, {string: "1", typ: '+'}, {string: "k2", typ: '+'}, {integer: 2, typ: ':'}}
+		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: values}}).AsIntMap(); !reflect.DeepEqual(map[string]int64{
+			"k1": 1,
+			"k2": 2,
+		}, ret) {
+			t.Fatal("AsIntMap not get value as expected")
+		}
+	})
+
 	t.Run("ToMap", func(t *testing.T) {
 		if _, err := (RedisResult{err: errors.New("other")}).ToMap(); err == nil {
 			t.Fatal("ToMap not failed as expected")
@@ -484,6 +503,19 @@ func TestRedisMessage(t *testing.T) {
 			}
 		}()
 		(&RedisMessage{typ: 't'}).AsStrMap()
+	})
+
+	t.Run("AsIntMap", func(t *testing.T) {
+		if _, err := (&RedisMessage{typ: '_'}).AsIntMap(); err == nil {
+			t.Fatal("AsIntMap not failed as expected")
+		}
+
+		defer func() {
+			if !strings.Contains(recover().(string), "redis message type t is not a map/array/set") {
+				t.Fatal("AsMap not panic as expected")
+			}
+		}()
+		(&RedisMessage{typ: 't'}).AsIntMap()
 	})
 
 	t.Run("ToMap", func(t *testing.T) {
