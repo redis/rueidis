@@ -1959,7 +1959,7 @@ type GeoSearchStoreQuery struct {
 }
 
 func (q *GeoRadiusQuery) args() []string {
-	args := make([]string, 2)
+	args := make([]string, 0, 2)
 	args = append(args, strconv.FormatFloat(q.Radius, 'f', -1, 64))
 	if q.Unit != "" {
 		args = append(args, q.Unit)
@@ -1993,7 +1993,7 @@ func (q *GeoRadiusQuery) args() []string {
 }
 
 func (q *GeoSearchQuery) args() []string {
-	args := make([]string, 2)
+	args := make([]string, 0, 2)
 	if q.Member != "" {
 		args = append(args, "FROMMEMBER", q.Member)
 	} else {
