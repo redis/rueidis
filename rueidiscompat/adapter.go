@@ -12,6 +12,8 @@ import (
 )
 
 type Cmdable interface {
+	Cache(ttl time.Duration) CacheCmdable
+
 	Command(ctx context.Context) *CommandsInfoCmd
 	ClientGetName(ctx context.Context) *StringCmd
 	Echo(ctx context.Context, message string) *StringCmd
@@ -299,16 +301,79 @@ type Cmdable interface {
 	GeoSearch(ctx context.Context, key string, q GeoSearchQuery) *StringSliceCmd
 	GeoSearchLocation(ctx context.Context, key string, q GeoSearchLocationQuery) *GeoLocationCmd
 	GeoSearchStore(ctx context.Context, dest, src string, q GeoSearchStoreQuery) *IntCmd
-	GeoDist(ctx context.Context, key string, member1, member2, unit string) *FloatCmd
+	GeoDist(ctx context.Context, key, member1, member2, unit string) *FloatCmd
 	GeoHash(ctx context.Context, key string, members ...string) *StringSliceCmd
+}
+
+type CacheCmdable interface {
+	// TODO:
+	//
+	// BitCount(ctx context.Context, key string, bitCount BitCount) *IntCmd
+	// BitPos(ctx context.Context, key string, bit int64, bitPos BitPos) *IntCmd
+	// GeoDist(ctx context.Context, key, member1, member2, unit string) *FloatCmd
+	// GeoHash(ctx context.Context, key string, members ...string) *StringSliceCmd
+	// GeoPos(ctx context.Context, key string, members ...string) *GeoPosCmd
+	// GeoRadius(ctx context.Context, key string, longitude, latitude float64, query GeoRadiusQuery) *GeoLocationCmd
+	// GeoRadiusByMember(ctx context.Context, key, member string, query GeoRadiusQuery) *GeoLocationCmd
+	// GeoSearch(ctx context.Context, key string, q GeoSearchQuery) *StringSliceCmd
+	// Get(ctx context.Context, key string) *StringCmd
+	// GetBit(ctx context.Context, key string, offset int64) *IntCmd
+	// GetRange(ctx context.Context, key string, start, end int64) *StringCmd
+	// HExists(ctx context.Context, key, field string) *BoolCmd
+	// HGet(ctx context.Context, key, field string) *StringCmd
+	// HGetAll(ctx context.Context, key string) *StringStringMapCmd
+	// HKeys(ctx context.Context, key string) *StringSliceCmd
+	// HLen(ctx context.Context, key string) *IntCmd
+	// HMGet(ctx context.Context, key string, fields ...string) *SliceCmd
+	// HVals(ctx context.Context, key string) *StringSliceCmd
+	// LIndex(ctx context.Context, key string, index int64) *StringCmd
+	// LLen(ctx context.Context, key string) *IntCmd
+	// LPos(ctx context.Context, key string, value string, a LPosArgs) *IntCmd
+	// LRange(ctx context.Context, key string, start, stop int64) *StringSliceCmd
+	// PTTL(ctx context.Context, key string) *IntCmd
+	// SCard(ctx context.Context, key string) *IntCmd
+	// SIsMember(ctx context.Context, key string, member string) *BoolCmd
+	// SMembers(ctx context.Context, key string) *StringSliceCmd
+	// Sort(ctx context.Context, key string, sort Sort) *StringSliceCmd
+	// StrLen(ctx context.Context, key string) *IntCmd
+	// TTL(ctx context.Context, key string) *IntCmd
+	// Type(ctx context.Context, key string) *StatusCmd
+	// ZCard(ctx context.Context, key string) *IntCmd
+	// ZCount(ctx context.Context, key string, min, max float64) *IntCmd
+	// ZLexCount(ctx context.Context, key, min, max string) *IntCmd
+	// ZMScore(ctx context.Context, key string, members ...string) *FloatSliceCmd
+	// ZRangeWithScores(ctx context.Context, key string, start, stop string) *ZSliceCmd
+	// ZRangeByScore(ctx context.Context, key string, min, max float64, opt ZRangeBy) *StringSliceCmd
+	// ZRangeByLex(ctx context.Context, key string, min, max string, opt ZRangeBy) *StringSliceCmd
+	// ZRangeByScoreWithScores(ctx context.Context, key string, min, max float64, opt ZRangeBy) *ZSliceCmd
+	// ZRangeArgs(ctx context.Context, z ZRangeArgs) *StringSliceCmd
+	// ZRangeArgsWithScores(ctx context.Context, z ZRangeArgs) *ZSliceCmd
+	// ZRangeStore(ctx context.Context, dst string, z ZRangeArgs) *IntCmd
+	// ZRank(ctx context.Context, key, member string) *IntCmd
+	// ZRevRange(ctx context.Context, key string, start, stop int64) *StringSliceCmd
+	// ZRevRangeWithScores(ctx context.Context, key string, start, stop int64) *ZSliceCmd
+	// ZRevRangeByScore(ctx context.Context, key string, min, max float64, opt ZRangeBy) *StringSliceCmd
+	// ZRevRangeByLex(ctx context.Context, key string, min, max string, opt ZRangeBy) *StringSliceCmd
+	// ZRevRangeByScoreWithScores(ctx context.Context, key string, min, max float64, opt ZRangeBy) *ZSliceCmd
+	// ZRevRank(ctx context.Context, key, member string) *IntCmd
+	// ZScore(ctx context.Context, key, member string) *FloatCmd
 }
 
 type Compat struct {
 	client rueidis.Client
 }
 
+type CacheCompat struct {
+	client rueidis.Client
+	ttl    time.Duration
+}
+
 func NewAdapter(client rueidis.Client) Cmdable {
 	return &Compat{client: client}
+}
+
+func (c *Compat) Cache(ttl time.Duration) CacheCmdable {
+	return &CacheCompat{client: c.client, ttl: ttl}
 }
 
 func (c *Compat) Command(ctx context.Context) *CommandsInfoCmd {
