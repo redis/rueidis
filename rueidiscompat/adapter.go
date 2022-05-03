@@ -12,6 +12,8 @@ import (
 )
 
 type Cmdable interface {
+	Cache(ttl time.Duration) CacheCompat
+
 	Command(ctx context.Context) *CommandsInfoCmd
 	ClientGetName(ctx context.Context) *StringCmd
 	Echo(ctx context.Context, message string) *StringCmd
@@ -111,8 +113,8 @@ type Cmdable interface {
 	LLen(ctx context.Context, key string) *IntCmd
 	LPop(ctx context.Context, key string) *StringCmd
 	LPopCount(ctx context.Context, key string, count int64) *StringSliceCmd
-	LPos(ctx context.Context, key string, value string, a LPosArgs) *IntCmd
-	LPosCount(ctx context.Context, key string, value string, count int64, args LPosArgs) *IntSliceCmd
+	LPos(ctx context.Context, key string, element string, a LPosArgs) *IntCmd
+	LPosCount(ctx context.Context, key string, element string, count int64, args LPosArgs) *IntSliceCmd
 	LPush(ctx context.Context, key string, elements ...string) *IntCmd
 	LPushX(ctx context.Context, key string, elements ...string) *IntCmd
 	LRange(ctx context.Context, key string, start, stop int64) *StringSliceCmd
@@ -299,7 +301,7 @@ type Cmdable interface {
 	GeoSearch(ctx context.Context, key string, q GeoSearchQuery) *StringSliceCmd
 	GeoSearchLocation(ctx context.Context, key string, q GeoSearchLocationQuery) *GeoLocationCmd
 	GeoSearchStore(ctx context.Context, dest, src string, q GeoSearchStoreQuery) *IntCmd
-	GeoDist(ctx context.Context, key string, member1, member2, unit string) *FloatCmd
+	GeoDist(ctx context.Context, key, member1, member2, unit string) *FloatCmd
 	GeoHash(ctx context.Context, key string, members ...string) *StringSliceCmd
 }
 
@@ -307,8 +309,17 @@ type Compat struct {
 	client rueidis.Client
 }
 
+type CacheCompat struct {
+	client rueidis.Client
+	ttl    time.Duration
+}
+
 func NewAdapter(client rueidis.Client) Cmdable {
 	return &Compat{client: client}
+}
+
+func (c *Compat) Cache(ttl time.Duration) CacheCompat {
+	return CacheCompat{client: c.client, ttl: ttl}
 }
 
 func (c *Compat) Command(ctx context.Context) *CommandsInfoCmd {
@@ -1782,7 +1793,7 @@ func (c *Compat) ZRange(ctx context.Context, key, start, stop string) *StringSli
 	return newStringSliceCmd(resp)
 }
 
-func (c *Compat) ZRangeWithScores(ctx context.Context, key, start, stop string) *ZSliceCmd {
+func (c *Compat) ZRangeWithScores(ctx context.Context, key string, start, stop string) *ZSliceCmd {
 	cmd := c.zRangeArgs(true, ZRangeArgs{
 		Key:   key,
 		Start: start,
@@ -1802,7 +1813,7 @@ func (c *Compat) ZRangeByScore(ctx context.Context, key string, min, max float64
 	return newStringSliceCmd(resp)
 }
 
-func (c *Compat) ZRangeByLex(ctx context.Context, key, min, max string, opt ZRangeBy) *StringSliceCmd {
+func (c *Compat) ZRangeByLex(ctx context.Context, key string, min, max string, opt ZRangeBy) *StringSliceCmd {
 	var resp rueidis.RedisResult
 	if opt.Offset != 0 || opt.Count != 0 {
 		resp = c.client.Do(ctx, c.client.B().Zrangebylex().Key(key).Min(min).Max(max).Limit(opt.Offset, opt.Count).Build())
@@ -2490,4 +2501,394 @@ func (c *Compat) GeoHash(ctx context.Context, key string, members ...string) *St
 	cmd := c.client.B().Geohash().Key(key).Member(members...).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newStringSliceCmd(resp)
+}
+
+func (c CacheCompat) BitCount(ctx context.Context, key string, bitCount BitCount) *IntCmd {
+	cmd := c.client.B().Bitcount().Key(key).Start(bitCount.Start).End(bitCount.End).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newIntCmd(resp)
+}
+
+func (c CacheCompat) BitPos(ctx context.Context, key string, bit int64, bitPos BitPos) *IntCmd {
+	var resp rueidis.RedisResult
+	if bitPos.Byte {
+		resp = c.client.DoCache(ctx, c.client.B().Bitpos().Key(key).Bit(bit).Start(bitPos.Start).End(bitPos.End).Byte().Cache(), c.ttl)
+	} else {
+		resp = c.client.DoCache(ctx, c.client.B().Bitpos().Key(key).Bit(bit).Start(bitPos.Start).End(bitPos.End).Bit().Cache(), c.ttl)
+	}
+	return newIntCmd(resp)
+}
+
+func (c CacheCompat) GeoDist(ctx context.Context, key, member1, member2, unit string) *FloatCmd {
+	var resp rueidis.RedisResult
+	switch strings.ToUpper(unit) {
+	case "M":
+		resp = c.client.DoCache(ctx, c.client.B().Geodist().Key(key).Member1(member1).Member2(member2).M().Cache(), c.ttl)
+	case "MI":
+		resp = c.client.DoCache(ctx, c.client.B().Geodist().Key(key).Member1(member1).Member2(member2).Mi().Cache(), c.ttl)
+	case "FT":
+		resp = c.client.DoCache(ctx, c.client.B().Geodist().Key(key).Member1(member1).Member2(member2).Ft().Cache(), c.ttl)
+	case "KM", "":
+		resp = c.client.DoCache(ctx, c.client.B().Geodist().Key(key).Member1(member1).Member2(member2).Km().Cache(), c.ttl)
+	default:
+		panic(fmt.Sprintf("invalid unit %s", unit))
+	}
+	return newFloatCmd(resp)
+}
+
+func (c CacheCompat) GeoHash(ctx context.Context, key string, members ...string) *StringSliceCmd {
+	cmd := c.client.B().Geohash().Key(key).Member(members...).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newStringSliceCmd(resp)
+}
+
+func (c CacheCompat) GeoPos(ctx context.Context, key string, members ...string) *GeoPosCmd {
+	cmd := c.client.B().Geopos().Key(key).Member(members...).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newGeoPosCmd(resp)
+}
+
+// GeoRadius is a read-only GEORADIUS_RO command.
+func (c CacheCompat) GeoRadius(ctx context.Context, key string, longitude, latitude float64, query GeoRadiusQuery) *GeoLocationCmd {
+	cmd := c.client.B().Arbitrary("GEORADIUS_RO").Keys(key).Args(strconv.FormatFloat(longitude, 'f', -1, 64), strconv.FormatFloat(latitude, 'f', -1, 64))
+	if query.Store != "" || query.StoreDist != "" {
+		panic("GeoRadius does not support Store or StoreDist")
+	}
+	cmd = cmd.Args(query.args()...)
+	resp := c.client.DoCache(ctx, cmds.Cacheable(cmd.Build()), c.ttl)
+	return newGeoLocationCmd(resp, query.WithDist, query.WithGeoHash, query.WithCoord)
+}
+
+// GeoRadiusByMember is a read-only GEORADIUSBYMEMBER_RO command.
+func (c CacheCompat) GeoRadiusByMember(ctx context.Context, key, member string, query GeoRadiusQuery) *GeoLocationCmd {
+	cmd := c.client.B().Arbitrary("GEORADIUSBYMEMBER_RO").Keys(key).Args(member)
+	if query.Store != "" || query.StoreDist != "" {
+		panic("GeoRadiusByMember does not support Store or StoreDist")
+	}
+	cmd = cmd.Args(query.args()...)
+	resp := c.client.DoCache(ctx, cmds.Cacheable(cmd.Build()), c.ttl)
+	return newGeoLocationCmd(resp, query.WithDist, query.WithGeoHash, query.WithCoord)
+}
+
+func (c CacheCompat) GeoSearch(ctx context.Context, key string, q GeoSearchQuery) *StringSliceCmd {
+	cmd := c.client.B().Arbitrary("GEOSEARCH").Keys(key)
+	cmd = cmd.Args(q.args()...)
+	resp := c.client.DoCache(ctx, cmds.Cacheable(cmd.Build()), c.ttl)
+	return newStringSliceCmd(resp)
+}
+
+func (c CacheCompat) Get(ctx context.Context, key string) *StringCmd {
+	cmd := c.client.B().Get().Key(key).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newStringCmd(resp)
+}
+
+func (c CacheCompat) GetBit(ctx context.Context, key string, offset int64) *IntCmd {
+	cmd := c.client.B().Getbit().Key(key).Offset(offset).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newIntCmd(resp)
+}
+
+func (c CacheCompat) GetRange(ctx context.Context, key string, start, end int64) *StringCmd {
+	cmd := c.client.B().Getrange().Key(key).Start(start).End(end).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newStringCmd(resp)
+}
+
+func (c CacheCompat) HExists(ctx context.Context, key, field string) *BoolCmd {
+	cmd := c.client.B().Hexists().Key(key).Field(field).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newBoolCmd(resp)
+}
+
+func (c CacheCompat) HGet(ctx context.Context, key, field string) *StringCmd {
+	cmd := c.client.B().Hget().Key(key).Field(field).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newStringCmd(resp)
+}
+
+func (c CacheCompat) HGetAll(ctx context.Context, key string) *StringStringMapCmd {
+	cmd := c.client.B().Hgetall().Key(key).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newStringStringMapCmd(resp)
+}
+
+func (c CacheCompat) HKeys(ctx context.Context, key string) *StringSliceCmd {
+	cmd := c.client.B().Hkeys().Key(key).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newStringSliceCmd(resp)
+}
+
+func (c CacheCompat) HLen(ctx context.Context, key string) *IntCmd {
+	cmd := c.client.B().Hlen().Key(key).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newIntCmd(resp)
+}
+
+func (c CacheCompat) HMGet(ctx context.Context, key string, fields ...string) *SliceCmd {
+	cmd := c.client.B().Hmget().Key(key).Field(fields...).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newSliceCmd(resp)
+}
+
+func (c CacheCompat) HVals(ctx context.Context, key string) *StringSliceCmd {
+	cmd := c.client.B().Hvals().Key(key).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newStringSliceCmd(resp)
+}
+
+func (c CacheCompat) LIndex(ctx context.Context, key string, index int64) *StringCmd {
+	cmd := c.client.B().Lindex().Key(key).Index(index).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newStringCmd(resp)
+}
+
+func (c CacheCompat) LLen(ctx context.Context, key string) *IntCmd {
+	cmd := c.client.B().Llen().Key(key).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newIntCmd(resp)
+}
+
+func (c CacheCompat) LPos(ctx context.Context, key string, element string, a LPosArgs) *IntCmd {
+	cmd := c.client.B().Arbitrary("LPOS").Keys(key).Args("ELEMENT", element)
+	if a.Rank != 0 {
+		cmd = cmd.Args("RANK", strconv.FormatInt(a.Rank, 10))
+	}
+	if a.MaxLen != 0 {
+		cmd = cmd.Args("MAXLEN", strconv.FormatInt(a.MaxLen, 10))
+	}
+	resp := c.client.DoCache(ctx, cmds.Cacheable(cmd.Build()), c.ttl)
+	return newIntCmd(resp)
+}
+
+func (c CacheCompat) LRange(ctx context.Context, key string, start, stop int64) *StringSliceCmd {
+	cmd := c.client.B().Lrange().Key(key).Start(start).Stop(stop).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newStringSliceCmd(resp)
+}
+
+func (c CacheCompat) PTTL(ctx context.Context, key string) *IntCmd {
+	cmd := c.client.B().Pttl().Key(key).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newIntCmd(resp)
+}
+
+func (c CacheCompat) SCard(ctx context.Context, key string) *IntCmd {
+	cmd := c.client.B().Scard().Key(key).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newIntCmd(resp)
+}
+
+func (c CacheCompat) SIsMember(ctx context.Context, key string, member string) *BoolCmd {
+	cmd := c.client.B().Sismember().Key(key).Member(member).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newBoolCmd(resp)
+}
+
+func (c CacheCompat) SMembers(ctx context.Context, key string) *StringSliceCmd {
+	cmd := c.client.B().Smembers().Key(key).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newStringSliceCmd(resp)
+}
+
+func (c CacheCompat) Sort(ctx context.Context, key string, sort Sort) *StringSliceCmd {
+	cmd := c.client.B().Arbitrary("SORT").Keys(key)
+	if sort.By != "" {
+		cmd = cmd.Args("BY", sort.By)
+	}
+	if sort.Offset != 0 || sort.Count != 0 {
+		cmd = cmd.Args("LIMIT", strconv.FormatInt(sort.Offset, 10), strconv.FormatInt(sort.Count, 10))
+	}
+	if len(sort.Get) > 0 {
+		cmd = cmd.Args("GET").Args(sort.Get...)
+	}
+	switch order := strings.ToUpper(sort.Order); order {
+	case "ASC", "DESC":
+		cmd = cmd.Args(order)
+	case "":
+	default:
+		panic(fmt.Sprintf("invalid sort order %s", sort.Order))
+	}
+	if sort.Alpha {
+		cmd = cmd.Args("ALPHA")
+	}
+	resp := c.client.DoCache(ctx, cmds.Cacheable(cmd.Build()), c.ttl)
+	return newStringSliceCmd(resp)
+}
+
+func (c CacheCompat) StrLen(ctx context.Context, key string) *IntCmd {
+	cmd := c.client.B().Strlen().Key(key).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newIntCmd(resp)
+}
+
+func (c CacheCompat) TTL(ctx context.Context, key string) *IntCmd {
+	cmd := c.client.B().Ttl().Key(key).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newIntCmd(resp)
+}
+
+func (c CacheCompat) Type(ctx context.Context, key string) *StatusCmd {
+	cmd := c.client.B().Type().Key(key).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newStatusCmd(resp)
+}
+
+func (c CacheCompat) ZCard(ctx context.Context, key string) *IntCmd {
+	cmd := c.client.B().Zcard().Key(key).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newIntCmd(resp)
+}
+
+func (c CacheCompat) ZCount(ctx context.Context, key string, min, max float64) *IntCmd {
+	cmd := c.client.B().Zcount().Key(key).Min(min).Max(max).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newIntCmd(resp)
+}
+
+func (c CacheCompat) ZLexCount(ctx context.Context, key, min, max string) *IntCmd {
+	cmd := c.client.B().Zlexcount().Key(key).Min(min).Max(max).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newIntCmd(resp)
+}
+
+func (c CacheCompat) ZMScore(ctx context.Context, key string, members ...string) *FloatSliceCmd {
+	cmd := c.client.B().Zmscore().Key(key).Member(members...).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newFloatSliceCmd(resp)
+}
+
+func (c CacheCompat) zRangeArgs(withScores bool, z ZRangeArgs) cmds.Cacheable {
+	cmd := c.client.B().Arbitrary("ZRANGE").Keys(z.Key)
+	if z.Rev && (z.ByScore || z.ByLex) {
+		cmd = cmd.Args(z.Stop, z.Start)
+	} else {
+		cmd = cmd.Args(z.Start, z.Stop)
+	}
+	if z.ByScore {
+		cmd = cmd.Args("BYSCORE")
+	} else if z.ByLex {
+		cmd = cmd.Args("BYLEX")
+	}
+	if z.Rev {
+		cmd = cmd.Args("REV")
+	}
+	if z.Offset != 0 || z.Count != 0 {
+		cmd = cmd.Args("LIMIT", strconv.FormatInt(z.Offset, 10), strconv.FormatInt(z.Count, 10))
+	}
+	if withScores {
+		cmd = cmd.Args("WITHSCORES")
+	}
+	return cmds.Cacheable(cmd.Build())
+}
+
+func (c CacheCompat) ZRangeWithScores(ctx context.Context, key string, start, stop string) *ZSliceCmd {
+	cmd := c.zRangeArgs(true, ZRangeArgs{
+		Key:   key,
+		Start: start,
+		Stop:  stop,
+	})
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newZSliceCmd(resp)
+}
+
+func (c CacheCompat) ZRangeByScore(ctx context.Context, key string, min, max float64, opt ZRangeBy) *StringSliceCmd {
+	var resp rueidis.RedisResult
+	if opt.Offset != 0 || opt.Count != 0 {
+		resp = c.client.DoCache(ctx, c.client.B().Zrangebyscore().Key(key).Min(min).Max(max).Limit(opt.Offset, opt.Count).Cache(), c.ttl)
+	} else {
+		resp = c.client.DoCache(ctx, c.client.B().Zrangebyscore().Key(key).Min(min).Max(max).Cache(), c.ttl)
+	}
+	return newStringSliceCmd(resp)
+}
+
+func (c CacheCompat) ZRangeByLex(ctx context.Context, key string, min, max string, opt ZRangeBy) *StringSliceCmd {
+	var resp rueidis.RedisResult
+	if opt.Offset != 0 || opt.Count != 0 {
+		resp = c.client.DoCache(ctx, c.client.B().Zrangebylex().Key(key).Min(min).Max(max).Limit(opt.Offset, opt.Count).Cache(), c.ttl)
+	} else {
+		resp = c.client.DoCache(ctx, c.client.B().Zrangebylex().Key(key).Min(min).Max(max).Cache(), c.ttl)
+	}
+	return newStringSliceCmd(resp)
+}
+
+func (c CacheCompat) ZRangeByScoreWithScores(ctx context.Context, key string, min, max float64, opt ZRangeBy) *ZSliceCmd {
+	var resp rueidis.RedisResult
+	if opt.Offset != 0 || opt.Count != 0 {
+		resp = c.client.DoCache(ctx, c.client.B().Zrangebyscore().Key(key).Min(min).Max(max).Withscores().Limit(opt.Offset, opt.Count).Cache(), c.ttl)
+	} else {
+		resp = c.client.DoCache(ctx, c.client.B().Zrangebyscore().Key(key).Min(min).Max(max).Withscores().Cache(), c.ttl)
+	}
+	return newZSliceCmd(resp)
+}
+
+func (c CacheCompat) ZRangeArgs(ctx context.Context, z ZRangeArgs) *StringSliceCmd {
+	cmd := c.zRangeArgs(false, z)
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newStringSliceCmd(resp)
+}
+
+func (c CacheCompat) ZRangeArgsWithScores(ctx context.Context, z ZRangeArgs) *ZSliceCmd {
+	cmd := c.zRangeArgs(true, z)
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newZSliceCmd(resp)
+}
+
+func (c CacheCompat) ZRank(ctx context.Context, key, member string) *IntCmd {
+	cmd := c.client.B().Zrank().Key(key).Member(member).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newIntCmd(resp)
+}
+
+func (c CacheCompat) ZRevRange(ctx context.Context, key string, start, stop int64) *StringSliceCmd {
+	cmd := c.client.B().Zrevrange().Key(key).Start(start).Stop(stop).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newStringSliceCmd(resp)
+}
+
+func (c CacheCompat) ZRevRangeWithScores(ctx context.Context, key string, start, stop int64) *ZSliceCmd {
+	cmd := c.client.B().Zrevrange().Key(key).Start(start).Stop(stop).Withscores().Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newZSliceCmd(resp)
+}
+
+func (c CacheCompat) ZRevRangeByScore(ctx context.Context, key string, min, max float64, opt ZRangeBy) *StringSliceCmd {
+	var resp rueidis.RedisResult
+	if opt.Offset != 0 || opt.Count != 0 {
+		resp = c.client.DoCache(ctx, c.client.B().Zrevrangebyscore().Key(key).Max(max).Min(min).Limit(opt.Offset, opt.Count).Cache(), c.ttl)
+	} else {
+		resp = c.client.DoCache(ctx, c.client.B().Zrevrangebyscore().Key(key).Max(max).Min(min).Cache(), c.ttl)
+	}
+	return newStringSliceCmd(resp)
+}
+
+func (c CacheCompat) ZRevRangeByLex(ctx context.Context, key string, min, max string, opt ZRangeBy) *StringSliceCmd {
+	var resp rueidis.RedisResult
+	if opt.Offset != 0 || opt.Count != 0 {
+		resp = c.client.DoCache(ctx, c.client.B().Zrevrangebylex().Key(key).Max(max).Min(min).Limit(opt.Offset, opt.Count).Cache(), c.ttl)
+	} else {
+		resp = c.client.DoCache(ctx, c.client.B().Zrevrangebylex().Key(key).Max(max).Min(min).Cache(), c.ttl)
+	}
+	return newStringSliceCmd(resp)
+}
+
+func (c CacheCompat) ZRevRangeByScoreWithScores(ctx context.Context, key string, min, max float64, opt ZRangeBy) *ZSliceCmd {
+	var resp rueidis.RedisResult
+	if opt.Offset != 0 || opt.Count != 0 {
+		resp = c.client.DoCache(ctx, c.client.B().Zrevrangebyscore().Key(key).Max(max).Min(min).Withscores().Limit(opt.Offset, opt.Count).Cache(), c.ttl)
+	} else {
+		resp = c.client.DoCache(ctx, c.client.B().Zrevrangebyscore().Key(key).Max(max).Min(min).Withscores().Cache(), c.ttl)
+	}
+	return newZSliceCmd(resp)
+}
+
+func (c CacheCompat) ZRevRank(ctx context.Context, key, member string) *IntCmd {
+	cmd := c.client.B().Zrevrank().Key(key).Member(member).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newIntCmd(resp)
+}
+func (c CacheCompat) ZScore(ctx context.Context, key, member string) *FloatCmd {
+	cmd := c.client.B().Zscore().Key(key).Member(member).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newFloatCmd(resp)
 }
