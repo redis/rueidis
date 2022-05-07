@@ -28,6 +28,10 @@ func (cmd *StringCmd) Val() string {
 	return cmd.val
 }
 
+func (cmd *StringCmd) Err() error {
+	return cmd.err
+}
+
 func (cmd *StringCmd) Result() (string, error) {
 	return cmd.val, cmd.err
 }
@@ -102,6 +106,10 @@ func (cmd *BoolCmd) Val() bool {
 	return cmd.val
 }
 
+func (cmd *BoolCmd) Err() error {
+	return cmd.err
+}
+
 func (cmd *BoolCmd) Result() (bool, error) {
 	return cmd.val, cmd.err
 }
@@ -127,6 +135,10 @@ func (cmd *IntCmd) SetVal(val int64) {
 
 func (cmd *IntCmd) Val() int64 {
 	return cmd.val
+}
+
+func (cmd *IntCmd) Err() error {
+	return cmd.err
 }
 
 func (cmd *IntCmd) Result() (int64, error) {
@@ -160,6 +172,10 @@ func (cmd *StatusCmd) Val() string {
 	return cmd.val
 }
 
+func (cmd *StatusCmd) Err() error {
+	return cmd.err
+}
+
 func (cmd *StatusCmd) Result() (string, error) {
 	return cmd.val, cmd.err
 }
@@ -170,24 +186,34 @@ func (cmd *StatusCmd) String() (string, error) {
 
 type SliceCmd struct {
 	res rueidis.RedisResult
-	val []rueidis.RedisMessage
+	val []interface{}
 	err error
 }
 
 func newSliceCmd(res rueidis.RedisResult) *SliceCmd {
 	val, err := res.ToArray()
-	return &SliceCmd{res: res, val: val, err: err}
+	slice := &SliceCmd{res: res, val: make([]interface{}, len(val)), err: err}
+	for i, v := range val {
+		if s, err := v.ToString(); err == nil {
+			slice.val[i] = s
+		}
+	}
+	return slice
 }
 
-func (cmd *SliceCmd) SetVal(val []rueidis.RedisMessage) {
+func (cmd *SliceCmd) SetVal(val []interface{}) {
 	cmd.val = val
 }
 
-func (cmd *SliceCmd) Val() []rueidis.RedisMessage {
+func (cmd *SliceCmd) Val() []interface{} {
 	return cmd.val
 }
 
-func (cmd *SliceCmd) Result() ([]rueidis.RedisMessage, error) {
+func (cmd *SliceCmd) Err() error {
+	return cmd.err
+}
+
+func (cmd *SliceCmd) Result() ([]interface{}, error) {
 	return cmd.val, cmd.err
 }
 
@@ -212,6 +238,10 @@ func (cmd *StringSliceCmd) SetVal(val []string) {
 
 func (cmd *StringSliceCmd) Val() []string {
 	return cmd.val
+}
+
+func (cmd *StringSliceCmd) Err() error {
+	return cmd.err
 }
 
 func (cmd *StringSliceCmd) Result() ([]string, error) {
@@ -239,6 +269,10 @@ func (cmd *IntSliceCmd) SetVal(val []int64) {
 
 func (cmd *IntSliceCmd) Val() []int64 {
 	return cmd.val
+}
+
+func (cmd *IntSliceCmd) Err() error {
+	return cmd.err
 }
 
 func (cmd *IntSliceCmd) Result() ([]int64, error) {
@@ -275,6 +309,10 @@ func (cmd *BoolSliceCmd) Val() []bool {
 	return cmd.val
 }
 
+func (cmd *BoolSliceCmd) Err() error {
+	return cmd.err
+}
+
 func (cmd *BoolSliceCmd) Result() ([]bool, error) {
 	return cmd.val, cmd.err
 }
@@ -300,6 +338,10 @@ func (cmd *FloatSliceCmd) SetVal(val []float64) {
 
 func (cmd *FloatSliceCmd) Val() []float64 {
 	return cmd.val
+}
+
+func (cmd *FloatSliceCmd) Err() error {
+	return cmd.err
 }
 
 func (cmd *FloatSliceCmd) Result() ([]float64, error) {
@@ -347,6 +389,10 @@ func (cmd *ZSliceCmd) Val() []Z {
 	return cmd.val
 }
 
+func (cmd *ZSliceCmd) Err() error {
+	return cmd.err
+}
+
 func (cmd *ZSliceCmd) Result() ([]Z, error) {
 	return cmd.val, cmd.err
 }
@@ -372,6 +418,10 @@ func (cmd *FloatCmd) SetVal(val float64) {
 
 func (cmd *FloatCmd) Val() float64 {
 	return cmd.val
+}
+
+func (cmd *FloatCmd) Err() error {
+	return cmd.err
 }
 
 func (cmd *FloatCmd) Result() (float64, error) {
@@ -411,6 +461,10 @@ func (cmd *ScanCmd) Val() (keys []string, cursor uint64) {
 	return cmd.keys, cmd.cursor
 }
 
+func (cmd *ScanCmd) Err() error {
+	return cmd.err
+}
+
 func (cmd *ScanCmd) Result() (keys []string, cursor uint64, err error) {
 	return cmd.keys, cmd.cursor, cmd.err
 }
@@ -438,6 +492,10 @@ func (cmd *StringStringMapCmd) Val() map[string]string {
 	return cmd.val
 }
 
+func (cmd *StringStringMapCmd) Err() error {
+	return cmd.err
+}
+
 func (cmd *StringStringMapCmd) Result() (map[string]string, error) {
 	return cmd.val, cmd.err
 }
@@ -463,6 +521,10 @@ func (cmd *StringIntMapCmd) SetVal(val map[string]int64) {
 
 func (cmd *StringIntMapCmd) Val() map[string]int64 {
 	return cmd.val
+}
+
+func (cmd *StringIntMapCmd) Err() error {
+	return cmd.err
 }
 
 func (cmd *StringIntMapCmd) Result() (map[string]int64, error) {
@@ -499,6 +561,10 @@ func (cmd *StringStructMapCmd) Val() map[string]struct{} {
 	return cmd.val
 }
 
+func (cmd *StringStructMapCmd) Err() error {
+	return cmd.err
+}
+
 func (cmd *StringStructMapCmd) Result() (map[string]struct{}, error) {
 	return cmd.val, cmd.err
 }
@@ -509,24 +575,40 @@ func (cmd *StringStructMapCmd) String() (string, error) {
 
 type XMessageSliceCmd struct {
 	res rueidis.RedisResult
-	val []rueidis.XRange
+	val []XMessage
 	err error
 }
 
 func newXMessageSliceCmd(res rueidis.RedisResult) *XMessageSliceCmd {
 	val, err := res.AsXRangeSlice()
-	return &XMessageSliceCmd{res: res, val: val, err: err}
+	slice := &XMessageSliceCmd{res: res, val: make([]XMessage, len(val)), err: err}
+	for i, r := range val {
+		slice.val[i] = newXMessage(r)
+	}
+	return slice
 }
 
-func (cmd *XMessageSliceCmd) SetVal(val []rueidis.XRange) {
+func newXMessage(r rueidis.XRange) XMessage {
+	m := XMessage{ID: r.ID, Values: make(map[string]interface{}, len(r.FieldValues))}
+	for k, v := range r.FieldValues {
+		m.Values[k] = v
+	}
+	return m
+}
+
+func (cmd *XMessageSliceCmd) SetVal(val []XMessage) {
 	cmd.val = val
 }
 
-func (cmd *XMessageSliceCmd) Val() []rueidis.XRange {
+func (cmd *XMessageSliceCmd) Val() []XMessage {
 	return cmd.val
 }
 
-func (cmd *XMessageSliceCmd) Result() ([]rueidis.XRange, error) {
+func (cmd *XMessageSliceCmd) Err() error {
+	return cmd.err
+}
+
+func (cmd *XMessageSliceCmd) Result() ([]XMessage, error) {
 	return cmd.val, cmd.err
 }
 
@@ -536,7 +618,7 @@ func (cmd *XMessageSliceCmd) String() (string, error) {
 
 type XStream struct {
 	Stream   string
-	Messages []rueidis.XRange
+	Messages []XMessage
 }
 
 type XStreamSliceCmd struct {
@@ -563,9 +645,13 @@ func newXStreamSliceCmd(res rueidis.RedisResult) *XStreamSliceCmd {
 		if err != nil {
 			return &XStreamSliceCmd{res: res, err: err}
 		}
-		msgs, err := arr[1].AsXRangeSlice()
+		ranges, err := arr[1].AsXRangeSlice()
 		if err != nil {
 			return &XStreamSliceCmd{res: res, err: err}
+		}
+		msgs := make([]XMessage, 0, len(ranges))
+		for _, r := range ranges {
+			msgs = append(msgs, newXMessage(r))
 		}
 		val = append(val, XStream{Stream: stream, Messages: msgs})
 	}
@@ -578,6 +664,10 @@ func (cmd *XStreamSliceCmd) SetVal(val []XStream) {
 
 func (cmd *XStreamSliceCmd) Val() []XStream {
 	return cmd.val
+}
+
+func (cmd *XStreamSliceCmd) Err() error {
+	return cmd.err
 }
 
 func (cmd *XStreamSliceCmd) Result() ([]XStream, error) {
@@ -662,6 +752,10 @@ func (cmd *XPendingCmd) Val() XPending {
 	return cmd.val
 }
 
+func (cmd *XPendingCmd) Err() error {
+	return cmd.err
+}
+
 func (cmd *XPendingCmd) Result() (XPending, error) {
 	return cmd.val, cmd.err
 }
@@ -731,6 +825,10 @@ func (cmd *XPendingExtCmd) Val() []XPendingExt {
 	return cmd.val
 }
 
+func (cmd *XPendingExtCmd) Err() error {
+	return cmd.err
+}
+
 func (cmd *XPendingExtCmd) Result() ([]XPendingExt, error) {
 	return cmd.val, cmd.err
 }
@@ -774,6 +872,10 @@ func (cmd *XAutoClaimCmd) Val() (messages []rueidis.XRange, start string) {
 	return cmd.val, cmd.start
 }
 
+func (cmd *XAutoClaimCmd) Err() error {
+	return cmd.err
+}
+
 func (cmd *XAutoClaimCmd) Result() (messages []rueidis.XRange, start string, err error) {
 	return cmd.val, cmd.start, cmd.err
 }
@@ -815,6 +917,10 @@ func (cmd *XAutoClaimJustIDCmd) SetVal(val []string, start string) {
 
 func (cmd *XAutoClaimJustIDCmd) Val() (ids []string, start string) {
 	return cmd.val, cmd.start
+}
+
+func (cmd *XAutoClaimJustIDCmd) Err() error {
+	return cmd.err
 }
 
 func (cmd *XAutoClaimJustIDCmd) Result() (ids []string, start string, err error) {
@@ -895,6 +1001,10 @@ func (cmd *XInfoGroupsCmd) Val() []XInfoGroup {
 	return cmd.val
 }
 
+func (cmd *XInfoGroupsCmd) Err() error {
+	return cmd.err
+}
+
 func (cmd *XInfoGroupsCmd) Result() ([]XInfoGroup, error) {
 	return cmd.val, cmd.err
 }
@@ -909,8 +1019,8 @@ type XInfoStream struct {
 	RadixTreeNodes  int64
 	Groups          int64
 	LastGeneratedID string
-	FirstEntry      rueidis.XRange
-	LastEntry       rueidis.XRange
+	FirstEntry      XMessage
+	LastEntry       XMessage
 }
 type XInfoStreamCmd struct {
 	res rueidis.RedisResult
@@ -944,15 +1054,17 @@ func newXInfoStreamCmd(res rueidis.RedisResult) *XInfoStreamCmd {
 		case "last-generated-id":
 			val.LastGeneratedID, err = arr[j].ToString()
 		case "first-entry":
-			val.FirstEntry, err = arr[j].AsXRange()
+			r, err := arr[j].AsXRange()
 			if rueidis.IsRedisNil(err) {
 				err = nil
 			}
+			val.FirstEntry = newXMessage(r)
 		case "last-entry":
-			val.LastEntry, err = arr[j].AsXRange()
+			r, err := arr[j].AsXRange()
 			if rueidis.IsRedisNil(err) {
 				err = nil
 			}
+			val.LastEntry = newXMessage(r)
 		default:
 			err = fmt.Errorf("unexpected content %s", key)
 		}
@@ -969,6 +1081,10 @@ func (cmd *XInfoStreamCmd) SetVal(val XInfoStream) {
 
 func (cmd *XInfoStreamCmd) Val() XInfoStream {
 	return cmd.val
+}
+
+func (cmd *XInfoStreamCmd) Err() error {
+	return cmd.err
 }
 
 func (cmd *XInfoStreamCmd) Result() (XInfoStream, error) {
@@ -1012,7 +1128,7 @@ type XInfoStreamFull struct {
 	RadixTreeKeys   int64
 	RadixTreeNodes  int64
 	LastGeneratedID string
-	Entries         []rueidis.XRange
+	Entries         []XMessage
 	Groups          []XInfoStreamGroup
 }
 
@@ -1046,7 +1162,14 @@ func newXInfoStreamFullCmd(res rueidis.RedisResult) *XInfoStreamFullCmd {
 		case "last-generated-id":
 			val.LastGeneratedID, err = arr[j].ToString()
 		case "entries":
-			val.Entries, err = arr[j].AsXRangeSlice()
+			ranges, err := arr[j].AsXRangeSlice()
+			if err != nil {
+				return &XInfoStreamFullCmd{res: res, err: err}
+			}
+			val.Entries = make([]XMessage, 0, len(ranges))
+			for _, r := range ranges {
+				val.Entries = append(val.Entries, newXMessage(r))
+			}
 		case "groups":
 			val.Groups, err = readStreamGroups(arr[j])
 		default:
@@ -1066,6 +1189,10 @@ func (cmd *XInfoStreamFullCmd) SetVal(val XInfoStreamFull) {
 
 func (cmd *XInfoStreamFullCmd) Val() XInfoStreamFull {
 	return cmd.val
+}
+
+func (cmd *XInfoStreamFullCmd) Err() error {
+	return cmd.err
 }
 
 func (cmd *XInfoStreamFullCmd) Result() (XInfoStreamFull, error) {
@@ -1294,6 +1421,10 @@ func (cmd *XInfoConsumersCmd) Val() []XInfoConsumer {
 	return cmd.val
 }
 
+func (cmd *XInfoConsumersCmd) Err() error {
+	return cmd.err
+}
+
 func (cmd *XInfoConsumersCmd) Result() ([]XInfoConsumer, error) {
 	return cmd.val, cmd.err
 }
@@ -1305,7 +1436,7 @@ func (cmd *XInfoConsumersCmd) String() (string, error) {
 // Z represents sorted set member.
 type Z struct {
 	Score  float64
-	Member string
+	Member interface{}
 }
 
 // ZWithKey represents sorted set member including the name of the key where it was popped.
@@ -1360,6 +1491,10 @@ func (cmd *ZWithKeyCmd) Val() ZWithKey {
 	return cmd.val
 }
 
+func (cmd *ZWithKeyCmd) Err() error {
+	return cmd.err
+}
+
 func (cmd *ZWithKeyCmd) Result() (ZWithKey, error) {
 	return cmd.val, cmd.err
 }
@@ -1399,6 +1534,10 @@ func (cmd *TimeCmd) SetVal(val time.Time) {
 
 func (cmd *TimeCmd) Val() time.Time {
 	return cmd.val
+}
+
+func (cmd *TimeCmd) Err() error {
+	return cmd.err
 }
 
 func (cmd *TimeCmd) Result() (time.Time, error) {
@@ -1491,6 +1630,10 @@ func (cmd *ClusterSlotsCmd) Val() []ClusterSlot {
 	return cmd.val
 }
 
+func (cmd *ClusterSlotsCmd) Err() error {
+	return cmd.err
+}
+
 func (cmd *ClusterSlotsCmd) Result() ([]ClusterSlot, error) {
 	return cmd.val, cmd.err
 }
@@ -1549,6 +1692,10 @@ func (cmd *GeoPosCmd) SetVal(val []*GeoPos) {
 
 func (cmd *GeoPosCmd) Val() []*GeoPos {
 	return cmd.val
+}
+
+func (cmd *GeoPosCmd) Err() error {
+	return cmd.err
 }
 
 func (cmd *GeoPosCmd) Result() ([]*GeoPos, error) {
@@ -1625,6 +1772,10 @@ func (cmd *GeoLocationCmd) SetVal(val []GeoLocation) {
 
 func (cmd *GeoLocationCmd) Val() []GeoLocation {
 	return cmd.val
+}
+
+func (cmd *GeoLocationCmd) Err() error {
+	return cmd.err
 }
 
 func (cmd *GeoLocationCmd) Result() ([]GeoLocation, error) {
@@ -1732,6 +1883,10 @@ func (cmd *CommandsInfoCmd) Val() map[string]CommandInfo {
 	return cmd.val
 }
 
+func (cmd *CommandsInfoCmd) Err() error {
+	return cmd.err
+}
+
 func (cmd *CommandsInfoCmd) Result() (map[string]CommandInfo, error) {
 	return cmd.val, cmd.err
 }
@@ -1769,10 +1924,10 @@ type BitCount struct {
 	Start, End int64
 }
 
-type BitPos struct {
-	BitCount
-	Byte bool
-}
+//type BitPos struct {
+//	BitCount
+//	Byte bool
+//}
 
 type BitFieldArg struct {
 	Encoding string
@@ -1791,8 +1946,7 @@ type LPosArgs struct {
 	Rank, MaxLen int64
 }
 
-// Note: len(Fields) and len(Values) must be the same.
-// MaxLen/MaxLenApprox and MinID are in conflict, only one of them can be used.
+// Note: MaxLen/MaxLenApprox and MinID are in conflict, only one of them can be used.
 type XAddArgs struct {
 	Stream     string
 	NoMkStream bool
@@ -1803,24 +1957,19 @@ type XAddArgs struct {
 	Approx bool
 	Limit  int64
 	ID     string
-	Fields []string
-	Values []string
+	Values interface{}
 }
 
-// Note: len(Streams) and len(IDs) must be the same.
 type XReadArgs struct {
 	Streams []string // list of streams
-	IDs     []string // list of ids
 	Count   int64
 	Block   time.Duration
 }
 
-// Note: len(Streams) and len(IDs) must be the same.
 type XReadGroupArgs struct {
 	Group    string
 	Consumer string
 	Streams  []string // list of streams
-	IDs      []string // list of ids
 	Count    int64
 	Block    time.Duration
 	NoAck    bool
@@ -1853,6 +2002,11 @@ type XAutoClaimArgs struct {
 	Consumer string
 }
 
+type XMessage struct {
+	ID     string
+	Values map[string]interface{}
+}
+
 // Note: The GT, LT and NX options are mutually exclusive.
 type ZAddArgs struct {
 	NX      bool
@@ -1877,8 +2031,8 @@ type ZAddArgs struct {
 type ZRangeArgs struct {
 	Key string
 
-	Start string
-	Stop  string
+	Start interface{}
+	Stop  interface{}
 
 	// The ByScore and ByLex options are mutually exclusive.
 	ByScore bool
@@ -1892,6 +2046,7 @@ type ZRangeArgs struct {
 }
 
 type ZRangeBy struct {
+	Min, Max      string
 	Offset, Count int64
 }
 
