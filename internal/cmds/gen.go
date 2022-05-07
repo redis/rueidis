@@ -28330,8 +28330,8 @@ func (c Zcount) Key(key string) ZcountKey {
 
 type ZcountKey Completed
 
-func (c ZcountKey) Min(min float64) ZcountMin {
-	c.cs.s = append(c.cs.s, strconv.FormatFloat(min, 'f', -1, 64))
+func (c ZcountKey) Min(min string) ZcountMin {
+	c.cs.s = append(c.cs.s, min)
 	return (ZcountMin)(c)
 }
 
@@ -28347,8 +28347,8 @@ func (c ZcountMax) Cache() Cacheable {
 
 type ZcountMin Completed
 
-func (c ZcountMin) Max(max float64) ZcountMax {
-	c.cs.s = append(c.cs.s, strconv.FormatFloat(max, 'f', -1, 64))
+func (c ZcountMin) Max(max string) ZcountMax {
+	c.cs.s = append(c.cs.s, max)
 	return (ZcountMax)(c)
 }
 
@@ -29302,8 +29302,8 @@ func (c Zrangebyscore) Key(key string) ZrangebyscoreKey {
 
 type ZrangebyscoreKey Completed
 
-func (c ZrangebyscoreKey) Min(min float64) ZrangebyscoreMin {
-	c.cs.s = append(c.cs.s, strconv.FormatFloat(min, 'f', -1, 64))
+func (c ZrangebyscoreKey) Min(min string) ZrangebyscoreMin {
+	c.cs.s = append(c.cs.s, min)
 	return (ZrangebyscoreMin)(c)
 }
 
@@ -29339,8 +29339,8 @@ func (c ZrangebyscoreMax) Cache() Cacheable {
 
 type ZrangebyscoreMin Completed
 
-func (c ZrangebyscoreMin) Max(max float64) ZrangebyscoreMax {
-	c.cs.s = append(c.cs.s, strconv.FormatFloat(max, 'f', -1, 64))
+func (c ZrangebyscoreMin) Max(max string) ZrangebyscoreMax {
+	c.cs.s = append(c.cs.s, max)
 	return (ZrangebyscoreMax)(c)
 }
 
@@ -29631,8 +29631,8 @@ func (c Zremrangebyscore) Key(key string) ZremrangebyscoreKey {
 
 type ZremrangebyscoreKey Completed
 
-func (c ZremrangebyscoreKey) Min(min float64) ZremrangebyscoreMin {
-	c.cs.s = append(c.cs.s, strconv.FormatFloat(min, 'f', -1, 64))
+func (c ZremrangebyscoreKey) Min(min string) ZremrangebyscoreMin {
+	c.cs.s = append(c.cs.s, min)
 	return (ZremrangebyscoreMin)(c)
 }
 
@@ -29644,8 +29644,8 @@ func (c ZremrangebyscoreMax) Build() Completed {
 
 type ZremrangebyscoreMin Completed
 
-func (c ZremrangebyscoreMin) Max(max float64) ZremrangebyscoreMax {
-	c.cs.s = append(c.cs.s, strconv.FormatFloat(max, 'f', -1, 64))
+func (c ZremrangebyscoreMin) Max(max string) ZremrangebyscoreMax {
+	c.cs.s = append(c.cs.s, max)
 	return (ZremrangebyscoreMax)(c)
 }
 
@@ -29777,8 +29777,8 @@ func (c Zrevrangebyscore) Key(key string) ZrevrangebyscoreKey {
 
 type ZrevrangebyscoreKey Completed
 
-func (c ZrevrangebyscoreKey) Max(max float64) ZrevrangebyscoreMax {
-	c.cs.s = append(c.cs.s, strconv.FormatFloat(max, 'f', -1, 64))
+func (c ZrevrangebyscoreKey) Max(max string) ZrevrangebyscoreMax {
+	c.cs.s = append(c.cs.s, max)
 	return (ZrevrangebyscoreMax)(c)
 }
 
@@ -29794,8 +29794,8 @@ func (c ZrevrangebyscoreLimit) Cache() Cacheable {
 
 type ZrevrangebyscoreMax Completed
 
-func (c ZrevrangebyscoreMax) Min(min float64) ZrevrangebyscoreMin {
-	c.cs.s = append(c.cs.s, strconv.FormatFloat(min, 'f', -1, 64))
+func (c ZrevrangebyscoreMax) Min(min string) ZrevrangebyscoreMin {
+	c.cs.s = append(c.cs.s, min)
 	return (ZrevrangebyscoreMin)(c)
 }
 
