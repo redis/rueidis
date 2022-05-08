@@ -257,6 +257,14 @@ func (r RedisResult) ToMap() (map[string]RedisMessage, error) {
 	return r.val.ToMap()
 }
 
+// ToAny delegates to RedisMessage.ToAny
+func (r RedisResult) ToAny() (interface{}, error) {
+	if err := r.Error(); err != nil {
+		return nil, err
+	}
+	return r.val.ToAny()
+}
+
 // IsCacheHit delegates to RedisMessage.IsCacheHit
 func (r RedisResult) IsCacheHit() bool {
 	return r.val.IsCacheHit()
@@ -572,6 +580,37 @@ func (m *RedisMessage) ToMap() (map[string]RedisMessage, error) {
 	}
 	typ := m.typ
 	panic(fmt.Sprintf("redis message type %c is not a map", typ))
+}
+
+// ToAny turns message into go interface{} value
+func (m *RedisMessage) ToAny() (interface{}, error) {
+	if err := m.Error(); err != nil {
+		return nil, err
+	}
+	switch m.typ {
+	case ',':
+		return strconv.ParseFloat(m.string, 64)
+	case '$', '+', '=', '(':
+		return m.string, nil
+	case '#':
+		return m.integer == 1, nil
+	case ':':
+		return m.integer, nil
+	case '%':
+		vs := make(map[string]interface{}, len(m.values)/2)
+		for i := 0; i < len(m.values); i += 2 {
+			vs[m.values[i].string], _ = m.values[i+1].ToAny()
+		}
+		return vs, nil
+	case '~', '*':
+		vs := make([]interface{}, len(m.values))
+		for i := 0; i < len(m.values); i++ {
+			vs[i], _ = m.values[i].ToAny()
+		}
+		return vs, nil
+	}
+	typ := m.typ
+	panic(fmt.Sprintf("redis message type %c is not a supported in ToAny", typ))
 }
 
 // IsCacheHit check if message is from client side cache
