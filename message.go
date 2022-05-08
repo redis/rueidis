@@ -325,6 +325,9 @@ func (m *RedisMessage) DecodeJSON(v interface{}) (err error) {
 
 // AsInt64 check if message is a redis string response, and parse it as int64
 func (m *RedisMessage) AsInt64() (val int64, err error) {
+	if m.typ == ':' {
+		return m.integer, nil
+	}
 	v, err := m.ToString()
 	if err != nil {
 		return 0, err
@@ -355,6 +358,9 @@ func (m *RedisMessage) AsBool() (val bool, err error) {
 
 // AsFloat64 check if message is a redis string response, and parse it as float64
 func (m *RedisMessage) AsFloat64() (val float64, err error) {
+	if m.typ == ',' {
+		return strconv.ParseFloat(m.string, 64)
+	}
 	v, err := m.ToString()
 	if err != nil {
 		return 0, err
@@ -411,7 +417,7 @@ func (m *RedisMessage) ToArray() ([]RedisMessage, error) {
 }
 
 // AsStrSlice check if message is a redis array/set response, and convert to []string.
-// Non string value will be ignored, including nil value.
+// redis nil element and other non string element will be present as zero.
 func (m *RedisMessage) AsStrSlice() ([]string, error) {
 	values, err := m.ToArray()
 	if err != nil {
@@ -419,15 +425,13 @@ func (m *RedisMessage) AsStrSlice() ([]string, error) {
 	}
 	s := make([]string, 0, len(values))
 	for _, v := range values {
-		if v.typ == '$' || v.typ == '+' || len(v.string) != 0 {
-			s = append(s, v.string)
-		}
+		s = append(s, v.string)
 	}
 	return s, nil
 }
 
 // AsIntSlice check if message is a redis array/set response, and convert to []int64.
-// Non int value will be ignored, including nil value.
+// redis nil element and other non integer element will be present as zero.
 func (m *RedisMessage) AsIntSlice() ([]int64, error) {
 	values, err := m.ToArray()
 	if err != nil {
@@ -435,15 +439,13 @@ func (m *RedisMessage) AsIntSlice() ([]int64, error) {
 	}
 	s := make([]int64, 0, len(values))
 	for _, v := range values {
-		if v.typ == ':' {
-			s = append(s, v.integer)
-		}
+		s = append(s, v.integer)
 	}
 	return s, nil
 }
 
 // AsFloatSlice check if message is a redis array/set response, and convert to []float64.
-// Non float, int or string value will be ignored, including nil value.
+// redis nil element and other non float element will be present as zero.
 func (m *RedisMessage) AsFloatSlice() ([]float64, error) {
 	values, err := m.ToArray()
 	if err != nil {
@@ -451,15 +453,14 @@ func (m *RedisMessage) AsFloatSlice() ([]float64, error) {
 	}
 	s := make([]float64, 0, len(values))
 	for _, v := range values {
-		switch v.typ {
-		case ':':
-			s = append(s, float64(v.integer))
-		case ',', '$', '+':
+		if len(v.string) != 0 {
 			i, err := strconv.ParseFloat(v.string, 64)
 			if err != nil {
 				return nil, err
 			}
 			s = append(s, i)
+		} else {
+			s = append(s, float64(v.integer))
 		}
 	}
 	return s, nil
@@ -522,7 +523,7 @@ func (m *RedisMessage) AsMap() (map[string]RedisMessage, error) {
 }
 
 // AsStrMap check if message is a redis map/array/set response, and convert to map[string]string.
-// Non string value will be ignored, including nil value.
+// redis nil element and other non string element will be present as zero.
 func (m *RedisMessage) AsStrMap() (map[string]string, error) {
 	if err := m.Error(); err != nil {
 		return nil, err
@@ -532,9 +533,7 @@ func (m *RedisMessage) AsStrMap() (map[string]string, error) {
 		for i := 0; i < len(m.values); i += 2 {
 			k := m.values[i]
 			v := m.values[i+1]
-			if (k.typ == '$' || k.typ == '+') && (v.typ == '$' || v.typ == '+' || len(v.string) != 0) {
-				r[k.string] = v.string
-			}
+			r[k.string] = v.string
 		}
 		return r, nil
 	}
@@ -543,7 +542,7 @@ func (m *RedisMessage) AsStrMap() (map[string]string, error) {
 }
 
 // AsIntMap check if message is a redis map/array/set response, and convert to map[string]int64.
-// Non int or string value will be ignored, including nil value.
+// redis nil element and other non integer element will be present as zero.
 func (m *RedisMessage) AsIntMap() (map[string]int64, error) {
 	if err := m.Error(); err != nil {
 		return nil, err
@@ -555,11 +554,11 @@ func (m *RedisMessage) AsIntMap() (map[string]int64, error) {
 			k := m.values[i]
 			v := m.values[i+1]
 			if k.typ == '$' || k.typ == '+' {
-				if v.typ == '$' || v.typ == '+' || len(v.string) != 0 {
+				if len(v.string) != 0 {
 					if r[k.string], err = strconv.ParseInt(v.string, 0, 64); err != nil {
 						return nil, err
 					}
-				} else if v.typ == ':' {
+				} else if v.typ == ':' || v.typ == '_' {
 					r[k.string] = v.integer
 				}
 			}
