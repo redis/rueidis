@@ -263,6 +263,32 @@ func TestRedisResult(t *testing.T) {
 		}
 	})
 
+	t.Run("ToAny", func(t *testing.T) {
+		if _, err := (RedisResult{err: errors.New("other")}).ToAny(); err == nil {
+			t.Fatal("ToAny not failed as expected")
+		}
+		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).ToAny(); err == nil {
+			t.Fatal("ToAny not failed as expected")
+		}
+		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+			{typ: '%', values: []RedisMessage{{typ: '+', string: "key"}, {typ: ':', integer: 1}}},
+			{typ: '%', values: []RedisMessage{{typ: '+', string: "nil"}, {typ: '_'}}},
+			{typ: ',', string: "1.2"},
+			{typ: '+', string: "str"},
+			{typ: '#', integer: 0},
+			{typ: '_'},
+		}}}).ToAny(); !reflect.DeepEqual([]interface{}{
+			map[string]interface{}{"key": int64(1)},
+			map[string]interface{}{"nil": nil},
+			1.2,
+			"str",
+			false,
+			nil,
+		}, ret) {
+			t.Fatal("ToAny not get value as expected")
+		}
+	})
+
 	t.Run("AsXRange", func(t *testing.T) {
 		if _, err := (RedisResult{err: errors.New("other")}).AsXRange(); err == nil {
 			t.Fatal("AsXRange not failed as expected")
@@ -525,10 +551,23 @@ func TestRedisMessage(t *testing.T) {
 
 		defer func() {
 			if !strings.Contains(recover().(string), "redis message type t is not a map") {
-				t.Fatal("ToString not panic as expected")
+				t.Fatal("ToMap not panic as expected")
 			}
 		}()
 		(&RedisMessage{typ: 't'}).ToMap()
+	})
+
+	t.Run("ToAny", func(t *testing.T) {
+		if _, err := (&RedisMessage{typ: '_'}).ToAny(); err == nil {
+			t.Fatal("ToAny not failed as expected")
+		}
+
+		defer func() {
+			if !strings.Contains(recover().(string), "redis message type t is not a supported in ToAny") {
+				t.Fatal("ToAny not panic as expected")
+			}
+		}()
+		(&RedisMessage{typ: 't'}).ToAny()
 	})
 
 	t.Run("AsXRange - no range id", func(t *testing.T) {
