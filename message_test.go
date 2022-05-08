@@ -130,6 +130,9 @@ func TestRedisResult(t *testing.T) {
 		if v, _ := (RedisResult{val: RedisMessage{typ: '+', string: "1"}}).AsInt64(); v != 1 {
 			t.Fatal("AsInt64 not get value as expected")
 		}
+		if v, _ := (RedisResult{val: RedisMessage{typ: ':', integer: 2}}).AsInt64(); v != 2 {
+			t.Fatal("AsInt64 not get value as expected")
+		}
 	})
 
 	t.Run("AsFloat64", func(t *testing.T) {
@@ -139,7 +142,10 @@ func TestRedisResult(t *testing.T) {
 		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsFloat64(); err == nil {
 			t.Fatal("AsFloat64 not failed as expected")
 		}
-		if v, _ := (RedisResult{val: RedisMessage{typ: '+', string: "1"}}).AsFloat64(); v != 1 {
+		if v, _ := (RedisResult{val: RedisMessage{typ: '+', string: "1.1"}}).AsFloat64(); v != 1.1 {
+			t.Fatal("AsFloat64 not get value as expected")
+		}
+		if v, _ := (RedisResult{val: RedisMessage{typ: ',', string: "2.2"}}).AsFloat64(); v != 2.2 {
 			t.Fatal("AsFloat64 not get value as expected")
 		}
 	})
@@ -190,7 +196,7 @@ func TestRedisResult(t *testing.T) {
 		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsFloatSlice(); err == nil {
 			t.Fatal("AsFloatSlice not failed as expected")
 		}
-		if _, err := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{string: "", typ: ','}}}}).AsFloatSlice(); err == nil {
+		if _, err := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{string: "fff", typ: ','}}}}).AsFloatSlice(); err == nil {
 			t.Fatal("AsFloatSlice not failed as expected")
 		}
 		values := []RedisMessage{{integer: 1, typ: ':'}, {string: "2", typ: '+'}, {string: "3", typ: '$'}, {string: "4", typ: ','}}
@@ -434,11 +440,11 @@ func TestRedisMessage(t *testing.T) {
 			t.Fatal("AsInt64 not failed as expected")
 		}
 		defer func() {
-			if !strings.Contains(recover().(string), "redis message type : is not a string") {
+			if !strings.Contains(recover().(string), "redis message type * is not a string") {
 				t.Fatal("AsInt64 not panic as expected")
 			}
 		}()
-		(&RedisMessage{typ: ':'}).AsInt64()
+		(&RedisMessage{typ: '*', values: []RedisMessage{{}}}).AsInt64()
 	})
 
 	t.Run("AsFloat64", func(t *testing.T) {
