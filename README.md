@@ -318,6 +318,44 @@ If you want to construct commands that are not yet supported, you can use `c.B()
 c.B().Arbitrary("ANY", "CMD").Keys("k1", "k2").Args("a1", "a2").Build()
 ```
 
+## High level go-redis like API
+
+Though it is easier to know what command will be sent to redis at first glance if the command is constructed by the command builder,
+users may sometimes feel it too verbose to write.
+
+For users who don't like the command builder, `rueidiscompat.Adapter`, contributed mainly by [@418Coffee](https://github.com/418Coffee), is an alternative.
+It is a high level API which is close to go-redis's `Cmdable` interface.
+
+### Migrating from go-redis
+
+You can also try adapting `rueidis` with existing go-redis code by replacing go-redis's `UniversalClient` with `rueidiscompat.Adapter`.
+
+### Client side caching
+
+To use client side caching with `rueidiscompat.Adapter`, chain `Cache(ttl)` call in front of supported command.
+
+```golang
+package main
+
+import (
+	"context"
+	"time"
+	"github.com/rueian/rueidis"
+	"github.com/rueian/rueidis/rueidiscompat"
+)
+
+func main() {
+	client, err := rueidis.NewClient(rueidis.ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
+	defer client.Close()
+
+	compat := rueidiscompat.NewAdapter(client)
+	ok, _ := compat.SetNX(context.Background(), "key", "val", time.Second).Result()
+
+	// with client side caching
+	res, _:= compat.Cache(time.Second).Get(context.Background(), "key").Result()
+}
+```
+
 ## Object Mapping
 
 The `NewHashRepository` and `NewJSONRepository` creates an OM repository backed by redis hash or RedisJSON.
@@ -464,5 +502,4 @@ client.Do(ctx, client.B().Lpop().Key("k").Count(2).Build()).AsStrSlice()
 ## Not Yet Implement
 
 The following subjects are not yet implemented.
-* go-redis like api layer (In progress as [`rueidiscompat`](https://github.com/rueian/rueidis/tree/master/rueidiscompat), Thanks to [@418Coffee](https://github.com/418Coffee))
 * RESP2
