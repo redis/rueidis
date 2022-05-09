@@ -279,16 +279,20 @@ func TestRedisResult(t *testing.T) {
 		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
 			{typ: '%', values: []RedisMessage{{typ: '+', string: "key"}, {typ: ':', integer: 1}}},
 			{typ: '%', values: []RedisMessage{{typ: '+', string: "nil"}, {typ: '_'}}},
+			{typ: '%', values: []RedisMessage{{typ: '+', string: "err"}, {typ: '-', string: "err"}}},
 			{typ: ',', string: "1.2"},
 			{typ: '+', string: "str"},
 			{typ: '#', integer: 0},
+			{typ: '-', string: "err"},
 			{typ: '_'},
 		}}}).ToAny(); !reflect.DeepEqual([]interface{}{
 			map[string]interface{}{"key": int64(1)},
 			map[string]interface{}{"nil": nil},
+			map[string]interface{}{"err": &RedisError{typ: '-', string: "err"}},
 			1.2,
 			"str",
 			false,
+			&RedisError{typ: '-', string: "err"},
 			nil,
 		}, ret) {
 			t.Fatal("ToAny not get value as expected")
@@ -302,10 +306,15 @@ func TestRedisResult(t *testing.T) {
 		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsXRange(); err == nil {
 			t.Fatal("AsXRange not failed as expected")
 		}
-		values := []RedisMessage{{string: "id", typ: '+'}, {typ: '*', values: []RedisMessage{{typ: '+', string: "a"}, {typ: '+', string: "b"}}}}
-		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: values}}).AsXRange(); !reflect.DeepEqual(XRange{
+		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{string: "id", typ: '+'}, {typ: '*', values: []RedisMessage{{typ: '+', string: "a"}, {typ: '+', string: "b"}}}}}}).AsXRange(); !reflect.DeepEqual(XRange{
 			ID:          "id",
 			FieldValues: map[string]string{"a": "b"},
+		}, ret) {
+			t.Fatal("AsXRange not get value as expected")
+		}
+		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{string: "id", typ: '+'}, {typ: '_'}}}}).AsXRange(); !reflect.DeepEqual(XRange{
+			ID:          "id",
+			FieldValues: nil,
 		}, ret) {
 			t.Fatal("AsXRange not get value as expected")
 		}
@@ -318,10 +327,15 @@ func TestRedisResult(t *testing.T) {
 		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsXRangeSlice(); err == nil {
 			t.Fatal("AsXRangeSlice not failed as expected")
 		}
-		values := []RedisMessage{{string: "id", typ: '+'}, {typ: '*', values: []RedisMessage{{typ: '+', string: "a"}, {typ: '+', string: "b"}}}}
-		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{typ: '*', values: values}}}}).AsXRangeSlice(); !reflect.DeepEqual([]XRange{{
-			ID:          "id",
+		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+			{typ: '*', values: []RedisMessage{{string: "id1", typ: '+'}, {typ: '*', values: []RedisMessage{{typ: '+', string: "a"}, {typ: '+', string: "b"}}}}},
+			{typ: '*', values: []RedisMessage{{string: "id2", typ: '+'}, {typ: '_'}}},
+		}}}).AsXRangeSlice(); !reflect.DeepEqual([]XRange{{
+			ID:          "id1",
 			FieldValues: map[string]string{"a": "b"},
+		}, {
+			ID:          "id2",
+			FieldValues: nil,
 		}}, ret) {
 			t.Fatal("AsXRangeSlice not get value as expected")
 		}
@@ -606,7 +620,7 @@ func TestRedisMessage(t *testing.T) {
 			t.Fatal("AsXRange not failed as expected")
 		}
 
-		if _, err := (&RedisMessage{typ: '*', values: []RedisMessage{{typ: '+'}, {typ: '_'}}}).AsXRange(); err == nil {
+		if _, err := (&RedisMessage{typ: '*', values: []RedisMessage{{typ: '+'}, {typ: '-'}}}).AsXRange(); err == nil {
 			t.Fatal("AsXRange not failed as expected")
 		}
 
