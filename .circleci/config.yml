@@ -11,6 +11,8 @@ jobs:
       - run: chmod +x ./cc-test-reporter
       - run: go get -v -t -d ./...
       - run: ./cc-test-reporter before-build
-      - run: ./dockertest.sh
+      - run:
+          command: ./dockertest.sh
+          no_output_timeout: 20m
       - run: ./cc-test-reporter after-build -p $(go list -m) --exit-code $?
       - run: bash <(curl -s https://codecov.io/bash)
