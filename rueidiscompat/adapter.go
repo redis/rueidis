@@ -2,6 +2,7 @@ package rueidiscompat
 
 import (
 	"context"
+	"encoding"
 	"fmt"
 	"strconv"
 	"strings"
@@ -18,38 +19,39 @@ type Cmdable interface {
 
 	Command(ctx context.Context) *CommandsInfoCmd
 	ClientGetName(ctx context.Context) *StringCmd
-	Echo(ctx context.Context, message string) *StringCmd
+	Echo(ctx context.Context, message interface{}) *StringCmd
 	Ping(ctx context.Context) *StatusCmd
 	Quit(ctx context.Context) *StatusCmd
 	Del(ctx context.Context, keys ...string) *IntCmd
 	Unlink(ctx context.Context, keys ...string) *IntCmd
 	Dump(ctx context.Context, key string) *StringCmd
 	Exists(ctx context.Context, keys ...string) *IntCmd
-	Expire(ctx context.Context, key string, seconds time.Duration) *BoolCmd
-	ExpireAt(ctx context.Context, key string, timestamp time.Time) *BoolCmd
-	ExpireNX(ctx context.Context, key string, seconds time.Duration) *BoolCmd
-	ExpireXX(ctx context.Context, key string, seconds time.Duration) *BoolCmd
-	ExpireGT(ctx context.Context, key string, seconds time.Duration) *BoolCmd
-	ExpireLT(ctx context.Context, key string, seconds time.Duration) *BoolCmd
+	Expire(ctx context.Context, key string, expiration time.Duration) *BoolCmd
+	ExpireAt(ctx context.Context, key string, tm time.Time) *BoolCmd
+	ExpireNX(ctx context.Context, key string, expiration time.Duration) *BoolCmd
+	ExpireXX(ctx context.Context, key string, expiration time.Duration) *BoolCmd
+	ExpireGT(ctx context.Context, key string, expiration time.Duration) *BoolCmd
+	ExpireLT(ctx context.Context, key string, expiration time.Duration) *BoolCmd
 	Keys(ctx context.Context, pattern string) *StringSliceCmd
-	Migrate(ctx context.Context, host string, port int64, key bool, db int64, timeout time.Duration) *StatusCmd
+	Migrate(ctx context.Context, host string, port int64, key string, db int64, timeout time.Duration) *StatusCmd
 	Move(ctx context.Context, key string, db int64) *BoolCmd
 	ObjectRefCount(ctx context.Context, key string) *IntCmd
 	ObjectEncoding(ctx context.Context, key string) *StringCmd
-	ObjectIdleTime(ctx context.Context, key string) *IntCmd
+	ObjectIdleTime(ctx context.Context, key string) *DurationCmd
 	Persist(ctx context.Context, key string) *BoolCmd
-	PExpire(ctx context.Context, key string, milliseconds time.Duration) *BoolCmd
-	PExpireAt(ctx context.Context, key string, millisecondsTimestamp time.Time) *BoolCmd
-	PTTL(ctx context.Context, key string) *IntCmd
+	PExpire(ctx context.Context, key string, expiration time.Duration) *BoolCmd
+	PExpireAt(ctx context.Context, key string, tm time.Time) *BoolCmd
+	PTTL(ctx context.Context, key string) *DurationCmd
 	RandomKey(ctx context.Context) *StringCmd
 	Rename(ctx context.Context, key, newkey string) *StatusCmd
 	RenameNX(ctx context.Context, key, newkey string) *BoolCmd
-	Restore(ctx context.Context, key string, ttl time.Duration, serializedValue string) *StatusCmd
-	RestoreReplace(ctx context.Context, key string, ttl time.Duration, serializedValue string) *StatusCmd
+	Restore(ctx context.Context, key string, ttl time.Duration, value string) *StatusCmd
+	RestoreReplace(ctx context.Context, key string, ttl time.Duration, value string) *StatusCmd
 	Sort(ctx context.Context, key string, sort Sort) *StringSliceCmd
 	SortStore(ctx context.Context, key, store string, sort Sort) *IntCmd
+	SortInterfaces(ctx context.Context, key string, sort Sort) *SliceCmd
 	Touch(ctx context.Context, keys ...string) *IntCmd
-	TTL(ctx context.Context, key string) *IntCmd
+	TTL(ctx context.Context, key string) *DurationCmd
 	Type(ctx context.Context, key string) *StatusCmd
 	Append(ctx context.Context, key, value string) *IntCmd
 	Decr(ctx context.Context, key string) *IntCmd
@@ -57,11 +59,11 @@ type Cmdable interface {
 	Get(ctx context.Context, key string) *StringCmd
 	GetRange(ctx context.Context, key string, start, end int64) *StringCmd
 	GetSet(ctx context.Context, key string, value interface{}) *StringCmd
-	GetEx(ctx context.Context, key string, seconds time.Duration) *StringCmd
+	GetEx(ctx context.Context, key string, expiration time.Duration) *StringCmd
 	GetDel(ctx context.Context, key string) *StringCmd
 	Incr(ctx context.Context, key string) *IntCmd
-	IncrBy(ctx context.Context, key string, increment int64) *IntCmd
-	IncrByFloat(ctx context.Context, key string, increment float64) *FloatCmd
+	IncrBy(ctx context.Context, key string, value int64) *IntCmd
+	IncrByFloat(ctx context.Context, key string, value float64) *FloatCmd
 	MGet(ctx context.Context, keys ...string) *SliceCmd
 	MSet(ctx context.Context, values ...interface{}) *StatusCmd
 	MSetNX(ctx context.Context, values ...interface{}) *BoolCmd
@@ -72,7 +74,7 @@ type Cmdable interface {
 	SetXX(ctx context.Context, key string, value interface{}, expiration time.Duration) *BoolCmd
 	SetRange(ctx context.Context, key string, offset int64, value string) *IntCmd
 	StrLen(ctx context.Context, key string) *IntCmd
-	Copy(ctx context.Context, source string, destination string, db int64, replace bool) *IntCmd
+	Copy(ctx context.Context, sourceKey string, destKey string, db int64, replace bool) *IntCmd
 
 	GetBit(ctx context.Context, key string, offset int64) *IntCmd
 	SetBit(ctx context.Context, key string, offset int64, value int64) *IntCmd
@@ -105,29 +107,29 @@ type Cmdable interface {
 	HVals(ctx context.Context, key string) *StringSliceCmd
 	HRandField(ctx context.Context, key string, count int64, withValues bool) *StringSliceCmd
 
-	BLPop(ctx context.Context, timeout time.Duration, key string, keys ...string) *StringSliceCmd
-	BRPop(ctx context.Context, timeout time.Duration, key string, keys ...string) *StringSliceCmd
+	BLPop(ctx context.Context, timeout time.Duration, keys ...string) *StringSliceCmd
+	BRPop(ctx context.Context, timeout time.Duration, keys ...string) *StringSliceCmd
 	BRPopLPush(ctx context.Context, source, destination string, timeout time.Duration) *StringCmd
 	LIndex(ctx context.Context, key string, index int64) *StringCmd
-	LInsert(ctx context.Context, key, op string, pivot, element interface{}) *IntCmd
-	LInsertBefore(ctx context.Context, key string, pivot, element interface{}) *IntCmd
-	LInsertAfter(ctx context.Context, key string, pivot, element interface{}) *IntCmd
+	LInsert(ctx context.Context, key, op string, pivot, value interface{}) *IntCmd
+	LInsertBefore(ctx context.Context, key string, pivot, value interface{}) *IntCmd
+	LInsertAfter(ctx context.Context, key string, pivot, value interface{}) *IntCmd
 	LLen(ctx context.Context, key string) *IntCmd
 	LPop(ctx context.Context, key string) *StringCmd
 	LPopCount(ctx context.Context, key string, count int64) *StringSliceCmd
-	LPos(ctx context.Context, key string, element string, a LPosArgs) *IntCmd
-	LPosCount(ctx context.Context, key string, element string, count int64, args LPosArgs) *IntSliceCmd
-	LPush(ctx context.Context, key string, elements ...string) *IntCmd
-	LPushX(ctx context.Context, key string, elements ...string) *IntCmd
+	LPos(ctx context.Context, key string, value string, args LPosArgs) *IntCmd
+	LPosCount(ctx context.Context, key string, value string, count int64, args LPosArgs) *IntSliceCmd
+	LPush(ctx context.Context, key string, values ...interface{}) *IntCmd
+	LPushX(ctx context.Context, key string, values ...interface{}) *IntCmd
 	LRange(ctx context.Context, key string, start, stop int64) *StringSliceCmd
-	LRem(ctx context.Context, key string, count int64, element string) *IntCmd
-	LSet(ctx context.Context, key string, index int64, element string) *StatusCmd
+	LRem(ctx context.Context, key string, count int64, value interface{}) *IntCmd
+	LSet(ctx context.Context, key string, index int64, value interface{}) *StatusCmd
 	LTrim(ctx context.Context, key string, start, stop int64) *StatusCmd
 	RPop(ctx context.Context, key string) *StringCmd
 	RPopCount(ctx context.Context, key string, count int64) *StringSliceCmd
 	RPopLPush(ctx context.Context, source, destination string) *StringCmd
-	RPush(ctx context.Context, key string, elements ...string) *IntCmd
-	RPushX(ctx context.Context, key string, elements ...string) *IntCmd
+	RPush(ctx context.Context, key string, values ...interface{}) *IntCmd
+	RPushX(ctx context.Context, key string, values ...interface{}) *IntCmd
 	LMove(ctx context.Context, source, destination, srcpos, destpos string) *StringCmd
 	BLMove(ctx context.Context, source, destination, srcpos, destpos string, timeout time.Duration) *StringCmd
 
@@ -137,16 +139,16 @@ type Cmdable interface {
 	SDiffStore(ctx context.Context, destination string, keys ...string) *IntCmd
 	SInter(ctx context.Context, keys ...string) *StringSliceCmd
 	SInterStore(ctx context.Context, destination string, keys ...string) *IntCmd
-	SIsMember(ctx context.Context, key string, member string) *BoolCmd
-	SMIsMember(ctx context.Context, key string, members ...string) *BoolSliceCmd
+	SIsMember(ctx context.Context, key string, member interface{}) *BoolCmd
+	SMIsMember(ctx context.Context, key string, members ...interface{}) *BoolSliceCmd
 	SMembers(ctx context.Context, key string) *StringSliceCmd
 	SMembersMap(ctx context.Context, key string) *StringStructMapCmd
-	SMove(ctx context.Context, source, destination string, member string) *BoolCmd
+	SMove(ctx context.Context, source, destination string, member interface{}) *BoolCmd
 	SPop(ctx context.Context, key string) *StringCmd
 	SPopN(ctx context.Context, key string, count int64) *StringSliceCmd
 	SRandMember(ctx context.Context, key string) *StringCmd
 	SRandMemberN(ctx context.Context, key string, count int64) *StringSliceCmd
-	SRem(ctx context.Context, key string, members ...string) *IntCmd
+	SRem(ctx context.Context, key string, members ...interface{}) *IntCmd
 	SUnion(ctx context.Context, keys ...string) *StringSliceCmd
 	SUnionStore(ctx context.Context, destination string, keys ...string) *IntCmd
 
@@ -194,7 +196,7 @@ type Cmdable interface {
 	ZCard(ctx context.Context, key string) *IntCmd
 	ZCount(ctx context.Context, key string, min, max string) *IntCmd
 	ZLexCount(ctx context.Context, key, min, max string) *IntCmd
-	ZIncrBy(ctx context.Context, key string, increment int64, member string) *FloatCmd
+	ZIncrBy(ctx context.Context, key string, increment float64, member string) *FloatCmd
 	ZInter(ctx context.Context, store ZStore) *StringSliceCmd
 	ZInterWithScores(ctx context.Context, store ZStore) *ZSliceCmd
 	ZInterStore(ctx context.Context, destination string, store ZStore) *IntCmd
@@ -210,7 +212,7 @@ type Cmdable interface {
 	ZRangeArgsWithScores(ctx context.Context, z ZRangeArgs) *ZSliceCmd
 	ZRangeStore(ctx context.Context, dst string, z ZRangeArgs) *IntCmd
 	ZRank(ctx context.Context, key, member string) *IntCmd
-	ZRem(ctx context.Context, key string, members ...string) *IntCmd
+	ZRem(ctx context.Context, key string, members ...interface{}) *IntCmd
 	ZRemRangeByRank(ctx context.Context, key string, start, stop int64) *IntCmd
 	ZRemRangeByScore(ctx context.Context, key string, min, max string) *IntCmd
 	ZRemRangeByLex(ctx context.Context, key, min, max string) *IntCmd
@@ -229,9 +231,9 @@ type Cmdable interface {
 	ZDiffWithScores(ctx context.Context, keys ...string) *ZSliceCmd
 	ZDiffStore(ctx context.Context, destination string, keys ...string) *IntCmd
 
-	PFAdd(ctx context.Context, key string, els ...string) *IntCmd
-	PFCount(ctx context.Context, key string, keys ...string) *IntCmd
-	PFMerge(ctx context.Context, dest string, src string, keys ...string) *StatusCmd
+	PFAdd(ctx context.Context, key string, els ...interface{}) *IntCmd
+	PFCount(ctx context.Context, keys ...string) *IntCmd
+	PFMerge(ctx context.Context, dest string, keys ...string) *StatusCmd
 
 	BgRewriteAOF(ctx context.Context) *StatusCmd
 	BgSave(ctx context.Context) *StatusCmd
@@ -262,14 +264,14 @@ type Cmdable interface {
 	ReadWrite(ctx context.Context) *StatusCmd
 	MemoryUsage(ctx context.Context, key string, samples ...int64) *IntCmd
 
-	Eval(ctx context.Context, script string, keys []string, args ...string) rueidis.RedisResult
-	EvalSha(ctx context.Context, sha1 string, keys []string, args ...string) rueidis.RedisResult
+	Eval(ctx context.Context, script string, keys []string, args ...interface{}) *Cmd
+	EvalSha(ctx context.Context, sha1 string, keys []string, args ...interface{}) *Cmd
 	ScriptExists(ctx context.Context, hashes ...string) *BoolSliceCmd
 	ScriptFlush(ctx context.Context) *StatusCmd
 	ScriptKill(ctx context.Context) *StatusCmd
 	ScriptLoad(ctx context.Context, script string) *StringCmd
 
-	Publish(ctx context.Context, channel string, message string) *IntCmd
+	Publish(ctx context.Context, channel string, message interface{}) *IntCmd
 	PubSubChannels(ctx context.Context, pattern string) *StringSliceCmd
 	PubSubNumSub(ctx context.Context, channels ...string) *StringIntMapCmd
 	PubSubNumPat(ctx context.Context) *IntCmd
@@ -302,7 +304,7 @@ type Cmdable interface {
 	GeoRadiusByMemberStore(ctx context.Context, key, member string, query GeoRadiusQuery) *IntCmd
 	GeoSearch(ctx context.Context, key string, q GeoSearchQuery) *StringSliceCmd
 	GeoSearchLocation(ctx context.Context, key string, q GeoSearchLocationQuery) *GeoLocationCmd
-	GeoSearchStore(ctx context.Context, dest, src string, q GeoSearchStoreQuery) *IntCmd
+	GeoSearchStore(ctx context.Context, src, dest string, q GeoSearchStoreQuery) *IntCmd
 	GeoDist(ctx context.Context, key, member1, member2, unit string) *FloatCmd
 	GeoHash(ctx context.Context, key string, members ...string) *StringSliceCmd
 }
@@ -336,8 +338,8 @@ func (c *Compat) ClientGetName(ctx context.Context) *StringCmd {
 	return newStringCmd(resp)
 }
 
-func (c *Compat) Echo(ctx context.Context, message string) *StringCmd {
-	cmd := c.client.B().Echo().Message(message).Build()
+func (c *Compat) Echo(ctx context.Context, message interface{}) *StringCmd {
+	cmd := c.client.B().Echo().Message(str(message)).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newStringCmd(resp)
 }
@@ -420,9 +422,9 @@ func (c *Compat) Keys(ctx context.Context, pattern string) *StringSliceCmd {
 	return newStringSliceCmd(resp)
 }
 
-func (c *Compat) Migrate(ctx context.Context, host string, port int64, key bool, db int64, timeout time.Duration) *StatusCmd {
+func (c *Compat) Migrate(ctx context.Context, host string, port int64, key string, db int64, timeout time.Duration) *StatusCmd {
 	var cmd cmds.Completed
-	if key {
+	if key == "key" {
 		cmd = c.client.B().Migrate().Host(host).Port(port).Key().DestinationDb(db).Timeout(formatSec(timeout)).Build()
 	} else {
 		cmd = c.client.B().Migrate().Host(host).Port(port).Empty().DestinationDb(db).Timeout(formatSec(timeout)).Build()
@@ -449,10 +451,10 @@ func (c *Compat) ObjectEncoding(ctx context.Context, key string) *StringCmd {
 	return newStringCmd(resp)
 }
 
-func (c *Compat) ObjectIdleTime(ctx context.Context, key string) *IntCmd {
+func (c *Compat) ObjectIdleTime(ctx context.Context, key string) *DurationCmd {
 	cmd := c.client.B().ObjectIdletime().Key(key).Build()
 	resp := c.client.Do(ctx, cmd)
-	return newIntCmd(resp)
+	return newDurationCmd(resp, time.Second)
 }
 func (c *Compat) Persist(ctx context.Context, key string) *BoolCmd {
 	cmd := c.client.B().Persist().Key(key).Build()
@@ -472,10 +474,10 @@ func (c *Compat) PExpireAt(ctx context.Context, key string, millisecondsTimestam
 	return newBoolCmd(resp)
 }
 
-func (c *Compat) PTTL(ctx context.Context, key string) *IntCmd {
+func (c *Compat) PTTL(ctx context.Context, key string) *DurationCmd {
 	cmd := c.client.B().Pttl().Key(key).Build()
 	resp := c.client.Do(ctx, cmd)
-	return newIntCmd(resp)
+	return newDurationCmd(resp, time.Millisecond)
 }
 
 func (c *Compat) RandomKey(ctx context.Context) *StringCmd {
@@ -508,7 +510,7 @@ func (c *Compat) RestoreReplace(ctx context.Context, key string, ttl time.Durati
 	return newStatusCmd(resp)
 }
 
-func (c *Compat) Sort(ctx context.Context, key string, sort Sort) *StringSliceCmd {
+func (c *Compat) sort(key string, sort Sort) cmds.Arbitrary {
 	cmd := c.client.B().Arbitrary("SORT").Keys(key)
 	if sort.By != "" {
 		cmd = cmd.Args("BY", sort.By)
@@ -529,33 +531,22 @@ func (c *Compat) Sort(ctx context.Context, key string, sort Sort) *StringSliceCm
 	if sort.Alpha {
 		cmd = cmd.Args("ALPHA")
 	}
-	resp := c.client.Do(ctx, cmd.Build())
+	return cmd
+}
+
+func (c *Compat) Sort(ctx context.Context, key string, sort Sort) *StringSliceCmd {
+	resp := c.client.Do(ctx, c.sort(key, sort).Build())
 	return newStringSliceCmd(resp)
 }
 
 func (c *Compat) SortStore(ctx context.Context, key, store string, sort Sort) *IntCmd {
-	cmd := c.client.B().Arbitrary("SORT").Keys(key)
-	if sort.By != "" {
-		cmd = cmd.Args("BY", sort.By)
-	}
-	if sort.Offset != 0 || sort.Count != 0 {
-		cmd = cmd.Args("LIMIT", strconv.FormatInt(sort.Offset, 10), strconv.FormatInt(sort.Count, 10))
-	}
-	if len(sort.Get) > 0 {
-		cmd = cmd.Args("GET").Args(sort.Get...)
-	}
-	switch order := strings.ToUpper(sort.Order); order {
-	case "ASC", "DESC":
-		cmd = cmd.Args(order)
-	case "":
-	default:
-		panic(fmt.Sprintf("invalid sort order %s", sort.Order))
-	}
-	if sort.Alpha {
-		cmd = cmd.Args("ALPHA")
-	}
-	resp := c.client.Do(ctx, cmd.Args("STORE", store).Build())
+	resp := c.client.Do(ctx, c.sort(key, sort).Args("STORE", store).Build())
 	return newIntCmd(resp)
+}
+
+func (c *Compat) SortInterfaces(ctx context.Context, key string, sort Sort) *SliceCmd {
+	resp := c.client.Do(ctx, c.sort(key, sort).Build())
+	return newSliceCmd(resp)
 }
 
 func (c *Compat) Touch(ctx context.Context, keys ...string) *IntCmd {
@@ -564,10 +555,10 @@ func (c *Compat) Touch(ctx context.Context, keys ...string) *IntCmd {
 	return newIntCmd(resp)
 }
 
-func (c *Compat) TTL(ctx context.Context, key string) *IntCmd {
+func (c *Compat) TTL(ctx context.Context, key string) *DurationCmd {
 	cmd := c.client.B().Ttl().Key(key).Build()
 	resp := c.client.Do(ctx, cmd)
-	return newIntCmd(resp)
+	return newDurationCmd(resp, time.Second)
 }
 
 func (c *Compat) Type(ctx context.Context, key string) *StatusCmd {
@@ -765,14 +756,14 @@ func (c *Compat) SetXX(ctx context.Context, key string, value interface{}, expir
 	var resp rueidis.RedisResult
 	if expiration > 0 {
 		if usePrecise(expiration) {
-			resp = c.client.Do(ctx, c.client.B().Set().Key(key).Value(str(value)).PxMilliseconds(formatMs(expiration)).Build())
+			resp = c.client.Do(ctx, c.client.B().Set().Key(key).Value(str(value)).PxMilliseconds(formatMs(expiration)).Xx().Build())
 		} else {
-			resp = c.client.Do(ctx, c.client.B().Set().Key(key).Value(str(value)).ExSeconds(formatSec(expiration)).Build())
+			resp = c.client.Do(ctx, c.client.B().Set().Key(key).Value(str(value)).ExSeconds(formatSec(expiration)).Xx().Build())
 		}
 	} else if expiration == KeepTTL {
-		resp = c.client.Do(ctx, c.client.B().Set().Key(key).Value(str(value)).Keepttl().Build())
+		resp = c.client.Do(ctx, c.client.B().Set().Key(key).Value(str(value)).Keepttl().Xx().Build())
 	} else {
-		resp = c.client.Do(ctx, c.client.B().Set().Key(key).Value(str(value)).Build())
+		resp = c.client.Do(ctx, c.client.B().Set().Key(key).Value(str(value)).Xx().Build())
 	}
 	return newBoolCmd(resp)
 }
@@ -870,32 +861,62 @@ func (c *Compat) BitField(ctx context.Context, key string, args ...interface{}) 
 }
 
 func (c *Compat) Scan(ctx context.Context, cursor uint64, match string, count int64) *ScanCmd {
-	cmd := c.client.B().Scan().Cursor(int64(cursor)).Match(match).Count(count).Build()
-	resp := c.client.Do(ctx, cmd)
+	cmd := c.client.B().Arbitrary("SCAN", strconv.FormatInt(int64(cursor), 10))
+	if match != "" {
+		cmd = cmd.Args("MATCH", match)
+	}
+	if count > 0 {
+		cmd = cmd.Args("COUNT", strconv.FormatInt(count, 10))
+	}
+	resp := c.client.Do(ctx, cmd.ReadOnly())
 	return newScanCmd(resp)
 }
 
 func (c *Compat) ScanType(ctx context.Context, cursor uint64, match string, count int64, keyType string) *ScanCmd {
-	cmd := c.client.B().Scan().Cursor(int64(cursor)).Match(match).Count(count).Type(keyType).Build()
-	resp := c.client.Do(ctx, cmd)
+	cmd := c.client.B().Arbitrary("SCAN", strconv.FormatInt(int64(cursor), 10))
+	if match != "" {
+		cmd = cmd.Args("MATCH", match)
+	}
+	if count > 0 {
+		cmd = cmd.Args("COUNT", strconv.FormatInt(count, 10))
+	}
+	resp := c.client.Do(ctx, cmd.Args("TYPE", keyType).ReadOnly())
 	return newScanCmd(resp)
 }
 
 func (c *Compat) SScan(ctx context.Context, key string, cursor uint64, match string, count int64) *ScanCmd {
-	cmd := c.client.B().Sscan().Key(key).Cursor(int64(cursor)).Match(match).Count(count).Build()
-	resp := c.client.Do(ctx, cmd)
+	cmd := c.client.B().Arbitrary("SSCAN").Keys(key).Args(strconv.FormatInt(int64(cursor), 10))
+	if match != "" {
+		cmd = cmd.Args("MATCH", match)
+	}
+	if count > 0 {
+		cmd = cmd.Args("COUNT", strconv.FormatInt(count, 10))
+	}
+	resp := c.client.Do(ctx, cmd.ReadOnly())
 	return newScanCmd(resp)
 }
 
 func (c *Compat) HScan(ctx context.Context, key string, cursor uint64, match string, count int64) *ScanCmd {
-	cmd := c.client.B().Hscan().Key(key).Cursor(int64(cursor)).Match(match).Count(count).Build()
-	resp := c.client.Do(ctx, cmd)
+	cmd := c.client.B().Arbitrary("HSCAN").Keys(key).Args(strconv.FormatInt(int64(cursor), 10))
+	if match != "" {
+		cmd = cmd.Args("MATCH", match)
+	}
+	if count > 0 {
+		cmd = cmd.Args("COUNT", strconv.FormatInt(count, 10))
+	}
+	resp := c.client.Do(ctx, cmd.ReadOnly())
 	return newScanCmd(resp)
 }
 
 func (c *Compat) ZScan(ctx context.Context, key string, cursor uint64, match string, count int64) *ScanCmd {
-	cmd := c.client.B().Zscan().Key(key).Cursor(int64(cursor)).Match(match).Count(count).Build()
-	resp := c.client.Do(ctx, cmd)
+	cmd := c.client.B().Arbitrary("ZSCAN").Keys(key).Args(strconv.FormatInt(int64(cursor), 10))
+	if match != "" {
+		cmd = cmd.Args("MATCH", match)
+	}
+	if count > 0 {
+		cmd = cmd.Args("COUNT", strconv.FormatInt(count, 10))
+	}
+	resp := c.client.Do(ctx, cmd.ReadOnly())
 	return newScanCmd(resp)
 }
 
@@ -996,21 +1017,22 @@ func (c *Compat) HVals(ctx context.Context, key string) *StringSliceCmd {
 func (c *Compat) HRandField(ctx context.Context, key string, count int64, withValues bool) *StringSliceCmd {
 	var resp rueidis.RedisResult
 	if withValues {
-		resp = c.client.Do(ctx, c.client.B().Hrandfield().Key(key).Count(count).Build())
-	} else {
 		resp = c.client.Do(ctx, c.client.B().Hrandfield().Key(key).Count(count).Withvalues().Build())
+		return flattenStringSliceCmd(resp)
+	} else {
+		resp = c.client.Do(ctx, c.client.B().Hrandfield().Key(key).Count(count).Build())
+		return newStringSliceCmd(resp)
 	}
-	return newStringSliceCmd(resp)
 }
 
-func (c *Compat) BLPop(ctx context.Context, timeout time.Duration, key string, keys ...string) *StringSliceCmd {
-	cmd := c.client.B().Blpop().Key(key).Key(keys...).Timeout(float64(formatSec(timeout))).Build()
+func (c *Compat) BLPop(ctx context.Context, timeout time.Duration, keys ...string) *StringSliceCmd {
+	cmd := c.client.B().Blpop().Key(keys...).Timeout(float64(formatSec(timeout))).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newStringSliceCmd(resp)
 }
 
-func (c *Compat) BRPop(ctx context.Context, timeout time.Duration, key string, keys ...string) *StringSliceCmd {
-	cmd := c.client.B().Brpop().Key(key).Key(keys...).Timeout(float64(formatSec(timeout))).Build()
+func (c *Compat) BRPop(ctx context.Context, timeout time.Duration, keys ...string) *StringSliceCmd {
+	cmd := c.client.B().Brpop().Key(keys...).Timeout(float64(formatSec(timeout))).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newStringSliceCmd(resp)
 }
@@ -1071,7 +1093,7 @@ func (c *Compat) LPopCount(ctx context.Context, key string, count int64) *String
 }
 
 func (c *Compat) LPos(ctx context.Context, key string, element string, a LPosArgs) *IntCmd {
-	cmd := c.client.B().Arbitrary("LPOS").Keys(key).Args("ELEMENT", element)
+	cmd := c.client.B().Arbitrary("LPOS").Keys(key).Args(element)
 	if a.Rank != 0 {
 		cmd = cmd.Args("RANK", strconv.FormatInt(a.Rank, 10))
 	}
@@ -1083,7 +1105,7 @@ func (c *Compat) LPos(ctx context.Context, key string, element string, a LPosArg
 }
 
 func (c *Compat) LPosCount(ctx context.Context, key string, element string, count int64, a LPosArgs) *IntSliceCmd {
-	cmd := c.client.B().Arbitrary("LPOS").Keys(key).Args("ELEMENT", element).Args("COUNT", strconv.FormatInt(count, 10))
+	cmd := c.client.B().Arbitrary("LPOS").Keys(key).Args(element).Args("COUNT", strconv.FormatInt(count, 10))
 	if a.Rank != 0 {
 		cmd = cmd.Args("RANK", strconv.FormatInt(a.Rank, 10))
 	}
@@ -1094,14 +1116,14 @@ func (c *Compat) LPosCount(ctx context.Context, key string, element string, coun
 	return newIntSliceCmd(resp)
 }
 
-func (c *Compat) LPush(ctx context.Context, key string, elements ...string) *IntCmd {
-	cmd := c.client.B().Lpush().Key(key).Element(elements...).Build()
+func (c *Compat) LPush(ctx context.Context, key string, elements ...interface{}) *IntCmd {
+	cmd := c.client.B().Lpush().Key(key).Element(argsToSlice(elements)...).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
 }
 
-func (c *Compat) LPushX(ctx context.Context, key string, elements ...string) *IntCmd {
-	cmd := c.client.B().Lpushx().Key(key).Element(elements...).Build()
+func (c *Compat) LPushX(ctx context.Context, key string, elements ...interface{}) *IntCmd {
+	cmd := c.client.B().Lpushx().Key(key).Element(argsToSlice(elements)...).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
 }
@@ -1112,14 +1134,14 @@ func (c *Compat) LRange(ctx context.Context, key string, start, stop int64) *Str
 	return newStringSliceCmd(resp)
 }
 
-func (c *Compat) LRem(ctx context.Context, key string, count int64, element string) *IntCmd {
-	cmd := c.client.B().Lrem().Key(key).Count(count).Element(element).Build()
+func (c *Compat) LRem(ctx context.Context, key string, count int64, element interface{}) *IntCmd {
+	cmd := c.client.B().Lrem().Key(key).Count(count).Element(str(element)).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
 }
 
-func (c *Compat) LSet(ctx context.Context, key string, index int64, element string) *StatusCmd {
-	cmd := c.client.B().Lset().Key(key).Index(index).Element(element).Build()
+func (c *Compat) LSet(ctx context.Context, key string, index int64, element interface{}) *StatusCmd {
+	cmd := c.client.B().Lset().Key(key).Index(index).Element(str(element)).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newStatusCmd(resp)
 }
@@ -1148,14 +1170,14 @@ func (c *Compat) RPopLPush(ctx context.Context, source, destination string) *Str
 	return newStringCmd(resp)
 }
 
-func (c *Compat) RPush(ctx context.Context, key string, elements ...string) *IntCmd {
-	cmd := c.client.B().Rpush().Key(key).Element(elements...).Build()
+func (c *Compat) RPush(ctx context.Context, key string, elements ...interface{}) *IntCmd {
+	cmd := c.client.B().Rpush().Key(key).Element(argsToSlice(elements)...).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
 }
 
-func (c *Compat) RPushX(ctx context.Context, key string, elements ...string) *IntCmd {
-	cmd := c.client.B().Rpushx().Key(key).Element(elements...).Build()
+func (c *Compat) RPushX(ctx context.Context, key string, elements ...interface{}) *IntCmd {
+	cmd := c.client.B().Rpushx().Key(key).Element(argsToSlice(elements)...).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
 }
@@ -1196,7 +1218,7 @@ func (c *Compat) BLMove(ctx context.Context, source, destination, srcpos, destpo
 
 func (c *Compat) SAdd(ctx context.Context, key string, members ...interface{}) *IntCmd {
 	cmd := c.client.B().Sadd().Key(key).Member()
-	for _, m := range members {
+	for _, m := range argsToSlice(members) {
 		cmd = cmd.Member(str(m))
 	}
 	resp := c.client.Do(ctx, cmd.Build())
@@ -1233,14 +1255,14 @@ func (c *Compat) SInterStore(ctx context.Context, destination string, keys ...st
 	return newIntCmd(resp)
 }
 
-func (c *Compat) SIsMember(ctx context.Context, key string, member string) *BoolCmd {
-	cmd := c.client.B().Sismember().Key(key).Member(member).Build()
+func (c *Compat) SIsMember(ctx context.Context, key string, member interface{}) *BoolCmd {
+	cmd := c.client.B().Sismember().Key(key).Member(str(member)).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newBoolCmd(resp)
 }
 
-func (c *Compat) SMIsMember(ctx context.Context, key string, members ...string) *BoolSliceCmd {
-	cmd := c.client.B().Smismember().Key(key).Member(members...).Build()
+func (c *Compat) SMIsMember(ctx context.Context, key string, members ...interface{}) *BoolSliceCmd {
+	cmd := c.client.B().Smismember().Key(key).Member(argsToSlice(members)...).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newBoolSliceCmd(resp)
 }
@@ -1257,8 +1279,8 @@ func (c *Compat) SMembersMap(ctx context.Context, key string) *StringStructMapCm
 	return newStringStructMapCmd(resp)
 }
 
-func (c *Compat) SMove(ctx context.Context, source, destination string, member string) *BoolCmd {
-	cmd := c.client.B().Smove().Source(source).Destination(destination).Member(member).Build()
+func (c *Compat) SMove(ctx context.Context, source, destination string, member interface{}) *BoolCmd {
+	cmd := c.client.B().Smove().Source(source).Destination(destination).Member(str(member)).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newBoolCmd(resp)
 }
@@ -1287,8 +1309,8 @@ func (c *Compat) SRandMemberN(ctx context.Context, key string, count int64) *Str
 	return newStringSliceCmd(resp)
 }
 
-func (c *Compat) SRem(ctx context.Context, key string, members ...string) *IntCmd {
-	cmd := c.client.B().Srem().Key(key).Member(members...).Build()
+func (c *Compat) SRem(ctx context.Context, key string, members ...interface{}) *IntCmd {
+	cmd := c.client.B().Srem().Key(key).Member(argsToSlice(members)...).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
 }
@@ -1361,13 +1383,13 @@ func (c *Compat) XRangeN(ctx context.Context, stream, start, stop string, count 
 	return newXMessageSliceCmd(resp)
 }
 
-func (c *Compat) XRevRange(ctx context.Context, stream, start, stop string) *XMessageSliceCmd {
+func (c *Compat) XRevRange(ctx context.Context, stream, stop, start string) *XMessageSliceCmd {
 	cmd := c.client.B().Xrevrange().Key(stream).End(stop).Start(start).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newXMessageSliceCmd(resp)
 }
 
-func (c *Compat) XRevRangeN(ctx context.Context, stream, start, stop string, count int64) *XMessageSliceCmd {
+func (c *Compat) XRevRangeN(ctx context.Context, stream, stop, start string, count int64) *XMessageSliceCmd {
 	cmd := c.client.B().Xrevrange().Key(stream).End(stop).Start(start).Count(count).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newXMessageSliceCmd(resp)
@@ -1669,7 +1691,7 @@ func (c *Compat) ZLexCount(ctx context.Context, key, min, max string) *IntCmd {
 	return newIntCmd(resp)
 }
 
-func (c *Compat) ZIncrBy(ctx context.Context, key string, increment int64, member string) *FloatCmd {
+func (c *Compat) ZIncrBy(ctx context.Context, key string, increment float64, member string) *FloatCmd {
 	cmd := c.client.B().Zincrby().Key(key).Increment(increment).Member(member).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newFloatCmd(resp)
@@ -1677,34 +1699,64 @@ func (c *Compat) ZIncrBy(ctx context.Context, key string, increment int64, membe
 
 func (c *Compat) ZInter(ctx context.Context, store ZStore) *StringSliceCmd {
 	var resp rueidis.RedisResult
-	switch strings.ToUpper(store.Aggregate) {
-	case "SUM":
-		resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateSum().Build())
-	case "MIN":
-		resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateMin().Build())
-	case "MAX":
-		resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateMax().Build())
-	case "":
-		resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).Build())
-	default:
-		panic(fmt.Sprintf("invalid aggregate argument value %s", store.Aggregate))
+	if len(store.Weights) > 0 {
+		switch strings.ToUpper(store.Aggregate) {
+		case "SUM":
+			resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateSum().Build())
+		case "MIN":
+			resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateMin().Build())
+		case "MAX":
+			resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateMax().Build())
+		case "":
+			resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).Build())
+		default:
+			panic(fmt.Sprintf("invalid aggregate argument value %s", store.Aggregate))
+		}
+	} else {
+		switch strings.ToUpper(store.Aggregate) {
+		case "SUM":
+			resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).AggregateSum().Build())
+		case "MIN":
+			resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).AggregateMin().Build())
+		case "MAX":
+			resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).AggregateMax().Build())
+		case "":
+			resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Build())
+		default:
+			panic(fmt.Sprintf("invalid aggregate argument value %s", store.Aggregate))
+		}
 	}
 	return newStringSliceCmd(resp)
 }
 
 func (c *Compat) ZInterWithScores(ctx context.Context, store ZStore) *ZSliceCmd {
 	var resp rueidis.RedisResult
-	switch strings.ToUpper(store.Aggregate) {
-	case "SUM":
-		resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateSum().Withscores().Build())
-	case "MIN":
-		resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateMin().Withscores().Build())
-	case "MAX":
-		resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateMax().Withscores().Build())
-	case "":
-		resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).Withscores().Build())
-	default:
-		panic(fmt.Sprintf("invalid aggregate argument value %s", store.Aggregate))
+	if len(store.Weights) > 0 {
+		switch strings.ToUpper(store.Aggregate) {
+		case "SUM":
+			resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateSum().Withscores().Build())
+		case "MIN":
+			resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateMin().Withscores().Build())
+		case "MAX":
+			resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateMax().Withscores().Build())
+		case "":
+			resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).Withscores().Build())
+		default:
+			panic(fmt.Sprintf("invalid aggregate argument value %s", store.Aggregate))
+		}
+	} else {
+		switch strings.ToUpper(store.Aggregate) {
+		case "SUM":
+			resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).AggregateSum().Withscores().Build())
+		case "MIN":
+			resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).AggregateMin().Withscores().Build())
+		case "MAX":
+			resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).AggregateMax().Withscores().Build())
+		case "":
+			resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Withscores().Build())
+		default:
+			panic(fmt.Sprintf("invalid aggregate argument value %s", store.Aggregate))
+		}
 	}
 	return newZSliceCmd(resp)
 }
@@ -1739,11 +1791,13 @@ func (c *Compat) ZPopMax(ctx context.Context, key string, count ...int64) *ZSlic
 		resp = c.client.Do(ctx, c.client.B().Zpopmax().Key(key).Build())
 	case 1:
 		resp = c.client.Do(ctx, c.client.B().Zpopmax().Key(key).Count(count[0]).Build())
+		if count[0] > 1 {
+			return newZSliceCmd(resp)
+		}
 	default:
 		panic("too many arguments")
 	}
-
-	return newZSliceCmd(resp)
+	return newZSliceSingleCmd(resp)
 }
 
 func (c *Compat) ZPopMin(ctx context.Context, key string, count ...int64) *ZSliceCmd {
@@ -1753,10 +1807,13 @@ func (c *Compat) ZPopMin(ctx context.Context, key string, count ...int64) *ZSlic
 		resp = c.client.Do(ctx, c.client.B().Zpopmin().Key(key).Build())
 	case 1:
 		resp = c.client.Do(ctx, c.client.B().Zpopmin().Key(key).Count(count[0]).Build())
+		if count[0] > 1 {
+			return newZSliceCmd(resp)
+		}
 	default:
 		panic("too many arguments")
 	}
-	return newZSliceCmd(resp)
+	return newZSliceSingleCmd(resp)
 }
 
 func (c *Compat) zRangeArgs(withScores bool, z ZRangeArgs) cmds.Completed {
@@ -1873,8 +1930,8 @@ func (c *Compat) ZRank(ctx context.Context, key, member string) *IntCmd {
 	return newIntCmd(resp)
 }
 
-func (c *Compat) ZRem(ctx context.Context, key string, members ...string) *IntCmd {
-	cmd := c.client.B().Zrem().Key(key).Member(members...).Build()
+func (c *Compat) ZRem(ctx context.Context, key string, members ...interface{}) *IntCmd {
+	cmd := c.client.B().Zrem().Key(key).Member(argsToSlice(members)...).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
 }
@@ -2029,20 +2086,20 @@ func (c *Compat) ZDiffStore(ctx context.Context, destination string, keys ...str
 	return newIntCmd(resp)
 }
 
-func (c *Compat) PFAdd(ctx context.Context, key string, els ...string) *IntCmd {
-	cmd := c.client.B().Pfadd().Key(key).Element(els...).Build()
+func (c *Compat) PFAdd(ctx context.Context, key string, els ...interface{}) *IntCmd {
+	cmd := c.client.B().Pfadd().Key(key).Element(argsToSlice(els)...).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
 }
 
-func (c *Compat) PFCount(ctx context.Context, key string, keys ...string) *IntCmd {
-	cmd := c.client.B().Pfcount().Key(key).Key(keys...).Build()
+func (c *Compat) PFCount(ctx context.Context, keys ...string) *IntCmd {
+	cmd := c.client.B().Pfcount().Key(keys...).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
 }
 
-func (c *Compat) PFMerge(ctx context.Context, dest string, src string, keys ...string) *StatusCmd {
-	cmd := c.client.B().Pfmerge().Destkey(dest).Sourcekey(src).Sourcekey(keys...).Build()
+func (c *Compat) PFMerge(ctx context.Context, dest string, keys ...string) *StatusCmd {
+	cmd := c.client.B().Pfmerge().Destkey(dest).Sourcekey(keys...).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newStatusCmd(resp)
 }
@@ -2095,7 +2152,7 @@ func (c *Compat) ClientID(ctx context.Context) *IntCmd {
 func (c *Compat) ConfigGet(ctx context.Context, parameter string) *SliceCmd {
 	cmd := c.client.B().ConfigGet().Parameter(parameter).Build()
 	resp := c.client.Do(ctx, cmd)
-	return newSliceCmd(resp)
+	return newSliceCmdFromMap(resp)
 }
 
 func (c *Compat) ConfigResetStat(ctx context.Context) *StatusCmd {
@@ -2229,14 +2286,14 @@ func (c *Compat) MemoryUsage(ctx context.Context, key string, samples ...int64) 
 	return newIntCmd(resp)
 }
 
-func (c *Compat) Eval(ctx context.Context, script string, keys []string, args ...string) rueidis.RedisResult {
-	cmd := c.client.B().Eval().Script(script).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build()
-	return c.client.Do(ctx, cmd)
+func (c *Compat) Eval(ctx context.Context, script string, keys []string, args ...interface{}) *Cmd {
+	cmd := c.client.B().Eval().Script(script).Numkeys(int64(len(keys))).Key(keys...).Arg(argsToSlice(args)...).Build()
+	return newCmd(c.client.Do(ctx, cmd))
 }
 
-func (c *Compat) EvalSha(ctx context.Context, sha1 string, keys []string, args ...string) rueidis.RedisResult {
-	cmd := c.client.B().Evalsha().Sha1(sha1).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build()
-	return c.client.Do(ctx, cmd)
+func (c *Compat) EvalSha(ctx context.Context, sha1 string, keys []string, args ...interface{}) *Cmd {
+	cmd := c.client.B().Evalsha().Sha1(sha1).Numkeys(int64(len(keys))).Key(keys...).Arg(argsToSlice(args)...).Build()
+	return newCmd(c.client.Do(ctx, cmd))
 }
 
 func (c *Compat) ScriptExists(ctx context.Context, hashes ...string) *BoolSliceCmd {
@@ -2263,8 +2320,8 @@ func (c *Compat) ScriptLoad(ctx context.Context, script string) *StringCmd {
 	return newStringCmd(resp)
 }
 
-func (c *Compat) Publish(ctx context.Context, channel string, message string) *IntCmd {
-	cmd := c.client.B().Publish().Channel(channel).Message(message).Build()
+func (c *Compat) Publish(ctx context.Context, channel string, message interface{}) *IntCmd {
+	cmd := c.client.B().Publish().Channel(channel).Message(str(message)).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
 }
@@ -2474,7 +2531,7 @@ func (c *Compat) GeoSearchLocation(ctx context.Context, key string, q GeoSearchL
 	return newGeoLocationCmd(resp, q.WithDist, q.WithHash, q.WithCoord)
 }
 
-func (c *Compat) GeoSearchStore(ctx context.Context, dest, src string, q GeoSearchStoreQuery) *IntCmd {
+func (c *Compat) GeoSearchStore(ctx context.Context, src, dest string, q GeoSearchStoreQuery) *IntCmd {
 	cmd := c.client.B().Arbitrary("GEOSEARCHSTORE").Keys(dest, src)
 	cmd = cmd.Args(q.args()...)
 	if q.StoreDist {
@@ -2663,7 +2720,7 @@ func (c CacheCompat) LLen(ctx context.Context, key string) *IntCmd {
 }
 
 func (c CacheCompat) LPos(ctx context.Context, key string, element string, a LPosArgs) *IntCmd {
-	cmd := c.client.B().Arbitrary("LPOS").Keys(key).Args("ELEMENT", element)
+	cmd := c.client.B().Arbitrary("LPOS").Keys(key).Args(element)
 	if a.Rank != 0 {
 		cmd = cmd.Args("RANK", strconv.FormatInt(a.Rank, 10))
 	}
@@ -2692,10 +2749,16 @@ func (c CacheCompat) SCard(ctx context.Context, key string) *IntCmd {
 	return newIntCmd(resp)
 }
 
-func (c CacheCompat) SIsMember(ctx context.Context, key string, member string) *BoolCmd {
-	cmd := c.client.B().Sismember().Key(key).Member(member).Cache()
+func (c CacheCompat) SIsMember(ctx context.Context, key string, member interface{}) *BoolCmd {
+	cmd := c.client.B().Sismember().Key(key).Member(str(member)).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newBoolCmd(resp)
+}
+
+func (c CacheCompat) SMIsMember(ctx context.Context, key string, members ...interface{}) *BoolSliceCmd {
+	cmd := c.client.B().Smismember().Key(key).Member(argsToSlice(members)...).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newBoolSliceCmd(resp)
 }
 
 func (c CacheCompat) SMembers(ctx context.Context, key string) *StringSliceCmd {
@@ -2908,8 +2971,22 @@ func (c CacheCompat) ZScore(ctx context.Context, key, member string) *FloatCmd {
 }
 
 func str(arg interface{}) string {
+	if v, ok := arg.(encoding.BinaryMarshaler); ok {
+		if data, err := v.MarshalBinary(); err == nil {
+			return rueidis.BinaryString(data)
+		}
+	}
 	if v, ok := arg.(string); ok {
 		return v
+	}
+	if v, ok := arg.([]byte); ok {
+		return string(v)
+	}
+	if v, ok := arg.(bool); ok {
+		if v {
+			return "1"
+		}
+		return "0"
 	}
 	return fmt.Sprint(arg)
 }

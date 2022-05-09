@@ -5,6 +5,10 @@ services:
     image: redislabs/rejson:2.0.6
     ports:
       - "6379:6379"
+  compat:
+    image: redislabs/rejson:2.0.6
+    ports:
+      - "6378:6379"
   sentinel:
     image: redislabs/rejson:2.0.6
     entrypoint:
