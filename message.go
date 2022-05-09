@@ -487,6 +487,9 @@ func (m *RedisMessage) AsXRange() (XRange, error) {
 	}
 	fieldValues, err := values[1].AsStrMap()
 	if err != nil {
+		if IsRedisNil(err) {
+			return XRange{ID: id, FieldValues: nil}, nil
+		}
 		return XRange{}, err
 	}
 	return XRange{
@@ -598,13 +601,21 @@ func (m *RedisMessage) ToAny() (interface{}, error) {
 	case '%':
 		vs := make(map[string]interface{}, len(m.values)/2)
 		for i := 0; i < len(m.values); i += 2 {
-			vs[m.values[i].string], _ = m.values[i+1].ToAny()
+			if v, err := m.values[i+1].ToAny(); err != nil && !IsRedisNil(err) {
+				vs[m.values[i].string] = err
+			} else {
+				vs[m.values[i].string] = v
+			}
 		}
 		return vs, nil
 	case '~', '*':
 		vs := make([]interface{}, len(m.values))
 		for i := 0; i < len(m.values); i++ {
-			vs[i], _ = m.values[i].ToAny()
+			if v, err := m.values[i].ToAny(); err != nil && !IsRedisNil(err) {
+				vs[i] = err
+			} else {
+				vs[i] = v
+			}
 		}
 		return vs, nil
 	}
