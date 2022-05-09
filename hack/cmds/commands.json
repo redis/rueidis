@@ -4718,7 +4718,7 @@
       },
       {
         "name": "increment",
-        "type": "integer"
+        "type": "double"
       },
       {
         "name": "member",

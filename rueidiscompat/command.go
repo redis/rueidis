@@ -1,3 +1,29 @@
+// Copyright (c) 2013 The github.com/go-redis/redis Authors.
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met:
+//
+// * Redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer.
+// * Redistributions in binary form must reproduce the above
+// copyright notice, this list of conditions and the following disclaimer
+// in the documentation and/or other materials provided with the
+// distribution.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 package rueidiscompat
 
 import (
@@ -9,19 +35,297 @@ import (
 	"github.com/rueian/rueidis"
 )
 
+type Cmd struct {
+	val interface{}
+	err error
+}
+
+func newCmd(res rueidis.RedisResult) *Cmd {
+	val, err := res.ToAny()
+	return &Cmd{val: val, err: err}
+}
+
+func (cmd *Cmd) SetVal(val string) {
+	cmd.val = val
+}
+
+func (cmd *Cmd) SetErr(err error) {
+	cmd.err = err
+}
+
+func (cmd *Cmd) Val() interface{} {
+	return cmd.val
+}
+
+func (cmd *Cmd) Err() error {
+	return cmd.err
+}
+
+func (cmd *Cmd) Result() (interface{}, error) {
+	return cmd.val, cmd.err
+}
+
+func (cmd *Cmd) Text() (string, error) {
+	if cmd.err != nil {
+		return "", cmd.err
+	}
+	return toString(cmd.val)
+}
+
+func toString(val interface{}) (string, error) {
+	switch val := val.(type) {
+	case string:
+		return val, nil
+	default:
+		err := fmt.Errorf("redis: unexpected type=%T for String", val)
+		return "", err
+	}
+}
+
+func (cmd *Cmd) Int() (int, error) {
+	if cmd.err != nil {
+		return 0, cmd.err
+	}
+	switch val := cmd.val.(type) {
+	case int64:
+		return int(val), nil
+	case string:
+		return strconv.Atoi(val)
+	default:
+		err := fmt.Errorf("redis: unexpected type=%T for Int", val)
+		return 0, err
+	}
+}
+
+func (cmd *Cmd) Int64() (int64, error) {
+	if cmd.err != nil {
+		return 0, cmd.err
+	}
+	return toInt64(cmd.val)
+}
+
+func toInt64(val interface{}) (int64, error) {
+	switch val := val.(type) {
+	case int64:
+		return val, nil
+	case string:
+		return strconv.ParseInt(val, 10, 64)
+	default:
+		err := fmt.Errorf("redis: unexpected type=%T for Int64", val)
+		return 0, err
+	}
+}
+
+func (cmd *Cmd) Uint64() (uint64, error) {
+	if cmd.err != nil {
+		return 0, cmd.err
+	}
+	return toUint64(cmd.val)
+}
+
+func toUint64(val interface{}) (uint64, error) {
+	switch val := val.(type) {
+	case int64:
+		return uint64(val), nil
+	case string:
+		return strconv.ParseUint(val, 10, 64)
+	default:
+		err := fmt.Errorf("redis: unexpected type=%T for Uint64", val)
+		return 0, err
+	}
+}
+
+func (cmd *Cmd) Float32() (float32, error) {
+	if cmd.err != nil {
+		return 0, cmd.err
+	}
+	return toFloat32(cmd.val)
+}
+
+func toFloat32(val interface{}) (float32, error) {
+	switch val := val.(type) {
+	case int64:
+		return float32(val), nil
+	case string:
+		f, err := strconv.ParseFloat(val, 32)
+		if err != nil {
+			return 0, err
+		}
+		return float32(f), nil
+	default:
+		err := fmt.Errorf("redis: unexpected type=%T for Float32", val)
+		return 0, err
+	}
+}
+
+func (cmd *Cmd) Float64() (float64, error) {
+	if cmd.err != nil {
+		return 0, cmd.err
+	}
+	return toFloat64(cmd.val)
+}
+
+func toFloat64(val interface{}) (float64, error) {
+	switch val := val.(type) {
+	case int64:
+		return float64(val), nil
+	case string:
+		return strconv.ParseFloat(val, 64)
+	default:
+		err := fmt.Errorf("redis: unexpected type=%T for Float64", val)
+		return 0, err
+	}
+}
+
+func (cmd *Cmd) Bool() (bool, error) {
+	if cmd.err != nil {
+		return false, cmd.err
+	}
+	return toBool(cmd.val)
+}
+
+func toBool(val interface{}) (bool, error) {
+	switch val := val.(type) {
+	case int64:
+		return val != 0, nil
+	case string:
+		return strconv.ParseBool(val)
+	default:
+		err := fmt.Errorf("redis: unexpected type=%T for Bool", val)
+		return false, err
+	}
+}
+
+func (cmd *Cmd) Slice() ([]interface{}, error) {
+	if cmd.err != nil {
+		return nil, cmd.err
+	}
+	switch val := cmd.val.(type) {
+	case []interface{}:
+		return val, nil
+	default:
+		return nil, fmt.Errorf("redis: unexpected type=%T for Slice", val)
+	}
+}
+
+func (cmd *Cmd) StringSlice() ([]string, error) {
+	slice, err := cmd.Slice()
+	if err != nil {
+		return nil, err
+	}
+
+	ss := make([]string, len(slice))
+	for i, iface := range slice {
+		val, err := toString(iface)
+		if err != nil {
+			return nil, err
+		}
+		ss[i] = val
+	}
+	return ss, nil
+}
+
+func (cmd *Cmd) Int64Slice() ([]int64, error) {
+	slice, err := cmd.Slice()
+	if err != nil {
+		return nil, err
+	}
+
+	nums := make([]int64, len(slice))
+	for i, iface := range slice {
+		val, err := toInt64(iface)
+		if err != nil {
+			return nil, err
+		}
+		nums[i] = val
+	}
+	return nums, nil
+}
+
+func (cmd *Cmd) Uint64Slice() ([]uint64, error) {
+	slice, err := cmd.Slice()
+	if err != nil {
+		return nil, err
+	}
+
+	nums := make([]uint64, len(slice))
+	for i, iface := range slice {
+		val, err := toUint64(iface)
+		if err != nil {
+			return nil, err
+		}
+		nums[i] = val
+	}
+	return nums, nil
+}
+
+func (cmd *Cmd) Float32Slice() ([]float32, error) {
+	slice, err := cmd.Slice()
+	if err != nil {
+		return nil, err
+	}
+
+	floats := make([]float32, len(slice))
+	for i, iface := range slice {
+		val, err := toFloat32(iface)
+		if err != nil {
+			return nil, err
+		}
+		floats[i] = val
+	}
+	return floats, nil
+}
+
+func (cmd *Cmd) Float64Slice() ([]float64, error) {
+	slice, err := cmd.Slice()
+	if err != nil {
+		return nil, err
+	}
+
+	floats := make([]float64, len(slice))
+	for i, iface := range slice {
+		val, err := toFloat64(iface)
+		if err != nil {
+			return nil, err
+		}
+		floats[i] = val
+	}
+	return floats, nil
+}
+
+func (cmd *Cmd) BoolSlice() ([]bool, error) {
+	slice, err := cmd.Slice()
+	if err != nil {
+		return nil, err
+	}
+
+	bools := make([]bool, len(slice))
+	for i, iface := range slice {
+		val, err := toBool(iface)
+		if err != nil {
+			return nil, err
+		}
+		bools[i] = val
+	}
+	return bools, nil
+}
+
 type StringCmd struct {
-	res rueidis.RedisResult
 	val string
 	err error
 }
 
 func newStringCmd(res rueidis.RedisResult) *StringCmd {
 	val, err := res.ToString()
-	return &StringCmd{res: res, val: val, err: err}
+	return &StringCmd{val: val, err: err}
 }
 
 func (cmd *StringCmd) SetVal(val string) {
 	cmd.val = val
+}
+
+func (cmd *StringCmd) SetErr(err error) {
+	cmd.err = err
 }
 
 func (cmd *StringCmd) Val() string {
@@ -41,16 +345,21 @@ func (cmd *StringCmd) Bytes() ([]byte, error) {
 }
 
 func (cmd *StringCmd) Bool() (bool, error) {
-	return cmd.res.ToBool()
+	return cmd.val != "", cmd.err
 }
 
 func (cmd *StringCmd) Int() (int, error) {
-	i, err := cmd.res.ToInt64()
-	return int(i), err
+	if cmd.err != nil {
+		return 0, cmd.err
+	}
+	return strconv.Atoi(cmd.Val())
 }
 
 func (cmd *StringCmd) Int64() (int64, error) {
-	return cmd.res.ToInt64()
+	if cmd.err != nil {
+		return 0, cmd.err
+	}
+	return strconv.ParseInt(cmd.Val(), 10, 64)
 }
 
 func (cmd *StringCmd) Uint64() (uint64, error) {
@@ -61,15 +370,21 @@ func (cmd *StringCmd) Uint64() (uint64, error) {
 }
 
 func (cmd *StringCmd) Float32() (float32, error) {
-	f, err := cmd.res.ToFloat64()
+	if cmd.err != nil {
+		return 0, cmd.err
+	}
+	v, err := strconv.ParseFloat(cmd.Val(), 32)
 	if err != nil {
 		return 0, err
 	}
-	return float32(f), nil
+	return float32(v), nil
 }
 
 func (cmd *StringCmd) Float64() (float64, error) {
-	return cmd.res.ToFloat64()
+	if cmd.err != nil {
+		return 0, cmd.err
+	}
+	return strconv.ParseFloat(cmd.Val(), 64)
 }
 
 func (cmd *StringCmd) Time() (time.Time, error) {
@@ -84,7 +399,6 @@ func (cmd *StringCmd) String() string {
 }
 
 type BoolCmd struct {
-	res rueidis.RedisResult
 	val bool
 	err error
 }
@@ -95,11 +409,15 @@ func newBoolCmd(res rueidis.RedisResult) *BoolCmd {
 		val = false
 		err = nil
 	}
-	return &BoolCmd{res: res, val: val, err: err}
+	return &BoolCmd{val: val, err: err}
 }
 
 func (cmd *BoolCmd) SetVal(val bool) {
 	cmd.val = val
+}
+
+func (cmd *BoolCmd) SetErr(err error) {
+	cmd.err = err
 }
 
 func (cmd *BoolCmd) Val() bool {
@@ -114,23 +432,22 @@ func (cmd *BoolCmd) Result() (bool, error) {
 	return cmd.val, cmd.err
 }
 
-func (cmd *BoolCmd) String() (string, error) {
-	return cmd.res.ToString()
-}
-
 type IntCmd struct {
-	res rueidis.RedisResult
 	val int64
 	err error
 }
 
 func newIntCmd(res rueidis.RedisResult) *IntCmd {
 	val, err := res.AsInt64()
-	return &IntCmd{res: res, val: val, err: err}
+	return &IntCmd{val: val, err: err}
 }
 
 func (cmd *IntCmd) SetVal(val int64) {
 	cmd.val = val
+}
+
+func (cmd *IntCmd) SetErr(err error) {
+	cmd.err = err
 }
 
 func (cmd *IntCmd) Val() int64 {
@@ -149,23 +466,58 @@ func (cmd *IntCmd) Uint64() (uint64, error) {
 	return uint64(cmd.val), cmd.err
 }
 
-func (cmd *IntCmd) String() (string, error) {
-	return cmd.res.ToString()
+type DurationCmd struct {
+	val time.Duration
+	err error
+}
+
+func newDurationCmd(res rueidis.RedisResult, precision time.Duration) *DurationCmd {
+	val, err := res.ToInt64()
+	if err != nil {
+		return &DurationCmd{val: 0, err: err}
+	}
+	if val > 0 {
+		return &DurationCmd{val: time.Duration(val) * precision, err: err}
+	}
+	return &DurationCmd{val: time.Duration(val), err: err}
+}
+
+func (cmd *DurationCmd) SetVal(val time.Duration) {
+	cmd.val = val
+}
+
+func (cmd *DurationCmd) SetErr(err error) {
+	cmd.err = err
+}
+
+func (cmd *DurationCmd) Val() time.Duration {
+	return cmd.val
+}
+
+func (cmd *DurationCmd) Err() error {
+	return cmd.err
+}
+
+func (cmd *DurationCmd) Result() (time.Duration, error) {
+	return cmd.val, cmd.err
 }
 
 type StatusCmd struct {
-	res rueidis.RedisResult
 	val string
 	err error
 }
 
 func newStatusCmd(res rueidis.RedisResult) *StatusCmd {
 	val, err := res.ToString()
-	return &StatusCmd{res: res, val: val, err: err}
+	return &StatusCmd{val: val, err: err}
 }
 
 func (cmd *StatusCmd) SetVal(val string) {
 	cmd.val = val
+}
+
+func (cmd *StatusCmd) SetErr(err error) {
+	cmd.err = err
 }
 
 func (cmd *StatusCmd) Val() string {
@@ -180,19 +532,14 @@ func (cmd *StatusCmd) Result() (string, error) {
 	return cmd.val, cmd.err
 }
 
-func (cmd *StatusCmd) String() (string, error) {
-	return cmd.res.ToString()
-}
-
 type SliceCmd struct {
-	res rueidis.RedisResult
 	val []interface{}
 	err error
 }
 
 func newSliceCmd(res rueidis.RedisResult) *SliceCmd {
 	val, err := res.ToArray()
-	slice := &SliceCmd{res: res, val: make([]interface{}, len(val)), err: err}
+	slice := &SliceCmd{val: make([]interface{}, len(val)), err: err}
 	for i, v := range val {
 		if s, err := v.ToString(); err == nil {
 			slice.val[i] = s
@@ -201,8 +548,21 @@ func newSliceCmd(res rueidis.RedisResult) *SliceCmd {
 	return slice
 }
 
+func newSliceCmdFromMap(res rueidis.RedisResult) *SliceCmd {
+	val, err := res.AsStrMap()
+	slice := &SliceCmd{val: make([]interface{}, 0, len(val)*2), err: err}
+	for k, v := range val {
+		slice.val = append(slice.val, k, v)
+	}
+	return slice
+}
+
 func (cmd *SliceCmd) SetVal(val []interface{}) {
 	cmd.val = val
+}
+
+func (cmd *SliceCmd) SetErr(err error) {
+	cmd.err = err
 }
 
 func (cmd *SliceCmd) Val() []interface{} {
@@ -217,23 +577,38 @@ func (cmd *SliceCmd) Result() ([]interface{}, error) {
 	return cmd.val, cmd.err
 }
 
-func (cmd *SliceCmd) String() (string, error) {
-	return cmd.res.ToString()
-}
-
 type StringSliceCmd struct {
-	res rueidis.RedisResult
 	val []string
 	err error
 }
 
 func newStringSliceCmd(res rueidis.RedisResult) *StringSliceCmd {
 	val, err := res.AsStrSlice()
-	return &StringSliceCmd{res: res, val: val, err: err}
+	return &StringSliceCmd{val: val, err: err}
+}
+
+func flattenStringSliceCmd(res rueidis.RedisResult) *StringSliceCmd {
+	arr, err := res.ToArray()
+	if err != nil {
+		return &StringSliceCmd{err: err}
+	}
+	val := make([]string, 0, len(arr)*2)
+	for _, v := range arr {
+		s, err := v.AsStrSlice()
+		if err != nil {
+			return &StringSliceCmd{err: err}
+		}
+		val = append(val, s...)
+	}
+	return &StringSliceCmd{val: val, err: err}
 }
 
 func (cmd *StringSliceCmd) SetVal(val []string) {
 	cmd.val = val
+}
+
+func (cmd *StringSliceCmd) SetErr(err error) {
+	cmd.err = err
 }
 
 func (cmd *StringSliceCmd) Val() []string {
@@ -248,23 +623,22 @@ func (cmd *StringSliceCmd) Result() ([]string, error) {
 	return cmd.val, cmd.err
 }
 
-func (cmd *StringSliceCmd) String() (string, error) {
-	return cmd.res.ToString()
-}
-
 type IntSliceCmd struct {
-	res rueidis.RedisResult
 	val []int64
 	err error
 }
 
 func newIntSliceCmd(res rueidis.RedisResult) *IntSliceCmd {
 	val, err := res.AsIntSlice()
-	return &IntSliceCmd{res: res, val: val, err: err}
+	return &IntSliceCmd{val: val, err: err}
 }
 
 func (cmd *IntSliceCmd) SetVal(val []int64) {
 	cmd.val = val
+}
+
+func (cmd *IntSliceCmd) SetErr(err error) {
+	cmd.err = err
 }
 
 func (cmd *IntSliceCmd) Val() []int64 {
@@ -279,12 +653,7 @@ func (cmd *IntSliceCmd) Result() ([]int64, error) {
 	return cmd.val, cmd.err
 }
 
-func (cmd *IntSliceCmd) String() (string, error) {
-	return cmd.res.ToString()
-}
-
 type BoolSliceCmd struct {
-	res rueidis.RedisResult
 	val []bool
 	err error
 }
@@ -292,17 +661,21 @@ type BoolSliceCmd struct {
 func newBoolSliceCmd(res rueidis.RedisResult) *BoolSliceCmd {
 	ints, err := res.AsIntSlice()
 	if err != nil {
-		return &BoolSliceCmd{res: res, err: err}
+		return &BoolSliceCmd{err: err}
 	}
 	val := make([]bool, 0, len(ints))
 	for _, i := range ints {
 		val = append(val, i == 1)
 	}
-	return &BoolSliceCmd{res: res, val: val, err: err}
+	return &BoolSliceCmd{val: val, err: err}
 }
 
 func (cmd *BoolSliceCmd) SetVal(val []bool) {
 	cmd.val = val
+}
+
+func (cmd *BoolSliceCmd) SetErr(err error) {
+	cmd.err = err
 }
 
 func (cmd *BoolSliceCmd) Val() []bool {
@@ -317,23 +690,22 @@ func (cmd *BoolSliceCmd) Result() ([]bool, error) {
 	return cmd.val, cmd.err
 }
 
-func (cmd *BoolSliceCmd) String() (string, error) {
-	return cmd.res.ToString()
-}
-
 type FloatSliceCmd struct {
-	res rueidis.RedisResult
 	val []float64
 	err error
 }
 
 func newFloatSliceCmd(res rueidis.RedisResult) *FloatSliceCmd {
 	val, err := res.AsFloatSlice()
-	return &FloatSliceCmd{res: res, val: val, err: err}
+	return &FloatSliceCmd{val: val, err: err}
 }
 
 func (cmd *FloatSliceCmd) SetVal(val []float64) {
 	cmd.val = val
+}
+
+func (cmd *FloatSliceCmd) SetErr(err error) {
+	cmd.err = err
 }
 
 func (cmd *FloatSliceCmd) Val() []float64 {
@@ -348,12 +720,7 @@ func (cmd *FloatSliceCmd) Result() ([]float64, error) {
 	return cmd.val, cmd.err
 }
 
-func (cmd *FloatSliceCmd) String() (string, error) {
-	return cmd.res.ToString()
-}
-
 type ZSliceCmd struct {
-	res rueidis.RedisResult
 	val []Z
 	err error
 }
@@ -361,28 +728,55 @@ type ZSliceCmd struct {
 func newZSliceCmd(res rueidis.RedisResult) *ZSliceCmd {
 	arr, err := res.ToArray()
 	if err != nil {
-		return &ZSliceCmd{res: res, err: err}
+		return &ZSliceCmd{err: err}
 	}
-	val := make([]Z, 0, len(arr)/2)
-	for i, j := 0, 1; i < len(arr); i, j = i+2, j+2 {
-		member, err := arr[i].ToString()
+	val := make([]Z, 0, len(arr))
+	for _, s := range arr {
+		kv, err := s.ToArray()
 		if err != nil {
-			return &ZSliceCmd{res: res, err: err}
+			return &ZSliceCmd{err: err}
 		}
-		score, err := arr[j].AsFloat64()
+		member, err := kv[0].ToString()
 		if err != nil {
-			return &ZSliceCmd{res: res, err: err}
+			return &ZSliceCmd{err: err}
+		}
+		score, err := kv[1].AsFloat64()
+		if err != nil {
+			return &ZSliceCmd{err: err}
 		}
 		val = append(val, Z{
 			Member: member,
 			Score:  score,
 		})
 	}
-	return &ZSliceCmd{res: res, val: val, err: err}
+	return &ZSliceCmd{val: val, err: err}
+}
+
+func newZSliceSingleCmd(res rueidis.RedisResult) *ZSliceCmd {
+	arr, err := res.ToArray()
+	if err != nil {
+		return &ZSliceCmd{err: err}
+	}
+	member, err := arr[0].ToString()
+	if err != nil {
+		return &ZSliceCmd{err: err}
+	}
+	score, err := arr[1].AsFloat64()
+	if err != nil {
+		return &ZSliceCmd{err: err}
+	}
+	return &ZSliceCmd{val: []Z{{
+		Member: member,
+		Score:  score,
+	}}, err: err}
 }
 
 func (cmd *ZSliceCmd) SetVal(val []Z) {
 	cmd.val = val
+}
+
+func (cmd *ZSliceCmd) SetErr(err error) {
+	cmd.err = err
 }
 
 func (cmd *ZSliceCmd) Val() []Z {
@@ -397,23 +791,22 @@ func (cmd *ZSliceCmd) Result() ([]Z, error) {
 	return cmd.val, cmd.err
 }
 
-func (cmd *ZSliceCmd) String() (string, error) {
-	return cmd.res.ToString()
-}
-
 type FloatCmd struct {
-	res rueidis.RedisResult
 	val float64
 	err error
 }
 
 func newFloatCmd(res rueidis.RedisResult) *FloatCmd {
-	val, err := res.ToFloat64()
-	return &FloatCmd{res: res, val: val, err: err}
+	val, err := res.AsFloat64()
+	return &FloatCmd{val: val, err: err}
 }
 
 func (cmd *FloatCmd) SetVal(val float64) {
 	cmd.val = val
+}
+
+func (cmd *FloatCmd) SetErr(err error) {
+	cmd.err = err
 }
 
 func (cmd *FloatCmd) Val() float64 {
@@ -428,12 +821,7 @@ func (cmd *FloatCmd) Result() (float64, error) {
 	return cmd.val, cmd.err
 }
 
-func (cmd *FloatCmd) String() (string, error) {
-	return cmd.res.ToString()
-}
-
 type ScanCmd struct {
-	res    rueidis.RedisResult
 	cursor uint64
 	keys   []string
 	err    error
@@ -442,14 +830,14 @@ type ScanCmd struct {
 func newScanCmd(res rueidis.RedisResult) *ScanCmd {
 	ret, err := res.ToArray()
 	if err != nil {
-		return &ScanCmd{res: res, err: err}
+		return &ScanCmd{err: err}
 	}
 	cursor, err := ret[0].AsInt64()
 	if err != nil {
-		return &ScanCmd{res: res, err: err}
+		return &ScanCmd{err: err}
 	}
 	keys, err := ret[1].AsStrSlice()
-	return &ScanCmd{res: res, cursor: uint64(cursor), keys: keys, err: err}
+	return &ScanCmd{cursor: uint64(cursor), keys: keys, err: err}
 }
 
 func (cmd *ScanCmd) SetVal(keys []string, cursor uint64) {
@@ -469,23 +857,22 @@ func (cmd *ScanCmd) Result() (keys []string, cursor uint64, err error) {
 	return cmd.keys, cmd.cursor, cmd.err
 }
 
-func (cmd *ScanCmd) String() (string, error) {
-	return cmd.res.ToString()
-}
-
 type StringStringMapCmd struct {
-	res rueidis.RedisResult
 	val map[string]string
 	err error
 }
 
 func newStringStringMapCmd(res rueidis.RedisResult) *StringStringMapCmd {
 	val, err := res.AsStrMap()
-	return &StringStringMapCmd{res: res, val: val, err: err}
+	return &StringStringMapCmd{val: val, err: err}
 }
 
 func (cmd *StringStringMapCmd) SetVal(val map[string]string) {
 	cmd.val = val
+}
+
+func (cmd *StringStringMapCmd) SetErr(err error) {
+	cmd.err = err
 }
 
 func (cmd *StringStringMapCmd) Val() map[string]string {
@@ -500,23 +887,22 @@ func (cmd *StringStringMapCmd) Result() (map[string]string, error) {
 	return cmd.val, cmd.err
 }
 
-func (cmd *StringStringMapCmd) String() (string, error) {
-	return cmd.res.ToString()
-}
-
 type StringIntMapCmd struct {
-	res rueidis.RedisResult
 	val map[string]int64
 	err error
 }
 
 func newStringIntMapCmd(res rueidis.RedisResult) *StringIntMapCmd {
 	val, err := res.AsIntMap()
-	return &StringIntMapCmd{res: res, val: val, err: err}
+	return &StringIntMapCmd{val: val, err: err}
 }
 
 func (cmd *StringIntMapCmd) SetVal(val map[string]int64) {
 	cmd.val = val
+}
+
+func (cmd *StringIntMapCmd) SetErr(err error) {
+	cmd.err = err
 }
 
 func (cmd *StringIntMapCmd) Val() map[string]int64 {
@@ -531,12 +917,7 @@ func (cmd *StringIntMapCmd) Result() (map[string]int64, error) {
 	return cmd.val, cmd.err
 }
 
-func (cmd *StringIntMapCmd) String() (string, error) {
-	return cmd.res.ToString()
-}
-
 type StringStructMapCmd struct {
-	res rueidis.RedisResult
 	val map[string]struct{}
 	err error
 }
@@ -544,17 +925,21 @@ type StringStructMapCmd struct {
 func newStringStructMapCmd(res rueidis.RedisResult) *StringStructMapCmd {
 	strSlice, err := res.AsStrSlice()
 	if err != nil {
-		return &StringStructMapCmd{res: res, err: err}
+		return &StringStructMapCmd{err: err}
 	}
 	val := make(map[string]struct{}, len(strSlice))
 	for _, v := range strSlice {
 		val[v] = struct{}{}
 	}
-	return &StringStructMapCmd{res: res, val: val, err: err}
+	return &StringStructMapCmd{val: val, err: err}
 }
 
 func (cmd *StringStructMapCmd) SetVal(val map[string]struct{}) {
 	cmd.val = val
+}
+
+func (cmd *StringStructMapCmd) SetErr(err error) {
+	cmd.err = err
 }
 
 func (cmd *StringStructMapCmd) Val() map[string]struct{} {
@@ -569,19 +954,14 @@ func (cmd *StringStructMapCmd) Result() (map[string]struct{}, error) {
 	return cmd.val, cmd.err
 }
 
-func (cmd *StringStructMapCmd) String() (string, error) {
-	return cmd.res.ToString()
-}
-
 type XMessageSliceCmd struct {
-	res rueidis.RedisResult
 	val []XMessage
 	err error
 }
 
 func newXMessageSliceCmd(res rueidis.RedisResult) *XMessageSliceCmd {
 	val, err := res.AsXRangeSlice()
-	slice := &XMessageSliceCmd{res: res, val: make([]XMessage, len(val)), err: err}
+	slice := &XMessageSliceCmd{val: make([]XMessage, len(val)), err: err}
 	for i, r := range val {
 		slice.val[i] = newXMessage(r)
 	}
@@ -589,6 +969,9 @@ func newXMessageSliceCmd(res rueidis.RedisResult) *XMessageSliceCmd {
 }
 
 func newXMessage(r rueidis.XRange) XMessage {
+	if r.FieldValues == nil {
+		return XMessage{ID: r.ID, Values: nil}
+	}
 	m := XMessage{ID: r.ID, Values: make(map[string]interface{}, len(r.FieldValues))}
 	for k, v := range r.FieldValues {
 		m.Values[k] = v
@@ -598,6 +981,10 @@ func newXMessage(r rueidis.XRange) XMessage {
 
 func (cmd *XMessageSliceCmd) SetVal(val []XMessage) {
 	cmd.val = val
+}
+
+func (cmd *XMessageSliceCmd) SetErr(err error) {
+	cmd.err = err
 }
 
 func (cmd *XMessageSliceCmd) Val() []XMessage {
@@ -612,54 +999,42 @@ func (cmd *XMessageSliceCmd) Result() ([]XMessage, error) {
 	return cmd.val, cmd.err
 }
 
-func (cmd *XMessageSliceCmd) String() (string, error) {
-	return cmd.res.ToString()
-}
-
 type XStream struct {
 	Stream   string
 	Messages []XMessage
 }
 
 type XStreamSliceCmd struct {
-	res rueidis.RedisResult
 	val []XStream
 	err error
 }
 
 func newXStreamSliceCmd(res rueidis.RedisResult) *XStreamSliceCmd {
-	arrs, err := res.ToArray()
+	streams, err := res.ToMap()
 	if err != nil {
-		return &XStreamSliceCmd{res: res, err: err}
+		return &XStreamSliceCmd{err: err}
 	}
-	val := make([]XStream, 0, len(arrs))
-	for _, v := range arrs {
-		arr, err := v.ToArray()
+	val := make([]XStream, 0, len(streams))
+	for name, stream := range streams {
+		ranges, err := stream.AsXRangeSlice()
 		if err != nil {
-			return &XStreamSliceCmd{res: res, err: err}
-		}
-		if len(arr) != 2 {
-			return &XStreamSliceCmd{res: res, err: fmt.Errorf("got %d, wanted 2", len(arr))}
-		}
-		stream, err := arr[0].ToString()
-		if err != nil {
-			return &XStreamSliceCmd{res: res, err: err}
-		}
-		ranges, err := arr[1].AsXRangeSlice()
-		if err != nil {
-			return &XStreamSliceCmd{res: res, err: err}
+			return &XStreamSliceCmd{err: err}
 		}
 		msgs := make([]XMessage, 0, len(ranges))
 		for _, r := range ranges {
 			msgs = append(msgs, newXMessage(r))
 		}
-		val = append(val, XStream{Stream: stream, Messages: msgs})
+		val = append(val, XStream{Stream: name, Messages: msgs})
 	}
-	return &XStreamSliceCmd{res: res, val: val, err: err}
+	return &XStreamSliceCmd{val: val, err: err}
 }
 
 func (cmd *XStreamSliceCmd) SetVal(val []XStream) {
 	cmd.val = val
+}
+
+func (cmd *XStreamSliceCmd) SetErr(err error) {
+	cmd.err = err
 }
 
 func (cmd *XStreamSliceCmd) Val() []XStream {
@@ -674,10 +1049,6 @@ func (cmd *XStreamSliceCmd) Result() ([]XStream, error) {
 	return cmd.val, cmd.err
 }
 
-func (cmd *XStreamSliceCmd) String() (string, error) {
-	return cmd.res.ToString()
-}
-
 type XPending struct {
 	Count     int64
 	Lower     string
@@ -686,7 +1057,6 @@ type XPending struct {
 }
 
 type XPendingCmd struct {
-	res rueidis.RedisResult
 	val XPending
 	err error
 }
@@ -694,22 +1064,22 @@ type XPendingCmd struct {
 func newXPendingCmd(res rueidis.RedisResult) *XPendingCmd {
 	arr, err := res.ToArray()
 	if err != nil {
-		return &XPendingCmd{res: res, err: err}
+		return &XPendingCmd{err: err}
 	}
 	if len(arr) != 4 {
-		return &XPendingCmd{res: res, err: fmt.Errorf("got %d, wanted 4", len(arr))}
+		return &XPendingCmd{err: fmt.Errorf("got %d, wanted 4", len(arr))}
 	}
 	count, err := arr[0].ToInt64()
 	if err != nil {
-		return &XPendingCmd{res: res, err: err}
+		return &XPendingCmd{err: err}
 	}
 	lower, err := arr[1].ToString()
 	if err != nil {
-		return &XPendingCmd{res: res, err: err}
+		return &XPendingCmd{err: err}
 	}
 	higher, err := arr[2].ToString()
 	if err != nil {
-		return &XPendingCmd{res: res, err: err}
+		return &XPendingCmd{err: err}
 	}
 	val := XPending{
 		Count:  count,
@@ -718,34 +1088,38 @@ func newXPendingCmd(res rueidis.RedisResult) *XPendingCmd {
 	}
 	consumerArr, err := arr[3].ToArray()
 	if err != nil {
-		return &XPendingCmd{res: res, err: err}
+		return &XPendingCmd{err: err}
 	}
 	for _, v := range consumerArr {
 		consumer, err := v.ToArray()
 		if err != nil {
-			return &XPendingCmd{res: res, err: err}
+			return &XPendingCmd{err: err}
 		}
-		if len(arr) != 2 {
-			return &XPendingCmd{res: res, err: fmt.Errorf("got %d, wanted 2", len(arr))}
+		if len(consumer) != 2 {
+			return &XPendingCmd{err: fmt.Errorf("got %d, wanted 2", len(arr))}
 		}
 		consumerName, err := consumer[0].ToString()
 		if err != nil {
-			return &XPendingCmd{res: res, err: err}
+			return &XPendingCmd{err: err}
 		}
 		consumerPending, err := consumer[1].AsInt64()
 		if err != nil {
-			return &XPendingCmd{res: res, err: err}
+			return &XPendingCmd{err: err}
 		}
 		if val.Consumers == nil {
 			val.Consumers = make(map[string]int64)
 		}
 		val.Consumers[consumerName] = consumerPending
 	}
-	return &XPendingCmd{res: res, val: val, err: err}
+	return &XPendingCmd{val: val, err: err}
 }
 
 func (cmd *XPendingCmd) SetVal(val XPending) {
 	cmd.val = val
+}
+
+func (cmd *XPendingCmd) SetErr(err error) {
+	cmd.err = err
 }
 
 func (cmd *XPendingCmd) Val() XPending {
@@ -760,10 +1134,6 @@ func (cmd *XPendingCmd) Result() (XPending, error) {
 	return cmd.val, cmd.err
 }
 
-func (cmd *XPendingCmd) String() (string, error) {
-	return cmd.res.ToString()
-}
-
 type XPendingExt struct {
 	ID         string
 	Consumer   string
@@ -772,7 +1142,6 @@ type XPendingExt struct {
 }
 
 type XPendingExtCmd struct {
-	res rueidis.RedisResult
 	val []XPendingExt
 	err error
 }
@@ -780,32 +1149,32 @@ type XPendingExtCmd struct {
 func newXPendingExtCmd(res rueidis.RedisResult) *XPendingExtCmd {
 	arrs, err := res.ToArray()
 	if err != nil {
-		return &XPendingExtCmd{res: res, err: err}
+		return &XPendingExtCmd{err: err}
 	}
 	val := make([]XPendingExt, 0, len(arrs))
 	for _, v := range arrs {
 		arr, err := v.ToArray()
 		if err != nil {
-			return &XPendingExtCmd{res: res, err: err}
+			return &XPendingExtCmd{err: err}
 		}
 		if len(arr) != 4 {
-			return &XPendingExtCmd{res: res, err: fmt.Errorf("got %d, wanted 4", len(arr))}
+			return &XPendingExtCmd{err: fmt.Errorf("got %d, wanted 4", len(arr))}
 		}
 		id, err := arr[0].ToString()
 		if err != nil {
-			return &XPendingExtCmd{res: res, err: err}
+			return &XPendingExtCmd{err: err}
 		}
 		consumer, err := arr[1].ToString()
 		if err != nil {
-			return &XPendingExtCmd{res: res, err: err}
+			return &XPendingExtCmd{err: err}
 		}
 		idle, err := arr[2].ToInt64()
 		if err != nil {
-			return &XPendingExtCmd{res: res, err: err}
+			return &XPendingExtCmd{err: err}
 		}
 		retryCount, err := arr[3].ToInt64()
 		if err != nil {
-			return &XPendingExtCmd{res: res, err: err}
+			return &XPendingExtCmd{err: err}
 		}
 		val = append(val, XPendingExt{
 			ID:         id,
@@ -814,11 +1183,15 @@ func newXPendingExtCmd(res rueidis.RedisResult) *XPendingExtCmd {
 			RetryCount: retryCount,
 		})
 	}
-	return &XPendingExtCmd{res: res, val: val, err: err}
+	return &XPendingExtCmd{val: val, err: err}
 }
 
 func (cmd *XPendingExtCmd) SetVal(val []XPendingExt) {
 	cmd.val = val
+}
+
+func (cmd *XPendingExtCmd) SetErr(err error) {
+	cmd.err = err
 }
 
 func (cmd *XPendingExtCmd) Val() []XPendingExt {
@@ -833,42 +1206,45 @@ func (cmd *XPendingExtCmd) Result() ([]XPendingExt, error) {
 	return cmd.val, cmd.err
 }
 
-func (cmd *XPendingExtCmd) String() (string, error) {
-	return cmd.res.ToString()
-}
-
 type XAutoClaimCmd struct {
-	res   rueidis.RedisResult
 	start string
-	val   []rueidis.XRange
+	val   []XMessage
 	err   error
 }
 
 func newXAutoClaimCmd(res rueidis.RedisResult) *XAutoClaimCmd {
 	arr, err := res.ToArray()
 	if err != nil {
-		return &XAutoClaimCmd{res: res, err: err}
+		return &XAutoClaimCmd{err: err}
 	}
 	if len(arr) != 2 {
-		return &XAutoClaimCmd{res: res, err: fmt.Errorf("got %d, wanted 2", len(arr))}
+		return &XAutoClaimCmd{err: fmt.Errorf("got %d, wanted 2", len(arr))}
 	}
 	start, err := arr[0].ToString()
 	if err != nil {
-		return &XAutoClaimCmd{res: res, err: err}
+		return &XAutoClaimCmd{err: err}
 	}
-	val, err := arr[1].AsXRangeSlice()
+	ranges, err := arr[1].AsXRangeSlice()
 	if err != nil {
-		return &XAutoClaimCmd{res: res, err: err}
+		return &XAutoClaimCmd{err: err}
 	}
-	return &XAutoClaimCmd{res: res, val: val, start: start, err: err}
+	val := make([]XMessage, 0, len(ranges))
+	for _, r := range ranges {
+		val = append(val, newXMessage(r))
+	}
+	return &XAutoClaimCmd{val: val, start: start, err: err}
 }
 
-func (cmd *XAutoClaimCmd) SetVal(val []rueidis.XRange, start string) {
+func (cmd *XAutoClaimCmd) SetVal(val []XMessage, start string) {
 	cmd.val = val
 	cmd.start = start
 }
 
-func (cmd *XAutoClaimCmd) Val() (messages []rueidis.XRange, start string) {
+func (cmd *XAutoClaimCmd) SetErr(err error) {
+	cmd.err = err
+}
+
+func (cmd *XAutoClaimCmd) Val() (messages []XMessage, start string) {
 	return cmd.val, cmd.start
 }
 
@@ -876,16 +1252,11 @@ func (cmd *XAutoClaimCmd) Err() error {
 	return cmd.err
 }
 
-func (cmd *XAutoClaimCmd) Result() (messages []rueidis.XRange, start string, err error) {
+func (cmd *XAutoClaimCmd) Result() (messages []XMessage, start string, err error) {
 	return cmd.val, cmd.start, cmd.err
 }
 
-func (cmd *XAutoClaimCmd) String() (string, error) {
-	return cmd.res.ToString()
-}
-
 type XAutoClaimJustIDCmd struct {
-	res   rueidis.RedisResult
 	start string
 	val   []string
 	err   error
@@ -894,25 +1265,29 @@ type XAutoClaimJustIDCmd struct {
 func newXAutoClaimJustIDCmd(res rueidis.RedisResult) *XAutoClaimJustIDCmd {
 	arr, err := res.ToArray()
 	if err != nil {
-		return &XAutoClaimJustIDCmd{res: res, err: err}
+		return &XAutoClaimJustIDCmd{err: err}
 	}
 	if len(arr) != 2 {
-		return &XAutoClaimJustIDCmd{res: res, err: fmt.Errorf("got %d, wanted 2", len(arr))}
+		return &XAutoClaimJustIDCmd{err: fmt.Errorf("got %d, wanted 2", len(arr))}
 	}
 	start, err := arr[0].ToString()
 	if err != nil {
-		return &XAutoClaimJustIDCmd{res: res, err: err}
+		return &XAutoClaimJustIDCmd{err: err}
 	}
 	val, err := arr[1].AsStrSlice()
 	if err != nil {
-		return &XAutoClaimJustIDCmd{res: res, err: err}
+		return &XAutoClaimJustIDCmd{err: err}
 	}
-	return &XAutoClaimJustIDCmd{res: res, val: val, start: start, err: err}
+	return &XAutoClaimJustIDCmd{val: val, start: start, err: err}
 }
 
 func (cmd *XAutoClaimJustIDCmd) SetVal(val []string, start string) {
 	cmd.val = val
 	cmd.start = start
+}
+
+func (cmd *XAutoClaimJustIDCmd) SetErr(err error) {
+	cmd.err = err
 }
 
 func (cmd *XAutoClaimJustIDCmd) Val() (ids []string, start string) {
@@ -927,10 +1302,6 @@ func (cmd *XAutoClaimJustIDCmd) Result() (ids []string, start string, err error)
 	return cmd.val, cmd.start, cmd.err
 }
 
-func (cmd *XAutoClaimJustIDCmd) String() (string, error) {
-	return cmd.res.ToString()
-}
-
 type XInfoGroup struct {
 	Name            string
 	Consumers       int64
@@ -939,7 +1310,6 @@ type XInfoGroup struct {
 }
 
 type XInfoGroupsCmd struct {
-	res rueidis.RedisResult
 	val []XInfoGroup
 	err error
 }
@@ -947,54 +1317,38 @@ type XInfoGroupsCmd struct {
 func newXInfoGroupsCmd(res rueidis.RedisResult) *XInfoGroupsCmd {
 	arr, err := res.ToArray()
 	if err != nil {
-		return &XInfoGroupsCmd{res: res, err: err}
+		return &XInfoGroupsCmd{err: err}
 	}
 	groupInfos := make([]XInfoGroup, 0, len(arr))
 	for _, v := range arr {
-		info, err := v.ToArray()
+		info, err := v.ToMap()
 		if err != nil {
-			return &XInfoGroupsCmd{res: res, err: err}
-		}
-		if len(info) != 8 {
-			return &XInfoGroupsCmd{res: res, err: fmt.Errorf("got %d, wanted 8", len(arr))}
+			return &XInfoGroupsCmd{err: err}
 		}
 		var group XInfoGroup
-		for i, j := 0, 1; i < 8; i, j = i+2, j+2 {
-			key, err := info[i].ToString()
-			if err != nil {
-				return &XInfoGroupsCmd{res: res, err: err}
-			}
-			val, err := info[j].ToString()
-			if err != nil {
-				return &XInfoGroupsCmd{res: res, err: err}
-			}
-			switch key {
-			case "name":
-				group.Name = val
-			case "consumers":
-				group.Consumers, err = strconv.ParseInt(val, 0, 64)
-				if err != nil {
-					return &XInfoGroupsCmd{res: res, err: err}
-				}
-			case "pending":
-				group.Pending, err = strconv.ParseInt(val, 0, 64)
-				if err != nil {
-					return &XInfoGroupsCmd{res: res, err: err}
-				}
-			case "last-delivered-id":
-				group.LastDeliveredID = val
-			default:
-				return &XInfoGroupsCmd{res: res, err: fmt.Errorf("unexpected content %s", key)}
-			}
+		if attr, ok := info["name"]; ok {
+			group.Name, _ = attr.ToString()
 		}
-
+		if attr, ok := info["consumers"]; ok {
+			group.Consumers, _ = attr.AsInt64()
+		}
+		if attr, ok := info["pending"]; ok {
+			group.Pending, _ = attr.AsInt64()
+		}
+		if attr, ok := info["last-delivered-id"]; ok {
+			group.LastDeliveredID, _ = attr.ToString()
+		}
 		groupInfos = append(groupInfos, group)
 	}
-	return &XInfoGroupsCmd{res: res, val: groupInfos, err: err}
+	return &XInfoGroupsCmd{val: groupInfos, err: err}
 }
 
 func (cmd *XInfoGroupsCmd) SetVal(val []XInfoGroup) {
 	cmd.val = val
+}
+
+func (cmd *XInfoGroupsCmd) SetErr(err error) {
+	cmd.err = err
 }
 
 func (cmd *XInfoGroupsCmd) Val() []XInfoGroup {
@@ -1009,10 +1363,6 @@ func (cmd *XInfoGroupsCmd) Result() ([]XInfoGroup, error) {
 	return cmd.val, cmd.err
 }
 
-func (cmd *XInfoGroupsCmd) String() (string, error) {
-	return cmd.res.ToString()
-}
-
 type XInfoStream struct {
 	Length          int64
 	RadixTreeKeys   int64
@@ -1023,60 +1373,50 @@ type XInfoStream struct {
 	LastEntry       XMessage
 }
 type XInfoStreamCmd struct {
-	res rueidis.RedisResult
 	val XInfoStream
 	err error
 }
 
 func newXInfoStreamCmd(res rueidis.RedisResult) *XInfoStreamCmd {
-	arr, err := res.ToArray()
+	kv, err := res.ToMap()
 	if err != nil {
-		return &XInfoStreamCmd{res: res, err: err}
-	}
-	if len(arr) != 14 {
-		return &XInfoStreamCmd{res: res, err: fmt.Errorf("got %d, wanted 14", len(arr))}
+		return &XInfoStreamCmd{err: err}
 	}
 	var val XInfoStream
-	for i, j := 0, 1; i < 14; i, j = i+2, j+2 {
-		key, err := arr[i].ToString()
-		if err != nil {
-			return &XInfoStreamCmd{res: res, err: err}
-		}
-		switch key {
-		case "length":
-			val.Length, err = arr[j].ToInt64()
-		case "radix-tree-keys":
-			val.RadixTreeKeys, err = arr[j].ToInt64()
-		case "radix-tree-nodes":
-			val.RadixTreeNodes, err = arr[j].ToInt64()
-		case "groups":
-			val.Groups, err = arr[j].ToInt64()
-		case "last-generated-id":
-			val.LastGeneratedID, err = arr[j].ToString()
-		case "first-entry":
-			r, err := arr[j].AsXRange()
-			if rueidis.IsRedisNil(err) {
-				err = nil
-			}
+	if v, ok := kv["length"]; ok {
+		val.Length, _ = v.ToInt64()
+	}
+	if v, ok := kv["radix-tree-keys"]; ok {
+		val.RadixTreeKeys, _ = v.ToInt64()
+	}
+	if v, ok := kv["radix-tree-nodes"]; ok {
+		val.RadixTreeNodes, _ = v.ToInt64()
+	}
+	if v, ok := kv["groups"]; ok {
+		val.Groups, _ = v.ToInt64()
+	}
+	if v, ok := kv["last-generated-id"]; ok {
+		val.LastGeneratedID, _ = v.ToString()
+	}
+	if v, ok := kv["first-entry"]; ok {
+		if r, err := v.AsXRange(); err == nil {
 			val.FirstEntry = newXMessage(r)
-		case "last-entry":
-			r, err := arr[j].AsXRange()
-			if rueidis.IsRedisNil(err) {
-				err = nil
-			}
-			val.LastEntry = newXMessage(r)
-		default:
-			err = fmt.Errorf("unexpected content %s", key)
-		}
-		if err != nil {
-			return &XInfoStreamCmd{res: res, err: err}
 		}
 	}
-	return &XInfoStreamCmd{res: res, val: val, err: err}
+	if v, ok := kv["last-entry"]; ok {
+		if r, err := v.AsXRange(); err == nil {
+			val.LastEntry = newXMessage(r)
+		}
+	}
+	return &XInfoStreamCmd{val: val, err: err}
 }
 
 func (cmd *XInfoStreamCmd) SetVal(val XInfoStream) {
 	cmd.val = val
+}
+
+func (cmd *XInfoStreamCmd) SetErr(err error) {
+	cmd.err = err
 }
 
 func (cmd *XInfoStreamCmd) Val() XInfoStream {
@@ -1089,10 +1429,6 @@ func (cmd *XInfoStreamCmd) Err() error {
 
 func (cmd *XInfoStreamCmd) Result() (XInfoStream, error) {
 	return cmd.val, cmd.err
-}
-
-func (cmd *XInfoStreamCmd) String() (string, error) {
-	return cmd.res.ToString()
 }
 
 type XInfoStreamConsumerPending struct {
@@ -1133,58 +1469,53 @@ type XInfoStreamFull struct {
 }
 
 type XInfoStreamFullCmd struct {
-	res rueidis.RedisResult
 	val XInfoStreamFull
 	err error
 }
 
 func newXInfoStreamFullCmd(res rueidis.RedisResult) *XInfoStreamFullCmd {
-	arr, err := res.ToArray()
+	kv, err := res.ToMap()
 	if err != nil {
-		return &XInfoStreamFullCmd{res: res, err: err}
-	}
-	if len(arr) != 12 {
-		return &XInfoStreamFullCmd{res: res, err: fmt.Errorf("got %d, wanted 12", len(arr))}
+		return &XInfoStreamFullCmd{err: err}
 	}
 	var val XInfoStreamFull
-	for i, j := 0, 1; i < 12; i, j = i+2, j+2 {
-		key, err := arr[i].ToString()
+	if v, ok := kv["length"]; ok {
+		val.Length, _ = v.ToInt64()
+	}
+	if v, ok := kv["radix-tree-keys"]; ok {
+		val.RadixTreeKeys, _ = v.ToInt64()
+	}
+	if v, ok := kv["radix-tree-nodes"]; ok {
+		val.RadixTreeNodes, _ = v.ToInt64()
+	}
+	if v, ok := kv["last-generated-id"]; ok {
+		val.LastGeneratedID, _ = v.ToString()
+	}
+	if v, ok := kv["groups"]; ok {
+		val.Groups, err = readStreamGroups(v)
 		if err != nil {
-			return &XInfoStreamFullCmd{res: res, err: err}
-		}
-		switch key {
-		case "length":
-			val.Length, err = arr[j].ToInt64()
-		case "radix-tree-keys":
-			val.RadixTreeKeys, err = arr[j].ToInt64()
-		case "radix-tree-nodes":
-			val.RadixTreeNodes, err = arr[j].ToInt64()
-		case "last-generated-id":
-			val.LastGeneratedID, err = arr[j].ToString()
-		case "entries":
-			ranges, err := arr[j].AsXRangeSlice()
-			if err != nil {
-				return &XInfoStreamFullCmd{res: res, err: err}
-			}
-			val.Entries = make([]XMessage, 0, len(ranges))
-			for _, r := range ranges {
-				val.Entries = append(val.Entries, newXMessage(r))
-			}
-		case "groups":
-			val.Groups, err = readStreamGroups(arr[j])
-		default:
-			err = fmt.Errorf("unexpected content %s", key)
-		}
-		if err != nil {
-			return &XInfoStreamFullCmd{res: res, err: err}
+			return &XInfoStreamFullCmd{err: err}
 		}
 	}
-
-	return &XInfoStreamFullCmd{res: res, val: val, err: err}
+	if v, ok := kv["entries"]; ok {
+		ranges, err := v.AsXRangeSlice()
+		if err != nil {
+			return &XInfoStreamFullCmd{err: err}
+		}
+		val.Entries = make([]XMessage, 0, len(ranges))
+		for _, r := range ranges {
+			val.Entries = append(val.Entries, newXMessage(r))
+		}
+	}
+	return &XInfoStreamFullCmd{val: val, err: err}
 }
 
 func (cmd *XInfoStreamFullCmd) SetVal(val XInfoStreamFull) {
 	cmd.val = val
+}
+
+func (cmd *XInfoStreamFullCmd) SetErr(err error) {
+	cmd.err = err
 }
 
 func (cmd *XInfoStreamFullCmd) Val() XInfoStreamFull {
@@ -1199,10 +1530,6 @@ func (cmd *XInfoStreamFullCmd) Result() (XInfoStreamFull, error) {
 	return cmd.val, cmd.err
 }
 
-func (cmd *XInfoStreamFullCmd) String() (string, error) {
-	return cmd.res.ToString()
-}
-
 func readStreamGroups(res rueidis.RedisMessage) ([]XInfoStreamGroup, error) {
 	arr, err := res.ToArray()
 	if err != nil {
@@ -1210,33 +1537,28 @@ func readStreamGroups(res rueidis.RedisMessage) ([]XInfoStreamGroup, error) {
 	}
 	groups := make([]XInfoStreamGroup, 0, len(arr))
 	for _, v := range arr {
-		info, err := v.ToArray()
+		info, err := v.ToMap()
 		if err != nil {
 			return nil, err
 		}
-		if len(info) != 10 {
-			return nil, fmt.Errorf("got %d, wanted 10", len(arr))
-		}
 		var group XInfoStreamGroup
-		for i, j := 0, 1; i < 10; i, j = i+2, j+2 {
-			key, err := info[i].ToString()
+		if attr, ok := info["name"]; ok {
+			group.Name, _ = attr.ToString()
+		}
+		if attr, ok := info["last-delivered-id"]; ok {
+			group.LastDeliveredID, _ = attr.ToString()
+		}
+		if attr, ok := info["pel-count"]; ok {
+			group.PelCount, _ = attr.ToInt64()
+		}
+		if attr, ok := info["pending"]; ok {
+			group.Pending, err = readXInfoStreamGroupPending(attr)
 			if err != nil {
 				return nil, err
 			}
-			switch key {
-			case "name":
-				group.Name, err = info[j].ToString()
-			case "last-delivered-id":
-				group.LastDeliveredID, err = info[j].ToString()
-			case "pel-count":
-				group.PelCount, err = info[j].ToInt64()
-			case "pending":
-				group.Pending, err = readXInfoStreamGroupPending(info[j])
-			case "consumers":
-				group.Consumers, err = readXInfoStreamConsumers(info[j])
-			default:
-				err = fmt.Errorf("unexpected content %s", key)
-			}
+		}
+		if attr, ok := info["consumers"]; ok {
+			group.Consumers, err = readXInfoStreamConsumers(attr)
 			if err != nil {
 				return nil, err
 			}
@@ -1290,65 +1612,50 @@ func readXInfoStreamConsumers(res rueidis.RedisMessage) ([]XInfoStreamConsumer, 
 	}
 	consumer := make([]XInfoStreamConsumer, 0, len(arr))
 	for _, v := range arr {
-		info, err := v.ToArray()
+		info, err := v.ToMap()
 		if err != nil {
 			return nil, err
 		}
-		if len(info) != 8 {
-			return nil, fmt.Errorf("got %d, wanted 8", len(arr))
-		}
 		var c XInfoStreamConsumer
-		for i, j := 0, 1; i < 8; i, j = i+2, j+2 {
-			cKey, err := info[i].ToString()
+		if attr, ok := info["name"]; ok {
+			c.Name, _ = attr.ToString()
+		}
+		if attr, ok := info["seen-time"]; ok {
+			seen, _ := attr.ToInt64()
+			c.SeenTime = time.Unix(seen/1000, seen%1000*int64(time.Millisecond))
+		}
+		if attr, ok := info["pel-count"]; ok {
+			c.PelCount, _ = attr.ToInt64()
+		}
+		if attr, ok := info["pending"]; ok {
+			pending, err := attr.ToArray()
 			if err != nil {
 				return nil, err
 			}
-			switch cKey {
-			case "name":
-				c.Name, err = info[j].ToString()
-			case "seen-time":
-				seen, err := info[j].ToInt64()
+			c.Pending = make([]XInfoStreamConsumerPending, 0, len(pending))
+			for _, v := range pending {
+				pendingInfo, err := v.ToArray()
 				if err != nil {
 					return nil, err
 				}
-				c.SeenTime = time.Unix(seen/1000, seen%1000*int64(time.Millisecond))
-			case "pel-count":
-				c.PelCount, err = info[j].ToInt64()
-			case "pending":
-				pending, err := info[j].ToArray()
+				if len(pendingInfo) != 3 {
+					return nil, fmt.Errorf("got %d, wanted 3", len(arr))
+				}
+				var p XInfoStreamConsumerPending
+				p.ID, err = pendingInfo[0].ToString()
 				if err != nil {
 					return nil, err
 				}
-				c.Pending = make([]XInfoStreamConsumerPending, 0, len(pending))
-				for _, v := range pending {
-					pendingInfo, err := v.ToArray()
-					if err != nil {
-						return nil, err
-					}
-					if len(pendingInfo) != 3 {
-						return nil, fmt.Errorf("got %d, wanted 3", len(arr))
-					}
-					var p XInfoStreamConsumerPending
-					p.ID, err = pendingInfo[0].ToString()
-					if err != nil {
-						return nil, err
-					}
-					delivery, err := pendingInfo[1].ToInt64()
-					if err != nil {
-						return nil, err
-					}
-					p.DeliveryTime = time.Unix(delivery/1000, delivery%1000*int64(time.Millisecond))
-					p.DeliveryCount, err = pendingInfo[2].ToInt64()
-					if err != nil {
-						return nil, err
-					}
-					c.Pending = append(c.Pending, p)
+				delivery, err := pendingInfo[1].ToInt64()
+				if err != nil {
+					return nil, err
 				}
-			default:
-				err = fmt.Errorf("unexpected content %s", cKey)
-			}
-			if err != nil {
-				return nil, err
+				p.DeliveryTime = time.Unix(delivery/1000, delivery%1000*int64(time.Millisecond))
+				p.DeliveryCount, err = pendingInfo[2].ToInt64()
+				if err != nil {
+					return nil, err
+				}
+				c.Pending = append(c.Pending, p)
 			}
 		}
 		consumer = append(consumer, c)
@@ -1362,7 +1669,6 @@ type XInfoConsumer struct {
 	Idle    int64
 }
 type XInfoConsumersCmd struct {
-	res rueidis.RedisResult
 	val []XInfoConsumer
 	err error
 }
@@ -1370,51 +1676,35 @@ type XInfoConsumersCmd struct {
 func newXInfoConsumersCmd(res rueidis.RedisResult) *XInfoConsumersCmd {
 	arr, err := res.ToArray()
 	if err != nil {
-		return &XInfoConsumersCmd{res: res, err: err}
+		return &XInfoConsumersCmd{err: err}
 	}
 	val := make([]XInfoConsumer, 0, len(arr))
 	for _, v := range arr {
-		info, err := v.ToArray()
+		info, err := v.ToMap()
 		if err != nil {
-			return &XInfoConsumersCmd{res: res, err: err}
-		}
-		if len(info) != 6 {
-			return &XInfoConsumersCmd{res: res, err: fmt.Errorf("got %d, wanted 6", len(arr))}
+			return &XInfoConsumersCmd{err: err}
 		}
 		var consumer XInfoConsumer
-		for i, j := 0, 1; i < 6; i, j = i+2, j+2 {
-			key, err := info[i].ToString()
-			if err != nil {
-				return &XInfoConsumersCmd{res: res, err: err}
-			}
-			val, err := info[j].ToString()
-			if err != nil {
-				return &XInfoConsumersCmd{res: res, err: err}
-			}
-			switch key {
-			case "name":
-				consumer.Name = val
-			case "pending":
-				consumer.Pending, err = strconv.ParseInt(val, 0, 64)
-				if err != nil {
-					return &XInfoConsumersCmd{res: res, err: err}
-				}
-			case "idle":
-				consumer.Idle, err = strconv.ParseInt(val, 0, 64)
-				if err != nil {
-					return &XInfoConsumersCmd{res: res, err: err}
-				}
-			default:
-				return &XInfoConsumersCmd{res: res, err: fmt.Errorf("unexpected content %s", key)}
-			}
+		if attr, ok := info["name"]; ok {
+			consumer.Name, _ = attr.ToString()
+		}
+		if attr, ok := info["pending"]; ok {
+			consumer.Pending, _ = attr.AsInt64()
+		}
+		if attr, ok := info["idle"]; ok {
+			consumer.Idle, _ = attr.AsInt64()
 		}
 		val = append(val, consumer)
 	}
-	return &XInfoConsumersCmd{res: res, val: val, err: err}
+	return &XInfoConsumersCmd{val: val, err: err}
 }
 
 func (cmd *XInfoConsumersCmd) SetVal(val []XInfoConsumer) {
 	cmd.val = val
+}
+
+func (cmd *XInfoConsumersCmd) SetErr(err error) {
+	cmd.err = err
 }
 
 func (cmd *XInfoConsumersCmd) Val() []XInfoConsumer {
@@ -1427,10 +1717,6 @@ func (cmd *XInfoConsumersCmd) Err() error {
 
 func (cmd *XInfoConsumersCmd) Result() ([]XInfoConsumer, error) {
 	return cmd.val, cmd.err
-}
-
-func (cmd *XInfoConsumersCmd) String() (string, error) {
-	return cmd.res.ToString()
 }
 
 // Z represents sorted set member.
@@ -1454,7 +1740,6 @@ type ZStore struct {
 }
 
 type ZWithKeyCmd struct {
-	res rueidis.RedisResult
 	val ZWithKey
 	err error
 }
@@ -1462,29 +1747,33 @@ type ZWithKeyCmd struct {
 func newZWithKeyCmd(res rueidis.RedisResult) *ZWithKeyCmd {
 	arr, err := res.ToArray()
 	if err != nil {
-		return &ZWithKeyCmd{res: res, err: err}
+		return &ZWithKeyCmd{err: err}
 	}
 	if len(arr) != 3 {
-		return &ZWithKeyCmd{res: res, err: fmt.Errorf("got %d, wanted 3", len(arr))}
+		return &ZWithKeyCmd{err: fmt.Errorf("got %d, wanted 3", len(arr))}
 	}
 	val := ZWithKey{}
 	val.Key, err = arr[0].ToString()
 	if err != nil {
-		return &ZWithKeyCmd{res: res, err: err}
+		return &ZWithKeyCmd{err: err}
 	}
-	val.Member, err = arr[0].ToString()
+	val.Member, err = arr[1].ToString()
 	if err != nil {
-		return &ZWithKeyCmd{res: res, err: err}
+		return &ZWithKeyCmd{err: err}
 	}
-	val.Score, err = arr[0].AsFloat64()
+	val.Score, err = arr[2].AsFloat64()
 	if err != nil {
-		return &ZWithKeyCmd{res: res, err: err}
+		return &ZWithKeyCmd{err: err}
 	}
-	return &ZWithKeyCmd{res: res, val: val, err: err}
+	return &ZWithKeyCmd{val: val, err: err}
 }
 
 func (cmd *ZWithKeyCmd) SetVal(val ZWithKey) {
 	cmd.val = val
+}
+
+func (cmd *ZWithKeyCmd) SetErr(err error) {
+	cmd.err = err
 }
 
 func (cmd *ZWithKeyCmd) Val() ZWithKey {
@@ -1499,12 +1788,7 @@ func (cmd *ZWithKeyCmd) Result() (ZWithKey, error) {
 	return cmd.val, cmd.err
 }
 
-func (cmd *ZWithKeyCmd) String() (string, error) {
-	return cmd.res.ToString()
-}
-
 type TimeCmd struct {
-	res rueidis.RedisResult
 	val time.Time
 	err error
 }
@@ -1512,24 +1796,28 @@ type TimeCmd struct {
 func newTimeCmd(res rueidis.RedisResult) *TimeCmd {
 	arr, err := res.ToArray()
 	if err != nil {
-		return &TimeCmd{res: res, err: err}
+		return &TimeCmd{err: err}
 	}
 	if len(arr) != 2 {
-		return &TimeCmd{res: res, err: fmt.Errorf("got %d, wanted 2", len(arr))}
+		return &TimeCmd{err: fmt.Errorf("got %d, wanted 2", len(arr))}
 	}
 	sec, err := arr[0].AsInt64()
 	if err != nil {
-		return &TimeCmd{res: res, err: err}
+		return &TimeCmd{err: err}
 	}
 	microSec, err := arr[1].AsInt64()
 	if err != nil {
-		return &TimeCmd{res: res, err: err}
+		return &TimeCmd{err: err}
 	}
-	return &TimeCmd{res: res, val: time.Unix(sec, microSec*1000), err: err}
+	return &TimeCmd{val: time.Unix(sec, microSec*1000), err: err}
 }
 
 func (cmd *TimeCmd) SetVal(val time.Time) {
 	cmd.val = val
+}
+
+func (cmd *TimeCmd) SetErr(err error) {
+	cmd.err = err
 }
 
 func (cmd *TimeCmd) Val() time.Time {
@@ -1544,10 +1832,6 @@ func (cmd *TimeCmd) Result() (time.Time, error) {
 	return cmd.val, cmd.err
 }
 
-func (cmd *TimeCmd) String() (string, error) {
-	return cmd.res.ToString()
-}
-
 type ClusterNode struct {
 	ID   string
 	Addr string
@@ -1560,7 +1844,6 @@ type ClusterSlot struct {
 }
 
 type ClusterSlotsCmd struct {
-	res rueidis.RedisResult
 	val []ClusterSlot
 	err error
 }
@@ -1568,47 +1851,47 @@ type ClusterSlotsCmd struct {
 func newClusterSlotsCmd(res rueidis.RedisResult) *ClusterSlotsCmd {
 	arr, err := res.ToArray()
 	if err != nil {
-		return &ClusterSlotsCmd{res: res, err: err}
+		return &ClusterSlotsCmd{err: err}
 	}
 	val := make([]ClusterSlot, 0, len(arr))
 	for _, v := range arr {
 		slot, err := v.ToArray()
 		if err != nil {
-			return &ClusterSlotsCmd{res: res, err: err}
+			return &ClusterSlotsCmd{err: err}
 		}
 		if len(slot) < 2 {
-			return &ClusterSlotsCmd{res: res, err: fmt.Errorf("got %d, excpected atleast 2", len(slot))}
+			return &ClusterSlotsCmd{err: fmt.Errorf("got %d, excpected atleast 2", len(slot))}
 		}
 		start, err := slot[0].ToInt64()
 		if err != nil {
-			return &ClusterSlotsCmd{res: res, err: err}
+			return &ClusterSlotsCmd{err: err}
 		}
 		end, err := slot[1].ToInt64()
 		if err != nil {
-			return &ClusterSlotsCmd{res: res, err: err}
+			return &ClusterSlotsCmd{err: err}
 		}
 		nodes := make([]ClusterNode, len(slot)-2)
 		for i, j := 2, 0; i < len(nodes); i, j = i+1, j+1 {
 			node, err := slot[i].ToArray()
 			if err != nil {
-				return &ClusterSlotsCmd{res: res, err: err}
+				return &ClusterSlotsCmd{err: err}
 			}
 			if len(node) != 2 && len(node) != 3 {
-				return &ClusterSlotsCmd{res: res, err: fmt.Errorf("got %d, expected 2 or 3", len(node))}
+				return &ClusterSlotsCmd{err: fmt.Errorf("got %d, expected 2 or 3", len(node))}
 			}
 			ip, err := node[0].ToString()
 			if err != nil {
-				return &ClusterSlotsCmd{res: res, err: err}
+				return &ClusterSlotsCmd{err: err}
 			}
 			port, err := node[1].ToInt64()
 			if err != nil {
-				return &ClusterSlotsCmd{res: res, err: err}
+				return &ClusterSlotsCmd{err: err}
 			}
 			nodes[j].Addr = net.JoinHostPort(ip, strconv.FormatInt(port, 10))
 			if len(node) == 3 {
 				id, err := node[2].ToString()
 				if err != nil {
-					return &ClusterSlotsCmd{res: res, err: err}
+					return &ClusterSlotsCmd{err: err}
 				}
 				nodes[j].ID = id
 			}
@@ -1619,11 +1902,15 @@ func newClusterSlotsCmd(res rueidis.RedisResult) *ClusterSlotsCmd {
 			Nodes: nodes,
 		})
 	}
-	return &ClusterSlotsCmd{res: res, val: val, err: err}
+	return &ClusterSlotsCmd{val: val, err: err}
 }
 
 func (cmd *ClusterSlotsCmd) SetVal(val []ClusterSlot) {
 	cmd.val = val
+}
+
+func (cmd *ClusterSlotsCmd) SetErr(err error) {
+	cmd.err = err
 }
 
 func (cmd *ClusterSlotsCmd) Val() []ClusterSlot {
@@ -1638,16 +1925,11 @@ func (cmd *ClusterSlotsCmd) Result() ([]ClusterSlot, error) {
 	return cmd.val, cmd.err
 }
 
-func (cmd *ClusterSlotsCmd) String() (string, error) {
-	return cmd.res.ToString()
-}
-
 type GeoPos struct {
 	Longitude, Latitude float64
 }
 
 type GeoPosCmd struct {
-	res rueidis.RedisResult
 	val []*GeoPos
 	err error
 }
@@ -1655,7 +1937,7 @@ type GeoPosCmd struct {
 func newGeoPosCmd(res rueidis.RedisResult) *GeoPosCmd {
 	arr, err := res.ToArray()
 	if err != nil {
-		return &GeoPosCmd{res: res, err: err}
+		return &GeoPosCmd{err: err}
 	}
 	val := make([]*GeoPos, 0, len(arr))
 	for _, v := range arr {
@@ -1665,29 +1947,33 @@ func newGeoPosCmd(res rueidis.RedisResult) *GeoPosCmd {
 				val = append(val, nil)
 				continue
 			}
-			return &GeoPosCmd{res: res, err: err}
+			return &GeoPosCmd{err: err}
 		}
 		if len(loc) != 2 {
-			return &GeoPosCmd{res: res, err: fmt.Errorf("got %d, expected 2", len(loc))}
+			return &GeoPosCmd{err: fmt.Errorf("got %d, expected 2", len(loc))}
 		}
 		long, err := loc[0].AsFloat64()
 		if err != nil {
-			return &GeoPosCmd{res: res, err: err}
+			return &GeoPosCmd{err: err}
 		}
 		lat, err := loc[1].AsFloat64()
 		if err != nil {
-			return &GeoPosCmd{res: res, err: err}
+			return &GeoPosCmd{err: err}
 		}
 		val = append(val, &GeoPos{
 			Longitude: long,
 			Latitude:  lat,
 		})
 	}
-	return &GeoPosCmd{res: res, val: val, err: err}
+	return &GeoPosCmd{val: val, err: err}
 }
 
 func (cmd *GeoPosCmd) SetVal(val []*GeoPos) {
 	cmd.val = val
+}
+
+func (cmd *GeoPosCmd) SetErr(err error) {
+	cmd.err = err
 }
 
 func (cmd *GeoPosCmd) Val() []*GeoPos {
@@ -1702,12 +1988,7 @@ func (cmd *GeoPosCmd) Result() ([]*GeoPos, error) {
 	return cmd.val, cmd.err
 }
 
-func (cmd *GeoPosCmd) String() (string, error) {
-	return cmd.res.ToString()
-}
-
 type GeoLocationCmd struct {
-	res rueidis.RedisResult
 	val []GeoLocation
 	err error
 }
@@ -1715,59 +1996,73 @@ type GeoLocationCmd struct {
 func newGeoLocationCmd(res rueidis.RedisResult, withDist, withGeoHash, withCoord bool) *GeoLocationCmd {
 	arr, err := res.ToArray()
 	if err != nil {
-		return &GeoLocationCmd{res: res, err: err}
+		return &GeoLocationCmd{err: err}
 	}
 	val := make([]GeoLocation, 0, len(arr))
+	if !withDist && !withGeoHash && !withCoord {
+		for _, v := range arr {
+			name, err := v.ToString()
+			if err != nil {
+				return &GeoLocationCmd{err: err}
+			}
+			val = append(val, GeoLocation{Name: name})
+		}
+		return &GeoLocationCmd{val: val, err: err}
+	}
 	for _, v := range arr {
 		info, err := v.ToArray()
 		if err != nil {
-			return &GeoLocationCmd{res: res, err: err}
+			return &GeoLocationCmd{err: err}
 		}
 		var loc GeoLocation
 		var i int
 		loc.Name, err = info[i].ToString()
 		i++
 		if err != nil {
-			return &GeoLocationCmd{res: res, err: err}
+			return &GeoLocationCmd{err: err}
 		}
 		if withDist {
 			loc.Dist, err = info[i].AsFloat64()
 			i++
 			if err != nil {
-				return &GeoLocationCmd{res: res, err: err}
+				return &GeoLocationCmd{err: err}
 			}
 		}
 		if withGeoHash {
 			loc.GeoHash, err = info[i].AsInt64()
 			i++
 			if err != nil {
-				return &GeoLocationCmd{res: res, err: err}
+				return &GeoLocationCmd{err: err}
 			}
 		}
 		if withCoord {
 			cord, err := info[i].ToArray()
 			if err != nil {
-				return &GeoLocationCmd{res: res, err: err}
+				return &GeoLocationCmd{err: err}
 			}
 			if len(cord) != 2 {
-				return &GeoLocationCmd{res: res, err: fmt.Errorf("got %d, expected 2", len(info))}
+				return &GeoLocationCmd{err: fmt.Errorf("got %d, expected 2", len(info))}
 			}
 			loc.Longitude, err = cord[0].AsFloat64()
 			if err != nil {
-				return &GeoLocationCmd{res: res, err: err}
+				return &GeoLocationCmd{err: err}
 			}
 			loc.Latitude, err = cord[1].AsFloat64()
 			if err != nil {
-				return &GeoLocationCmd{res: res, err: err}
+				return &GeoLocationCmd{err: err}
 			}
 		}
 		val = append(val, loc)
 	}
-	return &GeoLocationCmd{res: res, val: val, err: err}
+	return &GeoLocationCmd{val: val, err: err}
 }
 
 func (cmd *GeoLocationCmd) SetVal(val []GeoLocation) {
 	cmd.val = val
+}
+
+func (cmd *GeoLocationCmd) SetErr(err error) {
+	cmd.err = err
 }
 
 func (cmd *GeoLocationCmd) Val() []GeoLocation {
@@ -1782,10 +2077,6 @@ func (cmd *GeoLocationCmd) Result() ([]GeoLocation, error) {
 	return cmd.val, cmd.err
 }
 
-func (cmd *GeoLocationCmd) String() (string, error) {
-	return cmd.res.ToString()
-}
-
 type CommandInfo struct {
 	Name        string
 	Arity       int8
@@ -1798,7 +2089,6 @@ type CommandInfo struct {
 }
 
 type CommandsInfoCmd struct {
-	res rueidis.RedisResult
 	val map[string]CommandInfo
 	err error
 }
@@ -1806,27 +2096,25 @@ type CommandsInfoCmd struct {
 func newCommandsInfoCmd(res rueidis.RedisResult) *CommandsInfoCmd {
 	arr, err := res.ToArray()
 	if err != nil {
-		return &CommandsInfoCmd{res: res, err: err}
+		return &CommandsInfoCmd{err: err}
 	}
 	val := make(map[string]CommandInfo, len(arr))
 	for _, v := range arr {
 		info, err := v.ToArray()
 		if err != nil {
-			return &CommandsInfoCmd{res: res, err: err}
+			return &CommandsInfoCmd{err: err}
 		}
-		switch len(info) {
-		case 6, 7:
-		default:
-			return &CommandsInfoCmd{res: res, err: fmt.Errorf("got %d, wanted 7", len(info))}
+		if len(info) < 7 {
+			return &CommandsInfoCmd{err: fmt.Errorf("got %d, wanted at least 7", len(info))}
 		}
 		var cmd CommandInfo
 		cmd.Name, err = info[0].ToString()
 		if err != nil {
-			return &CommandsInfoCmd{res: res, err: err}
+			return &CommandsInfoCmd{err: err}
 		}
 		arity, err := info[1].ToInt64()
 		if err != nil {
-			return &CommandsInfoCmd{res: res, err: err}
+			return &CommandsInfoCmd{err: err}
 		}
 		cmd.Arity = int8(arity)
 		cmd.Flags, err = info[2].AsStrSlice()
@@ -1834,22 +2122,22 @@ func newCommandsInfoCmd(res rueidis.RedisResult) *CommandsInfoCmd {
 			if rueidis.IsRedisNil(err) {
 				cmd.Flags = []string{}
 			} else {
-				return &CommandsInfoCmd{res: res, err: err}
+				return &CommandsInfoCmd{err: err}
 			}
 		}
 		firstKeyPos, err := info[3].ToInt64()
 		if err != nil {
-			return &CommandsInfoCmd{res: res, err: err}
+			return &CommandsInfoCmd{err: err}
 		}
 		cmd.FirstKeyPos = int8(firstKeyPos)
 		lastKeyPos, err := info[4].ToInt64()
 		if err != nil {
-			return &CommandsInfoCmd{res: res, err: err}
+			return &CommandsInfoCmd{err: err}
 		}
 		cmd.LastKeyPos = int8(lastKeyPos)
 		stepCount, err := info[5].ToInt64()
 		if err != nil {
-			return &CommandsInfoCmd{res: res, err: err}
+			return &CommandsInfoCmd{err: err}
 		}
 		cmd.StepCount = int8(stepCount)
 		for _, flag := range cmd.Flags {
@@ -1867,16 +2155,20 @@ func newCommandsInfoCmd(res rueidis.RedisResult) *CommandsInfoCmd {
 			if rueidis.IsRedisNil(err) {
 				cmd.ACLFlags = []string{}
 			} else {
-				return &CommandsInfoCmd{res: res, err: err}
+				return &CommandsInfoCmd{err: err}
 			}
 		}
 		val[cmd.Name] = cmd
 	}
-	return &CommandsInfoCmd{res: res, val: val, err: err}
+	return &CommandsInfoCmd{val: val, err: err}
 }
 
 func (cmd *CommandsInfoCmd) SetVal(val map[string]CommandInfo) {
 	cmd.val = val
+}
+
+func (cmd *CommandsInfoCmd) SetErr(err error) {
+	cmd.err = err
 }
 
 func (cmd *CommandsInfoCmd) Val() map[string]CommandInfo {
@@ -1889,10 +2181,6 @@ func (cmd *CommandsInfoCmd) Err() error {
 
 func (cmd *CommandsInfoCmd) Result() (map[string]CommandInfo, error) {
 	return cmd.val, cmd.err
-}
-
-func (cmd *CommandsInfoCmd) String() (string, error) {
-	return cmd.res.ToString()
 }
 
 type Sort struct {
@@ -2119,7 +2407,7 @@ func (q *GeoRadiusQuery) args() []string {
 	if q.Unit != "" {
 		args = append(args, q.Unit)
 	} else {
-		args = append(args, "KM")
+		args = append(args, "km")
 	}
 	if q.WithCoord {
 		args = append(args, "WITHCOORD")
@@ -2128,7 +2416,7 @@ func (q *GeoRadiusQuery) args() []string {
 		args = append(args, "WITHDIST")
 	}
 	if q.WithGeoHash {
-		args = append(args, "WITHASH")
+		args = append(args, "WITHHASH")
 	}
 	if q.Count > 0 {
 		args = append(args, "COUNT", strconv.FormatInt(q.Count, 10))
@@ -2163,7 +2451,7 @@ func (q *GeoSearchQuery) args() []string {
 		if q.BoxUnit == "" {
 			q.BoxUnit = "KM"
 		}
-		args = append(args, "BYXBOX", strconv.FormatFloat(q.BoxWidth, 'f', -1, 64), strconv.FormatFloat(q.BoxHeight, 'f', -1, 64), q.BoxUnit)
+		args = append(args, "BYBOX", strconv.FormatFloat(q.BoxWidth, 'f', -1, 64), strconv.FormatFloat(q.BoxHeight, 'f', -1, 64), q.BoxUnit)
 	}
 	if q.Sort != "" {
 		args = append(args, q.Sort)
@@ -2186,7 +2474,7 @@ func (q *GeoSearchLocationQuery) args() []string {
 		args = append(args, "WITHDIST")
 	}
 	if q.WithHash {
-		args = append(args, "WITHASH")
+		args = append(args, "WITHHASH")
 	}
 	return args
 }

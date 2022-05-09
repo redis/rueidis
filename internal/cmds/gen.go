@@ -28480,8 +28480,8 @@ func (c ZincrbyIncrement) Member(member string) ZincrbyMember {
 
 type ZincrbyKey Completed
 
-func (c ZincrbyKey) Increment(increment int64) ZincrbyIncrement {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(increment, 10))
+func (c ZincrbyKey) Increment(increment float64) ZincrbyIncrement {
+	c.cs.s = append(c.cs.s, strconv.FormatFloat(increment, 'f', -1, 64))
 	return (ZincrbyIncrement)(c)
 }
 
