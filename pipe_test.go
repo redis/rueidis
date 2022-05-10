@@ -163,7 +163,7 @@ func TestNewPipe(t *testing.T) {
 		n1, n2 := net.Pipe()
 		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2}
 		go func() {
-			mock.Expect("HELLO", "3", "AUTH", "un", "pa", "SETNAME", "cn").
+			mock.Expect("HELLO", "3", "AUTH", "default", "pa", "SETNAME", "cn").
 				Reply(RedisMessage{
 					typ:    '%',
 					values: []RedisMessage{{typ: '+', string: "key"}, {typ: '+', string: "value"}},
@@ -175,7 +175,6 @@ func TestNewPipe(t *testing.T) {
 		}()
 		p, err := newPipe(n1, &ClientOption{
 			SelectDB:   1,
-			Username:   "un",
 			Password:   "pa",
 			ClientName: "cn",
 		})

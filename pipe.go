@@ -71,6 +71,9 @@ func newPipe(conn net.Conn, option *ClientOption) (p *pipe, err error) {
 	}
 
 	helloCmd := []string{"HELLO", "3"}
+	if option.Password != "" && option.Username == "" {
+		option.Username = "default"
+	}
 	if option.Username != "" {
 		helloCmd = append(helloCmd, "AUTH", option.Username, option.Password)
 	}
