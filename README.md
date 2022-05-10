@@ -353,7 +353,7 @@ func main() {
 	ok, _ := compat.SetNX(ctx, "key", "val", time.Second).Result()
 
 	// with client side caching
-	res, _:= compat.Cache(time.Second).Get(ctx, "key").Result()
+	res, _ := compat.Cache(time.Second).Get(ctx, "key").Result()
 }
 ```
 
