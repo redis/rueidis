@@ -345,14 +345,15 @@ import (
 )
 
 func main() {
-	client, err := rueidis.NewClient(rueidis.ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
+	ctx := context.Background()
+	client, _ := rueidis.NewClient(rueidis.ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
 	defer client.Close()
 
 	compat := rueidiscompat.NewAdapter(client)
-	ok, _ := compat.SetNX(context.Background(), "key", "val", time.Second).Result()
+	ok, _ := compat.SetNX(ctx, "key", "val", time.Second).Result()
 
 	// with client side caching
-	res, _:= compat.Cache(time.Second).Get(context.Background(), "key").Result()
+	res, _:= compat.Cache(time.Second).Get(ctx, "key").Result()
 }
 ```
 
