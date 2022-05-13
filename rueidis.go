@@ -25,7 +25,7 @@ const (
 
 var (
 	// ErrClosing means the Client.Close had been called
-	ErrClosing = errors.New("rueidis client is closing")
+	ErrClosing = errors.New("rueidis client is closing or unable to connect redis")
 	// ErrNoAddr means the ClientOption.InitAddress is empty
 	ErrNoAddr = errors.New("no alive address in InitAddress")
 )
