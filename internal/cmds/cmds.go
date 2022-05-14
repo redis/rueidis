@@ -35,6 +35,10 @@ var (
 	QuitCmd = Completed{
 		cs: &CommandSlice{s: []string{"QUIT"}},
 	}
+	// PingCmd is predefined PING
+	PingCmd = Completed{
+		cs: &CommandSlice{s: []string{"PING"}},
+	}
 	// SlotCmd is predefined CLUSTER SLOTS
 	SlotCmd = Completed{
 		cs: &CommandSlice{s: []string{"CLUSTER", "SLOTS"}},

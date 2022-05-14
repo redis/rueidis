@@ -33,6 +33,7 @@ type pipe struct {
 	state   int32
 	slept   int32
 	version int32
+	timeout time.Duration
 
 	once  sync.Once
 	cond  sync.Cond
@@ -68,6 +69,8 @@ func newPipe(conn net.Conn, option *ClientOption) (p *pipe, err error) {
 
 		subs:  newSubs(),
 		psubs: newSubs(),
+
+		timeout: option.ConnWriteTimeout,
 	}
 
 	helloCmd := []string{"HELLO", "3"}
@@ -137,22 +140,32 @@ func (p *pipe) background() {
 
 func (p *pipe) _background() {
 	wg := sync.WaitGroup{}
-	wg.Add(2)
 	exit := func() {
 		// stop accepting new requests
 		atomic.CompareAndSwapInt32(&p.state, 1, 2)
 		_ = p.conn.Close() // force both read & write goroutine to exit
 		wg.Done()
 	}
+	wg.Add(1)
 	go func() {
 		p._backgroundWrite()
 		exit()
 	}()
+	wg.Add(1)
 	go func() {
 		p._backgroundRead()
 		exit()
 		p._awake()
 	}()
+	if p.timeout > 0 {
+		go func() {
+			if err := p._backgroundPing(); err != ErrClosing {
+				p.error.CompareAndSwap(nil, &errs{error: err})
+				atomic.CompareAndSwapInt32(&p.state, 1, 2)
+				_ = p.conn.Close() // force both read & write goroutine to exit
+			}
+		}()
+	}
 	wg.Wait()
 
 	p.subs.Close()
@@ -314,6 +327,40 @@ func (p *pipe) _backgroundRead() {
 			}
 		}
 	}
+}
+
+func (p *pipe) _backgroundPing() error {
+	var timer *time.Timer
+	for atomic.LoadInt32(&p.state) == 1 {
+		ws := atomic.AddInt32(&p.waits, 1)
+		ch := p.queue.PutOne(cmds.PingCmd)
+		if ws == 1 {
+			p._awake()
+		}
+		if timer == nil {
+			timer = time.NewTimer(p.timeout)
+		} else {
+			timer.Reset(p.timeout)
+		}
+		select {
+		case resp := <-ch:
+			atomic.AddInt32(&p.waits, -1)
+			if !timer.Stop() {
+				<-timer.C
+			}
+			if err := resp.NonRedisError(); err != nil {
+				return err
+			}
+		case <-timer.C:
+			go func() {
+				<-ch
+				atomic.AddInt32(&p.waits, -1)
+			}()
+			return context.DeadlineExceeded
+		}
+		time.Sleep(time.Second)
+	}
+	return ErrClosing
 }
 
 func (p *pipe) handlePush(values []RedisMessage) {
@@ -534,6 +581,9 @@ func (p *pipe) syncDo(ctx context.Context, cmd cmds.Completed) (resp RedisResult
 	if dl, ok := ctx.Deadline(); ok {
 		p.conn.SetDeadline(dl)
 		defer p.conn.SetDeadline(time.Time{})
+	} else if p.timeout > 0 {
+		p.conn.SetDeadline(time.Now().Add(p.timeout))
+		defer p.conn.SetDeadline(time.Time{})
 	}
 
 	var msg RedisMessage
@@ -557,6 +607,9 @@ func (p *pipe) syncDo(ctx context.Context, cmd cmds.Completed) (resp RedisResult
 func (p *pipe) syncDoMulti(ctx context.Context, resp []RedisResult, multi []cmds.Completed) []RedisResult {
 	if dl, ok := ctx.Deadline(); ok {
 		p.conn.SetDeadline(dl)
+		defer p.conn.SetDeadline(time.Time{})
+	} else if p.timeout > 0 {
+		p.conn.SetDeadline(time.Now().Add(p.timeout))
 		defer p.conn.SetDeadline(time.Time{})
 	}
 
@@ -644,16 +697,15 @@ func (p *pipe) Error() error {
 
 func (p *pipe) Close() {
 	p.error.CompareAndSwap(nil, errClosing)
-	atomic.CompareAndSwapInt32(&p.state, 0, 2)
-	atomic.CompareAndSwapInt32(&p.state, 1, 2)
 	atomic.AddInt32(&p.waits, 1)
+	stopping1 := atomic.CompareAndSwapInt32(&p.state, 0, 2)
+	stopping2 := atomic.CompareAndSwapInt32(&p.state, 1, 2)
 	if p.queue != nil {
 		p.background()
 		p._awake()
-		for atomic.LoadInt32(&p.waits) != 1 {
-			runtime.Gosched()
+		if stopping1 || stopping2 {
+			<-p.queue.PutOne(cmds.QuitCmd)
 		}
-		<-p.queue.PutOne(cmds.QuitCmd)
 	}
 	atomic.AddInt32(&p.waits, -1)
 	atomic.CompareAndSwapInt32(&p.state, 2, 3)
