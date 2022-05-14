@@ -1,6 +1,7 @@
 package rueidis
 
 import (
+	"errors"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -141,7 +142,7 @@ func TestLRU(t *testing.T) {
 
 		lru.FreeAndClose(RedisMessage{typ: '-', string: "closed"})
 
-		if resp := entry.Wait(); resp.typ != '-' || resp.string != "closed" {
+		if resp, _ := entry.Wait(); resp.typ != '-' || resp.string != "closed" {
 			t.Fatalf("got unexpected value after FreeAndClose: %v", resp)
 		}
 
@@ -151,6 +152,27 @@ func TestLRU(t *testing.T) {
 			if v, entry := lru.GetOrPrepare("1", "GET", TTL); v.typ != 0 || entry != nil {
 				t.Fatalf("got unexpected value from the first GetOrPrepare: %v %v", v, entry)
 			}
+		}
+	})
+
+	t.Run("Cache Cancel", func(t *testing.T) {
+		lru := setup(t)
+		v, entry := lru.GetOrPrepare("1", "GET", TTL)
+		if v.typ != 0 || entry != nil {
+			t.Fatalf("got unexpected value from the first GetOrPrepare: %v %v", v, entry)
+		}
+		v, entry = lru.GetOrPrepare("1", "GET", TTL)
+		if v.typ != 0 || entry == nil { // entry should not be nil in second call
+			t.Fatalf("got unexpected value from the second GetOrPrepare: %v %v", v, entry)
+		}
+		err := errors.New("any")
+
+		go func() {
+			lru.Cancel("1", "GET", RedisMessage{typ: 1}, err)
+		}()
+
+		if v, err2 := entry.Wait(); v.typ != 1 || err2 != err {
+			t.Fatalf("got unexpected value from the entry.Wait(): %v %v", err, err2)
 		}
 	})
 }
@@ -176,12 +198,14 @@ func BenchmarkLRU(b *testing.B) {
 func TestEntry(t *testing.T) {
 	t.Run("Wait", func(t *testing.T) {
 		e := entry{ch: make(chan struct{}, 1)}
+		err := errors.New("any")
 		go func() {
 			e.val = RedisMessage{typ: 1}
+			e.err = err
 			close(e.ch)
 		}()
-		if v := e.Wait(); v.typ != 1 {
-			t.Fatalf("got unexpected value from the Wait: %v", v.typ)
+		if v, err2 := e.Wait(); v.typ != 1 || err2 != err {
+			t.Fatalf("got unexpected value from the Wait: %v %v", v.typ, err)
 		}
 	})
 }

@@ -21,6 +21,7 @@ const (
 type cache interface {
 	GetOrPrepare(key, cmd string, ttl time.Duration) (v RedisMessage, entry *entry)
 	Update(key, cmd string, value RedisMessage, pttl int64)
+	Cancel(key, cmd string, value RedisMessage, err error)
 	Delete(keys []RedisMessage)
 	FreeAndClose(notice RedisMessage)
 }
@@ -30,12 +31,13 @@ type entry struct {
 	key  string
 	cmd  string
 	val  RedisMessage
+	err  error
 	size int
 }
 
-func (e *entry) Wait() RedisMessage {
+func (e *entry) Wait() (RedisMessage, error) {
 	<-e.ch
-	return e.val
+	return e.val, e.err
 }
 
 type keyCache struct {
@@ -151,6 +153,26 @@ func (c *lru) Update(key, cmd string, value RedisMessage, pttl int64) {
 		if pttl >= 0 {
 			if ttl := time.Now().Add(time.Duration(pttl) * time.Millisecond); ttl.Before(store.ttl) {
 				store.ttl = ttl
+			}
+		}
+	}
+	c.mu.Unlock()
+	if ch != nil {
+		close(ch)
+	}
+}
+
+func (c *lru) Cancel(key, cmd string, val RedisMessage, err error) {
+	var ch chan struct{}
+	c.mu.Lock()
+	if store, ok := c.store[key]; ok {
+		if ele, ok := store.cache[cmd]; ok {
+			if e := ele.Value.(*entry); e.val.typ == 0 {
+				e.val = val
+				e.err = err
+				ch = e.ch
+				delete(c.store[key].cache, cmd)
+				c.list.Remove(ele)
 			}
 		}
 	}

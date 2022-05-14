@@ -281,9 +281,7 @@ func (p *pipe) _backgroundRead() {
 		if ff == 4 && len(multi) == 5 && multi[0].IsOptIn() {
 			cacheable := cmds.Cacheable(multi[3])
 			ck, cc := cacheable.CacheKey()
-			if len(msg.values) != 2 { // EXEC aborted
-				p.cache.Update(ck, cc, msg, 0)
-			} else {
+			if len(msg.values) == 2 {
 				cp := msg.values[1]
 				cp.attrs = cacheMark
 				p.cache.Update(ck, cc, cp, msg.values[0].integer)
@@ -610,18 +608,29 @@ func (p *pipe) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duratio
 	if v, entry := p.cache.GetOrPrepare(ck, cc, ttl); v.typ != 0 {
 		return newResult(v, nil)
 	} else if entry != nil {
-		return newResult(entry.Wait(), nil)
+		return newResult(entry.Wait())
 	}
-	exec, err := p.DoMulti(
+	resp := p.DoMulti(
 		ctx,
 		cmds.OptInCmd,
 		cmds.MultiCmd,
 		cmds.NewCompleted([]string{"PTTL", ck}),
 		cmds.Completed(cmd),
 		cmds.ExecCmd,
-	)[4].ToArray()
+	)
+	exec, err := resp[4].ToArray()
 	if err != nil {
-		return newErrResult(err)
+		if _, ok := err.(*RedisError); !ok {
+			p.cache.Cancel(ck, cc, RedisMessage{}, err)
+			return newErrResult(err)
+		}
+		// EXEC aborted, return err of the input cmd in MULTI block
+		if resp[3].val.typ != '+' {
+			p.cache.Cancel(ck, cc, resp[3].val, nil)
+			return newResult(resp[3].val, nil)
+		}
+		p.cache.Cancel(ck, cc, resp[4].val, nil)
+		return newResult(resp[4].val, nil)
 	}
 	return newResult(exec[1], nil)
 }

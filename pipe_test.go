@@ -414,6 +414,54 @@ func TestClientSideCachingExecAbort(t *testing.T) {
 	if v.IsCacheHit() {
 		t.Errorf("unexpected cache hit")
 	}
+	if v, entry := p.cache.GetOrPrepare("a", "GET", time.Second); v.typ != 0 || entry != nil {
+		t.Errorf("unexpected cache value and entry %v %v", v, entry)
+	}
+}
+
+func TestClientSideCachingExecAbortWithMoved(t *testing.T) {
+	p, mock, cancel, _ := setup(t, ClientOption{})
+	defer cancel()
+
+	go func() {
+		mock.Expect("CLIENT", "CACHING", "YES").
+			Expect("MULTI").
+			Expect("PTTL", "a").
+			Expect("GET", "a").
+			Expect("EXEC").
+			ReplyString("OK").
+			ReplyString("OK").
+			ReplyString("OK").
+			Reply(RedisMessage{typ: '-', string: "MOVED 0 :0"}).
+			Reply(RedisMessage{typ: '-', string: "EXECABORT"})
+	}()
+
+	v, err := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage()
+	if addr, ok := err.(*RedisError).IsMoved(); !ok || addr != ":0" {
+		t.Errorf("unexpected err, got %v", err)
+	}
+	if v.IsCacheHit() {
+		t.Errorf("unexpected cache hit")
+	}
+	if v, entry := p.cache.GetOrPrepare("a", "GET", time.Second); v.typ != 0 || entry != nil {
+		t.Errorf("unexpected cache value and entry %v %v", v, entry)
+	}
+}
+
+func TestClientSideCachingWithNonRedisError(t *testing.T) {
+	p, _, _, closeConn := setup(t, ClientOption{})
+	closeConn()
+
+	v, err := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage()
+	if !strings.HasPrefix(err.Error(), "io:") {
+		t.Errorf("unexpected err, got %v", err)
+	}
+	if v.IsCacheHit() {
+		t.Errorf("unexpected cache hit")
+	}
+	if v, entry := p.cache.GetOrPrepare("a", "GET", time.Second); v.typ != 0 || entry != nil {
+		t.Errorf("unexpected cache value and entry %v %v", v, entry)
+	}
 }
 
 // https://github.com/redis/redis/issues/8935
@@ -1027,7 +1075,7 @@ func TestOngoingCancelContextInPipelineMode_Do(t *testing.T) {
 }
 
 func TestOngoingWriteTimeoutInPipelineMode_Do(t *testing.T) {
-	p, mock, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: time.Second / 2})
+	p, mock, _, closeConn := setup(t, ClientOption{ConnReadWriteTimeout: time.Second / 2})
 	defer closeConn()
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
@@ -1098,7 +1146,7 @@ func TestOngoingCancelContextInPipelineMode_DoMulti(t *testing.T) {
 }
 
 func TestOngoingWriteTimeoutInPipelineMode_DoMulti(t *testing.T) {
-	p, mock, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: time.Second / 2})
+	p, mock, _, closeConn := setup(t, ClientOption{ConnReadWriteTimeout: time.Second / 2})
 	defer closeConn()
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
