@@ -154,6 +154,18 @@ type DedicatedClient interface {
 // It will first try to connect as cluster client. If the len(ClientOption.InitAddress) == 1 and
 // the address does not enable cluster mode, the NewClient() will use single client instead.
 func NewClient(option ClientOption) (client Client, err error) {
+	if option.CacheSizeEachConn <= 0 {
+		option.CacheSizeEachConn = DefaultCacheBytes
+	}
+	if option.Dialer.Timeout == 0 {
+		option.Dialer.Timeout = DefaultDialTimeout
+	}
+	if option.Dialer.KeepAlive == 0 {
+		option.Dialer.KeepAlive = DefaultTCPKeepAlive
+	}
+	if option.ConnWriteTimeout == 0 {
+		option.ConnWriteTimeout = option.Dialer.KeepAlive * 10
+	}
 	if option.ShuffleInit {
 		rand.Shuffle(len(option.InitAddress), func(i, j int) {
 			option.InitAddress[i], option.InitAddress[j] = option.InitAddress[j], option.InitAddress[i]
@@ -182,15 +194,6 @@ func makeRetryConn(dst string, opt *ClientOption) conn {
 }
 
 func dial(dst string, opt *ClientOption) (conn net.Conn, err error) {
-	if opt.Dialer.Timeout == 0 {
-		opt.Dialer.Timeout = DefaultDialTimeout
-	}
-	if opt.Dialer.KeepAlive == 0 {
-		opt.Dialer.KeepAlive = DefaultTCPKeepAlive
-	}
-	if opt.ConnWriteTimeout == 0 {
-		opt.ConnWriteTimeout = opt.Dialer.KeepAlive * 10
-	}
 	if opt.TLSConfig != nil {
 		conn, err = tls.DialWithDialer(&opt.Dialer, "tcp", dst, opt.TLSConfig)
 	} else {

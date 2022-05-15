@@ -34,7 +34,7 @@ func newClusterClient(opt *ClientOption, connFn connFn) (client *clusterClient, 
 		conns:  make(map[string]conn),
 	}
 
-	if _, err = client.init(); err != nil {
+	if err = client.init(); err != nil {
 		return nil, err
 	}
 
@@ -45,23 +45,36 @@ func newClusterClient(opt *ClientOption, connFn connFn) (client *clusterClient, 
 	return client, nil
 }
 
-func (c *clusterClient) init() (cc conn, err error) {
+func (c *clusterClient) init() error {
 	if len(c.opt.InitAddress) == 0 {
-		return nil, ErrNoAddr
+		return ErrNoAddr
 	}
+	results := make(chan error, len(c.opt.InitAddress))
 	for _, addr := range c.opt.InitAddress {
-		cc = c.connFn(addr, c.opt)
-		if err = cc.Dial(); err == nil {
-			c.mu.Lock()
-			if prev, ok := c.conns[addr]; ok {
-				go prev.Close()
+		cc := c.connFn(addr, c.opt)
+		go func(addr string, cc conn) {
+			if err := cc.Dial(); err == nil {
+				c.mu.Lock()
+				if prev, ok := c.conns[addr]; ok {
+					go prev.Close()
+				}
+				c.conns[addr] = cc
+				c.mu.Unlock()
+				results <- nil
+			} else {
+				results <- err
 			}
-			c.conns[addr] = cc
-			c.mu.Unlock()
-			return cc, nil
+		}(addr, cc)
+	}
+	es := make([]error, cap(results))
+	for i := 0; i < cap(results); i++ {
+		if err := <-results; err == nil {
+			return nil
+		} else {
+			es[i] = err
 		}
 	}
-	return nil, err
+	return es[0]
 }
 
 func (c *clusterClient) refresh() (err error) {
@@ -73,19 +86,24 @@ func (c *clusterClient) _refresh() (err error) {
 
 retry:
 	c.mu.RLock()
+	results := make(chan RedisResult, len(c.conns))
 	for _, cc := range c.conns {
-		if reply, err = cc.Do(context.Background(), cmds.SlotCmd).ToMessage(); err == nil {
+		go func(c conn) { results <- c.Do(context.Background(), cmds.SlotCmd) }(cc)
+	}
+	c.mu.RUnlock()
+
+	for i := 0; i < cap(results); i++ {
+		if reply, err = (<-results).ToMessage(); len(reply.values) != 0 {
 			break
 		}
 	}
-	c.mu.RUnlock()
 
 	if err != nil {
 		return err
 	}
 
 	if len(reply.values) == 0 {
-		if _, err = c.init(); err != nil {
+		if err = c.init(); err != nil {
 			return err
 		}
 		goto retry
@@ -324,7 +342,7 @@ func (c *clusterClient) Close() {
 }
 
 func (c *clusterClient) shouldRefreshRetry(err error) (should bool) {
-	if should = err == ErrClosing && atomic.LoadUint32(&c.closed) == 0; should {
+	if should = (err == ErrClosing || err == context.DeadlineExceeded) && atomic.LoadUint32(&c.closed) == 0; should {
 		c.refresh()
 	}
 	return should
