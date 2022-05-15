@@ -112,6 +112,9 @@ func write(o io.Writer, m RedisMessage) (err error) {
 }
 
 func setup(t *testing.T, option ClientOption) (*pipe, *redisMock, func(), func()) {
+	if option.CacheSizeEachConn <= 0 {
+		option.CacheSizeEachConn = DefaultCacheBytes
+	}
 	n1, n2 := net.Pipe()
 	mock := &redisMock{
 		t:    t,

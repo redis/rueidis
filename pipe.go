@@ -51,10 +51,6 @@ type pipe struct {
 }
 
 func newPipe(conn net.Conn, option *ClientOption) (p *pipe, err error) {
-	if option.CacheSizeEachConn <= 0 {
-		option.CacheSizeEachConn = DefaultCacheBytes
-	}
-
 	if option.ConnWriteTimeout > 0 {
 		conn = &writeTimeoutConn{Conn: conn, timeout: option.ConnWriteTimeout}
 	}
