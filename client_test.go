@@ -22,6 +22,7 @@ type mockConn struct {
 	AcquireFn  func() wire
 	StoreFn    func(w wire)
 	OverrideFn func(c conn)
+	IsFn       func(addr string) bool
 }
 
 func (m *mockConn) Override(c conn) {
@@ -96,6 +97,13 @@ func (m *mockConn) Close() {
 	if m.CloseFn != nil {
 		m.CloseFn()
 	}
+}
+
+func (m *mockConn) Is(addr string) bool {
+	if m.IsFn != nil {
+		return m.IsFn(addr)
+	}
+	return false
 }
 
 func TestNewSingleClientNoNode(t *testing.T) {

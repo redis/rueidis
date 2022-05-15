@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"reflect"
+	"sort"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -35,6 +37,18 @@ var singleSlotResp = newResult(RedisMessage{typ: '*', values: []RedisMessage{
 		{typ: '*', values: []RedisMessage{ // master
 			{typ: '+', string: ""},
 			{typ: ':', integer: 0},
+			{typ: '+', string: ""},
+		}},
+	}},
+}}, nil)
+
+var singleSlotResp2 = newResult(RedisMessage{typ: '*', values: []RedisMessage{
+	{typ: '*', values: []RedisMessage{
+		{typ: ':', integer: 0},
+		{typ: ':', integer: 0},
+		{typ: '*', values: []RedisMessage{ // master
+			{typ: '+', string: ""},
+			{typ: ':', integer: 3},
 			{typ: '+', string: ""},
 		}},
 	}},
@@ -105,15 +119,41 @@ func TestClusterClientInit(t *testing.T) {
 	})
 
 	t.Run("Refresh replace", func(t *testing.T) {
-		if client, err := newClusterClient(&ClientOption{InitAddress: []string{":1", ":2"}}, func(dst string, opt *ClientOption) conn {
+		first := true
+		client, err := newClusterClient(&ClientOption{InitAddress: []string{":1", ":2"}}, func(dst string, opt *ClientOption) conn {
 			return &mockConn{
 				DoFn: func(cmd cmds.Completed) RedisResult {
-					return slotsResp
+					if first {
+						first = false
+						return slotsResp
+					}
+					return singleSlotResp2
 				},
 			}
-		}); err != nil {
+		})
+		if err != nil {
 			t.Fatalf("unexpected err %v", err)
-		} else if nodes := client.nodes(); len(nodes) != 1 || nodes[0] != ":0" {
+		}
+
+		nodes := client.nodes()
+		sort.Strings(nodes)
+		if len(nodes) != 3 ||
+			nodes[0] != ":0" ||
+			nodes[1] != ":1" ||
+			nodes[2] != ":2" {
+			t.Fatalf("unexpected nodes %v", nodes)
+		}
+
+		if err = client.refresh(); err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+
+		nodes = client.nodes()
+		sort.Strings(nodes)
+		if len(nodes) != 3 ||
+			nodes[0] != ":1" ||
+			nodes[1] != ":2" ||
+			nodes[2] != ":3" {
 			t.Fatalf("unexpected nodes %v", nodes)
 		}
 	})
@@ -191,9 +231,10 @@ func TestClusterClient(t *testing.T) {
 	})
 
 	t.Run("Delegate Close", func(t *testing.T) {
+		once := sync.Once{}
 		called := make(chan struct{})
 		m.CloseFn = func() {
-			close(called)
+			once.Do(func() { close(called) })
 		}
 		client.Close()
 		<-called
@@ -368,6 +409,40 @@ func TestClusterClientErr(t *testing.T) {
 		}
 	})
 
+	t.Run("slot reconnect", func(t *testing.T) {
+		count := 0
+		check := 0
+		m := &mockConn{DoFn: func(cmd cmds.Completed) RedisResult {
+			if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
+				return slotsResp
+			}
+			if count < 3 {
+				count++
+				return newResult(RedisMessage{typ: '-', string: "MOVED 0 :0"}, nil)
+			}
+			return newResult(RedisMessage{typ: '+', string: "b"}, nil)
+		}, IsFn: func(addr string) bool {
+			is := addr == ":0"
+			if is {
+				check++
+			}
+			return is
+		}}
+
+		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
+			return m
+		})
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		if v, err := client.Do(context.Background(), client.B().Get().Key("a").Build()).ToString(); err != nil || v != "b" {
+			t.Fatalf("unexpected resp %v %v", v, err)
+		}
+		if check != 6 {
+			t.Fatalf("unexpected check count %v", check)
+		}
+	})
+
 	t.Run("slot moved", func(t *testing.T) {
 		count := 0
 		m := &mockConn{DoFn: func(cmd cmds.Completed) RedisResult {
@@ -388,6 +463,37 @@ func TestClusterClientErr(t *testing.T) {
 		}
 		if v, err := client.Do(context.Background(), client.B().Get().Key("a").Build()).ToString(); err != nil || v != "b" {
 			t.Fatalf("unexpected resp %v %v", v, err)
+		}
+	})
+
+	t.Run("slot moved new", func(t *testing.T) {
+		count := 0
+		var check bool
+		m := &mockConn{DoFn: func(cmd cmds.Completed) RedisResult {
+			if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
+				return slotsResp
+			}
+			if count < 3 {
+				count++
+				return newResult(RedisMessage{typ: '-', string: "MOVED 0 :2"}, nil)
+			}
+			return newResult(RedisMessage{typ: '+', string: "b"}, nil)
+		}}
+
+		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
+			if dst == ":2" {
+				check = true
+			}
+			return m
+		})
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		if v, err := client.Do(context.Background(), client.B().Get().Key("a").Build()).ToString(); err != nil || v != "b" {
+			t.Fatalf("unexpected resp %v %v", v, err)
+		}
+		if !check {
+			t.Fatalf("unexpected check value %v", check)
 		}
 	})
 

@@ -122,6 +122,16 @@ func TestNewMux(t *testing.T) {
 	})
 }
 
+func TestMuxIs(t *testing.T) {
+	m := makeMux("dst1", &ClientOption{}, nil, false)
+	if m.Is("dst1") != true {
+		t.Fatalf("unexpected m.Is == false")
+	}
+	if m.Is("") == true {
+		t.Fatalf("unexpected m.Is == true")
+	}
+}
+
 func TestMuxDialSuppress(t *testing.T) {
 	var wires, waits, done int64
 	blocking := make(chan struct{})
@@ -262,6 +272,9 @@ func TestMuxCMDRetry(t *testing.T) {
 					}
 					return newErrResult(errors.New("network error"))
 				},
+				ErrorFn: func() error {
+					return errors.New("network error")
+				},
 			},
 			{
 				DoFn: func(cmd cmds.Completed) RedisResult {
@@ -291,6 +304,9 @@ func TestMuxCMDRetry(t *testing.T) {
 					}
 					return errors.New("network error")
 				},
+				ErrorFn: func() error {
+					return errors.New("network error")
+				},
 			},
 			{
 				ReceiveFn: func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
@@ -309,11 +325,12 @@ func TestMuxCMDRetry(t *testing.T) {
 		}
 	})
 
-	t.Run("not retry read with context.Canceled", func(t *testing.T) {
+	t.Run("not retry read with context.Canceled when not broken", func(t *testing.T) {
 		e := context.Canceled
 		m, checkClean := setupMux([]*mockWire{{
 			DoFn:      func(cmd cmds.Completed) RedisResult { return newErrResult(e) },
 			DoMultiFn: func(cmd ...cmds.Completed) []RedisResult { return []RedisResult{newErrResult(e)} },
+			ErrorFn:   func() error { return nil },
 		}})
 		defer checkClean(t)
 		defer m.Close()
@@ -325,11 +342,50 @@ func TestMuxCMDRetry(t *testing.T) {
 		}
 	})
 
-	t.Run("not retry read with context.DeadlineExceeded", func(t *testing.T) {
+	t.Run("not retry read with context.DeadlineExceeded when not broken", func(t *testing.T) {
 		e := context.DeadlineExceeded
 		m, checkClean := setupMux([]*mockWire{{
 			DoFn:      func(cmd cmds.Completed) RedisResult { return newErrResult(e) },
 			DoMultiFn: func(cmd ...cmds.Completed) []RedisResult { return []RedisResult{newErrResult(e)} },
+			ErrorFn:   func() error { return nil },
+		}})
+		defer checkClean(t)
+		defer m.Close()
+		if _, err := m.Do(context.Background(), cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"})).ToString(); err != e {
+			t.Fatalf("unexpected error %v", err)
+		}
+		if _, err := m.DoMulti(context.Background(), cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"}))[0].ToString(); err != e {
+			t.Fatalf("unexpected error %v", err)
+		}
+	})
+
+	t.Run("not retry read with context.Canceled when broken", func(t *testing.T) {
+		e := context.Canceled
+		m, checkClean := setupMux([]*mockWire{{
+			DoFn:    func(cmd cmds.Completed) RedisResult { return newErrResult(e) },
+			ErrorFn: func() error { return e },
+		}, {
+			DoMultiFn: func(cmd ...cmds.Completed) []RedisResult { return []RedisResult{newErrResult(e)} },
+			ErrorFn:   func() error { return e },
+		}})
+		defer checkClean(t)
+		defer m.Close()
+		if _, err := m.Do(context.Background(), cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"})).ToString(); err != e {
+			t.Fatalf("unexpected error %v", err)
+		}
+		if _, err := m.DoMulti(context.Background(), cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"}))[0].ToString(); err != e {
+			t.Fatalf("unexpected error %v", err)
+		}
+	})
+
+	t.Run("not retry read with context.DeadlineExceeded when broken", func(t *testing.T) {
+		e := context.DeadlineExceeded
+		m, checkClean := setupMux([]*mockWire{{
+			DoFn:    func(cmd cmds.Completed) RedisResult { return newErrResult(e) },
+			ErrorFn: func() error { return e },
+		}, {
+			DoMultiFn: func(cmd ...cmds.Completed) []RedisResult { return []RedisResult{newErrResult(e)} },
+			ErrorFn:   func() error { return e },
 		}})
 		defer checkClean(t)
 		defer m.Close()
@@ -346,6 +402,9 @@ func TestMuxCMDRetry(t *testing.T) {
 			{
 				DoMultiFn: func(multi ...cmds.Completed) []RedisResult {
 					return []RedisResult{newErrResult(errors.New("network error"))}
+				},
+				ErrorFn: func() error {
+					return errors.New("network error")
 				},
 			},
 			{
@@ -369,6 +428,9 @@ func TestMuxCMDRetry(t *testing.T) {
 			{
 				DoCacheFn: func(cmd cmds.Cacheable, ttl time.Duration) RedisResult {
 					return newErrResult(errors.New("network error"))
+				},
+				ErrorFn: func() error {
+					return errors.New("network error")
 				},
 			},
 			{
@@ -395,6 +457,9 @@ func TestMuxCMDRetry(t *testing.T) {
 						t.Fatalf("command should be WRITE_COMMAND")
 					}
 					return newErrResult(errors.New("network error"))
+				},
+				ErrorFn: func() error {
+					return errors.New("network error")
 				},
 			},
 			{
@@ -425,6 +490,9 @@ func TestMuxCMDRetry(t *testing.T) {
 			{
 				DoMultiFn: func(multi ...cmds.Completed) []RedisResult {
 					return []RedisResult{newErrResult(errors.New("network error"))}
+				},
+				ErrorFn: func() error {
+					return errors.New("network error")
 				},
 			},
 			{

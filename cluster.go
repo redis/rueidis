@@ -94,17 +94,25 @@ retry:
 	groups := parseSlots(reply)
 
 	// TODO support read from replicas
-	masters := make(map[string]conn, len(groups))
-	for addr := range groups {
-		masters[addr] = c.connFn(addr, c.opt)
+	conns := make(map[string]conn, len(groups))
+	for _, g := range groups {
+		for _, addr := range g.nodes {
+			conns[addr] = c.connFn(addr, c.opt)
+		}
+	}
+	// make sure InitAddress always be present
+	for _, addr := range c.opt.InitAddress {
+		if _, ok := conns[addr]; !ok {
+			conns[addr] = c.connFn(addr, c.opt)
+		}
 	}
 
 	var removes []conn
 
 	c.mu.RLock()
 	for addr, cc := range c.conns {
-		if _, ok := masters[addr]; ok {
-			masters[addr] = cc
+		if _, ok := conns[addr]; ok {
+			conns[addr] = cc
 		} else {
 			removes = append(removes, cc)
 		}
@@ -112,8 +120,8 @@ retry:
 	c.mu.RUnlock()
 
 	slots := [16384]conn{}
-	for addr, g := range groups {
-		cc := masters[addr]
+	for master, g := range groups {
+		cc := conns[master]
 		for _, slot := range g.slots {
 			for i := slot[0]; i <= slot[1]; i++ {
 				slots[i] = cc
@@ -123,7 +131,7 @@ retry:
 
 	c.mu.Lock()
 	c.slots = slots
-	c.conns = masters
+	c.conns = conns
 	c.mu.Unlock()
 
 	for _, cc := range removes {
@@ -197,15 +205,22 @@ func (c *clusterClient) pick(slot uint16) (p conn, err error) {
 	return p, nil
 }
 
-func (c *clusterClient) pickOrNew(addr string) (p conn) {
+func (c *clusterClient) redirectOrNew(addr string) (p conn) {
 	c.mu.RLock()
 	p = c.conns[addr]
 	c.mu.RUnlock()
-	if p != nil {
+	if p != nil && !p.Is(addr) {
 		return p
 	}
 	c.mu.Lock()
 	if p = c.conns[addr]; p == nil {
+		p = c.connFn(addr, c.opt)
+		c.conns[addr] = p
+	} else if p.Is(addr) {
+		// try reconnection if the MOVED redirects to the same host,
+		// because the same hostname may actually be resolved into another destination
+		// depending on the fail-over implementation. ex: AWS MemoryDB's resize process.
+		go p.Close()
 		p = c.connFn(addr, c.opt)
 		c.conns[addr] = p
 	}
@@ -232,10 +247,10 @@ process:
 	if err := resp.RedisError(); err != nil {
 		if addr, ok := err.IsMoved(); ok {
 			go c.refresh()
-			resp = c.pickOrNew(addr).Do(ctx, cmd)
+			resp = c.redirectOrNew(addr).Do(ctx, cmd)
 			goto process
 		} else if addr, ok = err.IsAsk(); ok {
-			resp = c.pickOrNew(addr).DoMulti(ctx, cmds.AskingCmd, cmd)[1]
+			resp = c.redirectOrNew(addr).DoMulti(ctx, cmds.AskingCmd, cmd)[1]
 			goto process
 		} else if err.IsTryAgain() {
 			runtime.Gosched()
@@ -262,11 +277,11 @@ process:
 	if err := resp.RedisError(); err != nil {
 		if addr, ok := err.IsMoved(); ok {
 			go c.refresh()
-			resp = c.pickOrNew(addr).DoCache(ctx, cmd, ttl)
+			resp = c.redirectOrNew(addr).DoCache(ctx, cmd, ttl)
 			goto process
 		} else if addr, ok = err.IsAsk(); ok {
 			// TODO ASKING OPT-IN Caching
-			resp = c.pickOrNew(addr).DoMulti(ctx, cmds.AskingCmd, cmds.Completed(cmd))[1]
+			resp = c.redirectOrNew(addr).DoMulti(ctx, cmds.AskingCmd, cmds.Completed(cmd))[1]
 			goto process
 		} else if err.IsTryAgain() {
 			runtime.Gosched()
@@ -333,12 +348,6 @@ func (c *dedicatedClusterClient) check(slot uint16) {
 	} else if c.slot != slot {
 		panic(panicMsgCxSlot)
 	}
-}
-
-func (c *dedicatedClusterClient) getConn() conn {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	return c.conn
 }
 
 func (c *dedicatedClusterClient) acquire() (wire wire, err error) {

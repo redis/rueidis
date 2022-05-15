@@ -25,7 +25,7 @@ const (
 
 var (
 	// ErrClosing means the Client.Close had been called
-	ErrClosing = errors.New("rueidis client is closing")
+	ErrClosing = errors.New("rueidis client is closing or unable to connect redis")
 	// ErrNoAddr means the ClientOption.InitAddress is empty
 	ErrNoAddr = errors.New("no alive address in InitAddress")
 )
@@ -67,9 +67,10 @@ type ClientOption struct {
 	// The default is DefaultPoolSize.
 	BlockingPoolSize int
 
-	// ConnWriteTimeout is used to apply net.Conn.SetWriteDeadline
+	// ConnWriteTimeout is applied net.Conn.SetWriteDeadline and periodic PING to redis
 	// Since the Dialer.KeepAlive will not be triggered if there is data in the outgoing buffer,
 	// ConnWriteTimeout should be set in order to detect local congestion or unresponsive redis server.
+	// This default is ClientOption.Dialer.KeepAlive * (9+1), where 9 is the default of tcp_keepalive_probes on Linux.
 	ConnWriteTimeout time.Duration
 
 	// ShuffleInit is a handy flag that shuffles the InitAddress after passing to the NewClient() if it is true
@@ -186,6 +187,9 @@ func dial(dst string, opt *ClientOption) (conn net.Conn, err error) {
 	}
 	if opt.Dialer.KeepAlive == 0 {
 		opt.Dialer.KeepAlive = DefaultTCPKeepAlive
+	}
+	if opt.ConnWriteTimeout == 0 {
+		opt.ConnWriteTimeout = opt.Dialer.KeepAlive * 10
 	}
 	if opt.TLSConfig != nil {
 		conn, err = tls.DialWithDialer(&opt.Dialer, "tcp", dst, opt.TLSConfig)
