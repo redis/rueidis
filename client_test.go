@@ -213,7 +213,10 @@ func TestSingleClient(t *testing.T) {
 				return []RedisResult{newResult(RedisMessage{typ: '+', string: "Delegate"}, nil)}
 			},
 			ReceiveFn: func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
-				return errors.New("delegated")
+				return ErrClosing
+			},
+			ErrorFn: func() error {
+				return ErrClosing
 			},
 		}
 		m.AcquireFn = func() wire {
@@ -238,7 +241,7 @@ func TestSingleClient(t *testing.T) {
 					t.Fatalf("unexpected response %v %v", v, err)
 				}
 			}
-			if err := c.Receive(context.Background(), c.B().Subscribe().Channel("a").Build(), func(msg PubSubMessage) {}); err == nil {
+			if err := c.Receive(context.Background(), c.B().Subscribe().Channel("a").Build(), func(msg PubSubMessage) {}); err != ErrClosing {
 				t.Fatalf("unexpected ret %v", err)
 			}
 			return nil

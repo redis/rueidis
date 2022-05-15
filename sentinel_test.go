@@ -516,6 +516,9 @@ func TestSentinelClientDelegateRetry(t *testing.T) {
 				}
 				return ErrClosing
 			},
+			ErrorFn: func() error {
+				return ErrClosing
+			},
 		}
 		m1 := &mockConn{
 			DoFn: func(cmd cmds.Completed) RedisResult {

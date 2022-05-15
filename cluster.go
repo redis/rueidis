@@ -22,7 +22,7 @@ type clusterClient struct {
 	connFn connFn
 	sc     call
 	mu     sync.RWMutex
-	closed uint32
+	stop   uint32
 	cmd    cmds.Builder
 }
 
@@ -259,7 +259,7 @@ retry:
 	}
 	resp = cc.Do(ctx, cmd)
 process:
-	if c.shouldRefreshRetry(resp.NonRedisError(), ctx) {
+	if c.shouldRefreshRetry(resp.NonRedisError(), ctx) && cmd.IsReadOnly() {
 		goto retry
 	}
 	if err := resp.RedisError(); err != nil {
@@ -333,7 +333,7 @@ func (c *clusterClient) Dedicated(fn func(DedicatedClient) error) (err error) {
 }
 
 func (c *clusterClient) Close() {
-	atomic.StoreUint32(&c.closed, 1)
+	atomic.StoreUint32(&c.stop, 1)
 	c.mu.RLock()
 	for _, cc := range c.conns {
 		go cc.Close()
@@ -342,14 +342,10 @@ func (c *clusterClient) Close() {
 }
 
 func (c *clusterClient) shouldRefreshRetry(err error, ctx context.Context) (should bool) {
-	if should = (err == ErrClosing || err == context.DeadlineExceeded) && atomic.LoadUint32(&c.closed) == 0; should {
-		if ctx.Err() != nil {
-			go c.refresh()
-			return false
-		}
-		c.refresh()
+	if should = err != nil && atomic.LoadUint32(&c.stop) == 0; should {
+		go c.refresh()
 	}
-	return should
+	return should && ctx.Err() == nil
 }
 
 type dedicatedClusterClient struct {
@@ -401,11 +397,11 @@ func (c *dedicatedClusterClient) B() cmds.Builder {
 func (c *dedicatedClusterClient) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
 	c.check(cmd.Slot())
 retry:
-	if wire, err := c.acquire(); err != nil {
+	if w, err := c.acquire(); err != nil {
 		resp = newErrResult(err)
 	} else {
-		resp = wire.Do(ctx, cmd)
-		if c.client.shouldRefreshRetry(resp.NonRedisError(), ctx) {
+		resp = w.Do(ctx, cmd)
+		if c.client.shouldRefreshRetry(resp.NonRedisError(), ctx) && cmd.IsReadOnly() && w.Error() == nil {
 			goto retry
 		}
 	}
@@ -420,11 +416,12 @@ func (c *dedicatedClusterClient) DoMulti(ctx context.Context, multi ...cmds.Comp
 	for _, cmd := range multi {
 		c.check(cmd.Slot())
 	}
+	readonly := allReadOnly(multi)
 retry:
-	if wire, err := c.acquire(); err == nil {
-		resp = wire.DoMulti(ctx, multi...)
+	if w, err := c.acquire(); err == nil {
+		resp = w.DoMulti(ctx, multi...)
 		for _, resp := range resp {
-			if c.client.shouldRefreshRetry(resp.NonRedisError(), ctx) {
+			if c.client.shouldRefreshRetry(resp.NonRedisError(), ctx) && readonly && w.Error() == nil {
 				goto retry
 			}
 		}
@@ -442,10 +439,10 @@ retry:
 
 func (c *dedicatedClusterClient) Receive(ctx context.Context, subscribe cmds.Completed, fn func(msg PubSubMessage)) (err error) {
 	c.check(subscribe.Slot())
-	var wire wire
+	var w wire
 retry:
-	if wire, err = c.acquire(); err == nil {
-		if err = wire.Receive(ctx, subscribe, fn); c.client.shouldRefreshRetry(err, ctx) {
+	if w, err = c.acquire(); err == nil {
+		if err = w.Receive(ctx, subscribe, fn); c.client.shouldRefreshRetry(err, ctx) && w.Error() == nil {
 			goto retry
 		}
 	}
