@@ -58,7 +58,7 @@ func (c *sentinelClient) B() cmds.Builder {
 func (c *sentinelClient) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
 retry:
 	resp = c.mConn.Load().(conn).Do(ctx, cmd)
-	if c.shouldRetry(resp.NonRedisError()) {
+	if c.shouldRetry(resp.NonRedisError(), ctx) {
 		goto retry
 	}
 	cmds.Put(cmd.CommandSlice())
@@ -68,7 +68,7 @@ retry:
 func (c *sentinelClient) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp RedisResult) {
 retry:
 	resp = c.mConn.Load().(conn).DoCache(ctx, cmd, ttl)
-	if c.shouldRetry(resp.NonRedisError()) {
+	if c.shouldRetry(resp.NonRedisError(), ctx) {
 		goto retry
 	}
 	cmds.Put(cmd.CommandSlice())
@@ -77,7 +77,7 @@ retry:
 
 func (c *sentinelClient) Receive(ctx context.Context, subscribe cmds.Completed, fn func(msg PubSubMessage)) (err error) {
 retry:
-	if err = c.mConn.Load().(conn).Receive(ctx, subscribe, fn); c.shouldRetry(err) {
+	if err = c.mConn.Load().(conn).Receive(ctx, subscribe, fn); c.shouldRetry(err, ctx) {
 		goto retry
 	}
 	cmds.Put(subscribe.CommandSlice())
@@ -104,8 +104,8 @@ func (c *sentinelClient) Close() {
 	c.mu.Unlock()
 }
 
-func (c *sentinelClient) shouldRetry(err error) (should bool) {
-	if should = err == ErrClosing && atomic.LoadUint32(&c.closed) == 0; should {
+func (c *sentinelClient) shouldRetry(err error, ctx context.Context) (should bool) {
+	if should = err == ErrClosing && atomic.LoadUint32(&c.closed) == 0 && ctx.Err() == nil; should {
 		runtime.Gosched()
 	}
 	return should

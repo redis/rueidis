@@ -259,7 +259,7 @@ retry:
 	}
 	resp = cc.Do(ctx, cmd)
 process:
-	if c.shouldRefreshRetry(resp.NonRedisError()) {
+	if c.shouldRefreshRetry(resp.NonRedisError(), ctx) {
 		goto retry
 	}
 	if err := resp.RedisError(); err != nil {
@@ -289,7 +289,7 @@ retry:
 	}
 	resp = cc.DoCache(ctx, cmd, ttl)
 process:
-	if c.shouldRefreshRetry(resp.NonRedisError()) {
+	if c.shouldRefreshRetry(resp.NonRedisError(), ctx) {
 		goto retry
 	}
 	if err := resp.RedisError(); err != nil {
@@ -317,7 +317,7 @@ retry:
 	if err != nil {
 		goto ret
 	}
-	if err = cc.Receive(ctx, subscribe, fn); c.shouldRefreshRetry(err) {
+	if err = cc.Receive(ctx, subscribe, fn); c.shouldRefreshRetry(err, ctx) {
 		goto retry
 	}
 ret:
@@ -341,8 +341,12 @@ func (c *clusterClient) Close() {
 	c.mu.RUnlock()
 }
 
-func (c *clusterClient) shouldRefreshRetry(err error) (should bool) {
+func (c *clusterClient) shouldRefreshRetry(err error, ctx context.Context) (should bool) {
 	if should = (err == ErrClosing || err == context.DeadlineExceeded) && atomic.LoadUint32(&c.closed) == 0; should {
+		if ctx.Err() != nil {
+			go c.refresh()
+			return false
+		}
 		c.refresh()
 	}
 	return should
@@ -401,7 +405,7 @@ retry:
 		resp = newErrResult(err)
 	} else {
 		resp = wire.Do(ctx, cmd)
-		if c.client.shouldRefreshRetry(resp.NonRedisError()) {
+		if c.client.shouldRefreshRetry(resp.NonRedisError(), ctx) {
 			goto retry
 		}
 	}
@@ -420,7 +424,7 @@ retry:
 	if wire, err := c.acquire(); err == nil {
 		resp = wire.DoMulti(ctx, multi...)
 		for _, resp := range resp {
-			if c.client.shouldRefreshRetry(resp.NonRedisError()) {
+			if c.client.shouldRefreshRetry(resp.NonRedisError(), ctx) {
 				goto retry
 			}
 		}
@@ -441,7 +445,7 @@ func (c *dedicatedClusterClient) Receive(ctx context.Context, subscribe cmds.Com
 	var wire wire
 retry:
 	if wire, err = c.acquire(); err == nil {
-		if err = wire.Receive(ctx, subscribe, fn); c.client.shouldRefreshRetry(err) {
+		if err = wire.Receive(ctx, subscribe, fn); c.client.shouldRefreshRetry(err, ctx) {
 			goto retry
 		}
 	}
