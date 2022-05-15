@@ -42,13 +42,11 @@ type mux struct {
 	mu     sync.Mutex
 }
 
-func makeMux(dst string, option *ClientOption, dialFn dialFn, retryOnConnect bool) *mux {
+func makeMux(dst string, option *ClientOption, dialFn dialFn) *mux {
 	return newMux(dst, option, (*pipe)(nil), dead, func() (w wire, err error) {
 		conn, err := dialFn(dst, option)
 		if err == nil {
 			w, err = newPipe(conn, option)
-		} else if !retryOnConnect {
-			return dead, err
 		}
 		return w, err
 	})
@@ -61,26 +59,24 @@ func newMux(dst string, option *ClientOption, init, dead wire, wireFn wireFn) *m
 	return m
 }
 
-func (m *mux) _newPooledWire() wire {
-retry:
-	if wire, err := m.wireFn(); err == nil || wire == m.dead {
-		return wire
-	}
-	goto retry
-}
-
 func (m *mux) Override(cc conn) {
 	if m2, ok := cc.(*mux); ok {
 		m.wire.CompareAndSwap(m.init, m2.wire.Load())
 	}
 }
 
-func (m *mux) pipe() wire {
-retry:
-	if wire, err := m._pipe(); err == nil || wire == m.dead {
-		return wire
+func (m *mux) _newPooledWire() wire {
+	if w, err := m.wireFn(); err == nil {
+		return w
 	}
-	goto retry
+	return m.dead
+}
+
+func (m *mux) pipe() wire {
+	if w, err := m._pipe(); err == nil {
+		return w
+	}
+	return m.dead
 }
 
 func (m *mux) _pipe() (w wire, err error) {
@@ -133,38 +129,23 @@ func (m *mux) Error() error {
 }
 
 func (m *mux) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
-retry:
 	if cmd.IsBlock() {
 		resp = m.blocking(ctx, cmd)
 	} else {
 		resp = m.pipeline(ctx, cmd)
 	}
-	if cmd.IsReadOnly() && isRetryable(resp.NonRedisError()) {
-		goto retry
-	}
 	return resp
 }
 
 func (m *mux) DoMulti(ctx context.Context, multi ...cmds.Completed) (resp []RedisResult) {
-	var block, write bool
 	for _, cmd := range multi {
-		block = block || cmd.IsBlock()
-		write = write || cmd.IsWrite()
-	}
-retry:
-	if block {
-		resp = m.blockingMulti(ctx, multi)
-	} else {
-		resp = m.pipelineMulti(ctx, multi)
-	}
-	if !write {
-		for _, r := range resp {
-			if isRetryable(r.NonRedisError()) {
-				goto retry
-			}
+		if cmd.IsBlock() {
+			goto block
 		}
 	}
-	return resp
+	return m.pipelineMulti(ctx, multi)
+block:
+	return m.blockingMulti(ctx, multi)
 }
 
 func (m *mux) blocking(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
@@ -202,27 +183,19 @@ func (m *mux) pipelineMulti(ctx context.Context, cmd []cmds.Completed) (resp []R
 }
 
 func (m *mux) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) RedisResult {
-retry:
 	wire := m.pipe()
 	resp := wire.DoCache(ctx, cmd, ttl)
 	if isBroken(resp.NonRedisError(), wire) {
 		m.wire.CompareAndSwap(wire, m.init)
 	}
-	if isRetryable(resp.NonRedisError()) {
-		goto retry
-	}
 	return resp
 }
 
 func (m *mux) Receive(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
-retry:
 	wire := m.pipe()
 	err := wire.Receive(ctx, subscribe, fn)
 	if isBroken(err, wire) {
 		m.wire.CompareAndSwap(wire, m.init)
-	}
-	if isRetryable(err) {
-		goto retry
 	}
 	return err
 }
@@ -244,13 +217,6 @@ func (m *mux) Close() {
 
 func (m *mux) Is(addr string) bool {
 	return m.dst == addr
-}
-
-func isRetryable(err error) bool {
-	return err != nil &&
-		err != ErrClosing &&
-		err != context.Canceled &&
-		err != context.DeadlineExceeded
 }
 
 func isBroken(err error, w wire) bool {

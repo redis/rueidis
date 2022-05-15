@@ -172,11 +172,11 @@ func NewClient(option ClientOption) (client Client, err error) {
 		})
 	}
 	if option.Sentinel.MasterSet != "" {
-		return newSentinelClient(&option, makeNonRetryConn)
+		return newSentinelClient(&option, makeConn)
 	}
-	if client, err = newClusterClient(&option, makeNonRetryConn); err != nil {
+	if client, err = newClusterClient(&option, makeConn); err != nil {
 		if len(option.InitAddress) == 1 && err.Error() == redisErrMsgClusterDisabled {
-			client, err = newSingleClient(&option, client.(*clusterClient).single(), makeRetryConn)
+			client, err = newSingleClient(&option, client.(*clusterClient).single(), makeConn)
 		} else if client != (*clusterClient)(nil) {
 			client.Close()
 			return nil, err
@@ -185,12 +185,8 @@ func NewClient(option ClientOption) (client Client, err error) {
 	return client, err
 }
 
-func makeNonRetryConn(dst string, opt *ClientOption) conn {
-	return makeMux(dst, opt, dial, false)
-}
-
-func makeRetryConn(dst string, opt *ClientOption) conn {
-	return makeMux(dst, opt, dial, true)
+func makeConn(dst string, opt *ClientOption) conn {
+	return makeMux(dst, opt, dial)
 }
 
 func dial(dst string, opt *ClientOption) (conn net.Conn, err error) {
