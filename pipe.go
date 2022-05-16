@@ -34,6 +34,7 @@ type pipe struct {
 	slept   int32
 	version int32
 	timeout time.Duration
+	pinggap time.Duration
 
 	once  sync.Once
 	cond  sync.Cond
@@ -67,6 +68,7 @@ func newPipe(conn net.Conn, option *ClientOption) (p *pipe, err error) {
 		psubs: newSubs(),
 
 		timeout: option.ConnWriteTimeout,
+		pinggap: option.Dialer.KeepAlive,
 	}
 
 	helloCmd := []string{"HELLO", "3"}
@@ -135,34 +137,31 @@ func (p *pipe) background() {
 }
 
 func (p *pipe) _background() {
-	wg := sync.WaitGroup{}
 	exit := func() {
 		// stop accepting new requests
 		atomic.CompareAndSwapInt32(&p.state, 1, 2)
 		_ = p.conn.Close() // force both read & write goroutine to exit
-		wg.Done()
 	}
-	wg.Add(1)
-	go func() {
-		p._backgroundWrite()
-		exit()
-	}()
-	wg.Add(1)
-	go func() {
-		p._backgroundRead()
-		exit()
-		p._awake()
-	}()
-	if p.timeout > 0 {
+	if p.timeout > 0 && p.pinggap > 0 {
 		go func() {
 			if err := p._backgroundPing(); err != ErrClosing {
 				p.error.CompareAndSwap(nil, &errs{error: err})
-				atomic.CompareAndSwapInt32(&p.state, 1, 2)
-				_ = p.conn.Close() // force both read & write goroutine to exit
+				exit()
 			}
 		}()
 	}
-	wg.Wait()
+	wait := make(chan struct{})
+	go func() {
+		p._backgroundWrite()
+		exit()
+		close(wait)
+	}()
+	{
+		p._backgroundRead()
+		exit()
+		p._awake()
+	}
+	<-wait
 
 	p.subs.Close()
 	p.psubs.Close()
@@ -337,7 +336,7 @@ func (p *pipe) _backgroundRead() {
 
 func (p *pipe) _backgroundPing() error {
 	var timer *time.Timer
-	for atomic.LoadInt32(&p.state) == 1 {
+	for time.Sleep(p.pinggap); atomic.LoadInt32(&p.state) == 1; time.Sleep(p.pinggap) {
 		ws := atomic.AddInt32(&p.waits, 1)
 		ch := p.queue.PutOne(cmds.PingCmd)
 		if ws == 1 {
@@ -364,7 +363,6 @@ func (p *pipe) _backgroundPing() error {
 			}()
 			return context.DeadlineExceeded
 		}
-		time.Sleep(time.Second)
 	}
 	return ErrClosing
 }

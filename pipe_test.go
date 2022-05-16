@@ -1086,7 +1086,7 @@ func TestOngoingDeadlineContextInSyncMode_Do(t *testing.T) {
 }
 
 func TestWriteDeadlineInSyncMode_Do(t *testing.T) {
-	p, _, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: 1 * time.Second / 2})
+	p, _, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: 1 * time.Second / 2, Dialer: net.Dialer{KeepAlive: time.Second / 3}})
 	defer closeConn()
 
 	if err := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); err != context.DeadlineExceeded {
@@ -1109,7 +1109,7 @@ func TestOngoingDeadlineContextInSyncMode_DoMulti(t *testing.T) {
 }
 
 func TestWriteDeadlineInSyncMode_DoMulti(t *testing.T) {
-	p, _, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: time.Second / 2})
+	p, _, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: time.Second / 2, Dialer: net.Dialer{KeepAlive: time.Second / 3}})
 	defer closeConn()
 
 	if err := p.DoMulti(context.Background(), cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); err != context.DeadlineExceeded {
@@ -1158,7 +1158,7 @@ func TestOngoingCancelContextInPipelineMode_Do(t *testing.T) {
 }
 
 func TestOngoingWriteTimeoutInPipelineMode_Do(t *testing.T) {
-	p, mock, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: time.Second / 2})
+	p, mock, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: time.Second / 2, Dialer: net.Dialer{KeepAlive: time.Second / 3}})
 	defer closeConn()
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
@@ -1229,7 +1229,7 @@ func TestOngoingCancelContextInPipelineMode_DoMulti(t *testing.T) {
 }
 
 func TestOngoingWriteTimeoutInPipelineMode_DoMulti(t *testing.T) {
-	p, mock, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: time.Second / 2})
+	p, mock, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: time.Second / 2, Dialer: net.Dialer{KeepAlive: time.Second / 3}})
 	defer closeConn()
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
@@ -1261,7 +1261,7 @@ func TestOngoingWriteTimeoutInPipelineMode_DoMulti(t *testing.T) {
 }
 
 func TestPingOnConnError(t *testing.T) {
-	p, mock, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: 3 * time.Second})
+	p, mock, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: 3 * time.Second, Dialer: net.Dialer{KeepAlive: time.Second / 3}})
 	p.background()
 	mock.Expect("PING")
 	closeConn()
