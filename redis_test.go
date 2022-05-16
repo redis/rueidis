@@ -309,7 +309,7 @@ func run(t *testing.T, client Client, cases ...func(*testing.T, Client)) {
 func TestSingleClientIntegration(t *testing.T) {
 	client, err := NewClient(ClientOption{
 		InitAddress:      []string{"127.0.0.1:6379"},
-		ConnWriteTimeout: 120 * time.Second,
+		ConnWriteTimeout: 180 * time.Second,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -323,7 +323,7 @@ func TestSingleClientIntegration(t *testing.T) {
 func TestSentinelClientIntegration(t *testing.T) {
 	client, err := NewClient(ClientOption{
 		InitAddress:      []string{"127.0.0.1:26379"},
-		ConnWriteTimeout: 120 * time.Second,
+		ConnWriteTimeout: 180 * time.Second,
 		Sentinel: SentinelOption{
 			MasterSet: "test",
 		},
@@ -340,7 +340,7 @@ func TestSentinelClientIntegration(t *testing.T) {
 func TestClusterClientIntegration(t *testing.T) {
 	client, err := NewClient(ClientOption{
 		InitAddress:      []string{"127.0.0.1:7001", "127.0.0.1:7002", "127.0.0.1:7003"},
-		ConnWriteTimeout: 120 * time.Second,
+		ConnWriteTimeout: 180 * time.Second,
 		ShuffleInit:      true,
 	})
 	if err != nil {

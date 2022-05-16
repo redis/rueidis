@@ -79,6 +79,16 @@ func TestComplete_IsReadOnly(t *testing.T) {
 	}
 }
 
+func TestNewMultiCompleted(t *testing.T) {
+	multi := NewMultiCompleted([][]string{{"a", "b"}, {"c", "d"}})
+	if strings.Join(multi[0].Commands(), " ") != "a b" {
+		t.Fatalf("unexpected command %v", multi[0].Commands())
+	}
+	if strings.Join(multi[1].Commands(), " ") != "c d" {
+		t.Fatalf("unexpected command %v", multi[1].Commands())
+	}
+}
+
 func TestCompleted_PanicCrossSlot(t *testing.T) {
 	defer func() {
 		if !strings.Contains(recover().(string), multiKeySlotErr) {
