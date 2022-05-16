@@ -613,3 +613,18 @@ func TestClusterClientErr(t *testing.T) {
 		}
 	})
 }
+
+func TestClusterClientRetry(t *testing.T) {
+	SetupClientRetry(t, func(m *mockConn) Client {
+		m.DoOverride = map[string]func(cmd cmds.Completed) RedisResult{
+			"CLUSTER SLOTS": func(cmd cmds.Completed) RedisResult { return slotsResp },
+		}
+		c, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
+			return m
+		})
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		return c
+	})
+}

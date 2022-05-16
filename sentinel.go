@@ -249,7 +249,7 @@ func (c *sentinelClient) listWatch(cc conn) (master string, sentinels []string, 
 					c.switchMasterRetry(fmt.Sprintf("%s:%s", m[2], m[3]))
 				}
 			}
-		}); err != nil && err != ErrClosing {
+		}); err != nil && atomic.LoadUint32(&c.stop) == 0 {
 			c.refreshRetry()
 		}
 	}()
