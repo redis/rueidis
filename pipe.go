@@ -255,6 +255,16 @@ func (p *pipe) _backgroundRead() {
 		ver   = p.version
 	)
 
+	defer func() {
+		if err != nil {
+			for ; ff < len(multi); ff++ {
+				if !multi[ff].NoReply() {
+					ch <- newResult(msg, err)
+				}
+			}
+		}
+	}()
+
 	for {
 		if msg, err = readNextMessage(p.r); err != nil {
 			p.error.CompareAndSwap(nil, &errs{error: err})
