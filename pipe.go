@@ -52,10 +52,6 @@ type pipe struct {
 }
 
 func newPipe(conn net.Conn, option *ClientOption) (p *pipe, err error) {
-	if option.ConnWriteTimeout > 0 {
-		conn = &writeTimeoutConn{Conn: conn, timeout: option.ConnWriteTimeout}
-	}
-
 	p = &pipe{
 		conn:  conn,
 		cond:  sync.Cond{L: &sync.Mutex{}},
@@ -732,26 +728,3 @@ var cacheMark = &(RedisMessage{})
 var errClosing = &errs{error: ErrClosing}
 
 type errs struct{ error }
-
-type writeTimeoutConn struct {
-	net.Conn
-	current time.Time
-	timeout time.Duration
-}
-
-// automatically apply the write-deadline in Write call only when necessary,
-// since the net.Conn is used behind the bufio.Writer
-func (c *writeTimeoutConn) Write(b []byte) (n int, err error) {
-	if c.current.IsZero() {
-		_ = c.Conn.SetWriteDeadline(time.Now().Add(c.timeout))
-		n, err = c.Conn.Write(b)
-		_ = c.Conn.SetWriteDeadline(time.Time{})
-		return
-	}
-	return c.Conn.Write(b)
-}
-
-func (c *writeTimeoutConn) SetDeadline(t time.Time) error {
-	c.current = t
-	return c.Conn.SetDeadline(t)
-}
