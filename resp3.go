@@ -120,7 +120,7 @@ func readS(i *bufio.Reader) (string, error) {
 		return "", err
 	}
 	if trim := len(bs) - 2; trim < 0 {
-		panic(unexpectedNoCRLF)
+		return "", errors.New(unexpectedNoCRLF)
 	} else {
 		bs = bs[:trim]
 	}
@@ -152,8 +152,7 @@ func readI(i *bufio.Reader) (int64, error) {
 			}
 			return 0, err
 		default:
-			cStr := string(c)
-			panic(unexpectedNumByte + cStr)
+			return 0, errors.New(unexpectedNumByte + strconv.Itoa(int(c)))
 		}
 	}
 }
@@ -220,8 +219,7 @@ func readNextMessage(i *bufio.Reader) (m RedisMessage, err error) {
 		}
 		fn := readers[typ]
 		if fn == nil {
-			typStr := string(typ)
-			panic(unknownMessageType + typStr)
+			return RedisMessage{}, errors.New(unknownMessageType + strconv.Itoa(int(typ)))
 		}
 		if m, err = fn(i); err != nil {
 			return RedisMessage{}, err
