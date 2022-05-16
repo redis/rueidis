@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"runtime"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -15,7 +14,6 @@ import (
 )
 
 func newSentinelClient(opt *ClientOption, connFn connFn) (client *sentinelClient, err error) {
-
 	client = &sentinelClient{
 		cmd:       cmds.NewBuilder(cmds.NoSlot),
 		mOpt:      opt,
@@ -47,7 +45,7 @@ type sentinelClient struct {
 	sAddr     string
 	sc        call
 	mu        sync.Mutex
-	closed    uint32
+	stop      uint32
 	cmd       cmds.Builder
 }
 
@@ -58,7 +56,7 @@ func (c *sentinelClient) B() cmds.Builder {
 func (c *sentinelClient) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
 retry:
 	resp = c.mConn.Load().(conn).Do(ctx, cmd)
-	if c.shouldRetry(resp.NonRedisError(), ctx) {
+	if cmd.IsReadOnly() && c.isRetryable(resp.NonRedisError(), ctx) {
 		goto retry
 	}
 	cmds.Put(cmd.CommandSlice())
@@ -68,7 +66,7 @@ retry:
 func (c *sentinelClient) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp RedisResult) {
 retry:
 	resp = c.mConn.Load().(conn).DoCache(ctx, cmd, ttl)
-	if c.shouldRetry(resp.NonRedisError(), ctx) {
+	if c.isRetryable(resp.NonRedisError(), ctx) {
 		goto retry
 	}
 	cmds.Put(cmd.CommandSlice())
@@ -77,7 +75,7 @@ retry:
 
 func (c *sentinelClient) Receive(ctx context.Context, subscribe cmds.Completed, fn func(msg PubSubMessage)) (err error) {
 retry:
-	if err = c.mConn.Load().(conn).Receive(ctx, subscribe, fn); c.shouldRetry(err, ctx) {
+	if err = c.mConn.Load().(conn).Receive(ctx, subscribe, fn); c.isRetryable(err, ctx) {
 		goto retry
 	}
 	cmds.Put(subscribe.CommandSlice())
@@ -93,7 +91,7 @@ func (c *sentinelClient) Dedicated(fn func(DedicatedClient) error) (err error) {
 }
 
 func (c *sentinelClient) Close() {
-	atomic.StoreUint32(&c.closed, 1)
+	atomic.StoreUint32(&c.stop, 1)
 	c.mu.Lock()
 	if c.sConn != nil {
 		c.sConn.Close()
@@ -104,11 +102,8 @@ func (c *sentinelClient) Close() {
 	c.mu.Unlock()
 }
 
-func (c *sentinelClient) shouldRetry(err error, ctx context.Context) (should bool) {
-	if should = err == ErrClosing && atomic.LoadUint32(&c.closed) == 0 && ctx.Err() == nil; should {
-		runtime.Gosched()
-	}
-	return should
+func (c *sentinelClient) isRetryable(err error, ctx context.Context) (should bool) {
+	return err != nil && atomic.LoadUint32(&c.stop) == 0 && ctx.Err() == nil
 }
 
 func (c *sentinelClient) addSentinel(addr string) {
@@ -137,7 +132,7 @@ func (c *sentinelClient) switchMasterRetry(addr string) {
 
 func (c *sentinelClient) _switchMaster(addr string) (err error) {
 	var master conn
-	if atomic.LoadUint32(&c.closed) == 1 {
+	if atomic.LoadUint32(&c.stop) == 1 {
 		return nil
 	}
 	if c.mAddr == addr {
@@ -186,7 +181,7 @@ func (c *sentinelClient) _refresh() (err error) {
 	c.mu.Lock()
 	head := c.sentinels.Front()
 	for e := head; e != nil; {
-		if atomic.LoadUint32(&c.closed) == 1 {
+		if atomic.LoadUint32(&c.stop) == 1 {
 			c.mu.Unlock()
 			return nil
 		}
@@ -254,7 +249,7 @@ func (c *sentinelClient) listWatch(cc conn) (master string, sentinels []string, 
 					c.switchMasterRetry(fmt.Sprintf("%s:%s", m[2], m[3]))
 				}
 			}
-		}); err != nil && err != ErrClosing {
+		}); err != nil && atomic.LoadUint32(&c.stop) == 0 {
 			c.refreshRetry()
 		}
 	}()

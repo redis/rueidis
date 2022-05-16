@@ -34,6 +34,7 @@ type pipe struct {
 	slept   int32
 	version int32
 	timeout time.Duration
+	pinggap time.Duration
 
 	once  sync.Once
 	cond  sync.Cond
@@ -51,10 +52,6 @@ type pipe struct {
 }
 
 func newPipe(conn net.Conn, option *ClientOption) (p *pipe, err error) {
-	if option.ConnWriteTimeout > 0 {
-		conn = &writeTimeoutConn{Conn: conn, timeout: option.ConnWriteTimeout}
-	}
-
 	p = &pipe{
 		conn:  conn,
 		cond:  sync.Cond{L: &sync.Mutex{}},
@@ -67,6 +64,7 @@ func newPipe(conn net.Conn, option *ClientOption) (p *pipe, err error) {
 		psubs: newSubs(),
 
 		timeout: option.ConnWriteTimeout,
+		pinggap: option.Dialer.KeepAlive,
 	}
 
 	helloCmd := []string{"HELLO", "3"}
@@ -135,34 +133,31 @@ func (p *pipe) background() {
 }
 
 func (p *pipe) _background() {
-	wg := sync.WaitGroup{}
 	exit := func() {
 		// stop accepting new requests
 		atomic.CompareAndSwapInt32(&p.state, 1, 2)
 		_ = p.conn.Close() // force both read & write goroutine to exit
-		wg.Done()
 	}
-	wg.Add(1)
-	go func() {
-		p._backgroundWrite()
-		exit()
-	}()
-	wg.Add(1)
-	go func() {
-		p._backgroundRead()
-		exit()
-		p._awake()
-	}()
-	if p.timeout > 0 {
+	if p.timeout > 0 && p.pinggap > 0 {
 		go func() {
 			if err := p._backgroundPing(); err != ErrClosing {
 				p.error.CompareAndSwap(nil, &errs{error: err})
-				atomic.CompareAndSwapInt32(&p.state, 1, 2)
-				_ = p.conn.Close() // force both read & write goroutine to exit
+				exit()
 			}
 		}()
 	}
-	wg.Wait()
+	wait := make(chan struct{})
+	go func() {
+		p._backgroundWrite()
+		exit()
+		close(wait)
+	}()
+	{
+		p._backgroundRead()
+		exit()
+		p._awake()
+	}
+	<-wait
 
 	p.subs.Close()
 	p.psubs.Close()
@@ -255,6 +250,16 @@ func (p *pipe) _backgroundRead() {
 		ver   = p.version
 	)
 
+	defer func() {
+		if err != nil {
+			for ; ff < len(multi); ff++ {
+				if !multi[ff].NoReply() {
+					ch <- newResult(msg, err)
+				}
+			}
+		}
+	}()
+
 	for {
 		if msg, err = readNextMessage(p.r); err != nil {
 			p.error.CompareAndSwap(nil, &errs{error: err})
@@ -327,7 +332,7 @@ func (p *pipe) _backgroundRead() {
 
 func (p *pipe) _backgroundPing() error {
 	var timer *time.Timer
-	for atomic.LoadInt32(&p.state) == 1 {
+	for time.Sleep(p.pinggap); atomic.LoadInt32(&p.state) == 1; time.Sleep(p.pinggap) {
 		ws := atomic.AddInt32(&p.waits, 1)
 		ch := p.queue.PutOne(cmds.PingCmd)
 		if ws == 1 {
@@ -354,7 +359,6 @@ func (p *pipe) _backgroundPing() error {
 			}()
 			return context.DeadlineExceeded
 		}
-		time.Sleep(time.Second)
 	}
 	return ErrClosing
 }
@@ -724,26 +728,3 @@ var cacheMark = &(RedisMessage{})
 var errClosing = &errs{error: ErrClosing}
 
 type errs struct{ error }
-
-type writeTimeoutConn struct {
-	net.Conn
-	current time.Time
-	timeout time.Duration
-}
-
-// automatically apply the write-deadline in Write call only when necessary,
-// since the net.Conn is used behind the bufio.Writer
-func (c *writeTimeoutConn) Write(b []byte) (n int, err error) {
-	if c.current.IsZero() {
-		_ = c.Conn.SetWriteDeadline(time.Now().Add(c.timeout))
-		n, err = c.Conn.Write(b)
-		_ = c.Conn.SetWriteDeadline(time.Time{})
-		return
-	}
-	return c.Conn.Write(b)
-}
-
-func (c *writeTimeoutConn) SetDeadline(t time.Time) error {
-	c.current = t
-	return c.Conn.SetDeadline(t)
-}

@@ -588,6 +588,67 @@ func TestClientSideCachingRedis6InvalidationBug2(t *testing.T) {
 	}
 }
 
+// https://github.com/redis/redis/issues/8935
+func TestClientSideCachingRedis6InvalidationBugErr(t *testing.T) {
+	p, mock, _, closeConn := setup(t, ClientOption{})
+
+	expectCSC := func() {
+		mock.Expect("CLIENT", "CACHING", "YES").
+			Expect("MULTI").
+			Expect("PTTL", "a").
+			Expect("GET", "a").
+			Expect("EXEC").
+			ReplyString("OK").
+			ReplyString("OK").
+			ReplyString("OK").
+			ReplyString("OK").
+			Reply(RedisMessage{typ: '*', values: []RedisMessage{
+				{typ: ':', integer: -2},
+				{
+					typ: '>',
+					values: []RedisMessage{
+						{typ: '+', string: "invalidate"},
+						{typ: '*', values: []RedisMessage{{typ: '+', string: "a"}}},
+					},
+				},
+			}})
+	}
+
+	go func() {
+		expectCSC()
+		closeConn()
+	}()
+
+	err := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).Error()
+	if !strings.HasPrefix(err.Error(), "io:") {
+		t.Errorf("unexpected err %v", err)
+	}
+}
+
+func TestMultiHalfErr(t *testing.T) {
+	p, mock, _, closeConn := setup(t, ClientOption{})
+
+	expectCSC := func() {
+		mock.Expect("CLIENT", "CACHING", "YES").
+			Expect("MULTI").
+			Expect("PTTL", "a").
+			Expect("GET", "a").
+			Expect("EXEC").
+			ReplyString("OK").
+			ReplyString("OK")
+	}
+
+	go func() {
+		expectCSC()
+		closeConn()
+	}()
+
+	err := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).Error()
+	if !strings.HasPrefix(err.Error(), "io:") {
+		t.Errorf("unexpected err %v", err)
+	}
+}
+
 //gocyclo:ignore
 func TestPubSub(t *testing.T) {
 	builder := cmds.NewBuilder(cmds.NoSlot)
@@ -1025,7 +1086,7 @@ func TestOngoingDeadlineContextInSyncMode_Do(t *testing.T) {
 }
 
 func TestWriteDeadlineInSyncMode_Do(t *testing.T) {
-	p, _, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: 1 * time.Second / 2})
+	p, _, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: 1 * time.Second / 2, Dialer: net.Dialer{KeepAlive: time.Second / 3}})
 	defer closeConn()
 
 	if err := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); err != context.DeadlineExceeded {
@@ -1048,7 +1109,7 @@ func TestOngoingDeadlineContextInSyncMode_DoMulti(t *testing.T) {
 }
 
 func TestWriteDeadlineInSyncMode_DoMulti(t *testing.T) {
-	p, _, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: time.Second / 2})
+	p, _, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: time.Second / 2, Dialer: net.Dialer{KeepAlive: time.Second / 3}})
 	defer closeConn()
 
 	if err := p.DoMulti(context.Background(), cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); err != context.DeadlineExceeded {
@@ -1097,7 +1158,7 @@ func TestOngoingCancelContextInPipelineMode_Do(t *testing.T) {
 }
 
 func TestOngoingWriteTimeoutInPipelineMode_Do(t *testing.T) {
-	p, mock, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: time.Second / 2})
+	p, mock, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: time.Second / 2, Dialer: net.Dialer{KeepAlive: time.Second / 3}})
 	defer closeConn()
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
@@ -1168,7 +1229,7 @@ func TestOngoingCancelContextInPipelineMode_DoMulti(t *testing.T) {
 }
 
 func TestOngoingWriteTimeoutInPipelineMode_DoMulti(t *testing.T) {
-	p, mock, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: time.Second / 2})
+	p, mock, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: time.Second / 2, Dialer: net.Dialer{KeepAlive: time.Second / 3}})
 	defer closeConn()
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
@@ -1200,7 +1261,7 @@ func TestOngoingWriteTimeoutInPipelineMode_DoMulti(t *testing.T) {
 }
 
 func TestPingOnConnError(t *testing.T) {
-	p, mock, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: 3 * time.Second})
+	p, mock, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: 3 * time.Second, Dialer: net.Dialer{KeepAlive: time.Second / 3}})
 	p.background()
 	mock.Expect("PING")
 	closeConn()

@@ -356,6 +356,86 @@ func TestSentinelClientInit(t *testing.T) {
 	})
 }
 
+func TestSentinelRefreshAfterClose(t *testing.T) {
+	first := true
+	s0 := &mockConn{
+		DoFn: func(cmd cmds.Completed) RedisResult { return RedisResult{} },
+		DoMultiFn: func(multi ...cmds.Completed) []RedisResult {
+			if first {
+				first = true
+				return []RedisResult{
+					{val: RedisMessage{typ: '*', values: []RedisMessage{}}},
+					{val: RedisMessage{typ: '*', values: []RedisMessage{
+						{typ: '+', string: ""}, {typ: '+', string: "1"},
+					}}},
+				}
+			}
+			return []RedisResult{newErrResult(ErrClosing), newErrResult(ErrClosing)}
+		},
+	}
+	m := &mockConn{
+		DoFn: func(cmd cmds.Completed) RedisResult {
+			return RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "master"}}}}
+		},
+	}
+	client, err := newSentinelClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
+		if dst == ":0" {
+			return s0
+		}
+		if dst == ":1" {
+			return m
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+	client.Close()
+	if err := client.refresh(); err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+}
+
+func TestSentinelSwitchAfterClose(t *testing.T) {
+	first := true
+	s0 := &mockConn{
+		DoFn: func(cmd cmds.Completed) RedisResult { return RedisResult{} },
+		DoMultiFn: func(multi ...cmds.Completed) []RedisResult {
+			return []RedisResult{
+				{val: RedisMessage{typ: '*', values: []RedisMessage{}}},
+				{val: RedisMessage{typ: '*', values: []RedisMessage{
+					{typ: '+', string: ""}, {typ: '+', string: "1"},
+				}}},
+			}
+		},
+	}
+	m := &mockConn{
+		DoFn: func(cmd cmds.Completed) RedisResult {
+			if first {
+				first = false
+				return RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "master"}}}}
+			}
+			return newErrResult(ErrClosing)
+		},
+	}
+	client, err := newSentinelClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
+		if dst == ":0" {
+			return s0
+		}
+		if dst == ":1" {
+			return m
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+	client.Close()
+	if err := client._switchMaster(":1"); err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+}
+
 //gocyclo:ignore
 func TestSentinelClientDelegate(t *testing.T) {
 	s0 := &mockConn{
@@ -514,6 +594,9 @@ func TestSentinelClientDelegateRetry(t *testing.T) {
 				if err, ok := <-trigger; ok {
 					return err
 				}
+				return ErrClosing
+			},
+			ErrorFn: func() error {
 				return ErrClosing
 			},
 		}
@@ -763,4 +846,37 @@ func TestSentinelClientPubSub(t *testing.T) {
 		t.Log("wait old m1 to be close", atomic.LoadInt32(&m4close))
 		time.Sleep(time.Millisecond * 100)
 	}
+}
+
+func TestSentinelClientRetry(t *testing.T) {
+	SetupClientRetry(t, func(m *mockConn) Client {
+		m.DoOverride = map[string]func(cmd cmds.Completed) RedisResult{
+			"SENTINEL SENTINELS masters": func(cmd cmds.Completed) RedisResult {
+				return RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{}}}
+			},
+			"SENTINEL GET-MASTER-ADDR-BY-NAME masters": func(cmd cmds.Completed) RedisResult {
+				return RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+					{typ: '+', string: ""}, {typ: '+', string: "5"},
+				}}}
+			},
+			"ROLE": func(cmd cmds.Completed) RedisResult {
+				return RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "master"}}}}
+			},
+		}
+		m.ReceiveOverride = map[string]func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error{
+			"SUBSCRIBE +sentinel +switch-master +reboot": func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
+				return nil
+			},
+		}
+		c, err := newSentinelClient(&ClientOption{
+			InitAddress: []string{":0"},
+			Sentinel:    SentinelOption{MasterSet: "masters"},
+		}, func(dst string, opt *ClientOption) conn {
+			return m
+		})
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		return c
+	})
 }
