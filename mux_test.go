@@ -253,7 +253,7 @@ func TestMuxDelegation(t *testing.T) {
 		})
 		defer checkClean(t)
 		defer m.Close()
-		if err := m.Do(context.Background(), cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"})).Error(); err != context.DeadlineExceeded {
+		if err := m.Do(context.Background(), cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"})).Error(); !errors.Is(err, context.DeadlineExceeded) {
 			t.Fatalf("unexpected error %v", err)
 		}
 		if val, err := m.Do(context.Background(), cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"})).ToString(); err != nil {
@@ -281,7 +281,7 @@ func TestMuxDelegation(t *testing.T) {
 		})
 		defer checkClean(t)
 		defer m.Close()
-		if err := m.DoMulti(context.Background(), cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"}))[0].Error(); err != context.DeadlineExceeded {
+		if err := m.DoMulti(context.Background(), cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"}))[0].Error(); !errors.Is(err, context.DeadlineExceeded) {
 			t.Fatalf("unexpected error %v", err)
 		}
 		if val, err := m.DoMulti(context.Background(), cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"}))[0].ToString(); err != nil {
@@ -309,7 +309,7 @@ func TestMuxDelegation(t *testing.T) {
 		})
 		defer checkClean(t)
 		defer m.Close()
-		if err := m.DoCache(context.Background(), cmds.Cacheable(cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"})), time.Second).Error(); err != context.DeadlineExceeded {
+		if err := m.DoCache(context.Background(), cmds.Cacheable(cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"})), time.Second).Error(); !errors.Is(err, context.DeadlineExceeded) {
 			t.Fatalf("unexpected error %v", err)
 		}
 		if val, err := m.DoCache(context.Background(), cmds.Cacheable(cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"})), time.Second).ToString(); err != nil {
@@ -340,7 +340,7 @@ func TestMuxDelegation(t *testing.T) {
 		})
 		defer checkClean(t)
 		defer m.Close()
-		if err := m.Receive(context.Background(), cmds.NewCompleted([]string{"SUBSCRIBE"}), func(message PubSubMessage) {}); err != context.DeadlineExceeded {
+		if err := m.Receive(context.Background(), cmds.NewCompleted([]string{"SUBSCRIBE"}), func(message PubSubMessage) {}); !errors.Is(err, context.DeadlineExceeded) {
 			t.Fatalf("unexpected error %v", err)
 		}
 		if err := m.Receive(context.Background(), cmds.NewCompleted([]string{"SUBSCRIBE"}), func(message PubSubMessage) {}); err != nil {

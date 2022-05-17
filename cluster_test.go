@@ -122,10 +122,10 @@ func TestClusterClientInit(t *testing.T) {
 		client, err := newClusterClient(&ClientOption{InitAddress: []string{":1", ":2"}}, func(dst string, opt *ClientOption) conn {
 			return &mockConn{
 				DoFn: func(cmd cmds.Completed) RedisResult {
-					if atomic.AddInt64(&first, 1) == 1 {
-						return slotsResp
+					if atomic.LoadInt64(&first) == 1 {
+						return singleSlotResp2
 					}
-					return singleSlotResp2
+					return slotsResp
 				},
 			}
 		})
@@ -141,6 +141,8 @@ func TestClusterClientInit(t *testing.T) {
 			nodes[2] != ":2" {
 			t.Fatalf("unexpected nodes %v", nodes)
 		}
+
+		atomic.AddInt64(&first, 1)
 
 		if err = client.refresh(); err != nil {
 			t.Fatalf("unexpected err %v", err)

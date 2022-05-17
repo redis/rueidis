@@ -569,7 +569,7 @@ func TestSentinelClientDelegate(t *testing.T) {
 
 //gocyclo:ignore
 func TestSentinelClientDelegateRetry(t *testing.T) {
-	setup := func() (client *sentinelClient, cb func()) {
+	setup := func(t *testing.T) (client *sentinelClient, cb func()) {
 		retry := uint32(0)
 		trigger := make(chan error)
 		s0 := &mockConn{
@@ -647,8 +647,8 @@ func TestSentinelClientDelegateRetry(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 		return client, func() {
-			for atomic.LoadUint32(&retry) >= 10 {
-				break
+			for atomic.LoadUint32(&retry) < 10 {
+				time.Sleep(time.Millisecond * 100)
 			}
 			trigger <- errors.New("die")
 			close(trigger)
@@ -656,7 +656,7 @@ func TestSentinelClientDelegateRetry(t *testing.T) {
 	}
 
 	t.Run("Delegate Do", func(t *testing.T) {
-		client, cb := setup()
+		client, cb := setup(t)
 
 		go func() {
 			cb()
@@ -671,7 +671,7 @@ func TestSentinelClientDelegateRetry(t *testing.T) {
 	})
 
 	t.Run("Delegate DoCache", func(t *testing.T) {
-		client, cb := setup()
+		client, cb := setup(t)
 
 		go func() {
 			cb()
@@ -686,7 +686,7 @@ func TestSentinelClientDelegateRetry(t *testing.T) {
 	})
 
 	t.Run("Delegate Receive", func(t *testing.T) {
-		client, cb := setup()
+		client, cb := setup(t)
 
 		go func() {
 			cb()
