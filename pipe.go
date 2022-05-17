@@ -411,9 +411,8 @@ func (p *pipe) Receive(ctx context.Context, subscribe cmds.Completed, fn func(me
 		panic(wrongreceive)
 	}
 
-	if id, ch := sb.Subscribe(args); ch != nil {
-		defer sb.Remove(id)
-
+	if ch, cancel := sb.Subscribe(args); ch != nil {
+		defer cancel()
 		if err := p.Do(ctx, subscribe).Error(); err != nil {
 			return err
 		}
@@ -430,10 +429,6 @@ func (p *pipe) Receive(ctx context.Context, subscribe cmds.Completed, fn func(me
 					goto next
 				}
 			case <-ctx.Done():
-				go func() {
-					for range ch {
-					}
-				}()
 				return ctx.Err()
 			}
 		}

@@ -38,13 +38,13 @@ func (s *subs) Publish(channel string, msg PubSubMessage) {
 	s.mu.RUnlock()
 }
 
-func (s *subs) Subscribe(channels []string) (id int, ch chan PubSubMessage) {
+func (s *subs) Subscribe(channels []string) (ch chan PubSubMessage, cancel func()) {
 	s.mu.Lock()
 	if s.chs != nil {
 		s.cnt++
-		id = s.cnt
-		ch = make(chan PubSubMessage, 1)
+		ch = make(chan PubSubMessage, 16)
 		sb := &sub{cs: channels, ch: ch}
+		id := s.cnt
 		s.sub[id] = sb
 		for _, channel := range channels {
 			c := s.chs[channel]
@@ -54,17 +54,20 @@ func (s *subs) Subscribe(channels []string) (id int, ch chan PubSubMessage) {
 			}
 			c[id] = sb
 		}
+		cancel = func() {
+			go func() {
+				for range ch {
+				}
+			}()
+			s.mu.Lock()
+			if s.chs != nil {
+				s.remove(id)
+			}
+			s.mu.Unlock()
+		}
 	}
 	s.mu.Unlock()
-	return id, ch
-}
-
-func (s *subs) Remove(id int) {
-	s.mu.Lock()
-	if s.chs != nil {
-		s.remove(id)
-	}
-	s.mu.Unlock()
+	return ch, cancel
 }
 
 func (s *subs) remove(id int) {

@@ -1,6 +1,9 @@
 package rueidis
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 func TestSubs_Publish(t *testing.T) {
 	t.Run("without subs", func(t *testing.T) {
@@ -10,9 +13,9 @@ func TestSubs_Publish(t *testing.T) {
 
 	t.Run("with multiple subs", func(t *testing.T) {
 		s := newSubs()
-		id1, ch1 := s.Subscribe([]string{"a"})
-		id2, ch2 := s.Subscribe([]string{"a"})
-		id3, ch3 := s.Subscribe([]string{"b"})
+		ch1, cancel1 := s.Subscribe([]string{"a"})
+		ch2, cancel2 := s.Subscribe([]string{"a"})
+		ch3, cancel3 := s.Subscribe([]string{"b"})
 		m1 := PubSubMessage{Pattern: "1", Channel: "2", Message: "3"}
 		m2 := PubSubMessage{Pattern: "11", Channel: "22", Message: "33"}
 		go func() {
@@ -23,26 +26,39 @@ func TestSubs_Publish(t *testing.T) {
 			if m != m1 {
 				t.Fatalf("unexpected msg %v", m)
 			}
-			s.Remove(id1)
+			cancel1()
 		}
 		for m := range ch2 {
 			if m != m1 {
 				t.Fatalf("unexpected msg %v", m)
 			}
-			s.Remove(id2)
+			cancel2()
 		}
 		for m := range ch3 {
 			if m != m2 {
 				t.Fatalf("unexpected msg %v", m)
 			}
-			s.Remove(id3)
+			cancel3()
+		}
+	})
+
+	t.Run("drain ch", func(t *testing.T) {
+		s := newSubs()
+		ch, cancel := s.Subscribe([]string{"a"})
+		s.Publish("a", PubSubMessage{})
+		if len(ch) != 1 {
+			t.Fatalf("unexpected ch len %v", len(ch))
+		}
+		cancel()
+		for ; len(ch) != 0; time.Sleep(time.Millisecond * 100) {
+			t.Log("wait ch to be drain")
 		}
 	})
 }
 
 func TestSubs_Unsubscribe(t *testing.T) {
 	s := newSubs()
-	_, ch := s.Subscribe([]string{"1", "2"})
+	ch, _ := s.Subscribe([]string{"1", "2"})
 	go func() {
 		s.Publish("1", PubSubMessage{})
 	}()
