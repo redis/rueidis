@@ -90,28 +90,22 @@ func readNull(i *bufio.Reader) (m RedisMessage, err error) {
 
 func readArray(i *bufio.Reader) (m RedisMessage, err error) {
 	length, err := readI(i)
-	if err == errChunked {
-		m.values, err = readE(i)
-	} else {
+	if err == nil {
 		m.values, err = readA(i, int(length))
+	} else if err == errChunked {
+		m.values, err = readE(i)
 	}
-	if err != nil {
-		return RedisMessage{}, err
-	}
-	return
+	return m, err
 }
 
 func readMap(i *bufio.Reader) (m RedisMessage, err error) {
 	length, err := readI(i)
-	if err == errChunked {
-		m.values, err = readE(i)
-	} else {
+	if err == nil {
 		m.values, err = readA(i, int(length*2))
+	} else if err == errChunked {
+		m.values, err = readE(i)
 	}
-	if err != nil {
-		return RedisMessage{}, err
-	}
-	return
+	return m, err
 }
 
 func readS(i *bufio.Reader) (string, error) {
