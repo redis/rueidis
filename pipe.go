@@ -133,28 +133,25 @@ func (p *pipe) background() {
 }
 
 func (p *pipe) _background() {
-	exit := func() {
-		// stop accepting new requests
-		atomic.CompareAndSwapInt32(&p.state, 1, 2)
-		_ = p.conn.Close() // force both read & write goroutine to exit
+	exit := func(err error) {
+		p.error.CompareAndSwap(nil, &errs{error: err})
+		atomic.CompareAndSwapInt32(&p.state, 1, 2) // stop accepting new requests
+		_ = p.conn.Close()                         // force both read & write goroutine to exit
 	}
 	if p.timeout > 0 && p.pinggap > 0 {
 		go func() {
 			if err := p._backgroundPing(); err != ErrClosing {
-				p.error.CompareAndSwap(nil, &errs{error: err})
-				exit()
+				exit(err)
 			}
 		}()
 	}
 	wait := make(chan struct{})
 	go func() {
-		p._backgroundWrite()
-		exit()
+		exit(p._backgroundWrite())
 		close(wait)
 	}()
 	{
-		p._backgroundRead()
-		exit()
+		exit(p._backgroundRead())
 		p._awake()
 	}
 	<-wait
@@ -202,9 +199,8 @@ func (p *pipe) _background() {
 	atomic.CompareAndSwapInt32(&p.state, 2, 3)
 }
 
-func (p *pipe) _backgroundWrite() {
+func (p *pipe) _backgroundWrite() (err error) {
 	var (
-		err   error
 		ones  = make([]cmds.Completed, 1)
 		multi []cmds.Completed
 		ch    chan RedisResult
@@ -228,7 +224,6 @@ func (p *pipe) _backgroundWrite() {
 		}
 		if err != nil {
 			if err != ErrClosing { // ignore ErrClosing to allow final QUIT command to be sent
-				p.error.CompareAndSwap(nil, &errs{error: err})
 				return
 			}
 			runtime.Gosched()
@@ -236,11 +231,11 @@ func (p *pipe) _backgroundWrite() {
 			runtime.Gosched()
 		}
 	}
+	return
 }
 
-func (p *pipe) _backgroundRead() {
+func (p *pipe) _backgroundRead() (err error) {
 	var (
-		err   error
 		msg   RedisMessage
 		cond  *sync.Cond
 		ones  = make([]cmds.Completed, 1)
@@ -262,7 +257,6 @@ func (p *pipe) _backgroundRead() {
 
 	for {
 		if msg, err = readNextMessage(p.r); err != nil {
-			p.error.CompareAndSwap(nil, &errs{error: err})
 			return
 		}
 		if msg.typ == '>' {
@@ -286,7 +280,6 @@ func (p *pipe) _backgroundRead() {
 			}
 			for ; i < len(msg.values); i++ {
 				if msg.values[i], err = readNextMessage(p.r); err != nil {
-					p.error.CompareAndSwap(nil, &errs{error: err})
 					return
 				}
 			}
