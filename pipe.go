@@ -246,12 +246,14 @@ func (p *pipe) _backgroundRead() (err error) {
 	)
 
 	defer func() {
-		if err != nil {
+		if err != nil && ff < len(multi) {
 			for ; ff < len(multi); ff++ {
 				if !multi[ff].NoReply() {
 					ch <- newResult(msg, err)
 				}
 			}
+			cond.L.Unlock()
+			cond.Signal()
 		}
 	}()
 
