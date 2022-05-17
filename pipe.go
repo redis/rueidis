@@ -325,37 +325,14 @@ func (p *pipe) _backgroundRead() (err error) {
 	}
 }
 
-func (p *pipe) _backgroundPing() error {
-	var timer *time.Timer
-	for time.Sleep(p.pinggap); atomic.LoadInt32(&p.state) == 1; time.Sleep(p.pinggap) {
-		ws := atomic.AddInt32(&p.waits, 1)
-		ch := p.queue.PutOne(cmds.PingCmd)
-		if ws == 1 {
-			p._awake()
-		}
-		if timer == nil {
-			timer = time.NewTimer(p.timeout)
-		} else {
-			timer.Reset(p.timeout)
-		}
-		select {
-		case resp := <-ch:
-			atomic.AddInt32(&p.waits, -1)
-			if !timer.Stop() {
-				<-timer.C
-			}
-			if err := resp.NonRedisError(); err != nil {
-				return err
-			}
-		case <-timer.C:
-			go func() {
-				<-ch
-				atomic.AddInt32(&p.waits, -1)
-			}()
-			return context.DeadlineExceeded
-		}
+func (p *pipe) _backgroundPing() (err error) {
+	for err == nil {
+		time.Sleep(p.pinggap)
+		ctx, cancel := context.WithTimeout(context.Background(), p.timeout)
+		err = p.Do(ctx, cmds.PingCmd).NonRedisError()
+		cancel()
 	}
-	return ErrClosing
+	return err
 }
 
 func (p *pipe) handlePush(values []RedisMessage) {
