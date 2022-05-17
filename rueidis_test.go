@@ -3,7 +3,14 @@ package rueidis
 import (
 	"bufio"
 	"context"
+	"crypto/ed25519"
+	"crypto/rand"
+	"crypto/tls"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/pem"
 	"fmt"
+	"math/big"
 	"net"
 	"testing"
 	"time"
@@ -105,6 +112,81 @@ func TestFallBackSingleClient(t *testing.T) {
 
 	_, port, _ := net.SplitHostPort(ln.Addr().String())
 	client, err := NewClient(ClientOption{InitAddress: []string{"127.0.0.1:" + port}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := client.(*singleClient); !ok {
+		t.Fatal("client should be a singleClient")
+	}
+	client.Close()
+	<-done
+}
+
+func TestTLSClient(t *testing.T) {
+	pub, priv, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatalf("Failed to generate private key: %v", err)
+	}
+
+	serialNumber, err := rand.Int(rand.Reader, new(big.Int).Lsh(big.NewInt(1), 128))
+	if err != nil {
+		t.Fatalf("Failed to generate serial number: %v", err)
+	}
+
+	template := x509.Certificate{
+		SerialNumber:          serialNumber,
+		NotBefore:             time.Now(),
+		NotAfter:              time.Now().Add(time.Hour),
+		KeyUsage:              x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		BasicConstraintsValid: true,
+		DNSNames:              []string{"localhost"},
+		Subject:               pkix.Name{Organization: []string{"Acme Co"}},
+	}
+
+	derBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, pub, priv)
+	if err != nil {
+		t.Fatalf("Failed to create certificate: %v", err)
+	}
+
+	certPem := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: derBytes})
+
+	privBytes, err := x509.MarshalPKCS8PrivateKey(priv)
+	if err != nil {
+		t.Fatalf("Unable to marshal private key: %v", err)
+	}
+
+	privPem := pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: privBytes})
+
+	cert, err := tls.X509KeyPair(certPem, privPem)
+	if err != nil {
+		t.Fatalf("Fail to load X509KeyPair: %v", err)
+	}
+
+	config := &tls.Config{
+		Certificates:       []tls.Certificate{cert},
+		InsecureSkipVerify: true,
+	}
+
+	ln, err := tls.Listen("tcp", "127.0.0.1:0", config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ln.Close()
+
+	done := make(chan struct{})
+	go func() {
+		mock, err := accept(t, ln)
+		if err != nil {
+			return
+		}
+		mock.Expect("CLUSTER", "SLOTS").Reply(RedisMessage{typ: '-', string: redisErrMsgClusterDisabled})
+		mock.Expect("QUIT").ReplyString("OK")
+		close(done)
+	}()
+
+	_, port, _ := net.SplitHostPort(ln.Addr().String())
+	client, err := NewClient(ClientOption{InitAddress: []string{"127.0.0.1:" + port}, TLSConfig: config})
 	if err != nil {
 		t.Fatal(err)
 	}
