@@ -1209,36 +1209,12 @@ func (c *Compat) RPushX(ctx context.Context, key string, elements ...interface{}
 }
 
 func (c *Compat) LMove(ctx context.Context, source, destination, srcpos, destpos string) *StringCmd {
-	var resp rueidis.RedisResult
-	switch strings.ToUpper(srcpos + destpos) {
-	case "LEFTLEFT":
-		resp = c.client.Do(ctx, c.client.B().Lmove().Source(source).Destination(destination).Left().Left().Build())
-	case "LEFTRIGHT":
-		resp = c.client.Do(ctx, c.client.B().Lmove().Source(source).Destination(destination).Left().Right().Build())
-	case "RIGHTLEFT":
-		resp = c.client.Do(ctx, c.client.B().Lmove().Source(source).Destination(destination).Right().Left().Build())
-	case "RIGHTRIGHT":
-		resp = c.client.Do(ctx, c.client.B().Lmove().Source(source).Destination(destination).Right().Right().Build())
-	default:
-		panic(fmt.Sprintf("Invalid srcpost + destpos argument value: %s", srcpos+destpos))
-	}
+	resp := c.client.Do(ctx, c.client.B().Arbitrary("LMOVE").Keys(source, destination).Args(srcpos, destpos).Build())
 	return newStringCmd(resp)
 }
 
 func (c *Compat) BLMove(ctx context.Context, source, destination, srcpos, destpos string, timeout time.Duration) *StringCmd {
-	var resp rueidis.RedisResult
-	switch strings.ToUpper(srcpos + destpos) {
-	case "LEFTLEFT":
-		resp = c.client.Do(ctx, c.client.B().Blmove().Source(source).Destination(destination).Left().Left().Timeout(float64(formatSec(timeout))).Build())
-	case "LEFTRIGHT":
-		resp = c.client.Do(ctx, c.client.B().Blmove().Source(source).Destination(destination).Left().Right().Timeout(float64(formatSec(timeout))).Build())
-	case "RIGHTLEFT":
-		resp = c.client.Do(ctx, c.client.B().Blmove().Source(source).Destination(destination).Right().Left().Timeout(float64(formatSec(timeout))).Build())
-	case "RIGHTRIGHT":
-		resp = c.client.Do(ctx, c.client.B().Blmove().Source(source).Destination(destination).Right().Right().Timeout(float64(formatSec(timeout))).Build())
-	default:
-		panic(fmt.Sprintf("Invalid srcpost + destpos argument value: %s", srcpos+destpos))
-	}
+	resp := c.client.Do(ctx, c.client.B().Arbitrary("BLMOVE").Keys(source, destination).Args(srcpos, destpos, strconv.FormatFloat(float64(formatSec(timeout)), 'f', -1, 64)).Blocking())
 	return newStringCmd(resp)
 }
 
@@ -1723,85 +1699,30 @@ func (c *Compat) ZIncrBy(ctx context.Context, key string, increment float64, mem
 	return newFloatCmd(resp)
 }
 
-func (c *Compat) ZInter(ctx context.Context, store ZStore) *StringSliceCmd {
-	var resp rueidis.RedisResult
+func zstore(cmd cmds.Arbitrary, store ZStore) cmds.Arbitrary {
+	cmd = cmd.Args(strconv.Itoa(len(store.Keys))).Keys(store.Keys...)
 	if len(store.Weights) > 0 {
-		switch strings.ToUpper(store.Aggregate) {
-		case "SUM":
-			resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateSum().Build())
-		case "MIN":
-			resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateMin().Build())
-		case "MAX":
-			resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateMax().Build())
-		case "":
-			resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).Build())
-		default:
-			panic(fmt.Sprintf("invalid aggregate argument value %s", store.Aggregate))
-		}
-	} else {
-		switch strings.ToUpper(store.Aggregate) {
-		case "SUM":
-			resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).AggregateSum().Build())
-		case "MIN":
-			resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).AggregateMin().Build())
-		case "MAX":
-			resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).AggregateMax().Build())
-		case "":
-			resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Build())
-		default:
-			panic(fmt.Sprintf("invalid aggregate argument value %s", store.Aggregate))
+		cmd = cmd.Args("WEIGHTS")
+		for _, w := range store.Weights {
+			cmd = cmd.Args(strconv.FormatInt(w, 10))
 		}
 	}
-	return newStringSliceCmd(resp)
+	if store.Aggregate != "" {
+		cmd = cmd.Args("AGGREGATE", store.Aggregate)
+	}
+	return cmd
+}
+
+func (c *Compat) ZInter(ctx context.Context, store ZStore) *StringSliceCmd {
+	return newStringSliceCmd(c.client.Do(ctx, zstore(c.client.B().Arbitrary("ZINTER"), store).ReadOnly()))
 }
 
 func (c *Compat) ZInterWithScores(ctx context.Context, store ZStore) *ZSliceCmd {
-	var resp rueidis.RedisResult
-	if len(store.Weights) > 0 {
-		switch strings.ToUpper(store.Aggregate) {
-		case "SUM":
-			resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateSum().Withscores().Build())
-		case "MIN":
-			resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateMin().Withscores().Build())
-		case "MAX":
-			resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateMax().Withscores().Build())
-		case "":
-			resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).Withscores().Build())
-		default:
-			panic(fmt.Sprintf("invalid aggregate argument value %s", store.Aggregate))
-		}
-	} else {
-		switch strings.ToUpper(store.Aggregate) {
-		case "SUM":
-			resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).AggregateSum().Withscores().Build())
-		case "MIN":
-			resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).AggregateMin().Withscores().Build())
-		case "MAX":
-			resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).AggregateMax().Withscores().Build())
-		case "":
-			resp = c.client.Do(ctx, c.client.B().Zinter().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Withscores().Build())
-		default:
-			panic(fmt.Sprintf("invalid aggregate argument value %s", store.Aggregate))
-		}
-	}
-	return newZSliceCmd(resp)
+	return newZSliceCmd(c.client.Do(ctx, zstore(c.client.B().Arbitrary("ZINTER"), store).Args("WITHSCORES").ReadOnly()))
 }
 
 func (c *Compat) ZInterStore(ctx context.Context, destination string, store ZStore) *IntCmd {
-	var resp rueidis.RedisResult
-	switch strings.ToUpper(store.Aggregate) {
-	case "SUM":
-		resp = c.client.Do(ctx, c.client.B().Zinterstore().Destination(destination).Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateSum().Build())
-	case "MIN":
-		resp = c.client.Do(ctx, c.client.B().Zinterstore().Destination(destination).Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateMin().Build())
-	case "MAX":
-		resp = c.client.Do(ctx, c.client.B().Zinterstore().Destination(destination).Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateMax().Build())
-	case "":
-		resp = c.client.Do(ctx, c.client.B().Zinterstore().Destination(destination).Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).Build())
-	default:
-		panic(fmt.Sprintf("invalid aggregate argument value %s", store.Aggregate))
-	}
-	return newIntCmd(resp)
+	return newIntCmd(c.client.Do(ctx, zstore(c.client.B().Arbitrary("ZINTERSTORE").Keys(destination), store).Build()))
 }
 
 func (c *Compat) ZMScore(ctx context.Context, key string, members ...string) *FloatSliceCmd {
@@ -2034,54 +1955,15 @@ func (c *Compat) ZScore(ctx context.Context, key, member string) *FloatCmd {
 }
 
 func (c *Compat) ZUnionStore(ctx context.Context, dest string, store ZStore) *IntCmd {
-	var resp rueidis.RedisResult
-	switch strings.ToUpper(store.Aggregate) {
-	case "SUM":
-		resp = c.client.Do(ctx, c.client.B().Zunionstore().Destination(dest).Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateSum().Build())
-	case "MIN":
-		resp = c.client.Do(ctx, c.client.B().Zunionstore().Destination(dest).Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateMin().Build())
-	case "MAX":
-		resp = c.client.Do(ctx, c.client.B().Zunionstore().Destination(dest).Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateMax().Build())
-	case "":
-		resp = c.client.Do(ctx, c.client.B().Zunionstore().Destination(dest).Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).Build())
-	default:
-		panic(fmt.Sprintf("invalid aggregate argument value %s", store.Aggregate))
-	}
-	return newIntCmd(resp)
+	return newIntCmd(c.client.Do(ctx, zstore(c.client.B().Arbitrary("ZUNIONSTORE").Keys(dest), store).Build()))
 }
 
 func (c *Compat) ZUnion(ctx context.Context, store ZStore) *StringSliceCmd {
-	var resp rueidis.RedisResult
-	switch strings.ToUpper(store.Aggregate) {
-	case "SUM":
-		resp = c.client.Do(ctx, c.client.B().Zunion().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateSum().Build())
-	case "MIN":
-		resp = c.client.Do(ctx, c.client.B().Zunion().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateMin().Build())
-	case "MAX":
-		resp = c.client.Do(ctx, c.client.B().Zunion().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateMax().Build())
-	case "":
-		resp = c.client.Do(ctx, c.client.B().Zunion().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).Build())
-	default:
-		panic(fmt.Sprintf("invalid aggregate argument value %s", store.Aggregate))
-	}
-	return newStringSliceCmd(resp)
+	return newStringSliceCmd(c.client.Do(ctx, zstore(c.client.B().Arbitrary("ZUNION"), store).ReadOnly()))
 }
 
 func (c *Compat) ZUnionWithScores(ctx context.Context, store ZStore) *ZSliceCmd {
-	var resp rueidis.RedisResult
-	switch strings.ToUpper(store.Aggregate) {
-	case "SUM":
-		resp = c.client.Do(ctx, c.client.B().Zunion().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateSum().Withscores().Build())
-	case "MIN":
-		resp = c.client.Do(ctx, c.client.B().Zunion().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateMin().Withscores().Build())
-	case "MAX":
-		resp = c.client.Do(ctx, c.client.B().Zunion().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).AggregateMax().Withscores().Build())
-	case "":
-		resp = c.client.Do(ctx, c.client.B().Zunion().Numkeys(int64(len(store.Keys))).Key(store.Keys...).Weights(store.Weights...).Withscores().Build())
-	default:
-		panic(fmt.Sprintf("invalid aggregate argument value %s", store.Aggregate))
-	}
-	return newZSliceCmd(resp)
+	return newZSliceCmd(c.client.Do(ctx, zstore(c.client.B().Arbitrary("ZUNION"), store).Args("WITHSCORES").ReadOnly()))
 }
 
 func (c *Compat) ZRandMember(ctx context.Context, key string, count int64, withScores bool) *StringSliceCmd {
@@ -2763,10 +2645,10 @@ func (c CacheCompat) LRange(ctx context.Context, key string, start, stop int64) 
 	return newStringSliceCmd(resp)
 }
 
-func (c CacheCompat) PTTL(ctx context.Context, key string) *IntCmd {
+func (c CacheCompat) PTTL(ctx context.Context, key string) *DurationCmd {
 	cmd := c.client.B().Pttl().Key(key).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
-	return newIntCmd(resp)
+	return newDurationCmd(resp, time.Millisecond)
 }
 
 func (c CacheCompat) SCard(ctx context.Context, key string) *IntCmd {
@@ -2824,10 +2706,10 @@ func (c CacheCompat) StrLen(ctx context.Context, key string) *IntCmd {
 	return newIntCmd(resp)
 }
 
-func (c CacheCompat) TTL(ctx context.Context, key string) *IntCmd {
+func (c CacheCompat) TTL(ctx context.Context, key string) *DurationCmd {
 	cmd := c.client.B().Ttl().Key(key).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
-	return newIntCmd(resp)
+	return newDurationCmd(resp, time.Second)
 }
 
 func (c CacheCompat) Type(ctx context.Context, key string) *StatusCmd {
@@ -2997,22 +2879,22 @@ func (c CacheCompat) ZScore(ctx context.Context, key, member string) *FloatCmd {
 }
 
 func str(arg interface{}) string {
-	if v, ok := arg.(encoding.BinaryMarshaler); ok {
-		if data, err := v.MarshalBinary(); err == nil {
-			return rueidis.BinaryString(data)
-		}
-	}
-	if v, ok := arg.(string); ok {
+	switch v := arg.(type) {
+	case string:
 		return v
-	}
-	if v, ok := arg.([]byte); ok {
+	case []byte:
 		return string(v)
-	}
-	if v, ok := arg.(bool); ok {
+	case bool:
 		if v {
 			return "1"
 		}
 		return "0"
+	case time.Time:
+		return v.Format(time.RFC3339Nano)
+	case encoding.BinaryMarshaler:
+		if data, err := v.MarshalBinary(); err == nil {
+			return rueidis.BinaryString(data)
+		}
 	}
 	return fmt.Sprint(arg)
 }

@@ -52,7 +52,10 @@ var (
 
 var _ = BeforeSuite(func() {
 	ctx = context.Background()
-	client, err = rueidis.NewClient(rueidis.ClientOption{InitAddress: []string{"127.0.0.1:6378"}})
+	client, err = rueidis.NewClient(rueidis.ClientOption{
+		InitAddress: []string{"127.0.0.1:6378"},
+		ClientName:  "rueidis",
+	})
 	Expect(err).NotTo(HaveOccurred())
 	adapter = NewAdapter(client)
 })
@@ -93,6 +96,12 @@ var _ = Describe("Commands", func() {
 			err := adapter.ClientID(ctx).Err()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(adapter.ClientID(ctx).Val()).To(BeNumerically(">=", 0))
+		})
+
+		It("should ClientGetName", func() {
+			r := adapter.ClientGetName(ctx)
+			Expect(r.Err()).NotTo(HaveOccurred())
+			Expect(r.Val()).To(Equal("rueidis"))
 		})
 
 		It("should ConfigGet", func() {
@@ -276,6 +285,70 @@ var _ = Describe("Commands", func() {
 			ttl = adapter.TTL(ctx, "nonexistent_key")
 			Expect(ttl.Err()).NotTo(HaveOccurred())
 			Expect(ttl.Val()).To(Equal(time.Duration(-2)))
+		})
+
+		It("should ExpireNX", func() {
+			set := adapter.Set(ctx, "key", "Hello", 0)
+			Expect(set.Err()).NotTo(HaveOccurred())
+			Expect(set.Val()).To(Equal("OK"))
+
+			expire := adapter.ExpireNX(ctx, "key", 10*time.Second)
+			Expect(expire.Err()).NotTo(HaveOccurred())
+			Expect(expire.Val()).To(Equal(true))
+
+			ttl := adapter.TTL(ctx, "key")
+			Expect(ttl.Err()).NotTo(HaveOccurred())
+			Expect(ttl.Val()).To(Equal(10 * time.Second))
+
+			expire = adapter.ExpireNX(ctx, "key", 20*time.Second)
+			Expect(expire.Err()).NotTo(HaveOccurred())
+			Expect(expire.Val()).To(Equal(false))
+		})
+
+		It("should ExpireXX", func() {
+			set := adapter.Set(ctx, "key", "Hello", 0)
+			Expect(set.Err()).NotTo(HaveOccurred())
+			Expect(set.Val()).To(Equal("OK"))
+
+			expire := adapter.ExpireXX(ctx, "key", 10*time.Second)
+			Expect(expire.Err()).NotTo(HaveOccurred())
+			Expect(expire.Val()).To(Equal(false))
+
+			expire = adapter.ExpireNX(ctx, "key", 10*time.Second)
+			Expect(expire.Err()).NotTo(HaveOccurred())
+			Expect(expire.Val()).To(Equal(true))
+
+			expire = adapter.ExpireXX(ctx, "key", 20*time.Second)
+			Expect(expire.Err()).NotTo(HaveOccurred())
+			Expect(expire.Val()).To(Equal(true))
+		})
+
+		It("should ExpireGT", func() {
+			set := adapter.Set(ctx, "key", "Hello", 5*time.Second)
+			Expect(set.Err()).NotTo(HaveOccurred())
+			Expect(set.Val()).To(Equal("OK"))
+
+			expire := adapter.ExpireGT(ctx, "key", 10*time.Second)
+			Expect(expire.Err()).NotTo(HaveOccurred())
+			Expect(expire.Val()).To(Equal(true))
+
+			expire = adapter.ExpireGT(ctx, "key", 5*time.Second)
+			Expect(expire.Err()).NotTo(HaveOccurred())
+			Expect(expire.Val()).To(Equal(false))
+		})
+
+		It("should ExpireLT", func() {
+			set := adapter.Set(ctx, "key", "Hello", 10*time.Second)
+			Expect(set.Err()).NotTo(HaveOccurred())
+			Expect(set.Val()).To(Equal("OK"))
+
+			expire := adapter.ExpireLT(ctx, "key", 5*time.Second)
+			Expect(expire.Err()).NotTo(HaveOccurred())
+			Expect(expire.Val()).To(Equal(true))
+
+			expire = adapter.ExpireLT(ctx, "key", 10*time.Second)
+			Expect(expire.Err()).NotTo(HaveOccurred())
+			Expect(expire.Val()).To(Equal(false))
 		})
 
 		It("should ExpireAt", func() {
@@ -798,6 +871,12 @@ var _ = Describe("Commands", func() {
 			Expect(get.Val()).To(Equal("\xff"))
 		})
 
+		It("BitPos should panic", func() {
+			Expect(func() {
+				adapter.BitPos(ctx, "mykey", 0, 0, 0, 0)
+			}).To(Panic())
+		})
+
 		It("should BitPos", func() {
 			err := adapter.Set(ctx, "mykey", "\xff\xf0\x00", 0).Err()
 			Expect(err).NotTo(HaveOccurred())
@@ -959,6 +1038,28 @@ var _ = Describe("Commands", func() {
 			Expect(ttl.Val()).To(BeNumerically("~", 200*time.Second, 3*time.Second))
 		})
 
+		It("should GetEX 2", func() {
+			set := adapter.Set(ctx, "key", "value", 0)
+			Expect(set.Err()).NotTo(HaveOccurred())
+			Expect(set.Val()).To(Equal("OK"))
+
+			getEX := adapter.GetEx(ctx, "key", 0)
+			Expect(getEX.Err()).NotTo(HaveOccurred())
+			Expect(getEX.Val()).To(Equal("value"))
+
+			ttl := adapter.TTL(ctx, "key")
+			Expect(ttl.Err()).NotTo(HaveOccurred())
+			Expect(ttl.Val()).To(Equal(time.Duration(-1)))
+
+			getEX = adapter.GetEx(ctx, "key", 100*time.Millisecond)
+			Expect(getEX.Err()).NotTo(HaveOccurred())
+			Expect(getEX.Val()).To(Equal("value"))
+
+			ttl = adapter.PTTL(ctx, "key")
+			Expect(ttl.Err()).NotTo(HaveOccurred())
+			Expect(ttl.Val()).To(BeNumerically("~", 100*time.Millisecond, 10*time.Millisecond))
+		})
+
 		It("should GetDel", func() {
 			set := adapter.Set(ctx, "key", "value", 0)
 			Expect(set.Err()).NotTo(HaveOccurred())
@@ -1055,6 +1156,12 @@ var _ = Describe("Commands", func() {
 			mSetNX = adapter.MSetNX(ctx, "key2", "hello1", "key3", "hello2")
 			Expect(mSetNX.Err()).NotTo(HaveOccurred())
 			Expect(mSetNX.Val()).To(Equal(false))
+		})
+
+		It("SetWithArgs should panic wrong mode", func() {
+			Expect(func() {
+				adapter.SetArgs(ctx, "key", "hello", SetArgs{Mode: "ANY"})
+			}).To(Panic())
 		})
 
 		It("should SetWithArgs with TTL", func() {
@@ -1357,6 +1464,20 @@ var _ = Describe("Commands", func() {
 			Expect(val).To(Equal("hello"))
 		})
 
+		It("should SetNX with expiration 2", func() {
+			isSet, err := adapter.SetNX(ctx, "key", "hello", 100*time.Millisecond).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(isSet).To(Equal(true))
+
+			isSet, err = adapter.SetNX(ctx, "key", "hello2", 100*time.Millisecond).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(isSet).To(Equal(false))
+
+			val, err := adapter.Get(ctx, "key").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(val).To(Equal("hello"))
+		})
+
 		It("should SetNX with keepttl", func() {
 			isSet, err := adapter.SetNX(ctx, "key", "hello1", KeepTTL).Result()
 			Expect(err).NotTo(HaveOccurred())
@@ -1393,6 +1514,23 @@ var _ = Describe("Commands", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			isSet, err = adapter.SetXX(ctx, "key", "hello2", time.Second).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(isSet).To(Equal(true))
+
+			val, err := adapter.Get(ctx, "key").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(val).To(Equal("hello2"))
+		})
+
+		It("should SetXX with expiration", func() {
+			isSet, err := adapter.SetXX(ctx, "key", "hello2", 100*time.Millisecond).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(isSet).To(Equal(false))
+
+			err = adapter.Set(ctx, "key", "hello", time.Second).Err()
+			Expect(err).NotTo(HaveOccurred())
+
+			isSet, err = adapter.SetXX(ctx, "key", "hello2", 100*time.Millisecond).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(isSet).To(Equal(true))
 
@@ -1696,6 +1834,13 @@ var _ = Describe("Commands", func() {
 			Expect(v.Err()).NotTo(HaveOccurred())
 			Expect(v.Val()).To(HaveLen(0))
 
+			v = adapter.HRandField(ctx, "hash", 2, true)
+			Expect(v.Err()).NotTo(HaveOccurred())
+			Expect(v.Val()).To(Or(
+				ContainElements("key1", "hello1", "key2", "hello2"),
+				ContainElements("key2", "hello2", "key1", "hello1"),
+			))
+
 			// TODO
 			//var slice []string
 			//err = adapter.HRandField(ctx, "hash", 1, true).ScanSlice(&slice)
@@ -1852,6 +1997,12 @@ var _ = Describe("Commands", func() {
 			Expect(lIndex.Val()).To(Equal(""))
 		})
 
+		It("LInsert should panic", func() {
+			Expect(func() {
+				adapter.LInsert(ctx, "list", "ANY", "World", "There")
+			}).To(Panic())
+		})
+
 		It("should LInsert", func() {
 			rPush := adapter.RPush(ctx, "list", "Hello")
 			Expect(rPush.Err()).NotTo(HaveOccurred())
@@ -1865,6 +2016,37 @@ var _ = Describe("Commands", func() {
 			lRange := adapter.LRange(ctx, "list", 0, -1)
 			Expect(lRange.Err()).NotTo(HaveOccurred())
 			Expect(lRange.Val()).To(Equal([]string{"Hello", "There", "World"}))
+
+			lInsert = adapter.LInsert(ctx, "list", "AFTER", "World", "There")
+			Expect(lInsert.Err()).NotTo(HaveOccurred())
+			Expect(lInsert.Val()).To(Equal(int64(4)))
+
+			lRange = adapter.LRange(ctx, "list", 0, -1)
+			Expect(lRange.Err()).NotTo(HaveOccurred())
+			Expect(lRange.Val()).To(Equal([]string{"Hello", "There", "World", "There"}))
+		})
+
+		It("should LInsert", func() {
+			rPush := adapter.RPush(ctx, "list", "Hello")
+			Expect(rPush.Err()).NotTo(HaveOccurred())
+			rPush = adapter.RPush(ctx, "list", "World")
+			Expect(rPush.Err()).NotTo(HaveOccurred())
+
+			lInsert := adapter.LInsertBefore(ctx, "list", "World", "There")
+			Expect(lInsert.Err()).NotTo(HaveOccurred())
+			Expect(lInsert.Val()).To(Equal(int64(3)))
+
+			lRange := adapter.LRange(ctx, "list", 0, -1)
+			Expect(lRange.Err()).NotTo(HaveOccurred())
+			Expect(lRange.Val()).To(Equal([]string{"Hello", "There", "World"}))
+
+			lInsert = adapter.LInsertAfter(ctx, "list", "World", "There")
+			Expect(lInsert.Err()).NotTo(HaveOccurred())
+			Expect(lInsert.Val()).To(Equal(int64(4)))
+
+			lRange = adapter.LRange(ctx, "list", 0, -1)
+			Expect(lRange.Err()).NotTo(HaveOccurred())
+			Expect(lRange.Val()).To(Equal([]string{"Hello", "There", "World", "There"}))
 		})
 
 		It("should LLen", func() {
@@ -5118,6 +5300,1347 @@ var _ = Describe("Commands", func() {
 			Expect(vals.([]interface{})[1].(error).Error()).To(Equal("error"))
 			Expect(vals.([]interface{})[2]).To(Equal("abc"))
 		})
+	})
+})
+
+var _ = Describe("Cache Commands", func() {
+
+	BeforeEach(func() {
+		Expect(adapter.FlushDB(ctx).Err()).NotTo(HaveOccurred())
+	})
+
+	Describe("keys", func() {
+
+		It("should Expire", func() {
+			ttl := adapter.Cache(time.Hour).TTL(ctx, "nonexistent_key")
+			Expect(ttl.Err()).NotTo(HaveOccurred())
+			Expect(ttl.Val()).To(Equal(time.Duration(-2)))
+
+			set := adapter.Set(ctx, "key", "Hello", 0)
+			Expect(set.Err()).NotTo(HaveOccurred())
+			Expect(set.Val()).To(Equal("OK"))
+
+			expire := adapter.Expire(ctx, "key", 10*time.Second)
+			Expect(expire.Err()).NotTo(HaveOccurred())
+			Expect(expire.Val()).To(Equal(true))
+
+			ttl = adapter.Cache(time.Hour).TTL(ctx, "key")
+			Expect(ttl.Err()).NotTo(HaveOccurred())
+			Expect(ttl.Val()).To(Equal(10 * time.Second))
+
+			set = adapter.Set(ctx, "key", "Hello World", 0)
+			Expect(set.Err()).NotTo(HaveOccurred())
+			Expect(set.Val()).To(Equal("OK"))
+
+			time.Sleep(time.Millisecond * 100)
+
+			ttl = adapter.Cache(time.Hour).TTL(ctx, "key")
+			Expect(ttl.Err()).NotTo(HaveOccurred())
+			Expect(ttl.Val()).To(Equal(time.Duration(-1)))
+		})
+
+		It("should PExpire", func() {
+			set := adapter.Set(ctx, "key", "Hello", 0)
+			Expect(set.Err()).NotTo(HaveOccurred())
+			Expect(set.Val()).To(Equal("OK"))
+
+			expiration := 900 * time.Millisecond
+			pexpire := adapter.PExpire(ctx, "key", expiration)
+			Expect(pexpire.Err()).NotTo(HaveOccurred())
+			Expect(pexpire.Val()).To(Equal(true))
+
+			ttl := adapter.Cache(time.Hour).TTL(ctx, "key")
+			Expect(ttl.Err()).NotTo(HaveOccurred())
+			Expect(ttl.Val()).To(Equal(time.Second))
+
+			pttl := adapter.Cache(time.Hour).PTTL(ctx, "key")
+			Expect(pttl.Err()).NotTo(HaveOccurred())
+			Expect(pttl.Val()).To(BeNumerically("~", expiration, 100*time.Millisecond))
+		})
+
+		It("should PExpireAt", func() {
+			set := adapter.Set(ctx, "key", "Hello", 0)
+			Expect(set.Err()).NotTo(HaveOccurred())
+			Expect(set.Val()).To(Equal("OK"))
+
+			expiration := 900 * time.Millisecond
+			pexpireat := adapter.PExpireAt(ctx, "key", time.Now().Add(expiration))
+			Expect(pexpireat.Err()).NotTo(HaveOccurred())
+			Expect(pexpireat.Val()).To(Equal(true))
+
+			ttl := adapter.Cache(time.Hour).TTL(ctx, "key")
+			Expect(ttl.Err()).NotTo(HaveOccurred())
+			Expect(ttl.Val()).To(Equal(time.Second))
+
+			pttl := adapter.Cache(time.Hour).PTTL(ctx, "key")
+			Expect(pttl.Err()).NotTo(HaveOccurred())
+			Expect(pttl.Val()).To(BeNumerically("~", expiration, 100*time.Millisecond))
+		})
+
+		It("should PTTL", func() {
+			set := adapter.Set(ctx, "key", "Hello", 0)
+			Expect(set.Err()).NotTo(HaveOccurred())
+			Expect(set.Val()).To(Equal("OK"))
+
+			expiration := time.Second
+			expire := adapter.Expire(ctx, "key", expiration)
+			Expect(expire.Err()).NotTo(HaveOccurred())
+			Expect(set.Val()).To(Equal("OK"))
+
+			pttl := adapter.Cache(time.Hour).PTTL(ctx, "key")
+			Expect(pttl.Err()).NotTo(HaveOccurred())
+			Expect(pttl.Val()).To(BeNumerically("~", expiration, 100*time.Millisecond))
+		})
+
+		It("should Sort", func() {
+			size, err := adapter.LPush(ctx, "list", "1").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(size).To(Equal(int64(1)))
+
+			size, err = adapter.LPush(ctx, "list", "3").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(size).To(Equal(int64(2)))
+
+			size, err = adapter.LPush(ctx, "list", "2").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(size).To(Equal(int64(3)))
+
+			els, err := adapter.Cache(time.Hour).Sort(ctx, "list", Sort{
+				Offset: 0,
+				Count:  2,
+				Order:  "ASC",
+			}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(els).To(Equal([]string{"1", "2"}))
+		})
+
+		It("should Sort and Get", func() {
+			size, err := adapter.LPush(ctx, "list", "1").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(size).To(Equal(int64(1)))
+
+			size, err = adapter.LPush(ctx, "list", "3").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(size).To(Equal(int64(2)))
+
+			size, err = adapter.LPush(ctx, "list", "2").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(size).To(Equal(int64(3)))
+
+			err = adapter.Set(ctx, "object_2", "value2", 0).Err()
+			Expect(err).NotTo(HaveOccurred())
+
+			{
+				els, err := adapter.Cache(time.Hour).Sort(ctx, "list", Sort{
+					Get: []string{"object_*"},
+				}).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(els).To(Equal([]string{"", "value2", ""}))
+			}
+
+		})
+
+		It("should TTL", func() {
+			ttl := adapter.Cache(time.Hour).TTL(ctx, "key")
+			Expect(ttl.Err()).NotTo(HaveOccurred())
+			Expect(ttl.Val() < 0).To(Equal(true))
+
+			set := adapter.Set(ctx, "key", "hello", 0)
+			Expect(set.Err()).NotTo(HaveOccurred())
+			Expect(set.Val()).To(Equal("OK"))
+
+			expire := adapter.Expire(ctx, "key", 60*time.Second)
+			Expect(expire.Err()).NotTo(HaveOccurred())
+			Expect(expire.Val()).To(Equal(true))
+
+			ttl = adapter.Cache(time.Hour).TTL(ctx, "key")
+			Expect(ttl.Err()).NotTo(HaveOccurred())
+			Expect(ttl.Val()).To(Equal(60 * time.Second))
+		})
+
+		It("should Type", func() {
+			set := adapter.Set(ctx, "key", "hello", 0)
+			Expect(set.Err()).NotTo(HaveOccurred())
+			Expect(set.Val()).To(Equal("OK"))
+
+			type_ := adapter.Cache(time.Hour).Type(ctx, "key")
+			Expect(type_.Err()).NotTo(HaveOccurred())
+			Expect(type_.Val()).To(Equal("string"))
+		})
+	})
+
+	Describe("strings", func() {
+
+		It("should BitCount", func() {
+			set := adapter.Set(ctx, "key", "foobar", 0)
+			Expect(set.Err()).NotTo(HaveOccurred())
+			Expect(set.Val()).To(Equal("OK"))
+
+			bitCount := adapter.Cache(time.Hour).BitCount(ctx, "key", nil)
+			Expect(bitCount.Err()).NotTo(HaveOccurred())
+			Expect(bitCount.Val()).To(Equal(int64(26)))
+
+			bitCount = adapter.Cache(time.Hour).BitCount(ctx, "key", &BitCount{
+				Start: 0,
+				End:   0,
+			})
+			Expect(bitCount.Err()).NotTo(HaveOccurred())
+			Expect(bitCount.Val()).To(Equal(int64(4)))
+
+			bitCount = adapter.Cache(time.Hour).BitCount(ctx, "key", &BitCount{
+				Start: 1,
+				End:   1,
+			})
+			Expect(bitCount.Err()).NotTo(HaveOccurred())
+			Expect(bitCount.Val()).To(Equal(int64(6)))
+		})
+
+		It("should BitPos", func() {
+			err := adapter.Set(ctx, "mykey", "\xff\xf0\x00", 0).Err()
+			Expect(err).NotTo(HaveOccurred())
+
+			pos, err := adapter.Cache(time.Hour).BitPos(ctx, "mykey", 0).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(pos).To(Equal(int64(12)))
+
+			pos, err = adapter.Cache(time.Hour).BitPos(ctx, "mykey", 1).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(pos).To(Equal(int64(0)))
+
+			pos, err = adapter.Cache(time.Hour).BitPos(ctx, "mykey", 0, 2).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(pos).To(Equal(int64(16)))
+
+			pos, err = adapter.Cache(time.Hour).BitPos(ctx, "mykey", 1, 2).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(pos).To(Equal(int64(-1)))
+
+			pos, err = adapter.Cache(time.Hour).BitPos(ctx, "mykey", 0, -1).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(pos).To(Equal(int64(16)))
+
+			pos, err = adapter.Cache(time.Hour).BitPos(ctx, "mykey", 1, -1).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(pos).To(Equal(int64(-1)))
+
+			pos, err = adapter.Cache(time.Hour).BitPos(ctx, "mykey", 0, 2, 1).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(pos).To(Equal(int64(-1)))
+
+			pos, err = adapter.Cache(time.Hour).BitPos(ctx, "mykey", 0, 0, -3).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(pos).To(Equal(int64(-1)))
+
+			pos, err = adapter.Cache(time.Hour).BitPos(ctx, "mykey", 0, 0, 0).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(pos).To(Equal(int64(-1)))
+		})
+
+		It("should Get", func() {
+			get := adapter.Cache(time.Hour).Get(ctx, "_")
+			Expect(rueidis.IsRedisNil(get.Err())).To(BeTrue())
+			Expect(get.Val()).To(Equal(""))
+
+			set := adapter.Set(ctx, "key", "hello", 0)
+			Expect(set.Err()).NotTo(HaveOccurred())
+			Expect(set.Val()).To(Equal("OK"))
+
+			get = adapter.Cache(time.Hour).Get(ctx, "key")
+			Expect(get.Err()).NotTo(HaveOccurred())
+			Expect(get.Val()).To(Equal("hello"))
+		})
+
+		It("should GetBit", func() {
+			setBit := adapter.SetBit(ctx, "key", 7, 1)
+			Expect(setBit.Err()).NotTo(HaveOccurred())
+			Expect(setBit.Val()).To(Equal(int64(0)))
+
+			getBit := adapter.Cache(time.Hour).GetBit(ctx, "key", 0)
+			Expect(getBit.Err()).NotTo(HaveOccurred())
+			Expect(getBit.Val()).To(Equal(int64(0)))
+
+			getBit = adapter.Cache(time.Hour).GetBit(ctx, "key", 7)
+			Expect(getBit.Err()).NotTo(HaveOccurred())
+			Expect(getBit.Val()).To(Equal(int64(1)))
+
+			getBit = adapter.Cache(time.Hour).GetBit(ctx, "key", 100)
+			Expect(getBit.Err()).NotTo(HaveOccurred())
+			Expect(getBit.Val()).To(Equal(int64(0)))
+		})
+
+		It("should GetRange", func() {
+			set := adapter.Set(ctx, "key", "This is a string", 0)
+			Expect(set.Err()).NotTo(HaveOccurred())
+			Expect(set.Val()).To(Equal("OK"))
+
+			getRange := adapter.Cache(time.Hour).GetRange(ctx, "key", 0, 3)
+			Expect(getRange.Err()).NotTo(HaveOccurred())
+			Expect(getRange.Val()).To(Equal("This"))
+
+			getRange = adapter.Cache(time.Hour).GetRange(ctx, "key", -3, -1)
+			Expect(getRange.Err()).NotTo(HaveOccurred())
+			Expect(getRange.Val()).To(Equal("ing"))
+
+			getRange = adapter.Cache(time.Hour).GetRange(ctx, "key", 0, -1)
+			Expect(getRange.Err()).NotTo(HaveOccurred())
+			Expect(getRange.Val()).To(Equal("This is a string"))
+
+			getRange = adapter.Cache(time.Hour).GetRange(ctx, "key", 10, 100)
+			Expect(getRange.Err()).NotTo(HaveOccurred())
+			Expect(getRange.Val()).To(Equal("string"))
+		})
+
+		It("should StrLen", func() {
+			set := adapter.Set(ctx, "key", "hello", 0)
+			Expect(set.Err()).NotTo(HaveOccurred())
+			Expect(set.Val()).To(Equal("OK"))
+
+			strLen := adapter.Cache(time.Hour).StrLen(ctx, "key")
+			Expect(strLen.Err()).NotTo(HaveOccurred())
+			Expect(strLen.Val()).To(Equal(int64(5)))
+
+			strLen = adapter.Cache(time.Hour).StrLen(ctx, "_")
+			Expect(strLen.Err()).NotTo(HaveOccurred())
+			Expect(strLen.Val()).To(Equal(int64(0)))
+		})
+	})
+
+	Describe("hashes", func() {
+
+		It("should HExists", func() {
+			hSet := adapter.HSet(ctx, "hash", "key", "hello")
+			Expect(hSet.Err()).NotTo(HaveOccurred())
+
+			hExists := adapter.Cache(time.Hour).HExists(ctx, "hash", "key")
+			Expect(hExists.Err()).NotTo(HaveOccurred())
+			Expect(hExists.Val()).To(Equal(true))
+
+			hExists = adapter.Cache(time.Hour).HExists(ctx, "hash", "key1")
+			Expect(hExists.Err()).NotTo(HaveOccurred())
+			Expect(hExists.Val()).To(Equal(false))
+		})
+
+		It("should HGet", func() {
+			hSet := adapter.HSet(ctx, "hash", "key", "hello")
+			Expect(hSet.Err()).NotTo(HaveOccurred())
+
+			hGet := adapter.Cache(time.Hour).HGet(ctx, "hash", "key")
+			Expect(hGet.Err()).NotTo(HaveOccurred())
+			Expect(hGet.Val()).To(Equal("hello"))
+
+			hGet = adapter.Cache(time.Hour).HGet(ctx, "hash", "key1")
+			Expect(rueidis.IsRedisNil(hGet.Err())).To(BeTrue())
+			Expect(hGet.Val()).To(Equal(""))
+		})
+
+		It("should HGetAll", func() {
+			err := adapter.HSet(ctx, "hash", "key1", "hello1").Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.HSet(ctx, "hash", "key2", "hello2").Err()
+			Expect(err).NotTo(HaveOccurred())
+
+			m, err := adapter.Cache(time.Hour).HGetAll(ctx, "hash").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(m).To(Equal(map[string]string{"key1": "hello1", "key2": "hello2"}))
+		})
+
+		It("should HKeys", func() {
+			hkeys := adapter.HKeys(ctx, "hash")
+			Expect(hkeys.Err()).NotTo(HaveOccurred())
+			Expect(hkeys.Val()).To(Equal([]string{}))
+
+			hset := adapter.HSet(ctx, "hash", "key1", "hello1")
+			Expect(hset.Err()).NotTo(HaveOccurred())
+			hset = adapter.HSet(ctx, "hash", "key2", "hello2")
+			Expect(hset.Err()).NotTo(HaveOccurred())
+
+			hkeys = adapter.Cache(time.Hour).HKeys(ctx, "hash")
+			Expect(hkeys.Err()).NotTo(HaveOccurred())
+			Expect(hkeys.Val()).To(Equal([]string{"key1", "key2"}))
+		})
+
+		It("should HLen", func() {
+			hSet := adapter.HSet(ctx, "hash", "key1", "hello1")
+			Expect(hSet.Err()).NotTo(HaveOccurred())
+			hSet = adapter.HSet(ctx, "hash", "key2", "hello2")
+			Expect(hSet.Err()).NotTo(HaveOccurred())
+
+			hLen := adapter.Cache(time.Hour).HLen(ctx, "hash")
+			Expect(hLen.Err()).NotTo(HaveOccurred())
+			Expect(hLen.Val()).To(Equal(int64(2)))
+		})
+
+		It("should HMGet", func() {
+			err := adapter.HSet(ctx, "hash", "key1", "hello1", "key2", "hello2").Err()
+			Expect(err).NotTo(HaveOccurred())
+
+			vals, err := adapter.Cache(time.Hour).HMGet(ctx, "hash", "key1", "key2", "_").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(vals).To(Equal([]interface{}{"hello1", "hello2", nil}))
+		})
+
+		It("should HVals", func() {
+			err := adapter.HSet(ctx, "hash", "key1", "hello1").Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.HSet(ctx, "hash", "key2", "hello2").Err()
+			Expect(err).NotTo(HaveOccurred())
+
+			v, err := adapter.Cache(time.Hour).HVals(ctx, "hash").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(v).To(Equal([]string{"hello1", "hello2"}))
+
+			// TODO
+			//var slice []string
+			//err = adapter.Cache(time.Hour).HVals(ctx, "hash").ScanSlice(&slice)
+			//Expect(err).NotTo(HaveOccurred())
+			//Expect(slice).To(Equal([]string{"hello1", "hello2"}))
+		})
+	})
+
+	Describe("lists", func() {
+
+		It("should LIndex", func() {
+			lPush := adapter.LPush(ctx, "list", "World")
+			Expect(lPush.Err()).NotTo(HaveOccurred())
+			lPush = adapter.LPush(ctx, "list", "Hello")
+			Expect(lPush.Err()).NotTo(HaveOccurred())
+
+			lIndex := adapter.Cache(time.Hour).LIndex(ctx, "list", 0)
+			Expect(lIndex.Err()).NotTo(HaveOccurred())
+			Expect(lIndex.Val()).To(Equal("Hello"))
+
+			lIndex = adapter.Cache(time.Hour).LIndex(ctx, "list", -1)
+			Expect(lIndex.Err()).NotTo(HaveOccurred())
+			Expect(lIndex.Val()).To(Equal("World"))
+
+			lIndex = adapter.Cache(time.Hour).LIndex(ctx, "list", 3)
+			Expect(rueidis.IsRedisNil(lIndex.Err())).To(BeTrue())
+			Expect(lIndex.Val()).To(Equal(""))
+		})
+
+		It("should LLen", func() {
+			lPush := adapter.LPush(ctx, "list", "World")
+			Expect(lPush.Err()).NotTo(HaveOccurred())
+			lPush = adapter.LPush(ctx, "list", "Hello")
+			Expect(lPush.Err()).NotTo(HaveOccurred())
+
+			lLen := adapter.Cache(time.Hour).LLen(ctx, "list")
+			Expect(lLen.Err()).NotTo(HaveOccurred())
+			Expect(lLen.Val()).To(Equal(int64(2)))
+		})
+
+		It("should LPos", func() {
+			rPush := adapter.RPush(ctx, "list", "a")
+			Expect(rPush.Err()).NotTo(HaveOccurred())
+			rPush = adapter.RPush(ctx, "list", "b")
+			Expect(rPush.Err()).NotTo(HaveOccurred())
+			rPush = adapter.RPush(ctx, "list", "c")
+			Expect(rPush.Err()).NotTo(HaveOccurred())
+			rPush = adapter.RPush(ctx, "list", "b")
+			Expect(rPush.Err()).NotTo(HaveOccurred())
+
+			lPos := adapter.Cache(time.Hour).LPos(ctx, "list", "b", LPosArgs{})
+			Expect(lPos.Err()).NotTo(HaveOccurred())
+			Expect(lPos.Val()).To(Equal(int64(1)))
+
+			lPos = adapter.Cache(time.Hour).LPos(ctx, "list", "b", LPosArgs{Rank: 2})
+			Expect(lPos.Err()).NotTo(HaveOccurred())
+			Expect(lPos.Val()).To(Equal(int64(3)))
+
+			lPos = adapter.Cache(time.Hour).LPos(ctx, "list", "b", LPosArgs{Rank: -2})
+			Expect(lPos.Err()).NotTo(HaveOccurred())
+			Expect(lPos.Val()).To(Equal(int64(1)))
+
+			lPos = adapter.Cache(time.Hour).LPos(ctx, "list", "b", LPosArgs{Rank: 2, MaxLen: 1})
+			Expect(rueidis.IsRedisNil(lPos.Err())).To(BeTrue())
+
+			lPos = adapter.Cache(time.Hour).LPos(ctx, "list", "z", LPosArgs{})
+			Expect(rueidis.IsRedisNil(lPos.Err())).To(BeTrue())
+		})
+
+		It("should LRange", func() {
+			rPush := adapter.RPush(ctx, "list", "one")
+			Expect(rPush.Err()).NotTo(HaveOccurred())
+			rPush = adapter.RPush(ctx, "list", "two")
+			Expect(rPush.Err()).NotTo(HaveOccurred())
+			rPush = adapter.RPush(ctx, "list", "three")
+			Expect(rPush.Err()).NotTo(HaveOccurred())
+
+			lRange := adapter.Cache(time.Hour).LRange(ctx, "list", 0, 0)
+			Expect(lRange.Err()).NotTo(HaveOccurred())
+			Expect(lRange.Val()).To(Equal([]string{"one"}))
+
+			lRange = adapter.Cache(time.Hour).LRange(ctx, "list", -3, 2)
+			Expect(lRange.Err()).NotTo(HaveOccurred())
+			Expect(lRange.Val()).To(Equal([]string{"one", "two", "three"}))
+
+			lRange = adapter.Cache(time.Hour).LRange(ctx, "list", -100, 100)
+			Expect(lRange.Err()).NotTo(HaveOccurred())
+			Expect(lRange.Val()).To(Equal([]string{"one", "two", "three"}))
+
+			lRange = adapter.Cache(time.Hour).LRange(ctx, "list", 5, 10)
+			Expect(lRange.Err()).NotTo(HaveOccurred())
+			Expect(lRange.Val()).To(Equal([]string{}))
+		})
+	})
+
+	Describe("sets", func() {
+
+		It("should SCard", func() {
+			sAdd := adapter.SAdd(ctx, "set", "Hello")
+			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			Expect(sAdd.Val()).To(Equal(int64(1)))
+
+			sAdd = adapter.SAdd(ctx, "set", "World")
+			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			Expect(sAdd.Val()).To(Equal(int64(1)))
+
+			sCard := adapter.Cache(time.Hour).SCard(ctx, "set")
+			Expect(sCard.Err()).NotTo(HaveOccurred())
+			Expect(sCard.Val()).To(Equal(int64(2)))
+		})
+
+		It("should IsMember", func() {
+			sAdd := adapter.SAdd(ctx, "set", "one")
+			Expect(sAdd.Err()).NotTo(HaveOccurred())
+
+			sIsMember := adapter.Cache(time.Hour).SIsMember(ctx, "set", "one")
+			Expect(sIsMember.Err()).NotTo(HaveOccurred())
+			Expect(sIsMember.Val()).To(Equal(true))
+
+			sIsMember = adapter.Cache(time.Hour).SIsMember(ctx, "set", "two")
+			Expect(sIsMember.Err()).NotTo(HaveOccurred())
+			Expect(sIsMember.Val()).To(Equal(false))
+		})
+
+		It("should SMIsMember", func() {
+			sAdd := adapter.SAdd(ctx, "set", "one")
+			Expect(sAdd.Err()).NotTo(HaveOccurred())
+
+			sMIsMember := adapter.Cache(time.Hour).SMIsMember(ctx, "set", "one", "two")
+			Expect(sMIsMember.Err()).NotTo(HaveOccurred())
+			Expect(sMIsMember.Val()).To(Equal([]bool{true, false}))
+		})
+
+		It("should SMembers", func() {
+			sAdd := adapter.SAdd(ctx, "set", "Hello")
+			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			sAdd = adapter.SAdd(ctx, "set", "World")
+			Expect(sAdd.Err()).NotTo(HaveOccurred())
+
+			sMembers := adapter.Cache(time.Hour).SMembers(ctx, "set")
+			Expect(sMembers.Err()).NotTo(HaveOccurred())
+			Expect(sMembers.Val()).To(ConsistOf([]string{"Hello", "World"}))
+		})
+	})
+
+	Describe("sorted sets", func() {
+
+		It("should ZCard", func() {
+			err := adapter.ZAdd(ctx, "zset", Z{
+				Score:  1,
+				Member: "one",
+			}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset", Z{
+				Score:  2,
+				Member: "two",
+			}).Err()
+			Expect(err).NotTo(HaveOccurred())
+
+			card, err := adapter.Cache(time.Hour).ZCard(ctx, "zset").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(card).To(Equal(int64(2)))
+		})
+
+		It("should ZCount", func() {
+			err := adapter.ZAdd(ctx, "zset", Z{
+				Score:  1,
+				Member: "one",
+			}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset", Z{
+				Score:  2,
+				Member: "two",
+			}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset", Z{
+				Score:  3,
+				Member: "three",
+			}).Err()
+			Expect(err).NotTo(HaveOccurred())
+
+			count, err := adapter.Cache(time.Hour).ZCount(ctx, "zset", "-inf", "+inf").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(count).To(Equal(int64(3)))
+
+			count, err = adapter.Cache(time.Hour).ZCount(ctx, "zset", "(1", "3").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(count).To(Equal(int64(2)))
+
+			count, err = adapter.Cache(time.Hour).ZLexCount(ctx, "zset", "-", "+").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(count).To(Equal(int64(3)))
+		})
+
+		It("should ZRangeWithScores", func() {
+			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+
+			vals, err := adapter.Cache(time.Hour).ZRangeWithScores(ctx, "zset", 0, -1).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(vals).To(Equal([]Z{{
+				Score:  1,
+				Member: "one",
+			}, {
+				Score:  2,
+				Member: "two",
+			}, {
+				Score:  3,
+				Member: "three",
+			}}))
+
+			vals, err = adapter.Cache(time.Hour).ZRangeWithScores(ctx, "zset", 2, 3).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(vals).To(Equal([]Z{{Score: 3, Member: "three"}}))
+
+			vals, err = adapter.Cache(time.Hour).ZRangeWithScores(ctx, "zset", -2, -1).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(vals).To(Equal([]Z{{
+				Score:  2,
+				Member: "two",
+			}, {
+				Score:  3,
+				Member: "three",
+			}}))
+		})
+
+		It("should ZRangeArgs", func() {
+			added, err := adapter.ZAddArgs(ctx, "zset", ZAddArgs{
+				Members: []Z{
+					{Score: 1, Member: "one"},
+					{Score: 2, Member: "two"},
+					{Score: 3, Member: "three"},
+					{Score: 4, Member: "four"},
+				},
+			}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(added).To(Equal(int64(4)))
+
+			zRange, err := adapter.Cache(time.Hour).ZRangeArgs(ctx, ZRangeArgs{
+				Key:     "zset",
+				Start:   1,
+				Stop:    4,
+				ByScore: true,
+				Rev:     true,
+				Offset:  1,
+				Count:   2,
+			}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(zRange).To(Equal([]string{"three", "two"}))
+
+			zRange, err = adapter.Cache(time.Hour).ZRangeArgs(ctx, ZRangeArgs{
+				Key:    "zset",
+				Start:  "-",
+				Stop:   "+",
+				ByLex:  true,
+				Rev:    true,
+				Offset: 2,
+				Count:  2,
+			}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(zRange).To(Equal([]string{"two", "one"}))
+
+			zRange, err = adapter.Cache(time.Hour).ZRangeArgs(ctx, ZRangeArgs{
+				Key:     "zset",
+				Start:   "(1",
+				Stop:    "(4",
+				ByScore: true,
+			}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(zRange).To(Equal([]string{"two", "three"}))
+
+			// withScores.
+			zSlice, err := adapter.Cache(time.Hour).ZRangeArgsWithScores(ctx, ZRangeArgs{
+				Key:     "zset",
+				Start:   1,
+				Stop:    4,
+				ByScore: true,
+				Rev:     true,
+				Offset:  1,
+				Count:   2,
+			}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(zSlice).To(Equal([]Z{
+				{Score: 3, Member: "three"},
+				{Score: 2, Member: "two"},
+			}))
+		})
+
+		It("should ZRangeByScore", func() {
+			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+
+			zRangeByScore := adapter.Cache(time.Hour).ZRangeByScore(ctx, "zset", ZRangeBy{
+				Min: "-inf",
+				Max: "+inf",
+			})
+			Expect(zRangeByScore.Err()).NotTo(HaveOccurred())
+			Expect(zRangeByScore.Val()).To(Equal([]string{"one", "two", "three"}))
+
+			zRangeByScore = adapter.Cache(time.Hour).ZRangeByScore(ctx, "zset", ZRangeBy{
+				Min: "1",
+				Max: "2",
+			})
+			Expect(zRangeByScore.Err()).NotTo(HaveOccurred())
+			Expect(zRangeByScore.Val()).To(Equal([]string{"one", "two"}))
+
+			zRangeByScore = adapter.Cache(time.Hour).ZRangeByScore(ctx, "zset", ZRangeBy{
+				Min: "(1",
+				Max: "2",
+			})
+			Expect(zRangeByScore.Err()).NotTo(HaveOccurred())
+			Expect(zRangeByScore.Val()).To(Equal([]string{"two"}))
+
+			zRangeByScore = adapter.Cache(time.Hour).ZRangeByScore(ctx, "zset", ZRangeBy{
+				Min: "(1",
+				Max: "(2",
+			})
+			Expect(zRangeByScore.Err()).NotTo(HaveOccurred())
+			Expect(zRangeByScore.Val()).To(Equal([]string{}))
+		})
+
+		It("should ZRangeByLex", func() {
+			err := adapter.ZAdd(ctx, "zset", Z{
+				Score:  0,
+				Member: "a",
+			}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset", Z{
+				Score:  0,
+				Member: "b",
+			}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset", Z{
+				Score:  0,
+				Member: "c",
+			}).Err()
+			Expect(err).NotTo(HaveOccurred())
+
+			zRangeByLex := adapter.Cache(time.Hour).ZRangeByLex(ctx, "zset", ZRangeBy{
+				Min: "-",
+				Max: "+",
+			})
+			Expect(zRangeByLex.Err()).NotTo(HaveOccurred())
+			Expect(zRangeByLex.Val()).To(Equal([]string{"a", "b", "c"}))
+
+			zRangeByLex = adapter.Cache(time.Hour).ZRangeByLex(ctx, "zset", ZRangeBy{
+				Min: "[a",
+				Max: "[b",
+			})
+			Expect(zRangeByLex.Err()).NotTo(HaveOccurred())
+			Expect(zRangeByLex.Val()).To(Equal([]string{"a", "b"}))
+
+			zRangeByLex = adapter.Cache(time.Hour).ZRangeByLex(ctx, "zset", ZRangeBy{
+				Min: "(a",
+				Max: "[b",
+			})
+			Expect(zRangeByLex.Err()).NotTo(HaveOccurred())
+			Expect(zRangeByLex.Val()).To(Equal([]string{"b"}))
+
+			zRangeByLex = adapter.Cache(time.Hour).ZRangeByLex(ctx, "zset", ZRangeBy{
+				Min: "(a",
+				Max: "(b",
+			})
+			Expect(zRangeByLex.Err()).NotTo(HaveOccurred())
+			Expect(zRangeByLex.Val()).To(Equal([]string{}))
+		})
+
+		It("should ZRangeByScoreWithScoresMap", func() {
+			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+
+			vals, err := adapter.Cache(time.Hour).ZRangeByScoreWithScores(ctx, "zset", ZRangeBy{
+				Min: "-inf",
+				Max: "+inf",
+			}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(vals).To(Equal([]Z{{
+				Score:  1,
+				Member: "one",
+			}, {
+				Score:  2,
+				Member: "two",
+			}, {
+				Score:  3,
+				Member: "three",
+			}}))
+
+			vals, err = adapter.Cache(time.Hour).ZRangeByScoreWithScores(ctx, "zset", ZRangeBy{
+				Min: "1",
+				Max: "2",
+			}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(vals).To(Equal([]Z{{
+				Score:  1,
+				Member: "one",
+			}, {
+				Score:  2,
+				Member: "two",
+			}}))
+
+			vals, err = adapter.Cache(time.Hour).ZRangeByScoreWithScores(ctx, "zset", ZRangeBy{
+				Min: "(1",
+				Max: "2",
+			}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(vals).To(Equal([]Z{{Score: 2, Member: "two"}}))
+
+			vals, err = adapter.Cache(time.Hour).ZRangeByScoreWithScores(ctx, "zset", ZRangeBy{
+				Min: "(1",
+				Max: "(2",
+			}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(vals).To(Equal([]Z{}))
+		})
+
+		It("should ZRank", func() {
+			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+
+			zRank := adapter.Cache(time.Hour).ZRank(ctx, "zset", "three")
+			Expect(zRank.Err()).NotTo(HaveOccurred())
+			Expect(zRank.Val()).To(Equal(int64(2)))
+
+			zRank = adapter.Cache(time.Hour).ZRank(ctx, "zset", "four")
+			Expect(rueidis.IsRedisNil(zRank.Err())).To(BeTrue())
+			Expect(zRank.Val()).To(Equal(int64(0)))
+		})
+
+		It("should ZRevRange", func() {
+			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+
+			zRevRange := adapter.Cache(time.Hour).ZRevRange(ctx, "zset", 0, -1)
+			Expect(zRevRange.Err()).NotTo(HaveOccurred())
+			Expect(zRevRange.Val()).To(Equal([]string{"three", "two", "one"}))
+
+			zRevRange = adapter.Cache(time.Hour).ZRevRange(ctx, "zset", 2, 3)
+			Expect(zRevRange.Err()).NotTo(HaveOccurred())
+			Expect(zRevRange.Val()).To(Equal([]string{"one"}))
+
+			zRevRange = adapter.Cache(time.Hour).ZRevRange(ctx, "zset", -2, -1)
+			Expect(zRevRange.Err()).NotTo(HaveOccurred())
+			Expect(zRevRange.Val()).To(Equal([]string{"two", "one"}))
+		})
+
+		It("should ZRevRangeWithScoresMap", func() {
+			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+
+			val, err := adapter.Cache(time.Hour).ZRevRangeWithScores(ctx, "zset", 0, -1).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(val).To(Equal([]Z{{
+				Score:  3,
+				Member: "three",
+			}, {
+				Score:  2,
+				Member: "two",
+			}, {
+				Score:  1,
+				Member: "one",
+			}}))
+
+			val, err = adapter.Cache(time.Hour).ZRevRangeWithScores(ctx, "zset", 2, 3).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(val).To(Equal([]Z{{Score: 1, Member: "one"}}))
+
+			val, err = adapter.Cache(time.Hour).ZRevRangeWithScores(ctx, "zset", -2, -1).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(val).To(Equal([]Z{{
+				Score:  2,
+				Member: "two",
+			}, {
+				Score:  1,
+				Member: "one",
+			}}))
+		})
+
+		It("should ZRevRangeByScore", func() {
+			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+
+			vals, err := adapter.Cache(time.Hour).ZRevRangeByScore(
+				ctx, "zset", ZRangeBy{Max: "+inf", Min: "-inf"}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(vals).To(Equal([]string{"three", "two", "one"}))
+
+			vals, err = adapter.Cache(time.Hour).ZRevRangeByScore(
+				ctx, "zset", ZRangeBy{Max: "2", Min: "(1"}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(vals).To(Equal([]string{"two"}))
+
+			vals, err = adapter.Cache(time.Hour).ZRevRangeByScore(
+				ctx, "zset", ZRangeBy{Max: "(2", Min: "(1"}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(vals).To(Equal([]string{}))
+		})
+
+		It("should ZRevRangeByLex", func() {
+			err := adapter.ZAdd(ctx, "zset", Z{Score: 0, Member: "a"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset", Z{Score: 0, Member: "b"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset", Z{Score: 0, Member: "c"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+
+			vals, err := adapter.Cache(time.Hour).ZRevRangeByLex(
+				ctx, "zset", ZRangeBy{Max: "+", Min: "-"}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(vals).To(Equal([]string{"c", "b", "a"}))
+
+			vals, err = adapter.Cache(time.Hour).ZRevRangeByLex(
+				ctx, "zset", ZRangeBy{Max: "[b", Min: "(a"}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(vals).To(Equal([]string{"b"}))
+
+			vals, err = adapter.Cache(time.Hour).ZRevRangeByLex(
+				ctx, "zset", ZRangeBy{Max: "(b", Min: "(a"}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(vals).To(Equal([]string{}))
+		})
+
+		It("should ZRevRangeByScoreWithScores", func() {
+			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+
+			vals, err := adapter.Cache(time.Hour).ZRevRangeByScoreWithScores(
+				ctx, "zset", ZRangeBy{Max: "+inf", Min: "-inf"}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(vals).To(Equal([]Z{{
+				Score:  3,
+				Member: "three",
+			}, {
+				Score:  2,
+				Member: "two",
+			}, {
+				Score:  1,
+				Member: "one",
+			}}))
+		})
+
+		It("should ZRevRangeByScoreWithScoresMap", func() {
+			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+
+			vals, err := adapter.Cache(time.Hour).ZRevRangeByScoreWithScores(
+				ctx, "zset", ZRangeBy{Max: "+inf", Min: "-inf"}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(vals).To(Equal([]Z{{
+				Score:  3,
+				Member: "three",
+			}, {
+				Score:  2,
+				Member: "two",
+			}, {
+				Score:  1,
+				Member: "one",
+			}}))
+
+			vals, err = adapter.Cache(time.Hour).ZRevRangeByScoreWithScores(
+				ctx, "zset", ZRangeBy{Max: "2", Min: "(1"}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(vals).To(Equal([]Z{{Score: 2, Member: "two"}}))
+
+			vals, err = adapter.Cache(time.Hour).ZRevRangeByScoreWithScores(
+				ctx, "zset", ZRangeBy{Max: "(2", Min: "(1"}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(vals).To(Equal([]Z{}))
+		})
+
+		It("should ZRevRank", func() {
+			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+
+			zRevRank := adapter.Cache(time.Hour).ZRevRank(ctx, "zset", "one")
+			Expect(zRevRank.Err()).NotTo(HaveOccurred())
+			Expect(zRevRank.Val()).To(Equal(int64(2)))
+
+			zRevRank = adapter.Cache(time.Hour).ZRevRank(ctx, "zset", "four")
+			Expect(rueidis.IsRedisNil(zRevRank.Err())).To(BeTrue())
+			Expect(zRevRank.Val()).To(Equal(int64(0)))
+		})
+
+		It("should ZScore", func() {
+			zAdd := adapter.ZAdd(ctx, "zset", Z{Score: 1.001, Member: "one"})
+			Expect(zAdd.Err()).NotTo(HaveOccurred())
+
+			zScore := adapter.Cache(time.Hour).ZScore(ctx, "zset", "one")
+			Expect(zScore.Err()).NotTo(HaveOccurred())
+			Expect(zScore.Val()).To(Equal(float64(1.001)))
+		})
+	})
+
+	Describe("Geo add and radius search", func() {
+		BeforeEach(func() {
+			n, err := adapter.GeoAdd(
+				ctx,
+				"Sicily",
+				GeoLocation{Longitude: 13.361389, Latitude: 38.115556, Name: "Palermo"},
+				GeoLocation{Longitude: 15.087269, Latitude: 37.502669, Name: "Catania"},
+			).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(n).To(Equal(int64(2)))
+		})
+
+		It("should search geo radius", func() {
+			res, err := adapter.Cache(time.Hour).GeoRadius(ctx, "Sicily", 15, 37, GeoRadiusQuery{
+				Radius: 200,
+			}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(res).To(HaveLen(2))
+			Expect(res[0].Name).To(Equal("Palermo"))
+			Expect(res[1].Name).To(Equal("Catania"))
+		})
+
+		It("should search geo radius with options", func() {
+			res, err := adapter.Cache(time.Hour).GeoRadius(ctx, "Sicily", 15, 37, GeoRadiusQuery{
+				Radius:      200,
+				Unit:        "km",
+				WithGeoHash: true,
+				WithCoord:   true,
+				WithDist:    true,
+				Count:       2,
+				Sort:        "ASC",
+			}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(res).To(HaveLen(2))
+			Expect(res[1].Name).To(Equal("Palermo"))
+			Expect(res[1].Dist).To(Equal(190.4424))
+			Expect(res[1].GeoHash).To(Equal(int64(3479099956230698)))
+			Expect(res[1].Longitude).To(Equal(13.361389338970184))
+			Expect(res[1].Latitude).To(Equal(38.115556395496299))
+			Expect(res[0].Name).To(Equal("Catania"))
+			Expect(res[0].Dist).To(Equal(56.4413))
+			Expect(res[0].GeoHash).To(Equal(int64(3479447370796909)))
+			Expect(res[0].Longitude).To(Equal(15.087267458438873))
+			Expect(res[0].Latitude).To(Equal(37.50266842333162))
+		})
+
+		It("should search geo radius with WithDist=false", func() {
+			res, err := adapter.Cache(time.Hour).GeoRadius(ctx, "Sicily", 15, 37, GeoRadiusQuery{
+				Radius:      200,
+				Unit:        "km",
+				WithGeoHash: true,
+				WithCoord:   true,
+				Count:       2,
+				Sort:        "ASC",
+			}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(res).To(HaveLen(2))
+			Expect(res[1].Name).To(Equal("Palermo"))
+			Expect(res[1].Dist).To(Equal(float64(0)))
+			Expect(res[1].GeoHash).To(Equal(int64(3479099956230698)))
+			Expect(res[1].Longitude).To(Equal(13.361389338970184))
+			Expect(res[1].Latitude).To(Equal(38.115556395496299))
+			Expect(res[0].Name).To(Equal("Catania"))
+			Expect(res[0].Dist).To(Equal(float64(0)))
+			Expect(res[0].GeoHash).To(Equal(int64(3479447370796909)))
+			Expect(res[0].Longitude).To(Equal(15.087267458438873))
+			Expect(res[0].Latitude).To(Equal(37.50266842333162))
+		})
+
+		It("should search geo radius by member with options", func() {
+			res, err := adapter.Cache(time.Hour).GeoRadiusByMember(ctx, "Sicily", "Catania", GeoRadiusQuery{
+				Radius:      200,
+				Unit:        "km",
+				WithGeoHash: true,
+				WithCoord:   true,
+				WithDist:    true,
+				Count:       2,
+				Sort:        "ASC",
+			}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(res).To(HaveLen(2))
+			Expect(res[0].Name).To(Equal("Catania"))
+			Expect(res[0].Dist).To(Equal(0.0))
+			Expect(res[0].GeoHash).To(Equal(int64(3479447370796909)))
+			Expect(res[0].Longitude).To(Equal(15.087267458438873))
+			Expect(res[0].Latitude).To(Equal(37.50266842333162))
+			Expect(res[1].Name).To(Equal("Palermo"))
+			Expect(res[1].Dist).To(Equal(166.2742))
+			Expect(res[1].GeoHash).To(Equal(int64(3479099956230698)))
+			Expect(res[1].Longitude).To(Equal(13.361389338970184))
+			Expect(res[1].Latitude).To(Equal(38.115556395496299))
+		})
+
+		It("should search geo radius with no results", func() {
+			res, err := adapter.Cache(time.Hour).GeoRadius(ctx, "Sicily", 99, 37, GeoRadiusQuery{
+				Radius:      200,
+				Unit:        "km",
+				WithGeoHash: true,
+				WithCoord:   true,
+				WithDist:    true,
+			}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(res).To(HaveLen(0))
+		})
+
+		It("should get geo distance with unit options", func() {
+			// From Redis CLI, note the difference in rounding in m vs
+			// km on Redis itself.
+			//
+			// GEOADD Sicily 13.361389 38.115556 "Palermo" 15.087269 37.502669 "Catania"
+			// GEODIST Sicily Palermo Catania m
+			// "166274.15156960033"
+			// GEODIST Sicily Palermo Catania km
+			// "166.27415156960032"
+			dist, err := adapter.Cache(time.Hour).GeoDist(ctx, "Sicily", "Palermo", "Catania", "km").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(dist).To(BeNumerically("~", 166.27, 0.01))
+
+			dist, err = adapter.Cache(time.Hour).GeoDist(ctx, "Sicily", "Palermo", "Catania", "m").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(dist).To(BeNumerically("~", 166274.15, 0.01))
+		})
+
+		It("should get geo hash in string representation", func() {
+			hashes, err := adapter.Cache(time.Hour).GeoHash(ctx, "Sicily", "Palermo", "Catania").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(hashes).To(ConsistOf([]string{"sqc8b49rny0", "sqdtr74hyu0"}))
+		})
+
+		It("should return geo position", func() {
+			pos, err := adapter.Cache(time.Hour).GeoPos(ctx, "Sicily", "Palermo", "Catania", "NonExisting").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(pos).To(ConsistOf([]*GeoPos{
+				{
+					Longitude: 13.361389338970184,
+					Latitude:  38.1155563954963,
+				},
+				{
+					Longitude: 15.087267458438873,
+					Latitude:  37.50266842333162,
+				},
+				nil,
+			}))
+		})
+
+		It("should geo search", func() {
+			q := GeoSearchQuery{
+				Member:    "Catania",
+				BoxWidth:  400,
+				BoxHeight: 100,
+				BoxUnit:   "km",
+				Sort:      "asc",
+			}
+			val, err := adapter.Cache(time.Hour).GeoSearch(ctx, "Sicily", q).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(val).To(Equal([]string{"Catania"}))
+
+			q.BoxHeight = 400
+			val, err = adapter.Cache(time.Hour).GeoSearch(ctx, "Sicily", q).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(val).To(Equal([]string{"Catania", "Palermo"}))
+
+			q.Count = 1
+			val, err = adapter.Cache(time.Hour).GeoSearch(ctx, "Sicily", q).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(val).To(Equal([]string{"Catania"}))
+
+			q.CountAny = true
+			val, err = adapter.Cache(time.Hour).GeoSearch(ctx, "Sicily", q).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(val).To(Equal([]string{"Palermo"}))
+
+			q = GeoSearchQuery{
+				Member:     "Catania",
+				Radius:     100,
+				RadiusUnit: "km",
+				Sort:       "asc",
+			}
+			val, err = adapter.Cache(time.Hour).GeoSearch(ctx, "Sicily", q).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(val).To(Equal([]string{"Catania"}))
+
+			q.Radius = 400
+			val, err = adapter.Cache(time.Hour).GeoSearch(ctx, "Sicily", q).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(val).To(Equal([]string{"Catania", "Palermo"}))
+
+			q.Count = 1
+			val, err = adapter.Cache(time.Hour).GeoSearch(ctx, "Sicily", q).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(val).To(Equal([]string{"Catania"}))
+
+			q.CountAny = true
+			val, err = adapter.Cache(time.Hour).GeoSearch(ctx, "Sicily", q).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(val).To(Equal([]string{"Palermo"}))
+
+			q = GeoSearchQuery{
+				Longitude: 15,
+				Latitude:  37,
+				BoxWidth:  200,
+				BoxHeight: 200,
+				BoxUnit:   "km",
+				Sort:      "asc",
+			}
+			val, err = adapter.Cache(time.Hour).GeoSearch(ctx, "Sicily", q).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(val).To(Equal([]string{"Catania"}))
+
+			q.BoxWidth, q.BoxHeight = 400, 400
+			val, err = adapter.Cache(time.Hour).GeoSearch(ctx, "Sicily", q).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(val).To(Equal([]string{"Catania", "Palermo"}))
+
+			q.Count = 1
+			val, err = adapter.Cache(time.Hour).GeoSearch(ctx, "Sicily", q).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(val).To(Equal([]string{"Catania"}))
+
+			q.CountAny = true
+			val, err = adapter.Cache(time.Hour).GeoSearch(ctx, "Sicily", q).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(val).To(Equal([]string{"Palermo"}))
+
+			q = GeoSearchQuery{
+				Longitude:  15,
+				Latitude:   37,
+				Radius:     100,
+				RadiusUnit: "km",
+				Sort:       "asc",
+			}
+			val, err = adapter.Cache(time.Hour).GeoSearch(ctx, "Sicily", q).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(val).To(Equal([]string{"Catania"}))
+
+			q.Radius = 200
+			val, err = adapter.Cache(time.Hour).GeoSearch(ctx, "Sicily", q).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(val).To(Equal([]string{"Catania", "Palermo"}))
+
+			q.Count = 1
+			val, err = adapter.Cache(time.Hour).GeoSearch(ctx, "Sicily", q).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(val).To(Equal([]string{"Catania"}))
+
+			q.CountAny = true
+			val, err = adapter.Cache(time.Hour).GeoSearch(ctx, "Sicily", q).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(val).To(Equal([]string{"Palermo"}))
+		})
+	})
+
+	Describe("marshaling/unmarshaling", func() {
+		type convTest struct {
+			value  interface{}
+			wanted string
+			dest   interface{}
+		}
+
+		convTests := []convTest{
+			// TODO
+			//{nil, "", nil},
+			{"hello", "hello", new(string)},
+			{[]byte("hello"), "hello", new([]byte)},
+			{int(1), "1", new(int)},
+			{int8(1), "1", new(int8)},
+			{int16(1), "1", new(int16)},
+			{int32(1), "1", new(int32)},
+			{int64(1), "1", new(int64)},
+			{uint(1), "1", new(uint)},
+			{uint8(1), "1", new(uint8)},
+			{uint16(1), "1", new(uint16)},
+			{uint32(1), "1", new(uint32)},
+			{uint64(1), "1", new(uint64)},
+			{float32(1.0), "1", new(float32)},
+			{float64(1.0), "1", new(float64)},
+			{true, "1", new(bool)},
+			{false, "0", new(bool)},
+		}
+
+		It("should convert to string", func() {
+			for _, test := range convTests {
+				err := adapter.Set(ctx, "key", test.value, 0).Err()
+				Expect(err).NotTo(HaveOccurred())
+
+				s, err := adapter.Cache(time.Hour).Get(ctx, "key").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(s).To(Equal(test.wanted))
+
+				if test.dest == nil {
+					continue
+				}
+				// TODO
+				//err = adapter.Cache(time.Hour).Get(ctx, "key").Scan(test.dest)
+				//Expect(err).NotTo(HaveOccurred())
+				//Expect(deref(test.dest)).To(Equal(test.value))
+			}
+		})
+	})
+
+	Describe("json marshaling/unmarshaling", func() {
+		BeforeEach(func() {
+			value := &numberStruct{Number: 42}
+			err := adapter.Set(ctx, "key", value, 0).Err()
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("should marshal custom values using json", func() {
+			s, err := adapter.Cache(time.Hour).Get(ctx, "key").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(s).To(Equal(`{"Number":42}`))
+		})
+
+		// TODO
+		//It("should scan custom values using json", func() {
+		//	value := &numberStruct{}
+		//	err := adapter.Cache(time.Hour).Get(ctx, "key").Scan(value)
+		//	Expect(err).NotTo(HaveOccurred())
+		//	Expect(value.Number).To(Equal(42))
+		//})
 	})
 })
 

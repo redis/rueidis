@@ -6,7 +6,7 @@ services:
     ports:
       - "6379:6379"
   compat:
-    image: redislabs/rejson:2.0.6
+    image: redis:7.0.0-alpine
     ports:
       - "6378:6379"
   sentinel:

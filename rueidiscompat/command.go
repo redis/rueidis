@@ -45,7 +45,7 @@ func newCmd(res rueidis.RedisResult) *Cmd {
 	return &Cmd{val: val, err: err}
 }
 
-func (cmd *Cmd) SetVal(val string) {
+func (cmd *Cmd) SetVal(val interface{}) {
 	cmd.val = val
 }
 
@@ -1066,7 +1066,7 @@ func newXPendingCmd(res rueidis.RedisResult) *XPendingCmd {
 	if err != nil {
 		return &XPendingCmd{err: err}
 	}
-	if len(arr) != 4 {
+	if len(arr) < 4 {
 		return &XPendingCmd{err: fmt.Errorf("got %d, wanted 4", len(arr))}
 	}
 	count, err := arr[0].ToInt64()
@@ -1095,7 +1095,7 @@ func newXPendingCmd(res rueidis.RedisResult) *XPendingCmd {
 		if err != nil {
 			return &XPendingCmd{err: err}
 		}
-		if len(consumer) != 2 {
+		if len(consumer) < 2 {
 			return &XPendingCmd{err: fmt.Errorf("got %d, wanted 2", len(arr))}
 		}
 		consumerName, err := consumer[0].ToString()
@@ -1157,7 +1157,7 @@ func newXPendingExtCmd(res rueidis.RedisResult) *XPendingExtCmd {
 		if err != nil {
 			return &XPendingExtCmd{err: err}
 		}
-		if len(arr) != 4 {
+		if len(arr) < 4 {
 			return &XPendingExtCmd{err: fmt.Errorf("got %d, wanted 4", len(arr))}
 		}
 		id, err := arr[0].ToString()
@@ -1217,7 +1217,7 @@ func newXAutoClaimCmd(res rueidis.RedisResult) *XAutoClaimCmd {
 	if err != nil {
 		return &XAutoClaimCmd{err: err}
 	}
-	if len(arr) != 2 {
+	if len(arr) < 2 {
 		return &XAutoClaimCmd{err: fmt.Errorf("got %d, wanted 2", len(arr))}
 	}
 	start, err := arr[0].ToString()
@@ -1267,7 +1267,7 @@ func newXAutoClaimJustIDCmd(res rueidis.RedisResult) *XAutoClaimJustIDCmd {
 	if err != nil {
 		return &XAutoClaimJustIDCmd{err: err}
 	}
-	if len(arr) != 2 {
+	if len(arr) < 2 {
 		return &XAutoClaimJustIDCmd{err: fmt.Errorf("got %d, wanted 2", len(arr))}
 	}
 	start, err := arr[0].ToString()
@@ -1579,7 +1579,7 @@ func readXInfoStreamGroupPending(res rueidis.RedisMessage) ([]XInfoStreamGroupPe
 		if err != nil {
 			return nil, err
 		}
-		if len(info) != 4 {
+		if len(info) < 4 {
 			return nil, fmt.Errorf("got %d, wanted 4", len(arr))
 		}
 		var p XInfoStreamGroupPending
@@ -1638,7 +1638,7 @@ func readXInfoStreamConsumers(res rueidis.RedisMessage) ([]XInfoStreamConsumer, 
 				if err != nil {
 					return nil, err
 				}
-				if len(pendingInfo) != 3 {
+				if len(pendingInfo) < 3 {
 					return nil, fmt.Errorf("got %d, wanted 3", len(arr))
 				}
 				var p XInfoStreamConsumerPending
@@ -1749,7 +1749,7 @@ func newZWithKeyCmd(res rueidis.RedisResult) *ZWithKeyCmd {
 	if err != nil {
 		return &ZWithKeyCmd{err: err}
 	}
-	if len(arr) != 3 {
+	if len(arr) < 3 {
 		return &ZWithKeyCmd{err: fmt.Errorf("got %d, wanted 3", len(arr))}
 	}
 	val := ZWithKey{}
@@ -1798,7 +1798,7 @@ func newTimeCmd(res rueidis.RedisResult) *TimeCmd {
 	if err != nil {
 		return &TimeCmd{err: err}
 	}
-	if len(arr) != 2 {
+	if len(arr) < 2 {
 		return &TimeCmd{err: fmt.Errorf("got %d, wanted 2", len(arr))}
 	}
 	sec, err := arr[0].AsInt64()
