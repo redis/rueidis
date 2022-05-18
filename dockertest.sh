@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -ev
 
 docker-compose up -d
 go test -coverprofile=./c.out -v -race ./...

@@ -2,17 +2,21 @@ version: "3.8"
 
 services:
   redis:
-    image: redislabs/rejson:2.0.6
+    image: redis:7.0.0-alpine
     ports:
       - "6379:6379"
+  rejson:
+    image: redislabs/rejson:2.0.8
+    ports:
+      - "6377:6379"
   compat:
     image: redis:7.0.0-alpine
     ports:
       - "6378:6379"
   sentinel:
-    image: redislabs/rejson:2.0.6
+    image: redis:7.0.0-alpine
     entrypoint:
-      - /bin/bash
+      - /bin/sh
       - -c
       - |
         redis-server --save "" --appendonly no --port 6380 &
@@ -22,9 +26,9 @@ services:
       - "6380:6380"
       - "26379:26379"
   cluster:
-    image: redislabs/rejson:2.0.6
+    image: redis:7.0.0-alpine
     entrypoint:
-      - /bin/bash
+      - /bin/sh
       - -c
       - |
         redis-server --port 7001 --save "" --appendonly no --cluster-enabled yes --cluster-config-file 7001.conf &
