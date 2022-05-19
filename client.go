@@ -149,3 +149,12 @@ func allReadOnly(multi []cmds.Completed) bool {
 	}
 	return true
 }
+
+func allSameSlot(multi []cmds.Completed) bool {
+	for i := 1; i < len(multi); i++ {
+		if multi[0].Slot() != multi[i].Slot() {
+			return false
+		}
+	}
+	return true
+}

@@ -363,24 +363,19 @@ type dedicatedClusterClient struct {
 	slot uint16
 }
 
-func (c *dedicatedClusterClient) check(slot uint16) {
+func (c *dedicatedClusterClient) acquire(slot uint16) (wire wire, err error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.slot == cmds.NoSlot {
+		if slot == cmds.NoSlot {
+			panic(panicMsgNoSlot)
+		}
 		c.slot = slot
-	} else if c.slot != slot {
+	} else if c.slot != slot && slot != cmds.NoSlot {
 		panic(panicMsgCxSlot)
 	}
-}
-
-func (c *dedicatedClusterClient) acquire() (wire wire, err error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
 	if c.wire != nil {
 		return c.wire, nil
-	}
-	if c.slot == cmds.NoSlot {
-		panic(panicMsgNoSlot)
 	}
 	if c.conn, err = c.client.pick(c.slot); err != nil {
 		return nil, err
@@ -402,9 +397,8 @@ func (c *dedicatedClusterClient) B() cmds.Builder {
 }
 
 func (c *dedicatedClusterClient) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
-	c.check(cmd.Slot())
 retry:
-	if w, err := c.acquire(); err != nil {
+	if w, err := c.acquire(cmd.Slot()); err != nil {
 		resp = newErrResult(err)
 	} else {
 		resp = w.Do(ctx, cmd)
@@ -420,12 +414,12 @@ func (c *dedicatedClusterClient) DoMulti(ctx context.Context, multi ...cmds.Comp
 	if len(multi) == 0 {
 		return nil
 	}
-	for _, cmd := range multi {
-		c.check(cmd.Slot())
+	if !allSameSlot(multi) {
+		panic(panicMsgCxSlot)
 	}
 	readonly := allReadOnly(multi)
 retry:
-	if w, err := c.acquire(); err == nil {
+	if w, err := c.acquire(multi[0].Slot()); err == nil {
 		resp = w.DoMulti(ctx, multi...)
 		for _, resp := range resp {
 			if c.client.shouldRefreshRetry(resp.NonRedisError(), ctx) && readonly && w.Error() == nil {
@@ -445,10 +439,9 @@ retry:
 }
 
 func (c *dedicatedClusterClient) Receive(ctx context.Context, subscribe cmds.Completed, fn func(msg PubSubMessage)) (err error) {
-	c.check(subscribe.Slot())
 	var w wire
 retry:
-	if w, err = c.acquire(); err == nil {
+	if w, err = c.acquire(subscribe.Slot()); err == nil {
 		if err = w.Receive(ctx, subscribe, fn); c.client.shouldRefreshRetry(err, ctx) && w.Error() == nil {
 			goto retry
 		}

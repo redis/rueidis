@@ -5,6 +5,7 @@ import (
 	"errors"
 	"reflect"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -274,13 +275,34 @@ func TestClusterClient(t *testing.T) {
 		})
 	})
 
+	t.Run("Dedicated Multi Cross Slot Err", func(t *testing.T) {
+		m.AcquireFn = func() wire { return &mockWire{} }
+		err := client.Dedicated(func(c DedicatedClient) (err error) {
+			defer func() {
+				err = errors.New(recover().(string))
+			}()
+			c.DoMulti(
+				context.Background(),
+				c.B().Get().Key("a").Build(),
+				c.B().Get().Key("b").Build(),
+			)
+			return nil
+		})
+		if err == nil || err.Error() != panicMsgCxSlot {
+			t.Errorf("Multi should panic if cross slots is used")
+		}
+	})
+
 	t.Run("Dedicated Delegate", func(t *testing.T) {
 		w := &mockWire{
 			DoFn: func(cmd cmds.Completed) RedisResult {
 				return newResult(RedisMessage{typ: '+', string: "Delegate"}, nil)
 			},
 			DoMultiFn: func(cmd ...cmds.Completed) []RedisResult {
-				return []RedisResult{newResult(RedisMessage{typ: '+', string: "Delegate"}, nil)}
+				return []RedisResult{
+					newResult(RedisMessage{typ: '+', string: "Delegate0"}, nil),
+					newResult(RedisMessage{typ: '+', string: "Delegate1"}, nil),
+				}
 			},
 			ReceiveFn: func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
 				return ErrClosing
@@ -306,8 +328,12 @@ func TestClusterClient(t *testing.T) {
 			if v := c.DoMulti(context.Background()); len(v) != 0 {
 				t.Fatalf("received unexpected response %v", v)
 			}
-			for _, resp := range c.DoMulti(context.Background(), c.B().Get().Key("a").Build()) {
-				if v, err := resp.ToString(); err != nil || v != "Delegate" {
+			for i, resp := range c.DoMulti(
+				context.Background(),
+				c.B().Get().Key("a").Build(),
+				c.B().Get().Key("a").Build(),
+			) {
+				if v, err := resp.ToString(); err != nil || v != "Delegate"+strconv.Itoa(i) {
 					t.Fatalf("unexpected response %v %v", v, err)
 				}
 			}
@@ -329,7 +355,10 @@ func TestClusterClient(t *testing.T) {
 				return newResult(RedisMessage{typ: '+', string: "Delegate"}, nil)
 			},
 			DoMultiFn: func(cmd ...cmds.Completed) []RedisResult {
-				return []RedisResult{newResult(RedisMessage{typ: '+', string: "Delegate"}, nil)}
+				return []RedisResult{
+					newResult(RedisMessage{typ: '+', string: "Delegate0"}, nil),
+					newResult(RedisMessage{typ: '+', string: "Delegate1"}, nil),
+				}
 			},
 			ReceiveFn: func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
 				return ErrClosing
@@ -355,8 +384,12 @@ func TestClusterClient(t *testing.T) {
 		if v := c.DoMulti(context.Background()); len(v) != 0 {
 			t.Fatalf("received unexpected response %v", v)
 		}
-		for _, resp := range c.DoMulti(context.Background(), c.B().Get().Key("a").Build()) {
-			if v, err := resp.ToString(); err != nil || v != "Delegate" {
+		for i, resp := range c.DoMulti(
+			context.Background(),
+			c.B().Get().Key("a").Build(),
+			c.B().Get().Key("a").Build(),
+		) {
+			if v, err := resp.ToString(); err != nil || v != "Delegate"+strconv.Itoa(i) {
 				t.Fatalf("unexpected response %v %v", v, err)
 			}
 		}
