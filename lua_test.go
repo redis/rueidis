@@ -84,6 +84,7 @@ type client struct {
 	DoFn        func(ctx context.Context, cmd cmds.Completed) (resp RedisResult)
 	DoCacheFn   func(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp RedisResult)
 	DedicatedFn func(fn func(DedicatedClient) error) (err error)
+	DedicateFn  func() (DedicatedClient, func())
 	CloseFn     func()
 }
 
@@ -117,6 +118,13 @@ func (c *client) Dedicated(fn func(DedicatedClient) error) (err error) {
 		return c.DedicatedFn(fn)
 	}
 	return nil
+}
+
+func (c *client) Dedicate() (DedicatedClient, func()) {
+	if c.DedicateFn != nil {
+		return c.DedicateFn()
+	}
+	return nil, nil
 }
 
 func (c *client) Close() {

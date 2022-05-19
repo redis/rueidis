@@ -283,7 +283,10 @@ func TestClusterClient(t *testing.T) {
 				return []RedisResult{newResult(RedisMessage{typ: '+', string: "Delegate"}, nil)}
 			},
 			ReceiveFn: func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
-				return errors.New("delegated")
+				return ErrClosing
+			},
+			ErrorFn: func() error {
+				return ErrClosing
 			},
 		}
 		m.AcquireFn = func() wire {
@@ -308,13 +311,61 @@ func TestClusterClient(t *testing.T) {
 					t.Fatalf("unexpected response %v %v", v, err)
 				}
 			}
-			if err := c.Receive(context.Background(), c.B().Ssubscribe().Channel("a").Build(), func(msg PubSubMessage) {}); err == nil {
+			if err := c.Receive(context.Background(), c.B().Ssubscribe().Channel("a").Build(), func(msg PubSubMessage) {}); err != ErrClosing {
 				t.Fatalf("unexpected ret %v", err)
 			}
 			return nil
 		}); err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
+		if !stored {
+			t.Fatalf("Dedicated desn't put back the wire")
+		}
+	})
+
+	t.Run("Dedicated Delegate", func(t *testing.T) {
+		w := &mockWire{
+			DoFn: func(cmd cmds.Completed) RedisResult {
+				return newResult(RedisMessage{typ: '+', string: "Delegate"}, nil)
+			},
+			DoMultiFn: func(cmd ...cmds.Completed) []RedisResult {
+				return []RedisResult{newResult(RedisMessage{typ: '+', string: "Delegate"}, nil)}
+			},
+			ReceiveFn: func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
+				return ErrClosing
+			},
+			ErrorFn: func() error {
+				return ErrClosing
+			},
+		}
+		m.AcquireFn = func() wire {
+			return w
+		}
+		stored := false
+		m.StoreFn = func(ww wire) {
+			if ww != w {
+				t.Fatalf("received unexpected wire %v", ww)
+			}
+			stored = true
+		}
+		c, cancel := client.Dedicate()
+		if v, err := c.Do(context.Background(), c.B().Get().Key("a").Build()).ToString(); err != nil || v != "Delegate" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+		if v := c.DoMulti(context.Background()); len(v) != 0 {
+			t.Fatalf("received unexpected response %v", v)
+		}
+		for _, resp := range c.DoMulti(context.Background(), c.B().Get().Key("a").Build()) {
+			if v, err := resp.ToString(); err != nil || v != "Delegate" {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		}
+		if err := c.Receive(context.Background(), c.B().Ssubscribe().Channel("a").Build(), func(msg PubSubMessage) {}); err != ErrClosing {
+			t.Fatalf("unexpected ret %v", err)
+		}
+
+		cancel()
+
 		if !stored {
 			t.Fatalf("Dedicated desn't put back the wire")
 		}

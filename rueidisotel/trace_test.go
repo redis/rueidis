@@ -81,6 +81,35 @@ func TestWithClient(t *testing.T) {
 		return nil
 	})
 
+	c, cancel := client.Dedicate()
+	{
+		c.Do(ctx, c.B().Set().Key("key").Value("val").Build())
+		validateTrace(t, exp, "SET", codes.Ok)
+
+		c.DoMulti(
+			ctx,
+			c.B().Set().Key("key").Value("val").Build(),
+			c.B().Set().Key("key").Value("val").Build(),
+			c.B().Set().Key("key").Value("val").Build(),
+			c.B().Set().Key("key").Value("val").Build(),
+			c.B().Set().Key("key").Value("val").Build(),
+			c.B().Set().Key("ignored").Value("ignored").Build(),
+		)
+		validateTrace(t, exp, "SET SET SET SET SET", codes.Ok)
+
+		c.Do(ctx, cmds.NewCompleted([]string{"unknown", "command"}))
+		validateTrace(t, exp, "unknown", codes.Error)
+
+		c.DoMulti(ctx, cmds.NewCompleted([]string{"unknown", "command"}))
+		validateTrace(t, exp, "unknown", codes.Error)
+
+		ctx2, cancel := context.WithTimeout(ctx, time.Second/2)
+		c.Receive(ctx2, c.B().Subscribe().Channel("ch").Build(), func(msg rueidis.PubSubMessage) {})
+		cancel()
+		validateTrace(t, exp, "SUBSCRIBE", codes.Error)
+	}
+	cancel()
+
 	client.Do(ctx, cmds.NewCompleted([]string{"unknown", "command"}))
 	validateTrace(t, exp, "unknown", codes.Error)
 

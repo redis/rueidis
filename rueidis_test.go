@@ -289,6 +289,43 @@ func ExampleClient_dedicatedCAS() {
 	})
 }
 
+func ExampleClient_dedicateCAS() {
+	client, err := NewClient(ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
+	if err != nil {
+		panic(err)
+	}
+	defer client.Close()
+
+	c, cancel := client.Dedicate()
+	defer cancel()
+
+	ctx := context.Background()
+
+	// watch keys first
+	if err := c.Do(ctx, c.B().Watch().Key("k1", "k2").Build()).Error(); err != nil {
+		panic(err)
+	}
+	// perform read here
+	values, err := c.Do(ctx, c.B().Mget().Key("k1", "k2").Build()).ToArray()
+	if err != nil {
+		panic(err)
+	}
+	v1, _ := values[0].ToString()
+	v2, _ := values[1].ToString()
+	// perform write with MULTI EXEC
+	for _, resp := range c.DoMulti(
+		ctx,
+		c.B().Multi().Build(),
+		c.B().Set().Key("k1").Value(v1+"1").Build(),
+		c.B().Set().Key("k2").Value(v2+"2").Build(),
+		c.B().Exec().Build(),
+	) {
+		if err := resp.Error(); err != nil {
+			panic(err)
+		}
+	}
+}
+
 func ExampleNewClient_cluster() {
 	client, _ := NewClient(ClientOption{
 		InitAddress: []string{"127.0.0.1:7001", "127.0.0.1:7002", "127.0.0.1:7003"},

@@ -69,6 +69,11 @@ func (c *singleClient) Dedicated(fn func(DedicatedClient) error) (err error) {
 	return err
 }
 
+func (c *singleClient) Dedicate() (DedicatedClient, func()) {
+	wire := c.conn.Acquire()
+	return &dedicatedSingleClient{cmd: c.cmd, wire: wire}, func() { c.conn.Store(wire) }
+}
+
 func (c *singleClient) Close() {
 	atomic.StoreUint32(&c.stop, 1)
 	c.conn.Close()

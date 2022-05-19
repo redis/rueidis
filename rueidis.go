@@ -129,6 +129,10 @@ type Client interface {
 	// is not good for performance.
 	Dedicated(fn func(DedicatedClient) error) (err error)
 
+	// Dedicate does the same as Dedicated, but it exposes DedicatedClient directly
+	// and requires user to invoke cancel() manually to put connection back to the pool.
+	Dedicate() (client DedicatedClient, cancel func())
+
 	// Close will make further calls to the client be rejected with ErrClosing,
 	// and Close will wait until all pending calls finished.
 	Close()

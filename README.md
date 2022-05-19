@@ -245,6 +245,27 @@ c.Dedicated(func(client client.DedicatedClient) error {
     )
     return nil
 })
+
+```
+
+Or use Dedicate and invoke `cancel()` when finished to put the connection back to the pool.
+
+``` golang
+client, cancel := c.Dedicate()
+defer cancel()
+
+// watch keys first
+client.Do(ctx, client.B().Watch().Key("k1", "k2").Build())
+// perform read here
+client.Do(ctx, client.B().Mget().Key("k1", "k2").Build())
+// perform write with MULTI EXEC
+client.DoMulti(
+    ctx,
+    client.B().Multi().Build(),
+    client.B().Set().Key("k1").Value("1").Build(),
+    client.B().Set().Key("k2").Value("2").Build(),
+    client.B().Exec().Build(),
+)
 ```
 
 However, occupying a connection is not good in terms of throughput. It is better to use Lua script to perform

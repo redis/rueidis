@@ -90,6 +90,12 @@ func (c *sentinelClient) Dedicated(fn func(DedicatedClient) error) (err error) {
 	return err
 }
 
+func (c *sentinelClient) Dedicate() (DedicatedClient, func()) {
+	master := c.mConn.Load().(conn)
+	wire := master.Acquire()
+	return &dedicatedSingleClient{cmd: c.cmd, wire: wire}, func() { master.Store(wire) }
+}
+
 func (c *sentinelClient) Close() {
 	atomic.StoreUint32(&c.stop, 1)
 	c.mu.Lock()

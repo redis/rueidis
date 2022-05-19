@@ -91,6 +91,11 @@ func (o *otelclient) Dedicated(fn func(rueidis.DedicatedClient) error) (err erro
 	})
 }
 
+func (o *otelclient) Dedicate() (rueidis.DedicatedClient, func()) {
+	client, cancel := o.client.Dedicate()
+	return &dedicated{client: client, mAttrs: o.mAttrs, tAttrs: o.tAttrs}, cancel
+}
+
 func (o *otelclient) Receive(ctx context.Context, subscribe cmds.Completed, fn func(msg rueidis.PubSubMessage)) (err error) {
 	ctx, span := start(ctx, first(subscribe.Commands()), sum(subscribe.Commands()), o.tAttrs)
 	err = o.client.Receive(ctx, subscribe, fn)

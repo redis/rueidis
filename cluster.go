@@ -332,6 +332,11 @@ func (c *clusterClient) Dedicated(fn func(DedicatedClient) error) (err error) {
 	return err
 }
 
+func (c *clusterClient) Dedicate() (DedicatedClient, func()) {
+	dcc := &dedicatedClusterClient{cmd: c.cmd, client: c, slot: cmds.NoSlot}
+	return dcc, func() { dcc.release() }
+}
+
 func (c *clusterClient) Close() {
 	atomic.StoreUint32(&c.stop, 1)
 	c.mu.RLock()
@@ -385,6 +390,8 @@ func (c *dedicatedClusterClient) acquire() (wire wire, err error) {
 }
 
 func (c *dedicatedClusterClient) release() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	if c.wire != nil {
 		c.conn.Store(c.wire)
 	}
