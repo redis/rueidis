@@ -62,6 +62,7 @@ var _ = BeforeSuite(func() {
 
 var _ = AfterSuite(func() {
 	Expect(adapter.FlushDB(ctx).Err()).NotTo(HaveOccurred())
+	Expect(adapter.Quit(ctx).Err()).NotTo(HaveOccurred())
 	client.Close()
 })
 

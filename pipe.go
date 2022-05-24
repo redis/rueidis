@@ -152,6 +152,7 @@ func (p *pipe) _background() {
 	}()
 	{
 		exit(p._backgroundRead())
+		atomic.CompareAndSwapInt32(&p.state, 2, 3) // make write goroutine to exit
 		p._awake()
 	}
 	<-wait
@@ -196,7 +197,7 @@ func (p *pipe) _background() {
 			runtime.Gosched()
 		}
 	}
-	atomic.CompareAndSwapInt32(&p.state, 2, 3)
+	atomic.StoreInt32(&p.state, 4)
 }
 
 func (p *pipe) _backgroundWrite() (err error) {
@@ -206,7 +207,7 @@ func (p *pipe) _backgroundWrite() (err error) {
 		ch    chan RedisResult
 	)
 
-	for atomic.LoadInt32(&p.state) != 3 {
+	for atomic.LoadInt32(&p.state) < 3 {
 		if ones[0], multi, ch = p.queue.NextWriteCmd(); ch == nil {
 			if p.w.Buffered() == 0 {
 				err = p.Error()
@@ -675,7 +676,6 @@ func (p *pipe) Close() {
 		}
 	}
 	atomic.AddInt32(&p.waits, -1)
-	atomic.CompareAndSwapInt32(&p.state, 2, 3)
 }
 
 var dead *pipe
