@@ -17,11 +17,11 @@ import (
 func setupMux(wires []*mockWire) (conn *mux, checkClean func(t *testing.T)) {
 	var mu sync.Mutex
 	var count = -1
-	return newMux("", &ClientOption{}, (*mockWire)(nil), (*mockWire)(nil), func() (wire, error) {
+	return newMux("", &ClientOption{}, (*mockWire)(nil), (*mockWire)(nil), func() wire {
 			mu.Lock()
 			defer mu.Unlock()
 			count++
-			return wires[count], nil
+			return wires[count]
 		}), func(t *testing.T) {
 			if count != len(wires)-1 {
 				t.Fatalf("there is %d remaining unused wires", len(wires)-count-1)
@@ -104,10 +104,10 @@ func TestMuxIs(t *testing.T) {
 func TestMuxDialSuppress(t *testing.T) {
 	var wires, waits, done int64
 	blocking := make(chan struct{})
-	m := newMux("", &ClientOption{}, (*mockWire)(nil), (*mockWire)(nil), func() (wire, error) {
+	m := newMux("", &ClientOption{}, (*mockWire)(nil), (*mockWire)(nil), func() wire {
 		atomic.AddInt64(&wires, 1)
 		<-blocking
-		return &mockWire{}, nil
+		return &mockWire{}
 	})
 	for i := 0; i < 1000; i++ {
 		go func() {

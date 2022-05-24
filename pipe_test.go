@@ -1276,19 +1276,19 @@ func TestPingOnConnError(t *testing.T) {
 
 func TestDeadPipe(t *testing.T) {
 	ctx := context.Background()
-	if err := dead.Error(); err != ErrClosing {
+	if err := deadFn().Error(); err != ErrClosing {
 		t.Fatalf("unexpected err %v", err)
 	}
-	if err := dead.Do(ctx, cmds.NewCompleted(nil)).Error(); err != ErrClosing {
+	if err := deadFn().Do(ctx, cmds.NewCompleted(nil)).Error(); err != ErrClosing {
 		t.Fatalf("unexpected err %v", err)
 	}
-	if err := dead.DoMulti(ctx, cmds.NewCompleted(nil))[0].Error(); err != ErrClosing {
+	if err := deadFn().DoMulti(ctx, cmds.NewCompleted(nil))[0].Error(); err != ErrClosing {
 		t.Fatalf("unexpected err %v", err)
 	}
-	if err := dead.DoCache(ctx, cmds.Cacheable(cmds.NewCompleted(nil)), time.Second).Error(); err != ErrClosing {
+	if err := deadFn().DoCache(ctx, cmds.Cacheable(cmds.NewCompleted(nil)), time.Second).Error(); err != ErrClosing {
 		t.Fatalf("unexpected err %v", err)
 	}
-	if err := dead.Receive(ctx, cmds.NewCompleted(nil), func(message PubSubMessage) {}); err != ErrClosing {
+	if err := deadFn().Receive(ctx, cmds.NewCompleted(nil), func(message PubSubMessage) {}); err != ErrClosing {
 		t.Fatalf("unexpected err %v", err)
 	}
 }

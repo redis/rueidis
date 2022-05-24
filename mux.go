@@ -12,7 +12,7 @@ import (
 
 type connFn func(dst string, opt *ClientOption) conn
 type dialFn func(dst string, opt *ClientOption) (net.Conn, error)
-type wireFn func() (wire, error)
+type wireFn func() wire
 
 type singleconnect struct {
 	w wire
@@ -43,19 +43,24 @@ type mux struct {
 }
 
 func makeMux(dst string, option *ClientOption, dialFn dialFn) *mux {
-	return newMux(dst, option, (*pipe)(nil), dead, func() (w wire, err error) {
+	dead := deadFn()
+	return newMux(dst, option, (*pipe)(nil), dead, func() (w wire) {
 		conn, err := dialFn(dst, option)
 		if err == nil {
 			w, err = newPipe(conn, option)
 		}
-		return w, err
+		if err != nil {
+			dead.error.Store(&errs{error: err})
+			w = dead
+		}
+		return w
 	})
 }
 
 func newMux(dst string, option *ClientOption, init, dead wire, wireFn wireFn) *mux {
 	m := &mux{dst: dst, init: init, dead: dead, wireFn: wireFn}
 	m.wire.Store(init)
-	m.pool = newPool(option.BlockingPoolSize, dead, m._newPooledWire)
+	m.pool = newPool(option.BlockingPoolSize, dead, wireFn)
 	return m
 }
 
@@ -65,18 +70,9 @@ func (m *mux) Override(cc conn) {
 	}
 }
 
-func (m *mux) _newPooledWire() wire {
-	if w, err := m.wireFn(); err == nil {
-		return w
-	}
-	return m.dead
-}
-
 func (m *mux) pipe() wire {
-	if w, err := m._pipe(); err == nil {
-		return w
-	}
-	return m.dead
+	w, _ := m._pipe()
+	return w
 }
 
 func (m *mux) _pipe() (w wire, err error) {
@@ -98,8 +94,10 @@ func (m *mux) _pipe() (w wire, err error) {
 	}
 
 	if w = m.wire.Load().(wire); w == m.init {
-		if w, err = m.wireFn(); err == nil {
+		if w = m.wireFn(); w != m.dead {
 			m.wire.Store(w)
+		} else {
+			err = w.Error()
 		}
 	}
 

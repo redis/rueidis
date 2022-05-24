@@ -7,6 +7,8 @@ import (
 	"testing"
 )
 
+var dead = deadFn()
+
 //gocyclo:ignore
 func TestPool(t *testing.T) {
 	setup := func(size int) (*pool, *int32) {

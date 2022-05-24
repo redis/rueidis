@@ -168,7 +168,7 @@ func (p *pipe) _background() {
 	)
 
 	// clean up cache and free pending calls
-	p.cache.FreeAndClose(RedisMessage{typ: '-', string: ErrClosing.Error()})
+	p.cache.FreeAndClose(RedisMessage{typ: '-', string: p.Error().Error()})
 	for atomic.LoadInt32(&p.waits) != 0 {
 		if ones[0], multi, ch = p.queue.NextWriteCmd(); ch != nil {
 			if multi == nil {
@@ -678,11 +678,10 @@ func (p *pipe) Close() {
 	atomic.AddInt32(&p.waits, -1)
 }
 
-var dead *pipe
-
-func init() {
-	dead = &pipe{state: 3}
+func deadFn() *pipe {
+	dead := &pipe{state: 3}
 	dead.error.Store(errClosing)
+	return dead
 }
 
 const (
