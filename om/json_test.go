@@ -27,12 +27,12 @@ func TestNewJSONRepository(t *testing.T) {
 	repo := NewJSONRepository("json", JSONTestStruct{}, client)
 
 	t.Run("NewEntity", func(t *testing.T) {
-		e := repo.NewEntity().(*JSONTestStruct)
+		e := repo.NewEntity()
 		ulid.MustParse(e.Key)
 	})
 
 	t.Run("Save", func(t *testing.T) {
-		e := repo.NewEntity().(*JSONTestStruct)
+		e := repo.NewEntity()
 
 		// test save
 		e.Val = []byte("any")
@@ -55,11 +55,10 @@ func TestNewJSONRepository(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			ee := ei.(*JSONTestStruct)
-			if e == ee {
+			if e == ei {
 				t.Fatalf("e's address should not be the same as ee's")
 			}
-			if !reflect.DeepEqual(e, ee) {
+			if !reflect.DeepEqual(e, ei) {
 				t.Fatalf("e should be the same as ee")
 			}
 		})
@@ -69,7 +68,7 @@ func TestNewJSONRepository(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			ee := ei.(*JSONTestStruct)
+			ee := ei
 			if e == ee {
 				t.Fatalf("e's address should not be the same as ee's")
 			}
@@ -95,11 +94,10 @@ func TestNewJSONRepository(t *testing.T) {
 			if n != 1 {
 				t.Fatalf("unexpected total count %v", n)
 			}
-			items := records.([]*JSONTestStruct)
-			if len(items) != 1 {
+			if len(records) != 1 {
 				t.Fatalf("unexpected return count %v", n)
 			}
-			if !reflect.DeepEqual(e, items[0]) {
+			if !reflect.DeepEqual(e, records[0]) {
 				t.Fatalf("items[0] should be the same as e")
 			}
 			if err = repo.DropIndex(ctx); err != nil {

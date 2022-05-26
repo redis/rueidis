@@ -4,6 +4,7 @@ import (
 	"context"
 	"math/rand"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -13,11 +14,28 @@ import (
 type HashTestStruct struct {
 	Key string `redis:",key"`
 	F2  *bool
+	F2N *bool
 	F3  *string
+	F3N *string
 	F4  *int64
+	F4N *int64
 	Val []byte
 	Ver int64 `redis:",ver"`
 	F1  bool
+}
+
+type Unsupported struct {
+	Key string `redis:",key"`
+	Ver int64  `redis:",ver"`
+	F1  int32
+}
+
+func TestNewHashRepositoryPanic(t *testing.T) {
+	if v := recovered(func() {
+		NewHashRepository("hash", Unsupported{}, nil)
+	}); !strings.Contains(v, "should not contain unsupported field type") {
+		t.Fatalf("unexpeceted message %v", v)
+	}
 }
 
 //gocyclo:ignore
@@ -31,13 +49,13 @@ func TestNewHashRepository(t *testing.T) {
 	repo := NewHashRepository("hash", HashTestStruct{}, client)
 
 	t.Run("NewEntity", func(t *testing.T) {
-		e := repo.NewEntity().(*HashTestStruct)
+		e := repo.NewEntity()
 		ulid.MustParse(e.Key)
 	})
 
 	t.Run("Save", func(t *testing.T) {
 		f4 := rand.Int63()
-		e := repo.NewEntity().(*HashTestStruct)
+		e := repo.NewEntity()
 
 		// test save
 		e.Val = []byte("any")
@@ -64,11 +82,10 @@ func TestNewHashRepository(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			ee := ei.(*HashTestStruct)
-			if e == ee {
+			if e == ei {
 				t.Fatalf("e's address should not be the same as ee's")
 			}
-			if !reflect.DeepEqual(e, ee) {
+			if !reflect.DeepEqual(e, ei) {
 				t.Fatalf("e should be the same as ee")
 			}
 		})
@@ -78,11 +95,10 @@ func TestNewHashRepository(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			ee := ei.(*HashTestStruct)
-			if e == ee {
+			if e == ei {
 				t.Fatalf("e's address should not be the same as ee's")
 			}
-			if !reflect.DeepEqual(e, ee) {
+			if !reflect.DeepEqual(e, ei) {
 				t.Fatalf("ee should be the same as e")
 			}
 		})
@@ -104,11 +120,10 @@ func TestNewHashRepository(t *testing.T) {
 			if n != 1 {
 				t.Fatalf("unexpected total count %v", n)
 			}
-			items := records.([]*HashTestStruct)
-			if len(items) != 1 {
+			if len(records) != 1 {
 				t.Fatalf("unexpected return count %v", n)
 			}
-			if !reflect.DeepEqual(e, items[0]) {
+			if !reflect.DeepEqual(e, records[0]) {
 				t.Fatalf("items[0] should be the same as e")
 			}
 			if err = repo.DropIndex(ctx); err != nil {
