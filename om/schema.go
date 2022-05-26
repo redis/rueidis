@@ -89,12 +89,3 @@ func key(prefix, id string) (key string) {
 	sb.WriteString(id)
 	return sb.String()
 }
-
-func ptrValueOf(entity interface{}, typ reflect.Type) (reflect.Value, bool) {
-	val := reflect.ValueOf(entity)
-	if val.Kind() != reflect.Ptr {
-		return reflect.Value{}, false
-	}
-	val = val.Elem()
-	return val, val.Type() == typ
-}
