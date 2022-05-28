@@ -24,6 +24,9 @@ type wire interface {
 	Info() map[string]RedisMessage
 	Error() error
 	Close()
+
+	CleanSubscriptions()
+	SetPubSubHooks(hooks PubSubHooks) <-chan error
 }
 
 var _ wire = (*pipe)(nil)
@@ -49,6 +52,7 @@ type pipe struct {
 	info  map[string]RedisMessage
 	subs  *subs
 	psubs *subs
+	pshks atomic.Value
 }
 
 func newPipe(conn net.Conn, option *ClientOption) (p *pipe, err error) {
@@ -66,6 +70,7 @@ func newPipe(conn net.Conn, option *ClientOption) (p *pipe, err error) {
 		timeout: option.ConnWriteTimeout,
 		pinggap: option.Dialer.KeepAlive,
 	}
+	p.pshks.Store(emptypshks)
 
 	helloCmd := []string{"HELLO", "3"}
 	if option.Password != "" && option.Username == "" {
@@ -159,6 +164,10 @@ func (p *pipe) _background() {
 
 	p.subs.Close()
 	p.psubs.Close()
+	if old := p.pshks.Swap(emptypshks).(*pshks); old.close != nil {
+		old.close <- p.Error()
+		close(old.close)
+	}
 
 	var (
 		ones  = make([]cmds.Completed, 1)
@@ -343,8 +352,6 @@ func (p *pipe) handlePush(values []RedisMessage) {
 	// TODO: handle other push data
 	// tracking-redir-broken
 	// server-cpu-usage
-	// subscribe
-	// psubscribe
 	switch values[0].string {
 	case "invalidate":
 		if values[1].IsNil() {
@@ -354,16 +361,30 @@ func (p *pipe) handlePush(values []RedisMessage) {
 		}
 	case "message":
 		if len(values) >= 3 {
-			p.subs.Publish(values[1].string, PubSubMessage{Channel: values[1].string, Message: values[2].string})
+			m := PubSubMessage{Channel: values[1].string, Message: values[2].string}
+			p.subs.Publish(values[1].string, m)
+			p.pshks.Load().(*pshks).hooks.OnMessage(m)
 		}
 	case "pmessage":
 		if len(values) >= 4 {
-			p.psubs.Publish(values[1].string, PubSubMessage{Pattern: values[1].string, Channel: values[2].string, Message: values[3].string})
+			m := PubSubMessage{Pattern: values[1].string, Channel: values[2].string, Message: values[3].string}
+			p.psubs.Publish(values[1].string, m)
+			p.pshks.Load().(*pshks).hooks.OnMessage(m)
 		}
 	case "unsubscribe":
 		p.subs.Unsubscribe(values[1].string)
+		if len(values) >= 3 {
+			p.pshks.Load().(*pshks).hooks.OnSubscription(PubSubSubscription{Kind: values[0].string, Channel: values[1].string, Count: values[2].integer})
+		}
 	case "punsubscribe":
 		p.psubs.Unsubscribe(values[1].string)
+		if len(values) >= 3 {
+			p.pshks.Load().(*pshks).hooks.OnSubscription(PubSubSubscription{Kind: values[0].string, Channel: values[1].string, Count: values[2].integer})
+		}
+	case "subscribe", "psubscribe":
+		if len(values) >= 3 {
+			p.pshks.Load().(*pshks).hooks.OnSubscription(PubSubSubscription{Kind: values[0].string, Channel: values[1].string, Count: values[2].integer})
+		}
 	}
 }
 
@@ -407,6 +428,42 @@ func (p *pipe) Receive(ctx context.Context, subscribe cmds.Completed, fn func(me
 		}
 	}
 	return p.Error()
+}
+
+func (p *pipe) CleanSubscriptions() {
+	if atomic.LoadInt32(&p.state) == 1 {
+		if p.version >= 7 {
+			p.DoMulti(context.Background(), cmds.UnsubscribeCmd, cmds.PUnsubscribeCmd, cmds.SUnsubscribeCmd)
+		} else {
+			p.DoMulti(context.Background(), cmds.UnsubscribeCmd, cmds.PUnsubscribeCmd)
+		}
+	}
+}
+
+func (p *pipe) SetPubSubHooks(hooks PubSubHooks) <-chan error {
+	if hooks.isZero() {
+		if old := p.pshks.Swap(emptypshks).(*pshks); old.close != nil {
+			close(old.close)
+		}
+		return nil
+	}
+	if hooks.OnMessage == nil {
+		hooks.OnMessage = func(m PubSubMessage) {}
+	}
+	if hooks.OnSubscription == nil {
+		hooks.OnSubscription = func(s PubSubSubscription) {}
+	}
+	ch := make(chan error, 1)
+	if old := p.pshks.Swap(&pshks{hooks: hooks, close: ch}).(*pshks); old.close != nil {
+		close(old.close)
+	}
+	if err := p.Error(); err != nil {
+		if old := p.pshks.Swap(emptypshks).(*pshks); old.close != nil {
+			old.close <- err
+			close(old.close)
+		}
+	}
+	return ch
 }
 
 func (p *pipe) Info() map[string]RedisMessage {
@@ -680,9 +737,23 @@ func (p *pipe) Close() {
 	atomic.AddInt32(&p.waits, -1)
 }
 
+type pshks struct {
+	hooks PubSubHooks
+	close chan error
+}
+
+var emptypshks = &pshks{
+	hooks: PubSubHooks{
+		OnMessage:      func(m PubSubMessage) {},
+		OnSubscription: func(s PubSubSubscription) {},
+	},
+	close: nil,
+}
+
 func deadFn() *pipe {
 	dead := &pipe{state: 3}
 	dead.error.Store(errClosing)
+	dead.pshks.Store(emptypshks)
 	return dead
 }
 

@@ -35,6 +35,21 @@ var (
 	QuitCmd = Completed{
 		cs: &CommandSlice{s: []string{"QUIT"}},
 	}
+	// UnsubscribeCmd is predefined UNSUBSCRIBE
+	UnsubscribeCmd = Completed{
+		cs: &CommandSlice{s: []string{"UNSUBSCRIBE"}},
+		cf: noRetTag,
+	}
+	// PUnsubscribeCmd is predefined PUNSUBSCRIBE
+	PUnsubscribeCmd = Completed{
+		cs: &CommandSlice{s: []string{"PUNSUBSCRIBE"}},
+		cf: noRetTag,
+	}
+	// SUnsubscribeCmd is predefined SUNSUBSCRIBE
+	SUnsubscribeCmd = Completed{
+		cs: &CommandSlice{s: []string{"SUNSUBSCRIBE"}},
+		cf: noRetTag,
+	}
 	// PingCmd is predefined PING
 	PingCmd = Completed{
 		cs: &CommandSlice{s: []string{"PING"}},

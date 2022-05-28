@@ -180,6 +180,7 @@ func TestPoolError(t *testing.T) {
 		var count int32
 		return newPool(size, dead, func() wire {
 			w := &pipe{}
+			w.pshks.Store(emptypshks)
 			c := atomic.AddInt32(&count, 1)
 			if c%2 == 0 {
 				w.error.Store(&errs{error: errors.New("any")})

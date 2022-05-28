@@ -140,6 +140,10 @@ func (d *dedicated) Receive(ctx context.Context, subscribe cmds.Completed, fn fu
 	return
 }
 
+func (d *dedicated) SetPubSubHooks(hooks rueidis.PubSubHooks) <-chan error {
+	return d.client.SetPubSubHooks(hooks)
+}
+
 func first(s []string) string {
 	return s[0]
 }
