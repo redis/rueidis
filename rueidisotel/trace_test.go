@@ -52,6 +52,8 @@ func TestWithClient(t *testing.T) {
 	cancel()
 	validateTrace(t, exp, "SUBSCRIBE", codes.Error)
 
+	var hookCh <-chan error
+
 	client.Dedicated(func(client rueidis.DedicatedClient) error {
 		client.Do(ctx, client.B().Set().Key("key").Value("val").Build())
 		validateTrace(t, exp, "SET", codes.Ok)
@@ -78,8 +80,11 @@ func TestWithClient(t *testing.T) {
 		cancel()
 		validateTrace(t, exp, "SUBSCRIBE", codes.Error)
 
+		hookCh = client.SetPubSubHooks(rueidis.PubSubHooks{OnMessage: func(m rueidis.PubSubMessage) {}})
+
 		return nil
 	})
+	<-hookCh
 
 	c, cancel := client.Dedicate()
 	{
@@ -107,8 +112,11 @@ func TestWithClient(t *testing.T) {
 		c.Receive(ctx2, c.B().Subscribe().Channel("ch").Build(), func(msg rueidis.PubSubMessage) {})
 		cancel()
 		validateTrace(t, exp, "SUBSCRIBE", codes.Error)
+
+		hookCh = c.SetPubSubHooks(rueidis.PubSubHooks{OnMessage: func(m rueidis.PubSubMessage) {}})
 	}
 	cancel()
+	<-hookCh
 
 	client.Do(ctx, cmds.NewCompleted([]string{"unknown", "command"}))
 	validateTrace(t, exp, "unknown", codes.Error)

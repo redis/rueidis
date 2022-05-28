@@ -21,7 +21,13 @@ type singleconnect struct {
 }
 
 type conn interface {
-	wire
+	Do(ctx context.Context, cmd cmds.Completed) RedisResult
+	DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) RedisResult
+	DoMulti(ctx context.Context, multi ...cmds.Completed) []RedisResult
+	Receive(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error
+	Info() map[string]RedisMessage
+	Error() error
+	Close()
 	Dial() error
 	Override(conn)
 	Acquire() wire
@@ -203,6 +209,10 @@ func (m *mux) Acquire() wire {
 }
 
 func (m *mux) Store(w wire) {
+	w.SetPubSubHooks(PubSubHooks{})
+	if w.Pipelining() {
+		w.DoMulti(context.Background(), cmds.UnsubscribeCmd, cmds.PUnsubscribeCmd, cmds.SUnsubscribeCmd)
+	}
 	m.pool.Store(w)
 }
 

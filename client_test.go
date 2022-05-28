@@ -98,6 +98,14 @@ func (m *mockConn) Receive(ctx context.Context, subscribe cmds.Completed, hdl fu
 	return nil
 }
 
+func (m *mockConn) Pipelining() bool {
+	panic("not implemented")
+}
+
+func (m *mockConn) SetPubSubHooks(_ PubSubHooks) <-chan error {
+	panic("not implemented")
+}
+
 func (m *mockConn) Info() map[string]RedisMessage {
 	if m.InfoFn != nil {
 		return m.InfoFn()
@@ -234,6 +242,12 @@ func TestSingleClient(t *testing.T) {
 			ReceiveFn: func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
 				return ErrClosing
 			},
+			SetPubSubHooksFn: func(hooks PubSubHooks) <-chan error {
+				ch := make(chan error, 1)
+				ch <- ErrClosing
+				close(ch)
+				return ch
+			},
 			ErrorFn: func() error {
 				return ErrClosing
 			},
@@ -263,6 +277,9 @@ func TestSingleClient(t *testing.T) {
 			if err := c.Receive(context.Background(), c.B().Subscribe().Channel("a").Build(), func(msg PubSubMessage) {}); err != ErrClosing {
 				t.Fatalf("unexpected ret %v", err)
 			}
+			if err := <-c.SetPubSubHooks(PubSubHooks{}); err != ErrClosing {
+				t.Fatalf("unexpected ret %v", err)
+			}
 			return nil
 		}); err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -282,6 +299,12 @@ func TestSingleClient(t *testing.T) {
 			},
 			ReceiveFn: func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
 				return ErrClosing
+			},
+			SetPubSubHooksFn: func(hooks PubSubHooks) <-chan error {
+				ch := make(chan error, 1)
+				ch <- ErrClosing
+				close(ch)
+				return ch
 			},
 			ErrorFn: func() error {
 				return ErrClosing
@@ -311,6 +334,9 @@ func TestSingleClient(t *testing.T) {
 			}
 		}
 		if err := c.Receive(context.Background(), c.B().Subscribe().Channel("a").Build(), func(msg PubSubMessage) {}); err != ErrClosing {
+			t.Fatalf("unexpected ret %v", err)
+		}
+		if err := <-c.SetPubSubHooks(PubSubHooks{}); err != ErrClosing {
 			t.Fatalf("unexpected ret %v", err)
 		}
 

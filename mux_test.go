@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net"
 	"runtime"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -196,6 +197,46 @@ func TestMuxReuseWire(t *testing.T) {
 
 		response <- newResult(RedisMessage{typ: '+', string: "BLOCK_RESPONSE"}, nil)
 		<-blocking
+	})
+
+	t.Run("unsubscribe blocking pool", func(t *testing.T) {
+		ch := make(chan cmds.Completed)
+		m, checkClean := setupMux([]*mockWire{
+			{
+				// leave first wire for pipeline calls
+			},
+			{
+				PipeliningFn: func() bool {
+					return true
+				},
+				DoMultiFn: func(multi ...cmds.Completed) []RedisResult {
+					resp := make([]RedisResult, len(multi))
+					for i, cmd := range multi {
+						ch <- cmd
+						resp[i] = newErrResult(nil)
+					}
+					close(ch)
+					return resp
+				},
+			},
+		})
+		defer checkClean(t)
+		defer m.Close()
+
+		if err := m.Dial(); err != nil {
+			t.Fatalf("unexpected dial error %v", err)
+		}
+
+		go func() {
+			wire1 := m.Acquire()
+			m.Store(wire1)
+		}()
+
+		for cmd := range ch {
+			if !cmd.NoReply() || !strings.HasSuffix(strings.Join(cmd.Commands(), ""), "UNSUBSCRIBE") {
+				t.Fatalf("unexpected cmd %v", cmd)
+			}
+		}
 	})
 }
 
@@ -491,6 +532,9 @@ type mockWire struct {
 	InfoFn    func() map[string]RedisMessage
 	ErrorFn   func() error
 	CloseFn   func()
+
+	PipeliningFn     func() bool
+	SetPubSubHooksFn func(hooks PubSubHooks) <-chan error
 }
 
 func (m *mockWire) Do(ctx context.Context, cmd cmds.Completed) RedisResult {
@@ -517,6 +561,20 @@ func (m *mockWire) DoMulti(ctx context.Context, multi ...cmds.Completed) []Redis
 func (m *mockWire) Receive(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
 	if m.ReceiveFn != nil {
 		return m.ReceiveFn(ctx, subscribe, fn)
+	}
+	return nil
+}
+
+func (m *mockWire) Pipelining() bool {
+	if m.PipeliningFn != nil {
+		return m.PipeliningFn()
+	}
+	return false
+}
+
+func (m *mockWire) SetPubSubHooks(hooks PubSubHooks) <-chan error {
+	if m.SetPubSubHooksFn != nil {
+		return m.SetPubSubHooksFn(hooks)
 	}
 	return nil
 }

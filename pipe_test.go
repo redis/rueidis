@@ -887,6 +887,196 @@ func TestPubSub(t *testing.T) {
 	})
 }
 
+//gocyclo:ignore
+func TestPubSubHooks(t *testing.T) {
+	builder := cmds.NewBuilder(cmds.NoSlot)
+
+	t.Run("Empty Hooks", func(t *testing.T) {
+		p, _, cancel, _ := setup(t, ClientOption{})
+		defer cancel()
+		if ch := p.SetPubSubHooks(PubSubHooks{}); ch != nil {
+			t.Fatalf("unexpected ch %v", ch)
+		}
+	})
+
+	t.Run("Swap Hooks", func(t *testing.T) {
+		p, _, cancel, _ := setup(t, ClientOption{})
+		defer cancel()
+		ch1 := p.SetPubSubHooks(PubSubHooks{
+			OnMessage: func(m PubSubMessage) {},
+		})
+		ch2 := p.SetPubSubHooks(PubSubHooks{
+			OnSubscription: func(s PubSubSubscription) {},
+		})
+		if err := <-ch1; err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		ch3 := p.SetPubSubHooks(PubSubHooks{})
+		if err := <-ch2; err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		if ch3 != nil {
+			t.Fatalf("unexpected ch %v", ch3)
+		}
+	})
+
+	t.Run("PubSubHooks OnSubscription", func(t *testing.T) {
+		ctx := context.Background()
+		p, mock, cancel, _ := setup(t, ClientOption{})
+
+		var s1, s2, u1, u2 bool
+
+		ch := p.SetPubSubHooks(PubSubHooks{
+			OnSubscription: func(s PubSubSubscription) {
+				if s.Kind == "subscribe" && s.Channel == "1" && s.Count == 1 {
+					s1 = true
+				}
+				if s.Kind == "psubscribe" && s.Channel == "2" && s.Count == 2 {
+					s2 = true
+				}
+				if s.Kind == "unsubscribe" && s.Channel == "1" && s.Count == 1 {
+					u1 = true
+				}
+				if s.Kind == "punsubscribe" && s.Channel == "2" && s.Count == 2 {
+					u2 = true
+				}
+			},
+		})
+
+		activate1 := builder.Subscribe().Channel("1").Build()
+		activate2 := builder.Psubscribe().Pattern("2").Build()
+		go func() {
+			mock.Expect(activate1.Commands()...).Expect(activate2.Commands()...).Reply(
+				RedisMessage{typ: '>', values: []RedisMessage{
+					{typ: '+', string: "subscribe"},
+					{typ: '+', string: "1"},
+					{typ: ':', integer: 1},
+				}},
+				RedisMessage{typ: '>', values: []RedisMessage{
+					{typ: '+', string: "psubscribe"},
+					{typ: '+', string: "2"},
+					{typ: ':', integer: 2},
+				}},
+				RedisMessage{typ: '>', values: []RedisMessage{
+					{typ: '+', string: "message"},
+					{typ: '+', string: "1"},
+					{typ: '+', string: "11"},
+				}},
+				RedisMessage{typ: '>', values: []RedisMessage{
+					{typ: '+', string: "pmessage"},
+					{typ: '+', string: "2"},
+					{typ: '+', string: "22"},
+					{typ: '+', string: "222"},
+				}},
+				RedisMessage{typ: '>', values: []RedisMessage{
+					{typ: '+', string: "unsubscribe"},
+					{typ: '+', string: "1"},
+					{typ: ':', integer: 1},
+				}},
+				RedisMessage{typ: '>', values: []RedisMessage{
+					{typ: '+', string: "punsubscribe"},
+					{typ: '+', string: "2"},
+					{typ: ':', integer: 2},
+				}},
+			)
+			cancel()
+		}()
+
+		for _, r := range p.DoMulti(ctx, activate1, activate2) {
+			if err := r.Error(); err != nil {
+				t.Fatalf("unexpected err %v", err)
+			}
+		}
+		if err := <-ch; err != ErrClosing {
+			t.Fatalf("unexpected err %v", err)
+		}
+		if !s1 {
+			t.Fatalf("unexpecetd s1")
+		}
+		if !s2 {
+			t.Fatalf("unexpecetd s2")
+		}
+		if !u1 {
+			t.Fatalf("unexpecetd u1")
+		}
+		if !u2 {
+			t.Fatalf("unexpecetd u2")
+		}
+	})
+
+	t.Run("PubSubHooks OnMessage", func(t *testing.T) {
+		ctx := context.Background()
+		p, mock, cancel, _ := setup(t, ClientOption{})
+
+		var m1, m2 bool
+
+		ch := p.SetPubSubHooks(PubSubHooks{
+			OnMessage: func(m PubSubMessage) {
+				if m.Channel == "1" && m.Message == "11" {
+					m1 = true
+				}
+				if m.Pattern == "2" && m.Channel == "22" && m.Message == "222" {
+					m2 = true
+				}
+			},
+		})
+
+		activate1 := builder.Subscribe().Channel("1").Build()
+		activate2 := builder.Psubscribe().Pattern("2").Build()
+		go func() {
+			mock.Expect(activate1.Commands()...).Expect(activate2.Commands()...).Reply(
+				RedisMessage{typ: '>', values: []RedisMessage{
+					{typ: '+', string: "subscribe"},
+					{typ: '+', string: "1"},
+					{typ: ':', integer: 1},
+				}},
+				RedisMessage{typ: '>', values: []RedisMessage{
+					{typ: '+', string: "psubscribe"},
+					{typ: '+', string: "2"},
+					{typ: ':', integer: 2},
+				}},
+				RedisMessage{typ: '>', values: []RedisMessage{
+					{typ: '+', string: "message"},
+					{typ: '+', string: "1"},
+					{typ: '+', string: "11"},
+				}},
+				RedisMessage{typ: '>', values: []RedisMessage{
+					{typ: '+', string: "pmessage"},
+					{typ: '+', string: "2"},
+					{typ: '+', string: "22"},
+					{typ: '+', string: "222"},
+				}},
+				RedisMessage{typ: '>', values: []RedisMessage{
+					{typ: '+', string: "unsubscribe"},
+					{typ: '+', string: "1"},
+					{typ: ':', integer: 1},
+				}},
+				RedisMessage{typ: '>', values: []RedisMessage{
+					{typ: '+', string: "punsubscribe"},
+					{typ: '+', string: "2"},
+					{typ: ':', integer: 2},
+				}},
+			)
+			cancel()
+		}()
+
+		for _, r := range p.DoMulti(ctx, activate1, activate2) {
+			if err := r.Error(); err != nil {
+				t.Fatalf("unexpected err %v", err)
+			}
+		}
+		if err := <-ch; err != ErrClosing {
+			t.Fatalf("unexpected err %v", err)
+		}
+		if !m1 {
+			t.Fatalf("unexpecetd m1")
+		}
+		if !m2 {
+			t.Fatalf("unexpecetd m2")
+		}
+	})
+}
+
 func TestExitOnWriteError(t *testing.T) {
 	p, _, _, closeConn := setup(t, ClientOption{})
 
@@ -1262,6 +1452,17 @@ func TestOngoingWriteTimeoutInPipelineMode_DoMulti(t *testing.T) {
 	p.Close()
 }
 
+func TestPipelineStatus(t *testing.T) {
+	p, _, cancel, _ := setup(t, ClientOption{ConnWriteTimeout: time.Second / 2, Dialer: net.Dialer{KeepAlive: time.Second / 3}})
+	defer cancel()
+
+	p.background()
+
+	if !p.Pipelining() {
+		t.Fatalf("unexpected pipelining")
+	}
+}
+
 func TestPingOnConnError(t *testing.T) {
 	p, mock, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: 3 * time.Second, Dialer: net.Dialer{KeepAlive: time.Second / 3}})
 	p.background()
@@ -1290,5 +1491,8 @@ func TestDeadPipe(t *testing.T) {
 	}
 	if err := deadFn().Receive(ctx, cmds.NewCompleted(nil), func(message PubSubMessage) {}); err != ErrClosing {
 		t.Fatalf("unexpected err %v", err)
+	}
+	if deadFn().Pipelining() {
+		t.Fatalf("unexpected pipelining")
 	}
 }

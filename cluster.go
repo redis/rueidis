@@ -358,6 +358,7 @@ type dedicatedClusterClient struct {
 	client *clusterClient
 	conn   conn
 	wire   wire
+	pshks  *pshks
 
 	mu   sync.Mutex
 	cmd  cmds.Builder
@@ -379,15 +380,34 @@ func (c *dedicatedClusterClient) acquire(slot uint16) (wire wire, err error) {
 		return c.wire, nil
 	}
 	if c.conn, err = c.client.pick(c.slot); err != nil {
+		if p := c.pshks; p != nil {
+			c.pshks = nil
+			p.close <- err
+			close(p.close)
+		}
 		return nil, err
 	}
 	c.wire = c.conn.Acquire()
+	if p := c.pshks; p != nil {
+		c.pshks = nil
+		ch := c.wire.SetPubSubHooks(p.hooks)
+		go func() {
+			for e := range ch {
+				p.close <- e
+			}
+			close(p.close)
+		}()
+	}
 	return c.wire, nil
 }
 
 func (c *dedicatedClusterClient) release() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	if p := c.pshks; p != nil {
+		c.pshks = nil
+		close(p.close)
+	}
 	if c.wire != nil {
 		c.conn.Store(c.wire)
 	}
@@ -449,6 +469,24 @@ retry:
 	}
 	cmds.Put(subscribe.CommandSlice())
 	return err
+}
+
+func (c *dedicatedClusterClient) SetPubSubHooks(hooks PubSubHooks) <-chan error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if p := c.pshks; p != nil {
+		c.pshks = nil
+		close(p.close)
+	}
+	if c.wire != nil {
+		return c.wire.SetPubSubHooks(hooks)
+	}
+	if hooks.isZero() {
+		return nil
+	}
+	ch := make(chan error, 1)
+	c.pshks = &pshks{hooks: hooks, close: ch}
+	return ch
 }
 
 const (
