@@ -55,10 +55,11 @@ func (c *clusterClient) init() error {
 		go func(addr string, cc conn) {
 			if err := cc.Dial(); err == nil {
 				c.mu.Lock()
-				if prev, ok := c.conns[addr]; ok {
-					go prev.Close()
+				if _, ok := c.conns[addr]; ok {
+					go cc.Close() // abort the new connection instead of closing the old one which may already been used
+				} else {
+					c.conns[addr] = cc
 				}
-				c.conns[addr] = cc
 				c.mu.Unlock()
 				results <- nil
 			} else {
