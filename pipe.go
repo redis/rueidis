@@ -665,13 +665,15 @@ func (p *pipe) Error() error {
 
 func (p *pipe) Close() {
 	p.error.CompareAndSwap(nil, errClosing)
-	atomic.AddInt32(&p.waits, 1)
+	waits := atomic.AddInt32(&p.waits, 1)
 	stopping1 := atomic.CompareAndSwapInt32(&p.state, 0, 2)
 	stopping2 := atomic.CompareAndSwapInt32(&p.state, 1, 2)
 	if p.queue != nil {
-		p.background()
-		p._awake()
+		if stopping1 && waits == 1 { // make sure there is no sync read
+			p.background()
+		}
 		if stopping1 || stopping2 {
+			p._awake()
 			<-p.queue.PutOne(cmds.QuitCmd)
 		}
 	}
