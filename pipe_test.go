@@ -263,6 +263,35 @@ func TestWriteMultiPipelineFlush(t *testing.T) {
 	}
 }
 
+func TestNoReplyExceedRingSize(t *testing.T) {
+	p, mock, cancel, _ := setup(t, ClientOption{})
+	defer cancel()
+
+	times := ringSize * 3
+	wait := make(chan struct{})
+	go func() {
+		for i := 0; i < times; i++ {
+			if err := p.Do(context.Background(), cmds.UnsubscribeCmd).Error(); err != nil {
+				t.Fatalf("unexpected err %v", err)
+			}
+		}
+		close(wait)
+	}()
+
+	for i := 0; i < times; i++ {
+		mock.Expect("UNSUBSCRIBE").Reply(RedisMessage{typ: '>', values: []RedisMessage{
+			{typ: '+', string: "unsubscribe"},
+			{typ: '+', string: "1"},
+			{typ: ':', integer: 0},
+		}}).Reply(RedisMessage{typ: '>', values: []RedisMessage{
+			{typ: '+', string: "unsubscribe"},
+			{typ: '+', string: "2"},
+			{typ: ':', integer: 0},
+		}})
+	}
+	<-wait
+}
+
 func TestPanicOnProtocolBug(t *testing.T) {
 	p, mock, _, _ := setup(t, ClientOption{})
 

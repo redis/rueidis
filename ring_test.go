@@ -109,4 +109,44 @@ func TestRing(t *testing.T) {
 			cond.Signal()
 		}
 	})
+
+	t.Run("NextWriteCmd & CleanNoReply No Effect", func(t *testing.T) {
+		ring := newRing()
+		ring.CleanNoReply() // no effect
+		ring.PutOne(cmds.NewCompleted([]string{"0"}))
+		if one, _, _ := ring.NextWriteCmd(); len(one.Commands()) == 0 || one.Commands()[0] != "0" {
+			t.Fatalf("NextWriteCmd should returns next cmd")
+		}
+		ring.CleanNoReply() // no effect
+		if one, _, ch, cond := ring.NextResultCh(); len(one.Commands()) == 0 || one.Commands()[0] != "0" || ch == nil {
+			t.Fatalf("NextResultCh should returns next cmd after NextWriteCmd")
+		} else {
+			cond.L.Unlock()
+			cond.Signal()
+		}
+	})
+
+	t.Run("NextWriteCmd & CleanNoReply One", func(t *testing.T) {
+		ring := newRing()
+		ring.PutOne(cmds.UnsubscribeCmd)
+		if one, _, _ := ring.NextWriteCmd(); len(one.Commands()) == 0 || one.Commands()[0] != "UNSUBSCRIBE" {
+			t.Fatalf("NextWriteCmd should returns next cmd")
+		}
+		ring.CleanNoReply()
+		if _, _, ch, _ := ring.NextResultCh(); ch != nil {
+			t.Fatalf("NextResultCh should returns nothing after CleanNoReply")
+		}
+	})
+
+	t.Run("NextWriteCmd & CleanNoReply Multi", func(t *testing.T) {
+		ring := newRing()
+		ring.PutMulti([]cmds.Completed{cmds.UnsubscribeCmd, cmds.SUnsubscribeCmd})
+		if _, multi, _ := ring.NextWriteCmd(); len(multi) != 2 || multi[0].Commands()[0] != "UNSUBSCRIBE" || multi[1].Commands()[0] != "SUNSUBSCRIBE" {
+			t.Fatalf("NextWriteCmd should returns next cmd")
+		}
+		ring.CleanNoReply()
+		if _, _, ch, _ := ring.NextResultCh(); ch != nil {
+			t.Fatalf("NextResultCh should returns nothing after CleanNoReply")
+		}
+	})
 }

@@ -376,15 +376,18 @@ func (p *pipe) handlePush(values []RedisMessage) {
 		if len(values) >= 3 {
 			p.pshks.Load().(*pshks).hooks.OnSubscription(PubSubSubscription{Kind: values[0].string, Channel: values[1].string, Count: values[2].integer})
 		}
+		p.queue.CleanNoReply()
 	case "punsubscribe":
 		p.psubs.Unsubscribe(values[1].string)
 		if len(values) >= 3 {
 			p.pshks.Load().(*pshks).hooks.OnSubscription(PubSubSubscription{Kind: values[0].string, Channel: values[1].string, Count: values[2].integer})
 		}
+		p.queue.CleanNoReply()
 	case "subscribe", "psubscribe", "ssubscribe":
 		if len(values) >= 3 {
 			p.pshks.Load().(*pshks).hooks.OnSubscription(PubSubSubscription{Kind: values[0].string, Channel: values[1].string, Count: values[2].integer})
 		}
+		p.queue.CleanNoReply()
 	}
 }
 
