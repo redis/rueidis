@@ -371,7 +371,7 @@ func (p *pipe) handlePush(values []RedisMessage) {
 			p.psubs.Publish(values[1].string, m)
 			p.pshks.Load().(*pshks).hooks.OnMessage(m)
 		}
-	case "unsubscribe":
+	case "unsubscribe", "sunsubscribe":
 		p.subs.Unsubscribe(values[1].string)
 		if len(values) >= 3 {
 			p.pshks.Load().(*pshks).hooks.OnSubscription(PubSubSubscription{Kind: values[0].string, Channel: values[1].string, Count: values[2].integer})
@@ -381,7 +381,7 @@ func (p *pipe) handlePush(values []RedisMessage) {
 		if len(values) >= 3 {
 			p.pshks.Load().(*pshks).hooks.OnSubscription(PubSubSubscription{Kind: values[0].string, Channel: values[1].string, Count: values[2].integer})
 		}
-	case "subscribe", "psubscribe":
+	case "subscribe", "psubscribe", "ssubscribe":
 		if len(values) >= 3 {
 			p.pshks.Load().(*pshks).hooks.OnSubscription(PubSubSubscription{Kind: values[0].string, Channel: values[1].string, Count: values[2].integer})
 		}
