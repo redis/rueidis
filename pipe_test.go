@@ -1481,15 +1481,25 @@ func TestOngoingWriteTimeoutInPipelineMode_DoMulti(t *testing.T) {
 	p.Close()
 }
 
-func TestPipelineStatus(t *testing.T) {
-	p, _, cancel, _ := setup(t, ClientOption{ConnWriteTimeout: time.Second / 2, Dialer: net.Dialer{KeepAlive: time.Second / 3}})
+func TestPipe_CleanSubscriptions_6(t *testing.T) {
+	p, mock, cancel, _ := setup(t, ClientOption{ConnWriteTimeout: time.Second / 2, Dialer: net.Dialer{KeepAlive: time.Second / 3}})
 	defer cancel()
-
 	p.background()
+	go func() {
+		p.CleanSubscriptions()
+	}()
+	mock.Expect("UNSUBSCRIBE").Expect("PUNSUBSCRIBE")
+}
 
-	if !p.Pipelining() {
-		t.Fatalf("unexpected pipelining")
-	}
+func TestPipe_CleanSubscriptions_7(t *testing.T) {
+	p, mock, cancel, _ := setup(t, ClientOption{ConnWriteTimeout: time.Second / 2, Dialer: net.Dialer{KeepAlive: time.Second / 3}})
+	p.version = 7
+	defer cancel()
+	p.background()
+	go func() {
+		p.CleanSubscriptions()
+	}()
+	mock.Expect("UNSUBSCRIBE").Expect("PUNSUBSCRIBE").Expect("SUNSUBSCRIBE")
 }
 
 func TestPingOnConnError(t *testing.T) {
@@ -1520,8 +1530,5 @@ func TestDeadPipe(t *testing.T) {
 	}
 	if err := deadFn().Receive(ctx, cmds.NewCompleted(nil), func(message PubSubMessage) {}); err != ErrClosing {
 		t.Fatalf("unexpected err %v", err)
-	}
-	if deadFn().Pipelining() {
-		t.Fatalf("unexpected pipelining")
 	}
 }

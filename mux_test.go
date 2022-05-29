@@ -6,7 +6,6 @@ import (
 	"errors"
 	"net"
 	"runtime"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -200,23 +199,14 @@ func TestMuxReuseWire(t *testing.T) {
 	})
 
 	t.Run("unsubscribe blocking pool", func(t *testing.T) {
-		ch := make(chan cmds.Completed)
+		cleaned := false
 		m, checkClean := setupMux([]*mockWire{
 			{
 				// leave first wire for pipeline calls
 			},
 			{
-				PipeliningFn: func() bool {
-					return true
-				},
-				DoMultiFn: func(multi ...cmds.Completed) []RedisResult {
-					resp := make([]RedisResult, len(multi))
-					for i, cmd := range multi {
-						ch <- cmd
-						resp[i] = newErrResult(nil)
-					}
-					close(ch)
-					return resp
+				CleanSubscriptionsFn: func() {
+					cleaned = true
 				},
 			},
 		})
@@ -227,15 +217,11 @@ func TestMuxReuseWire(t *testing.T) {
 			t.Fatalf("unexpected dial error %v", err)
 		}
 
-		go func() {
-			wire1 := m.Acquire()
-			m.Store(wire1)
-		}()
+		wire1 := m.Acquire()
+		m.Store(wire1)
 
-		for cmd := range ch {
-			if !cmd.NoReply() || !strings.HasSuffix(strings.Join(cmd.Commands(), ""), "UNSUBSCRIBE") {
-				t.Fatalf("unexpected cmd %v", cmd)
-			}
+		if !cleaned {
+			t.Fatalf("CleanSubscriptions not called")
 		}
 	})
 }
@@ -533,8 +519,8 @@ type mockWire struct {
 	ErrorFn   func() error
 	CloseFn   func()
 
-	PipeliningFn     func() bool
-	SetPubSubHooksFn func(hooks PubSubHooks) <-chan error
+	CleanSubscriptionsFn func()
+	SetPubSubHooksFn     func(hooks PubSubHooks) <-chan error
 }
 
 func (m *mockWire) Do(ctx context.Context, cmd cmds.Completed) RedisResult {
@@ -565,11 +551,11 @@ func (m *mockWire) Receive(ctx context.Context, subscribe cmds.Completed, fn fun
 	return nil
 }
 
-func (m *mockWire) Pipelining() bool {
-	if m.PipeliningFn != nil {
-		return m.PipeliningFn()
+func (m *mockWire) CleanSubscriptions() {
+	if m.CleanSubscriptionsFn != nil {
+		m.CleanSubscriptionsFn()
 	}
-	return false
+	return
 }
 
 func (m *mockWire) SetPubSubHooks(hooks PubSubHooks) <-chan error {

@@ -210,9 +210,7 @@ func (m *mux) Acquire() wire {
 
 func (m *mux) Store(w wire) {
 	w.SetPubSubHooks(PubSubHooks{})
-	if w.Pipelining() {
-		w.DoMulti(context.Background(), cmds.UnsubscribeCmd, cmds.PUnsubscribeCmd, cmds.SUnsubscribeCmd)
-	}
+	w.CleanSubscriptions()
 	m.pool.Store(w)
 }
 

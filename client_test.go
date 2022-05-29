@@ -98,7 +98,7 @@ func (m *mockConn) Receive(ctx context.Context, subscribe cmds.Completed, hdl fu
 	return nil
 }
 
-func (m *mockConn) Pipelining() bool {
+func (m *mockConn) CleanSubscriptions() {
 	panic("not implemented")
 }
 

@@ -25,7 +25,7 @@ type wire interface {
 	Error() error
 	Close()
 
-	Pipelining() bool
+	CleanSubscriptions()
 	SetPubSubHooks(hooks PubSubHooks) <-chan error
 }
 
@@ -433,8 +433,14 @@ func (p *pipe) Receive(ctx context.Context, subscribe cmds.Completed, fn func(me
 	return p.Error()
 }
 
-func (p *pipe) Pipelining() bool {
-	return atomic.LoadInt32(&p.state) == 1
+func (p *pipe) CleanSubscriptions() {
+	if atomic.LoadInt32(&p.state) == 1 {
+		if p.version >= 7 {
+			p.DoMulti(context.Background(), cmds.UnsubscribeCmd, cmds.PUnsubscribeCmd, cmds.SUnsubscribeCmd)
+		} else {
+			p.DoMulti(context.Background(), cmds.UnsubscribeCmd, cmds.PUnsubscribeCmd)
+		}
+	}
 }
 
 func (p *pipe) SetPubSubHooks(hooks PubSubHooks) <-chan error {
