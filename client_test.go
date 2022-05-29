@@ -232,6 +232,7 @@ func TestSingleClient(t *testing.T) {
 	})
 
 	t.Run("Dedicated Delegate", func(t *testing.T) {
+		closed := false
 		w := &mockWire{
 			DoFn: func(cmd cmds.Completed) RedisResult {
 				return newResult(RedisMessage{typ: '+', string: "Delegate"}, nil)
@@ -250,6 +251,9 @@ func TestSingleClient(t *testing.T) {
 			},
 			ErrorFn: func() error {
 				return ErrClosing
+			},
+			CloseFn: func() {
+				closed = true
 			},
 		}
 		m.AcquireFn = func() wire {
@@ -280,6 +284,7 @@ func TestSingleClient(t *testing.T) {
 			if err := <-c.SetPubSubHooks(PubSubHooks{}); err != ErrClosing {
 				t.Fatalf("unexpected ret %v", err)
 			}
+			c.Close()
 			return nil
 		}); err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -287,9 +292,13 @@ func TestSingleClient(t *testing.T) {
 		if !stored {
 			t.Fatalf("Dedicated desn't put back the wire")
 		}
+		if !closed {
+			t.Fatalf("Dedicated desn't delegate Close")
+		}
 	})
 
 	t.Run("Dedicate Delegate", func(t *testing.T) {
+		closed := false
 		w := &mockWire{
 			DoFn: func(cmd cmds.Completed) RedisResult {
 				return newResult(RedisMessage{typ: '+', string: "Delegate"}, nil)
@@ -308,6 +317,9 @@ func TestSingleClient(t *testing.T) {
 			},
 			ErrorFn: func() error {
 				return ErrClosing
+			},
+			CloseFn: func() {
+				closed = true
 			},
 		}
 		m.AcquireFn = func() wire {
@@ -339,11 +351,15 @@ func TestSingleClient(t *testing.T) {
 		if err := <-c.SetPubSubHooks(PubSubHooks{}); err != ErrClosing {
 			t.Fatalf("unexpected ret %v", err)
 		}
+		c.Close()
 
 		cancel()
 
 		if !stored {
 			t.Fatalf("Dedicated desn't put back the wire")
+		}
+		if !closed {
+			t.Fatalf("Dedicated desn't delegate Close")
 		}
 	})
 }

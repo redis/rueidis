@@ -162,6 +162,8 @@ type DedicatedClient interface {
 	// and has at most one error describing the reason why the hooks will not be called anymore.
 	// Users can use the error channel to detect disconnection.
 	SetPubSubHooks(hooks PubSubHooks) <-chan error
+	// Close closes the dedicated connection and prevent the connection be put back into the pool.
+	Close()
 }
 
 // NewClient uses ClientOption to initialize the Client for both cluster client and single client.

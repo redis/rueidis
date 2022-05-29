@@ -82,6 +82,8 @@ func TestWithClient(t *testing.T) {
 
 		hookCh = client.SetPubSubHooks(rueidis.PubSubHooks{OnMessage: func(m rueidis.PubSubMessage) {}})
 
+		client.Close()
+
 		return nil
 	})
 	<-hookCh
@@ -114,6 +116,8 @@ func TestWithClient(t *testing.T) {
 		validateTrace(t, exp, "SUBSCRIBE", codes.Error)
 
 		hookCh = c.SetPubSubHooks(rueidis.PubSubHooks{OnMessage: func(m rueidis.PubSubMessage) {}})
+
+		c.Close()
 	}
 	cancel()
 	<-hookCh

@@ -489,6 +489,14 @@ func (c *dedicatedClusterClient) SetPubSubHooks(hooks PubSubHooks) <-chan error 
 	return ch
 }
 
+func (c *dedicatedClusterClient) Close() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.wire != nil {
+		c.wire.Close()
+	}
+}
+
 const (
 	panicMsgCxSlot = "cross slot command in Dedicated is prohibited"
 	panicMsgNoSlot = "the first command should contain the slot key"
