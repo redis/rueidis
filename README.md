@@ -222,6 +222,27 @@ While the `Client.Receive()` call is blocking, the `Client` is still able to acc
 and they are sharing the same tcp connection. If your message handler may take some time to complete, it is recommended
 to use the `Client.Receive()` inside a `Client.Dedicated()` for not blocking other concurrent requests.
 
+### Alternative PubSub Hooks
+
+The `Client.Receive()` requires users to provide a subscription command in advance.
+There is an alternative `DedicatedClient.SetPubSubHooks()` allows users to subscribe/unsubscribe channels later.
+
+```golang
+client, cancel := c.Dedicate()
+defer cancel()
+
+wait := client.SetPubSubHooks(rueidis.PubSubHooks{
+	OnMessage: func(m rueidis.PubSubMessage) {
+		// Handle message. This callback will be called sequentially, but in another goroutine.
+	}
+})
+client.Do(ctx, client.B().Subscribe().Channel("ch").Build())
+err := <-wait // disconnected with err
+```
+
+If the hooks are not nil, the above `wait` channel is guaranteed to be close when the hooks will not be called anymore,
+and produce at most one error describing the reason. Users can use this channel to detect disconnection.
+
 ## CAS Pattern
 
 To do a CAS operation (WATCH + MULTI + EXEC), a dedicated connection should be used, because there should be no
