@@ -197,6 +197,33 @@ func TestMuxReuseWire(t *testing.T) {
 		response <- newResult(RedisMessage{typ: '+', string: "BLOCK_RESPONSE"}, nil)
 		<-blocking
 	})
+
+	t.Run("unsubscribe blocking pool", func(t *testing.T) {
+		cleaned := false
+		m, checkClean := setupMux([]*mockWire{
+			{
+				// leave first wire for pipeline calls
+			},
+			{
+				CleanSubscriptionsFn: func() {
+					cleaned = true
+				},
+			},
+		})
+		defer checkClean(t)
+		defer m.Close()
+
+		if err := m.Dial(); err != nil {
+			t.Fatalf("unexpected dial error %v", err)
+		}
+
+		wire1 := m.Acquire()
+		m.Store(wire1)
+
+		if !cleaned {
+			t.Fatalf("CleanSubscriptions not called")
+		}
+	})
 }
 
 //gocyclo:ignore
@@ -491,6 +518,9 @@ type mockWire struct {
 	InfoFn    func() map[string]RedisMessage
 	ErrorFn   func() error
 	CloseFn   func()
+
+	CleanSubscriptionsFn func()
+	SetPubSubHooksFn     func(hooks PubSubHooks) <-chan error
 }
 
 func (m *mockWire) Do(ctx context.Context, cmd cmds.Completed) RedisResult {
@@ -517,6 +547,20 @@ func (m *mockWire) DoMulti(ctx context.Context, multi ...cmds.Completed) []Redis
 func (m *mockWire) Receive(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
 	if m.ReceiveFn != nil {
 		return m.ReceiveFn(ctx, subscribe, fn)
+	}
+	return nil
+}
+
+func (m *mockWire) CleanSubscriptions() {
+	if m.CleanSubscriptionsFn != nil {
+		m.CleanSubscriptionsFn()
+	}
+	return
+}
+
+func (m *mockWire) SetPubSubHooks(hooks PubSubHooks) <-chan error {
+	if m.SetPubSubHooksFn != nil {
+		return m.SetPubSubHooksFn(hooks)
 	}
 	return nil
 }

@@ -294,6 +294,7 @@ func TestClusterClient(t *testing.T) {
 	})
 
 	t.Run("Dedicated Delegate", func(t *testing.T) {
+		closed := false
 		w := &mockWire{
 			DoFn: func(cmd cmds.Completed) RedisResult {
 				return newResult(RedisMessage{typ: '+', string: "Delegate"}, nil)
@@ -307,8 +308,17 @@ func TestClusterClient(t *testing.T) {
 			ReceiveFn: func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
 				return ErrClosing
 			},
+			SetPubSubHooksFn: func(hooks PubSubHooks) <-chan error {
+				ch := make(chan error, 1)
+				ch <- ErrClosing
+				close(ch)
+				return ch
+			},
 			ErrorFn: func() error {
 				return ErrClosing
+			},
+			CloseFn: func() {
+				closed = true
 			},
 		}
 		m.AcquireFn = func() wire {
@@ -322,6 +332,7 @@ func TestClusterClient(t *testing.T) {
 			stored = true
 		}
 		if err := client.Dedicated(func(c DedicatedClient) error {
+			ch := c.SetPubSubHooks(PubSubHooks{OnMessage: func(m PubSubMessage) {}})
 			if v, err := c.Do(context.Background(), c.B().Get().Key("a").Build()).ToString(); err != nil || v != "Delegate" {
 				t.Fatalf("unexpected response %v %v", v, err)
 			}
@@ -340,6 +351,13 @@ func TestClusterClient(t *testing.T) {
 			if err := c.Receive(context.Background(), c.B().Ssubscribe().Channel("a").Build(), func(msg PubSubMessage) {}); err != ErrClosing {
 				t.Fatalf("unexpected ret %v", err)
 			}
+			if err := <-ch; err != ErrClosing {
+				t.Fatalf("unexpected ret %v", err)
+			}
+			if err := <-c.SetPubSubHooks(PubSubHooks{OnMessage: func(m PubSubMessage) {}}); err != ErrClosing {
+				t.Fatalf("unexpected ret %v", err)
+			}
+			c.Close()
 			return nil
 		}); err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -347,9 +365,13 @@ func TestClusterClient(t *testing.T) {
 		if !stored {
 			t.Fatalf("Dedicated desn't put back the wire")
 		}
+		if !closed {
+			t.Fatalf("Dedicated desn't delegate Close")
+		}
 	})
 
 	t.Run("Dedicated Delegate", func(t *testing.T) {
+		closed := false
 		w := &mockWire{
 			DoFn: func(cmd cmds.Completed) RedisResult {
 				return newResult(RedisMessage{typ: '+', string: "Delegate"}, nil)
@@ -363,8 +385,17 @@ func TestClusterClient(t *testing.T) {
 			ReceiveFn: func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
 				return ErrClosing
 			},
+			SetPubSubHooksFn: func(hooks PubSubHooks) <-chan error {
+				ch := make(chan error, 1)
+				ch <- ErrClosing
+				close(ch)
+				return ch
+			},
 			ErrorFn: func() error {
 				return ErrClosing
+			},
+			CloseFn: func() {
+				closed = true
 			},
 		}
 		m.AcquireFn = func() wire {
@@ -378,6 +409,7 @@ func TestClusterClient(t *testing.T) {
 			stored = true
 		}
 		c, cancel := client.Dedicate()
+		ch := c.SetPubSubHooks(PubSubHooks{OnMessage: func(m PubSubMessage) {}})
 		if v, err := c.Do(context.Background(), c.B().Get().Key("a").Build()).ToString(); err != nil || v != "Delegate" {
 			t.Fatalf("unexpected response %v %v", v, err)
 		}
@@ -396,11 +428,47 @@ func TestClusterClient(t *testing.T) {
 		if err := c.Receive(context.Background(), c.B().Ssubscribe().Channel("a").Build(), func(msg PubSubMessage) {}); err != ErrClosing {
 			t.Fatalf("unexpected ret %v", err)
 		}
-
+		if err := <-ch; err != ErrClosing {
+			t.Fatalf("unexpected ret %v", err)
+		}
+		if err := <-c.SetPubSubHooks(PubSubHooks{OnMessage: func(m PubSubMessage) {}}); err != ErrClosing {
+			t.Fatalf("unexpected ret %v", err)
+		}
+		c.Close()
 		cancel()
 
 		if !stored {
 			t.Fatalf("Dedicated desn't put back the wire")
+		}
+		if !closed {
+			t.Fatalf("Dedicated desn't delegate Close")
+		}
+	})
+
+	t.Run("Dedicated SetPubSubHooks Released", func(t *testing.T) {
+		c, cancel := client.Dedicate()
+		ch1 := c.SetPubSubHooks(PubSubHooks{OnMessage: func(m PubSubMessage) {}})
+		ch2 := c.SetPubSubHooks(PubSubHooks{OnMessage: func(m PubSubMessage) {}})
+		<-ch1
+		cancel()
+		<-ch2
+	})
+
+	t.Run("Dedicated SetPubSubHooks Close", func(t *testing.T) {
+		c, cancel := client.Dedicate()
+		defer cancel()
+		ch := c.SetPubSubHooks(PubSubHooks{OnMessage: func(m PubSubMessage) {}})
+		c.Close()
+		if err := <-ch; err != ErrClosing {
+			t.Fatalf("unexpected ret %v", ch)
+		}
+	})
+
+	t.Run("Dedicated SetPubSubHooks Released", func(t *testing.T) {
+		c, cancel := client.Dedicate()
+		defer cancel()
+		if ch := c.SetPubSubHooks(PubSubHooks{}); ch != nil {
+			t.Fatalf("unexpected ret %v", ch)
 		}
 	})
 }
@@ -463,9 +531,14 @@ func TestClusterClientErr(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
+		var ch <-chan error
 		if err := client.Dedicated(func(c DedicatedClient) error {
+			ch = c.SetPubSubHooks(PubSubHooks{OnMessage: func(m PubSubMessage) {}})
 			return c.Do(context.Background(), c.B().Get().Key("a").Build()).Error()
 		}); err != ErrNoSlot {
+			t.Fatalf("unexpected err %v", err)
+		}
+		if err := <-ch; err != ErrNoSlot {
 			t.Fatalf("unexpected err %v", err)
 		}
 	})
@@ -480,7 +553,9 @@ func TestClusterClientErr(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
+		var ch <-chan error
 		if err := client.Dedicated(func(c DedicatedClient) error {
+			ch = c.SetPubSubHooks(PubSubHooks{OnMessage: func(m PubSubMessage) {}})
 			for _, v := range c.DoMulti(context.Background(), c.B().Get().Key("a").Build()) {
 				if err := v.Error(); err != nil {
 					return err
@@ -488,6 +563,9 @@ func TestClusterClientErr(t *testing.T) {
 			}
 			return nil
 		}); err != ErrNoSlot {
+			t.Fatalf("unexpected err %v", err)
+		}
+		if err := <-ch; err != ErrNoSlot {
 			t.Fatalf("unexpected err %v", err)
 		}
 	})

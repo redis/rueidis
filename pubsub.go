@@ -12,6 +12,28 @@ type PubSubMessage struct {
 	Message string
 }
 
+// PubSubSubscription represent a pubsub "subscribe", "unsubscribe", "psubscribe" or "punsubscribe" event.
+type PubSubSubscription struct {
+	// Kind is "subscribe", "unsubscribe", "psubscribe" or "punsubscribe"
+	Kind string
+	// Channel is the event subject.
+	Channel string
+	// Count is the current number of subscriptions for connection.
+	Count int64
+}
+
+// PubSubHooks can be registered into DedicatedClient to process pubsub messages without using Client.Receive
+type PubSubHooks struct {
+	// OnMessage will be called when receiving "message" and "pmessage" event.
+	OnMessage func(m PubSubMessage)
+	// OnSubscription will be called when receiving "subscribe", "unsubscribe", "psubscribe" and "punsubscribe" event.
+	OnSubscription func(s PubSubSubscription)
+}
+
+func (h *PubSubHooks) isZero() bool {
+	return h.OnMessage == nil && h.OnSubscription == nil
+}
+
 func newSubs() *subs {
 	return &subs{chs: make(map[string]map[int]*sub), sub: make(map[int]*sub)}
 }

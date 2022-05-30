@@ -124,6 +124,14 @@ retry:
 	return err
 }
 
+func (c *dedicatedSingleClient) SetPubSubHooks(hooks PubSubHooks) <-chan error {
+	return c.wire.SetPubSubHooks(hooks)
+}
+
+func (c *dedicatedSingleClient) Close() {
+	c.wire.Close()
+}
+
 func (c *singleClient) isRetryable(err error, ctx context.Context) bool {
 	return err != nil && atomic.LoadUint32(&c.stop) == 0 && ctx.Err() == nil
 }

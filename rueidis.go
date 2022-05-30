@@ -152,6 +152,18 @@ type DedicatedClient interface {
 	DoMulti(ctx context.Context, multi ...cmds.Completed) (resp []RedisResult)
 	// Receive is the same as Client's
 	Receive(ctx context.Context, subscribe cmds.Completed, fn func(msg PubSubMessage)) error
+	// SetPubSubHooks is an alternative way to processing Pub/Sub messages instead of using Receive.
+	// SetPubSubHooks is non-blocking and allows users to subscribe/unsubscribe channels later.
+	// Note that the hooks will be called sequentially but in another goroutine.
+	// The return value will be either:
+	//   1. an error channel, if the hooks passed in is not zero, or
+	//   2. nil, if the hooks passed in is zero. (used for reset hooks)
+	// In the former case, the error channel is guaranteed to be close when the hooks will not be called anymore,
+	// and has at most one error describing the reason why the hooks will not be called anymore.
+	// Users can use the error channel to detect disconnection.
+	SetPubSubHooks(hooks PubSubHooks) <-chan error
+	// Close closes the dedicated connection and prevent the connection be put back into the pool.
+	Close()
 }
 
 // NewClient uses ClientOption to initialize the Client for both cluster client and single client.

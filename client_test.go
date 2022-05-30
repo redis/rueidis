@@ -98,6 +98,14 @@ func (m *mockConn) Receive(ctx context.Context, subscribe cmds.Completed, hdl fu
 	return nil
 }
 
+func (m *mockConn) CleanSubscriptions() {
+	panic("not implemented")
+}
+
+func (m *mockConn) SetPubSubHooks(_ PubSubHooks) <-chan error {
+	panic("not implemented")
+}
+
 func (m *mockConn) Info() map[string]RedisMessage {
 	if m.InfoFn != nil {
 		return m.InfoFn()
@@ -224,6 +232,7 @@ func TestSingleClient(t *testing.T) {
 	})
 
 	t.Run("Dedicated Delegate", func(t *testing.T) {
+		closed := false
 		w := &mockWire{
 			DoFn: func(cmd cmds.Completed) RedisResult {
 				return newResult(RedisMessage{typ: '+', string: "Delegate"}, nil)
@@ -234,8 +243,17 @@ func TestSingleClient(t *testing.T) {
 			ReceiveFn: func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
 				return ErrClosing
 			},
+			SetPubSubHooksFn: func(hooks PubSubHooks) <-chan error {
+				ch := make(chan error, 1)
+				ch <- ErrClosing
+				close(ch)
+				return ch
+			},
 			ErrorFn: func() error {
 				return ErrClosing
+			},
+			CloseFn: func() {
+				closed = true
 			},
 		}
 		m.AcquireFn = func() wire {
@@ -263,6 +281,10 @@ func TestSingleClient(t *testing.T) {
 			if err := c.Receive(context.Background(), c.B().Subscribe().Channel("a").Build(), func(msg PubSubMessage) {}); err != ErrClosing {
 				t.Fatalf("unexpected ret %v", err)
 			}
+			if err := <-c.SetPubSubHooks(PubSubHooks{}); err != ErrClosing {
+				t.Fatalf("unexpected ret %v", err)
+			}
+			c.Close()
 			return nil
 		}); err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -270,9 +292,13 @@ func TestSingleClient(t *testing.T) {
 		if !stored {
 			t.Fatalf("Dedicated desn't put back the wire")
 		}
+		if !closed {
+			t.Fatalf("Dedicated desn't delegate Close")
+		}
 	})
 
 	t.Run("Dedicate Delegate", func(t *testing.T) {
+		closed := false
 		w := &mockWire{
 			DoFn: func(cmd cmds.Completed) RedisResult {
 				return newResult(RedisMessage{typ: '+', string: "Delegate"}, nil)
@@ -283,8 +309,17 @@ func TestSingleClient(t *testing.T) {
 			ReceiveFn: func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
 				return ErrClosing
 			},
+			SetPubSubHooksFn: func(hooks PubSubHooks) <-chan error {
+				ch := make(chan error, 1)
+				ch <- ErrClosing
+				close(ch)
+				return ch
+			},
 			ErrorFn: func() error {
 				return ErrClosing
+			},
+			CloseFn: func() {
+				closed = true
 			},
 		}
 		m.AcquireFn = func() wire {
@@ -313,11 +348,18 @@ func TestSingleClient(t *testing.T) {
 		if err := c.Receive(context.Background(), c.B().Subscribe().Channel("a").Build(), func(msg PubSubMessage) {}); err != ErrClosing {
 			t.Fatalf("unexpected ret %v", err)
 		}
+		if err := <-c.SetPubSubHooks(PubSubHooks{}); err != ErrClosing {
+			t.Fatalf("unexpected ret %v", err)
+		}
+		c.Close()
 
 		cancel()
 
 		if !stored {
 			t.Fatalf("Dedicated desn't put back the wire")
+		}
+		if !closed {
+			t.Fatalf("Dedicated desn't delegate Close")
 		}
 	})
 }
