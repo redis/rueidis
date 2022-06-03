@@ -152,7 +152,7 @@
             "name": "field_type",
             "type": "enum",
             "enum": [
-              "TEXT", "TAG", "NUMERIC", "GEO"
+              "TEXT", "TAG", "NUMERIC", "GEO", "VECTOR"
             ]
           },
           {
@@ -625,6 +625,10 @@
       {
         "name": "option",
         "type": "string"
+      },
+      {
+        "name": "value",
+        "type": "string"
       }
     ],
     "since": "1.0.0",
@@ -636,10 +640,6 @@
     "arguments": [
       {
         "name": "option",
-        "type": "string"
-      },
-      {
-        "name": "value",
         "type": "string"
       }
     ],
@@ -816,9 +816,21 @@
             "command":"RETURN"
           },
           {
-            "name": "field",
-            "type": "string",
-            "multiple": true
+            "name": "identifiers",
+            "type": "block",
+            "multiple": true,
+            "block": [
+              {
+                "name": "identifier",
+                "type": "string"
+              },
+              {
+                "name": "property",
+                "type": "string",
+                "command": "AS",
+                "optional": true
+              }
+            ]
           }
         ]
       },
@@ -927,6 +939,12 @@
         "command":"SLOP"
       },
       {
+        "name": "timeout",
+        "type": "integer",
+        "optional": true,
+        "command":"TIMEOUT"
+      },
+      {
         "name": "tags",
         "type": "enum",
         "optional": true,
@@ -1005,6 +1023,26 @@
         ]
       },
       {
+        "type": "block",
+        "optional": true,
+        "block": [
+          {
+            "name": "params",
+            "type": "enum",
+            "enum": ["PARAMS"]
+          },
+          {
+            "name": "NARGS",
+            "type": "integer"
+          },
+          {
+            "name": ["name", "value"],
+            "type": ["string", "string"],
+            "multiple": true
+          }
+        ]
+      },
+      {
         "name": "dialect",
         "type": "integer",
         "optional": true,
@@ -1052,6 +1090,12 @@
             "multiple": true
           }
         ]
+      },
+      {
+        "name": "timeout",
+        "type": "integer",
+        "optional": true,
+        "command":"TIMEOUT"
       },
       {
         "name": "loadall",
@@ -1211,6 +1255,26 @@
         ]
       },
       {
+        "type": "block",
+        "optional": true,
+        "block": [
+          {
+            "name": "params",
+            "type": "enum",
+            "enum": ["PARAMS"]
+          },
+          {
+            "name": "NARGS",
+            "type": "integer"
+          },
+          {
+            "name": ["name", "value"],
+            "type": ["string", "string"],
+            "multiple": true
+          }
+        ]
+      },
+      {
         "name": "dialect",
         "type": "integer",
         "optional": true,
@@ -1220,6 +1284,30 @@
     ],
     "since": "1.1.0",
     "group": "search"
+  },
+  "FT.PROFILE": {
+    "arguments": [
+      {
+        "name": "index",
+        "type": "string"
+      },
+      {
+        "name": "querytype",
+        "type": "enum",
+        "enum": ["SEARCH", "AGGREGATE"]
+      },
+      {
+        "name": "limited",
+        "type": "enum",
+        "enum": ["LIMITED"],
+        "optional": true
+      },
+      {
+        "name": "query",
+        "command": "QUERY",
+        "type": "string"
+      }
+    ]
   },
   "FT.CURSOR READ": {
     "summary": "Reads from a cursor",

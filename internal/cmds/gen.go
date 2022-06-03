@@ -6252,6 +6252,11 @@ func (c FtAggregateApplyAs) Withcursor() FtAggregateCursorWithcursor {
 	return (FtAggregateCursorWithcursor)(c)
 }
 
+func (c FtAggregateApplyAs) Params() FtAggregateParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtAggregateParamsParams)(c)
+}
+
 func (c FtAggregateApplyAs) Dialect(dialect int64) FtAggregateDialect {
 	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
 	return (FtAggregateDialect)(c)
@@ -6268,6 +6273,11 @@ func (c FtAggregateCursorCount) Maxidle(idleTime int64) FtAggregateCursorMaxidle
 	return (FtAggregateCursorMaxidle)(c)
 }
 
+func (c FtAggregateCursorCount) Params() FtAggregateParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtAggregateParamsParams)(c)
+}
+
 func (c FtAggregateCursorCount) Dialect(dialect int64) FtAggregateDialect {
 	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
 	return (FtAggregateDialect)(c)
@@ -6278,6 +6288,11 @@ func (c FtAggregateCursorCount) Build() Completed {
 }
 
 type FtAggregateCursorMaxidle Completed
+
+func (c FtAggregateCursorMaxidle) Params() FtAggregateParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtAggregateParamsParams)(c)
+}
 
 func (c FtAggregateCursorMaxidle) Dialect(dialect int64) FtAggregateDialect {
 	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
@@ -6300,6 +6315,11 @@ func (c FtAggregateCursorWithcursor) Maxidle(idleTime int64) FtAggregateCursorMa
 	return (FtAggregateCursorMaxidle)(c)
 }
 
+func (c FtAggregateCursorWithcursor) Params() FtAggregateParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtAggregateParamsParams)(c)
+}
+
 func (c FtAggregateCursorWithcursor) Dialect(dialect int64) FtAggregateDialect {
 	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
 	return (FtAggregateDialect)(c)
@@ -6320,6 +6340,11 @@ type FtAggregateFilter Completed
 func (c FtAggregateFilter) Withcursor() FtAggregateCursorWithcursor {
 	c.cs.s = append(c.cs.s, "WITHCURSOR")
 	return (FtAggregateCursorWithcursor)(c)
+}
+
+func (c FtAggregateFilter) Params() FtAggregateParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtAggregateParamsParams)(c)
 }
 
 func (c FtAggregateFilter) Dialect(dialect int64) FtAggregateDialect {
@@ -6380,6 +6405,11 @@ func (c FtAggregateGroupbyProperty) Withcursor() FtAggregateCursorWithcursor {
 	return (FtAggregateCursorWithcursor)(c)
 }
 
+func (c FtAggregateGroupbyProperty) Params() FtAggregateParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtAggregateParamsParams)(c)
+}
+
 func (c FtAggregateGroupbyProperty) Dialect(dialect int64) FtAggregateDialect {
 	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
 	return (FtAggregateDialect)(c)
@@ -6436,6 +6466,11 @@ func (c FtAggregateGroupbyReduceArg) Withcursor() FtAggregateCursorWithcursor {
 	return (FtAggregateCursorWithcursor)(c)
 }
 
+func (c FtAggregateGroupbyReduceArg) Params() FtAggregateParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtAggregateParamsParams)(c)
+}
+
 func (c FtAggregateGroupbyReduceArg) Dialect(dialect int64) FtAggregateDialect {
 	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
 	return (FtAggregateDialect)(c)
@@ -6480,6 +6515,11 @@ func (c FtAggregateGroupbyReduceAs) Filter(filter string) FtAggregateFilter {
 func (c FtAggregateGroupbyReduceAs) Withcursor() FtAggregateCursorWithcursor {
 	c.cs.s = append(c.cs.s, "WITHCURSOR")
 	return (FtAggregateCursorWithcursor)(c)
+}
+
+func (c FtAggregateGroupbyReduceAs) Params() FtAggregateParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtAggregateParamsParams)(c)
 }
 
 func (c FtAggregateGroupbyReduceAs) Dialect(dialect int64) FtAggregateDialect {
@@ -6531,6 +6571,11 @@ func (c FtAggregateLimitOffsetNum) Withcursor() FtAggregateCursorWithcursor {
 	return (FtAggregateCursorWithcursor)(c)
 }
 
+func (c FtAggregateLimitOffsetNum) Params() FtAggregateParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtAggregateParamsParams)(c)
+}
+
 func (c FtAggregateLimitOffsetNum) Dialect(dialect int64) FtAggregateDialect {
 	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
 	return (FtAggregateDialect)(c)
@@ -6545,6 +6590,11 @@ type FtAggregateLoadField Completed
 func (c FtAggregateLoadField) Field(field ...string) FtAggregateLoadField {
 	c.cs.s = append(c.cs.s, field...)
 	return c
+}
+
+func (c FtAggregateLoadField) Timeout(timeout int64) FtAggregateTimeout {
+	c.cs.s = append(c.cs.s, "TIMEOUT", strconv.FormatInt(timeout, 10))
+	return (FtAggregateTimeout)(c)
 }
 
 func (c FtAggregateLoadField) LoadAll() FtAggregateLoadallLoadAll {
@@ -6580,6 +6630,11 @@ func (c FtAggregateLoadField) Filter(filter string) FtAggregateFilter {
 func (c FtAggregateLoadField) Withcursor() FtAggregateCursorWithcursor {
 	c.cs.s = append(c.cs.s, "WITHCURSOR")
 	return (FtAggregateCursorWithcursor)(c)
+}
+
+func (c FtAggregateLoadField) Params() FtAggregateParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtAggregateParamsParams)(c)
 }
 
 func (c FtAggregateLoadField) Dialect(dialect int64) FtAggregateDialect {
@@ -6630,6 +6685,11 @@ func (c FtAggregateLoadallLoadAll) Withcursor() FtAggregateCursorWithcursor {
 	return (FtAggregateCursorWithcursor)(c)
 }
 
+func (c FtAggregateLoadallLoadAll) Params() FtAggregateParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtAggregateParamsParams)(c)
+}
+
 func (c FtAggregateLoadallLoadAll) Dialect(dialect int64) FtAggregateDialect {
 	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
 	return (FtAggregateDialect)(c)
@@ -6637,6 +6697,35 @@ func (c FtAggregateLoadallLoadAll) Dialect(dialect int64) FtAggregateDialect {
 
 func (c FtAggregateLoadallLoadAll) Build() Completed {
 	return Completed(c)
+}
+
+type FtAggregateParamsNameValue Completed
+
+func (c FtAggregateParamsNameValue) NameValue(name string, value string) FtAggregateParamsNameValue {
+	c.cs.s = append(c.cs.s, name, value)
+	return c
+}
+
+func (c FtAggregateParamsNameValue) Dialect(dialect int64) FtAggregateDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtAggregateDialect)(c)
+}
+
+func (c FtAggregateParamsNameValue) Build() Completed {
+	return Completed(c)
+}
+
+type FtAggregateParamsNargs Completed
+
+func (c FtAggregateParamsNargs) NameValue() FtAggregateParamsNameValue {
+	return (FtAggregateParamsNameValue)(c)
+}
+
+type FtAggregateParamsParams Completed
+
+func (c FtAggregateParamsParams) Nargs(nargs int64) FtAggregateParamsNargs {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(nargs, 10))
+	return (FtAggregateParamsNargs)(c)
 }
 
 type FtAggregateQuery Completed
@@ -6649,6 +6738,11 @@ func (c FtAggregateQuery) Verbatim() FtAggregateVerbatim {
 func (c FtAggregateQuery) Load(count string) FtAggregateLoadLoad {
 	c.cs.s = append(c.cs.s, "LOAD", count)
 	return (FtAggregateLoadLoad)(c)
+}
+
+func (c FtAggregateQuery) Timeout(timeout int64) FtAggregateTimeout {
+	c.cs.s = append(c.cs.s, "TIMEOUT", strconv.FormatInt(timeout, 10))
+	return (FtAggregateTimeout)(c)
 }
 
 func (c FtAggregateQuery) LoadAll() FtAggregateLoadallLoadAll {
@@ -6684,6 +6778,11 @@ func (c FtAggregateQuery) Filter(filter string) FtAggregateFilter {
 func (c FtAggregateQuery) Withcursor() FtAggregateCursorWithcursor {
 	c.cs.s = append(c.cs.s, "WITHCURSOR")
 	return (FtAggregateCursorWithcursor)(c)
+}
+
+func (c FtAggregateQuery) Params() FtAggregateParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtAggregateParamsParams)(c)
 }
 
 func (c FtAggregateQuery) Dialect(dialect int64) FtAggregateDialect {
@@ -6727,6 +6826,11 @@ func (c FtAggregateSortbyFieldsOrderAsc) Withcursor() FtAggregateCursorWithcurso
 	return (FtAggregateCursorWithcursor)(c)
 }
 
+func (c FtAggregateSortbyFieldsOrderAsc) Params() FtAggregateParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtAggregateParamsParams)(c)
+}
+
 func (c FtAggregateSortbyFieldsOrderAsc) Dialect(dialect int64) FtAggregateDialect {
 	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
 	return (FtAggregateDialect)(c)
@@ -6766,6 +6870,11 @@ func (c FtAggregateSortbyFieldsOrderDesc) Filter(filter string) FtAggregateFilte
 func (c FtAggregateSortbyFieldsOrderDesc) Withcursor() FtAggregateCursorWithcursor {
 	c.cs.s = append(c.cs.s, "WITHCURSOR")
 	return (FtAggregateCursorWithcursor)(c)
+}
+
+func (c FtAggregateSortbyFieldsOrderDesc) Params() FtAggregateParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtAggregateParamsParams)(c)
 }
 
 func (c FtAggregateSortbyFieldsOrderDesc) Dialect(dialect int64) FtAggregateDialect {
@@ -6811,6 +6920,11 @@ func (c FtAggregateSortbyMax) Withcursor() FtAggregateCursorWithcursor {
 	return (FtAggregateCursorWithcursor)(c)
 }
 
+func (c FtAggregateSortbyMax) Params() FtAggregateParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtAggregateParamsParams)(c)
+}
+
 func (c FtAggregateSortbyMax) Dialect(dialect int64) FtAggregateDialect {
 	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
 	return (FtAggregateDialect)(c)
@@ -6852,6 +6966,11 @@ func (c FtAggregateSortbySortby) Withcursor() FtAggregateCursorWithcursor {
 	return (FtAggregateCursorWithcursor)(c)
 }
 
+func (c FtAggregateSortbySortby) Params() FtAggregateParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtAggregateParamsParams)(c)
+}
+
 func (c FtAggregateSortbySortby) Dialect(dialect int64) FtAggregateDialect {
 	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
 	return (FtAggregateDialect)(c)
@@ -6861,11 +6980,67 @@ func (c FtAggregateSortbySortby) Build() Completed {
 	return Completed(c)
 }
 
+type FtAggregateTimeout Completed
+
+func (c FtAggregateTimeout) LoadAll() FtAggregateLoadallLoadAll {
+	c.cs.s = append(c.cs.s, "LOAD", "*")
+	return (FtAggregateLoadallLoadAll)(c)
+}
+
+func (c FtAggregateTimeout) Groupby(nargs int64) FtAggregateGroupbyGroupby {
+	c.cs.s = append(c.cs.s, "GROUPBY", strconv.FormatInt(nargs, 10))
+	return (FtAggregateGroupbyGroupby)(c)
+}
+
+func (c FtAggregateTimeout) Sortby(nargs int64) FtAggregateSortbySortby {
+	c.cs.s = append(c.cs.s, "SORTBY", strconv.FormatInt(nargs, 10))
+	return (FtAggregateSortbySortby)(c)
+}
+
+func (c FtAggregateTimeout) Apply(expression string) FtAggregateApplyApply {
+	c.cs.s = append(c.cs.s, "APPLY", expression)
+	return (FtAggregateApplyApply)(c)
+}
+
+func (c FtAggregateTimeout) Limit() FtAggregateLimitLimit {
+	c.cs.s = append(c.cs.s, "LIMIT")
+	return (FtAggregateLimitLimit)(c)
+}
+
+func (c FtAggregateTimeout) Filter(filter string) FtAggregateFilter {
+	c.cs.s = append(c.cs.s, "FILTER", filter)
+	return (FtAggregateFilter)(c)
+}
+
+func (c FtAggregateTimeout) Withcursor() FtAggregateCursorWithcursor {
+	c.cs.s = append(c.cs.s, "WITHCURSOR")
+	return (FtAggregateCursorWithcursor)(c)
+}
+
+func (c FtAggregateTimeout) Params() FtAggregateParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtAggregateParamsParams)(c)
+}
+
+func (c FtAggregateTimeout) Dialect(dialect int64) FtAggregateDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtAggregateDialect)(c)
+}
+
+func (c FtAggregateTimeout) Build() Completed {
+	return Completed(c)
+}
+
 type FtAggregateVerbatim Completed
 
 func (c FtAggregateVerbatim) Load(count string) FtAggregateLoadLoad {
 	c.cs.s = append(c.cs.s, "LOAD", count)
 	return (FtAggregateLoadLoad)(c)
+}
+
+func (c FtAggregateVerbatim) Timeout(timeout int64) FtAggregateTimeout {
+	c.cs.s = append(c.cs.s, "TIMEOUT", strconv.FormatInt(timeout, 10))
+	return (FtAggregateTimeout)(c)
 }
 
 func (c FtAggregateVerbatim) LoadAll() FtAggregateLoadallLoadAll {
@@ -6901,6 +7076,11 @@ func (c FtAggregateVerbatim) Filter(filter string) FtAggregateFilter {
 func (c FtAggregateVerbatim) Withcursor() FtAggregateCursorWithcursor {
 	c.cs.s = append(c.cs.s, "WITHCURSOR")
 	return (FtAggregateCursorWithcursor)(c)
+}
+
+func (c FtAggregateVerbatim) Params() FtAggregateParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtAggregateParamsParams)(c)
 }
 
 func (c FtAggregateVerbatim) Dialect(dialect int64) FtAggregateDialect {
@@ -7045,14 +7225,7 @@ func (c FtConfigGet) Option(option string) FtConfigGetOption {
 
 type FtConfigGetOption Completed
 
-func (c FtConfigGetOption) Value(value string) FtConfigGetValue {
-	c.cs.s = append(c.cs.s, value)
-	return (FtConfigGetValue)(c)
-}
-
-type FtConfigGetValue Completed
-
-func (c FtConfigGetValue) Build() Completed {
+func (c FtConfigGetOption) Build() Completed {
 	return Completed(c)
 }
 
@@ -7090,7 +7263,14 @@ func (c FtConfigSet) Option(option string) FtConfigSetOption {
 
 type FtConfigSetOption Completed
 
-func (c FtConfigSetOption) Build() Completed {
+func (c FtConfigSetOption) Value(value string) FtConfigSetValue {
+	c.cs.s = append(c.cs.s, value)
+	return (FtConfigSetValue)(c)
+}
+
+type FtConfigSetValue Completed
+
+func (c FtConfigSetValue) Build() Completed {
 	return Completed(c)
 }
 
@@ -7129,6 +7309,11 @@ func (c FtCreateFieldAs) Geo() FtCreateFieldFieldTypeGeo {
 	return (FtCreateFieldFieldTypeGeo)(c)
 }
 
+func (c FtCreateFieldAs) Vector() FtCreateFieldFieldTypeVector {
+	c.cs.s = append(c.cs.s, "VECTOR")
+	return (FtCreateFieldFieldTypeVector)(c)
+}
+
 type FtCreateFieldFieldName Completed
 
 func (c FtCreateFieldFieldName) As(alias string) FtCreateFieldAs {
@@ -7154,6 +7339,11 @@ func (c FtCreateFieldFieldName) Numeric() FtCreateFieldFieldTypeNumeric {
 func (c FtCreateFieldFieldName) Geo() FtCreateFieldFieldTypeGeo {
 	c.cs.s = append(c.cs.s, "GEO")
 	return (FtCreateFieldFieldTypeGeo)(c)
+}
+
+func (c FtCreateFieldFieldName) Vector() FtCreateFieldFieldTypeVector {
+	c.cs.s = append(c.cs.s, "VECTOR")
+	return (FtCreateFieldFieldTypeVector)(c)
 }
 
 type FtCreateFieldFieldTypeGeo Completed
@@ -7237,6 +7427,27 @@ func (c FtCreateFieldFieldTypeText) FieldName(fieldName string) FtCreateFieldFie
 }
 
 func (c FtCreateFieldFieldTypeText) Build() Completed {
+	return Completed(c)
+}
+
+type FtCreateFieldFieldTypeVector Completed
+
+func (c FtCreateFieldFieldTypeVector) Sortable() FtCreateFieldSortableSortable {
+	c.cs.s = append(c.cs.s, "SORTABLE")
+	return (FtCreateFieldSortableSortable)(c)
+}
+
+func (c FtCreateFieldFieldTypeVector) Noindex() FtCreateFieldNoindex {
+	c.cs.s = append(c.cs.s, "NOINDEX")
+	return (FtCreateFieldNoindex)(c)
+}
+
+func (c FtCreateFieldFieldTypeVector) FieldName(fieldName string) FtCreateFieldFieldName {
+	c.cs.s = append(c.cs.s, fieldName)
+	return (FtCreateFieldFieldName)(c)
+}
+
+func (c FtCreateFieldFieldTypeVector) Build() Completed {
 	return Completed(c)
 }
 
@@ -8305,6 +8516,68 @@ func (c FtList) Build() Completed {
 	return Completed(c)
 }
 
+type FtProfile Completed
+
+func (b Builder) FtProfile() (c FtProfile) {
+	c = FtProfile{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "FT.PROFILE")
+	return c
+}
+
+func (c FtProfile) Index(index string) FtProfileIndex {
+	c.cs.s = append(c.cs.s, index)
+	return (FtProfileIndex)(c)
+}
+
+type FtProfileIndex Completed
+
+func (c FtProfileIndex) Search() FtProfileQuerytypeSearch {
+	c.cs.s = append(c.cs.s, "SEARCH")
+	return (FtProfileQuerytypeSearch)(c)
+}
+
+func (c FtProfileIndex) Aggregate() FtProfileQuerytypeAggregate {
+	c.cs.s = append(c.cs.s, "AGGREGATE")
+	return (FtProfileQuerytypeAggregate)(c)
+}
+
+type FtProfileLimited Completed
+
+func (c FtProfileLimited) Query(query string) FtProfileQuery {
+	c.cs.s = append(c.cs.s, "QUERY", query)
+	return (FtProfileQuery)(c)
+}
+
+type FtProfileQuery Completed
+
+func (c FtProfileQuery) Build() Completed {
+	return Completed(c)
+}
+
+type FtProfileQuerytypeAggregate Completed
+
+func (c FtProfileQuerytypeAggregate) Limited() FtProfileLimited {
+	c.cs.s = append(c.cs.s, "LIMITED")
+	return (FtProfileLimited)(c)
+}
+
+func (c FtProfileQuerytypeAggregate) Query(query string) FtProfileQuery {
+	c.cs.s = append(c.cs.s, "QUERY", query)
+	return (FtProfileQuery)(c)
+}
+
+type FtProfileQuerytypeSearch Completed
+
+func (c FtProfileQuerytypeSearch) Limited() FtProfileLimited {
+	c.cs.s = append(c.cs.s, "LIMITED")
+	return (FtProfileLimited)(c)
+}
+
+func (c FtProfileQuerytypeSearch) Query(query string) FtProfileQuery {
+	c.cs.s = append(c.cs.s, "QUERY", query)
+	return (FtProfileQuery)(c)
+}
+
 type FtSearch Completed
 
 func (b Builder) FtSearch() (c FtSearch) {
@@ -8351,6 +8624,11 @@ func (c FtSearchExpander) Limit() FtSearchLimitLimit {
 	return (FtSearchLimitLimit)(c)
 }
 
+func (c FtSearchExpander) Params() FtSearchParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtSearchParamsParams)(c)
+}
+
 func (c FtSearchExpander) Dialect(dialect int64) FtSearchDialect {
 	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
 	return (FtSearchDialect)(c)
@@ -8375,6 +8653,11 @@ func (c FtSearchExplainscore) Sortby(sortby string) FtSearchSortbySortby {
 func (c FtSearchExplainscore) Limit() FtSearchLimitLimit {
 	c.cs.s = append(c.cs.s, "LIMIT")
 	return (FtSearchLimitLimit)(c)
+}
+
+func (c FtSearchExplainscore) Params() FtSearchParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtSearchParamsParams)(c)
 }
 
 func (c FtSearchExplainscore) Dialect(dialect int64) FtSearchDialect {
@@ -8435,6 +8718,11 @@ func (c FtSearchFilterMax) Slop(slop int64) FtSearchSlop {
 	return (FtSearchSlop)(c)
 }
 
+func (c FtSearchFilterMax) Timeout(timeout int64) FtSearchTimeout {
+	c.cs.s = append(c.cs.s, "TIMEOUT", strconv.FormatInt(timeout, 10))
+	return (FtSearchTimeout)(c)
+}
+
 func (c FtSearchFilterMax) Inorder() FtSearchTagsInorder {
 	c.cs.s = append(c.cs.s, "INORDER")
 	return (FtSearchTagsInorder)(c)
@@ -8473,6 +8761,11 @@ func (c FtSearchFilterMax) Sortby(sortby string) FtSearchSortbySortby {
 func (c FtSearchFilterMax) Limit() FtSearchLimitLimit {
 	c.cs.s = append(c.cs.s, "LIMIT")
 	return (FtSearchLimitLimit)(c)
+}
+
+func (c FtSearchFilterMax) Params() FtSearchParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtSearchParamsParams)(c)
 }
 
 func (c FtSearchFilterMax) Dialect(dialect int64) FtSearchDialect {
@@ -8571,6 +8864,11 @@ func (c FtSearchGeoFilterRadiusTypeFt) Slop(slop int64) FtSearchSlop {
 	return (FtSearchSlop)(c)
 }
 
+func (c FtSearchGeoFilterRadiusTypeFt) Timeout(timeout int64) FtSearchTimeout {
+	c.cs.s = append(c.cs.s, "TIMEOUT", strconv.FormatInt(timeout, 10))
+	return (FtSearchTimeout)(c)
+}
+
 func (c FtSearchGeoFilterRadiusTypeFt) Inorder() FtSearchTagsInorder {
 	c.cs.s = append(c.cs.s, "INORDER")
 	return (FtSearchTagsInorder)(c)
@@ -8609,6 +8907,11 @@ func (c FtSearchGeoFilterRadiusTypeFt) Sortby(sortby string) FtSearchSortbySortb
 func (c FtSearchGeoFilterRadiusTypeFt) Limit() FtSearchLimitLimit {
 	c.cs.s = append(c.cs.s, "LIMIT")
 	return (FtSearchLimitLimit)(c)
+}
+
+func (c FtSearchGeoFilterRadiusTypeFt) Params() FtSearchParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtSearchParamsParams)(c)
 }
 
 func (c FtSearchGeoFilterRadiusTypeFt) Dialect(dialect int64) FtSearchDialect {
@@ -8657,6 +8960,11 @@ func (c FtSearchGeoFilterRadiusTypeKm) Slop(slop int64) FtSearchSlop {
 	return (FtSearchSlop)(c)
 }
 
+func (c FtSearchGeoFilterRadiusTypeKm) Timeout(timeout int64) FtSearchTimeout {
+	c.cs.s = append(c.cs.s, "TIMEOUT", strconv.FormatInt(timeout, 10))
+	return (FtSearchTimeout)(c)
+}
+
 func (c FtSearchGeoFilterRadiusTypeKm) Inorder() FtSearchTagsInorder {
 	c.cs.s = append(c.cs.s, "INORDER")
 	return (FtSearchTagsInorder)(c)
@@ -8695,6 +9003,11 @@ func (c FtSearchGeoFilterRadiusTypeKm) Sortby(sortby string) FtSearchSortbySortb
 func (c FtSearchGeoFilterRadiusTypeKm) Limit() FtSearchLimitLimit {
 	c.cs.s = append(c.cs.s, "LIMIT")
 	return (FtSearchLimitLimit)(c)
+}
+
+func (c FtSearchGeoFilterRadiusTypeKm) Params() FtSearchParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtSearchParamsParams)(c)
 }
 
 func (c FtSearchGeoFilterRadiusTypeKm) Dialect(dialect int64) FtSearchDialect {
@@ -8743,6 +9056,11 @@ func (c FtSearchGeoFilterRadiusTypeM) Slop(slop int64) FtSearchSlop {
 	return (FtSearchSlop)(c)
 }
 
+func (c FtSearchGeoFilterRadiusTypeM) Timeout(timeout int64) FtSearchTimeout {
+	c.cs.s = append(c.cs.s, "TIMEOUT", strconv.FormatInt(timeout, 10))
+	return (FtSearchTimeout)(c)
+}
+
 func (c FtSearchGeoFilterRadiusTypeM) Inorder() FtSearchTagsInorder {
 	c.cs.s = append(c.cs.s, "INORDER")
 	return (FtSearchTagsInorder)(c)
@@ -8781,6 +9099,11 @@ func (c FtSearchGeoFilterRadiusTypeM) Sortby(sortby string) FtSearchSortbySortby
 func (c FtSearchGeoFilterRadiusTypeM) Limit() FtSearchLimitLimit {
 	c.cs.s = append(c.cs.s, "LIMIT")
 	return (FtSearchLimitLimit)(c)
+}
+
+func (c FtSearchGeoFilterRadiusTypeM) Params() FtSearchParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtSearchParamsParams)(c)
 }
 
 func (c FtSearchGeoFilterRadiusTypeM) Dialect(dialect int64) FtSearchDialect {
@@ -8829,6 +9152,11 @@ func (c FtSearchGeoFilterRadiusTypeMi) Slop(slop int64) FtSearchSlop {
 	return (FtSearchSlop)(c)
 }
 
+func (c FtSearchGeoFilterRadiusTypeMi) Timeout(timeout int64) FtSearchTimeout {
+	c.cs.s = append(c.cs.s, "TIMEOUT", strconv.FormatInt(timeout, 10))
+	return (FtSearchTimeout)(c)
+}
+
 func (c FtSearchGeoFilterRadiusTypeMi) Inorder() FtSearchTagsInorder {
 	c.cs.s = append(c.cs.s, "INORDER")
 	return (FtSearchTagsInorder)(c)
@@ -8869,6 +9197,11 @@ func (c FtSearchGeoFilterRadiusTypeMi) Limit() FtSearchLimitLimit {
 	return (FtSearchLimitLimit)(c)
 }
 
+func (c FtSearchGeoFilterRadiusTypeMi) Params() FtSearchParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtSearchParamsParams)(c)
+}
+
 func (c FtSearchGeoFilterRadiusTypeMi) Dialect(dialect int64) FtSearchDialect {
 	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
 	return (FtSearchDialect)(c)
@@ -8893,6 +9226,11 @@ func (c FtSearchHighlightFieldsField) Tags() FtSearchHighlightTagsTags {
 func (c FtSearchHighlightFieldsField) Slop(slop int64) FtSearchSlop {
 	c.cs.s = append(c.cs.s, "SLOP", strconv.FormatInt(slop, 10))
 	return (FtSearchSlop)(c)
+}
+
+func (c FtSearchHighlightFieldsField) Timeout(timeout int64) FtSearchTimeout {
+	c.cs.s = append(c.cs.s, "TIMEOUT", strconv.FormatInt(timeout, 10))
+	return (FtSearchTimeout)(c)
 }
 
 func (c FtSearchHighlightFieldsField) Inorder() FtSearchTagsInorder {
@@ -8935,6 +9273,11 @@ func (c FtSearchHighlightFieldsField) Limit() FtSearchLimitLimit {
 	return (FtSearchLimitLimit)(c)
 }
 
+func (c FtSearchHighlightFieldsField) Params() FtSearchParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtSearchParamsParams)(c)
+}
+
 func (c FtSearchHighlightFieldsField) Dialect(dialect int64) FtSearchDialect {
 	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
 	return (FtSearchDialect)(c)
@@ -8966,6 +9309,11 @@ func (c FtSearchHighlightHighlight) Tags() FtSearchHighlightTagsTags {
 func (c FtSearchHighlightHighlight) Slop(slop int64) FtSearchSlop {
 	c.cs.s = append(c.cs.s, "SLOP", strconv.FormatInt(slop, 10))
 	return (FtSearchSlop)(c)
+}
+
+func (c FtSearchHighlightHighlight) Timeout(timeout int64) FtSearchTimeout {
+	c.cs.s = append(c.cs.s, "TIMEOUT", strconv.FormatInt(timeout, 10))
+	return (FtSearchTimeout)(c)
 }
 
 func (c FtSearchHighlightHighlight) Inorder() FtSearchTagsInorder {
@@ -9008,6 +9356,11 @@ func (c FtSearchHighlightHighlight) Limit() FtSearchLimitLimit {
 	return (FtSearchLimitLimit)(c)
 }
 
+func (c FtSearchHighlightHighlight) Params() FtSearchParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtSearchParamsParams)(c)
+}
+
 func (c FtSearchHighlightHighlight) Dialect(dialect int64) FtSearchDialect {
 	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
 	return (FtSearchDialect)(c)
@@ -9022,6 +9375,11 @@ type FtSearchHighlightTagsOpenClose Completed
 func (c FtSearchHighlightTagsOpenClose) Slop(slop int64) FtSearchSlop {
 	c.cs.s = append(c.cs.s, "SLOP", strconv.FormatInt(slop, 10))
 	return (FtSearchSlop)(c)
+}
+
+func (c FtSearchHighlightTagsOpenClose) Timeout(timeout int64) FtSearchTimeout {
+	c.cs.s = append(c.cs.s, "TIMEOUT", strconv.FormatInt(timeout, 10))
+	return (FtSearchTimeout)(c)
 }
 
 func (c FtSearchHighlightTagsOpenClose) Inorder() FtSearchTagsInorder {
@@ -9062,6 +9420,11 @@ func (c FtSearchHighlightTagsOpenClose) Sortby(sortby string) FtSearchSortbySort
 func (c FtSearchHighlightTagsOpenClose) Limit() FtSearchLimitLimit {
 	c.cs.s = append(c.cs.s, "LIMIT")
 	return (FtSearchLimitLimit)(c)
+}
+
+func (c FtSearchHighlightTagsOpenClose) Params() FtSearchParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtSearchParamsParams)(c)
 }
 
 func (c FtSearchHighlightTagsOpenClose) Dialect(dialect int64) FtSearchDialect {
@@ -9107,6 +9470,11 @@ func (c FtSearchInFieldsField) Slop(slop int64) FtSearchSlop {
 	return (FtSearchSlop)(c)
 }
 
+func (c FtSearchInFieldsField) Timeout(timeout int64) FtSearchTimeout {
+	c.cs.s = append(c.cs.s, "TIMEOUT", strconv.FormatInt(timeout, 10))
+	return (FtSearchTimeout)(c)
+}
+
 func (c FtSearchInFieldsField) Inorder() FtSearchTagsInorder {
 	c.cs.s = append(c.cs.s, "INORDER")
 	return (FtSearchTagsInorder)(c)
@@ -9145,6 +9513,11 @@ func (c FtSearchInFieldsField) Sortby(sortby string) FtSearchSortbySortby {
 func (c FtSearchInFieldsField) Limit() FtSearchLimitLimit {
 	c.cs.s = append(c.cs.s, "LIMIT")
 	return (FtSearchLimitLimit)(c)
+}
+
+func (c FtSearchInFieldsField) Params() FtSearchParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtSearchParamsParams)(c)
 }
 
 func (c FtSearchInFieldsField) Dialect(dialect int64) FtSearchDialect {
@@ -9202,6 +9575,11 @@ func (c FtSearchInKeysKey) Slop(slop int64) FtSearchSlop {
 	return (FtSearchSlop)(c)
 }
 
+func (c FtSearchInKeysKey) Timeout(timeout int64) FtSearchTimeout {
+	c.cs.s = append(c.cs.s, "TIMEOUT", strconv.FormatInt(timeout, 10))
+	return (FtSearchTimeout)(c)
+}
+
 func (c FtSearchInKeysKey) Inorder() FtSearchTagsInorder {
 	c.cs.s = append(c.cs.s, "INORDER")
 	return (FtSearchTagsInorder)(c)
@@ -9240,6 +9618,11 @@ func (c FtSearchInKeysKey) Sortby(sortby string) FtSearchSortbySortby {
 func (c FtSearchInKeysKey) Limit() FtSearchLimitLimit {
 	c.cs.s = append(c.cs.s, "LIMIT")
 	return (FtSearchLimitLimit)(c)
+}
+
+func (c FtSearchInKeysKey) Params() FtSearchParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtSearchParamsParams)(c)
 }
 
 func (c FtSearchInKeysKey) Dialect(dialect int64) FtSearchDialect {
@@ -9290,6 +9673,11 @@ func (c FtSearchLanguage) Limit() FtSearchLimitLimit {
 	return (FtSearchLimitLimit)(c)
 }
 
+func (c FtSearchLanguage) Params() FtSearchParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtSearchParamsParams)(c)
+}
+
 func (c FtSearchLanguage) Dialect(dialect int64) FtSearchDialect {
 	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
 	return (FtSearchDialect)(c)
@@ -9307,6 +9695,11 @@ func (c FtSearchLimitLimit) OffsetNum(offset int64, num int64) FtSearchLimitOffs
 }
 
 type FtSearchLimitOffsetNum Completed
+
+func (c FtSearchLimitOffsetNum) Params() FtSearchParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtSearchParamsParams)(c)
+}
 
 func (c FtSearchLimitOffsetNum) Dialect(dialect int64) FtSearchDialect {
 	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
@@ -9384,6 +9777,11 @@ func (c FtSearchNocontent) Slop(slop int64) FtSearchSlop {
 	return (FtSearchSlop)(c)
 }
 
+func (c FtSearchNocontent) Timeout(timeout int64) FtSearchTimeout {
+	c.cs.s = append(c.cs.s, "TIMEOUT", strconv.FormatInt(timeout, 10))
+	return (FtSearchTimeout)(c)
+}
+
 func (c FtSearchNocontent) Inorder() FtSearchTagsInorder {
 	c.cs.s = append(c.cs.s, "INORDER")
 	return (FtSearchTagsInorder)(c)
@@ -9422,6 +9820,11 @@ func (c FtSearchNocontent) Sortby(sortby string) FtSearchSortbySortby {
 func (c FtSearchNocontent) Limit() FtSearchLimitLimit {
 	c.cs.s = append(c.cs.s, "LIMIT")
 	return (FtSearchLimitLimit)(c)
+}
+
+func (c FtSearchNocontent) Params() FtSearchParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtSearchParamsParams)(c)
 }
 
 func (c FtSearchNocontent) Dialect(dialect int64) FtSearchDialect {
@@ -9490,6 +9893,11 @@ func (c FtSearchNostopwords) Slop(slop int64) FtSearchSlop {
 	return (FtSearchSlop)(c)
 }
 
+func (c FtSearchNostopwords) Timeout(timeout int64) FtSearchTimeout {
+	c.cs.s = append(c.cs.s, "TIMEOUT", strconv.FormatInt(timeout, 10))
+	return (FtSearchTimeout)(c)
+}
+
 func (c FtSearchNostopwords) Inorder() FtSearchTagsInorder {
 	c.cs.s = append(c.cs.s, "INORDER")
 	return (FtSearchTagsInorder)(c)
@@ -9530,6 +9938,11 @@ func (c FtSearchNostopwords) Limit() FtSearchLimitLimit {
 	return (FtSearchLimitLimit)(c)
 }
 
+func (c FtSearchNostopwords) Params() FtSearchParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtSearchParamsParams)(c)
+}
+
 func (c FtSearchNostopwords) Dialect(dialect int64) FtSearchDialect {
 	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
 	return (FtSearchDialect)(c)
@@ -9537,6 +9950,35 @@ func (c FtSearchNostopwords) Dialect(dialect int64) FtSearchDialect {
 
 func (c FtSearchNostopwords) Build() Completed {
 	return Completed(c)
+}
+
+type FtSearchParamsNameValue Completed
+
+func (c FtSearchParamsNameValue) NameValue(name string, value string) FtSearchParamsNameValue {
+	c.cs.s = append(c.cs.s, name, value)
+	return c
+}
+
+func (c FtSearchParamsNameValue) Dialect(dialect int64) FtSearchDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSearchDialect)(c)
+}
+
+func (c FtSearchParamsNameValue) Build() Completed {
+	return Completed(c)
+}
+
+type FtSearchParamsNargs Completed
+
+func (c FtSearchParamsNargs) NameValue() FtSearchParamsNameValue {
+	return (FtSearchParamsNameValue)(c)
+}
+
+type FtSearchParamsParams Completed
+
+func (c FtSearchParamsParams) Nargs(nargs int64) FtSearchParamsNargs {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(nargs, 10))
+	return (FtSearchParamsNargs)(c)
 }
 
 type FtSearchPayload Completed
@@ -9549,6 +9991,11 @@ func (c FtSearchPayload) Sortby(sortby string) FtSearchSortbySortby {
 func (c FtSearchPayload) Limit() FtSearchLimitLimit {
 	c.cs.s = append(c.cs.s, "LIMIT")
 	return (FtSearchLimitLimit)(c)
+}
+
+func (c FtSearchPayload) Params() FtSearchParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtSearchParamsParams)(c)
 }
 
 func (c FtSearchPayload) Dialect(dialect int64) FtSearchDialect {
@@ -9632,6 +10079,11 @@ func (c FtSearchQuery) Slop(slop int64) FtSearchSlop {
 	return (FtSearchSlop)(c)
 }
 
+func (c FtSearchQuery) Timeout(timeout int64) FtSearchTimeout {
+	c.cs.s = append(c.cs.s, "TIMEOUT", strconv.FormatInt(timeout, 10))
+	return (FtSearchTimeout)(c)
+}
+
 func (c FtSearchQuery) Inorder() FtSearchTagsInorder {
 	c.cs.s = append(c.cs.s, "INORDER")
 	return (FtSearchTagsInorder)(c)
@@ -9672,6 +10124,11 @@ func (c FtSearchQuery) Limit() FtSearchLimitLimit {
 	return (FtSearchLimitLimit)(c)
 }
 
+func (c FtSearchQuery) Params() FtSearchParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtSearchParamsParams)(c)
+}
+
 func (c FtSearchQuery) Dialect(dialect int64) FtSearchDialect {
 	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
 	return (FtSearchDialect)(c)
@@ -9681,82 +10138,178 @@ func (c FtSearchQuery) Build() Completed {
 	return Completed(c)
 }
 
-type FtSearchReturnField Completed
+type FtSearchReturnIdentifiersAs Completed
 
-func (c FtSearchReturnField) Field(field ...string) FtSearchReturnField {
-	c.cs.s = append(c.cs.s, field...)
-	return c
+func (c FtSearchReturnIdentifiersAs) Identifier(identifier string) FtSearchReturnIdentifiersIdentifier {
+	c.cs.s = append(c.cs.s, identifier)
+	return (FtSearchReturnIdentifiersIdentifier)(c)
 }
 
-func (c FtSearchReturnField) Summarize() FtSearchSummarizeSummarize {
+func (c FtSearchReturnIdentifiersAs) Summarize() FtSearchSummarizeSummarize {
 	c.cs.s = append(c.cs.s, "SUMMARIZE")
 	return (FtSearchSummarizeSummarize)(c)
 }
 
-func (c FtSearchReturnField) Highlight() FtSearchHighlightHighlight {
+func (c FtSearchReturnIdentifiersAs) Highlight() FtSearchHighlightHighlight {
 	c.cs.s = append(c.cs.s, "HIGHLIGHT")
 	return (FtSearchHighlightHighlight)(c)
 }
 
-func (c FtSearchReturnField) Slop(slop int64) FtSearchSlop {
+func (c FtSearchReturnIdentifiersAs) Slop(slop int64) FtSearchSlop {
 	c.cs.s = append(c.cs.s, "SLOP", strconv.FormatInt(slop, 10))
 	return (FtSearchSlop)(c)
 }
 
-func (c FtSearchReturnField) Inorder() FtSearchTagsInorder {
+func (c FtSearchReturnIdentifiersAs) Timeout(timeout int64) FtSearchTimeout {
+	c.cs.s = append(c.cs.s, "TIMEOUT", strconv.FormatInt(timeout, 10))
+	return (FtSearchTimeout)(c)
+}
+
+func (c FtSearchReturnIdentifiersAs) Inorder() FtSearchTagsInorder {
 	c.cs.s = append(c.cs.s, "INORDER")
 	return (FtSearchTagsInorder)(c)
 }
 
-func (c FtSearchReturnField) Language(language string) FtSearchLanguage {
+func (c FtSearchReturnIdentifiersAs) Language(language string) FtSearchLanguage {
 	c.cs.s = append(c.cs.s, "LANGUAGE", language)
 	return (FtSearchLanguage)(c)
 }
 
-func (c FtSearchReturnField) Expander(expander string) FtSearchExpander {
+func (c FtSearchReturnIdentifiersAs) Expander(expander string) FtSearchExpander {
 	c.cs.s = append(c.cs.s, "EXPANDER", expander)
 	return (FtSearchExpander)(c)
 }
 
-func (c FtSearchReturnField) Scorer(scorer string) FtSearchScorer {
+func (c FtSearchReturnIdentifiersAs) Scorer(scorer string) FtSearchScorer {
 	c.cs.s = append(c.cs.s, "SCORER", scorer)
 	return (FtSearchScorer)(c)
 }
 
-func (c FtSearchReturnField) Explainscore() FtSearchExplainscore {
+func (c FtSearchReturnIdentifiersAs) Explainscore() FtSearchExplainscore {
 	c.cs.s = append(c.cs.s, "EXPLAINSCORE")
 	return (FtSearchExplainscore)(c)
 }
 
-func (c FtSearchReturnField) Payload(payload string) FtSearchPayload {
+func (c FtSearchReturnIdentifiersAs) Payload(payload string) FtSearchPayload {
 	c.cs.s = append(c.cs.s, "PAYLOAD", payload)
 	return (FtSearchPayload)(c)
 }
 
-func (c FtSearchReturnField) Sortby(sortby string) FtSearchSortbySortby {
+func (c FtSearchReturnIdentifiersAs) Sortby(sortby string) FtSearchSortbySortby {
 	c.cs.s = append(c.cs.s, "SORTBY", sortby)
 	return (FtSearchSortbySortby)(c)
 }
 
-func (c FtSearchReturnField) Limit() FtSearchLimitLimit {
+func (c FtSearchReturnIdentifiersAs) Limit() FtSearchLimitLimit {
 	c.cs.s = append(c.cs.s, "LIMIT")
 	return (FtSearchLimitLimit)(c)
 }
 
-func (c FtSearchReturnField) Dialect(dialect int64) FtSearchDialect {
+func (c FtSearchReturnIdentifiersAs) Params() FtSearchParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtSearchParamsParams)(c)
+}
+
+func (c FtSearchReturnIdentifiersAs) Dialect(dialect int64) FtSearchDialect {
 	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
 	return (FtSearchDialect)(c)
 }
 
-func (c FtSearchReturnField) Build() Completed {
+func (c FtSearchReturnIdentifiersAs) Build() Completed {
+	return Completed(c)
+}
+
+type FtSearchReturnIdentifiersIdentifier Completed
+
+func (c FtSearchReturnIdentifiersIdentifier) As(property string) FtSearchReturnIdentifiersAs {
+	c.cs.s = append(c.cs.s, "AS", property)
+	return (FtSearchReturnIdentifiersAs)(c)
+}
+
+func (c FtSearchReturnIdentifiersIdentifier) Identifier(identifier string) FtSearchReturnIdentifiersIdentifier {
+	c.cs.s = append(c.cs.s, identifier)
+	return c
+}
+
+func (c FtSearchReturnIdentifiersIdentifier) Summarize() FtSearchSummarizeSummarize {
+	c.cs.s = append(c.cs.s, "SUMMARIZE")
+	return (FtSearchSummarizeSummarize)(c)
+}
+
+func (c FtSearchReturnIdentifiersIdentifier) Highlight() FtSearchHighlightHighlight {
+	c.cs.s = append(c.cs.s, "HIGHLIGHT")
+	return (FtSearchHighlightHighlight)(c)
+}
+
+func (c FtSearchReturnIdentifiersIdentifier) Slop(slop int64) FtSearchSlop {
+	c.cs.s = append(c.cs.s, "SLOP", strconv.FormatInt(slop, 10))
+	return (FtSearchSlop)(c)
+}
+
+func (c FtSearchReturnIdentifiersIdentifier) Timeout(timeout int64) FtSearchTimeout {
+	c.cs.s = append(c.cs.s, "TIMEOUT", strconv.FormatInt(timeout, 10))
+	return (FtSearchTimeout)(c)
+}
+
+func (c FtSearchReturnIdentifiersIdentifier) Inorder() FtSearchTagsInorder {
+	c.cs.s = append(c.cs.s, "INORDER")
+	return (FtSearchTagsInorder)(c)
+}
+
+func (c FtSearchReturnIdentifiersIdentifier) Language(language string) FtSearchLanguage {
+	c.cs.s = append(c.cs.s, "LANGUAGE", language)
+	return (FtSearchLanguage)(c)
+}
+
+func (c FtSearchReturnIdentifiersIdentifier) Expander(expander string) FtSearchExpander {
+	c.cs.s = append(c.cs.s, "EXPANDER", expander)
+	return (FtSearchExpander)(c)
+}
+
+func (c FtSearchReturnIdentifiersIdentifier) Scorer(scorer string) FtSearchScorer {
+	c.cs.s = append(c.cs.s, "SCORER", scorer)
+	return (FtSearchScorer)(c)
+}
+
+func (c FtSearchReturnIdentifiersIdentifier) Explainscore() FtSearchExplainscore {
+	c.cs.s = append(c.cs.s, "EXPLAINSCORE")
+	return (FtSearchExplainscore)(c)
+}
+
+func (c FtSearchReturnIdentifiersIdentifier) Payload(payload string) FtSearchPayload {
+	c.cs.s = append(c.cs.s, "PAYLOAD", payload)
+	return (FtSearchPayload)(c)
+}
+
+func (c FtSearchReturnIdentifiersIdentifier) Sortby(sortby string) FtSearchSortbySortby {
+	c.cs.s = append(c.cs.s, "SORTBY", sortby)
+	return (FtSearchSortbySortby)(c)
+}
+
+func (c FtSearchReturnIdentifiersIdentifier) Limit() FtSearchLimitLimit {
+	c.cs.s = append(c.cs.s, "LIMIT")
+	return (FtSearchLimitLimit)(c)
+}
+
+func (c FtSearchReturnIdentifiersIdentifier) Params() FtSearchParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtSearchParamsParams)(c)
+}
+
+func (c FtSearchReturnIdentifiersIdentifier) Dialect(dialect int64) FtSearchDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSearchDialect)(c)
+}
+
+func (c FtSearchReturnIdentifiersIdentifier) Build() Completed {
 	return Completed(c)
 }
 
 type FtSearchReturnReturn Completed
 
-func (c FtSearchReturnReturn) Field(field ...string) FtSearchReturnField {
-	c.cs.s = append(c.cs.s, field...)
-	return (FtSearchReturnField)(c)
+func (c FtSearchReturnReturn) Identifier(identifier string) FtSearchReturnIdentifiersIdentifier {
+	c.cs.s = append(c.cs.s, identifier)
+	return (FtSearchReturnIdentifiersIdentifier)(c)
 }
 
 type FtSearchScorer Completed
@@ -9781,6 +10334,11 @@ func (c FtSearchScorer) Limit() FtSearchLimitLimit {
 	return (FtSearchLimitLimit)(c)
 }
 
+func (c FtSearchScorer) Params() FtSearchParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtSearchParamsParams)(c)
+}
+
 func (c FtSearchScorer) Dialect(dialect int64) FtSearchDialect {
 	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
 	return (FtSearchDialect)(c)
@@ -9791,6 +10349,11 @@ func (c FtSearchScorer) Build() Completed {
 }
 
 type FtSearchSlop Completed
+
+func (c FtSearchSlop) Timeout(timeout int64) FtSearchTimeout {
+	c.cs.s = append(c.cs.s, "TIMEOUT", strconv.FormatInt(timeout, 10))
+	return (FtSearchTimeout)(c)
+}
 
 func (c FtSearchSlop) Inorder() FtSearchTagsInorder {
 	c.cs.s = append(c.cs.s, "INORDER")
@@ -9832,6 +10395,11 @@ func (c FtSearchSlop) Limit() FtSearchLimitLimit {
 	return (FtSearchLimitLimit)(c)
 }
 
+func (c FtSearchSlop) Params() FtSearchParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtSearchParamsParams)(c)
+}
+
 func (c FtSearchSlop) Dialect(dialect int64) FtSearchDialect {
 	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
 	return (FtSearchDialect)(c)
@@ -9848,6 +10416,11 @@ func (c FtSearchSortbyOrderAsc) Limit() FtSearchLimitLimit {
 	return (FtSearchLimitLimit)(c)
 }
 
+func (c FtSearchSortbyOrderAsc) Params() FtSearchParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtSearchParamsParams)(c)
+}
+
 func (c FtSearchSortbyOrderAsc) Dialect(dialect int64) FtSearchDialect {
 	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
 	return (FtSearchDialect)(c)
@@ -9862,6 +10435,11 @@ type FtSearchSortbyOrderDesc Completed
 func (c FtSearchSortbyOrderDesc) Limit() FtSearchLimitLimit {
 	c.cs.s = append(c.cs.s, "LIMIT")
 	return (FtSearchLimitLimit)(c)
+}
+
+func (c FtSearchSortbyOrderDesc) Params() FtSearchParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtSearchParamsParams)(c)
 }
 
 func (c FtSearchSortbyOrderDesc) Dialect(dialect int64) FtSearchDialect {
@@ -9888,6 +10466,11 @@ func (c FtSearchSortbySortby) Desc() FtSearchSortbyOrderDesc {
 func (c FtSearchSortbySortby) Limit() FtSearchLimitLimit {
 	c.cs.s = append(c.cs.s, "LIMIT")
 	return (FtSearchLimitLimit)(c)
+}
+
+func (c FtSearchSortbySortby) Params() FtSearchParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtSearchParamsParams)(c)
 }
 
 func (c FtSearchSortbySortby) Dialect(dialect int64) FtSearchDialect {
@@ -9931,6 +10514,11 @@ func (c FtSearchSummarizeFieldsField) Slop(slop int64) FtSearchSlop {
 	return (FtSearchSlop)(c)
 }
 
+func (c FtSearchSummarizeFieldsField) Timeout(timeout int64) FtSearchTimeout {
+	c.cs.s = append(c.cs.s, "TIMEOUT", strconv.FormatInt(timeout, 10))
+	return (FtSearchTimeout)(c)
+}
+
 func (c FtSearchSummarizeFieldsField) Inorder() FtSearchTagsInorder {
 	c.cs.s = append(c.cs.s, "INORDER")
 	return (FtSearchTagsInorder)(c)
@@ -9971,6 +10559,11 @@ func (c FtSearchSummarizeFieldsField) Limit() FtSearchLimitLimit {
 	return (FtSearchLimitLimit)(c)
 }
 
+func (c FtSearchSummarizeFieldsField) Params() FtSearchParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtSearchParamsParams)(c)
+}
+
 func (c FtSearchSummarizeFieldsField) Dialect(dialect int64) FtSearchDialect {
 	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
 	return (FtSearchDialect)(c)
@@ -10007,6 +10600,11 @@ func (c FtSearchSummarizeFrags) Highlight() FtSearchHighlightHighlight {
 func (c FtSearchSummarizeFrags) Slop(slop int64) FtSearchSlop {
 	c.cs.s = append(c.cs.s, "SLOP", strconv.FormatInt(slop, 10))
 	return (FtSearchSlop)(c)
+}
+
+func (c FtSearchSummarizeFrags) Timeout(timeout int64) FtSearchTimeout {
+	c.cs.s = append(c.cs.s, "TIMEOUT", strconv.FormatInt(timeout, 10))
+	return (FtSearchTimeout)(c)
 }
 
 func (c FtSearchSummarizeFrags) Inorder() FtSearchTagsInorder {
@@ -10049,6 +10647,11 @@ func (c FtSearchSummarizeFrags) Limit() FtSearchLimitLimit {
 	return (FtSearchLimitLimit)(c)
 }
 
+func (c FtSearchSummarizeFrags) Params() FtSearchParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtSearchParamsParams)(c)
+}
+
 func (c FtSearchSummarizeFrags) Dialect(dialect int64) FtSearchDialect {
 	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
 	return (FtSearchDialect)(c)
@@ -10073,6 +10676,11 @@ func (c FtSearchSummarizeLen) Highlight() FtSearchHighlightHighlight {
 func (c FtSearchSummarizeLen) Slop(slop int64) FtSearchSlop {
 	c.cs.s = append(c.cs.s, "SLOP", strconv.FormatInt(slop, 10))
 	return (FtSearchSlop)(c)
+}
+
+func (c FtSearchSummarizeLen) Timeout(timeout int64) FtSearchTimeout {
+	c.cs.s = append(c.cs.s, "TIMEOUT", strconv.FormatInt(timeout, 10))
+	return (FtSearchTimeout)(c)
 }
 
 func (c FtSearchSummarizeLen) Inorder() FtSearchTagsInorder {
@@ -10115,6 +10723,11 @@ func (c FtSearchSummarizeLen) Limit() FtSearchLimitLimit {
 	return (FtSearchLimitLimit)(c)
 }
 
+func (c FtSearchSummarizeLen) Params() FtSearchParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtSearchParamsParams)(c)
+}
+
 func (c FtSearchSummarizeLen) Dialect(dialect int64) FtSearchDialect {
 	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
 	return (FtSearchDialect)(c)
@@ -10134,6 +10747,11 @@ func (c FtSearchSummarizeSeparator) Highlight() FtSearchHighlightHighlight {
 func (c FtSearchSummarizeSeparator) Slop(slop int64) FtSearchSlop {
 	c.cs.s = append(c.cs.s, "SLOP", strconv.FormatInt(slop, 10))
 	return (FtSearchSlop)(c)
+}
+
+func (c FtSearchSummarizeSeparator) Timeout(timeout int64) FtSearchTimeout {
+	c.cs.s = append(c.cs.s, "TIMEOUT", strconv.FormatInt(timeout, 10))
+	return (FtSearchTimeout)(c)
 }
 
 func (c FtSearchSummarizeSeparator) Inorder() FtSearchTagsInorder {
@@ -10174,6 +10792,11 @@ func (c FtSearchSummarizeSeparator) Sortby(sortby string) FtSearchSortbySortby {
 func (c FtSearchSummarizeSeparator) Limit() FtSearchLimitLimit {
 	c.cs.s = append(c.cs.s, "LIMIT")
 	return (FtSearchLimitLimit)(c)
+}
+
+func (c FtSearchSummarizeSeparator) Params() FtSearchParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtSearchParamsParams)(c)
 }
 
 func (c FtSearchSummarizeSeparator) Dialect(dialect int64) FtSearchDialect {
@@ -10217,6 +10840,11 @@ func (c FtSearchSummarizeSummarize) Slop(slop int64) FtSearchSlop {
 	return (FtSearchSlop)(c)
 }
 
+func (c FtSearchSummarizeSummarize) Timeout(timeout int64) FtSearchTimeout {
+	c.cs.s = append(c.cs.s, "TIMEOUT", strconv.FormatInt(timeout, 10))
+	return (FtSearchTimeout)(c)
+}
+
 func (c FtSearchSummarizeSummarize) Inorder() FtSearchTagsInorder {
 	c.cs.s = append(c.cs.s, "INORDER")
 	return (FtSearchTagsInorder)(c)
@@ -10255,6 +10883,11 @@ func (c FtSearchSummarizeSummarize) Sortby(sortby string) FtSearchSortbySortby {
 func (c FtSearchSummarizeSummarize) Limit() FtSearchLimitLimit {
 	c.cs.s = append(c.cs.s, "LIMIT")
 	return (FtSearchLimitLimit)(c)
+}
+
+func (c FtSearchSummarizeSummarize) Params() FtSearchParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtSearchParamsParams)(c)
 }
 
 func (c FtSearchSummarizeSummarize) Dialect(dialect int64) FtSearchDialect {
@@ -10303,12 +10936,73 @@ func (c FtSearchTagsInorder) Limit() FtSearchLimitLimit {
 	return (FtSearchLimitLimit)(c)
 }
 
+func (c FtSearchTagsInorder) Params() FtSearchParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtSearchParamsParams)(c)
+}
+
 func (c FtSearchTagsInorder) Dialect(dialect int64) FtSearchDialect {
 	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
 	return (FtSearchDialect)(c)
 }
 
 func (c FtSearchTagsInorder) Build() Completed {
+	return Completed(c)
+}
+
+type FtSearchTimeout Completed
+
+func (c FtSearchTimeout) Inorder() FtSearchTagsInorder {
+	c.cs.s = append(c.cs.s, "INORDER")
+	return (FtSearchTagsInorder)(c)
+}
+
+func (c FtSearchTimeout) Language(language string) FtSearchLanguage {
+	c.cs.s = append(c.cs.s, "LANGUAGE", language)
+	return (FtSearchLanguage)(c)
+}
+
+func (c FtSearchTimeout) Expander(expander string) FtSearchExpander {
+	c.cs.s = append(c.cs.s, "EXPANDER", expander)
+	return (FtSearchExpander)(c)
+}
+
+func (c FtSearchTimeout) Scorer(scorer string) FtSearchScorer {
+	c.cs.s = append(c.cs.s, "SCORER", scorer)
+	return (FtSearchScorer)(c)
+}
+
+func (c FtSearchTimeout) Explainscore() FtSearchExplainscore {
+	c.cs.s = append(c.cs.s, "EXPLAINSCORE")
+	return (FtSearchExplainscore)(c)
+}
+
+func (c FtSearchTimeout) Payload(payload string) FtSearchPayload {
+	c.cs.s = append(c.cs.s, "PAYLOAD", payload)
+	return (FtSearchPayload)(c)
+}
+
+func (c FtSearchTimeout) Sortby(sortby string) FtSearchSortbySortby {
+	c.cs.s = append(c.cs.s, "SORTBY", sortby)
+	return (FtSearchSortbySortby)(c)
+}
+
+func (c FtSearchTimeout) Limit() FtSearchLimitLimit {
+	c.cs.s = append(c.cs.s, "LIMIT")
+	return (FtSearchLimitLimit)(c)
+}
+
+func (c FtSearchTimeout) Params() FtSearchParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtSearchParamsParams)(c)
+}
+
+func (c FtSearchTimeout) Dialect(dialect int64) FtSearchDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSearchDialect)(c)
+}
+
+func (c FtSearchTimeout) Build() Completed {
 	return Completed(c)
 }
 
@@ -10374,6 +11068,11 @@ func (c FtSearchVerbatim) Slop(slop int64) FtSearchSlop {
 	return (FtSearchSlop)(c)
 }
 
+func (c FtSearchVerbatim) Timeout(timeout int64) FtSearchTimeout {
+	c.cs.s = append(c.cs.s, "TIMEOUT", strconv.FormatInt(timeout, 10))
+	return (FtSearchTimeout)(c)
+}
+
 func (c FtSearchVerbatim) Inorder() FtSearchTagsInorder {
 	c.cs.s = append(c.cs.s, "INORDER")
 	return (FtSearchTagsInorder)(c)
@@ -10412,6 +11111,11 @@ func (c FtSearchVerbatim) Sortby(sortby string) FtSearchSortbySortby {
 func (c FtSearchVerbatim) Limit() FtSearchLimitLimit {
 	c.cs.s = append(c.cs.s, "LIMIT")
 	return (FtSearchLimitLimit)(c)
+}
+
+func (c FtSearchVerbatim) Params() FtSearchParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtSearchParamsParams)(c)
 }
 
 func (c FtSearchVerbatim) Dialect(dialect int64) FtSearchDialect {
@@ -10470,6 +11174,11 @@ func (c FtSearchWithpayloads) Slop(slop int64) FtSearchSlop {
 	return (FtSearchSlop)(c)
 }
 
+func (c FtSearchWithpayloads) Timeout(timeout int64) FtSearchTimeout {
+	c.cs.s = append(c.cs.s, "TIMEOUT", strconv.FormatInt(timeout, 10))
+	return (FtSearchTimeout)(c)
+}
+
 func (c FtSearchWithpayloads) Inorder() FtSearchTagsInorder {
 	c.cs.s = append(c.cs.s, "INORDER")
 	return (FtSearchTagsInorder)(c)
@@ -10508,6 +11217,11 @@ func (c FtSearchWithpayloads) Sortby(sortby string) FtSearchSortbySortby {
 func (c FtSearchWithpayloads) Limit() FtSearchLimitLimit {
 	c.cs.s = append(c.cs.s, "LIMIT")
 	return (FtSearchLimitLimit)(c)
+}
+
+func (c FtSearchWithpayloads) Params() FtSearchParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtSearchParamsParams)(c)
 }
 
 func (c FtSearchWithpayloads) Dialect(dialect int64) FtSearchDialect {
@@ -10571,6 +11285,11 @@ func (c FtSearchWithscores) Slop(slop int64) FtSearchSlop {
 	return (FtSearchSlop)(c)
 }
 
+func (c FtSearchWithscores) Timeout(timeout int64) FtSearchTimeout {
+	c.cs.s = append(c.cs.s, "TIMEOUT", strconv.FormatInt(timeout, 10))
+	return (FtSearchTimeout)(c)
+}
+
 func (c FtSearchWithscores) Inorder() FtSearchTagsInorder {
 	c.cs.s = append(c.cs.s, "INORDER")
 	return (FtSearchTagsInorder)(c)
@@ -10609,6 +11328,11 @@ func (c FtSearchWithscores) Sortby(sortby string) FtSearchSortbySortby {
 func (c FtSearchWithscores) Limit() FtSearchLimitLimit {
 	c.cs.s = append(c.cs.s, "LIMIT")
 	return (FtSearchLimitLimit)(c)
+}
+
+func (c FtSearchWithscores) Params() FtSearchParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtSearchParamsParams)(c)
 }
 
 func (c FtSearchWithscores) Dialect(dialect int64) FtSearchDialect {
@@ -10662,6 +11386,11 @@ func (c FtSearchWithsortkeys) Slop(slop int64) FtSearchSlop {
 	return (FtSearchSlop)(c)
 }
 
+func (c FtSearchWithsortkeys) Timeout(timeout int64) FtSearchTimeout {
+	c.cs.s = append(c.cs.s, "TIMEOUT", strconv.FormatInt(timeout, 10))
+	return (FtSearchTimeout)(c)
+}
+
 func (c FtSearchWithsortkeys) Inorder() FtSearchTagsInorder {
 	c.cs.s = append(c.cs.s, "INORDER")
 	return (FtSearchTagsInorder)(c)
@@ -10700,6 +11429,11 @@ func (c FtSearchWithsortkeys) Sortby(sortby string) FtSearchSortbySortby {
 func (c FtSearchWithsortkeys) Limit() FtSearchLimitLimit {
 	c.cs.s = append(c.cs.s, "LIMIT")
 	return (FtSearchLimitLimit)(c)
+}
+
+func (c FtSearchWithsortkeys) Params() FtSearchParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtSearchParamsParams)(c)
 }
 
 func (c FtSearchWithsortkeys) Dialect(dialect int64) FtSearchDialect {
