@@ -17018,6 +17018,51 @@ func (c JsonClearPath) Build() Completed {
 	return Completed(c)
 }
 
+type JsonDebugHelp Completed
+
+func (b Builder) JsonDebugHelp() (c JsonDebugHelp) {
+	c = JsonDebugHelp{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "JSON.DEBUG", "HELP")
+	return c
+}
+
+func (c JsonDebugHelp) Build() Completed {
+	return Completed(c)
+}
+
+type JsonDebugMemory Completed
+
+func (b Builder) JsonDebugMemory() (c JsonDebugMemory) {
+	c = JsonDebugMemory{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "JSON.DEBUG", "MEMORY")
+	return c
+}
+
+func (c JsonDebugMemory) Key(key string) JsonDebugMemoryKey {
+	if c.ks != NoSlot {
+		c.ks = check(c.ks, slot(key))
+	}
+	c.cs.s = append(c.cs.s, key)
+	return (JsonDebugMemoryKey)(c)
+}
+
+type JsonDebugMemoryKey Completed
+
+func (c JsonDebugMemoryKey) Path(path string) JsonDebugMemoryPath {
+	c.cs.s = append(c.cs.s, path)
+	return (JsonDebugMemoryPath)(c)
+}
+
+func (c JsonDebugMemoryKey) Build() Completed {
+	return Completed(c)
+}
+
+type JsonDebugMemoryPath Completed
+
+func (c JsonDebugMemoryPath) Build() Completed {
+	return Completed(c)
+}
+
 type JsonDel Completed
 
 func (b Builder) JsonDel() (c JsonDel) {
@@ -17048,6 +17093,39 @@ func (c JsonDelKey) Build() Completed {
 type JsonDelPath Completed
 
 func (c JsonDelPath) Build() Completed {
+	return Completed(c)
+}
+
+type JsonForget Completed
+
+func (b Builder) JsonForget() (c JsonForget) {
+	c = JsonForget{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "JSON.FORGET")
+	return c
+}
+
+func (c JsonForget) Key(key string) JsonForgetKey {
+	if c.ks != NoSlot {
+		c.ks = check(c.ks, slot(key))
+	}
+	c.cs.s = append(c.cs.s, key)
+	return (JsonForgetKey)(c)
+}
+
+type JsonForgetKey Completed
+
+func (c JsonForgetKey) Path(path string) JsonForgetPath {
+	c.cs.s = append(c.cs.s, path)
+	return (JsonForgetPath)(c)
+}
+
+func (c JsonForgetKey) Build() Completed {
+	return Completed(c)
+}
+
+type JsonForgetPath Completed
+
+func (c JsonForgetPath) Build() Completed {
 	return Completed(c)
 }
 
@@ -17246,6 +17324,42 @@ func (c JsonNumincrbyPath) Value(value float64) JsonNumincrbyValue {
 type JsonNumincrbyValue Completed
 
 func (c JsonNumincrbyValue) Build() Completed {
+	return Completed(c)
+}
+
+type JsonNummultby Completed
+
+func (b Builder) JsonNummultby() (c JsonNummultby) {
+	c = JsonNummultby{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "JSON.NUMMULTBY")
+	return c
+}
+
+func (c JsonNummultby) Key(key string) JsonNummultbyKey {
+	if c.ks != NoSlot {
+		c.ks = check(c.ks, slot(key))
+	}
+	c.cs.s = append(c.cs.s, key)
+	return (JsonNummultbyKey)(c)
+}
+
+type JsonNummultbyKey Completed
+
+func (c JsonNummultbyKey) Path(path string) JsonNummultbyPath {
+	c.cs.s = append(c.cs.s, path)
+	return (JsonNummultbyPath)(c)
+}
+
+type JsonNummultbyPath Completed
+
+func (c JsonNummultbyPath) Value(value float64) JsonNummultbyValue {
+	c.cs.s = append(c.cs.s, strconv.FormatFloat(value, 'f', -1, 64))
+	return (JsonNummultbyValue)(c)
+}
+
+type JsonNummultbyValue Completed
+
+func (c JsonNummultbyValue) Build() Completed {
 	return Completed(c)
 }
 

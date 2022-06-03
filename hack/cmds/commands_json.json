@@ -16,6 +16,19 @@
     "since": "1.0.0",
     "group": "json"
   },
+  "JSON.FORGET": {
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "path",
+        "type": "string",
+        "optional": true
+      }
+    ]
+  },
   "JSON.GET": {
     "summary": "Gets the value at one or more paths in JSON serialized form",
     "complexity": "O(N) when path is evaluated to a single value where N is the size of the value, O(N) when path is evaluated to multiple values, where N is the size of the key",
@@ -151,6 +164,22 @@
     ],
     "since": "1.0.0",
     "group": "json"
+  },
+  "JSON.NUMMULTBY": {
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "path",
+        "type": "string"
+      },
+      {
+        "name": "value",
+        "type": "double"
+      }
+    ]
   },
   "JSON.STRAPPEND": {
     "summary": "Appends a string to a JSON string value at path",
@@ -407,5 +436,21 @@
     ],
     "since": "1.0.0",
     "group": "json"
+  },
+  "JSON.DEBUG HELP": {
+
+  },
+  "JSON.DEBUG MEMORY": {
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "path",
+        "type": "string",
+        "optional": true
+      }
+    ]
   }
 }
