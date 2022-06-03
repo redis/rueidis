@@ -353,12 +353,18 @@
           "std.p",
           "std.s",
           "var.p",
-          "var.s"
+          "var.s",
+          "twa"
         ]
       },
       {
         "name": "bucketDuration",
         "type": "integer"
+      },
+      {
+        "name": "alignTimestamp",
+        "type": "integer",
+        "optional": true
       }
     ],
     "since": "1.0.0",
@@ -448,12 +454,25 @@
               "std.p",
               "std.s",
               "var.p",
-              "var.s"
+              "var.s",
+              "twa"
             ]
           },
           {
             "name": "bucketDuration",
             "type": "integer"
+          },
+          {
+            "name": "buckettimestamp",
+            "type": "string",
+            "command": "BUCKETTIMESTAMP",
+            "optional": true
+          },
+          {
+            "name": "empty",
+            "type": "enum",
+            "enum": ["EMPTY"],
+            "optional": true
           }
         ]
       }
@@ -529,12 +548,25 @@
               "std.p",
               "std.s",
               "var.p",
-              "var.s"
+              "var.s",
+              "twa"
             ]
           },
           {
             "name": "bucketDuration",
             "type": "integer"
+          },
+          {
+            "name": "buckettimestamp",
+            "type": "string",
+            "command": "BUCKETTIMESTAMP",
+            "optional": true
+          },
+          {
+            "name": "empty",
+            "type": "enum",
+            "enum": ["EMPTY"],
+            "optional": true
           }
         ]
       }
@@ -546,10 +578,6 @@
     "summary": "Query a range across multiple time-series by filters in forward direction",
     "complexity": "O(n/m+k) where n = Number of data points, m = Chunk size (data points per chunk), k = Number of data points that are in the requested ranges",
     "arguments": [
-      {
-        "name": "key",
-        "type": "key"
-      },
       {
         "name": "fromTimestamp",
         "type": "integer"
@@ -618,12 +646,25 @@
               "std.p",
               "std.s",
               "var.p",
-              "var.s"
+              "var.s",
+              "twa"
             ]
           },
           {
             "name": "bucketDuration",
             "type": "integer"
+          },
+          {
+            "name": "buckettimestamp",
+            "type": "string",
+            "command": "BUCKETTIMESTAMP",
+            "optional": true
+          },
+          {
+            "name": "empty",
+            "type": "enum",
+            "enum": ["EMPTY"],
+            "optional": true
           }
         ]
       },
@@ -663,10 +704,6 @@
     "complexity": "O(n/m+k) where n = Number of data points, m = Chunk size (data points per chunk), k = Number of data points that are in the requested ranges",
     "arguments": [
       {
-        "name": "key",
-        "type": "key"
-      },
-      {
         "name": "fromTimestamp",
         "type": "integer"
       },
@@ -734,12 +771,25 @@
               "std.p",
               "std.s",
               "var.p",
-              "var.s"
+              "var.s",
+              "twa"
             ]
           },
           {
             "name": "bucketDuration",
             "type": "integer"
+          },
+          {
+            "name": "buckettimestamp",
+            "type": "string",
+            "command": "BUCKETTIMESTAMP",
+            "optional": true
+          },
+          {
+            "name": "empty",
+            "type": "enum",
+            "enum": ["EMPTY"],
+            "optional": true
           }
         ]
       },

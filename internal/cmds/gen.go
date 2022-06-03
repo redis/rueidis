@@ -24448,6 +24448,13 @@ func (c TsCreateruleAggregationSum) Bucketduration(bucketduration int64) TsCreat
 	return (TsCreateruleBucketduration)(c)
 }
 
+type TsCreateruleAggregationTwa Completed
+
+func (c TsCreateruleAggregationTwa) Bucketduration(bucketduration int64) TsCreateruleBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsCreateruleBucketduration)(c)
+}
+
 type TsCreateruleAggregationVarP Completed
 
 func (c TsCreateruleAggregationVarP) Bucketduration(bucketduration int64) TsCreateruleBucketduration {
@@ -24462,7 +24469,18 @@ func (c TsCreateruleAggregationVarS) Bucketduration(bucketduration int64) TsCrea
 	return (TsCreateruleBucketduration)(c)
 }
 
+type TsCreateruleAligntimestamp Completed
+
+func (c TsCreateruleAligntimestamp) Build() Completed {
+	return Completed(c)
+}
+
 type TsCreateruleBucketduration Completed
+
+func (c TsCreateruleBucketduration) Aligntimestamp(aligntimestamp int64) TsCreateruleAligntimestamp {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(aligntimestamp, 10))
+	return (TsCreateruleAligntimestamp)(c)
+}
 
 func (c TsCreateruleBucketduration) Build() Completed {
 	return Completed(c)
@@ -24528,6 +24546,11 @@ func (c TsCreateruleDestkey) AggregationVarP() TsCreateruleAggregationVarP {
 func (c TsCreateruleDestkey) AggregationVarS() TsCreateruleAggregationVarS {
 	c.cs.s = append(c.cs.s, "AGGREGATION", "var.s")
 	return (TsCreateruleAggregationVarS)(c)
+}
+
+func (c TsCreateruleDestkey) AggregationTwa() TsCreateruleAggregationTwa {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	return (TsCreateruleAggregationTwa)(c)
 }
 
 type TsCreateruleSourcekey Completed
@@ -25028,12 +25051,9 @@ func (b Builder) TsMrange() (c TsMrange) {
 	return c
 }
 
-func (c TsMrange) Key(key string) TsMrangeKey {
-	if c.ks != NoSlot {
-		c.ks = check(c.ks, slot(key))
-	}
-	c.cs.s = append(c.cs.s, key)
-	return (TsMrangeKey)(c)
+func (c TsMrange) Fromtimestamp(fromtimestamp int64) TsMrangeFromtimestamp {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(fromtimestamp, 10))
+	return (TsMrangeFromtimestamp)(c)
 }
 
 type TsMrangeAggregationAggregationAvg Completed
@@ -25106,6 +25126,13 @@ func (c TsMrangeAggregationAggregationSum) Bucketduration(bucketduration int64) 
 	return (TsMrangeAggregationBucketduration)(c)
 }
 
+type TsMrangeAggregationAggregationTwa Completed
+
+func (c TsMrangeAggregationAggregationTwa) Bucketduration(bucketduration int64) TsMrangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsMrangeAggregationBucketduration)(c)
+}
+
 type TsMrangeAggregationAggregationVarP Completed
 
 func (c TsMrangeAggregationAggregationVarP) Bucketduration(bucketduration int64) TsMrangeAggregationBucketduration {
@@ -25122,7 +25149,38 @@ func (c TsMrangeAggregationAggregationVarS) Bucketduration(bucketduration int64)
 
 type TsMrangeAggregationBucketduration Completed
 
+func (c TsMrangeAggregationBucketduration) Buckettimestamp(buckettimestamp string) TsMrangeAggregationBuckettimestamp {
+	c.cs.s = append(c.cs.s, "BUCKETTIMESTAMP", buckettimestamp)
+	return (TsMrangeAggregationBuckettimestamp)(c)
+}
+
+func (c TsMrangeAggregationBucketduration) Empty() TsMrangeAggregationEmpty {
+	c.cs.s = append(c.cs.s, "EMPTY")
+	return (TsMrangeAggregationEmpty)(c)
+}
+
 func (c TsMrangeAggregationBucketduration) Filter(filter ...string) TsMrangeFilter {
+	c.cs.s = append(c.cs.s, "FILTER")
+	c.cs.s = append(c.cs.s, filter...)
+	return (TsMrangeFilter)(c)
+}
+
+type TsMrangeAggregationBuckettimestamp Completed
+
+func (c TsMrangeAggregationBuckettimestamp) Empty() TsMrangeAggregationEmpty {
+	c.cs.s = append(c.cs.s, "EMPTY")
+	return (TsMrangeAggregationEmpty)(c)
+}
+
+func (c TsMrangeAggregationBuckettimestamp) Filter(filter ...string) TsMrangeFilter {
+	c.cs.s = append(c.cs.s, "FILTER")
+	c.cs.s = append(c.cs.s, filter...)
+	return (TsMrangeFilter)(c)
+}
+
+type TsMrangeAggregationEmpty Completed
+
+func (c TsMrangeAggregationEmpty) Filter(filter ...string) TsMrangeFilter {
 	c.cs.s = append(c.cs.s, "FILTER")
 	c.cs.s = append(c.cs.s, filter...)
 	return (TsMrangeFilter)(c)
@@ -25188,6 +25246,11 @@ func (c TsMrangeAlign) AggregationVarP() TsMrangeAggregationAggregationVarP {
 func (c TsMrangeAlign) AggregationVarS() TsMrangeAggregationAggregationVarS {
 	c.cs.s = append(c.cs.s, "AGGREGATION", "var.s")
 	return (TsMrangeAggregationAggregationVarS)(c)
+}
+
+func (c TsMrangeAlign) AggregationTwa() TsMrangeAggregationAggregationTwa {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	return (TsMrangeAggregationAggregationTwa)(c)
 }
 
 func (c TsMrangeAlign) Filter(filter ...string) TsMrangeFilter {
@@ -25261,6 +25324,11 @@ func (c TsMrangeCount) AggregationVarP() TsMrangeAggregationAggregationVarP {
 func (c TsMrangeCount) AggregationVarS() TsMrangeAggregationAggregationVarS {
 	c.cs.s = append(c.cs.s, "AGGREGATION", "var.s")
 	return (TsMrangeAggregationAggregationVarS)(c)
+}
+
+func (c TsMrangeCount) AggregationTwa() TsMrangeAggregationAggregationTwa {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	return (TsMrangeAggregationAggregationTwa)(c)
 }
 
 func (c TsMrangeCount) Filter(filter ...string) TsMrangeFilter {
@@ -25382,6 +25450,11 @@ func (c TsMrangeFilterByTs) AggregationVarS() TsMrangeAggregationAggregationVarS
 	return (TsMrangeAggregationAggregationVarS)(c)
 }
 
+func (c TsMrangeFilterByTs) AggregationTwa() TsMrangeAggregationAggregationTwa {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	return (TsMrangeAggregationAggregationTwa)(c)
+}
+
 func (c TsMrangeFilterByTs) Filter(filter ...string) TsMrangeFilter {
 	c.cs.s = append(c.cs.s, "FILTER")
 	c.cs.s = append(c.cs.s, filter...)
@@ -25471,6 +25544,11 @@ func (c TsMrangeFilterByValue) AggregationVarS() TsMrangeAggregationAggregationV
 	return (TsMrangeAggregationAggregationVarS)(c)
 }
 
+func (c TsMrangeFilterByValue) AggregationTwa() TsMrangeAggregationAggregationTwa {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	return (TsMrangeAggregationAggregationTwa)(c)
+}
+
 func (c TsMrangeFilterByValue) Filter(filter ...string) TsMrangeFilter {
 	c.cs.s = append(c.cs.s, "FILTER")
 	c.cs.s = append(c.cs.s, filter...)
@@ -25488,13 +25566,6 @@ type TsMrangeGroupby Completed
 
 func (c TsMrangeGroupby) Build() Completed {
 	return Completed(c)
-}
-
-type TsMrangeKey Completed
-
-func (c TsMrangeKey) Fromtimestamp(fromtimestamp int64) TsMrangeFromtimestamp {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(fromtimestamp, 10))
-	return (TsMrangeFromtimestamp)(c)
 }
 
 type TsMrangeSelectedLabels Completed
@@ -25567,6 +25638,11 @@ func (c TsMrangeSelectedLabels) AggregationVarP() TsMrangeAggregationAggregation
 func (c TsMrangeSelectedLabels) AggregationVarS() TsMrangeAggregationAggregationVarS {
 	c.cs.s = append(c.cs.s, "AGGREGATION", "var.s")
 	return (TsMrangeAggregationAggregationVarS)(c)
+}
+
+func (c TsMrangeSelectedLabels) AggregationTwa() TsMrangeAggregationAggregationTwa {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	return (TsMrangeAggregationAggregationTwa)(c)
 }
 
 func (c TsMrangeSelectedLabels) Filter(filter ...string) TsMrangeFilter {
@@ -25671,6 +25747,11 @@ func (c TsMrangeTotimestamp) AggregationVarS() TsMrangeAggregationAggregationVar
 	return (TsMrangeAggregationAggregationVarS)(c)
 }
 
+func (c TsMrangeTotimestamp) AggregationTwa() TsMrangeAggregationAggregationTwa {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	return (TsMrangeAggregationAggregationTwa)(c)
+}
+
 func (c TsMrangeTotimestamp) Filter(filter ...string) TsMrangeFilter {
 	c.cs.s = append(c.cs.s, "FILTER")
 	c.cs.s = append(c.cs.s, filter...)
@@ -25749,6 +25830,11 @@ func (c TsMrangeWithlabels) AggregationVarS() TsMrangeAggregationAggregationVarS
 	return (TsMrangeAggregationAggregationVarS)(c)
 }
 
+func (c TsMrangeWithlabels) AggregationTwa() TsMrangeAggregationAggregationTwa {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	return (TsMrangeAggregationAggregationTwa)(c)
+}
+
 func (c TsMrangeWithlabels) Filter(filter ...string) TsMrangeFilter {
 	c.cs.s = append(c.cs.s, "FILTER")
 	c.cs.s = append(c.cs.s, filter...)
@@ -25763,12 +25849,9 @@ func (b Builder) TsMrevrange() (c TsMrevrange) {
 	return c
 }
 
-func (c TsMrevrange) Key(key string) TsMrevrangeKey {
-	if c.ks != NoSlot {
-		c.ks = check(c.ks, slot(key))
-	}
-	c.cs.s = append(c.cs.s, key)
-	return (TsMrevrangeKey)(c)
+func (c TsMrevrange) Fromtimestamp(fromtimestamp int64) TsMrevrangeFromtimestamp {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(fromtimestamp, 10))
+	return (TsMrevrangeFromtimestamp)(c)
 }
 
 type TsMrevrangeAggregationAggregationAvg Completed
@@ -25841,6 +25924,13 @@ func (c TsMrevrangeAggregationAggregationSum) Bucketduration(bucketduration int6
 	return (TsMrevrangeAggregationBucketduration)(c)
 }
 
+type TsMrevrangeAggregationAggregationTwa Completed
+
+func (c TsMrevrangeAggregationAggregationTwa) Bucketduration(bucketduration int64) TsMrevrangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsMrevrangeAggregationBucketduration)(c)
+}
+
 type TsMrevrangeAggregationAggregationVarP Completed
 
 func (c TsMrevrangeAggregationAggregationVarP) Bucketduration(bucketduration int64) TsMrevrangeAggregationBucketduration {
@@ -25857,7 +25947,38 @@ func (c TsMrevrangeAggregationAggregationVarS) Bucketduration(bucketduration int
 
 type TsMrevrangeAggregationBucketduration Completed
 
+func (c TsMrevrangeAggregationBucketduration) Buckettimestamp(buckettimestamp string) TsMrevrangeAggregationBuckettimestamp {
+	c.cs.s = append(c.cs.s, "BUCKETTIMESTAMP", buckettimestamp)
+	return (TsMrevrangeAggregationBuckettimestamp)(c)
+}
+
+func (c TsMrevrangeAggregationBucketduration) Empty() TsMrevrangeAggregationEmpty {
+	c.cs.s = append(c.cs.s, "EMPTY")
+	return (TsMrevrangeAggregationEmpty)(c)
+}
+
 func (c TsMrevrangeAggregationBucketduration) Filter(filter ...string) TsMrevrangeFilter {
+	c.cs.s = append(c.cs.s, "FILTER")
+	c.cs.s = append(c.cs.s, filter...)
+	return (TsMrevrangeFilter)(c)
+}
+
+type TsMrevrangeAggregationBuckettimestamp Completed
+
+func (c TsMrevrangeAggregationBuckettimestamp) Empty() TsMrevrangeAggregationEmpty {
+	c.cs.s = append(c.cs.s, "EMPTY")
+	return (TsMrevrangeAggregationEmpty)(c)
+}
+
+func (c TsMrevrangeAggregationBuckettimestamp) Filter(filter ...string) TsMrevrangeFilter {
+	c.cs.s = append(c.cs.s, "FILTER")
+	c.cs.s = append(c.cs.s, filter...)
+	return (TsMrevrangeFilter)(c)
+}
+
+type TsMrevrangeAggregationEmpty Completed
+
+func (c TsMrevrangeAggregationEmpty) Filter(filter ...string) TsMrevrangeFilter {
 	c.cs.s = append(c.cs.s, "FILTER")
 	c.cs.s = append(c.cs.s, filter...)
 	return (TsMrevrangeFilter)(c)
@@ -25923,6 +26044,11 @@ func (c TsMrevrangeAlign) AggregationVarP() TsMrevrangeAggregationAggregationVar
 func (c TsMrevrangeAlign) AggregationVarS() TsMrevrangeAggregationAggregationVarS {
 	c.cs.s = append(c.cs.s, "AGGREGATION", "var.s")
 	return (TsMrevrangeAggregationAggregationVarS)(c)
+}
+
+func (c TsMrevrangeAlign) AggregationTwa() TsMrevrangeAggregationAggregationTwa {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	return (TsMrevrangeAggregationAggregationTwa)(c)
 }
 
 func (c TsMrevrangeAlign) Filter(filter ...string) TsMrevrangeFilter {
@@ -25996,6 +26122,11 @@ func (c TsMrevrangeCount) AggregationVarP() TsMrevrangeAggregationAggregationVar
 func (c TsMrevrangeCount) AggregationVarS() TsMrevrangeAggregationAggregationVarS {
 	c.cs.s = append(c.cs.s, "AGGREGATION", "var.s")
 	return (TsMrevrangeAggregationAggregationVarS)(c)
+}
+
+func (c TsMrevrangeCount) AggregationTwa() TsMrevrangeAggregationAggregationTwa {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	return (TsMrevrangeAggregationAggregationTwa)(c)
 }
 
 func (c TsMrevrangeCount) Filter(filter ...string) TsMrevrangeFilter {
@@ -26117,6 +26248,11 @@ func (c TsMrevrangeFilterByTs) AggregationVarS() TsMrevrangeAggregationAggregati
 	return (TsMrevrangeAggregationAggregationVarS)(c)
 }
 
+func (c TsMrevrangeFilterByTs) AggregationTwa() TsMrevrangeAggregationAggregationTwa {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	return (TsMrevrangeAggregationAggregationTwa)(c)
+}
+
 func (c TsMrevrangeFilterByTs) Filter(filter ...string) TsMrevrangeFilter {
 	c.cs.s = append(c.cs.s, "FILTER")
 	c.cs.s = append(c.cs.s, filter...)
@@ -26206,6 +26342,11 @@ func (c TsMrevrangeFilterByValue) AggregationVarS() TsMrevrangeAggregationAggreg
 	return (TsMrevrangeAggregationAggregationVarS)(c)
 }
 
+func (c TsMrevrangeFilterByValue) AggregationTwa() TsMrevrangeAggregationAggregationTwa {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	return (TsMrevrangeAggregationAggregationTwa)(c)
+}
+
 func (c TsMrevrangeFilterByValue) Filter(filter ...string) TsMrevrangeFilter {
 	c.cs.s = append(c.cs.s, "FILTER")
 	c.cs.s = append(c.cs.s, filter...)
@@ -26223,13 +26364,6 @@ type TsMrevrangeGroupby Completed
 
 func (c TsMrevrangeGroupby) Build() Completed {
 	return Completed(c)
-}
-
-type TsMrevrangeKey Completed
-
-func (c TsMrevrangeKey) Fromtimestamp(fromtimestamp int64) TsMrevrangeFromtimestamp {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(fromtimestamp, 10))
-	return (TsMrevrangeFromtimestamp)(c)
 }
 
 type TsMrevrangeSelectedLabels Completed
@@ -26302,6 +26436,11 @@ func (c TsMrevrangeSelectedLabels) AggregationVarP() TsMrevrangeAggregationAggre
 func (c TsMrevrangeSelectedLabels) AggregationVarS() TsMrevrangeAggregationAggregationVarS {
 	c.cs.s = append(c.cs.s, "AGGREGATION", "var.s")
 	return (TsMrevrangeAggregationAggregationVarS)(c)
+}
+
+func (c TsMrevrangeSelectedLabels) AggregationTwa() TsMrevrangeAggregationAggregationTwa {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	return (TsMrevrangeAggregationAggregationTwa)(c)
 }
 
 func (c TsMrevrangeSelectedLabels) Filter(filter ...string) TsMrevrangeFilter {
@@ -26406,6 +26545,11 @@ func (c TsMrevrangeTotimestamp) AggregationVarS() TsMrevrangeAggregationAggregat
 	return (TsMrevrangeAggregationAggregationVarS)(c)
 }
 
+func (c TsMrevrangeTotimestamp) AggregationTwa() TsMrevrangeAggregationAggregationTwa {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	return (TsMrevrangeAggregationAggregationTwa)(c)
+}
+
 func (c TsMrevrangeTotimestamp) Filter(filter ...string) TsMrevrangeFilter {
 	c.cs.s = append(c.cs.s, "FILTER")
 	c.cs.s = append(c.cs.s, filter...)
@@ -26482,6 +26626,11 @@ func (c TsMrevrangeWithlabels) AggregationVarP() TsMrevrangeAggregationAggregati
 func (c TsMrevrangeWithlabels) AggregationVarS() TsMrevrangeAggregationAggregationVarS {
 	c.cs.s = append(c.cs.s, "AGGREGATION", "var.s")
 	return (TsMrevrangeAggregationAggregationVarS)(c)
+}
+
+func (c TsMrevrangeWithlabels) AggregationTwa() TsMrevrangeAggregationAggregationTwa {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	return (TsMrevrangeAggregationAggregationTwa)(c)
 }
 
 func (c TsMrevrangeWithlabels) Filter(filter ...string) TsMrevrangeFilter {
@@ -26600,6 +26749,13 @@ func (c TsRangeAggregationAggregationSum) Bucketduration(bucketduration int64) T
 	return (TsRangeAggregationBucketduration)(c)
 }
 
+type TsRangeAggregationAggregationTwa Completed
+
+func (c TsRangeAggregationAggregationTwa) Bucketduration(bucketduration int64) TsRangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsRangeAggregationBucketduration)(c)
+}
+
 type TsRangeAggregationAggregationVarP Completed
 
 func (c TsRangeAggregationAggregationVarP) Bucketduration(bucketduration int64) TsRangeAggregationBucketduration {
@@ -26616,7 +26772,34 @@ func (c TsRangeAggregationAggregationVarS) Bucketduration(bucketduration int64) 
 
 type TsRangeAggregationBucketduration Completed
 
+func (c TsRangeAggregationBucketduration) Buckettimestamp(buckettimestamp string) TsRangeAggregationBuckettimestamp {
+	c.cs.s = append(c.cs.s, "BUCKETTIMESTAMP", buckettimestamp)
+	return (TsRangeAggregationBuckettimestamp)(c)
+}
+
+func (c TsRangeAggregationBucketduration) Empty() TsRangeAggregationEmpty {
+	c.cs.s = append(c.cs.s, "EMPTY")
+	return (TsRangeAggregationEmpty)(c)
+}
+
 func (c TsRangeAggregationBucketduration) Build() Completed {
+	return Completed(c)
+}
+
+type TsRangeAggregationBuckettimestamp Completed
+
+func (c TsRangeAggregationBuckettimestamp) Empty() TsRangeAggregationEmpty {
+	c.cs.s = append(c.cs.s, "EMPTY")
+	return (TsRangeAggregationEmpty)(c)
+}
+
+func (c TsRangeAggregationBuckettimestamp) Build() Completed {
+	return Completed(c)
+}
+
+type TsRangeAggregationEmpty Completed
+
+func (c TsRangeAggregationEmpty) Build() Completed {
 	return Completed(c)
 }
 
@@ -26680,6 +26863,11 @@ func (c TsRangeAlign) AggregationVarP() TsRangeAggregationAggregationVarP {
 func (c TsRangeAlign) AggregationVarS() TsRangeAggregationAggregationVarS {
 	c.cs.s = append(c.cs.s, "AGGREGATION", "var.s")
 	return (TsRangeAggregationAggregationVarS)(c)
+}
+
+func (c TsRangeAlign) AggregationTwa() TsRangeAggregationAggregationTwa {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	return (TsRangeAggregationAggregationTwa)(c)
 }
 
 func (c TsRangeAlign) Build() Completed {
@@ -26751,6 +26939,11 @@ func (c TsRangeCount) AggregationVarP() TsRangeAggregationAggregationVarP {
 func (c TsRangeCount) AggregationVarS() TsRangeAggregationAggregationVarS {
 	c.cs.s = append(c.cs.s, "AGGREGATION", "var.s")
 	return (TsRangeAggregationAggregationVarS)(c)
+}
+
+func (c TsRangeCount) AggregationTwa() TsRangeAggregationAggregationTwa {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	return (TsRangeAggregationAggregationTwa)(c)
 }
 
 func (c TsRangeCount) Build() Completed {
@@ -26842,6 +27035,11 @@ func (c TsRangeFilterByTs) AggregationVarS() TsRangeAggregationAggregationVarS {
 	return (TsRangeAggregationAggregationVarS)(c)
 }
 
+func (c TsRangeFilterByTs) AggregationTwa() TsRangeAggregationAggregationTwa {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	return (TsRangeAggregationAggregationTwa)(c)
+}
+
 func (c TsRangeFilterByTs) Build() Completed {
 	return Completed(c)
 }
@@ -26916,6 +27114,11 @@ func (c TsRangeFilterByValue) AggregationVarP() TsRangeAggregationAggregationVar
 func (c TsRangeFilterByValue) AggregationVarS() TsRangeAggregationAggregationVarS {
 	c.cs.s = append(c.cs.s, "AGGREGATION", "var.s")
 	return (TsRangeAggregationAggregationVarS)(c)
+}
+
+func (c TsRangeFilterByValue) AggregationTwa() TsRangeAggregationAggregationTwa {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	return (TsRangeAggregationAggregationTwa)(c)
 }
 
 func (c TsRangeFilterByValue) Build() Completed {
@@ -27021,6 +27224,11 @@ func (c TsRangeTotimestamp) AggregationVarS() TsRangeAggregationAggregationVarS 
 	return (TsRangeAggregationAggregationVarS)(c)
 }
 
+func (c TsRangeTotimestamp) AggregationTwa() TsRangeAggregationAggregationTwa {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	return (TsRangeAggregationAggregationTwa)(c)
+}
+
 func (c TsRangeTotimestamp) Build() Completed {
 	return Completed(c)
 }
@@ -27111,6 +27319,13 @@ func (c TsRevrangeAggregationAggregationSum) Bucketduration(bucketduration int64
 	return (TsRevrangeAggregationBucketduration)(c)
 }
 
+type TsRevrangeAggregationAggregationTwa Completed
+
+func (c TsRevrangeAggregationAggregationTwa) Bucketduration(bucketduration int64) TsRevrangeAggregationBucketduration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(bucketduration, 10))
+	return (TsRevrangeAggregationBucketduration)(c)
+}
+
 type TsRevrangeAggregationAggregationVarP Completed
 
 func (c TsRevrangeAggregationAggregationVarP) Bucketduration(bucketduration int64) TsRevrangeAggregationBucketduration {
@@ -27127,7 +27342,34 @@ func (c TsRevrangeAggregationAggregationVarS) Bucketduration(bucketduration int6
 
 type TsRevrangeAggregationBucketduration Completed
 
+func (c TsRevrangeAggregationBucketduration) Buckettimestamp(buckettimestamp string) TsRevrangeAggregationBuckettimestamp {
+	c.cs.s = append(c.cs.s, "BUCKETTIMESTAMP", buckettimestamp)
+	return (TsRevrangeAggregationBuckettimestamp)(c)
+}
+
+func (c TsRevrangeAggregationBucketduration) Empty() TsRevrangeAggregationEmpty {
+	c.cs.s = append(c.cs.s, "EMPTY")
+	return (TsRevrangeAggregationEmpty)(c)
+}
+
 func (c TsRevrangeAggregationBucketduration) Build() Completed {
+	return Completed(c)
+}
+
+type TsRevrangeAggregationBuckettimestamp Completed
+
+func (c TsRevrangeAggregationBuckettimestamp) Empty() TsRevrangeAggregationEmpty {
+	c.cs.s = append(c.cs.s, "EMPTY")
+	return (TsRevrangeAggregationEmpty)(c)
+}
+
+func (c TsRevrangeAggregationBuckettimestamp) Build() Completed {
+	return Completed(c)
+}
+
+type TsRevrangeAggregationEmpty Completed
+
+func (c TsRevrangeAggregationEmpty) Build() Completed {
 	return Completed(c)
 }
 
@@ -27191,6 +27433,11 @@ func (c TsRevrangeAlign) AggregationVarP() TsRevrangeAggregationAggregationVarP 
 func (c TsRevrangeAlign) AggregationVarS() TsRevrangeAggregationAggregationVarS {
 	c.cs.s = append(c.cs.s, "AGGREGATION", "var.s")
 	return (TsRevrangeAggregationAggregationVarS)(c)
+}
+
+func (c TsRevrangeAlign) AggregationTwa() TsRevrangeAggregationAggregationTwa {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	return (TsRevrangeAggregationAggregationTwa)(c)
 }
 
 func (c TsRevrangeAlign) Build() Completed {
@@ -27262,6 +27509,11 @@ func (c TsRevrangeCount) AggregationVarP() TsRevrangeAggregationAggregationVarP 
 func (c TsRevrangeCount) AggregationVarS() TsRevrangeAggregationAggregationVarS {
 	c.cs.s = append(c.cs.s, "AGGREGATION", "var.s")
 	return (TsRevrangeAggregationAggregationVarS)(c)
+}
+
+func (c TsRevrangeCount) AggregationTwa() TsRevrangeAggregationAggregationTwa {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	return (TsRevrangeAggregationAggregationTwa)(c)
 }
 
 func (c TsRevrangeCount) Build() Completed {
@@ -27353,6 +27605,11 @@ func (c TsRevrangeFilterByTs) AggregationVarS() TsRevrangeAggregationAggregation
 	return (TsRevrangeAggregationAggregationVarS)(c)
 }
 
+func (c TsRevrangeFilterByTs) AggregationTwa() TsRevrangeAggregationAggregationTwa {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	return (TsRevrangeAggregationAggregationTwa)(c)
+}
+
 func (c TsRevrangeFilterByTs) Build() Completed {
 	return Completed(c)
 }
@@ -27427,6 +27684,11 @@ func (c TsRevrangeFilterByValue) AggregationVarP() TsRevrangeAggregationAggregat
 func (c TsRevrangeFilterByValue) AggregationVarS() TsRevrangeAggregationAggregationVarS {
 	c.cs.s = append(c.cs.s, "AGGREGATION", "var.s")
 	return (TsRevrangeAggregationAggregationVarS)(c)
+}
+
+func (c TsRevrangeFilterByValue) AggregationTwa() TsRevrangeAggregationAggregationTwa {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	return (TsRevrangeAggregationAggregationTwa)(c)
 }
 
 func (c TsRevrangeFilterByValue) Build() Completed {
@@ -27530,6 +27792,11 @@ func (c TsRevrangeTotimestamp) AggregationVarP() TsRevrangeAggregationAggregatio
 func (c TsRevrangeTotimestamp) AggregationVarS() TsRevrangeAggregationAggregationVarS {
 	c.cs.s = append(c.cs.s, "AGGREGATION", "var.s")
 	return (TsRevrangeAggregationAggregationVarS)(c)
+}
+
+func (c TsRevrangeTotimestamp) AggregationTwa() TsRevrangeAggregationAggregationTwa {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	return (TsRevrangeAggregationAggregationTwa)(c)
 }
 
 func (c TsRevrangeTotimestamp) Build() Completed {
