@@ -267,8 +267,7 @@
       },
       {
         "name": "item",
-        "type": "string",
-        "multiple": true
+        "type": "string"
       }
     ],
     "since": "1.0.0",
@@ -699,6 +698,19 @@
     "since": "2.0.0",
     "group": "topk"
   },
+  "TOPK.COUNT": {
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "item",
+        "type": "string",
+        "multiple": true
+      }
+    ]
+  },
   "TOPK.LIST": {
     "summary": "Return full list of items in Top K list",
     "complexity": "O(k) where k is the value of top-k",
@@ -706,10 +718,6 @@
       {
         "name": "key",
         "type": "key"
-      },
-      {
-        "name": "numKeys",
-        "type": "integer"
       },
       {
         "name": "withcount",
@@ -841,7 +849,8 @@
       },
       {
         "name": "quantile",
-        "type": "double"
+        "type": "double",
+        "multiple": true
       }
     ],
     "since": "2.4.0",
@@ -862,6 +871,22 @@
     ],
     "since": "2.4.0",
     "group": "tdigest"
+  },
+  "TDIGEST.TRIMMED_MEAN": {
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "low_cut_quantile",
+        "type": "double"
+      },
+      {
+        "name": "high_cut_quantile",
+        "type": "double"
+      }
+    ]
   },
   "TDIGEST.INFO": {
     "summary": "Returns information about a sketch",

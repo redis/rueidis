@@ -2801,19 +2801,14 @@ func (c CfAddnx) Key(key string) CfAddnxKey {
 
 type CfAddnxItem Completed
 
-func (c CfAddnxItem) Item(item ...string) CfAddnxItem {
-	c.cs.s = append(c.cs.s, item...)
-	return c
-}
-
 func (c CfAddnxItem) Build() Completed {
 	return Completed(c)
 }
 
 type CfAddnxKey Completed
 
-func (c CfAddnxKey) Item(item ...string) CfAddnxItem {
-	c.cs.s = append(c.cs.s, item...)
+func (c CfAddnxKey) Item(item string) CfAddnxItem {
+	c.cs.s = append(c.cs.s, item)
 	return (CfAddnxItem)(c)
 }
 
@@ -22925,12 +22920,21 @@ func (c TdigestQuantile) Key(key string) TdigestQuantileKey {
 
 type TdigestQuantileKey Completed
 
-func (c TdigestQuantileKey) Quantile(quantile float64) TdigestQuantileQuantile {
-	c.cs.s = append(c.cs.s, strconv.FormatFloat(quantile, 'f', -1, 64))
+func (c TdigestQuantileKey) Quantile(quantile ...float64) TdigestQuantileQuantile {
+	for _, n := range quantile {
+		c.cs.s = append(c.cs.s, strconv.FormatFloat(n, 'f', -1, 64))
+	}
 	return (TdigestQuantileQuantile)(c)
 }
 
 type TdigestQuantileQuantile Completed
+
+func (c TdigestQuantileQuantile) Quantile(quantile ...float64) TdigestQuantileQuantile {
+	for _, n := range quantile {
+		c.cs.s = append(c.cs.s, strconv.FormatFloat(n, 'f', -1, 64))
+	}
+	return c
+}
 
 func (c TdigestQuantileQuantile) Build() Completed {
 	return Completed(c)
@@ -22956,6 +22960,42 @@ type TdigestResetKey Completed
 
 func (c TdigestResetKey) Build() Completed {
 	return Completed(c)
+}
+
+type TdigestTrimmedMean Completed
+
+func (b Builder) TdigestTrimmedMean() (c TdigestTrimmedMean) {
+	c = TdigestTrimmedMean{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "TDIGEST.TRIMMED_MEAN")
+	return c
+}
+
+func (c TdigestTrimmedMean) Key(key string) TdigestTrimmedMeanKey {
+	if c.ks != NoSlot {
+		c.ks = check(c.ks, slot(key))
+	}
+	c.cs.s = append(c.cs.s, key)
+	return (TdigestTrimmedMeanKey)(c)
+}
+
+type TdigestTrimmedMeanHighCutQuantile Completed
+
+func (c TdigestTrimmedMeanHighCutQuantile) Build() Completed {
+	return Completed(c)
+}
+
+type TdigestTrimmedMeanKey Completed
+
+func (c TdigestTrimmedMeanKey) LowCutQuantile(lowCutQuantile float64) TdigestTrimmedMeanLowCutQuantile {
+	c.cs.s = append(c.cs.s, strconv.FormatFloat(lowCutQuantile, 'f', -1, 64))
+	return (TdigestTrimmedMeanLowCutQuantile)(c)
+}
+
+type TdigestTrimmedMeanLowCutQuantile Completed
+
+func (c TdigestTrimmedMeanLowCutQuantile) HighCutQuantile(highCutQuantile float64) TdigestTrimmedMeanHighCutQuantile {
+	c.cs.s = append(c.cs.s, strconv.FormatFloat(highCutQuantile, 'f', -1, 64))
+	return (TdigestTrimmedMeanHighCutQuantile)(c)
 }
 
 type Time Completed
@@ -23002,6 +23042,40 @@ type TopkAddKey Completed
 func (c TopkAddKey) Items(items ...string) TopkAddItems {
 	c.cs.s = append(c.cs.s, items...)
 	return (TopkAddItems)(c)
+}
+
+type TopkCount Completed
+
+func (b Builder) TopkCount() (c TopkCount) {
+	c = TopkCount{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "TOPK.COUNT")
+	return c
+}
+
+func (c TopkCount) Key(key string) TopkCountKey {
+	if c.ks != NoSlot {
+		c.ks = check(c.ks, slot(key))
+	}
+	c.cs.s = append(c.cs.s, key)
+	return (TopkCountKey)(c)
+}
+
+type TopkCountItem Completed
+
+func (c TopkCountItem) Item(item ...string) TopkCountItem {
+	c.cs.s = append(c.cs.s, item...)
+	return c
+}
+
+func (c TopkCountItem) Build() Completed {
+	return Completed(c)
+}
+
+type TopkCountKey Completed
+
+func (c TopkCountKey) Item(item ...string) TopkCountItem {
+	c.cs.s = append(c.cs.s, item...)
+	return (TopkCountItem)(c)
 }
 
 type TopkIncrby Completed
@@ -23089,14 +23163,7 @@ func (c TopkList) Key(key string) TopkListKey {
 
 type TopkListKey Completed
 
-func (c TopkListKey) Numkeys(numkeys int64) TopkListNumkeys {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(numkeys, 10))
-	return (TopkListNumkeys)(c)
-}
-
-type TopkListNumkeys Completed
-
-func (c TopkListNumkeys) Withcount() TopkListWithcount {
+func (c TopkListKey) Withcount() TopkListWithcount {
 	c.cs.s = append(c.cs.s, "WITHCOUNT")
 	return (TopkListWithcount)(c)
 }
