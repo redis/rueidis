@@ -304,10 +304,6 @@ func main() {
 		}
 	}
 
-	// fis missing GEORADIUS_RO and GEORADIUSBYMEMBER_RO
-	commands["GEORADIUS_RO"] = command{Arguments: filterArgs(commands["GEORADIUS"].Arguments, "STORE")}
-	commands["GEORADIUSBYMEMBER_RO"] = command{Arguments: filterArgs(commands["GEORADIUSBYMEMBER"].Arguments, "STORE")}
-
 	var roots []string
 	nodes := map[string]*node{}
 	for k, cmd := range commands {
@@ -751,15 +747,6 @@ func blockEntries(block *node) (nodes []*node) {
 		}
 	}
 	return nodes
-}
-
-func filterArgs(args []argument, exclude string) (out []argument) {
-	for _, a := range args {
-		if a.Command != exclude {
-			out = append(out, a)
-		}
-	}
-	return out
 }
 
 func name(s string) (name string) {

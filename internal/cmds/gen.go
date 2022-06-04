@@ -3398,22 +3398,22 @@ func (c ClientKill) Id(clientId int64) ClientKillId {
 }
 
 func (c ClientKill) TypeNormal() ClientKillTypeNormal {
-	c.cs.s = append(c.cs.s, "TYPE", "normal")
+	c.cs.s = append(c.cs.s, "TYPE", "NORMAL")
 	return (ClientKillTypeNormal)(c)
 }
 
 func (c ClientKill) TypeMaster() ClientKillTypeMaster {
-	c.cs.s = append(c.cs.s, "TYPE", "master")
+	c.cs.s = append(c.cs.s, "TYPE", "MASTER")
 	return (ClientKillTypeMaster)(c)
 }
 
-func (c ClientKill) TypeSlave() ClientKillTypeSlave {
-	c.cs.s = append(c.cs.s, "TYPE", "slave")
-	return (ClientKillTypeSlave)(c)
+func (c ClientKill) TypeReplica() ClientKillTypeReplica {
+	c.cs.s = append(c.cs.s, "TYPE", "REPLICA")
+	return (ClientKillTypeReplica)(c)
 }
 
 func (c ClientKill) TypePubsub() ClientKillTypePubsub {
-	c.cs.s = append(c.cs.s, "TYPE", "pubsub")
+	c.cs.s = append(c.cs.s, "TYPE", "PUBSUB")
 	return (ClientKillTypePubsub)(c)
 }
 
@@ -3460,22 +3460,22 @@ func (c ClientKillAddr) Build() Completed {
 type ClientKillId Completed
 
 func (c ClientKillId) TypeNormal() ClientKillTypeNormal {
-	c.cs.s = append(c.cs.s, "TYPE", "normal")
+	c.cs.s = append(c.cs.s, "TYPE", "NORMAL")
 	return (ClientKillTypeNormal)(c)
 }
 
 func (c ClientKillId) TypeMaster() ClientKillTypeMaster {
-	c.cs.s = append(c.cs.s, "TYPE", "master")
+	c.cs.s = append(c.cs.s, "TYPE", "MASTER")
 	return (ClientKillTypeMaster)(c)
 }
 
-func (c ClientKillId) TypeSlave() ClientKillTypeSlave {
-	c.cs.s = append(c.cs.s, "TYPE", "slave")
-	return (ClientKillTypeSlave)(c)
+func (c ClientKillId) TypeReplica() ClientKillTypeReplica {
+	c.cs.s = append(c.cs.s, "TYPE", "REPLICA")
+	return (ClientKillTypeReplica)(c)
 }
 
 func (c ClientKillId) TypePubsub() ClientKillTypePubsub {
-	c.cs.s = append(c.cs.s, "TYPE", "pubsub")
+	c.cs.s = append(c.cs.s, "TYPE", "PUBSUB")
 	return (ClientKillTypePubsub)(c)
 }
 
@@ -3511,22 +3511,22 @@ func (c ClientKillIpPort) Id(clientId int64) ClientKillId {
 }
 
 func (c ClientKillIpPort) TypeNormal() ClientKillTypeNormal {
-	c.cs.s = append(c.cs.s, "TYPE", "normal")
+	c.cs.s = append(c.cs.s, "TYPE", "NORMAL")
 	return (ClientKillTypeNormal)(c)
 }
 
 func (c ClientKillIpPort) TypeMaster() ClientKillTypeMaster {
-	c.cs.s = append(c.cs.s, "TYPE", "master")
+	c.cs.s = append(c.cs.s, "TYPE", "MASTER")
 	return (ClientKillTypeMaster)(c)
 }
 
-func (c ClientKillIpPort) TypeSlave() ClientKillTypeSlave {
-	c.cs.s = append(c.cs.s, "TYPE", "slave")
-	return (ClientKillTypeSlave)(c)
+func (c ClientKillIpPort) TypeReplica() ClientKillTypeReplica {
+	c.cs.s = append(c.cs.s, "TYPE", "REPLICA")
+	return (ClientKillTypeReplica)(c)
 }
 
 func (c ClientKillIpPort) TypePubsub() ClientKillTypePubsub {
-	c.cs.s = append(c.cs.s, "TYPE", "pubsub")
+	c.cs.s = append(c.cs.s, "TYPE", "PUBSUB")
 	return (ClientKillTypePubsub)(c)
 }
 
@@ -3649,29 +3649,29 @@ func (c ClientKillTypePubsub) Build() Completed {
 	return Completed(c)
 }
 
-type ClientKillTypeSlave Completed
+type ClientKillTypeReplica Completed
 
-func (c ClientKillTypeSlave) User(username string) ClientKillUser {
+func (c ClientKillTypeReplica) User(username string) ClientKillUser {
 	c.cs.s = append(c.cs.s, "USER", username)
 	return (ClientKillUser)(c)
 }
 
-func (c ClientKillTypeSlave) Addr(ipPort string) ClientKillAddr {
+func (c ClientKillTypeReplica) Addr(ipPort string) ClientKillAddr {
 	c.cs.s = append(c.cs.s, "ADDR", ipPort)
 	return (ClientKillAddr)(c)
 }
 
-func (c ClientKillTypeSlave) Laddr(ipPort string) ClientKillLaddr {
+func (c ClientKillTypeReplica) Laddr(ipPort string) ClientKillLaddr {
 	c.cs.s = append(c.cs.s, "LADDR", ipPort)
 	return (ClientKillLaddr)(c)
 }
 
-func (c ClientKillTypeSlave) Skipme(yesNo string) ClientKillSkipme {
+func (c ClientKillTypeReplica) Skipme(yesNo string) ClientKillSkipme {
 	c.cs.s = append(c.cs.s, "SKIPME", yesNo)
 	return (ClientKillSkipme)(c)
 }
 
-func (c ClientKillTypeSlave) Build() Completed {
+func (c ClientKillTypeReplica) Build() Completed {
 	return Completed(c)
 }
 
@@ -3705,22 +3705,22 @@ func (b Builder) ClientList() (c ClientList) {
 }
 
 func (c ClientList) TypeNormal() ClientListTypeNormal {
-	c.cs.s = append(c.cs.s, "TYPE", "normal")
+	c.cs.s = append(c.cs.s, "TYPE", "NORMAL")
 	return (ClientListTypeNormal)(c)
 }
 
 func (c ClientList) TypeMaster() ClientListTypeMaster {
-	c.cs.s = append(c.cs.s, "TYPE", "master")
+	c.cs.s = append(c.cs.s, "TYPE", "MASTER")
 	return (ClientListTypeMaster)(c)
 }
 
 func (c ClientList) TypeReplica() ClientListTypeReplica {
-	c.cs.s = append(c.cs.s, "TYPE", "replica")
+	c.cs.s = append(c.cs.s, "TYPE", "REPLICA")
 	return (ClientListTypeReplica)(c)
 }
 
 func (c ClientList) TypePubsub() ClientListTypePubsub {
-	c.cs.s = append(c.cs.s, "TYPE", "pubsub")
+	c.cs.s = append(c.cs.s, "TYPE", "PUBSUB")
 	return (ClientListTypePubsub)(c)
 }
 
@@ -5114,6 +5114,10 @@ func (b Builder) CommandInfo() (c CommandInfo) {
 func (c CommandInfo) CommandName(commandName ...string) CommandInfoCommandName {
 	c.cs.s = append(c.cs.s, commandName...)
 	return (CommandInfoCommandName)(c)
+}
+
+func (c CommandInfo) Build() Completed {
+	return Completed(c)
 }
 
 type CommandInfoCommandName Completed
@@ -11919,14 +11923,14 @@ func (b Builder) FunctionDelete() (c FunctionDelete) {
 	return c
 }
 
-func (c FunctionDelete) FunctionName(functionName string) FunctionDeleteFunctionName {
-	c.cs.s = append(c.cs.s, functionName)
-	return (FunctionDeleteFunctionName)(c)
+func (c FunctionDelete) LibraryName(libraryName string) FunctionDeleteLibraryName {
+	c.cs.s = append(c.cs.s, libraryName)
+	return (FunctionDeleteLibraryName)(c)
 }
 
-type FunctionDeleteFunctionName Completed
+type FunctionDeleteLibraryName Completed
 
-func (c FunctionDeleteFunctionName) Build() Completed {
+func (c FunctionDeleteLibraryName) Build() Completed {
 	return Completed(c)
 }
 
@@ -12586,14 +12590,6 @@ func (c GeoradiusRoCountAny) Desc() GeoradiusRoOrderDesc {
 	return (GeoradiusRoOrderDesc)(c)
 }
 
-func (c GeoradiusRoCountAny) Storedist(key string) GeoradiusRoStoredist {
-	if c.ks != NoSlot {
-		c.ks = check(c.ks, slot(key))
-	}
-	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusRoStoredist)(c)
-}
-
 func (c GeoradiusRoCountAny) Build() Completed {
 	return Completed(c)
 }
@@ -12617,14 +12613,6 @@ func (c GeoradiusRoCountCount) Asc() GeoradiusRoOrderAsc {
 func (c GeoradiusRoCountCount) Desc() GeoradiusRoOrderDesc {
 	c.cs.s = append(c.cs.s, "DESC")
 	return (GeoradiusRoOrderDesc)(c)
-}
-
-func (c GeoradiusRoCountCount) Storedist(key string) GeoradiusRoStoredist {
-	if c.ks != NoSlot {
-		c.ks = check(c.ks, slot(key))
-	}
-	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusRoStoredist)(c)
 }
 
 func (c GeoradiusRoCountCount) Build() Completed {
@@ -12658,14 +12646,6 @@ func (c GeoradiusRoLongitude) Latitude(latitude float64) GeoradiusRoLatitude {
 
 type GeoradiusRoOrderAsc Completed
 
-func (c GeoradiusRoOrderAsc) Storedist(key string) GeoradiusRoStoredist {
-	if c.ks != NoSlot {
-		c.ks = check(c.ks, slot(key))
-	}
-	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusRoStoredist)(c)
-}
-
 func (c GeoradiusRoOrderAsc) Build() Completed {
 	return Completed(c)
 }
@@ -12675,14 +12655,6 @@ func (c GeoradiusRoOrderAsc) Cache() Cacheable {
 }
 
 type GeoradiusRoOrderDesc Completed
-
-func (c GeoradiusRoOrderDesc) Storedist(key string) GeoradiusRoStoredist {
-	if c.ks != NoSlot {
-		c.ks = check(c.ks, slot(key))
-	}
-	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusRoStoredist)(c)
-}
 
 func (c GeoradiusRoOrderDesc) Build() Completed {
 	return Completed(c)
@@ -12712,16 +12684,6 @@ func (c GeoradiusRoRadius) Ft() GeoradiusRoUnitFt {
 func (c GeoradiusRoRadius) Mi() GeoradiusRoUnitMi {
 	c.cs.s = append(c.cs.s, "mi")
 	return (GeoradiusRoUnitMi)(c)
-}
-
-type GeoradiusRoStoredist Completed
-
-func (c GeoradiusRoStoredist) Build() Completed {
-	return Completed(c)
-}
-
-func (c GeoradiusRoStoredist) Cache() Cacheable {
-	return Cacheable(c)
 }
 
 type GeoradiusRoUnitFt Completed
@@ -12754,14 +12716,6 @@ func (c GeoradiusRoUnitFt) Asc() GeoradiusRoOrderAsc {
 func (c GeoradiusRoUnitFt) Desc() GeoradiusRoOrderDesc {
 	c.cs.s = append(c.cs.s, "DESC")
 	return (GeoradiusRoOrderDesc)(c)
-}
-
-func (c GeoradiusRoUnitFt) Storedist(key string) GeoradiusRoStoredist {
-	if c.ks != NoSlot {
-		c.ks = check(c.ks, slot(key))
-	}
-	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusRoStoredist)(c)
 }
 
 func (c GeoradiusRoUnitFt) Build() Completed {
@@ -12804,14 +12758,6 @@ func (c GeoradiusRoUnitKm) Desc() GeoradiusRoOrderDesc {
 	return (GeoradiusRoOrderDesc)(c)
 }
 
-func (c GeoradiusRoUnitKm) Storedist(key string) GeoradiusRoStoredist {
-	if c.ks != NoSlot {
-		c.ks = check(c.ks, slot(key))
-	}
-	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusRoStoredist)(c)
-}
-
 func (c GeoradiusRoUnitKm) Build() Completed {
 	return Completed(c)
 }
@@ -12850,14 +12796,6 @@ func (c GeoradiusRoUnitM) Asc() GeoradiusRoOrderAsc {
 func (c GeoradiusRoUnitM) Desc() GeoradiusRoOrderDesc {
 	c.cs.s = append(c.cs.s, "DESC")
 	return (GeoradiusRoOrderDesc)(c)
-}
-
-func (c GeoradiusRoUnitM) Storedist(key string) GeoradiusRoStoredist {
-	if c.ks != NoSlot {
-		c.ks = check(c.ks, slot(key))
-	}
-	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusRoStoredist)(c)
 }
 
 func (c GeoradiusRoUnitM) Build() Completed {
@@ -12900,14 +12838,6 @@ func (c GeoradiusRoUnitMi) Desc() GeoradiusRoOrderDesc {
 	return (GeoradiusRoOrderDesc)(c)
 }
 
-func (c GeoradiusRoUnitMi) Storedist(key string) GeoradiusRoStoredist {
-	if c.ks != NoSlot {
-		c.ks = check(c.ks, slot(key))
-	}
-	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusRoStoredist)(c)
-}
-
 func (c GeoradiusRoUnitMi) Build() Completed {
 	return Completed(c)
 }
@@ -12943,14 +12873,6 @@ func (c GeoradiusRoWithcoord) Desc() GeoradiusRoOrderDesc {
 	return (GeoradiusRoOrderDesc)(c)
 }
 
-func (c GeoradiusRoWithcoord) Storedist(key string) GeoradiusRoStoredist {
-	if c.ks != NoSlot {
-		c.ks = check(c.ks, slot(key))
-	}
-	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusRoStoredist)(c)
-}
-
 func (c GeoradiusRoWithcoord) Build() Completed {
 	return Completed(c)
 }
@@ -12981,14 +12903,6 @@ func (c GeoradiusRoWithdist) Desc() GeoradiusRoOrderDesc {
 	return (GeoradiusRoOrderDesc)(c)
 }
 
-func (c GeoradiusRoWithdist) Storedist(key string) GeoradiusRoStoredist {
-	if c.ks != NoSlot {
-		c.ks = check(c.ks, slot(key))
-	}
-	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusRoStoredist)(c)
-}
-
 func (c GeoradiusRoWithdist) Build() Completed {
 	return Completed(c)
 }
@@ -13012,14 +12926,6 @@ func (c GeoradiusRoWithhash) Asc() GeoradiusRoOrderAsc {
 func (c GeoradiusRoWithhash) Desc() GeoradiusRoOrderDesc {
 	c.cs.s = append(c.cs.s, "DESC")
 	return (GeoradiusRoOrderDesc)(c)
-}
-
-func (c GeoradiusRoWithhash) Storedist(key string) GeoradiusRoStoredist {
-	if c.ks != NoSlot {
-		c.ks = check(c.ks, slot(key))
-	}
-	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusRoStoredist)(c)
 }
 
 func (c GeoradiusRoWithhash) Build() Completed {
@@ -13577,14 +13483,6 @@ func (c GeoradiusbymemberRoCountAny) Desc() GeoradiusbymemberRoOrderDesc {
 	return (GeoradiusbymemberRoOrderDesc)(c)
 }
 
-func (c GeoradiusbymemberRoCountAny) Storedist(key string) GeoradiusbymemberRoStoredist {
-	if c.ks != NoSlot {
-		c.ks = check(c.ks, slot(key))
-	}
-	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusbymemberRoStoredist)(c)
-}
-
 func (c GeoradiusbymemberRoCountAny) Build() Completed {
 	return Completed(c)
 }
@@ -13608,14 +13506,6 @@ func (c GeoradiusbymemberRoCountCount) Asc() GeoradiusbymemberRoOrderAsc {
 func (c GeoradiusbymemberRoCountCount) Desc() GeoradiusbymemberRoOrderDesc {
 	c.cs.s = append(c.cs.s, "DESC")
 	return (GeoradiusbymemberRoOrderDesc)(c)
-}
-
-func (c GeoradiusbymemberRoCountCount) Storedist(key string) GeoradiusbymemberRoStoredist {
-	if c.ks != NoSlot {
-		c.ks = check(c.ks, slot(key))
-	}
-	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusbymemberRoStoredist)(c)
 }
 
 func (c GeoradiusbymemberRoCountCount) Build() Completed {
@@ -13642,14 +13532,6 @@ func (c GeoradiusbymemberRoMember) Radius(radius float64) GeoradiusbymemberRoRad
 
 type GeoradiusbymemberRoOrderAsc Completed
 
-func (c GeoradiusbymemberRoOrderAsc) Storedist(key string) GeoradiusbymemberRoStoredist {
-	if c.ks != NoSlot {
-		c.ks = check(c.ks, slot(key))
-	}
-	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusbymemberRoStoredist)(c)
-}
-
 func (c GeoradiusbymemberRoOrderAsc) Build() Completed {
 	return Completed(c)
 }
@@ -13659,14 +13541,6 @@ func (c GeoradiusbymemberRoOrderAsc) Cache() Cacheable {
 }
 
 type GeoradiusbymemberRoOrderDesc Completed
-
-func (c GeoradiusbymemberRoOrderDesc) Storedist(key string) GeoradiusbymemberRoStoredist {
-	if c.ks != NoSlot {
-		c.ks = check(c.ks, slot(key))
-	}
-	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusbymemberRoStoredist)(c)
-}
 
 func (c GeoradiusbymemberRoOrderDesc) Build() Completed {
 	return Completed(c)
@@ -13696,16 +13570,6 @@ func (c GeoradiusbymemberRoRadius) Ft() GeoradiusbymemberRoUnitFt {
 func (c GeoradiusbymemberRoRadius) Mi() GeoradiusbymemberRoUnitMi {
 	c.cs.s = append(c.cs.s, "mi")
 	return (GeoradiusbymemberRoUnitMi)(c)
-}
-
-type GeoradiusbymemberRoStoredist Completed
-
-func (c GeoradiusbymemberRoStoredist) Build() Completed {
-	return Completed(c)
-}
-
-func (c GeoradiusbymemberRoStoredist) Cache() Cacheable {
-	return Cacheable(c)
 }
 
 type GeoradiusbymemberRoUnitFt Completed
@@ -13738,14 +13602,6 @@ func (c GeoradiusbymemberRoUnitFt) Asc() GeoradiusbymemberRoOrderAsc {
 func (c GeoradiusbymemberRoUnitFt) Desc() GeoradiusbymemberRoOrderDesc {
 	c.cs.s = append(c.cs.s, "DESC")
 	return (GeoradiusbymemberRoOrderDesc)(c)
-}
-
-func (c GeoradiusbymemberRoUnitFt) Storedist(key string) GeoradiusbymemberRoStoredist {
-	if c.ks != NoSlot {
-		c.ks = check(c.ks, slot(key))
-	}
-	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusbymemberRoStoredist)(c)
 }
 
 func (c GeoradiusbymemberRoUnitFt) Build() Completed {
@@ -13788,14 +13644,6 @@ func (c GeoradiusbymemberRoUnitKm) Desc() GeoradiusbymemberRoOrderDesc {
 	return (GeoradiusbymemberRoOrderDesc)(c)
 }
 
-func (c GeoradiusbymemberRoUnitKm) Storedist(key string) GeoradiusbymemberRoStoredist {
-	if c.ks != NoSlot {
-		c.ks = check(c.ks, slot(key))
-	}
-	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusbymemberRoStoredist)(c)
-}
-
 func (c GeoradiusbymemberRoUnitKm) Build() Completed {
 	return Completed(c)
 }
@@ -13834,14 +13682,6 @@ func (c GeoradiusbymemberRoUnitM) Asc() GeoradiusbymemberRoOrderAsc {
 func (c GeoradiusbymemberRoUnitM) Desc() GeoradiusbymemberRoOrderDesc {
 	c.cs.s = append(c.cs.s, "DESC")
 	return (GeoradiusbymemberRoOrderDesc)(c)
-}
-
-func (c GeoradiusbymemberRoUnitM) Storedist(key string) GeoradiusbymemberRoStoredist {
-	if c.ks != NoSlot {
-		c.ks = check(c.ks, slot(key))
-	}
-	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusbymemberRoStoredist)(c)
 }
 
 func (c GeoradiusbymemberRoUnitM) Build() Completed {
@@ -13884,14 +13724,6 @@ func (c GeoradiusbymemberRoUnitMi) Desc() GeoradiusbymemberRoOrderDesc {
 	return (GeoradiusbymemberRoOrderDesc)(c)
 }
 
-func (c GeoradiusbymemberRoUnitMi) Storedist(key string) GeoradiusbymemberRoStoredist {
-	if c.ks != NoSlot {
-		c.ks = check(c.ks, slot(key))
-	}
-	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusbymemberRoStoredist)(c)
-}
-
 func (c GeoradiusbymemberRoUnitMi) Build() Completed {
 	return Completed(c)
 }
@@ -13927,14 +13759,6 @@ func (c GeoradiusbymemberRoWithcoord) Desc() GeoradiusbymemberRoOrderDesc {
 	return (GeoradiusbymemberRoOrderDesc)(c)
 }
 
-func (c GeoradiusbymemberRoWithcoord) Storedist(key string) GeoradiusbymemberRoStoredist {
-	if c.ks != NoSlot {
-		c.ks = check(c.ks, slot(key))
-	}
-	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusbymemberRoStoredist)(c)
-}
-
 func (c GeoradiusbymemberRoWithcoord) Build() Completed {
 	return Completed(c)
 }
@@ -13965,14 +13789,6 @@ func (c GeoradiusbymemberRoWithdist) Desc() GeoradiusbymemberRoOrderDesc {
 	return (GeoradiusbymemberRoOrderDesc)(c)
 }
 
-func (c GeoradiusbymemberRoWithdist) Storedist(key string) GeoradiusbymemberRoStoredist {
-	if c.ks != NoSlot {
-		c.ks = check(c.ks, slot(key))
-	}
-	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusbymemberRoStoredist)(c)
-}
-
 func (c GeoradiusbymemberRoWithdist) Build() Completed {
 	return Completed(c)
 }
@@ -13996,14 +13812,6 @@ func (c GeoradiusbymemberRoWithhash) Asc() GeoradiusbymemberRoOrderAsc {
 func (c GeoradiusbymemberRoWithhash) Desc() GeoradiusbymemberRoOrderDesc {
 	c.cs.s = append(c.cs.s, "DESC")
 	return (GeoradiusbymemberRoOrderDesc)(c)
-}
-
-func (c GeoradiusbymemberRoWithhash) Storedist(key string) GeoradiusbymemberRoStoredist {
-	if c.ks != NoSlot {
-		c.ks = check(c.ks, slot(key))
-	}
-	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusbymemberRoStoredist)(c)
 }
 
 func (c GeoradiusbymemberRoWithhash) Build() Completed {

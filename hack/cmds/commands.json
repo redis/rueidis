@@ -668,10 +668,10 @@
         "command": "TYPE",
         "type": "enum",
         "enum": [
-          "normal",
-          "master",
-          "slave",
-          "pubsub"
+          "NORMAL",
+          "MASTER",
+          "REPLICA",
+          "PUBSUB"
         ],
         "optional": true
       },
@@ -711,10 +711,10 @@
         "command": "TYPE",
         "type": "enum",
         "enum": [
-          "normal",
-          "master",
-          "replica",
-          "pubsub"
+          "NORMAL",
+          "MASTER",
+          "REPLICA",
+          "PUBSUB"
         ],
         "optional": true
       },
@@ -1236,7 +1236,8 @@
       {
         "name": "command-name",
         "type": "string",
-        "multiple": true
+        "multiple": true,
+        "optional": true
       }
     ],
     "group": "server"
@@ -1742,7 +1743,7 @@
   "FUNCTION DELETE": {
     "arguments": [
       {
-        "name": "function-name",
+        "name": "library-name",
         "type": "string"
       }
     ]
@@ -2116,6 +2117,168 @@
     ],
     "since": "3.2.0",
     "group": "geo"
+  },
+  "GEORADIUSBYMEMBER_RO": {
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "member",
+        "type": "string"
+      },
+      {
+        "name": "radius",
+        "type": "double"
+      },
+      {
+        "name": "unit",
+        "type": "enum",
+        "enum": [
+          "m",
+          "km",
+          "ft",
+          "mi"
+        ]
+      },
+      {
+        "name": "withcoord",
+        "type": "enum",
+        "enum": [
+          "WITHCOORD"
+        ],
+        "optional": true
+      },
+      {
+        "name": "withdist",
+        "type": "enum",
+        "enum": [
+          "WITHDIST"
+        ],
+        "optional": true
+      },
+      {
+        "name": "withhash",
+        "type": "enum",
+        "enum": [
+          "WITHHASH"
+        ],
+        "optional": true
+      },
+      {
+        "type": "block",
+        "name": "count",
+        "block": [
+          {
+            "name": "count",
+            "command": "COUNT",
+            "type": "integer"
+          },
+          {
+            "name": "any",
+            "type": "enum",
+            "enum": [
+              "ANY"
+            ],
+            "optional": true
+          }
+        ],
+        "optional": true
+      },
+      {
+        "name": "order",
+        "type": "enum",
+        "enum": [
+          "ASC",
+          "DESC"
+        ],
+        "optional": true
+      }
+    ]
+  },
+  "GEORADIUS_RO": {
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "longitude",
+        "type": "double"
+      },
+      {
+        "name": "latitude",
+        "type": "double"
+      },
+      {
+        "name": "radius",
+        "type": "double"
+      },
+      {
+        "name": "unit",
+        "type": "enum",
+        "enum": [
+          "m",
+          "km",
+          "ft",
+          "mi"
+        ]
+      },
+      {
+        "name": "withcoord",
+        "type": "enum",
+        "enum": [
+          "WITHCOORD"
+        ],
+        "optional": true
+      },
+      {
+        "name": "withdist",
+        "type": "enum",
+        "enum": [
+          "WITHDIST"
+        ],
+        "optional": true
+      },
+      {
+        "name": "withhash",
+        "type": "enum",
+        "enum": [
+          "WITHHASH"
+        ],
+        "optional": true
+      },
+      {
+        "type": "block",
+        "name": "count",
+        "block": [
+          {
+            "name": "count",
+            "command": "COUNT",
+            "type": "integer"
+          },
+          {
+            "name": "any",
+            "type": "enum",
+            "enum": [
+              "ANY"
+            ],
+            "optional": true
+          }
+        ],
+        "optional": true
+      },
+      {
+        "name": "order",
+        "type": "enum",
+        "enum": [
+          "ASC",
+          "DESC"
+        ],
+        "optional": true
+      }
+    ]
   },
   "GEOSEARCH": {
     "summary": "Query a sorted set representing a geospatial index to fetch members inside an area of a box or a circle.",
