@@ -21032,6 +21032,31 @@ func (c SetConditionNx) Get() SetGet {
 	return (SetGet)(c)
 }
 
+func (c SetConditionNx) ExSeconds(seconds int64) SetExpirationExSeconds {
+	c.cs.s = append(c.cs.s, "EX", strconv.FormatInt(seconds, 10))
+	return (SetExpirationExSeconds)(c)
+}
+
+func (c SetConditionNx) PxMilliseconds(milliseconds int64) SetExpirationPxMilliseconds {
+	c.cs.s = append(c.cs.s, "PX", strconv.FormatInt(milliseconds, 10))
+	return (SetExpirationPxMilliseconds)(c)
+}
+
+func (c SetConditionNx) ExatTimestamp(timestamp int64) SetExpirationExatTimestamp {
+	c.cs.s = append(c.cs.s, "EXAT", strconv.FormatInt(timestamp, 10))
+	return (SetExpirationExatTimestamp)(c)
+}
+
+func (c SetConditionNx) PxatMillisecondsTimestamp(millisecondsTimestamp int64) SetExpirationPxatMillisecondsTimestamp {
+	c.cs.s = append(c.cs.s, "PXAT", strconv.FormatInt(millisecondsTimestamp, 10))
+	return (SetExpirationPxatMillisecondsTimestamp)(c)
+}
+
+func (c SetConditionNx) Keepttl() SetExpirationKeepttl {
+	c.cs.s = append(c.cs.s, "KEEPTTL")
+	return (SetExpirationKeepttl)(c)
+}
+
 func (c SetConditionNx) Build() Completed {
 	return Completed(c)
 }
@@ -21043,26 +21068,36 @@ func (c SetConditionXx) Get() SetGet {
 	return (SetGet)(c)
 }
 
+func (c SetConditionXx) ExSeconds(seconds int64) SetExpirationExSeconds {
+	c.cs.s = append(c.cs.s, "EX", strconv.FormatInt(seconds, 10))
+	return (SetExpirationExSeconds)(c)
+}
+
+func (c SetConditionXx) PxMilliseconds(milliseconds int64) SetExpirationPxMilliseconds {
+	c.cs.s = append(c.cs.s, "PX", strconv.FormatInt(milliseconds, 10))
+	return (SetExpirationPxMilliseconds)(c)
+}
+
+func (c SetConditionXx) ExatTimestamp(timestamp int64) SetExpirationExatTimestamp {
+	c.cs.s = append(c.cs.s, "EXAT", strconv.FormatInt(timestamp, 10))
+	return (SetExpirationExatTimestamp)(c)
+}
+
+func (c SetConditionXx) PxatMillisecondsTimestamp(millisecondsTimestamp int64) SetExpirationPxatMillisecondsTimestamp {
+	c.cs.s = append(c.cs.s, "PXAT", strconv.FormatInt(millisecondsTimestamp, 10))
+	return (SetExpirationPxatMillisecondsTimestamp)(c)
+}
+
+func (c SetConditionXx) Keepttl() SetExpirationKeepttl {
+	c.cs.s = append(c.cs.s, "KEEPTTL")
+	return (SetExpirationKeepttl)(c)
+}
+
 func (c SetConditionXx) Build() Completed {
 	return Completed(c)
 }
 
 type SetExpirationExSeconds Completed
-
-func (c SetExpirationExSeconds) Nx() SetConditionNx {
-	c.cs.s = append(c.cs.s, "NX")
-	return (SetConditionNx)(c)
-}
-
-func (c SetExpirationExSeconds) Xx() SetConditionXx {
-	c.cs.s = append(c.cs.s, "XX")
-	return (SetConditionXx)(c)
-}
-
-func (c SetExpirationExSeconds) Get() SetGet {
-	c.cs.s = append(c.cs.s, "GET")
-	return (SetGet)(c)
-}
 
 func (c SetExpirationExSeconds) Build() Completed {
 	return Completed(c)
@@ -21070,41 +21105,11 @@ func (c SetExpirationExSeconds) Build() Completed {
 
 type SetExpirationExatTimestamp Completed
 
-func (c SetExpirationExatTimestamp) Nx() SetConditionNx {
-	c.cs.s = append(c.cs.s, "NX")
-	return (SetConditionNx)(c)
-}
-
-func (c SetExpirationExatTimestamp) Xx() SetConditionXx {
-	c.cs.s = append(c.cs.s, "XX")
-	return (SetConditionXx)(c)
-}
-
-func (c SetExpirationExatTimestamp) Get() SetGet {
-	c.cs.s = append(c.cs.s, "GET")
-	return (SetGet)(c)
-}
-
 func (c SetExpirationExatTimestamp) Build() Completed {
 	return Completed(c)
 }
 
 type SetExpirationKeepttl Completed
-
-func (c SetExpirationKeepttl) Nx() SetConditionNx {
-	c.cs.s = append(c.cs.s, "NX")
-	return (SetConditionNx)(c)
-}
-
-func (c SetExpirationKeepttl) Xx() SetConditionXx {
-	c.cs.s = append(c.cs.s, "XX")
-	return (SetConditionXx)(c)
-}
-
-func (c SetExpirationKeepttl) Get() SetGet {
-	c.cs.s = append(c.cs.s, "GET")
-	return (SetGet)(c)
-}
 
 func (c SetExpirationKeepttl) Build() Completed {
 	return Completed(c)
@@ -21112,47 +21117,42 @@ func (c SetExpirationKeepttl) Build() Completed {
 
 type SetExpirationPxMilliseconds Completed
 
-func (c SetExpirationPxMilliseconds) Nx() SetConditionNx {
-	c.cs.s = append(c.cs.s, "NX")
-	return (SetConditionNx)(c)
-}
-
-func (c SetExpirationPxMilliseconds) Xx() SetConditionXx {
-	c.cs.s = append(c.cs.s, "XX")
-	return (SetConditionXx)(c)
-}
-
-func (c SetExpirationPxMilliseconds) Get() SetGet {
-	c.cs.s = append(c.cs.s, "GET")
-	return (SetGet)(c)
-}
-
 func (c SetExpirationPxMilliseconds) Build() Completed {
 	return Completed(c)
 }
 
 type SetExpirationPxatMillisecondsTimestamp Completed
 
-func (c SetExpirationPxatMillisecondsTimestamp) Nx() SetConditionNx {
-	c.cs.s = append(c.cs.s, "NX")
-	return (SetConditionNx)(c)
-}
-
-func (c SetExpirationPxatMillisecondsTimestamp) Xx() SetConditionXx {
-	c.cs.s = append(c.cs.s, "XX")
-	return (SetConditionXx)(c)
-}
-
-func (c SetExpirationPxatMillisecondsTimestamp) Get() SetGet {
-	c.cs.s = append(c.cs.s, "GET")
-	return (SetGet)(c)
-}
-
 func (c SetExpirationPxatMillisecondsTimestamp) Build() Completed {
 	return Completed(c)
 }
 
 type SetGet Completed
+
+func (c SetGet) ExSeconds(seconds int64) SetExpirationExSeconds {
+	c.cs.s = append(c.cs.s, "EX", strconv.FormatInt(seconds, 10))
+	return (SetExpirationExSeconds)(c)
+}
+
+func (c SetGet) PxMilliseconds(milliseconds int64) SetExpirationPxMilliseconds {
+	c.cs.s = append(c.cs.s, "PX", strconv.FormatInt(milliseconds, 10))
+	return (SetExpirationPxMilliseconds)(c)
+}
+
+func (c SetGet) ExatTimestamp(timestamp int64) SetExpirationExatTimestamp {
+	c.cs.s = append(c.cs.s, "EXAT", strconv.FormatInt(timestamp, 10))
+	return (SetExpirationExatTimestamp)(c)
+}
+
+func (c SetGet) PxatMillisecondsTimestamp(millisecondsTimestamp int64) SetExpirationPxatMillisecondsTimestamp {
+	c.cs.s = append(c.cs.s, "PXAT", strconv.FormatInt(millisecondsTimestamp, 10))
+	return (SetExpirationPxatMillisecondsTimestamp)(c)
+}
+
+func (c SetGet) Keepttl() SetExpirationKeepttl {
+	c.cs.s = append(c.cs.s, "KEEPTTL")
+	return (SetExpirationKeepttl)(c)
+}
 
 func (c SetGet) Build() Completed {
 	return Completed(c)
@@ -21166,6 +21166,21 @@ func (c SetKey) Value(value string) SetValue {
 }
 
 type SetValue Completed
+
+func (c SetValue) Nx() SetConditionNx {
+	c.cs.s = append(c.cs.s, "NX")
+	return (SetConditionNx)(c)
+}
+
+func (c SetValue) Xx() SetConditionXx {
+	c.cs.s = append(c.cs.s, "XX")
+	return (SetConditionXx)(c)
+}
+
+func (c SetValue) Get() SetGet {
+	c.cs.s = append(c.cs.s, "GET")
+	return (SetGet)(c)
+}
 
 func (c SetValue) ExSeconds(seconds int64) SetExpirationExSeconds {
 	c.cs.s = append(c.cs.s, "EX", strconv.FormatInt(seconds, 10))
@@ -21190,21 +21205,6 @@ func (c SetValue) PxatMillisecondsTimestamp(millisecondsTimestamp int64) SetExpi
 func (c SetValue) Keepttl() SetExpirationKeepttl {
 	c.cs.s = append(c.cs.s, "KEEPTTL")
 	return (SetExpirationKeepttl)(c)
-}
-
-func (c SetValue) Nx() SetConditionNx {
-	c.cs.s = append(c.cs.s, "NX")
-	return (SetConditionNx)(c)
-}
-
-func (c SetValue) Xx() SetConditionXx {
-	c.cs.s = append(c.cs.s, "XX")
-	return (SetConditionXx)(c)
-}
-
-func (c SetValue) Get() SetGet {
-	c.cs.s = append(c.cs.s, "GET")
-	return (SetGet)(c)
 }
 
 func (c SetValue) Build() Completed {

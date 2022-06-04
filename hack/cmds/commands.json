@@ -3881,18 +3881,6 @@
         "type": "string"
       },
       {
-        "name": "expiration",
-        "type": "enum",
-        "enum": [
-          "EX seconds",
-          "PX milliseconds",
-          "EXAT timestamp",
-          "PXAT milliseconds-timestamp",
-          "KEEPTTL"
-        ],
-        "optional": true
-      },
-      {
         "name": "condition",
         "type": "enum",
         "enum": [
@@ -3906,6 +3894,18 @@
         "type": "enum",
         "enum": [
           "GET"
+        ],
+        "optional": true
+      },
+      {
+        "name": "expiration",
+        "type": "enum",
+        "enum": [
+          "EX seconds",
+          "PX milliseconds",
+          "EXAT timestamp",
+          "PXAT milliseconds-timestamp",
+          "KEEPTTL"
         ],
         "optional": true
       }

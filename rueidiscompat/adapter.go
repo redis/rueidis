@@ -766,12 +766,12 @@ func (c *Compat) SetNX(ctx context.Context, key string, value interface{}, expir
 	case 0:
 		resp = c.client.Do(ctx, c.client.B().Setnx().Key(key).Value(str(value)).Build())
 	case KeepTTL:
-		resp = c.client.Do(ctx, c.client.B().Set().Key(key).Value(str(value)).Keepttl().Nx().Build())
+		resp = c.client.Do(ctx, c.client.B().Set().Key(key).Value(str(value)).Nx().Keepttl().Build())
 	default:
 		if usePrecise(expiration) {
-			resp = c.client.Do(ctx, c.client.B().Set().Key(key).Value(str(value)).PxMilliseconds(formatMs(expiration)).Nx().Build())
+			resp = c.client.Do(ctx, c.client.B().Set().Key(key).Value(str(value)).Nx().PxMilliseconds(formatMs(expiration)).Build())
 		} else {
-			resp = c.client.Do(ctx, c.client.B().Set().Key(key).Value(str(value)).ExSeconds(formatSec(expiration)).Nx().Build())
+			resp = c.client.Do(ctx, c.client.B().Set().Key(key).Value(str(value)).Nx().ExSeconds(formatSec(expiration)).Build())
 		}
 	}
 
@@ -782,12 +782,12 @@ func (c *Compat) SetXX(ctx context.Context, key string, value interface{}, expir
 	var resp rueidis.RedisResult
 	if expiration > 0 {
 		if usePrecise(expiration) {
-			resp = c.client.Do(ctx, c.client.B().Set().Key(key).Value(str(value)).PxMilliseconds(formatMs(expiration)).Xx().Build())
+			resp = c.client.Do(ctx, c.client.B().Set().Key(key).Value(str(value)).Xx().PxMilliseconds(formatMs(expiration)).Build())
 		} else {
-			resp = c.client.Do(ctx, c.client.B().Set().Key(key).Value(str(value)).ExSeconds(formatSec(expiration)).Xx().Build())
+			resp = c.client.Do(ctx, c.client.B().Set().Key(key).Value(str(value)).Xx().ExSeconds(formatSec(expiration)).Build())
 		}
 	} else if expiration == KeepTTL {
-		resp = c.client.Do(ctx, c.client.B().Set().Key(key).Value(str(value)).Keepttl().Xx().Build())
+		resp = c.client.Do(ctx, c.client.B().Set().Key(key).Value(str(value)).Xx().Keepttl().Build())
 	} else {
 		resp = c.client.Do(ctx, c.client.B().Set().Key(key).Value(str(value)).Xx().Build())
 	}
