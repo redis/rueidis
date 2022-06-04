@@ -2186,6 +2186,11 @@ func (c BitfieldRo) Key(key string) BitfieldRoKey {
 
 type BitfieldRoGet Completed
 
+func (c BitfieldRoGet) Get(encoding string, offset int64) BitfieldRoGet {
+	c.cs.s = append(c.cs.s, encoding, strconv.FormatInt(offset, 10))
+	return c
+}
+
 func (c BitfieldRoGet) Build() Completed {
 	return Completed(c)
 }
@@ -2196,8 +2201,8 @@ func (c BitfieldRoGet) Cache() Cacheable {
 
 type BitfieldRoKey Completed
 
-func (c BitfieldRoKey) Get(encoding string, offset int64) BitfieldRoGet {
-	c.cs.s = append(c.cs.s, "GET", encoding, strconv.FormatInt(offset, 10))
+func (c BitfieldRoKey) Get() BitfieldRoGet {
+	c.cs.s = append(c.cs.s, "GET")
 	return (BitfieldRoGet)(c)
 }
 
