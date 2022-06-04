@@ -3056,15 +3056,21 @@
         "optional": true
       },
       {
-        "command": "AUTH",
-        "name": "password",
-        "type": "string",
-        "optional": true
-      },
-      {
-        "command": "AUTH2",
-        "name": "username password",
-        "type": "string",
+        "type": "block",
+        "block": [
+          {
+            "command": "AUTH",
+            "name": "password",
+            "type": "string",
+            "optional": true
+          },
+          {
+            "command": "AUTH2",
+            "name": ["username","password"],
+            "type": ["string","string"],
+            "optional": true
+          }
+        ],
         "optional": true
       },
       {

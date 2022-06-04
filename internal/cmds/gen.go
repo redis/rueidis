@@ -18574,14 +18574,14 @@ func (c Migrate) Host(host string) MigrateHost {
 	return (MigrateHost)(c)
 }
 
-type MigrateAuth Completed
+type MigrateAuthAuth Completed
 
-func (c MigrateAuth) Auth2(usernamePassword string) MigrateAuth2 {
-	c.cs.s = append(c.cs.s, "AUTH2", usernamePassword)
-	return (MigrateAuth2)(c)
+func (c MigrateAuthAuth) Auth2(username string, password string) MigrateAuthAuth2 {
+	c.cs.s = append(c.cs.s, "AUTH2", username, password)
+	return (MigrateAuthAuth2)(c)
 }
 
-func (c MigrateAuth) Keys(key ...string) MigrateKeys {
+func (c MigrateAuthAuth) Keys(key ...string) MigrateKeys {
 	if c.ks != NoSlot {
 		for _, k := range key {
 			c.ks = check(c.ks, slot(k))
@@ -18592,13 +18592,13 @@ func (c MigrateAuth) Keys(key ...string) MigrateKeys {
 	return (MigrateKeys)(c)
 }
 
-func (c MigrateAuth) Build() Completed {
+func (c MigrateAuthAuth) Build() Completed {
 	return Completed(c)
 }
 
-type MigrateAuth2 Completed
+type MigrateAuthAuth2 Completed
 
-func (c MigrateAuth2) Keys(key ...string) MigrateKeys {
+func (c MigrateAuthAuth2) Keys(key ...string) MigrateKeys {
 	if c.ks != NoSlot {
 		for _, k := range key {
 			c.ks = check(c.ks, slot(k))
@@ -18609,7 +18609,7 @@ func (c MigrateAuth2) Keys(key ...string) MigrateKeys {
 	return (MigrateKeys)(c)
 }
 
-func (c MigrateAuth2) Build() Completed {
+func (c MigrateAuthAuth2) Build() Completed {
 	return Completed(c)
 }
 
@@ -18620,14 +18620,14 @@ func (c MigrateCopy) Replace() MigrateReplace {
 	return (MigrateReplace)(c)
 }
 
-func (c MigrateCopy) Auth(password string) MigrateAuth {
+func (c MigrateCopy) Auth(password string) MigrateAuthAuth {
 	c.cs.s = append(c.cs.s, "AUTH", password)
-	return (MigrateAuth)(c)
+	return (MigrateAuthAuth)(c)
 }
 
-func (c MigrateCopy) Auth2(usernamePassword string) MigrateAuth2 {
-	c.cs.s = append(c.cs.s, "AUTH2", usernamePassword)
-	return (MigrateAuth2)(c)
+func (c MigrateCopy) Auth2(username string, password string) MigrateAuthAuth2 {
+	c.cs.s = append(c.cs.s, "AUTH2", username, password)
+	return (MigrateAuthAuth2)(c)
 }
 
 func (c MigrateCopy) Keys(key ...string) MigrateKeys {
@@ -18704,14 +18704,14 @@ func (c MigratePort) Empty() MigrateKeyEmpty {
 
 type MigrateReplace Completed
 
-func (c MigrateReplace) Auth(password string) MigrateAuth {
+func (c MigrateReplace) Auth(password string) MigrateAuthAuth {
 	c.cs.s = append(c.cs.s, "AUTH", password)
-	return (MigrateAuth)(c)
+	return (MigrateAuthAuth)(c)
 }
 
-func (c MigrateReplace) Auth2(usernamePassword string) MigrateAuth2 {
-	c.cs.s = append(c.cs.s, "AUTH2", usernamePassword)
-	return (MigrateAuth2)(c)
+func (c MigrateReplace) Auth2(username string, password string) MigrateAuthAuth2 {
+	c.cs.s = append(c.cs.s, "AUTH2", username, password)
+	return (MigrateAuthAuth2)(c)
 }
 
 func (c MigrateReplace) Keys(key ...string) MigrateKeys {
@@ -18741,14 +18741,14 @@ func (c MigrateTimeout) Replace() MigrateReplace {
 	return (MigrateReplace)(c)
 }
 
-func (c MigrateTimeout) Auth(password string) MigrateAuth {
+func (c MigrateTimeout) Auth(password string) MigrateAuthAuth {
 	c.cs.s = append(c.cs.s, "AUTH", password)
-	return (MigrateAuth)(c)
+	return (MigrateAuthAuth)(c)
 }
 
-func (c MigrateTimeout) Auth2(usernamePassword string) MigrateAuth2 {
-	c.cs.s = append(c.cs.s, "AUTH2", usernamePassword)
-	return (MigrateAuth2)(c)
+func (c MigrateTimeout) Auth2(username string, password string) MigrateAuthAuth2 {
+	c.cs.s = append(c.cs.s, "AUTH2", username, password)
+	return (MigrateAuthAuth2)(c)
 }
 
 func (c MigrateTimeout) Keys(key ...string) MigrateKeys {
