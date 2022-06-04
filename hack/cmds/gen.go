@@ -231,7 +231,7 @@ func (n *node) NextNodes() []*node {
 	}
 
 	if n.Child != nil {
-		nodes = append(nodes, n.Child)
+		nodes = append(nodes, blockEntries(n)...)
 	}
 
 	parent := n
@@ -248,7 +248,7 @@ func (n *node) NextNodes() []*node {
 		parent = parent.Parent
 		// block variadic
 		if parent != nil && parent.Variadic() {
-			nodes = append(nodes, parent.Child)
+			nodes = append(nodes, blockEntries(parent)...)
 		}
 		if parent != nil && parent.Root {
 			break // don't climb to root
@@ -382,13 +382,16 @@ func makePath(s goStruct, path []goStruct, pathes [][]goStruct) [][]goStruct {
 			if n.Parent != nil && n.Parent.Child == n {
 				continue
 			}
+			nodes := []*node{n}
 			if n.Child != nil {
-				n = n.Child
+				nodes = blockEntries(n)
 			}
-			for _, ss := range n.GoStructs() {
-				clone := make([]goStruct, len(path))
-				copy(clone, path)
-				pathes = makePath(ss, clone, pathes)
+			for _, nn := range nodes {
+				for _, ss := range nn.GoStructs() {
+					clone := make([]goStruct, len(path))
+					copy(clone, path)
+					pathes = makePath(ss, clone, pathes)
+				}
 			}
 		}
 	}
@@ -448,11 +451,14 @@ func generate(f io.Writer, structs map[string]goStruct) {
 		}
 
 		for _, next := range s.NextNodes {
+			nodes := []*node{next}
 			if next.Child != nil {
-				next = next.Child
+				nodes = blockEntries(next)
 			}
-			for _, ss := range next.GoStructs() {
-				printBuilder(f, s, ss)
+			for _, nn := range nodes {
+				for _, ss := range nn.GoStructs() {
+					printBuilder(f, s, ss)
+				}
 			}
 		}
 
@@ -719,6 +725,20 @@ func makeChildNodes(parent *node, args []argument) (first *node) {
 		}
 	}
 	return nodes[0]
+}
+
+func blockEntries(block *node) (nodes []*node) {
+	for child := block.Child; child != nil && child.Parent == block; child = child.Next {
+		if child.Child != nil {
+			nodes = append(nodes, blockEntries(child)...)
+		} else {
+			nodes = append(nodes, child)
+		}
+		if !child.Arg.Optional {
+			break
+		}
+	}
+	return nodes
 }
 
 func filterArgs(args []argument, exclude string) (out []argument) {

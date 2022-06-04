@@ -1996,109 +1996,175 @@ func (c Bitfield) Key(key string) BitfieldKey {
 	return (BitfieldKey)(c)
 }
 
-type BitfieldGet Completed
-
-func (c BitfieldGet) Set(encoding string, offset int64, value int64) BitfieldSet {
-	c.cs.s = append(c.cs.s, "SET", encoding, strconv.FormatInt(offset, 10), strconv.FormatInt(value, 10))
-	return (BitfieldSet)(c)
-}
-
-func (c BitfieldGet) Incrby(encoding string, offset int64, increment int64) BitfieldIncrby {
-	c.cs.s = append(c.cs.s, "INCRBY", encoding, strconv.FormatInt(offset, 10), strconv.FormatInt(increment, 10))
-	return (BitfieldIncrby)(c)
-}
-
-func (c BitfieldGet) OverflowWrap() BitfieldOverflowWrap {
-	c.cs.s = append(c.cs.s, "OVERFLOW", "WRAP")
-	return (BitfieldOverflowWrap)(c)
-}
-
-func (c BitfieldGet) OverflowSat() BitfieldOverflowSat {
-	c.cs.s = append(c.cs.s, "OVERFLOW", "SAT")
-	return (BitfieldOverflowSat)(c)
-}
-
-func (c BitfieldGet) OverflowFail() BitfieldOverflowFail {
-	c.cs.s = append(c.cs.s, "OVERFLOW", "FAIL")
-	return (BitfieldOverflowFail)(c)
-}
-
-func (c BitfieldGet) Build() Completed {
-	return Completed(c)
-}
-
-type BitfieldIncrby Completed
-
-func (c BitfieldIncrby) OverflowWrap() BitfieldOverflowWrap {
-	c.cs.s = append(c.cs.s, "OVERFLOW", "WRAP")
-	return (BitfieldOverflowWrap)(c)
-}
-
-func (c BitfieldIncrby) OverflowSat() BitfieldOverflowSat {
-	c.cs.s = append(c.cs.s, "OVERFLOW", "SAT")
-	return (BitfieldOverflowSat)(c)
-}
-
-func (c BitfieldIncrby) OverflowFail() BitfieldOverflowFail {
-	c.cs.s = append(c.cs.s, "OVERFLOW", "FAIL")
-	return (BitfieldOverflowFail)(c)
-}
-
-func (c BitfieldIncrby) Build() Completed {
-	return Completed(c)
-}
-
 type BitfieldKey Completed
 
-func (c BitfieldKey) Get(encoding string, offset int64) BitfieldGet {
+func (c BitfieldKey) Get(encoding string, offset int64) BitfieldOperationGet {
 	c.cs.s = append(c.cs.s, "GET", encoding, strconv.FormatInt(offset, 10))
-	return (BitfieldGet)(c)
+	return (BitfieldOperationGet)(c)
 }
 
-func (c BitfieldKey) Set(encoding string, offset int64, value int64) BitfieldSet {
-	c.cs.s = append(c.cs.s, "SET", encoding, strconv.FormatInt(offset, 10), strconv.FormatInt(value, 10))
-	return (BitfieldSet)(c)
-}
-
-func (c BitfieldKey) Incrby(encoding string, offset int64, increment int64) BitfieldIncrby {
-	c.cs.s = append(c.cs.s, "INCRBY", encoding, strconv.FormatInt(offset, 10), strconv.FormatInt(increment, 10))
-	return (BitfieldIncrby)(c)
-}
-
-func (c BitfieldKey) OverflowWrap() BitfieldOverflowWrap {
+func (c BitfieldKey) OverflowWrap() BitfieldOperationWriteOverflowWrap {
 	c.cs.s = append(c.cs.s, "OVERFLOW", "WRAP")
-	return (BitfieldOverflowWrap)(c)
+	return (BitfieldOperationWriteOverflowWrap)(c)
 }
 
-func (c BitfieldKey) OverflowSat() BitfieldOverflowSat {
+func (c BitfieldKey) OverflowSat() BitfieldOperationWriteOverflowSat {
 	c.cs.s = append(c.cs.s, "OVERFLOW", "SAT")
-	return (BitfieldOverflowSat)(c)
+	return (BitfieldOperationWriteOverflowSat)(c)
 }
 
-func (c BitfieldKey) OverflowFail() BitfieldOverflowFail {
+func (c BitfieldKey) OverflowFail() BitfieldOperationWriteOverflowFail {
 	c.cs.s = append(c.cs.s, "OVERFLOW", "FAIL")
-	return (BitfieldOverflowFail)(c)
+	return (BitfieldOperationWriteOverflowFail)(c)
 }
 
-func (c BitfieldKey) Build() Completed {
+func (c BitfieldKey) Set(encoding string, offset int64, value int64) BitfieldOperationWriteSetSet {
+	c.cs.s = append(c.cs.s, "SET", encoding, strconv.FormatInt(offset, 10), strconv.FormatInt(value, 10))
+	return (BitfieldOperationWriteSetSet)(c)
+}
+
+func (c BitfieldKey) Incrby(encoding string, offset int64, increment int64) BitfieldOperationWriteSetIncrby {
+	c.cs.s = append(c.cs.s, "INCRBY", encoding, strconv.FormatInt(offset, 10), strconv.FormatInt(increment, 10))
+	return (BitfieldOperationWriteSetIncrby)(c)
+}
+
+type BitfieldOperationGet Completed
+
+func (c BitfieldOperationGet) OverflowWrap() BitfieldOperationWriteOverflowWrap {
+	c.cs.s = append(c.cs.s, "OVERFLOW", "WRAP")
+	return (BitfieldOperationWriteOverflowWrap)(c)
+}
+
+func (c BitfieldOperationGet) OverflowSat() BitfieldOperationWriteOverflowSat {
+	c.cs.s = append(c.cs.s, "OVERFLOW", "SAT")
+	return (BitfieldOperationWriteOverflowSat)(c)
+}
+
+func (c BitfieldOperationGet) OverflowFail() BitfieldOperationWriteOverflowFail {
+	c.cs.s = append(c.cs.s, "OVERFLOW", "FAIL")
+	return (BitfieldOperationWriteOverflowFail)(c)
+}
+
+func (c BitfieldOperationGet) Set(encoding string, offset int64, value int64) BitfieldOperationWriteSetSet {
+	c.cs.s = append(c.cs.s, "SET", encoding, strconv.FormatInt(offset, 10), strconv.FormatInt(value, 10))
+	return (BitfieldOperationWriteSetSet)(c)
+}
+
+func (c BitfieldOperationGet) Incrby(encoding string, offset int64, increment int64) BitfieldOperationWriteSetIncrby {
+	c.cs.s = append(c.cs.s, "INCRBY", encoding, strconv.FormatInt(offset, 10), strconv.FormatInt(increment, 10))
+	return (BitfieldOperationWriteSetIncrby)(c)
+}
+
+type BitfieldOperationWriteOverflowFail Completed
+
+func (c BitfieldOperationWriteOverflowFail) Set(encoding string, offset int64, value int64) BitfieldOperationWriteSetSet {
+	c.cs.s = append(c.cs.s, "SET", encoding, strconv.FormatInt(offset, 10), strconv.FormatInt(value, 10))
+	return (BitfieldOperationWriteSetSet)(c)
+}
+
+func (c BitfieldOperationWriteOverflowFail) Incrby(encoding string, offset int64, increment int64) BitfieldOperationWriteSetIncrby {
+	c.cs.s = append(c.cs.s, "INCRBY", encoding, strconv.FormatInt(offset, 10), strconv.FormatInt(increment, 10))
+	return (BitfieldOperationWriteSetIncrby)(c)
+}
+
+type BitfieldOperationWriteOverflowSat Completed
+
+func (c BitfieldOperationWriteOverflowSat) Set(encoding string, offset int64, value int64) BitfieldOperationWriteSetSet {
+	c.cs.s = append(c.cs.s, "SET", encoding, strconv.FormatInt(offset, 10), strconv.FormatInt(value, 10))
+	return (BitfieldOperationWriteSetSet)(c)
+}
+
+func (c BitfieldOperationWriteOverflowSat) Incrby(encoding string, offset int64, increment int64) BitfieldOperationWriteSetIncrby {
+	c.cs.s = append(c.cs.s, "INCRBY", encoding, strconv.FormatInt(offset, 10), strconv.FormatInt(increment, 10))
+	return (BitfieldOperationWriteSetIncrby)(c)
+}
+
+type BitfieldOperationWriteOverflowWrap Completed
+
+func (c BitfieldOperationWriteOverflowWrap) Set(encoding string, offset int64, value int64) BitfieldOperationWriteSetSet {
+	c.cs.s = append(c.cs.s, "SET", encoding, strconv.FormatInt(offset, 10), strconv.FormatInt(value, 10))
+	return (BitfieldOperationWriteSetSet)(c)
+}
+
+func (c BitfieldOperationWriteOverflowWrap) Incrby(encoding string, offset int64, increment int64) BitfieldOperationWriteSetIncrby {
+	c.cs.s = append(c.cs.s, "INCRBY", encoding, strconv.FormatInt(offset, 10), strconv.FormatInt(increment, 10))
+	return (BitfieldOperationWriteSetIncrby)(c)
+}
+
+type BitfieldOperationWriteSetIncrby Completed
+
+func (c BitfieldOperationWriteSetIncrby) Get(encoding string, offset int64) BitfieldOperationGet {
+	c.cs.s = append(c.cs.s, "GET", encoding, strconv.FormatInt(offset, 10))
+	return (BitfieldOperationGet)(c)
+}
+
+func (c BitfieldOperationWriteSetIncrby) OverflowWrap() BitfieldOperationWriteOverflowWrap {
+	c.cs.s = append(c.cs.s, "OVERFLOW", "WRAP")
+	return (BitfieldOperationWriteOverflowWrap)(c)
+}
+
+func (c BitfieldOperationWriteSetIncrby) OverflowSat() BitfieldOperationWriteOverflowSat {
+	c.cs.s = append(c.cs.s, "OVERFLOW", "SAT")
+	return (BitfieldOperationWriteOverflowSat)(c)
+}
+
+func (c BitfieldOperationWriteSetIncrby) OverflowFail() BitfieldOperationWriteOverflowFail {
+	c.cs.s = append(c.cs.s, "OVERFLOW", "FAIL")
+	return (BitfieldOperationWriteOverflowFail)(c)
+}
+
+func (c BitfieldOperationWriteSetIncrby) Set(encoding string, offset int64, value int64) BitfieldOperationWriteSetSet {
+	c.cs.s = append(c.cs.s, "SET", encoding, strconv.FormatInt(offset, 10), strconv.FormatInt(value, 10))
+	return (BitfieldOperationWriteSetSet)(c)
+}
+
+func (c BitfieldOperationWriteSetIncrby) Incrby(encoding string, offset int64, increment int64) BitfieldOperationWriteSetIncrby {
+	c.cs.s = append(c.cs.s, "INCRBY", encoding, strconv.FormatInt(offset, 10), strconv.FormatInt(increment, 10))
+	return c
+}
+
+func (c BitfieldOperationWriteSetIncrby) Build() Completed {
 	return Completed(c)
 }
 
-type BitfieldOverflowFail Completed
+type BitfieldOperationWriteSetSet Completed
 
-func (c BitfieldOverflowFail) Build() Completed {
-	return Completed(c)
+func (c BitfieldOperationWriteSetSet) Incrby(encoding string, offset int64, increment int64) BitfieldOperationWriteSetIncrby {
+	c.cs.s = append(c.cs.s, "INCRBY", encoding, strconv.FormatInt(offset, 10), strconv.FormatInt(increment, 10))
+	return (BitfieldOperationWriteSetIncrby)(c)
 }
 
-type BitfieldOverflowSat Completed
-
-func (c BitfieldOverflowSat) Build() Completed {
-	return Completed(c)
+func (c BitfieldOperationWriteSetSet) Get(encoding string, offset int64) BitfieldOperationGet {
+	c.cs.s = append(c.cs.s, "GET", encoding, strconv.FormatInt(offset, 10))
+	return (BitfieldOperationGet)(c)
 }
 
-type BitfieldOverflowWrap Completed
+func (c BitfieldOperationWriteSetSet) OverflowWrap() BitfieldOperationWriteOverflowWrap {
+	c.cs.s = append(c.cs.s, "OVERFLOW", "WRAP")
+	return (BitfieldOperationWriteOverflowWrap)(c)
+}
 
-func (c BitfieldOverflowWrap) Build() Completed {
+func (c BitfieldOperationWriteSetSet) OverflowSat() BitfieldOperationWriteOverflowSat {
+	c.cs.s = append(c.cs.s, "OVERFLOW", "SAT")
+	return (BitfieldOperationWriteOverflowSat)(c)
+}
+
+func (c BitfieldOperationWriteSetSet) OverflowFail() BitfieldOperationWriteOverflowFail {
+	c.cs.s = append(c.cs.s, "OVERFLOW", "FAIL")
+	return (BitfieldOperationWriteOverflowFail)(c)
+}
+
+func (c BitfieldOperationWriteSetSet) Set(encoding string, offset int64, value int64) BitfieldOperationWriteSetSet {
+	c.cs.s = append(c.cs.s, "SET", encoding, strconv.FormatInt(offset, 10), strconv.FormatInt(value, 10))
+	return c
+}
+
+func (c BitfieldOperationWriteSetSet) Incrby(encoding string, offset int64, increment int64) BitfieldOperationWriteSetIncrby {
+	c.cs.s = append(c.cs.s, "INCRBY", encoding, strconv.FormatInt(offset, 10), strconv.FormatInt(increment, 10))
+	return (BitfieldOperationWriteSetIncrby)(c)
+}
+
+func (c BitfieldOperationWriteSetSet) Build() Completed {
 	return Completed(c)
 }
 
@@ -2133,32 +2199,6 @@ type BitfieldRoKey Completed
 func (c BitfieldRoKey) Get(encoding string, offset int64) BitfieldRoGet {
 	c.cs.s = append(c.cs.s, "GET", encoding, strconv.FormatInt(offset, 10))
 	return (BitfieldRoGet)(c)
-}
-
-type BitfieldSet Completed
-
-func (c BitfieldSet) Incrby(encoding string, offset int64, increment int64) BitfieldIncrby {
-	c.cs.s = append(c.cs.s, "INCRBY", encoding, strconv.FormatInt(offset, 10), strconv.FormatInt(increment, 10))
-	return (BitfieldIncrby)(c)
-}
-
-func (c BitfieldSet) OverflowWrap() BitfieldOverflowWrap {
-	c.cs.s = append(c.cs.s, "OVERFLOW", "WRAP")
-	return (BitfieldOverflowWrap)(c)
-}
-
-func (c BitfieldSet) OverflowSat() BitfieldOverflowSat {
-	c.cs.s = append(c.cs.s, "OVERFLOW", "SAT")
-	return (BitfieldOverflowSat)(c)
-}
-
-func (c BitfieldSet) OverflowFail() BitfieldOverflowFail {
-	c.cs.s = append(c.cs.s, "OVERFLOW", "FAIL")
-	return (BitfieldOverflowFail)(c)
-}
-
-func (c BitfieldSet) Build() Completed {
-	return Completed(c)
 }
 
 type Bitop Completed
@@ -28851,6 +28891,11 @@ type XpendingGroup Completed
 func (c XpendingGroup) Idle(minIdleTime int64) XpendingFiltersIdle {
 	c.cs.s = append(c.cs.s, "IDLE", strconv.FormatInt(minIdleTime, 10))
 	return (XpendingFiltersIdle)(c)
+}
+
+func (c XpendingGroup) Start(start string) XpendingFiltersStart {
+	c.cs.s = append(c.cs.s, start)
+	return (XpendingFiltersStart)(c)
 }
 
 func (c XpendingGroup) Build() Completed {

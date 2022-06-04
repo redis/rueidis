@@ -221,54 +221,72 @@
         "type": "key"
       },
       {
-        "command": "GET",
-        "name": [
-          "encoding",
-          "offset"
-        ],
-        "type": [
-          "string",
-          "integer"
-        ],
-        "optional": true
-      },
-      {
-        "command": "SET",
-        "name": [
-          "encoding",
-          "offset",
-          "value"
-        ],
-        "type": [
-          "string",
-          "integer",
-          "integer"
-        ],
-        "optional": true
-      },
-      {
-        "command": "INCRBY",
-        "name": [
-          "encoding",
-          "offset",
-          "increment"
-        ],
-        "type": [
-          "string",
-          "integer",
-          "integer"
-        ],
-        "optional": true
-      },
-      {
-        "command": "OVERFLOW",
-        "type": "enum",
-        "enum": [
-          "WRAP",
-          "SAT",
-          "FAIL"
-        ],
-        "optional": true
+        "name": "operation",
+        "type": "block",
+        "multiple": true,
+        "block": [
+          {
+            "command": "GET",
+            "name": [
+              "encoding",
+              "offset"
+            ],
+            "type": [
+              "string",
+              "integer"
+            ],
+            "optional": true
+          },
+          {
+            "name": "write",
+            "type": "block",
+            "block": [
+              {
+                "command": "OVERFLOW",
+                "type": "enum",
+                "enum": [
+                  "WRAP",
+                  "SAT",
+                  "FAIL"
+                ],
+                "optional": true
+              },
+              {
+                "type": "block",
+                "block": [
+                  {
+                    "command": "SET",
+                    "name": [
+                      "encoding",
+                      "offset",
+                      "value"
+                    ],
+                    "type": [
+                      "string",
+                      "integer",
+                      "integer"
+                    ],
+                    "optional": true
+                  },
+                  {
+                    "command": "INCRBY",
+                    "name": [
+                      "encoding",
+                      "offset",
+                      "increment"
+                    ],
+                    "type": [
+                      "string",
+                      "integer",
+                      "integer"
+                    ],
+                    "optional": true
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       }
     ],
     "since": "3.2.0",
