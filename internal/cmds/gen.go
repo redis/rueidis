@@ -2159,11 +2159,6 @@ func (c BitfieldOperationWriteSetSet) Set(encoding string, offset int64, value i
 	return c
 }
 
-func (c BitfieldOperationWriteSetSet) Incrby(encoding string, offset int64, increment int64) BitfieldOperationWriteSetIncrby {
-	c.cs.s = append(c.cs.s, "INCRBY", encoding, strconv.FormatInt(offset, 10), strconv.FormatInt(increment, 10))
-	return (BitfieldOperationWriteSetIncrby)(c)
-}
-
 func (c BitfieldOperationWriteSetSet) Build() Completed {
 	return Completed(c)
 }

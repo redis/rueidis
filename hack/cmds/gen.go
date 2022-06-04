@@ -223,8 +223,20 @@ func (n *node) Name() (out string) {
 	return
 }
 
-func (n *node) NextNodes() []*node {
-	var nodes []*node
+func (n *node) NextNodes() (nodes []*node) {
+	defer func() {
+		deduped := make([]*node, 0, len(nodes))
+	next:
+		for _, n := range nodes {
+			for _, nn := range deduped {
+				if n == nn {
+					continue next
+				}
+			}
+			deduped = append(deduped, n)
+		}
+		nodes = deduped
+	}()
 
 	if n.Child == nil && n.Variadic() {
 		nodes = append(nodes, n)
