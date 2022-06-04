@@ -179,18 +179,30 @@ func (b Builder) AclLog() (c AclLog) {
 	return c
 }
 
-func (c AclLog) CountOrReset(countOrReset string) AclLogCountOrReset {
-	c.cs.s = append(c.cs.s, countOrReset)
-	return (AclLogCountOrReset)(c)
+func (c AclLog) Count(count int64) AclLogCountCount {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(count, 10))
+	return (AclLogCountCount)(c)
 }
 
-func (c AclLog) Build() Completed {
+func (c AclLog) Reset() AclLogCountReset {
+	c.cs.s = append(c.cs.s, "RESET")
+	return (AclLogCountReset)(c)
+}
+
+type AclLogCountCount Completed
+
+func (c AclLogCountCount) Reset() AclLogCountReset {
+	c.cs.s = append(c.cs.s, "RESET")
+	return (AclLogCountReset)(c)
+}
+
+func (c AclLogCountCount) Build() Completed {
 	return Completed(c)
 }
 
-type AclLogCountOrReset Completed
+type AclLogCountReset Completed
 
-func (c AclLogCountOrReset) Build() Completed {
+func (c AclLogCountReset) Build() Completed {
 	return Completed(c)
 }
 

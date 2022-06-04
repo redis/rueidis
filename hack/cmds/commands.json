@@ -1,25 +1,58 @@
 {
-  "ACL LOAD": {
-    "summary": "Reload the ACLs from the configured ACL file",
-    "complexity": "O(N). Where N is the number of configured users.",
+  "ACL CAT": {
+    "summary": "List the ACL categories or the commands inside a category",
+    "complexity": "O(1) since the categories and commands are a fixed set.",
+    "arguments": [
+      {
+        "name": "categoryname",
+        "type": "string",
+        "optional": true
+      }
+    ],
     "since": "6.0.0",
     "group": "server"
   },
-  "ACL SAVE": {
-    "summary": "Save the current ACL rules in the configured ACL file",
-    "complexity": "O(N). Where N is the number of configured users.",
+  "ACL DELUSER": {
+    "summary": "Remove the specified ACL users and the associated rules",
+    "complexity": "O(1) amortized time considering the typical user.",
+    "arguments": [
+      {
+        "name": "username",
+        "type": "string",
+        "multiple": true
+      }
+    ],
     "since": "6.0.0",
     "group": "server"
   },
-  "ACL LIST": {
-    "summary": "List the current ACL rules in ACL config file format",
-    "complexity": "O(N). Where N is the number of configured users.",
-    "since": "6.0.0",
-    "group": "server"
+  "ACL DRYRUN": {
+    "arguments": [
+      {
+        "name": "username",
+        "type": "string"
+      },
+      {
+        "name": "command",
+        "type": "string"
+      },
+      {
+        "name": "arg",
+        "type": "string",
+        "optional": true,
+        "multiple": true
+      }
+    ]
   },
-  "ACL USERS": {
-    "summary": "List the username of all the configured ACL rules",
-    "complexity": "O(N). Where N is the number of configured users.",
+  "ACL GENPASS": {
+    "summary": "Generate a pseudorandom secure password to use for ACL users",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "bits",
+        "type": "integer",
+        "optional": true
+      }
+    ],
     "since": "6.0.0",
     "group": "server"
   },
@@ -32,6 +65,54 @@
         "type": "string"
       }
     ],
+    "since": "6.0.0",
+    "group": "server"
+  },
+  "ACL HELP": {
+    "summary": "Show helpful text about the different subcommands",
+    "complexity": "O(1)",
+    "since": "6.0.0",
+    "group": "server"
+  },
+  "ACL LIST": {
+    "summary": "List the current ACL rules in ACL config file format",
+    "complexity": "O(N). Where N is the number of configured users.",
+    "since": "6.0.0",
+    "group": "server"
+  },
+  "ACL LOAD": {
+    "summary": "Reload the ACLs from the configured ACL file",
+    "complexity": "O(N). Where N is the number of configured users.",
+    "since": "6.0.0",
+    "group": "server"
+  },
+  "ACL LOG": {
+    "summary": "List latest events denied because of ACLs in place",
+    "complexity": "O(N) with N being the number of entries shown.",
+    "arguments": [
+      {
+        "type": "block",
+        "block": [
+          {
+            "name": "count",
+            "type": "integer",
+            "optional": true
+          },
+          {
+            "name": "reset",
+            "type": "enum",
+            "enum": ["RESET"],
+            "optional": true
+          }
+        ]
+      }
+    ],
+    "since": "6.0.0",
+    "group": "server"
+  },
+  "ACL SAVE": {
+    "summary": "Save the current ACL rules in the configured ACL file",
+    "complexity": "O(N). Where N is the number of configured users.",
     "since": "6.0.0",
     "group": "server"
   },
@@ -53,66 +134,14 @@
     "since": "6.0.0",
     "group": "server"
   },
-  "ACL DELUSER": {
-    "summary": "Remove the specified ACL users and the associated rules",
-    "complexity": "O(1) amortized time considering the typical user.",
-    "arguments": [
-      {
-        "name": "username",
-        "type": "string",
-        "multiple": true
-      }
-    ],
-    "since": "6.0.0",
-    "group": "server"
-  },
-  "ACL CAT": {
-    "summary": "List the ACL categories or the commands inside a category",
-    "complexity": "O(1) since the categories and commands are a fixed set.",
-    "arguments": [
-      {
-        "name": "categoryname",
-        "type": "string",
-        "optional": true
-      }
-    ],
-    "since": "6.0.0",
-    "group": "server"
-  },
-  "ACL GENPASS": {
-    "summary": "Generate a pseudorandom secure password to use for ACL users",
-    "complexity": "O(1)",
-    "arguments": [
-      {
-        "name": "bits",
-        "type": "integer",
-        "optional": true
-      }
-    ],
+  "ACL USERS": {
+    "summary": "List the username of all the configured ACL rules",
+    "complexity": "O(N). Where N is the number of configured users.",
     "since": "6.0.0",
     "group": "server"
   },
   "ACL WHOAMI": {
     "summary": "Return the name of the user associated to the current connection",
-    "complexity": "O(1)",
-    "since": "6.0.0",
-    "group": "server"
-  },
-  "ACL LOG": {
-    "summary": "List latest events denied because of ACLs in place",
-    "complexity": "O(N) with N being the number of entries shown.",
-    "arguments": [
-      {
-        "name": "count or RESET",
-        "type": "string",
-        "optional": true
-      }
-    ],
-    "since": "6.0.0",
-    "group": "server"
-  },
-  "ACL HELP": {
-    "summary": "Show helpful text about the different subcommands",
     "complexity": "O(1)",
     "since": "6.0.0",
     "group": "server"
@@ -6339,24 +6368,6 @@
     "summary": "Show helpful text about the different subcommands.",
     "since": "2.8.13",
     "group": "server"
-  },
-  "ACL DRYRUN": {
-    "arguments": [
-      {
-        "name": "username",
-        "type": "string"
-      },
-      {
-        "name": "command",
-        "type": "string"
-      },
-      {
-        "name": "arg",
-        "type": "string",
-        "optional": true,
-        "multiple": true
-      }
-    ]
   },
   "COMMAND DOCS": {
     "arguments": [
