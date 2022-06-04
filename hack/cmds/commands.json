@@ -1982,70 +1982,80 @@
         "type": "key"
       },
       {
-        "command": "FROMMEMBER",
-        "name": "member",
-        "type": "string",
-        "optional": true
-      },
-      {
-        "command": "FROMLONLAT",
-        "name": [
-          "longitude",
-          "latitude"
-        ],
-        "type": [
-          "double",
-          "double"
-        ],
-        "optional": true
+        "type": "block",
+        "block": [
+          {
+            "command": "FROMMEMBER",
+            "name": "member",
+            "type": "string",
+            "optional": true
+          },
+          {
+            "command": "FROMLONLAT",
+            "name": [
+              "longitude",
+              "latitude"
+            ],
+            "type": [
+              "double",
+              "double"
+            ],
+            "optional": true
+          }
+        ]
       },
       {
         "type": "block",
-        "name": "circle",
         "block": [
           {
-            "name": "radius",
-            "command": "BYRADIUS",
-            "type": "double"
+            "type": "block",
+            "name": "circle",
+            "block": [
+              {
+                "name": "radius",
+                "command": "BYRADIUS",
+                "type": "double"
+              },
+              {
+                "name": "unit",
+                "type": "enum",
+                "enum": [
+                  "m",
+                  "km",
+                  "ft",
+                  "mi"
+                ]
+              }
+            ],
+            "optional": true
           },
           {
-            "name": "unit",
-            "type": "enum",
-            "enum": [
-              "m",
-              "km",
-              "ft",
-              "mi"
-            ]
+            "type": "block",
+            "name": "box",
+            "block": [
+              {
+                "name": "width",
+                "command": "BYBOX",
+                "type": "double"
+              },
+              {
+                "name": "height",
+                "type": "double"
+              },
+              {
+                "name": "unit",
+                "type": "enum",
+                "enum": [
+                  "m",
+                  "km",
+                  "ft",
+                  "mi"
+                ]
+              }
+            ],
+            "optional": true
           }
-        ],
-        "optional": true
-      },
-      {
-        "type": "block",
-        "name": "box",
-        "block": [
-          {
-            "name": "width",
-            "command": "BYBOX",
-            "type": "double"
-          },
-          {
-            "name": "height",
-            "type": "double"
-          },
-          {
-            "name": "unit",
-            "type": "enum",
-            "enum": [
-              "m",
-              "km",
-              "ft",
-              "mi"
-            ]
-          }
-        ],
-        "optional": true
+        ]
       },
       {
         "name": "order",
@@ -2117,70 +2127,80 @@
         "type": "key"
       },
       {
-        "command": "FROMMEMBER",
-        "name": "member",
-        "type": "string",
-        "optional": true
-      },
-      {
-        "command": "FROMLONLAT",
-        "name": [
-          "longitude",
-          "latitude"
-        ],
-        "type": [
-          "double",
-          "double"
-        ],
-        "optional": true
+        "type": "block",
+        "block": [
+          {
+            "command": "FROMMEMBER",
+            "name": "member",
+            "type": "string",
+            "optional": true
+          },
+          {
+            "command": "FROMLONLAT",
+            "name": [
+              "longitude",
+              "latitude"
+            ],
+            "type": [
+              "double",
+              "double"
+            ],
+            "optional": true
+          }
+        ]
       },
       {
         "type": "block",
-        "name": "circle",
         "block": [
           {
-            "name": "radius",
-            "command": "BYRADIUS",
-            "type": "double"
+            "type": "block",
+            "name": "circle",
+            "block": [
+              {
+                "name": "radius",
+                "command": "BYRADIUS",
+                "type": "double"
+              },
+              {
+                "name": "unit",
+                "type": "enum",
+                "enum": [
+                  "m",
+                  "km",
+                  "ft",
+                  "mi"
+                ]
+              }
+            ],
+            "optional": true
           },
           {
-            "name": "unit",
-            "type": "enum",
-            "enum": [
-              "m",
-              "km",
-              "ft",
-              "mi"
-            ]
+            "type": "block",
+            "name": "box",
+            "block": [
+              {
+                "name": "width",
+                "command": "BYBOX",
+                "type": "double"
+              },
+              {
+                "name": "height",
+                "type": "double"
+              },
+              {
+                "name": "unit",
+                "type": "enum",
+                "enum": [
+                  "m",
+                  "km",
+                  "ft",
+                  "mi"
+                ]
+              }
+            ],
+            "optional": true
           }
-        ],
-        "optional": true
-      },
-      {
-        "type": "block",
-        "name": "box",
-        "block": [
-          {
-            "name": "width",
-            "command": "BYBOX",
-            "type": "double"
-          },
-          {
-            "name": "height",
-            "type": "double"
-          },
-          {
-            "name": "unit",
-            "type": "enum",
-            "enum": [
-              "m",
-              "km",
-              "ft",
-              "mi"
-            ]
-          }
-        ],
-        "optional": true
+        ]
       },
       {
         "name": "order",

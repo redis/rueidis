@@ -14377,394 +14377,394 @@ func (c Geosearch) Key(key string) GeosearchKey {
 	return (GeosearchKey)(c)
 }
 
-type GeosearchBoxBybox Completed
+type GeosearchCircleBoxBybox Completed
 
-func (c GeosearchBoxBybox) Height(height float64) GeosearchBoxHeight {
+func (c GeosearchCircleBoxBybox) Height(height float64) GeosearchCircleBoxHeight {
 	c.cs.s = append(c.cs.s, strconv.FormatFloat(height, 'f', -1, 64))
-	return (GeosearchBoxHeight)(c)
+	return (GeosearchCircleBoxHeight)(c)
 }
 
-type GeosearchBoxHeight Completed
+type GeosearchCircleBoxHeight Completed
 
-func (c GeosearchBoxHeight) M() GeosearchBoxUnitM {
+func (c GeosearchCircleBoxHeight) M() GeosearchCircleBoxUnitM {
 	c.cs.s = append(c.cs.s, "m")
-	return (GeosearchBoxUnitM)(c)
+	return (GeosearchCircleBoxUnitM)(c)
 }
 
-func (c GeosearchBoxHeight) Km() GeosearchBoxUnitKm {
+func (c GeosearchCircleBoxHeight) Km() GeosearchCircleBoxUnitKm {
 	c.cs.s = append(c.cs.s, "km")
-	return (GeosearchBoxUnitKm)(c)
+	return (GeosearchCircleBoxUnitKm)(c)
 }
 
-func (c GeosearchBoxHeight) Ft() GeosearchBoxUnitFt {
+func (c GeosearchCircleBoxHeight) Ft() GeosearchCircleBoxUnitFt {
 	c.cs.s = append(c.cs.s, "ft")
-	return (GeosearchBoxUnitFt)(c)
+	return (GeosearchCircleBoxUnitFt)(c)
 }
 
-func (c GeosearchBoxHeight) Mi() GeosearchBoxUnitMi {
+func (c GeosearchCircleBoxHeight) Mi() GeosearchCircleBoxUnitMi {
 	c.cs.s = append(c.cs.s, "mi")
-	return (GeosearchBoxUnitMi)(c)
+	return (GeosearchCircleBoxUnitMi)(c)
 }
 
-type GeosearchBoxUnitFt Completed
+type GeosearchCircleBoxUnitFt Completed
 
-func (c GeosearchBoxUnitFt) Asc() GeosearchOrderAsc {
+func (c GeosearchCircleBoxUnitFt) Asc() GeosearchOrderAsc {
 	c.cs.s = append(c.cs.s, "ASC")
 	return (GeosearchOrderAsc)(c)
 }
 
-func (c GeosearchBoxUnitFt) Desc() GeosearchOrderDesc {
+func (c GeosearchCircleBoxUnitFt) Desc() GeosearchOrderDesc {
 	c.cs.s = append(c.cs.s, "DESC")
 	return (GeosearchOrderDesc)(c)
 }
 
-func (c GeosearchBoxUnitFt) Count(count int64) GeosearchCountCount {
+func (c GeosearchCircleBoxUnitFt) Count(count int64) GeosearchCountCount {
 	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
 	return (GeosearchCountCount)(c)
 }
 
-func (c GeosearchBoxUnitFt) Withcoord() GeosearchWithcoord {
+func (c GeosearchCircleBoxUnitFt) Withcoord() GeosearchWithcoord {
 	c.cs.s = append(c.cs.s, "WITHCOORD")
 	return (GeosearchWithcoord)(c)
 }
 
-func (c GeosearchBoxUnitFt) Withdist() GeosearchWithdist {
+func (c GeosearchCircleBoxUnitFt) Withdist() GeosearchWithdist {
 	c.cs.s = append(c.cs.s, "WITHDIST")
 	return (GeosearchWithdist)(c)
 }
 
-func (c GeosearchBoxUnitFt) Withhash() GeosearchWithhash {
+func (c GeosearchCircleBoxUnitFt) Withhash() GeosearchWithhash {
 	c.cs.s = append(c.cs.s, "WITHHASH")
 	return (GeosearchWithhash)(c)
 }
 
-func (c GeosearchBoxUnitFt) Build() Completed {
+func (c GeosearchCircleBoxUnitFt) Build() Completed {
 	return Completed(c)
 }
 
-func (c GeosearchBoxUnitFt) Cache() Cacheable {
+func (c GeosearchCircleBoxUnitFt) Cache() Cacheable {
 	return Cacheable(c)
 }
 
-type GeosearchBoxUnitKm Completed
+type GeosearchCircleBoxUnitKm Completed
 
-func (c GeosearchBoxUnitKm) Asc() GeosearchOrderAsc {
+func (c GeosearchCircleBoxUnitKm) Asc() GeosearchOrderAsc {
 	c.cs.s = append(c.cs.s, "ASC")
 	return (GeosearchOrderAsc)(c)
 }
 
-func (c GeosearchBoxUnitKm) Desc() GeosearchOrderDesc {
+func (c GeosearchCircleBoxUnitKm) Desc() GeosearchOrderDesc {
 	c.cs.s = append(c.cs.s, "DESC")
 	return (GeosearchOrderDesc)(c)
 }
 
-func (c GeosearchBoxUnitKm) Count(count int64) GeosearchCountCount {
+func (c GeosearchCircleBoxUnitKm) Count(count int64) GeosearchCountCount {
 	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
 	return (GeosearchCountCount)(c)
 }
 
-func (c GeosearchBoxUnitKm) Withcoord() GeosearchWithcoord {
+func (c GeosearchCircleBoxUnitKm) Withcoord() GeosearchWithcoord {
 	c.cs.s = append(c.cs.s, "WITHCOORD")
 	return (GeosearchWithcoord)(c)
 }
 
-func (c GeosearchBoxUnitKm) Withdist() GeosearchWithdist {
+func (c GeosearchCircleBoxUnitKm) Withdist() GeosearchWithdist {
 	c.cs.s = append(c.cs.s, "WITHDIST")
 	return (GeosearchWithdist)(c)
 }
 
-func (c GeosearchBoxUnitKm) Withhash() GeosearchWithhash {
+func (c GeosearchCircleBoxUnitKm) Withhash() GeosearchWithhash {
 	c.cs.s = append(c.cs.s, "WITHHASH")
 	return (GeosearchWithhash)(c)
 }
 
-func (c GeosearchBoxUnitKm) Build() Completed {
+func (c GeosearchCircleBoxUnitKm) Build() Completed {
 	return Completed(c)
 }
 
-func (c GeosearchBoxUnitKm) Cache() Cacheable {
+func (c GeosearchCircleBoxUnitKm) Cache() Cacheable {
 	return Cacheable(c)
 }
 
-type GeosearchBoxUnitM Completed
+type GeosearchCircleBoxUnitM Completed
 
-func (c GeosearchBoxUnitM) Asc() GeosearchOrderAsc {
+func (c GeosearchCircleBoxUnitM) Asc() GeosearchOrderAsc {
 	c.cs.s = append(c.cs.s, "ASC")
 	return (GeosearchOrderAsc)(c)
 }
 
-func (c GeosearchBoxUnitM) Desc() GeosearchOrderDesc {
+func (c GeosearchCircleBoxUnitM) Desc() GeosearchOrderDesc {
 	c.cs.s = append(c.cs.s, "DESC")
 	return (GeosearchOrderDesc)(c)
 }
 
-func (c GeosearchBoxUnitM) Count(count int64) GeosearchCountCount {
+func (c GeosearchCircleBoxUnitM) Count(count int64) GeosearchCountCount {
 	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
 	return (GeosearchCountCount)(c)
 }
 
-func (c GeosearchBoxUnitM) Withcoord() GeosearchWithcoord {
+func (c GeosearchCircleBoxUnitM) Withcoord() GeosearchWithcoord {
 	c.cs.s = append(c.cs.s, "WITHCOORD")
 	return (GeosearchWithcoord)(c)
 }
 
-func (c GeosearchBoxUnitM) Withdist() GeosearchWithdist {
+func (c GeosearchCircleBoxUnitM) Withdist() GeosearchWithdist {
 	c.cs.s = append(c.cs.s, "WITHDIST")
 	return (GeosearchWithdist)(c)
 }
 
-func (c GeosearchBoxUnitM) Withhash() GeosearchWithhash {
+func (c GeosearchCircleBoxUnitM) Withhash() GeosearchWithhash {
 	c.cs.s = append(c.cs.s, "WITHHASH")
 	return (GeosearchWithhash)(c)
 }
 
-func (c GeosearchBoxUnitM) Build() Completed {
+func (c GeosearchCircleBoxUnitM) Build() Completed {
 	return Completed(c)
 }
 
-func (c GeosearchBoxUnitM) Cache() Cacheable {
+func (c GeosearchCircleBoxUnitM) Cache() Cacheable {
 	return Cacheable(c)
 }
 
-type GeosearchBoxUnitMi Completed
+type GeosearchCircleBoxUnitMi Completed
 
-func (c GeosearchBoxUnitMi) Asc() GeosearchOrderAsc {
+func (c GeosearchCircleBoxUnitMi) Asc() GeosearchOrderAsc {
 	c.cs.s = append(c.cs.s, "ASC")
 	return (GeosearchOrderAsc)(c)
 }
 
-func (c GeosearchBoxUnitMi) Desc() GeosearchOrderDesc {
+func (c GeosearchCircleBoxUnitMi) Desc() GeosearchOrderDesc {
 	c.cs.s = append(c.cs.s, "DESC")
 	return (GeosearchOrderDesc)(c)
 }
 
-func (c GeosearchBoxUnitMi) Count(count int64) GeosearchCountCount {
+func (c GeosearchCircleBoxUnitMi) Count(count int64) GeosearchCountCount {
 	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
 	return (GeosearchCountCount)(c)
 }
 
-func (c GeosearchBoxUnitMi) Withcoord() GeosearchWithcoord {
+func (c GeosearchCircleBoxUnitMi) Withcoord() GeosearchWithcoord {
 	c.cs.s = append(c.cs.s, "WITHCOORD")
 	return (GeosearchWithcoord)(c)
 }
 
-func (c GeosearchBoxUnitMi) Withdist() GeosearchWithdist {
+func (c GeosearchCircleBoxUnitMi) Withdist() GeosearchWithdist {
 	c.cs.s = append(c.cs.s, "WITHDIST")
 	return (GeosearchWithdist)(c)
 }
 
-func (c GeosearchBoxUnitMi) Withhash() GeosearchWithhash {
+func (c GeosearchCircleBoxUnitMi) Withhash() GeosearchWithhash {
 	c.cs.s = append(c.cs.s, "WITHHASH")
 	return (GeosearchWithhash)(c)
 }
 
-func (c GeosearchBoxUnitMi) Build() Completed {
+func (c GeosearchCircleBoxUnitMi) Build() Completed {
 	return Completed(c)
 }
 
-func (c GeosearchBoxUnitMi) Cache() Cacheable {
+func (c GeosearchCircleBoxUnitMi) Cache() Cacheable {
 	return Cacheable(c)
 }
 
-type GeosearchCircleByradius Completed
+type GeosearchCircleCircleByradius Completed
 
-func (c GeosearchCircleByradius) M() GeosearchCircleUnitM {
+func (c GeosearchCircleCircleByradius) M() GeosearchCircleCircleUnitM {
 	c.cs.s = append(c.cs.s, "m")
-	return (GeosearchCircleUnitM)(c)
+	return (GeosearchCircleCircleUnitM)(c)
 }
 
-func (c GeosearchCircleByradius) Km() GeosearchCircleUnitKm {
+func (c GeosearchCircleCircleByradius) Km() GeosearchCircleCircleUnitKm {
 	c.cs.s = append(c.cs.s, "km")
-	return (GeosearchCircleUnitKm)(c)
+	return (GeosearchCircleCircleUnitKm)(c)
 }
 
-func (c GeosearchCircleByradius) Ft() GeosearchCircleUnitFt {
+func (c GeosearchCircleCircleByradius) Ft() GeosearchCircleCircleUnitFt {
 	c.cs.s = append(c.cs.s, "ft")
-	return (GeosearchCircleUnitFt)(c)
+	return (GeosearchCircleCircleUnitFt)(c)
 }
 
-func (c GeosearchCircleByradius) Mi() GeosearchCircleUnitMi {
+func (c GeosearchCircleCircleByradius) Mi() GeosearchCircleCircleUnitMi {
 	c.cs.s = append(c.cs.s, "mi")
-	return (GeosearchCircleUnitMi)(c)
+	return (GeosearchCircleCircleUnitMi)(c)
 }
 
-type GeosearchCircleUnitFt Completed
+type GeosearchCircleCircleUnitFt Completed
 
-func (c GeosearchCircleUnitFt) Bybox(width float64) GeosearchBoxBybox {
+func (c GeosearchCircleCircleUnitFt) Bybox(width float64) GeosearchCircleBoxBybox {
 	c.cs.s = append(c.cs.s, "BYBOX", strconv.FormatFloat(width, 'f', -1, 64))
-	return (GeosearchBoxBybox)(c)
+	return (GeosearchCircleBoxBybox)(c)
 }
 
-func (c GeosearchCircleUnitFt) Asc() GeosearchOrderAsc {
+func (c GeosearchCircleCircleUnitFt) Asc() GeosearchOrderAsc {
 	c.cs.s = append(c.cs.s, "ASC")
 	return (GeosearchOrderAsc)(c)
 }
 
-func (c GeosearchCircleUnitFt) Desc() GeosearchOrderDesc {
+func (c GeosearchCircleCircleUnitFt) Desc() GeosearchOrderDesc {
 	c.cs.s = append(c.cs.s, "DESC")
 	return (GeosearchOrderDesc)(c)
 }
 
-func (c GeosearchCircleUnitFt) Count(count int64) GeosearchCountCount {
+func (c GeosearchCircleCircleUnitFt) Count(count int64) GeosearchCountCount {
 	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
 	return (GeosearchCountCount)(c)
 }
 
-func (c GeosearchCircleUnitFt) Withcoord() GeosearchWithcoord {
+func (c GeosearchCircleCircleUnitFt) Withcoord() GeosearchWithcoord {
 	c.cs.s = append(c.cs.s, "WITHCOORD")
 	return (GeosearchWithcoord)(c)
 }
 
-func (c GeosearchCircleUnitFt) Withdist() GeosearchWithdist {
+func (c GeosearchCircleCircleUnitFt) Withdist() GeosearchWithdist {
 	c.cs.s = append(c.cs.s, "WITHDIST")
 	return (GeosearchWithdist)(c)
 }
 
-func (c GeosearchCircleUnitFt) Withhash() GeosearchWithhash {
+func (c GeosearchCircleCircleUnitFt) Withhash() GeosearchWithhash {
 	c.cs.s = append(c.cs.s, "WITHHASH")
 	return (GeosearchWithhash)(c)
 }
 
-func (c GeosearchCircleUnitFt) Build() Completed {
+func (c GeosearchCircleCircleUnitFt) Build() Completed {
 	return Completed(c)
 }
 
-func (c GeosearchCircleUnitFt) Cache() Cacheable {
+func (c GeosearchCircleCircleUnitFt) Cache() Cacheable {
 	return Cacheable(c)
 }
 
-type GeosearchCircleUnitKm Completed
+type GeosearchCircleCircleUnitKm Completed
 
-func (c GeosearchCircleUnitKm) Bybox(width float64) GeosearchBoxBybox {
+func (c GeosearchCircleCircleUnitKm) Bybox(width float64) GeosearchCircleBoxBybox {
 	c.cs.s = append(c.cs.s, "BYBOX", strconv.FormatFloat(width, 'f', -1, 64))
-	return (GeosearchBoxBybox)(c)
+	return (GeosearchCircleBoxBybox)(c)
 }
 
-func (c GeosearchCircleUnitKm) Asc() GeosearchOrderAsc {
+func (c GeosearchCircleCircleUnitKm) Asc() GeosearchOrderAsc {
 	c.cs.s = append(c.cs.s, "ASC")
 	return (GeosearchOrderAsc)(c)
 }
 
-func (c GeosearchCircleUnitKm) Desc() GeosearchOrderDesc {
+func (c GeosearchCircleCircleUnitKm) Desc() GeosearchOrderDesc {
 	c.cs.s = append(c.cs.s, "DESC")
 	return (GeosearchOrderDesc)(c)
 }
 
-func (c GeosearchCircleUnitKm) Count(count int64) GeosearchCountCount {
+func (c GeosearchCircleCircleUnitKm) Count(count int64) GeosearchCountCount {
 	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
 	return (GeosearchCountCount)(c)
 }
 
-func (c GeosearchCircleUnitKm) Withcoord() GeosearchWithcoord {
+func (c GeosearchCircleCircleUnitKm) Withcoord() GeosearchWithcoord {
 	c.cs.s = append(c.cs.s, "WITHCOORD")
 	return (GeosearchWithcoord)(c)
 }
 
-func (c GeosearchCircleUnitKm) Withdist() GeosearchWithdist {
+func (c GeosearchCircleCircleUnitKm) Withdist() GeosearchWithdist {
 	c.cs.s = append(c.cs.s, "WITHDIST")
 	return (GeosearchWithdist)(c)
 }
 
-func (c GeosearchCircleUnitKm) Withhash() GeosearchWithhash {
+func (c GeosearchCircleCircleUnitKm) Withhash() GeosearchWithhash {
 	c.cs.s = append(c.cs.s, "WITHHASH")
 	return (GeosearchWithhash)(c)
 }
 
-func (c GeosearchCircleUnitKm) Build() Completed {
+func (c GeosearchCircleCircleUnitKm) Build() Completed {
 	return Completed(c)
 }
 
-func (c GeosearchCircleUnitKm) Cache() Cacheable {
+func (c GeosearchCircleCircleUnitKm) Cache() Cacheable {
 	return Cacheable(c)
 }
 
-type GeosearchCircleUnitM Completed
+type GeosearchCircleCircleUnitM Completed
 
-func (c GeosearchCircleUnitM) Bybox(width float64) GeosearchBoxBybox {
+func (c GeosearchCircleCircleUnitM) Bybox(width float64) GeosearchCircleBoxBybox {
 	c.cs.s = append(c.cs.s, "BYBOX", strconv.FormatFloat(width, 'f', -1, 64))
-	return (GeosearchBoxBybox)(c)
+	return (GeosearchCircleBoxBybox)(c)
 }
 
-func (c GeosearchCircleUnitM) Asc() GeosearchOrderAsc {
+func (c GeosearchCircleCircleUnitM) Asc() GeosearchOrderAsc {
 	c.cs.s = append(c.cs.s, "ASC")
 	return (GeosearchOrderAsc)(c)
 }
 
-func (c GeosearchCircleUnitM) Desc() GeosearchOrderDesc {
+func (c GeosearchCircleCircleUnitM) Desc() GeosearchOrderDesc {
 	c.cs.s = append(c.cs.s, "DESC")
 	return (GeosearchOrderDesc)(c)
 }
 
-func (c GeosearchCircleUnitM) Count(count int64) GeosearchCountCount {
+func (c GeosearchCircleCircleUnitM) Count(count int64) GeosearchCountCount {
 	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
 	return (GeosearchCountCount)(c)
 }
 
-func (c GeosearchCircleUnitM) Withcoord() GeosearchWithcoord {
+func (c GeosearchCircleCircleUnitM) Withcoord() GeosearchWithcoord {
 	c.cs.s = append(c.cs.s, "WITHCOORD")
 	return (GeosearchWithcoord)(c)
 }
 
-func (c GeosearchCircleUnitM) Withdist() GeosearchWithdist {
+func (c GeosearchCircleCircleUnitM) Withdist() GeosearchWithdist {
 	c.cs.s = append(c.cs.s, "WITHDIST")
 	return (GeosearchWithdist)(c)
 }
 
-func (c GeosearchCircleUnitM) Withhash() GeosearchWithhash {
+func (c GeosearchCircleCircleUnitM) Withhash() GeosearchWithhash {
 	c.cs.s = append(c.cs.s, "WITHHASH")
 	return (GeosearchWithhash)(c)
 }
 
-func (c GeosearchCircleUnitM) Build() Completed {
+func (c GeosearchCircleCircleUnitM) Build() Completed {
 	return Completed(c)
 }
 
-func (c GeosearchCircleUnitM) Cache() Cacheable {
+func (c GeosearchCircleCircleUnitM) Cache() Cacheable {
 	return Cacheable(c)
 }
 
-type GeosearchCircleUnitMi Completed
+type GeosearchCircleCircleUnitMi Completed
 
-func (c GeosearchCircleUnitMi) Bybox(width float64) GeosearchBoxBybox {
+func (c GeosearchCircleCircleUnitMi) Bybox(width float64) GeosearchCircleBoxBybox {
 	c.cs.s = append(c.cs.s, "BYBOX", strconv.FormatFloat(width, 'f', -1, 64))
-	return (GeosearchBoxBybox)(c)
+	return (GeosearchCircleBoxBybox)(c)
 }
 
-func (c GeosearchCircleUnitMi) Asc() GeosearchOrderAsc {
+func (c GeosearchCircleCircleUnitMi) Asc() GeosearchOrderAsc {
 	c.cs.s = append(c.cs.s, "ASC")
 	return (GeosearchOrderAsc)(c)
 }
 
-func (c GeosearchCircleUnitMi) Desc() GeosearchOrderDesc {
+func (c GeosearchCircleCircleUnitMi) Desc() GeosearchOrderDesc {
 	c.cs.s = append(c.cs.s, "DESC")
 	return (GeosearchOrderDesc)(c)
 }
 
-func (c GeosearchCircleUnitMi) Count(count int64) GeosearchCountCount {
+func (c GeosearchCircleCircleUnitMi) Count(count int64) GeosearchCountCount {
 	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
 	return (GeosearchCountCount)(c)
 }
 
-func (c GeosearchCircleUnitMi) Withcoord() GeosearchWithcoord {
+func (c GeosearchCircleCircleUnitMi) Withcoord() GeosearchWithcoord {
 	c.cs.s = append(c.cs.s, "WITHCOORD")
 	return (GeosearchWithcoord)(c)
 }
 
-func (c GeosearchCircleUnitMi) Withdist() GeosearchWithdist {
+func (c GeosearchCircleCircleUnitMi) Withdist() GeosearchWithdist {
 	c.cs.s = append(c.cs.s, "WITHDIST")
 	return (GeosearchWithdist)(c)
 }
 
-func (c GeosearchCircleUnitMi) Withhash() GeosearchWithhash {
+func (c GeosearchCircleCircleUnitMi) Withhash() GeosearchWithhash {
 	c.cs.s = append(c.cs.s, "WITHHASH")
 	return (GeosearchWithhash)(c)
 }
 
-func (c GeosearchCircleUnitMi) Build() Completed {
+func (c GeosearchCircleCircleUnitMi) Build() Completed {
 	return Completed(c)
 }
 
-func (c GeosearchCircleUnitMi) Cache() Cacheable {
+func (c GeosearchCircleCircleUnitMi) Cache() Cacheable {
 	return Cacheable(c)
 }
 
@@ -14823,169 +14823,45 @@ func (c GeosearchCountCount) Cache() Cacheable {
 	return Cacheable(c)
 }
 
-type GeosearchFromlonlat Completed
+type GeosearchFrommemberFromlonlat Completed
 
-func (c GeosearchFromlonlat) Byradius(radius float64) GeosearchCircleByradius {
+func (c GeosearchFrommemberFromlonlat) Byradius(radius float64) GeosearchCircleCircleByradius {
 	c.cs.s = append(c.cs.s, "BYRADIUS", strconv.FormatFloat(radius, 'f', -1, 64))
-	return (GeosearchCircleByradius)(c)
+	return (GeosearchCircleCircleByradius)(c)
 }
 
-func (c GeosearchFromlonlat) Bybox(width float64) GeosearchBoxBybox {
+func (c GeosearchFrommemberFromlonlat) Bybox(width float64) GeosearchCircleBoxBybox {
 	c.cs.s = append(c.cs.s, "BYBOX", strconv.FormatFloat(width, 'f', -1, 64))
-	return (GeosearchBoxBybox)(c)
+	return (GeosearchCircleBoxBybox)(c)
 }
 
-func (c GeosearchFromlonlat) Asc() GeosearchOrderAsc {
-	c.cs.s = append(c.cs.s, "ASC")
-	return (GeosearchOrderAsc)(c)
-}
+type GeosearchFrommemberFrommember Completed
 
-func (c GeosearchFromlonlat) Desc() GeosearchOrderDesc {
-	c.cs.s = append(c.cs.s, "DESC")
-	return (GeosearchOrderDesc)(c)
-}
-
-func (c GeosearchFromlonlat) Count(count int64) GeosearchCountCount {
-	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
-	return (GeosearchCountCount)(c)
-}
-
-func (c GeosearchFromlonlat) Withcoord() GeosearchWithcoord {
-	c.cs.s = append(c.cs.s, "WITHCOORD")
-	return (GeosearchWithcoord)(c)
-}
-
-func (c GeosearchFromlonlat) Withdist() GeosearchWithdist {
-	c.cs.s = append(c.cs.s, "WITHDIST")
-	return (GeosearchWithdist)(c)
-}
-
-func (c GeosearchFromlonlat) Withhash() GeosearchWithhash {
-	c.cs.s = append(c.cs.s, "WITHHASH")
-	return (GeosearchWithhash)(c)
-}
-
-func (c GeosearchFromlonlat) Build() Completed {
-	return Completed(c)
-}
-
-func (c GeosearchFromlonlat) Cache() Cacheable {
-	return Cacheable(c)
-}
-
-type GeosearchFrommember Completed
-
-func (c GeosearchFrommember) Fromlonlat(longitude float64, latitude float64) GeosearchFromlonlat {
+func (c GeosearchFrommemberFrommember) Fromlonlat(longitude float64, latitude float64) GeosearchFrommemberFromlonlat {
 	c.cs.s = append(c.cs.s, "FROMLONLAT", strconv.FormatFloat(longitude, 'f', -1, 64), strconv.FormatFloat(latitude, 'f', -1, 64))
-	return (GeosearchFromlonlat)(c)
+	return (GeosearchFrommemberFromlonlat)(c)
 }
 
-func (c GeosearchFrommember) Byradius(radius float64) GeosearchCircleByradius {
+func (c GeosearchFrommemberFrommember) Byradius(radius float64) GeosearchCircleCircleByradius {
 	c.cs.s = append(c.cs.s, "BYRADIUS", strconv.FormatFloat(radius, 'f', -1, 64))
-	return (GeosearchCircleByradius)(c)
+	return (GeosearchCircleCircleByradius)(c)
 }
 
-func (c GeosearchFrommember) Bybox(width float64) GeosearchBoxBybox {
+func (c GeosearchFrommemberFrommember) Bybox(width float64) GeosearchCircleBoxBybox {
 	c.cs.s = append(c.cs.s, "BYBOX", strconv.FormatFloat(width, 'f', -1, 64))
-	return (GeosearchBoxBybox)(c)
-}
-
-func (c GeosearchFrommember) Asc() GeosearchOrderAsc {
-	c.cs.s = append(c.cs.s, "ASC")
-	return (GeosearchOrderAsc)(c)
-}
-
-func (c GeosearchFrommember) Desc() GeosearchOrderDesc {
-	c.cs.s = append(c.cs.s, "DESC")
-	return (GeosearchOrderDesc)(c)
-}
-
-func (c GeosearchFrommember) Count(count int64) GeosearchCountCount {
-	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
-	return (GeosearchCountCount)(c)
-}
-
-func (c GeosearchFrommember) Withcoord() GeosearchWithcoord {
-	c.cs.s = append(c.cs.s, "WITHCOORD")
-	return (GeosearchWithcoord)(c)
-}
-
-func (c GeosearchFrommember) Withdist() GeosearchWithdist {
-	c.cs.s = append(c.cs.s, "WITHDIST")
-	return (GeosearchWithdist)(c)
-}
-
-func (c GeosearchFrommember) Withhash() GeosearchWithhash {
-	c.cs.s = append(c.cs.s, "WITHHASH")
-	return (GeosearchWithhash)(c)
-}
-
-func (c GeosearchFrommember) Build() Completed {
-	return Completed(c)
-}
-
-func (c GeosearchFrommember) Cache() Cacheable {
-	return Cacheable(c)
+	return (GeosearchCircleBoxBybox)(c)
 }
 
 type GeosearchKey Completed
 
-func (c GeosearchKey) Frommember(member string) GeosearchFrommember {
+func (c GeosearchKey) Frommember(member string) GeosearchFrommemberFrommember {
 	c.cs.s = append(c.cs.s, "FROMMEMBER", member)
-	return (GeosearchFrommember)(c)
+	return (GeosearchFrommemberFrommember)(c)
 }
 
-func (c GeosearchKey) Fromlonlat(longitude float64, latitude float64) GeosearchFromlonlat {
+func (c GeosearchKey) Fromlonlat(longitude float64, latitude float64) GeosearchFrommemberFromlonlat {
 	c.cs.s = append(c.cs.s, "FROMLONLAT", strconv.FormatFloat(longitude, 'f', -1, 64), strconv.FormatFloat(latitude, 'f', -1, 64))
-	return (GeosearchFromlonlat)(c)
-}
-
-func (c GeosearchKey) Byradius(radius float64) GeosearchCircleByradius {
-	c.cs.s = append(c.cs.s, "BYRADIUS", strconv.FormatFloat(radius, 'f', -1, 64))
-	return (GeosearchCircleByradius)(c)
-}
-
-func (c GeosearchKey) Bybox(width float64) GeosearchBoxBybox {
-	c.cs.s = append(c.cs.s, "BYBOX", strconv.FormatFloat(width, 'f', -1, 64))
-	return (GeosearchBoxBybox)(c)
-}
-
-func (c GeosearchKey) Asc() GeosearchOrderAsc {
-	c.cs.s = append(c.cs.s, "ASC")
-	return (GeosearchOrderAsc)(c)
-}
-
-func (c GeosearchKey) Desc() GeosearchOrderDesc {
-	c.cs.s = append(c.cs.s, "DESC")
-	return (GeosearchOrderDesc)(c)
-}
-
-func (c GeosearchKey) Count(count int64) GeosearchCountCount {
-	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
-	return (GeosearchCountCount)(c)
-}
-
-func (c GeosearchKey) Withcoord() GeosearchWithcoord {
-	c.cs.s = append(c.cs.s, "WITHCOORD")
-	return (GeosearchWithcoord)(c)
-}
-
-func (c GeosearchKey) Withdist() GeosearchWithdist {
-	c.cs.s = append(c.cs.s, "WITHDIST")
-	return (GeosearchWithdist)(c)
-}
-
-func (c GeosearchKey) Withhash() GeosearchWithhash {
-	c.cs.s = append(c.cs.s, "WITHHASH")
-	return (GeosearchWithhash)(c)
-}
-
-func (c GeosearchKey) Build() Completed {
-	return Completed(c)
-}
-
-func (c GeosearchKey) Cache() Cacheable {
-	return Cacheable(c)
+	return (GeosearchFrommemberFromlonlat)(c)
 }
 
 type GeosearchOrderAsc Completed
@@ -15109,282 +14985,282 @@ func (c Geosearchstore) Destination(destination string) GeosearchstoreDestinatio
 	return (GeosearchstoreDestination)(c)
 }
 
-type GeosearchstoreBoxBybox Completed
+type GeosearchstoreCircleBoxBybox Completed
 
-func (c GeosearchstoreBoxBybox) Height(height float64) GeosearchstoreBoxHeight {
+func (c GeosearchstoreCircleBoxBybox) Height(height float64) GeosearchstoreCircleBoxHeight {
 	c.cs.s = append(c.cs.s, strconv.FormatFloat(height, 'f', -1, 64))
-	return (GeosearchstoreBoxHeight)(c)
+	return (GeosearchstoreCircleBoxHeight)(c)
 }
 
-type GeosearchstoreBoxHeight Completed
+type GeosearchstoreCircleBoxHeight Completed
 
-func (c GeosearchstoreBoxHeight) M() GeosearchstoreBoxUnitM {
+func (c GeosearchstoreCircleBoxHeight) M() GeosearchstoreCircleBoxUnitM {
 	c.cs.s = append(c.cs.s, "m")
-	return (GeosearchstoreBoxUnitM)(c)
+	return (GeosearchstoreCircleBoxUnitM)(c)
 }
 
-func (c GeosearchstoreBoxHeight) Km() GeosearchstoreBoxUnitKm {
+func (c GeosearchstoreCircleBoxHeight) Km() GeosearchstoreCircleBoxUnitKm {
 	c.cs.s = append(c.cs.s, "km")
-	return (GeosearchstoreBoxUnitKm)(c)
+	return (GeosearchstoreCircleBoxUnitKm)(c)
 }
 
-func (c GeosearchstoreBoxHeight) Ft() GeosearchstoreBoxUnitFt {
+func (c GeosearchstoreCircleBoxHeight) Ft() GeosearchstoreCircleBoxUnitFt {
 	c.cs.s = append(c.cs.s, "ft")
-	return (GeosearchstoreBoxUnitFt)(c)
+	return (GeosearchstoreCircleBoxUnitFt)(c)
 }
 
-func (c GeosearchstoreBoxHeight) Mi() GeosearchstoreBoxUnitMi {
+func (c GeosearchstoreCircleBoxHeight) Mi() GeosearchstoreCircleBoxUnitMi {
 	c.cs.s = append(c.cs.s, "mi")
-	return (GeosearchstoreBoxUnitMi)(c)
+	return (GeosearchstoreCircleBoxUnitMi)(c)
 }
 
-type GeosearchstoreBoxUnitFt Completed
+type GeosearchstoreCircleBoxUnitFt Completed
 
-func (c GeosearchstoreBoxUnitFt) Asc() GeosearchstoreOrderAsc {
+func (c GeosearchstoreCircleBoxUnitFt) Asc() GeosearchstoreOrderAsc {
 	c.cs.s = append(c.cs.s, "ASC")
 	return (GeosearchstoreOrderAsc)(c)
 }
 
-func (c GeosearchstoreBoxUnitFt) Desc() GeosearchstoreOrderDesc {
+func (c GeosearchstoreCircleBoxUnitFt) Desc() GeosearchstoreOrderDesc {
 	c.cs.s = append(c.cs.s, "DESC")
 	return (GeosearchstoreOrderDesc)(c)
 }
 
-func (c GeosearchstoreBoxUnitFt) Count(count int64) GeosearchstoreCountCount {
+func (c GeosearchstoreCircleBoxUnitFt) Count(count int64) GeosearchstoreCountCount {
 	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
 	return (GeosearchstoreCountCount)(c)
 }
 
-func (c GeosearchstoreBoxUnitFt) Storedist() GeosearchstoreStoredist {
+func (c GeosearchstoreCircleBoxUnitFt) Storedist() GeosearchstoreStoredist {
 	c.cs.s = append(c.cs.s, "STOREDIST")
 	return (GeosearchstoreStoredist)(c)
 }
 
-func (c GeosearchstoreBoxUnitFt) Build() Completed {
+func (c GeosearchstoreCircleBoxUnitFt) Build() Completed {
 	return Completed(c)
 }
 
-type GeosearchstoreBoxUnitKm Completed
+type GeosearchstoreCircleBoxUnitKm Completed
 
-func (c GeosearchstoreBoxUnitKm) Asc() GeosearchstoreOrderAsc {
+func (c GeosearchstoreCircleBoxUnitKm) Asc() GeosearchstoreOrderAsc {
 	c.cs.s = append(c.cs.s, "ASC")
 	return (GeosearchstoreOrderAsc)(c)
 }
 
-func (c GeosearchstoreBoxUnitKm) Desc() GeosearchstoreOrderDesc {
+func (c GeosearchstoreCircleBoxUnitKm) Desc() GeosearchstoreOrderDesc {
 	c.cs.s = append(c.cs.s, "DESC")
 	return (GeosearchstoreOrderDesc)(c)
 }
 
-func (c GeosearchstoreBoxUnitKm) Count(count int64) GeosearchstoreCountCount {
+func (c GeosearchstoreCircleBoxUnitKm) Count(count int64) GeosearchstoreCountCount {
 	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
 	return (GeosearchstoreCountCount)(c)
 }
 
-func (c GeosearchstoreBoxUnitKm) Storedist() GeosearchstoreStoredist {
+func (c GeosearchstoreCircleBoxUnitKm) Storedist() GeosearchstoreStoredist {
 	c.cs.s = append(c.cs.s, "STOREDIST")
 	return (GeosearchstoreStoredist)(c)
 }
 
-func (c GeosearchstoreBoxUnitKm) Build() Completed {
+func (c GeosearchstoreCircleBoxUnitKm) Build() Completed {
 	return Completed(c)
 }
 
-type GeosearchstoreBoxUnitM Completed
+type GeosearchstoreCircleBoxUnitM Completed
 
-func (c GeosearchstoreBoxUnitM) Asc() GeosearchstoreOrderAsc {
+func (c GeosearchstoreCircleBoxUnitM) Asc() GeosearchstoreOrderAsc {
 	c.cs.s = append(c.cs.s, "ASC")
 	return (GeosearchstoreOrderAsc)(c)
 }
 
-func (c GeosearchstoreBoxUnitM) Desc() GeosearchstoreOrderDesc {
+func (c GeosearchstoreCircleBoxUnitM) Desc() GeosearchstoreOrderDesc {
 	c.cs.s = append(c.cs.s, "DESC")
 	return (GeosearchstoreOrderDesc)(c)
 }
 
-func (c GeosearchstoreBoxUnitM) Count(count int64) GeosearchstoreCountCount {
+func (c GeosearchstoreCircleBoxUnitM) Count(count int64) GeosearchstoreCountCount {
 	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
 	return (GeosearchstoreCountCount)(c)
 }
 
-func (c GeosearchstoreBoxUnitM) Storedist() GeosearchstoreStoredist {
+func (c GeosearchstoreCircleBoxUnitM) Storedist() GeosearchstoreStoredist {
 	c.cs.s = append(c.cs.s, "STOREDIST")
 	return (GeosearchstoreStoredist)(c)
 }
 
-func (c GeosearchstoreBoxUnitM) Build() Completed {
+func (c GeosearchstoreCircleBoxUnitM) Build() Completed {
 	return Completed(c)
 }
 
-type GeosearchstoreBoxUnitMi Completed
+type GeosearchstoreCircleBoxUnitMi Completed
 
-func (c GeosearchstoreBoxUnitMi) Asc() GeosearchstoreOrderAsc {
+func (c GeosearchstoreCircleBoxUnitMi) Asc() GeosearchstoreOrderAsc {
 	c.cs.s = append(c.cs.s, "ASC")
 	return (GeosearchstoreOrderAsc)(c)
 }
 
-func (c GeosearchstoreBoxUnitMi) Desc() GeosearchstoreOrderDesc {
+func (c GeosearchstoreCircleBoxUnitMi) Desc() GeosearchstoreOrderDesc {
 	c.cs.s = append(c.cs.s, "DESC")
 	return (GeosearchstoreOrderDesc)(c)
 }
 
-func (c GeosearchstoreBoxUnitMi) Count(count int64) GeosearchstoreCountCount {
+func (c GeosearchstoreCircleBoxUnitMi) Count(count int64) GeosearchstoreCountCount {
 	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
 	return (GeosearchstoreCountCount)(c)
 }
 
-func (c GeosearchstoreBoxUnitMi) Storedist() GeosearchstoreStoredist {
+func (c GeosearchstoreCircleBoxUnitMi) Storedist() GeosearchstoreStoredist {
 	c.cs.s = append(c.cs.s, "STOREDIST")
 	return (GeosearchstoreStoredist)(c)
 }
 
-func (c GeosearchstoreBoxUnitMi) Build() Completed {
+func (c GeosearchstoreCircleBoxUnitMi) Build() Completed {
 	return Completed(c)
 }
 
-type GeosearchstoreCircleByradius Completed
+type GeosearchstoreCircleCircleByradius Completed
 
-func (c GeosearchstoreCircleByradius) M() GeosearchstoreCircleUnitM {
+func (c GeosearchstoreCircleCircleByradius) M() GeosearchstoreCircleCircleUnitM {
 	c.cs.s = append(c.cs.s, "m")
-	return (GeosearchstoreCircleUnitM)(c)
+	return (GeosearchstoreCircleCircleUnitM)(c)
 }
 
-func (c GeosearchstoreCircleByradius) Km() GeosearchstoreCircleUnitKm {
+func (c GeosearchstoreCircleCircleByradius) Km() GeosearchstoreCircleCircleUnitKm {
 	c.cs.s = append(c.cs.s, "km")
-	return (GeosearchstoreCircleUnitKm)(c)
+	return (GeosearchstoreCircleCircleUnitKm)(c)
 }
 
-func (c GeosearchstoreCircleByradius) Ft() GeosearchstoreCircleUnitFt {
+func (c GeosearchstoreCircleCircleByradius) Ft() GeosearchstoreCircleCircleUnitFt {
 	c.cs.s = append(c.cs.s, "ft")
-	return (GeosearchstoreCircleUnitFt)(c)
+	return (GeosearchstoreCircleCircleUnitFt)(c)
 }
 
-func (c GeosearchstoreCircleByradius) Mi() GeosearchstoreCircleUnitMi {
+func (c GeosearchstoreCircleCircleByradius) Mi() GeosearchstoreCircleCircleUnitMi {
 	c.cs.s = append(c.cs.s, "mi")
-	return (GeosearchstoreCircleUnitMi)(c)
+	return (GeosearchstoreCircleCircleUnitMi)(c)
 }
 
-type GeosearchstoreCircleUnitFt Completed
+type GeosearchstoreCircleCircleUnitFt Completed
 
-func (c GeosearchstoreCircleUnitFt) Bybox(width float64) GeosearchstoreBoxBybox {
+func (c GeosearchstoreCircleCircleUnitFt) Bybox(width float64) GeosearchstoreCircleBoxBybox {
 	c.cs.s = append(c.cs.s, "BYBOX", strconv.FormatFloat(width, 'f', -1, 64))
-	return (GeosearchstoreBoxBybox)(c)
+	return (GeosearchstoreCircleBoxBybox)(c)
 }
 
-func (c GeosearchstoreCircleUnitFt) Asc() GeosearchstoreOrderAsc {
+func (c GeosearchstoreCircleCircleUnitFt) Asc() GeosearchstoreOrderAsc {
 	c.cs.s = append(c.cs.s, "ASC")
 	return (GeosearchstoreOrderAsc)(c)
 }
 
-func (c GeosearchstoreCircleUnitFt) Desc() GeosearchstoreOrderDesc {
+func (c GeosearchstoreCircleCircleUnitFt) Desc() GeosearchstoreOrderDesc {
 	c.cs.s = append(c.cs.s, "DESC")
 	return (GeosearchstoreOrderDesc)(c)
 }
 
-func (c GeosearchstoreCircleUnitFt) Count(count int64) GeosearchstoreCountCount {
+func (c GeosearchstoreCircleCircleUnitFt) Count(count int64) GeosearchstoreCountCount {
 	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
 	return (GeosearchstoreCountCount)(c)
 }
 
-func (c GeosearchstoreCircleUnitFt) Storedist() GeosearchstoreStoredist {
+func (c GeosearchstoreCircleCircleUnitFt) Storedist() GeosearchstoreStoredist {
 	c.cs.s = append(c.cs.s, "STOREDIST")
 	return (GeosearchstoreStoredist)(c)
 }
 
-func (c GeosearchstoreCircleUnitFt) Build() Completed {
+func (c GeosearchstoreCircleCircleUnitFt) Build() Completed {
 	return Completed(c)
 }
 
-type GeosearchstoreCircleUnitKm Completed
+type GeosearchstoreCircleCircleUnitKm Completed
 
-func (c GeosearchstoreCircleUnitKm) Bybox(width float64) GeosearchstoreBoxBybox {
+func (c GeosearchstoreCircleCircleUnitKm) Bybox(width float64) GeosearchstoreCircleBoxBybox {
 	c.cs.s = append(c.cs.s, "BYBOX", strconv.FormatFloat(width, 'f', -1, 64))
-	return (GeosearchstoreBoxBybox)(c)
+	return (GeosearchstoreCircleBoxBybox)(c)
 }
 
-func (c GeosearchstoreCircleUnitKm) Asc() GeosearchstoreOrderAsc {
+func (c GeosearchstoreCircleCircleUnitKm) Asc() GeosearchstoreOrderAsc {
 	c.cs.s = append(c.cs.s, "ASC")
 	return (GeosearchstoreOrderAsc)(c)
 }
 
-func (c GeosearchstoreCircleUnitKm) Desc() GeosearchstoreOrderDesc {
+func (c GeosearchstoreCircleCircleUnitKm) Desc() GeosearchstoreOrderDesc {
 	c.cs.s = append(c.cs.s, "DESC")
 	return (GeosearchstoreOrderDesc)(c)
 }
 
-func (c GeosearchstoreCircleUnitKm) Count(count int64) GeosearchstoreCountCount {
+func (c GeosearchstoreCircleCircleUnitKm) Count(count int64) GeosearchstoreCountCount {
 	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
 	return (GeosearchstoreCountCount)(c)
 }
 
-func (c GeosearchstoreCircleUnitKm) Storedist() GeosearchstoreStoredist {
+func (c GeosearchstoreCircleCircleUnitKm) Storedist() GeosearchstoreStoredist {
 	c.cs.s = append(c.cs.s, "STOREDIST")
 	return (GeosearchstoreStoredist)(c)
 }
 
-func (c GeosearchstoreCircleUnitKm) Build() Completed {
+func (c GeosearchstoreCircleCircleUnitKm) Build() Completed {
 	return Completed(c)
 }
 
-type GeosearchstoreCircleUnitM Completed
+type GeosearchstoreCircleCircleUnitM Completed
 
-func (c GeosearchstoreCircleUnitM) Bybox(width float64) GeosearchstoreBoxBybox {
+func (c GeosearchstoreCircleCircleUnitM) Bybox(width float64) GeosearchstoreCircleBoxBybox {
 	c.cs.s = append(c.cs.s, "BYBOX", strconv.FormatFloat(width, 'f', -1, 64))
-	return (GeosearchstoreBoxBybox)(c)
+	return (GeosearchstoreCircleBoxBybox)(c)
 }
 
-func (c GeosearchstoreCircleUnitM) Asc() GeosearchstoreOrderAsc {
+func (c GeosearchstoreCircleCircleUnitM) Asc() GeosearchstoreOrderAsc {
 	c.cs.s = append(c.cs.s, "ASC")
 	return (GeosearchstoreOrderAsc)(c)
 }
 
-func (c GeosearchstoreCircleUnitM) Desc() GeosearchstoreOrderDesc {
+func (c GeosearchstoreCircleCircleUnitM) Desc() GeosearchstoreOrderDesc {
 	c.cs.s = append(c.cs.s, "DESC")
 	return (GeosearchstoreOrderDesc)(c)
 }
 
-func (c GeosearchstoreCircleUnitM) Count(count int64) GeosearchstoreCountCount {
+func (c GeosearchstoreCircleCircleUnitM) Count(count int64) GeosearchstoreCountCount {
 	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
 	return (GeosearchstoreCountCount)(c)
 }
 
-func (c GeosearchstoreCircleUnitM) Storedist() GeosearchstoreStoredist {
+func (c GeosearchstoreCircleCircleUnitM) Storedist() GeosearchstoreStoredist {
 	c.cs.s = append(c.cs.s, "STOREDIST")
 	return (GeosearchstoreStoredist)(c)
 }
 
-func (c GeosearchstoreCircleUnitM) Build() Completed {
+func (c GeosearchstoreCircleCircleUnitM) Build() Completed {
 	return Completed(c)
 }
 
-type GeosearchstoreCircleUnitMi Completed
+type GeosearchstoreCircleCircleUnitMi Completed
 
-func (c GeosearchstoreCircleUnitMi) Bybox(width float64) GeosearchstoreBoxBybox {
+func (c GeosearchstoreCircleCircleUnitMi) Bybox(width float64) GeosearchstoreCircleBoxBybox {
 	c.cs.s = append(c.cs.s, "BYBOX", strconv.FormatFloat(width, 'f', -1, 64))
-	return (GeosearchstoreBoxBybox)(c)
+	return (GeosearchstoreCircleBoxBybox)(c)
 }
 
-func (c GeosearchstoreCircleUnitMi) Asc() GeosearchstoreOrderAsc {
+func (c GeosearchstoreCircleCircleUnitMi) Asc() GeosearchstoreOrderAsc {
 	c.cs.s = append(c.cs.s, "ASC")
 	return (GeosearchstoreOrderAsc)(c)
 }
 
-func (c GeosearchstoreCircleUnitMi) Desc() GeosearchstoreOrderDesc {
+func (c GeosearchstoreCircleCircleUnitMi) Desc() GeosearchstoreOrderDesc {
 	c.cs.s = append(c.cs.s, "DESC")
 	return (GeosearchstoreOrderDesc)(c)
 }
 
-func (c GeosearchstoreCircleUnitMi) Count(count int64) GeosearchstoreCountCount {
+func (c GeosearchstoreCircleCircleUnitMi) Count(count int64) GeosearchstoreCountCount {
 	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
 	return (GeosearchstoreCountCount)(c)
 }
 
-func (c GeosearchstoreCircleUnitMi) Storedist() GeosearchstoreStoredist {
+func (c GeosearchstoreCircleCircleUnitMi) Storedist() GeosearchstoreStoredist {
 	c.cs.s = append(c.cs.s, "STOREDIST")
 	return (GeosearchstoreStoredist)(c)
 }
 
-func (c GeosearchstoreCircleUnitMi) Build() Completed {
+func (c GeosearchstoreCircleCircleUnitMi) Build() Completed {
 	return Completed(c)
 }
 
@@ -15425,81 +15301,33 @@ func (c GeosearchstoreDestination) Source(source string) GeosearchstoreSource {
 	return (GeosearchstoreSource)(c)
 }
 
-type GeosearchstoreFromlonlat Completed
+type GeosearchstoreFrommemberFromlonlat Completed
 
-func (c GeosearchstoreFromlonlat) Byradius(radius float64) GeosearchstoreCircleByradius {
+func (c GeosearchstoreFrommemberFromlonlat) Byradius(radius float64) GeosearchstoreCircleCircleByradius {
 	c.cs.s = append(c.cs.s, "BYRADIUS", strconv.FormatFloat(radius, 'f', -1, 64))
-	return (GeosearchstoreCircleByradius)(c)
+	return (GeosearchstoreCircleCircleByradius)(c)
 }
 
-func (c GeosearchstoreFromlonlat) Bybox(width float64) GeosearchstoreBoxBybox {
+func (c GeosearchstoreFrommemberFromlonlat) Bybox(width float64) GeosearchstoreCircleBoxBybox {
 	c.cs.s = append(c.cs.s, "BYBOX", strconv.FormatFloat(width, 'f', -1, 64))
-	return (GeosearchstoreBoxBybox)(c)
+	return (GeosearchstoreCircleBoxBybox)(c)
 }
 
-func (c GeosearchstoreFromlonlat) Asc() GeosearchstoreOrderAsc {
-	c.cs.s = append(c.cs.s, "ASC")
-	return (GeosearchstoreOrderAsc)(c)
-}
+type GeosearchstoreFrommemberFrommember Completed
 
-func (c GeosearchstoreFromlonlat) Desc() GeosearchstoreOrderDesc {
-	c.cs.s = append(c.cs.s, "DESC")
-	return (GeosearchstoreOrderDesc)(c)
-}
-
-func (c GeosearchstoreFromlonlat) Count(count int64) GeosearchstoreCountCount {
-	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
-	return (GeosearchstoreCountCount)(c)
-}
-
-func (c GeosearchstoreFromlonlat) Storedist() GeosearchstoreStoredist {
-	c.cs.s = append(c.cs.s, "STOREDIST")
-	return (GeosearchstoreStoredist)(c)
-}
-
-func (c GeosearchstoreFromlonlat) Build() Completed {
-	return Completed(c)
-}
-
-type GeosearchstoreFrommember Completed
-
-func (c GeosearchstoreFrommember) Fromlonlat(longitude float64, latitude float64) GeosearchstoreFromlonlat {
+func (c GeosearchstoreFrommemberFrommember) Fromlonlat(longitude float64, latitude float64) GeosearchstoreFrommemberFromlonlat {
 	c.cs.s = append(c.cs.s, "FROMLONLAT", strconv.FormatFloat(longitude, 'f', -1, 64), strconv.FormatFloat(latitude, 'f', -1, 64))
-	return (GeosearchstoreFromlonlat)(c)
+	return (GeosearchstoreFrommemberFromlonlat)(c)
 }
 
-func (c GeosearchstoreFrommember) Byradius(radius float64) GeosearchstoreCircleByradius {
+func (c GeosearchstoreFrommemberFrommember) Byradius(radius float64) GeosearchstoreCircleCircleByradius {
 	c.cs.s = append(c.cs.s, "BYRADIUS", strconv.FormatFloat(radius, 'f', -1, 64))
-	return (GeosearchstoreCircleByradius)(c)
+	return (GeosearchstoreCircleCircleByradius)(c)
 }
 
-func (c GeosearchstoreFrommember) Bybox(width float64) GeosearchstoreBoxBybox {
+func (c GeosearchstoreFrommemberFrommember) Bybox(width float64) GeosearchstoreCircleBoxBybox {
 	c.cs.s = append(c.cs.s, "BYBOX", strconv.FormatFloat(width, 'f', -1, 64))
-	return (GeosearchstoreBoxBybox)(c)
-}
-
-func (c GeosearchstoreFrommember) Asc() GeosearchstoreOrderAsc {
-	c.cs.s = append(c.cs.s, "ASC")
-	return (GeosearchstoreOrderAsc)(c)
-}
-
-func (c GeosearchstoreFrommember) Desc() GeosearchstoreOrderDesc {
-	c.cs.s = append(c.cs.s, "DESC")
-	return (GeosearchstoreOrderDesc)(c)
-}
-
-func (c GeosearchstoreFrommember) Count(count int64) GeosearchstoreCountCount {
-	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
-	return (GeosearchstoreCountCount)(c)
-}
-
-func (c GeosearchstoreFrommember) Storedist() GeosearchstoreStoredist {
-	c.cs.s = append(c.cs.s, "STOREDIST")
-	return (GeosearchstoreStoredist)(c)
-}
-
-func (c GeosearchstoreFrommember) Build() Completed {
-	return Completed(c)
+	return (GeosearchstoreCircleBoxBybox)(c)
 }
 
 type GeosearchstoreOrderAsc Completed
@@ -15536,48 +15364,14 @@ func (c GeosearchstoreOrderDesc) Build() Completed {
 
 type GeosearchstoreSource Completed
 
-func (c GeosearchstoreSource) Frommember(member string) GeosearchstoreFrommember {
+func (c GeosearchstoreSource) Frommember(member string) GeosearchstoreFrommemberFrommember {
 	c.cs.s = append(c.cs.s, "FROMMEMBER", member)
-	return (GeosearchstoreFrommember)(c)
+	return (GeosearchstoreFrommemberFrommember)(c)
 }
 
-func (c GeosearchstoreSource) Fromlonlat(longitude float64, latitude float64) GeosearchstoreFromlonlat {
+func (c GeosearchstoreSource) Fromlonlat(longitude float64, latitude float64) GeosearchstoreFrommemberFromlonlat {
 	c.cs.s = append(c.cs.s, "FROMLONLAT", strconv.FormatFloat(longitude, 'f', -1, 64), strconv.FormatFloat(latitude, 'f', -1, 64))
-	return (GeosearchstoreFromlonlat)(c)
-}
-
-func (c GeosearchstoreSource) Byradius(radius float64) GeosearchstoreCircleByradius {
-	c.cs.s = append(c.cs.s, "BYRADIUS", strconv.FormatFloat(radius, 'f', -1, 64))
-	return (GeosearchstoreCircleByradius)(c)
-}
-
-func (c GeosearchstoreSource) Bybox(width float64) GeosearchstoreBoxBybox {
-	c.cs.s = append(c.cs.s, "BYBOX", strconv.FormatFloat(width, 'f', -1, 64))
-	return (GeosearchstoreBoxBybox)(c)
-}
-
-func (c GeosearchstoreSource) Asc() GeosearchstoreOrderAsc {
-	c.cs.s = append(c.cs.s, "ASC")
-	return (GeosearchstoreOrderAsc)(c)
-}
-
-func (c GeosearchstoreSource) Desc() GeosearchstoreOrderDesc {
-	c.cs.s = append(c.cs.s, "DESC")
-	return (GeosearchstoreOrderDesc)(c)
-}
-
-func (c GeosearchstoreSource) Count(count int64) GeosearchstoreCountCount {
-	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
-	return (GeosearchstoreCountCount)(c)
-}
-
-func (c GeosearchstoreSource) Storedist() GeosearchstoreStoredist {
-	c.cs.s = append(c.cs.s, "STOREDIST")
-	return (GeosearchstoreStoredist)(c)
-}
-
-func (c GeosearchstoreSource) Build() Completed {
-	return Completed(c)
+	return (GeosearchstoreFrommemberFromlonlat)(c)
 }
 
 type GeosearchstoreStoredist Completed
