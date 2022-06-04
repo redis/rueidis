@@ -4634,13 +4634,22 @@ var _ = Describe("Commands", func() {
 				res.RadixTreeNodes = 0
 
 				Expect(res).To(Equal(XInfoStream{
-					Length:          3,
-					RadixTreeKeys:   0,
-					RadixTreeNodes:  0,
-					Groups:          2,
-					LastGeneratedID: "3-0",
-					FirstEntry:      XMessage{ID: "1-0", Values: map[string]interface{}{"uno": "un"}},
-					LastEntry:       XMessage{ID: "3-0", Values: map[string]interface{}{"tres": "troix"}},
+					Length:            3,
+					RadixTreeKeys:     0,
+					RadixTreeNodes:    0,
+					Groups:            2,
+					LastGeneratedID:   "3-0",
+					MaxDeletedEntryID: "0-0",
+					EntriesAdded:      3,
+					FirstEntry: XMessage{
+						ID:     "1-0",
+						Values: map[string]interface{}{"uno": "un"},
+					},
+					LastEntry: XMessage{
+						ID:     "3-0",
+						Values: map[string]interface{}{"tres": "troix"},
+					},
+					RecordedFirstEntryID: "1-0",
 				}))
 
 				// stream is empty
@@ -4654,13 +4663,16 @@ var _ = Describe("Commands", func() {
 				res.RadixTreeNodes = 0
 
 				Expect(res).To(Equal(XInfoStream{
-					Length:          0,
-					RadixTreeKeys:   0,
-					RadixTreeNodes:  0,
-					Groups:          2,
-					LastGeneratedID: "3-0",
-					FirstEntry:      XMessage{},
-					LastEntry:       XMessage{},
+					Length:               0,
+					RadixTreeKeys:        0,
+					RadixTreeNodes:       0,
+					Groups:               2,
+					LastGeneratedID:      "3-0",
+					MaxDeletedEntryID:    "3-0",
+					EntriesAdded:         3,
+					FirstEntry:           XMessage{},
+					LastEntry:            XMessage{},
+					RecordedFirstEntryID: "0-0",
 				}))
 			})
 
@@ -4690,10 +4702,12 @@ var _ = Describe("Commands", func() {
 				}
 
 				Expect(res).To(Equal(XInfoStreamFull{
-					Length:          3,
-					RadixTreeKeys:   0,
-					RadixTreeNodes:  0,
-					LastGeneratedID: "3-0",
+					Length:            3,
+					RadixTreeKeys:     0,
+					RadixTreeNodes:    0,
+					LastGeneratedID:   "3-0",
+					MaxDeletedEntryID: "0-0",
+					EntriesAdded:      3,
 					Entries: []XMessage{
 						{ID: "1-0", Values: map[string]interface{}{"uno": "un"}},
 						{ID: "2-0", Values: map[string]interface{}{"dos": "deux"}},
@@ -4703,6 +4717,7 @@ var _ = Describe("Commands", func() {
 							Name:            "group1",
 							LastDeliveredID: "3-0",
 							PelCount:        3,
+							EntriesRead:     3,
 							Pending: []XInfoStreamGroupPending{
 								{
 									ID:            "1-0",
@@ -4753,6 +4768,7 @@ var _ = Describe("Commands", func() {
 							Name:            "group2",
 							LastDeliveredID: "3-0",
 							PelCount:        2,
+							EntriesRead:     3,
 							Pending: []XInfoStreamGroupPending{
 								{
 									ID:            "2-0",
@@ -4788,6 +4804,7 @@ var _ = Describe("Commands", func() {
 							},
 						},
 					},
+					RecordedFirstEntryID: "1-0",
 				}))
 			})
 
@@ -4795,8 +4812,8 @@ var _ = Describe("Commands", func() {
 				res, err := adapter.XInfoGroups(ctx, "stream").Result()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(res).To(Equal([]XInfoGroup{
-					{Name: "group1", Consumers: 2, Pending: 3, LastDeliveredID: "3-0"},
-					{Name: "group2", Consumers: 1, Pending: 2, LastDeliveredID: "3-0"},
+					{Name: "group1", Consumers: 2, Pending: 3, LastDeliveredID: "3-0", EntriesRead: 3},
+					{Name: "group2", Consumers: 1, Pending: 2, LastDeliveredID: "3-0", EntriesRead: 3},
 				}))
 			})
 

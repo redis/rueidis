@@ -1306,6 +1306,8 @@ type XInfoGroup struct {
 	Name            string
 	Consumers       int64
 	Pending         int64
+	EntriesRead     int64
+	Lag             int64
 	LastDeliveredID string
 }
 
@@ -1334,6 +1336,12 @@ func newXInfoGroupsCmd(res rueidis.RedisResult) *XInfoGroupsCmd {
 		}
 		if attr, ok := info["pending"]; ok {
 			group.Pending, _ = attr.AsInt64()
+		}
+		if attr, ok := info["entries-read"]; ok {
+			group.EntriesRead, _ = attr.AsInt64()
+		}
+		if attr, ok := info["lag"]; ok {
+			group.Lag, _ = attr.AsInt64()
 		}
 		if attr, ok := info["last-delivered-id"]; ok {
 			group.LastDeliveredID, _ = attr.ToString()
@@ -1364,13 +1372,16 @@ func (cmd *XInfoGroupsCmd) Result() ([]XInfoGroup, error) {
 }
 
 type XInfoStream struct {
-	Length          int64
-	RadixTreeKeys   int64
-	RadixTreeNodes  int64
-	Groups          int64
-	LastGeneratedID string
-	FirstEntry      XMessage
-	LastEntry       XMessage
+	Length               int64
+	RadixTreeKeys        int64
+	RadixTreeNodes       int64
+	Groups               int64
+	LastGeneratedID      string
+	MaxDeletedEntryID    string
+	EntriesAdded         int64
+	FirstEntry           XMessage
+	LastEntry            XMessage
+	RecordedFirstEntryID string
 }
 type XInfoStreamCmd struct {
 	val XInfoStream
@@ -1397,6 +1408,15 @@ func newXInfoStreamCmd(res rueidis.RedisResult) *XInfoStreamCmd {
 	}
 	if v, ok := kv["last-generated-id"]; ok {
 		val.LastGeneratedID, _ = v.ToString()
+	}
+	if v, ok := kv["max-deleted-entry-id"]; ok {
+		val.MaxDeletedEntryID, _ = v.ToString()
+	}
+	if v, ok := kv["recorded-first-entry-id"]; ok {
+		val.RecordedFirstEntryID, _ = v.ToString()
+	}
+	if v, ok := kv["entries-added"]; ok {
+		val.EntriesAdded, _ = v.ToInt64()
 	}
 	if v, ok := kv["first-entry"]; ok {
 		if r, err := v.AsXRange(); err == nil {
@@ -1454,18 +1474,23 @@ type XInfoStreamConsumer struct {
 type XInfoStreamGroup struct {
 	Name            string
 	LastDeliveredID string
+	EntriesRead     int64
+	Lag             int64
 	PelCount        int64
 	Pending         []XInfoStreamGroupPending
 	Consumers       []XInfoStreamConsumer
 }
 
 type XInfoStreamFull struct {
-	Length          int64
-	RadixTreeKeys   int64
-	RadixTreeNodes  int64
-	LastGeneratedID string
-	Entries         []XMessage
-	Groups          []XInfoStreamGroup
+	Length               int64
+	RadixTreeKeys        int64
+	RadixTreeNodes       int64
+	LastGeneratedID      string
+	MaxDeletedEntryID    string
+	EntriesAdded         int64
+	Entries              []XMessage
+	Groups               []XInfoStreamGroup
+	RecordedFirstEntryID string
 }
 
 type XInfoStreamFullCmd struct {
@@ -1490,6 +1515,15 @@ func newXInfoStreamFullCmd(res rueidis.RedisResult) *XInfoStreamFullCmd {
 	}
 	if v, ok := kv["last-generated-id"]; ok {
 		val.LastGeneratedID, _ = v.ToString()
+	}
+	if v, ok := kv["entries-added"]; ok {
+		val.EntriesAdded, _ = v.ToInt64()
+	}
+	if v, ok := kv["max-deleted-entry-id"]; ok {
+		val.MaxDeletedEntryID, _ = v.ToString()
+	}
+	if v, ok := kv["recorded-first-entry-id"]; ok {
+		val.RecordedFirstEntryID, _ = v.ToString()
 	}
 	if v, ok := kv["groups"]; ok {
 		val.Groups, err = readStreamGroups(v)
@@ -1547,6 +1581,12 @@ func readStreamGroups(res rueidis.RedisMessage) ([]XInfoStreamGroup, error) {
 		}
 		if attr, ok := info["last-delivered-id"]; ok {
 			group.LastDeliveredID, _ = attr.ToString()
+		}
+		if attr, ok := info["entries-read"]; ok {
+			group.EntriesRead, _ = attr.ToInt64()
+		}
+		if attr, ok := info["lag"]; ok {
+			group.Lag, _ = attr.ToInt64()
 		}
 		if attr, ok := info["pel-count"]; ok {
 			group.PelCount, _ = attr.ToInt64()
