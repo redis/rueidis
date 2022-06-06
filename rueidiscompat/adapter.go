@@ -267,6 +267,7 @@ type Cmdable interface {
 	ClientKillByFilter(ctx context.Context, keys ...string) *IntCmd
 	ClientList(ctx context.Context) *StringCmd
 	ClientPause(ctx context.Context, dur time.Duration) *BoolCmd
+	ClientUnpause(ctx context.Context) *BoolCmd
 	ClientID(ctx context.Context) *IntCmd
 	ConfigGet(ctx context.Context, parameter string) *SliceCmd
 	ConfigResetStat(ctx context.Context) *StatusCmd
@@ -2047,6 +2048,12 @@ func (c *Compat) ClientList(ctx context.Context) *StringCmd {
 
 func (c *Compat) ClientPause(ctx context.Context, dur time.Duration) *BoolCmd {
 	cmd := c.client.B().ClientPause().Timeout(formatSec(dur)).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newBoolCmd(resp)
+}
+
+func (c *Compat) ClientUnpause(ctx context.Context) *BoolCmd {
+	cmd := c.client.B().ClientUnpause().Build()
 	resp := c.client.Do(ctx, cmd)
 	return newBoolCmd(resp)
 }
