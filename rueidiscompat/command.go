@@ -1706,7 +1706,7 @@ func readXInfoStreamConsumers(res rueidis.RedisMessage) ([]XInfoStreamConsumer, 
 type XInfoConsumer struct {
 	Name    string
 	Pending int64
-	Idle    int64
+	Idle    time.Duration
 }
 type XInfoConsumersCmd struct {
 	val []XInfoConsumer
@@ -1732,7 +1732,8 @@ func newXInfoConsumersCmd(res rueidis.RedisResult) *XInfoConsumersCmd {
 			consumer.Pending, _ = attr.AsInt64()
 		}
 		if attr, ok := info["idle"]; ok {
-			consumer.Idle, _ = attr.AsInt64()
+			idle, _ := attr.AsInt64()
+			consumer.Idle = time.Duration(idle) * time.Millisecond
 		}
 		val = append(val, consumer)
 	}

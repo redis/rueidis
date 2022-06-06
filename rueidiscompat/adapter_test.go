@@ -4821,6 +4821,7 @@ var _ = Describe("Commands", func() {
 				res, err := adapter.XInfoConsumers(ctx, "stream", "group1").Result()
 				Expect(err).NotTo(HaveOccurred())
 				for i := range res {
+					Expect(res[i].Idle > 0).To(BeTrue())
 					res[i].Idle = 0
 				}
 				Expect(res).To(Equal([]XInfoConsumer{
