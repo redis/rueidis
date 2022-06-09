@@ -359,7 +359,7 @@ func (p *pipe) handlePush(values []RedisMessage) {
 		} else {
 			p.cache.Delete(values[1].values)
 		}
-	case "message":
+	case "message", "smessage":
 		if len(values) >= 3 {
 			m := PubSubMessage{Channel: values[1].string, Message: values[2].string}
 			p.subs.Publish(values[1].string, m)
