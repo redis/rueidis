@@ -360,6 +360,25 @@ If you want to construct commands that are not yet supported, you can use `c.B()
 c.B().Arbitrary("ANY", "CMD").Keys("k1", "k2").Args("a1", "a2").Build()
 ```
 
+### Working with JSON string and `[]byte`
+
+The command builder treats all the parameters as Redis strings, which are binary safe. This means that users can store `[]byte`
+directly into Redis without conversion. And the `rueidis.BinaryString` helper can convert `[]byte` to `string` without copy. For example:
+
+```golang
+client.B().Set().Key("b").Value(rueidis.BinaryString([]byte{...})).Build()
+```
+
+Treating all the parameters as Redis strings also means that the command builder doesn't do any quoting, conversion automatically for users.
+
+When working with RedisJSON, users frequently need to prepare JSON string in Redis string. And `rueidis.JSON` can help:
+
+```golang
+client.B().JsonSet().Key("j").Path("$.myStrField").Value(rueidis.JSON("str")).Build()
+// equivalent to
+client.B().JsonSet().Key("j").Path("$.myStrField").Value(`"str"`).Build()
+```
+
 ## High level go-redis like API
 
 Though it is easier to know what command will be sent to redis at first glance if the command is constructed by the command builder,

@@ -77,13 +77,8 @@ func (r *JSONRepository[T]) Save(ctx context.Context, entity *T) (err error) {
 	keyField := val.Field(r.schema.key.idx)
 	verField := val.Field(r.schema.ver.idx)
 
-	sb := strings.Builder{}
-	if err = json.NewEncoder(&sb).Encode(entity); err != nil {
-		return err
-	}
-
 	str, err := jsonSaveScript.Exec(ctx, r.client, []string{key(r.prefix, keyField.String())}, []string{
-		r.schema.ver.name, strconv.FormatInt(verField.Int(), 10), sb.String(),
+		r.schema.ver.name, strconv.FormatInt(verField.Int(), 10), rueidis.JSON(entity),
 	}).ToString()
 	if rueidis.IsRedisNil(err) {
 		return ErrVersionMismatch
