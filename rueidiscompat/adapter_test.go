@@ -4818,6 +4818,7 @@ var _ = Describe("Commands", func() {
 			})
 
 			It("should XINFO CONSUMERS", func() {
+				time.Sleep(time.Millisecond * 2) // make consumer idle > 0
 				res, err := adapter.XInfoConsumers(ctx, "stream", "group1").Result()
 				Expect(err).NotTo(HaveOccurred())
 				for i := range res {
