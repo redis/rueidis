@@ -292,6 +292,25 @@ client.DoMulti(
 However, occupying a connection is not good in terms of throughput. It is better to use Lua script to perform
 optimistic locking instead.
 
+## Bulk Operations
+
+The `rueidis.Commands` and `DedicatedClient.DoMulti` can also be used for bulk operations:
+
+``` golang
+c, cancel := client.Dedicate()
+defer cancel()
+
+cmds := make(rueidis.Commands, 0, 10)
+for i := 0; i < 10; i++ {
+    cmds = append(cmds, c.B().Set().Key(strconv.Itoa(i)).Value(strconv.Itoa(i)).Build())
+}
+for _, resp := range c.DoMulti(ctx, cmds...) {
+    if err := resp.Error(); err != nil {
+        panic(err)
+    }
+}
+```
+
 ## Lua Script
 
 The `NewLuaScript` or `NewLuaScriptReadOnly` will create a script which is safe for concurrent usage.
