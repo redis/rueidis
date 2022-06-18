@@ -71,6 +71,7 @@ func TestNewMux(t *testing.T) {
 		mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
 			ReplyString("OK")
 		mock.Expect("QUIT").ReplyString("OK")
+		mock.Close()
 	}()
 	m := makeMux("", &ClientOption{}, func(dst string, opt *ClientOption) (net.Conn, error) {
 		return n1, nil

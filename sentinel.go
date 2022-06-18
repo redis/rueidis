@@ -238,7 +238,7 @@ func (c *sentinelClient) listWatch(cc conn) (master string, sentinels []string, 
 		cmds.Put(getMasterCMD.CommandSlice())
 	}()
 
-	go func() {
+	go func(cc conn) {
 		if err := cc.Receive(ctx, cmds.SentinelSubscribe, func(event PubSubMessage) {
 			switch event.Channel {
 			case "+sentinel":
@@ -258,7 +258,7 @@ func (c *sentinelClient) listWatch(cc conn) (master string, sentinels []string, 
 		}); err != nil && atomic.LoadUint32(&c.stop) == 0 {
 			c.refreshRetry()
 		}
-	}()
+	}(cc)
 
 	resp := cc.DoMulti(ctx, sentinelsCMD, getMasterCMD)
 	others, err := resp[0].ToArray()
