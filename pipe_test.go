@@ -1262,6 +1262,7 @@ func TestCloseAndWaitPendingCMDs(t *testing.T) {
 		r.ReplyString("b")
 	}
 	mock.Expect("QUIT").ReplyString("OK")
+	mock.Close()
 	wg.Wait()
 }
 

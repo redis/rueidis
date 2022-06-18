@@ -718,6 +718,9 @@ func (p *pipe) Close() {
 		}
 	}
 	atomic.AddInt32(&p.waits, -1)
+	if p.conn != nil {
+		p.conn.Close()
+	}
 }
 
 type pshks struct {

@@ -14,7 +14,13 @@ import (
 	"net"
 	"testing"
 	"time"
+
+	"go.uber.org/goleak"
 )
+
+func TestMain(m *testing.M) {
+	goleak.VerifyTestMain(m)
+}
 
 func accept(t *testing.T, ln net.Listener) (*redisMock, error) {
 	conn, err := ln.Accept()
@@ -54,11 +60,15 @@ func TestNewClusterClient(t *testing.T) {
 		}
 		slots, _ := slotsResp.ToMessage()
 		mock.Expect("CLUSTER", "SLOTS").Reply(slots)
+		mock.Close()
 		close(done)
 	}()
 
 	_, port, _ := net.SplitHostPort(ln.Addr().String())
-	client, err := NewClient(ClientOption{InitAddress: []string{"127.0.0.1:" + port}})
+	client, err := NewClient(ClientOption{
+		InitAddress: []string{"127.0.0.1:" + port},
+		Dialer:      net.Dialer{KeepAlive: -1},
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -83,10 +93,14 @@ func TestNewClusterClientError(t *testing.T) {
 		}
 		mock.Expect("CLUSTER", "SLOTS").Reply(RedisMessage{typ: '-', string: "other error"})
 		mock.Expect("QUIT").ReplyString("OK")
+		mock.Close()
 		close(done)
 	}()
 	_, port, _ := net.SplitHostPort(ln.Addr().String())
-	client, err := NewClient(ClientOption{InitAddress: []string{"127.0.0.1:" + port}})
+	client, err := NewClient(ClientOption{
+		InitAddress: []string{"127.0.0.1:" + port},
+		Dialer:      net.Dialer{KeepAlive: -1},
+	})
 	if client != nil || err == nil {
 		t.Errorf("unexpected return %v %v", client, err)
 	}
@@ -107,11 +121,15 @@ func TestFallBackSingleClient(t *testing.T) {
 		}
 		mock.Expect("CLUSTER", "SLOTS").Reply(RedisMessage{typ: '-', string: redisErrMsgClusterDisabled})
 		mock.Expect("QUIT").ReplyString("OK")
+		mock.Close()
 		close(done)
 	}()
 
 	_, port, _ := net.SplitHostPort(ln.Addr().String())
-	client, err := NewClient(ClientOption{InitAddress: []string{"127.0.0.1:" + port}})
+	client, err := NewClient(ClientOption{
+		InitAddress: []string{"127.0.0.1:" + port},
+		Dialer:      net.Dialer{KeepAlive: -1},
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -182,11 +200,16 @@ func TestTLSClient(t *testing.T) {
 		}
 		mock.Expect("CLUSTER", "SLOTS").Reply(RedisMessage{typ: '-', string: redisErrMsgClusterDisabled})
 		mock.Expect("QUIT").ReplyString("OK")
+		mock.Close()
 		close(done)
 	}()
 
 	_, port, _ := net.SplitHostPort(ln.Addr().String())
-	client, err := NewClient(ClientOption{InitAddress: []string{"127.0.0.1:" + port}, TLSConfig: config})
+	client, err := NewClient(ClientOption{
+		InitAddress: []string{"127.0.0.1:" + port},
+		Dialer:      net.Dialer{KeepAlive: -1},
+		TLSConfig:   config,
+	})
 	if err != nil {
 		t.Fatal(err)
 	}

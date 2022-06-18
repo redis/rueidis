@@ -13,6 +13,7 @@ require (
 require (
 	github.com/onsi/ginkgo/v2 v2.1.4
 	github.com/onsi/gomega v1.19.0
+	go.uber.org/goleak v1.1.12
 )
 
 require (

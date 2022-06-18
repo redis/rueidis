@@ -314,10 +314,12 @@ func TestSingleClientIntegration(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer client.Close()
 
 	run(t, client, testSETGET, testBlockingZPOP, testBlockingXREAD, testPubSub)
 	run(t, client, testFlush)
+
+	client.Close()
+	time.Sleep(time.Second * 5) // wait background ping exit
 }
 
 func TestSentinelClientIntegration(t *testing.T) {
@@ -331,10 +333,12 @@ func TestSentinelClientIntegration(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer client.Close()
 
 	run(t, client, testSETGET, testBlockingZPOP, testBlockingXREAD, testPubSub)
 	run(t, client, testFlush)
+
+	client.Close()
+	time.Sleep(time.Second * 5) // wait background ping exit
 }
 
 func TestClusterClientIntegration(t *testing.T) {
@@ -346,7 +350,8 @@ func TestClusterClientIntegration(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer client.Close()
-
 	run(t, client, testSETGET, testBlockingZPOP, testBlockingXREAD, testPubSub)
+
+	client.Close()
+	time.Sleep(time.Second * 5) // wait background ping exit
 }
