@@ -4,6 +4,7 @@ import (
 	"runtime"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/rueian/rueidis/internal/cmds"
 )
@@ -148,5 +149,33 @@ func TestRing(t *testing.T) {
 		if _, _, ch, _ := ring.NextResultCh(); ch != nil {
 			t.Fatalf("NextResultCh should returns nothing after CleanNoReply")
 		}
+	})
+
+	t.Run("PutOne Wakeup WaitForWrite", func(t *testing.T) {
+		ring := newRing()
+		if one, _, ch := ring.NextWriteCmd(); ch == nil {
+			go func() {
+				time.Sleep(time.Millisecond * 100)
+				ring.PutOne(cmds.QuitCmd)
+			}()
+			if one, _, ch = ring.WaitForWrite(); ch != nil && one.Commands()[0] == cmds.QuitCmd.Commands()[0] {
+				return
+			}
+		}
+		t.Fatal("Should sleep")
+	})
+
+	t.Run("PutMulti Wakeup WaitForWrite", func(t *testing.T) {
+		ring := newRing()
+		if _, multi, ch := ring.NextWriteCmd(); ch == nil {
+			go func() {
+				time.Sleep(time.Millisecond * 100)
+				ring.PutMulti([]cmds.Completed{cmds.QuitCmd})
+			}()
+			if _, multi, ch = ring.WaitForWrite(); ch != nil && multi[0].Commands()[0] == cmds.QuitCmd.Commands()[0] {
+				return
+			}
+		}
+		t.Fatal("Should sleep")
 	})
 }
