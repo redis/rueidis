@@ -34,13 +34,12 @@ var _ wire = (*pipe)(nil)
 type pipe struct {
 	waits   int32
 	state   int32
-	slept   int32
 	version int32
+	_       int32
 	timeout time.Duration
 	pinggap time.Duration
 
 	once  sync.Once
-	cond  sync.Cond
 	conn  net.Conn
 	queue queue
 	cache cache
@@ -58,7 +57,6 @@ type pipe struct {
 func newPipe(conn net.Conn, option *ClientOption) (p *pipe, err error) {
 	p = &pipe{
 		conn:  conn,
-		cond:  sync.Cond{L: &sync.Mutex{}},
 		queue: newRing(),
 		cache: newLRU(option.CacheSizeEachConn),
 		r:     bufio.NewReader(conn),
@@ -110,28 +108,6 @@ func newPipe(conn net.Conn, option *ClientOption) (p *pipe, err error) {
 	return p, nil
 }
 
-func (p *pipe) _sleep() (slept bool) {
-	if slept = atomic.LoadInt32(&p.waits) == 0 && atomic.LoadInt32(&p.state) == 1; slept {
-		p.cond.L.Lock()
-		if slept = atomic.LoadInt32(&p.waits) == 0 && atomic.LoadInt32(&p.state) == 1; slept {
-			p.slept = 1
-			p.cond.Wait()
-			p.slept = 0
-		}
-		p.cond.L.Unlock()
-	}
-	return slept
-}
-
-func (p *pipe) _awake() {
-	p.cond.L.Lock()
-	slept := p.slept
-	p.cond.L.Unlock()
-	if slept == 1 {
-		p.cond.Broadcast()
-	}
-}
-
 func (p *pipe) background() {
 	atomic.CompareAndSwapInt32(&p.state, 0, 1)
 	p.once.Do(func() { go p._background() })
@@ -158,7 +134,11 @@ func (p *pipe) _background() {
 	{
 		exit(p._backgroundRead())
 		atomic.CompareAndSwapInt32(&p.state, 2, 3) // make write goroutine to exit
-		p._awake()
+		atomic.AddInt32(&p.waits, 1)
+		go func() {
+			<-p.queue.PutOne(cmds.QuitCmd)
+			atomic.AddInt32(&p.waits, -1)
+		}()
 	}
 	<-wait
 
@@ -223,7 +203,16 @@ func (p *pipe) _backgroundWrite() (err error) {
 			} else {
 				err = p.w.Flush()
 			}
-		} else if multi == nil {
+			if err == nil {
+				if atomic.LoadInt32(&p.state) == 1 {
+					ones[0], multi, ch = p.queue.WaitForWrite()
+				} else {
+					runtime.Gosched()
+					continue
+				}
+			}
+		}
+		if ch != nil && multi == nil {
 			multi = ones
 		}
 		for _, cmd := range multi {
@@ -236,8 +225,6 @@ func (p *pipe) _backgroundWrite() (err error) {
 			if err != ErrClosing { // ignore ErrClosing to allow final QUIT command to be sent
 				return
 			}
-			runtime.Gosched()
-		} else if ch == nil && !p._sleep() {
 			runtime.Gosched()
 		}
 	}
@@ -504,9 +491,6 @@ func (p *pipe) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
 
 queue:
 	ch := p.queue.PutOne(cmd)
-	if waits == 1 {
-		p._awake()
-	}
 	if ctxCh := ctx.Done(); ctxCh == nil {
 		resp = <-ch
 		atomic.AddInt32(&p.waits, -1)
@@ -572,9 +556,6 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...cmds.Completed) []RedisResu
 
 queue:
 	ch := p.queue.PutMulti(multi)
-	if waits == 1 {
-		p._awake()
-	}
 	var i int
 	if ctxCh := ctx.Done(); ctxCh == nil {
 		for ; i < len(resp); i++ {
@@ -733,7 +714,6 @@ func (p *pipe) Close() {
 			p.background()
 		}
 		if stopping1 || stopping2 {
-			p._awake()
 			<-p.queue.PutOne(cmds.QuitCmd)
 		}
 	}

@@ -11,6 +11,7 @@ type queue interface {
 	PutOne(m cmds.Completed) chan RedisResult
 	PutMulti(m []cmds.Completed) chan RedisResult
 	NextWriteCmd() (cmds.Completed, []cmds.Completed, chan RedisResult)
+	WaitForWrite() (cmds.Completed, []cmds.Completed, chan RedisResult)
 	NextResultCh() (cmds.Completed, []cmds.Completed, chan RedisResult, *sync.Cond)
 	CleanNoReply()
 }
@@ -23,8 +24,10 @@ func newRing() *ring {
 	r := &ring{}
 	r.mask = uint64(len(r.store) - 1)
 	for i := range r.store {
+		m := &sync.Mutex{}
+		r.store[i].c1 = sync.NewCond(m)
+		r.store[i].c2 = sync.NewCond(m)
 		r.store[i].ch = make(chan RedisResult, 0) // this channel can't be buffered
-		r.store[i].cond = sync.NewCond(&sync.Mutex{})
 	}
 	return r
 }
@@ -43,7 +46,8 @@ type ring struct {
 }
 
 type node struct {
-	cond  *sync.Cond
+	c1    *sync.Cond
+	c2    *sync.Cond
 	ch    chan RedisResult
 	one   cmds.Completed
 	multi []cmds.Completed
@@ -52,27 +56,29 @@ type node struct {
 
 func (r *ring) PutOne(m cmds.Completed) chan RedisResult {
 	n := &r.store[atomic.AddUint64(&r.write, 1)&r.mask]
-	n.cond.L.Lock()
+	n.c1.L.Lock()
 	for n.mark != 0 {
-		n.cond.Wait()
+		n.c1.Wait()
 	}
 	n.one = m
 	n.multi = nil
 	n.mark = 1
-	n.cond.L.Unlock()
+	n.c1.L.Unlock()
+	n.c2.Broadcast()
 	return n.ch
 }
 
 func (r *ring) PutMulti(m []cmds.Completed) chan RedisResult {
 	n := &r.store[atomic.AddUint64(&r.write, 1)&r.mask]
-	n.cond.L.Lock()
+	n.c1.L.Lock()
 	for n.mark != 0 {
-		n.cond.Wait()
+		n.c1.Wait()
 	}
 	n.one = cmds.Completed{}
 	n.multi = m
 	n.mark = 1
-	n.cond.L.Unlock()
+	n.c1.L.Unlock()
+	n.c2.Broadcast()
 	return n.ch
 }
 
@@ -81,14 +87,29 @@ func (r *ring) NextWriteCmd() (one cmds.Completed, multi []cmds.Completed, ch ch
 	r.read1++
 	p := r.read1 & r.mask
 	n := &r.store[p]
-	n.cond.L.Lock()
+	n.c1.L.Lock()
 	if n.mark == 1 {
 		one, multi, ch = n.one, n.multi, n.ch
 		n.mark = 2
 	} else {
 		r.read1--
 	}
-	n.cond.L.Unlock()
+	n.c1.L.Unlock()
+	return
+}
+
+// WaitForWrite should be only called by one dedicated thread
+func (r *ring) WaitForWrite() (one cmds.Completed, multi []cmds.Completed, ch chan RedisResult) {
+	r.read1++
+	p := r.read1 & r.mask
+	n := &r.store[p]
+	n.c1.L.Lock()
+	for n.mark != 1 {
+		n.c2.Wait() // c1 and c2 share the same mutex
+	}
+	one, multi, ch = n.one, n.multi, n.ch
+	n.mark = 2
+	n.c1.L.Unlock()
 	return
 }
 
@@ -97,8 +118,8 @@ func (r *ring) NextResultCh() (one cmds.Completed, multi []cmds.Completed, ch ch
 	r.read2++
 	p := r.read2 & r.mask
 	n := &r.store[p]
-	cond = n.cond
-	n.cond.L.Lock()
+	cond = n.c1
+	n.c1.L.Lock()
 	if n.mark == 2 {
 		one, multi, ch = n.one, n.multi, n.ch
 		n.mark = 0
@@ -112,7 +133,7 @@ func (r *ring) NextResultCh() (one cmds.Completed, multi []cmds.Completed, ch ch
 func (r *ring) CleanNoReply() {
 	p := (r.read2 + 1) & r.mask
 	n := &r.store[p]
-	n.cond.L.Lock()
+	n.c1.L.Lock()
 	if n.mark == 2 {
 		mNoReply := len(n.multi) != 0
 		for _, one := range n.multi {
@@ -121,8 +142,8 @@ func (r *ring) CleanNoReply() {
 		if mNoReply || n.one.NoReply() {
 			n.mark = 0
 			r.read2++
+			n.c1.Signal()
 		}
 	}
-	n.cond.L.Unlock()
-	n.cond.Signal()
+	n.c1.L.Unlock()
 }
