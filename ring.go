@@ -52,6 +52,7 @@ type node struct {
 	one   cmds.Completed
 	multi []cmds.Completed
 	mark  uint32
+	slept bool
 }
 
 func (r *ring) PutOne(m cmds.Completed) chan RedisResult {
@@ -63,8 +64,11 @@ func (r *ring) PutOne(m cmds.Completed) chan RedisResult {
 	n.one = m
 	n.multi = nil
 	n.mark = 1
+	s := n.slept
 	n.c1.L.Unlock()
-	n.c2.Broadcast()
+	if s {
+		n.c2.Broadcast()
+	}
 	return n.ch
 }
 
@@ -77,8 +81,11 @@ func (r *ring) PutMulti(m []cmds.Completed) chan RedisResult {
 	n.one = cmds.Completed{}
 	n.multi = m
 	n.mark = 1
+	s := n.slept
 	n.c1.L.Unlock()
-	n.c2.Broadcast()
+	if s {
+		n.c2.Broadcast()
+	}
 	return n.ch
 }
 
@@ -105,7 +112,9 @@ func (r *ring) WaitForWrite() (one cmds.Completed, multi []cmds.Completed, ch ch
 	n := &r.store[p]
 	n.c1.L.Lock()
 	for n.mark != 1 {
+		n.slept = true
 		n.c2.Wait() // c1 and c2 share the same mutex
+		n.slept = false
 	}
 	one, multi, ch = n.one, n.multi, n.ch
 	n.mark = 2
@@ -142,7 +151,9 @@ func (r *ring) CleanNoReply() {
 		if mNoReply || n.one.NoReply() {
 			n.mark = 0
 			r.read2++
+			n.c1.L.Unlock()
 			n.c1.Signal()
+			return
 		}
 	}
 	n.c1.L.Unlock()
