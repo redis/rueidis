@@ -267,7 +267,7 @@ func TestNoReplyExceedRingSize(t *testing.T) {
 	p, mock, cancel, _ := setup(t, ClientOption{})
 	defer cancel()
 
-	times := ringSize * 3
+	times := DefaultRingScale * 3
 	wait := make(chan struct{})
 	go func() {
 		for i := 0; i < times; i++ {

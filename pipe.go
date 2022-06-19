@@ -39,25 +39,25 @@ type pipe struct {
 	timeout time.Duration
 	pinggap time.Duration
 
-	once  sync.Once
-	conn  net.Conn
-	queue queue
-	cache cache
-	error atomic.Value
-
 	r *bufio.Reader
 	w *bufio.Writer
+
+	conn  net.Conn
+	cache cache
+	queue queue
+	once  sync.Once
 
 	info  map[string]RedisMessage
 	subs  *subs
 	psubs *subs
 	pshks atomic.Value
+	error atomic.Value
 }
 
 func newPipe(conn net.Conn, option *ClientOption) (p *pipe, err error) {
 	p = &pipe{
 		conn:  conn,
-		queue: newRing(),
+		queue: newRing(option.RingScaleEachConn),
 		cache: newLRU(option.CacheSizeEachConn),
 		r:     bufio.NewReader(conn),
 		w:     bufio.NewWriter(conn),

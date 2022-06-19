@@ -15,6 +15,8 @@ import (
 const (
 	// DefaultCacheBytes is the default value of ClientOption.CacheSizeEachConn, which is 128 MiB
 	DefaultCacheBytes = 128 * (1 << 20)
+	// DefaultRingScale is the default value of ClientOption.RingScaleEachConn, which results into having a ring of size 2^10 for each connection
+	DefaultRingScale = 10
 	// DefaultPoolSize is the default value of ClientOption.BlockingPoolSize
 	DefaultPoolSize = 1000
 	// DefaultDialTimeout is the default value of ClientOption.Dialer.Timeout
@@ -62,6 +64,10 @@ type ClientOption struct {
 	// CacheSizeEachConn is redis client side cache size that bind to each TCP connection to a single redis instance.
 	// The default is DefaultCacheBytes.
 	CacheSizeEachConn int
+
+	// RingScaleEachConn set the size of the ring buffer in each connection to (2 ^ RingScaleEachConn).
+	// The default is RingScaleEachConn, which results into having a ring of size 2^10 for each connection.
+	RingScaleEachConn int
 
 	// BlockingPoolSize is the size of the connection pool shared by blocking commands (ex BLPOP, XREAD with BLOCK).
 	// The default is DefaultPoolSize.

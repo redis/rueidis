@@ -12,7 +12,7 @@ import (
 //gocyclo:ignore
 func TestRing(t *testing.T) {
 	t.Run("PutOne", func(t *testing.T) {
-		ring := newRing()
+		ring := newRing(DefaultRingScale)
 		size := 5000
 		fixture := make(map[string]struct{}, size)
 		for i := 0; i < size; i++ {
@@ -43,7 +43,7 @@ func TestRing(t *testing.T) {
 	})
 
 	t.Run("PutMulti", func(t *testing.T) {
-		ring := newRing()
+		ring := newRing(DefaultRingScale)
 		size := 5000
 		fixture := make(map[string]struct{}, size)
 		for i := 0; i < size; i++ {
@@ -77,7 +77,7 @@ func TestRing(t *testing.T) {
 	})
 
 	t.Run("NextWriteCmd & NextResultCh", func(t *testing.T) {
-		ring := newRing()
+		ring := newRing(DefaultRingScale)
 		if one, multi, _ := ring.NextWriteCmd(); !one.IsEmpty() || multi != nil {
 			t.Fatalf("NextWriteCmd should returns nil if empty")
 		}
@@ -112,7 +112,7 @@ func TestRing(t *testing.T) {
 	})
 
 	t.Run("NextWriteCmd & CleanNoReply No Effect", func(t *testing.T) {
-		ring := newRing()
+		ring := newRing(DefaultRingScale)
 		ring.CleanNoReply() // no effect
 		ring.PutOne(cmds.NewCompleted([]string{"0"}))
 		if one, _, _ := ring.NextWriteCmd(); len(one.Commands()) == 0 || one.Commands()[0] != "0" {
@@ -128,7 +128,7 @@ func TestRing(t *testing.T) {
 	})
 
 	t.Run("NextWriteCmd & CleanNoReply One", func(t *testing.T) {
-		ring := newRing()
+		ring := newRing(DefaultRingScale)
 		ring.PutOne(cmds.UnsubscribeCmd)
 		if one, _, _ := ring.NextWriteCmd(); len(one.Commands()) == 0 || one.Commands()[0] != "UNSUBSCRIBE" {
 			t.Fatalf("NextWriteCmd should returns next cmd")
@@ -140,7 +140,7 @@ func TestRing(t *testing.T) {
 	})
 
 	t.Run("NextWriteCmd & CleanNoReply Multi", func(t *testing.T) {
-		ring := newRing()
+		ring := newRing(DefaultRingScale)
 		ring.PutMulti([]cmds.Completed{cmds.UnsubscribeCmd, cmds.SUnsubscribeCmd})
 		if _, multi, _ := ring.NextWriteCmd(); len(multi) != 2 || multi[0].Commands()[0] != "UNSUBSCRIBE" || multi[1].Commands()[0] != "SUNSUBSCRIBE" {
 			t.Fatalf("NextWriteCmd should returns next cmd")
@@ -152,7 +152,7 @@ func TestRing(t *testing.T) {
 	})
 
 	t.Run("PutOne Wakeup WaitForWrite", func(t *testing.T) {
-		ring := newRing()
+		ring := newRing(DefaultRingScale)
 		if one, _, ch := ring.NextWriteCmd(); ch == nil {
 			go func() {
 				time.Sleep(time.Millisecond * 100)
@@ -166,7 +166,7 @@ func TestRing(t *testing.T) {
 	})
 
 	t.Run("PutMulti Wakeup WaitForWrite", func(t *testing.T) {
-		ring := newRing()
+		ring := newRing(DefaultRingScale)
 		if _, multi, ch := ring.NextWriteCmd(); ch == nil {
 			go func() {
 				time.Sleep(time.Millisecond * 100)

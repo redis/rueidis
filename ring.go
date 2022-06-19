@@ -16,12 +16,13 @@ type queue interface {
 	CleanNoReply()
 }
 
-const ringSize = 1024
-
 var _ queue = (*ring)(nil)
 
-func newRing() *ring {
-	r := &ring{}
+func newRing(factor int) *ring {
+	if factor <= 0 {
+		factor = DefaultRingScale
+	}
+	r := &ring{store: make([]node, 2<<(factor-1))}
 	r.mask = uint64(len(r.store) - 1)
 	for i := range r.store {
 		m := &sync.Mutex{}
@@ -33,16 +34,12 @@ func newRing() *ring {
 }
 
 type ring struct {
-	_     [8]uint64
 	write uint64
 	_     [7]uint64
 	read1 uint64
-	_     [7]uint64
 	read2 uint64
-	_     [7]uint64
 	mask  uint64
-	_     [7]uint64
-	store [ringSize]node // store's size must be 2^N to work with the mask
+	store []node // store's size must be 2^N to work with the mask
 }
 
 type node struct {
