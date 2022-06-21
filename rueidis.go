@@ -67,6 +67,8 @@ type ClientOption struct {
 
 	// RingScaleEachConn set the size of the ring buffer in each connection to (2 ^ RingScaleEachConn).
 	// The default is RingScaleEachConn, which results into having a ring of size 2^10 for each connection.
+	// Reduce this value can reduce the memory consumption of each connection at the cost of potential throughput degradation.
+	// Values smaller than 8 is typically not recommended.
 	RingScaleEachConn int
 
 	// BlockingPoolSize is the size of the connection pool shared by blocking commands (ex BLPOP, XREAD with BLOCK).

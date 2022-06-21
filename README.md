@@ -292,6 +292,14 @@ client.DoMulti(
 However, occupying a connection is not good in terms of throughput. It is better to use Lua script to perform
 optimistic locking instead.
 
+## Memory Consumption Consideration
+
+Each underlying connection in rueidis allocates a ring buffer for pipelining.
+Its size is controlled by the `ClientOption.RingScaleEachConn` and the default value is 10 which results into each ring of size 2^10.
+
+If you have many rueidis connections, you may find that they occupy quite amount of memory.
+In that case, you may consider reducing `ClientOption.RingScaleEachConn` to 8 or 9 at the cost of potential throughput degradation.
+
 ## Bulk Operations
 
 The `rueidis.Commands` and `DedicatedClient.DoMulti` can also be used for bulk operations:
