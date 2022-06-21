@@ -335,7 +335,7 @@ func (c *clusterClient) Dedicated(fn func(DedicatedClient) error) (err error) {
 
 func (c *clusterClient) Dedicate() (DedicatedClient, func()) {
 	dcc := &dedicatedClusterClient{cmd: c.cmd, client: c, slot: cmds.NoSlot}
-	return dcc, func() { dcc.release() }
+	return dcc, dcc.release
 }
 
 func (c *clusterClient) Close() {
@@ -363,6 +363,7 @@ type dedicatedClusterClient struct {
 	mu   sync.Mutex
 	cmd  cmds.Builder
 	slot uint16
+	mark bool
 }
 
 func (c *dedicatedClusterClient) acquire(slot uint16) (wire wire, err error) {
@@ -403,14 +404,17 @@ func (c *dedicatedClusterClient) acquire(slot uint16) (wire wire, err error) {
 
 func (c *dedicatedClusterClient) release() {
 	c.mu.Lock()
-	defer c.mu.Unlock()
-	if p := c.pshks; p != nil {
-		c.pshks = nil
-		close(p.close)
+	if !c.mark {
+		if p := c.pshks; p != nil {
+			c.pshks = nil
+			close(p.close)
+		}
+		if c.wire != nil {
+			c.conn.Store(c.wire)
+		}
 	}
-	if c.wire != nil {
-		c.conn.Store(c.wire)
-	}
+	c.mark = true
+	c.mu.Unlock()
 }
 
 func (c *dedicatedClusterClient) B() cmds.Builder {
@@ -491,7 +495,6 @@ func (c *dedicatedClusterClient) SetPubSubHooks(hooks PubSubHooks) <-chan error 
 
 func (c *dedicatedClusterClient) Close() {
 	c.mu.Lock()
-	defer c.mu.Unlock()
 	if p := c.pshks; p != nil {
 		c.pshks = nil
 		p.close <- ErrClosing
@@ -500,6 +503,8 @@ func (c *dedicatedClusterClient) Close() {
 	if c.wire != nil {
 		c.wire.Close()
 	}
+	c.mu.Unlock()
+	c.release()
 }
 
 const (

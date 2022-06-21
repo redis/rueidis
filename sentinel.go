@@ -85,15 +85,17 @@ retry:
 func (c *sentinelClient) Dedicated(fn func(DedicatedClient) error) (err error) {
 	master := c.mConn.Load().(conn)
 	wire := master.Acquire()
-	err = fn(&dedicatedSingleClient{cmd: c.cmd, wire: wire})
-	master.Store(wire)
+	dsc := &dedicatedSingleClient{cmd: c.cmd, conn: master, wire: wire}
+	err = fn(dsc)
+	dsc.release()
 	return err
 }
 
 func (c *sentinelClient) Dedicate() (DedicatedClient, func()) {
 	master := c.mConn.Load().(conn)
 	wire := master.Acquire()
-	return &dedicatedSingleClient{cmd: c.cmd, wire: wire}, func() { master.Store(wire) }
+	dsc := &dedicatedSingleClient{cmd: c.cmd, conn: master, wire: wire}
+	return dsc, dsc.release
 }
 
 func (c *sentinelClient) Close() {

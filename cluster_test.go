@@ -445,6 +445,39 @@ func TestClusterClient(t *testing.T) {
 		}
 	})
 
+	t.Run("Dedicate Delegate Release On Close", func(t *testing.T) {
+		stored := 0
+		w := &mockWire{}
+		m.AcquireFn = func() wire { return w }
+		m.StoreFn = func(ww wire) { stored++ }
+		c, _ := client.Dedicate()
+		c.Do(context.Background(), c.B().Get().Key("a").Build())
+
+		c.Close()
+
+		if stored != 1 {
+			t.Fatalf("unexpected stored count %v", stored)
+		}
+	})
+
+	t.Run("Dedicate Delegate No Duplicate Release", func(t *testing.T) {
+		stored := 0
+		w := &mockWire{}
+		m.AcquireFn = func() wire { return w }
+		m.StoreFn = func(ww wire) { stored++ }
+		c, cancel := client.Dedicate()
+		c.Do(context.Background(), c.B().Get().Key("a").Build())
+
+		c.Close()
+		c.Close() // should have no effect
+		cancel()  // should have no effect
+		cancel()  // should have no effect
+
+		if stored != 1 {
+			t.Fatalf("unexpected stored count %v", stored)
+		}
+	})
+
 	t.Run("Dedicated SetPubSubHooks Released", func(t *testing.T) {
 		c, cancel := client.Dedicate()
 		ch1 := c.SetPubSubHooks(PubSubHooks{OnMessage: func(m PubSubMessage) {}})

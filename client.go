@@ -64,14 +64,16 @@ retry:
 
 func (c *singleClient) Dedicated(fn func(DedicatedClient) error) (err error) {
 	wire := c.conn.Acquire()
-	err = fn(&dedicatedSingleClient{cmd: c.cmd, wire: wire})
-	c.conn.Store(wire)
+	dsc := &dedicatedSingleClient{cmd: c.cmd, conn: c.conn, wire: wire}
+	err = fn(dsc)
+	dsc.release()
 	return err
 }
 
 func (c *singleClient) Dedicate() (DedicatedClient, func()) {
 	wire := c.conn.Acquire()
-	return &dedicatedSingleClient{cmd: c.cmd, wire: wire}, func() { c.conn.Store(wire) }
+	dsc := &dedicatedSingleClient{cmd: c.cmd, conn: c.conn, wire: wire}
+	return dsc, dsc.release
 }
 
 func (c *singleClient) Close() {
@@ -80,7 +82,9 @@ func (c *singleClient) Close() {
 }
 
 type dedicatedSingleClient struct {
+	conn conn
 	wire wire
+	mark uint32
 	cmd  cmds.Builder
 }
 
@@ -130,6 +134,13 @@ func (c *dedicatedSingleClient) SetPubSubHooks(hooks PubSubHooks) <-chan error {
 
 func (c *dedicatedSingleClient) Close() {
 	c.wire.Close()
+	c.release()
+}
+
+func (c *dedicatedSingleClient) release() {
+	if atomic.CompareAndSwapUint32(&c.mark, 0, 1) {
+		c.conn.Store(c.wire)
+	}
 }
 
 func (c *singleClient) isRetryable(err error, ctx context.Context) bool {

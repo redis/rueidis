@@ -362,6 +362,37 @@ func TestSingleClient(t *testing.T) {
 			t.Fatalf("Dedicated desn't delegate Close")
 		}
 	})
+
+	t.Run("Dedicate Delegate Release On Close", func(t *testing.T) {
+		stored := 0
+		w := &mockWire{}
+		m.AcquireFn = func() wire { return w }
+		m.StoreFn = func(ww wire) { stored++ }
+		c, _ := client.Dedicate()
+
+		c.Close()
+
+		if stored != 1 {
+			t.Fatalf("unexpected stored count %v", stored)
+		}
+	})
+
+	t.Run("Dedicate Delegate No Duplicate Release", func(t *testing.T) {
+		stored := 0
+		w := &mockWire{}
+		m.AcquireFn = func() wire { return w }
+		m.StoreFn = func(ww wire) { stored++ }
+		c, cancel := client.Dedicate()
+
+		c.Close()
+		c.Close() // should have no effect
+		cancel()  // should have no effect
+		cancel()  // should have no effect
+
+		if stored != 1 {
+			t.Fatalf("unexpected stored count %v", stored)
+		}
+	})
 }
 
 func TestSingleClientRetry(t *testing.T) {
