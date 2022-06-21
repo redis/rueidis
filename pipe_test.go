@@ -928,6 +928,18 @@ func TestPubSubHooks(t *testing.T) {
 		}
 	})
 
+	t.Run("Close on error", func(t *testing.T) {
+		p, _, cancel, closeConn := setup(t, ClientOption{})
+		defer cancel()
+		ch := p.SetPubSubHooks(PubSubHooks{
+			OnMessage: func(m PubSubMessage) {},
+		})
+		closeConn()
+		if err := <-ch; err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
+			t.Fatalf("unexpected err %v", err)
+		}
+	})
+
 	t.Run("Swap Hooks", func(t *testing.T) {
 		p, _, cancel, _ := setup(t, ClientOption{})
 		defer cancel()

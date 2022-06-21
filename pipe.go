@@ -453,6 +453,10 @@ func (p *pipe) SetPubSubHooks(hooks PubSubHooks) <-chan error {
 			close(old.close)
 		}
 	}
+	if atomic.AddInt32(&p.waits, 1) == 1 && atomic.LoadInt32(&p.state) == 0 {
+		p.background()
+	}
+	atomic.AddInt32(&p.waits, -1)
 	return ch
 }
 
