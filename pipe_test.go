@@ -267,7 +267,7 @@ func TestNoReplyExceedRingSize(t *testing.T) {
 	p, mock, cancel, _ := setup(t, ClientOption{})
 	defer cancel()
 
-	times := DefaultRingScale * 3
+	times := (2 << (DefaultRingScale - 1)) * 3
 	wait := make(chan struct{})
 	go func() {
 		for i := 0; i < times; i++ {
@@ -282,10 +282,6 @@ func TestNoReplyExceedRingSize(t *testing.T) {
 		mock.Expect("UNSUBSCRIBE").Reply(RedisMessage{typ: '>', values: []RedisMessage{
 			{typ: '+', string: "unsubscribe"},
 			{typ: '+', string: "1"},
-			{typ: ':', integer: 0},
-		}}).Reply(RedisMessage{typ: '>', values: []RedisMessage{
-			{typ: '+', string: "unsubscribe"},
-			{typ: '+', string: "2"},
 			{typ: ':', integer: 0},
 		}})
 	}
@@ -696,7 +692,10 @@ func TestPubSub(t *testing.T) {
 
 		go func() {
 			for _, c := range commands {
-				mock.Expect(c.Commands()...)
+				mock.Expect(c.Commands()...).Reply(RedisMessage{typ: '>', values: []RedisMessage{
+					{typ: '+', string: strings.ToLower(c.Commands()[0])},
+					{typ: '+', string: strings.ToLower(c.Commands()[1])},
+				}})
 				mock.Expect("GET", "k").ReplyString("v")
 			}
 		}()
@@ -722,7 +721,10 @@ func TestPubSub(t *testing.T) {
 
 		go func() {
 			for _, c := range commands {
-				mock.Expect(c.Commands()...)
+				mock.Expect(c.Commands()...).Reply(RedisMessage{typ: '>', values: []RedisMessage{
+					{typ: '+', string: strings.ToLower(c.Commands()[0])},
+					{typ: '+', string: strings.ToLower(c.Commands()[1])},
+				}})
 			}
 			mock.Expect("GET", "k").ReplyString("v")
 		}()
@@ -733,45 +735,26 @@ func TestPubSub(t *testing.T) {
 		}
 	})
 
-	t.Run("Prohibit NoReply with other commands In DoMulti", func(t *testing.T) {
-		p, _, cancel, _ := setup(t, ClientOption{})
-		defer cancel()
-
-		commands := []cmds.Completed{
-			builder.Subscribe().Channel("a").Build(),
-			builder.Psubscribe().Pattern("b").Build(),
-			builder.Unsubscribe().Channel("c").Build(),
-			builder.Punsubscribe().Pattern("d").Build(),
-		}
-
-		for _, cmd := range commands {
-			done := make(chan struct{})
-			go func() {
-				defer func() {
-					if msg := recover(); msg != prohibitmix {
-						t.Errorf("unexpected panic msg %s", msg)
-					} else {
-						close(done)
-					}
-				}()
-				p.DoMulti(context.Background(), cmd, builder.Get().Key("any").Build())
-			}()
-			<-done
-		}
-	})
-
 	t.Run("PubSub Subscribe RedisMessage", func(t *testing.T) {
 		ctx := context.Background()
 		p, mock, cancel, _ := setup(t, ClientOption{})
 
 		activate := builder.Subscribe().Channel("1").Build()
+		deactivate := builder.Unsubscribe().Channel("1").Build()
 		go func() {
 			mock.Expect(activate.Commands()...).Reply(
+				RedisMessage{typ: '>', values: []RedisMessage{
+					{typ: '+', string: "subscribe"},
+					{typ: '+', string: "1"},
+					{typ: ':', integer: 1},
+				}},
 				RedisMessage{typ: '>', values: []RedisMessage{
 					{typ: '+', string: "message"},
 					{typ: '+', string: "1"},
 					{typ: '+', string: "2"},
 				}},
+			)
+			mock.Expect(deactivate.Commands()...).Reply(
 				RedisMessage{typ: '>', values: []RedisMessage{
 					{typ: '+', string: "unsubscribe"},
 					{typ: '+', string: "1"},
@@ -780,17 +763,15 @@ func TestPubSub(t *testing.T) {
 			)
 		}()
 
-		received := make(chan struct{})
-
 		if err := p.Receive(ctx, activate, func(msg PubSubMessage) {
 			if msg.Channel == "1" && msg.Message == "2" {
-				close(received)
+				if err := p.Do(ctx, deactivate).Error(); err != nil {
+					t.Fatalf("unexpected err %v", err)
+				}
 			}
 		}); err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
-
-		<-received
 
 		cancel()
 	})
@@ -800,32 +781,38 @@ func TestPubSub(t *testing.T) {
 		p, mock, cancel, _ := setup(t, ClientOption{})
 
 		activate := builder.Ssubscribe().Channel("1").Build()
+		deactivate := builder.Sunsubscribe().Channel("1").Build()
 		go func() {
 			mock.Expect(activate.Commands()...).Reply(
 				RedisMessage{typ: '>', values: []RedisMessage{
-					{typ: '+', string: "message"},
+					{typ: '+', string: "ssubscribe"},
+					{typ: '+', string: "1"},
+					{typ: ':', integer: 1},
+				}},
+				RedisMessage{typ: '>', values: []RedisMessage{
+					{typ: '+', string: "smessage"},
 					{typ: '+', string: "1"},
 					{typ: '+', string: "2"},
 				}},
+			)
+			mock.Expect(deactivate.Commands()...).Reply(
 				RedisMessage{typ: '>', values: []RedisMessage{
-					{typ: '+', string: "unsubscribe"},
+					{typ: '+', string: "sunsubscribe"},
 					{typ: '+', string: "1"},
 					{typ: ':', integer: 0},
 				}},
 			)
 		}()
 
-		received := make(chan struct{})
-
 		if err := p.Receive(ctx, activate, func(msg PubSubMessage) {
 			if msg.Channel == "1" && msg.Message == "2" {
-				close(received)
+				if err := p.Do(ctx, deactivate).Error(); err != nil {
+					t.Fatalf("unexpected err %v", err)
+				}
 			}
 		}); err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
-
-		<-received
 
 		cancel()
 	})
@@ -835,14 +822,22 @@ func TestPubSub(t *testing.T) {
 		p, mock, cancel, _ := setup(t, ClientOption{})
 
 		activate := builder.Psubscribe().Pattern("1").Build()
+		deactivate := builder.Punsubscribe().Pattern("1").Build()
 		go func() {
 			mock.Expect(activate.Commands()...).Reply(
+				RedisMessage{typ: '>', values: []RedisMessage{
+					{typ: '+', string: "psubscribe"},
+					{typ: '+', string: "1"},
+					{typ: ':', integer: 1},
+				}},
 				RedisMessage{typ: '>', values: []RedisMessage{
 					{typ: '+', string: "pmessage"},
 					{typ: '+', string: "1"},
 					{typ: '+', string: "2"},
 					{typ: '+', string: "3"},
 				}},
+			)
+			mock.Expect(deactivate.Commands()...).Reply(
 				RedisMessage{typ: '>', values: []RedisMessage{
 					{typ: '+', string: "punsubscribe"},
 					{typ: '+', string: "1"},
@@ -851,17 +846,15 @@ func TestPubSub(t *testing.T) {
 			)
 		}()
 
-		received := make(chan struct{})
-
 		if err := p.Receive(ctx, activate, func(msg PubSubMessage) {
 			if msg.Pattern == "1" && msg.Channel == "2" && msg.Message == "3" {
-				close(received)
+				if err := p.Do(ctx, deactivate).Error(); err != nil {
+					t.Fatalf("unexpected err %v", err)
+				}
 			}
 		}); err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
-
-		<-received
 
 		cancel()
 	})
@@ -897,6 +890,11 @@ func TestPubSub(t *testing.T) {
 		go func() {
 			mock.Expect(activate.Commands()...).Reply(
 				RedisMessage{typ: '>', values: []RedisMessage{
+					{typ: '+', string: "subscribe"},
+					{typ: '+', string: "1"},
+					{typ: ':', integer: 1},
+				}},
+				RedisMessage{typ: '>', values: []RedisMessage{
 					{typ: '+', string: "message"},
 					{typ: '+', string: "1"},
 					{typ: '+', string: "2"},
@@ -913,6 +911,174 @@ func TestPubSub(t *testing.T) {
 		}
 
 		cancel()
+	})
+
+	t.Run("PubSub Subscribe Redis Error", func(t *testing.T) {
+		ctx := context.Background()
+		p, mock, cancel, _ := setup(t, ClientOption{})
+
+		commands := []cmds.Completed{
+			builder.Subscribe().Channel("1").Build(),
+			builder.Psubscribe().Pattern("1").Build(),
+			builder.Ssubscribe().Channel("1").Build(),
+			builder.Unsubscribe().Channel("1").Build(),
+			builder.Punsubscribe().Pattern("1").Build(),
+			builder.Sunsubscribe().Channel("1").Build(),
+		}
+		go func() {
+			for _, cmd := range commands {
+				mock.Expect(cmd.Commands()...).Reply(RedisMessage{typ: '-', string: cmd.Commands()[0]})
+			}
+		}()
+		for _, cmd := range commands {
+			if err := p.Do(ctx, cmd).Error(); err == nil || !strings.Contains(err.Error(), cmd.Commands()[0]) {
+				t.Fatalf("unexpected err %v", err)
+			}
+		}
+
+		cancel()
+	})
+
+	t.Run("PubSub Subscribe Response", func(t *testing.T) {
+		ctx := context.Background()
+		p, mock, cancel, _ := setup(t, ClientOption{})
+
+		commands := []cmds.Completed{
+			builder.Subscribe().Channel("a", "b", "c").Build(),
+			builder.Psubscribe().Pattern("a", "b", "c").Build(),
+			builder.Ssubscribe().Channel("a", "b", "c").Build(),
+			builder.Unsubscribe().Channel("a", "b", "c").Build(),
+			builder.Punsubscribe().Pattern("a", "b", "c").Build(),
+			builder.Sunsubscribe().Channel("a", "b", "c").Build(),
+		}
+
+		for i, cmd1 := range commands {
+			cmd2 := builder.Get().Key(strconv.Itoa(i)).Build()
+			go func() {
+				mock.Expect(cmd1.Commands()...).Reply(
+					RedisMessage{typ: '>', values: []RedisMessage{
+						{typ: '+', string: "subscribe"},
+						{typ: '+', string: "a"},
+						{typ: ':', integer: 1},
+					}},
+					RedisMessage{typ: '>', values: []RedisMessage{ // skip
+						{typ: '+', string: "subscribe"},
+						{typ: '+', string: "b"},
+						{typ: ':', integer: 1},
+					}},
+					RedisMessage{typ: '>', values: []RedisMessage{ // skip
+						{typ: '+', string: "subscribe"},
+						{typ: '+', string: "c"},
+						{typ: ':', integer: 1},
+					}},
+				).Expect(cmd2.Commands()...).ReplyString(strconv.Itoa(i))
+			}()
+
+			if err := p.Do(ctx, cmd1).Error(); err != nil {
+				t.Fatalf("unexpected err %v", err)
+			}
+			if v, err := p.Do(ctx, cmd2).ToString(); err != nil || v != strconv.Itoa(i) {
+				t.Fatalf("unexpected val %v %v", v, err)
+			}
+		}
+		cancel()
+	})
+
+	t.Run("PubSub Wildcard Unsubscribe Response", func(t *testing.T) {
+		ctx := context.Background()
+		p, mock, cancel, _ := setup(t, ClientOption{})
+
+		commands := []cmds.Completed{
+			builder.Unsubscribe().Build(),
+			builder.Punsubscribe().Build(),
+			builder.Sunsubscribe().Build(),
+		}
+
+		p.psubs.Confirm("1")
+		p.ssubs.Confirm("2")
+		p.ssubs.Confirm("3")
+
+		replies := [][]RedisMessage{
+			{
+				{
+					typ: '>', values: []RedisMessage{
+						{typ: '+', string: "unsubscribe"},
+						{typ: '_'},
+						{typ: ':', integer: 0},
+					},
+				},
+			}, {
+				{
+					typ: '>', values: []RedisMessage{
+						{typ: '+', string: "punsubscribe"},
+						{typ: '+', string: "1"},
+						{typ: ':', integer: 0},
+					},
+				},
+			}, {
+				{
+					typ: '>', values: []RedisMessage{
+						{typ: '+', string: "sunsubscribe"},
+						{typ: '+', string: "2"},
+						{typ: ':', integer: 0},
+					},
+				},
+				{
+					typ: '>', values: []RedisMessage{
+						{typ: '+', string: "sunsubscribe"},
+						{typ: '+', string: "3"},
+						{typ: ':', integer: 0},
+					},
+				},
+			}}
+
+		for i, cmd1 := range commands {
+			cmd2 := builder.Get().Key(strconv.Itoa(i)).Build()
+			go func() {
+				mock.Expect(cmd1.Commands()...).Reply(replies[i]...).Expect(cmd2.Commands()...).ReplyString(strconv.Itoa(i))
+			}()
+
+			if err := p.Do(ctx, cmd1).Error(); err != nil {
+				t.Fatalf("unexpected err %v", err)
+			}
+			if v, err := p.Do(ctx, cmd2).ToString(); err != nil || v != strconv.Itoa(i) {
+				t.Fatalf("unexpected val %v %v", v, err)
+			}
+		}
+		cancel()
+	})
+
+	t.Run("PubSub Unexpected Subscribe/Unsubscribe", func(t *testing.T) {
+		var shouldPanic = func(push string) (pass bool) {
+			defer func() { pass = recover() == protocolbug }()
+
+			p, mock, _, _ := setup(t, ClientOption{})
+			atomic.StoreInt32(&p.state, 1)
+			p.queue.PutOne(builder.Get().Key("a").Build())
+			p.queue.NextWriteCmd()
+			go func() {
+				mock.Expect().Reply(RedisMessage{
+					typ: '>', values: []RedisMessage{
+						{typ: '+', string: push},
+						{typ: '+', string: ""},
+					},
+				})
+			}()
+			p._backgroundRead()
+			return
+		}
+		for _, push := range []string{
+			"subscribe",
+			"unsubscribe",
+			"psubscribe",
+			"punsubscribe",
+			"ssubscribe",
+			"sunsubscribe",
+		} {
+			if !shouldPanic(push) {
+				t.Fatalf("should panic on protocolbug")
+			}
+		}
 	})
 }
 
@@ -986,6 +1152,8 @@ func TestPubSubHooks(t *testing.T) {
 
 		activate1 := builder.Subscribe().Channel("1").Build()
 		activate2 := builder.Psubscribe().Pattern("2").Build()
+		deactivate1 := builder.Unsubscribe().Channel("1").Build()
+		deactivate2 := builder.Punsubscribe().Pattern("2").Build()
 		go func() {
 			mock.Expect(activate1.Commands()...).Expect(activate2.Commands()...).Reply(
 				RedisMessage{typ: '>', values: []RedisMessage{
@@ -1009,6 +1177,8 @@ func TestPubSubHooks(t *testing.T) {
 					{typ: '+', string: "22"},
 					{typ: '+', string: "222"},
 				}},
+			)
+			mock.Expect(deactivate1.Commands()...).Expect(deactivate2.Commands()...).Reply(
 				RedisMessage{typ: '>', values: []RedisMessage{
 					{typ: '+', string: "unsubscribe"},
 					{typ: '+', string: "1"},
@@ -1024,6 +1194,11 @@ func TestPubSubHooks(t *testing.T) {
 		}()
 
 		for _, r := range p.DoMulti(ctx, activate1, activate2) {
+			if err := r.Error(); err != nil {
+				t.Fatalf("unexpected err %v", err)
+			}
+		}
+		for _, r := range p.DoMulti(ctx, deactivate1, deactivate2) {
 			if err := r.Error(); err != nil {
 				t.Fatalf("unexpected err %v", err)
 			}
@@ -1064,6 +1239,8 @@ func TestPubSubHooks(t *testing.T) {
 
 		activate1 := builder.Subscribe().Channel("1").Build()
 		activate2 := builder.Psubscribe().Pattern("2").Build()
+		deactivate1 := builder.Unsubscribe().Channel("1").Build()
+		deactivate2 := builder.Punsubscribe().Pattern("2").Build()
 		go func() {
 			mock.Expect(activate1.Commands()...).Expect(activate2.Commands()...).Reply(
 				RedisMessage{typ: '>', values: []RedisMessage{
@@ -1087,6 +1264,8 @@ func TestPubSubHooks(t *testing.T) {
 					{typ: '+', string: "22"},
 					{typ: '+', string: "222"},
 				}},
+			)
+			mock.Expect(deactivate1.Commands()...).Expect(deactivate2.Commands()...).Reply(
 				RedisMessage{typ: '>', values: []RedisMessage{
 					{typ: '+', string: "unsubscribe"},
 					{typ: '+', string: "1"},
@@ -1102,6 +1281,11 @@ func TestPubSubHooks(t *testing.T) {
 		}()
 
 		for _, r := range p.DoMulti(ctx, activate1, activate2) {
+			if err := r.Error(); err != nil {
+				t.Fatalf("unexpected err %v", err)
+			}
+		}
+		for _, r := range p.DoMulti(ctx, deactivate1, deactivate2) {
 			if err := r.Error(); err != nil {
 				t.Fatalf("unexpected err %v", err)
 			}
@@ -1501,7 +1685,17 @@ func TestPipe_CleanSubscriptions_6(t *testing.T) {
 	go func() {
 		p.CleanSubscriptions()
 	}()
-	mock.Expect("UNSUBSCRIBE").Expect("PUNSUBSCRIBE")
+	mock.Expect("UNSUBSCRIBE").Expect("PUNSUBSCRIBE").Reply(
+		RedisMessage{typ: '>', values: []RedisMessage{
+			{typ: '+', string: "unsubscribe"},
+			{typ: '_'},
+			{typ: ':', integer: 1},
+		}},
+		RedisMessage{typ: '>', values: []RedisMessage{
+			{typ: '+', string: "punsubscribe"},
+			{typ: '_'},
+			{typ: ':', integer: 2},
+		}})
 }
 
 func TestPipe_CleanSubscriptions_7(t *testing.T) {
@@ -1512,7 +1706,22 @@ func TestPipe_CleanSubscriptions_7(t *testing.T) {
 	go func() {
 		p.CleanSubscriptions()
 	}()
-	mock.Expect("UNSUBSCRIBE").Expect("PUNSUBSCRIBE").Expect("SUNSUBSCRIBE")
+	mock.Expect("UNSUBSCRIBE").Expect("PUNSUBSCRIBE").Expect("SUNSUBSCRIBE").Reply(
+		RedisMessage{typ: '>', values: []RedisMessage{
+			{typ: '+', string: "unsubscribe"},
+			{typ: '_'},
+			{typ: ':', integer: 1},
+		}},
+		RedisMessage{typ: '>', values: []RedisMessage{
+			{typ: '+', string: "punsubscribe"},
+			{typ: '_'},
+			{typ: ':', integer: 2},
+		}},
+		RedisMessage{typ: '>', values: []RedisMessage{
+			{typ: '+', string: "sunsubscribe"},
+			{typ: '_'},
+			{typ: ':', integer: 2},
+		}})
 }
 
 func TestPingOnConnError(t *testing.T) {
