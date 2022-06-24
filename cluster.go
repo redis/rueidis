@@ -319,6 +319,11 @@ retry:
 		goto ret
 	}
 	if err = cc.Receive(ctx, subscribe, fn); c.shouldRefreshRetry(err, ctx) {
+		if err, ok := err.(*RedisError); ok {
+			if _, ok := err.IsMoved(); !ok && !err.IsTryAgain() {
+				goto ret
+			}
+		}
 		goto retry
 	}
 ret:
@@ -468,7 +473,9 @@ func (c *dedicatedClusterClient) Receive(ctx context.Context, subscribe cmds.Com
 retry:
 	if w, err = c.acquire(subscribe.Slot()); err == nil {
 		if err = w.Receive(ctx, subscribe, fn); c.client.shouldRefreshRetry(err, ctx) && w.Error() == nil {
-			goto retry
+			if _, ok := err.(*RedisError); !ok {
+				goto retry
+			}
 		}
 	}
 	cmds.Put(subscribe.CommandSlice())
