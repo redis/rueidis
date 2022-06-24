@@ -1073,7 +1073,7 @@ func TestPubSub(t *testing.T) {
 			"psubscribe",
 			"punsubscribe",
 			"ssubscribe",
-			"sunsubscribe",
+			// no unexpected sunsubscribe, because redis will send sunsubscribe proactively when slot changes
 		} {
 			if !shouldPanic(push) {
 				t.Fatalf("should panic on protocolbug")

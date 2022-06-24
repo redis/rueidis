@@ -292,6 +292,13 @@ func (p *pipe) _backgroundRead() (err error) {
 			ff = 0
 			ones[0], multi, ch, cond = p.queue.NextResultCh() // ch should not be nil, otherwise it must be a protocol bug
 			if ch == nil {
+				cond.L.Unlock()
+				if pr && msg.values[0].string == "sunsubscribe" {
+					pr = false
+					// Redis will send sunsubscribe notification proactively in the event of slot migration.
+					// We should ignore them and go fetch next message.
+					continue
+				}
 				panic(protocolbug)
 			}
 			if multi == nil {
@@ -299,6 +306,12 @@ func (p *pipe) _backgroundRead() (err error) {
 			}
 		}
 		if pr {
+			pr = false
+			if msg.values[0].string == "sunsubscribe" && (!multi[ff].NoReply() || multi[ff].Commands()[0] != "SUNSUBSCRIBE") {
+				// Redis will send sunsubscribe notification proactively in the event of slot migration.
+				// We should ignore them and go fetch next message.
+				continue
+			}
 			if !multi[ff].NoReply() {
 				panic(protocolbug)
 			}
@@ -315,7 +328,6 @@ func (p *pipe) _backgroundRead() (err error) {
 				skip = len(multi[ff].Commands()) - 2
 			}
 			msg = RedisMessage{} // override successful subscribe/unsubscribe response to empty
-			pr = false
 		}
 		ch <- newResult(msg, err)
 		if ff++; ff == len(multi) {
