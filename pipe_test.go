@@ -161,7 +161,7 @@ func ExpectOK(t *testing.T, result RedisResult) {
 }
 
 func TestNewPipe(t *testing.T) {
-	t.Run("Auth", func(t *testing.T) {
+	t.Run("Auth without Username", func(t *testing.T) {
 		n1, n2 := net.Pipe()
 		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2}
 		go func() {
@@ -177,6 +177,35 @@ func TestNewPipe(t *testing.T) {
 		}()
 		p, err := newPipe(n1, &ClientOption{
 			SelectDB:   1,
+			Password:   "pa",
+			ClientName: "cn",
+		})
+		if err != nil {
+			t.Fatalf("pipe setup failed: %v", err)
+		}
+		go func() { mock.Expect("QUIT").ReplyString("OK") }()
+		p.Close()
+		mock.Close()
+		n1.Close()
+		n2.Close()
+	})
+	t.Run("Auth with Username", func(t *testing.T) {
+		n1, n2 := net.Pipe()
+		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2}
+		go func() {
+			mock.Expect("HELLO", "3", "AUTH", "ua", "pa", "SETNAME", "cn").
+				Reply(RedisMessage{
+					typ:    '%',
+					values: []RedisMessage{{typ: '+', string: "key"}, {typ: '+', string: "value"}},
+				})
+			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
+				ReplyString("OK")
+			mock.Expect("SELECT", "1").
+				ReplyString("OK")
+		}()
+		p, err := newPipe(n1, &ClientOption{
+			SelectDB:   1,
+			Username:   "ua",
 			Password:   "pa",
 			ClientName: "cn",
 		})
