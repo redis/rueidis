@@ -13,6 +13,33 @@ import (
 	"github.com/rueian/rueidis/internal/cmds"
 )
 
+func TestNewLuaScriptOnePass(t *testing.T) {
+	body := strconv.Itoa(rand.Int())
+	sum := sha1.Sum([]byte(body))
+	sha := hex.EncodeToString(sum[:])
+
+	k := []string{"1", "2"}
+	a := []string{"3", "4"}
+
+	c := &client{
+		BFn: func() cmds.Builder {
+			return cmds.NewBuilder(cmds.NoSlot)
+		},
+		DoFn: func(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
+			if reflect.DeepEqual(cmd.Commands(), []string{"EVALSHA", sha, "2", "1", "2", "3", "4"}) {
+				return newResult(RedisMessage{typ: '+', string: "OK"}, nil)
+			}
+			return newResult(RedisMessage{typ: '+', string: "unexpected"}, nil)
+		},
+	}
+
+	script := NewLuaScript(body)
+
+	if v, err := script.Exec(context.Background(), c, k, a).ToString(); err != nil || v != "OK" {
+		t.Fatalf("ret mistmatch")
+	}
+}
+
 func TestNewLuaScript(t *testing.T) {
 	body := strconv.Itoa(rand.Int())
 	sum := sha1.Sum([]byte(body))
