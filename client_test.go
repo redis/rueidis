@@ -26,6 +26,7 @@ type mockConn struct {
 	IsFn       func(addr string) bool
 
 	DoOverride      map[string]func(cmd cmds.Completed) RedisResult
+	DoCacheOverride map[string]func(cmd cmds.Cacheable, ttl time.Duration) RedisResult
 	ReceiveOverride map[string]func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error
 }
 
@@ -66,6 +67,9 @@ func (m *mockConn) Do(ctx context.Context, cmd cmds.Completed) RedisResult {
 }
 
 func (m *mockConn) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) RedisResult {
+	if fn := m.DoCacheOverride[strings.Join(cmd.Commands(), " ")]; fn != nil {
+		return fn(cmd, ttl)
+	}
 	if m.DoCacheFn != nil {
 		return m.DoCacheFn(cmd, ttl)
 	}
@@ -213,6 +217,17 @@ func TestSingleClient(t *testing.T) {
 		}
 	})
 
+	t.Run("Delegate Receive Redis Err", func(t *testing.T) {
+		c := client.B().Subscribe().Channel("ch").Build()
+		e := &RedisError{}
+		m.ReceiveFn = func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
+			return e
+		}
+		if err := client.Receive(context.Background(), c, func(message PubSubMessage) {}); err != e {
+			t.Fatalf("unexpected response %v", err)
+		}
+	})
+
 	t.Run("Delegate Close", func(t *testing.T) {
 		called := false
 		m.CloseFn = func() { called = true }
@@ -227,6 +242,23 @@ func TestSingleClient(t *testing.T) {
 		if err := client.Dedicated(func(client DedicatedClient) error {
 			return v
 		}); err != v {
+			t.Fatalf("unexpected err %v", err)
+		}
+	})
+
+	t.Run("Dedicated Delegate Receive Redis Err", func(t *testing.T) {
+		e := &RedisError{}
+		w := &mockWire{
+			ReceiveFn: func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
+				return e
+			},
+		}
+		m.AcquireFn = func() wire {
+			return w
+		}
+		if err := client.Dedicated(func(c DedicatedClient) error {
+			return c.Receive(context.Background(), c.B().Subscribe().Channel("a").Build(), func(msg PubSubMessage) {})
+		}); err != e {
 			t.Fatalf("unexpected err %v", err)
 		}
 	})

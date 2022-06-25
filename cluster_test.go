@@ -169,6 +169,19 @@ func TestClusterClient(t *testing.T) {
 			}
 			return RedisResult{}
 		},
+		DoOverride: map[string]func(cmd cmds.Completed) RedisResult{
+			"GET Do": func(cmd cmds.Completed) RedisResult {
+				return newResult(RedisMessage{typ: '+', string: "Do"}, nil)
+			},
+			"INFO": func(cmd cmds.Completed) RedisResult {
+				return newResult(RedisMessage{typ: '+', string: "Info"}, nil)
+			},
+		},
+		DoCacheOverride: map[string]func(cmd cmds.Cacheable, ttl time.Duration) RedisResult{
+			"GET DoCache": func(cmd cmds.Cacheable, ttl time.Duration) RedisResult {
+				return newResult(RedisMessage{typ: '+', string: "DoCache"}, nil)
+			},
+		},
 	}
 
 	client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
@@ -180,25 +193,13 @@ func TestClusterClient(t *testing.T) {
 
 	t.Run("Delegate Do with no slot", func(t *testing.T) {
 		c := client.B().Info().Build()
-		m.DoFn = func(cmd cmds.Completed) RedisResult {
-			if !reflect.DeepEqual(cmd.Commands(), c.Commands()) {
-				t.Fatalf("unexpected command %v", cmd)
-			}
-			return newResult(RedisMessage{typ: '+', string: "Do"}, nil)
-		}
-		if v, err := client.Do(context.Background(), c).ToString(); err != nil || v != "Do" {
+		if v, err := client.Do(context.Background(), c).ToString(); err != nil || v != "Info" {
 			t.Fatalf("unexpected response %v %v", v, err)
 		}
 	})
 
 	t.Run("Delegate Do", func(t *testing.T) {
 		c := client.B().Get().Key("Do").Build()
-		m.DoFn = func(cmd cmds.Completed) RedisResult {
-			if !reflect.DeepEqual(cmd.Commands(), c.Commands()) {
-				t.Fatalf("unexpected command %v", cmd)
-			}
-			return newResult(RedisMessage{typ: '+', string: "Do"}, nil)
-		}
 		if v, err := client.Do(context.Background(), c).ToString(); err != nil || v != "Do" {
 			t.Fatalf("unexpected response %v %v", v, err)
 		}
@@ -206,12 +207,6 @@ func TestClusterClient(t *testing.T) {
 
 	t.Run("Delegate DoCache", func(t *testing.T) {
 		c := client.B().Get().Key("DoCache").Cache()
-		m.DoCacheFn = func(cmd cmds.Cacheable, ttl time.Duration) RedisResult {
-			if !reflect.DeepEqual(cmd.Commands(), c.Commands()) || ttl != 100 {
-				t.Fatalf("unexpected command %v, %v", cmd, ttl)
-			}
-			return newResult(RedisMessage{typ: '+', string: "DoCache"}, nil)
-		}
 		if v, err := client.DoCache(context.Background(), c, 100).ToString(); err != nil || v != "DoCache" {
 			t.Fatalf("unexpected response %v %v", v, err)
 		}
@@ -227,6 +222,17 @@ func TestClusterClient(t *testing.T) {
 			return nil
 		}
 		if err := client.Receive(context.Background(), c, hdl); err != nil {
+			t.Fatalf("unexpected response %v", err)
+		}
+	})
+
+	t.Run("Delegate Receive Redis Err", func(t *testing.T) {
+		c := client.B().Subscribe().Channel("ch").Build()
+		e := &RedisError{}
+		m.ReceiveFn = func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
+			return e
+		}
+		if err := client.Receive(context.Background(), c, func(message PubSubMessage) {}); err != e {
 			t.Fatalf("unexpected response %v", err)
 		}
 	})
@@ -290,6 +296,23 @@ func TestClusterClient(t *testing.T) {
 		})
 		if err == nil || err.Error() != panicMsgCxSlot {
 			t.Errorf("Multi should panic if cross slots is used")
+		}
+	})
+
+	t.Run("Dedicated Delegate Receive Redis Err", func(t *testing.T) {
+		e := &RedisError{}
+		w := &mockWire{
+			ReceiveFn: func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
+				return e
+			},
+		}
+		m.AcquireFn = func() wire {
+			return w
+		}
+		if err := client.Dedicated(func(c DedicatedClient) error {
+			return c.Receive(context.Background(), c.B().Subscribe().Channel("a").Build(), func(msg PubSubMessage) {})
+		}); err != e {
+			t.Fatalf("unexpected err %v", err)
 		}
 	})
 
