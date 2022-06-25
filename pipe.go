@@ -87,7 +87,15 @@ func newPipe(conn net.Conn, option *ClientOption) (p *pipe, err error) {
 		init = append(init, []string{"SELECT", strconv.Itoa(option.SelectDB)})
 	}
 
-	for i, r := range p.DoMulti(context.Background(), cmds.NewMultiCompleted(init)...) {
+	timeout := option.Dialer.Timeout
+	if timeout <= 0 {
+		timeout = DefaultDialTimeout
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	for i, r := range p.DoMulti(ctx, cmds.NewMultiCompleted(init)...) {
 		if i == 0 {
 			p.info, err = r.ToMap()
 		} else {
