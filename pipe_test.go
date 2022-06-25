@@ -988,49 +988,52 @@ func TestPubSub(t *testing.T) {
 		ctx := context.Background()
 		p, mock, cancel, _ := setup(t, ClientOption{})
 
+		p.psubs.Confirm("1")
+		p.ssubs.Confirm("2")
+		p.ssubs.Confirm("3")
+
 		commands := []cmds.Completed{
 			builder.Unsubscribe().Build(),
 			builder.Punsubscribe().Build(),
 			builder.Sunsubscribe().Build(),
 		}
 
-		p.psubs.Confirm("1")
-		p.ssubs.Confirm("2")
-		p.ssubs.Confirm("3")
-
-		replies := [][]RedisMessage{
+		replies := [][]RedisMessage{{
 			{
-				{
-					typ: '>', values: []RedisMessage{
-						{typ: '+', string: "unsubscribe"},
-						{typ: '_'},
-						{typ: ':', integer: 0},
-					},
+				typ: '>',
+				values: []RedisMessage{
+					{typ: '+', string: "unsubscribe"},
+					{typ: '_'},
+					{typ: ':', integer: 0},
 				},
-			}, {
-				{
-					typ: '>', values: []RedisMessage{
-						{typ: '+', string: "punsubscribe"},
-						{typ: '+', string: "1"},
-						{typ: ':', integer: 0},
-					},
+			},
+		}, {
+			{
+				typ: '>',
+				values: []RedisMessage{
+					{typ: '+', string: "punsubscribe"},
+					{typ: '+', string: "1"},
+					{typ: ':', integer: 0},
 				},
-			}, {
-				{
-					typ: '>', values: []RedisMessage{
-						{typ: '+', string: "sunsubscribe"},
-						{typ: '+', string: "2"},
-						{typ: ':', integer: 0},
-					},
+			},
+		}, {
+			{
+				typ: '>',
+				values: []RedisMessage{
+					{typ: '+', string: "sunsubscribe"},
+					{typ: '+', string: "2"},
+					{typ: ':', integer: 0},
 				},
-				{
-					typ: '>', values: []RedisMessage{
-						{typ: '+', string: "sunsubscribe"},
-						{typ: '+', string: "3"},
-						{typ: ':', integer: 0},
-					},
+			},
+			{
+				typ: '>',
+				values: []RedisMessage{
+					{typ: '+', string: "sunsubscribe"},
+					{typ: '+', string: "3"},
+					{typ: ':', integer: 0},
 				},
-			}}
+			},
+		}}
 
 		for i, cmd1 := range commands {
 			cmd2 := builder.Get().Key(strconv.Itoa(i)).Build()
@@ -1038,6 +1041,103 @@ func TestPubSub(t *testing.T) {
 				mock.Expect(cmd1.Commands()...).Reply(replies[i]...).Expect(cmd2.Commands()...).ReplyString(strconv.Itoa(i))
 			}()
 
+			if err := p.Do(ctx, cmd1).Error(); err != nil {
+				t.Fatalf("unexpected err %v", err)
+			}
+			if v, err := p.Do(ctx, cmd2).ToString(); err != nil || v != strconv.Itoa(i) {
+				t.Fatalf("unexpected val %v %v", v, err)
+			}
+		}
+		cancel()
+	})
+
+	t.Run("PubSub Proactive SSUNSCRIBE", func(t *testing.T) {
+		ctx := context.Background()
+		p, mock, cancel, _ := setup(t, ClientOption{})
+
+		p.ssubs.Confirm("0")
+		p.ssubs.Confirm("1")
+		p.ssubs.Confirm("2")
+
+		commands := []cmds.Completed{
+			builder.Sunsubscribe().Build(),
+			builder.Ssubscribe().Channel("3").Build(),
+		}
+
+		replies := [][]RedisMessage{
+			{
+				{ // proactive sunsubscribe before user sunsubscribe
+					typ: '>',
+					values: []RedisMessage{
+						{typ: '+', string: "sunsubscribe"},
+						{typ: '+', string: "1"},
+						{typ: ':', integer: 0},
+					},
+				},
+				{ // proactive sunsubscribe before user sunsubscribe
+					typ: '>',
+					values: []RedisMessage{
+						{typ: '+', string: "sunsubscribe"},
+						{typ: '+', string: "2"},
+						{typ: ':', integer: 0},
+					},
+				},
+				{ // user sunsubscribe
+					typ: '>',
+					values: []RedisMessage{
+						{typ: '+', string: "sunsubscribe"},
+						{typ: '_'},
+						{typ: ':', integer: 0},
+					},
+				},
+				{ // proactive sunsubscribe after user sunsubscribe
+					typ: '>',
+					values: []RedisMessage{
+						{typ: '+', string: "sunsubscribe"},
+						{typ: '_'},
+						{typ: ':', integer: 0},
+					},
+				},
+			},
+			{
+				{ // user ssubscribe
+					typ: '>',
+					values: []RedisMessage{
+						{typ: '+', string: "ssubscribe"},
+						{typ: '+', string: "3"},
+						{typ: ':', integer: 0},
+					},
+				},
+				{ // proactive sunsubscribe after user ssubscribe
+					typ: '>',
+					values: []RedisMessage{
+						{typ: '+', string: "sunsubscribe"},
+						{typ: '+', string: "3"},
+						{typ: ':', integer: 0},
+					},
+				},
+			},
+		}
+
+		p.background()
+
+		// proactive sunsubscribe before other commands
+		mock.Expect().Reply(RedisMessage{ // proactive sunsubscribe before user sunsubscribe
+			typ: '>',
+			values: []RedisMessage{
+				{typ: '+', string: "sunsubscribe"},
+				{typ: '+', string: "0"},
+				{typ: ':', integer: 0},
+			},
+		})
+
+		time.Sleep(time.Millisecond * 100)
+
+		for i, cmd1 := range commands {
+			cmd2 := builder.Get().Key(strconv.Itoa(i)).Build()
+			go func() {
+				mock.Expect(cmd1.Commands()...).Reply(replies[i]...).Expect(cmd2.Commands()...).ReplyString(strconv.Itoa(i))
+			}()
 			if err := p.Do(ctx, cmd1).Error(); err != nil {
 				t.Fatalf("unexpected err %v", err)
 			}
