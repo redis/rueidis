@@ -1,6 +1,9 @@
 package cmds
 
-import "sync"
+import (
+	"strings"
+	"sync"
+)
 
 var pool = &sync.Pool{New: newCommandSlice}
 
@@ -64,6 +67,12 @@ func (c Arbitrary) Args(args ...string) Arbitrary {
 
 // Build is used to complete constructing a command
 func (c Arbitrary) Build() Completed {
+	if len(c.cs.s) == 0 || len(c.cs.s[0]) == 0 {
+		panic(arbitraryNoCommand)
+	}
+	if strings.HasSuffix(strings.ToUpper(c.cs.s[0]), "SUBSCRIBE") {
+		panic(arbitrarySubscribe)
+	}
 	return Completed(c)
 }
 
@@ -71,12 +80,17 @@ func (c Arbitrary) Build() Completed {
 // Blocking command will occupy a connection from a separated connection pool.
 func (c Arbitrary) Blocking() Completed {
 	c.cf = blockTag
-	return Completed(c)
+	return c.Build()
 }
 
 // ReadOnly is used to complete constructing a command and mark it as readonly command.
 // ReadOnly will be retried under network issues.
 func (c Arbitrary) ReadOnly() Completed {
 	c.cf = readonly
-	return Completed(c)
+	return c.Build()
 }
+
+var (
+	arbitraryNoCommand = "Arbitrary should be provided with redis command"
+	arbitrarySubscribe = "Arbitrary does not support SUBSCRIBE/UNSUBSCRIBE"
+)

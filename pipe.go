@@ -316,7 +316,7 @@ func (p *pipe) _backgroundRead() (err error) {
 				panic(protocolbug)
 			}
 			if len(multi[ff].Commands()) == 1 { // wildcard unsubscribe
-				switch strings.ToUpper(multi[ff].Commands()[0]) {
+				switch multi[ff].Commands()[0] {
 				case "UNSUBSCRIBE":
 					skip = p.nsubs.Confirmed()
 				case "PUNSUBSCRIBE":
