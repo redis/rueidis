@@ -260,18 +260,15 @@ retry:
 	}
 	resp = cc.Do(ctx, cmd)
 process:
-	if c.shouldRefreshRetry(resp.NonRedisError(), ctx) && cmd.IsReadOnly() {
-		goto retry
-	}
-	if err := resp.RedisError(); err != nil {
-		if addr, ok := err.IsMoved(); ok {
-			go c.refresh()
-			resp = c.redirectOrNew(addr).Do(ctx, cmd)
-			goto process
-		} else if addr, ok = err.IsAsk(); ok {
-			resp = c.redirectOrNew(addr).DoMulti(ctx, cmds.AskingCmd, cmd)[1]
-			goto process
-		} else if err.IsTryAgain() {
+	switch addr, mode := c.shouldRefreshRetry(resp.Error(), ctx); mode {
+	case RedirectMove:
+		resp = c.redirectOrNew(addr).Do(ctx, cmd)
+		goto process
+	case RedirectAsk:
+		resp = c.redirectOrNew(addr).DoMulti(ctx, cmds.AskingCmd, cmd)[1]
+		goto process
+	case RedirectRetry:
+		if cmd.IsReadOnly() {
 			runtime.Gosched()
 			goto retry
 		}
@@ -290,22 +287,17 @@ retry:
 	}
 	resp = cc.DoCache(ctx, cmd, ttl)
 process:
-	if c.shouldRefreshRetry(resp.NonRedisError(), ctx) {
+	switch addr, mode := c.shouldRefreshRetry(resp.Error(), ctx); mode {
+	case RedirectMove:
+		resp = c.redirectOrNew(addr).DoCache(ctx, cmd, ttl)
+		goto process
+	case RedirectAsk:
+		// TODO ASKING OPT-IN Caching
+		resp = c.redirectOrNew(addr).DoMulti(ctx, cmds.AskingCmd, cmds.Completed(cmd))[1]
+		goto process
+	case RedirectRetry:
+		runtime.Gosched()
 		goto retry
-	}
-	if err := resp.RedisError(); err != nil {
-		if addr, ok := err.IsMoved(); ok {
-			go c.refresh()
-			resp = c.redirectOrNew(addr).DoCache(ctx, cmd, ttl)
-			goto process
-		} else if addr, ok = err.IsAsk(); ok {
-			// TODO ASKING OPT-IN Caching
-			resp = c.redirectOrNew(addr).DoMulti(ctx, cmds.AskingCmd, cmds.Completed(cmd))[1]
-			goto process
-		} else if err.IsTryAgain() {
-			runtime.Gosched()
-			goto retry
-		}
 	}
 ret:
 	cmds.Put(cmd.CommandSlice())
@@ -318,12 +310,9 @@ retry:
 	if err != nil {
 		goto ret
 	}
-	if err = cc.Receive(ctx, subscribe, fn); c.shouldRefreshRetry(err, ctx) {
-		if err, ok := err.(*RedisError); ok {
-			if _, ok := err.IsMoved(); !ok && !err.IsTryAgain() {
-				goto ret
-			}
-		}
+	err = cc.Receive(ctx, subscribe, fn)
+	if _, mode := c.shouldRefreshRetry(err, ctx); mode != RedirectNone {
+		runtime.Gosched()
 		goto retry
 	}
 ret:
@@ -352,11 +341,27 @@ func (c *clusterClient) Close() {
 	c.mu.RUnlock()
 }
 
-func (c *clusterClient) shouldRefreshRetry(err error, ctx context.Context) (should bool) {
-	if should = err != nil && atomic.LoadUint32(&c.stop) == 0; should {
-		go c.refresh()
+func (c *clusterClient) shouldRefreshRetry(err error, ctx context.Context) (addr string, mode RedirectMode) {
+	if err != nil && atomic.LoadUint32(&c.stop) == 0 {
+		if err, ok := err.(*RedisError); ok {
+			if addr, ok = err.IsMoved(); ok {
+				mode = RedirectMove
+			} else if addr, ok = err.IsAsk(); ok {
+				mode = RedirectAsk
+			} else if err.IsClusterDown() || err.IsTryAgain() {
+				mode = RedirectRetry
+			}
+		} else {
+			mode = RedirectRetry
+		}
+		if mode != RedirectNone {
+			go c.refresh()
+		}
+		if mode == RedirectRetry && ctx.Err() != nil {
+			mode = RedirectNone
+		}
 	}
-	return should && ctx.Err() == nil
+	return
 }
 
 type dedicatedClusterClient struct {
@@ -397,12 +402,12 @@ func (c *dedicatedClusterClient) acquire(slot uint16) (wire wire, err error) {
 	if p := c.pshks; p != nil {
 		c.pshks = nil
 		ch := c.wire.SetPubSubHooks(p.hooks)
-		go func() {
+		go func(ch <-chan error) {
 			for e := range ch {
 				p.close <- e
 			}
 			close(p.close)
-		}()
+		}(ch)
 	}
 	return c.wire, nil
 }
@@ -432,8 +437,12 @@ retry:
 		resp = newErrResult(err)
 	} else {
 		resp = w.Do(ctx, cmd)
-		if c.client.shouldRefreshRetry(resp.NonRedisError(), ctx) && cmd.IsReadOnly() && w.Error() == nil {
-			goto retry
+		switch _, mode := c.client.shouldRefreshRetry(resp.Error(), ctx); mode {
+		case RedirectRetry:
+			if cmd.IsReadOnly() && w.Error() == nil {
+				runtime.Gosched()
+				goto retry
+			}
 		}
 	}
 	cmds.Put(cmd.CommandSlice())
@@ -451,9 +460,14 @@ func (c *dedicatedClusterClient) DoMulti(ctx context.Context, multi ...cmds.Comp
 retry:
 	if w, err := c.acquire(multi[0].Slot()); err == nil {
 		resp = w.DoMulti(ctx, multi...)
-		for _, resp := range resp {
-			if c.client.shouldRefreshRetry(resp.NonRedisError(), ctx) && readonly && w.Error() == nil {
+		for _, r := range resp {
+			_, mode := c.client.shouldRefreshRetry(r.Error(), ctx)
+			if mode == RedirectRetry && readonly && w.Error() == nil {
+				runtime.Gosched()
 				goto retry
+			}
+			if mode != RedirectNone {
+				break
 			}
 		}
 	} else {
@@ -472,10 +486,10 @@ func (c *dedicatedClusterClient) Receive(ctx context.Context, subscribe cmds.Com
 	var w wire
 retry:
 	if w, err = c.acquire(subscribe.Slot()); err == nil {
-		if err = w.Receive(ctx, subscribe, fn); c.client.shouldRefreshRetry(err, ctx) && w.Error() == nil {
-			if _, ok := err.(*RedisError); !ok {
-				goto retry
-			}
+		err = w.Receive(ctx, subscribe, fn)
+		if _, mode := c.client.shouldRefreshRetry(err, ctx); mode == RedirectRetry && w.Error() == nil {
+			runtime.Gosched()
+			goto retry
 		}
 	}
 	cmds.Put(subscribe.CommandSlice())
@@ -514,7 +528,14 @@ func (c *dedicatedClusterClient) Close() {
 	c.release()
 }
 
+type RedirectMode int
+
 const (
+	RedirectNone RedirectMode = iota
+	RedirectMove
+	RedirectAsk
+	RedirectRetry
+
 	panicMsgCxSlot = "cross slot command in Dedicated is prohibited"
 	panicMsgNoSlot = "the first command should contain the slot key"
 )
