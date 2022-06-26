@@ -126,9 +126,10 @@ type Client interface {
 
 	// Receive accepts SUBSCRIBE, SSUBSCRIBE, PSUBSCRIBE command and a message handler.
 	// Receive will block and then return value only when the following cases:
-	//   1. nil, when received any unsubscribe/punsubscribe message related to the provided `subscribe` command.
-	//   2. ErrClosing, when the client is closed manually.
-	//   3. ctx.Err(), when the deadline of `ctx` is exceeded.
+	//   1. return nil when received any unsubscribe/punsubscribe message related to the provided `subscribe` command.
+	//   2. return ErrClosing when the client is closed manually.
+	//   3. return ctx.Err() when the `ctx` is done.
+	//   4. return non-nil err when the provided `subscribe` command failed.
 	Receive(ctx context.Context, subscribe cmds.Completed, fn func(msg PubSubMessage)) error
 
 	// Dedicated acquire a connection from the blocking connection pool, no one else can use the connection

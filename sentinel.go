@@ -75,7 +75,8 @@ retry:
 
 func (c *sentinelClient) Receive(ctx context.Context, subscribe cmds.Completed, fn func(msg PubSubMessage)) (err error) {
 retry:
-	if err = c.mConn.Load().(conn).Receive(ctx, subscribe, fn); c.isRetryable(err, ctx) {
+	err = c.mConn.Load().(conn).Receive(ctx, subscribe, fn)
+	if _, ok := err.(*RedisError); !ok && c.isRetryable(err, ctx) {
 		goto retry
 	}
 	cmds.Put(subscribe.CommandSlice())

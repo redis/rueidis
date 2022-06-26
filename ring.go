@@ -13,7 +13,6 @@ type queue interface {
 	NextWriteCmd() (cmds.Completed, []cmds.Completed, chan RedisResult)
 	WaitForWrite() (cmds.Completed, []cmds.Completed, chan RedisResult)
 	NextResultCh() (cmds.Completed, []cmds.Completed, chan RedisResult, *sync.Cond)
-	CleanNoReply()
 }
 
 var _ queue = (*ring)(nil)
@@ -133,25 +132,4 @@ func (r *ring) NextResultCh() (one cmds.Completed, multi []cmds.Completed, ch ch
 		r.read2--
 	}
 	return
-}
-
-// CleanNoReply should be only called by one dedicated thread
-func (r *ring) CleanNoReply() {
-	p := (r.read2 + 1) & r.mask
-	n := &r.store[p]
-	n.c1.L.Lock()
-	if n.mark == 2 {
-		mNoReply := len(n.multi) != 0
-		for _, one := range n.multi {
-			mNoReply = mNoReply && one.NoReply()
-		}
-		if mNoReply || n.one.NoReply() {
-			n.mark = 0
-			r.read2++
-			n.c1.L.Unlock()
-			n.c1.Signal()
-			return
-		}
-	}
-	n.c1.L.Unlock()
 }

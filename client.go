@@ -55,7 +55,7 @@ retry:
 func (c *singleClient) Receive(ctx context.Context, subscribe cmds.Completed, fn func(msg PubSubMessage)) (err error) {
 retry:
 	err = c.conn.Receive(ctx, subscribe, fn)
-	if c.isRetryable(err, ctx) {
+	if _, ok := err.(*RedisError); !ok && c.isRetryable(err, ctx) {
 		goto retry
 	}
 	cmds.Put(subscribe.CommandSlice())
@@ -121,7 +121,7 @@ retry:
 func (c *dedicatedSingleClient) Receive(ctx context.Context, subscribe cmds.Completed, fn func(msg PubSubMessage)) (err error) {
 retry:
 	err = c.wire.Receive(ctx, subscribe, fn)
-	if isRetryable(err, c.wire, ctx) {
+	if _, ok := err.(*RedisError); !ok && isRetryable(err, c.wire, ctx) {
 		goto retry
 	}
 	cmds.Put(subscribe.CommandSlice())

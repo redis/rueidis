@@ -214,9 +214,10 @@ err = c.Receive(context.Background(), c.B().Subscribe().Channel("ch1", "ch2").Bu
 The provided handler will be called with received message.
 
 It is important to note that `Client.Receive()` will keep blocking and return only when the following cases:
-1. return `nil`, when received any unsubscribe/punsubscribe message related to the provided `subscribe` command.
-2. return `rueidis.ErrClosing`, when the client is closed manually.
-3. return `ctx.Err()`, when the `ctx` is done.
+1. return `nil` when received any unsubscribe/punsubscribe message related to the provided `subscribe` command.
+2. return `rueidis.ErrClosing` when the client is closed manually.
+3. return `ctx.Err()` when the `ctx` is done.
+4. return non-nil `err` when the provided `subscribe` command failed.
 
 While the `Client.Receive()` call is blocking, the `Client` is still able to accept other concurrent requests,
 and they are sharing the same tcp connection. If your message handler may take some time to complete, it is recommended

@@ -508,6 +508,17 @@ func TestSentinelClientDelegate(t *testing.T) {
 		}
 	})
 
+	t.Run("Delegate Receive Redis Err", func(t *testing.T) {
+		c := client.B().Subscribe().Channel("ch").Build()
+		e := &RedisError{}
+		m.ReceiveFn = func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
+			return e
+		}
+		if err := client.Receive(context.Background(), c, func(message PubSubMessage) {}); err != e {
+			t.Fatalf("unexpected response %v", err)
+		}
+	})
+
 	t.Run("Delegate Close", func(t *testing.T) {
 		called := false
 		m.CloseFn = func() { called = true }

@@ -35,14 +35,19 @@ func (h *PubSubHooks) isZero() bool {
 }
 
 func newSubs() *subs {
-	return &subs{chs: make(map[string]map[int]*sub), sub: make(map[int]*sub)}
+	return &subs{chs: make(map[string]chs), sub: make(map[int]*sub)}
 }
 
 type subs struct {
 	mu  sync.RWMutex
-	chs map[string]map[int]*sub
+	chs map[string]chs
 	sub map[int]*sub
 	cnt int
+}
+
+type chs struct {
+	sub map[int]*sub
+	cnf bool
 }
 
 type sub struct {
@@ -53,7 +58,7 @@ type sub struct {
 func (s *subs) Publish(channel string, msg PubSubMessage) {
 	s.mu.RLock()
 	if s.chs != nil {
-		for _, sb := range s.chs[channel] {
+		for _, sb := range s.chs[channel].sub {
 			sb.ch <- msg
 		}
 	}
@@ -69,10 +74,10 @@ func (s *subs) Subscribe(channels []string) (ch chan PubSubMessage, cancel func(
 		id := s.cnt
 		s.sub[id] = sb
 		for _, channel := range channels {
-			c := s.chs[channel]
+			c := s.chs[channel].sub
 			if c == nil {
 				c = make(map[int]*sub)
-				s.chs[channel] = c
+				s.chs[channel] = chs{sub: c, cnf: false}
 			}
 			c[id] = sb
 		}
@@ -95,11 +100,8 @@ func (s *subs) Subscribe(channels []string) (ch chan PubSubMessage, cancel func(
 func (s *subs) remove(id int) {
 	if sb := s.sub[id]; sb != nil {
 		for _, channel := range sb.cs {
-			if c := s.chs[channel]; c != nil {
+			if c := s.chs[channel].sub; c != nil {
 				delete(c, id)
-				if len(c) == 0 {
-					delete(s.chs, channel)
-				}
 			}
 		}
 		close(sb.ch)
@@ -107,12 +109,36 @@ func (s *subs) remove(id int) {
 	}
 }
 
+func (s *subs) Confirm(channel string) {
+	s.mu.Lock()
+	if s.chs != nil {
+		c := s.chs[channel]
+		c.cnf = true
+		s.chs[channel] = c
+	}
+	s.mu.Unlock()
+}
+
+func (s *subs) Confirmed() (count int) {
+	s.mu.RLock()
+	if s.chs != nil {
+		for _, c := range s.chs {
+			if c.cnf {
+				count++
+			}
+		}
+	}
+	s.mu.RUnlock()
+	return
+}
+
 func (s *subs) Unsubscribe(channel string) {
 	s.mu.Lock()
 	if s.chs != nil {
-		for id := range s.chs[channel] {
+		for id := range s.chs[channel].sub {
 			s.remove(id)
 		}
+		delete(s.chs, channel)
 	}
 	s.mu.Unlock()
 }

@@ -42,3 +42,23 @@ func TestArbitrary(t *testing.T) {
 
 	builder2.Arbitrary().Keys("k1", "k2")
 }
+
+func TestEmptyArbitrary(t *testing.T) {
+	builder := NewBuilder(NoSlot)
+	defer func() {
+		if e := recover(); e != arbitraryNoCommand {
+			t.Errorf("arbitrary not check empty")
+		}
+	}()
+	builder.Arbitrary().Build()
+}
+
+func TestEmptySubscribe(t *testing.T) {
+	builder := NewBuilder(NoSlot)
+	defer func() {
+		if e := recover(); e != arbitrarySubscribe {
+			t.Errorf("arbitrary not check subscribe command")
+		}
+	}()
+	builder.Arbitrary("SUBSCRIBE").Build()
+}

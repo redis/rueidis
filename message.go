@@ -56,6 +56,11 @@ func (r *RedisError) IsTryAgain() bool {
 	return strings.HasPrefix(r.string, "TRYAGAIN")
 }
 
+// IsClusterDown checks if it is a redis CLUSTERDOWN message and returns ask address.
+func (r *RedisError) IsClusterDown() bool {
+	return strings.HasPrefix(r.string, "CLUSTERDOWN")
+}
+
 // IsNoScript checks if it is a redis NOSCRIPT message.
 func (r *RedisError) IsNoScript() bool {
 	return strings.HasPrefix(r.string, "NOSCRIPT")
