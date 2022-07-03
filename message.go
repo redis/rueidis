@@ -289,6 +289,36 @@ func (m *RedisMessage) IsNil() bool {
 	return m.typ == '_'
 }
 
+// IsInt64 check if message is a redis int response
+func (m *RedisMessage) IsInt64() bool {
+	return m.typ == ':'
+}
+
+// IsFloat64 check if message is a redis double response
+func (m *RedisMessage) IsFloat64() bool {
+	return m.typ == ','
+}
+
+// IsString check if message is a redis string response
+func (m *RedisMessage) IsString() bool {
+	return m.typ == '$' || m.typ == '+'
+}
+
+// IsBool check if message is a redis bool response
+func (m *RedisMessage) IsBool() bool {
+	return m.typ == '#'
+}
+
+// IsArray check if message is a redis array response
+func (m *RedisMessage) IsArray() bool {
+	return m.typ == '*' || m.typ == '~'
+}
+
+// IsMap check if message is a redis array response
+func (m *RedisMessage) IsMap() bool {
+	return m.typ == '%'
+}
+
 // Error check if message is a redis error response, including nil response
 func (m *RedisMessage) Error() error {
 	if m.typ == '-' || m.typ == '_' || m.typ == '!' {
@@ -299,10 +329,10 @@ func (m *RedisMessage) Error() error {
 
 // ToString check if message is a redis string response, and return it
 func (m *RedisMessage) ToString() (val string, err error) {
-	if m.typ == '$' || m.typ == '+' {
+	if m.IsString() {
 		return m.string, nil
 	}
-	if m.typ == ':' || m.values != nil {
+	if m.IsInt64() || m.values != nil {
 		typ := m.typ
 		panic(fmt.Sprintf("redis message type %c is not a string", typ))
 	}
@@ -330,7 +360,7 @@ func (m *RedisMessage) DecodeJSON(v interface{}) (err error) {
 
 // AsInt64 check if message is a redis string response, and parse it as int64
 func (m *RedisMessage) AsInt64() (val int64, err error) {
-	if m.typ == ':' {
+	if m.IsInt64() {
 		return m.integer, nil
 	}
 	v, err := m.ToString()
@@ -363,7 +393,7 @@ func (m *RedisMessage) AsBool() (val bool, err error) {
 
 // AsFloat64 check if message is a redis string response, and parse it as float64
 func (m *RedisMessage) AsFloat64() (val float64, err error) {
-	if m.typ == ',' {
+	if m.IsFloat64() {
 		return strconv.ParseFloat(m.string, 64)
 	}
 	v, err := m.ToString()
@@ -375,7 +405,7 @@ func (m *RedisMessage) AsFloat64() (val float64, err error) {
 
 // ToInt64 check if message is a redis int response, and return it
 func (m *RedisMessage) ToInt64() (val int64, err error) {
-	if m.typ == ':' {
+	if m.IsInt64() {
 		return m.integer, nil
 	}
 	if err = m.Error(); err != nil {
@@ -387,7 +417,7 @@ func (m *RedisMessage) ToInt64() (val int64, err error) {
 
 // ToBool check if message is a redis bool response, and return it
 func (m *RedisMessage) ToBool() (val bool, err error) {
-	if m.typ == '#' {
+	if m.IsBool() {
 		return m.integer == 1, nil
 	}
 	if err = m.Error(); err != nil {
@@ -399,7 +429,7 @@ func (m *RedisMessage) ToBool() (val bool, err error) {
 
 // ToFloat64 check if message is a redis double response, and return it
 func (m *RedisMessage) ToFloat64() (val float64, err error) {
-	if m.typ == ',' {
+	if m.IsFloat64() {
 		return strconv.ParseFloat(m.string, 64)
 	}
 	if err = m.Error(); err != nil {
@@ -411,7 +441,7 @@ func (m *RedisMessage) ToFloat64() (val float64, err error) {
 
 // ToArray check if message is a redis array/set response, and return it
 func (m *RedisMessage) ToArray() ([]RedisMessage, error) {
-	if m.typ == '*' || m.typ == '~' {
+	if m.IsArray() {
 		return m.values, nil
 	}
 	if err := m.Error(); err != nil {
@@ -536,7 +566,7 @@ func (m *RedisMessage) AsStrMap() (map[string]string, error) {
 	if err := m.Error(); err != nil {
 		return nil, err
 	}
-	if m.typ == '%' || m.typ == '*' || m.typ == '~' {
+	if m.IsMap() || m.IsArray() {
 		r := make(map[string]string, len(m.values)/2)
 		for i := 0; i < len(m.values); i += 2 {
 			k := m.values[i]
@@ -555,7 +585,7 @@ func (m *RedisMessage) AsIntMap() (map[string]int64, error) {
 	if err := m.Error(); err != nil {
 		return nil, err
 	}
-	if m.typ == '%' || m.typ == '*' || m.typ == '~' {
+	if m.IsMap() || m.IsArray() {
 		var err error
 		r := make(map[string]int64, len(m.values)/2)
 		for i := 0; i < len(m.values); i += 2 {
@@ -579,7 +609,7 @@ func (m *RedisMessage) AsIntMap() (map[string]int64, error) {
 
 // ToMap check if message is a redis map response, and return it
 func (m *RedisMessage) ToMap() (map[string]RedisMessage, error) {
-	if m.typ == '%' {
+	if m.IsMap() {
 		return toMap(m.values), nil
 	}
 	if err := m.Error(); err != nil {
