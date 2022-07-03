@@ -128,6 +128,20 @@ func (r *HashRepository[T]) Search(ctx context.Context, cmdFn func(search FtSear
 	return n, s, err
 }
 
+// Aggregate performs the FT.AGGREGATE and returns a *AggregateCursor for accessing the results
+func (r *HashRepository[T]) Aggregate(ctx context.Context, cmdFn func(search FtAggregateIndex) Completed) (cursor *AggregateCursor, err error) {
+	resp, err := r.client.Do(ctx, cmdFn(r.client.B().FtAggregate().Index(r.idx))).ToArray()
+	if err != nil {
+		return nil, err
+	}
+	return newAggregateCursor(r.idx, r.client, resp), nil
+}
+
+// IndexName returns the index name used in the FT.CREATE
+func (r *HashRepository[T]) IndexName() string {
+	return r.idx
+}
+
 func (r *HashRepository[T]) fromHash(record map[string]rueidis.RedisMessage) (*T, error) {
 	if len(record) == 0 {
 		return nil, ErrEmptyHashRecord

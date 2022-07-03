@@ -14,6 +14,8 @@ type (
 	FtCreateSchema = cmds.FtCreateSchema
 	// FtSearchIndex is the FT.SEARCH command builder
 	FtSearchIndex = cmds.FtSearchIndex
+	// FtAggregateIndex is the FT.AGGREGATE command builder
+	FtAggregateIndex = cmds.FtAggregateIndex
 	// Completed is the command builder result, should be created from the Build() of command builder
 	Completed = cmds.Completed
 )
@@ -36,8 +38,10 @@ type Repository[T any] interface {
 	Fetch(ctx context.Context, id string) (*T, error)
 	FetchCache(ctx context.Context, id string, ttl time.Duration) (v *T, err error)
 	Search(ctx context.Context, cmdFn func(search FtSearchIndex) Completed) (int64, []*T, error)
+	Aggregate(ctx context.Context, cmdFn func(search FtAggregateIndex) Completed) (*AggregateCursor, error)
 	Save(ctx context.Context, entity *T) (err error)
 	Remove(ctx context.Context, id string) error
 	CreateIndex(ctx context.Context, cmdFn func(schema FtCreateSchema) Completed) error
 	DropIndex(ctx context.Context) error
+	IndexName() string
 }

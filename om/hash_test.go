@@ -48,6 +48,12 @@ func TestNewHashRepository(t *testing.T) {
 
 	repo := NewHashRepository("hash", HashTestStruct{}, client)
 
+	t.Run("IndexName", func(t *testing.T) {
+		if name := repo.IndexName(); name != "hashidx:hash" {
+			t.Fatal("unexpected value")
+		}
+	})
+
 	t.Run("NewEntity", func(t *testing.T) {
 		e := repo.NewEntity()
 		ulid.MustParse(e.Key)

@@ -134,6 +134,20 @@ func (r *JSONRepository[T]) Search(ctx context.Context, cmdFn func(search FtSear
 	return n, s, err
 }
 
+// Aggregate performs the FT.AGGREGATE and returns a *AggregateCursor for accessing the results
+func (r *JSONRepository[T]) Aggregate(ctx context.Context, cmdFn func(search FtAggregateIndex) Completed) (cursor *AggregateCursor, err error) {
+	resp, err := r.client.Do(ctx, cmdFn(r.client.B().FtAggregate().Index(r.idx))).ToArray()
+	if err != nil {
+		return nil, err
+	}
+	return newAggregateCursor(r.idx, r.client, resp), nil
+}
+
+// IndexName returns the index name used in the FT.CREATE
+func (r *JSONRepository[T]) IndexName() string {
+	return r.idx
+}
+
 var jsonSaveScript = rueidis.NewLuaScript(`
 local v = redis.call('JSON.GET',KEYS[1],ARGV[1])
 if (not v or v == ARGV[2])
