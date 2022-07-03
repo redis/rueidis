@@ -1106,129 +1106,140 @@
         ]
       },
       {
-        "name": "groupby",
+        "comment": "https://github.com/rueian/rueidis/issues/57",
+        "name": "op",
         "type": "block",
         "optional": true,
         "multiple": true,
         "block" : [
           {
-            "name": "nargs",
-            "type": "integer",
-            "command":"GROUPBY"
-          },
-          {
-            "name": "property",
-            "type": "string",
-            "multiple": true
-          },
-          {
-            "name": "reduce",
+            "name": "groupby",
             "type": "block",
             "optional": true,
             "multiple": true,
             "block" : [
               {
-                "name": "function",
-                "type": "string",
-                "command":"REDUCE"
-              },
-              {
                 "name": "nargs",
-                "type": "integer"
+                "type": "integer",
+                "command":"GROUPBY"
               },
               {
-                "name": "arg",
+                "name": "property",
                 "type": "string",
+                "optional": true,
                 "multiple": true
               },
               {
-                "name": "name",
-                "type": "string",
-                "command":"AS",
-                "optional": true
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "name": "sortby",
-        "type": "block",
-        "optional": true,
-        "block" : [
-          {
-            "name": "nargs",
-            "type": "integer",
-            "command":"SORTBY"
-          },
-          {
-            "name": "fields",
-            "type": "block",
-            "optional": true,
-            "multiple": true,
-            "block" : [
-              {
-                "name": "property",
-                "type": "string"
-              },
-              {
-                "name": "order",
-                "type": "enum",
-                "enum": [
-                  "ASC", "DESC"
+                "name": "reduce",
+                "type": "block",
+                "optional": true,
+                "multiple": true,
+                "block" : [
+                  {
+                    "name": "function",
+                    "type": "string",
+                    "command":"REDUCE"
+                  },
+                  {
+                    "name": "nargs",
+                    "type": "integer"
+                  },
+                  {
+                    "name": "arg",
+                    "type": "string",
+                    "optional": true,
+                    "multiple": true
+                  },
+                  {
+                    "name": "name",
+                    "type": "string",
+                    "command":"AS",
+                    "optional": true
+                  }
                 ]
               }
             ]
           },
           {
-            "name": "num",
-            "type": "integer",
-            "command":"MAX",
-            "optional": true
-          }
-        ]
-      },
-      {
-        "name": "apply",
-        "type": "block",
-        "optional": true,
-        "multiple": true,
-        "block" : [
-          {
-            "name": "expression",
-            "type": "string",
-            "command":"APPLY"
-          },
-          {
-            "name": "name",
-            "type": "string",
-            "command":"AS"
-          }
-        ]
-      },
-      {
-        "name": "limit",
-        "type": "block",
-        "optional": true,
-        "block": [
-          {
-            "name": "limit",
-            "type": "enum",
-            "enum": [
-              "LIMIT"
+            "name": "sortby",
+            "type": "block",
+            "optional": true,
+            "block" : [
+              {
+                "name": "nargs",
+                "type": "integer",
+                "command":"SORTBY"
+              },
+              {
+                "name": "fields",
+                "type": "block",
+                "optional": true,
+                "multiple": true,
+                "block" : [
+                  {
+                    "name": "property",
+                    "type": "string"
+                  },
+                  {
+                    "name": "order",
+                    "type": "enum",
+                    "enum": [
+                      "ASC", "DESC"
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "num",
+                "type": "integer",
+                "command":"MAX",
+                "optional": true
+              }
             ]
           },
           {
-            "name": ["offset", "num"],
-            "type": ["integer", "integer"]
+            "name": "apply",
+            "type": "block",
+            "optional": true,
+            "multiple": true,
+            "block" : [
+              {
+                "name": "expression",
+                "type": "string",
+                "command":"APPLY"
+              },
+              {
+                "name": "name",
+                "type": "string",
+                "command":"AS"
+              }
+            ]
+          },
+          {
+            "name": "limit",
+            "type": "block",
+            "optional": true,
+            "block": [
+              {
+                "name": "limit",
+                "type": "enum",
+                "enum": [
+                  "LIMIT"
+                ]
+              },
+              {
+                "name": ["offset", "num"],
+                "type": ["integer", "integer"]
+              }
+            ]
+          },
+          {
+            "name": "filter",
+            "type": "string",
+            "optional": true,
+            "command":"FILTER"
           }
         ]
-      },
-      {
-        "name": "filter",
-        "type": "string",
-        "optional": true,
-        "command":"FILTER"
       },
       {
         "name": "cursor",

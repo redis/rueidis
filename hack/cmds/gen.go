@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/gob"
 	"encoding/json"
 	"fmt"
+	"hash/crc32"
 	"io"
 	"os"
 	"sort"
@@ -22,6 +24,12 @@ type buildDef struct {
 	MethodName string
 	Command    []string
 	Parameters []parameter
+}
+
+func (d buildDef) hash() uint32 {
+	hash := crc32.NewIEEE()
+	gob.NewEncoder(hash).Encode(d)
+	return hash.Sum32()
 }
 
 type parameter struct {
@@ -458,6 +466,7 @@ func generate(f io.Writer, structs map[string]goStruct) {
 			printRootBuilder(f, s)
 		}
 
+		dedupe := make(map[string]uint32)
 		for _, next := range s.NextNodes {
 			nodes := []*node{next}
 			if next.Child != nil {
@@ -465,7 +474,15 @@ func generate(f io.Writer, structs map[string]goStruct) {
 			}
 			for _, nn := range nodes {
 				for _, ss := range nn.GoStructs() {
-					printBuilder(f, s, ss)
+					hash := ss.BuildDef.hash()
+					if h, ok := dedupe[ss.BuildDef.MethodName]; ok {
+						if h != hash {
+							panic("same method but different hash")
+						}
+					} else {
+						dedupe[ss.BuildDef.MethodName] = hash
+						printBuilder(f, s, ss)
+					}
 				}
 			}
 		}
