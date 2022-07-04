@@ -11,8 +11,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric/global"
-	"go.opentelemetry.io/otel/metric/metrictest"
-	"go.opentelemetry.io/otel/metric/number"
+	"go.opentelemetry.io/otel/sdk/metric/metrictest"
 	"go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
@@ -28,8 +27,8 @@ func TestWithClient(t *testing.T) {
 	exp := tracetest.NewInMemoryExporter()
 	otel.SetTracerProvider(trace.NewTracerProvider(trace.WithSyncer(exp)))
 
-	mxp := metrictest.NewMeterProvider()
-	global.SetMeterProvider(mxp)
+	provider, mxp := metrictest.NewTestMeterProvider()
+	global.SetMeterProvider(provider)
 
 	ctx := context.Background()
 
@@ -39,13 +38,16 @@ func TestWithClient(t *testing.T) {
 	// first DoCache
 	client.DoCache(ctx, client.B().Get().Key("key").Cache(), time.Minute)
 	validateTrace(t, exp, "GET", codes.Ok)
-	validateMetrics(t, mxp, 0, cscMiss.SyncImpl().Descriptor().Name(), 1)
 
 	// second DoCache
 	client.DoCache(ctx, client.B().Get().Key("key").Cache(), time.Minute)
 	validateTrace(t, exp, "GET", codes.Ok)
-	validateMetrics(t, mxp, 0, cscMiss.SyncImpl().Descriptor().Name(), 1)
-	validateMetrics(t, mxp, 1, cscHits.SyncImpl().Descriptor().Name(), 1)
+
+	if err := mxp.Collect(ctx); err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+	validateMetrics(t, mxp, "rueidis_do_cache_miss", 1)
+	validateMetrics(t, mxp, "rueidis_do_cache_hits", 1)
 
 	ctx2, cancel := context.WithTimeout(ctx, time.Second/2)
 	client.Receive(ctx2, client.B().Subscribe().Channel("ch").Build(), func(msg rueidis.PubSubMessage) {})
@@ -146,15 +148,16 @@ func validateTrace(t *testing.T, exp *tracetest.InMemoryExporter, op string, cod
 	exp.Reset()
 }
 
-func validateMetrics(t *testing.T, mxp *metrictest.MeterProvider, idx int, name string, value uint64) {
-	if customAttr := mxp.MeasurementBatches[idx].Labels[0]; string(customAttr.Key) != "any" || customAttr.Value.AsString() != "label" {
+func validateMetrics(t *testing.T, mxp *metrictest.Exporter, name string, value uint64) {
+	record, err := mxp.GetByName(name)
+	if err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+	if customAttr := record.Attributes[0]; string(customAttr.Key) != "any" || customAttr.Value.AsString() != "label" {
 		t.Fatalf("unexpected custom attr %v", customAttr)
 	}
-	if v := mxp.MeasurementBatches[idx].Measurements[0].Instrument.Descriptor().Name(); v != name {
-		t.Fatalf("unexpected metric name %v", v)
-	}
-	if v := mxp.MeasurementBatches[idx].Measurements[0].Number; v != number.Number(value) {
-		t.Fatalf("unexpected metric value %v", v)
+	if record.Sum.AsRawAtomic() != value {
+		t.Fatalf("unexpected metric value %v", record.Sum)
 	}
 }
 

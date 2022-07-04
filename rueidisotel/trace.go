@@ -10,7 +10,6 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/metric/global"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -22,8 +21,8 @@ var (
 	meter  = global.Meter(name)
 	dbattr = attribute.String("db.system", "redis")
 
-	cscMiss = metric.Must(meter).NewInt64Counter("rueidis_do_cache_miss")
-	cscHits = metric.Must(meter).NewInt64Counter("rueidis_do_cache_hits")
+	cscMiss, _ = meter.SyncInt64().Counter("rueidis_do_cache_miss")
+	cscHits, _ = meter.SyncInt64().Counter("rueidis_do_cache_hits")
 )
 
 var _ rueidis.Client = (*otelclient)(nil)
