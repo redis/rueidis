@@ -10,7 +10,7 @@
       {
         "type": "integer",
         "command": "RETENTION",
-        "name": "retentionTime",
+        "name": "retentionPeriod",
         "optional": true
       },
       {
@@ -90,7 +90,7 @@
       {
         "type": "integer",
         "command": "RETENTION",
-        "name": "retentionTime",
+        "name": "retentionPeriod",
         "optional": true
       },
       {
@@ -149,7 +149,7 @@
       {
         "type": "integer",
         "command": "RETENTION",
-        "name": "retentionTime",
+        "name": "retentionPeriod",
         "optional": true
       },
       {
@@ -234,12 +234,13 @@
       {
         "name": "timestamp",
         "type": "integer",
+        "command": "TIMESTAMP",
         "optional": true
       },
       {
         "type": "integer",
         "command": "RETENTION",
-        "name": "retentionTime",
+        "name": "retentionPeriod",
         "optional": true
       },
       {
@@ -287,12 +288,13 @@
       {
         "name": "timestamp",
         "type": "integer",
+        "command": "TIMESTAMP",
         "optional": true
       },
       {
         "type": "integer",
         "command": "RETENTION",
-        "name": "retentionTime",
+        "name": "retentionPeriod",
         "optional": true
       },
       {
@@ -342,19 +344,19 @@
         "command": "AGGREGATION",
         "name": "aggregationType",
         "enum": [
-          "avg",
-          "sum",
-          "min",
-          "max",
-          "range",
-          "count",
-          "first",
-          "last",
-          "std.p",
-          "std.s",
-          "var.p",
-          "var.s",
-          "twa"
+          "AVG",
+          "SUM",
+          "MIN",
+          "MAX",
+          "RANGE",
+          "COUNT",
+          "FIRST",
+          "LAST",
+          "STD.P",
+          "STD.S",
+          "VAR.P",
+          "VAR.S",
+          "TWA"
         ]
       },
       {
@@ -403,6 +405,13 @@
         "type": "integer"
       },
       {
+        "type": "enum",
+        "enum": [
+          "LATEST"
+        ],
+        "optional": true
+      },
+      {
         "command": "FILTER_BY_TS",
         "name": "Timestamp",
         "type": "integer",
@@ -430,7 +439,7 @@
       {
         "command": "ALIGN",
         "name": "value",
-        "type": "integer",
+        "type": "string",
         "optional": true
       },
       {
@@ -443,19 +452,19 @@
             "name": "aggregationType",
             "type": "enum",
             "enum": [
-              "avg",
-              "sum",
-              "min",
-              "max",
-              "range",
-              "count",
-              "first",
-              "last",
-              "std.p",
-              "std.s",
-              "var.p",
-              "var.s",
-              "twa"
+              "AVG",
+              "SUM",
+              "MIN",
+              "MAX",
+              "RANGE",
+              "COUNT",
+              "FIRST",
+              "LAST",
+              "STD.P",
+              "STD.S",
+              "VAR.P",
+              "VAR.S",
+              "TWA"
             ]
           },
           {
@@ -497,6 +506,13 @@
         "type": "integer"
       },
       {
+        "type": "enum",
+        "enum": [
+          "LATEST"
+        ],
+        "optional": true
+      },
+      {
         "command": "FILTER_BY_TS",
         "name": "Timestamp",
         "type": "integer",
@@ -524,7 +540,7 @@
       {
         "command": "ALIGN",
         "name": "value",
-        "type": "integer",
+        "type": "string",
         "optional": true
       },
       {
@@ -537,19 +553,19 @@
             "name": "aggregationType",
             "type": "enum",
             "enum": [
-              "avg",
-              "sum",
-              "min",
-              "max",
-              "range",
-              "count",
-              "first",
-              "last",
-              "std.p",
-              "std.s",
-              "var.p",
-              "var.s",
-              "twa"
+              "AVG",
+              "SUM",
+              "MIN",
+              "MAX",
+              "RANGE",
+              "COUNT",
+              "FIRST",
+              "LAST",
+              "STD.P",
+              "STD.S",
+              "VAR.P",
+              "VAR.S",
+              "TWA"
             ]
           },
           {
@@ -587,6 +603,13 @@
         "type": "integer"
       },
       {
+        "type": "enum",
+        "enum": [
+          "LATEST"
+        ],
+        "optional": true
+      },
+      {
         "command": "FILTER_BY_TS",
         "name": "Timestamp",
         "type": "integer",
@@ -622,7 +645,7 @@
       {
         "command": "ALIGN",
         "name": "value",
-        "type": "integer",
+        "type": "string",
         "optional": true
       },
       {
@@ -635,19 +658,19 @@
             "name": "aggregationType",
             "type": "enum",
             "enum": [
-              "avg",
-              "sum",
-              "min",
-              "max",
-              "range",
-              "count",
-              "first",
-              "last",
-              "std.p",
-              "std.s",
-              "var.p",
-              "var.s",
-              "twa"
+              "AVG",
+              "SUM",
+              "MIN",
+              "MAX",
+              "RANGE",
+              "COUNT",
+              "FIRST",
+              "LAST",
+              "STD.P",
+              "STD.S",
+              "VAR.P",
+              "VAR.S",
+              "TWA"
             ]
           },
           {
@@ -712,6 +735,13 @@
         "type": "integer"
       },
       {
+        "type": "enum",
+        "enum": [
+          "LATEST"
+        ],
+        "optional": true
+      },
+      {
         "command": "FILTER_BY_TS",
         "name": "Timestamp",
         "type": "integer",
@@ -747,7 +777,7 @@
       {
         "command": "ALIGN",
         "name": "value",
-        "type": "integer",
+        "type": "string",
         "optional": true
       },
       {
@@ -760,19 +790,19 @@
             "name": "aggregationType",
             "type": "enum",
             "enum": [
-              "avg",
-              "sum",
-              "min",
-              "max",
-              "range",
-              "count",
-              "first",
-              "last",
-              "std.p",
-              "std.s",
-              "var.p",
-              "var.s",
-              "twa"
+              "AVG",
+              "SUM",
+              "MIN",
+              "MAX",
+              "RANGE",
+              "COUNT",
+              "FIRST",
+              "LAST",
+              "STD.P",
+              "STD.S",
+              "VAR.P",
+              "VAR.S",
+              "TWA"
             ]
           },
           {
@@ -831,6 +861,13 @@
       {
         "name": "key",
         "type": "key"
+      },
+      {
+        "type": "enum",
+        "enum": [
+          "LATEST"
+        ],
+        "optional": true
       }
     ],
     "since": "1.0.0",
@@ -840,6 +877,13 @@
     "summary": "Get the last samples matching the specific filter",
     "complexity": "O(n) where n is the number of time-series that match the filters",
     "arguments": [
+      {
+        "type": "enum",
+        "enum": [
+          "LATEST"
+        ],
+        "optional": true
+      },
       {
         "type": "enum",
         "enum": [

@@ -23572,8 +23572,8 @@ func (c TsAddTimestamp) Value(value float64) TsAddValue {
 
 type TsAddValue Completed
 
-func (c TsAddValue) Retention(retentiontime int64) TsAddRetention {
-	c.cs.s = append(c.cs.s, "RETENTION", strconv.FormatInt(retentiontime, 10))
+func (c TsAddValue) Retention(retentionperiod int64) TsAddRetention {
+	c.cs.s = append(c.cs.s, "RETENTION", strconv.FormatInt(retentionperiod, 10))
 	return (TsAddRetention)(c)
 }
 
@@ -23758,8 +23758,8 @@ func (c TsAlterDuplicatePolicySum) Build() Completed {
 
 type TsAlterKey Completed
 
-func (c TsAlterKey) Retention(retentiontime int64) TsAlterRetention {
-	c.cs.s = append(c.cs.s, "RETENTION", strconv.FormatInt(retentiontime, 10))
+func (c TsAlterKey) Retention(retentionperiod int64) TsAlterRetention {
+	c.cs.s = append(c.cs.s, "RETENTION", strconv.FormatInt(retentionperiod, 10))
 	return (TsAlterRetention)(c)
 }
 
@@ -24086,8 +24086,8 @@ func (c TsCreateEncodingUncompressed) Build() Completed {
 
 type TsCreateKey Completed
 
-func (c TsCreateKey) Retention(retentiontime int64) TsCreateRetention {
-	c.cs.s = append(c.cs.s, "RETENTION", strconv.FormatInt(retentiontime, 10))
+func (c TsCreateKey) Retention(retentionperiod int64) TsCreateRetention {
+	c.cs.s = append(c.cs.s, "RETENTION", strconv.FormatInt(retentionperiod, 10))
 	return (TsCreateRetention)(c)
 }
 
@@ -24341,67 +24341,67 @@ func (c TsCreateruleBucketduration) Build() Completed {
 type TsCreateruleDestkey Completed
 
 func (c TsCreateruleDestkey) AggregationAvg() TsCreateruleAggregationAvg {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "avg")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "AVG")
 	return (TsCreateruleAggregationAvg)(c)
 }
 
 func (c TsCreateruleDestkey) AggregationSum() TsCreateruleAggregationSum {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "sum")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "SUM")
 	return (TsCreateruleAggregationSum)(c)
 }
 
 func (c TsCreateruleDestkey) AggregationMin() TsCreateruleAggregationMin {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "min")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MIN")
 	return (TsCreateruleAggregationMin)(c)
 }
 
 func (c TsCreateruleDestkey) AggregationMax() TsCreateruleAggregationMax {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "max")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MAX")
 	return (TsCreateruleAggregationMax)(c)
 }
 
 func (c TsCreateruleDestkey) AggregationRange() TsCreateruleAggregationRange {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "range")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "RANGE")
 	return (TsCreateruleAggregationRange)(c)
 }
 
 func (c TsCreateruleDestkey) AggregationCount() TsCreateruleAggregationCount {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "count")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "COUNT")
 	return (TsCreateruleAggregationCount)(c)
 }
 
 func (c TsCreateruleDestkey) AggregationFirst() TsCreateruleAggregationFirst {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "first")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "FIRST")
 	return (TsCreateruleAggregationFirst)(c)
 }
 
 func (c TsCreateruleDestkey) AggregationLast() TsCreateruleAggregationLast {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "last")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "LAST")
 	return (TsCreateruleAggregationLast)(c)
 }
 
 func (c TsCreateruleDestkey) AggregationStdP() TsCreateruleAggregationStdP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.P")
 	return (TsCreateruleAggregationStdP)(c)
 }
 
 func (c TsCreateruleDestkey) AggregationStdS() TsCreateruleAggregationStdS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.S")
 	return (TsCreateruleAggregationStdS)(c)
 }
 
 func (c TsCreateruleDestkey) AggregationVarP() TsCreateruleAggregationVarP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.P")
 	return (TsCreateruleAggregationVarP)(c)
 }
 
 func (c TsCreateruleDestkey) AggregationVarS() TsCreateruleAggregationVarS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.S")
 	return (TsCreateruleAggregationVarS)(c)
 }
 
 func (c TsCreateruleDestkey) AggregationTwa() TsCreateruleAggregationTwa {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "TWA")
 	return (TsCreateruleAggregationTwa)(c)
 }
 
@@ -24483,8 +24483,8 @@ func (c TsDecrbyRetention) Build() Completed {
 
 type TsDecrbyTimestamp Completed
 
-func (c TsDecrbyTimestamp) Retention(retentiontime int64) TsDecrbyRetention {
-	c.cs.s = append(c.cs.s, "RETENTION", strconv.FormatInt(retentiontime, 10))
+func (c TsDecrbyTimestamp) Retention(retentionperiod int64) TsDecrbyRetention {
+	c.cs.s = append(c.cs.s, "RETENTION", strconv.FormatInt(retentionperiod, 10))
 	return (TsDecrbyRetention)(c)
 }
 
@@ -24526,12 +24526,12 @@ func (c TsDecrbyUncompressed) Build() Completed {
 type TsDecrbyValue Completed
 
 func (c TsDecrbyValue) Timestamp(timestamp int64) TsDecrbyTimestamp {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timestamp, 10))
+	c.cs.s = append(c.cs.s, "TIMESTAMP", strconv.FormatInt(timestamp, 10))
 	return (TsDecrbyTimestamp)(c)
 }
 
-func (c TsDecrbyValue) Retention(retentiontime int64) TsDecrbyRetention {
-	c.cs.s = append(c.cs.s, "RETENTION", strconv.FormatInt(retentiontime, 10))
+func (c TsDecrbyValue) Retention(retentionperiod int64) TsDecrbyRetention {
+	c.cs.s = append(c.cs.s, "RETENTION", strconv.FormatInt(retentionperiod, 10))
 	return (TsDecrbyRetention)(c)
 }
 
@@ -24640,7 +24640,18 @@ func (c TsGet) Key(key string) TsGetKey {
 
 type TsGetKey Completed
 
+func (c TsGetKey) Latest() TsGetLatest {
+	c.cs.s = append(c.cs.s, "LATEST")
+	return (TsGetLatest)(c)
+}
+
 func (c TsGetKey) Build() Completed {
+	return Completed(c)
+}
+
+type TsGetLatest Completed
+
+func (c TsGetLatest) Build() Completed {
 	return Completed(c)
 }
 
@@ -24712,8 +24723,8 @@ func (c TsIncrbyRetention) Build() Completed {
 
 type TsIncrbyTimestamp Completed
 
-func (c TsIncrbyTimestamp) Retention(retentiontime int64) TsIncrbyRetention {
-	c.cs.s = append(c.cs.s, "RETENTION", strconv.FormatInt(retentiontime, 10))
+func (c TsIncrbyTimestamp) Retention(retentionperiod int64) TsIncrbyRetention {
+	c.cs.s = append(c.cs.s, "RETENTION", strconv.FormatInt(retentionperiod, 10))
 	return (TsIncrbyRetention)(c)
 }
 
@@ -24755,12 +24766,12 @@ func (c TsIncrbyUncompressed) Build() Completed {
 type TsIncrbyValue Completed
 
 func (c TsIncrbyValue) Timestamp(timestamp int64) TsIncrbyTimestamp {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timestamp, 10))
+	c.cs.s = append(c.cs.s, "TIMESTAMP", strconv.FormatInt(timestamp, 10))
 	return (TsIncrbyTimestamp)(c)
 }
 
-func (c TsIncrbyValue) Retention(retentiontime int64) TsIncrbyRetention {
-	c.cs.s = append(c.cs.s, "RETENTION", strconv.FormatInt(retentiontime, 10))
+func (c TsIncrbyValue) Retention(retentionperiod int64) TsIncrbyRetention {
+	c.cs.s = append(c.cs.s, "RETENTION", strconv.FormatInt(retentionperiod, 10))
 	return (TsIncrbyRetention)(c)
 }
 
@@ -24850,6 +24861,11 @@ func (b Builder) TsMget() (c TsMget) {
 	return c
 }
 
+func (c TsMget) Latest() TsMgetLatest {
+	c.cs.s = append(c.cs.s, "LATEST")
+	return (TsMgetLatest)(c)
+}
+
 func (c TsMget) Withlabels() TsMgetWithlabels {
 	c.cs.s = append(c.cs.s, "WITHLABELS")
 	return (TsMgetWithlabels)(c)
@@ -24877,6 +24893,25 @@ func (c TsMgetFilter) Filter(filter ...string) TsMgetFilter {
 
 func (c TsMgetFilter) Build() Completed {
 	return Completed(c)
+}
+
+type TsMgetLatest Completed
+
+func (c TsMgetLatest) Withlabels() TsMgetWithlabels {
+	c.cs.s = append(c.cs.s, "WITHLABELS")
+	return (TsMgetWithlabels)(c)
+}
+
+func (c TsMgetLatest) SelectedLabels(labels []string) TsMgetSelectedLabels {
+	c.cs.s = append(c.cs.s, "SELECTED_LABELS")
+	c.cs.s = append(c.cs.s, labels...)
+	return (TsMgetSelectedLabels)(c)
+}
+
+func (c TsMgetLatest) Filter(filter ...string) TsMgetFilter {
+	c.cs.s = append(c.cs.s, "FILTER")
+	c.cs.s = append(c.cs.s, filter...)
+	return (TsMgetFilter)(c)
 }
 
 type TsMgetSelectedLabels Completed
@@ -25041,67 +25076,67 @@ func (c TsMrangeAggregationEmpty) Filter(filter ...string) TsMrangeFilter {
 type TsMrangeAlign Completed
 
 func (c TsMrangeAlign) AggregationAvg() TsMrangeAggregationAggregationAvg {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "avg")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "AVG")
 	return (TsMrangeAggregationAggregationAvg)(c)
 }
 
 func (c TsMrangeAlign) AggregationSum() TsMrangeAggregationAggregationSum {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "sum")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "SUM")
 	return (TsMrangeAggregationAggregationSum)(c)
 }
 
 func (c TsMrangeAlign) AggregationMin() TsMrangeAggregationAggregationMin {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "min")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MIN")
 	return (TsMrangeAggregationAggregationMin)(c)
 }
 
 func (c TsMrangeAlign) AggregationMax() TsMrangeAggregationAggregationMax {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "max")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MAX")
 	return (TsMrangeAggregationAggregationMax)(c)
 }
 
 func (c TsMrangeAlign) AggregationRange() TsMrangeAggregationAggregationRange {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "range")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "RANGE")
 	return (TsMrangeAggregationAggregationRange)(c)
 }
 
 func (c TsMrangeAlign) AggregationCount() TsMrangeAggregationAggregationCount {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "count")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "COUNT")
 	return (TsMrangeAggregationAggregationCount)(c)
 }
 
 func (c TsMrangeAlign) AggregationFirst() TsMrangeAggregationAggregationFirst {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "first")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "FIRST")
 	return (TsMrangeAggregationAggregationFirst)(c)
 }
 
 func (c TsMrangeAlign) AggregationLast() TsMrangeAggregationAggregationLast {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "last")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "LAST")
 	return (TsMrangeAggregationAggregationLast)(c)
 }
 
 func (c TsMrangeAlign) AggregationStdP() TsMrangeAggregationAggregationStdP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.P")
 	return (TsMrangeAggregationAggregationStdP)(c)
 }
 
 func (c TsMrangeAlign) AggregationStdS() TsMrangeAggregationAggregationStdS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.S")
 	return (TsMrangeAggregationAggregationStdS)(c)
 }
 
 func (c TsMrangeAlign) AggregationVarP() TsMrangeAggregationAggregationVarP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.P")
 	return (TsMrangeAggregationAggregationVarP)(c)
 }
 
 func (c TsMrangeAlign) AggregationVarS() TsMrangeAggregationAggregationVarS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.S")
 	return (TsMrangeAggregationAggregationVarS)(c)
 }
 
 func (c TsMrangeAlign) AggregationTwa() TsMrangeAggregationAggregationTwa {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "TWA")
 	return (TsMrangeAggregationAggregationTwa)(c)
 }
 
@@ -25113,73 +25148,73 @@ func (c TsMrangeAlign) Filter(filter ...string) TsMrangeFilter {
 
 type TsMrangeCount Completed
 
-func (c TsMrangeCount) Align(value int64) TsMrangeAlign {
-	c.cs.s = append(c.cs.s, "ALIGN", strconv.FormatInt(value, 10))
+func (c TsMrangeCount) Align(value string) TsMrangeAlign {
+	c.cs.s = append(c.cs.s, "ALIGN", value)
 	return (TsMrangeAlign)(c)
 }
 
 func (c TsMrangeCount) AggregationAvg() TsMrangeAggregationAggregationAvg {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "avg")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "AVG")
 	return (TsMrangeAggregationAggregationAvg)(c)
 }
 
 func (c TsMrangeCount) AggregationSum() TsMrangeAggregationAggregationSum {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "sum")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "SUM")
 	return (TsMrangeAggregationAggregationSum)(c)
 }
 
 func (c TsMrangeCount) AggregationMin() TsMrangeAggregationAggregationMin {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "min")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MIN")
 	return (TsMrangeAggregationAggregationMin)(c)
 }
 
 func (c TsMrangeCount) AggregationMax() TsMrangeAggregationAggregationMax {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "max")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MAX")
 	return (TsMrangeAggregationAggregationMax)(c)
 }
 
 func (c TsMrangeCount) AggregationRange() TsMrangeAggregationAggregationRange {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "range")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "RANGE")
 	return (TsMrangeAggregationAggregationRange)(c)
 }
 
 func (c TsMrangeCount) AggregationCount() TsMrangeAggregationAggregationCount {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "count")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "COUNT")
 	return (TsMrangeAggregationAggregationCount)(c)
 }
 
 func (c TsMrangeCount) AggregationFirst() TsMrangeAggregationAggregationFirst {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "first")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "FIRST")
 	return (TsMrangeAggregationAggregationFirst)(c)
 }
 
 func (c TsMrangeCount) AggregationLast() TsMrangeAggregationAggregationLast {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "last")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "LAST")
 	return (TsMrangeAggregationAggregationLast)(c)
 }
 
 func (c TsMrangeCount) AggregationStdP() TsMrangeAggregationAggregationStdP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.P")
 	return (TsMrangeAggregationAggregationStdP)(c)
 }
 
 func (c TsMrangeCount) AggregationStdS() TsMrangeAggregationAggregationStdS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.S")
 	return (TsMrangeAggregationAggregationStdS)(c)
 }
 
 func (c TsMrangeCount) AggregationVarP() TsMrangeAggregationAggregationVarP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.P")
 	return (TsMrangeAggregationAggregationVarP)(c)
 }
 
 func (c TsMrangeCount) AggregationVarS() TsMrangeAggregationAggregationVarS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.S")
 	return (TsMrangeAggregationAggregationVarS)(c)
 }
 
 func (c TsMrangeCount) AggregationTwa() TsMrangeAggregationAggregationTwa {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "TWA")
 	return (TsMrangeAggregationAggregationTwa)(c)
 }
 
@@ -25237,73 +25272,73 @@ func (c TsMrangeFilterByTs) Count(count int64) TsMrangeCount {
 	return (TsMrangeCount)(c)
 }
 
-func (c TsMrangeFilterByTs) Align(value int64) TsMrangeAlign {
-	c.cs.s = append(c.cs.s, "ALIGN", strconv.FormatInt(value, 10))
+func (c TsMrangeFilterByTs) Align(value string) TsMrangeAlign {
+	c.cs.s = append(c.cs.s, "ALIGN", value)
 	return (TsMrangeAlign)(c)
 }
 
 func (c TsMrangeFilterByTs) AggregationAvg() TsMrangeAggregationAggregationAvg {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "avg")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "AVG")
 	return (TsMrangeAggregationAggregationAvg)(c)
 }
 
 func (c TsMrangeFilterByTs) AggregationSum() TsMrangeAggregationAggregationSum {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "sum")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "SUM")
 	return (TsMrangeAggregationAggregationSum)(c)
 }
 
 func (c TsMrangeFilterByTs) AggregationMin() TsMrangeAggregationAggregationMin {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "min")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MIN")
 	return (TsMrangeAggregationAggregationMin)(c)
 }
 
 func (c TsMrangeFilterByTs) AggregationMax() TsMrangeAggregationAggregationMax {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "max")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MAX")
 	return (TsMrangeAggregationAggregationMax)(c)
 }
 
 func (c TsMrangeFilterByTs) AggregationRange() TsMrangeAggregationAggregationRange {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "range")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "RANGE")
 	return (TsMrangeAggregationAggregationRange)(c)
 }
 
 func (c TsMrangeFilterByTs) AggregationCount() TsMrangeAggregationAggregationCount {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "count")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "COUNT")
 	return (TsMrangeAggregationAggregationCount)(c)
 }
 
 func (c TsMrangeFilterByTs) AggregationFirst() TsMrangeAggregationAggregationFirst {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "first")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "FIRST")
 	return (TsMrangeAggregationAggregationFirst)(c)
 }
 
 func (c TsMrangeFilterByTs) AggregationLast() TsMrangeAggregationAggregationLast {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "last")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "LAST")
 	return (TsMrangeAggregationAggregationLast)(c)
 }
 
 func (c TsMrangeFilterByTs) AggregationStdP() TsMrangeAggregationAggregationStdP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.P")
 	return (TsMrangeAggregationAggregationStdP)(c)
 }
 
 func (c TsMrangeFilterByTs) AggregationStdS() TsMrangeAggregationAggregationStdS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.S")
 	return (TsMrangeAggregationAggregationStdS)(c)
 }
 
 func (c TsMrangeFilterByTs) AggregationVarP() TsMrangeAggregationAggregationVarP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.P")
 	return (TsMrangeAggregationAggregationVarP)(c)
 }
 
 func (c TsMrangeFilterByTs) AggregationVarS() TsMrangeAggregationAggregationVarS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.S")
 	return (TsMrangeAggregationAggregationVarS)(c)
 }
 
 func (c TsMrangeFilterByTs) AggregationTwa() TsMrangeAggregationAggregationTwa {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "TWA")
 	return (TsMrangeAggregationAggregationTwa)(c)
 }
 
@@ -25331,73 +25366,73 @@ func (c TsMrangeFilterByValue) Count(count int64) TsMrangeCount {
 	return (TsMrangeCount)(c)
 }
 
-func (c TsMrangeFilterByValue) Align(value int64) TsMrangeAlign {
-	c.cs.s = append(c.cs.s, "ALIGN", strconv.FormatInt(value, 10))
+func (c TsMrangeFilterByValue) Align(value string) TsMrangeAlign {
+	c.cs.s = append(c.cs.s, "ALIGN", value)
 	return (TsMrangeAlign)(c)
 }
 
 func (c TsMrangeFilterByValue) AggregationAvg() TsMrangeAggregationAggregationAvg {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "avg")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "AVG")
 	return (TsMrangeAggregationAggregationAvg)(c)
 }
 
 func (c TsMrangeFilterByValue) AggregationSum() TsMrangeAggregationAggregationSum {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "sum")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "SUM")
 	return (TsMrangeAggregationAggregationSum)(c)
 }
 
 func (c TsMrangeFilterByValue) AggregationMin() TsMrangeAggregationAggregationMin {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "min")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MIN")
 	return (TsMrangeAggregationAggregationMin)(c)
 }
 
 func (c TsMrangeFilterByValue) AggregationMax() TsMrangeAggregationAggregationMax {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "max")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MAX")
 	return (TsMrangeAggregationAggregationMax)(c)
 }
 
 func (c TsMrangeFilterByValue) AggregationRange() TsMrangeAggregationAggregationRange {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "range")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "RANGE")
 	return (TsMrangeAggregationAggregationRange)(c)
 }
 
 func (c TsMrangeFilterByValue) AggregationCount() TsMrangeAggregationAggregationCount {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "count")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "COUNT")
 	return (TsMrangeAggregationAggregationCount)(c)
 }
 
 func (c TsMrangeFilterByValue) AggregationFirst() TsMrangeAggregationAggregationFirst {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "first")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "FIRST")
 	return (TsMrangeAggregationAggregationFirst)(c)
 }
 
 func (c TsMrangeFilterByValue) AggregationLast() TsMrangeAggregationAggregationLast {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "last")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "LAST")
 	return (TsMrangeAggregationAggregationLast)(c)
 }
 
 func (c TsMrangeFilterByValue) AggregationStdP() TsMrangeAggregationAggregationStdP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.P")
 	return (TsMrangeAggregationAggregationStdP)(c)
 }
 
 func (c TsMrangeFilterByValue) AggregationStdS() TsMrangeAggregationAggregationStdS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.S")
 	return (TsMrangeAggregationAggregationStdS)(c)
 }
 
 func (c TsMrangeFilterByValue) AggregationVarP() TsMrangeAggregationAggregationVarP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.P")
 	return (TsMrangeAggregationAggregationVarP)(c)
 }
 
 func (c TsMrangeFilterByValue) AggregationVarS() TsMrangeAggregationAggregationVarS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.S")
 	return (TsMrangeAggregationAggregationVarS)(c)
 }
 
 func (c TsMrangeFilterByValue) AggregationTwa() TsMrangeAggregationAggregationTwa {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "TWA")
 	return (TsMrangeAggregationAggregationTwa)(c)
 }
 
@@ -25420,6 +25455,113 @@ func (c TsMrangeGroupby) Build() Completed {
 	return Completed(c)
 }
 
+type TsMrangeLatest Completed
+
+func (c TsMrangeLatest) FilterByTs(timestamp ...int64) TsMrangeFilterByTs {
+	c.cs.s = append(c.cs.s, "FILTER_BY_TS")
+	for _, n := range timestamp {
+		c.cs.s = append(c.cs.s, strconv.FormatInt(n, 10))
+	}
+	return (TsMrangeFilterByTs)(c)
+}
+
+func (c TsMrangeLatest) FilterByValue(min float64, max float64) TsMrangeFilterByValue {
+	c.cs.s = append(c.cs.s, "FILTER_BY_VALUE", strconv.FormatFloat(min, 'f', -1, 64), strconv.FormatFloat(max, 'f', -1, 64))
+	return (TsMrangeFilterByValue)(c)
+}
+
+func (c TsMrangeLatest) Withlabels() TsMrangeWithlabels {
+	c.cs.s = append(c.cs.s, "WITHLABELS")
+	return (TsMrangeWithlabels)(c)
+}
+
+func (c TsMrangeLatest) SelectedLabels(labels []string) TsMrangeSelectedLabels {
+	c.cs.s = append(c.cs.s, "SELECTED_LABELS")
+	c.cs.s = append(c.cs.s, labels...)
+	return (TsMrangeSelectedLabels)(c)
+}
+
+func (c TsMrangeLatest) Count(count int64) TsMrangeCount {
+	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
+	return (TsMrangeCount)(c)
+}
+
+func (c TsMrangeLatest) Align(value string) TsMrangeAlign {
+	c.cs.s = append(c.cs.s, "ALIGN", value)
+	return (TsMrangeAlign)(c)
+}
+
+func (c TsMrangeLatest) AggregationAvg() TsMrangeAggregationAggregationAvg {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "AVG")
+	return (TsMrangeAggregationAggregationAvg)(c)
+}
+
+func (c TsMrangeLatest) AggregationSum() TsMrangeAggregationAggregationSum {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "SUM")
+	return (TsMrangeAggregationAggregationSum)(c)
+}
+
+func (c TsMrangeLatest) AggregationMin() TsMrangeAggregationAggregationMin {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MIN")
+	return (TsMrangeAggregationAggregationMin)(c)
+}
+
+func (c TsMrangeLatest) AggregationMax() TsMrangeAggregationAggregationMax {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MAX")
+	return (TsMrangeAggregationAggregationMax)(c)
+}
+
+func (c TsMrangeLatest) AggregationRange() TsMrangeAggregationAggregationRange {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "RANGE")
+	return (TsMrangeAggregationAggregationRange)(c)
+}
+
+func (c TsMrangeLatest) AggregationCount() TsMrangeAggregationAggregationCount {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "COUNT")
+	return (TsMrangeAggregationAggregationCount)(c)
+}
+
+func (c TsMrangeLatest) AggregationFirst() TsMrangeAggregationAggregationFirst {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "FIRST")
+	return (TsMrangeAggregationAggregationFirst)(c)
+}
+
+func (c TsMrangeLatest) AggregationLast() TsMrangeAggregationAggregationLast {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "LAST")
+	return (TsMrangeAggregationAggregationLast)(c)
+}
+
+func (c TsMrangeLatest) AggregationStdP() TsMrangeAggregationAggregationStdP {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.P")
+	return (TsMrangeAggregationAggregationStdP)(c)
+}
+
+func (c TsMrangeLatest) AggregationStdS() TsMrangeAggregationAggregationStdS {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.S")
+	return (TsMrangeAggregationAggregationStdS)(c)
+}
+
+func (c TsMrangeLatest) AggregationVarP() TsMrangeAggregationAggregationVarP {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.P")
+	return (TsMrangeAggregationAggregationVarP)(c)
+}
+
+func (c TsMrangeLatest) AggregationVarS() TsMrangeAggregationAggregationVarS {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.S")
+	return (TsMrangeAggregationAggregationVarS)(c)
+}
+
+func (c TsMrangeLatest) AggregationTwa() TsMrangeAggregationAggregationTwa {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "TWA")
+	return (TsMrangeAggregationAggregationTwa)(c)
+}
+
+func (c TsMrangeLatest) Filter(filter ...string) TsMrangeFilter {
+	c.cs.s = append(c.cs.s, "FILTER")
+	c.cs.s = append(c.cs.s, filter...)
+	return (TsMrangeFilter)(c)
+}
+
 type TsMrangeSelectedLabels Completed
 
 func (c TsMrangeSelectedLabels) Count(count int64) TsMrangeCount {
@@ -25427,73 +25569,73 @@ func (c TsMrangeSelectedLabels) Count(count int64) TsMrangeCount {
 	return (TsMrangeCount)(c)
 }
 
-func (c TsMrangeSelectedLabels) Align(value int64) TsMrangeAlign {
-	c.cs.s = append(c.cs.s, "ALIGN", strconv.FormatInt(value, 10))
+func (c TsMrangeSelectedLabels) Align(value string) TsMrangeAlign {
+	c.cs.s = append(c.cs.s, "ALIGN", value)
 	return (TsMrangeAlign)(c)
 }
 
 func (c TsMrangeSelectedLabels) AggregationAvg() TsMrangeAggregationAggregationAvg {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "avg")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "AVG")
 	return (TsMrangeAggregationAggregationAvg)(c)
 }
 
 func (c TsMrangeSelectedLabels) AggregationSum() TsMrangeAggregationAggregationSum {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "sum")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "SUM")
 	return (TsMrangeAggregationAggregationSum)(c)
 }
 
 func (c TsMrangeSelectedLabels) AggregationMin() TsMrangeAggregationAggregationMin {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "min")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MIN")
 	return (TsMrangeAggregationAggregationMin)(c)
 }
 
 func (c TsMrangeSelectedLabels) AggregationMax() TsMrangeAggregationAggregationMax {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "max")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MAX")
 	return (TsMrangeAggregationAggregationMax)(c)
 }
 
 func (c TsMrangeSelectedLabels) AggregationRange() TsMrangeAggregationAggregationRange {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "range")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "RANGE")
 	return (TsMrangeAggregationAggregationRange)(c)
 }
 
 func (c TsMrangeSelectedLabels) AggregationCount() TsMrangeAggregationAggregationCount {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "count")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "COUNT")
 	return (TsMrangeAggregationAggregationCount)(c)
 }
 
 func (c TsMrangeSelectedLabels) AggregationFirst() TsMrangeAggregationAggregationFirst {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "first")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "FIRST")
 	return (TsMrangeAggregationAggregationFirst)(c)
 }
 
 func (c TsMrangeSelectedLabels) AggregationLast() TsMrangeAggregationAggregationLast {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "last")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "LAST")
 	return (TsMrangeAggregationAggregationLast)(c)
 }
 
 func (c TsMrangeSelectedLabels) AggregationStdP() TsMrangeAggregationAggregationStdP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.P")
 	return (TsMrangeAggregationAggregationStdP)(c)
 }
 
 func (c TsMrangeSelectedLabels) AggregationStdS() TsMrangeAggregationAggregationStdS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.S")
 	return (TsMrangeAggregationAggregationStdS)(c)
 }
 
 func (c TsMrangeSelectedLabels) AggregationVarP() TsMrangeAggregationAggregationVarP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.P")
 	return (TsMrangeAggregationAggregationVarP)(c)
 }
 
 func (c TsMrangeSelectedLabels) AggregationVarS() TsMrangeAggregationAggregationVarS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.S")
 	return (TsMrangeAggregationAggregationVarS)(c)
 }
 
 func (c TsMrangeSelectedLabels) AggregationTwa() TsMrangeAggregationAggregationTwa {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "TWA")
 	return (TsMrangeAggregationAggregationTwa)(c)
 }
 
@@ -25504,6 +25646,11 @@ func (c TsMrangeSelectedLabels) Filter(filter ...string) TsMrangeFilter {
 }
 
 type TsMrangeTotimestamp Completed
+
+func (c TsMrangeTotimestamp) Latest() TsMrangeLatest {
+	c.cs.s = append(c.cs.s, "LATEST")
+	return (TsMrangeLatest)(c)
+}
 
 func (c TsMrangeTotimestamp) FilterByTs(timestamp ...int64) TsMrangeFilterByTs {
 	c.cs.s = append(c.cs.s, "FILTER_BY_TS")
@@ -25534,73 +25681,73 @@ func (c TsMrangeTotimestamp) Count(count int64) TsMrangeCount {
 	return (TsMrangeCount)(c)
 }
 
-func (c TsMrangeTotimestamp) Align(value int64) TsMrangeAlign {
-	c.cs.s = append(c.cs.s, "ALIGN", strconv.FormatInt(value, 10))
+func (c TsMrangeTotimestamp) Align(value string) TsMrangeAlign {
+	c.cs.s = append(c.cs.s, "ALIGN", value)
 	return (TsMrangeAlign)(c)
 }
 
 func (c TsMrangeTotimestamp) AggregationAvg() TsMrangeAggregationAggregationAvg {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "avg")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "AVG")
 	return (TsMrangeAggregationAggregationAvg)(c)
 }
 
 func (c TsMrangeTotimestamp) AggregationSum() TsMrangeAggregationAggregationSum {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "sum")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "SUM")
 	return (TsMrangeAggregationAggregationSum)(c)
 }
 
 func (c TsMrangeTotimestamp) AggregationMin() TsMrangeAggregationAggregationMin {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "min")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MIN")
 	return (TsMrangeAggregationAggregationMin)(c)
 }
 
 func (c TsMrangeTotimestamp) AggregationMax() TsMrangeAggregationAggregationMax {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "max")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MAX")
 	return (TsMrangeAggregationAggregationMax)(c)
 }
 
 func (c TsMrangeTotimestamp) AggregationRange() TsMrangeAggregationAggregationRange {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "range")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "RANGE")
 	return (TsMrangeAggregationAggregationRange)(c)
 }
 
 func (c TsMrangeTotimestamp) AggregationCount() TsMrangeAggregationAggregationCount {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "count")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "COUNT")
 	return (TsMrangeAggregationAggregationCount)(c)
 }
 
 func (c TsMrangeTotimestamp) AggregationFirst() TsMrangeAggregationAggregationFirst {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "first")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "FIRST")
 	return (TsMrangeAggregationAggregationFirst)(c)
 }
 
 func (c TsMrangeTotimestamp) AggregationLast() TsMrangeAggregationAggregationLast {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "last")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "LAST")
 	return (TsMrangeAggregationAggregationLast)(c)
 }
 
 func (c TsMrangeTotimestamp) AggregationStdP() TsMrangeAggregationAggregationStdP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.P")
 	return (TsMrangeAggregationAggregationStdP)(c)
 }
 
 func (c TsMrangeTotimestamp) AggregationStdS() TsMrangeAggregationAggregationStdS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.S")
 	return (TsMrangeAggregationAggregationStdS)(c)
 }
 
 func (c TsMrangeTotimestamp) AggregationVarP() TsMrangeAggregationAggregationVarP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.P")
 	return (TsMrangeAggregationAggregationVarP)(c)
 }
 
 func (c TsMrangeTotimestamp) AggregationVarS() TsMrangeAggregationAggregationVarS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.S")
 	return (TsMrangeAggregationAggregationVarS)(c)
 }
 
 func (c TsMrangeTotimestamp) AggregationTwa() TsMrangeAggregationAggregationTwa {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "TWA")
 	return (TsMrangeAggregationAggregationTwa)(c)
 }
 
@@ -25617,73 +25764,73 @@ func (c TsMrangeWithlabels) Count(count int64) TsMrangeCount {
 	return (TsMrangeCount)(c)
 }
 
-func (c TsMrangeWithlabels) Align(value int64) TsMrangeAlign {
-	c.cs.s = append(c.cs.s, "ALIGN", strconv.FormatInt(value, 10))
+func (c TsMrangeWithlabels) Align(value string) TsMrangeAlign {
+	c.cs.s = append(c.cs.s, "ALIGN", value)
 	return (TsMrangeAlign)(c)
 }
 
 func (c TsMrangeWithlabels) AggregationAvg() TsMrangeAggregationAggregationAvg {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "avg")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "AVG")
 	return (TsMrangeAggregationAggregationAvg)(c)
 }
 
 func (c TsMrangeWithlabels) AggregationSum() TsMrangeAggregationAggregationSum {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "sum")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "SUM")
 	return (TsMrangeAggregationAggregationSum)(c)
 }
 
 func (c TsMrangeWithlabels) AggregationMin() TsMrangeAggregationAggregationMin {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "min")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MIN")
 	return (TsMrangeAggregationAggregationMin)(c)
 }
 
 func (c TsMrangeWithlabels) AggregationMax() TsMrangeAggregationAggregationMax {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "max")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MAX")
 	return (TsMrangeAggregationAggregationMax)(c)
 }
 
 func (c TsMrangeWithlabels) AggregationRange() TsMrangeAggregationAggregationRange {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "range")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "RANGE")
 	return (TsMrangeAggregationAggregationRange)(c)
 }
 
 func (c TsMrangeWithlabels) AggregationCount() TsMrangeAggregationAggregationCount {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "count")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "COUNT")
 	return (TsMrangeAggregationAggregationCount)(c)
 }
 
 func (c TsMrangeWithlabels) AggregationFirst() TsMrangeAggregationAggregationFirst {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "first")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "FIRST")
 	return (TsMrangeAggregationAggregationFirst)(c)
 }
 
 func (c TsMrangeWithlabels) AggregationLast() TsMrangeAggregationAggregationLast {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "last")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "LAST")
 	return (TsMrangeAggregationAggregationLast)(c)
 }
 
 func (c TsMrangeWithlabels) AggregationStdP() TsMrangeAggregationAggregationStdP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.P")
 	return (TsMrangeAggregationAggregationStdP)(c)
 }
 
 func (c TsMrangeWithlabels) AggregationStdS() TsMrangeAggregationAggregationStdS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.S")
 	return (TsMrangeAggregationAggregationStdS)(c)
 }
 
 func (c TsMrangeWithlabels) AggregationVarP() TsMrangeAggregationAggregationVarP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.P")
 	return (TsMrangeAggregationAggregationVarP)(c)
 }
 
 func (c TsMrangeWithlabels) AggregationVarS() TsMrangeAggregationAggregationVarS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.S")
 	return (TsMrangeAggregationAggregationVarS)(c)
 }
 
 func (c TsMrangeWithlabels) AggregationTwa() TsMrangeAggregationAggregationTwa {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "TWA")
 	return (TsMrangeAggregationAggregationTwa)(c)
 }
 
@@ -25839,67 +25986,67 @@ func (c TsMrevrangeAggregationEmpty) Filter(filter ...string) TsMrevrangeFilter 
 type TsMrevrangeAlign Completed
 
 func (c TsMrevrangeAlign) AggregationAvg() TsMrevrangeAggregationAggregationAvg {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "avg")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "AVG")
 	return (TsMrevrangeAggregationAggregationAvg)(c)
 }
 
 func (c TsMrevrangeAlign) AggregationSum() TsMrevrangeAggregationAggregationSum {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "sum")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "SUM")
 	return (TsMrevrangeAggregationAggregationSum)(c)
 }
 
 func (c TsMrevrangeAlign) AggregationMin() TsMrevrangeAggregationAggregationMin {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "min")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MIN")
 	return (TsMrevrangeAggregationAggregationMin)(c)
 }
 
 func (c TsMrevrangeAlign) AggregationMax() TsMrevrangeAggregationAggregationMax {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "max")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MAX")
 	return (TsMrevrangeAggregationAggregationMax)(c)
 }
 
 func (c TsMrevrangeAlign) AggregationRange() TsMrevrangeAggregationAggregationRange {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "range")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "RANGE")
 	return (TsMrevrangeAggregationAggregationRange)(c)
 }
 
 func (c TsMrevrangeAlign) AggregationCount() TsMrevrangeAggregationAggregationCount {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "count")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "COUNT")
 	return (TsMrevrangeAggregationAggregationCount)(c)
 }
 
 func (c TsMrevrangeAlign) AggregationFirst() TsMrevrangeAggregationAggregationFirst {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "first")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "FIRST")
 	return (TsMrevrangeAggregationAggregationFirst)(c)
 }
 
 func (c TsMrevrangeAlign) AggregationLast() TsMrevrangeAggregationAggregationLast {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "last")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "LAST")
 	return (TsMrevrangeAggregationAggregationLast)(c)
 }
 
 func (c TsMrevrangeAlign) AggregationStdP() TsMrevrangeAggregationAggregationStdP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.P")
 	return (TsMrevrangeAggregationAggregationStdP)(c)
 }
 
 func (c TsMrevrangeAlign) AggregationStdS() TsMrevrangeAggregationAggregationStdS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.S")
 	return (TsMrevrangeAggregationAggregationStdS)(c)
 }
 
 func (c TsMrevrangeAlign) AggregationVarP() TsMrevrangeAggregationAggregationVarP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.P")
 	return (TsMrevrangeAggregationAggregationVarP)(c)
 }
 
 func (c TsMrevrangeAlign) AggregationVarS() TsMrevrangeAggregationAggregationVarS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.S")
 	return (TsMrevrangeAggregationAggregationVarS)(c)
 }
 
 func (c TsMrevrangeAlign) AggregationTwa() TsMrevrangeAggregationAggregationTwa {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "TWA")
 	return (TsMrevrangeAggregationAggregationTwa)(c)
 }
 
@@ -25911,73 +26058,73 @@ func (c TsMrevrangeAlign) Filter(filter ...string) TsMrevrangeFilter {
 
 type TsMrevrangeCount Completed
 
-func (c TsMrevrangeCount) Align(value int64) TsMrevrangeAlign {
-	c.cs.s = append(c.cs.s, "ALIGN", strconv.FormatInt(value, 10))
+func (c TsMrevrangeCount) Align(value string) TsMrevrangeAlign {
+	c.cs.s = append(c.cs.s, "ALIGN", value)
 	return (TsMrevrangeAlign)(c)
 }
 
 func (c TsMrevrangeCount) AggregationAvg() TsMrevrangeAggregationAggregationAvg {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "avg")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "AVG")
 	return (TsMrevrangeAggregationAggregationAvg)(c)
 }
 
 func (c TsMrevrangeCount) AggregationSum() TsMrevrangeAggregationAggregationSum {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "sum")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "SUM")
 	return (TsMrevrangeAggregationAggregationSum)(c)
 }
 
 func (c TsMrevrangeCount) AggregationMin() TsMrevrangeAggregationAggregationMin {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "min")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MIN")
 	return (TsMrevrangeAggregationAggregationMin)(c)
 }
 
 func (c TsMrevrangeCount) AggregationMax() TsMrevrangeAggregationAggregationMax {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "max")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MAX")
 	return (TsMrevrangeAggregationAggregationMax)(c)
 }
 
 func (c TsMrevrangeCount) AggregationRange() TsMrevrangeAggregationAggregationRange {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "range")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "RANGE")
 	return (TsMrevrangeAggregationAggregationRange)(c)
 }
 
 func (c TsMrevrangeCount) AggregationCount() TsMrevrangeAggregationAggregationCount {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "count")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "COUNT")
 	return (TsMrevrangeAggregationAggregationCount)(c)
 }
 
 func (c TsMrevrangeCount) AggregationFirst() TsMrevrangeAggregationAggregationFirst {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "first")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "FIRST")
 	return (TsMrevrangeAggregationAggregationFirst)(c)
 }
 
 func (c TsMrevrangeCount) AggregationLast() TsMrevrangeAggregationAggregationLast {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "last")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "LAST")
 	return (TsMrevrangeAggregationAggregationLast)(c)
 }
 
 func (c TsMrevrangeCount) AggregationStdP() TsMrevrangeAggregationAggregationStdP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.P")
 	return (TsMrevrangeAggregationAggregationStdP)(c)
 }
 
 func (c TsMrevrangeCount) AggregationStdS() TsMrevrangeAggregationAggregationStdS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.S")
 	return (TsMrevrangeAggregationAggregationStdS)(c)
 }
 
 func (c TsMrevrangeCount) AggregationVarP() TsMrevrangeAggregationAggregationVarP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.P")
 	return (TsMrevrangeAggregationAggregationVarP)(c)
 }
 
 func (c TsMrevrangeCount) AggregationVarS() TsMrevrangeAggregationAggregationVarS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.S")
 	return (TsMrevrangeAggregationAggregationVarS)(c)
 }
 
 func (c TsMrevrangeCount) AggregationTwa() TsMrevrangeAggregationAggregationTwa {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "TWA")
 	return (TsMrevrangeAggregationAggregationTwa)(c)
 }
 
@@ -26035,73 +26182,73 @@ func (c TsMrevrangeFilterByTs) Count(count int64) TsMrevrangeCount {
 	return (TsMrevrangeCount)(c)
 }
 
-func (c TsMrevrangeFilterByTs) Align(value int64) TsMrevrangeAlign {
-	c.cs.s = append(c.cs.s, "ALIGN", strconv.FormatInt(value, 10))
+func (c TsMrevrangeFilterByTs) Align(value string) TsMrevrangeAlign {
+	c.cs.s = append(c.cs.s, "ALIGN", value)
 	return (TsMrevrangeAlign)(c)
 }
 
 func (c TsMrevrangeFilterByTs) AggregationAvg() TsMrevrangeAggregationAggregationAvg {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "avg")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "AVG")
 	return (TsMrevrangeAggregationAggregationAvg)(c)
 }
 
 func (c TsMrevrangeFilterByTs) AggregationSum() TsMrevrangeAggregationAggregationSum {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "sum")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "SUM")
 	return (TsMrevrangeAggregationAggregationSum)(c)
 }
 
 func (c TsMrevrangeFilterByTs) AggregationMin() TsMrevrangeAggregationAggregationMin {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "min")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MIN")
 	return (TsMrevrangeAggregationAggregationMin)(c)
 }
 
 func (c TsMrevrangeFilterByTs) AggregationMax() TsMrevrangeAggregationAggregationMax {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "max")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MAX")
 	return (TsMrevrangeAggregationAggregationMax)(c)
 }
 
 func (c TsMrevrangeFilterByTs) AggregationRange() TsMrevrangeAggregationAggregationRange {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "range")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "RANGE")
 	return (TsMrevrangeAggregationAggregationRange)(c)
 }
 
 func (c TsMrevrangeFilterByTs) AggregationCount() TsMrevrangeAggregationAggregationCount {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "count")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "COUNT")
 	return (TsMrevrangeAggregationAggregationCount)(c)
 }
 
 func (c TsMrevrangeFilterByTs) AggregationFirst() TsMrevrangeAggregationAggregationFirst {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "first")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "FIRST")
 	return (TsMrevrangeAggregationAggregationFirst)(c)
 }
 
 func (c TsMrevrangeFilterByTs) AggregationLast() TsMrevrangeAggregationAggregationLast {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "last")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "LAST")
 	return (TsMrevrangeAggregationAggregationLast)(c)
 }
 
 func (c TsMrevrangeFilterByTs) AggregationStdP() TsMrevrangeAggregationAggregationStdP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.P")
 	return (TsMrevrangeAggregationAggregationStdP)(c)
 }
 
 func (c TsMrevrangeFilterByTs) AggregationStdS() TsMrevrangeAggregationAggregationStdS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.S")
 	return (TsMrevrangeAggregationAggregationStdS)(c)
 }
 
 func (c TsMrevrangeFilterByTs) AggregationVarP() TsMrevrangeAggregationAggregationVarP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.P")
 	return (TsMrevrangeAggregationAggregationVarP)(c)
 }
 
 func (c TsMrevrangeFilterByTs) AggregationVarS() TsMrevrangeAggregationAggregationVarS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.S")
 	return (TsMrevrangeAggregationAggregationVarS)(c)
 }
 
 func (c TsMrevrangeFilterByTs) AggregationTwa() TsMrevrangeAggregationAggregationTwa {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "TWA")
 	return (TsMrevrangeAggregationAggregationTwa)(c)
 }
 
@@ -26129,73 +26276,73 @@ func (c TsMrevrangeFilterByValue) Count(count int64) TsMrevrangeCount {
 	return (TsMrevrangeCount)(c)
 }
 
-func (c TsMrevrangeFilterByValue) Align(value int64) TsMrevrangeAlign {
-	c.cs.s = append(c.cs.s, "ALIGN", strconv.FormatInt(value, 10))
+func (c TsMrevrangeFilterByValue) Align(value string) TsMrevrangeAlign {
+	c.cs.s = append(c.cs.s, "ALIGN", value)
 	return (TsMrevrangeAlign)(c)
 }
 
 func (c TsMrevrangeFilterByValue) AggregationAvg() TsMrevrangeAggregationAggregationAvg {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "avg")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "AVG")
 	return (TsMrevrangeAggregationAggregationAvg)(c)
 }
 
 func (c TsMrevrangeFilterByValue) AggregationSum() TsMrevrangeAggregationAggregationSum {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "sum")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "SUM")
 	return (TsMrevrangeAggregationAggregationSum)(c)
 }
 
 func (c TsMrevrangeFilterByValue) AggregationMin() TsMrevrangeAggregationAggregationMin {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "min")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MIN")
 	return (TsMrevrangeAggregationAggregationMin)(c)
 }
 
 func (c TsMrevrangeFilterByValue) AggregationMax() TsMrevrangeAggregationAggregationMax {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "max")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MAX")
 	return (TsMrevrangeAggregationAggregationMax)(c)
 }
 
 func (c TsMrevrangeFilterByValue) AggregationRange() TsMrevrangeAggregationAggregationRange {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "range")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "RANGE")
 	return (TsMrevrangeAggregationAggregationRange)(c)
 }
 
 func (c TsMrevrangeFilterByValue) AggregationCount() TsMrevrangeAggregationAggregationCount {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "count")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "COUNT")
 	return (TsMrevrangeAggregationAggregationCount)(c)
 }
 
 func (c TsMrevrangeFilterByValue) AggregationFirst() TsMrevrangeAggregationAggregationFirst {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "first")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "FIRST")
 	return (TsMrevrangeAggregationAggregationFirst)(c)
 }
 
 func (c TsMrevrangeFilterByValue) AggregationLast() TsMrevrangeAggregationAggregationLast {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "last")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "LAST")
 	return (TsMrevrangeAggregationAggregationLast)(c)
 }
 
 func (c TsMrevrangeFilterByValue) AggregationStdP() TsMrevrangeAggregationAggregationStdP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.P")
 	return (TsMrevrangeAggregationAggregationStdP)(c)
 }
 
 func (c TsMrevrangeFilterByValue) AggregationStdS() TsMrevrangeAggregationAggregationStdS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.S")
 	return (TsMrevrangeAggregationAggregationStdS)(c)
 }
 
 func (c TsMrevrangeFilterByValue) AggregationVarP() TsMrevrangeAggregationAggregationVarP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.P")
 	return (TsMrevrangeAggregationAggregationVarP)(c)
 }
 
 func (c TsMrevrangeFilterByValue) AggregationVarS() TsMrevrangeAggregationAggregationVarS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.S")
 	return (TsMrevrangeAggregationAggregationVarS)(c)
 }
 
 func (c TsMrevrangeFilterByValue) AggregationTwa() TsMrevrangeAggregationAggregationTwa {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "TWA")
 	return (TsMrevrangeAggregationAggregationTwa)(c)
 }
 
@@ -26218,6 +26365,113 @@ func (c TsMrevrangeGroupby) Build() Completed {
 	return Completed(c)
 }
 
+type TsMrevrangeLatest Completed
+
+func (c TsMrevrangeLatest) FilterByTs(timestamp ...int64) TsMrevrangeFilterByTs {
+	c.cs.s = append(c.cs.s, "FILTER_BY_TS")
+	for _, n := range timestamp {
+		c.cs.s = append(c.cs.s, strconv.FormatInt(n, 10))
+	}
+	return (TsMrevrangeFilterByTs)(c)
+}
+
+func (c TsMrevrangeLatest) FilterByValue(min float64, max float64) TsMrevrangeFilterByValue {
+	c.cs.s = append(c.cs.s, "FILTER_BY_VALUE", strconv.FormatFloat(min, 'f', -1, 64), strconv.FormatFloat(max, 'f', -1, 64))
+	return (TsMrevrangeFilterByValue)(c)
+}
+
+func (c TsMrevrangeLatest) Withlabels() TsMrevrangeWithlabels {
+	c.cs.s = append(c.cs.s, "WITHLABELS")
+	return (TsMrevrangeWithlabels)(c)
+}
+
+func (c TsMrevrangeLatest) SelectedLabels(labels []string) TsMrevrangeSelectedLabels {
+	c.cs.s = append(c.cs.s, "SELECTED_LABELS")
+	c.cs.s = append(c.cs.s, labels...)
+	return (TsMrevrangeSelectedLabels)(c)
+}
+
+func (c TsMrevrangeLatest) Count(count int64) TsMrevrangeCount {
+	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
+	return (TsMrevrangeCount)(c)
+}
+
+func (c TsMrevrangeLatest) Align(value string) TsMrevrangeAlign {
+	c.cs.s = append(c.cs.s, "ALIGN", value)
+	return (TsMrevrangeAlign)(c)
+}
+
+func (c TsMrevrangeLatest) AggregationAvg() TsMrevrangeAggregationAggregationAvg {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "AVG")
+	return (TsMrevrangeAggregationAggregationAvg)(c)
+}
+
+func (c TsMrevrangeLatest) AggregationSum() TsMrevrangeAggregationAggregationSum {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "SUM")
+	return (TsMrevrangeAggregationAggregationSum)(c)
+}
+
+func (c TsMrevrangeLatest) AggregationMin() TsMrevrangeAggregationAggregationMin {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MIN")
+	return (TsMrevrangeAggregationAggregationMin)(c)
+}
+
+func (c TsMrevrangeLatest) AggregationMax() TsMrevrangeAggregationAggregationMax {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MAX")
+	return (TsMrevrangeAggregationAggregationMax)(c)
+}
+
+func (c TsMrevrangeLatest) AggregationRange() TsMrevrangeAggregationAggregationRange {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "RANGE")
+	return (TsMrevrangeAggregationAggregationRange)(c)
+}
+
+func (c TsMrevrangeLatest) AggregationCount() TsMrevrangeAggregationAggregationCount {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "COUNT")
+	return (TsMrevrangeAggregationAggregationCount)(c)
+}
+
+func (c TsMrevrangeLatest) AggregationFirst() TsMrevrangeAggregationAggregationFirst {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "FIRST")
+	return (TsMrevrangeAggregationAggregationFirst)(c)
+}
+
+func (c TsMrevrangeLatest) AggregationLast() TsMrevrangeAggregationAggregationLast {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "LAST")
+	return (TsMrevrangeAggregationAggregationLast)(c)
+}
+
+func (c TsMrevrangeLatest) AggregationStdP() TsMrevrangeAggregationAggregationStdP {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.P")
+	return (TsMrevrangeAggregationAggregationStdP)(c)
+}
+
+func (c TsMrevrangeLatest) AggregationStdS() TsMrevrangeAggregationAggregationStdS {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.S")
+	return (TsMrevrangeAggregationAggregationStdS)(c)
+}
+
+func (c TsMrevrangeLatest) AggregationVarP() TsMrevrangeAggregationAggregationVarP {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.P")
+	return (TsMrevrangeAggregationAggregationVarP)(c)
+}
+
+func (c TsMrevrangeLatest) AggregationVarS() TsMrevrangeAggregationAggregationVarS {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.S")
+	return (TsMrevrangeAggregationAggregationVarS)(c)
+}
+
+func (c TsMrevrangeLatest) AggregationTwa() TsMrevrangeAggregationAggregationTwa {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "TWA")
+	return (TsMrevrangeAggregationAggregationTwa)(c)
+}
+
+func (c TsMrevrangeLatest) Filter(filter ...string) TsMrevrangeFilter {
+	c.cs.s = append(c.cs.s, "FILTER")
+	c.cs.s = append(c.cs.s, filter...)
+	return (TsMrevrangeFilter)(c)
+}
+
 type TsMrevrangeSelectedLabels Completed
 
 func (c TsMrevrangeSelectedLabels) Count(count int64) TsMrevrangeCount {
@@ -26225,73 +26479,73 @@ func (c TsMrevrangeSelectedLabels) Count(count int64) TsMrevrangeCount {
 	return (TsMrevrangeCount)(c)
 }
 
-func (c TsMrevrangeSelectedLabels) Align(value int64) TsMrevrangeAlign {
-	c.cs.s = append(c.cs.s, "ALIGN", strconv.FormatInt(value, 10))
+func (c TsMrevrangeSelectedLabels) Align(value string) TsMrevrangeAlign {
+	c.cs.s = append(c.cs.s, "ALIGN", value)
 	return (TsMrevrangeAlign)(c)
 }
 
 func (c TsMrevrangeSelectedLabels) AggregationAvg() TsMrevrangeAggregationAggregationAvg {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "avg")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "AVG")
 	return (TsMrevrangeAggregationAggregationAvg)(c)
 }
 
 func (c TsMrevrangeSelectedLabels) AggregationSum() TsMrevrangeAggregationAggregationSum {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "sum")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "SUM")
 	return (TsMrevrangeAggregationAggregationSum)(c)
 }
 
 func (c TsMrevrangeSelectedLabels) AggregationMin() TsMrevrangeAggregationAggregationMin {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "min")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MIN")
 	return (TsMrevrangeAggregationAggregationMin)(c)
 }
 
 func (c TsMrevrangeSelectedLabels) AggregationMax() TsMrevrangeAggregationAggregationMax {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "max")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MAX")
 	return (TsMrevrangeAggregationAggregationMax)(c)
 }
 
 func (c TsMrevrangeSelectedLabels) AggregationRange() TsMrevrangeAggregationAggregationRange {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "range")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "RANGE")
 	return (TsMrevrangeAggregationAggregationRange)(c)
 }
 
 func (c TsMrevrangeSelectedLabels) AggregationCount() TsMrevrangeAggregationAggregationCount {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "count")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "COUNT")
 	return (TsMrevrangeAggregationAggregationCount)(c)
 }
 
 func (c TsMrevrangeSelectedLabels) AggregationFirst() TsMrevrangeAggregationAggregationFirst {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "first")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "FIRST")
 	return (TsMrevrangeAggregationAggregationFirst)(c)
 }
 
 func (c TsMrevrangeSelectedLabels) AggregationLast() TsMrevrangeAggregationAggregationLast {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "last")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "LAST")
 	return (TsMrevrangeAggregationAggregationLast)(c)
 }
 
 func (c TsMrevrangeSelectedLabels) AggregationStdP() TsMrevrangeAggregationAggregationStdP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.P")
 	return (TsMrevrangeAggregationAggregationStdP)(c)
 }
 
 func (c TsMrevrangeSelectedLabels) AggregationStdS() TsMrevrangeAggregationAggregationStdS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.S")
 	return (TsMrevrangeAggregationAggregationStdS)(c)
 }
 
 func (c TsMrevrangeSelectedLabels) AggregationVarP() TsMrevrangeAggregationAggregationVarP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.P")
 	return (TsMrevrangeAggregationAggregationVarP)(c)
 }
 
 func (c TsMrevrangeSelectedLabels) AggregationVarS() TsMrevrangeAggregationAggregationVarS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.S")
 	return (TsMrevrangeAggregationAggregationVarS)(c)
 }
 
 func (c TsMrevrangeSelectedLabels) AggregationTwa() TsMrevrangeAggregationAggregationTwa {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "TWA")
 	return (TsMrevrangeAggregationAggregationTwa)(c)
 }
 
@@ -26302,6 +26556,11 @@ func (c TsMrevrangeSelectedLabels) Filter(filter ...string) TsMrevrangeFilter {
 }
 
 type TsMrevrangeTotimestamp Completed
+
+func (c TsMrevrangeTotimestamp) Latest() TsMrevrangeLatest {
+	c.cs.s = append(c.cs.s, "LATEST")
+	return (TsMrevrangeLatest)(c)
+}
 
 func (c TsMrevrangeTotimestamp) FilterByTs(timestamp ...int64) TsMrevrangeFilterByTs {
 	c.cs.s = append(c.cs.s, "FILTER_BY_TS")
@@ -26332,73 +26591,73 @@ func (c TsMrevrangeTotimestamp) Count(count int64) TsMrevrangeCount {
 	return (TsMrevrangeCount)(c)
 }
 
-func (c TsMrevrangeTotimestamp) Align(value int64) TsMrevrangeAlign {
-	c.cs.s = append(c.cs.s, "ALIGN", strconv.FormatInt(value, 10))
+func (c TsMrevrangeTotimestamp) Align(value string) TsMrevrangeAlign {
+	c.cs.s = append(c.cs.s, "ALIGN", value)
 	return (TsMrevrangeAlign)(c)
 }
 
 func (c TsMrevrangeTotimestamp) AggregationAvg() TsMrevrangeAggregationAggregationAvg {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "avg")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "AVG")
 	return (TsMrevrangeAggregationAggregationAvg)(c)
 }
 
 func (c TsMrevrangeTotimestamp) AggregationSum() TsMrevrangeAggregationAggregationSum {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "sum")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "SUM")
 	return (TsMrevrangeAggregationAggregationSum)(c)
 }
 
 func (c TsMrevrangeTotimestamp) AggregationMin() TsMrevrangeAggregationAggregationMin {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "min")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MIN")
 	return (TsMrevrangeAggregationAggregationMin)(c)
 }
 
 func (c TsMrevrangeTotimestamp) AggregationMax() TsMrevrangeAggregationAggregationMax {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "max")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MAX")
 	return (TsMrevrangeAggregationAggregationMax)(c)
 }
 
 func (c TsMrevrangeTotimestamp) AggregationRange() TsMrevrangeAggregationAggregationRange {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "range")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "RANGE")
 	return (TsMrevrangeAggregationAggregationRange)(c)
 }
 
 func (c TsMrevrangeTotimestamp) AggregationCount() TsMrevrangeAggregationAggregationCount {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "count")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "COUNT")
 	return (TsMrevrangeAggregationAggregationCount)(c)
 }
 
 func (c TsMrevrangeTotimestamp) AggregationFirst() TsMrevrangeAggregationAggregationFirst {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "first")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "FIRST")
 	return (TsMrevrangeAggregationAggregationFirst)(c)
 }
 
 func (c TsMrevrangeTotimestamp) AggregationLast() TsMrevrangeAggregationAggregationLast {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "last")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "LAST")
 	return (TsMrevrangeAggregationAggregationLast)(c)
 }
 
 func (c TsMrevrangeTotimestamp) AggregationStdP() TsMrevrangeAggregationAggregationStdP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.P")
 	return (TsMrevrangeAggregationAggregationStdP)(c)
 }
 
 func (c TsMrevrangeTotimestamp) AggregationStdS() TsMrevrangeAggregationAggregationStdS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.S")
 	return (TsMrevrangeAggregationAggregationStdS)(c)
 }
 
 func (c TsMrevrangeTotimestamp) AggregationVarP() TsMrevrangeAggregationAggregationVarP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.P")
 	return (TsMrevrangeAggregationAggregationVarP)(c)
 }
 
 func (c TsMrevrangeTotimestamp) AggregationVarS() TsMrevrangeAggregationAggregationVarS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.S")
 	return (TsMrevrangeAggregationAggregationVarS)(c)
 }
 
 func (c TsMrevrangeTotimestamp) AggregationTwa() TsMrevrangeAggregationAggregationTwa {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "TWA")
 	return (TsMrevrangeAggregationAggregationTwa)(c)
 }
 
@@ -26415,73 +26674,73 @@ func (c TsMrevrangeWithlabels) Count(count int64) TsMrevrangeCount {
 	return (TsMrevrangeCount)(c)
 }
 
-func (c TsMrevrangeWithlabels) Align(value int64) TsMrevrangeAlign {
-	c.cs.s = append(c.cs.s, "ALIGN", strconv.FormatInt(value, 10))
+func (c TsMrevrangeWithlabels) Align(value string) TsMrevrangeAlign {
+	c.cs.s = append(c.cs.s, "ALIGN", value)
 	return (TsMrevrangeAlign)(c)
 }
 
 func (c TsMrevrangeWithlabels) AggregationAvg() TsMrevrangeAggregationAggregationAvg {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "avg")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "AVG")
 	return (TsMrevrangeAggregationAggregationAvg)(c)
 }
 
 func (c TsMrevrangeWithlabels) AggregationSum() TsMrevrangeAggregationAggregationSum {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "sum")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "SUM")
 	return (TsMrevrangeAggregationAggregationSum)(c)
 }
 
 func (c TsMrevrangeWithlabels) AggregationMin() TsMrevrangeAggregationAggregationMin {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "min")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MIN")
 	return (TsMrevrangeAggregationAggregationMin)(c)
 }
 
 func (c TsMrevrangeWithlabels) AggregationMax() TsMrevrangeAggregationAggregationMax {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "max")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MAX")
 	return (TsMrevrangeAggregationAggregationMax)(c)
 }
 
 func (c TsMrevrangeWithlabels) AggregationRange() TsMrevrangeAggregationAggregationRange {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "range")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "RANGE")
 	return (TsMrevrangeAggregationAggregationRange)(c)
 }
 
 func (c TsMrevrangeWithlabels) AggregationCount() TsMrevrangeAggregationAggregationCount {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "count")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "COUNT")
 	return (TsMrevrangeAggregationAggregationCount)(c)
 }
 
 func (c TsMrevrangeWithlabels) AggregationFirst() TsMrevrangeAggregationAggregationFirst {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "first")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "FIRST")
 	return (TsMrevrangeAggregationAggregationFirst)(c)
 }
 
 func (c TsMrevrangeWithlabels) AggregationLast() TsMrevrangeAggregationAggregationLast {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "last")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "LAST")
 	return (TsMrevrangeAggregationAggregationLast)(c)
 }
 
 func (c TsMrevrangeWithlabels) AggregationStdP() TsMrevrangeAggregationAggregationStdP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.P")
 	return (TsMrevrangeAggregationAggregationStdP)(c)
 }
 
 func (c TsMrevrangeWithlabels) AggregationStdS() TsMrevrangeAggregationAggregationStdS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.S")
 	return (TsMrevrangeAggregationAggregationStdS)(c)
 }
 
 func (c TsMrevrangeWithlabels) AggregationVarP() TsMrevrangeAggregationAggregationVarP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.P")
 	return (TsMrevrangeAggregationAggregationVarP)(c)
 }
 
 func (c TsMrevrangeWithlabels) AggregationVarS() TsMrevrangeAggregationAggregationVarS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.S")
 	return (TsMrevrangeAggregationAggregationVarS)(c)
 }
 
 func (c TsMrevrangeWithlabels) AggregationTwa() TsMrevrangeAggregationAggregationTwa {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "TWA")
 	return (TsMrevrangeAggregationAggregationTwa)(c)
 }
 
@@ -26658,67 +26917,67 @@ func (c TsRangeAggregationEmpty) Build() Completed {
 type TsRangeAlign Completed
 
 func (c TsRangeAlign) AggregationAvg() TsRangeAggregationAggregationAvg {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "avg")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "AVG")
 	return (TsRangeAggregationAggregationAvg)(c)
 }
 
 func (c TsRangeAlign) AggregationSum() TsRangeAggregationAggregationSum {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "sum")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "SUM")
 	return (TsRangeAggregationAggregationSum)(c)
 }
 
 func (c TsRangeAlign) AggregationMin() TsRangeAggregationAggregationMin {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "min")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MIN")
 	return (TsRangeAggregationAggregationMin)(c)
 }
 
 func (c TsRangeAlign) AggregationMax() TsRangeAggregationAggregationMax {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "max")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MAX")
 	return (TsRangeAggregationAggregationMax)(c)
 }
 
 func (c TsRangeAlign) AggregationRange() TsRangeAggregationAggregationRange {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "range")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "RANGE")
 	return (TsRangeAggregationAggregationRange)(c)
 }
 
 func (c TsRangeAlign) AggregationCount() TsRangeAggregationAggregationCount {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "count")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "COUNT")
 	return (TsRangeAggregationAggregationCount)(c)
 }
 
 func (c TsRangeAlign) AggregationFirst() TsRangeAggregationAggregationFirst {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "first")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "FIRST")
 	return (TsRangeAggregationAggregationFirst)(c)
 }
 
 func (c TsRangeAlign) AggregationLast() TsRangeAggregationAggregationLast {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "last")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "LAST")
 	return (TsRangeAggregationAggregationLast)(c)
 }
 
 func (c TsRangeAlign) AggregationStdP() TsRangeAggregationAggregationStdP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.P")
 	return (TsRangeAggregationAggregationStdP)(c)
 }
 
 func (c TsRangeAlign) AggregationStdS() TsRangeAggregationAggregationStdS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.S")
 	return (TsRangeAggregationAggregationStdS)(c)
 }
 
 func (c TsRangeAlign) AggregationVarP() TsRangeAggregationAggregationVarP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.P")
 	return (TsRangeAggregationAggregationVarP)(c)
 }
 
 func (c TsRangeAlign) AggregationVarS() TsRangeAggregationAggregationVarS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.S")
 	return (TsRangeAggregationAggregationVarS)(c)
 }
 
 func (c TsRangeAlign) AggregationTwa() TsRangeAggregationAggregationTwa {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "TWA")
 	return (TsRangeAggregationAggregationTwa)(c)
 }
 
@@ -26728,73 +26987,73 @@ func (c TsRangeAlign) Build() Completed {
 
 type TsRangeCount Completed
 
-func (c TsRangeCount) Align(value int64) TsRangeAlign {
-	c.cs.s = append(c.cs.s, "ALIGN", strconv.FormatInt(value, 10))
+func (c TsRangeCount) Align(value string) TsRangeAlign {
+	c.cs.s = append(c.cs.s, "ALIGN", value)
 	return (TsRangeAlign)(c)
 }
 
 func (c TsRangeCount) AggregationAvg() TsRangeAggregationAggregationAvg {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "avg")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "AVG")
 	return (TsRangeAggregationAggregationAvg)(c)
 }
 
 func (c TsRangeCount) AggregationSum() TsRangeAggregationAggregationSum {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "sum")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "SUM")
 	return (TsRangeAggregationAggregationSum)(c)
 }
 
 func (c TsRangeCount) AggregationMin() TsRangeAggregationAggregationMin {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "min")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MIN")
 	return (TsRangeAggregationAggregationMin)(c)
 }
 
 func (c TsRangeCount) AggregationMax() TsRangeAggregationAggregationMax {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "max")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MAX")
 	return (TsRangeAggregationAggregationMax)(c)
 }
 
 func (c TsRangeCount) AggregationRange() TsRangeAggregationAggregationRange {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "range")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "RANGE")
 	return (TsRangeAggregationAggregationRange)(c)
 }
 
 func (c TsRangeCount) AggregationCount() TsRangeAggregationAggregationCount {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "count")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "COUNT")
 	return (TsRangeAggregationAggregationCount)(c)
 }
 
 func (c TsRangeCount) AggregationFirst() TsRangeAggregationAggregationFirst {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "first")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "FIRST")
 	return (TsRangeAggregationAggregationFirst)(c)
 }
 
 func (c TsRangeCount) AggregationLast() TsRangeAggregationAggregationLast {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "last")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "LAST")
 	return (TsRangeAggregationAggregationLast)(c)
 }
 
 func (c TsRangeCount) AggregationStdP() TsRangeAggregationAggregationStdP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.P")
 	return (TsRangeAggregationAggregationStdP)(c)
 }
 
 func (c TsRangeCount) AggregationStdS() TsRangeAggregationAggregationStdS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.S")
 	return (TsRangeAggregationAggregationStdS)(c)
 }
 
 func (c TsRangeCount) AggregationVarP() TsRangeAggregationAggregationVarP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.P")
 	return (TsRangeAggregationAggregationVarP)(c)
 }
 
 func (c TsRangeCount) AggregationVarS() TsRangeAggregationAggregationVarS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.S")
 	return (TsRangeAggregationAggregationVarS)(c)
 }
 
 func (c TsRangeCount) AggregationTwa() TsRangeAggregationAggregationTwa {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "TWA")
 	return (TsRangeAggregationAggregationTwa)(c)
 }
 
@@ -26822,73 +27081,73 @@ func (c TsRangeFilterByTs) Count(count int64) TsRangeCount {
 	return (TsRangeCount)(c)
 }
 
-func (c TsRangeFilterByTs) Align(value int64) TsRangeAlign {
-	c.cs.s = append(c.cs.s, "ALIGN", strconv.FormatInt(value, 10))
+func (c TsRangeFilterByTs) Align(value string) TsRangeAlign {
+	c.cs.s = append(c.cs.s, "ALIGN", value)
 	return (TsRangeAlign)(c)
 }
 
 func (c TsRangeFilterByTs) AggregationAvg() TsRangeAggregationAggregationAvg {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "avg")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "AVG")
 	return (TsRangeAggregationAggregationAvg)(c)
 }
 
 func (c TsRangeFilterByTs) AggregationSum() TsRangeAggregationAggregationSum {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "sum")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "SUM")
 	return (TsRangeAggregationAggregationSum)(c)
 }
 
 func (c TsRangeFilterByTs) AggregationMin() TsRangeAggregationAggregationMin {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "min")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MIN")
 	return (TsRangeAggregationAggregationMin)(c)
 }
 
 func (c TsRangeFilterByTs) AggregationMax() TsRangeAggregationAggregationMax {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "max")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MAX")
 	return (TsRangeAggregationAggregationMax)(c)
 }
 
 func (c TsRangeFilterByTs) AggregationRange() TsRangeAggregationAggregationRange {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "range")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "RANGE")
 	return (TsRangeAggregationAggregationRange)(c)
 }
 
 func (c TsRangeFilterByTs) AggregationCount() TsRangeAggregationAggregationCount {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "count")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "COUNT")
 	return (TsRangeAggregationAggregationCount)(c)
 }
 
 func (c TsRangeFilterByTs) AggregationFirst() TsRangeAggregationAggregationFirst {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "first")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "FIRST")
 	return (TsRangeAggregationAggregationFirst)(c)
 }
 
 func (c TsRangeFilterByTs) AggregationLast() TsRangeAggregationAggregationLast {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "last")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "LAST")
 	return (TsRangeAggregationAggregationLast)(c)
 }
 
 func (c TsRangeFilterByTs) AggregationStdP() TsRangeAggregationAggregationStdP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.P")
 	return (TsRangeAggregationAggregationStdP)(c)
 }
 
 func (c TsRangeFilterByTs) AggregationStdS() TsRangeAggregationAggregationStdS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.S")
 	return (TsRangeAggregationAggregationStdS)(c)
 }
 
 func (c TsRangeFilterByTs) AggregationVarP() TsRangeAggregationAggregationVarP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.P")
 	return (TsRangeAggregationAggregationVarP)(c)
 }
 
 func (c TsRangeFilterByTs) AggregationVarS() TsRangeAggregationAggregationVarS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.S")
 	return (TsRangeAggregationAggregationVarS)(c)
 }
 
 func (c TsRangeFilterByTs) AggregationTwa() TsRangeAggregationAggregationTwa {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "TWA")
 	return (TsRangeAggregationAggregationTwa)(c)
 }
 
@@ -26903,73 +27162,73 @@ func (c TsRangeFilterByValue) Count(count int64) TsRangeCount {
 	return (TsRangeCount)(c)
 }
 
-func (c TsRangeFilterByValue) Align(value int64) TsRangeAlign {
-	c.cs.s = append(c.cs.s, "ALIGN", strconv.FormatInt(value, 10))
+func (c TsRangeFilterByValue) Align(value string) TsRangeAlign {
+	c.cs.s = append(c.cs.s, "ALIGN", value)
 	return (TsRangeAlign)(c)
 }
 
 func (c TsRangeFilterByValue) AggregationAvg() TsRangeAggregationAggregationAvg {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "avg")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "AVG")
 	return (TsRangeAggregationAggregationAvg)(c)
 }
 
 func (c TsRangeFilterByValue) AggregationSum() TsRangeAggregationAggregationSum {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "sum")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "SUM")
 	return (TsRangeAggregationAggregationSum)(c)
 }
 
 func (c TsRangeFilterByValue) AggregationMin() TsRangeAggregationAggregationMin {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "min")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MIN")
 	return (TsRangeAggregationAggregationMin)(c)
 }
 
 func (c TsRangeFilterByValue) AggregationMax() TsRangeAggregationAggregationMax {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "max")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MAX")
 	return (TsRangeAggregationAggregationMax)(c)
 }
 
 func (c TsRangeFilterByValue) AggregationRange() TsRangeAggregationAggregationRange {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "range")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "RANGE")
 	return (TsRangeAggregationAggregationRange)(c)
 }
 
 func (c TsRangeFilterByValue) AggregationCount() TsRangeAggregationAggregationCount {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "count")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "COUNT")
 	return (TsRangeAggregationAggregationCount)(c)
 }
 
 func (c TsRangeFilterByValue) AggregationFirst() TsRangeAggregationAggregationFirst {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "first")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "FIRST")
 	return (TsRangeAggregationAggregationFirst)(c)
 }
 
 func (c TsRangeFilterByValue) AggregationLast() TsRangeAggregationAggregationLast {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "last")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "LAST")
 	return (TsRangeAggregationAggregationLast)(c)
 }
 
 func (c TsRangeFilterByValue) AggregationStdP() TsRangeAggregationAggregationStdP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.P")
 	return (TsRangeAggregationAggregationStdP)(c)
 }
 
 func (c TsRangeFilterByValue) AggregationStdS() TsRangeAggregationAggregationStdS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.S")
 	return (TsRangeAggregationAggregationStdS)(c)
 }
 
 func (c TsRangeFilterByValue) AggregationVarP() TsRangeAggregationAggregationVarP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.P")
 	return (TsRangeAggregationAggregationVarP)(c)
 }
 
 func (c TsRangeFilterByValue) AggregationVarS() TsRangeAggregationAggregationVarS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.S")
 	return (TsRangeAggregationAggregationVarS)(c)
 }
 
 func (c TsRangeFilterByValue) AggregationTwa() TsRangeAggregationAggregationTwa {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "TWA")
 	return (TsRangeAggregationAggregationTwa)(c)
 }
 
@@ -26991,7 +27250,106 @@ func (c TsRangeKey) Fromtimestamp(fromtimestamp int64) TsRangeFromtimestamp {
 	return (TsRangeFromtimestamp)(c)
 }
 
+type TsRangeLatest Completed
+
+func (c TsRangeLatest) FilterByTs(timestamp ...int64) TsRangeFilterByTs {
+	c.cs.s = append(c.cs.s, "FILTER_BY_TS")
+	for _, n := range timestamp {
+		c.cs.s = append(c.cs.s, strconv.FormatInt(n, 10))
+	}
+	return (TsRangeFilterByTs)(c)
+}
+
+func (c TsRangeLatest) FilterByValue(min float64, max float64) TsRangeFilterByValue {
+	c.cs.s = append(c.cs.s, "FILTER_BY_VALUE", strconv.FormatFloat(min, 'f', -1, 64), strconv.FormatFloat(max, 'f', -1, 64))
+	return (TsRangeFilterByValue)(c)
+}
+
+func (c TsRangeLatest) Count(count int64) TsRangeCount {
+	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
+	return (TsRangeCount)(c)
+}
+
+func (c TsRangeLatest) Align(value string) TsRangeAlign {
+	c.cs.s = append(c.cs.s, "ALIGN", value)
+	return (TsRangeAlign)(c)
+}
+
+func (c TsRangeLatest) AggregationAvg() TsRangeAggregationAggregationAvg {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "AVG")
+	return (TsRangeAggregationAggregationAvg)(c)
+}
+
+func (c TsRangeLatest) AggregationSum() TsRangeAggregationAggregationSum {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "SUM")
+	return (TsRangeAggregationAggregationSum)(c)
+}
+
+func (c TsRangeLatest) AggregationMin() TsRangeAggregationAggregationMin {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MIN")
+	return (TsRangeAggregationAggregationMin)(c)
+}
+
+func (c TsRangeLatest) AggregationMax() TsRangeAggregationAggregationMax {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MAX")
+	return (TsRangeAggregationAggregationMax)(c)
+}
+
+func (c TsRangeLatest) AggregationRange() TsRangeAggregationAggregationRange {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "RANGE")
+	return (TsRangeAggregationAggregationRange)(c)
+}
+
+func (c TsRangeLatest) AggregationCount() TsRangeAggregationAggregationCount {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "COUNT")
+	return (TsRangeAggregationAggregationCount)(c)
+}
+
+func (c TsRangeLatest) AggregationFirst() TsRangeAggregationAggregationFirst {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "FIRST")
+	return (TsRangeAggregationAggregationFirst)(c)
+}
+
+func (c TsRangeLatest) AggregationLast() TsRangeAggregationAggregationLast {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "LAST")
+	return (TsRangeAggregationAggregationLast)(c)
+}
+
+func (c TsRangeLatest) AggregationStdP() TsRangeAggregationAggregationStdP {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.P")
+	return (TsRangeAggregationAggregationStdP)(c)
+}
+
+func (c TsRangeLatest) AggregationStdS() TsRangeAggregationAggregationStdS {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.S")
+	return (TsRangeAggregationAggregationStdS)(c)
+}
+
+func (c TsRangeLatest) AggregationVarP() TsRangeAggregationAggregationVarP {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.P")
+	return (TsRangeAggregationAggregationVarP)(c)
+}
+
+func (c TsRangeLatest) AggregationVarS() TsRangeAggregationAggregationVarS {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.S")
+	return (TsRangeAggregationAggregationVarS)(c)
+}
+
+func (c TsRangeLatest) AggregationTwa() TsRangeAggregationAggregationTwa {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "TWA")
+	return (TsRangeAggregationAggregationTwa)(c)
+}
+
+func (c TsRangeLatest) Build() Completed {
+	return Completed(c)
+}
+
 type TsRangeTotimestamp Completed
+
+func (c TsRangeTotimestamp) Latest() TsRangeLatest {
+	c.cs.s = append(c.cs.s, "LATEST")
+	return (TsRangeLatest)(c)
+}
 
 func (c TsRangeTotimestamp) FilterByTs(timestamp ...int64) TsRangeFilterByTs {
 	c.cs.s = append(c.cs.s, "FILTER_BY_TS")
@@ -27011,73 +27369,73 @@ func (c TsRangeTotimestamp) Count(count int64) TsRangeCount {
 	return (TsRangeCount)(c)
 }
 
-func (c TsRangeTotimestamp) Align(value int64) TsRangeAlign {
-	c.cs.s = append(c.cs.s, "ALIGN", strconv.FormatInt(value, 10))
+func (c TsRangeTotimestamp) Align(value string) TsRangeAlign {
+	c.cs.s = append(c.cs.s, "ALIGN", value)
 	return (TsRangeAlign)(c)
 }
 
 func (c TsRangeTotimestamp) AggregationAvg() TsRangeAggregationAggregationAvg {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "avg")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "AVG")
 	return (TsRangeAggregationAggregationAvg)(c)
 }
 
 func (c TsRangeTotimestamp) AggregationSum() TsRangeAggregationAggregationSum {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "sum")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "SUM")
 	return (TsRangeAggregationAggregationSum)(c)
 }
 
 func (c TsRangeTotimestamp) AggregationMin() TsRangeAggregationAggregationMin {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "min")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MIN")
 	return (TsRangeAggregationAggregationMin)(c)
 }
 
 func (c TsRangeTotimestamp) AggregationMax() TsRangeAggregationAggregationMax {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "max")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MAX")
 	return (TsRangeAggregationAggregationMax)(c)
 }
 
 func (c TsRangeTotimestamp) AggregationRange() TsRangeAggregationAggregationRange {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "range")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "RANGE")
 	return (TsRangeAggregationAggregationRange)(c)
 }
 
 func (c TsRangeTotimestamp) AggregationCount() TsRangeAggregationAggregationCount {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "count")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "COUNT")
 	return (TsRangeAggregationAggregationCount)(c)
 }
 
 func (c TsRangeTotimestamp) AggregationFirst() TsRangeAggregationAggregationFirst {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "first")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "FIRST")
 	return (TsRangeAggregationAggregationFirst)(c)
 }
 
 func (c TsRangeTotimestamp) AggregationLast() TsRangeAggregationAggregationLast {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "last")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "LAST")
 	return (TsRangeAggregationAggregationLast)(c)
 }
 
 func (c TsRangeTotimestamp) AggregationStdP() TsRangeAggregationAggregationStdP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.P")
 	return (TsRangeAggregationAggregationStdP)(c)
 }
 
 func (c TsRangeTotimestamp) AggregationStdS() TsRangeAggregationAggregationStdS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.S")
 	return (TsRangeAggregationAggregationStdS)(c)
 }
 
 func (c TsRangeTotimestamp) AggregationVarP() TsRangeAggregationAggregationVarP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.P")
 	return (TsRangeAggregationAggregationVarP)(c)
 }
 
 func (c TsRangeTotimestamp) AggregationVarS() TsRangeAggregationAggregationVarS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.S")
 	return (TsRangeAggregationAggregationVarS)(c)
 }
 
 func (c TsRangeTotimestamp) AggregationTwa() TsRangeAggregationAggregationTwa {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "TWA")
 	return (TsRangeAggregationAggregationTwa)(c)
 }
 
@@ -27228,67 +27586,67 @@ func (c TsRevrangeAggregationEmpty) Build() Completed {
 type TsRevrangeAlign Completed
 
 func (c TsRevrangeAlign) AggregationAvg() TsRevrangeAggregationAggregationAvg {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "avg")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "AVG")
 	return (TsRevrangeAggregationAggregationAvg)(c)
 }
 
 func (c TsRevrangeAlign) AggregationSum() TsRevrangeAggregationAggregationSum {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "sum")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "SUM")
 	return (TsRevrangeAggregationAggregationSum)(c)
 }
 
 func (c TsRevrangeAlign) AggregationMin() TsRevrangeAggregationAggregationMin {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "min")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MIN")
 	return (TsRevrangeAggregationAggregationMin)(c)
 }
 
 func (c TsRevrangeAlign) AggregationMax() TsRevrangeAggregationAggregationMax {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "max")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MAX")
 	return (TsRevrangeAggregationAggregationMax)(c)
 }
 
 func (c TsRevrangeAlign) AggregationRange() TsRevrangeAggregationAggregationRange {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "range")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "RANGE")
 	return (TsRevrangeAggregationAggregationRange)(c)
 }
 
 func (c TsRevrangeAlign) AggregationCount() TsRevrangeAggregationAggregationCount {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "count")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "COUNT")
 	return (TsRevrangeAggregationAggregationCount)(c)
 }
 
 func (c TsRevrangeAlign) AggregationFirst() TsRevrangeAggregationAggregationFirst {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "first")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "FIRST")
 	return (TsRevrangeAggregationAggregationFirst)(c)
 }
 
 func (c TsRevrangeAlign) AggregationLast() TsRevrangeAggregationAggregationLast {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "last")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "LAST")
 	return (TsRevrangeAggregationAggregationLast)(c)
 }
 
 func (c TsRevrangeAlign) AggregationStdP() TsRevrangeAggregationAggregationStdP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.P")
 	return (TsRevrangeAggregationAggregationStdP)(c)
 }
 
 func (c TsRevrangeAlign) AggregationStdS() TsRevrangeAggregationAggregationStdS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.S")
 	return (TsRevrangeAggregationAggregationStdS)(c)
 }
 
 func (c TsRevrangeAlign) AggregationVarP() TsRevrangeAggregationAggregationVarP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.P")
 	return (TsRevrangeAggregationAggregationVarP)(c)
 }
 
 func (c TsRevrangeAlign) AggregationVarS() TsRevrangeAggregationAggregationVarS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.S")
 	return (TsRevrangeAggregationAggregationVarS)(c)
 }
 
 func (c TsRevrangeAlign) AggregationTwa() TsRevrangeAggregationAggregationTwa {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "TWA")
 	return (TsRevrangeAggregationAggregationTwa)(c)
 }
 
@@ -27298,73 +27656,73 @@ func (c TsRevrangeAlign) Build() Completed {
 
 type TsRevrangeCount Completed
 
-func (c TsRevrangeCount) Align(value int64) TsRevrangeAlign {
-	c.cs.s = append(c.cs.s, "ALIGN", strconv.FormatInt(value, 10))
+func (c TsRevrangeCount) Align(value string) TsRevrangeAlign {
+	c.cs.s = append(c.cs.s, "ALIGN", value)
 	return (TsRevrangeAlign)(c)
 }
 
 func (c TsRevrangeCount) AggregationAvg() TsRevrangeAggregationAggregationAvg {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "avg")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "AVG")
 	return (TsRevrangeAggregationAggregationAvg)(c)
 }
 
 func (c TsRevrangeCount) AggregationSum() TsRevrangeAggregationAggregationSum {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "sum")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "SUM")
 	return (TsRevrangeAggregationAggregationSum)(c)
 }
 
 func (c TsRevrangeCount) AggregationMin() TsRevrangeAggregationAggregationMin {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "min")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MIN")
 	return (TsRevrangeAggregationAggregationMin)(c)
 }
 
 func (c TsRevrangeCount) AggregationMax() TsRevrangeAggregationAggregationMax {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "max")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MAX")
 	return (TsRevrangeAggregationAggregationMax)(c)
 }
 
 func (c TsRevrangeCount) AggregationRange() TsRevrangeAggregationAggregationRange {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "range")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "RANGE")
 	return (TsRevrangeAggregationAggregationRange)(c)
 }
 
 func (c TsRevrangeCount) AggregationCount() TsRevrangeAggregationAggregationCount {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "count")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "COUNT")
 	return (TsRevrangeAggregationAggregationCount)(c)
 }
 
 func (c TsRevrangeCount) AggregationFirst() TsRevrangeAggregationAggregationFirst {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "first")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "FIRST")
 	return (TsRevrangeAggregationAggregationFirst)(c)
 }
 
 func (c TsRevrangeCount) AggregationLast() TsRevrangeAggregationAggregationLast {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "last")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "LAST")
 	return (TsRevrangeAggregationAggregationLast)(c)
 }
 
 func (c TsRevrangeCount) AggregationStdP() TsRevrangeAggregationAggregationStdP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.P")
 	return (TsRevrangeAggregationAggregationStdP)(c)
 }
 
 func (c TsRevrangeCount) AggregationStdS() TsRevrangeAggregationAggregationStdS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.S")
 	return (TsRevrangeAggregationAggregationStdS)(c)
 }
 
 func (c TsRevrangeCount) AggregationVarP() TsRevrangeAggregationAggregationVarP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.P")
 	return (TsRevrangeAggregationAggregationVarP)(c)
 }
 
 func (c TsRevrangeCount) AggregationVarS() TsRevrangeAggregationAggregationVarS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.S")
 	return (TsRevrangeAggregationAggregationVarS)(c)
 }
 
 func (c TsRevrangeCount) AggregationTwa() TsRevrangeAggregationAggregationTwa {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "TWA")
 	return (TsRevrangeAggregationAggregationTwa)(c)
 }
 
@@ -27392,73 +27750,73 @@ func (c TsRevrangeFilterByTs) Count(count int64) TsRevrangeCount {
 	return (TsRevrangeCount)(c)
 }
 
-func (c TsRevrangeFilterByTs) Align(value int64) TsRevrangeAlign {
-	c.cs.s = append(c.cs.s, "ALIGN", strconv.FormatInt(value, 10))
+func (c TsRevrangeFilterByTs) Align(value string) TsRevrangeAlign {
+	c.cs.s = append(c.cs.s, "ALIGN", value)
 	return (TsRevrangeAlign)(c)
 }
 
 func (c TsRevrangeFilterByTs) AggregationAvg() TsRevrangeAggregationAggregationAvg {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "avg")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "AVG")
 	return (TsRevrangeAggregationAggregationAvg)(c)
 }
 
 func (c TsRevrangeFilterByTs) AggregationSum() TsRevrangeAggregationAggregationSum {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "sum")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "SUM")
 	return (TsRevrangeAggregationAggregationSum)(c)
 }
 
 func (c TsRevrangeFilterByTs) AggregationMin() TsRevrangeAggregationAggregationMin {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "min")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MIN")
 	return (TsRevrangeAggregationAggregationMin)(c)
 }
 
 func (c TsRevrangeFilterByTs) AggregationMax() TsRevrangeAggregationAggregationMax {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "max")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MAX")
 	return (TsRevrangeAggregationAggregationMax)(c)
 }
 
 func (c TsRevrangeFilterByTs) AggregationRange() TsRevrangeAggregationAggregationRange {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "range")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "RANGE")
 	return (TsRevrangeAggregationAggregationRange)(c)
 }
 
 func (c TsRevrangeFilterByTs) AggregationCount() TsRevrangeAggregationAggregationCount {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "count")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "COUNT")
 	return (TsRevrangeAggregationAggregationCount)(c)
 }
 
 func (c TsRevrangeFilterByTs) AggregationFirst() TsRevrangeAggregationAggregationFirst {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "first")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "FIRST")
 	return (TsRevrangeAggregationAggregationFirst)(c)
 }
 
 func (c TsRevrangeFilterByTs) AggregationLast() TsRevrangeAggregationAggregationLast {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "last")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "LAST")
 	return (TsRevrangeAggregationAggregationLast)(c)
 }
 
 func (c TsRevrangeFilterByTs) AggregationStdP() TsRevrangeAggregationAggregationStdP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.P")
 	return (TsRevrangeAggregationAggregationStdP)(c)
 }
 
 func (c TsRevrangeFilterByTs) AggregationStdS() TsRevrangeAggregationAggregationStdS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.S")
 	return (TsRevrangeAggregationAggregationStdS)(c)
 }
 
 func (c TsRevrangeFilterByTs) AggregationVarP() TsRevrangeAggregationAggregationVarP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.P")
 	return (TsRevrangeAggregationAggregationVarP)(c)
 }
 
 func (c TsRevrangeFilterByTs) AggregationVarS() TsRevrangeAggregationAggregationVarS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.S")
 	return (TsRevrangeAggregationAggregationVarS)(c)
 }
 
 func (c TsRevrangeFilterByTs) AggregationTwa() TsRevrangeAggregationAggregationTwa {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "TWA")
 	return (TsRevrangeAggregationAggregationTwa)(c)
 }
 
@@ -27473,73 +27831,73 @@ func (c TsRevrangeFilterByValue) Count(count int64) TsRevrangeCount {
 	return (TsRevrangeCount)(c)
 }
 
-func (c TsRevrangeFilterByValue) Align(value int64) TsRevrangeAlign {
-	c.cs.s = append(c.cs.s, "ALIGN", strconv.FormatInt(value, 10))
+func (c TsRevrangeFilterByValue) Align(value string) TsRevrangeAlign {
+	c.cs.s = append(c.cs.s, "ALIGN", value)
 	return (TsRevrangeAlign)(c)
 }
 
 func (c TsRevrangeFilterByValue) AggregationAvg() TsRevrangeAggregationAggregationAvg {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "avg")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "AVG")
 	return (TsRevrangeAggregationAggregationAvg)(c)
 }
 
 func (c TsRevrangeFilterByValue) AggregationSum() TsRevrangeAggregationAggregationSum {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "sum")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "SUM")
 	return (TsRevrangeAggregationAggregationSum)(c)
 }
 
 func (c TsRevrangeFilterByValue) AggregationMin() TsRevrangeAggregationAggregationMin {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "min")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MIN")
 	return (TsRevrangeAggregationAggregationMin)(c)
 }
 
 func (c TsRevrangeFilterByValue) AggregationMax() TsRevrangeAggregationAggregationMax {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "max")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MAX")
 	return (TsRevrangeAggregationAggregationMax)(c)
 }
 
 func (c TsRevrangeFilterByValue) AggregationRange() TsRevrangeAggregationAggregationRange {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "range")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "RANGE")
 	return (TsRevrangeAggregationAggregationRange)(c)
 }
 
 func (c TsRevrangeFilterByValue) AggregationCount() TsRevrangeAggregationAggregationCount {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "count")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "COUNT")
 	return (TsRevrangeAggregationAggregationCount)(c)
 }
 
 func (c TsRevrangeFilterByValue) AggregationFirst() TsRevrangeAggregationAggregationFirst {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "first")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "FIRST")
 	return (TsRevrangeAggregationAggregationFirst)(c)
 }
 
 func (c TsRevrangeFilterByValue) AggregationLast() TsRevrangeAggregationAggregationLast {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "last")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "LAST")
 	return (TsRevrangeAggregationAggregationLast)(c)
 }
 
 func (c TsRevrangeFilterByValue) AggregationStdP() TsRevrangeAggregationAggregationStdP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.P")
 	return (TsRevrangeAggregationAggregationStdP)(c)
 }
 
 func (c TsRevrangeFilterByValue) AggregationStdS() TsRevrangeAggregationAggregationStdS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.S")
 	return (TsRevrangeAggregationAggregationStdS)(c)
 }
 
 func (c TsRevrangeFilterByValue) AggregationVarP() TsRevrangeAggregationAggregationVarP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.P")
 	return (TsRevrangeAggregationAggregationVarP)(c)
 }
 
 func (c TsRevrangeFilterByValue) AggregationVarS() TsRevrangeAggregationAggregationVarS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.S")
 	return (TsRevrangeAggregationAggregationVarS)(c)
 }
 
 func (c TsRevrangeFilterByValue) AggregationTwa() TsRevrangeAggregationAggregationTwa {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "TWA")
 	return (TsRevrangeAggregationAggregationTwa)(c)
 }
 
@@ -27561,7 +27919,106 @@ func (c TsRevrangeKey) Fromtimestamp(fromtimestamp int64) TsRevrangeFromtimestam
 	return (TsRevrangeFromtimestamp)(c)
 }
 
+type TsRevrangeLatest Completed
+
+func (c TsRevrangeLatest) FilterByTs(timestamp ...int64) TsRevrangeFilterByTs {
+	c.cs.s = append(c.cs.s, "FILTER_BY_TS")
+	for _, n := range timestamp {
+		c.cs.s = append(c.cs.s, strconv.FormatInt(n, 10))
+	}
+	return (TsRevrangeFilterByTs)(c)
+}
+
+func (c TsRevrangeLatest) FilterByValue(min float64, max float64) TsRevrangeFilterByValue {
+	c.cs.s = append(c.cs.s, "FILTER_BY_VALUE", strconv.FormatFloat(min, 'f', -1, 64), strconv.FormatFloat(max, 'f', -1, 64))
+	return (TsRevrangeFilterByValue)(c)
+}
+
+func (c TsRevrangeLatest) Count(count int64) TsRevrangeCount {
+	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
+	return (TsRevrangeCount)(c)
+}
+
+func (c TsRevrangeLatest) Align(value string) TsRevrangeAlign {
+	c.cs.s = append(c.cs.s, "ALIGN", value)
+	return (TsRevrangeAlign)(c)
+}
+
+func (c TsRevrangeLatest) AggregationAvg() TsRevrangeAggregationAggregationAvg {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "AVG")
+	return (TsRevrangeAggregationAggregationAvg)(c)
+}
+
+func (c TsRevrangeLatest) AggregationSum() TsRevrangeAggregationAggregationSum {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "SUM")
+	return (TsRevrangeAggregationAggregationSum)(c)
+}
+
+func (c TsRevrangeLatest) AggregationMin() TsRevrangeAggregationAggregationMin {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MIN")
+	return (TsRevrangeAggregationAggregationMin)(c)
+}
+
+func (c TsRevrangeLatest) AggregationMax() TsRevrangeAggregationAggregationMax {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MAX")
+	return (TsRevrangeAggregationAggregationMax)(c)
+}
+
+func (c TsRevrangeLatest) AggregationRange() TsRevrangeAggregationAggregationRange {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "RANGE")
+	return (TsRevrangeAggregationAggregationRange)(c)
+}
+
+func (c TsRevrangeLatest) AggregationCount() TsRevrangeAggregationAggregationCount {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "COUNT")
+	return (TsRevrangeAggregationAggregationCount)(c)
+}
+
+func (c TsRevrangeLatest) AggregationFirst() TsRevrangeAggregationAggregationFirst {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "FIRST")
+	return (TsRevrangeAggregationAggregationFirst)(c)
+}
+
+func (c TsRevrangeLatest) AggregationLast() TsRevrangeAggregationAggregationLast {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "LAST")
+	return (TsRevrangeAggregationAggregationLast)(c)
+}
+
+func (c TsRevrangeLatest) AggregationStdP() TsRevrangeAggregationAggregationStdP {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.P")
+	return (TsRevrangeAggregationAggregationStdP)(c)
+}
+
+func (c TsRevrangeLatest) AggregationStdS() TsRevrangeAggregationAggregationStdS {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.S")
+	return (TsRevrangeAggregationAggregationStdS)(c)
+}
+
+func (c TsRevrangeLatest) AggregationVarP() TsRevrangeAggregationAggregationVarP {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.P")
+	return (TsRevrangeAggregationAggregationVarP)(c)
+}
+
+func (c TsRevrangeLatest) AggregationVarS() TsRevrangeAggregationAggregationVarS {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.S")
+	return (TsRevrangeAggregationAggregationVarS)(c)
+}
+
+func (c TsRevrangeLatest) AggregationTwa() TsRevrangeAggregationAggregationTwa {
+	c.cs.s = append(c.cs.s, "AGGREGATION", "TWA")
+	return (TsRevrangeAggregationAggregationTwa)(c)
+}
+
+func (c TsRevrangeLatest) Build() Completed {
+	return Completed(c)
+}
+
 type TsRevrangeTotimestamp Completed
+
+func (c TsRevrangeTotimestamp) Latest() TsRevrangeLatest {
+	c.cs.s = append(c.cs.s, "LATEST")
+	return (TsRevrangeLatest)(c)
+}
 
 func (c TsRevrangeTotimestamp) FilterByTs(timestamp ...int64) TsRevrangeFilterByTs {
 	c.cs.s = append(c.cs.s, "FILTER_BY_TS")
@@ -27581,73 +28038,73 @@ func (c TsRevrangeTotimestamp) Count(count int64) TsRevrangeCount {
 	return (TsRevrangeCount)(c)
 }
 
-func (c TsRevrangeTotimestamp) Align(value int64) TsRevrangeAlign {
-	c.cs.s = append(c.cs.s, "ALIGN", strconv.FormatInt(value, 10))
+func (c TsRevrangeTotimestamp) Align(value string) TsRevrangeAlign {
+	c.cs.s = append(c.cs.s, "ALIGN", value)
 	return (TsRevrangeAlign)(c)
 }
 
 func (c TsRevrangeTotimestamp) AggregationAvg() TsRevrangeAggregationAggregationAvg {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "avg")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "AVG")
 	return (TsRevrangeAggregationAggregationAvg)(c)
 }
 
 func (c TsRevrangeTotimestamp) AggregationSum() TsRevrangeAggregationAggregationSum {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "sum")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "SUM")
 	return (TsRevrangeAggregationAggregationSum)(c)
 }
 
 func (c TsRevrangeTotimestamp) AggregationMin() TsRevrangeAggregationAggregationMin {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "min")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MIN")
 	return (TsRevrangeAggregationAggregationMin)(c)
 }
 
 func (c TsRevrangeTotimestamp) AggregationMax() TsRevrangeAggregationAggregationMax {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "max")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "MAX")
 	return (TsRevrangeAggregationAggregationMax)(c)
 }
 
 func (c TsRevrangeTotimestamp) AggregationRange() TsRevrangeAggregationAggregationRange {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "range")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "RANGE")
 	return (TsRevrangeAggregationAggregationRange)(c)
 }
 
 func (c TsRevrangeTotimestamp) AggregationCount() TsRevrangeAggregationAggregationCount {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "count")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "COUNT")
 	return (TsRevrangeAggregationAggregationCount)(c)
 }
 
 func (c TsRevrangeTotimestamp) AggregationFirst() TsRevrangeAggregationAggregationFirst {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "first")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "FIRST")
 	return (TsRevrangeAggregationAggregationFirst)(c)
 }
 
 func (c TsRevrangeTotimestamp) AggregationLast() TsRevrangeAggregationAggregationLast {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "last")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "LAST")
 	return (TsRevrangeAggregationAggregationLast)(c)
 }
 
 func (c TsRevrangeTotimestamp) AggregationStdP() TsRevrangeAggregationAggregationStdP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.P")
 	return (TsRevrangeAggregationAggregationStdP)(c)
 }
 
 func (c TsRevrangeTotimestamp) AggregationStdS() TsRevrangeAggregationAggregationStdS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "std.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "STD.S")
 	return (TsRevrangeAggregationAggregationStdS)(c)
 }
 
 func (c TsRevrangeTotimestamp) AggregationVarP() TsRevrangeAggregationAggregationVarP {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.p")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.P")
 	return (TsRevrangeAggregationAggregationVarP)(c)
 }
 
 func (c TsRevrangeTotimestamp) AggregationVarS() TsRevrangeAggregationAggregationVarS {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "var.s")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "VAR.S")
 	return (TsRevrangeAggregationAggregationVarS)(c)
 }
 
 func (c TsRevrangeTotimestamp) AggregationTwa() TsRevrangeAggregationAggregationTwa {
-	c.cs.s = append(c.cs.s, "AGGREGATION", "twa")
+	c.cs.s = append(c.cs.s, "AGGREGATION", "TWA")
 	return (TsRevrangeAggregationAggregationTwa)(c)
 }
 
