@@ -18,6 +18,12 @@ func TestCacheable_CacheKey(t *testing.T) {
 	}
 }
 
+func TestCacheable_IsMGet(t *testing.T) {
+	if cmd := Cacheable(NewMGetCompleted([]string{"MGET", "K"})); !cmd.IsMGet() {
+		t.Fatalf("should be mget")
+	}
+}
+
 func TestCompleted_IsEmpty(t *testing.T) {
 	if cmd := NewCompleted([]string{}); !cmd.IsEmpty() {
 		t.Fatalf("should be empty")

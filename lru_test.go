@@ -175,6 +175,22 @@ func TestLRU(t *testing.T) {
 			t.Fatalf("got unexpected value from the entry.Wait(): %v %v", err, err2)
 		}
 	})
+
+	t.Run("GetTTL", func(t *testing.T) {
+		lru := setup(t)
+		if v := lru.GetTTL("empty"); v != -2 {
+			t.Fatalf("unexpected %v", v)
+		}
+		lru.GetOrPrepare("key", "cmd", time.Second)
+		lru.Update("key", "cmd", RedisMessage{typ: 1}, 1000)
+		if v := lru.GetTTL("key"); !roughly(v, time.Second) {
+			t.Fatalf("unexpected %v", v)
+		}
+	})
+}
+
+func roughly(ttl, expect time.Duration) bool {
+	return ttl >= (expect/4) && ttl <= expect
 }
 
 func BenchmarkLRU(b *testing.B) {

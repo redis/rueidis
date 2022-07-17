@@ -576,6 +576,13 @@ func rootCf(root goStruct) (tag string) {
 		tag = "noRetTag"
 	}
 
+	if within(root, mtGetCMDs) {
+		if tag != "" {
+			panic("root cf collision")
+		}
+		tag = "mtGetTag"
+	}
+
 	if within(root, readOnlyCMDs) {
 		if tag != "" {
 			panic("root cf collision")
@@ -815,6 +822,10 @@ var noRetCMDs = map[string]bool{
 	"sunsubscribe": false,
 }
 
+var mtGetCMDs = map[string]bool{
+	"mget": false,
+}
+
 var blockingCMDs = map[string]bool{
 	"blpop":       false,
 	"brpop":       false,
@@ -841,6 +852,7 @@ var cacheableCMDs = map[string]bool{
 	"georadiusbymemberro": false,
 	"geosearch":           false,
 	"get":                 false,
+	"mget":                false,
 	"getbit":              false,
 	"getrange":            false,
 	"hexists":             false,
@@ -943,7 +955,6 @@ var readOnlyCMDs = map[string]bool{
 	"memorystats":         false,
 	"memoryusage":         false,
 	"memorymallocstats":   false,
-	"mget":                false,
 	"objectencoding":      false,
 	"objectfreq":          false,
 	"objecthelp":          false,

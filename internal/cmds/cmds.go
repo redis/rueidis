@@ -7,6 +7,7 @@ const (
 	blockTag = uint16(1 << 14)
 	readonly = uint16(1 << 13)
 	noRetTag = uint16(1<<12) | readonly // make noRetTag can also be retried
+	mtGetTag = uint16(1<<11) | readonly // make mtGetTag can also be retried
 	// InitSlot indicates that the command be sent to any redis node in cluster
 	InitSlot = uint16(1 << 15)
 	// NoSlot indicates that the command has no key slot specified
@@ -139,9 +140,14 @@ func (c *Cacheable) Commands() []string {
 	return c.cs.s
 }
 
-// CommandSlice it the command container which will be recycled by the sync.Pool.
+// CommandSlice returns the command container which will be recycled by the sync.Pool.
 func (c *Cacheable) CommandSlice() *CommandSlice {
 	return c.cs
+}
+
+// IsMGet returns if the command is MGET
+func (c *Cacheable) IsMGet() bool {
+	return c.cf == mtGetTag
 }
 
 // CacheKey returns the cache key used by the server-assisted client side caching
@@ -182,6 +188,11 @@ func NewBlockingCompleted(ss []string) Completed {
 // NewReadOnlyCompleted creates an arbitrary readonly Completed command.
 func NewReadOnlyCompleted(ss []string) Completed {
 	return Completed{cs: &CommandSlice{s: ss}, cf: readonly}
+}
+
+// NewMGetCompleted creates an arbitrary readonly Completed command.
+func NewMGetCompleted(ss []string) Completed {
+	return Completed{cs: &CommandSlice{s: ss}, cf: mtGetTag}
 }
 
 // NewMultiCompleted creates multiple arbitrary Completed commands.
