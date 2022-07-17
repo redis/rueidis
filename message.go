@@ -566,7 +566,7 @@ func (m *RedisMessage) AsStrMap() (map[string]string, error) {
 	if err := m.Error(); err != nil {
 		return nil, err
 	}
-	if m.IsMap() || m.IsArray() {
+	if (m.IsMap() || m.IsArray()) && len(m.values)%2 == 0 {
 		r := make(map[string]string, len(m.values)/2)
 		for i := 0; i < len(m.values); i += 2 {
 			k := m.values[i]
@@ -576,7 +576,7 @@ func (m *RedisMessage) AsStrMap() (map[string]string, error) {
 		return r, nil
 	}
 	typ := m.typ
-	panic(fmt.Sprintf("redis message type %c is not a map/array/set", typ))
+	panic(fmt.Sprintf("redis message type %c is not a map/array/set or its length is not even", typ))
 }
 
 // AsIntMap check if message is a redis map/array/set response, and convert to map[string]int64.
@@ -585,7 +585,7 @@ func (m *RedisMessage) AsIntMap() (map[string]int64, error) {
 	if err := m.Error(); err != nil {
 		return nil, err
 	}
-	if m.IsMap() || m.IsArray() {
+	if (m.IsMap() || m.IsArray()) && len(m.values)%2 == 0 {
 		var err error
 		r := make(map[string]int64, len(m.values)/2)
 		for i := 0; i < len(m.values); i += 2 {
@@ -604,7 +604,7 @@ func (m *RedisMessage) AsIntMap() (map[string]int64, error) {
 		return r, nil
 	}
 	typ := m.typ
-	panic(fmt.Sprintf("redis message type %c is not a map/array/set", typ))
+	panic(fmt.Sprintf("redis message type %c is not a map/array/set or its length is not even", typ))
 }
 
 // ToMap check if message is a redis map response, and return it
