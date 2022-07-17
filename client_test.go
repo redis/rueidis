@@ -3,7 +3,9 @@ package rueidis
 import (
 	"context"
 	"errors"
+	"net"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -719,4 +721,46 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 			t.Fatalf("unexpected response %v", ret)
 		}
 	})
+}
+
+func BenchmarkSingleClient_DoCache(b *testing.B) {
+	ctx := context.Background()
+	client, err := NewClient(ClientOption{InitAddress: []string{"127.0.0.1:6379"}, Dialer: net.Dialer{KeepAlive: -1}})
+	if err != nil {
+		b.Fatal(err)
+	}
+	keys := make([]string, 10000)
+	for i := 0; i < 10000; i++ {
+		keys[i] = strconv.Itoa(i)
+	}
+	mset := client.B().Mset().KeyValue()
+	for _, v := range keys {
+		mset = mset.KeyValue(v, v)
+	}
+	if err := client.Do(ctx, mset.Build()).Error(); err != nil {
+		b.Fatal(err)
+	}
+	b.Run("NoCache", func(b *testing.B) {
+		b.ResetTimer()
+		b.RunParallel(func(pb *testing.PB) {
+			for pb.Next() {
+				if err := client.Do(ctx, client.B().Mget().Key(keys...).Build()).Error(); err != nil {
+					b.Errorf("unexpected %v", err)
+				}
+			}
+		})
+		b.StopTimer()
+	})
+	b.Run("DoCache", func(b *testing.B) {
+		b.ResetTimer()
+		b.RunParallel(func(pb *testing.PB) {
+			for pb.Next() {
+				if err := client.DoCache(ctx, client.B().Mget().Key(keys...).Cache(), time.Minute).Error(); err != nil {
+					b.Errorf("unexpected %v", err)
+				}
+			}
+		})
+		b.StopTimer()
+	})
+	client.Close()
 }

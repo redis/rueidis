@@ -23,6 +23,7 @@ type cache interface {
 	Update(key, cmd string, value RedisMessage, pttl int64)
 	Cancel(key, cmd string, value RedisMessage, err error)
 	Delete(keys []RedisMessage)
+	GetTTL(key string) time.Duration
 	FreeAndClose(notice RedisMessage)
 }
 
@@ -151,9 +152,7 @@ func (c *lru) Update(key, cmd string, value RedisMessage, pttl int64) {
 			}
 		}
 		if pttl >= 0 {
-			if ttl := time.Now().Add(time.Duration(pttl) * time.Millisecond); ttl.Before(store.ttl) {
-				store.ttl = ttl
-			}
+			store.ttl = time.Now().Add(time.Duration(pttl) * time.Millisecond)
 		}
 	}
 	c.mu.Unlock()
@@ -180,6 +179,18 @@ func (c *lru) Cancel(key, cmd string, val RedisMessage, err error) {
 	if ch != nil {
 		close(ch)
 	}
+}
+
+func (c *lru) GetTTL(key string) (ttl time.Duration) {
+	c.mu.Lock()
+	if store, ok := c.store[key]; ok && len(store.cache) != 0 {
+		ttl = store.ttl.Sub(time.Now())
+	}
+	if ttl <= 0 {
+		ttl = -2
+	}
+	c.mu.Unlock()
+	return
 }
 
 func (c *lru) purge(store *keyCache) {

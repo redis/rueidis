@@ -32730,6 +32730,7 @@ func TestCommand_307(t *testing.T) {
 	s.MemoryUsage().Key("1").Samples(1).Build()
 	s.MemoryUsage().Key("1").Build()
 	s.Mget().Key("1").Key("1").Build()
+	s.Mget().Key("1").Key("1").Cache()
 	s.Migrate().Host("1").Port(1).Key().DestinationDb(1).Timeout(1).Copy().Replace().Build()
 	s.Migrate().Host("1").Port(1).Key().DestinationDb(1).Timeout(1).Copy().Auth("1").Build()
 	s.Migrate().Host("1").Port(1).Key().DestinationDb(1).Timeout(1).Copy().Auth2("1", "1").Build()

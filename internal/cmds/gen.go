@@ -18543,7 +18543,7 @@ func (c MemoryUsageSamples) Build() Completed {
 type Mget Completed
 
 func (b Builder) Mget() (c Mget) {
-	c = Mget{cs: get(), ks: b.ks, cf: readonly}
+	c = Mget{cs: get(), ks: b.ks, cf: mtGetTag}
 	c.cs.s = append(c.cs.s, "MGET")
 	return c
 }
@@ -18572,6 +18572,10 @@ func (c MgetKey) Key(key ...string) MgetKey {
 
 func (c MgetKey) Build() Completed {
 	return Completed(c)
+}
+
+func (c MgetKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Migrate Completed

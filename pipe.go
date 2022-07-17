@@ -286,13 +286,22 @@ func (p *pipe) _backgroundRead() (err error) {
 			}
 		}
 		// if unfulfilled multi commands are lead by opt-in and get success response
-		if ff == 4 && len(multi) == 5 && multi[0].IsOptIn() {
-			cacheable := cmds.Cacheable(multi[3])
-			ck, cc := cacheable.CacheKey()
-			if len(msg.values) == 2 {
-				cp := msg.values[1]
-				cp.attrs = cacheMark
-				p.cache.Update(ck, cc, cp, msg.values[0].integer)
+		if ff == len(multi)-1 && multi[0].IsOptIn() {
+			cacheable := cmds.Cacheable(multi[len(multi)-2])
+			if cacheable.IsMGet() {
+				if len(msg.values) >= 2 {
+					for i, cp := range msg.values[len(msg.values)-1].values {
+						cp.attrs = cacheMark
+						p.cache.Update(cacheable.Commands()[i+1], "GET", cp, msg.values[i].integer)
+					}
+				}
+			} else {
+				ck, cc := cacheable.CacheKey()
+				if len(msg.values) == 2 {
+					cp := msg.values[1]
+					cp.attrs = cacheMark
+					p.cache.Update(ck, cc, cp, msg.values[0].integer)
+				}
 			}
 		}
 		if ff == len(multi) {
@@ -721,6 +730,9 @@ func (p *pipe) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duratio
 	if p.cache == nil {
 		return newErrResult(ErrClosing)
 	}
+	if cmd.IsMGet() {
+		return p.doCacheMGet(ctx, cmd, ttl)
+	}
 	ck, cc := cmd.CacheKey()
 	if v, entry := p.cache.GetOrPrepare(ck, cc, ttl); v.typ != 0 {
 		return newResult(v, nil)
@@ -750,6 +762,89 @@ func (p *pipe) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duratio
 		return newResult(resp[4].val, nil)
 	}
 	return newResult(exec[1], nil)
+}
+
+func (p *pipe) doCacheMGet(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) RedisResult {
+	commands := cmd.Commands()
+	entries := make(map[int]*entry)
+	result := RedisResult{val: RedisMessage{typ: '*', values: nil}}
+	j := 1
+	for i, key := range commands[1:] {
+		v, entry := p.cache.GetOrPrepare(key, "GET", ttl)
+		if v.typ != 0 { // cache hit for one key
+			if len(result.val.values) == 0 {
+				result.val.values = make([]RedisMessage, len(commands)-1)
+			}
+			result.val.values[i] = v
+			continue
+		}
+		if entry != nil {
+			entries[i] = entry // store entries for later entry.Wait() to avoid MGET deadlock each others.
+			continue
+		}
+		commands[j] = key // rewrite MGET
+		j++
+	}
+
+	var partial []RedisMessage
+	if j != 1 {
+		rewrite := cmds.NewMGetCompleted(commands[:j])
+		multi := make([]cmds.Completed, 0, len(commands[1:j])+4)
+		multi = append(multi, cmds.OptInCmd, cmds.MultiCmd)
+		for _, key := range commands[1:j] {
+			multi = append(multi, cmds.NewCompleted([]string{"PTTL", key}))
+		}
+		multi = append(multi, rewrite, cmds.ExecCmd)
+
+		resp := p.DoMulti(ctx, multi...)
+		exec, err := resp[len(multi)-1].ToArray()
+		if err != nil {
+			var msg RedisMessage
+			var er2 error
+			if _, ok := err.(*RedisError); !ok {
+				msg = RedisMessage{}
+				er2 = err
+			} else if resp[len(multi)-2].val.typ != '+' { // EXEC aborted, return err of the input cmd in MULTI block
+				msg = resp[len(multi)-2].val
+				er2 = nil
+			} else {
+				msg = resp[len(multi)-1].val
+				er2 = nil
+			}
+			for _, key := range commands[1:j] {
+				p.cache.Cancel(key, "GET", msg, er2)
+			}
+			return newResult(msg, er2)
+		}
+		if j == len(commands) { // all cache miss
+			return newResult(exec[len(exec)-1], nil)
+		}
+		partial = exec[len(exec)-1].values
+	} else { // all cache hit
+		result.val.attrs = cacheMark
+	}
+
+	if len(result.val.values) == 0 {
+		result.val.values = make([]RedisMessage, len(commands)-1)
+	}
+	for i, entry := range entries {
+		v, err := entry.Wait()
+		if err != nil {
+			return newErrResult(err)
+		}
+		result.val.values[i] = v
+	}
+
+	j = 0
+	for _, ret := range partial {
+		for ; j < len(result.val.values); j++ {
+			if result.val.values[j].typ == 0 {
+				result.val.values[j] = ret
+				break
+			}
+		}
+	}
+	return result
 }
 
 func (p *pipe) Error() error {
