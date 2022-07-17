@@ -112,7 +112,6 @@ func (c *lru) GetOrPrepare(key, cmd string, ttl time.Duration) (v RedisMessage, 
 		} else {
 			c.list.Remove(ele)
 			c.size -= e.size
-			store.ttl = now.Add(ttl)
 			e = nil
 		}
 	}
@@ -123,6 +122,7 @@ func (c *lru) GetOrPrepare(key, cmd string, ttl time.Duration) (v RedisMessage, 
 			cmd: cmd,
 			ch:  make(chan struct{}, 1),
 		})
+		store.ttl = now.Add(ttl)
 		store.cache[cmd] = c.list.Back()
 	}
 	c.mu.Unlock()
@@ -152,7 +152,10 @@ func (c *lru) Update(key, cmd string, value RedisMessage, pttl int64) {
 			}
 		}
 		if pttl >= 0 {
-			store.ttl = time.Now().Add(time.Duration(pttl) * time.Millisecond)
+			// server side ttl should only shorten client side ttl
+			if ttl := time.Now().Add(time.Duration(pttl) * time.Millisecond); ttl.Before(store.ttl) {
+				store.ttl = ttl
+			}
 		}
 	}
 	c.mu.Unlock()

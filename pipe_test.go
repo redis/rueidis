@@ -635,7 +635,7 @@ func TestClientSideCachingMGet(t *testing.T) {
 		time.Sleep(10 * time.Millisecond)
 	}
 
-	v, _ := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewMGetCompleted([]string{"MGET", "a1", "a2", "a3"})), time.Second).ToMessage()
+	v, _ := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewMGetCompleted([]string{"MGET", "a1", "a2", "a3"})), 10*time.Second).ToMessage()
 	arr, _ := v.ToArray()
 	if len(arr) != 3 {
 		t.Errorf("unexpected cached mget length, expected 3, got %v", len(arr))
