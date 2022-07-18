@@ -1155,6 +1155,20 @@
                     "type": "string",
                     "command":"AS",
                     "optional": true
+                  },
+                  {
+                    "name": "by",
+                    "type": "string",
+                    "command": "BY",
+                    "optional": true
+                  },
+                  {
+                    "name": "order",
+                    "type": "enum",
+                    "enum": [
+                      "ASC", "DESC"
+                    ],
+                    "optional": true
                   }
                 ]
               }

@@ -6687,6 +6687,21 @@ func (c FtAggregateOpGroupbyReduceArg) As(name string) FtAggregateOpGroupbyReduc
 	return (FtAggregateOpGroupbyReduceAs)(c)
 }
 
+func (c FtAggregateOpGroupbyReduceArg) By(by string) FtAggregateOpGroupbyReduceBy {
+	c.cs.s = append(c.cs.s, "BY", by)
+	return (FtAggregateOpGroupbyReduceBy)(c)
+}
+
+func (c FtAggregateOpGroupbyReduceArg) Asc() FtAggregateOpGroupbyReduceOrderAsc {
+	c.cs.s = append(c.cs.s, "ASC")
+	return (FtAggregateOpGroupbyReduceOrderAsc)(c)
+}
+
+func (c FtAggregateOpGroupbyReduceArg) Desc() FtAggregateOpGroupbyReduceOrderDesc {
+	c.cs.s = append(c.cs.s, "DESC")
+	return (FtAggregateOpGroupbyReduceOrderDesc)(c)
+}
+
 func (c FtAggregateOpGroupbyReduceArg) Reduce(function string) FtAggregateOpGroupbyReduceReduce {
 	c.cs.s = append(c.cs.s, "REDUCE", function)
 	return (FtAggregateOpGroupbyReduceReduce)(c)
@@ -6738,6 +6753,21 @@ func (c FtAggregateOpGroupbyReduceArg) Build() Completed {
 
 type FtAggregateOpGroupbyReduceAs Completed
 
+func (c FtAggregateOpGroupbyReduceAs) By(by string) FtAggregateOpGroupbyReduceBy {
+	c.cs.s = append(c.cs.s, "BY", by)
+	return (FtAggregateOpGroupbyReduceBy)(c)
+}
+
+func (c FtAggregateOpGroupbyReduceAs) Asc() FtAggregateOpGroupbyReduceOrderAsc {
+	c.cs.s = append(c.cs.s, "ASC")
+	return (FtAggregateOpGroupbyReduceOrderAsc)(c)
+}
+
+func (c FtAggregateOpGroupbyReduceAs) Desc() FtAggregateOpGroupbyReduceOrderDesc {
+	c.cs.s = append(c.cs.s, "DESC")
+	return (FtAggregateOpGroupbyReduceOrderDesc)(c)
+}
+
 func (c FtAggregateOpGroupbyReduceAs) Reduce(function string) FtAggregateOpGroupbyReduceReduce {
 	c.cs.s = append(c.cs.s, "REDUCE", function)
 	return (FtAggregateOpGroupbyReduceReduce)(c)
@@ -6787,6 +6817,67 @@ func (c FtAggregateOpGroupbyReduceAs) Build() Completed {
 	return Completed(c)
 }
 
+type FtAggregateOpGroupbyReduceBy Completed
+
+func (c FtAggregateOpGroupbyReduceBy) Asc() FtAggregateOpGroupbyReduceOrderAsc {
+	c.cs.s = append(c.cs.s, "ASC")
+	return (FtAggregateOpGroupbyReduceOrderAsc)(c)
+}
+
+func (c FtAggregateOpGroupbyReduceBy) Desc() FtAggregateOpGroupbyReduceOrderDesc {
+	c.cs.s = append(c.cs.s, "DESC")
+	return (FtAggregateOpGroupbyReduceOrderDesc)(c)
+}
+
+func (c FtAggregateOpGroupbyReduceBy) Reduce(function string) FtAggregateOpGroupbyReduceReduce {
+	c.cs.s = append(c.cs.s, "REDUCE", function)
+	return (FtAggregateOpGroupbyReduceReduce)(c)
+}
+
+func (c FtAggregateOpGroupbyReduceBy) Groupby(nargs int64) FtAggregateOpGroupbyGroupby {
+	c.cs.s = append(c.cs.s, "GROUPBY", strconv.FormatInt(nargs, 10))
+	return (FtAggregateOpGroupbyGroupby)(c)
+}
+
+func (c FtAggregateOpGroupbyReduceBy) Sortby(nargs int64) FtAggregateOpSortbySortby {
+	c.cs.s = append(c.cs.s, "SORTBY", strconv.FormatInt(nargs, 10))
+	return (FtAggregateOpSortbySortby)(c)
+}
+
+func (c FtAggregateOpGroupbyReduceBy) Apply(expression string) FtAggregateOpApplyApply {
+	c.cs.s = append(c.cs.s, "APPLY", expression)
+	return (FtAggregateOpApplyApply)(c)
+}
+
+func (c FtAggregateOpGroupbyReduceBy) Limit() FtAggregateOpLimitLimit {
+	c.cs.s = append(c.cs.s, "LIMIT")
+	return (FtAggregateOpLimitLimit)(c)
+}
+
+func (c FtAggregateOpGroupbyReduceBy) Filter(filter string) FtAggregateOpFilter {
+	c.cs.s = append(c.cs.s, "FILTER", filter)
+	return (FtAggregateOpFilter)(c)
+}
+
+func (c FtAggregateOpGroupbyReduceBy) Withcursor() FtAggregateCursorWithcursor {
+	c.cs.s = append(c.cs.s, "WITHCURSOR")
+	return (FtAggregateCursorWithcursor)(c)
+}
+
+func (c FtAggregateOpGroupbyReduceBy) Params() FtAggregateParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtAggregateParamsParams)(c)
+}
+
+func (c FtAggregateOpGroupbyReduceBy) Dialect(dialect int64) FtAggregateDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtAggregateDialect)(c)
+}
+
+func (c FtAggregateOpGroupbyReduceBy) Build() Completed {
+	return Completed(c)
+}
+
 type FtAggregateOpGroupbyReduceNargs Completed
 
 func (c FtAggregateOpGroupbyReduceNargs) Arg(arg ...string) FtAggregateOpGroupbyReduceArg {
@@ -6797,6 +6888,21 @@ func (c FtAggregateOpGroupbyReduceNargs) Arg(arg ...string) FtAggregateOpGroupby
 func (c FtAggregateOpGroupbyReduceNargs) As(name string) FtAggregateOpGroupbyReduceAs {
 	c.cs.s = append(c.cs.s, "AS", name)
 	return (FtAggregateOpGroupbyReduceAs)(c)
+}
+
+func (c FtAggregateOpGroupbyReduceNargs) By(by string) FtAggregateOpGroupbyReduceBy {
+	c.cs.s = append(c.cs.s, "BY", by)
+	return (FtAggregateOpGroupbyReduceBy)(c)
+}
+
+func (c FtAggregateOpGroupbyReduceNargs) Asc() FtAggregateOpGroupbyReduceOrderAsc {
+	c.cs.s = append(c.cs.s, "ASC")
+	return (FtAggregateOpGroupbyReduceOrderAsc)(c)
+}
+
+func (c FtAggregateOpGroupbyReduceNargs) Desc() FtAggregateOpGroupbyReduceOrderDesc {
+	c.cs.s = append(c.cs.s, "DESC")
+	return (FtAggregateOpGroupbyReduceOrderDesc)(c)
 }
 
 func (c FtAggregateOpGroupbyReduceNargs) Reduce(function string) FtAggregateOpGroupbyReduceReduce {
@@ -6845,6 +6951,108 @@ func (c FtAggregateOpGroupbyReduceNargs) Dialect(dialect int64) FtAggregateDiale
 }
 
 func (c FtAggregateOpGroupbyReduceNargs) Build() Completed {
+	return Completed(c)
+}
+
+type FtAggregateOpGroupbyReduceOrderAsc Completed
+
+func (c FtAggregateOpGroupbyReduceOrderAsc) Reduce(function string) FtAggregateOpGroupbyReduceReduce {
+	c.cs.s = append(c.cs.s, "REDUCE", function)
+	return (FtAggregateOpGroupbyReduceReduce)(c)
+}
+
+func (c FtAggregateOpGroupbyReduceOrderAsc) Groupby(nargs int64) FtAggregateOpGroupbyGroupby {
+	c.cs.s = append(c.cs.s, "GROUPBY", strconv.FormatInt(nargs, 10))
+	return (FtAggregateOpGroupbyGroupby)(c)
+}
+
+func (c FtAggregateOpGroupbyReduceOrderAsc) Sortby(nargs int64) FtAggregateOpSortbySortby {
+	c.cs.s = append(c.cs.s, "SORTBY", strconv.FormatInt(nargs, 10))
+	return (FtAggregateOpSortbySortby)(c)
+}
+
+func (c FtAggregateOpGroupbyReduceOrderAsc) Apply(expression string) FtAggregateOpApplyApply {
+	c.cs.s = append(c.cs.s, "APPLY", expression)
+	return (FtAggregateOpApplyApply)(c)
+}
+
+func (c FtAggregateOpGroupbyReduceOrderAsc) Limit() FtAggregateOpLimitLimit {
+	c.cs.s = append(c.cs.s, "LIMIT")
+	return (FtAggregateOpLimitLimit)(c)
+}
+
+func (c FtAggregateOpGroupbyReduceOrderAsc) Filter(filter string) FtAggregateOpFilter {
+	c.cs.s = append(c.cs.s, "FILTER", filter)
+	return (FtAggregateOpFilter)(c)
+}
+
+func (c FtAggregateOpGroupbyReduceOrderAsc) Withcursor() FtAggregateCursorWithcursor {
+	c.cs.s = append(c.cs.s, "WITHCURSOR")
+	return (FtAggregateCursorWithcursor)(c)
+}
+
+func (c FtAggregateOpGroupbyReduceOrderAsc) Params() FtAggregateParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtAggregateParamsParams)(c)
+}
+
+func (c FtAggregateOpGroupbyReduceOrderAsc) Dialect(dialect int64) FtAggregateDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtAggregateDialect)(c)
+}
+
+func (c FtAggregateOpGroupbyReduceOrderAsc) Build() Completed {
+	return Completed(c)
+}
+
+type FtAggregateOpGroupbyReduceOrderDesc Completed
+
+func (c FtAggregateOpGroupbyReduceOrderDesc) Reduce(function string) FtAggregateOpGroupbyReduceReduce {
+	c.cs.s = append(c.cs.s, "REDUCE", function)
+	return (FtAggregateOpGroupbyReduceReduce)(c)
+}
+
+func (c FtAggregateOpGroupbyReduceOrderDesc) Groupby(nargs int64) FtAggregateOpGroupbyGroupby {
+	c.cs.s = append(c.cs.s, "GROUPBY", strconv.FormatInt(nargs, 10))
+	return (FtAggregateOpGroupbyGroupby)(c)
+}
+
+func (c FtAggregateOpGroupbyReduceOrderDesc) Sortby(nargs int64) FtAggregateOpSortbySortby {
+	c.cs.s = append(c.cs.s, "SORTBY", strconv.FormatInt(nargs, 10))
+	return (FtAggregateOpSortbySortby)(c)
+}
+
+func (c FtAggregateOpGroupbyReduceOrderDesc) Apply(expression string) FtAggregateOpApplyApply {
+	c.cs.s = append(c.cs.s, "APPLY", expression)
+	return (FtAggregateOpApplyApply)(c)
+}
+
+func (c FtAggregateOpGroupbyReduceOrderDesc) Limit() FtAggregateOpLimitLimit {
+	c.cs.s = append(c.cs.s, "LIMIT")
+	return (FtAggregateOpLimitLimit)(c)
+}
+
+func (c FtAggregateOpGroupbyReduceOrderDesc) Filter(filter string) FtAggregateOpFilter {
+	c.cs.s = append(c.cs.s, "FILTER", filter)
+	return (FtAggregateOpFilter)(c)
+}
+
+func (c FtAggregateOpGroupbyReduceOrderDesc) Withcursor() FtAggregateCursorWithcursor {
+	c.cs.s = append(c.cs.s, "WITHCURSOR")
+	return (FtAggregateCursorWithcursor)(c)
+}
+
+func (c FtAggregateOpGroupbyReduceOrderDesc) Params() FtAggregateParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtAggregateParamsParams)(c)
+}
+
+func (c FtAggregateOpGroupbyReduceOrderDesc) Dialect(dialect int64) FtAggregateDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtAggregateDialect)(c)
+}
+
+func (c FtAggregateOpGroupbyReduceOrderDesc) Build() Completed {
 	return Completed(c)
 }
 
