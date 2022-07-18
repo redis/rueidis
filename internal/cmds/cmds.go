@@ -150,6 +150,19 @@ func (c *Cacheable) IsMGet() bool {
 	return c.cf == mtGetTag
 }
 
+// MGetCacheCmd returns the cache command of the MGET singular command
+func (c *Cacheable) MGetCacheCmd() string {
+	if c.cs.s[0][0] == 'J' {
+		return "JSON.GET" + c.cs.s[len(c.cs.s)-1]
+	}
+	return "GET"
+}
+
+// MGetCacheKey returns the cache key of the MGET singular command
+func (c *Cacheable) MGetCacheKey(i int) string {
+	return c.cs.s[i+1]
+}
+
 // CacheKey returns the cache key used by the server-assisted client side caching
 func (c *Cacheable) CacheKey() (key, command string) {
 	if len(c.cs.s) == 2 {

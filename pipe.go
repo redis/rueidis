@@ -290,9 +290,10 @@ func (p *pipe) _backgroundRead() (err error) {
 			cacheable := cmds.Cacheable(multi[len(multi)-2])
 			if cacheable.IsMGet() {
 				if len(msg.values) >= 2 {
+					cc := cacheable.MGetCacheCmd()
 					for i, cp := range msg.values[len(msg.values)-1].values {
 						cp.attrs = cacheMark
-						p.cache.Update(cacheable.Commands()[i+1], "GET", cp, msg.values[i].integer)
+						p.cache.Update(cacheable.MGetCacheKey(i), cc, cp, msg.values[i].integer)
 					}
 				}
 			} else {
@@ -768,12 +769,17 @@ func (p *pipe) doCacheMGet(ctx context.Context, cmd cmds.Cacheable, ttl time.Dur
 	commands := cmd.Commands()
 	entries := make(map[int]*entry)
 	result := RedisResult{val: RedisMessage{typ: '*', values: nil}}
+	cc := cmd.MGetCacheCmd()
+	keys := len(commands) - 1
+	if cc[0] == 'J' {
+		keys-- // the last one of JSON.MGET is a path, not a key
+	}
 	j := 1
-	for i, key := range commands[1:] {
-		v, entry := p.cache.GetOrPrepare(key, "GET", ttl)
+	for i, key := range commands[1 : keys+1] {
+		v, entry := p.cache.GetOrPrepare(cmd.MGetCacheKey(i), cc, ttl)
 		if v.typ != 0 { // cache hit for one key
 			if len(result.val.values) == 0 {
-				result.val.values = make([]RedisMessage, len(commands)-1)
+				result.val.values = make([]RedisMessage, keys)
 			}
 			result.val.values[i] = v
 			continue
@@ -788,7 +794,12 @@ func (p *pipe) doCacheMGet(ctx context.Context, cmd cmds.Cacheable, ttl time.Dur
 
 	var partial []RedisMessage
 	if j != 1 {
-		rewrite := cmds.NewMGetCompleted(commands[:j])
+		last := j
+		if cc[0] == 'J' { // rewrite JSON.MGET path
+			commands[j] = commands[len(commands)-1]
+			last++
+		}
+		rewrite := cmds.NewMGetCompleted(commands[:last])
 		multi := make([]cmds.Completed, 0, len(commands[1:j])+4)
 		multi = append(multi, cmds.OptInCmd, cmds.MultiCmd)
 		for _, key := range commands[1:j] {
@@ -812,11 +823,11 @@ func (p *pipe) doCacheMGet(ctx context.Context, cmd cmds.Cacheable, ttl time.Dur
 				er2 = nil
 			}
 			for _, key := range commands[1:j] {
-				p.cache.Cancel(key, "GET", msg, er2)
+				p.cache.Cancel(key, cc, msg, er2)
 			}
 			return newResult(msg, er2)
 		}
-		if j == len(commands) { // all cache miss
+		if last == len(commands) { // all cache miss
 			return newResult(exec[len(exec)-1], nil)
 		}
 		partial = exec[len(exec)-1].values
@@ -825,7 +836,7 @@ func (p *pipe) doCacheMGet(ctx context.Context, cmd cmds.Cacheable, ttl time.Dur
 	}
 
 	if len(result.val.values) == 0 {
-		result.val.values = make([]RedisMessage, len(commands)-1)
+		result.val.values = make([]RedisMessage, keys)
 	}
 	for i, entry := range entries {
 		v, err := entry.Wait()

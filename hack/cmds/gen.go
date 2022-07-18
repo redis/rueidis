@@ -823,7 +823,8 @@ var noRetCMDs = map[string]bool{
 }
 
 var mtGetCMDs = map[string]bool{
-	"mget": false,
+	"mget":     false,
+	"jsonmget": false,
 }
 
 var blockingCMDs = map[string]bool{
@@ -891,6 +892,7 @@ var cacheableCMDs = map[string]bool{
 	"zrevrank":            false,
 	"zscore":              false,
 	"jsonget":             false,
+	"jsonmget":            false,
 	"jsonstrlen":          false,
 	"jsonarrindex":        false,
 	"jsonarrlen":          false,
@@ -1017,7 +1019,6 @@ var readOnlyCMDs = map[string]bool{
 	"zunion":              false,
 	"zintercard":          false,
 	"jsonget":             false,
-	"jsonmget":            false,
 	"jsonstrlen":          false,
 	"jsonarrindex":        false,
 	"jsonarrlen":          false,

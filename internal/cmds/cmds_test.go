@@ -24,6 +24,24 @@ func TestCacheable_IsMGet(t *testing.T) {
 	}
 }
 
+func TestCacheable_MGetCacheKey(t *testing.T) {
+	if cmd := Cacheable(NewMGetCompleted([]string{"MGET", "K"})); cmd.MGetCacheKey(0) != "K" {
+		t.Fatalf("should be K")
+	}
+	if cmd := Cacheable(NewMGetCompleted([]string{"JSON.MGET", "K"})); cmd.MGetCacheKey(0) != "K" {
+		t.Fatalf("should be K")
+	}
+}
+
+func TestCacheable_MGetCacheCmd(t *testing.T) {
+	if cmd := Cacheable(NewMGetCompleted([]string{"MGET", "K"})); cmd.MGetCacheCmd() != "GET" {
+		t.Fatalf("should be GET")
+	}
+	if cmd := Cacheable(NewMGetCompleted([]string{"JSON.MGET", "K", "$"})); cmd.MGetCacheCmd() != "JSON.GET$" {
+		t.Fatalf("should be JSON.GET$")
+	}
+}
+
 func TestCompleted_IsEmpty(t *testing.T) {
 	if cmd := NewCompleted([]string{}); !cmd.IsEmpty() {
 		t.Fatalf("should be empty")

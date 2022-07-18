@@ -17313,7 +17313,7 @@ func (c JsonGetSpace) Cache() Cacheable {
 type JsonMget Completed
 
 func (b Builder) JsonMget() (c JsonMget) {
-	c = JsonMget{cs: get(), ks: b.ks, cf: readonly}
+	c = JsonMget{cs: get(), ks: b.ks, cf: mtGetTag}
 	c.cs.s = append(c.cs.s, "JSON.MGET")
 	return c
 }
@@ -17349,6 +17349,10 @@ type JsonMgetPath Completed
 
 func (c JsonMgetPath) Build() Completed {
 	return Completed(c)
+}
+
+func (c JsonMgetPath) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type JsonNumincrby Completed

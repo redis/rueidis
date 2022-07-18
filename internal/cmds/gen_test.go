@@ -32660,6 +32660,7 @@ func TestCommand_307(t *testing.T) {
 	s.JsonGet().Key("1").Build()
 	s.JsonGet().Key("1").Cache()
 	s.JsonMget().Key("1").Key("1").Path("1").Build()
+	s.JsonMget().Key("1").Key("1").Path("1").Cache()
 	s.JsonNumincrby().Key("1").Path("1").Value(1).Build()
 	s.JsonNummultby().Key("1").Path("1").Value(1).Build()
 	s.JsonObjkeys().Key("1").Path("1").Build()
