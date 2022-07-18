@@ -562,45 +562,38 @@ func TestClientSideCachingMGet(t *testing.T) {
 	// single flight
 	miss := uint64(0)
 	hits := uint64(0)
-	times := 2000
-	wg := sync.WaitGroup{}
-	wg.Add(times)
-	for i := 0; i < times; i++ {
-		go func() {
-			defer wg.Done()
-			v, _ := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewMGetCompleted([]string{"MGET", "a1", "a2", "a3"})), 10*time.Second).ToMessage()
-			arr, _ := v.ToArray()
-			if len(arr) != 3 {
-				t.Errorf("unexpected cached mget length, expected 3, got %v", len(arr))
+	for i := 0; i < 2; i++ {
+		v, _ := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewMGetCompleted([]string{"MGET", "a1", "a2", "a3"})), 10*time.Second).ToMessage()
+		arr, _ := v.ToArray()
+		if len(arr) != 3 {
+			t.Errorf("unexpected cached mget length, expected 3, got %v", len(arr))
+		}
+		for i, v := range arr {
+			if v.integer != int64(i+1) {
+				t.Errorf("unexpected cached mget response, expected %v, got %v", i+1, v.integer)
 			}
-			for i, v := range arr {
-				if v.integer != int64(i+1) {
-					t.Errorf("unexpected cached mget response, expected %v, got %v", i+1, v.integer)
-				}
-			}
-			if ttl := p.cache.GetTTL("a1"); !roughly(ttl, time.Second) {
-				t.Errorf("unexpected ttl %v", ttl)
-			}
-			if ttl := p.cache.GetTTL("a2"); !roughly(ttl, time.Second*2) {
-				t.Errorf("unexpected ttl %v", ttl)
-			}
-			if ttl := p.cache.GetTTL("a3"); !roughly(ttl, time.Second*3) {
-				t.Errorf("unexpected ttl %v", ttl)
-			}
-			if v.IsCacheHit() {
-				atomic.AddUint64(&hits, 1)
-			} else {
-				atomic.AddUint64(&miss, 1)
-			}
-		}()
+		}
+		if ttl := p.cache.GetTTL("a1"); !roughly(ttl, time.Second) {
+			t.Errorf("unexpected ttl %v", ttl)
+		}
+		if ttl := p.cache.GetTTL("a2"); !roughly(ttl, time.Second*2) {
+			t.Errorf("unexpected ttl %v", ttl)
+		}
+		if ttl := p.cache.GetTTL("a3"); !roughly(ttl, time.Second*3) {
+			t.Errorf("unexpected ttl %v", ttl)
+		}
+		if v.IsCacheHit() {
+			atomic.AddUint64(&hits, 1)
+		} else {
+			atomic.AddUint64(&miss, 1)
+		}
 	}
-	wg.Wait()
 
 	if v := atomic.LoadUint64(&miss); v != 1 {
 		t.Fatalf("unexpected cache miss count %v", v)
 	}
 
-	if v := atomic.LoadUint64(&hits); v != uint64(times-1) {
+	if v := atomic.LoadUint64(&hits); v != uint64(1) {
 		t.Fatalf("unexpected cache hits count %v", v)
 	}
 
@@ -702,45 +695,38 @@ func TestClientSideCachingJSONMGet(t *testing.T) {
 	// single flight
 	miss := uint64(0)
 	hits := uint64(0)
-	times := 2000
-	wg := sync.WaitGroup{}
-	wg.Add(times)
-	for i := 0; i < times; i++ {
-		go func() {
-			defer wg.Done()
-			v, _ := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewMGetCompleted([]string{"JSON.MGET", "a1", "a2", "a3", "$"})), 10*time.Second).ToMessage()
-			arr, _ := v.ToArray()
-			if len(arr) != 3 {
-				t.Errorf("unexpected cached mget length, expected 3, got %v", len(arr))
+	for i := 0; i < 2; i++ {
+		v, _ := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewMGetCompleted([]string{"JSON.MGET", "a1", "a2", "a3", "$"})), 10*time.Second).ToMessage()
+		arr, _ := v.ToArray()
+		if len(arr) != 3 {
+			t.Errorf("unexpected cached mget length, expected 3, got %v", len(arr))
+		}
+		for i, v := range arr {
+			if v.integer != int64(i+1) {
+				t.Errorf("unexpected cached mget response, expected %v, got %v", i+1, v.integer)
 			}
-			for i, v := range arr {
-				if v.integer != int64(i+1) {
-					t.Errorf("unexpected cached mget response, expected %v, got %v", i+1, v.integer)
-				}
-			}
-			if ttl := p.cache.GetTTL("a1"); !roughly(ttl, time.Second) {
-				t.Errorf("unexpected ttl %v", ttl)
-			}
-			if ttl := p.cache.GetTTL("a2"); !roughly(ttl, time.Second*2) {
-				t.Errorf("unexpected ttl %v", ttl)
-			}
-			if ttl := p.cache.GetTTL("a3"); !roughly(ttl, time.Second*3) {
-				t.Errorf("unexpected ttl %v", ttl)
-			}
-			if v.IsCacheHit() {
-				atomic.AddUint64(&hits, 1)
-			} else {
-				atomic.AddUint64(&miss, 1)
-			}
-		}()
+		}
+		if ttl := p.cache.GetTTL("a1"); !roughly(ttl, time.Second) {
+			t.Errorf("unexpected ttl %v", ttl)
+		}
+		if ttl := p.cache.GetTTL("a2"); !roughly(ttl, time.Second*2) {
+			t.Errorf("unexpected ttl %v", ttl)
+		}
+		if ttl := p.cache.GetTTL("a3"); !roughly(ttl, time.Second*3) {
+			t.Errorf("unexpected ttl %v", ttl)
+		}
+		if v.IsCacheHit() {
+			atomic.AddUint64(&hits, 1)
+		} else {
+			atomic.AddUint64(&miss, 1)
+		}
 	}
-	wg.Wait()
 
 	if v := atomic.LoadUint64(&miss); v != 1 {
 		t.Fatalf("unexpected cache miss count %v", v)
 	}
 
-	if v := atomic.LoadUint64(&hits); v != uint64(times-1) {
+	if v := atomic.LoadUint64(&hits); v != uint64(1) {
 		t.Fatalf("unexpected cache hits count %v", v)
 	}
 
