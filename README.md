@@ -110,6 +110,7 @@ Benchmark source code: https://github.com/rueian/rueidis-benchmark
 * georadiusbymemberro
 * geosearch
 * get
+* mget
 * getbit
 * getrange
 * hexists
@@ -148,6 +149,7 @@ Benchmark source code: https://github.com/rueian/rueidis-benchmark
 * zrevrank
 * zscore
 * jsonget
+* jsonmget
 * jsonstrlen
 * jsonarrindex
 * jsonarrlen
