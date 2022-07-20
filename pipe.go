@@ -128,14 +128,14 @@ func (p *pipe) _background() {
 		atomic.CompareAndSwapInt32(&p.state, 1, 2) // stop accepting new requests
 		_ = p.conn.Close()                         // force both read & write goroutine to exit
 	}
+	wait := make(chan struct{})
 	if p.timeout > 0 && p.pinggap > 0 {
 		go func() {
-			if err := p._backgroundPing(); err != ErrClosing {
+			if err := p._backgroundPing(wait); err != ErrClosing {
 				exit(err)
 			}
 		}()
 	}
-	wait := make(chan struct{})
 	go func() {
 		exit(p._backgroundWrite())
 		close(wait)
@@ -354,12 +354,18 @@ func (p *pipe) _backgroundRead() (err error) {
 	}
 }
 
-func (p *pipe) _backgroundPing() (err error) {
+func (p *pipe) _backgroundPing(stop <-chan struct{}) (err error) {
+	ticker := time.NewTicker(p.pinggap)
+	defer ticker.Stop()
 	for err == nil {
-		time.Sleep(p.pinggap)
-		ctx, cancel := context.WithTimeout(context.Background(), p.timeout)
-		err = p.Do(ctx, cmds.PingCmd).NonRedisError()
-		cancel()
+		select {
+		case <-ticker.C:
+			ctx, cancel := context.WithTimeout(context.Background(), p.timeout)
+			err = p.Do(ctx, cmds.PingCmd).NonRedisError()
+			cancel()
+		case <-stop:
+			return
+		}
 	}
 	return err
 }
