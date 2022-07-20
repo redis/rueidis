@@ -70,6 +70,13 @@ func (o *otelclient) Do(ctx context.Context, cmd cmds.Completed) (resp rueidis.R
 	return
 }
 
+func (o *otelclient) DoMulti(ctx context.Context, multi ...cmds.Completed) (resp []rueidis.RedisResult) {
+	ctx, span := start(ctx, multiFirst(multi), multiSum(multi), o.tAttrs)
+	resp = o.client.DoMulti(ctx, multi...)
+	end(span, firstError(resp))
+	return
+}
+
 func (o *otelclient) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp rueidis.RedisResult) {
 	ctx, span := start(ctx, first(cmd.Commands()), sum(cmd.Commands()), o.tAttrs)
 	resp = o.client.DoCache(ctx, cmd, ttl)

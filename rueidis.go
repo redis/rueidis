@@ -112,6 +112,9 @@ type Client interface {
 	// Blocking commands will use another separated connection pool.
 	// The cmd parameter is recycled after passing into Do() and should not be reused.
 	Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult)
+	// DoMulti takes multiple redis commands and sends them together, reducing RTT from the user code.
+	// The multi parameters are recycled after passing into DoMulti() and should not be reused.
+	DoMulti(ctx context.Context, multi ...cmds.Completed) (resp []RedisResult)
 	// DoCache is similar to Do, but it uses opt-in client side caching and requires a client side TTL.
 	// The explicit client side TTL specifies the maximum TTL on the client side.
 	// If the key's TTL on the server is smaller than the client side TTL, the client side TTL will be capped.

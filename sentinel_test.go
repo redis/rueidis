@@ -3,11 +3,12 @@ package rueidis
 import (
 	"context"
 	"errors"
-	"github.com/rueian/rueidis/internal/cmds"
 	"reflect"
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/rueian/rueidis/internal/cmds"
 )
 
 //gocyclo:ignore
@@ -481,6 +482,19 @@ func TestSentinelClientDelegate(t *testing.T) {
 		}
 	})
 
+	t.Run("Delegate DoMulti", func(t *testing.T) {
+		c := client.B().Get().Key("Do").Build()
+		m.DoMultiFn = func(cmd ...cmds.Completed) []RedisResult {
+			if !reflect.DeepEqual(cmd[0].Commands(), c.Commands()) {
+				t.Fatalf("unexpected command %v", cmd)
+			}
+			return []RedisResult{newResult(RedisMessage{typ: '+', string: "Do"}, nil)}
+		}
+		if v, err := client.DoMulti(context.Background(), c)[0].ToString(); err != nil || v != "Do" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
 	t.Run("Delegate DoCache", func(t *testing.T) {
 		c := client.B().Get().Key("DoCache").Cache()
 		m.DoCacheFn = func(cmd cmds.Cacheable, ttl time.Duration) RedisResult {
@@ -674,6 +688,10 @@ func TestSentinelClientDelegateRetry(t *testing.T) {
 				atomic.AddUint32(&retry, 1)
 				return newErrResult(ErrClosing)
 			},
+			DoMultiFn: func(multi ...cmds.Completed) []RedisResult {
+				atomic.AddUint32(&retry, 1)
+				return []RedisResult{newErrResult(ErrClosing)}
+			},
 			DoCacheFn: func(cmd cmds.Cacheable, ttl time.Duration) RedisResult {
 				atomic.AddUint32(&retry, 1)
 				return newErrResult(ErrClosing)
@@ -689,6 +707,9 @@ func TestSentinelClientDelegateRetry(t *testing.T) {
 					return RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "master"}}}}
 				}
 				return RedisResult{val: RedisMessage{typ: '+', string: "OK"}}
+			},
+			DoMultiFn: func(multi ...cmds.Completed) []RedisResult {
+				return []RedisResult{{val: RedisMessage{typ: '+', string: "OK"}}}
 			},
 			DoCacheFn: func(cmd cmds.Cacheable, ttl time.Duration) RedisResult {
 				return RedisResult{val: RedisMessage{typ: '+', string: "OK"}}
@@ -729,6 +750,21 @@ func TestSentinelClientDelegateRetry(t *testing.T) {
 		}()
 
 		v, err := client.Do(context.Background(), client.B().Get().Key("k").Build()).ToString()
+		if err != nil || v != "OK" {
+			t.Fatalf("unexpected resp %v %v", v, err)
+		}
+
+		client.Close()
+	})
+
+	t.Run("Delegate DoMulti", func(t *testing.T) {
+		client, cb := setup(t)
+
+		go func() {
+			cb()
+		}()
+
+		v, err := client.DoMulti(context.Background(), client.B().Get().Key("k").Build())[0].ToString()
 		if err != nil || v != "OK" {
 			t.Fatalf("unexpected resp %v %v", v, err)
 		}

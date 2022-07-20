@@ -109,6 +109,7 @@ func TestNewLuaScriptReadOnly(t *testing.T) {
 type client struct {
 	BFn         func() cmds.Builder
 	DoFn        func(ctx context.Context, cmd cmds.Completed) (resp RedisResult)
+	DoMultiFn   func(ctx context.Context, cmd ...cmds.Completed) (resp []RedisResult)
 	DoCacheFn   func(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp RedisResult)
 	DedicatedFn func(fn func(DedicatedClient) error) (err error)
 	DedicateFn  func() (DedicatedClient, func())
@@ -131,6 +132,13 @@ func (c *client) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) 
 		return c.DoFn(ctx, cmd)
 	}
 	return RedisResult{}
+}
+
+func (c *client) DoMulti(ctx context.Context, cmd ...cmds.Completed) (resp []RedisResult) {
+	if c.DoMultiFn != nil {
+		return c.DoMultiFn(ctx, cmd...)
+	}
+	return nil
 }
 
 func (c *client) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp RedisResult) {

@@ -278,6 +278,10 @@ ret:
 	return resp
 }
 
+func (c *clusterClient) DoMulti(ctx context.Context, multi ...cmds.Completed) (resps []RedisResult) {
+	panic("DoMulti for Redis Cluster is not yet implemented, use Dedicate or Dedicated instead")
+}
+
 func (c *clusterClient) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp RedisResult) {
 retry:
 	cc, err := c.pick(cmd.Slot())

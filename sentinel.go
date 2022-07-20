@@ -63,6 +63,22 @@ retry:
 	return resp
 }
 
+func (c *sentinelClient) DoMulti(ctx context.Context, multi ...cmds.Completed) (resps []RedisResult) {
+retry:
+	resps = c.mConn.Load().(conn).DoMulti(ctx, multi...)
+	if allReadOnly(multi) {
+		for _, resp := range resps {
+			if c.isRetryable(resp.NonRedisError(), ctx) {
+				goto retry
+			}
+		}
+	}
+	for _, cmd := range multi {
+		cmds.Put(cmd.CommandSlice())
+	}
+	return resps
+}
+
 func (c *sentinelClient) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp RedisResult) {
 retry:
 	resp = c.mConn.Load().(conn).DoCache(ctx, cmd, ttl)
