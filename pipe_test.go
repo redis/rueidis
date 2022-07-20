@@ -873,6 +873,22 @@ func TestClientSideCachingWithNonRedisErrorMGet(t *testing.T) {
 	}
 }
 
+func TestClientSideCachingWithSideChannelMGet(t *testing.T) {
+	p, _, _, closeConn := setup(t, ClientOption{})
+	closeConn()
+
+	p.cache.GetOrPrepare("a1", "GET", 10*time.Second)
+	go func() {
+		time.Sleep(100 * time.Millisecond)
+		p.cache.Update("a1", "GET", RedisMessage{typ: '+', string: "OK"}, 10)
+	}()
+
+	v, _ := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewMGetCompleted([]string{"MGET", "a1"})), 10*time.Second).AsStrSlice()
+	if v[0] != "OK" {
+		t.Errorf("unexpected value, got %v", v)
+	}
+}
+
 func TestClientSideCachingWithSideChannelErrorMGet(t *testing.T) {
 	p, _, _, closeConn := setup(t, ClientOption{})
 	closeConn()
