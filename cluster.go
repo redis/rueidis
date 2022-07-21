@@ -22,6 +22,7 @@ type clusterClient struct {
 	connFn connFn
 	sc     call
 	mu     sync.RWMutex
+	cpus   int
 	stop   uint32
 	cmd    cmds.Builder
 }
@@ -32,6 +33,7 @@ func newClusterClient(opt *ClientOption, connFn connFn) (client *clusterClient, 
 		opt:    opt,
 		connFn: connFn,
 		conns:  make(map[string]conn),
+		cpus:   runtime.NumCPU(),
 	}
 
 	if err = client.init(); err != nil {
@@ -278,8 +280,120 @@ ret:
 	return resp
 }
 
-func (c *clusterClient) DoMulti(ctx context.Context, multi ...cmds.Completed) (resps []RedisResult) {
-	panic("DoMulti for Redis Cluster is not yet implemented, use Dedicate or Dedicated instead")
+func (c *clusterClient) DoMulti(ctx context.Context, multi ...cmds.Completed) (results []RedisResult) {
+	if len(multi) == 0 {
+		return nil
+	}
+	slots := make(map[uint16]int, 16)
+	for _, cmd := range multi {
+		slots[cmd.Slot()]++
+	}
+	results = make([]RedisResult, len(multi))
+	if len(slots) == 1 || len(slots) == 2 && slots[cmds.InitSlot] > 0 {
+		slot := cmds.InitSlot
+		for s := range slots {
+			if s != cmds.InitSlot {
+				slot = s
+			}
+		}
+		commands := make([]cmds.Completed, 0, len(multi)+2)
+		commands = append(commands, cmds.MultiCmd)
+		commands = append(commands, multi...)
+		commands = append(commands, cmds.ExecCmd)
+		cIndexes := make([]int, len(multi))
+		for i := range multi {
+			cIndexes[i] = i
+		}
+		c.doMulti(ctx, slot, commands, cIndexes, results)
+		for _, cmd := range multi {
+			cmds.Put(cmd.CommandSlice())
+		}
+		return results
+	}
+	if slots[cmds.InitSlot] > 0 {
+		panic(panicMixCxSlot)
+	}
+	commands := make(map[uint16][]cmds.Completed, len(slots))
+	cIndexes := make(map[uint16][]int, len(slots))
+	for slot, count := range slots {
+		cIndexes[slot] = make([]int, 0, count)
+		commands[slot] = make([]cmds.Completed, 0, count+2)
+		commands[slot] = append(commands[slot], cmds.MultiCmd)
+	}
+	for i, cmd := range multi {
+		slot := cmd.Slot()
+		commands[slot] = append(commands[slot], cmd)
+		cIndexes[slot] = append(cIndexes[slot], i)
+	}
+	for slot := range slots {
+		commands[slot] = append(commands[slot], cmds.ExecCmd)
+	}
+
+	concurrency := len(slots)
+	if concurrency > c.cpus {
+		concurrency = c.cpus
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(len(commands))
+
+	ch := make(chan uint16, len(commands))
+	for slot := range commands {
+		ch <- slot
+	}
+	close(ch)
+
+	for i := 0; i < concurrency; i++ {
+		go func() {
+			for slot := range ch {
+				c.doMulti(ctx, slot, commands[slot], cIndexes[slot], results)
+				wg.Done()
+			}
+		}()
+	}
+	wg.Wait()
+	for _, cmd := range multi {
+		cmds.Put(cmd.CommandSlice())
+	}
+	return results
+}
+
+func (c *clusterClient) doMulti(ctx context.Context, slot uint16, multi []cmds.Completed, idx []int, results []RedisResult) {
+retry:
+	cc, err := c.pick(slot)
+	if err != nil {
+		for _, i := range idx {
+			results[i] = newErrResult(err)
+		}
+		return
+	}
+	resps := cc.DoMulti(ctx, multi...)
+process:
+	for _, resp := range resps {
+		switch addr, mode := c.shouldRefreshRetry(resp.Error(), ctx); mode {
+		case RedirectMove:
+			resps = c.redirectOrNew(addr).DoMulti(ctx, multi...)
+			goto process
+		case RedirectAsk:
+			resps = c.redirectOrNew(addr).DoMulti(ctx, append([]cmds.Completed{cmds.AskingCmd}, multi...)...)[1:]
+			goto process
+		case RedirectRetry:
+			if allReadOnly(multi[1 : len(multi)-1]) {
+				runtime.Gosched()
+				goto retry
+			}
+		}
+	}
+	msgs, err := resps[len(resps)-1].ToArray()
+	if err != nil {
+		for _, i := range idx {
+			results[i] = newErrResult(err)
+		}
+		return
+	}
+	for i, msg := range msgs {
+		results[idx[i]] = newResult(msg, nil)
+	}
 }
 
 func (c *clusterClient) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp RedisResult) {
@@ -541,5 +655,6 @@ const (
 	RedirectRetry
 
 	panicMsgCxSlot = "cross slot command in Dedicated is prohibited"
+	panicMixCxSlot = "Mixing no-slot and cross slot commands in DoMulti is prohibited"
 	panicMsgNoSlot = "the first command should contain the slot key"
 )
