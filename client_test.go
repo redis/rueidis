@@ -531,31 +531,23 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 		}
 	})
 
-	t.Run("Delegate DoMulti ReadOnly Retry - Panic not yet implement", func(t *testing.T) {
-		c, m := setup()
-		if _, ok := c.(*clusterClient); !ok {
-			t.Skipf("This test is only valid for cluster client")
-		}
-		defer func() {
-			if r := recover().(string); !strings.Contains(r, "not yet implement") {
-				t.Fatalf("should panic")
-			}
-		}()
-		m.DoMultiFn = makeDoMultiFn(
-			[]RedisResult{newErrResult(ErrClosing)},
-		)
-		c.DoMulti(context.Background(), c.B().Get().Key("Do").Build())
-	})
-
 	t.Run("Delegate DoMulti ReadOnly Retry", func(t *testing.T) {
 		c, m := setup()
 		if _, ok := c.(*clusterClient); ok {
-			t.Skipf("DoMulti for Redis Cluster is not yet implement")
+			m.DoMultiFn = makeDoMultiFn(
+				[]RedisResult{newErrResult(ErrClosing)},
+				[]RedisResult{
+					newResult(RedisMessage{typ: '+', string: "OK"}, nil),
+					newResult(RedisMessage{typ: '+', string: "QUEUED"}, nil),
+					newResult(RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "Do"}}}, nil),
+				},
+			)
+		} else {
+			m.DoMultiFn = makeDoMultiFn(
+				[]RedisResult{newErrResult(ErrClosing)},
+				[]RedisResult{newResult(RedisMessage{typ: '+', string: "Do"}, nil)},
+			)
 		}
-		m.DoMultiFn = makeDoMultiFn(
-			[]RedisResult{newErrResult(ErrClosing)},
-			[]RedisResult{newResult(RedisMessage{typ: '+', string: "Do"}, nil)},
-		)
 		if v, err := c.DoMulti(context.Background(), c.B().Get().Key("Do").Build())[0].ToString(); err != nil || v != "Do" {
 			t.Fatalf("unexpected response %v %v", v, err)
 		}
@@ -563,9 +555,6 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 
 	t.Run("Delegate DoMulti ReadOnly NoRetry - closed", func(t *testing.T) {
 		c, m := setup()
-		if _, ok := c.(*clusterClient); ok {
-			t.Skipf("DoMulti for Redis Cluster is not yet implement")
-		}
 		m.DoMultiFn = makeDoMultiFn([]RedisResult{newErrResult(ErrClosing)})
 		c.Close()
 		if v, err := c.DoMulti(context.Background(), c.B().Get().Key("Do").Build())[0].ToString(); err != ErrClosing {
@@ -575,9 +564,6 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 
 	t.Run("Delegate DoMulti ReadOnly NoRetry - ctx done", func(t *testing.T) {
 		c, m := setup()
-		if _, ok := c.(*clusterClient); ok {
-			t.Skipf("DoMulti for Redis Cluster is not yet implement")
-		}
 		m.DoMultiFn = makeDoMultiFn([]RedisResult{newErrResult(ErrClosing)})
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
@@ -588,9 +574,6 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 
 	t.Run("Delegate DoMulti Write NoRetry", func(t *testing.T) {
 		c, m := setup()
-		if _, ok := c.(*clusterClient); ok {
-			t.Skipf("DoMulti for Redis Cluster is not yet implement")
-		}
 		m.DoMultiFn = makeDoMultiFn([]RedisResult{newErrResult(ErrClosing)})
 		if v, err := c.DoMulti(context.Background(), c.B().Set().Key("Do").Value("V").Build())[0].ToString(); err != ErrClosing {
 			t.Fatalf("unexpected response %v %v", v, err)

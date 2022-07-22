@@ -3,6 +3,7 @@ package rueidis
 import (
 	"context"
 	"errors"
+	"fmt"
 	"reflect"
 	"sort"
 	"strconv"
@@ -169,6 +170,18 @@ func TestClusterClient(t *testing.T) {
 			}
 			return RedisResult{}
 		},
+		DoMultiFn: func(multi ...cmds.Completed) []RedisResult {
+			resps := make([]RedisMessage, len(multi)-2)
+			for i, cmd := range multi[1 : len(multi)-1] {
+				resps[i] = RedisMessage{typ: '+', string: strings.Join(cmd.Commands(), " ")}
+			}
+			result := make([]RedisResult, len(multi))
+			for i := 0; i < len(multi)-1; i++ {
+				result[i] = newResult(RedisMessage{typ: '+', string: "QUEUED"}, nil)
+			}
+			result[len(multi)-1] = newResult(RedisMessage{typ: '*', values: resps}, nil)
+			return result
+		},
 		DoOverride: map[string]func(cmd cmds.Completed) RedisResult{
 			"GET Do": func(cmd cmds.Completed) RedisResult {
 				return newResult(RedisMessage{typ: '+', string: "Do"}, nil)
@@ -202,6 +215,61 @@ func TestClusterClient(t *testing.T) {
 		c := client.B().Get().Key("Do").Build()
 		if v, err := client.Do(context.Background(), c).ToString(); err != nil || v != "Do" {
 			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("Delegate DoMulti Empty", func(t *testing.T) {
+		if resps := client.DoMulti(context.Background()); resps != nil {
+			t.Fatalf("unexpected response %v", resps)
+		}
+	})
+
+	t.Run("Delegate DoMulti Single Slot", func(t *testing.T) {
+		c1 := client.B().Get().Key("K1{a}").Build()
+		c2 := client.B().Get().Key("K2{a}").Build()
+		resps := client.DoMulti(context.Background(), c1, c2)
+		if v, err := resps[0].ToString(); err != nil || v != "GET K1{a}" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+		if v, err := resps[1].ToString(); err != nil || v != "GET K2{a}" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("Delegate DoMulti Single Slot + Init Slot", func(t *testing.T) {
+		c1 := client.B().Get().Key("K1{a}").Build()
+		c2 := client.B().Info().Build()
+		resps := client.DoMulti(context.Background(), c1, c2)
+		if v, err := resps[0].ToString(); err != nil || v != "GET K1{a}" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+		if v, err := resps[1].ToString(); err != nil || v != "INFO" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("Delegate DoMulti Cross Slot + Init Slot", func(t *testing.T) {
+		defer func() {
+			if err := recover(); err != panicMixCxSlot {
+				t.Errorf("DoMulti should panic if Cross Slot + Init Slot")
+			}
+		}()
+		c1 := client.B().Get().Key("K1{a}").Build()
+		c2 := client.B().Get().Key("K1{b}").Build()
+		c3 := client.B().Info().Build()
+		client.DoMulti(context.Background(), c1, c2, c3)
+	})
+
+	t.Run("Delegate DoMulti Multi Slot", func(t *testing.T) {
+		multi := make([]cmds.Completed, 500)
+		for i := 0; i < len(multi); i++ {
+			multi[i] = client.B().Get().Key(fmt.Sprintf("K1{%d}", i)).Build()
+		}
+		resps := client.DoMulti(context.Background(), multi...)
+		for i := 0; i < len(multi); i++ {
+			if v, err := resps[i].ToString(); err != nil || v != fmt.Sprintf("GET K1{%d}", i) {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
 		}
 	})
 
@@ -554,6 +622,9 @@ func TestClusterClientErr(t *testing.T) {
 		if err := client.Do(context.Background(), client.B().Get().Key("a").Build()).Error(); err != v {
 			t.Fatalf("unexpected err %v", err)
 		}
+		if err := client.DoMulti(context.Background(), client.B().Get().Key("a").Build())[0].Error(); err != v {
+			t.Fatalf("unexpected err %v", err)
+		}
 		if err := client.DoCache(context.Background(), client.B().Get().Key("a").Cache(), 100).Error(); err != v {
 			t.Fatalf("unexpected err %v", err)
 		}
@@ -573,6 +644,9 @@ func TestClusterClientErr(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 		if err := client.Do(context.Background(), client.B().Get().Key("a").Build()).Error(); err != ErrNoSlot {
+			t.Fatalf("unexpected err %v", err)
+		}
+		if err := client.DoMulti(context.Background(), client.B().Get().Key("a").Build())[0].Error(); err != ErrNoSlot {
 			t.Fatalf("unexpected err %v", err)
 		}
 	})
@@ -680,6 +754,32 @@ func TestClusterClientErr(t *testing.T) {
 		}
 	})
 
+	t.Run("slot moved DoMulti", func(t *testing.T) {
+		var count int64
+		m := &mockConn{DoFn: func(cmd cmds.Completed) RedisResult {
+			return slotsResp
+		}, DoMultiFn: func(multi ...cmds.Completed) []RedisResult {
+			if atomic.AddInt64(&count, 1) <= 3 {
+				return []RedisResult{newResult(RedisMessage{typ: '-', string: "MOVED 0 :1"}, nil)}
+			}
+			ret := make([]RedisResult, len(multi))
+			for i := 0; i < len(multi)-1; i++ {
+				ret[i] = newResult(RedisMessage{typ: '+', string: "QUEUED"}, nil)
+			}
+			ret[len(multi)-1] = newResult(RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "b"}}}, nil)
+			return ret
+		}}
+		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
+			return m
+		})
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		if v, err := client.DoMulti(context.Background(), client.B().Get().Key("a").Build())[0].ToString(); err != nil || v != "b" {
+			t.Fatalf("unexpected resp %v %v", v, err)
+		}
+	})
+
 	t.Run("slot moved new", func(t *testing.T) {
 		var count, check int64
 		m := &mockConn{DoFn: func(cmd cmds.Completed) RedisResult {
@@ -702,6 +802,39 @@ func TestClusterClientErr(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 		if v, err := client.Do(context.Background(), client.B().Get().Key("a").Build()).ToString(); err != nil || v != "b" {
+			t.Fatalf("unexpected resp %v %v", v, err)
+		}
+		if atomic.LoadInt64(&check) == 0 {
+			t.Fatalf("unexpected check value %v", check)
+		}
+	})
+
+	t.Run("slot moved new (multi)", func(t *testing.T) {
+		var count, check int64
+		m := &mockConn{DoFn: func(cmd cmds.Completed) RedisResult {
+			return slotsResp
+		}, DoMultiFn: func(multi ...cmds.Completed) []RedisResult {
+			if atomic.AddInt64(&count, 1) <= 3 {
+				return []RedisResult{newResult(RedisMessage{typ: '-', string: "MOVED 0 :2"}, nil)}
+			}
+			ret := make([]RedisResult, len(multi))
+			for i := 0; i < len(multi)-1; i++ {
+				ret[i] = newResult(RedisMessage{typ: '+', string: "QUEUED"}, nil)
+			}
+			ret[len(multi)-1] = newResult(RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "b"}}}, nil)
+			return ret
+		}}
+
+		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
+			if dst == ":2" {
+				atomic.AddInt64(&check, 1)
+			}
+			return m
+		})
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		if v, err := client.DoMulti(context.Background(), client.B().Get().Key("a").Build())[0].ToString(); err != nil || v != "b" {
 			t.Fatalf("unexpected resp %v %v", v, err)
 		}
 		if atomic.LoadInt64(&check) == 0 {
@@ -760,6 +893,35 @@ func TestClusterClientErr(t *testing.T) {
 		}
 	})
 
+	t.Run("slot asking DoMulti", func(t *testing.T) {
+		var count int64
+		m := &mockConn{
+			DoFn: func(cmd cmds.Completed) RedisResult {
+				return slotsResp
+			},
+			DoMultiFn: func(multi ...cmds.Completed) []RedisResult {
+				if atomic.AddInt64(&count, 1) <= 3 {
+					return []RedisResult{{}, newResult(RedisMessage{typ: '-', string: "ASK 0 :1"}, nil)}
+				}
+				ret := make([]RedisResult, len(multi))
+				for i := 0; i < len(multi)-1; i++ {
+					ret[i] = newResult(RedisMessage{typ: '+', string: "QUEUED"}, nil)
+				}
+				ret[len(multi)-1] = newResult(RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "b"}}}, nil)
+				return ret
+			},
+		}
+		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
+			return m
+		})
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		if v, err := client.DoMulti(context.Background(), client.B().Get().Key("a").Build())[0].ToString(); err != nil || v != "b" {
+			t.Fatalf("unexpected resp %v %v", v, err)
+		}
+	})
+
 	t.Run("slot asking (cache)", func(t *testing.T) {
 		var count int64
 		m := &mockConn{
@@ -805,6 +967,32 @@ func TestClusterClientErr(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 		if v, err := client.Do(context.Background(), client.B().Get().Key("a").Build()).ToString(); err != nil || v != "b" {
+			t.Fatalf("unexpected resp %v %v", v, err)
+		}
+	})
+
+	t.Run("slot try again DoMulti", func(t *testing.T) {
+		var count int64
+		m := &mockConn{DoFn: func(cmd cmds.Completed) RedisResult {
+			return slotsResp
+		}, DoMultiFn: func(multi ...cmds.Completed) []RedisResult {
+			if atomic.AddInt64(&count, 1) <= 3 {
+				return []RedisResult{newResult(RedisMessage{typ: '-', string: "TRYAGAIN"}, nil)}
+			}
+			ret := make([]RedisResult, len(multi))
+			for i := 0; i < len(multi)-1; i++ {
+				ret[i] = newResult(RedisMessage{typ: '+', string: "QUEUED"}, nil)
+			}
+			ret[len(multi)-1] = newResult(RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "b"}}}, nil)
+			return ret
+		}}
+		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
+			return m
+		})
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		if v, err := client.DoMulti(context.Background(), client.B().Get().Key("a").Build())[0].ToString(); err != nil || v != "b" {
 			t.Fatalf("unexpected resp %v %v", v, err)
 		}
 	})
