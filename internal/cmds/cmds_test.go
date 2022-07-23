@@ -149,3 +149,39 @@ func TestCompleted_Slots(t *testing.T) {
 		t.Fatalf("unexpected same slot")
 	}
 }
+
+func TestMGets(t *testing.T) {
+	keys := []string{"{1}", "{2}", "{3}", "{1}", "{2}", "{3}"}
+	ret := MGets(keys)
+	for _, key := range keys {
+		ks := slot(key)
+		cp := ret[slot(key)]
+		if cp.ks != ks {
+			t.Fatalf("ks mistmatch %v %v", cp.ks, ks)
+		}
+		if cp.cf != mtGetTag {
+			t.Fatalf("cf should be mtGetTag")
+		}
+		if reflect.DeepEqual(cp.cs.s, []string{key, key}) {
+			t.Fatalf("cs mismatch %v %v", cp.cs.s, []string{key, key})
+		}
+	}
+}
+
+func TestJsonMGets(t *testing.T) {
+	keys := []string{"{1}", "{2}", "{3}", "{1}", "{2}", "{3}"}
+	ret := JsonMGets(keys, "&")
+	for _, key := range keys {
+		ks := slot(key)
+		cp := ret[slot(key)]
+		if cp.ks != ks {
+			t.Fatalf("ks mistmatch %v %v", cp.ks, ks)
+		}
+		if cp.cf != mtGetTag {
+			t.Fatalf("cf should be mtGetTag")
+		}
+		if reflect.DeepEqual(cp.cs.s, []string{key, key, "$"}) {
+			t.Fatalf("cs mismatch %v %v", cp.cs.s, []string{key, key, "$"})
+		}
+	}
+}

@@ -396,12 +396,11 @@ process:
 	}
 }
 
-func (c *clusterClient) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp RedisResult) {
+func (c *clusterClient) doCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp RedisResult) {
 retry:
 	cc, err := c.pick(cmd.Slot())
 	if err != nil {
-		resp = newErrResult(err)
-		goto ret
+		return newErrResult(err)
 	}
 	resp = cc.DoCache(ctx, cmd, ttl)
 process:
@@ -417,7 +416,11 @@ process:
 		runtime.Gosched()
 		goto retry
 	}
-ret:
+	return resp
+}
+
+func (c *clusterClient) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp RedisResult) {
+	resp = c.doCache(ctx, cmd, ttl)
 	cmds.Put(cmd.CommandSlice())
 	return resp
 }

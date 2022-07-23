@@ -208,6 +208,37 @@ func NewMGetCompleted(ss []string) Completed {
 	return Completed{cs: &CommandSlice{s: ss}, cf: mtGetTag}
 }
 
+// MGets groups keys by their slot and returns multi MGET commands
+func MGets(keys []string) map[uint16]Completed {
+	return slotMGets("MGET", keys)
+}
+
+// JsonMGets groups keys by their slot and returns multi JSON.MGET commands
+func JsonMGets(keys []string, path string) map[uint16]Completed {
+	ret := slotMGets("JSON.MGET", keys)
+	for _, jsonmget := range ret {
+		jsonmget.cs.s = append(jsonmget.cs.s, path)
+	}
+	return ret
+}
+
+func slotMGets(cmd string, keys []string) map[uint16]Completed {
+	ret := make(map[uint16]Completed, 16)
+	for _, key := range keys {
+		var cs *CommandSlice
+		ks := slot(key)
+		if cp, ok := ret[ks]; ok {
+			cs = cp.cs
+		} else {
+			cs = get()
+			cs.s = append(cs.s, cmd)
+			ret[ks] = Completed{cs: cs, cf: mtGetTag, ks: ks}
+		}
+		cs.s = append(cs.s, key)
+	}
+	return ret
+}
+
 // NewMultiCompleted creates multiple arbitrary Completed commands.
 func NewMultiCompleted(cs [][]string) []Completed {
 	ret := make([]Completed, len(cs))
