@@ -889,35 +889,33 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisR
 		missing = append(missing, cmds.NewCompleted([]string{"PTTL", ck}), cmds.Completed(ct.Cmd))
 	}
 
-	var partial []RedisMessage
+	var exec []RedisMessage
+	var err error
 	if len(missing) > 2 {
 		missing = append(missing, cmds.ExecCmd)
 		resp := p.DoMulti(ctx, missing...)
-		exec, err := resp[len(missing)-1].ToArray()
+		exec, err = resp[len(missing)-1].ToArray()
 		if err != nil {
 			var msg RedisMessage
-			var er2 error
-			if _, ok := err.(*RedisError); !ok {
-				msg = RedisMessage{}
-				er2 = err
-			} else if resp[len(multi)-2].val.typ != '+' { // EXEC aborted, return err of the input cmd in MULTI block
-				msg = resp[len(multi)-2].val
-				er2 = nil
-			} else {
-				msg = resp[len(multi)-1].val
-				er2 = nil
+			if _, ok := err.(*RedisError); ok {
+				for i := 1; i < len(resp); i += 2 { // EXEC aborted, return the first err of the input cmd in MULTI block
+					if resp[i].val.typ == '-' || resp[i].val.typ == '_' || resp[i].val.typ == '!' {
+						msg = resp[i].val
+						err = nil
+						break
+					}
+				}
 			}
 			for i := 3; i < len(missing); i += 2 {
 				cacheable := cmds.Cacheable(missing[i])
 				ck, cc := cacheable.CacheKey()
-				p.cache.Cancel(ck, cc, msg, er2)
+				p.cache.Cancel(ck, cc, msg, err)
 			}
 			for i := range results {
-				results[i] = newResult(msg, er2)
+				results[i] = newResult(msg, err)
 			}
 			return results
 		}
-		partial = exec[len(exec)-1].values
 	}
 
 	for i, entry := range entries {
@@ -925,10 +923,10 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisR
 	}
 
 	j := 0
-	for _, ret := range partial {
+	for i := 1; i < len(exec); i += 2 {
 		for ; j < len(results); j++ {
 			if results[j].val.typ == 0 && results[j].err == nil {
-				results[j] = newResult(ret, nil)
+				results[j] = newResult(exec[i], nil)
 				break
 			}
 		}
