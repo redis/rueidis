@@ -863,12 +863,6 @@ func (p *pipe) doCacheMGet(ctx context.Context, cmd cmds.Cacheable, ttl time.Dur
 	return result
 }
 
-// CacheableTTL is parameter container of DoMultiCache
-type CacheableTTL struct {
-	Cmd cmds.Cacheable
-	TTL time.Duration
-}
-
 func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisResult {
 	results := make([]RedisResult, len(multi))
 	entries := make(map[int]*entry)

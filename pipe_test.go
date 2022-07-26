@@ -915,7 +915,7 @@ func TestClientSideCachingDoMultiCacheMGet(t *testing.T) {
 		}
 	}()
 	p.DoMultiCache(context.Background(), []CacheableTTL{
-		{Cmd: cmds.Cacheable(cmds.NewMGetCompleted([]string{"MGET", "a1"})), TTL: time.Second * 10},
+		CT(cmds.Cacheable(cmds.NewMGetCompleted([]string{"MGET", "a1"})), time.Second*10),
 	}...)
 }
 
@@ -965,9 +965,9 @@ func TestClientSideCachingDoMultiCache(t *testing.T) {
 	hits := uint64(0)
 	for i := 0; i < 2; i++ {
 		arr := p.DoMultiCache(context.Background(), []CacheableTTL{
-			{Cmd: cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a1"})), TTL: time.Second * 10},
-			{Cmd: cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a2"})), TTL: time.Second * 10},
-			{Cmd: cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a3"})), TTL: time.Second * 10},
+			CT(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a1"})), time.Second*10),
+			CT(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a2"})), time.Second*10),
+			CT(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a3"})), time.Second*10),
 		}...)
 		if len(arr) != 3 {
 			t.Errorf("unexpected cached mget length, expected 3, got %v", len(arr))
@@ -1033,9 +1033,9 @@ func TestClientSideCachingDoMultiCache(t *testing.T) {
 	}
 
 	arr := p.DoMultiCache(context.Background(), []CacheableTTL{
-		{Cmd: cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a1"})), TTL: time.Second * 10},
-		{Cmd: cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a2"})), TTL: time.Second * 10},
-		{Cmd: cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a3"})), TTL: time.Second * 10},
+		CT(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a1"})), time.Second*10),
+		CT(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a2"})), time.Second*10),
+		CT(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a3"})), time.Second*10),
 	}...)
 	if len(arr) != 3 {
 		t.Errorf("unexpected cached mget length, expected 3, got %v", len(arr))
@@ -1082,8 +1082,8 @@ func TestClientSideCachingExecAbortDoMultiCache(t *testing.T) {
 	}()
 
 	arr := p.DoMultiCache(context.Background(), []CacheableTTL{
-		{Cmd: cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a1"})), TTL: time.Second * 10},
-		{Cmd: cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a2"})), TTL: time.Second * 10},
+		CT(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a1"})), time.Second*10),
+		CT(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a2"})), time.Second*10),
 	}...)
 	for _, resp := range arr {
 		v, err := resp.ToMessage()
@@ -1124,8 +1124,8 @@ func TestClientSideCachingExecAbortWithMovedDoMultiCache(t *testing.T) {
 	}()
 
 	arr := p.DoMultiCache(context.Background(), []CacheableTTL{
-		{Cmd: cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a1"})), TTL: time.Second * 10},
-		{Cmd: cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a2"})), TTL: time.Second * 10},
+		CT(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a1"})), time.Second*10),
+		CT(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a2"})), time.Second*10),
 	}...)
 	for _, resp := range arr {
 		v, err := resp.ToMessage()
@@ -1149,8 +1149,8 @@ func TestClientSideCachingWithNonRedisErrorDoMultiCache(t *testing.T) {
 	closeConn()
 
 	arr := p.DoMultiCache(context.Background(), []CacheableTTL{
-		{Cmd: cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a1"})), TTL: time.Second * 10},
-		{Cmd: cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a2"})), TTL: time.Second * 10},
+		CT(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a1"})), time.Second*10),
+		CT(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a2"})), time.Second*10),
 	}...)
 	for _, resp := range arr {
 		v, err := resp.ToMessage()
@@ -1180,7 +1180,7 @@ func TestClientSideCachingWithSideChannelDoMultiCache(t *testing.T) {
 	}()
 
 	arr := p.DoMultiCache(context.Background(), []CacheableTTL{
-		{Cmd: cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a1"})), TTL: time.Second * 10},
+		CT(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a1"})), time.Second*10),
 	}...)
 	if arr[0].val.string != "OK" {
 		t.Errorf("unexpected value, got %v", arr[0].val.string)
@@ -1198,7 +1198,7 @@ func TestClientSideCachingWithSideChannelErrorDoMultiCache(t *testing.T) {
 	}()
 
 	arr := p.DoMultiCache(context.Background(), []CacheableTTL{
-		{Cmd: cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a1"})), TTL: time.Second * 10},
+		CT(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a1"})), time.Second*10),
 	}...)
 	if arr[0].err != io.EOF {
 		t.Errorf("unexpected err, got %v", arr[0].err)

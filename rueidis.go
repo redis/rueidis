@@ -181,6 +181,17 @@ type DedicatedClient interface {
 	Close()
 }
 
+// CT is a shorthand constructor for CacheableTTL
+func CT(cmd cmds.Cacheable, ttl time.Duration) CacheableTTL {
+	return CacheableTTL{Cmd: cmd, TTL: ttl}
+}
+
+// CacheableTTL is parameter container of DoMultiCache
+type CacheableTTL struct {
+	Cmd cmds.Cacheable
+	TTL time.Duration
+}
+
 // NewClient uses ClientOption to initialize the Client for both cluster client and single client.
 // It will first try to connect as cluster client. If the len(ClientOption.InitAddress) == 1 and
 // the address does not enable cluster mode, the NewClient() will use single client instead.

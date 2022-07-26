@@ -243,7 +243,7 @@ func TestSingleClient(t *testing.T) {
 			}
 			return []RedisResult{newResult(RedisMessage{typ: '+', string: "DoCache"}, nil)}
 		}
-		if v, err := client.DoMultiCache(context.Background(), CacheableTTL{Cmd: c, TTL: 100})[0].ToString(); err != nil || v != "DoCache" {
+		if v, err := client.DoMultiCache(context.Background(), CT(c, 100))[0].ToString(); err != nil || v != "DoCache" {
 			t.Fatalf("unexpected response %v %v", v, err)
 		}
 	})
@@ -654,7 +654,7 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 			[]RedisResult{newErrResult(ErrClosing)},
 			[]RedisResult{newResult(RedisMessage{typ: '+', string: "Do"}, nil)},
 		)
-		if v, err := c.DoMultiCache(context.Background(), CacheableTTL{Cmd: c.B().Get().Key("Do").Cache(), TTL: 0})[0].ToString(); err != nil || v != "Do" {
+		if v, err := c.DoMultiCache(context.Background(), CT(c.B().Get().Key("Do").Cache(), 0))[0].ToString(); err != nil || v != "Do" {
 			t.Fatalf("unexpected response %v %v", v, err)
 		}
 	})
@@ -663,7 +663,7 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 		c, m := setup()
 		m.DoMultiCacheFn = makeDoMultiCacheFn([]RedisResult{newErrResult(ErrClosing)})
 		c.Close()
-		if v, err := c.DoMultiCache(context.Background(), CacheableTTL{Cmd: c.B().Get().Key("Do").Cache(), TTL: 0})[0].ToString(); err != ErrClosing {
+		if v, err := c.DoMultiCache(context.Background(), CT(c.B().Get().Key("Do").Cache(), 0))[0].ToString(); err != ErrClosing {
 			t.Fatalf("unexpected response %v %v", v, err)
 		}
 	})
@@ -673,7 +673,7 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 		m.DoMultiCacheFn = makeDoMultiCacheFn([]RedisResult{newErrResult(ErrClosing)})
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
-		if v, err := c.DoMultiCache(ctx, CacheableTTL{Cmd: c.B().Get().Key("Do").Cache(), TTL: 0})[0].ToString(); err != ErrClosing {
+		if v, err := c.DoMultiCache(ctx, CT(c.B().Get().Key("Do").Cache(), 0))[0].ToString(); err != ErrClosing {
 			t.Fatalf("unexpected response %v %v", v, err)
 		}
 	})

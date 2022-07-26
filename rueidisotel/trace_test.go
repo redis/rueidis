@@ -48,22 +48,22 @@ func TestWithClient(t *testing.T) {
 
 	// first DoMultiCache
 	client.DoMultiCache(ctx,
-		rueidis.CacheableTTL{Cmd: client.B().Get().Key("key1").Cache(), TTL: time.Minute},
-		rueidis.CacheableTTL{Cmd: client.B().Get().Key("key2").Cache(), TTL: time.Minute},
-		rueidis.CacheableTTL{Cmd: client.B().Get().Key("key3").Cache(), TTL: time.Minute},
-		rueidis.CacheableTTL{Cmd: client.B().Get().Key("key4").Cache(), TTL: time.Minute},
-		rueidis.CacheableTTL{Cmd: client.B().Get().Key("key5").Cache(), TTL: time.Minute},
-		rueidis.CacheableTTL{Cmd: client.B().Get().Key("key6").Cache(), TTL: time.Minute})
+		rueidis.CT(client.B().Get().Key("key1").Cache(), time.Minute),
+		rueidis.CT(client.B().Get().Key("key2").Cache(), time.Minute),
+		rueidis.CT(client.B().Get().Key("key3").Cache(), time.Minute),
+		rueidis.CT(client.B().Get().Key("key4").Cache(), time.Minute),
+		rueidis.CT(client.B().Get().Key("key5").Cache(), time.Minute),
+		rueidis.CT(client.B().Get().Key("key6").Cache(), time.Minute))
 	validateTrace(t, exp, "GET GET GET GET GET", codes.Ok)
 
 	// second DoMultiCache
 	client.DoMultiCache(ctx,
-		rueidis.CacheableTTL{Cmd: client.B().Get().Key("key1").Cache(), TTL: time.Minute},
-		rueidis.CacheableTTL{Cmd: client.B().Get().Key("key2").Cache(), TTL: time.Minute},
-		rueidis.CacheableTTL{Cmd: client.B().Get().Key("key3").Cache(), TTL: time.Minute},
-		rueidis.CacheableTTL{Cmd: client.B().Get().Key("key4").Cache(), TTL: time.Minute},
-		rueidis.CacheableTTL{Cmd: client.B().Get().Key("key5").Cache(), TTL: time.Minute},
-		rueidis.CacheableTTL{Cmd: client.B().Get().Key("key6").Cache(), TTL: time.Minute})
+		rueidis.CT(client.B().Get().Key("key1").Cache(), time.Minute),
+		rueidis.CT(client.B().Get().Key("key2").Cache(), time.Minute),
+		rueidis.CT(client.B().Get().Key("key3").Cache(), time.Minute),
+		rueidis.CT(client.B().Get().Key("key4").Cache(), time.Minute),
+		rueidis.CT(client.B().Get().Key("key5").Cache(), time.Minute),
+		rueidis.CT(client.B().Get().Key("key6").Cache(), time.Minute))
 	validateTrace(t, exp, "GET GET GET GET GET", codes.Ok)
 
 	if err := mxp.Collect(ctx); err != nil {

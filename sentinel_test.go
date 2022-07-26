@@ -516,7 +516,7 @@ func TestSentinelClientDelegate(t *testing.T) {
 			}
 			return []RedisResult{newResult(RedisMessage{typ: '+', string: "DoCache"}, nil)}
 		}
-		if v, err := client.DoMultiCache(context.Background(), CacheableTTL{Cmd: c, TTL: 100})[0].ToString(); err != nil || v != "DoCache" {
+		if v, err := client.DoMultiCache(context.Background(), CT(c, 100))[0].ToString(); err != nil || v != "DoCache" {
 			t.Fatalf("unexpected response %v %v", v, err)
 		}
 	})

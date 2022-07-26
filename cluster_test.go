@@ -296,7 +296,7 @@ func TestClusterClient(t *testing.T) {
 	t.Run("Delegate DoMultiCache Single Slot", func(t *testing.T) {
 		c1 := client.B().Get().Key("K1{a}").Cache()
 		c2 := client.B().Get().Key("K2{a}").Cache()
-		resps := client.DoMultiCache(context.Background(), CacheableTTL{Cmd: c1, TTL: time.Second}, CacheableTTL{Cmd: c2, TTL: time.Second})
+		resps := client.DoMultiCache(context.Background(), CT(c1, time.Second), CT(c2, time.Second))
 		if v, err := resps[0].ToString(); err != nil || v != "GET K1{a}" {
 			t.Fatalf("unexpected response %v %v", v, err)
 		}
@@ -308,7 +308,7 @@ func TestClusterClient(t *testing.T) {
 	t.Run("Delegate DoMultiCache Multi Slot", func(t *testing.T) {
 		multi := make([]CacheableTTL, 500)
 		for i := 0; i < len(multi); i++ {
-			multi[i] = CacheableTTL{Cmd: client.B().Get().Key(fmt.Sprintf("K1{%d}", i)).Cache(), TTL: time.Second}
+			multi[i] = CT(client.B().Get().Key(fmt.Sprintf("K1{%d}", i)).Cache(), time.Second)
 		}
 		resps := client.DoMultiCache(context.Background(), multi...)
 		for i := 0; i < len(multi); i++ {
@@ -666,7 +666,7 @@ func TestClusterClientErr(t *testing.T) {
 		if err := client.DoCache(context.Background(), client.B().Get().Key("a").Cache(), 100).Error(); err != v {
 			t.Fatalf("unexpected err %v", err)
 		}
-		if err := client.DoMultiCache(context.Background(), CacheableTTL{Cmd: client.B().Get().Key("a").Cache(), TTL: 100})[0].Error(); err != v {
+		if err := client.DoMultiCache(context.Background(), CT(client.B().Get().Key("a").Cache(), 100))[0].Error(); err != v {
 			t.Fatalf("unexpected err %v", err)
 		}
 		if err := client.Receive(context.Background(), client.B().Ssubscribe().Channel("a").Build(), func(msg PubSubMessage) {}); err != v {
@@ -923,7 +923,7 @@ func TestClusterClientErr(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
-		if v, err := client.DoMultiCache(context.Background(), CacheableTTL{Cmd: client.B().Get().Key("a").Cache(), TTL: 100})[0].ToString(); err != nil || v != "b" {
+		if v, err := client.DoMultiCache(context.Background(), CT(client.B().Get().Key("a").Cache(), 100))[0].ToString(); err != nil || v != "b" {
 			t.Fatalf("unexpected resp %v %v", v, err)
 		}
 	})
@@ -1038,7 +1038,7 @@ func TestClusterClientErr(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
-		if v, err := client.DoMultiCache(context.Background(), CacheableTTL{Cmd: client.B().Get().Key("a").Cache(), TTL: 100})[0].ToString(); err != nil || v != "b" {
+		if v, err := client.DoMultiCache(context.Background(), CT(client.B().Get().Key("a").Cache(), 100))[0].ToString(); err != nil || v != "b" {
 			t.Fatalf("unexpected resp %v %v", v, err)
 		}
 	})
@@ -1131,7 +1131,7 @@ func TestClusterClientErr(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
-		if v, err := client.DoMultiCache(context.Background(), CacheableTTL{Cmd: client.B().Get().Key("a").Cache(), TTL: 100})[0].ToString(); err != nil || v != "b" {
+		if v, err := client.DoMultiCache(context.Background(), CT(client.B().Get().Key("a").Cache(), 100))[0].ToString(); err != nil || v != "b" {
 			t.Fatalf("unexpected resp %v %v", v, err)
 		}
 	})

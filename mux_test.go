@@ -365,10 +365,10 @@ func TestMuxDelegation(t *testing.T) {
 		})
 		defer checkClean(t)
 		defer m.Close()
-		if err := m.DoMultiCache(context.Background(), CacheableTTL{Cmd: cmds.Cacheable(cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"})), TTL: time.Second})[0].Error(); !errors.Is(err, context.DeadlineExceeded) {
+		if err := m.DoMultiCache(context.Background(), CT(cmds.Cacheable(cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"})), time.Second))[0].Error(); !errors.Is(err, context.DeadlineExceeded) {
 			t.Fatalf("unexpected error %v", err)
 		}
-		if val, err := m.DoMultiCache(context.Background(), CacheableTTL{Cmd: cmds.Cacheable(cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"})), TTL: time.Second})[0].ToString(); err != nil {
+		if val, err := m.DoMultiCache(context.Background(), CT(cmds.Cacheable(cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"})), time.Second))[0].ToString(); err != nil {
 			t.Fatalf("unexpected error %v", err)
 		} else if val != "MULTI_COMMANDS_RESPONSE" {
 			t.Fatalf("unexpected response %v", val)
