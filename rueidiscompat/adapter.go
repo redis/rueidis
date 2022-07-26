@@ -2424,7 +2424,7 @@ func (c *Compat) GeoRadiusByMember(ctx context.Context, key, member string, quer
 // GeoRadiusByMemberStore is a writing GEORADIUSBYMEMBER command.
 func (c *Compat) GeoRadiusByMemberStore(ctx context.Context, key, member string, query GeoRadiusQuery) *IntCmd {
 	cmd := c.client.B().Arbitrary("GEORADIUSBYMEMBER").Keys(key).Args(member)
-	if query.Store != "" && query.StoreDist != "" {
+	if query.Store == "" && query.StoreDist == "" {
 		panic("GeoRadiusByMemberStore requires Store or StoreDist")
 	}
 	cmd = cmd.Args(query.args()...)
@@ -2690,8 +2690,8 @@ func (c CacheCompat) Sort(ctx context.Context, key string, sort Sort) *StringSli
 	if sort.Offset != 0 || sort.Count != 0 {
 		cmd = cmd.Args("LIMIT", strconv.FormatInt(sort.Offset, 10), strconv.FormatInt(sort.Count, 10))
 	}
-	if len(sort.Get) > 0 {
-		cmd = cmd.Args("GET").Args(sort.Get...)
+	for _, g := range sort.Get {
+		cmd = cmd.Args("GET").Args(g)
 	}
 	switch order := strings.ToUpper(sort.Order); order {
 	case "ASC", "DESC":
