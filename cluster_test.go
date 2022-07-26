@@ -182,6 +182,13 @@ func TestClusterClient(t *testing.T) {
 			result[len(multi)-1] = newResult(RedisMessage{typ: '*', values: resps}, nil)
 			return result
 		},
+		DoMultiCacheFn: func(multi ...CacheableTTL) []RedisResult {
+			resps := make([]RedisResult, len(multi))
+			for i, cmd := range multi {
+				resps[i] = newResult(RedisMessage{typ: '+', string: strings.Join(cmd.Cmd.Commands(), " ")}, nil)
+			}
+			return resps
+		},
 		DoOverride: map[string]func(cmd cmds.Completed) RedisResult{
 			"GET Do": func(cmd cmds.Completed) RedisResult {
 				return newResult(RedisMessage{typ: '+', string: "Do"}, nil)
@@ -277,6 +284,37 @@ func TestClusterClient(t *testing.T) {
 		c := client.B().Get().Key("DoCache").Cache()
 		if v, err := client.DoCache(context.Background(), c, 100).ToString(); err != nil || v != "DoCache" {
 			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("Delegate DoMultiCache Empty", func(t *testing.T) {
+		if resps := client.DoMultiCache(context.Background()); resps != nil {
+			t.Fatalf("unexpected response %v", resps)
+		}
+	})
+
+	t.Run("Delegate DoMultiCache Single Slot", func(t *testing.T) {
+		c1 := client.B().Get().Key("K1{a}").Cache()
+		c2 := client.B().Get().Key("K2{a}").Cache()
+		resps := client.DoMultiCache(context.Background(), CacheableTTL{Cmd: c1, TTL: time.Second}, CacheableTTL{Cmd: c2, TTL: time.Second})
+		if v, err := resps[0].ToString(); err != nil || v != "GET K1{a}" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+		if v, err := resps[1].ToString(); err != nil || v != "GET K2{a}" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("Delegate DoMultiCache Multi Slot", func(t *testing.T) {
+		multi := make([]CacheableTTL, 500)
+		for i := 0; i < len(multi); i++ {
+			multi[i] = CacheableTTL{Cmd: client.B().Get().Key(fmt.Sprintf("K1{%d}", i)).Cache(), TTL: time.Second}
+		}
+		resps := client.DoMultiCache(context.Background(), multi...)
+		for i := 0; i < len(multi); i++ {
+			if v, err := resps[i].ToString(); err != nil || v != fmt.Sprintf("GET K1{%d}", i) {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
 		}
 	})
 
@@ -628,6 +666,9 @@ func TestClusterClientErr(t *testing.T) {
 		if err := client.DoCache(context.Background(), client.B().Get().Key("a").Cache(), 100).Error(); err != v {
 			t.Fatalf("unexpected err %v", err)
 		}
+		if err := client.DoMultiCache(context.Background(), CacheableTTL{Cmd: client.B().Get().Key("a").Cache(), TTL: 100})[0].Error(); err != v {
+			t.Fatalf("unexpected err %v", err)
+		}
 		if err := client.Receive(context.Background(), client.B().Ssubscribe().Channel("a").Build(), func(msg PubSubMessage) {}); err != v {
 			t.Fatalf("unexpected err %v", err)
 		}
@@ -866,6 +907,27 @@ func TestClusterClientErr(t *testing.T) {
 		}
 	})
 
+	t.Run("slot moved (cache multi)", func(t *testing.T) {
+		var count int64
+		m := &mockConn{DoFn: func(cmd cmds.Completed) RedisResult {
+			return slotsResp
+		}, DoMultiCacheFn: func(multi ...CacheableTTL) []RedisResult {
+			if atomic.AddInt64(&count, 1) <= 3 {
+				return []RedisResult{newResult(RedisMessage{typ: '-', string: "MOVED 0 :1"}, nil)}
+			}
+			return []RedisResult{newResult(RedisMessage{typ: '+', string: "b"}, nil)}
+		}}
+		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
+			return m
+		})
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		if v, err := client.DoMultiCache(context.Background(), CacheableTTL{Cmd: client.B().Get().Key("a").Cache(), TTL: 100})[0].ToString(); err != nil || v != "b" {
+			t.Fatalf("unexpected resp %v %v", v, err)
+		}
+	})
+
 	t.Run("slot asking", func(t *testing.T) {
 		var count int64
 		m := &mockConn{
@@ -949,6 +1011,38 @@ func TestClusterClientErr(t *testing.T) {
 		}
 	})
 
+	t.Run("slot asking (cache multi)", func(t *testing.T) {
+		var count int64
+		m := &mockConn{
+			DoFn: func(cmd cmds.Completed) RedisResult {
+				return slotsResp
+			},
+			DoMultiCacheFn: func(multi ...CacheableTTL) []RedisResult {
+				return []RedisResult{newResult(RedisMessage{typ: '-', string: "ASK 0 :1"}, nil)}
+			},
+			DoMultiFn: func(multi ...cmds.Completed) []RedisResult {
+				if atomic.AddInt64(&count, 1) <= 3 {
+					return []RedisResult{{}, {}, {}, newResult(RedisMessage{typ: '-', string: "ASK 0 :1"}, nil)}
+				}
+				ret := make([]RedisResult, len(multi))
+				for i := 0; i < len(multi)-1; i++ {
+					ret[i] = newResult(RedisMessage{typ: '+', string: "QUEUED"}, nil)
+				}
+				ret[len(multi)-1] = newResult(RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "b"}}}, nil)
+				return ret
+			},
+		}
+		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
+			return m
+		})
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		if v, err := client.DoMultiCache(context.Background(), CacheableTTL{Cmd: client.B().Get().Key("a").Cache(), TTL: 100})[0].ToString(); err != nil || v != "b" {
+			t.Fatalf("unexpected resp %v %v", v, err)
+		}
+	})
+
 	t.Run("slot try again", func(t *testing.T) {
 		var count int64
 		m := &mockConn{DoFn: func(cmd cmds.Completed) RedisResult {
@@ -1017,6 +1111,27 @@ func TestClusterClientErr(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 		if v, err := client.DoCache(context.Background(), client.B().Get().Key("a").Cache(), 100).ToString(); err != nil || v != "b" {
+			t.Fatalf("unexpected resp %v %v", v, err)
+		}
+	})
+
+	t.Run("slot try again (cache multi)", func(t *testing.T) {
+		var count int64
+		m := &mockConn{DoFn: func(cmd cmds.Completed) RedisResult {
+			return slotsResp
+		}, DoMultiCacheFn: func(multi ...CacheableTTL) []RedisResult {
+			if atomic.AddInt64(&count, 1) <= 3 {
+				return []RedisResult{newResult(RedisMessage{typ: '-', string: "TRYAGAIN"}, nil)}
+			}
+			return []RedisResult{newResult(RedisMessage{typ: '+', string: "b"}, nil)}
+		}}
+		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
+			return m
+		})
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		if v, err := client.DoMultiCache(context.Background(), CacheableTTL{Cmd: client.B().Get().Key("a").Cache(), TTL: 100})[0].ToString(); err != nil || v != "b" {
 			t.Fatalf("unexpected resp %v %v", v, err)
 		}
 	})

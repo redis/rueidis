@@ -20,6 +20,7 @@ type wire interface {
 	Do(ctx context.Context, cmd cmds.Completed) RedisResult
 	DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) RedisResult
 	DoMulti(ctx context.Context, multi ...cmds.Completed) []RedisResult
+	DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisResult
 	Receive(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error
 	Info() map[string]RedisMessage
 	Error() error

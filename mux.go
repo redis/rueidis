@@ -24,6 +24,7 @@ type conn interface {
 	Do(ctx context.Context, cmd cmds.Completed) RedisResult
 	DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) RedisResult
 	DoMulti(ctx context.Context, multi ...cmds.Completed) []RedisResult
+	DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisResult
 	Receive(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error
 	Info() map[string]RedisMessage
 	Error() error
@@ -191,6 +192,18 @@ func (m *mux) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration
 	resp := wire.DoCache(ctx, cmd, ttl)
 	if isBroken(resp.NonRedisError(), wire) {
 		m.wire.CompareAndSwap(wire, m.init)
+	}
+	return resp
+}
+
+func (m *mux) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisResult {
+	wire := m.pipe()
+	resp := wire.DoMultiCache(ctx, multi...)
+	for _, r := range resp {
+		if isBroken(r.NonRedisError(), wire) {
+			m.wire.CompareAndSwap(wire, m.init)
+			return resp
+		}
 	}
 	return resp
 }

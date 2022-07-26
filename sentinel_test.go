@@ -508,6 +508,19 @@ func TestSentinelClientDelegate(t *testing.T) {
 		}
 	})
 
+	t.Run("Delegate DoMultiCache", func(t *testing.T) {
+		c := client.B().Get().Key("DoCache").Cache()
+		m.DoMultiCacheFn = func(multi ...CacheableTTL) []RedisResult {
+			if !reflect.DeepEqual(multi[0].Cmd.Commands(), c.Commands()) || multi[0].TTL != 100 {
+				t.Fatalf("unexpected command %v, %v", multi[0].Cmd, multi[0].TTL)
+			}
+			return []RedisResult{newResult(RedisMessage{typ: '+', string: "DoCache"}, nil)}
+		}
+		if v, err := client.DoMultiCache(context.Background(), CacheableTTL{Cmd: c, TTL: 100})[0].ToString(); err != nil || v != "DoCache" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
 	t.Run("Delegate Receive", func(t *testing.T) {
 		c := client.B().Subscribe().Channel("ch").Build()
 		hdl := func(message PubSubMessage) {}
