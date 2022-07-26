@@ -425,6 +425,109 @@ func (c *clusterClient) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl tim
 	return resp
 }
 
+func (c *clusterClient) doMultiCache(ctx context.Context, slot uint16, multi []CacheableTTL, idx []int, results []RedisResult) {
+retry:
+	cc, err := c.pick(slot)
+	if err != nil {
+		for _, i := range idx {
+			results[i] = newErrResult(err)
+		}
+		return
+	}
+	resps := cc.DoMultiCache(ctx, multi...)
+process:
+	for i, resp := range resps {
+		switch addr, mode := c.shouldRefreshRetry(resp.Error(), ctx); mode {
+		case RedirectMove:
+			resps = c.redirectOrNew(addr).DoMultiCache(ctx, multi...)
+			goto process
+		case RedirectAsk:
+			commands := make([]cmds.Completed, 0, len(multi)+3)
+			commands = append(commands, cmds.AskingCmd, cmds.MultiCmd)
+			for _, cmd := range multi {
+				commands = append(commands, cmds.Completed(cmd.Cmd))
+			}
+			commands = append(commands, cmds.ExecCmd)
+			if asked, err := c.redirectOrNew(addr).DoMulti(ctx, commands...)[len(commands)-1].ToArray(); err != nil {
+				for i := range resps {
+					resps[i] = newErrResult(err)
+				}
+			} else {
+				for i, ret := range asked {
+					resps[i] = newResult(ret, nil)
+				}
+			}
+			goto process
+		case RedirectRetry:
+			runtime.Gosched()
+			goto retry
+		}
+		results[idx[i]] = newResult(resp.ToMessage())
+	}
+}
+
+func (c *clusterClient) DoMultiCache(ctx context.Context, multi ...CacheableTTL) (results []RedisResult) {
+	if len(multi) == 0 {
+		return nil
+	}
+	slots := make(map[uint16]int, 16)
+	for _, cmd := range multi {
+		slots[cmd.Cmd.Slot()]++
+	}
+	results = make([]RedisResult, len(multi))
+	if len(slots) == 1 {
+		cIndexes := make([]int, len(multi))
+		for i := range multi {
+			cIndexes[i] = i
+		}
+		c.doMultiCache(ctx, multi[0].Cmd.Slot(), multi, cIndexes, results)
+		for _, cmd := range multi {
+			cmds.Put(cmd.Cmd.CommandSlice())
+		}
+		return results
+	}
+
+	commands := make(map[uint16][]CacheableTTL, len(slots))
+	cIndexes := make(map[uint16][]int, len(slots))
+	for slot, count := range slots {
+		cIndexes[slot] = make([]int, 0, count)
+		commands[slot] = make([]CacheableTTL, 0, count)
+	}
+	for i, cmd := range multi {
+		slot := cmd.Cmd.Slot()
+		commands[slot] = append(commands[slot], cmd)
+		cIndexes[slot] = append(cIndexes[slot], i)
+	}
+
+	concurrency := len(slots)
+	if concurrency > c.cpus {
+		concurrency = c.cpus
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(len(commands))
+
+	ch := make(chan uint16, len(commands))
+	for slot := range commands {
+		ch <- slot
+	}
+	close(ch)
+
+	for i := 0; i < concurrency; i++ {
+		go func() {
+			for slot := range ch {
+				c.doMultiCache(ctx, slot, commands[slot], cIndexes[slot], results)
+				wg.Done()
+			}
+		}()
+	}
+	wg.Wait()
+	for _, cmd := range multi {
+		cmds.Put(cmd.Cmd.CommandSlice())
+	}
+	return results
+}
+
 func (c *clusterClient) Receive(ctx context.Context, subscribe cmds.Completed, fn func(msg PubSubMessage)) (err error) {
 retry:
 	cc, err := c.pick(subscribe.Slot())

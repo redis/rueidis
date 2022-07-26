@@ -121,11 +121,14 @@ type Client interface {
 	//  client.Do(ctx, client.B().Get().Key("k").Cache(), time.Minute).ToString()
 	// The above example will send the following command to redis if cache miss:
 	//  CLIENT CACHING YES
-	//  GET k
 	//  PTTL k
+	//  GET k
 	// The in-memory cache size is configured by ClientOption.CacheSizeEachConn.
 	// The cmd parameter is recycled after passing into DoCache() and should not be reused.
 	DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp RedisResult)
+	// DoMultiCache is similar to DoCache, but works with multiple cacheable commands across different slots.
+	// It will first group commands by slots and will send only cache missed commands to redis.
+	DoMultiCache(ctx context.Context, multi ...CacheableTTL) (resp []RedisResult)
 
 	// Receive accepts SUBSCRIBE, SSUBSCRIBE, PSUBSCRIBE command and a message handler.
 	// Receive will block and then return value only when the following cases:
@@ -176,6 +179,17 @@ type DedicatedClient interface {
 	SetPubSubHooks(hooks PubSubHooks) <-chan error
 	// Close closes the dedicated connection and prevent the connection be put back into the pool.
 	Close()
+}
+
+// CT is a shorthand constructor for CacheableTTL
+func CT(cmd cmds.Cacheable, ttl time.Duration) CacheableTTL {
+	return CacheableTTL{Cmd: cmd, TTL: ttl}
+}
+
+// CacheableTTL is parameter container of DoMultiCache
+type CacheableTTL struct {
+	Cmd cmds.Cacheable
+	TTL time.Duration
 }
 
 // NewClient uses ClientOption to initialize the Client for both cluster client and single client.

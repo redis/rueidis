@@ -347,6 +347,34 @@ func TestMuxDelegation(t *testing.T) {
 		}
 	})
 
+	t.Run("wire do multi cache", func(t *testing.T) {
+		m, checkClean := setupMux([]*mockWire{
+			{
+				DoMultiCacheFn: func(multi ...CacheableTTL) []RedisResult {
+					return []RedisResult{newErrResult(context.DeadlineExceeded)}
+				},
+				ErrorFn: func() error {
+					return context.DeadlineExceeded
+				},
+			},
+			{
+				DoMultiCacheFn: func(multi ...CacheableTTL) []RedisResult {
+					return []RedisResult{newResult(RedisMessage{typ: '+', string: "MULTI_COMMANDS_RESPONSE"}, nil)}
+				},
+			},
+		})
+		defer checkClean(t)
+		defer m.Close()
+		if err := m.DoMultiCache(context.Background(), CT(cmds.Cacheable(cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"})), time.Second))[0].Error(); !errors.Is(err, context.DeadlineExceeded) {
+			t.Fatalf("unexpected error %v", err)
+		}
+		if val, err := m.DoMultiCache(context.Background(), CT(cmds.Cacheable(cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"})), time.Second))[0].ToString(); err != nil {
+			t.Fatalf("unexpected error %v", err)
+		} else if val != "MULTI_COMMANDS_RESPONSE" {
+			t.Fatalf("unexpected response %v", val)
+		}
+	})
+
 	t.Run("wire receive", func(t *testing.T) {
 		m, checkClean := setupMux([]*mockWire{
 			{
@@ -512,13 +540,14 @@ func BenchmarkClientSideCaching(b *testing.B) {
 }
 
 type mockWire struct {
-	DoFn      func(cmd cmds.Completed) RedisResult
-	DoCacheFn func(cmd cmds.Cacheable, ttl time.Duration) RedisResult
-	DoMultiFn func(multi ...cmds.Completed) []RedisResult
-	ReceiveFn func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error
-	InfoFn    func() map[string]RedisMessage
-	ErrorFn   func() error
-	CloseFn   func()
+	DoFn           func(cmd cmds.Completed) RedisResult
+	DoCacheFn      func(cmd cmds.Cacheable, ttl time.Duration) RedisResult
+	DoMultiFn      func(multi ...cmds.Completed) []RedisResult
+	DoMultiCacheFn func(multi ...CacheableTTL) []RedisResult
+	ReceiveFn      func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error
+	InfoFn         func() map[string]RedisMessage
+	ErrorFn        func() error
+	CloseFn        func()
 
 	CleanSubscriptionsFn func()
 	SetPubSubHooksFn     func(hooks PubSubHooks) <-chan error
@@ -536,6 +565,13 @@ func (m *mockWire) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Dur
 		return m.DoCacheFn(cmd, ttl)
 	}
 	return RedisResult{}
+}
+
+func (m *mockWire) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisResult {
+	if m.DoMultiCacheFn != nil {
+		return m.DoMultiCacheFn(multi...)
+	}
+	return nil
 }
 
 func (m *mockWire) DoMulti(ctx context.Context, multi ...cmds.Completed) []RedisResult {

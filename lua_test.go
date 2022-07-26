@@ -107,13 +107,14 @@ func TestNewLuaScriptReadOnly(t *testing.T) {
 }
 
 type client struct {
-	BFn         func() cmds.Builder
-	DoFn        func(ctx context.Context, cmd cmds.Completed) (resp RedisResult)
-	DoMultiFn   func(ctx context.Context, cmd ...cmds.Completed) (resp []RedisResult)
-	DoCacheFn   func(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp RedisResult)
-	DedicatedFn func(fn func(DedicatedClient) error) (err error)
-	DedicateFn  func() (DedicatedClient, func())
-	CloseFn     func()
+	BFn            func() cmds.Builder
+	DoFn           func(ctx context.Context, cmd cmds.Completed) (resp RedisResult)
+	DoMultiFn      func(ctx context.Context, cmd ...cmds.Completed) (resp []RedisResult)
+	DoCacheFn      func(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp RedisResult)
+	DoMultiCacheFn func(ctx context.Context, cmd ...CacheableTTL) (resp []RedisResult)
+	DedicatedFn    func(fn func(DedicatedClient) error) (err error)
+	DedicateFn     func() (DedicatedClient, func())
+	CloseFn        func()
 }
 
 func (c *client) Receive(ctx context.Context, subscribe cmds.Completed, fn func(msg PubSubMessage)) error {
@@ -137,6 +138,13 @@ func (c *client) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) 
 func (c *client) DoMulti(ctx context.Context, cmd ...cmds.Completed) (resp []RedisResult) {
 	if c.DoMultiFn != nil {
 		return c.DoMultiFn(ctx, cmd...)
+	}
+	return nil
+}
+
+func (c *client) DoMultiCache(ctx context.Context, cmd ...CacheableTTL) (resp []RedisResult) {
+	if c.DoMultiCacheFn != nil {
+		return c.DoMultiCacheFn(ctx, cmd...)
 	}
 	return nil
 }

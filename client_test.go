@@ -14,18 +14,19 @@ import (
 )
 
 type mockConn struct {
-	DoFn       func(cmd cmds.Completed) RedisResult
-	DoCacheFn  func(cmd cmds.Cacheable, ttl time.Duration) RedisResult
-	DoMultiFn  func(multi ...cmds.Completed) []RedisResult
-	ReceiveFn  func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error
-	InfoFn     func() map[string]RedisMessage
-	ErrorFn    func() error
-	CloseFn    func()
-	DialFn     func() error
-	AcquireFn  func() wire
-	StoreFn    func(w wire)
-	OverrideFn func(c conn)
-	IsFn       func(addr string) bool
+	DoFn           func(cmd cmds.Completed) RedisResult
+	DoCacheFn      func(cmd cmds.Cacheable, ttl time.Duration) RedisResult
+	DoMultiFn      func(multi ...cmds.Completed) []RedisResult
+	DoMultiCacheFn func(multi ...CacheableTTL) []RedisResult
+	ReceiveFn      func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error
+	InfoFn         func() map[string]RedisMessage
+	ErrorFn        func() error
+	CloseFn        func()
+	DialFn         func() error
+	AcquireFn      func() wire
+	StoreFn        func(w wire)
+	OverrideFn     func(c conn)
+	IsFn           func(addr string) bool
 
 	DoOverride      map[string]func(cmd cmds.Completed) RedisResult
 	DoCacheOverride map[string]func(cmd cmds.Cacheable, ttl time.Duration) RedisResult
@@ -76,6 +77,22 @@ func (m *mockConn) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Dur
 		return m.DoCacheFn(cmd, ttl)
 	}
 	return RedisResult{}
+}
+
+func (m *mockConn) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisResult {
+	overrides := make([]RedisResult, 0, len(multi))
+	for _, cmd := range multi {
+		if fn := m.DoCacheOverride[strings.Join(cmd.Cmd.Commands(), " ")]; fn != nil {
+			overrides = append(overrides, fn(cmd.Cmd, cmd.TTL))
+		}
+	}
+	if len(overrides) == len(multi) {
+		return overrides
+	}
+	if m.DoMultiCacheFn != nil {
+		return m.DoMultiCacheFn(multi...)
+	}
+	return nil
 }
 
 func (m *mockConn) DoMulti(ctx context.Context, multi ...cmds.Completed) []RedisResult {
@@ -214,6 +231,19 @@ func TestSingleClient(t *testing.T) {
 			return newResult(RedisMessage{typ: '+', string: "DoCache"}, nil)
 		}
 		if v, err := client.DoCache(context.Background(), c, 100).ToString(); err != nil || v != "DoCache" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("Delegate DoMultiCache", func(t *testing.T) {
+		c := client.B().Get().Key("DoCache").Cache()
+		m.DoMultiCacheFn = func(multi ...CacheableTTL) []RedisResult {
+			if !reflect.DeepEqual(multi[0].Cmd.Commands(), c.Commands()) || multi[0].TTL != 100 {
+				t.Fatalf("unexpected command %v, %v", multi[0].Cmd, multi[0].TTL)
+			}
+			return []RedisResult{newResult(RedisMessage{typ: '+', string: "DoCache"}, nil)}
+		}
+		if v, err := client.DoMultiCache(context.Background(), CT(c, 100))[0].ToString(); err != nil || v != "DoCache" {
 			t.Fatalf("unexpected response %v %v", v, err)
 		}
 	})
@@ -493,6 +523,14 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 		}
 	}
 
+	makeDoMultiCacheFn := func(results ...[]RedisResult) func(multi ...CacheableTTL) []RedisResult {
+		count := -1
+		return func(multi ...CacheableTTL) []RedisResult {
+			count++
+			return results[count]
+		}
+	}
+
 	t.Run("Delegate Do ReadOnly Retry", func(t *testing.T) {
 		c, m := setup()
 		m.DoFn = makeDoFn(
@@ -606,6 +644,36 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
 		if v, err := c.DoCache(ctx, c.B().Get().Key("Do").Cache(), 0).ToString(); err != ErrClosing {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("Delegate DoMultiCache Retry", func(t *testing.T) {
+		c, m := setup()
+		m.DoMultiCacheFn = makeDoMultiCacheFn(
+			[]RedisResult{newErrResult(ErrClosing)},
+			[]RedisResult{newResult(RedisMessage{typ: '+', string: "Do"}, nil)},
+		)
+		if v, err := c.DoMultiCache(context.Background(), CT(c.B().Get().Key("Do").Cache(), 0))[0].ToString(); err != nil || v != "Do" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("Delegate DoMultiCache NoRetry - closed", func(t *testing.T) {
+		c, m := setup()
+		m.DoMultiCacheFn = makeDoMultiCacheFn([]RedisResult{newErrResult(ErrClosing)})
+		c.Close()
+		if v, err := c.DoMultiCache(context.Background(), CT(c.B().Get().Key("Do").Cache(), 0))[0].ToString(); err != ErrClosing {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("Delegate DoMultiCache ReadOnly NoRetry - ctx done", func(t *testing.T) {
+		c, m := setup()
+		m.DoMultiCacheFn = makeDoMultiCacheFn([]RedisResult{newErrResult(ErrClosing)})
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		if v, err := c.DoMultiCache(ctx, CT(c.B().Get().Key("Do").Cache(), 0))[0].ToString(); err != ErrClosing {
 			t.Fatalf("unexpected response %v %v", v, err)
 		}
 	})

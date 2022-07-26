@@ -20,6 +20,7 @@ type wire interface {
 	Do(ctx context.Context, cmd cmds.Completed) RedisResult
 	DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) RedisResult
 	DoMulti(ctx context.Context, multi ...cmds.Completed) []RedisResult
+	DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisResult
 	Receive(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error
 	Info() map[string]RedisMessage
 	Error() error
@@ -286,22 +287,20 @@ func (p *pipe) _backgroundRead() (err error) {
 			}
 		}
 		// if unfulfilled multi commands are lead by opt-in and get success response
-		if ff == len(multi)-1 && multi[0].IsOptIn() {
-			cacheable := cmds.Cacheable(multi[len(multi)-2])
-			if cacheable.IsMGet() {
-				if len(msg.values) >= 2 {
-					cc := cacheable.MGetCacheCmd()
-					for i, cp := range msg.values[len(msg.values)-1].values {
-						cp.attrs = cacheMark
-						p.cache.Update(cacheable.MGetCacheKey(i), cc, cp, msg.values[i].integer)
-					}
+		if ff == len(multi)-1 && multi[0].IsOptIn() && len(msg.values) >= 2 {
+			if cacheable := cmds.Cacheable(multi[len(multi)-2]); cacheable.IsMGet() {
+				cc := cacheable.MGetCacheCmd()
+				for i, cp := range msg.values[len(msg.values)-1].values {
+					cp.attrs = cacheMark
+					p.cache.Update(cacheable.MGetCacheKey(i), cc, cp, msg.values[i].integer)
 				}
 			} else {
-				ck, cc := cacheable.CacheKey()
-				if len(msg.values) == 2 {
-					cp := msg.values[1]
+				for i := 1; i < len(msg.values); i += 2 {
+					cacheable = cmds.Cacheable(multi[i+2])
+					ck, cc := cacheable.CacheKey()
+					cp := msg.values[i]
 					cp.attrs = cacheMark
-					p.cache.Update(ck, cc, cp, msg.values[0].integer)
+					p.cache.Update(ck, cc, cp, msg.values[i-1].integer)
 				}
 			}
 		}
@@ -864,6 +863,72 @@ func (p *pipe) doCacheMGet(ctx context.Context, cmd cmds.Cacheable, ttl time.Dur
 	return result
 }
 
+func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisResult {
+	results := make([]RedisResult, len(multi))
+	entries := make(map[int]*entry)
+	missing := []cmds.Completed{cmds.OptInCmd, cmds.MultiCmd}
+	for i, ct := range multi {
+		if ct.Cmd.IsMGet() {
+			panic(panicmgetcsc)
+		}
+		ck, cc := ct.Cmd.CacheKey()
+		v, entry := p.cache.GetOrPrepare(ck, cc, ct.TTL)
+		if v.typ != 0 { // cache hit for one key
+			results[i] = newResult(v, nil)
+			continue
+		}
+		if entry != nil {
+			entries[i] = entry // store entries for later entry.Wait() to avoid MGET deadlock each others.
+			continue
+		}
+		missing = append(missing, cmds.NewCompleted([]string{"PTTL", ck}), cmds.Completed(ct.Cmd))
+	}
+
+	var exec []RedisMessage
+	var err error
+	if len(missing) > 2 {
+		missing = append(missing, cmds.ExecCmd)
+		resp := p.DoMulti(ctx, missing...)
+		exec, err = resp[len(missing)-1].ToArray()
+		if err != nil {
+			var msg RedisMessage
+			if _, ok := err.(*RedisError); ok {
+				for i := 1; i < len(resp); i += 2 { // EXEC aborted, return the first err of the input cmd in MULTI block
+					if resp[i].val.typ == '-' || resp[i].val.typ == '_' || resp[i].val.typ == '!' {
+						msg = resp[i].val
+						err = nil
+						break
+					}
+				}
+			}
+			for i := 3; i < len(missing); i += 2 {
+				cacheable := cmds.Cacheable(missing[i])
+				ck, cc := cacheable.CacheKey()
+				p.cache.Cancel(ck, cc, msg, err)
+			}
+			for i := range results {
+				results[i] = newResult(msg, err)
+			}
+			return results
+		}
+	}
+
+	for i, entry := range entries {
+		results[i] = newResult(entry.Wait())
+	}
+
+	j := 0
+	for i := 1; i < len(exec); i += 2 {
+		for ; j < len(results); j++ {
+			if results[j].val.typ == 0 && results[j].err == nil {
+				results[j] = newResult(exec[i], nil)
+				break
+			}
+		}
+	}
+	return results
+}
+
 func (p *pipe) Error() error {
 	if err, ok := p.error.Load().(*errs); ok {
 		return err.error
@@ -912,7 +977,8 @@ func deadFn() *pipe {
 
 const (
 	protocolbug  = "protocol bug, message handled out of order"
-	wrongreceive = `only SUBSCRIBE, SSUBSCRIBE, or PSUBSCRIBE command are allowed in Receive`
+	wrongreceive = "only SUBSCRIBE, SSUBSCRIBE, or PSUBSCRIBE command are allowed in Receive"
+	panicmgetcsc = "MGET and JSON.MGET in in DoMultiCache is prohibited"
 )
 
 var cacheMark = &(RedisMessage{})

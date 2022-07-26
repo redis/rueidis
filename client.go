@@ -58,6 +58,20 @@ retry:
 	return resps
 }
 
+func (c *singleClient) DoMultiCache(ctx context.Context, multi ...CacheableTTL) (resps []RedisResult) {
+retry:
+	resps = c.conn.DoMultiCache(ctx, multi...)
+	for _, resp := range resps {
+		if c.isRetryable(resp.NonRedisError(), ctx) {
+			goto retry
+		}
+	}
+	for _, cmd := range multi {
+		cmds.Put(cmd.Cmd.CommandSlice())
+	}
+	return resps
+}
+
 func (c *singleClient) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp RedisResult) {
 retry:
 	resp = c.conn.DoCache(ctx, cmd, ttl)

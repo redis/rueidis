@@ -91,6 +91,22 @@ func (o *otelclient) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.D
 	return
 }
 
+func (o *otelclient) DoMultiCache(ctx context.Context, multi ...rueidis.CacheableTTL) (resps []rueidis.RedisResult) {
+	ctx, span := start(ctx, multiCacheableFirst(multi), multiCacheableSum(multi), o.tAttrs)
+	resps = o.client.DoMultiCache(ctx, multi...)
+	for _, resp := range resps {
+		if resp.NonRedisError() == nil {
+			if resp.IsCacheHit() {
+				cscHits.Add(ctx, 1, o.mAttrs...)
+			} else {
+				cscMiss.Add(ctx, 1, o.mAttrs...)
+			}
+		}
+	}
+	end(span, firstError(resps))
+	return
+}
+
 func (o *otelclient) Dedicated(fn func(rueidis.DedicatedClient) error) (err error) {
 	return o.client.Dedicated(func(client rueidis.DedicatedClient) error {
 		return fn(&dedicated{client: client, mAttrs: o.mAttrs, tAttrs: o.tAttrs})
@@ -181,6 +197,13 @@ func multiSum(multi []cmds.Completed) (v int) {
 	return v
 }
 
+func multiCacheableSum(multi []rueidis.CacheableTTL) (v int) {
+	for _, cmd := range multi {
+		v += sum(cmd.Cmd.Commands())
+	}
+	return v
+}
+
 func multiFirst(multi []cmds.Completed) string {
 	if len(multi) > 5 {
 		multi = multi[:5]
@@ -195,6 +218,27 @@ func multiFirst(multi []cmds.Completed) string {
 	sb.Grow(size)
 	for i, cmd := range multi {
 		sb.WriteString(first(cmd.Commands()))
+		if i != len(multi)-1 {
+			sb.WriteString(" ")
+		}
+	}
+	return sb.String()
+}
+
+func multiCacheableFirst(multi []rueidis.CacheableTTL) string {
+	if len(multi) > 5 {
+		multi = multi[:5]
+	}
+	size := 0
+	for _, cmd := range multi {
+		size += len(first(cmd.Cmd.Commands()))
+	}
+	size += len(multi) - 1
+
+	sb := strings.Builder{}
+	sb.Grow(size)
+	for i, cmd := range multi {
+		sb.WriteString(first(cmd.Cmd.Commands()))
 		if i != len(multi)-1 {
 			sb.WriteString(" ")
 		}

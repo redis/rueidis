@@ -46,11 +46,31 @@ func TestWithClient(t *testing.T) {
 	client.DoCache(ctx, client.B().Get().Key("key").Cache(), time.Minute)
 	validateTrace(t, exp, "GET", codes.Ok)
 
+	// first DoMultiCache
+	client.DoMultiCache(ctx,
+		rueidis.CT(client.B().Get().Key("key1").Cache(), time.Minute),
+		rueidis.CT(client.B().Get().Key("key2").Cache(), time.Minute),
+		rueidis.CT(client.B().Get().Key("key3").Cache(), time.Minute),
+		rueidis.CT(client.B().Get().Key("key4").Cache(), time.Minute),
+		rueidis.CT(client.B().Get().Key("key5").Cache(), time.Minute),
+		rueidis.CT(client.B().Get().Key("key6").Cache(), time.Minute))
+	validateTrace(t, exp, "GET GET GET GET GET", codes.Ok)
+
+	// second DoMultiCache
+	client.DoMultiCache(ctx,
+		rueidis.CT(client.B().Get().Key("key1").Cache(), time.Minute),
+		rueidis.CT(client.B().Get().Key("key2").Cache(), time.Minute),
+		rueidis.CT(client.B().Get().Key("key3").Cache(), time.Minute),
+		rueidis.CT(client.B().Get().Key("key4").Cache(), time.Minute),
+		rueidis.CT(client.B().Get().Key("key5").Cache(), time.Minute),
+		rueidis.CT(client.B().Get().Key("key6").Cache(), time.Minute))
+	validateTrace(t, exp, "GET GET GET GET GET", codes.Ok)
+
 	if err := mxp.Collect(ctx); err != nil {
 		t.Fatalf("unexpected err %v", err)
 	}
-	validateMetrics(t, mxp, "rueidis_do_cache_miss", 1)
-	validateMetrics(t, mxp, "rueidis_do_cache_hits", 1)
+	validateMetrics(t, mxp, "rueidis_do_cache_miss", 7) // 1 (DoCache) + 6 (DoMultiCache)
+	validateMetrics(t, mxp, "rueidis_do_cache_hits", 7) // 1 (DoCache) + 6 (DoMultiCache)
 
 	ctx2, cancel := context.WithTimeout(ctx, time.Second/2)
 	client.Receive(ctx2, client.B().Subscribe().Channel("ch").Build(), func(msg rueidis.PubSubMessage) {})
