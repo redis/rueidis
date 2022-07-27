@@ -978,7 +978,7 @@ func deadFn() *pipe {
 const (
 	protocolbug  = "protocol bug, message handled out of order"
 	wrongreceive = "only SUBSCRIBE, SSUBSCRIBE, or PSUBSCRIBE command are allowed in Receive"
-	panicmgetcsc = "MGET and JSON.MGET in in DoMultiCache is prohibited"
+	panicmgetcsc = "MGET and JSON.MGET in DoMultiCache are not implemented, use DoCache instead"
 )
 
 var cacheMark = &(RedisMessage{})
