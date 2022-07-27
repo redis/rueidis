@@ -51,7 +51,7 @@ func main() {
 ## Auto Pipeline
 
 All non-blocking commands sending to a single redis node are automatically pipelined through one tcp connection,
-which reduces the overall round trip costs, and gets higher throughput.
+which reduces the overall round trips and system calls, and gets higher throughput.
 
 ### Benchmark comparison with go-redis v8.11.4
 
@@ -68,23 +68,26 @@ Benchmark source code: https://github.com/rueian/rueidis-benchmark
 
 ## Client Side Caching
 
-The Opt-In mode of server-assisted client side caching is always enabled, and can be used by calling `DoCache()` with
+The Opt-In mode of server-assisted client side caching is always enabled, and can be used by calling `DoCache()` or `DoMultiCache()` with
 an explicit client side TTL.
 
 ```golang
 c.DoCache(ctx, c.B().Hmget().Key("myhash").Field("1", "2").Cache(), time.Minute).ToArray()
+c.DoMultiCache(ctx,
+    rueidis.CT(c.B().Get().Key("k1").Cache(), 1*time.Minute),
+    rueidis.CT(c.B().Get().Key("k2").Cache(), 2*time.Minute))
 ```
 
 An explicit client side TTL is required because redis server may not send invalidation message in time when
 a key is expired on the server. Please follow [#6833](https://github.com/redis/redis/issues/6833) and [#6867](https://github.com/redis/redis/issues/6867)
 
-Although an explicit client side TTL is required, the `DoCache()` still sends a `PTTL` command to server and make sure that
+Although an explicit client side TTL is required, the `DoCache()` and `DoMultiCache()` still sends a `PTTL` command to server and make sure that
 the client side TTL is not longer than the TTL on server side.
 
 Users can use `IsCacheHit()` to verify that if the response came from the client side memory.
 
 ```golang
-c.DoCache(ctx, c.B().Hmget().Key("myhash").Field("1", "2").Cache(), time.Minute).IsCacheHit() == true
+c.DoCache(ctx, c.B().Get().Key("k1").Cache(), time.Minute).IsCacheHit() == true
 ```
 
 If the OpenTelemetry is enabled by the `rueidisotel.WithClient(client)`, then there are also two metrics instrumented:
@@ -198,7 +201,7 @@ with non-blocking commands and thus will not cause the pipeline to be blocked:
 
 ## Context Deadline
 
-`Client.Do()` and `Client.DoCache()` can return early if the deadline of context is reached.
+`Client.Do()`, `Client.DoMulti()`, `Client.DoCache()` and `Client.DoMultiCache()` can return early if the deadline of context is reached.
 
 ```golang
 ctx, cancel := context.WithTimeout(context.Background(), time.Second)
@@ -310,12 +313,9 @@ In that case, you may consider reducing `ClientOption.RingScaleEachConn` to 8 or
 
 ## Bulk Operations
 
-The `rueidis.Commands` and `DedicatedClient.DoMulti` can also be used for bulk operations:
+The `rueidis.Commands` and `DoMulti()` can also be used for bulk operations:
 
 ``` golang
-c, cancel := client.Dedicate()
-defer cancel()
-
 cmds := make(rueidis.Commands, 0, 10)
 for i := 0; i < 10; i++ {
     cmds = append(cmds, c.B().Set().Key(strconv.Itoa(i)).Value(strconv.Itoa(i)).Build())
@@ -382,7 +382,7 @@ And then pass it to either `Client.Do()` or `Client.DoCache()`.
 c.Do(ctx, c.B().Set().Key("mykey").Value("myval").Ex(10).Nx().Build())
 ```
 
-**Once the command is passed to the `Client.Do()`, `Client.DoCache()`, the command will be recycled and should not be reused.**
+**Once the command is passed to the `Client.Do()`, `Client.DoCache()`, the command will be recycled and SHOULD NOT be reused.**
 
 **The `ClusterClient.B()` also checks if the command contains multiple keys belongs to different slots. If it does, then panic.**
 
