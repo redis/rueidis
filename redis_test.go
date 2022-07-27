@@ -180,6 +180,129 @@ func testSETGET(t *testing.T, client Client) {
 	wait()
 }
 
+//gocyclo:ignore
+func testMultiSETGET(t *testing.T, client Client) {
+	ctx := context.Background()
+	keys := 10000
+	batch := 100
+	para := 8
+
+	kvs := make(map[string]string, keys)
+	for i := 0; i < keys; i++ {
+		kvs["m"+strconv.Itoa(i)] = strconv.FormatInt(rand.Int63(), 10)
+	}
+
+	t.Logf("testing Multi SET with %d keys and %d parallelism\n", keys, para)
+	jobs, wait := parallel(para)
+	for i := 0; i < keys; i += batch {
+		commands := make(Commands, 0, batch)
+		for j := 0; j < batch; j++ {
+			key := "m" + strconv.Itoa(i+j)
+			commands = append(commands, client.B().Set().Key(key).Value(kvs[key]).Build())
+		}
+		jobs <- func() {
+			for _, resp := range client.DoMulti(ctx, commands...) {
+				val, err := resp.ToString()
+				if err != nil || val != "OK" {
+					t.Errorf("unexpected set response %v %v", val, err)
+				}
+			}
+		}
+	}
+	wait()
+
+	t.Logf("testing GET with %d keys and %d parallelism\n", keys*2, para)
+	jobs, wait = parallel(para)
+	for i := 0; i < keys*2; i += batch {
+		cmdkeys := make([]string, 0, batch)
+		commands := make(Commands, 0, batch)
+		for j := 0; j < batch; j++ {
+			cmdkeys = append(cmdkeys, "m"+strconv.Itoa(rand.Intn(keys*2)))
+			commands = append(commands, client.B().Get().Key(cmdkeys[len(cmdkeys)-1]).Build())
+		}
+		jobs <- func() {
+			for j, resp := range client.DoMulti(ctx, commands...) {
+				val, err := resp.ToString()
+				if v, ok := kvs[cmdkeys[j]]; !((ok && val == v) || (!ok && IsRedisNil(err))) {
+					t.Errorf("unexpected get response %v %v %v", val, err, ok)
+				}
+			}
+		}
+	}
+	wait()
+
+	t.Logf("testing client side caching with %d interations and %d parallelism\n", keys*5, para)
+	jobs, wait = parallel(para)
+	hits, miss := int64(0), int64(0)
+	for i := 0; i < keys*10; i += batch {
+		cmdkeys := make([]string, 0, batch)
+		commands := make([]CacheableTTL, 0, batch)
+		for j := 0; j < batch; j++ {
+			cmdkeys = append(cmdkeys, "m"+strconv.Itoa(rand.Intn(keys/100)))
+			commands = append(commands, CT(client.B().Get().Key(cmdkeys[len(cmdkeys)-1]).Cache(), time.Minute))
+		}
+		jobs <- func() {
+			for j, resp := range client.DoMultiCache(ctx, commands...) {
+				val, err := resp.ToString()
+				if v, ok := kvs[cmdkeys[j]]; !((ok && val == v) || (!ok && IsRedisNil(err))) {
+					t.Errorf("unexpected csc get response %v %v %v", val, err, ok)
+				}
+				if resp.IsCacheHit() {
+					atomic.AddInt64(&hits, 1)
+				} else {
+					atomic.AddInt64(&miss, 1)
+				}
+			}
+		}
+	}
+	wait()
+	if atomic.LoadInt64(&miss) != 100 || atomic.LoadInt64(&hits) != int64(keys*10-100) {
+		t.Fatalf("unexpected client side caching hits and miss %v %v", atomic.LoadInt64(&hits), atomic.LoadInt64(&miss))
+	}
+
+	t.Logf("testing DEL with %d keys and %d parallelism\n", keys*2, para)
+	jobs, wait = parallel(para)
+	for i := 0; i < keys*2; i += batch {
+		cmdkeys := make([]string, 0, batch)
+		commands := make(Commands, 0, batch)
+		for j := 0; j < batch; j++ {
+			cmdkeys = append(cmdkeys, "m"+strconv.Itoa(i+j))
+			commands = append(commands, client.B().Del().Key(cmdkeys[len(cmdkeys)-1]).Build())
+		}
+		jobs <- func() {
+			for j, resp := range client.DoMulti(ctx, commands...) {
+				val, err := resp.ToInt64()
+				if _, ok := kvs[cmdkeys[j]]; !((val == 1 && ok) || (val == 0 && !ok)) {
+					t.Errorf("unexpected del response %v %v %v", val, err, ok)
+				}
+			}
+		}
+	}
+	wait()
+
+	t.Logf("testing client side caching after delete\n")
+	jobs, wait = parallel(para)
+	for i := 0; i < keys/100; i += batch {
+		cmdkeys := make([]string, 0, batch)
+		commands := make([]CacheableTTL, 0, batch)
+		for j := 0; j < batch; j++ {
+			cmdkeys = append(cmdkeys, "m"+strconv.Itoa(i+j))
+			commands = append(commands, CT(client.B().Get().Key(cmdkeys[len(cmdkeys)-1]).Cache(), time.Minute))
+		}
+		jobs <- func() {
+			for _, resp := range client.DoMultiCache(ctx, commands...) {
+				if !IsRedisNil(resp.Error()) {
+					t.Errorf("unexpected csc get response after delete %v", resp)
+				}
+				if resp.IsCacheHit() {
+					t.Errorf("unexpected csc cache hit after delete")
+				}
+			}
+		}
+	}
+	wait()
+}
+
 func testBlockingZPOP(t *testing.T, client Client) {
 	ctx := context.Background()
 	key := "bz_pop_test"
@@ -315,7 +438,7 @@ func TestSingleClientIntegration(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	run(t, client, testSETGET, testBlockingZPOP, testBlockingXREAD, testPubSub)
+	run(t, client, testSETGET, testMultiSETGET, testBlockingZPOP, testBlockingXREAD, testPubSub)
 	run(t, client, testFlush)
 
 	client.Close()
@@ -334,7 +457,7 @@ func TestSentinelClientIntegration(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	run(t, client, testSETGET, testBlockingZPOP, testBlockingXREAD, testPubSub)
+	run(t, client, testSETGET, testMultiSETGET, testBlockingZPOP, testBlockingXREAD, testPubSub)
 	run(t, client, testFlush)
 
 	client.Close()
@@ -350,7 +473,7 @@ func TestClusterClientIntegration(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	run(t, client, testSETGET, testBlockingZPOP, testBlockingXREAD, testPubSub)
+	run(t, client, testSETGET, testMultiSETGET, testBlockingZPOP, testBlockingXREAD, testPubSub)
 
 	client.Close()
 	time.Sleep(time.Second * 5) // wait background ping exit
