@@ -61,17 +61,23 @@ func clusterMGetCache(cc *clusterClient, ctx context.Context, ttl time.Duration,
 		concurrency = cc.cpus
 	}
 
+	width := maxWidth(mgets)
+
 	for i := 0; i < concurrency; i++ {
 		go func() {
+			keyIdx := make([]string, width)
 			for slot := range ch {
 				cmd := cmds.Cacheable(mgets[slot])
+				for i, k := range cmd.Commands()[1:] {
+					keyIdx[i] = k
+				}
 				arr, err2 := cc.doCache(ctx, cmd, ttl).ToArray()
 				mu.Lock()
 				if err2 != nil {
 					err = err2
 				} else {
 					for i, resp := range arr {
-						ret[cmd.Commands()[i+1]] = resp
+						ret[keyIdx[i]] = resp
 					}
 				}
 				mu.Unlock()
@@ -85,4 +91,13 @@ func clusterMGetCache(cc *clusterClient, ctx context.Context, ttl time.Duration,
 		return nil, err
 	}
 	return ret, nil
+}
+
+func maxWidth(mgets map[uint16]cmds.Completed) (max int) {
+	for _, cmd := range mgets {
+		if l := len(cmd.Commands()); max < l {
+			max = l
+		}
+	}
+	return max
 }
