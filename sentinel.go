@@ -59,7 +59,9 @@ retry:
 	if cmd.IsReadOnly() && c.isRetryable(resp.NonRedisError(), ctx) {
 		goto retry
 	}
-	cmds.Put(cmd.CommandSlice())
+	if resp.NonRedisError() == nil { // not recycle cmds if error, since cmds may be used later in pipe. consider recycle them by pipe
+		cmds.Put(cmd.CommandSlice())
+	}
 	return resp
 }
 
@@ -73,8 +75,10 @@ retry:
 			}
 		}
 	}
-	for _, cmd := range multi {
-		cmds.Put(cmd.CommandSlice())
+	for i, cmd := range multi {
+		if resps[i].NonRedisError() == nil {
+			cmds.Put(cmd.CommandSlice())
+		}
 	}
 	return resps
 }
@@ -85,7 +89,9 @@ retry:
 	if c.isRetryable(resp.NonRedisError(), ctx) {
 		goto retry
 	}
-	cmds.Put(cmd.CommandSlice())
+	if resp.NonRedisError() == nil {
+		cmds.Put(cmd.CommandSlice())
+	}
 	return resp
 }
 
@@ -97,8 +103,10 @@ retry:
 			goto retry
 		}
 	}
-	for _, cmd := range multi {
-		cmds.Put(cmd.Cmd.CommandSlice())
+	for i, cmd := range multi {
+		if resps[i].NonRedisError() == nil {
+			cmds.Put(cmd.Cmd.CommandSlice())
+		}
 	}
 	return resps
 }
@@ -109,7 +117,9 @@ retry:
 	if _, ok := err.(*RedisError); !ok && c.isRetryable(err, ctx) {
 		goto retry
 	}
-	cmds.Put(subscribe.CommandSlice())
+	if err == nil {
+		cmds.Put(subscribe.CommandSlice())
+	}
 	return err
 }
 
@@ -267,8 +277,10 @@ func (c *sentinelClient) listWatch(cc conn) (master string, sentinels []string, 
 	sentinelsCMD := c.cmd.SentinelSentinels().Master(c.mOpt.Sentinel.MasterSet).Build()
 	getMasterCMD := c.cmd.SentinelGetMasterAddrByName().Master(c.mOpt.Sentinel.MasterSet).Build()
 	defer func() {
-		cmds.Put(sentinelsCMD.CommandSlice())
-		cmds.Put(getMasterCMD.CommandSlice())
+		if err == nil { // not recycle cmds if error, since cmds may be used later in pipe. consider recycle them by pipe
+			cmds.Put(sentinelsCMD.CommandSlice())
+			cmds.Put(getMasterCMD.CommandSlice())
+		}
 	}()
 
 	go func(cc conn) {

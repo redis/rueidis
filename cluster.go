@@ -276,7 +276,9 @@ process:
 		}
 	}
 ret:
-	cmds.Put(cmd.CommandSlice())
+	if resp.NonRedisError() == nil { // not recycle cmds if error, since cmds may be used later in pipe. consider recycle them by pipe
+		cmds.Put(cmd.CommandSlice())
+	}
 	return resp
 }
 
@@ -305,8 +307,10 @@ func (c *clusterClient) DoMulti(ctx context.Context, multi ...cmds.Completed) (r
 			cIndexes[i] = i
 		}
 		c.doMulti(ctx, slot, commands, cIndexes, results)
-		for _, cmd := range multi {
-			cmds.Put(cmd.CommandSlice())
+		for i, cmd := range multi {
+			if results[i].NonRedisError() == nil {
+				cmds.Put(cmd.CommandSlice())
+			}
 		}
 		return results
 	}
@@ -352,8 +356,10 @@ func (c *clusterClient) DoMulti(ctx context.Context, multi ...cmds.Completed) (r
 		}()
 	}
 	wg.Wait()
-	for _, cmd := range multi {
-		cmds.Put(cmd.CommandSlice())
+	for i, cmd := range multi {
+		if results[i].NonRedisError() == nil {
+			cmds.Put(cmd.CommandSlice())
+		}
 	}
 	return results
 }
@@ -421,7 +427,9 @@ process:
 
 func (c *clusterClient) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp RedisResult) {
 	resp = c.doCache(ctx, cmd, ttl)
-	cmds.Put(cmd.CommandSlice())
+	if resp.NonRedisError() == nil {
+		cmds.Put(cmd.CommandSlice())
+	}
 	return resp
 }
 
@@ -481,8 +489,10 @@ func (c *clusterClient) DoMultiCache(ctx context.Context, multi ...CacheableTTL)
 			cIndexes[i] = i
 		}
 		c.doMultiCache(ctx, multi[0].Cmd.Slot(), multi, cIndexes, results)
-		for _, cmd := range multi {
-			cmds.Put(cmd.Cmd.CommandSlice())
+		for i, cmd := range multi {
+			if results[i].NonRedisError() == nil {
+				cmds.Put(cmd.Cmd.CommandSlice())
+			}
 		}
 		return results
 	}
@@ -522,8 +532,10 @@ func (c *clusterClient) DoMultiCache(ctx context.Context, multi ...CacheableTTL)
 		}()
 	}
 	wg.Wait()
-	for _, cmd := range multi {
-		cmds.Put(cmd.Cmd.CommandSlice())
+	for i, cmd := range multi {
+		if results[i].NonRedisError() == nil {
+			cmds.Put(cmd.Cmd.CommandSlice())
+		}
 	}
 	return results
 }
@@ -540,7 +552,9 @@ retry:
 		goto retry
 	}
 ret:
-	cmds.Put(subscribe.CommandSlice())
+	if err == nil {
+		cmds.Put(subscribe.CommandSlice())
+	}
 	return err
 }
 
@@ -669,7 +683,9 @@ retry:
 			}
 		}
 	}
-	cmds.Put(cmd.CommandSlice())
+	if resp.NonRedisError() == nil {
+		cmds.Put(cmd.CommandSlice())
+	}
 	return resp
 }
 
@@ -700,8 +716,10 @@ retry:
 			resp[i] = newErrResult(err)
 		}
 	}
-	for _, cmd := range multi {
-		cmds.Put(cmd.CommandSlice())
+	for i, cmd := range multi {
+		if resp[i].NonRedisError() == nil {
+			cmds.Put(cmd.CommandSlice())
+		}
 	}
 	return resp
 }
@@ -716,7 +734,9 @@ retry:
 			goto retry
 		}
 	}
-	cmds.Put(subscribe.CommandSlice())
+	if err == nil {
+		cmds.Put(subscribe.CommandSlice())
+	}
 	return err
 }
 

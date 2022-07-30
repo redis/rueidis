@@ -82,13 +82,15 @@ func clusterMGetCache(cc *clusterClient, ctx context.Context, ttl time.Duration,
 				}
 				mu.Unlock()
 				wg.Done()
-				cmds.Put(cmd.CommandSlice())
 			}
 		}()
 	}
 	wg.Wait()
 	if err != nil {
 		return nil, err
+	}
+	for _, mget := range mgets { // not recycle cmds if error, since cmds may be used later in pipe. consider recycle them by pipe
+		cmds.Put(mget.CommandSlice())
 	}
 	return ret, nil
 }

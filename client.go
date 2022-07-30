@@ -38,7 +38,9 @@ retry:
 	if cmd.IsReadOnly() && c.isRetryable(resp.NonRedisError(), ctx) {
 		goto retry
 	}
-	cmds.Put(cmd.CommandSlice())
+	if resp.NonRedisError() == nil { // not recycle cmds if error, since cmds may be used later in pipe. consider recycle them by pipe
+		cmds.Put(cmd.CommandSlice())
+	}
 	return resp
 }
 
@@ -52,8 +54,10 @@ retry:
 			}
 		}
 	}
-	for _, cmd := range multi {
-		cmds.Put(cmd.CommandSlice())
+	for i, cmd := range multi {
+		if resps[i].NonRedisError() == nil {
+			cmds.Put(cmd.CommandSlice())
+		}
 	}
 	return resps
 }
@@ -66,8 +70,10 @@ retry:
 			goto retry
 		}
 	}
-	for _, cmd := range multi {
-		cmds.Put(cmd.Cmd.CommandSlice())
+	for i, cmd := range multi {
+		if resps[i].NonRedisError() == nil {
+			cmds.Put(cmd.Cmd.CommandSlice())
+		}
 	}
 	return resps
 }
@@ -78,7 +84,9 @@ retry:
 	if c.isRetryable(resp.NonRedisError(), ctx) {
 		goto retry
 	}
-	cmds.Put(cmd.CommandSlice())
+	if resp.NonRedisError() == nil {
+		cmds.Put(cmd.CommandSlice())
+	}
 	return resp
 }
 
@@ -88,7 +96,9 @@ retry:
 	if _, ok := err.(*RedisError); !ok && c.isRetryable(err, ctx) {
 		goto retry
 	}
-	cmds.Put(subscribe.CommandSlice())
+	if err == nil {
+		cmds.Put(subscribe.CommandSlice())
+	}
 	return err
 }
 
@@ -128,7 +138,9 @@ retry:
 	if cmd.IsReadOnly() && isRetryable(resp.NonRedisError(), c.wire, ctx) {
 		goto retry
 	}
-	cmds.Put(cmd.CommandSlice())
+	if resp.NonRedisError() == nil {
+		cmds.Put(cmd.CommandSlice())
+	}
 	return resp
 }
 
@@ -142,8 +154,10 @@ retry:
 	if readonly && anyRetryable(resp, c.wire, ctx) {
 		goto retry
 	}
-	for _, cmd := range multi {
-		cmds.Put(cmd.CommandSlice())
+	for i, cmd := range multi {
+		if resp[i].NonRedisError() == nil {
+			cmds.Put(cmd.CommandSlice())
+		}
 	}
 	return resp
 }
@@ -154,7 +168,9 @@ retry:
 	if _, ok := err.(*RedisError); !ok && isRetryable(err, c.wire, ctx) {
 		goto retry
 	}
-	cmds.Put(subscribe.CommandSlice())
+	if err == nil {
+		cmds.Put(subscribe.CommandSlice())
+	}
 	return err
 }
 
