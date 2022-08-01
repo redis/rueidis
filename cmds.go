@@ -17,3 +17,9 @@ import "github.com/rueian/rueidis/internal/cmds"
 //   }
 // However, please know that once commands are processed by the Do() or DoMulti(), they are recycled and should not be reused.
 type Commands []cmds.Completed
+
+type (
+	Arbitrary = cmds.Arbitrary
+	Completed = cmds.Completed
+	Cacheable = cmds.Cacheable
+)

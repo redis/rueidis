@@ -1968,13 +1968,10 @@ func (c *Compat) ZUnionWithScores(ctx context.Context, store ZStore) *ZSliceCmd 
 }
 
 func (c *Compat) ZRandMember(ctx context.Context, key string, count int64, withScores bool) *StringSliceCmd {
-	var resp rueidis.RedisResult
 	if withScores {
-		resp = c.client.Do(ctx, c.client.B().Zrandmember().Key(key).Count(count).Withscores().Build())
-	} else {
-		resp = c.client.Do(ctx, c.client.B().Zrandmember().Key(key).Count(count).Build())
+		return flattenStringSliceCmd(c.client.Do(ctx, c.client.B().Zrandmember().Key(key).Count(count).Withscores().Build()))
 	}
-	return newStringSliceCmd(resp)
+	return newStringSliceCmd(c.client.Do(ctx, c.client.B().Zrandmember().Key(key).Count(count).Build()))
 }
 
 func (c *Compat) ZDiff(ctx context.Context, keys ...string) *StringSliceCmd {
@@ -2035,7 +2032,7 @@ func (c *Compat) ClientKill(ctx context.Context, ipPort string) *StatusCmd {
 //
 //   CLIENT KILL <option> [value] ... <option> [value]
 func (c *Compat) ClientKillByFilter(ctx context.Context, keys ...string) *IntCmd {
-	cmd := c.client.B().Arbitrary("CLIENT KILL").Args(keys...).Build()
+	cmd := c.client.B().Arbitrary("CLIENT").Args("KILL").Args(keys...).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
 }
