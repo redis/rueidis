@@ -252,7 +252,8 @@ type Cmdable interface {
 	ZUnionStore(ctx context.Context, dest string, store ZStore) *IntCmd
 	ZUnion(ctx context.Context, store ZStore) *StringSliceCmd
 	ZUnionWithScores(ctx context.Context, store ZStore) *ZSliceCmd
-	ZRandMember(ctx context.Context, key string, count int64, withScores bool) *StringSliceCmd
+	ZRandMember(ctx context.Context, key string, count int64) *StringSliceCmd
+	ZRandMemberWithScores(ctx context.Context, key string, count int64) *ZSliceCmd
 	ZDiff(ctx context.Context, keys ...string) *StringSliceCmd
 	ZDiffWithScores(ctx context.Context, keys ...string) *ZSliceCmd
 	ZDiffStore(ctx context.Context, destination string, keys ...string) *IntCmd
@@ -1967,14 +1968,12 @@ func (c *Compat) ZUnionWithScores(ctx context.Context, store ZStore) *ZSliceCmd 
 	return newZSliceCmd(c.client.Do(ctx, zstore(c.client.B().Arbitrary("ZUNION"), store).Args("WITHSCORES").ReadOnly()))
 }
 
-func (c *Compat) ZRandMember(ctx context.Context, key string, count int64, withScores bool) *StringSliceCmd {
-	var resp rueidis.RedisResult
-	if withScores {
-		resp = c.client.Do(ctx, c.client.B().Zrandmember().Key(key).Count(count).Withscores().Build())
-	} else {
-		resp = c.client.Do(ctx, c.client.B().Zrandmember().Key(key).Count(count).Build())
-	}
-	return newStringSliceCmd(resp)
+func (c *Compat) ZRandMember(ctx context.Context, key string, count int64) *StringSliceCmd {
+	return newStringSliceCmd(c.client.Do(ctx, c.client.B().Zrandmember().Key(key).Count(count).Build()))
+}
+
+func (c *Compat) ZRandMemberWithScores(ctx context.Context, key string, count int64) *ZSliceCmd {
+	return newZSliceCmd(c.client.Do(ctx, c.client.B().Zrandmember().Key(key).Count(count).Withscores().Build()))
 }
 
 func (c *Compat) ZDiff(ctx context.Context, keys ...string) *StringSliceCmd {
@@ -2031,11 +2030,8 @@ func (c *Compat) ClientKill(ctx context.Context, ipPort string) *StatusCmd {
 	return newStatusCmd(resp)
 }
 
-// ClientKillByFilter is new style syntax, while the ClientKill is old
-//
-//   CLIENT KILL <option> [value] ... <option> [value]
 func (c *Compat) ClientKillByFilter(ctx context.Context, keys ...string) *IntCmd {
-	cmd := c.client.B().Arbitrary("CLIENT KILL").Args(keys...).Build()
+	cmd := c.client.B().Arbitrary("CLIENT", "KILL").Args(keys...).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
 }
