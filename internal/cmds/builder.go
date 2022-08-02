@@ -90,7 +90,25 @@ func (c Arbitrary) ReadOnly() Completed {
 	return c.Build()
 }
 
+// MultiGet is used to complete constructing a command and mark it as mtGetTag command.
+func (c Arbitrary) MultiGet() Completed {
+	if len(c.cs.s) == 0 || len(c.cs.s[0]) == 0 {
+		panic(arbitraryNoCommand)
+	}
+	if c.cs.s[0] != "MGET" && c.cs.s[0] != "JSON.MGET" {
+		panic(arbitraryMultiGet)
+	}
+	c.cf = mtGetTag
+	return c.Build()
+}
+
+// IsZero is used to test if Arbitrary is initialized
+func (c Arbitrary) IsZero() bool {
+	return c.cs == nil
+}
+
 var (
 	arbitraryNoCommand = "Arbitrary should be provided with redis command"
 	arbitrarySubscribe = "Arbitrary does not support SUBSCRIBE/UNSUBSCRIBE"
+	arbitraryMultiGet  = "Arbitrary.MultiGet is only valid for MGET and JSON.MGET"
 )

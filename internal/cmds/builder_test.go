@@ -19,6 +19,17 @@ retry:
 	}
 }
 
+func TestArbitraryIsZero(t *testing.T) {
+	builder := NewBuilder(NoSlot)
+	if cmd := builder.Arbitrary("any", "cmd"); cmd.IsZero() {
+		t.Fatalf("arbitrary failed")
+	}
+	var cmd Arbitrary
+	if !cmd.IsZero() {
+		t.Fatalf("arbitrary failed")
+	}
+}
+
 func TestArbitrary(t *testing.T) {
 	builder := NewBuilder(NoSlot)
 	cmd := builder.Arbitrary("any", "cmd").Keys("k1", "k2").Args("a1", "a2")
@@ -61,4 +72,32 @@ func TestEmptySubscribe(t *testing.T) {
 		}
 	}()
 	builder.Arbitrary("SUBSCRIBE").Build()
+}
+
+func TestEmptyArbitraryMultiGet(t *testing.T) {
+	builder := NewBuilder(NoSlot)
+	defer func() {
+		if e := recover(); e != arbitraryNoCommand {
+			t.Errorf("arbitrary not check empty")
+		}
+	}()
+	builder.Arbitrary().MultiGet()
+}
+
+func TestArbitraryMultiGet(t *testing.T) {
+	builder := NewBuilder(NoSlot)
+	cacheable := Cacheable(builder.Arbitrary("MGET").Args("KKK").MultiGet())
+	if !cacheable.IsMGet() {
+		t.Fatalf("arbitrary failed")
+	}
+}
+
+func TestArbitraryMultiGetPanic(t *testing.T) {
+	builder := NewBuilder(NoSlot)
+	defer func() {
+		if e := recover(); e != arbitraryMultiGet {
+			t.Errorf("arbitrary not check MGET command")
+		}
+	}()
+	builder.Arbitrary("SUBSCRIBE").MultiGet()
 }

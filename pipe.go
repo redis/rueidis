@@ -773,15 +773,16 @@ func (p *pipe) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duratio
 func (p *pipe) doCacheMGet(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) RedisResult {
 	commands := cmd.Commands()
 	entries := make(map[int]*entry)
+	builder := cmds.NewBuilder(cmds.InitSlot)
 	result := RedisResult{val: RedisMessage{typ: '*', values: nil}}
-	cc := cmd.MGetCacheCmd()
+	mgetcc := cmd.MGetCacheCmd()
 	keys := len(commands) - 1
-	if cc[0] == 'J' {
+	if mgetcc[0] == 'J' {
 		keys-- // the last one of JSON.MGET is a path, not a key
 	}
-	j := 1
+	var rewrite cmds.Arbitrary
 	for i, key := range commands[1 : keys+1] {
-		v, entry := p.cache.GetOrPrepare(cmd.MGetCacheKey(i), cc, ttl)
+		v, entry := p.cache.GetOrPrepare(key, mgetcc, ttl)
 		if v.typ != 0 { // cache hit for one key
 			if len(result.val.values) == 0 {
 				result.val.values = make([]RedisMessage, keys)
@@ -793,46 +794,54 @@ func (p *pipe) doCacheMGet(ctx context.Context, cmd cmds.Cacheable, ttl time.Dur
 			entries[i] = entry // store entries for later entry.Wait() to avoid MGET deadlock each others.
 			continue
 		}
-		commands[j] = key // rewrite MGET
-		j++
+		if rewrite.IsZero() {
+			rewrite = builder.Arbitrary(commands[0])
+		}
+		rewrite = rewrite.Args(key)
 	}
 
 	var partial []RedisMessage
-	if j != 1 {
-		last := j
-		if cc[0] == 'J' { // rewrite JSON.MGET path
-			commands[j] = commands[len(commands)-1]
-			last++
+	if !rewrite.IsZero() {
+		var rewritten cmds.Completed
+		var keys int
+		if mgetcc[0] == 'J' { // rewrite JSON.MGET path
+			rewritten = rewrite.Args(commands[len(commands)-1]).MultiGet()
+			keys = len(rewritten.Commands()) - 2
+		} else {
+			rewritten = rewrite.MultiGet()
+			keys = len(rewritten.Commands()) - 1
 		}
-		rewrite := cmds.NewMGetCompleted(commands[:last])
-		multi := make([]cmds.Completed, 0, len(commands[1:j])+4)
+
+		multi := make([]cmds.Completed, 0, keys+4)
 		multi = append(multi, cmds.OptInCmd, cmds.MultiCmd)
-		for _, key := range commands[1:j] {
-			multi = append(multi, cmds.NewCompleted([]string{"PTTL", key}))
+		for _, key := range rewritten.Commands()[1 : keys+1] {
+			multi = append(multi, builder.Pttl().Key(key).Build())
 		}
-		multi = append(multi, rewrite, cmds.ExecCmd)
+		multi = append(multi, rewritten, cmds.ExecCmd)
 
 		resp := p.DoMulti(ctx, multi...)
 		exec, err := resp[len(multi)-1].ToArray()
 		if err != nil {
 			var msg RedisMessage
-			var er2 error
-			if _, ok := err.(*RedisError); !ok {
-				msg = RedisMessage{}
-				er2 = err
-			} else if resp[len(multi)-2].val.typ != '+' { // EXEC aborted, return err of the input cmd in MULTI block
-				msg = resp[len(multi)-2].val
-				er2 = nil
-			} else {
-				msg = resp[len(multi)-1].val
-				er2 = nil
+			if _, ok := err.(*RedisError); ok {
+				err = nil
+				if resp[len(multi)-2].val.typ != '+' { // EXEC aborted, return err of the input cmd in MULTI block
+					msg = resp[len(multi)-2].val
+				} else {
+					msg = resp[len(multi)-1].val
+				}
 			}
-			for _, key := range commands[1:j] {
-				p.cache.Cancel(key, cc, msg, er2)
+			for _, key := range rewritten.Commands()[1 : keys+1] {
+				p.cache.Cancel(key, mgetcc, msg, err)
 			}
-			return newResult(msg, er2)
+			return newResult(msg, err)
 		}
-		if last == len(commands) { // all cache miss
+		defer func() {
+			for _, cmd := range multi[2 : len(multi)-1] {
+				cmds.Put(cmd.CommandSlice())
+			}
+		}()
+		if len(rewritten.Commands()) == len(commands) { // all cache miss
 			return newResult(exec[len(exec)-1], nil)
 		}
 		partial = exec[len(exec)-1].values
@@ -851,7 +860,7 @@ func (p *pipe) doCacheMGet(ctx context.Context, cmd cmds.Cacheable, ttl time.Dur
 		result.val.values[i] = v
 	}
 
-	j = 0
+	j := 0
 	for _, ret := range partial {
 		for ; j < len(result.val.values); j++ {
 			if result.val.values[j].typ == 0 {
