@@ -4012,19 +4012,20 @@ var _ = Describe("Commands", func() {
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
 			Expect(err).NotTo(HaveOccurred())
 
-			v := adapter.ZRandMember(ctx, "zset", 1, false)
+			v := adapter.ZRandMember(ctx, "zset", 1)
 			Expect(v.Err()).NotTo(HaveOccurred())
 			Expect(v.Val()).To(Or(Equal([]string{"one"}), Equal([]string{"two"})))
 
-			v = adapter.ZRandMember(ctx, "zset", 0, false)
+			v = adapter.ZRandMember(ctx, "zset", 0)
 			Expect(v.Err()).NotTo(HaveOccurred())
 			Expect(v.Val()).To(HaveLen(0))
 
-			// TODO
-			//var slice []string
-			//err = adapter.ZRandMember(ctx, "zset", 1, true).ScanSlice(&slice)
-			//Expect(err).NotTo(HaveOccurred())
-			//Expect(slice).To(Or(Equal([]string{"one", "1"}), Equal([]string{"two", "2"})))
+			kv, err := adapter.ZRandMemberWithScores(ctx, "zset", 1).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(kv).To(Or(
+				Equal([]Z{{Member: "one", Score: 1}}),
+				Equal([]Z{{Member: "two", Score: 2}}),
+			))
 		})
 
 		It("should ZDiff", func() {
