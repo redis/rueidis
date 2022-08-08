@@ -25,6 +25,7 @@ type clusterClient struct {
 	cpus   int
 	stop   uint32
 	cmd    cmds.Builder
+	retry  bool
 }
 
 func newClusterClient(opt *ClientOption, connFn connFn) (client *clusterClient, err error) {
@@ -34,6 +35,7 @@ func newClusterClient(opt *ClientOption, connFn connFn) (client *clusterClient, 
 		connFn: connFn,
 		conns:  make(map[string]conn),
 		cpus:   runtime.NumCPU(),
+		retry:  !opt.DisableRetry,
 	}
 
 	if err = client.init(); err != nil {
@@ -270,7 +272,7 @@ process:
 		resp = c.redirectOrNew(addr).DoMulti(ctx, cmds.AskingCmd, cmd)[1]
 		goto process
 	case RedirectRetry:
-		if cmd.IsReadOnly() {
+		if c.retry && cmd.IsReadOnly() {
 			runtime.Gosched()
 			goto retry
 		}
@@ -384,7 +386,7 @@ process:
 			resps = c.redirectOrNew(addr).DoMulti(ctx, append([]cmds.Completed{cmds.AskingCmd}, multi...)...)[1:]
 			goto process
 		case RedirectRetry:
-			if allReadOnly(multi[1 : len(multi)-1]) {
+			if c.retry && allReadOnly(multi[1:len(multi)-1]) {
 				runtime.Gosched()
 				goto retry
 			}
@@ -419,8 +421,10 @@ process:
 		resp = c.redirectOrNew(addr).DoMulti(ctx, cmds.AskingCmd, cmds.Completed(cmd))[1]
 		goto process
 	case RedirectRetry:
-		runtime.Gosched()
-		goto retry
+		if c.retry {
+			runtime.Gosched()
+			goto retry
+		}
 	}
 	return resp
 }
@@ -467,8 +471,10 @@ process:
 			}
 			goto process
 		case RedirectRetry:
-			runtime.Gosched()
-			goto retry
+			if c.retry {
+				runtime.Gosched()
+				goto retry
+			}
 		}
 		results[idx[i]] = newResult(resp.ToMessage())
 	}
@@ -547,7 +553,7 @@ retry:
 		goto ret
 	}
 	err = cc.Receive(ctx, subscribe, fn)
-	if _, mode := c.shouldRefreshRetry(err, ctx); mode != RedirectNone {
+	if _, mode := c.shouldRefreshRetry(err, ctx); c.retry && mode != RedirectNone {
 		runtime.Gosched()
 		goto retry
 	}
@@ -559,14 +565,14 @@ ret:
 }
 
 func (c *clusterClient) Dedicated(fn func(DedicatedClient) error) (err error) {
-	dcc := &dedicatedClusterClient{cmd: c.cmd, client: c, slot: cmds.NoSlot}
+	dcc := &dedicatedClusterClient{cmd: c.cmd, client: c, slot: cmds.NoSlot, retry: c.retry}
 	err = fn(dcc)
 	dcc.release()
 	return err
 }
 
 func (c *clusterClient) Dedicate() (DedicatedClient, func()) {
-	dcc := &dedicatedClusterClient{cmd: c.cmd, client: c, slot: cmds.NoSlot}
+	dcc := &dedicatedClusterClient{cmd: c.cmd, client: c, slot: cmds.NoSlot, retry: c.retry}
 	return dcc, dcc.release
 }
 
@@ -608,10 +614,11 @@ type dedicatedClusterClient struct {
 	wire   wire
 	pshks  *pshks
 
-	mu   sync.Mutex
-	cmd  cmds.Builder
-	slot uint16
-	mark bool
+	mu    sync.Mutex
+	cmd   cmds.Builder
+	slot  uint16
+	mark  bool
+	retry bool
 }
 
 func (c *dedicatedClusterClient) acquire(slot uint16) (wire wire, err error) {
@@ -677,7 +684,7 @@ retry:
 		resp = w.Do(ctx, cmd)
 		switch _, mode := c.client.shouldRefreshRetry(resp.Error(), ctx); mode {
 		case RedirectRetry:
-			if cmd.IsReadOnly() && w.Error() == nil {
+			if c.retry && cmd.IsReadOnly() && w.Error() == nil {
 				runtime.Gosched()
 				goto retry
 			}
@@ -696,13 +703,16 @@ func (c *dedicatedClusterClient) DoMulti(ctx context.Context, multi ...cmds.Comp
 	if !allSameSlot(multi) {
 		panic(panicMsgCxSlot)
 	}
-	readonly := allReadOnly(multi)
+	retryable := c.retry
+	if retryable {
+		retryable = allReadOnly(multi)
+	}
 retry:
 	if w, err := c.acquire(multi[0].Slot()); err == nil {
 		resp = w.DoMulti(ctx, multi...)
 		for _, r := range resp {
 			_, mode := c.client.shouldRefreshRetry(r.Error(), ctx)
-			if mode == RedirectRetry && readonly && w.Error() == nil {
+			if mode == RedirectRetry && retryable && w.Error() == nil {
 				runtime.Gosched()
 				goto retry
 			}
@@ -729,7 +739,7 @@ func (c *dedicatedClusterClient) Receive(ctx context.Context, subscribe cmds.Com
 retry:
 	if w, err = c.acquire(subscribe.Slot()); err == nil {
 		err = w.Receive(ctx, subscribe, fn)
-		if _, mode := c.client.shouldRefreshRetry(err, ctx); mode == RedirectRetry && w.Error() == nil {
+		if _, mode := c.client.shouldRefreshRetry(err, ctx); c.retry && mode == RedirectRetry && w.Error() == nil {
 			runtime.Gosched()
 			goto retry
 		}
