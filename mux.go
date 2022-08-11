@@ -156,6 +156,9 @@ block:
 func (m *mux) blocking(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
 	wire := m.pool.Acquire()
 	resp = wire.Do(ctx, cmd)
+	if resp.NonRedisError() != nil { // abort the wire if blocking command return early (ex. context.DeadlineExceeded)
+		wire.Close()
+	}
 	m.pool.Store(wire)
 	return resp
 }
@@ -163,6 +166,12 @@ func (m *mux) blocking(ctx context.Context, cmd cmds.Completed) (resp RedisResul
 func (m *mux) blockingMulti(ctx context.Context, cmd []cmds.Completed) (resp []RedisResult) {
 	wire := m.pool.Acquire()
 	resp = wire.DoMulti(ctx, cmd...)
+	for _, res := range resp {
+		if res.NonRedisError() != nil { // abort the wire if blocking command return early (ex. context.DeadlineExceeded)
+			wire.Close()
+			break
+		}
+	}
 	m.pool.Store(wire)
 	return resp
 }
