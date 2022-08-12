@@ -36,7 +36,7 @@ type pipe struct {
 	waits   int32
 	state   int32
 	version int32
-	_       int32
+	pingsig int32
 	timeout time.Duration
 	pinggap time.Duration
 
@@ -359,9 +359,15 @@ func (p *pipe) _backgroundPing(stop <-chan struct{}) (err error) {
 	for err == nil {
 		select {
 		case <-ticker.C:
+			if atomic.LoadInt32(&p.pingsig) != 0 {
+				continue
+			}
 			ctx, cancel := context.WithTimeout(context.Background(), p.timeout)
 			err = p.Do(ctx, cmds.PingCmd).NonRedisError()
 			cancel()
+			if err != nil && atomic.LoadInt32(&p.pingsig) != 0 {
+				err = nil
+			}
 		case <-stop:
 			return
 		}
@@ -559,6 +565,10 @@ func (p *pipe) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
 	return resp
 
 queue:
+	if cmd.IsBlock() {
+		atomic.AddInt32(&p.pingsig, 1)
+		defer atomic.AddInt32(&p.pingsig, -1)
+	}
 	ch := p.queue.PutOne(cmd)
 	if ctxCh := ctx.Done(); ctxCh == nil {
 		resp = <-ch
@@ -625,6 +635,13 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...cmds.Completed) []RedisResu
 	return resp
 
 queue:
+	for _, cmd := range multi {
+		if cmd.IsBlock() {
+			atomic.AddInt32(&p.pingsig, 1)
+			defer atomic.AddInt32(&p.pingsig, -1)
+			break
+		}
+	}
 	ch := p.queue.PutMulti(multi)
 	var i int
 	if ctxCh := ctx.Done(); ctxCh == nil {
@@ -660,7 +677,7 @@ func (p *pipe) syncDo(ctx context.Context, cmd cmds.Completed) (resp RedisResult
 	if dl, ok := ctx.Deadline(); ok {
 		p.conn.SetDeadline(dl)
 		defer p.conn.SetDeadline(time.Time{})
-	} else if p.timeout > 0 {
+	} else if p.timeout > 0 && !cmd.IsBlock() {
 		p.conn.SetDeadline(time.Now().Add(p.timeout))
 		defer p.conn.SetDeadline(time.Time{})
 	}
@@ -688,10 +705,15 @@ func (p *pipe) syncDoMulti(ctx context.Context, resp []RedisResult, multi []cmds
 		p.conn.SetDeadline(dl)
 		defer p.conn.SetDeadline(time.Time{})
 	} else if p.timeout > 0 {
+		for _, cmd := range multi {
+			if cmd.IsBlock() {
+				goto process
+			}
+		}
 		p.conn.SetDeadline(time.Now().Add(p.timeout))
 		defer p.conn.SetDeadline(time.Time{})
 	}
-
+process:
 	var err error
 	var msg RedisMessage
 

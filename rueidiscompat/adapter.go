@@ -1409,7 +1409,12 @@ func (c *Compat) XRead(ctx context.Context, a XReadArgs) *XStreamSliceCmd {
 	}
 	cmd = cmd.Args("STREAMS")
 	cmd = cmd.Keys(a.Streams[:a.Count]...).Args(a.Streams[a.Count:]...)
-	resp := c.client.Do(ctx, cmd.Build())
+	var resp rueidis.RedisResult
+	if a.Block >= 0 {
+		resp = c.client.Do(ctx, cmd.Blocking())
+	} else {
+		resp = c.client.Do(ctx, cmd.Build())
+	}
 	return newXStreamSliceCmd(resp)
 }
 
@@ -1467,7 +1472,12 @@ func (c *Compat) XReadGroup(ctx context.Context, a XReadGroupArgs) *XStreamSlice
 	}
 	cmd = cmd.Args("STREAMS")
 	cmd = cmd.Keys(a.Streams[:a.Count]...).Args(a.Streams[a.Count:]...)
-	resp := c.client.Do(ctx, cmd.Build())
+	var resp rueidis.RedisResult
+	if a.Block >= 0 {
+		resp = c.client.Do(ctx, cmd.Blocking())
+	} else {
+		resp = c.client.Do(ctx, cmd.Build())
+	}
 	return newXStreamSliceCmd(resp)
 }
 
