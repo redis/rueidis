@@ -453,6 +453,45 @@ func TestMuxDelegation(t *testing.T) {
 		wg.Wait()
 	})
 
+	t.Run("single blocking no recycle the wire if err", func(t *testing.T) {
+		closed := false
+		m, checkClean := setupMux([]*mockWire{
+			{
+				// leave first wire for pipeline calls
+			},
+			{
+				DoFn: func(cmd cmds.Completed) RedisResult {
+					return newErrResult(context.DeadlineExceeded)
+				},
+				ErrorFn: func() error {
+					return context.DeadlineExceeded
+				},
+				CloseFn: func() {
+					closed = true
+				},
+			},
+			{
+				DoFn: func(cmd cmds.Completed) RedisResult {
+					return newResult(RedisMessage{typ: '+', string: "OK"}, nil)
+				},
+			},
+		})
+		defer checkClean(t)
+		defer m.Close()
+		if err := m.Dial(); err != nil {
+			t.Fatalf("unexpected dial error %v", err)
+		}
+		if err := m.Do(context.Background(), cmds.NewBlockingCompleted([]string{"BLOCK"})).Error(); err != context.DeadlineExceeded {
+			t.Errorf("unexpected error %v", err)
+		}
+		if val, err := m.Do(context.Background(), cmds.NewBlockingCompleted([]string{"BLOCK"})).ToString(); err != nil || val != "OK" {
+			t.Errorf("unexpected response %v %v", err, val)
+		}
+		if !closed {
+			t.Errorf("wire not closed")
+		}
+	})
+
 	t.Run("multiple blocking", func(t *testing.T) {
 		blocked := make(chan struct{})
 		responses := make(chan RedisResult)
@@ -504,6 +543,49 @@ func TestMuxDelegation(t *testing.T) {
 			responses <- newResult(RedisMessage{typ: '+', string: "BLOCK_COMMANDS_RESPONSE"}, nil)
 		}
 		wg.Wait()
+	})
+
+	t.Run("multi blocking no recycle the wire if err", func(t *testing.T) {
+		closed := false
+		m, checkClean := setupMux([]*mockWire{
+			{
+				// leave first wire for pipeline calls
+			},
+			{
+				DoMultiFn: func(cmd ...cmds.Completed) []RedisResult {
+					return []RedisResult{newErrResult(context.DeadlineExceeded)}
+				},
+				ErrorFn: func() error {
+					return context.DeadlineExceeded
+				},
+				CloseFn: func() {
+					closed = true
+				},
+			},
+			{
+				DoFn: func(cmd cmds.Completed) RedisResult {
+					return newResult(RedisMessage{typ: '+', string: "OK"}, nil)
+				},
+			},
+		})
+		defer checkClean(t)
+		defer m.Close()
+		if err := m.Dial(); err != nil {
+			t.Fatalf("unexpected dial error %v", err)
+		}
+		if err := m.DoMulti(
+			context.Background(),
+			cmds.NewReadOnlyCompleted([]string{"READONLY"}),
+			cmds.NewBlockingCompleted([]string{"BLOCK"}),
+		)[0].Error(); err != context.DeadlineExceeded {
+			t.Errorf("unexpected error %v", err)
+		}
+		if val, err := m.Do(context.Background(), cmds.NewBlockingCompleted([]string{"BLOCK"})).ToString(); err != nil || val != "OK" {
+			t.Errorf("unexpected response %v %v", err, val)
+		}
+		if !closed {
+			t.Errorf("wire not closed")
+		}
 	})
 }
 
