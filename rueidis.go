@@ -85,6 +85,8 @@ type ClientOption struct {
 	ShuffleInit bool
 	// DisableRetry disables retrying read-only commands under network errors
 	DisableRetry bool
+	// DisableCache falls back Client.DoCache/Client.DoMultiCache to Client.Do/Client.DoMulti
+	DisableCache bool
 }
 
 // SentinelOption contains MasterSet,

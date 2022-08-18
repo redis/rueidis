@@ -60,7 +60,6 @@ func newPipe(conn net.Conn, option *ClientOption) (p *pipe, err error) {
 	p = &pipe{
 		conn:  conn,
 		queue: newRing(option.RingScaleEachConn),
-		cache: newLRU(option.CacheSizeEachConn),
 		r:     bufio.NewReader(conn),
 		w:     bufio.NewWriter(conn),
 
@@ -70,6 +69,9 @@ func newPipe(conn net.Conn, option *ClientOption) (p *pipe, err error) {
 
 		timeout: option.ConnWriteTimeout,
 		pinggap: option.Dialer.KeepAlive,
+	}
+	if !option.DisableCache {
+		p.cache = newLRU(option.CacheSizeEachConn)
 	}
 	p.pshks.Store(emptypshks)
 
@@ -84,6 +86,9 @@ func newPipe(conn net.Conn, option *ClientOption) (p *pipe, err error) {
 	}
 
 	init := [][]string{helloCmd, {"CLIENT", "TRACKING", "ON", "OPTIN"}}
+	if option.DisableCache {
+		init = init[:1]
+	}
 	if option.SelectDB != 0 {
 		init = append(init, []string{"SELECT", strconv.Itoa(option.SelectDB)})
 	}
@@ -168,7 +173,9 @@ func (p *pipe) _background() {
 	)
 
 	// clean up cache and free pending calls
-	p.cache.FreeAndClose(RedisMessage{typ: '-', string: p.Error().Error()})
+	if p.cache != nil {
+		p.cache.FreeAndClose(RedisMessage{typ: '-', string: p.Error().Error()})
+	}
 	for atomic.LoadInt32(&p.waits) != 0 {
 		p.queue.NextWriteCmd()
 		if ones[0], multi, ch, cond = p.queue.NextResultCh(); ch != nil {
@@ -384,10 +391,12 @@ func (p *pipe) handlePush(values []RedisMessage) (reply bool) {
 	// server-cpu-usage
 	switch values[0].string {
 	case "invalidate":
-		if values[1].IsNil() {
-			p.cache.Delete(nil)
-		} else {
-			p.cache.Delete(values[1].values)
+		if p.cache != nil {
+			if values[1].IsNil() {
+				p.cache.Delete(nil)
+			} else {
+				p.cache.Delete(values[1].values)
+			}
 		}
 	case "message":
 		if len(values) >= 3 {
@@ -756,7 +765,7 @@ next:
 
 func (p *pipe) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) RedisResult {
 	if p.cache == nil {
-		return newErrResult(ErrClosing)
+		return p.Do(ctx, cmds.Completed(cmd))
 	}
 	if cmd.IsMGet() {
 		return p.doCacheMGet(ctx, cmd, ttl)
@@ -895,6 +904,13 @@ func (p *pipe) doCacheMGet(ctx context.Context, cmd cmds.Cacheable, ttl time.Dur
 }
 
 func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisResult {
+	if p.cache == nil {
+		commands := make([]cmds.Completed, len(multi))
+		for i, ct := range multi {
+			commands[i] = cmds.Completed(ct.Cmd)
+		}
+		return p.DoMulti(ctx, commands...)
+	}
 	results := make([]RedisResult, len(multi))
 	entries := make(map[int]*entry)
 	missing := []cmds.Completed{cmds.OptInCmd, cmds.MultiCmd}

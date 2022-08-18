@@ -130,8 +130,10 @@ func setup(t *testing.T, option ClientOption) (*pipe, *redisMock, func(), func()
 					{typ: '+', string: "6.0.0"},
 				},
 			})
-		mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
-			ReplyString("OK")
+		if !option.DisableCache {
+			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
+				ReplyString("OK")
+		}
 	}()
 	p, err := newPipe(n1, &option)
 	if err != nil {
@@ -1361,6 +1363,43 @@ func TestClientSideCachingRedis6InvalidationBugErr(t *testing.T) {
 	err := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).Error()
 	if err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 		t.Errorf("unexpected err %v", err)
+	}
+}
+
+func TestDisableClientSideCaching(t *testing.T) {
+	p, mock, cancel, _ := setup(t, ClientOption{DisableCache: true})
+	defer cancel()
+	p.background()
+
+	go func() {
+		mock.Expect().Reply(RedisMessage{
+			typ: '>',
+			values: []RedisMessage{
+				{typ: '+', string: "invalidate"},
+				{typ: '*', values: []RedisMessage{{typ: '+', string: "a"}}},
+			},
+		})
+		mock.Expect("GET", "a").ReplyString("1").
+			Expect("GET", "b").
+			Expect("GET", "c").
+			ReplyString("2").
+			ReplyString("3")
+
+	}()
+
+	v, _ := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage()
+	if v.string != "1" {
+		t.Errorf("unexpected cached result, expected %v, got %v", "1", v.string)
+	}
+
+	vs := p.DoMultiCache(context.Background(),
+		CT(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "b"})), 10*time.Second),
+		CT(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "c"})), 10*time.Second))
+	if vs[0].val.string != "2" {
+		t.Errorf("unexpected cached result, expected %v, got %v", "1", v.string)
+	}
+	if vs[1].val.string != "3" {
+		t.Errorf("unexpected cached result, expected %v, got %v", "1", v.string)
 	}
 }
 
