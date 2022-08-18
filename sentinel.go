@@ -68,6 +68,9 @@ retry:
 }
 
 func (c *sentinelClient) DoMulti(ctx context.Context, multi ...cmds.Completed) (resps []RedisResult) {
+	if len(multi) == 0 {
+		return nil
+	}
 retry:
 	resps = c.mConn.Load().(conn).DoMulti(ctx, multi...)
 	if c.retry && allReadOnly(multi) {
@@ -98,6 +101,9 @@ retry:
 }
 
 func (c *sentinelClient) DoMultiCache(ctx context.Context, multi ...CacheableTTL) (resps []RedisResult) {
+	if len(multi) == 0 {
+		return nil
+	}
 retry:
 	resps = c.mConn.Load().(conn).DoMultiCache(ctx, multi...)
 	if c.retry {

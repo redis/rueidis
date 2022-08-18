@@ -490,6 +490,9 @@ func TestSentinelClientDelegate(t *testing.T) {
 			}
 			return []RedisResult{newResult(RedisMessage{typ: '+', string: "Do"}, nil)}
 		}
+		if len(client.DoMulti(context.Background())) != 0 {
+			t.Fatalf("unexpected response length")
+		}
 		if v, err := client.DoMulti(context.Background(), c)[0].ToString(); err != nil || v != "Do" {
 			t.Fatalf("unexpected response %v %v", v, err)
 		}
@@ -515,6 +518,9 @@ func TestSentinelClientDelegate(t *testing.T) {
 				t.Fatalf("unexpected command %v, %v", multi[0].Cmd, multi[0].TTL)
 			}
 			return []RedisResult{newResult(RedisMessage{typ: '+', string: "DoCache"}, nil)}
+		}
+		if len(client.DoMultiCache(context.Background())) != 0 {
+			t.Fatalf("unexpected response length")
 		}
 		if v, err := client.DoMultiCache(context.Background(), CT(c, 100))[0].ToString(); err != nil || v != "DoCache" {
 			t.Fatalf("unexpected response %v %v", v, err)

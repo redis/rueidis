@@ -46,6 +46,9 @@ retry:
 }
 
 func (c *singleClient) DoMulti(ctx context.Context, multi ...cmds.Completed) (resps []RedisResult) {
+	if len(multi) == 0 {
+		return nil
+	}
 retry:
 	resps = c.conn.DoMulti(ctx, multi...)
 	if c.retry && allReadOnly(multi) {
@@ -64,6 +67,9 @@ retry:
 }
 
 func (c *singleClient) DoMultiCache(ctx context.Context, multi ...CacheableTTL) (resps []RedisResult) {
+	if len(multi) == 0 {
+		return nil
+	}
 retry:
 	resps = c.conn.DoMultiCache(ctx, multi...)
 	if c.retry {
