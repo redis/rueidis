@@ -71,7 +71,7 @@ Benchmark source code: https://github.com/rueian/rueidis-benchmark
 
 ## Client Side Caching
 
-The Opt-In mode of server-assisted client side caching is always enabled, and can be used by calling `DoCache()` or `DoMultiCache()` with
+The Opt-In mode of server-assisted client side caching is enabled by default, and can be used by calling `DoCache()` or `DoMultiCache()` with
 an explicit client side TTL.
 
 ```golang
@@ -182,6 +182,12 @@ Benchmark source code: https://github.com/rueian/rueidis-benchmark
 
 `rueidis.MGetCache` and `JsonMGetCache.MGetCache` are handy helpers fetching multiple keys across different slots through the client side caching.
 They will first group keys by slot to build `MGET` or `JSON.MGET` commands respectively and then send requests with only cache missed keys to redis nodes.
+
+### Disable Client Side Caching
+
+Some Redis provider doesn't support client-side caching, ex. Google Cloud Memorystore.
+You can disable client-side caching by setting `ClientOption.DisableCache` to `true`.
+This will also fall back `Client.DoCache/Client.DoMultiCache` to `Client.Do/Client.DoMulti`.
 
 ## Blocking Commands
 
