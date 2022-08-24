@@ -480,7 +480,9 @@
           {
             "name": "empty",
             "type": "enum",
-            "enum": ["EMPTY"],
+            "enum": [
+              "EMPTY"
+            ],
             "optional": true
           }
         ]
@@ -581,7 +583,9 @@
           {
             "name": "empty",
             "type": "enum",
-            "enum": ["EMPTY"],
+            "enum": [
+              "EMPTY"
+            ],
             "optional": true
           }
         ]
@@ -686,7 +690,9 @@
           {
             "name": "empty",
             "type": "enum",
-            "enum": ["EMPTY"],
+            "enum": [
+              "EMPTY"
+            ],
             "optional": true
           }
         ]
@@ -818,7 +824,9 @@
           {
             "name": "empty",
             "type": "enum",
-            "enum": ["EMPTY"],
+            "enum": [
+              "EMPTY"
+            ],
             "optional": true
           }
         ]
