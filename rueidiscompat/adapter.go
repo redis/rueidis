@@ -1408,7 +1408,7 @@ func (c *Compat) XRead(ctx context.Context, a XReadArgs) *XStreamSliceCmd {
 		cmd = cmd.Args("BLOCK", strconv.FormatInt(formatMs(a.Block), 10))
 	}
 	cmd = cmd.Args("STREAMS")
-	cmd = cmd.Keys(a.Streams[:a.Count]...).Args(a.Streams[a.Count:]...)
+	cmd = cmd.Keys(a.Streams[:len(a.Streams)/2]...).Args(a.Streams[len(a.Streams)/2:]...)
 	var resp rueidis.RedisResult
 	if a.Block >= 0 {
 		resp = c.client.Do(ctx, cmd.Blocking())
@@ -1471,7 +1471,7 @@ func (c *Compat) XReadGroup(ctx context.Context, a XReadGroupArgs) *XStreamSlice
 		cmd = cmd.Args("NOACK")
 	}
 	cmd = cmd.Args("STREAMS")
-	cmd = cmd.Keys(a.Streams[:a.Count]...).Args(a.Streams[a.Count:]...)
+	cmd = cmd.Keys(a.Streams[:len(a.Streams)/2]...).Args(a.Streams[len(a.Streams)/2:]...)
 	var resp rueidis.RedisResult
 	if a.Block >= 0 {
 		resp = c.client.Do(ctx, cmd.Blocking())
