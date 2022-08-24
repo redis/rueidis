@@ -564,7 +564,12 @@ func (p *pipe) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
 			p.background()
 			goto queue
 		}
-		resp = p.syncDo(ctx, cmd)
+		dl, ok := ctx.Deadline()
+		if !ok && ctx.Done() != nil {
+			p.background()
+			goto queue
+		}
+		resp = p.syncDo(dl, ok, cmd)
 	} else {
 		resp = newErrResult(p.Error())
 	}
@@ -631,7 +636,12 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...cmds.Completed) []RedisResu
 			p.background()
 			goto queue
 		}
-		resp = p.syncDoMulti(ctx, resp, multi)
+		dl, ok := ctx.Deadline()
+		if !ok && ctx.Done() != nil {
+			p.background()
+			goto queue
+		}
+		resp = p.syncDoMulti(dl, ok, resp, multi)
 	} else {
 		err := newErrResult(p.Error())
 		for i := 0; i < len(resp); i++ {
@@ -682,8 +692,8 @@ abort:
 	return resp
 }
 
-func (p *pipe) syncDo(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
-	if dl, ok := ctx.Deadline(); ok {
+func (p *pipe) syncDo(dl time.Time, dlOk bool, cmd cmds.Completed) (resp RedisResult) {
+	if dlOk {
 		p.conn.SetDeadline(dl)
 		defer p.conn.SetDeadline(time.Time{})
 	} else if p.timeout > 0 && !cmd.IsBlock() {
@@ -709,8 +719,8 @@ func (p *pipe) syncDo(ctx context.Context, cmd cmds.Completed) (resp RedisResult
 	return newResult(msg, err)
 }
 
-func (p *pipe) syncDoMulti(ctx context.Context, resp []RedisResult, multi []cmds.Completed) []RedisResult {
-	if dl, ok := ctx.Deadline(); ok {
+func (p *pipe) syncDoMulti(dl time.Time, dlOk bool, resp []RedisResult, multi []cmds.Completed) []RedisResult {
+	if dlOk {
 		p.conn.SetDeadline(dl)
 		defer p.conn.SetDeadline(time.Time{})
 	} else if p.timeout > 0 {

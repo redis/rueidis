@@ -208,9 +208,9 @@ with non-blocking commands and thus will not cause the pipeline to be blocked:
 * migrate
 * wait
 
-## Context Deadline
+## Context Cancellation
 
-`Client.Do()`, `Client.DoMulti()`, `Client.DoCache()` and `Client.DoMultiCache()` can return early if the deadline of context is reached.
+`Client.Do()`, `Client.DoMulti()`, `Client.DoCache()` and `Client.DoMultiCache()` can return early if the deadline of context is reached or canceled.
 
 ```golang
 ctx, cancel := context.WithTimeout(context.Background(), time.Second)
