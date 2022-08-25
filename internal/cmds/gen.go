@@ -7649,6 +7649,11 @@ func (c FtAlterField) Options(options string) FtAlterOptions {
 
 type FtAlterIndex Completed
 
+func (c FtAlterIndex) Skipinitialscan() FtAlterSkipinitialscan {
+	c.cs.s = append(c.cs.s, "SKIPINITIALSCAN")
+	return (FtAlterSkipinitialscan)(c)
+}
+
 func (c FtAlterIndex) Schema() FtAlterSchema {
 	c.cs.s = append(c.cs.s, "SCHEMA")
 	return (FtAlterSchema)(c)
@@ -7665,6 +7670,13 @@ type FtAlterSchema Completed
 func (c FtAlterSchema) Add() FtAlterAdd {
 	c.cs.s = append(c.cs.s, "ADD")
 	return (FtAlterAdd)(c)
+}
+
+type FtAlterSkipinitialscan Completed
+
+func (c FtAlterSkipinitialscan) Schema() FtAlterSchema {
+	c.cs.s = append(c.cs.s, "SCHEMA")
+	return (FtAlterSchema)(c)
 }
 
 type FtConfigGet Completed
@@ -7805,6 +7817,11 @@ func (c FtCreateFieldFieldName) Vector() FtCreateFieldFieldTypeVector {
 
 type FtCreateFieldFieldTypeGeo Completed
 
+func (c FtCreateFieldFieldTypeGeo) Withsuffixtrie() FtCreateFieldWithsuffixtrie {
+	c.cs.s = append(c.cs.s, "WITHSUFFIXTRIE")
+	return (FtCreateFieldWithsuffixtrie)(c)
+}
+
 func (c FtCreateFieldFieldTypeGeo) Sortable() FtCreateFieldSortableSortable {
 	c.cs.s = append(c.cs.s, "SORTABLE")
 	return (FtCreateFieldSortableSortable)(c)
@@ -7825,6 +7842,11 @@ func (c FtCreateFieldFieldTypeGeo) Build() Completed {
 }
 
 type FtCreateFieldFieldTypeNumeric Completed
+
+func (c FtCreateFieldFieldTypeNumeric) Withsuffixtrie() FtCreateFieldWithsuffixtrie {
+	c.cs.s = append(c.cs.s, "WITHSUFFIXTRIE")
+	return (FtCreateFieldWithsuffixtrie)(c)
+}
 
 func (c FtCreateFieldFieldTypeNumeric) Sortable() FtCreateFieldSortableSortable {
 	c.cs.s = append(c.cs.s, "SORTABLE")
@@ -7847,6 +7869,11 @@ func (c FtCreateFieldFieldTypeNumeric) Build() Completed {
 
 type FtCreateFieldFieldTypeTag Completed
 
+func (c FtCreateFieldFieldTypeTag) Withsuffixtrie() FtCreateFieldWithsuffixtrie {
+	c.cs.s = append(c.cs.s, "WITHSUFFIXTRIE")
+	return (FtCreateFieldWithsuffixtrie)(c)
+}
+
 func (c FtCreateFieldFieldTypeTag) Sortable() FtCreateFieldSortableSortable {
 	c.cs.s = append(c.cs.s, "SORTABLE")
 	return (FtCreateFieldSortableSortable)(c)
@@ -7868,6 +7895,11 @@ func (c FtCreateFieldFieldTypeTag) Build() Completed {
 
 type FtCreateFieldFieldTypeText Completed
 
+func (c FtCreateFieldFieldTypeText) Withsuffixtrie() FtCreateFieldWithsuffixtrie {
+	c.cs.s = append(c.cs.s, "WITHSUFFIXTRIE")
+	return (FtCreateFieldWithsuffixtrie)(c)
+}
+
 func (c FtCreateFieldFieldTypeText) Sortable() FtCreateFieldSortableSortable {
 	c.cs.s = append(c.cs.s, "SORTABLE")
 	return (FtCreateFieldSortableSortable)(c)
@@ -7888,6 +7920,11 @@ func (c FtCreateFieldFieldTypeText) Build() Completed {
 }
 
 type FtCreateFieldFieldTypeVector Completed
+
+func (c FtCreateFieldFieldTypeVector) Withsuffixtrie() FtCreateFieldWithsuffixtrie {
+	c.cs.s = append(c.cs.s, "WITHSUFFIXTRIE")
+	return (FtCreateFieldWithsuffixtrie)(c)
+}
 
 func (c FtCreateFieldFieldTypeVector) Sortable() FtCreateFieldSortableSortable {
 	c.cs.s = append(c.cs.s, "SORTABLE")
@@ -7956,6 +7993,99 @@ func (c FtCreateFieldSortableUnf) Build() Completed {
 	return Completed(c)
 }
 
+type FtCreateFieldWithsuffixtrie Completed
+
+func (c FtCreateFieldWithsuffixtrie) Sortable() FtCreateFieldSortableSortable {
+	c.cs.s = append(c.cs.s, "SORTABLE")
+	return (FtCreateFieldSortableSortable)(c)
+}
+
+func (c FtCreateFieldWithsuffixtrie) Noindex() FtCreateFieldNoindex {
+	c.cs.s = append(c.cs.s, "NOINDEX")
+	return (FtCreateFieldNoindex)(c)
+}
+
+func (c FtCreateFieldWithsuffixtrie) FieldName(fieldName string) FtCreateFieldFieldName {
+	c.cs.s = append(c.cs.s, fieldName)
+	return (FtCreateFieldFieldName)(c)
+}
+
+func (c FtCreateFieldWithsuffixtrie) Build() Completed {
+	return Completed(c)
+}
+
+type FtCreateFilter Completed
+
+func (c FtCreateFilter) Language(defaultLang string) FtCreateLanguage {
+	c.cs.s = append(c.cs.s, "LANGUAGE", defaultLang)
+	return (FtCreateLanguage)(c)
+}
+
+func (c FtCreateFilter) LanguageField(langAttribute string) FtCreateLanguageField {
+	c.cs.s = append(c.cs.s, "LANGUAGE_FIELD", langAttribute)
+	return (FtCreateLanguageField)(c)
+}
+
+func (c FtCreateFilter) Score(defaultScore float64) FtCreateScore {
+	c.cs.s = append(c.cs.s, "SCORE", strconv.FormatFloat(defaultScore, 'f', -1, 64))
+	return (FtCreateScore)(c)
+}
+
+func (c FtCreateFilter) ScoreField(scoreAttribute string) FtCreateScoreField {
+	c.cs.s = append(c.cs.s, "SCORE_FIELD", scoreAttribute)
+	return (FtCreateScoreField)(c)
+}
+
+func (c FtCreateFilter) PayloadField(payloadAttribute string) FtCreatePayloadField {
+	c.cs.s = append(c.cs.s, "PAYLOAD_FIELD", payloadAttribute)
+	return (FtCreatePayloadField)(c)
+}
+
+func (c FtCreateFilter) Maxtextfields() FtCreateMaxtextfields {
+	c.cs.s = append(c.cs.s, "MAXTEXTFIELDS")
+	return (FtCreateMaxtextfields)(c)
+}
+
+func (c FtCreateFilter) Temporary(seconds float64) FtCreateTemporary {
+	c.cs.s = append(c.cs.s, "TEMPORARY", strconv.FormatFloat(seconds, 'f', -1, 64))
+	return (FtCreateTemporary)(c)
+}
+
+func (c FtCreateFilter) Nooffsets() FtCreateNooffsets {
+	c.cs.s = append(c.cs.s, "NOOFFSETS")
+	return (FtCreateNooffsets)(c)
+}
+
+func (c FtCreateFilter) Nohl() FtCreateNohl {
+	c.cs.s = append(c.cs.s, "NOHL")
+	return (FtCreateNohl)(c)
+}
+
+func (c FtCreateFilter) Nofields() FtCreateNofields {
+	c.cs.s = append(c.cs.s, "NOFIELDS")
+	return (FtCreateNofields)(c)
+}
+
+func (c FtCreateFilter) Nofreqs() FtCreateNofreqs {
+	c.cs.s = append(c.cs.s, "NOFREQS")
+	return (FtCreateNofreqs)(c)
+}
+
+func (c FtCreateFilter) Stopwords(count int64) FtCreateStopwordsStopwords {
+	c.cs.s = append(c.cs.s, "STOPWORDS", strconv.FormatInt(count, 10))
+	return (FtCreateStopwordsStopwords)(c)
+}
+
+func (c FtCreateFilter) Skipinitialscan() FtCreateSkipinitialscan {
+	c.cs.s = append(c.cs.s, "SKIPINITIALSCAN")
+	return (FtCreateSkipinitialscan)(c)
+}
+
+func (c FtCreateFilter) Schema() FtCreateSchema {
+	c.cs.s = append(c.cs.s, "SCHEMA")
+	return (FtCreateSchema)(c)
+}
+
 type FtCreateIndex Completed
 
 func (c FtCreateIndex) OnHash() FtCreateOnHash {
@@ -7971,6 +8101,11 @@ func (c FtCreateIndex) OnJson() FtCreateOnJson {
 func (c FtCreateIndex) Prefix(count int64) FtCreatePrefixCount {
 	c.cs.s = append(c.cs.s, "PREFIX", strconv.FormatInt(count, 10))
 	return (FtCreatePrefixCount)(c)
+}
+
+func (c FtCreateIndex) Filter(filter string) FtCreateFilter {
+	c.cs.s = append(c.cs.s, "FILTER", filter)
+	return (FtCreateFilter)(c)
 }
 
 func (c FtCreateIndex) Language(defaultLang string) FtCreateLanguage {
@@ -8031,6 +8166,11 @@ func (c FtCreateIndex) Nofreqs() FtCreateNofreqs {
 func (c FtCreateIndex) Stopwords(count int64) FtCreateStopwordsStopwords {
 	c.cs.s = append(c.cs.s, "STOPWORDS", strconv.FormatInt(count, 10))
 	return (FtCreateStopwordsStopwords)(c)
+}
+
+func (c FtCreateIndex) Skipinitialscan() FtCreateSkipinitialscan {
+	c.cs.s = append(c.cs.s, "SKIPINITIALSCAN")
+	return (FtCreateSkipinitialscan)(c)
 }
 
 func (c FtCreateIndex) Schema() FtCreateSchema {
@@ -8095,6 +8235,11 @@ func (c FtCreateLanguage) Stopwords(count int64) FtCreateStopwordsStopwords {
 	return (FtCreateStopwordsStopwords)(c)
 }
 
+func (c FtCreateLanguage) Skipinitialscan() FtCreateSkipinitialscan {
+	c.cs.s = append(c.cs.s, "SKIPINITIALSCAN")
+	return (FtCreateSkipinitialscan)(c)
+}
+
 func (c FtCreateLanguage) Schema() FtCreateSchema {
 	c.cs.s = append(c.cs.s, "SCHEMA")
 	return (FtCreateSchema)(c)
@@ -8152,6 +8297,11 @@ func (c FtCreateLanguageField) Stopwords(count int64) FtCreateStopwordsStopwords
 	return (FtCreateStopwordsStopwords)(c)
 }
 
+func (c FtCreateLanguageField) Skipinitialscan() FtCreateSkipinitialscan {
+	c.cs.s = append(c.cs.s, "SKIPINITIALSCAN")
+	return (FtCreateSkipinitialscan)(c)
+}
+
 func (c FtCreateLanguageField) Schema() FtCreateSchema {
 	c.cs.s = append(c.cs.s, "SCHEMA")
 	return (FtCreateSchema)(c)
@@ -8189,6 +8339,11 @@ func (c FtCreateMaxtextfields) Stopwords(count int64) FtCreateStopwordsStopwords
 	return (FtCreateStopwordsStopwords)(c)
 }
 
+func (c FtCreateMaxtextfields) Skipinitialscan() FtCreateSkipinitialscan {
+	c.cs.s = append(c.cs.s, "SKIPINITIALSCAN")
+	return (FtCreateSkipinitialscan)(c)
+}
+
 func (c FtCreateMaxtextfields) Schema() FtCreateSchema {
 	c.cs.s = append(c.cs.s, "SCHEMA")
 	return (FtCreateSchema)(c)
@@ -8206,6 +8361,11 @@ func (c FtCreateNofields) Stopwords(count int64) FtCreateStopwordsStopwords {
 	return (FtCreateStopwordsStopwords)(c)
 }
 
+func (c FtCreateNofields) Skipinitialscan() FtCreateSkipinitialscan {
+	c.cs.s = append(c.cs.s, "SKIPINITIALSCAN")
+	return (FtCreateSkipinitialscan)(c)
+}
+
 func (c FtCreateNofields) Schema() FtCreateSchema {
 	c.cs.s = append(c.cs.s, "SCHEMA")
 	return (FtCreateSchema)(c)
@@ -8216,6 +8376,11 @@ type FtCreateNofreqs Completed
 func (c FtCreateNofreqs) Stopwords(count int64) FtCreateStopwordsStopwords {
 	c.cs.s = append(c.cs.s, "STOPWORDS", strconv.FormatInt(count, 10))
 	return (FtCreateStopwordsStopwords)(c)
+}
+
+func (c FtCreateNofreqs) Skipinitialscan() FtCreateSkipinitialscan {
+	c.cs.s = append(c.cs.s, "SKIPINITIALSCAN")
+	return (FtCreateSkipinitialscan)(c)
 }
 
 func (c FtCreateNofreqs) Schema() FtCreateSchema {
@@ -8238,6 +8403,11 @@ func (c FtCreateNohl) Nofreqs() FtCreateNofreqs {
 func (c FtCreateNohl) Stopwords(count int64) FtCreateStopwordsStopwords {
 	c.cs.s = append(c.cs.s, "STOPWORDS", strconv.FormatInt(count, 10))
 	return (FtCreateStopwordsStopwords)(c)
+}
+
+func (c FtCreateNohl) Skipinitialscan() FtCreateSkipinitialscan {
+	c.cs.s = append(c.cs.s, "SKIPINITIALSCAN")
+	return (FtCreateSkipinitialscan)(c)
 }
 
 func (c FtCreateNohl) Schema() FtCreateSchema {
@@ -8267,6 +8437,11 @@ func (c FtCreateNooffsets) Stopwords(count int64) FtCreateStopwordsStopwords {
 	return (FtCreateStopwordsStopwords)(c)
 }
 
+func (c FtCreateNooffsets) Skipinitialscan() FtCreateSkipinitialscan {
+	c.cs.s = append(c.cs.s, "SKIPINITIALSCAN")
+	return (FtCreateSkipinitialscan)(c)
+}
+
 func (c FtCreateNooffsets) Schema() FtCreateSchema {
 	c.cs.s = append(c.cs.s, "SCHEMA")
 	return (FtCreateSchema)(c)
@@ -8277,6 +8452,11 @@ type FtCreateOnHash Completed
 func (c FtCreateOnHash) Prefix(count int64) FtCreatePrefixCount {
 	c.cs.s = append(c.cs.s, "PREFIX", strconv.FormatInt(count, 10))
 	return (FtCreatePrefixCount)(c)
+}
+
+func (c FtCreateOnHash) Filter(filter string) FtCreateFilter {
+	c.cs.s = append(c.cs.s, "FILTER", filter)
+	return (FtCreateFilter)(c)
 }
 
 func (c FtCreateOnHash) Language(defaultLang string) FtCreateLanguage {
@@ -8339,6 +8519,11 @@ func (c FtCreateOnHash) Stopwords(count int64) FtCreateStopwordsStopwords {
 	return (FtCreateStopwordsStopwords)(c)
 }
 
+func (c FtCreateOnHash) Skipinitialscan() FtCreateSkipinitialscan {
+	c.cs.s = append(c.cs.s, "SKIPINITIALSCAN")
+	return (FtCreateSkipinitialscan)(c)
+}
+
 func (c FtCreateOnHash) Schema() FtCreateSchema {
 	c.cs.s = append(c.cs.s, "SCHEMA")
 	return (FtCreateSchema)(c)
@@ -8349,6 +8534,11 @@ type FtCreateOnJson Completed
 func (c FtCreateOnJson) Prefix(count int64) FtCreatePrefixCount {
 	c.cs.s = append(c.cs.s, "PREFIX", strconv.FormatInt(count, 10))
 	return (FtCreatePrefixCount)(c)
+}
+
+func (c FtCreateOnJson) Filter(filter string) FtCreateFilter {
+	c.cs.s = append(c.cs.s, "FILTER", filter)
+	return (FtCreateFilter)(c)
 }
 
 func (c FtCreateOnJson) Language(defaultLang string) FtCreateLanguage {
@@ -8411,6 +8601,11 @@ func (c FtCreateOnJson) Stopwords(count int64) FtCreateStopwordsStopwords {
 	return (FtCreateStopwordsStopwords)(c)
 }
 
+func (c FtCreateOnJson) Skipinitialscan() FtCreateSkipinitialscan {
+	c.cs.s = append(c.cs.s, "SKIPINITIALSCAN")
+	return (FtCreateSkipinitialscan)(c)
+}
+
 func (c FtCreateOnJson) Schema() FtCreateSchema {
 	c.cs.s = append(c.cs.s, "SCHEMA")
 	return (FtCreateSchema)(c)
@@ -8453,6 +8648,11 @@ func (c FtCreatePayloadField) Stopwords(count int64) FtCreateStopwordsStopwords 
 	return (FtCreateStopwordsStopwords)(c)
 }
 
+func (c FtCreatePayloadField) Skipinitialscan() FtCreateSkipinitialscan {
+	c.cs.s = append(c.cs.s, "SKIPINITIALSCAN")
+	return (FtCreateSkipinitialscan)(c)
+}
+
 func (c FtCreatePayloadField) Schema() FtCreateSchema {
 	c.cs.s = append(c.cs.s, "SCHEMA")
 	return (FtCreateSchema)(c)
@@ -8470,6 +8670,11 @@ type FtCreatePrefixPrefix Completed
 func (c FtCreatePrefixPrefix) Prefix(prefix ...string) FtCreatePrefixPrefix {
 	c.cs.s = append(c.cs.s, prefix...)
 	return c
+}
+
+func (c FtCreatePrefixPrefix) Filter(filter string) FtCreateFilter {
+	c.cs.s = append(c.cs.s, "FILTER", filter)
+	return (FtCreateFilter)(c)
 }
 
 func (c FtCreatePrefixPrefix) Language(defaultLang string) FtCreateLanguage {
@@ -8532,6 +8737,11 @@ func (c FtCreatePrefixPrefix) Stopwords(count int64) FtCreateStopwordsStopwords 
 	return (FtCreateStopwordsStopwords)(c)
 }
 
+func (c FtCreatePrefixPrefix) Skipinitialscan() FtCreateSkipinitialscan {
+	c.cs.s = append(c.cs.s, "SKIPINITIALSCAN")
+	return (FtCreateSkipinitialscan)(c)
+}
+
 func (c FtCreatePrefixPrefix) Schema() FtCreateSchema {
 	c.cs.s = append(c.cs.s, "SCHEMA")
 	return (FtCreateSchema)(c)
@@ -8591,6 +8801,11 @@ func (c FtCreateScore) Stopwords(count int64) FtCreateStopwordsStopwords {
 	return (FtCreateStopwordsStopwords)(c)
 }
 
+func (c FtCreateScore) Skipinitialscan() FtCreateSkipinitialscan {
+	c.cs.s = append(c.cs.s, "SKIPINITIALSCAN")
+	return (FtCreateSkipinitialscan)(c)
+}
+
 func (c FtCreateScore) Schema() FtCreateSchema {
 	c.cs.s = append(c.cs.s, "SCHEMA")
 	return (FtCreateSchema)(c)
@@ -8638,7 +8853,19 @@ func (c FtCreateScoreField) Stopwords(count int64) FtCreateStopwordsStopwords {
 	return (FtCreateStopwordsStopwords)(c)
 }
 
+func (c FtCreateScoreField) Skipinitialscan() FtCreateSkipinitialscan {
+	c.cs.s = append(c.cs.s, "SKIPINITIALSCAN")
+	return (FtCreateSkipinitialscan)(c)
+}
+
 func (c FtCreateScoreField) Schema() FtCreateSchema {
+	c.cs.s = append(c.cs.s, "SCHEMA")
+	return (FtCreateSchema)(c)
+}
+
+type FtCreateSkipinitialscan Completed
+
+func (c FtCreateSkipinitialscan) Schema() FtCreateSchema {
 	c.cs.s = append(c.cs.s, "SCHEMA")
 	return (FtCreateSchema)(c)
 }
@@ -8648,6 +8875,11 @@ type FtCreateStopwordsStopword Completed
 func (c FtCreateStopwordsStopword) Stopword(stopword ...string) FtCreateStopwordsStopword {
 	c.cs.s = append(c.cs.s, stopword...)
 	return c
+}
+
+func (c FtCreateStopwordsStopword) Skipinitialscan() FtCreateSkipinitialscan {
+	c.cs.s = append(c.cs.s, "SKIPINITIALSCAN")
+	return (FtCreateSkipinitialscan)(c)
 }
 
 func (c FtCreateStopwordsStopword) Schema() FtCreateSchema {
@@ -8660,6 +8892,16 @@ type FtCreateStopwordsStopwords Completed
 func (c FtCreateStopwordsStopwords) Stopword(stopword ...string) FtCreateStopwordsStopword {
 	c.cs.s = append(c.cs.s, stopword...)
 	return (FtCreateStopwordsStopword)(c)
+}
+
+func (c FtCreateStopwordsStopwords) Skipinitialscan() FtCreateSkipinitialscan {
+	c.cs.s = append(c.cs.s, "SKIPINITIALSCAN")
+	return (FtCreateSkipinitialscan)(c)
+}
+
+func (c FtCreateStopwordsStopwords) Schema() FtCreateSchema {
+	c.cs.s = append(c.cs.s, "SCHEMA")
+	return (FtCreateSchema)(c)
 }
 
 type FtCreateTemporary Completed
@@ -8687,6 +8929,11 @@ func (c FtCreateTemporary) Nofreqs() FtCreateNofreqs {
 func (c FtCreateTemporary) Stopwords(count int64) FtCreateStopwordsStopwords {
 	c.cs.s = append(c.cs.s, "STOPWORDS", strconv.FormatInt(count, 10))
 	return (FtCreateStopwordsStopwords)(c)
+}
+
+func (c FtCreateTemporary) Skipinitialscan() FtCreateSkipinitialscan {
+	c.cs.s = append(c.cs.s, "SKIPINITIALSCAN")
+	return (FtCreateSkipinitialscan)(c)
 }
 
 func (c FtCreateTemporary) Schema() FtCreateSchema {

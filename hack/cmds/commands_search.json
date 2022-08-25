@@ -37,6 +37,12 @@
         ]
       },
       {
+        "name": "filter",
+        "type": "string",
+        "optional": true,
+        "command": "FILTER"
+      },
+      {
         "name": "default_lang",
         "type": "string",
         "command": "LANGUAGE",
@@ -122,11 +128,20 @@
             "type": "integer"
           },
           {
-            "multiple": true,
             "name": "stopword",
-            "type": "string"
+            "type": "string",
+            "multiple": true,
+            "optional": true
           }
         ]
+      },
+      {
+        "name": "skipinitialscan",
+        "type": "enum",
+        "enum": [
+          "SKIPINITIALSCAN"
+        ],
+        "optional": true
       },
       {
         "name": "schema",
@@ -160,6 +175,14 @@
               "GEO",
               "VECTOR"
             ]
+          },
+          {
+            "name": "withsuffixtrie",
+            "type": "enum",
+            "enum": [
+              "WITHSUFFIXTRIE"
+            ],
+            "optional": true
           },
           {
             "name": "sortable",
@@ -262,6 +285,14 @@
       {
         "name": "index",
         "type": "string"
+      },
+      {
+        "name": "skipinitialscan",
+        "type": "enum",
+        "enum": [
+          "SKIPINITIALSCAN"
+        ],
+        "optional": true
       },
       {
         "name": "schema",
