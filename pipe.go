@@ -36,7 +36,7 @@ type pipe struct {
 	waits   int32
 	state   int32
 	version int32
-	pingsig int32
+	blcksig int32
 	timeout time.Duration
 	pinggap time.Duration
 
@@ -366,13 +366,13 @@ func (p *pipe) _backgroundPing(stop <-chan struct{}) (err error) {
 	for err == nil {
 		select {
 		case <-ticker.C:
-			if atomic.LoadInt32(&p.pingsig) != 0 {
+			if atomic.LoadInt32(&p.blcksig) != 0 {
 				continue
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), p.timeout)
 			err = p.Do(ctx, cmds.PingCmd).NonRedisError()
 			cancel()
-			if err != nil && atomic.LoadInt32(&p.pingsig) != 0 {
+			if err != nil && atomic.LoadInt32(&p.blcksig) != 0 {
 				err = nil
 			}
 		case <-stop:
@@ -549,6 +549,15 @@ func (p *pipe) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
 		return newErrResult(ctx.Err())
 	}
 
+	if cmd.IsBlock() {
+		atomic.AddInt32(&p.blcksig, 1)
+		defer func() {
+			if resp.err == nil {
+				atomic.AddInt32(&p.blcksig, -1)
+			}
+		}()
+	}
+
 	waits := atomic.AddInt32(&p.waits, 1) // if this is 1, and background worker is not started, no need to queue
 	state := atomic.LoadInt32(&p.state)
 
@@ -579,10 +588,6 @@ func (p *pipe) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
 	return resp
 
 queue:
-	if cmd.IsBlock() {
-		atomic.AddInt32(&p.pingsig, 1)
-		defer atomic.AddInt32(&p.pingsig, -1)
-	}
 	ch := p.queue.PutOne(cmd)
 	if ctxCh := ctx.Done(); ctxCh == nil {
 		resp = <-ch
@@ -613,12 +618,32 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...cmds.Completed) []RedisResu
 
 	isOptIn := multi[0].IsOptIn() // len(multi) > 0 should have already been checked by upper layer
 	noReply := false
+	isBlock := false
 
 	for _, cmd := range multi {
 		if cmd.NoReply() {
 			noReply = true
 			break
 		}
+	}
+
+	for _, cmd := range multi {
+		if cmd.IsBlock() {
+			isBlock = true
+			break
+		}
+	}
+
+	if isBlock {
+		atomic.AddInt32(&p.blcksig, 1)
+		defer func() {
+			for _, r := range resp {
+				if r.err != nil {
+					return
+				}
+			}
+			atomic.AddInt32(&p.blcksig, -1)
+		}()
 	}
 
 	waits := atomic.AddInt32(&p.waits, 1) // if this is 1, and background worker is not started, no need to queue
@@ -654,13 +679,6 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...cmds.Completed) []RedisResu
 	return resp
 
 queue:
-	for _, cmd := range multi {
-		if cmd.IsBlock() {
-			atomic.AddInt32(&p.pingsig, 1)
-			defer atomic.AddInt32(&p.pingsig, -1)
-			break
-		}
-	}
 	ch := p.queue.PutMulti(multi)
 	var i int
 	if ctxCh := ctx.Done(); ctxCh == nil {
@@ -995,6 +1013,7 @@ func (p *pipe) Error() error {
 
 func (p *pipe) Close() {
 	p.error.CompareAndSwap(nil, errClosing)
+	block := atomic.AddInt32(&p.blcksig, 1)
 	waits := atomic.AddInt32(&p.waits, 1)
 	stopping1 := atomic.CompareAndSwapInt32(&p.state, 0, 2)
 	stopping2 := atomic.CompareAndSwapInt32(&p.state, 1, 2)
@@ -1002,11 +1021,12 @@ func (p *pipe) Close() {
 		if stopping1 && waits == 1 { // make sure there is no sync read
 			p.background()
 		}
-		if stopping1 || stopping2 {
+		if block == 1 && (stopping1 || stopping2) { // make sure there is no block cmd
 			<-p.queue.PutOne(cmds.QuitCmd)
 		}
 	}
 	atomic.AddInt32(&p.waits, -1)
+	atomic.AddInt32(&p.blcksig, -1)
 	if p.conn != nil {
 		p.conn.Close()
 	}

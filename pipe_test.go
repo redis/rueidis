@@ -2409,6 +2409,66 @@ func TestCancelContext_DoMulti_Block(t *testing.T) {
 	shutdown()
 }
 
+func TestForceClose_Do_Block(t *testing.T) {
+	p, mock, _, _ := setup(t, ClientOption{})
+
+	go func() {
+		mock.Expect("GET", "a")
+		p.Close()
+	}()
+
+	if err := p.Do(context.Background(), cmds.NewBlockingCompleted([]string{"GET", "a"})).NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
+		t.Fatalf("unexpected err %v", err)
+	}
+}
+
+func TestForceClose_Do_Canceled_Block(t *testing.T) {
+	p, mock, _, _ := setup(t, ClientOption{})
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	go func() {
+		mock.Expect("GET", "a")
+		cancel()
+		mock.Expect().ReplyString("OK")
+	}()
+
+	if err := p.Do(ctx, cmds.NewBlockingCompleted([]string{"GET", "a"})).NonRedisError(); !errors.Is(err, context.Canceled) {
+		t.Fatalf("unexpected err %v", err)
+	}
+	p.Close()
+}
+
+func TestForceClose_DoMulti_Block(t *testing.T) {
+	p, mock, _, _ := setup(t, ClientOption{})
+
+	go func() {
+		mock.Expect("GET", "a")
+		p.Close()
+	}()
+
+	if err := p.DoMulti(context.Background(), cmds.NewBlockingCompleted([]string{"GET", "a"}))[0].NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
+		t.Fatalf("unexpected err %v", err)
+	}
+}
+
+func TestForceClose_DoMulti_Canceled_Block(t *testing.T) {
+	p, mock, _, _ := setup(t, ClientOption{})
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	go func() {
+		mock.Expect("GET", "a")
+		cancel()
+		mock.Expect().ReplyString("OK")
+	}()
+
+	if err := p.DoMulti(ctx, cmds.NewBlockingCompleted([]string{"GET", "a"}))[0].NonRedisError(); !errors.Is(err, context.Canceled) {
+		t.Fatalf("unexpected err %v", err)
+	}
+	p.Close()
+}
+
 func TestOngoingDeadlineContextInSyncMode_Do(t *testing.T) {
 	p, _, _, closeConn := setup(t, ClientOption{})
 	defer closeConn()
