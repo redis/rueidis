@@ -22986,6 +22986,10 @@ func (c TdigestCreateKey) Compression(compression int64) TdigestCreateCompressio
 	return (TdigestCreateCompression)(c)
 }
 
+func (c TdigestCreateKey) Build() Completed {
+	return Completed(c)
+}
+
 type TdigestInfo Completed
 
 func (b Builder) TdigestInfo() (c TdigestInfo) {
@@ -23038,28 +23042,102 @@ func (b Builder) TdigestMerge() (c TdigestMerge) {
 	return c
 }
 
-func (c TdigestMerge) ToKey(toKey string) TdigestMergeToKey {
+func (c TdigestMerge) DestinationKey(destinationKey string) TdigestMergeDestinationKey {
 	if c.ks != NoSlot {
-		c.ks = check(c.ks, slot(toKey))
+		c.ks = check(c.ks, slot(destinationKey))
 	}
-	c.cs.s = append(c.cs.s, toKey)
-	return (TdigestMergeToKey)(c)
+	c.cs.s = append(c.cs.s, destinationKey)
+	return (TdigestMergeDestinationKey)(c)
 }
 
-type TdigestMergeFromKey Completed
+type TdigestMergeDestinationKey Completed
 
-func (c TdigestMergeFromKey) Build() Completed {
+func (c TdigestMergeDestinationKey) SourceKey(sourceKey ...string) TdigestMergeSourceKey {
+	if c.ks != NoSlot {
+		for _, k := range sourceKey {
+			c.ks = check(c.ks, slot(k))
+		}
+	}
+	c.cs.s = append(c.cs.s, sourceKey...)
+	return (TdigestMergeSourceKey)(c)
+}
+
+type TdigestMergeSourceKey Completed
+
+func (c TdigestMergeSourceKey) SourceKey(sourceKey ...string) TdigestMergeSourceKey {
+	if c.ks != NoSlot {
+		for _, k := range sourceKey {
+			c.ks = check(c.ks, slot(k))
+		}
+	}
+	c.cs.s = append(c.cs.s, sourceKey...)
+	return c
+}
+
+func (c TdigestMergeSourceKey) Build() Completed {
 	return Completed(c)
 }
 
-type TdigestMergeToKey Completed
+type TdigestMergestore Completed
 
-func (c TdigestMergeToKey) FromKey(fromKey string) TdigestMergeFromKey {
+func (b Builder) TdigestMergestore() (c TdigestMergestore) {
+	c = TdigestMergestore{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "TDIGEST.MERGESTORE")
+	return c
+}
+
+func (c TdigestMergestore) DestinationKey(destinationKey string) TdigestMergestoreDestinationKey {
 	if c.ks != NoSlot {
-		c.ks = check(c.ks, slot(fromKey))
+		c.ks = check(c.ks, slot(destinationKey))
 	}
-	c.cs.s = append(c.cs.s, fromKey)
-	return (TdigestMergeFromKey)(c)
+	c.cs.s = append(c.cs.s, destinationKey)
+	return (TdigestMergestoreDestinationKey)(c)
+}
+
+type TdigestMergestoreConfigCompression Completed
+
+func (c TdigestMergestoreConfigCompression) Build() Completed {
+	return Completed(c)
+}
+
+type TdigestMergestoreDestinationKey Completed
+
+func (c TdigestMergestoreDestinationKey) Numkeys(numkeys int64) TdigestMergestoreNumkeys {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(numkeys, 10))
+	return (TdigestMergestoreNumkeys)(c)
+}
+
+type TdigestMergestoreNumkeys Completed
+
+func (c TdigestMergestoreNumkeys) SourceKey(sourceKey ...string) TdigestMergestoreSourceKey {
+	if c.ks != NoSlot {
+		for _, k := range sourceKey {
+			c.ks = check(c.ks, slot(k))
+		}
+	}
+	c.cs.s = append(c.cs.s, sourceKey...)
+	return (TdigestMergestoreSourceKey)(c)
+}
+
+type TdigestMergestoreSourceKey Completed
+
+func (c TdigestMergestoreSourceKey) SourceKey(sourceKey ...string) TdigestMergestoreSourceKey {
+	if c.ks != NoSlot {
+		for _, k := range sourceKey {
+			c.ks = check(c.ks, slot(k))
+		}
+	}
+	c.cs.s = append(c.cs.s, sourceKey...)
+	return c
+}
+
+func (c TdigestMergestoreSourceKey) Compression(compression int64) TdigestMergestoreConfigCompression {
+	c.cs.s = append(c.cs.s, "COMPRESSION", strconv.FormatInt(compression, 10))
+	return (TdigestMergestoreConfigCompression)(c)
+}
+
+func (c TdigestMergestoreSourceKey) Build() Completed {
+	return Completed(c)
 }
 
 type TdigestMin Completed

@@ -1,6 +1,5 @@
 {
-  "AI.TENSORSET":
-  {
+  "AI.TENSORSET": {
     "summary": "stores a tensor as the value of a key.",
     "complexity": "O(1)",
     "arguments": [
@@ -12,7 +11,16 @@
         "name": "type",
         "type": "enum",
         "enum": [
-          "FLOAT" , "DOUBLE" , "INT8" , "INT16" , "INT32" , "INT64" , "UINT8", "UINT16", "STRING", "BOOL"
+          "FLOAT",
+          "DOUBLE",
+          "INT8",
+          "INT16",
+          "INT32",
+          "INT64",
+          "UINT8",
+          "UINT16",
+          "STRING",
+          "BOOL"
         ]
       },
       {
@@ -33,13 +41,11 @@
         "multiple": true,
         "optional": true
       }
-
     ],
     "since": "1.2.5",
     "group": "tensor"
   },
-  "AI.TENSORGET":
-  {
+  "AI.TENSORGET": {
     "summary": "returns a tensor stored as key's value.",
     "complexity": "O(1)",
     "arguments": [
@@ -58,17 +64,16 @@
         "name": "format",
         "type": "enum",
         "enum": [
-          "BLOB", "VALUES"
+          "BLOB",
+          "VALUES"
         ],
         "optional": true
       }
-
     ],
     "since": "1.2.5",
     "group": "tensor"
   },
-  "AI.MODELSTORE":
-  {
+  "AI.MODELSTORE": {
     "summary": "stores a model as the value of a key",
     "complexity": "O(1)",
     "arguments": [
@@ -79,12 +84,19 @@
       {
         "name": "backend",
         "type": "enum",
-        "enum":["TF", "TORCH", "ONNX"]
+        "enum": [
+          "TF",
+          "TORCH",
+          "ONNX"
+        ]
       },
       {
         "name": "device",
         "type": "enum",
-        "enum":["CPU", "GPU"]
+        "enum": [
+          "CPU",
+          "GPU"
+        ]
       },
       {
         "name": "tag",
@@ -117,14 +129,13 @@
           {
             "name": "input_count",
             "type": "integer",
-            "command":"INPUTS"
+            "command": "INPUTS"
           },
           {
             "name": "input",
             "type": "string",
             "multiple": true
           }
-
         ]
       },
       {
@@ -134,14 +145,13 @@
           {
             "name": "output_count",
             "type": "integer",
-            "command":"OUTPUTS"
+            "command": "OUTPUTS"
           },
           {
             "name": "output",
             "type": "string",
             "multiple": true
           }
-
         ]
       },
       {
@@ -150,7 +160,6 @@
         "type": "string",
         "optional": true
       }
-
     ],
     "since": "1.2.5",
     "group": "model"
@@ -183,8 +192,7 @@
     "since": "1.2.5",
     "group": "model"
   },
-  "AI.MODELDEL":
-  {
+  "AI.MODELDEL": {
     "summary": "deletes a model stored as a key's value.",
     "complexity": "O(1)",
     "arguments": [
@@ -196,8 +204,7 @@
     "since": "1.2.5",
     "group": "model"
   },
-  "AI.MODELEXECUTE":
-  {
+  "AI.MODELEXECUTE": {
     "summary": "runs a model stored as a key's value using its specified backend and device. It accepts one or more input tensors and store output tensors.",
     "complexity": "O(1)",
     "arguments": [
@@ -211,14 +218,13 @@
           {
             "name": "input_count",
             "type": "integer",
-            "command":"INPUTS"
+            "command": "INPUTS"
           },
           {
             "name": "input",
             "type": "string",
             "multiple": true
           }
-
         ]
       },
       {
@@ -227,14 +233,13 @@
           {
             "name": "output_count",
             "type": "integer",
-            "command":"OUTPUTS"
+            "command": "OUTPUTS"
           },
           {
             "name": "output",
             "type": "string",
             "multiple": true
           }
-
         ]
       },
       {
@@ -258,7 +263,10 @@
       {
         "name": "device",
         "type": "enum",
-        "enum":["CPU", "GPU"]
+        "enum": [
+          "CPU",
+          "GPU"
+        ]
       },
       {
         "name": "tag",
@@ -272,14 +280,13 @@
           {
             "name": "entry_point_count",
             "type": "integer",
-            "command":"ENTRY_POINTS"
+            "command": "ENTRY_POINTS"
           },
           {
             "name": "entry_point",
             "type": "string",
             "multiple": true
           }
-
         ]
       }
     ],
@@ -326,8 +333,7 @@
     "since": "1.2.5",
     "group": "script"
   },
-  "AI.SCRIPTEXECUTE":
-  {
+  "AI.SCRIPTEXECUTE": {
     "summary": "command runs a script stored as a key's value on its specified device.",
     "complexity": "O(1)",
     "arguments": [
@@ -346,14 +352,13 @@
           {
             "name": "key_count",
             "type": "integer",
-            "command":"KEYS"
+            "command": "KEYS"
           },
           {
             "name": "key",
             "type": "string",
             "multiple": true
           }
-
         ]
       },
       {
@@ -363,14 +368,13 @@
           {
             "name": "input_count",
             "type": "integer",
-            "command":"INPUTS"
+            "command": "INPUTS"
           },
           {
             "name": "input",
             "type": "string",
             "multiple": true
           }
-
         ]
       },
       {
@@ -380,14 +384,13 @@
           {
             "name": "arg_count",
             "type": "integer",
-            "command":"ARGS"
+            "command": "ARGS"
           },
           {
             "name": "arg",
             "type": "string",
             "multiple": true
           }
-
         ]
       },
       {
@@ -397,14 +400,13 @@
           {
             "name": "output_count",
             "type": "integer",
-            "command":"OUTPUTS"
+            "command": "OUTPUTS"
           },
           {
             "name": "output",
             "type": "string",
             "multiple": true
           }
-
         ]
       },
       {
