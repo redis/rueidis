@@ -210,7 +210,7 @@ with non-blocking commands and thus will not cause the pipeline to be blocked:
 
 ## Context Cancellation
 
-`Client.Do()`, `Client.DoMulti()`, `Client.DoCache()` and `Client.DoMultiCache()` can return early if the deadline of context is reached or canceled.
+`Client.Do()`, `Client.DoMulti()`, `Client.DoCache()` and `Client.DoMultiCache()` can return early if the context is canceled or the deadline is reached.
 
 ```golang
 ctx, cancel := context.WithTimeout(context.Background(), time.Second)
