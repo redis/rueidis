@@ -60,6 +60,17 @@ func TestCompleted_IsBlock(t *testing.T) {
 	}
 }
 
+func TestCompleted_ToBlock(t *testing.T) {
+	cmd := NewCompleted([]string{"a", "b"})
+	if cmd.IsBlock() {
+		t.Fatalf("should not be block command")
+	}
+	cmd.ToBlock()
+	if !cmd.IsBlock() {
+		t.Fatalf("should be block command")
+	}
+}
+
 func TestCompleted_IsOptIn(t *testing.T) {
 	if cmd := NewCompleted([]string{"a", "b"}); cmd.IsOptIn() {
 		t.Fatalf("should not be opt in command")

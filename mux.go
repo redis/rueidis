@@ -150,6 +150,7 @@ func (m *mux) DoMulti(ctx context.Context, multi ...cmds.Completed) (resp []Redi
 	}
 	return m.pipelineMulti(ctx, multi)
 block:
+	multi[0].ToBlock() // mark the first cmd as block if one of them is block to shortcut later check.
 	return m.blockingMulti(ctx, multi)
 }
 
