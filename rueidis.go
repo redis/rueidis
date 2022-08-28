@@ -13,6 +13,8 @@ import (
 	"github.com/rueian/rueidis/internal/cmds"
 )
 
+type CacheInvalidateCallbackFunc func([]RedisMessage)
+
 const (
 	// DefaultCacheBytes is the default value of ClientOption.CacheSizeEachConn, which is 128 MiB
 	DefaultCacheBytes = 128 * (1 << 20)
@@ -88,6 +90,8 @@ type ClientOption struct {
 	DisableRetry bool
 	// DisableCache falls back Client.DoCache/Client.DoMultiCache to Client.Do/Client.DoMulti
 	DisableCache bool
+	// CacheInvalidateCallback calls function in case of invalidation
+	CacheInvalidateCallback *CacheInvalidateCallbackFunc
 }
 
 // SentinelOption contains MasterSet,
