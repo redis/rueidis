@@ -91,7 +91,7 @@ type ClientOption struct {
 	// DisableCache falls back Client.DoCache/Client.DoMultiCache to Client.Do/Client.DoMulti
 	DisableCache bool
 	// CacheInvalidateCallback calls function in case of invalidation
-	CacheInvalidateCallback *CacheInvalidateCallbackFunc
+	CacheInvalidateCallback CacheInvalidateCallbackFunc
 }
 
 // SentinelOption contains MasterSet,

@@ -54,7 +54,7 @@ type pipe struct {
 	ssubs                   *subs
 	pshks                   atomic.Value
 	error                   atomic.Value
-	cacheInvalidateCallback *CacheInvalidateCallbackFunc
+	cacheInvalidateCallback CacheInvalidateCallbackFunc
 }
 
 func newPipe(conn net.Conn, option *ClientOption) (p *pipe, err error) {
@@ -402,9 +402,9 @@ func (p *pipe) handlePush(values []RedisMessage) (reply bool) {
 		}
 		if p.cacheInvalidateCallback != nil {
 			if values[1].IsNil() {
-				(*p.cacheInvalidateCallback)(nil)
+				p.cacheInvalidateCallback(nil)
 			} else {
-				(*p.cacheInvalidateCallback)(values[1].values)
+				p.cacheInvalidateCallback(values[1].values)
 			}
 		}
 	case "message":
