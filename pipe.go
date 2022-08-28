@@ -121,7 +121,9 @@ func newPipe(conn net.Conn, option *ClientOption) (p *pipe, err error) {
 		}
 	}
 	p.cacheInvalidateCallback = option.CacheInvalidateCallback
-
+	if p.cacheInvalidateCallback != nil {
+		p.background()
+	}
 	return p, nil
 }
 
