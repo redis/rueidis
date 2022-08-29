@@ -144,7 +144,10 @@ func (c *lru) Update(key, cmd string, value RedisMessage, pttl int64) {
 			ele = c.list.Front()
 			for c.size > c.max && ele != nil {
 				if e := ele.Value.(*entry); e.val.typ != 0 { // do not delete pending entries
-					delete(c.store[e.key].cache, e.cmd)
+					store := c.store[e.key]
+					if delete(store.cache, e.cmd); len(store.cache) == 0 {
+						delete(c.store, e.key)
+					}
 					c.list.Remove(ele)
 					c.size -= e.size
 				}
@@ -173,7 +176,10 @@ func (c *lru) Cancel(key, cmd string, val RedisMessage, err error) {
 				e.val = val
 				e.err = err
 				ch = e.ch
-				delete(c.store[key].cache, cmd)
+				store := c.store[key]
+				if delete(store.cache, cmd); len(store.cache) == 0 {
+					delete(c.store, key)
+				}
 				c.list.Remove(ele)
 			}
 		}
@@ -196,11 +202,13 @@ func (c *lru) GetTTL(key string) (ttl time.Duration) {
 	return
 }
 
-func (c *lru) purge(store *keyCache) {
+func (c *lru) purge(key string, store *keyCache) {
 	if store != nil {
 		for cmd, ele := range store.cache {
 			if e := ele.Value.(*entry); e.val.typ != 0 { // do not delete pending entries
-				delete(store.cache, cmd)
+				if delete(store.cache, cmd); len(store.cache) == 0 {
+					delete(c.store, key)
+				}
 				c.list.Remove(ele)
 				c.size -= e.size
 			}
@@ -211,12 +219,12 @@ func (c *lru) purge(store *keyCache) {
 func (c *lru) Delete(keys []RedisMessage) {
 	c.mu.Lock()
 	if keys == nil {
-		for _, store := range c.store {
-			c.purge(store)
+		for key, store := range c.store {
+			c.purge(key, store)
 		}
 	} else {
 		for _, k := range keys {
-			c.purge(c.store[k.string])
+			c.purge(k.string, c.store[k.string])
 		}
 	}
 	c.mu.Unlock()
