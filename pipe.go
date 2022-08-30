@@ -48,13 +48,13 @@ type pipe struct {
 	queue queue
 	once  sync.Once
 
-	info                    map[string]RedisMessage
-	nsubs                   *subs
-	psubs                   *subs
-	ssubs                   *subs
-	pshks                   atomic.Value
-	error                   atomic.Value
-	cacheInvalidateCallback CacheInvalidateCallbackFunc
+	info            map[string]RedisMessage
+	nsubs           *subs
+	psubs           *subs
+	ssubs           *subs
+	pshks           atomic.Value
+	error           atomic.Value
+	onInvalidations OnInvalidationsFunc
 }
 
 func newPipe(conn net.Conn, option *ClientOption) (p *pipe, err error) {
@@ -120,8 +120,8 @@ func newPipe(conn net.Conn, option *ClientOption) (p *pipe, err error) {
 			p.version = int32(vv)
 		}
 	}
-	p.cacheInvalidateCallback = option.CacheInvalidateCallback
-	if p.cacheInvalidateCallback != nil {
+	p.onInvalidations = option.OnInvalidations
+	if p.onInvalidations != nil {
 		p.background()
 	}
 	return p, nil
@@ -402,11 +402,11 @@ func (p *pipe) handlePush(values []RedisMessage) (reply bool) {
 				p.cache.Delete(values[1].values)
 			}
 		}
-		if p.cacheInvalidateCallback != nil {
+		if p.onInvalidations != nil {
 			if values[1].IsNil() {
-				p.cacheInvalidateCallback(nil)
+				p.onInvalidations(nil)
 			} else {
-				p.cacheInvalidateCallback(values[1].values)
+				p.onInvalidations(values[1].values)
 			}
 		}
 	case "message":
