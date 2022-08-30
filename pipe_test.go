@@ -1403,6 +1403,45 @@ func TestDisableClientSideCaching(t *testing.T) {
 	}
 }
 
+func TestOnInvalidations(t *testing.T) {
+	ch := make(chan []RedisMessage)
+	_, mock, cancel, _ := setup(t, ClientOption{
+		OnInvalidations: func(messages []RedisMessage) {
+			ch <- messages
+		},
+	})
+
+	go func() {
+		mock.Expect().Reply(RedisMessage{
+			typ: '>',
+			values: []RedisMessage{
+				{typ: '+', string: "invalidate"},
+				{typ: '*', values: []RedisMessage{{typ: '+', string: "a"}}},
+			},
+		})
+	}()
+
+	if messages := <-ch; messages[0].string != "a" {
+		t.Fatalf("unexpected invlidation %v", messages)
+	}
+
+	go func() {
+		mock.Expect().Reply(RedisMessage{
+			typ: '>',
+			values: []RedisMessage{
+				{typ: '+', string: "invalidate"},
+				{typ: '_'},
+			},
+		})
+	}()
+
+	if messages := <-ch; messages != nil {
+		t.Fatalf("unexpected invlidation %v", messages)
+	}
+
+	cancel()
+}
+
 func TestMultiHalfErr(t *testing.T) {
 	p, mock, _, closeConn := setup(t, ClientOption{})
 

@@ -13,8 +13,6 @@ import (
 	"github.com/rueian/rueidis/internal/cmds"
 )
 
-type OnInvalidationsFunc func([]RedisMessage)
-
 const (
 	// DefaultCacheBytes is the default value of ClientOption.CacheSizeEachConn, which is 128 MiB
 	DefaultCacheBytes = 128 * (1 << 20)
@@ -90,8 +88,9 @@ type ClientOption struct {
 	DisableRetry bool
 	// DisableCache falls back Client.DoCache/Client.DoMultiCache to Client.Do/Client.DoMulti
 	DisableCache bool
-	// OnInvalidations calls function in case of invalidation
-	OnInvalidations OnInvalidationsFunc
+	// OnInvalidations is a callback function in case of client-side caching invalidation received.
+	// Note that this function must be fast, otherwise other redis messages will be blocked.
+	OnInvalidations func([]RedisMessage)
 }
 
 // SentinelOption contains MasterSet,
