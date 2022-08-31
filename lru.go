@@ -9,11 +9,13 @@ import (
 )
 
 const (
-	entrySize   = int(unsafe.Sizeof(entry{})) + int(unsafe.Sizeof(&entry{}))
-	elementSize = int(unsafe.Sizeof(list.Element{})) + int(unsafe.Sizeof(&list.Element{}))
-	stringSSize = int(unsafe.Sizeof(""))
+	entrySize    = int(unsafe.Sizeof(entry{})) + int(unsafe.Sizeof(&entry{}))
+	keyCacheSize = int(unsafe.Sizeof(keyCache{})) + int(unsafe.Sizeof(&keyCache{}))
+	elementSize  = int(unsafe.Sizeof(list.Element{})) + int(unsafe.Sizeof(&list.Element{}))
+	stringSSize  = int(unsafe.Sizeof(""))
 
-	entryMinSize = entrySize + elementSize + stringSSize*2 + messageStructSize
+	entryBaseSize = (keyCacheSize + entrySize + elementSize + stringSSize*2) * 3 / 2
+	entryMinSize  = entryBaseSize + messageStructSize
 
 	moveThreshold = uint64(1024 - 1)
 )
@@ -136,7 +138,7 @@ func (c *lru) Update(key, cmd string, value RedisMessage, pttl int64) {
 		if ele, ok := store.cache[cmd]; ok {
 			if e := ele.Value.(*entry); e.val.typ == 0 {
 				e.val = value
-				e.size = entrySize + elementSize + 2*(stringSSize+len(key)+stringSSize+len(cmd)) + value.approximateSize()
+				e.size = entryBaseSize + 2*(len(key)+len(cmd)) + value.approximateSize()
 				c.size += e.size
 				ch = e.ch
 			}
