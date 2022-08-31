@@ -341,7 +341,8 @@
           "string",
           "integer"
         ],
-        "multiple": true
+        "multiple": true,
+        "multiple_token": true
       }
     ],
     "since": "6.2.0",
@@ -827,7 +828,8 @@
         "name": "prefix",
         "type": "string",
         "optional": true,
-        "multiple": true
+        "multiple": true,
+        "multiple_token": true
       },
       {
         "name": "BCAST",
@@ -3625,10 +3627,17 @@
         "type": "string"
       },
       {
-        "name": "config",
         "command": "CONFIG",
-        "type": "string",
-        "variadic": true,
+        "name": [
+          "name",
+          "value"
+        ],
+        "type": [
+          "string",
+          "string"
+        ],
+        "multiple": true,
+        "multiple_token": true,
         "optional": true
       },
       {
@@ -4784,7 +4793,8 @@
         "name": "pattern",
         "type": "string",
         "optional": true,
-        "multiple": true
+        "multiple": true,
+        "multiple_token": true
       },
       {
         "name": "order",
@@ -4844,7 +4854,8 @@
         "name": "pattern",
         "type": "string",
         "optional": true,
-        "multiple": true
+        "multiple": true,
+        "multiple_token": true
       },
       {
         "name": "order",

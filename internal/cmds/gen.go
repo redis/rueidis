@@ -2194,7 +2194,7 @@ func (c BitfieldRo) Key(key string) BitfieldRoKey {
 type BitfieldRoGet Completed
 
 func (c BitfieldRoGet) Get(encoding string, offset int64) BitfieldRoGet {
-	c.cs.s = append(c.cs.s, encoding, strconv.FormatInt(offset, 10))
+	c.cs.s = append(c.cs.s, "GET", encoding, strconv.FormatInt(offset, 10))
 	return c
 }
 
@@ -2209,7 +2209,6 @@ func (c BitfieldRoGet) Cache() Cacheable {
 type BitfieldRoKey Completed
 
 func (c BitfieldRoKey) Get() BitfieldRoGet {
-	c.cs.s = append(c.cs.s, "GET")
 	return (BitfieldRoGet)(c)
 }
 
@@ -4004,9 +4003,8 @@ func (c ClientTrackingOptout) Build() Completed {
 
 type ClientTrackingPrefix Completed
 
-func (c ClientTrackingPrefix) Prefix(prefix ...string) ClientTrackingPrefix {
-	c.cs.s = append(c.cs.s, "PREFIX")
-	c.cs.s = append(c.cs.s, prefix...)
+func (c ClientTrackingPrefix) Prefix(prefix string) ClientTrackingPrefix {
+	c.cs.s = append(c.cs.s, "PREFIX", prefix)
 	return c
 }
 
@@ -4036,9 +4034,7 @@ func (c ClientTrackingPrefix) Build() Completed {
 
 type ClientTrackingRedirect Completed
 
-func (c ClientTrackingRedirect) Prefix(prefix ...string) ClientTrackingPrefix {
-	c.cs.s = append(c.cs.s, "PREFIX")
-	c.cs.s = append(c.cs.s, prefix...)
+func (c ClientTrackingRedirect) Prefix() ClientTrackingPrefix {
 	return (ClientTrackingPrefix)(c)
 }
 
@@ -4073,9 +4069,7 @@ func (c ClientTrackingStatusOff) Redirect(clientId int64) ClientTrackingRedirect
 	return (ClientTrackingRedirect)(c)
 }
 
-func (c ClientTrackingStatusOff) Prefix(prefix ...string) ClientTrackingPrefix {
-	c.cs.s = append(c.cs.s, "PREFIX")
-	c.cs.s = append(c.cs.s, prefix...)
+func (c ClientTrackingStatusOff) Prefix() ClientTrackingPrefix {
 	return (ClientTrackingPrefix)(c)
 }
 
@@ -4110,9 +4104,7 @@ func (c ClientTrackingStatusOn) Redirect(clientId int64) ClientTrackingRedirect 
 	return (ClientTrackingRedirect)(c)
 }
 
-func (c ClientTrackingStatusOn) Prefix(prefix ...string) ClientTrackingPrefix {
-	c.cs.s = append(c.cs.s, "PREFIX")
-	c.cs.s = append(c.cs.s, prefix...)
+func (c ClientTrackingStatusOn) Prefix() ClientTrackingPrefix {
 	return (ClientTrackingPrefix)(c)
 }
 
@@ -19316,9 +19308,8 @@ func (c ModuleLoadexArgs) Build() Completed {
 
 type ModuleLoadexConfig Completed
 
-func (c ModuleLoadexConfig) Config(config ...string) ModuleLoadexConfig {
-	c.cs.s = append(c.cs.s, "CONFIG")
-	c.cs.s = append(c.cs.s, config...)
+func (c ModuleLoadexConfig) Config(name string, value string) ModuleLoadexConfig {
+	c.cs.s = append(c.cs.s, "CONFIG", name, value)
 	return c
 }
 
@@ -19334,9 +19325,7 @@ func (c ModuleLoadexConfig) Build() Completed {
 
 type ModuleLoadexPath Completed
 
-func (c ModuleLoadexPath) Config(config ...string) ModuleLoadexConfig {
-	c.cs.s = append(c.cs.s, "CONFIG")
-	c.cs.s = append(c.cs.s, config...)
+func (c ModuleLoadexPath) Config() ModuleLoadexConfig {
 	return (ModuleLoadexConfig)(c)
 }
 
@@ -22310,9 +22299,7 @@ func (c SortBy) Limit(offset int64, count int64) SortLimit {
 	return (SortLimit)(c)
 }
 
-func (c SortBy) Get(pattern ...string) SortGet {
-	c.cs.s = append(c.cs.s, "GET")
-	c.cs.s = append(c.cs.s, pattern...)
+func (c SortBy) Get() SortGet {
 	return (SortGet)(c)
 }
 
@@ -22345,9 +22332,8 @@ func (c SortBy) Build() Completed {
 
 type SortGet Completed
 
-func (c SortGet) Get(pattern ...string) SortGet {
-	c.cs.s = append(c.cs.s, "GET")
-	c.cs.s = append(c.cs.s, pattern...)
+func (c SortGet) Get(pattern string) SortGet {
+	c.cs.s = append(c.cs.s, "GET", pattern)
 	return c
 }
 
@@ -22390,9 +22376,7 @@ func (c SortKey) Limit(offset int64, count int64) SortLimit {
 	return (SortLimit)(c)
 }
 
-func (c SortKey) Get(pattern ...string) SortGet {
-	c.cs.s = append(c.cs.s, "GET")
-	c.cs.s = append(c.cs.s, pattern...)
+func (c SortKey) Get() SortGet {
 	return (SortGet)(c)
 }
 
@@ -22425,9 +22409,7 @@ func (c SortKey) Build() Completed {
 
 type SortLimit Completed
 
-func (c SortLimit) Get(pattern ...string) SortGet {
-	c.cs.s = append(c.cs.s, "GET")
-	c.cs.s = append(c.cs.s, pattern...)
+func (c SortLimit) Get() SortGet {
 	return (SortGet)(c)
 }
 
@@ -22519,9 +22501,7 @@ func (c SortRoBy) Limit(offset int64, count int64) SortRoLimit {
 	return (SortRoLimit)(c)
 }
 
-func (c SortRoBy) Get(pattern ...string) SortRoGet {
-	c.cs.s = append(c.cs.s, "GET")
-	c.cs.s = append(c.cs.s, pattern...)
+func (c SortRoBy) Get() SortRoGet {
 	return (SortRoGet)(c)
 }
 
@@ -22550,9 +22530,8 @@ func (c SortRoBy) Cache() Cacheable {
 
 type SortRoGet Completed
 
-func (c SortRoGet) Get(pattern ...string) SortRoGet {
-	c.cs.s = append(c.cs.s, "GET")
-	c.cs.s = append(c.cs.s, pattern...)
+func (c SortRoGet) Get(pattern string) SortRoGet {
+	c.cs.s = append(c.cs.s, "GET", pattern)
 	return c
 }
 
@@ -22591,9 +22570,7 @@ func (c SortRoKey) Limit(offset int64, count int64) SortRoLimit {
 	return (SortRoLimit)(c)
 }
 
-func (c SortRoKey) Get(pattern ...string) SortRoGet {
-	c.cs.s = append(c.cs.s, "GET")
-	c.cs.s = append(c.cs.s, pattern...)
+func (c SortRoKey) Get() SortRoGet {
 	return (SortRoGet)(c)
 }
 
@@ -22622,9 +22599,7 @@ func (c SortRoKey) Cache() Cacheable {
 
 type SortRoLimit Completed
 
-func (c SortRoLimit) Get(pattern ...string) SortRoGet {
-	c.cs.s = append(c.cs.s, "GET")
-	c.cs.s = append(c.cs.s, pattern...)
+func (c SortRoLimit) Get() SortRoGet {
 	return (SortRoGet)(c)
 }
 

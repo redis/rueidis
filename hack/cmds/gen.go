@@ -18,6 +18,8 @@ type goStruct struct {
 	BuildDef  buildDef
 	NextNodes []*node
 	Variadic  bool
+
+	MultipleToken bool
 }
 
 type buildDef struct {
@@ -52,6 +54,8 @@ type argument struct {
 	Multiple bool        `json:"multiple"`
 	Optional bool        `json:"optional"`
 	Variadic bool        `json:"variadic"`
+
+	MultipleToken bool `json:"multiple_token"`
 }
 
 type node struct {
@@ -106,8 +110,9 @@ func (n *node) GoStructs() (out []goStruct) {
 					Command:    nil,
 					Parameters: nil,
 				},
-				Variadic:  n.Variadic(),
-				NextNodes: n.NextNodes(),
+				Variadic:      n.Variadic() && !n.MultipleToken(),
+				MultipleToken: n.MultipleToken(),
+				NextNodes:     n.NextNodes(),
 			}
 			if len(n.Arg.Command) != 0 {
 				if !strings.HasSuffix(s.FullName, name(n.Arg.Command)) {
@@ -160,8 +165,9 @@ func (n *node) GoStructs() (out []goStruct) {
 				MethodName: n.Name(),
 				Parameters: nil,
 			},
-			Variadic:  n.Variadic(),
-			NextNodes: n.NextNodes(),
+			Variadic:      n.Variadic() && !n.MultipleToken(),
+			MultipleToken: n.MultipleToken(),
+			NextNodes:     n.NextNodes(),
 		}
 		if len(n.Arg.Command) != 0 {
 			s.BuildDef.Command = strings.Split(n.Arg.Command, " ")
@@ -187,6 +193,10 @@ func (n *node) GoStructs() (out []goStruct) {
 		out = append(out, s)
 	}
 	return
+}
+
+func (n *node) MultipleToken() bool {
+	return n.Arg.MultipleToken
 }
 
 func (n *node) Variadic() bool {
@@ -436,11 +446,11 @@ func printPath(f io.Writer, receiver string, path []goStruct, end string) {
 	fmt.Fprintf(f, "\t%s.%s()", receiver, path[0].BuildDef.MethodName)
 	for _, s := range path[1:] {
 		fmt.Fprintf(f, ".%s(", s.BuildDef.MethodName)
-		if len(s.BuildDef.Parameters) != 1 && s.Variadic {
+		if (len(s.BuildDef.Parameters) != 1 && s.Variadic) || s.MultipleToken {
 			fmt.Fprintf(f, ").%s(", s.BuildDef.MethodName)
 		}
 		fmt.Fprintf(f, "%s)", testParams(s.BuildDef.Parameters))
-		if s.Variadic {
+		if s.Variadic || s.MultipleToken {
 			fmt.Fprintf(f, ".%s(%s)", s.BuildDef.MethodName, testParams(s.BuildDef.Parameters))
 		}
 	}
@@ -604,7 +614,7 @@ func printBuilder(w io.Writer, parent, next goStruct) {
 	fmt.Fprintf(w, "func (c %s) %s(", parent.FullName, next.BuildDef.MethodName)
 	if len(next.BuildDef.Parameters) == 1 && next.Variadic {
 		fmt.Fprintf(w, "%s ...%s", toGoName(next.BuildDef.Parameters[0].Name), toGoType(next.BuildDef.Parameters[0].Type))
-	} else if next.Variadic && parent.FullName != next.FullName {
+	} else if (next.Variadic || next.MultipleToken) && parent.FullName != next.FullName {
 		// no parameter
 	} else {
 		for i, param := range next.BuildDef.Parameters {
@@ -625,7 +635,7 @@ func printBuilder(w io.Writer, parent, next goStruct) {
 			fmt.Fprintf(w, "\t}\n")
 		}
 	} else {
-		if len(next.BuildDef.Parameters) != 1 && next.Variadic && parent.FullName != next.FullName {
+		if len(next.BuildDef.Parameters) != 1 && (next.Variadic || next.MultipleToken) && parent.FullName != next.FullName {
 			// no parameter
 		} else {
 			for _, arg := range next.BuildDef.Parameters {
@@ -663,12 +673,12 @@ func printBuilder(w io.Writer, parent, next goStruct) {
 	if len(appends) == 0 && next.Variadic && len(next.BuildDef.Parameters) == 1 && toGoType(next.BuildDef.Parameters[0].Type) == "string" {
 		appends = append(appends, toGoName(next.BuildDef.Parameters[0].Name)+"...")
 		fmt.Fprintf(w, "\tc.cs.s = append(c.cs.s, %s)\n", strings.Join(appends, ", "))
-	} else if len(next.BuildDef.Parameters) != 1 && next.Variadic && parent.FullName != next.FullName {
+	} else if len(next.BuildDef.Parameters) != 1 && (next.Variadic || next.MultipleToken) && parent.FullName != next.FullName {
 		// no parameter
-		if len(appends) != 0 {
+		if len(appends) != 0 && !next.MultipleToken {
 			fmt.Fprintf(w, "\tc.cs.s = append(c.cs.s, %s)\n", strings.Join(appends, ", "))
 		}
-	} else {
+	} else if !(next.MultipleToken && parent.FullName != next.FullName) {
 		allstring := true
 		for _, p := range next.BuildDef.Parameters {
 			if toGoType(p.Type) != "string" {
