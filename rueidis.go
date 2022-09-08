@@ -76,6 +76,11 @@ type ClientOption struct {
 	// The default is DefaultPoolSize.
 	BlockingPoolSize int
 
+	// PipelineMultiplex determines how many tcp connections used to pipeline commands to one redis instance.
+	// The default for single and sentinel clients is 2, which means 4 connections (2^2).
+	// The default for cluster client is 0, which means 1 connection (2^0).
+	PipelineMultiplex int
+
 	// ConnWriteTimeout is applied net.Conn.SetWriteDeadline and periodic PING to redis
 	// Since the Dialer.KeepAlive will not be triggered if there is data in the outgoing buffer,
 	// ConnWriteTimeout should be set in order to detect local congestion or unresponsive redis server.
@@ -222,10 +227,12 @@ func NewClient(option ClientOption) (client Client, err error) {
 		})
 	}
 	if option.Sentinel.MasterSet != "" {
+		option.PipelineMultiplex = singleClientMultiplex(option.PipelineMultiplex)
 		return newSentinelClient(&option, makeConn)
 	}
 	if client, err = newClusterClient(&option, makeConn); err != nil {
 		if len(option.InitAddress) == 1 && (err.Error() == redisErrMsgClusterDisabled || strings.HasPrefix(err.Error(), redisErrMsgUnknownClusterCmd)) {
+			option.PipelineMultiplex = singleClientMultiplex(option.PipelineMultiplex)
 			client, err = newSingleClient(&option, client.(*clusterClient).single(), makeConn)
 		} else if client != (*clusterClient)(nil) {
 			client.Close()
@@ -233,6 +240,16 @@ func NewClient(option ClientOption) (client Client, err error) {
 		}
 	}
 	return client, err
+}
+
+func singleClientMultiplex(multiplex int) int {
+	if multiplex == 0 {
+		multiplex = 2
+	}
+	if multiplex < 0 {
+		multiplex = 0
+	}
+	return multiplex
 }
 
 func makeConn(dst string, opt *ClientOption) conn {

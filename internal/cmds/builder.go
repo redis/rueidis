@@ -50,7 +50,12 @@ func (b Builder) Arbitrary(token ...string) (c Arbitrary) {
 // Users must use Keys to construct the key part of the command, otherwise
 // the command will not be sent to correct redis node.
 func (c Arbitrary) Keys(keys ...string) Arbitrary {
-	if c.ks != NoSlot {
+	if c.ks&NoSlot == NoSlot {
+		for _, k := range keys {
+			c.ks = NoSlot | slot(k)
+			break
+		}
+	} else {
 		for _, k := range keys {
 			c.ks = check(c.ks, slot(k))
 		}

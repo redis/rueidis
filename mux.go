@@ -41,7 +41,7 @@ var _ conn = (*mux)(nil)
 type mux struct {
 	init   wire
 	dead   wire
-	wire   atomic.Value
+	wire   []atomic.Value
 	sc     *singleconnect
 	pool   *pool
 	wireFn wireFn
@@ -65,25 +65,29 @@ func makeMux(dst string, option *ClientOption, dialFn dialFn) *mux {
 }
 
 func newMux(dst string, option *ClientOption, init, dead wire, wireFn wireFn) *mux {
-	m := &mux{dst: dst, init: init, dead: dead, wireFn: wireFn}
-	m.wire.Store(init)
+	m := &mux{dst: dst, init: init, dead: dead, wireFn: wireFn, wire: make([]atomic.Value, 1<<option.PipelineMultiplex)}
+	for i := 0; i < len(m.wire); i++ {
+		m.wire[i].Store(init)
+	}
 	m.pool = newPool(option.BlockingPoolSize, dead, wireFn)
 	return m
 }
 
 func (m *mux) Override(cc conn) {
 	if m2, ok := cc.(*mux); ok {
-		m.wire.CompareAndSwap(m.init, m2.wire.Load())
+		for i := 0; i < len(m.wire) && i < len(m2.wire); i++ {
+			m.wire[i].CompareAndSwap(m.init, m2.wire[i].Load())
+		}
 	}
 }
 
-func (m *mux) pipe() wire {
-	w, _ := m._pipe()
+func (m *mux) pipe(i uint16) wire {
+	w, _ := m._pipe(i)
 	return w
 }
 
-func (m *mux) _pipe() (w wire, err error) {
-	if w = m.wire.Load().(wire); w != m.init {
+func (m *mux) _pipe(i uint16) (w wire, err error) {
+	if w = m.wire[i].Load().(wire); w != m.init {
 		return w, nil
 	}
 
@@ -100,9 +104,9 @@ func (m *mux) _pipe() (w wire, err error) {
 		return sc.w, sc.e
 	}
 
-	if w = m.wire.Load().(wire); w == m.init {
+	if w = m.wire[i].Load().(wire); w == m.init {
 		if w = m.wireFn(); w != m.dead {
-			m.wire.Store(w)
+			m.wire[i].Store(w)
 		} else {
 			err = w.Error()
 		}
@@ -121,16 +125,16 @@ func (m *mux) _pipe() (w wire, err error) {
 }
 
 func (m *mux) Dial() error { // no retry
-	_, err := m._pipe()
+	_, err := m._pipe(0)
 	return err
 }
 
 func (m *mux) Info() map[string]RedisMessage {
-	return m.pipe().Info()
+	return m.pipe(0).Info()
 }
 
 func (m *mux) Error() error {
-	return m.pipe().Error()
+	return m.pipe(0).Error()
 }
 
 func (m *mux) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
@@ -178,19 +182,21 @@ func (m *mux) blockingMulti(ctx context.Context, cmd []cmds.Completed) (resp []R
 }
 
 func (m *mux) pipeline(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
-	wire := m.pipe()
+	i := cmd.Slot() & uint16(len(m.wire)-1)
+	wire := m.pipe(i)
 	if resp = wire.Do(ctx, cmd); isBroken(resp.NonRedisError(), wire) {
-		m.wire.CompareAndSwap(wire, m.init)
+		m.wire[i].CompareAndSwap(wire, m.init)
 	}
 	return resp
 }
 
 func (m *mux) pipelineMulti(ctx context.Context, cmd []cmds.Completed) (resp []RedisResult) {
-	wire := m.pipe()
+	i := cmd[0].Slot() & uint16(len(m.wire)-1)
+	wire := m.pipe(i)
 	resp = wire.DoMulti(ctx, cmd...)
 	for _, r := range resp {
 		if isBroken(r.NonRedisError(), wire) {
-			m.wire.CompareAndSwap(wire, m.init)
+			m.wire[i].CompareAndSwap(wire, m.init)
 			return resp
 		}
 	}
@@ -198,20 +204,20 @@ func (m *mux) pipelineMulti(ctx context.Context, cmd []cmds.Completed) (resp []R
 }
 
 func (m *mux) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) RedisResult {
-	wire := m.pipe()
+	wire := m.pipe(0)
 	resp := wire.DoCache(ctx, cmd, ttl)
 	if isBroken(resp.NonRedisError(), wire) {
-		m.wire.CompareAndSwap(wire, m.init)
+		m.wire[0].CompareAndSwap(wire, m.init)
 	}
 	return resp
 }
 
 func (m *mux) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisResult {
-	wire := m.pipe()
+	wire := m.pipe(0)
 	resp := wire.DoMultiCache(ctx, multi...)
 	for _, r := range resp {
 		if isBroken(r.NonRedisError(), wire) {
-			m.wire.CompareAndSwap(wire, m.init)
+			m.wire[0].CompareAndSwap(wire, m.init)
 			return resp
 		}
 	}
@@ -219,10 +225,11 @@ func (m *mux) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisRe
 }
 
 func (m *mux) Receive(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
-	wire := m.pipe()
+	i := subscribe.Slot() & uint16(len(m.wire)-1)
+	wire := m.pipe(0)
 	err := wire.Receive(ctx, subscribe, fn)
 	if isBroken(err, wire) {
-		m.wire.CompareAndSwap(wire, m.init)
+		m.wire[i].CompareAndSwap(wire, m.init)
 	}
 	return err
 }
@@ -238,8 +245,10 @@ func (m *mux) Store(w wire) {
 }
 
 func (m *mux) Close() {
-	if prev := m.wire.Swap(m.dead).(wire); prev != m.init && prev != m.dead {
-		prev.Close()
+	for i := 0; i < len(m.wire); i++ {
+		if prev := m.wire[i].Swap(m.dead).(wire); prev != m.init && prev != m.dead {
+			prev.Close()
+		}
 	}
 	m.pool.Close()
 }
