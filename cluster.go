@@ -22,7 +22,6 @@ type clusterClient struct {
 	connFn connFn
 	sc     call
 	mu     sync.RWMutex
-	cpus   int
 	stop   uint32
 	cmd    cmds.Builder
 	retry  bool
@@ -34,7 +33,6 @@ func newClusterClient(opt *ClientOption, connFn connFn) (client *clusterClient, 
 		opt:    opt,
 		connFn: connFn,
 		conns:  make(map[string]conn),
-		cpus:   runtime.NumCPU(),
 		retry:  !opt.DisableRetry,
 	}
 
@@ -288,80 +286,44 @@ func (c *clusterClient) DoMulti(ctx context.Context, multi ...cmds.Completed) (r
 	if len(multi) == 0 {
 		return nil
 	}
+	results = make([]RedisResult, len(multi))
 	slots := make(map[uint16]int, 16)
 	for _, cmd := range multi {
 		slots[cmd.Slot()]++
 	}
-	results = make([]RedisResult, len(multi))
-	if len(slots) == 1 || len(slots) == 2 && slots[cmds.InitSlot] > 0 {
-		slot := cmds.InitSlot
-		for s := range slots {
-			if s != cmds.InitSlot {
-				slot = s
-			}
-		}
-		commands := make([]cmds.Completed, 0, len(multi)+2)
-		commands = append(commands, cmds.MultiCmd)
-		commands = append(commands, multi...)
-		commands = append(commands, cmds.ExecCmd)
-		cIndexes := make([]int, len(multi))
-		for i := range multi {
-			cIndexes[i] = i
-		}
-		c.doMulti(ctx, slot, commands, cIndexes, results)
-		for i, cmd := range multi {
-			if results[i].NonRedisError() == nil {
-				cmds.Put(cmd.CommandSlice())
-			}
-		}
-		return results
-	}
-	if slots[cmds.InitSlot] > 0 {
+	if slots[cmds.InitSlot] > 0 && len(slots) > 2 {
 		panic(panicMixCxSlot)
 	}
 	commands := make(map[uint16][]cmds.Completed, len(slots))
 	cIndexes := make(map[uint16][]int, len(slots))
-	for slot, count := range slots {
-		cIndexes[slot] = make([]int, 0, count)
-		commands[slot] = make([]cmds.Completed, 0, count+2)
-		commands[slot] = append(commands[slot], cmds.MultiCmd)
-	}
-	for i, cmd := range multi {
-		slot := cmd.Slot()
-		commands[slot] = append(commands[slot], cmd)
-		cIndexes[slot] = append(cIndexes[slot], i)
-	}
-	for slot := range slots {
-		commands[slot] = append(commands[slot], cmds.ExecCmd)
+	if len(slots) == 2 && slots[cmds.InitSlot] > 0 {
+		delete(slots, cmds.InitSlot)
+		for slot := range slots {
+			commands[slot] = make([]cmds.Completed, 0, len(multi)+2)
+			commands[slot] = append(commands[slot], cmds.MultiCmd)
+			commands[slot] = append(commands[slot], multi...)
+			commands[slot] = append(commands[slot], cmds.ExecCmd)
+		}
+	} else {
+		for slot, count := range slots {
+			cIndexes[slot] = make([]int, 0, count)
+			commands[slot] = make([]cmds.Completed, 0, count+2)
+			commands[slot] = append(commands[slot], cmds.MultiCmd)
+		}
+		for i, cmd := range multi {
+			slot := cmd.Slot()
+			commands[slot] = append(commands[slot], cmd)
+			cIndexes[slot] = append(cIndexes[slot], i)
+		}
+		for slot := range slots {
+			commands[slot] = append(commands[slot], cmds.ExecCmd)
+		}
 	}
 
-	concurrency := len(slots)
-	if concurrency > c.cpus {
-		concurrency = c.cpus
-	}
-
-	var wg sync.WaitGroup
-	wg.Add(len(commands))
-
-	ch := make(chan uint16, len(commands))
-	for slot := range commands {
-		ch <- slot
-	}
-	close(ch)
-
-	for i := 1; i < concurrency; i++ {
-		go func() {
-			for slot := range ch {
-				c.doMulti(ctx, slot, commands[slot], cIndexes[slot], results)
-				wg.Done()
-			}
-		}()
-	}
-	for slot := range ch {
+	parallelKeys(commands, func(slot uint16) {
 		c.doMulti(ctx, slot, commands[slot], cIndexes[slot], results)
-		wg.Done()
-	}
-	wg.Wait()
+	})
+
 	for i, cmd := range multi {
 		if results[i].NonRedisError() == nil {
 			cmds.Put(cmd.CommandSlice())
@@ -370,13 +332,23 @@ func (c *clusterClient) DoMulti(ctx context.Context, multi ...cmds.Completed) (r
 	return results
 }
 
+func fillErrs(idx []int, results []RedisResult, err error) {
+	if idx == nil {
+		for i := range results {
+			results[i] = newErrResult(err)
+		}
+	} else {
+		for _, i := range idx {
+			results[i] = newErrResult(err)
+		}
+	}
+}
+
 func (c *clusterClient) doMulti(ctx context.Context, slot uint16, multi []cmds.Completed, idx []int, results []RedisResult) {
 retry:
 	cc, err := c.pick(slot)
 	if err != nil {
-		for _, i := range idx {
-			results[i] = newErrResult(err)
-		}
+		fillErrs(idx, results, err)
 		return
 	}
 	resps := cc.DoMulti(ctx, multi...)
@@ -398,13 +370,17 @@ process:
 	}
 	msgs, err := resps[len(resps)-1].ToArray()
 	if err != nil {
-		for _, i := range idx {
-			results[i] = newErrResult(err)
-		}
+		fillErrs(idx, results, err)
 		return
 	}
-	for i, msg := range msgs {
-		results[idx[i]] = newResult(msg, nil)
+	if idx == nil {
+		for i, msg := range msgs {
+			results[i] = newResult(msg, nil)
+		}
+	} else {
+		for i, msg := range msgs {
+			results[idx[i]] = newResult(msg, nil)
+		}
 	}
 }
 
@@ -445,14 +421,12 @@ func (c *clusterClient) doMultiCache(ctx context.Context, slot uint16, multi []C
 retry:
 	cc, err := c.pick(slot)
 	if err != nil {
-		for _, i := range idx {
-			results[i] = newErrResult(err)
-		}
+		fillErrs(idx, results, err)
 		return
 	}
 	resps := cc.DoMultiCache(ctx, multi...)
 process:
-	for i, resp := range resps {
+	for _, resp := range resps {
 		switch addr, mode := c.shouldRefreshRetry(resp.Error(), ctx); mode {
 		case RedirectMove:
 			resps = c.redirectOrNew(addr).DoMultiCache(ctx, multi...)
@@ -480,7 +454,13 @@ process:
 				goto retry
 			}
 		}
-		results[idx[i]] = resp
+	}
+	if idx == nil {
+		copy(results, resps)
+	} else {
+		for i, resp := range resps {
+			results[idx[i]] = resp
+		}
 	}
 }
 
@@ -488,64 +468,33 @@ func (c *clusterClient) DoMultiCache(ctx context.Context, multi ...CacheableTTL)
 	if len(multi) == 0 {
 		return nil
 	}
+	results = make([]RedisResult, len(multi))
 	slots := make(map[uint16]int, 16)
 	for _, cmd := range multi {
 		slots[cmd.Cmd.Slot()]++
 	}
-	results = make([]RedisResult, len(multi))
-	if len(slots) == 1 {
-		cIndexes := make([]int, len(multi))
-		for i := range multi {
-			cIndexes[i] = i
-		}
-		c.doMultiCache(ctx, multi[0].Cmd.Slot(), multi, cIndexes, results)
-		for i, cmd := range multi {
-			if results[i].NonRedisError() == nil {
-				cmds.Put(cmd.Cmd.CommandSlice())
-			}
-		}
-		return results
-	}
-
 	commands := make(map[uint16][]CacheableTTL, len(slots))
 	cIndexes := make(map[uint16][]int, len(slots))
-	for slot, count := range slots {
-		cIndexes[slot] = make([]int, 0, count)
-		commands[slot] = make([]CacheableTTL, 0, count)
-	}
-	for i, cmd := range multi {
-		slot := cmd.Cmd.Slot()
-		commands[slot] = append(commands[slot], cmd)
-		cIndexes[slot] = append(cIndexes[slot], i)
+	if len(slots) == 1 {
+		for slot := range slots {
+			commands[slot] = multi
+		}
+	} else {
+		for slot, count := range slots {
+			cIndexes[slot] = make([]int, 0, count)
+			commands[slot] = make([]CacheableTTL, 0, count)
+		}
+		for i, cmd := range multi {
+			slot := cmd.Cmd.Slot()
+			commands[slot] = append(commands[slot], cmd)
+			cIndexes[slot] = append(cIndexes[slot], i)
+		}
 	}
 
-	concurrency := len(slots)
-	if concurrency > c.cpus {
-		concurrency = c.cpus
-	}
-
-	var wg sync.WaitGroup
-	wg.Add(len(commands))
-
-	ch := make(chan uint16, len(commands))
-	for slot := range commands {
-		ch <- slot
-	}
-	close(ch)
-
-	for i := 1; i < concurrency; i++ {
-		go func() {
-			for slot := range ch {
-				c.doMultiCache(ctx, slot, commands[slot], cIndexes[slot], results)
-				wg.Done()
-			}
-		}()
-	}
-	for slot := range ch {
+	parallelKeys(commands, func(slot uint16) {
 		c.doMultiCache(ctx, slot, commands[slot], cIndexes[slot], results)
-		wg.Done()
-	}
-	wg.Wait()
+	})
+
 	for i, cmd := range multi {
 		if results[i].NonRedisError() == nil {
 			cmds.Put(cmd.Cmd.CommandSlice())
