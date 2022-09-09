@@ -24,6 +24,10 @@ const (
 	DefaultDialTimeout = 5 * time.Second
 	// DefaultTCPKeepAlive is the default value of ClientOption.Dialer.KeepAlive
 	DefaultTCPKeepAlive = 1 * time.Second
+	// DefaultReadBuffer is the default value of bufio.NewReaderSize for each connection, which is 0.5MiB
+	DefaultReadBuffer = 1 << 19
+	// DefaultWriteBuffer is the default value of bufio.NewWriterSize for each connection, which is 0.5MiB
+	DefaultWriteBuffer = 1 << 19
 )
 
 var (
@@ -66,11 +70,16 @@ type ClientOption struct {
 	// The default is DefaultCacheBytes.
 	CacheSizeEachConn int
 
-	// RingScaleEachConn set the size of the ring buffer in each connection to (2 ^ RingScaleEachConn).
+	// RingScaleEachConn sets the size of the ring buffer in each connection to (2 ^ RingScaleEachConn).
 	// The default is RingScaleEachConn, which results into having a ring of size 2^10 for each connection.
 	// Reduce this value can reduce the memory consumption of each connection at the cost of potential throughput degradation.
 	// Values smaller than 8 is typically not recommended.
 	RingScaleEachConn int
+
+	// ReadBufferEachConn is the size of the bufio.NewReaderSize for each connection, default to DefaultReadBuffer (0.5 MiB).
+	ReadBufferEachConn int
+	// WriteBufferEachConn is the size of the bufio.NewWriterSize for each connection, default to DefaultWriteBuffer (0.5 MiB).
+	WriteBufferEachConn int
 
 	// BlockingPoolSize is the size of the connection pool shared by blocking commands (ex BLPOP, XREAD with BLOCK).
 	// The default is DefaultPoolSize.
@@ -209,6 +218,12 @@ type CacheableTTL struct {
 // It will first try to connect as cluster client. If the len(ClientOption.InitAddress) == 1 and
 // the address does not enable cluster mode, the NewClient() will use single client instead.
 func NewClient(option ClientOption) (client Client, err error) {
+	if option.ReadBufferEachConn <= 0 {
+		option.ReadBufferEachConn = DefaultReadBuffer
+	}
+	if option.WriteBufferEachConn <= 0 {
+		option.WriteBufferEachConn = DefaultWriteBuffer
+	}
 	if option.CacheSizeEachConn <= 0 {
 		option.CacheSizeEachConn = DefaultCacheBytes
 	}

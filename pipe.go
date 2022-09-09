@@ -62,8 +62,8 @@ func newPipe(conn net.Conn, option *ClientOption) (p *pipe, err error) {
 	p = &pipe{
 		conn:  conn,
 		queue: newRing(option.RingScaleEachConn),
-		r:     bufio.NewReader(conn),
-		w:     bufio.NewWriter(conn),
+		r:     bufio.NewReaderSize(conn, option.ReadBufferEachConn),
+		w:     bufio.NewWriterSize(conn, option.WriteBufferEachConn),
 
 		nsubs: newSubs(),
 		psubs: newSubs(),
