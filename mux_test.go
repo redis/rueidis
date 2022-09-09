@@ -42,7 +42,7 @@ func TestNewMuxDailErr(t *testing.T) {
 	if c != 1 {
 		t.Fatalf("dialFn not called")
 	}
-	if w := m.pipe(); w != m.dead { // c = 2
+	if w := m.pipe(0); w != m.dead { // c = 2
 		t.Fatalf("unexpected wire %v", w)
 	}
 	if err := m.Dial(); err != e { // c = 3

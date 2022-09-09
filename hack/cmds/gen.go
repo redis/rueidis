@@ -628,7 +628,12 @@ func printBuilder(w io.Writer, parent, next goStruct) {
 
 	if len(next.BuildDef.Parameters) == 1 && next.Variadic {
 		if next.BuildDef.Parameters[0].Type == "key" {
-			fmt.Fprintf(w, "\tif c.ks != NoSlot {\n")
+			fmt.Fprintf(w, "\tif c.ks&NoSlot == NoSlot {\n")
+			fmt.Fprintf(w, "\t\tfor _, k := range %s {\n", toGoName(next.BuildDef.Parameters[0].Name))
+			fmt.Fprintf(w, "\t\t\tc.ks = NoSlot | slot(k)\n")
+			fmt.Fprintf(w, "\t\t\tbreak\n")
+			fmt.Fprintf(w, "\t\t}\n")
+			fmt.Fprintf(w, "\t} else {\n")
 			fmt.Fprintf(w, "\t\tfor _, k := range %s {\n", toGoName(next.BuildDef.Parameters[0].Name))
 			fmt.Fprintf(w, "\t\t\tc.ks = check(c.ks, slot(k))\n")
 			fmt.Fprintf(w, "\t\t}\n")
@@ -640,7 +645,9 @@ func printBuilder(w io.Writer, parent, next goStruct) {
 		} else {
 			for _, arg := range next.BuildDef.Parameters {
 				if arg.Type == "key" {
-					fmt.Fprintf(w, "\tif c.ks != NoSlot {\n")
+					fmt.Fprintf(w, "\tif c.ks&NoSlot == NoSlot {\n")
+					fmt.Fprintf(w, "\t\tc.ks = NoSlot | slot(%s)\n", toGoName(arg.Name))
+					fmt.Fprintf(w, "\t} else {\n")
 					fmt.Fprintf(w, "\t\tc.ks = check(c.ks, slot(%s))\n", toGoName(arg.Name))
 					fmt.Fprintf(w, "\t}\n")
 				}

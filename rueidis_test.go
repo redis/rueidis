@@ -216,6 +216,17 @@ func TestTLSClient(t *testing.T) {
 	<-done
 }
 
+func TestSingleClientMultiplex(t *testing.T) {
+	option := ClientOption{}
+	if v := singleClientMultiplex(option.PipelineMultiplex); v != 2 {
+		t.Fatalf("unexpected value %v", v)
+	}
+	option.PipelineMultiplex = -1
+	if v := singleClientMultiplex(option.PipelineMultiplex); v != 0 {
+		t.Fatalf("unexpected value %v", v)
+	}
+}
+
 func ExampleIsRedisNil() {
 	client, err := NewClient(ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
 	if err != nil {

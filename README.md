@@ -53,7 +53,7 @@ func main() {
 
 ## Auto Pipeline
 
-All non-blocking commands sending to a single redis node are automatically pipelined through one tcp connection,
+All non-blocking commands sending to a single redis node are automatically pipelined through connections,
 which reduces the overall round trips and system calls, and gets higher throughput.
 
 ### Benchmark comparison with go-redis v8.11.4
