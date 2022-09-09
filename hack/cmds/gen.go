@@ -380,20 +380,34 @@ func tests(f io.Writer, structs map[string]goStruct) {
 
 	fmt.Fprintf(f, "import \"testing\"\n\n")
 
-	fmt.Fprintf(f, "var s = NewBuilder(InitSlot)\n\n")
+	mod := 100
 
 	for i, p := range pathes {
-		if i%100 == 0 {
-			fmt.Fprintf(f, "func TestCommand_%d(t *testing.T) {\n", i/100)
+		if i%mod == 0 {
+			fmt.Fprintf(f, "func tc%d(s Builder, t *testing.T) {\n", i/mod)
 		}
 		printPath(f, "s", p, "Build")
 		if within(p[0], cacheableCMDs) {
 			printPath(f, "s", p, "Cache")
 		}
-		if i%100 == 99 || i == len(pathes)-1 {
+		if i%mod == mod-1 || i == len(pathes)-1 {
 			fmt.Fprintf(f, "}\n\n")
 		}
 	}
+
+	fmt.Fprintf(f, "func TestCommand_InitSlot(t *testing.T) {\n")
+	fmt.Fprintf(f, "\tvar s = NewBuilder(InitSlot)\n")
+	for i := 0; i <= len(pathes)/mod; i++ {
+		fmt.Fprintf(f, "\tt.Run(\"%d\", func(t *testing.T) { tc%d(s, t) })\n", i, i)
+	}
+	fmt.Fprintf(f, "}\n\n")
+
+	fmt.Fprintf(f, "func TestCommand_NoSlot(t *testing.T) {\n")
+	fmt.Fprintf(f, "\tvar s = NewBuilder(NoSlot)\n")
+	for i := 0; i <= len(pathes)/mod; i++ {
+		fmt.Fprintf(f, "\tt.Run(\"%d\", func(t *testing.T) { tc%d(s, t) })\n", i, i)
+	}
+	fmt.Fprintf(f, "}\n\n")
 
 }
 
