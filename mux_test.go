@@ -4,8 +4,10 @@ import (
 	"bufio"
 	"context"
 	"errors"
+	"fmt"
 	"net"
 	"runtime"
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -15,9 +17,13 @@ import (
 )
 
 func setupMux(wires []*mockWire) (conn *mux, checkClean func(t *testing.T)) {
+	return setupMuxWithOption(wires, &ClientOption{})
+}
+
+func setupMuxWithOption(wires []*mockWire, option *ClientOption) (conn *mux, checkClean func(t *testing.T)) {
 	var mu sync.Mutex
 	var count = -1
-	return newMux("", &ClientOption{}, (*mockWire)(nil), (*mockWire)(nil), func() wire {
+	return newMux("", option, (*mockWire)(nil), (*mockWire)(nil), func() wire {
 			mu.Lock()
 			defer mu.Unlock()
 			count++
@@ -372,6 +378,85 @@ func TestMuxDelegation(t *testing.T) {
 			t.Fatalf("unexpected error %v", err)
 		} else if val != "MULTI_COMMANDS_RESPONSE" {
 			t.Fatalf("unexpected response %v", val)
+		}
+	})
+
+	t.Run("wire do multi cache multiple slots", func(t *testing.T) {
+		multiplex := 1
+		wires := make([]*mockWire, 1<<multiplex)
+		for i := range wires {
+			idx := uint16(i)
+			wires[i] = &mockWire{
+				DoMultiCacheFn: func(multi ...CacheableTTL) []RedisResult {
+					result := make([]RedisResult, len(multi))
+					for j, cmd := range multi {
+						if s := cmd.Cmd.Slot() & uint16(len(wires)-1); s != idx {
+							result[j] = newErrResult(errors.New(fmt.Sprintf("wrong slot %v %v", s, idx)))
+						} else {
+							result[j] = newResult(RedisMessage{typ: '+', string: cmd.Cmd.Commands()[1]}, nil)
+						}
+					}
+					return result
+				},
+			}
+		}
+		m, checkClean := setupMuxWithOption(wires, &ClientOption{PipelineMultiplex: multiplex})
+		defer checkClean(t)
+		defer m.Close()
+
+		for i := range wires {
+			m._pipe(uint16(i))
+		}
+
+		builder := cmds.NewBuilder(cmds.NoSlot)
+
+		for count := 1; count <= 3; count++ {
+			commands := make([]CacheableTTL, count)
+			for c := 0; c < count; c++ {
+				commands[c] = CT(builder.Get().Key(strconv.Itoa(c)).Cache(), time.Second)
+			}
+			for i, resp := range m.DoMultiCache(context.Background(), commands...) {
+				if v, err := resp.ToString(); err != nil || v != strconv.Itoa(i) {
+					t.Fatalf("unexpected resp %v %v", v, err)
+				}
+			}
+		}
+	})
+
+	t.Run("wire do multi cache multiple slots fail", func(t *testing.T) {
+		multiplex := 1
+		wires := make([]*mockWire, 1<<multiplex)
+		for i := range wires {
+			idx := uint16(i)
+			wires[i] = &mockWire{
+				DoMultiCacheFn: func(multi ...CacheableTTL) []RedisResult {
+					for _, cmd := range multi {
+						if s := cmd.Cmd.Slot() & uint16(len(wires)-1); s != idx {
+							return []RedisResult{newErrResult(errors.New(fmt.Sprintf("wrong slot %v %v", s, idx)))}
+						}
+					}
+					return []RedisResult{newErrResult(context.DeadlineExceeded)}
+				},
+				ErrorFn: func() error {
+					return context.DeadlineExceeded
+				},
+			}
+		}
+		m, checkClean := setupMuxWithOption(wires, &ClientOption{PipelineMultiplex: multiplex})
+		defer checkClean(t)
+		defer m.Close()
+
+		for i := range wires {
+			m._pipe(uint16(i))
+		}
+
+		builder := cmds.NewBuilder(cmds.NoSlot)
+		commands := make([]CacheableTTL, 4)
+		for c := 0; c < len(commands); c++ {
+			commands[c] = CT(builder.Get().Key(strconv.Itoa(c)).Cache(), time.Second)
+		}
+		if err := m.DoMultiCache(context.Background(), commands...)[0].Error(); !errors.Is(err, context.DeadlineExceeded) {
+			t.Fatalf("unexpected error %v", err)
 		}
 	})
 
