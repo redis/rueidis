@@ -61,23 +61,26 @@ func clusterMGetCache(cc *clusterClient, ctx context.Context, ttl time.Duration,
 		concurrency = cc.cpus
 	}
 
-	for i := 0; i < concurrency; i++ {
-		go func() {
-			for cmd := range ch {
-				arr, err2 := cc.doCache(ctx, cmd, ttl).ToArray()
-				mu.Lock()
-				if err2 != nil {
-					err = err2
-				} else {
-					for i, resp := range arr {
-						ret[cmd.MGetCacheKey(i)] = resp
-					}
+	consume := func() {
+		for cmd := range ch {
+			arr, err2 := cc.doCache(ctx, cmd, ttl).ToArray()
+			mu.Lock()
+			if err2 != nil {
+				err = err2
+			} else {
+				for i, resp := range arr {
+					ret[cmd.MGetCacheKey(i)] = resp
 				}
-				mu.Unlock()
-				wg.Done()
 			}
-		}()
+			mu.Unlock()
+			wg.Done()
+		}
 	}
+
+	for i := 1; i < concurrency; i++ {
+		go consume()
+	}
+	consume()
 	wg.Wait()
 	if err != nil {
 		return nil, err

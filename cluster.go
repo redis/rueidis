@@ -349,13 +349,17 @@ func (c *clusterClient) DoMulti(ctx context.Context, multi ...cmds.Completed) (r
 	}
 	close(ch)
 
-	for i := 0; i < concurrency; i++ {
+	for i := 1; i < concurrency; i++ {
 		go func() {
 			for slot := range ch {
 				c.doMulti(ctx, slot, commands[slot], cIndexes[slot], results)
 				wg.Done()
 			}
 		}()
+	}
+	for slot := range ch {
+		c.doMulti(ctx, slot, commands[slot], cIndexes[slot], results)
+		wg.Done()
 	}
 	wg.Wait()
 	for i, cmd := range multi {
@@ -476,7 +480,7 @@ process:
 				goto retry
 			}
 		}
-		results[idx[i]] = newResult(resp.ToMessage())
+		results[idx[i]] = resp
 	}
 }
 
@@ -529,13 +533,17 @@ func (c *clusterClient) DoMultiCache(ctx context.Context, multi ...CacheableTTL)
 	}
 	close(ch)
 
-	for i := 0; i < concurrency; i++ {
+	for i := 1; i < concurrency; i++ {
 		go func() {
 			for slot := range ch {
 				c.doMultiCache(ctx, slot, commands[slot], cIndexes[slot], results)
 				wg.Done()
 			}
 		}()
+	}
+	for slot := range ch {
+		c.doMultiCache(ctx, slot, commands[slot], cIndexes[slot], results)
+		wg.Done()
 	}
 	wg.Wait()
 	for i, cmd := range multi {
