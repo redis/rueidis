@@ -98,13 +98,10 @@ func TestNewMux(t *testing.T) {
 	})
 }
 
-func TestMuxIs(t *testing.T) {
+func TestMuxAddr(t *testing.T) {
 	m := makeMux("dst1", &ClientOption{}, nil)
-	if m.Is("dst1") != true {
-		t.Fatalf("unexpected m.Is == false")
-	}
-	if m.Is("") == true {
-		t.Fatalf("unexpected m.Is == true")
+	if m.Addr() != "dst1" {
+		t.Fatalf("unexpected m.Addr != dst1")
 	}
 }
 

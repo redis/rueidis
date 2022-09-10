@@ -230,14 +230,14 @@ func (c *clusterClient) redirectOrNew(addr string) (p conn) {
 	c.mu.RLock()
 	p = c.conns[addr]
 	c.mu.RUnlock()
-	if p != nil && !p.Is(addr) {
+	if p != nil && p.Addr() != addr {
 		return p
 	}
 	c.mu.Lock()
 	if p = c.conns[addr]; p == nil {
 		p = c.connFn(addr, c.opt)
 		c.conns[addr] = p
-	} else if p.Is(addr) {
+	} else if p.Addr() == addr {
 		// try reconnection if the MOVED redirects to the same host,
 		// because the same hostname may actually be resolved into another destination
 		// depending on the fail-over implementation. ex: AWS MemoryDB's resize process.
@@ -531,6 +531,16 @@ func (c *clusterClient) Dedicated(fn func(DedicatedClient) error) (err error) {
 func (c *clusterClient) Dedicate() (DedicatedClient, func()) {
 	dcc := &dedicatedClusterClient{cmd: c.cmd, client: c, slot: cmds.NoSlot, retry: c.retry}
 	return dcc, dcc.release
+}
+
+func (c *clusterClient) Nodes() map[string]Client {
+	c.mu.RLock()
+	nodes := make(map[string]Client, len(c.conns))
+	for addr, conn := range c.conns {
+		nodes[addr] = newSingleClientWithConn(conn, c.cmd, c.retry)
+	}
+	c.mu.RUnlock()
+	return nodes
 }
 
 func (c *clusterClient) Close() {

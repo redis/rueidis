@@ -25,8 +25,11 @@ func newSingleClient(opt *ClientOption, prev conn, connFn connFn) (*singleClient
 	if err := conn.Dial(); err != nil {
 		return nil, err
 	}
+	return newSingleClientWithConn(conn, cmds.NewBuilder(cmds.NoSlot), !opt.DisableRetry), nil
+}
 
-	return &singleClient{cmd: cmds.NewBuilder(cmds.NoSlot), conn: conn, retry: !opt.DisableRetry}, nil
+func newSingleClientWithConn(conn conn, builder cmds.Builder, retry bool) *singleClient {
+	return &singleClient{cmd: builder, conn: conn, retry: retry}
 }
 
 func (c *singleClient) B() cmds.Builder {
@@ -125,6 +128,10 @@ func (c *singleClient) Dedicate() (DedicatedClient, func()) {
 	wire := c.conn.Acquire()
 	dsc := &dedicatedSingleClient{cmd: c.cmd, conn: c.conn, wire: wire, retry: c.retry}
 	return dsc, dsc.release
+}
+
+func (c *singleClient) Nodes() map[string]Client {
+	return map[string]Client{c.conn.Addr(): c}
 }
 
 func (c *singleClient) Close() {

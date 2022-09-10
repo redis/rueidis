@@ -454,6 +454,7 @@ func TestSentinelClientDelegate(t *testing.T) {
 		DoFn: func(cmd cmds.Completed) RedisResult {
 			return RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "master"}}}}
 		},
+		AddrFn: func() string { return ":1" },
 	}
 	client, err := newSentinelClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
 		if dst == ":0" {
@@ -468,6 +469,12 @@ func TestSentinelClientDelegate(t *testing.T) {
 		t.Fatalf("unexpected err %v", err)
 	}
 	defer client.Close()
+
+	t.Run("Nodes", func(t *testing.T) {
+		if nodes := client.Nodes(); len(nodes) != 1 || nodes[":1"] == nil {
+			t.Fatalf("unexpected nodes")
+		}
+	})
 
 	t.Run("Delegate Do", func(t *testing.T) {
 		c := client.B().Get().Key("Do").Build()

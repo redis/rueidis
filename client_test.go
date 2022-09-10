@@ -26,7 +26,7 @@ type mockConn struct {
 	AcquireFn      func() wire
 	StoreFn        func(w wire)
 	OverrideFn     func(c conn)
-	IsFn           func(addr string) bool
+	AddrFn         func() string
 
 	DoOverride      map[string]func(cmd cmds.Completed) RedisResult
 	DoCacheOverride map[string]func(cmd cmds.Cacheable, ttl time.Duration) RedisResult
@@ -149,11 +149,11 @@ func (m *mockConn) Close() {
 	}
 }
 
-func (m *mockConn) Is(addr string) bool {
-	if m.IsFn != nil {
-		return m.IsFn(addr)
+func (m *mockConn) Addr() string {
+	if m.AddrFn != nil {
+		return m.AddrFn()
 	}
-	return false
+	return ""
 }
 
 func TestNewSingleClientNoNode(t *testing.T) {
@@ -188,13 +188,21 @@ func TestNewSingleClientOverride(t *testing.T) {
 
 //gocyclo:ignore
 func TestSingleClient(t *testing.T) {
-	m := &mockConn{}
+	m := &mockConn{
+		AddrFn: func() string { return "myaddr" },
+	}
 	client, err := newSingleClient(&ClientOption{InitAddress: []string{""}}, m, func(dst string, opt *ClientOption) conn {
 		return m
 	})
 	if err != nil {
 		t.Fatalf("unexpected err %v", err)
 	}
+
+	t.Run("Nodes", func(t *testing.T) {
+		if nodes := client.Nodes(); len(nodes) != 1 || nodes["myaddr"] != client {
+			t.Fatalf("unexpected nodes")
+		}
+	})
 
 	t.Run("Delegate Do", func(t *testing.T) {
 		c := client.B().Get().Key("Do").Build()

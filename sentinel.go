@@ -151,6 +151,11 @@ func (c *sentinelClient) Dedicate() (DedicatedClient, func()) {
 	return dsc, dsc.release
 }
 
+func (c *sentinelClient) Nodes() map[string]Client {
+	conn := c.mConn.Load().(conn)
+	return map[string]Client{conn.Addr(): newSingleClientWithConn(conn, c.cmd, c.retry)}
+}
+
 func (c *sentinelClient) Close() {
 	atomic.StoreUint32(&c.stop, 1)
 	c.mu.Lock()

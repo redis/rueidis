@@ -170,6 +170,10 @@ func (c *client) Dedicate() (DedicatedClient, func()) {
 	return nil, nil
 }
 
+func (c *client) Nodes() map[string]Client {
+	return nil
+}
+
 func (c *client) Close() {
 	if c.CloseFn != nil {
 		c.CloseFn()

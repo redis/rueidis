@@ -170,6 +170,10 @@ type Client interface {
 	// and requires user to invoke cancel() manually to put connection back to the pool.
 	Dedicate() (client DedicatedClient, cancel func())
 
+	// Nodes returns each redis node this client known as rueidis.Client. This is useful if you want to
+	// send commands to some specific redis nodes in the cluster.
+	Nodes() map[string]Client
+
 	// Close will make further calls to the client be rejected with ErrClosing,
 	// and Close will wait until all pending calls finished.
 	Close()

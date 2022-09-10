@@ -33,7 +33,7 @@ type conn interface {
 	Override(conn)
 	Acquire() wire
 	Store(w wire)
-	Is(addr string) bool
+	Addr() string
 }
 
 var _ conn = (*mux)(nil)
@@ -86,11 +86,6 @@ func (m *mux) Override(cc conn) {
 	}
 }
 
-func (m *mux) pipe(i uint16) wire {
-	w, _ := m._pipe(i)
-	return w
-}
-
 func (m *mux) _pipe(i uint16) (w wire, err error) {
 	if w = m.wire[i].Load().(wire); w != m.init {
 		return w, nil
@@ -129,7 +124,12 @@ func (m *mux) _pipe(i uint16) (w wire, err error) {
 	return w, err
 }
 
-func (m *mux) Dial() error { // no retry
+func (m *mux) pipe(i uint16) wire {
+	w, _ := m._pipe(i)
+	return w // this should never be nil
+}
+
+func (m *mux) Dial() error {
 	_, err := m._pipe(0)
 	return err
 }
@@ -298,8 +298,8 @@ func (m *mux) Close() {
 	m.pool.Close()
 }
 
-func (m *mux) Is(addr string) bool {
-	return m.dst == addr
+func (m *mux) Addr() string {
+	return m.dst
 }
 
 func isBroken(err error, w wire) bool {

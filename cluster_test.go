@@ -211,6 +211,13 @@ func TestClusterClient(t *testing.T) {
 		t.Fatalf("unexpected err %v", err)
 	}
 
+	t.Run("Nodes", func(t *testing.T) {
+		nodes := client.Nodes()
+		if len(nodes) != 2 || nodes[":0"] == nil || nodes[":1"] == nil {
+			t.Fatalf("unexpected Nodes")
+		}
+	})
+
 	t.Run("Delegate Do with no slot", func(t *testing.T) {
 		c := client.B().Info().Build()
 		if v, err := client.Do(context.Background(), c).ToString(); err != nil || v != "Info" {
@@ -751,12 +758,9 @@ func TestClusterClientErr(t *testing.T) {
 				return newResult(RedisMessage{typ: '-', string: "MOVED 0 :0"}, nil)
 			}
 			return newResult(RedisMessage{typ: '+', string: "b"}, nil)
-		}, IsFn: func(addr string) bool {
-			is := addr == ":0"
-			if is {
-				atomic.AddInt64(&check, 1)
-			}
-			return is
+		}, AddrFn: func() string {
+			atomic.AddInt64(&check, 1)
+			return ":0"
 		}}
 
 		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
