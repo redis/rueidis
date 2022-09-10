@@ -5328,6 +5328,7 @@ var _ = Describe("Cache Commands", func() {
 
 	BeforeEach(func() {
 		Expect(adapter.FlushDB(ctx).Err()).NotTo(HaveOccurred())
+		Expect(adapter.FlushAll(ctx).Err()).NotTo(HaveOccurred())
 	})
 
 	Describe("keys", func() {

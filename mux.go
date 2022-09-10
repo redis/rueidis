@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/rueian/rueidis/internal/cmds"
+	"github.com/rueian/rueidis/internal/util"
 )
 
 type connFn func(dst string, opt *ClientOption) conn
@@ -248,7 +249,7 @@ func (m *mux) DoMultiCache(ctx context.Context, multi ...CacheableTTL) (results 
 	}
 
 	results = make([]RedisResult, len(multi))
-	parallelKeys(commands, func(slot uint16) {
+	util.ParallelKeys(commands, func(slot uint16) {
 		for i, r := range m.doMultiCache(ctx, slot, commands[slot]) {
 			results[cIndexes[slot][i]] = r
 		}

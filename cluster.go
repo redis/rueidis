@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/rueian/rueidis/internal/cmds"
+	"github.com/rueian/rueidis/internal/util"
 )
 
 // ErrNoSlot indicates that there is no redis node owns the key slot.
@@ -320,7 +321,7 @@ func (c *clusterClient) DoMulti(ctx context.Context, multi ...cmds.Completed) (r
 		}
 	}
 
-	parallelKeys(commands, func(slot uint16) {
+	util.ParallelKeys(commands, func(slot uint16) {
 		c.doMulti(ctx, slot, commands[slot], cIndexes[slot], results)
 	})
 
@@ -491,7 +492,7 @@ func (c *clusterClient) DoMultiCache(ctx context.Context, multi ...CacheableTTL)
 		}
 	}
 
-	parallelKeys(commands, func(slot uint16) {
+	util.ParallelKeys(commands, func(slot uint16) {
 		c.doMultiCache(ctx, slot, commands[slot], cIndexes[slot], results)
 	})
 

@@ -2,11 +2,11 @@ package rueidis
 
 import (
 	"context"
-	"runtime"
 	"sync"
 	"time"
 
 	"github.com/rueian/rueidis/internal/cmds"
+	"github.com/rueian/rueidis/internal/util"
 )
 
 // MGetCache is a helper that consults the client-side caches with multiple keys by grouping keys within same slot into MGETs
@@ -47,7 +47,7 @@ func clientMGetCache(client Client, ctx context.Context, ttl time.Duration, cmd 
 func clusterMGetCache(cc *clusterClient, ctx context.Context, ttl time.Duration, mgets map[uint16]cmds.Completed, keys []string) (ret map[string]RedisMessage, err error) {
 	var mu sync.Mutex
 	ret = make(map[string]RedisMessage, len(keys))
-	parallelVals(mgets, func(cmd cmds.Completed) {
+	util.ParallelVals(mgets, func(cmd cmds.Completed) {
 		c := cmds.Cacheable(cmd)
 		arr, err2 := cc.doCache(ctx, c, ttl).ToArray()
 		mu.Lock()
@@ -67,43 +67,4 @@ func clusterMGetCache(cc *clusterClient, ctx context.Context, ttl time.Duration,
 		cmds.Put(mget.CommandSlice())
 	}
 	return ret, nil
-}
-
-func parallelKeys[K comparable, V any](p map[K]V, fn func(k K)) {
-	ch := make(chan K, len(p))
-	for k := range p {
-		ch <- k
-	}
-	closeThenParallel(ch, fn)
-}
-
-func parallelVals[K comparable, V any](p map[K]V, fn func(k V)) {
-	ch := make(chan V, len(p))
-	for _, v := range p {
-		ch <- v
-	}
-	closeThenParallel(ch, fn)
-}
-
-func closeThenParallel[V any](ch chan V, fn func(k V)) {
-	close(ch)
-	concurrency := len(ch)
-	if cpus := runtime.NumCPU(); concurrency > cpus {
-		concurrency = cpus
-	}
-	wg := sync.WaitGroup{}
-	wg.Add(concurrency)
-	for i := 1; i < concurrency; i++ {
-		go func() {
-			for v := range ch {
-				fn(v)
-			}
-			wg.Done()
-		}()
-	}
-	for v := range ch {
-		fn(v)
-	}
-	wg.Done()
-	wg.Wait()
 }

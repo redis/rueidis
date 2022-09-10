@@ -32,10 +32,13 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/rueian/rueidis"
 	"github.com/rueian/rueidis/internal/cmds"
+	"github.com/rueian/rueidis/internal/util"
 )
 
 const KeepTTL = -1
@@ -445,9 +448,18 @@ func (c *Compat) ExpireLT(ctx context.Context, key string, seconds time.Duration
 }
 
 func (c *Compat) Keys(ctx context.Context, pattern string) *StringSliceCmd {
-	cmd := c.client.B().Keys().Pattern(pattern).Build()
-	resp := c.client.Do(ctx, cmd)
-	return newStringSliceCmd(resp)
+	var mu sync.Mutex
+	ret := &StringSliceCmd{}
+	ret.err = c.doPrimaries(ctx, func(c rueidis.Client) error {
+		res, err := c.Do(ctx, c.B().Keys().Pattern(pattern).Build()).AsStrSlice()
+		if err == nil {
+			mu.Lock()
+			ret.val = append(ret.val, res...)
+			mu.Unlock()
+		}
+		return err
+	})
+	return ret
 }
 
 func (c *Compat) Migrate(ctx context.Context, host string, port int64, key string, db int64, timeout time.Duration) *StatusCmd {
@@ -2023,27 +2035,27 @@ func (c *Compat) PFMerge(ctx context.Context, dest string, keys ...string) *Stat
 }
 
 func (c *Compat) BgRewriteAOF(ctx context.Context) *StatusCmd {
-	cmd := c.client.B().Bgrewriteaof().Build()
-	resp := c.client.Do(ctx, cmd)
-	return newStatusCmd(resp)
+	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+		return c.B().Bgrewriteaof().Build()
+	})
 }
 
 func (c *Compat) BgSave(ctx context.Context) *StatusCmd {
-	cmd := c.client.B().Bgsave().Build()
-	resp := c.client.Do(ctx, cmd)
-	return newStatusCmd(resp)
+	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+		return c.B().Bgsave().Build()
+	})
 }
 
 func (c *Compat) ClientKill(ctx context.Context, ipPort string) *StatusCmd {
-	cmd := c.client.B().ClientKill().IpPort(ipPort).Build()
-	resp := c.client.Do(ctx, cmd)
-	return newStatusCmd(resp)
+	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+		return c.B().ClientKill().IpPort(ipPort).Build()
+	})
 }
 
 func (c *Compat) ClientKillByFilter(ctx context.Context, keys ...string) *IntCmd {
-	cmd := c.client.B().Arbitrary("CLIENT", "KILL").Args(keys...).Build()
-	resp := c.client.Do(ctx, cmd)
-	return newIntCmd(resp)
+	return c.doIntCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+		return c.B().Arbitrary("CLIENT", "KILL").Args(keys...).Build()
+	})
 }
 
 func (c *Compat) ClientList(ctx context.Context) *StringCmd {
@@ -2053,15 +2065,33 @@ func (c *Compat) ClientList(ctx context.Context) *StringCmd {
 }
 
 func (c *Compat) ClientPause(ctx context.Context, dur time.Duration) *BoolCmd {
-	cmd := c.client.B().ClientPause().Timeout(formatSec(dur)).Build()
-	resp := c.client.Do(ctx, cmd)
-	return newBoolCmd(resp)
+	var mu sync.Mutex
+	ret := &BoolCmd{}
+	ret.err = c.doPrimaries(ctx, func(c rueidis.Client) error {
+		res, err := c.Do(ctx, c.B().ClientPause().Timeout(formatSec(dur)).Build()).ToString()
+		if err == nil {
+			mu.Lock()
+			ret.val = res == "OK"
+			mu.Unlock()
+		}
+		return err
+	})
+	return ret
 }
 
 func (c *Compat) ClientUnpause(ctx context.Context) *BoolCmd {
-	cmd := c.client.B().ClientUnpause().Build()
-	resp := c.client.Do(ctx, cmd)
-	return newBoolCmd(resp)
+	var mu sync.Mutex
+	ret := &BoolCmd{}
+	ret.err = c.doPrimaries(ctx, func(c rueidis.Client) error {
+		res, err := c.Do(ctx, c.B().ClientUnpause().Build()).ToString()
+		if err == nil {
+			mu.Lock()
+			ret.val = res == "OK"
+			mu.Unlock()
+		}
+		return err
+	})
+	return ret
 }
 
 func (c *Compat) ClientID(ctx context.Context) *IntCmd {
@@ -2077,51 +2107,51 @@ func (c *Compat) ConfigGet(ctx context.Context, parameter string) *SliceCmd {
 }
 
 func (c *Compat) ConfigResetStat(ctx context.Context) *StatusCmd {
-	cmd := c.client.B().ConfigResetstat().Build()
-	resp := c.client.Do(ctx, cmd)
-	return newStatusCmd(resp)
+	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+		return c.B().ConfigResetstat().Build()
+	})
 }
 
 func (c *Compat) ConfigSet(ctx context.Context, parameter, value string) *StatusCmd {
-	cmd := c.client.B().ConfigSet().ParameterValue().ParameterValue(parameter, value).Build()
-	resp := c.client.Do(ctx, cmd)
-	return newStatusCmd(resp)
+	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+		return c.B().ConfigSet().ParameterValue().ParameterValue(parameter, value).Build()
+	})
 }
 
 func (c *Compat) ConfigRewrite(ctx context.Context) *StatusCmd {
-	cmd := c.client.B().ConfigRewrite().Build()
-	resp := c.client.Do(ctx, cmd)
-	return newStatusCmd(resp)
+	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+		return c.B().ConfigRewrite().Build()
+	})
 }
 
 func (c *Compat) DBSize(ctx context.Context) *IntCmd {
-	cmd := c.client.B().Dbsize().Build()
-	resp := c.client.Do(ctx, cmd)
-	return newIntCmd(resp)
+	return c.doIntCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+		return c.B().Dbsize().Build()
+	})
 }
 
 func (c *Compat) FlushAll(ctx context.Context) *StatusCmd {
-	cmd := c.client.B().Flushall().Build()
-	resp := c.client.Do(ctx, cmd)
-	return newStatusCmd(resp)
+	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+		return c.B().Flushall().Build()
+	})
 }
 
 func (c *Compat) FlushAllAsync(ctx context.Context) *StatusCmd {
-	cmd := c.client.B().Flushall().Async().Build()
-	resp := c.client.Do(ctx, cmd)
-	return newStatusCmd(resp)
+	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+		return c.B().Flushall().Async().Build()
+	})
 }
 
 func (c *Compat) FlushDB(ctx context.Context) *StatusCmd {
-	cmd := c.client.B().Flushdb().Build()
-	resp := c.client.Do(ctx, cmd)
-	return newStatusCmd(resp)
+	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+		return c.B().Flushdb().Build()
+	})
 }
 
 func (c *Compat) FlushDBAsync(ctx context.Context) *StatusCmd {
-	cmd := c.client.B().Flushdb().Async().Build()
-	resp := c.client.Do(ctx, cmd)
-	return newStatusCmd(resp)
+	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+		return c.B().Flushdb().Async().Build()
+	})
 }
 
 func (c *Compat) Info(ctx context.Context, section ...string) *StringCmd {
@@ -2137,27 +2167,27 @@ func (c *Compat) LastSave(ctx context.Context) *IntCmd {
 }
 
 func (c *Compat) Save(ctx context.Context) *StatusCmd {
-	cmd := c.client.B().Save().Build()
-	resp := c.client.Do(ctx, cmd)
-	return newStatusCmd(resp)
+	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+		return c.B().Save().Build()
+	})
 }
 
 func (c *Compat) Shutdown(ctx context.Context) *StatusCmd {
-	cmd := c.client.B().Shutdown().Build()
-	resp := c.client.Do(ctx, cmd)
-	return newStatusCmd(resp)
+	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+		return c.B().Shutdown().Build()
+	})
 }
 
 func (c *Compat) ShutdownSave(ctx context.Context) *StatusCmd {
-	cmd := c.client.B().Shutdown().Save().Build()
-	resp := c.client.Do(ctx, cmd)
-	return newStatusCmd(resp)
+	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+		return c.B().Shutdown().Save().Build()
+	})
 }
 
 func (c *Compat) ShutdownNoSave(ctx context.Context) *StatusCmd {
-	cmd := c.client.B().Shutdown().Nosave().Build()
-	resp := c.client.Do(ctx, cmd)
-	return newStatusCmd(resp)
+	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+		return c.B().Shutdown().Nosave().Build()
+	})
 }
 
 func (c *Compat) SlaveOf(ctx context.Context, host string, port string) *StatusCmd {
@@ -2218,27 +2248,52 @@ func (c *Compat) EvalSha(ctx context.Context, sha1 string, keys []string, args .
 }
 
 func (c *Compat) ScriptExists(ctx context.Context, hashes ...string) *BoolSliceCmd {
-	cmd := c.client.B().ScriptExists().Sha1(hashes...).Build()
-	resp := c.client.Do(ctx, cmd)
-	return newBoolSliceCmd(resp)
+	var mu sync.Mutex
+	ret := &BoolSliceCmd{val: make([]bool, len(hashes))}
+	for i := range hashes {
+		ret.val[i] = true
+	}
+	ret.err = c.doPrimaries(ctx, func(c rueidis.Client) error {
+		res, err := c.Do(ctx, c.B().ScriptExists().Sha1(hashes...).Build()).ToArray()
+		if err == nil {
+			mu.Lock()
+			for i, v := range res {
+				if b, _ := v.ToInt64(); b == 0 {
+					ret.val[i] = false
+				}
+			}
+			mu.Unlock()
+		}
+		return err
+	})
+	return ret
 }
 
 func (c *Compat) ScriptFlush(ctx context.Context) *StatusCmd {
-	cmd := c.client.B().ScriptFlush().Build()
-	resp := c.client.Do(ctx, cmd)
-	return newStatusCmd(resp)
+	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+		return c.B().ScriptFlush().Build()
+	})
 }
 
 func (c *Compat) ScriptKill(ctx context.Context) *StatusCmd {
-	cmd := c.client.B().ScriptKill().Build()
-	resp := c.client.Do(ctx, cmd)
-	return newStatusCmd(resp)
+	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+		return c.B().ScriptKill().Build()
+	})
 }
 
 func (c *Compat) ScriptLoad(ctx context.Context, script string) *StringCmd {
-	cmd := c.client.B().ScriptLoad().Script(script).Build()
-	resp := c.client.Do(ctx, cmd)
-	return newStringCmd(resp)
+	var mu sync.Mutex
+	ret := &StringCmd{}
+	ret.err = c.doPrimaries(ctx, func(c rueidis.Client) error {
+		res, err := c.Do(ctx, c.B().ScriptLoad().Script(script).Build()).ToString()
+		if err == nil {
+			mu.Lock()
+			ret.val = res
+			mu.Unlock()
+		}
+		return err
+	})
+	return ret
 }
 
 func (c *Compat) Publish(ctx context.Context, channel string, message interface{}) *IntCmd {
@@ -2296,15 +2351,15 @@ func (c *Compat) ClusterReplicate(ctx context.Context, nodeID string) *StatusCmd
 }
 
 func (c *Compat) ClusterResetSoft(ctx context.Context) *StatusCmd {
-	cmd := c.client.B().ClusterReset().Soft().Build()
-	resp := c.client.Do(ctx, cmd)
-	return newStatusCmd(resp)
+	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+		return c.B().ClusterReset().Soft().Build()
+	})
 }
 
 func (c *Compat) ClusterResetHard(ctx context.Context) *StatusCmd {
-	cmd := c.client.B().ClusterReset().Hard().Build()
-	resp := c.client.Do(ctx, cmd)
-	return newStatusCmd(resp)
+	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+		return c.B().ClusterReset().Hard().Build()
+	})
 }
 
 func (c *Compat) ClusterInfo(ctx context.Context) *StringCmd {
@@ -2350,9 +2405,9 @@ func (c *Compat) ClusterDelSlotsRange(ctx context.Context, min, max int64) *Stat
 }
 
 func (c *Compat) ClusterSaveConfig(ctx context.Context) *StatusCmd {
-	cmd := c.client.B().ClusterSaveconfig().Build()
-	resp := c.client.Do(ctx, cmd)
-	return newStatusCmd(resp)
+	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+		return c.B().ClusterSaveconfig().Build()
+	})
 }
 
 func (c *Compat) ClusterSlaves(ctx context.Context, nodeID string) *StringSliceCmd {
@@ -2483,6 +2538,55 @@ func (c *Compat) GeoHash(ctx context.Context, key string, members ...string) *St
 	cmd := c.client.B().Geohash().Key(key).Member(members...).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) doPrimaries(ctx context.Context, fn func(c rueidis.Client) error) error {
+	var firsterr atomic.Value
+	util.ParallelVals(c.client.Nodes(), func(client rueidis.Client) {
+		msgs, err := client.Do(ctx, client.B().Role().Build()).ToArray()
+		if err == nil {
+			if role, _ := msgs[0].ToString(); role == "master" {
+				err = fn(client)
+			}
+		}
+		if err != nil {
+			firsterr.CompareAndSwap(nil, err)
+		}
+	})
+	if v := firsterr.Load(); v != nil {
+		return v.(error)
+	}
+	return nil
+}
+
+func (c *Compat) doStatusCmdPrimaries(ctx context.Context, fn func(c rueidis.Client) cmds.Completed) *StatusCmd {
+	var mu sync.Mutex
+	ret := &StatusCmd{}
+	ret.err = c.doPrimaries(ctx, func(c rueidis.Client) error {
+		res, err := c.Do(ctx, fn(c)).ToString()
+		if err == nil {
+			mu.Lock()
+			ret.val = res
+			mu.Unlock()
+		}
+		return err
+	})
+	return ret
+}
+
+func (c *Compat) doIntCmdPrimaries(ctx context.Context, fn func(c rueidis.Client) cmds.Completed) *IntCmd {
+	var mu sync.Mutex
+	ret := &IntCmd{}
+	ret.err = c.doPrimaries(ctx, func(c rueidis.Client) error {
+		res, err := c.Do(ctx, fn(c)).ToInt64()
+		if err == nil {
+			mu.Lock()
+			ret.val += res
+			mu.Unlock()
+		}
+		return err
+	})
+	return ret
 }
 
 func (c CacheCompat) BitCount(ctx context.Context, key string, bitCount *BitCount) *IntCmd {
