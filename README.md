@@ -56,18 +56,20 @@ func main() {
 All non-blocking commands sending to a single redis node are automatically pipelined through connections,
 which reduces the overall round trips and system calls, and gets higher throughput.
 
-### Benchmark comparison with go-redis v8.11.4
+### Benchmark comparison with go-redis v9
 
-Rueidis has higher throughput than go-redis v8.11.4 across 1, 8, and 64 parallelism settings.
+Rueidis has higher throughput than go-redis v9 across 1, 8, and 64 parallelism settings.
 
-It is even able to achieve ~14x throughput over go-redis in a local benchmark. (see `parallelism(64)-key(16)-value(64)-10`)
+It is even able to achieve ~14x throughput over go-redis in a local benchmark of Macbook Pro 16" M1 Pro 2021. (see `parallelism(64)-key(16)-value(64)-10`)
 
 #### Single Client
-![client_test_set](https://github.com/rueian/rueidis-benchmark/blob/master/client_test_set_6.png)
+![client_test_set](https://github.com/rueian/rueidis-benchmark/blob/master/client_test_set_8.png)
 #### Cluster Client
-![cluster_test_set](https://github.com/rueian/rueidis-benchmark/blob/master/cluster_test_set_5.png)
+![cluster_test_set](https://github.com/rueian/rueidis-benchmark/blob/master/cluster_test_set_8.png)
 
 Benchmark source code: https://github.com/rueian/rueidis-benchmark
+
+There is also a benchmark result performed on two GCP n2-highcpu-2 machines shows that rueidis can achieve higher throughput with lower latencies: https://github.com/rueian/rueidis/pull/93
 
 ## Client Side Caching
 
@@ -99,7 +101,7 @@ If the OpenTelemetry is enabled by the `rueidisotel.WithClient(client)`, then th
 
 ### Benchmark
 
-![client_test_get](https://github.com/rueian/rueidis-benchmark/blob/master/client_test_get_6.png)
+![client_test_get](https://github.com/rueian/rueidis-benchmark/blob/master/client_test_get_8.png)
 
 Benchmark source code: https://github.com/rueian/rueidis-benchmark
 
