@@ -10,6 +10,7 @@ import (
 )
 
 var errChunked = errors.New("unbounded redis message")
+var errOldNull = errors.New("RESP2 null")
 
 type reader func(i *bufio.Reader) (RedisMessage, error)
 
@@ -91,7 +92,10 @@ func readNull(i *bufio.Reader) (m RedisMessage, err error) {
 func readArray(i *bufio.Reader) (m RedisMessage, err error) {
 	length, err := readI(i)
 	if err == nil {
-		m.values, err = readA(i, int(length))
+		if length == -1 {
+			return m, errOldNull
+		}
+		m.values, err = readA(i, length)
 	} else if err == errChunked {
 		m.values, err = readE(i)
 	}
@@ -101,7 +105,7 @@ func readArray(i *bufio.Reader) (m RedisMessage, err error) {
 func readMap(i *bufio.Reader) (m RedisMessage, err error) {
 	length, err := readI(i)
 	if err == nil {
-		m.values, err = readA(i, int(length*2))
+		m.values, err = readA(i, length*2)
 	} else if err == errChunked {
 		m.values, err = readE(i)
 	}
@@ -156,6 +160,9 @@ func readB(i *bufio.Reader) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	if length == -1 {
+		return "", errOldNull
+	}
 	bs := make([]byte, length)
 	if _, err = io.ReadFull(i, bs); err != nil {
 		return "", err
@@ -180,9 +187,9 @@ func readE(i *bufio.Reader) ([]RedisMessage, error) {
 	}
 }
 
-func readA(i *bufio.Reader, length int) (v []RedisMessage, err error) {
+func readA(i *bufio.Reader, length int64) (v []RedisMessage, err error) {
 	v = make([]RedisMessage, length)
-	for n := 0; n < length; n++ {
+	for n := int64(0); n < length; n++ {
 		if v[n], err = readNextMessage(i); err != nil {
 			return nil, err
 		}
@@ -216,6 +223,9 @@ func readNextMessage(i *bufio.Reader) (m RedisMessage, err error) {
 			return RedisMessage{}, errors.New(unknownMessageType + strconv.Itoa(int(typ)))
 		}
 		if m, err = fn(i); err != nil {
+			if err == errOldNull {
+				return RedisMessage{typ: '_'}, nil
+			}
 			return RedisMessage{}, err
 		}
 		m.typ = typ

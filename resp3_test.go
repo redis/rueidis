@@ -331,6 +331,70 @@ func TestReadAttr(t *testing.T) {
 	}
 }
 
+func TestReadRESP2NullString(t *testing.T) {
+	data := "$-1\r\n"
+	for i := 1; i <= len(data); i++ {
+		m, err := readNextMessage(bufio.NewReader(io.LimitReader(strings.NewReader(data), int64(i))))
+		if i < len(data) {
+			if err == nil {
+				t.Fatalf("unexpected no error: %v", i)
+			}
+		} else {
+			if err != nil {
+				t.Fatal(err)
+			}
+			if m.typ != '_' {
+				t.Fatalf("unexpected msg type %v", m.typ)
+			}
+		}
+	}
+}
+
+func TestReadRESP2NullStringInArray(t *testing.T) {
+	data := "*3\r\n$5\r\nhello\r\n$-1\r\n$5\r\nworld\r\n"
+	for i := 1; i <= len(data); i++ {
+		m, err := readNextMessage(bufio.NewReader(io.LimitReader(strings.NewReader(data), int64(i))))
+		if i < len(data) {
+			if err == nil {
+				t.Fatalf("unexpected no error: %v", i)
+			}
+		} else {
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !reflect.DeepEqual(m, RedisMessage{
+				typ: '*',
+				values: []RedisMessage{
+					{typ: '$', string: "hello"},
+					{typ: '_'},
+					{typ: '$', string: "world"},
+				},
+			}) {
+				t.Fatalf("unexpected msg %v", m)
+			}
+		}
+	}
+}
+
+func TestReadRESP2NullArray(t *testing.T) {
+	data := "*-1\r\n"
+	for i := 1; i <= len(data); i++ {
+		m, err := readNextMessage(bufio.NewReader(io.LimitReader(strings.NewReader(data), int64(i))))
+		if i < len(data) {
+			if err == nil {
+				t.Fatalf("unexpected no error: %v", i)
+			}
+		} else {
+			if err != nil {
+				t.Fatal(err)
+			}
+			if m.typ != '_' {
+				t.Fatalf("unexpected msg type %v", m.typ)
+			}
+		}
+	}
+}
+
 func TestWriteBReadB(t *testing.T) {
 	TWriterAndReader(t, writeB, readB, false)
 }
