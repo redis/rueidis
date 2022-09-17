@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"errors"
+	"fmt"
 	"net"
 	"os"
 	"runtime"
@@ -112,13 +113,18 @@ func newPipe(conn net.Conn, option *ClientOption) (p *pipe, err error) {
 			err = r.Error()
 		}
 		if err != nil {
-			if strings.Contains(err.Error(), "unknown command `HELLO`") ||
-				strings.Contains(err.Error(), "wrong number of arguments for 'TRACKING'") {
-				resp2 = true
-			} else {
-				p.Close()
-				return nil, err
+			if re, ok := err.(*RedisError); ok {
+				if !resp2 && strings.Contains(re.string, "unknown command `HELLO`") {
+					resp2 = true
+					continue
+				} else if strings.Contains(re.string, "wrong number of arguments for 'TRACKING'") {
+					err = fmt.Errorf("%s: %w", re.string, ErrNoCache)
+				} else if resp2 {
+					continue
+				}
 			}
+			p.Close()
+			return nil, err
 		}
 	}
 	if !resp2 {
@@ -132,12 +138,9 @@ func newPipe(conn net.Conn, option *ClientOption) (p *pipe, err error) {
 			p.background()
 		}
 	} else {
-		if !option.DisableCache {
-			return nil, ErrRESP2Cache
-		}
 		init = init[:0]
 		if option.Password != "" && option.Username == "" {
-			init = append(init, []string{"AUTH", "default", option.Password})
+			init = append(init, []string{"AUTH", option.Password})
 		} else if option.Username != "" {
 			init = append(init, []string{"AUTH", option.Username, option.Password})
 		}

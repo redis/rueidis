@@ -35,8 +35,8 @@ var (
 	ErrClosing = errors.New("rueidis client is closing or unable to connect redis")
 	// ErrNoAddr means the ClientOption.InitAddress is empty
 	ErrNoAddr = errors.New("no alive address in InitAddress")
-	// ErrRESP2Cache means your redis does not support RESP3 and must set ClientOption.DisableCache to true
-	ErrRESP2Cache = errors.New("ClientOption.DisableCache must be true for redis not supporting RESP3")
+	// ErrNoCache means your redis does not support client-side caching and must set ClientOption.DisableCache to true
+	ErrNoCache = errors.New("ClientOption.DisableCache must be true for redis not supporting client-side caching")
 	// ErrRESP2PubSub means your redis does not support RESP3 and rueidis can't handle SUBSCRIBE/PSUBSCRIBE/SSUBSCRIBE in this case
 	ErrRESP2PubSub = errors.New("rueidis does not support SUBSCRIBE/PSUBSCRIBE/SSUBSCRIBE in RESP2")
 )
