@@ -64,6 +64,15 @@ func (r *redisExpect) ReplyString(replies ...string) *redisExpect {
 	return r
 }
 
+func (r *redisExpect) ReplyError(replies ...string) *redisExpect {
+	for _, reply := range replies {
+		if r.err == nil {
+			r.Reply(RedisMessage{typ: '-', string: reply})
+		}
+	}
+	return r
+}
+
 func (r *redisExpect) ReplyInteger(replies ...int64) *redisExpect {
 	for _, reply := range replies {
 		if r.err == nil {
@@ -225,6 +234,115 @@ func TestNewPipe(t *testing.T) {
 		n1.Close()
 		n2.Close()
 		if _, err := newPipe(n1, &ClientOption{}); err != io.ErrClosedPipe {
+			t.Fatalf("pipe setup should failed with io.ErrClosedPipe, but got %v", err)
+		}
+	})
+}
+
+func TestNewRESP2Pipe(t *testing.T) {
+	t.Run("Without DisableCache", func(t *testing.T) {
+		n1, n2 := net.Pipe()
+		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2}
+		go func() {
+			mock.Expect("HELLO", "3").
+				ReplyError("ERR unknown command `HELLO`")
+			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
+				ReplyError("ERR unknown subcommand or wrong number of arguments for 'TRACKING'")
+			mock.Expect("QUIT").ReplyString("OK")
+		}()
+		if _, err := newPipe(n1, &ClientOption{}); !errors.Is(err, ErrNoCache) {
+			t.Fatalf("unexpected err: %v", err)
+		}
+		mock.Close()
+		n1.Close()
+		n2.Close()
+	})
+	t.Run("Auth without Username", func(t *testing.T) {
+		n1, n2 := net.Pipe()
+		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2}
+		go func() {
+			mock.Expect("HELLO", "3", "AUTH", "default", "pa", "SETNAME", "cn").
+				ReplyError("ERR unknown command `HELLO`")
+			mock.Expect("SELECT", "1").
+				ReplyError("ERR ACL")
+			mock.Expect("AUTH", "pa").
+				ReplyString("OK")
+			mock.Expect("CLIENT", "SETNAME", "cn").
+				ReplyString("OK")
+			mock.Expect("SELECT", "1").
+				ReplyString("OK")
+		}()
+		p, err := newPipe(n1, &ClientOption{
+			SelectDB:     1,
+			Password:     "pa",
+			ClientName:   "cn",
+			DisableCache: true,
+		})
+		if err != nil {
+			t.Fatalf("pipe setup failed: %v", err)
+		}
+		if p.version >= 6 {
+			t.Fatalf("unexpected p.version: %v", p.version)
+		}
+		go func() { mock.Expect("QUIT").ReplyString("OK") }()
+		p.Close()
+		mock.Close()
+		n1.Close()
+		n2.Close()
+	})
+	t.Run("Auth with Username", func(t *testing.T) {
+		n1, n2 := net.Pipe()
+		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2}
+		go func() {
+			mock.Expect("HELLO", "3", "AUTH", "ua", "pa", "SETNAME", "cn").
+				ReplyError("ERR unknown command `HELLO`")
+			mock.Expect("SELECT", "1").
+				ReplyError("ERR ACL")
+			mock.Expect("AUTH", "ua", "pa").
+				ReplyString("OK")
+			mock.Expect("CLIENT", "SETNAME", "cn").
+				ReplyString("OK")
+			mock.Expect("SELECT", "1").
+				ReplyString("OK")
+		}()
+		p, err := newPipe(n1, &ClientOption{
+			SelectDB:     1,
+			Username:     "ua",
+			Password:     "pa",
+			ClientName:   "cn",
+			DisableCache: true,
+		})
+		if err != nil {
+			t.Fatalf("pipe setup failed: %v", err)
+		}
+		if p.version >= 6 {
+			t.Fatalf("unexpected p.version: %v", p.version)
+		}
+		go func() { mock.Expect("QUIT").ReplyString("OK") }()
+		p.Close()
+		mock.Close()
+		n1.Close()
+		n2.Close()
+	})
+	t.Run("Network Error", func(t *testing.T) {
+		n1, n2 := net.Pipe()
+		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2}
+		go func() {
+			mock.Expect("HELLO", "3", "AUTH", "ua", "pa", "SETNAME", "cn").
+				ReplyError("ERR unknown command `HELLO`")
+			mock.Expect("SELECT", "1").
+				ReplyError("ERR ACL")
+			n1.Close()
+			n2.Close()
+		}()
+		_, err := newPipe(n1, &ClientOption{
+			SelectDB:     1,
+			Username:     "ua",
+			Password:     "pa",
+			ClientName:   "cn",
+			DisableCache: true,
+		})
+		if err != io.ErrClosedPipe {
 			t.Fatalf("pipe setup should failed with io.ErrClosedPipe, but got %v", err)
 		}
 	})
@@ -1969,6 +2087,36 @@ func TestPubSub(t *testing.T) {
 		} {
 			if !shouldPanic(push) {
 				t.Fatalf("should panic on protocolbug")
+			}
+		}
+	})
+
+	t.Run("RESP2 no subscribe", func(t *testing.T) {
+		p, _, cancel, _ := setup(t, ClientOption{})
+		p.version = 5
+		defer cancel()
+
+		commands := []cmds.Completed{
+			builder.Subscribe().Channel("a").Build(),
+			builder.Psubscribe().Pattern("b").Build(),
+			builder.Ssubscribe().Channel("c").Build(),
+		}
+
+		for _, c := range commands {
+			if e := p.Do(context.Background(), c).Error(); e != ErrRESP2PubSub {
+				t.Fatalf("unexpected err %v", e)
+			}
+		}
+
+		for _, c := range commands {
+			if e := p.DoMulti(context.Background(), c)[0].Error(); e != ErrRESP2PubSub {
+				t.Fatalf("unexpected err %v", e)
+			}
+		}
+
+		for _, c := range commands {
+			if e := p.Receive(context.Background(), c, func(message PubSubMessage) {}); e != ErrRESP2PubSub {
+				t.Fatalf("unexpected err %v", e)
 			}
 		}
 	})
