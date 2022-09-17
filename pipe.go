@@ -621,6 +621,7 @@ func (p *pipe) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
 		}
 		if cmd.NoReply() {
 			if p.version < 6 {
+				atomic.AddInt32(&p.waits, -1)
 				return newErrResult(ErrRESP2PubSub)
 			}
 			p.background()

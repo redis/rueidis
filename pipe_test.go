@@ -2090,6 +2090,36 @@ func TestPubSub(t *testing.T) {
 			}
 		}
 	})
+
+	t.Run("RESP2 no subscribe", func(t *testing.T) {
+		p, _, cancel, _ := setup(t, ClientOption{})
+		p.version = 5
+		defer cancel()
+
+		commands := []cmds.Completed{
+			builder.Subscribe().Channel("a").Build(),
+			builder.Psubscribe().Pattern("b").Build(),
+			builder.Ssubscribe().Channel("c").Build(),
+		}
+
+		for _, c := range commands {
+			if e := p.Do(context.Background(), c).Error(); e != ErrRESP2PubSub {
+				t.Fatalf("unexpected err %v", e)
+			}
+		}
+
+		for _, c := range commands {
+			if e := p.DoMulti(context.Background(), c)[0].Error(); e != ErrRESP2PubSub {
+				t.Fatalf("unexpected err %v", e)
+			}
+		}
+
+		for _, c := range commands {
+			if e := p.Receive(context.Background(), c, func(message PubSubMessage) {}); e != ErrRESP2PubSub {
+				t.Fatalf("unexpected err %v", e)
+			}
+		}
+	})
 }
 
 //gocyclo:ignore
