@@ -214,20 +214,28 @@ func (r RedisResult) AsFloatSlice() ([]float64, error) {
 	return r.val.AsFloatSlice()
 }
 
-// AsXRange delegates to RedisMessage.AsXRange
-func (r RedisResult) AsXRange() (XRange, error) {
+// AsXRangeEntry delegates to RedisMessage.AsXRangeEntry
+func (r RedisResult) AsXRangeEntry() (XRangeEntry, error) {
 	if err := r.Error(); err != nil {
-		return XRange{}, err
+		return XRangeEntry{}, err
+	}
+	return r.val.AsXRangeEntry()
+}
+
+// AsXRange delegates to RedisMessage.AsXRange
+func (r RedisResult) AsXRange() ([]XRangeEntry, error) {
+	if err := r.Error(); err != nil {
+		return nil, err
 	}
 	return r.val.AsXRange()
 }
 
-// AsXRangeSlice delegates to RedisMessage.AsXRangeSlice
-func (r RedisResult) AsXRangeSlice() ([]XRange, error) {
+// AsXRead delegates to RedisMessage.AsXRead
+func (r RedisResult) AsXRead() (map[string][]XRangeEntry, error) {
 	if err := r.Error(); err != nil {
 		return nil, err
 	}
-	return r.val.AsXRangeSlice()
+	return r.val.AsXRead()
 }
 
 // AsMap delegates to RedisMessage.AsMap
@@ -501,54 +509,83 @@ func (m *RedisMessage) AsFloatSlice() ([]float64, error) {
 	return s, nil
 }
 
-// XRange is the element type of both XRANGE and XREVRANGE command response array
-type XRange struct {
+// XRangeEntry is the element type of both XRANGE and XREVRANGE command response array
+type XRangeEntry struct {
 	ID          string
 	FieldValues map[string]string
 }
 
-// AsXRange check if message is a redis array/set response of length 2, and convert to XRange
-func (m *RedisMessage) AsXRange() (XRange, error) {
+// AsXRangeEntry check if message is a redis array/set response of length 2, and convert to XRangeEntry
+func (m *RedisMessage) AsXRangeEntry() (XRangeEntry, error) {
 	values, err := m.ToArray()
 	if err != nil {
-		return XRange{}, err
+		return XRangeEntry{}, err
 	}
 	if len(values) != 2 {
-		return XRange{}, fmt.Errorf("got %d, wanted 2", len(values))
+		return XRangeEntry{}, fmt.Errorf("got %d, wanted 2", len(values))
 	}
 	id, err := values[0].ToString()
 	if err != nil {
-		return XRange{}, err
+		return XRangeEntry{}, err
 	}
 	fieldValues, err := values[1].AsStrMap()
 	if err != nil {
 		if IsRedisNil(err) {
-			return XRange{ID: id, FieldValues: nil}, nil
+			return XRangeEntry{ID: id, FieldValues: nil}, nil
 		}
-		return XRange{}, err
+		return XRangeEntry{}, err
 	}
-	return XRange{
+	return XRangeEntry{
 		ID:          id,
 		FieldValues: fieldValues,
 	}, nil
 }
 
-// AsXRangeSlice check if message is a redis array/set response, and convert to []XRange
-func (m *RedisMessage) AsXRangeSlice() ([]XRange, error) {
+// AsXRange check if message is a redis array/set response, and convert to []XRangeEntry
+func (m *RedisMessage) AsXRange() ([]XRangeEntry, error) {
 	values, err := m.ToArray()
 	if err != nil {
 		return nil, err
 	}
-	msgs := make([]XRange, 0, len(values))
+	msgs := make([]XRangeEntry, 0, len(values))
 	for _, v := range values {
-		msg, err := v.AsXRange()
+		msg, err := v.AsXRangeEntry()
 		if err != nil {
 			return nil, err
 		}
 		msgs = append(msgs, msg)
 	}
 	return msgs, nil
+}
 
+// AsXRead converts XREAD/XREADGRUOP response to map[string][]XRangeEntry
+func (m *RedisMessage) AsXRead() (ret map[string][]XRangeEntry, err error) {
+	if err = m.Error(); err != nil {
+		return nil, err
+	}
+	if m.IsMap() {
+		ret = make(map[string][]XRangeEntry, len(m.values)/2)
+		for i := 0; i < len(m.values); i += 2 {
+			if ret[m.values[i].string], err = m.values[i+1].AsXRange(); err != nil {
+				return nil, err
+			}
+		}
+		return ret, nil
+	}
+	if m.IsArray() {
+		ret = make(map[string][]XRangeEntry, len(m.values))
+		for _, v := range m.values {
+			if !v.IsArray() || len(v.values) != 2 {
+				return nil, fmt.Errorf("got %d, wanted 2", len(v.values))
+			}
+			if ret[v.values[0].string], err = v.values[1].AsXRange(); err != nil {
+				return nil, err
+			}
+		}
+		return ret, nil
+	}
+	typ := m.typ
+	panic(fmt.Sprintf("redis message type %c is not a map/array/set or its length is not even", typ))
 }
 
 // AsMap check if message is a redis array/set response, and convert to map[string]RedisMessage

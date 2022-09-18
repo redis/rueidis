@@ -960,7 +960,7 @@ type XMessageSliceCmd struct {
 }
 
 func newXMessageSliceCmd(res rueidis.RedisResult) *XMessageSliceCmd {
-	val, err := res.AsXRangeSlice()
+	val, err := res.AsXRange()
 	slice := &XMessageSliceCmd{val: make([]XMessage, len(val)), err: err}
 	for i, r := range val {
 		slice.val[i] = newXMessage(r)
@@ -968,7 +968,7 @@ func newXMessageSliceCmd(res rueidis.RedisResult) *XMessageSliceCmd {
 	return slice
 }
 
-func newXMessage(r rueidis.XRange) XMessage {
+func newXMessage(r rueidis.XRangeEntry) XMessage {
 	if r.FieldValues == nil {
 		return XMessage{ID: r.ID, Values: nil}
 	}
@@ -1010,18 +1010,14 @@ type XStreamSliceCmd struct {
 }
 
 func newXStreamSliceCmd(res rueidis.RedisResult) *XStreamSliceCmd {
-	streams, err := res.ToMap()
+	streams, err := res.AsXRead()
 	if err != nil {
 		return &XStreamSliceCmd{err: err}
 	}
 	val := make([]XStream, 0, len(streams))
-	for name, stream := range streams {
-		ranges, err := stream.AsXRangeSlice()
-		if err != nil {
-			return &XStreamSliceCmd{err: err}
-		}
-		msgs := make([]XMessage, 0, len(ranges))
-		for _, r := range ranges {
+	for name, messages := range streams {
+		msgs := make([]XMessage, 0, len(messages))
+		for _, r := range messages {
 			msgs = append(msgs, newXMessage(r))
 		}
 		val = append(val, XStream{Stream: name, Messages: msgs})
@@ -1224,7 +1220,7 @@ func newXAutoClaimCmd(res rueidis.RedisResult) *XAutoClaimCmd {
 	if err != nil {
 		return &XAutoClaimCmd{err: err}
 	}
-	ranges, err := arr[1].AsXRangeSlice()
+	ranges, err := arr[1].AsXRange()
 	if err != nil {
 		return &XAutoClaimCmd{err: err}
 	}
@@ -1419,12 +1415,12 @@ func newXInfoStreamCmd(res rueidis.RedisResult) *XInfoStreamCmd {
 		val.EntriesAdded, _ = v.ToInt64()
 	}
 	if v, ok := kv["first-entry"]; ok {
-		if r, err := v.AsXRange(); err == nil {
+		if r, err := v.AsXRangeEntry(); err == nil {
 			val.FirstEntry = newXMessage(r)
 		}
 	}
 	if v, ok := kv["last-entry"]; ok {
-		if r, err := v.AsXRange(); err == nil {
+		if r, err := v.AsXRangeEntry(); err == nil {
 			val.LastEntry = newXMessage(r)
 		}
 	}
@@ -1532,7 +1528,7 @@ func newXInfoStreamFullCmd(res rueidis.RedisResult) *XInfoStreamFullCmd {
 		}
 	}
 	if v, ok := kv["entries"]; ok {
-		ranges, err := v.AsXRangeSlice()
+		ranges, err := v.AsXRange()
 		if err != nil {
 			return &XInfoStreamFullCmd{err: err}
 		}

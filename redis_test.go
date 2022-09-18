@@ -347,15 +347,18 @@ func testBlockingXREAD(t *testing.T, client Client) {
 	}()
 	id := "0"
 	for i := 0; i < items; i++ {
-		m, err := client.Do(ctx, client.B().Xread().Count(1).Block(0).Streams().Key(key).Id(id).Build()).ToMap()
+		m, err := client.Do(ctx, client.B().Xread().Count(1).Block(0).Streams().Key(key).Id(id).Build()).AsXRead()
 		if err != nil {
 			t.Errorf("unexpected XREAD response %v %v", m, err)
 		}
-		id = m[key].values[0].values[0].string
-		f := m[key].values[0].values[1].values[0].string
-		v := m[key].values[0].values[1].values[1].string
-		if f != v || f != strconv.Itoa(i) {
+		id = m[key][0].ID
+		if len(m[key][0].FieldValues) == 0 {
 			t.Errorf("unexpected XREAD response %v %v", m, err)
+		}
+		for f, v := range m[key][0].FieldValues {
+			if f != v || f != strconv.Itoa(i) {
+				t.Errorf("unexpected XREAD response %v %v", m, err)
+			}
 		}
 	}
 	client.Do(ctx, client.B().Del().Key(key).Build())
