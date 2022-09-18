@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -16,6 +17,8 @@ import (
 
 	"github.com/rueian/rueidis/internal/cmds"
 )
+
+var noHello = regexp.MustCompile("unknown command .HELLO.")
 
 type wire interface {
 	Do(ctx context.Context, cmd cmds.Completed) RedisResult
@@ -114,7 +117,7 @@ func newPipe(conn net.Conn, option *ClientOption) (p *pipe, err error) {
 		}
 		if err != nil {
 			if re, ok := err.(*RedisError); ok {
-				if !resp2 && strings.Contains(re.string, "unknown command `HELLO`") {
+				if !resp2 && noHello.MatchString(re.string) {
 					resp2 = true
 					continue
 				} else if strings.Contains(re.string, "wrong number of arguments for 'TRACKING'") {
