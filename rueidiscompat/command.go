@@ -725,68 +725,24 @@ type ZSliceCmd struct {
 	err error
 }
 
-func newZSliceCmd(res rueidis.RedisResult, withscore bool) *ZSliceCmd {
-	arr, err := res.ToArray()
+func newZSliceCmd(res rueidis.RedisResult) *ZSliceCmd {
+	scores, err := res.AsZScores()
 	if err != nil {
 		return &ZSliceCmd{err: err}
 	}
-	if withscore && len(arr) > 0 {
-		if arr[0].IsArray() {
-			val := make([]Z, len(arr))
-			for i, s := range arr {
-				kv, err := s.ToArray()
-				if err != nil {
-					return &ZSliceCmd{err: err}
-				}
-				if val[i].Member, err = kv[0].ToString(); err != nil {
-					return &ZSliceCmd{err: err}
-				}
-				if val[i].Score, err = kv[1].AsFloat64(); err != nil {
-					return &ZSliceCmd{err: err}
-				}
-			}
-			return &ZSliceCmd{val: val}
-		} else {
-			val := make([]Z, len(arr)/2)
-			for i := 0; i < len(val); i++ {
-				if val[i].Member, err = arr[i*2].ToString(); err != nil {
-					return &ZSliceCmd{err: err}
-				}
-				if val[i].Score, err = arr[i*2+1].AsFloat64(); err != nil {
-					return &ZSliceCmd{err: err}
-				}
-			}
-			return &ZSliceCmd{val: val}
-		}
-	}
-	val := make([]Z, 0, len(arr))
-	for _, s := range arr {
-		v, err := s.ToString()
-		if err != nil {
-			return &ZSliceCmd{err: err}
-		}
-		val = append(val, Z{Member: v})
+	val := make([]Z, 0, len(scores))
+	for _, s := range scores {
+		val = append(val, Z{Member: s.Member, Score: s.Score})
 	}
 	return &ZSliceCmd{val: val}
 }
 
 func newZSliceSingleCmd(res rueidis.RedisResult) *ZSliceCmd {
-	arr, err := res.ToArray()
+	s, err := res.AsZScore()
 	if err != nil {
 		return &ZSliceCmd{err: err}
 	}
-	member, err := arr[0].ToString()
-	if err != nil {
-		return &ZSliceCmd{err: err}
-	}
-	score, err := arr[1].AsFloat64()
-	if err != nil {
-		return &ZSliceCmd{err: err}
-	}
-	return &ZSliceCmd{val: []Z{{
-		Member: member,
-		Score:  score,
-	}}, err: err}
+	return &ZSliceCmd{val: []Z{{Member: s.Member, Score: s.Score}}, err: err}
 }
 
 func (cmd *ZSliceCmd) SetVal(val []Z) {

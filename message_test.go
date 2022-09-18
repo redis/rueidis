@@ -394,6 +394,62 @@ func TestRedisResult(t *testing.T) {
 		}
 	})
 
+	t.Run("AsZScore", func(t *testing.T) {
+		if _, err := (RedisResult{err: errors.New("other")}).AsZScore(); err == nil {
+			t.Fatal("AsZScore not failed as expected")
+		}
+		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsZScore(); err == nil {
+			t.Fatal("AsZScore not failed as expected")
+		}
+		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+			{typ: '+', string: "m1"},
+			{typ: '+', string: "1"},
+		}}}).AsZScore(); !reflect.DeepEqual(ZScore{Member: "m1", Score: 1}, ret) {
+			t.Fatal("AsZScore not get value as expected")
+		}
+		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+			{typ: '+', string: "m1"},
+			{typ: ',', string: "1"},
+		}}}).AsZScore(); !reflect.DeepEqual(ZScore{Member: "m1", Score: 1}, ret) {
+			t.Fatal("AsZScore not get value as expected")
+		}
+	})
+
+	t.Run("AsZScores", func(t *testing.T) {
+		if _, err := (RedisResult{err: errors.New("other")}).AsZScores(); err == nil {
+			t.Fatal("AsZScores not failed as expected")
+		}
+		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsZScores(); err == nil {
+			t.Fatal("AsZScores not failed as expected")
+		}
+		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+			{typ: '+', string: "m1"},
+			{typ: '+', string: "1"},
+			{typ: '+', string: "m2"},
+			{typ: '+', string: "2"},
+		}}}).AsZScores(); !reflect.DeepEqual([]ZScore{
+			{Member: "m1", Score: 1},
+			{Member: "m2", Score: 2},
+		}, ret) {
+			t.Fatal("AsZScores not get value as expected")
+		}
+		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+			{typ: '*', values: []RedisMessage{
+				{typ: '+', string: "m1"},
+				{typ: ',', string: "1"},
+			}},
+			{typ: '*', values: []RedisMessage{
+				{typ: '+', string: "m2"},
+				{typ: ',', string: "2"},
+			}},
+		}}}).AsZScores(); !reflect.DeepEqual([]ZScore{
+			{Member: "m1", Score: 1},
+			{Member: "m2", Score: 2},
+		}, ret) {
+			t.Fatal("AsZScores not get value as expected")
+		}
+	})
+
 	t.Run("IsCacheHit", func(t *testing.T) {
 		if (RedisResult{err: errors.New("other")}).IsCacheHit() {
 			t.Fatal("IsCacheHit not as expected")
@@ -727,6 +783,38 @@ func TestRedisMessage(t *testing.T) {
 			}
 		}()
 		(&RedisMessage{typ: 't'}).AsXRead()
+	})
+
+	t.Run("AsZScore", func(t *testing.T) {
+		if _, err := (&RedisMessage{typ: '_'}).AsZScore(); err == nil {
+			t.Fatal("AsZScore not failed as expected")
+		}
+		defer func() {
+			if !strings.Contains(recover().(string), "redis message is not a map/array/set or its length is not 2") {
+				t.Fatal("AsZScore not panic as expected")
+			}
+		}()
+		(&RedisMessage{typ: '*'}).AsZScore()
+	})
+
+	t.Run("AsZScores", func(t *testing.T) {
+		if _, err := (&RedisMessage{typ: '_'}).AsZScores(); err == nil {
+			t.Fatal("AsZScore not failed as expected")
+		}
+		if _, err := (&RedisMessage{typ: '*', values: []RedisMessage{
+			{typ: '+', string: "m1"},
+			{typ: '+', string: "m2"},
+		}}).AsZScores(); err == nil {
+			t.Fatal("AsZScores not fails as expected")
+		}
+		if _, err := (&RedisMessage{typ: '*', values: []RedisMessage{
+			{typ: '*', values: []RedisMessage{
+				{typ: '+', string: "m1"},
+				{typ: '+', string: "m2"},
+			}},
+		}}).AsZScores(); err == nil {
+			t.Fatal("AsZScores not fails as expected")
+		}
 	})
 
 	t.Run("ToMap with non string key", func(t *testing.T) {

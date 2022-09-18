@@ -230,6 +230,22 @@ func (r RedisResult) AsXRange() ([]XRangeEntry, error) {
 	return r.val.AsXRange()
 }
 
+// AsZScore delegates to RedisMessage.AsZScore
+func (r RedisResult) AsZScore() (ZScore, error) {
+	if err := r.Error(); err != nil {
+		return ZScore{}, err
+	}
+	return r.val.AsZScore()
+}
+
+// AsZScores delegates to RedisMessage.AsZScores
+func (r RedisResult) AsZScores() ([]ZScore, error) {
+	if err := r.Error(); err != nil {
+		return nil, err
+	}
+	return r.val.AsZScores()
+}
+
 // AsXRead delegates to RedisMessage.AsXRead
 func (r RedisResult) AsXRead() (map[string][]XRangeEntry, error) {
 	if err := r.Error(); err != nil {
@@ -586,6 +602,56 @@ func (m *RedisMessage) AsXRead() (ret map[string][]XRangeEntry, err error) {
 	}
 	typ := m.typ
 	panic(fmt.Sprintf("redis message type %c is not a map/array/set or its length is not even", typ))
+}
+
+// ZScore is the element type of ZRANGE WITHSCORES, ZDIFF WITHSCORES and ZPOPMAX command response
+type ZScore struct {
+	Member string
+	Score  float64
+}
+
+func toZScore(values []RedisMessage) (s ZScore, err error) {
+	if len(values) == 2 {
+		if s.Member, err = values[0].ToString(); err == nil {
+			s.Score, err = values[1].AsFloat64()
+		}
+		return s, err
+	}
+	panic(fmt.Sprintf("redis message is not a map/array/set or its length is not 2"))
+}
+
+// AsZScore converts ZPOPMAX and ZPOPMIN command with count 1 response to a single ZScore
+func (m *RedisMessage) AsZScore() (s ZScore, err error) {
+	arr, err := m.ToArray()
+	if err != nil {
+		return s, err
+	}
+	return toZScore(arr)
+}
+
+// AsZScores converts ZRANGE WITHSCROES, ZDIFF WITHSCROES and ZPOPMAX/ZPOPMIN command with count > 1 responses to []ZScore
+func (m *RedisMessage) AsZScores() ([]ZScore, error) {
+	arr, err := m.ToArray()
+	if err != nil {
+		return nil, err
+	}
+	if len(arr) > 0 && arr[0].IsArray() {
+		scores := make([]ZScore, len(arr))
+		for i, v := range arr {
+			if scores[i], err = toZScore(v.values); err != nil {
+				return nil, err
+			}
+		}
+		return scores, nil
+	}
+	scores := make([]ZScore, len(arr)/2)
+	for i := 0; i < len(scores); i++ {
+		j := i * 2
+		if scores[i], err = toZScore(arr[j : j+2]); err != nil {
+			return nil, err
+		}
+	}
+	return scores, nil
 }
 
 // AsMap check if message is a redis array/set response, and convert to map[string]RedisMessage

@@ -610,6 +610,12 @@ client.Do(ctx, client.B().Zrange().Key("k").Min("1").Max("2").Build()).AsStrSlic
 client.Do(ctx, client.B().Zrank().Key("k").Member("m").Build()).AsInt64()
 // ZSCORE
 client.Do(ctx, client.B().Zscore().Key("k").Member("m").Build()).AsFloat64()
+// ZRANGE
+client.Do(ctx, client.B().Zrange().Key("k").Min("0").Max("-1").Build()).AsStrSlice()
+client.Do(ctx, client.B().Zrange().Key("k").Min("0").Max("-1").Withscores().Build()).AsZScores()
+// ZPOPMIN
+client.Do(ctx, client.B().Zpopmin().Key("k").Build()).AsZScore()
+client.Do(ctx, client.B().Zpopmin().Key("myzset").Count(2).Build()).AsZScores()
 // SCARD
 client.Do(ctx, client.B().Scard().Key("k").Build()).AsInt64()
 // SMEMBERS
