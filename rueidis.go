@@ -254,7 +254,7 @@ func NewClient(option ClientOption) (client Client, err error) {
 		return newSentinelClient(&option, makeConn)
 	}
 	if client, err = newClusterClient(&option, makeConn); err != nil {
-		if len(option.InitAddress) == 1 && (err.Error() == redisErrMsgClusterDisabled || strings.HasPrefix(err.Error(), redisErrMsgUnknownClusterCmd)) {
+		if len(option.InitAddress) == 1 && (err.Error() == redisErrMsgClusterDisabled || err.Error() == redisErrMsgCommandNotAllow || strings.HasPrefix(err.Error(), redisErrMsgUnknownClusterCmd)) {
 			option.PipelineMultiplex = singleClientMultiplex(option.PipelineMultiplex)
 			client, err = newSingleClient(&option, client.(*clusterClient).single(), makeConn)
 		} else if client != (*clusterClient)(nil) {
@@ -288,5 +288,6 @@ func dial(dst string, opt *ClientOption) (conn net.Conn, err error) {
 	return conn, err
 }
 
+const redisErrMsgCommandNotAllow = "ERR command is not allowed"
 const redisErrMsgClusterDisabled = "ERR This instance has cluster support disabled"
 const redisErrMsgUnknownClusterCmd = "ERR unknown command `CLUSTER`, with args beginning with"
