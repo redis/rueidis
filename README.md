@@ -180,9 +180,9 @@ Benchmark source code: https://github.com/rueian/rueidis-benchmark
 * aimodelexecute
 * aiscriptget
 
-### Client Side Caching Helpers
+### MGET/JSON.MGET Client Side Caching Helpers
 
-`rueidis.MGetCache` and `JsonMGetCache.MGetCache` are handy helpers fetching multiple keys across different slots through the client side caching.
+`rueidis.MGetCache` and `rueidis.JsonMGetCache` are handy helpers fetching multiple keys across different slots through the client side caching.
 They will first group keys by slot to build `MGET` or `JSON.MGET` commands respectively and then send requests with only cache missed keys to redis nodes.
 
 ### Disable Client Side Caching
