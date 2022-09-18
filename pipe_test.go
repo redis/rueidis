@@ -257,6 +257,23 @@ func TestNewRESP2Pipe(t *testing.T) {
 		n1.Close()
 		n2.Close()
 	})
+	t.Run("Without DisableCache 2", func(t *testing.T) {
+		n1, n2 := net.Pipe()
+		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2}
+		go func() {
+			mock.Expect("HELLO", "3").
+				ReplyError("ERR unknown command `HELLO`")
+			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
+				ReplyString("OK")
+			mock.Expect("QUIT").ReplyString("OK")
+		}()
+		if _, err := newPipe(n1, &ClientOption{}); !errors.Is(err, ErrNoCache) {
+			t.Fatalf("unexpected err: %v", err)
+		}
+		mock.Close()
+		n1.Close()
+		n2.Close()
+	})
 	t.Run("Auth without Username", func(t *testing.T) {
 		n1, n2 := net.Pipe()
 		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2}

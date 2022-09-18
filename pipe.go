@@ -141,6 +141,10 @@ func newPipe(conn net.Conn, option *ClientOption) (p *pipe, err error) {
 			p.background()
 		}
 	} else {
+		if !option.DisableCache {
+			p.Close()
+			return nil, ErrNoCache
+		}
 		init = init[:0]
 		if option.Password != "" && option.Username == "" {
 			init = append(init, []string{"AUTH", option.Password})
