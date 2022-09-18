@@ -250,9 +250,23 @@ var _ = Describe("Commands", func() {
 	})
 })
 
-var _ = Describe("Cmd", func() {
+var _ = Describe("RESP3 Cmd", func() {
+	testCmd(true)
+})
+
+var _ = Describe("RESP2 Cmd", func() {
+	testCmd(false)
+})
+
+func testCmd(resp3 bool) {
+	var adapter Cmdable
 
 	BeforeEach(func() {
+		if resp3 {
+			adapter = adapterresp3
+		} else {
+			adapter = adapterresp2
+		}
 		Expect(adapter.FlushAll(ctx).Err()).NotTo(HaveOccurred())
 	})
 
@@ -311,4 +325,4 @@ var _ = Describe("Cmd", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(tm2).To(BeTemporally("==", tm))
 	})
-})
+}

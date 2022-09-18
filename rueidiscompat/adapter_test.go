@@ -44,31 +44,57 @@ func TestAdapter(t *testing.T) {
 }
 
 var (
-	err     error
-	ctx     context.Context
-	client  rueidis.Client
-	adapter Cmdable
+	err          error
+	ctx          context.Context
+	clientresp2  rueidis.Client
+	clientresp3  rueidis.Client
+	adapterresp2 Cmdable
+	adapterresp3 Cmdable
 )
 
 var _ = BeforeSuite(func() {
 	ctx = context.Background()
-	client, err = rueidis.NewClient(rueidis.ClientOption{
+	clientresp3, err = rueidis.NewClient(rueidis.ClientOption{
 		InitAddress: []string{"127.0.0.1:6378"},
 		ClientName:  "rueidis",
 	})
 	Expect(err).NotTo(HaveOccurred())
-	adapter = NewAdapter(client)
+	adapterresp3 = NewAdapter(clientresp3)
+	clientresp2, err = rueidis.NewClient(rueidis.ClientOption{
+		InitAddress:  []string{"127.0.0.1:6356"},
+		ClientName:   "rueidis",
+		DisableCache: true,
+	})
+	Expect(err).NotTo(HaveOccurred())
+	adapterresp2 = NewAdapter(clientresp2)
 })
 
 var _ = AfterSuite(func() {
-	Expect(adapter.FlushDB(ctx).Err()).NotTo(HaveOccurred())
-	Expect(adapter.Quit(ctx).Err()).NotTo(HaveOccurred())
-	client.Close()
+	Expect(adapterresp3.FlushDB(ctx).Err()).NotTo(HaveOccurred())
+	Expect(adapterresp3.Quit(ctx).Err()).NotTo(HaveOccurred())
+	clientresp3.Close()
+	Expect(adapterresp2.FlushDB(ctx).Err()).NotTo(HaveOccurred())
+	Expect(adapterresp2.Quit(ctx).Err()).NotTo(HaveOccurred())
+	clientresp2.Close()
 })
 
-var _ = Describe("Commands", func() {
+var _ = Describe("RESP3 Commands", func() {
+	testAdapter(true)
+})
+
+var _ = Describe("RESP2 Commands", func() {
+	testAdapter(false)
+})
+
+func testAdapter(resp3 bool) {
+	var adapter Cmdable
 
 	BeforeEach(func() {
+		if resp3 {
+			adapter = adapterresp3
+		} else {
+			adapter = adapterresp2
+		}
 		Expect(adapter.FlushDB(ctx).Err()).NotTo(HaveOccurred())
 	})
 
@@ -288,69 +314,71 @@ var _ = Describe("Commands", func() {
 			Expect(ttl.Val()).To(Equal(time.Duration(-2)))
 		})
 
-		It("should ExpireNX", func() {
-			set := adapter.Set(ctx, "key", "Hello", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+		if resp3 {
+			It("should ExpireNX", func() {
+				set := adapter.Set(ctx, "key", "Hello", 0)
+				Expect(set.Err()).NotTo(HaveOccurred())
+				Expect(set.Val()).To(Equal("OK"))
 
-			expire := adapter.ExpireNX(ctx, "key", 10*time.Second)
-			Expect(expire.Err()).NotTo(HaveOccurred())
-			Expect(expire.Val()).To(Equal(true))
+				expire := adapter.ExpireNX(ctx, "key", 10*time.Second)
+				Expect(expire.Err()).NotTo(HaveOccurred())
+				Expect(expire.Val()).To(Equal(true))
 
-			ttl := adapter.TTL(ctx, "key")
-			Expect(ttl.Err()).NotTo(HaveOccurred())
-			Expect(ttl.Val()).To(Equal(10 * time.Second))
+				ttl := adapter.TTL(ctx, "key")
+				Expect(ttl.Err()).NotTo(HaveOccurred())
+				Expect(ttl.Val()).To(Equal(10 * time.Second))
 
-			expire = adapter.ExpireNX(ctx, "key", 20*time.Second)
-			Expect(expire.Err()).NotTo(HaveOccurred())
-			Expect(expire.Val()).To(Equal(false))
-		})
+				expire = adapter.ExpireNX(ctx, "key", 20*time.Second)
+				Expect(expire.Err()).NotTo(HaveOccurred())
+				Expect(expire.Val()).To(Equal(false))
+			})
 
-		It("should ExpireXX", func() {
-			set := adapter.Set(ctx, "key", "Hello", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			It("should ExpireXX", func() {
+				set := adapter.Set(ctx, "key", "Hello", 0)
+				Expect(set.Err()).NotTo(HaveOccurred())
+				Expect(set.Val()).To(Equal("OK"))
 
-			expire := adapter.ExpireXX(ctx, "key", 10*time.Second)
-			Expect(expire.Err()).NotTo(HaveOccurred())
-			Expect(expire.Val()).To(Equal(false))
+				expire := adapter.ExpireXX(ctx, "key", 10*time.Second)
+				Expect(expire.Err()).NotTo(HaveOccurred())
+				Expect(expire.Val()).To(Equal(false))
 
-			expire = adapter.ExpireNX(ctx, "key", 10*time.Second)
-			Expect(expire.Err()).NotTo(HaveOccurred())
-			Expect(expire.Val()).To(Equal(true))
+				expire = adapter.ExpireNX(ctx, "key", 10*time.Second)
+				Expect(expire.Err()).NotTo(HaveOccurred())
+				Expect(expire.Val()).To(Equal(true))
 
-			expire = adapter.ExpireXX(ctx, "key", 20*time.Second)
-			Expect(expire.Err()).NotTo(HaveOccurred())
-			Expect(expire.Val()).To(Equal(true))
-		})
+				expire = adapter.ExpireXX(ctx, "key", 20*time.Second)
+				Expect(expire.Err()).NotTo(HaveOccurred())
+				Expect(expire.Val()).To(Equal(true))
+			})
 
-		It("should ExpireGT", func() {
-			set := adapter.Set(ctx, "key", "Hello", 5*time.Second)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			It("should ExpireGT", func() {
+				set := adapter.Set(ctx, "key", "Hello", 5*time.Second)
+				Expect(set.Err()).NotTo(HaveOccurred())
+				Expect(set.Val()).To(Equal("OK"))
 
-			expire := adapter.ExpireGT(ctx, "key", 10*time.Second)
-			Expect(expire.Err()).NotTo(HaveOccurred())
-			Expect(expire.Val()).To(Equal(true))
+				expire := adapter.ExpireGT(ctx, "key", 10*time.Second)
+				Expect(expire.Err()).NotTo(HaveOccurred())
+				Expect(expire.Val()).To(Equal(true))
 
-			expire = adapter.ExpireGT(ctx, "key", 5*time.Second)
-			Expect(expire.Err()).NotTo(HaveOccurred())
-			Expect(expire.Val()).To(Equal(false))
-		})
+				expire = adapter.ExpireGT(ctx, "key", 5*time.Second)
+				Expect(expire.Err()).NotTo(HaveOccurred())
+				Expect(expire.Val()).To(Equal(false))
+			})
 
-		It("should ExpireLT", func() {
-			set := adapter.Set(ctx, "key", "Hello", 10*time.Second)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			It("should ExpireLT", func() {
+				set := adapter.Set(ctx, "key", "Hello", 10*time.Second)
+				Expect(set.Err()).NotTo(HaveOccurred())
+				Expect(set.Val()).To(Equal("OK"))
 
-			expire := adapter.ExpireLT(ctx, "key", 5*time.Second)
-			Expect(expire.Err()).NotTo(HaveOccurred())
-			Expect(expire.Val()).To(Equal(true))
+				expire := adapter.ExpireLT(ctx, "key", 5*time.Second)
+				Expect(expire.Err()).NotTo(HaveOccurred())
+				Expect(expire.Val()).To(Equal(true))
 
-			expire = adapter.ExpireLT(ctx, "key", 10*time.Second)
-			Expect(expire.Err()).NotTo(HaveOccurred())
-			Expect(expire.Val()).To(Equal(false))
-		})
+				expire = adapter.ExpireLT(ctx, "key", 10*time.Second)
+				Expect(expire.Err()).NotTo(HaveOccurred())
+				Expect(expire.Val()).To(Equal(false))
+			})
+		}
 
 		It("should ExpireAt", func() {
 			set := adapter.Set(ctx, "key", "Hello", 0)
@@ -709,17 +737,19 @@ var _ = Describe("Commands", func() {
 			Expect(cursor).NotTo(BeZero())
 		})
 
-		It("should ScanType", func() {
-			for i := 0; i < 1000; i++ {
-				set := adapter.Set(ctx, fmt.Sprintf("key%d", i), "hello", 0)
-				Expect(set.Err()).NotTo(HaveOccurred())
-			}
+		if resp3 {
+			It("should ScanType", func() {
+				for i := 0; i < 1000; i++ {
+					set := adapter.Set(ctx, fmt.Sprintf("key%d", i), "hello", 0)
+					Expect(set.Err()).NotTo(HaveOccurred())
+				}
 
-			keys, cursor, err := adapter.ScanType(ctx, 0, "", 0, "string").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(keys).NotTo(BeEmpty())
-			Expect(cursor).NotTo(BeZero())
-		})
+				keys, cursor, err := adapter.ScanType(ctx, 0, "", 0, "string").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(keys).NotTo(BeEmpty())
+				Expect(cursor).NotTo(BeZero())
+			})
+		}
 
 		It("should SScan", func() {
 			for i := 0; i < 1000; i++ {
@@ -1021,58 +1051,60 @@ var _ = Describe("Commands", func() {
 			Expect(get.Val()).To(Equal("0"))
 		})
 
-		It("should GetEX", func() {
-			set := adapter.Set(ctx, "key", "value", 100*time.Second)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+		if resp3 {
+			It("should GetEX", func() {
+				set := adapter.Set(ctx, "key", "value", 100*time.Second)
+				Expect(set.Err()).NotTo(HaveOccurred())
+				Expect(set.Val()).To(Equal("OK"))
 
-			ttl := adapter.TTL(ctx, "key")
-			Expect(ttl.Err()).NotTo(HaveOccurred())
-			Expect(ttl.Val()).To(BeNumerically("~", 100*time.Second, 3*time.Second))
+				ttl := adapter.TTL(ctx, "key")
+				Expect(ttl.Err()).NotTo(HaveOccurred())
+				Expect(ttl.Val()).To(BeNumerically("~", 100*time.Second, 3*time.Second))
 
-			getEX := adapter.GetEx(ctx, "key", 200*time.Second)
-			Expect(getEX.Err()).NotTo(HaveOccurred())
-			Expect(getEX.Val()).To(Equal("value"))
+				getEX := adapter.GetEx(ctx, "key", 200*time.Second)
+				Expect(getEX.Err()).NotTo(HaveOccurred())
+				Expect(getEX.Val()).To(Equal("value"))
 
-			ttl = adapter.TTL(ctx, "key")
-			Expect(ttl.Err()).NotTo(HaveOccurred())
-			Expect(ttl.Val()).To(BeNumerically("~", 200*time.Second, 3*time.Second))
-		})
+				ttl = adapter.TTL(ctx, "key")
+				Expect(ttl.Err()).NotTo(HaveOccurred())
+				Expect(ttl.Val()).To(BeNumerically("~", 200*time.Second, 3*time.Second))
+			})
 
-		It("should GetEX 2", func() {
-			set := adapter.Set(ctx, "key", "value", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			It("should GetEX 2", func() {
+				set := adapter.Set(ctx, "key", "value", 0)
+				Expect(set.Err()).NotTo(HaveOccurred())
+				Expect(set.Val()).To(Equal("OK"))
 
-			getEX := adapter.GetEx(ctx, "key", 0)
-			Expect(getEX.Err()).NotTo(HaveOccurred())
-			Expect(getEX.Val()).To(Equal("value"))
+				getEX := adapter.GetEx(ctx, "key", 0)
+				Expect(getEX.Err()).NotTo(HaveOccurred())
+				Expect(getEX.Val()).To(Equal("value"))
 
-			ttl := adapter.TTL(ctx, "key")
-			Expect(ttl.Err()).NotTo(HaveOccurred())
-			Expect(ttl.Val()).To(Equal(time.Duration(-1)))
+				ttl := adapter.TTL(ctx, "key")
+				Expect(ttl.Err()).NotTo(HaveOccurred())
+				Expect(ttl.Val()).To(Equal(time.Duration(-1)))
 
-			getEX = adapter.GetEx(ctx, "key", 100*time.Millisecond)
-			Expect(getEX.Err()).NotTo(HaveOccurred())
-			Expect(getEX.Val()).To(Equal("value"))
+				getEX = adapter.GetEx(ctx, "key", 100*time.Millisecond)
+				Expect(getEX.Err()).NotTo(HaveOccurred())
+				Expect(getEX.Val()).To(Equal("value"))
 
-			ttl = adapter.PTTL(ctx, "key")
-			Expect(ttl.Err()).NotTo(HaveOccurred())
-			Expect(ttl.Val()).To(BeNumerically("~", 100*time.Millisecond, 10*time.Millisecond))
-		})
+				ttl = adapter.PTTL(ctx, "key")
+				Expect(ttl.Err()).NotTo(HaveOccurred())
+				Expect(ttl.Val()).To(BeNumerically("~", 100*time.Millisecond, 10*time.Millisecond))
+			})
 
-		It("should GetDel", func() {
-			set := adapter.Set(ctx, "key", "value", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			It("should GetDel", func() {
+				set := adapter.Set(ctx, "key", "value", 0)
+				Expect(set.Err()).NotTo(HaveOccurred())
+				Expect(set.Val()).To(Equal("OK"))
 
-			getDel := adapter.GetDel(ctx, "key")
-			Expect(getDel.Err()).NotTo(HaveOccurred())
-			Expect(getDel.Val()).To(Equal("value"))
+				getDel := adapter.GetDel(ctx, "key")
+				Expect(getDel.Err()).NotTo(HaveOccurred())
+				Expect(getDel.Val()).To(Equal("value"))
 
-			get := adapter.Get(ctx, "key")
-			Expect(rueidis.IsRedisNil(get.Err())).To(BeTrue())
-		})
+				get := adapter.Get(ctx, "key")
+				Expect(rueidis.IsRedisNil(get.Err())).To(BeTrue())
+			})
+		}
 
 		It("should Incr", func() {
 			set := adapter.Set(ctx, "key", "10", 0)
@@ -1181,61 +1213,63 @@ var _ = Describe("Commands", func() {
 			}, "2s", "100ms").Should(BeTrue())
 		})
 
-		It("should SetWithArgs with expiration date", func() {
-			expireAt := time.Now().AddDate(1, 1, 1)
-			args := SetArgs{
-				ExpireAt: expireAt,
-			}
-			err := adapter.SetArgs(ctx, "key", "hello", args).Err()
-			Expect(err).NotTo(HaveOccurred())
+		if resp3 {
+			It("should SetWithArgs with expiration date", func() {
+				expireAt := time.Now().AddDate(1, 1, 1)
+				args := SetArgs{
+					ExpireAt: expireAt,
+				}
+				err := adapter.SetArgs(ctx, "key", "hello", args).Err()
+				Expect(err).NotTo(HaveOccurred())
 
-			val, err := adapter.Get(ctx, "key").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal("hello"))
+				val, err := adapter.Get(ctx, "key").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(val).To(Equal("hello"))
 
-			// check the key has an expiration date
-			// (so a TTL value different of -1)
-			ttl := adapter.TTL(ctx, "key")
-			Expect(ttl.Err()).NotTo(HaveOccurred())
-			Expect(ttl.Val()).ToNot(Equal(-1))
-		})
+				// check the key has an expiration date
+				// (so a TTL value different of -1)
+				ttl := adapter.TTL(ctx, "key")
+				Expect(ttl.Err()).NotTo(HaveOccurred())
+				Expect(ttl.Val()).ToNot(Equal(-1))
+			})
 
-		It("should SetWithArgs with negative expiration date", func() {
-			args := SetArgs{
-				ExpireAt: time.Now().AddDate(-3, 1, 1),
-			}
-			// redis accepts a timestamp less than the current date
-			// but returns nil when trying to get the key
-			err := adapter.SetArgs(ctx, "key", "hello", args).Err()
-			Expect(err).NotTo(HaveOccurred())
+			It("should SetWithArgs with negative expiration date", func() {
+				args := SetArgs{
+					ExpireAt: time.Now().AddDate(-3, 1, 1),
+				}
+				// redis accepts a timestamp less than the current date
+				// but returns nil when trying to get the key
+				err := adapter.SetArgs(ctx, "key", "hello", args).Err()
+				Expect(err).NotTo(HaveOccurred())
 
-			val, err := adapter.Get(ctx, "key").Result()
-			Expect(rueidis.IsRedisNil(err)).To(BeTrue())
-			Expect(val).To(Equal(""))
-		})
+				val, err := adapter.Get(ctx, "key").Result()
+				Expect(rueidis.IsRedisNil(err)).To(BeTrue())
+				Expect(val).To(Equal(""))
+			})
 
-		It("should SetWithArgs with keepttl", func() {
-			// Set with ttl
-			argsWithTTL := SetArgs{
-				TTL: 5 * time.Second,
-			}
-			set := adapter.SetArgs(ctx, "key", "hello", argsWithTTL)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Result()).To(Equal("OK"))
+			It("should SetWithArgs with keepttl", func() {
+				// Set with ttl
+				argsWithTTL := SetArgs{
+					TTL: 5 * time.Second,
+				}
+				set := adapter.SetArgs(ctx, "key", "hello", argsWithTTL)
+				Expect(set.Err()).NotTo(HaveOccurred())
+				Expect(set.Result()).To(Equal("OK"))
 
-			// Set with keepttl
-			argsWithKeepTTL := SetArgs{
-				KeepTTL: true,
-			}
-			set = adapter.SetArgs(ctx, "key", "hello", argsWithKeepTTL)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Result()).To(Equal("OK"))
+				// Set with keepttl
+				argsWithKeepTTL := SetArgs{
+					KeepTTL: true,
+				}
+				set = adapter.SetArgs(ctx, "key", "hello", argsWithKeepTTL)
+				Expect(set.Err()).NotTo(HaveOccurred())
+				Expect(set.Result()).To(Equal("OK"))
 
-			ttl := adapter.TTL(ctx, "key")
-			Expect(ttl.Err()).NotTo(HaveOccurred())
-			// set keepttl will Retain the ttl associated with the key
-			Expect(ttl.Val().Nanoseconds()).NotTo(Equal(-1))
-		})
+				ttl := adapter.TTL(ctx, "key")
+				Expect(ttl.Err()).NotTo(HaveOccurred())
+				// set keepttl will Retain the ttl associated with the key
+				Expect(ttl.Val().Nanoseconds()).NotTo(Equal(-1))
+			})
+		}
 
 		It("should SetWithArgs with NX mode and key exists", func() {
 			err := adapter.Set(ctx, "key", "hello", 0).Err()
@@ -1306,83 +1340,102 @@ var _ = Describe("Commands", func() {
 			Expect(val).To(Equal("OK"))
 		})
 
-		It("should SetWithArgs with XX mode and GET option, and key exists", func() {
-			e := adapter.Set(ctx, "key", "hello", 0).Err()
-			Expect(e).NotTo(HaveOccurred())
+		if resp3 {
+			It("should SetWithArgs with XX mode and GET option, and key exists", func() {
+				e := adapter.Set(ctx, "key", "hello", 0).Err()
+				Expect(e).NotTo(HaveOccurred())
 
-			args := SetArgs{
-				Mode: "xx",
-				Get:  true,
-			}
-			val, err := adapter.SetArgs(ctx, "key", "world", args).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal("hello"))
-		})
+				args := SetArgs{
+					Mode: "xx",
+					Get:  true,
+				}
+				val, err := adapter.SetArgs(ctx, "key", "world", args).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(val).To(Equal("hello"))
+			})
 
-		It("should SetWithArgs with XX mode and GET option, and key does not exist", func() {
-			args := SetArgs{
-				Mode: "xx",
-				Get:  true,
-			}
+			It("should SetWithArgs with XX mode and GET option, and key does not exist", func() {
+				args := SetArgs{
+					Mode: "xx",
+					Get:  true,
+				}
 
-			val, err := adapter.SetArgs(ctx, "key", "world", args).Result()
-			Expect(rueidis.IsRedisNil(err)).To(BeTrue())
-			Expect(val).To(Equal(""))
-		})
+				val, err := adapter.SetArgs(ctx, "key", "world", args).Result()
+				Expect(rueidis.IsRedisNil(err)).To(BeTrue())
+				Expect(val).To(Equal(""))
+			})
 
-		It("should SetWithArgs with expiration, XX mode, GET option, and key does not exist", func() {
-			args := SetArgs{
-				TTL:  500 * time.Millisecond,
-				Mode: "xx",
-				Get:  true,
-			}
+			It("should SetWithArgs with expiration, XX mode, GET option, and key does not exist", func() {
+				args := SetArgs{
+					TTL:  500 * time.Millisecond,
+					Mode: "xx",
+					Get:  true,
+				}
 
-			val, err := adapter.SetArgs(ctx, "key", "world", args).Result()
-			Expect(rueidis.IsRedisNil(err)).To(BeTrue())
-			Expect(val).To(Equal(""))
-		})
+				val, err := adapter.SetArgs(ctx, "key", "world", args).Result()
+				Expect(rueidis.IsRedisNil(err)).To(BeTrue())
+				Expect(val).To(Equal(""))
+			})
 
-		It("should SetWithArgs with expiration, XX mode, GET option, and key exists", func() {
-			e := adapter.Set(ctx, "key", "hello", 0)
-			Expect(e.Err()).NotTo(HaveOccurred())
+			It("should SetWithArgs with expiration, XX mode, GET option, and key exists", func() {
+				e := adapter.Set(ctx, "key", "hello", 0)
+				Expect(e.Err()).NotTo(HaveOccurred())
 
-			args := SetArgs{
-				TTL:  500 * time.Millisecond,
-				Mode: "xx",
-				Get:  true,
-			}
+				args := SetArgs{
+					TTL:  500 * time.Millisecond,
+					Mode: "xx",
+					Get:  true,
+				}
 
-			val, err := adapter.SetArgs(ctx, "key", "world", args).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal("hello"))
+				val, err := adapter.SetArgs(ctx, "key", "world", args).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(val).To(Equal("hello"))
 
-			Eventually(func() bool {
-				return rueidis.IsRedisNil(adapter.Get(ctx, "key").Err())
-			}, "1s", "100ms").Should(BeTrue())
-		})
+				Eventually(func() bool {
+					return rueidis.IsRedisNil(adapter.Get(ctx, "key").Err())
+				}, "1s", "100ms").Should(BeTrue())
+			})
 
-		It("should SetWithArgs with Get and key does not exist yet", func() {
-			args := SetArgs{
-				Get: true,
-			}
+			It("should SetWithArgs with Get and key does not exist yet", func() {
+				args := SetArgs{
+					Get: true,
+				}
 
-			val, err := adapter.SetArgs(ctx, "key", "hello", args).Result()
-			Expect(rueidis.IsRedisNil(err)).To(BeTrue())
-			Expect(val).To(Equal(""))
-		})
+				val, err := adapter.SetArgs(ctx, "key", "hello", args).Result()
+				Expect(rueidis.IsRedisNil(err)).To(BeTrue())
+				Expect(val).To(Equal(""))
+			})
 
-		It("should SetWithArgs with Get and key exists", func() {
-			e := adapter.Set(ctx, "key", "hello", 0)
-			Expect(e.Err()).NotTo(HaveOccurred())
+			It("should SetWithArgs with Get and key exists", func() {
+				e := adapter.Set(ctx, "key", "hello", 0)
+				Expect(e.Err()).NotTo(HaveOccurred())
 
-			args := SetArgs{
-				Get: true,
-			}
+				args := SetArgs{
+					Get: true,
+				}
 
-			val, err := adapter.SetArgs(ctx, "key", "world", args).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal("hello"))
-		})
+				val, err := adapter.SetArgs(ctx, "key", "world", args).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(val).To(Equal("hello"))
+			})
+
+			It("should Set with keepttl", func() {
+				// set with ttl
+				set := adapter.Set(ctx, "key", "hello", 5*time.Second)
+				Expect(set.Err()).NotTo(HaveOccurred())
+				Expect(set.Val()).To(Equal("OK"))
+
+				// set with keepttl
+				set = adapter.Set(ctx, "key", "hello1", KeepTTL)
+				Expect(set.Err()).NotTo(HaveOccurred())
+				Expect(set.Val()).To(Equal("OK"))
+
+				ttl := adapter.TTL(ctx, "key")
+				Expect(ttl.Err()).NotTo(HaveOccurred())
+				// set keepttl will Retain the ttl associated with the key
+				Expect(ttl.Val().Nanoseconds()).NotTo(Equal(-1))
+			})
+		}
 
 		It("should Set with expiration", func() {
 			err := adapter.Set(ctx, "key", "hello", 100*time.Millisecond).Err()
@@ -1395,23 +1448,6 @@ var _ = Describe("Commands", func() {
 			Eventually(func() bool {
 				return rueidis.IsRedisNil(adapter.Get(ctx, "key").Err())
 			}, "1s", "100ms").Should(BeTrue())
-		})
-
-		It("should Set with keepttl", func() {
-			// set with ttl
-			set := adapter.Set(ctx, "key", "hello", 5*time.Second)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
-
-			// set with keepttl
-			set = adapter.Set(ctx, "key", "hello1", KeepTTL)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
-
-			ttl := adapter.TTL(ctx, "key")
-			Expect(ttl.Err()).NotTo(HaveOccurred())
-			// set keepttl will Retain the ttl associated with the key
-			Expect(ttl.Val().Nanoseconds()).NotTo(Equal(-1))
 		})
 
 		It("should SetGet", func() {
@@ -1479,15 +1515,17 @@ var _ = Describe("Commands", func() {
 			Expect(val).To(Equal("hello"))
 		})
 
-		It("should SetNX with keepttl", func() {
-			isSet, err := adapter.SetNX(ctx, "key", "hello1", KeepTTL).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(isSet).To(Equal(true))
+		if resp3 {
+			It("should SetNX with keepttl", func() {
+				isSet, err := adapter.SetNX(ctx, "key", "hello1", KeepTTL).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(isSet).To(Equal(true))
 
-			ttl := adapter.TTL(ctx, "key")
-			Expect(ttl.Err()).NotTo(HaveOccurred())
-			Expect(ttl.Val().Nanoseconds()).To(Equal(int64(-1)))
-		})
+				ttl := adapter.TTL(ctx, "key")
+				Expect(ttl.Err()).NotTo(HaveOccurred())
+				Expect(ttl.Val().Nanoseconds()).To(Equal(int64(-1)))
+			})
+		}
 
 		It("should SetXX", func() {
 			isSet, err := adapter.SetXX(ctx, "key", "hello2", 0).Result()
@@ -1540,31 +1578,33 @@ var _ = Describe("Commands", func() {
 			Expect(val).To(Equal("hello2"))
 		})
 
-		It("should SetXX with keepttl", func() {
-			isSet, err := adapter.SetXX(ctx, "key", "hello2", time.Second).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(isSet).To(Equal(false))
+		if resp3 {
+			It("should SetXX with keepttl", func() {
+				isSet, err := adapter.SetXX(ctx, "key", "hello2", time.Second).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(isSet).To(Equal(false))
 
-			err = adapter.Set(ctx, "key", "hello", time.Second).Err()
-			Expect(err).NotTo(HaveOccurred())
+				err = adapter.Set(ctx, "key", "hello", time.Second).Err()
+				Expect(err).NotTo(HaveOccurred())
 
-			isSet, err = adapter.SetXX(ctx, "key", "hello2", 5*time.Second).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(isSet).To(Equal(true))
+				isSet, err = adapter.SetXX(ctx, "key", "hello2", 5*time.Second).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(isSet).To(Equal(true))
 
-			isSet, err = adapter.SetXX(ctx, "key", "hello3", KeepTTL).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(isSet).To(Equal(true))
+				isSet, err = adapter.SetXX(ctx, "key", "hello3", KeepTTL).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(isSet).To(Equal(true))
 
-			val, err := adapter.Get(ctx, "key").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal("hello3"))
+				val, err := adapter.Get(ctx, "key").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(val).To(Equal("hello3"))
 
-			// set keepttl will Retain the ttl associated with the key
-			ttl, err := adapter.TTL(ctx, "key").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(ttl).NotTo(Equal(-1))
-		})
+				// set keepttl will Retain the ttl associated with the key
+				ttl, err := adapter.TTL(ctx, "key").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl).NotTo(Equal(-1))
+			})
+		}
 
 		It("should SetRange", func() {
 			set := adapter.Set(ctx, "key", "Hello World", 0)
@@ -1594,31 +1634,33 @@ var _ = Describe("Commands", func() {
 			Expect(strLen.Val()).To(Equal(int64(0)))
 		})
 
-		It("should Copy", func() {
-			set := adapter.Set(ctx, "key", "hello", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+		if resp3 {
+			It("should Copy", func() {
+				set := adapter.Set(ctx, "key", "hello", 0)
+				Expect(set.Err()).NotTo(HaveOccurred())
+				Expect(set.Val()).To(Equal("OK"))
 
-			copy := adapter.Copy(ctx, "key", "newKey", 0, false)
-			Expect(copy.Err()).NotTo(HaveOccurred())
-			Expect(copy.Val()).To(Equal(int64(1)))
+				copy := adapter.Copy(ctx, "key", "newKey", 0, false)
+				Expect(copy.Err()).NotTo(HaveOccurred())
+				Expect(copy.Val()).To(Equal(int64(1)))
 
-			// Value is available by both keys now
-			getOld := adapter.Get(ctx, "key")
-			Expect(getOld.Err()).NotTo(HaveOccurred())
-			Expect(getOld.Val()).To(Equal("hello"))
-			getNew := adapter.Get(ctx, "newKey")
-			Expect(getNew.Err()).NotTo(HaveOccurred())
-			Expect(getNew.Val()).To(Equal("hello"))
+				// Value is available by both keys now
+				getOld := adapter.Get(ctx, "key")
+				Expect(getOld.Err()).NotTo(HaveOccurred())
+				Expect(getOld.Val()).To(Equal("hello"))
+				getNew := adapter.Get(ctx, "newKey")
+				Expect(getNew.Err()).NotTo(HaveOccurred())
+				Expect(getNew.Val()).To(Equal("hello"))
 
-			// Overwriting an existing key should not succeed
-			overwrite := adapter.Copy(ctx, "newKey", "key", 0, false)
-			Expect(overwrite.Val()).To(Equal(int64(0)))
+				// Overwriting an existing key should not succeed
+				overwrite := adapter.Copy(ctx, "newKey", "key", 0, false)
+				Expect(overwrite.Val()).To(Equal(int64(0)))
 
-			// Overwrite is allowed when replace=rue
-			replace := adapter.Copy(ctx, "newKey", "key", 0, true)
-			Expect(replace.Val()).To(Equal(int64(1)))
-		})
+				// Overwrite is allowed when replace=rue
+				replace := adapter.Copy(ctx, "newKey", "key", 0, true)
+				Expect(replace.Val()).To(Equal(int64(1)))
+			})
+		}
 	})
 
 	Describe("hashes", func() {
@@ -1821,33 +1863,35 @@ var _ = Describe("Commands", func() {
 			//Expect(slice).To(Equal([]string{"hello1", "hello2"}))
 		})
 
-		It("should HRandField", func() {
-			err := adapter.HSet(ctx, "hash", "key1", "hello1").Err()
-			Expect(err).NotTo(HaveOccurred())
-			err = adapter.HSet(ctx, "hash", "key2", "hello2").Err()
-			Expect(err).NotTo(HaveOccurred())
+		if resp3 {
+			It("should HRandField", func() {
+				err := adapter.HSet(ctx, "hash", "key1", "hello1").Err()
+				Expect(err).NotTo(HaveOccurred())
+				err = adapter.HSet(ctx, "hash", "key2", "hello2").Err()
+				Expect(err).NotTo(HaveOccurred())
 
-			v := adapter.HRandField(ctx, "hash", 1, false)
-			Expect(v.Err()).NotTo(HaveOccurred())
-			Expect(v.Val()).To(Or(Equal([]string{"key1"}), Equal([]string{"key2"})))
+				v := adapter.HRandField(ctx, "hash", 1, false)
+				Expect(v.Err()).NotTo(HaveOccurred())
+				Expect(v.Val()).To(Or(Equal([]string{"key1"}), Equal([]string{"key2"})))
 
-			v = adapter.HRandField(ctx, "hash", 0, false)
-			Expect(v.Err()).NotTo(HaveOccurred())
-			Expect(v.Val()).To(HaveLen(0))
+				v = adapter.HRandField(ctx, "hash", 0, false)
+				Expect(v.Err()).NotTo(HaveOccurred())
+				Expect(v.Val()).To(HaveLen(0))
 
-			v = adapter.HRandField(ctx, "hash", 2, true)
-			Expect(v.Err()).NotTo(HaveOccurred())
-			Expect(v.Val()).To(Or(
-				ContainElements("key1", "hello1", "key2", "hello2"),
-				ContainElements("key2", "hello2", "key1", "hello1"),
-			))
+				v = adapter.HRandField(ctx, "hash", 2, true)
+				Expect(v.Err()).NotTo(HaveOccurred())
+				Expect(v.Val()).To(Or(
+					ContainElements("key1", "hello1", "key2", "hello2"),
+					ContainElements("key2", "hello2", "key1", "hello1"),
+				))
 
-			// TODO
-			//var slice []string
-			//err = adapter.HRandField(ctx, "hash", 1, true).ScanSlice(&slice)
-			//Expect(err).NotTo(HaveOccurred())
-			//Expect(slice).To(Or(Equal([]string{"key1", "hello1"}), Equal([]string{"key2", "hello2"})))
-		})
+				// TODO
+				//var slice []string
+				//err = adapter.HRandField(ctx, "hash", 1, true).ScanSlice(&slice)
+				//Expect(err).NotTo(HaveOccurred())
+				//Expect(slice).To(Or(Equal([]string{"key1", "hello1"}), Equal([]string{"key2", "hello2"})))
+			})
+		}
 	})
 
 	Describe("hyperloglog", func() {
@@ -2078,80 +2122,82 @@ var _ = Describe("Commands", func() {
 			Expect(lRange.Val()).To(Equal([]string{"two", "three"}))
 		})
 
-		It("should LPopCount", func() {
-			rPush := adapter.RPush(ctx, "list", "one")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
-			rPush = adapter.RPush(ctx, "list", "two")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
-			rPush = adapter.RPush(ctx, "list", "three")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
-			rPush = adapter.RPush(ctx, "list", "four")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
+		if resp3 {
+			It("should LPopCount", func() {
+				rPush := adapter.RPush(ctx, "list", "one")
+				Expect(rPush.Err()).NotTo(HaveOccurred())
+				rPush = adapter.RPush(ctx, "list", "two")
+				Expect(rPush.Err()).NotTo(HaveOccurred())
+				rPush = adapter.RPush(ctx, "list", "three")
+				Expect(rPush.Err()).NotTo(HaveOccurred())
+				rPush = adapter.RPush(ctx, "list", "four")
+				Expect(rPush.Err()).NotTo(HaveOccurred())
 
-			lPopCount := adapter.LPopCount(ctx, "list", 2)
-			Expect(lPopCount.Err()).NotTo(HaveOccurred())
-			Expect(lPopCount.Val()).To(Equal([]string{"one", "two"}))
+				lPopCount := adapter.LPopCount(ctx, "list", 2)
+				Expect(lPopCount.Err()).NotTo(HaveOccurred())
+				Expect(lPopCount.Val()).To(Equal([]string{"one", "two"}))
 
-			lRange := adapter.LRange(ctx, "list", 0, -1)
-			Expect(lRange.Err()).NotTo(HaveOccurred())
-			Expect(lRange.Val()).To(Equal([]string{"three", "four"}))
-		})
+				lRange := adapter.LRange(ctx, "list", 0, -1)
+				Expect(lRange.Err()).NotTo(HaveOccurred())
+				Expect(lRange.Val()).To(Equal([]string{"three", "four"}))
+			})
 
-		It("should LPos", func() {
-			rPush := adapter.RPush(ctx, "list", "a")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
-			rPush = adapter.RPush(ctx, "list", "b")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
-			rPush = adapter.RPush(ctx, "list", "c")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
-			rPush = adapter.RPush(ctx, "list", "b")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
+			It("should LPos", func() {
+				rPush := adapter.RPush(ctx, "list", "a")
+				Expect(rPush.Err()).NotTo(HaveOccurred())
+				rPush = adapter.RPush(ctx, "list", "b")
+				Expect(rPush.Err()).NotTo(HaveOccurred())
+				rPush = adapter.RPush(ctx, "list", "c")
+				Expect(rPush.Err()).NotTo(HaveOccurred())
+				rPush = adapter.RPush(ctx, "list", "b")
+				Expect(rPush.Err()).NotTo(HaveOccurred())
 
-			lPos := adapter.LPos(ctx, "list", "b", LPosArgs{})
-			Expect(lPos.Err()).NotTo(HaveOccurred())
-			Expect(lPos.Val()).To(Equal(int64(1)))
+				lPos := adapter.LPos(ctx, "list", "b", LPosArgs{})
+				Expect(lPos.Err()).NotTo(HaveOccurred())
+				Expect(lPos.Val()).To(Equal(int64(1)))
 
-			lPos = adapter.LPos(ctx, "list", "b", LPosArgs{Rank: 2})
-			Expect(lPos.Err()).NotTo(HaveOccurred())
-			Expect(lPos.Val()).To(Equal(int64(3)))
+				lPos = adapter.LPos(ctx, "list", "b", LPosArgs{Rank: 2})
+				Expect(lPos.Err()).NotTo(HaveOccurred())
+				Expect(lPos.Val()).To(Equal(int64(3)))
 
-			lPos = adapter.LPos(ctx, "list", "b", LPosArgs{Rank: -2})
-			Expect(lPos.Err()).NotTo(HaveOccurred())
-			Expect(lPos.Val()).To(Equal(int64(1)))
+				lPos = adapter.LPos(ctx, "list", "b", LPosArgs{Rank: -2})
+				Expect(lPos.Err()).NotTo(HaveOccurred())
+				Expect(lPos.Val()).To(Equal(int64(1)))
 
-			lPos = adapter.LPos(ctx, "list", "b", LPosArgs{Rank: 2, MaxLen: 1})
-			Expect(rueidis.IsRedisNil(lPos.Err())).To(BeTrue())
+				lPos = adapter.LPos(ctx, "list", "b", LPosArgs{Rank: 2, MaxLen: 1})
+				Expect(rueidis.IsRedisNil(lPos.Err())).To(BeTrue())
 
-			lPos = adapter.LPos(ctx, "list", "z", LPosArgs{})
-			Expect(rueidis.IsRedisNil(lPos.Err())).To(BeTrue())
-		})
+				lPos = adapter.LPos(ctx, "list", "z", LPosArgs{})
+				Expect(rueidis.IsRedisNil(lPos.Err())).To(BeTrue())
+			})
 
-		It("should LPosCount", func() {
-			rPush := adapter.RPush(ctx, "list", "a")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
-			rPush = adapter.RPush(ctx, "list", "b")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
-			rPush = adapter.RPush(ctx, "list", "c")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
-			rPush = adapter.RPush(ctx, "list", "b")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
+			It("should LPosCount", func() {
+				rPush := adapter.RPush(ctx, "list", "a")
+				Expect(rPush.Err()).NotTo(HaveOccurred())
+				rPush = adapter.RPush(ctx, "list", "b")
+				Expect(rPush.Err()).NotTo(HaveOccurred())
+				rPush = adapter.RPush(ctx, "list", "c")
+				Expect(rPush.Err()).NotTo(HaveOccurred())
+				rPush = adapter.RPush(ctx, "list", "b")
+				Expect(rPush.Err()).NotTo(HaveOccurred())
 
-			lPos := adapter.LPosCount(ctx, "list", "b", 2, LPosArgs{})
-			Expect(lPos.Err()).NotTo(HaveOccurred())
-			Expect(lPos.Val()).To(Equal([]int64{1, 3}))
+				lPos := adapter.LPosCount(ctx, "list", "b", 2, LPosArgs{})
+				Expect(lPos.Err()).NotTo(HaveOccurred())
+				Expect(lPos.Val()).To(Equal([]int64{1, 3}))
 
-			lPos = adapter.LPosCount(ctx, "list", "b", 2, LPosArgs{Rank: 2})
-			Expect(lPos.Err()).NotTo(HaveOccurred())
-			Expect(lPos.Val()).To(Equal([]int64{3}))
+				lPos = adapter.LPosCount(ctx, "list", "b", 2, LPosArgs{Rank: 2})
+				Expect(lPos.Err()).NotTo(HaveOccurred())
+				Expect(lPos.Val()).To(Equal([]int64{3}))
 
-			lPos = adapter.LPosCount(ctx, "list", "b", 1, LPosArgs{Rank: 1, MaxLen: 1})
-			Expect(lPos.Err()).NotTo(HaveOccurred())
-			Expect(lPos.Val()).To(Equal([]int64{}))
+				lPos = adapter.LPosCount(ctx, "list", "b", 1, LPosArgs{Rank: 1, MaxLen: 1})
+				Expect(lPos.Err()).NotTo(HaveOccurred())
+				Expect(lPos.Val()).To(Equal([]int64{}))
 
-			lPos = adapter.LPosCount(ctx, "list", "b", 1, LPosArgs{Rank: 1, MaxLen: 0})
-			Expect(lPos.Err()).NotTo(HaveOccurred())
-			Expect(lPos.Val()).To(Equal([]int64{1}))
-		})
+				lPos = adapter.LPosCount(ctx, "list", "b", 1, LPosArgs{Rank: 1, MaxLen: 0})
+				Expect(lPos.Err()).NotTo(HaveOccurred())
+				Expect(lPos.Val()).To(Equal([]int64{1}))
+			})
+		}
 
 		It("should LPush", func() {
 			lPush := adapter.LPush(ctx, "list", "World")
@@ -2296,19 +2342,21 @@ var _ = Describe("Commands", func() {
 			Expect(lRange.Val()).To(Equal([]string{"one", "two"}))
 		})
 
-		It("should RPopCount", func() {
-			rPush := adapter.RPush(ctx, "list", "one", "two", "three", "four")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
-			Expect(rPush.Val()).To(Equal(int64(4)))
+		if resp3 {
+			It("should RPopCount", func() {
+				rPush := adapter.RPush(ctx, "list", "one", "two", "three", "four")
+				Expect(rPush.Err()).NotTo(HaveOccurred())
+				Expect(rPush.Val()).To(Equal(int64(4)))
 
-			rPopCount := adapter.RPopCount(ctx, "list", 2)
-			Expect(rPopCount.Err()).NotTo(HaveOccurred())
-			Expect(rPopCount.Val()).To(Equal([]string{"four", "three"}))
+				rPopCount := adapter.RPopCount(ctx, "list", 2)
+				Expect(rPopCount.Err()).NotTo(HaveOccurred())
+				Expect(rPopCount.Val()).To(Equal([]string{"four", "three"}))
 
-			lRange := adapter.LRange(ctx, "list", 0, -1)
-			Expect(lRange.Err()).NotTo(HaveOccurred())
-			Expect(lRange.Val()).To(Equal([]string{"one", "two"}))
-		})
+				lRange := adapter.LRange(ctx, "list", 0, -1)
+				Expect(lRange.Err()).NotTo(HaveOccurred())
+				Expect(lRange.Val()).To(Equal([]string{"one", "two"}))
+			})
+		}
 
 		It("should RPopLPush", func() {
 			rPush := adapter.RPush(ctx, "list", "one")
@@ -2379,49 +2427,51 @@ var _ = Describe("Commands", func() {
 			Expect(lRange.Val()).To(Equal([]string{}))
 		})
 
-		It("should LMove", func() {
-			rPush := adapter.RPush(ctx, "lmove1", "ichi")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
-			Expect(rPush.Val()).To(Equal(int64(1)))
+		if resp3 {
+			It("should LMove", func() {
+				rPush := adapter.RPush(ctx, "lmove1", "ichi")
+				Expect(rPush.Err()).NotTo(HaveOccurred())
+				Expect(rPush.Val()).To(Equal(int64(1)))
 
-			rPush = adapter.RPush(ctx, "lmove1", "ni")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
-			Expect(rPush.Val()).To(Equal(int64(2)))
+				rPush = adapter.RPush(ctx, "lmove1", "ni")
+				Expect(rPush.Err()).NotTo(HaveOccurred())
+				Expect(rPush.Val()).To(Equal(int64(2)))
 
-			rPush = adapter.RPush(ctx, "lmove1", "san")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
-			Expect(rPush.Val()).To(Equal(int64(3)))
+				rPush = adapter.RPush(ctx, "lmove1", "san")
+				Expect(rPush.Err()).NotTo(HaveOccurred())
+				Expect(rPush.Val()).To(Equal(int64(3)))
 
-			lMove := adapter.LMove(ctx, "lmove1", "lmove2", "RIGHT", "LEFT")
-			Expect(lMove.Err()).NotTo(HaveOccurred())
-			Expect(lMove.Val()).To(Equal("san"))
+				lMove := adapter.LMove(ctx, "lmove1", "lmove2", "RIGHT", "LEFT")
+				Expect(lMove.Err()).NotTo(HaveOccurred())
+				Expect(lMove.Val()).To(Equal("san"))
 
-			lRange := adapter.LRange(ctx, "lmove2", 0, -1)
-			Expect(lRange.Err()).NotTo(HaveOccurred())
-			Expect(lRange.Val()).To(Equal([]string{"san"}))
-		})
+				lRange := adapter.LRange(ctx, "lmove2", 0, -1)
+				Expect(lRange.Err()).NotTo(HaveOccurred())
+				Expect(lRange.Val()).To(Equal([]string{"san"}))
+			})
 
-		It("should BLMove", func() {
-			rPush := adapter.RPush(ctx, "blmove1", "ichi")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
-			Expect(rPush.Val()).To(Equal(int64(1)))
+			It("should BLMove", func() {
+				rPush := adapter.RPush(ctx, "blmove1", "ichi")
+				Expect(rPush.Err()).NotTo(HaveOccurred())
+				Expect(rPush.Val()).To(Equal(int64(1)))
 
-			rPush = adapter.RPush(ctx, "blmove1", "ni")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
-			Expect(rPush.Val()).To(Equal(int64(2)))
+				rPush = adapter.RPush(ctx, "blmove1", "ni")
+				Expect(rPush.Err()).NotTo(HaveOccurred())
+				Expect(rPush.Val()).To(Equal(int64(2)))
 
-			rPush = adapter.RPush(ctx, "blmove1", "san")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
-			Expect(rPush.Val()).To(Equal(int64(3)))
+				rPush = adapter.RPush(ctx, "blmove1", "san")
+				Expect(rPush.Err()).NotTo(HaveOccurred())
+				Expect(rPush.Val()).To(Equal(int64(3)))
 
-			blMove := adapter.BLMove(ctx, "blmove1", "blmove2", "RIGHT", "LEFT", time.Second)
-			Expect(blMove.Err()).NotTo(HaveOccurred())
-			Expect(blMove.Val()).To(Equal("san"))
+				blMove := adapter.BLMove(ctx, "blmove1", "blmove2", "RIGHT", "LEFT", time.Second)
+				Expect(blMove.Err()).NotTo(HaveOccurred())
+				Expect(blMove.Val()).To(Equal("san"))
 
-			lRange := adapter.LRange(ctx, "blmove2", 0, -1)
-			Expect(lRange.Err()).NotTo(HaveOccurred())
-			Expect(lRange.Val()).To(Equal([]string{"san"}))
-		})
+				lRange := adapter.LRange(ctx, "blmove2", 0, -1)
+				Expect(lRange.Err()).NotTo(HaveOccurred())
+				Expect(lRange.Val()).To(Equal([]string{"san"}))
+			})
+		}
 	})
 
 	Describe("sets", func() {
@@ -2569,14 +2619,16 @@ var _ = Describe("Commands", func() {
 			Expect(sIsMember.Val()).To(Equal(false))
 		})
 
-		It("should SMIsMember", func() {
-			sAdd := adapter.SAdd(ctx, "set", "one")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+		if resp3 {
+			It("should SMIsMember", func() {
+				sAdd := adapter.SAdd(ctx, "set", "one")
+				Expect(sAdd.Err()).NotTo(HaveOccurred())
 
-			sMIsMember := adapter.SMIsMember(ctx, "set", "one", "two")
-			Expect(sMIsMember.Err()).NotTo(HaveOccurred())
-			Expect(sMIsMember.Val()).To(Equal([]bool{true, false}))
-		})
+				sMIsMember := adapter.SMIsMember(ctx, "set", "one", "two")
+				Expect(sMIsMember.Err()).NotTo(HaveOccurred())
+				Expect(sMIsMember.Val()).To(Equal([]bool{true, false}))
+			})
+		}
 
 		It("should SMembers", func() {
 			sAdd := adapter.SAdd(ctx, "set", "Hello")
@@ -2992,41 +3044,43 @@ var _ = Describe("Commands", func() {
 			}}))
 		})
 
-		It("should ZAddArgs", func() {
-			// Test only the GT+LT options.
-			added, err := adapter.ZAddArgs(ctx, "zset", ZAddArgs{
-				GT:      true,
-				Members: []Z{{Score: 1, Member: "one"}},
-			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(added).To(Equal(int64(1)))
+		if resp3 {
+			It("should ZAddArgs", func() {
+				// Test only the GT+LT options.
+				added, err := adapter.ZAddArgs(ctx, "zset", ZAddArgs{
+					GT:      true,
+					Members: []Z{{Score: 1, Member: "one"}},
+				}).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(added).To(Equal(int64(1)))
 
-			vals, err := adapter.ZRangeWithScores(ctx, "zset", 0, -1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]Z{{Score: 1, Member: "one"}}))
+				vals, err := adapter.ZRangeWithScores(ctx, "zset", 0, -1).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(vals).To(Equal([]Z{{Score: 1, Member: "one"}}))
 
-			added, err = adapter.ZAddArgs(ctx, "zset", ZAddArgs{
-				GT:      true,
-				Members: []Z{{Score: 2, Member: "one"}},
-			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(added).To(Equal(int64(0)))
+				added, err = adapter.ZAddArgs(ctx, "zset", ZAddArgs{
+					GT:      true,
+					Members: []Z{{Score: 2, Member: "one"}},
+				}).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(added).To(Equal(int64(0)))
 
-			vals, err = adapter.ZRangeWithScores(ctx, "zset", 0, -1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]Z{{Score: 2, Member: "one"}}))
+				vals, err = adapter.ZRangeWithScores(ctx, "zset", 0, -1).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(vals).To(Equal([]Z{{Score: 2, Member: "one"}}))
 
-			added, err = adapter.ZAddArgs(ctx, "zset", ZAddArgs{
-				LT:      true,
-				Members: []Z{{Score: 1, Member: "one"}},
-			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(added).To(Equal(int64(0)))
+				added, err = adapter.ZAddArgs(ctx, "zset", ZAddArgs{
+					LT:      true,
+					Members: []Z{{Score: 1, Member: "one"}},
+				}).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(added).To(Equal(int64(0)))
 
-			vals, err = adapter.ZRangeWithScores(ctx, "zset", 0, -1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]Z{{Score: 1, Member: "one"}}))
-		})
+				vals, err = adapter.ZRangeWithScores(ctx, "zset", 0, -1).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(vals).To(Equal([]Z{{Score: 1, Member: "one"}}))
+			})
+		}
 
 		It("should ZAddNX", func() {
 			added, err := adapter.ZAddNX(ctx, "zset", Z{
@@ -3194,32 +3248,34 @@ var _ = Describe("Commands", func() {
 			}}))
 		})
 
-		It("should ZMScore", func() {
-			zmScore := adapter.ZMScore(ctx, "zset", "one", "three")
-			Expect(zmScore.Err()).NotTo(HaveOccurred())
-			Expect(zmScore.Val()).To(HaveLen(2))
-			Expect(zmScore.Val()[0]).To(Equal(float64(0)))
+		if resp3 {
+			It("should ZMScore", func() {
+				zmScore := adapter.ZMScore(ctx, "zset", "one", "three")
+				Expect(zmScore.Err()).NotTo(HaveOccurred())
+				Expect(zmScore.Val()).To(HaveLen(2))
+				Expect(zmScore.Val()[0]).To(Equal(float64(0)))
 
-			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
-			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
-			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+				err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
+				Expect(err).NotTo(HaveOccurred())
+				err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
+				Expect(err).NotTo(HaveOccurred())
+				err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
+				Expect(err).NotTo(HaveOccurred())
 
-			zmScore = adapter.ZMScore(ctx, "zset", "one", "three")
-			Expect(zmScore.Err()).NotTo(HaveOccurred())
-			Expect(zmScore.Val()).To(HaveLen(2))
-			Expect(zmScore.Val()[0]).To(Equal(float64(1)))
+				zmScore = adapter.ZMScore(ctx, "zset", "one", "three")
+				Expect(zmScore.Err()).NotTo(HaveOccurred())
+				Expect(zmScore.Val()).To(HaveLen(2))
+				Expect(zmScore.Val()[0]).To(Equal(float64(1)))
 
-			zmScore = adapter.ZMScore(ctx, "zset", "four")
-			Expect(zmScore.Err()).NotTo(HaveOccurred())
-			Expect(zmScore.Val()).To(HaveLen(1))
+				zmScore = adapter.ZMScore(ctx, "zset", "four")
+				Expect(zmScore.Err()).NotTo(HaveOccurred())
+				Expect(zmScore.Val()).To(HaveLen(1))
 
-			zmScore = adapter.ZMScore(ctx, "zset", "four", "one")
-			Expect(zmScore.Err()).NotTo(HaveOccurred())
-			Expect(zmScore.Val()).To(HaveLen(2))
-		})
+				zmScore = adapter.ZMScore(ctx, "zset", "four", "one")
+				Expect(zmScore.Err()).NotTo(HaveOccurred())
+				Expect(zmScore.Val()).To(HaveLen(2))
+			})
+		}
 
 		It("should ZPopMax", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{
@@ -3410,67 +3466,69 @@ var _ = Describe("Commands", func() {
 			}}))
 		})
 
-		It("should ZRangeArgs", func() {
-			added, err := adapter.ZAddArgs(ctx, "zset", ZAddArgs{
-				Members: []Z{
-					{Score: 1, Member: "one"},
-					{Score: 2, Member: "two"},
+		if resp3 {
+			It("should ZRangeArgs", func() {
+				added, err := adapter.ZAddArgs(ctx, "zset", ZAddArgs{
+					Members: []Z{
+						{Score: 1, Member: "one"},
+						{Score: 2, Member: "two"},
+						{Score: 3, Member: "three"},
+						{Score: 4, Member: "four"},
+					},
+				}).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(added).To(Equal(int64(4)))
+
+				zRange, err := adapter.ZRangeArgs(ctx, ZRangeArgs{
+					Key:     "zset",
+					Start:   1,
+					Stop:    4,
+					ByScore: true,
+					Rev:     true,
+					Offset:  1,
+					Count:   2,
+				}).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(zRange).To(Equal([]string{"three", "two"}))
+
+				zRange, err = adapter.ZRangeArgs(ctx, ZRangeArgs{
+					Key:    "zset",
+					Start:  "-",
+					Stop:   "+",
+					ByLex:  true,
+					Rev:    true,
+					Offset: 2,
+					Count:  2,
+				}).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(zRange).To(Equal([]string{"two", "one"}))
+
+				zRange, err = adapter.ZRangeArgs(ctx, ZRangeArgs{
+					Key:     "zset",
+					Start:   "(1",
+					Stop:    "(4",
+					ByScore: true,
+				}).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(zRange).To(Equal([]string{"two", "three"}))
+
+				// withScores.
+				zSlice, err := adapter.ZRangeArgsWithScores(ctx, ZRangeArgs{
+					Key:     "zset",
+					Start:   1,
+					Stop:    4,
+					ByScore: true,
+					Rev:     true,
+					Offset:  1,
+					Count:   2,
+				}).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(zSlice).To(Equal([]Z{
 					{Score: 3, Member: "three"},
-					{Score: 4, Member: "four"},
-				},
-			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(added).To(Equal(int64(4)))
-
-			zRange, err := adapter.ZRangeArgs(ctx, ZRangeArgs{
-				Key:     "zset",
-				Start:   1,
-				Stop:    4,
-				ByScore: true,
-				Rev:     true,
-				Offset:  1,
-				Count:   2,
-			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(zRange).To(Equal([]string{"three", "two"}))
-
-			zRange, err = adapter.ZRangeArgs(ctx, ZRangeArgs{
-				Key:    "zset",
-				Start:  "-",
-				Stop:   "+",
-				ByLex:  true,
-				Rev:    true,
-				Offset: 2,
-				Count:  2,
-			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(zRange).To(Equal([]string{"two", "one"}))
-
-			zRange, err = adapter.ZRangeArgs(ctx, ZRangeArgs{
-				Key:     "zset",
-				Start:   "(1",
-				Stop:    "(4",
-				ByScore: true,
-			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(zRange).To(Equal([]string{"two", "three"}))
-
-			// withScores.
-			zSlice, err := adapter.ZRangeArgsWithScores(ctx, ZRangeArgs{
-				Key:     "zset",
-				Start:   1,
-				Stop:    4,
-				ByScore: true,
-				Rev:     true,
-				Offset:  1,
-				Count:   2,
-			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(zSlice).To(Equal([]Z{
-				{Score: 3, Member: "three"},
-				{Score: 2, Member: "two"},
-			}))
-		})
+					{Score: 2, Member: "two"},
+				}))
+			})
+		}
 
 		It("should ZRangeByScore", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
@@ -3607,34 +3665,36 @@ var _ = Describe("Commands", func() {
 			Expect(vals).To(Equal([]Z{}))
 		})
 
-		It("should ZRangeStore", func() {
-			added, err := adapter.ZAddArgs(ctx, "zset", ZAddArgs{
-				Members: []Z{
-					{Score: 1, Member: "one"},
-					{Score: 2, Member: "two"},
-					{Score: 3, Member: "three"},
-					{Score: 4, Member: "four"},
-				},
-			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(added).To(Equal(int64(4)))
+		if resp3 {
+			It("should ZRangeStore", func() {
+				added, err := adapter.ZAddArgs(ctx, "zset", ZAddArgs{
+					Members: []Z{
+						{Score: 1, Member: "one"},
+						{Score: 2, Member: "two"},
+						{Score: 3, Member: "three"},
+						{Score: 4, Member: "four"},
+					},
+				}).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(added).To(Equal(int64(4)))
 
-			rangeStore, err := adapter.ZRangeStore(ctx, "new-zset", ZRangeArgs{
-				Key:     "zset",
-				Start:   1,
-				Stop:    4,
-				ByScore: true,
-				Rev:     true,
-				Offset:  1,
-				Count:   2,
-			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(rangeStore).To(Equal(int64(2)))
+				rangeStore, err := adapter.ZRangeStore(ctx, "new-zset", ZRangeArgs{
+					Key:     "zset",
+					Start:   1,
+					Stop:    4,
+					ByScore: true,
+					Rev:     true,
+					Offset:  1,
+					Count:   2,
+				}).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(rangeStore).To(Equal(int64(2)))
 
-			zRange, err := adapter.ZRange(ctx, "new-zset", 0, -1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(zRange).To(Equal([]string{"two", "three"}))
-		})
+				zRange, err := adapter.ZRange(ctx, "new-zset", 0, -1).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(zRange).To(Equal([]string{"two", "three"}))
+			})
+		}
 
 		It("should ZRank", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
@@ -3933,44 +3993,46 @@ var _ = Describe("Commands", func() {
 			Expect(zScore.Val()).To(Equal(float64(1.001)))
 		})
 
-		It("should ZUnion", func() {
-			err := adapter.ZAddArgs(ctx, "zset1", ZAddArgs{
-				Members: []Z{
-					{Score: 1, Member: "one"},
-					{Score: 2, Member: "two"},
-				},
-			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+		if resp3 {
+			It("should ZUnion", func() {
+				err := adapter.ZAddArgs(ctx, "zset1", ZAddArgs{
+					Members: []Z{
+						{Score: 1, Member: "one"},
+						{Score: 2, Member: "two"},
+					},
+				}).Err()
+				Expect(err).NotTo(HaveOccurred())
 
-			err = adapter.ZAddArgs(ctx, "zset2", ZAddArgs{
-				Members: []Z{
-					{Score: 1, Member: "one"},
-					{Score: 2, Member: "two"},
-					{Score: 3, Member: "three"},
-				},
-			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+				err = adapter.ZAddArgs(ctx, "zset2", ZAddArgs{
+					Members: []Z{
+						{Score: 1, Member: "one"},
+						{Score: 2, Member: "two"},
+						{Score: 3, Member: "three"},
+					},
+				}).Err()
+				Expect(err).NotTo(HaveOccurred())
 
-			union, err := adapter.ZUnion(ctx, ZStore{
-				Keys:      []string{"zset1", "zset2"},
-				Weights:   []int64{2, 3},
-				Aggregate: "sum",
-			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(union).To(Equal([]string{"one", "three", "two"}))
+				union, err := adapter.ZUnion(ctx, ZStore{
+					Keys:      []string{"zset1", "zset2"},
+					Weights:   []int64{2, 3},
+					Aggregate: "sum",
+				}).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(union).To(Equal([]string{"one", "three", "two"}))
 
-			unionScores, err := adapter.ZUnionWithScores(ctx, ZStore{
-				Keys:      []string{"zset1", "zset2"},
-				Weights:   []int64{2, 3},
-				Aggregate: "sum",
-			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(unionScores).To(Equal([]Z{
-				{Score: 5, Member: "one"},
-				{Score: 9, Member: "three"},
-				{Score: 10, Member: "two"},
-			}))
-		})
+				unionScores, err := adapter.ZUnionWithScores(ctx, ZStore{
+					Keys:      []string{"zset1", "zset2"},
+					Weights:   []int64{2, 3},
+					Aggregate: "sum",
+				}).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(unionScores).To(Equal([]Z{
+					{Score: 5, Member: "one"},
+					{Score: 9, Member: "three"},
+					{Score: 10, Member: "two"},
+				}))
+			})
+		}
 
 		It("should ZUnionStore", func() {
 			err := adapter.ZAdd(ctx, "zset1", Z{Score: 1, Member: "one"}).Err()
@@ -4006,140 +4068,142 @@ var _ = Describe("Commands", func() {
 			}}))
 		})
 
-		It("should ZRandMember", func() {
-			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
-			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+		if resp3 {
+			It("should ZRandMember", func() {
+				err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
+				Expect(err).NotTo(HaveOccurred())
+				err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
+				Expect(err).NotTo(HaveOccurred())
 
-			v := adapter.ZRandMember(ctx, "zset", 1)
-			Expect(v.Err()).NotTo(HaveOccurred())
-			Expect(v.Val()).To(Or(Equal([]string{"one"}), Equal([]string{"two"})))
+				v := adapter.ZRandMember(ctx, "zset", 1)
+				Expect(v.Err()).NotTo(HaveOccurred())
+				Expect(v.Val()).To(Or(Equal([]string{"one"}), Equal([]string{"two"})))
 
-			v = adapter.ZRandMember(ctx, "zset", 0)
-			Expect(v.Err()).NotTo(HaveOccurred())
-			Expect(v.Val()).To(HaveLen(0))
+				v = adapter.ZRandMember(ctx, "zset", 0)
+				Expect(v.Err()).NotTo(HaveOccurred())
+				Expect(v.Val()).To(HaveLen(0))
 
-			kv, err := adapter.ZRandMemberWithScores(ctx, "zset", 1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(kv).To(Or(
-				Equal([]Z{{Member: "one", Score: 1}}),
-				Equal([]Z{{Member: "two", Score: 2}}),
-			))
-		})
+				kv, err := adapter.ZRandMemberWithScores(ctx, "zset", 1).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(kv).To(Or(
+					Equal([]Z{{Member: "one", Score: 1}}),
+					Equal([]Z{{Member: "two", Score: 2}}),
+				))
+			})
 
-		It("should ZDiff", func() {
-			err := adapter.ZAdd(ctx, "zset1", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
-			err = adapter.ZAdd(ctx, "zset1", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
-			err = adapter.ZAdd(ctx, "zset1", Z{Score: 3, Member: "three"}).Err()
-			Expect(err).NotTo(HaveOccurred())
-			err = adapter.ZAdd(ctx, "zset2", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			It("should ZDiff", func() {
+				err := adapter.ZAdd(ctx, "zset1", Z{Score: 1, Member: "one"}).Err()
+				Expect(err).NotTo(HaveOccurred())
+				err = adapter.ZAdd(ctx, "zset1", Z{Score: 2, Member: "two"}).Err()
+				Expect(err).NotTo(HaveOccurred())
+				err = adapter.ZAdd(ctx, "zset1", Z{Score: 3, Member: "three"}).Err()
+				Expect(err).NotTo(HaveOccurred())
+				err = adapter.ZAdd(ctx, "zset2", Z{Score: 1, Member: "one"}).Err()
+				Expect(err).NotTo(HaveOccurred())
 
-			v, err := adapter.ZDiff(ctx, "zset1", "zset2").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(v).To(Equal([]string{"two", "three"}))
-		})
+				v, err := adapter.ZDiff(ctx, "zset1", "zset2").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(v).To(Equal([]string{"two", "three"}))
+			})
 
-		It("should ZDiffWithScores", func() {
-			err := adapter.ZAdd(ctx, "zset1", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
-			err = adapter.ZAdd(ctx, "zset1", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
-			err = adapter.ZAdd(ctx, "zset1", Z{Score: 3, Member: "three"}).Err()
-			Expect(err).NotTo(HaveOccurred())
-			err = adapter.ZAdd(ctx, "zset2", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			It("should ZDiffWithScores", func() {
+				err := adapter.ZAdd(ctx, "zset1", Z{Score: 1, Member: "one"}).Err()
+				Expect(err).NotTo(HaveOccurred())
+				err = adapter.ZAdd(ctx, "zset1", Z{Score: 2, Member: "two"}).Err()
+				Expect(err).NotTo(HaveOccurred())
+				err = adapter.ZAdd(ctx, "zset1", Z{Score: 3, Member: "three"}).Err()
+				Expect(err).NotTo(HaveOccurred())
+				err = adapter.ZAdd(ctx, "zset2", Z{Score: 1, Member: "one"}).Err()
+				Expect(err).NotTo(HaveOccurred())
 
-			v, err := adapter.ZDiffWithScores(ctx, "zset1", "zset2").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(v).To(Equal([]Z{
-				{
-					Member: "two",
-					Score:  2,
-				},
-				{
+				v, err := adapter.ZDiffWithScores(ctx, "zset1", "zset2").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(v).To(Equal([]Z{
+					{
+						Member: "two",
+						Score:  2,
+					},
+					{
+						Member: "three",
+						Score:  3,
+					},
+				}))
+			})
+
+			It("should ZInter", func() {
+				err := adapter.ZAdd(ctx, "zset1", Z{Score: 1, Member: "one"}).Err()
+				Expect(err).NotTo(HaveOccurred())
+				err = adapter.ZAdd(ctx, "zset1", Z{Score: 2, Member: "two"}).Err()
+				Expect(err).NotTo(HaveOccurred())
+				err = adapter.ZAdd(ctx, "zset2", Z{Score: 1, Member: "one"}).Err()
+				Expect(err).NotTo(HaveOccurred())
+				err = adapter.ZAdd(ctx, "zset2", Z{Score: 2, Member: "two"}).Err()
+				Expect(err).NotTo(HaveOccurred())
+				err = adapter.ZAdd(ctx, "zset2", Z{Score: 3, Member: "three"}).Err()
+				Expect(err).NotTo(HaveOccurred())
+
+				v, err := adapter.ZInter(ctx, ZStore{
+					Keys: []string{"zset1", "zset2"},
+				}).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(v).To(Equal([]string{"one", "two"}))
+			})
+
+			It("should ZInterWithScores", func() {
+				err := adapter.ZAdd(ctx, "zset1", Z{Score: 1, Member: "one"}).Err()
+				Expect(err).NotTo(HaveOccurred())
+				err = adapter.ZAdd(ctx, "zset1", Z{Score: 2, Member: "two"}).Err()
+				Expect(err).NotTo(HaveOccurred())
+				err = adapter.ZAdd(ctx, "zset2", Z{Score: 1, Member: "one"}).Err()
+				Expect(err).NotTo(HaveOccurred())
+				err = adapter.ZAdd(ctx, "zset2", Z{Score: 2, Member: "two"}).Err()
+				Expect(err).NotTo(HaveOccurred())
+				err = adapter.ZAdd(ctx, "zset2", Z{Score: 3, Member: "three"}).Err()
+				Expect(err).NotTo(HaveOccurred())
+
+				v, err := adapter.ZInterWithScores(ctx, ZStore{
+					Keys:      []string{"zset1", "zset2"},
+					Weights:   []int64{2, 3},
+					Aggregate: "Max",
+				}).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(v).To(Equal([]Z{
+					{
+						Member: "one",
+						Score:  3,
+					},
+					{
+						Member: "two",
+						Score:  6,
+					},
+				}))
+			})
+
+			It("should ZDiffStore", func() {
+				err := adapter.ZAdd(ctx, "zset1", Z{Score: 1, Member: "one"}).Err()
+				Expect(err).NotTo(HaveOccurred())
+				err = adapter.ZAdd(ctx, "zset1", Z{Score: 2, Member: "two"}).Err()
+				Expect(err).NotTo(HaveOccurred())
+				err = adapter.ZAdd(ctx, "zset2", Z{Score: 1, Member: "one"}).Err()
+				Expect(err).NotTo(HaveOccurred())
+				err = adapter.ZAdd(ctx, "zset2", Z{Score: 2, Member: "two"}).Err()
+				Expect(err).NotTo(HaveOccurred())
+				err = adapter.ZAdd(ctx, "zset2", Z{Score: 3, Member: "three"}).Err()
+				Expect(err).NotTo(HaveOccurred())
+				v, err := adapter.ZDiffStore(ctx, "out1", "zset1", "zset2").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(v).To(Equal(int64(0)))
+				v, err = adapter.ZDiffStore(ctx, "out1", "zset2", "zset1").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(v).To(Equal(int64(1)))
+				vals, err := adapter.ZRangeWithScores(ctx, "out1", 0, -1).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(vals).To(Equal([]Z{{
+					Score:  3,
 					Member: "three",
-					Score:  3,
-				},
-			}))
-		})
-
-		It("should ZInter", func() {
-			err := adapter.ZAdd(ctx, "zset1", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
-			err = adapter.ZAdd(ctx, "zset1", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
-			err = adapter.ZAdd(ctx, "zset2", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
-			err = adapter.ZAdd(ctx, "zset2", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
-			err = adapter.ZAdd(ctx, "zset2", Z{Score: 3, Member: "three"}).Err()
-			Expect(err).NotTo(HaveOccurred())
-
-			v, err := adapter.ZInter(ctx, ZStore{
-				Keys: []string{"zset1", "zset2"},
-			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(v).To(Equal([]string{"one", "two"}))
-		})
-
-		It("should ZInterWithScores", func() {
-			err := adapter.ZAdd(ctx, "zset1", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
-			err = adapter.ZAdd(ctx, "zset1", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
-			err = adapter.ZAdd(ctx, "zset2", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
-			err = adapter.ZAdd(ctx, "zset2", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
-			err = adapter.ZAdd(ctx, "zset2", Z{Score: 3, Member: "three"}).Err()
-			Expect(err).NotTo(HaveOccurred())
-
-			v, err := adapter.ZInterWithScores(ctx, ZStore{
-				Keys:      []string{"zset1", "zset2"},
-				Weights:   []int64{2, 3},
-				Aggregate: "Max",
-			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(v).To(Equal([]Z{
-				{
-					Member: "one",
-					Score:  3,
-				},
-				{
-					Member: "two",
-					Score:  6,
-				},
-			}))
-		})
-
-		It("should ZDiffStore", func() {
-			err := adapter.ZAdd(ctx, "zset1", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
-			err = adapter.ZAdd(ctx, "zset1", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
-			err = adapter.ZAdd(ctx, "zset2", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
-			err = adapter.ZAdd(ctx, "zset2", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
-			err = adapter.ZAdd(ctx, "zset2", Z{Score: 3, Member: "three"}).Err()
-			Expect(err).NotTo(HaveOccurred())
-			v, err := adapter.ZDiffStore(ctx, "out1", "zset1", "zset2").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(v).To(Equal(int64(0)))
-			v, err = adapter.ZDiffStore(ctx, "out1", "zset2", "zset1").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(v).To(Equal(int64(1)))
-			vals, err := adapter.ZRangeWithScores(ctx, "out1", 0, -1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]Z{{
-				Score:  3,
-				Member: "three",
-			}}))
-		})
+				}}))
+			})
+		}
 	})
 
 	Describe("streams", func() {
@@ -4186,17 +4250,19 @@ var _ = Describe("Commands", func() {
 			Expect(n).To(Equal(int64(3)))
 		})
 
-		It("should XTrimMinID", func() {
-			n, err := adapter.XTrimMinID(ctx, "stream", "4-0").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(n).To(Equal(int64(3)))
-		})
+		if resp3 {
+			It("should XTrimMinID", func() {
+				n, err := adapter.XTrimMinID(ctx, "stream", "4-0").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(n).To(Equal(int64(3)))
+			})
 
-		It("should XTrimMinIDApprox", func() {
-			n, err := adapter.XTrimMinIDApprox(ctx, "stream", "4-0", 0).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(n).To(Equal(int64(3)))
-		})
+			It("should XTrimMinIDApprox", func() {
+				n, err := adapter.XTrimMinIDApprox(ctx, "stream", "4-0", 0).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(n).To(Equal(int64(3)))
+			})
+		}
 
 		It("should XAdd", func() {
 			id, err := adapter.XAdd(ctx, XAddArgs{
@@ -4233,20 +4299,22 @@ var _ = Describe("Commands", func() {
 			}))
 		})
 
-		It("should XAdd with MinID", func() {
-			id, err := adapter.XAdd(ctx, XAddArgs{
-				Stream: "stream",
-				MinID:  "5-0",
-				ID:     "4-0",
-				Values: map[string]interface{}{"quatro": "quatre"},
-			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(id).To(Equal("4-0"))
+		if resp3 {
+			It("should XAdd with MinID", func() {
+				id, err := adapter.XAdd(ctx, XAddArgs{
+					Stream: "stream",
+					MinID:  "5-0",
+					ID:     "4-0",
+					Values: map[string]interface{}{"quatro": "quatre"},
+				}).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(id).To(Equal("4-0"))
 
-			vals, err := adapter.XRange(ctx, "stream", "-", "+").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(HaveLen(0))
-		})
+				vals, err := adapter.XRange(ctx, "stream", "-", "+").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(vals).To(HaveLen(0))
+			})
+		}
 
 		It("should XDel", func() {
 			n, err := adapter.XDel(ctx, "stream", "1-0", "2-0", "3-0").Result()
@@ -4448,83 +4516,85 @@ var _ = Describe("Commands", func() {
 				Expect(n).To(Equal(int64(1)))
 			})
 
-			It("should XPending", func() {
-				info, err := adapter.XPending(ctx, "stream", "group").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(info).To(Equal(XPending{
-					Count:     3,
-					Lower:     "1-0",
-					Higher:    "3-0",
-					Consumers: map[string]int64{"consumer": 3},
-				}))
-				args := XPendingExtArgs{
-					Stream:   "stream",
-					Group:    "group",
-					Start:    "-",
-					End:      "+",
-					Count:    10,
-					Consumer: "consumer",
-				}
-				infoExt, err := adapter.XPendingExt(ctx, args).Result()
-				Expect(err).NotTo(HaveOccurred())
-				for i := range infoExt {
-					infoExt[i].Idle = 0
-				}
-				Expect(infoExt).To(Equal([]XPendingExt{
-					{ID: "1-0", Consumer: "consumer", Idle: 0, RetryCount: 1},
-					{ID: "2-0", Consumer: "consumer", Idle: 0, RetryCount: 1},
-					{ID: "3-0", Consumer: "consumer", Idle: 0, RetryCount: 1},
-				}))
+			if resp3 {
+				It("should XPending", func() {
+					info, err := adapter.XPending(ctx, "stream", "group").Result()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(info).To(Equal(XPending{
+						Count:     3,
+						Lower:     "1-0",
+						Higher:    "3-0",
+						Consumers: map[string]int64{"consumer": 3},
+					}))
+					args := XPendingExtArgs{
+						Stream:   "stream",
+						Group:    "group",
+						Start:    "-",
+						End:      "+",
+						Count:    10,
+						Consumer: "consumer",
+					}
+					infoExt, err := adapter.XPendingExt(ctx, args).Result()
+					Expect(err).NotTo(HaveOccurred())
+					for i := range infoExt {
+						infoExt[i].Idle = 0
+					}
+					Expect(infoExt).To(Equal([]XPendingExt{
+						{ID: "1-0", Consumer: "consumer", Idle: 0, RetryCount: 1},
+						{ID: "2-0", Consumer: "consumer", Idle: 0, RetryCount: 1},
+						{ID: "3-0", Consumer: "consumer", Idle: 0, RetryCount: 1},
+					}))
 
-				args.Idle = 72 * time.Hour
-				infoExt, err = adapter.XPendingExt(ctx, args).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(infoExt).To(HaveLen(0))
-			})
+					args.Idle = 72 * time.Hour
+					infoExt, err = adapter.XPendingExt(ctx, args).Result()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(infoExt).To(HaveLen(0))
+				})
 
-			It("should XGroup Create Delete Consumer", func() {
-				n, err := adapter.XGroupCreateConsumer(ctx, "stream", "group", "c1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(n).To(Equal(int64(1)))
+				It("should XGroup Create Delete Consumer", func() {
+					n, err := adapter.XGroupCreateConsumer(ctx, "stream", "group", "c1").Result()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(n).To(Equal(int64(1)))
 
-				n, err = adapter.XGroupDelConsumer(ctx, "stream", "group", "consumer").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(n).To(Equal(int64(3)))
-			})
+					n, err = adapter.XGroupDelConsumer(ctx, "stream", "group", "consumer").Result()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(n).To(Equal(int64(3)))
+				})
 
-			It("should XAutoClaim", func() {
-				xca := XAutoClaimArgs{
-					Stream:   "stream",
-					Group:    "group",
-					Consumer: "consumer",
-					Start:    "-",
-					Count:    2,
-				}
-				msgs, start, err := adapter.XAutoClaim(ctx, xca).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(start).To(Equal("3-0"))
-				Expect(msgs).To(Equal([]XMessage{{
-					ID:     "1-0",
-					Values: map[string]interface{}{"uno": "un"},
-				}, {
-					ID:     "2-0",
-					Values: map[string]interface{}{"dos": "deux"},
-				}}))
+				It("should XAutoClaim", func() {
+					xca := XAutoClaimArgs{
+						Stream:   "stream",
+						Group:    "group",
+						Consumer: "consumer",
+						Start:    "-",
+						Count:    2,
+					}
+					msgs, start, err := adapter.XAutoClaim(ctx, xca).Result()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(start).To(Equal("3-0"))
+					Expect(msgs).To(Equal([]XMessage{{
+						ID:     "1-0",
+						Values: map[string]interface{}{"uno": "un"},
+					}, {
+						ID:     "2-0",
+						Values: map[string]interface{}{"dos": "deux"},
+					}}))
 
-				xca.Start = start
-				msgs, start, err = adapter.XAutoClaim(ctx, xca).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(start).To(Equal("0-0"))
-				Expect(msgs).To(Equal([]XMessage{{
-					ID:     "3-0",
-					Values: map[string]interface{}{"tres": "troix"},
-				}}))
+					xca.Start = start
+					msgs, start, err = adapter.XAutoClaim(ctx, xca).Result()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(start).To(Equal("0-0"))
+					Expect(msgs).To(Equal([]XMessage{{
+						ID:     "3-0",
+						Values: map[string]interface{}{"tres": "troix"},
+					}}))
 
-				ids, start, err := adapter.XAutoClaimJustID(ctx, xca).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(start).To(Equal("0-0"))
-				Expect(ids).To(Equal([]string{"3-0"}))
-			})
+					ids, start, err := adapter.XAutoClaimJustID(ctx, xca).Result()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(start).To(Equal("0-0"))
+					Expect(ids).To(Equal([]string{"3-0"}))
+				})
+			}
 
 			It("should XClaim", func() {
 				msgs, err := adapter.XClaim(ctx, XClaimArgs{
@@ -4634,24 +4704,42 @@ var _ = Describe("Commands", func() {
 				res.RadixTreeKeys = 0
 				res.RadixTreeNodes = 0
 
-				Expect(res).To(Equal(XInfoStream{
-					Length:            3,
-					RadixTreeKeys:     0,
-					RadixTreeNodes:    0,
-					Groups:            2,
-					LastGeneratedID:   "3-0",
-					MaxDeletedEntryID: "0-0",
-					EntriesAdded:      3,
-					FirstEntry: XMessage{
-						ID:     "1-0",
-						Values: map[string]interface{}{"uno": "un"},
-					},
-					LastEntry: XMessage{
-						ID:     "3-0",
-						Values: map[string]interface{}{"tres": "troix"},
-					},
-					RecordedFirstEntryID: "1-0",
-				}))
+				if resp3 {
+					Expect(res).To(Equal(XInfoStream{
+						Length:            3,
+						RadixTreeKeys:     0,
+						RadixTreeNodes:    0,
+						Groups:            2,
+						LastGeneratedID:   "3-0",
+						MaxDeletedEntryID: "0-0",
+						EntriesAdded:      3,
+						FirstEntry: XMessage{
+							ID:     "1-0",
+							Values: map[string]interface{}{"uno": "un"},
+						},
+						LastEntry: XMessage{
+							ID:     "3-0",
+							Values: map[string]interface{}{"tres": "troix"},
+						},
+						RecordedFirstEntryID: "1-0",
+					}))
+				} else {
+					Expect(res).To(Equal(XInfoStream{
+						Length:          3,
+						RadixTreeKeys:   0,
+						RadixTreeNodes:  0,
+						Groups:          2,
+						LastGeneratedID: "3-0",
+						FirstEntry: XMessage{
+							ID:     "1-0",
+							Values: map[string]interface{}{"uno": "un"},
+						},
+						LastEntry: XMessage{
+							ID:     "3-0",
+							Values: map[string]interface{}{"tres": "troix"},
+						},
+					}))
+				}
 
 				// stream is empty
 				n, err := adapter.XDel(ctx, "stream", "1-0", "2-0", "3-0").Result()
@@ -4663,159 +4751,180 @@ var _ = Describe("Commands", func() {
 				res.RadixTreeKeys = 0
 				res.RadixTreeNodes = 0
 
-				Expect(res).To(Equal(XInfoStream{
-					Length:               0,
-					RadixTreeKeys:        0,
-					RadixTreeNodes:       0,
-					Groups:               2,
-					LastGeneratedID:      "3-0",
-					MaxDeletedEntryID:    "3-0",
-					EntriesAdded:         3,
-					FirstEntry:           XMessage{},
-					LastEntry:            XMessage{},
-					RecordedFirstEntryID: "0-0",
-				}))
+				if resp3 {
+					Expect(res).To(Equal(XInfoStream{
+						Length:               0,
+						RadixTreeKeys:        0,
+						RadixTreeNodes:       0,
+						Groups:               2,
+						LastGeneratedID:      "3-0",
+						MaxDeletedEntryID:    "3-0",
+						EntriesAdded:         3,
+						FirstEntry:           XMessage{},
+						LastEntry:            XMessage{},
+						RecordedFirstEntryID: "0-0",
+					}))
+				} else {
+					Expect(res).To(Equal(XInfoStream{
+						Length:          0,
+						RadixTreeKeys:   0,
+						RadixTreeNodes:  0,
+						Groups:          2,
+						LastGeneratedID: "3-0",
+						FirstEntry:      XMessage{},
+						LastEntry:       XMessage{},
+					}))
+				}
 			})
 
-			It("should XINFO STREAM FULL", func() {
-				res, err := adapter.XInfoStreamFull(ctx, "stream", 2).Result()
-				Expect(err).NotTo(HaveOccurred())
-				res.RadixTreeKeys = 0
-				res.RadixTreeNodes = 0
+			if resp3 {
+				It("should XINFO STREAM FULL", func() {
+					res, err := adapter.XInfoStreamFull(ctx, "stream", 2).Result()
+					Expect(err).NotTo(HaveOccurred())
+					res.RadixTreeKeys = 0
+					res.RadixTreeNodes = 0
 
-				// Verify DeliveryTime
-				now := time.Now()
-				maxElapsed := 10 * time.Minute
-				for k, g := range res.Groups {
-					for k2, p := range g.Pending {
-						Expect(now.Sub(p.DeliveryTime)).To(BeNumerically("<=", maxElapsed))
-						res.Groups[k].Pending[k2].DeliveryTime = time.Time{}
-					}
-					for k3, c := range g.Consumers {
-						Expect(now.Sub(c.SeenTime)).To(BeNumerically("<=", maxElapsed))
-						res.Groups[k].Consumers[k3].SeenTime = time.Time{}
-
-						for k4, p := range c.Pending {
+					// Verify DeliveryTime
+					now := time.Now()
+					maxElapsed := 10 * time.Minute
+					for k, g := range res.Groups {
+						for k2, p := range g.Pending {
 							Expect(now.Sub(p.DeliveryTime)).To(BeNumerically("<=", maxElapsed))
-							res.Groups[k].Consumers[k3].Pending[k4].DeliveryTime = time.Time{}
+							res.Groups[k].Pending[k2].DeliveryTime = time.Time{}
+						}
+						for k3, c := range g.Consumers {
+							Expect(now.Sub(c.SeenTime)).To(BeNumerically("<=", maxElapsed))
+							res.Groups[k].Consumers[k3].SeenTime = time.Time{}
+
+							for k4, p := range c.Pending {
+								Expect(now.Sub(p.DeliveryTime)).To(BeNumerically("<=", maxElapsed))
+								res.Groups[k].Consumers[k3].Pending[k4].DeliveryTime = time.Time{}
+							}
 						}
 					}
-				}
 
-				Expect(res).To(Equal(XInfoStreamFull{
-					Length:            3,
-					RadixTreeKeys:     0,
-					RadixTreeNodes:    0,
-					LastGeneratedID:   "3-0",
-					MaxDeletedEntryID: "0-0",
-					EntriesAdded:      3,
-					Entries: []XMessage{
-						{ID: "1-0", Values: map[string]interface{}{"uno": "un"}},
-						{ID: "2-0", Values: map[string]interface{}{"dos": "deux"}},
-					},
-					Groups: []XInfoStreamGroup{
-						{
-							Name:            "group1",
-							LastDeliveredID: "3-0",
-							PelCount:        3,
-							EntriesRead:     3,
-							Pending: []XInfoStreamGroupPending{
-								{
-									ID:            "1-0",
-									Consumer:      "consumer1",
-									DeliveryTime:  time.Time{},
-									DeliveryCount: 1,
+					Expect(res).To(Equal(XInfoStreamFull{
+						Length:            3,
+						RadixTreeKeys:     0,
+						RadixTreeNodes:    0,
+						LastGeneratedID:   "3-0",
+						MaxDeletedEntryID: "0-0",
+						EntriesAdded:      3,
+						Entries: []XMessage{
+							{ID: "1-0", Values: map[string]interface{}{"uno": "un"}},
+							{ID: "2-0", Values: map[string]interface{}{"dos": "deux"}},
+						},
+						Groups: []XInfoStreamGroup{
+							{
+								Name:            "group1",
+								LastDeliveredID: "3-0",
+								PelCount:        3,
+								EntriesRead:     3,
+								Pending: []XInfoStreamGroupPending{
+									{
+										ID:            "1-0",
+										Consumer:      "consumer1",
+										DeliveryTime:  time.Time{},
+										DeliveryCount: 1,
+									},
+									{
+										ID:            "2-0",
+										Consumer:      "consumer1",
+										DeliveryTime:  time.Time{},
+										DeliveryCount: 1,
+									},
 								},
-								{
-									ID:            "2-0",
-									Consumer:      "consumer1",
-									DeliveryTime:  time.Time{},
-									DeliveryCount: 1,
-								},
-							},
-							Consumers: []XInfoStreamConsumer{
-								{
-									Name:     "consumer1",
-									SeenTime: time.Time{},
-									PelCount: 2,
-									Pending: []XInfoStreamConsumerPending{
-										{
-											ID:            "1-0",
-											DeliveryTime:  time.Time{},
-											DeliveryCount: 1,
+								Consumers: []XInfoStreamConsumer{
+									{
+										Name:     "consumer1",
+										SeenTime: time.Time{},
+										PelCount: 2,
+										Pending: []XInfoStreamConsumerPending{
+											{
+												ID:            "1-0",
+												DeliveryTime:  time.Time{},
+												DeliveryCount: 1,
+											},
+											{
+												ID:            "2-0",
+												DeliveryTime:  time.Time{},
+												DeliveryCount: 1,
+											},
 										},
-										{
-											ID:            "2-0",
-											DeliveryTime:  time.Time{},
-											DeliveryCount: 1,
+									},
+									{
+										Name:     "consumer2",
+										SeenTime: time.Time{},
+										PelCount: 1,
+										Pending: []XInfoStreamConsumerPending{
+											{
+												ID:            "3-0",
+												DeliveryTime:  time.Time{},
+												DeliveryCount: 1,
+											},
 										},
 									},
 								},
-								{
-									Name:     "consumer2",
-									SeenTime: time.Time{},
-									PelCount: 1,
-									Pending: []XInfoStreamConsumerPending{
-										{
-											ID:            "3-0",
-											DeliveryTime:  time.Time{},
-											DeliveryCount: 1,
+							},
+							{
+								Name:            "group2",
+								LastDeliveredID: "3-0",
+								PelCount:        2,
+								EntriesRead:     3,
+								Pending: []XInfoStreamGroupPending{
+									{
+										ID:            "2-0",
+										Consumer:      "consumer1",
+										DeliveryTime:  time.Time{},
+										DeliveryCount: 1,
+									},
+									{
+										ID:            "3-0",
+										Consumer:      "consumer1",
+										DeliveryTime:  time.Time{},
+										DeliveryCount: 1,
+									},
+								},
+								Consumers: []XInfoStreamConsumer{
+									{
+										Name:     "consumer1",
+										SeenTime: time.Time{},
+										PelCount: 2,
+										Pending: []XInfoStreamConsumerPending{
+											{
+												ID:            "2-0",
+												DeliveryTime:  time.Time{},
+												DeliveryCount: 1,
+											},
+											{
+												ID:            "3-0",
+												DeliveryTime:  time.Time{},
+												DeliveryCount: 1,
+											},
 										},
 									},
 								},
 							},
 						},
-						{
-							Name:            "group2",
-							LastDeliveredID: "3-0",
-							PelCount:        2,
-							EntriesRead:     3,
-							Pending: []XInfoStreamGroupPending{
-								{
-									ID:            "2-0",
-									Consumer:      "consumer1",
-									DeliveryTime:  time.Time{},
-									DeliveryCount: 1,
-								},
-								{
-									ID:            "3-0",
-									Consumer:      "consumer1",
-									DeliveryTime:  time.Time{},
-									DeliveryCount: 1,
-								},
-							},
-							Consumers: []XInfoStreamConsumer{
-								{
-									Name:     "consumer1",
-									SeenTime: time.Time{},
-									PelCount: 2,
-									Pending: []XInfoStreamConsumerPending{
-										{
-											ID:            "2-0",
-											DeliveryTime:  time.Time{},
-											DeliveryCount: 1,
-										},
-										{
-											ID:            "3-0",
-											DeliveryTime:  time.Time{},
-											DeliveryCount: 1,
-										},
-									},
-								},
-							},
-						},
-					},
-					RecordedFirstEntryID: "1-0",
-				}))
-			})
+						RecordedFirstEntryID: "1-0",
+					}))
+				})
+			}
 
 			It("should XINFO GROUPS", func() {
 				res, err := adapter.XInfoGroups(ctx, "stream").Result()
 				Expect(err).NotTo(HaveOccurred())
-				Expect(res).To(Equal([]XInfoGroup{
-					{Name: "group1", Consumers: 2, Pending: 3, LastDeliveredID: "3-0", EntriesRead: 3},
-					{Name: "group2", Consumers: 1, Pending: 2, LastDeliveredID: "3-0", EntriesRead: 3},
-				}))
+				if resp3 {
+					Expect(res).To(Equal([]XInfoGroup{
+						{Name: "group1", Consumers: 2, Pending: 3, LastDeliveredID: "3-0", EntriesRead: 3},
+						{Name: "group2", Consumers: 1, Pending: 2, LastDeliveredID: "3-0", EntriesRead: 3},
+					}))
+				} else {
+					Expect(res).To(Equal([]XInfoGroup{
+						{Name: "group1", Consumers: 2, Pending: 3, LastDeliveredID: "3-0"},
+						{Name: "group2", Consumers: 1, Pending: 2, LastDeliveredID: "3-0"},
+					}))
+				}
 			})
 
 			It("should XINFO CONSUMERS", func() {
@@ -5029,203 +5138,205 @@ var _ = Describe("Commands", func() {
 			}))
 		})
 
-		It("should geo search", func() {
-			q := GeoSearchQuery{
-				Member:    "Catania",
-				BoxWidth:  400,
-				BoxHeight: 100,
-				BoxUnit:   "km",
-				Sort:      "asc",
-			}
-			val, err := adapter.GeoSearch(ctx, "Sicily", q).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]string{"Catania"}))
+		if resp3 {
+			It("should geo search", func() {
+				q := GeoSearchQuery{
+					Member:    "Catania",
+					BoxWidth:  400,
+					BoxHeight: 100,
+					BoxUnit:   "km",
+					Sort:      "asc",
+				}
+				val, err := adapter.GeoSearch(ctx, "Sicily", q).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(val).To(Equal([]string{"Catania"}))
 
-			q.BoxHeight = 400
-			val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]string{"Catania", "Palermo"}))
+				q.BoxHeight = 400
+				val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(val).To(Equal([]string{"Catania", "Palermo"}))
 
-			q.Count = 1
-			val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]string{"Catania"}))
+				q.Count = 1
+				val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(val).To(Equal([]string{"Catania"}))
 
-			q.CountAny = true
-			val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]string{"Palermo"}))
+				q.CountAny = true
+				val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(val).To(Equal([]string{"Palermo"}))
 
-			q = GeoSearchQuery{
-				Member:     "Catania",
-				Radius:     100,
-				RadiusUnit: "km",
-				Sort:       "asc",
-			}
-			val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]string{"Catania"}))
-
-			q.Radius = 400
-			val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]string{"Catania", "Palermo"}))
-
-			q.Count = 1
-			val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]string{"Catania"}))
-
-			q.CountAny = true
-			val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]string{"Palermo"}))
-
-			q = GeoSearchQuery{
-				Longitude: 15,
-				Latitude:  37,
-				BoxWidth:  200,
-				BoxHeight: 200,
-				BoxUnit:   "km",
-				Sort:      "asc",
-			}
-			val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]string{"Catania"}))
-
-			q.BoxWidth, q.BoxHeight = 400, 400
-			val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]string{"Catania", "Palermo"}))
-
-			q.Count = 1
-			val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]string{"Catania"}))
-
-			q.CountAny = true
-			val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]string{"Palermo"}))
-
-			q = GeoSearchQuery{
-				Longitude:  15,
-				Latitude:   37,
-				Radius:     100,
-				RadiusUnit: "km",
-				Sort:       "asc",
-			}
-			val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]string{"Catania"}))
-
-			q.Radius = 200
-			val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]string{"Catania", "Palermo"}))
-
-			q.Count = 1
-			val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]string{"Catania"}))
-
-			q.CountAny = true
-			val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]string{"Palermo"}))
-		})
-
-		It("should geo search with options", func() {
-			q := GeoSearchLocationQuery{
-				GeoSearchQuery: GeoSearchQuery{
-					Longitude:  15,
-					Latitude:   37,
-					Radius:     200,
+				q = GeoSearchQuery{
+					Member:     "Catania",
+					Radius:     100,
 					RadiusUnit: "km",
 					Sort:       "asc",
-				},
-				WithHash:  true,
-				WithDist:  true,
-				WithCoord: true,
-			}
-			val, err := adapter.GeoSearchLocation(ctx, "Sicily", q).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]GeoLocation{
-				{
-					Name:      "Catania",
-					Longitude: 15.08726745843887329,
-					Latitude:  37.50266842333162032,
-					Dist:      56.4413,
-					GeoHash:   3479447370796909,
-				},
-				{
-					Name:      "Palermo",
-					Longitude: 13.36138933897018433,
-					Latitude:  38.11555639549629859,
-					Dist:      190.4424,
-					GeoHash:   3479099956230698,
-				},
-			}))
-		})
+				}
+				val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(val).To(Equal([]string{"Catania"}))
 
-		It("should geo search store", func() {
-			q := GeoSearchStoreQuery{
-				GeoSearchQuery: GeoSearchQuery{
+				q.Radius = 400
+				val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(val).To(Equal([]string{"Catania", "Palermo"}))
+
+				q.Count = 1
+				val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(val).To(Equal([]string{"Catania"}))
+
+				q.CountAny = true
+				val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(val).To(Equal([]string{"Palermo"}))
+
+				q = GeoSearchQuery{
+					Longitude: 15,
+					Latitude:  37,
+					BoxWidth:  200,
+					BoxHeight: 200,
+					BoxUnit:   "km",
+					Sort:      "asc",
+				}
+				val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(val).To(Equal([]string{"Catania"}))
+
+				q.BoxWidth, q.BoxHeight = 400, 400
+				val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(val).To(Equal([]string{"Catania", "Palermo"}))
+
+				q.Count = 1
+				val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(val).To(Equal([]string{"Catania"}))
+
+				q.CountAny = true
+				val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(val).To(Equal([]string{"Palermo"}))
+
+				q = GeoSearchQuery{
 					Longitude:  15,
 					Latitude:   37,
-					Radius:     200,
+					Radius:     100,
 					RadiusUnit: "km",
 					Sort:       "asc",
-				},
-				StoreDist: false,
-			}
+				}
+				val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(val).To(Equal([]string{"Catania"}))
 
-			val, err := adapter.GeoSearchStore(ctx, "Sicily", "key1", q).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal(int64(2)))
+				q.Radius = 200
+				val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(val).To(Equal([]string{"Catania", "Palermo"}))
 
-			q.StoreDist = true
-			val, err = adapter.GeoSearchStore(ctx, "Sicily", "key2", q).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal(int64(2)))
+				q.Count = 1
+				val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(val).To(Equal([]string{"Catania"}))
 
-			loc, err := adapter.GeoSearchLocation(ctx, "key1", GeoSearchLocationQuery{
-				GeoSearchQuery: q.GeoSearchQuery,
-				WithCoord:      true,
-				WithDist:       true,
-				WithHash:       true,
-			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(loc).To(Equal([]GeoLocation{
-				{
-					Name:      "Catania",
-					Longitude: 15.08726745843887329,
-					Latitude:  37.50266842333162032,
-					Dist:      56.4413,
-					GeoHash:   3479447370796909,
-				},
-				{
-					Name:      "Palermo",
-					Longitude: 13.36138933897018433,
-					Latitude:  38.11555639549629859,
-					Dist:      190.4424,
-					GeoHash:   3479099956230698,
-				},
-			}))
+				q.CountAny = true
+				val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(val).To(Equal([]string{"Palermo"}))
+			})
 
-			v, err := adapter.ZRangeWithScores(ctx, "key2", 0, -1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(v).To(Equal([]Z{
-				{
-					Score:  56.441257870158204,
-					Member: "Catania",
-				},
-				{
-					Score:  190.44242984775784,
-					Member: "Palermo",
-				},
-			}))
-		})
+			It("should geo search with options", func() {
+				q := GeoSearchLocationQuery{
+					GeoSearchQuery: GeoSearchQuery{
+						Longitude:  15,
+						Latitude:   37,
+						Radius:     200,
+						RadiusUnit: "km",
+						Sort:       "asc",
+					},
+					WithHash:  true,
+					WithDist:  true,
+					WithCoord: true,
+				}
+				val, err := adapter.GeoSearchLocation(ctx, "Sicily", q).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(val).To(Equal([]GeoLocation{
+					{
+						Name:      "Catania",
+						Longitude: 15.08726745843887329,
+						Latitude:  37.50266842333162032,
+						Dist:      56.4413,
+						GeoHash:   3479447370796909,
+					},
+					{
+						Name:      "Palermo",
+						Longitude: 13.36138933897018433,
+						Latitude:  38.11555639549629859,
+						Dist:      190.4424,
+						GeoHash:   3479099956230698,
+					},
+				}))
+			})
+
+			It("should geo search store", func() {
+				q := GeoSearchStoreQuery{
+					GeoSearchQuery: GeoSearchQuery{
+						Longitude:  15,
+						Latitude:   37,
+						Radius:     200,
+						RadiusUnit: "km",
+						Sort:       "asc",
+					},
+					StoreDist: false,
+				}
+
+				val, err := adapter.GeoSearchStore(ctx, "Sicily", "key1", q).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(val).To(Equal(int64(2)))
+
+				q.StoreDist = true
+				val, err = adapter.GeoSearchStore(ctx, "Sicily", "key2", q).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(val).To(Equal(int64(2)))
+
+				loc, err := adapter.GeoSearchLocation(ctx, "key1", GeoSearchLocationQuery{
+					GeoSearchQuery: q.GeoSearchQuery,
+					WithCoord:      true,
+					WithDist:       true,
+					WithHash:       true,
+				}).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(loc).To(Equal([]GeoLocation{
+					{
+						Name:      "Catania",
+						Longitude: 15.08726745843887329,
+						Latitude:  37.50266842333162032,
+						Dist:      56.4413,
+						GeoHash:   3479447370796909,
+					},
+					{
+						Name:      "Palermo",
+						Longitude: 13.36138933897018433,
+						Latitude:  38.11555639549629859,
+						Dist:      190.4424,
+						GeoHash:   3479099956230698,
+					},
+				}))
+
+				v, err := adapter.ZRangeWithScores(ctx, "key2", 0, -1).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(v).To(Equal([]Z{
+					{
+						Score:  56.441257870158204,
+						Member: "Catania",
+					},
+					{
+						Score:  190.44242984775784,
+						Member: "Palermo",
+					},
+				}))
+			})
+		}
 	})
 
 	Describe("marshaling/unmarshaling", func() {
@@ -5322,9 +5433,9 @@ var _ = Describe("Commands", func() {
 			Expect(vals.([]interface{})[2]).To(Equal("abc"))
 		})
 	})
-})
+}
 
-var _ = Describe("Cache Commands", func() {
+func testAdapterCache(adapter Cmdable) {
 
 	BeforeEach(func() {
 		Expect(adapter.FlushDB(ctx).Err()).NotTo(HaveOccurred())
@@ -6664,7 +6775,7 @@ var _ = Describe("Cache Commands", func() {
 		//	Expect(value.Number).To(Equal(42))
 		//})
 	})
-})
+}
 
 type numberStruct struct {
 	Number int

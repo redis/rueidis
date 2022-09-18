@@ -417,7 +417,7 @@ func TestRedisMessage(t *testing.T) {
 		}
 
 		defer func() {
-			if !strings.Contains(recover().(string), "redis message type t is not a int64") {
+			if !strings.Contains(recover().(string), "redis message type t is not a RESP3 int64") {
 				t.Fatal("ToInt64 not panic as expected")
 			}
 		}()
@@ -430,7 +430,7 @@ func TestRedisMessage(t *testing.T) {
 		}
 
 		defer func() {
-			if !strings.Contains(recover().(string), "redis message type t is not a bool") {
+			if !strings.Contains(recover().(string), "redis message type t is not a RESP3 bool") {
 				t.Fatal("ToBool not panic as expected")
 			}
 		}()
@@ -456,7 +456,7 @@ func TestRedisMessage(t *testing.T) {
 		}
 
 		defer func() {
-			if !strings.Contains(recover().(string), "redis message type t is not a float64") {
+			if !strings.Contains(recover().(string), "redis message type t is not a RESP3 float64") {
 				t.Fatal("ToFloat64 not panic as expected")
 			}
 		}()
@@ -584,7 +584,7 @@ func TestRedisMessage(t *testing.T) {
 		}
 
 		defer func() {
-			if !strings.Contains(recover().(string), "redis message type t is not a array") {
+			if !strings.Contains(recover().(string), "redis message type t is not a map/array/set or its length is not even") {
 				t.Fatal("AsMap not panic as expected")
 			}
 		}()
@@ -623,7 +623,7 @@ func TestRedisMessage(t *testing.T) {
 		}
 
 		defer func() {
-			if !strings.Contains(recover().(string), "redis message type t is not a map") {
+			if !strings.Contains(recover().(string), "redis message type t is not a RESP3 map") {
 				t.Fatal("ToMap not panic as expected")
 			}
 		}()

@@ -3,6 +3,6 @@
 set -ev
 
 docker-compose up -d
-go test -coverprofile=./c.out -v -race ./...
+go test -coverprofile=./c.out -v -race -timeout 20m ./...
 cp c.out coverage.txt
 docker-compose down -v

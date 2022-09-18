@@ -590,11 +590,14 @@ func (m *RedisMessage) AsXRead() (ret map[string][]XRangeEntry, err error) {
 
 // AsMap check if message is a redis array/set response, and convert to map[string]RedisMessage
 func (m *RedisMessage) AsMap() (map[string]RedisMessage, error) {
-	values, err := m.ToArray()
-	if err != nil {
+	if err := m.Error(); err != nil {
 		return nil, err
 	}
-	return toMap(values), nil
+	if (m.IsMap() || m.IsArray()) && len(m.values)%2 == 0 {
+		return toMap(m.values), nil
+	}
+	typ := m.typ
+	panic(fmt.Sprintf("redis message type %c is not a map/array/set or its length is not even", typ))
 }
 
 // AsStrMap check if message is a redis map/array/set response, and convert to map[string]string.

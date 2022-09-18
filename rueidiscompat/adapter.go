@@ -1742,7 +1742,7 @@ func (c *Compat) ZInter(ctx context.Context, store ZStore) *StringSliceCmd {
 }
 
 func (c *Compat) ZInterWithScores(ctx context.Context, store ZStore) *ZSliceCmd {
-	return newZSliceCmd(c.client.Do(ctx, zstore(c.client.B().Arbitrary("ZINTER"), store).Args("WITHSCORES").ReadOnly()))
+	return newZSliceCmd(c.client.Do(ctx, zstore(c.client.B().Arbitrary("ZINTER"), store).Args("WITHSCORES").ReadOnly()), true)
 }
 
 func (c *Compat) ZInterStore(ctx context.Context, destination string, store ZStore) *IntCmd {
@@ -1763,7 +1763,7 @@ func (c *Compat) ZPopMax(ctx context.Context, key string, count ...int64) *ZSlic
 	case 1:
 		resp = c.client.Do(ctx, c.client.B().Zpopmax().Key(key).Count(count[0]).Build())
 		if count[0] > 1 {
-			return newZSliceCmd(resp)
+			return newZSliceCmd(resp, true)
 		}
 	default:
 		panic("too many arguments")
@@ -1779,7 +1779,7 @@ func (c *Compat) ZPopMin(ctx context.Context, key string, count ...int64) *ZSlic
 	case 1:
 		resp = c.client.Do(ctx, c.client.B().Zpopmin().Key(key).Count(count[0]).Build())
 		if count[0] > 1 {
-			return newZSliceCmd(resp)
+			return newZSliceCmd(resp, true)
 		}
 	default:
 		panic("too many arguments")
@@ -1828,7 +1828,7 @@ func (c *Compat) ZRangeWithScores(ctx context.Context, key string, start, stop i
 		Stop:  stop,
 	})
 	resp := c.client.Do(ctx, cmd)
-	return newZSliceCmd(resp)
+	return newZSliceCmd(resp, true)
 }
 
 func (c *Compat) ZRangeByScore(ctx context.Context, key string, opt ZRangeBy) *StringSliceCmd {
@@ -1858,7 +1858,7 @@ func (c *Compat) ZRangeByScoreWithScores(ctx context.Context, key string, opt ZR
 	} else {
 		resp = c.client.Do(ctx, c.client.B().Zrangebyscore().Key(key).Min(opt.Min).Max(opt.Max).Withscores().Build())
 	}
-	return newZSliceCmd(resp)
+	return newZSliceCmd(resp, true)
 }
 
 func (c *Compat) ZRangeArgs(ctx context.Context, z ZRangeArgs) *StringSliceCmd {
@@ -1870,7 +1870,7 @@ func (c *Compat) ZRangeArgs(ctx context.Context, z ZRangeArgs) *StringSliceCmd {
 func (c *Compat) ZRangeArgsWithScores(ctx context.Context, z ZRangeArgs) *ZSliceCmd {
 	cmd := c.zRangeArgs(true, z)
 	resp := c.client.Do(ctx, cmd)
-	return newZSliceCmd(resp)
+	return newZSliceCmd(resp, true)
 }
 
 func (c *Compat) ZRangeStore(ctx context.Context, dst string, z ZRangeArgs) *IntCmd {
@@ -1933,7 +1933,7 @@ func (c *Compat) ZRevRange(ctx context.Context, key string, start, stop int64) *
 func (c *Compat) ZRevRangeWithScores(ctx context.Context, key string, start, stop int64) *ZSliceCmd {
 	cmd := c.client.B().Zrevrange().Key(key).Start(start).Stop(stop).Withscores().Build()
 	resp := c.client.Do(ctx, cmd)
-	return newZSliceCmd(resp)
+	return newZSliceCmd(resp, true)
 }
 
 func (c *Compat) ZRevRangeByScore(ctx context.Context, key string, opt ZRangeBy) *StringSliceCmd {
@@ -1963,7 +1963,7 @@ func (c *Compat) ZRevRangeByScoreWithScores(ctx context.Context, key string, opt
 	} else {
 		resp = c.client.Do(ctx, c.client.B().Zrevrangebyscore().Key(key).Max(opt.Max).Min(opt.Min).Withscores().Build())
 	}
-	return newZSliceCmd(resp)
+	return newZSliceCmd(resp, true)
 }
 
 func (c *Compat) ZRevRank(ctx context.Context, key, member string) *IntCmd {
@@ -1987,7 +1987,7 @@ func (c *Compat) ZUnion(ctx context.Context, store ZStore) *StringSliceCmd {
 }
 
 func (c *Compat) ZUnionWithScores(ctx context.Context, store ZStore) *ZSliceCmd {
-	return newZSliceCmd(c.client.Do(ctx, zstore(c.client.B().Arbitrary("ZUNION"), store).Args("WITHSCORES").ReadOnly()))
+	return newZSliceCmd(c.client.Do(ctx, zstore(c.client.B().Arbitrary("ZUNION"), store).Args("WITHSCORES").ReadOnly()), true)
 }
 
 func (c *Compat) ZRandMember(ctx context.Context, key string, count int64) *StringSliceCmd {
@@ -1995,7 +1995,7 @@ func (c *Compat) ZRandMember(ctx context.Context, key string, count int64) *Stri
 }
 
 func (c *Compat) ZRandMemberWithScores(ctx context.Context, key string, count int64) *ZSliceCmd {
-	return newZSliceCmd(c.client.Do(ctx, c.client.B().Zrandmember().Key(key).Count(count).Withscores().Build()))
+	return newZSliceCmd(c.client.Do(ctx, c.client.B().Zrandmember().Key(key).Count(count).Withscores().Build()), true)
 }
 
 func (c *Compat) ZDiff(ctx context.Context, keys ...string) *StringSliceCmd {
@@ -2007,7 +2007,7 @@ func (c *Compat) ZDiff(ctx context.Context, keys ...string) *StringSliceCmd {
 func (c *Compat) ZDiffWithScores(ctx context.Context, keys ...string) *ZSliceCmd {
 	cmd := c.client.B().Zdiff().Numkeys(int64(len(keys))).Key(keys...).Withscores().Build()
 	resp := c.client.Do(ctx, cmd)
-	return newZSliceCmd(resp)
+	return newZSliceCmd(resp, true)
 }
 
 func (c *Compat) ZDiffStore(ctx context.Context, destination string, keys ...string) *IntCmd {
@@ -2890,7 +2890,7 @@ func (c CacheCompat) ZRangeWithScores(ctx context.Context, key string, start, st
 		Stop:  stop,
 	})
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
-	return newZSliceCmd(resp)
+	return newZSliceCmd(resp, true)
 }
 
 func (c CacheCompat) ZRangeByScore(ctx context.Context, key string, opt ZRangeBy) *StringSliceCmd {
@@ -2920,7 +2920,7 @@ func (c CacheCompat) ZRangeByScoreWithScores(ctx context.Context, key string, op
 	} else {
 		resp = c.client.DoCache(ctx, c.client.B().Zrangebyscore().Key(key).Min(opt.Min).Max(opt.Max).Withscores().Cache(), c.ttl)
 	}
-	return newZSliceCmd(resp)
+	return newZSliceCmd(resp, true)
 }
 
 func (c CacheCompat) ZRangeArgs(ctx context.Context, z ZRangeArgs) *StringSliceCmd {
@@ -2932,7 +2932,7 @@ func (c CacheCompat) ZRangeArgs(ctx context.Context, z ZRangeArgs) *StringSliceC
 func (c CacheCompat) ZRangeArgsWithScores(ctx context.Context, z ZRangeArgs) *ZSliceCmd {
 	cmd := c.zRangeArgs(true, z)
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
-	return newZSliceCmd(resp)
+	return newZSliceCmd(resp, true)
 }
 
 func (c CacheCompat) ZRank(ctx context.Context, key, member string) *IntCmd {
@@ -2950,7 +2950,7 @@ func (c CacheCompat) ZRevRange(ctx context.Context, key string, start, stop int6
 func (c CacheCompat) ZRevRangeWithScores(ctx context.Context, key string, start, stop int64) *ZSliceCmd {
 	cmd := c.client.B().Zrevrange().Key(key).Start(start).Stop(stop).Withscores().Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
-	return newZSliceCmd(resp)
+	return newZSliceCmd(resp, true)
 }
 
 func (c CacheCompat) ZRevRangeByScore(ctx context.Context, key string, opt ZRangeBy) *StringSliceCmd {
@@ -2980,7 +2980,7 @@ func (c CacheCompat) ZRevRangeByScoreWithScores(ctx context.Context, key string,
 	} else {
 		resp = c.client.DoCache(ctx, c.client.B().Zrevrangebyscore().Key(key).Max(opt.Max).Min(opt.Min).Withscores().Cache(), c.ttl)
 	}
-	return newZSliceCmd(resp)
+	return newZSliceCmd(resp, true)
 }
 
 func (c CacheCompat) ZRevRank(ctx context.Context, key, member string) *IntCmd {

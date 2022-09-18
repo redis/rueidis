@@ -5,6 +5,10 @@ services:
     image: redis:7.0.2-alpine
     ports:
       - "6379:6379"
+  redis5:
+    image: redis:5-alpine
+    ports:
+      - "6355:6379"
   redisearch:
     image: redislabs/redisearch:2.4.9
     ports:
@@ -13,6 +17,10 @@ services:
     image: redis:7.0.0-alpine
     ports:
       - "6378:6379"
+  compat5:
+    image: redis:5-alpine
+    ports:
+      - "6356:6379"
   sentinel:
     image: redis:7.0.0-alpine
     entrypoint:
@@ -40,3 +48,18 @@ services:
       - "7001:7001"
       - "7002:7002"
       - "7003:7003"
+  cluster5:
+    image: redis:5-alpine
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        redis-server --port 7004 --save "" --appendonly no --cluster-enabled yes --cluster-config-file 7004.conf &
+        redis-server --port 7005 --save "" --appendonly no --cluster-enabled yes --cluster-config-file 7005.conf &
+        redis-server --port 7006 --save "" --appendonly no --cluster-enabled yes --cluster-config-file 7006.conf &
+        while ! redis-cli --cluster create 127.0.0.1:7004 127.0.0.1:7005 127.0.0.1:7006 --cluster-yes; do sleep 1; done
+        wait
+    ports:
+      - "7004:7004"
+      - "7005:7005"
+      - "7006:7006"

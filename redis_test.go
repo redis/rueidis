@@ -73,6 +73,8 @@ func testFlush(t *testing.T, client Client) {
 		t.Errorf("unexpected flush err %v", err)
 	}
 
+	time.Sleep(time.Second)
+
 	t.Logf("testing client side caching after flush\n")
 	jobs, wait = parallel(para)
 	for i := 0; i < keys; i++ {
@@ -90,8 +92,16 @@ func testFlush(t *testing.T, client Client) {
 	wait()
 }
 
+func testSETGETCSC(t *testing.T, client Client) {
+	testSETGET(t, client, true)
+}
+
+func testSETGETRESP2(t *testing.T, client Client) {
+	testSETGET(t, client, false)
+}
+
 //gocyclo:ignore
-func testSETGET(t *testing.T, client Client) {
+func testSETGET(t *testing.T, client Client, csc bool) {
 	ctx := context.Background()
 	keys := 10000
 	para := 8
@@ -146,8 +156,14 @@ func testSETGET(t *testing.T, client Client) {
 		}
 	}
 	wait()
-	if atomic.LoadInt64(&miss) != 100 || atomic.LoadInt64(&hits) != int64(keys*10-100) {
-		t.Fatalf("unexpected client side caching hits and miss %v %v", atomic.LoadInt64(&hits), atomic.LoadInt64(&miss))
+	if csc {
+		if atomic.LoadInt64(&miss) != 100 || atomic.LoadInt64(&hits) != int64(keys*10-100) {
+			t.Fatalf("unexpected client side caching hits and miss %v %v", atomic.LoadInt64(&hits), atomic.LoadInt64(&miss))
+		}
+	} else {
+		if atomic.LoadInt64(&hits) != 0 {
+			t.Fatalf("unexpected client side caching hits and miss %v %v", atomic.LoadInt64(&hits), atomic.LoadInt64(&miss))
+		}
 	}
 
 	t.Logf("testing DEL with %d keys and %d parallelism\n", keys*2, para)
@@ -155,7 +171,7 @@ func testSETGET(t *testing.T, client Client) {
 	for i := 0; i < keys*2; i++ {
 		key := strconv.Itoa(i)
 		jobs <- func() {
-			val, err := client.Do(ctx, client.B().Del().Key(key).Build()).ToInt64()
+			val, err := client.Do(ctx, client.B().Del().Key(key).Build()).AsInt64()
 			if _, ok := kvs[key]; !((val == 1 && ok) || (val == 0 && !ok)) {
 				t.Errorf("unexpected del response %v %v %v", val, err, ok)
 			}
@@ -180,8 +196,16 @@ func testSETGET(t *testing.T, client Client) {
 	wait()
 }
 
+func testMultiSETGETCSC(t *testing.T, client Client) {
+	testMultiSETGET(t, client, true)
+}
+
+func testMultiSETGETRESP2(t *testing.T, client Client) {
+	testMultiSETGET(t, client, false)
+}
+
 //gocyclo:ignore
-func testMultiSETGET(t *testing.T, client Client) {
+func testMultiSETGET(t *testing.T, client Client, csc bool) {
 	ctx := context.Background()
 	keys := 10000
 	batch := 100
@@ -256,8 +280,14 @@ func testMultiSETGET(t *testing.T, client Client) {
 		}
 	}
 	wait()
-	if atomic.LoadInt64(&miss) != 100 || atomic.LoadInt64(&hits) != int64(keys*10-100) {
-		t.Fatalf("unexpected client side caching hits and miss %v %v", atomic.LoadInt64(&hits), atomic.LoadInt64(&miss))
+	if csc {
+		if atomic.LoadInt64(&miss) != 100 || atomic.LoadInt64(&hits) != int64(keys*10-100) {
+			t.Fatalf("unexpected client side caching hits and miss %v %v", atomic.LoadInt64(&hits), atomic.LoadInt64(&miss))
+		}
+	} else {
+		if atomic.LoadInt64(&hits) != 0 {
+			t.Fatalf("unexpected client side caching hits and miss %v %v", atomic.LoadInt64(&hits), atomic.LoadInt64(&miss))
+		}
 	}
 
 	t.Logf("testing DEL with %d keys and %d parallelism\n", keys*2, para)
@@ -271,7 +301,7 @@ func testMultiSETGET(t *testing.T, client Client) {
 		}
 		jobs <- func() {
 			for j, resp := range client.DoMulti(ctx, commands...) {
-				val, err := resp.ToInt64()
+				val, err := resp.AsInt64()
 				if _, ok := kvs[cmdkeys[j]]; !((val == 1 && ok) || (val == 0 && !ok)) {
 					t.Errorf("unexpected del response %v %v %v", val, err, ok)
 				}
@@ -313,7 +343,7 @@ func testBlockingZPOP(t *testing.T, client Client) {
 	t.Logf("testing BZPOPMIN blocking concurrently with ZADD with %d items\n", items)
 	go func() {
 		for i := 0; i < items; i++ {
-			v, err := client.Do(ctx, client.B().Zadd().Key(key).ScoreMember().ScoreMember(float64(i), strconv.Itoa(i)).Build()).ToInt64()
+			v, err := client.Do(ctx, client.B().Zadd().Key(key).ScoreMember().ScoreMember(float64(i), strconv.Itoa(i)).Build()).AsInt64()
 			if err != nil || v != 1 {
 				t.Errorf("unexpected ZADD response %v %v", v, err)
 			}
@@ -441,7 +471,7 @@ func TestSingleClientIntegration(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	run(t, client, testSETGET, testMultiSETGET, testBlockingZPOP, testBlockingXREAD, testPubSub)
+	run(t, client, testSETGETCSC, testMultiSETGETCSC, testBlockingZPOP, testBlockingXREAD, testPubSub)
 	run(t, client, testFlush)
 
 	client.Close()
@@ -460,7 +490,7 @@ func TestSentinelClientIntegration(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	run(t, client, testSETGET, testMultiSETGET, testBlockingZPOP, testBlockingXREAD, testPubSub)
+	run(t, client, testSETGETCSC, testMultiSETGETCSC, testBlockingZPOP, testBlockingXREAD, testPubSub)
 	run(t, client, testFlush)
 
 	client.Close()
@@ -476,7 +506,39 @@ func TestClusterClientIntegration(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	run(t, client, testSETGET, testMultiSETGET, testBlockingZPOP, testBlockingXREAD, testPubSub)
+	run(t, client, testSETGETCSC, testMultiSETGETCSC, testBlockingZPOP, testBlockingXREAD, testPubSub)
+
+	client.Close()
+	time.Sleep(time.Second * 5) // wait background ping exit
+}
+
+func TestSingleClient5Integration(t *testing.T) {
+	client, err := NewClient(ClientOption{
+		InitAddress:      []string{"127.0.0.1:6355"},
+		ConnWriteTimeout: 180 * time.Second,
+		DisableCache:     true,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testBlockingZPOP, testBlockingXREAD)
+
+	client.Close()
+	time.Sleep(time.Second * 5) // wait background ping exit
+}
+
+func TestCluster5ClientIntegration(t *testing.T) {
+	client, err := NewClient(ClientOption{
+		InitAddress:      []string{"127.0.0.1:7004", "127.0.0.1:7005", "127.0.0.1:7006"},
+		ConnWriteTimeout: 180 * time.Second,
+		ShuffleInit:      true,
+		DisableCache:     true,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testBlockingZPOP, testBlockingXREAD)
 
 	client.Close()
 	time.Sleep(time.Second * 5) // wait background ping exit
