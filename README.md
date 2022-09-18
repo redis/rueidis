@@ -7,21 +7,27 @@
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/rueian/rueidis.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/rueian/rueidis/alerts/)
 [![Maintainability](https://api.codeclimate.com/v1/badges/0d93d524c2b8497aacbe/maintainability)](https://codeclimate.com/github/rueian/rueidis/maintainability)
 
-A Fast Golang Redis RESP3 client that does auto pipelining and supports client side caching.
+A Fast Golang Redis client that does auto pipelining and supports client side caching.
 
 ## Features
 
 * Auto pipeline for non-blocking redis commands
 * Connection pooling for blocking redis commands
-* Opt-in client side caching
-* Redis Cluster, Sentinel, Pub/Sub, Redis 7 Sharded Pub/Sub, Streams, TLS, RedisJSON, RedisBloom, RediSearch, RedisGraph, RedisTimeseries, RedisAI, RedisGears
+* Opt-in client side caching in RESP3
+* Pub/Sub, Redis 7 Sharded Pub/Sub in RESP3
+* Redis Cluster, Sentinel, Streams, TLS, RedisJSON, RedisBloom, RediSearch, RedisGraph, RedisTimeseries, RedisAI, RedisGears
 * IDE friendly redis command builder
 * Generic Hash/RedisJSON Object Mapping with client side caching and optimistic locking
 * OpenTelemetry tracing and metrics
 
-## Requirement
+## Limitations
 
-* Currently, only supports redis >= 6.x
+Rueidis is built around the latest RESP3 protocol, and supports almost all redis features.
+However, the following features has not yet been implemented in RESP2 mode:
+
+* PubSub only works in RESP3
+* Redis Sentinel only works in RESP3
+* Client side caching only works in RESP3
 
 ## Getting Started
 
@@ -591,7 +597,7 @@ client.Do(ctx, client.B().Mget().Key("k1", "k2").Build()).ToArray()
 // SET
 client.Do(ctx, client.B().Set().Key("k").Value("v").Build()).Error()
 // INCR
-client.Do(ctx, client.B().Incr().Key("k").Build()).ToInt64()
+client.Do(ctx, client.B().Incr().Key("k").Build()).AsInt64()
 // HGET
 client.Do(ctx, client.B().Hget().Key("k").Field("f").Build()).ToString()
 // HMGET
@@ -601,11 +607,11 @@ client.Do(ctx, client.B().Hgetall().Key("h").Build()).AsStrMap()
 // ZRANGE
 client.Do(ctx, client.B().Zrange().Key("k").Min("1").Max("2").Build()).AsStrSlice()
 // ZRANK
-client.Do(ctx, client.B().Zrank().Key("k").Member("m").Build()).ToInt64()
+client.Do(ctx, client.B().Zrank().Key("k").Member("m").Build()).AsInt64()
 // ZSCORE
-client.Do(ctx, client.B().Zscore().Key("k").Member("m").Build()).ToFloat64()
+client.Do(ctx, client.B().Zscore().Key("k").Member("m").Build()).AsFloat64()
 // SCARD
-client.Do(ctx, client.B().Scard().Key("k").Build()).ToInt64()
+client.Do(ctx, client.B().Scard().Key("k").Build()).AsInt64()
 // SMEMBERS
 client.Do(ctx, client.B().Smembers().Key("k").Build()).AsStrSlice()
 // LINDEX
@@ -618,4 +624,5 @@ client.Do(ctx, client.B().Lpop().Key("k").Count(2).Build()).AsStrSlice()
 ## Not Yet Implement
 
 The following subjects are not yet implemented.
-* RESP2
+* PubSub in RESP2
+* Sentinel in RESP2

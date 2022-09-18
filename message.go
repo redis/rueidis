@@ -289,12 +289,12 @@ func (m *RedisMessage) IsNil() bool {
 	return m.typ == '_'
 }
 
-// IsInt64 check if message is a redis int response
+// IsInt64 check if message is a redis RESP3 int response
 func (m *RedisMessage) IsInt64() bool {
 	return m.typ == ':'
 }
 
-// IsFloat64 check if message is a redis double response
+// IsFloat64 check if message is a redis RESP3 double response
 func (m *RedisMessage) IsFloat64() bool {
 	return m.typ == ','
 }
@@ -304,7 +304,7 @@ func (m *RedisMessage) IsString() bool {
 	return m.typ == '$' || m.typ == '+'
 }
 
-// IsBool check if message is a redis bool response
+// IsBool check if message is a redis RESP3 bool response
 func (m *RedisMessage) IsBool() bool {
 	return m.typ == '#'
 }
@@ -314,7 +314,7 @@ func (m *RedisMessage) IsArray() bool {
 	return m.typ == '*' || m.typ == '~'
 }
 
-// IsMap check if message is a redis array response
+// IsMap check if message is a redis RESP3 map response
 func (m *RedisMessage) IsMap() bool {
 	return m.typ == '%'
 }
@@ -403,7 +403,7 @@ func (m *RedisMessage) AsFloat64() (val float64, err error) {
 	return strconv.ParseFloat(v, 64)
 }
 
-// ToInt64 check if message is a redis int response, and return it
+// ToInt64 check if message is a redis RESP3 int response, and return it
 func (m *RedisMessage) ToInt64() (val int64, err error) {
 	if m.IsInt64() {
 		return m.integer, nil
@@ -412,10 +412,10 @@ func (m *RedisMessage) ToInt64() (val int64, err error) {
 		return 0, err
 	}
 	typ := m.typ
-	panic(fmt.Sprintf("redis message type %c is not a int64", typ))
+	panic(fmt.Sprintf("redis message type %c is not a RESP3 int64", typ))
 }
 
-// ToBool check if message is a redis bool response, and return it
+// ToBool check if message is a redis RESP3 bool response, and return it
 func (m *RedisMessage) ToBool() (val bool, err error) {
 	if m.IsBool() {
 		return m.integer == 1, nil
@@ -424,10 +424,10 @@ func (m *RedisMessage) ToBool() (val bool, err error) {
 		return false, err
 	}
 	typ := m.typ
-	panic(fmt.Sprintf("redis message type %c is not a bool", typ))
+	panic(fmt.Sprintf("redis message type %c is not a RESP3 bool", typ))
 }
 
-// ToFloat64 check if message is a redis double response, and return it
+// ToFloat64 check if message is a redis RESP3 double response, and return it
 func (m *RedisMessage) ToFloat64() (val float64, err error) {
 	if m.IsFloat64() {
 		return strconv.ParseFloat(m.string, 64)
@@ -436,7 +436,7 @@ func (m *RedisMessage) ToFloat64() (val float64, err error) {
 		return 0, err
 	}
 	typ := m.typ
-	panic(fmt.Sprintf("redis message type %c is not a float64", typ))
+	panic(fmt.Sprintf("redis message type %c is not a RESP3 float64", typ))
 }
 
 // ToArray check if message is a redis array/set response, and return it
@@ -607,7 +607,7 @@ func (m *RedisMessage) AsIntMap() (map[string]int64, error) {
 	panic(fmt.Sprintf("redis message type %c is not a map/array/set or its length is not even", typ))
 }
 
-// ToMap check if message is a redis map response, and return it
+// ToMap check if message is a redis RESP3 map response, and return it
 func (m *RedisMessage) ToMap() (map[string]RedisMessage, error) {
 	if m.IsMap() {
 		return toMap(m.values), nil
@@ -616,7 +616,7 @@ func (m *RedisMessage) ToMap() (map[string]RedisMessage, error) {
 		return nil, err
 	}
 	typ := m.typ
-	panic(fmt.Sprintf("redis message type %c is not a map", typ))
+	panic(fmt.Sprintf("redis message type %c is not a RESP3 map", typ))
 }
 
 // ToAny turns message into go interface{} value
