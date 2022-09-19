@@ -2089,13 +2089,13 @@ func (cmd *GeoLocationCmd) Result() ([]GeoLocation, error) {
 }
 
 type CommandInfo struct {
-	Name        string
-	Arity       int8
 	Flags       []string
 	ACLFlags    []string
-	FirstKeyPos int8
-	LastKeyPos  int8
-	StepCount   int8
+	Name        string
+	Arity       int64
+	FirstKeyPos int64
+	LastKeyPos  int64
+	StepCount   int64
 	ReadOnly    bool
 }
 
@@ -2123,11 +2123,10 @@ func newCommandsInfoCmd(res rueidis.RedisResult) *CommandsInfoCmd {
 		if err != nil {
 			return &CommandsInfoCmd{err: err}
 		}
-		arity, err := info[1].AsInt64()
+		cmd.Arity, err = info[1].AsInt64()
 		if err != nil {
 			return &CommandsInfoCmd{err: err}
 		}
-		cmd.Arity = int8(arity)
 		cmd.Flags, err = info[2].AsStrSlice()
 		if err != nil {
 			if rueidis.IsRedisNil(err) {
@@ -2140,17 +2139,15 @@ func newCommandsInfoCmd(res rueidis.RedisResult) *CommandsInfoCmd {
 		if err != nil {
 			return &CommandsInfoCmd{err: err}
 		}
-		cmd.FirstKeyPos = int8(firstKeyPos)
-		lastKeyPos, err := info[4].AsInt64()
+		cmd.FirstKeyPos = int64(int8(firstKeyPos))
+		cmd.LastKeyPos, err = info[4].AsInt64()
 		if err != nil {
 			return &CommandsInfoCmd{err: err}
 		}
-		cmd.LastKeyPos = int8(lastKeyPos)
-		stepCount, err := info[5].AsInt64()
+		cmd.StepCount, err = info[5].AsInt64()
 		if err != nil {
 			return &CommandsInfoCmd{err: err}
 		}
-		cmd.StepCount = int8(stepCount)
 		for _, flag := range cmd.Flags {
 			if flag == "readonly" {
 				cmd.ReadOnly = true

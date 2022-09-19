@@ -199,19 +199,19 @@ func testAdapter(resp3 bool) {
 
 			cmd := cmds["mget"]
 			Expect(cmd.Name).To(Equal("mget"))
-			Expect(cmd.Arity).To(Equal(int8(-2)))
+			Expect(cmd.Arity).To(Equal(int64(-2)))
 			Expect(cmd.Flags).To(ContainElement("readonly"))
-			Expect(cmd.FirstKeyPos).To(Equal(int8(1)))
-			Expect(cmd.LastKeyPos).To(Equal(int8(-1)))
-			Expect(cmd.StepCount).To(Equal(int8(1)))
+			Expect(cmd.FirstKeyPos).To(Equal(int64(1)))
+			Expect(cmd.LastKeyPos).To(Equal(int64(-1)))
+			Expect(cmd.StepCount).To(Equal(int64(1)))
 
 			cmd = cmds["ping"]
 			Expect(cmd.Name).To(Equal("ping"))
-			Expect(cmd.Arity).To(Equal(int8(-1)))
+			Expect(cmd.Arity).To(Equal(int64(-1)))
 			Expect(cmd.Flags).To(ContainElement("fast"))
-			Expect(cmd.FirstKeyPos).To(Equal(int8(0)))
-			Expect(cmd.LastKeyPos).To(Equal(int8(0)))
-			Expect(cmd.StepCount).To(Equal(int8(0)))
+			Expect(cmd.FirstKeyPos).To(Equal(int64(0)))
+			Expect(cmd.LastKeyPos).To(Equal(int64(0)))
+			Expect(cmd.StepCount).To(Equal(int64(0)))
 		})
 	})
 
