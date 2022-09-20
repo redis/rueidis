@@ -66,7 +66,12 @@ func makeMux(dst string, option *ClientOption, dialFn dialFn) *mux {
 }
 
 func newMux(dst string, option *ClientOption, init, dead wire, wireFn wireFn) *mux {
-	multiplex := 1 << option.PipelineMultiplex
+	var multiplex int
+	if option.PipelineMultiplex >= 0 {
+		multiplex = 1 << option.PipelineMultiplex
+	} else {
+		multiplex = 1
+	}
 	m := &mux{dst: dst, init: init, dead: dead, wireFn: wireFn,
 		wire: make([]atomic.Value, multiplex),
 		mu:   make([]sync.Mutex, multiplex),

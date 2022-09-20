@@ -97,6 +97,14 @@ func TestNewMux(t *testing.T) {
 		m2.Close()
 	})
 }
+func TestNewMuxPipelineMultiplex(t *testing.T) {
+	for _, v := range []int{-1, 0, 1, 2} {
+		m := makeMux("", &ClientOption{PipelineMultiplex: v}, func(dst string, opt *ClientOption) (net.Conn, error) { return nil, nil })
+		if (v < 0 && len(m.wire) != 1) || (v >= 0 && len(m.wire) != 1<<v) {
+			t.Fatalf("unexpected len(m.wire): %v", len(m.wire))
+		}
+	}
+}
 
 func TestMuxAddr(t *testing.T) {
 	m := makeMux("dst1", &ClientOption{}, nil)
