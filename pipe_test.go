@@ -1574,7 +1574,11 @@ func TestOnInvalidations(t *testing.T) {
 		t.Fatalf("unexpected invlidation %v", messages)
 	}
 
-	cancel()
+	go cancel()
+
+	if messages := <-ch; messages != nil {
+		t.Fatalf("unexpected invlidation %v", messages)
+	}
 }
 
 func TestMultiHalfErr(t *testing.T) {

@@ -223,6 +223,9 @@ func (p *pipe) _background() {
 	if p.cache != nil {
 		p.cache.FreeAndClose(RedisMessage{typ: '-', string: p.Error().Error()})
 	}
+	if p.onInvalidations != nil {
+		p.onInvalidations(nil)
+	}
 	for atomic.LoadInt32(&p.waits) != 0 {
 		p.queue.NextWriteCmd()
 		if ones[0], multi, ch, cond = p.queue.NextResultCh(); ch != nil {
