@@ -2135,11 +2135,10 @@ func newCommandsInfoCmd(res rueidis.RedisResult) *CommandsInfoCmd {
 				return &CommandsInfoCmd{err: err}
 			}
 		}
-		firstKeyPos, err := info[3].AsInt64()
+		cmd.FirstKeyPos, err = info[3].AsInt64()
 		if err != nil {
 			return &CommandsInfoCmd{err: err}
 		}
-		cmd.FirstKeyPos = int64(int8(firstKeyPos))
 		cmd.LastKeyPos, err = info[4].AsInt64()
 		if err != nil {
 			return &CommandsInfoCmd{err: err}
