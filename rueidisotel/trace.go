@@ -126,7 +126,11 @@ func (o *otelclient) Receive(ctx context.Context, subscribe cmds.Completed, fn f
 }
 
 func (o *otelclient) Nodes() map[string]rueidis.Client {
-	return o.client.Nodes()
+	nodes := o.client.Nodes()
+	for addr, client := range nodes {
+		nodes[addr] = &otelclient{client: client, mAttrs: o.mAttrs, tAttrs: o.tAttrs}
+	}
+	return nodes
 }
 
 func (o *otelclient) Close() {

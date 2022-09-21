@@ -152,6 +152,18 @@ func TestWithClient(t *testing.T) {
 
 	client.Do(ctx, cmds.NewCompleted([]string{"unknown", "command"}))
 	validateTrace(t, exp, "unknown", codes.Error)
+
+	nodes := client.Nodes()
+	if len(nodes) == 0 {
+		t.Fatalf("unexpected nodes count %v", len(nodes))
+	}
+	for _, client := range nodes {
+		client.Do(ctx, client.B().Set().Key("key").Value("val").Build())
+		validateTrace(t, exp, "SET", codes.Ok)
+
+		client.DoMulti(ctx, client.B().Set().Key("key").Value("val").Build(), client.B().Set().Key("key").Value("val").Build())
+		validateTrace(t, exp, "SET SET", codes.Ok)
+	}
 }
 
 func validateTrace(t *testing.T, exp *tracetest.InMemoryExporter, op string, code codes.Code) {
