@@ -92,7 +92,11 @@ func newPipe(conn net.Conn, option *ClientOption) (p *pipe, err error) {
 	}
 
 	init := make([][]string, 0, 3)
-	init = append(init, helloCmd, []string{"CLIENT", "TRACKING", "ON", "OPTIN"})
+	if option.ClientTrackingOptions == nil {
+		init = append(init, helloCmd, []string{"CLIENT", "TRACKING", "ON", "OPTIN"})
+	} else {
+		init = append(init, helloCmd, append([]string{"CLIENT", "TRACKING", "ON"}, option.ClientTrackingOptions...))
+	}
 	if option.DisableCache {
 		init = init[:1]
 	}

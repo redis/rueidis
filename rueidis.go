@@ -109,6 +109,9 @@ type ClientOption struct {
 	// OnInvalidations is a callback function in case of client-side caching invalidation received.
 	// Note that this function must be fast, otherwise other redis messages will be blocked.
 	OnInvalidations func([]RedisMessage)
+	// ClientTrackingOptions will be appended to CLIENT TRACKING ON command when the connection is established.
+	// The default is []string{"OPTIN"}
+	ClientTrackingOptions []string
 }
 
 // SentinelOption contains MasterSet,

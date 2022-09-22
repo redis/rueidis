@@ -229,6 +229,30 @@ func TestNewPipe(t *testing.T) {
 		n1.Close()
 		n2.Close()
 	})
+	t.Run("With ClientSideTrackingOptions", func(t *testing.T) {
+		n1, n2 := net.Pipe()
+		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2}
+		go func() {
+			mock.Expect("HELLO", "3").
+				Reply(RedisMessage{
+					typ:    '%',
+					values: []RedisMessage{{typ: '+', string: "key"}, {typ: '+', string: "value"}},
+				})
+			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN", "NOLOOP").
+				ReplyString("OK")
+		}()
+		p, err := newPipe(n1, &ClientOption{
+			ClientTrackingOptions: []string{"OPTIN", "NOLOOP"},
+		})
+		if err != nil {
+			t.Fatalf("pipe setup failed: %v", err)
+		}
+		go func() { mock.Expect("QUIT").ReplyString("OK") }()
+		p.Close()
+		mock.Close()
+		n1.Close()
+		n2.Close()
+	})
 	t.Run("Network Error", func(t *testing.T) {
 		n1, n2 := net.Pipe()
 		n1.Close()
