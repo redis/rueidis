@@ -5,6 +5,10 @@ services:
     image: redis:7.0.2-alpine
     ports:
       - "6379:6379"
+  redislock:
+    image: redis:7.0.2-alpine
+    ports:
+      - "6376:6379"
   redis5:
     image: redis:5-alpine
     ports:
