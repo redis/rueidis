@@ -158,8 +158,8 @@ func TestLocker_WithContext_CancelContext(t *testing.T) {
 	ctx, cancel, err := locker.WithContext(context.Background(), lck)
 
 	wg := sync.WaitGroup{}
-	wg.Add(10)
-	for i := 0; i < 10; i++ {
+	wg.Add(100)
+	for i := 0; i < 100; i++ {
 		go func() {
 			if _, _, err := locker.WithContext(ctx, lck); !errors.Is(err, context.Canceled) {
 				t.Error(err)
@@ -167,12 +167,27 @@ func TestLocker_WithContext_CancelContext(t *testing.T) {
 			wg.Done()
 		}()
 	}
-	time.Sleep(time.Second)
+	time.Sleep(time.Second * 3)
 	cancel()
 	wg.Wait()
 	if !errors.Is(ctx.Err(), context.Canceled) {
 		t.Fatal(err)
 	}
+}
+
+func TestLocker_TryWithContext(t *testing.T) {
+	locker := newLocker(t)
+	defer locker.Close()
+
+	lck := strconv.Itoa(rand.Int())
+	ctx, cancel, err := locker.TryWithContext(context.Background(), lck)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := locker.TryWithContext(ctx, lck); err == nil {
+		t.Fatal(err)
+	}
+	cancel()
 }
 
 func TestLocker_Close(t *testing.T) {

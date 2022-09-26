@@ -31,6 +31,7 @@ type LockerOption struct {
 
 type Locker interface {
 	WithContext(ctx context.Context, name string) (context.Context, context.CancelFunc, error)
+	TryWithContext(ctx context.Context, name string) (context.Context, context.CancelFunc, error)
 	Close()
 }
 
@@ -119,17 +120,17 @@ func keyname(prefix, name string, i int) string {
 	return sb.String()
 }
 
-func (m *locker) acquire(ctx context.Context, key, val string, deadline time.Time) error {
+func (m *locker) acquire(ctx context.Context, key, val string, deadline time.Time) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, m.timeout)
 	resp := m.client.DoMulti(ctx,
 		m.client.B().Set().Key(key).Value(val).Nx().PxatMillisecondsTimestamp(deadline.UnixMilli()).Build(),
 		m.client.B().Get().Key(key).Build(),
 	)
 	cancel()
-	if v, _ := resp[1].ToString(); v != val {
-		return errNotLock
+	if err = resp[0].Error(); rueidis.IsRedisNil(err) {
+		return ErrNotLocked
 	}
-	return nil
+	return err
 }
 
 func (m *locker) script(ctx context.Context, script *rueidis.Lua, key, val string, deadline time.Time) error {
@@ -139,7 +140,7 @@ func (m *locker) script(ctx context.Context, script *rueidis.Lua, key, val strin
 	if v, err := resp.AsInt64(); err != nil || v == 1 {
 		return err
 	}
-	return errNotLock
+	return ErrNotLocked
 }
 
 func (m *locker) waitgate(ctx context.Context, name string) (g *gate, err error) {
@@ -167,13 +168,20 @@ func (m *locker) waitgate(ctx context.Context, name string) (g *gate, err error)
 		if ok {
 			return g, nil
 		}
-		m.mu.Lock()
-		if g.w--; g.w == 0 {
-			delete(m.gates, name)
-		}
-		m.mu.Unlock()
 		return nil, ErrLockerClosed
 	}
+}
+
+func (m *locker) trygate(name string) (g *gate) {
+	m.mu.Lock()
+	g, ok := m.gates[name]
+	if !ok {
+		g = makegate(m.totalcnt)
+		g.w++
+		m.gates[name] = g
+	}
+	m.mu.Unlock()
+	return g
 }
 
 func (m *locker) onInvalidations(messages []rueidis.RedisMessage) {
@@ -205,87 +213,101 @@ func (m *locker) onInvalidations(messages []rueidis.RedisMessage) {
 	}
 }
 
-func (m *locker) WithContext(ctx context.Context, name string) (context.Context, context.CancelFunc, error) {
-	for {
-		ctx, cancel := context.WithCancel(ctx)
+func (m *locker) try(ctx context.Context, cancel context.CancelFunc, name string, g *gate) bool {
+	var err error
 
-		g, err := m.waitgate(ctx, name)
-		if err != nil {
-			return ctx, cancel, err
-		}
+	val := random()
+	deadline := time.Now().Add(m.validity)
+	cacneltm := time.AfterFunc(m.validity, cancel)
+	released := int32(0)
 
-		val := random()
-		deadline := time.Now().Add(m.validity)
-		cacneltm := time.AfterFunc(m.validity, cancel)
-		released := int32(0)
-
-		monitoring := func(err error, key string, deadline time.Time, csc chan struct{}) {
-			if err == nil {
-				for timer := time.NewTimer(m.interval); err == nil; {
-					select {
-					case <-ctx.Done():
-						err = ctx.Err()
-					case <-timer.C:
-						deadline = deadline.Add(m.interval)
-						if err = m.script(ctx, extend, key, val, deadline); err == nil {
-							timer.Reset(m.interval)
-							<-csc
-						}
-					case <-csc:
-						if err = m.script(ctx, extend, key, val, deadline); err == nil {
-							<-csc
-						}
+	monitoring := func(err error, key string, deadline time.Time, csc chan struct{}) {
+		if err == nil {
+			for timer := time.NewTimer(m.interval); err == nil; {
+				select {
+				case <-ctx.Done():
+					err = ctx.Err()
+				case <-timer.C:
+					deadline = deadline.Add(m.interval)
+					if err = m.script(ctx, extend, key, val, deadline); err == nil {
+						timer.Reset(m.interval)
+						<-csc
+					}
+				case <-csc:
+					if err = m.script(ctx, extend, key, val, deadline); err == nil {
+						<-csc
 					}
 				}
 			}
-			if err != errNotLock {
-				err = m.script(context.Background(), delkey, key, val, deadline)
-			}
-			if released := int(atomic.AddInt32(&released, 1)); released >= m.majority {
-				cancel()
-				if released == m.totalcnt {
-					m.mu.Lock()
-					if g.w--; g.w == 0 {
-						delete(m.gates, name)
-						m.mu.Unlock()
-					} else {
-						m.mu.Unlock()
+		}
+		if err != ErrNotLocked {
+			err = m.script(context.Background(), delkey, key, val, deadline)
+		}
+		if released := int(atomic.AddInt32(&released, 1)); released >= m.majority {
+			cancel()
+			if released == m.totalcnt {
+				m.mu.Lock()
+				if g.w--; g.w == 0 {
+					delete(m.gates, name)
+				} else {
+					if _, ok := m.gates[name]; ok {
 						g.ch <- struct{}{}
 					}
 				}
+				m.mu.Unlock()
 			}
 		}
+	}
 
-		acquire := func(err error, key string, ch chan struct{}) error {
-			select {
-			case <-ch:
-			default:
-			}
-			if err != errNotLock {
-				err = m.acquire(ctx, key, val, deadline)
-			}
-			go monitoring(err, key, deadline, ch)
-			return err
+	acquire := func(err error, key string, ch chan struct{}) error {
+		select {
+		case <-ch:
+		default:
 		}
+		if err != ErrNotLocked {
+			err = m.acquire(ctx, key, val, deadline)
+		}
+		go monitoring(err, key, deadline, ch)
+		return err
+	}
 
-		var i int
-		var failures int
-		for acquired := 0; acquired < m.majority && failures < m.majority; i++ {
-			if err = acquire(err, keyname(m.prefix, name, i), g.csc[i]); err == nil {
-				acquired++
-			} else {
-				failures++
+	var i int
+	var failures int
+	for acquired := 0; acquired < m.majority && failures < m.majority; i++ {
+		if err = acquire(err, keyname(m.prefix, name, i), g.csc[i]); err == nil {
+			acquired++
+		} else {
+			failures++
+		}
+	}
+	if i != m.totalcnt {
+		go func() {
+			for ; i < m.totalcnt; i++ {
+				err = acquire(err, keyname(m.prefix, name, i), g.csc[i])
 			}
-		}
-		if i != m.totalcnt {
-			go func() {
-				for ; i < m.totalcnt; i++ {
-					err = acquire(err, keyname(m.prefix, name, i), g.csc[i])
-				}
-			}()
-		}
-		if cacneltm.Stop() && failures < m.majority {
+		}()
+	}
+	return cacneltm.Stop() && failures < m.majority
+}
+
+func (m *locker) TryWithContext(ctx context.Context, name string) (context.Context, context.CancelFunc, error) {
+	ctx, cancel := context.WithCancel(ctx)
+	if g := m.trygate(name); g != nil && m.try(ctx, cancel, name, g) {
+		return ctx, cancel, nil
+	}
+	cancel()
+	return ctx, cancel, ErrLockerClosed
+}
+
+func (m *locker) WithContext(ctx context.Context, name string) (context.Context, context.CancelFunc, error) {
+	for {
+		ctx, cancel := context.WithCancel(ctx)
+		g, err := m.waitgate(ctx, name)
+		if g != nil && m.try(ctx, cancel, name, g) {
 			return ctx, cancel, nil
+		}
+		if cancel(); err != nil {
+			return ctx, cancel, err
 		}
 	}
 }
@@ -299,5 +321,5 @@ var (
 	extend = rueidis.NewLuaScript(`if redis.call("GET",KEYS[1]) == ARGV[1] then return redis.call("PEXPIREAT",KEYS[1],ARGV[2]) else return 0 end`)
 )
 
-var errNotLock = errors.New("not lock")
+var ErrNotLocked = errors.New("not locked")
 var ErrLockerClosed = errors.New("locker closed")
