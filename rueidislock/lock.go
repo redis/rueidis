@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/rueian/rueidis"
@@ -216,20 +217,10 @@ func (m *locker) WithContext(ctx context.Context, name string) (context.Context,
 		val := random()
 		deadline := time.Now().Add(m.validity)
 		cacneltm := time.AfterFunc(m.validity, cancel)
-
-		var acquired int
-		var released int
-		cond := sync.NewCond(&sync.Mutex{})
+		released := int32(0)
 
 		monitoring := func(err error, key string, deadline time.Time, csc chan struct{}) {
 			if err == nil {
-				cond.L.Lock()
-				acquired++
-				acquired := acquired
-				cond.L.Unlock()
-				if acquired >= m.majority {
-					cond.Broadcast()
-				}
 				for timer := time.NewTimer(m.interval); err == nil; {
 					select {
 					case <-ctx.Done():
@@ -250,13 +241,8 @@ func (m *locker) WithContext(ctx context.Context, name string) (context.Context,
 			if err != errNotLock {
 				err = m.script(context.Background(), delkey, key, val, deadline)
 			}
-			cond.L.Lock()
-			released++
-			released := released
-			cond.L.Unlock()
-			if released >= m.majority {
+			if released := int(atomic.AddInt32(&released, 1)); released >= m.majority {
 				cancel()
-				cond.Broadcast()
 				if released == m.totalcnt {
 					m.mu.Lock()
 					if g.w--; g.w == 0 {
@@ -270,26 +256,35 @@ func (m *locker) WithContext(ctx context.Context, name string) (context.Context,
 			}
 		}
 
-		go func() {
-			for i := 0; i < m.totalcnt; i++ {
-				select {
-				case <-g.csc[i]:
-				default:
-				}
-				key := keyname(m.prefix, name, i)
-				if err != errNotLock {
-					err = m.acquire(ctx, key, val, deadline)
-				}
-				go monitoring(err, key, deadline, g.csc[i])
+		acquire := func(err error, key string, ch chan struct{}) error {
+			select {
+			case <-ch:
+			default:
 			}
-		}()
-		cond.L.Lock()
-		for released < m.majority && acquired < m.majority {
-			cond.Wait()
+			if err != errNotLock {
+				err = m.acquire(ctx, key, val, deadline)
+			}
+			go monitoring(err, key, deadline, ch)
+			return err
 		}
-		succeed := released < m.majority
-		cond.L.Unlock()
-		if cacneltm.Stop() && succeed {
+
+		var i int
+		var failures int
+		for acquired := 0; acquired < m.majority && failures < m.majority; i++ {
+			if err = acquire(err, keyname(m.prefix, name, i), g.csc[i]); err == nil {
+				acquired++
+			} else {
+				failures++
+			}
+		}
+		if i != m.totalcnt {
+			go func() {
+				for ; i < m.totalcnt; i++ {
+					err = acquire(err, keyname(m.prefix, name, i), g.csc[i])
+				}
+			}()
+		}
+		if cacneltm.Stop() && failures < m.majority {
 			return ctx, cancel, nil
 		}
 	}
