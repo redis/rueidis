@@ -47,7 +47,7 @@ func NewLocker(option LockerOption) (Locker, error) {
 		option.ExtendInterval = time.Millisecond * 500
 	}
 	if option.TryNextAfter <= 0 {
-		option.TryNextAfter = time.Millisecond * 5
+		option.TryNextAfter = time.Millisecond * 20
 	}
 	if option.KeyMajority <= 0 {
 		option.KeyMajority = 2
