@@ -54,6 +54,19 @@ func TestNewLocker(t *testing.T) {
 	}
 }
 
+func TestNewLocker_WithClientBuilder(t *testing.T) {
+	l, err := NewLocker(LockerOption{
+		ClientOption: rueidis.ClientOption{InitAddress: address},
+		ClientBuilder: func(option rueidis.ClientOption) (rueidis.Client, error) {
+			return rueidis.NewClient(option)
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer l.Close()
+}
+
 func TestLocker_WithContext_MultipleLocker(t *testing.T) {
 	lockers := make([]*locker, 10)
 	sum := make([]int, len(lockers))

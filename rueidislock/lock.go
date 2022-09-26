@@ -27,6 +27,7 @@ type LockerOption struct {
 	KeyValidity    time.Duration
 	ExtendInterval time.Duration
 	TryNextAfter   time.Duration
+	ClientBuilder  func(option rueidis.ClientOption) (rueidis.Client, error)
 }
 
 type Locker interface {
@@ -63,11 +64,16 @@ func NewLocker(option LockerOption) (Locker, error) {
 	option.ClientOption.DisableCache = false
 	option.ClientOption.ClientTrackingOptions = []string{"OPTOUT"}
 	option.ClientOption.OnInvalidations = impl.onInvalidations
-	client, err := rueidis.NewClient(option.ClientOption)
+
+	var err error
+	if option.ClientBuilder != nil {
+		impl.client, err = option.ClientBuilder(option.ClientOption)
+	} else {
+		impl.client, err = rueidis.NewClient(option.ClientOption)
+	}
 	if err != nil {
 		return nil, err
 	}
-	impl.client = client
 	return impl, nil
 }
 
