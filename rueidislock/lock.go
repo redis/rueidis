@@ -25,6 +25,7 @@ type LockerOption struct {
 	KeyMajority    int
 	KeyValidity    time.Duration
 	ExtendInterval time.Duration
+	TryNextAfter   time.Duration
 }
 
 type Locker interface {
@@ -42,6 +43,9 @@ func NewLocker(option LockerOption) (Locker, error) {
 	if option.ExtendInterval <= 0 {
 		option.ExtendInterval = time.Millisecond * 500
 	}
+	if option.TryNextAfter <= 0 {
+		option.TryNextAfter = time.Millisecond * 5
+	}
 	if option.KeyMajority <= 0 {
 		option.KeyMajority = 2
 	}
@@ -49,6 +53,7 @@ func NewLocker(option LockerOption) (Locker, error) {
 		prefix:   option.KeyPrefix,
 		validity: option.KeyValidity,
 		interval: option.ExtendInterval,
+		timeout:  option.TryNextAfter,
 		majority: option.KeyMajority,
 		totalcnt: option.KeyMajority*2 - 1,
 		gates:    make(map[string]*gate),
@@ -69,6 +74,7 @@ type locker struct {
 	prefix   string
 	validity time.Duration
 	interval time.Duration
+	timeout  time.Duration
 	majority int
 	totalcnt int
 
@@ -113,7 +119,7 @@ func keyname(prefix, name string, i int) string {
 }
 
 func (m *locker) acquire(ctx context.Context, key, val string, deadline time.Time) error {
-	ctx, cancel := context.WithTimeout(ctx, m.validity/1000)
+	ctx, cancel := context.WithTimeout(ctx, m.timeout)
 	resp := m.client.DoMulti(ctx,
 		m.client.B().Set().Key(key).Value(val).Nx().PxatMillisecondsTimestamp(deadline.UnixMilli()).Build(),
 		m.client.B().Get().Key(key).Build(),
