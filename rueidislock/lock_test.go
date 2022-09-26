@@ -197,10 +197,39 @@ func TestLocker_TryWithContext(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, _, err := locker.TryWithContext(ctx, lck); err == nil {
+	if _, _, err := locker.TryWithContext(ctx, lck); err != ErrNotLocked {
 		t.Fatal(err)
 	}
 	cancel()
+}
+
+func TestLocker_WithContext_Cleanup(t *testing.T) {
+	locker := newLocker(t)
+	defer locker.Close()
+
+	lck := strconv.Itoa(rand.Int())
+	_, cancel1, err := locker.WithContext(context.Background(), lck)
+	if err != nil {
+		t.Fatal(err)
+	}
+	locker.mu.Lock()
+	locker.gates[lck].w--
+	locker.mu.Unlock()
+	ctx2, cancel2 := context.WithCancel(context.Background())
+	go func() {
+		time.Sleep(time.Second)
+		cancel2()
+		cancel1()
+	}()
+	if _, _, err := locker.WithContext(ctx2, lck); !errors.Is(err, context.Canceled) {
+		t.Fatal(err)
+	}
+	locker.mu.Lock()
+	keys := len(locker.gates)
+	locker.mu.Unlock()
+	if keys != 0 {
+		t.Fatalf("unexpected length %v", keys)
+	}
 }
 
 func TestLocker_Close(t *testing.T) {

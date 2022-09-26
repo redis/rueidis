@@ -219,7 +219,7 @@ func (m *locker) onInvalidations(messages []rueidis.RedisMessage) {
 	}
 }
 
-func (m *locker) try(ctx context.Context, cancel context.CancelFunc, name string, g *gate) bool {
+func (m *locker) try(ctx context.Context, cancel context.CancelFunc, name string, g *gate) context.CancelFunc {
 	var err error
 
 	val := random()
@@ -227,6 +227,7 @@ func (m *locker) try(ctx context.Context, cancel context.CancelFunc, name string
 	cacneltm := time.AfterFunc(m.validity, cancel)
 	released := int32(0)
 
+	done := make(chan struct{})
 	monitoring := func(err error, key string, deadline time.Time, csc chan struct{}) {
 		if err == nil {
 			for timer := time.NewTimer(m.interval); err == nil; {
@@ -247,7 +248,7 @@ func (m *locker) try(ctx context.Context, cancel context.CancelFunc, name string
 			}
 		}
 		if err != ErrNotLocked {
-			err = m.script(context.Background(), delkey, key, val, deadline)
+			_ = m.script(context.Background(), delkey, key, val, deadline)
 		}
 		if released := int(atomic.AddInt32(&released, 1)); released >= m.majority {
 			cancel()
@@ -261,6 +262,7 @@ func (m *locker) try(ctx context.Context, cancel context.CancelFunc, name string
 					}
 				}
 				m.mu.Unlock()
+				close(done)
 			}
 		}
 	}
@@ -293,24 +295,34 @@ func (m *locker) try(ctx context.Context, cancel context.CancelFunc, name string
 			}
 		}()
 	}
-	return cacneltm.Stop() && failures < m.majority
+	if cacneltm.Stop() && failures < m.majority {
+		return func() {
+			cancel()
+			<-done
+		}
+	}
+	return nil
 }
 
 func (m *locker) TryWithContext(ctx context.Context, name string) (context.Context, context.CancelFunc, error) {
 	ctx, cancel := context.WithCancel(ctx)
-	if g := m.trygate(name); g != nil && m.try(ctx, cancel, name, g) {
-		return ctx, cancel, nil
+	if g := m.trygate(name); g != nil {
+		if cancel := m.try(ctx, cancel, name, g); cancel != nil {
+			return ctx, cancel, nil
+		}
 	}
 	cancel()
-	return ctx, cancel, ErrLockerClosed
+	return ctx, cancel, ErrNotLocked
 }
 
 func (m *locker) WithContext(ctx context.Context, name string) (context.Context, context.CancelFunc, error) {
 	for {
 		ctx, cancel := context.WithCancel(ctx)
 		g, err := m.waitgate(ctx, name)
-		if g != nil && m.try(ctx, cancel, name, g) {
-			return ctx, cancel, nil
+		if g != nil {
+			if cancel := m.try(ctx, cancel, name, g); cancel != nil {
+				return ctx, cancel, nil
+			}
 		}
 		if cancel(); err != nil {
 			return ctx, cancel, err
