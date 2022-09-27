@@ -19,6 +19,7 @@ A Fast Golang Redis client that does auto pipelining and supports client side ca
 * IDE friendly redis command builder
 * Generic Hash/RedisJSON Object Mapping with client side caching and optimistic locking
 * OpenTelemetry tracing and metrics
+* Distributed Locks with client side caching
 
 ## Limitations
 
@@ -583,6 +584,10 @@ func main() {
     defer client.Close()
 }
 ```
+
+## Distributed Locks with client side caching
+
+See [rueidislock](./rueidislock/README.md) for more details.
 
 ## Command Response Cheatsheet
 

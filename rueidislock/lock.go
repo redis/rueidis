@@ -21,22 +21,36 @@ func init() {
 	sources = sync.Pool{New: func() any { return rand.New(rand.NewSource(time.Now().UnixNano())) }}
 }
 
+// LockerOption should be passed to NewLocker to construct a Locker
 type LockerOption struct {
-	ClientOption   rueidis.ClientOption
-	ClientBuilder  func(option rueidis.ClientOption) (rueidis.Client, error)
-	KeyPrefix      string
-	KeyValidity    time.Duration
+	// ClientOption is passed to rueidis.NewClient or LockerOption.ClientBuilder to build a rueidis.Client
+	ClientOption rueidis.ClientOption
+	// ClientBuilder can be used to modify rueidis.Client used by Locker
+	ClientBuilder func(option rueidis.ClientOption) (rueidis.Client, error)
+	// KeyPrefix is the prefix of redis key for locks. Default value is "rueidislock".
+	KeyPrefix string
+	// KeyValidity is the validity duration of locks and will be extended periodically by the ExtendInterval. Default value is 5s.
+	KeyValidity time.Duration
+	// ExtendInterval is the interval to extend KeyValidity. Default value is 1s.
 	ExtendInterval time.Duration
-	TryNextAfter   time.Duration
-	KeyMajority    int32
+	// TryNextAfter is the timeout duration before trying the next redis key for locks. Default value is 20ms.
+	TryNextAfter time.Duration
+	// KeyMajority is at least how many redis keys in a total of KeyMajority*2-1 should be acquired to be a valid lock.
+	// Default value is 2.
+	KeyMajority int32
 }
 
+// Locker is the interface of rueidislock
 type Locker interface {
+	// WithContext acquires a distributed redis lock by name by waiting for it. It may return ErrLockerClosed.
 	WithContext(ctx context.Context, name string) (context.Context, context.CancelFunc, error)
+	// TryWithContext tries to acquire a distributed redis lock by name without waiting. It may return ErrNotLocked.
 	TryWithContext(ctx context.Context, name string) (context.Context, context.CancelFunc, error)
+	// Close closes the underlying rueidis.Client
 	Close()
 }
 
+// NewLocker creates the distributed Locker backed by redis client side caching
 func NewLocker(option LockerOption) (Locker, error) {
 	if option.KeyPrefix == "" {
 		option.KeyPrefix = "rueidislock"
@@ -351,5 +365,8 @@ var (
 	extend = rueidis.NewLuaScript(`if redis.call("GET",KEYS[1]) == ARGV[1] then return redis.call("PEXPIREAT",KEYS[1],ARGV[2]) else return 0 end`)
 )
 
+// ErrNotLocked is returned from the Locker.TryWithContext when it fails
 var ErrNotLocked = errors.New("not locked")
+
+// ErrLockerClosed is returned from the Locker.WithContext when the Locker is closed
 var ErrLockerClosed = errors.New("locker closed")
