@@ -72,6 +72,7 @@ func TestLocker_WithContext_MultipleLocker(t *testing.T) {
 	sum := make([]int, len(lockers))
 	for i := 0; i < len(lockers); i++ {
 		lockers[i] = newLocker(t)
+		lockers[i].timeout = time.Second
 	}
 	defer func() {
 		for _, locker := range lockers {
@@ -107,6 +108,7 @@ func TestLocker_WithContext_MultipleLocker(t *testing.T) {
 
 func TestLocker_WithContext_UnlockByClientSideCaching(t *testing.T) {
 	locker := newLocker(t)
+	locker.timeout = time.Second
 	defer locker.Close()
 	lck := strconv.Itoa(rand.Int())
 	ctx, cancel, err := locker.WithContext(context.Background(), lck)
@@ -116,7 +118,7 @@ func TestLocker_WithContext_UnlockByClientSideCaching(t *testing.T) {
 	go func() {
 		client := newClient(t)
 		defer client.Close()
-		for i := 0; i < locker.majority; i++ {
+		for i := int32(0); i < locker.majority; i++ {
 			if err := client.Do(context.Background(), client.B().Del().Key(keyname(locker.prefix, lck, i)).Build()).Error(); err != nil {
 				t.Error(err)
 			}
@@ -129,8 +131,36 @@ func TestLocker_WithContext_UnlockByClientSideCaching(t *testing.T) {
 	}
 }
 
+func TestLocker_WithContext_ExtendByClientSideCaching(t *testing.T) {
+	locker := newLocker(t)
+	locker.timeout = time.Second
+	defer locker.Close()
+	lck := strconv.Itoa(rand.Int())
+	ctx, cancel, err := locker.WithContext(context.Background(), lck)
+	if err != nil {
+		t.Fatal(err)
+	}
+	go func() {
+		client := newClient(t)
+		defer client.Close()
+		for i := int32(0); i < locker.majority; i++ {
+			if err := client.Do(context.Background(), client.B().Pexpire().Key(keyname(locker.prefix, lck, i)).Milliseconds(100).Build()).Error(); err != nil {
+				t.Error(err)
+			}
+		}
+	}()
+	time.Sleep(time.Second)
+	select {
+	case <-ctx.Done():
+		t.Fatalf("unexpected err %v", ctx.Err())
+	default:
+	}
+	cancel()
+}
+
 func TestLocker_WithContext_AutoExtend(t *testing.T) {
 	locker := newLocker(t)
+	locker.validity = time.Second * 2
 	defer locker.Close()
 
 	ctx, cancel, err := locker.WithContext(context.Background(), strconv.Itoa(rand.Int()))
@@ -190,6 +220,7 @@ func TestLocker_WithContext_CancelContext(t *testing.T) {
 
 func TestLocker_TryWithContext(t *testing.T) {
 	locker := newLocker(t)
+	locker.timeout = time.Second
 	defer locker.Close()
 
 	lck := strconv.Itoa(rand.Int())

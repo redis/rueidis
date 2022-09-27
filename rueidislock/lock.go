@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"math/rand"
+	"reflect"
 	"strconv"
 	"strings"
 	"sync"
@@ -22,12 +23,12 @@ func init() {
 
 type LockerOption struct {
 	ClientOption   rueidis.ClientOption
+	ClientBuilder  func(option rueidis.ClientOption) (rueidis.Client, error)
 	KeyPrefix      string
-	KeyMajority    int
 	KeyValidity    time.Duration
 	ExtendInterval time.Duration
 	TryNextAfter   time.Duration
-	ClientBuilder  func(option rueidis.ClientOption) (rueidis.Client, error)
+	KeyMajority    int32
 }
 
 type Locker interface {
@@ -44,7 +45,7 @@ func NewLocker(option LockerOption) (Locker, error) {
 		option.KeyValidity = time.Second * 5
 	}
 	if option.ExtendInterval <= 0 {
-		option.ExtendInterval = time.Millisecond * 500
+		option.ExtendInterval = time.Second
 	}
 	if option.TryNextAfter <= 0 {
 		option.TryNextAfter = time.Millisecond * 20
@@ -83,8 +84,8 @@ type locker struct {
 	validity time.Duration
 	interval time.Duration
 	timeout  time.Duration
-	majority int
-	totalcnt int
+	majority int32
+	totalcnt int32
 
 	mu    sync.RWMutex
 	gates map[string]*gate
@@ -96,7 +97,7 @@ type gate struct {
 	csc []chan struct{}
 }
 
-func makegate(size int) *gate {
+func makegate(size int32) *gate {
 	csc := make([]chan struct{}, size)
 	for i := 0; i < len(csc); i++ {
 		csc[i] = make(chan struct{}, 1)
@@ -114,8 +115,8 @@ func random() string {
 	return rueidis.BinaryString(val)
 }
 
-func keyname(prefix, name string, i int) string {
-	ia := strconv.Itoa(i)
+func keyname(prefix, name string, i int32) string {
+	ia := strconv.Itoa(int(i))
 	sb := strings.Builder{}
 	sb.Grow(len(prefix) + len(name) + len(ia) + 2)
 	sb.WriteString(prefix)
@@ -226,6 +227,8 @@ func (m *locker) try(ctx context.Context, cancel context.CancelFunc, name string
 	deadline := time.Now().Add(m.validity)
 	cacneltm := time.AfterFunc(m.validity, cancel)
 	released := int32(0)
+	acquired := int32(0)
+	failures := int32(0)
 
 	done := make(chan struct{})
 	monitoring := func(err error, key string, deadline time.Time, csc chan struct{}) {
@@ -250,9 +253,19 @@ func (m *locker) try(ctx context.Context, cancel context.CancelFunc, name string
 		if err != ErrNotLocked {
 			_ = m.script(context.Background(), delkey, key, val, deadline)
 		}
-		if released := int(atomic.AddInt32(&released, 1)); released >= m.majority {
+		if released := atomic.AddInt32(&released, 1); released >= m.majority {
 			cancel()
 			if released == m.totalcnt {
+				if atomic.LoadInt32(&failures) >= m.majority {
+					tm := time.NewTimer(m.interval)
+					cases := make([]reflect.SelectCase, 0, m.totalcnt+1)
+					cases = append(cases, reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(tm.C)})
+					for i := int32(0); i < m.totalcnt; i++ {
+						cases = append(cases, reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(g.csc[i])})
+					}
+					reflect.Select(cases)
+					tm.Stop()
+				}
 				m.mu.Lock()
 				if g.w--; g.w == 0 {
 					delete(m.gates, name)
@@ -279,13 +292,12 @@ func (m *locker) try(ctx context.Context, cancel context.CancelFunc, name string
 		return err
 	}
 
-	var i int
-	var failures int
-	for acquired := 0; acquired < m.majority && failures < m.majority; i++ {
+	var i int32
+	for a, f := atomic.LoadInt32(&acquired), atomic.LoadInt32(&failures); a < m.majority && f < m.majority; i++ {
 		if err = acquire(err, keyname(m.prefix, name, i), g.csc[i]); err == nil {
-			acquired++
+			a = atomic.AddInt32(&acquired, 1)
 		} else {
-			failures++
+			f = atomic.AddInt32(&failures, 1)
 		}
 	}
 	if i != m.totalcnt {
