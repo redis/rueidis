@@ -587,7 +587,7 @@ func main() {
 
 ## Distributed Locks with client side caching
 
-See [rueidislock](./rueidislock/README.md) for more details.
+See [rueidislock](./rueidislock) for more details.
 
 ## Command Response Cheatsheet
 
