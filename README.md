@@ -23,12 +23,12 @@ A Fast Golang Redis client that does auto pipelining and supports client side ca
 
 ## Limitations
 
-Rueidis is built around the latest RESP3 protocol, and supports almost all redis features.
+Rueidis is built around RESP2 and RESP3 protocol, and supports almost all redis features.
 However, the following features has not yet been implemented in RESP2 mode:
 
-* PubSub only works in RESP3
-* Redis Sentinel only works in RESP3
-* Client side caching only works in RESP3
+* PubSub only works in RESP3 and Redis >= 6.0
+* Redis Sentinel only works in RESP3 and Redis >= 6.0
+* Client side caching only works in RESP3 and Redis >= 6.0
 
 ## Getting Started
 
