@@ -161,6 +161,7 @@ func TestLocker_WithContext_ExtendByClientSideCaching(t *testing.T) {
 func TestLocker_WithContext_AutoExtend(t *testing.T) {
 	locker := newLocker(t)
 	locker.validity = time.Second * 2
+	locker.interval = time.Second
 	defer locker.Close()
 
 	ctx, cancel, err := locker.WithContext(context.Background(), strconv.Itoa(rand.Int()))
