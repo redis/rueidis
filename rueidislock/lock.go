@@ -271,14 +271,14 @@ func (m *locker) try(ctx context.Context, cancel context.CancelFunc, name string
 			cancel()
 			if released == m.totalcnt {
 				if atomic.LoadInt32(&failures) >= m.majority {
-					tm := time.NewTimer(m.interval)
+					timer := time.NewTimer(m.interval)
 					cases := make([]reflect.SelectCase, 0, m.totalcnt+1)
-					cases = append(cases, reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(tm.C)})
+					cases = append(cases, reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(timer.C)})
 					for i := int32(0); i < m.totalcnt; i++ {
 						cases = append(cases, reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(g.csc[i])})
 					}
 					reflect.Select(cases)
-					tm.Stop()
+					timer.Stop()
 				}
 				m.mu.Lock()
 				if g.w--; g.w == 0 {
@@ -307,7 +307,7 @@ func (m *locker) try(ctx context.Context, cancel context.CancelFunc, name string
 	}
 
 	var i int32
-	for a, f := atomic.LoadInt32(&acquired), atomic.LoadInt32(&failures); a < m.majority && f < m.majority; i++ {
+	for a, f := int32(0), int32(0); a < m.majority && f < m.majority; i++ {
 		if err = acquire(err, keyname(m.prefix, name, i), g.csc[i]); err == nil {
 			a = atomic.AddInt32(&acquired, 1)
 		} else {
