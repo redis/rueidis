@@ -2,11 +2,11 @@ version: "3.8"
 
 services:
   redis:
-    image: redis:7.0.2-alpine
+    image: redis:7.0.5-alpine
     ports:
       - "6379:6379"
   redislock:
-    image: redis:7.0.2-alpine
+    image: redis:7.0.5-alpine
     ports:
       - "6376:6379"
   redis5:
@@ -18,7 +18,7 @@ services:
     ports:
       - "6377:6379"
   compat:
-    image: redis:7.0.0-alpine
+    image: redis:7.0.5-alpine
     ports:
       - "6378:6379"
   compat5:
@@ -26,7 +26,7 @@ services:
     ports:
       - "6356:6379"
   sentinel:
-    image: redis:7.0.0-alpine
+    image: redis:7.0.5-alpine
     entrypoint:
       - /bin/sh
       - -c
@@ -38,7 +38,7 @@ services:
       - "6380:6380"
       - "26379:26379"
   cluster:
-    image: redis:7.0.0-alpine
+    image: redis:7.0.5-alpine
     entrypoint:
       - /bin/sh
       - -c

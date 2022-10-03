@@ -38,6 +38,9 @@ type LockerOption struct {
 	// KeyMajority is at least how many redis keys in a total of KeyMajority*2-1 should be acquired to be a valid lock.
 	// Default value is 2.
 	KeyMajority int32
+	// NoLoopTracking will use NOLOOP in the CLIENT TRACKING command to avoid unnecessary notifications and thus have better performance.
+	// This can only be enabled if all your redis nodes >= 7.0.5. (https://github.com/redis/redis/pull/11052)
+	NoLoopTracking bool
 }
 
 // Locker is the interface of rueidislock
@@ -75,9 +78,14 @@ func NewLocker(option LockerOption) (Locker, error) {
 		majority: option.KeyMajority,
 		totalcnt: option.KeyMajority*2 - 1,
 		gates:    make(map[string]*gate),
+		noloop:   option.NoLoopTracking,
 	}
 	option.ClientOption.DisableCache = false
-	option.ClientOption.ClientTrackingOptions = []string{"OPTOUT"}
+	if option.NoLoopTracking {
+		option.ClientOption.ClientTrackingOptions = []string{"OPTOUT", "NOLOOP"}
+	} else {
+		option.ClientOption.ClientTrackingOptions = []string{"OPTOUT"}
+	}
 	option.ClientOption.OnInvalidations = impl.onInvalidations
 
 	var err error
@@ -103,6 +111,8 @@ type locker struct {
 
 	mu    sync.RWMutex
 	gates map[string]*gate
+
+	noloop bool
 }
 
 type gate struct {
@@ -255,11 +265,15 @@ func (m *locker) try(ctx context.Context, cancel context.CancelFunc, name string
 					deadline = deadline.Add(m.interval)
 					if err = m.script(ctx, extend, key, val, deadline); err == nil {
 						timer.Reset(m.interval)
-						<-csc
+						if !m.noloop {
+							<-csc
+						}
 					}
 				case <-csc:
 					if err = m.script(ctx, extend, key, val, deadline); err == nil {
-						<-csc
+						if !m.noloop {
+							<-csc
+						}
 					}
 				}
 			}
