@@ -119,14 +119,17 @@ func (r *JSONRepository[T]) Search(ctx context.Context, cmdFn func(search FtSear
 		n, _ = resp[0].ToInt64()
 		s = make([]*T, 0, len(resp[1:])/2)
 		for i := 2; i < len(resp); i += 2 {
-			if kv, _ := resp[i].ToArray(); len(kv) == 2 {
-				if k, _ := kv[0].ToString(); k == "$" {
-					record, _ := kv[1].ToString()
-					v, err := r.decode(record)
-					if err != nil {
-						return 0, nil, err
+			if kv, _ := resp[i].ToArray(); len(kv) >= 2 {
+				for j := len(kv) - 2; j >= 0; i -= 2 {
+					if k, _ := kv[j].ToString(); k == "$" {
+						record, _ := kv[j+1].ToString()
+						v, err := r.decode(record)
+						if err != nil {
+							return 0, nil, err
+						}
+						s = append(s, v)
+						break
 					}
-					s = append(s, v)
 				}
 			}
 		}

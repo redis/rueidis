@@ -137,6 +137,34 @@ func TestNewHashRepository(t *testing.T) {
 			}
 		})
 
+		t.Run("Search Sort", func(t *testing.T) {
+			err := repo.CreateIndex(ctx, func(schema FtCreateSchema) Completed {
+				return schema.FieldName("Val").Text().Sortable().Build()
+			})
+			time.Sleep(time.Second)
+			if err != nil {
+				t.Fatal(err)
+			}
+			n, records, err := repo.Search(ctx, func(search FtSearchIndex) Completed {
+				return search.Query("*").Sortby("Val").Build()
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if n != 1 {
+				t.Fatalf("unexpected total count %v", n)
+			}
+			if len(records) != 1 {
+				t.Fatalf("unexpected return count %v", n)
+			}
+			if !reflect.DeepEqual(e, records[0]) {
+				t.Fatalf("items[0] should be the same as e")
+			}
+			if err = repo.DropIndex(ctx); err != nil {
+				t.Fatal(err)
+			}
+		})
+
 		t.Run("Delete", func(t *testing.T) {
 			if err := repo.Remove(ctx, e.Key); err != nil {
 				t.Fatal(err)
