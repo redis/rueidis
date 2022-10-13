@@ -37,6 +37,18 @@ services:
     ports:
       - "6380:6380"
       - "26379:26379"
+  sentinel5:
+    image: redis:5-alpine
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        redis-server --save "" --appendonly no --port 6385 &
+        echo "sentinel monitor test5 127.0.0.1 6385 2\n" > sentinel.conf
+        redis-server sentinel.conf --sentinel
+    ports:
+      - "6385:6385"
+      - "26355:26379"
   cluster:
     image: redis:7.0.5-alpine
     entrypoint:

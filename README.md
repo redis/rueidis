@@ -14,7 +14,7 @@ A Fast Golang Redis client that does auto pipelining and supports client side ca
 * Auto pipeline for non-blocking redis commands
 * Connection pooling for blocking redis commands
 * Opt-in client side caching in RESP3
-* Pub/Sub, Redis 7 Sharded Pub/Sub in RESP3
+* Pub/Sub, Redis 7 Sharded Pub/Sub
 * Redis Cluster, Sentinel, Streams, TLS, RedisJSON, RedisBloom, RediSearch, RedisGraph, RedisTimeseries, RedisAI, RedisGears
 * IDE friendly redis command builder
 * Generic Hash/RedisJSON Object Mapping with client side caching and optimistic locking
@@ -27,8 +27,6 @@ A Fast Golang Redis client that does auto pipelining and supports client side ca
 Rueidis is built around RESP2 and RESP3 protocol, and supports almost all redis features.
 However, the following features has not yet been implemented in RESP2 mode:
 
-* PubSub only works in RESP3 and Redis >= 6.0
-* Redis Sentinel only works in RESP3 and Redis >= 6.0
 * Client side caching only works in RESP3 and Redis >= 6.0
 
 ## Getting Started
@@ -636,9 +634,3 @@ client.Do(ctx, client.B().Lindex().Key("k").Index(0).Build()).ToString()
 client.Do(ctx, client.B().Lpop().Key("k").Build()).ToString()
 client.Do(ctx, client.B().Lpop().Key("k").Count(2).Build()).AsStrSlice()
 ```
-
-## Not Yet Implement
-
-The following subjects are not yet implemented.
-* PubSub in RESP2
-* Sentinel in RESP2

@@ -144,7 +144,7 @@ func setup(t *testing.T, option ClientOption) (*pipe, *redisMock, func(), func()
 				ReplyString("OK")
 		}
 	}()
-	p, err := newPipe(n1, &option)
+	p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &option)
 	if err != nil {
 		t.Fatalf("pipe setup failed: %v", err)
 	}
@@ -186,7 +186,7 @@ func TestNewPipe(t *testing.T) {
 			mock.Expect("SELECT", "1").
 				ReplyString("OK")
 		}()
-		p, err := newPipe(n1, &ClientOption{
+		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
 			SelectDB:   1,
 			Password:   "pa",
 			ClientName: "cn",
@@ -214,7 +214,7 @@ func TestNewPipe(t *testing.T) {
 			mock.Expect("SELECT", "1").
 				ReplyString("OK")
 		}()
-		p, err := newPipe(n1, &ClientOption{
+		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
 			SelectDB:   1,
 			Username:   "ua",
 			Password:   "pa",
@@ -241,7 +241,7 @@ func TestNewPipe(t *testing.T) {
 			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN", "NOLOOP").
 				ReplyString("OK")
 		}()
-		p, err := newPipe(n1, &ClientOption{
+		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
 			ClientTrackingOptions: []string{"OPTIN", "NOLOOP"},
 		})
 		if err != nil {
@@ -257,7 +257,7 @@ func TestNewPipe(t *testing.T) {
 		n1, n2 := net.Pipe()
 		n1.Close()
 		n2.Close()
-		if _, err := newPipe(n1, &ClientOption{}); err != io.ErrClosedPipe {
+		if _, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{}); err != io.ErrClosedPipe {
 			t.Fatalf("pipe setup should failed with io.ErrClosedPipe, but got %v", err)
 		}
 	})
@@ -274,7 +274,7 @@ func TestNewRESP2Pipe(t *testing.T) {
 				ReplyError("ERR unknown subcommand or wrong number of arguments for 'TRACKING'")
 			mock.Expect("QUIT").ReplyString("OK")
 		}()
-		if _, err := newPipe(n1, &ClientOption{}); !errors.Is(err, ErrNoCache) {
+		if _, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{}); !errors.Is(err, ErrNoCache) {
 			t.Fatalf("unexpected err: %v", err)
 		}
 		mock.Close()
@@ -291,7 +291,7 @@ func TestNewRESP2Pipe(t *testing.T) {
 				ReplyString("OK")
 			mock.Expect("QUIT").ReplyString("OK")
 		}()
-		if _, err := newPipe(n1, &ClientOption{}); !errors.Is(err, ErrNoCache) {
+		if _, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{}); !errors.Is(err, ErrNoCache) {
 			t.Fatalf("unexpected err: %v", err)
 		}
 		mock.Close()
@@ -313,7 +313,7 @@ func TestNewRESP2Pipe(t *testing.T) {
 			mock.Expect("SELECT", "1").
 				ReplyString("OK")
 		}()
-		p, err := newPipe(n1, &ClientOption{
+		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
 			SelectDB:     1,
 			Password:     "pa",
 			ClientName:   "cn",
@@ -346,7 +346,7 @@ func TestNewRESP2Pipe(t *testing.T) {
 			mock.Expect("SELECT", "1").
 				ReplyString("OK")
 		}()
-		p, err := newPipe(n1, &ClientOption{
+		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
 			SelectDB:     1,
 			Username:     "ua",
 			Password:     "pa",
@@ -376,7 +376,7 @@ func TestNewRESP2Pipe(t *testing.T) {
 			n1.Close()
 			n2.Close()
 		}()
-		_, err := newPipe(n1, &ClientOption{
+		_, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
 			SelectDB:     1,
 			Username:     "ua",
 			Password:     "pa",
@@ -2136,7 +2136,7 @@ func TestPubSub(t *testing.T) {
 		}
 	})
 
-	t.Run("RESP2 no subscribe", func(t *testing.T) {
+	t.Run("RESP2 pubsub mixed", func(t *testing.T) {
 		p, _, cancel, _ := setup(t, ClientOption{})
 		p.version = 5
 		defer cancel()
@@ -2144,25 +2144,34 @@ func TestPubSub(t *testing.T) {
 		commands := []cmds.Completed{
 			builder.Subscribe().Channel("a").Build(),
 			builder.Psubscribe().Pattern("b").Build(),
-			builder.Ssubscribe().Channel("c").Build(),
+			builder.Get().Key("c").Build(),
 		}
-
-		for _, c := range commands {
-			if e := p.Do(context.Background(), c).Error(); e != ErrRESP2PubSub {
+		for _, resp := range p.DoMulti(context.Background(), commands...) {
+			if e := resp.Error(); e != ErrRESP2PubSubMixed {
 				t.Fatalf("unexpected err %v", e)
 			}
 		}
+	})
 
-		for _, c := range commands {
-			if e := p.DoMulti(context.Background(), c)[0].Error(); e != ErrRESP2PubSub {
-				t.Fatalf("unexpected err %v", e)
-			}
+	t.Run("RESP2 pubsub connect error", func(t *testing.T) {
+		p, _, cancel, _ := setup(t, ClientOption{})
+		p.version = 5
+		e := errors.New("any")
+		p.r2psFn = func() (p *pipe, err error) {
+			return nil, e
+		}
+		defer cancel()
+
+		if err := p.Receive(context.Background(), builder.Subscribe().Channel("a").Build(), nil); err != e {
+			t.Fatalf("unexpected err %v", err)
 		}
 
-		for _, c := range commands {
-			if e := p.Receive(context.Background(), c, func(message PubSubMessage) {}); e != ErrRESP2PubSub {
-				t.Fatalf("unexpected err %v", e)
-			}
+		if err := p.Do(context.Background(), builder.Subscribe().Channel("a").Build()).Error(); err != e {
+			t.Fatalf("unexpected err %v", err)
+		}
+
+		if err := p.DoMulti(context.Background(), builder.Subscribe().Channel("a").Build())[0].Error(); err != e {
+			t.Fatalf("unexpected err %v", err)
 		}
 	})
 }
@@ -3060,6 +3069,29 @@ func TestDeadPipe(t *testing.T) {
 		t.Fatalf("unexpected err %v", err)
 	}
 	if err := <-deadFn().SetPubSubHooks(PubSubHooks{OnMessage: func(m PubSubMessage) {}}); err != ErrClosing {
+		t.Fatalf("unexpected err %v", err)
+	}
+}
+
+func TestErrorPipe(t *testing.T) {
+	ctx := context.Background()
+	target := errors.New("any")
+	if err := epipeFn(target).Error(); err != target {
+		t.Fatalf("unexpected err %v", err)
+	}
+	if err := epipeFn(target).Do(ctx, cmds.NewCompleted(nil)).Error(); err != target {
+		t.Fatalf("unexpected err %v", err)
+	}
+	if err := epipeFn(target).DoMulti(ctx, cmds.NewCompleted(nil))[0].Error(); err != target {
+		t.Fatalf("unexpected err %v", err)
+	}
+	if err := epipeFn(target).DoCache(ctx, cmds.Cacheable(cmds.NewCompleted(nil)), time.Second).Error(); err != target {
+		t.Fatalf("unexpected err %v", err)
+	}
+	if err := epipeFn(target).Receive(ctx, cmds.NewCompleted(nil), func(message PubSubMessage) {}); err != target {
+		t.Fatalf("unexpected err %v", err)
+	}
+	if err := <-epipeFn(target).SetPubSubHooks(PubSubHooks{OnMessage: func(m PubSubMessage) {}}); err != target {
 		t.Fatalf("unexpected err %v", err)
 	}
 }

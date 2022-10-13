@@ -37,8 +37,8 @@ var (
 	ErrNoAddr = errors.New("no alive address in InitAddress")
 	// ErrNoCache means your redis does not support client-side caching and must set ClientOption.DisableCache to true
 	ErrNoCache = errors.New("ClientOption.DisableCache must be true for redis not supporting client-side caching or not supporting RESP3")
-	// ErrRESP2PubSub means your redis does not support RESP3 and rueidis can't handle SUBSCRIBE/PSUBSCRIBE/SSUBSCRIBE in this case
-	ErrRESP2PubSub = errors.New("rueidis does not support SUBSCRIBE/PSUBSCRIBE/SSUBSCRIBE in RESP2")
+	// ErrRESP2PubSubMixed means your redis does not support RESP3 and rueidis can't handle SUBSCRIBE/PSUBSCRIBE/SSUBSCRIBE in mixed case
+	ErrRESP2PubSubMixed = errors.New("rueidis does not support SUBSCRIBE/PSUBSCRIBE/SSUBSCRIBE mixed with other commands in RESP2")
 )
 
 // ClientOption should be passed to NewClient to construct a Client

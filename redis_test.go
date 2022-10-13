@@ -395,7 +395,7 @@ func testBlockingXREAD(t *testing.T, client Client) {
 }
 
 func testPubSub(t *testing.T, client Client) {
-	msgs := 10000
+	msgs := 5000
 	mmap := make(map[string]struct{})
 	for i := 0; i < msgs; i++ {
 		mmap[strconv.Itoa(i)] = struct{}{}
@@ -406,22 +406,27 @@ func testPubSub(t *testing.T, client Client) {
 	ctx := context.Background()
 
 	messages := make(chan string, 10)
+
+	wg := sync.WaitGroup{}
+	wg.Add(2)
 	go func() {
 		err := client.Receive(ctx, client.B().Subscribe().Channel("ch1").Build(), func(msg PubSubMessage) {
 			messages <- msg.Message
 		})
-		if err != ErrClosing {
+		if err != nil {
 			t.Errorf("unexpected subscribe response %v", err)
 		}
+		wg.Done()
 	}()
 
 	go func() {
 		err := client.Receive(ctx, client.B().Psubscribe().Pattern("pat*").Build(), func(msg PubSubMessage) {
 			messages <- msg.Message
 		})
-		if err != ErrClosing {
+		if err != nil {
 			t.Errorf("unexpected subscribe response %v", err)
 		}
+		wg.Done()
 	}()
 
 	go func() {
@@ -446,6 +451,39 @@ func testPubSub(t *testing.T, client Client) {
 		if len(mmap) == 0 {
 			close(messages)
 		}
+	}
+
+	for _, c := range client.Nodes() {
+		for _, resp := range c.DoMulti(context.Background(),
+			client.B().Unsubscribe().Channel("ch1").Build(),
+			client.B().Punsubscribe().Pattern("pat*").Build()) {
+			if err := resp.Error(); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+	wg.Wait()
+
+	t.Logf("testing pubsub hooks with 500 messages\n")
+
+	for i := 0; i < 500; i++ {
+		cc, cancel := client.Dedicate()
+		msg := strconv.Itoa(i)
+		ch := cc.SetPubSubHooks(PubSubHooks{
+			OnMessage: func(m PubSubMessage) {
+				cc.SetPubSubHooks(PubSubHooks{})
+			},
+		})
+		if err := cc.Do(context.Background(), client.B().Subscribe().Channel("ch2").Build()).Error(); err != nil {
+			t.Fatal(err)
+		}
+		if err := client.Do(context.Background(), client.B().Publish().Channel("ch2").Message(msg).Build()).Error(); err != nil {
+			t.Fatal(err)
+		}
+		if err := <-ch; err != nil {
+			t.Fatal(err)
+		}
+		cancel()
 	}
 }
 
@@ -522,7 +560,7 @@ func TestSingleClient5Integration(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testBlockingZPOP, testBlockingXREAD)
+	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testBlockingZPOP, testBlockingXREAD, testPubSub)
 
 	client.Close()
 	time.Sleep(time.Second * 5) // wait background ping exit
@@ -538,7 +576,26 @@ func TestCluster5ClientIntegration(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testBlockingZPOP, testBlockingXREAD)
+	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testBlockingZPOP, testBlockingXREAD, testPubSub)
+
+	client.Close()
+	time.Sleep(time.Second * 5) // wait background ping exit
+}
+
+func TestSentinel5ClientIntegration(t *testing.T) {
+	client, err := NewClient(ClientOption{
+		InitAddress:      []string{"127.0.0.1:26355"},
+		ConnWriteTimeout: 180 * time.Second,
+		DisableCache:     true,
+		Sentinel: SentinelOption{
+			MasterSet: "test5",
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testBlockingZPOP, testBlockingXREAD, testPubSub)
 
 	client.Close()
 	time.Sleep(time.Second * 5) // wait background ping exit

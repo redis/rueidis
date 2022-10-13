@@ -53,10 +53,9 @@ type mux struct {
 func makeMux(dst string, option *ClientOption, dialFn dialFn) *mux {
 	dead := deadFn()
 	return newMux(dst, option, (*pipe)(nil), dead, func() (w wire) {
-		conn, err := dialFn(dst, option)
-		if err == nil {
-			w, err = newPipe(conn, option)
-		}
+		w, err := newPipe(func() (net.Conn, error) {
+			return dialFn(dst, option)
+		}, option)
 		if err != nil {
 			dead.error.Store(&errs{error: err})
 			w = dead
