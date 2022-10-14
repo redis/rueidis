@@ -348,7 +348,7 @@ func (p *pipe) _backgroundRead() (err error) {
 				pr = false
 				continue
 			}
-		} else if ver >= 6 && ver < 7 && len(msg.values) != 0 {
+		} else if ver == 6 && len(msg.values) != 0 {
 			// This is a workaround for Redis 6's broken invalidation protocol: https://github.com/redis/redis/issues/8935
 			// When Redis 6 handles MULTI, MGET, or other multi-keys command,
 			// it will send invalidation message immediately if it finds the keys are expired, thus causing the multi-keys command response to be broken.
