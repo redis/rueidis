@@ -293,4 +293,4 @@ func dial(dst string, opt *ClientOption) (conn net.Conn, err error) {
 
 const redisErrMsgCommandNotAllow = "ERR command is not allowed"
 const redisErrMsgClusterDisabled = "ERR This instance has cluster support disabled"
-const redisErrMsgUnknownClusterCmd = "ERR unknown command `CLUSTER`, with args beginning with"
+const redisErrMsgUnknownClusterCmd = "ERR unknown command `CLUSTER`"

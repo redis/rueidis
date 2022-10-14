@@ -600,3 +600,35 @@ func TestSentinel5ClientIntegration(t *testing.T) {
 	client.Close()
 	time.Sleep(time.Second * 5) // wait background ping exit
 }
+
+func TestKeyDBSingleClientIntegration(t *testing.T) {
+	client, err := NewClient(ClientOption{
+		InitAddress:      []string{"127.0.0.1:6344"},
+		ConnWriteTimeout: 180 * time.Second,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	run(t, client, testSETGETCSC, testMultiSETGETCSC, testBlockingZPOP, testBlockingXREAD, testPubSub)
+	run(t, client, testFlush)
+
+	client.Close()
+	time.Sleep(time.Second * 5) // wait background ping exit
+}
+
+func TestDragonflyDBSingleClientIntegration(t *testing.T) {
+	client, err := NewClient(ClientOption{
+		InitAddress:      []string{"127.0.0.1:6333"},
+		ConnWriteTimeout: 180 * time.Second,
+		DisableCache:     true,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testPubSub)
+
+	client.Close()
+	time.Sleep(time.Second * 5) // wait background ping exit
+}
