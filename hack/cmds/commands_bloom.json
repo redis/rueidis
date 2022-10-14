@@ -24,14 +24,12 @@
       {
         "name": "nonscaling",
         "type": "enum",
-        "enum": [
-          "NONSCALING"
-        ],
+        "command": "NONSCALING",
         "optional": true
       }
     ],
     "since": "1.0.0",
-    "group": "bloom"
+    "group": "bf"
   },
   "BF.ADD": {
     "summary": "Adds an item to a Bloom Filter",
@@ -47,7 +45,7 @@
       }
     ],
     "since": "1.0.0",
-    "group": "bloom"
+    "group": "bf"
   },
   "BF.MADD": {
     "summary": "Adds one or more items to a Bloom Filter. A filter will be created if it does not exist",
@@ -64,7 +62,7 @@
       }
     ],
     "since": "1.0.0",
-    "group": "bloom"
+    "group": "bf"
   },
   "BF.INSERT": {
     "summary": "Adds one or more items to a Bloom Filter. A filter will be created if it does not exist",
@@ -94,26 +92,20 @@
       },
       {
         "name": "nocreate",
+        "command": "NOCREATE",
         "type": "enum",
-        "enum": [
-          "NOCREATE"
-        ],
         "optional": true
       },
       {
         "name": "nonscaling",
+        "command": "NONSCALING",
         "type": "enum",
-        "enum": [
-          "NONSCALING"
-        ],
         "optional": true
       },
       {
         "name": "items",
-        "type": "enum",
-        "enum": [
-          "ITEMS"
-        ]
+        "command": "ITEMS",
+        "type": "enum"
       },
       {
         "name": "item",
@@ -122,7 +114,7 @@
       }
     ],
     "since": "1.0.0",
-    "group": "bloom"
+    "group": "bf"
   },
   "BF.EXISTS": {
     "summary": "Checks whether an item exists in a Bloom Filter",
@@ -138,7 +130,7 @@
       }
     ],
     "since": "1.0.0",
-    "group": "bloom"
+    "group": "bf"
   },
   "BF.MEXISTS": {
     "summary": "Checks whether one or more items exist in a Bloom Filter",
@@ -155,7 +147,7 @@
       }
     ],
     "since": "1.0.0",
-    "group": "bloom"
+    "group": "bf"
   },
   "BF.SCANDUMP": {
     "summary": "Begins an incremental save of the bloom filter",
@@ -171,7 +163,7 @@
       }
     ],
     "since": "1.0.0",
-    "group": "bloom"
+    "group": "bf"
   },
   "BF.LOADCHUNK": {
     "summary": "Restores a filter previously saved using SCANDUMP",
@@ -191,7 +183,7 @@
       }
     ],
     "since": "1.0.0",
-    "group": "bloom"
+    "group": "bf"
   },
   "BF.INFO": {
     "summary": "Returns information about a Bloom Filter",
@@ -200,10 +192,22 @@
       {
         "name": "key",
         "type": "key"
+      },
+      {
+        "name": "single_value",
+        "type": "enum",
+        "optional": true,
+        "enum": [
+          "CAPACITY",
+          "SIZE",
+          "FILTERS",
+          "ITEMS",
+          "EXPANSION"
+        ]
       }
     ],
     "since": "1.0.0",
-    "group": "bloom"
+    "group": "bf"
   },
   "CF.RESERVE": {
     "summary": "Creates a new Cuckoo Filter",
@@ -237,7 +241,7 @@
       }
     ],
     "since": "1.0.0",
-    "group": "cuckoo"
+    "group": "cf"
   },
   "CF.ADD": {
     "summary": "Adds an item to a Cuckoo Filter",
@@ -253,7 +257,7 @@
       }
     ],
     "since": "1.0.0",
-    "group": "cuckoo"
+    "group": "cf"
   },
   "CF.ADDNX": {
     "summary": "Adds an item to a Cuckoo Filter if the item did not exist previously.",
@@ -269,7 +273,7 @@
       }
     ],
     "since": "1.0.0",
-    "group": "cuckoo"
+    "group": "cf"
   },
   "CF.INSERT": {
     "summary": "Adds one or more items to a Cuckoo Filter. A filter will be created if it does not exist",
@@ -287,18 +291,14 @@
       },
       {
         "name": "nocreate",
+        "command": "NOCREATE",
         "type": "enum",
-        "enum": [
-          "NOCREATE"
-        ],
         "optional": true
       },
       {
         "name": "items",
-        "type": "enum",
-        "enum": [
-          "ITEMS"
-        ]
+        "command": "ITEMS",
+        "type": "enum"
       },
       {
         "name": "item",
@@ -307,7 +307,7 @@
       }
     ],
     "since": "1.0.0",
-    "group": "cuckoo"
+    "group": "cf"
   },
   "CF.INSERTNX": {
     "summary": "Adds one or more items to a Cuckoo Filter if the items did not exist previously. A filter will be created if it does not exist",
@@ -325,18 +325,14 @@
       },
       {
         "name": "nocreate",
+        "command": "NOCREATE",
         "type": "enum",
-        "enum": [
-          "NOCREATE"
-        ],
         "optional": true
       },
       {
         "name": "items",
-        "type": "enum",
-        "enum": [
-          "ITEMS"
-        ]
+        "command": "ITEMS",
+        "type": "enum"
       },
       {
         "name": "item",
@@ -345,7 +341,7 @@
       }
     ],
     "since": "1.0.0",
-    "group": "cuckoo"
+    "group": "cf"
   },
   "CF.EXISTS": {
     "summary": "Checks whether one or more items exist in a Cuckoo Filter",
@@ -361,7 +357,7 @@
       }
     ],
     "since": "1.0.0",
-    "group": "cuckoo"
+    "group": "cf"
   },
   "CF.MEXISTS": {
     "summary": "Checks whether one or more items exist in a Cuckoo Filter",
@@ -378,7 +374,7 @@
       }
     ],
     "since": "1.0.0",
-    "group": "cuckoo"
+    "group": "cf"
   },
   "CF.DEL": {
     "summary": "Deletes an item from a Cuckoo Filter",
@@ -394,7 +390,7 @@
       }
     ],
     "since": "1.0.0",
-    "group": "cuckoo"
+    "group": "cf"
   },
   "CF.COUNT": {
     "summary": "Return the number of times an item might be in a Cuckoo Filter",
@@ -410,7 +406,7 @@
       }
     ],
     "since": "1.0.0",
-    "group": "cuckoo"
+    "group": "cf"
   },
   "CF.SCANDUMP": {
     "summary": "Begins an incremental save of the bloom filter",
@@ -426,7 +422,7 @@
       }
     ],
     "since": "1.0.0",
-    "group": "cuckoo"
+    "group": "cf"
   },
   "CF.LOADCHUNK": {
     "summary": "Restores a filter previously saved using SCANDUMP",
@@ -446,7 +442,7 @@
       }
     ],
     "since": "1.0.0",
-    "group": "cuckoo"
+    "group": "cf"
   },
   "CF.INFO": {
     "summary": "Returns information about a Cuckoo Filter",
@@ -458,7 +454,7 @@
       }
     ],
     "since": "1.0.0",
-    "group": "cuckoo"
+    "group": "cf"
   },
   "CMS.INITBYDIM": {
     "summary": "Initializes a Count-Min Sketch to dimensions specified by user",
@@ -512,7 +508,7 @@
         "name": "items",
         "type": "block",
         "multiple": true,
-        "block": [
+        "arguments": [
           {
             "name": "item",
             "type": "string"
@@ -565,13 +561,11 @@
         "name": "weight",
         "type": "block",
         "optional": true,
-        "block": [
+        "arguments": [
           {
             "name": "weights",
-            "type": "enum",
-            "enum": [
-              "WEIGHTS"
-            ]
+            "command": "WEIGHTS",
+            "type": "enum"
           },
           {
             "name": "weight",
@@ -612,7 +606,7 @@
         "name": "params",
         "type": "block",
         "optional": true,
-        "block": [
+        "arguments": [
           {
             "name": "width",
             "type": "integer"
@@ -660,7 +654,7 @@
         "name": "items",
         "type": "block",
         "multiple": true,
-        "block": [
+        "arguments": [
           {
             "name": "item",
             "type": "string"
@@ -693,6 +687,9 @@
     "group": "topk"
   },
   "TOPK.COUNT": {
+    "summary": "Return the count for one or more items are in a sketch",
+    "complexity": "O(n) where n is the number of items",
+    "deprecated_since": "2.4",
     "arguments": [
       {
         "name": "key",
@@ -703,7 +700,9 @@
         "type": "string",
         "multiple": true
       }
-    ]
+    ],
+    "since": "2.0.0",
+    "group": "topk"
   },
   "TOPK.LIST": {
     "summary": "Return full list of items in Top K list",
@@ -715,10 +714,9 @@
       },
       {
         "name": "withcount",
+        "command": "WITHCOUNT",
         "type": "enum",
-        "enum": [
-          "WITHCOUNT"
-        ]
+        "optional": true
       }
     ],
     "since": "2.0.0",
@@ -747,6 +745,7 @@
       {
         "name": "compression",
         "type": "integer",
+        "command": "COMPRESSION",
         "optional": true
       }
     ],
@@ -777,13 +776,9 @@
         "name": "values",
         "type": "block",
         "multiple": true,
-        "block": [
+        "arguments": [
           {
             "name": "value",
-            "type": "double"
-          },
-          {
-            "name": "weight",
             "type": "double"
           }
         ]
@@ -793,23 +788,6 @@
     "group": "tdigest"
   },
   "TDIGEST.MERGE": {
-    "summary": "Merges all of the values from 'source-key' keys to 'destination-key' sketch",
-    "complexity": "O(N), where N is the number of centroids",
-    "arguments": [
-      {
-        "name": "destination-key",
-        "type": "key"
-      },
-      {
-        "name": "source-key",
-        "type": "key",
-        "multiple": true
-      }
-    ],
-    "since": "2.4.0",
-    "group": "tdigest"
-  },
-  "TDIGEST.MERGESTORE": {
     "summary": "Merges all of the values from 'source-key' keys to 'destination-key' sketch",
     "complexity": "O(N*K), where N is the number of centroids and K being the number of input sketches",
     "arguments": [
@@ -830,13 +808,19 @@
         "name": "config",
         "type": "block",
         "optional": true,
-        "block": [
+        "arguments": [
           {
             "name": "compression",
             "command": "COMPRESSION",
             "type": "integer"
           }
         ]
+      },
+      {
+        "name": "override",
+        "type": "enum",
+        "command": "OVERRIDE",
+        "optional": true
       }
     ],
     "since": "2.4.0",
@@ -867,7 +851,7 @@
     "group": "tdigest"
   },
   "TDIGEST.QUANTILE": {
-    "summary": "Returns an estimate of the cutoff",
+    "summary": "Returns an estimate of the cutoff such that a specified fraction of the data added to this TDigest would be less than or equal to the specified cutoffs. Multiple quantiles can be returned with one call.",
     "complexity": "O(1)",
     "arguments": [
       {
@@ -884,7 +868,7 @@
     "group": "tdigest"
   },
   "TDIGEST.CDF": {
-    "summary": "Returns the fraction of all points added which are <= value",
+    "summary": "Returns the fraction of all points added which are <= value. Multiple fractions can be returned with one call.",
     "complexity": "O(1)",
     "arguments": [
       {
@@ -893,13 +877,16 @@
       },
       {
         "name": "value",
-        "type": "double"
+        "type": "double",
+        "multiple": true
       }
     ],
     "since": "2.4.0",
     "group": "tdigest"
   },
   "TDIGEST.TRIMMED_MEAN": {
+    "summary": "Returns the trimmed mean ignoring values outside given cutoff upper and lower limits",
+    "complexity": "O(n)",
     "arguments": [
       {
         "name": "key",
@@ -913,7 +900,77 @@
         "name": "high_cut_quantile",
         "type": "double"
       }
-    ]
+    ],
+    "since": "2.4.0",
+    "group": "tdigest"
+  },
+  "TDIGEST.RANK": {
+    "summary": "Retrieve the estimated rank of value (the number of observations in the sketch that are smaller than value + half the number of observations that are equal to value). Multiple ranks can be returned with one call.",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "value",
+        "type": "double",
+        "multiple": true
+      }
+    ],
+    "since": "2.4.0",
+    "group": "tdigest"
+  },
+  "TDIGEST.REVRANK": {
+    "summary": "Retrieve the estimated rank of value (the number of observations in the sketch that are larger than value + half the number of observations that are equal to value). Multiple ranks can be returned with one call.",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "value",
+        "type": "double",
+        "multiple": true
+      }
+    ],
+    "since": "2.4.0",
+    "group": "tdigest"
+  },
+  "TDIGEST.BYRANK": {
+    "summary": "Retrieve an estimation of the value with the given the rank. Multiple estimations can be returned with one call.",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "rank",
+        "type": "double",
+        "multiple": true
+      }
+    ],
+    "since": "2.4.0",
+    "group": "tdigest"
+  },
+  "TDIGEST.BYREVRANK": {
+    "summary": "Retrieve an estimation of the value with the given the reverse rank. Multiple estimations can be returned with one call.",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "reverse_rank",
+        "type": "double",
+        "multiple": true
+      }
+    ],
+    "since": "2.4.0",
+    "group": "tdigest"
   },
   "TDIGEST.INFO": {
     "summary": "Returns information about a sketch",

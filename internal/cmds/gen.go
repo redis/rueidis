@@ -1552,11 +1552,86 @@ func (c BfInfo) Key(key string) BfInfoKey {
 
 type BfInfoKey Completed
 
+func (c BfInfoKey) Capacity() BfInfoSingleValueCapacity {
+	c.cs.s = append(c.cs.s, "CAPACITY")
+	return (BfInfoSingleValueCapacity)(c)
+}
+
+func (c BfInfoKey) Size() BfInfoSingleValueSize {
+	c.cs.s = append(c.cs.s, "SIZE")
+	return (BfInfoSingleValueSize)(c)
+}
+
+func (c BfInfoKey) Filters() BfInfoSingleValueFilters {
+	c.cs.s = append(c.cs.s, "FILTERS")
+	return (BfInfoSingleValueFilters)(c)
+}
+
+func (c BfInfoKey) Items() BfInfoSingleValueItems {
+	c.cs.s = append(c.cs.s, "ITEMS")
+	return (BfInfoSingleValueItems)(c)
+}
+
+func (c BfInfoKey) Expansion() BfInfoSingleValueExpansion {
+	c.cs.s = append(c.cs.s, "EXPANSION")
+	return (BfInfoSingleValueExpansion)(c)
+}
+
 func (c BfInfoKey) Build() Completed {
 	return Completed(c)
 }
 
 func (c BfInfoKey) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type BfInfoSingleValueCapacity Completed
+
+func (c BfInfoSingleValueCapacity) Build() Completed {
+	return Completed(c)
+}
+
+func (c BfInfoSingleValueCapacity) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type BfInfoSingleValueExpansion Completed
+
+func (c BfInfoSingleValueExpansion) Build() Completed {
+	return Completed(c)
+}
+
+func (c BfInfoSingleValueExpansion) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type BfInfoSingleValueFilters Completed
+
+func (c BfInfoSingleValueFilters) Build() Completed {
+	return Completed(c)
+}
+
+func (c BfInfoSingleValueFilters) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type BfInfoSingleValueItems Completed
+
+func (c BfInfoSingleValueItems) Build() Completed {
+	return Completed(c)
+}
+
+func (c BfInfoSingleValueItems) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type BfInfoSingleValueSize Completed
+
+func (c BfInfoSingleValueSize) Build() Completed {
+	return Completed(c)
+}
+
+func (c BfInfoSingleValueSize) Cache() Cacheable {
 	return Cacheable(c)
 }
 
@@ -4648,6 +4723,12 @@ func (c ClusterMeet) Ip(ip string) ClusterMeetIp {
 	return (ClusterMeetIp)(c)
 }
 
+type ClusterMeetClusterBusPort Completed
+
+func (c ClusterMeetClusterBusPort) Build() Completed {
+	return Completed(c)
+}
+
 type ClusterMeetIp Completed
 
 func (c ClusterMeetIp) Port(port int64) ClusterMeetPort {
@@ -4656,6 +4737,11 @@ func (c ClusterMeetIp) Port(port int64) ClusterMeetPort {
 }
 
 type ClusterMeetPort Completed
+
+func (c ClusterMeetPort) ClusterBusPort(clusterBusPort int64) ClusterMeetClusterBusPort {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(clusterBusPort, 10))
+	return (ClusterMeetClusterBusPort)(c)
+}
 
 func (c ClusterMeetPort) Build() Completed {
 	return Completed(c)
@@ -6366,6 +6452,10 @@ func (c FcallKey) Arg(arg ...string) FcallArg {
 	return (FcallArg)(c)
 }
 
+func (c FcallKey) Build() Completed {
+	return Completed(c)
+}
+
 type FcallNumkeys Completed
 
 func (c FcallNumkeys) Key(key ...string) FcallKey {
@@ -6381,6 +6471,15 @@ func (c FcallNumkeys) Key(key ...string) FcallKey {
 	}
 	c.cs.s = append(c.cs.s, key...)
 	return (FcallKey)(c)
+}
+
+func (c FcallNumkeys) Arg(arg ...string) FcallArg {
+	c.cs.s = append(c.cs.s, arg...)
+	return (FcallArg)(c)
+}
+
+func (c FcallNumkeys) Build() Completed {
+	return Completed(c)
 }
 
 type FcallRo Completed
@@ -6440,6 +6539,14 @@ func (c FcallRoKey) Arg(arg ...string) FcallRoArg {
 	return (FcallRoArg)(c)
 }
 
+func (c FcallRoKey) Build() Completed {
+	return Completed(c)
+}
+
+func (c FcallRoKey) Cache() Cacheable {
+	return Cacheable(c)
+}
+
 type FcallRoNumkeys Completed
 
 func (c FcallRoNumkeys) Key(key ...string) FcallRoKey {
@@ -6455,6 +6562,19 @@ func (c FcallRoNumkeys) Key(key ...string) FcallRoKey {
 	}
 	c.cs.s = append(c.cs.s, key...)
 	return (FcallRoKey)(c)
+}
+
+func (c FcallRoNumkeys) Arg(arg ...string) FcallRoArg {
+	c.cs.s = append(c.cs.s, arg...)
+	return (FcallRoArg)(c)
+}
+
+func (c FcallRoNumkeys) Build() Completed {
+	return Completed(c)
+}
+
+func (c FcallRoNumkeys) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type Flushall Completed
@@ -17633,17 +17753,20 @@ func (c JsonArrlen) Key(key string) JsonArrlenKey {
 
 type JsonArrlenKey Completed
 
-func (c JsonArrlenKey) Path(path ...string) JsonArrlenPath {
-	c.cs.s = append(c.cs.s, path...)
+func (c JsonArrlenKey) Path(path string) JsonArrlenPath {
+	c.cs.s = append(c.cs.s, path)
 	return (JsonArrlenPath)(c)
 }
 
-type JsonArrlenPath Completed
-
-func (c JsonArrlenPath) Path(path ...string) JsonArrlenPath {
-	c.cs.s = append(c.cs.s, path...)
-	return c
+func (c JsonArrlenKey) Build() Completed {
+	return Completed(c)
 }
+
+func (c JsonArrlenKey) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type JsonArrlenPath Completed
 
 func (c JsonArrlenPath) Build() Completed {
 	return Completed(c)
@@ -18448,10 +18571,6 @@ type JsonToggleKey Completed
 func (c JsonToggleKey) Path(path string) JsonTogglePath {
 	c.cs.s = append(c.cs.s, path)
 	return (JsonTogglePath)(c)
-}
-
-func (c JsonToggleKey) Build() Completed {
-	return Completed(c)
 }
 
 type JsonTogglePath Completed
@@ -23938,19 +24057,92 @@ func (c TdigestAddKey) Value(value float64) TdigestAddValuesValue {
 
 type TdigestAddValuesValue Completed
 
-func (c TdigestAddValuesValue) Weight(weight float64) TdigestAddValuesWeight {
-	c.cs.s = append(c.cs.s, strconv.FormatFloat(weight, 'f', -1, 64))
-	return (TdigestAddValuesWeight)(c)
-}
-
-type TdigestAddValuesWeight Completed
-
-func (c TdigestAddValuesWeight) Value(value float64) TdigestAddValuesValue {
+func (c TdigestAddValuesValue) Value(value float64) TdigestAddValuesValue {
 	c.cs.s = append(c.cs.s, strconv.FormatFloat(value, 'f', -1, 64))
-	return (TdigestAddValuesValue)(c)
+	return c
 }
 
-func (c TdigestAddValuesWeight) Build() Completed {
+func (c TdigestAddValuesValue) Build() Completed {
+	return Completed(c)
+}
+
+type TdigestByrank Completed
+
+func (b Builder) TdigestByrank() (c TdigestByrank) {
+	c = TdigestByrank{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "TDIGEST.BYRANK")
+	return c
+}
+
+func (c TdigestByrank) Key(key string) TdigestByrankKey {
+	if c.ks&NoSlot == NoSlot {
+		c.ks = NoSlot | slot(key)
+	} else {
+		c.ks = check(c.ks, slot(key))
+	}
+	c.cs.s = append(c.cs.s, key)
+	return (TdigestByrankKey)(c)
+}
+
+type TdigestByrankKey Completed
+
+func (c TdigestByrankKey) Rank(rank ...float64) TdigestByrankRank {
+	for _, n := range rank {
+		c.cs.s = append(c.cs.s, strconv.FormatFloat(n, 'f', -1, 64))
+	}
+	return (TdigestByrankRank)(c)
+}
+
+type TdigestByrankRank Completed
+
+func (c TdigestByrankRank) Rank(rank ...float64) TdigestByrankRank {
+	for _, n := range rank {
+		c.cs.s = append(c.cs.s, strconv.FormatFloat(n, 'f', -1, 64))
+	}
+	return c
+}
+
+func (c TdigestByrankRank) Build() Completed {
+	return Completed(c)
+}
+
+type TdigestByrevrank Completed
+
+func (b Builder) TdigestByrevrank() (c TdigestByrevrank) {
+	c = TdigestByrevrank{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "TDIGEST.BYREVRANK")
+	return c
+}
+
+func (c TdigestByrevrank) Key(key string) TdigestByrevrankKey {
+	if c.ks&NoSlot == NoSlot {
+		c.ks = NoSlot | slot(key)
+	} else {
+		c.ks = check(c.ks, slot(key))
+	}
+	c.cs.s = append(c.cs.s, key)
+	return (TdigestByrevrankKey)(c)
+}
+
+type TdigestByrevrankKey Completed
+
+func (c TdigestByrevrankKey) ReverseRank(reverseRank ...float64) TdigestByrevrankReverseRank {
+	for _, n := range reverseRank {
+		c.cs.s = append(c.cs.s, strconv.FormatFloat(n, 'f', -1, 64))
+	}
+	return (TdigestByrevrankReverseRank)(c)
+}
+
+type TdigestByrevrankReverseRank Completed
+
+func (c TdigestByrevrankReverseRank) ReverseRank(reverseRank ...float64) TdigestByrevrankReverseRank {
+	for _, n := range reverseRank {
+		c.cs.s = append(c.cs.s, strconv.FormatFloat(n, 'f', -1, 64))
+	}
+	return c
+}
+
+func (c TdigestByrevrankReverseRank) Build() Completed {
 	return Completed(c)
 }
 
@@ -23974,12 +24166,21 @@ func (c TdigestCdf) Key(key string) TdigestCdfKey {
 
 type TdigestCdfKey Completed
 
-func (c TdigestCdfKey) Value(value float64) TdigestCdfValue {
-	c.cs.s = append(c.cs.s, strconv.FormatFloat(value, 'f', -1, 64))
+func (c TdigestCdfKey) Value(value ...float64) TdigestCdfValue {
+	for _, n := range value {
+		c.cs.s = append(c.cs.s, strconv.FormatFloat(n, 'f', -1, 64))
+	}
 	return (TdigestCdfValue)(c)
 }
 
 type TdigestCdfValue Completed
+
+func (c TdigestCdfValue) Value(value ...float64) TdigestCdfValue {
+	for _, n := range value {
+		c.cs.s = append(c.cs.s, strconv.FormatFloat(n, 'f', -1, 64))
+	}
+	return c
+}
 
 func (c TdigestCdfValue) Build() Completed {
 	return Completed(c)
@@ -24012,7 +24213,7 @@ func (c TdigestCreateCompression) Build() Completed {
 type TdigestCreateKey Completed
 
 func (c TdigestCreateKey) Compression(compression int64) TdigestCreateCompression {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(compression, 10))
+	c.cs.s = append(c.cs.s, "COMPRESSION", strconv.FormatInt(compression, 10))
 	return (TdigestCreateCompression)(c)
 }
 
@@ -24086,9 +24287,27 @@ func (c TdigestMerge) DestinationKey(destinationKey string) TdigestMergeDestinat
 	return (TdigestMergeDestinationKey)(c)
 }
 
+type TdigestMergeConfigCompression Completed
+
+func (c TdigestMergeConfigCompression) Override() TdigestMergeOverride {
+	c.cs.s = append(c.cs.s, "OVERRIDE")
+	return (TdigestMergeOverride)(c)
+}
+
+func (c TdigestMergeConfigCompression) Build() Completed {
+	return Completed(c)
+}
+
 type TdigestMergeDestinationKey Completed
 
-func (c TdigestMergeDestinationKey) SourceKey(sourceKey ...string) TdigestMergeSourceKey {
+func (c TdigestMergeDestinationKey) Numkeys(numkeys int64) TdigestMergeNumkeys {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(numkeys, 10))
+	return (TdigestMergeNumkeys)(c)
+}
+
+type TdigestMergeNumkeys Completed
+
+func (c TdigestMergeNumkeys) SourceKey(sourceKey ...string) TdigestMergeSourceKey {
 	if c.ks&NoSlot == NoSlot {
 		for _, k := range sourceKey {
 			c.ks = NoSlot | slot(k)
@@ -24101,6 +24320,12 @@ func (c TdigestMergeDestinationKey) SourceKey(sourceKey ...string) TdigestMergeS
 	}
 	c.cs.s = append(c.cs.s, sourceKey...)
 	return (TdigestMergeSourceKey)(c)
+}
+
+type TdigestMergeOverride Completed
+
+func (c TdigestMergeOverride) Build() Completed {
+	return Completed(c)
 }
 
 type TdigestMergeSourceKey Completed
@@ -24120,81 +24345,17 @@ func (c TdigestMergeSourceKey) SourceKey(sourceKey ...string) TdigestMergeSource
 	return c
 }
 
-func (c TdigestMergeSourceKey) Build() Completed {
-	return Completed(c)
-}
-
-type TdigestMergestore Completed
-
-func (b Builder) TdigestMergestore() (c TdigestMergestore) {
-	c = TdigestMergestore{cs: get(), ks: b.ks}
-	c.cs.s = append(c.cs.s, "TDIGEST.MERGESTORE")
-	return c
-}
-
-func (c TdigestMergestore) DestinationKey(destinationKey string) TdigestMergestoreDestinationKey {
-	if c.ks&NoSlot == NoSlot {
-		c.ks = NoSlot | slot(destinationKey)
-	} else {
-		c.ks = check(c.ks, slot(destinationKey))
-	}
-	c.cs.s = append(c.cs.s, destinationKey)
-	return (TdigestMergestoreDestinationKey)(c)
-}
-
-type TdigestMergestoreConfigCompression Completed
-
-func (c TdigestMergestoreConfigCompression) Build() Completed {
-	return Completed(c)
-}
-
-type TdigestMergestoreDestinationKey Completed
-
-func (c TdigestMergestoreDestinationKey) Numkeys(numkeys int64) TdigestMergestoreNumkeys {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(numkeys, 10))
-	return (TdigestMergestoreNumkeys)(c)
-}
-
-type TdigestMergestoreNumkeys Completed
-
-func (c TdigestMergestoreNumkeys) SourceKey(sourceKey ...string) TdigestMergestoreSourceKey {
-	if c.ks&NoSlot == NoSlot {
-		for _, k := range sourceKey {
-			c.ks = NoSlot | slot(k)
-			break
-		}
-	} else {
-		for _, k := range sourceKey {
-			c.ks = check(c.ks, slot(k))
-		}
-	}
-	c.cs.s = append(c.cs.s, sourceKey...)
-	return (TdigestMergestoreSourceKey)(c)
-}
-
-type TdigestMergestoreSourceKey Completed
-
-func (c TdigestMergestoreSourceKey) SourceKey(sourceKey ...string) TdigestMergestoreSourceKey {
-	if c.ks&NoSlot == NoSlot {
-		for _, k := range sourceKey {
-			c.ks = NoSlot | slot(k)
-			break
-		}
-	} else {
-		for _, k := range sourceKey {
-			c.ks = check(c.ks, slot(k))
-		}
-	}
-	c.cs.s = append(c.cs.s, sourceKey...)
-	return c
-}
-
-func (c TdigestMergestoreSourceKey) Compression(compression int64) TdigestMergestoreConfigCompression {
+func (c TdigestMergeSourceKey) Compression(compression int64) TdigestMergeConfigCompression {
 	c.cs.s = append(c.cs.s, "COMPRESSION", strconv.FormatInt(compression, 10))
-	return (TdigestMergestoreConfigCompression)(c)
+	return (TdigestMergeConfigCompression)(c)
 }
 
-func (c TdigestMergestoreSourceKey) Build() Completed {
+func (c TdigestMergeSourceKey) Override() TdigestMergeOverride {
+	c.cs.s = append(c.cs.s, "OVERRIDE")
+	return (TdigestMergeOverride)(c)
+}
+
+func (c TdigestMergeSourceKey) Build() Completed {
 	return Completed(c)
 }
 
@@ -24262,6 +24423,46 @@ func (c TdigestQuantileQuantile) Build() Completed {
 	return Completed(c)
 }
 
+type TdigestRank Completed
+
+func (b Builder) TdigestRank() (c TdigestRank) {
+	c = TdigestRank{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "TDIGEST.RANK")
+	return c
+}
+
+func (c TdigestRank) Key(key string) TdigestRankKey {
+	if c.ks&NoSlot == NoSlot {
+		c.ks = NoSlot | slot(key)
+	} else {
+		c.ks = check(c.ks, slot(key))
+	}
+	c.cs.s = append(c.cs.s, key)
+	return (TdigestRankKey)(c)
+}
+
+type TdigestRankKey Completed
+
+func (c TdigestRankKey) Value(value ...float64) TdigestRankValue {
+	for _, n := range value {
+		c.cs.s = append(c.cs.s, strconv.FormatFloat(n, 'f', -1, 64))
+	}
+	return (TdigestRankValue)(c)
+}
+
+type TdigestRankValue Completed
+
+func (c TdigestRankValue) Value(value ...float64) TdigestRankValue {
+	for _, n := range value {
+		c.cs.s = append(c.cs.s, strconv.FormatFloat(n, 'f', -1, 64))
+	}
+	return c
+}
+
+func (c TdigestRankValue) Build() Completed {
+	return Completed(c)
+}
+
 type TdigestReset Completed
 
 func (b Builder) TdigestReset() (c TdigestReset) {
@@ -24283,6 +24484,46 @@ func (c TdigestReset) Key(key string) TdigestResetKey {
 type TdigestResetKey Completed
 
 func (c TdigestResetKey) Build() Completed {
+	return Completed(c)
+}
+
+type TdigestRevrank Completed
+
+func (b Builder) TdigestRevrank() (c TdigestRevrank) {
+	c = TdigestRevrank{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "TDIGEST.REVRANK")
+	return c
+}
+
+func (c TdigestRevrank) Key(key string) TdigestRevrankKey {
+	if c.ks&NoSlot == NoSlot {
+		c.ks = NoSlot | slot(key)
+	} else {
+		c.ks = check(c.ks, slot(key))
+	}
+	c.cs.s = append(c.cs.s, key)
+	return (TdigestRevrankKey)(c)
+}
+
+type TdigestRevrankKey Completed
+
+func (c TdigestRevrankKey) Value(value ...float64) TdigestRevrankValue {
+	for _, n := range value {
+		c.cs.s = append(c.cs.s, strconv.FormatFloat(n, 'f', -1, 64))
+	}
+	return (TdigestRevrankValue)(c)
+}
+
+type TdigestRevrankValue Completed
+
+func (c TdigestRevrankValue) Value(value ...float64) TdigestRevrankValue {
+	for _, n := range value {
+		c.cs.s = append(c.cs.s, strconv.FormatFloat(n, 'f', -1, 64))
+	}
+	return c
+}
+
+func (c TdigestRevrankValue) Build() Completed {
 	return Completed(c)
 }
 
@@ -24502,6 +24743,14 @@ type TopkListKey Completed
 func (c TopkListKey) Withcount() TopkListWithcount {
 	c.cs.s = append(c.cs.s, "WITHCOUNT")
 	return (TopkListWithcount)(c)
+}
+
+func (c TopkListKey) Build() Completed {
+	return Completed(c)
+}
+
+func (c TopkListKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type TopkListWithcount Completed
@@ -30031,6 +30280,11 @@ func (c XclaimForce) Justid() XclaimJustid {
 	return (XclaimJustid)(c)
 }
 
+func (c XclaimForce) Lastid() XclaimLastid {
+	c.cs.s = append(c.cs.s, "LASTID")
+	return (XclaimLastid)(c)
+}
+
 func (c XclaimForce) Build() Completed {
 	return Completed(c)
 }
@@ -30074,6 +30328,11 @@ func (c XclaimId) Justid() XclaimJustid {
 	return (XclaimJustid)(c)
 }
 
+func (c XclaimId) Lastid() XclaimLastid {
+	c.cs.s = append(c.cs.s, "LASTID")
+	return (XclaimLastid)(c)
+}
+
 func (c XclaimId) Build() Completed {
 	return Completed(c)
 }
@@ -30100,11 +30359,21 @@ func (c XclaimIdle) Justid() XclaimJustid {
 	return (XclaimJustid)(c)
 }
 
+func (c XclaimIdle) Lastid() XclaimLastid {
+	c.cs.s = append(c.cs.s, "LASTID")
+	return (XclaimLastid)(c)
+}
+
 func (c XclaimIdle) Build() Completed {
 	return Completed(c)
 }
 
 type XclaimJustid Completed
+
+func (c XclaimJustid) Lastid() XclaimLastid {
+	c.cs.s = append(c.cs.s, "LASTID")
+	return (XclaimLastid)(c)
+}
 
 func (c XclaimJustid) Build() Completed {
 	return Completed(c)
@@ -30115,6 +30384,12 @@ type XclaimKey Completed
 func (c XclaimKey) Group(group string) XclaimGroup {
 	c.cs.s = append(c.cs.s, group)
 	return (XclaimGroup)(c)
+}
+
+type XclaimLastid Completed
+
+func (c XclaimLastid) Build() Completed {
+	return Completed(c)
 }
 
 type XclaimMinIdleTime Completed
@@ -30136,6 +30411,11 @@ func (c XclaimRetrycount) Justid() XclaimJustid {
 	return (XclaimJustid)(c)
 }
 
+func (c XclaimRetrycount) Lastid() XclaimLastid {
+	c.cs.s = append(c.cs.s, "LASTID")
+	return (XclaimLastid)(c)
+}
+
 func (c XclaimRetrycount) Build() Completed {
 	return Completed(c)
 }
@@ -30155,6 +30435,11 @@ func (c XclaimTime) Force() XclaimForce {
 func (c XclaimTime) Justid() XclaimJustid {
 	c.cs.s = append(c.cs.s, "JUSTID")
 	return (XclaimJustid)(c)
+}
+
+func (c XclaimTime) Lastid() XclaimLastid {
+	c.cs.s = append(c.cs.s, "LASTID")
+	return (XclaimLastid)(c)
 }
 
 func (c XclaimTime) Build() Completed {

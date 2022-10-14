@@ -1080,6 +1080,11 @@
       {
         "name": "port",
         "type": "integer"
+      },
+      {
+        "name": "cluster_bus_port",
+        "type": "integer",
+        "optional": true
       }
     ],
     "since": "3.0.0",
@@ -1677,11 +1682,13 @@
       {
         "name": "key",
         "type": "key",
+        "optional": true,
         "multiple": true
       },
       {
         "name": "arg",
         "type": "string",
+        "optional": true,
         "multiple": true
       }
     ]
@@ -1699,11 +1706,13 @@
       {
         "name": "key",
         "type": "key",
+        "optional": true,
         "multiple": true
       },
       {
         "name": "arg",
         "type": "string",
+        "optional": true,
         "multiple": true
       }
     ]
@@ -5357,6 +5366,14 @@
         "type": "enum",
         "enum": [
           "JUSTID"
+        ],
+        "optional": true
+      },
+      {
+        "name": "lastid",
+        "type": "enum",
+        "enum": [
+          "LASTID"
         ],
         "optional": true
       }

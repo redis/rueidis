@@ -75,8 +75,7 @@
       },
       {
         "name": "path",
-        "type": "string",
-        "optional": true
+        "type": "string"
       }
     ],
     "since": "2.0.0",
@@ -312,7 +311,7 @@
       {
         "name": "path",
         "type": "string",
-        "multiple": true
+        "optional": true
       }
     ],
     "since": "1.0.0",

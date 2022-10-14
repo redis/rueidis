@@ -46,14 +46,15 @@ type command struct {
 }
 
 type argument struct {
-	Name     interface{} `json:"name"`
-	Type     interface{} `json:"type"`
-	Command  string      `json:"command"`
-	Enum     []string    `json:"enum"`
-	Block    []argument  `json:"block"`
-	Multiple bool        `json:"multiple"`
-	Optional bool        `json:"optional"`
-	Variadic bool        `json:"variadic"`
+	Name      interface{} `json:"name"`
+	Type      interface{} `json:"type"`
+	Command   string      `json:"command"`
+	Enum      []string    `json:"enum"`
+	Block     []argument  `json:"block"`
+	Arguments []argument  `json:"arguments"`
+	Multiple  bool        `json:"multiple"`
+	Optional  bool        `json:"optional"`
+	Variadic  bool        `json:"variadic"`
 
 	MultipleToken bool `json:"multiple_token"`
 }
@@ -769,6 +770,18 @@ func makeChildNodes(parent *node, args []argument) (first *node) {
 	}
 	var nodes []*node
 	for _, arg := range args {
+
+		if len(arg.Arguments) != 0 {
+			arg.Block = arg.Arguments
+		}
+		if arg.Type == "enum" && len(arg.Enum) == 0 && arg.Command != "" {
+			arg.Enum = []string{arg.Command}
+			arg.Command = ""
+		}
+		if arg.Type == "oneof" && len(arg.Block) == 0 && arg.Command != "" {
+			arg.Enum = []string{arg.Command}
+		}
+
 		nodes = append(nodes, &node{Parent: parent, Arg: arg})
 	}
 	for i, node := range nodes {
