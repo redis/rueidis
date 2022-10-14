@@ -21,6 +21,10 @@ services:
     image: docker.dragonflydb.io/dragonflydb/dragonfly:v0.9.1
     ports:
       - "6333:6379"
+  kvrocks:
+    image: kvrocks/kvrocks:v2.0.6
+    ports:
+      - "6666:6666"
   redisearch:
     image: redislabs/redisearch:2.4.9
     ports:

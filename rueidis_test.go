@@ -117,7 +117,7 @@ func TestFallBackSingleClient(t *testing.T) {
 		if err != nil {
 			return
 		}
-		mock.Expect("CLUSTER", "SLOTS").Reply(RedisMessage{typ: '-', string: redisErrMsgClusterDisabled})
+		mock.Expect("CLUSTER", "SLOTS").Reply(RedisMessage{typ: '-', string: "ERR This instance has cluster support disabled"})
 		mock.Expect("QUIT").ReplyString("OK")
 		mock.Close()
 		close(done)
@@ -195,7 +195,7 @@ func TestTLSClient(t *testing.T) {
 		if err != nil {
 			return
 		}
-		mock.Expect("CLUSTER", "SLOTS").Reply(RedisMessage{typ: '-', string: redisErrMsgClusterDisabled})
+		mock.Expect("CLUSTER", "SLOTS").Reply(RedisMessage{typ: '-', string: "ERR This instance has cluster support disabled"})
 		mock.Expect("QUIT").ReplyString("OK")
 		mock.Close()
 		close(done)

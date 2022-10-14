@@ -632,3 +632,20 @@ func TestDragonflyDBSingleClientIntegration(t *testing.T) {
 	client.Close()
 	time.Sleep(time.Second * 5) // wait background ping exit
 }
+
+func TestKvrocksSingleClientIntegration(t *testing.T) {
+	client, err := NewClient(ClientOption{
+		InitAddress:      []string{"127.0.0.1:6666"},
+		ConnWriteTimeout: 180 * time.Second,
+		DisableCache:     true,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testPubSub)
+	run(t, client, testFlush)
+
+	client.Close()
+	time.Sleep(time.Second * 5) // wait background ping exit
+}
