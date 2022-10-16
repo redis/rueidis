@@ -3540,11 +3540,7 @@
       },
       {
         "name": "key",
-        "type": "enum",
-        "enum": [
-          "key",
-          "\"\""
-        ]
+        "type": "key"
       },
       {
         "name": "destination-db",

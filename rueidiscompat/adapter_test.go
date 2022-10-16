@@ -80,6 +80,7 @@ var _ = AfterSuite(func() {
 
 var _ = Describe("RESP3 Commands", func() {
 	testAdapter(true)
+	testAdapterCache(true)
 })
 
 var _ = Describe("RESP2 Commands", func() {
@@ -96,6 +97,7 @@ func testAdapter(resp3 bool) {
 			adapter = adapterresp2
 		}
 		Expect(adapter.FlushDB(ctx).Err()).NotTo(HaveOccurred())
+		Expect(adapter.FlushAll(ctx).Err()).NotTo(HaveOccurred())
 	})
 
 	Describe("server", func() {
@@ -113,10 +115,40 @@ func testAdapter(resp3 bool) {
 			Expect(ping.Val()).To(Equal("PONG"))
 		})
 
+		It("should Migrate", func() {
+			var r *StatusCmd
+			if resp3 {
+				r = adapter.Migrate(ctx, "127.0.0.1", 6378, "nonkey", 0, 1)
+			} else {
+				r = adapter.Migrate(ctx, "127.0.0.1", 6356, "nonkey", 0, 1)
+			}
+			Expect(r.Err()).To(BeNil())
+			Expect(r.Val()).To(Equal("NOKEY"))
+		})
+
+		It("should Move", func() {
+			Expect(adapter.Set(ctx, "movekey", "1", 0).Err()).To(BeNil())
+			r := adapter.Move(ctx, "movekey", 1)
+			Expect(r.Err()).To(BeNil())
+			Expect(r.Val()).To(BeTrue())
+		})
+
 		It("should ClientKill", func() {
 			r := adapter.ClientKill(ctx, "1.1.1.1:1111")
 			Expect(r.Err()).To(MatchError("ERR No such client"))
 			Expect(r.Val()).To(Equal(""))
+		})
+
+		It("should ClientKillByFilter", func() {
+			r := adapter.ClientKillByFilter(ctx, "ID", "12039487")
+			Expect(r.Err()).To(BeNil())
+			Expect(r.Val()).To(Equal(int64(0)))
+		})
+
+		It("should ClientList", func() {
+			r := adapter.ClientList(ctx)
+			Expect(r.Err()).To(BeNil())
+			Expect(r.Val()).NotTo(Equal(""))
 		})
 
 		It("should ClientID", func() {
@@ -617,9 +649,38 @@ func testAdapter(resp3 bool) {
 				Offset: 0,
 				Count:  2,
 				Order:  "ASC",
+				Alpha:  true,
 			}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(els).To(Equal([]string{"1", "2"}))
+		})
+
+		It("should Sort By", func() {
+			size, err := adapter.LPush(ctx, "list_by", "1").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(size).To(Equal(int64(1)))
+
+			size, err = adapter.LPush(ctx, "list_by", "3").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(size).To(Equal(int64(2)))
+
+			size, err = adapter.LPush(ctx, "list_by", "2").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(size).To(Equal(int64(3)))
+
+			els, err := adapter.Sort(ctx, "list_by", Sort{
+				Offset: 0,
+				Count:  2,
+				By:     "nosort",
+			}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(els).To(Equal([]string{"2", "3"}))
+		})
+
+		It("should Sort Panic", func() {
+			Expect(func() {
+				adapter.Sort(ctx, "list", Sort{Order: "PANIC"})
+			}).To(Panic())
 		})
 
 		It("should Sort and Get", func() {
@@ -731,7 +792,7 @@ func testAdapter(resp3 bool) {
 				Expect(set.Err()).NotTo(HaveOccurred())
 			}
 
-			keys, cursor, err := adapter.Scan(ctx, 0, "", 0).Result()
+			keys, cursor, err := adapter.Scan(ctx, 0, "key*", 100).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(keys).NotTo(BeEmpty())
 			Expect(cursor).NotTo(BeZero())
@@ -744,7 +805,7 @@ func testAdapter(resp3 bool) {
 					Expect(set.Err()).NotTo(HaveOccurred())
 				}
 
-				keys, cursor, err := adapter.ScanType(ctx, 0, "", 0, "string").Result()
+				keys, cursor, err := adapter.ScanType(ctx, 0, "key*", 100, "string").Result()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(keys).NotTo(BeEmpty())
 				Expect(cursor).NotTo(BeZero())
@@ -757,7 +818,7 @@ func testAdapter(resp3 bool) {
 				Expect(sadd.Err()).NotTo(HaveOccurred())
 			}
 
-			keys, cursor, err := adapter.SScan(ctx, "myset", 0, "", 0).Result()
+			keys, cursor, err := adapter.SScan(ctx, "myset", 0, "member*", 100).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(keys).NotTo(BeEmpty())
 			Expect(cursor).NotTo(BeZero())
@@ -769,7 +830,7 @@ func testAdapter(resp3 bool) {
 				Expect(sadd.Err()).NotTo(HaveOccurred())
 			}
 
-			keys, cursor, err := adapter.HScan(ctx, "myhash", 0, "", 0).Result()
+			keys, cursor, err := adapter.HScan(ctx, "myhash", 0, "key*", 100).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(keys).NotTo(BeEmpty())
 			Expect(cursor).NotTo(BeZero())
@@ -784,7 +845,7 @@ func testAdapter(resp3 bool) {
 				Expect(err).NotTo(HaveOccurred())
 			}
 
-			keys, cursor, err := adapter.ZScan(ctx, "myset", 0, "", 0).Result()
+			keys, cursor, err := adapter.ZScan(ctx, "myset", 0, "member*", 100).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(keys).NotTo(BeEmpty())
 			Expect(cursor).NotTo(BeZero())
@@ -5114,6 +5175,12 @@ func testAdapter(resp3 bool) {
 			dist, err = adapter.GeoDist(ctx, "Sicily", "Palermo", "Catania", "m").Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(dist).To(BeNumerically("~", 166274.15, 0.01))
+
+			_, err = adapter.GeoDist(ctx, "Sicily", "Palermo", "Catania", "mi").Result()
+			Expect(err).NotTo(HaveOccurred())
+
+			_, err = adapter.GeoDist(ctx, "Sicily", "Palermo", "Catania", "ft").Result()
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("should get geo hash in string representation", func() {
@@ -5435,9 +5502,16 @@ func testAdapter(resp3 bool) {
 	})
 }
 
-func testAdapterCache(adapter Cmdable) {
+func testAdapterCache(resp3 bool) {
+
+	var adapter Cmdable
 
 	BeforeEach(func() {
+		if resp3 {
+			adapter = adapterresp3
+		} else {
+			adapter = adapterresp2
+		}
 		Expect(adapter.FlushDB(ctx).Err()).NotTo(HaveOccurred())
 		Expect(adapter.FlushAll(ctx).Err()).NotTo(HaveOccurred())
 	})
@@ -5526,6 +5600,14 @@ func testAdapterCache(adapter Cmdable) {
 		})
 
 		It("should Sort", func() {
+			Expect(func() {
+				adapter.Cache(time.Hour).Sort(ctx, "list", Sort{
+					Order: "PANIC",
+				})
+			}).To(Panic())
+		})
+
+		It("should Sort", func() {
 			size, err := adapter.LPush(ctx, "list", "1").Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(size).To(Equal(int64(1)))
@@ -5542,9 +5624,32 @@ func testAdapterCache(adapter Cmdable) {
 				Offset: 0,
 				Count:  2,
 				Order:  "ASC",
+				Alpha:  true,
 			}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(els).To(Equal([]string{"1", "2"}))
+		})
+
+		It("should Sort By", func() {
+			size, err := adapter.LPush(ctx, "list_by", "1").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(size).To(Equal(int64(1)))
+
+			size, err = adapter.LPush(ctx, "list_by", "3").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(size).To(Equal(int64(2)))
+
+			size, err = adapter.LPush(ctx, "list_by", "2").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(size).To(Equal(int64(3)))
+
+			els, err := adapter.Cache(time.Hour).Sort(ctx, "list_by", Sort{
+				Offset: 0,
+				Count:  2,
+				By:     "nosort",
+			}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(els).To(Equal([]string{"2", "3"}))
 		})
 
 		It("should Sort and Get", func() {
@@ -6452,6 +6557,33 @@ func testAdapterCache(adapter Cmdable) {
 			Expect(zScore.Err()).NotTo(HaveOccurred())
 			Expect(zScore.Val()).To(Equal(float64(1.001)))
 		})
+
+		It("should ZMScore", func() {
+			zmScore := adapter.Cache(time.Hour).ZMScore(ctx, "zset", "one", "three")
+			Expect(zmScore.Err()).NotTo(HaveOccurred())
+			Expect(zmScore.Val()).To(HaveLen(2))
+			Expect(zmScore.Val()[0]).To(Equal(float64(0)))
+
+			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+
+			zmScore = adapter.Cache(time.Hour).ZMScore(ctx, "zset", "one", "three")
+			Expect(zmScore.Err()).NotTo(HaveOccurred())
+			Expect(zmScore.Val()).To(HaveLen(2))
+			Expect(zmScore.Val()[0]).To(Equal(float64(1)))
+
+			zmScore = adapter.Cache(time.Hour).ZMScore(ctx, "zset", "four")
+			Expect(zmScore.Err()).NotTo(HaveOccurred())
+			Expect(zmScore.Val()).To(HaveLen(1))
+
+			zmScore = adapter.Cache(time.Hour).ZMScore(ctx, "zset", "four", "one")
+			Expect(zmScore.Err()).NotTo(HaveOccurred())
+			Expect(zmScore.Val()).To(HaveLen(2))
+		})
 	})
 
 	Describe("Geo add and radius search", func() {
@@ -6575,6 +6707,12 @@ func testAdapterCache(adapter Cmdable) {
 			dist, err = adapter.Cache(time.Hour).GeoDist(ctx, "Sicily", "Palermo", "Catania", "m").Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(dist).To(BeNumerically("~", 166274.15, 0.01))
+
+			_, err = adapter.Cache(time.Hour).GeoDist(ctx, "Sicily", "Palermo", "Catania", "mi").Result()
+			Expect(err).NotTo(HaveOccurred())
+
+			_, err = adapter.Cache(time.Hour).GeoDist(ctx, "Sicily", "Palermo", "Catania", "ft").Result()
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("should get geo hash in string representation", func() {

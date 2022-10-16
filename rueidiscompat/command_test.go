@@ -39,17 +39,257 @@ var _ = Describe("Commands", func() {
 		err := errors.New("any")
 		{
 			cmd := &Cmd{}
-			cmd.SetVal(1)
-			Expect(cmd.Val()).To(Equal(1))
 			cmd.SetErr(err)
 			Expect(cmd.Err()).To(Equal(err))
+			_, e := cmd.Int()
+			Expect(e).To(Equal(err))
+			_, e = cmd.Int64()
+			Expect(e).To(Equal(err))
+			_, e = cmd.Uint64()
+			Expect(e).To(Equal(err))
+			_, e = cmd.Float32()
+			Expect(e).To(Equal(err))
+			_, e = cmd.Float64()
+			Expect(e).To(Equal(err))
+			_, e = cmd.Text()
+			Expect(e).To(Equal(err))
+			_, e = cmd.Bool()
+			Expect(e).To(Equal(err))
+			_, e = cmd.Slice()
+			Expect(e).To(Equal(err))
+			_, e = cmd.Int64Slice()
+			Expect(e).To(Equal(err))
+			_, e = cmd.Uint64Slice()
+			Expect(e).To(Equal(err))
+			_, e = cmd.Float32Slice()
+			Expect(e).To(Equal(err))
+			_, e = cmd.Float64Slice()
+			Expect(e).To(Equal(err))
+			_, e = cmd.BoolSlice()
+			Expect(e).To(Equal(err))
+			_, e = cmd.StringSlice()
+			Expect(e).To(Equal(err))
+		}
+		{
+			cmd := &Cmd{}
+			cmd.SetVal(int64(1))
+			Expect(cmd.Err()).To(BeNil())
+			Expect(cmd.Val()).To(Equal(int64(1)))
+			i, _ := cmd.Int()
+			Expect(i).To(Equal(1))
+			i64, _ := cmd.Int64()
+			Expect(i64).To(Equal(int64(1)))
+			u64, _ := cmd.Uint64()
+			Expect(u64).To(Equal(uint64(1)))
+			f32, _ := cmd.Float32()
+			Expect(f32).To(Equal(float32(1)))
+			f64, _ := cmd.Float64()
+			Expect(f64).To(Equal(float64(1)))
+			_, e := cmd.Text()
+			Expect(e).NotTo(BeNil())
+			b, _ := cmd.Bool()
+			Expect(b).To(BeTrue())
+			_, e = cmd.Slice()
+			Expect(e).NotTo(BeNil())
+			_, e = cmd.Int64Slice()
+			Expect(e).NotTo(BeNil())
+			_, e = cmd.Uint64Slice()
+			Expect(e).NotTo(BeNil())
+			_, e = cmd.Float32Slice()
+			Expect(e).NotTo(BeNil())
+			_, e = cmd.Float64Slice()
+			Expect(e).NotTo(BeNil())
+			_, e = cmd.BoolSlice()
+			Expect(e).NotTo(BeNil())
+			_, e = cmd.StringSlice()
+			Expect(e).NotTo(BeNil())
+		}
+		{
+			cmd := &Cmd{}
+			cmd.SetVal("1")
+			Expect(cmd.Err()).To(BeNil())
+			i, _ := cmd.Int()
+			Expect(i).To(Equal(1))
+			i64, _ := cmd.Int64()
+			Expect(i64).To(Equal(int64(1)))
+			u64, _ := cmd.Uint64()
+			Expect(u64).To(Equal(uint64(1)))
+			f32, _ := cmd.Float32()
+			Expect(f32).To(Equal(float32(1)))
+			f64, _ := cmd.Float64()
+			Expect(f64).To(Equal(float64(1)))
+			t, _ := cmd.Text()
+			Expect(t).To(Equal("1"))
+			b, _ := cmd.Bool()
+			Expect(b).To(BeTrue())
+			_, e := cmd.Slice()
+			Expect(e).NotTo(BeNil())
+			_, e = cmd.Int64Slice()
+			Expect(e).NotTo(BeNil())
+			_, e = cmd.Uint64Slice()
+			Expect(e).NotTo(BeNil())
+			_, e = cmd.Float32Slice()
+			Expect(e).NotTo(BeNil())
+			_, e = cmd.Float64Slice()
+			Expect(e).NotTo(BeNil())
+			_, e = cmd.BoolSlice()
+			Expect(e).NotTo(BeNil())
+			_, e = cmd.StringSlice()
+			Expect(e).NotTo(BeNil())
+		}
+		{
+			cmd := &Cmd{}
+			cmd.SetVal([]interface{}{"1"})
+			Expect(cmd.Err()).To(BeNil())
+			_, e := cmd.Int()
+			Expect(e).NotTo(BeNil())
+			_, e = cmd.Int64()
+			Expect(e).NotTo(BeNil())
+			_, e = cmd.Uint64()
+			Expect(e).NotTo(BeNil())
+			_, e = cmd.Float32()
+			Expect(e).NotTo(BeNil())
+			_, e = cmd.Float64()
+			Expect(e).NotTo(BeNil())
+			_, e = cmd.Text()
+			Expect(e).NotTo(BeNil())
+			_, e = cmd.Bool()
+			Expect(e).NotTo(BeNil())
+			s, _ := cmd.Slice()
+			Expect(s).To(Equal([]interface{}{"1"}))
+			si64, _ := cmd.Int64Slice()
+			Expect(si64).To(Equal([]int64{1}))
+			su64, _ := cmd.Uint64Slice()
+			Expect(su64).To(Equal([]uint64{1}))
+			sf32, _ := cmd.Float32Slice()
+			Expect(sf32).To(Equal([]float32{1}))
+			sf64, _ := cmd.Float64Slice()
+			Expect(sf64).To(Equal([]float64{1}))
+			bs, _ := cmd.BoolSlice()
+			Expect(bs).To(Equal([]bool{true}))
+			ss, _ := cmd.StringSlice()
+			Expect(ss).To(Equal([]string{"1"}))
+		}
+		{
+			cmd := &Cmd{}
+			cmd.SetVal("Text")
+			_, e := cmd.Int64()
+			Expect(e).NotTo(BeNil())
+			_, e = cmd.Uint64()
+			Expect(e).NotTo(BeNil())
+			_, e = cmd.Float32()
+			Expect(e).NotTo(BeNil())
+			_, e = cmd.Float64()
+			Expect(e).NotTo(BeNil())
+			_, e = cmd.Bool()
+			Expect(e).NotTo(BeNil())
+			_, e = cmd.Slice()
+			Expect(e).NotTo(BeNil())
+			_, e = cmd.Int64Slice()
+			Expect(e).NotTo(BeNil())
+			_, e = cmd.Uint64Slice()
+			Expect(e).NotTo(BeNil())
+			_, e = cmd.Float32Slice()
+			Expect(e).NotTo(BeNil())
+			_, e = cmd.Float64Slice()
+			Expect(e).NotTo(BeNil())
+			_, e = cmd.BoolSlice()
+			Expect(e).NotTo(BeNil())
+			_, e = cmd.StringSlice()
+			Expect(e).NotTo(BeNil())
+		}
+		{
+			cmd := &Cmd{}
+			cmd.SetVal([]interface{}{1})
+			_, e := cmd.StringSlice()
+			Expect(e).NotTo(BeNil())
+		}
+		{
+			cmd := &Cmd{}
+			cmd.SetVal([]interface{}{"Text"})
+			_, e := cmd.Int64()
+			Expect(e).NotTo(BeNil())
+			_, e = cmd.Uint64()
+			Expect(e).NotTo(BeNil())
+			_, e = cmd.Float32()
+			Expect(e).NotTo(BeNil())
+			_, e = cmd.Float64()
+			Expect(e).NotTo(BeNil())
+			_, e = cmd.Bool()
+			Expect(e).NotTo(BeNil())
+			_, e = cmd.Int64Slice()
+			Expect(e).NotTo(BeNil())
+			_, e = cmd.Uint64Slice()
+			Expect(e).NotTo(BeNil())
+			_, e = cmd.Float32Slice()
+			Expect(e).NotTo(BeNil())
+			_, e = cmd.Float64Slice()
+			Expect(e).NotTo(BeNil())
+			_, e = cmd.BoolSlice()
+			Expect(e).NotTo(BeNil())
+		}
+		{
+			cmd := &StringCmd{}
+			cmd.SetVal("xxx")
+			_, err := cmd.Float32()
+			Expect(err).NotTo(BeNil())
+			_, err = cmd.Float64()
+			Expect(err).NotTo(BeNil())
 		}
 		{
 			cmd := &StringCmd{}
 			cmd.SetVal("1")
 			Expect(cmd.Val()).To(Equal("1"))
+
+			bs, _ := cmd.Bytes()
+			Expect(bs).To(Equal([]byte("1")))
+
+			bv, _ := cmd.Bool()
+			Expect(bv).To(BeTrue())
+
+			i, _ := cmd.Int()
+			Expect(i).To(Equal(1))
+
+			i64, _ := cmd.Int64()
+			Expect(i64).To(Equal(int64(1)))
+
+			u64, _ := cmd.Uint64()
+			Expect(u64).To(Equal(uint64(1)))
+
+			f32, _ := cmd.Float32()
+			Expect(f32).To(Equal(float32(1)))
+
+			f64, _ := cmd.Float64()
+			Expect(f64).To(Equal(float64(1)))
+
+			Expect(cmd.String()).To(Equal("1"))
+
 			cmd.SetErr(err)
 			Expect(cmd.Err()).To(Equal(err))
+
+			_, e := cmd.Bytes()
+			Expect(e).To(Equal(err))
+
+			_, e = cmd.Int()
+			Expect(e).To(Equal(err))
+
+			_, e = cmd.Int64()
+			Expect(e).To(Equal(err))
+
+			_, e = cmd.Uint64()
+			Expect(e).To(Equal(err))
+
+			_, e = cmd.Float32()
+			Expect(e).To(Equal(err))
+
+			_, e = cmd.Float64()
+			Expect(e).To(Equal(err))
+
+			_, e = cmd.Bool()
+			Expect(e).To(Equal(err))
+
+			_, e = cmd.Time()
+			Expect(e).To(Equal(err))
 		}
 		{
 			cmd := &BoolCmd{}
@@ -62,6 +302,8 @@ var _ = Describe("Commands", func() {
 			cmd := &IntCmd{}
 			cmd.SetVal(1)
 			Expect(cmd.Val()).To(Equal(int64(1)))
+			v, _ := cmd.Uint64()
+			Expect(v).To(Equal(uint64(1)))
 			cmd.SetErr(err)
 			Expect(cmd.Err()).To(Equal(err))
 		}
@@ -104,6 +346,8 @@ var _ = Describe("Commands", func() {
 			cmd := &BoolSliceCmd{}
 			cmd.SetVal([]bool{true})
 			Expect(cmd.Val()).To(Equal([]bool{true}))
+			ret, _ := cmd.Result()
+			Expect(ret).To(Equal([]bool{true}))
 			cmd.SetErr(err)
 			Expect(cmd.Err()).To(Equal(err))
 		}
@@ -111,8 +355,18 @@ var _ = Describe("Commands", func() {
 			cmd := &FloatSliceCmd{}
 			cmd.SetVal([]float64{1})
 			Expect(cmd.Val()).To(Equal([]float64{1}))
+			ret, _ := cmd.Result()
+			Expect(ret).To(Equal([]float64{1}))
 			cmd.SetErr(err)
 			Expect(cmd.Err()).To(Equal(err))
+		}
+		{
+			cmd := &ScanCmd{}
+			cmd.SetVal([]string{"1"}, 1)
+			keys, cursor := cmd.Val()
+			Expect(keys).To(Equal([]string{"1"}))
+			Expect(cursor).To(Equal(uint64(1)))
+			Expect(cmd.Err()).To(BeNil())
 		}
 		{
 			cmd := &ZSliceCmd{}
@@ -139,6 +393,8 @@ var _ = Describe("Commands", func() {
 			cmd := &StringIntMapCmd{}
 			cmd.SetVal(map[string]int64{"a": 1})
 			Expect(cmd.Val()).To(Equal(map[string]int64{"a": 1}))
+			m, _ := cmd.Result()
+			Expect(m).To(Equal(map[string]int64{"a": 1}))
 			cmd.SetErr(err)
 			Expect(cmd.Err()).To(Equal(err))
 		}
@@ -146,6 +402,8 @@ var _ = Describe("Commands", func() {
 			cmd := &StringStructMapCmd{}
 			cmd.SetVal(map[string]struct{}{"a": {}})
 			Expect(cmd.Val()).To(Equal(map[string]struct{}{"a": {}}))
+			m, _ := cmd.Result()
+			Expect(m).To(Equal(map[string]struct{}{"a": {}}))
 			cmd.SetErr(err)
 			Expect(cmd.Err()).To(Equal(err))
 		}
@@ -223,6 +481,8 @@ var _ = Describe("Commands", func() {
 			cmd := &ClusterSlotsCmd{}
 			cmd.SetVal([]ClusterSlot{{Start: 1}})
 			Expect(cmd.Val()).To(Equal([]ClusterSlot{{Start: 1}}))
+			v, _ := cmd.Result()
+			Expect(v).To(Equal([]ClusterSlot{{Start: 1}}))
 			cmd.SetErr(err)
 			Expect(cmd.Err()).To(Equal(err))
 		}
@@ -246,6 +506,22 @@ var _ = Describe("Commands", func() {
 			Expect(cmd.Val()).To(Equal(map[string]CommandInfo{"a": {}}))
 			cmd.SetErr(err)
 			Expect(cmd.Err()).To(Equal(err))
+		}
+		{
+			cmd := &XAutoClaimCmd{}
+			cmd.SetVal([]XMessage{{ID: "1", Values: map[string]interface{}{}}}, "0")
+			v, s := cmd.Val()
+			Expect(v).To(Equal([]XMessage{{ID: "1", Values: map[string]interface{}{}}}))
+			Expect(s).To(Equal("0"))
+			Expect(cmd.Err()).To(BeNil())
+		}
+		{
+			cmd := &XAutoClaimJustIDCmd{}
+			cmd.SetVal([]string{"1"}, "0")
+			v, s := cmd.Val()
+			Expect(v).To(Equal([]string{"1"}))
+			Expect(s).To(Equal("0"))
+			Expect(cmd.Err()).To(BeNil())
 		}
 	})
 })

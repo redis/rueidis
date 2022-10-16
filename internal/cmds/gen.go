@@ -19820,13 +19820,6 @@ func (c MigrateKey) DestinationDb(destinationDb int64) MigrateDestinationDb {
 	return (MigrateDestinationDb)(c)
 }
 
-type MigrateKeyEmpty Completed
-
-func (c MigrateKeyEmpty) DestinationDb(destinationDb int64) MigrateDestinationDb {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(destinationDb, 10))
-	return (MigrateDestinationDb)(c)
-}
-
 type MigrateKeys Completed
 
 func (c MigrateKeys) Keys(key ...string) MigrateKeys {
@@ -19851,14 +19844,14 @@ func (c MigrateKeys) Build() Completed {
 
 type MigratePort Completed
 
-func (c MigratePort) Key() MigrateKey {
-	c.cs.s = append(c.cs.s, "key")
+func (c MigratePort) Key(key string) MigrateKey {
+	if c.ks&NoSlot == NoSlot {
+		c.ks = NoSlot | slot(key)
+	} else {
+		c.ks = check(c.ks, slot(key))
+	}
+	c.cs.s = append(c.cs.s, key)
 	return (MigrateKey)(c)
-}
-
-func (c MigratePort) Empty() MigrateKeyEmpty {
-	c.cs.s = append(c.cs.s, "")
-	return (MigrateKeyEmpty)(c)
 }
 
 type MigrateReplace Completed

@@ -2500,7 +2500,7 @@ func formatMs(dur time.Duration) int64 {
 
 func formatSec(dur time.Duration) int64 {
 	if dur > 0 && dur < time.Second {
-		// too small ,truncate too 1s
+		// too small, truncate too 1s
 		return 1
 	}
 	return int64(dur / time.Second)
