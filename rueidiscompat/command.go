@@ -1882,12 +1882,12 @@ func newClusterSlotsCmd(res rueidis.RedisResult) *ClusterSlotsCmd {
 			return &ClusterSlotsCmd{err: err}
 		}
 		nodes := make([]ClusterNode, len(slot)-2)
-		for i, j := 2, 0; i < len(nodes); i, j = i+1, j+1 {
+		for i, j := 2, 0; i < len(slot); i, j = i+1, j+1 {
 			node, err := slot[i].ToArray()
 			if err != nil {
 				return &ClusterSlotsCmd{err: err}
 			}
-			if len(node) != 2 && len(node) != 3 {
+			if len(node) < 2 {
 				return &ClusterSlotsCmd{err: fmt.Errorf("got %d, expected 2 or 3", len(node))}
 			}
 			ip, err := node[0].ToString()
@@ -1899,7 +1899,7 @@ func newClusterSlotsCmd(res rueidis.RedisResult) *ClusterSlotsCmd {
 				return &ClusterSlotsCmd{err: err}
 			}
 			nodes[j].Addr = net.JoinHostPort(ip, strconv.FormatInt(port, 10))
-			if len(node) == 3 {
+			if len(node) > 2 {
 				id, err := node[2].ToString()
 				if err != nil {
 					return &ClusterSlotsCmd{err: err}
@@ -2309,7 +2309,6 @@ type ZAddArgs struct {
 	LT      bool
 	GT      bool
 	Ch      bool
-	Incr    bool
 	Members []Z
 }
 
