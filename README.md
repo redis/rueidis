@@ -191,6 +191,25 @@ Benchmark source code: https://github.com/rueian/rueidis-benchmark
 `rueidis.MGetCache` and `rueidis.JsonMGetCache` are handy helpers fetching multiple keys across different slots through the client side caching.
 They will first group keys by slot to build `MGET` or `JSON.MGET` commands respectively and then send requests with only cache missed keys to redis nodes.
 
+### Broadcast Mode Client Side Caching
+
+Although the default is opt-in mode, you can use broadcast mode by specifying your prefixes in `ClientOption.ClientTrackingOptions`:
+
+```go
+c, err := rueidis.NewClient(rueidis.ClientOption{
+	InitAddress:           []string{"127.0.0.1:6379"},
+	ClientTrackingOptions: []string{"PREFIX", "prefix1:", "PREFIX", "prefix2:", "BCAST"},
+})
+if err != nil {
+	panic(err)
+}
+c.DoCache(ctx, c.B().Get().Key("prefix1:1").Cache(), time.Minute).IsCacheHit() == false
+c.DoCache(ctx, c.B().Get().Key("prefix1:1").Cache(), time.Minute).IsCacheHit() == true
+```
+
+Please make sure that commands passed to `DoCache()` and `DoMultiCache()` are covered by your prefixes.
+Otherwise, their client-side cache will not be invalidated by redis.
+
 ### Disable Client Side Caching
 
 Some Redis provider doesn't support client-side caching, ex. Google Cloud Memorystore.
