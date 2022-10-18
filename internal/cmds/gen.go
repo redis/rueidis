@@ -7624,6 +7624,60 @@ func (c FtAggregateOpSortbyFieldsProperty) Desc() FtAggregateOpSortbyFieldsOrder
 	return (FtAggregateOpSortbyFieldsOrderDesc)(c)
 }
 
+func (c FtAggregateOpSortbyFieldsProperty) Property(property string) FtAggregateOpSortbyFieldsProperty {
+	c.cs.s = append(c.cs.s, property)
+	return c
+}
+
+func (c FtAggregateOpSortbyFieldsProperty) Max(num int64) FtAggregateOpSortbyMax {
+	c.cs.s = append(c.cs.s, "MAX", strconv.FormatInt(num, 10))
+	return (FtAggregateOpSortbyMax)(c)
+}
+
+func (c FtAggregateOpSortbyFieldsProperty) Apply(expression string) FtAggregateOpApplyApply {
+	c.cs.s = append(c.cs.s, "APPLY", expression)
+	return (FtAggregateOpApplyApply)(c)
+}
+
+func (c FtAggregateOpSortbyFieldsProperty) Limit() FtAggregateOpLimitLimit {
+	c.cs.s = append(c.cs.s, "LIMIT")
+	return (FtAggregateOpLimitLimit)(c)
+}
+
+func (c FtAggregateOpSortbyFieldsProperty) Filter(filter string) FtAggregateOpFilter {
+	c.cs.s = append(c.cs.s, "FILTER", filter)
+	return (FtAggregateOpFilter)(c)
+}
+
+func (c FtAggregateOpSortbyFieldsProperty) Groupby(nargs int64) FtAggregateOpGroupbyGroupby {
+	c.cs.s = append(c.cs.s, "GROUPBY", strconv.FormatInt(nargs, 10))
+	return (FtAggregateOpGroupbyGroupby)(c)
+}
+
+func (c FtAggregateOpSortbyFieldsProperty) Sortby(nargs int64) FtAggregateOpSortbySortby {
+	c.cs.s = append(c.cs.s, "SORTBY", strconv.FormatInt(nargs, 10))
+	return (FtAggregateOpSortbySortby)(c)
+}
+
+func (c FtAggregateOpSortbyFieldsProperty) Withcursor() FtAggregateCursorWithcursor {
+	c.cs.s = append(c.cs.s, "WITHCURSOR")
+	return (FtAggregateCursorWithcursor)(c)
+}
+
+func (c FtAggregateOpSortbyFieldsProperty) Params() FtAggregateParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtAggregateParamsParams)(c)
+}
+
+func (c FtAggregateOpSortbyFieldsProperty) Dialect(dialect int64) FtAggregateDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtAggregateDialect)(c)
+}
+
+func (c FtAggregateOpSortbyFieldsProperty) Build() Completed {
+	return Completed(c)
+}
+
 type FtAggregateOpSortbyMax Completed
 
 func (c FtAggregateOpSortbyMax) Apply(expression string) FtAggregateOpApplyApply {

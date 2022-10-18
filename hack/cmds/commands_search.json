@@ -1262,7 +1262,8 @@
                     "enum": [
                       "ASC",
                       "DESC"
-                    ]
+                    ],
+                    "optional": true
                   }
                 ]
               },
