@@ -9,12 +9,15 @@ import (
 )
 
 type (
+	// Completed is alias to internal cmds.Completed
 	Completed = cmds.Completed
+	// Cacheable is alias to internal cmds.Cacheable
 	Cacheable = cmds.Cacheable
 )
 
 var _ rueidis.Client = (*hookclient)(nil)
 
+// Hook allows user to intercept rueidis.Client by using WithHook
 type Hook interface {
 	Do(client rueidis.Client, ctx context.Context, cmd Completed) (resp rueidis.RedisResult)
 	DoMulti(client rueidis.Client, ctx context.Context, multi ...Completed) (resps []rueidis.RedisResult)
@@ -23,6 +26,7 @@ type Hook interface {
 	Receive(client rueidis.Client, ctx context.Context, subscribe Completed, fn func(msg rueidis.PubSubMessage)) (err error)
 }
 
+// WithHook wraps rueidis.Client with Hook and allows user to intercept rueidis.Client
 func WithHook(client rueidis.Client, hook Hook) rueidis.Client {
 	return &hookclient{client: client, hook: hook}
 }
@@ -54,13 +58,13 @@ func (c *hookclient) DoMultiCache(ctx context.Context, multi ...rueidis.Cacheabl
 
 func (c *hookclient) Dedicated(fn func(rueidis.DedicatedClient) error) (err error) {
 	return c.client.Dedicated(func(client rueidis.DedicatedClient) error {
-		return fn(&dedicated{client: &extended{client}, hook: c.hook})
+		return fn(&dedicated{client: &extended{DedicatedClient: client}, hook: c.hook})
 	})
 }
 
 func (c *hookclient) Dedicate() (rueidis.DedicatedClient, func()) {
 	client, cancel := c.client.Dedicate()
-	return &dedicated{client: &extended{client}, hook: c.hook}, cancel
+	return &dedicated{client: &extended{DedicatedClient: client}, hook: c.hook}, cancel
 }
 
 func (c *hookclient) Receive(ctx context.Context, subscribe cmds.Completed, fn func(msg rueidis.PubSubMessage)) (err error) {
@@ -70,7 +74,7 @@ func (c *hookclient) Receive(ctx context.Context, subscribe cmds.Completed, fn f
 func (c *hookclient) Nodes() map[string]rueidis.Client {
 	nodes := c.client.Nodes()
 	for addr, client := range nodes {
-		nodes[addr] = &hookclient{client: client}
+		nodes[addr] = &hookclient{client: client, hook: c.hook}
 	}
 	return nodes
 }
