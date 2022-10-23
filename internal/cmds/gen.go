@@ -8216,8 +8216,9 @@ func (c FtCreateFieldAs) Geo() FtCreateFieldFieldTypeGeo {
 	return (FtCreateFieldFieldTypeGeo)(c)
 }
 
-func (c FtCreateFieldAs) Vector() FtCreateFieldFieldTypeVector {
-	c.cs.s = append(c.cs.s, "VECTOR")
+func (c FtCreateFieldAs) Vector(algo string, nargs int64, args ...string) FtCreateFieldFieldTypeVector {
+	c.cs.s = append(c.cs.s, "VECTOR", algo, strconv.FormatInt(nargs, 10))
+	c.cs.s = append(c.cs.s, args...)
 	return (FtCreateFieldFieldTypeVector)(c)
 }
 
@@ -8248,8 +8249,9 @@ func (c FtCreateFieldFieldName) Geo() FtCreateFieldFieldTypeGeo {
 	return (FtCreateFieldFieldTypeGeo)(c)
 }
 
-func (c FtCreateFieldFieldName) Vector() FtCreateFieldFieldTypeVector {
-	c.cs.s = append(c.cs.s, "VECTOR")
+func (c FtCreateFieldFieldName) Vector(algo string, nargs int64, args ...string) FtCreateFieldFieldTypeVector {
+	c.cs.s = append(c.cs.s, "VECTOR", algo, strconv.FormatInt(nargs, 10))
+	c.cs.s = append(c.cs.s, args...)
 	return (FtCreateFieldFieldTypeVector)(c)
 }
 

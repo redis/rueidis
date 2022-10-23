@@ -127,8 +127,17 @@ func (n *node) GoStructs() (out []goStruct) {
 			}
 			cmds := strings.Split(e, " ")
 			if len(cmds) == 1 {
-				s.BuildDef.Command = append(s.BuildDef.Command, cmds...)
-				s.BuildDef.Parameters = nil
+				if cmds[0] == "VECTOR" {
+					s.BuildDef.Command = append(s.BuildDef.Command, cmds...)
+					s.BuildDef.Parameters = []parameter{
+						{Name: "algo", Type: "string"},
+						{Name: "nargs", Type: "integer"},
+						{Name: "args", Type: "...string"},
+					}
+				} else {
+					s.BuildDef.Command = append(s.BuildDef.Command, cmds...)
+					s.BuildDef.Parameters = nil
+				}
 			} else {
 				switch cmds[1] {
 				case "name", "category", "pattern":
@@ -553,6 +562,8 @@ func toGoType(paramType string) string {
 	switch paramType {
 	case "[]string": // TODO hack for TS.MRANGE, TS.MREVRANGE, TS.MGET
 		return "[]string"
+	case "...string": // TODO hack for FT.CREATE VECTOR
+		return "...string"
 	case "key", "string", "pattern", "type":
 		return "string"
 	case "double":
@@ -743,6 +754,8 @@ func printBuilder(w io.Writer, parent, next goStruct) {
 					case "string":
 						appends = append(appends, toGoName(p.Name))
 					case "[]string": // TODO hack for TS.MRANGE, TS.MREVRANGE, TS.MGET
+						follows = append(follows, toGoName(p.Name)+"...")
+					case "...string": // TODO hack for FT.CREATE VECTOR
 						follows = append(follows, toGoName(p.Name)+"...")
 					default:
 						panic("unexpected param type " + next.BuildDef.Parameters[0].Type)
