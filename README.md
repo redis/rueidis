@@ -605,7 +605,7 @@ func main() {
 
 ## Hooks and Other Observability Integration
 
-In addition to `rueidisotel`, `rueidishook` provides a general hook mechanism to intercept `rueidis.Client` interface.
+In addition to `rueidisotel`, `rueidishook` provides a general hook mechanism for users to intercept `rueidis.Client` interface.
 
 See [rueidishook](./rueidishook) for more details.
 
