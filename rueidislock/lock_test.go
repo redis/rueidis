@@ -335,6 +335,9 @@ func TestLocker_Close(t *testing.T) {
 
 		lck := strconv.Itoa(rand.Int())
 		ctx, _, err := locker.WithContext(context.Background(), lck)
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		wg := sync.WaitGroup{}
 		wg.Add(10)
@@ -349,7 +352,8 @@ func TestLocker_Close(t *testing.T) {
 		time.Sleep(time.Second)
 		locker.Close()
 		wg.Wait()
-		if !errors.Is(ctx.Err(), context.Canceled) {
+		<-ctx.Done()
+		if err := ctx.Err(); !errors.Is(err, context.Canceled) {
 			t.Fatal(err)
 		}
 	}
