@@ -13,6 +13,6 @@ jobs:
       - run: ./cc-test-reporter before-build
       - run:
           command: ./dockertest.sh
-          no_output_timeout: 20m
+          no_output_timeout: 30m
       - run: ./cc-test-reporter after-build -p $(go list -m) --exit-code $?
       - run: bash <(curl -s https://codecov.io/bash)
