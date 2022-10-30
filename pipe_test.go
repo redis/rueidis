@@ -2445,6 +2445,33 @@ func TestExitOnWriteMultiError(t *testing.T) {
 	}
 }
 
+func TestExitOnRingFullAndConnError(t *testing.T) {
+	p, mock, _, closeConn := setup(t, ClientOption{
+		RingScaleEachConn: 1,
+	})
+	p.background()
+
+	// fill the ring
+	for i := 0; i < len(p.queue.(*ring).store); i++ {
+		go func() {
+			if err := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).Error(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
+				t.Errorf("unexpected result, expected io err, got %v", err)
+			}
+		}()
+	}
+	// let writer loop over the ring
+	for i := 0; i < len(p.queue.(*ring).store); i++ {
+		mock.Expect("GET", "a")
+	}
+
+	time.Sleep(time.Second) // make sure the writer is waiting for the next write
+	closeConn()
+
+	if err := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).Error(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
+		t.Errorf("unexpected result, expected io err, got %v", err)
+	}
+}
+
 func TestExitAllGoroutineOnWriteError(t *testing.T) {
 	conn, mock, _, closeConn := setup(t, ClientOption{})
 

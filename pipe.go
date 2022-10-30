@@ -217,6 +217,11 @@ func (p *pipe) _background() {
 	}
 	go func() {
 		exit(p._backgroundWrite())
+		for atomic.LoadInt32(&p.waits) != 0 {
+			if _, _, ch := p.queue.NextWriteCmd(); ch == nil {
+				runtime.Gosched()
+			}
+		}
 		close(wait)
 	}()
 	{
@@ -228,7 +233,6 @@ func (p *pipe) _background() {
 			atomic.AddInt32(&p.waits, -1)
 		}()
 	}
-	<-wait
 
 	p.nsubs.Close()
 	p.psubs.Close()
@@ -253,7 +257,6 @@ func (p *pipe) _background() {
 		p.onInvalidations(nil)
 	}
 	for atomic.LoadInt32(&p.waits) != 0 {
-		p.queue.NextWriteCmd()
 		if ones[0], multi, ch, cond = p.queue.NextResultCh(); ch != nil {
 			if multi == nil {
 				multi = ones
@@ -269,6 +272,7 @@ func (p *pipe) _background() {
 			runtime.Gosched()
 		}
 	}
+	<-wait
 	atomic.StoreInt32(&p.state, 4)
 }
 
