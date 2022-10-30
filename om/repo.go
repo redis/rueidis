@@ -18,6 +18,8 @@ type (
 	FtAggregateIndex = cmds.FtAggregateIndex
 	// Completed is the command builder result, should be created from the Build() of command builder
 	Completed = cmds.Completed
+	// Arbitrary is alias to cmds.Arbitrary. This allows user build arbitrary command in Repository.CreateIndex
+	Arbitrary = cmds.Arbitrary
 )
 
 var (
