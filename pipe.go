@@ -450,9 +450,15 @@ func (p *pipe) _backgroundPing(stop <-chan struct{}) (err error) {
 			if atomic.LoadInt32(&p.blcksig) != 0 {
 				continue
 			}
-			ctx, cancel := context.WithTimeout(context.Background(), p.timeout)
-			err = p.Do(ctx, cmds.PingCmd).NonRedisError()
-			cancel()
+			ch := make(chan error, 1)
+			tm := time.NewTimer(p.timeout)
+			go func() { ch <- p.Do(context.Background(), cmds.PingCmd).NonRedisError() }()
+			select {
+			case <-tm.C:
+				err = context.DeadlineExceeded
+			case err = <-ch:
+				tm.Stop()
+			}
 			if err != nil && atomic.LoadInt32(&p.blcksig) != 0 {
 				err = nil
 			}
