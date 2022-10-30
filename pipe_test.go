@@ -2472,6 +2472,32 @@ func TestExitOnRingFullAndConnError(t *testing.T) {
 	}
 }
 
+func TestExitOnRingFullAndPingTimout(t *testing.T) {
+	p, mock, _, _ := setup(t, ClientOption{
+		RingScaleEachConn: 1,
+		ConnWriteTimeout:  500 * time.Millisecond,
+		Dialer:            net.Dialer{KeepAlive: 500 * time.Millisecond},
+	})
+	p.background()
+
+	// fill the ring
+	for i := 0; i < len(p.queue.(*ring).store); i++ {
+		go func() {
+			if err := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).Error(); err != context.DeadlineExceeded {
+				t.Errorf("unexpected result, expected context.DeadlineExceeded, got %v", err)
+			}
+		}()
+	}
+	// let writer loop over the ring
+	for i := 0; i < len(p.queue.(*ring).store); i++ {
+		mock.Expect("GET", "a")
+	}
+
+	if err := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).Error(); err != context.DeadlineExceeded {
+		t.Errorf("unexpected result, expected context.DeadlineExceeded, got %v", err)
+	}
+}
+
 func TestExitAllGoroutineOnWriteError(t *testing.T) {
 	conn, mock, _, closeConn := setup(t, ClientOption{})
 
