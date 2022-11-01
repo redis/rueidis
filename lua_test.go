@@ -106,6 +106,89 @@ func TestNewLuaScriptReadOnly(t *testing.T) {
 	}
 }
 
+func TestNewLuaScriptExecMultiError(t *testing.T) {
+	body := strconv.Itoa(rand.Int())
+
+	k := []string{"1", "2"}
+	a := []string{"3", "4"}
+
+	c := &client{
+		BFn: func() cmds.Builder {
+			return cmds.NewBuilder(cmds.NoSlot)
+		},
+		DoFn: func(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
+			return newResult(RedisMessage{typ: '-', string: "ANY ERR"}, nil)
+		},
+	}
+
+	script := NewLuaScript(body)
+	if script.ExecMulti(context.Background(), c, LuaExec{Keys: k, Args: a})[0].Error().Error() != "ANY ERR" {
+		t.Fatalf("ret mistmatch")
+	}
+}
+
+func TestNewLuaScriptExecMulti(t *testing.T) {
+	body := strconv.Itoa(rand.Int())
+	sum := sha1.Sum([]byte(body))
+	sha := hex.EncodeToString(sum[:])
+
+	k := []string{"1", "2"}
+	a := []string{"3", "4"}
+
+	c := &client{
+		BFn: func() cmds.Builder {
+			return cmds.NewBuilder(cmds.NoSlot)
+		},
+		DoFn: func(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
+			return newResult(RedisMessage{typ: '+', string: "OK"}, nil)
+		},
+		DoMultiFn: func(ctx context.Context, multi ...cmds.Completed) (resp []RedisResult) {
+			for _, cmd := range multi {
+				if reflect.DeepEqual(cmd.Commands(), []string{"EVALSHA", sha, "2", "1", "2", "3", "4"}) {
+					resp = append(resp, newResult(RedisMessage{typ: '+', string: "OK"}, nil))
+				}
+			}
+			return resp
+		},
+	}
+
+	script := NewLuaScript(body)
+	if v, err := script.ExecMulti(context.Background(), c, LuaExec{Keys: k, Args: a})[0].ToString(); err != nil || v != "OK" {
+		t.Fatalf("ret mistmatch")
+	}
+}
+
+func TestNewLuaScriptExecMultiRo(t *testing.T) {
+	body := strconv.Itoa(rand.Int())
+	sum := sha1.Sum([]byte(body))
+	sha := hex.EncodeToString(sum[:])
+
+	k := []string{"1", "2"}
+	a := []string{"3", "4"}
+
+	c := &client{
+		BFn: func() cmds.Builder {
+			return cmds.NewBuilder(cmds.NoSlot)
+		},
+		DoFn: func(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
+			return newResult(RedisMessage{typ: '+', string: "OK"}, nil)
+		},
+		DoMultiFn: func(ctx context.Context, multi ...cmds.Completed) (resp []RedisResult) {
+			for _, cmd := range multi {
+				if reflect.DeepEqual(cmd.Commands(), []string{"EVALSHA_RO", sha, "2", "1", "2", "3", "4"}) {
+					resp = append(resp, newResult(RedisMessage{typ: '+', string: "OK"}, nil))
+				}
+			}
+			return resp
+		},
+	}
+
+	script := NewLuaScriptReadOnly(body)
+	if v, err := script.ExecMulti(context.Background(), c, LuaExec{Keys: k, Args: a})[0].ToString(); err != nil || v != "OK" {
+		t.Fatalf("ret mistmatch")
+	}
+}
+
 type client struct {
 	BFn            func() cmds.Builder
 	DoFn           func(ctx context.Context, cmd cmds.Completed) (resp RedisResult)
@@ -171,7 +254,7 @@ func (c *client) Dedicate() (DedicatedClient, func()) {
 }
 
 func (c *client) Nodes() map[string]Client {
-	return nil
+	return map[string]Client{"addr": c}
 }
 
 func (c *client) Close() {
