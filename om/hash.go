@@ -61,24 +61,26 @@ func (r *HashRepository[T]) FetchCache(ctx context.Context, id string, ttl time.
 	return v, err
 }
 
+func (r *HashRepository[T]) toExec(entity *T) (val reflect.Value, exec rueidis.LuaExec) {
+	val = reflect.ValueOf(entity).Elem()
+	fields := r.factory.NewConverter(val).ToHash()
+	keyVal := fields[r.schema.key.name]
+	verVal := fields[r.schema.ver.name]
+	exec.Keys = []string{key(r.prefix, keyVal)}
+	exec.Args = make([]string, 0, len(fields)*2)
+	exec.Args = append(exec.Args, r.schema.ver.name, verVal) // keep the ver field be the first pair for the hashSaveScript
+	delete(fields, r.schema.ver.name)
+	for k, v := range fields {
+		exec.Args = append(exec.Args, k, v)
+	}
+	return
+}
+
 // Save the entity under the redis key of `{prefix}:{id}`.
 // It also uses the `redis:",ver"` field and lua script to perform optimistic locking and prevent lost update.
 func (r *HashRepository[T]) Save(ctx context.Context, entity *T) (err error) {
-	val := reflect.ValueOf(entity).Elem()
-
-	fields := r.factory.NewConverter(val).ToHash()
-
-	keyVal := fields[r.schema.key.name]
-	verVal := fields[r.schema.ver.name]
-
-	args := make([]string, 0, len(fields)*2)
-	args = append(args, r.schema.ver.name, verVal) // keep the ver field be the first pair for the hashSaveScript
-	delete(fields, r.schema.ver.name)
-	for k, v := range fields {
-		args = append(args, k, v)
-	}
-
-	str, err := hashSaveScript.Exec(ctx, r.client, []string{key(r.prefix, keyVal)}, args).ToString()
+	val, exec := r.toExec(entity)
+	str, err := hashSaveScript.Exec(ctx, r.client, exec.Keys, exec.Args).ToString()
 	if rueidis.IsRedisNil(err) {
 		return ErrVersionMismatch
 	}
@@ -87,6 +89,27 @@ func (r *HashRepository[T]) Save(ctx context.Context, entity *T) (err error) {
 		val.Field(r.schema.ver.idx).SetInt(ver)
 	}
 	return err
+}
+
+// SaveMulti batches multiple HashRepository.Save at once
+func (r *HashRepository[T]) SaveMulti(ctx context.Context, entities ...*T) []error {
+	errs := make([]error, len(entities))
+	vals := make([]reflect.Value, len(entities))
+	exec := make([]rueidis.LuaExec, len(entities))
+	for i, entity := range entities {
+		vals[i], exec[i] = r.toExec(entity)
+	}
+	for i, resp := range hashSaveScript.ExecMulti(ctx, r.client, exec...) {
+		if str, err := resp.ToString(); err != nil {
+			if errs[i] = err; rueidis.IsRedisNil(err) {
+				errs[i] = ErrVersionMismatch
+			}
+		} else {
+			ver, _ := strconv.ParseInt(str, 10, 64)
+			vals[i].Field(r.schema.ver.idx).SetInt(ver)
+		}
+	}
+	return errs
 }
 
 // Remove the entity under the redis key of `{prefix}:{id}`.
