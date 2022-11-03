@@ -179,4 +179,42 @@ func TestNewHashRepository(t *testing.T) {
 			}
 		})
 	})
+
+	t.Run("SaveMulti", func(t *testing.T) {
+		entities := []*HashTestStruct{
+			repo.NewEntity(),
+			repo.NewEntity(),
+			repo.NewEntity(),
+		}
+
+		for _, e := range entities {
+			e.Val = []byte("any")
+		}
+
+		for i, err := range repo.SaveMulti(context.Background(), entities...) {
+			if err != nil {
+				t.Fatal(err)
+			}
+			if entities[i].Ver != 1 {
+				t.Fatalf("unexpected ver %d", entities[i].Ver)
+			}
+		}
+
+		entities[len(entities)-1].Ver = 0
+
+		for i, err := range repo.SaveMulti(context.Background(), entities...) {
+			if i == len(entities)-1 {
+				if err != ErrVersionMismatch {
+					t.Fatalf("unexpected err %v", err)
+				}
+			} else {
+				if err != nil {
+					t.Fatal(err)
+				}
+				if entities[i].Ver != 2 {
+					t.Fatalf("unexpected ver %d", entities[i].Ver)
+				}
+			}
+		}
+	})
 }

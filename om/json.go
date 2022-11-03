@@ -69,25 +69,48 @@ func (r *JSONRepository[T]) decode(record string) (*T, error) {
 	return &v, nil
 }
 
+func (r *JSONRepository[T]) toExec(entity *T) (verf reflect.Value, exec rueidis.LuaExec) {
+	val := reflect.ValueOf(entity).Elem()
+	verf = val.Field(r.schema.ver.idx)
+	exec.Keys = []string{key(r.prefix, val.Field(r.schema.key.idx).String())}
+	exec.Args = []string{r.schema.ver.name, strconv.FormatInt(verf.Int(), 10), rueidis.JSON(entity)}
+	return
+}
+
 // Save the entity under the redis key of `{prefix}:{id}`.
 // It also uses the `redis:",ver"` field and lua script to perform optimistic locking and prevent lost update.
 func (r *JSONRepository[T]) Save(ctx context.Context, entity *T) (err error) {
-	val := reflect.ValueOf(entity).Elem()
-
-	keyField := val.Field(r.schema.key.idx)
-	verField := val.Field(r.schema.ver.idx)
-
-	str, err := jsonSaveScript.Exec(ctx, r.client, []string{key(r.prefix, keyField.String())}, []string{
-		r.schema.ver.name, strconv.FormatInt(verField.Int(), 10), rueidis.JSON(entity),
-	}).ToString()
+	valf, exec := r.toExec(entity)
+	str, err := jsonSaveScript.Exec(ctx, r.client, exec.Keys, exec.Args).ToString()
 	if rueidis.IsRedisNil(err) {
 		return ErrVersionMismatch
 	}
 	if err == nil {
 		ver, _ := strconv.ParseInt(str, 10, 64)
-		verField.SetInt(ver)
+		valf.SetInt(ver)
 	}
 	return err
+}
+
+// SaveMulti batches multiple HashRepository.Save at once
+func (r *JSONRepository[T]) SaveMulti(ctx context.Context, entities ...*T) []error {
+	errs := make([]error, len(entities))
+	valf := make([]reflect.Value, len(entities))
+	exec := make([]rueidis.LuaExec, len(entities))
+	for i, entity := range entities {
+		valf[i], exec[i] = r.toExec(entity)
+	}
+	for i, resp := range jsonSaveScript.ExecMulti(ctx, r.client, exec...) {
+		if str, err := resp.ToString(); err != nil {
+			if errs[i] = err; rueidis.IsRedisNil(err) {
+				errs[i] = ErrVersionMismatch
+			}
+		} else {
+			ver, _ := strconv.ParseInt(str, 10, 64)
+			valf[i].SetInt(ver)
+		}
+	}
+	return errs
 }
 
 // Remove the entity under the redis key of `{prefix}:{id}`.
