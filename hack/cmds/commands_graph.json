@@ -10,6 +10,12 @@
         "name": "query",
         "type": "string",
         "dsl": "cypher"
+      },
+      {
+        "name": "timeout",
+        "type": "integer",
+        "optional": true,
+        "command": "TIMEOUT"
       }
     ],
     "since": "1.0.0",
@@ -26,6 +32,12 @@
         "name": "query",
         "type": "string",
         "dsl": "cypher"
+      },
+      {
+        "name": "timeout",
+        "type": "integer",
+        "optional": true,
+        "command": "TIMEOUT"
       }
     ],
     "since": "2.2.8",
@@ -69,6 +81,12 @@
         "name": "query",
         "type": "string",
         "dsl": "cypher"
+      },
+      {
+        "name": "timeout",
+        "type": "integer",
+        "optional": true,
+        "command": "TIMEOUT"
       }
     ],
     "since": "2.0.0",

@@ -5886,6 +5886,10 @@ func (c EvalRoKey) Arg(arg ...string) EvalRoArg {
 	return (EvalRoArg)(c)
 }
 
+func (c EvalRoKey) Build() Completed {
+	return Completed(c)
+}
+
 type EvalRoNumkeys Completed
 
 func (c EvalRoNumkeys) Key(key ...string) EvalRoKey {
@@ -5901,6 +5905,15 @@ func (c EvalRoNumkeys) Key(key ...string) EvalRoKey {
 	}
 	c.cs.s = append(c.cs.s, key...)
 	return (EvalRoKey)(c)
+}
+
+func (c EvalRoNumkeys) Arg(arg ...string) EvalRoArg {
+	c.cs.s = append(c.cs.s, arg...)
+	return (EvalRoArg)(c)
+}
+
+func (c EvalRoNumkeys) Build() Completed {
+	return Completed(c)
 }
 
 type EvalRoScript Completed
@@ -6039,6 +6052,10 @@ func (c EvalshaRoKey) Arg(arg ...string) EvalshaRoArg {
 	return (EvalshaRoArg)(c)
 }
 
+func (c EvalshaRoKey) Build() Completed {
+	return Completed(c)
+}
+
 type EvalshaRoNumkeys Completed
 
 func (c EvalshaRoNumkeys) Key(key ...string) EvalshaRoKey {
@@ -6054,6 +6071,15 @@ func (c EvalshaRoNumkeys) Key(key ...string) EvalshaRoKey {
 	}
 	c.cs.s = append(c.cs.s, key...)
 	return (EvalshaRoKey)(c)
+}
+
+func (c EvalshaRoNumkeys) Arg(arg ...string) EvalshaRoArg {
+	c.cs.s = append(c.cs.s, arg...)
+	return (EvalshaRoArg)(c)
+}
+
+func (c EvalshaRoNumkeys) Build() Completed {
+	return Completed(c)
 }
 
 type EvalshaRoSha1 Completed
@@ -16780,7 +16806,18 @@ func (c GraphProfileGraph) Query(query string) GraphProfileQuery {
 
 type GraphProfileQuery Completed
 
+func (c GraphProfileQuery) Timeout(timeout int64) GraphProfileTimeout {
+	c.cs.s = append(c.cs.s, "TIMEOUT", strconv.FormatInt(timeout, 10))
+	return (GraphProfileTimeout)(c)
+}
+
 func (c GraphProfileQuery) Build() Completed {
+	return Completed(c)
+}
+
+type GraphProfileTimeout Completed
+
+func (c GraphProfileTimeout) Build() Completed {
 	return Completed(c)
 }
 
@@ -16811,7 +16848,18 @@ func (c GraphQueryGraph) Query(query string) GraphQueryQuery {
 
 type GraphQueryQuery Completed
 
+func (c GraphQueryQuery) Timeout(timeout int64) GraphQueryTimeout {
+	c.cs.s = append(c.cs.s, "TIMEOUT", strconv.FormatInt(timeout, 10))
+	return (GraphQueryTimeout)(c)
+}
+
 func (c GraphQueryQuery) Build() Completed {
+	return Completed(c)
+}
+
+type GraphQueryTimeout Completed
+
+func (c GraphQueryTimeout) Build() Completed {
 	return Completed(c)
 }
 
@@ -16842,11 +16890,26 @@ func (c GraphRoQueryGraph) Query(query string) GraphRoQueryQuery {
 
 type GraphRoQueryQuery Completed
 
+func (c GraphRoQueryQuery) Timeout(timeout int64) GraphRoQueryTimeout {
+	c.cs.s = append(c.cs.s, "TIMEOUT", strconv.FormatInt(timeout, 10))
+	return (GraphRoQueryTimeout)(c)
+}
+
 func (c GraphRoQueryQuery) Build() Completed {
 	return Completed(c)
 }
 
 func (c GraphRoQueryQuery) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type GraphRoQueryTimeout Completed
+
+func (c GraphRoQueryTimeout) Build() Completed {
+	return Completed(c)
+}
+
+func (c GraphRoQueryTimeout) Cache() Cacheable {
 	return Cacheable(c)
 }
 
