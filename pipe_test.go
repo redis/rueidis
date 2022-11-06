@@ -155,6 +155,10 @@ func setup(t *testing.T, option ClientOption) (*pipe, *redisMock, func(), func()
 			go func() { mock.Expect("QUIT").ReplyString("OK") }()
 			p.Close()
 			mock.Close()
+			for atomic.LoadInt32(&p.state) != 4 {
+				t.Log("wait the pipe to be closed")
+				time.Sleep(time.Millisecond * 100)
+			}
 		}, func() {
 			n1.Close()
 			n2.Close()
