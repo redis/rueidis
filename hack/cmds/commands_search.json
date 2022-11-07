@@ -177,41 +177,83 @@
             ]
           },
           {
-            "name": "withsuffixtrie",
-            "type": "enum",
-            "enum": [
-              "WITHSUFFIXTRIE"
-            ],
-            "optional": true
-          },
-          {
-            "name": "sortable",
+            "name": "option",
             "type": "block",
             "optional": true,
+            "multiple": true,
             "block": [
               {
-                "name": "sortable",
+                "name": "withsuffixtrie",
                 "type": "enum",
                 "enum": [
-                  "SORTABLE"
+                  "WITHSUFFIXTRIE"
+                ],
+                "optional": true
+              },
+              {
+                "name": "sortable",
+                "type": "block",
+                "optional": true,
+                "block": [
+                  {
+                    "name": "sortable",
+                    "type": "enum",
+                    "enum": [
+                      "SORTABLE"
+                    ]
+                  },
+                  {
+                    "name": "UNF",
+                    "type": "enum",
+                    "enum": [
+                      "UNF"
+                    ],
+                    "optional": true
+                  }
                 ]
               },
               {
-                "name": "UNF",
+                "name": "noindex",
                 "type": "enum",
+                "optional": true,
                 "enum": [
-                  "UNF"
-                ],
-                "optional": true
+                  "NOINDEX"
+                ]
+              },
+              {
+                "name": "NOSTEM",
+                "type": "enum",
+                "optional": true,
+                "enum": [
+                  "NOSTEM"
+                ]
+              },
+              {
+                "name": "PHONETIC",
+                "type": "string",
+                "optional": true,
+                "command": "PHONETIC"
+              },
+              {
+                "name": "WEIGHT",
+                "type": "double",
+                "optional": true,
+                "command": "WEIGHT"
+              },
+              {
+                "name": "SEPARATOR",
+                "type": "string",
+                "optional": true,
+                "command": "SEPARATOR"
+              },
+              {
+                "name": "CASESENSITIVE",
+                "type": "enum",
+                "optional": true,
+                "enum": [
+                  "CASESENSITIVE"
+                ]
               }
-            ]
-          },
-          {
-            "name": "noindex",
-            "type": "enum",
-            "optional": true,
-            "enum": [
-              "NOINDEX"
             ]
           }
         ]

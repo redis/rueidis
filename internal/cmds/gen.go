@@ -8283,19 +8283,44 @@ func (c FtCreateFieldFieldName) Vector(algo string, nargs int64, args ...string)
 
 type FtCreateFieldFieldTypeGeo Completed
 
-func (c FtCreateFieldFieldTypeGeo) Withsuffixtrie() FtCreateFieldWithsuffixtrie {
+func (c FtCreateFieldFieldTypeGeo) Withsuffixtrie() FtCreateFieldOptionWithsuffixtrie {
 	c.cs.s = append(c.cs.s, "WITHSUFFIXTRIE")
-	return (FtCreateFieldWithsuffixtrie)(c)
+	return (FtCreateFieldOptionWithsuffixtrie)(c)
 }
 
-func (c FtCreateFieldFieldTypeGeo) Sortable() FtCreateFieldSortableSortable {
+func (c FtCreateFieldFieldTypeGeo) Sortable() FtCreateFieldOptionSortableSortable {
 	c.cs.s = append(c.cs.s, "SORTABLE")
-	return (FtCreateFieldSortableSortable)(c)
+	return (FtCreateFieldOptionSortableSortable)(c)
 }
 
-func (c FtCreateFieldFieldTypeGeo) Noindex() FtCreateFieldNoindex {
+func (c FtCreateFieldFieldTypeGeo) Noindex() FtCreateFieldOptionNoindex {
 	c.cs.s = append(c.cs.s, "NOINDEX")
-	return (FtCreateFieldNoindex)(c)
+	return (FtCreateFieldOptionNoindex)(c)
+}
+
+func (c FtCreateFieldFieldTypeGeo) Nostem() FtCreateFieldOptionNostem {
+	c.cs.s = append(c.cs.s, "NOSTEM")
+	return (FtCreateFieldOptionNostem)(c)
+}
+
+func (c FtCreateFieldFieldTypeGeo) Phonetic(phonetic string) FtCreateFieldOptionPhonetic {
+	c.cs.s = append(c.cs.s, "PHONETIC", phonetic)
+	return (FtCreateFieldOptionPhonetic)(c)
+}
+
+func (c FtCreateFieldFieldTypeGeo) Weight(weight float64) FtCreateFieldOptionWeight {
+	c.cs.s = append(c.cs.s, "WEIGHT", strconv.FormatFloat(weight, 'f', -1, 64))
+	return (FtCreateFieldOptionWeight)(c)
+}
+
+func (c FtCreateFieldFieldTypeGeo) Separator(separator string) FtCreateFieldOptionSeparator {
+	c.cs.s = append(c.cs.s, "SEPARATOR", separator)
+	return (FtCreateFieldOptionSeparator)(c)
+}
+
+func (c FtCreateFieldFieldTypeGeo) Casesensitive() FtCreateFieldOptionCasesensitive {
+	c.cs.s = append(c.cs.s, "CASESENSITIVE")
+	return (FtCreateFieldOptionCasesensitive)(c)
 }
 
 func (c FtCreateFieldFieldTypeGeo) FieldName(fieldName string) FtCreateFieldFieldName {
@@ -8309,19 +8334,44 @@ func (c FtCreateFieldFieldTypeGeo) Build() Completed {
 
 type FtCreateFieldFieldTypeNumeric Completed
 
-func (c FtCreateFieldFieldTypeNumeric) Withsuffixtrie() FtCreateFieldWithsuffixtrie {
+func (c FtCreateFieldFieldTypeNumeric) Withsuffixtrie() FtCreateFieldOptionWithsuffixtrie {
 	c.cs.s = append(c.cs.s, "WITHSUFFIXTRIE")
-	return (FtCreateFieldWithsuffixtrie)(c)
+	return (FtCreateFieldOptionWithsuffixtrie)(c)
 }
 
-func (c FtCreateFieldFieldTypeNumeric) Sortable() FtCreateFieldSortableSortable {
+func (c FtCreateFieldFieldTypeNumeric) Sortable() FtCreateFieldOptionSortableSortable {
 	c.cs.s = append(c.cs.s, "SORTABLE")
-	return (FtCreateFieldSortableSortable)(c)
+	return (FtCreateFieldOptionSortableSortable)(c)
 }
 
-func (c FtCreateFieldFieldTypeNumeric) Noindex() FtCreateFieldNoindex {
+func (c FtCreateFieldFieldTypeNumeric) Noindex() FtCreateFieldOptionNoindex {
 	c.cs.s = append(c.cs.s, "NOINDEX")
-	return (FtCreateFieldNoindex)(c)
+	return (FtCreateFieldOptionNoindex)(c)
+}
+
+func (c FtCreateFieldFieldTypeNumeric) Nostem() FtCreateFieldOptionNostem {
+	c.cs.s = append(c.cs.s, "NOSTEM")
+	return (FtCreateFieldOptionNostem)(c)
+}
+
+func (c FtCreateFieldFieldTypeNumeric) Phonetic(phonetic string) FtCreateFieldOptionPhonetic {
+	c.cs.s = append(c.cs.s, "PHONETIC", phonetic)
+	return (FtCreateFieldOptionPhonetic)(c)
+}
+
+func (c FtCreateFieldFieldTypeNumeric) Weight(weight float64) FtCreateFieldOptionWeight {
+	c.cs.s = append(c.cs.s, "WEIGHT", strconv.FormatFloat(weight, 'f', -1, 64))
+	return (FtCreateFieldOptionWeight)(c)
+}
+
+func (c FtCreateFieldFieldTypeNumeric) Separator(separator string) FtCreateFieldOptionSeparator {
+	c.cs.s = append(c.cs.s, "SEPARATOR", separator)
+	return (FtCreateFieldOptionSeparator)(c)
+}
+
+func (c FtCreateFieldFieldTypeNumeric) Casesensitive() FtCreateFieldOptionCasesensitive {
+	c.cs.s = append(c.cs.s, "CASESENSITIVE")
+	return (FtCreateFieldOptionCasesensitive)(c)
 }
 
 func (c FtCreateFieldFieldTypeNumeric) FieldName(fieldName string) FtCreateFieldFieldName {
@@ -8335,19 +8385,44 @@ func (c FtCreateFieldFieldTypeNumeric) Build() Completed {
 
 type FtCreateFieldFieldTypeTag Completed
 
-func (c FtCreateFieldFieldTypeTag) Withsuffixtrie() FtCreateFieldWithsuffixtrie {
+func (c FtCreateFieldFieldTypeTag) Withsuffixtrie() FtCreateFieldOptionWithsuffixtrie {
 	c.cs.s = append(c.cs.s, "WITHSUFFIXTRIE")
-	return (FtCreateFieldWithsuffixtrie)(c)
+	return (FtCreateFieldOptionWithsuffixtrie)(c)
 }
 
-func (c FtCreateFieldFieldTypeTag) Sortable() FtCreateFieldSortableSortable {
+func (c FtCreateFieldFieldTypeTag) Sortable() FtCreateFieldOptionSortableSortable {
 	c.cs.s = append(c.cs.s, "SORTABLE")
-	return (FtCreateFieldSortableSortable)(c)
+	return (FtCreateFieldOptionSortableSortable)(c)
 }
 
-func (c FtCreateFieldFieldTypeTag) Noindex() FtCreateFieldNoindex {
+func (c FtCreateFieldFieldTypeTag) Noindex() FtCreateFieldOptionNoindex {
 	c.cs.s = append(c.cs.s, "NOINDEX")
-	return (FtCreateFieldNoindex)(c)
+	return (FtCreateFieldOptionNoindex)(c)
+}
+
+func (c FtCreateFieldFieldTypeTag) Nostem() FtCreateFieldOptionNostem {
+	c.cs.s = append(c.cs.s, "NOSTEM")
+	return (FtCreateFieldOptionNostem)(c)
+}
+
+func (c FtCreateFieldFieldTypeTag) Phonetic(phonetic string) FtCreateFieldOptionPhonetic {
+	c.cs.s = append(c.cs.s, "PHONETIC", phonetic)
+	return (FtCreateFieldOptionPhonetic)(c)
+}
+
+func (c FtCreateFieldFieldTypeTag) Weight(weight float64) FtCreateFieldOptionWeight {
+	c.cs.s = append(c.cs.s, "WEIGHT", strconv.FormatFloat(weight, 'f', -1, 64))
+	return (FtCreateFieldOptionWeight)(c)
+}
+
+func (c FtCreateFieldFieldTypeTag) Separator(separator string) FtCreateFieldOptionSeparator {
+	c.cs.s = append(c.cs.s, "SEPARATOR", separator)
+	return (FtCreateFieldOptionSeparator)(c)
+}
+
+func (c FtCreateFieldFieldTypeTag) Casesensitive() FtCreateFieldOptionCasesensitive {
+	c.cs.s = append(c.cs.s, "CASESENSITIVE")
+	return (FtCreateFieldOptionCasesensitive)(c)
 }
 
 func (c FtCreateFieldFieldTypeTag) FieldName(fieldName string) FtCreateFieldFieldName {
@@ -8361,19 +8436,44 @@ func (c FtCreateFieldFieldTypeTag) Build() Completed {
 
 type FtCreateFieldFieldTypeText Completed
 
-func (c FtCreateFieldFieldTypeText) Withsuffixtrie() FtCreateFieldWithsuffixtrie {
+func (c FtCreateFieldFieldTypeText) Withsuffixtrie() FtCreateFieldOptionWithsuffixtrie {
 	c.cs.s = append(c.cs.s, "WITHSUFFIXTRIE")
-	return (FtCreateFieldWithsuffixtrie)(c)
+	return (FtCreateFieldOptionWithsuffixtrie)(c)
 }
 
-func (c FtCreateFieldFieldTypeText) Sortable() FtCreateFieldSortableSortable {
+func (c FtCreateFieldFieldTypeText) Sortable() FtCreateFieldOptionSortableSortable {
 	c.cs.s = append(c.cs.s, "SORTABLE")
-	return (FtCreateFieldSortableSortable)(c)
+	return (FtCreateFieldOptionSortableSortable)(c)
 }
 
-func (c FtCreateFieldFieldTypeText) Noindex() FtCreateFieldNoindex {
+func (c FtCreateFieldFieldTypeText) Noindex() FtCreateFieldOptionNoindex {
 	c.cs.s = append(c.cs.s, "NOINDEX")
-	return (FtCreateFieldNoindex)(c)
+	return (FtCreateFieldOptionNoindex)(c)
+}
+
+func (c FtCreateFieldFieldTypeText) Nostem() FtCreateFieldOptionNostem {
+	c.cs.s = append(c.cs.s, "NOSTEM")
+	return (FtCreateFieldOptionNostem)(c)
+}
+
+func (c FtCreateFieldFieldTypeText) Phonetic(phonetic string) FtCreateFieldOptionPhonetic {
+	c.cs.s = append(c.cs.s, "PHONETIC", phonetic)
+	return (FtCreateFieldOptionPhonetic)(c)
+}
+
+func (c FtCreateFieldFieldTypeText) Weight(weight float64) FtCreateFieldOptionWeight {
+	c.cs.s = append(c.cs.s, "WEIGHT", strconv.FormatFloat(weight, 'f', -1, 64))
+	return (FtCreateFieldOptionWeight)(c)
+}
+
+func (c FtCreateFieldFieldTypeText) Separator(separator string) FtCreateFieldOptionSeparator {
+	c.cs.s = append(c.cs.s, "SEPARATOR", separator)
+	return (FtCreateFieldOptionSeparator)(c)
+}
+
+func (c FtCreateFieldFieldTypeText) Casesensitive() FtCreateFieldOptionCasesensitive {
+	c.cs.s = append(c.cs.s, "CASESENSITIVE")
+	return (FtCreateFieldOptionCasesensitive)(c)
 }
 
 func (c FtCreateFieldFieldTypeText) FieldName(fieldName string) FtCreateFieldFieldName {
@@ -8387,19 +8487,44 @@ func (c FtCreateFieldFieldTypeText) Build() Completed {
 
 type FtCreateFieldFieldTypeVector Completed
 
-func (c FtCreateFieldFieldTypeVector) Withsuffixtrie() FtCreateFieldWithsuffixtrie {
+func (c FtCreateFieldFieldTypeVector) Withsuffixtrie() FtCreateFieldOptionWithsuffixtrie {
 	c.cs.s = append(c.cs.s, "WITHSUFFIXTRIE")
-	return (FtCreateFieldWithsuffixtrie)(c)
+	return (FtCreateFieldOptionWithsuffixtrie)(c)
 }
 
-func (c FtCreateFieldFieldTypeVector) Sortable() FtCreateFieldSortableSortable {
+func (c FtCreateFieldFieldTypeVector) Sortable() FtCreateFieldOptionSortableSortable {
 	c.cs.s = append(c.cs.s, "SORTABLE")
-	return (FtCreateFieldSortableSortable)(c)
+	return (FtCreateFieldOptionSortableSortable)(c)
 }
 
-func (c FtCreateFieldFieldTypeVector) Noindex() FtCreateFieldNoindex {
+func (c FtCreateFieldFieldTypeVector) Noindex() FtCreateFieldOptionNoindex {
 	c.cs.s = append(c.cs.s, "NOINDEX")
-	return (FtCreateFieldNoindex)(c)
+	return (FtCreateFieldOptionNoindex)(c)
+}
+
+func (c FtCreateFieldFieldTypeVector) Nostem() FtCreateFieldOptionNostem {
+	c.cs.s = append(c.cs.s, "NOSTEM")
+	return (FtCreateFieldOptionNostem)(c)
+}
+
+func (c FtCreateFieldFieldTypeVector) Phonetic(phonetic string) FtCreateFieldOptionPhonetic {
+	c.cs.s = append(c.cs.s, "PHONETIC", phonetic)
+	return (FtCreateFieldOptionPhonetic)(c)
+}
+
+func (c FtCreateFieldFieldTypeVector) Weight(weight float64) FtCreateFieldOptionWeight {
+	c.cs.s = append(c.cs.s, "WEIGHT", strconv.FormatFloat(weight, 'f', -1, 64))
+	return (FtCreateFieldOptionWeight)(c)
+}
+
+func (c FtCreateFieldFieldTypeVector) Separator(separator string) FtCreateFieldOptionSeparator {
+	c.cs.s = append(c.cs.s, "SEPARATOR", separator)
+	return (FtCreateFieldOptionSeparator)(c)
+}
+
+func (c FtCreateFieldFieldTypeVector) Casesensitive() FtCreateFieldOptionCasesensitive {
+	c.cs.s = append(c.cs.s, "CASESENSITIVE")
+	return (FtCreateFieldOptionCasesensitive)(c)
 }
 
 func (c FtCreateFieldFieldTypeVector) FieldName(fieldName string) FtCreateFieldFieldName {
@@ -8411,72 +8536,467 @@ func (c FtCreateFieldFieldTypeVector) Build() Completed {
 	return Completed(c)
 }
 
-type FtCreateFieldNoindex Completed
+type FtCreateFieldOptionCasesensitive Completed
 
-func (c FtCreateFieldNoindex) FieldName(fieldName string) FtCreateFieldFieldName {
-	c.cs.s = append(c.cs.s, fieldName)
-	return (FtCreateFieldFieldName)(c)
+func (c FtCreateFieldOptionCasesensitive) Withsuffixtrie() FtCreateFieldOptionWithsuffixtrie {
+	c.cs.s = append(c.cs.s, "WITHSUFFIXTRIE")
+	return (FtCreateFieldOptionWithsuffixtrie)(c)
 }
 
-func (c FtCreateFieldNoindex) Build() Completed {
-	return Completed(c)
-}
-
-type FtCreateFieldSortableSortable Completed
-
-func (c FtCreateFieldSortableSortable) Unf() FtCreateFieldSortableUnf {
-	c.cs.s = append(c.cs.s, "UNF")
-	return (FtCreateFieldSortableUnf)(c)
-}
-
-func (c FtCreateFieldSortableSortable) Noindex() FtCreateFieldNoindex {
-	c.cs.s = append(c.cs.s, "NOINDEX")
-	return (FtCreateFieldNoindex)(c)
-}
-
-func (c FtCreateFieldSortableSortable) FieldName(fieldName string) FtCreateFieldFieldName {
-	c.cs.s = append(c.cs.s, fieldName)
-	return (FtCreateFieldFieldName)(c)
-}
-
-func (c FtCreateFieldSortableSortable) Build() Completed {
-	return Completed(c)
-}
-
-type FtCreateFieldSortableUnf Completed
-
-func (c FtCreateFieldSortableUnf) Noindex() FtCreateFieldNoindex {
-	c.cs.s = append(c.cs.s, "NOINDEX")
-	return (FtCreateFieldNoindex)(c)
-}
-
-func (c FtCreateFieldSortableUnf) FieldName(fieldName string) FtCreateFieldFieldName {
-	c.cs.s = append(c.cs.s, fieldName)
-	return (FtCreateFieldFieldName)(c)
-}
-
-func (c FtCreateFieldSortableUnf) Build() Completed {
-	return Completed(c)
-}
-
-type FtCreateFieldWithsuffixtrie Completed
-
-func (c FtCreateFieldWithsuffixtrie) Sortable() FtCreateFieldSortableSortable {
+func (c FtCreateFieldOptionCasesensitive) Sortable() FtCreateFieldOptionSortableSortable {
 	c.cs.s = append(c.cs.s, "SORTABLE")
-	return (FtCreateFieldSortableSortable)(c)
+	return (FtCreateFieldOptionSortableSortable)(c)
 }
 
-func (c FtCreateFieldWithsuffixtrie) Noindex() FtCreateFieldNoindex {
+func (c FtCreateFieldOptionCasesensitive) Noindex() FtCreateFieldOptionNoindex {
 	c.cs.s = append(c.cs.s, "NOINDEX")
-	return (FtCreateFieldNoindex)(c)
+	return (FtCreateFieldOptionNoindex)(c)
 }
 
-func (c FtCreateFieldWithsuffixtrie) FieldName(fieldName string) FtCreateFieldFieldName {
+func (c FtCreateFieldOptionCasesensitive) Nostem() FtCreateFieldOptionNostem {
+	c.cs.s = append(c.cs.s, "NOSTEM")
+	return (FtCreateFieldOptionNostem)(c)
+}
+
+func (c FtCreateFieldOptionCasesensitive) Phonetic(phonetic string) FtCreateFieldOptionPhonetic {
+	c.cs.s = append(c.cs.s, "PHONETIC", phonetic)
+	return (FtCreateFieldOptionPhonetic)(c)
+}
+
+func (c FtCreateFieldOptionCasesensitive) Weight(weight float64) FtCreateFieldOptionWeight {
+	c.cs.s = append(c.cs.s, "WEIGHT", strconv.FormatFloat(weight, 'f', -1, 64))
+	return (FtCreateFieldOptionWeight)(c)
+}
+
+func (c FtCreateFieldOptionCasesensitive) Separator(separator string) FtCreateFieldOptionSeparator {
+	c.cs.s = append(c.cs.s, "SEPARATOR", separator)
+	return (FtCreateFieldOptionSeparator)(c)
+}
+
+func (c FtCreateFieldOptionCasesensitive) Casesensitive() FtCreateFieldOptionCasesensitive {
+	c.cs.s = append(c.cs.s, "CASESENSITIVE")
+	return c
+}
+
+func (c FtCreateFieldOptionCasesensitive) FieldName(fieldName string) FtCreateFieldFieldName {
 	c.cs.s = append(c.cs.s, fieldName)
 	return (FtCreateFieldFieldName)(c)
 }
 
-func (c FtCreateFieldWithsuffixtrie) Build() Completed {
+func (c FtCreateFieldOptionCasesensitive) Build() Completed {
+	return Completed(c)
+}
+
+type FtCreateFieldOptionNoindex Completed
+
+func (c FtCreateFieldOptionNoindex) Nostem() FtCreateFieldOptionNostem {
+	c.cs.s = append(c.cs.s, "NOSTEM")
+	return (FtCreateFieldOptionNostem)(c)
+}
+
+func (c FtCreateFieldOptionNoindex) Phonetic(phonetic string) FtCreateFieldOptionPhonetic {
+	c.cs.s = append(c.cs.s, "PHONETIC", phonetic)
+	return (FtCreateFieldOptionPhonetic)(c)
+}
+
+func (c FtCreateFieldOptionNoindex) Weight(weight float64) FtCreateFieldOptionWeight {
+	c.cs.s = append(c.cs.s, "WEIGHT", strconv.FormatFloat(weight, 'f', -1, 64))
+	return (FtCreateFieldOptionWeight)(c)
+}
+
+func (c FtCreateFieldOptionNoindex) Separator(separator string) FtCreateFieldOptionSeparator {
+	c.cs.s = append(c.cs.s, "SEPARATOR", separator)
+	return (FtCreateFieldOptionSeparator)(c)
+}
+
+func (c FtCreateFieldOptionNoindex) Casesensitive() FtCreateFieldOptionCasesensitive {
+	c.cs.s = append(c.cs.s, "CASESENSITIVE")
+	return (FtCreateFieldOptionCasesensitive)(c)
+}
+
+func (c FtCreateFieldOptionNoindex) Withsuffixtrie() FtCreateFieldOptionWithsuffixtrie {
+	c.cs.s = append(c.cs.s, "WITHSUFFIXTRIE")
+	return (FtCreateFieldOptionWithsuffixtrie)(c)
+}
+
+func (c FtCreateFieldOptionNoindex) Sortable() FtCreateFieldOptionSortableSortable {
+	c.cs.s = append(c.cs.s, "SORTABLE")
+	return (FtCreateFieldOptionSortableSortable)(c)
+}
+
+func (c FtCreateFieldOptionNoindex) Noindex() FtCreateFieldOptionNoindex {
+	c.cs.s = append(c.cs.s, "NOINDEX")
+	return c
+}
+
+func (c FtCreateFieldOptionNoindex) FieldName(fieldName string) FtCreateFieldFieldName {
+	c.cs.s = append(c.cs.s, fieldName)
+	return (FtCreateFieldFieldName)(c)
+}
+
+func (c FtCreateFieldOptionNoindex) Build() Completed {
+	return Completed(c)
+}
+
+type FtCreateFieldOptionNostem Completed
+
+func (c FtCreateFieldOptionNostem) Phonetic(phonetic string) FtCreateFieldOptionPhonetic {
+	c.cs.s = append(c.cs.s, "PHONETIC", phonetic)
+	return (FtCreateFieldOptionPhonetic)(c)
+}
+
+func (c FtCreateFieldOptionNostem) Weight(weight float64) FtCreateFieldOptionWeight {
+	c.cs.s = append(c.cs.s, "WEIGHT", strconv.FormatFloat(weight, 'f', -1, 64))
+	return (FtCreateFieldOptionWeight)(c)
+}
+
+func (c FtCreateFieldOptionNostem) Separator(separator string) FtCreateFieldOptionSeparator {
+	c.cs.s = append(c.cs.s, "SEPARATOR", separator)
+	return (FtCreateFieldOptionSeparator)(c)
+}
+
+func (c FtCreateFieldOptionNostem) Casesensitive() FtCreateFieldOptionCasesensitive {
+	c.cs.s = append(c.cs.s, "CASESENSITIVE")
+	return (FtCreateFieldOptionCasesensitive)(c)
+}
+
+func (c FtCreateFieldOptionNostem) Withsuffixtrie() FtCreateFieldOptionWithsuffixtrie {
+	c.cs.s = append(c.cs.s, "WITHSUFFIXTRIE")
+	return (FtCreateFieldOptionWithsuffixtrie)(c)
+}
+
+func (c FtCreateFieldOptionNostem) Sortable() FtCreateFieldOptionSortableSortable {
+	c.cs.s = append(c.cs.s, "SORTABLE")
+	return (FtCreateFieldOptionSortableSortable)(c)
+}
+
+func (c FtCreateFieldOptionNostem) Noindex() FtCreateFieldOptionNoindex {
+	c.cs.s = append(c.cs.s, "NOINDEX")
+	return (FtCreateFieldOptionNoindex)(c)
+}
+
+func (c FtCreateFieldOptionNostem) Nostem() FtCreateFieldOptionNostem {
+	c.cs.s = append(c.cs.s, "NOSTEM")
+	return c
+}
+
+func (c FtCreateFieldOptionNostem) FieldName(fieldName string) FtCreateFieldFieldName {
+	c.cs.s = append(c.cs.s, fieldName)
+	return (FtCreateFieldFieldName)(c)
+}
+
+func (c FtCreateFieldOptionNostem) Build() Completed {
+	return Completed(c)
+}
+
+type FtCreateFieldOptionPhonetic Completed
+
+func (c FtCreateFieldOptionPhonetic) Weight(weight float64) FtCreateFieldOptionWeight {
+	c.cs.s = append(c.cs.s, "WEIGHT", strconv.FormatFloat(weight, 'f', -1, 64))
+	return (FtCreateFieldOptionWeight)(c)
+}
+
+func (c FtCreateFieldOptionPhonetic) Separator(separator string) FtCreateFieldOptionSeparator {
+	c.cs.s = append(c.cs.s, "SEPARATOR", separator)
+	return (FtCreateFieldOptionSeparator)(c)
+}
+
+func (c FtCreateFieldOptionPhonetic) Casesensitive() FtCreateFieldOptionCasesensitive {
+	c.cs.s = append(c.cs.s, "CASESENSITIVE")
+	return (FtCreateFieldOptionCasesensitive)(c)
+}
+
+func (c FtCreateFieldOptionPhonetic) Withsuffixtrie() FtCreateFieldOptionWithsuffixtrie {
+	c.cs.s = append(c.cs.s, "WITHSUFFIXTRIE")
+	return (FtCreateFieldOptionWithsuffixtrie)(c)
+}
+
+func (c FtCreateFieldOptionPhonetic) Sortable() FtCreateFieldOptionSortableSortable {
+	c.cs.s = append(c.cs.s, "SORTABLE")
+	return (FtCreateFieldOptionSortableSortable)(c)
+}
+
+func (c FtCreateFieldOptionPhonetic) Noindex() FtCreateFieldOptionNoindex {
+	c.cs.s = append(c.cs.s, "NOINDEX")
+	return (FtCreateFieldOptionNoindex)(c)
+}
+
+func (c FtCreateFieldOptionPhonetic) Nostem() FtCreateFieldOptionNostem {
+	c.cs.s = append(c.cs.s, "NOSTEM")
+	return (FtCreateFieldOptionNostem)(c)
+}
+
+func (c FtCreateFieldOptionPhonetic) Phonetic(phonetic string) FtCreateFieldOptionPhonetic {
+	c.cs.s = append(c.cs.s, "PHONETIC", phonetic)
+	return c
+}
+
+func (c FtCreateFieldOptionPhonetic) FieldName(fieldName string) FtCreateFieldFieldName {
+	c.cs.s = append(c.cs.s, fieldName)
+	return (FtCreateFieldFieldName)(c)
+}
+
+func (c FtCreateFieldOptionPhonetic) Build() Completed {
+	return Completed(c)
+}
+
+type FtCreateFieldOptionSeparator Completed
+
+func (c FtCreateFieldOptionSeparator) Casesensitive() FtCreateFieldOptionCasesensitive {
+	c.cs.s = append(c.cs.s, "CASESENSITIVE")
+	return (FtCreateFieldOptionCasesensitive)(c)
+}
+
+func (c FtCreateFieldOptionSeparator) Withsuffixtrie() FtCreateFieldOptionWithsuffixtrie {
+	c.cs.s = append(c.cs.s, "WITHSUFFIXTRIE")
+	return (FtCreateFieldOptionWithsuffixtrie)(c)
+}
+
+func (c FtCreateFieldOptionSeparator) Sortable() FtCreateFieldOptionSortableSortable {
+	c.cs.s = append(c.cs.s, "SORTABLE")
+	return (FtCreateFieldOptionSortableSortable)(c)
+}
+
+func (c FtCreateFieldOptionSeparator) Noindex() FtCreateFieldOptionNoindex {
+	c.cs.s = append(c.cs.s, "NOINDEX")
+	return (FtCreateFieldOptionNoindex)(c)
+}
+
+func (c FtCreateFieldOptionSeparator) Nostem() FtCreateFieldOptionNostem {
+	c.cs.s = append(c.cs.s, "NOSTEM")
+	return (FtCreateFieldOptionNostem)(c)
+}
+
+func (c FtCreateFieldOptionSeparator) Phonetic(phonetic string) FtCreateFieldOptionPhonetic {
+	c.cs.s = append(c.cs.s, "PHONETIC", phonetic)
+	return (FtCreateFieldOptionPhonetic)(c)
+}
+
+func (c FtCreateFieldOptionSeparator) Weight(weight float64) FtCreateFieldOptionWeight {
+	c.cs.s = append(c.cs.s, "WEIGHT", strconv.FormatFloat(weight, 'f', -1, 64))
+	return (FtCreateFieldOptionWeight)(c)
+}
+
+func (c FtCreateFieldOptionSeparator) Separator(separator string) FtCreateFieldOptionSeparator {
+	c.cs.s = append(c.cs.s, "SEPARATOR", separator)
+	return c
+}
+
+func (c FtCreateFieldOptionSeparator) FieldName(fieldName string) FtCreateFieldFieldName {
+	c.cs.s = append(c.cs.s, fieldName)
+	return (FtCreateFieldFieldName)(c)
+}
+
+func (c FtCreateFieldOptionSeparator) Build() Completed {
+	return Completed(c)
+}
+
+type FtCreateFieldOptionSortableSortable Completed
+
+func (c FtCreateFieldOptionSortableSortable) Unf() FtCreateFieldOptionSortableUnf {
+	c.cs.s = append(c.cs.s, "UNF")
+	return (FtCreateFieldOptionSortableUnf)(c)
+}
+
+func (c FtCreateFieldOptionSortableSortable) Noindex() FtCreateFieldOptionNoindex {
+	c.cs.s = append(c.cs.s, "NOINDEX")
+	return (FtCreateFieldOptionNoindex)(c)
+}
+
+func (c FtCreateFieldOptionSortableSortable) Nostem() FtCreateFieldOptionNostem {
+	c.cs.s = append(c.cs.s, "NOSTEM")
+	return (FtCreateFieldOptionNostem)(c)
+}
+
+func (c FtCreateFieldOptionSortableSortable) Phonetic(phonetic string) FtCreateFieldOptionPhonetic {
+	c.cs.s = append(c.cs.s, "PHONETIC", phonetic)
+	return (FtCreateFieldOptionPhonetic)(c)
+}
+
+func (c FtCreateFieldOptionSortableSortable) Weight(weight float64) FtCreateFieldOptionWeight {
+	c.cs.s = append(c.cs.s, "WEIGHT", strconv.FormatFloat(weight, 'f', -1, 64))
+	return (FtCreateFieldOptionWeight)(c)
+}
+
+func (c FtCreateFieldOptionSortableSortable) Separator(separator string) FtCreateFieldOptionSeparator {
+	c.cs.s = append(c.cs.s, "SEPARATOR", separator)
+	return (FtCreateFieldOptionSeparator)(c)
+}
+
+func (c FtCreateFieldOptionSortableSortable) Casesensitive() FtCreateFieldOptionCasesensitive {
+	c.cs.s = append(c.cs.s, "CASESENSITIVE")
+	return (FtCreateFieldOptionCasesensitive)(c)
+}
+
+func (c FtCreateFieldOptionSortableSortable) Withsuffixtrie() FtCreateFieldOptionWithsuffixtrie {
+	c.cs.s = append(c.cs.s, "WITHSUFFIXTRIE")
+	return (FtCreateFieldOptionWithsuffixtrie)(c)
+}
+
+func (c FtCreateFieldOptionSortableSortable) Sortable() FtCreateFieldOptionSortableSortable {
+	c.cs.s = append(c.cs.s, "SORTABLE")
+	return c
+}
+
+func (c FtCreateFieldOptionSortableSortable) FieldName(fieldName string) FtCreateFieldFieldName {
+	c.cs.s = append(c.cs.s, fieldName)
+	return (FtCreateFieldFieldName)(c)
+}
+
+func (c FtCreateFieldOptionSortableSortable) Build() Completed {
+	return Completed(c)
+}
+
+type FtCreateFieldOptionSortableUnf Completed
+
+func (c FtCreateFieldOptionSortableUnf) Noindex() FtCreateFieldOptionNoindex {
+	c.cs.s = append(c.cs.s, "NOINDEX")
+	return (FtCreateFieldOptionNoindex)(c)
+}
+
+func (c FtCreateFieldOptionSortableUnf) Nostem() FtCreateFieldOptionNostem {
+	c.cs.s = append(c.cs.s, "NOSTEM")
+	return (FtCreateFieldOptionNostem)(c)
+}
+
+func (c FtCreateFieldOptionSortableUnf) Phonetic(phonetic string) FtCreateFieldOptionPhonetic {
+	c.cs.s = append(c.cs.s, "PHONETIC", phonetic)
+	return (FtCreateFieldOptionPhonetic)(c)
+}
+
+func (c FtCreateFieldOptionSortableUnf) Weight(weight float64) FtCreateFieldOptionWeight {
+	c.cs.s = append(c.cs.s, "WEIGHT", strconv.FormatFloat(weight, 'f', -1, 64))
+	return (FtCreateFieldOptionWeight)(c)
+}
+
+func (c FtCreateFieldOptionSortableUnf) Separator(separator string) FtCreateFieldOptionSeparator {
+	c.cs.s = append(c.cs.s, "SEPARATOR", separator)
+	return (FtCreateFieldOptionSeparator)(c)
+}
+
+func (c FtCreateFieldOptionSortableUnf) Casesensitive() FtCreateFieldOptionCasesensitive {
+	c.cs.s = append(c.cs.s, "CASESENSITIVE")
+	return (FtCreateFieldOptionCasesensitive)(c)
+}
+
+func (c FtCreateFieldOptionSortableUnf) Withsuffixtrie() FtCreateFieldOptionWithsuffixtrie {
+	c.cs.s = append(c.cs.s, "WITHSUFFIXTRIE")
+	return (FtCreateFieldOptionWithsuffixtrie)(c)
+}
+
+func (c FtCreateFieldOptionSortableUnf) Sortable() FtCreateFieldOptionSortableSortable {
+	c.cs.s = append(c.cs.s, "SORTABLE")
+	return (FtCreateFieldOptionSortableSortable)(c)
+}
+
+func (c FtCreateFieldOptionSortableUnf) FieldName(fieldName string) FtCreateFieldFieldName {
+	c.cs.s = append(c.cs.s, fieldName)
+	return (FtCreateFieldFieldName)(c)
+}
+
+func (c FtCreateFieldOptionSortableUnf) Build() Completed {
+	return Completed(c)
+}
+
+type FtCreateFieldOptionWeight Completed
+
+func (c FtCreateFieldOptionWeight) Separator(separator string) FtCreateFieldOptionSeparator {
+	c.cs.s = append(c.cs.s, "SEPARATOR", separator)
+	return (FtCreateFieldOptionSeparator)(c)
+}
+
+func (c FtCreateFieldOptionWeight) Casesensitive() FtCreateFieldOptionCasesensitive {
+	c.cs.s = append(c.cs.s, "CASESENSITIVE")
+	return (FtCreateFieldOptionCasesensitive)(c)
+}
+
+func (c FtCreateFieldOptionWeight) Withsuffixtrie() FtCreateFieldOptionWithsuffixtrie {
+	c.cs.s = append(c.cs.s, "WITHSUFFIXTRIE")
+	return (FtCreateFieldOptionWithsuffixtrie)(c)
+}
+
+func (c FtCreateFieldOptionWeight) Sortable() FtCreateFieldOptionSortableSortable {
+	c.cs.s = append(c.cs.s, "SORTABLE")
+	return (FtCreateFieldOptionSortableSortable)(c)
+}
+
+func (c FtCreateFieldOptionWeight) Noindex() FtCreateFieldOptionNoindex {
+	c.cs.s = append(c.cs.s, "NOINDEX")
+	return (FtCreateFieldOptionNoindex)(c)
+}
+
+func (c FtCreateFieldOptionWeight) Nostem() FtCreateFieldOptionNostem {
+	c.cs.s = append(c.cs.s, "NOSTEM")
+	return (FtCreateFieldOptionNostem)(c)
+}
+
+func (c FtCreateFieldOptionWeight) Phonetic(phonetic string) FtCreateFieldOptionPhonetic {
+	c.cs.s = append(c.cs.s, "PHONETIC", phonetic)
+	return (FtCreateFieldOptionPhonetic)(c)
+}
+
+func (c FtCreateFieldOptionWeight) Weight(weight float64) FtCreateFieldOptionWeight {
+	c.cs.s = append(c.cs.s, "WEIGHT", strconv.FormatFloat(weight, 'f', -1, 64))
+	return c
+}
+
+func (c FtCreateFieldOptionWeight) FieldName(fieldName string) FtCreateFieldFieldName {
+	c.cs.s = append(c.cs.s, fieldName)
+	return (FtCreateFieldFieldName)(c)
+}
+
+func (c FtCreateFieldOptionWeight) Build() Completed {
+	return Completed(c)
+}
+
+type FtCreateFieldOptionWithsuffixtrie Completed
+
+func (c FtCreateFieldOptionWithsuffixtrie) Sortable() FtCreateFieldOptionSortableSortable {
+	c.cs.s = append(c.cs.s, "SORTABLE")
+	return (FtCreateFieldOptionSortableSortable)(c)
+}
+
+func (c FtCreateFieldOptionWithsuffixtrie) Noindex() FtCreateFieldOptionNoindex {
+	c.cs.s = append(c.cs.s, "NOINDEX")
+	return (FtCreateFieldOptionNoindex)(c)
+}
+
+func (c FtCreateFieldOptionWithsuffixtrie) Nostem() FtCreateFieldOptionNostem {
+	c.cs.s = append(c.cs.s, "NOSTEM")
+	return (FtCreateFieldOptionNostem)(c)
+}
+
+func (c FtCreateFieldOptionWithsuffixtrie) Phonetic(phonetic string) FtCreateFieldOptionPhonetic {
+	c.cs.s = append(c.cs.s, "PHONETIC", phonetic)
+	return (FtCreateFieldOptionPhonetic)(c)
+}
+
+func (c FtCreateFieldOptionWithsuffixtrie) Weight(weight float64) FtCreateFieldOptionWeight {
+	c.cs.s = append(c.cs.s, "WEIGHT", strconv.FormatFloat(weight, 'f', -1, 64))
+	return (FtCreateFieldOptionWeight)(c)
+}
+
+func (c FtCreateFieldOptionWithsuffixtrie) Separator(separator string) FtCreateFieldOptionSeparator {
+	c.cs.s = append(c.cs.s, "SEPARATOR", separator)
+	return (FtCreateFieldOptionSeparator)(c)
+}
+
+func (c FtCreateFieldOptionWithsuffixtrie) Casesensitive() FtCreateFieldOptionCasesensitive {
+	c.cs.s = append(c.cs.s, "CASESENSITIVE")
+	return (FtCreateFieldOptionCasesensitive)(c)
+}
+
+func (c FtCreateFieldOptionWithsuffixtrie) Withsuffixtrie() FtCreateFieldOptionWithsuffixtrie {
+	c.cs.s = append(c.cs.s, "WITHSUFFIXTRIE")
+	return c
+}
+
+func (c FtCreateFieldOptionWithsuffixtrie) FieldName(fieldName string) FtCreateFieldFieldName {
+	c.cs.s = append(c.cs.s, fieldName)
+	return (FtCreateFieldFieldName)(c)
+}
+
+func (c FtCreateFieldOptionWithsuffixtrie) Build() Completed {
 	return Completed(c)
 }
 
