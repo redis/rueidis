@@ -1,7 +1,7 @@
 # rueidis
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/rueian/rueidis.svg)](https://pkg.go.dev/github.com/rueian/rueidis)
-[![circleci](https://circleci.com/gh/rueian/rueidis.svg?style=shield)](https://app.circleci.com/pipelines/github/rueian/rueidis)
+[![Build status](https://badge.buildkite.com/d15fbd91b3b22b55c8d799564f84918a322118ae02590858c4.svg)](https://buildkite.com/rueian/rueidis)
 [![Go Report Card](https://goreportcard.com/badge/github.com/rueian/rueidis)](https://goreportcard.com/report/github.com/rueian/rueidis)
 [![codecov](https://codecov.io/gh/rueian/rueidis/branch/master/graph/badge.svg?token=wGTB8GdY06)](https://codecov.io/gh/rueian/rueidis)
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/rueian/rueidis.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/rueian/rueidis/alerts/)
