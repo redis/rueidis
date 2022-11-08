@@ -42,13 +42,15 @@ func format(v interface{}) string {
 	return sb.String()
 }
 
-func commands(x interface{}) []string {
+func commands(x interface{}) interface{} {
+	if cmd, ok := x.(cmds.Completed); ok {
+		return cmd.Commands()
+	}
 	if cmd, ok := x.(cmds.Cacheable); ok {
 		return cmd.Commands()
 	}
 	if cmd, ok := x.(rueidis.CacheableTTL); ok {
 		return cmd.Cmd.Commands()
 	}
-	cmd := x.(cmds.Completed)
-	return cmd.Commands()
+	return x
 }
