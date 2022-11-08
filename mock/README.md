@@ -31,6 +31,15 @@ func TestWithRueidis(t *testing.T) {
 	if v, _ := client.Do(ctx, client.B().Get().Key("key").Build()).ToString(); v != "val" {
 		t.Fatalf("unexpected val %v", v)
 	}
+	client.EXPECT().DoMulti(ctx, mock.Match("GET", "c"), mock.Match("GET", "d")).Return([]rueidis.RedisResult{
+		mock.Result(mock.RedisNil()),
+		mock.Result(mock.RedisNil()),
+	})
+	for _, resp := range client.DoMulti(ctx, client.B().Get().Key("c").Build(), client.B().Get().Key("d").Build()) {
+		if err := resp.Error(); !rueidis.IsRedisNil(err) {
+			t.Fatalf("unexpected err %v", err)
+		}
+	}
 }
 ```
 
