@@ -100,6 +100,9 @@ func (c *lru) GetOrPrepare(key, cmd string, ttl time.Duration) (v RedisMessage, 
 	e = nil
 
 	c.mu.Lock()
+	if c.store == nil {
+		goto miss
+	}
 	if store == nil {
 		if store, ok = c.store[key]; !ok {
 			store = &keyCache{cache: make(map[string]*list.Element), ttl: now.Add(ttl)}
@@ -117,7 +120,7 @@ func (c *lru) GetOrPrepare(key, cmd string, ttl time.Duration) (v RedisMessage, 
 			e = nil
 		}
 	}
-	if e == nil && c.list != nil {
+	if e == nil {
 		atomic.AddUint64(&store.miss, 1)
 		c.list.PushBack(&entry{
 			key: key,
@@ -127,6 +130,7 @@ func (c *lru) GetOrPrepare(key, cmd string, ttl time.Duration) (v RedisMessage, 
 		store.ttl = now.Add(ttl)
 		store.cache[cmd] = c.list.Back()
 	}
+miss:
 	c.mu.Unlock()
 	return v, e
 }
@@ -178,7 +182,6 @@ func (c *lru) Cancel(key, cmd string, val RedisMessage, err error) {
 				e.val = val
 				e.err = err
 				ch = e.ch
-				store := c.store[key]
 				if delete(store.cache, cmd); len(store.cache) == 0 {
 					delete(c.store, key)
 				}
@@ -242,7 +245,7 @@ func (c *lru) FreeAndClose(notice RedisMessage) {
 			}
 		}
 	}
-	c.store = make(map[string]*keyCache)
+	c.store = nil
 	c.list = nil
 	c.mu.Unlock()
 }
