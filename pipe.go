@@ -946,17 +946,17 @@ func (p *pipe) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duratio
 	)
 	exec, err := resp[4].ToArray()
 	if err != nil {
-		if _, ok := err.(*RedisError); !ok {
-			p.cache.Cancel(ck, cc, RedisMessage{}, err)
-			return newErrResult(err)
+		var msg RedisMessage
+		if _, ok := err.(*RedisError); ok {
+			err = nil
+			if resp[3].val.typ != '+' { // EXEC aborted, return err of the input cmd in MULTI block
+				msg = resp[3].val
+			} else {
+				msg = resp[4].val
+			}
 		}
-		// EXEC aborted, return err of the input cmd in MULTI block
-		if resp[3].val.typ != '+' {
-			p.cache.Cancel(ck, cc, resp[3].val, nil)
-			return newResult(resp[3].val, nil)
-		}
-		p.cache.Cancel(ck, cc, resp[4].val, nil)
-		return newResult(resp[4].val, nil)
+		p.cache.Cancel(ck, cc, msg, err)
+		return newResult(msg, err)
 	}
 	return newResult(exec[1], nil)
 }
