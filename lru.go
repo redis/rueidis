@@ -90,7 +90,9 @@ func (c *lru) GetOrPrepare(key, cmd string, ttl time.Duration) (v RedisMessage, 
 		hits := atomic.AddUint64(&store.hits, 1)
 		if ele != back && hits&moveThreshold == 0 {
 			c.mu.Lock()
-			c.list.MoveToBack(ele)
+			if c.list != nil {
+				c.list.MoveToBack(ele)
+			}
 			c.mu.Unlock()
 		}
 		return v, e
