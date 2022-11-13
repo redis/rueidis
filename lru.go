@@ -2,6 +2,7 @@ package rueidis
 
 import (
 	"container/list"
+	"context"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -38,8 +39,16 @@ type entry struct {
 	size int
 }
 
-func (e *entry) Wait() (RedisMessage, error) {
-	<-e.ch
+func (e *entry) Wait(ctx context.Context) (RedisMessage, error) {
+	if ch := ctx.Done(); ch == nil {
+		<-e.ch
+	} else {
+		select {
+		case <-ch:
+			return RedisMessage{}, ctx.Err()
+		case <-e.ch:
+		}
+	}
 	return e.val, e.err
 }
 

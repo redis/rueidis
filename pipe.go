@@ -934,7 +934,7 @@ func (p *pipe) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duratio
 	if v, entry := p.cache.GetOrPrepare(ck, cc, ttl); v.typ != 0 {
 		return newResult(v, nil)
 	} else if entry != nil {
-		return newResult(entry.Wait())
+		return newResult(entry.Wait(ctx))
 	}
 	resp := p.DoMulti(
 		ctx,
@@ -1044,7 +1044,7 @@ func (p *pipe) doCacheMGet(ctx context.Context, cmd cmds.Cacheable, ttl time.Dur
 		result.val.values = make([]RedisMessage, keys)
 	}
 	for i, entry := range entries {
-		v, err := entry.Wait()
+		v, err := entry.Wait(ctx)
 		if err != nil {
 			return newErrResult(err)
 		}
@@ -1121,7 +1121,7 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisR
 	}
 
 	for i, entry := range entries {
-		results[i] = newResult(entry.Wait())
+		results[i] = newResult(entry.Wait(ctx))
 	}
 
 	j := 0

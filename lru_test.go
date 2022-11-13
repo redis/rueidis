@@ -1,6 +1,7 @@
 package rueidis
 
 import (
+	"context"
 	"errors"
 	"strconv"
 	"sync"
@@ -142,7 +143,7 @@ func TestLRU(t *testing.T) {
 
 		lru.FreeAndClose(RedisMessage{typ: '-', string: "closed"})
 
-		if resp, _ := entry.Wait(); resp.typ != '-' || resp.string != "closed" {
+		if resp, _ := entry.Wait(context.Background()); resp.typ != '-' || resp.string != "closed" {
 			t.Fatalf("got unexpected value after FreeAndClose: %v", resp)
 		}
 
@@ -171,7 +172,7 @@ func TestLRU(t *testing.T) {
 			lru.Cancel("1", "GET", RedisMessage{typ: 1}, err)
 		}()
 
-		if v, err2 := entry.Wait(); v.typ != 1 || err2 != err {
+		if v, err2 := entry.Wait(context.Background()); v.typ != 1 || err2 != err {
 			t.Fatalf("got unexpected value from the entry.Wait(): %v %v", err, err2)
 		}
 	})
@@ -220,7 +221,27 @@ func TestEntry(t *testing.T) {
 			e.err = err
 			close(e.ch)
 		}()
-		if v, err2 := e.Wait(); v.typ != 1 || err2 != err {
+		if v, err2 := e.Wait(context.Background()); v.typ != 1 || err2 != err {
+			t.Fatalf("got unexpected value from the Wait: %v %v", v.typ, err)
+		}
+	})
+	t.Run("Wait with cancel", func(t *testing.T) {
+		e := entry{ch: make(chan struct{}, 1)}
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		go func() {
+			e.val = RedisMessage{typ: 1}
+			close(e.ch)
+		}()
+		if v, err := e.Wait(ctx); v.typ != 1 || err != nil {
+			t.Fatalf("got unexpected value from the Wait: %v %v", v.typ, err)
+		}
+	})
+	t.Run("Wait with closed ctx", func(t *testing.T) {
+		e := entry{ch: make(chan struct{}, 1)}
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		if v, err := e.Wait(ctx); err != context.Canceled {
 			t.Fatalf("got unexpected value from the Wait: %v %v", v.typ, err)
 		}
 	})
