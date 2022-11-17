@@ -346,6 +346,7 @@ func newSentinelOpt(opt *ClientOption) *ClientOption {
 	o.ClientName = o.Sentinel.ClientName
 	o.Dialer = o.Sentinel.Dialer
 	o.TLSConfig = o.Sentinel.TLSConfig
+	o.SelectDB = 0 // https://github.com/rueian/rueidis/issues/138
 	return &o
 }
 
