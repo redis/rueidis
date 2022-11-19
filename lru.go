@@ -32,7 +32,7 @@ type cache interface {
 
 type entry struct {
 	ch   chan struct{}
-	key  string
+	sto  *keyCache
 	cmd  string
 	val  RedisMessage
 	err  error
@@ -56,6 +56,7 @@ type keyCache struct {
 	hits  uint64
 	miss  uint64
 	cache map[string]*list.Element
+	key   string
 	ttl   time.Time
 }
 
@@ -115,7 +116,7 @@ func (c *lru) GetOrPrepare(key, cmd string, ttl time.Duration) (v RedisMessage, 
 		if c.store == nil {
 			goto miss
 		}
-		store = &keyCache{cache: make(map[string]*list.Element), ttl: now.Add(ttl)}
+		store = &keyCache{cache: make(map[string]*list.Element, 1), key: key, ttl: now.Add(ttl)}
 		c.store[key] = store
 	}
 	if ele, ok = store.cache[cmd]; ok {
@@ -132,8 +133,8 @@ func (c *lru) GetOrPrepare(key, cmd string, ttl time.Duration) (v RedisMessage, 
 	if e == nil {
 		atomic.AddUint64(&store.miss, 1)
 		c.list.PushBack(&entry{
-			key: key,
 			cmd: cmd,
+			sto: store,
 			ch:  make(chan struct{}, 1),
 		})
 		store.ttl = now.Add(ttl)
@@ -159,9 +160,9 @@ func (c *lru) Update(key, cmd string, value RedisMessage, pttl int64) {
 			ele = c.list.Front()
 			for c.size > c.max && ele != nil {
 				if e := ele.Value.(*entry); e.val.typ != 0 { // do not delete pending entries
-					store := c.store[e.key]
+					store := e.sto
 					if delete(store.cache, e.cmd); len(store.cache) == 0 {
-						delete(c.store, e.key)
+						delete(c.store, store.key)
 					}
 					c.list.Remove(ele)
 					c.size -= e.size
