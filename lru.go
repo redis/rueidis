@@ -111,14 +111,12 @@ func (c *lru) GetOrPrepare(key, cmd string, ttl time.Duration) (v RedisMessage, 
 	e = nil
 
 	c.mu.Lock()
-	if c.store == nil {
-		goto miss
-	}
-	if store == nil {
-		if store, ok = c.store[key]; !ok {
-			store = &keyCache{cache: make(map[string]*list.Element), ttl: now.Add(ttl)}
-			c.store[key] = store
+	if store, ok = c.store[key]; !ok {
+		if c.store == nil {
+			goto miss
 		}
+		store = &keyCache{cache: make(map[string]*list.Element), ttl: now.Add(ttl)}
+		c.store[key] = store
 	}
 	if ele, ok = store.cache[cmd]; ok {
 		if e = ele.Value.(*entry); e.val.typ == 0 || store.ttl.After(now) {
