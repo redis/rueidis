@@ -246,7 +246,7 @@ func (p *pipe) _background() {
 
 	// clean up cache and free pending calls
 	if p.cache != nil {
-		p.cache.FreeAndClose(RedisMessage{typ: '-', string: p.Error().Error()})
+		p.cache.FreeAndClose(ErrDoCacheAborted)
 	}
 	if p.onInvalidations != nil {
 		p.onInvalidations(nil)
@@ -946,17 +946,11 @@ func (p *pipe) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duratio
 	)
 	exec, err := resp[4].ToArray()
 	if err != nil {
-		var msg RedisMessage
 		if _, ok := err.(*RedisError); ok {
-			err = nil
-			if resp[3].val.typ != '+' { // EXEC aborted, return err of the input cmd in MULTI block
-				msg = resp[3].val
-			} else {
-				msg = resp[4].val
-			}
+			err = ErrDoCacheAborted
 		}
-		p.cache.Cancel(ck, cc, msg, err)
-		return newResult(msg, err)
+		p.cache.Cancel(ck, cc, err)
+		return newErrResult(err)
 	}
 	return newResult(exec[1], nil)
 }
@@ -1013,19 +1007,13 @@ func (p *pipe) doCacheMGet(ctx context.Context, cmd cmds.Cacheable, ttl time.Dur
 		resp := p.DoMulti(ctx, multi...)
 		exec, err := resp[len(multi)-1].ToArray()
 		if err != nil {
-			var msg RedisMessage
 			if _, ok := err.(*RedisError); ok {
-				err = nil
-				if resp[len(multi)-2].val.typ != '+' { // EXEC aborted, return err of the input cmd in MULTI block
-					msg = resp[len(multi)-2].val
-				} else {
-					msg = resp[len(multi)-1].val
-				}
+				err = ErrDoCacheAborted
 			}
 			for _, key := range rewritten.Commands()[1 : keys+1] {
-				p.cache.Cancel(key, mgetcc, msg, err)
+				p.cache.Cancel(key, mgetcc, err)
 			}
-			return newResult(msg, err)
+			return newErrResult(err)
 		}
 		defer func() {
 			for _, cmd := range multi[2 : len(multi)-1] {
@@ -1098,23 +1086,16 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisR
 		resp := p.DoMulti(ctx, missing...)
 		exec, err = resp[len(missing)-1].ToArray()
 		if err != nil {
-			var msg RedisMessage
 			if _, ok := err.(*RedisError); ok {
-				for i := 1; i < len(resp); i += 2 { // EXEC aborted, return the first err of the input cmd in MULTI block
-					if resp[i].val.typ == '-' || resp[i].val.typ == '_' || resp[i].val.typ == '!' {
-						msg = resp[i].val
-						err = nil
-						break
-					}
-				}
+				err = ErrDoCacheAborted
 			}
 			for i := 3; i < len(missing); i += 2 {
 				cacheable := cmds.Cacheable(missing[i])
 				ck, cc := cacheable.CacheKey()
-				p.cache.Cancel(ck, cc, msg, err)
+				p.cache.Cancel(ck, cc, err)
 			}
 			for i := range results {
-				results[i] = newResult(msg, err)
+				results[i] = newErrResult(err)
 			}
 			return results
 		}

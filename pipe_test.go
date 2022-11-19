@@ -629,36 +629,7 @@ func TestClientSideCachingExecAbort(t *testing.T) {
 	}()
 
 	v, err := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage()
-	if !IsRedisNil(err) {
-		t.Errorf("unexpected err, got %v", err)
-	}
-	if v.IsCacheHit() {
-		t.Errorf("unexpected cache hit")
-	}
-	if v, entry := p.cache.GetOrPrepare("a", "GET", time.Second); v.typ != 0 || entry != nil {
-		t.Errorf("unexpected cache value and entry %v %v", v, entry)
-	}
-}
-
-func TestClientSideCachingExecAbortWithMoved(t *testing.T) {
-	p, mock, cancel, _ := setup(t, ClientOption{})
-	defer cancel()
-
-	go func() {
-		mock.Expect("CLIENT", "CACHING", "YES").
-			Expect("MULTI").
-			Expect("PTTL", "a").
-			Expect("GET", "a").
-			Expect("EXEC").
-			ReplyString("OK").
-			ReplyString("OK").
-			ReplyString("OK").
-			Reply(RedisMessage{typ: '-', string: "MOVED 0 :0"}).
-			Reply(RedisMessage{typ: '-', string: "EXECABORT"})
-	}()
-
-	v, err := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage()
-	if addr, ok := err.(*RedisError).IsMoved(); !ok || addr != ":0" {
+	if err != ErrDoCacheAborted {
 		t.Errorf("unexpected err, got %v", err)
 	}
 	if v.IsCacheHit() {
@@ -971,41 +942,7 @@ func TestClientSideCachingExecAbortMGet(t *testing.T) {
 	}()
 
 	v, err := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewMGetCompleted([]string{"MGET", "a1", "a2"})), 10*time.Second).ToMessage()
-	if !IsRedisNil(err) {
-		t.Errorf("unexpected err, got %v", err)
-	}
-	if v.IsCacheHit() {
-		t.Errorf("unexpected cache hit")
-	}
-	if v, entry := p.cache.GetOrPrepare("a1", "GET", time.Second); v.typ != 0 || entry != nil {
-		t.Errorf("unexpected cache value and entry %v %v", v, entry)
-	}
-	if v, entry := p.cache.GetOrPrepare("a2", "GET", time.Second); v.typ != 0 || entry != nil {
-		t.Errorf("unexpected cache value and entry %v %v", v, entry)
-	}
-}
-
-func TestClientSideCachingExecAbortWithMovedMGet(t *testing.T) {
-	p, mock, cancel, _ := setup(t, ClientOption{})
-	defer cancel()
-
-	go func() {
-		mock.Expect("CLIENT", "CACHING", "YES").
-			Expect("MULTI").
-			Expect("PTTL", "a1").
-			Expect("PTTL", "a2").
-			Expect("MGET", "a1", "a2").
-			Expect("EXEC").
-			ReplyString("OK").
-			ReplyString("OK").
-			ReplyString("OK").
-			ReplyString("OK").
-			Reply(RedisMessage{typ: '-', string: "MOVED 0 :0"}).
-			Reply(RedisMessage{typ: '-', string: "EXECABORT"})
-	}()
-
-	v, err := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewMGetCompleted([]string{"MGET", "a1", "a2"})), 10*time.Second).ToMessage()
-	if addr, ok := err.(*RedisError).IsMoved(); !ok || addr != ":0" {
+	if err != ErrDoCacheAborted {
 		t.Errorf("unexpected err, got %v", err)
 	}
 	if v.IsCacheHit() {
@@ -1061,7 +998,7 @@ func TestClientSideCachingWithSideChannelErrorMGet(t *testing.T) {
 	p.cache.GetOrPrepare("a1", "GET", 10*time.Second)
 	go func() {
 		time.Sleep(100 * time.Millisecond)
-		p.cache.Cancel("a1", "GET", RedisMessage{}, io.EOF)
+		p.cache.Cancel("a1", "GET", io.EOF)
 	}()
 
 	_, err := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewMGetCompleted([]string{"MGET", "a1"})), 10*time.Second).ToMessage()
@@ -1252,49 +1189,7 @@ func TestClientSideCachingExecAbortDoMultiCache(t *testing.T) {
 	}...)
 	for _, resp := range arr {
 		v, err := resp.ToMessage()
-		if !IsRedisNil(err) {
-			t.Errorf("unexpected err, got %v", err)
-		}
-		if v.IsCacheHit() {
-			t.Errorf("unexpected cache hit")
-		}
-	}
-	if v, entry := p.cache.GetOrPrepare("a1", "GET", time.Second); v.typ != 0 || entry != nil {
-		t.Errorf("unexpected cache value and entry %v %v", v, entry)
-	}
-	if v, entry := p.cache.GetOrPrepare("a2", "GET", time.Second); v.typ != 0 || entry != nil {
-		t.Errorf("unexpected cache value and entry %v %v", v, entry)
-	}
-}
-
-func TestClientSideCachingExecAbortWithMovedDoMultiCache(t *testing.T) {
-	p, mock, cancel, _ := setup(t, ClientOption{})
-	defer cancel()
-
-	go func() {
-		mock.Expect("CLIENT", "CACHING", "YES").
-			Expect("MULTI").
-			Expect("PTTL", "a1").
-			Expect("GET", "a1").
-			Expect("PTTL", "a2").
-			Expect("GET", "a2").
-			Expect("EXEC").
-			ReplyString("OK").
-			ReplyString("OK").
-			ReplyString("OK").
-			ReplyString("OK").
-			ReplyString("OK").
-			Reply(RedisMessage{typ: '-', string: "MOVED 0 :0"}).
-			Reply(RedisMessage{typ: '-', string: "EXECABORT"})
-	}()
-
-	arr := p.DoMultiCache(context.Background(), []CacheableTTL{
-		CT(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a1"})), time.Second*10),
-		CT(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a2"})), time.Second*10),
-	}...)
-	for _, resp := range arr {
-		v, err := resp.ToMessage()
-		if addr, ok := err.(*RedisError).IsMoved(); !ok || addr != ":0" {
+		if err != ErrDoCacheAborted {
 			t.Errorf("unexpected err, got %v", err)
 		}
 		if v.IsCacheHit() {
@@ -1359,7 +1254,7 @@ func TestClientSideCachingWithSideChannelErrorDoMultiCache(t *testing.T) {
 	p.cache.GetOrPrepare("a1", "GET", 10*time.Second)
 	go func() {
 		time.Sleep(100 * time.Millisecond)
-		p.cache.Cancel("a1", "GET", RedisMessage{}, io.EOF)
+		p.cache.Cancel("a1", "GET", io.EOF)
 	}()
 
 	arr := p.DoMultiCache(context.Background(), []CacheableTTL{

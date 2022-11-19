@@ -24,10 +24,10 @@ const (
 type cache interface {
 	GetOrPrepare(key, cmd string, ttl time.Duration) (v RedisMessage, entry *entry)
 	Update(key, cmd string, value RedisMessage, pttl int64)
-	Cancel(key, cmd string, value RedisMessage, err error)
+	Cancel(key, cmd string, err error)
 	Delete(keys []RedisMessage)
 	GetTTL(key string) time.Duration
-	FreeAndClose(notice RedisMessage)
+	FreeAndClose(err error)
 }
 
 type entry struct {
@@ -183,13 +183,12 @@ func (c *lru) Update(key, cmd string, value RedisMessage, pttl int64) {
 	}
 }
 
-func (c *lru) Cancel(key, cmd string, val RedisMessage, err error) {
+func (c *lru) Cancel(key, cmd string, err error) {
 	var ch chan struct{}
 	c.mu.Lock()
 	if kc, ok := c.store[key]; ok {
 		if ele, ok := kc.cache[cmd]; ok {
 			if e := ele.Value.(*entry); e.val.typ == 0 {
-				e.val = val
 				e.err = err
 				ch = e.ch
 				if delete(kc.cache, cmd); len(kc.cache) == 0 {
@@ -245,12 +244,12 @@ func (c *lru) Delete(keys []RedisMessage) {
 	c.mu.Unlock()
 }
 
-func (c *lru) FreeAndClose(notice RedisMessage) {
+func (c *lru) FreeAndClose(err error) {
 	c.mu.Lock()
 	for _, kc := range c.store {
 		for _, ele := range kc.cache {
 			if e := ele.Value.(*entry); e.val.typ == 0 {
-				e.val = notice
+				e.err = err
 				close(e.ch)
 			}
 		}

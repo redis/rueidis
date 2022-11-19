@@ -94,7 +94,7 @@ retry:
 	if c.retry && c.isRetryable(resp.NonRedisError(), ctx) {
 		goto retry
 	}
-	if resp.NonRedisError() == nil {
+	if err := resp.NonRedisError(); err == nil || err == ErrDoCacheAborted {
 		cmds.Put(cmd.CommandSlice())
 	}
 	return resp
@@ -114,7 +114,7 @@ retry:
 		}
 	}
 	for i, cmd := range multi {
-		if resps[i].NonRedisError() == nil {
+		if err := resps[i].NonRedisError(); err == nil || err == ErrDoCacheAborted {
 			cmds.Put(cmd.Cmd.CommandSlice())
 		}
 	}
