@@ -412,7 +412,7 @@ process:
 
 func (c *clusterClient) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp RedisResult) {
 	resp = c.doCache(ctx, cmd, ttl)
-	if resp.NonRedisError() == nil {
+	if err := resp.NonRedisError(); err == nil || err == ErrDoCacheAborted {
 		cmds.Put(cmd.CommandSlice())
 	}
 	return resp
@@ -497,7 +497,7 @@ func (c *clusterClient) DoMultiCache(ctx context.Context, multi ...CacheableTTL)
 	})
 
 	for i, cmd := range multi {
-		if results[i].NonRedisError() == nil {
+		if err := results[i].NonRedisError(); err == nil || err == ErrDoCacheAborted {
 			cmds.Put(cmd.Cmd.CommandSlice())
 		}
 	}

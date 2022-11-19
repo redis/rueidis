@@ -24,15 +24,15 @@ const (
 type cache interface {
 	GetOrPrepare(key, cmd string, ttl time.Duration) (v RedisMessage, entry *entry)
 	Update(key, cmd string, value RedisMessage, pttl int64)
-	Cancel(key, cmd string, value RedisMessage, err error)
+	Cancel(key, cmd string, err error)
 	Delete(keys []RedisMessage)
 	GetTTL(key string) time.Duration
-	FreeAndClose(notice RedisMessage)
+	FreeAndClose(err error)
 }
 
 type entry struct {
 	ch   chan struct{}
-	key  string
+	kc   *keyCache
 	cmd  string
 	val  RedisMessage
 	err  error
@@ -56,6 +56,7 @@ type keyCache struct {
 	hits  uint64
 	miss  uint64
 	cache map[string]*list.Element
+	key   string
 	ttl   time.Time
 }
 
@@ -79,15 +80,15 @@ func newLRU(max int) *lru {
 
 func (c *lru) GetOrPrepare(key, cmd string, ttl time.Duration) (v RedisMessage, e *entry) {
 	var ok bool
-	var store *keyCache
+	var kc *keyCache
 	var now = time.Now()
-	var storeTTL time.Time
+	var kcTTL time.Time
 	var ele, back *list.Element
 
 	c.mu.RLock()
-	if store, ok = c.store[key]; ok {
-		storeTTL = store.ttl
-		if ele, ok = store.cache[cmd]; ok {
+	if kc, ok = c.store[key]; ok {
+		kcTTL = kc.ttl
+		if ele, ok = kc.cache[cmd]; ok {
 			e = ele.Value.(*entry)
 			v = e.val
 			back = c.list.Back()
@@ -95,8 +96,8 @@ func (c *lru) GetOrPrepare(key, cmd string, ttl time.Duration) (v RedisMessage, 
 	}
 	c.mu.RUnlock()
 
-	if e != nil && (v.typ == 0 || storeTTL.After(now)) {
-		hits := atomic.AddUint64(&store.hits, 1)
+	if e != nil && (v.typ == 0 || kcTTL.After(now)) {
+		hits := atomic.AddUint64(&kc.hits, 1)
 		if ele != back && hits&moveThreshold == 0 {
 			c.mu.Lock()
 			if c.list != nil {
@@ -111,18 +112,16 @@ func (c *lru) GetOrPrepare(key, cmd string, ttl time.Duration) (v RedisMessage, 
 	e = nil
 
 	c.mu.Lock()
-	if c.store == nil {
-		goto miss
-	}
-	if store == nil {
-		if store, ok = c.store[key]; !ok {
-			store = &keyCache{cache: make(map[string]*list.Element), ttl: now.Add(ttl)}
-			c.store[key] = store
+	if kc, ok = c.store[key]; !ok {
+		if c.store == nil {
+			goto miss
 		}
+		kc = &keyCache{cache: make(map[string]*list.Element, 1), key: key, ttl: now.Add(ttl)}
+		c.store[key] = kc
 	}
-	if ele, ok = store.cache[cmd]; ok {
-		if e = ele.Value.(*entry); e.val.typ == 0 || store.ttl.After(now) {
-			atomic.AddUint64(&store.hits, 1)
+	if ele, ok = kc.cache[cmd]; ok {
+		if e = ele.Value.(*entry); e.val.typ == 0 || kc.ttl.After(now) {
+			atomic.AddUint64(&kc.hits, 1)
 			v = e.val
 			c.list.MoveToBack(ele)
 		} else {
@@ -132,14 +131,14 @@ func (c *lru) GetOrPrepare(key, cmd string, ttl time.Duration) (v RedisMessage, 
 		}
 	}
 	if e == nil {
-		atomic.AddUint64(&store.miss, 1)
+		atomic.AddUint64(&kc.miss, 1)
 		c.list.PushBack(&entry{
-			key: key,
 			cmd: cmd,
+			kc:  kc,
 			ch:  make(chan struct{}, 1),
 		})
-		store.ttl = now.Add(ttl)
-		store.cache[cmd] = c.list.Back()
+		kc.ttl = now.Add(ttl)
+		kc.cache[cmd] = c.list.Back()
 	}
 miss:
 	c.mu.Unlock()
@@ -149,8 +148,8 @@ miss:
 func (c *lru) Update(key, cmd string, value RedisMessage, pttl int64) {
 	var ch chan struct{}
 	c.mu.Lock()
-	if store, ok := c.store[key]; ok {
-		if ele, ok := store.cache[cmd]; ok {
+	if kc, ok := c.store[key]; ok {
+		if ele, ok := kc.cache[cmd]; ok {
 			if e := ele.Value.(*entry); e.val.typ == 0 {
 				e.val = value
 				e.size = entryBaseSize + 2*(len(key)+len(cmd)) + value.approximateSize()
@@ -161,9 +160,9 @@ func (c *lru) Update(key, cmd string, value RedisMessage, pttl int64) {
 			ele = c.list.Front()
 			for c.size > c.max && ele != nil {
 				if e := ele.Value.(*entry); e.val.typ != 0 { // do not delete pending entries
-					store := c.store[e.key]
-					if delete(store.cache, e.cmd); len(store.cache) == 0 {
-						delete(c.store, e.key)
+					kc := e.kc
+					if delete(kc.cache, e.cmd); len(kc.cache) == 0 {
+						delete(c.store, kc.key)
 					}
 					c.list.Remove(ele)
 					c.size -= e.size
@@ -173,8 +172,8 @@ func (c *lru) Update(key, cmd string, value RedisMessage, pttl int64) {
 		}
 		if pttl >= 0 {
 			// server side ttl should only shorten client side ttl
-			if ttl := time.Now().Add(time.Duration(pttl) * time.Millisecond); ttl.Before(store.ttl) {
-				store.ttl = ttl
+			if ttl := time.Now().Add(time.Duration(pttl) * time.Millisecond); ttl.Before(kc.ttl) {
+				kc.ttl = ttl
 			}
 		}
 	}
@@ -184,16 +183,15 @@ func (c *lru) Update(key, cmd string, value RedisMessage, pttl int64) {
 	}
 }
 
-func (c *lru) Cancel(key, cmd string, val RedisMessage, err error) {
+func (c *lru) Cancel(key, cmd string, err error) {
 	var ch chan struct{}
 	c.mu.Lock()
-	if store, ok := c.store[key]; ok {
-		if ele, ok := store.cache[cmd]; ok {
+	if kc, ok := c.store[key]; ok {
+		if ele, ok := kc.cache[cmd]; ok {
 			if e := ele.Value.(*entry); e.val.typ == 0 {
-				e.val = val
 				e.err = err
 				ch = e.ch
-				if delete(store.cache, cmd); len(store.cache) == 0 {
+				if delete(kc.cache, cmd); len(kc.cache) == 0 {
 					delete(c.store, key)
 				}
 				c.list.Remove(ele)
@@ -208,8 +206,8 @@ func (c *lru) Cancel(key, cmd string, val RedisMessage, err error) {
 
 func (c *lru) GetTTL(key string) (ttl time.Duration) {
 	c.mu.Lock()
-	if store, ok := c.store[key]; ok && len(store.cache) != 0 {
-		ttl = store.ttl.Sub(time.Now())
+	if kc, ok := c.store[key]; ok && len(kc.cache) != 0 {
+		ttl = kc.ttl.Sub(time.Now())
 	}
 	if ttl <= 0 {
 		ttl = -2
@@ -218,11 +216,11 @@ func (c *lru) GetTTL(key string) (ttl time.Duration) {
 	return
 }
 
-func (c *lru) purge(key string, store *keyCache) {
-	if store != nil {
-		for cmd, ele := range store.cache {
+func (c *lru) purge(key string, kc *keyCache) {
+	if kc != nil {
+		for cmd, ele := range kc.cache {
 			if e := ele.Value.(*entry); e.val.typ != 0 { // do not delete pending entries
-				if delete(store.cache, cmd); len(store.cache) == 0 {
+				if delete(kc.cache, cmd); len(kc.cache) == 0 {
 					delete(c.store, key)
 				}
 				c.list.Remove(ele)
@@ -235,8 +233,8 @@ func (c *lru) purge(key string, store *keyCache) {
 func (c *lru) Delete(keys []RedisMessage) {
 	c.mu.Lock()
 	if keys == nil {
-		for key, store := range c.store {
-			c.purge(key, store)
+		for key, kc := range c.store {
+			c.purge(key, kc)
 		}
 	} else {
 		for _, k := range keys {
@@ -246,12 +244,12 @@ func (c *lru) Delete(keys []RedisMessage) {
 	c.mu.Unlock()
 }
 
-func (c *lru) FreeAndClose(notice RedisMessage) {
+func (c *lru) FreeAndClose(err error) {
 	c.mu.Lock()
-	for _, store := range c.store {
-		for _, ele := range store.cache {
+	for _, kc := range c.store {
+		for _, ele := range kc.cache {
 			if e := ele.Value.(*entry); e.val.typ == 0 {
-				e.val = notice
+				e.err = err
 				close(e.ch)
 			}
 		}

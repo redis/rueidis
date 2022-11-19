@@ -141,10 +141,10 @@ func TestLRU(t *testing.T) {
 			t.Fatalf("got unexpected value from the second GetOrPrepare: %v %v", v, entry)
 		}
 
-		lru.FreeAndClose(RedisMessage{typ: '-', string: "closed"})
+		lru.FreeAndClose(ErrDoCacheAborted)
 
-		if resp, _ := entry.Wait(context.Background()); resp.typ != '-' || resp.string != "closed" {
-			t.Fatalf("got unexpected value after FreeAndClose: %v", resp)
+		if _, err := entry.Wait(context.Background()); err != ErrDoCacheAborted {
+			t.Fatalf("got unexpected value after FreeAndClose: %v", err)
 		}
 
 		lru.Update("1", "GET", RedisMessage{typ: '+', string: "this Update should have no effect"}, PTTL)
@@ -169,10 +169,10 @@ func TestLRU(t *testing.T) {
 		err := errors.New("any")
 
 		go func() {
-			lru.Cancel("1", "GET", RedisMessage{typ: 1}, err)
+			lru.Cancel("1", "GET", err)
 		}()
 
-		if v, err2 := entry.Wait(context.Background()); v.typ != 1 || err2 != err {
+		if _, err2 := entry.Wait(context.Background()); err2 != err {
 			t.Fatalf("got unexpected value from the entry.Wait(): %v %v", err, err2)
 		}
 	})
