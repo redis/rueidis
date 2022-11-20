@@ -15,3 +15,8 @@ docker-compose down -v
 if [ ! -z "$CC_TEST_REPORTER_ID" ]; then
   ./cc-test-reporter after-build -p $(go list -m)
 fi
+
+if [ ! -z "$CODECOV_TOKEN" ]; then
+  cp c.out coverage.txt
+  bash <(curl -s https://codecov.io/bash)
+fi
