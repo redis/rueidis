@@ -30,6 +30,17 @@ func TestMatch_CacheableTTL(t *testing.T) {
 	}
 }
 
+func TestMatch_Other(t *testing.T) {
+	if m := Match("GET", "k"); m.Matches(1) {
+		t.Fatalf("unexpected matched %s", m.String())
+	}
+	if m := Match("GET", "k"); m.Matches([]cmds.Completed{
+		cmds.NewBuilder(cmds.NoSlot).Get().Key("k").Build(), // https://github.com/rueian/rueidis/issues/120
+	}) {
+		t.Fatalf("unexpected matched %s", m.String())
+	}
+}
+
 func TestMatch_Format(t *testing.T) {
 	matcher := Match("GET", "t")
 	if !strings.Contains(matcher.String(), "GET t") {

@@ -94,7 +94,7 @@ retry:
 	if c.retry && c.isRetryable(resp.NonRedisError(), ctx) {
 		goto retry
 	}
-	if resp.NonRedisError() == nil {
+	if err := resp.NonRedisError(); err == nil || err == ErrDoCacheAborted {
 		cmds.Put(cmd.CommandSlice())
 	}
 	return resp
@@ -114,7 +114,7 @@ retry:
 		}
 	}
 	for i, cmd := range multi {
-		if resps[i].NonRedisError() == nil {
+		if err := resps[i].NonRedisError(); err == nil || err == ErrDoCacheAborted {
 			cmds.Put(cmd.Cmd.CommandSlice())
 		}
 	}
@@ -346,6 +346,7 @@ func newSentinelOpt(opt *ClientOption) *ClientOption {
 	o.ClientName = o.Sentinel.ClientName
 	o.Dialer = o.Sentinel.Dialer
 	o.TLSConfig = o.Sentinel.TLSConfig
+	o.SelectDB = 0 // https://github.com/rueian/rueidis/issues/138
 	return &o
 }
 
