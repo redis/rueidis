@@ -13,10 +13,26 @@ import (
 var _ rueidis.Client = (*Client)(nil)
 var _ rueidis.DedicatedClient = (*DedicatedClient)(nil)
 
+// ClientOption is optional function parameter for NewClient
+type ClientOption func(c any)
+
+// WithSlotCheck enables the command builder of Client to check if the command built across multiple slots and then panic
+func WithSlotCheck() ClientOption {
+	return func(c any) {
+		if cc, ok := c.(*Client); ok {
+			cc.slot = cmds.InitSlot
+		}
+		if cc, ok := c.(*DedicatedClient); ok {
+			cc.slot = cmds.InitSlot
+		}
+	}
+}
+
 // Client is a mock of Client interface.
 type Client struct {
 	ctrl     *gomock.Controller
 	recorder *ClientMockRecorder
+	slot     uint16
 }
 
 // ClientMockRecorder is the mock recorder for Client.
@@ -25,9 +41,12 @@ type ClientMockRecorder struct {
 }
 
 // NewClient creates a new mock instance.
-func NewClient(ctrl *gomock.Controller) *Client {
-	mock := &Client{ctrl: ctrl}
+func NewClient(ctrl *gomock.Controller, options ...ClientOption) *Client {
+	mock := &Client{ctrl: ctrl, slot: cmds.NoSlot}
 	mock.recorder = &ClientMockRecorder{mock}
+	for _, opt := range options {
+		opt(mock)
+	}
 	return mock
 }
 
@@ -38,7 +57,7 @@ func (m *Client) EXPECT() *ClientMockRecorder {
 
 // B mocks base method.
 func (m *Client) B() cmds.Builder {
-	return cmds.NewBuilder(cmds.InitSlot)
+	return cmds.NewBuilder(m.slot)
 }
 
 // Close mocks base method.
@@ -180,6 +199,7 @@ func (mr *ClientMockRecorder) Receive(arg0, arg1, arg2 interface{}) *gomock.Call
 type DedicatedClient struct {
 	ctrl     *gomock.Controller
 	recorder *DedicatedClientMockRecorder
+	slot     uint16
 }
 
 // DedicatedClientMockRecorder is the mock recorder for DedicatedClient.
@@ -188,9 +208,12 @@ type DedicatedClientMockRecorder struct {
 }
 
 // NewDedicatedClient creates a new mock instance.
-func NewDedicatedClient(ctrl *gomock.Controller) *DedicatedClient {
-	mock := &DedicatedClient{ctrl: ctrl}
+func NewDedicatedClient(ctrl *gomock.Controller, options ...ClientOption) *DedicatedClient {
+	mock := &DedicatedClient{ctrl: ctrl, slot: cmds.NoSlot}
 	mock.recorder = &DedicatedClientMockRecorder{mock}
+	for _, opt := range options {
+		opt(mock)
+	}
 	return mock
 }
 
@@ -201,7 +224,7 @@ func (m *DedicatedClient) EXPECT() *DedicatedClientMockRecorder {
 
 // B mocks base method.
 func (m *DedicatedClient) B() cmds.Builder {
-	return cmds.NewBuilder(cmds.InitSlot)
+	return cmds.NewBuilder(m.slot)
 }
 
 // Close mocks base method.

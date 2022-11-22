@@ -168,3 +168,30 @@ func TestNewDedicatedClient(t *testing.T) {
 		})
 	}
 }
+
+func TestNewClientAcrossSlot(t *testing.T) {
+	t.Run("Default", func(t *testing.T) {
+		cc := NewClient(nil)
+		cc.B().Del().Key("{1}", "{2}").Build() // should not panic
+		dc := NewDedicatedClient(nil)
+		dc.B().Del().Key("{1}", "{2}").Build() // should not panic
+	})
+	t.Run("Enable Slot Check", func(t *testing.T) {
+		defer func() {
+			if msg := recover().(string); msg != "multi key command with different key slots are not allowed" {
+				t.Fail()
+			}
+		}()
+		cc := NewClient(nil, WithSlotCheck())
+		cc.B().Del().Key("{1}", "{2}").Build() // should panic
+	})
+	t.Run("Enable Slot Check", func(t *testing.T) {
+		defer func() {
+			if msg := recover().(string); msg != "multi key command with different key slots are not allowed" {
+				t.Fail()
+			}
+		}()
+		cc := NewDedicatedClient(nil, WithSlotCheck())
+		cc.B().Del().Key("{1}", "{2}").Build() // should panic
+	})
+}
