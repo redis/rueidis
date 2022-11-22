@@ -47,7 +47,6 @@ type subs struct {
 
 type chs struct {
 	sub map[int]*sub
-	cnf bool
 }
 
 type sub struct {
@@ -77,7 +76,7 @@ func (s *subs) Subscribe(channels []string) (ch chan PubSubMessage, cancel func(
 			c := s.chs[channel].sub
 			if c == nil {
 				c = make(map[int]*sub)
-				s.chs[channel] = chs{sub: c, cnf: false}
+				s.chs[channel] = chs{sub: c}
 			}
 			c[id] = sb
 		}
@@ -107,29 +106,6 @@ func (s *subs) remove(id int) {
 		close(sb.ch)
 		delete(s.sub, id)
 	}
-}
-
-func (s *subs) Confirm(channel string) {
-	s.mu.Lock()
-	if s.chs != nil {
-		c := s.chs[channel]
-		c.cnf = true
-		s.chs[channel] = c
-	}
-	s.mu.Unlock()
-}
-
-func (s *subs) Confirmed() (count int) {
-	s.mu.RLock()
-	if s.chs != nil {
-		for _, c := range s.chs {
-			if c.cnf {
-				count++
-			}
-		}
-	}
-	s.mu.RUnlock()
-	return
 }
 
 func (s *subs) Unsubscribe(channel string) {
