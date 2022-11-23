@@ -325,7 +325,8 @@ func (p *pipe) _backgroundRead() (err error) {
 		ff    int // fulfilled count
 		skip  int // skip rest push messages
 		ver   = p.version
-		pr    bool // push reply
+		prply bool // push reply
+		unsub bool // unsubscribe notification
 		r2ps  = p.r2ps
 	)
 
@@ -344,12 +345,13 @@ func (p *pipe) _backgroundRead() (err error) {
 			return
 		}
 		if msg.typ == '>' || (r2ps && len(msg.values) != 0 && msg.values[0].string != "pong") {
-			if pr = p.handlePush(msg.values); !pr {
+			if prply, unsub = p.handlePush(msg.values); !prply {
 				continue
 			}
 			if skip > 0 {
 				skip--
-				pr = false
+				prply = false
+				unsub = false
 				continue
 			}
 		} else if ver == 6 && len(msg.values) != 0 {
@@ -399,8 +401,11 @@ func (p *pipe) _backgroundRead() (err error) {
 				cond.L.Unlock()
 				// Redis will send sunsubscribe notification proactively in the event of slot migration.
 				// We should ignore them and go fetch next message.
-				if pr && msg.values[0].string == "sunsubscribe" {
-					pr = false
+				// We also treat all the other unsubscribe notifications just like sunsubscribe,
+				// so that we don't need to track how many channels we have subscribed to deal with wildcard unsubscribe command
+				if unsub {
+					prply = false
+					unsub = false
 					continue
 				}
 				panic(protocolbug)
@@ -409,28 +414,22 @@ func (p *pipe) _backgroundRead() (err error) {
 				multi = ones
 			}
 		}
-		if pr {
-			pr = false
+		if prply {
 			// Redis will send sunsubscribe notification proactively in the event of slot migration.
 			// We should ignore them and go fetch next message.
-			if msg.values[0].string == "sunsubscribe" && (!multi[ff].NoReply() || multi[ff].Commands()[0] != "SUNSUBSCRIBE") {
+			// We also treat all the other unsubscribe notifications just like sunsubscribe,
+			// so that we don't need to track how many channels we have subscribed to deal with wildcard unsubscribe command
+			if unsub && (!multi[ff].NoReply() || !strings.HasSuffix(multi[ff].Commands()[0], "UNSUBSCRIBE")) {
+				prply = false
+				unsub = false
 				continue
 			}
+			prply = false
+			unsub = false
 			if !multi[ff].NoReply() {
 				panic(protocolbug)
 			}
-			if len(multi[ff].Commands()) == 1 { // wildcard unsubscribe
-				switch multi[ff].Commands()[0] {
-				case "UNSUBSCRIBE":
-					skip = p.nsubs.Confirmed()
-				case "PUNSUBSCRIBE":
-					skip = p.psubs.Confirmed()
-				case "SUNSUBSCRIBE":
-					skip = p.ssubs.Confirmed()
-				}
-			} else {
-				skip = len(multi[ff].Commands()) - 2
-			}
+			skip = len(multi[ff].Commands()) - 2
 			msg = RedisMessage{} // override successful subscribe/unsubscribe response to empty
 		}
 		ch <- newResult(msg, err)
@@ -469,7 +468,7 @@ func (p *pipe) _backgroundPing(stop <-chan struct{}) (err error) {
 	return err
 }
 
-func (p *pipe) handlePush(values []RedisMessage) (reply bool) {
+func (p *pipe) handlePush(values []RedisMessage) (reply bool, unsubscribe bool) {
 	if len(values) < 2 {
 		return
 	}
@@ -515,39 +514,26 @@ func (p *pipe) handlePush(values []RedisMessage) (reply bool) {
 		if len(values) >= 3 {
 			p.pshks.Load().(*pshks).hooks.OnSubscription(PubSubSubscription{Kind: values[0].string, Channel: values[1].string, Count: values[2].integer})
 		}
-		return true
+		return true, true
 	case "punsubscribe":
 		p.psubs.Unsubscribe(values[1].string)
 		if len(values) >= 3 {
 			p.pshks.Load().(*pshks).hooks.OnSubscription(PubSubSubscription{Kind: values[0].string, Channel: values[1].string, Count: values[2].integer})
 		}
-		return true
+		return true, true
 	case "sunsubscribe":
 		p.ssubs.Unsubscribe(values[1].string)
 		if len(values) >= 3 {
 			p.pshks.Load().(*pshks).hooks.OnSubscription(PubSubSubscription{Kind: values[0].string, Channel: values[1].string, Count: values[2].integer})
 		}
-		return true
-	case "subscribe":
-		p.nsubs.Confirm(values[1].string)
+		return true, true
+	case "subscribe", "psubscribe", "ssubscribe":
 		if len(values) >= 3 {
 			p.pshks.Load().(*pshks).hooks.OnSubscription(PubSubSubscription{Kind: values[0].string, Channel: values[1].string, Count: values[2].integer})
 		}
-		return true
-	case "psubscribe":
-		p.psubs.Confirm(values[1].string)
-		if len(values) >= 3 {
-			p.pshks.Load().(*pshks).hooks.OnSubscription(PubSubSubscription{Kind: values[0].string, Channel: values[1].string, Count: values[2].integer})
-		}
-		return true
-	case "ssubscribe":
-		p.ssubs.Confirm(values[1].string)
-		if len(values) >= 3 {
-			p.pshks.Load().(*pshks).hooks.OnSubscription(PubSubSubscription{Kind: values[0].string, Channel: values[1].string, Count: values[2].integer})
-		}
-		return true
+		return true, false
 	}
-	return false
+	return false, false
 }
 func (p *pipe) _r2pipe() (r2p *pipe) {
 	p.r2mu.Lock()

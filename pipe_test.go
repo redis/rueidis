@@ -1842,10 +1842,6 @@ func TestPubSub(t *testing.T) {
 		ctx := context.Background()
 		p, mock, cancel, _ := setup(t, ClientOption{})
 
-		p.psubs.Confirm("1")
-		p.ssubs.Confirm("2")
-		p.ssubs.Confirm("3")
-
 		commands := []cmds.Completed{
 			builder.Unsubscribe().Build(),
 			builder.Punsubscribe().Build(),
@@ -1905,104 +1901,109 @@ func TestPubSub(t *testing.T) {
 		cancel()
 	})
 
-	t.Run("PubSub Proactive SSUNSCRIBE", func(t *testing.T) {
-		ctx := context.Background()
-		p, mock, cancel, _ := setup(t, ClientOption{})
+	t.Run("PubSub Proactive UNSUBSCRIBE/PUNSUBSCRIBE/SUNSCRIBE", func(t *testing.T) {
+		for _, command := range []string{
+			"unsubscribe",
+			"punsubscribe",
+			"sunsubscribe",
+		} {
+			command := command
+			t.Run(command, func(t *testing.T) {
+				ctx := context.Background()
+				p, mock, cancel, _ := setup(t, ClientOption{})
 
-		p.ssubs.Confirm("0")
-		p.ssubs.Confirm("1")
-		p.ssubs.Confirm("2")
+				commands := []cmds.Completed{
+					builder.Sunsubscribe().Build(),
+					builder.Ssubscribe().Channel("3").Build(),
+				}
 
-		commands := []cmds.Completed{
-			builder.Sunsubscribe().Build(),
-			builder.Ssubscribe().Channel("3").Build(),
+				replies := [][]RedisMessage{
+					{
+						{ // proactive unsubscribe before user unsubscribe
+							typ: '>',
+							values: []RedisMessage{
+								{typ: '+', string: command},
+								{typ: '+', string: "1"},
+								{typ: ':', integer: 0},
+							},
+						},
+						{ // proactive unsubscribe before user unsubscribe
+							typ: '>',
+							values: []RedisMessage{
+								{typ: '+', string: command},
+								{typ: '+', string: "2"},
+								{typ: ':', integer: 0},
+							},
+						},
+						{ // user unsubscribe
+							typ: '>',
+							values: []RedisMessage{
+								{typ: '+', string: command},
+								{typ: '_'},
+								{typ: ':', integer: 0},
+							},
+						},
+						{ // proactive unsubscribe after user unsubscribe
+							typ: '>',
+							values: []RedisMessage{
+								{typ: '+', string: command},
+								{typ: '_'},
+								{typ: ':', integer: 0},
+							},
+						},
+					},
+					{
+						{ // user ssubscribe
+							typ: '>',
+							values: []RedisMessage{
+								{typ: '+', string: "ssubscribe"},
+								{typ: '+', string: "3"},
+								{typ: ':', integer: 0},
+							},
+						},
+						{ // proactive unsubscribe after user ssubscribe
+							typ: '>',
+							values: []RedisMessage{
+								{typ: '+', string: command},
+								{typ: '+', string: "3"},
+								{typ: ':', integer: 0},
+							},
+						},
+					},
+				}
+
+				p.background()
+
+				// proactive unsubscribe before other commands
+				mock.Expect().Reply(RedisMessage{ // proactive unsubscribe before user unsubscribe
+					typ: '>',
+					values: []RedisMessage{
+						{typ: '+', string: command},
+						{typ: '+', string: "0"},
+						{typ: ':', integer: 0},
+					},
+				})
+
+				time.Sleep(time.Millisecond * 100)
+
+				for i, cmd1 := range commands {
+					cmd2 := builder.Get().Key(strconv.Itoa(i)).Build()
+					go func() {
+						mock.Expect(cmd1.Commands()...).Reply(replies[i]...).Expect(cmd2.Commands()...).ReplyString(strconv.Itoa(i))
+					}()
+					if err := p.Do(ctx, cmd1).Error(); err != nil {
+						t.Fatalf("unexpected err %v", err)
+					}
+					if v, err := p.Do(ctx, cmd2).ToString(); err != nil || v != strconv.Itoa(i) {
+						t.Fatalf("unexpected val %v %v", v, err)
+					}
+				}
+				cancel()
+			})
 		}
-
-		replies := [][]RedisMessage{
-			{
-				{ // proactive sunsubscribe before user sunsubscribe
-					typ: '>',
-					values: []RedisMessage{
-						{typ: '+', string: "sunsubscribe"},
-						{typ: '+', string: "1"},
-						{typ: ':', integer: 0},
-					},
-				},
-				{ // proactive sunsubscribe before user sunsubscribe
-					typ: '>',
-					values: []RedisMessage{
-						{typ: '+', string: "sunsubscribe"},
-						{typ: '+', string: "2"},
-						{typ: ':', integer: 0},
-					},
-				},
-				{ // user sunsubscribe
-					typ: '>',
-					values: []RedisMessage{
-						{typ: '+', string: "sunsubscribe"},
-						{typ: '_'},
-						{typ: ':', integer: 0},
-					},
-				},
-				{ // proactive sunsubscribe after user sunsubscribe
-					typ: '>',
-					values: []RedisMessage{
-						{typ: '+', string: "sunsubscribe"},
-						{typ: '_'},
-						{typ: ':', integer: 0},
-					},
-				},
-			},
-			{
-				{ // user ssubscribe
-					typ: '>',
-					values: []RedisMessage{
-						{typ: '+', string: "ssubscribe"},
-						{typ: '+', string: "3"},
-						{typ: ':', integer: 0},
-					},
-				},
-				{ // proactive sunsubscribe after user ssubscribe
-					typ: '>',
-					values: []RedisMessage{
-						{typ: '+', string: "sunsubscribe"},
-						{typ: '+', string: "3"},
-						{typ: ':', integer: 0},
-					},
-				},
-			},
-		}
-
-		p.background()
-
-		// proactive sunsubscribe before other commands
-		mock.Expect().Reply(RedisMessage{ // proactive sunsubscribe before user sunsubscribe
-			typ: '>',
-			values: []RedisMessage{
-				{typ: '+', string: "sunsubscribe"},
-				{typ: '+', string: "0"},
-				{typ: ':', integer: 0},
-			},
-		})
-
-		time.Sleep(time.Millisecond * 100)
-
-		for i, cmd1 := range commands {
-			cmd2 := builder.Get().Key(strconv.Itoa(i)).Build()
-			go func() {
-				mock.Expect(cmd1.Commands()...).Reply(replies[i]...).Expect(cmd2.Commands()...).ReplyString(strconv.Itoa(i))
-			}()
-			if err := p.Do(ctx, cmd1).Error(); err != nil {
-				t.Fatalf("unexpected err %v", err)
-			}
-			if v, err := p.Do(ctx, cmd2).ToString(); err != nil || v != strconv.Itoa(i) {
-				t.Fatalf("unexpected val %v %v", v, err)
-			}
-		}
-		cancel()
 	})
 
-	t.Run("PubSub Unexpected Subscribe/Unsubscribe", func(t *testing.T) {
+	t.Run("PubSub Unexpected Subscribe", func(t *testing.T) {
 		var shouldPanic = func(push string) (pass bool) {
 			defer func() { pass = recover() == protocolbug }()
 
@@ -2023,11 +2024,8 @@ func TestPubSub(t *testing.T) {
 		}
 		for _, push := range []string{
 			"subscribe",
-			"unsubscribe",
 			"psubscribe",
-			"punsubscribe",
 			"ssubscribe",
-			// no unexpected sunsubscribe, because redis will send sunsubscribe proactively when slot changes
 		} {
 			if !shouldPanic(push) {
 				t.Fatalf("should panic on protocolbug")
