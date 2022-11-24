@@ -3,7 +3,7 @@
 Due to the design of the command builder, it is impossible for users to mock `rueidis.Client` for testing.
 
 Therefore, rueidis provides an implemented one, based on the `gomock`, with some helpers
-to make user writing tests more easily, including command matcher `mock.Match` and `mock.Result` for faking redis responses.
+to make user writing tests more easily, including command matcher `mock.Match`, `mock.MatchFn` and `mock.Result` for faking redis responses.
 
 ## Examples
 

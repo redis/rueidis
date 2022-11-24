@@ -30,6 +30,31 @@ func (c *cmdMatcher) String() string {
 	return fmt.Sprintf("redis command %v", c.expect)
 }
 
+func MatchFn(fn func(cmd []string) bool, description ...string) gomock.Matcher {
+	return gomock.GotFormatterAdapter(
+		gomock.GotFormatterFunc(func(i interface{}) string {
+			return format(i)
+		}),
+		&fnMatcher{matcher: fn, description: description},
+	)
+}
+
+type fnMatcher struct {
+	matcher     func(cmd []string) bool
+	description []string
+}
+
+func (c *fnMatcher) Matches(x interface{}) bool {
+	if cmd, ok := commands(x).([]string); ok {
+		return c.matcher(cmd)
+	}
+	return false
+}
+
+func (c *fnMatcher) String() string {
+	return fmt.Sprintf("matches %v", strings.Join(c.description, " "))
+}
+
 func format(v interface{}) string {
 	if _, ok := v.([]interface{}); !ok {
 		v = []interface{}{v}
