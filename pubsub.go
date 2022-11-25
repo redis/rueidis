@@ -58,11 +58,13 @@ type sub struct {
 }
 
 func (s *subs) Publish(channel string, msg PubSubMessage) {
-	s.mu.RLock()
-	for _, sb := range s.chs[channel].sub {
-		sb.ch <- msg
+	if atomic.LoadUint64(&s.cnt) != 0 {
+		s.mu.RLock()
+		for _, sb := range s.chs[channel].sub {
+			sb.ch <- msg
+		}
+		s.mu.RUnlock()
 	}
-	s.mu.RUnlock()
 }
 
 func (s *subs) Subscribe(channels []string) (ch chan PubSubMessage, cancel func()) {
