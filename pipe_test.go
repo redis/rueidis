@@ -3045,3 +3045,30 @@ func TestErrorPipe(t *testing.T) {
 		t.Fatalf("unexpected err %v", err)
 	}
 }
+
+func TestCloseHook(t *testing.T) {
+	t.Run("normal close", func(t *testing.T) {
+		var flag int32
+		p, _, cancel, _ := setup(t, ClientOption{})
+		p.SetOnCloseHook(func() {
+			atomic.StoreInt32(&flag, 1)
+		})
+		cancel()
+		if atomic.LoadInt32(&flag) != 1 {
+			t.Fatalf("hook not be invoked")
+		}
+	})
+	t.Run("disconnect", func(t *testing.T) {
+		var flag int32
+		p, _, _, closeConn := setup(t, ClientOption{})
+		p.SetOnCloseHook(func() {
+			atomic.StoreInt32(&flag, 1)
+		})
+		p.background()
+		closeConn()
+		for atomic.LoadInt32(&flag) != 1 {
+			time.Sleep(time.Millisecond * 100)
+			t.Log("wait close hook to be invoked")
+		}
+	})
+}

@@ -679,6 +679,35 @@ func TestMuxDelegation(t *testing.T) {
 	})
 }
 
+//gocyclo:ignore
+func TestMuxRegisterCloseHook(t *testing.T) {
+	var hook atomic.Value
+	m, checkClean := setupMux([]*mockWire{
+		{
+			DoFn: func(cmd cmds.Completed) RedisResult {
+				return newResult(RedisMessage{typ: '+', string: "PONG1"}, nil)
+			},
+			SetOnCloseHookFn: func(fn func()) {
+				hook.Store(fn)
+			},
+		},
+		{
+			DoFn: func(cmd cmds.Completed) RedisResult {
+				return newResult(RedisMessage{typ: '+', string: "PONG2"}, nil)
+			},
+		},
+	})
+	defer checkClean(t)
+	defer m.Close()
+	if resp, _ := m.Do(context.Background(), cmds.NewCompleted([]string{"PING"})).ToString(); resp != "PONG1" {
+		t.Fatalf("unexpected response %v", resp)
+	}
+	hook.Load().(func())() // invoke the hook, this should cause the first wire be discarded
+	if resp, _ := m.Do(context.Background(), cmds.NewCompleted([]string{"PING"})).ToString(); resp != "PONG2" {
+		t.Fatalf("unexpected response %v", resp)
+	}
+}
+
 func BenchmarkClientSideCaching(b *testing.B) {
 	setup := func(b *testing.B) *mux {
 		c := makeMux("127.0.0.1:6379", &ClientOption{CacheSizeEachConn: DefaultCacheBytes}, func(dst string, opt *ClientOption) (conn net.Conn, err error) {
@@ -723,6 +752,7 @@ type mockWire struct {
 
 	CleanSubscriptionsFn func()
 	SetPubSubHooksFn     func(hooks PubSubHooks) <-chan error
+	SetOnCloseHookFn     func(fn func())
 }
 
 func (m *mockWire) Do(ctx context.Context, cmd cmds.Completed) RedisResult {
@@ -772,6 +802,13 @@ func (m *mockWire) SetPubSubHooks(hooks PubSubHooks) <-chan error {
 		return m.SetPubSubHooksFn(hooks)
 	}
 	return nil
+}
+
+func (m *mockWire) SetOnCloseHook(fn func()) {
+	if m.SetOnCloseHookFn != nil {
+		m.SetOnCloseHookFn(fn)
+	}
+	return
 }
 
 func (m *mockWire) Info() map[string]RedisMessage {

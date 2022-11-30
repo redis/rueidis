@@ -32,6 +32,7 @@ type wire interface {
 
 	CleanSubscriptions()
 	SetPubSubHooks(hooks PubSubHooks) <-chan error
+	SetOnCloseHook(fn func())
 }
 
 var _ wire = (*pipe)(nil)
@@ -57,6 +58,7 @@ type pipe struct {
 	psubs *subs
 	ssubs *subs
 	pshks atomic.Value
+	clhks atomic.Value
 	error atomic.Value
 
 	onInvalidations func([]RedisMessage)
@@ -100,6 +102,7 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 		p.cache = newLRU(option.CacheSizeEachConn)
 	}
 	p.pshks.Store(emptypshks)
+	p.clhks.Store(emptyclhks)
 
 	helloCmd := []string{"HELLO", "3"}
 	if option.Password != "" && option.Username == "" {
@@ -206,6 +209,7 @@ func (p *pipe) _background() {
 		p.error.CompareAndSwap(nil, &errs{error: err})
 		atomic.CompareAndSwapInt32(&p.state, 1, 2) // stop accepting new requests
 		_ = p.conn.Close()                         // force both read & write goroutine to exit
+		p.clhks.Load().(func())()
 	}
 	wait := make(chan struct{})
 	if p.timeout > 0 && p.pinggap > 0 {
@@ -640,6 +644,10 @@ func (p *pipe) SetPubSubHooks(hooks PubSubHooks) <-chan error {
 	}
 	atomic.AddInt32(&p.waits, -1)
 	return ch
+}
+
+func (p *pipe) SetOnCloseHook(fn func()) {
+	p.clhks.Store(fn)
 }
 
 func (p *pipe) Info() map[string]RedisMessage {
@@ -1149,10 +1157,13 @@ var emptypshks = &pshks{
 	close: nil,
 }
 
+var emptyclhks = func() {}
+
 func deadFn() *pipe {
 	dead := &pipe{state: 3}
 	dead.error.Store(errClosing)
 	dead.pshks.Store(emptypshks)
+	dead.clhks.Store(emptyclhks)
 	return dead
 }
 
@@ -1160,6 +1171,7 @@ func epipeFn(err error) *pipe {
 	dead := &pipe{state: 3}
 	dead.error.Store(&errs{error: err})
 	dead.pshks.Store(emptypshks)
+	dead.clhks.Store(emptyclhks)
 	return dead
 }
 
