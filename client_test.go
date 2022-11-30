@@ -129,6 +129,10 @@ func (m *mockConn) SetPubSubHooks(_ PubSubHooks) <-chan error {
 	panic("not implemented")
 }
 
+func (m *mockConn) SetOnCloseHook(fn func()) {
+	panic("not implemented")
+}
+
 func (m *mockConn) Info() map[string]RedisMessage {
 	if m.InfoFn != nil {
 		return m.InfoFn()

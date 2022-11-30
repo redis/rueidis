@@ -111,6 +111,9 @@ func (m *mux) _pipe(i uint16) (w wire, err error) {
 
 	if w = m.wire[i].Load().(wire); w == m.init {
 		if w = m.wireFn(); w != m.dead {
+			w.SetOnCloseHook(func() {
+				m.wire[i].CompareAndSwap(w, m.init)
+			})
 			m.wire[i].Store(w)
 		} else {
 			err = w.Error()
