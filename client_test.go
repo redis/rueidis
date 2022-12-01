@@ -129,7 +129,7 @@ func (m *mockConn) SetPubSubHooks(_ PubSubHooks) <-chan error {
 	panic("not implemented")
 }
 
-func (m *mockConn) SetOnCloseHook(fn func()) {
+func (m *mockConn) SetOnCloseHook(func(error)) {
 	panic("not implemented")
 }
 

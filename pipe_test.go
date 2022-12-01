@@ -3050,7 +3050,7 @@ func TestCloseHook(t *testing.T) {
 	t.Run("normal close", func(t *testing.T) {
 		var flag int32
 		p, _, cancel, _ := setup(t, ClientOption{})
-		p.SetOnCloseHook(func() {
+		p.SetOnCloseHook(func(error) {
 			atomic.StoreInt32(&flag, 1)
 		})
 		cancel()
@@ -3061,7 +3061,7 @@ func TestCloseHook(t *testing.T) {
 	t.Run("disconnect", func(t *testing.T) {
 		var flag int32
 		p, _, _, closeConn := setup(t, ClientOption{})
-		p.SetOnCloseHook(func() {
+		p.SetOnCloseHook(func(error) {
 			atomic.StoreInt32(&flag, 1)
 		})
 		p.background()
