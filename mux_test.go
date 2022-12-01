@@ -70,8 +70,8 @@ func TestNewMux(t *testing.T) {
 			Reply(RedisMessage{
 				typ: '%',
 				values: []RedisMessage{
-					{typ: '+', string: "key"},
-					{typ: '+', string: "value"},
+					{typ: '+', string: "proto"},
+					{typ: ':', integer: 3},
 				},
 			})
 		mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").

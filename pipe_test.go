@@ -137,6 +137,8 @@ func setup(t *testing.T, option ClientOption) (*pipe, *redisMock, func(), func()
 				values: []RedisMessage{
 					{typ: '+', string: "version"},
 					{typ: '+', string: "6.0.0"},
+					{typ: '+', string: "proto"},
+					{typ: ':', integer: 3},
 				},
 			})
 		if !option.DisableCache {
@@ -182,8 +184,11 @@ func TestNewPipe(t *testing.T) {
 		go func() {
 			mock.Expect("HELLO", "3", "AUTH", "default", "pa", "SETNAME", "cn").
 				Reply(RedisMessage{
-					typ:    '%',
-					values: []RedisMessage{{typ: '+', string: "key"}, {typ: '+', string: "value"}},
+					typ: '%',
+					values: []RedisMessage{
+						{typ: '+', string: "proto"},
+						{typ: ':', integer: 3},
+					},
 				})
 			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
 				ReplyString("OK")
@@ -210,8 +215,11 @@ func TestNewPipe(t *testing.T) {
 		go func() {
 			mock.Expect("HELLO", "3", "AUTH", "ua", "pa", "SETNAME", "cn").
 				Reply(RedisMessage{
-					typ:    '%',
-					values: []RedisMessage{{typ: '+', string: "key"}, {typ: '+', string: "value"}},
+					typ: '%',
+					values: []RedisMessage{
+						{typ: '+', string: "proto"},
+						{typ: ':', integer: 3},
+					},
 				})
 			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
 				ReplyString("OK")
@@ -239,8 +247,11 @@ func TestNewPipe(t *testing.T) {
 		go func() {
 			mock.Expect("HELLO", "3").
 				Reply(RedisMessage{
-					typ:    '%',
-					values: []RedisMessage{{typ: '+', string: "key"}, {typ: '+', string: "value"}},
+					typ: '%',
+					values: []RedisMessage{
+						{typ: '+', string: "proto"},
+						{typ: ':', integer: 3},
+					},
 				})
 			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN", "NOLOOP").
 				ReplyString("OK")
@@ -298,6 +309,33 @@ func TestNewRESP2Pipe(t *testing.T) {
 		if _, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{}); !errors.Is(err, ErrNoCache) {
 			t.Fatalf("unexpected err: %v", err)
 		}
+		mock.Close()
+		n1.Close()
+		n2.Close()
+	})
+	t.Run("With Hello Proto 2", func(t *testing.T) { // kvrocks version 2.2.0
+		n1, n2 := net.Pipe()
+		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2}
+		go func() {
+			mock.Expect("HELLO", "3").
+				Reply(RedisMessage{typ: '*', values: []RedisMessage{
+					{typ: '+', string: "server"},
+					{typ: '+', string: "redis"},
+					{typ: '+', string: "proto"},
+					{typ: ':', integer: 2},
+				}})
+		}()
+		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
+			DisableCache: true,
+		})
+		if err != nil {
+			t.Fatalf("pipe setup failed: %v", err)
+		}
+		if p.version >= 6 {
+			t.Fatalf("unexpected p.version: %v", p.version)
+		}
+		go func() { mock.Expect("QUIT").ReplyString("OK") }()
+		p.Close()
 		mock.Close()
 		n1.Close()
 		n2.Close()

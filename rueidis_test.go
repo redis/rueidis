@@ -37,8 +37,8 @@ func accept(t *testing.T, ln net.Listener) (*redisMock, error) {
 		Reply(RedisMessage{
 			typ: '%',
 			values: []RedisMessage{
-				{typ: '+', string: "key"},
-				{typ: '+', string: "value"},
+				{typ: '+', string: "proto"},
+				{typ: ':', integer: 3},
 			},
 		})
 	mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").

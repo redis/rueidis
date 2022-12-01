@@ -139,7 +139,7 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 	if !r2ps {
 		for i, r := range p.DoMulti(ctx, cmds.NewMultiCompleted(init)...) {
 			if i == 0 {
-				p.info, err = r.ToMap()
+				p.info, err = r.AsMap()
 			} else {
 				err = r.Error()
 			}
@@ -148,7 +148,7 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 					if !r2 && noHello.MatchString(re.string) {
 						r2 = true
 						continue
-					} else if strings.Contains(re.string, "wrong number of arguments for 'TRACKING'") {
+					} else if strings.Contains(re.string, "CLIENT") {
 						err = fmt.Errorf("%s: %w", re.string, ErrNoCache)
 					} else if r2 {
 						continue
@@ -158,6 +158,9 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 				return nil, err
 			}
 		}
+	}
+	if proto := p.info["proto"]; proto.integer < 3 {
+		r2 = true
 	}
 	if !r2 && !r2ps {
 		if ver, ok := p.info["version"]; ok {
