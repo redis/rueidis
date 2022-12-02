@@ -155,10 +155,10 @@ func testCluster(resp3 bool) {
 			Expect(kc).To(Equal(int64(1)))
 		})
 		It("ClusterCountFailureReports", func() {
-			Expect(adapter.ClusterCountFailureReports(ctx, "1").Err()).To(MatchError("ERR Unknown node 1"))
+			Expect(adapter.ClusterCountFailureReports(ctx, "1").Err()).To(MatchError("Unknown node 1"))
 		})
 		It("ClusterSlaves", func() {
-			Expect(adapter.ClusterSlaves(ctx, "1").Err()).To(MatchError("ERR Unknown node 1"))
+			Expect(adapter.ClusterSlaves(ctx, "1").Err()).To(MatchError("Unknown node 1"))
 		})
 	})
 }
@@ -211,7 +211,7 @@ func testAdapter(resp3 bool) {
 
 		It("should ClientKill", func() {
 			r := adapter.ClientKill(ctx, "1.1.1.1:1111")
-			Expect(r.Err()).To(MatchError("ERR No such client"))
+			Expect(r.Err()).To(MatchError("No such client"))
 			Expect(r.Val()).To(Equal(""))
 		})
 
@@ -1106,7 +1106,7 @@ func testAdapter(resp3 bool) {
 			Expect(set.Val()).To(Equal("OK"))
 
 			decr = adapter.Decr(ctx, "key")
-			Expect(decr.Err()).To(MatchError("ERR value is not an integer or out of range"))
+			Expect(decr.Err()).To(MatchError("value is not an integer or out of range"))
 			Expect(decr.Val()).To(Equal(int64(0)))
 		})
 
@@ -5840,14 +5840,14 @@ func testAdapterCache(resp3 bool) {
 			time.Sleep(2 * time.Second)
 		})
 		It("Config Rewrite", func() {
-			Expect(adapter.ConfigRewrite(ctx).Err()).To(MatchError("ERR The server is running without a config file"))
+			Expect(adapter.ConfigRewrite(ctx).Err()).To(MatchError("The server is running without a config file"))
 		})
 		It("DebugObject", func() {
-			Expect(adapter.DebugObject(ctx, "non").Err().Error()).To(HavePrefix("ERR DEBUG command not allowed."))
+			Expect(adapter.DebugObject(ctx, "non").Err().Error()).To(HavePrefix("DEBUG command not allowed."))
 		})
 		It("ReadOnly & ReadWrite", func() {
-			Expect(adapter.ReadOnly(ctx).Err()).To(MatchError("ERR This instance has cluster support disabled"))
-			Expect(adapter.ReadWrite(ctx).Err()).To(MatchError("ERR This instance has cluster support disabled"))
+			Expect(adapter.ReadOnly(ctx).Err()).To(MatchError("This instance has cluster support disabled"))
+			Expect(adapter.ReadWrite(ctx).Err()).To(MatchError("This instance has cluster support disabled"))
 		})
 	})
 

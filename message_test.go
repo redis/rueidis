@@ -467,6 +467,12 @@ func TestRedisMessage(t *testing.T) {
 			t.Fatal("IsNil fail")
 		}
 	})
+	t.Run("Trim ERR prefix", func(t *testing.T) {
+		// kvrocks: https://github.com/rueian/rueidis/issues/152#issuecomment-1333923750
+		if (&RedisMessage{typ: '-', string: "ERR no_prefix"}).Error().Error() != "no_prefix" {
+			t.Fatal("fail to trim ERR")
+		}
+	})
 	t.Run("ToInt64", func(t *testing.T) {
 		if _, err := (&RedisMessage{typ: '_'}).ToInt64(); err == nil {
 			t.Fatal("ToInt64 not failed as expected")

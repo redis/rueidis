@@ -293,4 +293,4 @@ func dial(dst string, opt *ClientOption) (conn net.Conn, err error) {
 	return conn, err
 }
 
-const redisErrMsgCommandNotAllow = "ERR command is not allowed"
+const redisErrMsgCommandNotAllow = "command is not allowed"

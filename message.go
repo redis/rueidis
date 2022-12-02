@@ -345,7 +345,12 @@ func (m *RedisMessage) IsMap() bool {
 
 // Error check if message is a redis error response, including nil response
 func (m *RedisMessage) Error() error {
-	if m.typ == '-' || m.typ == '_' || m.typ == '!' {
+	if m.typ == '_' {
+		return (*RedisError)(m)
+	}
+	if m.typ == '-' || m.typ == '!' {
+		// kvrocks: https://github.com/rueian/rueidis/issues/152#issuecomment-1333923750
+		m.string = strings.TrimPrefix(m.string, "ERR ")
 		return (*RedisError)(m)
 	}
 	return nil

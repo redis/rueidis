@@ -3,6 +3,7 @@ package rueidis
 import (
 	"context"
 	"math/rand"
+	"reflect"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -487,6 +488,31 @@ func testPubSub(t *testing.T, client Client) {
 	}
 }
 
+func testLua(t *testing.T, client Client) {
+	script := NewLuaScript("return {KEYS[1],ARGV[1]}")
+
+	keys := 1000
+	para := 4
+	kvs := make(map[string]string, keys)
+	for i := 0; i < keys; i++ {
+		kvs["m"+strconv.Itoa(i)] = strconv.FormatInt(rand.Int63(), 10)
+	}
+
+	t.Logf("testing lua with %d keys and %d parallelism\n", keys, para)
+	jobs, wait := parallel(para)
+	for k, v := range kvs {
+		k := k
+		v := v
+		jobs <- func() {
+			val, err := script.Exec(context.Background(), client, []string{k}, []string{v}).AsStrSlice()
+			if err != nil || !reflect.DeepEqual(val, []string{k, v}) {
+				t.Errorf("unexpected lua response %v %v", val, err)
+			}
+		}
+	}
+	wait()
+}
+
 func run(t *testing.T, client Client, cases ...func(*testing.T, Client)) {
 	wg := sync.WaitGroup{}
 	wg.Add(len(cases))
@@ -509,7 +535,7 @@ func TestSingleClientIntegration(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	run(t, client, testSETGETCSC, testMultiSETGETCSC, testBlockingZPOP, testBlockingXREAD, testPubSub)
+	run(t, client, testSETGETCSC, testMultiSETGETCSC, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
 	run(t, client, testFlush)
 
 	client.Close()
@@ -529,7 +555,7 @@ func TestSentinelClientIntegration(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	run(t, client, testSETGETCSC, testMultiSETGETCSC, testBlockingZPOP, testBlockingXREAD, testPubSub)
+	run(t, client, testSETGETCSC, testMultiSETGETCSC, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
 	run(t, client, testFlush)
 
 	client.Close()
@@ -545,7 +571,7 @@ func TestClusterClientIntegration(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	run(t, client, testSETGETCSC, testMultiSETGETCSC, testBlockingZPOP, testBlockingXREAD, testPubSub)
+	run(t, client, testSETGETCSC, testMultiSETGETCSC, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
 
 	client.Close()
 	time.Sleep(time.Second * 5) // wait background ping exit
@@ -561,7 +587,7 @@ func TestSingleClient5Integration(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testBlockingZPOP, testBlockingXREAD, testPubSub)
+	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
 
 	client.Close()
 	time.Sleep(time.Second * 5) // wait background ping exit
@@ -577,7 +603,7 @@ func TestCluster5ClientIntegration(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testBlockingZPOP, testBlockingXREAD, testPubSub)
+	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
 
 	client.Close()
 	time.Sleep(time.Second * 5) // wait background ping exit
@@ -596,7 +622,7 @@ func TestSentinel5ClientIntegration(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testBlockingZPOP, testBlockingXREAD, testPubSub)
+	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
 
 	client.Close()
 	time.Sleep(time.Second * 5) // wait background ping exit
@@ -611,7 +637,7 @@ func TestKeyDBSingleClientIntegration(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	run(t, client, testSETGETCSC, testMultiSETGETCSC, testBlockingZPOP, testBlockingXREAD, testPubSub)
+	run(t, client, testSETGETCSC, testMultiSETGETCSC, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
 	run(t, client, testFlush)
 
 	client.Close()
@@ -628,7 +654,7 @@ func TestDragonflyDBSingleClientIntegration(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testPubSub)
+	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testPubSub, testLua)
 
 	client.Close()
 	time.Sleep(time.Second * 5) // wait background ping exit
@@ -644,7 +670,7 @@ func TestKvrocksSingleClientIntegration(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testPubSub)
+	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testPubSub, testLua)
 	run(t, client, testFlush)
 
 	client.Close()
