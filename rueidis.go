@@ -116,6 +116,8 @@ type ClientOption struct {
 	DisableRetry bool
 	// DisableCache falls back Client.DoCache/Client.DoMultiCache to Client.Do/Client.DoMulti
 	DisableCache bool
+	// AlwaysPipelining makes rueidis.Client always pipeline redis commands even if they are not issued concurrently.
+	AlwaysPipelining bool
 }
 
 // SentinelOption contains MasterSet,

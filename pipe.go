@@ -168,9 +168,7 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 				p.version = int32(vv)
 			}
 		}
-		if p.onInvalidations = option.OnInvalidations; p.onInvalidations != nil {
-			p.background()
-		}
+		p.onInvalidations = option.OnInvalidations
 	} else {
 		if !option.DisableCache {
 			p.Close()
@@ -197,6 +195,9 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 			}
 		}
 		p.version = 5
+	}
+	if p.onInvalidations != nil || option.AlwaysPipelining {
+		p.background()
 	}
 	if p.timeout > 0 && p.pinggap > 0 {
 		go p.backgroundPing()
