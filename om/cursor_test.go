@@ -8,10 +8,10 @@ import (
 
 type Book struct {
 	Key   string `json:"key"   redis:",key"`
+	Loc   string `json:"loc"   redis:",loc"`
 	Ver   int64  `json:"ver"   redis:",ver"`
 	ID    int64  `json:"id"    redis:",id"`
 	Count int64  `json:"count" redis:",count"`
-	Loc   string `json:"loc"   redis:",loc"`
 }
 
 func TestAggregateCursor(t *testing.T) {

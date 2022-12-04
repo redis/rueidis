@@ -23,12 +23,12 @@ func init() {
 
 // LockerOption should be passed to NewLocker to construct a Locker
 type LockerOption struct {
-	// ClientOption is passed to rueidis.NewClient or LockerOption.ClientBuilder to build a rueidis.Client
-	ClientOption rueidis.ClientOption
 	// ClientBuilder can be used to modify rueidis.Client used by Locker
 	ClientBuilder func(option rueidis.ClientOption) (rueidis.Client, error)
 	// KeyPrefix is the prefix of redis key for locks. Default value is "rueidislock".
 	KeyPrefix string
+	// ClientOption is passed to rueidis.NewClient or LockerOption.ClientBuilder to build a rueidis.Client
+	ClientOption rueidis.ClientOption
 	// KeyValidity is the validity duration of locks and will be extended periodically by the ExtendInterval. Default value is 5s.
 	KeyValidity time.Duration
 	// ExtendInterval is the interval to extend KeyValidity. Default value is 1s.
@@ -102,23 +102,21 @@ func NewLocker(option LockerOption) (Locker, error) {
 
 type locker struct {
 	client   rueidis.Client
+	gates    map[string]*gate
 	prefix   string
 	validity time.Duration
 	interval time.Duration
 	timeout  time.Duration
+	mu       sync.RWMutex
 	majority int32
 	totalcnt int32
-
-	mu    sync.RWMutex
-	gates map[string]*gate
-
-	noloop bool
+	noloop   bool
 }
 
 type gate struct {
-	w   int
 	ch  chan struct{}
 	csc []chan struct{}
+	w   int
 }
 
 func makegate(size int32) *gate {

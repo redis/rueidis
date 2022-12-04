@@ -42,10 +42,10 @@ func newSubs() *subs {
 }
 
 type subs struct {
-	mu  sync.RWMutex
 	chs map[string]chs
 	sub map[uint64]*sub
 	cnt uint64
+	mu  sync.RWMutex
 }
 
 type chs struct {
@@ -53,8 +53,8 @@ type chs struct {
 }
 
 type sub struct {
-	cs []string
 	ch chan PubSubMessage
+	cs []string
 }
 
 func (s *subs) Publish(channel string, msg PubSubMessage) {

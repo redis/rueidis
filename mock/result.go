@@ -66,11 +66,11 @@ func RedisMap(kv map[string]rueidis.RedisMessage) rueidis.RedisMessage {
 }
 
 type message struct {
-	typ     byte
+	attrs   *rueidis.RedisMessage
 	string  string
 	values  []rueidis.RedisMessage
-	attrs   *rueidis.RedisMessage
 	integer int64
+	typ     byte
 }
 type result struct {
 	err error

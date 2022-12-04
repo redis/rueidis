@@ -5668,29 +5668,29 @@ func testAdapter(resp3 bool) {
 	Describe("marshaling/unmarshaling", func() {
 		type convTest struct {
 			value  interface{}
-			wanted string
 			dest   interface{}
+			wanted string
 		}
 
 		convTests := []convTest{
 			// TODO
 			//{nil, "", nil},
-			{"hello", "hello", new(string)},
-			{[]byte("hello"), "hello", new([]byte)},
-			{int(1), "1", new(int)},
-			{int8(1), "1", new(int8)},
-			{int16(1), "1", new(int16)},
-			{int32(1), "1", new(int32)},
-			{int64(1), "1", new(int64)},
-			{uint(1), "1", new(uint)},
-			{uint8(1), "1", new(uint8)},
-			{uint16(1), "1", new(uint16)},
-			{uint32(1), "1", new(uint32)},
-			{uint64(1), "1", new(uint64)},
-			{float32(1.0), "1", new(float32)},
-			{float64(1.0), "1", new(float64)},
-			{true, "1", new(bool)},
-			{false, "0", new(bool)},
+			{"hello", new(string), "hello"},
+			{[]byte("hello"), new([]byte), "hello"},
+			{int(1), new(int), "1"},
+			{int8(1), new(int8), "1"},
+			{int16(1), new(int16), "1"},
+			{int32(1), new(int32), "1"},
+			{int64(1), new(int64), "1"},
+			{uint(1), new(uint), "1"},
+			{uint8(1), new(uint8), "1"},
+			{uint16(1), new(uint16), "1"},
+			{uint32(1), new(uint32), "1"},
+			{uint64(1), new(uint64), "1"},
+			{float32(1.0), new(float32), "1"},
+			{float64(1.0), new(float64), "1"},
+			{true, new(bool), "1"},
+			{false, new(bool), "0"},
 		}
 
 		It("should convert to string", func() {
@@ -7271,29 +7271,29 @@ func testAdapterCache(resp3 bool) {
 	Describe("marshaling/unmarshaling", func() {
 		type convTest struct {
 			value  interface{}
-			wanted string
 			dest   interface{}
+			wanted string
 		}
 
 		convTests := []convTest{
 			// TODO
 			//{nil, "", nil},
-			{"hello", "hello", new(string)},
-			{[]byte("hello"), "hello", new([]byte)},
-			{int(1), "1", new(int)},
-			{int8(1), "1", new(int8)},
-			{int16(1), "1", new(int16)},
-			{int32(1), "1", new(int32)},
-			{int64(1), "1", new(int64)},
-			{uint(1), "1", new(uint)},
-			{uint8(1), "1", new(uint8)},
-			{uint16(1), "1", new(uint16)},
-			{uint32(1), "1", new(uint32)},
-			{uint64(1), "1", new(uint64)},
-			{float32(1.0), "1", new(float32)},
-			{float64(1.0), "1", new(float64)},
-			{true, "1", new(bool)},
-			{false, "0", new(bool)},
+			{"hello", new(string), "hello"},
+			{[]byte("hello"), new([]byte), "hello"},
+			{int(1), new(int), "1"},
+			{int8(1), new(int8), "1"},
+			{int16(1), new(int16), "1"},
+			{int32(1), new(int32), "1"},
+			{int64(1), new(int64), "1"},
+			{uint(1), new(uint), "1"},
+			{uint8(1), new(uint8), "1"},
+			{uint16(1), new(uint16), "1"},
+			{uint32(1), new(uint32), "1"},
+			{uint64(1), new(uint64), "1"},
+			{float32(1.0), new(float32), "1"},
+			{float64(1.0), new(float64), "1"},
+			{true, new(bool), "1"},
+			{false, new(bool), "0"},
 		}
 
 		It("should convert to string", func() {

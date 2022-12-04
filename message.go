@@ -301,11 +301,11 @@ func (r RedisResult) IsCacheHit() bool {
 
 // RedisMessage is a redis response message, it may be a nil response
 type RedisMessage struct {
-	typ     byte
+	attrs   *RedisMessage
 	string  string
 	values  []RedisMessage
-	attrs   *RedisMessage
 	integer int64
+	typ     byte
 }
 
 // IsNil check if message is a redis nil response
@@ -532,8 +532,8 @@ func (m *RedisMessage) AsFloatSlice() ([]float64, error) {
 
 // XRangeEntry is the element type of both XRANGE and XREVRANGE command response array
 type XRangeEntry struct {
-	ID          string
 	FieldValues map[string]string
+	ID          string
 }
 
 // AsXRangeEntry check if message is a redis array/set response of length 2, and convert to XRangeEntry

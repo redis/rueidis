@@ -56,6 +56,10 @@ type ClientOption struct {
 	Dialer    net.Dialer
 	TLSConfig *tls.Config
 
+	// OnInvalidations is a callback function in case of client-side caching invalidation received.
+	// Note that this function must be fast, otherwise other redis messages will be blocked.
+	OnInvalidations func([]RedisMessage)
+
 	// Sentinel options, including MasterSet and Auth options
 	Sentinel SentinelOption
 
@@ -69,6 +73,10 @@ type ClientOption struct {
 	// If len(InitAddress) == 1 and the address is not running in cluster mode, rueidis will fall back to the single client mode.
 	// If ClientOption.Sentinel.MasterSet is set, then InitAddress will be used to connect sentinels
 	InitAddress []string
+
+	// ClientTrackingOptions will be appended to CLIENT TRACKING ON command when the connection is established.
+	// The default is []string{"OPTIN"}
+	ClientTrackingOptions []string
 
 	SelectDB int
 
@@ -108,12 +116,6 @@ type ClientOption struct {
 	DisableRetry bool
 	// DisableCache falls back Client.DoCache/Client.DoMultiCache to Client.Do/Client.DoMulti
 	DisableCache bool
-	// OnInvalidations is a callback function in case of client-side caching invalidation received.
-	// Note that this function must be fast, otherwise other redis messages will be blocked.
-	OnInvalidations func([]RedisMessage)
-	// ClientTrackingOptions will be appended to CLIENT TRACKING ON command when the connection is established.
-	// The default is []string{"OPTIN"}
-	ClientTrackingOptions []string
 }
 
 // SentinelOption contains MasterSet,

@@ -31,11 +31,11 @@ type cache interface {
 }
 
 type entry struct {
+	err  error
 	ch   chan struct{}
 	kc   *keyCache
 	cmd  string
 	val  RedisMessage
-	err  error
 	size int
 }
 
@@ -53,11 +53,11 @@ func (e *entry) Wait(ctx context.Context) (RedisMessage, error) {
 }
 
 type keyCache struct {
-	hits  uint64
-	miss  uint64
+	ttl   time.Time
 	cache map[string]*list.Element
 	key   string
-	ttl   time.Time
+	hits  uint64
+	miss  uint64
 }
 
 var _ cache = (*lru)(nil)

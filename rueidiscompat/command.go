@@ -311,8 +311,8 @@ func (cmd *Cmd) BoolSlice() ([]bool, error) {
 }
 
 type StringCmd struct {
-	val string
 	err error
+	val string
 }
 
 func newStringCmd(res rueidis.RedisResult) *StringCmd {
@@ -399,8 +399,8 @@ func (cmd *StringCmd) String() string {
 }
 
 type BoolCmd struct {
-	val bool
 	err error
+	val bool
 }
 
 func newBoolCmd(res rueidis.RedisResult) *BoolCmd {
@@ -433,8 +433,8 @@ func (cmd *BoolCmd) Result() (bool, error) {
 }
 
 type IntCmd struct {
-	val int64
 	err error
+	val int64
 }
 
 func newIntCmd(res rueidis.RedisResult) *IntCmd {
@@ -467,8 +467,8 @@ func (cmd *IntCmd) Uint64() (uint64, error) {
 }
 
 type DurationCmd struct {
-	val time.Duration
 	err error
+	val time.Duration
 }
 
 func newDurationCmd(res rueidis.RedisResult, precision time.Duration) *DurationCmd {
@@ -503,8 +503,8 @@ func (cmd *DurationCmd) Result() (time.Duration, error) {
 }
 
 type StatusCmd struct {
-	val string
 	err error
+	val string
 }
 
 func newStatusCmd(res rueidis.RedisResult) *StatusCmd {
@@ -533,8 +533,8 @@ func (cmd *StatusCmd) Result() (string, error) {
 }
 
 type SliceCmd struct {
-	val []interface{}
 	err error
+	val []interface{}
 }
 
 func newSliceCmd(res rueidis.RedisResult) *SliceCmd {
@@ -578,8 +578,8 @@ func (cmd *SliceCmd) Result() ([]interface{}, error) {
 }
 
 type StringSliceCmd struct {
-	val []string
 	err error
+	val []string
 }
 
 func newStringSliceCmd(res rueidis.RedisResult) *StringSliceCmd {
@@ -624,8 +624,8 @@ func (cmd *StringSliceCmd) Result() ([]string, error) {
 }
 
 type IntSliceCmd struct {
-	val []int64
 	err error
+	val []int64
 }
 
 func newIntSliceCmd(res rueidis.RedisResult) *IntSliceCmd {
@@ -654,8 +654,8 @@ func (cmd *IntSliceCmd) Result() ([]int64, error) {
 }
 
 type BoolSliceCmd struct {
-	val []bool
 	err error
+	val []bool
 }
 
 func newBoolSliceCmd(res rueidis.RedisResult) *BoolSliceCmd {
@@ -691,8 +691,8 @@ func (cmd *BoolSliceCmd) Result() ([]bool, error) {
 }
 
 type FloatSliceCmd struct {
-	val []float64
 	err error
+	val []float64
 }
 
 func newFloatSliceCmd(res rueidis.RedisResult) *FloatSliceCmd {
@@ -721,8 +721,8 @@ func (cmd *FloatSliceCmd) Result() ([]float64, error) {
 }
 
 type ZSliceCmd struct {
-	val []Z
 	err error
+	val []Z
 }
 
 func newZSliceCmd(res rueidis.RedisResult) *ZSliceCmd {
@@ -766,8 +766,8 @@ func (cmd *ZSliceCmd) Result() ([]Z, error) {
 }
 
 type FloatCmd struct {
-	val float64
 	err error
+	val float64
 }
 
 func newFloatCmd(res rueidis.RedisResult) *FloatCmd {
@@ -796,9 +796,9 @@ func (cmd *FloatCmd) Result() (float64, error) {
 }
 
 type ScanCmd struct {
-	cursor uint64
-	keys   []string
 	err    error
+	keys   []string
+	cursor uint64
 }
 
 func newScanCmd(res rueidis.RedisResult) *ScanCmd {
@@ -929,8 +929,8 @@ func (cmd *StringStructMapCmd) Result() (map[string]struct{}, error) {
 }
 
 type XMessageSliceCmd struct {
-	val []XMessage
 	err error
+	val []XMessage
 }
 
 func newXMessageSliceCmd(res rueidis.RedisResult) *XMessageSliceCmd {
@@ -979,8 +979,8 @@ type XStream struct {
 }
 
 type XStreamSliceCmd struct {
-	val []XStream
 	err error
+	val []XStream
 }
 
 func newXStreamSliceCmd(res rueidis.RedisResult) *XStreamSliceCmd {
@@ -1020,15 +1020,15 @@ func (cmd *XStreamSliceCmd) Result() ([]XStream, error) {
 }
 
 type XPending struct {
-	Count     int64
+	Consumers map[string]int64
 	Lower     string
 	Higher    string
-	Consumers map[string]int64
+	Count     int64
 }
 
 type XPendingCmd struct {
-	val XPending
 	err error
+	val XPending
 }
 
 func newXPendingCmd(res rueidis.RedisResult) *XPendingCmd {
@@ -1112,8 +1112,8 @@ type XPendingExt struct {
 }
 
 type XPendingExtCmd struct {
-	val []XPendingExt
 	err error
+	val []XPendingExt
 }
 
 func newXPendingExtCmd(res rueidis.RedisResult) *XPendingExtCmd {
@@ -1177,9 +1177,9 @@ func (cmd *XPendingExtCmd) Result() ([]XPendingExt, error) {
 }
 
 type XAutoClaimCmd struct {
+	err   error
 	start string
 	val   []XMessage
-	err   error
 }
 
 func newXAutoClaimCmd(res rueidis.RedisResult) *XAutoClaimCmd {
@@ -1227,9 +1227,9 @@ func (cmd *XAutoClaimCmd) Result() (messages []XMessage, start string, err error
 }
 
 type XAutoClaimJustIDCmd struct {
+	err   error
 	start string
 	val   []string
-	err   error
 }
 
 func newXAutoClaimJustIDCmd(res rueidis.RedisResult) *XAutoClaimJustIDCmd {
@@ -1274,16 +1274,16 @@ func (cmd *XAutoClaimJustIDCmd) Result() (ids []string, start string, err error)
 
 type XInfoGroup struct {
 	Name            string
+	LastDeliveredID string
 	Consumers       int64
 	Pending         int64
 	EntriesRead     int64
 	Lag             int64
-	LastDeliveredID string
 }
 
 type XInfoGroupsCmd struct {
-	val []XInfoGroup
 	err error
+	val []XInfoGroup
 }
 
 func newXInfoGroupsCmd(res rueidis.RedisResult) *XInfoGroupsCmd {
@@ -1342,20 +1342,20 @@ func (cmd *XInfoGroupsCmd) Result() ([]XInfoGroup, error) {
 }
 
 type XInfoStream struct {
+	FirstEntry           XMessage
+	LastEntry            XMessage
+	LastGeneratedID      string
+	MaxDeletedEntryID    string
+	RecordedFirstEntryID string
 	Length               int64
 	RadixTreeKeys        int64
 	RadixTreeNodes       int64
 	Groups               int64
-	LastGeneratedID      string
-	MaxDeletedEntryID    string
 	EntriesAdded         int64
-	FirstEntry           XMessage
-	LastEntry            XMessage
-	RecordedFirstEntryID string
 }
 type XInfoStreamCmd struct {
-	val XInfoStream
 	err error
+	val XInfoStream
 }
 
 func newXInfoStreamCmd(res rueidis.RedisResult) *XInfoStreamCmd {
@@ -1422,50 +1422,50 @@ func (cmd *XInfoStreamCmd) Result() (XInfoStream, error) {
 }
 
 type XInfoStreamConsumerPending struct {
-	ID            string
 	DeliveryTime  time.Time
+	ID            string
 	DeliveryCount int64
 }
 
 type XInfoStreamGroupPending struct {
+	DeliveryTime  time.Time
 	ID            string
 	Consumer      string
-	DeliveryTime  time.Time
 	DeliveryCount int64
 }
 
 type XInfoStreamConsumer struct {
-	Name     string
 	SeenTime time.Time
-	PelCount int64
+	Name     string
 	Pending  []XInfoStreamConsumerPending
+	PelCount int64
 }
 
 type XInfoStreamGroup struct {
 	Name            string
 	LastDeliveredID string
+	Pending         []XInfoStreamGroupPending
+	Consumers       []XInfoStreamConsumer
 	EntriesRead     int64
 	Lag             int64
 	PelCount        int64
-	Pending         []XInfoStreamGroupPending
-	Consumers       []XInfoStreamConsumer
 }
 
 type XInfoStreamFull struct {
+	LastGeneratedID      string
+	MaxDeletedEntryID    string
+	RecordedFirstEntryID string
+	Entries              []XMessage
+	Groups               []XInfoStreamGroup
 	Length               int64
 	RadixTreeKeys        int64
 	RadixTreeNodes       int64
-	LastGeneratedID      string
-	MaxDeletedEntryID    string
 	EntriesAdded         int64
-	Entries              []XMessage
-	Groups               []XInfoStreamGroup
-	RecordedFirstEntryID string
 }
 
 type XInfoStreamFullCmd struct {
-	val XInfoStreamFull
 	err error
+	val XInfoStreamFull
 }
 
 func newXInfoStreamFullCmd(res rueidis.RedisResult) *XInfoStreamFullCmd {
@@ -1679,8 +1679,8 @@ type XInfoConsumer struct {
 	Idle    time.Duration
 }
 type XInfoConsumersCmd struct {
-	val []XInfoConsumer
 	err error
+	val []XInfoConsumer
 }
 
 func newXInfoConsumersCmd(res rueidis.RedisResult) *XInfoConsumersCmd {
@@ -1732,8 +1732,8 @@ func (cmd *XInfoConsumersCmd) Result() ([]XInfoConsumer, error) {
 
 // Z represents sorted set member.
 type Z struct {
-	Score  float64
 	Member interface{}
+	Score  float64
 }
 
 // ZWithKey represents sorted set member including the name of the key where it was popped.
@@ -1744,15 +1744,14 @@ type ZWithKey struct {
 
 // ZStore is used as an arg to ZInter/ZInterStore and ZUnion/ZUnionStore.
 type ZStore struct {
-	Keys    []string
-	Weights []int64
-	// Can be SUM, MIN or MAX.
 	Aggregate string
+	Keys      []string
+	Weights   []int64
 }
 
 type ZWithKeyCmd struct {
-	val ZWithKey
 	err error
+	val ZWithKey
 }
 
 func newZWithKeyCmd(res rueidis.RedisResult) *ZWithKeyCmd {
@@ -1849,14 +1848,14 @@ type ClusterNode struct {
 }
 
 type ClusterSlot struct {
+	Nodes []ClusterNode
 	Start int64
 	End   int64
-	Nodes []ClusterNode
 }
 
 type ClusterSlotsCmd struct {
-	val []ClusterSlot
 	err error
+	val []ClusterSlot
 }
 
 func newClusterSlotsCmd(res rueidis.RedisResult) *ClusterSlotsCmd {
@@ -1941,8 +1940,8 @@ type GeoPos struct {
 }
 
 type GeoPosCmd struct {
-	val []*GeoPos
 	err error
+	val []*GeoPos
 }
 
 func newGeoPosCmd(res rueidis.RedisResult) *GeoPosCmd {
@@ -2000,8 +1999,8 @@ func (cmd *GeoPosCmd) Result() ([]*GeoPos, error) {
 }
 
 type GeoLocationCmd struct {
-	val []GeoLocation
 	err error
+	val []GeoLocation
 }
 
 func newGeoLocationCmd(res rueidis.RedisResult, withDist, withGeoHash, withCoord bool) *GeoLocationCmd {
@@ -2089,9 +2088,9 @@ func (cmd *GeoLocationCmd) Result() ([]GeoLocation, error) {
 }
 
 type CommandInfo struct {
+	Name        string
 	Flags       []string
 	ACLFlags    []string
-	Name        string
 	Arity       int64
 	FirstKeyPos int64
 	LastKeyPos  int64
@@ -2191,28 +2190,21 @@ func (cmd *CommandsInfoCmd) Result() (map[string]CommandInfo, error) {
 }
 
 type Sort struct {
-	By            string
-	Offset, Count int64
-	Get           []string
-	Order         string
-	Alpha         bool
+	By     string
+	Order  string
+	Get    []string
+	Offset int64
+	Count  int64
+	Alpha  bool
 }
 
 // SetArgs provides arguments for the SetArgs function.
 type SetArgs struct {
-	// Mode can be `NX` or `XX` or empty.
-	Mode string
-
-	// Zero `TTL` or `Expiration` means that the key has no expiration time.
-	TTL      time.Duration
 	ExpireAt time.Time
-
-	// When Get is true, the command returns the old value stored at key, or nil when key did not exist.
-	Get bool
-
-	// KeepTTL is a Redis KEEPTTL option to keep existing TTL, it requires your redis-server version >= 6.0,
-	// otherwise you will receive an error: (error) ERR syntax error.
-	KeepTTL bool
+	Mode     string
+	TTL      time.Duration
+	Get      bool
+	KeepTTL  bool
 }
 
 type BitCount struct {
@@ -2233,8 +2225,8 @@ type BitField struct {
 	Get       *BitFieldArg
 	Set       *BitFieldArg
 	IncrBy    *BitFieldArg
-	Increment int64
 	Overflow  string
+	Increment int64
 }
 
 type LPosArgs struct {
@@ -2243,16 +2235,14 @@ type LPosArgs struct {
 
 // Note: MaxLen/MaxLenApprox and MinID are in conflict, only one of them can be used.
 type XAddArgs struct {
+	Values     interface{}
 	Stream     string
+	MinID      string
+	ID         string
+	MaxLen     int64
+	Limit      int64
 	NoMkStream bool
-	MaxLen     int64 // MAXLEN N
-
-	MinID string
-	// Approx causes MaxLen and MinID to use "~" matcher (instead of "=").
-	Approx bool
-	Limit  int64
-	ID     string
-	Values interface{}
+	Approx     bool
 }
 
 type XReadArgs struct {
@@ -2273,70 +2263,66 @@ type XReadGroupArgs struct {
 type XPendingExtArgs struct {
 	Stream   string
 	Group    string
-	Idle     time.Duration
 	Start    string
 	End      string
-	Count    int64
 	Consumer string
+	Idle     time.Duration
+	Count    int64
 }
 
 type XClaimArgs struct {
 	Stream   string
 	Group    string
 	Consumer string
-	MinIdle  time.Duration
 	Messages []string
+	MinIdle  time.Duration
 }
 
 type XAutoClaimArgs struct {
 	Stream   string
 	Group    string
-	MinIdle  time.Duration
 	Start    string
-	Count    int64
 	Consumer string
+	MinIdle  time.Duration
+	Count    int64
 }
 
 type XMessage struct {
-	ID     string
 	Values map[string]interface{}
+	ID     string
 }
 
 // Note: The GT, LT and NX options are mutually exclusive.
 type ZAddArgs struct {
+	Members []Z
 	NX      bool
 	XX      bool
 	LT      bool
 	GT      bool
 	Ch      bool
-	Members []Z
 }
 
 // ZRangeArgs is all the options of the ZRange command.
 // In version> 6.2.0, you can replace the(cmd):
-//		ZREVRANGE,
-//		ZRANGEBYSCORE,
-//		ZREVRANGEBYSCORE,
-//		ZRANGEBYLEX,
-//		ZREVRANGEBYLEX.
+//
+//	ZREVRANGE,
+//	ZRANGEBYSCORE,
+//	ZREVRANGEBYSCORE,
+//	ZRANGEBYLEX,
+//	ZREVRANGEBYLEX.
+//
 // Please pay attention to your redis-server version.
 //
 // Rev, ByScore, ByLex and Offset+Count options require redis-server 6.2.0 and higher.
 type ZRangeArgs struct {
-	Key string
-
-	Start interface{}
-	Stop  interface{}
-
-	// The ByScore and ByLex options are mutually exclusive.
+	Start   interface{}
+	Stop    interface{}
+	Key     string
+	Offset  int64
+	Count   int64
 	ByScore bool
 	ByLex   bool
-
-	Rev bool
-
-	// limit offset count.
-	Offset int64
-	Count  int64
+	Rev     bool
 }
 
 type ZRangeBy struct {
@@ -2352,42 +2338,30 @@ type GeoLocation struct {
 
 // GeoRadiusQuery is used with GeoRadius to query geospatial index.
 type GeoRadiusQuery struct {
-	Radius float64
-	// Can be m, km, ft, or mi. Default is km.
 	Unit        string
+	Sort        string
+	Store       string
+	StoreDist   string
+	Radius      float64
+	Count       int64
 	WithCoord   bool
 	WithDist    bool
 	WithGeoHash bool
-	Count       int64
-	// Can be ASC or DESC. Default is no sort order.
-	Sort      string
-	Store     string
-	StoreDist string
 }
 
 // GeoSearchQuery is used for GEOSearch/GEOSearchStore command query.
 type GeoSearchQuery struct {
-	Member string
-
-	// Latitude and Longitude when using FromLonLat option.
-	Longitude float64
-	Latitude  float64
-
-	// Distance and unit when using ByRadius option.
-	// Can use m, km, ft, or mi. Default is km.
-	Radius     float64
+	Member     string
 	RadiusUnit string
-
-	// Height, width and unit when using ByBox option.
-	// Can be m, km, ft, or mi. Default is km.
-	BoxWidth  float64
-	BoxHeight float64
-	BoxUnit   string
-
-	// Can be ASC or DESC. Default is no sort order.
-	Sort     string
-	Count    int64
-	CountAny bool
+	BoxUnit    string
+	Sort       string
+	Longitude  float64
+	Latitude   float64
+	Radius     float64
+	BoxWidth   float64
+	BoxHeight  float64
+	Count      int64
+	CountAny   bool
 }
 
 type GeoSearchLocationQuery struct {

@@ -33,12 +33,13 @@ func newRing(factor int) *ring {
 }
 
 type ring struct {
+	store []node // store's size must be 2^N to work with the mask
+	_     [5]uint64
 	write uint64
 	_     [7]uint64
 	read1 uint64
 	read2 uint64
 	mask  uint64
-	store []node // store's size must be 2^N to work with the mask
 }
 
 type node struct {

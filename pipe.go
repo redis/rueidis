@@ -38,35 +38,31 @@ type wire interface {
 var _ wire = (*pipe)(nil)
 
 type pipe struct {
-	waits   int32
-	state   int32
-	version int32
-	blcksig int32
-	timeout time.Duration
-	pinggap time.Duration
-
-	r *bufio.Reader
-	w *bufio.Writer
-
-	conn  net.Conn
-	cache cache
-	queue queue
-	once  sync.Once
-
-	info  map[string]RedisMessage
-	nsubs *subs
-	psubs *subs
-	ssubs *subs
-	pshks atomic.Value
-	clhks atomic.Value
-	error atomic.Value
-
+	conn            net.Conn
+	error           atomic.Value
+	clhks           atomic.Value
+	pshks           atomic.Value
+	queue           queue
+	cache           cache
+	r               *bufio.Reader
+	w               *bufio.Writer
 	onInvalidations func([]RedisMessage)
-
-	r2psFn func() (p *pipe, err error)
-	r2mu   sync.Mutex
-	r2pipe *pipe
-	r2ps   bool
+	r2psFn          func() (p *pipe, err error)
+	r2pipe          *pipe
+	ssubs           *subs
+	nsubs           *subs
+	psubs           *subs
+	info            map[string]RedisMessage
+	timeout         time.Duration
+	pinggap         time.Duration
+	once            sync.Once
+	r2mu            sync.Mutex
+	version         int32
+	_               [12]int32
+	blcksig         int32
+	state           int32
+	waits           int32
+	r2ps            bool
 }
 
 func newPipe(connFn func() (net.Conn, error), option *ClientOption) (p *pipe, err error) {
