@@ -2935,15 +2935,27 @@ func TestPipe_CleanSubscriptions_7(t *testing.T) {
 }
 
 func TestPingOnConnError(t *testing.T) {
-	p, mock, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: 3 * time.Second, Dialer: net.Dialer{KeepAlive: time.Second / 3}})
-	p.background()
-	mock.Expect("PING")
-	closeConn()
-	time.Sleep(time.Second / 2)
-	p.Close()
-	if err := p.Error(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
-		t.Fatalf("unexpect err %v", err)
-	}
+	t.Run("sync", func(t *testing.T) {
+		p, mock, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: 3 * time.Second, Dialer: net.Dialer{KeepAlive: time.Second / 3}})
+		mock.Expect("PING")
+		closeConn()
+		time.Sleep(time.Second / 2)
+		p.Close()
+		if err := p.Error(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
+			t.Fatalf("unexpect err %v", err)
+		}
+	})
+	t.Run("pipelining", func(t *testing.T) {
+		p, mock, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: 3 * time.Second, Dialer: net.Dialer{KeepAlive: time.Second / 3}})
+		p.background()
+		mock.Expect("PING")
+		closeConn()
+		time.Sleep(time.Second / 2)
+		p.Close()
+		if err := p.Error(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
+			t.Fatalf("unexpect err %v", err)
+		}
+	})
 }
 
 //gocyclo:ignore

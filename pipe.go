@@ -46,6 +46,7 @@ type pipe struct {
 	cache           cache
 	r               *bufio.Reader
 	w               *bufio.Writer
+	close           chan struct{}
 	onInvalidations func([]RedisMessage)
 	r2psFn          func() (p *pipe, err error)
 	r2pipe          *pipe
@@ -58,10 +59,11 @@ type pipe struct {
 	once            sync.Once
 	r2mu            sync.Mutex
 	version         int32
-	_               [12]int32
+	_               [10]int32
 	blcksig         int32
 	state           int32
 	waits           int32
+	recvs           int32
 	r2ps            bool
 }
 
@@ -83,6 +85,7 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 		nsubs: newSubs(),
 		psubs: newSubs(),
 		ssubs: newSubs(),
+		close: make(chan struct{}),
 
 		timeout: option.ConnWriteTimeout,
 		pinggap: option.Dialer.KeepAlive,
@@ -195,6 +198,9 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 		}
 		p.version = 5
 	}
+	if p.timeout > 0 && p.pinggap > 0 {
+		go p.backgroundPing()
+	}
 	return p, nil
 }
 
@@ -203,27 +209,20 @@ func (p *pipe) background() {
 	p.once.Do(func() { go p._background() })
 }
 
+func (p *pipe) _exit(err error) {
+	p.error.CompareAndSwap(nil, &errs{error: err})
+	atomic.CompareAndSwapInt32(&p.state, 1, 2) // stop accepting new requests
+	_ = p.conn.Close()                         // force both read & write goroutine to exit
+	p.clhks.Load().(func(error))(err)
+}
+
 func (p *pipe) _background() {
-	exit := func(err error) {
-		p.error.CompareAndSwap(nil, &errs{error: err})
-		atomic.CompareAndSwapInt32(&p.state, 1, 2) // stop accepting new requests
-		_ = p.conn.Close()                         // force both read & write goroutine to exit
-		p.clhks.Load().(func(error))(err)
-	}
-	wait := make(chan struct{})
-	if p.timeout > 0 && p.pinggap > 0 {
-		go func() {
-			if err := p._backgroundPing(wait); err != ErrClosing {
-				exit(err)
-			}
-		}()
-	}
 	go func() {
-		exit(p._backgroundWrite())
-		close(wait)
+		p._exit(p._backgroundWrite())
+		close(p.close)
 	}()
 	{
-		exit(p._backgroundRead())
+		p._exit(p._backgroundRead())
 		atomic.CompareAndSwapInt32(&p.state, 2, 3) // make write goroutine to exit
 		atomic.AddInt32(&p.waits, 1)
 		go func() {
@@ -256,7 +255,7 @@ func (p *pipe) _background() {
 	}
 	for atomic.LoadInt32(&p.waits) != 0 {
 		select {
-		case <-wait:
+		case <-p.close:
 			_, _, _ = p.queue.NextWriteCmd()
 		default:
 		}
@@ -275,7 +274,7 @@ func (p *pipe) _background() {
 			runtime.Gosched()
 		}
 	}
-	<-wait
+	<-p.close
 	atomic.StoreInt32(&p.state, 4)
 }
 
@@ -443,13 +442,17 @@ func (p *pipe) _backgroundRead() (err error) {
 	}
 }
 
-func (p *pipe) _backgroundPing(stop <-chan struct{}) (err error) {
+func (p *pipe) backgroundPing() {
+	var err error
+	var prev, recv int32
+
 	ticker := time.NewTicker(p.pinggap)
 	defer ticker.Stop()
-	for err == nil {
+	for ; err == nil; prev = recv {
 		select {
 		case <-ticker.C:
-			if atomic.LoadInt32(&p.blcksig) != 0 {
+			recv = atomic.LoadInt32(&p.recvs)
+			if recv != prev || atomic.LoadInt32(&p.blcksig) != 0 || (atomic.LoadInt32(&p.state) == 0 && atomic.LoadInt32(&p.waits) != 0) {
 				continue
 			}
 			ch := make(chan error, 1)
@@ -464,11 +467,13 @@ func (p *pipe) _backgroundPing(stop <-chan struct{}) (err error) {
 			if err != nil && atomic.LoadInt32(&p.blcksig) != 0 {
 				err = nil
 			}
-		case <-stop:
+		case <-p.close:
 			return
 		}
 	}
-	return err
+	if err != ErrClosing {
+		p._exit(err)
+	}
 }
 
 func (p *pipe) handlePush(values []RedisMessage) (reply bool, unsubscribe bool) {
@@ -700,6 +705,7 @@ func (p *pipe) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
 	if left := atomic.AddInt32(&p.waits, -1); state == 0 && waits == 1 && left != 0 {
 		p.background()
 	}
+	atomic.AddInt32(&p.recvs, 1)
 	return resp
 
 queue:
@@ -707,15 +713,18 @@ queue:
 	if ctxCh := ctx.Done(); ctxCh == nil {
 		resp = <-ch
 		atomic.AddInt32(&p.waits, -1)
+		atomic.AddInt32(&p.recvs, 1)
 	} else {
 		select {
 		case resp = <-ch:
 			atomic.AddInt32(&p.waits, -1)
+			atomic.AddInt32(&p.recvs, 1)
 		case <-ctxCh:
 			resp = newErrResult(ctx.Err())
 			go func() {
 				<-ch
 				atomic.AddInt32(&p.waits, -1)
+				atomic.AddInt32(&p.recvs, 1)
 			}()
 		}
 	}
@@ -801,6 +810,7 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...cmds.Completed) []RedisResu
 	if left := atomic.AddInt32(&p.waits, -1); state == 0 && waits == 1 && left != 0 {
 		p.background()
 	}
+	atomic.AddInt32(&p.recvs, 1)
 	return resp
 
 queue:
@@ -820,6 +830,7 @@ queue:
 		}
 	}
 	atomic.AddInt32(&p.waits, -1)
+	atomic.AddInt32(&p.recvs, 1)
 	return resp
 abort:
 	go func(i int) {
@@ -827,6 +838,7 @@ abort:
 			<-ch
 		}
 		atomic.AddInt32(&p.waits, -1)
+		atomic.AddInt32(&p.recvs, 1)
 	}(i)
 	err := newErrResult(ctx.Err())
 	for ; i < len(resp); i++ {
