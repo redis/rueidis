@@ -286,7 +286,7 @@ func TestNewRESP2Pipe(t *testing.T) {
 			mock.Expect("HELLO", "3").
 				ReplyError("ERR unknown command `HELLO`")
 			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
-				ReplyError("ERR unknown subcommand or wrong number of arguments for 'TRACKING'")
+				ReplyError("ERR unknown subcommand or wrong number of arguments for 'TRACKING'. Try CLIENT HELP")
 			mock.Expect("QUIT").ReplyString("OK")
 		}()
 		if _, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{}); !errors.Is(err, ErrNoCache) {
