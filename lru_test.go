@@ -188,6 +188,41 @@ func TestLRU(t *testing.T) {
 			t.Fatalf("unexpected %v", v)
 		}
 	})
+
+	t.Run("Update Message TTL", func(t *testing.T) {
+		t.Run("client side TTL > server side TTL", func(t *testing.T) {
+			lru := setup(t)
+			lru.GetOrPrepare("key", "cmd", 2*time.Second)
+			lru.Update("key", "cmd", RedisMessage{typ: 1}, 1000)
+			if v, _ := lru.GetOrPrepare("key", "cmd", 2*time.Second); v.CacheTTL() != 1 {
+				t.Fatalf("unexpected %v", v.CacheTTL())
+			}
+		})
+		t.Run("client side TTL < server side TTL", func(t *testing.T) {
+			lru := setup(t)
+			lru.GetOrPrepare("key", "cmd", 2*time.Second)
+			lru.Update("key", "cmd", RedisMessage{typ: 1}, 3000)
+			if v, _ := lru.GetOrPrepare("key", "cmd", 2*time.Second); v.CacheTTL() != 2 {
+				t.Fatalf("unexpected %v", v.CacheTTL())
+			}
+		})
+		t.Run("no server side TTL -1", func(t *testing.T) {
+			lru := setup(t)
+			lru.GetOrPrepare("key", "cmd", 2*time.Second)
+			lru.Update("key", "cmd", RedisMessage{typ: 1}, -1)
+			if v, _ := lru.GetOrPrepare("key", "cmd", 2*time.Second); v.CacheTTL() != 2 {
+				t.Fatalf("unexpected %v", v.CacheTTL())
+			}
+		})
+		t.Run("no server side TTL -2", func(t *testing.T) {
+			lru := setup(t)
+			lru.GetOrPrepare("key", "cmd", 2*time.Second)
+			lru.Update("key", "cmd", RedisMessage{typ: 1}, -2)
+			if v, _ := lru.GetOrPrepare("key", "cmd", 2*time.Second); v.CacheTTL() != 2 {
+				t.Fatalf("unexpected %v", v.CacheTTL())
+			}
+		})
+	})
 }
 
 func roughly(ttl, expect time.Duration) bool {

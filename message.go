@@ -6,6 +6,7 @@ import (
 	"io"
 	"strconv"
 	"strings"
+	"time"
 	"unsafe"
 )
 
@@ -299,6 +300,11 @@ func (r RedisResult) IsCacheHit() bool {
 	return r.val.IsCacheHit()
 }
 
+// CacheTTL delegates to RedisMessage.CacheTTL
+func (r RedisResult) CacheTTL() int64 {
+	return r.val.CacheTTL()
+}
+
 // RedisMessage is a redis response message, it may be a nil response
 type RedisMessage struct {
 	attrs   *RedisMessage
@@ -306,6 +312,7 @@ type RedisMessage struct {
 	values  []RedisMessage
 	integer int64
 	typ     byte
+	ttl     [7]byte
 }
 
 // IsNil check if message is a redis nil response
@@ -772,6 +779,26 @@ func (m *RedisMessage) ToAny() (interface{}, error) {
 // IsCacheHit check if message is from client side cache
 func (m *RedisMessage) IsCacheHit() bool {
 	return m.attrs == cacheMark
+}
+
+// CacheTTL returns the remaining TTL in seconds of client side cache
+func (m *RedisMessage) CacheTTL() int64 {
+	unix := int64(m.ttl[0]) | int64(m.ttl[1])<<8 | int64(m.ttl[2])<<16 | int64(m.ttl[3])<<24 |
+		int64(m.ttl[4])<<32 | int64(m.ttl[5])<<40 | int64(m.ttl[6])<<48
+	if unix > 0 {
+		return unix - time.Now().Unix()
+	}
+	return 0
+}
+
+func (m *RedisMessage) setTTL(pttl int64) {
+	m.ttl[0] = byte(pttl)
+	m.ttl[1] = byte(pttl >> 8)
+	m.ttl[2] = byte(pttl >> 16)
+	m.ttl[3] = byte(pttl >> 24)
+	m.ttl[4] = byte(pttl >> 32)
+	m.ttl[5] = byte(pttl >> 40)
+	m.ttl[6] = byte(pttl >> 48)
 }
 
 func toMap(values []RedisMessage) map[string]RedisMessage {
