@@ -22,7 +22,7 @@ const (
 )
 
 type cache interface {
-	GetOrPrepare(key, cmd string, ttl time.Duration) (v RedisMessage, entry *entry)
+	GetOrPrepare(key, cmd string, now time.Time, ttl time.Duration) (v RedisMessage, entry *entry)
 	Update(key, cmd string, value RedisMessage, pttl int64)
 	Cancel(key, cmd string, err error)
 	Delete(keys []RedisMessage)
@@ -78,10 +78,9 @@ func newLRU(max int) *lru {
 	}
 }
 
-func (c *lru) GetOrPrepare(key, cmd string, ttl time.Duration) (v RedisMessage, e *entry) {
+func (c *lru) GetOrPrepare(key, cmd string, now time.Time, ttl time.Duration) (v RedisMessage, e *entry) {
 	var ok bool
 	var kc *keyCache
-	var now = time.Now()
 	var kcTTL time.Time
 	var ele, back *list.Element
 
