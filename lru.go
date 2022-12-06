@@ -22,7 +22,7 @@ const (
 )
 
 type cache interface {
-	GetOrPrepare(key, cmd string, ttl time.Duration) (v RedisMessage, entry *entry)
+	GetOrPrepare(key, cmd string, now time.Time, ttl time.Duration) (v RedisMessage, entry *entry)
 	Update(key, cmd string, value RedisMessage, pttl int64)
 	Cancel(key, cmd string, err error)
 	Delete(keys []RedisMessage)
@@ -78,10 +78,9 @@ func newLRU(max int) *lru {
 	}
 }
 
-func (c *lru) GetOrPrepare(key, cmd string, ttl time.Duration) (v RedisMessage, e *entry) {
+func (c *lru) GetOrPrepare(key, cmd string, now time.Time, ttl time.Duration) (v RedisMessage, e *entry) {
 	var ok bool
 	var kc *keyCache
-	var now = time.Now()
 	var kcTTL time.Time
 	var ele, back *list.Element
 
@@ -149,9 +148,16 @@ func (c *lru) Update(key, cmd string, value RedisMessage, pttl int64) {
 	var ch chan struct{}
 	c.mu.Lock()
 	if kc, ok := c.store[key]; ok {
+		if pttl >= 0 {
+			// server side ttl should only shorten client side ttl
+			if ttl := time.Now().Add(time.Duration(pttl) * time.Millisecond); ttl.Before(kc.ttl) {
+				kc.ttl = ttl
+			}
+		}
 		if ele, ok := kc.cache[cmd]; ok {
 			if e := ele.Value.(*entry); e.val.typ == 0 {
 				e.val = value
+				e.val.setTTL(kc.ttl.Unix())
 				e.size = entryBaseSize + 2*(len(key)+len(cmd)) + value.approximateSize()
 				c.size += e.size
 				ch = e.ch
@@ -168,12 +174,6 @@ func (c *lru) Update(key, cmd string, value RedisMessage, pttl int64) {
 					c.size -= e.size
 				}
 				ele = ele.Next()
-			}
-		}
-		if pttl >= 0 {
-			// server side ttl should only shorten client side ttl
-			if ttl := time.Now().Add(time.Duration(pttl) * time.Millisecond); ttl.Before(kc.ttl) {
-				kc.ttl = ttl
 			}
 		}
 	}

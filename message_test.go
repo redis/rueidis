@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestIsRedisNil(t *testing.T) {
@@ -458,6 +459,17 @@ func TestRedisResult(t *testing.T) {
 			t.Fatal("IsCacheHit not as expected")
 		}
 	})
+
+	t.Run("CacheTTL", func(t *testing.T) {
+		if (RedisResult{err: errors.New("other")}).CacheTTL() != 0 {
+			t.Fatal("CacheTTL != 0")
+		}
+		m := RedisMessage{}
+		m.setTTL(time.Now().Add(2 * time.Second).Unix())
+		if (RedisResult{val: m}).CacheTTL() <= 0 {
+			t.Fatal("CacheTTL <= 0")
+		}
+	})
 }
 
 //gocyclo:ignore
@@ -838,6 +850,17 @@ func TestRedisMessage(t *testing.T) {
 		}
 		if !(&RedisMessage{typ: '_', attrs: cacheMark}).IsCacheHit() {
 			t.Fatal("IsCacheHit not as expected")
+		}
+	})
+
+	t.Run("CacheTTL", func(t *testing.T) {
+		if (&RedisMessage{typ: '_'}).CacheTTL() != 0 {
+			t.Fatal("CacheTTL != 0")
+		}
+		m := &RedisMessage{typ: '_'}
+		m.setTTL(time.Now().Add(2 * time.Second).Unix())
+		if m.CacheTTL() <= 0 {
+			t.Fatal("CacheTTL <= 0")
 		}
 	})
 }

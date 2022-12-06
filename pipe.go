@@ -929,6 +929,15 @@ next:
 	return m, nil
 }
 
+func remainTTL(now time.Time, ttl time.Duration, pttl int64) int64 {
+	if pttl >= 0 {
+		if sttl := time.Duration(pttl) * time.Millisecond; sttl < ttl {
+			ttl = sttl
+		}
+	}
+	return now.Add(ttl).Unix()
+}
+
 func (p *pipe) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) RedisResult {
 	if p.cache == nil {
 		return p.Do(ctx, cmds.Completed(cmd))
@@ -937,7 +946,8 @@ func (p *pipe) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duratio
 		return p.doCacheMGet(ctx, cmd, ttl)
 	}
 	ck, cc := cmd.CacheKey()
-	if v, entry := p.cache.GetOrPrepare(ck, cc, ttl); v.typ != 0 {
+	now := time.Now()
+	if v, entry := p.cache.GetOrPrepare(ck, cc, now, ttl); v.typ != 0 {
 		return newResult(v, nil)
 	} else if entry != nil {
 		return newResult(entry.Wait(ctx))
@@ -958,6 +968,7 @@ func (p *pipe) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duratio
 		p.cache.Cancel(ck, cc, err)
 		return newErrResult(err)
 	}
+	exec[1].setTTL(remainTTL(now, ttl, exec[0].integer))
 	return newResult(exec[1], nil)
 }
 
@@ -971,9 +982,10 @@ func (p *pipe) doCacheMGet(ctx context.Context, cmd cmds.Cacheable, ttl time.Dur
 	if mgetcc[0] == 'J' {
 		keys-- // the last one of JSON.MGET is a path, not a key
 	}
+	var now = time.Now()
 	var rewrite cmds.Arbitrary
 	for i, key := range commands[1 : keys+1] {
-		v, entry := p.cache.GetOrPrepare(key, mgetcc, ttl)
+		v, entry := p.cache.GetOrPrepare(key, mgetcc, now, ttl)
 		if v.typ != 0 { // cache hit for one key
 			if len(result.val.values) == 0 {
 				result.val.values = make([]RedisMessage, keys)
@@ -1026,10 +1038,14 @@ func (p *pipe) doCacheMGet(ctx context.Context, cmd cmds.Cacheable, ttl time.Dur
 				cmds.Put(cmd.CommandSlice())
 			}
 		}()
-		if len(rewritten.Commands()) == len(commands) { // all cache miss
-			return newResult(exec[len(exec)-1], nil)
+		last := len(exec) - 1
+		for i := range exec[last].values {
+			exec[last].values[i].setTTL(remainTTL(now, ttl, exec[i].integer))
 		}
-		partial = exec[len(exec)-1].values
+		if len(rewritten.Commands()) == len(commands) { // all cache miss
+			return newResult(exec[last], nil)
+		}
+		partial = exec[last].values
 	} else { // all cache hit
 		result.val.attrs = cacheMark
 	}
@@ -1068,12 +1084,13 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisR
 	results := make([]RedisResult, len(multi))
 	entries := make(map[int]*entry)
 	missing := []cmds.Completed{cmds.OptInCmd, cmds.MultiCmd}
+	now := time.Now()
 	for i, ct := range multi {
 		if ct.Cmd.IsMGet() {
 			panic(panicmgetcsc)
 		}
 		ck, cc := ct.Cmd.CacheKey()
-		v, entry := p.cache.GetOrPrepare(ck, cc, ct.TTL)
+		v, entry := p.cache.GetOrPrepare(ck, cc, now, ct.TTL)
 		if v.typ != 0 { // cache hit for one key
 			results[i] = newResult(v, nil)
 			continue
@@ -1115,6 +1132,7 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisR
 	for i := 1; i < len(exec); i += 2 {
 		for ; j < len(results); j++ {
 			if results[j].val.typ == 0 && results[j].err == nil {
+				exec[i].setTTL(remainTTL(now, multi[j].TTL, exec[i-1].integer))
 				results[j] = newResult(exec[i], nil)
 				break
 			}

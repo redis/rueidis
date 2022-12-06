@@ -673,7 +673,7 @@ func TestClientSideCachingExecAbort(t *testing.T) {
 	if v.IsCacheHit() {
 		t.Errorf("unexpected cache hit")
 	}
-	if v, entry := p.cache.GetOrPrepare("a", "GET", time.Second); v.typ != 0 || entry != nil {
+	if v, entry := p.cache.GetOrPrepare("a", "GET", time.Now(), time.Second); v.typ != 0 || entry != nil {
 		t.Errorf("unexpected cache value and entry %v %v", v, entry)
 	}
 }
@@ -689,7 +689,7 @@ func TestClientSideCachingWithNonRedisError(t *testing.T) {
 	if v.IsCacheHit() {
 		t.Errorf("unexpected cache hit")
 	}
-	if v, entry := p.cache.GetOrPrepare("a", "GET", time.Second); v.typ != 0 || entry != nil {
+	if v, entry := p.cache.GetOrPrepare("a", "GET", time.Now(), time.Second); v.typ != 0 || entry != nil {
 		t.Errorf("unexpected cache value and entry %v %v", v, entry)
 	}
 }
@@ -986,10 +986,10 @@ func TestClientSideCachingExecAbortMGet(t *testing.T) {
 	if v.IsCacheHit() {
 		t.Errorf("unexpected cache hit")
 	}
-	if v, entry := p.cache.GetOrPrepare("a1", "GET", time.Second); v.typ != 0 || entry != nil {
+	if v, entry := p.cache.GetOrPrepare("a1", "GET", time.Now(), time.Second); v.typ != 0 || entry != nil {
 		t.Errorf("unexpected cache value and entry %v %v", v, entry)
 	}
-	if v, entry := p.cache.GetOrPrepare("a2", "GET", time.Second); v.typ != 0 || entry != nil {
+	if v, entry := p.cache.GetOrPrepare("a2", "GET", time.Now(), time.Second); v.typ != 0 || entry != nil {
 		t.Errorf("unexpected cache value and entry %v %v", v, entry)
 	}
 }
@@ -1005,10 +1005,10 @@ func TestClientSideCachingWithNonRedisErrorMGet(t *testing.T) {
 	if v.IsCacheHit() {
 		t.Errorf("unexpected cache hit")
 	}
-	if v, entry := p.cache.GetOrPrepare("a1", "GET", time.Second); v.typ != 0 || entry != nil {
+	if v, entry := p.cache.GetOrPrepare("a1", "GET", time.Now(), time.Second); v.typ != 0 || entry != nil {
 		t.Errorf("unexpected cache value and entry %v %v", v, entry)
 	}
-	if v, entry := p.cache.GetOrPrepare("a2", "GET", time.Second); v.typ != 0 || entry != nil {
+	if v, entry := p.cache.GetOrPrepare("a2", "GET", time.Now(), time.Second); v.typ != 0 || entry != nil {
 		t.Errorf("unexpected cache value and entry %v %v", v, entry)
 	}
 }
@@ -1017,7 +1017,7 @@ func TestClientSideCachingWithSideChannelMGet(t *testing.T) {
 	p, _, _, closeConn := setup(t, ClientOption{})
 	closeConn()
 
-	p.cache.GetOrPrepare("a1", "GET", 10*time.Second)
+	p.cache.GetOrPrepare("a1", "GET", time.Now(), 10*time.Second)
 	go func() {
 		time.Sleep(100 * time.Millisecond)
 		p.cache.Update("a1", "GET", RedisMessage{typ: '+', string: "OK"}, 10)
@@ -1033,7 +1033,7 @@ func TestClientSideCachingWithSideChannelErrorMGet(t *testing.T) {
 	p, _, _, closeConn := setup(t, ClientOption{})
 	closeConn()
 
-	p.cache.GetOrPrepare("a1", "GET", 10*time.Second)
+	p.cache.GetOrPrepare("a1", "GET", time.Now(), 10*time.Second)
 	go func() {
 		time.Sleep(100 * time.Millisecond)
 		p.cache.Cancel("a1", "GET", io.EOF)
@@ -1234,10 +1234,10 @@ func TestClientSideCachingExecAbortDoMultiCache(t *testing.T) {
 			t.Errorf("unexpected cache hit")
 		}
 	}
-	if v, entry := p.cache.GetOrPrepare("a1", "GET", time.Second); v.typ != 0 || entry != nil {
+	if v, entry := p.cache.GetOrPrepare("a1", "GET", time.Now(), time.Second); v.typ != 0 || entry != nil {
 		t.Errorf("unexpected cache value and entry %v %v", v, entry)
 	}
-	if v, entry := p.cache.GetOrPrepare("a2", "GET", time.Second); v.typ != 0 || entry != nil {
+	if v, entry := p.cache.GetOrPrepare("a2", "GET", time.Now(), time.Second); v.typ != 0 || entry != nil {
 		t.Errorf("unexpected cache value and entry %v %v", v, entry)
 	}
 }
@@ -1259,10 +1259,10 @@ func TestClientSideCachingWithNonRedisErrorDoMultiCache(t *testing.T) {
 			t.Errorf("unexpected cache hit")
 		}
 	}
-	if v, entry := p.cache.GetOrPrepare("a1", "GET", time.Second); v.typ != 0 || entry != nil {
+	if v, entry := p.cache.GetOrPrepare("a1", "GET", time.Now(), time.Second); v.typ != 0 || entry != nil {
 		t.Errorf("unexpected cache value and entry %v %v", v, entry)
 	}
-	if v, entry := p.cache.GetOrPrepare("a2", "GET", time.Second); v.typ != 0 || entry != nil {
+	if v, entry := p.cache.GetOrPrepare("a2", "GET", time.Now(), time.Second); v.typ != 0 || entry != nil {
 		t.Errorf("unexpected cache value and entry %v %v", v, entry)
 	}
 }
@@ -1271,7 +1271,7 @@ func TestClientSideCachingWithSideChannelDoMultiCache(t *testing.T) {
 	p, _, _, closeConn := setup(t, ClientOption{})
 	closeConn()
 
-	p.cache.GetOrPrepare("a1", "GET", 10*time.Second)
+	p.cache.GetOrPrepare("a1", "GET", time.Now(), 10*time.Second)
 	go func() {
 		time.Sleep(100 * time.Millisecond)
 		p.cache.Update("a1", "GET", RedisMessage{typ: '+', string: "OK"}, 10)
@@ -1289,7 +1289,7 @@ func TestClientSideCachingWithSideChannelErrorDoMultiCache(t *testing.T) {
 	p, _, _, closeConn := setup(t, ClientOption{})
 	closeConn()
 
-	p.cache.GetOrPrepare("a1", "GET", 10*time.Second)
+	p.cache.GetOrPrepare("a1", "GET", time.Now(), 10*time.Second)
 	go func() {
 		time.Sleep(100 * time.Millisecond)
 		p.cache.Cancel("a1", "GET", io.EOF)
@@ -1301,6 +1301,129 @@ func TestClientSideCachingWithSideChannelErrorDoMultiCache(t *testing.T) {
 	if arr[0].err != io.EOF {
 		t.Errorf("unexpected err, got %v", arr[0].err)
 	}
+}
+
+func TestClientSideCachingMissCacheTTL(t *testing.T) {
+	t.Run("DoCache GET", func(t *testing.T) {
+		p, mock, cancel, _ := setup(t, ClientOption{})
+		defer cancel()
+		expectCSC := func(pttl int64, key string) {
+			mock.Expect("CLIENT", "CACHING", "YES").
+				Expect("MULTI").
+				Expect("PTTL", key).
+				Expect("GET", key).
+				Expect("EXEC").
+				ReplyString("OK").
+				ReplyString("OK").
+				ReplyString("OK").
+				ReplyString("OK").
+				Reply(RedisMessage{typ: '*', values: []RedisMessage{
+					{typ: ':', integer: pttl},
+					{typ: '+', string: key},
+				}})
+		}
+		go func() {
+			expectCSC(-1, "a")
+			expectCSC(1000, "b")
+			expectCSC(20000, "c")
+		}()
+		v, _ := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage()
+		if ttl := v.CacheTTL(); ttl != 10 {
+			t.Errorf("unexpected cached ttl, expected %v, got %v", 10, ttl)
+		}
+		v, _ = p.DoCache(context.Background(), cmds.Cacheable(cmds.NewCompleted([]string{"GET", "b"})), 10*time.Second).ToMessage()
+		if ttl := v.CacheTTL(); ttl != 1 {
+			t.Errorf("unexpected cached ttl, expected %v, got %v", 1, ttl)
+		}
+		v, _ = p.DoCache(context.Background(), cmds.Cacheable(cmds.NewCompleted([]string{"GET", "c"})), 10*time.Second).ToMessage()
+		if ttl := v.CacheTTL(); ttl != 10 {
+			t.Errorf("unexpected cached ttl, expected %v, got %v", 10, ttl)
+		}
+	})
+	t.Run("DoCache MGET", func(t *testing.T) {
+		p, mock, cancel, _ := setup(t, ClientOption{})
+		defer cancel()
+		go func() {
+			mock.Expect("CLIENT", "CACHING", "YES").
+				Expect("MULTI").
+				Expect("PTTL", "a").
+				Expect("PTTL", "b").
+				Expect("PTTL", "c").
+				Expect("MGET", "a", "b", "c").
+				Expect("EXEC").
+				ReplyString("OK").
+				ReplyString("OK").
+				ReplyString("OK").
+				ReplyString("OK").
+				ReplyString("OK").
+				ReplyString("OK").
+				Reply(RedisMessage{typ: '*', values: []RedisMessage{
+					{typ: ':', integer: -1},
+					{typ: ':', integer: 1000},
+					{typ: ':', integer: 20000},
+					{typ: '*', values: []RedisMessage{
+						{typ: '+', string: "a"},
+						{typ: '+', string: "b"},
+						{typ: '+', string: "c"},
+					}},
+				}})
+		}()
+		v, _ := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewMGetCompleted([]string{"MGET", "a", "b", "c"})), 10*time.Second).ToArray()
+		if ttl := v[0].CacheTTL(); ttl != 10 {
+			t.Errorf("unexpected cached ttl, expected %v, got %v", 10, ttl)
+		}
+		if ttl := v[1].CacheTTL(); ttl != 1 {
+			t.Errorf("unexpected cached ttl, expected %v, got %v", 1, ttl)
+		}
+		if ttl := v[2].CacheTTL(); ttl != 10 {
+			t.Errorf("unexpected cached ttl, expected %v, got %v", 10, ttl)
+		}
+	})
+	t.Run("DoMultiCache", func(t *testing.T) {
+		p, mock, cancel, _ := setup(t, ClientOption{})
+		defer cancel()
+		go func() {
+			mock.Expect("CLIENT", "CACHING", "YES").
+				Expect("MULTI").
+				Expect("PTTL", "a1").
+				Expect("GET", "a1").
+				Expect("PTTL", "a2").
+				Expect("GET", "a2").
+				Expect("PTTL", "a3").
+				Expect("GET", "a3").
+				Expect("EXEC").
+				ReplyString("OK").
+				ReplyString("OK").
+				ReplyString("OK").
+				ReplyString("OK").
+				ReplyString("OK").
+				ReplyString("OK").
+				ReplyString("OK").
+				ReplyString("OK").
+				Reply(RedisMessage{typ: '*', values: []RedisMessage{
+					{typ: ':', integer: -1},
+					{typ: ':', integer: 1},
+					{typ: ':', integer: 1000},
+					{typ: ':', integer: 2},
+					{typ: ':', integer: 20000},
+					{typ: ':', integer: 3},
+				}})
+		}()
+		arr := p.DoMultiCache(context.Background(), []CacheableTTL{
+			CT(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a1"})), time.Second*10),
+			CT(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a2"})), time.Second*10),
+			CT(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a3"})), time.Second*10),
+		}...)
+		if ttl := arr[0].CacheTTL(); ttl != 10 {
+			t.Errorf("unexpected cached ttl, expected %v, got %v", 10, ttl)
+		}
+		if ttl := arr[1].CacheTTL(); ttl != 1 {
+			t.Errorf("unexpected cached ttl, expected %v, got %v", 1, ttl)
+		}
+		if ttl := arr[2].CacheTTL(); ttl != 10 {
+			t.Errorf("unexpected cached ttl, expected %v, got %v", 10, ttl)
+		}
+	})
 }
 
 // https://github.com/redis/redis/issues/8935
