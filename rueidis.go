@@ -2,9 +2,11 @@
 package rueidis
 
 import (
+	"bufio"
 	"context"
 	"crypto/tls"
 	"errors"
+	"io"
 	"math/rand"
 	"net"
 	"strings"
@@ -94,6 +96,10 @@ type ClientOption struct {
 	ReadBufferEachConn int
 	// WriteBufferEachConn is the size of the bufio.NewWriterSize for each connection, default to DefaultWriteBuffer (0.5 MiB).
 	WriteBufferEachConn int
+
+	// GetWriterEachConn allows caller to construct its own bufio.Writer for each connection by providing a function
+	// which returns *bufio.Writer and the callback to be called by Rueidis upon exit from the pipe.
+	GetWriterEachConn func(writer io.Writer) (*bufio.Writer, func())
 
 	// BlockingPoolSize is the size of the connection pool shared by blocking commands (ex BLPOP, XREAD with BLOCK).
 	// The default is DefaultPoolSize.

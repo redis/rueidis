@@ -46,6 +46,7 @@ type pipe struct {
 	cache           cache
 	r               *bufio.Reader
 	w               *bufio.Writer
+	wClose          func()
 	close           chan struct{}
 	onInvalidations func([]RedisMessage)
 	r2psFn          func() (p *pipe, err error)
@@ -76,11 +77,21 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 	if err != nil {
 		return nil, err
 	}
+
+	var w *bufio.Writer
+	var wCloseFunc func()
+	if option.GetWriterEachConn != nil {
+		w, wCloseFunc = option.GetWriterEachConn(conn)
+	} else {
+		w = bufio.NewWriterSize(conn, option.WriteBufferEachConn)
+	}
+
 	p = &pipe{
-		conn:  conn,
-		queue: newRing(option.RingScaleEachConn),
-		r:     bufio.NewReaderSize(conn, option.ReadBufferEachConn),
-		w:     bufio.NewWriterSize(conn, option.WriteBufferEachConn),
+		conn:   conn,
+		queue:  newRing(option.RingScaleEachConn),
+		r:      bufio.NewReaderSize(conn, option.ReadBufferEachConn),
+		w:      w,
+		wClose: wCloseFunc,
 
 		nsubs: newSubs(),
 		psubs: newSubs(),
@@ -213,7 +224,10 @@ func (p *pipe) background() {
 func (p *pipe) _exit(err error) {
 	p.error.CompareAndSwap(nil, &errs{error: err})
 	atomic.CompareAndSwapInt32(&p.state, 1, 2) // stop accepting new requests
-	_ = p.conn.Close()                         // force both read & write goroutine to exit
+	if p.wClose != nil {
+		p.wClose()
+	}
+	_ = p.conn.Close() // force both read & write goroutine to exit
 	p.clhks.Load().(func(error))(err)
 }
 
