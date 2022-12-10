@@ -286,6 +286,7 @@ func (p *pipe) _backgroundWrite() (err error) {
 		ones  = make([]cmds.Completed, 1)
 		multi []cmds.Completed
 		ch    chan RedisResult
+		delay = p.maxFlushDelay
 	)
 
 	for atomic.LoadInt32(&p.state) < 3 {
@@ -293,16 +294,12 @@ func (p *pipe) _backgroundWrite() (err error) {
 			if p.w.Buffered() == 0 {
 				err = p.Error()
 			} else {
-				if p.maxFlushDelay == 0 {
+				if delay == 0 || atomic.LoadInt32(&p.waits) == 1 { // do not delay for sequential usage
 					err = p.w.Flush()
 				} else {
-					if atomic.LoadInt32(&p.waits) == 1 {
-						err = p.w.Flush()
-					} else {
-						ts := time.Now()
-						err = p.w.Flush()
-						time.Sleep(p.maxFlushDelay - time.Since(ts))
-					}
+					ts := time.Now()
+					err = p.w.Flush()
+					time.Sleep(delay - time.Since(ts)) // ref: https://github.com/rueian/rueidis/issues/156
 				}
 			}
 			if err == nil {

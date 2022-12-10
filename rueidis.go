@@ -110,6 +110,15 @@ type ClientOption struct {
 	// This default is ClientOption.Dialer.KeepAlive * (9+1), where 9 is the default of tcp_keepalive_probes on Linux.
 	ConnWriteTimeout time.Duration
 
+	// MaxFlushDelay when greater than zero pauses pipeline write loop for some time (not larger than MaxFlushDelay)
+	// after each flushing of data to the connection. This gives pipeline a chance to collect more commands to send
+	// to Redis. Adding this delay increases latency, reduces throughput – but in most cases may significantly reduce
+	// application and Redis CPU utilization due to less executed system calls. By default, Rueidis flushes data to the
+	// connection without extra delays. Depending on network latency and application-specific conditions the value
+	// of MaxFlushDelay may vary, sth like 20 microseconds should not affect latency/throughput a lot but still
+	// produce notable CPU usage reduction under load. Ref: https://github.com/rueian/rueidis/issues/156
+	MaxFlushDelay time.Duration
+
 	// ShuffleInit is a handy flag that shuffles the InitAddress after passing to the NewClient() if it is true
 	ShuffleInit bool
 	// DisableRetry disables retrying read-only commands under network errors
@@ -118,14 +127,6 @@ type ClientOption struct {
 	DisableCache bool
 	// AlwaysPipelining makes rueidis.Client always pipeline redis commands even if they are not issued concurrently.
 	AlwaysPipelining bool
-	// MaxFlushDelay when greater than zero pauses pipeline write loop for some time (not larger than MaxFlushDelay)
-	// after each flushing of data to the connection. This gives pipeline a chance to collect more commands to send
-	// to Redis. Adding this delay increases latency, reduces throughput – but in most cases may significantly reduce
-	// application and Redis CPU utilization due to less executed system calls. By default, Rueidis flushes data to the
-	// connection without extra delays. Depending on network latency and application-specific conditions the value
-	// of MaxFlushDelay may vary, sth like 20 microseconds should not affect latency/throughput a lot but still
-	// produce notable CPU usage reduction under load.
-	MaxFlushDelay time.Duration
 }
 
 // SentinelOption contains MasterSet,
