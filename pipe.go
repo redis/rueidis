@@ -56,6 +56,7 @@ type pipe struct {
 	info            map[string]RedisMessage
 	timeout         time.Duration
 	pinggap         time.Duration
+	maxFlushDelay   time.Duration
 	once            sync.Once
 	r2mu            sync.Mutex
 	version         int32
@@ -87,8 +88,9 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 		ssubs: newSubs(),
 		close: make(chan struct{}),
 
-		timeout: option.ConnWriteTimeout,
-		pinggap: option.Dialer.KeepAlive,
+		timeout:       option.ConnWriteTimeout,
+		pinggap:       option.Dialer.KeepAlive,
+		maxFlushDelay: option.MaxFlushDelay,
 
 		r2ps: r2ps,
 	}
@@ -291,7 +293,17 @@ func (p *pipe) _backgroundWrite() (err error) {
 			if p.w.Buffered() == 0 {
 				err = p.Error()
 			} else {
-				err = p.w.Flush()
+				if p.maxFlushDelay == 0 {
+					err = p.w.Flush()
+				} else {
+					if atomic.LoadInt32(&p.waits) == 1 {
+						err = p.w.Flush()
+					} else {
+						ts := time.Now()
+						err = p.w.Flush()
+						time.Sleep(time.Microsecond*20 - time.Since(ts))
+					}
+				}
 			}
 			if err == nil {
 				if atomic.LoadInt32(&p.state) == 1 {

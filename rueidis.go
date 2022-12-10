@@ -118,6 +118,14 @@ type ClientOption struct {
 	DisableCache bool
 	// AlwaysPipelining makes rueidis.Client always pipeline redis commands even if they are not issued concurrently.
 	AlwaysPipelining bool
+	// MaxFlushDelay when greater than zero pauses pipeline write loop for some time (not larger than MaxFlushDelay)
+	// after each flushing of data to the connection. This gives pipeline a chance to collect more commands to send
+	// to Redis. Adding this delay increases latency, reduces throughput – but in most cases may significantly reduce
+	// application and Redis CPU utilization due to less executed system calls. By default, Rueidis flushes data to the
+	// connection without extra delays. Depending on network latency and application-specific conditions the value
+	// of MaxFlushDelay may vary, sth like 20 microseconds should not affect latency/throughput a lot but still
+	// produce notable CPU usage reduction under load.
+	MaxFlushDelay time.Duration
 }
 
 // SentinelOption contains MasterSet,

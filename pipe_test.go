@@ -464,6 +464,26 @@ func TestWriteSinglePipelineFlush(t *testing.T) {
 	}
 }
 
+func TestWriteWithMaxFlushDelay(t *testing.T) {
+	p, mock, cancel, _ := setup(t, ClientOption{
+		AlwaysPipelining: true,
+		MaxFlushDelay:    20 * time.Microsecond,
+	})
+	defer cancel()
+	times := 2000
+	wg := sync.WaitGroup{}
+	wg.Add(times)
+
+	for i := 0; i < times; i++ {
+		go func() {
+			ExpectOK(t, p.Do(context.Background(), cmds.NewCompleted([]string{"PING"})))
+		}()
+	}
+	for i := 0; i < times; i++ {
+		mock.Expect("PING").ReplyString("OK")
+	}
+}
+
 func TestWriteMultiFlush(t *testing.T) {
 	p, mock, cancel, _ := setup(t, ClientOption{})
 	defer cancel()
