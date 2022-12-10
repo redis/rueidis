@@ -301,7 +301,7 @@ func (p *pipe) _backgroundWrite() (err error) {
 					} else {
 						ts := time.Now()
 						err = p.w.Flush()
-						time.Sleep(time.Microsecond*20 - time.Since(ts))
+						time.Sleep(p.maxFlushDelay - time.Since(ts))
 					}
 				}
 			}
