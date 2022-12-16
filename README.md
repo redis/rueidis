@@ -4,7 +4,6 @@
 [![Build status](https://badge.buildkite.com/d15fbd91b3b22b55c8d799564f84918a322118ae02590858c4.svg)](https://buildkite.com/rueian/rueidis)
 [![Go Report Card](https://goreportcard.com/badge/github.com/rueian/rueidis)](https://goreportcard.com/report/github.com/rueian/rueidis)
 [![codecov](https://codecov.io/gh/rueian/rueidis/branch/master/graph/badge.svg?token=wGTB8GdY06)](https://codecov.io/gh/rueian/rueidis)
-[![Total alerts](https://img.shields.io/lgtm/alerts/g/rueian/rueidis.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/rueian/rueidis/alerts/)
 [![Maintainability](https://api.codeclimate.com/v1/badges/0d93d524c2b8497aacbe/maintainability)](https://codeclimate.com/github/rueian/rueidis/maintainability)
 
 A Fast Golang Redis client that does auto pipelining and supports client side caching.
@@ -69,9 +68,9 @@ Rueidis has higher throughput than go-redis v9 across 1, 8, and 64 parallelism s
 It is even able to achieve ~14x throughput over go-redis in a local benchmark of Macbook Pro 16" M1 Pro 2021. (see `parallelism(64)-key(16)-value(64)-10`)
 
 #### Single Client
-![client_test_set](https://github.com/rueian/rueidis-benchmark/blob/master/client_test_set_8.png)
+![client_test_set](https://github.com/rueian/rueidis-benchmark/blob/master/client_test_set_10.png)
 #### Cluster Client
-![cluster_test_set](https://github.com/rueian/rueidis-benchmark/blob/master/cluster_test_set_8.png)
+![cluster_test_set](https://github.com/rueian/rueidis-benchmark/blob/master/cluster_test_set_10.png)
 
 Benchmark source code: https://github.com/rueian/rueidis-benchmark
 
@@ -113,7 +112,7 @@ If the OpenTelemetry is enabled by the `rueidisotel.WithClient(client)`, then th
 
 ### Benchmark
 
-![client_test_get](https://github.com/rueian/rueidis-benchmark/blob/master/client_test_get_8.png)
+![client_test_get](https://github.com/rueian/rueidis-benchmark/blob/master/client_test_get_10.png)
 
 Benchmark source code: https://github.com/rueian/rueidis-benchmark
 
