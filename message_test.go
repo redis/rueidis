@@ -11,7 +11,7 @@ import (
 )
 
 func TestIsRedisNil(t *testing.T) {
-	err := &RedisError{typ: '_'}
+	err := Nil
 	if !IsRedisNil(err) {
 		t.Fatal("IsRedisNil fail")
 	}

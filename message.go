@@ -12,13 +12,13 @@ import (
 
 const messageStructSize = int(unsafe.Sizeof(RedisMessage{}))
 
+// Nil represents a Redis Nil message
+var Nil = &RedisError{typ: '_'}
+
 // IsRedisNil is a handy method to check if error is redis nil response.
 // All redis nil response returns as an error.
 func IsRedisNil(err error) bool {
-	if e, ok := err.(*RedisError); ok {
-		return e.IsNil()
-	}
-	return false
+	return err == Nil
 }
 
 // RedisError is an error response or a nil message from redis instance
@@ -403,8 +403,7 @@ func (m *RedisMessage) IsMap() bool {
 // Error check if message is a redis error response, including nil response
 func (m *RedisMessage) Error() error {
 	if m.typ == '_' {
-		mm := *m
-		return (*RedisError)(&mm)
+		return Nil
 	}
 	if m.typ == '-' || m.typ == '!' {
 		// kvrocks: https://github.com/rueian/rueidis/issues/152#issuecomment-1333923750
