@@ -12,13 +12,13 @@ import (
 
 const messageStructSize = int(unsafe.Sizeof(RedisMessage{}))
 
+// Nil represents a Redis Nil message
+var Nil = &RedisError{typ: '_'}
+
 // IsRedisNil is a handy method to check if error is redis nil response.
 // All redis nil response returns as an error.
 func IsRedisNil(err error) bool {
-	if e, ok := err.(*RedisError); ok {
-		return e.IsNil()
-	}
-	return false
+	return err == Nil
 }
 
 // RedisError is an error response or a nil message from redis instance
@@ -96,203 +96,253 @@ func (r RedisResult) NonRedisError() error {
 }
 
 // Error returns either underlying error or redis error or nil
-func (r RedisResult) Error() error {
+func (r RedisResult) Error() (err error) {
 	if r.err != nil {
-		return r.err
+		err = r.err
+	} else {
+		err = r.val.Error()
 	}
-	if err := r.val.Error(); err != nil {
-		return err
-	}
-	return nil
+	return
 }
 
 // ToMessage retrieves the RedisMessage
-func (r RedisResult) ToMessage() (RedisMessage, error) {
-	return r.val, r.Error()
+func (r RedisResult) ToMessage() (v RedisMessage, err error) {
+	if r.err != nil {
+		err = r.err
+	} else {
+		err = r.val.Error()
+	}
+	return r.val, err
 }
 
 // ToInt64 delegates to RedisMessage.ToInt64
-func (r RedisResult) ToInt64() (int64, error) {
-	if err := r.Error(); err != nil {
-		return 0, err
+func (r RedisResult) ToInt64() (v int64, err error) {
+	if r.err != nil {
+		err = r.err
+	} else {
+		v, err = r.val.ToInt64()
 	}
-	return r.val.ToInt64()
+	return
 }
 
 // ToBool delegates to RedisMessage.ToBool
-func (r RedisResult) ToBool() (bool, error) {
-	if err := r.Error(); err != nil {
-		return false, err
+func (r RedisResult) ToBool() (v bool, err error) {
+	if r.err != nil {
+		err = r.err
+	} else {
+		v, err = r.val.ToBool()
 	}
-	return r.val.ToBool()
+	return
 }
 
 // ToFloat64 delegates to RedisMessage.ToFloat64
-func (r RedisResult) ToFloat64() (float64, error) {
-	if err := r.Error(); err != nil {
-		return 0, err
+func (r RedisResult) ToFloat64() (v float64, err error) {
+	if r.err != nil {
+		err = r.err
+	} else {
+		v, err = r.val.ToFloat64()
 	}
-	return r.val.ToFloat64()
+	return
 }
 
 // ToString delegates to RedisMessage.ToString
-func (r RedisResult) ToString() (string, error) {
-	if err := r.Error(); err != nil {
-		return "", err
+func (r RedisResult) ToString() (v string, err error) {
+	if r.err != nil {
+		err = r.err
+	} else {
+		v, err = r.val.ToString()
 	}
-	return r.val.ToString()
+	return
 }
 
 // AsReader delegates to RedisMessage.AsReader
-func (r RedisResult) AsReader() (reader io.Reader, err error) {
-	if err := r.Error(); err != nil {
-		return nil, err
+func (r RedisResult) AsReader() (v io.Reader, err error) {
+	if r.err != nil {
+		err = r.err
+	} else {
+		v, err = r.val.AsReader()
 	}
-	return r.val.AsReader()
+	return
 }
 
 // DecodeJSON delegates to RedisMessage.DecodeJSON
-func (r RedisResult) DecodeJSON(v interface{}) error {
-	if err := r.Error(); err != nil {
-		return err
+func (r RedisResult) DecodeJSON(v interface{}) (err error) {
+	if r.err != nil {
+		err = r.err
+	} else {
+		err = r.val.DecodeJSON(v)
 	}
-	return r.val.DecodeJSON(v)
+	return
 }
 
 // AsInt64 delegates to RedisMessage.AsInt64
-func (r RedisResult) AsInt64() (int64, error) {
-	if err := r.Error(); err != nil {
-		return 0, err
+func (r RedisResult) AsInt64() (v int64, err error) {
+	if r.err != nil {
+		err = r.err
+	} else {
+		v, err = r.val.AsInt64()
 	}
-	return r.val.AsInt64()
+	return
 }
 
 // AsBool delegates to RedisMessage.AsBool
-func (r RedisResult) AsBool() (bool, error) {
-	if err := r.Error(); err != nil {
-		return false, err
+func (r RedisResult) AsBool() (v bool, err error) {
+	if r.err != nil {
+		err = r.err
+	} else {
+		v, err = r.val.AsBool()
 	}
-	return r.val.AsBool()
+	return
 }
 
 // AsFloat64 delegates to RedisMessage.AsFloat64
-func (r RedisResult) AsFloat64() (float64, error) {
-	if err := r.Error(); err != nil {
-		return 0, err
+func (r RedisResult) AsFloat64() (v float64, err error) {
+	if r.err != nil {
+		err = r.err
+	} else {
+		v, err = r.val.AsFloat64()
 	}
-	return r.val.AsFloat64()
+	return
 }
 
 // ToArray delegates to RedisMessage.ToArray
-func (r RedisResult) ToArray() ([]RedisMessage, error) {
-	if err := r.Error(); err != nil {
-		return nil, err
+func (r RedisResult) ToArray() (v []RedisMessage, err error) {
+	if r.err != nil {
+		err = r.err
+	} else {
+		v, err = r.val.ToArray()
 	}
-	return r.val.ToArray()
+	return
 }
 
 // AsStrSlice delegates to RedisMessage.AsStrSlice
-func (r RedisResult) AsStrSlice() ([]string, error) {
-	if err := r.Error(); err != nil {
-		return nil, err
+func (r RedisResult) AsStrSlice() (v []string, err error) {
+	if r.err != nil {
+		err = r.err
+	} else {
+		v, err = r.val.AsStrSlice()
 	}
-	return r.val.AsStrSlice()
+	return
 }
 
 // AsIntSlice delegates to RedisMessage.AsIntSlice
-func (r RedisResult) AsIntSlice() ([]int64, error) {
-	if err := r.Error(); err != nil {
-		return nil, err
+func (r RedisResult) AsIntSlice() (v []int64, err error) {
+	if r.err != nil {
+		err = r.err
+	} else {
+		v, err = r.val.AsIntSlice()
 	}
-	return r.val.AsIntSlice()
+	return
 }
 
 // AsFloatSlice delegates to RedisMessage.AsFloatSlice
-func (r RedisResult) AsFloatSlice() ([]float64, error) {
-	if err := r.Error(); err != nil {
-		return nil, err
+func (r RedisResult) AsFloatSlice() (v []float64, err error) {
+	if r.err != nil {
+		err = r.err
+	} else {
+		v, err = r.val.AsFloatSlice()
 	}
-	return r.val.AsFloatSlice()
+	return
 }
 
 // AsXRangeEntry delegates to RedisMessage.AsXRangeEntry
-func (r RedisResult) AsXRangeEntry() (XRangeEntry, error) {
-	if err := r.Error(); err != nil {
-		return XRangeEntry{}, err
+func (r RedisResult) AsXRangeEntry() (v XRangeEntry, err error) {
+	if r.err != nil {
+		err = r.err
+	} else {
+		v, err = r.val.AsXRangeEntry()
 	}
-	return r.val.AsXRangeEntry()
+	return
 }
 
 // AsXRange delegates to RedisMessage.AsXRange
-func (r RedisResult) AsXRange() ([]XRangeEntry, error) {
-	if err := r.Error(); err != nil {
-		return nil, err
+func (r RedisResult) AsXRange() (v []XRangeEntry, err error) {
+	if r.err != nil {
+		err = r.err
+	} else {
+		v, err = r.val.AsXRange()
 	}
-	return r.val.AsXRange()
+	return
 }
 
 // AsZScore delegates to RedisMessage.AsZScore
-func (r RedisResult) AsZScore() (ZScore, error) {
-	if err := r.Error(); err != nil {
-		return ZScore{}, err
+func (r RedisResult) AsZScore() (v ZScore, err error) {
+	if r.err != nil {
+		err = r.err
+	} else {
+		v, err = r.val.AsZScore()
 	}
-	return r.val.AsZScore()
+	return
 }
 
 // AsZScores delegates to RedisMessage.AsZScores
-func (r RedisResult) AsZScores() ([]ZScore, error) {
-	if err := r.Error(); err != nil {
-		return nil, err
+func (r RedisResult) AsZScores() (v []ZScore, err error) {
+	if r.err != nil {
+		err = r.err
+	} else {
+		v, err = r.val.AsZScores()
 	}
-	return r.val.AsZScores()
+	return
 }
 
 // AsXRead delegates to RedisMessage.AsXRead
-func (r RedisResult) AsXRead() (map[string][]XRangeEntry, error) {
-	if err := r.Error(); err != nil {
-		return nil, err
+func (r RedisResult) AsXRead() (v map[string][]XRangeEntry, err error) {
+	if r.err != nil {
+		err = r.err
+	} else {
+		v, err = r.val.AsXRead()
 	}
-	return r.val.AsXRead()
+	return
 }
 
 // AsMap delegates to RedisMessage.AsMap
-func (r RedisResult) AsMap() (map[string]RedisMessage, error) {
-	if err := r.Error(); err != nil {
-		return nil, err
+func (r RedisResult) AsMap() (v map[string]RedisMessage, err error) {
+	if r.err != nil {
+		err = r.err
+	} else {
+		v, err = r.val.AsMap()
 	}
-	return r.val.AsMap()
+	return
 }
 
 // AsStrMap delegates to RedisMessage.AsStrMap
-func (r RedisResult) AsStrMap() (map[string]string, error) {
-	if err := r.Error(); err != nil {
-		return nil, err
+func (r RedisResult) AsStrMap() (v map[string]string, err error) {
+	if r.err != nil {
+		err = r.err
+	} else {
+		v, err = r.val.AsStrMap()
 	}
-	return r.val.AsStrMap()
+	return
 }
 
 // AsIntMap delegates to RedisMessage.AsIntMap
-func (r RedisResult) AsIntMap() (map[string]int64, error) {
-	if err := r.Error(); err != nil {
-		return nil, err
+func (r RedisResult) AsIntMap() (v map[string]int64, err error) {
+	if r.err != nil {
+		err = r.err
+	} else {
+		v, err = r.val.AsIntMap()
 	}
-	return r.val.AsIntMap()
+	return
 }
 
 // ToMap delegates to RedisMessage.ToMap
-func (r RedisResult) ToMap() (map[string]RedisMessage, error) {
-	if err := r.Error(); err != nil {
-		return nil, err
+func (r RedisResult) ToMap() (v map[string]RedisMessage, err error) {
+	if r.err != nil {
+		err = r.err
+	} else {
+		v, err = r.val.ToMap()
 	}
-	return r.val.ToMap()
+	return
 }
 
 // ToAny delegates to RedisMessage.ToAny
-func (r RedisResult) ToAny() (interface{}, error) {
-	if err := r.Error(); err != nil {
-		return nil, err
+func (r RedisResult) ToAny() (v interface{}, err error) {
+	if r.err != nil {
+		err = r.err
+	} else {
+		v, err = r.val.ToAny()
 	}
-	return r.val.ToAny()
+	return
 }
 
 // IsCacheHit delegates to RedisMessage.IsCacheHit
@@ -353,12 +403,13 @@ func (m *RedisMessage) IsMap() bool {
 // Error check if message is a redis error response, including nil response
 func (m *RedisMessage) Error() error {
 	if m.typ == '_' {
-		return (*RedisError)(m)
+		return Nil
 	}
 	if m.typ == '-' || m.typ == '!' {
 		// kvrocks: https://github.com/rueian/rueidis/issues/152#issuecomment-1333923750
-		m.string = strings.TrimPrefix(m.string, "ERR ")
-		return (*RedisError)(m)
+		mm := *m
+		mm.string = strings.TrimPrefix(m.string, "ERR ")
+		return (*RedisError)(&mm)
 	}
 	return nil
 }
