@@ -6,27 +6,19 @@
 [![codecov](https://codecov.io/gh/rueian/rueidis/branch/master/graph/badge.svg?token=wGTB8GdY06)](https://codecov.io/gh/rueian/rueidis)
 [![Maintainability](https://api.codeclimate.com/v1/badges/0d93d524c2b8497aacbe/maintainability)](https://codeclimate.com/github/rueian/rueidis/maintainability)
 
-A Fast Golang Redis client that does auto pipelining and supports client side caching.
+A fast Golang Redis client that does auto pipelining and supports client side caching.
 
 ## Features
 
-* Auto pipeline for non-blocking redis commands
-* Connection pooling for blocking redis commands
-* Opt-in client side caching in RESP3
-* Pub/Sub, Redis 7 Sharded Pub/Sub
-* Redis Cluster, Sentinel, Streams, TLS, RedisJSON, RedisBloom, RediSearch, RedisGraph, RedisTimeseries, RedisAI, RedisGears
+* Auto pipelining for non-blocking redis commands
+* Client side caching in RESP3
+* Pub/Sub, Sharded Pub/Sub
+* Redis Cluster, Sentinel, Streams, TLS, RedisJSON, RedisBloom, RediSearch, RedisTimeseries, etc.
 * IDE friendly redis command builder
 * Generic Hash/RedisJSON Object Mapping with client side caching and optimistic locking
 * OpenTelemetry tracing and metrics
 * Distributed Locks with client side caching
 * Helpers for writing tests with rueidis mock
-
-## Limitations
-
-Rueidis is built around RESP2 and RESP3 protocol, and supports almost all redis features.
-However, the following features has not yet been implemented in RESP2 mode:
-
-* Client side caching only works in RESP3 and Redis >= 6.0
 
 ## Getting Started
 
@@ -56,9 +48,21 @@ func main() {
 }
 ```
 
-## Auto Pipeline
+## Command Builder
 
-All non-blocking commands sending to a single redis node are automatically pipelined through connections,
+`client.B()` is the entrypoint to construct a redis command:
+
+![IDE friendly command builder](https://user-images.githubusercontent.com/2727535/209358313-39000aee-eaa4-42e1-9748-0d3836c1264f.gif)\
+<sub>_Recorded by @FZambia [Improving Centrifugo Redis Engine throughput and allocation efficiency with Rueidis Go library
+](https://centrifugal.dev/blog/2022/12/20/improving-redis-engine-performance)_</sub>
+
+Once the command is completed, call the `Build()` or `Cache()` to get the actual command and then pass it to either `Client.Do()` or `Client.DoCache()`.
+
+**After the command is passed to the `Client.Do()`, `Client.DoCache()`, the command will be recycled and❗️SHOULD NOT❗️be reused.**
+
+## Auto Pipelining
+
+All non-blocking concurrent commands are automatically pipelined through connections,
 which reduces the overall round trips and system calls, and gets higher throughput.
 
 ### Benchmark comparison with go-redis v9
@@ -74,12 +78,12 @@ It is even able to achieve ~14x throughput over go-redis in a local benchmark of
 
 Benchmark source code: https://github.com/rueian/rueidis-benchmark
 
-There is also a benchmark result performed on two GCP n2-highcpu-2 machines shows that rueidis can achieve higher throughput with lower latencies: https://github.com/rueian/rueidis/pull/93
+A benchmark result performed on two GCP n2-highcpu-2 machines also shows that rueidis can achieve higher throughput with lower latencies: https://github.com/rueian/rueidis/pull/93
 
 ## Client Side Caching
 
 The Opt-In mode of server-assisted client side caching is enabled by default, and can be used by calling `DoCache()` or `DoMultiCache()` with
-an explicit client side TTL.
+pairs of a readonly command and a client side TTL.
 
 ```golang
 c.DoCache(ctx, c.B().Hmget().Key("myhash").Field("1", "2").Cache(), time.Minute).ToArray()
@@ -88,11 +92,7 @@ c.DoMultiCache(ctx,
     rueidis.CT(c.B().Get().Key("k2").Cache(), 2*time.Minute))
 ```
 
-An explicit client side TTL is required because redis server may not send invalidation message in time when
-a key is expired on the server. Please follow [#6833](https://github.com/redis/redis/issues/6833) and [#6867](https://github.com/redis/redis/issues/6867)
-
-Although an explicit client side TTL is required, the `DoCache()` and `DoMultiCache()` still sends a `PTTL` command to server and make sure that
-the client side TTL is not longer than the TTL on server side.
+Cached responses will be invalidated when being notified by redis or their client side ttl is reached.
 
 Users can use `IsCacheHit()` to verify that if the response came from the client side memory:
 
@@ -112,84 +112,11 @@ If the OpenTelemetry is enabled by the `rueidisotel.WithClient(client)`, then th
 
 ### Benchmark
 
+Client Side Caching can boost read throughput just like you have a redis replica in your application:
+
 ![client_test_get](https://github.com/rueian/rueidis-benchmark/blob/master/client_test_get_10.png)
 
 Benchmark source code: https://github.com/rueian/rueidis-benchmark
-
-### Supported Commands by Client Side Caching
-
-* bitcount
-* bitfieldro
-* bitpos
-* expiretime
-* geodist
-* geohash
-* geopos
-* georadiusro
-* georadiusbymemberro
-* geosearch
-* get
-* mget
-* getbit
-* getrange
-* hexists
-* hget
-* hgetall
-* hkeys
-* hlen
-* hmget
-* hstrlen
-* hvals
-* lindex
-* llen
-* lpos
-* lrange
-* pexpiretime
-* pttl
-* scard
-* sismember
-* smembers
-* smismember
-* sortro
-* strlen
-* ttl
-* type
-* zcard
-* zcount
-* zlexcount
-* zmscore
-* zrange
-* zrangebylex
-* zrangebyscore
-* zrank
-* zrevrange
-* zrevrangebylex
-* zrevrangebyscore
-* zrevrank
-* zscore
-* jsonget
-* jsonmget
-* jsonstrlen
-* jsonarrindex
-* jsonarrlen
-* jsonobjkeys
-* jsonobjlen
-* jsontype
-* jsonresp
-* bfexists
-* bfinfo
-* cfexists
-* cfcount
-* cfinfo
-* cmsquery
-* cmsinfo
-* topkquery
-* topklist
-* topkinfo
-* aitensorget
-* aimodelget
-* aimodelexecute
-* aiscriptget
 
 ### MGET/JSON.MGET Client Side Caching Helpers
 
@@ -219,26 +146,7 @@ Otherwise, their client-side cache will not be invalidated by redis.
 
 Some Redis provider doesn't support client-side caching, ex. Google Cloud Memorystore.
 You can disable client-side caching by setting `ClientOption.DisableCache` to `true`.
-This will also fall back `Client.DoCache/Client.DoMultiCache` to `Client.Do/Client.DoMulti`.
-
-## Blocking Commands
-
-The following blocking commands use another connection pool and will not share the same connection
-with non-blocking commands and thus will not cause the pipeline to be blocked:
-
-* xread with block
-* xreadgroup with block
-* blpop
-* brpop
-* brpoplpush
-* blmove
-* blmpop
-* bzpopmin
-* bzpopmax
-* bzmpop
-* clientpause
-* migrate
-* wait
+This will also fall back `Client.DoCache()` and `Client.DoMultiCache()` to `Client.Do()` and `Client.DoMulti()`.
 
 ## Context Cancellation
 
@@ -297,10 +205,8 @@ and produce at most one error describing the reason. Users can use this channel 
 
 ## CAS Pattern
 
-To do a CAS operation (WATCH + MULTI + EXEC), a dedicated connection should be used, because there should be no
-unintentional write commands between WATCH and EXEC. Otherwise, the EXEC may not fail as expected.
-
-The dedicated connection shares the same connection pool with blocking commands.
+To do a CAS operation (`WATCH` + `MULTI` + `EXEC`), a dedicated connection should be used, because there should be no
+unintentional write commands between `WATCH and `EXEC`. Otherwise, the `EXEC` may not fail as expected.
 
 ```golang
 c.Dedicated(func(client client.DedicatedClient) error {
@@ -321,7 +227,7 @@ c.Dedicated(func(client client.DedicatedClient) error {
 
 ```
 
-Or use Dedicate and invoke `cancel()` when finished to put the connection back to the pool.
+Or use `Dedicate()` and invoke `cancel()` when finished to put the connection back to the pool.
 
 ``` golang
 client, cancel := c.Dedicate()
@@ -354,7 +260,7 @@ In that case, you may consider reducing `ClientOption.RingScaleEachConn` to 8 or
 
 ## Bulk Operations
 
-The `rueidis.Commands` and `DoMulti()` can also be used for bulk operations:
+Though all concurrent non-blocking commands are automatically pipelined, you can still pipeline commands manually with `DoMulti()`:
 
 ``` golang
 cmds := make(rueidis.Commands, 0, 10)
@@ -372,8 +278,7 @@ for _, resp := range c.DoMulti(ctx, cmds...) {
 
 The `NewLuaScript` or `NewLuaScriptReadOnly` will create a script which is safe for concurrent usage.
 
-When calling the `script.Exec`, it will try sending EVALSHA to the client and if the server returns NOSCRIPT,
-it will send EVAL to try again.
+When calling the `script.Exec`, it will try sending `EVALSHA` first and fallback to `EVAL` if the server returns `NOSCRIPT`.
 
 ```golang
 script := rueidis.NewLuaScript("return {KEYS[1],KEYS[2],ARGV[1],ARGV[2]}")
@@ -411,23 +316,7 @@ c, err := rueidis.NewClient(rueidis.ClientOption{
 })
 ```
 
-## Command Builder
-
-Redis commands are very complex and their formats are very different from each other.
-
-This library provides a type safe command builder within `client.B()` that can be used as
-an entrypoint to construct a redis command. Once the command is completed, call the `Build()` or `Cache()` to get the actual command.
-And then pass it to either `Client.Do()` or `Client.DoCache()`.
-
-```golang
-c.Do(ctx, c.B().Set().Key("mykey").Value("myval").Ex(10).Nx().Build())
-```
-
-**Once the command is passed to the `Client.Do()`, `Client.DoCache()`, the command will be recycled and SHOULD NOT be reused.**
-
-**The `ClusterClient.B()` also checks if the command contains multiple keys belongs to different slots. If it does, then panic.**
-
-### Arbitrary command
+## Arbitrary command
 
 If you want to construct commands that are not yet supported, you can use `c.B().Arbitrary()`:
 
@@ -436,7 +325,7 @@ If you want to construct commands that are not yet supported, you can use `c.B()
 c.B().Arbitrary("ANY", "CMD").Keys("k1", "k2").Args("a1", "a2").Build()
 ```
 
-### Working with JSON string and `[]byte`
+## Working with JSON string and `[]byte`
 
 The command builder treats all the parameters as Redis strings, which are binary safe. This means that users can store `[]byte`
 directly into Redis without conversion. And the `rueidis.BinaryString` helper can convert `[]byte` to `string` without copy. For example:

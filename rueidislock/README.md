@@ -14,7 +14,7 @@ import (
 func main() {
 	locker, err := rueidislock.NewLocker(rueidislock.LockerOption{
 		ClientOption: rueidis.ClientOption{InitAddress: []string{"node1:6379", "node2:6380", "node3:6379"}},
-		KeyMajority:  2,
+		KeyMajority:  2, // please make sure that all your locker share the same KeyMajority
 	})
 	if err != nil {
 		panic(err)
