@@ -12,13 +12,14 @@ A fast Golang Redis client that does auto pipelining and supports client side ca
 
 * Auto pipelining for non-blocking redis commands
 * Client side caching in RESP3
-* Pub/Sub, Sharded Pub/Sub
-* Redis Cluster, Sentinel, Streams, TLS, RedisJSON, RedisBloom, RediSearch, RedisTimeseries, etc.
-* IDE friendly redis command builder
-* Generic Hash/RedisJSON Object Mapping with client side caching and optimistic locking
-* OpenTelemetry tracing and metrics
-* Distributed Locks with client side caching
-* Helpers for writing tests with rueidis mock
+* Pub/Sub, Sharded Pub/Sub, Streams
+* Redis Cluster, Sentinel, RedisJSON, RedisBloom, RediSearch, RedisTimeseries, etc.
+* [Generic Object Mapping with client side caching and optimistic locking](./om)
+* [Distributed Locks with client side caching](./rueidislock)
+* [Helpers for writing tests with rueidis mock](./mock)
+* [OpenTelemetry integration](./rueidisotel)
+* [Hooks and other integrations](./rueidishook)
+* [Go-redis like API adapter](./rueidiscompat) by [@418Coffee](https://github.com/418Coffee)
 
 ## Getting Started
 
@@ -40,25 +41,22 @@ func main() {
 	defer c.Close()
 
 	ctx := context.Background()
-
 	// SET key val NX
-	c.Do(ctx, c.B().Set().Key("key").Value("val").Nx().Build()).Error()
-	// GET key
-	c.Do(ctx, c.B().Get().Key("key").Build()).ToString()
+	err = c.Do(ctx, c.B().Set().Key("key").Value("val").Nx().Build()).Error()
 }
 ```
 
-## Command Builder
+## IDE friendly Command Builder
 
-`client.B()` is the entrypoint to construct a redis command:
+`client.B()` is the builder entrypoint to construct a redis command:
 
 ![IDE friendly command builder](https://user-images.githubusercontent.com/2727535/209358313-39000aee-eaa4-42e1-9748-0d3836c1264f.gif)\
 <sub>_Recorded by @FZambia [Improving Centrifugo Redis Engine throughput and allocation efficiency with Rueidis Go library
 ](https://centrifugal.dev/blog/2022/12/20/improving-redis-engine-performance)_</sub>
 
-Once the command is completed, call the `Build()` or `Cache()` to get the actual command and then pass it to either `Client.Do()` or `Client.DoCache()`.
+Once the command is completed, use either `Client.Do()` or `Client.DoMulti()` to send it to redis.
 
-**After the command is passed to the `Client.Do()`, `Client.DoCache()`, the command will be recycled and❗️SHOULD NOT❗️be reused.**
+**The constructed command will be recycled to underlying `sync.Pool` and you ❗️SHOULD NOT❗️reuse it across multiple `Client.Do()` or `Client.DoMulti()` calls**
 
 ## Auto Pipelining
 
@@ -82,7 +80,7 @@ A benchmark result performed on two GCP n2-highcpu-2 machines also shows that ru
 
 ## Client Side Caching
 
-The Opt-In mode of server-assisted client side caching is enabled by default, and can be used by calling `DoCache()` or `DoMultiCache()` with
+The opt-in mode of server-assisted client side caching is enabled by default, and can be used by calling `DoCache()` or `DoMultiCache()` with
 pairs of a readonly command and a client side TTL.
 
 ```golang
@@ -94,22 +92,6 @@ c.DoMultiCache(ctx,
 
 Cached responses will be invalidated when being notified by redis or their client side ttl is reached.
 
-Users can use `IsCacheHit()` to verify that if the response came from the client side memory:
-
-```golang
-c.DoCache(ctx, c.B().Get().Key("k1").Cache(), time.Minute).IsCacheHit() == true
-```
-
-And use `CacheTTL()` to check the remaining client side TTL in seconds:
-
-```golang
-c.DoCache(ctx, c.B().Get().Key("k1").Cache(), time.Minute).CacheTTL() == 60
-```
-
-If the OpenTelemetry is enabled by the `rueidisotel.WithClient(client)`, then there are also two metrics instrumented:
-* rueidis_do_cache_miss
-* rueidis_do_cache_hits
-
 ### Benchmark
 
 Client Side Caching can boost read throughput just like you have a redis replica in your application:
@@ -117,6 +99,24 @@ Client Side Caching can boost read throughput just like you have a redis replica
 ![client_test_get](https://github.com/rueian/rueidis-benchmark/blob/master/client_test_get_10.png)
 
 Benchmark source code: https://github.com/rueian/rueidis-benchmark
+
+### Client Side Caching Helpers
+
+Use `CacheTTL()` to check the remaining client side TTL in seconds:
+
+```golang
+c.DoCache(ctx, c.B().Get().Key("k1").Cache(), time.Minute).CacheTTL() == 60
+```
+
+Use `IsCacheHit()` to verify that if the response came from the client side memory:
+
+```golang
+c.DoCache(ctx, c.B().Get().Key("k1").Cache(), time.Minute).IsCacheHit() == true
+```
+
+If the OpenTelemetry is enabled by the `rueidisotel.WithClient(client)`, then there are also two metrics instrumented:
+* rueidis_do_cache_miss
+* rueidis_do_cache_hits
 
 ### MGET/JSON.MGET Client Side Caching Helpers
 
@@ -206,7 +206,7 @@ and produce at most one error describing the reason. Users can use this channel 
 ## CAS Pattern
 
 To do a CAS operation (`WATCH` + `MULTI` + `EXEC`), a dedicated connection should be used, because there should be no
-unintentional write commands between `WATCH and `EXEC`. Otherwise, the `EXEC` may not fail as expected.
+unintentional write commands between `WATCH` and `EXEC`. Otherwise, the `EXEC` may not fail as expected.
 
 ```golang
 c.Dedicated(func(client client.DedicatedClient) error {
@@ -233,18 +233,8 @@ Or use `Dedicate()` and invoke `cancel()` when finished to put the connection ba
 client, cancel := c.Dedicate()
 defer cancel()
 
-// watch keys first
 client.Do(ctx, client.B().Watch().Key("k1", "k2").Build())
-// perform read here
-client.Do(ctx, client.B().Mget().Key("k1", "k2").Build())
-// perform write with MULTI EXEC
-client.DoMulti(
-    ctx,
-    client.B().Multi().Build(),
-    client.B().Set().Key("k1").Value("1").Build(),
-    client.B().Set().Key("k2").Value("2").Build(),
-    client.B().Exec().Build(),
-)
+// do the rest CAS operations with the `client` who occupying a connection 
 ```
 
 However, occupying a connection is not good in terms of throughput. It is better to use Lua script to perform
@@ -258,14 +248,14 @@ Its size is controlled by the `ClientOption.RingScaleEachConn` and the default v
 If you have many rueidis connections, you may find that they occupy quite amount of memory.
 In that case, you may consider reducing `ClientOption.RingScaleEachConn` to 8 or 9 at the cost of potential throughput degradation.
 
-## Bulk Operations
+## Pipelining Bulk Operations Manually
 
 Though all concurrent non-blocking commands are automatically pipelined, you can still pipeline commands manually with `DoMulti()`:
 
 ``` golang
 cmds := make(rueidis.Commands, 0, 10)
 for i := 0; i < 10; i++ {
-    cmds = append(cmds, c.B().Set().Key(strconv.Itoa(i)).Value(strconv.Itoa(i)).Build())
+    cmds = append(cmds, c.B().Set().Key("key").Value("value").Build())
 }
 for _, resp := range c.DoMulti(ctx, cmds...) {
     if err := resp.Error(); err != nil {
@@ -343,173 +333,6 @@ client.B().JsonSet().Key("j").Path("$.myStrField").Value(rueidis.JSON("str")).Bu
 // equivalent to
 client.B().JsonSet().Key("j").Path("$.myStrField").Value(`"str"`).Build()
 ```
-
-## High level go-redis like API
-
-Though it is easier to know what command will be sent to redis at first glance if the command is constructed by the command builder,
-users may sometimes feel it too verbose to write.
-
-For users who don't like the command builder, `rueidiscompat.Adapter`, contributed mainly by [@418Coffee](https://github.com/418Coffee), is an alternative.
-It is a high level API which is close to go-redis's `Cmdable` interface.
-
-### Migrating from go-redis
-
-You can also try adapting `rueidis` with existing go-redis code by replacing go-redis's `UniversalClient` with `rueidiscompat.Adapter`.
-
-### Client side caching
-
-To use client side caching with `rueidiscompat.Adapter`, chain `Cache(ttl)` call in front of supported command.
-
-```golang
-package main
-
-import (
-	"context"
-	"time"
-	"github.com/rueian/rueidis"
-	"github.com/rueian/rueidis/rueidiscompat"
-)
-
-func main() {
-	ctx := context.Background()
-	client, err := rueidis.NewClient(rueidis.ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
-	if err != nil {
-		panic(err)
-	}
-	defer client.Close()
-
-	compat := rueidiscompat.NewAdapter(client)
-	ok, _ := compat.SetNX(ctx, "key", "val", time.Second).Result()
-
-	// with client side caching
-	res, _ := compat.Cache(time.Second).Get(ctx, "key").Result()
-}
-```
-
-## Generic Object Mapping
-
-The `NewHashRepository` and `NewJSONRepository` creates an OM repository backed by redis hash or RedisJSON.
-
-```golang
-package main
-
-import (
-    "context"
-    "fmt"
-    "time"
-
-    "github.com/rueian/rueidis"
-    "github.com/rueian/rueidis/om"
-)
-
-type Example struct {
-    Key string `json:"key" redis:",key"` // the redis:",key" is required to indicate which field is the ULID key
-    Ver int64  `json:"ver" redis:",ver"` // the redis:",ver" is required to do optimistic locking to prevent lost update
-    Str string `json:"myStr"`            // both NewHashRepository and NewJSONRepository use json tag as field name
-}
-
-func main() {
-    ctx := context.Background()
-    c, err := rueidis.NewClient(rueidis.ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
-    if err != nil {
-        panic(err)
-    }
-    // create the repo with NewHashRepository or NewJSONRepository
-    repo := om.NewHashRepository("my_prefix", Example{}, c)
-
-    exp := repo.NewEntity()
-    exp.Str = "mystr"
-    fmt.Println(exp.Key) // output 01FNH4FCXV9JTB9WTVFAAKGSYB
-    repo.Save(ctx, exp) // success
-
-    // lookup "my_prefix:01FNH4FCXV9JTB9WTVFAAKGSYB" through client side caching
-    exp2, _ := repo.FetchCache(ctx, exp.Key, time.Second*5)
-    fmt.Println(exp2.Str) // output "mystr", which equals to exp.Str
-
-    exp2.Ver = 0         // if someone changes the version during your GET then SET operation,
-    repo.Save(ctx, exp2) // the save will fail with ErrVersionMismatch.
-}
-
-```
-
-### Object Mapping + RediSearch
-
-If you have RediSearch, you can create and search the repository against the index.
-
-```golang
-
-if _, ok := repo.(*om.HashRepository[Example]); ok {
-    repo.CreateIndex(ctx, func(schema om.FtCreateSchema) om.Completed {
-        return schema.FieldName("myStr").Text().Build() // Note that the Example.Str field is mapped to myStr on redis by its json tag
-    })
-}
-
-if _, ok := repo.(*om.JSONRepository[Example]); ok {
-    repo.CreateIndex(ctx, func(schema om.FtCreateSchema) om.Completed {
-        return schema.FieldName("$.myStr").Text().Build() // the field name of json index should be a json path syntax
-    })
-}
-
-exp := repo.NewEntity()
-exp.Str = "foo"
-repo.Save(ctx, exp)
-
-n, records, _ := repo.Search(ctx, func(search om.FtSearchIndex) om.Completed {
-    return search.Query("foo").Build() // you have full query capability by building the command from om.FtSearchIndex
-})
-
-fmt.Println("total", n) // n is total number of results matched in redis, which is >= len(records)
-
-for _, v := range records {
-    fmt.Println(v.Str) // print "foo"
-}
-```
-
-### Object Mapping Limitation
-
-`NewHashRepository` only accepts these field types:
-* `string`, `*string`
-* `int64`, `*int64`
-* `bool`, `*bool`
-* `[]byte`
-
-Field projection by RediSearch is not supported.
-
-## OpenTelemetry Tracing
-
-Use `rueidisotel.WithClient` to create a client with OpenTelemetry Tracing enabled.
-
-```golang
-package main
-
-import (
-    "github.com/rueian/rueidis"
-    "github.com/rueian/rueidis/rueidisotel"
-)
-
-func main() {
-    client, err := rueidis.NewClient(rueidis.ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
-    if err != nil {
-        panic(err)
-    }
-    client = rueidisotel.WithClient(client)
-    defer client.Close()
-}
-```
-
-## Hooks and Other Observability Integration
-
-In addition to `rueidisotel`, `rueidishook` provides a general hook mechanism for users to intercept `rueidis.Client` interface.
-
-See [rueidishook](./rueidishook) for more details.
-
-## Distributed Locks with client side caching
-
-See [rueidislock](./rueidislock) for more details.
-
-## Writing tests by mocking rueidis
-
-See [mock](./mock) for more details.
 
 ## Command Response Cheatsheet
 
