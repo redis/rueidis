@@ -788,7 +788,7 @@ func testAdapter(resp3 bool) {
 					Get: []string{"object_*"},
 				}).Result()
 				Expect(err).NotTo(HaveOccurred())
-				Expect(els).To(Equal([]interface{}{nil, "value2", nil}))
+				Expect(els).To(Equal([]any{nil, "value2", nil}))
 			}
 		})
 
@@ -1298,7 +1298,7 @@ func testAdapter(resp3 bool) {
 
 			mGet := adapter.MGet(ctx, "key1", "key2", "_")
 			Expect(mGet.Err()).NotTo(HaveOccurred())
-			Expect(mGet.Val()).To(Equal([]interface{}{"hello1", "hello2", nil}))
+			Expect(mGet.Val()).To(Equal([]any{"hello1", "hello2", nil}))
 		})
 
 		It("should scan Mget", func() {
@@ -1935,11 +1935,11 @@ func testAdapter(resp3 bool) {
 
 			vals, err := adapter.HMGet(ctx, "hash", "key1", "key2", "_").Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]interface{}{"hello1", "hello2", nil}))
+			Expect(vals).To(Equal([]any{"hello1", "hello2", nil}))
 		})
 
 		It("should HSet", func() {
-			ok, err := adapter.HSet(ctx, "hash", map[string]interface{}{
+			ok, err := adapter.HSet(ctx, "hash", map[string]any{
 				"key1": "hello1",
 				"key2": "hello2",
 			}).Result()
@@ -4431,7 +4431,7 @@ func testAdapter(resp3 bool) {
 				_, err := adapter.XAdd(ctx, XAddArgs{
 					Stream:     "stream",
 					ID:         "1-0",
-					Values:     map[string]interface{}{"uno": "un"},
+					Values:     map[string]any{"uno": "un"},
 					NoMkStream: true,
 				}).Result()
 				Expect(rueidis.IsRedisNil(err)).To(BeTrue())
@@ -4440,16 +4440,16 @@ func testAdapter(resp3 bool) {
 			id, err := adapter.XAdd(ctx, XAddArgs{
 				Stream: "stream",
 				ID:     "1-0",
-				Values: map[string]interface{}{"uno": "un"},
+				Values: map[string]any{"uno": "un"},
 			}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(id).To(Equal("1-0"))
 
-			// Values supports []interface{}.
+			// Values supports []any.
 			id, err = adapter.XAdd(ctx, XAddArgs{
 				Stream: "stream",
 				ID:     "2-0",
-				Values: []interface{}{"dos", "deux"},
+				Values: []any{"dos", "deux"},
 			}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(id).To(Equal("2-0"))
@@ -4499,17 +4499,17 @@ func testAdapter(resp3 bool) {
 		It("should XAdd", func() {
 			id, err := adapter.XAdd(ctx, XAddArgs{
 				Stream: "stream",
-				Values: map[string]interface{}{"quatro": "quatre"},
+				Values: map[string]any{"quatro": "quatre"},
 			}).Result()
 			Expect(err).NotTo(HaveOccurred())
 
 			vals, err := adapter.XRange(ctx, "stream", "-", "+").Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(vals).To(Equal([]XMessage{
-				{ID: "1-0", Values: map[string]interface{}{"uno": "un"}},
-				{ID: "2-0", Values: map[string]interface{}{"dos": "deux"}},
-				{ID: "3-0", Values: map[string]interface{}{"tres": "troix"}},
-				{ID: id, Values: map[string]interface{}{"quatro": "quatre"}},
+				{ID: "1-0", Values: map[string]any{"uno": "un"}},
+				{ID: "2-0", Values: map[string]any{"dos": "deux"}},
+				{ID: "3-0", Values: map[string]any{"tres": "troix"}},
+				{ID: id, Values: map[string]any{"quatro": "quatre"}},
 			}))
 		})
 
@@ -4520,14 +4520,14 @@ func testAdapter(resp3 bool) {
 			id, err := adapter.XAdd(ctx, XAddArgs{
 				Stream: "stream",
 				MaxLen: 1,
-				Values: map[string]interface{}{"quatro": "quatre"},
+				Values: map[string]any{"quatro": "quatre"},
 			}).Result()
 			Expect(err).NotTo(HaveOccurred())
 
 			vals, err := adapter.XRange(ctx, "stream", "-", "+").Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(vals).To(Equal([]XMessage{
-				{ID: id, Values: map[string]interface{}{"quatro": "quatre"}},
+				{ID: id, Values: map[string]any{"quatro": "quatre"}},
 			}))
 		})
 
@@ -4536,17 +4536,17 @@ func testAdapter(resp3 bool) {
 				Stream: "stream",
 				MaxLen: 1,
 				Approx: true,
-				Values: map[string]interface{}{"quatro": "quatre"},
+				Values: map[string]any{"quatro": "quatre"},
 			}).Result()
 			Expect(err).NotTo(HaveOccurred())
 
 			vals, err := adapter.XRange(ctx, "stream", "-", "+").Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(vals).To(Equal([]XMessage{
-				{ID: "1-0", Values: map[string]interface{}{"uno": "un"}},
-				{ID: "2-0", Values: map[string]interface{}{"dos": "deux"}},
-				{ID: "3-0", Values: map[string]interface{}{"tres": "troix"}},
-				{ID: id, Values: map[string]interface{}{"quatro": "quatre"}},
+				{ID: "1-0", Values: map[string]any{"uno": "un"}},
+				{ID: "2-0", Values: map[string]any{"dos": "deux"}},
+				{ID: "3-0", Values: map[string]any{"tres": "troix"}},
+				{ID: id, Values: map[string]any{"quatro": "quatre"}},
 			}))
 		})
 
@@ -4556,7 +4556,7 @@ func testAdapter(resp3 bool) {
 					Stream: "stream",
 					MinID:  "5-0",
 					ID:     "4-0",
-					Values: map[string]interface{}{"quatro": "quatre"},
+					Values: map[string]any{"quatro": "quatre"},
 				}).Result()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(id).To(Equal("4-0"))
@@ -4572,7 +4572,7 @@ func testAdapter(resp3 bool) {
 					MinID:  "5-0",
 					ID:     "4-0",
 					Approx: true,
-					Values: map[string]interface{}{"quatro": "quatre"},
+					Values: map[string]any{"quatro": "quatre"},
 				}).Result()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(id).To(Equal("4-0"))
@@ -4588,7 +4588,7 @@ func testAdapter(resp3 bool) {
 					MinID:  "5-0",
 					ID:     "4-0",
 					Approx: true,
-					Values: map[string]interface{}{"quatro": "quatre"},
+					Values: map[string]any{"quatro": "quatre"},
 					Limit:  1,
 				}).Result()
 				Expect(err).NotTo(HaveOccurred())
@@ -4597,10 +4597,10 @@ func testAdapter(resp3 bool) {
 				vals, err := adapter.XRange(ctx, "stream", "-", "+").Result()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(vals).To(Equal([]XMessage{
-					{ID: "1-0", Values: map[string]interface{}{"uno": "un"}},
-					{ID: "2-0", Values: map[string]interface{}{"dos": "deux"}},
-					{ID: "3-0", Values: map[string]interface{}{"tres": "troix"}},
-					{ID: id, Values: map[string]interface{}{"quatro": "quatre"}},
+					{ID: "1-0", Values: map[string]any{"uno": "un"}},
+					{ID: "2-0", Values: map[string]any{"dos": "deux"}},
+					{ID: "3-0", Values: map[string]any{"tres": "troix"}},
+					{ID: id, Values: map[string]any{"quatro": "quatre"}},
 				}))
 			})
 		}
@@ -4621,23 +4621,23 @@ func testAdapter(resp3 bool) {
 			msgs, err := adapter.XRange(ctx, "stream", "-", "+").Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(msgs).To(Equal([]XMessage{
-				{ID: "1-0", Values: map[string]interface{}{"uno": "un"}},
-				{ID: "2-0", Values: map[string]interface{}{"dos": "deux"}},
-				{ID: "3-0", Values: map[string]interface{}{"tres": "troix"}},
+				{ID: "1-0", Values: map[string]any{"uno": "un"}},
+				{ID: "2-0", Values: map[string]any{"dos": "deux"}},
+				{ID: "3-0", Values: map[string]any{"tres": "troix"}},
 			}))
 
 			msgs, err = adapter.XRange(ctx, "stream", "2", "+").Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(msgs).To(Equal([]XMessage{
-				{ID: "2-0", Values: map[string]interface{}{"dos": "deux"}},
-				{ID: "3-0", Values: map[string]interface{}{"tres": "troix"}},
+				{ID: "2-0", Values: map[string]any{"dos": "deux"}},
+				{ID: "3-0", Values: map[string]any{"tres": "troix"}},
 			}))
 
 			msgs, err = adapter.XRange(ctx, "stream", "-", "2").Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(msgs).To(Equal([]XMessage{
-				{ID: "1-0", Values: map[string]interface{}{"uno": "un"}},
-				{ID: "2-0", Values: map[string]interface{}{"dos": "deux"}},
+				{ID: "1-0", Values: map[string]any{"uno": "un"}},
+				{ID: "2-0", Values: map[string]any{"dos": "deux"}},
 			}))
 		})
 
@@ -4645,20 +4645,20 @@ func testAdapter(resp3 bool) {
 			msgs, err := adapter.XRangeN(ctx, "stream", "-", "+", 2).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(msgs).To(Equal([]XMessage{
-				{ID: "1-0", Values: map[string]interface{}{"uno": "un"}},
-				{ID: "2-0", Values: map[string]interface{}{"dos": "deux"}},
+				{ID: "1-0", Values: map[string]any{"uno": "un"}},
+				{ID: "2-0", Values: map[string]any{"dos": "deux"}},
 			}))
 
 			msgs, err = adapter.XRangeN(ctx, "stream", "2", "+", 1).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(msgs).To(Equal([]XMessage{
-				{ID: "2-0", Values: map[string]interface{}{"dos": "deux"}},
+				{ID: "2-0", Values: map[string]any{"dos": "deux"}},
 			}))
 
 			msgs, err = adapter.XRangeN(ctx, "stream", "-", "2", 1).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(msgs).To(Equal([]XMessage{
-				{ID: "1-0", Values: map[string]interface{}{"uno": "un"}},
+				{ID: "1-0", Values: map[string]any{"uno": "un"}},
 			}))
 		})
 
@@ -4666,16 +4666,16 @@ func testAdapter(resp3 bool) {
 			msgs, err := adapter.XRevRange(ctx, "stream", "+", "-").Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(msgs).To(Equal([]XMessage{
-				{ID: "3-0", Values: map[string]interface{}{"tres": "troix"}},
-				{ID: "2-0", Values: map[string]interface{}{"dos": "deux"}},
-				{ID: "1-0", Values: map[string]interface{}{"uno": "un"}},
+				{ID: "3-0", Values: map[string]any{"tres": "troix"}},
+				{ID: "2-0", Values: map[string]any{"dos": "deux"}},
+				{ID: "1-0", Values: map[string]any{"uno": "un"}},
 			}))
 
 			msgs, err = adapter.XRevRange(ctx, "stream", "+", "2").Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(msgs).To(Equal([]XMessage{
-				{ID: "3-0", Values: map[string]interface{}{"tres": "troix"}},
-				{ID: "2-0", Values: map[string]interface{}{"dos": "deux"}},
+				{ID: "3-0", Values: map[string]any{"tres": "troix"}},
+				{ID: "2-0", Values: map[string]any{"dos": "deux"}},
 			}))
 		})
 
@@ -4683,14 +4683,14 @@ func testAdapter(resp3 bool) {
 			msgs, err := adapter.XRevRangeN(ctx, "stream", "+", "-", 2).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(msgs).To(Equal([]XMessage{
-				{ID: "3-0", Values: map[string]interface{}{"tres": "troix"}},
-				{ID: "2-0", Values: map[string]interface{}{"dos": "deux"}},
+				{ID: "3-0", Values: map[string]any{"tres": "troix"}},
+				{ID: "2-0", Values: map[string]any{"dos": "deux"}},
 			}))
 
 			msgs, err = adapter.XRevRangeN(ctx, "stream", "+", "2", 1).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(msgs).To(Equal([]XMessage{
-				{ID: "3-0", Values: map[string]interface{}{"tres": "troix"}},
+				{ID: "3-0", Values: map[string]any{"tres": "troix"}},
 			}))
 		})
 
@@ -4701,9 +4701,9 @@ func testAdapter(resp3 bool) {
 				{
 					Stream: "stream",
 					Messages: []XMessage{
-						{ID: "1-0", Values: map[string]interface{}{"uno": "un"}},
-						{ID: "2-0", Values: map[string]interface{}{"dos": "deux"}},
-						{ID: "3-0", Values: map[string]interface{}{"tres": "troix"}},
+						{ID: "1-0", Values: map[string]any{"uno": "un"}},
+						{ID: "2-0", Values: map[string]any{"dos": "deux"}},
+						{ID: "3-0", Values: map[string]any{"tres": "troix"}},
 					},
 				},
 			}))
@@ -4723,8 +4723,8 @@ func testAdapter(resp3 bool) {
 				{
 					Stream: "stream",
 					Messages: []XMessage{
-						{ID: "1-0", Values: map[string]interface{}{"uno": "un"}},
-						{ID: "2-0", Values: map[string]interface{}{"dos": "deux"}},
+						{ID: "1-0", Values: map[string]any{"uno": "un"}},
+						{ID: "2-0", Values: map[string]any{"dos": "deux"}},
 					},
 				},
 			}))
@@ -4754,9 +4754,9 @@ func testAdapter(resp3 bool) {
 					{
 						Stream: "stream",
 						Messages: []XMessage{
-							{ID: "1-0", Values: map[string]interface{}{"uno": "un"}},
-							{ID: "2-0", Values: map[string]interface{}{"dos": "deux"}},
-							{ID: "3-0", Values: map[string]interface{}{"tres": "troix"}},
+							{ID: "1-0", Values: map[string]any{"uno": "un"}},
+							{ID: "2-0", Values: map[string]any{"dos": "deux"}},
+							{ID: "3-0", Values: map[string]any{"tres": "troix"}},
 						},
 					},
 				}))
@@ -4785,9 +4785,9 @@ func testAdapter(resp3 bool) {
 					{
 						Stream: "stream",
 						Messages: []XMessage{
-							{ID: "1-0", Values: map[string]interface{}{"uno": "un"}},
+							{ID: "1-0", Values: map[string]any{"uno": "un"}},
 							{ID: "2-0", Values: nil},
-							{ID: "3-0", Values: map[string]interface{}{"tres": "troix"}},
+							{ID: "3-0", Values: map[string]any{"tres": "troix"}},
 						},
 					},
 				}))
@@ -4867,10 +4867,10 @@ func testAdapter(resp3 bool) {
 					Expect(start).To(Equal("3-0"))
 					Expect(msgs).To(Equal([]XMessage{{
 						ID:     "1-0",
-						Values: map[string]interface{}{"uno": "un"},
+						Values: map[string]any{"uno": "un"},
 					}, {
 						ID:     "2-0",
-						Values: map[string]interface{}{"dos": "deux"},
+						Values: map[string]any{"dos": "deux"},
 					}}))
 
 					xca.Start = start
@@ -4879,7 +4879,7 @@ func testAdapter(resp3 bool) {
 					Expect(start).To(Equal("0-0"))
 					Expect(msgs).To(Equal([]XMessage{{
 						ID:     "3-0",
-						Values: map[string]interface{}{"tres": "troix"},
+						Values: map[string]any{"tres": "troix"},
 					}}))
 
 					ids, start, err := adapter.XAutoClaimJustID(ctx, xca).Result()
@@ -4900,13 +4900,13 @@ func testAdapter(resp3 bool) {
 					Expect(start).To(Equal("0-0"))
 					Expect(msgs).To(Equal([]XMessage{{
 						ID:     "1-0",
-						Values: map[string]interface{}{"uno": "un"},
+						Values: map[string]any{"uno": "un"},
 					}, {
 						ID:     "2-0",
-						Values: map[string]interface{}{"dos": "deux"},
+						Values: map[string]any{"dos": "deux"},
 					}, {
 						ID:     "3-0",
-						Values: map[string]interface{}{"tres": "troix"},
+						Values: map[string]any{"tres": "troix"},
 					}}))
 
 					ids, start, err := adapter.XAutoClaimJustID(ctx, xca).Result()
@@ -4926,13 +4926,13 @@ func testAdapter(resp3 bool) {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(msgs).To(Equal([]XMessage{{
 					ID:     "1-0",
-					Values: map[string]interface{}{"uno": "un"},
+					Values: map[string]any{"uno": "un"},
 				}, {
 					ID:     "2-0",
-					Values: map[string]interface{}{"dos": "deux"},
+					Values: map[string]any{"dos": "deux"},
 				}, {
 					ID:     "3-0",
-					Values: map[string]interface{}{"tres": "troix"},
+					Values: map[string]any{"tres": "troix"},
 				}}))
 
 				ids, err := adapter.XClaimJustID(ctx, XClaimArgs{
@@ -4968,8 +4968,8 @@ func testAdapter(resp3 bool) {
 					{
 						Stream: "stream",
 						Messages: []XMessage{
-							{ID: "1-0", Values: map[string]interface{}{"uno": "un"}},
-							{ID: "2-0", Values: map[string]interface{}{"dos": "deux"}},
+							{ID: "1-0", Values: map[string]any{"uno": "un"}},
+							{ID: "2-0", Values: map[string]any{"dos": "deux"}},
 						},
 					},
 				}))
@@ -4984,7 +4984,7 @@ func testAdapter(resp3 bool) {
 					{
 						Stream: "stream",
 						Messages: []XMessage{
-							{ID: "3-0", Values: map[string]interface{}{"tres": "troix"}},
+							{ID: "3-0", Values: map[string]any{"tres": "troix"}},
 						},
 					},
 				}))
@@ -5002,8 +5002,8 @@ func testAdapter(resp3 bool) {
 					{
 						Stream: "stream",
 						Messages: []XMessage{
-							{ID: "2-0", Values: map[string]interface{}{"dos": "deux"}},
-							{ID: "3-0", Values: map[string]interface{}{"tres": "troix"}},
+							{ID: "2-0", Values: map[string]any{"dos": "deux"}},
+							{ID: "3-0", Values: map[string]any{"tres": "troix"}},
 						},
 					},
 				}))
@@ -5035,11 +5035,11 @@ func testAdapter(resp3 bool) {
 						EntriesAdded:      3,
 						FirstEntry: XMessage{
 							ID:     "1-0",
-							Values: map[string]interface{}{"uno": "un"},
+							Values: map[string]any{"uno": "un"},
 						},
 						LastEntry: XMessage{
 							ID:     "3-0",
-							Values: map[string]interface{}{"tres": "troix"},
+							Values: map[string]any{"tres": "troix"},
 						},
 						RecordedFirstEntryID: "1-0",
 					}))
@@ -5052,11 +5052,11 @@ func testAdapter(resp3 bool) {
 						LastGeneratedID: "3-0",
 						FirstEntry: XMessage{
 							ID:     "1-0",
-							Values: map[string]interface{}{"uno": "un"},
+							Values: map[string]any{"uno": "un"},
 						},
 						LastEntry: XMessage{
 							ID:     "3-0",
-							Values: map[string]interface{}{"tres": "troix"},
+							Values: map[string]any{"tres": "troix"},
 						},
 					}))
 				}
@@ -5131,8 +5131,8 @@ func testAdapter(resp3 bool) {
 						MaxDeletedEntryID: "0-0",
 						EntriesAdded:      3,
 						Entries: []XMessage{
-							{ID: "1-0", Values: map[string]interface{}{"uno": "un"}},
-							{ID: "2-0", Values: map[string]interface{}{"dos": "deux"}},
+							{ID: "1-0", Values: map[string]any{"uno": "un"}},
+							{ID: "2-0", Values: map[string]any{"dos": "deux"}},
 						},
 						Groups: []XInfoStreamGroup{
 							{
@@ -5667,8 +5667,8 @@ func testAdapter(resp3 bool) {
 
 	Describe("marshaling/unmarshaling", func() {
 		type convTest struct {
-			value  interface{}
-			dest   interface{}
+			value  any
+			dest   any
 			wanted string
 		}
 
@@ -5770,7 +5770,7 @@ func testAdapter(resp3 bool) {
 				"hello",
 			).Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]interface{}{"key", "hello"}))
+			Expect(vals).To(Equal([]any{"key", "hello"}))
 		})
 
 		It("returns all values after an error", func() {
@@ -5780,9 +5780,9 @@ func testAdapter(resp3 bool) {
 				nil,
 			).Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(vals.([]interface{})[0]).To(Equal(int64(12)))
-			Expect(vals.([]interface{})[1].(error).Error()).To(Equal("error"))
-			Expect(vals.([]interface{})[2]).To(Equal("abc"))
+			Expect(vals.([]any)[0]).To(Equal(int64(12)))
+			Expect(vals.([]any)[1].(error).Error()).To(Equal("error"))
+			Expect(vals.([]any)[2]).To(Equal("abc"))
 		})
 
 		It("script load", func() {
@@ -5802,7 +5802,7 @@ func testAdapter(resp3 bool) {
 				"hello",
 			).Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]interface{}{"key", "hello"}))
+			Expect(vals).To(Equal([]any{"key", "hello"}))
 		})
 
 		It("script kill & flush", func() {
@@ -6258,7 +6258,7 @@ func testAdapterCache(resp3 bool) {
 
 			vals, err := adapter.Cache(time.Hour).HMGet(ctx, "hash", "key1", "key2", "_").Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]interface{}{"hello1", "hello2", nil}))
+			Expect(vals).To(Equal([]any{"hello1", "hello2", nil}))
 		})
 
 		It("should HVals", func() {
@@ -7270,8 +7270,8 @@ func testAdapterCache(resp3 bool) {
 
 	Describe("marshaling/unmarshaling", func() {
 		type convTest struct {
-			value  interface{}
-			dest   interface{}
+			value  any
+			dest   any
 			wanted string
 		}
 

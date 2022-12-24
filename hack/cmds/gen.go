@@ -46,15 +46,15 @@ type command struct {
 }
 
 type argument struct {
-	Name      interface{} `json:"name"`
-	Type      interface{} `json:"type"`
-	Command   string      `json:"command"`
-	Enum      []string    `json:"enum"`
-	Block     []argument  `json:"block"`
-	Arguments []argument  `json:"arguments"`
-	Multiple  bool        `json:"multiple"`
-	Optional  bool        `json:"optional"`
-	Variadic  bool        `json:"variadic"`
+	Name      any        `json:"name"`
+	Type      any        `json:"type"`
+	Command   string     `json:"command"`
+	Enum      []string   `json:"enum"`
+	Block     []argument `json:"block"`
+	Arguments []argument `json:"arguments"`
+	Multiple  bool       `json:"multiple"`
+	Optional  bool       `json:"optional"`
+	Variadic  bool       `json:"variadic"`
 
 	MultipleToken bool `json:"multiple_token"`
 }
@@ -189,9 +189,9 @@ func (n *node) GoStructs() (out []goStruct) {
 				s.FullName = "FtCreatePrefixCount"
 			}
 			s.BuildDef.Parameters = []parameter{{Name: lcFirst(name(nm)), Type: n.Arg.Type.(string)}} // not change to go type here, change at render
-		case []interface{}:
+		case []any:
 			for i, nn := range nm {
-				s.BuildDef.Parameters = append(s.BuildDef.Parameters, parameter{Name: lcFirst(name(nn.(string))), Type: n.Arg.Type.([]interface{})[i].(string)})
+				s.BuildDef.Parameters = append(s.BuildDef.Parameters, parameter{Name: lcFirst(name(nn.(string))), Type: n.Arg.Type.([]any)[i].(string)})
 			}
 		default:
 			if n.Arg.Type == nil || (n.Arg.Type != nil && n.Arg.Type.(string) == "command") {
@@ -228,7 +228,7 @@ func (n *node) Name() (out string) {
 		switch n := n.Arg.Name.(type) {
 		case string:
 			tokens = append(tokens, name(n))
-		case []interface{}:
+		case []any:
 			for _, nn := range n {
 				tokens = append(tokens, name(nn.(string)))
 			}

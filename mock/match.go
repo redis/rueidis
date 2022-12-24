@@ -11,7 +11,7 @@ import (
 
 func Match(cmd ...string) gomock.Matcher {
 	return gomock.GotFormatterAdapter(
-		gomock.GotFormatterFunc(func(i interface{}) string {
+		gomock.GotFormatterFunc(func(i any) string {
 			return format(i)
 		}),
 		&cmdMatcher{expect: cmd},
@@ -22,7 +22,7 @@ type cmdMatcher struct {
 	expect []string
 }
 
-func (c *cmdMatcher) Matches(x interface{}) bool {
+func (c *cmdMatcher) Matches(x any) bool {
 	return gomock.Eq(commands(x)).Matches(c.expect)
 }
 
@@ -32,7 +32,7 @@ func (c *cmdMatcher) String() string {
 
 func MatchFn(fn func(cmd []string) bool, description ...string) gomock.Matcher {
 	return gomock.GotFormatterAdapter(
-		gomock.GotFormatterFunc(func(i interface{}) string {
+		gomock.GotFormatterFunc(func(i any) string {
 			return format(i)
 		}),
 		&fnMatcher{matcher: fn, description: description},
@@ -44,7 +44,7 @@ type fnMatcher struct {
 	description []string
 }
 
-func (c *fnMatcher) Matches(x interface{}) bool {
+func (c *fnMatcher) Matches(x any) bool {
 	if cmd, ok := commands(x).([]string); ok {
 		return c.matcher(cmd)
 	}
@@ -55,19 +55,19 @@ func (c *fnMatcher) String() string {
 	return fmt.Sprintf("matches %v", strings.Join(c.description, " "))
 }
 
-func format(v interface{}) string {
-	if _, ok := v.([]interface{}); !ok {
-		v = []interface{}{v}
+func format(v any) string {
+	if _, ok := v.([]any); !ok {
+		v = []any{v}
 	}
 	sb := &strings.Builder{}
 	sb.WriteString("\n")
-	for i, c := range v.([]interface{}) {
+	for i, c := range v.([]any) {
 		fmt.Fprintf(sb, "index %d redis command %v\n", i+1, commands(c))
 	}
 	return sb.String()
 }
 
-func commands(x interface{}) interface{} {
+func commands(x any) any {
 	if cmd, ok := x.(cmds.Completed); ok {
 		return cmd.Commands()
 	}

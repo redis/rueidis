@@ -10,7 +10,7 @@ import (
 )
 
 var entropies = sync.Pool{
-	New: func() interface{} {
+	New: func() any {
 		return ulid.Monotonic(rand.New(rand.NewSource(time.Now().UnixNano())), 0)
 	},
 }

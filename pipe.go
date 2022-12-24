@@ -672,7 +672,7 @@ func (p *pipe) Info() map[string]RedisMessage {
 
 func (p *pipe) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
 	if err := ctx.Err(); err != nil {
-		return newErrResult(ctx.Err())
+		return newErrResult(err)
 	}
 
 	if cmd.IsBlock() {

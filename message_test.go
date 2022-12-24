@@ -286,10 +286,10 @@ func TestRedisResult(t *testing.T) {
 			{typ: '#', integer: 0},
 			{typ: '-', string: "err"},
 			{typ: '_'},
-		}}}).ToAny(); !reflect.DeepEqual([]interface{}{
-			map[string]interface{}{"key": int64(1)},
-			map[string]interface{}{"nil": nil},
-			map[string]interface{}{"err": &RedisError{typ: '-', string: "err"}},
+		}}}).ToAny(); !reflect.DeepEqual([]any{
+			map[string]any{"key": int64(1)},
+			map[string]any{"nil": nil},
+			map[string]any{"err": &RedisError{typ: '-', string: "err"}},
 			1.2,
 			"str",
 			false,

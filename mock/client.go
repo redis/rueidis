@@ -96,7 +96,7 @@ func (m *Client) Dedicated(arg0 func(rueidis.DedicatedClient) error) error {
 }
 
 // Dedicated indicates an expected call of Dedicated.
-func (mr *ClientMockRecorder) Dedicated(arg0 interface{}) *gomock.Call {
+func (mr *ClientMockRecorder) Dedicated(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Dedicated", reflect.TypeOf((*Client)(nil).Dedicated), arg0)
 }
@@ -110,7 +110,7 @@ func (m *Client) Do(arg0 context.Context, arg1 cmds.Completed) rueidis.RedisResu
 }
 
 // Do indicates an expected call of Do.
-func (mr *ClientMockRecorder) Do(arg0, arg1 interface{}) *gomock.Call {
+func (mr *ClientMockRecorder) Do(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Do", reflect.TypeOf((*Client)(nil).Do), arg0, arg1)
 }
@@ -124,7 +124,7 @@ func (m *Client) DoCache(arg0 context.Context, arg1 cmds.Cacheable, arg2 time.Du
 }
 
 // DoCache indicates an expected call of DoCache.
-func (mr *ClientMockRecorder) DoCache(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *ClientMockRecorder) DoCache(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DoCache", reflect.TypeOf((*Client)(nil).DoCache), arg0, arg1, arg2)
 }
@@ -132,7 +132,7 @@ func (mr *ClientMockRecorder) DoCache(arg0, arg1, arg2 interface{}) *gomock.Call
 // DoMulti mocks base method.
 func (m *Client) DoMulti(arg0 context.Context, arg1 ...cmds.Completed) []rueidis.RedisResult {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{arg0}
+	varargs := []any{arg0}
 	for _, a := range arg1 {
 		varargs = append(varargs, a)
 	}
@@ -142,16 +142,16 @@ func (m *Client) DoMulti(arg0 context.Context, arg1 ...cmds.Completed) []rueidis
 }
 
 // DoMulti indicates an expected call of DoMulti.
-func (mr *ClientMockRecorder) DoMulti(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
+func (mr *ClientMockRecorder) DoMulti(arg0 any, arg1 ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{arg0}, arg1...)
+	varargs := append([]any{arg0}, arg1...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DoMulti", reflect.TypeOf((*Client)(nil).DoMulti), varargs...)
 }
 
 // DoMultiCache mocks base method.
 func (m *Client) DoMultiCache(arg0 context.Context, arg1 ...rueidis.CacheableTTL) []rueidis.RedisResult {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{arg0}
+	varargs := []any{arg0}
 	for _, a := range arg1 {
 		varargs = append(varargs, a)
 	}
@@ -161,9 +161,9 @@ func (m *Client) DoMultiCache(arg0 context.Context, arg1 ...rueidis.CacheableTTL
 }
 
 // DoMultiCache indicates an expected call of DoMultiCache.
-func (mr *ClientMockRecorder) DoMultiCache(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
+func (mr *ClientMockRecorder) DoMultiCache(arg0 any, arg1 ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{arg0}, arg1...)
+	varargs := append([]any{arg0}, arg1...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DoMultiCache", reflect.TypeOf((*Client)(nil).DoMultiCache), varargs...)
 }
 
@@ -190,7 +190,7 @@ func (m *Client) Receive(arg0 context.Context, arg1 cmds.Completed, arg2 func(ru
 }
 
 // Receive indicates an expected call of Receive.
-func (mr *ClientMockRecorder) Receive(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *ClientMockRecorder) Receive(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Receive", reflect.TypeOf((*Client)(nil).Receive), arg0, arg1, arg2)
 }
@@ -248,7 +248,7 @@ func (m *DedicatedClient) Do(arg0 context.Context, arg1 cmds.Completed) rueidis.
 }
 
 // Do indicates an expected call of Do.
-func (mr *DedicatedClientMockRecorder) Do(arg0, arg1 interface{}) *gomock.Call {
+func (mr *DedicatedClientMockRecorder) Do(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Do", reflect.TypeOf((*DedicatedClient)(nil).Do), arg0, arg1)
 }
@@ -256,7 +256,7 @@ func (mr *DedicatedClientMockRecorder) Do(arg0, arg1 interface{}) *gomock.Call {
 // DoMulti mocks base method.
 func (m *DedicatedClient) DoMulti(arg0 context.Context, arg1 ...cmds.Completed) []rueidis.RedisResult {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{arg0}
+	varargs := []any{arg0}
 	for _, a := range arg1 {
 		varargs = append(varargs, a)
 	}
@@ -266,9 +266,9 @@ func (m *DedicatedClient) DoMulti(arg0 context.Context, arg1 ...cmds.Completed) 
 }
 
 // DoMulti indicates an expected call of DoMulti.
-func (mr *DedicatedClientMockRecorder) DoMulti(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
+func (mr *DedicatedClientMockRecorder) DoMulti(arg0 any, arg1 ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{arg0}, arg1...)
+	varargs := append([]any{arg0}, arg1...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DoMulti", reflect.TypeOf((*DedicatedClient)(nil).DoMulti), varargs...)
 }
 
@@ -281,7 +281,7 @@ func (m *DedicatedClient) Receive(arg0 context.Context, arg1 cmds.Completed, arg
 }
 
 // Receive indicates an expected call of Receive.
-func (mr *DedicatedClientMockRecorder) Receive(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *DedicatedClientMockRecorder) Receive(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Receive", reflect.TypeOf((*DedicatedClient)(nil).Receive), arg0, arg1, arg2)
 }
@@ -295,7 +295,7 @@ func (m *DedicatedClient) SetPubSubHooks(arg0 rueidis.PubSubHooks) <-chan error 
 }
 
 // SetPubSubHooks indicates an expected call of SetPubSubHooks.
-func (mr *DedicatedClientMockRecorder) SetPubSubHooks(arg0 interface{}) *gomock.Call {
+func (mr *DedicatedClientMockRecorder) SetPubSubHooks(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPubSubHooks", reflect.TypeOf((*DedicatedClient)(nil).SetPubSubHooks), arg0)
 }

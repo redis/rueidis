@@ -166,7 +166,7 @@ func (r RedisResult) AsReader() (v io.Reader, err error) {
 }
 
 // DecodeJSON delegates to RedisMessage.DecodeJSON
-func (r RedisResult) DecodeJSON(v interface{}) (err error) {
+func (r RedisResult) DecodeJSON(v any) (err error) {
 	if r.err != nil {
 		err = r.err
 	} else {
@@ -336,7 +336,7 @@ func (r RedisResult) ToMap() (v map[string]RedisMessage, err error) {
 }
 
 // ToAny delegates to RedisMessage.ToAny
-func (r RedisResult) ToAny() (v interface{}, err error) {
+func (r RedisResult) ToAny() (v any, err error) {
 	if r.err != nil {
 		err = r.err
 	} else {
@@ -436,7 +436,7 @@ func (m *RedisMessage) AsReader() (reader io.Reader, err error) {
 }
 
 // DecodeJSON check if message is a redis string response and treat it as json, then unmarshal it into provided value
-func (m *RedisMessage) DecodeJSON(v interface{}) (err error) {
+func (m *RedisMessage) DecodeJSON(v any) (err error) {
 	str, err := m.ToString()
 	if err != nil {
 		return err
@@ -788,8 +788,8 @@ func (m *RedisMessage) ToMap() (map[string]RedisMessage, error) {
 	panic(fmt.Sprintf("redis message type %c is not a RESP3 map", typ))
 }
 
-// ToAny turns message into go interface{} value
-func (m *RedisMessage) ToAny() (interface{}, error) {
+// ToAny turns message into go any value
+func (m *RedisMessage) ToAny() (any, error) {
 	if err := m.Error(); err != nil {
 		return nil, err
 	}
@@ -803,7 +803,7 @@ func (m *RedisMessage) ToAny() (interface{}, error) {
 	case ':':
 		return m.integer, nil
 	case '%':
-		vs := make(map[string]interface{}, len(m.values)/2)
+		vs := make(map[string]any, len(m.values)/2)
 		for i := 0; i < len(m.values); i += 2 {
 			if v, err := m.values[i+1].ToAny(); err != nil && !IsRedisNil(err) {
 				vs[m.values[i].string] = err
@@ -813,7 +813,7 @@ func (m *RedisMessage) ToAny() (interface{}, error) {
 		}
 		return vs, nil
 	case '~', '*':
-		vs := make([]interface{}, len(m.values))
+		vs := make([]any, len(m.values))
 		for i := 0; i < len(m.values); i++ {
 			if v, err := m.values[i].ToAny(); err != nil && !IsRedisNil(err) {
 				vs[i] = err

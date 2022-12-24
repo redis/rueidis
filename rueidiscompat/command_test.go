@@ -139,7 +139,7 @@ var _ = Describe("Commands", func() {
 		}
 		{
 			cmd := &Cmd{}
-			cmd.SetVal([]interface{}{"1"})
+			cmd.SetVal([]any{"1"})
 			Expect(cmd.Err()).To(BeNil())
 			_, e := cmd.Int()
 			Expect(e).NotTo(BeNil())
@@ -156,7 +156,7 @@ var _ = Describe("Commands", func() {
 			_, e = cmd.Bool()
 			Expect(e).NotTo(BeNil())
 			s, _ := cmd.Slice()
-			Expect(s).To(Equal([]interface{}{"1"}))
+			Expect(s).To(Equal([]any{"1"}))
 			si64, _ := cmd.Int64Slice()
 			Expect(si64).To(Equal([]int64{1}))
 			su64, _ := cmd.Uint64Slice()
@@ -200,13 +200,13 @@ var _ = Describe("Commands", func() {
 		}
 		{
 			cmd := &Cmd{}
-			cmd.SetVal([]interface{}{1})
+			cmd.SetVal([]any{1})
 			_, e := cmd.StringSlice()
 			Expect(e).NotTo(BeNil())
 		}
 		{
 			cmd := &Cmd{}
-			cmd.SetVal([]interface{}{"Text"})
+			cmd.SetVal([]any{"Text"})
 			_, e := cmd.Int64()
 			Expect(e).NotTo(BeNil())
 			_, e = cmd.Uint64()
@@ -323,8 +323,8 @@ var _ = Describe("Commands", func() {
 		}
 		{
 			cmd := &SliceCmd{}
-			cmd.SetVal([]interface{}{1})
-			Expect(cmd.Val()).To(Equal([]interface{}{1}))
+			cmd.SetVal([]any{1})
+			Expect(cmd.Val()).To(Equal([]any{1}))
 			cmd.SetErr(err)
 			Expect(cmd.Err()).To(Equal(err))
 		}
@@ -509,9 +509,9 @@ var _ = Describe("Commands", func() {
 		}
 		{
 			cmd := &XAutoClaimCmd{}
-			cmd.SetVal([]XMessage{{ID: "1", Values: map[string]interface{}{}}}, "0")
+			cmd.SetVal([]XMessage{{ID: "1", Values: map[string]any{}}}, "0")
 			v, s := cmd.Val()
-			Expect(v).To(Equal([]XMessage{{ID: "1", Values: map[string]interface{}{}}}))
+			Expect(v).To(Equal([]XMessage{{ID: "1", Values: map[string]any{}}}))
 			Expect(s).To(Equal("0"))
 			Expect(cmd.Err()).To(BeNil())
 		}

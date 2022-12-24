@@ -48,7 +48,7 @@ type Cmdable interface {
 
 	Command(ctx context.Context) *CommandsInfoCmd
 	ClientGetName(ctx context.Context) *StringCmd
-	Echo(ctx context.Context, message interface{}) *StringCmd
+	Echo(ctx context.Context, message any) *StringCmd
 	Ping(ctx context.Context) *StatusCmd
 	Quit(ctx context.Context) *StatusCmd
 	Del(ctx context.Context, keys ...string) *IntCmd
@@ -87,20 +87,20 @@ type Cmdable interface {
 	DecrBy(ctx context.Context, key string, decrement int64) *IntCmd
 	Get(ctx context.Context, key string) *StringCmd
 	GetRange(ctx context.Context, key string, start, end int64) *StringCmd
-	GetSet(ctx context.Context, key string, value interface{}) *StringCmd
+	GetSet(ctx context.Context, key string, value any) *StringCmd
 	GetEx(ctx context.Context, key string, expiration time.Duration) *StringCmd
 	GetDel(ctx context.Context, key string) *StringCmd
 	Incr(ctx context.Context, key string) *IntCmd
 	IncrBy(ctx context.Context, key string, value int64) *IntCmd
 	IncrByFloat(ctx context.Context, key string, value float64) *FloatCmd
 	MGet(ctx context.Context, keys ...string) *SliceCmd
-	MSet(ctx context.Context, values ...interface{}) *StatusCmd
-	MSetNX(ctx context.Context, values ...interface{}) *BoolCmd
-	Set(ctx context.Context, key string, value interface{}, expiration time.Duration) *StatusCmd
-	SetArgs(ctx context.Context, key string, value interface{}, a SetArgs) *StatusCmd
-	SetEX(ctx context.Context, key string, value interface{}, expiration time.Duration) *StatusCmd
-	SetNX(ctx context.Context, key string, value interface{}, expiration time.Duration) *BoolCmd
-	SetXX(ctx context.Context, key string, value interface{}, expiration time.Duration) *BoolCmd
+	MSet(ctx context.Context, values ...any) *StatusCmd
+	MSetNX(ctx context.Context, values ...any) *BoolCmd
+	Set(ctx context.Context, key string, value any, expiration time.Duration) *StatusCmd
+	SetArgs(ctx context.Context, key string, value any, a SetArgs) *StatusCmd
+	SetEX(ctx context.Context, key string, value any, expiration time.Duration) *StatusCmd
+	SetNX(ctx context.Context, key string, value any, expiration time.Duration) *BoolCmd
+	SetXX(ctx context.Context, key string, value any, expiration time.Duration) *BoolCmd
 	SetRange(ctx context.Context, key string, offset int64, value string) *IntCmd
 	StrLen(ctx context.Context, key string) *IntCmd
 	Copy(ctx context.Context, sourceKey string, destKey string, db int64, replace bool) *IntCmd
@@ -113,7 +113,7 @@ type Cmdable interface {
 	BitOpXor(ctx context.Context, destKey string, keys ...string) *IntCmd
 	BitOpNot(ctx context.Context, destKey string, key string) *IntCmd
 	BitPos(ctx context.Context, key string, bit int64, pos ...int64) *IntCmd
-	BitField(ctx context.Context, key string, args ...interface{}) *IntSliceCmd
+	BitField(ctx context.Context, key string, args ...any) *IntSliceCmd
 
 	Scan(ctx context.Context, cursor uint64, match string, count int64) *ScanCmd
 	ScanType(ctx context.Context, cursor uint64, match string, count int64, keyType string) *ScanCmd
@@ -130,9 +130,9 @@ type Cmdable interface {
 	HKeys(ctx context.Context, key string) *StringSliceCmd
 	HLen(ctx context.Context, key string) *IntCmd
 	HMGet(ctx context.Context, key string, fields ...string) *SliceCmd
-	HSet(ctx context.Context, key string, values ...interface{}) *IntCmd
-	HMSet(ctx context.Context, key string, values ...interface{}) *BoolCmd
-	HSetNX(ctx context.Context, key, field string, value interface{}) *BoolCmd
+	HSet(ctx context.Context, key string, values ...any) *IntCmd
+	HMSet(ctx context.Context, key string, values ...any) *BoolCmd
+	HSetNX(ctx context.Context, key, field string, value any) *BoolCmd
 	HVals(ctx context.Context, key string) *StringSliceCmd
 	HRandField(ctx context.Context, key string, count int64, withValues bool) *StringSliceCmd
 
@@ -140,44 +140,44 @@ type Cmdable interface {
 	BRPop(ctx context.Context, timeout time.Duration, keys ...string) *StringSliceCmd
 	BRPopLPush(ctx context.Context, source, destination string, timeout time.Duration) *StringCmd
 	LIndex(ctx context.Context, key string, index int64) *StringCmd
-	LInsert(ctx context.Context, key, op string, pivot, value interface{}) *IntCmd
-	LInsertBefore(ctx context.Context, key string, pivot, value interface{}) *IntCmd
-	LInsertAfter(ctx context.Context, key string, pivot, value interface{}) *IntCmd
+	LInsert(ctx context.Context, key, op string, pivot, value any) *IntCmd
+	LInsertBefore(ctx context.Context, key string, pivot, value any) *IntCmd
+	LInsertAfter(ctx context.Context, key string, pivot, value any) *IntCmd
 	LLen(ctx context.Context, key string) *IntCmd
 	LPop(ctx context.Context, key string) *StringCmd
 	LPopCount(ctx context.Context, key string, count int64) *StringSliceCmd
 	LPos(ctx context.Context, key string, value string, args LPosArgs) *IntCmd
 	LPosCount(ctx context.Context, key string, value string, count int64, args LPosArgs) *IntSliceCmd
-	LPush(ctx context.Context, key string, values ...interface{}) *IntCmd
-	LPushX(ctx context.Context, key string, values ...interface{}) *IntCmd
+	LPush(ctx context.Context, key string, values ...any) *IntCmd
+	LPushX(ctx context.Context, key string, values ...any) *IntCmd
 	LRange(ctx context.Context, key string, start, stop int64) *StringSliceCmd
-	LRem(ctx context.Context, key string, count int64, value interface{}) *IntCmd
-	LSet(ctx context.Context, key string, index int64, value interface{}) *StatusCmd
+	LRem(ctx context.Context, key string, count int64, value any) *IntCmd
+	LSet(ctx context.Context, key string, index int64, value any) *StatusCmd
 	LTrim(ctx context.Context, key string, start, stop int64) *StatusCmd
 	RPop(ctx context.Context, key string) *StringCmd
 	RPopCount(ctx context.Context, key string, count int64) *StringSliceCmd
 	RPopLPush(ctx context.Context, source, destination string) *StringCmd
-	RPush(ctx context.Context, key string, values ...interface{}) *IntCmd
-	RPushX(ctx context.Context, key string, values ...interface{}) *IntCmd
+	RPush(ctx context.Context, key string, values ...any) *IntCmd
+	RPushX(ctx context.Context, key string, values ...any) *IntCmd
 	LMove(ctx context.Context, source, destination, srcpos, destpos string) *StringCmd
 	BLMove(ctx context.Context, source, destination, srcpos, destpos string, timeout time.Duration) *StringCmd
 
-	SAdd(ctx context.Context, key string, members ...interface{}) *IntCmd
+	SAdd(ctx context.Context, key string, members ...any) *IntCmd
 	SCard(ctx context.Context, key string) *IntCmd
 	SDiff(ctx context.Context, keys ...string) *StringSliceCmd
 	SDiffStore(ctx context.Context, destination string, keys ...string) *IntCmd
 	SInter(ctx context.Context, keys ...string) *StringSliceCmd
 	SInterStore(ctx context.Context, destination string, keys ...string) *IntCmd
-	SIsMember(ctx context.Context, key string, member interface{}) *BoolCmd
-	SMIsMember(ctx context.Context, key string, members ...interface{}) *BoolSliceCmd
+	SIsMember(ctx context.Context, key string, member any) *BoolCmd
+	SMIsMember(ctx context.Context, key string, members ...any) *BoolSliceCmd
 	SMembers(ctx context.Context, key string) *StringSliceCmd
 	SMembersMap(ctx context.Context, key string) *StringStructMapCmd
-	SMove(ctx context.Context, source, destination string, member interface{}) *BoolCmd
+	SMove(ctx context.Context, source, destination string, member any) *BoolCmd
 	SPop(ctx context.Context, key string) *StringCmd
 	SPopN(ctx context.Context, key string, count int64) *StringSliceCmd
 	SRandMember(ctx context.Context, key string) *StringCmd
 	SRandMemberN(ctx context.Context, key string, count int64) *StringSliceCmd
-	SRem(ctx context.Context, key string, members ...interface{}) *IntCmd
+	SRem(ctx context.Context, key string, members ...any) *IntCmd
 	SUnion(ctx context.Context, keys ...string) *StringSliceCmd
 	SUnionStore(ctx context.Context, destination string, keys ...string) *IntCmd
 
@@ -241,7 +241,7 @@ type Cmdable interface {
 	ZRangeArgsWithScores(ctx context.Context, z ZRangeArgs) *ZSliceCmd
 	ZRangeStore(ctx context.Context, dst string, z ZRangeArgs) *IntCmd
 	ZRank(ctx context.Context, key, member string) *IntCmd
-	ZRem(ctx context.Context, key string, members ...interface{}) *IntCmd
+	ZRem(ctx context.Context, key string, members ...any) *IntCmd
 	ZRemRangeByRank(ctx context.Context, key string, start, stop int64) *IntCmd
 	ZRemRangeByScore(ctx context.Context, key string, min, max string) *IntCmd
 	ZRemRangeByLex(ctx context.Context, key, min, max string) *IntCmd
@@ -261,7 +261,7 @@ type Cmdable interface {
 	ZDiffWithScores(ctx context.Context, keys ...string) *ZSliceCmd
 	ZDiffStore(ctx context.Context, destination string, keys ...string) *IntCmd
 
-	PFAdd(ctx context.Context, key string, els ...interface{}) *IntCmd
+	PFAdd(ctx context.Context, key string, els ...any) *IntCmd
 	PFCount(ctx context.Context, keys ...string) *IntCmd
 	PFMerge(ctx context.Context, dest string, keys ...string) *StatusCmd
 
@@ -295,14 +295,14 @@ type Cmdable interface {
 	ReadWrite(ctx context.Context) *StatusCmd
 	MemoryUsage(ctx context.Context, key string, samples ...int64) *IntCmd
 
-	Eval(ctx context.Context, script string, keys []string, args ...interface{}) *Cmd
-	EvalSha(ctx context.Context, sha1 string, keys []string, args ...interface{}) *Cmd
+	Eval(ctx context.Context, script string, keys []string, args ...any) *Cmd
+	EvalSha(ctx context.Context, sha1 string, keys []string, args ...any) *Cmd
 	ScriptExists(ctx context.Context, hashes ...string) *BoolSliceCmd
 	ScriptFlush(ctx context.Context) *StatusCmd
 	ScriptKill(ctx context.Context) *StatusCmd
 	ScriptLoad(ctx context.Context, script string) *StringCmd
 
-	Publish(ctx context.Context, channel string, message interface{}) *IntCmd
+	Publish(ctx context.Context, channel string, message any) *IntCmd
 	PubSubChannels(ctx context.Context, pattern string) *StringSliceCmd
 	PubSubNumSub(ctx context.Context, channels ...string) *StringIntMapCmd
 	PubSubNumPat(ctx context.Context) *IntCmd
@@ -369,7 +369,7 @@ func (c *Compat) ClientGetName(ctx context.Context) *StringCmd {
 	return newStringCmd(resp)
 }
 
-func (c *Compat) Echo(ctx context.Context, message interface{}) *StringCmd {
+func (c *Compat) Echo(ctx context.Context, message any) *StringCmd {
 	cmd := c.client.B().Echo().Message(str(message)).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newStringCmd(resp)
@@ -633,7 +633,7 @@ func (c *Compat) GetRange(ctx context.Context, key string, start, end int64) *St
 	return newStringCmd(resp)
 }
 
-func (c *Compat) GetSet(ctx context.Context, key string, value interface{}) *StringCmd {
+func (c *Compat) GetSet(ctx context.Context, key string, value any) *StringCmd {
 	cmd := c.client.B().Getset().Key(key).Value(str(value)).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newStringCmd(resp)
@@ -685,7 +685,7 @@ func (c *Compat) MGet(ctx context.Context, keys ...string) *SliceCmd {
 	return newSliceCmd(resp)
 }
 
-func (c *Compat) MSet(ctx context.Context, values ...interface{}) *StatusCmd {
+func (c *Compat) MSet(ctx context.Context, values ...any) *StatusCmd {
 	partial := c.client.B().Mset().KeyValue()
 
 	args := argsToSlice(values)
@@ -698,7 +698,7 @@ func (c *Compat) MSet(ctx context.Context, values ...interface{}) *StatusCmd {
 	return newStatusCmd(resp)
 }
 
-func (c *Compat) MSetNX(ctx context.Context, values ...interface{}) *BoolCmd {
+func (c *Compat) MSetNX(ctx context.Context, values ...any) *BoolCmd {
 	partial := c.client.B().Msetnx().KeyValue()
 
 	args := argsToSlice(values)
@@ -718,7 +718,7 @@ func (c *Compat) MSetNX(ctx context.Context, values ...interface{}) *BoolCmd {
 // For KEEPTTL use -1.
 //
 // For more options, use SetArgs.
-func (c *Compat) Set(ctx context.Context, key string, value interface{}, expiration time.Duration) *StatusCmd {
+func (c *Compat) Set(ctx context.Context, key string, value any, expiration time.Duration) *StatusCmd {
 	var resp rueidis.RedisResult
 	if expiration > 0 {
 		if usePrecise(expiration) {
@@ -734,7 +734,7 @@ func (c *Compat) Set(ctx context.Context, key string, value interface{}, expirat
 	return newStatusCmd(resp)
 }
 
-func (c *Compat) SetArgs(ctx context.Context, key string, value interface{}, a SetArgs) *StatusCmd {
+func (c *Compat) SetArgs(ctx context.Context, key string, value any, a SetArgs) *StatusCmd {
 	cmd := c.client.B().Arbitrary("SET").Keys(key).Args(str(value))
 	if a.KeepTTL {
 		cmd = cmd.Args("KEEPTTL")
@@ -763,13 +763,13 @@ func (c *Compat) SetArgs(ctx context.Context, key string, value interface{}, a S
 	return newStatusCmd(resp)
 }
 
-func (c *Compat) SetEX(ctx context.Context, key string, value interface{}, expiration time.Duration) *StatusCmd {
+func (c *Compat) SetEX(ctx context.Context, key string, value any, expiration time.Duration) *StatusCmd {
 	cmd := c.client.B().Setex().Key(key).Seconds(formatSec(expiration)).Value(str(value)).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newStatusCmd(resp)
 }
 
-func (c *Compat) SetNX(ctx context.Context, key string, value interface{}, expiration time.Duration) *BoolCmd {
+func (c *Compat) SetNX(ctx context.Context, key string, value any, expiration time.Duration) *BoolCmd {
 	var resp rueidis.RedisResult
 
 	switch expiration {
@@ -788,7 +788,7 @@ func (c *Compat) SetNX(ctx context.Context, key string, value interface{}, expir
 	return newBoolCmd(resp)
 }
 
-func (c *Compat) SetXX(ctx context.Context, key string, value interface{}, expiration time.Duration) *BoolCmd {
+func (c *Compat) SetXX(ctx context.Context, key string, value any, expiration time.Duration) *BoolCmd {
 	var resp rueidis.RedisResult
 	if expiration > 0 {
 		if usePrecise(expiration) {
@@ -887,7 +887,7 @@ func (c *Compat) BitPos(ctx context.Context, key string, bit int64, pos ...int64
 	return newIntCmd(resp)
 }
 
-func (c *Compat) BitField(ctx context.Context, key string, args ...interface{}) *IntSliceCmd {
+func (c *Compat) BitField(ctx context.Context, key string, args ...any) *IntSliceCmd {
 	cmd := c.client.B().Arbitrary("BITFIELD").Keys(key)
 	for _, v := range args {
 		cmd = cmd.Args(str(v))
@@ -1011,7 +1011,7 @@ func (c *Compat) HMGet(ctx context.Context, key string, fields ...string) *Slice
 }
 
 // HSet requires Redis v4 for multiple field/value pairs support.
-func (c *Compat) HSet(ctx context.Context, key string, values ...interface{}) *IntCmd {
+func (c *Compat) HSet(ctx context.Context, key string, values ...any) *IntCmd {
 	partial := c.client.B().Hset().Key(key).FieldValue()
 
 	args := argsToSlice(values)
@@ -1025,7 +1025,7 @@ func (c *Compat) HSet(ctx context.Context, key string, values ...interface{}) *I
 }
 
 // HMSet is a deprecated version of HSet left for compatibility with Redis 3.
-func (c *Compat) HMSet(ctx context.Context, key string, values ...interface{}) *BoolCmd {
+func (c *Compat) HMSet(ctx context.Context, key string, values ...any) *BoolCmd {
 	partial := c.client.B().Hset().Key(key).FieldValue()
 
 	args := argsToSlice(values)
@@ -1038,7 +1038,7 @@ func (c *Compat) HMSet(ctx context.Context, key string, values ...interface{}) *
 	return newBoolCmd(resp)
 }
 
-func (c *Compat) HSetNX(ctx context.Context, key, field string, value interface{}) *BoolCmd {
+func (c *Compat) HSetNX(ctx context.Context, key, field string, value any) *BoolCmd {
 	cmd := c.client.B().Hsetnx().Key(key).Field(field).Value(str(value)).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newBoolCmd(resp)
@@ -1085,7 +1085,7 @@ func (c *Compat) LIndex(ctx context.Context, key string, index int64) *StringCmd
 	return newStringCmd(resp)
 }
 
-func (c *Compat) LInsert(ctx context.Context, key, op string, pivot, element interface{}) *IntCmd {
+func (c *Compat) LInsert(ctx context.Context, key, op string, pivot, element any) *IntCmd {
 	var resp rueidis.RedisResult
 	switch strings.ToUpper(op) {
 	case "BEFORE":
@@ -1098,13 +1098,13 @@ func (c *Compat) LInsert(ctx context.Context, key, op string, pivot, element int
 	return newIntCmd(resp)
 }
 
-func (c *Compat) LInsertBefore(ctx context.Context, key string, pivot, element interface{}) *IntCmd {
+func (c *Compat) LInsertBefore(ctx context.Context, key string, pivot, element any) *IntCmd {
 	cmd := c.client.B().Linsert().Key(key).Before().Pivot(str(pivot)).Element(str(element)).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
 }
 
-func (c *Compat) LInsertAfter(ctx context.Context, key string, pivot, element interface{}) *IntCmd {
+func (c *Compat) LInsertAfter(ctx context.Context, key string, pivot, element any) *IntCmd {
 	cmd := c.client.B().Linsert().Key(key).After().Pivot(str(pivot)).Element(str(element)).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
@@ -1152,13 +1152,13 @@ func (c *Compat) LPosCount(ctx context.Context, key string, element string, coun
 	return newIntSliceCmd(resp)
 }
 
-func (c *Compat) LPush(ctx context.Context, key string, elements ...interface{}) *IntCmd {
+func (c *Compat) LPush(ctx context.Context, key string, elements ...any) *IntCmd {
 	cmd := c.client.B().Lpush().Key(key).Element(argsToSlice(elements)...).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
 }
 
-func (c *Compat) LPushX(ctx context.Context, key string, elements ...interface{}) *IntCmd {
+func (c *Compat) LPushX(ctx context.Context, key string, elements ...any) *IntCmd {
 	cmd := c.client.B().Lpushx().Key(key).Element(argsToSlice(elements)...).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
@@ -1170,13 +1170,13 @@ func (c *Compat) LRange(ctx context.Context, key string, start, stop int64) *Str
 	return newStringSliceCmd(resp)
 }
 
-func (c *Compat) LRem(ctx context.Context, key string, count int64, element interface{}) *IntCmd {
+func (c *Compat) LRem(ctx context.Context, key string, count int64, element any) *IntCmd {
 	cmd := c.client.B().Lrem().Key(key).Count(count).Element(str(element)).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
 }
 
-func (c *Compat) LSet(ctx context.Context, key string, index int64, element interface{}) *StatusCmd {
+func (c *Compat) LSet(ctx context.Context, key string, index int64, element any) *StatusCmd {
 	cmd := c.client.B().Lset().Key(key).Index(index).Element(str(element)).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newStatusCmd(resp)
@@ -1206,13 +1206,13 @@ func (c *Compat) RPopLPush(ctx context.Context, source, destination string) *Str
 	return newStringCmd(resp)
 }
 
-func (c *Compat) RPush(ctx context.Context, key string, elements ...interface{}) *IntCmd {
+func (c *Compat) RPush(ctx context.Context, key string, elements ...any) *IntCmd {
 	cmd := c.client.B().Rpush().Key(key).Element(argsToSlice(elements)...).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
 }
 
-func (c *Compat) RPushX(ctx context.Context, key string, elements ...interface{}) *IntCmd {
+func (c *Compat) RPushX(ctx context.Context, key string, elements ...any) *IntCmd {
 	cmd := c.client.B().Rpushx().Key(key).Element(argsToSlice(elements)...).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
@@ -1228,7 +1228,7 @@ func (c *Compat) BLMove(ctx context.Context, source, destination, srcpos, destpo
 	return newStringCmd(resp)
 }
 
-func (c *Compat) SAdd(ctx context.Context, key string, members ...interface{}) *IntCmd {
+func (c *Compat) SAdd(ctx context.Context, key string, members ...any) *IntCmd {
 	cmd := c.client.B().Sadd().Key(key).Member()
 	for _, m := range argsToSlice(members) {
 		cmd = cmd.Member(str(m))
@@ -1267,13 +1267,13 @@ func (c *Compat) SInterStore(ctx context.Context, destination string, keys ...st
 	return newIntCmd(resp)
 }
 
-func (c *Compat) SIsMember(ctx context.Context, key string, member interface{}) *BoolCmd {
+func (c *Compat) SIsMember(ctx context.Context, key string, member any) *BoolCmd {
 	cmd := c.client.B().Sismember().Key(key).Member(str(member)).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newBoolCmd(resp)
 }
 
-func (c *Compat) SMIsMember(ctx context.Context, key string, members ...interface{}) *BoolSliceCmd {
+func (c *Compat) SMIsMember(ctx context.Context, key string, members ...any) *BoolSliceCmd {
 	cmd := c.client.B().Smismember().Key(key).Member(argsToSlice(members)...).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newBoolSliceCmd(resp)
@@ -1291,7 +1291,7 @@ func (c *Compat) SMembersMap(ctx context.Context, key string) *StringStructMapCm
 	return newStringStructMapCmd(resp)
 }
 
-func (c *Compat) SMove(ctx context.Context, source, destination string, member interface{}) *BoolCmd {
+func (c *Compat) SMove(ctx context.Context, source, destination string, member any) *BoolCmd {
 	cmd := c.client.B().Smove().Source(source).Destination(destination).Member(str(member)).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newBoolCmd(resp)
@@ -1321,7 +1321,7 @@ func (c *Compat) SRandMemberN(ctx context.Context, key string, count int64) *Str
 	return newStringSliceCmd(resp)
 }
 
-func (c *Compat) SRem(ctx context.Context, key string, members ...interface{}) *IntCmd {
+func (c *Compat) SRem(ctx context.Context, key string, members ...any) *IntCmd {
 	cmd := c.client.B().Srem().Key(key).Member(argsToSlice(members)...).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
@@ -1897,7 +1897,7 @@ func (c *Compat) ZRank(ctx context.Context, key, member string) *IntCmd {
 	return newIntCmd(resp)
 }
 
-func (c *Compat) ZRem(ctx context.Context, key string, members ...interface{}) *IntCmd {
+func (c *Compat) ZRem(ctx context.Context, key string, members ...any) *IntCmd {
 	cmd := c.client.B().Zrem().Key(key).Member(argsToSlice(members)...).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
@@ -2012,7 +2012,7 @@ func (c *Compat) ZDiffStore(ctx context.Context, destination string, keys ...str
 	return newIntCmd(resp)
 }
 
-func (c *Compat) PFAdd(ctx context.Context, key string, els ...interface{}) *IntCmd {
+func (c *Compat) PFAdd(ctx context.Context, key string, els ...any) *IntCmd {
 	cmd := c.client.B().Pfadd().Key(key).Element(argsToSlice(els)...).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
@@ -2233,12 +2233,12 @@ func (c *Compat) MemoryUsage(ctx context.Context, key string, samples ...int64) 
 	return newIntCmd(resp)
 }
 
-func (c *Compat) Eval(ctx context.Context, script string, keys []string, args ...interface{}) *Cmd {
+func (c *Compat) Eval(ctx context.Context, script string, keys []string, args ...any) *Cmd {
 	cmd := c.client.B().Eval().Script(script).Numkeys(int64(len(keys))).Key(keys...).Arg(argsToSlice(args)...).Build()
 	return newCmd(c.client.Do(ctx, cmd))
 }
 
-func (c *Compat) EvalSha(ctx context.Context, sha1 string, keys []string, args ...interface{}) *Cmd {
+func (c *Compat) EvalSha(ctx context.Context, sha1 string, keys []string, args ...any) *Cmd {
 	cmd := c.client.B().Evalsha().Sha1(sha1).Numkeys(int64(len(keys))).Key(keys...).Arg(argsToSlice(args)...).Build()
 	return newCmd(c.client.Do(ctx, cmd))
 }
@@ -2292,7 +2292,7 @@ func (c *Compat) ScriptLoad(ctx context.Context, script string) *StringCmd {
 	return ret
 }
 
-func (c *Compat) Publish(ctx context.Context, channel string, message interface{}) *IntCmd {
+func (c *Compat) Publish(ctx context.Context, channel string, message any) *IntCmd {
 	cmd := c.client.B().Publish().Channel(channel).Message(str(message)).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
@@ -2790,13 +2790,13 @@ func (c CacheCompat) SCard(ctx context.Context, key string) *IntCmd {
 	return newIntCmd(resp)
 }
 
-func (c CacheCompat) SIsMember(ctx context.Context, key string, member interface{}) *BoolCmd {
+func (c CacheCompat) SIsMember(ctx context.Context, key string, member any) *BoolCmd {
 	cmd := c.client.B().Sismember().Key(key).Member(str(member)).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newBoolCmd(resp)
 }
 
-func (c CacheCompat) SMIsMember(ctx context.Context, key string, members ...interface{}) *BoolSliceCmd {
+func (c CacheCompat) SMIsMember(ctx context.Context, key string, members ...any) *BoolSliceCmd {
 	cmd := c.client.B().Smismember().Key(key).Member(argsToSlice(members)...).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newBoolSliceCmd(resp)
@@ -3011,7 +3011,7 @@ func (c CacheCompat) ZScore(ctx context.Context, key, member string) *FloatCmd {
 	return newFloatCmd(resp)
 }
 
-func str(arg interface{}) string {
+func str(arg any) string {
 	switch v := arg.(type) {
 	case string:
 		return v
@@ -3032,7 +3032,7 @@ func str(arg interface{}) string {
 	return fmt.Sprint(arg)
 }
 
-func argsToSlice(src []interface{}) []string {
+func argsToSlice(src []any) []string {
 	if len(src) == 1 {
 		return argToSlice(src[0])
 	}
@@ -3043,17 +3043,17 @@ func argsToSlice(src []interface{}) []string {
 	return dst
 }
 
-func argToSlice(arg interface{}) []string {
+func argToSlice(arg any) []string {
 	switch arg := arg.(type) {
 	case []string:
 		return arg
-	case []interface{}:
+	case []any:
 		dst := make([]string, 0, len(arg))
 		for _, v := range arg {
 			dst = append(dst, str(v))
 		}
 		return dst
-	case map[string]interface{}:
+	case map[string]any:
 		dst := make([]string, 0, len(arg))
 		for k, v := range arg {
 			dst = append(dst, k, str(v))

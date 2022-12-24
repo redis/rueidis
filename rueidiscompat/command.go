@@ -36,7 +36,7 @@ import (
 )
 
 type Cmd struct {
-	val interface{}
+	val any
 	err error
 }
 
@@ -45,7 +45,7 @@ func newCmd(res rueidis.RedisResult) *Cmd {
 	return &Cmd{val: val, err: err}
 }
 
-func (cmd *Cmd) SetVal(val interface{}) {
+func (cmd *Cmd) SetVal(val any) {
 	cmd.val = val
 }
 
@@ -53,7 +53,7 @@ func (cmd *Cmd) SetErr(err error) {
 	cmd.err = err
 }
 
-func (cmd *Cmd) Val() interface{} {
+func (cmd *Cmd) Val() any {
 	return cmd.val
 }
 
@@ -61,7 +61,7 @@ func (cmd *Cmd) Err() error {
 	return cmd.err
 }
 
-func (cmd *Cmd) Result() (interface{}, error) {
+func (cmd *Cmd) Result() (any, error) {
 	return cmd.val, cmd.err
 }
 
@@ -72,7 +72,7 @@ func (cmd *Cmd) Text() (string, error) {
 	return toString(cmd.val)
 }
 
-func toString(val interface{}) (string, error) {
+func toString(val any) (string, error) {
 	switch val := val.(type) {
 	case string:
 		return val, nil
@@ -104,7 +104,7 @@ func (cmd *Cmd) Int64() (int64, error) {
 	return toInt64(cmd.val)
 }
 
-func toInt64(val interface{}) (int64, error) {
+func toInt64(val any) (int64, error) {
 	switch val := val.(type) {
 	case int64:
 		return val, nil
@@ -123,7 +123,7 @@ func (cmd *Cmd) Uint64() (uint64, error) {
 	return toUint64(cmd.val)
 }
 
-func toUint64(val interface{}) (uint64, error) {
+func toUint64(val any) (uint64, error) {
 	switch val := val.(type) {
 	case int64:
 		return uint64(val), nil
@@ -142,7 +142,7 @@ func (cmd *Cmd) Float32() (float32, error) {
 	return toFloat32(cmd.val)
 }
 
-func toFloat32(val interface{}) (float32, error) {
+func toFloat32(val any) (float32, error) {
 	switch val := val.(type) {
 	case int64:
 		return float32(val), nil
@@ -165,7 +165,7 @@ func (cmd *Cmd) Float64() (float64, error) {
 	return toFloat64(cmd.val)
 }
 
-func toFloat64(val interface{}) (float64, error) {
+func toFloat64(val any) (float64, error) {
 	switch val := val.(type) {
 	case int64:
 		return float64(val), nil
@@ -184,7 +184,7 @@ func (cmd *Cmd) Bool() (bool, error) {
 	return toBool(cmd.val)
 }
 
-func toBool(val interface{}) (bool, error) {
+func toBool(val any) (bool, error) {
 	switch val := val.(type) {
 	case int64:
 		return val != 0, nil
@@ -196,12 +196,12 @@ func toBool(val interface{}) (bool, error) {
 	}
 }
 
-func (cmd *Cmd) Slice() ([]interface{}, error) {
+func (cmd *Cmd) Slice() ([]any, error) {
 	if cmd.err != nil {
 		return nil, cmd.err
 	}
 	switch val := cmd.val.(type) {
-	case []interface{}:
+	case []any:
 		return val, nil
 	default:
 		return nil, fmt.Errorf("redis: unexpected type=%T for Slice", val)
@@ -534,12 +534,12 @@ func (cmd *StatusCmd) Result() (string, error) {
 
 type SliceCmd struct {
 	err error
-	val []interface{}
+	val []any
 }
 
 func newSliceCmd(res rueidis.RedisResult) *SliceCmd {
 	val, err := res.ToArray()
-	slice := &SliceCmd{val: make([]interface{}, len(val)), err: err}
+	slice := &SliceCmd{val: make([]any, len(val)), err: err}
 	for i, v := range val {
 		if s, err := v.ToString(); err == nil {
 			slice.val[i] = s
@@ -550,14 +550,14 @@ func newSliceCmd(res rueidis.RedisResult) *SliceCmd {
 
 func newSliceCmdFromMap(res rueidis.RedisResult) *SliceCmd {
 	val, err := res.AsStrMap()
-	slice := &SliceCmd{val: make([]interface{}, 0, len(val)*2), err: err}
+	slice := &SliceCmd{val: make([]any, 0, len(val)*2), err: err}
 	for k, v := range val {
 		slice.val = append(slice.val, k, v)
 	}
 	return slice
 }
 
-func (cmd *SliceCmd) SetVal(val []interface{}) {
+func (cmd *SliceCmd) SetVal(val []any) {
 	cmd.val = val
 }
 
@@ -565,7 +565,7 @@ func (cmd *SliceCmd) SetErr(err error) {
 	cmd.err = err
 }
 
-func (cmd *SliceCmd) Val() []interface{} {
+func (cmd *SliceCmd) Val() []any {
 	return cmd.val
 }
 
@@ -573,7 +573,7 @@ func (cmd *SliceCmd) Err() error {
 	return cmd.err
 }
 
-func (cmd *SliceCmd) Result() ([]interface{}, error) {
+func (cmd *SliceCmd) Result() ([]any, error) {
 	return cmd.val, cmd.err
 }
 
@@ -946,7 +946,7 @@ func newXMessage(r rueidis.XRangeEntry) XMessage {
 	if r.FieldValues == nil {
 		return XMessage{ID: r.ID, Values: nil}
 	}
-	m := XMessage{ID: r.ID, Values: make(map[string]interface{}, len(r.FieldValues))}
+	m := XMessage{ID: r.ID, Values: make(map[string]any, len(r.FieldValues))}
 	for k, v := range r.FieldValues {
 		m.Values[k] = v
 	}
@@ -1732,7 +1732,7 @@ func (cmd *XInfoConsumersCmd) Result() ([]XInfoConsumer, error) {
 
 // Z represents sorted set member.
 type Z struct {
-	Member interface{}
+	Member any
 	Score  float64
 }
 
@@ -2235,7 +2235,7 @@ type LPosArgs struct {
 
 // Note: MaxLen/MaxLenApprox and MinID are in conflict, only one of them can be used.
 type XAddArgs struct {
-	Values     interface{}
+	Values     any
 	Stream     string
 	MinID      string
 	ID         string
@@ -2288,7 +2288,7 @@ type XAutoClaimArgs struct {
 }
 
 type XMessage struct {
-	Values map[string]interface{}
+	Values map[string]any
 	ID     string
 }
 
@@ -2315,8 +2315,8 @@ type ZAddArgs struct {
 //
 // Rev, ByScore, ByLex and Offset+Count options require redis-server 6.2.0 and higher.
 type ZRangeArgs struct {
-	Start   interface{}
-	Stop    interface{}
+	Start   any
+	Stop    any
 	Key     string
 	Offset  int64
 	Count   int64
