@@ -325,6 +325,16 @@ func (r RedisResult) AsIntMap() (v map[string]int64, err error) {
 	return
 }
 
+// AsScanEntry delegates to RedisMessage.AsScanEntry.
+func (r RedisResult) AsScanEntry() (v ScanEntry, err error) {
+	if r.err != nil {
+		err = r.err
+	} else {
+		v, err = r.val.AsScanEntry()
+	}
+	return
+}
+
 // ToMap delegates to RedisMessage.ToMap
 func (r RedisResult) ToMap() (v map[string]RedisMessage, err error) {
 	if r.err != nil {
@@ -715,6 +725,35 @@ func (m *RedisMessage) AsZScores() ([]ZScore, error) {
 		}
 	}
 	return scores, nil
+}
+
+// ScanEntry is the element type of both SCAN, SSCAN, HSCAN and ZSCAN command response.
+type ScanEntry struct {
+	Cursor   int64
+	Elements []string
+}
+
+// AsScanEntry check if message is a redis array/set response of length 2, and convert to ScanEntry.
+func (m *RedisMessage) AsScanEntry() (ScanEntry, error) {
+	msgs, err := m.ToArray()
+	if err != nil {
+		return ScanEntry{}, err
+	}
+	if len(msgs) < 2 {
+		return ScanEntry{}, fmt.Errorf("got %d, wanted 2", len(msgs))
+	}
+
+	cursor, err := msgs[0].AsInt64()
+	if err != nil {
+		return ScanEntry{}, err
+	}
+
+	elements, err := msgs[1].AsStrSlice()
+	if err != nil {
+		return ScanEntry{}, err
+	}
+
+	return ScanEntry{Cursor: cursor, Elements: elements}, nil
 }
 
 // AsMap check if message is a redis array/set response, and convert to map[string]RedisMessage

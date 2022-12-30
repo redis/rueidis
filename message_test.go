@@ -835,6 +835,24 @@ func TestRedisMessage(t *testing.T) {
 		}
 	})
 
+	t.Run("AsScanEntry", func(t *testing.T) {
+		if _, err := (RedisResult{err: errors.New("other")}).AsScanEntry(); err == nil {
+			t.Fatal("AsScanEntry not failed as expected")
+		}
+		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsScanEntry(); err == nil {
+			t.Fatal("AsScanEntry not failed as expected")
+		}
+		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{string: "1", typ: '+'}, {typ: '*', values: []RedisMessage{{typ: '+', string: "a"}, {typ: '+', string: "b"}}}}}}).AsScanEntry(); !reflect.DeepEqual(ScanEntry{
+			Cursor:   1,
+			Elements: []string{"a", "b"},
+		}, ret) {
+			t.Fatal("AsScanEntry not get value as expected")
+		}
+		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{string: "0", typ: '+'}, {typ: '_'}}}}).AsScanEntry(); !reflect.DeepEqual(ScanEntry{}, ret) {
+			t.Fatal("AsScanEntry not get value as expected")
+		}
+	})
+
 	t.Run("ToMap with non string key", func(t *testing.T) {
 		defer func() {
 			if !strings.Contains(recover().(string), "redis message type : as map key is not supported") {
