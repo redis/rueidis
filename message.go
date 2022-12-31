@@ -734,26 +734,19 @@ type ScanEntry struct {
 }
 
 // AsScanEntry check if message is a redis array/set response of length 2, and convert to ScanEntry.
-func (m *RedisMessage) AsScanEntry() (ScanEntry, error) {
+func (m *RedisMessage) AsScanEntry() (e ScanEntry, err error) {
 	msgs, err := m.ToArray()
 	if err != nil {
 		return ScanEntry{}, err
 	}
-	if len(msgs) < 2 {
-		return ScanEntry{}, fmt.Errorf("got %d, wanted 2", len(msgs))
+	if len(msgs) >= 2 {
+		if e.Cursor, err = msgs[0].AsInt64(); err == nil {
+			e.Elements, err = msgs[1].AsStrSlice()
+		}
+		return e, err
 	}
-
-	cursor, err := msgs[0].AsInt64()
-	if err != nil {
-		return ScanEntry{}, err
-	}
-
-	elements, err := msgs[1].AsStrSlice()
-	if err != nil {
-		return ScanEntry{}, err
-	}
-
-	return ScanEntry{Cursor: cursor, Elements: elements}, nil
+	typ := m.typ
+	panic(fmt.Sprintf("redis message type %c is not a scan response or its length is not at least 2", typ))
 }
 
 // AsMap check if message is a redis array/set response, and convert to map[string]RedisMessage

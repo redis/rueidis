@@ -851,6 +851,13 @@ func TestRedisMessage(t *testing.T) {
 		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{string: "0", typ: '+'}, {typ: '_'}}}}).AsScanEntry(); !reflect.DeepEqual(ScanEntry{}, ret) {
 			t.Fatal("AsScanEntry not get value as expected")
 		}
+
+		defer func() {
+			if !strings.Contains(recover().(string), "redis message type * is not a scan response or its length is not at least 2") {
+				t.Fatal("AsScanEntry not panic as expected")
+			}
+		}()
+		(&RedisMessage{typ: '*', values: []RedisMessage{{typ: ':'}}}).AsScanEntry()
 	})
 
 	t.Run("ToMap with non string key", func(t *testing.T) {
