@@ -802,16 +802,8 @@ type ScanCmd struct {
 }
 
 func newScanCmd(res rueidis.RedisResult) *ScanCmd {
-	ret, err := res.ToArray()
-	if err != nil {
-		return &ScanCmd{err: err}
-	}
-	cursor, err := ret[0].AsInt64()
-	if err != nil {
-		return &ScanCmd{err: err}
-	}
-	keys, err := ret[1].AsStrSlice()
-	return &ScanCmd{cursor: uint64(cursor), keys: keys, err: err}
+	e, err := res.AsScanEntry()
+	return &ScanCmd{cursor: uint64(e.Cursor), keys: e.Elements, err: err}
 }
 
 func (cmd *ScanCmd) SetVal(keys []string, cursor uint64) {
