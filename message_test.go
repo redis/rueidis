@@ -863,7 +863,7 @@ func TestRedisMessage(t *testing.T) {
 	t.Run("ToMap with non string key", func(t *testing.T) {
 		defer func() {
 			if !strings.Contains(recover().(string), "redis message type : as map key is not supported") {
-				t.Fatal("ToString not panic as expected")
+				t.Fatal("ToMap not panic as expected")
 			}
 		}()
 		(&RedisMessage{typ: '%', values: []RedisMessage{{typ: ':'}, {typ: ':'}}}).ToMap()
