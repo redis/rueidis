@@ -32,17 +32,17 @@ import (
 )
 
 func main() {
-	c, err := rueidis.NewClient(rueidis.ClientOption{
+	client, err := rueidis.NewClient(rueidis.ClientOption{
 		InitAddress: []string{"127.0.0.1:6379"},
 	})
 	if err != nil {
 		panic(err)
 	}
-	defer c.Close()
+	defer client.Close()
 
 	ctx := context.Background()
 	// SET key val NX
-	err = c.Do(ctx, c.B().Set().Key("key").Value("val").Nx().Build()).Error()
+	err = client.Do(ctx, client.B().Set().Key("key").Value("val").Nx().Build()).Error()
 }
 ```
 
@@ -54,9 +54,9 @@ func main() {
 <sub>_Recorded by @FZambia [Improving Centrifugo Redis Engine throughput and allocation efficiency with Rueidis Go library
 ](https://centrifugal.dev/blog/2022/12/20/improving-redis-engine-performance)_</sub>
 
-Once the command is completed, use either `Client.Do()` or `Client.DoMulti()` to send it to redis.
+Once the command is completed, use either `client.Do()` or `client.DoMulti()` to send it to redis.
 
-**The constructed command will be recycled to underlying `sync.Pool` and you ❗️SHOULD NOT❗️reuse it across multiple `Client.Do()` or `Client.DoMulti()` calls**
+**The constructed command will be recycled to underlying `sync.Pool` and you ❗️SHOULD NOT❗️ reuse it across multiple `client.Do()` or `client.DoMulti()` calls**
 
 ## Auto Pipelining
 
@@ -84,17 +84,17 @@ The opt-in mode of server-assisted client side caching is enabled by default, an
 pairs of a readonly command and a client side TTL.
 
 ```golang
-c.DoCache(ctx, c.B().Hmget().Key("myhash").Field("1", "2").Cache(), time.Minute).ToArray()
-c.DoMultiCache(ctx,
-    rueidis.CT(c.B().Get().Key("k1").Cache(), 1*time.Minute),
-    rueidis.CT(c.B().Get().Key("k2").Cache(), 2*time.Minute))
+client.DoCache(ctx, client.B().Hmget().Key("myhash").Field("1", "2").Cache(), time.Minute).ToArray()
+client.DoMultiCache(ctx,
+    rueidis.CT(client.B().Get().Key("k1").Cache(), 1*time.Minute),
+    rueidis.CT(client.B().Get().Key("k2").Cache(), 2*time.Minute))
 ```
 
 Cached responses will be invalidated when being notified by redis or their client side ttl is reached.
 
 ### Benchmark
 
-Client Side Caching can boost read throughput just like you have a redis replica in your application:
+Client Side Caching can boost read throughput just like having a redis replica in your application:
 
 ![client_test_get](https://github.com/rueian/rueidis-benchmark/blob/master/client_test_get_10.png)
 
@@ -105,13 +105,13 @@ Benchmark source code: https://github.com/rueian/rueidis-benchmark
 Use `CacheTTL()` to check the remaining client side TTL in seconds:
 
 ```golang
-c.DoCache(ctx, c.B().Get().Key("k1").Cache(), time.Minute).CacheTTL() == 60
+client.DoCache(ctx, client.B().Get().Key("k1").Cache(), time.Minute).CacheTTL() == 60
 ```
 
 Use `IsCacheHit()` to verify that if the response came from the client side memory:
 
 ```golang
-c.DoCache(ctx, c.B().Get().Key("k1").Cache(), time.Minute).IsCacheHit() == true
+client.DoCache(ctx, client.B().Get().Key("k1").Cache(), time.Minute).IsCacheHit() == true
 ```
 
 If the OpenTelemetry is enabled by the `rueidisotel.WithClient(client)`, then there are also two metrics instrumented:
@@ -128,15 +128,15 @@ They will first group keys by slot to build `MGET` or `JSON.MGET` commands respe
 Although the default is opt-in mode, you can use broadcast mode by specifying your prefixes in `ClientOption.ClientTrackingOptions`:
 
 ```go
-c, err := rueidis.NewClient(rueidis.ClientOption{
+client, err := rueidis.NewClient(rueidis.ClientOption{
 	InitAddress:           []string{"127.0.0.1:6379"},
 	ClientTrackingOptions: []string{"PREFIX", "prefix1:", "PREFIX", "prefix2:", "BCAST"},
 })
 if err != nil {
 	panic(err)
 }
-c.DoCache(ctx, c.B().Get().Key("prefix1:1").Cache(), time.Minute).IsCacheHit() == false
-c.DoCache(ctx, c.B().Get().Key("prefix1:1").Cache(), time.Minute).IsCacheHit() == true
+client.DoCache(ctx, client.B().Get().Key("prefix1:1").Cache(), time.Minute).IsCacheHit() == false
+client.DoCache(ctx, client.B().Get().Key("prefix1:1").Cache(), time.Minute).IsCacheHit() == true
 ```
 
 Please make sure that commands passed to `DoCache()` and `DoMultiCache()` are covered by your prefixes.
@@ -146,57 +146,57 @@ Otherwise, their client-side cache will not be invalidated by redis.
 
 Some Redis provider doesn't support client-side caching, ex. Google Cloud Memorystore.
 You can disable client-side caching by setting `ClientOption.DisableCache` to `true`.
-This will also fall back `Client.DoCache()` and `Client.DoMultiCache()` to `Client.Do()` and `Client.DoMulti()`.
+This will also fall back `client.DoCache()` and `client.DoMultiCache()` to `client.Do()` and `client.DoMulti()`.
 
 ## Context Cancellation
 
-`Client.Do()`, `Client.DoMulti()`, `Client.DoCache()` and `Client.DoMultiCache()` can return early if the context is canceled or the deadline is reached.
+`client.Do()`, `client.DoMulti()`, `client.DoCache()` and `client.DoMultiCache()` can return early if the context is canceled or the deadline is reached.
 
 ```golang
 ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 defer cancel()
-c.Do(ctx, c.B().Set().Key("key").Value("val").Nx().Build()).Error() == context.DeadlineExceeded
+client.Do(ctx, client.B().Set().Key("key").Value("val").Nx().Build()).Error() == context.DeadlineExceeded
 ```
 
 Please note that though operations can return early, the command is likely sent already.
 
 ## Pub/Sub
 
-To receive messages from channels, `Client.Receive()` should be used. It supports `SUBSCRIBE`, `PSUBSCRIBE` and Redis 7.0's `SSUBSCRIBE`:
+To receive messages from channels, `client.Receive()` should be used. It supports `SUBSCRIBE`, `PSUBSCRIBE` and Redis 7.0's `SSUBSCRIBE`:
 
 ```golang
-err = c.Receive(context.Background(), c.B().Subscribe().Channel("ch1", "ch2").Build(), func(msg rueidis.PubSubMessage) {
+err = client.Receive(context.Background(), client.B().Subscribe().Channel("ch1", "ch2").Build(), func(msg rueidis.PubSubMessage) {
     // handle the msg
 })
 ```
 
 The provided handler will be called with received message.
 
-It is important to note that `Client.Receive()` will keep blocking and return only when the following cases:
+It is important to note that `client.Receive()` will keep blocking and return only when the following cases:
 1. return `nil` when received any unsubscribe/punsubscribe message related to the provided `subscribe` command.
 2. return `rueidis.ErrClosing` when the client is closed manually.
 3. return `ctx.Err()` when the `ctx` is done.
 4. return non-nil `err` when the provided `subscribe` command failed.
 
-While the `Client.Receive()` call is blocking, the `Client` is still able to accept other concurrent requests,
+While the `client.Receive()` call is blocking, the `Client` is still able to accept other concurrent requests,
 and they are sharing the same tcp connection. If your message handler may take some time to complete, it is recommended
-to use the `Client.Receive()` inside a `Client.Dedicated()` for not blocking other concurrent requests.
+to use the `client.Receive()` inside a `client.Dedicated()` for not blocking other concurrent requests.
 
 ### Alternative PubSub Hooks
 
-The `Client.Receive()` requires users to provide a subscription command in advance.
-There is an alternative `DedicatedClient.SetPubSubHooks()` allows users to subscribe/unsubscribe channels later.
+The `client.Receive()` requires users to provide a subscription command in advance.
+There is an alternative `Dedicatedclient.SetPubSubHooks()` allows users to subscribe/unsubscribe channels later.
 
 ```golang
-client, cancel := c.Dedicate()
+c, cancel := client.Dedicate()
 defer cancel()
 
-wait := client.SetPubSubHooks(rueidis.PubSubHooks{
+wait := c.SetPubSubHooks(rueidis.PubSubHooks{
 	OnMessage: func(m rueidis.PubSubMessage) {
 		// Handle message. This callback will be called sequentially, but in another goroutine.
 	}
 })
-client.Do(ctx, client.B().Subscribe().Channel("ch").Build())
+c.Do(ctx, c.B().Subscribe().Channel("ch").Build())
 err := <-wait // disconnected with err
 ```
 
@@ -209,18 +209,18 @@ To do a CAS operation (`WATCH` + `MULTI` + `EXEC`), a dedicated connection shoul
 unintentional write commands between `WATCH` and `EXEC`. Otherwise, the `EXEC` may not fail as expected.
 
 ```golang
-c.Dedicated(func(client client.DedicatedClient) error {
+client.Dedicated(func(c rueidis.DedicatedClient) error {
     // watch keys first
-    client.Do(ctx, client.B().Watch().Key("k1", "k2").Build())
+    c.Do(ctx, c.B().Watch().Key("k1", "k2").Build())
     // perform read here
-    client.Do(ctx, client.B().Mget().Key("k1", "k2").Build())
+    c.Do(ctx, c.B().Mget().Key("k1", "k2").Build())
     // perform write with MULTI EXEC
-    client.DoMulti(
+    c.DoMulti(
         ctx,
-        client.B().Multi().Build(),
-        client.B().Set().Key("k1").Value("1").Build(),
-        client.B().Set().Key("k2").Value("2").Build(),
-        client.B().Exec().Build(),
+        c.B().Multi().Build(),
+        c.B().Set().Key("k1").Value("1").Build(),
+        c.B().Set().Key("k2").Value("2").Build(),
+        c.B().Exec().Build(),
     )
     return nil
 })
@@ -230,10 +230,10 @@ c.Dedicated(func(client client.DedicatedClient) error {
 Or use `Dedicate()` and invoke `cancel()` when finished to put the connection back to the pool.
 
 ``` golang
-client, cancel := c.Dedicate()
+c, cancel := client.Dedicate()
 defer cancel()
 
-client.Do(ctx, client.B().Watch().Key("k1", "k2").Build())
+c.Do(ctx, c.B().Watch().Key("k1", "k2").Build())
 // do the rest CAS operations with the `client` who occupying a connection 
 ```
 
@@ -255,9 +255,9 @@ Though all concurrent non-blocking commands are automatically pipelined, you can
 ``` golang
 cmds := make(rueidis.Commands, 0, 10)
 for i := 0; i < 10; i++ {
-    cmds = append(cmds, c.B().Set().Key("key").Value("value").Build())
+    cmds = append(cmds, client.B().Set().Key("key").Value("value").Build())
 }
-for _, resp := range c.DoMulti(ctx, cmds...) {
+for _, resp := range client.DoMulti(ctx, cmds...) {
     if err := resp.Error(); err != nil {
         panic(err)
     }
@@ -281,7 +281,7 @@ list, err := script.Exec(ctx, client, []string{"k1", "k2"}, []string{"a1", "a2"}
 To connect to a redis cluster, the `NewClient` should be used:
 
 ```golang
-c, err := rueidis.NewClient(rueidis.ClientOption{
+client, err := rueidis.NewClient(rueidis.ClientOption{
     InitAddress: []string{"127.0.0.1:7001", "127.0.0.1:7002", "127.0.0.1:7003"},
     ShuffleInit: true,
 })
@@ -290,7 +290,7 @@ c, err := rueidis.NewClient(rueidis.ClientOption{
 To connect to a single redis node, still use the `NewClient` with one InitAddress
 
 ```golang
-c, err := rueidis.NewClient(rueidis.ClientOption{
+client, err := rueidis.NewClient(rueidis.ClientOption{
     InitAddress: []string{"127.0.0.1:6379"},
 })
 ```
@@ -298,7 +298,7 @@ c, err := rueidis.NewClient(rueidis.ClientOption{
 To connect to sentinels, specify the required master set name:
 
 ```golang
-c, err := rueidis.NewClient(rueidis.ClientOption{
+client, err := rueidis.NewClient(rueidis.ClientOption{
     InitAddress: []string{"127.0.0.1:26379", "127.0.0.1:26380", "127.0.0.1:26381"},
     Sentinel: rueidis.SentinelOption{
         MasterSet: "my_master",
@@ -308,11 +308,11 @@ c, err := rueidis.NewClient(rueidis.ClientOption{
 
 ## Arbitrary command
 
-If you want to construct commands that are not yet supported, you can use `c.B().Arbitrary()`:
+If you want to construct commands that are not yet supported, you can use `client.B().Arbitrary()`:
 
 ```golang
 // This will result into [ANY CMD k1 k2 a1 a2]
-c.B().Arbitrary("ANY", "CMD").Keys("k1", "k2").Args("a1", "a2").Build()
+client.B().Arbitrary("ANY", "CMD").Keys("k1", "k2").Args("a1", "a2").Build()
 ```
 
 ## Working with JSON string and `[]byte`
