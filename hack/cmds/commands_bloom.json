@@ -209,6 +209,18 @@
     "since": "1.0.0",
     "group": "bf"
   },
+  "BF.CARD": {
+    "summary": "Returns the cardinality of a Bloom filter",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      }
+    ],
+    "since": "1.0.0",
+    "group": "bf"
+  },
   "CF.RESERVE": {
     "summary": "Creates a new Cuckoo Filter",
     "complexity": "O(1)",

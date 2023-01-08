@@ -1497,6 +1497,30 @@ func (c BfAddKey) Item(item string) BfAddItem {
 	return (BfAddItem)(c)
 }
 
+type BfCard Completed
+
+func (b Builder) BfCard() (c BfCard) {
+	c = BfCard{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "BF.CARD")
+	return c
+}
+
+func (c BfCard) Key(key string) BfCardKey {
+	if c.ks&NoSlot == NoSlot {
+		c.ks = NoSlot | slot(key)
+	} else {
+		c.ks = check(c.ks, slot(key))
+	}
+	c.cs.s = append(c.cs.s, key)
+	return (BfCardKey)(c)
+}
+
+type BfCardKey Completed
+
+func (c BfCardKey) Build() Completed {
+	return Completed(c)
+}
+
 type BfExists Completed
 
 func (b Builder) BfExists() (c BfExists) {
