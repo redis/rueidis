@@ -60,12 +60,26 @@ Once the command is completed, use either `client.Do()` or `client.DoMulti()` to
 
 ## Auto Pipelining
 
-All non-blocking concurrent commands are automatically pipelined through connections,
-which reduces the overall round trips and system calls, and gets higher throughput.
+All concurrent non-blocking redis commands (such as `GET`, `SET`) are automatically pipelined through connections,
+which reduces the overall round trips and system calls, and gets higher throughput. You can easily get the benefit
+of [pipelining technique](https://redis.io/docs/manual/pipelining/) by just calling `client.Do()` from multiple goroutines.
+For example:
+
+```go
+func BenchmarkPipelining(b *testing.B, client rueidis.Client) {
+	// the below client.Do() operations will be issued from
+	// multiple goroutines and thus will be pipelined automatically.
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			client.Do(context.Background(), client.B().Get().Key("k").Build()).ToString()
+		}
+	})
+}
+```
 
 ### Benchmark comparison with go-redis v9
 
-Rueidis has higher throughput than go-redis v9 across 1, 8, and 64 parallelism settings.
+Comparing to go-redis, Rueidis has higher throughput across 1, 8, and 64 parallelism settings.
 
 It is even able to achieve ~14x throughput over go-redis in a local benchmark of Macbook Pro 16" M1 Pro 2021. (see `parallelism(64)-key(16)-value(64)-10`)
 
