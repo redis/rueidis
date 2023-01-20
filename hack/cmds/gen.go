@@ -459,7 +459,7 @@ func testParams(defs []parameter) string {
 			params = append(params, `[]string{"1"}`)
 		case "string":
 			params = append(params, `"1"`)
-		case "int64", "float64":
+		case "int64", "uint64", "float64":
 			params = append(params, `1`)
 		}
 	}
@@ -570,6 +570,8 @@ func toGoType(paramType string) string {
 		return "float64"
 	case "integer", "posix time":
 		return "int64"
+	case "unsigned integer":
+		return "uint64"
 	default:
 		panic("unknown param type " + paramType)
 	}
@@ -738,6 +740,8 @@ func printBuilder(w io.Writer, parent, next goStruct) {
 						fmt.Fprintf(w, "\t\tc.cs.s = append(c.cs.s, strconv.FormatFloat(n, 'f', -1, 64))\n")
 					case "int64":
 						fmt.Fprintf(w, "\t\tc.cs.s = append(c.cs.s, strconv.FormatInt(n, 10))\n")
+					case "uint64":
+						fmt.Fprintf(w, "\t\tc.cs.s = append(c.cs.s, strconv.FormatUint(n, 10))\n")
 					default:
 						panic("unexpected param type " + next.BuildDef.Parameters[0].Type)
 					}
@@ -751,6 +755,8 @@ func printBuilder(w io.Writer, parent, next goStruct) {
 						appends = append(appends, fmt.Sprintf("strconv.FormatFloat(%s, 'f', -1, 64)", toGoName(p.Name)))
 					case "int64":
 						appends = append(appends, fmt.Sprintf("strconv.FormatInt(%s, 10)", toGoName(p.Name)))
+					case "uint64":
+						appends = append(appends, fmt.Sprintf("strconv.FormatUint(%s, 10)", toGoName(p.Name)))
 					case "string":
 						appends = append(appends, toGoName(p.Name))
 					case "[]string": // TODO hack for TS.MRANGE, TS.MREVRANGE, TS.MGET

@@ -2908,7 +2908,7 @@
       },
       {
         "name": "cursor",
-        "type": "integer"
+        "type": "unsigned integer"
       },
       {
         "command": "MATCH",
@@ -4301,7 +4301,7 @@
     "arguments": [
       {
         "name": "cursor",
-        "type": "integer"
+        "type": "unsigned integer"
       },
       {
         "command": "MATCH",
@@ -4960,7 +4960,7 @@
       },
       {
         "name": "cursor",
-        "type": "integer"
+        "type": "unsigned integer"
       },
       {
         "command": "MATCH",
@@ -6656,7 +6656,7 @@
       },
       {
         "name": "cursor",
-        "type": "integer"
+        "type": "unsigned integer"
       },
       {
         "command": "MATCH",

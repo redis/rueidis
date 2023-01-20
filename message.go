@@ -751,7 +751,7 @@ func (m *RedisMessage) AsZScores() ([]ZScore, error) {
 
 // ScanEntry is the element type of both SCAN, SSCAN, HSCAN and ZSCAN command response.
 type ScanEntry struct {
-	Cursor   int64
+	Cursor   uint64
 	Elements []string
 }
 
@@ -762,7 +762,7 @@ func (m *RedisMessage) AsScanEntry() (e ScanEntry, err error) {
 		return ScanEntry{}, err
 	}
 	if len(msgs) >= 2 {
-		if e.Cursor, err = msgs[0].AsInt64(); err == nil {
+		if e.Cursor, err = msgs[0].AsUint64(); err == nil {
 			e.Elements, err = msgs[1].AsStrSlice()
 		}
 		return e, err

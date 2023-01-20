@@ -17960,8 +17960,8 @@ func (c HscanCursor) Build() Completed {
 
 type HscanKey Completed
 
-func (c HscanKey) Cursor(cursor int64) HscanCursor {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(cursor, 10))
+func (c HscanKey) Cursor(cursor uint64) HscanCursor {
+	c.cs.s = append(c.cs.s, strconv.FormatUint(cursor, 10))
 	return (HscanCursor)(c)
 }
 
@@ -22534,8 +22534,8 @@ func (b Builder) Scan() (c Scan) {
 	return c
 }
 
-func (c Scan) Cursor(cursor int64) ScanCursor {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(cursor, 10))
+func (c Scan) Cursor(cursor uint64) ScanCursor {
+	c.cs.s = append(c.cs.s, strconv.FormatUint(cursor, 10))
 	return (ScanCursor)(c)
 }
 
@@ -24388,8 +24388,8 @@ func (c SscanCursor) Build() Completed {
 
 type SscanKey Completed
 
-func (c SscanKey) Cursor(cursor int64) SscanCursor {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(cursor, 10))
+func (c SscanKey) Cursor(cursor uint64) SscanCursor {
+	c.cs.s = append(c.cs.s, strconv.FormatUint(cursor, 10))
 	return (SscanCursor)(c)
 }
 
@@ -33952,8 +33952,8 @@ func (c ZscanCursor) Build() Completed {
 
 type ZscanKey Completed
 
-func (c ZscanKey) Cursor(cursor int64) ZscanCursor {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(cursor, 10))
+func (c ZscanKey) Cursor(cursor uint64) ZscanCursor {
+	c.cs.s = append(c.cs.s, strconv.FormatUint(cursor, 10))
 	return (ZscanCursor)(c)
 }
 

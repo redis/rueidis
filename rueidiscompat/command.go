@@ -803,7 +803,7 @@ type ScanCmd struct {
 
 func newScanCmd(res rueidis.RedisResult) *ScanCmd {
 	e, err := res.AsScanEntry()
-	return &ScanCmd{cursor: uint64(e.Cursor), keys: e.Elements, err: err}
+	return &ScanCmd{cursor: e.Cursor, keys: e.Elements, err: err}
 }
 
 func (cmd *ScanCmd) SetVal(keys []string, cursor uint64) {
