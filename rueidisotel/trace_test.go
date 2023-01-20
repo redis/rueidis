@@ -11,7 +11,9 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric/global"
-	"go.opentelemetry.io/otel/sdk/metric/metrictest"
+	"go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/sdk/metric/metricdata"
+	"go.opentelemetry.io/otel/sdk/metric/metricdata/metricdatatest"
 	"go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
@@ -27,7 +29,8 @@ func TestWithClient(t *testing.T) {
 	exp := tracetest.NewInMemoryExporter()
 	otel.SetTracerProvider(trace.NewTracerProvider(trace.WithSyncer(exp)))
 
-	provider, mxp := metrictest.NewTestMeterProvider()
+	mxp := metric.NewManualReader()
+	provider := metric.NewMeterProvider(metric.WithReader(mxp))
 	global.SetMeterProvider(provider)
 
 	ctx := context.Background()
@@ -66,11 +69,12 @@ func TestWithClient(t *testing.T) {
 		rueidis.CT(client.B().Get().Key("key6").Cache(), time.Minute))
 	validateTrace(t, exp, "GET GET GET GET GET", codes.Ok)
 
-	if err := mxp.Collect(ctx); err != nil {
+	metrics, err := mxp.Collect(ctx)
+	if err != nil {
 		t.Fatalf("unexpected err %v", err)
 	}
-	validateMetrics(t, mxp, "rueidis_do_cache_miss", 7) // 1 (DoCache) + 6 (DoMultiCache)
-	validateMetrics(t, mxp, "rueidis_do_cache_hits", 7) // 1 (DoCache) + 6 (DoMultiCache)
+	validateMetrics(t, metrics, "rueidis_do_cache_miss", 7) // 1 (DoCache) + 6 (DoMultiCache)
+	validateMetrics(t, metrics, "rueidis_do_cache_hits", 7) // 1 (DoCache) + 6 (DoMultiCache)
 
 	ctx2, cancel := context.WithTimeout(ctx, time.Second/2)
 	client.Receive(ctx2, client.B().Subscribe().Channel("ch").Build(), func(msg rueidis.PubSubMessage) {})
@@ -183,17 +187,20 @@ func validateTrace(t *testing.T, exp *tracetest.InMemoryExporter, op string, cod
 	exp.Reset()
 }
 
-func validateMetrics(t *testing.T, mxp *metrictest.Exporter, name string, value uint64) {
-	record, err := mxp.GetByName(name)
-	if err != nil {
-		t.Fatalf("unexpected err %v", err)
+func validateMetrics(t *testing.T, metrics metricdata.ResourceMetrics, name string, value int64) {
+	for _, sm := range metrics.ScopeMetrics {
+		for _, m := range sm.Metrics {
+			if m.Name == name {
+				data := m.Data.(metricdata.Sum[int64])
+				metricdatatest.AssertHasAttributes(t, data, attribute.String("any", "label"))
+				if data.DataPoints[0].Value != value {
+					t.Fatalf("unexpected metric value %v", data.DataPoints[0].Value)
+				}
+				return
+			}
+		}
 	}
-	if customAttr := record.Attributes[0]; string(customAttr.Key) != "any" || customAttr.Value.AsString() != "label" {
-		t.Fatalf("unexpected custom attr %v", customAttr)
-	}
-	if record.Sum.AsRawAtomic() != value {
-		t.Fatalf("unexpected metric value %v", record.Sum)
-	}
+	t.Fatalf("metrics not found %v", name)
 }
 
 func ExampleWithClient_openTelemetry() {
