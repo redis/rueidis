@@ -10,8 +10,8 @@ A fast Golang Redis client that does auto pipelining and supports client side ca
 
 ## Features
 
-* Auto pipelining for non-blocking redis commands
-* Client side caching in RESP3
+* [Auto pipelining for non-blocking redis commands](https://redis.io/docs/manual/pipelining/)
+* [Client side caching in RESP3](https://redis.io/docs/manual/client-side-caching/)
 * Pub/Sub, Sharded Pub/Sub, Streams
 * Redis Cluster, Sentinel, RedisJSON, RedisBloom, RediSearch, RedisTimeseries, etc.
 * [Generic Object Mapping with client side caching and optimistic locking](./om)
@@ -58,7 +58,7 @@ Once the command is completed, use either `client.Do()` or `client.DoMulti()` to
 
 **The constructed command will be recycled to underlying `sync.Pool` and you ❗️SHOULD NOT❗️ reuse it across multiple `client.Do()` or `client.DoMulti()` calls**
 
-## Auto Pipelining
+## [Auto Pipelining](https://redis.io/docs/manual/pipelining/)
 
 All concurrent non-blocking redis commands (such as `GET`, `SET`) are automatically pipelined through connections,
 which reduces the overall round trips and system calls, and gets higher throughput. You can easily get the benefit
@@ -83,18 +83,15 @@ Comparing to go-redis, Rueidis has higher throughput across 1, 8, and 64 paralle
 
 It is even able to achieve ~14x throughput over go-redis in a local benchmark of Macbook Pro 16" M1 Pro 2021. (see `parallelism(64)-key(16)-value(64)-10`)
 
-#### Single Client
 ![client_test_set](https://github.com/rueian/rueidis-benchmark/blob/master/client_test_set_10.png)
-#### Cluster Client
-![cluster_test_set](https://github.com/rueian/rueidis-benchmark/blob/master/cluster_test_set_10.png)
 
 Benchmark source code: https://github.com/rueian/rueidis-benchmark
 
 A benchmark result performed on two GCP n2-highcpu-2 machines also shows that rueidis can achieve higher throughput with lower latencies: https://github.com/rueian/rueidis/pull/93
 
-## Client Side Caching
+## [Client Side Caching](https://redis.io/docs/manual/client-side-caching/)
 
-The opt-in mode of server-assisted client side caching is enabled by default, and can be used by calling `DoCache()` or `DoMultiCache()` with
+The opt-in mode of [server-assisted client side caching](https://redis.io/docs/manual/client-side-caching/) is enabled by default, and can be used by calling `DoCache()` or `DoMultiCache()` with
 pairs of a readonly command and a client side TTL.
 
 ```golang
@@ -108,7 +105,7 @@ Cached responses will be invalidated when being notified by redis or their clien
 
 ### Benchmark
 
-Client Side Caching can boost read throughput just like having a redis replica in your application:
+Client Side Caching can boost read throughput just like **having a redis replica right inside your application**:
 
 ![client_test_get](https://github.com/rueian/rueidis-benchmark/blob/master/client_test_get_10.png)
 
