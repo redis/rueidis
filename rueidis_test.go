@@ -282,6 +282,24 @@ func ExampleClient_doCache() {
 	client.DoCache(ctx, client.B().Smembers().Key("s").Cache(), time.Minute).AsStrSlice()
 }
 
+func ExampleClient_scan() {
+	client, err := NewClient(ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
+	if err != nil {
+		panic(err)
+	}
+	defer client.Close()
+
+	for _, c := range client.Nodes() { // loop over all your redis nodes
+		var scan ScanEntry
+		for more := true; more; more = scan.Cursor != 0 {
+			if scan, err = c.Do(context.Background(), c.B().Scan().Cursor(scan.Cursor).Build()).AsScanEntry(); err != nil {
+				panic(err)
+			}
+			fmt.Println(scan.Elements)
+		}
+	}
+}
+
 func ExampleClient_dedicatedCAS() {
 	client, err := NewClient(ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
 	if err != nil {
