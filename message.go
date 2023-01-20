@@ -185,6 +185,16 @@ func (r RedisResult) AsInt64() (v int64, err error) {
 	return
 }
 
+// AsUint64 delegates to RedisMessage.AsUint64
+func (r RedisResult) AsUint64() (v uint64, err error) {
+	if r.err != nil {
+		err = r.err
+	} else {
+		v, err = r.val.AsUint64()
+	}
+	return
+}
+
 // AsBool delegates to RedisMessage.AsBool
 func (r RedisResult) AsBool() (v bool, err error) {
 	if r.err != nil {
@@ -465,6 +475,18 @@ func (m *RedisMessage) AsInt64() (val int64, err error) {
 		return 0, err
 	}
 	return strconv.ParseInt(v, 10, 64)
+}
+
+// AsUint64 check if message is a redis string response, and parse it as uint64
+func (m *RedisMessage) AsUint64() (val uint64, err error) {
+	if m.IsInt64() {
+		return uint64(m.integer), nil
+	}
+	v, err := m.ToString()
+	if err != nil {
+		return 0, err
+	}
+	return strconv.ParseUint(v, 10, 64)
 }
 
 // AsBool checks if message is non-nil redis response, and parses it as bool
