@@ -1178,35 +1178,10 @@
         ]
       },
       {
-        "name": "load",
-        "type": "block",
-        "optional": true,
-        "block": [
-          {
-            "name": "count",
-            "type": "string",
-            "command": "LOAD"
-          },
-          {
-            "name": "field",
-            "type": "string",
-            "multiple": true
-          }
-        ]
-      },
-      {
         "name": "timeout",
         "type": "integer",
         "optional": true,
         "command": "TIMEOUT"
-      },
-      {
-        "name": "loadall",
-        "type": "enum",
-        "optional": true,
-        "enum": [
-          "LOAD *"
-        ]
       },
       {
         "comment": "https://github.com/rueian/rueidis/issues/57",
@@ -1215,6 +1190,31 @@
         "optional": true,
         "multiple": true,
         "block": [
+          {
+            "name": "loadall",
+            "type": "enum",
+            "optional": true,
+            "enum": [
+              "LOAD *"
+            ]
+          },
+          {
+            "name": "load",
+            "type": "block",
+            "optional": true,
+            "block": [
+              {
+                "name": "count",
+                "type": "integer",
+                "command": "LOAD"
+              },
+              {
+                "name": "field",
+                "type": "string",
+                "multiple": true
+              }
+            ]
+          },
           {
             "name": "groupby",
             "type": "block",
