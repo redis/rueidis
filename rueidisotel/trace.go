@@ -21,8 +21,8 @@ var (
 	meter  = global.Meter(name)
 	dbattr = attribute.String("db.system", "redis")
 
-	cscMiss, _ = meter.SyncInt64().Counter("rueidis_do_cache_miss")
-	cscHits, _ = meter.SyncInt64().Counter("rueidis_do_cache_hits")
+	cscMiss, _ = meter.Int64Counter("rueidis_do_cache_miss")
+	cscHits, _ = meter.Int64Counter("rueidis_do_cache_hits")
 )
 
 var _ rueidis.Client = (*otelclient)(nil)
