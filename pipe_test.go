@@ -2841,6 +2841,56 @@ func TestForceClose_DoMulti_Canceled_Block(t *testing.T) {
 	p.Close()
 }
 
+func TestSyncModeSwitchingWithDeadlineExceed_Do(t *testing.T) {
+	p, mock, _, closeConn := setup(t, ClientOption{})
+	defer closeConn()
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Microsecond*100)
+	defer cancel()
+
+	var wg sync.WaitGroup
+	for i := 0; i < 10; i++ {
+		wg.Add(1)
+		go func() {
+			if err := p.Do(ctx, cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); !errors.Is(err, context.DeadlineExceeded) {
+				t.Errorf("unexpected err %v", err)
+			}
+			wg.Done()
+		}()
+	}
+
+	mock.Expect("GET", "a")
+	time.Sleep(time.Microsecond * 200)
+	mock.Expect().ReplyString("OK")
+	wg.Wait()
+	p.Close()
+}
+
+func TestSyncModeSwitchingWithDeadlineExceed_DoMulti(t *testing.T) {
+	p, mock, _, closeConn := setup(t, ClientOption{})
+	defer closeConn()
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Microsecond*100)
+	defer cancel()
+
+	var wg sync.WaitGroup
+	for i := 0; i < 10; i++ {
+		wg.Add(1)
+		go func() {
+			if err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); !errors.Is(err, context.DeadlineExceeded) {
+				t.Errorf("unexpected err %v", err)
+			}
+			wg.Done()
+		}()
+	}
+
+	mock.Expect("GET", "a")
+	time.Sleep(time.Microsecond * 200)
+	mock.Expect().ReplyString("OK")
+	wg.Wait()
+	p.Close()
+}
+
 func TestOngoingDeadlineContextInSyncMode_Do(t *testing.T) {
 	p, _, _, closeConn := setup(t, ClientOption{})
 	defer closeConn()
