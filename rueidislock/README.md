@@ -36,14 +36,16 @@ func main() {
 ```
 
 ## Features backed by the Redis Client Side Caching
-* The returned `ctx` will be canceled automatically if the `KeyMajority` is not held anymore.
-* The waiting `Locker.WithContext` will retry again if the lock is released by someone.
+* The returned `ctx` will be canceled automatically and immediately once the `KeyMajority` is not held anymore, for example:
+  * Redis down.
+  * Related keys has been deleted by other program or administrator.
+* The waiting `Locker.WithContext` will try acquiring the lock again automatically and immediately once it has been released by someone even from other program.
 
 ## How it works
 
 When the `locker.WithContext` is invoked, it will:
 
-1. Try acquiring 3 keys (given that `KeyMajority` is 2), which are `rueidislock:0:my_lock`, `rueidislock:1:my_lock` and `rueidislock:2:my_lock`, by sending redis command `SET NX PXAT`.
-2. If the `KeyMajority` is satisfied within the `KeyValidity` duration, the invocation is successful and a `ctx` is returned.
+1. Try acquiring 3 keys (given that `KeyMajority` is 2), which are `rueidislock:0:my_lock`, `rueidislock:1:my_lock` and `rueidislock:2:my_lock`, by sending redis command `SET NX PXAT` or `SET NX PX` if `FallbackSETPX` is set.
+2. If the `KeyMajority` is satisfied within the `KeyValidity` duration, the invocation is successful and a `ctx` is returned as the lock.
 3. If the invocation is not successful, it will wait for client-side caching notification to retry again.
 4. If the invocation is successful, the `Locker` will extend the `ctx` validity periodically and also watch client-side caching notification for canceling the `ctx` if the `KeyMajority` is not held anymore.

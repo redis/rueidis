@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/rueian/rueidis"
+	"github.com/rueian/rueidis/internal/cmds"
 )
 
 var sources sync.Pool
@@ -41,6 +42,8 @@ type LockerOption struct {
 	// NoLoopTracking will use NOLOOP in the CLIENT TRACKING command to avoid unnecessary notifications and thus have better performance.
 	// This can only be enabled if all your redis nodes >= 7.0.5. (https://github.com/redis/redis/pull/11052)
 	NoLoopTracking bool
+	// Use SET PX instead of SET PXAT when acquiring locks to be compatible with Redis < 6.2
+	FallbackSETPX bool
 }
 
 // Locker is the interface of rueidislock
@@ -79,6 +82,7 @@ func NewLocker(option LockerOption) (Locker, error) {
 		totalcnt: option.KeyMajority*2 - 1,
 		gates:    make(map[string]*gate),
 		noloop:   option.NoLoopTracking,
+		setpx:    option.FallbackSETPX,
 	}
 	option.ClientOption.DisableCache = false
 	if option.NoLoopTracking {
@@ -111,6 +115,7 @@ type locker struct {
 	majority int32
 	totalcnt int32
 	noloop   bool
+	setpx    bool
 }
 
 type gate struct {
@@ -151,10 +156,13 @@ func keyname(prefix, name string, i int32) string {
 
 func (m *locker) acquire(ctx context.Context, key, val string, deadline time.Time) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, m.timeout)
-	resp := m.client.DoMulti(ctx,
-		m.client.B().Set().Key(key).Value(val).Nx().PxatMillisecondsTimestamp(deadline.UnixMilli()).Build(),
-		m.client.B().Get().Key(key).Build(),
-	)
+	var set cmds.Completed
+	if m.setpx {
+		set = m.client.B().Set().Key(key).Value(val).Nx().PxMilliseconds(m.validity.Milliseconds()).Build()
+	} else {
+		set = m.client.B().Set().Key(key).Value(val).Nx().PxatMillisecondsTimestamp(deadline.UnixMilli()).Build()
+	}
+	resp := m.client.DoMulti(ctx, set, m.client.B().Get().Key(key).Build())
 	cancel()
 	if err = resp[0].Error(); rueidis.IsRedisNil(err) {
 		return ErrNotLocked
