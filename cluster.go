@@ -255,11 +255,17 @@ func (c *clusterClient) B() cmds.Builder {
 }
 
 func (c *clusterClient) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
+	if resp = c.do(ctx, cmd); resp.NonRedisError() == nil { // not recycle cmds if error, since cmds may be used later in pipe. consider recycle them by pipe
+		cmds.Put(cmd.CommandSlice())
+	}
+	return resp
+}
+
+func (c *clusterClient) do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
 retry:
 	cc, err := c.pick(cmd.Slot())
 	if err != nil {
-		resp = newErrResult(err)
-		goto ret
+		return newErrResult(err)
 	}
 	resp = cc.Do(ctx, cmd)
 process:
@@ -275,10 +281,6 @@ process:
 			runtime.Gosched()
 			goto retry
 		}
-	}
-ret:
-	if resp.NonRedisError() == nil { // not recycle cmds if error, since cmds may be used later in pipe. consider recycle them by pipe
-		cmds.Put(cmd.CommandSlice())
 	}
 	return resp
 }

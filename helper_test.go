@@ -102,6 +102,97 @@ func TestMGetCache(t *testing.T) {
 }
 
 //gocyclo:ignore
+func TestMGet(t *testing.T) {
+	t.Run("single client", func(t *testing.T) {
+		m := &mockConn{}
+		client, err := newSingleClient(&ClientOption{InitAddress: []string{""}}, m, func(dst string, opt *ClientOption) conn {
+			return m
+		})
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		t.Run("Delegate Do", func(t *testing.T) {
+			m.DoFn = func(cmd cmds.Completed) RedisResult {
+				if !reflect.DeepEqual(cmd.Commands(), []string{"MGET", "1", "2"}) {
+					t.Fatalf("unexpected command %v", cmd)
+				}
+				return newResult(RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "1"}, {typ: '+', string: "2"}}}, nil)
+			}
+			if v, err := MGet(client, context.Background(), []string{"1", "2"}); err != nil || v["1"].string != "1" || v["2"].string != "2" {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		})
+		t.Run("Delegate Do Empty", func(t *testing.T) {
+			if v, err := MGet(client, context.Background(), []string{}); err != nil || v == nil {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		})
+		t.Run("Delegate Do Err", func(t *testing.T) {
+			ctx, cancel := context.WithCancel(context.Background())
+			cancel()
+			m.DoFn = func(cmd cmds.Completed) RedisResult {
+				return newResult(RedisMessage{}, context.Canceled)
+			}
+			if v, err := MGet(client, ctx, []string{"1", "2"}); err != context.Canceled {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		})
+	})
+	t.Run("cluster client", func(t *testing.T) {
+		m := &mockConn{
+			DoFn: func(cmd cmds.Completed) RedisResult {
+				return slotsResp
+			},
+		}
+		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
+			return m
+		})
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		t.Run("Delegate Do", func(t *testing.T) {
+			keys := make([]string, 100)
+			for i := range keys {
+				keys[i] = strconv.Itoa(i)
+			}
+			m.DoFn = func(cmd cmds.Completed) RedisResult {
+				for _, key := range keys {
+					if reflect.DeepEqual(cmd.Commands(), []string{"MGET", key}) {
+						return newResult(RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: key}}}, nil)
+					}
+				}
+				t.Fatalf("unexpected command %v", cmd)
+				return RedisResult{}
+			}
+			v, err := MGet(client, context.Background(), keys)
+			if err != nil {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+			for _, key := range keys {
+				if v[key].string != key {
+					t.Fatalf("unexpected response %v", v)
+				}
+			}
+		})
+		t.Run("Delegate Do Empty", func(t *testing.T) {
+			if v, err := MGet(client, context.Background(), []string{}); err != nil || v == nil {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		})
+		t.Run("Delegate Do Err", func(t *testing.T) {
+			ctx, cancel := context.WithCancel(context.Background())
+			cancel()
+			m.DoFn = func(cmd cmds.Completed) RedisResult {
+				return newResult(RedisMessage{}, context.Canceled)
+			}
+			if v, err := MGet(client, ctx, []string{"1", "2"}); err != context.Canceled {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		})
+	})
+}
+
+//gocyclo:ignore
 func TestJsonMGetCache(t *testing.T) {
 	t.Run("single client", func(t *testing.T) {
 		m := &mockConn{}
@@ -186,6 +277,97 @@ func TestJsonMGetCache(t *testing.T) {
 				return newResult(RedisMessage{}, context.Canceled)
 			}
 			if v, err := JsonMGetCache(client, ctx, 100, []string{"1", "2"}, "$"); err != context.Canceled {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		})
+	})
+}
+
+//gocyclo:ignore
+func TestJsonMGet(t *testing.T) {
+	t.Run("single client", func(t *testing.T) {
+		m := &mockConn{}
+		client, err := newSingleClient(&ClientOption{InitAddress: []string{""}}, m, func(dst string, opt *ClientOption) conn {
+			return m
+		})
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		t.Run("Delegate Do", func(t *testing.T) {
+			m.DoFn = func(cmd cmds.Completed) RedisResult {
+				if !reflect.DeepEqual(cmd.Commands(), []string{"JSON.MGET", "1", "2", "$"}) {
+					t.Fatalf("unexpected command %v", cmd)
+				}
+				return newResult(RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "1"}, {typ: '+', string: "2"}}}, nil)
+			}
+			if v, err := JsonMGet(client, context.Background(), []string{"1", "2"}, "$"); err != nil || v["1"].string != "1" || v["2"].string != "2" {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		})
+		t.Run("Delegate Do Empty", func(t *testing.T) {
+			if v, err := JsonMGet(client, context.Background(), []string{}, "$"); err != nil || v == nil {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		})
+		t.Run("Delegate Do Err", func(t *testing.T) {
+			ctx, cancel := context.WithCancel(context.Background())
+			cancel()
+			m.DoFn = func(cmd cmds.Completed) RedisResult {
+				return newResult(RedisMessage{}, context.Canceled)
+			}
+			if v, err := JsonMGet(client, ctx, []string{"1", "2"}, "$"); err != context.Canceled {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		})
+	})
+	t.Run("cluster client", func(t *testing.T) {
+		m := &mockConn{
+			DoFn: func(cmd cmds.Completed) RedisResult {
+				return slotsResp
+			},
+		}
+		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
+			return m
+		})
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		t.Run("Delegate Do", func(t *testing.T) {
+			keys := make([]string, 100)
+			for i := range keys {
+				keys[i] = strconv.Itoa(i)
+			}
+			m.DoFn = func(cmd cmds.Completed) RedisResult {
+				for _, key := range keys {
+					if reflect.DeepEqual(cmd.Commands(), []string{"JSON.MGET", key, "$"}) {
+						return newResult(RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: key}}}, nil)
+					}
+				}
+				t.Fatalf("unexpected command %v", cmd)
+				return RedisResult{}
+			}
+			v, err := JsonMGet(client, context.Background(), keys, "$")
+			if err != nil {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+			for _, key := range keys {
+				if v[key].string != key {
+					t.Fatalf("unexpected response %v", v)
+				}
+			}
+		})
+		t.Run("Delegate Do Empty", func(t *testing.T) {
+			if v, err := JsonMGet(client, context.Background(), []string{}, "$"); err != nil || v == nil {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		})
+		t.Run("Delegate Do Err", func(t *testing.T) {
+			ctx, cancel := context.WithCancel(context.Background())
+			cancel()
+			m.DoFn = func(cmd cmds.Completed) RedisResult {
+				return newResult(RedisMessage{}, context.Canceled)
+			}
+			if v, err := JsonMGet(client, ctx, []string{"1", "2"}, "$"); err != context.Canceled {
 				t.Fatalf("unexpected response %v %v", v, err)
 			}
 		})
