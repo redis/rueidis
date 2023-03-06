@@ -849,25 +849,25 @@ func (c *Compat) BitCount(ctx context.Context, key string, bitCount *BitCount) *
 }
 
 func (c *Compat) BitOpAnd(ctx context.Context, destKey string, keys ...string) *IntCmd {
-	cmd := c.client.B().Bitop().Operation("AND").Destkey(destKey).Key(keys...).Build()
+	cmd := c.client.B().Bitop().And().Destkey(destKey).Key(keys...).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
 }
 
 func (c *Compat) BitOpOr(ctx context.Context, destKey string, keys ...string) *IntCmd {
-	cmd := c.client.B().Bitop().Operation("OR").Destkey(destKey).Key(keys...).Build()
+	cmd := c.client.B().Bitop().Or().Destkey(destKey).Key(keys...).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
 }
 
 func (c *Compat) BitOpXor(ctx context.Context, destKey string, keys ...string) *IntCmd {
-	cmd := c.client.B().Bitop().Operation("XOR").Destkey(destKey).Key(keys...).Build()
+	cmd := c.client.B().Bitop().Xor().Destkey(destKey).Key(keys...).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
 }
 
 func (c *Compat) BitOpNot(ctx context.Context, destKey string, key string) *IntCmd {
-	cmd := c.client.B().Bitop().Operation("NOT").Destkey(destKey).Key(key).Build()
+	cmd := c.client.B().Bitop().Not().Destkey(destKey).Key(key).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
 }
@@ -1431,37 +1431,37 @@ func (c *Compat) XReadStreams(ctx context.Context, streams ...string) *XStreamSl
 }
 
 func (c *Compat) XGroupCreate(ctx context.Context, stream, group, start string) *StatusCmd {
-	cmd := c.client.B().XgroupCreate().Key(stream).Groupname(group).Id(start).Build()
+	cmd := c.client.B().XgroupCreate().Key(stream).Group(group).Id(start).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newStatusCmd(resp)
 }
 
 func (c *Compat) XGroupCreateMkStream(ctx context.Context, stream, group, start string) *StatusCmd {
-	cmd := c.client.B().XgroupCreate().Key(stream).Groupname(group).Id(start).Mkstream().Build()
+	cmd := c.client.B().XgroupCreate().Key(stream).Group(group).Id(start).Mkstream().Build()
 	resp := c.client.Do(ctx, cmd)
 	return newStatusCmd(resp)
 }
 
 func (c *Compat) XGroupSetID(ctx context.Context, stream, group, start string) *StatusCmd {
-	cmd := c.client.B().XgroupSetid().Key(stream).Groupname(group).Id(start).Build()
+	cmd := c.client.B().XgroupSetid().Key(stream).Group(group).Id(start).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newStatusCmd(resp)
 }
 
 func (c *Compat) XGroupDestroy(ctx context.Context, stream, group string) *IntCmd {
-	cmd := c.client.B().XgroupDestroy().Key(stream).Groupname(group).Build()
+	cmd := c.client.B().XgroupDestroy().Key(stream).Group(group).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
 }
 
 func (c *Compat) XGroupCreateConsumer(ctx context.Context, stream, group, consumer string) *IntCmd {
-	cmd := c.client.B().XgroupCreateconsumer().Key(stream).Groupname(group).Consumername(consumer).Build()
+	cmd := c.client.B().XgroupCreateconsumer().Key(stream).Group(group).Consumer(consumer).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
 }
 
 func (c *Compat) XGroupDelConsumer(ctx context.Context, stream, group, consumer string) *IntCmd {
-	cmd := c.client.B().XgroupDelconsumer().Key(stream).Groupname(group).Consumername(consumer).Build()
+	cmd := c.client.B().XgroupDelconsumer().Key(stream).Group(group).Consumername(consumer).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
 }
@@ -1548,8 +1548,10 @@ func (c *Compat) XAutoClaimJustID(ctx context.Context, a XAutoClaimArgs) *XAutoC
 
 // xTrim If approx is true, add the "~" parameter, otherwise it is the default "=" (redis default).
 // example:
-//		XTRIM key MAXLEN/MINID threshold LIMIT limit.
-//		XTRIM key MAXLEN/MINID ~ threshold LIMIT limit.
+//
+//	XTRIM key MAXLEN/MINID threshold LIMIT limit.
+//	XTRIM key MAXLEN/MINID ~ threshold LIMIT limit.
+//
 // The redis-server version is lower than 6.2, please set limit to 0.
 func (c *Compat) xTrim(ctx context.Context, key, strategy string,
 	approx bool, threshold string, limit int64) *IntCmd {
@@ -1610,7 +1612,7 @@ func (c *Compat) XInfoStreamFull(ctx context.Context, key string, count int64) *
 }
 
 func (c *Compat) XInfoConsumers(ctx context.Context, key, group string) *XInfoConsumersCmd {
-	cmd := c.client.B().XinfoConsumers().Key(key).Groupname(group).Build()
+	cmd := c.client.B().XinfoConsumers().Key(key).Group(group).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newXInfoConsumersCmd(resp)
 }

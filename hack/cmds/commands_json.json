@@ -56,7 +56,7 @@
         "optional": true
       },
       {
-        "name": "paths",
+        "name": "path",
         "type": "string",
         "optional": true,
         "multiple": true

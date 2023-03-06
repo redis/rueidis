@@ -2183,6 +2183,10 @@ func (c BitfieldKey) Incrby(encoding string, offset int64, increment int64) Bitf
 	return (BitfieldOperationWriteSetIncrby)(c)
 }
 
+func (c BitfieldKey) Build() Completed {
+	return Completed(c)
+}
+
 type BitfieldOperationGet Completed
 
 func (c BitfieldOperationGet) OverflowWrap() BitfieldOperationWriteOverflowWrap {
@@ -2357,6 +2361,14 @@ func (c BitfieldRoKey) Get() BitfieldRoGet {
 	return (BitfieldRoGet)(c)
 }
 
+func (c BitfieldRoKey) Build() Completed {
+	return Completed(c)
+}
+
+func (c BitfieldRoKey) Cache() Cacheable {
+	return Cacheable(c)
+}
+
 type Bitop Completed
 
 func (b Builder) Bitop() (c Bitop) {
@@ -2365,9 +2377,24 @@ func (b Builder) Bitop() (c Bitop) {
 	return c
 }
 
-func (c Bitop) Operation(operation string) BitopOperation {
-	c.cs.s = append(c.cs.s, operation)
-	return (BitopOperation)(c)
+func (c Bitop) And() BitopOperationAnd {
+	c.cs.s = append(c.cs.s, "AND")
+	return (BitopOperationAnd)(c)
+}
+
+func (c Bitop) Or() BitopOperationOr {
+	c.cs.s = append(c.cs.s, "OR")
+	return (BitopOperationOr)(c)
+}
+
+func (c Bitop) Xor() BitopOperationXor {
+	c.cs.s = append(c.cs.s, "XOR")
+	return (BitopOperationXor)(c)
+}
+
+func (c Bitop) Not() BitopOperationNot {
+	c.cs.s = append(c.cs.s, "NOT")
+	return (BitopOperationNot)(c)
 }
 
 type BitopDestkey Completed
@@ -2408,9 +2435,45 @@ func (c BitopKey) Build() Completed {
 	return Completed(c)
 }
 
-type BitopOperation Completed
+type BitopOperationAnd Completed
 
-func (c BitopOperation) Destkey(destkey string) BitopDestkey {
+func (c BitopOperationAnd) Destkey(destkey string) BitopDestkey {
+	if c.ks&NoSlot == NoSlot {
+		c.ks = NoSlot | slot(destkey)
+	} else {
+		c.ks = check(c.ks, slot(destkey))
+	}
+	c.cs.s = append(c.cs.s, destkey)
+	return (BitopDestkey)(c)
+}
+
+type BitopOperationNot Completed
+
+func (c BitopOperationNot) Destkey(destkey string) BitopDestkey {
+	if c.ks&NoSlot == NoSlot {
+		c.ks = NoSlot | slot(destkey)
+	} else {
+		c.ks = check(c.ks, slot(destkey))
+	}
+	c.cs.s = append(c.cs.s, destkey)
+	return (BitopDestkey)(c)
+}
+
+type BitopOperationOr Completed
+
+func (c BitopOperationOr) Destkey(destkey string) BitopDestkey {
+	if c.ks&NoSlot == NoSlot {
+		c.ks = NoSlot | slot(destkey)
+	} else {
+		c.ks = check(c.ks, slot(destkey))
+	}
+	c.cs.s = append(c.cs.s, destkey)
+	return (BitopDestkey)(c)
+}
+
+type BitopOperationXor Completed
+
+func (c BitopOperationXor) Destkey(destkey string) BitopDestkey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(destkey)
 	} else {
@@ -3682,9 +3745,14 @@ func (c ClientKill) Laddr(ipPort string) ClientKillLaddr {
 	return (ClientKillLaddr)(c)
 }
 
-func (c ClientKill) Skipme(yesNo string) ClientKillSkipme {
-	c.cs.s = append(c.cs.s, "SKIPME", yesNo)
-	return (ClientKillSkipme)(c)
+func (c ClientKill) SkipmeYes() ClientKillSkipmeYes {
+	c.cs.s = append(c.cs.s, "SKIPME", "YES")
+	return (ClientKillSkipmeYes)(c)
+}
+
+func (c ClientKill) SkipmeNo() ClientKillSkipmeNo {
+	c.cs.s = append(c.cs.s, "SKIPME", "NO")
+	return (ClientKillSkipmeNo)(c)
 }
 
 func (c ClientKill) Build() Completed {
@@ -3698,9 +3766,14 @@ func (c ClientKillAddr) Laddr(ipPort string) ClientKillLaddr {
 	return (ClientKillLaddr)(c)
 }
 
-func (c ClientKillAddr) Skipme(yesNo string) ClientKillSkipme {
-	c.cs.s = append(c.cs.s, "SKIPME", yesNo)
-	return (ClientKillSkipme)(c)
+func (c ClientKillAddr) SkipmeYes() ClientKillSkipmeYes {
+	c.cs.s = append(c.cs.s, "SKIPME", "YES")
+	return (ClientKillSkipmeYes)(c)
+}
+
+func (c ClientKillAddr) SkipmeNo() ClientKillSkipmeNo {
+	c.cs.s = append(c.cs.s, "SKIPME", "NO")
+	return (ClientKillSkipmeNo)(c)
 }
 
 func (c ClientKillAddr) Build() Completed {
@@ -3744,9 +3817,14 @@ func (c ClientKillId) Laddr(ipPort string) ClientKillLaddr {
 	return (ClientKillLaddr)(c)
 }
 
-func (c ClientKillId) Skipme(yesNo string) ClientKillSkipme {
-	c.cs.s = append(c.cs.s, "SKIPME", yesNo)
-	return (ClientKillSkipme)(c)
+func (c ClientKillId) SkipmeYes() ClientKillSkipmeYes {
+	c.cs.s = append(c.cs.s, "SKIPME", "YES")
+	return (ClientKillSkipmeYes)(c)
+}
+
+func (c ClientKillId) SkipmeNo() ClientKillSkipmeNo {
+	c.cs.s = append(c.cs.s, "SKIPME", "NO")
+	return (ClientKillSkipmeNo)(c)
 }
 
 func (c ClientKillId) Build() Completed {
@@ -3795,9 +3873,14 @@ func (c ClientKillIpPort) Laddr(ipPort string) ClientKillLaddr {
 	return (ClientKillLaddr)(c)
 }
 
-func (c ClientKillIpPort) Skipme(yesNo string) ClientKillSkipme {
-	c.cs.s = append(c.cs.s, "SKIPME", yesNo)
-	return (ClientKillSkipme)(c)
+func (c ClientKillIpPort) SkipmeYes() ClientKillSkipmeYes {
+	c.cs.s = append(c.cs.s, "SKIPME", "YES")
+	return (ClientKillSkipmeYes)(c)
+}
+
+func (c ClientKillIpPort) SkipmeNo() ClientKillSkipmeNo {
+	c.cs.s = append(c.cs.s, "SKIPME", "NO")
+	return (ClientKillSkipmeNo)(c)
 }
 
 func (c ClientKillIpPort) Build() Completed {
@@ -3806,18 +3889,29 @@ func (c ClientKillIpPort) Build() Completed {
 
 type ClientKillLaddr Completed
 
-func (c ClientKillLaddr) Skipme(yesNo string) ClientKillSkipme {
-	c.cs.s = append(c.cs.s, "SKIPME", yesNo)
-	return (ClientKillSkipme)(c)
+func (c ClientKillLaddr) SkipmeYes() ClientKillSkipmeYes {
+	c.cs.s = append(c.cs.s, "SKIPME", "YES")
+	return (ClientKillSkipmeYes)(c)
+}
+
+func (c ClientKillLaddr) SkipmeNo() ClientKillSkipmeNo {
+	c.cs.s = append(c.cs.s, "SKIPME", "NO")
+	return (ClientKillSkipmeNo)(c)
 }
 
 func (c ClientKillLaddr) Build() Completed {
 	return Completed(c)
 }
 
-type ClientKillSkipme Completed
+type ClientKillSkipmeNo Completed
 
-func (c ClientKillSkipme) Build() Completed {
+func (c ClientKillSkipmeNo) Build() Completed {
+	return Completed(c)
+}
+
+type ClientKillSkipmeYes Completed
+
+func (c ClientKillSkipmeYes) Build() Completed {
 	return Completed(c)
 }
 
@@ -3838,9 +3932,14 @@ func (c ClientKillTypeMaster) Laddr(ipPort string) ClientKillLaddr {
 	return (ClientKillLaddr)(c)
 }
 
-func (c ClientKillTypeMaster) Skipme(yesNo string) ClientKillSkipme {
-	c.cs.s = append(c.cs.s, "SKIPME", yesNo)
-	return (ClientKillSkipme)(c)
+func (c ClientKillTypeMaster) SkipmeYes() ClientKillSkipmeYes {
+	c.cs.s = append(c.cs.s, "SKIPME", "YES")
+	return (ClientKillSkipmeYes)(c)
+}
+
+func (c ClientKillTypeMaster) SkipmeNo() ClientKillSkipmeNo {
+	c.cs.s = append(c.cs.s, "SKIPME", "NO")
+	return (ClientKillSkipmeNo)(c)
 }
 
 func (c ClientKillTypeMaster) Build() Completed {
@@ -3864,9 +3963,14 @@ func (c ClientKillTypeNormal) Laddr(ipPort string) ClientKillLaddr {
 	return (ClientKillLaddr)(c)
 }
 
-func (c ClientKillTypeNormal) Skipme(yesNo string) ClientKillSkipme {
-	c.cs.s = append(c.cs.s, "SKIPME", yesNo)
-	return (ClientKillSkipme)(c)
+func (c ClientKillTypeNormal) SkipmeYes() ClientKillSkipmeYes {
+	c.cs.s = append(c.cs.s, "SKIPME", "YES")
+	return (ClientKillSkipmeYes)(c)
+}
+
+func (c ClientKillTypeNormal) SkipmeNo() ClientKillSkipmeNo {
+	c.cs.s = append(c.cs.s, "SKIPME", "NO")
+	return (ClientKillSkipmeNo)(c)
 }
 
 func (c ClientKillTypeNormal) Build() Completed {
@@ -3890,9 +3994,14 @@ func (c ClientKillTypePubsub) Laddr(ipPort string) ClientKillLaddr {
 	return (ClientKillLaddr)(c)
 }
 
-func (c ClientKillTypePubsub) Skipme(yesNo string) ClientKillSkipme {
-	c.cs.s = append(c.cs.s, "SKIPME", yesNo)
-	return (ClientKillSkipme)(c)
+func (c ClientKillTypePubsub) SkipmeYes() ClientKillSkipmeYes {
+	c.cs.s = append(c.cs.s, "SKIPME", "YES")
+	return (ClientKillSkipmeYes)(c)
+}
+
+func (c ClientKillTypePubsub) SkipmeNo() ClientKillSkipmeNo {
+	c.cs.s = append(c.cs.s, "SKIPME", "NO")
+	return (ClientKillSkipmeNo)(c)
 }
 
 func (c ClientKillTypePubsub) Build() Completed {
@@ -3916,9 +4025,14 @@ func (c ClientKillTypeReplica) Laddr(ipPort string) ClientKillLaddr {
 	return (ClientKillLaddr)(c)
 }
 
-func (c ClientKillTypeReplica) Skipme(yesNo string) ClientKillSkipme {
-	c.cs.s = append(c.cs.s, "SKIPME", yesNo)
-	return (ClientKillSkipme)(c)
+func (c ClientKillTypeReplica) SkipmeYes() ClientKillSkipmeYes {
+	c.cs.s = append(c.cs.s, "SKIPME", "YES")
+	return (ClientKillSkipmeYes)(c)
+}
+
+func (c ClientKillTypeReplica) SkipmeNo() ClientKillSkipmeNo {
+	c.cs.s = append(c.cs.s, "SKIPME", "NO")
+	return (ClientKillSkipmeNo)(c)
 }
 
 func (c ClientKillTypeReplica) Build() Completed {
@@ -3937,9 +4051,14 @@ func (c ClientKillUser) Laddr(ipPort string) ClientKillLaddr {
 	return (ClientKillLaddr)(c)
 }
 
-func (c ClientKillUser) Skipme(yesNo string) ClientKillSkipme {
-	c.cs.s = append(c.cs.s, "SKIPME", yesNo)
-	return (ClientKillSkipme)(c)
+func (c ClientKillUser) SkipmeYes() ClientKillSkipmeYes {
+	c.cs.s = append(c.cs.s, "SKIPME", "YES")
+	return (ClientKillSkipmeYes)(c)
+}
+
+func (c ClientKillUser) SkipmeNo() ClientKillSkipmeNo {
+	c.cs.s = append(c.cs.s, "SKIPME", "NO")
+	return (ClientKillSkipmeNo)(c)
 }
 
 func (c ClientKillUser) Build() Completed {
@@ -4783,6 +4902,18 @@ func (c ClusterMyid) Build() Completed {
 	return Completed(c)
 }
 
+type ClusterMyshardid Completed
+
+func (b Builder) ClusterMyshardid() (c ClusterMyshardid) {
+	c = ClusterMyshardid{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "CLUSTER", "MYSHARDID")
+	return c
+}
+
+func (c ClusterMyshardid) Build() Completed {
+	return Completed(c)
+}
+
 type ClusterNodes Completed
 
 func (b Builder) ClusterNodes() (c ClusterNodes) {
@@ -5363,7 +5494,30 @@ func (b Builder) CommandGetkeys() (c CommandGetkeys) {
 	return c
 }
 
-func (c CommandGetkeys) Build() Completed {
+func (c CommandGetkeys) Command(command string) CommandGetkeysCommand {
+	c.cs.s = append(c.cs.s, command)
+	return (CommandGetkeysCommand)(c)
+}
+
+type CommandGetkeysArg Completed
+
+func (c CommandGetkeysArg) Arg(arg ...string) CommandGetkeysArg {
+	c.cs.s = append(c.cs.s, arg...)
+	return c
+}
+
+func (c CommandGetkeysArg) Build() Completed {
+	return Completed(c)
+}
+
+type CommandGetkeysCommand Completed
+
+func (c CommandGetkeysCommand) Arg(arg ...string) CommandGetkeysArg {
+	c.cs.s = append(c.cs.s, arg...)
+	return (CommandGetkeysArg)(c)
+}
+
+func (c CommandGetkeysCommand) Build() Completed {
 	return Completed(c)
 }
 
@@ -5375,7 +5529,30 @@ func (b Builder) CommandGetkeysandflags() (c CommandGetkeysandflags) {
 	return c
 }
 
-func (c CommandGetkeysandflags) Build() Completed {
+func (c CommandGetkeysandflags) Command(command string) CommandGetkeysandflagsCommand {
+	c.cs.s = append(c.cs.s, command)
+	return (CommandGetkeysandflagsCommand)(c)
+}
+
+type CommandGetkeysandflagsArg Completed
+
+func (c CommandGetkeysandflagsArg) Arg(arg ...string) CommandGetkeysandflagsArg {
+	c.cs.s = append(c.cs.s, arg...)
+	return c
+}
+
+func (c CommandGetkeysandflagsArg) Build() Completed {
+	return Completed(c)
+}
+
+type CommandGetkeysandflagsCommand Completed
+
+func (c CommandGetkeysandflagsCommand) Arg(arg ...string) CommandGetkeysandflagsArg {
+	c.cs.s = append(c.cs.s, arg...)
+	return (CommandGetkeysandflagsArg)(c)
+}
+
+func (c CommandGetkeysandflagsCommand) Build() Completed {
 	return Completed(c)
 }
 
@@ -14181,6 +14358,14 @@ func (c GeohashKey) Member(member ...string) GeohashMember {
 	return (GeohashMember)(c)
 }
 
+func (c GeohashKey) Build() Completed {
+	return Completed(c)
+}
+
+func (c GeohashKey) Cache() Cacheable {
+	return Cacheable(c)
+}
+
 type GeohashMember Completed
 
 func (c GeohashMember) Member(member ...string) GeohashMember {
@@ -14219,6 +14404,14 @@ type GeoposKey Completed
 func (c GeoposKey) Member(member ...string) GeoposMember {
 	c.cs.s = append(c.cs.s, member...)
 	return (GeoposMember)(c)
+}
+
+func (c GeoposKey) Build() Completed {
+	return Completed(c)
+}
+
+func (c GeoposKey) Cache() Cacheable {
+	return Cacheable(c)
 }
 
 type GeoposMember Completed
@@ -18887,9 +19080,9 @@ func (c JsonGetIndent) Space(space string) JsonGetSpace {
 	return (JsonGetSpace)(c)
 }
 
-func (c JsonGetIndent) Paths(paths ...string) JsonGetPaths {
-	c.cs.s = append(c.cs.s, paths...)
-	return (JsonGetPaths)(c)
+func (c JsonGetIndent) Path(path ...string) JsonGetPath {
+	c.cs.s = append(c.cs.s, path...)
+	return (JsonGetPath)(c)
 }
 
 func (c JsonGetIndent) Build() Completed {
@@ -18917,9 +19110,9 @@ func (c JsonGetKey) Space(space string) JsonGetSpace {
 	return (JsonGetSpace)(c)
 }
 
-func (c JsonGetKey) Paths(paths ...string) JsonGetPaths {
-	c.cs.s = append(c.cs.s, paths...)
-	return (JsonGetPaths)(c)
+func (c JsonGetKey) Path(path ...string) JsonGetPath {
+	c.cs.s = append(c.cs.s, path...)
+	return (JsonGetPath)(c)
 }
 
 func (c JsonGetKey) Build() Completed {
@@ -18937,9 +19130,9 @@ func (c JsonGetNewline) Space(space string) JsonGetSpace {
 	return (JsonGetSpace)(c)
 }
 
-func (c JsonGetNewline) Paths(paths ...string) JsonGetPaths {
-	c.cs.s = append(c.cs.s, paths...)
-	return (JsonGetPaths)(c)
+func (c JsonGetNewline) Path(path ...string) JsonGetPath {
+	c.cs.s = append(c.cs.s, path...)
+	return (JsonGetPath)(c)
 }
 
 func (c JsonGetNewline) Build() Completed {
@@ -18950,26 +19143,26 @@ func (c JsonGetNewline) Cache() Cacheable {
 	return Cacheable(c)
 }
 
-type JsonGetPaths Completed
+type JsonGetPath Completed
 
-func (c JsonGetPaths) Paths(paths ...string) JsonGetPaths {
-	c.cs.s = append(c.cs.s, paths...)
+func (c JsonGetPath) Path(path ...string) JsonGetPath {
+	c.cs.s = append(c.cs.s, path...)
 	return c
 }
 
-func (c JsonGetPaths) Build() Completed {
+func (c JsonGetPath) Build() Completed {
 	return Completed(c)
 }
 
-func (c JsonGetPaths) Cache() Cacheable {
+func (c JsonGetPath) Cache() Cacheable {
 	return Cacheable(c)
 }
 
 type JsonGetSpace Completed
 
-func (c JsonGetSpace) Paths(paths ...string) JsonGetPaths {
-	c.cs.s = append(c.cs.s, paths...)
-	return (JsonGetPaths)(c)
+func (c JsonGetSpace) Path(path ...string) JsonGetPath {
+	c.cs.s = append(c.cs.s, path...)
+	return (JsonGetPath)(c)
 }
 
 func (c JsonGetSpace) Build() Completed {
@@ -21428,6 +21621,10 @@ func (c PfmergeDestkey) Sourcekey(sourcekey ...string) PfmergeSourcekey {
 	}
 	c.cs.s = append(c.cs.s, sourcekey...)
 	return (PfmergeSourcekey)(c)
+}
+
+func (c PfmergeDestkey) Build() Completed {
+	return Completed(c)
 }
 
 type PfmergeSourcekey Completed
@@ -31337,9 +31534,9 @@ func (c XgroupCreateEntriesread) Build() Completed {
 	return Completed(c)
 }
 
-type XgroupCreateGroupname Completed
+type XgroupCreateGroup Completed
 
-func (c XgroupCreateGroupname) Id(id string) XgroupCreateId {
+func (c XgroupCreateGroup) Id(id string) XgroupCreateId {
 	c.cs.s = append(c.cs.s, id)
 	return (XgroupCreateId)(c)
 }
@@ -31362,9 +31559,9 @@ func (c XgroupCreateId) Build() Completed {
 
 type XgroupCreateKey Completed
 
-func (c XgroupCreateKey) Groupname(groupname string) XgroupCreateGroupname {
-	c.cs.s = append(c.cs.s, groupname)
-	return (XgroupCreateGroupname)(c)
+func (c XgroupCreateKey) Group(group string) XgroupCreateGroup {
+	c.cs.s = append(c.cs.s, group)
+	return (XgroupCreateGroup)(c)
 }
 
 type XgroupCreateMkstream Completed
@@ -31396,24 +31593,24 @@ func (c XgroupCreateconsumer) Key(key string) XgroupCreateconsumerKey {
 	return (XgroupCreateconsumerKey)(c)
 }
 
-type XgroupCreateconsumerConsumername Completed
+type XgroupCreateconsumerConsumer Completed
 
-func (c XgroupCreateconsumerConsumername) Build() Completed {
+func (c XgroupCreateconsumerConsumer) Build() Completed {
 	return Completed(c)
 }
 
-type XgroupCreateconsumerGroupname Completed
+type XgroupCreateconsumerGroup Completed
 
-func (c XgroupCreateconsumerGroupname) Consumername(consumername string) XgroupCreateconsumerConsumername {
-	c.cs.s = append(c.cs.s, consumername)
-	return (XgroupCreateconsumerConsumername)(c)
+func (c XgroupCreateconsumerGroup) Consumer(consumer string) XgroupCreateconsumerConsumer {
+	c.cs.s = append(c.cs.s, consumer)
+	return (XgroupCreateconsumerConsumer)(c)
 }
 
 type XgroupCreateconsumerKey Completed
 
-func (c XgroupCreateconsumerKey) Groupname(groupname string) XgroupCreateconsumerGroupname {
-	c.cs.s = append(c.cs.s, groupname)
-	return (XgroupCreateconsumerGroupname)(c)
+func (c XgroupCreateconsumerKey) Group(group string) XgroupCreateconsumerGroup {
+	c.cs.s = append(c.cs.s, group)
+	return (XgroupCreateconsumerGroup)(c)
 }
 
 type XgroupDelconsumer Completed
@@ -31440,18 +31637,18 @@ func (c XgroupDelconsumerConsumername) Build() Completed {
 	return Completed(c)
 }
 
-type XgroupDelconsumerGroupname Completed
+type XgroupDelconsumerGroup Completed
 
-func (c XgroupDelconsumerGroupname) Consumername(consumername string) XgroupDelconsumerConsumername {
+func (c XgroupDelconsumerGroup) Consumername(consumername string) XgroupDelconsumerConsumername {
 	c.cs.s = append(c.cs.s, consumername)
 	return (XgroupDelconsumerConsumername)(c)
 }
 
 type XgroupDelconsumerKey Completed
 
-func (c XgroupDelconsumerKey) Groupname(groupname string) XgroupDelconsumerGroupname {
-	c.cs.s = append(c.cs.s, groupname)
-	return (XgroupDelconsumerGroupname)(c)
+func (c XgroupDelconsumerKey) Group(group string) XgroupDelconsumerGroup {
+	c.cs.s = append(c.cs.s, group)
+	return (XgroupDelconsumerGroup)(c)
 }
 
 type XgroupDestroy Completed
@@ -31472,17 +31669,17 @@ func (c XgroupDestroy) Key(key string) XgroupDestroyKey {
 	return (XgroupDestroyKey)(c)
 }
 
-type XgroupDestroyGroupname Completed
+type XgroupDestroyGroup Completed
 
-func (c XgroupDestroyGroupname) Build() Completed {
+func (c XgroupDestroyGroup) Build() Completed {
 	return Completed(c)
 }
 
 type XgroupDestroyKey Completed
 
-func (c XgroupDestroyKey) Groupname(groupname string) XgroupDestroyGroupname {
-	c.cs.s = append(c.cs.s, groupname)
-	return (XgroupDestroyGroupname)(c)
+func (c XgroupDestroyKey) Group(group string) XgroupDestroyGroup {
+	c.cs.s = append(c.cs.s, group)
+	return (XgroupDestroyGroup)(c)
 }
 
 type XgroupHelp Completed
@@ -31521,9 +31718,9 @@ func (c XgroupSetidEntriesread) Build() Completed {
 	return Completed(c)
 }
 
-type XgroupSetidGroupname Completed
+type XgroupSetidGroup Completed
 
-func (c XgroupSetidGroupname) Id(id string) XgroupSetidId {
+func (c XgroupSetidGroup) Id(id string) XgroupSetidId {
 	c.cs.s = append(c.cs.s, id)
 	return (XgroupSetidId)(c)
 }
@@ -31541,9 +31738,9 @@ func (c XgroupSetidId) Build() Completed {
 
 type XgroupSetidKey Completed
 
-func (c XgroupSetidKey) Groupname(groupname string) XgroupSetidGroupname {
-	c.cs.s = append(c.cs.s, groupname)
-	return (XgroupSetidGroupname)(c)
+func (c XgroupSetidKey) Group(group string) XgroupSetidGroup {
+	c.cs.s = append(c.cs.s, group)
+	return (XgroupSetidGroup)(c)
 }
 
 type XinfoConsumers Completed
@@ -31564,17 +31761,17 @@ func (c XinfoConsumers) Key(key string) XinfoConsumersKey {
 	return (XinfoConsumersKey)(c)
 }
 
-type XinfoConsumersGroupname Completed
+type XinfoConsumersGroup Completed
 
-func (c XinfoConsumersGroupname) Build() Completed {
+func (c XinfoConsumersGroup) Build() Completed {
 	return Completed(c)
 }
 
 type XinfoConsumersKey Completed
 
-func (c XinfoConsumersKey) Groupname(groupname string) XinfoConsumersGroupname {
-	c.cs.s = append(c.cs.s, groupname)
-	return (XinfoConsumersGroupname)(c)
+func (c XinfoConsumersKey) Group(group string) XinfoConsumersGroup {
+	c.cs.s = append(c.cs.s, group)
+	return (XinfoConsumersGroup)(c)
 }
 
 type XinfoGroups Completed
@@ -33701,11 +33898,26 @@ func (c ZrankKey) Member(member string) ZrankMember {
 
 type ZrankMember Completed
 
+func (c ZrankMember) Withscore() ZrankWithscore {
+	c.cs.s = append(c.cs.s, "WITHSCORE")
+	return (ZrankWithscore)(c)
+}
+
 func (c ZrankMember) Build() Completed {
 	return Completed(c)
 }
 
 func (c ZrankMember) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type ZrankWithscore Completed
+
+func (c ZrankWithscore) Build() Completed {
+	return Completed(c)
+}
+
+func (c ZrankWithscore) Cache() Cacheable {
 	return Cacheable(c)
 }
 
@@ -34077,11 +34289,26 @@ func (c ZrevrankKey) Member(member string) ZrevrankMember {
 
 type ZrevrankMember Completed
 
+func (c ZrevrankMember) Withscore() ZrevrankWithscore {
+	c.cs.s = append(c.cs.s, "WITHSCORE")
+	return (ZrevrankWithscore)(c)
+}
+
 func (c ZrevrankMember) Build() Completed {
 	return Completed(c)
 }
 
 func (c ZrevrankMember) Cache() Cacheable {
+	return Cacheable(c)
+}
+
+type ZrevrankWithscore Completed
+
+func (c ZrevrankWithscore) Build() Completed {
+	return Completed(c)
+}
+
+func (c ZrevrankWithscore) Cache() Cacheable {
 	return Cacheable(c)
 }
 

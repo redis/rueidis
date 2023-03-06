@@ -254,6 +254,7 @@
       {
         "name": "operation",
         "type": "block",
+        "optional": true,
         "multiple": true,
         "block": [
           {
@@ -341,6 +342,7 @@
           "string",
           "integer"
         ],
+        "optional": true,
         "multiple": true,
         "multiple_token": true
       }
@@ -354,7 +356,13 @@
     "arguments": [
       {
         "name": "operation",
-        "type": "string"
+        "type": "enum",
+        "enum": [
+          "AND",
+          "OR",
+          "XOR",
+          "NOT"
+        ]
       },
       {
         "name": "destkey",
@@ -696,8 +704,11 @@
       },
       {
         "command": "SKIPME",
-        "name": "yes/no",
-        "type": "string",
+        "type": "enum",
+        "enum": [
+          "YES",
+          "NO"
+        ],
         "optional": true
       }
     ],
@@ -1096,6 +1107,12 @@
     "since": "3.0.0",
     "group": "cluster"
   },
+  "CLUSTER MYSHARDID": {
+    "summary": "Return the node shard id",
+    "since": "7.2.0",
+    "group": "cluster",
+    "complexity": "O(1)"
+  },
   "CLUSTER NODES": {
     "summary": "Get Cluster config for the node",
     "complexity": "O(N) where N is the total number of Cluster nodes",
@@ -1227,13 +1244,36 @@
     "summary": "Extract keys given a full Redis command",
     "complexity": "O(N) where N is the number of arguments to the command",
     "since": "2.8.13",
-    "group": "server"
+    "group": "server",
+    "arguments": [
+      {
+        "name": "command",
+        "type": "string"
+      },
+      {
+        "name": "arg",
+        "type": "string",
+        "optional": true,
+        "multiple": true
+      }
+    ]
   },
   "COMMAND GETKEYSANDFLAGS": {
     "summary": "Extract keys given a full Redis command",
     "since": "7.0.0",
     "group": "server",
-    "complexity": "O(N) where N is the number of arguments to the command"
+    "arguments": [
+      {
+        "name": "command",
+        "type": "string"
+      },
+      {
+        "name": "arg",
+        "type": "string",
+        "optional": true,
+        "multiple": true
+      }
+    ]
   },
   "COMMAND INFO": {
     "summary": "Get array of specific Redis command details",
@@ -1274,12 +1314,8 @@
     "summary": "Get the values of configuration parameters",
     "arguments": [
       {
-        "name": [
-          "parameter"
-        ],
-        "type": [
-          "string"
-        ],
+        "name": "parameter",
+        "type": "string",
         "multiple": true
       }
     ],
@@ -1916,6 +1952,7 @@
       {
         "name": "member",
         "type": "string",
+        "optional": true,
         "multiple": true
       }
     ],
@@ -1933,6 +1970,7 @@
       {
         "name": "member",
         "type": "string",
+        "optional": true,
         "multiple": true
       }
     ],
@@ -3908,6 +3946,7 @@
       {
         "name": "sourcekey",
         "type": "key",
+        "optional": true,
         "multiple": true
       }
     ],
@@ -3951,12 +3990,8 @@
     "complexity": "O(N) where N is the number of patterns the client is already subscribed to.",
     "arguments": [
       {
-        "name": [
-          "pattern"
-        ],
-        "type": [
-          "pattern"
-        ],
+        "name": "pattern",
+        "type": "pattern",
         "multiple": true
       }
     ],
@@ -5407,7 +5442,7 @@
         "type": "key"
       },
       {
-        "name": "groupname",
+        "name": "group",
         "type": "string"
       },
       {
@@ -5441,11 +5476,11 @@
         "type": "key"
       },
       {
-        "name": "groupname",
+        "name": "group",
         "type": "string"
       },
       {
-        "name": "consumername",
+        "name": "consumer",
         "type": "string"
       }
     ],
@@ -5461,7 +5496,7 @@
         "type": "key"
       },
       {
-        "name": "groupname",
+        "name": "group",
         "type": "string"
       },
       {
@@ -5481,7 +5516,7 @@
         "type": "key"
       },
       {
-        "name": "groupname",
+        "name": "group",
         "type": "string"
       }
     ],
@@ -5503,7 +5538,7 @@
         "type": "key"
       },
       {
-        "name": "groupname",
+        "name": "group",
         "type": "string"
       },
       {
@@ -5533,7 +5568,7 @@
         "type": "key"
       },
       {
-        "name": "groupname",
+        "name": "group",
         "type": "string"
       }
     ],
@@ -6448,6 +6483,10 @@
       {
         "name": "member",
         "type": "string"
+      },
+      {
+        "command": "WITHSCORE",
+        "optional": true
       }
     ],
     "since": "2.0.0",
@@ -6641,6 +6680,10 @@
       {
         "name": "member",
         "type": "string"
+      },
+      {
+        "command": "WITHSCORE",
+        "optional": true
       }
     ],
     "since": "2.0.0",
