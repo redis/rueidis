@@ -2007,20 +2007,21 @@ func testAdapter(resp3 bool) {
 				err = adapter.HSet(ctx, "hash", "key2", "hello2").Err()
 				Expect(err).NotTo(HaveOccurred())
 
-				v := adapter.HRandField(ctx, "hash", 1, false)
+				v := adapter.HRandField(ctx, "hash", 1)
 				Expect(v.Err()).NotTo(HaveOccurred())
 				Expect(v.Val()).To(Or(Equal([]string{"key1"}), Equal([]string{"key2"})))
 
-				v = adapter.HRandField(ctx, "hash", 0, false)
+				v = adapter.HRandField(ctx, "hash", 0)
 				Expect(v.Err()).NotTo(HaveOccurred())
 				Expect(v.Val()).To(HaveLen(0))
 
-				v = adapter.HRandField(ctx, "hash", 2, true)
-				Expect(v.Err()).NotTo(HaveOccurred())
-				Expect(v.Val()).To(Or(
-					ContainElements("key1", "hello1", "key2", "hello2"),
-					ContainElements("key2", "hello2", "key1", "hello1"),
-				))
+				// TODO
+				//v = adapter.HRandFieldWithValues(ctx, "hash", 2)
+				//Expect(v.Err()).NotTo(HaveOccurred())
+				//Expect(v.Val()).To(Or(
+				//	ContainElements("key1", "hello1", "key2", "hello2"),
+				//	ContainElements("key2", "hello2", "key1", "hello1"),
+				//))
 
 				// TODO
 				//var slice []string

@@ -587,22 +587,6 @@ func newStringSliceCmd(res rueidis.RedisResult) *StringSliceCmd {
 	return &StringSliceCmd{val: val, err: err}
 }
 
-func flattenStringSliceCmd(res rueidis.RedisResult) *StringSliceCmd {
-	arr, err := res.ToArray()
-	if err != nil {
-		return &StringSliceCmd{err: err}
-	}
-	val := make([]string, 0, len(arr)*2)
-	for _, v := range arr {
-		s, err := v.AsStrSlice()
-		if err != nil {
-			return &StringSliceCmd{err: err}
-		}
-		val = append(val, s...)
-	}
-	return &StringSliceCmd{val: val, err: err}
-}
-
 func (cmd *StringSliceCmd) SetVal(val []string) {
 	cmd.val = val
 }
@@ -821,6 +805,113 @@ func (cmd *ScanCmd) Err() error {
 
 func (cmd *ScanCmd) Result() (keys []string, cursor uint64, err error) {
 	return cmd.keys, cmd.cursor, cmd.err
+}
+
+type KeyValue struct {
+	Key   string
+	Value string
+}
+
+type KeyValueSliceCmd struct {
+	err error
+	val []KeyValue
+}
+
+func newKeyValueSliceCmd(res rueidis.RedisResult) *KeyValueSliceCmd {
+	ret := &KeyValueSliceCmd{}
+	val, err := res.AsStrMap()
+	if len(val) > 0 {
+		ret.val = make([]KeyValue, 0, len(val))
+		for k, v := range val {
+			ret.val = append(ret.val, KeyValue{Key: k, Value: v})
+		}
+	}
+	ret.err = err
+	return ret
+}
+
+func (cmd *KeyValueSliceCmd) SetVal(val []KeyValue) {
+	cmd.val = val
+}
+
+func (cmd *KeyValueSliceCmd) SetErr(err error) {
+	cmd.err = err
+}
+
+func (cmd *KeyValueSliceCmd) Val() []KeyValue {
+	return cmd.val
+}
+
+func (cmd *KeyValueSliceCmd) Err() error {
+	return cmd.err
+}
+
+func (cmd *KeyValueSliceCmd) Result() ([]KeyValue, error) {
+	return cmd.val, cmd.err
+}
+
+type KeyValuesCmd struct {
+	err error
+	val rueidis.KeyValues
+}
+
+func newKeyValuesCmd(res rueidis.RedisResult) *KeyValuesCmd {
+	ret := &KeyValuesCmd{}
+	ret.val, ret.err = res.AsLMPop()
+	return ret
+}
+
+func (cmd *KeyValuesCmd) SetVal(key string, val []string) {
+	cmd.val.Key = key
+	cmd.val.Values = val
+}
+
+func (cmd *KeyValuesCmd) SetErr(err error) {
+	cmd.err = err
+}
+
+func (cmd *KeyValuesCmd) Val() (string, []string) {
+	return cmd.val.Key, cmd.val.Values
+}
+
+func (cmd *KeyValuesCmd) Err() error {
+	return cmd.err
+}
+
+func (cmd *KeyValuesCmd) Result() (string, []string, error) {
+	return cmd.val.Key, cmd.val.Values, cmd.err
+}
+
+type ZSliceWithKeyCmd struct {
+	err error
+	val rueidis.KeyZScores
+}
+
+func newZSliceWithKeyCmd(res rueidis.RedisResult) *ZSliceWithKeyCmd {
+	ret := &ZSliceWithKeyCmd{}
+	ret.val, ret.err = res.AsZMPop()
+	return ret
+}
+
+func (cmd *ZSliceWithKeyCmd) SetVal(key string, val []rueidis.ZScore) {
+	cmd.val.Key = key
+	cmd.val.Values = val
+}
+
+func (cmd *ZSliceWithKeyCmd) SetErr(err error) {
+	cmd.err = err
+}
+
+func (cmd *ZSliceWithKeyCmd) Val() (string, []rueidis.ZScore) {
+	return cmd.val.Key, cmd.val.Values
+}
+
+func (cmd *ZSliceWithKeyCmd) Err() error {
+	return cmd.err
+}
+
+func (cmd *ZSliceWithKeyCmd) Result() (string, []rueidis.ZScore, error) {
+	return cmd.val.Key, cmd.val.Values, cmd.err
 }
 
 type StringStringMapCmd struct {
