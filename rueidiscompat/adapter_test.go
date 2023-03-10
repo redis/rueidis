@@ -6336,7 +6336,7 @@ func testAdapterCache(resp3 bool) {
 
 		It("should Sort", func() {
 			Expect(func() {
-				adapter.Cache(time.Hour).Sort(ctx, "list", Sort{
+				adapter.Cache(time.Hour).SortRO(ctx, "list", Sort{
 					Order: "PANIC",
 				})
 			}).To(Panic())
@@ -6355,7 +6355,7 @@ func testAdapterCache(resp3 bool) {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(size).To(Equal(int64(3)))
 
-			els, err := adapter.Cache(time.Hour).Sort(ctx, "list", Sort{
+			els, err := adapter.Cache(time.Hour).SortRO(ctx, "list", Sort{
 				Offset: 0,
 				Count:  2,
 				Order:  "ASC",
@@ -6378,7 +6378,7 @@ func testAdapterCache(resp3 bool) {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(size).To(Equal(int64(3)))
 
-			els, err := adapter.Cache(time.Hour).Sort(ctx, "list_by", Sort{
+			els, err := adapter.Cache(time.Hour).SortRO(ctx, "list_by", Sort{
 				Offset: 0,
 				Count:  2,
 				By:     "nosort",
@@ -6404,7 +6404,7 @@ func testAdapterCache(resp3 bool) {
 			Expect(err).NotTo(HaveOccurred())
 
 			{
-				els, err := adapter.Cache(time.Hour).Sort(ctx, "list", Sort{
+				els, err := adapter.Cache(time.Hour).SortRO(ctx, "list", Sort{
 					Get: []string{"object_*"},
 				}).Result()
 				Expect(err).NotTo(HaveOccurred())

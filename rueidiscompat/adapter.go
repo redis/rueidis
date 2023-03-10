@@ -2901,8 +2901,8 @@ func (c CacheCompat) SMembers(ctx context.Context, key string) *StringSliceCmd {
 	return newStringSliceCmd(resp)
 }
 
-func (c CacheCompat) Sort(ctx context.Context, key string, sort Sort) *StringSliceCmd {
-	cmd := c.client.B().Arbitrary("SORT").Keys(key)
+func (c CacheCompat) SortRO(ctx context.Context, key string, sort Sort) *StringSliceCmd {
+	cmd := c.client.B().Arbitrary("SORT_RO").Keys(key)
 	if sort.By != "" {
 		cmd = cmd.Args("BY", sort.By)
 	}
