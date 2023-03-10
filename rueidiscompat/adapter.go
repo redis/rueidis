@@ -301,7 +301,6 @@ type Cmdable interface {
 	Shutdown(ctx context.Context) *StatusCmd
 	ShutdownSave(ctx context.Context) *StatusCmd
 	ShutdownNoSave(ctx context.Context) *StatusCmd
-	SlaveOf(ctx context.Context, host, port string) *StatusCmd
 	Time(ctx context.Context) *TimeCmd
 	DebugObject(ctx context.Context, key string) *StringCmd
 	ReadOnly(ctx context.Context) *StatusCmd
@@ -2260,16 +2259,6 @@ func (c *Compat) ShutdownNoSave(ctx context.Context) *StatusCmd {
 	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
 		return c.B().Shutdown().Nosave().Build()
 	})
-}
-
-func (c *Compat) SlaveOf(ctx context.Context, host, port string) *StatusCmd {
-	p, err := strconv.ParseInt(port, 10, 64)
-	if err != nil {
-		return &StatusCmd{err: err}
-	}
-	cmd := c.client.B().Slaveof().Host(host).Port(p).Build()
-	resp := c.client.Do(ctx, cmd)
-	return newStatusCmd(resp)
 }
 
 func (c *Compat) Time(ctx context.Context) *TimeCmd {

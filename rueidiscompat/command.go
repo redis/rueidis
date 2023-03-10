@@ -819,11 +819,11 @@ type KeyValueSliceCmd struct {
 
 func newKeyValueSliceCmd(res rueidis.RedisResult) *KeyValueSliceCmd {
 	ret := &KeyValueSliceCmd{}
-	val, err := res.AsStrMap()
-	if len(val) > 0 {
-		ret.val = make([]KeyValue, 0, len(val))
-		for k, v := range val {
-			ret.val = append(ret.val, KeyValue{Key: k, Value: v})
+	arr, err := res.ToArray()
+	for _, a := range arr {
+		kv, _ := a.AsStrSlice()
+		for i := 0; i < len(kv); i += 2 {
+			ret.val = append(ret.val, KeyValue{Key: kv[i], Value: kv[i+1]})
 		}
 	}
 	ret.err = err

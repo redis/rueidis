@@ -508,6 +508,10 @@ func testAdapter(resp3 bool) {
 				Expect(timeCmd.Err()).NotTo(HaveOccurred())
 				Expect(timeCmd.Val().Seconds()).To(BeNumerically("==", expireAt.Unix()))
 
+				ptimeCmd := adapter.PExpireTime(ctx, "key")
+				Expect(ptimeCmd.Err()).NotTo(HaveOccurred())
+				Expect(ptimeCmd.Val().Seconds()).To(BeNumerically("==", expireAt.Unix()))
+
 				// Check correct expiration in the past
 				expireAtCmd = adapter.ExpireAt(ctx, "key", time.Now().Add(-time.Hour))
 				Expect(expireAtCmd.Err()).NotTo(HaveOccurred())
@@ -765,6 +769,53 @@ func testAdapter(resp3 bool) {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(els).To(Equal([]string{"2", "3"}))
 		})
+
+		if resp3 {
+			It("should Sort", func() {
+				size, err := adapter.LPush(ctx, "list", "1").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(size).To(Equal(int64(1)))
+
+				size, err = adapter.LPush(ctx, "list", "3").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(size).To(Equal(int64(2)))
+
+				size, err = adapter.LPush(ctx, "list", "2").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(size).To(Equal(int64(3)))
+
+				els, err := adapter.SortRO(ctx, "list", Sort{
+					Offset: 0,
+					Count:  2,
+					Order:  "ASC",
+					Alpha:  true,
+				}).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(els).To(Equal([]string{"1", "2"}))
+			})
+
+			It("should Sort By", func() {
+				size, err := adapter.LPush(ctx, "list_by", "1").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(size).To(Equal(int64(1)))
+
+				size, err = adapter.LPush(ctx, "list_by", "3").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(size).To(Equal(int64(2)))
+
+				size, err = adapter.LPush(ctx, "list_by", "2").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(size).To(Equal(int64(3)))
+
+				els, err := adapter.SortRO(ctx, "list_by", Sort{
+					Offset: 0,
+					Count:  2,
+					By:     "nosort",
+				}).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(els).To(Equal([]string{"2", "3"}))
+			})
+		}
 
 		It("should Sort Panic", func() {
 			Expect(func() {
@@ -2028,19 +2079,12 @@ func testAdapter(resp3 bool) {
 				Expect(v.Err()).NotTo(HaveOccurred())
 				Expect(v.Val()).To(HaveLen(0))
 
-				// TODO
-				//v = adapter.HRandFieldWithValues(ctx, "hash", 2)
-				//Expect(v.Err()).NotTo(HaveOccurred())
-				//Expect(v.Val()).To(Or(
-				//	ContainElements("key1", "hello1", "key2", "hello2"),
-				//	ContainElements("key2", "hello2", "key1", "hello1"),
-				//))
-
-				// TODO
-				//var slice []string
-				//err = adapter.HRandField(ctx, "hash", 1, true).ScanSlice(&slice)
-				//Expect(err).NotTo(HaveOccurred())
-				//Expect(slice).To(Or(Equal([]string{"key1", "hello1"}), Equal([]string{"key2", "hello2"})))
+				kv, err := adapter.HRandFieldWithValues(ctx, "hash", -1).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(kv).To(Or(
+					Equal([]KeyValue{{Key: "key1", Value: "hello1"}}),
+					Equal([]KeyValue{{Key: "key2", Value: "hello2"}}),
+				))
 			})
 		}
 	})
@@ -2246,6 +2290,46 @@ func testAdapter(resp3 bool) {
 		})
 
 		if resp3 {
+			It("should LMPop", func() {
+				err := adapter.LPush(ctx, "list1", "one", "two", "three", "four", "five").Err()
+				Expect(err).NotTo(HaveOccurred())
+
+				err = adapter.LPush(ctx, "list2", "a", "b", "c", "d", "e").Err()
+				Expect(err).NotTo(HaveOccurred())
+
+				key, val, err := adapter.LMPop(ctx, "left", 3, "list1", "list2").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(key).To(Equal("list1"))
+				Expect(val).To(Equal([]string{"five", "four", "three"}))
+
+				key, val, err = adapter.LMPop(ctx, "right", 3, "list1", "list2").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(key).To(Equal("list1"))
+				Expect(val).To(Equal([]string{"one", "two"}))
+
+				key, val, err = adapter.LMPop(ctx, "left", 1, "list1", "list2").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(key).To(Equal("list2"))
+				Expect(val).To(Equal([]string{"e"}))
+
+				key, val, err = adapter.LMPop(ctx, "right", 10, "list1", "list2").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(key).To(Equal("list2"))
+				Expect(val).To(Equal([]string{"a", "b", "c", "d"}))
+
+				err = adapter.LMPop(ctx, "left", 10, "list1", "list2").Err()
+				Expect(err).To(Equal(rueidis.Nil))
+
+				err = adapter.Set(ctx, "list3", 1024, 0).Err()
+				Expect(err).NotTo(HaveOccurred())
+
+				err = adapter.LMPop(ctx, "left", 10, "list1", "list2", "list3").Err()
+				Expect(err.Error()).To(Equal("WRONGTYPE Operation against a key holding the wrong kind of value"))
+
+				err = adapter.LMPop(ctx, "right", 0, "list1", "list2").Err()
+				Expect(err).To(HaveOccurred())
+			})
+
 			It("should BLMPop", func() {
 				err := adapter.LPush(ctx, "list1", "one", "two", "three", "four", "five").Err()
 				Expect(err).NotTo(HaveOccurred())
@@ -2804,6 +2888,38 @@ func testAdapter(resp3 bool) {
 			Expect(sInter.Err()).NotTo(HaveOccurred())
 			Expect(sInter.Val()).To(Equal([]string{"c"}))
 		})
+
+		if resp3 {
+			It("should SInterCard", func() {
+				sAdd := adapter.SAdd(ctx, "set1", "a")
+				Expect(sAdd.Err()).NotTo(HaveOccurred())
+				sAdd = adapter.SAdd(ctx, "set1", "b")
+				Expect(sAdd.Err()).NotTo(HaveOccurred())
+				sAdd = adapter.SAdd(ctx, "set1", "c")
+				Expect(sAdd.Err()).NotTo(HaveOccurred())
+
+				sAdd = adapter.SAdd(ctx, "set2", "b")
+				Expect(sAdd.Err()).NotTo(HaveOccurred())
+				sAdd = adapter.SAdd(ctx, "set2", "c")
+				Expect(sAdd.Err()).NotTo(HaveOccurred())
+				sAdd = adapter.SAdd(ctx, "set2", "d")
+				Expect(sAdd.Err()).NotTo(HaveOccurred())
+				sAdd = adapter.SAdd(ctx, "set2", "e")
+				Expect(sAdd.Err()).NotTo(HaveOccurred())
+				// limit 0 means no limit,see https://redis.io/commands/sintercard/ for more details
+				sInterCard := adapter.SInterCard(ctx, 0, "set1", "set2")
+				Expect(sInterCard.Err()).NotTo(HaveOccurred())
+				Expect(sInterCard.Val()).To(Equal(int64(2)))
+
+				sInterCard = adapter.SInterCard(ctx, 1, "set1", "set2")
+				Expect(sInterCard.Err()).NotTo(HaveOccurred())
+				Expect(sInterCard.Val()).To(Equal(int64(1)))
+
+				sInterCard = adapter.SInterCard(ctx, 3, "set1", "set2")
+				Expect(sInterCard.Err()).NotTo(HaveOccurred())
+				Expect(sInterCard.Val()).To(Equal(int64(2)))
+			})
+		}
 
 		It("should SInterStore", func() {
 			sAdd := adapter.SAdd(ctx, "set1", "a")
@@ -4526,6 +4642,32 @@ func testAdapter(resp3 bool) {
 				Expect(v).To(Equal([]string{"one", "two"}))
 			})
 
+			It("should ZInterCard", func() {
+				err := adapter.ZAdd(ctx, "zset1", Z{Score: 1, Member: "one"}).Err()
+				Expect(err).NotTo(HaveOccurred())
+				err = adapter.ZAdd(ctx, "zset1", Z{Score: 2, Member: "two"}).Err()
+				Expect(err).NotTo(HaveOccurred())
+				err = adapter.ZAdd(ctx, "zset2", Z{Score: 1, Member: "one"}).Err()
+				Expect(err).NotTo(HaveOccurred())
+				err = adapter.ZAdd(ctx, "zset2", Z{Score: 2, Member: "two"}).Err()
+				Expect(err).NotTo(HaveOccurred())
+				err = adapter.ZAdd(ctx, "zset2", Z{Score: 3, Member: "three"}).Err()
+				Expect(err).NotTo(HaveOccurred())
+
+				// limit 0 means no limit
+				sInterCard := adapter.ZInterCard(ctx, 0, "zset1", "zset2")
+				Expect(sInterCard.Err()).NotTo(HaveOccurred())
+				Expect(sInterCard.Val()).To(Equal(int64(2)))
+
+				sInterCard = adapter.ZInterCard(ctx, 1, "zset1", "zset2")
+				Expect(sInterCard.Err()).NotTo(HaveOccurred())
+				Expect(sInterCard.Val()).To(Equal(int64(1)))
+
+				sInterCard = adapter.ZInterCard(ctx, 3, "zset1", "zset2")
+				Expect(sInterCard.Err()).NotTo(HaveOccurred())
+				Expect(sInterCard.Val()).To(Equal(int64(2)))
+			})
+
 			It("should ZInterWithScores", func() {
 				err := adapter.ZAdd(ctx, "zset1", Z{Score: 1, Member: "one"}).Err()
 				Expect(err).NotTo(HaveOccurred())
@@ -5562,6 +5704,15 @@ func testAdapter(resp3 bool) {
 			Expect(res[1].GeoHash).To(Equal(int64(3479099956230698)))
 			Expect(res[1].Longitude).To(Equal(13.361389338970184))
 			Expect(res[1].Latitude).To(Equal(38.115556395496299))
+
+			ress, err := adapter.GeoRadiusByMemberStore(ctx, "Sicily", "Catania", GeoRadiusQuery{
+				Radius: 200,
+				Unit:   "km",
+				Count:  2,
+				Store:  "Sicily2",
+			}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(ress).To(Equal(int64(2)))
 		})
 
 		It("should search geo radius with no results", func() {
@@ -5917,6 +6068,26 @@ func testAdapter(resp3 bool) {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(v).To(Equal(map[string]int64{"ch": 0}))
 		})
+
+		if resp3 {
+			It("SPublish", func() {
+				v, err := adapter.SPublish(ctx, "ch", "1").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(v).To(Equal(int64(0)))
+			})
+
+			It("PubSubShardChannels", func() {
+				v, err := adapter.PubSubShardChannels(ctx, "*").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(v).To(Equal([]string{}))
+			})
+
+			It("PubSubShardNumSub", func() {
+				v, err := adapter.PubSubShardNumSub(ctx, "ch").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(v).To(Equal(map[string]int64{"ch": 0}))
+			})
+		}
 	})
 
 	Describe("Script", func() {
@@ -5962,6 +6133,28 @@ func testAdapter(resp3 bool) {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(vals).To(Equal([]any{"key", "hello"}))
 		})
+
+		if resp3 {
+			It("script load", func() {
+				val, err := adapter.ScriptLoad(
+					ctx,
+					"return {KEYS[1],ARGV[1]}",
+				).Result()
+				Expect(err).NotTo(HaveOccurred())
+				ret, err := adapter.ScriptExists(ctx, val).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ret).To(Equal([]bool{true}))
+
+				valsRo, err := adapter.EvalShaRO(
+					ctx,
+					val,
+					[]string{"key"},
+					"hello",
+				).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(valsRo).To(Equal([]any{"key", "hello"}))
+			})
+		}
 
 		It("script kill & flush", func() {
 			Expect(adapter.ScriptKill(ctx).Err()).To(MatchError("NOTBUSY No scripts in execution right now."))
@@ -6010,11 +6203,51 @@ func testAdapterCache(resp3 bool) {
 	})
 
 	Describe("Client", func() {
+		It("should ClientUnblock", func() {
+			id := adapter.ClientID(ctx).Val()
+			r, err := adapter.ClientUnblock(ctx, id).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(r).To(Equal(int64(0)))
+		})
+
+		It("should ClientUnblockWithError", func() {
+			id := adapter.ClientID(ctx).Val()
+			r, err := adapter.ClientUnblockWithError(ctx, id).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(r).To(Equal(int64(0)))
+		})
+
 		It("ClientPause", func() {
 			Expect(adapter.ClientPause(ctx, time.Second).Err()).NotTo(HaveOccurred())
 		})
+
 		It("ClientUnpause", func() {
 			Expect(adapter.ClientUnpause(ctx).Err()).NotTo(HaveOccurred())
+		})
+	})
+
+	Describe("EvalRO", func() {
+		It("returns keys and values", func() {
+			vals, err := adapter.EvalRO(
+				ctx,
+				"return {KEYS[1],ARGV[1]}",
+				[]string{"key"},
+				"hello",
+			).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(vals).To(Equal([]any{"key", "hello"}))
+		})
+
+		It("returns all values after an error", func() {
+			vals, err := adapter.EvalRO(
+				ctx,
+				`return {12, {err="error"}, "abc"}`,
+				nil,
+			).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(vals.([]any)[0]).To(Equal(int64(12)))
+			Expect(vals.([]any)[1].(error).Error()).To(Equal("error"))
+			Expect(vals.([]any)[2]).To(Equal("abc"))
 		})
 	})
 
