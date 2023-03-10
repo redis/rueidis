@@ -884,34 +884,41 @@ func (cmd *KeyValuesCmd) Result() (string, []string, error) {
 
 type ZSliceWithKeyCmd struct {
 	err error
-	val rueidis.KeyZScores
+	key string
+	val []Z
 }
 
 func newZSliceWithKeyCmd(res rueidis.RedisResult) *ZSliceWithKeyCmd {
-	ret := &ZSliceWithKeyCmd{}
-	ret.val, ret.err = res.AsZMPop()
-	return ret
+	v, err := res.AsZMPop()
+	if err != nil {
+		return &ZSliceWithKeyCmd{err: err}
+	}
+	val := make([]Z, 0, len(v.Values))
+	for _, s := range v.Values {
+		val = append(val, Z{Member: s.Member, Score: s.Score})
+	}
+	return &ZSliceWithKeyCmd{key: v.Key, val: val}
 }
 
-func (cmd *ZSliceWithKeyCmd) SetVal(key string, val []rueidis.ZScore) {
-	cmd.val.Key = key
-	cmd.val.Values = val
+func (cmd *ZSliceWithKeyCmd) SetVal(key string, val []Z) {
+	cmd.key = key
+	cmd.val = val
 }
 
 func (cmd *ZSliceWithKeyCmd) SetErr(err error) {
 	cmd.err = err
 }
 
-func (cmd *ZSliceWithKeyCmd) Val() (string, []rueidis.ZScore) {
-	return cmd.val.Key, cmd.val.Values
+func (cmd *ZSliceWithKeyCmd) Val() (string, []Z) {
+	return cmd.key, cmd.val
 }
 
 func (cmd *ZSliceWithKeyCmd) Err() error {
 	return cmd.err
 }
 
-func (cmd *ZSliceWithKeyCmd) Result() (string, []rueidis.ZScore, error) {
-	return cmd.val.Key, cmd.val.Values, cmd.err
+func (cmd *ZSliceWithKeyCmd) Result() (string, []Z, error) {
+	return cmd.key, cmd.val, cmd.err
 }
 
 type StringStringMapCmd struct {

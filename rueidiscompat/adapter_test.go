@@ -488,23 +488,36 @@ func testAdapter(resp3 bool) {
 			})
 		}
 
-		It("should ExpireAt", func() {
-			set := adapter.Set(ctx, "key", "Hello", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+		if resp3 {
+			It("should ExpireAt", func() {
+				set := adapter.Set(ctx, "key", "Hello", 0)
+				Expect(set.Err()).NotTo(HaveOccurred())
+				Expect(set.Val()).To(Equal("OK"))
 
-			n, err := adapter.Exists(ctx, "key").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(n).To(Equal(int64(1)))
+				n, err := adapter.Exists(ctx, "key").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(n).To(Equal(int64(1)))
 
-			expireAt := adapter.ExpireAt(ctx, "key", time.Now().Add(-time.Hour))
-			Expect(expireAt.Err()).NotTo(HaveOccurred())
-			Expect(expireAt.Val()).To(Equal(true))
+				// Check correct expiration time is set in the future
+				expireAt := time.Now().Add(time.Minute)
+				expireAtCmd := adapter.ExpireAt(ctx, "key", expireAt)
+				Expect(expireAtCmd.Err()).NotTo(HaveOccurred())
+				Expect(expireAtCmd.Val()).To(Equal(true))
 
-			n, err = adapter.Exists(ctx, "key").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(n).To(Equal(int64(0)))
-		})
+				timeCmd := adapter.ExpireTime(ctx, "key")
+				Expect(timeCmd.Err()).NotTo(HaveOccurred())
+				Expect(timeCmd.Val().Seconds()).To(BeNumerically("==", expireAt.Unix()))
+
+				// Check correct expiration in the past
+				expireAtCmd = adapter.ExpireAt(ctx, "key", time.Now().Add(-time.Hour))
+				Expect(expireAtCmd.Err()).NotTo(HaveOccurred())
+				Expect(expireAtCmd.Val()).To(Equal(true))
+
+				n, err = adapter.Exists(ctx, "key").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(n).To(Equal(int64(0)))
+			})
+		}
 
 		It("should Keys", func() {
 			mset := adapter.MSet(ctx, "one", "1", "two", "2", "three", "3", "four", "4")
@@ -2232,6 +2245,78 @@ func testAdapter(resp3 bool) {
 			Expect(lRange.Val()).To(Equal([]string{"Hello", "There", "World", "There"}))
 		})
 
+		if resp3 {
+			It("should BLMPop", func() {
+				err := adapter.LPush(ctx, "list1", "one", "two", "three", "four", "five").Err()
+				Expect(err).NotTo(HaveOccurred())
+
+				err = adapter.LPush(ctx, "list2", "a", "b", "c", "d", "e").Err()
+				Expect(err).NotTo(HaveOccurred())
+
+				key, val, err := adapter.BLMPop(ctx, 0, "left", 3, "list1", "list2").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(key).To(Equal("list1"))
+				Expect(val).To(Equal([]string{"five", "four", "three"}))
+
+				key, val, err = adapter.BLMPop(ctx, 0, "right", 3, "list1", "list2").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(key).To(Equal("list1"))
+				Expect(val).To(Equal([]string{"one", "two"}))
+
+				key, val, err = adapter.BLMPop(ctx, 0, "left", 1, "list1", "list2").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(key).To(Equal("list2"))
+				Expect(val).To(Equal([]string{"e"}))
+
+				key, val, err = adapter.BLMPop(ctx, 0, "right", 10, "list1", "list2").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(key).To(Equal("list2"))
+				Expect(val).To(Equal([]string{"a", "b", "c", "d"}))
+
+			})
+
+			It("should BLMPopBlocks", func() {
+				started := make(chan bool)
+				done := make(chan bool)
+				go func() {
+					defer GinkgoRecover()
+
+					started <- true
+					key, val, err := adapter.BLMPop(ctx, 0, "left", 1, "list_list").Result()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(key).To(Equal("list_list"))
+					Expect(val).To(Equal([]string{"a"}))
+					done <- true
+				}()
+				<-started
+
+				select {
+				case <-done:
+					Fail("BLMPop is not blocked")
+				case <-time.After(time.Second):
+					//ok
+				}
+
+				_, err := adapter.LPush(ctx, "list_list", "a").Result()
+				Expect(err).NotTo(HaveOccurred())
+
+				select {
+				case <-done:
+					//ok
+				case <-time.After(time.Second):
+					Fail("BLMPop is still blocked")
+				}
+			})
+
+			It("should BLMPop timeout", func() {
+				_, val, err := adapter.BLMPop(ctx, time.Second, "left", 1, "list1").Result()
+				Expect(err).To(Equal(rueidis.Nil))
+				Expect(val).To(BeNil())
+
+				Expect(adapter.Ping(ctx).Err()).NotTo(HaveOccurred())
+			})
+		}
+
 		It("should LLen", func() {
 			lPush := adapter.LPush(ctx, "list", "World")
 			Expect(lPush.Err()).NotTo(HaveOccurred())
@@ -3217,6 +3302,78 @@ func testAdapter(resp3 bool) {
 				vals, err = adapter.ZRangeWithScores(ctx, "zset", 0, -1).Result()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(vals).To(Equal([]Z{{Score: 1, Member: "one"}}))
+			})
+		}
+
+		if resp3 {
+			It("should ZAddArgsLT", func() {
+				added, err := adapter.ZAddLT(ctx, "zset", Z{
+					Score:  2,
+					Member: "one",
+				}).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(added).To(Equal(int64(1)))
+
+				vals, err := adapter.ZRangeWithScores(ctx, "zset", 0, -1).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(vals).To(Equal([]Z{{Score: 2, Member: "one"}}))
+
+				added, err = adapter.ZAddLT(ctx, "zset", Z{
+					Score:  3,
+					Member: "one",
+				}).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(added).To(Equal(int64(0)))
+
+				vals, err = adapter.ZRangeWithScores(ctx, "zset", 0, -1).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(vals).To(Equal([]Z{{Score: 2, Member: "one"}}))
+
+				added, err = adapter.ZAddLT(ctx, "zset", Z{
+					Score:  1,
+					Member: "one",
+				}).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(added).To(Equal(int64(0)))
+
+				vals, err = adapter.ZRangeWithScores(ctx, "zset", 0, -1).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(vals).To(Equal([]Z{{Score: 1, Member: "one"}}))
+			})
+
+			It("should ZAddArgsGT", func() {
+				added, err := adapter.ZAddGT(ctx, "zset", Z{
+					Score:  2,
+					Member: "one",
+				}).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(added).To(Equal(int64(1)))
+
+				vals, err := adapter.ZRangeWithScores(ctx, "zset", 0, -1).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(vals).To(Equal([]Z{{Score: 2, Member: "one"}}))
+
+				added, err = adapter.ZAddGT(ctx, "zset", Z{
+					Score:  3,
+					Member: "one",
+				}).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(added).To(Equal(int64(0)))
+
+				vals, err = adapter.ZRangeWithScores(ctx, "zset", 0, -1).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(vals).To(Equal([]Z{{Score: 3, Member: "one"}}))
+
+				added, err = adapter.ZAddGT(ctx, "zset", Z{
+					Score:  1,
+					Member: "one",
+				}).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(added).To(Equal(int64(0)))
+
+				vals, err = adapter.ZRangeWithScores(ctx, "zset", 0, -1).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(vals).To(Equal([]Z{{Score: 3, Member: "one"}}))
 			})
 		}
 
@@ -6981,6 +7138,204 @@ func testAdapterCache(resp3 bool) {
 			zScore := adapter.Cache(time.Hour).ZScore(ctx, "zset", "one")
 			Expect(zScore.Err()).NotTo(HaveOccurred())
 			Expect(zScore.Val()).To(Equal(float64(1.001)))
+		})
+
+		It("should ZMPop", func() {
+
+			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+
+			err = adapter.ZAdd(ctx, "zset2", Z{Score: 1, Member: "one"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset2", Z{Score: 2, Member: "two"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset2", Z{Score: 3, Member: "three"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+
+			key, elems, err := adapter.ZMPop(ctx, "min", 1, "zset").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(key).To(Equal("zset"))
+			Expect(elems).To(Equal([]Z{{
+				Score:  1,
+				Member: "one",
+			}}))
+
+			_, _, err = adapter.ZMPop(ctx, "min", 1, "nosuchkey").Result()
+			Expect(err).To(Equal(rueidis.Nil))
+
+			err = adapter.ZAdd(ctx, "myzset", Z{Score: 1, Member: "one"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "myzset", Z{Score: 2, Member: "two"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "myzset", Z{Score: 3, Member: "three"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+
+			key, elems, err = adapter.ZMPop(ctx, "min", 1, "myzset").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(key).To(Equal("myzset"))
+			Expect(elems).To(Equal([]Z{{
+				Score:  1,
+				Member: "one",
+			}}))
+
+			key, elems, err = adapter.ZMPop(ctx, "max", 10, "myzset").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(key).To(Equal("myzset"))
+			Expect(elems).To(Equal([]Z{{
+				Score:  3,
+				Member: "three",
+			}, {
+				Score:  2,
+				Member: "two",
+			}}))
+
+			err = adapter.ZAdd(ctx, "myzset2", Z{Score: 4, Member: "four"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "myzset2", Z{Score: 5, Member: "five"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "myzset2", Z{Score: 6, Member: "six"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+
+			key, elems, err = adapter.ZMPop(ctx, "min", 10, "myzset", "myzset2").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(key).To(Equal("myzset2"))
+			Expect(elems).To(Equal([]Z{{
+				Score:  4,
+				Member: "four",
+			}, {
+				Score:  5,
+				Member: "five",
+			}, {
+				Score:  6,
+				Member: "six",
+			}}))
+		})
+
+		It("should BZMPop", func() {
+
+			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+
+			err = adapter.ZAdd(ctx, "zset2", Z{Score: 1, Member: "one"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset2", Z{Score: 2, Member: "two"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset2", Z{Score: 3, Member: "three"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+
+			key, elems, err := adapter.BZMPop(ctx, 0, "min", 1, "zset").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(key).To(Equal("zset"))
+			Expect(elems).To(Equal([]Z{{
+				Score:  1,
+				Member: "one",
+			}}))
+			key, elems, err = adapter.BZMPop(ctx, 0, "max", 1, "zset").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(key).To(Equal("zset"))
+			Expect(elems).To(Equal([]Z{{
+				Score:  3,
+				Member: "three",
+			}}))
+			key, elems, err = adapter.BZMPop(ctx, 0, "min", 10, "zset").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(key).To(Equal("zset"))
+			Expect(elems).To(Equal([]Z{{
+				Score:  2,
+				Member: "two",
+			}}))
+
+			key, elems, err = adapter.BZMPop(ctx, 0, "max", 10, "zset2").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(key).To(Equal("zset2"))
+			Expect(elems).To(Equal([]Z{{
+				Score:  3,
+				Member: "three",
+			}, {
+				Score:  2,
+				Member: "two",
+			}, {
+				Score:  1,
+				Member: "one",
+			}}))
+
+			err = adapter.ZAdd(ctx, "myzset", Z{Score: 1, Member: "one"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			key, elems, err = adapter.BZMPop(ctx, 0, "min", 10, "myzset").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(key).To(Equal("myzset"))
+			Expect(elems).To(Equal([]Z{{
+				Score:  1,
+				Member: "one",
+			}}))
+
+			err = adapter.ZAdd(ctx, "myzset2", Z{Score: 4, Member: "four"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "myzset2", Z{Score: 5, Member: "five"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+
+			key, elems, err = adapter.BZMPop(ctx, 0, "min", 10, "myzset", "myzset2").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(key).To(Equal("myzset2"))
+			Expect(elems).To(Equal([]Z{{
+				Score:  4,
+				Member: "four",
+			}, {
+				Score:  5,
+				Member: "five",
+			}}))
+		})
+
+		It("should BZMPopBlocks", func() {
+			started := make(chan bool)
+			done := make(chan bool)
+			go func() {
+				defer GinkgoRecover()
+
+				started <- true
+				key, elems, err := adapter.BZMPop(ctx, 0, "min", 1, "list_list").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(key).To(Equal("list_list"))
+				Expect(elems).To(Equal([]Z{{
+					Score:  1,
+					Member: "one",
+				}}))
+				done <- true
+			}()
+			<-started
+
+			select {
+			case <-done:
+				Fail("BZMPop is not blocked")
+			case <-time.After(time.Second):
+				//ok
+			}
+
+			err := adapter.ZAdd(ctx, "list_list", Z{Score: 1, Member: "one"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+
+			select {
+			case <-done:
+				//ok
+			case <-time.After(time.Second):
+				Fail("BZMPop is still blocked")
+			}
+		})
+
+		It("should BZMPop timeout", func() {
+			_, val, err := adapter.BZMPop(ctx, time.Second, "min", 1, "list1").Result()
+			Expect(err).To(Equal(rueidis.Nil))
+			Expect(val).To(BeNil())
+
+			Expect(adapter.Ping(ctx).Err()).NotTo(HaveOccurred())
 		})
 
 		It("should ZMScore", func() {

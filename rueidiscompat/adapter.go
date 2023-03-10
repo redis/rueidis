@@ -1104,7 +1104,7 @@ func (c *Compat) BLMPop(ctx context.Context, timeout time.Duration, direction st
 	if count > 0 {
 		cmd = cmd.Args("COUNT", strconv.FormatInt(count, 10))
 	}
-	return newKeyValuesCmd(c.client.Do(ctx, cmd.Build()))
+	return newKeyValuesCmd(c.client.Do(ctx, cmd.Blocking()))
 }
 
 func (c *Compat) BRPop(ctx context.Context, timeout time.Duration, keys ...string) *StringSliceCmd {
@@ -1690,7 +1690,7 @@ func (c *Compat) BZMPop(ctx context.Context, timeout time.Duration, order string
 	if count > 0 {
 		cmd = cmd.Args("COUNT", strconv.FormatInt(count, 10))
 	}
-	return newZSliceWithKeyCmd(c.client.Do(ctx, cmd.Build()))
+	return newZSliceWithKeyCmd(c.client.Do(ctx, cmd.Blocking()))
 }
 
 // ZAdd Redis `ZADD key score member [score member ...]` command.
