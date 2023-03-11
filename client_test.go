@@ -589,21 +589,10 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 
 	t.Run("Delegate DoMulti ReadOnly Retry", func(t *testing.T) {
 		c, m := setup()
-		if _, ok := c.(*clusterClient); ok {
-			m.DoMultiFn = makeDoMultiFn(
-				[]RedisResult{newErrResult(ErrClosing)},
-				[]RedisResult{
-					newResult(RedisMessage{typ: '+', string: "OK"}, nil),
-					newResult(RedisMessage{typ: '+', string: "QUEUED"}, nil),
-					newResult(RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "Do"}}}, nil),
-				},
-			)
-		} else {
-			m.DoMultiFn = makeDoMultiFn(
-				[]RedisResult{newErrResult(ErrClosing)},
-				[]RedisResult{newResult(RedisMessage{typ: '+', string: "Do"}, nil)},
-			)
-		}
+		m.DoMultiFn = makeDoMultiFn(
+			[]RedisResult{newErrResult(ErrClosing)},
+			[]RedisResult{newResult(RedisMessage{typ: '+', string: "Do"}, nil)},
+		)
 		if v, err := c.DoMulti(context.Background(), c.B().Get().Key("Do").Build())[0].ToString(); err != nil || v != "Do" {
 			t.Fatalf("unexpected response %v %v", v, err)
 		}

@@ -171,16 +171,11 @@ func TestClusterClient(t *testing.T) {
 			return RedisResult{}
 		},
 		DoMultiFn: func(multi ...cmds.Completed) []RedisResult {
-			resps := make([]RedisMessage, len(multi)-2)
-			for i, cmd := range multi[1 : len(multi)-1] {
-				resps[i] = RedisMessage{typ: '+', string: strings.Join(cmd.Commands(), " ")}
+			resps := make([]RedisResult, len(multi))
+			for i, cmd := range multi {
+				resps[i] = newResult(RedisMessage{typ: '+', string: strings.Join(cmd.Commands(), " ")}, nil)
 			}
-			result := make([]RedisResult, len(multi))
-			for i := 0; i < len(multi)-1; i++ {
-				result[i] = newResult(RedisMessage{typ: '+', string: "QUEUED"}, nil)
-			}
-			result[len(multi)-1] = newResult(RedisMessage{typ: '*', values: resps}, nil)
-			return result
+			return resps
 		},
 		DoMultiCacheFn: func(multi ...CacheableTTL) []RedisResult {
 			resps := make([]RedisResult, len(multi))
@@ -808,10 +803,7 @@ func TestClusterClientErr(t *testing.T) {
 				return []RedisResult{newResult(RedisMessage{typ: '-', string: "MOVED 0 :1"}, nil)}
 			}
 			ret := make([]RedisResult, len(multi))
-			for i := 0; i < len(multi)-1; i++ {
-				ret[i] = newResult(RedisMessage{typ: '+', string: "QUEUED"}, nil)
-			}
-			ret[len(multi)-1] = newResult(RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "b"}}}, nil)
+			ret[0] = newResult(RedisMessage{typ: '+', string: "b"}, nil)
 			return ret
 		}}
 		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
@@ -863,10 +855,7 @@ func TestClusterClientErr(t *testing.T) {
 				return []RedisResult{newResult(RedisMessage{typ: '-', string: "MOVED 0 :2"}, nil)}
 			}
 			ret := make([]RedisResult, len(multi))
-			for i := 0; i < len(multi)-1; i++ {
-				ret[i] = newResult(RedisMessage{typ: '+', string: "QUEUED"}, nil)
-			}
-			ret[len(multi)-1] = newResult(RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "b"}}}, nil)
+			ret[0] = newResult(RedisMessage{typ: '+', string: "b"}, nil)
 			return ret
 		}}
 
@@ -970,10 +959,8 @@ func TestClusterClientErr(t *testing.T) {
 					return []RedisResult{{}, newResult(RedisMessage{typ: '-', string: "ASK 0 :1"}, nil)}
 				}
 				ret := make([]RedisResult, len(multi))
-				for i := 0; i < len(multi)-1; i++ {
-					ret[i] = newResult(RedisMessage{typ: '+', string: "QUEUED"}, nil)
-				}
-				ret[len(multi)-1] = newResult(RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "b"}}}, nil)
+				ret[0] = newResult(RedisMessage{typ: '+', string: "OK"}, nil)
+				ret[1] = newResult(RedisMessage{typ: '+', string: "b"}, nil)
 				return ret
 			},
 		}
@@ -1078,10 +1065,7 @@ func TestClusterClientErr(t *testing.T) {
 				return []RedisResult{newResult(RedisMessage{typ: '-', string: "TRYAGAIN"}, nil)}
 			}
 			ret := make([]RedisResult, len(multi))
-			for i := 0; i < len(multi)-1; i++ {
-				ret[i] = newResult(RedisMessage{typ: '+', string: "QUEUED"}, nil)
-			}
-			ret[len(multi)-1] = newResult(RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "b"}}}, nil)
+			ret[0] = newResult(RedisMessage{typ: '+', string: "b"}, nil)
 			return ret
 		}}
 		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {

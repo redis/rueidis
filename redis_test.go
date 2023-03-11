@@ -334,6 +334,43 @@ func testMultiSETGET(t *testing.T, client Client, csc bool) {
 	wait()
 }
 
+//gocyclo:ignore
+func testMultiExec(t *testing.T, client Client) {
+	ctx := context.Background()
+	keys := 1000
+	para := 8
+
+	kvs := make(map[string]int64, keys)
+	for i := 1; i <= keys; i++ {
+		kvs["me"+strconv.Itoa(i)] = int64(i)
+	}
+
+	t.Logf("testing MULTI EXEC with %d keys and %d parallelism\n", keys, para)
+	jobs, wait := parallel(para)
+	for k, v := range kvs {
+		k, v := k, v
+		jobs <- func() {
+			resps, err := client.DoMulti(ctx,
+				client.B().Multi().Build(),
+				client.B().Set().Key(k).Value(strconv.FormatInt(v, 10)).ExSeconds(v).Build(),
+				client.B().Ttl().Key(k).Build(),
+				client.B().Get().Key(k).Build(),
+				client.B().Exec().Build(),
+			)[4].ToArray()
+			if err != nil {
+				t.Errorf("unexpected exec response %v", err)
+			}
+			if resps[1].integer != v {
+				t.Errorf("unexpected ttl response %v %v", v, resps[1].integer)
+			}
+			if resps[2].string != strconv.FormatInt(v, 10) {
+				t.Errorf("unexpected get response %v %v", v, resps[2].string)
+			}
+		}
+	}
+	wait()
+}
+
 func testBlockingZPOP(t *testing.T, client Client) {
 	ctx := context.Background()
 	key := "bz_pop_test"
@@ -535,7 +572,7 @@ func TestSingleClientIntegration(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	run(t, client, testSETGETCSC, testMultiSETGETCSC, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
+	run(t, client, testSETGETCSC, testMultiSETGETCSC, testMultiExec, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
 	run(t, client, testFlush)
 
 	client.Close()
@@ -555,7 +592,7 @@ func TestSentinelClientIntegration(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	run(t, client, testSETGETCSC, testMultiSETGETCSC, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
+	run(t, client, testSETGETCSC, testMultiSETGETCSC, testMultiExec, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
 	run(t, client, testFlush)
 
 	client.Close()
@@ -571,7 +608,7 @@ func TestClusterClientIntegration(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	run(t, client, testSETGETCSC, testMultiSETGETCSC, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
+	run(t, client, testSETGETCSC, testMultiSETGETCSC, testMultiExec, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
 
 	client.Close()
 	time.Sleep(time.Second * 5) // wait background ping exit
@@ -587,7 +624,7 @@ func TestSingleClient5Integration(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
+	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testMultiExec, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
 
 	client.Close()
 	time.Sleep(time.Second * 5) // wait background ping exit
@@ -603,7 +640,7 @@ func TestCluster5ClientIntegration(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
+	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testMultiExec, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
 
 	client.Close()
 	time.Sleep(time.Second * 5) // wait background ping exit
@@ -622,7 +659,7 @@ func TestSentinel5ClientIntegration(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
+	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testMultiExec, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
 
 	client.Close()
 	time.Sleep(time.Second * 5) // wait background ping exit
@@ -637,7 +674,7 @@ func TestKeyDBSingleClientIntegration(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	run(t, client, testSETGETCSC, testMultiSETGETCSC, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
+	run(t, client, testSETGETCSC, testMultiSETGETCSC, testMultiExec, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
 	run(t, client, testFlush)
 
 	client.Close()

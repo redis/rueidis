@@ -289,12 +289,11 @@ func (c *clusterClient) DoMulti(ctx context.Context, multi ...cmds.Completed) (r
 	if len(multi) == 0 {
 		return nil
 	}
-	results = make([]RedisResult, len(multi))
-	slots := make(map[uint16]int, 16)
+	slots := make(map[uint16]int, 8)
 	for _, cmd := range multi {
 		slots[cmd.Slot()]++
 	}
-	if slots[cmds.InitSlot] > 0 && len(slots) > 2 {
+	if len(slots) > 2 && slots[cmds.InitSlot] > 0 {
 		panic(panicMixCxSlot)
 	}
 	commands := make(map[uint16][]cmds.Completed, len(slots))
@@ -302,27 +301,21 @@ func (c *clusterClient) DoMulti(ctx context.Context, multi ...cmds.Completed) (r
 	if len(slots) == 2 && slots[cmds.InitSlot] > 0 {
 		delete(slots, cmds.InitSlot)
 		for slot := range slots {
-			commands[slot] = make([]cmds.Completed, 0, len(multi)+2)
-			commands[slot] = append(commands[slot], cmds.MultiCmd)
-			commands[slot] = append(commands[slot], multi...)
-			commands[slot] = append(commands[slot], cmds.ExecCmd)
+			commands[slot] = multi
 		}
 	} else {
 		for slot, count := range slots {
 			cIndexes[slot] = make([]int, 0, count)
-			commands[slot] = make([]cmds.Completed, 0, count+2)
-			commands[slot] = append(commands[slot], cmds.MultiCmd)
+			commands[slot] = make([]cmds.Completed, 0, count)
 		}
 		for i, cmd := range multi {
 			slot := cmd.Slot()
 			commands[slot] = append(commands[slot], cmd)
 			cIndexes[slot] = append(cIndexes[slot], i)
 		}
-		for slot := range slots {
-			commands[slot] = append(commands[slot], cmds.ExecCmd)
-		}
 	}
 
+	results = make([]RedisResult, len(multi))
 	util.ParallelKeys(commands, func(slot uint16) {
 		c.doMulti(ctx, slot, commands[slot], cIndexes[slot], results)
 	})
@@ -359,30 +352,29 @@ process:
 	for _, resp := range resps {
 		switch addr, mode := c.shouldRefreshRetry(resp.Error(), ctx); mode {
 		case RedirectMove:
-			resps = c.redirectOrNew(addr).DoMulti(ctx, multi...)
-			goto process
+			if c.retry && allReadOnly(multi) {
+				resps = c.redirectOrNew(addr).DoMulti(ctx, multi...)
+				goto process
+			}
 		case RedirectAsk:
-			resps = c.redirectOrNew(addr).DoMulti(ctx, append([]cmds.Completed{cmds.AskingCmd}, multi...)...)[1:]
-			goto process
+			if c.retry && allReadOnly(multi) {
+				resps = c.redirectOrNew(addr).DoMulti(ctx, append([]cmds.Completed{cmds.AskingCmd}, multi...)...)[1:]
+				goto process
+			}
 		case RedirectRetry:
-			if c.retry && allReadOnly(multi[1:len(multi)-1]) {
+			if c.retry && allReadOnly(multi) {
 				runtime.Gosched()
 				goto retry
 			}
 		}
 	}
-	msgs, err := resps[len(resps)-1].ToArray()
-	if err != nil {
-		fillErrs(idx, results, err)
-		return
-	}
 	if idx == nil {
-		for i, msg := range msgs {
-			results[i] = newResult(msg, nil)
+		for i, res := range resps {
+			results[i] = res
 		}
 	} else {
-		for i, msg := range msgs {
-			results[idx[i]] = newResult(msg, nil)
+		for i, res := range resps {
+			results[idx[i]] = res
 		}
 	}
 }
@@ -471,8 +463,7 @@ func (c *clusterClient) DoMultiCache(ctx context.Context, multi ...CacheableTTL)
 	if len(multi) == 0 {
 		return nil
 	}
-	results = make([]RedisResult, len(multi))
-	slots := make(map[uint16]int, 16)
+	slots := make(map[uint16]int, 8)
 	for _, cmd := range multi {
 		slots[cmd.Cmd.Slot()]++
 	}
@@ -494,6 +485,7 @@ func (c *clusterClient) DoMultiCache(ctx context.Context, multi ...CacheableTTL)
 		}
 	}
 
+	results = make([]RedisResult, len(multi))
 	util.ParallelKeys(commands, func(slot uint16) {
 		c.doMultiCache(ctx, slot, commands[slot], cIndexes[slot], results)
 	})
