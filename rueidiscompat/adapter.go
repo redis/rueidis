@@ -57,6 +57,7 @@ type Cmdable interface {
 	Exists(ctx context.Context, keys ...string) *IntCmd
 	Expire(ctx context.Context, key string, expiration time.Duration) *BoolCmd
 	ExpireAt(ctx context.Context, key string, tm time.Time) *BoolCmd
+	ExpireTime(ctx context.Context, key string) *DurationCmd
 	ExpireNX(ctx context.Context, key string, expiration time.Duration) *BoolCmd
 	ExpireXX(ctx context.Context, key string, expiration time.Duration) *BoolCmd
 	ExpireGT(ctx context.Context, key string, expiration time.Duration) *BoolCmd
@@ -70,6 +71,7 @@ type Cmdable interface {
 	Persist(ctx context.Context, key string) *BoolCmd
 	PExpire(ctx context.Context, key string, expiration time.Duration) *BoolCmd
 	PExpireAt(ctx context.Context, key string, tm time.Time) *BoolCmd
+	PExpireTime(ctx context.Context, key string) *DurationCmd
 	PTTL(ctx context.Context, key string) *DurationCmd
 	RandomKey(ctx context.Context) *StringCmd
 	Rename(ctx context.Context, key, newkey string) *StatusCmd
@@ -77,6 +79,7 @@ type Cmdable interface {
 	Restore(ctx context.Context, key string, ttl time.Duration, value string) *StatusCmd
 	RestoreReplace(ctx context.Context, key string, ttl time.Duration, value string) *StatusCmd
 	Sort(ctx context.Context, key string, sort Sort) *StringSliceCmd
+	SortRO(ctx context.Context, key string, sort Sort) *StringSliceCmd
 	SortStore(ctx context.Context, key, store string, sort Sort) *IntCmd
 	SortInterfaces(ctx context.Context, key string, sort Sort) *SliceCmd
 	Touch(ctx context.Context, keys ...string) *IntCmd
@@ -134,9 +137,11 @@ type Cmdable interface {
 	HMSet(ctx context.Context, key string, values ...any) *BoolCmd
 	HSetNX(ctx context.Context, key, field string, value any) *BoolCmd
 	HVals(ctx context.Context, key string) *StringSliceCmd
-	HRandField(ctx context.Context, key string, count int64, withValues bool) *StringSliceCmd
+	HRandField(ctx context.Context, key string, count int64) *StringSliceCmd
+	HRandFieldWithValues(ctx context.Context, key string, count int64) *KeyValueSliceCmd
 
 	BLPop(ctx context.Context, timeout time.Duration, keys ...string) *StringSliceCmd
+	BLMPop(ctx context.Context, timeout time.Duration, direction string, count int64, keys ...string) *KeyValuesCmd
 	BRPop(ctx context.Context, timeout time.Duration, keys ...string) *StringSliceCmd
 	BRPopLPush(ctx context.Context, source, destination string, timeout time.Duration) *StringCmd
 	LIndex(ctx context.Context, key string, index int64) *StringCmd
@@ -144,6 +149,7 @@ type Cmdable interface {
 	LInsertBefore(ctx context.Context, key string, pivot, value any) *IntCmd
 	LInsertAfter(ctx context.Context, key string, pivot, value any) *IntCmd
 	LLen(ctx context.Context, key string) *IntCmd
+	LMPop(ctx context.Context, direction string, count int64, keys ...string) *KeyValuesCmd
 	LPop(ctx context.Context, key string) *StringCmd
 	LPopCount(ctx context.Context, key string, count int64) *StringSliceCmd
 	LPos(ctx context.Context, key string, value string, args LPosArgs) *IntCmd
@@ -167,6 +173,7 @@ type Cmdable interface {
 	SDiff(ctx context.Context, keys ...string) *StringSliceCmd
 	SDiffStore(ctx context.Context, destination string, keys ...string) *IntCmd
 	SInter(ctx context.Context, keys ...string) *StringSliceCmd
+	SInterCard(ctx context.Context, limit int64, keys ...string) *IntCmd
 	SInterStore(ctx context.Context, destination string, keys ...string) *IntCmd
 	SIsMember(ctx context.Context, key string, member any) *BoolCmd
 	SMIsMember(ctx context.Context, key string, members ...any) *BoolSliceCmd
@@ -204,7 +211,6 @@ type Cmdable interface {
 	XClaimJustID(ctx context.Context, a XClaimArgs) *StringSliceCmd
 	XAutoClaim(ctx context.Context, a XAutoClaimArgs) *XAutoClaimCmd
 	XAutoClaimJustID(ctx context.Context, a XAutoClaimArgs) *XAutoClaimJustIDCmd
-
 	XTrimMaxLen(ctx context.Context, key string, maxLen int64) *IntCmd
 	XTrimMaxLenApprox(ctx context.Context, key string, maxLen, limit int64) *IntCmd
 	XTrimMinID(ctx context.Context, key string, minID string) *IntCmd
@@ -216,19 +222,24 @@ type Cmdable interface {
 
 	BZPopMax(ctx context.Context, timeout time.Duration, keys ...string) *ZWithKeyCmd
 	BZPopMin(ctx context.Context, timeout time.Duration, keys ...string) *ZWithKeyCmd
+	BZMPop(ctx context.Context, timeout time.Duration, order string, count int64, keys ...string) *ZSliceWithKeyCmd
 
 	ZAdd(ctx context.Context, key string, members ...Z) *IntCmd
+	ZAddLT(ctx context.Context, key string, members ...Z) *IntCmd
+	ZAddGT(ctx context.Context, key string, members ...Z) *IntCmd
 	ZAddNX(ctx context.Context, key string, members ...Z) *IntCmd
 	ZAddXX(ctx context.Context, key string, members ...Z) *IntCmd
 	ZAddArgs(ctx context.Context, key string, args ZAddArgs) *IntCmd
 	ZAddArgsIncr(ctx context.Context, key string, args ZAddArgs) *FloatCmd
 	ZCard(ctx context.Context, key string) *IntCmd
-	ZCount(ctx context.Context, key string, min, max string) *IntCmd
+	ZCount(ctx context.Context, key, min, max string) *IntCmd
 	ZLexCount(ctx context.Context, key, min, max string) *IntCmd
 	ZIncrBy(ctx context.Context, key string, increment float64, member string) *FloatCmd
 	ZInter(ctx context.Context, store ZStore) *StringSliceCmd
 	ZInterWithScores(ctx context.Context, store ZStore) *ZSliceCmd
+	ZInterCard(ctx context.Context, limit int64, keys ...string) *IntCmd
 	ZInterStore(ctx context.Context, destination string, store ZStore) *IntCmd
+	ZMPop(ctx context.Context, order string, count int64, keys ...string) *ZSliceWithKeyCmd
 	ZMScore(ctx context.Context, key string, members ...string) *FloatSliceCmd
 	ZPopMax(ctx context.Context, key string, count ...int64) *ZSliceCmd
 	ZPopMin(ctx context.Context, key string, count ...int64) *ZSliceCmd
@@ -243,7 +254,7 @@ type Cmdable interface {
 	ZRank(ctx context.Context, key, member string) *IntCmd
 	ZRem(ctx context.Context, key string, members ...any) *IntCmd
 	ZRemRangeByRank(ctx context.Context, key string, start, stop int64) *IntCmd
-	ZRemRangeByScore(ctx context.Context, key string, min, max string) *IntCmd
+	ZRemRangeByScore(ctx context.Context, key, min, max string) *IntCmd
 	ZRemRangeByLex(ctx context.Context, key, min, max string) *IntCmd
 	ZRevRange(ctx context.Context, key string, start, stop int64) *StringSliceCmd
 	ZRevRangeWithScores(ctx context.Context, key string, start, stop int64) *ZSliceCmd
@@ -253,10 +264,10 @@ type Cmdable interface {
 	ZRevRank(ctx context.Context, key, member string) *IntCmd
 	ZScore(ctx context.Context, key, member string) *FloatCmd
 	ZUnionStore(ctx context.Context, dest string, store ZStore) *IntCmd
-	ZUnion(ctx context.Context, store ZStore) *StringSliceCmd
-	ZUnionWithScores(ctx context.Context, store ZStore) *ZSliceCmd
 	ZRandMember(ctx context.Context, key string, count int64) *StringSliceCmd
 	ZRandMemberWithScores(ctx context.Context, key string, count int64) *ZSliceCmd
+	ZUnion(ctx context.Context, store ZStore) *StringSliceCmd
+	ZUnionWithScores(ctx context.Context, store ZStore) *ZSliceCmd
 	ZDiff(ctx context.Context, keys ...string) *StringSliceCmd
 	ZDiffWithScores(ctx context.Context, keys ...string) *ZSliceCmd
 	ZDiffStore(ctx context.Context, destination string, keys ...string) *IntCmd
@@ -273,6 +284,8 @@ type Cmdable interface {
 	ClientPause(ctx context.Context, dur time.Duration) *BoolCmd
 	ClientUnpause(ctx context.Context) *BoolCmd
 	ClientID(ctx context.Context) *IntCmd
+	ClientUnblock(ctx context.Context, id int64) *IntCmd
+	ClientUnblockWithError(ctx context.Context, id int64) *IntCmd
 	ConfigGet(ctx context.Context, parameter string) *SliceCmd
 	ConfigResetStat(ctx context.Context) *StatusCmd
 	ConfigSet(ctx context.Context, parameter, value string) *StatusCmd
@@ -288,7 +301,6 @@ type Cmdable interface {
 	Shutdown(ctx context.Context) *StatusCmd
 	ShutdownSave(ctx context.Context) *StatusCmd
 	ShutdownNoSave(ctx context.Context) *StatusCmd
-	SlaveOf(ctx context.Context, host string, port string) *StatusCmd
 	Time(ctx context.Context) *TimeCmd
 	DebugObject(ctx context.Context, key string) *StringCmd
 	ReadOnly(ctx context.Context) *StatusCmd
@@ -297,15 +309,20 @@ type Cmdable interface {
 
 	Eval(ctx context.Context, script string, keys []string, args ...any) *Cmd
 	EvalSha(ctx context.Context, sha1 string, keys []string, args ...any) *Cmd
+	EvalRO(ctx context.Context, script string, keys []string, args ...any) *Cmd
+	EvalShaRO(ctx context.Context, sha1 string, keys []string, args ...any) *Cmd
 	ScriptExists(ctx context.Context, hashes ...string) *BoolSliceCmd
 	ScriptFlush(ctx context.Context) *StatusCmd
 	ScriptKill(ctx context.Context) *StatusCmd
 	ScriptLoad(ctx context.Context, script string) *StringCmd
 
 	Publish(ctx context.Context, channel string, message any) *IntCmd
+	SPublish(ctx context.Context, channel string, message any) *IntCmd
 	PubSubChannels(ctx context.Context, pattern string) *StringSliceCmd
 	PubSubNumSub(ctx context.Context, channels ...string) *StringIntMapCmd
 	PubSubNumPat(ctx context.Context) *IntCmd
+	PubSubShardChannels(ctx context.Context, pattern string) *StringSliceCmd
+	PubSubShardNumSub(ctx context.Context, channels ...string) *StringIntMapCmd
 
 	ClusterSlots(ctx context.Context) *ClusterSlotsCmd
 	ClusterNodes(ctx context.Context) *StringCmd
@@ -335,7 +352,7 @@ type Cmdable interface {
 	GeoRadiusByMemberStore(ctx context.Context, key, member string, query GeoRadiusQuery) *IntCmd
 	GeoSearch(ctx context.Context, key string, q GeoSearchQuery) *StringSliceCmd
 	GeoSearchLocation(ctx context.Context, key string, q GeoSearchLocationQuery) *GeoLocationCmd
-	GeoSearchStore(ctx context.Context, src, dest string, q GeoSearchStoreQuery) *IntCmd
+	GeoSearchStore(ctx context.Context, key, store string, q GeoSearchStoreQuery) *IntCmd
 	GeoDist(ctx context.Context, key, member1, member2, unit string) *FloatCmd
 	GeoHash(ctx context.Context, key string, members ...string) *StringSliceCmd
 }
@@ -421,6 +438,11 @@ func (c *Compat) ExpireAt(ctx context.Context, key string, timestamp time.Time) 
 	cmd := c.client.B().Expireat().Key(key).Timestamp(timestamp.Unix()).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newBoolCmd(resp)
+}
+func (c *Compat) ExpireTime(ctx context.Context, key string) *DurationCmd {
+	cmd := c.client.B().Expiretime().Key(key).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newDurationCmd(resp, time.Second)
 }
 
 func (c *Compat) ExpireNX(ctx context.Context, key string, seconds time.Duration) *BoolCmd {
@@ -510,6 +532,12 @@ func (c *Compat) PExpireAt(ctx context.Context, key string, millisecondsTimestam
 	return newBoolCmd(resp)
 }
 
+func (c *Compat) PExpireTime(ctx context.Context, key string) *DurationCmd {
+	cmd := c.client.B().Pexpiretime().Key(key).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newDurationCmd(resp, time.Millisecond)
+}
+
 func (c *Compat) PTTL(ctx context.Context, key string) *DurationCmd {
 	cmd := c.client.B().Pttl().Key(key).Build()
 	resp := c.client.Do(ctx, cmd)
@@ -546,8 +574,8 @@ func (c *Compat) RestoreReplace(ctx context.Context, key string, ttl time.Durati
 	return newStatusCmd(resp)
 }
 
-func (c *Compat) sort(key string, sort Sort) cmds.Arbitrary {
-	cmd := c.client.B().Arbitrary("SORT").Keys(key)
+func (c *Compat) sort(command, key string, sort Sort) cmds.Arbitrary {
+	cmd := c.client.B().Arbitrary(command).Keys(key)
 	if sort.By != "" {
 		cmd = cmd.Args("BY", sort.By)
 	}
@@ -571,17 +599,22 @@ func (c *Compat) sort(key string, sort Sort) cmds.Arbitrary {
 }
 
 func (c *Compat) Sort(ctx context.Context, key string, sort Sort) *StringSliceCmd {
-	resp := c.client.Do(ctx, c.sort(key, sort).Build())
+	resp := c.client.Do(ctx, c.sort("SORT", key, sort).Build())
+	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) SortRO(ctx context.Context, key string, sort Sort) *StringSliceCmd {
+	resp := c.client.Do(ctx, c.sort("SORT_RO", key, sort).Build())
 	return newStringSliceCmd(resp)
 }
 
 func (c *Compat) SortStore(ctx context.Context, key, store string, sort Sort) *IntCmd {
-	resp := c.client.Do(ctx, c.sort(key, sort).Args("STORE", store).Build())
+	resp := c.client.Do(ctx, c.sort("SORT", key, sort).Args("STORE", store).Build())
 	return newIntCmd(resp)
 }
 
 func (c *Compat) SortInterfaces(ctx context.Context, key string, sort Sort) *SliceCmd {
-	resp := c.client.Do(ctx, c.sort(key, sort).Build())
+	resp := c.client.Do(ctx, c.sort("SORT", key, sort).Build())
 	return newSliceCmd(resp)
 }
 
@@ -1050,21 +1083,27 @@ func (c *Compat) HVals(ctx context.Context, key string) *StringSliceCmd {
 	return newStringSliceCmd(resp)
 }
 
-func (c *Compat) HRandField(ctx context.Context, key string, count int64, withValues bool) *StringSliceCmd {
-	var resp rueidis.RedisResult
-	if withValues {
-		resp = c.client.Do(ctx, c.client.B().Hrandfield().Key(key).Count(count).Withvalues().Build())
-		return flattenStringSliceCmd(resp)
-	} else {
-		resp = c.client.Do(ctx, c.client.B().Hrandfield().Key(key).Count(count).Build())
-		return newStringSliceCmd(resp)
-	}
+func (c *Compat) HRandField(ctx context.Context, key string, count int64) *StringSliceCmd {
+	return newStringSliceCmd(c.client.Do(ctx, c.client.B().Hrandfield().Key(key).Count(count).Build()))
+}
+
+func (c *Compat) HRandFieldWithValues(ctx context.Context, key string, count int64) *KeyValueSliceCmd {
+	return newKeyValueSliceCmd(c.client.Do(ctx, c.client.B().Hrandfield().Key(key).Count(count).Withvalues().Build()))
 }
 
 func (c *Compat) BLPop(ctx context.Context, timeout time.Duration, keys ...string) *StringSliceCmd {
 	cmd := c.client.B().Blpop().Key(keys...).Timeout(float64(formatSec(timeout))).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) BLMPop(ctx context.Context, timeout time.Duration, direction string, count int64, keys ...string) *KeyValuesCmd {
+	cmd := c.client.B().Arbitrary("BLMPOP", strconv.FormatInt(formatSec(timeout), 10), strconv.Itoa(len(keys))).Keys(keys...)
+	cmd = cmd.Args(direction)
+	if count > 0 {
+		cmd = cmd.Args("COUNT", strconv.FormatInt(count, 10))
+	}
+	return newKeyValuesCmd(c.client.Do(ctx, cmd.Blocking()))
 }
 
 func (c *Compat) BRPop(ctx context.Context, timeout time.Duration, keys ...string) *StringSliceCmd {
@@ -1114,6 +1153,15 @@ func (c *Compat) LLen(ctx context.Context, key string) *IntCmd {
 	cmd := c.client.B().Llen().Key(key).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
+}
+
+func (c *Compat) LMPop(ctx context.Context, direction string, count int64, keys ...string) *KeyValuesCmd {
+	cmd := c.client.B().Arbitrary("LMPOP", strconv.Itoa(len(keys))).Keys(keys...)
+	cmd = cmd.Args(direction)
+	if count > 0 {
+		cmd = cmd.Args("COUNT", strconv.FormatInt(count, 10))
+	}
+	return newKeyValuesCmd(c.client.Do(ctx, cmd.Build()))
 }
 
 func (c *Compat) LPop(ctx context.Context, key string) *StringCmd {
@@ -1259,6 +1307,10 @@ func (c *Compat) SInter(ctx context.Context, keys ...string) *StringSliceCmd {
 	cmd := c.client.B().Sinter().Key(keys...).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) SInterCard(ctx context.Context, limit int64, keys ...string) *IntCmd {
+	return newIntCmd(c.client.Do(ctx, c.client.B().Sintercard().Numkeys(int64(len(keys))).Key(keys...).Limit(limit).Build()))
 }
 
 func (c *Compat) SInterStore(ctx context.Context, destination string, keys ...string) *IntCmd {
@@ -1631,34 +1683,36 @@ func (c *Compat) BZPopMin(ctx context.Context, timeout time.Duration, keys ...st
 	return newZWithKeyCmd(resp)
 }
 
+func (c *Compat) BZMPop(ctx context.Context, timeout time.Duration, order string, count int64, keys ...string) *ZSliceWithKeyCmd {
+	cmd := c.client.B().Arbitrary("BZMPOP", strconv.FormatInt(formatSec(timeout), 10), strconv.Itoa(len(keys))).Keys(keys...)
+	cmd = cmd.Args(order)
+	if count > 0 {
+		cmd = cmd.Args("COUNT", strconv.FormatInt(count, 10))
+	}
+	return newZSliceWithKeyCmd(c.client.Do(ctx, cmd.Blocking()))
+}
+
 // ZAdd Redis `ZADD key score member [score member ...]` command.
 func (c *Compat) ZAdd(ctx context.Context, key string, members ...Z) *IntCmd {
-	cmd := c.client.B().Zadd().Key(key).ScoreMember()
-	for _, v := range members {
-		cmd = cmd.ScoreMember(v.Score, str(v.Member))
-	}
-	resp := c.client.Do(ctx, cmd.Build())
-	return newIntCmd(resp)
+	return newIntCmd(c.zAddArgs(ctx, key, false, ZAddArgs{Members: members}))
 }
 
 // ZAddNX Redis `ZADD key NX score member [score member ...]` command.
 func (c *Compat) ZAddNX(ctx context.Context, key string, members ...Z) *IntCmd {
-	cmd := c.client.B().Zadd().Key(key).Nx().ScoreMember()
-	for _, v := range members {
-		cmd = cmd.ScoreMember(v.Score, str(v.Member))
-	}
-	resp := c.client.Do(ctx, cmd.Build())
-	return newIntCmd(resp)
+	return newIntCmd(c.zAddArgs(ctx, key, false, ZAddArgs{Members: members, NX: true}))
 }
 
 // ZAddXX Redis `ZADD key XX score member [score member ...]` command.
 func (c *Compat) ZAddXX(ctx context.Context, key string, members ...Z) *IntCmd {
-	cmd := c.client.B().Zadd().Key(key).Xx().ScoreMember()
-	for _, v := range members {
-		cmd = cmd.ScoreMember(v.Score, str(v.Member))
-	}
-	resp := c.client.Do(ctx, cmd.Build())
-	return newIntCmd(resp)
+	return newIntCmd(c.zAddArgs(ctx, key, false, ZAddArgs{Members: members, XX: true}))
+}
+
+func (c *Compat) ZAddLT(ctx context.Context, key string, members ...Z) *IntCmd {
+	return newIntCmd(c.zAddArgs(ctx, key, false, ZAddArgs{Members: members, LT: true}))
+}
+
+func (c *Compat) ZAddGT(ctx context.Context, key string, members ...Z) *IntCmd {
+	return newIntCmd(c.zAddArgs(ctx, key, false, ZAddArgs{Members: members, GT: true}))
 }
 
 func (c *Compat) zAddArgs(ctx context.Context, key string, incr bool, args ZAddArgs) rueidis.RedisResult {
@@ -1703,7 +1757,7 @@ func (c *Compat) ZCard(ctx context.Context, key string) *IntCmd {
 	return newIntCmd(resp)
 }
 
-func (c *Compat) ZCount(ctx context.Context, key string, min, max string) *IntCmd {
+func (c *Compat) ZCount(ctx context.Context, key, min, max string) *IntCmd {
 	cmd := c.client.B().Zcount().Key(key).Min(min).Max(max).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
@@ -1743,8 +1797,21 @@ func (c *Compat) ZInterWithScores(ctx context.Context, store ZStore) *ZSliceCmd 
 	return newZSliceCmd(c.client.Do(ctx, zstore(c.client.B().Arbitrary("ZINTER"), store).Args("WITHSCORES").ReadOnly()))
 }
 
+func (c *Compat) ZInterCard(ctx context.Context, limit int64, keys ...string) *IntCmd {
+	return newIntCmd(c.client.Do(ctx, c.client.B().Zintercard().Numkeys(int64(len(keys))).Key(keys...).Limit(limit).Build()))
+}
+
 func (c *Compat) ZInterStore(ctx context.Context, destination string, store ZStore) *IntCmd {
 	return newIntCmd(c.client.Do(ctx, zstore(c.client.B().Arbitrary("ZINTERSTORE").Keys(destination), store).Build()))
+}
+
+func (c *Compat) ZMPop(ctx context.Context, order string, count int64, keys ...string) *ZSliceWithKeyCmd {
+	cmd := c.client.B().Arbitrary("ZMPOP", strconv.Itoa(len(keys))).Keys(keys...)
+	cmd = cmd.Args(order)
+	if count > 0 {
+		cmd = cmd.Args("COUNT", strconv.FormatInt(count, 10))
+	}
+	return newZSliceWithKeyCmd(c.client.Do(ctx, cmd.Build()))
 }
 
 func (c *Compat) ZMScore(ctx context.Context, key string, members ...string) *FloatSliceCmd {
@@ -1910,7 +1977,7 @@ func (c *Compat) ZRemRangeByRank(ctx context.Context, key string, start, stop in
 	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
 }
-func (c *Compat) ZRemRangeByScore(ctx context.Context, key string, min, max string) *IntCmd {
+func (c *Compat) ZRemRangeByScore(ctx context.Context, key, min, max string) *IntCmd {
 	cmd := c.client.B().Zremrangebyscore().Key(key).Min(min).Max(max).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
@@ -2093,9 +2160,15 @@ func (c *Compat) ClientUnpause(ctx context.Context) *BoolCmd {
 }
 
 func (c *Compat) ClientID(ctx context.Context) *IntCmd {
-	cmd := c.client.B().ClientId().Build()
-	resp := c.client.Do(ctx, cmd)
-	return newIntCmd(resp)
+	return newIntCmd(c.client.Do(ctx, c.client.B().ClientId().Build()))
+}
+
+func (c *Compat) ClientUnblock(ctx context.Context, id int64) *IntCmd {
+	return newIntCmd(c.client.Do(ctx, c.client.B().ClientUnblock().ClientId(id).Build()))
+}
+
+func (c *Compat) ClientUnblockWithError(ctx context.Context, id int64) *IntCmd {
+	return newIntCmd(c.client.Do(ctx, c.client.B().ClientUnblock().ClientId(id).Error().Build()))
 }
 
 func (c *Compat) ConfigGet(ctx context.Context, parameter string) *SliceCmd {
@@ -2188,16 +2261,6 @@ func (c *Compat) ShutdownNoSave(ctx context.Context) *StatusCmd {
 	})
 }
 
-func (c *Compat) SlaveOf(ctx context.Context, host string, port string) *StatusCmd {
-	p, err := strconv.ParseInt(port, 10, 64)
-	if err != nil {
-		return &StatusCmd{err: err}
-	}
-	cmd := c.client.B().Slaveof().Host(host).Port(p).Build()
-	resp := c.client.Do(ctx, cmd)
-	return newStatusCmd(resp)
-}
-
 func (c *Compat) Time(ctx context.Context) *TimeCmd {
 	cmd := c.client.B().Time().Build()
 	resp := c.client.Do(ctx, cmd)
@@ -2242,6 +2305,16 @@ func (c *Compat) Eval(ctx context.Context, script string, keys []string, args ..
 
 func (c *Compat) EvalSha(ctx context.Context, sha1 string, keys []string, args ...any) *Cmd {
 	cmd := c.client.B().Evalsha().Sha1(sha1).Numkeys(int64(len(keys))).Key(keys...).Arg(argsToSlice(args)...).Build()
+	return newCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) EvalRO(ctx context.Context, script string, keys []string, args ...any) *Cmd {
+	cmd := c.client.B().EvalRo().Script(script).Numkeys(int64(len(keys))).Key(keys...).Arg(argsToSlice(args)...).Build()
+	return newCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) EvalShaRO(ctx context.Context, sha1 string, keys []string, args ...any) *Cmd {
+	cmd := c.client.B().EvalshaRo().Sha1(sha1).Numkeys(int64(len(keys))).Key(keys...).Arg(argsToSlice(args)...).Build()
 	return newCmd(c.client.Do(ctx, cmd))
 }
 
@@ -2300,6 +2373,12 @@ func (c *Compat) Publish(ctx context.Context, channel string, message any) *IntC
 	return newIntCmd(resp)
 }
 
+func (c *Compat) SPublish(ctx context.Context, channel string, message any) *IntCmd {
+	cmd := c.client.B().Spublish().Channel(channel).Message(str(message)).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
 func (c *Compat) PubSubChannels(ctx context.Context, pattern string) *StringSliceCmd {
 	cmd := c.client.B().PubsubChannels().Pattern(pattern).Build()
 	resp := c.client.Do(ctx, cmd)
@@ -2316,6 +2395,18 @@ func (c *Compat) PubSubNumPat(ctx context.Context) *IntCmd {
 	cmd := c.client.B().PubsubNumpat().Build()
 	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
+}
+
+func (c *Compat) PubSubShardChannels(ctx context.Context, pattern string) *StringSliceCmd {
+	cmd := c.client.B().PubsubShardchannels().Pattern(pattern).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) PubSubShardNumSub(ctx context.Context, channels ...string) *StringIntMapCmd {
+	cmd := c.client.B().PubsubShardnumsub().Channel(channels...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringIntMapCmd(resp)
 }
 
 func (c *Compat) ClusterSlots(ctx context.Context) *ClusterSlotsCmd {
@@ -2810,8 +2901,8 @@ func (c CacheCompat) SMembers(ctx context.Context, key string) *StringSliceCmd {
 	return newStringSliceCmd(resp)
 }
 
-func (c CacheCompat) Sort(ctx context.Context, key string, sort Sort) *StringSliceCmd {
-	cmd := c.client.B().Arbitrary("SORT").Keys(key)
+func (c CacheCompat) SortRO(ctx context.Context, key string, sort Sort) *StringSliceCmd {
+	cmd := c.client.B().Arbitrary("SORT_RO").Keys(key)
 	if sort.By != "" {
 		cmd = cmd.Args("BY", sort.By)
 	}
@@ -2859,7 +2950,7 @@ func (c CacheCompat) ZCard(ctx context.Context, key string) *IntCmd {
 	return newIntCmd(resp)
 }
 
-func (c CacheCompat) ZCount(ctx context.Context, key string, min, max string) *IntCmd {
+func (c CacheCompat) ZCount(ctx context.Context, key, min, max string) *IntCmd {
 	cmd := c.client.B().Zcount().Key(key).Min(min).Max(max).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newIntCmd(resp)

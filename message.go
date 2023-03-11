@@ -305,6 +305,24 @@ func (r RedisResult) AsXRead() (v map[string][]XRangeEntry, err error) {
 	return
 }
 
+func (r RedisResult) AsLMPop() (v KeyValues, err error) {
+	if r.err != nil {
+		err = r.err
+	} else {
+		v, err = r.val.AsLMPop()
+	}
+	return
+}
+
+func (r RedisResult) AsZMPop() (v KeyZScores, err error) {
+	if r.err != nil {
+		err = r.err
+	} else {
+		v, err = r.val.AsZMPop()
+	}
+	return
+}
+
 // AsMap delegates to RedisMessage.AsMap
 func (r RedisResult) AsMap() (v map[string]RedisMessage, err error) {
 	if r.err != nil {
@@ -828,6 +846,42 @@ func (m *RedisMessage) AsIntMap() (map[string]int64, error) {
 	}
 	typ := m.typ
 	panic(fmt.Sprintf("redis message type %c is not a map/array/set or its length is not even", typ))
+}
+
+type KeyValues struct {
+	Key    string
+	Values []string
+}
+
+func (m *RedisMessage) AsLMPop() (kvs KeyValues, err error) {
+	if err = m.Error(); err != nil {
+		return KeyValues{}, err
+	}
+	if len(m.values) >= 2 {
+		kvs.Key = m.values[0].string
+		kvs.Values, err = m.values[1].AsStrSlice()
+		return
+	}
+	typ := m.typ
+	panic(fmt.Sprintf("redis message type %c is not a LMPOP response", typ))
+}
+
+type KeyZScores struct {
+	Key    string
+	Values []ZScore
+}
+
+func (m *RedisMessage) AsZMPop() (kvs KeyZScores, err error) {
+	if err = m.Error(); err != nil {
+		return KeyZScores{}, err
+	}
+	if len(m.values) >= 2 {
+		kvs.Key = m.values[0].string
+		kvs.Values, err = m.values[1].AsZScores()
+		return
+	}
+	typ := m.typ
+	panic(fmt.Sprintf("redis message type %c is not a ZMPOP response", typ))
 }
 
 // ToMap check if message is a redis RESP3 map response, and return it

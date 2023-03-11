@@ -523,6 +523,32 @@ var _ = Describe("Commands", func() {
 			Expect(s).To(Equal("0"))
 			Expect(cmd.Err()).To(BeNil())
 		}
+		{
+			cmd := &KeyValueSliceCmd{}
+			cmd.SetVal([]KeyValue{{Key: "1", Value: "2"}})
+			v := cmd.Val()
+			Expect(v).To(Equal([]KeyValue{{Key: "1", Value: "2"}}))
+			cmd.SetErr(err)
+			Expect(cmd.Err()).To(Equal(err))
+		}
+		{
+			cmd := &KeyValuesCmd{}
+			cmd.SetVal("k", []string{"1"})
+			k, v := cmd.Val()
+			Expect(k).To(Equal("k"))
+			Expect(v).To(Equal([]string{"1"}))
+			cmd.SetErr(err)
+			Expect(cmd.Err()).To(Equal(err))
+		}
+		{
+			cmd := &ZSliceWithKeyCmd{}
+			cmd.SetVal("k", []Z{{Member: "1", Score: 1}})
+			k, v := cmd.Val()
+			Expect(k).To(Equal("k"))
+			Expect(v).To(Equal([]Z{{Member: "1", Score: 1}}))
+			cmd.SetErr(err)
+			Expect(cmd.Err()).To(Equal(err))
+		}
 	})
 })
 
