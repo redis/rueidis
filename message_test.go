@@ -466,6 +466,57 @@ func TestRedisResult(t *testing.T) {
 		}
 	})
 
+	t.Run("AsLMPop", func(t *testing.T) {
+		if _, err := (RedisResult{err: errors.New("other")}).AsLMPop(); err == nil {
+			t.Fatal("AsLMPop not failed as expected")
+		}
+		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsLMPop(); err == nil {
+			t.Fatal("AsLMPop not failed as expected")
+		}
+		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+			{typ: '+', string: "k"},
+			{typ: '*', values: []RedisMessage{
+				{typ: '+', string: "1"},
+				{typ: '+', string: "2"},
+			}},
+		}}}).AsLMPop(); !reflect.DeepEqual(KeyValues{
+			Key:    "k",
+			Values: []string{"1", "2"},
+		}, ret) {
+			t.Fatal("AsZScores not get value as expected")
+		}
+	})
+
+	t.Run("AsZMPop", func(t *testing.T) {
+		if _, err := (RedisResult{err: errors.New("other")}).AsZMPop(); err == nil {
+			t.Fatal("AsZMPop not failed as expected")
+		}
+		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsZMPop(); err == nil {
+			t.Fatal("AsZMPop not failed as expected")
+		}
+		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+			{typ: '+', string: "k"},
+			{typ: '*', values: []RedisMessage{
+				{typ: '*', values: []RedisMessage{
+					{typ: '+', string: "1"},
+					{typ: ',', string: "1"},
+				}},
+				{typ: '*', values: []RedisMessage{
+					{typ: '+', string: "2"},
+					{typ: ',', string: "2"},
+				}},
+			}},
+		}}}).AsZMPop(); !reflect.DeepEqual(KeyZScores{
+			Key: "k",
+			Values: []ZScore{
+				{Member: "1", Score: 1},
+				{Member: "2", Score: 2},
+			},
+		}, ret) {
+			t.Fatal("AsZMPop not get value as expected")
+		}
+	})
+
 	t.Run("IsCacheHit", func(t *testing.T) {
 		if (RedisResult{err: errors.New("other")}).IsCacheHit() {
 			t.Fatal("IsCacheHit not as expected")
@@ -860,6 +911,46 @@ func TestRedisMessage(t *testing.T) {
 		}}).AsZScores(); err == nil {
 			t.Fatal("AsZScores not fails as expected")
 		}
+	})
+
+	t.Run("AsLMPop", func(t *testing.T) {
+		if _, err := (&RedisMessage{typ: '_'}).AsLMPop(); err == nil {
+			t.Fatal("AsLMPop not failed as expected")
+		}
+		if _, err := (&RedisMessage{typ: '*', values: []RedisMessage{
+			{typ: '+', string: "k"},
+			{typ: '_'},
+		}}).AsLMPop(); err == nil {
+			t.Fatal("AsLMPop not fails as expected")
+		}
+		defer func() {
+			if !strings.Contains(recover().(string), "redis message type * is not a LMPOP response") {
+				t.Fatal("AsLMPop not panic as expected")
+			}
+		}()
+		(&RedisMessage{typ: '*', values: []RedisMessage{
+			{typ: '+', string: "k"},
+		}}).AsLMPop()
+	})
+
+	t.Run("AsZMPop", func(t *testing.T) {
+		if _, err := (&RedisMessage{typ: '_'}).AsZMPop(); err == nil {
+			t.Fatal("AsZMPop not failed as expected")
+		}
+		if _, err := (&RedisMessage{typ: '*', values: []RedisMessage{
+			{typ: '+', string: "k"},
+			{typ: '_'},
+		}}).AsZMPop(); err == nil {
+			t.Fatal("AsZMPop not fails as expected")
+		}
+		defer func() {
+			if !strings.Contains(recover().(string), "redis message type * is not a ZMPOP response") {
+				t.Fatal("AsZMPop not panic as expected")
+			}
+		}()
+		(&RedisMessage{typ: '*', values: []RedisMessage{
+			{typ: '+', string: "k"},
+		}}).AsZMPop()
 	})
 
 	t.Run("AsScanEntry", func(t *testing.T) {

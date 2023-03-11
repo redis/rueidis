@@ -859,12 +859,11 @@ func (m *RedisMessage) AsLMPop() (kvs KeyValues, err error) {
 	}
 	if len(m.values) >= 2 {
 		kvs.Key = m.values[0].string
-		if kvs.Values, err = m.values[1].AsStrSlice(); err == nil {
-			return
-		}
+		kvs.Values, err = m.values[1].AsStrSlice()
+		return
 	}
 	typ := m.typ
-	panic(fmt.Sprintf("redis message type %c is not a RESP array", typ))
+	panic(fmt.Sprintf("redis message type %c is not a LMPOP response", typ))
 }
 
 type KeyZScores struct {
@@ -878,12 +877,11 @@ func (m *RedisMessage) AsZMPop() (kvs KeyZScores, err error) {
 	}
 	if len(m.values) >= 2 {
 		kvs.Key = m.values[0].string
-		if kvs.Values, err = m.values[1].AsZScores(); err == nil {
-			return
-		}
+		kvs.Values, err = m.values[1].AsZScores()
+		return
 	}
 	typ := m.typ
-	panic(fmt.Sprintf("redis message type %c is not a RESP array", typ))
+	panic(fmt.Sprintf("redis message type %c is not a ZMPOP response", typ))
 }
 
 // ToMap check if message is a redis RESP3 map response, and return it

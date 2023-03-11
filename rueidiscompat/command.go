@@ -473,9 +473,6 @@ type DurationCmd struct {
 
 func newDurationCmd(res rueidis.RedisResult, precision time.Duration) *DurationCmd {
 	val, err := res.AsInt64()
-	if err != nil {
-		return &DurationCmd{val: 0, err: err}
-	}
 	if val > 0 {
 		return &DurationCmd{val: time.Duration(val) * precision, err: err}
 	}
