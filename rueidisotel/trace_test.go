@@ -69,8 +69,8 @@ func TestWithClient(t *testing.T) {
 		rueidis.CT(client.B().Get().Key("key6").Cache(), time.Minute))
 	validateTrace(t, exp, "GET GET GET GET GET", codes.Ok)
 
-	metrics, err := mxp.Collect(ctx)
-	if err != nil {
+	metrics := metricdata.ResourceMetrics{}
+	if err := mxp.Collect(ctx, &metrics); err != nil {
 		t.Fatalf("unexpected err %v", err)
 	}
 	validateMetrics(t, metrics, "rueidis_do_cache_miss", 7) // 1 (DoCache) + 6 (DoMultiCache)
