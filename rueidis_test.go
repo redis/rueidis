@@ -12,14 +12,21 @@ import (
 	"fmt"
 	"math/big"
 	"net"
+	"os"
 	"testing"
 	"time"
 
-	"go.uber.org/goleak"
+	"github.com/onsi/gomega"
+	"github.com/onsi/gomega/gleak"
 )
 
 func TestMain(m *testing.M) {
-	goleak.VerifyTestMain(m)
+	g := gomega.NewGomega(func(message string, callerSkip ...int) {
+		panic(message)
+	})
+	code := m.Run()
+	g.Eventually(gleak.Goroutines).WithTimeout(time.Second * 10).ShouldNot(gleak.HaveLeaked())
+	os.Exit(code)
 }
 
 func accept(t *testing.T, ln net.Listener) (*redisMock, error) {
