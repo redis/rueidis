@@ -4198,6 +4198,36 @@ func (c ClientNoEvictEnabledOn) Build() Completed {
 	return Completed(c)
 }
 
+type ClientNoTouch Completed
+
+func (b Builder) ClientNoTouch() (c ClientNoTouch) {
+	c = ClientNoTouch{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "CLIENT", "NO-TOUCH")
+	return c
+}
+
+func (c ClientNoTouch) On() ClientNoTouchEnabledOn {
+	c.cs.s = append(c.cs.s, "ON")
+	return (ClientNoTouchEnabledOn)(c)
+}
+
+func (c ClientNoTouch) Off() ClientNoTouchEnabledOff {
+	c.cs.s = append(c.cs.s, "OFF")
+	return (ClientNoTouchEnabledOff)(c)
+}
+
+type ClientNoTouchEnabledOff Completed
+
+func (c ClientNoTouchEnabledOff) Build() Completed {
+	return Completed(c)
+}
+
+type ClientNoTouchEnabledOn Completed
+
+func (c ClientNoTouchEnabledOn) Build() Completed {
+	return Completed(c)
+}
+
 type ClientPause Completed
 
 func (b Builder) ClientPause() (c ClientPause) {
@@ -4277,6 +4307,32 @@ func (c ClientReplyReplyModeOn) Build() Completed {
 type ClientReplyReplyModeSkip Completed
 
 func (c ClientReplyReplyModeSkip) Build() Completed {
+	return Completed(c)
+}
+
+type ClientSetinfo Completed
+
+func (b Builder) ClientSetinfo() (c ClientSetinfo) {
+	c = ClientSetinfo{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "CLIENT", "SETINFO")
+	return c
+}
+
+func (c ClientSetinfo) Libname(libname string) ClientSetinfoAttrLibname {
+	c.cs.s = append(c.cs.s, libname)
+	return (ClientSetinfoAttrLibname)(c)
+}
+
+type ClientSetinfoAttrLibname Completed
+
+func (c ClientSetinfoAttrLibname) Libver(libver string) ClientSetinfoAttrLibver {
+	c.cs.s = append(c.cs.s, libver)
+	return (ClientSetinfoAttrLibver)(c)
+}
+
+type ClientSetinfoAttrLibver Completed
+
+func (c ClientSetinfoAttrLibver) Build() Completed {
 	return Completed(c)
 }
 
@@ -30966,6 +31022,39 @@ func (c WaitNumreplicas) Timeout(timeout int64) WaitTimeout {
 type WaitTimeout Completed
 
 func (c WaitTimeout) Build() Completed {
+	return Completed(c)
+}
+
+type Waitaof Completed
+
+func (b Builder) Waitaof() (c Waitaof) {
+	c = Waitaof{cs: get(), ks: b.ks, cf: blockTag}
+	c.cs.s = append(c.cs.s, "WAITAOF")
+	return c
+}
+
+func (c Waitaof) Numlocal(numlocal int64) WaitaofNumlocal {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(numlocal, 10))
+	return (WaitaofNumlocal)(c)
+}
+
+type WaitaofNumlocal Completed
+
+func (c WaitaofNumlocal) Numreplicas(numreplicas int64) WaitaofNumreplicas {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(numreplicas, 10))
+	return (WaitaofNumreplicas)(c)
+}
+
+type WaitaofNumreplicas Completed
+
+func (c WaitaofNumreplicas) Timeout(timeout int64) WaitaofTimeout {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(timeout, 10))
+	return (WaitaofTimeout)(c)
+}
+
+type WaitaofTimeout Completed
+
+func (c WaitaofTimeout) Build() Completed {
 	return Completed(c)
 }
 

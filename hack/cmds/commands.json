@@ -766,6 +766,18 @@
     ],
     "group": "connection"
   },
+  "CLIENT NO-TOUCH": {
+    "arguments": [
+      {
+        "name": "enabled",
+        "type": "enum",
+        "enum": [
+          "ON",
+          "OFF"
+        ]
+      }
+    ]
+  },
   "CLIENT PAUSE": {
     "summary": "Stop processing commands from clients for some time",
     "complexity": "O(1)",
@@ -803,6 +815,26 @@
     ],
     "since": "3.2.0",
     "group": "connection"
+  },
+  "CLIENT SETINFO": {
+    "arguments": [
+      {
+        "name": "attr",
+        "type": "oneof",
+        "arguments": [
+          {
+            "name": "libname",
+            "type": "string",
+            "token": "LIB-NAME"
+          },
+          {
+            "name": "libver",
+            "type": "string",
+            "token": "LIB-VER"
+          }
+        ]
+      }
+    ]
   },
   "CLIENT SETNAME": {
     "summary": "Set the current connection name",
@@ -5199,6 +5231,22 @@
     ],
     "since": "3.0.0",
     "group": "generic"
+  },
+  "WAITAOF": {
+    "arguments": [
+      {
+        "name": "numlocal",
+        "type": "integer"
+      },
+      {
+        "name": "numreplicas",
+        "type": "integer"
+      },
+      {
+        "name": "timeout",
+        "type": "integer"
+      }
+    ]
   },
   "WATCH": {
     "summary": "Watch the given keys to determine execution of the MULTI/EXEC block",

@@ -902,6 +902,7 @@ var blockingCMDs = map[string]bool{
 	"clientpause": false,
 	"migrate":     false,
 	"wait":        false,
+	"waitaof":     false,
 }
 
 var cacheableCMDs = map[string]bool{
