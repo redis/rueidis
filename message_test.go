@@ -108,16 +108,29 @@ func TestRedisResult(t *testing.T) {
 		}
 	})
 
+	t.Run("AsBytes", func(t *testing.T) {
+		if _, err := (RedisResult{err: errors.New("other")}).AsBytes(); err == nil {
+			t.Fatal("AsBytes not failed as expected")
+		}
+		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsBytes(); err == nil {
+			t.Fatal("AsBytes not failed as expected")
+		}
+		bs, _ := (RedisResult{val: RedisMessage{typ: '+', string: "0.1"}}).AsBytes()
+		if !bytes.Equal(bs, []byte("0.1")) {
+			t.Fatalf("AsBytes not get value as expected %v", bs)
+		}
+	})
+
 	t.Run("DecodeJSON", func(t *testing.T) {
 		v := map[string]string{}
 		if err := (RedisResult{err: errors.New("other")}).DecodeJSON(&v); err == nil {
-			t.Fatal("AsReader not failed as expected")
+			t.Fatal("DecodeJSON not failed as expected")
 		}
 		if err := (RedisResult{val: RedisMessage{typ: '-'}}).DecodeJSON(&v); err == nil {
-			t.Fatal("AsReader not failed as expected")
+			t.Fatal("DecodeJSON not failed as expected")
 		}
 		if _ = (RedisResult{val: RedisMessage{typ: '+', string: `{"k":"v"}`}}).DecodeJSON(&v); v["k"] != "v" {
-			t.Fatalf("AsReader not get value as expected %v", v)
+			t.Fatalf("DecodeJSON not get value as expected %v", v)
 		}
 	})
 
@@ -627,6 +640,19 @@ func TestRedisMessage(t *testing.T) {
 			}
 		}()
 		(&RedisMessage{typ: ':'}).AsReader()
+	})
+
+	t.Run("AsBytes", func(t *testing.T) {
+		if _, err := (&RedisMessage{typ: '_'}).AsBytes(); err == nil {
+			t.Fatal("AsBytes not failed as expected")
+		}
+
+		defer func() {
+			if !strings.Contains(recover().(string), "redis message type : is not a string") {
+				t.Fatal("AsBytes not panic as expected")
+			}
+		}()
+		(&RedisMessage{typ: ':'}).AsBytes()
 	})
 
 	t.Run("DecodeJSON", func(t *testing.T) {

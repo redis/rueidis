@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
-	"unsafe"
+
+	"github.com/rueian/rueidis"
 )
 
 func newHashConvFactory(t reflect.Type, schema schema) *hashConvFactory {
@@ -164,7 +165,7 @@ var converters = struct {
 				if !ok {
 					return "", false
 				}
-				return *(*string)(unsafe.Pointer(&buf)), true
+				return rueidis.BinaryString(buf), true
 			},
 			StringToValue: func(value string) (reflect.Value, error) {
 				buf := []byte(value)

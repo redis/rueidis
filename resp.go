@@ -6,7 +6,6 @@ import (
 	"io"
 	"strconv"
 	"strings"
-	"unsafe"
 )
 
 var errChunked = errors.New("unbounded redis message")
@@ -122,7 +121,7 @@ func readS(i *bufio.Reader) (string, error) {
 	} else {
 		bs = bs[:trim]
 	}
-	return *(*string)(unsafe.Pointer(&bs)), nil
+	return BinaryString(bs), nil
 }
 
 func readI(i *bufio.Reader) (int64, error) {
@@ -170,7 +169,7 @@ func readB(i *bufio.Reader) (string, error) {
 	if _, err = i.Discard(2); err != nil {
 		return "", err
 	}
-	return *(*string)(unsafe.Pointer(&bs)), nil
+	return BinaryString(bs), nil
 }
 
 func readE(i *bufio.Reader) ([]RedisMessage, error) {

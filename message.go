@@ -165,6 +165,16 @@ func (r RedisResult) AsReader() (v io.Reader, err error) {
 	return
 }
 
+// AsBytes delegates to RedisMessage.AsBytes
+func (r RedisResult) AsBytes() (v []byte, err error) {
+	if r.err != nil {
+		err = r.err
+	} else {
+		v, err = r.val.AsBytes()
+	}
+	return
+}
+
 // DecodeJSON delegates to RedisMessage.DecodeJSON
 func (r RedisResult) DecodeJSON(v any) (err error) {
 	if r.err != nil {
@@ -471,6 +481,15 @@ func (m *RedisMessage) AsReader() (reader io.Reader, err error) {
 		return nil, err
 	}
 	return strings.NewReader(str), nil
+}
+
+// AsBytes check if message is a redis string response and return it as an immutable []byte
+func (m *RedisMessage) AsBytes() (bs []byte, err error) {
+	str, err := m.ToString()
+	if err != nil {
+		return nil, err
+	}
+	return unsafe.Slice(unsafe.StringData(str), len(str)), nil
 }
 
 // DecodeJSON check if message is a redis string response and treat it as json, then unmarshal it into provided value
