@@ -317,16 +317,16 @@ client, err := rueidis.NewClient(rueidis.ClientOption{
 })
 ```
 
-## Arbitrary command
+## Arbitrary Command
 
-If you want to construct commands that are not yet supported, you can use `client.B().Arbitrary()`:
+If you want to construct commands that are absent from the command builder, you can use `client.B().Arbitrary()`:
 
 ```golang
 // This will result into [ANY CMD k1 k2 a1 a2]
 client.B().Arbitrary("ANY", "CMD").Keys("k1", "k2").Args("a1", "a2").Build()
 ```
 
-## Working with JSON string and `[]byte`
+## Working with JSON, Raw `[]byte`, and Vector Similarity Search
 
 The command builder treats all the parameters as Redis strings, which are binary safe. This means that users can store `[]byte`
 directly into Redis without conversion. And the `rueidis.BinaryString` helper can convert `[]byte` to `string` without copy. For example:
@@ -343,6 +343,14 @@ When working with RedisJSON, users frequently need to prepare JSON string in Red
 client.B().JsonSet().Key("j").Path("$.myStrField").Value(rueidis.JSON("str")).Build()
 // equivalent to
 client.B().JsonSet().Key("j").Path("$.myStrField").Value(`"str"`).Build()
+```
+
+When working with vector similarity search, users can use `rueidis.VectorString32` and `rueidis.VectorString64` to build queries:
+
+```golang
+client.B().FtSearch().Index("idx").Query("*=>[KNN 5 @vec $V]").
+    Params().Nargs(2).NameValue().NameValue("V", rueidis.VectorString64([]float64{...})).
+    Dialect(2).Build()
 ```
 
 ## Command Response Cheatsheet
