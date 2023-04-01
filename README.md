@@ -89,6 +89,22 @@ Benchmark source code: https://github.com/rueian/rueidis-benchmark
 
 A benchmark result performed on two GCP n2-highcpu-2 machines also shows that rueidis can achieve higher throughput with lower latencies: https://github.com/rueian/rueidis/pull/93
 
+### Pipelining Bulk Operations Manually
+
+Though all concurrent non-blocking commands are automatically pipelined, you can still pipeline commands manually with `DoMulti()`:
+
+``` golang
+cmds := make(rueidis.Commands, 0, 10)
+for i := 0; i < 10; i++ {
+    cmds = append(cmds, client.B().Set().Key("key").Value("value").Build())
+}
+for _, resp := range client.DoMulti(ctx, cmds...) {
+    if err := resp.Error(); err != nil {
+        panic(err)
+    }
+}
+```
+
 ## [Client Side Caching](https://redis.io/docs/manual/client-side-caching/)
 
 The opt-in mode of [server-assisted client side caching](https://redis.io/docs/manual/client-side-caching/) is enabled by default, and can be used by calling `DoCache()` or `DoMultiCache()` with
@@ -258,22 +274,6 @@ Its size is controlled by the `ClientOption.RingScaleEachConn` and the default v
 
 If you have many rueidis connections, you may find that they occupy quite amount of memory.
 In that case, you may consider reducing `ClientOption.RingScaleEachConn` to 8 or 9 at the cost of potential throughput degradation.
-
-## Pipelining Bulk Operations Manually
-
-Though all concurrent non-blocking commands are automatically pipelined, you can still pipeline commands manually with `DoMulti()`:
-
-``` golang
-cmds := make(rueidis.Commands, 0, 10)
-for i := 0; i < 10; i++ {
-    cmds = append(cmds, client.B().Set().Key("key").Value("value").Build())
-}
-for _, resp := range client.DoMulti(ctx, cmds...) {
-    if err := resp.Error(); err != nil {
-        panic(err)
-    }
-}
-```
 
 ## Lua Script
 
