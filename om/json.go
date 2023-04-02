@@ -137,23 +137,12 @@ func (r *JSONRepository[T]) DropIndex(ctx context.Context) error {
 // 3. error if any
 // You can use the cmdFn parameter to mutate the search command.
 func (r *JSONRepository[T]) Search(ctx context.Context, cmdFn func(search FtSearchIndex) Completed) (n int64, s []*T, err error) {
-	resp, err := r.client.Do(ctx, cmdFn(r.client.B().FtSearch().Index(r.idx))).ToArray()
+	n, resp, err := r.client.Do(ctx, cmdFn(r.client.B().FtSearch().Index(r.idx))).AsFtSearch()
 	if err == nil {
-		n, _ = resp[0].ToInt64()
-		s = make([]*T, 0, len(resp[1:])/2)
-		for i := 2; i < len(resp); i += 2 {
-			if kv, _ := resp[i].ToArray(); len(kv) >= 2 {
-				for j := len(kv) - 2; j >= 0; i -= 2 {
-					if k, _ := kv[j].ToString(); k == "$" {
-						record, _ := kv[j+1].ToString()
-						v, err := r.decode(record)
-						if err != nil {
-							return 0, nil, err
-						}
-						s = append(s, v)
-						break
-					}
-				}
+		s = make([]*T, len(resp))
+		for i, v := range resp {
+			if s[i], err = r.decode(v.Doc["$"]); err != nil {
+				return 0, nil, err
 			}
 		}
 	}

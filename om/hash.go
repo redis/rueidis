@@ -45,7 +45,7 @@ func (r *HashRepository[T]) NewEntity() (entity *T) {
 
 // Fetch an entity whose name is `{prefix}:{id}`
 func (r *HashRepository[T]) Fetch(ctx context.Context, id string) (v *T, err error) {
-	record, err := r.client.Do(ctx, r.client.B().Hgetall().Key(key(r.prefix, id)).Build()).ToMap()
+	record, err := r.client.Do(ctx, r.client.B().Hgetall().Key(key(r.prefix, id)).Build()).AsStrMap()
 	if err == nil {
 		v, err = r.fromHash(record)
 	}
@@ -54,7 +54,7 @@ func (r *HashRepository[T]) Fetch(ctx context.Context, id string) (v *T, err err
 
 // FetchCache is like Fetch, but it uses client side caching mechanism.
 func (r *HashRepository[T]) FetchCache(ctx context.Context, id string, ttl time.Duration) (v *T, err error) {
-	record, err := r.client.DoCache(ctx, r.client.B().Hgetall().Key(key(r.prefix, id)).Cache(), ttl).ToMap()
+	record, err := r.client.DoCache(ctx, r.client.B().Hgetall().Key(key(r.prefix, id)).Cache(), ttl).AsStrMap()
 	if err == nil {
 		v, err = r.fromHash(record)
 	}
@@ -135,17 +135,13 @@ func (r *HashRepository[T]) DropIndex(ctx context.Context) error {
 // 3. error if any
 // You can use the cmdFn parameter to mutate the search command.
 func (r *HashRepository[T]) Search(ctx context.Context, cmdFn func(search FtSearchIndex) Completed) (n int64, s []*T, err error) {
-	resp, err := r.client.Do(ctx, cmdFn(r.client.B().FtSearch().Index(r.idx))).ToArray()
+	n, resp, err := r.client.Do(ctx, cmdFn(r.client.B().FtSearch().Index(r.idx))).AsFtSearch()
 	if err == nil {
-		n, _ = resp[0].ToInt64()
-		s = make([]*T, 0, len(resp[1:])/2)
-		for i := 2; i < len(resp); i += 2 {
-			kv, _ := resp[i].ToArray()
-			v, err := r.fromArray(kv)
-			if err != nil {
+		s = make([]*T, len(resp))
+		for i, v := range resp {
+			if s[i], err = r.fromFields(v.Doc); err != nil {
 				return 0, nil, err
 			}
-			s = append(s, v)
 		}
 	}
 	return n, s, err
@@ -165,28 +161,11 @@ func (r *HashRepository[T]) IndexName() string {
 	return r.idx
 }
 
-func (r *HashRepository[T]) fromHash(record map[string]rueidis.RedisMessage) (*T, error) {
+func (r *HashRepository[T]) fromHash(record map[string]string) (*T, error) {
 	if len(record) == 0 {
 		return nil, ErrEmptyHashRecord
 	}
-	fields := make(map[string]string, len(record))
-	for k, v := range record {
-		if s, err := v.ToString(); err == nil {
-			fields[k] = s
-		}
-	}
-	return r.fromFields(fields)
-}
-
-func (r *HashRepository[T]) fromArray(record []rueidis.RedisMessage) (*T, error) {
-	fields := make(map[string]string, len(record)/2)
-	for i := 0; i < len(record); i += 2 {
-		k, _ := record[i].ToString()
-		if s, err := record[i+1].ToString(); err == nil {
-			fields[k] = s
-		}
-	}
-	return r.fromFields(fields)
+	return r.fromFields(record)
 }
 
 func (r *HashRepository[T]) fromFields(fields map[string]string) (*T, error) {
