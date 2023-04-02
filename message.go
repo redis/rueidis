@@ -333,6 +333,15 @@ func (r RedisResult) AsZMPop() (v KeyZScores, err error) {
 	return
 }
 
+func (r RedisResult) AsFtSearch() (total int64, docs []FtSearchDoc, err error) {
+	if r.err != nil {
+		err = r.err
+	} else {
+		total, docs, err = r.val.AsFtSearch()
+	}
+	return
+}
+
 // AsMap delegates to RedisMessage.AsMap
 func (r RedisResult) AsMap() (v map[string]RedisMessage, err error) {
 	if r.err != nil {
@@ -901,6 +910,35 @@ func (m *RedisMessage) AsZMPop() (kvs KeyZScores, err error) {
 	}
 	typ := m.typ
 	panic(fmt.Sprintf("redis message type %c is not a ZMPOP response", typ))
+}
+
+type FtSearchDoc struct {
+	Doc map[string]string
+	Key string
+}
+
+func (m *RedisMessage) AsFtSearch() (total int64, docs []FtSearchDoc, err error) {
+	if err = m.Error(); err != nil {
+		return 0, nil, err
+	}
+	if len(m.values) > 0 {
+		total = m.values[0].integer
+		if len(m.values) > 2 && m.values[2].string == "" {
+			docs = make([]FtSearchDoc, 0, (len(m.values)-1)/2)
+			for i := 1; i < len(m.values); i += 2 {
+				doc, _ := m.values[i+1].AsStrMap()
+				docs = append(docs, FtSearchDoc{Doc: doc, Key: m.values[i].string})
+			}
+		} else {
+			docs = make([]FtSearchDoc, 0, len(m.values)-1)
+			for i := 1; i < len(m.values); i++ {
+				docs = append(docs, FtSearchDoc{Doc: nil, Key: m.values[i].string})
+			}
+		}
+		return
+	}
+	typ := m.typ
+	panic(fmt.Sprintf("redis message type %c is not a FT.SEARCH response", typ))
 }
 
 // ToMap check if message is a redis RESP3 map response, and return it

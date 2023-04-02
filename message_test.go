@@ -530,6 +530,74 @@ func TestRedisResult(t *testing.T) {
 		}
 	})
 
+	t.Run("AsFtSearch", func(t *testing.T) {
+		if _, _, err := (RedisResult{err: errors.New("other")}).AsFtSearch(); err == nil {
+			t.Fatal("AsFtSearch not failed as expected")
+		}
+		if _, _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsFtSearch(); err == nil {
+			t.Fatal("AsFtSearch not failed as expected")
+		}
+		if n, ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+			{typ: ':', integer: 3},
+			{typ: '+', string: "1"},
+			{typ: '*', values: []RedisMessage{
+				{typ: '+', string: "k1"},
+				{typ: '+', string: "v1"},
+				{typ: '+', string: "kk"},
+				{typ: '+', string: "vv"},
+			}},
+			{typ: '+', string: "2"},
+			{typ: '*', values: []RedisMessage{
+				{typ: '+', string: "k2"},
+				{typ: '+', string: "v2"},
+				{typ: '+', string: "kk"},
+				{typ: '+', string: "vv"},
+			}},
+		}}}).AsFtSearch(); n != 3 || !reflect.DeepEqual([]FtSearchDoc{
+			{Key: "1", Doc: map[string]string{"k1": "v1", "kk": "vv"}},
+			{Key: "2", Doc: map[string]string{"k2": "v2", "kk": "vv"}},
+		}, ret) {
+			t.Fatal("AsFtSearch not get value as expected")
+		}
+		if n, ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+			{typ: ':', integer: 3},
+			{typ: '+', string: "1"},
+			{typ: '*', values: []RedisMessage{
+				{typ: '+', string: "k1"},
+				{typ: '+', string: "v1"},
+				{typ: '+', string: "kk"},
+				{typ: '+', string: "vv"},
+			}},
+		}}}).AsFtSearch(); n != 3 || !reflect.DeepEqual([]FtSearchDoc{
+			{Key: "1", Doc: map[string]string{"k1": "v1", "kk": "vv"}},
+		}, ret) {
+			t.Fatal("AsFtSearch not get value as expected")
+		}
+		if n, ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+			{typ: ':', integer: 3},
+			{typ: '+', string: "1"},
+			{typ: '+', string: "2"},
+		}}}).AsFtSearch(); n != 3 || !reflect.DeepEqual([]FtSearchDoc{
+			{Key: "1", Doc: nil},
+			{Key: "2", Doc: nil},
+		}, ret) {
+			t.Fatal("AsFtSearch not get value as expected")
+		}
+		if n, ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+			{typ: ':', integer: 3},
+			{typ: '+', string: "1"},
+		}}}).AsFtSearch(); n != 3 || !reflect.DeepEqual([]FtSearchDoc{
+			{Key: "1", Doc: nil},
+		}, ret) {
+			t.Fatal("AsFtSearch not get value as expected")
+		}
+		if n, ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+			{typ: ':', integer: 3},
+		}}}).AsFtSearch(); n != 3 || !reflect.DeepEqual([]FtSearchDoc{}, ret) {
+			t.Fatal("AsFtSearch not get value as expected")
+		}
+	})
+
 	t.Run("IsCacheHit", func(t *testing.T) {
 		if (RedisResult{err: errors.New("other")}).IsCacheHit() {
 			t.Fatal("IsCacheHit not as expected")
@@ -977,6 +1045,18 @@ func TestRedisMessage(t *testing.T) {
 		(&RedisMessage{typ: '*', values: []RedisMessage{
 			{typ: '+', string: "k"},
 		}}).AsZMPop()
+	})
+
+	t.Run("AsFtSearch", func(t *testing.T) {
+		if _, _, err := (&RedisMessage{typ: '_'}).AsFtSearch(); err == nil {
+			t.Fatal("AsFtSearch not failed as expected")
+		}
+		defer func() {
+			if !strings.Contains(recover().(string), "redis message type * is not a FT.SEARCH response") {
+				t.Fatal("AsFtSearch not panic as expected")
+			}
+		}()
+		(&RedisMessage{typ: '*', values: []RedisMessage{}}).AsFtSearch()
 	})
 
 	t.Run("AsScanEntry", func(t *testing.T) {
