@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"unsafe"
 
 	"github.com/rueian/rueidis"
 )
@@ -168,8 +169,26 @@ var converters = struct {
 				return rueidis.BinaryString(buf), true
 			},
 			StringToValue: func(value string) (reflect.Value, error) {
-				buf := []byte(value)
+				buf := unsafe.Slice(unsafe.StringData(value), len(value))
 				return reflect.ValueOf(buf), nil
+			},
+		},
+		reflect.Float32: {
+			ValueToString: func(value reflect.Value) (string, bool) {
+				vs, ok := value.Interface().([]float32)
+				return rueidis.VectorString32(vs), ok
+			},
+			StringToValue: func(value string) (reflect.Value, error) {
+				return reflect.ValueOf(rueidis.ToVector32(value)), nil
+			},
+		},
+		reflect.Float64: {
+			ValueToString: func(value reflect.Value) (string, bool) {
+				vs, ok := value.Interface().([]float64)
+				return rueidis.VectorString64(vs), ok
+			},
+			StringToValue: func(value string) (reflect.Value, error) {
+				return reflect.ValueOf(rueidis.ToVector64(value)), nil
 			},
 		},
 	},

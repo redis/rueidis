@@ -84,5 +84,6 @@ for _, v := range records {
 * `int64`, `*int64`
 * `bool`, `*bool`
 * `[]byte`
+* `[]float32`, `[]float64` for vector search
 
 Field projection by RediSearch is not supported.

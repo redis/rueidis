@@ -12,16 +12,18 @@ import (
 )
 
 type HashTestStruct struct {
-	Key string `redis:",key"`
-	F2  *bool
-	F2N *bool
-	F3  *string
-	F3N *string
-	F4  *int64
-	F4N *int64
-	Val []byte
-	Ver int64 `redis:",ver"`
-	F1  bool
+	Key   string `redis:",key"`
+	F2    *bool
+	F2N   *bool
+	F3    *string
+	F3N   *string
+	F4    *int64
+	F4N   *int64
+	Val   []byte
+	Ver   int64 `redis:",ver"`
+	F1    bool
+	Vec32 []float32
+	Vec64 []float64
 }
 
 type Unsupported struct {
@@ -69,6 +71,8 @@ func TestNewHashRepository(t *testing.T) {
 		e.F2 = &e.F1
 		e.F3 = &e.Key
 		e.F4 = &f4
+		e.Vec32 = []float32{3, 2, 1}
+		e.Vec64 = []float64{1, 2, 3}
 		if err := repo.Save(ctx, e); err != nil {
 			t.Fatal(err)
 		}
