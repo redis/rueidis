@@ -173,15 +173,15 @@ func TestMGets(t *testing.T) {
 		if cp.cf != mtGetTag {
 			t.Fatalf("cf should be mtGetTag")
 		}
-		if reflect.DeepEqual(cp.cs.s, []string{key, key}) {
-			t.Fatalf("cs mismatch %v %v", cp.cs.s, []string{key, key})
+		if !reflect.DeepEqual(cp.cs.s, []string{"MGET", key, key}) {
+			t.Fatalf("cs mismatch %v %v", cp.cs.s, []string{"MGET", key, key})
 		}
 	}
 }
 
 func TestJsonMGets(t *testing.T) {
 	keys := []string{"{1}", "{2}", "{3}", "{1}", "{2}", "{3}"}
-	ret := JsonMGets(keys, "&")
+	ret := JsonMGets(keys, "$")
 	for _, key := range keys {
 		ks := slot(key)
 		cp := ret[slot(key)]
@@ -191,8 +191,50 @@ func TestJsonMGets(t *testing.T) {
 		if cp.cf != mtGetTag {
 			t.Fatalf("cf should be mtGetTag")
 		}
-		if reflect.DeepEqual(cp.cs.s, []string{key, key, "$"}) {
-			t.Fatalf("cs mismatch %v %v", cp.cs.s, []string{key, key, "$"})
+		if !reflect.DeepEqual(cp.cs.s, []string{"JSON.MGET", key, key, "$"}) {
+			t.Fatalf("cs mismatch %v %v", cp.cs.s, []string{"JSON.MGET", key, key, "$"})
+		}
+	}
+}
+
+func TestMSets(t *testing.T) {
+	keys := map[string]string{"{1}": "{1}", "{2}": "{2}", "{3}": "{3}", "{1}a": "{1}a", "{2}a": "{2}a", "{3}a": "{3}a"}
+	ret := MSets(keys)
+	for _, key := range keys {
+		ks := slot(key)
+		cp := ret[slot(key)]
+		if cp.ks != ks {
+			t.Fatalf("ks mistmatch %v %v", cp.ks, ks)
+		}
+		if cp.IsReadOnly() {
+			t.Fatalf("cf should not be readonly")
+		}
+		key := strings.TrimSuffix(key, "a")
+		key2 := key + "a"
+		if !reflect.DeepEqual(cp.cs.s, []string{"MSET", key, key, key2, key2}) &&
+			!reflect.DeepEqual(cp.cs.s, []string{"MSET", key2, key2, key, key}) {
+			t.Fatalf("cs mismatch %v", cp.cs.s)
+		}
+	}
+}
+
+func TestMSetNXs(t *testing.T) {
+	keys := map[string]string{"{1}": "{1}", "{2}": "{2}", "{3}": "{3}", "{1}a": "{1}a", "{2}a": "{2}a", "{3}a": "{3}a"}
+	ret := MSetNXs(keys)
+	for _, key := range keys {
+		ks := slot(key)
+		cp := ret[slot(key)]
+		if cp.ks != ks {
+			t.Fatalf("ks mistmatch %v %v", cp.ks, ks)
+		}
+		if cp.IsReadOnly() {
+			t.Fatalf("cf should not be readonly")
+		}
+		key := strings.TrimSuffix(key, "a")
+		key2 := key + "a"
+		if !reflect.DeepEqual(cp.cs.s, []string{"MSETNX", key, key, key2, key2}) &&
+			!reflect.DeepEqual(cp.cs.s, []string{"MSETNX", key2, key2, key, key}) {
+			t.Fatalf("cs mismatch %v", cp.cs.s)
 		}
 	}
 }

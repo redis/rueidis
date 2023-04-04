@@ -218,6 +218,16 @@ func MGets(keys []string) map[uint16]Completed {
 	return slotMGets("MGET", keys)
 }
 
+// MSets groups keys by their slot and returns multi MSET commands
+func MSets(kvs map[string]string) map[uint16]Completed {
+	return slotMSets("MSET", kvs)
+}
+
+// MSetNXs groups keys by their slot and returns multi MSETNX commands
+func MSetNXs(kvs map[string]string) map[uint16]Completed {
+	return slotMSets("MSETNX", kvs)
+}
+
 // JsonMGets groups keys by their slot and returns multi JSON.MGET commands
 func JsonMGets(keys []string, path string) map[uint16]Completed {
 	ret := slotMGets("JSON.MGET", keys)
@@ -228,7 +238,7 @@ func JsonMGets(keys []string, path string) map[uint16]Completed {
 }
 
 func slotMGets(cmd string, keys []string) map[uint16]Completed {
-	ret := make(map[uint16]Completed, 16)
+	ret := make(map[uint16]Completed, 8)
 	for _, key := range keys {
 		var cs *CommandSlice
 		ks := slot(key)
@@ -240,6 +250,23 @@ func slotMGets(cmd string, keys []string) map[uint16]Completed {
 			ret[ks] = Completed{cs: cs, cf: mtGetTag, ks: ks}
 		}
 		cs.s = append(cs.s, key)
+	}
+	return ret
+}
+
+func slotMSets(cmd string, kvs map[string]string) map[uint16]Completed {
+	ret := make(map[uint16]Completed, 8)
+	for key, value := range kvs {
+		var cs *CommandSlice
+		ks := slot(key)
+		if cp, ok := ret[ks]; ok {
+			cs = cp.cs
+		} else {
+			cs = get()
+			cs.s = append(cs.s, cmd)
+			ret[ks] = Completed{cs: cs, ks: ks}
+		}
+		cs.s = append(cs.s, key, value)
 	}
 	return ret
 }
