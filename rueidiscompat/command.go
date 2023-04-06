@@ -33,6 +33,7 @@ import (
 	"time"
 
 	"github.com/rueian/rueidis"
+	"github.com/rueian/rueidis/internal/util"
 )
 
 type Cmd struct {
@@ -147,11 +148,11 @@ func toFloat32(val any) (float32, error) {
 	case int64:
 		return float32(val), nil
 	case string:
-		f, err := strconv.ParseFloat(val, 32)
+		f, err := util.ToFloat32(val)
 		if err != nil {
 			return 0, err
 		}
-		return float32(f), nil
+		return f, nil
 	default:
 		err := fmt.Errorf("redis: unexpected type=%T for Float32", val)
 		return 0, err
@@ -170,7 +171,7 @@ func toFloat64(val any) (float64, error) {
 	case int64:
 		return float64(val), nil
 	case string:
-		return strconv.ParseFloat(val, 64)
+		return util.ToFloat64(val)
 	default:
 		err := fmt.Errorf("redis: unexpected type=%T for Float64", val)
 		return 0, err
@@ -373,18 +374,18 @@ func (cmd *StringCmd) Float32() (float32, error) {
 	if cmd.err != nil {
 		return 0, cmd.err
 	}
-	v, err := strconv.ParseFloat(cmd.Val(), 32)
+	v, err := util.ToFloat32(cmd.Val())
 	if err != nil {
 		return 0, err
 	}
-	return float32(v), nil
+	return v, nil
 }
 
 func (cmd *StringCmd) Float64() (float64, error) {
 	if cmd.err != nil {
 		return 0, cmd.err
 	}
-	return strconv.ParseFloat(cmd.Val(), 64)
+	return util.ToFloat64(cmd.Val())
 }
 
 func (cmd *StringCmd) Time() (time.Time, error) {

@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 	"unsafe"
+
+	"github.com/rueian/rueidis/internal/util"
 )
 
 const messageStructSize = int(unsafe.Sizeof(RedisMessage{}))
@@ -559,13 +561,13 @@ func (m *RedisMessage) AsBool() (val bool, err error) {
 // AsFloat64 check if message is a redis string response, and parse it as float64
 func (m *RedisMessage) AsFloat64() (val float64, err error) {
 	if m.IsFloat64() {
-		return strconv.ParseFloat(m.string, 64)
+		return util.ToFloat64(m.string)
 	}
 	v, err := m.ToString()
 	if err != nil {
 		return 0, err
 	}
-	return strconv.ParseFloat(v, 64)
+	return util.ToFloat64(v)
 }
 
 // ToInt64 check if message is a redis RESP3 int response, and return it
@@ -595,7 +597,7 @@ func (m *RedisMessage) ToBool() (val bool, err error) {
 // ToFloat64 check if message is a redis RESP3 double response, and return it
 func (m *RedisMessage) ToFloat64() (val float64, err error) {
 	if m.IsFloat64() {
-		return strconv.ParseFloat(m.string, 64)
+		return util.ToFloat64(m.string)
 	}
 	if err = m.Error(); err != nil {
 		return 0, err
@@ -654,7 +656,7 @@ func (m *RedisMessage) AsFloatSlice() ([]float64, error) {
 	s := make([]float64, 0, len(values))
 	for _, v := range values {
 		if len(v.string) != 0 {
-			i, err := strconv.ParseFloat(v.string, 64)
+			i, err := util.ToFloat64(v.string)
 			if err != nil {
 				return nil, err
 			}
@@ -960,7 +962,7 @@ func (m *RedisMessage) ToAny() (any, error) {
 	}
 	switch m.typ {
 	case ',':
-		return strconv.ParseFloat(m.string, 64)
+		return util.ToFloat64(m.string)
 	case '$', '+', '=', '(':
 		return m.string, nil
 	case '#':
