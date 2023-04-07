@@ -12,7 +12,7 @@ import (
 // NewHashRepository creates an HashRepository.
 // The prefix parameter is used as redis key prefix. The entity stored by the repository will be named in the form of `{prefix}:{id}`
 // The schema parameter should be a struct with fields tagged with `redis:",key"` and `redis:",ver"`
-func NewHashRepository[T any](prefix string, schema T, client rueidis.Client) Repository[T] {
+func NewHashRepository[T any](prefix string, schema T, client rueidis.Client, opts ...RepositoryOption) Repository[T] {
 	repo := &HashRepository[T]{
 		prefix: prefix,
 		idx:    "hashidx:" + prefix,
@@ -21,6 +21,9 @@ func NewHashRepository[T any](prefix string, schema T, client rueidis.Client) Re
 	}
 	repo.schema = newSchema(repo.typ)
 	repo.factory = newHashConvFactory(repo.typ, repo.schema)
+	for _, opt := range opts {
+		opt((*HashRepository[any])(repo))
+	}
 	return repo
 }
 

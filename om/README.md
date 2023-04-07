@@ -77,6 +77,17 @@ for _, v := range records {
 }
 ```
 
+### Change Search Index Name
+
+The default index name for `HashRepository` and `JSONRepository` is `hashidx:{prefix}` and `jsonidx:{prefix}` respectively.
+
+They can be changed by `WithIndexName` option to allow searching difference indexes:
+
+```golang
+repo1 := om.NewHashRepository("my_prefix", Example{}, c, om.WithIndexName("my_index1"))
+repo2 := om.NewHashRepository("my_prefix", Example{}, c, om.WithIndexName("my_index2"))
+```
+
 ### Object Mapping Limitation
 
 `NewHashRepository` only accepts these field types:

@@ -48,3 +48,16 @@ type Repository[T any] interface {
 	DropIndex(ctx context.Context) error
 	IndexName() string
 }
+
+type RepositoryOption func(Repository[any])
+
+func WithIndexName(name string) RepositoryOption {
+	return func(r Repository[any]) {
+		switch repo := r.(type) {
+		case *HashRepository[any]:
+			repo.idx = name
+		case *JSONRepository[any]:
+			repo.idx = name
+		}
+	}
+}

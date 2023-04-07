@@ -14,7 +14,7 @@ import (
 // NewJSONRepository creates an JSONRepository.
 // The prefix parameter is used as redis key prefix. The entity stored by the repository will be named in the form of `{prefix}:{id}`
 // The schema parameter should be a struct with fields tagged with `redis:",key"` and `redis:",ver"`
-func NewJSONRepository[T any](prefix string, schema T, client rueidis.Client) Repository[T] {
+func NewJSONRepository[T any](prefix string, schema T, client rueidis.Client, opts ...RepositoryOption) Repository[T] {
 	repo := &JSONRepository[T]{
 		prefix: prefix,
 		idx:    "jsonidx:" + prefix,
@@ -22,6 +22,9 @@ func NewJSONRepository[T any](prefix string, schema T, client rueidis.Client) Re
 		client: client,
 	}
 	repo.schema = newSchema(repo.typ)
+	for _, opt := range opts {
+		opt((*JSONRepository[any])(repo))
+	}
 	return repo
 }
 
