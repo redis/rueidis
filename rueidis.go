@@ -127,6 +127,8 @@ type ClientOption struct {
 	DisableCache bool
 	// AlwaysPipelining makes rueidis.Client always pipeline redis commands even if they are not issued concurrently.
 	AlwaysPipelining bool
+	// AlwaysRESP2 makes rueidis.Client always uses RESP2, otherwise it will try using RESP3 first.
+	AlwaysRESP2 bool
 }
 
 // SentinelOption contains MasterSet,

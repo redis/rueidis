@@ -136,7 +136,7 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	var r2 bool
+	r2 := option.AlwaysRESP2
 	if !r2ps {
 		for i, r := range p.DoMulti(ctx, cmds.NewMultiCompleted(init)...) {
 			if i == 0 {

@@ -686,6 +686,7 @@ func TestDragonflyDBSingleClientIntegration(t *testing.T) {
 		InitAddress:      []string{"127.0.0.1:6333"},
 		ConnWriteTimeout: 180 * time.Second,
 		DisableCache:     true,
+		AlwaysRESP2:      true,
 	})
 	if err != nil {
 		t.Fatal(err)
