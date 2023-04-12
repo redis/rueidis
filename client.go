@@ -240,11 +240,16 @@ func allReadOnly(multi []cmds.Completed) bool {
 	return true
 }
 
-func allSameSlot(multi []cmds.Completed) bool {
-	for i := 1; i < len(multi); i++ {
-		if multi[0].Slot() != multi[i].Slot() {
-			return false
+func chooseSlot(multi []cmds.Completed) uint16 {
+	for i := 0; i < len(multi); i++ {
+		if multi[i].Slot() != cmds.InitSlot {
+			for j := i + 1; j < len(multi); j++ {
+				if multi[j].Slot() != cmds.InitSlot && multi[j].Slot() != multi[i].Slot() {
+					return cmds.NoSlot
+				}
+			}
+			return multi[i].Slot()
 		}
 	}
-	return true
+	return cmds.InitSlot
 }

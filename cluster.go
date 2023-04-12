@@ -587,11 +587,8 @@ func (c *dedicatedClusterClient) acquire(slot uint16) (wire wire, err error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.slot == cmds.NoSlot {
-		if slot == cmds.NoSlot {
-			panic(panicMsgNoSlot)
-		}
 		c.slot = slot
-	} else if c.slot != slot && slot != cmds.NoSlot {
+	} else if c.slot != slot && slot != cmds.InitSlot {
 		panic(panicMsgCxSlot)
 	}
 	if c.wire != nil {
@@ -662,7 +659,8 @@ func (c *dedicatedClusterClient) DoMulti(ctx context.Context, multi ...cmds.Comp
 	if len(multi) == 0 {
 		return nil
 	}
-	if !allSameSlot(multi) {
+	slot := chooseSlot(multi)
+	if slot == cmds.NoSlot {
 		panic(panicMsgCxSlot)
 	}
 	retryable := c.retry
@@ -670,7 +668,7 @@ func (c *dedicatedClusterClient) DoMulti(ctx context.Context, multi ...cmds.Comp
 		retryable = allReadOnly(multi)
 	}
 retry:
-	if w, err := c.acquire(multi[0].Slot()); err == nil {
+	if w, err := c.acquire(slot); err == nil {
 		resp = w.DoMulti(ctx, multi...)
 		for _, r := range resp {
 			_, mode := c.client.shouldRefreshRetry(r.Error(), ctx)
@@ -754,5 +752,4 @@ const (
 
 	panicMsgCxSlot = "cross slot command in Dedicated is prohibited"
 	panicMixCxSlot = "Mixing no-slot and cross slot commands in DoMulti is prohibited"
-	panicMsgNoSlot = "the first command should contain the slot key"
 )
