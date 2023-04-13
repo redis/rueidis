@@ -633,6 +633,7 @@ func rootCf(root goStruct) (tag string) {
 
 func printFinalBuilder(w io.Writer, parent goStruct, method, ss string) {
 	fmt.Fprintf(w, "func (c %s) %s() %s {\n", parent.FullName, method, ss)
+	fmt.Fprintf(w, "\tc.cs.Build()\n")
 	fmt.Fprintf(w, "\treturn %s(c)\n", ss)
 	fmt.Fprintf(w, "}\n\n")
 }

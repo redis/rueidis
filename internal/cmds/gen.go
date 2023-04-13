@@ -18,12 +18,14 @@ func (c AclCat) Categoryname(categoryname string) AclCatCategoryname {
 }
 
 func (c AclCat) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type AclCatCategoryname Completed
 
 func (c AclCatCategoryname) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -48,6 +50,7 @@ func (c AclDeluserUsername) Username(username ...string) AclDeluserUsername {
 }
 
 func (c AclDeluserUsername) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -72,6 +75,7 @@ func (c AclDryrunArg) Arg(arg ...string) AclDryrunArg {
 }
 
 func (c AclDryrunArg) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -83,6 +87,7 @@ func (c AclDryrunCommand) Arg(arg ...string) AclDryrunArg {
 }
 
 func (c AclDryrunCommand) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -107,12 +112,14 @@ func (c AclGenpass) Bits(bits int64) AclGenpassBits {
 }
 
 func (c AclGenpass) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type AclGenpassBits Completed
 
 func (c AclGenpassBits) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -132,6 +139,7 @@ func (c AclGetuser) Username(username string) AclGetuserUsername {
 type AclGetuserUsername Completed
 
 func (c AclGetuserUsername) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -144,6 +152,7 @@ func (b Builder) AclHelp() (c AclHelp) {
 }
 
 func (c AclHelp) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -156,6 +165,7 @@ func (b Builder) AclList() (c AclList) {
 }
 
 func (c AclList) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -168,6 +178,7 @@ func (b Builder) AclLoad() (c AclLoad) {
 }
 
 func (c AclLoad) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -197,12 +208,14 @@ func (c AclLogCountCount) Reset() AclLogCountReset {
 }
 
 func (c AclLogCountCount) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type AclLogCountReset Completed
 
 func (c AclLogCountReset) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -215,6 +228,7 @@ func (b Builder) AclSave() (c AclSave) {
 }
 
 func (c AclSave) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -239,6 +253,7 @@ func (c AclSetuserRule) Rule(rule ...string) AclSetuserRule {
 }
 
 func (c AclSetuserRule) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -250,6 +265,7 @@ func (c AclSetuserUsername) Rule(rule ...string) AclSetuserRule {
 }
 
 func (c AclSetuserUsername) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -262,6 +278,7 @@ func (b Builder) AclUsers() (c AclUsers) {
 }
 
 func (c AclUsers) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -274,6 +291,7 @@ func (b Builder) AclWhoami() (c AclWhoami) {
 }
 
 func (c AclWhoami) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -298,6 +316,7 @@ func (c AiModeldel) Key(key string) AiModeldelKey {
 type AiModeldelKey Completed
 
 func (c AiModeldelKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -358,10 +377,12 @@ func (c AiModelexecuteOutputsOutput) Timeout(timeout int64) AiModelexecuteTimeou
 }
 
 func (c AiModelexecuteOutputsOutput) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c AiModelexecuteOutputsOutput) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -375,10 +396,12 @@ func (c AiModelexecuteOutputsOutputs) Output(output ...string) AiModelexecuteOut
 type AiModelexecuteTimeout Completed
 
 func (c AiModelexecuteTimeout) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c AiModelexecuteTimeout) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -403,10 +426,12 @@ func (c AiModelget) Key(key string) AiModelgetKey {
 type AiModelgetBlob Completed
 
 func (c AiModelgetBlob) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c AiModelgetBlob) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -423,10 +448,12 @@ func (c AiModelgetKey) Blob() AiModelgetBlob {
 }
 
 func (c AiModelgetKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c AiModelgetKey) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -438,10 +465,12 @@ func (c AiModelgetMeta) Blob() AiModelgetBlob {
 }
 
 func (c AiModelgetMeta) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c AiModelgetMeta) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -527,12 +556,14 @@ func (c AiModelstoreBatchsize) Blob(blob string) AiModelstoreBlob {
 }
 
 func (c AiModelstoreBatchsize) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type AiModelstoreBlob Completed
 
 func (c AiModelstoreBlob) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -574,6 +605,7 @@ func (c AiModelstoreDeviceCpu) Blob(blob string) AiModelstoreBlob {
 }
 
 func (c AiModelstoreDeviceCpu) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -615,6 +647,7 @@ func (c AiModelstoreDeviceGpu) Blob(blob string) AiModelstoreBlob {
 }
 
 func (c AiModelstoreDeviceGpu) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -636,6 +669,7 @@ func (c AiModelstoreInputsInput) Blob(blob string) AiModelstoreBlob {
 }
 
 func (c AiModelstoreInputsInput) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -686,6 +720,7 @@ func (c AiModelstoreMinbatchsize) Blob(blob string) AiModelstoreBlob {
 }
 
 func (c AiModelstoreMinbatchsize) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -707,6 +742,7 @@ func (c AiModelstoreMinbatchtimeout) Blob(blob string) AiModelstoreBlob {
 }
 
 func (c AiModelstoreMinbatchtimeout) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -723,6 +759,7 @@ func (c AiModelstoreOutputsOutput) Blob(blob string) AiModelstoreBlob {
 }
 
 func (c AiModelstoreOutputsOutput) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -766,6 +803,7 @@ func (c AiModelstoreTag) Blob(blob string) AiModelstoreBlob {
 }
 
 func (c AiModelstoreTag) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -790,6 +828,7 @@ func (c AiScriptdel) Key(key string) AiScriptdelKey {
 type AiScriptdelKey Completed
 
 func (c AiScriptdelKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -829,6 +868,7 @@ func (c AiScriptexecuteArgsArg) Timeout(timeout int64) AiScriptexecuteTimeout {
 }
 
 func (c AiScriptexecuteArgsArg) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -867,6 +907,7 @@ func (c AiScriptexecuteFunction) Timeout(timeout int64) AiScriptexecuteTimeout {
 }
 
 func (c AiScriptexecuteFunction) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -893,6 +934,7 @@ func (c AiScriptexecuteInputsInput) Timeout(timeout int64) AiScriptexecuteTimeou
 }
 
 func (c AiScriptexecuteInputsInput) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -938,6 +980,7 @@ func (c AiScriptexecuteKeysKey) Timeout(timeout int64) AiScriptexecuteTimeout {
 }
 
 func (c AiScriptexecuteKeysKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -961,6 +1004,7 @@ func (c AiScriptexecuteOutputsOutput) Timeout(timeout int64) AiScriptexecuteTime
 }
 
 func (c AiScriptexecuteOutputsOutput) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -974,6 +1018,7 @@ func (c AiScriptexecuteOutputsOutputs) Output(output ...string) AiScriptexecuteO
 type AiScriptexecuteTimeout Completed
 
 func (c AiScriptexecuteTimeout) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -1008,10 +1053,12 @@ func (c AiScriptgetKey) Source() AiScriptgetSource {
 }
 
 func (c AiScriptgetKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c AiScriptgetKey) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -1023,20 +1070,24 @@ func (c AiScriptgetMeta) Source() AiScriptgetSource {
 }
 
 func (c AiScriptgetMeta) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c AiScriptgetMeta) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
 type AiScriptgetSource Completed
 
 func (c AiScriptgetSource) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c AiScriptgetSource) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -1090,6 +1141,7 @@ func (c AiScriptstoreEntryPointsEntryPoint) EntryPoint(entryPoint ...string) AiS
 }
 
 func (c AiScriptstoreEntryPointsEntryPoint) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -1140,20 +1192,24 @@ func (c AiTensorget) Key(key string) AiTensorgetKey {
 type AiTensorgetFormatBlob Completed
 
 func (c AiTensorgetFormatBlob) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c AiTensorgetFormatBlob) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
 type AiTensorgetFormatValues Completed
 
 func (c AiTensorgetFormatValues) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c AiTensorgetFormatValues) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -1177,10 +1233,12 @@ func (c AiTensorgetMeta) Values() AiTensorgetFormatValues {
 }
 
 func (c AiTensorgetMeta) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c AiTensorgetMeta) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -1211,6 +1269,7 @@ func (c AiTensorsetBlob) Values(value ...string) AiTensorsetValues {
 }
 
 func (c AiTensorsetBlob) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -1287,6 +1346,7 @@ func (c AiTensorsetShape) Values(value ...string) AiTensorsetValues {
 }
 
 func (c AiTensorsetShape) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -1389,6 +1449,7 @@ func (c AiTensorsetValues) Values(value ...string) AiTensorsetValues {
 }
 
 func (c AiTensorsetValues) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -1420,6 +1481,7 @@ func (c AppendKey) Value(value string) AppendValue {
 type AppendValue Completed
 
 func (c AppendValue) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -1432,6 +1494,7 @@ func (b Builder) Asking() (c Asking) {
 }
 
 func (c Asking) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -1456,6 +1519,7 @@ func (c Auth) Password(password string) AuthPassword {
 type AuthPassword Completed
 
 func (c AuthPassword) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -1487,6 +1551,7 @@ func (c BfAdd) Key(key string) BfAddKey {
 type BfAddItem Completed
 
 func (c BfAddItem) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -1518,6 +1583,7 @@ func (c BfCard) Key(key string) BfCardKey {
 type BfCardKey Completed
 
 func (c BfCardKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -1542,10 +1608,12 @@ func (c BfExists) Key(key string) BfExistsKey {
 type BfExistsItem Completed
 
 func (c BfExistsItem) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c BfExistsItem) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -1602,60 +1670,72 @@ func (c BfInfoKey) Expansion() BfInfoSingleValueExpansion {
 }
 
 func (c BfInfoKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c BfInfoKey) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
 type BfInfoSingleValueCapacity Completed
 
 func (c BfInfoSingleValueCapacity) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c BfInfoSingleValueCapacity) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
 type BfInfoSingleValueExpansion Completed
 
 func (c BfInfoSingleValueExpansion) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c BfInfoSingleValueExpansion) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
 type BfInfoSingleValueFilters Completed
 
 func (c BfInfoSingleValueFilters) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c BfInfoSingleValueFilters) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
 type BfInfoSingleValueItems Completed
 
 func (c BfInfoSingleValueItems) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c BfInfoSingleValueItems) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
 type BfInfoSingleValueSize Completed
 
 func (c BfInfoSingleValueSize) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c BfInfoSingleValueSize) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -1751,6 +1831,7 @@ func (c BfInsertItem) Item(item ...string) BfInsertItem {
 }
 
 func (c BfInsertItem) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -1833,6 +1914,7 @@ func (c BfLoadchunk) Key(key string) BfLoadchunkKey {
 type BfLoadchunkData Completed
 
 func (c BfLoadchunkData) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -1876,6 +1958,7 @@ func (c BfMaddItem) Item(item ...string) BfMaddItem {
 }
 
 func (c BfMaddItem) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -1912,6 +1995,7 @@ func (c BfMexistsItem) Item(item ...string) BfMexistsItem {
 }
 
 func (c BfMexistsItem) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -1953,6 +2037,7 @@ func (c BfReserveCapacity) Nonscaling() BfReserveNonscaling {
 }
 
 func (c BfReserveCapacity) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -1971,6 +2056,7 @@ func (c BfReserveExpansion) Nonscaling() BfReserveNonscaling {
 }
 
 func (c BfReserveExpansion) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -1984,6 +2070,7 @@ func (c BfReserveKey) ErrorRate(errorRate float64) BfReserveErrorRate {
 type BfReserveNonscaling Completed
 
 func (c BfReserveNonscaling) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -2008,6 +2095,7 @@ func (c BfScandump) Key(key string) BfScandumpKey {
 type BfScandumpIterator Completed
 
 func (c BfScandumpIterator) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -2027,6 +2115,7 @@ func (b Builder) Bgrewriteaof() (c Bgrewriteaof) {
 }
 
 func (c Bgrewriteaof) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -2044,12 +2133,14 @@ func (c Bgsave) Schedule() BgsaveSchedule {
 }
 
 func (c Bgsave) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type BgsaveSchedule Completed
 
 func (c BgsaveSchedule) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -2084,30 +2175,36 @@ func (c BitcountIndexEnd) Bit() BitcountIndexIndexUnitBit {
 }
 
 func (c BitcountIndexEnd) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c BitcountIndexEnd) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
 type BitcountIndexIndexUnitBit Completed
 
 func (c BitcountIndexIndexUnitBit) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c BitcountIndexIndexUnitBit) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
 type BitcountIndexIndexUnitByte Completed
 
 func (c BitcountIndexIndexUnitByte) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c BitcountIndexIndexUnitByte) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -2126,10 +2223,12 @@ func (c BitcountKey) Start(start int64) BitcountIndexStart {
 }
 
 func (c BitcountKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c BitcountKey) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -2184,6 +2283,7 @@ func (c BitfieldKey) Incrby(encoding string, offset int64, increment int64) Bitf
 }
 
 func (c BitfieldKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -2283,6 +2383,7 @@ func (c BitfieldOperationWriteSetIncrby) Incrby(encoding string, offset int64, i
 }
 
 func (c BitfieldOperationWriteSetIncrby) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -2319,6 +2420,7 @@ func (c BitfieldOperationWriteSetSet) Set(encoding string, offset int64, value i
 }
 
 func (c BitfieldOperationWriteSetSet) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -2348,10 +2450,12 @@ func (c BitfieldRoGet) Get(encoding string, offset int64) BitfieldRoGet {
 }
 
 func (c BitfieldRoGet) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c BitfieldRoGet) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -2362,10 +2466,12 @@ func (c BitfieldRoKey) Get() BitfieldRoGet {
 }
 
 func (c BitfieldRoKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c BitfieldRoKey) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -2432,6 +2538,7 @@ func (c BitopKey) Key(key ...string) BitopKey {
 }
 
 func (c BitopKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -2509,10 +2616,12 @@ func (c BitposBit) Start(start int64) BitposIndexStart {
 }
 
 func (c BitposBit) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c BitposBit) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -2529,30 +2638,36 @@ func (c BitposIndexEndIndexEnd) Bit() BitposIndexEndIndexIndexUnitBit {
 }
 
 func (c BitposIndexEndIndexEnd) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c BitposIndexEndIndexEnd) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
 type BitposIndexEndIndexIndexUnitBit Completed
 
 func (c BitposIndexEndIndexIndexUnitBit) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c BitposIndexEndIndexIndexUnitBit) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
 type BitposIndexEndIndexIndexUnitByte Completed
 
 func (c BitposIndexEndIndexIndexUnitByte) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c BitposIndexEndIndexIndexUnitByte) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -2564,10 +2679,12 @@ func (c BitposIndexStart) End(end int64) BitposIndexEndIndexEnd {
 }
 
 func (c BitposIndexStart) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c BitposIndexStart) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -2623,6 +2740,7 @@ func (c BlmoveSource) Destination(destination string) BlmoveDestination {
 type BlmoveTimeout Completed
 
 func (c BlmoveTimeout) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -2680,6 +2798,7 @@ func (c Blmpop) Timeout(timeout float64) BlmpopTimeout {
 type BlmpopCount Completed
 
 func (c BlmpopCount) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -2742,6 +2861,7 @@ func (c BlmpopWhereLeft) Count(count int64) BlmpopCount {
 }
 
 func (c BlmpopWhereLeft) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -2753,6 +2873,7 @@ func (c BlmpopWhereRight) Count(count int64) BlmpopCount {
 }
 
 func (c BlmpopWhereRight) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -2804,6 +2925,7 @@ func (c BlpopKey) Timeout(timeout float64) BlpopTimeout {
 type BlpopTimeout Completed
 
 func (c BlpopTimeout) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -2855,6 +2977,7 @@ func (c BrpopKey) Timeout(timeout float64) BrpopTimeout {
 type BrpopTimeout Completed
 
 func (c BrpopTimeout) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -2898,6 +3021,7 @@ func (c BrpoplpushSource) Destination(destination string) BrpoplpushDestination 
 type BrpoplpushTimeout Completed
 
 func (c BrpoplpushTimeout) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -2917,6 +3041,7 @@ func (c Bzmpop) Timeout(timeout float64) BzmpopTimeout {
 type BzmpopCount Completed
 
 func (c BzmpopCount) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -2979,6 +3104,7 @@ func (c BzmpopWhereMax) Count(count int64) BzmpopCount {
 }
 
 func (c BzmpopWhereMax) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -2990,6 +3116,7 @@ func (c BzmpopWhereMin) Count(count int64) BzmpopCount {
 }
 
 func (c BzmpopWhereMin) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -3041,6 +3168,7 @@ func (c BzpopmaxKey) Timeout(timeout float64) BzpopmaxTimeout {
 type BzpopmaxTimeout Completed
 
 func (c BzpopmaxTimeout) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -3092,6 +3220,7 @@ func (c BzpopminKey) Timeout(timeout float64) BzpopminTimeout {
 type BzpopminTimeout Completed
 
 func (c BzpopminTimeout) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -3116,6 +3245,7 @@ func (c CfAdd) Key(key string) CfAddKey {
 type CfAddItem Completed
 
 func (c CfAddItem) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -3147,6 +3277,7 @@ func (c CfAddnx) Key(key string) CfAddnxKey {
 type CfAddnxItem Completed
 
 func (c CfAddnxItem) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -3178,10 +3309,12 @@ func (c CfCount) Key(key string) CfCountKey {
 type CfCountItem Completed
 
 func (c CfCountItem) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c CfCountItem) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -3213,6 +3346,7 @@ func (c CfDel) Key(key string) CfDelKey {
 type CfDelItem Completed
 
 func (c CfDelItem) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -3244,10 +3378,12 @@ func (c CfExists) Key(key string) CfExistsKey {
 type CfExistsItem Completed
 
 func (c CfExistsItem) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c CfExistsItem) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -3279,10 +3415,12 @@ func (c CfInfo) Key(key string) CfInfoKey {
 type CfInfoKey Completed
 
 func (c CfInfoKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c CfInfoKey) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -3324,6 +3462,7 @@ func (c CfInsertItem) Item(item ...string) CfInsertItem {
 }
 
 func (c CfInsertItem) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -3396,6 +3535,7 @@ func (c CfInsertnxItem) Item(item ...string) CfInsertnxItem {
 }
 
 func (c CfInsertnxItem) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -3451,6 +3591,7 @@ func (c CfLoadchunk) Key(key string) CfLoadchunkKey {
 type CfLoadchunkData Completed
 
 func (c CfLoadchunkData) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -3494,6 +3635,7 @@ func (c CfMexistsItem) Item(item ...string) CfMexistsItem {
 }
 
 func (c CfMexistsItem) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -3535,6 +3677,7 @@ func (c CfReserveBucketsize) Expansion(expansion int64) CfReserveExpansion {
 }
 
 func (c CfReserveBucketsize) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -3556,12 +3699,14 @@ func (c CfReserveCapacity) Expansion(expansion int64) CfReserveExpansion {
 }
 
 func (c CfReserveCapacity) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type CfReserveExpansion Completed
 
 func (c CfReserveExpansion) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -3580,6 +3725,7 @@ func (c CfReserveMaxiterations) Expansion(expansion int64) CfReserveExpansion {
 }
 
 func (c CfReserveMaxiterations) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -3604,6 +3750,7 @@ func (c CfScandump) Key(key string) CfScandumpKey {
 type CfScandumpIterator Completed
 
 func (c CfScandumpIterator) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -3635,12 +3782,14 @@ func (c ClientCaching) No() ClientCachingModeNo {
 type ClientCachingModeNo Completed
 
 func (c ClientCachingModeNo) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type ClientCachingModeYes Completed
 
 func (c ClientCachingModeYes) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -3653,6 +3802,7 @@ func (b Builder) ClientGetname() (c ClientGetname) {
 }
 
 func (c ClientGetname) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -3665,6 +3815,7 @@ func (b Builder) ClientGetredir() (c ClientGetredir) {
 }
 
 func (c ClientGetredir) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -3677,6 +3828,7 @@ func (b Builder) ClientId() (c ClientId) {
 }
 
 func (c ClientId) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -3689,6 +3841,7 @@ func (b Builder) ClientInfo() (c ClientInfo) {
 }
 
 func (c ClientInfo) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -3756,6 +3909,7 @@ func (c ClientKill) SkipmeNo() ClientKillSkipmeNo {
 }
 
 func (c ClientKill) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -3777,6 +3931,7 @@ func (c ClientKillAddr) SkipmeNo() ClientKillSkipmeNo {
 }
 
 func (c ClientKillAddr) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -3828,6 +3983,7 @@ func (c ClientKillId) SkipmeNo() ClientKillSkipmeNo {
 }
 
 func (c ClientKillId) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -3884,6 +4040,7 @@ func (c ClientKillIpPort) SkipmeNo() ClientKillSkipmeNo {
 }
 
 func (c ClientKillIpPort) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -3900,18 +4057,21 @@ func (c ClientKillLaddr) SkipmeNo() ClientKillSkipmeNo {
 }
 
 func (c ClientKillLaddr) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type ClientKillSkipmeNo Completed
 
 func (c ClientKillSkipmeNo) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type ClientKillSkipmeYes Completed
 
 func (c ClientKillSkipmeYes) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -3943,6 +4103,7 @@ func (c ClientKillTypeMaster) SkipmeNo() ClientKillSkipmeNo {
 }
 
 func (c ClientKillTypeMaster) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -3974,6 +4135,7 @@ func (c ClientKillTypeNormal) SkipmeNo() ClientKillSkipmeNo {
 }
 
 func (c ClientKillTypeNormal) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4005,6 +4167,7 @@ func (c ClientKillTypePubsub) SkipmeNo() ClientKillSkipmeNo {
 }
 
 func (c ClientKillTypePubsub) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4036,6 +4199,7 @@ func (c ClientKillTypeReplica) SkipmeNo() ClientKillSkipmeNo {
 }
 
 func (c ClientKillTypeReplica) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4062,6 +4226,7 @@ func (c ClientKillUser) SkipmeNo() ClientKillSkipmeNo {
 }
 
 func (c ClientKillUser) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4099,6 +4264,7 @@ func (c ClientList) Id() ClientListIdId {
 }
 
 func (c ClientList) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4112,6 +4278,7 @@ func (c ClientListIdClientId) ClientId(clientId ...int64) ClientListIdClientId {
 }
 
 func (c ClientListIdClientId) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4132,6 +4299,7 @@ func (c ClientListTypeMaster) Id() ClientListIdId {
 }
 
 func (c ClientListTypeMaster) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4143,6 +4311,7 @@ func (c ClientListTypeNormal) Id() ClientListIdId {
 }
 
 func (c ClientListTypeNormal) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4154,6 +4323,7 @@ func (c ClientListTypePubsub) Id() ClientListIdId {
 }
 
 func (c ClientListTypePubsub) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4165,6 +4335,7 @@ func (c ClientListTypeReplica) Id() ClientListIdId {
 }
 
 func (c ClientListTypeReplica) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4189,12 +4360,14 @@ func (c ClientNoEvict) Off() ClientNoEvictEnabledOff {
 type ClientNoEvictEnabledOff Completed
 
 func (c ClientNoEvictEnabledOff) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type ClientNoEvictEnabledOn Completed
 
 func (c ClientNoEvictEnabledOn) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4219,12 +4392,14 @@ func (c ClientNoTouch) Off() ClientNoTouchEnabledOff {
 type ClientNoTouchEnabledOff Completed
 
 func (c ClientNoTouchEnabledOff) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type ClientNoTouchEnabledOn Completed
 
 func (c ClientNoTouchEnabledOn) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4244,12 +4419,14 @@ func (c ClientPause) Timeout(timeout int64) ClientPauseTimeout {
 type ClientPauseModeAll Completed
 
 func (c ClientPauseModeAll) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type ClientPauseModeWrite Completed
 
 func (c ClientPauseModeWrite) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4266,6 +4443,7 @@ func (c ClientPauseTimeout) All() ClientPauseModeAll {
 }
 
 func (c ClientPauseTimeout) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4295,18 +4473,21 @@ func (c ClientReply) Skip() ClientReplyReplyModeSkip {
 type ClientReplyReplyModeOff Completed
 
 func (c ClientReplyReplyModeOff) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type ClientReplyReplyModeOn Completed
 
 func (c ClientReplyReplyModeOn) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type ClientReplyReplyModeSkip Completed
 
 func (c ClientReplyReplyModeSkip) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4333,6 +4514,7 @@ func (c ClientSetinfoAttrLibname) Libver(libver string) ClientSetinfoAttrLibver 
 type ClientSetinfoAttrLibver Completed
 
 func (c ClientSetinfoAttrLibver) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4352,6 +4534,7 @@ func (c ClientSetname) ConnectionName(connectionName string) ClientSetnameConnec
 type ClientSetnameConnectionName Completed
 
 func (c ClientSetnameConnectionName) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4391,12 +4574,14 @@ func (c ClientTrackingBcast) Noloop() ClientTrackingNoloop {
 }
 
 func (c ClientTrackingBcast) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type ClientTrackingNoloop Completed
 
 func (c ClientTrackingNoloop) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4413,6 +4598,7 @@ func (c ClientTrackingOptin) Noloop() ClientTrackingNoloop {
 }
 
 func (c ClientTrackingOptin) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4424,6 +4610,7 @@ func (c ClientTrackingOptout) Noloop() ClientTrackingNoloop {
 }
 
 func (c ClientTrackingOptout) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4455,6 +4642,7 @@ func (c ClientTrackingPrefix) Noloop() ClientTrackingNoloop {
 }
 
 func (c ClientTrackingPrefix) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4485,6 +4673,7 @@ func (c ClientTrackingRedirect) Noloop() ClientTrackingNoloop {
 }
 
 func (c ClientTrackingRedirect) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4520,6 +4709,7 @@ func (c ClientTrackingStatusOff) Noloop() ClientTrackingNoloop {
 }
 
 func (c ClientTrackingStatusOff) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4555,6 +4745,7 @@ func (c ClientTrackingStatusOn) Noloop() ClientTrackingNoloop {
 }
 
 func (c ClientTrackingStatusOn) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4567,6 +4758,7 @@ func (b Builder) ClientTrackinginfo() (c ClientTrackinginfo) {
 }
 
 func (c ClientTrackinginfo) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4596,18 +4788,21 @@ func (c ClientUnblockClientId) Error() ClientUnblockUnblockTypeError {
 }
 
 func (c ClientUnblockClientId) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type ClientUnblockUnblockTypeError Completed
 
 func (c ClientUnblockUnblockTypeError) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type ClientUnblockUnblockTypeTimeout Completed
 
 func (c ClientUnblockUnblockTypeTimeout) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4620,6 +4815,7 @@ func (b Builder) ClientUnpause() (c ClientUnpause) {
 }
 
 func (c ClientUnpause) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4648,6 +4844,7 @@ func (c ClusterAddslotsSlot) Slot(slot ...int64) ClusterAddslotsSlot {
 }
 
 func (c ClusterAddslotsSlot) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4671,6 +4868,7 @@ func (c ClusterAddslotsrangeStartSlotEndSlot) StartSlotEndSlot(startSlot int64, 
 }
 
 func (c ClusterAddslotsrangeStartSlotEndSlot) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4683,6 +4881,7 @@ func (b Builder) ClusterBumpepoch() (c ClusterBumpepoch) {
 }
 
 func (c ClusterBumpepoch) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4702,6 +4901,7 @@ func (c ClusterCountFailureReports) NodeId(nodeId string) ClusterCountFailureRep
 type ClusterCountFailureReportsNodeId Completed
 
 func (c ClusterCountFailureReportsNodeId) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4721,6 +4921,7 @@ func (c ClusterCountkeysinslot) Slot(slot int64) ClusterCountkeysinslotSlot {
 type ClusterCountkeysinslotSlot Completed
 
 func (c ClusterCountkeysinslotSlot) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4749,6 +4950,7 @@ func (c ClusterDelslotsSlot) Slot(slot ...int64) ClusterDelslotsSlot {
 }
 
 func (c ClusterDelslotsSlot) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4772,6 +4974,7 @@ func (c ClusterDelslotsrangeStartSlotEndSlot) StartSlotEndSlot(startSlot int64, 
 }
 
 func (c ClusterDelslotsrangeStartSlotEndSlot) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4794,18 +4997,21 @@ func (c ClusterFailover) Takeover() ClusterFailoverOptionsTakeover {
 }
 
 func (c ClusterFailover) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type ClusterFailoverOptionsForce Completed
 
 func (c ClusterFailoverOptionsForce) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type ClusterFailoverOptionsTakeover Completed
 
 func (c ClusterFailoverOptionsTakeover) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4818,6 +5024,7 @@ func (b Builder) ClusterFlushslots() (c ClusterFlushslots) {
 }
 
 func (c ClusterFlushslots) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4837,6 +5044,7 @@ func (c ClusterForget) NodeId(nodeId string) ClusterForgetNodeId {
 type ClusterForgetNodeId Completed
 
 func (c ClusterForgetNodeId) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4856,6 +5064,7 @@ func (c ClusterGetkeysinslot) Slot(slot int64) ClusterGetkeysinslotSlot {
 type ClusterGetkeysinslotCount Completed
 
 func (c ClusterGetkeysinslotCount) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4875,6 +5084,7 @@ func (b Builder) ClusterInfo() (c ClusterInfo) {
 }
 
 func (c ClusterInfo) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4894,6 +5104,7 @@ func (c ClusterKeyslot) Key(key string) ClusterKeyslotKey {
 type ClusterKeyslotKey Completed
 
 func (c ClusterKeyslotKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4906,6 +5117,7 @@ func (b Builder) ClusterLinks() (c ClusterLinks) {
 }
 
 func (c ClusterLinks) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4925,6 +5137,7 @@ func (c ClusterMeet) Ip(ip string) ClusterMeetIp {
 type ClusterMeetClusterBusPort Completed
 
 func (c ClusterMeetClusterBusPort) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4943,6 +5156,7 @@ func (c ClusterMeetPort) ClusterBusPort(clusterBusPort int64) ClusterMeetCluster
 }
 
 func (c ClusterMeetPort) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4955,6 +5169,7 @@ func (b Builder) ClusterMyid() (c ClusterMyid) {
 }
 
 func (c ClusterMyid) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4967,6 +5182,7 @@ func (b Builder) ClusterMyshardid() (c ClusterMyshardid) {
 }
 
 func (c ClusterMyshardid) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4979,6 +5195,7 @@ func (b Builder) ClusterNodes() (c ClusterNodes) {
 }
 
 func (c ClusterNodes) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -4998,6 +5215,7 @@ func (c ClusterReplicas) NodeId(nodeId string) ClusterReplicasNodeId {
 type ClusterReplicasNodeId Completed
 
 func (c ClusterReplicasNodeId) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5017,6 +5235,7 @@ func (c ClusterReplicate) NodeId(nodeId string) ClusterReplicateNodeId {
 type ClusterReplicateNodeId Completed
 
 func (c ClusterReplicateNodeId) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5039,18 +5258,21 @@ func (c ClusterReset) Soft() ClusterResetResetTypeSoft {
 }
 
 func (c ClusterReset) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type ClusterResetResetTypeHard Completed
 
 func (c ClusterResetResetTypeHard) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type ClusterResetResetTypeSoft Completed
 
 func (c ClusterResetResetTypeSoft) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5063,6 +5285,7 @@ func (b Builder) ClusterSaveconfig() (c ClusterSaveconfig) {
 }
 
 func (c ClusterSaveconfig) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5082,6 +5305,7 @@ func (c ClusterSetConfigEpoch) ConfigEpoch(configEpoch int64) ClusterSetConfigEp
 type ClusterSetConfigEpochConfigEpoch Completed
 
 func (c ClusterSetConfigEpochConfigEpoch) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5101,6 +5325,7 @@ func (c ClusterSetslot) Slot(slot int64) ClusterSetslotSlot {
 type ClusterSetslotNodeId Completed
 
 func (c ClusterSetslotNodeId) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5134,6 +5359,7 @@ func (c ClusterSetslotSubcommandImporting) NodeId(nodeId string) ClusterSetslotN
 }
 
 func (c ClusterSetslotSubcommandImporting) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5145,6 +5371,7 @@ func (c ClusterSetslotSubcommandMigrating) NodeId(nodeId string) ClusterSetslotN
 }
 
 func (c ClusterSetslotSubcommandMigrating) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5156,6 +5383,7 @@ func (c ClusterSetslotSubcommandNode) NodeId(nodeId string) ClusterSetslotNodeId
 }
 
 func (c ClusterSetslotSubcommandNode) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5167,6 +5395,7 @@ func (c ClusterSetslotSubcommandStable) NodeId(nodeId string) ClusterSetslotNode
 }
 
 func (c ClusterSetslotSubcommandStable) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5179,6 +5408,7 @@ func (b Builder) ClusterShards() (c ClusterShards) {
 }
 
 func (c ClusterShards) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5198,6 +5428,7 @@ func (c ClusterSlaves) NodeId(nodeId string) ClusterSlavesNodeId {
 type ClusterSlavesNodeId Completed
 
 func (c ClusterSlavesNodeId) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5210,6 +5441,7 @@ func (b Builder) ClusterSlots() (c ClusterSlots) {
 }
 
 func (c ClusterSlots) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5239,6 +5471,7 @@ func (c CmsIncrbyItemsIncrement) Item(item string) CmsIncrbyItemsItem {
 }
 
 func (c CmsIncrbyItemsIncrement) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5277,10 +5510,12 @@ func (c CmsInfo) Key(key string) CmsInfoKey {
 type CmsInfoKey Completed
 
 func (c CmsInfoKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c CmsInfoKey) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -5305,6 +5540,7 @@ func (c CmsInitbydim) Key(key string) CmsInitbydimKey {
 type CmsInitbydimDepth Completed
 
 func (c CmsInitbydimDepth) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5357,6 +5593,7 @@ func (c CmsInitbyprobKey) Error(error float64) CmsInitbyprobError {
 type CmsInitbyprobProbability Completed
 
 func (c CmsInitbyprobProbability) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5425,6 +5662,7 @@ func (c CmsMergeSource) Weights() CmsMergeWeightWeights {
 }
 
 func (c CmsMergeSource) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5438,6 +5676,7 @@ func (c CmsMergeWeightWeight) Weight(weight ...float64) CmsMergeWeightWeight {
 }
 
 func (c CmsMergeWeightWeight) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5476,10 +5715,12 @@ func (c CmsQueryItem) Item(item ...string) CmsQueryItem {
 }
 
 func (c CmsQueryItem) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c CmsQueryItem) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -5499,6 +5740,7 @@ func (b Builder) Command() (c Command) {
 }
 
 func (c Command) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5511,6 +5753,7 @@ func (b Builder) CommandCount() (c CommandCount) {
 }
 
 func (c CommandCount) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5528,6 +5771,7 @@ func (c CommandDocs) CommandName(commandName ...string) CommandDocsCommandName {
 }
 
 func (c CommandDocs) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5539,6 +5783,7 @@ func (c CommandDocsCommandName) CommandName(commandName ...string) CommandDocsCo
 }
 
 func (c CommandDocsCommandName) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5563,6 +5808,7 @@ func (c CommandGetkeysArg) Arg(arg ...string) CommandGetkeysArg {
 }
 
 func (c CommandGetkeysArg) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5574,6 +5820,7 @@ func (c CommandGetkeysCommand) Arg(arg ...string) CommandGetkeysArg {
 }
 
 func (c CommandGetkeysCommand) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5598,6 +5845,7 @@ func (c CommandGetkeysandflagsArg) Arg(arg ...string) CommandGetkeysandflagsArg 
 }
 
 func (c CommandGetkeysandflagsArg) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5609,6 +5857,7 @@ func (c CommandGetkeysandflagsCommand) Arg(arg ...string) CommandGetkeysandflags
 }
 
 func (c CommandGetkeysandflagsCommand) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5626,6 +5875,7 @@ func (c CommandInfo) CommandName(commandName ...string) CommandInfoCommandName {
 }
 
 func (c CommandInfo) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5637,6 +5887,7 @@ func (c CommandInfoCommandName) CommandName(commandName ...string) CommandInfoCo
 }
 
 func (c CommandInfoCommandName) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5664,24 +5915,28 @@ func (c CommandList) FilterbyPatternPattern(pattern string) CommandListFilterbyP
 }
 
 func (c CommandList) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type CommandListFilterbyAclcatCategory Completed
 
 func (c CommandListFilterbyAclcatCategory) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type CommandListFilterbyModuleName Completed
 
 func (c CommandListFilterbyModuleName) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type CommandListFilterbyPatternPattern Completed
 
 func (c CommandListFilterbyPatternPattern) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5706,6 +5961,7 @@ func (c ConfigGetParameter) Parameter(parameter ...string) ConfigGetParameter {
 }
 
 func (c ConfigGetParameter) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5718,6 +5974,7 @@ func (b Builder) ConfigResetstat() (c ConfigResetstat) {
 }
 
 func (c ConfigResetstat) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5730,6 +5987,7 @@ func (b Builder) ConfigRewrite() (c ConfigRewrite) {
 }
 
 func (c ConfigRewrite) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5753,6 +6011,7 @@ func (c ConfigSetParameterValue) ParameterValue(parameter string, value string) 
 }
 
 func (c ConfigSetParameterValue) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5782,6 +6041,7 @@ func (c CopyDb) Replace() CopyReplace {
 }
 
 func (c CopyDb) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5798,12 +6058,14 @@ func (c CopyDestination) Replace() CopyReplace {
 }
 
 func (c CopyDestination) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type CopyReplace Completed
 
 func (c CopyReplace) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5828,6 +6090,7 @@ func (b Builder) Dbsize() (c Dbsize) {
 }
 
 func (c Dbsize) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5852,6 +6115,7 @@ func (c DebugObject) Key(key string) DebugObjectKey {
 type DebugObjectKey Completed
 
 func (c DebugObjectKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5864,6 +6128,7 @@ func (b Builder) DebugSegfault() (c DebugSegfault) {
 }
 
 func (c DebugSegfault) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5888,6 +6153,7 @@ func (c Decr) Key(key string) DecrKey {
 type DecrKey Completed
 
 func (c DecrKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5912,6 +6178,7 @@ func (c Decrby) Key(key string) DecrbyKey {
 type DecrbyDecrement Completed
 
 func (c DecrbyDecrement) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5963,6 +6230,7 @@ func (c DelKey) Key(key ...string) DelKey {
 }
 
 func (c DelKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5975,6 +6243,7 @@ func (b Builder) Discard() (c Discard) {
 }
 
 func (c Discard) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -5999,6 +6268,7 @@ func (c Dump) Key(key string) DumpKey {
 type DumpKey Completed
 
 func (c DumpKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -6018,6 +6288,7 @@ func (c Echo) Message(message string) EchoMessage {
 type EchoMessage Completed
 
 func (c EchoMessage) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -6042,6 +6313,7 @@ func (c EvalArg) Arg(arg ...string) EvalArg {
 }
 
 func (c EvalArg) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -6068,6 +6340,7 @@ func (c EvalKey) Arg(arg ...string) EvalArg {
 }
 
 func (c EvalKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -6094,6 +6367,7 @@ func (c EvalNumkeys) Arg(arg ...string) EvalArg {
 }
 
 func (c EvalNumkeys) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -6118,6 +6392,7 @@ func (c EvalRoArg) Arg(arg ...string) EvalRoArg {
 }
 
 func (c EvalRoArg) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -6144,6 +6419,7 @@ func (c EvalRoKey) Arg(arg ...string) EvalRoArg {
 }
 
 func (c EvalRoKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -6170,6 +6446,7 @@ func (c EvalRoNumkeys) Arg(arg ...string) EvalRoArg {
 }
 
 func (c EvalRoNumkeys) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -6208,6 +6485,7 @@ func (c EvalshaArg) Arg(arg ...string) EvalshaArg {
 }
 
 func (c EvalshaArg) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -6234,6 +6512,7 @@ func (c EvalshaKey) Arg(arg ...string) EvalshaArg {
 }
 
 func (c EvalshaKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -6260,6 +6539,7 @@ func (c EvalshaNumkeys) Arg(arg ...string) EvalshaArg {
 }
 
 func (c EvalshaNumkeys) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -6284,6 +6564,7 @@ func (c EvalshaRoArg) Arg(arg ...string) EvalshaRoArg {
 }
 
 func (c EvalshaRoArg) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -6310,6 +6591,7 @@ func (c EvalshaRoKey) Arg(arg ...string) EvalshaRoArg {
 }
 
 func (c EvalshaRoKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -6336,6 +6618,7 @@ func (c EvalshaRoNumkeys) Arg(arg ...string) EvalshaRoArg {
 }
 
 func (c EvalshaRoNumkeys) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -6362,6 +6645,7 @@ func (b Builder) Exec() (c Exec) {
 }
 
 func (c Exec) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -6406,6 +6690,7 @@ func (c ExistsKey) Key(key ...string) ExistsKey {
 }
 
 func (c ExistsKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -6430,24 +6715,28 @@ func (c Expire) Key(key string) ExpireKey {
 type ExpireConditionGt Completed
 
 func (c ExpireConditionGt) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type ExpireConditionLt Completed
 
 func (c ExpireConditionLt) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type ExpireConditionNx Completed
 
 func (c ExpireConditionNx) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type ExpireConditionXx Completed
 
 func (c ExpireConditionXx) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -6481,6 +6770,7 @@ func (c ExpireSeconds) Lt() ExpireConditionLt {
 }
 
 func (c ExpireSeconds) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -6505,24 +6795,28 @@ func (c Expireat) Key(key string) ExpireatKey {
 type ExpireatConditionGt Completed
 
 func (c ExpireatConditionGt) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type ExpireatConditionLt Completed
 
 func (c ExpireatConditionLt) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type ExpireatConditionNx Completed
 
 func (c ExpireatConditionNx) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type ExpireatConditionXx Completed
 
 func (c ExpireatConditionXx) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -6556,6 +6850,7 @@ func (c ExpireatTimestamp) Lt() ExpireatConditionLt {
 }
 
 func (c ExpireatTimestamp) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -6580,10 +6875,12 @@ func (c Expiretime) Key(key string) ExpiretimeKey {
 type ExpiretimeKey Completed
 
 func (c ExpiretimeKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c ExpiretimeKey) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -6611,6 +6908,7 @@ func (c Failover) Timeout(milliseconds int64) FailoverTimeout {
 }
 
 func (c Failover) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -6622,6 +6920,7 @@ func (c FailoverAbort) Timeout(milliseconds int64) FailoverTimeout {
 }
 
 func (c FailoverAbort) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -6638,6 +6937,7 @@ func (c FailoverTargetForce) Timeout(milliseconds int64) FailoverTimeout {
 }
 
 func (c FailoverTargetForce) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -6666,6 +6966,7 @@ func (c FailoverTargetPort) Timeout(milliseconds int64) FailoverTimeout {
 }
 
 func (c FailoverTargetPort) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -6679,6 +6980,7 @@ func (c FailoverTargetTo) Host(host string) FailoverTargetHost {
 type FailoverTimeout Completed
 
 func (c FailoverTimeout) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -6703,6 +7005,7 @@ func (c FcallArg) Arg(arg ...string) FcallArg {
 }
 
 func (c FcallArg) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -6736,6 +7039,7 @@ func (c FcallKey) Arg(arg ...string) FcallArg {
 }
 
 func (c FcallKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -6762,6 +7066,7 @@ func (c FcallNumkeys) Arg(arg ...string) FcallArg {
 }
 
 func (c FcallNumkeys) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -6786,10 +7091,12 @@ func (c FcallRoArg) Arg(arg ...string) FcallRoArg {
 }
 
 func (c FcallRoArg) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c FcallRoArg) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -6823,10 +7130,12 @@ func (c FcallRoKey) Arg(arg ...string) FcallRoArg {
 }
 
 func (c FcallRoKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c FcallRoKey) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -6853,10 +7162,12 @@ func (c FcallRoNumkeys) Arg(arg ...string) FcallRoArg {
 }
 
 func (c FcallRoNumkeys) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c FcallRoNumkeys) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -6879,18 +7190,21 @@ func (c Flushall) Sync() FlushallAsyncSync {
 }
 
 func (c Flushall) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type FlushallAsync Completed
 
 func (c FlushallAsync) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type FlushallAsyncSync Completed
 
 func (c FlushallAsyncSync) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -6913,18 +7227,21 @@ func (c Flushdb) Sync() FlushdbAsyncSync {
 }
 
 func (c Flushdb) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type FlushdbAsync Completed
 
 func (c FlushdbAsync) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type FlushdbAsyncSync Completed
 
 func (c FlushdbAsyncSync) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -6959,6 +7276,7 @@ func (c FtAggregateCursorCount) Dialect(dialect int64) FtAggregateDialect {
 }
 
 func (c FtAggregateCursorCount) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -6975,6 +7293,7 @@ func (c FtAggregateCursorMaxidle) Dialect(dialect int64) FtAggregateDialect {
 }
 
 func (c FtAggregateCursorMaxidle) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -7001,12 +7320,14 @@ func (c FtAggregateCursorWithcursor) Dialect(dialect int64) FtAggregateDialect {
 }
 
 func (c FtAggregateCursorWithcursor) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type FtAggregateDialect Completed
 
 func (c FtAggregateDialect) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -7077,6 +7398,7 @@ func (c FtAggregateOpApplyAs) Dialect(dialect int64) FtAggregateDialect {
 }
 
 func (c FtAggregateOpApplyAs) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -7133,6 +7455,7 @@ func (c FtAggregateOpFilter) Dialect(dialect int64) FtAggregateDialect {
 }
 
 func (c FtAggregateOpFilter) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -7199,6 +7522,7 @@ func (c FtAggregateOpGroupbyGroupby) Dialect(dialect int64) FtAggregateDialect {
 }
 
 func (c FtAggregateOpGroupbyGroupby) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -7265,6 +7589,7 @@ func (c FtAggregateOpGroupbyProperty) Dialect(dialect int64) FtAggregateDialect 
 }
 
 func (c FtAggregateOpGroupbyProperty) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -7351,6 +7676,7 @@ func (c FtAggregateOpGroupbyReduceArg) Dialect(dialect int64) FtAggregateDialect
 }
 
 func (c FtAggregateOpGroupbyReduceArg) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -7427,6 +7753,7 @@ func (c FtAggregateOpGroupbyReduceAs) Dialect(dialect int64) FtAggregateDialect 
 }
 
 func (c FtAggregateOpGroupbyReduceAs) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -7498,6 +7825,7 @@ func (c FtAggregateOpGroupbyReduceBy) Dialect(dialect int64) FtAggregateDialect 
 }
 
 func (c FtAggregateOpGroupbyReduceBy) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -7584,6 +7912,7 @@ func (c FtAggregateOpGroupbyReduceNargs) Dialect(dialect int64) FtAggregateDiale
 }
 
 func (c FtAggregateOpGroupbyReduceNargs) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -7645,6 +7974,7 @@ func (c FtAggregateOpGroupbyReduceOrderAsc) Dialect(dialect int64) FtAggregateDi
 }
 
 func (c FtAggregateOpGroupbyReduceOrderAsc) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -7706,6 +8036,7 @@ func (c FtAggregateOpGroupbyReduceOrderDesc) Dialect(dialect int64) FtAggregateD
 }
 
 func (c FtAggregateOpGroupbyReduceOrderDesc) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -7776,6 +8107,7 @@ func (c FtAggregateOpLimitOffsetNum) Dialect(dialect int64) FtAggregateDialect {
 }
 
 func (c FtAggregateOpLimitOffsetNum) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -7837,6 +8169,7 @@ func (c FtAggregateOpLoadField) Dialect(dialect int64) FtAggregateDialect {
 }
 
 func (c FtAggregateOpLoadField) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -7900,6 +8233,7 @@ func (c FtAggregateOpLoadallLoadAll) Dialect(dialect int64) FtAggregateDialect {
 }
 
 func (c FtAggregateOpLoadallLoadAll) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -7966,6 +8300,7 @@ func (c FtAggregateOpSortbyFieldsOrderAsc) Dialect(dialect int64) FtAggregateDia
 }
 
 func (c FtAggregateOpSortbyFieldsOrderAsc) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -8032,6 +8367,7 @@ func (c FtAggregateOpSortbyFieldsOrderDesc) Dialect(dialect int64) FtAggregateDi
 }
 
 func (c FtAggregateOpSortbyFieldsOrderDesc) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -8108,6 +8444,7 @@ func (c FtAggregateOpSortbyFieldsProperty) Dialect(dialect int64) FtAggregateDia
 }
 
 func (c FtAggregateOpSortbyFieldsProperty) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -8164,6 +8501,7 @@ func (c FtAggregateOpSortbyMax) Dialect(dialect int64) FtAggregateDialect {
 }
 
 func (c FtAggregateOpSortbyMax) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -8230,6 +8568,7 @@ func (c FtAggregateOpSortbySortby) Dialect(dialect int64) FtAggregateDialect {
 }
 
 func (c FtAggregateOpSortbySortby) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -8246,6 +8585,7 @@ func (c FtAggregateParamsNameValue) Dialect(dialect int64) FtAggregateDialect {
 }
 
 func (c FtAggregateParamsNameValue) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -8325,6 +8665,7 @@ func (c FtAggregateQuery) Dialect(dialect int64) FtAggregateDialect {
 }
 
 func (c FtAggregateQuery) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -8381,6 +8722,7 @@ func (c FtAggregateTimeout) Dialect(dialect int64) FtAggregateDialect {
 }
 
 func (c FtAggregateTimeout) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -8442,6 +8784,7 @@ func (c FtAggregateVerbatim) Dialect(dialect int64) FtAggregateDialect {
 }
 
 func (c FtAggregateVerbatim) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -8468,6 +8811,7 @@ func (c FtAliasaddAlias) Index(index string) FtAliasaddIndex {
 type FtAliasaddIndex Completed
 
 func (c FtAliasaddIndex) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -8487,6 +8831,7 @@ func (c FtAliasdel) Alias(alias string) FtAliasdelAlias {
 type FtAliasdelAlias Completed
 
 func (c FtAliasdelAlias) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -8513,6 +8858,7 @@ func (c FtAliasupdateAlias) Index(index string) FtAliasupdateIndex {
 type FtAliasupdateIndex Completed
 
 func (c FtAliasupdateIndex) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -8558,6 +8904,7 @@ func (c FtAlterIndex) Schema() FtAlterSchema {
 type FtAlterOptions Completed
 
 func (c FtAlterOptions) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -8591,6 +8938,7 @@ func (c FtConfigGet) Option(option string) FtConfigGetOption {
 type FtConfigGetOption Completed
 
 func (c FtConfigGetOption) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -8610,6 +8958,7 @@ func (c FtConfigHelp) Option(option string) FtConfigHelpOption {
 type FtConfigHelpOption Completed
 
 func (c FtConfigHelpOption) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -8636,6 +8985,7 @@ func (c FtConfigSetOption) Value(value string) FtConfigSetValue {
 type FtConfigSetValue Completed
 
 func (c FtConfigSetValue) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -8761,6 +9111,7 @@ func (c FtCreateFieldFieldTypeGeo) FieldName(fieldName string) FtCreateFieldFiel
 }
 
 func (c FtCreateFieldFieldTypeGeo) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -8812,6 +9163,7 @@ func (c FtCreateFieldFieldTypeNumeric) FieldName(fieldName string) FtCreateField
 }
 
 func (c FtCreateFieldFieldTypeNumeric) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -8863,6 +9215,7 @@ func (c FtCreateFieldFieldTypeTag) FieldName(fieldName string) FtCreateFieldFiel
 }
 
 func (c FtCreateFieldFieldTypeTag) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -8914,6 +9267,7 @@ func (c FtCreateFieldFieldTypeText) FieldName(fieldName string) FtCreateFieldFie
 }
 
 func (c FtCreateFieldFieldTypeText) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -8965,6 +9319,7 @@ func (c FtCreateFieldFieldTypeVector) FieldName(fieldName string) FtCreateFieldF
 }
 
 func (c FtCreateFieldFieldTypeVector) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -9016,6 +9371,7 @@ func (c FtCreateFieldOptionCasesensitive) FieldName(fieldName string) FtCreateFi
 }
 
 func (c FtCreateFieldOptionCasesensitive) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -9067,6 +9423,7 @@ func (c FtCreateFieldOptionNoindex) FieldName(fieldName string) FtCreateFieldFie
 }
 
 func (c FtCreateFieldOptionNoindex) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -9118,6 +9475,7 @@ func (c FtCreateFieldOptionNostem) FieldName(fieldName string) FtCreateFieldFiel
 }
 
 func (c FtCreateFieldOptionNostem) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -9169,6 +9527,7 @@ func (c FtCreateFieldOptionPhonetic) FieldName(fieldName string) FtCreateFieldFi
 }
 
 func (c FtCreateFieldOptionPhonetic) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -9220,6 +9579,7 @@ func (c FtCreateFieldOptionSeparator) FieldName(fieldName string) FtCreateFieldF
 }
 
 func (c FtCreateFieldOptionSeparator) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -9276,6 +9636,7 @@ func (c FtCreateFieldOptionSortableSortable) FieldName(fieldName string) FtCreat
 }
 
 func (c FtCreateFieldOptionSortableSortable) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -9327,6 +9688,7 @@ func (c FtCreateFieldOptionSortableUnf) FieldName(fieldName string) FtCreateFiel
 }
 
 func (c FtCreateFieldOptionSortableUnf) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -9378,6 +9740,7 @@ func (c FtCreateFieldOptionWeight) FieldName(fieldName string) FtCreateFieldFiel
 }
 
 func (c FtCreateFieldOptionWeight) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -9429,6 +9792,7 @@ func (c FtCreateFieldOptionWithsuffixtrie) FieldName(fieldName string) FtCreateF
 }
 
 func (c FtCreateFieldOptionWithsuffixtrie) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -10375,6 +10739,7 @@ func (c FtCursorDel) Index(index string) FtCursorDelIndex {
 type FtCursorDelCursorId Completed
 
 func (c FtCursorDelCursorId) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -10401,6 +10766,7 @@ func (c FtCursorRead) Index(index string) FtCursorReadIndex {
 type FtCursorReadCount Completed
 
 func (c FtCursorReadCount) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -10412,6 +10778,7 @@ func (c FtCursorReadCursorId) Count(readSize int64) FtCursorReadCount {
 }
 
 func (c FtCursorReadCursorId) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -10450,6 +10817,7 @@ func (c FtDictaddTerm) Term(term ...string) FtDictaddTerm {
 }
 
 func (c FtDictaddTerm) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -10481,6 +10849,7 @@ func (c FtDictdelTerm) Term(term ...string) FtDictdelTerm {
 }
 
 func (c FtDictdelTerm) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -10500,6 +10869,7 @@ func (c FtDictdump) Dict(dict string) FtDictdumpDict {
 type FtDictdumpDict Completed
 
 func (c FtDictdumpDict) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -10519,6 +10889,7 @@ func (c FtDropindex) Index(index string) FtDropindexIndex {
 type FtDropindexDeleteDocsDd Completed
 
 func (c FtDropindexDeleteDocsDd) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -10530,6 +10901,7 @@ func (c FtDropindexIndex) Dd() FtDropindexDeleteDocsDd {
 }
 
 func (c FtDropindexIndex) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -10549,6 +10921,7 @@ func (c FtExplain) Index(index string) FtExplainIndex {
 type FtExplainDialect Completed
 
 func (c FtExplainDialect) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -10567,6 +10940,7 @@ func (c FtExplainQuery) Dialect(dialect int64) FtExplainDialect {
 }
 
 func (c FtExplainQuery) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -10586,6 +10960,7 @@ func (c FtExplaincli) Index(index string) FtExplaincliIndex {
 type FtExplaincliDialect Completed
 
 func (c FtExplaincliDialect) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -10604,6 +10979,7 @@ func (c FtExplaincliQuery) Dialect(dialect int64) FtExplaincliDialect {
 }
 
 func (c FtExplaincliQuery) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -10623,6 +10999,7 @@ func (c FtInfo) Index(index string) FtInfoIndex {
 type FtInfoIndex Completed
 
 func (c FtInfoIndex) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -10635,6 +11012,7 @@ func (b Builder) FtList() (c FtList) {
 }
 
 func (c FtList) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -10673,6 +11051,7 @@ func (c FtProfileLimited) Query(query string) FtProfileQuery {
 type FtProfileQuery Completed
 
 func (c FtProfileQuery) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -10716,6 +11095,7 @@ func (c FtSearch) Index(index string) FtSearchIndex {
 type FtSearchDialect Completed
 
 func (c FtSearchDialect) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -10757,6 +11137,7 @@ func (c FtSearchExpander) Dialect(dialect int64) FtSearchDialect {
 }
 
 func (c FtSearchExpander) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -10788,6 +11169,7 @@ func (c FtSearchExplainscore) Dialect(dialect int64) FtSearchDialect {
 }
 
 func (c FtSearchExplainscore) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -10896,6 +11278,7 @@ func (c FtSearchFilterMax) Dialect(dialect int64) FtSearchDialect {
 }
 
 func (c FtSearchFilterMax) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -11042,6 +11425,7 @@ func (c FtSearchGeoFilterRadiusTypeFt) Dialect(dialect int64) FtSearchDialect {
 }
 
 func (c FtSearchGeoFilterRadiusTypeFt) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -11138,6 +11522,7 @@ func (c FtSearchGeoFilterRadiusTypeKm) Dialect(dialect int64) FtSearchDialect {
 }
 
 func (c FtSearchGeoFilterRadiusTypeKm) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -11234,6 +11619,7 @@ func (c FtSearchGeoFilterRadiusTypeM) Dialect(dialect int64) FtSearchDialect {
 }
 
 func (c FtSearchGeoFilterRadiusTypeM) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -11330,6 +11716,7 @@ func (c FtSearchGeoFilterRadiusTypeMi) Dialect(dialect int64) FtSearchDialect {
 }
 
 func (c FtSearchGeoFilterRadiusTypeMi) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -11406,6 +11793,7 @@ func (c FtSearchHighlightFieldsField) Dialect(dialect int64) FtSearchDialect {
 }
 
 func (c FtSearchHighlightFieldsField) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -11489,6 +11877,7 @@ func (c FtSearchHighlightHighlight) Dialect(dialect int64) FtSearchDialect {
 }
 
 func (c FtSearchHighlightHighlight) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -11555,6 +11944,7 @@ func (c FtSearchHighlightTagsOpenClose) Dialect(dialect int64) FtSearchDialect {
 }
 
 func (c FtSearchHighlightTagsOpenClose) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -11648,6 +12038,7 @@ func (c FtSearchInFieldsField) Dialect(dialect int64) FtSearchDialect {
 }
 
 func (c FtSearchInFieldsField) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -11753,6 +12144,7 @@ func (c FtSearchInKeysKey) Dialect(dialect int64) FtSearchDialect {
 }
 
 func (c FtSearchInKeysKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -11806,6 +12198,7 @@ func (c FtSearchLanguage) Dialect(dialect int64) FtSearchDialect {
 }
 
 func (c FtSearchLanguage) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -11829,6 +12222,7 @@ func (c FtSearchLimitOffsetNum) Dialect(dialect int64) FtSearchDialect {
 }
 
 func (c FtSearchLimitOffsetNum) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -11955,6 +12349,7 @@ func (c FtSearchNocontent) Dialect(dialect int64) FtSearchDialect {
 }
 
 func (c FtSearchNocontent) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -12071,6 +12466,7 @@ func (c FtSearchNostopwords) Dialect(dialect int64) FtSearchDialect {
 }
 
 func (c FtSearchNostopwords) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -12087,6 +12483,7 @@ func (c FtSearchParamsNameValue) Dialect(dialect int64) FtSearchDialect {
 }
 
 func (c FtSearchParamsNameValue) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -12126,6 +12523,7 @@ func (c FtSearchPayload) Dialect(dialect int64) FtSearchDialect {
 }
 
 func (c FtSearchPayload) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -12257,6 +12655,7 @@ func (c FtSearchQuery) Dialect(dialect int64) FtSearchDialect {
 }
 
 func (c FtSearchQuery) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -12338,6 +12737,7 @@ func (c FtSearchReturnIdentifiersAs) Dialect(dialect int64) FtSearchDialect {
 }
 
 func (c FtSearchReturnIdentifiersAs) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -12424,6 +12824,7 @@ func (c FtSearchReturnIdentifiersIdentifier) Dialect(dialect int64) FtSearchDial
 }
 
 func (c FtSearchReturnIdentifiersIdentifier) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -12467,6 +12868,7 @@ func (c FtSearchScorer) Dialect(dialect int64) FtSearchDialect {
 }
 
 func (c FtSearchScorer) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -12528,6 +12930,7 @@ func (c FtSearchSlop) Dialect(dialect int64) FtSearchDialect {
 }
 
 func (c FtSearchSlop) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -12549,6 +12952,7 @@ func (c FtSearchSortbyOrderAsc) Dialect(dialect int64) FtSearchDialect {
 }
 
 func (c FtSearchSortbyOrderAsc) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -12570,6 +12974,7 @@ func (c FtSearchSortbyOrderDesc) Dialect(dialect int64) FtSearchDialect {
 }
 
 func (c FtSearchSortbyOrderDesc) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -12601,6 +13006,7 @@ func (c FtSearchSortbySortby) Dialect(dialect int64) FtSearchDialect {
 }
 
 func (c FtSearchSortbySortby) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -12692,6 +13098,7 @@ func (c FtSearchSummarizeFieldsField) Dialect(dialect int64) FtSearchDialect {
 }
 
 func (c FtSearchSummarizeFieldsField) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -12780,6 +13187,7 @@ func (c FtSearchSummarizeFrags) Dialect(dialect int64) FtSearchDialect {
 }
 
 func (c FtSearchSummarizeFrags) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -12856,6 +13264,7 @@ func (c FtSearchSummarizeLen) Dialect(dialect int64) FtSearchDialect {
 }
 
 func (c FtSearchSummarizeLen) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -12927,6 +13336,7 @@ func (c FtSearchSummarizeSeparator) Dialect(dialect int64) FtSearchDialect {
 }
 
 func (c FtSearchSummarizeSeparator) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -13018,6 +13428,7 @@ func (c FtSearchSummarizeSummarize) Dialect(dialect int64) FtSearchDialect {
 }
 
 func (c FtSearchSummarizeSummarize) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -13069,6 +13480,7 @@ func (c FtSearchTagsInorder) Dialect(dialect int64) FtSearchDialect {
 }
 
 func (c FtSearchTagsInorder) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -13125,6 +13537,7 @@ func (c FtSearchTimeout) Dialect(dialect int64) FtSearchDialect {
 }
 
 func (c FtSearchTimeout) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -13246,6 +13659,7 @@ func (c FtSearchVerbatim) Dialect(dialect int64) FtSearchDialect {
 }
 
 func (c FtSearchVerbatim) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -13352,6 +13766,7 @@ func (c FtSearchWithpayloads) Dialect(dialect int64) FtSearchDialect {
 }
 
 func (c FtSearchWithpayloads) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -13463,6 +13878,7 @@ func (c FtSearchWithscores) Dialect(dialect int64) FtSearchDialect {
 }
 
 func (c FtSearchWithscores) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -13564,6 +13980,7 @@ func (c FtSearchWithsortkeys) Dialect(dialect int64) FtSearchDialect {
 }
 
 func (c FtSearchWithsortkeys) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -13583,6 +14000,7 @@ func (c FtSpellcheck) Index(index string) FtSpellcheckIndex {
 type FtSpellcheckDialect Completed
 
 func (c FtSpellcheckDialect) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -13604,6 +14022,7 @@ func (c FtSpellcheckDistance) Dialect(dialect int64) FtSpellcheckDialect {
 }
 
 func (c FtSpellcheckDistance) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -13637,6 +14056,7 @@ func (c FtSpellcheckQuery) Dialect(dialect int64) FtSpellcheckDialect {
 }
 
 func (c FtSpellcheckQuery) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -13653,6 +14073,7 @@ func (c FtSpellcheckTermsDictionary) Dialect(dialect int64) FtSpellcheckDialect 
 }
 
 func (c FtSpellcheckTermsDictionary) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -13669,6 +14090,7 @@ func (c FtSpellcheckTermsTerms) Dialect(dialect int64) FtSpellcheckDialect {
 }
 
 func (c FtSpellcheckTermsTerms) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -13707,6 +14129,7 @@ func (c FtSugaddIncrementScoreIncr) Payload(payload string) FtSugaddPayload {
 }
 
 func (c FtSugaddIncrementScoreIncr) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -13720,6 +14143,7 @@ func (c FtSugaddKey) String(string string) FtSugaddString {
 type FtSugaddPayload Completed
 
 func (c FtSugaddPayload) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -13736,6 +14160,7 @@ func (c FtSugaddScore) Payload(payload string) FtSugaddPayload {
 }
 
 func (c FtSugaddScore) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -13769,6 +14194,7 @@ func (c FtSugdelKey) String(string string) FtSugdelString {
 type FtSugdelString Completed
 
 func (c FtSugdelString) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -13803,6 +14229,7 @@ func (c FtSuggetFuzzy) Max(max int64) FtSuggetMax {
 }
 
 func (c FtSuggetFuzzy) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -13816,6 +14243,7 @@ func (c FtSuggetKey) Prefix(prefix string) FtSuggetPrefix {
 type FtSuggetMax Completed
 
 func (c FtSuggetMax) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -13842,6 +14270,7 @@ func (c FtSuggetPrefix) Max(max int64) FtSuggetMax {
 }
 
 func (c FtSuggetPrefix) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -13853,6 +14282,7 @@ func (c FtSuggetWithpayloads) Max(max int64) FtSuggetMax {
 }
 
 func (c FtSuggetWithpayloads) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -13869,6 +14299,7 @@ func (c FtSuggetWithscores) Max(max int64) FtSuggetMax {
 }
 
 func (c FtSuggetWithscores) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -13888,6 +14319,7 @@ func (c FtSuglen) Key(key string) FtSuglenKey {
 type FtSuglenKey Completed
 
 func (c FtSuglenKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -13907,6 +14339,7 @@ func (c FtSyndump) Index(index string) FtSyndumpIndex {
 type FtSyndumpIndex Completed
 
 func (c FtSyndumpIndex) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -13957,6 +14390,7 @@ func (c FtSynupdateTerm) Term(term ...string) FtSynupdateTerm {
 }
 
 func (c FtSynupdateTerm) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -13976,6 +14410,7 @@ func (c FtTagvals) Index(index string) FtTagvalsIndex {
 type FtTagvalsFieldName Completed
 
 func (c FtTagvalsFieldName) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -14002,6 +14437,7 @@ func (c FunctionDelete) LibraryName(libraryName string) FunctionDeleteLibraryNam
 type FunctionDeleteLibraryName Completed
 
 func (c FunctionDeleteLibraryName) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -14014,6 +14450,7 @@ func (b Builder) FunctionDump() (c FunctionDump) {
 }
 
 func (c FunctionDump) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -14036,18 +14473,21 @@ func (c FunctionFlush) Sync() FunctionFlushAsyncSync {
 }
 
 func (c FunctionFlush) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type FunctionFlushAsync Completed
 
 func (c FunctionFlushAsync) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type FunctionFlushAsyncSync Completed
 
 func (c FunctionFlushAsyncSync) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -14060,6 +14500,7 @@ func (b Builder) FunctionHelp() (c FunctionHelp) {
 }
 
 func (c FunctionHelp) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -14072,6 +14513,7 @@ func (b Builder) FunctionKill() (c FunctionKill) {
 }
 
 func (c FunctionKill) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -14094,6 +14536,7 @@ func (c FunctionList) Withcode() FunctionListWithcode {
 }
 
 func (c FunctionList) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -14105,12 +14548,14 @@ func (c FunctionListLibraryname) Withcode() FunctionListWithcode {
 }
 
 func (c FunctionListLibraryname) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type FunctionListWithcode Completed
 
 func (c FunctionListWithcode) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -14135,6 +14580,7 @@ func (c FunctionLoad) FunctionCode(functionCode string) FunctionLoadFunctionCode
 type FunctionLoadFunctionCode Completed
 
 func (c FunctionLoadFunctionCode) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -14161,18 +14607,21 @@ func (c FunctionRestore) SerializedValue(serializedValue string) FunctionRestore
 type FunctionRestorePolicyAppend Completed
 
 func (c FunctionRestorePolicyAppend) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type FunctionRestorePolicyFlush Completed
 
 func (c FunctionRestorePolicyFlush) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type FunctionRestorePolicyReplace Completed
 
 func (c FunctionRestorePolicyReplace) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -14194,6 +14643,7 @@ func (c FunctionRestoreSerializedValue) Replace() FunctionRestorePolicyReplace {
 }
 
 func (c FunctionRestoreSerializedValue) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -14206,6 +14656,7 @@ func (b Builder) FunctionStats() (c FunctionStats) {
 }
 
 func (c FunctionStats) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -14284,6 +14735,7 @@ func (c GeoaddLongitudeLatitudeMember) LongitudeLatitudeMember(longitude float64
 }
 
 func (c GeoaddLongitudeLatitudeMember) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -14342,50 +14794,60 @@ func (c GeodistMember2) Mi() GeodistUnitMi {
 }
 
 func (c GeodistMember2) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeodistMember2) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
 type GeodistUnitFt Completed
 
 func (c GeodistUnitFt) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeodistUnitFt) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
 type GeodistUnitKm Completed
 
 func (c GeodistUnitKm) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeodistUnitKm) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
 type GeodistUnitM Completed
 
 func (c GeodistUnitM) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeodistUnitM) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
 type GeodistUnitMi Completed
 
 func (c GeodistUnitMi) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeodistUnitMi) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -14415,10 +14877,12 @@ func (c GeohashKey) Member(member ...string) GeohashMember {
 }
 
 func (c GeohashKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeohashKey) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -14430,10 +14894,12 @@ func (c GeohashMember) Member(member ...string) GeohashMember {
 }
 
 func (c GeohashMember) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeohashMember) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -14463,10 +14929,12 @@ func (c GeoposKey) Member(member ...string) GeoposMember {
 }
 
 func (c GeoposKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeoposKey) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -14478,10 +14946,12 @@ func (c GeoposMember) Member(member ...string) GeoposMember {
 }
 
 func (c GeoposMember) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeoposMember) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -14536,6 +15006,7 @@ func (c GeoradiusCountAny) Storedist(key string) GeoradiusStoredist {
 }
 
 func (c GeoradiusCountAny) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -14577,6 +15048,7 @@ func (c GeoradiusCountCount) Storedist(key string) GeoradiusStoredist {
 }
 
 func (c GeoradiusCountCount) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -14624,6 +15096,7 @@ func (c GeoradiusOrderAsc) Storedist(key string) GeoradiusStoredist {
 }
 
 func (c GeoradiusOrderAsc) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -14650,6 +15123,7 @@ func (c GeoradiusOrderDesc) Storedist(key string) GeoradiusStoredist {
 }
 
 func (c GeoradiusOrderDesc) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -14706,10 +15180,12 @@ func (c GeoradiusRoCountAny) Desc() GeoradiusRoOrderDesc {
 }
 
 func (c GeoradiusRoCountAny) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeoradiusRoCountAny) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -14731,10 +15207,12 @@ func (c GeoradiusRoCountCount) Desc() GeoradiusRoOrderDesc {
 }
 
 func (c GeoradiusRoCountCount) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeoradiusRoCountCount) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -14762,20 +15240,24 @@ func (c GeoradiusRoLongitude) Latitude(latitude float64) GeoradiusRoLatitude {
 type GeoradiusRoOrderAsc Completed
 
 func (c GeoradiusRoOrderAsc) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeoradiusRoOrderAsc) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
 type GeoradiusRoOrderDesc Completed
 
 func (c GeoradiusRoOrderDesc) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeoradiusRoOrderDesc) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -14834,10 +15316,12 @@ func (c GeoradiusRoUnitFt) Desc() GeoradiusRoOrderDesc {
 }
 
 func (c GeoradiusRoUnitFt) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeoradiusRoUnitFt) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -14874,10 +15358,12 @@ func (c GeoradiusRoUnitKm) Desc() GeoradiusRoOrderDesc {
 }
 
 func (c GeoradiusRoUnitKm) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeoradiusRoUnitKm) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -14914,10 +15400,12 @@ func (c GeoradiusRoUnitM) Desc() GeoradiusRoOrderDesc {
 }
 
 func (c GeoradiusRoUnitM) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeoradiusRoUnitM) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -14954,10 +15442,12 @@ func (c GeoradiusRoUnitMi) Desc() GeoradiusRoOrderDesc {
 }
 
 func (c GeoradiusRoUnitMi) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeoradiusRoUnitMi) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -14989,10 +15479,12 @@ func (c GeoradiusRoWithcoord) Desc() GeoradiusRoOrderDesc {
 }
 
 func (c GeoradiusRoWithcoord) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeoradiusRoWithcoord) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -15019,10 +15511,12 @@ func (c GeoradiusRoWithdist) Desc() GeoradiusRoOrderDesc {
 }
 
 func (c GeoradiusRoWithdist) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeoradiusRoWithdist) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -15044,10 +15538,12 @@ func (c GeoradiusRoWithhash) Desc() GeoradiusRoOrderDesc {
 }
 
 func (c GeoradiusRoWithhash) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeoradiusRoWithhash) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -15064,12 +15560,14 @@ func (c GeoradiusStore) Storedist(key string) GeoradiusStoredist {
 }
 
 func (c GeoradiusStore) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type GeoradiusStoredist Completed
 
 func (c GeoradiusStoredist) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -15126,6 +15624,7 @@ func (c GeoradiusUnitFt) Storedist(key string) GeoradiusStoredist {
 }
 
 func (c GeoradiusUnitFt) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -15182,6 +15681,7 @@ func (c GeoradiusUnitKm) Storedist(key string) GeoradiusStoredist {
 }
 
 func (c GeoradiusUnitKm) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -15238,6 +15738,7 @@ func (c GeoradiusUnitM) Storedist(key string) GeoradiusStoredist {
 }
 
 func (c GeoradiusUnitM) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -15294,6 +15795,7 @@ func (c GeoradiusUnitMi) Storedist(key string) GeoradiusStoredist {
 }
 
 func (c GeoradiusUnitMi) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -15345,6 +15847,7 @@ func (c GeoradiusWithcoord) Storedist(key string) GeoradiusStoredist {
 }
 
 func (c GeoradiusWithcoord) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -15391,6 +15894,7 @@ func (c GeoradiusWithdist) Storedist(key string) GeoradiusStoredist {
 }
 
 func (c GeoradiusWithdist) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -15432,6 +15936,7 @@ func (c GeoradiusWithhash) Storedist(key string) GeoradiusStoredist {
 }
 
 func (c GeoradiusWithhash) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -15486,6 +15991,7 @@ func (c GeoradiusbymemberCountAny) Storedist(key string) GeoradiusbymemberStored
 }
 
 func (c GeoradiusbymemberCountAny) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -15527,6 +16033,7 @@ func (c GeoradiusbymemberCountCount) Storedist(key string) GeoradiusbymemberStor
 }
 
 func (c GeoradiusbymemberCountCount) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -15567,6 +16074,7 @@ func (c GeoradiusbymemberOrderAsc) Storedist(key string) GeoradiusbymemberStored
 }
 
 func (c GeoradiusbymemberOrderAsc) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -15593,6 +16101,7 @@ func (c GeoradiusbymemberOrderDesc) Storedist(key string) GeoradiusbymemberStore
 }
 
 func (c GeoradiusbymemberOrderDesc) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -15649,10 +16158,12 @@ func (c GeoradiusbymemberRoCountAny) Desc() GeoradiusbymemberRoOrderDesc {
 }
 
 func (c GeoradiusbymemberRoCountAny) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeoradiusbymemberRoCountAny) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -15674,10 +16185,12 @@ func (c GeoradiusbymemberRoCountCount) Desc() GeoradiusbymemberRoOrderDesc {
 }
 
 func (c GeoradiusbymemberRoCountCount) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeoradiusbymemberRoCountCount) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -15698,20 +16211,24 @@ func (c GeoradiusbymemberRoMember) Radius(radius float64) GeoradiusbymemberRoRad
 type GeoradiusbymemberRoOrderAsc Completed
 
 func (c GeoradiusbymemberRoOrderAsc) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeoradiusbymemberRoOrderAsc) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
 type GeoradiusbymemberRoOrderDesc Completed
 
 func (c GeoradiusbymemberRoOrderDesc) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeoradiusbymemberRoOrderDesc) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -15770,10 +16287,12 @@ func (c GeoradiusbymemberRoUnitFt) Desc() GeoradiusbymemberRoOrderDesc {
 }
 
 func (c GeoradiusbymemberRoUnitFt) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeoradiusbymemberRoUnitFt) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -15810,10 +16329,12 @@ func (c GeoradiusbymemberRoUnitKm) Desc() GeoradiusbymemberRoOrderDesc {
 }
 
 func (c GeoradiusbymemberRoUnitKm) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeoradiusbymemberRoUnitKm) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -15850,10 +16371,12 @@ func (c GeoradiusbymemberRoUnitM) Desc() GeoradiusbymemberRoOrderDesc {
 }
 
 func (c GeoradiusbymemberRoUnitM) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeoradiusbymemberRoUnitM) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -15890,10 +16413,12 @@ func (c GeoradiusbymemberRoUnitMi) Desc() GeoradiusbymemberRoOrderDesc {
 }
 
 func (c GeoradiusbymemberRoUnitMi) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeoradiusbymemberRoUnitMi) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -15925,10 +16450,12 @@ func (c GeoradiusbymemberRoWithcoord) Desc() GeoradiusbymemberRoOrderDesc {
 }
 
 func (c GeoradiusbymemberRoWithcoord) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeoradiusbymemberRoWithcoord) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -15955,10 +16482,12 @@ func (c GeoradiusbymemberRoWithdist) Desc() GeoradiusbymemberRoOrderDesc {
 }
 
 func (c GeoradiusbymemberRoWithdist) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeoradiusbymemberRoWithdist) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -15980,10 +16509,12 @@ func (c GeoradiusbymemberRoWithhash) Desc() GeoradiusbymemberRoOrderDesc {
 }
 
 func (c GeoradiusbymemberRoWithhash) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeoradiusbymemberRoWithhash) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -16000,12 +16531,14 @@ func (c GeoradiusbymemberStore) Storedist(key string) GeoradiusbymemberStoredist
 }
 
 func (c GeoradiusbymemberStore) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type GeoradiusbymemberStoredist Completed
 
 func (c GeoradiusbymemberStoredist) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -16062,6 +16595,7 @@ func (c GeoradiusbymemberUnitFt) Storedist(key string) GeoradiusbymemberStoredis
 }
 
 func (c GeoradiusbymemberUnitFt) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -16118,6 +16652,7 @@ func (c GeoradiusbymemberUnitKm) Storedist(key string) GeoradiusbymemberStoredis
 }
 
 func (c GeoradiusbymemberUnitKm) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -16174,6 +16709,7 @@ func (c GeoradiusbymemberUnitM) Storedist(key string) GeoradiusbymemberStoredist
 }
 
 func (c GeoradiusbymemberUnitM) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -16230,6 +16766,7 @@ func (c GeoradiusbymemberUnitMi) Storedist(key string) GeoradiusbymemberStoredis
 }
 
 func (c GeoradiusbymemberUnitMi) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -16281,6 +16818,7 @@ func (c GeoradiusbymemberWithcoord) Storedist(key string) GeoradiusbymemberStore
 }
 
 func (c GeoradiusbymemberWithcoord) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -16327,6 +16865,7 @@ func (c GeoradiusbymemberWithdist) Storedist(key string) GeoradiusbymemberStored
 }
 
 func (c GeoradiusbymemberWithdist) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -16368,6 +16907,7 @@ func (c GeoradiusbymemberWithhash) Storedist(key string) GeoradiusbymemberStored
 }
 
 func (c GeoradiusbymemberWithhash) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -16451,10 +16991,12 @@ func (c GeosearchCircleBoxUnitFt) Withhash() GeosearchWithhash {
 }
 
 func (c GeosearchCircleBoxUnitFt) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeosearchCircleBoxUnitFt) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -16491,10 +17033,12 @@ func (c GeosearchCircleBoxUnitKm) Withhash() GeosearchWithhash {
 }
 
 func (c GeosearchCircleBoxUnitKm) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeosearchCircleBoxUnitKm) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -16531,10 +17075,12 @@ func (c GeosearchCircleBoxUnitM) Withhash() GeosearchWithhash {
 }
 
 func (c GeosearchCircleBoxUnitM) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeosearchCircleBoxUnitM) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -16571,10 +17117,12 @@ func (c GeosearchCircleBoxUnitMi) Withhash() GeosearchWithhash {
 }
 
 func (c GeosearchCircleBoxUnitMi) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeosearchCircleBoxUnitMi) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -16638,10 +17186,12 @@ func (c GeosearchCircleCircleUnitFt) Withhash() GeosearchWithhash {
 }
 
 func (c GeosearchCircleCircleUnitFt) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeosearchCircleCircleUnitFt) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -16683,10 +17233,12 @@ func (c GeosearchCircleCircleUnitKm) Withhash() GeosearchWithhash {
 }
 
 func (c GeosearchCircleCircleUnitKm) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeosearchCircleCircleUnitKm) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -16728,10 +17280,12 @@ func (c GeosearchCircleCircleUnitM) Withhash() GeosearchWithhash {
 }
 
 func (c GeosearchCircleCircleUnitM) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeosearchCircleCircleUnitM) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -16773,10 +17327,12 @@ func (c GeosearchCircleCircleUnitMi) Withhash() GeosearchWithhash {
 }
 
 func (c GeosearchCircleCircleUnitMi) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeosearchCircleCircleUnitMi) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -16798,10 +17354,12 @@ func (c GeosearchCountAny) Withhash() GeosearchWithhash {
 }
 
 func (c GeosearchCountAny) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeosearchCountAny) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -16828,10 +17386,12 @@ func (c GeosearchCountCount) Withhash() GeosearchWithhash {
 }
 
 func (c GeosearchCountCount) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeosearchCountCount) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -16899,10 +17459,12 @@ func (c GeosearchOrderAsc) Withhash() GeosearchWithhash {
 }
 
 func (c GeosearchOrderAsc) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeosearchOrderAsc) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -16929,10 +17491,12 @@ func (c GeosearchOrderDesc) Withhash() GeosearchWithhash {
 }
 
 func (c GeosearchOrderDesc) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeosearchOrderDesc) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -16949,10 +17513,12 @@ func (c GeosearchWithcoord) Withhash() GeosearchWithhash {
 }
 
 func (c GeosearchWithcoord) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeosearchWithcoord) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -16964,20 +17530,24 @@ func (c GeosearchWithdist) Withhash() GeosearchWithhash {
 }
 
 func (c GeosearchWithdist) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeosearchWithdist) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
 type GeosearchWithhash Completed
 
 func (c GeosearchWithhash) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GeosearchWithhash) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -17051,6 +17621,7 @@ func (c GeosearchstoreCircleBoxUnitFt) Storedist() GeosearchstoreStoredist {
 }
 
 func (c GeosearchstoreCircleBoxUnitFt) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -17077,6 +17648,7 @@ func (c GeosearchstoreCircleBoxUnitKm) Storedist() GeosearchstoreStoredist {
 }
 
 func (c GeosearchstoreCircleBoxUnitKm) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -17103,6 +17675,7 @@ func (c GeosearchstoreCircleBoxUnitM) Storedist() GeosearchstoreStoredist {
 }
 
 func (c GeosearchstoreCircleBoxUnitM) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -17129,6 +17702,7 @@ func (c GeosearchstoreCircleBoxUnitMi) Storedist() GeosearchstoreStoredist {
 }
 
 func (c GeosearchstoreCircleBoxUnitMi) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -17182,6 +17756,7 @@ func (c GeosearchstoreCircleCircleUnitFt) Storedist() GeosearchstoreStoredist {
 }
 
 func (c GeosearchstoreCircleCircleUnitFt) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -17213,6 +17788,7 @@ func (c GeosearchstoreCircleCircleUnitKm) Storedist() GeosearchstoreStoredist {
 }
 
 func (c GeosearchstoreCircleCircleUnitKm) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -17244,6 +17820,7 @@ func (c GeosearchstoreCircleCircleUnitM) Storedist() GeosearchstoreStoredist {
 }
 
 func (c GeosearchstoreCircleCircleUnitM) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -17275,6 +17852,7 @@ func (c GeosearchstoreCircleCircleUnitMi) Storedist() GeosearchstoreStoredist {
 }
 
 func (c GeosearchstoreCircleCircleUnitMi) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -17286,6 +17864,7 @@ func (c GeosearchstoreCountAny) Storedist() GeosearchstoreStoredist {
 }
 
 func (c GeosearchstoreCountAny) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -17302,6 +17881,7 @@ func (c GeosearchstoreCountCount) Storedist() GeosearchstoreStoredist {
 }
 
 func (c GeosearchstoreCountCount) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -17359,6 +17939,7 @@ func (c GeosearchstoreOrderAsc) Storedist() GeosearchstoreStoredist {
 }
 
 func (c GeosearchstoreOrderAsc) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -17375,6 +17956,7 @@ func (c GeosearchstoreOrderDesc) Storedist() GeosearchstoreStoredist {
 }
 
 func (c GeosearchstoreOrderDesc) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -17393,6 +17975,7 @@ func (c GeosearchstoreSource) Fromlonlat(longitude float64, latitude float64) Ge
 type GeosearchstoreStoredist Completed
 
 func (c GeosearchstoreStoredist) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -17417,10 +18000,12 @@ func (c Get) Key(key string) GetKey {
 type GetKey Completed
 
 func (c GetKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GetKey) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -17452,10 +18037,12 @@ func (c GetbitKey) Offset(offset int64) GetbitOffset {
 type GetbitOffset Completed
 
 func (c GetbitOffset) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GetbitOffset) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -17480,6 +18067,7 @@ func (c Getdel) Key(key string) GetdelKey {
 type GetdelKey Completed
 
 func (c GetdelKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -17504,30 +18092,35 @@ func (c Getex) Key(key string) GetexKey {
 type GetexExpirationExSeconds Completed
 
 func (c GetexExpirationExSeconds) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type GetexExpirationExatTimestamp Completed
 
 func (c GetexExpirationExatTimestamp) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type GetexExpirationPersist Completed
 
 func (c GetexExpirationPersist) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type GetexExpirationPxMilliseconds Completed
 
 func (c GetexExpirationPxMilliseconds) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type GetexExpirationPxatMillisecondsTimestamp Completed
 
 func (c GetexExpirationPxatMillisecondsTimestamp) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -17559,6 +18152,7 @@ func (c GetexKey) Persist() GetexExpirationPersist {
 }
 
 func (c GetexKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -17583,10 +18177,12 @@ func (c Getrange) Key(key string) GetrangeKey {
 type GetrangeEnd Completed
 
 func (c GetrangeEnd) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GetrangeEnd) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -17632,6 +18228,7 @@ func (c GetsetKey) Value(value string) GetsetValue {
 type GetsetValue Completed
 
 func (c GetsetValue) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -17651,6 +18248,7 @@ func (c GraphConfigGet) Name(name string) GraphConfigGetName {
 type GraphConfigGetName Completed
 
 func (c GraphConfigGetName) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -17677,6 +18275,7 @@ func (c GraphConfigSetName) Value(value string) GraphConfigSetValue {
 type GraphConfigSetValue Completed
 
 func (c GraphConfigSetValue) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -17701,6 +18300,7 @@ func (c GraphDelete) Graph(graph string) GraphDeleteGraph {
 type GraphDeleteGraph Completed
 
 func (c GraphDeleteGraph) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -17732,6 +18332,7 @@ func (c GraphExplainGraph) Query(query string) GraphExplainQuery {
 type GraphExplainQuery Completed
 
 func (c GraphExplainQuery) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -17744,6 +18345,7 @@ func (b Builder) GraphList() (c GraphList) {
 }
 
 func (c GraphList) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -17780,12 +18382,14 @@ func (c GraphProfileQuery) Timeout(timeout int64) GraphProfileTimeout {
 }
 
 func (c GraphProfileQuery) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type GraphProfileTimeout Completed
 
 func (c GraphProfileTimeout) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -17822,12 +18426,14 @@ func (c GraphQueryQuery) Timeout(timeout int64) GraphQueryTimeout {
 }
 
 func (c GraphQueryQuery) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type GraphQueryTimeout Completed
 
 func (c GraphQueryTimeout) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -17864,20 +18470,24 @@ func (c GraphRoQueryQuery) Timeout(timeout int64) GraphRoQueryTimeout {
 }
 
 func (c GraphRoQueryQuery) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GraphRoQueryQuery) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
 type GraphRoQueryTimeout Completed
 
 func (c GraphRoQueryTimeout) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c GraphRoQueryTimeout) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -17902,6 +18512,7 @@ func (c GraphSlowlog) Graph(graph string) GraphSlowlogGraph {
 type GraphSlowlogGraph Completed
 
 func (c GraphSlowlogGraph) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -17931,6 +18542,7 @@ func (c HdelField) Field(field ...string) HdelField {
 }
 
 func (c HdelField) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -17955,6 +18567,7 @@ func (c Hello) Protover(protover int64) HelloArgumentsProtover {
 }
 
 func (c Hello) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -17966,6 +18579,7 @@ func (c HelloArgumentsAuth) Setname(clientname string) HelloArgumentsSetname {
 }
 
 func (c HelloArgumentsAuth) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -17982,12 +18596,14 @@ func (c HelloArgumentsProtover) Setname(clientname string) HelloArgumentsSetname
 }
 
 func (c HelloArgumentsProtover) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type HelloArgumentsSetname Completed
 
 func (c HelloArgumentsSetname) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -18012,10 +18628,12 @@ func (c Hexists) Key(key string) HexistsKey {
 type HexistsField Completed
 
 func (c HexistsField) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c HexistsField) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -18047,10 +18665,12 @@ func (c Hget) Key(key string) HgetKey {
 type HgetField Completed
 
 func (c HgetField) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c HgetField) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -18082,10 +18702,12 @@ func (c Hgetall) Key(key string) HgetallKey {
 type HgetallKey Completed
 
 func (c HgetallKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c HgetallKey) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -18117,6 +18739,7 @@ func (c HincrbyField) Increment(increment int64) HincrbyIncrement {
 type HincrbyIncrement Completed
 
 func (c HincrbyIncrement) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -18155,6 +18778,7 @@ func (c HincrbyfloatField) Increment(increment float64) HincrbyfloatIncrement {
 type HincrbyfloatIncrement Completed
 
 func (c HincrbyfloatIncrement) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -18186,10 +18810,12 @@ func (c Hkeys) Key(key string) HkeysKey {
 type HkeysKey Completed
 
 func (c HkeysKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c HkeysKey) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -18214,10 +18840,12 @@ func (c Hlen) Key(key string) HlenKey {
 type HlenKey Completed
 
 func (c HlenKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c HlenKey) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -18247,10 +18875,12 @@ func (c HmgetField) Field(field ...string) HmgetField {
 }
 
 func (c HmgetField) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c HmgetField) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -18287,6 +18917,7 @@ func (c HmsetFieldValue) FieldValue(field string, value string) HmsetFieldValue 
 }
 
 func (c HmsetFieldValue) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -18322,6 +18953,7 @@ func (c HrandfieldKey) Count(count int64) HrandfieldOptionsCount {
 }
 
 func (c HrandfieldKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -18333,12 +18965,14 @@ func (c HrandfieldOptionsCount) Withvalues() HrandfieldOptionsWithvalues {
 }
 
 func (c HrandfieldOptionsCount) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type HrandfieldOptionsWithvalues Completed
 
 func (c HrandfieldOptionsWithvalues) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -18363,6 +18997,7 @@ func (c Hscan) Key(key string) HscanKey {
 type HscanCount Completed
 
 func (c HscanCount) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -18379,6 +19014,7 @@ func (c HscanCursor) Count(count int64) HscanCount {
 }
 
 func (c HscanCursor) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -18397,6 +19033,7 @@ func (c HscanMatch) Count(count int64) HscanCount {
 }
 
 func (c HscanMatch) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -18426,6 +19063,7 @@ func (c HsetFieldValue) FieldValue(field string, value string) HsetFieldValue {
 }
 
 func (c HsetFieldValue) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -18470,6 +19108,7 @@ func (c HsetnxKey) Field(field string) HsetnxField {
 type HsetnxValue Completed
 
 func (c HsetnxValue) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -18494,10 +19133,12 @@ func (c Hstrlen) Key(key string) HstrlenKey {
 type HstrlenField Completed
 
 func (c HstrlenField) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c HstrlenField) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -18529,10 +19170,12 @@ func (c Hvals) Key(key string) HvalsKey {
 type HvalsKey Completed
 
 func (c HvalsKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c HvalsKey) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -18557,6 +19200,7 @@ func (c Incr) Key(key string) IncrKey {
 type IncrKey Completed
 
 func (c IncrKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -18581,6 +19225,7 @@ func (c Incrby) Key(key string) IncrbyKey {
 type IncrbyIncrement Completed
 
 func (c IncrbyIncrement) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -18612,6 +19257,7 @@ func (c Incrbyfloat) Key(key string) IncrbyfloatKey {
 type IncrbyfloatIncrement Completed
 
 func (c IncrbyfloatIncrement) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -18636,6 +19282,7 @@ func (c Info) Section(section ...string) InfoSection {
 }
 
 func (c Info) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -18647,6 +19294,7 @@ func (c InfoSection) Section(section ...string) InfoSection {
 }
 
 func (c InfoSection) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -18695,6 +19343,7 @@ func (c JsonArrappendValue) Value(value ...string) JsonArrappendValue {
 }
 
 func (c JsonArrappendValue) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -18738,20 +19387,24 @@ func (c JsonArrindexStartStart) Stop(stop int64) JsonArrindexStartStop {
 }
 
 func (c JsonArrindexStartStart) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c JsonArrindexStartStart) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
 type JsonArrindexStartStop Completed
 
 func (c JsonArrindexStartStop) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c JsonArrindexStartStop) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -18763,10 +19416,12 @@ func (c JsonArrindexValue) Start(start int64) JsonArrindexStartStart {
 }
 
 func (c JsonArrindexValue) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c JsonArrindexValue) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -18817,6 +19472,7 @@ func (c JsonArrinsertValue) Value(value ...string) JsonArrinsertValue {
 }
 
 func (c JsonArrinsertValue) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -18846,20 +19502,24 @@ func (c JsonArrlenKey) Path(path string) JsonArrlenPath {
 }
 
 func (c JsonArrlenKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c JsonArrlenKey) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
 type JsonArrlenPath Completed
 
 func (c JsonArrlenPath) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c JsonArrlenPath) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -18889,12 +19549,14 @@ func (c JsonArrpopKey) Path(path string) JsonArrpopPathPath {
 }
 
 func (c JsonArrpopKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type JsonArrpopPathIndex Completed
 
 func (c JsonArrpopPathIndex) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -18906,6 +19568,7 @@ func (c JsonArrpopPathPath) Index(index int64) JsonArrpopPathIndex {
 }
 
 func (c JsonArrpopPathPath) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -18951,6 +19614,7 @@ func (c JsonArrtrimStart) Stop(stop int64) JsonArrtrimStop {
 type JsonArrtrimStop Completed
 
 func (c JsonArrtrimStop) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -18980,12 +19644,14 @@ func (c JsonClearKey) Path(path string) JsonClearPath {
 }
 
 func (c JsonClearKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type JsonClearPath Completed
 
 func (c JsonClearPath) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -18998,6 +19664,7 @@ func (b Builder) JsonDebugHelp() (c JsonDebugHelp) {
 }
 
 func (c JsonDebugHelp) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -19027,12 +19694,14 @@ func (c JsonDebugMemoryKey) Path(path string) JsonDebugMemoryPath {
 }
 
 func (c JsonDebugMemoryKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type JsonDebugMemoryPath Completed
 
 func (c JsonDebugMemoryPath) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -19062,12 +19731,14 @@ func (c JsonDelKey) Path(path string) JsonDelPath {
 }
 
 func (c JsonDelKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type JsonDelPath Completed
 
 func (c JsonDelPath) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -19097,12 +19768,14 @@ func (c JsonForgetKey) Path(path string) JsonForgetPath {
 }
 
 func (c JsonForgetKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type JsonForgetPath Completed
 
 func (c JsonForgetPath) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -19142,10 +19815,12 @@ func (c JsonGetIndent) Path(path ...string) JsonGetPath {
 }
 
 func (c JsonGetIndent) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c JsonGetIndent) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -19172,10 +19847,12 @@ func (c JsonGetKey) Path(path ...string) JsonGetPath {
 }
 
 func (c JsonGetKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c JsonGetKey) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -19192,10 +19869,12 @@ func (c JsonGetNewline) Path(path ...string) JsonGetPath {
 }
 
 func (c JsonGetNewline) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c JsonGetNewline) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -19207,10 +19886,12 @@ func (c JsonGetPath) Path(path ...string) JsonGetPath {
 }
 
 func (c JsonGetPath) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c JsonGetPath) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -19222,10 +19903,12 @@ func (c JsonGetSpace) Path(path ...string) JsonGetPath {
 }
 
 func (c JsonGetSpace) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c JsonGetSpace) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -19277,10 +19960,12 @@ func (c JsonMgetKey) Path(path string) JsonMgetPath {
 type JsonMgetPath Completed
 
 func (c JsonMgetPath) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c JsonMgetPath) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -19319,6 +20004,7 @@ func (c JsonNumincrbyPath) Value(value float64) JsonNumincrbyValue {
 type JsonNumincrbyValue Completed
 
 func (c JsonNumincrbyValue) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -19357,6 +20043,7 @@ func (c JsonNummultbyPath) Value(value float64) JsonNummultbyValue {
 type JsonNummultbyValue Completed
 
 func (c JsonNummultbyValue) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -19386,20 +20073,24 @@ func (c JsonObjkeysKey) Path(path string) JsonObjkeysPath {
 }
 
 func (c JsonObjkeysKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c JsonObjkeysKey) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
 type JsonObjkeysPath Completed
 
 func (c JsonObjkeysPath) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c JsonObjkeysPath) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -19429,20 +20120,24 @@ func (c JsonObjlenKey) Path(path string) JsonObjlenPath {
 }
 
 func (c JsonObjlenKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c JsonObjlenKey) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
 type JsonObjlenPath Completed
 
 func (c JsonObjlenPath) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c JsonObjlenPath) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -19472,20 +20167,24 @@ func (c JsonRespKey) Path(path string) JsonRespPath {
 }
 
 func (c JsonRespKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c JsonRespKey) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
 type JsonRespPath Completed
 
 func (c JsonRespPath) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c JsonRespPath) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -19510,12 +20209,14 @@ func (c JsonSet) Key(key string) JsonSetKey {
 type JsonSetConditionNx Completed
 
 func (c JsonSetConditionNx) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type JsonSetConditionXx Completed
 
 func (c JsonSetConditionXx) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -19546,6 +20247,7 @@ func (c JsonSetValue) Xx() JsonSetConditionXx {
 }
 
 func (c JsonSetValue) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -19589,6 +20291,7 @@ func (c JsonStrappendPath) Value(value string) JsonStrappendValue {
 type JsonStrappendValue Completed
 
 func (c JsonStrappendValue) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -19618,20 +20321,24 @@ func (c JsonStrlenKey) Path(path string) JsonStrlenPath {
 }
 
 func (c JsonStrlenKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c JsonStrlenKey) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
 type JsonStrlenPath Completed
 
 func (c JsonStrlenPath) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c JsonStrlenPath) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -19663,6 +20370,7 @@ func (c JsonToggleKey) Path(path string) JsonTogglePath {
 type JsonTogglePath Completed
 
 func (c JsonTogglePath) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -19692,20 +20400,24 @@ func (c JsonTypeKey) Path(path string) JsonTypePath {
 }
 
 func (c JsonTypeKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c JsonTypeKey) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
 type JsonTypePath Completed
 
 func (c JsonTypePath) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c JsonTypePath) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -19725,6 +20437,7 @@ func (c Keys) Pattern(pattern string) KeysPattern {
 type KeysPattern Completed
 
 func (c KeysPattern) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -19737,6 +20450,7 @@ func (b Builder) Lastsave() (c Lastsave) {
 }
 
 func (c Lastsave) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -19749,6 +20463,7 @@ func (b Builder) LatencyDoctor() (c LatencyDoctor) {
 }
 
 func (c LatencyDoctor) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -19768,6 +20483,7 @@ func (c LatencyGraph) Event(event string) LatencyGraphEvent {
 type LatencyGraphEvent Completed
 
 func (c LatencyGraphEvent) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -19780,6 +20496,7 @@ func (b Builder) LatencyHelp() (c LatencyHelp) {
 }
 
 func (c LatencyHelp) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -19797,6 +20514,7 @@ func (c LatencyHistogram) Command(command ...string) LatencyHistogramCommand {
 }
 
 func (c LatencyHistogram) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -19808,6 +20526,7 @@ func (c LatencyHistogramCommand) Command(command ...string) LatencyHistogramComm
 }
 
 func (c LatencyHistogramCommand) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -19827,6 +20546,7 @@ func (c LatencyHistory) Event(event string) LatencyHistoryEvent {
 type LatencyHistoryEvent Completed
 
 func (c LatencyHistoryEvent) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -19839,6 +20559,7 @@ func (b Builder) LatencyLatest() (c LatencyLatest) {
 }
 
 func (c LatencyLatest) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -19856,6 +20577,7 @@ func (c LatencyReset) Event(event ...string) LatencyResetEvent {
 }
 
 func (c LatencyReset) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -19867,6 +20589,7 @@ func (c LatencyResetEvent) Event(event ...string) LatencyResetEvent {
 }
 
 func (c LatencyResetEvent) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -19901,6 +20624,7 @@ func (c LcsIdx) Withmatchlen() LcsWithmatchlen {
 }
 
 func (c LcsIdx) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -19939,6 +20663,7 @@ func (c LcsKey2) Withmatchlen() LcsWithmatchlen {
 }
 
 func (c LcsKey2) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -19960,6 +20685,7 @@ func (c LcsLen) Withmatchlen() LcsWithmatchlen {
 }
 
 func (c LcsLen) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -19971,12 +20697,14 @@ func (c LcsMinmatchlen) Withmatchlen() LcsWithmatchlen {
 }
 
 func (c LcsMinmatchlen) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type LcsWithmatchlen Completed
 
 func (c LcsWithmatchlen) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -20001,10 +20729,12 @@ func (c Lindex) Key(key string) LindexKey {
 type LindexIndex Completed
 
 func (c LindexIndex) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c LindexIndex) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -20036,6 +20766,7 @@ func (c Linsert) Key(key string) LinsertKey {
 type LinsertElement Completed
 
 func (c LinsertElement) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -20093,10 +20824,12 @@ func (c Llen) Key(key string) LlenKey {
 type LlenKey Completed
 
 func (c LlenKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c LlenKey) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -20169,12 +20902,14 @@ func (c LmoveWherefromRight) Right() LmoveWheretoRight {
 type LmoveWheretoLeft Completed
 
 func (c LmoveWheretoLeft) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type LmoveWheretoRight Completed
 
 func (c LmoveWheretoRight) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -20194,6 +20929,7 @@ func (c Lmpop) Numkeys(numkeys int64) LmpopNumkeys {
 type LmpopCount Completed
 
 func (c LmpopCount) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -20249,6 +20985,7 @@ func (c LmpopWhereLeft) Count(count int64) LmpopCount {
 }
 
 func (c LmpopWhereLeft) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -20260,6 +20997,7 @@ func (c LmpopWhereRight) Count(count int64) LmpopCount {
 }
 
 func (c LmpopWhereRight) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -20277,12 +21015,14 @@ func (c Lolwut) Version(version int64) LolwutVersion {
 }
 
 func (c Lolwut) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type LolwutVersion Completed
 
 func (c LolwutVersion) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -20307,6 +21047,7 @@ func (c Lpop) Key(key string) LpopKey {
 type LpopCount Completed
 
 func (c LpopCount) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -20318,6 +21059,7 @@ func (c LpopKey) Count(count int64) LpopCount {
 }
 
 func (c LpopKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -20347,10 +21089,12 @@ func (c LposCount) Maxlen(len int64) LposMaxlen {
 }
 
 func (c LposCount) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c LposCount) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -20372,10 +21116,12 @@ func (c LposElement) Maxlen(len int64) LposMaxlen {
 }
 
 func (c LposElement) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c LposElement) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -20389,10 +21135,12 @@ func (c LposKey) Element(element string) LposElement {
 type LposMaxlen Completed
 
 func (c LposMaxlen) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c LposMaxlen) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -20409,10 +21157,12 @@ func (c LposRank) Maxlen(len int64) LposMaxlen {
 }
 
 func (c LposRank) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c LposRank) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -20442,6 +21192,7 @@ func (c LpushElement) Element(element ...string) LpushElement {
 }
 
 func (c LpushElement) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -20478,6 +21229,7 @@ func (c LpushxElement) Element(element ...string) LpushxElement {
 }
 
 func (c LpushxElement) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -20523,10 +21275,12 @@ func (c LrangeStart) Stop(stop int64) LrangeStop {
 type LrangeStop Completed
 
 func (c LrangeStop) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c LrangeStop) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -20558,6 +21312,7 @@ func (c LremCount) Element(element string) LremElement {
 type LremElement Completed
 
 func (c LremElement) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -20589,6 +21344,7 @@ func (c Lset) Key(key string) LsetKey {
 type LsetElement Completed
 
 func (c LsetElement) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -20641,6 +21397,7 @@ func (c LtrimStart) Stop(stop int64) LtrimStop {
 type LtrimStop Completed
 
 func (c LtrimStop) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -20653,6 +21410,7 @@ func (b Builder) MemoryDoctor() (c MemoryDoctor) {
 }
 
 func (c MemoryDoctor) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -20665,6 +21423,7 @@ func (b Builder) MemoryHelp() (c MemoryHelp) {
 }
 
 func (c MemoryHelp) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -20677,6 +21436,7 @@ func (b Builder) MemoryMallocStats() (c MemoryMallocStats) {
 }
 
 func (c MemoryMallocStats) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -20689,6 +21449,7 @@ func (b Builder) MemoryPurge() (c MemoryPurge) {
 }
 
 func (c MemoryPurge) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -20701,6 +21462,7 @@ func (b Builder) MemoryStats() (c MemoryStats) {
 }
 
 func (c MemoryStats) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -20730,12 +21492,14 @@ func (c MemoryUsageKey) Samples(count int64) MemoryUsageSamples {
 }
 
 func (c MemoryUsageKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type MemoryUsageSamples Completed
 
 func (c MemoryUsageSamples) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -20780,10 +21544,12 @@ func (c MgetKey) Key(key ...string) MgetKey {
 }
 
 func (c MgetKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c MgetKey) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -20824,6 +21590,7 @@ func (c MigrateAuthAuth) Keys(key ...string) MigrateKeys {
 }
 
 func (c MigrateAuthAuth) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -20846,6 +21613,7 @@ func (c MigrateAuthAuth2) Keys(key ...string) MigrateKeys {
 }
 
 func (c MigrateAuthAuth2) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -20883,6 +21651,7 @@ func (c MigrateCopy) Keys(key ...string) MigrateKeys {
 }
 
 func (c MigrateCopy) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -20926,6 +21695,7 @@ func (c MigrateKeys) Keys(key ...string) MigrateKeys {
 }
 
 func (c MigrateKeys) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -20970,6 +21740,7 @@ func (c MigrateReplace) Keys(key ...string) MigrateKeys {
 }
 
 func (c MigrateReplace) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21012,6 +21783,7 @@ func (c MigrateTimeout) Keys(key ...string) MigrateKeys {
 }
 
 func (c MigrateTimeout) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21024,6 +21796,7 @@ func (b Builder) ModuleList() (c ModuleList) {
 }
 
 func (c ModuleList) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21048,6 +21821,7 @@ func (c ModuleLoadArg) Arg(arg ...string) ModuleLoadArg {
 }
 
 func (c ModuleLoadArg) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21059,6 +21833,7 @@ func (c ModuleLoadPath) Arg(arg ...string) ModuleLoadArg {
 }
 
 func (c ModuleLoadPath) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21084,6 +21859,7 @@ func (c ModuleLoadexArgs) Args(args ...string) ModuleLoadexArgs {
 }
 
 func (c ModuleLoadexArgs) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21101,6 +21877,7 @@ func (c ModuleLoadexConfig) Args(args ...string) ModuleLoadexArgs {
 }
 
 func (c ModuleLoadexConfig) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21117,6 +21894,7 @@ func (c ModuleLoadexPath) Args(args ...string) ModuleLoadexArgs {
 }
 
 func (c ModuleLoadexPath) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21136,6 +21914,7 @@ func (c ModuleUnload) Name(name string) ModuleUnloadName {
 type ModuleUnloadName Completed
 
 func (c ModuleUnloadName) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21148,6 +21927,7 @@ func (b Builder) Monitor() (c Monitor) {
 }
 
 func (c Monitor) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21172,6 +21952,7 @@ func (c Move) Key(key string) MoveKey {
 type MoveDb Completed
 
 func (c MoveDb) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21207,6 +21988,7 @@ func (c MsetKeyValue) KeyValue(key string, value string) MsetKeyValue {
 }
 
 func (c MsetKeyValue) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21235,6 +22017,7 @@ func (c MsetnxKeyValue) KeyValue(key string, value string) MsetnxKeyValue {
 }
 
 func (c MsetnxKeyValue) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21247,6 +22030,7 @@ func (b Builder) Multi() (c Multi) {
 }
 
 func (c Multi) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21271,6 +22055,7 @@ func (c ObjectEncoding) Key(key string) ObjectEncodingKey {
 type ObjectEncodingKey Completed
 
 func (c ObjectEncodingKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21295,6 +22080,7 @@ func (c ObjectFreq) Key(key string) ObjectFreqKey {
 type ObjectFreqKey Completed
 
 func (c ObjectFreqKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21307,6 +22093,7 @@ func (b Builder) ObjectHelp() (c ObjectHelp) {
 }
 
 func (c ObjectHelp) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21331,6 +22118,7 @@ func (c ObjectIdletime) Key(key string) ObjectIdletimeKey {
 type ObjectIdletimeKey Completed
 
 func (c ObjectIdletimeKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21355,6 +22143,7 @@ func (c ObjectRefcount) Key(key string) ObjectRefcountKey {
 type ObjectRefcountKey Completed
 
 func (c ObjectRefcountKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21379,6 +22168,7 @@ func (c Persist) Key(key string) PersistKey {
 type PersistKey Completed
 
 func (c PersistKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21403,24 +22193,28 @@ func (c Pexpire) Key(key string) PexpireKey {
 type PexpireConditionGt Completed
 
 func (c PexpireConditionGt) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type PexpireConditionLt Completed
 
 func (c PexpireConditionLt) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type PexpireConditionNx Completed
 
 func (c PexpireConditionNx) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type PexpireConditionXx Completed
 
 func (c PexpireConditionXx) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21454,6 +22248,7 @@ func (c PexpireMilliseconds) Lt() PexpireConditionLt {
 }
 
 func (c PexpireMilliseconds) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21478,24 +22273,28 @@ func (c Pexpireat) Key(key string) PexpireatKey {
 type PexpireatConditionGt Completed
 
 func (c PexpireatConditionGt) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type PexpireatConditionLt Completed
 
 func (c PexpireatConditionLt) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type PexpireatConditionNx Completed
 
 func (c PexpireatConditionNx) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type PexpireatConditionXx Completed
 
 func (c PexpireatConditionXx) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21529,6 +22328,7 @@ func (c PexpireatMillisecondsTimestamp) Lt() PexpireatConditionLt {
 }
 
 func (c PexpireatMillisecondsTimestamp) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21553,10 +22353,12 @@ func (c Pexpiretime) Key(key string) PexpiretimeKey {
 type PexpiretimeKey Completed
 
 func (c PexpiretimeKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c PexpiretimeKey) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -21586,6 +22388,7 @@ func (c PfaddElement) Element(element ...string) PfaddElement {
 }
 
 func (c PfaddElement) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21597,6 +22400,7 @@ func (c PfaddKey) Element(element ...string) PfaddElement {
 }
 
 func (c PfaddKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21641,6 +22445,7 @@ func (c PfcountKey) Key(key ...string) PfcountKey {
 }
 
 func (c PfcountKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21680,6 +22485,7 @@ func (c PfmergeDestkey) Sourcekey(sourcekey ...string) PfmergeSourcekey {
 }
 
 func (c PfmergeDestkey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21701,6 +22507,7 @@ func (c PfmergeSourcekey) Sourcekey(sourcekey ...string) PfmergeSourcekey {
 }
 
 func (c PfmergeSourcekey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21718,12 +22525,14 @@ func (c Ping) Message(message string) PingMessage {
 }
 
 func (c Ping) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type PingMessage Completed
 
 func (c PingMessage) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21762,6 +22571,7 @@ func (c PsetexMilliseconds) Value(value string) PsetexValue {
 type PsetexValue Completed
 
 func (c PsetexValue) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21786,6 +22596,7 @@ func (c PsubscribePattern) Pattern(pattern ...string) PsubscribePattern {
 }
 
 func (c PsubscribePattern) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21805,6 +22616,7 @@ func (c Psync) Replicationid(replicationid string) PsyncReplicationid {
 type PsyncOffset Completed
 
 func (c PsyncOffset) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21836,10 +22648,12 @@ func (c Pttl) Key(key string) PttlKey {
 type PttlKey Completed
 
 func (c PttlKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c PttlKey) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -21866,6 +22680,7 @@ func (c PublishChannel) Message(message string) PublishMessage {
 type PublishMessage Completed
 
 func (c PublishMessage) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21883,12 +22698,14 @@ func (c PubsubChannels) Pattern(pattern string) PubsubChannelsPattern {
 }
 
 func (c PubsubChannels) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type PubsubChannelsPattern Completed
 
 func (c PubsubChannelsPattern) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21901,6 +22718,7 @@ func (b Builder) PubsubHelp() (c PubsubHelp) {
 }
 
 func (c PubsubHelp) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21913,6 +22731,7 @@ func (b Builder) PubsubNumpat() (c PubsubNumpat) {
 }
 
 func (c PubsubNumpat) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21930,6 +22749,7 @@ func (c PubsubNumsub) Channel(channel ...string) PubsubNumsubChannel {
 }
 
 func (c PubsubNumsub) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21941,6 +22761,7 @@ func (c PubsubNumsubChannel) Channel(channel ...string) PubsubNumsubChannel {
 }
 
 func (c PubsubNumsubChannel) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21958,12 +22779,14 @@ func (c PubsubShardchannels) Pattern(pattern string) PubsubShardchannelsPattern 
 }
 
 func (c PubsubShardchannels) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type PubsubShardchannelsPattern Completed
 
 func (c PubsubShardchannelsPattern) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21981,6 +22804,7 @@ func (c PubsubShardnumsub) Channel(channel ...string) PubsubShardnumsubChannel {
 }
 
 func (c PubsubShardnumsub) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -21992,6 +22816,7 @@ func (c PubsubShardnumsubChannel) Channel(channel ...string) PubsubShardnumsubCh
 }
 
 func (c PubsubShardnumsubChannel) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22009,6 +22834,7 @@ func (c Punsubscribe) Pattern(pattern ...string) PunsubscribePattern {
 }
 
 func (c Punsubscribe) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22020,6 +22846,7 @@ func (c PunsubscribePattern) Pattern(pattern ...string) PunsubscribePattern {
 }
 
 func (c PunsubscribePattern) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22032,6 +22859,7 @@ func (b Builder) Quit() (c Quit) {
 }
 
 func (c Quit) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22044,6 +22872,7 @@ func (b Builder) Randomkey() (c Randomkey) {
 }
 
 func (c Randomkey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22056,6 +22885,7 @@ func (b Builder) Readonly() (c Readonly) {
 }
 
 func (c Readonly) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22068,6 +22898,7 @@ func (b Builder) Readwrite() (c Readwrite) {
 }
 
 func (c Readwrite) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22104,6 +22935,7 @@ func (c RenameKey) Newkey(newkey string) RenameNewkey {
 type RenameNewkey Completed
 
 func (c RenameNewkey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22140,6 +22972,7 @@ func (c RenamenxKey) Newkey(newkey string) RenamenxNewkey {
 type RenamenxNewkey Completed
 
 func (c RenamenxNewkey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22166,6 +22999,7 @@ func (c ReplicaofHost) Port(port int64) ReplicaofPort {
 type ReplicaofPort Completed
 
 func (c ReplicaofPort) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22178,6 +23012,7 @@ func (b Builder) Reset() (c Reset) {
 }
 
 func (c Reset) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22212,12 +23047,14 @@ func (c RestoreAbsttl) Freq(frequency int64) RestoreFreq {
 }
 
 func (c RestoreAbsttl) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type RestoreFreq Completed
 
 func (c RestoreFreq) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22229,6 +23066,7 @@ func (c RestoreIdletime) Freq(frequency int64) RestoreFreq {
 }
 
 func (c RestoreIdletime) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22257,6 +23095,7 @@ func (c RestoreReplace) Freq(frequency int64) RestoreFreq {
 }
 
 func (c RestoreReplace) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22283,6 +23122,7 @@ func (c RestoreSerializedValue) Freq(frequency int64) RestoreFreq {
 }
 
 func (c RestoreSerializedValue) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22309,6 +23149,7 @@ func (c RgAbortexecution) Id(id string) RgAbortexecutionId {
 type RgAbortexecutionId Completed
 
 func (c RgAbortexecutionId) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22333,6 +23174,7 @@ func (c RgConfiggetKey) Key(key ...string) RgConfiggetKey {
 }
 
 func (c RgConfiggetKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22356,6 +23198,7 @@ func (c RgConfigsetKeyValue) KeyValue(key string, value string) RgConfigsetKeyVa
 }
 
 func (c RgConfigsetKeyValue) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22375,6 +23218,7 @@ func (c RgDropexecution) Id(id string) RgDropexecutionId {
 type RgDropexecutionId Completed
 
 func (c RgDropexecutionId) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22387,6 +23231,7 @@ func (b Builder) RgDumpexecutions() (c RgDumpexecutions) {
 }
 
 func (c RgDumpexecutions) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22399,6 +23244,7 @@ func (b Builder) RgDumpregistrations() (c RgDumpregistrations) {
 }
 
 func (c RgDumpregistrations) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22428,18 +23274,21 @@ func (c RgGetexecutionId) Cluster() RgGetexecutionModeCluster {
 }
 
 func (c RgGetexecutionId) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type RgGetexecutionModeCluster Completed
 
 func (c RgGetexecutionModeCluster) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type RgGetexecutionModeShard Completed
 
 func (c RgGetexecutionModeShard) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22459,6 +23308,7 @@ func (c RgGetresults) Id(id string) RgGetresultsId {
 type RgGetresultsId Completed
 
 func (c RgGetresultsId) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22478,6 +23328,7 @@ func (c RgGetresultsblocking) Id(id string) RgGetresultsblockingId {
 type RgGetresultsblockingId Completed
 
 func (c RgGetresultsblockingId) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22490,6 +23341,7 @@ func (b Builder) RgInfocluster() (c RgInfocluster) {
 }
 
 func (c RgInfocluster) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22502,6 +23354,7 @@ func (b Builder) RgPydumpreqs() (c RgPydumpreqs) {
 }
 
 func (c RgPydumpreqs) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22537,6 +23390,7 @@ func (c RgPyexecuteDescription) Requirements(requirement ...string) RgPyexecuteR
 }
 
 func (c RgPyexecuteDescription) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22574,6 +23428,7 @@ func (c RgPyexecuteFunction) Requirements(requirement ...string) RgPyexecuteRequ
 }
 
 func (c RgPyexecuteFunction) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22601,6 +23456,7 @@ func (c RgPyexecuteId) Requirements(requirement ...string) RgPyexecuteRequiremen
 }
 
 func (c RgPyexecuteId) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22613,6 +23469,7 @@ func (c RgPyexecuteReplaceWith) Requirements(requirement ...string) RgPyexecuteR
 }
 
 func (c RgPyexecuteReplaceWith) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22625,6 +23482,7 @@ func (c RgPyexecuteRequirementsRequirements) Requirements(requirement ...string)
 }
 
 func (c RgPyexecuteRequirementsRequirements) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22657,6 +23515,7 @@ func (c RgPyexecuteUnblocking) Requirements(requirement ...string) RgPyexecuteRe
 }
 
 func (c RgPyexecuteUnblocking) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22674,6 +23533,7 @@ func (c RgPyexecuteUpgrade) Requirements(requirement ...string) RgPyexecuteRequi
 }
 
 func (c RgPyexecuteUpgrade) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22686,6 +23546,7 @@ func (b Builder) RgPystats() (c RgPystats) {
 }
 
 func (c RgPystats) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22698,6 +23559,7 @@ func (b Builder) RgRefreshcluster() (c RgRefreshcluster) {
 }
 
 func (c RgRefreshcluster) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22722,6 +23584,7 @@ func (c RgTriggerArgument) Argument(argument ...string) RgTriggerArgument {
 }
 
 func (c RgTriggerArgument) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22748,6 +23611,7 @@ func (c RgUnregister) Id(id string) RgUnregisterId {
 type RgUnregisterId Completed
 
 func (c RgUnregisterId) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22760,6 +23624,7 @@ func (b Builder) Role() (c Role) {
 }
 
 func (c Role) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22784,6 +23649,7 @@ func (c Rpop) Key(key string) RpopKey {
 type RpopCount Completed
 
 func (c RpopCount) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22795,6 +23661,7 @@ func (c RpopKey) Count(count int64) RpopCount {
 }
 
 func (c RpopKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22819,6 +23686,7 @@ func (c Rpoplpush) Source(source string) RpoplpushSource {
 type RpoplpushDestination Completed
 
 func (c RpoplpushDestination) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22860,6 +23728,7 @@ func (c RpushElement) Element(element ...string) RpushElement {
 }
 
 func (c RpushElement) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22896,6 +23765,7 @@ func (c RpushxElement) Element(element ...string) RpushxElement {
 }
 
 func (c RpushxElement) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22939,6 +23809,7 @@ func (c SaddMember) Member(member ...string) SaddMember {
 }
 
 func (c SaddMember) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22951,6 +23822,7 @@ func (b Builder) Save() (c Save) {
 }
 
 func (c Save) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22975,6 +23847,7 @@ func (c ScanCount) Type(typ string) ScanType {
 }
 
 func (c ScanCount) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -22996,6 +23869,7 @@ func (c ScanCursor) Type(typ string) ScanType {
 }
 
 func (c ScanCursor) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -23012,12 +23886,14 @@ func (c ScanMatch) Type(typ string) ScanType {
 }
 
 func (c ScanMatch) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type ScanType Completed
 
 func (c ScanType) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -23042,10 +23918,12 @@ func (c Scard) Key(key string) ScardKey {
 type ScardKey Completed
 
 func (c ScardKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c ScardKey) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -23075,18 +23953,21 @@ func (c ScriptDebug) No() ScriptDebugModeNo {
 type ScriptDebugModeNo Completed
 
 func (c ScriptDebugModeNo) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type ScriptDebugModeSync Completed
 
 func (c ScriptDebugModeSync) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type ScriptDebugModeYes Completed
 
 func (c ScriptDebugModeYes) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -23111,6 +23992,7 @@ func (c ScriptExistsSha1) Sha1(sha1 ...string) ScriptExistsSha1 {
 }
 
 func (c ScriptExistsSha1) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -23133,18 +24015,21 @@ func (c ScriptFlush) Sync() ScriptFlushAsyncSync {
 }
 
 func (c ScriptFlush) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type ScriptFlushAsync Completed
 
 func (c ScriptFlushAsync) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type ScriptFlushAsyncSync Completed
 
 func (c ScriptFlushAsyncSync) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -23157,6 +24042,7 @@ func (b Builder) ScriptKill() (c ScriptKill) {
 }
 
 func (c ScriptKill) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -23176,6 +24062,7 @@ func (c ScriptLoad) Script(script string) ScriptLoadScript {
 type ScriptLoadScript Completed
 
 func (c ScriptLoadScript) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -23220,6 +24107,7 @@ func (c SdiffKey) Key(key ...string) SdiffKey {
 }
 
 func (c SdiffKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -23276,6 +24164,7 @@ func (c SdiffstoreKey) Key(key ...string) SdiffstoreKey {
 }
 
 func (c SdiffstoreKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -23295,6 +24184,7 @@ func (c Select) Index(index int64) SelectIndex {
 type SelectIndex Completed
 
 func (c SelectIndex) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -23314,6 +24204,7 @@ func (c SentinelFailover) Master(master string) SentinelFailoverMaster {
 type SentinelFailoverMaster Completed
 
 func (c SentinelFailoverMaster) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -23333,6 +24224,7 @@ func (c SentinelGetMasterAddrByName) Master(master string) SentinelGetMasterAddr
 type SentinelGetMasterAddrByNameMaster Completed
 
 func (c SentinelGetMasterAddrByNameMaster) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -23352,6 +24244,7 @@ func (c SentinelSentinels) Master(master string) SentinelSentinelsMaster {
 type SentinelSentinelsMaster Completed
 
 func (c SentinelSentinelsMaster) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -23406,6 +24299,7 @@ func (c SetConditionNx) Keepttl() SetExpirationKeepttl {
 }
 
 func (c SetConditionNx) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -23442,36 +24336,42 @@ func (c SetConditionXx) Keepttl() SetExpirationKeepttl {
 }
 
 func (c SetConditionXx) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type SetExpirationExSeconds Completed
 
 func (c SetExpirationExSeconds) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type SetExpirationExatTimestamp Completed
 
 func (c SetExpirationExatTimestamp) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type SetExpirationKeepttl Completed
 
 func (c SetExpirationKeepttl) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type SetExpirationPxMilliseconds Completed
 
 func (c SetExpirationPxMilliseconds) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type SetExpirationPxatMillisecondsTimestamp Completed
 
 func (c SetExpirationPxatMillisecondsTimestamp) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -23503,6 +24403,7 @@ func (c SetGet) Keepttl() SetExpirationKeepttl {
 }
 
 func (c SetGet) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -23556,6 +24457,7 @@ func (c SetValue) Keepttl() SetExpirationKeepttl {
 }
 
 func (c SetValue) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -23594,6 +24496,7 @@ func (c SetbitOffset) Value(value int64) SetbitValue {
 type SetbitValue Completed
 
 func (c SetbitValue) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -23632,6 +24535,7 @@ func (c SetexSeconds) Value(value string) SetexValue {
 type SetexValue Completed
 
 func (c SetexValue) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -23663,6 +24567,7 @@ func (c SetnxKey) Value(value string) SetnxValue {
 type SetnxValue Completed
 
 func (c SetnxValue) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -23701,6 +24606,7 @@ func (c SetrangeOffset) Value(value string) SetrangeValue {
 type SetrangeValue Completed
 
 func (c SetrangeValue) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -23738,12 +24644,14 @@ func (c Shutdown) Abort() ShutdownAbort {
 }
 
 func (c Shutdown) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type ShutdownAbort Completed
 
 func (c ShutdownAbort) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -23755,6 +24663,7 @@ func (c ShutdownForce) Abort() ShutdownAbort {
 }
 
 func (c ShutdownForce) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -23771,6 +24680,7 @@ func (c ShutdownNow) Abort() ShutdownAbort {
 }
 
 func (c ShutdownNow) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -23792,6 +24702,7 @@ func (c ShutdownSaveModeNosave) Abort() ShutdownAbort {
 }
 
 func (c ShutdownSaveModeNosave) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -23813,6 +24724,7 @@ func (c ShutdownSaveModeSave) Abort() ShutdownAbort {
 }
 
 func (c ShutdownSaveModeSave) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -23857,6 +24769,7 @@ func (c SinterKey) Key(key ...string) SinterKey {
 }
 
 func (c SinterKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -23896,12 +24809,14 @@ func (c SintercardKey) Limit(limit int64) SintercardLimit {
 }
 
 func (c SintercardKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type SintercardLimit Completed
 
 func (c SintercardLimit) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -23975,6 +24890,7 @@ func (c SinterstoreKey) Key(key ...string) SinterstoreKey {
 }
 
 func (c SinterstoreKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -24006,10 +24922,12 @@ func (c SismemberKey) Member(member string) SismemberMember {
 type SismemberMember Completed
 
 func (c SismemberMember) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c SismemberMember) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -24036,6 +24954,7 @@ func (c SlaveofHost) Port(port int64) SlaveofPort {
 type SlaveofPort Completed
 
 func (c SlaveofPort) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -24053,12 +24972,14 @@ func (c SlowlogGet) Count(count int64) SlowlogGetCount {
 }
 
 func (c SlowlogGet) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type SlowlogGetCount Completed
 
 func (c SlowlogGetCount) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -24071,6 +24992,7 @@ func (b Builder) SlowlogHelp() (c SlowlogHelp) {
 }
 
 func (c SlowlogHelp) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -24083,6 +25005,7 @@ func (b Builder) SlowlogLen() (c SlowlogLen) {
 }
 
 func (c SlowlogLen) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -24095,6 +25018,7 @@ func (b Builder) SlowlogReset() (c SlowlogReset) {
 }
 
 func (c SlowlogReset) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -24119,10 +25043,12 @@ func (c Smembers) Key(key string) SmembersKey {
 type SmembersKey Completed
 
 func (c SmembersKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c SmembersKey) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -24159,10 +25085,12 @@ func (c SmismemberMember) Member(member ...string) SmismemberMember {
 }
 
 func (c SmismemberMember) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c SmismemberMember) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -24194,6 +25122,7 @@ func (c SmoveDestination) Member(member string) SmoveMember {
 type SmoveMember Completed
 
 func (c SmoveMember) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -24264,6 +25193,7 @@ func (c SortBy) Store(destination string) SortStore {
 }
 
 func (c SortBy) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -24300,6 +25230,7 @@ func (c SortGet) Store(destination string) SortStore {
 }
 
 func (c SortGet) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -24345,6 +25276,7 @@ func (c SortKey) Store(destination string) SortStore {
 }
 
 func (c SortKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -24380,6 +25312,7 @@ func (c SortLimit) Store(destination string) SortStore {
 }
 
 func (c SortLimit) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -24401,6 +25334,7 @@ func (c SortOrderAsc) Store(destination string) SortStore {
 }
 
 func (c SortOrderAsc) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -24422,6 +25356,7 @@ func (c SortOrderDesc) Store(destination string) SortStore {
 }
 
 func (c SortOrderDesc) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -24470,10 +25405,12 @@ func (c SortRoBy) Alpha() SortRoSortingAlpha {
 }
 
 func (c SortRoBy) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c SortRoBy) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -24500,10 +25437,12 @@ func (c SortRoGet) Alpha() SortRoSortingAlpha {
 }
 
 func (c SortRoGet) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c SortRoGet) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -24539,10 +25478,12 @@ func (c SortRoKey) Alpha() SortRoSortingAlpha {
 }
 
 func (c SortRoKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c SortRoKey) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -24568,10 +25509,12 @@ func (c SortRoLimit) Alpha() SortRoSortingAlpha {
 }
 
 func (c SortRoLimit) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c SortRoLimit) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -24583,10 +25526,12 @@ func (c SortRoOrderAsc) Alpha() SortRoSortingAlpha {
 }
 
 func (c SortRoOrderAsc) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c SortRoOrderAsc) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -24598,20 +25543,24 @@ func (c SortRoOrderDesc) Alpha() SortRoSortingAlpha {
 }
 
 func (c SortRoOrderDesc) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c SortRoOrderDesc) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
 type SortRoSortingAlpha Completed
 
 func (c SortRoSortingAlpha) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c SortRoSortingAlpha) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -24628,12 +25577,14 @@ func (c SortSortingAlpha) Store(destination string) SortStore {
 }
 
 func (c SortSortingAlpha) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type SortStore Completed
 
 func (c SortStore) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -24658,6 +25609,7 @@ func (c Spop) Key(key string) SpopKey {
 type SpopCount Completed
 
 func (c SpopCount) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -24669,6 +25621,7 @@ func (c SpopKey) Count(count int64) SpopCount {
 }
 
 func (c SpopKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -24700,6 +25653,7 @@ func (c SpublishChannel) Message(message string) SpublishMessage {
 type SpublishMessage Completed
 
 func (c SpublishMessage) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -24724,6 +25678,7 @@ func (c Srandmember) Key(key string) SrandmemberKey {
 type SrandmemberCount Completed
 
 func (c SrandmemberCount) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -24735,6 +25690,7 @@ func (c SrandmemberKey) Count(count int64) SrandmemberCount {
 }
 
 func (c SrandmemberKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -24771,6 +25727,7 @@ func (c SremMember) Member(member ...string) SremMember {
 }
 
 func (c SremMember) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -24795,6 +25752,7 @@ func (c Sscan) Key(key string) SscanKey {
 type SscanCount Completed
 
 func (c SscanCount) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -24811,6 +25769,7 @@ func (c SscanCursor) Count(count int64) SscanCount {
 }
 
 func (c SscanCursor) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -24829,6 +25788,7 @@ func (c SscanMatch) Count(count int64) SscanCount {
 }
 
 func (c SscanMatch) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -24873,6 +25833,7 @@ func (c SsubscribeChannel) Channel(channel ...string) SsubscribeChannel {
 }
 
 func (c SsubscribeChannel) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -24897,10 +25858,12 @@ func (c Strlen) Key(key string) StrlenKey {
 type StrlenKey Completed
 
 func (c StrlenKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c StrlenKey) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -24925,6 +25888,7 @@ func (c SubscribeChannel) Channel(channel ...string) SubscribeChannel {
 }
 
 func (c SubscribeChannel) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -24969,6 +25933,7 @@ func (c SunionKey) Key(key ...string) SunionKey {
 }
 
 func (c SunionKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -25025,6 +25990,7 @@ func (c SunionstoreKey) Key(key ...string) SunionstoreKey {
 }
 
 func (c SunionstoreKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -25052,6 +26018,7 @@ func (c Sunsubscribe) Channel(channel ...string) SunsubscribeChannel {
 }
 
 func (c Sunsubscribe) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -25073,6 +26040,7 @@ func (c SunsubscribeChannel) Channel(channel ...string) SunsubscribeChannel {
 }
 
 func (c SunsubscribeChannel) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -25099,6 +26067,7 @@ func (c SwapdbIndex1) Index2(index2 int64) SwapdbIndex2 {
 type SwapdbIndex2 Completed
 
 func (c SwapdbIndex2) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -25111,6 +26080,7 @@ func (b Builder) Sync() (c Sync) {
 }
 
 func (c Sync) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -25147,6 +26117,7 @@ func (c TdigestAddValuesValue) Value(value float64) TdigestAddValuesValue {
 }
 
 func (c TdigestAddValuesValue) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -25187,6 +26158,7 @@ func (c TdigestByrankRank) Rank(rank ...float64) TdigestByrankRank {
 }
 
 func (c TdigestByrankRank) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -25227,6 +26199,7 @@ func (c TdigestByrevrankReverseRank) ReverseRank(reverseRank ...float64) Tdigest
 }
 
 func (c TdigestByrevrankReverseRank) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -25267,6 +26240,7 @@ func (c TdigestCdfValue) Value(value ...float64) TdigestCdfValue {
 }
 
 func (c TdigestCdfValue) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -25291,6 +26265,7 @@ func (c TdigestCreate) Key(key string) TdigestCreateKey {
 type TdigestCreateCompression Completed
 
 func (c TdigestCreateCompression) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -25302,6 +26277,7 @@ func (c TdigestCreateKey) Compression(compression int64) TdigestCreateCompressio
 }
 
 func (c TdigestCreateKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -25326,6 +26302,7 @@ func (c TdigestInfo) Key(key string) TdigestInfoKey {
 type TdigestInfoKey Completed
 
 func (c TdigestInfoKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -25350,6 +26327,7 @@ func (c TdigestMax) Key(key string) TdigestMaxKey {
 type TdigestMaxKey Completed
 
 func (c TdigestMaxKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -25379,6 +26357,7 @@ func (c TdigestMergeConfigCompression) Override() TdigestMergeOverride {
 }
 
 func (c TdigestMergeConfigCompression) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -25409,6 +26388,7 @@ func (c TdigestMergeNumkeys) SourceKey(sourceKey ...string) TdigestMergeSourceKe
 type TdigestMergeOverride Completed
 
 func (c TdigestMergeOverride) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -25440,6 +26420,7 @@ func (c TdigestMergeSourceKey) Override() TdigestMergeOverride {
 }
 
 func (c TdigestMergeSourceKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -25464,6 +26445,7 @@ func (c TdigestMin) Key(key string) TdigestMinKey {
 type TdigestMinKey Completed
 
 func (c TdigestMinKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -25504,6 +26486,7 @@ func (c TdigestQuantileQuantile) Quantile(quantile ...float64) TdigestQuantileQu
 }
 
 func (c TdigestQuantileQuantile) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -25544,6 +26527,7 @@ func (c TdigestRankValue) Value(value ...float64) TdigestRankValue {
 }
 
 func (c TdigestRankValue) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -25568,6 +26552,7 @@ func (c TdigestReset) Key(key string) TdigestResetKey {
 type TdigestResetKey Completed
 
 func (c TdigestResetKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -25608,6 +26593,7 @@ func (c TdigestRevrankValue) Value(value ...float64) TdigestRevrankValue {
 }
 
 func (c TdigestRevrankValue) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -25632,6 +26618,7 @@ func (c TdigestTrimmedMean) Key(key string) TdigestTrimmedMeanKey {
 type TdigestTrimmedMeanHighCutQuantile Completed
 
 func (c TdigestTrimmedMeanHighCutQuantile) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -25658,6 +26645,7 @@ func (b Builder) Time() (c Time) {
 }
 
 func (c Time) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -25687,6 +26675,7 @@ func (c TopkAddItems) Items(items ...string) TopkAddItems {
 }
 
 func (c TopkAddItems) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -25723,6 +26712,7 @@ func (c TopkCountItem) Item(item ...string) TopkCountItem {
 }
 
 func (c TopkCountItem) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -25759,6 +26749,7 @@ func (c TopkIncrbyItemsIncrement) Item(item string) TopkIncrbyItemsItem {
 }
 
 func (c TopkIncrbyItemsIncrement) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -25797,10 +26788,12 @@ func (c TopkInfo) Key(key string) TopkInfoKey {
 type TopkInfoKey Completed
 
 func (c TopkInfoKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c TopkInfoKey) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -25830,20 +26823,24 @@ func (c TopkListKey) Withcount() TopkListWithcount {
 }
 
 func (c TopkListKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c TopkListKey) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
 type TopkListWithcount Completed
 
 func (c TopkListWithcount) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c TopkListWithcount) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -25873,10 +26870,12 @@ func (c TopkQueryItem) Item(item ...string) TopkQueryItem {
 }
 
 func (c TopkQueryItem) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c TopkQueryItem) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -25915,6 +26914,7 @@ func (c TopkReserveKey) Topk(topk int64) TopkReserveTopk {
 type TopkReserveParamsDecay Completed
 
 func (c TopkReserveParamsDecay) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -25940,6 +26940,7 @@ func (c TopkReserveTopk) Width(width int64) TopkReserveParamsWidth {
 }
 
 func (c TopkReserveTopk) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -25984,6 +26985,7 @@ func (c TouchKey) Key(key ...string) TouchKey {
 }
 
 func (c TouchKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -26044,6 +27046,7 @@ func (c TsAddChunkSize) Labels() TsAddLabels {
 }
 
 func (c TsAddChunkSize) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -26091,6 +27094,7 @@ func (c TsAddEncodingCompressed) Labels() TsAddLabels {
 }
 
 func (c TsAddEncodingCompressed) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -26138,6 +27142,7 @@ func (c TsAddEncodingUncompressed) Labels() TsAddLabels {
 }
 
 func (c TsAddEncodingUncompressed) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -26156,6 +27161,7 @@ func (c TsAddLabels) Labels(label string, value string) TsAddLabels {
 }
 
 func (c TsAddLabels) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -26167,6 +27173,7 @@ func (c TsAddOnDuplicateBlock) Labels() TsAddLabels {
 }
 
 func (c TsAddOnDuplicateBlock) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -26178,6 +27185,7 @@ func (c TsAddOnDuplicateFirst) Labels() TsAddLabels {
 }
 
 func (c TsAddOnDuplicateFirst) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -26189,6 +27197,7 @@ func (c TsAddOnDuplicateLast) Labels() TsAddLabels {
 }
 
 func (c TsAddOnDuplicateLast) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -26200,6 +27209,7 @@ func (c TsAddOnDuplicateMax) Labels() TsAddLabels {
 }
 
 func (c TsAddOnDuplicateMax) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -26211,6 +27221,7 @@ func (c TsAddOnDuplicateMin) Labels() TsAddLabels {
 }
 
 func (c TsAddOnDuplicateMin) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -26222,6 +27233,7 @@ func (c TsAddOnDuplicateSum) Labels() TsAddLabels {
 }
 
 func (c TsAddOnDuplicateSum) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -26279,6 +27291,7 @@ func (c TsAddRetention) Labels() TsAddLabels {
 }
 
 func (c TsAddRetention) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -26348,6 +27361,7 @@ func (c TsAddValue) Labels() TsAddLabels {
 }
 
 func (c TsAddValue) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -26408,6 +27422,7 @@ func (c TsAlterChunkSize) Labels() TsAlterLabels {
 }
 
 func (c TsAlterChunkSize) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -26419,6 +27434,7 @@ func (c TsAlterDuplicatePolicyBlock) Labels() TsAlterLabels {
 }
 
 func (c TsAlterDuplicatePolicyBlock) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -26430,6 +27446,7 @@ func (c TsAlterDuplicatePolicyFirst) Labels() TsAlterLabels {
 }
 
 func (c TsAlterDuplicatePolicyFirst) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -26441,6 +27458,7 @@ func (c TsAlterDuplicatePolicyLast) Labels() TsAlterLabels {
 }
 
 func (c TsAlterDuplicatePolicyLast) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -26452,6 +27470,7 @@ func (c TsAlterDuplicatePolicyMax) Labels() TsAlterLabels {
 }
 
 func (c TsAlterDuplicatePolicyMax) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -26463,6 +27482,7 @@ func (c TsAlterDuplicatePolicyMin) Labels() TsAlterLabels {
 }
 
 func (c TsAlterDuplicatePolicyMin) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -26474,6 +27494,7 @@ func (c TsAlterDuplicatePolicySum) Labels() TsAlterLabels {
 }
 
 func (c TsAlterDuplicatePolicySum) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -26526,6 +27547,7 @@ func (c TsAlterKey) Labels() TsAlterLabels {
 }
 
 func (c TsAlterKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -26537,6 +27559,7 @@ func (c TsAlterLabels) Labels(label string, value string) TsAlterLabels {
 }
 
 func (c TsAlterLabels) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -26584,6 +27607,7 @@ func (c TsAlterRetention) Labels() TsAlterLabels {
 }
 
 func (c TsAlterRetention) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -26644,6 +27668,7 @@ func (c TsCreateChunkSize) Labels() TsCreateLabels {
 }
 
 func (c TsCreateChunkSize) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -26655,6 +27680,7 @@ func (c TsCreateDuplicatePolicyBlock) Labels() TsCreateLabels {
 }
 
 func (c TsCreateDuplicatePolicyBlock) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -26666,6 +27692,7 @@ func (c TsCreateDuplicatePolicyFirst) Labels() TsCreateLabels {
 }
 
 func (c TsCreateDuplicatePolicyFirst) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -26677,6 +27704,7 @@ func (c TsCreateDuplicatePolicyLast) Labels() TsCreateLabels {
 }
 
 func (c TsCreateDuplicatePolicyLast) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -26688,6 +27716,7 @@ func (c TsCreateDuplicatePolicyMax) Labels() TsCreateLabels {
 }
 
 func (c TsCreateDuplicatePolicyMax) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -26699,6 +27728,7 @@ func (c TsCreateDuplicatePolicyMin) Labels() TsCreateLabels {
 }
 
 func (c TsCreateDuplicatePolicyMin) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -26710,6 +27740,7 @@ func (c TsCreateDuplicatePolicySum) Labels() TsCreateLabels {
 }
 
 func (c TsCreateDuplicatePolicySum) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -26757,6 +27788,7 @@ func (c TsCreateEncodingCompressed) Labels() TsCreateLabels {
 }
 
 func (c TsCreateEncodingCompressed) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -26804,6 +27836,7 @@ func (c TsCreateEncodingUncompressed) Labels() TsCreateLabels {
 }
 
 func (c TsCreateEncodingUncompressed) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -26866,6 +27899,7 @@ func (c TsCreateKey) Labels() TsCreateLabels {
 }
 
 func (c TsCreateKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -26877,6 +27911,7 @@ func (c TsCreateLabels) Labels(label string, value string) TsCreateLabels {
 }
 
 func (c TsCreateLabels) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -26934,6 +27969,7 @@ func (c TsCreateRetention) Labels() TsCreateLabels {
 }
 
 func (c TsCreateRetention) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -27049,6 +28085,7 @@ func (c TsCreateruleAggregationVarS) Bucketduration(bucketduration int64) TsCrea
 type TsCreateruleAligntimestamp Completed
 
 func (c TsCreateruleAligntimestamp) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -27060,6 +28097,7 @@ func (c TsCreateruleBucketduration) Aligntimestamp(aligntimestamp int64) TsCreat
 }
 
 func (c TsCreateruleBucketduration) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -27168,6 +28206,7 @@ func (c TsDecrbyChunkSize) Labels() TsDecrbyLabels {
 }
 
 func (c TsDecrbyChunkSize) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -27186,6 +28225,7 @@ func (c TsDecrbyLabels) Labels(label string, value string) TsDecrbyLabels {
 }
 
 func (c TsDecrbyLabels) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -27207,6 +28247,7 @@ func (c TsDecrbyRetention) Labels() TsDecrbyLabels {
 }
 
 func (c TsDecrbyRetention) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -27233,6 +28274,7 @@ func (c TsDecrbyTimestamp) Labels() TsDecrbyLabels {
 }
 
 func (c TsDecrbyTimestamp) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -27249,6 +28291,7 @@ func (c TsDecrbyUncompressed) Labels() TsDecrbyLabels {
 }
 
 func (c TsDecrbyUncompressed) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -27280,6 +28323,7 @@ func (c TsDecrbyValue) Labels() TsDecrbyLabels {
 }
 
 func (c TsDecrbyValue) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -27318,6 +28362,7 @@ func (c TsDelKey) FromTimestamp(fromTimestamp int64) TsDelFromTimestamp {
 type TsDelToTimestamp Completed
 
 func (c TsDelToTimestamp) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -27342,6 +28387,7 @@ func (c TsDeleterule) Sourcekey(sourcekey string) TsDeleteruleSourcekey {
 type TsDeleteruleDestkey Completed
 
 func (c TsDeleteruleDestkey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -27383,12 +28429,14 @@ func (c TsGetKey) Latest() TsGetLatest {
 }
 
 func (c TsGetKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type TsGetLatest Completed
 
 func (c TsGetLatest) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -27418,6 +28466,7 @@ func (c TsIncrbyChunkSize) Labels() TsIncrbyLabels {
 }
 
 func (c TsIncrbyChunkSize) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -27436,6 +28485,7 @@ func (c TsIncrbyLabels) Labels(label string, value string) TsIncrbyLabels {
 }
 
 func (c TsIncrbyLabels) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -27457,6 +28507,7 @@ func (c TsIncrbyRetention) Labels() TsIncrbyLabels {
 }
 
 func (c TsIncrbyRetention) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -27483,6 +28534,7 @@ func (c TsIncrbyTimestamp) Labels() TsIncrbyLabels {
 }
 
 func (c TsIncrbyTimestamp) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -27499,6 +28551,7 @@ func (c TsIncrbyUncompressed) Labels() TsIncrbyLabels {
 }
 
 func (c TsIncrbyUncompressed) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -27530,6 +28583,7 @@ func (c TsIncrbyValue) Labels() TsIncrbyLabels {
 }
 
 func (c TsIncrbyValue) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -27554,6 +28608,7 @@ func (c TsInfo) Key(key string) TsInfoKey {
 type TsInfoDebug Completed
 
 func (c TsInfoDebug) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -27565,6 +28620,7 @@ func (c TsInfoKey) Debug(debug string) TsInfoDebug {
 }
 
 func (c TsInfoKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -27593,6 +28649,7 @@ func (c TsMaddKeyTimestampValue) KeyTimestampValue(key string, timestamp int64, 
 }
 
 func (c TsMaddKeyTimestampValue) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -27635,6 +28692,7 @@ func (c TsMgetFilter) Filter(filter ...string) TsMgetFilter {
 }
 
 func (c TsMgetFilter) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -27981,6 +29039,7 @@ func (c TsMrangeFilter) Groupby(label string, reduce string, reducer string) TsM
 }
 
 func (c TsMrangeFilter) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -28195,6 +29254,7 @@ func (c TsMrangeFromtimestamp) Totimestamp(totimestamp int64) TsMrangeTotimestam
 type TsMrangeGroupby Completed
 
 func (c TsMrangeGroupby) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -28891,6 +29951,7 @@ func (c TsMrevrangeFilter) Groupby(label string, reduce string, reducer string) 
 }
 
 func (c TsMrevrangeFilter) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -29105,6 +30166,7 @@ func (c TsMrevrangeFromtimestamp) Totimestamp(totimestamp int64) TsMrevrangeToti
 type TsMrevrangeGroupby Completed
 
 func (c TsMrevrangeGroupby) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -29514,6 +30576,7 @@ func (c TsQueryindexFilter) Filter(filter ...string) TsQueryindexFilter {
 }
 
 func (c TsQueryindexFilter) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -29639,6 +30702,7 @@ func (c TsRangeAggregationBucketduration) Empty() TsRangeAggregationEmpty {
 }
 
 func (c TsRangeAggregationBucketduration) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -29650,12 +30714,14 @@ func (c TsRangeAggregationBuckettimestamp) Empty() TsRangeAggregationEmpty {
 }
 
 func (c TsRangeAggregationBuckettimestamp) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type TsRangeAggregationEmpty Completed
 
 func (c TsRangeAggregationEmpty) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -29727,6 +30793,7 @@ func (c TsRangeAlign) AggregationTwa() TsRangeAggregationAggregationTwa {
 }
 
 func (c TsRangeAlign) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -29803,6 +30870,7 @@ func (c TsRangeCount) AggregationTwa() TsRangeAggregationAggregationTwa {
 }
 
 func (c TsRangeCount) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -29897,6 +30965,7 @@ func (c TsRangeFilterByTs) AggregationTwa() TsRangeAggregationAggregationTwa {
 }
 
 func (c TsRangeFilterByTs) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -29978,6 +31047,7 @@ func (c TsRangeFilterByValue) AggregationTwa() TsRangeAggregationAggregationTwa 
 }
 
 func (c TsRangeFilterByValue) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -30086,6 +31156,7 @@ func (c TsRangeLatest) AggregationTwa() TsRangeAggregationAggregationTwa {
 }
 
 func (c TsRangeLatest) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -30185,6 +31256,7 @@ func (c TsRangeTotimestamp) AggregationTwa() TsRangeAggregationAggregationTwa {
 }
 
 func (c TsRangeTotimestamp) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -30310,6 +31382,7 @@ func (c TsRevrangeAggregationBucketduration) Empty() TsRevrangeAggregationEmpty 
 }
 
 func (c TsRevrangeAggregationBucketduration) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -30321,12 +31394,14 @@ func (c TsRevrangeAggregationBuckettimestamp) Empty() TsRevrangeAggregationEmpty
 }
 
 func (c TsRevrangeAggregationBuckettimestamp) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type TsRevrangeAggregationEmpty Completed
 
 func (c TsRevrangeAggregationEmpty) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -30398,6 +31473,7 @@ func (c TsRevrangeAlign) AggregationTwa() TsRevrangeAggregationAggregationTwa {
 }
 
 func (c TsRevrangeAlign) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -30474,6 +31550,7 @@ func (c TsRevrangeCount) AggregationTwa() TsRevrangeAggregationAggregationTwa {
 }
 
 func (c TsRevrangeCount) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -30568,6 +31645,7 @@ func (c TsRevrangeFilterByTs) AggregationTwa() TsRevrangeAggregationAggregationT
 }
 
 func (c TsRevrangeFilterByTs) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -30649,6 +31727,7 @@ func (c TsRevrangeFilterByValue) AggregationTwa() TsRevrangeAggregationAggregati
 }
 
 func (c TsRevrangeFilterByValue) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -30757,6 +31836,7 @@ func (c TsRevrangeLatest) AggregationTwa() TsRevrangeAggregationAggregationTwa {
 }
 
 func (c TsRevrangeLatest) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -30856,6 +31936,7 @@ func (c TsRevrangeTotimestamp) AggregationTwa() TsRevrangeAggregationAggregation
 }
 
 func (c TsRevrangeTotimestamp) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -30880,10 +31961,12 @@ func (c Ttl) Key(key string) TtlKey {
 type TtlKey Completed
 
 func (c TtlKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c TtlKey) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -30908,10 +31991,12 @@ func (c Type) Key(key string) TypeKey {
 type TypeKey Completed
 
 func (c TypeKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c TypeKey) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -30956,6 +32041,7 @@ func (c UnlinkKey) Key(key ...string) UnlinkKey {
 }
 
 func (c UnlinkKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -30973,6 +32059,7 @@ func (c Unsubscribe) Channel(channel ...string) UnsubscribeChannel {
 }
 
 func (c Unsubscribe) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -30984,6 +32071,7 @@ func (c UnsubscribeChannel) Channel(channel ...string) UnsubscribeChannel {
 }
 
 func (c UnsubscribeChannel) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -30996,6 +32084,7 @@ func (b Builder) Unwatch() (c Unwatch) {
 }
 
 func (c Unwatch) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -31022,6 +32111,7 @@ func (c WaitNumreplicas) Timeout(timeout int64) WaitTimeout {
 type WaitTimeout Completed
 
 func (c WaitTimeout) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -31055,6 +32145,7 @@ func (c WaitaofNumreplicas) Timeout(timeout int64) WaitaofTimeout {
 type WaitaofTimeout Completed
 
 func (c WaitaofTimeout) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -31099,6 +32190,7 @@ func (c WatchKey) Key(key ...string) WatchKey {
 }
 
 func (c WatchKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -31135,6 +32227,7 @@ func (c XackId) Id(id ...string) XackId {
 }
 
 func (c XackId) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -31171,6 +32264,7 @@ func (c XaddFieldValue) FieldValue(field string, value string) XaddFieldValue {
 }
 
 func (c XaddFieldValue) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -31319,6 +32413,7 @@ func (c XautoclaimCount) Justid() XautoclaimJustid {
 }
 
 func (c XautoclaimCount) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -31332,6 +32427,7 @@ func (c XautoclaimGroup) Consumer(consumer string) XautoclaimConsumer {
 type XautoclaimJustid Completed
 
 func (c XautoclaimJustid) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -31362,6 +32458,7 @@ func (c XautoclaimStart) Justid() XautoclaimJustid {
 }
 
 func (c XautoclaimStart) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -31403,6 +32500,7 @@ func (c XclaimForce) Lastid() XclaimLastid {
 }
 
 func (c XclaimForce) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -31451,6 +32549,7 @@ func (c XclaimId) Lastid() XclaimLastid {
 }
 
 func (c XclaimId) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -31482,6 +32581,7 @@ func (c XclaimIdle) Lastid() XclaimLastid {
 }
 
 func (c XclaimIdle) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -31493,6 +32593,7 @@ func (c XclaimJustid) Lastid() XclaimLastid {
 }
 
 func (c XclaimJustid) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -31506,6 +32607,7 @@ func (c XclaimKey) Group(group string) XclaimGroup {
 type XclaimLastid Completed
 
 func (c XclaimLastid) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -31534,6 +32636,7 @@ func (c XclaimRetrycount) Lastid() XclaimLastid {
 }
 
 func (c XclaimRetrycount) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -31560,6 +32663,7 @@ func (c XclaimTime) Lastid() XclaimLastid {
 }
 
 func (c XclaimTime) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -31589,6 +32693,7 @@ func (c XdelId) Id(id ...string) XdelId {
 }
 
 func (c XdelId) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -31620,6 +32725,7 @@ func (c XgroupCreate) Key(key string) XgroupCreateKey {
 type XgroupCreateEntriesread Completed
 
 func (c XgroupCreateEntriesread) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -31643,6 +32749,7 @@ func (c XgroupCreateId) Entriesread(entriesRead int64) XgroupCreateEntriesread {
 }
 
 func (c XgroupCreateId) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -31661,6 +32768,7 @@ func (c XgroupCreateMkstream) Entriesread(entriesRead int64) XgroupCreateEntries
 }
 
 func (c XgroupCreateMkstream) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -31685,6 +32793,7 @@ func (c XgroupCreateconsumer) Key(key string) XgroupCreateconsumerKey {
 type XgroupCreateconsumerConsumer Completed
 
 func (c XgroupCreateconsumerConsumer) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -31723,6 +32832,7 @@ func (c XgroupDelconsumer) Key(key string) XgroupDelconsumerKey {
 type XgroupDelconsumerConsumername Completed
 
 func (c XgroupDelconsumerConsumername) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -31761,6 +32871,7 @@ func (c XgroupDestroy) Key(key string) XgroupDestroyKey {
 type XgroupDestroyGroup Completed
 
 func (c XgroupDestroyGroup) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -31780,6 +32891,7 @@ func (b Builder) XgroupHelp() (c XgroupHelp) {
 }
 
 func (c XgroupHelp) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -31804,6 +32916,7 @@ func (c XgroupSetid) Key(key string) XgroupSetidKey {
 type XgroupSetidEntriesread Completed
 
 func (c XgroupSetidEntriesread) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -31822,6 +32935,7 @@ func (c XgroupSetidId) Entriesread(entriesRead int64) XgroupSetidEntriesread {
 }
 
 func (c XgroupSetidId) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -31853,6 +32967,7 @@ func (c XinfoConsumers) Key(key string) XinfoConsumersKey {
 type XinfoConsumersGroup Completed
 
 func (c XinfoConsumersGroup) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -31884,6 +32999,7 @@ func (c XinfoGroups) Key(key string) XinfoGroupsKey {
 type XinfoGroupsKey Completed
 
 func (c XinfoGroupsKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -31896,6 +33012,7 @@ func (b Builder) XinfoHelp() (c XinfoHelp) {
 }
 
 func (c XinfoHelp) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -31920,6 +33037,7 @@ func (c XinfoStream) Key(key string) XinfoStreamKey {
 type XinfoStreamFullCount Completed
 
 func (c XinfoStreamFullCount) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -31931,6 +33049,7 @@ func (c XinfoStreamFullFull) Count(count int64) XinfoStreamFullCount {
 }
 
 func (c XinfoStreamFullFull) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -31942,6 +33061,7 @@ func (c XinfoStreamKey) Full() XinfoStreamFullFull {
 }
 
 func (c XinfoStreamKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -31966,6 +33086,7 @@ func (c Xlen) Key(key string) XlenKey {
 type XlenKey Completed
 
 func (c XlenKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -31990,6 +33111,7 @@ func (c Xpending) Key(key string) XpendingKey {
 type XpendingFiltersConsumer Completed
 
 func (c XpendingFiltersConsumer) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -32001,6 +33123,7 @@ func (c XpendingFiltersCount) Consumer(consumer string) XpendingFiltersConsumer 
 }
 
 func (c XpendingFiltersCount) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -32038,6 +33161,7 @@ func (c XpendingGroup) Start(start string) XpendingFiltersStart {
 }
 
 func (c XpendingGroup) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -32069,6 +33193,7 @@ func (c Xrange) Key(key string) XrangeKey {
 type XrangeCount Completed
 
 func (c XrangeCount) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -32080,6 +33205,7 @@ func (c XrangeEnd) Count(count int64) XrangeCount {
 }
 
 func (c XrangeEnd) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -32149,6 +33275,7 @@ func (c XreadId) Id(id ...string) XreadId {
 }
 
 func (c XreadId) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -32265,6 +33392,7 @@ func (c XreadgroupId) Id(id ...string) XreadgroupId {
 }
 
 func (c XreadgroupId) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -32335,6 +33463,7 @@ func (c Xrevrange) Key(key string) XrevrangeKey {
 type XrevrangeCount Completed
 
 func (c XrevrangeCount) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -32360,6 +33489,7 @@ func (c XrevrangeStart) Count(count int64) XrevrangeCount {
 }
 
 func (c XrevrangeStart) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -32389,6 +33519,7 @@ func (c XsetidEntriesadded) Maxdeletedid(maxDeletedEntryId string) XsetidMaxdele
 }
 
 func (c XsetidEntriesadded) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -32412,12 +33543,14 @@ func (c XsetidLastId) Maxdeletedid(maxDeletedEntryId string) XsetidMaxdeletedid 
 }
 
 func (c XsetidLastId) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type XsetidMaxdeletedid Completed
 
 func (c XsetidMaxdeletedid) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -32454,6 +33587,7 @@ func (c XtrimKey) Minid() XtrimTrimStrategyMinid {
 type XtrimTrimLimit Completed
 
 func (c XtrimTrimLimit) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -32513,6 +33647,7 @@ func (c XtrimTrimThreshold) Limit(count int64) XtrimTrimLimit {
 }
 
 func (c XtrimTrimThreshold) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -32679,6 +33814,7 @@ func (c ZaddScoreMember) ScoreMember(score float64, member string) ZaddScoreMemb
 }
 
 func (c ZaddScoreMember) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -32703,10 +33839,12 @@ func (c Zcard) Key(key string) ZcardKey {
 type ZcardKey Completed
 
 func (c ZcardKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c ZcardKey) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -32738,10 +33876,12 @@ func (c ZcountKey) Min(min string) ZcountMin {
 type ZcountMax Completed
 
 func (c ZcountMax) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c ZcountMax) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -32788,6 +33928,7 @@ func (c ZdiffKey) Withscores() ZdiffWithscores {
 }
 
 func (c ZdiffKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -32811,6 +33952,7 @@ func (c ZdiffNumkeys) Key(key ...string) ZdiffKey {
 type ZdiffWithscores Completed
 
 func (c ZdiffWithscores) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -32857,6 +33999,7 @@ func (c ZdiffstoreKey) Key(key ...string) ZdiffstoreKey {
 }
 
 func (c ZdiffstoreKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -32912,6 +34055,7 @@ func (c ZincrbyKey) Increment(increment float64) ZincrbyIncrement {
 type ZincrbyMember Completed
 
 func (c ZincrbyMember) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -32936,6 +34080,7 @@ func (c ZinterAggregateMax) Withscores() ZinterWithscores {
 }
 
 func (c ZinterAggregateMax) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -32947,6 +34092,7 @@ func (c ZinterAggregateMin) Withscores() ZinterWithscores {
 }
 
 func (c ZinterAggregateMin) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -32958,6 +34104,7 @@ func (c ZinterAggregateSum) Withscores() ZinterWithscores {
 }
 
 func (c ZinterAggregateSum) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -33007,6 +34154,7 @@ func (c ZinterKey) Withscores() ZinterWithscores {
 }
 
 func (c ZinterKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -33058,12 +34206,14 @@ func (c ZinterWeights) Withscores() ZinterWithscores {
 }
 
 func (c ZinterWeights) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type ZinterWithscores Completed
 
 func (c ZinterWithscores) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -33103,12 +34253,14 @@ func (c ZintercardKey) Limit(limit int64) ZintercardLimit {
 }
 
 func (c ZintercardKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type ZintercardLimit Completed
 
 func (c ZintercardLimit) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -33150,18 +34302,21 @@ func (c Zinterstore) Destination(destination string) ZinterstoreDestination {
 type ZinterstoreAggregateMax Completed
 
 func (c ZinterstoreAggregateMax) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type ZinterstoreAggregateMin Completed
 
 func (c ZinterstoreAggregateMin) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type ZinterstoreAggregateSum Completed
 
 func (c ZinterstoreAggregateSum) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -33213,6 +34368,7 @@ func (c ZinterstoreKey) AggregateMax() ZinterstoreAggregateMax {
 }
 
 func (c ZinterstoreKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -33259,6 +34415,7 @@ func (c ZinterstoreWeights) AggregateMax() ZinterstoreAggregateMax {
 }
 
 func (c ZinterstoreWeights) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -33290,10 +34447,12 @@ func (c ZlexcountKey) Min(min string) ZlexcountMin {
 type ZlexcountMax Completed
 
 func (c ZlexcountMax) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c ZlexcountMax) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -33320,6 +34479,7 @@ func (c Zmpop) Numkeys(numkeys int64) ZmpopNumkeys {
 type ZmpopCount Completed
 
 func (c ZmpopCount) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -33375,6 +34535,7 @@ func (c ZmpopWhereMax) Count(count int64) ZmpopCount {
 }
 
 func (c ZmpopWhereMax) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -33386,6 +34547,7 @@ func (c ZmpopWhereMin) Count(count int64) ZmpopCount {
 }
 
 func (c ZmpopWhereMin) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -33422,10 +34584,12 @@ func (c ZmscoreMember) Member(member ...string) ZmscoreMember {
 }
 
 func (c ZmscoreMember) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c ZmscoreMember) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -33450,6 +34614,7 @@ func (c Zpopmax) Key(key string) ZpopmaxKey {
 type ZpopmaxCount Completed
 
 func (c ZpopmaxCount) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -33461,6 +34626,7 @@ func (c ZpopmaxKey) Count(count int64) ZpopmaxCount {
 }
 
 func (c ZpopmaxKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -33485,6 +34651,7 @@ func (c Zpopmin) Key(key string) ZpopminKey {
 type ZpopminCount Completed
 
 func (c ZpopminCount) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -33496,6 +34663,7 @@ func (c ZpopminKey) Count(count int64) ZpopminCount {
 }
 
 func (c ZpopminKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -33525,6 +34693,7 @@ func (c ZrandmemberKey) Count(count int64) ZrandmemberOptionsCount {
 }
 
 func (c ZrandmemberKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -33536,12 +34705,14 @@ func (c ZrandmemberOptionsCount) Withscores() ZrandmemberOptionsWithscores {
 }
 
 func (c ZrandmemberOptionsCount) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type ZrandmemberOptionsWithscores Completed
 
 func (c ZrandmemberOptionsWithscores) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -33578,10 +34749,12 @@ func (c ZrangeLimit) Withscores() ZrangeWithscores {
 }
 
 func (c ZrangeLimit) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c ZrangeLimit) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -33613,10 +34786,12 @@ func (c ZrangeMax) Withscores() ZrangeWithscores {
 }
 
 func (c ZrangeMax) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c ZrangeMax) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -33640,10 +34815,12 @@ func (c ZrangeRev) Withscores() ZrangeWithscores {
 }
 
 func (c ZrangeRev) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c ZrangeRev) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -33665,10 +34842,12 @@ func (c ZrangeSortbyBylex) Withscores() ZrangeWithscores {
 }
 
 func (c ZrangeSortbyBylex) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c ZrangeSortbyBylex) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -33690,20 +34869,24 @@ func (c ZrangeSortbyByscore) Withscores() ZrangeWithscores {
 }
 
 func (c ZrangeSortbyByscore) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c ZrangeSortbyByscore) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
 type ZrangeWithscores Completed
 
 func (c ZrangeWithscores) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c ZrangeWithscores) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -33735,10 +34918,12 @@ func (c ZrangebylexKey) Min(min string) ZrangebylexMin {
 type ZrangebylexLimit Completed
 
 func (c ZrangebylexLimit) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c ZrangebylexLimit) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -33750,10 +34935,12 @@ func (c ZrangebylexMax) Limit(offset int64, count int64) ZrangebylexLimit {
 }
 
 func (c ZrangebylexMax) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c ZrangebylexMax) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -33792,10 +34979,12 @@ func (c ZrangebyscoreKey) Min(min string) ZrangebyscoreMin {
 type ZrangebyscoreLimit Completed
 
 func (c ZrangebyscoreLimit) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c ZrangebyscoreLimit) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -33812,10 +35001,12 @@ func (c ZrangebyscoreMax) Limit(offset int64, count int64) ZrangebyscoreLimit {
 }
 
 func (c ZrangebyscoreMax) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c ZrangebyscoreMax) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -33834,10 +35025,12 @@ func (c ZrangebyscoreWithscores) Limit(offset int64, count int64) ZrangebyscoreL
 }
 
 func (c ZrangebyscoreWithscores) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c ZrangebyscoreWithscores) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -33874,6 +35067,7 @@ func (c ZrangestoreDst) Src(src string) ZrangestoreSrc {
 type ZrangestoreLimit Completed
 
 func (c ZrangestoreLimit) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -33900,6 +35094,7 @@ func (c ZrangestoreMax) Limit(offset int64, count int64) ZrangestoreLimit {
 }
 
 func (c ZrangestoreMax) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -33918,6 +35113,7 @@ func (c ZrangestoreRev) Limit(offset int64, count int64) ZrangestoreLimit {
 }
 
 func (c ZrangestoreRev) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -33934,6 +35130,7 @@ func (c ZrangestoreSortbyBylex) Limit(offset int64, count int64) ZrangestoreLimi
 }
 
 func (c ZrangestoreSortbyBylex) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -33950,6 +35147,7 @@ func (c ZrangestoreSortbyByscore) Limit(offset int64, count int64) ZrangestoreLi
 }
 
 func (c ZrangestoreSortbyByscore) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -33993,20 +35191,24 @@ func (c ZrankMember) Withscore() ZrankWithscore {
 }
 
 func (c ZrankMember) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c ZrankMember) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
 type ZrankWithscore Completed
 
 func (c ZrankWithscore) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c ZrankWithscore) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -34043,6 +35245,7 @@ func (c ZremMember) Member(member ...string) ZremMember {
 }
 
 func (c ZremMember) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -34074,6 +35277,7 @@ func (c ZremrangebylexKey) Min(min string) ZremrangebylexMin {
 type ZremrangebylexMax Completed
 
 func (c ZremrangebylexMax) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -34119,6 +35323,7 @@ func (c ZremrangebyrankStart) Stop(stop int64) ZremrangebyrankStop {
 type ZremrangebyrankStop Completed
 
 func (c ZremrangebyrankStop) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -34150,6 +35355,7 @@ func (c ZremrangebyscoreKey) Min(min string) ZremrangebyscoreMin {
 type ZremrangebyscoreMax Completed
 
 func (c ZremrangebyscoreMax) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -34200,20 +35406,24 @@ func (c ZrevrangeStop) Withscores() ZrevrangeWithscores {
 }
 
 func (c ZrevrangeStop) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c ZrevrangeStop) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
 type ZrevrangeWithscores Completed
 
 func (c ZrevrangeWithscores) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c ZrevrangeWithscores) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -34245,10 +35455,12 @@ func (c ZrevrangebylexKey) Max(max string) ZrevrangebylexMax {
 type ZrevrangebylexLimit Completed
 
 func (c ZrevrangebylexLimit) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c ZrevrangebylexLimit) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -34267,10 +35479,12 @@ func (c ZrevrangebylexMin) Limit(offset int64, count int64) ZrevrangebylexLimit 
 }
 
 func (c ZrevrangebylexMin) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c ZrevrangebylexMin) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -34302,10 +35516,12 @@ func (c ZrevrangebyscoreKey) Max(max string) ZrevrangebyscoreMax {
 type ZrevrangebyscoreLimit Completed
 
 func (c ZrevrangebyscoreLimit) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c ZrevrangebyscoreLimit) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -34329,10 +35545,12 @@ func (c ZrevrangebyscoreMin) Limit(offset int64, count int64) ZrevrangebyscoreLi
 }
 
 func (c ZrevrangebyscoreMin) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c ZrevrangebyscoreMin) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -34344,10 +35562,12 @@ func (c ZrevrangebyscoreWithscores) Limit(offset int64, count int64) Zrevrangeby
 }
 
 func (c ZrevrangebyscoreWithscores) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c ZrevrangebyscoreWithscores) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -34384,20 +35604,24 @@ func (c ZrevrankMember) Withscore() ZrevrankWithscore {
 }
 
 func (c ZrevrankMember) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c ZrevrankMember) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
 type ZrevrankWithscore Completed
 
 func (c ZrevrankWithscore) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c ZrevrankWithscore) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -34422,6 +35646,7 @@ func (c Zscan) Key(key string) ZscanKey {
 type ZscanCount Completed
 
 func (c ZscanCount) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -34438,6 +35663,7 @@ func (c ZscanCursor) Count(count int64) ZscanCount {
 }
 
 func (c ZscanCursor) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -34456,6 +35682,7 @@ func (c ZscanMatch) Count(count int64) ZscanCount {
 }
 
 func (c ZscanMatch) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -34487,10 +35714,12 @@ func (c ZscoreKey) Member(member string) ZscoreMember {
 type ZscoreMember Completed
 
 func (c ZscoreMember) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 func (c ZscoreMember) Cache() Cacheable {
+	c.cs.Build()
 	return Cacheable(c)
 }
 
@@ -34515,6 +35744,7 @@ func (c ZunionAggregateMax) Withscores() ZunionWithscores {
 }
 
 func (c ZunionAggregateMax) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -34526,6 +35756,7 @@ func (c ZunionAggregateMin) Withscores() ZunionWithscores {
 }
 
 func (c ZunionAggregateMin) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -34537,6 +35768,7 @@ func (c ZunionAggregateSum) Withscores() ZunionWithscores {
 }
 
 func (c ZunionAggregateSum) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -34586,6 +35818,7 @@ func (c ZunionKey) Withscores() ZunionWithscores {
 }
 
 func (c ZunionKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -34637,12 +35870,14 @@ func (c ZunionWeights) Withscores() ZunionWithscores {
 }
 
 func (c ZunionWeights) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type ZunionWithscores Completed
 
 func (c ZunionWithscores) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -34667,18 +35902,21 @@ func (c Zunionstore) Destination(destination string) ZunionstoreDestination {
 type ZunionstoreAggregateMax Completed
 
 func (c ZunionstoreAggregateMax) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type ZunionstoreAggregateMin Completed
 
 func (c ZunionstoreAggregateMin) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
 type ZunionstoreAggregateSum Completed
 
 func (c ZunionstoreAggregateSum) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -34730,6 +35968,7 @@ func (c ZunionstoreKey) AggregateMax() ZunionstoreAggregateMax {
 }
 
 func (c ZunionstoreKey) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 
@@ -34776,6 +36015,7 @@ func (c ZunionstoreWeights) AggregateMax() ZunionstoreAggregateMax {
 }
 
 func (c ZunionstoreWeights) Build() Completed {
+	c.cs.Build()
 	return Completed(c)
 }
 

@@ -17,55 +17,55 @@ const (
 var (
 	// OptInCmd is predefined CLIENT CACHING YES
 	OptInCmd = Completed{
-		cs: &CommandSlice{s: []string{"CLIENT", "CACHING", "YES"}},
+		cs: newCommandSlice([]string{"CLIENT", "CACHING", "YES"}),
 		cf: optInTag,
 	}
 	// MultiCmd is predefined MULTI
 	MultiCmd = Completed{
-		cs: &CommandSlice{s: []string{"MULTI"}},
+		cs: newCommandSlice([]string{"MULTI"}),
 	}
 	// ExecCmd is predefined EXEC
 	ExecCmd = Completed{
-		cs: &CommandSlice{s: []string{"EXEC"}},
+		cs: newCommandSlice([]string{"EXEC"}),
 	}
 	// RoleCmd is predefined ROLE
 	RoleCmd = Completed{
-		cs: &CommandSlice{s: []string{"ROLE"}},
+		cs: newCommandSlice([]string{"ROLE"}),
 	}
 	// QuitCmd is predefined QUIT
 	QuitCmd = Completed{
-		cs: &CommandSlice{s: []string{"QUIT"}},
+		cs: newCommandSlice([]string{"QUIT"}),
 	}
 	// UnsubscribeCmd is predefined UNSUBSCRIBE
 	UnsubscribeCmd = Completed{
-		cs: &CommandSlice{s: []string{"UNSUBSCRIBE"}},
+		cs: newCommandSlice([]string{"UNSUBSCRIBE"}),
 		cf: noRetTag,
 	}
 	// PUnsubscribeCmd is predefined PUNSUBSCRIBE
 	PUnsubscribeCmd = Completed{
-		cs: &CommandSlice{s: []string{"PUNSUBSCRIBE"}},
+		cs: newCommandSlice([]string{"PUNSUBSCRIBE"}),
 		cf: noRetTag,
 	}
 	// SUnsubscribeCmd is predefined SUNSUBSCRIBE
 	SUnsubscribeCmd = Completed{
-		cs: &CommandSlice{s: []string{"SUNSUBSCRIBE"}},
+		cs: newCommandSlice([]string{"SUNSUBSCRIBE"}),
 		cf: noRetTag,
 	}
 	// PingCmd is predefined PING
 	PingCmd = Completed{
-		cs: &CommandSlice{s: []string{"PING"}},
+		cs: newCommandSlice([]string{"PING"}),
 	}
 	// SlotCmd is predefined CLUSTER SLOTS
 	SlotCmd = Completed{
-		cs: &CommandSlice{s: []string{"CLUSTER", "SLOTS"}},
+		cs: newCommandSlice([]string{"CLUSTER", "SLOTS"}),
 	}
 	// AskingCmd is predefined CLUSTER ASKING
 	AskingCmd = Completed{
-		cs: &CommandSlice{s: []string{"ASKING"}},
+		cs: newCommandSlice([]string{"ASKING"}),
 	}
 	// SentinelSubscribe is predefined SUBSCRIBE ASKING
 	SentinelSubscribe = Completed{
-		cs: &CommandSlice{s: []string{"SUBSCRIBE", "+sentinel", "+switch-master", "+reboot"}},
+		cs: newCommandSlice([]string{"SUBSCRIBE", "+sentinel", "+switch-master", "+reboot"}),
 		cf: noRetTag,
 	}
 )
@@ -195,22 +195,22 @@ func (c *Cacheable) CacheKey() (key, command string) {
 
 // NewCompleted creates an arbitrary Completed command.
 func NewCompleted(ss []string) Completed {
-	return Completed{cs: &CommandSlice{s: ss}}
+	return Completed{cs: newCommandSlice(ss)}
 }
 
 // NewBlockingCompleted creates an arbitrary blocking Completed command.
 func NewBlockingCompleted(ss []string) Completed {
-	return Completed{cs: &CommandSlice{s: ss}, cf: blockTag}
+	return Completed{cs: newCommandSlice(ss), cf: blockTag}
 }
 
 // NewReadOnlyCompleted creates an arbitrary readonly Completed command.
 func NewReadOnlyCompleted(ss []string) Completed {
-	return Completed{cs: &CommandSlice{s: ss}, cf: readonly}
+	return Completed{cs: newCommandSlice(ss), cf: readonly}
 }
 
 // NewMGetCompleted creates an arbitrary readonly Completed command.
 func NewMGetCompleted(ss []string) Completed {
-	return Completed{cs: &CommandSlice{s: ss}, cf: mtGetTag}
+	return Completed{cs: newCommandSlice(ss), cf: mtGetTag}
 }
 
 // MGets groups keys by their slot and returns multi MGET commands
