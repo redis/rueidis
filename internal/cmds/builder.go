@@ -3,7 +3,6 @@ package cmds
 import (
 	"strings"
 	"sync"
-	"sync/atomic"
 )
 
 const ErrBuiltTwice = "a command should not be built twice"
@@ -33,14 +32,6 @@ func (cs *CommandSlice) Verify() {
 	}
 }
 
-func (cs *CommandSlice) Pin() int32 {
-	return atomic.AddInt32(&cs.r, 1)
-}
-
-func (cs *CommandSlice) Unpin() int32 {
-	return atomic.AddInt32(&cs.r, -1)
-}
-
 func newCommandSlice(s []string) *CommandSlice {
 	return &CommandSlice{s: s, l: int32(len(s))}
 }
@@ -67,12 +58,16 @@ func put(cs *CommandSlice) {
 
 // PutCompleted recycles the Completed
 func PutCompleted(c Completed) {
-	put(c.cs)
+	if c.cs.r == 0 {
+		put(c.cs)
+	}
 }
 
 // PutCacheable recycles the Cacheable
 func PutCacheable(c Cacheable) {
-	put(c.cs)
+	if c.cs.r == 0 {
+		put(c.cs)
+	}
 }
 
 // Arbitrary allows user to build an arbitrary redis command with Builder.Arbitrary

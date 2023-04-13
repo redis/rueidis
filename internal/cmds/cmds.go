@@ -78,8 +78,9 @@ type Completed struct {
 }
 
 // Pin prevents a Completed to be recycled
-func (c *Completed) Pin() {
-	c.cs.Pin()
+func (c Completed) Pin() Completed {
+	c.cs.r = 1
+	return c
 }
 
 // IsEmpty checks if it is an empty command.
@@ -135,8 +136,9 @@ func (c *Completed) Slot() uint16 {
 type Cacheable Completed
 
 // Pin prevents a Cacheable to be recycled
-func (c *Cacheable) Pin() {
-	c.cs.Pin()
+func (c Cacheable) Pin() Cacheable {
+	c.cs.r = 1
+	return c
 }
 
 // Slot returns the command key slot
