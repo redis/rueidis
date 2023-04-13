@@ -8,22 +8,15 @@ import (
 	"github.com/rueian/rueidis/internal/cmds"
 )
 
-type (
-	// Completed is alias to internal cmds.Completed
-	Completed = cmds.Completed
-	// Cacheable is alias to internal cmds.Cacheable
-	Cacheable = cmds.Cacheable
-)
-
 var _ rueidis.Client = (*hookclient)(nil)
 
 // Hook allows user to intercept rueidis.Client by using WithHook
 type Hook interface {
-	Do(client rueidis.Client, ctx context.Context, cmd Completed) (resp rueidis.RedisResult)
-	DoMulti(client rueidis.Client, ctx context.Context, multi ...Completed) (resps []rueidis.RedisResult)
-	DoCache(client rueidis.Client, ctx context.Context, cmd Cacheable, ttl time.Duration) (resp rueidis.RedisResult)
+	Do(client rueidis.Client, ctx context.Context, cmd rueidis.Completed) (resp rueidis.RedisResult)
+	DoMulti(client rueidis.Client, ctx context.Context, multi ...rueidis.Completed) (resps []rueidis.RedisResult)
+	DoCache(client rueidis.Client, ctx context.Context, cmd rueidis.Cacheable, ttl time.Duration) (resp rueidis.RedisResult)
 	DoMultiCache(client rueidis.Client, ctx context.Context, multi ...rueidis.CacheableTTL) (resps []rueidis.RedisResult)
-	Receive(client rueidis.Client, ctx context.Context, subscribe Completed, fn func(msg rueidis.PubSubMessage)) (err error)
+	Receive(client rueidis.Client, ctx context.Context, subscribe rueidis.Completed, fn func(msg rueidis.PubSubMessage)) (err error)
 }
 
 // WithHook wraps rueidis.Client with Hook and allows user to intercept rueidis.Client
@@ -40,15 +33,15 @@ func (c *hookclient) B() cmds.Builder {
 	return c.client.B()
 }
 
-func (c *hookclient) Do(ctx context.Context, cmd cmds.Completed) (resp rueidis.RedisResult) {
+func (c *hookclient) Do(ctx context.Context, cmd rueidis.Completed) (resp rueidis.RedisResult) {
 	return c.hook.Do(c.client, ctx, cmd)
 }
 
-func (c *hookclient) DoMulti(ctx context.Context, multi ...cmds.Completed) (resp []rueidis.RedisResult) {
+func (c *hookclient) DoMulti(ctx context.Context, multi ...rueidis.Completed) (resp []rueidis.RedisResult) {
 	return c.hook.DoMulti(c.client, ctx, multi...)
 }
 
-func (c *hookclient) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp rueidis.RedisResult) {
+func (c *hookclient) DoCache(ctx context.Context, cmd rueidis.Cacheable, ttl time.Duration) (resp rueidis.RedisResult) {
 	return c.hook.DoCache(c.client, ctx, cmd, ttl)
 }
 
@@ -67,7 +60,7 @@ func (c *hookclient) Dedicate() (rueidis.DedicatedClient, func()) {
 	return &dedicated{client: &extended{DedicatedClient: client}, hook: c.hook}, cancel
 }
 
-func (c *hookclient) Receive(ctx context.Context, subscribe cmds.Completed, fn func(msg rueidis.PubSubMessage)) (err error) {
+func (c *hookclient) Receive(ctx context.Context, subscribe rueidis.Completed, fn func(msg rueidis.PubSubMessage)) (err error) {
 	return c.hook.Receive(c.client, ctx, subscribe, fn)
 }
 
@@ -94,15 +87,15 @@ func (d *dedicated) B() cmds.Builder {
 	return d.client.B()
 }
 
-func (d *dedicated) Do(ctx context.Context, cmd cmds.Completed) (resp rueidis.RedisResult) {
+func (d *dedicated) Do(ctx context.Context, cmd rueidis.Completed) (resp rueidis.RedisResult) {
 	return d.hook.Do(d.client, ctx, cmd)
 }
 
-func (d *dedicated) DoMulti(ctx context.Context, multi ...cmds.Completed) (resp []rueidis.RedisResult) {
+func (d *dedicated) DoMulti(ctx context.Context, multi ...rueidis.Completed) (resp []rueidis.RedisResult) {
 	return d.hook.DoMulti(d.client, ctx, multi...)
 }
 
-func (d *dedicated) Receive(ctx context.Context, subscribe cmds.Completed, fn func(msg rueidis.PubSubMessage)) (err error) {
+func (d *dedicated) Receive(ctx context.Context, subscribe rueidis.Completed, fn func(msg rueidis.PubSubMessage)) (err error) {
 	return d.hook.Receive(d.client, ctx, subscribe, fn)
 }
 
@@ -120,7 +113,7 @@ type extended struct {
 	rueidis.DedicatedClient
 }
 
-func (e *extended) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp rueidis.RedisResult) {
+func (e *extended) DoCache(ctx context.Context, cmd rueidis.Cacheable, ttl time.Duration) (resp rueidis.RedisResult) {
 	panic("DoCache() is not allowed with rueidis.DedicatedClient")
 }
 

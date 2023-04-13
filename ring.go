@@ -3,16 +3,14 @@ package rueidis
 import (
 	"sync"
 	"sync/atomic"
-
-	"github.com/rueian/rueidis/internal/cmds"
 )
 
 type queue interface {
-	PutOne(m cmds.Completed) chan RedisResult
-	PutMulti(m []cmds.Completed) chan RedisResult
-	NextWriteCmd() (cmds.Completed, []cmds.Completed, chan RedisResult)
-	WaitForWrite() (cmds.Completed, []cmds.Completed, chan RedisResult)
-	NextResultCh() (cmds.Completed, []cmds.Completed, chan RedisResult, *sync.Cond)
+	PutOne(m Completed) chan RedisResult
+	PutMulti(m []Completed) chan RedisResult
+	NextWriteCmd() (Completed, []Completed, chan RedisResult)
+	WaitForWrite() (Completed, []Completed, chan RedisResult)
+	NextResultCh() (Completed, []Completed, chan RedisResult, *sync.Cond)
 }
 
 var _ queue = (*ring)(nil)
@@ -46,13 +44,13 @@ type node struct {
 	c1    *sync.Cond
 	c2    *sync.Cond
 	ch    chan RedisResult
-	one   cmds.Completed
-	multi []cmds.Completed
+	one   Completed
+	multi []Completed
 	mark  uint32
 	slept bool
 }
 
-func (r *ring) PutOne(m cmds.Completed) chan RedisResult {
+func (r *ring) PutOne(m Completed) chan RedisResult {
 	n := &r.store[atomic.AddUint64(&r.write, 1)&r.mask]
 	n.c1.L.Lock()
 	for n.mark != 0 {
@@ -69,13 +67,13 @@ func (r *ring) PutOne(m cmds.Completed) chan RedisResult {
 	return n.ch
 }
 
-func (r *ring) PutMulti(m []cmds.Completed) chan RedisResult {
+func (r *ring) PutMulti(m []Completed) chan RedisResult {
 	n := &r.store[atomic.AddUint64(&r.write, 1)&r.mask]
 	n.c1.L.Lock()
 	for n.mark != 0 {
 		n.c1.Wait()
 	}
-	n.one = cmds.Completed{}
+	n.one = Completed{}
 	n.multi = m
 	n.mark = 1
 	s := n.slept
@@ -87,7 +85,7 @@ func (r *ring) PutMulti(m []cmds.Completed) chan RedisResult {
 }
 
 // NextWriteCmd should be only called by one dedicated thread
-func (r *ring) NextWriteCmd() (one cmds.Completed, multi []cmds.Completed, ch chan RedisResult) {
+func (r *ring) NextWriteCmd() (one Completed, multi []Completed, ch chan RedisResult) {
 	r.read1++
 	p := r.read1 & r.mask
 	n := &r.store[p]
@@ -103,7 +101,7 @@ func (r *ring) NextWriteCmd() (one cmds.Completed, multi []cmds.Completed, ch ch
 }
 
 // WaitForWrite should be only called by one dedicated thread
-func (r *ring) WaitForWrite() (one cmds.Completed, multi []cmds.Completed, ch chan RedisResult) {
+func (r *ring) WaitForWrite() (one Completed, multi []Completed, ch chan RedisResult) {
 	r.read1++
 	p := r.read1 & r.mask
 	n := &r.store[p]
@@ -120,7 +118,7 @@ func (r *ring) WaitForWrite() (one cmds.Completed, multi []cmds.Completed, ch ch
 }
 
 // NextResultCh should be only called by one dedicated thread
-func (r *ring) NextResultCh() (one cmds.Completed, multi []cmds.Completed, ch chan RedisResult, cond *sync.Cond) {
+func (r *ring) NextResultCh() (one Completed, multi []Completed, ch chan RedisResult, cond *sync.Cond) {
 	r.read2++
 	p := r.read2 & r.mask
 	n := &r.store[p]

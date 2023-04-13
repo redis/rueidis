@@ -55,19 +55,19 @@ func (c *sentinelClient) B() cmds.Builder {
 	return c.cmd
 }
 
-func (c *sentinelClient) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
+func (c *sentinelClient) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 retry:
 	resp = c.mConn.Load().(conn).Do(ctx, cmd)
 	if c.retry && cmd.IsReadOnly() && c.isRetryable(resp.NonRedisError(), ctx) {
 		goto retry
 	}
 	if resp.NonRedisError() == nil { // not recycle cmds if error, since cmds may be used later in pipe. consider recycle them by pipe
-		cmds.Put(cmd.CommandSlice())
+		cmds.PutCompleted(cmd)
 	}
 	return resp
 }
 
-func (c *sentinelClient) DoMulti(ctx context.Context, multi ...cmds.Completed) (resps []RedisResult) {
+func (c *sentinelClient) DoMulti(ctx context.Context, multi ...Completed) (resps []RedisResult) {
 	if len(multi) == 0 {
 		return nil
 	}
@@ -82,20 +82,20 @@ retry:
 	}
 	for i, cmd := range multi {
 		if resps[i].NonRedisError() == nil {
-			cmds.Put(cmd.CommandSlice())
+			cmds.PutCompleted(cmd)
 		}
 	}
 	return resps
 }
 
-func (c *sentinelClient) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp RedisResult) {
+func (c *sentinelClient) DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) (resp RedisResult) {
 retry:
 	resp = c.mConn.Load().(conn).DoCache(ctx, cmd, ttl)
 	if c.retry && c.isRetryable(resp.NonRedisError(), ctx) {
 		goto retry
 	}
 	if err := resp.NonRedisError(); err == nil || err == ErrDoCacheAborted {
-		cmds.Put(cmd.CommandSlice())
+		cmds.PutCacheable(cmd)
 	}
 	return resp
 }
@@ -115,13 +115,13 @@ retry:
 	}
 	for i, cmd := range multi {
 		if err := resps[i].NonRedisError(); err == nil || err == ErrDoCacheAborted {
-			cmds.Put(cmd.Cmd.CommandSlice())
+			cmds.PutCacheable(cmd.Cmd)
 		}
 	}
 	return resps
 }
 
-func (c *sentinelClient) Receive(ctx context.Context, subscribe cmds.Completed, fn func(msg PubSubMessage)) (err error) {
+func (c *sentinelClient) Receive(ctx context.Context, subscribe Completed, fn func(msg PubSubMessage)) (err error) {
 retry:
 	err = c.mConn.Load().(conn).Receive(ctx, subscribe, fn)
 	if c.retry {
@@ -130,7 +130,7 @@ retry:
 		}
 	}
 	if err == nil {
-		cmds.Put(subscribe.CommandSlice())
+		cmds.PutCompleted(subscribe)
 	}
 	return err
 }
@@ -295,8 +295,8 @@ func (c *sentinelClient) listWatch(cc conn) (master string, sentinels []string, 
 	getMasterCMD := c.cmd.SentinelGetMasterAddrByName().Master(c.mOpt.Sentinel.MasterSet).Build()
 	defer func() {
 		if err == nil { // not recycle cmds if error, since cmds may be used later in pipe. consider recycle them by pipe
-			cmds.Put(sentinelsCMD.CommandSlice())
-			cmds.Put(getMasterCMD.CommandSlice())
+			cmds.PutCompleted(sentinelsCMD)
+			cmds.PutCompleted(getMasterCMD)
 		}
 	}()
 

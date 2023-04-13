@@ -130,7 +130,7 @@ func TestRing(t *testing.T) {
 		if _, multi, ch := ring.NextWriteCmd(); ch == nil {
 			go func() {
 				time.Sleep(time.Millisecond * 100)
-				ring.PutMulti([]cmds.Completed{cmds.QuitCmd})
+				ring.PutMulti([]Completed{cmds.QuitCmd})
 			}()
 			if _, multi, ch = ring.WaitForWrite(); ch != nil && multi[0].Commands()[0] == cmds.QuitCmd.Commands()[0] {
 				return

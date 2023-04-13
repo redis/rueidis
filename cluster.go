@@ -254,14 +254,14 @@ func (c *clusterClient) B() cmds.Builder {
 	return c.cmd
 }
 
-func (c *clusterClient) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
+func (c *clusterClient) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 	if resp = c.do(ctx, cmd); resp.NonRedisError() == nil { // not recycle cmds if error, since cmds may be used later in pipe. consider recycle them by pipe
-		cmds.Put(cmd.CommandSlice())
+		cmds.PutCompleted(cmd)
 	}
 	return resp
 }
 
-func (c *clusterClient) do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
+func (c *clusterClient) do(ctx context.Context, cmd Completed) (resp RedisResult) {
 retry:
 	cc, err := c.pick(cmd.Slot())
 	if err != nil {
@@ -285,7 +285,7 @@ process:
 	return resp
 }
 
-func (c *clusterClient) DoMulti(ctx context.Context, multi ...cmds.Completed) (results []RedisResult) {
+func (c *clusterClient) DoMulti(ctx context.Context, multi ...Completed) (results []RedisResult) {
 	if len(multi) == 0 {
 		return nil
 	}
@@ -296,7 +296,7 @@ func (c *clusterClient) DoMulti(ctx context.Context, multi ...cmds.Completed) (r
 	if len(slots) > 2 && slots[cmds.InitSlot] > 0 {
 		panic(panicMixCxSlot)
 	}
-	commands := make(map[uint16][]cmds.Completed, len(slots))
+	commands := make(map[uint16][]Completed, len(slots))
 	cIndexes := make(map[uint16][]int, len(slots))
 	if len(slots) == 2 && slots[cmds.InitSlot] > 0 {
 		delete(slots, cmds.InitSlot)
@@ -306,7 +306,7 @@ func (c *clusterClient) DoMulti(ctx context.Context, multi ...cmds.Completed) (r
 	} else {
 		for slot, count := range slots {
 			cIndexes[slot] = make([]int, 0, count)
-			commands[slot] = make([]cmds.Completed, 0, count)
+			commands[slot] = make([]Completed, 0, count)
 		}
 		for i, cmd := range multi {
 			slot := cmd.Slot()
@@ -322,7 +322,7 @@ func (c *clusterClient) DoMulti(ctx context.Context, multi ...cmds.Completed) (r
 
 	for i, cmd := range multi {
 		if results[i].NonRedisError() == nil {
-			cmds.Put(cmd.CommandSlice())
+			cmds.PutCompleted(cmd)
 		}
 	}
 	return results
@@ -340,7 +340,7 @@ func fillErrs(idx []int, results []RedisResult, err error) {
 	}
 }
 
-func (c *clusterClient) doMulti(ctx context.Context, slot uint16, multi []cmds.Completed, idx []int, results []RedisResult) {
+func (c *clusterClient) doMulti(ctx context.Context, slot uint16, multi []Completed, idx []int, results []RedisResult) {
 retry:
 	cc, err := c.pick(slot)
 	if err != nil {
@@ -358,7 +358,7 @@ process:
 			}
 		case RedirectAsk:
 			if c.retry && allReadOnly(multi) {
-				resps = c.redirectOrNew(addr).DoMulti(ctx, append([]cmds.Completed{cmds.AskingCmd}, multi...)...)[1:]
+				resps = c.redirectOrNew(addr).DoMulti(ctx, append([]Completed{cmds.AskingCmd}, multi...)...)[1:]
 				goto process
 			}
 		case RedirectRetry:
@@ -379,7 +379,7 @@ process:
 	}
 }
 
-func (c *clusterClient) doCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp RedisResult) {
+func (c *clusterClient) doCache(ctx context.Context, cmd Cacheable, ttl time.Duration) (resp RedisResult) {
 retry:
 	cc, err := c.pick(cmd.Slot())
 	if err != nil {
@@ -393,7 +393,7 @@ process:
 		goto process
 	case RedirectAsk:
 		// TODO ASKING OPT-IN Caching
-		resp = c.redirectOrNew(addr).DoMulti(ctx, cmds.AskingCmd, cmds.Completed(cmd))[1]
+		resp = c.redirectOrNew(addr).DoMulti(ctx, cmds.AskingCmd, Completed(cmd))[1]
 		goto process
 	case RedirectRetry:
 		if c.retry {
@@ -404,10 +404,10 @@ process:
 	return resp
 }
 
-func (c *clusterClient) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp RedisResult) {
+func (c *clusterClient) DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) (resp RedisResult) {
 	resp = c.doCache(ctx, cmd, ttl)
 	if err := resp.NonRedisError(); err == nil || err == ErrDoCacheAborted {
-		cmds.Put(cmd.CommandSlice())
+		cmds.PutCacheable(cmd)
 	}
 	return resp
 }
@@ -427,10 +427,10 @@ process:
 			resps = c.redirectOrNew(addr).DoMultiCache(ctx, multi...)
 			goto process
 		case RedirectAsk:
-			commands := make([]cmds.Completed, 0, len(multi)+3)
+			commands := make([]Completed, 0, len(multi)+3)
 			commands = append(commands, cmds.AskingCmd, cmds.MultiCmd)
 			for _, cmd := range multi {
-				commands = append(commands, cmds.Completed(cmd.Cmd))
+				commands = append(commands, Completed(cmd.Cmd))
 			}
 			commands = append(commands, cmds.ExecCmd)
 			if asked, err := c.redirectOrNew(addr).DoMulti(ctx, commands...)[len(commands)-1].ToArray(); err != nil {
@@ -492,13 +492,13 @@ func (c *clusterClient) DoMultiCache(ctx context.Context, multi ...CacheableTTL)
 
 	for i, cmd := range multi {
 		if err := results[i].NonRedisError(); err == nil || err == ErrDoCacheAborted {
-			cmds.Put(cmd.Cmd.CommandSlice())
+			cmds.PutCacheable(cmd.Cmd)
 		}
 	}
 	return results
 }
 
-func (c *clusterClient) Receive(ctx context.Context, subscribe cmds.Completed, fn func(msg PubSubMessage)) (err error) {
+func (c *clusterClient) Receive(ctx context.Context, subscribe Completed, fn func(msg PubSubMessage)) (err error) {
 retry:
 	cc, err := c.pick(subscribe.Slot())
 	if err != nil {
@@ -511,7 +511,7 @@ retry:
 	}
 ret:
 	if err == nil {
-		cmds.Put(subscribe.CommandSlice())
+		cmds.PutCompleted(subscribe)
 	}
 	return err
 }
@@ -635,7 +635,7 @@ func (c *dedicatedClusterClient) B() cmds.Builder {
 	return c.cmd
 }
 
-func (c *dedicatedClusterClient) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
+func (c *dedicatedClusterClient) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 retry:
 	if w, err := c.acquire(cmd.Slot()); err != nil {
 		resp = newErrResult(err)
@@ -650,12 +650,12 @@ retry:
 		}
 	}
 	if resp.NonRedisError() == nil {
-		cmds.Put(cmd.CommandSlice())
+		cmds.PutCompleted(cmd)
 	}
 	return resp
 }
 
-func (c *dedicatedClusterClient) DoMulti(ctx context.Context, multi ...cmds.Completed) (resp []RedisResult) {
+func (c *dedicatedClusterClient) DoMulti(ctx context.Context, multi ...Completed) (resp []RedisResult) {
 	if len(multi) == 0 {
 		return nil
 	}
@@ -688,13 +688,13 @@ retry:
 	}
 	for i, cmd := range multi {
 		if resp[i].NonRedisError() == nil {
-			cmds.Put(cmd.CommandSlice())
+			cmds.PutCompleted(cmd)
 		}
 	}
 	return resp
 }
 
-func (c *dedicatedClusterClient) Receive(ctx context.Context, subscribe cmds.Completed, fn func(msg PubSubMessage)) (err error) {
+func (c *dedicatedClusterClient) Receive(ctx context.Context, subscribe Completed, fn func(msg PubSubMessage)) (err error) {
 	var w wire
 retry:
 	if w, err = c.acquire(subscribe.Slot()); err == nil {
@@ -705,7 +705,7 @@ retry:
 		}
 	}
 	if err == nil {
-		cmds.Put(subscribe.CommandSlice())
+		cmds.PutCompleted(subscribe)
 	}
 	return err
 }

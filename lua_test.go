@@ -25,7 +25,7 @@ func TestNewLuaScriptOnePass(t *testing.T) {
 		BFn: func() cmds.Builder {
 			return cmds.NewBuilder(cmds.NoSlot)
 		},
-		DoFn: func(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
+		DoFn: func(ctx context.Context, cmd Completed) (resp RedisResult) {
 			if reflect.DeepEqual(cmd.Commands(), []string{"EVALSHA", sha, "2", "1", "2", "3", "4"}) {
 				return newResult(RedisMessage{typ: '+', string: "OK"}, nil)
 			}
@@ -54,7 +54,7 @@ func TestNewLuaScript(t *testing.T) {
 		BFn: func() cmds.Builder {
 			return cmds.NewBuilder(cmds.NoSlot)
 		},
-		DoFn: func(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
+		DoFn: func(ctx context.Context, cmd Completed) (resp RedisResult) {
 			if reflect.DeepEqual(cmd.Commands(), []string{"EVALSHA", sha, "2", "1", "2", "3", "4"}) {
 				eval = true
 				return newResult(RedisMessage{typ: '-', string: "NOSCRIPT"}, nil)
@@ -87,7 +87,7 @@ func TestNewLuaScriptReadOnly(t *testing.T) {
 		BFn: func() cmds.Builder {
 			return cmds.NewBuilder(cmds.NoSlot)
 		},
-		DoFn: func(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
+		DoFn: func(ctx context.Context, cmd Completed) (resp RedisResult) {
 			if reflect.DeepEqual(cmd.Commands(), []string{"EVALSHA_RO", sha, "2", "1", "2", "3", "4"}) {
 				eval = true
 				return newResult(RedisMessage{typ: '-', string: "NOSCRIPT"}, nil)
@@ -116,7 +116,7 @@ func TestNewLuaScriptExecMultiError(t *testing.T) {
 		BFn: func() cmds.Builder {
 			return cmds.NewBuilder(cmds.NoSlot)
 		},
-		DoFn: func(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
+		DoFn: func(ctx context.Context, cmd Completed) (resp RedisResult) {
 			return newResult(RedisMessage{typ: '-', string: "ANY ERR"}, nil)
 		},
 	}
@@ -139,10 +139,10 @@ func TestNewLuaScriptExecMulti(t *testing.T) {
 		BFn: func() cmds.Builder {
 			return cmds.NewBuilder(cmds.NoSlot)
 		},
-		DoFn: func(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
+		DoFn: func(ctx context.Context, cmd Completed) (resp RedisResult) {
 			return newResult(RedisMessage{typ: '+', string: "OK"}, nil)
 		},
-		DoMultiFn: func(ctx context.Context, multi ...cmds.Completed) (resp []RedisResult) {
+		DoMultiFn: func(ctx context.Context, multi ...Completed) (resp []RedisResult) {
 			for _, cmd := range multi {
 				if reflect.DeepEqual(cmd.Commands(), []string{"EVALSHA", sha, "2", "1", "2", "3", "4"}) {
 					resp = append(resp, newResult(RedisMessage{typ: '+', string: "OK"}, nil))
@@ -170,10 +170,10 @@ func TestNewLuaScriptExecMultiRo(t *testing.T) {
 		BFn: func() cmds.Builder {
 			return cmds.NewBuilder(cmds.NoSlot)
 		},
-		DoFn: func(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
+		DoFn: func(ctx context.Context, cmd Completed) (resp RedisResult) {
 			return newResult(RedisMessage{typ: '+', string: "OK"}, nil)
 		},
-		DoMultiFn: func(ctx context.Context, multi ...cmds.Completed) (resp []RedisResult) {
+		DoMultiFn: func(ctx context.Context, multi ...Completed) (resp []RedisResult) {
 			for _, cmd := range multi {
 				if reflect.DeepEqual(cmd.Commands(), []string{"EVALSHA_RO", sha, "2", "1", "2", "3", "4"}) {
 					resp = append(resp, newResult(RedisMessage{typ: '+', string: "OK"}, nil))
@@ -191,16 +191,16 @@ func TestNewLuaScriptExecMultiRo(t *testing.T) {
 
 type client struct {
 	BFn            func() cmds.Builder
-	DoFn           func(ctx context.Context, cmd cmds.Completed) (resp RedisResult)
-	DoMultiFn      func(ctx context.Context, cmd ...cmds.Completed) (resp []RedisResult)
-	DoCacheFn      func(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp RedisResult)
+	DoFn           func(ctx context.Context, cmd Completed) (resp RedisResult)
+	DoMultiFn      func(ctx context.Context, cmd ...Completed) (resp []RedisResult)
+	DoCacheFn      func(ctx context.Context, cmd Cacheable, ttl time.Duration) (resp RedisResult)
 	DoMultiCacheFn func(ctx context.Context, cmd ...CacheableTTL) (resp []RedisResult)
 	DedicatedFn    func(fn func(DedicatedClient) error) (err error)
 	DedicateFn     func() (DedicatedClient, func())
 	CloseFn        func()
 }
 
-func (c *client) Receive(ctx context.Context, subscribe cmds.Completed, fn func(msg PubSubMessage)) error {
+func (c *client) Receive(ctx context.Context, subscribe Completed, fn func(msg PubSubMessage)) error {
 	return nil
 }
 
@@ -211,14 +211,14 @@ func (c *client) B() cmds.Builder {
 	return cmds.Builder{}
 }
 
-func (c *client) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
+func (c *client) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 	if c.DoFn != nil {
 		return c.DoFn(ctx, cmd)
 	}
 	return RedisResult{}
 }
 
-func (c *client) DoMulti(ctx context.Context, cmd ...cmds.Completed) (resp []RedisResult) {
+func (c *client) DoMulti(ctx context.Context, cmd ...Completed) (resp []RedisResult) {
 	if c.DoMultiFn != nil {
 		return c.DoMultiFn(ctx, cmd...)
 	}
@@ -232,7 +232,7 @@ func (c *client) DoMultiCache(ctx context.Context, cmd ...CacheableTTL) (resp []
 	return nil
 }
 
-func (c *client) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp RedisResult) {
+func (c *client) DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) (resp RedisResult) {
 	if c.DoCacheFn != nil {
 		return c.DoCacheFn(ctx, cmd, ttl)
 	}

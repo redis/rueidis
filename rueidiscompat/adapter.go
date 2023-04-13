@@ -485,7 +485,7 @@ func (c *Compat) Keys(ctx context.Context, pattern string) *StringSliceCmd {
 }
 
 func (c *Compat) Migrate(ctx context.Context, host string, port int64, key string, db int64, timeout time.Duration) *StatusCmd {
-	var cmd cmds.Completed
+	var cmd rueidis.Completed
 	cmd = c.client.B().Migrate().Host(host).Port(port).Key(key).DestinationDb(db).Timeout(formatSec(timeout)).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newStatusCmd(resp)
@@ -1852,7 +1852,7 @@ func (c *Compat) ZPopMin(ctx context.Context, key string, count ...int64) *ZSlic
 	return newZSliceSingleCmd(resp)
 }
 
-func (c *Compat) zRangeArgs(withScores bool, z ZRangeArgs) cmds.Completed {
+func (c *Compat) zRangeArgs(withScores bool, z ZRangeArgs) rueidis.Completed {
 	cmd := c.client.B().Arbitrary("ZRANGE").Keys(z.Key)
 	if z.Rev && (z.ByScore || z.ByLex) {
 		cmd = cmd.Args(str(z.Stop), str(z.Start))
@@ -2100,25 +2100,25 @@ func (c *Compat) PFMerge(ctx context.Context, dest string, keys ...string) *Stat
 }
 
 func (c *Compat) BgRewriteAOF(ctx context.Context) *StatusCmd {
-	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
 		return c.B().Bgrewriteaof().Build()
 	})
 }
 
 func (c *Compat) BgSave(ctx context.Context) *StatusCmd {
-	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
 		return c.B().Bgsave().Build()
 	})
 }
 
 func (c *Compat) ClientKill(ctx context.Context, ipPort string) *StatusCmd {
-	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
 		return c.B().ClientKill().IpPort(ipPort).Build()
 	})
 }
 
 func (c *Compat) ClientKillByFilter(ctx context.Context, keys ...string) *IntCmd {
-	return c.doIntCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+	return c.doIntCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
 		return c.B().Arbitrary("CLIENT", "KILL").Args(keys...).Build()
 	})
 }
@@ -2178,49 +2178,49 @@ func (c *Compat) ConfigGet(ctx context.Context, parameter string) *SliceCmd {
 }
 
 func (c *Compat) ConfigResetStat(ctx context.Context) *StatusCmd {
-	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
 		return c.B().ConfigResetstat().Build()
 	})
 }
 
 func (c *Compat) ConfigSet(ctx context.Context, parameter, value string) *StatusCmd {
-	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
 		return c.B().ConfigSet().ParameterValue().ParameterValue(parameter, value).Build()
 	})
 }
 
 func (c *Compat) ConfigRewrite(ctx context.Context) *StatusCmd {
-	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
 		return c.B().ConfigRewrite().Build()
 	})
 }
 
 func (c *Compat) DBSize(ctx context.Context) *IntCmd {
-	return c.doIntCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+	return c.doIntCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
 		return c.B().Dbsize().Build()
 	})
 }
 
 func (c *Compat) FlushAll(ctx context.Context) *StatusCmd {
-	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
 		return c.B().Flushall().Build()
 	})
 }
 
 func (c *Compat) FlushAllAsync(ctx context.Context) *StatusCmd {
-	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
 		return c.B().Flushall().Async().Build()
 	})
 }
 
 func (c *Compat) FlushDB(ctx context.Context) *StatusCmd {
-	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
 		return c.B().Flushdb().Build()
 	})
 }
 
 func (c *Compat) FlushDBAsync(ctx context.Context) *StatusCmd {
-	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
 		return c.B().Flushdb().Async().Build()
 	})
 }
@@ -2238,25 +2238,25 @@ func (c *Compat) LastSave(ctx context.Context) *IntCmd {
 }
 
 func (c *Compat) Save(ctx context.Context) *StatusCmd {
-	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
 		return c.B().Save().Build()
 	})
 }
 
 func (c *Compat) Shutdown(ctx context.Context) *StatusCmd {
-	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
 		return c.B().Shutdown().Build()
 	})
 }
 
 func (c *Compat) ShutdownSave(ctx context.Context) *StatusCmd {
-	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
 		return c.B().Shutdown().Save().Build()
 	})
 }
 
 func (c *Compat) ShutdownNoSave(ctx context.Context) *StatusCmd {
-	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
 		return c.B().Shutdown().Nosave().Build()
 	})
 }
@@ -2341,13 +2341,13 @@ func (c *Compat) ScriptExists(ctx context.Context, hashes ...string) *BoolSliceC
 }
 
 func (c *Compat) ScriptFlush(ctx context.Context) *StatusCmd {
-	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
 		return c.B().ScriptFlush().Build()
 	})
 }
 
 func (c *Compat) ScriptKill(ctx context.Context) *StatusCmd {
-	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
 		return c.B().ScriptKill().Build()
 	})
 }
@@ -2440,13 +2440,13 @@ func (c *Compat) ClusterReplicate(ctx context.Context, nodeID string) *StatusCmd
 }
 
 func (c *Compat) ClusterResetSoft(ctx context.Context) *StatusCmd {
-	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
 		return c.B().ClusterReset().Soft().Build()
 	})
 }
 
 func (c *Compat) ClusterResetHard(ctx context.Context) *StatusCmd {
-	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
 		return c.B().ClusterReset().Hard().Build()
 	})
 }
@@ -2514,7 +2514,7 @@ func (c *Compat) ClusterDelSlotsRange(ctx context.Context, min, max int64) *Stat
 }
 
 func (c *Compat) ClusterSaveConfig(ctx context.Context) *StatusCmd {
-	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) cmds.Completed {
+	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
 		return c.B().ClusterSaveconfig().Build()
 	})
 }
@@ -2668,7 +2668,7 @@ func (c *Compat) doPrimaries(ctx context.Context, fn func(c rueidis.Client) erro
 	return nil
 }
 
-func (c *Compat) doStatusCmdPrimaries(ctx context.Context, fn func(c rueidis.Client) cmds.Completed) *StatusCmd {
+func (c *Compat) doStatusCmdPrimaries(ctx context.Context, fn func(c rueidis.Client) rueidis.Completed) *StatusCmd {
 	var mu sync.Mutex
 	ret := &StatusCmd{}
 	ret.err = c.doPrimaries(ctx, func(c rueidis.Client) error {
@@ -2683,7 +2683,7 @@ func (c *Compat) doStatusCmdPrimaries(ctx context.Context, fn func(c rueidis.Cli
 	return ret
 }
 
-func (c *Compat) doIntCmdPrimaries(ctx context.Context, fn func(c rueidis.Client) cmds.Completed) *IntCmd {
+func (c *Compat) doIntCmdPrimaries(ctx context.Context, fn func(c rueidis.Client) rueidis.Completed) *IntCmd {
 	var mu sync.Mutex
 	ret := &IntCmd{}
 	ret.err = c.doPrimaries(ctx, func(c rueidis.Client) error {
@@ -2759,7 +2759,7 @@ func (c CacheCompat) GeoRadius(ctx context.Context, key string, longitude, latit
 		panic("GeoRadius does not support Store or StoreDist")
 	}
 	cmd = cmd.Args(query.args()...)
-	resp := c.client.DoCache(ctx, cmds.Cacheable(cmd.Build()), c.ttl)
+	resp := c.client.DoCache(ctx, rueidis.Cacheable(cmd.Build()), c.ttl)
 	return newGeoLocationCmd(resp, query.WithDist, query.WithGeoHash, query.WithCoord)
 }
 
@@ -2770,14 +2770,14 @@ func (c CacheCompat) GeoRadiusByMember(ctx context.Context, key, member string, 
 		panic("GeoRadiusByMember does not support Store or StoreDist")
 	}
 	cmd = cmd.Args(query.args()...)
-	resp := c.client.DoCache(ctx, cmds.Cacheable(cmd.Build()), c.ttl)
+	resp := c.client.DoCache(ctx, rueidis.Cacheable(cmd.Build()), c.ttl)
 	return newGeoLocationCmd(resp, query.WithDist, query.WithGeoHash, query.WithCoord)
 }
 
 func (c CacheCompat) GeoSearch(ctx context.Context, key string, q GeoSearchQuery) *StringSliceCmd {
 	cmd := c.client.B().Arbitrary("GEOSEARCH").Keys(key)
 	cmd = cmd.Args(q.args()...)
-	resp := c.client.DoCache(ctx, cmds.Cacheable(cmd.Build()), c.ttl)
+	resp := c.client.DoCache(ctx, rueidis.Cacheable(cmd.Build()), c.ttl)
 	return newStringSliceCmd(resp)
 }
 
@@ -2861,7 +2861,7 @@ func (c CacheCompat) LPos(ctx context.Context, key string, element string, a LPo
 	if a.MaxLen != 0 {
 		cmd = cmd.Args("MAXLEN", strconv.FormatInt(a.MaxLen, 10))
 	}
-	resp := c.client.DoCache(ctx, cmds.Cacheable(cmd.Build()), c.ttl)
+	resp := c.client.DoCache(ctx, rueidis.Cacheable(cmd.Build()), c.ttl)
 	return newIntCmd(resp)
 }
 
@@ -2922,7 +2922,7 @@ func (c CacheCompat) SortRO(ctx context.Context, key string, sort Sort) *StringS
 	if sort.Alpha {
 		cmd = cmd.Args("ALPHA")
 	}
-	resp := c.client.DoCache(ctx, cmds.Cacheable(cmd.Build()), c.ttl)
+	resp := c.client.DoCache(ctx, rueidis.Cacheable(cmd.Build()), c.ttl)
 	return newStringSliceCmd(resp)
 }
 
@@ -2968,7 +2968,7 @@ func (c CacheCompat) ZMScore(ctx context.Context, key string, members ...string)
 	return newFloatSliceCmd(resp)
 }
 
-func (c CacheCompat) zRangeArgs(withScores bool, z ZRangeArgs) cmds.Cacheable {
+func (c CacheCompat) zRangeArgs(withScores bool, z ZRangeArgs) rueidis.Cacheable {
 	cmd := c.client.B().Arbitrary("ZRANGE").Keys(z.Key)
 	if z.Rev && (z.ByScore || z.ByLex) {
 		cmd = cmd.Args(str(z.Stop), str(z.Start))
@@ -2989,7 +2989,7 @@ func (c CacheCompat) zRangeArgs(withScores bool, z ZRangeArgs) cmds.Cacheable {
 	if withScores {
 		cmd = cmd.Args("WITHSCORES")
 	}
-	return cmds.Cacheable(cmd.Build())
+	return rueidis.Cacheable(cmd.Build())
 }
 
 func (c CacheCompat) ZRangeWithScores(ctx context.Context, key string, start, stop int64) *ZSliceCmd {

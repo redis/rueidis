@@ -22,11 +22,11 @@ type singleconnect struct {
 }
 
 type conn interface {
-	Do(ctx context.Context, cmd cmds.Completed) RedisResult
-	DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) RedisResult
-	DoMulti(ctx context.Context, multi ...cmds.Completed) []RedisResult
+	Do(ctx context.Context, cmd Completed) RedisResult
+	DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) RedisResult
+	DoMulti(ctx context.Context, multi ...Completed) []RedisResult
 	DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisResult
-	Receive(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error
+	Receive(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error
 	Info() map[string]RedisMessage
 	Error() error
 	Close()
@@ -154,7 +154,7 @@ func (m *mux) Error() error {
 	return m.pipe(0).Error()
 }
 
-func (m *mux) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
+func (m *mux) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 	if cmd.IsBlock() {
 		resp = m.blocking(ctx, cmd)
 	} else {
@@ -163,7 +163,7 @@ func (m *mux) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
 	return resp
 }
 
-func (m *mux) DoMulti(ctx context.Context, multi ...cmds.Completed) (resp []RedisResult) {
+func (m *mux) DoMulti(ctx context.Context, multi ...Completed) (resp []RedisResult) {
 	for _, cmd := range multi {
 		if cmd.IsBlock() {
 			goto block
@@ -171,11 +171,11 @@ func (m *mux) DoMulti(ctx context.Context, multi ...cmds.Completed) (resp []Redi
 	}
 	return m.pipelineMulti(ctx, multi)
 block:
-	multi[0].ToBlock() // mark the first cmd as block if one of them is block to shortcut later check.
+	multi[0] = cmds.ToBlock(multi[0]) // mark the first cmd as block if one of them is block to shortcut later check.
 	return m.blockingMulti(ctx, multi)
 }
 
-func (m *mux) blocking(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
+func (m *mux) blocking(ctx context.Context, cmd Completed) (resp RedisResult) {
 	wire := m.pool.Acquire()
 	resp = wire.Do(ctx, cmd)
 	if resp.NonRedisError() != nil { // abort the wire if blocking command return early (ex. context.DeadlineExceeded)
@@ -185,7 +185,7 @@ func (m *mux) blocking(ctx context.Context, cmd cmds.Completed) (resp RedisResul
 	return resp
 }
 
-func (m *mux) blockingMulti(ctx context.Context, cmd []cmds.Completed) (resp []RedisResult) {
+func (m *mux) blockingMulti(ctx context.Context, cmd []Completed) (resp []RedisResult) {
 	wire := m.pool.Acquire()
 	resp = wire.DoMulti(ctx, cmd...)
 	for _, res := range resp {
@@ -198,7 +198,7 @@ func (m *mux) blockingMulti(ctx context.Context, cmd []cmds.Completed) (resp []R
 	return resp
 }
 
-func (m *mux) pipeline(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
+func (m *mux) pipeline(ctx context.Context, cmd Completed) (resp RedisResult) {
 	slot := cmd.Slot() & uint16(len(m.wire)-1)
 	wire := m.pipe(slot)
 	if resp = wire.Do(ctx, cmd); isBroken(resp.NonRedisError(), wire) {
@@ -207,7 +207,7 @@ func (m *mux) pipeline(ctx context.Context, cmd cmds.Completed) (resp RedisResul
 	return resp
 }
 
-func (m *mux) pipelineMulti(ctx context.Context, cmd []cmds.Completed) (resp []RedisResult) {
+func (m *mux) pipelineMulti(ctx context.Context, cmd []Completed) (resp []RedisResult) {
 	slot := cmd[0].Slot() & uint16(len(m.wire)-1)
 	wire := m.pipe(slot)
 	resp = wire.DoMulti(ctx, cmd...)
@@ -220,7 +220,7 @@ func (m *mux) pipelineMulti(ctx context.Context, cmd []cmds.Completed) (resp []R
 	return resp
 }
 
-func (m *mux) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) RedisResult {
+func (m *mux) DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) RedisResult {
 	slot := cmd.Slot() & uint16(len(m.wire)-1)
 	wire := m.pipe(slot)
 	resp := wire.DoCache(ctx, cmd, ttl)
@@ -281,7 +281,7 @@ func (m *mux) doMultiCache(ctx context.Context, slot uint16, multi []CacheableTT
 	return resps
 }
 
-func (m *mux) Receive(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
+func (m *mux) Receive(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
 	slot := subscribe.Slot() & uint16(len(m.wire)-1)
 	wire := m.pipe(slot)
 	err := wire.Receive(ctx, subscribe, fn)

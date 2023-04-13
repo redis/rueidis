@@ -9,16 +9,14 @@ import (
 	"strings"
 	"testing"
 	"time"
-
-	"github.com/rueian/rueidis/internal/cmds"
 )
 
 type mockConn struct {
-	DoFn           func(cmd cmds.Completed) RedisResult
-	DoCacheFn      func(cmd cmds.Cacheable, ttl time.Duration) RedisResult
-	DoMultiFn      func(multi ...cmds.Completed) []RedisResult
+	DoFn           func(cmd Completed) RedisResult
+	DoCacheFn      func(cmd Cacheable, ttl time.Duration) RedisResult
+	DoMultiFn      func(multi ...Completed) []RedisResult
 	DoMultiCacheFn func(multi ...CacheableTTL) []RedisResult
-	ReceiveFn      func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error
+	ReceiveFn      func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error
 	InfoFn         func() map[string]RedisMessage
 	ErrorFn        func() error
 	CloseFn        func()
@@ -28,9 +26,9 @@ type mockConn struct {
 	OverrideFn     func(c conn)
 	AddrFn         func() string
 
-	DoOverride      map[string]func(cmd cmds.Completed) RedisResult
-	DoCacheOverride map[string]func(cmd cmds.Cacheable, ttl time.Duration) RedisResult
-	ReceiveOverride map[string]func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error
+	DoOverride      map[string]func(cmd Completed) RedisResult
+	DoCacheOverride map[string]func(cmd Cacheable, ttl time.Duration) RedisResult
+	ReceiveOverride map[string]func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error
 }
 
 func (m *mockConn) Override(c conn) {
@@ -59,7 +57,7 @@ func (m *mockConn) Store(w wire) {
 	}
 }
 
-func (m *mockConn) Do(ctx context.Context, cmd cmds.Completed) RedisResult {
+func (m *mockConn) Do(ctx context.Context, cmd Completed) RedisResult {
 	if fn := m.DoOverride[strings.Join(cmd.Commands(), " ")]; fn != nil {
 		return fn(cmd)
 	}
@@ -69,7 +67,7 @@ func (m *mockConn) Do(ctx context.Context, cmd cmds.Completed) RedisResult {
 	return RedisResult{}
 }
 
-func (m *mockConn) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) RedisResult {
+func (m *mockConn) DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) RedisResult {
 	if fn := m.DoCacheOverride[strings.Join(cmd.Commands(), " ")]; fn != nil {
 		return fn(cmd, ttl)
 	}
@@ -95,7 +93,7 @@ func (m *mockConn) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []Re
 	return nil
 }
 
-func (m *mockConn) DoMulti(ctx context.Context, multi ...cmds.Completed) []RedisResult {
+func (m *mockConn) DoMulti(ctx context.Context, multi ...Completed) []RedisResult {
 	overrides := make([]RedisResult, 0, len(multi))
 	for _, cmd := range multi {
 		if fn := m.DoOverride[strings.Join(cmd.Commands(), " ")]; fn != nil {
@@ -111,7 +109,7 @@ func (m *mockConn) DoMulti(ctx context.Context, multi ...cmds.Completed) []Redis
 	return nil
 }
 
-func (m *mockConn) Receive(ctx context.Context, subscribe cmds.Completed, hdl func(message PubSubMessage)) error {
+func (m *mockConn) Receive(ctx context.Context, subscribe Completed, hdl func(message PubSubMessage)) error {
 	if fn := m.ReceiveOverride[strings.Join(subscribe.Commands(), " ")]; fn != nil {
 		return fn(ctx, subscribe, hdl)
 	}
@@ -210,7 +208,7 @@ func TestSingleClient(t *testing.T) {
 
 	t.Run("Delegate Do", func(t *testing.T) {
 		c := client.B().Get().Key("Do").Build()
-		m.DoFn = func(cmd cmds.Completed) RedisResult {
+		m.DoFn = func(cmd Completed) RedisResult {
 			if !reflect.DeepEqual(cmd.Commands(), c.Commands()) {
 				t.Fatalf("unexpected command %v", cmd)
 			}
@@ -223,7 +221,7 @@ func TestSingleClient(t *testing.T) {
 
 	t.Run("Delegate DoMulti", func(t *testing.T) {
 		c := client.B().Get().Key("Do").Build()
-		m.DoMultiFn = func(cmd ...cmds.Completed) []RedisResult {
+		m.DoMultiFn = func(cmd ...Completed) []RedisResult {
 			if !reflect.DeepEqual(cmd[0].Commands(), c.Commands()) {
 				t.Fatalf("unexpected command %v", cmd)
 			}
@@ -239,7 +237,7 @@ func TestSingleClient(t *testing.T) {
 
 	t.Run("Delegate DoCache", func(t *testing.T) {
 		c := client.B().Get().Key("DoCache").Cache()
-		m.DoCacheFn = func(cmd cmds.Cacheable, ttl time.Duration) RedisResult {
+		m.DoCacheFn = func(cmd Cacheable, ttl time.Duration) RedisResult {
 			if !reflect.DeepEqual(cmd.Commands(), c.Commands()) || ttl != 100 {
 				t.Fatalf("unexpected command %v, %v", cmd, ttl)
 			}
@@ -269,7 +267,7 @@ func TestSingleClient(t *testing.T) {
 	t.Run("Delegate Receive", func(t *testing.T) {
 		c := client.B().Subscribe().Channel("ch").Build()
 		hdl := func(message PubSubMessage) {}
-		m.ReceiveFn = func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
+		m.ReceiveFn = func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
 			if !reflect.DeepEqual(subscribe.Commands(), c.Commands()) {
 				t.Fatalf("unexpected command %v", subscribe)
 			}
@@ -283,7 +281,7 @@ func TestSingleClient(t *testing.T) {
 	t.Run("Delegate Receive Redis Err", func(t *testing.T) {
 		c := client.B().Subscribe().Channel("ch").Build()
 		e := &RedisError{}
-		m.ReceiveFn = func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
+		m.ReceiveFn = func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
 			return e
 		}
 		if err := client.Receive(context.Background(), c, func(message PubSubMessage) {}); err != e {
@@ -312,7 +310,7 @@ func TestSingleClient(t *testing.T) {
 	t.Run("Dedicated Delegate Receive Redis Err", func(t *testing.T) {
 		e := &RedisError{}
 		w := &mockWire{
-			ReceiveFn: func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
+			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
 				return e
 			},
 		}
@@ -329,13 +327,13 @@ func TestSingleClient(t *testing.T) {
 	t.Run("Dedicated Delegate", func(t *testing.T) {
 		closed := false
 		w := &mockWire{
-			DoFn: func(cmd cmds.Completed) RedisResult {
+			DoFn: func(cmd Completed) RedisResult {
 				return newResult(RedisMessage{typ: '+', string: "Delegate"}, nil)
 			},
-			DoMultiFn: func(cmd ...cmds.Completed) []RedisResult {
+			DoMultiFn: func(cmd ...Completed) []RedisResult {
 				return []RedisResult{newResult(RedisMessage{typ: '+', string: "Delegate"}, nil)}
 			},
-			ReceiveFn: func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
+			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
 				return ErrClosing
 			},
 			SetPubSubHooksFn: func(hooks PubSubHooks) <-chan error {
@@ -395,13 +393,13 @@ func TestSingleClient(t *testing.T) {
 	t.Run("Dedicate Delegate", func(t *testing.T) {
 		closed := false
 		w := &mockWire{
-			DoFn: func(cmd cmds.Completed) RedisResult {
+			DoFn: func(cmd Completed) RedisResult {
 				return newResult(RedisMessage{typ: '+', string: "Delegate"}, nil)
 			},
-			DoMultiFn: func(cmd ...cmds.Completed) []RedisResult {
+			DoMultiFn: func(cmd ...Completed) []RedisResult {
 				return []RedisResult{newResult(RedisMessage{typ: '+', string: "Delegate"}, nil)}
 			},
-			ReceiveFn: func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
+			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
 				return ErrClosing
 			},
 			SetPubSubHooksFn: func(hooks PubSubHooks) <-chan error {
@@ -509,33 +507,33 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 		return fn(m), m
 	}
 
-	makeDoFn := func(results ...RedisResult) func(cmd cmds.Completed) RedisResult {
+	makeDoFn := func(results ...RedisResult) func(cmd Completed) RedisResult {
 		count := -1
-		return func(cmd cmds.Completed) RedisResult {
+		return func(cmd Completed) RedisResult {
 			count++
 			return results[count]
 		}
 	}
 
-	makeDoCacheFn := func(results ...RedisResult) func(cmd cmds.Cacheable, ttl time.Duration) RedisResult {
+	makeDoCacheFn := func(results ...RedisResult) func(cmd Cacheable, ttl time.Duration) RedisResult {
 		count := -1
-		return func(cmd cmds.Cacheable, ttl time.Duration) RedisResult {
+		return func(cmd Cacheable, ttl time.Duration) RedisResult {
 			count++
 			return results[count]
 		}
 	}
 
-	makeReceiveFn := func(results ...error) func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
+	makeReceiveFn := func(results ...error) func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
 		count := -1
-		return func(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
+		return func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
 			count++
 			return results[count]
 		}
 	}
 
-	makeDoMultiFn := func(results ...[]RedisResult) func(multi ...cmds.Completed) []RedisResult {
+	makeDoMultiFn := func(results ...[]RedisResult) func(multi ...Completed) []RedisResult {
 		count := -1
-		return func(multi ...cmds.Completed) []RedisResult {
+		return func(multi ...Completed) []RedisResult {
 			count++
 			return results[count]
 		}

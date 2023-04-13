@@ -98,8 +98,9 @@ func (c *Completed) IsBlock() bool {
 }
 
 // ToBlock marks the command with blockTag
-func (c *Completed) ToBlock() {
+func ToBlock(c Completed) Completed {
 	c.cf |= blockTag
+	return c
 }
 
 // NoReply checks if it is one of the SUBSCRIBE, PSUBSCRIBE, UNSUBSCRIBE or PUNSUBSCRIBE commands.
@@ -122,11 +123,6 @@ func (c *Completed) IsWrite() bool {
 // and should not be read after passing into the Client interface, because it will be recycled.
 func (c *Completed) Commands() []string {
 	return c.cs.s
-}
-
-// CommandSlice it the command container which will be recycled by the sync.Pool.
-func (c *Completed) CommandSlice() *CommandSlice {
-	return c.cs
 }
 
 // Slot returns the command key slot
@@ -155,18 +151,13 @@ func (c *Cacheable) Commands() []string {
 	return c.cs.s
 }
 
-// CommandSlice returns the command container which will be recycled by the sync.Pool.
-func (c *Cacheable) CommandSlice() *CommandSlice {
-	return c.cs
-}
-
 // IsMGet returns if the command is MGET
 func (c *Cacheable) IsMGet() bool {
 	return c.cf == mtGetTag
 }
 
 // MGetCacheCmd returns the cache command of the MGET singular command
-func (c *Cacheable) MGetCacheCmd() string {
+func MGetCacheCmd(c Cacheable) string {
 	if c.cs.s[0][0] == 'J' {
 		return "JSON.GET" + c.cs.s[len(c.cs.s)-1]
 	}
@@ -174,12 +165,12 @@ func (c *Cacheable) MGetCacheCmd() string {
 }
 
 // MGetCacheKey returns the cache key of the MGET singular command
-func (c *Cacheable) MGetCacheKey(i int) string {
+func MGetCacheKey(c Cacheable, i int) string {
 	return c.cs.s[i+1]
 }
 
 // CacheKey returns the cache key used by the server-assisted client side caching
-func (c *Cacheable) CacheKey() (key, command string) {
+func CacheKey(c Cacheable) (key, command string) {
 	if len(c.cs.s) == 2 {
 		return c.cs.s[1], c.cs.s[0]
 	}
@@ -201,6 +192,16 @@ func (c *Cacheable) CacheKey() (key, command string) {
 		}
 	}
 	return key, sb.String()
+}
+
+// CompletedCommandSlice get the underlying *CommandSlice
+func CompletedCommandSlice(c Completed) *CommandSlice {
+	return c.cs
+}
+
+// CacheableCommandSlice get the underlying *CommandSlice
+func CacheableCommandSlice(c Cacheable) *CommandSlice {
+	return c.cs
 }
 
 // NewCompleted creates an arbitrary Completed command.

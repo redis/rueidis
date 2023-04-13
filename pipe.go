@@ -21,11 +21,11 @@ import (
 var noHello = regexp.MustCompile("unknown command .?HELLO.?")
 
 type wire interface {
-	Do(ctx context.Context, cmd cmds.Completed) RedisResult
-	DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) RedisResult
-	DoMulti(ctx context.Context, multi ...cmds.Completed) []RedisResult
+	Do(ctx context.Context, cmd Completed) RedisResult
+	DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) RedisResult
+	DoMulti(ctx context.Context, multi ...Completed) []RedisResult
 	DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisResult
-	Receive(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error
+	Receive(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error
 	Info() map[string]RedisMessage
 	Error() error
 	Close()
@@ -243,8 +243,8 @@ func (p *pipe) _background() {
 	}
 
 	var (
-		ones  = make([]cmds.Completed, 1)
-		multi []cmds.Completed
+		ones  = make([]Completed, 1)
+		multi []Completed
 		ch    chan RedisResult
 		cond  *sync.Cond
 	)
@@ -283,8 +283,8 @@ func (p *pipe) _background() {
 
 func (p *pipe) _backgroundWrite() (err error) {
 	var (
-		ones  = make([]cmds.Completed, 1)
-		multi []cmds.Completed
+		ones  = make([]Completed, 1)
+		multi []Completed
 		ch    chan RedisResult
 
 		flushDelay = p.maxFlushDelay
@@ -333,8 +333,8 @@ func (p *pipe) _backgroundRead() (err error) {
 	var (
 		msg   RedisMessage
 		cond  *sync.Cond
-		ones  = make([]cmds.Completed, 1)
-		multi []cmds.Completed
+		ones  = make([]Completed, 1)
+		multi []Completed
 		ch    chan RedisResult
 		ff    int // fulfilled count
 		skip  int // skip rest push messages
@@ -392,16 +392,16 @@ func (p *pipe) _backgroundRead() (err error) {
 		}
 		// if unfulfilled multi commands are lead by opt-in and get success response
 		if ff == len(multi)-1 && multi[0].IsOptIn() && len(msg.values) >= 2 {
-			if cacheable := cmds.Cacheable(multi[len(multi)-2]); cacheable.IsMGet() {
-				cc := cacheable.MGetCacheCmd()
+			if cacheable := Cacheable(multi[len(multi)-2]); cacheable.IsMGet() {
+				cc := cmds.MGetCacheCmd(cacheable)
 				for i, cp := range msg.values[len(msg.values)-1].values {
 					cp.attrs = cacheMark
-					p.cache.Update(cacheable.MGetCacheKey(i), cc, cp, msg.values[i].integer)
+					p.cache.Update(cmds.MGetCacheKey(cacheable, i), cc, cp, msg.values[i].integer)
 				}
 			} else {
 				for i := 1; i < len(msg.values); i += 2 {
-					cacheable = cmds.Cacheable(multi[i+2])
-					ck, cc := cacheable.CacheKey()
+					cacheable = Cacheable(multi[i+2])
+					ck, cc := cmds.CacheKey(cacheable)
 					cp := msg.values[i]
 					cp.attrs = cacheMark
 					p.cache.Update(ck, cc, cp, msg.values[i-1].integer)
@@ -572,7 +572,7 @@ func (p *pipe) _r2pipe() (r2p *pipe) {
 	return r2p
 }
 
-func (p *pipe) Receive(ctx context.Context, subscribe cmds.Completed, fn func(message PubSubMessage)) error {
+func (p *pipe) Receive(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
 	if p.nsubs == nil || p.psubs == nil || p.ssubs == nil {
 		return p.Error()
 	}
@@ -581,7 +581,7 @@ func (p *pipe) Receive(ctx context.Context, subscribe cmds.Completed, fn func(me
 		return p._r2pipe().Receive(ctx, subscribe, fn)
 	}
 
-	subscribe.CommandSlice().Verify()
+	cmds.CompletedCommandSlice(subscribe).Verify()
 
 	var sb *subs
 	cmd, args := subscribe.Commands()[0], subscribe.Commands()[1:]
@@ -673,12 +673,12 @@ func (p *pipe) Info() map[string]RedisMessage {
 	return p.info
 }
 
-func (p *pipe) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
+func (p *pipe) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 	if err := ctx.Err(); err != nil {
 		return newErrResult(err)
 	}
 
-	cmd.CommandSlice().Verify()
+	cmds.CompletedCommandSlice(cmd).Verify()
 
 	if cmd.IsBlock() {
 		atomic.AddInt32(&p.blcksig, 1)
@@ -748,7 +748,7 @@ queue:
 	return resp
 }
 
-func (p *pipe) DoMulti(ctx context.Context, multi ...cmds.Completed) []RedisResult {
+func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) []RedisResult {
 	resp := make([]RedisResult, len(multi))
 	if err := ctx.Err(); err != nil {
 		for i := 0; i < len(resp); i++ {
@@ -757,7 +757,7 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...cmds.Completed) []RedisResu
 		return resp
 	}
 
-	multi[0].CommandSlice().Verify()
+	cmds.CompletedCommandSlice(multi[0]).Verify()
 
 	isOptIn := multi[0].IsOptIn() // len(multi) > 0 should have already been checked by upper layer
 	noReply := 0
@@ -866,7 +866,7 @@ abort:
 	return resp
 }
 
-func (p *pipe) syncDo(dl time.Time, dlOk bool, cmd cmds.Completed) (resp RedisResult) {
+func (p *pipe) syncDo(dl time.Time, dlOk bool, cmd Completed) (resp RedisResult) {
 	if dlOk {
 		p.conn.SetDeadline(dl)
 		defer p.conn.SetDeadline(time.Time{})
@@ -893,7 +893,7 @@ func (p *pipe) syncDo(dl time.Time, dlOk bool, cmd cmds.Completed) (resp RedisRe
 	return newResult(msg, err)
 }
 
-func (p *pipe) syncDoMulti(dl time.Time, dlOk bool, resp []RedisResult, multi []cmds.Completed) []RedisResult {
+func (p *pipe) syncDoMulti(dl time.Time, dlOk bool, resp []RedisResult, multi []Completed) []RedisResult {
 	if dlOk {
 		p.conn.SetDeadline(dl)
 		defer p.conn.SetDeadline(time.Time{})
@@ -956,17 +956,17 @@ func remainTTL(now time.Time, ttl time.Duration, pttl int64) int64 {
 	return now.Add(ttl).Unix()
 }
 
-func (p *pipe) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) RedisResult {
+func (p *pipe) DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) RedisResult {
 	if p.cache == nil {
-		return p.Do(ctx, cmds.Completed(cmd))
+		return p.Do(ctx, Completed(cmd))
 	}
 
-	cmd.CommandSlice().Verify()
+	cmds.CacheableCommandSlice(cmd).Verify()
 
 	if cmd.IsMGet() {
 		return p.doCacheMGet(ctx, cmd, ttl)
 	}
-	ck, cc := cmd.CacheKey()
+	ck, cc := cmds.CacheKey(cmd)
 	now := time.Now()
 	if v, entry := p.cache.GetOrPrepare(ck, cc, now, ttl); v.typ != 0 {
 		return newResult(v, nil)
@@ -978,7 +978,7 @@ func (p *pipe) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duratio
 		cmds.OptInCmd,
 		cmds.MultiCmd,
 		cmds.NewCompleted([]string{"PTTL", ck}),
-		cmds.Completed(cmd),
+		Completed(cmd),
 		cmds.ExecCmd,
 	)
 	exec, err := resp[4].ToArray()
@@ -993,12 +993,12 @@ func (p *pipe) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duratio
 	return newResult(exec[1], nil)
 }
 
-func (p *pipe) doCacheMGet(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) RedisResult {
+func (p *pipe) doCacheMGet(ctx context.Context, cmd Cacheable, ttl time.Duration) RedisResult {
 	commands := cmd.Commands()
 	entries := make(map[int]*entry)
 	builder := cmds.NewBuilder(cmds.InitSlot)
 	result := RedisResult{val: RedisMessage{typ: '*', values: nil}}
-	mgetcc := cmd.MGetCacheCmd()
+	mgetcc := cmds.MGetCacheCmd(cmd)
 	keys := len(commands) - 1
 	if mgetcc[0] == 'J' {
 		keys-- // the last one of JSON.MGET is a path, not a key
@@ -1026,7 +1026,7 @@ func (p *pipe) doCacheMGet(ctx context.Context, cmd cmds.Cacheable, ttl time.Dur
 
 	var partial []RedisMessage
 	if !rewrite.IsZero() {
-		var rewritten cmds.Completed
+		var rewritten Completed
 		var keys int
 		if mgetcc[0] == 'J' { // rewrite JSON.MGET path
 			rewritten = rewrite.Args(commands[len(commands)-1]).MultiGet()
@@ -1036,7 +1036,7 @@ func (p *pipe) doCacheMGet(ctx context.Context, cmd cmds.Cacheable, ttl time.Dur
 			keys = len(rewritten.Commands()) - 1
 		}
 
-		multi := make([]cmds.Completed, 0, keys+4)
+		multi := make([]Completed, 0, keys+4)
 		multi = append(multi, cmds.OptInCmd, cmds.MultiCmd)
 		for _, key := range rewritten.Commands()[1 : keys+1] {
 			multi = append(multi, builder.Pttl().Key(key).Build())
@@ -1056,7 +1056,7 @@ func (p *pipe) doCacheMGet(ctx context.Context, cmd cmds.Cacheable, ttl time.Dur
 		}
 		defer func() {
 			for _, cmd := range multi[2 : len(multi)-1] {
-				cmds.Put(cmd.CommandSlice())
+				cmds.PutCompleted(cmd)
 			}
 		}()
 		last := len(exec) - 1
@@ -1096,24 +1096,24 @@ func (p *pipe) doCacheMGet(ctx context.Context, cmd cmds.Cacheable, ttl time.Dur
 
 func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisResult {
 	if p.cache == nil {
-		commands := make([]cmds.Completed, len(multi))
+		commands := make([]Completed, len(multi))
 		for i, ct := range multi {
-			commands[i] = cmds.Completed(ct.Cmd)
+			commands[i] = Completed(ct.Cmd)
 		}
 		return p.DoMulti(ctx, commands...)
 	}
 
-	multi[0].Cmd.CommandSlice().Verify()
+	cmds.CacheableCommandSlice(multi[0].Cmd).Verify()
 
 	results := make([]RedisResult, len(multi))
 	entries := make(map[int]*entry)
-	missing := []cmds.Completed{cmds.OptInCmd, cmds.MultiCmd}
+	missing := []Completed{cmds.OptInCmd, cmds.MultiCmd}
 	now := time.Now()
 	for i, ct := range multi {
 		if ct.Cmd.IsMGet() {
 			panic(panicmgetcsc)
 		}
-		ck, cc := ct.Cmd.CacheKey()
+		ck, cc := cmds.CacheKey(ct.Cmd)
 		v, entry := p.cache.GetOrPrepare(ck, cc, now, ct.TTL)
 		if v.typ != 0 { // cache hit for one key
 			results[i] = newResult(v, nil)
@@ -1123,7 +1123,7 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisR
 			entries[i] = entry // store entries for later entry.Wait() to avoid MGET deadlock each others.
 			continue
 		}
-		missing = append(missing, cmds.NewCompleted([]string{"PTTL", ck}), cmds.Completed(ct.Cmd))
+		missing = append(missing, cmds.NewCompleted([]string{"PTTL", ck}), Completed(ct.Cmd))
 	}
 
 	var exec []RedisMessage
@@ -1137,8 +1137,8 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisR
 				err = ErrDoCacheAborted
 			}
 			for i := 3; i < len(missing); i += 2 {
-				cacheable := cmds.Cacheable(missing[i])
-				ck, cc := cacheable.CacheKey()
+				cacheable := Cacheable(missing[i])
+				ck, cc := cmds.CacheKey(cacheable)
 				p.cache.Cancel(ck, cc, err)
 			}
 			for i := range results {

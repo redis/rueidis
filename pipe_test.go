@@ -621,7 +621,7 @@ func TestClientSideCaching(t *testing.T) {
 	for i := 0; i < times; i++ {
 		go func() {
 			defer wg.Done()
-			v, _ := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage()
+			v, _ := p.DoCache(context.Background(), Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage()
 			if v.string != "1" {
 				t.Errorf("unexpected cached result, expected %v, got %v", "1", v.string)
 			}
@@ -649,7 +649,7 @@ func TestClientSideCaching(t *testing.T) {
 	}()
 
 	for {
-		if v, _ := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), time.Second).ToMessage(); v.string == "2" {
+		if v, _ := p.DoCache(context.Background(), Cacheable(cmds.NewCompleted([]string{"GET", "a"})), time.Second).ToMessage(); v.string == "2" {
 			break
 		}
 		t.Logf("waiting for invalidating")
@@ -662,7 +662,7 @@ func TestClientSideCaching(t *testing.T) {
 	}()
 
 	for {
-		if v, _ := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), time.Second).ToMessage(); v.string == "3" {
+		if v, _ := p.DoCache(context.Background(), Cacheable(cmds.NewCompleted([]string{"GET", "a"})), time.Second).ToMessage(); v.string == "3" {
 			break
 		}
 		t.Logf("waiting for invalidating")
@@ -686,7 +686,7 @@ func TestClientSideCachingExecAbort(t *testing.T) {
 			Reply(RedisMessage{typ: '_'})
 	}()
 
-	v, err := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage()
+	v, err := p.DoCache(context.Background(), Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage()
 	if err != ErrDoCacheAborted {
 		t.Errorf("unexpected err, got %v", err)
 	}
@@ -702,7 +702,7 @@ func TestClientSideCachingWithNonRedisError(t *testing.T) {
 	p, _, _, closeConn := setup(t, ClientOption{})
 	closeConn()
 
-	v, err := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage()
+	v, err := p.DoCache(context.Background(), Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage()
 	if err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 		t.Errorf("unexpected err, got %v", err)
 	}
@@ -757,7 +757,7 @@ func TestClientSideCachingMGet(t *testing.T) {
 	miss := uint64(0)
 	hits := uint64(0)
 	for i := 0; i < 2; i++ {
-		v, _ := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewMGetCompleted([]string{"MGET", "a1", "a2", "a3"})), 10*time.Second).ToMessage()
+		v, _ := p.DoCache(context.Background(), Cacheable(cmds.NewMGetCompleted([]string{"MGET", "a1", "a2", "a3"})), 10*time.Second).ToMessage()
 		arr, _ := v.ToArray()
 		if len(arr) != 3 {
 			t.Errorf("unexpected cached mget length, expected 3, got %v", len(arr))
@@ -822,7 +822,7 @@ func TestClientSideCachingMGet(t *testing.T) {
 		time.Sleep(10 * time.Millisecond)
 	}
 
-	v, _ := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewMGetCompleted([]string{"MGET", "a1", "a2", "a3"})), 10*time.Second).ToMessage()
+	v, _ := p.DoCache(context.Background(), Cacheable(cmds.NewMGetCompleted([]string{"MGET", "a1", "a2", "a3"})), 10*time.Second).ToMessage()
 	arr, _ := v.ToArray()
 	if len(arr) != 3 {
 		t.Errorf("unexpected cached mget length, expected 3, got %v", len(arr))
@@ -890,7 +890,7 @@ func TestClientSideCachingJSONMGet(t *testing.T) {
 	miss := uint64(0)
 	hits := uint64(0)
 	for i := 0; i < 2; i++ {
-		v, _ := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewMGetCompleted([]string{"JSON.MGET", "a1", "a2", "a3", "$"})), 10*time.Second).ToMessage()
+		v, _ := p.DoCache(context.Background(), Cacheable(cmds.NewMGetCompleted([]string{"JSON.MGET", "a1", "a2", "a3", "$"})), 10*time.Second).ToMessage()
 		arr, _ := v.ToArray()
 		if len(arr) != 3 {
 			t.Errorf("unexpected cached mget length, expected 3, got %v", len(arr))
@@ -955,7 +955,7 @@ func TestClientSideCachingJSONMGet(t *testing.T) {
 		time.Sleep(10 * time.Millisecond)
 	}
 
-	v, _ := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewMGetCompleted([]string{"JSON.MGET", "a1", "a2", "a3", "$"})), 10*time.Second).ToMessage()
+	v, _ := p.DoCache(context.Background(), Cacheable(cmds.NewMGetCompleted([]string{"JSON.MGET", "a1", "a2", "a3", "$"})), 10*time.Second).ToMessage()
 	arr, _ := v.ToArray()
 	if len(arr) != 3 {
 		t.Errorf("unexpected cached mget length, expected 3, got %v", len(arr))
@@ -999,7 +999,7 @@ func TestClientSideCachingExecAbortMGet(t *testing.T) {
 			Reply(RedisMessage{typ: '_'})
 	}()
 
-	v, err := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewMGetCompleted([]string{"MGET", "a1", "a2"})), 10*time.Second).ToMessage()
+	v, err := p.DoCache(context.Background(), Cacheable(cmds.NewMGetCompleted([]string{"MGET", "a1", "a2"})), 10*time.Second).ToMessage()
 	if err != ErrDoCacheAborted {
 		t.Errorf("unexpected err, got %v", err)
 	}
@@ -1018,7 +1018,7 @@ func TestClientSideCachingWithNonRedisErrorMGet(t *testing.T) {
 	p, _, _, closeConn := setup(t, ClientOption{})
 	closeConn()
 
-	v, err := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewMGetCompleted([]string{"MGET", "a1", "a2"})), 10*time.Second).ToMessage()
+	v, err := p.DoCache(context.Background(), Cacheable(cmds.NewMGetCompleted([]string{"MGET", "a1", "a2"})), 10*time.Second).ToMessage()
 	if err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 		t.Errorf("unexpected err, got %v", err)
 	}
@@ -1043,7 +1043,7 @@ func TestClientSideCachingWithSideChannelMGet(t *testing.T) {
 		p.cache.Update("a1", "GET", RedisMessage{typ: '+', string: "OK"}, 10)
 	}()
 
-	v, _ := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewMGetCompleted([]string{"MGET", "a1"})), 10*time.Second).AsStrSlice()
+	v, _ := p.DoCache(context.Background(), Cacheable(cmds.NewMGetCompleted([]string{"MGET", "a1"})), 10*time.Second).AsStrSlice()
 	if v[0] != "OK" {
 		t.Errorf("unexpected value, got %v", v)
 	}
@@ -1059,7 +1059,7 @@ func TestClientSideCachingWithSideChannelErrorMGet(t *testing.T) {
 		p.cache.Cancel("a1", "GET", io.EOF)
 	}()
 
-	_, err := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewMGetCompleted([]string{"MGET", "a1"})), 10*time.Second).ToMessage()
+	_, err := p.DoCache(context.Background(), Cacheable(cmds.NewMGetCompleted([]string{"MGET", "a1"})), 10*time.Second).ToMessage()
 	if err != io.EOF {
 		t.Errorf("unexpected err, got %v", err)
 	}
@@ -1075,7 +1075,7 @@ func TestClientSideCachingDoMultiCacheMGet(t *testing.T) {
 		}
 	}()
 	p.DoMultiCache(context.Background(), []CacheableTTL{
-		CT(cmds.Cacheable(cmds.NewMGetCompleted([]string{"MGET", "a1"})), time.Second*10),
+		CT(Cacheable(cmds.NewMGetCompleted([]string{"MGET", "a1"})), time.Second*10),
 	}...)
 }
 
@@ -1125,9 +1125,9 @@ func TestClientSideCachingDoMultiCache(t *testing.T) {
 	hits := uint64(0)
 	for i := 0; i < 2; i++ {
 		arr := p.DoMultiCache(context.Background(), []CacheableTTL{
-			CT(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a1"})), time.Second*10),
-			CT(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a2"})), time.Second*10),
-			CT(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a3"})), time.Second*10),
+			CT(Cacheable(cmds.NewCompleted([]string{"GET", "a1"})), time.Second*10),
+			CT(Cacheable(cmds.NewCompleted([]string{"GET", "a2"})), time.Second*10),
+			CT(Cacheable(cmds.NewCompleted([]string{"GET", "a3"})), time.Second*10),
 		}...)
 		if len(arr) != 3 {
 			t.Errorf("unexpected cached mget length, expected 3, got %v", len(arr))
@@ -1193,9 +1193,9 @@ func TestClientSideCachingDoMultiCache(t *testing.T) {
 	}
 
 	arr := p.DoMultiCache(context.Background(), []CacheableTTL{
-		CT(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a1"})), time.Second*10),
-		CT(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a2"})), time.Second*10),
-		CT(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a3"})), time.Second*10),
+		CT(Cacheable(cmds.NewCompleted([]string{"GET", "a1"})), time.Second*10),
+		CT(Cacheable(cmds.NewCompleted([]string{"GET", "a2"})), time.Second*10),
+		CT(Cacheable(cmds.NewCompleted([]string{"GET", "a3"})), time.Second*10),
 	}...)
 	if len(arr) != 3 {
 		t.Errorf("unexpected cached mget length, expected 3, got %v", len(arr))
@@ -1242,8 +1242,8 @@ func TestClientSideCachingExecAbortDoMultiCache(t *testing.T) {
 	}()
 
 	arr := p.DoMultiCache(context.Background(), []CacheableTTL{
-		CT(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a1"})), time.Second*10),
-		CT(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a2"})), time.Second*10),
+		CT(Cacheable(cmds.NewCompleted([]string{"GET", "a1"})), time.Second*10),
+		CT(Cacheable(cmds.NewCompleted([]string{"GET", "a2"})), time.Second*10),
 	}...)
 	for _, resp := range arr {
 		v, err := resp.ToMessage()
@@ -1267,8 +1267,8 @@ func TestClientSideCachingWithNonRedisErrorDoMultiCache(t *testing.T) {
 	closeConn()
 
 	arr := p.DoMultiCache(context.Background(), []CacheableTTL{
-		CT(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a1"})), time.Second*10),
-		CT(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a2"})), time.Second*10),
+		CT(Cacheable(cmds.NewCompleted([]string{"GET", "a1"})), time.Second*10),
+		CT(Cacheable(cmds.NewCompleted([]string{"GET", "a2"})), time.Second*10),
 	}...)
 	for _, resp := range arr {
 		v, err := resp.ToMessage()
@@ -1298,7 +1298,7 @@ func TestClientSideCachingWithSideChannelDoMultiCache(t *testing.T) {
 	}()
 
 	arr := p.DoMultiCache(context.Background(), []CacheableTTL{
-		CT(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a1"})), time.Second*10),
+		CT(Cacheable(cmds.NewCompleted([]string{"GET", "a1"})), time.Second*10),
 	}...)
 	if arr[0].val.string != "OK" {
 		t.Errorf("unexpected value, got %v", arr[0].val.string)
@@ -1316,7 +1316,7 @@ func TestClientSideCachingWithSideChannelErrorDoMultiCache(t *testing.T) {
 	}()
 
 	arr := p.DoMultiCache(context.Background(), []CacheableTTL{
-		CT(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a1"})), time.Second*10),
+		CT(Cacheable(cmds.NewCompleted([]string{"GET", "a1"})), time.Second*10),
 	}...)
 	if arr[0].err != io.EOF {
 		t.Errorf("unexpected err, got %v", arr[0].err)
@@ -1347,15 +1347,15 @@ func TestClientSideCachingMissCacheTTL(t *testing.T) {
 			expectCSC(1000, "b")
 			expectCSC(20000, "c")
 		}()
-		v, _ := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage()
+		v, _ := p.DoCache(context.Background(), Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage()
 		if ttl := v.CacheTTL(); ttl != 10 {
 			t.Errorf("unexpected cached ttl, expected %v, got %v", 10, ttl)
 		}
-		v, _ = p.DoCache(context.Background(), cmds.Cacheable(cmds.NewCompleted([]string{"GET", "b"})), 10*time.Second).ToMessage()
+		v, _ = p.DoCache(context.Background(), Cacheable(cmds.NewCompleted([]string{"GET", "b"})), 10*time.Second).ToMessage()
 		if ttl := v.CacheTTL(); ttl != 1 {
 			t.Errorf("unexpected cached ttl, expected %v, got %v", 1, ttl)
 		}
-		v, _ = p.DoCache(context.Background(), cmds.Cacheable(cmds.NewCompleted([]string{"GET", "c"})), 10*time.Second).ToMessage()
+		v, _ = p.DoCache(context.Background(), Cacheable(cmds.NewCompleted([]string{"GET", "c"})), 10*time.Second).ToMessage()
 		if ttl := v.CacheTTL(); ttl != 10 {
 			t.Errorf("unexpected cached ttl, expected %v, got %v", 10, ttl)
 		}
@@ -1388,7 +1388,7 @@ func TestClientSideCachingMissCacheTTL(t *testing.T) {
 					}},
 				}})
 		}()
-		v, _ := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewMGetCompleted([]string{"MGET", "a", "b", "c"})), 10*time.Second).ToArray()
+		v, _ := p.DoCache(context.Background(), Cacheable(cmds.NewMGetCompleted([]string{"MGET", "a", "b", "c"})), 10*time.Second).ToArray()
 		if ttl := v[0].CacheTTL(); ttl != 10 {
 			t.Errorf("unexpected cached ttl, expected %v, got %v", 10, ttl)
 		}
@@ -1430,9 +1430,9 @@ func TestClientSideCachingMissCacheTTL(t *testing.T) {
 				}})
 		}()
 		arr := p.DoMultiCache(context.Background(), []CacheableTTL{
-			CT(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a1"})), time.Second*10),
-			CT(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a2"})), time.Second*10),
-			CT(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a3"})), time.Second*10),
+			CT(Cacheable(cmds.NewCompleted([]string{"GET", "a1"})), time.Second*10),
+			CT(Cacheable(cmds.NewCompleted([]string{"GET", "a2"})), time.Second*10),
+			CT(Cacheable(cmds.NewCompleted([]string{"GET", "a3"})), time.Second*10),
 		}...)
 		if ttl := arr[0].CacheTTL(); ttl != 10 {
 			t.Errorf("unexpected cached ttl, expected %v, got %v", 10, ttl)
@@ -1485,7 +1485,7 @@ func TestClientSideCachingRedis6InvalidationBug1(t *testing.T) {
 	for i := 0; i < times; i++ {
 		go func() {
 			defer wg.Done()
-			v, _ := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage()
+			v, _ := p.DoCache(context.Background(), Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage()
 			if v.typ != '_' {
 				t.Errorf("unexpected cached result, expected null, got %v", v.string)
 			}
@@ -1546,7 +1546,7 @@ func TestClientSideCachingRedis6InvalidationBug2(t *testing.T) {
 	for i := 0; i < times; i++ {
 		go func() {
 			defer wg.Done()
-			v, _ := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage()
+			v, _ := p.DoCache(context.Background(), Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage()
 			if v.typ != '_' {
 				t.Errorf("unexpected cached result, expected null, got %v", v.string)
 			}
@@ -1599,7 +1599,7 @@ func TestClientSideCachingRedis6InvalidationBugErr(t *testing.T) {
 		closeConn()
 	}()
 
-	err := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).Error()
+	err := p.DoCache(context.Background(), Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).Error()
 	if err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 		t.Errorf("unexpected err %v", err)
 	}
@@ -1626,14 +1626,14 @@ func TestDisableClientSideCaching(t *testing.T) {
 
 	}()
 
-	v, _ := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage()
+	v, _ := p.DoCache(context.Background(), Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage()
 	if v.string != "1" {
 		t.Errorf("unexpected cached result, expected %v, got %v", "1", v.string)
 	}
 
 	vs := p.DoMultiCache(context.Background(),
-		CT(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "b"})), 10*time.Second),
-		CT(cmds.Cacheable(cmds.NewCompleted([]string{"GET", "c"})), 10*time.Second))
+		CT(Cacheable(cmds.NewCompleted([]string{"GET", "b"})), 10*time.Second),
+		CT(Cacheable(cmds.NewCompleted([]string{"GET", "c"})), 10*time.Second))
 	if vs[0].val.string != "2" {
 		t.Errorf("unexpected cached result, expected %v, got %v", "1", v.string)
 	}
@@ -1703,7 +1703,7 @@ func TestMultiHalfErr(t *testing.T) {
 		closeConn()
 	}()
 
-	err := p.DoCache(context.Background(), cmds.Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).Error()
+	err := p.DoCache(context.Background(), Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).Error()
 	if err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 		t.Errorf("unexpected err %v", err)
 	}
@@ -1716,7 +1716,7 @@ func TestPubSub(t *testing.T) {
 		p, mock, cancel, _ := setup(t, ClientOption{})
 		defer cancel()
 
-		commands := []cmds.Completed{
+		commands := []Completed{
 			builder.Subscribe().Channel("a").Build(),
 			builder.Psubscribe().Pattern("b").Build(),
 			builder.Unsubscribe().Channel("c").Build(),
@@ -1747,7 +1747,7 @@ func TestPubSub(t *testing.T) {
 		p, mock, cancel, _ := setup(t, ClientOption{})
 		defer cancel()
 
-		commands := []cmds.Completed{
+		commands := []Completed{
 			builder.Subscribe().Channel("a").Build(),
 			builder.Psubscribe().Pattern("b").Build(),
 			builder.Unsubscribe().Channel("c").Build(),
@@ -1952,7 +1952,7 @@ func TestPubSub(t *testing.T) {
 		ctx := context.Background()
 		p, mock, cancel, _ := setup(t, ClientOption{})
 
-		commands := []cmds.Completed{
+		commands := []Completed{
 			builder.Subscribe().Channel("1").Build(),
 			builder.Psubscribe().Pattern("1").Build(),
 			builder.Ssubscribe().Channel("1").Build(),
@@ -1978,7 +1978,7 @@ func TestPubSub(t *testing.T) {
 		ctx := context.Background()
 		p, mock, cancel, _ := setup(t, ClientOption{})
 
-		commands := []cmds.Completed{
+		commands := []Completed{
 			builder.Subscribe().Channel("a", "b", "c").Build(),
 			builder.Psubscribe().Pattern("a", "b", "c").Build(),
 			builder.Ssubscribe().Channel("a", "b", "c").Build(),
@@ -2023,7 +2023,7 @@ func TestPubSub(t *testing.T) {
 		ctx := context.Background()
 		p, mock, cancel, _ := setup(t, ClientOption{})
 
-		commands := []cmds.Completed{
+		commands := []Completed{
 			builder.Unsubscribe().Build(),
 			builder.Punsubscribe().Build(),
 			builder.Sunsubscribe().Build(),
@@ -2093,7 +2093,7 @@ func TestPubSub(t *testing.T) {
 				ctx := context.Background()
 				p, mock, cancel, _ := setup(t, ClientOption{})
 
-				commands := []cmds.Completed{
+				commands := []Completed{
 					builder.Sunsubscribe().Build(),
 					builder.Ssubscribe().Channel("3").Build(),
 				}
@@ -2219,7 +2219,7 @@ func TestPubSub(t *testing.T) {
 		p.version = 5
 		defer cancel()
 
-		commands := []cmds.Completed{
+		commands := []Completed{
 			builder.Subscribe().Channel("a").Build(),
 			builder.Psubscribe().Pattern("b").Build(),
 			builder.Get().Key("c").Build(),
@@ -3255,7 +3255,7 @@ func TestDeadPipe(t *testing.T) {
 	if err := deadFn().DoMulti(ctx, cmds.NewCompleted(nil))[0].Error(); err != ErrClosing {
 		t.Fatalf("unexpected err %v", err)
 	}
-	if err := deadFn().DoCache(ctx, cmds.Cacheable(cmds.NewCompleted(nil)), time.Second).Error(); err != ErrClosing {
+	if err := deadFn().DoCache(ctx, Cacheable(cmds.NewCompleted(nil)), time.Second).Error(); err != ErrClosing {
 		t.Fatalf("unexpected err %v", err)
 	}
 	if err := deadFn().Receive(ctx, cmds.NewCompleted(nil), func(message PubSubMessage) {}); err != ErrClosing {
@@ -3278,7 +3278,7 @@ func TestErrorPipe(t *testing.T) {
 	if err := epipeFn(target).DoMulti(ctx, cmds.NewCompleted(nil))[0].Error(); err != target {
 		t.Fatalf("unexpected err %v", err)
 	}
-	if err := epipeFn(target).DoCache(ctx, cmds.Cacheable(cmds.NewCompleted(nil)), time.Second).Error(); err != target {
+	if err := epipeFn(target).DoCache(ctx, Cacheable(cmds.NewCompleted(nil)), time.Second).Error(); err != target {
 		t.Fatalf("unexpected err %v", err)
 	}
 	if err := epipeFn(target).Receive(ctx, cmds.NewCompleted(nil), func(message PubSubMessage) {}); err != target {

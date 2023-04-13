@@ -122,7 +122,7 @@ func (r *HashRepository[T]) Remove(ctx context.Context, id string) error {
 
 // CreateIndex uses FT.CREATE from the RediSearch module to create inverted index under the name `hashidx:{prefix}`
 // You can use the cmdFn parameter to mutate the index construction command.
-func (r *HashRepository[T]) CreateIndex(ctx context.Context, cmdFn func(schema FtCreateSchema) Completed) error {
+func (r *HashRepository[T]) CreateIndex(ctx context.Context, cmdFn func(schema FtCreateSchema) rueidis.Completed) error {
 	return r.client.Do(ctx, cmdFn(r.client.B().FtCreate().Index(r.idx).OnHash().Prefix(1).Prefix(r.prefix+":").Schema())).Error()
 }
 
@@ -137,7 +137,7 @@ func (r *HashRepository[T]) DropIndex(ctx context.Context) error {
 // 2. search result, and note that its length might smaller than the first return value.
 // 3. error if any
 // You can use the cmdFn parameter to mutate the search command.
-func (r *HashRepository[T]) Search(ctx context.Context, cmdFn func(search FtSearchIndex) Completed) (n int64, s []*T, err error) {
+func (r *HashRepository[T]) Search(ctx context.Context, cmdFn func(search FtSearchIndex) rueidis.Completed) (n int64, s []*T, err error) {
 	n, resp, err := r.client.Do(ctx, cmdFn(r.client.B().FtSearch().Index(r.idx))).AsFtSearch()
 	if err == nil {
 		s = make([]*T, len(resp))
@@ -151,7 +151,7 @@ func (r *HashRepository[T]) Search(ctx context.Context, cmdFn func(search FtSear
 }
 
 // Aggregate performs the FT.AGGREGATE and returns a *AggregateCursor for accessing the results
-func (r *HashRepository[T]) Aggregate(ctx context.Context, cmdFn func(search FtAggregateIndex) Completed) (cursor *AggregateCursor, err error) {
+func (r *HashRepository[T]) Aggregate(ctx context.Context, cmdFn func(search FtAggregateIndex) rueidis.Completed) (cursor *AggregateCursor, err error) {
 	resp, err := r.client.Do(ctx, cmdFn(r.client.B().FtAggregate().Index(r.idx))).ToArray()
 	if err != nil {
 		return nil, err

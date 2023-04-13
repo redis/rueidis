@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/oklog/ulid/v2"
+	"github.com/rueian/rueidis"
 )
 
 type HashTestStruct struct {
@@ -114,14 +115,14 @@ func TestNewHashRepository(t *testing.T) {
 		})
 
 		t.Run("Search", func(t *testing.T) {
-			err := repo.CreateIndex(ctx, func(schema FtCreateSchema) Completed {
+			err := repo.CreateIndex(ctx, func(schema FtCreateSchema) rueidis.Completed {
 				return schema.FieldName("Val").Text().Build()
 			})
 			time.Sleep(time.Second)
 			if err != nil {
 				t.Fatal(err)
 			}
-			n, records, err := repo.Search(ctx, func(search FtSearchIndex) Completed {
+			n, records, err := repo.Search(ctx, func(search FtSearchIndex) rueidis.Completed {
 				return search.Query("*").Build()
 			})
 			if err != nil {
@@ -142,14 +143,14 @@ func TestNewHashRepository(t *testing.T) {
 		})
 
 		t.Run("Search Sort", func(t *testing.T) {
-			err := repo.CreateIndex(ctx, func(schema FtCreateSchema) Completed {
+			err := repo.CreateIndex(ctx, func(schema FtCreateSchema) rueidis.Completed {
 				return schema.FieldName("Val").Text().Sortable().Build()
 			})
 			time.Sleep(time.Second)
 			if err != nil {
 				t.Fatal(err)
 			}
-			n, records, err := repo.Search(ctx, func(search FtSearchIndex) Completed {
+			n, records, err := repo.Search(ctx, func(search FtSearchIndex) rueidis.Completed {
 				return search.Query("*").Sortby("Val").Build()
 			})
 			if err != nil {

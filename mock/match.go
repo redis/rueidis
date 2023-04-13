@@ -6,7 +6,6 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/rueian/rueidis"
-	"github.com/rueian/rueidis/internal/cmds"
 )
 
 func Match(cmd ...string) gomock.Matcher {
@@ -68,10 +67,10 @@ func format(v any) string {
 }
 
 func commands(x any) any {
-	if cmd, ok := x.(cmds.Completed); ok {
+	if cmd, ok := x.(rueidis.Completed); ok {
 		return cmd.Commands()
 	}
-	if cmd, ok := x.(cmds.Cacheable); ok {
+	if cmd, ok := x.(rueidis.Cacheable); ok {
 		return cmd.Commands()
 	}
 	if cmd, ok := x.(rueidis.CacheableTTL); ok {

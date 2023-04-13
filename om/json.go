@@ -124,7 +124,7 @@ func (r *JSONRepository[T]) Remove(ctx context.Context, id string) error {
 // CreateIndex uses FT.CREATE from the RediSearch module to create inverted index under the name `jsonidx:{prefix}`
 // You can use the cmdFn parameter to mutate the index construction command,
 // and note that the field name should be specified with JSON path syntax, otherwise the index may not work as expected.
-func (r *JSONRepository[T]) CreateIndex(ctx context.Context, cmdFn func(schema FtCreateSchema) Completed) error {
+func (r *JSONRepository[T]) CreateIndex(ctx context.Context, cmdFn func(schema FtCreateSchema) rueidis.Completed) error {
 	return r.client.Do(ctx, cmdFn(r.client.B().FtCreate().Index(r.idx).OnJson().Prefix(1).Prefix(r.prefix+":").Schema())).Error()
 }
 
@@ -139,7 +139,7 @@ func (r *JSONRepository[T]) DropIndex(ctx context.Context) error {
 // 2. search result, and note that its length might smaller than the first return value.
 // 3. error if any
 // You can use the cmdFn parameter to mutate the search command.
-func (r *JSONRepository[T]) Search(ctx context.Context, cmdFn func(search FtSearchIndex) Completed) (n int64, s []*T, err error) {
+func (r *JSONRepository[T]) Search(ctx context.Context, cmdFn func(search FtSearchIndex) rueidis.Completed) (n int64, s []*T, err error) {
 	n, resp, err := r.client.Do(ctx, cmdFn(r.client.B().FtSearch().Index(r.idx))).AsFtSearch()
 	if err == nil {
 		s = make([]*T, len(resp))
@@ -153,7 +153,7 @@ func (r *JSONRepository[T]) Search(ctx context.Context, cmdFn func(search FtSear
 }
 
 // Aggregate performs the FT.AGGREGATE and returns a *AggregateCursor for accessing the results
-func (r *JSONRepository[T]) Aggregate(ctx context.Context, cmdFn func(search FtAggregateIndex) Completed) (cursor *AggregateCursor, err error) {
+func (r *JSONRepository[T]) Aggregate(ctx context.Context, cmdFn func(search FtAggregateIndex) rueidis.Completed) (cursor *AggregateCursor, err error) {
 	resp, err := r.client.Do(ctx, cmdFn(r.client.B().FtAggregate().Index(r.idx))).ToArray()
 	if err != nil {
 		return nil, err

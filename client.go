@@ -36,19 +36,19 @@ func (c *singleClient) B() cmds.Builder {
 	return c.cmd
 }
 
-func (c *singleClient) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
+func (c *singleClient) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 retry:
 	resp = c.conn.Do(ctx, cmd)
 	if c.retry && cmd.IsReadOnly() && c.isRetryable(resp.NonRedisError(), ctx) {
 		goto retry
 	}
 	if resp.NonRedisError() == nil { // not recycle cmds if error, since cmds may be used later in pipe. consider recycle them by pipe
-		cmds.Put(cmd.CommandSlice())
+		cmds.PutCompleted(cmd)
 	}
 	return resp
 }
 
-func (c *singleClient) DoMulti(ctx context.Context, multi ...cmds.Completed) (resps []RedisResult) {
+func (c *singleClient) DoMulti(ctx context.Context, multi ...Completed) (resps []RedisResult) {
 	if len(multi) == 0 {
 		return nil
 	}
@@ -63,7 +63,7 @@ retry:
 	}
 	for i, cmd := range multi {
 		if resps[i].NonRedisError() == nil {
-			cmds.Put(cmd.CommandSlice())
+			cmds.PutCompleted(cmd)
 		}
 	}
 	return resps
@@ -84,25 +84,25 @@ retry:
 	}
 	for i, cmd := range multi {
 		if err := resps[i].NonRedisError(); err == nil || err == ErrDoCacheAborted {
-			cmds.Put(cmd.Cmd.CommandSlice())
+			cmds.PutCacheable(cmd.Cmd)
 		}
 	}
 	return resps
 }
 
-func (c *singleClient) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp RedisResult) {
+func (c *singleClient) DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) (resp RedisResult) {
 retry:
 	resp = c.conn.DoCache(ctx, cmd, ttl)
 	if c.retry && c.isRetryable(resp.NonRedisError(), ctx) {
 		goto retry
 	}
 	if err := resp.NonRedisError(); err == nil || err == ErrDoCacheAborted {
-		cmds.Put(cmd.CommandSlice())
+		cmds.PutCacheable(cmd)
 	}
 	return resp
 }
 
-func (c *singleClient) Receive(ctx context.Context, subscribe cmds.Completed, fn func(msg PubSubMessage)) (err error) {
+func (c *singleClient) Receive(ctx context.Context, subscribe Completed, fn func(msg PubSubMessage)) (err error) {
 retry:
 	err = c.conn.Receive(ctx, subscribe, fn)
 	if c.retry {
@@ -111,7 +111,7 @@ retry:
 		}
 	}
 	if err == nil {
-		cmds.Put(subscribe.CommandSlice())
+		cmds.PutCompleted(subscribe)
 	}
 	return err
 }
@@ -152,19 +152,19 @@ func (c *dedicatedSingleClient) B() cmds.Builder {
 	return c.cmd
 }
 
-func (c *dedicatedSingleClient) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
+func (c *dedicatedSingleClient) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 retry:
 	resp = c.wire.Do(ctx, cmd)
 	if c.retry && cmd.IsReadOnly() && isRetryable(resp.NonRedisError(), c.wire, ctx) {
 		goto retry
 	}
 	if resp.NonRedisError() == nil {
-		cmds.Put(cmd.CommandSlice())
+		cmds.PutCompleted(cmd)
 	}
 	return resp
 }
 
-func (c *dedicatedSingleClient) DoMulti(ctx context.Context, multi ...cmds.Completed) (resp []RedisResult) {
+func (c *dedicatedSingleClient) DoMulti(ctx context.Context, multi ...Completed) (resp []RedisResult) {
 	if len(multi) == 0 {
 		return nil
 	}
@@ -179,13 +179,13 @@ retry:
 	}
 	for i, cmd := range multi {
 		if resp[i].NonRedisError() == nil {
-			cmds.Put(cmd.CommandSlice())
+			cmds.PutCompleted(cmd)
 		}
 	}
 	return resp
 }
 
-func (c *dedicatedSingleClient) Receive(ctx context.Context, subscribe cmds.Completed, fn func(msg PubSubMessage)) (err error) {
+func (c *dedicatedSingleClient) Receive(ctx context.Context, subscribe Completed, fn func(msg PubSubMessage)) (err error) {
 retry:
 	err = c.wire.Receive(ctx, subscribe, fn)
 	if c.retry {
@@ -194,7 +194,7 @@ retry:
 		}
 	}
 	if err == nil {
-		cmds.Put(subscribe.CommandSlice())
+		cmds.PutCompleted(subscribe)
 	}
 	return err
 }
@@ -231,7 +231,7 @@ func anyRetryable(resp []RedisResult, w wire, ctx context.Context) bool {
 	return false
 }
 
-func allReadOnly(multi []cmds.Completed) bool {
+func allReadOnly(multi []Completed) bool {
 	for _, cmd := range multi {
 		if cmd.IsWrite() {
 			return false
@@ -240,7 +240,7 @@ func allReadOnly(multi []cmds.Completed) bool {
 	return true
 }
 
-func chooseSlot(multi []cmds.Completed) uint16 {
+func chooseSlot(multi []Completed) uint16 {
 	for i := 0; i < len(multi); i++ {
 		if multi[i].Slot() != cmds.InitSlot {
 			for j := i + 1; j < len(multi); j++ {

@@ -62,7 +62,7 @@ func TestMatch_Other(t *testing.T) {
 	if m := Match("GET", "k"); m.Matches(1) {
 		t.Fatalf("unexpected matched %s", m.String())
 	}
-	if m := Match("GET", "k"); m.Matches([]cmds.Completed{
+	if m := Match("GET", "k"); m.Matches([]rueidis.Completed{
 		cmds.NewBuilder(cmds.NoSlot).Get().Key("k").Build(), // https://github.com/rueian/rueidis/issues/120
 	}) {
 		t.Fatalf("unexpected matched %s", m.String())
@@ -77,7 +77,7 @@ func TestMatchFn_Other(t *testing.T) {
 	}
 	if m := MatchFn(func(cmd []string) bool {
 		return reflect.DeepEqual(cmd, []string{"GET", "k"})
-	}, "GET k"); m.Matches([]cmds.Completed{
+	}, "GET k"); m.Matches([]rueidis.Completed{
 		cmds.NewBuilder(cmds.NoSlot).Get().Key("k").Build(), // https://github.com/rueian/rueidis/issues/120
 	}) {
 		t.Fatalf("unexpected matched %s", m.String())

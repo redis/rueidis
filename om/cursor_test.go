@@ -4,6 +4,8 @@ import (
 	"context"
 	"strconv"
 	"testing"
+
+	"github.com/rueian/rueidis"
 )
 
 type Book struct {
@@ -24,7 +26,7 @@ func TestAggregateCursor(t *testing.T) {
 	jsonRepo := NewJSONRepository("book", Book{}, client)
 	hashRepo := NewHashRepository("book", Book{}, client)
 
-	if err := jsonRepo.CreateIndex(ctx, func(schema FtCreateSchema) Completed {
+	if err := jsonRepo.CreateIndex(ctx, func(schema FtCreateSchema) rueidis.Completed {
 		return schema.
 			FieldName("$.id").As("id").Numeric().
 			FieldName("$.loc").As("loc").Tag().
@@ -33,7 +35,7 @@ func TestAggregateCursor(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := hashRepo.CreateIndex(ctx, func(schema FtCreateSchema) Completed {
+	if err := hashRepo.CreateIndex(ctx, func(schema FtCreateSchema) rueidis.Completed {
 		return schema.
 			FieldName("id").As("id").Numeric().
 			FieldName("loc").As("loc").Tag().
@@ -65,7 +67,7 @@ func testRepo(t *testing.T, repo Repository[Book]) {
 	t.Run("Deadline exceed", func(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
-		_, err := repo.Aggregate(ctx, func(search FtAggregateIndex) Completed {
+		_, err := repo.Aggregate(ctx, func(search FtAggregateIndex) rueidis.Completed {
 			return search.Query("any").Build()
 		})
 		if err != context.Canceled {
@@ -74,7 +76,7 @@ func testRepo(t *testing.T, repo Repository[Book]) {
 	})
 
 	t.Run("Without cursor", func(t *testing.T) {
-		cursor, err := repo.Aggregate(context.Background(), func(search FtAggregateIndex) Completed {
+		cursor, err := repo.Aggregate(context.Background(), func(search FtAggregateIndex) rueidis.Completed {
 			return search.Query("@loc:{1}").
 				Groupby(1).Property("@id").Reduce("MIN").Nargs(1).Arg("@count").As("minCount").
 				Sortby(2).Property("@minCount").Asc().Build()
@@ -106,7 +108,7 @@ func testRepo(t *testing.T, repo Repository[Book]) {
 	})
 
 	t.Run("With cursor", func(t *testing.T) {
-		cursor, err := repo.Aggregate(context.Background(), func(search FtAggregateIndex) Completed {
+		cursor, err := repo.Aggregate(context.Background(), func(search FtAggregateIndex) rueidis.Completed {
 			return search.Query("@loc:{1}").
 				Groupby(1).Property("@id").Reduce("MIN").Nargs(1).Arg("@count").As("minCount").
 				Sortby(2).Property("@minCount").Asc().Withcursor().Count(2).Build()
@@ -145,7 +147,7 @@ func testRepo(t *testing.T, repo Repository[Book]) {
 	})
 
 	t.Run("Read deadline", func(t *testing.T) {
-		cursor, err := repo.Aggregate(context.Background(), func(search FtAggregateIndex) Completed {
+		cursor, err := repo.Aggregate(context.Background(), func(search FtAggregateIndex) rueidis.Completed {
 			return search.Query("@loc:{1}").
 				Groupby(1).Property("@id").Reduce("MIN").Nargs(1).Arg("@count").As("minCount").
 				Sortby(2).Property("@minCount").Asc().Withcursor().Count(2).Build()
@@ -164,7 +166,7 @@ func testRepo(t *testing.T, repo Repository[Book]) {
 	})
 
 	t.Run("Del cursor", func(t *testing.T) {
-		cursor, err := repo.Aggregate(context.Background(), func(search FtAggregateIndex) Completed {
+		cursor, err := repo.Aggregate(context.Background(), func(search FtAggregateIndex) rueidis.Completed {
 			return search.Query("@loc:{1}").
 				Groupby(1).Property("@id").Reduce("MIN").Nargs(1).Arg("@count").As("minCount").
 				Sortby(2).Property("@minCount").Asc().Withcursor().Count(2).Build()

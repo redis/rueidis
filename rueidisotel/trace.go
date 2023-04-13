@@ -63,21 +63,21 @@ func (o *otelclient) B() cmds.Builder {
 	return o.client.B()
 }
 
-func (o *otelclient) Do(ctx context.Context, cmd cmds.Completed) (resp rueidis.RedisResult) {
+func (o *otelclient) Do(ctx context.Context, cmd rueidis.Completed) (resp rueidis.RedisResult) {
 	ctx, span := start(ctx, first(cmd.Commands()), sum(cmd.Commands()), o.tAttrs)
 	resp = o.client.Do(ctx, cmd)
 	end(span, resp.Error())
 	return
 }
 
-func (o *otelclient) DoMulti(ctx context.Context, multi ...cmds.Completed) (resp []rueidis.RedisResult) {
+func (o *otelclient) DoMulti(ctx context.Context, multi ...rueidis.Completed) (resp []rueidis.RedisResult) {
 	ctx, span := start(ctx, multiFirst(multi), multiSum(multi), o.tAttrs)
 	resp = o.client.DoMulti(ctx, multi...)
 	end(span, firstError(resp))
 	return
 }
 
-func (o *otelclient) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp rueidis.RedisResult) {
+func (o *otelclient) DoCache(ctx context.Context, cmd rueidis.Cacheable, ttl time.Duration) (resp rueidis.RedisResult) {
 	ctx, span := start(ctx, first(cmd.Commands()), sum(cmd.Commands()), o.tAttrs)
 	resp = o.client.DoCache(ctx, cmd, ttl)
 	if resp.NonRedisError() == nil {
@@ -118,7 +118,7 @@ func (o *otelclient) Dedicate() (rueidis.DedicatedClient, func()) {
 	return &dedicated{client: client, mAttrs: o.mAttrs, tAttrs: o.tAttrs}, cancel
 }
 
-func (o *otelclient) Receive(ctx context.Context, subscribe cmds.Completed, fn func(msg rueidis.PubSubMessage)) (err error) {
+func (o *otelclient) Receive(ctx context.Context, subscribe rueidis.Completed, fn func(msg rueidis.PubSubMessage)) (err error) {
 	ctx, span := start(ctx, first(subscribe.Commands()), sum(subscribe.Commands()), o.tAttrs)
 	err = o.client.Receive(ctx, subscribe, fn)
 	end(span, err)
@@ -149,21 +149,21 @@ func (d *dedicated) B() cmds.Builder {
 	return d.client.B()
 }
 
-func (d *dedicated) Do(ctx context.Context, cmd cmds.Completed) (resp rueidis.RedisResult) {
+func (d *dedicated) Do(ctx context.Context, cmd rueidis.Completed) (resp rueidis.RedisResult) {
 	ctx, span := start(ctx, first(cmd.Commands()), sum(cmd.Commands()), d.tAttrs)
 	resp = d.client.Do(ctx, cmd)
 	end(span, resp.Error())
 	return
 }
 
-func (d *dedicated) DoMulti(ctx context.Context, multi ...cmds.Completed) (resp []rueidis.RedisResult) {
+func (d *dedicated) DoMulti(ctx context.Context, multi ...rueidis.Completed) (resp []rueidis.RedisResult) {
 	ctx, span := start(ctx, multiFirst(multi), multiSum(multi), d.tAttrs)
 	resp = d.client.DoMulti(ctx, multi...)
 	end(span, firstError(resp))
 	return
 }
 
-func (d *dedicated) Receive(ctx context.Context, subscribe cmds.Completed, fn func(msg rueidis.PubSubMessage)) (err error) {
+func (d *dedicated) Receive(ctx context.Context, subscribe rueidis.Completed, fn func(msg rueidis.PubSubMessage)) (err error) {
 	ctx, span := start(ctx, first(subscribe.Commands()), sum(subscribe.Commands()), d.tAttrs)
 	err = d.client.Receive(ctx, subscribe, fn)
 	end(span, err)
@@ -198,7 +198,7 @@ func firstError(s []rueidis.RedisResult) error {
 	return nil
 }
 
-func multiSum(multi []cmds.Completed) (v int) {
+func multiSum(multi []rueidis.Completed) (v int) {
 	for _, cmd := range multi {
 		v += sum(cmd.Commands())
 	}
@@ -212,7 +212,7 @@ func multiCacheableSum(multi []rueidis.CacheableTTL) (v int) {
 	return v
 }
 
-func multiFirst(multi []cmds.Completed) string {
+func multiFirst(multi []rueidis.Completed) string {
 	if len(multi) > 5 {
 		multi = multi[:5]
 	}
