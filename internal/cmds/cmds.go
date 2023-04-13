@@ -77,6 +77,11 @@ type Completed struct {
 	ks uint16
 }
 
+// Pin prevents a Completed to be recycled
+func (c *Completed) Pin() {
+	c.cs.Pin()
+}
+
 // IsEmpty checks if it is an empty command.
 func (c *Completed) IsEmpty() bool {
 	return c.cs == nil || len(c.cs.s) == 0
@@ -132,6 +137,11 @@ func (c *Completed) Slot() uint16 {
 // Cacheable represents a completed Redis command which supports server-assisted client side caching,
 // and it should be created by the Cache() of command builder.
 type Cacheable Completed
+
+// Pin prevents a Cacheable to be recycled
+func (c *Cacheable) Pin() {
+	c.cs.Pin()
+}
 
 // Slot returns the command key slot
 func (c *Cacheable) Slot() uint16 {

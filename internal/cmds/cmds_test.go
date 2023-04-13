@@ -238,3 +238,14 @@ func TestMSetNXs(t *testing.T) {
 		}
 	}
 }
+
+func TestCmdPin(t *testing.T) {
+	c1 := NewMGetCompleted([]string{"MGET", "K"})
+	if c1.Pin(); c1.cs.Unpin() != 0 {
+		t.Fail()
+	}
+	cc := Cacheable(NewMGetCompleted([]string{"MGET", "K"}))
+	if cc.Pin(); cc.cs.Unpin() != 0 {
+		t.Fail()
+	}
+}

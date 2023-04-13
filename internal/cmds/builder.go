@@ -3,6 +3,7 @@ package cmds
 import (
 	"strings"
 	"sync"
+	"sync/atomic"
 )
 
 const ErrBuiltTwice = "a command should not be built twice"
@@ -16,6 +17,7 @@ var pool = &sync.Pool{New: func() any {
 type CommandSlice struct {
 	s []string
 	l int32
+	r int32
 }
 
 func (cs *CommandSlice) Build() {
@@ -29,6 +31,14 @@ func (cs *CommandSlice) Verify() {
 	if cs.l != int32(len(cs.s)) {
 		panic(ErrUnfinished)
 	}
+}
+
+func (cs *CommandSlice) Pin() int32 {
+	return atomic.AddInt32(&cs.r, 1)
+}
+
+func (cs *CommandSlice) Unpin() int32 {
+	return atomic.AddInt32(&cs.r, -1)
 }
 
 func newCommandSlice(s []string) *CommandSlice {
