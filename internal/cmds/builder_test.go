@@ -127,3 +127,13 @@ func TestVerify(t *testing.T) {
 	}()
 	cmd1.cs.Verify()
 }
+
+func TestPin(t *testing.T) {
+	cmd := NewBuilder(NoSlot).Get().Key("a").Build()
+	if cmd.cs.Pin() != 1 {
+		t.Fail()
+	}
+	if cmd.cs.Unpin() != 0 {
+		t.Fail()
+	}
+}
