@@ -13,15 +13,15 @@ import (
 
 type hook struct{}
 
-func (h *hook) Do(client rueidis.Client, ctx context.Context, cmd Completed) (resp rueidis.RedisResult) {
+func (h *hook) Do(client rueidis.Client, ctx context.Context, cmd rueidis.Completed) (resp rueidis.RedisResult) {
 	return client.Do(ctx, cmd)
 }
 
-func (h *hook) DoMulti(client rueidis.Client, ctx context.Context, multi ...Completed) (resps []rueidis.RedisResult) {
+func (h *hook) DoMulti(client rueidis.Client, ctx context.Context, multi ...rueidis.Completed) (resps []rueidis.RedisResult) {
 	return client.DoMulti(ctx, multi...)
 }
 
-func (h *hook) DoCache(client rueidis.Client, ctx context.Context, cmd Cacheable, ttl time.Duration) (resp rueidis.RedisResult) {
+func (h *hook) DoCache(client rueidis.Client, ctx context.Context, cmd rueidis.Cacheable, ttl time.Duration) (resp rueidis.RedisResult) {
 	return client.DoCache(ctx, cmd, ttl)
 }
 
@@ -29,7 +29,7 @@ func (h *hook) DoMultiCache(client rueidis.Client, ctx context.Context, multi ..
 	return client.DoMultiCache(ctx, multi...)
 }
 
-func (h *hook) Receive(client rueidis.Client, ctx context.Context, subscribe Completed, fn func(msg rueidis.PubSubMessage)) (err error) {
+func (h *hook) Receive(client rueidis.Client, ctx context.Context, subscribe rueidis.Completed, fn func(msg rueidis.PubSubMessage)) (err error) {
 	return client.Receive(ctx, subscribe, fn)
 }
 
@@ -37,16 +37,16 @@ type wronghook struct {
 	DoFn func(client rueidis.Client)
 }
 
-func (w *wronghook) Do(client rueidis.Client, ctx context.Context, cmd Completed) (resp rueidis.RedisResult) {
+func (w *wronghook) Do(client rueidis.Client, ctx context.Context, cmd rueidis.Completed) (resp rueidis.RedisResult) {
 	w.DoFn(client)
 	return rueidis.RedisResult{}
 }
 
-func (w *wronghook) DoMulti(client rueidis.Client, ctx context.Context, multi ...Completed) (resps []rueidis.RedisResult) {
+func (w *wronghook) DoMulti(client rueidis.Client, ctx context.Context, multi ...rueidis.Completed) (resps []rueidis.RedisResult) {
 	panic("implement me")
 }
 
-func (w *wronghook) DoCache(client rueidis.Client, ctx context.Context, cmd Cacheable, ttl time.Duration) (resp rueidis.RedisResult) {
+func (w *wronghook) DoCache(client rueidis.Client, ctx context.Context, cmd rueidis.Cacheable, ttl time.Duration) (resp rueidis.RedisResult) {
 	panic("implement me")
 }
 
@@ -54,7 +54,7 @@ func (w *wronghook) DoMultiCache(client rueidis.Client, ctx context.Context, mul
 	panic("implement me")
 }
 
-func (w *wronghook) Receive(client rueidis.Client, ctx context.Context, subscribe Completed, fn func(msg rueidis.PubSubMessage)) (err error) {
+func (w *wronghook) Receive(client rueidis.Client, ctx context.Context, subscribe rueidis.Completed, fn func(msg rueidis.PubSubMessage)) (err error) {
 	panic("implement me")
 }
 

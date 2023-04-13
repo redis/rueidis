@@ -59,11 +59,20 @@ func get() *CommandSlice {
 	return pool.Get().(*CommandSlice)
 }
 
-// Put recycles the CommandSlice
-func Put(cs *CommandSlice) {
+func put(cs *CommandSlice) {
 	cs.s = cs.s[:0]
 	cs.l = -1
 	pool.Put(cs)
+}
+
+// PutCompleted recycles the Completed
+func PutCompleted(c Completed) {
+	put(c.cs)
+}
+
+// PutCacheable recycles the Cacheable
+func PutCacheable(c Cacheable) {
+	put(c.cs)
 }
 
 // Arbitrary allows user to build an arbitrary redis command with Builder.Arbitrary

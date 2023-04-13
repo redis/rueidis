@@ -102,7 +102,7 @@ func (mr *ClientMockRecorder) Dedicated(arg0 any) *gomock.Call {
 }
 
 // Do mocks base method.
-func (m *Client) Do(arg0 context.Context, arg1 cmds.Completed) rueidis.RedisResult {
+func (m *Client) Do(arg0 context.Context, arg1 rueidis.Completed) rueidis.RedisResult {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Do", arg0, arg1)
 	ret0, _ := ret[0].(rueidis.RedisResult)
@@ -116,7 +116,7 @@ func (mr *ClientMockRecorder) Do(arg0, arg1 any) *gomock.Call {
 }
 
 // DoCache mocks base method.
-func (m *Client) DoCache(arg0 context.Context, arg1 cmds.Cacheable, arg2 time.Duration) rueidis.RedisResult {
+func (m *Client) DoCache(arg0 context.Context, arg1 rueidis.Cacheable, arg2 time.Duration) rueidis.RedisResult {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DoCache", arg0, arg1, arg2)
 	ret0, _ := ret[0].(rueidis.RedisResult)
@@ -130,7 +130,7 @@ func (mr *ClientMockRecorder) DoCache(arg0, arg1, arg2 any) *gomock.Call {
 }
 
 // DoMulti mocks base method.
-func (m *Client) DoMulti(arg0 context.Context, arg1 ...cmds.Completed) []rueidis.RedisResult {
+func (m *Client) DoMulti(arg0 context.Context, arg1 ...rueidis.Completed) []rueidis.RedisResult {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0}
 	for _, a := range arg1 {
@@ -182,7 +182,7 @@ func (mr *ClientMockRecorder) Nodes() *gomock.Call {
 }
 
 // Receive mocks base method.
-func (m *Client) Receive(arg0 context.Context, arg1 cmds.Completed, arg2 func(rueidis.PubSubMessage)) error {
+func (m *Client) Receive(arg0 context.Context, arg1 rueidis.Completed, arg2 func(rueidis.PubSubMessage)) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Receive", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -240,7 +240,7 @@ func (mr *DedicatedClientMockRecorder) Close() *gomock.Call {
 }
 
 // Do mocks base method.
-func (m *DedicatedClient) Do(arg0 context.Context, arg1 cmds.Completed) rueidis.RedisResult {
+func (m *DedicatedClient) Do(arg0 context.Context, arg1 rueidis.Completed) rueidis.RedisResult {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Do", arg0, arg1)
 	ret0, _ := ret[0].(rueidis.RedisResult)
@@ -254,7 +254,7 @@ func (mr *DedicatedClientMockRecorder) Do(arg0, arg1 any) *gomock.Call {
 }
 
 // DoMulti mocks base method.
-func (m *DedicatedClient) DoMulti(arg0 context.Context, arg1 ...cmds.Completed) []rueidis.RedisResult {
+func (m *DedicatedClient) DoMulti(arg0 context.Context, arg1 ...rueidis.Completed) []rueidis.RedisResult {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0}
 	for _, a := range arg1 {
@@ -273,7 +273,7 @@ func (mr *DedicatedClientMockRecorder) DoMulti(arg0 any, arg1 ...any) *gomock.Ca
 }
 
 // Receive mocks base method.
-func (m *DedicatedClient) Receive(arg0 context.Context, arg1 cmds.Completed, arg2 func(rueidis.PubSubMessage)) error {
+func (m *DedicatedClient) Receive(arg0 context.Context, arg1 rueidis.Completed, arg2 func(rueidis.PubSubMessage)) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Receive", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)

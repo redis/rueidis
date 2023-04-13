@@ -7,12 +7,12 @@ import (
 )
 
 func TestCacheable_CacheKey(t *testing.T) {
-	key, cmd := (&Cacheable{cs: newCommandSlice([]string{"GET", "A"})}).CacheKey()
+	key, cmd := CacheKey(Cacheable{cs: newCommandSlice([]string{"GET", "A"})})
 	if key != "A" || cmd != "GET" {
 		t.Fatalf("unexpected ret %v %v", key, cmd)
 	}
 
-	key, cmd = (&Cacheable{cs: newCommandSlice([]string{"HMGET", "A", "B", "C"})}).CacheKey()
+	key, cmd = CacheKey(Cacheable{cs: newCommandSlice([]string{"HMGET", "A", "B", "C"})})
 	if key != "A" || cmd != "HMGETBC" {
 		t.Fatalf("unexpected ret %v %v", key, cmd)
 	}
@@ -25,19 +25,19 @@ func TestCacheable_IsMGet(t *testing.T) {
 }
 
 func TestCacheable_MGetCacheKey(t *testing.T) {
-	if cmd := Cacheable(NewMGetCompleted([]string{"MGET", "K"})); cmd.MGetCacheKey(0) != "K" {
+	if cmd := Cacheable(NewMGetCompleted([]string{"MGET", "K"})); MGetCacheKey(cmd, 0) != "K" {
 		t.Fatalf("should be K")
 	}
-	if cmd := Cacheable(NewMGetCompleted([]string{"JSON.MGET", "K"})); cmd.MGetCacheKey(0) != "K" {
+	if cmd := Cacheable(NewMGetCompleted([]string{"JSON.MGET", "K"})); MGetCacheKey(cmd, 0) != "K" {
 		t.Fatalf("should be K")
 	}
 }
 
 func TestCacheable_MGetCacheCmd(t *testing.T) {
-	if cmd := Cacheable(NewMGetCompleted([]string{"MGET", "K"})); cmd.MGetCacheCmd() != "GET" {
+	if cmd := Cacheable(NewMGetCompleted([]string{"MGET", "K"})); MGetCacheCmd(cmd) != "GET" {
 		t.Fatalf("should be GET")
 	}
-	if cmd := Cacheable(NewMGetCompleted([]string{"JSON.MGET", "K", "$"})); cmd.MGetCacheCmd() != "JSON.GET$" {
+	if cmd := Cacheable(NewMGetCompleted([]string{"JSON.MGET", "K", "$"})); MGetCacheCmd(cmd) != "JSON.GET$" {
 		t.Fatalf("should be JSON.GET$")
 	}
 }
@@ -65,8 +65,7 @@ func TestCompleted_ToBlock(t *testing.T) {
 	if cmd.IsBlock() {
 		t.Fatalf("should not be block command")
 	}
-	cmd.ToBlock()
-	if !cmd.IsBlock() {
+	if cmd = ToBlock(cmd); !cmd.IsBlock() {
 		t.Fatalf("should be block command")
 	}
 }
@@ -138,11 +137,11 @@ func TestCompleted_PanicCrossSlot(t *testing.T) {
 func TestCompleted_CommandSlice(t *testing.T) {
 	cs := []string{"a", "b", "c"}
 	completed := NewCompleted(cs)
-	if !reflect.DeepEqual(completed.CommandSlice().s, cs) || !reflect.DeepEqual(completed.Commands(), cs) {
+	if !reflect.DeepEqual(completed.cs.s, cs) || !reflect.DeepEqual(completed.Commands(), cs) {
 		t.Fatalf("unexpecetd diffs")
 	}
 	cacheable := Cacheable(completed)
-	if !reflect.DeepEqual(cacheable.CommandSlice().s, cs) || !reflect.DeepEqual(cacheable.Commands(), cs) {
+	if !reflect.DeepEqual(cacheable.cs.s, cs) || !reflect.DeepEqual(cacheable.Commands(), cs) {
 		t.Fatalf("unexpecetd diffs")
 	}
 }
@@ -246,6 +245,18 @@ func TestCmdPin(t *testing.T) {
 	}
 	cc := Cacheable(NewMGetCompleted([]string{"MGET", "K"}))
 	if cc.Pin(); cc.cs.Unpin() != 0 {
+		t.Fail()
+	}
+}
+
+func TestCompletedCommandSlice(t *testing.T) {
+	if c1 := NewMGetCompleted([]string{"MGET", "K"}); CompletedCommandSlice(c1) != c1.cs {
+		t.Fail()
+	}
+}
+
+func TestCacheableCommandSlice(t *testing.T) {
+	if c1 := Cacheable(NewMGetCompleted([]string{"MGET", "K"})); CacheableCommandSlice(c1) != c1.cs {
 		t.Fail()
 	}
 }

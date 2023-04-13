@@ -76,7 +76,7 @@ func JsonMGet(client Client, ctx context.Context, keys []string, path string) (r
 	return parallelMGet(client, ctx, cmds.JsonMGets(keys, path), keys)
 }
 
-func clientMGetCache(client Client, ctx context.Context, ttl time.Duration, cmd cmds.Cacheable, keys []string) (ret map[string]RedisMessage, err error) {
+func clientMGetCache(client Client, ctx context.Context, ttl time.Duration, cmd Cacheable, keys []string) (ret map[string]RedisMessage, err error) {
 	arr, err := client.DoCache(ctx, cmd, ttl).ToArray()
 	if err != nil {
 		return nil, err
@@ -84,7 +84,7 @@ func clientMGetCache(client Client, ctx context.Context, ttl time.Duration, cmd 
 	return arrayToKV(make(map[string]RedisMessage, len(keys)), arr, keys), nil
 }
 
-func clientMGet(client Client, ctx context.Context, cmd cmds.Completed, keys []string) (ret map[string]RedisMessage, err error) {
+func clientMGet(client Client, ctx context.Context, cmd Completed, keys []string) (ret map[string]RedisMessage, err error) {
 	arr, err := client.Do(ctx, cmd).ToArray()
 	if err != nil {
 		return nil, err
@@ -107,21 +107,21 @@ func clientMSet(client Client, ctx context.Context, mset string, kvs map[string]
 	return ret
 }
 
-func parallelMGetCache(cc Client, ctx context.Context, ttl time.Duration, mgets map[uint16]cmds.Completed, keys []string) (ret map[string]RedisMessage, err error) {
-	return doMGets(make(map[string]RedisMessage, len(keys)), mgets, func(cmd cmds.Completed) RedisResult {
-		return cc.DoCache(ctx, cmds.Cacheable(cmd), ttl)
+func parallelMGetCache(cc Client, ctx context.Context, ttl time.Duration, mgets map[uint16]Completed, keys []string) (ret map[string]RedisMessage, err error) {
+	return doMGets(make(map[string]RedisMessage, len(keys)), mgets, func(cmd Completed) RedisResult {
+		return cc.DoCache(ctx, Cacheable(cmd), ttl)
 	})
 }
 
-func parallelMGet(cc Client, ctx context.Context, mgets map[uint16]cmds.Completed, keys []string) (ret map[string]RedisMessage, err error) {
-	return doMGets(make(map[string]RedisMessage, len(keys)), mgets, func(cmd cmds.Completed) RedisResult {
+func parallelMGet(cc Client, ctx context.Context, mgets map[uint16]Completed, keys []string) (ret map[string]RedisMessage, err error) {
+	return doMGets(make(map[string]RedisMessage, len(keys)), mgets, func(cmd Completed) RedisResult {
 		return cc.Do(ctx, cmd)
 	})
 }
 
-func parallelMSet(cc Client, ctx context.Context, msets map[uint16]cmds.Completed, ret map[string]error) map[string]error {
+func parallelMSet(cc Client, ctx context.Context, msets map[uint16]Completed, ret map[string]error) map[string]error {
 	var mu sync.Mutex
-	util.ParallelVals(msets, func(cmd cmds.Completed) {
+	util.ParallelVals(msets, func(cmd Completed) {
 		keys := make([]string, 0, (len(cmd.Commands())-1)/2)
 		for i := 1; i < len(cmd.Commands()); i += 2 {
 			keys = append(keys, cmd.Commands()[i])
@@ -140,9 +140,9 @@ func parallelMSet(cc Client, ctx context.Context, msets map[uint16]cmds.Complete
 	return ret
 }
 
-func doMGets(m map[string]RedisMessage, mgets map[uint16]cmds.Completed, fn func(cmd cmds.Completed) RedisResult) (ret map[string]RedisMessage, err error) {
+func doMGets(m map[string]RedisMessage, mgets map[uint16]Completed, fn func(cmd Completed) RedisResult) (ret map[string]RedisMessage, err error) {
 	var mu sync.Mutex
-	util.ParallelVals(mgets, func(cmd cmds.Completed) {
+	util.ParallelVals(mgets, func(cmd Completed) {
 		keys := make([]string, len(cmd.Commands())-1)
 		copy(keys, cmd.Commands()[1:])
 		arr, err2 := fn(cmd).ToArray()

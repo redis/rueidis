@@ -157,10 +157,10 @@ type Client interface {
 	// All concurrent non-blocking commands will be pipelined automatically and have better throughput.
 	// Blocking commands will use another separated connection pool.
 	// The cmd parameter is recycled after passing into Do() and should not be reused.
-	Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult)
+	Do(ctx context.Context, cmd Completed) (resp RedisResult)
 	// DoMulti takes multiple redis commands and sends them together, reducing RTT from the user code.
 	// The multi parameters are recycled after passing into DoMulti() and should not be reused.
-	DoMulti(ctx context.Context, multi ...cmds.Completed) (resp []RedisResult)
+	DoMulti(ctx context.Context, multi ...Completed) (resp []RedisResult)
 	// DoCache is similar to Do, but it uses opt-in client side caching and requires a client side TTL.
 	// The explicit client side TTL specifies the maximum TTL on the client side.
 	// If the key's TTL on the server is smaller than the client side TTL, the client side TTL will be capped.
@@ -171,7 +171,7 @@ type Client interface {
 	//  GET k
 	// The in-memory cache size is configured by ClientOption.CacheSizeEachConn.
 	// The cmd parameter is recycled after passing into DoCache() and should not be reused.
-	DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duration) (resp RedisResult)
+	DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) (resp RedisResult)
 	// DoMultiCache is similar to DoCache, but works with multiple cacheable commands across different slots.
 	// It will first group commands by slots and will send only cache missed commands to redis.
 	DoMultiCache(ctx context.Context, multi ...CacheableTTL) (resp []RedisResult)
@@ -182,7 +182,7 @@ type Client interface {
 	//   2. return ErrClosing when the client is closed manually.
 	//   3. return ctx.Err() when the `ctx` is done.
 	//   4. return non-nil err when the provided `subscribe` command failed.
-	Receive(ctx context.Context, subscribe cmds.Completed, fn func(msg PubSubMessage)) error
+	Receive(ctx context.Context, subscribe Completed, fn func(msg PubSubMessage)) error
 
 	// Dedicated acquire a connection from the blocking connection pool, no one else can use the connection
 	// during Dedicated. The main usage of Dedicated is CAS operation, which is WATCH + MULTI + EXEC.
@@ -211,12 +211,12 @@ type DedicatedClient interface {
 	B() cmds.Builder
 	// Do is the same as Client's
 	// The cmd parameter is recycled after passing into Do() and should not be reused.
-	Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult)
+	Do(ctx context.Context, cmd Completed) (resp RedisResult)
 	// DoMulti takes multiple redis commands and sends them together, reducing RTT from the user code.
 	// The multi parameters are recycled after passing into DoMulti() and should not be reused.
-	DoMulti(ctx context.Context, multi ...cmds.Completed) (resp []RedisResult)
+	DoMulti(ctx context.Context, multi ...Completed) (resp []RedisResult)
 	// Receive is the same as Client's
-	Receive(ctx context.Context, subscribe cmds.Completed, fn func(msg PubSubMessage)) error
+	Receive(ctx context.Context, subscribe Completed, fn func(msg PubSubMessage)) error
 	// SetPubSubHooks is an alternative way to processing Pub/Sub messages instead of using Receive.
 	// SetPubSubHooks is non-blocking and allows users to subscribe/unsubscribe channels later.
 	// Note that the hooks will be called sequentially but in another goroutine.
@@ -232,13 +232,13 @@ type DedicatedClient interface {
 }
 
 // CT is a shorthand constructor for CacheableTTL
-func CT(cmd cmds.Cacheable, ttl time.Duration) CacheableTTL {
+func CT(cmd Cacheable, ttl time.Duration) CacheableTTL {
 	return CacheableTTL{Cmd: cmd, TTL: ttl}
 }
 
 // CacheableTTL is parameter container of DoMultiCache
 type CacheableTTL struct {
-	Cmd cmds.Cacheable
+	Cmd Cacheable
 	TTL time.Duration
 }
 

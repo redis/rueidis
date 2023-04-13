@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/rueian/rueidis"
-	"github.com/rueian/rueidis/internal/cmds"
 )
 
 var sources sync.Pool
@@ -156,7 +155,7 @@ func keyname(prefix, name string, i int32) string {
 
 func (m *locker) acquire(ctx context.Context, key, val string, deadline time.Time) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, m.timeout)
-	var set cmds.Completed
+	var set rueidis.Completed
 	if m.setpx {
 		set = m.client.B().Set().Key(key).Value(val).Nx().PxMilliseconds(m.validity.Milliseconds()).Build()
 	} else {
