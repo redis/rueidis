@@ -101,3 +101,29 @@ func TestArbitraryMultiGetPanic(t *testing.T) {
 	}()
 	builder.Arbitrary("SUBSCRIBE").MultiGet()
 }
+
+func TestBuiltTwice(t *testing.T) {
+	src := NewBuilder(NoSlot).Get()
+	cmd1 := src.Key("a")
+	cmd2 := src.Key("b")
+	cmd1.Build()
+	defer func() {
+		if e := recover(); e != ErrBuiltTwice {
+			t.Errorf("arbitrary not check MGET command")
+		}
+	}()
+	cmd2.Build()
+}
+
+func TestVerify(t *testing.T) {
+	src := NewBuilder(NoSlot).Get()
+	cmd1 := src.Key("a").Build()
+	cmd1.cs.Verify()
+	src.Key("b")
+	defer func() {
+		if e := recover(); e != ErrUnfinished {
+			t.Errorf("arbitrary not check MGET command")
+		}
+	}()
+	cmd1.cs.Verify()
+}

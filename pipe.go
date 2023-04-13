@@ -555,6 +555,7 @@ func (p *pipe) handlePush(values []RedisMessage) (reply bool, unsubscribe bool) 
 	}
 	return false, false
 }
+
 func (p *pipe) _r2pipe() (r2p *pipe) {
 	p.r2mu.Lock()
 	if p.r2pipe != nil {
@@ -579,6 +580,8 @@ func (p *pipe) Receive(ctx context.Context, subscribe cmds.Completed, fn func(me
 	if p.version < 6 && p.r2psFn != nil {
 		return p._r2pipe().Receive(ctx, subscribe, fn)
 	}
+
+	subscribe.CommandSlice().Verify()
 
 	var sb *subs
 	cmd, args := subscribe.Commands()[0], subscribe.Commands()[1:]
@@ -675,6 +678,8 @@ func (p *pipe) Do(ctx context.Context, cmd cmds.Completed) (resp RedisResult) {
 		return newErrResult(err)
 	}
 
+	cmd.CommandSlice().Verify()
+
 	if cmd.IsBlock() {
 		atomic.AddInt32(&p.blcksig, 1)
 		defer func() {
@@ -751,6 +756,8 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...cmds.Completed) []RedisResu
 		}
 		return resp
 	}
+
+	multi[0].CommandSlice().Verify()
 
 	isOptIn := multi[0].IsOptIn() // len(multi) > 0 should have already been checked by upper layer
 	noReply := 0
@@ -953,6 +960,9 @@ func (p *pipe) DoCache(ctx context.Context, cmd cmds.Cacheable, ttl time.Duratio
 	if p.cache == nil {
 		return p.Do(ctx, cmds.Completed(cmd))
 	}
+
+	cmd.CommandSlice().Verify()
+
 	if cmd.IsMGet() {
 		return p.doCacheMGet(ctx, cmd, ttl)
 	}
@@ -1092,6 +1102,9 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisR
 		}
 		return p.DoMulti(ctx, commands...)
 	}
+
+	multi[0].Cmd.CommandSlice().Verify()
+
 	results := make([]RedisResult, len(multi))
 	entries := make(map[int]*entry)
 	missing := []cmds.Completed{cmds.OptInCmd, cmds.MultiCmd}
