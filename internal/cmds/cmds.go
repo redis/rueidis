@@ -70,6 +70,11 @@ var (
 	}
 )
 
+// ToBlock marks the command with blockTag
+func ToBlock(c *Completed) {
+	c.cf |= blockTag
+}
+
 // Completed represents a completed Redis command, should be created by the Build() of command builder.
 type Completed struct {
 	cs *CommandSlice
@@ -96,12 +101,6 @@ func (c *Completed) IsOptIn() bool {
 // IsBlock checks if it is blocking command which needs to be process by dedicated connection.
 func (c *Completed) IsBlock() bool {
 	return c.cf&blockTag == blockTag
-}
-
-// ToBlock marks the command with blockTag
-func ToBlock(c Completed) Completed {
-	c.cf |= blockTag
-	return c
 }
 
 // NoReply checks if it is one of the SUBSCRIBE, PSUBSCRIBE, UNSUBSCRIBE or PUNSUBSCRIBE commands.
@@ -196,13 +195,13 @@ func CacheKey(c Cacheable) (key, command string) {
 	return key, sb.String()
 }
 
-// CompletedCommandSlice get the underlying *CommandSlice
-func CompletedCommandSlice(c Completed) *CommandSlice {
+// CompletedCS get the underlying *CommandSlice
+func CompletedCS(c Completed) *CommandSlice {
 	return c.cs
 }
 
-// CacheableCommandSlice get the underlying *CommandSlice
-func CacheableCommandSlice(c Cacheable) *CommandSlice {
+// CacheableCS get the underlying *CommandSlice
+func CacheableCS(c Cacheable) *CommandSlice {
 	return c.cs
 }
 

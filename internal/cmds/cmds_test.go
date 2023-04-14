@@ -65,7 +65,7 @@ func TestCompleted_ToBlock(t *testing.T) {
 	if cmd.IsBlock() {
 		t.Fatalf("should not be block command")
 	}
-	if cmd = ToBlock(cmd); !cmd.IsBlock() {
+	if ToBlock(&cmd); !cmd.IsBlock() {
 		t.Fatalf("should be block command")
 	}
 }
@@ -249,14 +249,14 @@ func TestCmdPin(t *testing.T) {
 	}
 }
 
-func TestCompletedCommandSlice(t *testing.T) {
-	if c1 := NewMGetCompleted([]string{"MGET", "K"}); CompletedCommandSlice(c1) != c1.cs {
+func TestCompletedCS(t *testing.T) {
+	if c1 := NewMGetCompleted([]string{"MGET", "K"}); CompletedCS(c1) != c1.cs {
 		t.Fail()
 	}
 }
 
-func TestCacheableCommandSlice(t *testing.T) {
-	if c1 := Cacheable(NewMGetCompleted([]string{"MGET", "K"})); CacheableCommandSlice(c1) != c1.cs {
+func TestCacheableCS(t *testing.T) {
+	if c1 := Cacheable(NewMGetCompleted([]string{"MGET", "K"})); CacheableCS(c1) != c1.cs {
 		t.Fail()
 	}
 }
