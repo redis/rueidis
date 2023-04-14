@@ -46,17 +46,18 @@ func main() {
 }
 ```
 
-## IDE friendly Command Builder
+## Developer friendly Command Builder
 
 `client.B()` is the builder entrypoint to construct a redis command:
 
-![IDE friendly command builder](https://user-images.githubusercontent.com/2727535/209358313-39000aee-eaa4-42e1-9748-0d3836c1264f.gif)\
+![Developer friendly command builder](https://user-images.githubusercontent.com/2727535/209358313-39000aee-eaa4-42e1-9748-0d3836c1264f.gif)\
 <sub>_Recorded by @FZambia [Improving Centrifugo Redis Engine throughput and allocation efficiency with Rueidis Go library
 ](https://centrifugal.dev/blog/2022/12/20/improving-redis-engine-performance)_</sub>
 
-Once the command is completed, use either `client.Do()` or `client.DoMulti()` to send it to redis.
+Once a command is built, use either `client.Do()` or `client.DoMulti()` to send it to redis.
 
-**The constructed command will be recycled to underlying `sync.Pool` and you ❗️SHOULD NOT❗️ reuse it across multiple `client.Do()` or `client.DoMulti()` calls**
+**Constructed commands will be recycled to underlying `sync.Pool` by default and you ❗️SHOULD NOT❗️ reuse them across multiple `client.Do()` or `client.DoMulti()` calls.**
+To reuse a command, use `Pin()` after `Build()` and it will prevent the command being recycled. 
 
 ## [Auto Pipelining](https://redis.io/docs/manual/pipelining/)
 
