@@ -503,6 +503,15 @@ func TestClusterClient(t *testing.T) {
 			}
 			for i, resp := range c.DoMulti(
 				context.Background(),
+				c.B().Info().Build(),
+				c.B().Info().Build(),
+			) {
+				if v, err := resp.ToString(); err != nil || v != "Delegate"+strconv.Itoa(i) {
+					t.Fatalf("unexpected response %v %v", v, err)
+				}
+			}
+			for i, resp := range c.DoMulti(
+				context.Background(),
 				c.B().Get().Key("a").Build(),
 				c.B().Get().Key("a").Build(),
 			) {
@@ -599,6 +608,15 @@ func TestClusterClient(t *testing.T) {
 		}
 		if v := c.DoMulti(context.Background()); len(v) != 0 {
 			t.Fatalf("received unexpected response %v", v)
+		}
+		for i, resp := range c.DoMulti(
+			context.Background(),
+			c.B().Info().Build(),
+			c.B().Info().Build(),
+		) {
+			if v, err := resp.ToString(); err != nil || v != "Delegate"+strconv.Itoa(i) {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
 		}
 		for i, resp := range c.DoMulti(
 			context.Background(),
