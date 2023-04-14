@@ -50,23 +50,24 @@ func get() *CommandSlice {
 	return pool.Get().(*CommandSlice)
 }
 
-func put(cs *CommandSlice) {
+func Put(cs *CommandSlice) {
 	cs.s = cs.s[:0]
 	cs.l = -1
+	cs.r = 0
 	pool.Put(cs)
 }
 
 // PutCompleted recycles the Completed
 func PutCompleted(c Completed) {
 	if c.cs.r == 0 {
-		put(c.cs)
+		Put(c.cs)
 	}
 }
 
 // PutCacheable recycles the Cacheable
 func PutCacheable(c Cacheable) {
 	if c.cs.r == 0 {
-		put(c.cs)
+		Put(c.cs)
 	}
 }
 

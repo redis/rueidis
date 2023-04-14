@@ -121,41 +121,47 @@ func parallelMGet(cc Client, ctx context.Context, mgets map[uint16]Completed, ke
 
 func parallelMSet(cc Client, ctx context.Context, msets map[uint16]Completed, ret map[string]error) map[string]error {
 	var mu sync.Mutex
+	for _, cmd := range msets {
+		cmd.Pin()
+	}
 	util.ParallelVals(msets, func(cmd Completed) {
-		keys := make([]string, 0, (len(cmd.Commands())-1)/2)
-		for i := 1; i < len(cmd.Commands()); i += 2 {
-			keys = append(keys, cmd.Commands()[i])
-		}
 		ok, err := cc.Do(ctx, cmd).AsBool()
 		err2 := err
 		if err2 == nil && !ok {
 			err2 = ErrMSetNXNotSet
 		}
 		mu.Lock()
-		for _, k := range keys {
-			ret[k] = err2
+		for i := 1; i < len(cmd.Commands()); i += 2 {
+			ret[cmd.Commands()[i]] = err2
 		}
 		mu.Unlock()
+		if err == nil {
+			cmds.Put(cmds.CompletedCS(cmd))
+		}
 	})
 	return ret
 }
 
 func doMGets(m map[string]RedisMessage, mgets map[uint16]Completed, fn func(cmd Completed) RedisResult) (ret map[string]RedisMessage, err error) {
 	var mu sync.Mutex
+	for _, cmd := range mgets {
+		cmd.Pin()
+	}
 	util.ParallelVals(mgets, func(cmd Completed) {
-		keys := make([]string, len(cmd.Commands())-1)
-		copy(keys, cmd.Commands()[1:])
 		arr, err2 := fn(cmd).ToArray()
 		mu.Lock()
 		if err2 != nil {
 			err = err2
 		} else {
-			arrayToKV(m, arr, keys)
+			arrayToKV(m, arr, cmd.Commands()[1:])
 		}
 		mu.Unlock()
 	})
 	if err != nil {
 		return nil, err
+	}
+	for _, cmd := range mgets {
+		cmds.Put(cmds.CompletedCS(cmd))
 	}
 	return m, nil
 }
