@@ -209,6 +209,33 @@ func TestNewPipe(t *testing.T) {
 		n1.Close()
 		n2.Close()
 	})
+	t.Run("AlwaysRESP2", func(t *testing.T) {
+		n1, n2 := net.Pipe()
+		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2}
+		go func() {
+			mock.Expect("AUTH", "pa").
+				ReplyString("OK")
+			mock.Expect("CLIENT", "SETNAME", "cn").
+				ReplyString("OK")
+			mock.Expect("SELECT", "1").
+				ReplyString("OK")
+		}()
+		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
+			SelectDB:     1,
+			Password:     "pa",
+			ClientName:   "cn",
+			AlwaysRESP2:  true,
+			DisableCache: true,
+		})
+		if err != nil {
+			t.Fatalf("pipe setup failed: %v", err)
+		}
+		go func() { mock.Expect("QUIT").ReplyString("OK") }()
+		p.Close()
+		mock.Close()
+		n1.Close()
+		n2.Close()
+	})
 	t.Run("Auth with Username", func(t *testing.T) {
 		n1, n2 := net.Pipe()
 		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2}
