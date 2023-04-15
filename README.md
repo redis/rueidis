@@ -396,3 +396,18 @@ client.Do(ctx, client.B().Lindex().Key("k").Index(0).Build()).ToString()
 client.Do(ctx, client.B().Lpop().Key("k").Build()).ToString()
 client.Do(ctx, client.B().Lpop().Key("k").Count(2).Build()).AsStrSlice()
 ```
+
+## Supporting Go mod 1.18
+
+To continuously support the old Go 1.18, there will be a special build tagged with `-go1.18` for each release.
+
+Such releases remove `RedisResult.AsBytes()` and other related functionalities provided by later go versions.
+
+```
+# go.mod
+module mymodule
+
+go 1.19
+
+require github.com/rueian/rueidis v0.0.100-go1.18
+```
