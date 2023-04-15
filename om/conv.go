@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
-	"unsafe"
 
 	"github.com/redis/rueidis"
 )
@@ -184,7 +183,7 @@ var converters = struct {
 				return rueidis.BinaryString(value.Bytes()), true
 			},
 			StringToValue: func(value string) (reflect.Value, error) {
-				buf := unsafe.Slice(unsafe.StringData(value), len(value))
+				buf := []byte(value)
 				return reflect.ValueOf(buf), nil
 			},
 		},
