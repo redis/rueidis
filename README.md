@@ -349,9 +349,10 @@ client.B().JsonSet().Key("j").Path("$.myStrField").Value(`"str"`).Build()
 When working with vector similarity search, users can use `rueidis.VectorString32` and `rueidis.VectorString64` to build queries:
 
 ```golang
-client.B().FtSearch().Index("idx").Query("*=>[KNN 5 @vec $V]").
+cmd := client.B().FtSearch().Index("idx").Query("*=>[KNN 5 @vec $V]").
     Params().Nargs(2).NameValue().NameValue("V", rueidis.VectorString64([]float64{...})).
     Dialect(2).Build()
+n, resp, err := client.Do(ctx, cmd).AsFtSearch()
 ```
 
 ## Command Response Cheatsheet
@@ -395,6 +396,8 @@ client.Do(ctx, client.B().Lindex().Key("k").Index(0).Build()).ToString()
 // LPOP
 client.Do(ctx, client.B().Lpop().Key("k").Build()).ToString()
 client.Do(ctx, client.B().Lpop().Key("k").Count(2).Build()).AsStrSlice()
+// FT.SEARCH
+client.Do(ctx, client.B().FtSearch().Index("idx").Query("@f:v").Build()).AsFtSearch()
 ```
 
 ## Supporting Go mod 1.18
