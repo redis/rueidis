@@ -402,7 +402,7 @@ client.Do(ctx, client.B().FtSearch().Index("idx").Query("@f:v").Build()).AsFtSea
 
 ## Supporting Go mod 1.18
 
-To continuously support the old Go 1.18, there will be a special build tagged with `-go1.18` for each release.
+To support the old Go 1.18 at least until Go 1.21 comes, there will be a special build tagged with `-go1.18` for each release.
 
 Such releases remove `RedisResult.AsBytes()` and other related functionalities provided by later go versions.
 
@@ -410,7 +410,7 @@ Such releases remove `RedisResult.AsBytes()` and other related functionalities p
 # go.mod
 module mymodule
 
-go 1.19
+go 1.18
 
 require github.com/rueian/rueidis v0.0.100-go1.18
 ```
