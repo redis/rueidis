@@ -9,6 +9,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"math/big"
 	"net"
@@ -231,6 +232,26 @@ func TestSingleClientMultiplex(t *testing.T) {
 	option.PipelineMultiplex = -1
 	if v := singleClientMultiplex(option.PipelineMultiplex); v != 0 {
 		t.Fatalf("unexpected value %v", v)
+	}
+}
+
+func TestCustomDialFnIsCalled(t *testing.T) {
+	isFnCalled := false
+	option := ClientOption{
+		InitAddress: []string{"127.0.0.1:0"},
+		DialFn: func(s string, dialer *net.Dialer, config *tls.Config) (conn net.Conn, err error) {
+			isFnCalled = true
+			return nil, errors.New("dial error")
+		},
+	}
+
+	_, err := NewClient(option)
+
+	if !isFnCalled {
+		t.Fatalf("excepted ClientOption.DialFn to be called")
+	}
+	if err == nil {
+		t.Fatalf("expected dial error")
 	}
 }
 
