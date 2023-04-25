@@ -612,7 +612,7 @@ func TestRedisResult(t *testing.T) {
 			t.Fatal("CacheTTL != 0")
 		}
 		m := RedisMessage{}
-		m.setTTL(time.Now().Add(2 * time.Second).Unix())
+		m.setExpireAt(time.Now().Add(2 * time.Second).UnixMilli())
 		if (RedisResult{val: m}).CacheTTL() <= 0 {
 			t.Fatal("CacheTTL <= 0")
 		}
@@ -1107,7 +1107,7 @@ func TestRedisMessage(t *testing.T) {
 			t.Fatal("CacheTTL != 0")
 		}
 		m := &RedisMessage{typ: '_'}
-		m.setTTL(time.Now().Add(2 * time.Second).Unix())
+		m.setExpireAt(time.Now().Add(2 * time.Second).UnixMilli())
 		if m.CacheTTL() <= 0 {
 			t.Fatal("CacheTTL <= 0")
 		}

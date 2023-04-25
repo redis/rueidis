@@ -23,10 +23,10 @@ const (
 
 type cache interface {
 	GetOrPrepare(key, cmd string, now time.Time, ttl time.Duration) (v RedisMessage, entry *entry)
-	Update(key, cmd string, value RedisMessage, pttl int64)
+	Update(key, cmd string, value RedisMessage) (pttl int64)
 	Cancel(key, cmd string, err error)
 	Delete(keys []RedisMessage)
-	GetTTL(key string) time.Duration
+	GetTTL(key, cmd string) time.Duration
 	FreeAndClose(err error)
 }
 
@@ -53,7 +53,6 @@ func (e *entry) Wait(ctx context.Context) (RedisMessage, error) {
 }
 
 type keyCache struct {
-	ttl   time.Time
 	cache map[string]*list.Element
 	key   string
 	hits  uint64
@@ -81,12 +80,10 @@ func newLRU(max int) *lru {
 func (c *lru) GetOrPrepare(key, cmd string, now time.Time, ttl time.Duration) (v RedisMessage, e *entry) {
 	var ok bool
 	var kc *keyCache
-	var kcTTL time.Time
 	var ele, back *list.Element
 
 	c.mu.RLock()
 	if kc, ok = c.store[key]; ok {
-		kcTTL = kc.ttl
 		if ele, ok = kc.cache[cmd]; ok {
 			e = ele.Value.(*entry)
 			v = e.val
@@ -95,7 +92,7 @@ func (c *lru) GetOrPrepare(key, cmd string, now time.Time, ttl time.Duration) (v
 	}
 	c.mu.RUnlock()
 
-	if e != nil && (v.typ == 0 || kcTTL.After(now)) {
+	if e != nil && (v.typ == 0 || v.relativePTTL(now) > 0) {
 		hits := atomic.AddUint64(&kc.hits, 1)
 		if ele != back && hits&moveThreshold == 0 {
 			c.mu.Lock()
@@ -115,11 +112,11 @@ func (c *lru) GetOrPrepare(key, cmd string, now time.Time, ttl time.Duration) (v
 		if c.store == nil {
 			goto miss
 		}
-		kc = &keyCache{cache: make(map[string]*list.Element, 1), key: key, ttl: now.Add(ttl)}
+		kc = &keyCache{cache: make(map[string]*list.Element, 1), key: key}
 		c.store[key] = kc
 	}
 	if ele, ok = kc.cache[cmd]; ok {
-		if e = ele.Value.(*entry); e.val.typ == 0 || kc.ttl.After(now) {
+		if e = ele.Value.(*entry); e.val.typ == 0 || e.val.relativePTTL(now) > 0 {
 			atomic.AddUint64(&kc.hits, 1)
 			v = e.val
 			c.list.MoveToBack(ele)
@@ -131,12 +128,13 @@ func (c *lru) GetOrPrepare(key, cmd string, now time.Time, ttl time.Duration) (v
 	}
 	if e == nil {
 		atomic.AddUint64(&kc.miss, 1)
-		c.list.PushBack(&entry{
+		ne := &entry{
 			cmd: cmd,
 			kc:  kc,
 			ch:  make(chan struct{}, 1),
-		})
-		kc.ttl = now.Add(ttl)
+		}
+		ne.val.setExpireAt(now.Add(ttl).UnixMilli())
+		c.list.PushBack(ne)
 		kc.cache[cmd] = c.list.Back()
 	}
 miss:
@@ -144,20 +142,20 @@ miss:
 	return v, e
 }
 
-func (c *lru) Update(key, cmd string, value RedisMessage, pttl int64) {
+func (c *lru) Update(key, cmd string, value RedisMessage) (pttl int64) {
 	var ch chan struct{}
 	c.mu.Lock()
 	if kc, ok := c.store[key]; ok {
-		if pttl >= 0 {
-			// server side ttl should only shorten client side ttl
-			if ttl := time.Now().Add(time.Duration(pttl) * time.Millisecond); ttl.Before(kc.ttl) {
-				kc.ttl = ttl
-			}
-		}
 		if ele, ok := kc.cache[cmd]; ok {
 			if e := ele.Value.(*entry); e.val.typ == 0 {
+				pttl = value.getExpireAt()
+				cpttl := e.val.getExpireAt()
+				if cpttl < pttl || pttl == 0 {
+					// server side ttl should only shorten client side ttl
+					pttl = cpttl
+					value.setExpireAt(pttl)
+				}
 				e.val = value
-				e.val.setTTL(kc.ttl.Unix())
 				e.size = entryBaseSize + 2*(len(key)+len(cmd)) + value.approximateSize()
 				c.size += e.size
 				ch = e.ch
@@ -181,6 +179,7 @@ func (c *lru) Update(key, cmd string, value RedisMessage, pttl int64) {
 	if ch != nil {
 		close(ch)
 	}
+	return
 }
 
 func (c *lru) Cancel(key, cmd string, err error) {
@@ -204,10 +203,10 @@ func (c *lru) Cancel(key, cmd string, err error) {
 	}
 }
 
-func (c *lru) GetTTL(key string) (ttl time.Duration) {
+func (c *lru) GetTTL(key, cmd string) (ttl time.Duration) {
 	c.mu.Lock()
-	if kc, ok := c.store[key]; ok && len(kc.cache) != 0 {
-		ttl = kc.ttl.Sub(time.Now())
+	if kc, ok := c.store[key]; ok && kc.cache[cmd] != nil {
+		ttl = time.Duration(kc.cache[cmd].Value.(*entry).val.relativePTTL(time.Now())) * time.Millisecond
 	}
 	if ttl <= 0 {
 		ttl = -2

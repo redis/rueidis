@@ -1000,16 +1000,27 @@ func (m *RedisMessage) IsCacheHit() bool {
 }
 
 // CacheTTL returns the remaining TTL in seconds of client side cache
-func (m *RedisMessage) CacheTTL() int64 {
-	unix := int64(m.ttl[0]) | int64(m.ttl[1])<<8 | int64(m.ttl[2])<<16 | int64(m.ttl[3])<<24 |
-		int64(m.ttl[4])<<32 | int64(m.ttl[5])<<40 | int64(m.ttl[6])<<48
-	if unix > 0 {
-		return unix - time.Now().Unix()
+func (m *RedisMessage) CacheTTL() (ttl int64) {
+	pttl := m.relativePTTL(time.Now())
+	if ttl = pttl / 1000; pttl > ttl*1000 {
+		ttl++
+	}
+	return ttl
+}
+
+func (m *RedisMessage) relativePTTL(now time.Time) int64 {
+	if milli := m.getExpireAt(); milli > 0 {
+		return milli - now.UnixMilli()
 	}
 	return 0
 }
 
-func (m *RedisMessage) setTTL(pttl int64) {
+func (m *RedisMessage) getExpireAt() int64 {
+	return int64(m.ttl[0]) | int64(m.ttl[1])<<8 | int64(m.ttl[2])<<16 | int64(m.ttl[3])<<24 |
+		int64(m.ttl[4])<<32 | int64(m.ttl[5])<<40 | int64(m.ttl[6])<<48
+}
+
+func (m *RedisMessage) setExpireAt(pttl int64) {
 	m.ttl[0] = byte(pttl)
 	m.ttl[1] = byte(pttl >> 8)
 	m.ttl[2] = byte(pttl >> 16)
