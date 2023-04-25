@@ -794,13 +794,13 @@ func TestClientSideCachingMGet(t *testing.T) {
 				t.Errorf("unexpected cached mget response, expected %v, got %v", i+1, v.integer)
 			}
 		}
-		if ttl := p.cache.GetTTL("a1"); !roughly(ttl, time.Second) {
+		if ttl := p.cache.GetTTL("a1", "GET"); !roughly(ttl, time.Second) {
 			t.Errorf("unexpected ttl %v", ttl)
 		}
-		if ttl := p.cache.GetTTL("a2"); !roughly(ttl, time.Second*2) {
+		if ttl := p.cache.GetTTL("a2", "GET"); !roughly(ttl, time.Second*2) {
 			t.Errorf("unexpected ttl %v", ttl)
 		}
-		if ttl := p.cache.GetTTL("a3"); !roughly(ttl, time.Second*3) {
+		if ttl := p.cache.GetTTL("a3", "GET"); !roughly(ttl, time.Second*3) {
 			t.Errorf("unexpected ttl %v", ttl)
 		}
 		if v.IsCacheHit() {
@@ -843,7 +843,7 @@ func TestClientSideCachingMGet(t *testing.T) {
 	}()
 
 	for {
-		if p.cache.GetTTL("a1") == -2 && p.cache.GetTTL("a3") == -2 {
+		if p.cache.GetTTL("a1", "GET") == -2 && p.cache.GetTTL("a3", "GET") == -2 {
 			break
 		}
 		time.Sleep(10 * time.Millisecond)
@@ -863,13 +863,13 @@ func TestClientSideCachingMGet(t *testing.T) {
 	if arr[2].integer != 30 {
 		t.Errorf("unexpected cached mget response, expected %v, got %v", 30, arr[2].integer)
 	}
-	if ttl := p.cache.GetTTL("a1"); !roughly(ttl, time.Second*10) {
+	if ttl := p.cache.GetTTL("a1", "GET"); !roughly(ttl, time.Second*10) {
 		t.Errorf("unexpected ttl %v", ttl)
 	}
-	if ttl := p.cache.GetTTL("a2"); !roughly(ttl, time.Second*2) {
+	if ttl := p.cache.GetTTL("a2", "GET"); !roughly(ttl, time.Second*2) {
 		t.Errorf("unexpected ttl %v", ttl)
 	}
-	if ttl := p.cache.GetTTL("a3"); !roughly(ttl, time.Second*30) {
+	if ttl := p.cache.GetTTL("a3", "GET"); !roughly(ttl, time.Second*30) {
 		t.Errorf("unexpected ttl %v", ttl)
 	}
 }
@@ -927,13 +927,13 @@ func TestClientSideCachingJSONMGet(t *testing.T) {
 				t.Errorf("unexpected cached mget response, expected %v, got %v", i+1, v.integer)
 			}
 		}
-		if ttl := p.cache.GetTTL("a1"); !roughly(ttl, time.Second) {
+		if ttl := p.cache.GetTTL("a1", "JSON.GET$"); !roughly(ttl, time.Second) {
 			t.Errorf("unexpected ttl %v", ttl)
 		}
-		if ttl := p.cache.GetTTL("a2"); !roughly(ttl, time.Second*2) {
+		if ttl := p.cache.GetTTL("a2", "JSON.GET$"); !roughly(ttl, time.Second*2) {
 			t.Errorf("unexpected ttl %v", ttl)
 		}
-		if ttl := p.cache.GetTTL("a3"); !roughly(ttl, time.Second*3) {
+		if ttl := p.cache.GetTTL("a3", "JSON.GET$"); !roughly(ttl, time.Second*3) {
 			t.Errorf("unexpected ttl %v", ttl)
 		}
 		if v.IsCacheHit() {
@@ -976,7 +976,7 @@ func TestClientSideCachingJSONMGet(t *testing.T) {
 	}()
 
 	for {
-		if p.cache.GetTTL("a1") == -2 && p.cache.GetTTL("a3") == -2 {
+		if p.cache.GetTTL("a1", "JSON.GET$") == -2 && p.cache.GetTTL("a3", "JSON.GET$") == -2 {
 			break
 		}
 		time.Sleep(10 * time.Millisecond)
@@ -996,13 +996,13 @@ func TestClientSideCachingJSONMGet(t *testing.T) {
 	if arr[2].integer != 30 {
 		t.Errorf("unexpected cached mget response, expected %v, got %v", 30, arr[2].integer)
 	}
-	if ttl := p.cache.GetTTL("a1"); !roughly(ttl, time.Second*10) {
+	if ttl := p.cache.GetTTL("a1", "JSON.GET$"); !roughly(ttl, time.Second*10) {
 		t.Errorf("unexpected ttl %v", ttl)
 	}
-	if ttl := p.cache.GetTTL("a2"); !roughly(ttl, time.Second*2) {
+	if ttl := p.cache.GetTTL("a2", "JSON.GET$"); !roughly(ttl, time.Second*2) {
 		t.Errorf("unexpected ttl %v", ttl)
 	}
-	if ttl := p.cache.GetTTL("a3"); !roughly(ttl, time.Second*30) {
+	if ttl := p.cache.GetTTL("a3", "JSON.GET$"); !roughly(ttl, time.Second*30) {
 		t.Errorf("unexpected ttl %v", ttl)
 	}
 }
@@ -1067,7 +1067,9 @@ func TestClientSideCachingWithSideChannelMGet(t *testing.T) {
 	p.cache.GetOrPrepare("a1", "GET", time.Now(), 10*time.Second)
 	go func() {
 		time.Sleep(100 * time.Millisecond)
-		p.cache.Update("a1", "GET", RedisMessage{typ: '+', string: "OK"}, 10)
+		m := RedisMessage{typ: '+', string: "OK"}
+		m.setExpireAt(time.Now().Add(10 * time.Millisecond).UnixMilli())
+		p.cache.Update("a1", "GET", m)
 	}()
 
 	v, _ := p.DoCache(context.Background(), Cacheable(cmds.NewMGetCompleted([]string{"MGET", "a1"})), 10*time.Second).AsStrSlice()
@@ -1169,13 +1171,13 @@ func TestClientSideCachingDoMultiCache(t *testing.T) {
 				atomic.AddUint64(&miss, 1)
 			}
 		}
-		if ttl := p.cache.GetTTL("a1"); !roughly(ttl, time.Second) {
+		if ttl := p.cache.GetTTL("a1", "GET"); !roughly(ttl, time.Second) {
 			t.Errorf("unexpected ttl %v", ttl)
 		}
-		if ttl := p.cache.GetTTL("a2"); !roughly(ttl, time.Second*2) {
+		if ttl := p.cache.GetTTL("a2", "GET"); !roughly(ttl, time.Second*2) {
 			t.Errorf("unexpected ttl %v", ttl)
 		}
-		if ttl := p.cache.GetTTL("a3"); !roughly(ttl, time.Second*3) {
+		if ttl := p.cache.GetTTL("a3", "GET"); !roughly(ttl, time.Second*3) {
 			t.Errorf("unexpected ttl %v", ttl)
 		}
 	}
@@ -1213,7 +1215,7 @@ func TestClientSideCachingDoMultiCache(t *testing.T) {
 	}()
 
 	for {
-		if p.cache.GetTTL("a1") == -2 && p.cache.GetTTL("a3") == -2 {
+		if p.cache.GetTTL("a1", "GET") == -2 && p.cache.GetTTL("a3", "GET") == -2 {
 			break
 		}
 		time.Sleep(10 * time.Millisecond)
@@ -1236,13 +1238,13 @@ func TestClientSideCachingDoMultiCache(t *testing.T) {
 	if arr[2].val.integer != 30 {
 		t.Errorf("unexpected cached mget response, expected %v, got %v", 30, arr[2].val.integer)
 	}
-	if ttl := p.cache.GetTTL("a1"); !roughly(ttl, time.Second*10) {
+	if ttl := p.cache.GetTTL("a1", "GET"); !roughly(ttl, time.Second*10) {
 		t.Errorf("unexpected ttl %v", ttl)
 	}
-	if ttl := p.cache.GetTTL("a2"); !roughly(ttl, time.Second*2) {
+	if ttl := p.cache.GetTTL("a2", "GET"); !roughly(ttl, time.Second*2) {
 		t.Errorf("unexpected ttl %v", ttl)
 	}
-	if ttl := p.cache.GetTTL("a3"); !roughly(ttl, time.Second*30) {
+	if ttl := p.cache.GetTTL("a3", "GET"); !roughly(ttl, time.Second*30) {
 		t.Errorf("unexpected ttl %v", ttl)
 	}
 }
@@ -1321,7 +1323,9 @@ func TestClientSideCachingWithSideChannelDoMultiCache(t *testing.T) {
 	p.cache.GetOrPrepare("a1", "GET", time.Now(), 10*time.Second)
 	go func() {
 		time.Sleep(100 * time.Millisecond)
-		p.cache.Update("a1", "GET", RedisMessage{typ: '+', string: "OK"}, 10)
+		m := RedisMessage{typ: '+', string: "OK"}
+		m.setExpireAt(time.Now().Add(10 * time.Millisecond).UnixMilli())
+		p.cache.Update("a1", "GET", m)
 	}()
 
 	arr := p.DoMultiCache(context.Background(), []CacheableTTL{

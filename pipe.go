@@ -392,11 +392,15 @@ func (p *pipe) _backgroundRead() (err error) {
 		}
 		// if unfulfilled multi commands are lead by opt-in and get success response
 		if ff == len(multi)-1 && multi[0].IsOptIn() && len(msg.values) >= 2 {
+			now := time.Now()
 			if cacheable := Cacheable(multi[len(multi)-2]); cacheable.IsMGet() {
 				cc := cmds.MGetCacheCmd(cacheable)
 				for i, cp := range msg.values[len(msg.values)-1].values {
 					cp.attrs = cacheMark
-					p.cache.Update(cmds.MGetCacheKey(cacheable, i), cc, cp, msg.values[i].integer)
+					if pttl := msg.values[i].integer; pttl >= 0 {
+						cp.setExpireAt(now.Add(time.Duration(pttl) * time.Millisecond).UnixMilli())
+					}
+					p.cache.Update(cmds.MGetCacheKey(cacheable, i), cc, cp)
 				}
 			} else {
 				for i := 1; i < len(msg.values); i += 2 {
@@ -404,7 +408,10 @@ func (p *pipe) _backgroundRead() (err error) {
 					ck, cc := cmds.CacheKey(cacheable)
 					cp := msg.values[i]
 					cp.attrs = cacheMark
-					p.cache.Update(ck, cc, cp, msg.values[i-1].integer)
+					if pttl := msg.values[i-1].integer; pttl >= 0 {
+						cp.setExpireAt(now.Add(time.Duration(pttl) * time.Millisecond).UnixMilli())
+					}
+					p.cache.Update(ck, cc, cp)
 				}
 			}
 		}
@@ -947,13 +954,13 @@ next:
 	return m, nil
 }
 
-func remainTTL(now time.Time, ttl time.Duration, pttl int64) int64 {
+func remainPTTL(now time.Time, ttl time.Duration, pttl int64) int64 {
 	if pttl >= 0 {
 		if sttl := time.Duration(pttl) * time.Millisecond; sttl < ttl {
 			ttl = sttl
 		}
 	}
-	return now.Add(ttl).Unix()
+	return now.Add(ttl).UnixMilli()
 }
 
 func (p *pipe) DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) RedisResult {
@@ -989,7 +996,7 @@ func (p *pipe) DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) Re
 		p.cache.Cancel(ck, cc, err)
 		return newErrResult(err)
 	}
-	exec[1].setTTL(remainTTL(now, ttl, exec[0].integer))
+	exec[1].setExpireAt(remainPTTL(now, ttl, exec[0].integer))
 	return newResult(exec[1], nil)
 }
 
@@ -1061,7 +1068,7 @@ func (p *pipe) doCacheMGet(ctx context.Context, cmd Cacheable, ttl time.Duration
 		}()
 		last := len(exec) - 1
 		for i := range exec[last].values {
-			exec[last].values[i].setTTL(remainTTL(now, ttl, exec[i].integer))
+			exec[last].values[i].setExpireAt(remainPTTL(now, ttl, exec[i].integer))
 		}
 		if len(rewritten.Commands()) == len(commands) { // all cache miss
 			return newResult(exec[last], nil)
@@ -1156,7 +1163,7 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisR
 	for i := 1; i < len(exec); i += 2 {
 		for ; j < len(results); j++ {
 			if results[j].val.typ == 0 && results[j].err == nil {
-				exec[i].setTTL(remainTTL(now, multi[j].TTL, exec[i-1].integer))
+				exec[i].setExpireAt(remainPTTL(now, multi[j].TTL, exec[i-1].integer))
 				results[j] = newResult(exec[i], nil)
 				break
 			}

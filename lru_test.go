@@ -22,7 +22,9 @@ func TestLRU(t *testing.T) {
 		if v, entry := lru.GetOrPrepare("0", "GET", time.Now(), TTL); v.typ != 0 || entry != nil {
 			t.Fatalf("got unexpected value from the first GetOrPrepare: %v %v", v, entry)
 		}
-		lru.Update("0", "GET", RedisMessage{typ: '+', string: "0", values: []RedisMessage{{}}}, PTTL)
+		m := RedisMessage{typ: '+', string: "0", values: []RedisMessage{{}}}
+		m.setExpireAt(time.Now().Add(PTTL * time.Millisecond).UnixMilli())
+		lru.Update("0", "GET", m)
 		return lru
 	}
 
@@ -44,7 +46,8 @@ func TestLRU(t *testing.T) {
 		if v, entry := lru.GetOrPrepare("1", "GET", time.Now(), TTL); v.typ != 0 || entry != nil {
 			t.Fatalf("got unexpected value from the GetOrPrepare after pttl: %v %v", v, entry)
 		}
-		lru.Update("1", "GET", RedisMessage{typ: '+', string: "1"}, -2)
+		m := RedisMessage{typ: '+', string: "1"}
+		lru.Update("1", "GET", m)
 		if v, _ := lru.GetOrPrepare("1", "GET", time.Now(), TTL); v.typ == 0 {
 			t.Fatalf("did not get the value from the second GetOrPrepare")
 		} else if v.string != "1" {
@@ -91,7 +94,9 @@ func TestLRU(t *testing.T) {
 		lru := setup(t)
 		for i := 1; i <= Entries; i++ {
 			lru.GetOrPrepare(strconv.Itoa(i), "GET", time.Now(), TTL)
-			lru.Update(strconv.Itoa(i), "GET", RedisMessage{typ: '+', string: strconv.Itoa(i)}, PTTL)
+			m := RedisMessage{typ: '+', string: strconv.Itoa(i)}
+			m.setExpireAt(time.Now().Add(PTTL * time.Millisecond).UnixMilli())
+			lru.Update(strconv.Itoa(i), "GET", m)
 		}
 		if v, entry := lru.GetOrPrepare("1", "GET", time.Now(), TTL); v.typ != 0 {
 			t.Fatalf("got evicted value from the first GetOrPrepare: %v %v", v, entry)
@@ -115,7 +120,8 @@ func TestLRU(t *testing.T) {
 		lru := setup(t)
 		for i := 1; i < Entries; i++ {
 			lru.GetOrPrepare(strconv.Itoa(i), "GET", time.Now(), TTL)
-			lru.Update(strconv.Itoa(i), "GET", RedisMessage{typ: '+', string: strconv.Itoa(i)}, -1)
+			m := RedisMessage{typ: '+', string: strconv.Itoa(i)}
+			lru.Update(strconv.Itoa(i), "GET", m)
 		}
 		for i := 1; i < Entries; i++ {
 			if v, _ := lru.GetOrPrepare(strconv.Itoa(i), "GET", time.Now(), TTL); v.string != strconv.Itoa(i) {
@@ -147,8 +153,9 @@ func TestLRU(t *testing.T) {
 			t.Fatalf("got unexpected value after FreeAndClose: %v", err)
 		}
 
-		lru.Update("1", "GET", RedisMessage{typ: '+', string: "this Update should have no effect"}, PTTL)
-
+		m := RedisMessage{typ: '+', string: "this Update should have no effect"}
+		m.setExpireAt(time.Now().Add(PTTL * time.Millisecond).UnixMilli())
+		lru.Update("1", "GET", m)
 		for i := 0; i < 2; i++ { // entry should be always nil after the first call if FreeAndClose
 			if v, entry := lru.GetOrPrepare("1", "GET", time.Now(), TTL); v.typ != 0 || entry != nil {
 				t.Fatalf("got unexpected value from the first GetOrPrepare: %v %v", v, entry)
@@ -179,12 +186,14 @@ func TestLRU(t *testing.T) {
 
 	t.Run("GetTTL", func(t *testing.T) {
 		lru := setup(t)
-		if v := lru.GetTTL("empty"); v != -2 {
+		if v := lru.GetTTL("empty", "cmd"); v != -2 {
 			t.Fatalf("unexpected %v", v)
 		}
 		lru.GetOrPrepare("key", "cmd", time.Now(), time.Second)
-		lru.Update("key", "cmd", RedisMessage{typ: 1}, 1000)
-		if v := lru.GetTTL("key"); !roughly(v, time.Second) {
+		m := RedisMessage{typ: 1}
+		m.setExpireAt(time.Now().Add(time.Second).UnixMilli())
+		lru.Update("key", "cmd", m)
+		if v := lru.GetTTL("key", "cmd"); !roughly(v, time.Second) {
 			t.Fatalf("unexpected %v", v)
 		}
 	})
@@ -193,7 +202,9 @@ func TestLRU(t *testing.T) {
 		t.Run("client side TTL > server side TTL", func(t *testing.T) {
 			lru := setup(t)
 			lru.GetOrPrepare("key", "cmd", time.Now(), 2*time.Second)
-			lru.Update("key", "cmd", RedisMessage{typ: 1}, 1000)
+			m := RedisMessage{typ: 1}
+			m.setExpireAt(time.Now().Add(time.Second).UnixMilli())
+			lru.Update("key", "cmd", m)
 			if v, _ := lru.GetOrPrepare("key", "cmd", time.Now(), 2*time.Second); v.CacheTTL() != 1 {
 				t.Fatalf("unexpected %v", v.CacheTTL())
 			}
@@ -201,7 +212,9 @@ func TestLRU(t *testing.T) {
 		t.Run("client side TTL < server side TTL", func(t *testing.T) {
 			lru := setup(t)
 			lru.GetOrPrepare("key", "cmd", time.Now(), 2*time.Second)
-			lru.Update("key", "cmd", RedisMessage{typ: 1}, 3000)
+			m := RedisMessage{typ: 1}
+			m.setExpireAt(time.Now().Add(3 * time.Second).UnixMilli())
+			lru.Update("key", "cmd", m)
 			if v, _ := lru.GetOrPrepare("key", "cmd", time.Now(), 2*time.Second); v.CacheTTL() != 2 {
 				t.Fatalf("unexpected %v", v.CacheTTL())
 			}
@@ -209,7 +222,8 @@ func TestLRU(t *testing.T) {
 		t.Run("no server side TTL -1", func(t *testing.T) {
 			lru := setup(t)
 			lru.GetOrPrepare("key", "cmd", time.Now(), 2*time.Second)
-			lru.Update("key", "cmd", RedisMessage{typ: 1}, -1)
+			m := RedisMessage{typ: 1}
+			lru.Update("key", "cmd", m)
 			if v, _ := lru.GetOrPrepare("key", "cmd", time.Now(), 2*time.Second); v.CacheTTL() != 2 {
 				t.Fatalf("unexpected %v", v.CacheTTL())
 			}
@@ -217,7 +231,8 @@ func TestLRU(t *testing.T) {
 		t.Run("no server side TTL -2", func(t *testing.T) {
 			lru := setup(t)
 			lru.GetOrPrepare("key", "cmd", time.Now(), 2*time.Second)
-			lru.Update("key", "cmd", RedisMessage{typ: 1}, -2)
+			m := RedisMessage{typ: 1}
+			lru.Update("key", "cmd", m)
 			if v, _ := lru.GetOrPrepare("key", "cmd", time.Now(), 2*time.Second); v.CacheTTL() != 2 {
 				t.Fatalf("unexpected %v", v.CacheTTL())
 			}
@@ -242,7 +257,9 @@ func BenchmarkLRU(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			key := strconv.Itoa(i)
 			lru.GetOrPrepare(key, "GET", time.Now(), TTL)
-			lru.Update(key, "GET", RedisMessage{}, PTTL)
+			m := RedisMessage{}
+			m.setExpireAt(time.Now().Add(PTTL * time.Millisecond).UnixMilli())
+			lru.Update(key, "GET", m)
 		}
 	})
 }
