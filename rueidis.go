@@ -56,7 +56,7 @@ type ClientOption struct {
 	Dialer    net.Dialer
 	TLSConfig *tls.Config
 
-	// DialFn allows for a custom function to be used to create TCP/TLS connections
+	// DialFn allows for a custom function to be used to create net.Conn connections
 	DialFn func(string, *net.Dialer, *tls.Config) (conn net.Conn, err error)
 
 	// OnInvalidations is a callback function in case of client-side caching invalidation received.
@@ -306,7 +306,6 @@ func dial(dst string, opt *ClientOption) (conn net.Conn, err error) {
 	if opt.DialFn != nil {
 		return opt.DialFn(dst, &opt.Dialer, opt.TLSConfig)
 	}
-
 	if opt.TLSConfig != nil {
 		conn, err = tls.DialWithDialer(&opt.Dialer, "tcp", dst, opt.TLSConfig)
 	} else {
