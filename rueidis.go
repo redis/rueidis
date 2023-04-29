@@ -59,6 +59,9 @@ type ClientOption struct {
 	// DialFn allows for a custom function to be used to create net.Conn connections
 	DialFn func(string, *net.Dialer, *tls.Config) (conn net.Conn, err error)
 
+	// NewCacheStoreFn allows a custom client side caching store for each connection
+	NewCacheStoreFn NewCacheStoreFn
+
 	// OnInvalidations is a callback function in case of client-side caching invalidation received.
 	// Note that this function must be fast, otherwise other redis messages will be blocked.
 	OnInvalidations func([]RedisMessage)

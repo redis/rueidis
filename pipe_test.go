@@ -720,7 +720,7 @@ func TestClientSideCachingExecAbort(t *testing.T) {
 	if v.IsCacheHit() {
 		t.Errorf("unexpected cache hit")
 	}
-	if v, entry := p.cache.GetOrPrepare("a", "GET", time.Now(), time.Second); v.typ != 0 || entry != nil {
+	if v, entry := p.cache.Flight("a", "GET", time.Second, time.Now()); v.typ != 0 || entry != nil {
 		t.Errorf("unexpected cache value and entry %v %v", v, entry)
 	}
 }
@@ -736,7 +736,7 @@ func TestClientSideCachingWithNonRedisError(t *testing.T) {
 	if v.IsCacheHit() {
 		t.Errorf("unexpected cache hit")
 	}
-	if v, entry := p.cache.GetOrPrepare("a", "GET", time.Now(), time.Second); v.typ != 0 || entry != nil {
+	if v, entry := p.cache.Flight("a", "GET", time.Second, time.Now()); v.typ != 0 || entry != nil {
 		t.Errorf("unexpected cache value and entry %v %v", v, entry)
 	}
 }
@@ -794,13 +794,13 @@ func TestClientSideCachingMGet(t *testing.T) {
 				t.Errorf("unexpected cached mget response, expected %v, got %v", i+1, v.integer)
 			}
 		}
-		if ttl := p.cache.GetTTL("a1", "GET"); !roughly(ttl, time.Second) {
+		if ttl := p.cache.(*lru).GetTTL("a1", "GET"); !roughly(ttl, time.Second) {
 			t.Errorf("unexpected ttl %v", ttl)
 		}
-		if ttl := p.cache.GetTTL("a2", "GET"); !roughly(ttl, time.Second*2) {
+		if ttl := p.cache.(*lru).GetTTL("a2", "GET"); !roughly(ttl, time.Second*2) {
 			t.Errorf("unexpected ttl %v", ttl)
 		}
-		if ttl := p.cache.GetTTL("a3", "GET"); !roughly(ttl, time.Second*3) {
+		if ttl := p.cache.(*lru).GetTTL("a3", "GET"); !roughly(ttl, time.Second*3) {
 			t.Errorf("unexpected ttl %v", ttl)
 		}
 		if v.IsCacheHit() {
@@ -843,7 +843,7 @@ func TestClientSideCachingMGet(t *testing.T) {
 	}()
 
 	for {
-		if p.cache.GetTTL("a1", "GET") == -2 && p.cache.GetTTL("a3", "GET") == -2 {
+		if p.cache.(*lru).GetTTL("a1", "GET") == -2 && p.cache.(*lru).GetTTL("a3", "GET") == -2 {
 			break
 		}
 		time.Sleep(10 * time.Millisecond)
@@ -863,13 +863,13 @@ func TestClientSideCachingMGet(t *testing.T) {
 	if arr[2].integer != 30 {
 		t.Errorf("unexpected cached mget response, expected %v, got %v", 30, arr[2].integer)
 	}
-	if ttl := p.cache.GetTTL("a1", "GET"); !roughly(ttl, time.Second*10) {
+	if ttl := p.cache.(*lru).GetTTL("a1", "GET"); !roughly(ttl, time.Second*10) {
 		t.Errorf("unexpected ttl %v", ttl)
 	}
-	if ttl := p.cache.GetTTL("a2", "GET"); !roughly(ttl, time.Second*2) {
+	if ttl := p.cache.(*lru).GetTTL("a2", "GET"); !roughly(ttl, time.Second*2) {
 		t.Errorf("unexpected ttl %v", ttl)
 	}
-	if ttl := p.cache.GetTTL("a3", "GET"); !roughly(ttl, time.Second*30) {
+	if ttl := p.cache.(*lru).GetTTL("a3", "GET"); !roughly(ttl, time.Second*30) {
 		t.Errorf("unexpected ttl %v", ttl)
 	}
 }
@@ -927,13 +927,13 @@ func TestClientSideCachingJSONMGet(t *testing.T) {
 				t.Errorf("unexpected cached mget response, expected %v, got %v", i+1, v.integer)
 			}
 		}
-		if ttl := p.cache.GetTTL("a1", "JSON.GET$"); !roughly(ttl, time.Second) {
+		if ttl := p.cache.(*lru).GetTTL("a1", "JSON.GET$"); !roughly(ttl, time.Second) {
 			t.Errorf("unexpected ttl %v", ttl)
 		}
-		if ttl := p.cache.GetTTL("a2", "JSON.GET$"); !roughly(ttl, time.Second*2) {
+		if ttl := p.cache.(*lru).GetTTL("a2", "JSON.GET$"); !roughly(ttl, time.Second*2) {
 			t.Errorf("unexpected ttl %v", ttl)
 		}
-		if ttl := p.cache.GetTTL("a3", "JSON.GET$"); !roughly(ttl, time.Second*3) {
+		if ttl := p.cache.(*lru).GetTTL("a3", "JSON.GET$"); !roughly(ttl, time.Second*3) {
 			t.Errorf("unexpected ttl %v", ttl)
 		}
 		if v.IsCacheHit() {
@@ -976,7 +976,7 @@ func TestClientSideCachingJSONMGet(t *testing.T) {
 	}()
 
 	for {
-		if p.cache.GetTTL("a1", "JSON.GET$") == -2 && p.cache.GetTTL("a3", "JSON.GET$") == -2 {
+		if p.cache.(*lru).GetTTL("a1", "JSON.GET$") == -2 && p.cache.(*lru).GetTTL("a3", "JSON.GET$") == -2 {
 			break
 		}
 		time.Sleep(10 * time.Millisecond)
@@ -996,13 +996,13 @@ func TestClientSideCachingJSONMGet(t *testing.T) {
 	if arr[2].integer != 30 {
 		t.Errorf("unexpected cached mget response, expected %v, got %v", 30, arr[2].integer)
 	}
-	if ttl := p.cache.GetTTL("a1", "JSON.GET$"); !roughly(ttl, time.Second*10) {
+	if ttl := p.cache.(*lru).GetTTL("a1", "JSON.GET$"); !roughly(ttl, time.Second*10) {
 		t.Errorf("unexpected ttl %v", ttl)
 	}
-	if ttl := p.cache.GetTTL("a2", "JSON.GET$"); !roughly(ttl, time.Second*2) {
+	if ttl := p.cache.(*lru).GetTTL("a2", "JSON.GET$"); !roughly(ttl, time.Second*2) {
 		t.Errorf("unexpected ttl %v", ttl)
 	}
-	if ttl := p.cache.GetTTL("a3", "JSON.GET$"); !roughly(ttl, time.Second*30) {
+	if ttl := p.cache.(*lru).GetTTL("a3", "JSON.GET$"); !roughly(ttl, time.Second*30) {
 		t.Errorf("unexpected ttl %v", ttl)
 	}
 }
@@ -1033,10 +1033,10 @@ func TestClientSideCachingExecAbortMGet(t *testing.T) {
 	if v.IsCacheHit() {
 		t.Errorf("unexpected cache hit")
 	}
-	if v, entry := p.cache.GetOrPrepare("a1", "GET", time.Now(), time.Second); v.typ != 0 || entry != nil {
+	if v, entry := p.cache.Flight("a1", "GET", time.Second, time.Now()); v.typ != 0 || entry != nil {
 		t.Errorf("unexpected cache value and entry %v %v", v, entry)
 	}
-	if v, entry := p.cache.GetOrPrepare("a2", "GET", time.Now(), time.Second); v.typ != 0 || entry != nil {
+	if v, entry := p.cache.Flight("a2", "GET", time.Second, time.Now()); v.typ != 0 || entry != nil {
 		t.Errorf("unexpected cache value and entry %v %v", v, entry)
 	}
 }
@@ -1052,10 +1052,10 @@ func TestClientSideCachingWithNonRedisErrorMGet(t *testing.T) {
 	if v.IsCacheHit() {
 		t.Errorf("unexpected cache hit")
 	}
-	if v, entry := p.cache.GetOrPrepare("a1", "GET", time.Now(), time.Second); v.typ != 0 || entry != nil {
+	if v, entry := p.cache.Flight("a1", "GET", time.Second, time.Now()); v.typ != 0 || entry != nil {
 		t.Errorf("unexpected cache value and entry %v %v", v, entry)
 	}
-	if v, entry := p.cache.GetOrPrepare("a2", "GET", time.Now(), time.Second); v.typ != 0 || entry != nil {
+	if v, entry := p.cache.Flight("a2", "GET", time.Second, time.Now()); v.typ != 0 || entry != nil {
 		t.Errorf("unexpected cache value and entry %v %v", v, entry)
 	}
 }
@@ -1064,7 +1064,7 @@ func TestClientSideCachingWithSideChannelMGet(t *testing.T) {
 	p, _, _, closeConn := setup(t, ClientOption{})
 	closeConn()
 
-	p.cache.GetOrPrepare("a1", "GET", time.Now(), 10*time.Second)
+	p.cache.Flight("a1", "GET", 10*time.Second, time.Now())
 	go func() {
 		time.Sleep(100 * time.Millisecond)
 		m := RedisMessage{typ: '+', string: "OK"}
@@ -1082,7 +1082,7 @@ func TestClientSideCachingWithSideChannelErrorMGet(t *testing.T) {
 	p, _, _, closeConn := setup(t, ClientOption{})
 	closeConn()
 
-	p.cache.GetOrPrepare("a1", "GET", time.Now(), 10*time.Second)
+	p.cache.Flight("a1", "GET", 10*time.Second, time.Now())
 	go func() {
 		time.Sleep(100 * time.Millisecond)
 		p.cache.Cancel("a1", "GET", io.EOF)
@@ -1171,13 +1171,13 @@ func TestClientSideCachingDoMultiCache(t *testing.T) {
 				atomic.AddUint64(&miss, 1)
 			}
 		}
-		if ttl := p.cache.GetTTL("a1", "GET"); !roughly(ttl, time.Second) {
+		if ttl := p.cache.(*lru).GetTTL("a1", "GET"); !roughly(ttl, time.Second) {
 			t.Errorf("unexpected ttl %v", ttl)
 		}
-		if ttl := p.cache.GetTTL("a2", "GET"); !roughly(ttl, time.Second*2) {
+		if ttl := p.cache.(*lru).GetTTL("a2", "GET"); !roughly(ttl, time.Second*2) {
 			t.Errorf("unexpected ttl %v", ttl)
 		}
-		if ttl := p.cache.GetTTL("a3", "GET"); !roughly(ttl, time.Second*3) {
+		if ttl := p.cache.(*lru).GetTTL("a3", "GET"); !roughly(ttl, time.Second*3) {
 			t.Errorf("unexpected ttl %v", ttl)
 		}
 	}
@@ -1215,7 +1215,7 @@ func TestClientSideCachingDoMultiCache(t *testing.T) {
 	}()
 
 	for {
-		if p.cache.GetTTL("a1", "GET") == -2 && p.cache.GetTTL("a3", "GET") == -2 {
+		if p.cache.(*lru).GetTTL("a1", "GET") == -2 && p.cache.(*lru).GetTTL("a3", "GET") == -2 {
 			break
 		}
 		time.Sleep(10 * time.Millisecond)
@@ -1238,13 +1238,13 @@ func TestClientSideCachingDoMultiCache(t *testing.T) {
 	if arr[2].val.integer != 30 {
 		t.Errorf("unexpected cached mget response, expected %v, got %v", 30, arr[2].val.integer)
 	}
-	if ttl := p.cache.GetTTL("a1", "GET"); !roughly(ttl, time.Second*10) {
+	if ttl := p.cache.(*lru).GetTTL("a1", "GET"); !roughly(ttl, time.Second*10) {
 		t.Errorf("unexpected ttl %v", ttl)
 	}
-	if ttl := p.cache.GetTTL("a2", "GET"); !roughly(ttl, time.Second*2) {
+	if ttl := p.cache.(*lru).GetTTL("a2", "GET"); !roughly(ttl, time.Second*2) {
 		t.Errorf("unexpected ttl %v", ttl)
 	}
-	if ttl := p.cache.GetTTL("a3", "GET"); !roughly(ttl, time.Second*30) {
+	if ttl := p.cache.(*lru).GetTTL("a3", "GET"); !roughly(ttl, time.Second*30) {
 		t.Errorf("unexpected ttl %v", ttl)
 	}
 }
@@ -1283,10 +1283,10 @@ func TestClientSideCachingExecAbortDoMultiCache(t *testing.T) {
 			t.Errorf("unexpected cache hit")
 		}
 	}
-	if v, entry := p.cache.GetOrPrepare("a1", "GET", time.Now(), time.Second); v.typ != 0 || entry != nil {
+	if v, entry := p.cache.Flight("a1", "GET", time.Second, time.Now()); v.typ != 0 || entry != nil {
 		t.Errorf("unexpected cache value and entry %v %v", v, entry)
 	}
-	if v, entry := p.cache.GetOrPrepare("a2", "GET", time.Now(), time.Second); v.typ != 0 || entry != nil {
+	if v, entry := p.cache.Flight("a2", "GET", time.Second, time.Now()); v.typ != 0 || entry != nil {
 		t.Errorf("unexpected cache value and entry %v %v", v, entry)
 	}
 }
@@ -1308,10 +1308,10 @@ func TestClientSideCachingWithNonRedisErrorDoMultiCache(t *testing.T) {
 			t.Errorf("unexpected cache hit")
 		}
 	}
-	if v, entry := p.cache.GetOrPrepare("a1", "GET", time.Now(), time.Second); v.typ != 0 || entry != nil {
+	if v, entry := p.cache.Flight("a1", "GET", time.Second, time.Now()); v.typ != 0 || entry != nil {
 		t.Errorf("unexpected cache value and entry %v %v", v, entry)
 	}
-	if v, entry := p.cache.GetOrPrepare("a2", "GET", time.Now(), time.Second); v.typ != 0 || entry != nil {
+	if v, entry := p.cache.Flight("a2", "GET", time.Second, time.Now()); v.typ != 0 || entry != nil {
 		t.Errorf("unexpected cache value and entry %v %v", v, entry)
 	}
 }
@@ -1320,7 +1320,7 @@ func TestClientSideCachingWithSideChannelDoMultiCache(t *testing.T) {
 	p, _, _, closeConn := setup(t, ClientOption{})
 	closeConn()
 
-	p.cache.GetOrPrepare("a1", "GET", time.Now(), 10*time.Second)
+	p.cache.Flight("a1", "GET", 10*time.Second, time.Now())
 	go func() {
 		time.Sleep(100 * time.Millisecond)
 		m := RedisMessage{typ: '+', string: "OK"}
@@ -1340,7 +1340,7 @@ func TestClientSideCachingWithSideChannelErrorDoMultiCache(t *testing.T) {
 	p, _, _, closeConn := setup(t, ClientOption{})
 	closeConn()
 
-	p.cache.GetOrPrepare("a1", "GET", time.Now(), 10*time.Second)
+	p.cache.Flight("a1", "GET", 10*time.Second, time.Now())
 	go func() {
 		time.Sleep(100 * time.Millisecond)
 		p.cache.Cancel("a1", "GET", io.EOF)
