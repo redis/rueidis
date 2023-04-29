@@ -414,6 +414,16 @@ func (r RedisResult) CacheTTL() int64 {
 	return r.val.CacheTTL()
 }
 
+// CachePTTL delegates to RedisMessage.CachePTTL
+func (r RedisResult) CachePTTL() int64 {
+	return r.val.CachePTTL()
+}
+
+// CachePXAT delegates to RedisMessage.CachePXAT
+func (r RedisResult) CachePXAT() int64 {
+	return r.val.CachePXAT()
+}
+
 // RedisMessage is a redis response message, it may be a nil response
 type RedisMessage struct {
 	attrs   *RedisMessage
@@ -1001,11 +1011,35 @@ func (m *RedisMessage) IsCacheHit() bool {
 
 // CacheTTL returns the remaining TTL in seconds of client side cache
 func (m *RedisMessage) CacheTTL() (ttl int64) {
-	pttl := m.relativePTTL(time.Now())
-	if ttl = pttl / 1000; pttl > ttl*1000 {
-		ttl++
+	milli := m.CachePTTL()
+	if milli > 0 {
+		if ttl = milli / 1000; milli > ttl*1000 {
+			ttl++
+		}
+		return ttl
 	}
-	return ttl
+	return milli
+}
+
+// CachePTTL returns the remaining PTTL in seconds of client side cache
+func (m *RedisMessage) CachePTTL() int64 {
+	milli := m.getExpireAt()
+	if milli == 0 {
+		return -1
+	}
+	if milli = milli - time.Now().UnixMilli(); milli < 0 {
+		milli = 0
+	}
+	return milli
+}
+
+// CachePXAT returns the remaining PXAT in seconds of client side cache
+func (m *RedisMessage) CachePXAT() int64 {
+	milli := m.getExpireAt()
+	if milli == 0 {
+		return -1
+	}
+	return milli
 }
 
 func (m *RedisMessage) relativePTTL(now time.Time) int64 {

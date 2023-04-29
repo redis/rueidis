@@ -43,7 +43,7 @@ type pipe struct {
 	clhks           atomic.Value
 	pshks           atomic.Value
 	queue           queue
-	cache           cache
+	cache           CacheStore
 	r               *bufio.Reader
 	w               *bufio.Writer
 	close           chan struct{}
@@ -100,7 +100,11 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 		}
 	}
 	if !option.DisableCache {
-		p.cache = newLRU(option.CacheSizeEachConn)
+		cacheStoreFn := option.NewCacheStoreFn
+		if cacheStoreFn == nil {
+			cacheStoreFn = newLRU
+		}
+		p.cache = cacheStoreFn(CacheStoreOption{CacheSizeEachConn: option.CacheSizeEachConn})
 	}
 	p.pshks.Store(emptypshks)
 	p.clhks.Store(emptyclhks)
@@ -251,7 +255,7 @@ func (p *pipe) _background() {
 
 	// clean up cache and free pending calls
 	if p.cache != nil {
-		p.cache.FreeAndClose(ErrDoCacheAborted)
+		p.cache.Close(ErrDoCacheAborted)
 	}
 	if p.onInvalidations != nil {
 		p.onInvalidations(nil)
@@ -969,7 +973,7 @@ func (p *pipe) DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) Re
 	}
 	ck, cc := cmds.CacheKey(cmd)
 	now := time.Now()
-	if v, entry := p.cache.GetOrPrepare(ck, cc, now, ttl); v.typ != 0 {
+	if v, entry := p.cache.Flight(ck, cc, ttl, now); v.typ != 0 {
 		return newResult(v, nil)
 	} else if entry != nil {
 		return newResult(entry.Wait(ctx))
@@ -995,7 +999,7 @@ func (p *pipe) DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) Re
 
 func (p *pipe) doCacheMGet(ctx context.Context, cmd Cacheable, ttl time.Duration) RedisResult {
 	commands := cmd.Commands()
-	entries := make(map[int]*entry)
+	entries := make(map[int]CacheEntry)
 	builder := cmds.NewBuilder(cmds.InitSlot)
 	result := RedisResult{val: RedisMessage{typ: '*', values: nil}}
 	mgetcc := cmds.MGetCacheCmd(cmd)
@@ -1006,7 +1010,7 @@ func (p *pipe) doCacheMGet(ctx context.Context, cmd Cacheable, ttl time.Duration
 	var now = time.Now()
 	var rewrite cmds.Arbitrary
 	for i, key := range commands[1 : keys+1] {
-		v, entry := p.cache.GetOrPrepare(key, mgetcc, now, ttl)
+		v, entry := p.cache.Flight(key, mgetcc, ttl, now)
 		if v.typ != 0 { // cache hit for one key
 			if len(result.val.values) == 0 {
 				result.val.values = make([]RedisMessage, keys)
@@ -1103,7 +1107,7 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisR
 	cmds.CacheableCS(multi[0].Cmd).Verify()
 
 	results := make([]RedisResult, len(multi))
-	entries := make(map[int]*entry)
+	entries := make(map[int]CacheEntry)
 	missing := []Completed{cmds.OptInCmd, cmds.MultiCmd}
 	now := time.Now()
 	for i, ct := range multi {
@@ -1111,7 +1115,7 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisR
 			panic(panicmgetcsc)
 		}
 		ck, cc := cmds.CacheKey(ct.Cmd)
-		v, entry := p.cache.GetOrPrepare(ck, cc, now, ct.TTL)
+		v, entry := p.cache.Flight(ck, cc, ct.TTL, now)
 		if v.typ != 0 { // cache hit for one key
 			results[i] = newResult(v, nil)
 			continue

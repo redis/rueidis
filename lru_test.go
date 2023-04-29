@@ -18,40 +18,40 @@ const Entries = 3
 func TestLRU(t *testing.T) {
 
 	setup := func(t *testing.T) *lru {
-		lru := newLRU(entryMinSize * Entries)
-		if v, entry := lru.GetOrPrepare("0", "GET", time.Now(), TTL); v.typ != 0 || entry != nil {
-			t.Fatalf("got unexpected value from the first GetOrPrepare: %v %v", v, entry)
+		store := newLRU(CacheStoreOption{CacheSizeEachConn: entryMinSize * Entries})
+		if v, entry := store.Flight("0", "GET", TTL, time.Now()); v.typ != 0 || entry != nil {
+			t.Fatalf("got unexpected value from the first Flight: %v %v", v, entry)
 		}
 		m := RedisMessage{typ: '+', string: "0", values: []RedisMessage{{}}}
 		m.setExpireAt(time.Now().Add(PTTL * time.Millisecond).UnixMilli())
-		lru.Update("0", "GET", m)
-		return lru
+		store.Update("0", "GET", m)
+		return store.(*lru)
 	}
 
 	t.Run("Cache Hit & Expire", func(t *testing.T) {
 		lru := setup(t)
-		if v, _ := lru.GetOrPrepare("0", "GET", time.Now(), TTL); v.typ == 0 {
-			t.Fatalf("did not get the value from the second GetOrPrepare")
+		if v, _ := lru.Flight("0", "GET", TTL, time.Now()); v.typ == 0 {
+			t.Fatalf("did not get the value from the second Flight")
 		} else if v.string != "0" {
-			t.Fatalf("got unexpected value from the second GetOrPrepare: %v", v)
+			t.Fatalf("got unexpected value from the second Flight: %v", v)
 		}
 		time.Sleep(PTTL * time.Millisecond)
-		if v, entry := lru.GetOrPrepare("0", "GET", time.Now(), TTL); v.typ != 0 || entry != nil {
-			t.Fatalf("got unexpected value from the GetOrPrepare after pttl: %v %v", v, entry)
+		if v, entry := lru.Flight("0", "GET", TTL, time.Now()); v.typ != 0 || entry != nil {
+			t.Fatalf("got unexpected value from the Flight after pttl: %v %v", v, entry)
 		}
 	})
 
 	t.Run("Cache Should Not Expire By PTTL -2", func(t *testing.T) {
 		lru := setup(t)
-		if v, entry := lru.GetOrPrepare("1", "GET", time.Now(), TTL); v.typ != 0 || entry != nil {
-			t.Fatalf("got unexpected value from the GetOrPrepare after pttl: %v %v", v, entry)
+		if v, entry := lru.Flight("1", "GET", TTL, time.Now()); v.typ != 0 || entry != nil {
+			t.Fatalf("got unexpected value from the Flight after pttl: %v %v", v, entry)
 		}
 		m := RedisMessage{typ: '+', string: "1"}
 		lru.Update("1", "GET", m)
-		if v, _ := lru.GetOrPrepare("1", "GET", time.Now(), TTL); v.typ == 0 {
-			t.Fatalf("did not get the value from the second GetOrPrepare")
+		if v, _ := lru.Flight("1", "GET", TTL, time.Now()); v.typ == 0 {
+			t.Fatalf("did not get the value from the second Flight")
 		} else if v.string != "1" {
-			t.Fatalf("got unexpected value from the second GetOrPrepare: %v", v)
+			t.Fatalf("got unexpected value from the second Flight: %v", v)
 		}
 	})
 
@@ -63,11 +63,11 @@ func TestLRU(t *testing.T) {
 		for i := 0; i < count; i++ {
 			go func() {
 				defer wg.Done()
-				if v, _ := lru.GetOrPrepare("1", "GET", time.Now(), TTL); v.typ != 0 {
-					t.Errorf("got unexpected value from the first GetOrPrepare: %v", v)
+				if v, _ := lru.Flight("1", "GET", TTL, time.Now()); v.typ != 0 {
+					t.Errorf("got unexpected value from the first Flight: %v", v)
 				}
-				if v, _ := lru.GetOrPrepare("2", "GET", time.Now(), TTL); v.typ != 0 {
-					t.Errorf("got unexpected value from the first GetOrPrepare: %v", v)
+				if v, _ := lru.Flight("2", "GET", TTL, time.Now()); v.typ != 0 {
+					t.Errorf("got unexpected value from the first Flight: %v", v)
 				}
 			}()
 		}
@@ -93,85 +93,85 @@ func TestLRU(t *testing.T) {
 	t.Run("Cache Evict", func(t *testing.T) {
 		lru := setup(t)
 		for i := 1; i <= Entries; i++ {
-			lru.GetOrPrepare(strconv.Itoa(i), "GET", time.Now(), TTL)
+			lru.Flight(strconv.Itoa(i), "GET", TTL, time.Now())
 			m := RedisMessage{typ: '+', string: strconv.Itoa(i)}
 			m.setExpireAt(time.Now().Add(PTTL * time.Millisecond).UnixMilli())
 			lru.Update(strconv.Itoa(i), "GET", m)
 		}
-		if v, entry := lru.GetOrPrepare("1", "GET", time.Now(), TTL); v.typ != 0 {
-			t.Fatalf("got evicted value from the first GetOrPrepare: %v %v", v, entry)
+		if v, entry := lru.Flight("1", "GET", TTL, time.Now()); v.typ != 0 {
+			t.Fatalf("got evicted value from the first Flight: %v %v", v, entry)
 		}
-		if v, _ := lru.GetOrPrepare(strconv.Itoa(Entries), "GET", time.Now(), TTL); v.typ == 0 {
-			t.Fatalf("did not get the latest value from the GetOrPrepare")
+		if v, _ := lru.Flight(strconv.Itoa(Entries), "GET", TTL, time.Now()); v.typ == 0 {
+			t.Fatalf("did not get the latest value from the Flight")
 		} else if v.string != strconv.Itoa(Entries) {
-			t.Fatalf("got unexpected value from the GetOrPrepare: %v", v)
+			t.Fatalf("got unexpected value from the Flight: %v", v)
 		}
 	})
 
 	t.Run("Cache Delete", func(t *testing.T) {
 		lru := setup(t)
 		lru.Delete([]RedisMessage{{string: "0"}})
-		if v, _ := lru.GetOrPrepare("0", "GET", time.Now(), TTL); v.typ != 0 {
-			t.Fatalf("got unexpected value from the first GetOrPrepare: %v", v)
+		if v, _ := lru.Flight("0", "GET", TTL, time.Now()); v.typ != 0 {
+			t.Fatalf("got unexpected value from the first Flight: %v", v)
 		}
 	})
 
 	t.Run("Cache Flush", func(t *testing.T) {
 		lru := setup(t)
 		for i := 1; i < Entries; i++ {
-			lru.GetOrPrepare(strconv.Itoa(i), "GET", time.Now(), TTL)
+			lru.Flight(strconv.Itoa(i), "GET", TTL, time.Now())
 			m := RedisMessage{typ: '+', string: strconv.Itoa(i)}
 			lru.Update(strconv.Itoa(i), "GET", m)
 		}
 		for i := 1; i < Entries; i++ {
-			if v, _ := lru.GetOrPrepare(strconv.Itoa(i), "GET", time.Now(), TTL); v.string != strconv.Itoa(i) {
+			if v, _ := lru.Flight(strconv.Itoa(i), "GET", TTL, time.Now()); v.string != strconv.Itoa(i) {
 				t.Fatalf("got unexpected value before flush all: %v", v)
 			}
 		}
 		lru.Delete(nil)
 		for i := 1; i <= Entries; i++ {
-			if v, _ := lru.GetOrPrepare(strconv.Itoa(i), "GET", time.Now(), TTL); v.typ != 0 {
+			if v, _ := lru.Flight(strconv.Itoa(i), "GET", TTL, time.Now()); v.typ != 0 {
 				t.Fatalf("got unexpected value after flush all: %v", v)
 			}
 		}
 	})
 
-	t.Run("Cache FreeAndClose", func(t *testing.T) {
+	t.Run("Cache Close", func(t *testing.T) {
 		lru := setup(t)
-		v, entry := lru.GetOrPrepare("1", "GET", time.Now(), TTL)
+		v, entry := lru.Flight("1", "GET", TTL, time.Now())
 		if v.typ != 0 || entry != nil {
-			t.Fatalf("got unexpected value from the first GetOrPrepare: %v %v", v, entry)
+			t.Fatalf("got unexpected value from the first Flight: %v %v", v, entry)
 		}
-		v, entry = lru.GetOrPrepare("1", "GET", time.Now(), TTL)
+		v, entry = lru.Flight("1", "GET", TTL, time.Now())
 		if v.typ != 0 || entry == nil { // entry should not be nil in second call
-			t.Fatalf("got unexpected value from the second GetOrPrepare: %v %v", v, entry)
+			t.Fatalf("got unexpected value from the second Flight: %v %v", v, entry)
 		}
 
-		lru.FreeAndClose(ErrDoCacheAborted)
+		lru.Close(ErrDoCacheAborted)
 
 		if _, err := entry.Wait(context.Background()); err != ErrDoCacheAborted {
-			t.Fatalf("got unexpected value after FreeAndClose: %v", err)
+			t.Fatalf("got unexpected value after Close: %v", err)
 		}
 
 		m := RedisMessage{typ: '+', string: "this Update should have no effect"}
 		m.setExpireAt(time.Now().Add(PTTL * time.Millisecond).UnixMilli())
 		lru.Update("1", "GET", m)
-		for i := 0; i < 2; i++ { // entry should be always nil after the first call if FreeAndClose
-			if v, entry := lru.GetOrPrepare("1", "GET", time.Now(), TTL); v.typ != 0 || entry != nil {
-				t.Fatalf("got unexpected value from the first GetOrPrepare: %v %v", v, entry)
+		for i := 0; i < 2; i++ { // entry should be always nil after the first call if Close
+			if v, entry := lru.Flight("1", "GET", TTL, time.Now()); v.typ != 0 || entry != nil {
+				t.Fatalf("got unexpected value from the first Flight: %v %v", v, entry)
 			}
 		}
 	})
 
 	t.Run("Cache Cancel", func(t *testing.T) {
 		lru := setup(t)
-		v, entry := lru.GetOrPrepare("1", "GET", time.Now(), TTL)
+		v, entry := lru.Flight("1", "GET", TTL, time.Now())
 		if v.typ != 0 || entry != nil {
-			t.Fatalf("got unexpected value from the first GetOrPrepare: %v %v", v, entry)
+			t.Fatalf("got unexpected value from the first Flight: %v %v", v, entry)
 		}
-		v, entry = lru.GetOrPrepare("1", "GET", time.Now(), TTL)
+		v, entry = lru.Flight("1", "GET", TTL, time.Now())
 		if v.typ != 0 || entry == nil { // entry should not be nil in second call
-			t.Fatalf("got unexpected value from the second GetOrPrepare: %v %v", v, entry)
+			t.Fatalf("got unexpected value from the second Flight: %v %v", v, entry)
 		}
 		err := errors.New("any")
 
@@ -180,7 +180,7 @@ func TestLRU(t *testing.T) {
 		}()
 
 		if _, err2 := entry.Wait(context.Background()); err2 != err {
-			t.Fatalf("got unexpected value from the entry.Wait(): %v %v", err, err2)
+			t.Fatalf("got unexpected value from the CacheEntry.Wait(): %v %v", err, err2)
 		}
 	})
 
@@ -189,7 +189,7 @@ func TestLRU(t *testing.T) {
 		if v := lru.GetTTL("empty", "cmd"); v != -2 {
 			t.Fatalf("unexpected %v", v)
 		}
-		lru.GetOrPrepare("key", "cmd", time.Now(), time.Second)
+		lru.Flight("key", "cmd", time.Second, time.Now())
 		m := RedisMessage{typ: 1}
 		m.setExpireAt(time.Now().Add(time.Second).UnixMilli())
 		lru.Update("key", "cmd", m)
@@ -201,39 +201,39 @@ func TestLRU(t *testing.T) {
 	t.Run("Update Message TTL", func(t *testing.T) {
 		t.Run("client side TTL > server side TTL", func(t *testing.T) {
 			lru := setup(t)
-			lru.GetOrPrepare("key", "cmd", time.Now(), 2*time.Second)
+			lru.Flight("key", "cmd", 2*time.Second, time.Now())
 			m := RedisMessage{typ: 1}
 			m.setExpireAt(time.Now().Add(time.Second).UnixMilli())
 			lru.Update("key", "cmd", m)
-			if v, _ := lru.GetOrPrepare("key", "cmd", time.Now(), 2*time.Second); v.CacheTTL() != 1 {
+			if v, _ := lru.Flight("key", "cmd", 2*time.Second, time.Now()); v.CacheTTL() != 1 {
 				t.Fatalf("unexpected %v", v.CacheTTL())
 			}
 		})
 		t.Run("client side TTL < server side TTL", func(t *testing.T) {
 			lru := setup(t)
-			lru.GetOrPrepare("key", "cmd", time.Now(), 2*time.Second)
+			lru.Flight("key", "cmd", 2*time.Second, time.Now())
 			m := RedisMessage{typ: 1}
 			m.setExpireAt(time.Now().Add(3 * time.Second).UnixMilli())
 			lru.Update("key", "cmd", m)
-			if v, _ := lru.GetOrPrepare("key", "cmd", time.Now(), 2*time.Second); v.CacheTTL() != 2 {
+			if v, _ := lru.Flight("key", "cmd", 2*time.Second, time.Now()); v.CacheTTL() != 2 {
 				t.Fatalf("unexpected %v", v.CacheTTL())
 			}
 		})
 		t.Run("no server side TTL -1", func(t *testing.T) {
 			lru := setup(t)
-			lru.GetOrPrepare("key", "cmd", time.Now(), 2*time.Second)
+			lru.Flight("key", "cmd", 2*time.Second, time.Now())
 			m := RedisMessage{typ: 1}
 			lru.Update("key", "cmd", m)
-			if v, _ := lru.GetOrPrepare("key", "cmd", time.Now(), 2*time.Second); v.CacheTTL() != 2 {
+			if v, _ := lru.Flight("key", "cmd", 2*time.Second, time.Now()); v.CacheTTL() != 2 {
 				t.Fatalf("unexpected %v", v.CacheTTL())
 			}
 		})
 		t.Run("no server side TTL -2", func(t *testing.T) {
 			lru := setup(t)
-			lru.GetOrPrepare("key", "cmd", time.Now(), 2*time.Second)
+			lru.Flight("key", "cmd", 2*time.Second, time.Now())
 			m := RedisMessage{typ: 1}
 			lru.Update("key", "cmd", m)
-			if v, _ := lru.GetOrPrepare("key", "cmd", time.Now(), 2*time.Second); v.CacheTTL() != 2 {
+			if v, _ := lru.Flight("key", "cmd", 2*time.Second, time.Now()); v.CacheTTL() != 2 {
 				t.Fatalf("unexpected %v", v.CacheTTL())
 			}
 		})
@@ -245,18 +245,18 @@ func roughly(ttl, expect time.Duration) bool {
 }
 
 func BenchmarkLRU(b *testing.B) {
-	lru := newLRU(entryMinSize * Entries)
-	b.Run("GetOrPrepare", func(b *testing.B) {
+	lru := newLRU(CacheStoreOption{CacheSizeEachConn: entryMinSize * Entries})
+	b.Run("Flight", func(b *testing.B) {
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
-				lru.GetOrPrepare("0", "GET", time.Now(), TTL)
+				lru.Flight("0", "GET", TTL, time.Now())
 			}
 		})
 	})
 	b.Run("Update", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			key := strconv.Itoa(i)
-			lru.GetOrPrepare(key, "GET", time.Now(), TTL)
+			lru.Flight(key, "GET", TTL, time.Now())
 			m := RedisMessage{}
 			m.setExpireAt(time.Now().Add(PTTL * time.Millisecond).UnixMilli())
 			lru.Update(key, "GET", m)
@@ -266,7 +266,7 @@ func BenchmarkLRU(b *testing.B) {
 
 func TestEntry(t *testing.T) {
 	t.Run("Wait", func(t *testing.T) {
-		e := entry{ch: make(chan struct{}, 1)}
+		e := cacheEntry{ch: make(chan struct{})}
 		err := errors.New("any")
 		go func() {
 			e.val = RedisMessage{typ: 1}
@@ -278,7 +278,7 @@ func TestEntry(t *testing.T) {
 		}
 	})
 	t.Run("Wait with cancel", func(t *testing.T) {
-		e := entry{ch: make(chan struct{}, 1)}
+		e := cacheEntry{ch: make(chan struct{})}
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 		go func() {
@@ -290,7 +290,7 @@ func TestEntry(t *testing.T) {
 		}
 	})
 	t.Run("Wait with closed ctx", func(t *testing.T) {
-		e := entry{ch: make(chan struct{}, 1)}
+		e := cacheEntry{ch: make(chan struct{})}
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
 		if v, err := e.Wait(ctx); err != context.Canceled {

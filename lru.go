@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	entrySize    = int(unsafe.Sizeof(entry{})) + int(unsafe.Sizeof(&entry{}))
+	entrySize    = int(unsafe.Sizeof(cacheEntry{})) + int(unsafe.Sizeof(&cacheEntry{}))
 	keyCacheSize = int(unsafe.Sizeof(keyCache{})) + int(unsafe.Sizeof(&keyCache{}))
 	elementSize  = int(unsafe.Sizeof(list.Element{})) + int(unsafe.Sizeof(&list.Element{}))
 	stringSSize  = int(unsafe.Sizeof(""))
@@ -21,16 +21,7 @@ const (
 	moveThreshold = uint64(1024 - 1)
 )
 
-type cache interface {
-	GetOrPrepare(key, cmd string, now time.Time, ttl time.Duration) (v RedisMessage, entry *entry)
-	Update(key, cmd string, value RedisMessage) (pttl int64)
-	Cancel(key, cmd string, err error)
-	Delete(keys []RedisMessage)
-	GetTTL(key, cmd string) time.Duration
-	FreeAndClose(err error)
-}
-
-type entry struct {
+type cacheEntry struct {
 	err  error
 	ch   chan struct{}
 	kc   *keyCache
@@ -39,7 +30,7 @@ type entry struct {
 	size int
 }
 
-func (e *entry) Wait(ctx context.Context) (RedisMessage, error) {
+func (e *cacheEntry) Wait(ctx context.Context) (RedisMessage, error) {
 	if ch := ctx.Done(); ch == nil {
 		<-e.ch
 	} else {
@@ -59,7 +50,7 @@ type keyCache struct {
 	miss  uint64
 }
 
-var _ cache = (*lru)(nil)
+var _ CacheStore = (*lru)(nil)
 
 type lru struct {
 	store map[string]*keyCache
@@ -69,23 +60,24 @@ type lru struct {
 	max   int
 }
 
-func newLRU(max int) *lru {
+func newLRU(opt CacheStoreOption) CacheStore {
 	return &lru{
-		max:   max,
+		max:   opt.CacheSizeEachConn,
 		store: make(map[string]*keyCache),
 		list:  list.New(),
 	}
 }
 
-func (c *lru) GetOrPrepare(key, cmd string, now time.Time, ttl time.Duration) (v RedisMessage, e *entry) {
+func (c *lru) Flight(key, cmd string, ttl time.Duration, now time.Time) (v RedisMessage, ce CacheEntry) {
 	var ok bool
 	var kc *keyCache
 	var ele, back *list.Element
+	var e *cacheEntry
 
 	c.mu.RLock()
 	if kc, ok = c.store[key]; ok {
 		if ele, ok = kc.cache[cmd]; ok {
-			e = ele.Value.(*entry)
+			e = ele.Value.(*cacheEntry)
 			v = e.val
 			back = c.list.Back()
 		}
@@ -110,36 +102,30 @@ func (c *lru) GetOrPrepare(key, cmd string, now time.Time, ttl time.Duration) (v
 	c.mu.Lock()
 	if kc, ok = c.store[key]; !ok {
 		if c.store == nil {
-			goto miss
+			goto ret
 		}
 		kc = &keyCache{cache: make(map[string]*list.Element, 1), key: key}
 		c.store[key] = kc
 	}
 	if ele, ok = kc.cache[cmd]; ok {
-		if e = ele.Value.(*entry); e.val.typ == 0 || e.val.relativePTTL(now) > 0 {
+		if e = ele.Value.(*cacheEntry); e.val.typ == 0 || e.val.relativePTTL(now) > 0 {
 			atomic.AddUint64(&kc.hits, 1)
 			v = e.val
 			c.list.MoveToBack(ele)
+			ce = e
+			goto ret
 		} else {
 			c.list.Remove(ele)
 			c.size -= e.size
-			e = nil
 		}
 	}
-	if e == nil {
-		atomic.AddUint64(&kc.miss, 1)
-		ne := &entry{
-			cmd: cmd,
-			kc:  kc,
-			ch:  make(chan struct{}, 1),
-		}
-		ne.val.setExpireAt(now.Add(ttl).UnixMilli())
-		c.list.PushBack(ne)
-		kc.cache[cmd] = c.list.Back()
-	}
-miss:
+	atomic.AddUint64(&kc.miss, 1)
+	v.setExpireAt(now.Add(ttl).UnixMilli())
+	c.list.PushBack(&cacheEntry{cmd: cmd, kc: kc, val: v, ch: make(chan struct{})})
+	kc.cache[cmd] = c.list.Back()
+ret:
 	c.mu.Unlock()
-	return v, e
+	return v, ce
 }
 
 func (c *lru) Update(key, cmd string, value RedisMessage) (pttl int64) {
@@ -147,7 +133,7 @@ func (c *lru) Update(key, cmd string, value RedisMessage) (pttl int64) {
 	c.mu.Lock()
 	if kc, ok := c.store[key]; ok {
 		if ele, ok := kc.cache[cmd]; ok {
-			if e := ele.Value.(*entry); e.val.typ == 0 {
+			if e := ele.Value.(*cacheEntry); e.val.typ == 0 {
 				pttl = value.getExpireAt()
 				cpttl := e.val.getExpireAt()
 				if cpttl < pttl || pttl == 0 {
@@ -163,7 +149,7 @@ func (c *lru) Update(key, cmd string, value RedisMessage) (pttl int64) {
 
 			ele = c.list.Front()
 			for c.size > c.max && ele != nil {
-				if e := ele.Value.(*entry); e.val.typ != 0 { // do not delete pending entries
+				if e := ele.Value.(*cacheEntry); e.val.typ != 0 { // do not delete pending entries
 					kc := e.kc
 					if delete(kc.cache, e.cmd); len(kc.cache) == 0 {
 						delete(c.store, kc.key)
@@ -187,7 +173,7 @@ func (c *lru) Cancel(key, cmd string, err error) {
 	c.mu.Lock()
 	if kc, ok := c.store[key]; ok {
 		if ele, ok := kc.cache[cmd]; ok {
-			if e := ele.Value.(*entry); e.val.typ == 0 {
+			if e := ele.Value.(*cacheEntry); e.val.typ == 0 {
 				e.err = err
 				ch = e.ch
 				if delete(kc.cache, cmd); len(kc.cache) == 0 {
@@ -206,7 +192,7 @@ func (c *lru) Cancel(key, cmd string, err error) {
 func (c *lru) GetTTL(key, cmd string) (ttl time.Duration) {
 	c.mu.Lock()
 	if kc, ok := c.store[key]; ok && kc.cache[cmd] != nil {
-		ttl = time.Duration(kc.cache[cmd].Value.(*entry).val.relativePTTL(time.Now())) * time.Millisecond
+		ttl = time.Duration(kc.cache[cmd].Value.(*cacheEntry).val.relativePTTL(time.Now())) * time.Millisecond
 	}
 	if ttl <= 0 {
 		ttl = -2
@@ -218,7 +204,7 @@ func (c *lru) GetTTL(key, cmd string) (ttl time.Duration) {
 func (c *lru) purge(key string, kc *keyCache) {
 	if kc != nil {
 		for cmd, ele := range kc.cache {
-			if e := ele.Value.(*entry); e.val.typ != 0 { // do not delete pending entries
+			if e := ele.Value.(*cacheEntry); e.val.typ != 0 { // do not delete pending entries
 				if delete(kc.cache, cmd); len(kc.cache) == 0 {
 					delete(c.store, key)
 				}
@@ -243,11 +229,11 @@ func (c *lru) Delete(keys []RedisMessage) {
 	c.mu.Unlock()
 }
 
-func (c *lru) FreeAndClose(err error) {
+func (c *lru) Close(err error) {
 	c.mu.Lock()
 	for _, kc := range c.store {
 		for _, ele := range kc.cache {
-			if e := ele.Value.(*entry); e.val.typ == 0 {
+			if e := ele.Value.(*cacheEntry); e.val.typ == 0 {
 				e.err = err
 				close(e.ch)
 			}

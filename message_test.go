@@ -608,13 +608,43 @@ func TestRedisResult(t *testing.T) {
 	})
 
 	t.Run("CacheTTL", func(t *testing.T) {
-		if (RedisResult{err: errors.New("other")}).CacheTTL() != 0 {
-			t.Fatal("CacheTTL != 0")
+		if (RedisResult{err: errors.New("other")}).CacheTTL() != -1 {
+			t.Fatal("CacheTTL != -1")
 		}
 		m := RedisMessage{}
-		m.setExpireAt(time.Now().Add(2 * time.Second).UnixMilli())
+		m.setExpireAt(time.Now().Add(time.Millisecond * 100).UnixMilli())
 		if (RedisResult{val: m}).CacheTTL() <= 0 {
 			t.Fatal("CacheTTL <= 0")
+		}
+		time.Sleep(100 * time.Millisecond)
+		if (RedisResult{val: m}).CacheTTL() > 0 {
+			t.Fatal("CacheTTL > 0")
+		}
+	})
+
+	t.Run("CachePTTL", func(t *testing.T) {
+		if (RedisResult{err: errors.New("other")}).CachePTTL() != -1 {
+			t.Fatal("CachePTTL != -1")
+		}
+		m := RedisMessage{}
+		m.setExpireAt(time.Now().Add(time.Millisecond * 100).UnixMilli())
+		if (RedisResult{val: m}).CachePTTL() <= 0 {
+			t.Fatal("CachePTTL <= 0")
+		}
+		time.Sleep(100 * time.Millisecond)
+		if (RedisResult{val: m}).CachePTTL() > 0 {
+			t.Fatal("CachePTTL > 0")
+		}
+	})
+
+	t.Run("CachePXAT", func(t *testing.T) {
+		if (RedisResult{err: errors.New("other")}).CachePXAT() != -1 {
+			t.Fatal("CachePTTL != -1")
+		}
+		m := RedisMessage{}
+		m.setExpireAt(time.Now().Add(time.Millisecond * 100).UnixMilli())
+		if (RedisResult{val: m}).CachePXAT() <= 0 {
+			t.Fatal("CachePXAT <= 0")
 		}
 	})
 }
@@ -1103,13 +1133,43 @@ func TestRedisMessage(t *testing.T) {
 	})
 
 	t.Run("CacheTTL", func(t *testing.T) {
-		if (&RedisMessage{typ: '_'}).CacheTTL() != 0 {
-			t.Fatal("CacheTTL != 0")
+		if (&RedisMessage{typ: '_'}).CacheTTL() != -1 {
+			t.Fatal("CacheTTL != -1")
 		}
 		m := &RedisMessage{typ: '_'}
-		m.setExpireAt(time.Now().Add(2 * time.Second).UnixMilli())
+		m.setExpireAt(time.Now().Add(time.Millisecond * 100).UnixMilli())
 		if m.CacheTTL() <= 0 {
 			t.Fatal("CacheTTL <= 0")
+		}
+		time.Sleep(100 * time.Millisecond)
+		if m.CachePTTL() > 0 {
+			t.Fatal("CachePTTL > 0")
+		}
+	})
+
+	t.Run("CachePTTL", func(t *testing.T) {
+		if (&RedisMessage{typ: '_'}).CachePTTL() != -1 {
+			t.Fatal("CachePTTL != -1")
+		}
+		m := &RedisMessage{typ: '_'}
+		m.setExpireAt(time.Now().Add(time.Millisecond * 100).UnixMilli())
+		if m.CachePTTL() <= 0 {
+			t.Fatal("CachePTTL <= 0")
+		}
+		time.Sleep(100 * time.Millisecond)
+		if m.CachePTTL() > 0 {
+			t.Fatal("CachePTTL > 0")
+		}
+	})
+
+	t.Run("CachePXAT", func(t *testing.T) {
+		if (&RedisMessage{typ: '_'}).CachePXAT() != -1 {
+			t.Fatal("CachePXAT != -1")
+		}
+		m := &RedisMessage{typ: '_'}
+		m.setExpireAt(time.Now().Add(time.Millisecond * 100).UnixMilli())
+		if m.CachePXAT() <= 0 {
+			t.Fatal("CachePXAT <= 0")
 		}
 	})
 }
