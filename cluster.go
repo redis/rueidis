@@ -156,9 +156,12 @@ retry:
 	c.conns = conns
 	c.mu.Unlock()
 
-	for _, cc := range removes {
-		go cc.Close()
-	}
+	go func(removes []conn) {
+		time.Sleep(time.Second * 5)
+		for _, cc := range removes {
+			cc.Close()
+		}
+	}(removes)
 
 	return nil
 }
@@ -227,22 +230,25 @@ func (c *clusterClient) pick(slot uint16) (p conn, err error) {
 	return p, nil
 }
 
-func (c *clusterClient) redirectOrNew(addr string) (p conn) {
+func (c *clusterClient) redirectOrNew(addr string, prev conn) (p conn) {
 	c.mu.RLock()
 	p = c.conns[addr]
 	c.mu.RUnlock()
-	if p != nil && p.Addr() != addr {
+	if p != nil && prev != p {
 		return p
 	}
 	c.mu.Lock()
 	if p = c.conns[addr]; p == nil {
 		p = c.connFn(addr, c.opt)
 		c.conns[addr] = p
-	} else if p.Addr() == addr {
+	} else if prev == p {
 		// try reconnection if the MOVED redirects to the same host,
 		// because the same hostname may actually be resolved into another destination
 		// depending on the fail-over implementation. ex: AWS MemoryDB's resize process.
-		go p.Close()
+		go func(prev conn) {
+			time.Sleep(time.Second * 5)
+			prev.Close()
+		}(prev)
 		p = c.connFn(addr, c.opt)
 		c.conns[addr] = p
 	}
@@ -271,10 +277,10 @@ retry:
 process:
 	switch addr, mode := c.shouldRefreshRetry(resp.Error(), ctx); mode {
 	case RedirectMove:
-		resp = c.redirectOrNew(addr).Do(ctx, cmd)
+		resp = c.redirectOrNew(addr, cc).Do(ctx, cmd)
 		goto process
 	case RedirectAsk:
-		resp = c.redirectOrNew(addr).DoMulti(ctx, cmds.AskingCmd, cmd)[1]
+		resp = c.redirectOrNew(addr, cc).DoMulti(ctx, cmds.AskingCmd, cmd)[1]
 		goto process
 	case RedirectRetry:
 		if c.retry && cmd.IsReadOnly() {
@@ -353,12 +359,12 @@ process:
 		switch addr, mode := c.shouldRefreshRetry(resp.Error(), ctx); mode {
 		case RedirectMove:
 			if c.retry && allReadOnly(multi) {
-				resps = c.redirectOrNew(addr).DoMulti(ctx, multi...)
+				resps = c.redirectOrNew(addr, cc).DoMulti(ctx, multi...)
 				goto process
 			}
 		case RedirectAsk:
 			if c.retry && allReadOnly(multi) {
-				resps = c.redirectOrNew(addr).DoMulti(ctx, append([]Completed{cmds.AskingCmd}, multi...)...)[1:]
+				resps = c.redirectOrNew(addr, cc).DoMulti(ctx, append([]Completed{cmds.AskingCmd}, multi...)...)[1:]
 				goto process
 			}
 		case RedirectRetry:
@@ -389,11 +395,11 @@ retry:
 process:
 	switch addr, mode := c.shouldRefreshRetry(resp.Error(), ctx); mode {
 	case RedirectMove:
-		resp = c.redirectOrNew(addr).DoCache(ctx, cmd, ttl)
+		resp = c.redirectOrNew(addr, cc).DoCache(ctx, cmd, ttl)
 		goto process
 	case RedirectAsk:
 		// TODO ASKING OPT-IN Caching
-		resp = c.redirectOrNew(addr).DoMulti(ctx, cmds.AskingCmd, Completed(cmd))[1]
+		resp = c.redirectOrNew(addr, cc).DoMulti(ctx, cmds.AskingCmd, Completed(cmd))[1]
 		goto process
 	case RedirectRetry:
 		if c.retry {
@@ -424,7 +430,7 @@ process:
 	for _, resp := range resps {
 		switch addr, mode := c.shouldRefreshRetry(resp.Error(), ctx); mode {
 		case RedirectMove:
-			resps = c.redirectOrNew(addr).DoMultiCache(ctx, multi...)
+			resps = c.redirectOrNew(addr, cc).DoMultiCache(ctx, multi...)
 			goto process
 		case RedirectAsk:
 			commands := make([]Completed, 0, len(multi)+3)
@@ -433,7 +439,7 @@ process:
 				commands = append(commands, Completed(cmd.Cmd))
 			}
 			commands = append(commands, cmds.ExecCmd)
-			if asked, err := c.redirectOrNew(addr).DoMulti(ctx, commands...)[len(commands)-1].ToArray(); err != nil {
+			if asked, err := c.redirectOrNew(addr, cc).DoMulti(ctx, commands...)[len(commands)-1].ToArray(); err != nil {
 				for i := range resps {
 					resps[i] = newErrResult(err)
 				}

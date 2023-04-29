@@ -835,12 +835,10 @@ func TestClusterClientErr(t *testing.T) {
 				return newResult(RedisMessage{typ: '-', string: "MOVED 0 :0"}, nil)
 			}
 			return newResult(RedisMessage{typ: '+', string: "b"}, nil)
-		}, AddrFn: func() string {
-			atomic.AddInt64(&check, 1)
-			return ":0"
 		}}
 
 		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
+			atomic.AddInt64(&check, 1)
 			return m
 		})
 		if err != nil {
