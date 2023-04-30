@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rueian/rueidis"
-	"github.com/rueian/rueidis/internal/cmds"
+	"github.com/redis/rueidis"
+	"github.com/redis/rueidis/internal/cmds"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"

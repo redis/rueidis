@@ -28,7 +28,7 @@ package main
 
 import (
 	"context"
-	"github.com/rueian/rueidis"
+	"github.com/redis/rueidis"
 )
 
 func main() {
@@ -88,7 +88,7 @@ It is even able to achieve ~14x throughput over go-redis in a local benchmark of
 
 Benchmark source code: https://github.com/rueian/rueidis-benchmark
 
-A benchmark result performed on two GCP n2-highcpu-2 machines also shows that rueidis can achieve higher throughput with lower latencies: https://github.com/rueian/rueidis/pull/93
+A benchmark result performed on two GCP n2-highcpu-2 machines also shows that rueidis can achieve higher throughput with lower latencies: https://github.com/redis/rueidis/pull/93
 
 ### Pipelining Bulk Operations Manually
 
@@ -412,5 +412,5 @@ module mymodule
 
 go 1.18
 
-require github.com/rueian/rueidis v0.0.100-go1.18
+require github.com/redis/rueidis v1.0.0-go1.18
 ```

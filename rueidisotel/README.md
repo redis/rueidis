@@ -6,8 +6,8 @@ Use `rueidisotel.WithClient` to create a client with OpenTelemetry Tracing enabl
 package main
 
 import (
-    "github.com/rueian/rueidis"
-    "github.com/rueian/rueidis/rueidisotel"
+    "github.com/redis/rueidis"
+    "github.com/redis/rueidis/rueidisotel"
 )
 
 func main() {

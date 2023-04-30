@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
-	"github.com/rueian/rueidis"
-	"github.com/rueian/rueidis/internal/cmds"
+	"github.com/redis/rueidis"
+	"github.com/redis/rueidis/internal/cmds"
 )
 
 var _ rueidis.Client = (*Client)(nil)

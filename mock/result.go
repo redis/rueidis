@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"unsafe"
 
-	"github.com/rueian/rueidis"
+	"github.com/redis/rueidis"
 )
 
 func Result(val rueidis.RedisMessage) rueidis.RedisResult {

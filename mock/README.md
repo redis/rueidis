@@ -17,7 +17,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/rueian/rueidis/mock"
+	"github.com/redis/rueidis/mock"
 )
 
 func TestWithRueidis(t *testing.T) {
@@ -53,7 +53,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/rueian/rueidis/mock"
+	"github.com/redis/rueidis/mock"
 )
 
 func TestWithRueidisReceive(t *testing.T) {

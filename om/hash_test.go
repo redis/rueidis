@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/oklog/ulid/v2"
-	"github.com/rueian/rueidis"
+	"github.com/redis/rueidis"
 )
 
 type HashTestStruct struct {

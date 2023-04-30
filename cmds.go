@@ -1,6 +1,6 @@
 package rueidis
 
-import "github.com/rueian/rueidis/internal/cmds"
+import "github.com/redis/rueidis/internal/cmds"
 
 // Completed represents a completed Redis command, should be created by the Build() of command builder.
 type Completed = cmds.Completed

@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rueian/rueidis"
-	"github.com/rueian/rueidis/internal/cmds"
+	"github.com/redis/rueidis"
+	"github.com/redis/rueidis/internal/cmds"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	name   = "github.com/rueian/rueidis"
+	name   = "github.com/redis/rueidis"
 	kind   = trace.WithSpanKind(trace.SpanKindClient)
 	tracer = otel.Tracer(name)
 	meter  = global.Meter(name)

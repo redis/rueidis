@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
-	"github.com/rueian/rueidis"
-	"github.com/rueian/rueidis/mock"
+	"github.com/redis/rueidis"
+	"github.com/redis/rueidis/mock"
 )
 
 type hook struct{}

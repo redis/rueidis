@@ -14,7 +14,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rueian/rueidis/internal/cmds"
+	"github.com/redis/rueidis/internal/cmds"
 )
 
 type redisExpect struct {

@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rueian/rueidis/internal/cmds"
+	"github.com/redis/rueidis/internal/cmds"
 )
 
 func TestNewLuaScriptOnePass(t *testing.T) {

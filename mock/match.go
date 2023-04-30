@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/golang/mock/gomock"
-	"github.com/rueian/rueidis"
+	"github.com/redis/rueidis"
 )
 
 func Match(cmd ...string) gomock.Matcher {
