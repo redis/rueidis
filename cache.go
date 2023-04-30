@@ -5,8 +5,10 @@ import (
 	"time"
 )
 
+// NewCacheStoreFn can be provided in ClientOption for using a custom CacheStore implementation
 type NewCacheStoreFn func(CacheStoreOption) CacheStore
 
+// CacheStoreOption will be passed to NewCacheStoreFn
 type CacheStoreOption struct {
 	// CacheSizeEachConn is redis client side cache size that bind to each TCP connection to a single redis instance.
 	// The default is DefaultCacheBytes.
@@ -14,6 +16,7 @@ type CacheStoreOption struct {
 }
 
 // CacheStore is the store interface for the client side caching
+// More detailed interface requirement can be found in cache_test.go
 type CacheStore interface {
 	// Flight is called when DoCache and DoMultiCache, with the requested client side ttl and the current time.
 	// It should look up the store in single-flight manner and return one of the following three combinations:
