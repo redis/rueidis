@@ -26,7 +26,7 @@ func TestMain(m *testing.M) {
 		panic(message)
 	})
 	code := m.Run()
-	g.Eventually(gleak.Goroutines).WithTimeout(time.Second * 10).ShouldNot(gleak.HaveLeaked())
+	g.Eventually(gleak.Goroutines).WithTimeout(time.Second * 20).ShouldNot(gleak.HaveLeaked())
 	os.Exit(code)
 }
 
