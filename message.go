@@ -1043,10 +1043,7 @@ func (m *RedisMessage) CachePXAT() int64 {
 }
 
 func (m *RedisMessage) relativePTTL(now time.Time) int64 {
-	if milli := m.getExpireAt(); milli > 0 {
-		return milli - now.UnixMilli()
-	}
-	return 0
+	return m.getExpireAt() - now.UnixMilli()
 }
 
 func (m *RedisMessage) getExpireAt() int64 {
