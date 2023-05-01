@@ -326,19 +326,18 @@ type Cmdable interface {
 	ScriptKill(ctx context.Context) *StatusCmd
 	ScriptLoad(ctx context.Context, script string) *StringCmd
 
-	// TODO FunctionLoad(ctx context.Context, code string) *StringCmd
-	// TODO FunctionLoadReplace(ctx context.Context, code string) *StringCmd
-	// TODO FunctionDelete(ctx context.Context, libName string) *StringCmd
-	// TODO FunctionFlush(ctx context.Context) *StringCmd
-	// TODO FunctionKill(ctx context.Context) *StringCmd
-	// TODO FunctionFlushAsync(ctx context.Context) *StringCmd
-	// TODO FunctionList(ctx context.Context, q FunctionListQuery) *FunctionListCmd
-	// TODO FunctionDump(ctx context.Context) *StringCmd
-	// TODO FunctionRestore(ctx context.Context, libDump string) *StringCmd
+	FunctionLoad(ctx context.Context, code string) *StringCmd
+	FunctionLoadReplace(ctx context.Context, code string) *StringCmd
+	FunctionDelete(ctx context.Context, libName string) *StringCmd
+	FunctionFlush(ctx context.Context) *StringCmd
+	FunctionKill(ctx context.Context) *StringCmd
+	FunctionFlushAsync(ctx context.Context) *StringCmd
+	FunctionList(ctx context.Context, q FunctionListQuery) *FunctionListCmd
+	FunctionDump(ctx context.Context) *StringCmd
+	FunctionRestore(ctx context.Context, libDump string) *StringCmd
 	// TODO FunctionStats(ctx context.Context) *FunctionStatsCmd
-	// TODO FCall(ctx context.Context, function string, keys []string, args ...any) *Cmd
-	// TODO FCallRo(ctx context.Context, function string, keys []string, args ...any) *Cmd
-	// TODO FCallRO(ctx context.Context, function string, keys []string, args ...any) *Cmd
+	FCall(ctx context.Context, function string, keys []string, args ...any) *Cmd
+	FCallRO(ctx context.Context, function string, keys []string, args ...any) *Cmd
 
 	Publish(ctx context.Context, channel string, message any) *IntCmd
 	SPublish(ctx context.Context, channel string, message any) *IntCmd
@@ -2185,19 +2184,19 @@ func (c *Compat) PFMerge(ctx context.Context, dest string, keys ...string) *Stat
 }
 
 func (c *Compat) BgRewriteAOF(ctx context.Context) *StatusCmd {
-	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
+	return c.doStringCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
 		return c.B().Bgrewriteaof().Build()
 	})
 }
 
 func (c *Compat) BgSave(ctx context.Context) *StatusCmd {
-	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
+	return c.doStringCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
 		return c.B().Bgsave().Build()
 	})
 }
 
 func (c *Compat) ClientKill(ctx context.Context, ipPort string) *StatusCmd {
-	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
+	return c.doStringCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
 		return c.B().ClientKill().IpPort(ipPort).Build()
 	})
 }
@@ -2263,19 +2262,19 @@ func (c *Compat) ConfigGet(ctx context.Context, parameter string) *StringStringM
 }
 
 func (c *Compat) ConfigResetStat(ctx context.Context) *StatusCmd {
-	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
+	return c.doStringCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
 		return c.B().ConfigResetstat().Build()
 	})
 }
 
 func (c *Compat) ConfigSet(ctx context.Context, parameter, value string) *StatusCmd {
-	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
+	return c.doStringCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
 		return c.B().ConfigSet().ParameterValue().ParameterValue(parameter, value).Build()
 	})
 }
 
 func (c *Compat) ConfigRewrite(ctx context.Context) *StatusCmd {
-	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
+	return c.doStringCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
 		return c.B().ConfigRewrite().Build()
 	})
 }
@@ -2287,25 +2286,25 @@ func (c *Compat) DBSize(ctx context.Context) *IntCmd {
 }
 
 func (c *Compat) FlushAll(ctx context.Context) *StatusCmd {
-	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
+	return c.doStringCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
 		return c.B().Flushall().Build()
 	})
 }
 
 func (c *Compat) FlushAllAsync(ctx context.Context) *StatusCmd {
-	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
+	return c.doStringCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
 		return c.B().Flushall().Async().Build()
 	})
 }
 
 func (c *Compat) FlushDB(ctx context.Context) *StatusCmd {
-	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
+	return c.doStringCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
 		return c.B().Flushdb().Build()
 	})
 }
 
 func (c *Compat) FlushDBAsync(ctx context.Context) *StatusCmd {
-	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
+	return c.doStringCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
 		return c.B().Flushdb().Async().Build()
 	})
 }
@@ -2323,25 +2322,25 @@ func (c *Compat) LastSave(ctx context.Context) *IntCmd {
 }
 
 func (c *Compat) Save(ctx context.Context) *StatusCmd {
-	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
+	return c.doStringCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
 		return c.B().Save().Build()
 	})
 }
 
 func (c *Compat) Shutdown(ctx context.Context) *StatusCmd {
-	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
+	return c.doStringCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
 		return c.B().Shutdown().Build()
 	})
 }
 
 func (c *Compat) ShutdownSave(ctx context.Context) *StatusCmd {
-	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
+	return c.doStringCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
 		return c.B().Shutdown().Save().Build()
 	})
 }
 
 func (c *Compat) ShutdownNoSave(ctx context.Context) *StatusCmd {
-	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
+	return c.doStringCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
 		return c.B().Shutdown().Nosave().Build()
 	})
 }
@@ -2426,30 +2425,88 @@ func (c *Compat) ScriptExists(ctx context.Context, hashes ...string) *BoolSliceC
 }
 
 func (c *Compat) ScriptFlush(ctx context.Context) *StatusCmd {
-	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
+	return c.doStringCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
 		return c.B().ScriptFlush().Build()
 	})
 }
 
 func (c *Compat) ScriptKill(ctx context.Context) *StatusCmd {
-	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
+	return c.doStringCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
 		return c.B().ScriptKill().Build()
 	})
 }
 
 func (c *Compat) ScriptLoad(ctx context.Context, script string) *StringCmd {
-	var mu sync.Mutex
-	ret := &StringCmd{}
-	ret.err = c.doPrimaries(ctx, func(c rueidis.Client) error {
-		res, err := c.Do(ctx, c.B().ScriptLoad().Script(script).Build()).ToString()
-		if err == nil {
-			mu.Lock()
-			ret.val = res
-			mu.Unlock()
-		}
-		return err
+	return c.doStringCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
+		return c.B().ScriptLoad().Script(script).Build()
 	})
-	return ret
+}
+
+func (c *Compat) FunctionLoad(ctx context.Context, code string) *StringCmd {
+	return c.doStringCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
+		return c.B().FunctionLoad().FunctionCode(code).Build()
+	})
+}
+
+func (c *Compat) FunctionLoadReplace(ctx context.Context, code string) *StringCmd {
+	return c.doStringCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
+		return c.B().FunctionLoad().Replace().FunctionCode(code).Build()
+	})
+}
+
+func (c *Compat) FunctionDelete(ctx context.Context, libName string) *StringCmd {
+	return c.doStringCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
+		return c.B().FunctionDelete().LibraryName(libName).Build()
+	})
+}
+
+func (c *Compat) FunctionFlush(ctx context.Context) *StringCmd {
+	return c.doStringCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
+		return c.B().FunctionFlush().Build()
+	})
+}
+
+func (c *Compat) FunctionKill(ctx context.Context) *StringCmd {
+	return c.doStringCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
+		return c.B().FunctionKill().Build()
+	})
+}
+
+func (c *Compat) FunctionFlushAsync(ctx context.Context) *StringCmd {
+	return c.doStringCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
+		return c.B().FunctionFlush().Async().Build()
+	})
+}
+
+func (c *Compat) FunctionList(ctx context.Context, q FunctionListQuery) *FunctionListCmd {
+	cmd := c.client.B().Arbitrary("FUNCTION", "LIST")
+	if q.LibraryNamePattern != "" {
+		cmd = cmd.Args("LIBRARYNAME", q.LibraryNamePattern)
+	}
+	if q.WithCode {
+		cmd = cmd.Args("WITHCODE")
+	}
+	return newFunctionListCmd(c.client.Do(ctx, cmd.Build()))
+}
+
+func (c *Compat) FunctionDump(ctx context.Context) *StringCmd {
+	return newStringCmd(c.client.Do(ctx, c.client.B().FunctionDump().Build()))
+}
+
+func (c *Compat) FunctionRestore(ctx context.Context, libDump string) *StringCmd {
+	return c.doStringCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
+		return c.B().FunctionRestore().SerializedValue(libDump).Build()
+	})
+}
+
+func (c *Compat) FCall(ctx context.Context, function string, keys []string, args ...any) *Cmd {
+	cmd := c.client.B().Fcall().Function(function).Numkeys(int64(len(keys))).Key(keys...).Arg(argsToSlice(args)...).Build()
+	return newCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) FCallRO(ctx context.Context, function string, keys []string, args ...any) *Cmd {
+	cmd := c.client.B().FcallRo().Function(function).Numkeys(int64(len(keys))).Key(keys...).Arg(argsToSlice(args)...).Build()
+	return newCmd(c.client.Do(ctx, cmd))
 }
 
 func (c *Compat) Publish(ctx context.Context, channel string, message any) *IntCmd {
@@ -2525,13 +2582,13 @@ func (c *Compat) ClusterReplicate(ctx context.Context, nodeID string) *StatusCmd
 }
 
 func (c *Compat) ClusterResetSoft(ctx context.Context) *StatusCmd {
-	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
+	return c.doStringCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
 		return c.B().ClusterReset().Soft().Build()
 	})
 }
 
 func (c *Compat) ClusterResetHard(ctx context.Context) *StatusCmd {
-	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
+	return c.doStringCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
 		return c.B().ClusterReset().Hard().Build()
 	})
 }
@@ -2599,7 +2656,7 @@ func (c *Compat) ClusterDelSlotsRange(ctx context.Context, min, max int64) *Stat
 }
 
 func (c *Compat) ClusterSaveConfig(ctx context.Context) *StatusCmd {
-	return c.doStatusCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
+	return c.doStringCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
 		return c.B().ClusterSaveconfig().Build()
 	})
 }
@@ -2759,9 +2816,9 @@ func (c *Compat) doPrimaries(ctx context.Context, fn func(c rueidis.Client) erro
 	return nil
 }
 
-func (c *Compat) doStatusCmdPrimaries(ctx context.Context, fn func(c rueidis.Client) rueidis.Completed) *StatusCmd {
+func (c *Compat) doStringCmdPrimaries(ctx context.Context, fn func(c rueidis.Client) rueidis.Completed) *StringCmd {
 	var mu sync.Mutex
-	ret := &StatusCmd{}
+	ret := &StringCmd{}
 	ret.err = c.doPrimaries(ctx, func(c rueidis.Client) error {
 		res, err := c.Do(ctx, fn(c)).ToString()
 		if err == nil {

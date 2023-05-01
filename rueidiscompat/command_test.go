@@ -565,6 +565,14 @@ var _ = Describe("Commands", func() {
 			cmd.SetErr(err)
 			Expect(cmd.Err()).To(Equal(err))
 		}
+		{
+			cmd := &FunctionListCmd{}
+			cmd.SetVal([]Library{{Name: "a"}})
+			v := cmd.Val()
+			Expect(v).To(Equal([]Library{{Name: "a"}}))
+			cmd.SetErr(err)
+			Expect(cmd.Err()).To(Equal(err))
+		}
 	})
 })
 

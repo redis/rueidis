@@ -500,34 +500,11 @@ func (cmd *DurationCmd) Result() (time.Duration, error) {
 	return cmd.val, cmd.err
 }
 
-type StatusCmd struct {
-	err error
-	val string
-}
+type StatusCmd = StringCmd
 
 func newStatusCmd(res rueidis.RedisResult) *StatusCmd {
 	val, err := res.ToString()
 	return &StatusCmd{val: val, err: err}
-}
-
-func (cmd *StatusCmd) SetVal(val string) {
-	cmd.val = val
-}
-
-func (cmd *StatusCmd) SetErr(err error) {
-	cmd.err = err
-}
-
-func (cmd *StatusCmd) Val() string {
-	return cmd.val
-}
-
-func (cmd *StatusCmd) Err() error {
-	return cmd.err
-}
-
-func (cmd *StatusCmd) Result() (string, error) {
-	return cmd.val, cmd.err
 }
 
 type SliceCmd struct {
@@ -542,15 +519,6 @@ func newSliceCmd(res rueidis.RedisResult) *SliceCmd {
 		if s, err := v.ToString(); err == nil {
 			slice.val[i] = s
 		}
-	}
-	return slice
-}
-
-func newSliceCmdFromMap(res rueidis.RedisResult) *SliceCmd {
-	val, err := res.AsStrMap()
-	slice := &SliceCmd{val: make([]any, 0, len(val)*2), err: err}
-	for k, v := range val {
-		slice.val = append(slice.val, k, v)
 	}
 	return slice
 }
@@ -2632,6 +2600,97 @@ func (q *GeoSearchLocationQuery) args() []string {
 		args = append(args, "WITHHASH")
 	}
 	return args
+}
+
+type Function struct {
+	Name        string
+	Description string
+	Flags       []string
+}
+
+type Library struct {
+	Name      string
+	Engine    string
+	Functions []Function
+	Code      string
+}
+
+type FunctionListQuery struct {
+	LibraryNamePattern string
+	WithCode           bool
+}
+
+type FunctionListCmd struct {
+	err error
+	val []Library
+}
+
+func newFunctionListCmd(res rueidis.RedisResult) *FunctionListCmd {
+	arr, err := res.ToArray()
+	if err != nil {
+		return &FunctionListCmd{err: err}
+	}
+	val := make([]Library, len(arr))
+	for i := 0; i < len(arr); i++ {
+		kv, _ := arr[i].AsMap()
+		for k, v := range kv {
+			switch k {
+			case "library_name":
+				val[i].Name, _ = v.ToString()
+			case "engine":
+				val[i].Engine, _ = v.ToString()
+			case "library_code":
+				val[i].Code, _ = v.ToString()
+			case "functions":
+				fns, _ := v.ToArray()
+				val[i].Functions = make([]Function, len(fns))
+				for j := 0; j < len(fns); j++ {
+					fkv, _ := fns[j].AsMap()
+					for k, v := range fkv {
+						switch k {
+						case "name":
+							val[i].Functions[j].Name, _ = v.ToString()
+						case "description":
+							val[i].Functions[j].Description, _ = v.ToString()
+						case "flags":
+							val[i].Functions[j].Flags, _ = v.AsStrSlice()
+						}
+					}
+				}
+			}
+		}
+	}
+	return &FunctionListCmd{val: val, err: err}
+}
+
+func (cmd *FunctionListCmd) SetVal(val []Library) {
+	cmd.val = val
+}
+
+func (cmd *FunctionListCmd) SetErr(err error) {
+	cmd.err = err
+}
+
+func (cmd *FunctionListCmd) Val() []Library {
+	return cmd.val
+}
+
+func (cmd *FunctionListCmd) Err() error {
+	return cmd.err
+}
+
+func (cmd *FunctionListCmd) Result() ([]Library, error) {
+	return cmd.val, cmd.err
+}
+
+func (cmd *FunctionListCmd) First() (*Library, error) {
+	if cmd.err != nil {
+		return nil, cmd.err
+	}
+	if len(cmd.val) > 0 {
+		return &cmd.val[0], nil
+	}
+	return nil, rueidis.Nil
 }
 
 func usePrecise(dur time.Duration) bool {

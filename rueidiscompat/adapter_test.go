@@ -6416,6 +6416,280 @@ func testAdapterCache(resp3 bool) {
 		})
 	})
 
+	if resp3 {
+		Describe("Functions", func() {
+			var (
+				q        FunctionListQuery
+				lib1Code string
+				lib2Code string
+				lib1     Library
+				lib2     Library
+			)
+
+			BeforeEach(func() {
+				flush := adapter.FunctionFlush(ctx)
+				Expect(flush.Err()).NotTo(HaveOccurred())
+
+				lib1 = Library{
+					Name:   "mylib1",
+					Engine: "LUA",
+					Functions: []Function{
+						{
+							Name:        "lib1_func1",
+							Description: "This is the func-1 of lib 1",
+							Flags:       []string{"allow-oom", "allow-stale"},
+						},
+					},
+					Code: `#!lua name=%s
+
+                     local function f1(keys, args)
+                        local hash = keys[1]  -- Get the key name
+                        local time = redis.call('TIME')[1]  -- Get the current time from the Redis server
+
+                        -- Add the current timestamp to the arguments that the user passed to the function, stored in args
+                        table.insert(args, '_updated_at')
+                        table.insert(args, time)
+
+                        -- Run HSET with the updated argument list
+                        return redis.call('HSET', hash, unpack(args))
+                     end
+
+					redis.register_function{
+						function_name='%s',
+						description ='%s',
+						callback=f1,
+						flags={'%s', '%s'}
+					}`,
+				}
+
+				lib2 = Library{
+					Name:   "mylib2",
+					Engine: "LUA",
+					Functions: []Function{
+						{
+							Name:  "lib2_func1",
+							Flags: []string{},
+						},
+						{
+							Name:        "lib2_func2",
+							Description: "This is the func-2 of lib 2",
+							Flags:       []string{"no-writes"},
+						},
+					},
+					Code: `#!lua name=%s
+
+					local function f1(keys, args)
+						 return 'Function 1'
+					end
+
+					local function f2(keys, args)
+						 return 'Function 2'
+					end
+
+					redis.register_function('%s', f1)
+					redis.register_function{
+						function_name='%s',
+						description ='%s',
+						callback=f2,
+						flags={'%s'}
+					}`,
+				}
+
+				lib1Code = fmt.Sprintf(lib1.Code, lib1.Name, lib1.Functions[0].Name,
+					lib1.Functions[0].Description, lib1.Functions[0].Flags[0], lib1.Functions[0].Flags[1])
+				lib2Code = fmt.Sprintf(lib2.Code, lib2.Name, lib2.Functions[0].Name,
+					lib2.Functions[1].Name, lib2.Functions[1].Description, lib2.Functions[1].Flags[0])
+
+				q = FunctionListQuery{}
+			})
+
+			It("Loads a new library", func() {
+				functionLoad := adapter.FunctionLoad(ctx, lib1Code)
+				Expect(functionLoad.Err()).NotTo(HaveOccurred())
+				Expect(functionLoad.Val()).To(Equal(lib1.Name))
+
+				functionList := adapter.FunctionList(ctx, q)
+				Expect(functionList.Err()).NotTo(HaveOccurred())
+				Expect(functionList.Val()).To(HaveLen(1))
+			})
+
+			It("Loads and replaces a new library", func() {
+				// Load a library for the first time
+				err := adapter.FunctionLoad(ctx, lib1Code).Err()
+				Expect(err).NotTo(HaveOccurred())
+
+				newFuncName := "replaces_func_name"
+				newFuncDesc := "replaces_func_desc"
+				flag1, flag2 := "allow-stale", "no-cluster"
+				newCode := fmt.Sprintf(lib1.Code, lib1.Name, newFuncName, newFuncDesc, flag1, flag2)
+
+				// And then replace it
+				functionLoadReplace := adapter.FunctionLoadReplace(ctx, newCode)
+				Expect(functionLoadReplace.Err()).NotTo(HaveOccurred())
+				Expect(functionLoadReplace.Val()).To(Equal(lib1.Name))
+
+				lib, err := adapter.FunctionList(ctx, q).First()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(lib.Functions).To(Equal([]Function{
+					{
+						Name:        newFuncName,
+						Description: newFuncDesc,
+						Flags:       []string{flag1, flag2},
+					},
+				}))
+			})
+
+			It("Deletes a library", func() {
+				err := adapter.FunctionLoad(ctx, lib1Code).Err()
+				Expect(err).NotTo(HaveOccurred())
+
+				err = adapter.FunctionDelete(ctx, lib1.Name).Err()
+				Expect(err).NotTo(HaveOccurred())
+
+				val, err := adapter.FunctionList(ctx, FunctionListQuery{
+					LibraryNamePattern: lib1.Name,
+				}).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(val).To(HaveLen(0))
+			})
+
+			It("Flushes all libraries", func() {
+				err := adapter.FunctionLoad(ctx, lib1Code).Err()
+				Expect(err).NotTo(HaveOccurred())
+
+				err = adapter.FunctionLoad(ctx, lib2Code).Err()
+				Expect(err).NotTo(HaveOccurred())
+
+				err = adapter.FunctionFlush(ctx).Err()
+				Expect(err).NotTo(HaveOccurred())
+
+				val, err := adapter.FunctionList(ctx, q).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(val).To(HaveLen(0))
+			})
+
+			It("Flushes all libraries asynchronously", func() {
+				functionLoad := adapter.FunctionLoad(ctx, lib1Code)
+				Expect(functionLoad.Err()).NotTo(HaveOccurred())
+
+				// we only verify the command result.
+				functionFlush := adapter.FunctionFlushAsync(ctx)
+				Expect(functionFlush.Err()).NotTo(HaveOccurred())
+			})
+
+			It("Kills a running function", func() {
+				functionKill := adapter.FunctionKill(ctx)
+				Expect(functionKill.Err()).To(MatchError("NOTBUSY No scripts in execution right now."))
+
+				// Add test for a long-running function, once we make the test for `function stats` pass
+			})
+
+			It("Lists registered functions", func() {
+				err := adapter.FunctionLoad(ctx, lib1Code).Err()
+				Expect(err).NotTo(HaveOccurred())
+
+				val, err := adapter.FunctionList(ctx, FunctionListQuery{
+					LibraryNamePattern: "*",
+					WithCode:           true,
+				}).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(val).To(HaveLen(1))
+				Expect(val[0].Name).To(Equal(lib1.Name))
+				Expect(val[0].Engine).To(Equal(lib1.Engine))
+				Expect(val[0].Code).To(Equal(lib1Code))
+				Expect(val[0].Functions).Should(ConsistOf(lib1.Functions))
+
+				err = adapter.FunctionLoad(ctx, lib2Code).Err()
+				Expect(err).NotTo(HaveOccurred())
+
+				val, err = adapter.FunctionList(ctx, FunctionListQuery{
+					WithCode: true,
+				}).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(val).To(HaveLen(2))
+
+				lib, err := adapter.FunctionList(ctx, FunctionListQuery{
+					LibraryNamePattern: lib2.Name,
+					WithCode:           false,
+				}).First()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(lib.Name).To(Equal(lib2.Name))
+				Expect(lib.Code).To(Equal(""))
+
+				_, err = adapter.FunctionList(ctx, FunctionListQuery{
+					LibraryNamePattern: "non_lib",
+					WithCode:           true,
+				}).First()
+				Expect(err).To(Equal(rueidis.Nil))
+			})
+
+			It("Dump and restores all libraries", func() {
+				err := adapter.FunctionLoad(ctx, lib1Code).Err()
+				Expect(err).NotTo(HaveOccurred())
+				err = adapter.FunctionLoad(ctx, lib2Code).Err()
+				Expect(err).NotTo(HaveOccurred())
+
+				dump, err := adapter.FunctionDump(ctx).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(dump).NotTo(BeEmpty())
+
+				err = adapter.FunctionRestore(ctx, dump).Err()
+				Expect(err).To(HaveOccurred())
+
+				err = adapter.FunctionFlush(ctx).Err()
+				Expect(err).NotTo(HaveOccurred())
+
+				list, err := adapter.FunctionList(ctx, q).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(list).To(HaveLen(0))
+
+				err = adapter.FunctionRestore(ctx, dump).Err()
+				Expect(err).NotTo(HaveOccurred())
+
+				list, err = adapter.FunctionList(ctx, q).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(list).To(HaveLen(2))
+			})
+
+			It("Calls a function", func() {
+				lib1Code = fmt.Sprintf(lib1.Code, lib1.Name, lib1.Functions[0].Name,
+					lib1.Functions[0].Description, lib1.Functions[0].Flags[0], lib1.Functions[0].Flags[1])
+
+				err := adapter.FunctionLoad(ctx, lib1Code).Err()
+				Expect(err).NotTo(HaveOccurred())
+
+				x := adapter.FCall(ctx, lib1.Functions[0].Name, []string{"my_hash"}, "a", 1, "b", 2)
+				Expect(x.Err()).NotTo(HaveOccurred())
+				Expect(x.Int()).To(Equal(3))
+			})
+
+			It("Calls a function as read-only", func() {
+				lib1Code = fmt.Sprintf(lib1.Code, lib1.Name, lib1.Functions[0].Name,
+					lib1.Functions[0].Description, lib1.Functions[0].Flags[0], lib1.Functions[0].Flags[1])
+
+				err := adapter.FunctionLoad(ctx, lib1Code).Err()
+				Expect(err).NotTo(HaveOccurred())
+
+				// This function doesn't have a "no-writes" flag
+				x := adapter.FCallRO(ctx, lib1.Functions[0].Name, []string{"my_hash"}, "a", 1, "b", 2)
+
+				Expect(x.Err()).To(HaveOccurred())
+
+				lib2Code = fmt.Sprintf(lib2.Code, lib2.Name, lib2.Functions[0].Name, lib2.Functions[1].Name,
+					lib2.Functions[1].Description, lib2.Functions[1].Flags[0])
+
+				// This function has a "no-writes" flag
+				err = adapter.FunctionLoad(ctx, lib2Code).Err()
+				Expect(err).NotTo(HaveOccurred())
+
+				x = adapter.FCallRO(ctx, lib2.Functions[1].Name, []string{})
+
+				Expect(x.Err()).NotTo(HaveOccurred())
+				Expect(x.Text()).To(Equal("Function 2"))
+			})
+		})
+	}
+
 	Describe("keys", func() {
 
 		It("should Expire", func() {
