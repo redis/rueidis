@@ -549,6 +549,22 @@ var _ = Describe("Commands", func() {
 			cmd.SetErr(err)
 			Expect(cmd.Err()).To(Equal(err))
 		}
+		{
+			cmd := &KeyFlagsCmd{}
+			cmd.SetVal([]KeyFlags{{Key: "k", Flags: []string{"1", "2"}}})
+			v := cmd.Val()
+			Expect(v).To(Equal([]KeyFlags{{Key: "k", Flags: []string{"1", "2"}}}))
+			cmd.SetErr(err)
+			Expect(cmd.Err()).To(Equal(err))
+		}
+		{
+			cmd := &RankWithScoreCmd{}
+			cmd.SetVal(RankScore{Rank: 1, Score: 2})
+			v := cmd.Val()
+			Expect(v).To(Equal(RankScore{Rank: 1, Score: 2}))
+			cmd.SetErr(err)
+			Expect(cmd.Err()).To(Equal(err))
+		}
 	})
 })
 

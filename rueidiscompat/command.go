@@ -880,6 +880,51 @@ func (cmd *KeyValuesCmd) Result() (string, []string, error) {
 	return cmd.val.Key, cmd.val.Values, cmd.err
 }
 
+type KeyFlags struct {
+	Key   string
+	Flags []string
+}
+
+type KeyFlagsCmd struct {
+	err error
+	val []KeyFlags
+}
+
+func newKeyFlagsCmd(res rueidis.RedisResult) *KeyFlagsCmd {
+	ret := &KeyFlagsCmd{}
+	if ret.err = res.Error(); ret.err == nil {
+		kfs, _ := res.ToArray()
+		ret.val = make([]KeyFlags, len(kfs))
+		for i := 0; i < len(kfs); i++ {
+			if kf, _ := kfs[i].ToArray(); len(kf) >= 2 {
+				ret.val[i].Key, _ = kf[0].ToString()
+				ret.val[i].Flags, _ = kf[1].AsStrSlice()
+			}
+		}
+	}
+	return ret
+}
+
+func (cmd *KeyFlagsCmd) SetVal(val []KeyFlags) {
+	cmd.val = val
+}
+
+func (cmd *KeyFlagsCmd) SetErr(err error) {
+	cmd.err = err
+}
+
+func (cmd *KeyFlagsCmd) Val() (val []KeyFlags) {
+	return cmd.val
+}
+
+func (cmd *KeyFlagsCmd) Err() error {
+	return cmd.err
+}
+
+func (cmd *KeyFlagsCmd) Result() ([]KeyFlags, error) {
+	return cmd.val, cmd.err
+}
+
 type ZSliceWithKeyCmd struct {
 	err error
 	key string
@@ -1883,6 +1928,48 @@ func (cmd *ZWithKeyCmd) Err() error {
 }
 
 func (cmd *ZWithKeyCmd) Result() (ZWithKey, error) {
+	return cmd.val, cmd.err
+}
+
+type RankScore struct {
+	Rank  int64
+	Score float64
+}
+
+type RankWithScoreCmd struct {
+	err error
+	val RankScore
+}
+
+func newRankWithScoreCmd(res rueidis.RedisResult) *RankWithScoreCmd {
+	ret := &RankWithScoreCmd{}
+	if ret.err = res.Error(); ret.err == nil {
+		vs, _ := res.ToArray()
+		if len(vs) >= 2 {
+			ret.val.Rank, _ = vs[0].AsInt64()
+			ret.val.Score, _ = vs[1].AsFloat64()
+		}
+	}
+	return ret
+}
+
+func (cmd *RankWithScoreCmd) SetVal(val RankScore) {
+	cmd.val = val
+}
+
+func (cmd *RankWithScoreCmd) SetErr(err error) {
+	cmd.err = err
+}
+
+func (cmd *RankWithScoreCmd) Val() RankScore {
+	return cmd.val
+}
+
+func (cmd *RankWithScoreCmd) Err() error {
+	return cmd.err
+}
+
+func (cmd *RankWithScoreCmd) Result() (RankScore, error) {
 	return cmd.val, cmd.err
 }
 

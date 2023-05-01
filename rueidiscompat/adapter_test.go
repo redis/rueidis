@@ -254,10 +254,10 @@ func testAdapter(resp3 bool) {
 		It("should ConfigSet", func() {
 			configGet := adapter.ConfigGet(ctx, "maxmemory")
 			Expect(configGet.Err()).NotTo(HaveOccurred())
-			Expect(configGet.Val()).To(HaveLen(2))
-			Expect(configGet.Val()[0]).To(Equal("maxmemory"))
+			Expect(configGet.Val()).To(HaveLen(1))
+			Expect(configGet.Val()["maxmemory"]).NotTo(BeEmpty())
 
-			configSet := adapter.ConfigSet(ctx, "maxmemory", configGet.Val()[1].(string))
+			configSet := adapter.ConfigSet(ctx, "maxmemory", configGet.Val()["maxmemory"])
 			Expect(configSet.Err()).NotTo(HaveOccurred())
 			Expect(configSet.Val()).To(Equal("OK"))
 		})
@@ -321,6 +321,96 @@ func testAdapter(resp3 bool) {
 			Expect(cmd.LastKeyPos).To(Equal(int64(0)))
 			Expect(cmd.StepCount).To(Equal(int64(0)))
 		})
+
+		if resp3 {
+			It("should return all command names", func() {
+				cmdList := adapter.CommandList(ctx, FilterBy{})
+				Expect(cmdList.Err()).NotTo(HaveOccurred())
+				cmdNames := cmdList.Val()
+
+				Expect(cmdNames).NotTo(BeEmpty())
+
+				// Assert that some expected commands are present in the list
+				Expect(cmdNames).To(ContainElement("get"))
+				Expect(cmdNames).To(ContainElement("set"))
+				Expect(cmdNames).To(ContainElement("hset"))
+			})
+
+			It("should filter commands by module", func() {
+				filter := FilterBy{
+					Module: "JSON",
+				}
+				cmdList := adapter.CommandList(ctx, filter)
+				Expect(cmdList.Err()).NotTo(HaveOccurred())
+				Expect(cmdList.Val()).To(HaveLen(0))
+			})
+
+			It("should filter commands by ACL category", func() {
+
+				filter := FilterBy{
+					ACLCat: "admin",
+				}
+
+				cmdList := adapter.CommandList(ctx, filter)
+				Expect(cmdList.Err()).NotTo(HaveOccurred())
+				cmdNames := cmdList.Val()
+
+				// Assert that the returned list only contains commands from the admin ACL category
+				Expect(len(cmdNames)).To(BeNumerically(">", 10))
+			})
+
+			It("should filter commands by pattern", func() {
+				filter := FilterBy{
+					Pattern: "*GET*",
+				}
+				cmdList := adapter.CommandList(ctx, filter)
+				Expect(cmdList.Err()).NotTo(HaveOccurred())
+				cmdNames := cmdList.Val()
+
+				// Assert that the returned list only contains commands that match the given pattern
+				Expect(cmdNames).To(ContainElement("get"))
+				Expect(cmdNames).To(ContainElement("getbit"))
+				Expect(cmdNames).To(ContainElement("getrange"))
+				Expect(cmdNames).NotTo(ContainElement("set"))
+			})
+
+			It("Should CommandGetKeys", func() {
+				keys, err := adapter.CommandGetKeys(ctx, "MSET", "a", "b", "c", "d", "e", "f").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(keys).To(Equal([]string{"a", "c", "e"}))
+
+				keys, err = adapter.CommandGetKeys(ctx, "EVAL", "not consulted", "3", "key1", "key2", "key3", "arg1", "arg2", "arg3", "argN").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(keys).To(Equal([]string{"key1", "key2", "key3"}))
+
+				keys, err = adapter.CommandGetKeys(ctx, "SORT", "mylist", "ALPHA", "STORE", "outlist").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(keys).To(Equal([]string{"mylist", "outlist"}))
+
+				_, err = adapter.CommandGetKeys(ctx, "FAKECOMMAND", "arg1", "arg2").Result()
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(Equal("Invalid command specified"))
+			})
+
+			It("should CommandGetKeysAndFlags", func() {
+				keysAndFlags, err := adapter.CommandGetKeysAndFlags(ctx, "LMOVE", "mylist1", "mylist2", "left", "left").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(keysAndFlags).To(Equal([]KeyFlags{
+					{
+						Key:   "mylist1",
+						Flags: []string{"RW", "access", "delete"},
+					},
+					{
+						Key:   "mylist2",
+						Flags: []string{"RW", "insert"},
+					},
+				}))
+
+				_, err = adapter.CommandGetKeysAndFlags(ctx, "FAKECOMMAND", "arg1", "arg2").Result()
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(Equal("Invalid command specified"))
+			})
+		}
 	})
 
 	Describe("debugging", func() {
@@ -1150,6 +1240,21 @@ func testAdapter(resp3 bool) {
 			Expect(pos).To(Equal(int64(-1)))
 		})
 
+		if resp3 {
+			It("should BitPosSpan", func() {
+				err := adapter.Set(ctx, "mykey", "\x00\xff\x00", 0).Err()
+				Expect(err).NotTo(HaveOccurred())
+
+				pos, err := adapter.BitPosSpan(ctx, "mykey", 0, 1, 3, "byte").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(pos).To(Equal(int64(16)))
+
+				pos, err = adapter.BitPosSpan(ctx, "mykey", 0, 1, 3, "bit").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(pos).To(Equal(int64(1)))
+			})
+		}
+
 		It("should BitField", func() {
 			nn, err := adapter.BitField(ctx, "mykey", "INCRBY", "i5", 100, 1, "GET", "u4", 0).Result()
 			Expect(err).NotTo(HaveOccurred())
@@ -1860,6 +1965,12 @@ func testAdapter(resp3 bool) {
 				// Overwrite is allowed when replace=rue
 				replace := adapter.Copy(ctx, "newKey", "key", 0, true)
 				Expect(replace.Val()).To(Equal(int64(1)))
+			})
+
+			It("should acl dryrun", func() {
+				dryRun := adapter.ACLDryRun(ctx, "default", "get", "randomKey")
+				Expect(dryRun.Err()).NotTo(HaveOccurred())
+				Expect(dryRun.Val()).To(Equal("OK"))
 			})
 		}
 	})
@@ -4185,6 +4296,33 @@ func testAdapter(resp3 bool) {
 			Expect(zRank.Val()).To(Equal(int64(0)))
 		})
 
+		if resp3 {
+			It("should ZRankWithScore", func() {
+				err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
+				Expect(err).NotTo(HaveOccurred())
+				err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
+				Expect(err).NotTo(HaveOccurred())
+				err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
+				Expect(err).NotTo(HaveOccurred())
+
+				zRankWithScore := adapter.ZRankWithScore(ctx, "zset", "one")
+				Expect(zRankWithScore.Err()).NotTo(HaveOccurred())
+				Expect(zRankWithScore.Result()).To(Equal(RankScore{Rank: 0, Score: 1}))
+
+				zRankWithScore = adapter.ZRankWithScore(ctx, "zset", "two")
+				Expect(zRankWithScore.Err()).NotTo(HaveOccurred())
+				Expect(zRankWithScore.Result()).To(Equal(RankScore{Rank: 1, Score: 2}))
+
+				zRankWithScore = adapter.ZRankWithScore(ctx, "zset", "three")
+				Expect(zRankWithScore.Err()).NotTo(HaveOccurred())
+				Expect(zRankWithScore.Result()).To(Equal(RankScore{Rank: 2, Score: 3}))
+
+				zRankWithScore = adapter.ZRankWithScore(ctx, "zset", "four")
+				Expect(zRankWithScore.Err()).To(HaveOccurred())
+				Expect(zRankWithScore.Err()).To(Equal(rueidis.Nil))
+			})
+		}
+
 		It("should ZRem", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
 			Expect(err).NotTo(HaveOccurred())
@@ -4476,6 +4614,33 @@ func testAdapter(resp3 bool) {
 			Expect(rueidis.IsRedisNil(zRevRank.Err())).To(BeTrue())
 			Expect(zRevRank.Val()).To(Equal(int64(0)))
 		})
+
+		if resp3 {
+			It("should ZRevRankWithScore", func() {
+				err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
+				Expect(err).NotTo(HaveOccurred())
+				err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
+				Expect(err).NotTo(HaveOccurred())
+				err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
+				Expect(err).NotTo(HaveOccurred())
+
+				zRevRankWithScore := adapter.ZRevRankWithScore(ctx, "zset", "one")
+				Expect(zRevRankWithScore.Err()).NotTo(HaveOccurred())
+				Expect(zRevRankWithScore.Result()).To(Equal(RankScore{Rank: 2, Score: 1}))
+
+				zRevRankWithScore = adapter.ZRevRankWithScore(ctx, "zset", "two")
+				Expect(zRevRankWithScore.Err()).NotTo(HaveOccurred())
+				Expect(zRevRankWithScore.Result()).To(Equal(RankScore{Rank: 1, Score: 2}))
+
+				zRevRankWithScore = adapter.ZRevRankWithScore(ctx, "zset", "three")
+				Expect(zRevRankWithScore.Err()).NotTo(HaveOccurred())
+				Expect(zRevRankWithScore.Result()).To(Equal(RankScore{Rank: 0, Score: 3}))
+
+				zRevRankWithScore = adapter.ZRevRankWithScore(ctx, "zset", "four")
+				Expect(zRevRankWithScore.Err()).To(HaveOccurred())
+				Expect(zRevRankWithScore.Err()).To(Equal(rueidis.Nil))
+			})
+		}
 
 		It("should ZScore", func() {
 			zAdd := adapter.ZAdd(ctx, "zset", Z{Score: 1.001, Member: "one"})
@@ -6509,6 +6674,19 @@ func testAdapterCache(resp3 bool) {
 			Expect(pos).To(Equal(int64(-1)))
 		})
 
+		It("should BitPosSpan", func() {
+			err := adapter.Set(ctx, "mykey", "\x00\xff\x00", 0).Err()
+			Expect(err).NotTo(HaveOccurred())
+
+			pos, err := adapter.Cache(time.Hour).BitPosSpan(ctx, "mykey", 0, 1, 3, "byte").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(pos).To(Equal(int64(16)))
+
+			pos, err = adapter.Cache(time.Hour).BitPosSpan(ctx, "mykey", 0, 1, 3, "bit").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(pos).To(Equal(int64(1)))
+		})
+
 		It("should Get", func() {
 			get := adapter.Cache(time.Hour).Get(ctx, "_")
 			Expect(rueidis.IsRedisNil(get.Err())).To(BeTrue())
@@ -7165,6 +7343,31 @@ func testAdapterCache(resp3 bool) {
 			Expect(zRank.Val()).To(Equal(int64(0)))
 		})
 
+		It("should ZRankWithScore", func() {
+			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+
+			zRankWithScore := adapter.Cache(time.Hour).ZRankWithScore(ctx, "zset", "one")
+			Expect(zRankWithScore.Err()).NotTo(HaveOccurred())
+			Expect(zRankWithScore.Result()).To(Equal(RankScore{Rank: 0, Score: 1}))
+
+			zRankWithScore = adapter.Cache(time.Hour).ZRankWithScore(ctx, "zset", "two")
+			Expect(zRankWithScore.Err()).NotTo(HaveOccurred())
+			Expect(zRankWithScore.Result()).To(Equal(RankScore{Rank: 1, Score: 2}))
+
+			zRankWithScore = adapter.Cache(time.Hour).ZRankWithScore(ctx, "zset", "three")
+			Expect(zRankWithScore.Err()).NotTo(HaveOccurred())
+			Expect(zRankWithScore.Result()).To(Equal(RankScore{Rank: 2, Score: 3}))
+
+			zRankWithScore = adapter.Cache(time.Hour).ZRankWithScore(ctx, "zset", "four")
+			Expect(zRankWithScore.Err()).To(HaveOccurred())
+			Expect(zRankWithScore.Err()).To(Equal(rueidis.Nil))
+		})
+
 		It("should ZRevRange", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
 			Expect(err).NotTo(HaveOccurred())
@@ -7362,6 +7565,31 @@ func testAdapterCache(resp3 bool) {
 			zRevRank = adapter.Cache(time.Hour).ZRevRank(ctx, "zset", "four")
 			Expect(rueidis.IsRedisNil(zRevRank.Err())).To(BeTrue())
 			Expect(zRevRank.Val()).To(Equal(int64(0)))
+		})
+
+		It("should ZRevRankWithScore", func() {
+			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
+			Expect(err).NotTo(HaveOccurred())
+
+			zRevRankWithScore := adapter.Cache(time.Hour).ZRevRankWithScore(ctx, "zset", "one")
+			Expect(zRevRankWithScore.Err()).NotTo(HaveOccurred())
+			Expect(zRevRankWithScore.Result()).To(Equal(RankScore{Rank: 2, Score: 1}))
+
+			zRevRankWithScore = adapter.Cache(time.Hour).ZRevRankWithScore(ctx, "zset", "two")
+			Expect(zRevRankWithScore.Err()).NotTo(HaveOccurred())
+			Expect(zRevRankWithScore.Result()).To(Equal(RankScore{Rank: 1, Score: 2}))
+
+			zRevRankWithScore = adapter.Cache(time.Hour).ZRevRankWithScore(ctx, "zset", "three")
+			Expect(zRevRankWithScore.Err()).NotTo(HaveOccurred())
+			Expect(zRevRankWithScore.Result()).To(Equal(RankScore{Rank: 0, Score: 3}))
+
+			zRevRankWithScore = adapter.Cache(time.Hour).ZRevRankWithScore(ctx, "zset", "four")
+			Expect(zRevRankWithScore.Err()).To(HaveOccurred())
+			Expect(zRevRankWithScore.Err()).To(Equal(rueidis.Nil))
 		})
 
 		It("should ZScore", func() {

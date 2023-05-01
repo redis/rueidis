@@ -47,6 +47,9 @@ type Cmdable interface {
 	Cache(ttl time.Duration) CacheCompat
 
 	Command(ctx context.Context) *CommandsInfoCmd
+	CommandList(ctx context.Context, filter FilterBy) *StringSliceCmd
+	CommandGetKeys(ctx context.Context, commands ...any) *StringSliceCmd
+	CommandGetKeysAndFlags(ctx context.Context, commands ...any) *KeyFlagsCmd
 	ClientGetName(ctx context.Context) *StringCmd
 	Echo(ctx context.Context, message any) *StringCmd
 	Ping(ctx context.Context) *StatusCmd
@@ -116,6 +119,7 @@ type Cmdable interface {
 	BitOpXor(ctx context.Context, destKey string, keys ...string) *IntCmd
 	BitOpNot(ctx context.Context, destKey string, key string) *IntCmd
 	BitPos(ctx context.Context, key string, bit int64, pos ...int64) *IntCmd
+	BitPosSpan(ctx context.Context, key string, bit int64, start, end int64, span string) *IntCmd
 	BitField(ctx context.Context, key string, args ...any) *IntSliceCmd
 
 	Scan(ctx context.Context, cursor uint64, match string, count int64) *ScanCmd
@@ -144,6 +148,7 @@ type Cmdable interface {
 	BLMPop(ctx context.Context, timeout time.Duration, direction string, count int64, keys ...string) *KeyValuesCmd
 	BRPop(ctx context.Context, timeout time.Duration, keys ...string) *StringSliceCmd
 	BRPopLPush(ctx context.Context, source, destination string, timeout time.Duration) *StringCmd
+	// TODO LCS(ctx context.Context, q *LCSQuery) *LCSCmd
 	LIndex(ctx context.Context, key string, index int64) *StringCmd
 	LInsert(ctx context.Context, key, op string, pivot, value any) *IntCmd
 	LInsertBefore(ctx context.Context, key string, pivot, value any) *IntCmd
@@ -193,7 +198,7 @@ type Cmdable interface {
 	XLen(ctx context.Context, stream string) *IntCmd
 	XRange(ctx context.Context, stream, start, stop string) *XMessageSliceCmd
 	XRangeN(ctx context.Context, stream, start, stop string, count int64) *XMessageSliceCmd
-	XRevRange(ctx context.Context, stream, start, stop string) *XMessageSliceCmd
+	XRevRange(ctx context.Context, stream string, start, stop string) *XMessageSliceCmd
 	XRevRangeN(ctx context.Context, stream string, start, stop string, count int64) *XMessageSliceCmd
 	XRead(ctx context.Context, a XReadArgs) *XStreamSliceCmd
 	XReadStreams(ctx context.Context, streams ...string) *XStreamSliceCmd
@@ -252,6 +257,7 @@ type Cmdable interface {
 	ZRangeArgsWithScores(ctx context.Context, z ZRangeArgs) *ZSliceCmd
 	ZRangeStore(ctx context.Context, dst string, z ZRangeArgs) *IntCmd
 	ZRank(ctx context.Context, key, member string) *IntCmd
+	ZRankWithScore(ctx context.Context, key, member string) *RankWithScoreCmd
 	ZRem(ctx context.Context, key string, members ...any) *IntCmd
 	ZRemRangeByRank(ctx context.Context, key string, start, stop int64) *IntCmd
 	ZRemRangeByScore(ctx context.Context, key, min, max string) *IntCmd
@@ -262,6 +268,7 @@ type Cmdable interface {
 	ZRevRangeByLex(ctx context.Context, key string, opt ZRangeBy) *StringSliceCmd
 	ZRevRangeByScoreWithScores(ctx context.Context, key string, opt ZRangeBy) *ZSliceCmd
 	ZRevRank(ctx context.Context, key, member string) *IntCmd
+	ZRevRankWithScore(ctx context.Context, key, member string) *RankWithScoreCmd
 	ZScore(ctx context.Context, key, member string) *FloatCmd
 	ZUnionStore(ctx context.Context, dest string, store ZStore) *IntCmd
 	ZRandMember(ctx context.Context, key string, count int64) *StringSliceCmd
@@ -281,12 +288,13 @@ type Cmdable interface {
 	ClientKill(ctx context.Context, ipPort string) *StatusCmd
 	ClientKillByFilter(ctx context.Context, keys ...string) *IntCmd
 	ClientList(ctx context.Context) *StringCmd
+	// TODO ClientInfo(ctx context.Context) *ClientInfoCmd
 	ClientPause(ctx context.Context, dur time.Duration) *BoolCmd
 	ClientUnpause(ctx context.Context) *BoolCmd
 	ClientID(ctx context.Context) *IntCmd
 	ClientUnblock(ctx context.Context, id int64) *IntCmd
 	ClientUnblockWithError(ctx context.Context, id int64) *IntCmd
-	ConfigGet(ctx context.Context, parameter string) *SliceCmd
+	ConfigGet(ctx context.Context, parameter string) *StringStringMapCmd
 	ConfigResetStat(ctx context.Context) *StatusCmd
 	ConfigSet(ctx context.Context, parameter, value string) *StatusCmd
 	ConfigRewrite(ctx context.Context) *StatusCmd
@@ -301,6 +309,8 @@ type Cmdable interface {
 	Shutdown(ctx context.Context) *StatusCmd
 	ShutdownSave(ctx context.Context) *StatusCmd
 	ShutdownNoSave(ctx context.Context) *StatusCmd
+	// TODO SlaveOf(ctx context.Context, host, port string) *StatusCmd
+	// TODO SlowLogGet(ctx context.Context, num int64) *SlowLogCmd
 	Time(ctx context.Context) *TimeCmd
 	DebugObject(ctx context.Context, key string) *StringCmd
 	ReadOnly(ctx context.Context) *StatusCmd
@@ -316,6 +326,20 @@ type Cmdable interface {
 	ScriptKill(ctx context.Context) *StatusCmd
 	ScriptLoad(ctx context.Context, script string) *StringCmd
 
+	// TODO FunctionLoad(ctx context.Context, code string) *StringCmd
+	// TODO FunctionLoadReplace(ctx context.Context, code string) *StringCmd
+	// TODO FunctionDelete(ctx context.Context, libName string) *StringCmd
+	// TODO FunctionFlush(ctx context.Context) *StringCmd
+	// TODO FunctionKill(ctx context.Context) *StringCmd
+	// TODO FunctionFlushAsync(ctx context.Context) *StringCmd
+	// TODO FunctionList(ctx context.Context, q FunctionListQuery) *FunctionListCmd
+	// TODO FunctionDump(ctx context.Context) *StringCmd
+	// TODO FunctionRestore(ctx context.Context, libDump string) *StringCmd
+	// TODO FunctionStats(ctx context.Context) *FunctionStatsCmd
+	// TODO FCall(ctx context.Context, function string, keys []string, args ...any) *Cmd
+	// TODO FCallRo(ctx context.Context, function string, keys []string, args ...any) *Cmd
+	// TODO FCallRO(ctx context.Context, function string, keys []string, args ...any) *Cmd
+
 	Publish(ctx context.Context, channel string, message any) *IntCmd
 	SPublish(ctx context.Context, channel string, message any) *IntCmd
 	PubSubChannels(ctx context.Context, pattern string) *StringSliceCmd
@@ -324,7 +348,10 @@ type Cmdable interface {
 	PubSubShardChannels(ctx context.Context, pattern string) *StringSliceCmd
 	PubSubShardNumSub(ctx context.Context, channels ...string) *StringIntMapCmd
 
+	// TODO ClusterMyShardID(ctx context.Context) *StringCmd
 	ClusterSlots(ctx context.Context) *ClusterSlotsCmd
+	// TODO ClusterShards(ctx context.Context) *ClusterShardsCmd
+	// TODO ClusterLinks(ctx context.Context) *ClusterLinksCmd
 	ClusterNodes(ctx context.Context) *StringCmd
 	ClusterMeet(ctx context.Context, host string, port int64) *StatusCmd
 	ClusterForget(ctx context.Context, nodeID string) *StatusCmd
@@ -353,8 +380,12 @@ type Cmdable interface {
 	GeoSearch(ctx context.Context, key string, q GeoSearchQuery) *StringSliceCmd
 	GeoSearchLocation(ctx context.Context, key string, q GeoSearchLocationQuery) *GeoLocationCmd
 	GeoSearchStore(ctx context.Context, key, store string, q GeoSearchStoreQuery) *IntCmd
-	GeoDist(ctx context.Context, key, member1, member2, unit string) *FloatCmd
+	GeoDist(ctx context.Context, key string, member1, member2, unit string) *FloatCmd
 	GeoHash(ctx context.Context, key string, members ...string) *StringSliceCmd
+
+	ACLDryRun(ctx context.Context, username string, command ...any) *StringCmd
+
+	// TODO ModuleLoadex(ctx context.Context, conf *ModuleLoadexConfig) *StringCmd
 }
 
 type Compat struct {
@@ -378,6 +409,38 @@ func (c *Compat) Command(ctx context.Context) *CommandsInfoCmd {
 	cmd := c.client.B().Command().Build()
 	resp := c.client.Do(ctx, cmd)
 	return newCommandsInfoCmd(resp)
+}
+
+type FilterBy struct {
+	Module  string
+	ACLCat  string
+	Pattern string
+}
+
+func (c *Compat) CommandList(ctx context.Context, filter FilterBy) *StringSliceCmd {
+	var resp rueidis.RedisResult
+	if filter.Module != "" {
+		resp = c.client.Do(ctx, c.client.B().CommandList().FilterbyModuleName(filter.Module).Build())
+	} else if filter.Pattern != "" {
+		resp = c.client.Do(ctx, c.client.B().CommandList().FilterbyPatternPattern(filter.Pattern).Build())
+	} else if filter.ACLCat != "" {
+		resp = c.client.Do(ctx, c.client.B().CommandList().FilterbyAclcatCategory(filter.ACLCat).Build())
+	} else {
+		resp = c.client.Do(ctx, c.client.B().CommandList().Build())
+	}
+	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) CommandGetKeys(ctx context.Context, commands ...any) *StringSliceCmd {
+	cmd := c.client.B().CommandGetkeys().Command(commands[0].(string)).Arg(argsToSlice(commands[1:])...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) CommandGetKeysAndFlags(ctx context.Context, commands ...any) *KeyFlagsCmd {
+	cmd := c.client.B().CommandGetkeysandflags().Command(commands[0].(string)).Arg(argsToSlice(commands[1:])...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newKeyFlagsCmd(resp)
 }
 
 func (c *Compat) ClientGetName(ctx context.Context) *StringCmd {
@@ -916,6 +979,16 @@ func (c *Compat) BitPos(ctx context.Context, key string, bit int64, pos ...int64
 		resp = c.client.Do(ctx, c.client.B().Bitpos().Key(key).Bit(bit).Start(pos[0]).End(pos[1]).Build())
 	default:
 		panic("too many arguments")
+	}
+	return newIntCmd(resp)
+}
+
+func (c *Compat) BitPosSpan(ctx context.Context, key string, bit, start, end int64, span string) *IntCmd {
+	var resp rueidis.RedisResult
+	if strings.ToLower(span) == "bit" {
+		resp = c.client.Do(ctx, c.client.B().Bitpos().Key(key).Bit(bit).Start(start).End(end).Bit().Build())
+	} else {
+		resp = c.client.Do(ctx, c.client.B().Bitpos().Key(key).Bit(bit).Start(start).End(end).Byte().Build())
 	}
 	return newIntCmd(resp)
 }
@@ -1966,6 +2039,12 @@ func (c *Compat) ZRank(ctx context.Context, key, member string) *IntCmd {
 	return newIntCmd(resp)
 }
 
+func (c *Compat) ZRankWithScore(ctx context.Context, key, member string) *RankWithScoreCmd {
+	cmd := c.client.B().Zrank().Key(key).Member(member).Withscore().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newRankWithScoreCmd(resp)
+}
+
 func (c *Compat) ZRem(ctx context.Context, key string, members ...any) *IntCmd {
 	cmd := c.client.B().Zrem().Key(key).Member(argsToSlice(members)...).Build()
 	resp := c.client.Do(ctx, cmd)
@@ -2035,6 +2114,12 @@ func (c *Compat) ZRevRank(ctx context.Context, key, member string) *IntCmd {
 	cmd := c.client.B().Zrevrank().Key(key).Member(member).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
+}
+
+func (c *Compat) ZRevRankWithScore(ctx context.Context, key, member string) *RankWithScoreCmd {
+	cmd := c.client.B().Zrevrank().Key(key).Member(member).Withscore().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newRankWithScoreCmd(resp)
 }
 
 func (c *Compat) ZScore(ctx context.Context, key, member string) *FloatCmd {
@@ -2171,10 +2256,10 @@ func (c *Compat) ClientUnblockWithError(ctx context.Context, id int64) *IntCmd {
 	return newIntCmd(c.client.Do(ctx, c.client.B().ClientUnblock().ClientId(id).Error().Build()))
 }
 
-func (c *Compat) ConfigGet(ctx context.Context, parameter string) *SliceCmd {
+func (c *Compat) ConfigGet(ctx context.Context, parameter string) *StringStringMapCmd {
 	cmd := c.client.B().ConfigGet().Parameter(parameter).Build()
 	resp := c.client.Do(ctx, cmd)
-	return newSliceCmdFromMap(resp)
+	return newStringStringMapCmd(resp)
 }
 
 func (c *Compat) ConfigResetStat(ctx context.Context) *StatusCmd {
@@ -2649,6 +2734,12 @@ func (c *Compat) GeoHash(ctx context.Context, key string, members ...string) *St
 	return newStringSliceCmd(resp)
 }
 
+func (c *Compat) ACLDryRun(ctx context.Context, username string, command ...any) *StringCmd {
+	cmd := c.client.B().AclDryrun().Username(username).Command(command[0].(string)).Arg(argsToSlice(command[1:])...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringCmd(resp)
+}
+
 func (c *Compat) doPrimaries(ctx context.Context, fn func(c rueidis.Client) error) error {
 	var firsterr atomic.Value
 	util.ParallelVals(c.client.Nodes(), func(client rueidis.Client) {
@@ -2719,6 +2810,16 @@ func (c CacheCompat) BitPos(ctx context.Context, key string, bit int64, pos ...i
 		resp = c.client.DoCache(ctx, c.client.B().Bitpos().Key(key).Bit(bit).Start(pos[0]).End(pos[1]).Cache(), c.ttl)
 	default:
 		panic("too many arguments")
+	}
+	return newIntCmd(resp)
+}
+
+func (c CacheCompat) BitPosSpan(ctx context.Context, key string, bit, start, end int64, span string) *IntCmd {
+	var resp rueidis.RedisResult
+	if strings.ToLower(span) == "bit" {
+		resp = c.client.DoCache(ctx, c.client.B().Bitpos().Key(key).Bit(bit).Start(start).End(end).Bit().Cache(), c.ttl)
+	} else {
+		resp = c.client.DoCache(ctx, c.client.B().Bitpos().Key(key).Bit(bit).Start(start).End(end).Byte().Cache(), c.ttl)
 	}
 	return newIntCmd(resp)
 }
@@ -3050,6 +3151,12 @@ func (c CacheCompat) ZRank(ctx context.Context, key, member string) *IntCmd {
 	return newIntCmd(resp)
 }
 
+func (c CacheCompat) ZRankWithScore(ctx context.Context, key, member string) *RankWithScoreCmd {
+	cmd := c.client.B().Zrank().Key(key).Member(member).Withscore().Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newRankWithScoreCmd(resp)
+}
+
 func (c CacheCompat) ZRevRange(ctx context.Context, key string, start, stop int64) *StringSliceCmd {
 	cmd := c.client.B().Zrevrange().Key(key).Start(start).Stop(stop).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
@@ -3096,6 +3203,12 @@ func (c CacheCompat) ZRevRank(ctx context.Context, key, member string) *IntCmd {
 	cmd := c.client.B().Zrevrank().Key(key).Member(member).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newIntCmd(resp)
+}
+
+func (c CacheCompat) ZRevRankWithScore(ctx context.Context, key, member string) *RankWithScoreCmd {
+	cmd := c.client.B().Zrevrank().Key(key).Member(member).Withscore().Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newRankWithScoreCmd(resp)
 }
 
 func (c CacheCompat) ZScore(ctx context.Context, key, member string) *FloatCmd {
