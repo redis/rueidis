@@ -41,7 +41,8 @@
         "optional": true,
         "multiple": true
       }
-    ]
+    ],
+    "group": "server"
   },
   "ACL GENPASS": {
     "summary": "Generate a pseudorandom secure password to use for ACL users",
@@ -776,7 +777,8 @@
           "OFF"
         ]
       }
-    ]
+    ],
+    "group": "connection"
   },
   "CLIENT PAUSE": {
     "summary": "Stop processing commands from clients for some time",
@@ -834,7 +836,8 @@
           }
         ]
       }
-    ]
+    ],
+    "group": "connection"
   },
   "CLIENT SETNAME": {
     "summary": "Set the current connection name",
@@ -1237,7 +1240,9 @@
     "since": "3.0.0",
     "group": "cluster"
   },
-  "CLUSTER SHARDS": {},
+  "CLUSTER SHARDS": {
+    "group": "cluster"
+  },
   "CLUSTER SLAVES": {
     "summary": "List replica nodes of the specified master node",
     "complexity": "O(1)",
@@ -1270,7 +1275,8 @@
         "optional": true,
         "multiple": true
       }
-    ]
+    ],
+    "group": "server"
   },
   "COMMAND GETKEYS": {
     "summary": "Extract keys given a full Redis command",
@@ -1334,7 +1340,8 @@
           "PATTERN pattern"
         ]
       }
-    ]
+    ],
+    "group": "server"
   },
   "COMMAND": {
     "summary": "Get array of Redis command details",
@@ -1763,7 +1770,8 @@
         "optional": true,
         "multiple": true
       }
-    ]
+    ],
+    "group": "scripting"
   },
   "FCALL_RO": {
     "arguments": [
@@ -1787,7 +1795,8 @@
         "optional": true,
         "multiple": true
       }
-    ]
+    ],
+    "group": "scripting"
   },
   "FLUSHALL": {
     "summary": "Remove all keys from all databases",
@@ -1829,9 +1838,12 @@
         "name": "library-name",
         "type": "string"
       }
-    ]
+    ],
+    "group": "scripting"
   },
-  "FUNCTION DUMP": {},
+  "FUNCTION DUMP": {
+    "group": "scripting"
+  },
   "FUNCTION FLUSH": {
     "arguments": [
       {
@@ -1843,10 +1855,15 @@
           "SYNC"
         ]
       }
-    ]
+    ],
+    "group": "scripting"
   },
-  "FUNCTION HELP": {},
-  "FUNCTION KILL": {},
+  "FUNCTION HELP": {
+    "group": "scripting"
+  },
+  "FUNCTION KILL": {
+    "group": "scripting"
+  },
   "FUNCTION LIST": {
     "arguments": [
       {
@@ -1863,7 +1880,8 @@
         ],
         "optional": true
       }
-    ]
+    ],
+    "group": "scripting"
   },
   "FUNCTION LOAD": {
     "arguments": [
@@ -1879,7 +1897,8 @@
         "name": "function-code",
         "type": "string"
       }
-    ]
+    ],
+    "group": "scripting"
   },
   "FUNCTION RESTORE": {
     "arguments": [
@@ -1897,9 +1916,12 @@
           "REPLACE"
         ]
       }
-    ]
+    ],
+    "group": "scripting"
   },
-  "FUNCTION STATS": {},
+  "FUNCTION STATS": {
+    "group": "scripting"
+  },
   "GEOADD": {
     "summary": "Add one or more geospatial items in the geospatial index represented using a sorted set",
     "complexity": "O(log(N)) for each item added, where N is the number of elements in the sorted set.",
@@ -2280,7 +2302,8 @@
         ],
         "optional": true
       }
-    ]
+    ],
+    "group": "geo"
   },
   "GEORADIUS_RO": {
     "arguments": [
@@ -2363,7 +2386,8 @@
         ],
         "optional": true
       }
-    ]
+    ],
+    "group": "geo"
   },
   "GEOSEARCH": {
     "summary": "Query a sorted set representing a geospatial index to fetch members inside an area of a box or a circle.",
@@ -3170,7 +3194,8 @@
         "optional": true,
         "multiple": true
       }
-    ]
+    ],
+    "group": "server"
   },
   "LATENCY HISTORY": {
     "summary": "Return timestamp-latency samples for the event.",
@@ -3726,7 +3751,8 @@
         "variadic": true,
         "optional": true
       }
-    ]
+    ],
+    "group": "server"
   },
   "MODULE UNLOAD": {
     "summary": "Unload a module",
@@ -4119,7 +4145,8 @@
         "type": "string",
         "optional": true
       }
-    ]
+    ],
+    "group": "pubsub"
   },
   "PUBSUB SHARDNUMSUB": {
     "arguments": [
@@ -4129,7 +4156,8 @@
         "optional": true,
         "multiple": true
       }
-    ]
+    ],
+    "group": "pubsub"
   },
   "PUNSUBSCRIBE": {
     "summary": "Stop listening for messages posted to channels matching the given patterns",
@@ -4981,7 +5009,8 @@
         "name": "message",
         "type": "string"
       }
-    ]
+    ],
+    "group": "pubsub"
   },
   "SRANDMEMBER": {
     "summary": "Get one or multiple random members from a set",
@@ -5052,7 +5081,8 @@
         "type": "key",
         "multiple": true
       }
-    ]
+    ],
+    "group": "pubsub"
   },
   "STRLEN": {
     "summary": "Get the length of the value stored in a key",
@@ -5117,7 +5147,8 @@
         "optional": true,
         "multiple": true
       }
-    ]
+    ],
+    "group": "pubsub"
   },
   "SWAPDB": {
     "summary": "Swaps two Redis databases",
@@ -5246,7 +5277,8 @@
         "name": "timeout",
         "type": "integer"
       }
-    ]
+    ],
+    "group": "generic"
   },
   "WATCH": {
     "summary": "Watch the given keys to determine execution of the MULTI/EXEC block",

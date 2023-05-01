@@ -5,7 +5,8 @@
         "name": "master",
         "type": "string"
       }
-    ]
+    ],
+    "group": "sentinel"
   },
   "SENTINEL SENTINELS": {
     "arguments": [
@@ -13,7 +14,8 @@
         "name": "master",
         "type": "string"
       }
-    ]
+    ],
+    "group": "sentinel"
   },
   "SENTINEL FAILOVER": {
     "arguments": [
@@ -21,6 +23,7 @@
         "name": "master",
         "type": "string"
       }
-    ]
+    ],
+    "group": "sentinel"
   }
 }

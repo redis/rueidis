@@ -7,6 +7,8 @@ import (
 	"hash/crc32"
 	"io"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"sort"
 	"strings"
 	"unicode"
@@ -60,6 +62,7 @@ type argument struct {
 }
 
 type node struct {
+	Group  string
 	Parent *node
 	Child  *node
 	Next   *node
@@ -310,67 +313,98 @@ func (n *node) Walk(fn func(node *node)) {
 }
 
 func main() {
-	var commands = map[string]command{}
 
-	for _, p := range []string{
-		"./commands.json",
-		"./commands_sentinel.json",
-		"./commands_json.json",
-		"./commands_bloom.json",
-		"./commands_search.json",
-		"./commands_graph.json",
-		"./commands_timeseries.json",
-		"./commands_ai.json",
-		"./commands_gears.json",
-	} {
+	var structs = map[string]map[string]goStruct{}
+
+	defs, err := filepath.Glob("*.json")
+	if err != nil {
+		panic(err)
+	}
+
+	for _, p := range defs {
 		raw, err := os.ReadFile(p)
 		if err != nil {
 			panic(err)
 		}
+
+		var commands = map[string]command{}
 		if err := json.Unmarshal(raw, &commands); err != nil {
+			panic(err)
+		}
+
+		var roots []string
+		nodes := map[string]*node{}
+		for k, cmd := range commands {
+			if cmd.Group == "" {
+				panic(k + " no group")
+			}
+			root := &node{Group: cmd.Group, Cmd: cmd, Arg: argument{Name: k, Command: k, Type: "command"}, Root: true}
+			root.Next = makeChildNodes(root, cmd.Arguments)
+			roots = append(roots, k)
+			if _, ok := nodes[k]; ok {
+				panic(k + " conflict")
+			}
+			nodes[k] = root
+		}
+		sort.Strings(roots)
+
+		for _, name := range roots {
+			n := nodes[name]
+			g := n.Group
+			if _, ok := structs[g]; !ok {
+				structs[g] = make(map[string]goStruct)
+			}
+			n.Walk(func(n *node) {
+				for _, s := range n.GoStructs() {
+					if v, ok := structs[g][s.FullName]; ok {
+						panic("struct conflict " + v.FullName)
+					}
+					structs[g][s.FullName] = s
+				}
+			})
+		}
+	}
+
+	for g, structs := range structs {
+		gfname := "../../internal/cmds/gen_" + g + ".go"
+		tfname := "../../internal/cmds/gen_" + g + "_test.go"
+		gf, err := os.Create(gfname)
+		if err != nil {
+			panic(err)
+		}
+		generate(gf, structs)
+		if err := gf.Close(); err != nil {
+			panic(err)
+		}
+		if err := exec.Command("gofmt", "-w", gfname).Run(); err != nil {
+			panic(err)
+		}
+		if err := exec.Command("goimports", "-w", gfname).Run(); err != nil {
+			panic(err)
+		}
+		tf, err := os.Create(tfname)
+		if err != nil {
+			panic(err)
+		}
+		tests(tf, structs, g)
+		if err := tf.Close(); err != nil {
+			panic(err)
+		}
+		if err := exec.Command("gofmt", "-w", tfname).Run(); err != nil {
+			panic(err)
+		}
+		if err := exec.Command("goimports", "-w", tfname).Run(); err != nil {
 			panic(err)
 		}
 	}
 
-	var roots []string
-	nodes := map[string]*node{}
-	for k, cmd := range commands {
-		root := &node{Cmd: cmd, Arg: argument{Name: k, Command: k, Type: "command"}, Root: true}
-		root.Next = makeChildNodes(root, cmd.Arguments)
-		roots = append(roots, k)
-		nodes[k] = root
-	}
-	sort.Strings(roots)
-
-	var structs = map[string]goStruct{}
-	for _, name := range roots {
-		n := nodes[name]
-		n.Walk(func(n *node) {
-			for _, s := range n.GoStructs() {
-				if v, ok := structs[s.FullName]; ok {
-					panic("struct conflict " + v.FullName)
-				}
-				structs[s.FullName] = s
-			}
-		})
-	}
-
-	gf, err := os.Create("../../internal/cmds/gen.go")
-	if err != nil {
-		panic(err)
-	}
-	defer gf.Close()
-	tf, err := os.Create("../../internal/cmds/gen_test.go")
-	if err != nil {
-		panic(err)
-	}
-	defer tf.Close()
-
-	generate(gf, structs)
-	tests(tf, structs)
+	checkAllUsed("noRetCMDs", noRetCMDs)
+	checkAllUsed("blockingCMDs", blockingCMDs)
+	checkAllUsed("cacheableCMDs", cacheableCMDs)
+	checkAllUsed("readOnlyCMDs", readOnlyCMDs)
 }
 
-func tests(f io.Writer, structs map[string]goStruct) {
+func tests(f io.Writer, structs map[string]goStruct, prefix string) {
 	var names []string
 	for name := range structs {
 		names = append(names, name)
@@ -394,7 +428,7 @@ func tests(f io.Writer, structs map[string]goStruct) {
 
 	for i, p := range pathes {
 		if i%mod == 0 {
-			fmt.Fprintf(f, "func tc%d(s Builder, t *testing.T) {\n", i/mod)
+			fmt.Fprintf(f, "func %s%d(s Builder) {\n", prefix, i/mod)
 		}
 		printPath(f, "s", p, "Build")
 		if within(p[0], cacheableCMDs) {
@@ -405,17 +439,17 @@ func tests(f io.Writer, structs map[string]goStruct) {
 		}
 	}
 
-	fmt.Fprintf(f, "func TestCommand_InitSlot(t *testing.T) {\n")
+	fmt.Fprintf(f, "func TestCommand_InitSlot_%s(t *testing.T) {\n", prefix)
 	fmt.Fprintf(f, "\tvar s = NewBuilder(InitSlot)\n")
 	for i := 0; i <= len(pathes)/mod; i++ {
-		fmt.Fprintf(f, "\tt.Run(\"%d\", func(t *testing.T) { tc%d(s, t) })\n", i, i)
+		fmt.Fprintf(f, "\tt.Run(\"%d\", func(t *testing.T) { %s%d(s) })\n", i, prefix, i)
 	}
 	fmt.Fprintf(f, "}\n\n")
 
-	fmt.Fprintf(f, "func TestCommand_NoSlot(t *testing.T) {\n")
+	fmt.Fprintf(f, "func TestCommand_NoSlot_%s(t *testing.T) {\n", prefix)
 	fmt.Fprintf(f, "\tvar s = NewBuilder(NoSlot)\n")
 	for i := 0; i <= len(pathes)/mod; i++ {
-		fmt.Fprintf(f, "\tt.Run(\"%d\", func(t *testing.T) { tc%d(s, t) })\n", i, i)
+		fmt.Fprintf(f, "\tt.Run(\"%d\", func(t *testing.T) { %s%d(s) })\n", i, prefix, i)
 	}
 	fmt.Fprintf(f, "}\n\n")
 
@@ -528,11 +562,6 @@ func generate(f io.Writer, structs map[string]goStruct) {
 			}
 		}
 	}
-
-	checkAllUsed("noRetCMDs", noRetCMDs)
-	checkAllUsed("blockingCMDs", blockingCMDs)
-	checkAllUsed("cacheableCMDs", cacheableCMDs)
-	checkAllUsed("readOnlyCMDs", readOnlyCMDs)
 }
 
 func checkAllUsed(name string, tags map[string]bool) {

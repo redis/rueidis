@@ -1459,7 +1459,8 @@
         "command": "QUERY",
         "type": "string"
       }
-    ]
+    ],
+    "group": "search"
   },
   "FT.CURSOR READ": {
     "summary": "Reads from a cursor",

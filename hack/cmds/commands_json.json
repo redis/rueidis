@@ -27,7 +27,8 @@
         "type": "string",
         "optional": true
       }
-    ]
+    ],
+    "group": "json"
   },
   "JSON.GET": {
     "summary": "Gets the value at one or more paths in JSON serialized form",
@@ -178,7 +179,8 @@
         "name": "value",
         "type": "double"
       }
-    ]
+    ],
+    "group": "json"
   },
   "JSON.STRAPPEND": {
     "summary": "Appends a string to a JSON string value at path",
@@ -437,6 +439,7 @@
     "group": "json"
   },
   "JSON.DEBUG HELP": {
+    "group": "json"
   },
   "JSON.DEBUG MEMORY": {
     "arguments": [
@@ -449,6 +452,7 @@
         "type": "string",
         "optional": true
       }
-    ]
+    ],
+    "group": "json"
   }
 }
