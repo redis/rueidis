@@ -128,18 +128,18 @@ ret:
 	return v, ce
 }
 
-func (c *lru) Update(key, cmd string, value RedisMessage) (pttl int64) {
+func (c *lru) Update(key, cmd string, value RedisMessage) (pxat int64) {
 	var ch chan struct{}
 	c.mu.Lock()
 	if kc, ok := c.store[key]; ok {
 		if ele, ok := kc.cache[cmd]; ok {
 			if e := ele.Value.(*cacheEntry); e.val.typ == 0 {
-				pttl = value.getExpireAt()
+				pxat = value.getExpireAt()
 				cpttl := e.val.getExpireAt()
-				if cpttl < pttl || pttl == 0 {
+				if cpttl < pxat || pxat == 0 {
 					// server side ttl should only shorten client side ttl
-					pttl = cpttl
-					value.setExpireAt(pttl)
+					pxat = cpttl
+					value.setExpireAt(pxat)
 				}
 				e.val = value
 				e.size = entryBaseSize + 2*(len(key)+len(cmd)) + value.approximateSize()

@@ -25,9 +25,9 @@ type CacheStore interface {
 	// Case 3: (non-empty RedisMessage, non-nil CacheEntry) <- when cache hit
 	Flight(key, cmd string, ttl time.Duration, now time.Time) (v RedisMessage, e CacheEntry)
 	// Update is called when receiving the response of the request sent by the above Flight Case 1 from redis.
-	// It should not only update the store but also deliver the response to all CacheEntry.Wait and return a desired client side PTTL of the response.
+	// It should not only update the store but also deliver the response to all CacheEntry.Wait and return a desired client side PXAT of the response.
 	// Note that the server side expire time can be retrieved from RedisMessage.CachePXAT.
-	Update(key, cmd string, val RedisMessage) (pttl int64)
+	Update(key, cmd string, val RedisMessage) (pxat int64)
 	// Cancel is called when the request sent by the above Flight Case 1 failed.
 	// It should not only deliver the error to all CacheEntry.Wait but also remove the CacheEntry from the store.
 	Cancel(key, cmd string, err error)
