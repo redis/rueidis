@@ -19,21 +19,21 @@ import (
 
 type hook struct{}
 
-func (h *hook) Do(client rueidis.Client, ctx context.Context, cmd rueidishook.Completed) (resp rueidis.RedisResult) {
+func (h *hook) Do(client rueidis.Client, ctx context.Context, cmd rueidis.Completed) (resp rueidis.RedisResult) {
 	// do whatever you want before client.Do
 	resp = client.Do(ctx, cmd)
 	// do whatever you want after client.Do
 	return
 }
 
-func (h *hook) DoMulti(client rueidis.Client, ctx context.Context, multi ...rueidishook.Completed) (resps []rueidis.RedisResult) {
+func (h *hook) DoMulti(client rueidis.Client, ctx context.Context, multi ...rueidis.Completed) (resps []rueidis.RedisResult) {
 	// do whatever you want before client.DoMulti
 	resps = client.DoMulti(ctx, multi...)
 	// do whatever you want after client.DoMulti
 	return
 }
 
-func (h *hook) DoCache(client rueidis.Client, ctx context.Context, cmd rueidishook.Cacheable, ttl time.Duration) (resp rueidis.RedisResult) {
+func (h *hook) DoCache(client rueidis.Client, ctx context.Context, cmd rueidis.Cacheable, ttl time.Duration) (resp rueidis.RedisResult) {
 	// do whatever you want before client.DoCache
 	resp = client.DoCache(ctx, cmd, ttl)
 	// do whatever you want after client.DoCache
@@ -47,7 +47,7 @@ func (h *hook) DoMultiCache(client rueidis.Client, ctx context.Context, multi ..
 	return
 }
 
-func (h *hook) Receive(client rueidis.Client, ctx context.Context, subscribe rueidishook.Completed, fn func(msg rueidis.PubSubMessage)) (err error) {
+func (h *hook) Receive(client rueidis.Client, ctx context.Context, subscribe rueidis.Completed, fn func(msg rueidis.PubSubMessage)) (err error) {
 	// do whatever you want before client.Receive
 	err = client.Receive(ctx, subscribe, fn)
 	// do whatever you want after client.Receive
