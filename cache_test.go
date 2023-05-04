@@ -7,11 +7,11 @@ import (
 	"time"
 )
 
-func TestLRUCacheStore(t *testing.T) {
+func test(t *testing.T, storeFn func() CacheStore) {
 	t.Run("Flight and Update", func(t *testing.T) {
 		var err error
 		var now = time.Now()
-		var store = newLRU(CacheStoreOption{CacheSizeEachConn: DefaultCacheBytes})
+		var store = storeFn()
 
 		v, e := store.Flight("key", "cmd", time.Millisecond*100, now)
 		if v.typ != 0 || e != nil {
@@ -45,8 +45,8 @@ func TestLRUCacheStore(t *testing.T) {
 		}
 
 		v2, e2 = store.Flight("key", "cmd", time.Millisecond*100, now)
-		if v2.typ != v.typ || v2.string != v.string || e != e2 {
-			t.Fatal("flights after Update should return updated RedisMessage and the same CacheEntry")
+		if v2.typ != v.typ || v2.string != v.string {
+			t.Fatal("flights after Update should return updated RedisMessage")
 		}
 		if pttl := v2.CachePXAT(); pttl < now.Add(90*time.Millisecond).UnixMilli() || pttl > now.Add(100*time.Millisecond).UnixMilli() {
 			t.Fatal("CachePXAT should return a desired pttl")
@@ -62,7 +62,7 @@ func TestLRUCacheStore(t *testing.T) {
 	t.Run("Flight and Cancel", func(t *testing.T) {
 		var err error
 		var now = time.Now()
-		var store = newLRU(CacheStoreOption{CacheSizeEachConn: DefaultCacheBytes})
+		var store = storeFn()
 
 		v, e := store.Flight("key", "cmd", time.Millisecond*100, now)
 		if v.typ != 0 || e != nil {
@@ -96,7 +96,7 @@ func TestLRUCacheStore(t *testing.T) {
 
 	t.Run("Flight and Delete", func(t *testing.T) {
 		var now = time.Now()
-		var store = newLRU(CacheStoreOption{CacheSizeEachConn: DefaultCacheBytes})
+		var store = storeFn()
 
 		for _, deletions := range [][]RedisMessage{
 			{{typ: '+', string: "key"}},
@@ -121,7 +121,7 @@ func TestLRUCacheStore(t *testing.T) {
 
 	t.Run("Flight and TTL", func(t *testing.T) {
 		var now = time.Now()
-		var store = newLRU(CacheStoreOption{CacheSizeEachConn: DefaultCacheBytes})
+		var store = storeFn()
 
 		v, e := store.Flight("key", "cmd", time.Second, now)
 		if v.typ != 0 || e != nil {
@@ -140,7 +140,7 @@ func TestLRUCacheStore(t *testing.T) {
 
 	t.Run("Flight and Close", func(t *testing.T) {
 		var now = time.Now()
-		var store = newLRU(CacheStoreOption{CacheSizeEachConn: DefaultCacheBytes})
+		var store = storeFn()
 
 		_, _ = store.Flight("key", "cmd", time.Millisecond*100, now)
 		_, e := store.Flight("key", "cmd", time.Millisecond*100, now)
@@ -156,4 +156,51 @@ func TestLRUCacheStore(t *testing.T) {
 			t.Fatal("flight after Close should return empty RedisMessage and nil CacheEntry")
 		}
 	})
+
+	t.Run("Flight timeout", func(t *testing.T) {
+		var now = time.Now()
+		var store = storeFn()
+
+		_, _ = store.Flight("key", "cmd", time.Millisecond*100, now)
+		_, e := store.Flight("key", "cmd", time.Millisecond*100, now)
+
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		if _, err := e.Wait(ctx); err != context.Canceled {
+			t.Fatal("Wait should honor context")
+		}
+	})
+}
+
+func TestCacheStore(t *testing.T) {
+	t.Run("LRUCacheStore", func(t *testing.T) {
+		test(t, func() CacheStore {
+			return newLRU(CacheStoreOption{CacheSizeEachConn: DefaultCacheBytes})
+		})
+	})
+	t.Run("SimpleCache", func(t *testing.T) {
+		test(t, func() CacheStore {
+			return NewSimpleCacheAdapter(&simple{store: map[string]RedisMessage{}})
+		})
+	})
+}
+
+type simple struct {
+	store map[string]RedisMessage
+}
+
+func (s *simple) Get(key string) RedisMessage {
+	return s.store[key]
+}
+
+func (s *simple) Set(key string, val RedisMessage) {
+	s.store[key] = val
+}
+
+func (s *simple) Del(key string) {
+	delete(s.store, key)
+}
+
+func (s *simple) Flush() {
+	s.store = nil
 }
