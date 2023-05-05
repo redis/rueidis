@@ -2891,7 +2891,7 @@ func TestSyncModeSwitchingWithDeadlineExceed_Do(t *testing.T) {
 	}
 
 	mock.Expect("GET", "a")
-	time.Sleep(time.Microsecond * 200)
+	time.Sleep(time.Second / 2)
 	mock.Expect().ReplyString("OK")
 	wg.Wait()
 	p.Close()
@@ -2916,7 +2916,7 @@ func TestSyncModeSwitchingWithDeadlineExceed_DoMulti(t *testing.T) {
 	}
 
 	mock.Expect("GET", "a")
-	time.Sleep(time.Microsecond * 200)
+	time.Sleep(time.Second / 2)
 	mock.Expect().ReplyString("OK")
 	wg.Wait()
 	p.Close()
