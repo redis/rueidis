@@ -2,6 +2,7 @@ package om
 
 import (
 	"context"
+	"encoding/json"
 	"math/rand"
 	"reflect"
 	"strings"
@@ -25,6 +26,7 @@ type HashTestStruct struct {
 	F1    bool
 	Vec32 []float32
 	Vec64 []float64
+	JSON  json.RawMessage
 }
 
 type Unsupported struct {
@@ -74,6 +76,7 @@ func TestNewHashRepository(t *testing.T) {
 		e.F4 = &f4
 		e.Vec32 = []float32{3, 2, 1}
 		e.Vec64 = []float64{1, 2, 3}
+		e.JSON = []byte(`[1]`)
 		if err := repo.Save(ctx, e); err != nil {
 			t.Fatal(err)
 		}

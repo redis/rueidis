@@ -94,7 +94,7 @@ repo2 := om.NewHashRepository("my_prefix", Example{}, c, om.WithIndexName("my_in
 * `string`, `*string`
 * `int64`, `*int64`
 * `bool`, `*bool`
-* `[]byte`
+* `[]byte`, `json.RawMessage`
 * `[]float32`, `[]float64` for vector search
 
 Field projection by RediSearch is not supported.

@@ -162,11 +162,7 @@ var converters = struct {
 	slice: map[reflect.Kind]converter{
 		reflect.Uint8: {
 			ValueToString: func(value reflect.Value) (string, bool) {
-				buf, ok := value.Interface().([]byte)
-				if !ok {
-					return "", false
-				}
-				return rueidis.BinaryString(buf), true
+				return rueidis.BinaryString(value.Bytes()), true
 			},
 			StringToValue: func(value string) (reflect.Value, error) {
 				buf := unsafe.Slice(unsafe.StringData(value), len(value))
