@@ -650,6 +650,13 @@ func rootCf(root goStruct) (tag string) {
 		tag = "mtGetTag"
 	}
 
+	if within(root, scrRoCMDs) {
+		if tag != "" {
+			panic("root cf collision")
+		}
+		tag = "scrRoTag"
+	}
+
 	if within(root, readOnlyCMDs) {
 		if tag != "" {
 			panic("root cf collision")
@@ -920,6 +927,12 @@ var mtGetCMDs = map[string]bool{
 	"jsonmget": false,
 }
 
+var scrRoCMDs = map[string]bool{
+	"fcallro":   false,
+	"evalsharo": false,
+	"evalro":    false,
+}
+
 var blockingCMDs = map[string]bool{
 	"blpop":       false,
 	"brpop":       false,
@@ -1005,6 +1018,8 @@ var cacheableCMDs = map[string]bool{
 	"topklist":            false,
 	"topkinfo":            false,
 	"fcallro":             false,
+	"evalsharo":           false,
+	"evalro":              false,
 	"graphroquery":        false,
 	"aitensorget":         false,
 	"aimodelget":          false,
@@ -1018,8 +1033,6 @@ var readOnlyCMDs = map[string]bool{
 	"bitpos":              false,
 	"dbsize":              false,
 	"dump":                false,
-	"evalro":              false,
-	"evalsharo":           false,
 	"exists":              false,
 	"expiretime":          false,
 	"geodist":             false,
@@ -1143,7 +1156,6 @@ var readOnlyCMDs = map[string]bool{
 	"graphslowlog":        false,
 	"graphconfigget":      false,
 	"graphlist":           false,
-	"fcallro":             false,
 	"aitensorget":         false,
 	"aimodelget":          false,
 	"aimodelexecute":      false,

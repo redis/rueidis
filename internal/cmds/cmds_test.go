@@ -18,6 +18,19 @@ func TestCacheable_CacheKey(t *testing.T) {
 	}
 }
 
+func TestCacheable_Scripting(t *testing.T) {
+	key, cmd := CacheKey(Cacheable{cs: newCommandSlice([]string{"EVALSHA_RO", "sha1", "1", "OOO", "XXX"}), cf: scrRoTag})
+	if key != "OOO" || cmd != "EVALSHA_ROsha11XXX" {
+		t.Fatalf("unexpected ret %v %v", key, cmd)
+	}
+	defer func() {
+		if err := recover().(string); err != multiKeyCacheErr {
+			t.Fatalf("not panic as expected")
+		}
+	}()
+	CacheKey(Cacheable{cs: newCommandSlice([]string{"EVALSHA_RO", "sha1", "2", "OOO", "XXX"}), cf: scrRoTag})
+}
+
 func TestCacheable_IsMGet(t *testing.T) {
 	if cmd := Cacheable(NewMGetCompleted([]string{"MGET", "K"})); !cmd.IsMGet() {
 		t.Fatalf("should be mget")
