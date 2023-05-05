@@ -616,9 +616,9 @@ func TestRedisResult(t *testing.T) {
 		if (RedisResult{val: m}).CacheTTL() <= 0 {
 			t.Fatal("CacheTTL <= 0")
 		}
-		time.Sleep(100 * time.Millisecond)
-		if (RedisResult{val: m}).CacheTTL() > 0 {
-			t.Fatal("CacheTTL > 0")
+		time.Sleep(150 * time.Millisecond)
+		if (RedisResult{val: m}).CacheTTL() != 0 {
+			t.Fatal("CacheTTL != 0")
 		}
 	})
 
@@ -631,9 +631,9 @@ func TestRedisResult(t *testing.T) {
 		if (RedisResult{val: m}).CachePTTL() <= 0 {
 			t.Fatal("CachePTTL <= 0")
 		}
-		time.Sleep(100 * time.Millisecond)
-		if (RedisResult{val: m}).CachePTTL() > 0 {
-			t.Fatal("CachePTTL > 0")
+		time.Sleep(150 * time.Millisecond)
+		if (RedisResult{val: m}).CachePTTL() != 0 {
+			t.Fatal("CachePTTL != 0")
 		}
 	})
 
