@@ -51,13 +51,13 @@ If you have RediSearch, you can create and search the repository against the ind
 ```golang
 
 if _, ok := repo.(*om.HashRepository[Example]); ok {
-    repo.CreateIndex(ctx, func(schema om.FtCreateSchema) om.Completed {
+    repo.CreateIndex(ctx, func(schema om.FtCreateSchema) rueidis.Completed {
         return schema.FieldName("myStr").Text().Build() // Note that the Example.Str field is mapped to myStr on redis by its json tag
     })
 }
 
 if _, ok := repo.(*om.JSONRepository[Example]); ok {
-    repo.CreateIndex(ctx, func(schema om.FtCreateSchema) om.Completed {
+    repo.CreateIndex(ctx, func(schema om.FtCreateSchema) rueidis.Completed {
         return schema.FieldName("$.myStr").Text().Build() // the field name of json index should be a json path syntax
     })
 }
@@ -66,7 +66,7 @@ exp := repo.NewEntity()
 exp.Str = "foo"
 repo.Save(ctx, exp)
 
-n, records, _ := repo.Search(ctx, func(search om.FtSearchIndex) om.Completed {
+n, records, _ := repo.Search(ctx, func(search om.FtSearchIndex) rueidis.Completed {
     return search.Query("foo").Build() // you have full query capability by building the command from om.FtSearchIndex
 })
 
