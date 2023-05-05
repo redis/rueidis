@@ -8,6 +8,7 @@ const (
 	readonly = uint16(1 << 13)
 	noRetTag = uint16(1<<12) | readonly // make noRetTag can also be retried
 	mtGetTag = uint16(1<<11) | readonly // make mtGetTag can also be retried
+	scrRoTag = uint16(1<<10) | readonly // make scrRoTag can also be retried
 	// InitSlot indicates that the command be sent to any redis node in cluster
 	InitSlot = uint16(1 << 14)
 	// NoSlot indicates that the command has no key slot specified
@@ -176,9 +177,18 @@ func CacheKey(c Cacheable) (key, command string) {
 		return c.cs.s[1], c.cs.s[0]
 	}
 
+	kp := 1
+
+	if c.cf == scrRoTag {
+		if c.cs.s[2] != "1" {
+			panic(multiKeyCacheErr)
+		}
+		kp = 3
+	}
+
 	length := 0
 	for i, v := range c.cs.s {
-		if i == 1 {
+		if i == kp {
 			continue
 		}
 		length += len(v)
@@ -186,7 +196,7 @@ func CacheKey(c Cacheable) (key, command string) {
 	sb := strings.Builder{}
 	sb.Grow(length)
 	for i, v := range c.cs.s {
-		if i == 1 {
+		if i == kp {
 			key = v
 		} else {
 			sb.WriteString(v)
@@ -300,3 +310,4 @@ func check(prev, new uint16) uint16 {
 }
 
 const multiKeySlotErr = "multi key command with different key slots are not allowed"
+const multiKeyCacheErr = "client side caching for scripting only supports numkeys=1"

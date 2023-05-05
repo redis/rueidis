@@ -86,7 +86,7 @@ func (c EvalNumkeys) Build() Completed {
 type EvalRo Completed
 
 func (b Builder) EvalRo() (c EvalRo) {
-	c = EvalRo{cs: get(), ks: b.ks, cf: readonly}
+	c = EvalRo{cs: get(), ks: b.ks, cf: scrRoTag}
 	c.cs.s = append(c.cs.s, "EVAL_RO")
 	return c
 }
@@ -106,6 +106,11 @@ func (c EvalRoArg) Arg(arg ...string) EvalRoArg {
 func (c EvalRoArg) Build() Completed {
 	c.cs.Build()
 	return Completed(c)
+}
+
+func (c EvalRoArg) Cache() Cacheable {
+	c.cs.Build()
+	return Cacheable(c)
 }
 
 type EvalRoKey Completed
@@ -135,6 +140,11 @@ func (c EvalRoKey) Build() Completed {
 	return Completed(c)
 }
 
+func (c EvalRoKey) Cache() Cacheable {
+	c.cs.Build()
+	return Cacheable(c)
+}
+
 type EvalRoNumkeys Completed
 
 func (c EvalRoNumkeys) Key(key ...string) EvalRoKey {
@@ -160,6 +170,11 @@ func (c EvalRoNumkeys) Arg(arg ...string) EvalRoArg {
 func (c EvalRoNumkeys) Build() Completed {
 	c.cs.Build()
 	return Completed(c)
+}
+
+func (c EvalRoNumkeys) Cache() Cacheable {
+	c.cs.Build()
+	return Cacheable(c)
 }
 
 type EvalRoScript Completed
@@ -258,7 +273,7 @@ func (c EvalshaNumkeys) Build() Completed {
 type EvalshaRo Completed
 
 func (b Builder) EvalshaRo() (c EvalshaRo) {
-	c = EvalshaRo{cs: get(), ks: b.ks, cf: readonly}
+	c = EvalshaRo{cs: get(), ks: b.ks, cf: scrRoTag}
 	c.cs.s = append(c.cs.s, "EVALSHA_RO")
 	return c
 }
@@ -278,6 +293,11 @@ func (c EvalshaRoArg) Arg(arg ...string) EvalshaRoArg {
 func (c EvalshaRoArg) Build() Completed {
 	c.cs.Build()
 	return Completed(c)
+}
+
+func (c EvalshaRoArg) Cache() Cacheable {
+	c.cs.Build()
+	return Cacheable(c)
 }
 
 type EvalshaRoKey Completed
@@ -307,6 +327,11 @@ func (c EvalshaRoKey) Build() Completed {
 	return Completed(c)
 }
 
+func (c EvalshaRoKey) Cache() Cacheable {
+	c.cs.Build()
+	return Cacheable(c)
+}
+
 type EvalshaRoNumkeys Completed
 
 func (c EvalshaRoNumkeys) Key(key ...string) EvalshaRoKey {
@@ -332,6 +357,11 @@ func (c EvalshaRoNumkeys) Arg(arg ...string) EvalshaRoArg {
 func (c EvalshaRoNumkeys) Build() Completed {
 	c.cs.Build()
 	return Completed(c)
+}
+
+func (c EvalshaRoNumkeys) Cache() Cacheable {
+	c.cs.Build()
+	return Cacheable(c)
 }
 
 type EvalshaRoSha1 Completed
@@ -437,7 +467,7 @@ func (c FcallNumkeys) Build() Completed {
 type FcallRo Completed
 
 func (b Builder) FcallRo() (c FcallRo) {
-	c = FcallRo{cs: get(), ks: b.ks, cf: readonly}
+	c = FcallRo{cs: get(), ks: b.ks, cf: scrRoTag}
 	c.cs.s = append(c.cs.s, "FCALL_RO")
 	return c
 }
