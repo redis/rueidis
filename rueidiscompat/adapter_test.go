@@ -6961,6 +6961,160 @@ func testAdapterCache(resp3 bool) {
 			Expect(pos).To(Equal(int64(1)))
 		})
 
+		Describe("EvalRO", func() {
+			It("returns keys and values", func() {
+				vals, err := adapter.Cache(time.Hour).EvalRO(
+					ctx,
+					"return {KEYS[1],ARGV[1]}",
+					[]string{"key"},
+					"hello",
+				).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(vals).To(Equal([]any{"key", "hello"}))
+			})
+
+			It("returns all values after an error", func() {
+				vals, err := adapter.Cache(time.Hour).EvalRO(
+					ctx,
+					`return {12, {err="error"}, "abc"}`,
+					[]string{"key"},
+				).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(vals.([]any)[0]).To(Equal(int64(12)))
+				Expect(vals.([]any)[1].(error).Error()).To(Equal("error"))
+				Expect(vals.([]any)[2]).To(Equal("abc"))
+			})
+		})
+
+		It("script load", func() {
+			val, err := adapter.ScriptLoad(
+				ctx,
+				"return {KEYS[1],ARGV[1]}",
+			).Result()
+			Expect(err).NotTo(HaveOccurred())
+			ret, err := adapter.ScriptExists(ctx, val).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(ret).To(Equal([]bool{true}))
+
+			valsRo, err := adapter.Cache(time.Hour).EvalShaRO(
+				ctx,
+				val,
+				[]string{"key"},
+				"hello",
+			).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(valsRo).To(Equal([]any{"key", "hello"}))
+		})
+
+		Describe("Functions", func() {
+			var (
+				lib1Code string
+				lib2Code string
+				lib1     Library
+				lib2     Library
+			)
+
+			BeforeEach(func() {
+				flush := adapter.FunctionFlush(ctx)
+				Expect(flush.Err()).NotTo(HaveOccurred())
+
+				lib1 = Library{
+					Name:   "mylib1",
+					Engine: "LUA",
+					Functions: []Function{
+						{
+							Name:        "lib1_func1",
+							Description: "This is the func-1 of lib 1",
+							Flags:       []string{"allow-oom", "allow-stale"},
+						},
+					},
+					Code: `#!lua name=%s
+
+                     local function f1(keys, args)
+                        local hash = keys[1]  -- Get the key name
+                        local time = redis.call('TIME')[1]  -- Get the current time from the Redis server
+
+                        -- Add the current timestamp to the arguments that the user passed to the function, stored in args
+                        table.insert(args, '_updated_at')
+                        table.insert(args, time)
+
+                        -- Run HSET with the updated argument list
+                        return redis.call('HSET', hash, unpack(args))
+                     end
+
+					redis.register_function{
+						function_name='%s',
+						description ='%s',
+						callback=f1,
+						flags={'%s', '%s'}
+					}`,
+				}
+
+				lib2 = Library{
+					Name:   "mylib2",
+					Engine: "LUA",
+					Functions: []Function{
+						{
+							Name:  "lib2_func1",
+							Flags: []string{},
+						},
+						{
+							Name:        "lib2_func2",
+							Description: "This is the func-2 of lib 2",
+							Flags:       []string{"no-writes"},
+						},
+					},
+					Code: `#!lua name=%s
+
+					local function f1(keys, args)
+						 return 'Function 1'
+					end
+
+					local function f2(keys, args)
+						 return 'Function 2'
+					end
+
+					redis.register_function('%s', f1)
+					redis.register_function{
+						function_name='%s',
+						description ='%s',
+						callback=f2,
+						flags={'%s'}
+					}`,
+				}
+
+				lib1Code = fmt.Sprintf(lib1.Code, lib1.Name, lib1.Functions[0].Name,
+					lib1.Functions[0].Description, lib1.Functions[0].Flags[0], lib1.Functions[0].Flags[1])
+				lib2Code = fmt.Sprintf(lib2.Code, lib2.Name, lib2.Functions[0].Name,
+					lib2.Functions[1].Name, lib2.Functions[1].Description, lib2.Functions[1].Flags[0])
+			})
+
+			It("Calls a function as read-only", func() {
+				lib1Code = fmt.Sprintf(lib1.Code, lib1.Name, lib1.Functions[0].Name,
+					lib1.Functions[0].Description, lib1.Functions[0].Flags[0], lib1.Functions[0].Flags[1])
+
+				err := adapter.FunctionLoad(ctx, lib1Code).Err()
+				Expect(err).NotTo(HaveOccurred())
+
+				// This function doesn't have a "no-writes" flag
+				x := adapter.Cache(time.Hour).FCallRO(ctx, lib1.Functions[0].Name, []string{"my_hash"}, "a", 1, "b", 2)
+
+				Expect(x.Err()).To(HaveOccurred())
+
+				lib2Code = fmt.Sprintf(lib2.Code, lib2.Name, lib2.Functions[0].Name, lib2.Functions[1].Name,
+					lib2.Functions[1].Description, lib2.Functions[1].Flags[0])
+
+				// This function has a "no-writes" flag
+				err = adapter.FunctionLoad(ctx, lib2Code).Err()
+				Expect(err).NotTo(HaveOccurred())
+
+				x = adapter.Cache(time.Hour).FCallRO(ctx, lib2.Functions[1].Name, []string{"my_hash"})
+
+				Expect(x.Err()).NotTo(HaveOccurred())
+				Expect(x.Text()).To(Equal("Function 2"))
+			})
+		})
+
 		It("should Get", func() {
 			get := adapter.Cache(time.Hour).Get(ctx, "_")
 			Expect(rueidis.IsRedisNil(get.Err())).To(BeTrue())
