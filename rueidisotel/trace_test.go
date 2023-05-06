@@ -8,6 +8,7 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/metric/global"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 	"go.opentelemetry.io/otel/sdk/metric/metricdata/metricdatatest"
@@ -35,7 +36,7 @@ func TestWithClientGlobalProvider(t *testing.T) {
 
 	mxp := metric.NewManualReader()
 	meterProvider := metric.NewMeterProvider(metric.WithReader(mxp))
-	otel.SetMeterProvider(meterProvider)
+	global.SetMeterProvider(meterProvider)
 
 	client = WithClient(
 		client,
