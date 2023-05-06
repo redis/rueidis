@@ -2881,6 +2881,21 @@ func (c CacheCompat) BitPosSpan(ctx context.Context, key string, bit, start, end
 	return newIntCmd(resp)
 }
 
+func (c CacheCompat) EvalRO(ctx context.Context, script string, keys []string, args ...any) *Cmd {
+	cmd := c.client.B().EvalRo().Script(script).Numkeys(int64(len(keys))).Key(keys...).Arg(argsToSlice(args)...).Cache()
+	return newCmd(c.client.DoCache(ctx, cmd, c.ttl))
+}
+
+func (c CacheCompat) EvalShaRO(ctx context.Context, sha1 string, keys []string, args ...any) *Cmd {
+	cmd := c.client.B().EvalshaRo().Sha1(sha1).Numkeys(int64(len(keys))).Key(keys...).Arg(argsToSlice(args)...).Cache()
+	return newCmd(c.client.DoCache(ctx, cmd, c.ttl))
+}
+
+func (c CacheCompat) FCallRO(ctx context.Context, function string, keys []string, args ...any) *Cmd {
+	cmd := c.client.B().FcallRo().Function(function).Numkeys(int64(len(keys))).Key(keys...).Arg(argsToSlice(args)...).Cache()
+	return newCmd(c.client.DoCache(ctx, cmd, c.ttl))
+}
+
 func (c CacheCompat) GeoDist(ctx context.Context, key, member1, member2, unit string) *FloatCmd {
 	var resp rueidis.RedisResult
 	switch strings.ToUpper(unit) {
