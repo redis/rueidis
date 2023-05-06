@@ -179,6 +179,7 @@ func TestMGets(t *testing.T) {
 	for _, key := range keys {
 		ks := slot(key)
 		cp := ret[slot(key)]
+		cp.cs.Verify()
 		if cp.ks != ks {
 			t.Fatalf("ks mistmatch %v %v", cp.ks, ks)
 		}
@@ -197,6 +198,7 @@ func TestJsonMGets(t *testing.T) {
 	for _, key := range keys {
 		ks := slot(key)
 		cp := ret[slot(key)]
+		cp.cs.Verify()
 		if cp.ks != ks {
 			t.Fatalf("ks mistmatch %v %v", cp.ks, ks)
 		}
@@ -215,6 +217,7 @@ func TestMSets(t *testing.T) {
 	for _, key := range keys {
 		ks := slot(key)
 		cp := ret[slot(key)]
+		cp.cs.Verify()
 		if cp.ks != ks {
 			t.Fatalf("ks mistmatch %v %v", cp.ks, ks)
 		}
@@ -236,6 +239,7 @@ func TestMSetNXs(t *testing.T) {
 	for _, key := range keys {
 		ks := slot(key)
 		cp := ret[slot(key)]
+		cp.cs.Verify()
 		if cp.ks != ks {
 			t.Fatalf("ks mistmatch %v %v", cp.ks, ks)
 		}

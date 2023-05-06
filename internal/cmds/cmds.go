@@ -255,6 +255,7 @@ func JsonMGets(keys []string, path string) map[uint16]Completed {
 	ret := slotMGets("JSON.MGET", keys)
 	for _, jsonmget := range ret {
 		jsonmget.cs.s = append(jsonmget.cs.s, path)
+		jsonmget.cs.l++
 	}
 	return ret
 }
@@ -269,9 +270,11 @@ func slotMGets(cmd string, keys []string) map[uint16]Completed {
 		} else {
 			cs = get()
 			cs.s = append(cs.s, cmd)
+			cs.l = 1
 			ret[ks] = Completed{cs: cs, cf: mtGetTag, ks: ks}
 		}
 		cs.s = append(cs.s, key)
+		cs.l++
 	}
 	return ret
 }
@@ -286,9 +289,11 @@ func slotMSets(cmd string, kvs map[string]string) map[uint16]Completed {
 		} else {
 			cs = get()
 			cs.s = append(cs.s, cmd)
+			cs.l = 1
 			ret[ks] = Completed{cs: cs, ks: ks}
 		}
 		cs.s = append(cs.s, key, value)
+		cs.l += 2
 	}
 	return ret
 }
