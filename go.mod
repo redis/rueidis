@@ -4,16 +4,16 @@ go 1.18
 
 require (
 	github.com/oklog/ulid/v2 v2.1.0
-	go.opentelemetry.io/otel v1.19.0
-	go.opentelemetry.io/otel/metric v1.19.0
-	go.opentelemetry.io/otel/sdk v1.19.0
-	go.opentelemetry.io/otel/sdk/metric v1.19.0
-	go.opentelemetry.io/otel/trace v1.19.0
+	go.opentelemetry.io/otel v1.14.0
+	go.opentelemetry.io/otel/metric v0.37.0
+	go.opentelemetry.io/otel/sdk v1.14.0
+	go.opentelemetry.io/otel/trace v1.14.0
 )
 
 require (
-	github.com/onsi/ginkgo/v2 v2.12.1
-	github.com/onsi/gomega v1.28.0
+	github.com/onsi/ginkgo/v2 v2.11.0
+	github.com/onsi/gomega v1.27.10
+	go.opentelemetry.io/otel/sdk/metric v0.37.0
 	go.uber.org/mock v0.3.0
 )
 
