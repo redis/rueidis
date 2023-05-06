@@ -9,6 +9,8 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/metric/global"
+	"go.opentelemetry.io/otel/metric/instrument"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/redis/rueidis"
@@ -32,7 +34,7 @@ func WithClient(client rueidis.Client, opts ...Option) rueidis.Client {
 		opt(o)
 	}
 	if o.meterProvider == nil {
-		o.meterProvider = otel.GetMeterProvider() // Default to global MeterProvider
+		o.meterProvider = global.MeterProvider() // Default to global MeterProvider
 	}
 	if o.tracerProvider == nil {
 		o.tracerProvider = otel.GetTracerProvider() // Default to global TracerProvider
@@ -85,8 +87,8 @@ type otelclient struct {
 	tracerProvider trace.TracerProvider
 	tracer         trace.Tracer
 	meter          metric.Meter
-	cscMiss        metric.Int64Counter
-	cscHits        metric.Int64Counter
+	cscMiss        instrument.Int64Counter
+	cscHits        instrument.Int64Counter
 }
 
 func (o *otelclient) B() cmds.Builder {
@@ -112,9 +114,9 @@ func (o *otelclient) DoCache(ctx context.Context, cmd rueidis.Cacheable, ttl tim
 	resp = o.client.DoCache(ctx, cmd, ttl)
 	if resp.NonRedisError() == nil {
 		if resp.IsCacheHit() {
-			o.cscHits.Add(ctx, 1, metric.WithAttributes(o.tAttrs...))
+			o.cscHits.Add(ctx, 1, o.tAttrs...)
 		} else {
-			o.cscMiss.Add(ctx, 1, metric.WithAttributes(o.tAttrs...))
+			o.cscMiss.Add(ctx, 1, o.tAttrs...)
 		}
 	}
 	o.end(span, resp.Error())
@@ -127,9 +129,9 @@ func (o *otelclient) DoMultiCache(ctx context.Context, multi ...rueidis.Cacheabl
 	for _, resp := range resps {
 		if resp.NonRedisError() == nil {
 			if resp.IsCacheHit() {
-				o.cscHits.Add(ctx, 1, metric.WithAttributes(o.tAttrs...))
+				o.cscHits.Add(ctx, 1, o.tAttrs...)
 			} else {
-				o.cscMiss.Add(ctx, 1, metric.WithAttributes(o.tAttrs...))
+				o.cscMiss.Add(ctx, 1, o.tAttrs...)
 			}
 		}
 	}
@@ -201,8 +203,8 @@ type dedicated struct {
 	tAttrs  []attribute.KeyValue
 	tracer  trace.Tracer
 	meter   metric.Meter
-	cscMiss metric.Int64Counter
-	cscHits metric.Int64Counter
+	cscMiss instrument.Int64Counter
+	cscHits instrument.Int64Counter
 }
 
 func (d *dedicated) B() cmds.Builder {
