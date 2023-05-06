@@ -10,7 +10,6 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/metric/global"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -83,9 +82,9 @@ func (o *otelclient) DoCache(ctx context.Context, cmd rueidis.Cacheable, ttl tim
 	resp = o.client.DoCache(ctx, cmd, ttl)
 	if resp.NonRedisError() == nil {
 		if resp.IsCacheHit() {
-			cscHits.Add(ctx, 1, metric.WithAttributes(o.tAttrs...))
+			cscHits.Add(ctx, 1, o.tAttrs...)
 		} else {
-			cscMiss.Add(ctx, 1, metric.WithAttributes(o.tAttrs...))
+			cscMiss.Add(ctx, 1, o.tAttrs...)
 		}
 	}
 	end(span, resp.Error())
@@ -98,9 +97,9 @@ func (o *otelclient) DoMultiCache(ctx context.Context, multi ...rueidis.Cacheabl
 	for _, resp := range resps {
 		if resp.NonRedisError() == nil {
 			if resp.IsCacheHit() {
-				cscHits.Add(ctx, 1, metric.WithAttributes(o.tAttrs...))
+				cscHits.Add(ctx, 1, o.tAttrs...)
 			} else {
-				cscMiss.Add(ctx, 1, metric.WithAttributes(o.tAttrs...))
+				cscMiss.Add(ctx, 1, o.tAttrs...)
 			}
 		}
 	}
