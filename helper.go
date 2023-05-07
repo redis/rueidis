@@ -43,6 +43,17 @@ func MSet(client Client, ctx context.Context, kvs map[string]string) map[string]
 	return parallelMSet(client, ctx, cmds.MSets(kvs), make(map[string]error, len(kvs)))
 }
 
+// MDel is a helper that consults the redis directly with multiple keys by grouping keys within same slot into DELs
+func MDel(client Client, ctx context.Context, keys []string) map[string]error {
+	if len(keys) == 0 {
+		return make(map[string]error)
+	}
+	if _, ok := client.(*singleClient); ok {
+		return clientMDel(client, ctx, keys)
+	}
+	return parallelMDel(client, ctx, cmds.MDels(keys), make(map[string]error, len(keys)))
+}
+
 // MSetNX is a helper that consults the redis directly with multiple keys by grouping keys within same slot into MSETNXs
 func MSetNX(client Client, ctx context.Context, kvs map[string]string) map[string]error {
 	if len(kvs) == 0 {
@@ -107,6 +118,15 @@ func clientMSet(client Client, ctx context.Context, mset string, kvs map[string]
 	return ret
 }
 
+func clientMDel(client Client, ctx context.Context, keys []string) map[string]error {
+	err := client.Do(ctx, client.B().Del().Key(keys...).Build()).Error()
+	ret := make(map[string]error, len(keys))
+	for _, k := range keys {
+		ret[k] = err
+	}
+	return ret
+}
+
 func parallelMGetCache(cc Client, ctx context.Context, ttl time.Duration, mgets map[uint16]Completed, keys []string) (ret map[string]RedisMessage, err error) {
 	return doMGets(make(map[string]RedisMessage, len(keys)), mgets, func(cmd Completed) RedisResult {
 		return cc.DoCache(ctx, Cacheable(cmd), ttl)
@@ -133,6 +153,25 @@ func parallelMSet(cc Client, ctx context.Context, msets map[uint16]Completed, re
 		mu.Lock()
 		for i := 1; i < len(cmd.Commands()); i += 2 {
 			ret[cmd.Commands()[i]] = err2
+		}
+		mu.Unlock()
+		if err == nil {
+			cmds.Put(cmds.CompletedCS(cmd))
+		}
+	})
+	return ret
+}
+
+func parallelMDel(cc Client, ctx context.Context, mdels map[uint16]Completed, ret map[string]error) map[string]error {
+	var mu sync.Mutex
+	for _, cmd := range mdels {
+		cmd.Pin()
+	}
+	util.ParallelVals(mdels, func(cmd Completed) {
+		err := cc.Do(ctx, cmd).Error()
+		mu.Lock()
+		for i := 1; i < len(cmd.Commands()); i += 2 {
+			ret[cmd.Commands()[i]] = err
 		}
 		mu.Unlock()
 		if err == nil {

@@ -205,6 +205,14 @@ func testMultiSETGETRESP2(t *testing.T, client Client) {
 	testMultiSETGET(t, client, false)
 }
 
+func testMultiSETGETCSCHelpers(t *testing.T, client Client) {
+	testMultiSETGETHelpers(t, client, true)
+}
+
+func testMultiSETGETRESP2Helpers(t *testing.T, client Client) {
+	testMultiSETGETHelpers(t, client, false)
+}
+
 //gocyclo:ignore
 func testMultiSETGET(t *testing.T, client Client, csc bool) {
 	ctx := context.Background()
@@ -332,6 +340,91 @@ func testMultiSETGET(t *testing.T, client Client, csc bool) {
 		}
 	}
 	wait()
+}
+
+func testMultiSETGETHelpers(t *testing.T, client Client, csc bool) {
+	ctx := context.Background()
+	keys := 10000
+
+	kvs := make(map[string]string, keys)
+	for i := 0; i < keys; i++ {
+		kvs["z"+strconv.Itoa(i)] = strconv.FormatInt(rand.Int63(), 10)
+	}
+
+	t.Logf("testing Multi SET with %d keys\n", keys)
+	for _, err := range MSet(client, ctx, kvs) {
+		if err != nil {
+			t.Fatalf("unexpecetd err %v\n", err)
+		}
+	}
+
+	t.Logf("testing GET with %d keys\n", keys*2)
+	cmdKeys := make([]string, keys*2)
+	for i := 0; i < len(cmdKeys); i++ {
+		cmdKeys[i] = "z" + strconv.Itoa(i)
+	}
+	validate := func(resp map[string]RedisMessage) {
+		for _, key := range cmdKeys {
+			ret, ok := resp[key]
+			if !ok {
+				t.Fatalf("unexpecetd result %v not found\n", key)
+			}
+			if exp, ok := kvs[key]; ok {
+				if exp != ret.string {
+					t.Fatalf("unexpecetd result %v wrong value %v\n", key, exp)
+				}
+			} else {
+				if !ret.IsNil() {
+					t.Fatalf("unexpecetd result %v wrong value %v\n", key, "nil")
+				}
+			}
+		}
+	}
+	resp, err := MGet(client, ctx, cmdKeys)
+	if err != nil {
+		t.Fatalf("unexpecetd err %v\n", err)
+	}
+	validate(resp)
+
+	t.Logf("testing client side caching with %d keys\n", keys*2)
+	resp, err = MGetCache(client, ctx, time.Minute, cmdKeys)
+	if err != nil {
+		t.Fatalf("unexpecetd err %v\n", err)
+	}
+	validate(resp)
+	for _, ret := range resp {
+		if ret.IsCacheHit() {
+			t.Fatalf("unexpeceted cache hit %v\n", ret)
+		}
+	}
+	resp, err = MGetCache(client, ctx, time.Minute, cmdKeys)
+	if err != nil {
+		t.Fatalf("unexpecetd err %v\n", err)
+	}
+	validate(resp)
+	for _, ret := range resp {
+		if csc && !ret.IsCacheHit() {
+			t.Fatalf("unexpeceted cache miss %v\n", ret)
+		}
+	}
+
+	t.Logf("testing DEL with %d keys\n", keys*2)
+	for _, err := range MDel(client, ctx, cmdKeys) {
+		if err != nil {
+			t.Fatalf("unexpecetd err %v\n", err)
+		}
+	}
+	time.Sleep(time.Second)
+	t.Logf("testing client side caching after delete\n")
+	resp, err = MGetCache(client, ctx, time.Minute, cmdKeys)
+	if err != nil {
+		t.Fatalf("unexpecetd err %v\n", err)
+	}
+	for _, ret := range resp {
+		if !ret.IsNil() {
+			t.Fatalf("unexpeceted cache hit %v\n", ret)
+		}
+	}
 }
 
 //gocyclo:ignore
@@ -572,7 +665,7 @@ func TestSingleClientIntegration(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	run(t, client, testSETGETCSC, testMultiSETGETCSC, testMultiExec, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
+	run(t, client, testSETGETCSC, testMultiSETGETCSC, testMultiSETGETCSCHelpers, testMultiExec, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
 	run(t, client, testFlush)
 
 	client.Close()
@@ -592,7 +685,7 @@ func TestSentinelClientIntegration(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	run(t, client, testSETGETCSC, testMultiSETGETCSC, testMultiExec, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
+	run(t, client, testSETGETCSC, testMultiSETGETCSC, testMultiSETGETCSCHelpers, testMultiExec, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
 	run(t, client, testFlush)
 
 	client.Close()
@@ -608,7 +701,7 @@ func TestClusterClientIntegration(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	run(t, client, testSETGETCSC, testMultiSETGETCSC, testMultiExec, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
+	run(t, client, testSETGETCSC, testMultiSETGETCSC, testMultiSETGETCSCHelpers, testMultiExec, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
 
 	client.Close()
 	time.Sleep(time.Second * 5) // wait background ping exit
@@ -624,7 +717,7 @@ func TestSingleClient5Integration(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testMultiExec, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
+	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testMultiSETGETRESP2Helpers, testMultiExec, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
 
 	client.Close()
 	time.Sleep(time.Second * 5) // wait background ping exit
@@ -640,7 +733,7 @@ func TestCluster5ClientIntegration(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testMultiExec, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
+	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testMultiSETGETRESP2Helpers, testMultiExec, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
 
 	client.Close()
 	time.Sleep(time.Second * 5) // wait background ping exit
@@ -659,7 +752,7 @@ func TestSentinel5ClientIntegration(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testMultiExec, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
+	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testMultiSETGETRESP2Helpers, testMultiExec, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
 
 	client.Close()
 	time.Sleep(time.Second * 5) // wait background ping exit
@@ -674,7 +767,7 @@ func TestKeyDBSingleClientIntegration(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	run(t, client, testSETGETCSC, testMultiSETGETCSC, testMultiExec, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
+	run(t, client, testSETGETCSC, testMultiSETGETCSC, testMultiSETGETCSCHelpers, testMultiExec, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
 	run(t, client, testFlush)
 
 	client.Close()
@@ -692,7 +785,7 @@ func TestDragonflyDBSingleClientIntegration(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testPubSub, testLua)
+	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testMultiSETGETRESP2Helpers, testPubSub, testLua)
 
 	client.Close()
 	time.Sleep(time.Second * 5) // wait background ping exit
@@ -708,7 +801,7 @@ func TestKvrocksSingleClientIntegration(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testPubSub, testLua)
+	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testMultiSETGETRESP2Helpers, testPubSub, testLua)
 	run(t, client, testFlush)
 
 	client.Close()

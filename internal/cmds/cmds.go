@@ -237,7 +237,12 @@ func NewMGetCompleted(ss []string) Completed {
 
 // MGets groups keys by their slot and returns multi MGET commands
 func MGets(keys []string) map[uint16]Completed {
-	return slotMGets("MGET", keys)
+	return slotMCMDs("MGET", keys, mtGetTag)
+}
+
+// MDels groups keys by their slot and returns multi DEL commands
+func MDels(keys []string) map[uint16]Completed {
+	return slotMCMDs("DEL", keys, 0)
 }
 
 // MSets groups keys by their slot and returns multi MSET commands
@@ -252,7 +257,7 @@ func MSetNXs(kvs map[string]string) map[uint16]Completed {
 
 // JsonMGets groups keys by their slot and returns multi JSON.MGET commands
 func JsonMGets(keys []string, path string) map[uint16]Completed {
-	ret := slotMGets("JSON.MGET", keys)
+	ret := slotMCMDs("JSON.MGET", keys, mtGetTag)
 	for _, jsonmget := range ret {
 		jsonmget.cs.s = append(jsonmget.cs.s, path)
 		jsonmget.cs.l++
@@ -260,7 +265,7 @@ func JsonMGets(keys []string, path string) map[uint16]Completed {
 	return ret
 }
 
-func slotMGets(cmd string, keys []string) map[uint16]Completed {
+func slotMCMDs(cmd string, keys []string, cf uint16) map[uint16]Completed {
 	ret := make(map[uint16]Completed, 8)
 	for _, key := range keys {
 		var cs *CommandSlice
@@ -271,7 +276,7 @@ func slotMGets(cmd string, keys []string) map[uint16]Completed {
 			cs = get()
 			cs.s = append(cs.s, cmd)
 			cs.l = 1
-			ret[ks] = Completed{cs: cs, cf: mtGetTag, ks: ks}
+			ret[ks] = Completed{cs: cs, cf: cf, ks: ks}
 		}
 		cs.s = append(cs.s, key)
 		cs.l++
