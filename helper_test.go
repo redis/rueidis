@@ -190,6 +190,94 @@ func TestMGet(t *testing.T) {
 	})
 }
 
+//gocyclo:ignore
+func TestMDel(t *testing.T) {
+	t.Run("single client", func(t *testing.T) {
+		m := &mockConn{}
+		client, err := newSingleClient(&ClientOption{InitAddress: []string{""}}, m, func(dst string, opt *ClientOption) conn {
+			return m
+		})
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		t.Run("Delegate Do", func(t *testing.T) {
+			m.DoFn = func(cmd Completed) RedisResult {
+				if !reflect.DeepEqual(cmd.Commands(), []string{"DEL", "1", "2"}) {
+					t.Fatalf("unexpected command %v", cmd)
+				}
+				return newResult(RedisMessage{typ: ':', integer: 2}, nil)
+			}
+			if v := MDel(client, context.Background(), []string{"1", "2"}); v["1"] != nil || v["2"] != nil {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		})
+		t.Run("Delegate Do Empty", func(t *testing.T) {
+			if v := MDel(client, context.Background(), []string{}); len(v) != 0 {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		})
+		t.Run("Delegate Do Err", func(t *testing.T) {
+			ctx, cancel := context.WithCancel(context.Background())
+			cancel()
+			m.DoFn = func(cmd Completed) RedisResult {
+				return newResult(RedisMessage{}, context.Canceled)
+			}
+			if v := MDel(client, ctx, []string{"1", "2"}); v["1"] != context.Canceled || v["2"] != context.Canceled {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		})
+	})
+	t.Run("cluster client", func(t *testing.T) {
+		m := &mockConn{
+			DoFn: func(cmd Completed) RedisResult {
+				return slotsResp
+			},
+		}
+		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
+			return m
+		})
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		t.Run("Delegate Do", func(t *testing.T) {
+			keys := make([]string, 100)
+			for i := range keys {
+				keys[i] = strconv.Itoa(i)
+			}
+			m.DoFn = func(cmd Completed) RedisResult {
+				for _, key := range keys {
+					if reflect.DeepEqual(cmd.Commands(), []string{"DEL", key}) {
+						return newResult(RedisMessage{typ: ':', integer: 1}, nil)
+					}
+				}
+				t.Fatalf("unexpected command %v", cmd)
+				return RedisResult{}
+			}
+			v := MDel(client, context.Background(), keys)
+			for _, key := range keys {
+				if v[key] != nil {
+					t.Fatalf("unexpected response %v", v)
+				}
+			}
+		})
+		t.Run("Delegate Do Empty", func(t *testing.T) {
+			if v := MDel(client, context.Background(), []string{}); len(v) != 0 {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		})
+		t.Run("Delegate Do Err", func(t *testing.T) {
+			ctx, cancel := context.WithCancel(context.Background())
+			cancel()
+			m.DoFn = func(cmd Completed) RedisResult {
+				return newResult(RedisMessage{}, context.Canceled)
+			}
+			if v := MDel(client, ctx, []string{"1", "2"}); v["1"] != context.Canceled || v["2"] != context.Canceled {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		})
+	})
+}
+
 func TestMSet(t *testing.T) {
 	t.Run("single client", func(t *testing.T) {
 		m := &mockConn{}

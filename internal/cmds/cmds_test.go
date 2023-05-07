@@ -192,6 +192,25 @@ func TestMGets(t *testing.T) {
 	}
 }
 
+func TestMDels(t *testing.T) {
+	keys := []string{"{1}", "{2}", "{3}", "{1}", "{2}", "{3}"}
+	ret := MDels(keys)
+	for _, key := range keys {
+		ks := slot(key)
+		cp := ret[slot(key)]
+		cp.cs.Verify()
+		if cp.ks != ks {
+			t.Fatalf("ks mistmatch %v %v", cp.ks, ks)
+		}
+		if cp.cf == mtGetTag {
+			t.Fatalf("cf should not be mtGetTag")
+		}
+		if !reflect.DeepEqual(cp.cs.s, []string{"DEL", key, key}) {
+			t.Fatalf("cs mismatch %v %v", cp.cs.s, []string{"DEL", key, key})
+		}
+	}
+}
+
 func TestJsonMGets(t *testing.T) {
 	keys := []string{"{1}", "{2}", "{3}", "{1}", "{2}", "{3}"}
 	ret := JsonMGets(keys, "$")
