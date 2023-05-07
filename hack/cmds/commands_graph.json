@@ -134,5 +134,15 @@
     "arguments": [],
     "since": "2.4.3",
     "group": "graph"
+  },
+  "GRAPH.CONSTRAINT DROP": {
+    "summary": "Deletes a constraint from specified graph",
+    "since": "2.12.0",
+    "group": "graph"
+  },
+  "GRAPH.CONSTRAINT CREATE": {
+    "summary": "Creates a constraint on specified graph",
+    "since": "2.12.0",
+    "group": "graph"
   }
 }

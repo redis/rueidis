@@ -7,6 +7,8 @@ import "testing"
 func graph0(s Builder) {
 	s.GraphConfigGet().Name("1").Build()
 	s.GraphConfigSet().Name("1").Value("1").Build()
+	s.GraphConstraintCreate().Build()
+	s.GraphConstraintDrop().Build()
 	s.GraphDelete().Graph("1").Build()
 	s.GraphExplain().Graph("1").Query("1").Build()
 	s.GraphList().Build()
