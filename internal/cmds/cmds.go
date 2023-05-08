@@ -265,6 +265,26 @@ func JsonMGets(keys []string, path string) map[uint16]Completed {
 	return ret
 }
 
+// JsonMSets groups keys by their slot and returns multi JSON.MSET commands
+func JsonMSets(kvs map[string]string, path string) map[uint16]Completed {
+	ret := make(map[uint16]Completed, 8)
+	for key, value := range kvs {
+		var cs *CommandSlice
+		ks := slot(key)
+		if cp, ok := ret[ks]; ok {
+			cs = cp.cs
+		} else {
+			cs = get()
+			cs.s = append(cs.s, "JSON.MSET")
+			cs.l = 1
+			ret[ks] = Completed{cs: cs, ks: ks}
+		}
+		cs.s = append(cs.s, key, path, value)
+		cs.l += 3
+	}
+	return ret
+}
+
 func slotMCMDs(cmd string, keys []string, cf uint16) map[uint16]Completed {
 	ret := make(map[uint16]Completed, 8)
 	for _, key := range keys {
