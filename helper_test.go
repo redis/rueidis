@@ -676,3 +676,91 @@ func TestJsonMGet(t *testing.T) {
 		})
 	})
 }
+
+func TestJsonMSet(t *testing.T) {
+	t.Run("single client", func(t *testing.T) {
+		m := &mockConn{}
+		client, err := newSingleClient(&ClientOption{InitAddress: []string{""}}, m, func(dst string, opt *ClientOption) conn {
+			return m
+		})
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		t.Run("Delegate Do", func(t *testing.T) {
+			m.DoFn = func(cmd Completed) RedisResult {
+				if !reflect.DeepEqual(cmd.Commands(), []string{"JSON.MSET", "1", "$", "1", "2", "$", "2"}) &&
+					!reflect.DeepEqual(cmd.Commands(), []string{"JSON.MSET", "2", "$", "2", "1", "$", "1"}) {
+					t.Fatalf("unexpected command %v", cmd)
+				}
+				return newResult(RedisMessage{typ: '+', string: "OK"}, nil)
+			}
+			if err := JsonMSet(client, context.Background(), map[string]string{"1": "1", "2": "2"}, "$"); err["1"] != nil || err["2"] != nil {
+				t.Fatalf("unexpected response %v", err)
+			}
+		})
+		t.Run("Delegate Do Empty", func(t *testing.T) {
+			if err := JsonMSet(client, context.Background(), map[string]string{}, "$"); len(err) != 0 {
+				t.Fatalf("unexpected response %v", err)
+			}
+		})
+		t.Run("Delegate Do Err", func(t *testing.T) {
+			ctx, cancel := context.WithCancel(context.Background())
+			cancel()
+			m.DoFn = func(cmd Completed) RedisResult {
+				return newResult(RedisMessage{}, context.Canceled)
+			}
+			if err := JsonMSet(client, ctx, map[string]string{"1": "1", "2": "2"}, "$"); err["1"] != context.Canceled || err["2"] != context.Canceled {
+				t.Fatalf("unexpected response %v", err)
+			}
+		})
+	})
+	t.Run("cluster client", func(t *testing.T) {
+		m := &mockConn{
+			DoFn: func(cmd Completed) RedisResult {
+				return slotsResp
+			},
+		}
+		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
+			return m
+		})
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		t.Run("Delegate Do", func(t *testing.T) {
+			keys := make(map[string]string, 100)
+			for i := 0; i < 100; i++ {
+				keys[strconv.Itoa(i)] = strconv.Itoa(i)
+			}
+			m.DoFn = func(cmd Completed) RedisResult {
+				for key := range keys {
+					if reflect.DeepEqual(cmd.Commands(), []string{"JSON.MSET", key, "$", key}) {
+						return newResult(RedisMessage{typ: '+', string: "OK"}, nil)
+					}
+				}
+				t.Fatalf("unexpected command %v", cmd)
+				return RedisResult{}
+			}
+			err := JsonMSet(client, context.Background(), keys, "$")
+			for key := range keys {
+				if err[key] != nil {
+					t.Fatalf("unexpected response %v", err)
+				}
+			}
+		})
+		t.Run("Delegate Do Empty", func(t *testing.T) {
+			if err := JsonMSet(client, context.Background(), map[string]string{}, "$"); len(err) != 0 {
+				t.Fatalf("unexpected response %v", err)
+			}
+		})
+		t.Run("Delegate Do Err", func(t *testing.T) {
+			ctx, cancel := context.WithCancel(context.Background())
+			cancel()
+			m.DoFn = func(cmd Completed) RedisResult {
+				return newResult(RedisMessage{}, context.Canceled)
+			}
+			if err := JsonMSet(client, ctx, map[string]string{"1": "1", "2": "2"}, "$"); err["1"] != context.Canceled || err["2"] != context.Canceled {
+				t.Fatalf("unexpected response %v", err)
+			}
+		})
+	})
+}

@@ -87,6 +87,17 @@ func JsonMGet(client Client, ctx context.Context, keys []string, path string) (r
 	return parallelMGet(client, ctx, cmds.JsonMGets(keys, path), keys)
 }
 
+// JsonMSet is a helper that consults redis directly with multiple keys by grouping keys within same slot into JSON.MSETs
+func JsonMSet(client Client, ctx context.Context, kvs map[string]string, path string) map[string]error {
+	if len(kvs) == 0 {
+		return make(map[string]error)
+	}
+	if _, ok := client.(*singleClient); ok {
+		return clientJSONMSet(client, ctx, kvs, path, make(map[string]error, len(kvs)))
+	}
+	return parallelMSet(client, ctx, cmds.JsonMSets(kvs, path), make(map[string]error, len(kvs)))
+}
+
 func clientMGetCache(client Client, ctx context.Context, ttl time.Duration, cmd Cacheable, keys []string) (ret map[string]RedisMessage, err error) {
 	arr, err := client.DoCache(ctx, cmd, ttl).ToArray()
 	if err != nil {
@@ -112,6 +123,18 @@ func clientMSet(client Client, ctx context.Context, mset string, kvs map[string]
 	if err == nil && !ok {
 		err = ErrMSetNXNotSet
 	}
+	for k := range kvs {
+		ret[k] = err
+	}
+	return ret
+}
+
+func clientJSONMSet(client Client, ctx context.Context, kvs map[string]string, path string, ret map[string]error) map[string]error {
+	cmd := cmds.JsonMsetTripletValue(client.B().JsonMset())
+	for k, v := range kvs {
+		cmd = cmd.Key(k).Path(path).Value(v)
+	}
+	err := client.Do(ctx, cmd.Build()).Error()
 	for k := range kvs {
 		ret[k] = err
 	}

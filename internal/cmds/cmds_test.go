@@ -230,6 +230,28 @@ func TestJsonMGets(t *testing.T) {
 	}
 }
 
+func TestJsonMSets(t *testing.T) {
+	keys := map[string]string{"{1}": "{1}", "{2}": "{2}", "{3}": "{3}", "{1}a": "{1}a", "{2}a": "{2}a", "{3}a": "{3}a"}
+	ret := JsonMSets(keys, "$")
+	for _, key := range keys {
+		ks := slot(key)
+		cp := ret[slot(key)]
+		cp.cs.Verify()
+		if cp.ks != ks {
+			t.Fatalf("ks mistmatch %v %v", cp.ks, ks)
+		}
+		if cp.IsReadOnly() {
+			t.Fatalf("cf should not be readonly")
+		}
+		key := strings.TrimSuffix(key, "a")
+		key2 := key + "a"
+		if !reflect.DeepEqual(cp.cs.s, []string{"JSON.MSET", key, "$", key, key2, "$", key2}) &&
+			!reflect.DeepEqual(cp.cs.s, []string{"JSON.MSET", key2, "$", key2, key, "$", key}) {
+			t.Fatalf("cs mismatch %v", cp.cs.s)
+		}
+	}
+}
+
 func TestMSets(t *testing.T) {
 	keys := map[string]string{"{1}": "{1}", "{2}": "{2}", "{3}": "{3}", "{1}a": "{1}a", "{2}a": "{2}a", "{3}a": "{3}a"}
 	ret := MSets(keys)
