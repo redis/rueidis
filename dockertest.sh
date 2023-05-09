@@ -2,11 +2,10 @@
 
 set -ev
 
-docker-compose up -d
-go test -coverprofile=./c.out -v -race -timeout 30m ./...
-docker-compose down -v
+package=${1:-./...}
+pkgbase="github.com/redis/rueidis"
 
-if [ ! -z "$CODECOV_TOKEN" ]; then
-  cp c.out coverage.txt
-  bash <(curl -s https://codecov.io/bash)
-fi
+[[ "/om /rueidiscompat /rueidislock /rueidisotel ./..." =~ "${package#$pkgbase}" || -z "${package#$pkgbase}" ]] && \
+docker-compose up -d
+go test -coverprofile=coverage.out -v -race -timeout 30m $package
+docker-compose down -v
