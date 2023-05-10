@@ -3,7 +3,7 @@
 set -ev
 
 docker-compose up -d
-go test -coverprofile=./c.out -v -race -timeout 30m ./...
+go test -coverprofile=./c.out -v -race -timeout 30m ${1:-./...}
 docker-compose down -v
 
 if [ ! -z "$CODECOV_TOKEN" ]; then
