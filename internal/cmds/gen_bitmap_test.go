@@ -63,10 +63,10 @@ func bitmap0(s Builder) {
 
 func TestCommand_InitSlot_bitmap(t *testing.T) {
 	var s = NewBuilder(InitSlot)
-	t.Run("0", func(t *testing.T) { bitmap0(s) })
+	bitmap0(s)
 }
 
 func TestCommand_NoSlot_bitmap(t *testing.T) {
 	var s = NewBuilder(NoSlot)
-	t.Run("0", func(t *testing.T) { bitmap0(s) })
+	bitmap0(s)
 }

@@ -51,10 +51,10 @@ func cluster0(s Builder) {
 
 func TestCommand_InitSlot_cluster(t *testing.T) {
 	var s = NewBuilder(InitSlot)
-	t.Run("0", func(t *testing.T) { cluster0(s) })
+	cluster0(s)
 }
 
 func TestCommand_NoSlot_cluster(t *testing.T) {
 	var s = NewBuilder(NoSlot)
-	t.Run("0", func(t *testing.T) { cluster0(s) })
+	cluster0(s)
 }

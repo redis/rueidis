@@ -14,10 +14,10 @@ func hyperloglog0(s Builder) {
 
 func TestCommand_InitSlot_hyperloglog(t *testing.T) {
 	var s = NewBuilder(InitSlot)
-	t.Run("0", func(t *testing.T) { hyperloglog0(s) })
+	hyperloglog0(s)
 }
 
 func TestCommand_NoSlot_hyperloglog(t *testing.T) {
 	var s = NewBuilder(NoSlot)
-	t.Run("0", func(t *testing.T) { hyperloglog0(s) })
+	hyperloglog0(s)
 }

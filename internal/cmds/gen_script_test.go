@@ -22,10 +22,10 @@ func script0(s Builder) {
 
 func TestCommand_InitSlot_script(t *testing.T) {
 	var s = NewBuilder(InitSlot)
-	t.Run("0", func(t *testing.T) { script0(s) })
+	script0(s)
 }
 
 func TestCommand_NoSlot_script(t *testing.T) {
 	var s = NewBuilder(NoSlot)
-	t.Run("0", func(t *testing.T) { script0(s) })
+	script0(s)
 }

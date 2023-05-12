@@ -411,16 +411,16 @@ func model3(s Builder) {
 
 func TestCommand_InitSlot_model(t *testing.T) {
 	var s = NewBuilder(InitSlot)
-	t.Run("0", func(t *testing.T) { model0(s) })
-	t.Run("1", func(t *testing.T) { model1(s) })
-	t.Run("2", func(t *testing.T) { model2(s) })
-	t.Run("3", func(t *testing.T) { model3(s) })
+	model0(s)
+	model1(s)
+	model2(s)
+	model3(s)
 }
 
 func TestCommand_NoSlot_model(t *testing.T) {
 	var s = NewBuilder(NoSlot)
-	t.Run("0", func(t *testing.T) { model0(s) })
-	t.Run("1", func(t *testing.T) { model1(s) })
-	t.Run("2", func(t *testing.T) { model2(s) })
-	t.Run("3", func(t *testing.T) { model3(s) })
+	model0(s)
+	model1(s)
+	model2(s)
+	model3(s)
 }

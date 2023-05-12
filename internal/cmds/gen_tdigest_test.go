@@ -27,10 +27,10 @@ func tdigest0(s Builder) {
 
 func TestCommand_InitSlot_tdigest(t *testing.T) {
 	var s = NewBuilder(InitSlot)
-	t.Run("0", func(t *testing.T) { tdigest0(s) })
+	tdigest0(s)
 }
 
 func TestCommand_NoSlot_tdigest(t *testing.T) {
 	var s = NewBuilder(NoSlot)
-	t.Run("0", func(t *testing.T) { tdigest0(s) })
+	tdigest0(s)
 }

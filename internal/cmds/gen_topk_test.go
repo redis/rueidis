@@ -22,10 +22,10 @@ func topk0(s Builder) {
 
 func TestCommand_InitSlot_topk(t *testing.T) {
 	var s = NewBuilder(InitSlot)
-	t.Run("0", func(t *testing.T) { topk0(s) })
+	topk0(s)
 }
 
 func TestCommand_NoSlot_topk(t *testing.T) {
 	var s = NewBuilder(NoSlot)
-	t.Run("0", func(t *testing.T) { topk0(s) })
+	topk0(s)
 }

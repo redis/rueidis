@@ -140,12 +140,12 @@ func server1(s Builder) {
 
 func TestCommand_InitSlot_server(t *testing.T) {
 	var s = NewBuilder(InitSlot)
-	t.Run("0", func(t *testing.T) { server0(s) })
-	t.Run("1", func(t *testing.T) { server1(s) })
+	server0(s)
+	server1(s)
 }
 
 func TestCommand_NoSlot_server(t *testing.T) {
 	var s = NewBuilder(NoSlot)
-	t.Run("0", func(t *testing.T) { server0(s) })
-	t.Run("1", func(t *testing.T) { server1(s) })
+	server0(s)
+	server1(s)
 }

@@ -30,10 +30,10 @@ func pubsub0(s Builder) {
 
 func TestCommand_InitSlot_pubsub(t *testing.T) {
 	var s = NewBuilder(InitSlot)
-	t.Run("0", func(t *testing.T) { pubsub0(s) })
+	pubsub0(s)
 }
 
 func TestCommand_NoSlot_pubsub(t *testing.T) {
 	var s = NewBuilder(NoSlot)
-	t.Run("0", func(t *testing.T) { pubsub0(s) })
+	pubsub0(s)
 }

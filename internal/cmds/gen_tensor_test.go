@@ -55,10 +55,10 @@ func tensor0(s Builder) {
 
 func TestCommand_InitSlot_tensor(t *testing.T) {
 	var s = NewBuilder(InitSlot)
-	t.Run("0", func(t *testing.T) { tensor0(s) })
+	tensor0(s)
 }
 
 func TestCommand_NoSlot_tensor(t *testing.T) {
 	var s = NewBuilder(NoSlot)
-	t.Run("0", func(t *testing.T) { tensor0(s) })
+	tensor0(s)
 }

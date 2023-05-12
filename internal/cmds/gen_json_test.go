@@ -99,10 +99,10 @@ func json0(s Builder) {
 
 func TestCommand_InitSlot_json(t *testing.T) {
 	var s = NewBuilder(InitSlot)
-	t.Run("0", func(t *testing.T) { json0(s) })
+	json0(s)
 }
 
 func TestCommand_NoSlot_json(t *testing.T) {
 	var s = NewBuilder(NoSlot)
-	t.Run("0", func(t *testing.T) { json0(s) })
+	json0(s)
 }

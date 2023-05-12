@@ -90,10 +90,10 @@ func gears0(s Builder) {
 
 func TestCommand_InitSlot_gears(t *testing.T) {
 	var s = NewBuilder(InitSlot)
-	t.Run("0", func(t *testing.T) { gears0(s) })
+	gears0(s)
 }
 
 func TestCommand_NoSlot_gears(t *testing.T) {
 	var s = NewBuilder(NoSlot)
-	t.Run("0", func(t *testing.T) { gears0(s) })
+	gears0(s)
 }

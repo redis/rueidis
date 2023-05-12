@@ -35,10 +35,10 @@ func inference0(s Builder) {
 
 func TestCommand_InitSlot_inference(t *testing.T) {
 	var s = NewBuilder(InitSlot)
-	t.Run("0", func(t *testing.T) { inference0(s) })
+	inference0(s)
 }
 
 func TestCommand_NoSlot_inference(t *testing.T) {
 	var s = NewBuilder(NoSlot)
-	t.Run("0", func(t *testing.T) { inference0(s) })
+	inference0(s)
 }

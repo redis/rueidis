@@ -14,10 +14,10 @@ func transactions0(s Builder) {
 
 func TestCommand_InitSlot_transactions(t *testing.T) {
 	var s = NewBuilder(InitSlot)
-	t.Run("0", func(t *testing.T) { transactions0(s) })
+	transactions0(s)
 }
 
 func TestCommand_NoSlot_transactions(t *testing.T) {
 	var s = NewBuilder(NoSlot)
-	t.Run("0", func(t *testing.T) { transactions0(s) })
+	transactions0(s)
 }

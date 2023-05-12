@@ -299,14 +299,14 @@ func generic2(s Builder) {
 
 func TestCommand_InitSlot_generic(t *testing.T) {
 	var s = NewBuilder(InitSlot)
-	t.Run("0", func(t *testing.T) { generic0(s) })
-	t.Run("1", func(t *testing.T) { generic1(s) })
-	t.Run("2", func(t *testing.T) { generic2(s) })
+	generic0(s)
+	generic1(s)
+	generic2(s)
 }
 
 func TestCommand_NoSlot_generic(t *testing.T) {
 	var s = NewBuilder(NoSlot)
-	t.Run("0", func(t *testing.T) { generic0(s) })
-	t.Run("1", func(t *testing.T) { generic1(s) })
-	t.Run("2", func(t *testing.T) { generic2(s) })
+	generic0(s)
+	generic1(s)
+	generic2(s)
 }

@@ -233,12 +233,12 @@ func sorted_set1(s Builder) {
 
 func TestCommand_InitSlot_sorted_set(t *testing.T) {
 	var s = NewBuilder(InitSlot)
-	t.Run("0", func(t *testing.T) { sorted_set0(s) })
-	t.Run("1", func(t *testing.T) { sorted_set1(s) })
+	sorted_set0(s)
+	sorted_set1(s)
 }
 
 func TestCommand_NoSlot_sorted_set(t *testing.T) {
 	var s = NewBuilder(NoSlot)
-	t.Run("0", func(t *testing.T) { sorted_set0(s) })
-	t.Run("1", func(t *testing.T) { sorted_set1(s) })
+	sorted_set0(s)
+	sorted_set1(s)
 }

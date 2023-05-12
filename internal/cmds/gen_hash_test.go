@@ -38,10 +38,10 @@ func hash0(s Builder) {
 
 func TestCommand_InitSlot_hash(t *testing.T) {
 	var s = NewBuilder(InitSlot)
-	t.Run("0", func(t *testing.T) { hash0(s) })
+	hash0(s)
 }
 
 func TestCommand_NoSlot_hash(t *testing.T) {
 	var s = NewBuilder(NoSlot)
-	t.Run("0", func(t *testing.T) { hash0(s) })
+	hash0(s)
 }

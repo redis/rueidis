@@ -681,22 +681,22 @@ func connection6(s Builder) {
 
 func TestCommand_InitSlot_connection(t *testing.T) {
 	var s = NewBuilder(InitSlot)
-	t.Run("0", func(t *testing.T) { connection0(s) })
-	t.Run("1", func(t *testing.T) { connection1(s) })
-	t.Run("2", func(t *testing.T) { connection2(s) })
-	t.Run("3", func(t *testing.T) { connection3(s) })
-	t.Run("4", func(t *testing.T) { connection4(s) })
-	t.Run("5", func(t *testing.T) { connection5(s) })
-	t.Run("6", func(t *testing.T) { connection6(s) })
+	connection0(s)
+	connection1(s)
+	connection2(s)
+	connection3(s)
+	connection4(s)
+	connection5(s)
+	connection6(s)
 }
 
 func TestCommand_NoSlot_connection(t *testing.T) {
 	var s = NewBuilder(NoSlot)
-	t.Run("0", func(t *testing.T) { connection0(s) })
-	t.Run("1", func(t *testing.T) { connection1(s) })
-	t.Run("2", func(t *testing.T) { connection2(s) })
-	t.Run("3", func(t *testing.T) { connection3(s) })
-	t.Run("4", func(t *testing.T) { connection4(s) })
-	t.Run("5", func(t *testing.T) { connection5(s) })
-	t.Run("6", func(t *testing.T) { connection6(s) })
+	connection0(s)
+	connection1(s)
+	connection2(s)
+	connection3(s)
+	connection4(s)
+	connection5(s)
+	connection6(s)
 }

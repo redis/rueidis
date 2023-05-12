@@ -72,10 +72,10 @@ func scripting0(s Builder) {
 
 func TestCommand_InitSlot_scripting(t *testing.T) {
 	var s = NewBuilder(InitSlot)
-	t.Run("0", func(t *testing.T) { scripting0(s) })
+	scripting0(s)
 }
 
 func TestCommand_NoSlot_scripting(t *testing.T) {
 	var s = NewBuilder(NoSlot)
-	t.Run("0", func(t *testing.T) { scripting0(s) })
+	scripting0(s)
 }

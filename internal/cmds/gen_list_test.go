@@ -64,10 +64,10 @@ func list0(s Builder) {
 
 func TestCommand_InitSlot_list(t *testing.T) {
 	var s = NewBuilder(InitSlot)
-	t.Run("0", func(t *testing.T) { list0(s) })
+	list0(s)
 }
 
 func TestCommand_NoSlot_list(t *testing.T) {
 	var s = NewBuilder(NoSlot)
-	t.Run("0", func(t *testing.T) { list0(s) })
+	list0(s)
 }

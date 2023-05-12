@@ -64,10 +64,10 @@ func bf0(s Builder) {
 
 func TestCommand_InitSlot_bf(t *testing.T) {
 	var s = NewBuilder(InitSlot)
-	t.Run("0", func(t *testing.T) { bf0(s) })
+	bf0(s)
 }
 
 func TestCommand_NoSlot_bf(t *testing.T) {
 	var s = NewBuilder(NoSlot)
-	t.Run("0", func(t *testing.T) { bf0(s) })
+	bf0(s)
 }

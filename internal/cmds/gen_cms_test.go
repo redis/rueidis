@@ -18,10 +18,10 @@ func cms0(s Builder) {
 
 func TestCommand_InitSlot_cms(t *testing.T) {
 	var s = NewBuilder(InitSlot)
-	t.Run("0", func(t *testing.T) { cms0(s) })
+	cms0(s)
 }
 
 func TestCommand_NoSlot_cms(t *testing.T) {
 	var s = NewBuilder(NoSlot)
-	t.Run("0", func(t *testing.T) { cms0(s) })
+	cms0(s)
 }

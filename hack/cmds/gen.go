@@ -442,14 +442,14 @@ func tests(f io.Writer, structs map[string]goStruct, prefix string) {
 	fmt.Fprintf(f, "func TestCommand_InitSlot_%s(t *testing.T) {\n", prefix)
 	fmt.Fprintf(f, "\tvar s = NewBuilder(InitSlot)\n")
 	for i := 0; i <= len(pathes)/mod; i++ {
-		fmt.Fprintf(f, "\tt.Run(\"%d\", func(t *testing.T) { %s%d(s) })\n", i, prefix, i)
+		fmt.Fprintf(f, "\t%s%d(s)\n", prefix, i)
 	}
 	fmt.Fprintf(f, "}\n\n")
 
 	fmt.Fprintf(f, "func TestCommand_NoSlot_%s(t *testing.T) {\n", prefix)
 	fmt.Fprintf(f, "\tvar s = NewBuilder(NoSlot)\n")
 	for i := 0; i <= len(pathes)/mod; i++ {
-		fmt.Fprintf(f, "\tt.Run(\"%d\", func(t *testing.T) { %s%d(s) })\n", i, prefix, i)
+		fmt.Fprintf(f, "\t%s%d(s)\n", prefix, i)
 	}
 	fmt.Fprintf(f, "}\n\n")
 

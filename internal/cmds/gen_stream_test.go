@@ -116,12 +116,12 @@ func stream1(s Builder) {
 
 func TestCommand_InitSlot_stream(t *testing.T) {
 	var s = NewBuilder(InitSlot)
-	t.Run("0", func(t *testing.T) { stream0(s) })
-	t.Run("1", func(t *testing.T) { stream1(s) })
+	stream0(s)
+	stream1(s)
 }
 
 func TestCommand_NoSlot_stream(t *testing.T) {
 	var s = NewBuilder(NoSlot)
-	t.Run("0", func(t *testing.T) { stream0(s) })
-	t.Run("1", func(t *testing.T) { stream1(s) })
+	stream0(s)
+	stream1(s)
 }
