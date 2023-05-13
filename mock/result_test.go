@@ -80,6 +80,12 @@ func TestRedisMap(t *testing.T) {
 	}) {
 		t.Fatalf("unexpected value %v", err)
 	}
+	if arr, err := m.ToMap(); err != nil || !reflect.DeepEqual(arr, map[string]rueidis.RedisMessage{
+		"a": RedisString("0"),
+		"b": RedisString("1"),
+	}) {
+		t.Fatalf("unexpected value %v", err)
+	}
 }
 
 func TestRedisResult(t *testing.T) {

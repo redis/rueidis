@@ -61,7 +61,7 @@ func RedisMap(kv map[string]rueidis.RedisMessage) rueidis.RedisMessage {
 		values = append(values, RedisString(k))
 		values = append(values, v)
 	}
-	m := message{typ: '*', values: values}
+	m := message{typ: '%', values: values}
 	return *(*rueidis.RedisMessage)(unsafe.Pointer(&m))
 }
 
