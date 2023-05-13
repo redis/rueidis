@@ -28,7 +28,6 @@ func cf0(s Builder) {
 	s.CfReserve().Key("1").Capacity(1).Bucketsize(1).Maxiterations(1).Build()
 	s.CfReserve().Key("1").Capacity(1).Bucketsize(1).Expansion(1).Build()
 	s.CfReserve().Key("1").Capacity(1).Bucketsize(1).Build()
-	s.CfReserve().Key("1").Capacity(1).Maxiterations(1).Expansion(1).Build()
 	s.CfReserve().Key("1").Capacity(1).Maxiterations(1).Build()
 	s.CfReserve().Key("1").Capacity(1).Expansion(1).Build()
 	s.CfReserve().Key("1").Capacity(1).Build()

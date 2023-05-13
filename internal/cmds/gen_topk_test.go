@@ -7,7 +7,7 @@ import "testing"
 func topk0(s Builder) {
 	s.TopkAdd().Key("1").Items("1").Items("1").Build()
 	s.TopkCount().Key("1").Item("1").Item("1").Build()
-	s.TopkIncrby().Key("1").Item("1").Increment(1).Build()
+	s.TopkIncrby().Key("1").Item("1").Increment(1).Item("1").Increment(1).Build()
 	s.TopkInfo().Key("1").Build()
 	s.TopkInfo().Key("1").Cache()
 	s.TopkList().Key("1").Withcount().Build()

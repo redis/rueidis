@@ -455,16 +455,29 @@ func tests(f io.Writer, structs map[string]goStruct, prefix string) {
 
 }
 
+var pathmark = map[string]bool{}
+var blockmark = map[*node]bool{}
+
 func makePath(s goStruct, path []goStruct, pathes [][]goStruct) [][]goStruct {
 	path = append(path, s)
 	nexts := s.Node.NextNodes()
-	if len(path) < 8 {
+	if pathmark[s.FullName] && allOptional(s.Node, nexts) {
+		pathes = append(pathes, path)
+		return pathes
+	}
+	if len(path) < 100 {
 		for _, n := range nexts {
 			if s.Node == n {
+				if !s.Variadic && !s.MultipleToken {
+					path = append(path, s)
+				}
 				continue
 			}
 			if n.Parent != nil && n.Parent.Child == n {
-				continue
+				if blockmark[n] {
+					continue
+				}
+				blockmark[n] = true
 			}
 			nodes := []*node{n}
 			if n.Child != nil {
@@ -475,9 +488,13 @@ func makePath(s goStruct, path []goStruct, pathes [][]goStruct) [][]goStruct {
 					clone := make([]goStruct, len(path))
 					copy(clone, path)
 					pathes = makePath(ss, clone, pathes)
+					if pathmark[s.FullName] {
+						return pathes
+					}
 				}
 			}
 		}
+		pathmark[s.FullName] = true
 	}
 	if allOptional(s.Node, nexts) {
 		pathes = append(pathes, path)
