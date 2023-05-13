@@ -14,6 +14,7 @@ import (
 )
 
 func TestNewLuaScriptOnePass(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	body := strconv.Itoa(rand.Int())
 	sum := sha1.Sum([]byte(body))
 	sha := hex.EncodeToString(sum[:])
@@ -41,6 +42,7 @@ func TestNewLuaScriptOnePass(t *testing.T) {
 }
 
 func TestNewLuaScript(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	body := strconv.Itoa(rand.Int())
 	sum := sha1.Sum([]byte(body))
 	sha := hex.EncodeToString(sum[:])
@@ -74,6 +76,7 @@ func TestNewLuaScript(t *testing.T) {
 }
 
 func TestNewLuaScriptReadOnly(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	body := strconv.Itoa(rand.Int())
 	sum := sha1.Sum([]byte(body))
 	sha := hex.EncodeToString(sum[:])
@@ -107,6 +110,7 @@ func TestNewLuaScriptReadOnly(t *testing.T) {
 }
 
 func TestNewLuaScriptExecMultiError(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	body := strconv.Itoa(rand.Int())
 
 	k := []string{"1", "2"}
@@ -128,6 +132,7 @@ func TestNewLuaScriptExecMultiError(t *testing.T) {
 }
 
 func TestNewLuaScriptExecMulti(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	body := strconv.Itoa(rand.Int())
 	sum := sha1.Sum([]byte(body))
 	sha := hex.EncodeToString(sum[:])
@@ -159,6 +164,7 @@ func TestNewLuaScriptExecMulti(t *testing.T) {
 }
 
 func TestNewLuaScriptExecMultiRo(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	body := strconv.Itoa(rand.Int())
 	sum := sha1.Sum([]byte(body))
 	sha := hex.EncodeToString(sum[:])
