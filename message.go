@@ -17,10 +17,16 @@ const messageStructSize = int(unsafe.Sizeof(RedisMessage{}))
 // Nil represents a Redis Nil message
 var Nil = &RedisError{typ: '_'}
 
-// IsRedisNil is a handy method to check if error is redis nil response.
+// IsRedisNil is a handy method to check if error is a redis nil response.
 // All redis nil response returns as an error.
 func IsRedisNil(err error) bool {
 	return err == Nil
+}
+
+// IsRedisErr is a handy method to check if error is a redis ERR response.
+func IsRedisErr(err error) (ret *RedisError, ok bool) {
+	ret, ok = err.(*RedisError)
+	return ret, ok && ret != Nil
 }
 
 // RedisError is an error response or a nil message from redis instance
@@ -82,14 +88,6 @@ func newErrResult(err error) RedisResult {
 type RedisResult struct {
 	err error
 	val RedisMessage
-}
-
-// RedisError can be used to check if the redis response is an error message.
-func (r RedisResult) RedisError() *RedisError {
-	if err := r.val.Error(); err != nil {
-		return err.(*RedisError)
-	}
-	return nil
 }
 
 // NonRedisError can be used to check if there is an underlying error (ex. network timeout).

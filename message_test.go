@@ -23,6 +23,22 @@ func TestIsRedisNil(t *testing.T) {
 	}
 }
 
+func TestIsRedisErr(t *testing.T) {
+	err := Nil
+	if ret, ok := IsRedisErr(err); ok || ret != Nil {
+		t.Fatal("TestIsRedisErr fail")
+	}
+	if ret, ok := IsRedisErr(nil); ok || ret != nil {
+		t.Fatal("TestIsRedisErr fail")
+	}
+	if ret, ok := IsRedisErr(errors.New("other")); ok || ret != nil {
+		t.Fatal("TestIsRedisErr fail")
+	}
+	if ret, ok := IsRedisErr(&RedisError{typ: '-'}); !ok || ret.typ != '-' {
+		t.Fatal("TestIsRedisErr fail")
+	}
+}
+
 //gocyclo:ignore
 func TestRedisResult(t *testing.T) {
 	t.Run("ToInt64", func(t *testing.T) {

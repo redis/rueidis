@@ -68,7 +68,7 @@ func TestNewLuaScript(t *testing.T) {
 
 	script := NewLuaScript(body)
 
-	if !script.Exec(context.Background(), c, k, a).RedisError().IsNil() {
+	if err, ok := IsRedisErr(script.Exec(context.Background(), c, k, a).Error()); ok && !err.IsNil() {
 		t.Fatalf("ret mistmatch")
 	}
 }
@@ -101,7 +101,7 @@ func TestNewLuaScriptReadOnly(t *testing.T) {
 
 	script := NewLuaScriptReadOnly(body)
 
-	if !script.Exec(context.Background(), c, k, a).RedisError().IsNil() {
+	if err, ok := IsRedisErr(script.Exec(context.Background(), c, k, a).Error()); ok && !err.IsNil() {
 		t.Fatalf("ret mistmatch")
 	}
 }
