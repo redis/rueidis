@@ -31,9 +31,7 @@ import (
 )
 
 func main() {
-	client, err := rueidis.NewClient(rueidis.ClientOption{
-		InitAddress: []string{"127.0.0.1:6379"},
-	})
+	client, err := rueidis.NewClient(rueidis.ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
 	if err != nil {
 		panic(err)
 	}
@@ -42,8 +40,12 @@ func main() {
 	ctx := context.Background()
 	// SET key val NX
 	err = client.Do(ctx, client.B().Set().Key("key").Value("val").Nx().Build()).Error()
+	// HGETALL hm
+	hm, err := client.Do(ctx, client.B().Hgetall().Key("hm").Build()).AsStrMap()
 }
 ```
+
+Checkout more examples: [Command Response Cheatsheet](https://github.com/redis/rueidis#command-response-cheatsheet)
 
 ## Developer friendly Command Builder
 
@@ -411,5 +413,5 @@ module mymodule
 
 go 1.18
 
-require github.com/redis/rueidis v1.0.2-go1.18
+require github.com/redis/rueidis v1.0.3-go1.18
 ```
