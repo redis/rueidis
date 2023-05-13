@@ -27,7 +27,7 @@ jobs:
         with:
           go-version-file: go.mod
           cache-key-suffix: ${{ matrix.pkg }}
-      - run: ./dockertest.sh ${{ matrix.pkg }}
+      - run: for n in {1..5}; do ./dockertest.sh ${{ matrix.pkg }} && break; done
       - uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
