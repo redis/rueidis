@@ -5,7 +5,7 @@ package cmds
 import "testing"
 
 func cms0(s Builder) {
-	s.CmsIncrby().Key("1").Item("1").Increment(1).Build()
+	s.CmsIncrby().Key("1").Item("1").Increment(1).Item("1").Increment(1).Build()
 	s.CmsInfo().Key("1").Build()
 	s.CmsInfo().Key("1").Cache()
 	s.CmsInitbydim().Key("1").Width(1).Depth(1).Build()

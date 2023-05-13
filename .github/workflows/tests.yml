@@ -1,0 +1,33 @@
+name: Go Tests
+
+on: [push]
+
+jobs:
+  list-packages:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: magnetikonline/action-golang-cache@v4
+        with:
+          go-version-file: go.mod
+      - id: golist
+        run: echo "pkgs=$(go list ./... | jq -R -s -c 'split("\n")[:-1]')" >> "$GITHUB_OUTPUT"
+    outputs:
+      pkgs: ${{ steps.golist.outputs.pkgs }}
+
+  test:
+    runs-on: ubuntu-latest
+    needs: [ list-packages ]
+    strategy:
+      matrix:
+        pkg: ${{ fromJson(needs.list-packages.outputs.pkgs) }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: magnetikonline/action-golang-cache@v4
+        with:
+          go-version-file: go.mod
+          cache-key-suffix: ${{ matrix.pkg }}
+      - run: ./dockertest.sh ${{ matrix.pkg }}
+      - uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}

@@ -40,8 +40,6 @@ func list0(s Builder) {
 	s.Lpos().Key("1").Element("1").Rank(1).Maxlen(1).Cache()
 	s.Lpos().Key("1").Element("1").Rank(1).Build()
 	s.Lpos().Key("1").Element("1").Rank(1).Cache()
-	s.Lpos().Key("1").Element("1").Count(1).Maxlen(1).Build()
-	s.Lpos().Key("1").Element("1").Count(1).Maxlen(1).Cache()
 	s.Lpos().Key("1").Element("1").Count(1).Build()
 	s.Lpos().Key("1").Element("1").Count(1).Cache()
 	s.Lpos().Key("1").Element("1").Maxlen(1).Build()

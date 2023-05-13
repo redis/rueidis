@@ -52,11 +52,9 @@ func server0(s Builder) {
 	s.Failover().To().Host("1").Port(1).Force().Abort().Build()
 	s.Failover().To().Host("1").Port(1).Force().Timeout(1).Build()
 	s.Failover().To().Host("1").Port(1).Force().Build()
-	s.Failover().To().Host("1").Port(1).Abort().Timeout(1).Build()
 	s.Failover().To().Host("1").Port(1).Abort().Build()
 	s.Failover().To().Host("1").Port(1).Timeout(1).Build()
 	s.Failover().To().Host("1").Port(1).Build()
-	s.Failover().Abort().Timeout(1).Build()
 	s.Failover().Abort().Build()
 	s.Failover().Timeout(1).Build()
 	s.Failover().Build()
@@ -104,26 +102,17 @@ func server0(s Builder) {
 	s.Shutdown().Nosave().Now().Force().Build()
 	s.Shutdown().Nosave().Now().Abort().Build()
 	s.Shutdown().Nosave().Now().Build()
-	s.Shutdown().Nosave().Force().Abort().Build()
-}
-
-func server1(s Builder) {
 	s.Shutdown().Nosave().Force().Build()
 	s.Shutdown().Nosave().Abort().Build()
 	s.Shutdown().Nosave().Build()
-	s.Shutdown().Save().Now().Force().Abort().Build()
-	s.Shutdown().Save().Now().Force().Build()
-	s.Shutdown().Save().Now().Abort().Build()
+}
+
+func server1(s Builder) {
 	s.Shutdown().Save().Now().Build()
-	s.Shutdown().Save().Force().Abort().Build()
 	s.Shutdown().Save().Force().Build()
 	s.Shutdown().Save().Abort().Build()
 	s.Shutdown().Save().Build()
-	s.Shutdown().Now().Force().Abort().Build()
-	s.Shutdown().Now().Force().Build()
-	s.Shutdown().Now().Abort().Build()
 	s.Shutdown().Now().Build()
-	s.Shutdown().Force().Abort().Build()
 	s.Shutdown().Force().Build()
 	s.Shutdown().Abort().Build()
 	s.Shutdown().Build()

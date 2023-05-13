@@ -5,7 +5,7 @@ package cmds
 import "testing"
 
 func tdigest0(s Builder) {
-	s.TdigestAdd().Key("1").Value(1).Build()
+	s.TdigestAdd().Key("1").Value(1).Value(1).Build()
 	s.TdigestByrank().Key("1").Rank(1).Rank(1).Build()
 	s.TdigestByrevrank().Key("1").ReverseRank(1).ReverseRank(1).Build()
 	s.TdigestCdf().Key("1").Value(1).Value(1).Build()
