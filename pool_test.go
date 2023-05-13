@@ -11,6 +11,7 @@ var dead = deadFn()
 
 //gocyclo:ignore
 func TestPool(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	setup := func(size int) (*pool, *int32) {
 		var count int32
 		return newPool(size, dead, func() wire {

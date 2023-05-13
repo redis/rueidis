@@ -8,6 +8,7 @@ import (
 )
 
 func TestSingleFlight(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	var calls, done, err int64
 
 	sg := call{}

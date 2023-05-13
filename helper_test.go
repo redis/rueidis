@@ -10,6 +10,7 @@ import (
 
 //gocyclo:ignore
 func TestMGetCache(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	t.Run("single client", func(t *testing.T) {
 		m := &mockConn{}
 		client, err := newSingleClient(&ClientOption{InitAddress: []string{""}}, m, func(dst string, opt *ClientOption) conn {
@@ -101,6 +102,7 @@ func TestMGetCache(t *testing.T) {
 
 //gocyclo:ignore
 func TestMGet(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	t.Run("single client", func(t *testing.T) {
 		m := &mockConn{}
 		client, err := newSingleClient(&ClientOption{InitAddress: []string{""}}, m, func(dst string, opt *ClientOption) conn {
@@ -192,6 +194,7 @@ func TestMGet(t *testing.T) {
 
 //gocyclo:ignore
 func TestMDel(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	t.Run("single client", func(t *testing.T) {
 		m := &mockConn{}
 		client, err := newSingleClient(&ClientOption{InitAddress: []string{""}}, m, func(dst string, opt *ClientOption) conn {
@@ -279,6 +282,7 @@ func TestMDel(t *testing.T) {
 }
 
 func TestMSet(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	t.Run("single client", func(t *testing.T) {
 		m := &mockConn{}
 		client, err := newSingleClient(&ClientOption{InitAddress: []string{""}}, m, func(dst string, opt *ClientOption) conn {
@@ -367,6 +371,7 @@ func TestMSet(t *testing.T) {
 }
 
 func TestMSetNX(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	t.Run("single client", func(t *testing.T) {
 		m := &mockConn{}
 		client, err := newSingleClient(&ClientOption{InitAddress: []string{""}}, m, func(dst string, opt *ClientOption) conn {
@@ -455,6 +460,7 @@ func TestMSetNX(t *testing.T) {
 }
 
 func TestMSetNXNotSet(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	t.Run("single client", func(t *testing.T) {
 		m := &mockConn{}
 		client, err := newSingleClient(&ClientOption{InitAddress: []string{""}}, m, func(dst string, opt *ClientOption) conn {
@@ -497,6 +503,7 @@ func TestMSetNXNotSet(t *testing.T) {
 
 //gocyclo:ignore
 func TestJsonMGetCache(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	t.Run("single client", func(t *testing.T) {
 		m := &mockConn{}
 		client, err := newSingleClient(&ClientOption{InitAddress: []string{""}}, m, func(dst string, opt *ClientOption) conn {
@@ -588,6 +595,7 @@ func TestJsonMGetCache(t *testing.T) {
 
 //gocyclo:ignore
 func TestJsonMGet(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	t.Run("single client", func(t *testing.T) {
 		m := &mockConn{}
 		client, err := newSingleClient(&ClientOption{InitAddress: []string{""}}, m, func(dst string, opt *ClientOption) conn {
@@ -678,6 +686,7 @@ func TestJsonMGet(t *testing.T) {
 }
 
 func TestJsonMSet(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	t.Run("single client", func(t *testing.T) {
 		m := &mockConn{}
 		client, err := newSingleClient(&ClientOption{InitAddress: []string{""}}, m, func(dst string, opt *ClientOption) conn {

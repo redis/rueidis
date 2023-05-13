@@ -159,6 +159,7 @@ func (m *mockConn) Addr() string {
 }
 
 func TestNewSingleClientNoNode(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	if _, err := newSingleClient(&ClientOption{}, nil, func(dst string, opt *ClientOption) conn {
 		return nil
 	}); err != ErrNoAddr {

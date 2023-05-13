@@ -178,6 +178,7 @@ func ExpectOK(t *testing.T, result RedisResult) {
 }
 
 func TestNewPipe(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	t.Run("Auth without Username", func(t *testing.T) {
 		n1, n2 := net.Pipe()
 		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2}
@@ -306,6 +307,7 @@ func TestNewPipe(t *testing.T) {
 }
 
 func TestNewRESP2Pipe(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	t.Run("Without DisableCache", func(t *testing.T) {
 		n1, n2 := net.Pipe()
 		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2}
@@ -459,6 +461,7 @@ func TestNewRESP2Pipe(t *testing.T) {
 }
 
 func TestWriteSingleFlush(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, cancel, _ := setup(t, ClientOption{})
 	defer cancel()
 	go func() { mock.Expect("PING").ReplyString("OK") }()
@@ -466,6 +469,7 @@ func TestWriteSingleFlush(t *testing.T) {
 }
 
 func TestIgnoreOutOfBandDataDuringSyncMode(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, cancel, _ := setup(t, ClientOption{})
 	defer cancel()
 	go func() {
@@ -475,6 +479,7 @@ func TestIgnoreOutOfBandDataDuringSyncMode(t *testing.T) {
 }
 
 func TestWriteSinglePipelineFlush(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, cancel, _ := setup(t, ClientOption{})
 	defer cancel()
 	times := 2000
@@ -492,6 +497,7 @@ func TestWriteSinglePipelineFlush(t *testing.T) {
 }
 
 func TestWriteWithMaxFlushDelay(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, cancel, _ := setup(t, ClientOption{
 		AlwaysPipelining: true,
 		MaxFlushDelay:    20 * time.Microsecond,
@@ -512,6 +518,7 @@ func TestWriteWithMaxFlushDelay(t *testing.T) {
 }
 
 func TestWriteMultiFlush(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, cancel, _ := setup(t, ClientOption{})
 	defer cancel()
 	go func() {
@@ -523,6 +530,7 @@ func TestWriteMultiFlush(t *testing.T) {
 }
 
 func TestWriteMultiPipelineFlush(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, cancel, _ := setup(t, ClientOption{})
 	defer cancel()
 	times := 2000
@@ -543,6 +551,7 @@ func TestWriteMultiPipelineFlush(t *testing.T) {
 }
 
 func TestNoReplyExceedRingSize(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, cancel, _ := setup(t, ClientOption{})
 	defer cancel()
 
@@ -568,6 +577,7 @@ func TestNoReplyExceedRingSize(t *testing.T) {
 }
 
 func TestPanicOnProtocolBug(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, _, _ := setup(t, ClientOption{})
 
 	go func() {
@@ -584,6 +594,7 @@ func TestPanicOnProtocolBug(t *testing.T) {
 }
 
 func TestResponseSequenceWithPushMessageInjected(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, cancel, _ := setup(t, ClientOption{})
 	defer cancel()
 
@@ -608,6 +619,7 @@ func TestResponseSequenceWithPushMessageInjected(t *testing.T) {
 }
 
 func TestClientSideCaching(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, cancel, _ := setup(t, ClientOption{})
 	defer cancel()
 
@@ -697,6 +709,7 @@ func TestClientSideCaching(t *testing.T) {
 }
 
 func TestClientSideCachingExecAbort(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, cancel, _ := setup(t, ClientOption{})
 	defer cancel()
 
@@ -726,6 +739,7 @@ func TestClientSideCachingExecAbort(t *testing.T) {
 }
 
 func TestClientSideCachingWithNonRedisError(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, _, _, closeConn := setup(t, ClientOption{})
 	closeConn()
 

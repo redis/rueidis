@@ -13,6 +13,7 @@ import (
 
 //gocyclo:ignore
 func TestSentinelClientInit(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	t.Run("Init no nodes", func(t *testing.T) {
 		if _, err := newSentinelClient(&ClientOption{InitAddress: []string{}}, func(dst string, opt *ClientOption) conn { return nil }); err != ErrNoAddr {
 			t.Fatalf("unexpected err %v", err)
@@ -358,6 +359,7 @@ func TestSentinelClientInit(t *testing.T) {
 }
 
 func TestSentinelRefreshAfterClose(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	first := true
 	s0 := &mockConn{
 		DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
@@ -398,6 +400,7 @@ func TestSentinelRefreshAfterClose(t *testing.T) {
 }
 
 func TestSentinelSwitchAfterClose(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	first := true
 	s0 := &mockConn{
 		DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
@@ -439,6 +442,7 @@ func TestSentinelSwitchAfterClose(t *testing.T) {
 
 //gocyclo:ignore
 func TestSentinelClientDelegate(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	s0 := &mockConn{
 		DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
 		DoMultiFn: func(multi ...Completed) []RedisResult {
@@ -675,6 +679,7 @@ func TestSentinelClientDelegate(t *testing.T) {
 
 //gocyclo:ignore
 func TestSentinelClientDelegateRetry(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	setup := func(t *testing.T) (client *sentinelClient, cb func()) {
 		retry := uint32(0)
 		trigger := make(chan error)
@@ -833,6 +838,7 @@ func TestSentinelClientDelegateRetry(t *testing.T) {
 
 //gocyclo:ignore
 func TestSentinelClientPubSub(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	var s0count, s0close, m1close, m2close, m4close int32
 
 	messages := make(chan PubSubMessage)
@@ -977,6 +983,7 @@ func TestSentinelClientPubSub(t *testing.T) {
 }
 
 func TestSentinelClientRetry(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	SetupClientRetry(t, func(m *mockConn) Client {
 		m.DoOverride = map[string]func(cmd Completed) RedisResult{
 			"SENTINEL SENTINELS masters": func(cmd Completed) RedisResult {

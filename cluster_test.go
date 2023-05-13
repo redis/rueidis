@@ -57,6 +57,7 @@ var singleSlotResp2 = newResult(RedisMessage{typ: '*', values: []RedisMessage{
 
 //gocyclo:ignore
 func TestClusterClientInit(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	t.Run("Init no nodes", func(t *testing.T) {
 		if _, err := newClusterClient(&ClientOption{InitAddress: []string{}}, func(dst string, opt *ClientOption) conn { return nil }); err != ErrNoAddr {
 			t.Fatalf("unexpected err %v", err)
@@ -161,6 +162,7 @@ func TestClusterClientInit(t *testing.T) {
 
 //gocyclo:ignore
 func TestClusterClient(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	m := &mockConn{
 		DoFn: func(cmd Completed) RedisResult {
 			if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
@@ -721,6 +723,7 @@ func TestClusterClient(t *testing.T) {
 
 //gocyclo:ignore
 func TestClusterClientErr(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	t.Run("refresh err on pick", func(t *testing.T) {
 		var first int64
 		v := errors.New("refresh err")
@@ -1189,6 +1192,7 @@ func TestClusterClientErr(t *testing.T) {
 }
 
 func TestClusterClientRetry(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	SetupClientRetry(t, func(m *mockConn) Client {
 		m.DoOverride = map[string]func(cmd Completed) RedisResult{
 			"CLUSTER SLOTS": func(cmd Completed) RedisResult { return slotsResp },

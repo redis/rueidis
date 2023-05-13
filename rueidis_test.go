@@ -21,12 +21,20 @@ import (
 	"github.com/onsi/gomega/gleak"
 )
 
-func TestMain(m *testing.M) {
-	g := gomega.NewGomega(func(message string, callerSkip ...int) {
+func SetupLeakDetection() (gomega.Gomega, []gleak.Goroutine) {
+	return gomega.NewGomega(func(message string, callerSkip ...int) {
 		panic(message)
-	})
+	}), gleak.Goroutines()
+}
+
+func ShouldNotLeaked(g gomega.Gomega, snapshot []gleak.Goroutine) {
+	g.Eventually(gleak.Goroutines).WithTimeout(time.Minute).WithPolling(5 * time.Second).ShouldNot(gleak.HaveLeaked(snapshot))
+}
+
+func TestMain(m *testing.M) {
+	g, snap := SetupLeakDetection()
 	code := m.Run()
-	g.Eventually(gleak.Goroutines).WithTimeout(time.Minute).ShouldNot(gleak.HaveLeaked())
+	ShouldNotLeaked(g, snap)
 	os.Exit(code)
 }
 
@@ -55,6 +63,7 @@ func accept(t *testing.T, ln net.Listener) (*redisMock, error) {
 }
 
 func TestNewClusterClient(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatal(err)
@@ -87,6 +96,7 @@ func TestNewClusterClient(t *testing.T) {
 }
 
 func TestNewClusterClientError(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatal(err)
@@ -114,6 +124,7 @@ func TestNewClusterClientError(t *testing.T) {
 }
 
 func TestFallBackSingleClient(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatal(err)
@@ -146,6 +157,7 @@ func TestFallBackSingleClient(t *testing.T) {
 }
 
 func TestTLSClient(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	pub, priv, err := ed25519.GenerateKey(rand.Reader)
 	if err != nil {
 		t.Fatalf("Failed to generate private key: %v", err)
@@ -225,6 +237,7 @@ func TestTLSClient(t *testing.T) {
 }
 
 func TestSingleClientMultiplex(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	option := ClientOption{}
 	if v := singleClientMultiplex(option.PipelineMultiplex); v != 2 {
 		t.Fatalf("unexpected value %v", v)
@@ -236,6 +249,7 @@ func TestSingleClientMultiplex(t *testing.T) {
 }
 
 func TestCustomDialFnIsCalled(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	isFnCalled := false
 	option := ClientOption{
 		InitAddress: []string{"127.0.0.1:0"},
