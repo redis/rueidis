@@ -671,7 +671,6 @@ func TestSingleClientIntegration(t *testing.T) {
 	run(t, client, testFlush)
 
 	client.Close()
-	time.Sleep(time.Second * 5) // wait background ping exit
 }
 
 func TestSentinelClientIntegration(t *testing.T) {
@@ -692,7 +691,6 @@ func TestSentinelClientIntegration(t *testing.T) {
 	run(t, client, testFlush)
 
 	client.Close()
-	time.Sleep(time.Second * 5) // wait background ping exit
 }
 
 func TestClusterClientIntegration(t *testing.T) {
@@ -709,7 +707,6 @@ func TestClusterClientIntegration(t *testing.T) {
 	run(t, client, testSETGETCSC, testMultiSETGETCSC, testMultiSETGETCSCHelpers, testMultiExec, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
 
 	client.Close()
-	time.Sleep(time.Second * 5) // wait background ping exit
 }
 
 func TestSingleClient5Integration(t *testing.T) {
@@ -726,7 +723,6 @@ func TestSingleClient5Integration(t *testing.T) {
 	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testMultiSETGETRESP2Helpers, testMultiExec, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
 
 	client.Close()
-	time.Sleep(time.Second * 5) // wait background ping exit
 }
 
 func TestCluster5ClientIntegration(t *testing.T) {
@@ -744,7 +740,6 @@ func TestCluster5ClientIntegration(t *testing.T) {
 	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testMultiSETGETRESP2Helpers, testMultiExec, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
 
 	client.Close()
-	time.Sleep(time.Second * 5) // wait background ping exit
 }
 
 func TestSentinel5ClientIntegration(t *testing.T) {
@@ -764,7 +759,6 @@ func TestSentinel5ClientIntegration(t *testing.T) {
 	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testMultiSETGETRESP2Helpers, testMultiExec, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
 
 	client.Close()
-	time.Sleep(time.Second * 5) // wait background ping exit
 }
 
 func TestKeyDBSingleClientIntegration(t *testing.T) {
@@ -781,7 +775,6 @@ func TestKeyDBSingleClientIntegration(t *testing.T) {
 	run(t, client, testFlush)
 
 	client.Close()
-	time.Sleep(time.Second * 5) // wait background ping exit
 }
 
 func TestDragonflyDBSingleClientIntegration(t *testing.T) {
@@ -799,7 +792,6 @@ func TestDragonflyDBSingleClientIntegration(t *testing.T) {
 	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testMultiSETGETRESP2Helpers, testPubSub, testLua)
 
 	client.Close()
-	time.Sleep(time.Second * 5) // wait background ping exit
 }
 
 func TestKvrocksSingleClientIntegration(t *testing.T) {
@@ -817,5 +809,4 @@ func TestKvrocksSingleClientIntegration(t *testing.T) {
 	run(t, client, testFlush)
 
 	client.Close()
-	time.Sleep(time.Second * 5) // wait background ping exit
 }

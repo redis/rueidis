@@ -28,7 +28,7 @@ func SetupLeakDetection() (gomega.Gomega, []gleak.Goroutine) {
 }
 
 func ShouldNotLeaked(g gomega.Gomega, snapshot []gleak.Goroutine) {
-	g.Eventually(gleak.Goroutines).WithTimeout(time.Minute).WithPolling(5 * time.Second).ShouldNot(gleak.HaveLeaked(snapshot))
+	g.Eventually(gleak.Goroutines).WithTimeout(time.Minute).ShouldNot(gleak.HaveLeaked(snapshot))
 }
 
 func TestMain(m *testing.M) {
