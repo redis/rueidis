@@ -1,0 +1,22 @@
+version: 2.1
+orbs:
+  go: circleci/go@1.7.3
+jobs:
+  build:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large
+    parallelism: 3
+    steps:
+      - checkout
+      - go/install:
+          version: 1.20.4
+      - run:
+          command: |
+            list=$(go list ./... | circleci tests split --split-by=timings)
+            echo "Test Packages: $list"
+            for n in {1..5}; do ./dockertest.sh $list && break; done
+          no_output_timeout: 15m
+      - store_test_results:
+          path: unit-tests.xml
+      - run: curl -Os https://uploader.codecov.io/latest/linux/codecov && chmod +x codecov && ./codecov -t ${CODECOV_TOKEN}
