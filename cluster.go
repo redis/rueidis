@@ -88,7 +88,6 @@ func (c *clusterClient) refresh() (err error) {
 func (c *clusterClient) _refresh() (err error) {
 	var reply RedisMessage
 
-retry:
 	c.mu.RLock()
 	results := make(chan RedisResult, len(c.conns))
 	for _, cc := range c.conns {
@@ -104,13 +103,6 @@ retry:
 
 	if err != nil {
 		return err
-	}
-
-	if len(reply.values) == 0 {
-		if err = c.init(); err != nil {
-			return err
-		}
-		goto retry
 	}
 
 	groups := parseSlots(reply)
