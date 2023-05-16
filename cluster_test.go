@@ -82,9 +82,9 @@ func TestClusterClientInit(t *testing.T) {
 		}
 	})
 
-	t.Run("Refresh retry", func(t *testing.T) {
+	t.Run("Refresh skip zero slots", func(t *testing.T) {
 		var first int64
-		if _, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
+		if _, err := newClusterClient(&ClientOption{InitAddress: []string{":0", ":1"}}, func(dst string, opt *ClientOption) conn {
 			return &mockConn{
 				DoFn: func(cmd Completed) RedisResult {
 					if atomic.AddInt64(&first, 1) == 1 {
@@ -93,27 +93,19 @@ func TestClusterClientInit(t *testing.T) {
 					return slotsResp
 				},
 			}
-		}); err != nil {
+		}); err != nil || atomic.LoadInt64(&first) != 2 {
 			t.Fatalf("unexpected err %v", err)
 		}
 	})
 
-	t.Run("Refresh retry err", func(t *testing.T) {
-		v := errors.New("dial err")
-		var first int64
+	t.Run("Refresh no slots cluster", func(t *testing.T) {
 		if _, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
 			return &mockConn{
 				DoFn: func(cmd Completed) RedisResult {
 					return newResult(RedisMessage{typ: '*', values: []RedisMessage{}}, nil)
 				},
-				DialFn: func() error {
-					if atomic.AddInt64(&first, 1) == 1 {
-						return nil
-					}
-					return v
-				},
 			}
-		}); err != v {
+		}); err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
 	})
