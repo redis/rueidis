@@ -15,9 +15,6 @@ func MGetCache(client Client, ctx context.Context, ttl time.Duration, keys []str
 	if len(keys) == 0 {
 		return make(map[string]RedisMessage), nil
 	}
-	if _, ok := client.(*singleClient); ok {
-		return clientMGetCache(client, ctx, ttl, client.B().Mget().Key(keys...).Cache(), keys)
-	}
 	return parallelMGetCache(client, ctx, ttl, cmds.MGets(keys), keys)
 }
 
@@ -70,9 +67,6 @@ func JsonMGetCache(client Client, ctx context.Context, ttl time.Duration, keys [
 	if len(keys) == 0 {
 		return make(map[string]RedisMessage), nil
 	}
-	if _, ok := client.(*singleClient); ok {
-		return clientMGetCache(client, ctx, ttl, client.B().JsonMget().Key(keys...).Path(path).Cache(), keys)
-	}
 	return parallelMGetCache(client, ctx, ttl, cmds.JsonMGets(keys, path), keys)
 }
 
@@ -96,14 +90,6 @@ func JsonMSet(client Client, ctx context.Context, kvs map[string]string, path st
 		return clientJSONMSet(client, ctx, kvs, path, make(map[string]error, len(kvs)))
 	}
 	return parallelMSet(client, ctx, cmds.JsonMSets(kvs, path), make(map[string]error, len(kvs)))
-}
-
-func clientMGetCache(client Client, ctx context.Context, ttl time.Duration, cmd Cacheable, keys []string) (ret map[string]RedisMessage, err error) {
-	arr, err := client.DoCache(ctx, cmd, ttl).ToArray()
-	if err != nil {
-		return nil, err
-	}
-	return arrayToKV(make(map[string]RedisMessage, len(keys)), arr, keys), nil
 }
 
 func clientMGet(client Client, ctx context.Context, cmd Completed, keys []string) (ret map[string]RedisMessage, err error) {
