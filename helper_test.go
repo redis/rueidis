@@ -21,10 +21,14 @@ func TestMGetCache(t *testing.T) {
 		}
 		t.Run("Delegate DoCache", func(t *testing.T) {
 			m.DoCacheFn = func(cmd Cacheable, ttl time.Duration) RedisResult {
-				if !reflect.DeepEqual(cmd.Commands(), []string{"MGET", "1", "2"}) || ttl != 100 {
-					t.Fatalf("unexpected command %v, %v", cmd, ttl)
+				if reflect.DeepEqual(cmd.Commands(), []string{"MGET", "1"}) && ttl == 100 {
+					return newResult(RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "1"}}}, nil)
 				}
-				return newResult(RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "1"}, {typ: '+', string: "2"}}}, nil)
+				if reflect.DeepEqual(cmd.Commands(), []string{"MGET", "2"}) && ttl == 100 {
+					return newResult(RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "2"}}}, nil)
+				}
+				t.Fatalf("unexpected command %v, %v", cmd, ttl)
+				return RedisResult{}
 			}
 			if v, err := MGetCache(client, context.Background(), 100, []string{"1", "2"}); err != nil || v["1"].string != "1" || v["2"].string != "2" {
 				t.Fatalf("unexpected response %v %v", v, err)
@@ -514,10 +518,14 @@ func TestJsonMGetCache(t *testing.T) {
 		}
 		t.Run("Delegate DoCache", func(t *testing.T) {
 			m.DoCacheFn = func(cmd Cacheable, ttl time.Duration) RedisResult {
-				if !reflect.DeepEqual(cmd.Commands(), []string{"JSON.MGET", "1", "2", "$"}) || ttl != 100 {
-					t.Fatalf("unexpected command %v, %v", cmd, ttl)
+				if reflect.DeepEqual(cmd.Commands(), []string{"JSON.MGET", "1", "$"}) && ttl == 100 {
+					return newResult(RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "1"}}}, nil)
 				}
-				return newResult(RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "1"}, {typ: '+', string: "2"}}}, nil)
+				if reflect.DeepEqual(cmd.Commands(), []string{"JSON.MGET", "2", "$"}) && ttl == 100 {
+					return newResult(RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "2"}}}, nil)
+				}
+				t.Fatalf("unexpected command %v, %v", cmd, ttl)
+				return RedisResult{}
 			}
 			if v, err := JsonMGetCache(client, context.Background(), 100, []string{"1", "2"}, "$"); err != nil || v["1"].string != "1" || v["2"].string != "2" {
 				t.Fatalf("unexpected response %v %v", v, err)
