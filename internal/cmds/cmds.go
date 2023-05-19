@@ -69,6 +69,11 @@ var (
 		cs: newCommandSlice([]string{"SUBSCRIBE", "+sentinel", "+switch-master", "+reboot"}),
 		cf: noRetTag,
 	}
+	// SentinelUnSubscribe is predefined UNSUBSCRIBE ASKING
+	SentinelUnSubscribe = Completed{
+		cs: newCommandSlice([]string{"UNSUBSCRIBE", "+sentinel", "+switch-master", "+reboot"}),
+		cf: noRetTag,
+	}
 )
 
 // ToBlock marks the command with blockTag

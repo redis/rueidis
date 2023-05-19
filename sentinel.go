@@ -300,6 +300,9 @@ func (c *sentinelClient) listWatch(cc conn) (master string, sentinels []string, 
 		}
 	}()
 
+	// unsubscribe in case there is any previous subscription
+	cc.Do(ctx, cmds.SentinelUnSubscribe)
+
 	go func(cc conn) {
 		if err := cc.Receive(ctx, cmds.SentinelSubscribe, func(event PubSubMessage) {
 			switch event.Channel {
