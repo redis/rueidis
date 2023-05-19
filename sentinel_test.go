@@ -999,7 +999,7 @@ func TestSentinelClientRetry(t *testing.T) {
 			},
 		}
 		m.ReceiveOverride = map[string]func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error{
-			"SUBSCRIBE +sentinel +switch-master +reboot": func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
+			"SUBSCRIBE +sentinel +slave +switch-master +reboot": func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
 				return nil
 			},
 		}
