@@ -106,6 +106,7 @@ func (c *clusterClient) _refresh() (err error) {
 			break
 		}
 	}
+	pending = nil
 
 	if err != nil {
 		return err
@@ -154,12 +155,14 @@ func (c *clusterClient) _refresh() (err error) {
 	c.conns = conns
 	c.mu.Unlock()
 
-	go func(removes []conn) {
-		time.Sleep(time.Second * 5)
-		for _, cc := range removes {
-			cc.Close()
-		}
-	}(removes)
+	if len(removes) > 0 {
+		go func(removes []conn) {
+			time.Sleep(time.Second * 5)
+			for _, cc := range removes {
+				cc.Close()
+			}
+		}(removes)
+	}
 
 	return nil
 }
