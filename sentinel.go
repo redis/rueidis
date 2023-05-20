@@ -352,11 +352,12 @@ func (c *sentinelClient) listWatch(cc conn) (serverAddress string, sentinels []s
 
 	commands := []Completed{
 		sentinelsCMD,
-		getMasterCMD,
 	}
 
 	if c.readonly {
 		commands = append(commands, replicasCMD)
+	} else {
+		commands = append(commands, getMasterCMD)
 	}
 
 	resp := cc.DoMulti(ctx, commands...)
@@ -372,7 +373,7 @@ func (c *sentinelClient) listWatch(cc conn) (serverAddress string, sentinels []s
 
 	// we return random slave address instead of master
 	if c.readonly {
-		replicaResponses, err := resp[2].ToArray()
+		replicaResponses, err := resp[1].ToArray()
 		if err != nil {
 			return "", nil, err
 		}
