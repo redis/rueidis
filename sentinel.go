@@ -22,7 +22,7 @@ func newSentinelClient(opt *ClientOption, connFn connFn) (client *sentinelClient
 		connFn:    connFn,
 		sentinels: list.New(),
 		retry:     !opt.DisableRetry,
-		readonly:  opt.ReadOnlyReplica,
+		readonly:  opt.ReplicaOnly,
 	}
 
 	for _, sentinel := range opt.InitAddress {
@@ -38,21 +38,20 @@ func newSentinelClient(opt *ClientOption, connFn connFn) (client *sentinelClient
 }
 
 type sentinelClient struct {
-	mConn        atomic.Value
-	sConn        conn
-	mOpt         *ClientOption
-	sOpt         *ClientOption
-	connFn       connFn
-	sentinels    *list.List
-	mAddr        string
-	sAddr        string
-	sc           call
-	mu           sync.Mutex
-	stop         uint32
-	cmd          cmds.Builder
-	retry        bool
-	readonly     bool
-	watchCounter atomic.Int32
+	mConn     atomic.Value
+	sConn     conn
+	mOpt      *ClientOption
+	sOpt      *ClientOption
+	connFn    connFn
+	sentinels *list.List
+	mAddr     string
+	sAddr     string
+	sc        call
+	mu        sync.Mutex
+	stop      uint32
+	cmd       cmds.Builder
+	retry     bool
+	readonly  bool
 }
 
 func (c *sentinelClient) B() cmds.Builder {
