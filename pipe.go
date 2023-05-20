@@ -459,6 +459,8 @@ func (p *pipe) _backgroundRead() (err error) {
 			}
 			skip = len(multi[ff].Commands()) - 2
 			msg = RedisMessage{} // override successful subscribe/unsubscribe response to empty
+		} else if multi[ff].NoReply() && msg.string == "QUEUED" {
+			panic(multiexecsub)
 		}
 		ch <- newResult(msg, err)
 		if ff++; ff == len(multi) {
@@ -1232,6 +1234,7 @@ func epipeFn(err error) *pipe {
 const (
 	protocolbug  = "protocol bug, message handled out of order"
 	wrongreceive = "only SUBSCRIBE, SSUBSCRIBE, or PSUBSCRIBE command are allowed in Receive"
+	multiexecsub = "SUBSCRIBE/UNSUBSCRIBE are not allowed in MULTI/EXEC block"
 	panicmgetcsc = "MGET and JSON.MGET in DoMultiCache are not implemented, use DoCache instead"
 )
 
