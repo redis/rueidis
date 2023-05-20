@@ -90,16 +90,23 @@ func (c *clusterClient) _refresh() (err error) {
 
 	c.mu.RLock()
 	results := make(chan RedisResult, len(c.conns))
+	pending := make([]conn, 0, len(c.conns))
 	for _, cc := range c.conns {
-		go func(c conn) { results <- c.Do(context.Background(), cmds.SlotCmd) }(cc)
+		pending = append(pending, cc)
 	}
 	c.mu.RUnlock()
 
 	for i := 0; i < cap(results); i++ {
+		if i&3 == 0 { // batch CLUSTER SLOTS for every 4 connections
+			for j := i; j < i+4 && j < len(pending); j++ {
+				go func(c conn) { results <- c.Do(context.Background(), cmds.SlotCmd) }(pending[j])
+			}
+		}
 		if reply, err = (<-results).ToMessage(); len(reply.values) != 0 {
 			break
 		}
 	}
+	pending = nil
 
 	if err != nil {
 		return err
@@ -148,12 +155,14 @@ func (c *clusterClient) _refresh() (err error) {
 	c.conns = conns
 	c.mu.Unlock()
 
-	go func(removes []conn) {
-		time.Sleep(time.Second * 5)
-		for _, cc := range removes {
-			cc.Close()
-		}
-	}(removes)
+	if len(removes) > 0 {
+		go func(removes []conn) {
+			time.Sleep(time.Second * 5)
+			for _, cc := range removes {
+				cc.Close()
+			}
+		}(removes)
+	}
 
 	return nil
 }
@@ -555,14 +564,11 @@ func (c *clusterClient) shouldRefreshRetry(err error, ctx context.Context) (addr
 			} else if err.IsClusterDown() || err.IsTryAgain() {
 				mode = RedirectRetry
 			}
-		} else {
+		} else if ctx.Err() == nil {
 			mode = RedirectRetry
 		}
 		if mode != RedirectNone {
 			go c.refresh()
-		}
-		if mode == RedirectRetry && ctx.Err() != nil {
-			mode = RedirectNone
 		}
 	}
 	return

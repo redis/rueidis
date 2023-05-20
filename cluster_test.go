@@ -716,6 +716,67 @@ func TestClusterClient(t *testing.T) {
 //gocyclo:ignore
 func TestClusterClientErr(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
+
+	t.Run("not refresh on context error", func(t *testing.T) {
+		var count int64
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		v := ctx.Err()
+		m := &mockConn{
+			DoFn: func(cmd Completed) RedisResult {
+				if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
+					atomic.AddInt64(&count, 1)
+					return slotsResp
+				}
+				return newErrResult(v)
+			},
+			DoMultiFn: func(multi ...Completed) []RedisResult {
+				res := make([]RedisResult, len(multi))
+				for i := range res {
+					res[i] = newErrResult(v)
+				}
+				return res
+			},
+			DoCacheFn: func(cmd Cacheable, ttl time.Duration) RedisResult {
+				return newErrResult(v)
+			},
+			DoMultiCacheFn: func(multi ...CacheableTTL) []RedisResult {
+				res := make([]RedisResult, len(multi))
+				for i := range res {
+					res[i] = newErrResult(v)
+				}
+				return res
+			},
+			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
+				return v
+			},
+		}
+		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
+			return m
+		})
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		if err := client.Do(ctx, client.B().Get().Key("a").Build()).Error(); err != v {
+			t.Fatalf("unexpected err %v", err)
+		}
+		if err := client.DoMulti(ctx, client.B().Get().Key("a").Build())[0].Error(); err != v {
+			t.Fatalf("unexpected err %v", err)
+		}
+		if err := client.DoCache(ctx, client.B().Get().Key("a").Cache(), 100).Error(); err != v {
+			t.Fatalf("unexpected err %v", err)
+		}
+		if err := client.DoMultiCache(ctx, CT(client.B().Get().Key("a").Cache(), 100))[0].Error(); err != v {
+			t.Fatalf("unexpected err %v", err)
+		}
+		if err := client.Receive(ctx, client.B().Ssubscribe().Channel("a").Build(), func(msg PubSubMessage) {}); err != v {
+			t.Fatalf("unexpected err %v", err)
+		}
+		if c := atomic.LoadInt64(&count); c != 1 {
+			t.Fatalf("unexpected refresh count %v", c)
+		}
+	})
+
 	t.Run("refresh err on pick", func(t *testing.T) {
 		var first int64
 		v := errors.New("refresh err")
