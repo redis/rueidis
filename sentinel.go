@@ -373,35 +373,12 @@ func (c *sentinelClient) listWatch(cc conn) (serverAddress string, sentinels []s
 
 	// we return random slave address instead of master
 	if c.readonly {
-		replicaResponses, err := resp[1].ToArray()
+		addr, err := c.randomEligibleReplicaAddress(resp)
 		if err != nil {
 			return "", nil, err
 		}
 
-		eligibleReplicas := make([]RedisMessage, 0, len(replicaResponses))
-		// eliminate replicas with s_down condition
-		for i := range replicaResponses {
-			replicaResponseMap, err := replicaResponses[i].AsMap()
-			if err != nil {
-				continue
-			}
-			if _, containsSDownTime := replicaResponseMap["s-down-time"]; !containsSDownTime {
-				eligibleReplicas = append(eligibleReplicas, replicaResponses[i])
-			}
-		}
-
-		if len(eligibleReplicas) == 0 {
-			return "", nil, fmt.Errorf("not enough ready replicas")
-		}
-
-		// choose a replica randomly
-		randomReplicaIndex := rand.Intn(len(eligibleReplicas))
-		m, err := eligibleReplicas[randomReplicaIndex].AsStrMap()
-		if err != nil {
-			return "", nil, err
-		}
-
-		return fmt.Sprintf("%s:%s", m["ip"], m["port"]), sentinels, nil
+		return addr, sentinels, nil
 	}
 
 	// otherwise send master as addrress
@@ -410,6 +387,35 @@ func (c *sentinelClient) listWatch(cc conn) (serverAddress string, sentinels []s
 		return "", nil, err
 	}
 	return fmt.Sprintf("%s:%s", m[0], m[1]), sentinels, nil
+}
+
+func (c *sentinelClient) randomEligibleReplicaAddress(redisResponse []RedisResult) (string, error) {
+	replicaResponses, err := redisResponse[1].ToArray()
+	if err != nil {
+		return "", err
+	}
+
+	eligibleReplicas := make([]map[string]string, 0, len(replicaResponses))
+	// eliminate replicas with s_down condition
+	for i := range replicaResponses {
+		replicaResponseMap, err := replicaResponses[i].AsStrMap()
+		if err != nil {
+			continue
+		}
+		if _, containsSDownTime := replicaResponseMap["s-down-time"]; !containsSDownTime {
+			eligibleReplicas = append(eligibleReplicas, replicaResponseMap)
+		}
+	}
+
+	if len(eligibleReplicas) == 0 {
+		return "", fmt.Errorf("not enough ready replicas")
+	}
+
+	// choose a replica randomly
+	randomReplicaIndex := rand.Intn(len(eligibleReplicas))
+	m := eligibleReplicas[randomReplicaIndex]
+
+	return fmt.Sprintf("%s:%s", m["ip"], m["port"]), nil
 }
 
 func newSentinelOpt(opt *ClientOption) *ClientOption {
