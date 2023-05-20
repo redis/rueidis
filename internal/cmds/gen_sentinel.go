@@ -2,26 +2,6 @@
 
 package cmds
 
-type SentinelReplicas Completed
-
-func (b Builder) SentinelReplicas() (c SentinelReplicas) {
-	c = SentinelReplicas{cs: get(), ks: b.ks}
-	c.cs.s = append(c.cs.s, "SENTINEL", "REPLICAS")
-	return c
-}
-
-func (c SentinelReplicas) Master(master string) SentinelReplicasMaster {
-	c.cs.s = append(c.cs.s, master)
-	return (SentinelReplicasMaster)(c)
-}
-
-type SentinelReplicasMaster Completed
-
-func (c SentinelReplicasMaster) Build() Completed {
-	c.cs.Build()
-	return Completed(c)
-}
-
 type SentinelFailover Completed
 
 func (b Builder) SentinelFailover() (c SentinelFailover) {
@@ -58,6 +38,26 @@ func (c SentinelGetMasterAddrByName) Master(master string) SentinelGetMasterAddr
 type SentinelGetMasterAddrByNameMaster Completed
 
 func (c SentinelGetMasterAddrByNameMaster) Build() Completed {
+	c.cs.Build()
+	return Completed(c)
+}
+
+type SentinelReplicas Completed
+
+func (b Builder) SentinelReplicas() (c SentinelReplicas) {
+	c = SentinelReplicas{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "SENTINEL", "REPLICAS")
+	return c
+}
+
+func (c SentinelReplicas) Master(master string) SentinelReplicasMaster {
+	c.cs.s = append(c.cs.s, master)
+	return (SentinelReplicasMaster)(c)
+}
+
+type SentinelReplicasMaster Completed
+
+func (c SentinelReplicasMaster) Build() Completed {
 	c.cs.Build()
 	return Completed(c)
 }
