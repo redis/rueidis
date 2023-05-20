@@ -378,31 +378,25 @@ func (c *sentinelClient) listWatch(cc conn) (serverAddress string, sentinels []s
 			return "", nil, err
 		}
 
+		eligibleReplicas := make([]RedisMessage, 0, len(replicaResponses))
 		// eliminate replicas with s_down condition
 		for i := range replicaResponses {
 			replicaResponseMap, err := replicaResponses[i].AsMap()
 			if err != nil {
-				// delete response i
-				replicaResponses[i], replicaResponses[len(replicaResponses)-1] =
-					replicaResponses[len(replicaResponses)-1], replicaResponses[i]
-				replicaResponses = replicaResponses[:len(replicaResponses)-1]
 				continue
 			}
-
-			if _, containsSDownTime := replicaResponseMap["s-down-time"]; containsSDownTime {
-				replicaResponses[i], replicaResponses[len(replicaResponses)-1] =
-					replicaResponses[len(replicaResponses)-1], replicaResponses[i]
-				replicaResponses = replicaResponses[:len(replicaResponses)-1]
+			if _, containsSDownTime := replicaResponseMap["s-down-time"]; !containsSDownTime {
+				eligibleReplicas = append(eligibleReplicas, replicaResponses[i])
 			}
 		}
 
-		if len(replicaResponses) == 0 {
+		if len(eligibleReplicas) == 0 {
 			return "", nil, fmt.Errorf("not enough ready replicas")
 		}
 
 		// choose a replica randomly
-		randomReplicaIndex := rand.Intn(len(replicaResponses))
-		m, err := replicaResponses[randomReplicaIndex].AsStrMap()
+		randomReplicaIndex := rand.Intn(len(eligibleReplicas))
+		m, err := eligibleReplicas[randomReplicaIndex].AsStrMap()
 		if err != nil {
 			return "", nil, err
 		}
