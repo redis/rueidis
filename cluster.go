@@ -90,6 +90,7 @@ func (c *clusterClient) _refresh() (err error) {
 
 	c.mu.RLock()
 	results := make(chan RedisResult, len(c.conns))
+	// TODO do it by batch
 	for _, cc := range c.conns {
 		go func(c conn) { results <- c.Do(context.Background(), cmds.SlotCmd) }(cc)
 	}
@@ -555,14 +556,11 @@ func (c *clusterClient) shouldRefreshRetry(err error, ctx context.Context) (addr
 			} else if err.IsClusterDown() || err.IsTryAgain() {
 				mode = RedirectRetry
 			}
-		} else {
+		} else if ctx.Err() == nil {
 			mode = RedirectRetry
 		}
 		if mode != RedirectNone {
 			go c.refresh()
-		}
-		if mode == RedirectRetry && ctx.Err() != nil {
-			mode = RedirectNone
 		}
 	}
 	return
