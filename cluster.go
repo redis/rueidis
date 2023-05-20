@@ -90,13 +90,18 @@ func (c *clusterClient) _refresh() (err error) {
 
 	c.mu.RLock()
 	results := make(chan RedisResult, len(c.conns))
-	// TODO do it by batch
+	pending := make([]conn, 0, len(c.conns))
 	for _, cc := range c.conns {
-		go func(c conn) { results <- c.Do(context.Background(), cmds.SlotCmd) }(cc)
+		pending = append(pending, cc)
 	}
 	c.mu.RUnlock()
 
 	for i := 0; i < cap(results); i++ {
+		if i&3 == 0 { // batch CLUSTER SLOTS for every 4 connections
+			for j := i; j < i+4 && j < len(pending); j++ {
+				go func(c conn) { results <- c.Do(context.Background(), cmds.SlotCmd) }(pending[j])
+			}
+		}
 		if reply, err = (<-results).ToMessage(); len(reply.values) != 0 {
 			break
 		}
