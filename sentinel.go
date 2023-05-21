@@ -339,8 +339,8 @@ func (c *sentinelClient) listWatch(cc conn) (serverAddress string, sentinels []s
 					c.switchMasterRetry(fmt.Sprintf("%s:%s", m[2], m[3]))
 				}
 			case "+slave", "+sdown", "-sdown":
-				m := strings.SplitN(event.Message, " ", 4)
-				if m[0] == "slave" {
+				m := strings.SplitN(event.Message, " ", 7)
+				if c.readonly && m[0] == "slave" && m[5] == c.sOpt.Sentinel.MasterSet {
 					// call refresh to randomly choose a new slave
 					c.refreshRetry()
 				}
