@@ -2259,6 +2259,34 @@ func TestPubSub(t *testing.T) {
 		}
 	})
 
+	t.Run("PubSub MULTI/EXEC Subscribe", func(t *testing.T) {
+		var shouldPanic = func(cmd Completed) (pass bool) {
+			defer func() { pass = recover() == multiexecsub }()
+
+			p, mock, _, _ := setup(t, ClientOption{})
+			atomic.StoreInt32(&p.state, 1)
+			p.queue.PutOne(cmd)
+			p.queue.NextWriteCmd()
+			go func() {
+				mock.Expect().Reply(RedisMessage{typ: '+', string: "QUEUED"})
+			}()
+			p._backgroundRead()
+			return
+		}
+		for _, push := range []Completed{
+			builder.Subscribe().Channel("ch1").Build(),
+			builder.Psubscribe().Pattern("ch1").Build(),
+			builder.Ssubscribe().Channel("ch1").Build(),
+			builder.Unsubscribe().Channel("ch1").Build(),
+			builder.Punsubscribe().Pattern("ch1").Build(),
+			builder.Sunsubscribe().Channel("ch1").Build(),
+		} {
+			if !shouldPanic(push) {
+				t.Fatalf("should panic on protocolbug")
+			}
+		}
+	})
+
 	t.Run("RESP2 pubsub mixed", func(t *testing.T) {
 		p, _, cancel, _ := setup(t, ClientOption{})
 		p.version = 5
