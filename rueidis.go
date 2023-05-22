@@ -127,8 +127,8 @@ type ClientOption struct {
 
 	// ShuffleInit is a handy flag that shuffles the InitAddress after passing to the NewClient() if it is true
 	ShuffleInit bool
-	// NoTouch controls whether commands alter LRU/LFU stats
-	NoTouch bool
+	// ClientNoTouch controls whether commands alter LRU/LFU stats
+	ClientNoTouch bool
 	// DisableRetry disables retrying read-only commands under network errors
 	DisableRetry bool
 	// DisableCache falls back Client.DoCache/Client.DoMultiCache to Client.Do/Client.DoMulti
@@ -268,11 +268,6 @@ func NewClient(option ClientOption) (client Client, err error) {
 	}
 	if option.Dialer.KeepAlive == 0 {
 		option.Dialer.KeepAlive = DefaultTCPKeepAlive
-	}
-	// Check if NoTouch is enabled
-	if option.NoTouch {
-		option.PipelineMultiplex = singleClientMultiplex(option.PipelineMultiplex)
-		return newSingleClient(&option, nil, makeConn)
 	}
 	if option.ConnWriteTimeout == 0 {
 		option.ConnWriteTimeout = option.Dialer.KeepAlive * 10
