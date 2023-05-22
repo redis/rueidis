@@ -162,6 +162,229 @@ func TestSentinelClientInit(t *testing.T) {
 		client.Close()
 	})
 
+	t.Run("Refresh retry replica-only client", func(t *testing.T) {
+		v := errors.New("refresh err")
+		slaveWithMultiError := &mockConn{
+			DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
+			DoMultiFn: func(multi ...Completed) []RedisResult {
+				return []RedisResult{
+					newErrResult(v),
+					newErrResult(v),
+				}
+			},
+		}
+		slaveWithReplicaResponseErr := &mockConn{
+			DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
+			DoMultiFn: func(multi ...Completed) []RedisResult {
+				return []RedisResult{
+					{val: RedisMessage{typ: '*', values: []RedisMessage{
+						{typ: '%', values: []RedisMessage{
+							{typ: '+', string: "ip"}, {typ: '+', string: ""},
+							{typ: '+', string: "port"}, {typ: '+', string: "0"},
+						}},
+					}}},
+					newErrResult(v),
+				}
+			},
+		}
+		sentinelWithFaultiSlave := &mockConn{
+			DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
+			DoMultiFn: func(multi ...Completed) []RedisResult {
+				return []RedisResult{
+					{val: RedisMessage{typ: '*', values: []RedisMessage{
+						{typ: '%', values: []RedisMessage{
+							{typ: '+', string: "ip"}, {typ: '+', string: ""},
+							{typ: '+', string: "port"}, {typ: '+', string: "3"},
+						}},
+					}}},
+					{val: RedisMessage{typ: '*', values: []RedisMessage{
+						{typ: '%', values: []RedisMessage{
+							{typ: '+', string: "ip"}, {typ: '+', string: ""},
+							{typ: '+', string: "port"}, {typ: '+', string: "6"},
+						}},
+					}}},
+				}
+			},
+		}
+		// this connection will fail because OK slave is in 's-down' status
+		// since the next 2 connections won't update sentinel list,
+		// we update the list here.
+		sentinelWithHealthySlaveInSDown := &mockConn{
+			DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
+			DoMultiFn: func(multi ...Completed) []RedisResult {
+				return []RedisResult{
+					{val: RedisMessage{typ: '*', values: []RedisMessage{
+						{typ: '%', values: []RedisMessage{
+							{typ: '+', string: "ip"}, {typ: '+', string: ""},
+							{typ: '+', string: "port"}, {typ: '+', string: "4"},
+						}},
+						{typ: '%', values: []RedisMessage{
+							{typ: '+', string: "ip"}, {typ: '+', string: ""},
+							{typ: '+', string: "port"}, {typ: '+', string: "32"},
+						}},
+						{typ: '%', values: []RedisMessage{
+							{typ: '+', string: "ip"}, {typ: '+', string: ""},
+							{typ: '+', string: "port"}, {typ: '+', string: "31"},
+						}},
+					}}},
+					{val: RedisMessage{typ: '*', values: []RedisMessage{
+						{typ: '%', values: []RedisMessage{
+							{typ: '+', string: "ip"}, {typ: '+', string: ""},
+							{typ: '+', string: "port"}, {typ: '+', string: "6"},
+						}},
+						{typ: '%', values: []RedisMessage{
+							{typ: '+', string: "ip"}, {typ: '+', string: ""},
+							{typ: '+', string: "port"}, {typ: '+', string: "8"},
+							{typ: '+', string: "s-down-time"}, {typ: '+', string: "1"},
+						}},
+					}}},
+				}
+			},
+		}
+		sentinelWithoutEligibleSlave := &mockConn{
+			DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
+			DoMultiFn: func(multi ...Completed) []RedisResult {
+				return []RedisResult{
+					{val: RedisMessage{typ: '*', values: []RedisMessage{
+						{typ: '%', values: []RedisMessage{
+							{typ: '+', string: "ip"}, {typ: '+', string: ""},
+							{typ: '+', string: "port"}, {typ: '+', string: "32"},
+						}},
+					}}},
+					{val: RedisMessage{typ: '*', values: []RedisMessage{
+						{typ: '%', values: []RedisMessage{
+							{typ: '+', string: "ip"}, {typ: '+', string: ""},
+							{typ: '+', string: "port"}, {typ: '+', string: "8"},
+							{typ: '+', string: "s-down-time"}, {typ: '+', string: "1"},
+						}},
+					}}},
+				}
+			},
+		}
+
+		sentinelWithInvalidMapResponse := &mockConn{
+			DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
+			DoMultiFn: func(multi ...Completed) []RedisResult {
+				return []RedisResult{
+					{val: RedisMessage{typ: '*', values: []RedisMessage{
+						{typ: '%', values: []RedisMessage{
+							{typ: '+', string: "ip"}, {typ: '+', string: ""},
+							{typ: '+', string: "port"}, {typ: '+', string: "4"},
+						}},
+					}}},
+					{val: RedisMessage{typ: '*', values: []RedisMessage{
+						RedisMessage(*Nil),
+						//{typ: '%', values: []RedisMessage{
+						//	RedisMessage(RedisError{}),
+						//	RedisMessage(RedisError{}),
+						//}},
+					}}},
+				}
+			},
+		}
+		sentinelWithMasterRoleAsSlave := &mockConn{
+			DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
+			DoMultiFn: func(multi ...Completed) []RedisResult {
+				return []RedisResult{
+					{val: RedisMessage{typ: '*', values: []RedisMessage{
+						{typ: '%', values: []RedisMessage{
+							{typ: '+', string: "ip"}, {typ: '+', string: ""},
+							{typ: '+', string: "port"}, {typ: '+', string: "5"},
+						}},
+					}}},
+					{val: RedisMessage{typ: '*', values: []RedisMessage{
+						{typ: '%', values: []RedisMessage{
+							{typ: '+', string: "ip"}, {typ: '+', string: ""},
+							{typ: '+', string: "port"}, {typ: '+', string: "7"},
+						}},
+					}}},
+				}
+			},
+		}
+		sentinelWithOKResponse := &mockConn{
+			DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
+			DoMultiFn: func(multi ...Completed) []RedisResult {
+				return []RedisResult{
+					{val: RedisMessage{typ: '*', values: []RedisMessage{
+						{typ: '%', values: []RedisMessage{
+							{typ: '+', string: "ip"}, {typ: '+', string: ""},
+							{typ: '+', string: "port"}, {typ: '+', string: "2"},
+						}},
+					}}},
+					{val: RedisMessage{typ: '*', values: []RedisMessage{
+						{typ: '%', values: []RedisMessage{
+							{typ: '+', string: "ip"}, {typ: '+', string: ""},
+							{typ: '+', string: "port"}, {typ: '+', string: "8"},
+						}},
+					}}},
+				}
+			},
+		}
+
+		client, err := newSentinelClient(&ClientOption{InitAddress: []string{":0", ":1", ":2"}, ReplicaOnly: true}, func(dst string, opt *ClientOption) conn {
+			if dst == ":0" {
+				return slaveWithMultiError
+			}
+			if dst == ":1" {
+				return slaveWithReplicaResponseErr
+			}
+			if dst == ":2" {
+				return sentinelWithFaultiSlave
+			}
+			if dst == ":3" {
+				return sentinelWithHealthySlaveInSDown
+			}
+			if dst == ":31" {
+				return sentinelWithoutEligibleSlave
+			}
+
+			if dst == ":32" {
+				return sentinelWithInvalidMapResponse
+			}
+
+			if dst == ":4" {
+				return sentinelWithMasterRoleAsSlave
+			}
+			if dst == ":5" {
+				return sentinelWithOKResponse
+			}
+			if dst == ":6" {
+				return &mockConn{
+					DialFn: func() error { return v },
+				}
+			}
+			if dst == ":7" {
+				return &mockConn{
+					DoFn: func(cmd Completed) RedisResult {
+						return RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "master"}}}}
+					},
+				}
+			}
+			if dst == ":8" {
+				return &mockConn{
+					DoFn: func(cmd Completed) RedisResult {
+						return RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "slave"}}}}
+					},
+				}
+			}
+			return nil
+		})
+		if client.sAddr != ":5" && err == nil {
+			t.Fatalf("expected error but got nil with sentinel %s", client.sAddr)
+		}
+
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		if client.sConn == nil {
+			t.Fatalf("unexpected nil sentinel conn")
+		}
+		if client.mConn.Load() == nil {
+			t.Fatalf("unexpected nil slave conn")
+		}
+		client.Close()
+	})
+
 	t.Run("Refresh retry 2", func(t *testing.T) {
 		v := errors.New("refresh err")
 		s0 := &mockConn{

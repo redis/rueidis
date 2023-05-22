@@ -338,6 +338,8 @@ func (c *sentinelClient) listWatch(cc conn) (serverAddress string, sentinels []s
 				if m[0] == "master" && m[1] == c.sOpt.Sentinel.MasterSet {
 					c.switchMasterRetry(fmt.Sprintf("%s:%s", m[2], m[3]))
 				}
+			// note that in case of failover, every slave in the setup
+			// will send +slave event individually.
 			case "+slave", "+sdown", "-sdown":
 				m := strings.SplitN(event.Message, " ", 7)
 				if c.readonly && m[0] == "slave" && m[5] == c.sOpt.Sentinel.MasterSet {
