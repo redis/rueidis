@@ -334,9 +334,11 @@ func (c *sentinelClient) listWatch(cc conn) (serverAddress string, sentinels []s
 					c.switchMasterRetry(fmt.Sprintf("%s:%s", m[3], m[4]))
 				}
 			case "+reboot":
-				m := strings.SplitN(event.Message, " ", 4)
+				m := strings.SplitN(event.Message, " ", 7)
 				if m[0] == "master" && m[1] == c.sOpt.Sentinel.MasterSet {
 					c.switchMasterRetry(fmt.Sprintf("%s:%s", m[2], m[3]))
+				} else if c.readonly && m[0] == "slave" && m[5] == c.sOpt.Sentinel.MasterSet {
+					c.refreshRetry()
 				}
 			// note that in case of failover, every slave in the setup
 			// will send +slave event individually.
