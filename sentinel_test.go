@@ -274,10 +274,6 @@ func TestSentinelClientInit(t *testing.T) {
 					}}},
 					{val: RedisMessage{typ: '*', values: []RedisMessage{
 						RedisMessage(*Nil),
-						//{typ: '%', values: []RedisMessage{
-						//	RedisMessage(RedisError{}),
-						//	RedisMessage(RedisError{}),
-						//}},
 					}}},
 				}
 			},
@@ -1201,6 +1197,194 @@ func TestSentinelClientPubSub(t *testing.T) {
 	}
 	for atomic.LoadInt32(&m4close) != 1 {
 		t.Log("wait old m1 to be close", atomic.LoadInt32(&m4close))
+		time.Sleep(time.Millisecond * 100)
+	}
+}
+
+//gocyclo:ignore
+func TestSentinelReplicaOnlyClientPubSub(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	var s0count, s0close, slave1close, slave2close, slave4close int32
+
+	messages := make(chan PubSubMessage)
+
+	s0 := &mockConn{
+		DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
+		DoMultiFn: func(multi ...Completed) []RedisResult {
+			count := atomic.AddInt32(&s0count, 1)
+			remainder := (count - 1) % 3
+			if remainder == 0 {
+				return []RedisResult{
+					{val: RedisMessage{typ: '*', values: []RedisMessage{}}},
+					{val: RedisMessage{typ: '*', values: []RedisMessage{
+						{typ: '%', values: []RedisMessage{
+							{typ: '+', string: "ip"}, {typ: '+', string: ""},
+							{typ: '+', string: "port"}, {typ: '+', string: "1"},
+						}},
+					}}},
+				}
+			} else if remainder == 1 {
+				return []RedisResult{
+					{val: RedisMessage{typ: '*', values: []RedisMessage{}}},
+					{val: RedisMessage{typ: '*', values: []RedisMessage{
+						{typ: '%', values: []RedisMessage{
+							{typ: '+', string: "ip"}, {typ: '+', string: ""},
+							{typ: '+', string: "port"}, {typ: '+', string: "2"},
+						}},
+					}}},
+				}
+			} else {
+				return []RedisResult{
+					{val: RedisMessage{typ: '*', values: []RedisMessage{}}},
+					{val: RedisMessage{typ: '*', values: []RedisMessage{
+						{typ: '%', values: []RedisMessage{
+							{typ: '+', string: "ip"}, {typ: '+', string: ""},
+							{typ: '+', string: "port"}, {typ: '+', string: "4"},
+						}},
+					}}},
+				}
+			}
+		},
+		ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
+			for msg := range messages {
+				fn(msg)
+			}
+			return ErrClosing
+		},
+		CloseFn: func() { atomic.AddInt32(&s0close, 1) },
+	}
+	slave1 := &mockConn{
+		DoFn: func(cmd Completed) RedisResult {
+			if cmd == cmds.RoleCmd {
+				return RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "slave"}}}}
+			}
+			return RedisResult{val: RedisMessage{typ: '+', string: "OK"}}
+		},
+		CloseFn: func() {
+			atomic.AddInt32(&slave1close, 1)
+		},
+	}
+	slave2 := &mockConn{
+		DoFn: func(cmd Completed) RedisResult {
+			return RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "master"}}}}
+		},
+		CloseFn: func() { atomic.AddInt32(&slave2close, 1) },
+	}
+	s3 := &mockConn{
+		DoMultiFn: func(cmd ...Completed) []RedisResult { return []RedisResult{newErrResult(errClosing)} },
+	}
+	slave4 := &mockConn{
+		DoFn: func(cmd Completed) RedisResult {
+			if cmd == cmds.RoleCmd {
+				return RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "slave"}}}}
+			}
+			return RedisResult{val: RedisMessage{typ: '+', string: "OK4"}}
+		},
+		CloseFn: func() { atomic.AddInt32(&slave4close, 1) },
+	}
+
+	client, err := newSentinelClient(&ClientOption{
+		InitAddress: []string{":0"},
+		Sentinel: SentinelOption{
+			MasterSet: "replicaonly",
+		},
+		ReplicaOnly: true,
+	}, func(dst string, opt *ClientOption) conn {
+		if dst == ":0" {
+			return s0
+		}
+		if dst == ":1" {
+			return slave1
+		}
+		if dst == ":2" {
+			return slave2
+		}
+		if dst == ":3" {
+			return s3
+		}
+		if dst == ":4" {
+			return slave4
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+
+	messages <- PubSubMessage{Channel: "+sentinel", Message: "sentinel 000000  3"}
+
+	var added bool
+	for !added {
+		client.mu.Lock()
+		added = client.sentinels.Front().Value.(string) == ":3"
+		client.mu.Unlock()
+		t.Log("wait +sentinel")
+		time.Sleep(time.Millisecond * 100)
+	}
+
+	// event will be skipped because of first word
+	messages <- PubSubMessage{Channel: "+slave", Message: "sla_ve 0:0 0 2 @ replicaonly 0 0"}
+
+	v, err := client.Do(context.Background(), client.B().Get().Key("k").Build()).ToString()
+	if err != nil || v != "OK" {
+		t.Fatalf("unexpected resp %v %v", v, err)
+	}
+
+	// event will be skipped because of wrong master set name
+	messages <- PubSubMessage{Channel: "+slave", Message: "slave 0:0 0 2 @ test 0 0"}
+
+	v, err = client.Do(context.Background(), client.B().Get().Key("k").Build()).ToString()
+	if err != nil || v != "OK" {
+		t.Fatalf("unexpected resp %v %v", v, err)
+	}
+
+	// new slave with wrong role (2)
+	// this won't directly switch to :2 like master
+	// it will cause s0 to return :2 in DoMulti response
+	messages <- PubSubMessage{Channel: "+slave", Message: "slave 0:0 0 2 @ replicaonly 0 0"}
+
+	for atomic.LoadInt32(&slave2close) != 1 {
+		t.Log("wait false slave2 to be close", atomic.LoadInt32(&slave2close))
+		time.Sleep(time.Millisecond * 100)
+	}
+
+	for atomic.LoadInt32(&s0count) != 3 {
+		t.Log("wait s0 to be call third time", atomic.LoadInt32(&s0count))
+		time.Sleep(time.Millisecond * 100)
+	}
+
+	for atomic.LoadInt32(&slave1close) != 1 {
+		t.Log("wait for slave1 to close (and for client to use slave4)", atomic.LoadInt32(&slave1close))
+		time.Sleep(time.Millisecond * 100)
+	}
+
+	v, err = client.Do(context.Background(), client.B().Get().Key("k").Build()).ToString()
+	if err != nil || v != "OK4" {
+		t.Fatalf("unexpected resp %v %v", v, err)
+	}
+
+	// switch to new slave by reboot
+	messages <- PubSubMessage{Channel: "+reboot", Message: "slave 0:0 0 1 @ replicaonly 0 0"}
+
+	for atomic.LoadInt32(&slave4close) != 1 {
+		t.Log("wait old slave4 to be close", atomic.LoadInt32(&slave4close))
+		time.Sleep(time.Millisecond * 100)
+	}
+
+	v, err = client.Do(context.Background(), client.B().Get().Key("k").Build()).ToString()
+	if err != nil || v != "OK" {
+		t.Fatalf("unexpected resp %v %v", v, err)
+	}
+
+	close(messages)
+	client.Close()
+
+	for atomic.LoadInt32(&s0close) != 4 {
+		t.Log("wait old s0 to be close", atomic.LoadInt32(&s0close))
+		time.Sleep(time.Millisecond * 100)
+	}
+	for atomic.LoadInt32(&slave1close) != 2 {
+		t.Log("wait old slave1 to be close", atomic.LoadInt32(&slave1close))
 		time.Sleep(time.Millisecond * 100)
 	}
 }
