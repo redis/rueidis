@@ -135,6 +135,10 @@ type ClientOption struct {
 	AlwaysPipelining bool
 	// AlwaysRESP2 makes rueidis.Client always uses RESP2, otherwise it will try using RESP3 first.
 	AlwaysRESP2 bool
+
+	// ReplicaOnly indicates that this client will only try to connect to readonly replicas of redis setup.
+	// currently, it is only implemented for sentinel client
+	ReplicaOnly bool
 }
 
 // SentinelOption contains MasterSet,
