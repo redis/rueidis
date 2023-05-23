@@ -197,9 +197,10 @@ func TestNewPipe(t *testing.T) {
 				ReplyString("OK")
 		}()
 		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
-			SelectDB:   1,
-			Password:   "pa",
-			ClientName: "cn",
+			SelectDB:      1,
+			Password:      "pa",
+			ClientName:    "cn",
+			ClientNoTouch: true,
 		})
 		if err != nil {
 			t.Fatalf("pipe setup failed: %v", err)
@@ -222,11 +223,12 @@ func TestNewPipe(t *testing.T) {
 				ReplyString("OK")
 		}()
 		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
-			SelectDB:     1,
-			Password:     "pa",
-			ClientName:   "cn",
-			AlwaysRESP2:  true,
-			DisableCache: true,
+			SelectDB:      1,
+			Password:      "pa",
+			ClientName:    "cn",
+			AlwaysRESP2:   true,
+			DisableCache:  true,
+			ClientNoTouch: true,
 		})
 		if err != nil {
 			t.Fatalf("pipe setup failed: %v", err)
