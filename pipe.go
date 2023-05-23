@@ -133,8 +133,6 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 	}
 	if option.ClientNoTouch {
 		init = append(init, []string{"CLIENT", "NO-TOUCH", "ON"})
-	} else {
-		init = append(init, []string{"CLIENT", "NO-TOUCH", "OFF"})
 	}
 
 	timeout := option.Dialer.Timeout
@@ -199,9 +197,8 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 		}
 		if option.ClientNoTouch {
 			init = append(init, []string{"CLIENT", "NO-TOUCH", "ON"})
-		} else {
-			init = append(init, []string{"CLIENT", "NO-TOUCH", "OFF"})
 		}
+
 		if len(init) != 0 {
 			for _, r := range p.DoMulti(ctx, cmds.NewMultiCompleted(init)...) {
 				if err = r.Error(); err != nil {
