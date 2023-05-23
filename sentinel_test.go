@@ -654,7 +654,7 @@ func TestSentinelSwitchAfterClose(t *testing.T) {
 		t.Fatalf("unexpected err %v", err)
 	}
 	client.Close()
-	if err := client._switchMaster(":1"); err != nil {
+	if err := client._switchTarget(":1"); err != nil {
 		t.Fatalf("unexpected err %v", err)
 	}
 }
