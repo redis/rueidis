@@ -7,7 +7,6 @@ import (
 
 	"github.com/redis/rueidis"
 	"github.com/redis/rueidis/internal/cmds"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/sdk/metric"
@@ -22,15 +21,19 @@ func TestWithClient(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	client = WithClient(client, TraceAttrs(attribute.String("any", "label")), MetricAttrs(attribute.String("any", "label")))
-	defer client.Close()
 
 	exp := tracetest.NewInMemoryExporter()
-	otel.SetTracerProvider(trace.NewTracerProvider(trace.WithSyncer(exp)))
+	tracerProvider := trace.NewTracerProvider(trace.WithSyncer(exp))
 
 	mxp := metric.NewManualReader()
-	provider := metric.NewMeterProvider(metric.WithReader(mxp))
-	otel.SetMeterProvider(provider)
+	meterProvider := metric.NewMeterProvider(metric.WithReader(mxp))
+
+	client = WithClient(
+		client, TraceAttrs(attribute.String("any", "label")),
+		MetricAttrs(attribute.String("any", "label")),
+		WithTracerProvider(tracerProvider),
+		WithMeterProvider(meterProvider),
+	)
 
 	ctx := context.Background()
 

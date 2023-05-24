@@ -27,12 +27,25 @@ var (
 
 var _ rueidis.Client = (*otelclient)(nil)
 
-// WithClient creates a new rueidis.Client with OpenTelemetry tracing enabled
+// WithClient creates a new rueidis.Client with OpenTelemetry tracing enabled.
 func WithClient(client rueidis.Client, opts ...Option) rueidis.Client {
-	o := &otelclient{client: client}
-	for _, fn := range opts {
-		fn(o)
+	o := &otelclient{
+		client:         client,
+		meterProvider:  otel.GetMeterProvider(),  // Defaults to global MeterProvider
+		tracerProvider: otel.GetTracerProvider(), // Defaults to global TracerProvider
 	}
+	for _, opt := range opts {
+		opt(o)
+	}
+
+	// Set the MeterProvider and TracerProvider if specified
+	if o.meterProvider != nil {
+		otel.SetMeterProvider(o.meterProvider)
+	}
+	if o.tracerProvider != nil {
+		otel.SetTracerProvider(o.tracerProvider)
+	}
+
 	return o
 }
 
@@ -53,10 +66,26 @@ func TraceAttrs(attrs ...attribute.KeyValue) Option {
 	}
 }
 
+// WithMeterProvider sets the MeterProvider for the otelclient.
+func WithMeterProvider(provider metric.MeterProvider) Option {
+	return func(o *otelclient) {
+		o.meterProvider = provider
+	}
+}
+
+// WithTracerProvider sets the TracerProvider for the otelclient.
+func WithTracerProvider(provider trace.TracerProvider) Option {
+	return func(o *otelclient) {
+		o.tracerProvider = provider
+	}
+}
+
 type otelclient struct {
-	client rueidis.Client
-	mAttrs []attribute.KeyValue
-	tAttrs []attribute.KeyValue
+	client         rueidis.Client
+	mAttrs         []attribute.KeyValue
+	tAttrs         []attribute.KeyValue
+	meterProvider  metric.MeterProvider
+	tracerProvider trace.TracerProvider
 }
 
 func (o *otelclient) B() cmds.Builder {
