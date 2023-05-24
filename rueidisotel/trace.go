@@ -5,14 +5,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/redis/rueidis"
-	"github.com/redis/rueidis/internal/cmds"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/metric/global"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/redis/rueidis"
+	"github.com/redis/rueidis/internal/cmds"
 )
 
 var (
@@ -72,6 +73,10 @@ func (o *otelclient) Do(ctx context.Context, cmd rueidis.Completed) (resp rueidi
 }
 
 func (o *otelclient) DoMulti(ctx context.Context, multi ...rueidis.Completed) (resp []rueidis.RedisResult) {
+	if len(multi) == 0 {
+		return
+	}
+
 	ctx, span := start(ctx, multiFirst(multi), multiSum(multi), o.tAttrs)
 	resp = o.client.DoMulti(ctx, multi...)
 	end(span, firstError(resp))
@@ -93,6 +98,10 @@ func (o *otelclient) DoCache(ctx context.Context, cmd rueidis.Cacheable, ttl tim
 }
 
 func (o *otelclient) DoMultiCache(ctx context.Context, multi ...rueidis.CacheableTTL) (resps []rueidis.RedisResult) {
+	if len(multi) == 0 {
+		return
+	}
+
 	ctx, span := start(ctx, multiCacheableFirst(multi), multiCacheableSum(multi), o.tAttrs)
 	resps = o.client.DoMultiCache(ctx, multi...)
 	for _, resp := range resps {
@@ -158,6 +167,10 @@ func (d *dedicated) Do(ctx context.Context, cmd rueidis.Completed) (resp rueidis
 }
 
 func (d *dedicated) DoMulti(ctx context.Context, multi ...rueidis.Completed) (resp []rueidis.RedisResult) {
+	if len(multi) == 0 {
+		return
+	}
+
 	ctx, span := start(ctx, multiFirst(multi), multiSum(multi), d.tAttrs)
 	resp = d.client.DoMulti(ctx, multi...)
 	end(span, firstError(resp))

@@ -5,8 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/redis/rueidis"
-	"github.com/redis/rueidis/internal/cmds"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -16,6 +14,9 @@ import (
 	"go.opentelemetry.io/otel/sdk/metric/metricdata/metricdatatest"
 	"go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
+
+	"github.com/redis/rueidis"
+	"github.com/redis/rueidis/internal/cmds"
 )
 
 func TestWithClient(t *testing.T) {
@@ -210,4 +211,28 @@ func ExampleWithClient_openTelemetry() {
 	}
 	client = WithClient(client)
 	defer client.Close()
+}
+
+func TestWithClientEmptyCommands(t *testing.T) {
+	client, err := rueidis.NewClient(rueidis.ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	client = WithClient(client, TraceAttrs(attribute.String("any", "label")), MetricAttrs(attribute.String("any", "label")))
+	defer client.Close()
+
+	defer func() {
+		r := recover()
+		if r != nil {
+			t.Error("unexpected panic : ", r)
+		}
+	}()
+
+	var emptyCompletedArr []rueidis.Completed
+
+	resps := client.DoMulti(context.Background(), emptyCompletedArr...)
+	if resps != nil {
+		t.Error("unexpected response : ", resps)
+	}
 }
