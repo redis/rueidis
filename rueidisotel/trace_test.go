@@ -44,6 +44,13 @@ func TestWithClient(t *testing.T) {
 	}
 	validateTrace(t, exp, "", codes.Ok)
 
+	var emtpyCacheableArr []rueidis.CacheableTTL
+	resps = client.DoMultiCache(ctx, emtpyCacheableArr...)
+	if resps != nil {
+		t.Error("unexpected response : ", resps)
+	}
+	validateTrace(t, exp, "", codes.Ok)
+
 	client.Do(ctx, client.B().Set().Key("key").Value("val").Build())
 	validateTrace(t, exp, "SET", codes.Ok)
 
