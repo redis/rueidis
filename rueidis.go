@@ -138,6 +138,12 @@ type ClientOption struct {
 	AlwaysPipelining bool
 	// AlwaysRESP2 makes rueidis.Client always uses RESP2, otherwise it will try using RESP3 first.
 	AlwaysRESP2 bool
+
+	// ClientNoEvict sets the client eviction mode for the current connection.
+	// When turned on and client eviction is configured,
+	// the current connection will be excluded from the client eviction process
+	// even if we're above the configured client eviction threshold.
+	ClientNoEvict bool
 }
 
 // SentinelOption contains MasterSet,

@@ -125,6 +125,9 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 	} else {
 		init = append(init, helloCmd, append([]string{"CLIENT", "TRACKING", "ON"}, option.ClientTrackingOptions...))
 	}
+	if option.ClientNoEvict {
+		init = append(init, []string{"CLIENT", "NO-EVICT", "ON"})
+	}
 	if option.ClientSetInfo != nil {
 		clientSetInfoCmd := []string{"CLIENT", "SETINFO"}
 		clientSetInfoCmd = append(clientSetInfoCmd, option.ClientSetInfo...)
@@ -194,12 +197,14 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 		if option.ClientName != "" {
 			init = append(init, []string{"CLIENT", "SETNAME", option.ClientName})
 		}
+		if option.ClientNoEvict {
+			init = append(init, []string{"CLIENT", "NO-EVICT", "ON"})
+		}
 		if option.ClientSetInfo != nil {
 			clientSetInfoCmd := []string{"CLIENT", "SETINFO"}
 			clientSetInfoCmd = append(clientSetInfoCmd, option.ClientSetInfo...)
 			init = append(init, clientSetInfoCmd)
 		}
-
 		if option.SelectDB != 0 {
 			init = append(init, []string{"SELECT", strconv.Itoa(option.SelectDB)})
 		}
