@@ -208,7 +208,7 @@ func TestNewPipe(t *testing.T) {
 			ClientName:    "cn",
 			ClientNoEvict: true,
 			ClientSetInfo: []string{"LIB-NAME", "libname", "LIB-VER", "1"},
-      ClientNoTouch: true,
+			ClientNoTouch: true,
 		})
 		if err != nil {
 			t.Fatalf("pipe setup failed: %v", err)
@@ -242,10 +242,9 @@ func TestNewPipe(t *testing.T) {
 			ClientName:    "cn",
 			ClientNoEvict: true,
 			ClientSetInfo: []string{"LIB-NAME", "libname", "LIB-VER", "1"},
-      ClientNoTouch: true,
+			ClientNoTouch: true,
 			AlwaysRESP2:   true,
 			DisableCache:  true,
-
 		})
 		if err != nil {
 			t.Fatalf("pipe setup failed: %v", err)
