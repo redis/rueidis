@@ -131,6 +131,9 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 	if option.SelectDB != 0 {
 		init = append(init, []string{"SELECT", strconv.Itoa(option.SelectDB)})
 	}
+	if option.ClientNoTouch {
+		init = append(init, []string{"CLIENT", "NO-TOUCH", "ON"})
+	}
 
 	timeout := option.Dialer.Timeout
 	if timeout <= 0 {
@@ -192,6 +195,10 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 		if option.SelectDB != 0 {
 			init = append(init, []string{"SELECT", strconv.Itoa(option.SelectDB)})
 		}
+		if option.ClientNoTouch {
+			init = append(init, []string{"CLIENT", "NO-TOUCH", "ON"})
+		}
+
 		if len(init) != 0 {
 			for _, r := range p.DoMulti(ctx, cmds.NewMultiCompleted(init)...) {
 				if err = r.Error(); err != nil {
