@@ -193,13 +193,16 @@ func TestNewPipe(t *testing.T) {
 				})
 			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
 				ReplyString("OK")
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", "libname", "LIB-VER", "1").
+				ReplyString("OK")
 			mock.Expect("SELECT", "1").
 				ReplyString("OK")
 		}()
 		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
-			SelectDB:   1,
-			Password:   "pa",
-			ClientName: "cn",
+			SelectDB:      1,
+			Password:      "pa",
+			ClientName:    "cn",
+			ClientSetInfo: []string{"LIB-NAME", "libname", "LIB-VER", "1"},
 		})
 		if err != nil {
 			t.Fatalf("pipe setup failed: %v", err)
@@ -218,15 +221,18 @@ func TestNewPipe(t *testing.T) {
 				ReplyString("OK")
 			mock.Expect("CLIENT", "SETNAME", "cn").
 				ReplyString("OK")
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", "libname", "LIB-VER", "1").
+				ReplyString("OK")
 			mock.Expect("SELECT", "1").
 				ReplyString("OK")
 		}()
 		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
-			SelectDB:     1,
-			Password:     "pa",
-			ClientName:   "cn",
-			AlwaysRESP2:  true,
-			DisableCache: true,
+			SelectDB:      1,
+			Password:      "pa",
+			ClientName:    "cn",
+			ClientSetInfo: []string{"LIB-NAME", "libname", "LIB-VER", "1"},
+			AlwaysRESP2:   true,
+			DisableCache:  true,
 		})
 		if err != nil {
 			t.Fatalf("pipe setup failed: %v", err)

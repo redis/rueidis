@@ -74,6 +74,9 @@ type ClientOption struct {
 	Password   string
 	ClientName string
 
+	// ClientSetInfo will assign various info attributes to the current connection
+	ClientSetInfo []string
+
 	// InitAddress point to redis nodes.
 	// Rueidis will connect to them one by one and issue CLUSTER SLOT command to initialize the cluster client until success.
 	// If len(InitAddress) == 1 and the address is not running in cluster mode, rueidis will fall back to the single client mode.
