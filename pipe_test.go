@@ -193,9 +193,9 @@ func TestNewPipe(t *testing.T) {
 				})
 			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
 				ReplyString("OK")
-			mock.Expect("CLIENT", "NO-TOUCH", "ON").
-				ReplyString("OK")
 			mock.Expect("SELECT", "1").
+				ReplyString("OK")
+			mock.Expect("CLIENT", "NO-TOUCH", "ON").
 				ReplyString("OK")
 		}()
 		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
@@ -221,9 +221,9 @@ func TestNewPipe(t *testing.T) {
 				ReplyString("OK")
 			mock.Expect("CLIENT", "SETNAME", "cn").
 				ReplyString("OK")
-			mock.Expect("CLIENT", "NO-TOUCH", "ON").
-				ReplyString("OK")
 			mock.Expect("SELECT", "1").
+				ReplyString("OK")
+			mock.Expect("CLIENT", "NO-TOUCH", "ON").
 				ReplyString("OK")
 		}()
 		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
