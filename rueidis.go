@@ -143,7 +143,7 @@ type ClientOption struct {
 	// currently, it is only implemented for sentinel client
 	ReplicaOnly bool
 
-  // ClientNoEvict sets the client eviction mode for the current connection.
+	// ClientNoEvict sets the client eviction mode for the current connection.
 	// When turned on and client eviction is configured,
 	// the current connection will be excluded from the client eviction process
 	// even if we're above the configured client eviction threshold.
