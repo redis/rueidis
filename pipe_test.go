@@ -193,6 +193,10 @@ func TestNewPipe(t *testing.T) {
 				})
 			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
 				ReplyString("OK")
+			mock.Expect("CLIENT", "NO-EVICT", "ON").
+				ReplyString("OK")
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", "libname", "LIB-VER", "1").
+				ReplyString("OK")
 			mock.Expect("SELECT", "1").
 				ReplyString("OK")
 			mock.Expect("CLIENT", "NO-TOUCH", "ON").
@@ -202,6 +206,8 @@ func TestNewPipe(t *testing.T) {
 			SelectDB:      1,
 			Password:      "pa",
 			ClientName:    "cn",
+			ClientNoEvict: true,
+			ClientSetInfo: []string{"LIB-NAME", "libname", "LIB-VER", "1"},
 			ClientNoTouch: true,
 		})
 		if err != nil {
@@ -221,6 +227,10 @@ func TestNewPipe(t *testing.T) {
 				ReplyString("OK")
 			mock.Expect("CLIENT", "SETNAME", "cn").
 				ReplyString("OK")
+			mock.Expect("CLIENT", "NO-EVICT", "ON").
+				ReplyString("OK")
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", "libname", "LIB-VER", "1").
+				ReplyString("OK")
 			mock.Expect("SELECT", "1").
 				ReplyString("OK")
 			mock.Expect("CLIENT", "NO-TOUCH", "ON").
@@ -230,9 +240,11 @@ func TestNewPipe(t *testing.T) {
 			SelectDB:      1,
 			Password:      "pa",
 			ClientName:    "cn",
+			ClientNoEvict: true,
+			ClientSetInfo: []string{"LIB-NAME", "libname", "LIB-VER", "1"},
+			ClientNoTouch: true,
 			AlwaysRESP2:   true,
 			DisableCache:  true,
-			ClientNoTouch: true,
 		})
 		if err != nil {
 			t.Fatalf("pipe setup failed: %v", err)
