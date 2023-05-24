@@ -73,10 +73,6 @@ func (o *otelclient) Do(ctx context.Context, cmd rueidis.Completed) (resp rueidi
 }
 
 func (o *otelclient) DoMulti(ctx context.Context, multi ...rueidis.Completed) (resp []rueidis.RedisResult) {
-	if len(multi) == 0 {
-		return
-	}
-
 	ctx, span := start(ctx, multiFirst(multi), multiSum(multi), o.tAttrs)
 	resp = o.client.DoMulti(ctx, multi...)
 	end(span, firstError(resp))
@@ -98,10 +94,6 @@ func (o *otelclient) DoCache(ctx context.Context, cmd rueidis.Cacheable, ttl tim
 }
 
 func (o *otelclient) DoMultiCache(ctx context.Context, multi ...rueidis.CacheableTTL) (resps []rueidis.RedisResult) {
-	if len(multi) == 0 {
-		return
-	}
-
 	ctx, span := start(ctx, multiCacheableFirst(multi), multiCacheableSum(multi), o.tAttrs)
 	resps = o.client.DoMultiCache(ctx, multi...)
 	for _, resp := range resps {
@@ -167,10 +159,6 @@ func (d *dedicated) Do(ctx context.Context, cmd rueidis.Completed) (resp rueidis
 }
 
 func (d *dedicated) DoMulti(ctx context.Context, multi ...rueidis.Completed) (resp []rueidis.RedisResult) {
-	if len(multi) == 0 {
-		return
-	}
-
 	ctx, span := start(ctx, multiFirst(multi), multiSum(multi), d.tAttrs)
 	resp = d.client.DoMulti(ctx, multi...)
 	end(span, firstError(resp))
@@ -227,6 +215,10 @@ func multiCacheableSum(multi []rueidis.CacheableTTL) (v int) {
 }
 
 func multiFirst(multi []rueidis.Completed) string {
+	if len(multi) == 0 {
+		return ""
+	}
+
 	if len(multi) > 5 {
 		multi = multi[:5]
 	}
@@ -248,6 +240,10 @@ func multiFirst(multi []rueidis.Completed) string {
 }
 
 func multiCacheableFirst(multi []rueidis.CacheableTTL) string {
+	if len(multi) == 0 {
+		return ""
+	}
+
 	if len(multi) > 5 {
 		multi = multi[:5]
 	}

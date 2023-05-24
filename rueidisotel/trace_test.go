@@ -222,6 +222,9 @@ func TestWithClientEmptyCommands(t *testing.T) {
 	client = WithClient(client, TraceAttrs(attribute.String("any", "label")), MetricAttrs(attribute.String("any", "label")))
 	defer client.Close()
 
+	exp := tracetest.NewInMemoryExporter()
+	otel.SetTracerProvider(trace.NewTracerProvider(trace.WithSyncer(exp)))
+
 	defer func() {
 		r := recover()
 		if r != nil {
@@ -234,5 +237,25 @@ func TestWithClientEmptyCommands(t *testing.T) {
 	resps := client.DoMulti(context.Background(), emptyCompletedArr...)
 	if resps != nil {
 		t.Error("unexpected response : ", resps)
+	}
+
+	snapshots := exp.GetSpans().Snapshots()
+	if len(snapshots) != 1 {
+		t.Error("unexpected snapshot count : ", len(snapshots))
+	}
+
+	snapshot := snapshots[0]
+	if snapshot.Name() != "" {
+		// name should be empty
+		t.Error("unexpected snapshot name : ", snapshot.Name())
+	}
+
+	if snapshot.Status().Code != codes.Ok {
+		t.Error("unexpected snapshot status code : ", snapshot.Status().Code)
+	}
+
+	customAttr := snapshot.Attributes()[3]
+	if string(customAttr.Key) != "any" || customAttr.Value.AsString() != "label" {
+		t.Fatalf("unexpected custom attr %v", customAttr)
 	}
 }
