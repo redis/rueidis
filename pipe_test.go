@@ -193,6 +193,8 @@ func TestNewPipe(t *testing.T) {
 				})
 			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
 				ReplyString("OK")
+			mock.Expect("CLIENT", "NO-TOUCH", "ON").
+				ReplyString("OK")
 			mock.Expect("SELECT", "1").
 				ReplyString("OK")
 		}()
@@ -218,6 +220,8 @@ func TestNewPipe(t *testing.T) {
 			mock.Expect("AUTH", "pa").
 				ReplyString("OK")
 			mock.Expect("CLIENT", "SETNAME", "cn").
+				ReplyString("OK")
+			mock.Expect("CLIENT", "NO-TOUCH", "ON").
 				ReplyString("OK")
 			mock.Expect("SELECT", "1").
 				ReplyString("OK")
