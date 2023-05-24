@@ -199,6 +199,8 @@ func TestNewPipe(t *testing.T) {
 				ReplyString("OK")
 			mock.Expect("SELECT", "1").
 				ReplyString("OK")
+			mock.Expect("CLIENT", "NO-TOUCH", "ON").
+				ReplyString("OK")
 		}()
 		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
 			SelectDB:      1,
@@ -206,6 +208,7 @@ func TestNewPipe(t *testing.T) {
 			ClientName:    "cn",
 			ClientNoEvict: true,
 			ClientSetInfo: []string{"LIB-NAME", "libname", "LIB-VER", "1"},
+      ClientNoTouch: true,
 		})
 		if err != nil {
 			t.Fatalf("pipe setup failed: %v", err)
@@ -230,6 +233,8 @@ func TestNewPipe(t *testing.T) {
 				ReplyString("OK")
 			mock.Expect("SELECT", "1").
 				ReplyString("OK")
+			mock.Expect("CLIENT", "NO-TOUCH", "ON").
+				ReplyString("OK")
 		}()
 		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
 			SelectDB:      1,
@@ -237,8 +242,10 @@ func TestNewPipe(t *testing.T) {
 			ClientName:    "cn",
 			ClientNoEvict: true,
 			ClientSetInfo: []string{"LIB-NAME", "libname", "LIB-VER", "1"},
+      ClientNoTouch: true,
 			AlwaysRESP2:   true,
 			DisableCache:  true,
+
 		})
 		if err != nil {
 			t.Fatalf("pipe setup failed: %v", err)

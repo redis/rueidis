@@ -130,6 +130,8 @@ type ClientOption struct {
 
 	// ShuffleInit is a handy flag that shuffles the InitAddress after passing to the NewClient() if it is true
 	ShuffleInit bool
+	// ClientNoTouch controls whether commands alter LRU/LFU stats
+	ClientNoTouch bool
 	// DisableRetry disables retrying read-only commands under network errors
 	DisableRetry bool
 	// DisableCache falls back Client.DoCache/Client.DoMultiCache to Client.Do/Client.DoMulti

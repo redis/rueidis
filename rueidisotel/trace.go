@@ -11,7 +11,6 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
-	"go.opentelemetry.io/otel/metric/global"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -19,7 +18,7 @@ var (
 	name   = "github.com/redis/rueidis"
 	kind   = trace.WithSpanKind(trace.SpanKindClient)
 	tracer = otel.Tracer(name)
-	meter  = global.Meter(name)
+	meter  = otel.Meter(name)
 	dbattr = attribute.String("db.system", "redis")
 
 	cscMiss, _ = meter.Int64Counter("rueidis_do_cache_miss")
