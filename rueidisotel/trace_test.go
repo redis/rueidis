@@ -36,6 +36,14 @@ func TestWithClient(t *testing.T) {
 
 	ctx := context.Background()
 
+	// test empty trace
+	var emptyCompletedArr []rueidis.Completed
+	resps := client.DoMulti(ctx, emptyCompletedArr...)
+	if resps != nil {
+		t.Error("unexpected response : ", resps)
+	}
+	validateTrace(t, exp, "", codes.Ok)
+
 	client.Do(ctx, client.B().Set().Key("key").Value("val").Build())
 	validateTrace(t, exp, "SET", codes.Ok)
 
@@ -211,33 +219,4 @@ func ExampleWithClient_openTelemetry() {
 	}
 	client = WithClient(client)
 	defer client.Close()
-}
-
-func TestWithClientEmptyCommands(t *testing.T) {
-	client, err := rueidis.NewClient(rueidis.ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	client = WithClient(client, TraceAttrs(attribute.String("any", "label")), MetricAttrs(attribute.String("any", "label")))
-	defer client.Close()
-
-	exp := tracetest.NewInMemoryExporter()
-	otel.SetTracerProvider(trace.NewTracerProvider(trace.WithSyncer(exp)))
-
-	defer func() {
-		r := recover()
-		if r != nil {
-			t.Error("unexpected panic : ", r)
-		}
-	}()
-
-	var emptyCompletedArr []rueidis.Completed
-
-	resps := client.DoMulti(context.Background(), emptyCompletedArr...)
-	if resps != nil {
-		t.Error("unexpected response : ", resps)
-	}
-
-	validateTrace(t, exp, "", codes.Ok)
 }
