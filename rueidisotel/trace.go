@@ -30,22 +30,23 @@ var _ rueidis.Client = (*otelclient)(nil)
 // WithClient creates a new rueidis.Client with OpenTelemetry tracing enabled.
 func WithClient(client rueidis.Client, opts ...Option) rueidis.Client {
 	o := &otelclient{
-		client:         client,
-		meterProvider:  otel.GetMeterProvider(),  // Defaults to global MeterProvider
-		tracerProvider: otel.GetTracerProvider(), // Defaults to global TracerProvider
+		client: client,
 	}
 	for _, opt := range opts {
 		opt(o)
 	}
-
-	// Set the MeterProvider and TracerProvider if specified
-	if o.meterProvider != nil {
-		otel.SetMeterProvider(o.meterProvider)
+	if o.meterProvider == nil {
+		o.meterProvider = otel.GetMeterProvider() // Default to global MeterProvider
 	}
-	if o.tracerProvider != nil {
-		otel.SetTracerProvider(o.tracerProvider)
+	if o.tracerProvider == nil {
+		o.tracerProvider = otel.GetTracerProvider() // Default to global TracerProvider
 	}
-
+	// Now that we have the meterProvider and tracerProvider, get the Meter and Tracer
+	o.meter = o.meterProvider.Meter(name)
+	o.tracer = o.tracerProvider.Tracer(name)
+	// Now create the counters using the meter
+	o.cscMiss, _ = o.meter.Int64Counter("rueidis_do_cache_miss")
+	o.cscHits, _ = o.meter.Int64Counter("rueidis_do_cache_hits")
 	return o
 }
 
@@ -86,6 +87,10 @@ type otelclient struct {
 	tAttrs         []attribute.KeyValue
 	meterProvider  metric.MeterProvider
 	tracerProvider trace.TracerProvider
+	tracer         trace.Tracer
+	meter          metric.Meter
+	cscMiss        metric.Int64Counter
+	cscHits        metric.Int64Counter
 }
 
 func (o *otelclient) B() cmds.Builder {
