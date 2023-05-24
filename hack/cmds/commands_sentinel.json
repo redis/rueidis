@@ -25,5 +25,14 @@
       }
     ],
     "group": "sentinel"
+  },
+  "SENTINEL REPLICAS": {
+    "arguments": [
+      {
+        "name": "master",
+        "type": "string"
+      }
+    ],
+    "group": "sentinel"
   }
 }

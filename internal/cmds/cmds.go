@@ -66,12 +66,12 @@ var (
 	}
 	// SentinelSubscribe is predefined SUBSCRIBE ASKING
 	SentinelSubscribe = Completed{
-		cs: newCommandSlice([]string{"SUBSCRIBE", "+sentinel", "+switch-master", "+reboot"}),
+		cs: newCommandSlice([]string{"SUBSCRIBE", "+sentinel", "+slave", "-sdown", "+sdown", "+switch-master", "+reboot"}),
 		cf: noRetTag,
 	}
 	// SentinelUnSubscribe is predefined UNSUBSCRIBE ASKING
 	SentinelUnSubscribe = Completed{
-		cs: newCommandSlice([]string{"UNSUBSCRIBE", "+sentinel", "+switch-master", "+reboot"}),
+		cs: newCommandSlice([]string{"UNSUBSCRIBE", "+sentinel", "+slave", "-sdown", "+sdown", "+switch-master", "+reboot"}),
 		cf: noRetTag,
 	}
 )

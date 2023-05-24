@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/redis/rueidis/internal/cmds"
+	"math/rand"
 )
 
 func newSentinelClient(opt *ClientOption, connFn connFn) (client *sentinelClient, err error) {
@@ -21,6 +22,7 @@ func newSentinelClient(opt *ClientOption, connFn connFn) (client *sentinelClient
 		connFn:    connFn,
 		sentinels: list.New(),
 		retry:     !opt.DisableRetry,
+		replica:   opt.ReplicaOnly,
 	}
 
 	for _, sentinel := range opt.InitAddress {
@@ -49,6 +51,7 @@ type sentinelClient struct {
 	stop      uint32
 	cmd       cmds.Builder
 	retry     bool
+	replica   bool
 }
 
 func (c *sentinelClient) B() cmds.Builder {
@@ -187,42 +190,50 @@ func (c *sentinelClient) _addSentinel(addr string) {
 	c.sentinels.PushFront(addr)
 }
 
-func (c *sentinelClient) switchMasterRetry(addr string) {
+func (c *sentinelClient) switchTargetRetry(addr string) {
 	c.mu.Lock()
-	err := c._switchMaster(addr)
+	err := c._switchTarget(addr)
 	c.mu.Unlock()
 	if err != nil {
 		go c.refreshRetry()
 	}
 }
 
-func (c *sentinelClient) _switchMaster(addr string) (err error) {
-	var master conn
+func (c *sentinelClient) _switchTarget(addr string) (err error) {
+	var target conn
 	if atomic.LoadUint32(&c.stop) == 1 {
 		return nil
 	}
 	if c.mAddr == addr {
-		master = c.mConn.Load().(conn)
-		if master.Error() != nil {
-			master = nil
+		target = c.mConn.Load().(conn)
+		if target.Error() != nil {
+			target = nil
 		}
 	}
-	if master == nil {
-		master = c.connFn(addr, c.mOpt)
-		if err = master.Dial(); err != nil {
+	if target == nil {
+		target = c.connFn(addr, c.mOpt)
+		if err = target.Dial(); err != nil {
 			return err
 		}
 	}
-	if resp, err := master.Do(context.Background(), cmds.RoleCmd).ToArray(); err != nil {
-		master.Close()
+
+	resp, err := target.Do(context.Background(), cmds.RoleCmd).ToArray()
+	if err != nil {
+		target.Close()
 		return err
-	} else if resp[0].string != "master" {
-		master.Close()
+	}
+
+	if c.replica && resp[0].string != "slave" {
+		target.Close()
+		return errNotSlave
+	} else if !c.replica && resp[0].string != "master" {
+		target.Close()
 		return errNotMaster
 	}
+
 	c.mAddr = addr
-	if old := c.mConn.Swap(master); old != nil {
-		if prev := old.(conn); prev != master {
+	if old := c.mConn.Swap(target); old != nil {
+		if prev := old.(conn); prev != target {
 			prev.Close()
 		}
 	}
@@ -241,7 +252,7 @@ func (c *sentinelClient) refresh() (err error) {
 }
 
 func (c *sentinelClient) _refresh() (err error) {
-	var master string
+	var target string
 	var sentinels []string
 
 	c.mu.Lock()
@@ -262,11 +273,15 @@ func (c *sentinelClient) _refresh() (err error) {
 			err = c.sConn.Dial()
 		}
 		if err == nil {
-			if master, sentinels, err = c.listWatch(c.sConn); err == nil {
+			// listWatch returns server address with sentinels.
+			// check if target is master or replica
+			if target, sentinels, err = c.listWatch(c.sConn); err == nil {
 				for _, sentinel := range sentinels {
 					c._addSentinel(sentinel)
 				}
-				if err = c._switchMaster(master); err == nil {
+
+				// _switchTarget will switch the connection for master OR replica
+				if err = c._switchTarget(target); err == nil {
 					break
 				}
 			}
@@ -289,14 +304,18 @@ func (c *sentinelClient) _refresh() (err error) {
 	return err
 }
 
-func (c *sentinelClient) listWatch(cc conn) (master string, sentinels []string, err error) {
+// listWatch will use sentinel to list current master|replica address along with sentinels address
+func (c *sentinelClient) listWatch(cc conn) (target string, sentinels []string, err error) {
 	ctx := context.Background()
 	sentinelsCMD := c.cmd.SentinelSentinels().Master(c.mOpt.Sentinel.MasterSet).Build()
 	getMasterCMD := c.cmd.SentinelGetMasterAddrByName().Master(c.mOpt.Sentinel.MasterSet).Build()
+	replicasCMD := c.cmd.SentinelReplicas().Master(c.mOpt.Sentinel.MasterSet).Build()
+
 	defer func() {
 		if err == nil { // not recycle cmds if error, since cmds may be used later in pipe. consider recycle them by pipe
 			cmds.PutCompleted(sentinelsCMD)
 			cmds.PutCompleted(getMasterCMD)
+			cmds.PutCompleted(replicasCMD)
 		}
 	}()
 
@@ -312,12 +331,22 @@ func (c *sentinelClient) listWatch(cc conn) (master string, sentinels []string, 
 			case "+switch-master":
 				m := strings.SplitN(event.Message, " ", 5)
 				if m[0] == c.sOpt.Sentinel.MasterSet {
-					c.switchMasterRetry(fmt.Sprintf("%s:%s", m[3], m[4]))
+					c.switchTargetRetry(fmt.Sprintf("%s:%s", m[3], m[4]))
 				}
 			case "+reboot":
-				m := strings.SplitN(event.Message, " ", 4)
+				m := strings.SplitN(event.Message, " ", 7)
 				if m[0] == "master" && m[1] == c.sOpt.Sentinel.MasterSet {
-					c.switchMasterRetry(fmt.Sprintf("%s:%s", m[2], m[3]))
+					c.switchTargetRetry(fmt.Sprintf("%s:%s", m[2], m[3]))
+				} else if c.replica && m[0] == "slave" && m[5] == c.sOpt.Sentinel.MasterSet {
+					c.refreshRetry()
+				}
+			// note that in case of failover, every slave in the setup
+			// will send +slave event individually.
+			case "+slave", "+sdown", "-sdown":
+				m := strings.SplitN(event.Message, " ", 7)
+				if c.replica && m[0] == "slave" && m[5] == c.sOpt.Sentinel.MasterSet {
+					// call refresh to randomly choose a new slave
+					c.refreshRetry()
 				}
 			}
 		}); err != nil && atomic.LoadUint32(&c.stop) == 0 {
@@ -325,7 +354,14 @@ func (c *sentinelClient) listWatch(cc conn) (master string, sentinels []string, 
 		}
 	}(cc)
 
-	resp := cc.DoMulti(ctx, sentinelsCMD, getMasterCMD)
+	var commands Commands
+	if c.replica {
+		commands = Commands{sentinelsCMD, replicasCMD}
+	} else {
+		commands = Commands{sentinelsCMD, getMasterCMD}
+	}
+
+	resp := cc.DoMulti(ctx, commands...)
 	others, err := resp[0].ToArray()
 	if err != nil {
 		return "", nil, err
@@ -335,11 +371,50 @@ func (c *sentinelClient) listWatch(cc conn) (master string, sentinels []string, 
 			sentinels = append(sentinels, fmt.Sprintf("%s:%s", m["ip"], m["port"]))
 		}
 	}
+
+	// we return random slave address instead of master
+	if c.replica {
+		addr, err := pickReplica(resp)
+		if err != nil {
+			return "", nil, err
+		}
+
+		return addr, sentinels, nil
+	}
+
+	// otherwise send master as address
 	m, err := resp[1].AsStrSlice()
 	if err != nil {
 		return "", nil, err
 	}
 	return fmt.Sprintf("%s:%s", m[0], m[1]), sentinels, nil
+}
+
+func pickReplica(resp []RedisResult) (string, error) {
+	replicas, err := resp[1].ToArray()
+	if err != nil {
+		return "", err
+	}
+
+	eligible := make([]map[string]string, 0, len(replicas))
+	// eliminate replicas with s_down condition
+	for i := range replicas {
+		replica, err := replicas[i].AsStrMap()
+		if err != nil {
+			continue
+		}
+		if _, ok := replica["s-down-time"]; !ok {
+			eligible = append(eligible, replica)
+		}
+	}
+
+	if len(eligible) == 0 {
+		return "", fmt.Errorf("not enough ready replicas")
+	}
+
+	// choose a replica randomly
+	m := eligible[rand.Intn(len(eligible))]
+	return fmt.Sprintf("%s:%s", m["ip"], m["port"]), nil
 }
 
 func newSentinelOpt(opt *ClientOption) *ClientOption {
@@ -353,4 +428,7 @@ func newSentinelOpt(opt *ClientOption) *ClientOption {
 	return &o
 }
 
-var errNotMaster = errors.New("the redis is not master")
+var (
+	errNotMaster = errors.New("the redis role is not master")
+	errNotSlave  = errors.New("the redis role is not slave")
+)
