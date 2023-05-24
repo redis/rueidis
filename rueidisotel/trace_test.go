@@ -239,23 +239,5 @@ func TestWithClientEmptyCommands(t *testing.T) {
 		t.Error("unexpected response : ", resps)
 	}
 
-	snapshots := exp.GetSpans().Snapshots()
-	if len(snapshots) != 1 {
-		t.Error("unexpected snapshot count : ", len(snapshots))
-	}
-
-	snapshot := snapshots[0]
-	if snapshot.Name() != "" {
-		// name should be empty
-		t.Error("unexpected snapshot name : ", snapshot.Name())
-	}
-
-	if snapshot.Status().Code != codes.Ok {
-		t.Error("unexpected snapshot status code : ", snapshot.Status().Code)
-	}
-
-	customAttr := snapshot.Attributes()[3]
-	if string(customAttr.Key) != "any" || customAttr.Value.AsString() != "label" {
-		t.Fatalf("unexpected custom attr %v", customAttr)
-	}
+	validateTrace(t, exp, "", codes.Ok)
 }
