@@ -17,12 +17,7 @@ import (
 var (
 	name   = "github.com/redis/rueidis"
 	kind   = trace.WithSpanKind(trace.SpanKindClient)
-	tracer = otel.Tracer(name)
-	meter  = otel.Meter(name)
 	dbattr = attribute.String("db.system", "redis")
-
-	cscMiss, _ = meter.Int64Counter("rueidis_do_cache_miss")
-	cscHits, _ = meter.Int64Counter("rueidis_do_cache_hits")
 )
 
 var _ rueidis.Client = (*otelclient)(nil)
@@ -53,15 +48,15 @@ func WithClient(client rueidis.Client, opts ...Option) rueidis.Client {
 // Option is the Functional Options interface
 type Option func(o *otelclient)
 
-// MetricAttrs set additional attributes to append to each metric.
-func MetricAttrs(attrs ...attribute.KeyValue) Option {
+// WithMetricAttrs MetricAttrs set additional attributes to append to each metric.
+func WithMetricAttrs(attrs ...attribute.KeyValue) Option {
 	return func(o *otelclient) {
 		o.mAttrs = attrs
 	}
 }
 
-// TraceAttrs set additional attributes to append to each trace.
-func TraceAttrs(attrs ...attribute.KeyValue) Option {
+// WithTraceAttrs set additional attributes to append to each trace.
+func WithTraceAttrs(attrs ...attribute.KeyValue) Option {
 	return func(o *otelclient) {
 		o.tAttrs = attrs
 	}
@@ -98,46 +93,46 @@ func (o *otelclient) B() cmds.Builder {
 }
 
 func (o *otelclient) Do(ctx context.Context, cmd rueidis.Completed) (resp rueidis.RedisResult) {
-	ctx, span := start(ctx, first(cmd.Commands()), sum(cmd.Commands()), o.tAttrs)
+	ctx, span := o.start(ctx, first(cmd.Commands()), sum(cmd.Commands()), o.tAttrs)
 	resp = o.client.Do(ctx, cmd)
-	end(span, resp.Error())
+	o.end(span, resp.Error())
 	return
 }
 
 func (o *otelclient) DoMulti(ctx context.Context, multi ...rueidis.Completed) (resp []rueidis.RedisResult) {
-	ctx, span := start(ctx, multiFirst(multi), multiSum(multi), o.tAttrs)
+	ctx, span := o.start(ctx, multiFirst(multi), multiSum(multi), o.tAttrs)
 	resp = o.client.DoMulti(ctx, multi...)
-	end(span, firstError(resp))
+	o.end(span, firstError(resp))
 	return
 }
 
 func (o *otelclient) DoCache(ctx context.Context, cmd rueidis.Cacheable, ttl time.Duration) (resp rueidis.RedisResult) {
-	ctx, span := start(ctx, first(cmd.Commands()), sum(cmd.Commands()), o.tAttrs)
+	ctx, span := o.start(ctx, first(cmd.Commands()), sum(cmd.Commands()), o.tAttrs)
 	resp = o.client.DoCache(ctx, cmd, ttl)
 	if resp.NonRedisError() == nil {
 		if resp.IsCacheHit() {
-			cscHits.Add(ctx, 1, metric.WithAttributes(o.tAttrs...))
+			o.cscHits.Add(ctx, 1, metric.WithAttributes(o.tAttrs...))
 		} else {
-			cscMiss.Add(ctx, 1, metric.WithAttributes(o.tAttrs...))
+			o.cscMiss.Add(ctx, 1, metric.WithAttributes(o.tAttrs...))
 		}
 	}
-	end(span, resp.Error())
+	o.end(span, resp.Error())
 	return
 }
 
 func (o *otelclient) DoMultiCache(ctx context.Context, multi ...rueidis.CacheableTTL) (resps []rueidis.RedisResult) {
-	ctx, span := start(ctx, multiCacheableFirst(multi), multiCacheableSum(multi), o.tAttrs)
+	ctx, span := o.start(ctx, multiCacheableFirst(multi), multiCacheableSum(multi), o.tAttrs)
 	resps = o.client.DoMultiCache(ctx, multi...)
 	for _, resp := range resps {
 		if resp.NonRedisError() == nil {
 			if resp.IsCacheHit() {
-				cscHits.Add(ctx, 1, metric.WithAttributes(o.tAttrs...))
+				o.cscHits.Add(ctx, 1, metric.WithAttributes(o.tAttrs...))
 			} else {
-				cscMiss.Add(ctx, 1, metric.WithAttributes(o.tAttrs...))
+				o.cscMiss.Add(ctx, 1, metric.WithAttributes(o.tAttrs...))
 			}
 		}
 	}
-	end(span, firstError(resps))
+	o.end(span, firstError(resps))
 	return
 }
 
@@ -153,9 +148,9 @@ func (o *otelclient) Dedicate() (rueidis.DedicatedClient, func()) {
 }
 
 func (o *otelclient) Receive(ctx context.Context, subscribe rueidis.Completed, fn func(msg rueidis.PubSubMessage)) (err error) {
-	ctx, span := start(ctx, first(subscribe.Commands()), sum(subscribe.Commands()), o.tAttrs)
+	ctx, span := o.start(ctx, first(subscribe.Commands()), sum(subscribe.Commands()), o.tAttrs)
 	err = o.client.Receive(ctx, subscribe, fn)
-	end(span, err)
+	o.end(span, err)
 	return
 }
 
@@ -177,6 +172,7 @@ type dedicated struct {
 	client rueidis.DedicatedClient
 	mAttrs []attribute.KeyValue
 	tAttrs []attribute.KeyValue
+	tracer trace.Tracer
 }
 
 func (d *dedicated) B() cmds.Builder {
@@ -184,23 +180,23 @@ func (d *dedicated) B() cmds.Builder {
 }
 
 func (d *dedicated) Do(ctx context.Context, cmd rueidis.Completed) (resp rueidis.RedisResult) {
-	ctx, span := start(ctx, first(cmd.Commands()), sum(cmd.Commands()), d.tAttrs)
+	ctx, span := d.start(ctx, first(cmd.Commands()), sum(cmd.Commands()), d.tAttrs)
 	resp = d.client.Do(ctx, cmd)
-	end(span, resp.Error())
+	d.end(span, resp.Error())
 	return
 }
 
 func (d *dedicated) DoMulti(ctx context.Context, multi ...rueidis.Completed) (resp []rueidis.RedisResult) {
-	ctx, span := start(ctx, multiFirst(multi), multiSum(multi), d.tAttrs)
+	ctx, span := d.start(ctx, multiFirst(multi), multiSum(multi), d.tAttrs)
 	resp = d.client.DoMulti(ctx, multi...)
-	end(span, firstError(resp))
+	d.end(span, firstError(resp))
 	return
 }
 
 func (d *dedicated) Receive(ctx context.Context, subscribe rueidis.Completed, fn func(msg rueidis.PubSubMessage)) (err error) {
-	ctx, span := start(ctx, first(subscribe.Commands()), sum(subscribe.Commands()), d.tAttrs)
+	ctx, span := d.start(ctx, first(subscribe.Commands()), sum(subscribe.Commands()), d.tAttrs)
 	err = d.client.Receive(ctx, subscribe, fn)
-	end(span, err)
+	d.end(span, err)
 	return
 }
 
@@ -288,11 +284,25 @@ func multiCacheableFirst(multi []rueidis.CacheableTTL) string {
 	return sb.String()
 }
 
-func start(ctx context.Context, op string, size int, attrs []attribute.KeyValue) (context.Context, trace.Span) {
-	return tracer.Start(ctx, op, kind, attr(op, size), trace.WithAttributes(attrs...))
+func (o *otelclient) start(ctx context.Context, op string, size int, attrs []attribute.KeyValue) (context.Context, trace.Span) {
+	return o.tracer.Start(ctx, op, kind, attr(op, size), trace.WithAttributes(attrs...))
 }
 
-func end(span trace.Span, err error) {
+func (o *otelclient) end(span trace.Span, err error) {
+	if err != nil && !rueidis.IsRedisNil(err) {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+	} else {
+		span.SetStatus(codes.Ok, "")
+	}
+	span.End()
+}
+
+func (d *dedicated) start(ctx context.Context, op string, size int, attrs []attribute.KeyValue) (context.Context, trace.Span) {
+	return d.tracer.Start(ctx, op, kind, attr(op, size), trace.WithAttributes(attrs...))
+}
+
+func (d *dedicated) end(span trace.Span, err error) {
 	if err != nil && !rueidis.IsRedisNil(err) {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
