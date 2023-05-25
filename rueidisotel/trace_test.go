@@ -7,7 +7,6 @@ import (
 
 	"github.com/redis/rueidis"
 	"github.com/redis/rueidis/internal/cmds"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/sdk/metric"
@@ -17,20 +16,30 @@ import (
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
 
+// MockMeterProvider for testing purposes
+type MockMeterProvider struct {
+	metric.MeterProvider
+}
+
 func TestWithClient(t *testing.T) {
 	client, err := rueidis.NewClient(rueidis.ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
 	if err != nil {
 		t.Fatal(err)
 	}
-	client = WithClient(client, TraceAttrs(attribute.String("any", "label")), MetricAttrs(attribute.String("any", "label")))
-	defer client.Close()
 
 	exp := tracetest.NewInMemoryExporter()
-	otel.SetTracerProvider(trace.NewTracerProvider(trace.WithSyncer(exp)))
+	tracerProvider := trace.NewTracerProvider(trace.WithSyncer(exp))
 
 	mxp := metric.NewManualReader()
-	provider := metric.NewMeterProvider(metric.WithReader(mxp))
-	otel.SetMeterProvider(provider)
+	meterProvider := metric.NewMeterProvider(metric.WithReader(mxp))
+
+	client = WithClient(
+		client,
+		TraceAttrs(attribute.String("any", "label")),
+		MetricAttrs(attribute.String("any", "label")),
+		WithTracerProvider(tracerProvider),
+		WithMeterProvider(meterProvider),
+	)
 
 	ctx := context.Background()
 
@@ -184,6 +193,62 @@ func validateTrace(t *testing.T, exp *tracetest.InMemoryExporter, op string, cod
 		t.Fatalf("unexpected span statuc code %v", c)
 	}
 	exp.Reset()
+}
+
+func TestWithMeterProvider(t *testing.T) {
+	mockMeterProvider := &MockMeterProvider{}
+
+	client := &otelclient{}
+	option := WithMeterProvider(mockMeterProvider)
+	option(client)
+
+	if client.meterProvider != mockMeterProvider {
+		t.Fatalf("unexpected MeterProvider: got %v, expected %v", client.meterProvider, mockMeterProvider)
+	}
+}
+
+func TestWithClientSimple(t *testing.T) {
+	client, err := rueidis.NewClient(rueidis.ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	exp := tracetest.NewInMemoryExporter()
+	tracerProvider := trace.NewTracerProvider(trace.WithSyncer(exp))
+
+	mxp := metric.NewManualReader()
+	meterProvider := metric.NewMeterProvider(metric.WithReader(mxp))
+
+	client = WithClient(
+		client,
+		TraceAttrs(attribute.String("any", "label")),
+		MetricAttrs(attribute.String("any", "label")),
+		WithTracerProvider(tracerProvider),
+		WithMeterProvider(meterProvider),
+	)
+
+	cmd := client.B().Set().Key("key").Value("val").Build()
+	client.Do(context.Background(), cmd)
+
+	// Validate trace
+	spans := exp.GetSpans().Snapshots()
+	if len(spans) != 1 {
+		t.Fatalf("expected 1 span, got %d", len(spans))
+	}
+	span := spans[0]
+	if span.Name() != "SET" {
+		t.Fatalf("unexpected span name: got %s, expected %s", span.Name(), "Set")
+	}
+	var found bool
+	for _, attr := range span.Attributes() {
+		if string(attr.Key) == "any" && attr.Value.AsString() == "label" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("expected attribute 'any: label' not found in span attributes")
+	}
 }
 
 func validateMetrics(t *testing.T, metrics metricdata.ResourceMetrics, name string, value int64) {
