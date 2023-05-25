@@ -35,8 +35,8 @@ func TestWithClient(t *testing.T) {
 
 	client = WithClient(
 		client,
-		WithTraceAttrs(attribute.String("any", "label")),
-		WithMetricAttrs(attribute.String("any", "label")),
+		TraceAttrs(attribute.String("any", "label")),
+		MetricAttrs(attribute.String("any", "label")),
 		WithTracerProvider(tracerProvider),
 		WithMeterProvider(meterProvider),
 	)
@@ -221,8 +221,8 @@ func TestWithClientSimple(t *testing.T) {
 
 	client = WithClient(
 		client,
-		WithTraceAttrs(attribute.String("any", "label")),
-		WithMetricAttrs(attribute.String("any", "label")),
+		TraceAttrs(attribute.String("any", "label")),
+		MetricAttrs(attribute.String("any", "label")),
 		WithTracerProvider(tracerProvider),
 		WithMeterProvider(meterProvider),
 	)

@@ -48,15 +48,15 @@ func WithClient(client rueidis.Client, opts ...Option) rueidis.Client {
 // Option is the Functional Options interface
 type Option func(o *otelclient)
 
-// WithMetricAttrs MetricAttrs set additional attributes to append to each metric.
-func WithMetricAttrs(attrs ...attribute.KeyValue) Option {
+// MetricAttrs set additional attributes to append to each metric.
+func MetricAttrs(attrs ...attribute.KeyValue) Option {
 	return func(o *otelclient) {
 		o.mAttrs = attrs
 	}
 }
 
-// WithTraceAttrs set additional attributes to append to each trace.
-func WithTraceAttrs(attrs ...attribute.KeyValue) Option {
+// TraceAttrs set additional attributes to append to each trace.
+func TraceAttrs(attrs ...attribute.KeyValue) Option {
 	return func(o *otelclient) {
 		o.tAttrs = attrs
 	}
@@ -138,13 +138,33 @@ func (o *otelclient) DoMultiCache(ctx context.Context, multi ...rueidis.Cacheabl
 
 func (o *otelclient) Dedicated(fn func(rueidis.DedicatedClient) error) (err error) {
 	return o.client.Dedicated(func(client rueidis.DedicatedClient) error {
-		return fn(&dedicated{client: client, mAttrs: o.mAttrs, tAttrs: o.tAttrs})
+		return fn(&dedicated{
+			client:         client,
+			mAttrs:         o.mAttrs,
+			tAttrs:         o.tAttrs,
+			meterProvider:  o.meterProvider,
+			tracerProvider: o.tracerProvider,
+			tracer:         o.tracer,
+			meter:          o.meter,
+			cscMiss:        o.cscMiss,
+			cscHits:        o.cscHits,
+		})
 	})
 }
 
 func (o *otelclient) Dedicate() (rueidis.DedicatedClient, func()) {
 	client, cancel := o.client.Dedicate()
-	return &dedicated{client: client, mAttrs: o.mAttrs, tAttrs: o.tAttrs}, cancel
+	return &dedicated{
+		client:         client,
+		mAttrs:         o.mAttrs,
+		tAttrs:         o.tAttrs,
+		meterProvider:  o.meterProvider,
+		tracerProvider: o.tracerProvider,
+		tracer:         o.tracer,
+		meter:          o.meter,
+		cscMiss:        o.cscMiss,
+		cscHits:        o.cscHits,
+	}, cancel
 }
 
 func (o *otelclient) Receive(ctx context.Context, subscribe rueidis.Completed, fn func(msg rueidis.PubSubMessage)) (err error) {
@@ -157,7 +177,17 @@ func (o *otelclient) Receive(ctx context.Context, subscribe rueidis.Completed, f
 func (o *otelclient) Nodes() map[string]rueidis.Client {
 	nodes := o.client.Nodes()
 	for addr, client := range nodes {
-		nodes[addr] = &otelclient{client: client, mAttrs: o.mAttrs, tAttrs: o.tAttrs}
+		nodes[addr] = &otelclient{
+			client:         client,
+			mAttrs:         o.mAttrs,
+			tAttrs:         o.tAttrs,
+			meterProvider:  o.meterProvider,
+			tracerProvider: o.tracerProvider,
+			tracer:         o.tracer,
+			meter:          o.meter,
+			cscMiss:        o.cscMiss,
+			cscHits:        o.cscHits,
+		}
 	}
 	return nodes
 }
@@ -169,10 +199,15 @@ func (o *otelclient) Close() {
 var _ rueidis.DedicatedClient = (*dedicated)(nil)
 
 type dedicated struct {
-	client rueidis.DedicatedClient
-	mAttrs []attribute.KeyValue
-	tAttrs []attribute.KeyValue
-	tracer trace.Tracer
+	client         rueidis.DedicatedClient
+	mAttrs         []attribute.KeyValue
+	tAttrs         []attribute.KeyValue
+	meterProvider  metric.MeterProvider
+	tracerProvider trace.TracerProvider
+	tracer         trace.Tracer
+	meter          metric.Meter
+	cscMiss        metric.Int64Counter
+	cscHits        metric.Int64Counter
 }
 
 func (d *dedicated) B() cmds.Builder {
