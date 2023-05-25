@@ -2,7 +2,6 @@ package rueidisotel
 
 import (
 	"context"
-	"go.opentelemetry.io/otel/codes"
 	"strings"
 	"time"
 
@@ -10,6 +9,7 @@ import (
 	"github.com/redis/rueidis/internal/cmds"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -139,15 +139,13 @@ func (o *otelclient) DoMultiCache(ctx context.Context, multi ...rueidis.Cacheabl
 func (o *otelclient) Dedicated(fn func(rueidis.DedicatedClient) error) (err error) {
 	return o.client.Dedicated(func(client rueidis.DedicatedClient) error {
 		return fn(&dedicated{
-			client:         client,
-			mAttrs:         o.mAttrs,
-			tAttrs:         o.tAttrs,
-			meterProvider:  o.meterProvider,
-			tracerProvider: o.tracerProvider,
-			tracer:         o.tracer,
-			meter:          o.meter,
-			cscMiss:        o.cscMiss,
-			cscHits:        o.cscHits,
+			client:  client,
+			mAttrs:  o.mAttrs,
+			tAttrs:  o.tAttrs,
+			tracer:  o.tracer,
+			meter:   o.meter,
+			cscMiss: o.cscMiss,
+			cscHits: o.cscHits,
 		})
 	})
 }
@@ -155,15 +153,13 @@ func (o *otelclient) Dedicated(fn func(rueidis.DedicatedClient) error) (err erro
 func (o *otelclient) Dedicate() (rueidis.DedicatedClient, func()) {
 	client, cancel := o.client.Dedicate()
 	return &dedicated{
-		client:         client,
-		mAttrs:         o.mAttrs,
-		tAttrs:         o.tAttrs,
-		meterProvider:  o.meterProvider,
-		tracerProvider: o.tracerProvider,
-		tracer:         o.tracer,
-		meter:          o.meter,
-		cscMiss:        o.cscMiss,
-		cscHits:        o.cscHits,
+		client:  client,
+		mAttrs:  o.mAttrs,
+		tAttrs:  o.tAttrs,
+		tracer:  o.tracer,
+		meter:   o.meter,
+		cscMiss: o.cscMiss,
+		cscHits: o.cscHits,
 	}, cancel
 }
 
@@ -199,15 +195,13 @@ func (o *otelclient) Close() {
 var _ rueidis.DedicatedClient = (*dedicated)(nil)
 
 type dedicated struct {
-	client         rueidis.DedicatedClient
-	mAttrs         []attribute.KeyValue
-	tAttrs         []attribute.KeyValue
-	meterProvider  metric.MeterProvider
-	tracerProvider trace.TracerProvider
-	tracer         trace.Tracer
-	meter          metric.Meter
-	cscMiss        metric.Int64Counter
-	cscHits        metric.Int64Counter
+	client  rueidis.DedicatedClient
+	mAttrs  []attribute.KeyValue
+	tAttrs  []attribute.KeyValue
+	tracer  trace.Tracer
+	meter   metric.Meter
+	cscMiss metric.Int64Counter
+	cscHits metric.Int64Counter
 }
 
 func (d *dedicated) B() cmds.Builder {
