@@ -2,6 +2,7 @@ package rueidisotel
 
 import (
 	"context"
+	"go.opentelemetry.io/otel/codes"
 	"strings"
 	"time"
 
@@ -9,7 +10,6 @@ import (
 	"github.com/redis/rueidis/internal/cmds"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -320,24 +320,26 @@ func multiCacheableFirst(multi []rueidis.CacheableTTL) string {
 }
 
 func (o *otelclient) start(ctx context.Context, op string, size int, attrs []attribute.KeyValue) (context.Context, trace.Span) {
-	return o.tracer.Start(ctx, op, kind, attr(op, size), trace.WithAttributes(attrs...))
+	return startSpan(o.tracer, ctx, op, size, attrs...)
 }
 
 func (o *otelclient) end(span trace.Span, err error) {
-	if err != nil && !rueidis.IsRedisNil(err) {
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
-	} else {
-		span.SetStatus(codes.Ok, "")
-	}
-	span.End()
+	endSpan(span, err)
 }
 
 func (d *dedicated) start(ctx context.Context, op string, size int, attrs []attribute.KeyValue) (context.Context, trace.Span) {
-	return d.tracer.Start(ctx, op, kind, attr(op, size), trace.WithAttributes(attrs...))
+	return startSpan(d.tracer, ctx, op, size, attrs...)
 }
 
 func (d *dedicated) end(span trace.Span, err error) {
+	endSpan(span, err)
+}
+
+func startSpan(tracer trace.Tracer, ctx context.Context, op string, size int, attrs ...attribute.KeyValue) (context.Context, trace.Span) {
+	return tracer.Start(ctx, op, kind, attr(op, size), trace.WithAttributes(attrs...))
+}
+
+func endSpan(span trace.Span, err error) {
 	if err != nil && !rueidis.IsRedisNil(err) {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
