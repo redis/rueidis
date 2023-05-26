@@ -83,13 +83,17 @@ func NewLocker(option LockerOption) (Locker, error) {
 		noloop:   option.NoLoopTracking,
 		setpx:    option.FallbackSETPX,
 	}
-	option.ClientOption.DisableCache = false
-	if option.NoLoopTracking {
-		option.ClientOption.ClientTrackingOptions = []string{"OPTOUT", "NOLOOP"}
+
+	if option.ClientOption.DisableCache {
+		impl.noloop = true
 	} else {
-		option.ClientOption.ClientTrackingOptions = []string{"OPTOUT"}
+		if option.NoLoopTracking {
+			option.ClientOption.ClientTrackingOptions = []string{"OPTOUT", "NOLOOP"}
+		} else {
+			option.ClientOption.ClientTrackingOptions = []string{"OPTOUT"}
+		}
+		option.ClientOption.OnInvalidations = impl.onInvalidations
 	}
-	option.ClientOption.OnInvalidations = impl.onInvalidations
 
 	var err error
 	if option.ClientBuilder != nil {
@@ -377,6 +381,9 @@ func (m *locker) WithContext(ctx context.Context, name string) (context.Context,
 
 func (m *locker) Close() {
 	m.client.Close()
+	if m.noloop {
+		m.onInvalidations(nil)
+	}
 }
 
 var (
