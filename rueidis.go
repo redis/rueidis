@@ -74,6 +74,9 @@ type ClientOption struct {
 	Password   string
 	ClientName string
 
+	// ClientSetInfo will assign various info attributes to the current connection
+	ClientSetInfo []string
+
 	// InitAddress point to redis nodes.
 	// Rueidis will connect to them one by one and issue CLUSTER SLOT command to initialize the cluster client until success.
 	// If len(InitAddress) == 1 and the address is not running in cluster mode, rueidis will fall back to the single client mode.
@@ -127,6 +130,8 @@ type ClientOption struct {
 
 	// ShuffleInit is a handy flag that shuffles the InitAddress after passing to the NewClient() if it is true
 	ShuffleInit bool
+	// ClientNoTouch controls whether commands alter LRU/LFU stats
+	ClientNoTouch bool
 	// DisableRetry disables retrying read-only commands under network errors
 	DisableRetry bool
 	// DisableCache falls back Client.DoCache/Client.DoMultiCache to Client.Do/Client.DoMulti
@@ -139,6 +144,12 @@ type ClientOption struct {
 	// ReplicaOnly indicates that this client will only try to connect to readonly replicas of redis setup.
 	// currently, it is only implemented for sentinel client
 	ReplicaOnly bool
+
+	// ClientNoEvict sets the client eviction mode for the current connection.
+	// When turned on and client eviction is configured,
+	// the current connection will be excluded from the client eviction process
+	// even if we're above the configured client eviction threshold.
+	ClientNoEvict bool
 }
 
 // SentinelOption contains MasterSet,

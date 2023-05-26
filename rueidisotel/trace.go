@@ -9,7 +9,6 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
-	"go.opentelemetry.io/otel/metric/global"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/redis/rueidis"
@@ -19,22 +18,31 @@ import (
 var (
 	name   = "github.com/redis/rueidis"
 	kind   = trace.WithSpanKind(trace.SpanKindClient)
-	tracer = otel.Tracer(name)
-	meter  = global.Meter(name)
 	dbattr = attribute.String("db.system", "redis")
-
-	cscMiss, _ = meter.Int64Counter("rueidis_do_cache_miss")
-	cscHits, _ = meter.Int64Counter("rueidis_do_cache_hits")
 )
 
 var _ rueidis.Client = (*otelclient)(nil)
 
-// WithClient creates a new rueidis.Client with OpenTelemetry tracing enabled
+// WithClient creates a new rueidis.Client with OpenTelemetry tracing enabled.
 func WithClient(client rueidis.Client, opts ...Option) rueidis.Client {
-	o := &otelclient{client: client}
-	for _, fn := range opts {
-		fn(o)
+	o := &otelclient{
+		client: client,
 	}
+	for _, opt := range opts {
+		opt(o)
+	}
+	if o.meterProvider == nil {
+		o.meterProvider = otel.GetMeterProvider() // Default to global MeterProvider
+	}
+	if o.tracerProvider == nil {
+		o.tracerProvider = otel.GetTracerProvider() // Default to global TracerProvider
+	}
+	// Now that we have the meterProvider and tracerProvider, get the Meter and Tracer
+	o.meter = o.meterProvider.Meter(name)
+	o.tracer = o.tracerProvider.Tracer(name)
+	// Now create the counters using the meter
+	o.cscMiss, _ = o.meter.Int64Counter("rueidis_do_cache_miss")
+	o.cscHits, _ = o.meter.Int64Counter("rueidis_do_cache_hits")
 	return o
 }
 
@@ -55,10 +63,30 @@ func TraceAttrs(attrs ...attribute.KeyValue) Option {
 	}
 }
 
+// WithMeterProvider sets the MeterProvider for the otelclient.
+func WithMeterProvider(provider metric.MeterProvider) Option {
+	return func(o *otelclient) {
+		o.meterProvider = provider
+	}
+}
+
+// WithTracerProvider sets the TracerProvider for the otelclient.
+func WithTracerProvider(provider trace.TracerProvider) Option {
+	return func(o *otelclient) {
+		o.tracerProvider = provider
+	}
+}
+
 type otelclient struct {
-	client rueidis.Client
-	mAttrs []attribute.KeyValue
-	tAttrs []attribute.KeyValue
+	client         rueidis.Client
+	mAttrs         []attribute.KeyValue
+	tAttrs         []attribute.KeyValue
+	meterProvider  metric.MeterProvider
+	tracerProvider trace.TracerProvider
+	tracer         trace.Tracer
+	meter          metric.Meter
+	cscMiss        metric.Int64Counter
+	cscHits        metric.Int64Counter
 }
 
 func (o *otelclient) B() cmds.Builder {
@@ -66,71 +94,97 @@ func (o *otelclient) B() cmds.Builder {
 }
 
 func (o *otelclient) Do(ctx context.Context, cmd rueidis.Completed) (resp rueidis.RedisResult) {
-	ctx, span := start(ctx, first(cmd.Commands()), sum(cmd.Commands()), o.tAttrs)
+	ctx, span := o.start(ctx, first(cmd.Commands()), sum(cmd.Commands()), o.tAttrs)
 	resp = o.client.Do(ctx, cmd)
-	end(span, resp.Error())
+	o.end(span, resp.Error())
 	return
 }
 
 func (o *otelclient) DoMulti(ctx context.Context, multi ...rueidis.Completed) (resp []rueidis.RedisResult) {
-	ctx, span := start(ctx, multiFirst(multi), multiSum(multi), o.tAttrs)
+	ctx, span := o.start(ctx, multiFirst(multi), multiSum(multi), o.tAttrs)
 	resp = o.client.DoMulti(ctx, multi...)
-	end(span, firstError(resp))
+	o.end(span, firstError(resp))
 	return
 }
 
 func (o *otelclient) DoCache(ctx context.Context, cmd rueidis.Cacheable, ttl time.Duration) (resp rueidis.RedisResult) {
-	ctx, span := start(ctx, first(cmd.Commands()), sum(cmd.Commands()), o.tAttrs)
+	ctx, span := o.start(ctx, first(cmd.Commands()), sum(cmd.Commands()), o.tAttrs)
 	resp = o.client.DoCache(ctx, cmd, ttl)
 	if resp.NonRedisError() == nil {
 		if resp.IsCacheHit() {
-			cscHits.Add(ctx, 1, metric.WithAttributes(o.tAttrs...))
+			o.cscHits.Add(ctx, 1, metric.WithAttributes(o.tAttrs...))
 		} else {
-			cscMiss.Add(ctx, 1, metric.WithAttributes(o.tAttrs...))
+			o.cscMiss.Add(ctx, 1, metric.WithAttributes(o.tAttrs...))
 		}
 	}
-	end(span, resp.Error())
+	o.end(span, resp.Error())
 	return
 }
 
 func (o *otelclient) DoMultiCache(ctx context.Context, multi ...rueidis.CacheableTTL) (resps []rueidis.RedisResult) {
-	ctx, span := start(ctx, multiCacheableFirst(multi), multiCacheableSum(multi), o.tAttrs)
+	ctx, span := o.start(ctx, multiCacheableFirst(multi), multiCacheableSum(multi), o.tAttrs)
 	resps = o.client.DoMultiCache(ctx, multi...)
 	for _, resp := range resps {
 		if resp.NonRedisError() == nil {
 			if resp.IsCacheHit() {
-				cscHits.Add(ctx, 1, metric.WithAttributes(o.tAttrs...))
+				o.cscHits.Add(ctx, 1, metric.WithAttributes(o.tAttrs...))
 			} else {
-				cscMiss.Add(ctx, 1, metric.WithAttributes(o.tAttrs...))
+				o.cscMiss.Add(ctx, 1, metric.WithAttributes(o.tAttrs...))
 			}
 		}
 	}
-	end(span, firstError(resps))
+	o.end(span, firstError(resps))
 	return
 }
 
 func (o *otelclient) Dedicated(fn func(rueidis.DedicatedClient) error) (err error) {
 	return o.client.Dedicated(func(client rueidis.DedicatedClient) error {
-		return fn(&dedicated{client: client, mAttrs: o.mAttrs, tAttrs: o.tAttrs})
+		return fn(&dedicated{
+			client:  client,
+			mAttrs:  o.mAttrs,
+			tAttrs:  o.tAttrs,
+			tracer:  o.tracer,
+			meter:   o.meter,
+			cscMiss: o.cscMiss,
+			cscHits: o.cscHits,
+		})
 	})
 }
 
 func (o *otelclient) Dedicate() (rueidis.DedicatedClient, func()) {
 	client, cancel := o.client.Dedicate()
-	return &dedicated{client: client, mAttrs: o.mAttrs, tAttrs: o.tAttrs}, cancel
+	return &dedicated{
+		client:  client,
+		mAttrs:  o.mAttrs,
+		tAttrs:  o.tAttrs,
+		tracer:  o.tracer,
+		meter:   o.meter,
+		cscMiss: o.cscMiss,
+		cscHits: o.cscHits,
+	}, cancel
 }
 
 func (o *otelclient) Receive(ctx context.Context, subscribe rueidis.Completed, fn func(msg rueidis.PubSubMessage)) (err error) {
-	ctx, span := start(ctx, first(subscribe.Commands()), sum(subscribe.Commands()), o.tAttrs)
+	ctx, span := o.start(ctx, first(subscribe.Commands()), sum(subscribe.Commands()), o.tAttrs)
 	err = o.client.Receive(ctx, subscribe, fn)
-	end(span, err)
+	o.end(span, err)
 	return
 }
 
 func (o *otelclient) Nodes() map[string]rueidis.Client {
 	nodes := o.client.Nodes()
 	for addr, client := range nodes {
-		nodes[addr] = &otelclient{client: client, mAttrs: o.mAttrs, tAttrs: o.tAttrs}
+		nodes[addr] = &otelclient{
+			client:         client,
+			mAttrs:         o.mAttrs,
+			tAttrs:         o.tAttrs,
+			meterProvider:  o.meterProvider,
+			tracerProvider: o.tracerProvider,
+			tracer:         o.tracer,
+			meter:          o.meter,
+			cscMiss:        o.cscMiss,
+			cscHits:        o.cscHits,
+		}
 	}
 	return nodes
 }
@@ -142,9 +196,13 @@ func (o *otelclient) Close() {
 var _ rueidis.DedicatedClient = (*dedicated)(nil)
 
 type dedicated struct {
-	client rueidis.DedicatedClient
-	mAttrs []attribute.KeyValue
-	tAttrs []attribute.KeyValue
+	client  rueidis.DedicatedClient
+	mAttrs  []attribute.KeyValue
+	tAttrs  []attribute.KeyValue
+	tracer  trace.Tracer
+	meter   metric.Meter
+	cscMiss metric.Int64Counter
+	cscHits metric.Int64Counter
 }
 
 func (d *dedicated) B() cmds.Builder {
@@ -152,23 +210,23 @@ func (d *dedicated) B() cmds.Builder {
 }
 
 func (d *dedicated) Do(ctx context.Context, cmd rueidis.Completed) (resp rueidis.RedisResult) {
-	ctx, span := start(ctx, first(cmd.Commands()), sum(cmd.Commands()), d.tAttrs)
+	ctx, span := d.start(ctx, first(cmd.Commands()), sum(cmd.Commands()), d.tAttrs)
 	resp = d.client.Do(ctx, cmd)
-	end(span, resp.Error())
+	d.end(span, resp.Error())
 	return
 }
 
 func (d *dedicated) DoMulti(ctx context.Context, multi ...rueidis.Completed) (resp []rueidis.RedisResult) {
-	ctx, span := start(ctx, multiFirst(multi), multiSum(multi), d.tAttrs)
+	ctx, span := d.start(ctx, multiFirst(multi), multiSum(multi), d.tAttrs)
 	resp = d.client.DoMulti(ctx, multi...)
-	end(span, firstError(resp))
+	d.end(span, firstError(resp))
 	return
 }
 
 func (d *dedicated) Receive(ctx context.Context, subscribe rueidis.Completed, fn func(msg rueidis.PubSubMessage)) (err error) {
-	ctx, span := start(ctx, first(subscribe.Commands()), sum(subscribe.Commands()), d.tAttrs)
+	ctx, span := d.start(ctx, first(subscribe.Commands()), sum(subscribe.Commands()), d.tAttrs)
 	err = d.client.Receive(ctx, subscribe, fn)
-	end(span, err)
+	d.end(span, err)
 	return
 }
 
@@ -264,11 +322,27 @@ func multiCacheableFirst(multi []rueidis.CacheableTTL) string {
 	return sb.String()
 }
 
-func start(ctx context.Context, op string, size int, attrs []attribute.KeyValue) (context.Context, trace.Span) {
+func (o *otelclient) start(ctx context.Context, op string, size int, attrs []attribute.KeyValue) (context.Context, trace.Span) {
+	return startSpan(o.tracer, ctx, op, size, attrs...)
+}
+
+func (o *otelclient) end(span trace.Span, err error) {
+	endSpan(span, err)
+}
+
+func (d *dedicated) start(ctx context.Context, op string, size int, attrs []attribute.KeyValue) (context.Context, trace.Span) {
+	return startSpan(d.tracer, ctx, op, size, attrs...)
+}
+
+func (d *dedicated) end(span trace.Span, err error) {
+	endSpan(span, err)
+}
+
+func startSpan(tracer trace.Tracer, ctx context.Context, op string, size int, attrs ...attribute.KeyValue) (context.Context, trace.Span) {
 	return tracer.Start(ctx, op, kind, attr(op, size), trace.WithAttributes(attrs...))
 }
 
-func end(span trace.Span, err error) {
+func endSpan(span trace.Span, err error) {
 	if err != nil && !rueidis.IsRedisNil(err) {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())

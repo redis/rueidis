@@ -125,11 +125,22 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 	} else {
 		init = append(init, helloCmd, append([]string{"CLIENT", "TRACKING", "ON"}, option.ClientTrackingOptions...))
 	}
+	if option.ClientNoEvict {
+		init = append(init, []string{"CLIENT", "NO-EVICT", "ON"})
+	}
+	if option.ClientSetInfo != nil {
+		clientSetInfoCmd := []string{"CLIENT", "SETINFO"}
+		clientSetInfoCmd = append(clientSetInfoCmd, option.ClientSetInfo...)
+		init = append(init, clientSetInfoCmd)
+	}
 	if option.DisableCache {
 		init = init[:1]
 	}
 	if option.SelectDB != 0 {
 		init = append(init, []string{"SELECT", strconv.Itoa(option.SelectDB)})
+	}
+	if option.ClientNoTouch {
+		init = append(init, []string{"CLIENT", "NO-TOUCH", "ON"})
 	}
 
 	timeout := option.Dialer.Timeout
@@ -189,9 +200,21 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 		if option.ClientName != "" {
 			init = append(init, []string{"CLIENT", "SETNAME", option.ClientName})
 		}
+		if option.ClientNoEvict {
+			init = append(init, []string{"CLIENT", "NO-EVICT", "ON"})
+		}
+		if option.ClientSetInfo != nil {
+			clientSetInfoCmd := []string{"CLIENT", "SETINFO"}
+			clientSetInfoCmd = append(clientSetInfoCmd, option.ClientSetInfo...)
+			init = append(init, clientSetInfoCmd)
+		}
 		if option.SelectDB != 0 {
 			init = append(init, []string{"SELECT", strconv.Itoa(option.SelectDB)})
 		}
+		if option.ClientNoTouch {
+			init = append(init, []string{"CLIENT", "NO-TOUCH", "ON"})
+		}
+
 		if len(init) != 0 {
 			for _, r := range p.DoMulti(ctx, cmds.NewMultiCompleted(init)...) {
 				if err = r.Error(); err != nil {
