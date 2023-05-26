@@ -5,13 +5,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/redis/rueidis"
-	"github.com/redis/rueidis/internal/cmds"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/redis/rueidis"
+	"github.com/redis/rueidis/internal/cmds"
 )
 
 var (
@@ -272,6 +273,10 @@ func multiCacheableSum(multi []rueidis.CacheableTTL) (v int) {
 }
 
 func multiFirst(multi []rueidis.Completed) string {
+	if len(multi) == 0 {
+		return ""
+	}
+
 	if len(multi) > 5 {
 		multi = multi[:5]
 	}
@@ -293,6 +298,10 @@ func multiFirst(multi []rueidis.Completed) string {
 }
 
 func multiCacheableFirst(multi []rueidis.CacheableTTL) string {
+	if len(multi) == 0 {
+		return ""
+	}
+
 	if len(multi) > 5 {
 		multi = multi[:5]
 	}

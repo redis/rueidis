@@ -5,8 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/redis/rueidis"
-	"github.com/redis/rueidis/internal/cmds"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/sdk/metric"
@@ -14,6 +12,9 @@ import (
 	"go.opentelemetry.io/otel/sdk/metric/metricdata/metricdatatest"
 	"go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
+
+	"github.com/redis/rueidis"
+	"github.com/redis/rueidis/internal/cmds"
 )
 
 // MockMeterProvider for testing purposes
@@ -42,6 +43,21 @@ func TestWithClient(t *testing.T) {
 	)
 
 	ctx := context.Background()
+
+	// test empty trace
+	var emptyCompletedArr []rueidis.Completed
+	resps := client.DoMulti(ctx, emptyCompletedArr...)
+	if resps != nil {
+		t.Error("unexpected response : ", resps)
+	}
+	validateTrace(t, exp, "", codes.Ok)
+
+	var emtpyCacheableArr []rueidis.CacheableTTL
+	resps = client.DoMultiCache(ctx, emtpyCacheableArr...)
+	if resps != nil {
+		t.Error("unexpected response : ", resps)
+	}
+	validateTrace(t, exp, "", codes.Ok)
 
 	client.Do(ctx, client.B().Set().Key("key").Value("val").Build())
 	validateTrace(t, exp, "SET", codes.Ok)
