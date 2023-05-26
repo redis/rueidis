@@ -49,3 +49,9 @@ When the `locker.WithContext` is invoked, it will:
 2. If the `KeyMajority` is satisfied within the `KeyValidity` duration, the invocation is successful and a `ctx` is returned as the lock.
 3. If the invocation is not successful, it will wait for client-side caching notification to retry again.
 4. If the invocation is successful, the `Locker` will extend the `ctx` validity periodically and also watch client-side caching notification for canceling the `ctx` if the `KeyMajority` is not held anymore.
+
+### Disable Client Side Caching
+
+Some Redis provider doesn't support client-side caching, ex. Google Cloud Memorystore.
+You can disable client-side caching by setting `ClientOption.DisableCache` to `true`.
+Please note that when the client-side caching is disabled, rueidislock will only try to re-acquire locks for every ExtendInterval.

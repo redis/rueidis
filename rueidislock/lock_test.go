@@ -14,9 +14,9 @@ import (
 
 var address = []string{"127.0.0.1:6376"}
 
-func newLocker(t *testing.T, noLoop, setpx bool) *locker {
+func newLocker(t *testing.T, noLoop, setpx, nocsc bool) *locker {
 	impl, err := NewLocker(LockerOption{
-		ClientOption:   rueidis.ClientOption{InitAddress: address},
+		ClientOption:   rueidis.ClientOption{InitAddress: address, DisableCache: nocsc},
 		NoLoopTracking: noLoop,
 		FallbackSETPX:  setpx,
 	})
@@ -70,11 +70,11 @@ func TestNewLocker_WithClientBuilder(t *testing.T) {
 }
 
 func TestLocker_WithContext_MultipleLocker(t *testing.T) {
-	test := func(t *testing.T, noLoop, setpx bool) {
+	test := func(t *testing.T, noLoop, setpx, nocsc bool) {
 		lockers := make([]*locker, 10)
 		sum := make([]int, len(lockers))
 		for i := 0; i < len(lockers); i++ {
-			lockers[i] = newLocker(t, noLoop, setpx)
+			lockers[i] = newLocker(t, noLoop, setpx, nocsc)
 			lockers[i].timeout = time.Second
 		}
 		defer func() {
@@ -108,20 +108,22 @@ func TestLocker_WithContext_MultipleLocker(t *testing.T) {
 			}
 		}
 	}
-	t.Run("Tracking Loop", func(t *testing.T) {
-		test(t, false, false)
-	})
-	t.Run("Tracking NoLoop", func(t *testing.T) {
-		test(t, true, false)
-	})
-	t.Run("SET PX", func(t *testing.T) {
-		test(t, true, true)
-	})
+	for _, nocsc := range []bool{false, true} {
+		t.Run("Tracking Loop", func(t *testing.T) {
+			test(t, false, false, nocsc)
+		})
+		t.Run("Tracking NoLoop", func(t *testing.T) {
+			test(t, true, false, nocsc)
+		})
+		t.Run("SET PX", func(t *testing.T) {
+			test(t, true, true, nocsc)
+		})
+	}
 }
 
 func TestLocker_WithContext_UnlockByClientSideCaching(t *testing.T) {
 	test := func(t *testing.T, noLoop, setpx bool) {
-		locker := newLocker(t, noLoop, setpx)
+		locker := newLocker(t, noLoop, setpx, false)
 		locker.timeout = time.Second
 		defer locker.Close()
 		lck := strconv.Itoa(rand.Int())
@@ -157,7 +159,7 @@ func TestLocker_WithContext_UnlockByClientSideCaching(t *testing.T) {
 
 func TestLocker_WithContext_ExtendByClientSideCaching(t *testing.T) {
 	test := func(t *testing.T, noLoop, setpx bool) {
-		locker := newLocker(t, noLoop, setpx)
+		locker := newLocker(t, noLoop, setpx, false)
 		locker.timeout = time.Second
 		defer locker.Close()
 		lck := strconv.Itoa(rand.Int())
@@ -194,8 +196,8 @@ func TestLocker_WithContext_ExtendByClientSideCaching(t *testing.T) {
 }
 
 func TestLocker_WithContext_AutoExtend(t *testing.T) {
-	test := func(t *testing.T, noLoop, setpx bool) {
-		locker := newLocker(t, noLoop, setpx)
+	test := func(t *testing.T, noLoop, setpx, nocsc bool) {
+		locker := newLocker(t, noLoop, setpx, nocsc)
 		locker.validity = time.Second * 2
 		locker.interval = time.Second
 		defer locker.Close()
@@ -217,20 +219,22 @@ func TestLocker_WithContext_AutoExtend(t *testing.T) {
 		}
 		cancel()
 	}
-	t.Run("Tracking Loop", func(t *testing.T) {
-		test(t, false, false)
-	})
-	t.Run("Tracking NoLoop", func(t *testing.T) {
-		test(t, true, false)
-	})
-	t.Run("SET PX", func(t *testing.T) {
-		test(t, true, true)
-	})
+	for _, nocsc := range []bool{false, true} {
+		t.Run("Tracking Loop", func(t *testing.T) {
+			test(t, false, false, nocsc)
+		})
+		t.Run("Tracking NoLoop", func(t *testing.T) {
+			test(t, true, false, nocsc)
+		})
+		t.Run("SET PX", func(t *testing.T) {
+			test(t, true, true, nocsc)
+		})
+	}
 }
 
 func TestLocker_WithContext_DeadContext(t *testing.T) {
-	test := func(t *testing.T, noLoop, setpx bool) {
-		locker := newLocker(t, noLoop, setpx)
+	test := func(t *testing.T, noLoop, setpx, nocsc bool) {
+		locker := newLocker(t, noLoop, setpx, nocsc)
 		defer locker.Close()
 
 		ctx, cancel := context.WithCancel(context.Background())
@@ -240,20 +244,22 @@ func TestLocker_WithContext_DeadContext(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	t.Run("Tracking Loop", func(t *testing.T) {
-		test(t, false, false)
-	})
-	t.Run("Tracking NoLoop", func(t *testing.T) {
-		test(t, true, false)
-	})
-	t.Run("SET PX", func(t *testing.T) {
-		test(t, true, true)
-	})
+	for _, nocsc := range []bool{false, true} {
+		t.Run("Tracking Loop", func(t *testing.T) {
+			test(t, false, false, nocsc)
+		})
+		t.Run("Tracking NoLoop", func(t *testing.T) {
+			test(t, true, false, nocsc)
+		})
+		t.Run("SET PX", func(t *testing.T) {
+			test(t, true, true, nocsc)
+		})
+	}
 }
 
 func TestLocker_WithContext_CancelContext(t *testing.T) {
-	test := func(t *testing.T, noLoop, setpx bool) {
-		locker := newLocker(t, noLoop, setpx)
+	test := func(t *testing.T, noLoop, setpx, nocsc bool) {
+		locker := newLocker(t, noLoop, setpx, nocsc)
 		defer locker.Close()
 
 		lck := strconv.Itoa(rand.Int())
@@ -276,20 +282,22 @@ func TestLocker_WithContext_CancelContext(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	t.Run("Tracking Loop", func(t *testing.T) {
-		test(t, false, false)
-	})
-	t.Run("Tracking NoLoop", func(t *testing.T) {
-		test(t, true, false)
-	})
-	t.Run("SET PX", func(t *testing.T) {
-		test(t, true, true)
-	})
+	for _, nocsc := range []bool{false, true} {
+		t.Run("Tracking Loop", func(t *testing.T) {
+			test(t, false, false, nocsc)
+		})
+		t.Run("Tracking NoLoop", func(t *testing.T) {
+			test(t, true, false, nocsc)
+		})
+		t.Run("SET PX", func(t *testing.T) {
+			test(t, true, true, nocsc)
+		})
+	}
 }
 
 func TestLocker_TryWithContext(t *testing.T) {
-	test := func(t *testing.T, noLoop, setpx bool) {
-		locker := newLocker(t, noLoop, setpx)
+	test := func(t *testing.T, noLoop, setpx, nocsc bool) {
+		locker := newLocker(t, noLoop, setpx, nocsc)
 		locker.timeout = time.Second
 		defer locker.Close()
 
@@ -303,20 +311,22 @@ func TestLocker_TryWithContext(t *testing.T) {
 		}
 		cancel()
 	}
-	t.Run("Tracking Loop", func(t *testing.T) {
-		test(t, false, false)
-	})
-	t.Run("Tracking NoLoop", func(t *testing.T) {
-		test(t, true, false)
-	})
-	t.Run("SET PX", func(t *testing.T) {
-		test(t, true, true)
-	})
+	for _, nocsc := range []bool{false, true} {
+		t.Run("Tracking Loop", func(t *testing.T) {
+			test(t, false, false, nocsc)
+		})
+		t.Run("Tracking NoLoop", func(t *testing.T) {
+			test(t, true, false, nocsc)
+		})
+		t.Run("SET PX", func(t *testing.T) {
+			test(t, true, true, nocsc)
+		})
+	}
 }
 
 func TestLocker_WithContext_Cleanup(t *testing.T) {
-	test := func(t *testing.T, noLoop, setpx bool) {
-		locker := newLocker(t, noLoop, setpx)
+	test := func(t *testing.T, noLoop, setpx, nocsc bool) {
+		locker := newLocker(t, noLoop, setpx, nocsc)
 		defer locker.Close()
 
 		lck := strconv.Itoa(rand.Int())
@@ -343,20 +353,22 @@ func TestLocker_WithContext_Cleanup(t *testing.T) {
 			t.Fatalf("unexpected length %v", keys)
 		}
 	}
-	t.Run("Tracking Loop", func(t *testing.T) {
-		test(t, false, false)
-	})
-	t.Run("Tracking NoLoop", func(t *testing.T) {
-		test(t, true, false)
-	})
-	t.Run("SET PX", func(t *testing.T) {
-		test(t, true, true)
-	})
+	for _, nocsc := range []bool{false, true} {
+		t.Run("Tracking Loop", func(t *testing.T) {
+			test(t, false, false, nocsc)
+		})
+		t.Run("Tracking NoLoop", func(t *testing.T) {
+			test(t, true, false, nocsc)
+		})
+		t.Run("SET PX", func(t *testing.T) {
+			test(t, true, true, nocsc)
+		})
+	}
 }
 
 func TestLocker_Close(t *testing.T) {
-	test := func(t *testing.T, noLoop, setpx bool) {
-		locker := newLocker(t, noLoop, setpx)
+	test := func(t *testing.T, noLoop, setpx, nocsc bool) {
+		locker := newLocker(t, noLoop, setpx, nocsc)
 
 		lck := strconv.Itoa(rand.Int())
 		ctx, _, err := locker.WithContext(context.Background(), lck)
@@ -382,13 +394,15 @@ func TestLocker_Close(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	t.Run("Tracking Loop", func(t *testing.T) {
-		test(t, false, false)
-	})
-	t.Run("Tracking NoLoop", func(t *testing.T) {
-		test(t, true, false)
-	})
-	t.Run("SET PX", func(t *testing.T) {
-		test(t, true, true)
-	})
+	for _, nocsc := range []bool{false, true} {
+		t.Run("Tracking Loop", func(t *testing.T) {
+			test(t, false, false, nocsc)
+		})
+		t.Run("Tracking NoLoop", func(t *testing.T) {
+			test(t, true, false, nocsc)
+		})
+		t.Run("SET PX", func(t *testing.T) {
+			test(t, true, true, nocsc)
+		})
+	}
 }
