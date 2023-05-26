@@ -2,6 +2,7 @@ package rueidis
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"strconv"
@@ -20,13 +21,17 @@ var Nil = &RedisError{typ: '_'}
 // IsRedisNil is a handy method to check if error is a redis nil response.
 // All redis nil response returns as an error.
 func IsRedisNil(err error) bool {
-	return err == Nil
+	return errors.Is(err, Nil)
 }
 
 // IsRedisErr is a handy method to check if error is a redis ERR response.
 func IsRedisErr(err error) (ret *RedisError, ok bool) {
-	ret, ok = err.(*RedisError)
-	return ret, ok && ret != Nil
+	var e *RedisError
+	if errors.As(err, &e) {
+		ret = e
+		ok = !errors.Is(err, Nil)
+	}
+	return ret, ok
 }
 
 // RedisError is an error response or a nil message from redis instance
