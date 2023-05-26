@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/sdk/metric"
@@ -22,11 +23,36 @@ type MockMeterProvider struct {
 	metric.MeterProvider
 }
 
+func TestWithClientGlobalProvider(t *testing.T) {
+	client, err := rueidis.NewClient(rueidis.ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer client.Close()
+
+	exp := tracetest.NewInMemoryExporter()
+	tracerProvider := trace.NewTracerProvider(trace.WithSyncer(exp))
+	otel.SetTracerProvider(tracerProvider)
+
+	mxp := metric.NewManualReader()
+	meterProvider := metric.NewMeterProvider(metric.WithReader(mxp))
+	otel.SetMeterProvider(meterProvider)
+
+	client = WithClient(
+		client,
+		TraceAttrs(attribute.String("any", "label")),
+		MetricAttrs(attribute.String("any", "label")),
+	)
+
+	testWithClient(t, client, exp, mxp)
+}
+
 func TestWithClient(t *testing.T) {
 	client, err := rueidis.NewClient(rueidis.ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer client.Close()
 
 	exp := tracetest.NewInMemoryExporter()
 	tracerProvider := trace.NewTracerProvider(trace.WithSyncer(exp))
@@ -41,7 +67,10 @@ func TestWithClient(t *testing.T) {
 		WithTracerProvider(tracerProvider),
 		WithMeterProvider(meterProvider),
 	)
+	testWithClient(t, client, exp, mxp)
+}
 
+func testWithClient(t *testing.T, client rueidis.Client, exp *tracetest.InMemoryExporter, mxp metric.Reader) {
 	ctx := context.Background()
 
 	// test empty trace
@@ -228,6 +257,7 @@ func TestWithClientSimple(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer client.Close()
 
 	exp := tracetest.NewInMemoryExporter()
 	tracerProvider := trace.NewTracerProvider(trace.WithSyncer(exp))
