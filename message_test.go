@@ -49,6 +49,10 @@ func TestIsRedisErr(t *testing.T) {
 	if ret, ok := IsRedisErr(&RedisError{typ: '-'}); !ok || ret.typ != '-' {
 		t.Fatal("TestIsRedisErr fail")
 	}
+	wrappedErr := wrapped{msg: "wrapped", err: Nil}
+	if ret, ok := IsRedisErr(wrappedErr); ok || ret == Nil {
+		t.Fatal("TestIsRedisErr fail : wrapped error")
+	}
 }
 
 //gocyclo:ignore
