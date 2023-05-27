@@ -10,6 +10,14 @@ import (
 	"time"
 )
 
+type wrapped struct {
+	msg string
+	err error
+}
+
+func (e wrapped) Error() string { return e.msg }
+func (e wrapped) Unwrap() error { return e.err }
+
 func TestIsRedisNil(t *testing.T) {
 	err := Nil
 	if !IsRedisNil(err) {
@@ -20,6 +28,10 @@ func TestIsRedisNil(t *testing.T) {
 	}
 	if err.Error() != "redis nil message" {
 		t.Fatal("IsRedisNil fail")
+	}
+	wrappedErr := wrapped{msg: "wrapped", err: Nil}
+	if IsRedisNil(wrappedErr) {
+		t.Fatal("IsRedisNil fail : wrapped error")
 	}
 }
 
@@ -36,6 +48,10 @@ func TestIsRedisErr(t *testing.T) {
 	}
 	if ret, ok := IsRedisErr(&RedisError{typ: '-'}); !ok || ret.typ != '-' {
 		t.Fatal("TestIsRedisErr fail")
+	}
+	wrappedErr := wrapped{msg: "wrapped", err: Nil}
+	if ret, ok := IsRedisErr(wrappedErr); ok || ret == Nil {
+		t.Fatal("TestIsRedisErr fail : wrapped error")
 	}
 }
 
