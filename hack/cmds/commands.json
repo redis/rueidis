@@ -4578,6 +4578,17 @@
           "KEEPTTL"
         ],
         "optional": true
+      },
+      {
+        "name": "expiration",
+        "type": "enum",
+        "enum": [
+          "EX seconds-with-type",
+          "PX milliseconds-with-type",
+          "EXAT timestamp-with-type",
+          "PXAT milliseconds-timestamp-with-type"
+        ],
+        "optional": true
       }
     ],
     "since": "1.0.0",
