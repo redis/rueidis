@@ -2,7 +2,10 @@
 
 package cmds
 
-import "strconv"
+import (
+	"strconv"
+	"time"
+)
 
 type Append Completed
 
@@ -203,23 +206,23 @@ func (c GetexExpirationPxatMillisecondsTimestamp) Build() Completed {
 
 type GetexKey Completed
 
-func (c GetexKey) ExSeconds(seconds int64) GetexExpirationExSeconds {
-	c.cs.s = append(c.cs.s, "EX", strconv.FormatInt(seconds, 10))
+func (c GetexKey) ExSeconds(seconds time.Duration) GetexExpirationExSeconds {
+	c.cs.s = append(c.cs.s, "EX", strconv.FormatInt(int64(seconds/time.Millisecond), 10))
 	return (GetexExpirationExSeconds)(c)
 }
 
-func (c GetexKey) PxMilliseconds(milliseconds int64) GetexExpirationPxMilliseconds {
-	c.cs.s = append(c.cs.s, "PX", strconv.FormatInt(milliseconds, 10))
+func (c GetexKey) PxMilliseconds(milliseconds time.Duration) GetexExpirationPxMilliseconds {
+	c.cs.s = append(c.cs.s, "PX", strconv.FormatInt(int64(milliseconds/time.Millisecond), 10))
 	return (GetexExpirationPxMilliseconds)(c)
 }
 
-func (c GetexKey) ExatTimestamp(timestamp int64) GetexExpirationExatTimestamp {
-	c.cs.s = append(c.cs.s, "EXAT", strconv.FormatInt(timestamp, 10))
+func (c GetexKey) ExatTimestamp(timestamp time.Time) GetexExpirationExatTimestamp {
+	c.cs.s = append(c.cs.s, "EXAT", timestamp.Format(time.RFC3339))
 	return (GetexExpirationExatTimestamp)(c)
 }
 
-func (c GetexKey) PxatMillisecondsTimestamp(millisecondsTimestamp int64) GetexExpirationPxatMillisecondsTimestamp {
-	c.cs.s = append(c.cs.s, "PXAT", strconv.FormatInt(millisecondsTimestamp, 10))
+func (c GetexKey) PxatMillisecondsTimestamp(millisecondsTimestamp time.Time) GetexExpirationPxatMillisecondsTimestamp {
+	c.cs.s = append(c.cs.s, "PXAT", millisecondsTimestamp.Format(time.RFC3339))
 	return (GetexExpirationPxatMillisecondsTimestamp)(c)
 }
 
@@ -685,23 +688,23 @@ func (c SetConditionNx) Get() SetGet {
 	return (SetGet)(c)
 }
 
-func (c SetConditionNx) ExSeconds(seconds int64) SetExpirationExSeconds {
-	c.cs.s = append(c.cs.s, "EX", strconv.FormatInt(seconds, 10))
+func (c SetConditionNx) ExSeconds(seconds time.Duration) SetExpirationExSeconds {
+	c.cs.s = append(c.cs.s, "EX", strconv.FormatInt(int64(seconds/time.Millisecond), 10))
 	return (SetExpirationExSeconds)(c)
 }
 
-func (c SetConditionNx) PxMilliseconds(milliseconds int64) SetExpirationPxMilliseconds {
-	c.cs.s = append(c.cs.s, "PX", strconv.FormatInt(milliseconds, 10))
+func (c SetConditionNx) PxMilliseconds(milliseconds time.Duration) SetExpirationPxMilliseconds {
+	c.cs.s = append(c.cs.s, "PX", strconv.FormatInt(int64(milliseconds/time.Millisecond), 10))
 	return (SetExpirationPxMilliseconds)(c)
 }
 
-func (c SetConditionNx) ExatTimestamp(timestamp int64) SetExpirationExatTimestamp {
-	c.cs.s = append(c.cs.s, "EXAT", strconv.FormatInt(timestamp, 10))
+func (c SetConditionNx) ExatTimestamp(timestamp time.Time) SetExpirationExatTimestamp {
+	c.cs.s = append(c.cs.s, "EXAT", timestamp.Format(time.RFC3339))
 	return (SetExpirationExatTimestamp)(c)
 }
 
-func (c SetConditionNx) PxatMillisecondsTimestamp(millisecondsTimestamp int64) SetExpirationPxatMillisecondsTimestamp {
-	c.cs.s = append(c.cs.s, "PXAT", strconv.FormatInt(millisecondsTimestamp, 10))
+func (c SetConditionNx) PxatMillisecondsTimestamp(millisecondsTimestamp time.Time) SetExpirationPxatMillisecondsTimestamp {
+	c.cs.s = append(c.cs.s, "PXAT", millisecondsTimestamp.Format(time.RFC3339))
 	return (SetExpirationPxatMillisecondsTimestamp)(c)
 }
 
@@ -722,23 +725,23 @@ func (c SetConditionXx) Get() SetGet {
 	return (SetGet)(c)
 }
 
-func (c SetConditionXx) ExSeconds(seconds int64) SetExpirationExSeconds {
-	c.cs.s = append(c.cs.s, "EX", strconv.FormatInt(seconds, 10))
+func (c SetConditionXx) ExSeconds(seconds time.Duration) SetExpirationExSeconds {
+	c.cs.s = append(c.cs.s, "EX", strconv.FormatInt(int64(seconds/time.Millisecond), 10))
 	return (SetExpirationExSeconds)(c)
 }
 
-func (c SetConditionXx) PxMilliseconds(milliseconds int64) SetExpirationPxMilliseconds {
-	c.cs.s = append(c.cs.s, "PX", strconv.FormatInt(milliseconds, 10))
+func (c SetConditionXx) PxMilliseconds(milliseconds time.Duration) SetExpirationPxMilliseconds {
+	c.cs.s = append(c.cs.s, "PX", strconv.FormatInt(int64(milliseconds/time.Millisecond), 10))
 	return (SetExpirationPxMilliseconds)(c)
 }
 
-func (c SetConditionXx) ExatTimestamp(timestamp int64) SetExpirationExatTimestamp {
-	c.cs.s = append(c.cs.s, "EXAT", strconv.FormatInt(timestamp, 10))
+func (c SetConditionXx) ExatTimestamp(timestamp time.Time) SetExpirationExatTimestamp {
+	c.cs.s = append(c.cs.s, "EXAT", timestamp.Format(time.RFC3339))
 	return (SetExpirationExatTimestamp)(c)
 }
 
-func (c SetConditionXx) PxatMillisecondsTimestamp(millisecondsTimestamp int64) SetExpirationPxatMillisecondsTimestamp {
-	c.cs.s = append(c.cs.s, "PXAT", strconv.FormatInt(millisecondsTimestamp, 10))
+func (c SetConditionXx) PxatMillisecondsTimestamp(millisecondsTimestamp time.Time) SetExpirationPxatMillisecondsTimestamp {
+	c.cs.s = append(c.cs.s, "PXAT", millisecondsTimestamp.Format(time.RFC3339))
 	return (SetExpirationPxatMillisecondsTimestamp)(c)
 }
 
@@ -789,23 +792,23 @@ func (c SetExpirationPxatMillisecondsTimestamp) Build() Completed {
 
 type SetGet Completed
 
-func (c SetGet) ExSeconds(seconds int64) SetExpirationExSeconds {
-	c.cs.s = append(c.cs.s, "EX", strconv.FormatInt(seconds, 10))
+func (c SetGet) ExSeconds(seconds time.Duration) SetExpirationExSeconds {
+	c.cs.s = append(c.cs.s, "EX", strconv.FormatInt(int64(seconds/time.Millisecond), 10))
 	return (SetExpirationExSeconds)(c)
 }
 
-func (c SetGet) PxMilliseconds(milliseconds int64) SetExpirationPxMilliseconds {
-	c.cs.s = append(c.cs.s, "PX", strconv.FormatInt(milliseconds, 10))
+func (c SetGet) PxMilliseconds(milliseconds time.Duration) SetExpirationPxMilliseconds {
+	c.cs.s = append(c.cs.s, "PX", strconv.FormatInt(int64(milliseconds/time.Millisecond), 10))
 	return (SetExpirationPxMilliseconds)(c)
 }
 
-func (c SetGet) ExatTimestamp(timestamp int64) SetExpirationExatTimestamp {
-	c.cs.s = append(c.cs.s, "EXAT", strconv.FormatInt(timestamp, 10))
+func (c SetGet) ExatTimestamp(timestamp time.Time) SetExpirationExatTimestamp {
+	c.cs.s = append(c.cs.s, "EXAT", timestamp.Format(time.RFC3339))
 	return (SetExpirationExatTimestamp)(c)
 }
 
-func (c SetGet) PxatMillisecondsTimestamp(millisecondsTimestamp int64) SetExpirationPxatMillisecondsTimestamp {
-	c.cs.s = append(c.cs.s, "PXAT", strconv.FormatInt(millisecondsTimestamp, 10))
+func (c SetGet) PxatMillisecondsTimestamp(millisecondsTimestamp time.Time) SetExpirationPxatMillisecondsTimestamp {
+	c.cs.s = append(c.cs.s, "PXAT", millisecondsTimestamp.Format(time.RFC3339))
 	return (SetExpirationPxatMillisecondsTimestamp)(c)
 }
 
@@ -843,23 +846,23 @@ func (c SetValue) Get() SetGet {
 	return (SetGet)(c)
 }
 
-func (c SetValue) ExSeconds(seconds int64) SetExpirationExSeconds {
-	c.cs.s = append(c.cs.s, "EX", strconv.FormatInt(seconds, 10))
+func (c SetValue) ExSeconds(seconds time.Duration) SetExpirationExSeconds {
+	c.cs.s = append(c.cs.s, "EX", strconv.FormatInt(int64(seconds/time.Millisecond), 10))
 	return (SetExpirationExSeconds)(c)
 }
 
-func (c SetValue) PxMilliseconds(milliseconds int64) SetExpirationPxMilliseconds {
-	c.cs.s = append(c.cs.s, "PX", strconv.FormatInt(milliseconds, 10))
+func (c SetValue) PxMilliseconds(milliseconds time.Duration) SetExpirationPxMilliseconds {
+	c.cs.s = append(c.cs.s, "PX", strconv.FormatInt(int64(milliseconds/time.Millisecond), 10))
 	return (SetExpirationPxMilliseconds)(c)
 }
 
-func (c SetValue) ExatTimestamp(timestamp int64) SetExpirationExatTimestamp {
-	c.cs.s = append(c.cs.s, "EXAT", strconv.FormatInt(timestamp, 10))
+func (c SetValue) ExatTimestamp(timestamp time.Time) SetExpirationExatTimestamp {
+	c.cs.s = append(c.cs.s, "EXAT", timestamp.Format(time.RFC3339))
 	return (SetExpirationExatTimestamp)(c)
 }
 
-func (c SetValue) PxatMillisecondsTimestamp(millisecondsTimestamp int64) SetExpirationPxatMillisecondsTimestamp {
-	c.cs.s = append(c.cs.s, "PXAT", strconv.FormatInt(millisecondsTimestamp, 10))
+func (c SetValue) PxatMillisecondsTimestamp(millisecondsTimestamp time.Time) SetExpirationPxatMillisecondsTimestamp {
+	c.cs.s = append(c.cs.s, "PXAT", millisecondsTimestamp.Format(time.RFC3339))
 	return (SetExpirationPxatMillisecondsTimestamp)(c)
 }
 

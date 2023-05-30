@@ -146,9 +146,14 @@ func (n *node) GoStructs() (out []goStruct) {
 				case "name", "category", "pattern":
 					s.BuildDef.Command = append(s.BuildDef.Command, cmds[:1]...)
 					s.BuildDef.Parameters = []parameter{{Name: lcFirst(name(cmds[1])), Type: "string"}}
-				case "seconds", "milliseconds", "timestamp", "milliseconds-timestamp":
+				case "seconds", "milliseconds":
+					// Using time.Duration for EX/PX
 					s.BuildDef.Command = append(s.BuildDef.Command, cmds[:1]...)
-					s.BuildDef.Parameters = []parameter{{Name: lcFirst(name(cmds[1])), Type: "integer"}}
+					s.BuildDef.Parameters = []parameter{{Name: lcFirst(name(cmds[1])), Type: "time.Duration"}}
+				case "timestamp", "milliseconds-timestamp":
+					// Using time.Time for EXAT/PXAT
+					s.BuildDef.Command = append(s.BuildDef.Command, cmds[:1]...)
+					s.BuildDef.Parameters = []parameter{{Name: lcFirst(name(cmds[1])), Type: "time.Time"}}
 				case "*":
 					// fix for FT.AGGREGATE
 					if cmds[0] == "LOAD" {
@@ -512,6 +517,10 @@ func testParams(defs []parameter) string {
 			params = append(params, `"1"`)
 		case "int64", "uint64", "float64":
 			params = append(params, `1`)
+		case "time.Duration":
+			params = append(params, `time.Second`)
+		case "time.Time":
+			params = append(params, `time.Now()`)
 		}
 	}
 	return strings.Join(params, ", ")
@@ -618,6 +627,10 @@ func toGoType(paramType string) string {
 		return "int64"
 	case "unsigned integer":
 		return "uint64"
+	case "time.Duration":
+		return "time.Duration"
+	case "time.Time":
+		return "time.Time"
 	default:
 		panic("unknown param type " + paramType)
 	}
@@ -817,6 +830,10 @@ func printBuilder(w io.Writer, parent, next goStruct) {
 						follows = append(follows, toGoName(p.Name)+"...")
 					case "...string": // TODO hack for FT.CREATE VECTOR
 						follows = append(follows, toGoName(p.Name)+"...")
+					case "time.Duration":
+						appends = append(appends, fmt.Sprintf("strconv.FormatInt(int64(%s/time.Millisecond), 10)", toGoName(p.Name)))
+					case "time.Time":
+						appends = append(appends, fmt.Sprintf("%s.Format(time.RFC3339)", toGoName(p.Name)))
 					default:
 						panic("unexpected param type " + next.BuildDef.Parameters[0].Type)
 					}
