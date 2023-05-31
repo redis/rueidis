@@ -275,7 +275,7 @@ func (c GetexKey) Exat(timestamp time.Time) GetexExpirationExatTimestampTyped {
 }
 
 func (c GetexKey) Pxat(timestamp time.Time) GetexExpirationPxatMsTimestampTyped {
-	c.cs.s = append(c.cs.s, "PXAT", strconv.FormatInt(timestamp.UnixNano()/1e6, 10))
+	c.cs.s = append(c.cs.s, "PXAT", strconv.FormatInt(timestamp.UnixMilli(), 10))
 	return (GetexExpirationPxatMsTimestampTyped)(c)
 }
 
@@ -777,7 +777,7 @@ func (c SetConditionNx) Exat(timestamp time.Time) SetExpirationExatTimestampType
 }
 
 func (c SetConditionNx) Pxat(timestamp time.Time) SetExpirationPxatMsTimestampTyped {
-	c.cs.s = append(c.cs.s, "PXAT", strconv.FormatInt(timestamp.UnixNano()/1e6, 10))
+	c.cs.s = append(c.cs.s, "PXAT", strconv.FormatInt(timestamp.UnixMilli(), 10))
 	return (SetExpirationPxatMsTimestampTyped)(c)
 }
 
@@ -834,7 +834,7 @@ func (c SetConditionXx) Exat(timestamp time.Time) SetExpirationExatTimestampType
 }
 
 func (c SetConditionXx) Pxat(timestamp time.Time) SetExpirationPxatMsTimestampTyped {
-	c.cs.s = append(c.cs.s, "PXAT", strconv.FormatInt(timestamp.UnixNano()/1e6, 10))
+	c.cs.s = append(c.cs.s, "PXAT", strconv.FormatInt(timestamp.UnixMilli(), 10))
 	return (SetExpirationPxatMsTimestampTyped)(c)
 }
 
@@ -949,7 +949,7 @@ func (c SetGet) Exat(timestamp time.Time) SetExpirationExatTimestampTyped {
 }
 
 func (c SetGet) Pxat(timestamp time.Time) SetExpirationPxatMsTimestampTyped {
-	c.cs.s = append(c.cs.s, "PXAT", strconv.FormatInt(timestamp.UnixNano()/1e6, 10))
+	c.cs.s = append(c.cs.s, "PXAT", strconv.FormatInt(timestamp.UnixMilli(), 10))
 	return (SetExpirationPxatMsTimestampTyped)(c)
 }
 
@@ -1023,7 +1023,7 @@ func (c SetValue) Exat(timestamp time.Time) SetExpirationExatTimestampTyped {
 }
 
 func (c SetValue) Pxat(timestamp time.Time) SetExpirationPxatMsTimestampTyped {
-	c.cs.s = append(c.cs.s, "PXAT", strconv.FormatInt(timestamp.UnixNano()/1e6, 10))
+	c.cs.s = append(c.cs.s, "PXAT", strconv.FormatInt(timestamp.UnixMilli(), 10))
 	return (SetExpirationPxatMsTimestampTyped)(c)
 }
 

@@ -851,7 +851,7 @@ func printBuilder(w io.Writer, parent, next goStruct) {
 						case next.BuildDef.MethodName == "Exat":
 							appends = append(appends, fmt.Sprintf("strconv.FormatInt(%s.Unix(), 10)", toGoName(p.Name))) // For seconds
 						case next.BuildDef.MethodName == "Pxat":
-							appends = append(appends, fmt.Sprintf("strconv.FormatInt(%s.UnixNano()/1e6, 10)", toGoName(p.Name))) // For milliseconds
+							appends = append(appends, fmt.Sprintf("strconv.FormatInt(%s.UnixMilli(), 10)", toGoName(p.Name))) // For milliseconds
 						}
 					default:
 						panic("unexpected param type " + next.BuildDef.Parameters[0].Type)
