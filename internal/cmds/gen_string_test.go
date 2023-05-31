@@ -2,7 +2,10 @@
 
 package cmds
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 func string0(s Builder) {
 	s.Append().Key("1").Value("1").Build()
@@ -16,6 +19,10 @@ func string0(s Builder) {
 	s.Getex().Key("1").ExatTimestamp(1).Build()
 	s.Getex().Key("1").PxatMillisecondsTimestamp(1).Build()
 	s.Getex().Key("1").Persist().Build()
+	s.Getex().Key("1").Ex(time.Second).Build()
+	s.Getex().Key("1").Px(time.Second).Build()
+	s.Getex().Key("1").Exat(time.Now()).Build()
+	s.Getex().Key("1").Pxat(time.Now()).Build()
 	s.Getex().Key("1").Build()
 	s.Getrange().Key("1").Start(1).End(1).Build()
 	s.Getrange().Key("1").Start(1).End(1).Cache()
@@ -44,12 +51,20 @@ func string0(s Builder) {
 	s.Set().Key("1").Value("1").Nx().Get().ExatTimestamp(1).Build()
 	s.Set().Key("1").Value("1").Nx().Get().PxatMillisecondsTimestamp(1).Build()
 	s.Set().Key("1").Value("1").Nx().Get().Keepttl().Build()
+	s.Set().Key("1").Value("1").Nx().Get().Ex(time.Second).Build()
+	s.Set().Key("1").Value("1").Nx().Get().Px(time.Second).Build()
+	s.Set().Key("1").Value("1").Nx().Get().Exat(time.Now()).Build()
+	s.Set().Key("1").Value("1").Nx().Get().Pxat(time.Now()).Build()
 	s.Set().Key("1").Value("1").Nx().Get().Build()
 	s.Set().Key("1").Value("1").Nx().ExSeconds(1).Build()
 	s.Set().Key("1").Value("1").Nx().PxMilliseconds(1).Build()
 	s.Set().Key("1").Value("1").Nx().ExatTimestamp(1).Build()
 	s.Set().Key("1").Value("1").Nx().PxatMillisecondsTimestamp(1).Build()
 	s.Set().Key("1").Value("1").Nx().Keepttl().Build()
+	s.Set().Key("1").Value("1").Nx().Ex(time.Second).Build()
+	s.Set().Key("1").Value("1").Nx().Px(time.Second).Build()
+	s.Set().Key("1").Value("1").Nx().Exat(time.Now()).Build()
+	s.Set().Key("1").Value("1").Nx().Pxat(time.Now()).Build()
 	s.Set().Key("1").Value("1").Nx().Build()
 	s.Set().Key("1").Value("1").Xx().Get().Build()
 	s.Set().Key("1").Value("1").Xx().ExSeconds(1).Build()
@@ -57,6 +72,10 @@ func string0(s Builder) {
 	s.Set().Key("1").Value("1").Xx().ExatTimestamp(1).Build()
 	s.Set().Key("1").Value("1").Xx().PxatMillisecondsTimestamp(1).Build()
 	s.Set().Key("1").Value("1").Xx().Keepttl().Build()
+	s.Set().Key("1").Value("1").Xx().Ex(time.Second).Build()
+	s.Set().Key("1").Value("1").Xx().Px(time.Second).Build()
+	s.Set().Key("1").Value("1").Xx().Exat(time.Now()).Build()
+	s.Set().Key("1").Value("1").Xx().Pxat(time.Now()).Build()
 	s.Set().Key("1").Value("1").Xx().Build()
 	s.Set().Key("1").Value("1").Get().Build()
 	s.Set().Key("1").Value("1").ExSeconds(1).Build()
@@ -64,6 +83,10 @@ func string0(s Builder) {
 	s.Set().Key("1").Value("1").ExatTimestamp(1).Build()
 	s.Set().Key("1").Value("1").PxatMillisecondsTimestamp(1).Build()
 	s.Set().Key("1").Value("1").Keepttl().Build()
+	s.Set().Key("1").Value("1").Ex(time.Second).Build()
+	s.Set().Key("1").Value("1").Px(time.Second).Build()
+	s.Set().Key("1").Value("1").Exat(time.Now()).Build()
+	s.Set().Key("1").Value("1").Pxat(time.Now()).Build()
 	s.Set().Key("1").Value("1").Build()
 	s.Setex().Key("1").Seconds(1).Value("1").Build()
 	s.Setnx().Key("1").Value("1").Build()

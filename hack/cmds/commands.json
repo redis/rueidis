@@ -2715,7 +2715,11 @@
           "PX milliseconds",
           "EXAT timestamp",
           "PXAT milliseconds-timestamp",
-          "PERSIST"
+          "PERSIST",
+          "EX sec-typed",
+          "PX ms-typed",
+          "EXAT timestamp-typed",
+          "PXAT ms-timestamp-typed"
         ],
         "optional": true
       }
@@ -4575,7 +4579,11 @@
           "PX milliseconds",
           "EXAT timestamp",
           "PXAT milliseconds-timestamp",
-          "KEEPTTL"
+          "KEEPTTL",
+          "EX sec-typed",
+          "PX ms-typed",
+          "EXAT timestamp-typed",
+          "PXAT ms-timestamp-typed"
         ],
         "optional": true
       }

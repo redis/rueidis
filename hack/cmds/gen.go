@@ -149,6 +149,20 @@ func (n *node) GoStructs() (out []goStruct) {
 				case "seconds", "milliseconds", "timestamp", "milliseconds-timestamp":
 					s.BuildDef.Command = append(s.BuildDef.Command, cmds[:1]...)
 					s.BuildDef.Parameters = []parameter{{Name: lcFirst(name(cmds[1])), Type: "integer"}}
+					// FIXME: this should be handle differently later
+				case "sec-typed", "ms-typed":
+					// Using time.Duration for EX/PX
+					s.BuildDef.Command = append(s.BuildDef.Command, cmds[:1]...)
+					s.BuildDef.MethodName = strings.TrimSuffix(s.BuildDef.MethodName, "SecTyped")
+					s.BuildDef.MethodName = strings.TrimSuffix(s.BuildDef.MethodName, "MsTyped")
+					s.BuildDef.Parameters = []parameter{{Name: "duration", Type: "time.Duration"}}
+					// FIXME: this should be handle differently later
+				case "timestamp-typed", "ms-timestamp-typed":
+					// Using time.Time for EXAT/PXAT
+					s.BuildDef.Command = append(s.BuildDef.Command, cmds[:1]...)
+					s.BuildDef.MethodName = strings.TrimSuffix(s.BuildDef.MethodName, "MsTimestampTyped")
+					s.BuildDef.MethodName = strings.TrimSuffix(s.BuildDef.MethodName, "TimestampTyped")
+					s.BuildDef.Parameters = []parameter{{Name: "timestamp", Type: "time.Time"}}
 				case "*":
 					// fix for FT.AGGREGATE
 					if cmds[0] == "LOAD" {
@@ -512,6 +526,10 @@ func testParams(defs []parameter) string {
 			params = append(params, `"1"`)
 		case "int64", "uint64", "float64":
 			params = append(params, `1`)
+		case "time.Duration":
+			params = append(params, `time.Second`)
+		case "time.Time":
+			params = append(params, `time.Now()`)
 		}
 	}
 	return strings.Join(params, ", ")
@@ -618,6 +636,10 @@ func toGoType(paramType string) string {
 		return "int64"
 	case "unsigned integer":
 		return "uint64"
+	case "time.Duration":
+		return "time.Duration"
+	case "time.Time":
+		return "time.Time"
 	default:
 		panic("unknown param type " + paramType)
 	}
@@ -817,6 +839,20 @@ func printBuilder(w io.Writer, parent, next goStruct) {
 						follows = append(follows, toGoName(p.Name)+"...")
 					case "...string": // TODO hack for FT.CREATE VECTOR
 						follows = append(follows, toGoName(p.Name)+"...")
+					case "time.Duration":
+						switch {
+						case next.BuildDef.MethodName == "Ex":
+							appends = append(appends, fmt.Sprintf("strconv.FormatInt(int64(%s/time.Second), 10)", toGoName(p.Name))) // For seconds
+						case next.BuildDef.MethodName == "Px":
+							appends = append(appends, fmt.Sprintf("strconv.FormatInt(int64(%s/time.Millisecond), 10)", toGoName(p.Name)))
+						}
+					case "time.Time":
+						switch {
+						case next.BuildDef.MethodName == "Exat":
+							appends = append(appends, fmt.Sprintf("strconv.FormatInt(%s.Unix(), 10)", toGoName(p.Name))) // For seconds
+						case next.BuildDef.MethodName == "Pxat":
+							appends = append(appends, fmt.Sprintf("strconv.FormatInt(%s.UnixMilli(), 10)", toGoName(p.Name))) // For milliseconds
+						}
 					default:
 						panic("unexpected param type " + next.BuildDef.Parameters[0].Type)
 					}
