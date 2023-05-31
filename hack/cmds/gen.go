@@ -149,13 +149,13 @@ func (n *node) GoStructs() (out []goStruct) {
 				case "seconds", "milliseconds", "timestamp", "milliseconds-timestamp":
 					s.BuildDef.Command = append(s.BuildDef.Command, cmds[:1]...)
 					s.BuildDef.Parameters = []parameter{{Name: lcFirst(name(cmds[1])), Type: "integer"}}
-					// TODO: naming?
-				case "seconds-with-type", "milliseconds-with-type":
+					// FIXME: this should be handle differently later
+				case "sec-typed", "ms-typed":
 					// Using time.Duration for EX/PX
 					s.BuildDef.Command = append(s.BuildDef.Command, cmds[:1]...)
 					s.BuildDef.Parameters = []parameter{{Name: lcFirst(name(cmds[1])), Type: "time.Duration"}}
-					// TODO: naming?
-				case "timestamp-with-type", "milliseconds-timestamp-with-type":
+					// FIXME: this should be handle differently later
+				case "timestamp-typed", "ms-timestamp-typed":
 					// Using time.Time for EXAT/PXAT
 					s.BuildDef.Command = append(s.BuildDef.Command, cmds[:1]...)
 					s.BuildDef.Parameters = []parameter{{Name: lcFirst(name(cmds[1])), Type: "time.Time"}}
