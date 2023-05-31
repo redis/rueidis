@@ -259,23 +259,23 @@ func (c GetexKey) Persist() GetexExpirationPersist {
 	return (GetexExpirationPersist)(c)
 }
 
-func (c GetexKey) ExSecTyped(secTyped time.Duration) GetexExpirationExSecTyped {
-	c.cs.s = append(c.cs.s, "EX", strconv.FormatInt(int64(secTyped/time.Millisecond), 10))
+func (c GetexKey) Ex(duration time.Duration) GetexExpirationExSecTyped {
+	c.cs.s = append(c.cs.s, "EX", strconv.FormatInt(int64(duration/time.Second), 10))
 	return (GetexExpirationExSecTyped)(c)
 }
 
-func (c GetexKey) PxMsTyped(msTyped time.Duration) GetexExpirationPxMsTyped {
-	c.cs.s = append(c.cs.s, "PX", strconv.FormatInt(int64(msTyped/time.Millisecond), 10))
+func (c GetexKey) Px(duration time.Duration) GetexExpirationPxMsTyped {
+	c.cs.s = append(c.cs.s, "PX", strconv.FormatInt(int64(duration/time.Millisecond), 10))
 	return (GetexExpirationPxMsTyped)(c)
 }
 
-func (c GetexKey) ExatTimestampTyped(timestampTyped time.Time) GetexExpirationExatTimestampTyped {
-	c.cs.s = append(c.cs.s, "EXAT", timestampTyped.Format(time.RFC3339))
+func (c GetexKey) Exat(timestamp time.Time) GetexExpirationExatTimestampTyped {
+	c.cs.s = append(c.cs.s, "EXAT", strconv.FormatInt(timestamp.Unix(), 10))
 	return (GetexExpirationExatTimestampTyped)(c)
 }
 
-func (c GetexKey) PxatMsTimestampTyped(msTimestampTyped time.Time) GetexExpirationPxatMsTimestampTyped {
-	c.cs.s = append(c.cs.s, "PXAT", msTimestampTyped.Format(time.RFC3339))
+func (c GetexKey) Pxat(timestamp time.Time) GetexExpirationPxatMsTimestampTyped {
+	c.cs.s = append(c.cs.s, "PXAT", strconv.FormatInt(timestamp.UnixNano()/1e6, 10))
 	return (GetexExpirationPxatMsTimestampTyped)(c)
 }
 
@@ -761,23 +761,23 @@ func (c SetConditionNx) Keepttl() SetExpirationKeepttl {
 	return (SetExpirationKeepttl)(c)
 }
 
-func (c SetConditionNx) ExSecTyped(secTyped time.Duration) SetExpirationExSecTyped {
-	c.cs.s = append(c.cs.s, "EX", strconv.FormatInt(int64(secTyped/time.Millisecond), 10))
+func (c SetConditionNx) Ex(duration time.Duration) SetExpirationExSecTyped {
+	c.cs.s = append(c.cs.s, "EX", strconv.FormatInt(int64(duration/time.Second), 10))
 	return (SetExpirationExSecTyped)(c)
 }
 
-func (c SetConditionNx) PxMsTyped(msTyped time.Duration) SetExpirationPxMsTyped {
-	c.cs.s = append(c.cs.s, "PX", strconv.FormatInt(int64(msTyped/time.Millisecond), 10))
+func (c SetConditionNx) Px(duration time.Duration) SetExpirationPxMsTyped {
+	c.cs.s = append(c.cs.s, "PX", strconv.FormatInt(int64(duration/time.Millisecond), 10))
 	return (SetExpirationPxMsTyped)(c)
 }
 
-func (c SetConditionNx) ExatTimestampTyped(timestampTyped time.Time) SetExpirationExatTimestampTyped {
-	c.cs.s = append(c.cs.s, "EXAT", timestampTyped.Format(time.RFC3339))
+func (c SetConditionNx) Exat(timestamp time.Time) SetExpirationExatTimestampTyped {
+	c.cs.s = append(c.cs.s, "EXAT", strconv.FormatInt(timestamp.Unix(), 10))
 	return (SetExpirationExatTimestampTyped)(c)
 }
 
-func (c SetConditionNx) PxatMsTimestampTyped(msTimestampTyped time.Time) SetExpirationPxatMsTimestampTyped {
-	c.cs.s = append(c.cs.s, "PXAT", msTimestampTyped.Format(time.RFC3339))
+func (c SetConditionNx) Pxat(timestamp time.Time) SetExpirationPxatMsTimestampTyped {
+	c.cs.s = append(c.cs.s, "PXAT", strconv.FormatInt(timestamp.UnixNano()/1e6, 10))
 	return (SetExpirationPxatMsTimestampTyped)(c)
 }
 
@@ -818,23 +818,23 @@ func (c SetConditionXx) Keepttl() SetExpirationKeepttl {
 	return (SetExpirationKeepttl)(c)
 }
 
-func (c SetConditionXx) ExSecTyped(secTyped time.Duration) SetExpirationExSecTyped {
-	c.cs.s = append(c.cs.s, "EX", strconv.FormatInt(int64(secTyped/time.Millisecond), 10))
+func (c SetConditionXx) Ex(duration time.Duration) SetExpirationExSecTyped {
+	c.cs.s = append(c.cs.s, "EX", strconv.FormatInt(int64(duration/time.Second), 10))
 	return (SetExpirationExSecTyped)(c)
 }
 
-func (c SetConditionXx) PxMsTyped(msTyped time.Duration) SetExpirationPxMsTyped {
-	c.cs.s = append(c.cs.s, "PX", strconv.FormatInt(int64(msTyped/time.Millisecond), 10))
+func (c SetConditionXx) Px(duration time.Duration) SetExpirationPxMsTyped {
+	c.cs.s = append(c.cs.s, "PX", strconv.FormatInt(int64(duration/time.Millisecond), 10))
 	return (SetExpirationPxMsTyped)(c)
 }
 
-func (c SetConditionXx) ExatTimestampTyped(timestampTyped time.Time) SetExpirationExatTimestampTyped {
-	c.cs.s = append(c.cs.s, "EXAT", timestampTyped.Format(time.RFC3339))
+func (c SetConditionXx) Exat(timestamp time.Time) SetExpirationExatTimestampTyped {
+	c.cs.s = append(c.cs.s, "EXAT", strconv.FormatInt(timestamp.Unix(), 10))
 	return (SetExpirationExatTimestampTyped)(c)
 }
 
-func (c SetConditionXx) PxatMsTimestampTyped(msTimestampTyped time.Time) SetExpirationPxatMsTimestampTyped {
-	c.cs.s = append(c.cs.s, "PXAT", msTimestampTyped.Format(time.RFC3339))
+func (c SetConditionXx) Pxat(timestamp time.Time) SetExpirationPxatMsTimestampTyped {
+	c.cs.s = append(c.cs.s, "PXAT", strconv.FormatInt(timestamp.UnixNano()/1e6, 10))
 	return (SetExpirationPxatMsTimestampTyped)(c)
 }
 
@@ -933,23 +933,23 @@ func (c SetGet) Keepttl() SetExpirationKeepttl {
 	return (SetExpirationKeepttl)(c)
 }
 
-func (c SetGet) ExSecTyped(secTyped time.Duration) SetExpirationExSecTyped {
-	c.cs.s = append(c.cs.s, "EX", strconv.FormatInt(int64(secTyped/time.Millisecond), 10))
+func (c SetGet) Ex(duration time.Duration) SetExpirationExSecTyped {
+	c.cs.s = append(c.cs.s, "EX", strconv.FormatInt(int64(duration/time.Second), 10))
 	return (SetExpirationExSecTyped)(c)
 }
 
-func (c SetGet) PxMsTyped(msTyped time.Duration) SetExpirationPxMsTyped {
-	c.cs.s = append(c.cs.s, "PX", strconv.FormatInt(int64(msTyped/time.Millisecond), 10))
+func (c SetGet) Px(duration time.Duration) SetExpirationPxMsTyped {
+	c.cs.s = append(c.cs.s, "PX", strconv.FormatInt(int64(duration/time.Millisecond), 10))
 	return (SetExpirationPxMsTyped)(c)
 }
 
-func (c SetGet) ExatTimestampTyped(timestampTyped time.Time) SetExpirationExatTimestampTyped {
-	c.cs.s = append(c.cs.s, "EXAT", timestampTyped.Format(time.RFC3339))
+func (c SetGet) Exat(timestamp time.Time) SetExpirationExatTimestampTyped {
+	c.cs.s = append(c.cs.s, "EXAT", strconv.FormatInt(timestamp.Unix(), 10))
 	return (SetExpirationExatTimestampTyped)(c)
 }
 
-func (c SetGet) PxatMsTimestampTyped(msTimestampTyped time.Time) SetExpirationPxatMsTimestampTyped {
-	c.cs.s = append(c.cs.s, "PXAT", msTimestampTyped.Format(time.RFC3339))
+func (c SetGet) Pxat(timestamp time.Time) SetExpirationPxatMsTimestampTyped {
+	c.cs.s = append(c.cs.s, "PXAT", strconv.FormatInt(timestamp.UnixNano()/1e6, 10))
 	return (SetExpirationPxatMsTimestampTyped)(c)
 }
 
@@ -1007,23 +1007,23 @@ func (c SetValue) Keepttl() SetExpirationKeepttl {
 	return (SetExpirationKeepttl)(c)
 }
 
-func (c SetValue) ExSecTyped(secTyped time.Duration) SetExpirationExSecTyped {
-	c.cs.s = append(c.cs.s, "EX", strconv.FormatInt(int64(secTyped/time.Millisecond), 10))
+func (c SetValue) Ex(duration time.Duration) SetExpirationExSecTyped {
+	c.cs.s = append(c.cs.s, "EX", strconv.FormatInt(int64(duration/time.Second), 10))
 	return (SetExpirationExSecTyped)(c)
 }
 
-func (c SetValue) PxMsTyped(msTyped time.Duration) SetExpirationPxMsTyped {
-	c.cs.s = append(c.cs.s, "PX", strconv.FormatInt(int64(msTyped/time.Millisecond), 10))
+func (c SetValue) Px(duration time.Duration) SetExpirationPxMsTyped {
+	c.cs.s = append(c.cs.s, "PX", strconv.FormatInt(int64(duration/time.Millisecond), 10))
 	return (SetExpirationPxMsTyped)(c)
 }
 
-func (c SetValue) ExatTimestampTyped(timestampTyped time.Time) SetExpirationExatTimestampTyped {
-	c.cs.s = append(c.cs.s, "EXAT", timestampTyped.Format(time.RFC3339))
+func (c SetValue) Exat(timestamp time.Time) SetExpirationExatTimestampTyped {
+	c.cs.s = append(c.cs.s, "EXAT", strconv.FormatInt(timestamp.Unix(), 10))
 	return (SetExpirationExatTimestampTyped)(c)
 }
 
-func (c SetValue) PxatMsTimestampTyped(msTimestampTyped time.Time) SetExpirationPxatMsTimestampTyped {
-	c.cs.s = append(c.cs.s, "PXAT", msTimestampTyped.Format(time.RFC3339))
+func (c SetValue) Pxat(timestamp time.Time) SetExpirationPxatMsTimestampTyped {
+	c.cs.s = append(c.cs.s, "PXAT", strconv.FormatInt(timestamp.UnixNano()/1e6, 10))
 	return (SetExpirationPxatMsTimestampTyped)(c)
 }
 
