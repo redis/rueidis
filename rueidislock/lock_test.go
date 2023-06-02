@@ -406,3 +406,48 @@ func TestLocker_Close(t *testing.T) {
 		})
 	}
 }
+
+func TestLocker_RetryErrLockerClosed(t *testing.T) {
+	test := func(t *testing.T, noLoop, setpx, nocsc bool) {
+		locker := newLocker(t, noLoop, setpx, nocsc)
+
+		lck := strconv.Itoa(rand.Int())
+		ctx, cancel, err := locker.WithContext(context.Background(), lck)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		wg := sync.WaitGroup{}
+		wg.Add(1)
+		go func() {
+			_, cancel, err := locker.WithContext(context.Background(), lck)
+			if err != nil {
+				t.Error(err)
+			}
+			wg.Done()
+			cancel()
+		}()
+		go func() {
+			for {
+				time.Sleep(time.Second)
+				locker.onInvalidations(nil) // create ErrLockerClosed
+				cancel()
+			}
+		}()
+		wg.Wait()
+		if err := ctx.Err(); !errors.Is(err, context.Canceled) {
+			t.Fatal(err)
+		}
+	}
+	for _, nocsc := range []bool{false, true} {
+		t.Run("Tracking Loop", func(t *testing.T) {
+			test(t, false, false, nocsc)
+		})
+		t.Run("Tracking NoLoop", func(t *testing.T) {
+			test(t, true, false, nocsc)
+		})
+		t.Run("SET PX", func(t *testing.T) {
+			test(t, true, true, nocsc)
+		})
+	}
+}
