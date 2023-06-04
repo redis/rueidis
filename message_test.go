@@ -3,6 +3,7 @@ package rueidis
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"reflect"
 	"strings"
@@ -57,6 +58,9 @@ func TestIsRedisErr(t *testing.T) {
 
 //gocyclo:ignore
 func TestRedisResult(t *testing.T) {
+	//Add erroneous type
+	typeNames['t'] = "t"
+
 	t.Run("ToInt64", func(t *testing.T) {
 		if _, err := (RedisResult{err: errors.New("other")}).ToInt64(); err == nil {
 			t.Fatal("ToInt64 not failed as expected")
@@ -683,6 +687,9 @@ func TestRedisResult(t *testing.T) {
 
 //gocyclo:ignore
 func TestRedisMessage(t *testing.T) {
+	//Add erroneous type
+	typeNames['t'] = "t"
+
 	t.Run("IsNil", func(t *testing.T) {
 		if !(&RedisMessage{typ: '_'}).IsNil() {
 			t.Fatal("IsNil fail")
@@ -752,7 +759,7 @@ func TestRedisMessage(t *testing.T) {
 		}
 
 		defer func() {
-			if !strings.Contains(recover().(string), "redis message type : is not a string") {
+			if !strings.Contains(recover().(string), fmt.Sprintf("redis message type %s is not a string", typeNames[':'])) {
 				t.Fatal("ToString not panic as expected")
 			}
 		}()
@@ -765,7 +772,7 @@ func TestRedisMessage(t *testing.T) {
 		}
 
 		defer func() {
-			if !strings.Contains(recover().(string), "redis message type : is not a string") {
+			if !strings.Contains(recover().(string), fmt.Sprintf("redis message type %s is not a string", typeNames[':'])) {
 				t.Fatal("AsReader not panic as expected")
 			}
 		}()
@@ -778,7 +785,7 @@ func TestRedisMessage(t *testing.T) {
 		}
 
 		defer func() {
-			if !strings.Contains(recover().(string), "redis message type : is not a string") {
+			if !strings.Contains(recover().(string), fmt.Sprintf("redis message type %s is not a string", typeNames[':'])) {
 				t.Fatal("AsBytes not panic as expected")
 			}
 		}()
@@ -791,7 +798,7 @@ func TestRedisMessage(t *testing.T) {
 		}
 
 		defer func() {
-			if !strings.Contains(recover().(string), "redis message type : is not a string") {
+			if !strings.Contains(recover().(string), fmt.Sprintf("redis message type %s is not a string", typeNames[':'])) {
 				t.Fatal("DecodeJSON not panic as expected")
 			}
 		}()
@@ -803,7 +810,7 @@ func TestRedisMessage(t *testing.T) {
 			t.Fatal("AsInt64 not failed as expected")
 		}
 		defer func() {
-			if !strings.Contains(recover().(string), "redis message type * is not a string") {
+			if !strings.Contains(recover().(string), fmt.Sprintf("redis message type %s is not a string", typeNames['*'])) {
 				t.Fatal("AsInt64 not panic as expected")
 			}
 		}()
@@ -815,7 +822,7 @@ func TestRedisMessage(t *testing.T) {
 			t.Fatal("AsUint64 not failed as expected")
 		}
 		defer func() {
-			if !strings.Contains(recover().(string), "redis message type * is not a string") {
+			if !strings.Contains(recover().(string), fmt.Sprintf("redis message type %s is not a string", typeNames['*'])) {
 				t.Fatal("AsUint64 not panic as expected")
 			}
 		}()
@@ -827,7 +834,7 @@ func TestRedisMessage(t *testing.T) {
 			t.Fatal("AsFloat64 not failed as expected")
 		}
 		defer func() {
-			if !strings.Contains(recover().(string), "redis message type : is not a string") {
+			if !strings.Contains(recover().(string), fmt.Sprintf("redis message type %s is not a string", typeNames[':'])) {
 				t.Fatal("AsFloat64 not panic as expected")
 			}
 		}()
@@ -965,7 +972,7 @@ func TestRedisMessage(t *testing.T) {
 		}
 
 		defer func() {
-			if !strings.Contains(recover().(string), "redis message type : is not a string") {
+			if !strings.Contains(recover().(string), fmt.Sprintf("redis message type %s is not a string", typeNames[':'])) {
 				t.Fatal("AsXRangeEntry not panic as expected")
 			}
 		}()
@@ -1080,7 +1087,7 @@ func TestRedisMessage(t *testing.T) {
 			t.Fatal("AsLMPop not fails as expected")
 		}
 		defer func() {
-			if !strings.Contains(recover().(string), "redis message type * is not a LMPOP response") {
+			if !strings.Contains(recover().(string), fmt.Sprintf("redis message type %s is not a LMPOP response", typeNames['*'])) {
 				t.Fatal("AsLMPop not panic as expected")
 			}
 		}()
@@ -1100,7 +1107,7 @@ func TestRedisMessage(t *testing.T) {
 			t.Fatal("AsZMPop not fails as expected")
 		}
 		defer func() {
-			if !strings.Contains(recover().(string), "redis message type * is not a ZMPOP response") {
+			if !strings.Contains(recover().(string), fmt.Sprintf("redis message type %s is not a ZMPOP response", typeNames['*'])) {
 				t.Fatal("AsZMPop not panic as expected")
 			}
 		}()
@@ -1114,7 +1121,7 @@ func TestRedisMessage(t *testing.T) {
 			t.Fatal("AsFtSearch not failed as expected")
 		}
 		defer func() {
-			if !strings.Contains(recover().(string), "redis message type * is not a FT.SEARCH response") {
+			if !strings.Contains(recover().(string), fmt.Sprintf("redis message type %s is not a FT.SEARCH response", typeNames['*'])) {
 				t.Fatal("AsFtSearch not panic as expected")
 			}
 		}()
@@ -1139,7 +1146,7 @@ func TestRedisMessage(t *testing.T) {
 		}
 
 		defer func() {
-			if !strings.Contains(recover().(string), "redis message type * is not a scan response or its length is not at least 2") {
+			if !strings.Contains(recover().(string), fmt.Sprintf("redis message type %s is not a scan response or its length is not at least 2", typeNames['*'])) {
 				t.Fatal("AsScanEntry not panic as expected")
 			}
 		}()
@@ -1148,7 +1155,7 @@ func TestRedisMessage(t *testing.T) {
 
 	t.Run("ToMap with non string key", func(t *testing.T) {
 		defer func() {
-			if !strings.Contains(recover().(string), "redis message type : as map key is not supported") {
+			if !strings.Contains(recover().(string), fmt.Sprintf("redis message type %s as map key is not supported", typeNames[':'])) {
 				t.Fatal("ToMap not panic as expected")
 			}
 		}()
