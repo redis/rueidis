@@ -30,7 +30,7 @@ const (
 	typePush           = byte('>')
 )
 
-var typeNames = [256]string{}
+var typeNames = make(map[byte]string, 16)
 
 type reader func(i *bufio.Reader) (RedisMessage, error)
 
