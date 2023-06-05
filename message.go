@@ -342,6 +342,15 @@ func (r RedisResult) AsFtSearch() (total int64, docs []FtSearchDoc, err error) {
 	return
 }
 
+func (r RedisResult) AsGeosearch() (locations []GeoLocation, err error) {
+	if r.err != nil {
+		err = r.err
+	} else {
+		locations, err = r.val.AsGeosearch()
+	}
+	return
+}
+
 // AsMap delegates to RedisMessage.AsMap
 func (r RedisResult) AsMap() (v map[string]RedisMessage, err error) {
 	if r.err != nil {
@@ -949,6 +958,72 @@ func (m *RedisMessage) AsFtSearch() (total int64, docs []FtSearchDoc, err error)
 	}
 	typ := m.typ
 	panic(fmt.Sprintf("redis message type %c is not a FT.SEARCH response", typ))
+}
+
+type GeoLocation struct {
+	Name                      string
+	Longitude, Latitude, Dist float64
+	GeoHash                   int64
+}
+
+func (m *RedisMessage) AsGeosearch() ([]GeoLocation, error) {
+	arr, err := m.ToArray()
+	if err != nil {
+		return nil, err
+	}
+	geoLocations := make([]GeoLocation, 0, len(arr))
+	for _, v := range arr {
+		info, err := v.ToArray()
+		if err != nil {
+			return nil, err
+		}
+		var loc GeoLocation
+
+		loc.Name, err = info[0].ToString()
+		if err != nil {
+			return nil, err
+		}
+		if len(info) == 1 {
+			geoLocations = append(geoLocations, loc)
+			continue
+		}
+		for i := 1; i < len(info); i++ {
+			value := info[i]
+			if value.string != "" {
+				loc.Dist, err = value.AsFloat64()
+				if err != nil {
+					return nil, err
+				}
+				continue
+			}
+			if value.integer != 0 {
+				loc.GeoHash, err = value.AsInt64()
+				if err != nil {
+					return nil, err
+				}
+				continue
+			}
+			if value.values != nil {
+				cord, err := value.ToArray()
+				if err != nil {
+					return nil, err
+				}
+				if len(cord) != 2 {
+					return nil, fmt.Errorf("got %d, expected 2", len(info))
+				}
+				loc.Longitude, err = cord[0].AsFloat64()
+				if err != nil {
+					return nil, err
+				}
+				loc.Latitude, err = cord[1].AsFloat64()
+				if err != nil {
+					return nil, err
+				}
+			}
+			geoLocations = append(geoLocations, loc)
+		}
+	}
+	return geoLocations, nil
 }
 
 // ToMap check if message is a redis RESP3 map response, and return it
