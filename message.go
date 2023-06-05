@@ -977,51 +977,50 @@ func (m *RedisMessage) AsGeosearch() ([]GeoLocation, error) {
 		if err != nil {
 			return nil, err
 		}
+		var i int
 		var loc GeoLocation
 
-		loc.Name, err = info[0].ToString()
+		//name
+		loc.Name, err = info[i].ToString()
 		if err != nil {
 			return nil, err
 		}
-		if len(info) == 1 {
-			geoLocations = append(geoLocations, loc)
-			continue
+		i++
+		//distance
+		if i < len(info) && info[i].string != "" {
+			loc.Dist, err = info[i].AsFloat64()
+			if err != nil {
+				return nil, err
+			}
+			i++
 		}
-		for i := 1; i < len(info); i++ {
-			value := info[i]
-			if value.string != "" {
-				loc.Dist, err = value.AsFloat64()
-				if err != nil {
-					return nil, err
-				}
-				continue
+		//hash
+		if i < len(info) && info[i].integer != 0 {
+			loc.GeoHash, err = info[i].AsInt64()
+			if err != nil {
+				return nil, err
 			}
-			if value.integer != 0 {
-				loc.GeoHash, err = value.AsInt64()
-				if err != nil {
-					return nil, err
-				}
-				continue
-			}
-			if value.values != nil {
-				cord, err := value.ToArray()
-				if err != nil {
-					return nil, err
-				}
-				if len(cord) != 2 {
-					return nil, fmt.Errorf("got %d, expected 2", len(info))
-				}
-				loc.Longitude, err = cord[0].AsFloat64()
-				if err != nil {
-					return nil, err
-				}
-				loc.Latitude, err = cord[1].AsFloat64()
-				if err != nil {
-					return nil, err
-				}
-			}
-			geoLocations = append(geoLocations, loc)
+			i++
 		}
+		//coords
+		if i < len(info) && info[i].values != nil {
+			cord, err := info[i].ToArray()
+			if err != nil {
+				return nil, err
+			}
+			if len(cord) != 2 {
+				return nil, fmt.Errorf("got %d, expected 2", len(info))
+			}
+			loc.Longitude, err = cord[0].AsFloat64()
+			if err != nil {
+				return nil, err
+			}
+			loc.Latitude, err = cord[1].AsFloat64()
+			if err != nil {
+				return nil, err
+			}
+		}
+		geoLocations = append(geoLocations, loc)
 	}
 	return geoLocations, nil
 }
