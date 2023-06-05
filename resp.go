@@ -17,7 +17,7 @@ const (
 	typeSimpleErr      = byte('-')
 	typeInteger        = byte(':')
 	typeNull           = byte('_')
-	typeNull2          = byte('.')
+	typeEnd            = byte('.')
 	typeFloat          = byte(',')
 	typeBool           = byte('#')
 	typeBlobErr        = byte('!')
@@ -52,7 +52,7 @@ func init() {
 	readers[typeSet] = readArray
 	readers[typeAttribute] = readMap
 	readers[typePush] = readArray
-	readers[typeNull2] = readNull
+	readers[typeEnd] = readNull
 
 	typeNames[typeBlobString] = "blob string"
 	typeNames[typeSimpleString] = "simple string"
@@ -69,7 +69,7 @@ func init() {
 	typeNames[typeSet] = "set"
 	typeNames[typeAttribute] = "attribute"
 	typeNames[typePush] = "push"
-	typeNames[typeNull2] = "null"
+	typeNames[typeEnd] = "null"
 }
 
 func readSimpleString(i *bufio.Reader) (m RedisMessage, err error) {
