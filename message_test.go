@@ -642,8 +642,8 @@ func TestRedisResult(t *testing.T) {
 		//WithDist, WithHash, WithCoord
 		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
 			{typ: '*', values: []RedisMessage{
-				{typ: '+', string: "k1"},
-				{typ: ',', string: "2.5"},
+				{typ: '$', string: "k1"},
+				{typ: '$', string: "2.5"},
 				{typ: ':', integer: 1},
 				{typ: '*', values: []RedisMessage{
 					{typ: ',', string: "28.0473"},
@@ -651,8 +651,8 @@ func TestRedisResult(t *testing.T) {
 				}},
 			}},
 			{typ: '*', values: []RedisMessage{
-				{typ: '+', string: "k2"},
-				{typ: ',', string: "4.5"},
+				{typ: '$', string: "k2"},
+				{typ: '$', string: "4.5"},
 				{typ: ':', integer: 4},
 				{typ: '*', values: []RedisMessage{
 					{typ: ',', string: "72.4973"},
@@ -668,7 +668,7 @@ func TestRedisResult(t *testing.T) {
 		//WithHash, WithCoord
 		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
 			{typ: '*', values: []RedisMessage{
-				{typ: '+', string: "k1"},
+				{typ: '$', string: "k1"},
 				{typ: ':', integer: 1},
 				{typ: '*', values: []RedisMessage{
 					{typ: ',', string: "84.3877"},
@@ -676,7 +676,7 @@ func TestRedisResult(t *testing.T) {
 				}},
 			}},
 			{typ: '*', values: []RedisMessage{
-				{typ: '+', string: "k2"},
+				{typ: '$', string: "k2"},
 				{typ: ':', integer: 4},
 				{typ: '*', values: []RedisMessage{
 					{typ: ',', string: "115.8613"},
@@ -692,16 +692,16 @@ func TestRedisResult(t *testing.T) {
 		//WithDist, WithCoord
 		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
 			{typ: '*', values: []RedisMessage{
-				{typ: '+', string: "k1"},
-				{typ: ',', string: "2.50076"},
+				{typ: '$', string: "k1"},
+				{typ: '$', string: "2.50076"},
 				{typ: '*', values: []RedisMessage{
 					{typ: ',', string: "84.3877"},
 					{typ: ',', string: "33.7488"},
 				}},
 			}},
 			{typ: '*', values: []RedisMessage{
-				{typ: '+', string: "k2"},
-				{typ: ',', string: "1024.96"},
+				{typ: '$', string: "k2"},
+				{typ: '$', string: "1024.96"},
 				{typ: '*', values: []RedisMessage{
 					{typ: ',', string: "115.8613"},
 					{typ: ',', string: "31.9523"},
@@ -716,14 +716,14 @@ func TestRedisResult(t *testing.T) {
 		//WithCoord
 		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
 			{typ: '*', values: []RedisMessage{
-				{typ: '+', string: "k1"},
+				{typ: '$', string: "k1"},
 				{typ: '*', values: []RedisMessage{
 					{typ: ',', string: "122.4194"},
 					{typ: ',', string: "37.7749"},
 				}},
 			}},
 			{typ: '*', values: []RedisMessage{
-				{typ: '+', string: "k2"},
+				{typ: '$', string: "k2"},
 				{typ: '*', values: []RedisMessage{
 					{typ: ',', string: "35.6762"},
 					{typ: ',', string: "139.6503"},
@@ -738,11 +738,11 @@ func TestRedisResult(t *testing.T) {
 		//WithDist
 		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
 			{typ: '*', values: []RedisMessage{
-				{typ: '+', string: "k1"},
+				{typ: '$', string: "k1"},
 				{typ: ',', string: "2.50076"},
 			}},
 			{typ: '*', values: []RedisMessage{
-				{typ: '+', string: "k2"},
+				{typ: '$', string: "k2"},
 				{typ: ',', string: strconv.FormatFloat(math.MaxFloat64, 'E', -1, 64)},
 			}},
 		}}}).AsGeosearch(); !reflect.DeepEqual([]GeoLocation{
@@ -754,16 +754,26 @@ func TestRedisResult(t *testing.T) {
 		//WithHash
 		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
 			{typ: '*', values: []RedisMessage{
-				{typ: '+', string: "k1"},
+				{typ: '$', string: "k1"},
 				{typ: ':', integer: math.MaxInt64},
 			}},
 			{typ: '*', values: []RedisMessage{
-				{typ: '+', string: "k2"},
+				{typ: '$', string: "k2"},
 				{typ: ':', integer: 22296},
 			}},
 		}}}).AsGeosearch(); !reflect.DeepEqual([]GeoLocation{
 			{Name: "k1", GeoHash: math.MaxInt64},
 			{Name: "k2", GeoHash: 22296},
+		}, ret) {
+			t.Fatal("AsGeosearch not get value as expected")
+		}
+		//With no additional options
+		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+			{typ: '$', string: "k1"},
+			{typ: '$', string: "k2"},
+		}}}).AsGeosearch(); !reflect.DeepEqual([]GeoLocation{
+			{Name: "k1"},
+			{Name: "k2"},
 		}, ret) {
 			t.Fatal("AsGeosearch not get value as expected")
 		}
