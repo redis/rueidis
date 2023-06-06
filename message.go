@@ -974,57 +974,36 @@ func (m *RedisMessage) AsGeosearch() ([]GeoLocation, error) {
 	geoLocations := make([]GeoLocation, 0, len(arr))
 	for _, v := range arr {
 		var loc GeoLocation
-		if v.typ == '$' {
-			loc.Name, err = v.ToString()
-			if err != nil {
-				return nil, err
-			}
+		if v.IsString() {
+			loc.Name = v.string
 		} else {
-			info, err := v.ToArray()
-			if err != nil {
-				return nil, err
-			}
+			info := v.values
 			var i int
 
 			//name
-			loc.Name, err = info[i].ToString()
-			if err != nil {
-				return nil, err
-			}
+			loc.Name = info[i].string
 			i++
 			//distance
-			if i < len(info) && info[i].string != "" {
-				loc.Dist, err = info[i].AsFloat64()
+			if i < len(info) && info[i].IsString() {
+				loc.Dist, err = util.ToFloat64(info[i].string)
 				if err != nil {
 					return nil, err
 				}
 				i++
 			}
 			//hash
-			if i < len(info) && info[i].integer != 0 {
-				loc.GeoHash, err = info[i].AsInt64()
-				if err != nil {
-					return nil, err
-				}
+			if i < len(info) && info[i].IsInt64() {
+				loc.GeoHash = info[i].integer
 				i++
 			}
 			//coordinates
 			if i < len(info) && info[i].values != nil {
-				cord, err := info[i].ToArray()
-				if err != nil {
-					return nil, err
-				}
-				if len(cord) != 2 {
+				cord := info[i].values
+				if len(cord) < 2 {
 					return nil, fmt.Errorf("got %d, expected 2", len(info))
 				}
-				loc.Longitude, err = cord[0].AsFloat64()
-				if err != nil {
-					return nil, err
-				}
-				loc.Latitude, err = cord[1].AsFloat64()
-				if err != nil {
-					return nil, err
-				}
+				loc.Longitude, _ = cord[0].AsFloat64()
+				loc.Latitude, _ = cord[1].AsFloat64()
 			}
 		}
 		geoLocations = append(geoLocations, loc)
