@@ -643,7 +643,7 @@ func TestRedisResult(t *testing.T) {
 		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
 			{typ: '*', values: []RedisMessage{
 				{typ: '$', string: "k1"},
-				{typ: '$', string: "2.5"},
+				{typ: ',', string: "2.5"},
 				{typ: ':', integer: 1},
 				{typ: '*', values: []RedisMessage{
 					{typ: ',', string: "28.0473"},
@@ -652,7 +652,7 @@ func TestRedisResult(t *testing.T) {
 			}},
 			{typ: '*', values: []RedisMessage{
 				{typ: '$', string: "k2"},
-				{typ: '$', string: "4.5"},
+				{typ: ',', string: "4.5"},
 				{typ: ':', integer: 4},
 				{typ: '*', values: []RedisMessage{
 					{typ: ',', string: "72.4973"},
@@ -693,7 +693,7 @@ func TestRedisResult(t *testing.T) {
 		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
 			{typ: '*', values: []RedisMessage{
 				{typ: '$', string: "k1"},
-				{typ: '$', string: "2.50076"},
+				{typ: ',', string: "2.50076"},
 				{typ: '*', values: []RedisMessage{
 					{typ: ',', string: "84.3877"},
 					{typ: ',', string: "33.7488"},
@@ -701,7 +701,7 @@ func TestRedisResult(t *testing.T) {
 			}},
 			{typ: '*', values: []RedisMessage{
 				{typ: '$', string: "k2"},
-				{typ: '$', string: "1024.96"},
+				{typ: ',', string: "1024.96"},
 				{typ: '*', values: []RedisMessage{
 					{typ: ',', string: "115.8613"},
 					{typ: ',', string: "31.9523"},
