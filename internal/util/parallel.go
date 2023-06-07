@@ -24,7 +24,7 @@ func ParallelVals[K comparable, V any](p map[K]V, fn func(k V)) {
 func closeThenParallel[V any](ch chan V, fn func(k V)) {
 	close(ch)
 	concurrency := len(ch)
-	if cpus := runtime.NumCPU(); concurrency > cpus {
+	if cpus := runtime.GOMAXPROCS(0); concurrency > cpus {
 		concurrency = cpus
 	}
 	wg := sync.WaitGroup{}
