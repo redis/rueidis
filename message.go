@@ -984,7 +984,7 @@ func (m *RedisMessage) AsGeosearch() ([]GeoLocation, error) {
 			loc.Name = info[i].string
 			i++
 			//distance
-			if i < len(info) && info[i].IsFloat64() {
+			if i < len(info) && info[i].string != "" {
 				loc.Dist, err = util.ToFloat64(info[i].string)
 				if err != nil {
 					return nil, err
