@@ -342,6 +342,15 @@ func (r RedisResult) AsFtSearch() (total int64, docs []FtSearchDoc, err error) {
 	return
 }
 
+func (r RedisResult) AsGeosearch() (locations []GeoLocation, err error) {
+	if r.err != nil {
+		err = r.err
+	} else {
+		locations, err = r.val.AsGeosearch()
+	}
+	return
+}
+
 // AsMap delegates to RedisMessage.AsMap
 func (r RedisResult) AsMap() (v map[string]RedisMessage, err error) {
 	if r.err != nil {
@@ -949,6 +958,57 @@ func (m *RedisMessage) AsFtSearch() (total int64, docs []FtSearchDoc, err error)
 	}
 	typ := m.typ
 	panic(fmt.Sprintf("redis message type %s is not a FT.SEARCH response", typeNames[typ]))
+}
+
+type GeoLocation struct {
+	Name                      string
+	Longitude, Latitude, Dist float64
+	GeoHash                   int64
+}
+
+func (m *RedisMessage) AsGeosearch() ([]GeoLocation, error) {
+	arr, err := m.ToArray()
+	if err != nil {
+		return nil, err
+	}
+	geoLocations := make([]GeoLocation, 0, len(arr))
+	for _, v := range arr {
+		var loc GeoLocation
+		if v.IsString() {
+			loc.Name = v.string
+		} else {
+			info := v.values
+			var i int
+
+			//name
+			loc.Name = info[i].string
+			i++
+			//distance
+			if i < len(info) && info[i].string != "" {
+				loc.Dist, err = util.ToFloat64(info[i].string)
+				if err != nil {
+					return nil, err
+				}
+				i++
+			}
+			//hash
+			if i < len(info) && info[i].IsInt64() {
+				loc.GeoHash = info[i].integer
+				i++
+			}
+			//coordinates
+			if i < len(info) && info[i].values != nil {
+				cord := info[i].values
+				if len(cord) < 2 {
+					return nil, fmt.Errorf("got %d, expected 2", len(info))
+				}
+				loc.Longitude, _ = cord[0].AsFloat64()
+				loc.Latitude, _ = cord[1].AsFloat64()
+			}
+		}
+		geoLocations = append(geoLocations, loc)
+	}
+	return geoLocations, nil
 }
 
 // ToMap check if message is a redis RESP3 map response, and return it

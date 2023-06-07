@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -632,6 +634,154 @@ func TestRedisResult(t *testing.T) {
 		}}}).AsFtSearch(); n != 3 || !reflect.DeepEqual([]FtSearchDoc{}, ret) {
 			t.Fatal("AsFtSearch not get value as expected")
 		}
+	})
+
+	t.Run("asGeosearch", func(t *testing.T) {
+		if _, err := (RedisResult{err: errors.New("other")}).AsGeosearch(); err == nil {
+			t.Fatal("asGeosearch not failed as expected")
+		}
+		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsGeosearch(); err == nil {
+			t.Fatal("asGeosearch not failed as expected")
+		}
+		//WithDist, WithHash, WithCoord
+		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+			{typ: '*', values: []RedisMessage{
+				{typ: '$', string: "k1"},
+				{typ: ',', string: "2.5"},
+				{typ: ':', integer: 1},
+				{typ: '*', values: []RedisMessage{
+					{typ: ',', string: "28.0473"},
+					{typ: ',', string: "26.2041"},
+				}},
+			}},
+			{typ: '*', values: []RedisMessage{
+				{typ: '$', string: "k2"},
+				{typ: ',', string: "4.5"},
+				{typ: ':', integer: 4},
+				{typ: '*', values: []RedisMessage{
+					{typ: ',', string: "72.4973"},
+					{typ: ',', string: "13.2263"},
+				}},
+			}},
+		}}}).AsGeosearch(); !reflect.DeepEqual([]GeoLocation{
+			{Name: "k1", Dist: 2.5, GeoHash: 1, Longitude: 28.0473, Latitude: 26.2041},
+			{Name: "k2", Dist: 4.5, GeoHash: 4, Longitude: 72.4973, Latitude: 13.2263},
+		}, ret) {
+			t.Fatal("AsGeosearch not get value as expected")
+		}
+		//WithHash, WithCoord
+		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+			{typ: '*', values: []RedisMessage{
+				{typ: '$', string: "k1"},
+				{typ: ':', integer: 1},
+				{typ: '*', values: []RedisMessage{
+					{typ: ',', string: "84.3877"},
+					{typ: ',', string: "33.7488"},
+				}},
+			}},
+			{typ: '*', values: []RedisMessage{
+				{typ: '$', string: "k2"},
+				{typ: ':', integer: 4},
+				{typ: '*', values: []RedisMessage{
+					{typ: ',', string: "115.8613"},
+					{typ: ',', string: "31.9523"},
+				}},
+			}},
+		}}}).AsGeosearch(); !reflect.DeepEqual([]GeoLocation{
+			{Name: "k1", GeoHash: 1, Longitude: 84.3877, Latitude: 33.7488},
+			{Name: "k2", GeoHash: 4, Longitude: 115.8613, Latitude: 31.9523},
+		}, ret) {
+			t.Fatal("AsGeosearch not get value as expected")
+		}
+		//WithDist, WithCoord
+		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+			{typ: '*', values: []RedisMessage{
+				{typ: '$', string: "k1"},
+				{typ: ',', string: "2.50076"},
+				{typ: '*', values: []RedisMessage{
+					{typ: ',', string: "84.3877"},
+					{typ: ',', string: "33.7488"},
+				}},
+			}},
+			{typ: '*', values: []RedisMessage{
+				{typ: '$', string: "k2"},
+				{typ: ',', string: "1024.96"},
+				{typ: '*', values: []RedisMessage{
+					{typ: ',', string: "115.8613"},
+					{typ: ',', string: "31.9523"},
+				}},
+			}},
+		}}}).AsGeosearch(); !reflect.DeepEqual([]GeoLocation{
+			{Name: "k1", Dist: 2.50076, Longitude: 84.3877, Latitude: 33.7488},
+			{Name: "k2", Dist: 1024.96, Longitude: 115.8613, Latitude: 31.9523},
+		}, ret) {
+			t.Fatal("AsGeosearch not get value as expected")
+		}
+		//WithCoord
+		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+			{typ: '*', values: []RedisMessage{
+				{typ: '$', string: "k1"},
+				{typ: '*', values: []RedisMessage{
+					{typ: ',', string: "122.4194"},
+					{typ: ',', string: "37.7749"},
+				}},
+			}},
+			{typ: '*', values: []RedisMessage{
+				{typ: '$', string: "k2"},
+				{typ: '*', values: []RedisMessage{
+					{typ: ',', string: "35.6762"},
+					{typ: ',', string: "139.6503"},
+				}},
+			}},
+		}}}).AsGeosearch(); !reflect.DeepEqual([]GeoLocation{
+			{Name: "k1", Longitude: 122.4194, Latitude: 37.7749},
+			{Name: "k2", Longitude: 35.6762, Latitude: 139.6503},
+		}, ret) {
+			t.Fatal("AsGeosearch not get value as expected")
+		}
+		//WithDist
+		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+			{typ: '*', values: []RedisMessage{
+				{typ: '$', string: "k1"},
+				{typ: ',', string: "2.50076"},
+			}},
+			{typ: '*', values: []RedisMessage{
+				{typ: '$', string: "k2"},
+				{typ: ',', string: strconv.FormatFloat(math.MaxFloat64, 'E', -1, 64)},
+			}},
+		}}}).AsGeosearch(); !reflect.DeepEqual([]GeoLocation{
+			{Name: "k1", Dist: 2.50076},
+			{Name: "k2", Dist: math.MaxFloat64},
+		}, ret) {
+			t.Fatal("AsGeosearch not get value as expected")
+		}
+		//WithHash
+		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+			{typ: '*', values: []RedisMessage{
+				{typ: '$', string: "k1"},
+				{typ: ':', integer: math.MaxInt64},
+			}},
+			{typ: '*', values: []RedisMessage{
+				{typ: '$', string: "k2"},
+				{typ: ':', integer: 22296},
+			}},
+		}}}).AsGeosearch(); !reflect.DeepEqual([]GeoLocation{
+			{Name: "k1", GeoHash: math.MaxInt64},
+			{Name: "k2", GeoHash: 22296},
+		}, ret) {
+			t.Fatal("AsGeosearch not get value as expected")
+		}
+		//With no additional options
+		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+			{typ: '$', string: "k1"},
+			{typ: '$', string: "k2"},
+		}}}).AsGeosearch(); !reflect.DeepEqual([]GeoLocation{
+			{Name: "k1"},
+			{Name: "k2"},
+		}, ret) {
+			t.Fatal("AsGeosearch not get value as expected")
+		}
+
 	})
 
 	t.Run("IsCacheHit", func(t *testing.T) {
