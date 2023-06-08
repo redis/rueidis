@@ -636,12 +636,12 @@ func TestRedisResult(t *testing.T) {
 		}
 	})
 
-	t.Run("asGeosearch", func(t *testing.T) {
+	t.Run("AsGeosearch", func(t *testing.T) {
 		if _, err := (RedisResult{err: errors.New("other")}).AsGeosearch(); err == nil {
-			t.Fatal("asGeosearch not failed as expected")
+			t.Fatal("AsGeosearch not failed as expected")
 		}
 		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsGeosearch(); err == nil {
-			t.Fatal("asGeosearch not failed as expected")
+			t.Fatal("AsGeosearch not failed as expected")
 		}
 		//WithDist, WithHash, WithCoord
 		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
@@ -781,7 +781,26 @@ func TestRedisResult(t *testing.T) {
 		}, ret) {
 			t.Fatal("AsGeosearch not get value as expected")
 		}
-
+		//With wrong distance
+		if _, err := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+			{typ: '*', values: []RedisMessage{
+				{typ: '$', string: "k1"},
+				{typ: ',', string: "wrong distance"},
+			}},
+		}}}).AsGeosearch(); err == nil {
+			t.Fatal("AsGeosearch not failed as expected")
+		}
+		//With wrong coordinates
+		if _, err := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+			{typ: '*', values: []RedisMessage{
+				{typ: '$', string: "k2"},
+				{typ: '*', values: []RedisMessage{
+					{typ: ',', string: "35.6762"},
+				}},
+			}},
+		}}}).AsGeosearch(); err == nil {
+			t.Fatal("AsGeosearch not failed as expected")
+		}
 	})
 
 	t.Run("IsCacheHit", func(t *testing.T) {
