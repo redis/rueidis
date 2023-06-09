@@ -2143,71 +2143,13 @@ func (cmd *GeoPosCmd) Result() ([]*GeoPos, error) {
 
 type GeoLocationCmd struct {
 	err error
-	val []GeoLocation
+	val []rueidis.GeoLocation
 }
 
-func newGeoLocationCmd(res rueidis.RedisResult, withDist, withGeoHash, withCoord bool) *GeoLocationCmd {
-	arr, err := res.ToArray()
-	if err != nil {
-		return &GeoLocationCmd{err: err}
-	}
-	val := make([]GeoLocation, 0, len(arr))
-	if !withDist && !withGeoHash && !withCoord {
-		for _, v := range arr {
-			name, err := v.ToString()
-			if err != nil {
-				return &GeoLocationCmd{err: err}
-			}
-			val = append(val, GeoLocation{Name: name})
-		}
-		return &GeoLocationCmd{val: val, err: err}
-	}
-	for _, v := range arr {
-		info, err := v.ToArray()
-		if err != nil {
-			return &GeoLocationCmd{err: err}
-		}
-		var loc GeoLocation
-		var i int
-		loc.Name, err = info[i].ToString()
-		i++
-		if err != nil {
-			return &GeoLocationCmd{err: err}
-		}
-		if withDist {
-			loc.Dist, err = info[i].AsFloat64()
-			i++
-			if err != nil {
-				return &GeoLocationCmd{err: err}
-			}
-		}
-		if withGeoHash {
-			loc.GeoHash, err = info[i].AsInt64()
-			i++
-			if err != nil {
-				return &GeoLocationCmd{err: err}
-			}
-		}
-		if withCoord {
-			cord, err := info[i].ToArray()
-			if err != nil {
-				return &GeoLocationCmd{err: err}
-			}
-			if len(cord) != 2 {
-				return &GeoLocationCmd{err: fmt.Errorf("got %d, expected 2", len(info))}
-			}
-			loc.Longitude, err = cord[0].AsFloat64()
-			if err != nil {
-				return &GeoLocationCmd{err: err}
-			}
-			loc.Latitude, err = cord[1].AsFloat64()
-			if err != nil {
-				return &GeoLocationCmd{err: err}
-			}
-		}
-		val = append(val, loc)
-	}
-	return &GeoLocationCmd{val: val, err: err}
+func newGeoLocationCmd(res rueidis.RedisResult) *GeoLocationCmd {
+	ret := &GeoLocationCmd{}
+	ret.val, ret.err = res.AsGeosearch()
+	return ret
 }
 
 func (cmd *GeoLocationCmd) SetVal(val []GeoLocation) {
@@ -2218,7 +2160,7 @@ func (cmd *GeoLocationCmd) SetErr(err error) {
 	cmd.err = err
 }
 
-func (cmd *GeoLocationCmd) Val() []GeoLocation {
+func (cmd *GeoLocationCmd) Val() []rueidis.GeoLocation {
 	return cmd.val
 }
 
@@ -2226,7 +2168,7 @@ func (cmd *GeoLocationCmd) Err() error {
 	return cmd.err
 }
 
-func (cmd *GeoLocationCmd) Result() ([]GeoLocation, error) {
+func (cmd *GeoLocationCmd) Result() ([]rueidis.GeoLocation, error) {
 	return cmd.val, cmd.err
 }
 
@@ -2473,11 +2415,7 @@ type ZRangeBy struct {
 	Offset, Count int64
 }
 
-type GeoLocation struct {
-	Name                      string
-	Longitude, Latitude, Dist float64
-	GeoHash                   int64
-}
+type GeoLocation = rueidis.GeoLocation
 
 // GeoRadiusQuery is used with GeoRadius to query geospatial index.
 type GeoRadiusQuery struct {

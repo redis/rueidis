@@ -2708,7 +2708,7 @@ func (c *Compat) GeoRadius(ctx context.Context, key string, longitude, latitude 
 	}
 	cmd = cmd.Args(query.args()...)
 	resp := c.client.Do(ctx, cmd.Build())
-	return newGeoLocationCmd(resp, query.WithDist, query.WithGeoHash, query.WithCoord)
+	return newGeoLocationCmd(resp)
 }
 
 // GeoRadiusStore is a writing GEORADIUS command.
@@ -2730,7 +2730,7 @@ func (c *Compat) GeoRadiusByMember(ctx context.Context, key, member string, quer
 	}
 	cmd = cmd.Args(query.args()...)
 	resp := c.client.Do(ctx, cmd.Build())
-	return newGeoLocationCmd(resp, query.WithDist, query.WithGeoHash, query.WithCoord)
+	return newGeoLocationCmd(resp)
 }
 
 // GeoRadiusByMemberStore is a writing GEORADIUSBYMEMBER command.
@@ -2755,7 +2755,7 @@ func (c *Compat) GeoSearchLocation(ctx context.Context, key string, q GeoSearchL
 	cmd := c.client.B().Arbitrary("GEOSEARCH").Keys(key)
 	cmd = cmd.Args(q.args()...)
 	resp := c.client.Do(ctx, cmd.Build())
-	return newGeoLocationCmd(resp, q.WithDist, q.WithHash, q.WithCoord)
+	return newGeoLocationCmd(resp)
 }
 
 func (c *Compat) GeoSearchStore(ctx context.Context, src, dest string, q GeoSearchStoreQuery) *IntCmd {
@@ -2933,7 +2933,7 @@ func (c CacheCompat) GeoRadius(ctx context.Context, key string, longitude, latit
 	}
 	cmd = cmd.Args(query.args()...)
 	resp := c.client.DoCache(ctx, rueidis.Cacheable(cmd.Build()), c.ttl)
-	return newGeoLocationCmd(resp, query.WithDist, query.WithGeoHash, query.WithCoord)
+	return newGeoLocationCmd(resp)
 }
 
 // GeoRadiusByMember is a read-only GEORADIUSBYMEMBER_RO command.
@@ -2944,7 +2944,7 @@ func (c CacheCompat) GeoRadiusByMember(ctx context.Context, key, member string, 
 	}
 	cmd = cmd.Args(query.args()...)
 	resp := c.client.DoCache(ctx, rueidis.Cacheable(cmd.Build()), c.ttl)
-	return newGeoLocationCmd(resp, query.WithDist, query.WithGeoHash, query.WithCoord)
+	return newGeoLocationCmd(resp)
 }
 
 func (c CacheCompat) GeoSearch(ctx context.Context, key string, q GeoSearchQuery) *StringSliceCmd {
