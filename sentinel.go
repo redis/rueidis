@@ -5,13 +5,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	"github.com/redis/rueidis/internal/cmds"
 	"math/rand"
+
+	"github.com/redis/rueidis/internal/cmds"
 )
 
 func newSentinelClient(opt *ClientOption, connFn connFn) (client *sentinelClient, err error) {
@@ -327,16 +329,16 @@ func (c *sentinelClient) listWatch(cc conn) (target string, sentinels []string, 
 			switch event.Channel {
 			case "+sentinel":
 				m := strings.SplitN(event.Message, " ", 4)
-				c.addSentinel(fmt.Sprintf("%s:%s", m[2], m[3]))
+				c.addSentinel(net.JoinHostPort(m[2], m[3]))
 			case "+switch-master":
 				m := strings.SplitN(event.Message, " ", 5)
 				if m[0] == c.sOpt.Sentinel.MasterSet {
-					c.switchTargetRetry(fmt.Sprintf("%s:%s", m[3], m[4]))
+					c.switchTargetRetry(net.JoinHostPort(m[3], m[4]))
 				}
 			case "+reboot":
 				m := strings.SplitN(event.Message, " ", 7)
 				if m[0] == "master" && m[1] == c.sOpt.Sentinel.MasterSet {
-					c.switchTargetRetry(fmt.Sprintf("%s:%s", m[2], m[3]))
+					c.switchTargetRetry(net.JoinHostPort(m[2], m[3]))
 				} else if c.replica && m[0] == "slave" && m[5] == c.sOpt.Sentinel.MasterSet {
 					c.refreshRetry()
 				}
@@ -368,7 +370,7 @@ func (c *sentinelClient) listWatch(cc conn) (target string, sentinels []string, 
 	}
 	for _, other := range others {
 		if m, err := other.AsStrMap(); err == nil {
-			sentinels = append(sentinels, fmt.Sprintf("%s:%s", m["ip"], m["port"]))
+			sentinels = append(sentinels, net.JoinHostPort(m["ip"], m["port"]))
 		}
 	}
 
@@ -387,7 +389,7 @@ func (c *sentinelClient) listWatch(cc conn) (target string, sentinels []string, 
 	if err != nil {
 		return "", nil, err
 	}
-	return fmt.Sprintf("%s:%s", m[0], m[1]), sentinels, nil
+	return net.JoinHostPort(m[0], m[1]), sentinels, nil
 }
 
 func pickReplica(resp []RedisResult) (string, error) {
@@ -414,7 +416,7 @@ func pickReplica(resp []RedisResult) (string, error) {
 
 	// choose a replica randomly
 	m := eligible[rand.Intn(len(eligible))]
-	return fmt.Sprintf("%s:%s", m["ip"], m["port"]), nil
+	return net.JoinHostPort(m["ip"], m["port"]), nil
 }
 
 func newSentinelOpt(opt *ClientOption) *ClientOption {
