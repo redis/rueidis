@@ -3,8 +3,9 @@ package rueidis
 import (
 	"context"
 	"errors"
-	"fmt"
+	"net"
 	"runtime"
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -189,13 +190,13 @@ type group struct {
 func parseSlots(slots RedisMessage) map[string]group {
 	groups := make(map[string]group, len(slots.values))
 	for _, v := range slots.values {
-		master := fmt.Sprintf("%s:%d", v.values[2].values[0].string, v.values[2].values[1].integer)
+		master := net.JoinHostPort(v.values[2].values[0].string, strconv.FormatInt(v.values[2].values[1].integer, 10))
 		g, ok := groups[master]
 		if !ok {
 			g.slots = make([][2]int64, 0)
 			g.nodes = make([]string, 0, len(v.values)-2)
 			for i := 2; i < len(v.values); i++ {
-				dst := fmt.Sprintf("%s:%d", v.values[i].values[0].string, v.values[i].values[1].integer)
+				dst := net.JoinHostPort(v.values[i].values[0].string, strconv.FormatInt(v.values[i].values[1].integer, 10))
 				g.nodes = append(g.nodes, dst)
 			}
 		}
