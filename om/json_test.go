@@ -17,6 +17,42 @@ type JSONTestStruct struct {
 	Ver    int64 `redis:",ver"`
 }
 
+func TestNewJsonRepositoryMismatch(t *testing.T) {
+	ctx := context.Background()
+
+	client := setup(t)
+	client.Do(ctx, client.B().Flushall().Build())
+	defer client.Close()
+
+	repo := NewJSONRepository("jsonmismatch", Mismatch{}, client)
+	if err := repo.CreateIndex(ctx, func(schema FtCreateSchema) rueidis.Completed {
+		return schema.FieldName("$.F1").Tag().Build()
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	t.Run("Mismatch", func(t *testing.T) {
+		e := repo.NewEntity()
+		if err := repo.Save(ctx, e); err != nil {
+			t.Fatal(err)
+		}
+		if err := client.Do(ctx, client.B().Del().Key("jsonmismatch:"+e.Key).Build()).Error(); err != nil {
+			t.Fatal(err)
+		}
+		if err := client.Do(ctx, client.B().JsonSet().Key("jsonmismatch:"+e.Key).Path("$").Value(rueidis.JSON("1")).Build()).Error(); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := repo.Fetch(ctx, e.Key); err == nil {
+			t.Fatal("Fetch not failed as expected")
+		}
+		if _, _, err := repo.Search(ctx, func(search FtSearchIndex) rueidis.Completed {
+			return search.Query("*").Build()
+		}); err == nil {
+			t.Fatal("Search not failed as expected")
+		}
+	})
+}
+
 //gocyclo:ignore
 func TestNewJSONRepository(t *testing.T) {
 	ctx := context.Background()

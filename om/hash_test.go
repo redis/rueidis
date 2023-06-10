@@ -24,6 +24,7 @@ type HashTestStruct struct {
 	Val   []byte
 	Ver   int64 `redis:",ver"`
 	F1    bool
+	F5    *bool
 	Vec32 []float32
 	Vec64 []float64
 	JSON  json.RawMessage
@@ -35,12 +36,70 @@ type Unsupported struct {
 	F1  int32
 }
 
+type Mismatch struct {
+	Key string `redis:",key"`
+	Ver int64  `redis:",ver"`
+	F1  int64
+	F2  *int64
+}
+
 func TestNewHashRepositoryPanic(t *testing.T) {
 	if v := recovered(func() {
 		NewHashRepository("hash", Unsupported{}, nil)
 	}); !strings.Contains(v, "should not contain unsupported field type") {
 		t.Fatalf("unexpeceted message %v", v)
 	}
+}
+
+func TestNewHashRepositoryMismatch(t *testing.T) {
+	ctx := context.Background()
+
+	client := setup(t)
+	client.Do(ctx, client.B().Flushall().Build())
+	defer client.Close()
+
+	repo := NewHashRepository("hashmismatch", Mismatch{}, client)
+	if err := repo.CreateIndex(ctx, func(schema FtCreateSchema) rueidis.Completed {
+		return schema.FieldName("F1").Tag().Build()
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	t.Run("Mismatch int64", func(t *testing.T) {
+		e := repo.NewEntity()
+		if err := repo.Save(ctx, e); err != nil {
+			t.Fatal(err)
+		}
+		if err := client.Do(ctx, client.B().Hmset().Key("hashmismatch:"+e.Key).FieldValue().FieldValue("F1", "").Build()).Error(); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := repo.Fetch(ctx, e.Key); err == nil {
+			t.Fatal("Fetch not failed as expected")
+		}
+		if _, _, err := repo.Search(ctx, func(search FtSearchIndex) rueidis.Completed {
+			return search.Query("*").Build()
+		}); err == nil {
+			t.Fatal("Search not failed as expected")
+		}
+	})
+
+	t.Run("Mismatch *int64", func(t *testing.T) {
+		e := repo.NewEntity()
+		if err := repo.Save(ctx, e); err != nil {
+			t.Fatal(err)
+		}
+		if err := client.Do(ctx, client.B().Hmset().Key("hashmismatch:"+e.Key).FieldValue().FieldValue("F2", "").Build()).Error(); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := repo.Fetch(ctx, e.Key); err == nil {
+			t.Fatal("Fetch not failed as expected")
+		}
+		if _, _, err := repo.Search(ctx, func(search FtSearchIndex) rueidis.Completed {
+			return search.Query("*").Build()
+		}); err == nil {
+			t.Fatal("Search not failed as expected")
+		}
+	})
 }
 
 //gocyclo:ignore
@@ -53,12 +112,6 @@ func TestNewHashRepository(t *testing.T) {
 
 	repo := NewHashRepository("hash", HashTestStruct{}, client)
 
-	t.Run("IndexName", func(t *testing.T) {
-		if name := repo.IndexName(); name != "hashidx:hash" {
-			t.Fatal("unexpected value")
-		}
-	})
-
 	t.Run("NewEntity", func(t *testing.T) {
 		e := repo.NewEntity()
 		ulid.MustParse(e.Key)
@@ -67,13 +120,14 @@ func TestNewHashRepository(t *testing.T) {
 	t.Run("Save", func(t *testing.T) {
 		f4 := rand.Int63()
 		e := repo.NewEntity()
-
+		f := false
 		// test save
 		e.Val = []byte("any")
 		e.F1 = true
 		e.F2 = &e.F1
 		e.F3 = &e.Key
 		e.F4 = &f4
+		e.F5 = &f
 		e.Vec32 = []float32{3, 2, 1}
 		e.Vec64 = []float64{1, 2, 3}
 		e.JSON = []byte(`[1]`)

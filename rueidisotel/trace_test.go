@@ -28,7 +28,6 @@ func TestWithClientGlobalProvider(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer client.Close()
 
 	exp := tracetest.NewInMemoryExporter()
 	tracerProvider := trace.NewTracerProvider(trace.WithSyncer(exp))
@@ -43,6 +42,7 @@ func TestWithClientGlobalProvider(t *testing.T) {
 		TraceAttrs(attribute.String("any", "label")),
 		MetricAttrs(attribute.String("any", "label")),
 	)
+	defer client.Close()
 
 	testWithClient(t, client, exp, mxp)
 }
@@ -52,7 +52,6 @@ func TestWithClient(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer client.Close()
 
 	exp := tracetest.NewInMemoryExporter()
 	tracerProvider := trace.NewTracerProvider(trace.WithSyncer(exp))
@@ -67,6 +66,7 @@ func TestWithClient(t *testing.T) {
 		WithTracerProvider(tracerProvider),
 		WithMeterProvider(meterProvider),
 	)
+	defer client.Close()
 	testWithClient(t, client, exp, mxp)
 }
 
@@ -257,7 +257,6 @@ func TestWithClientSimple(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer client.Close()
 
 	exp := tracetest.NewInMemoryExporter()
 	tracerProvider := trace.NewTracerProvider(trace.WithSyncer(exp))
@@ -272,6 +271,7 @@ func TestWithClientSimple(t *testing.T) {
 		WithTracerProvider(tracerProvider),
 		WithMeterProvider(meterProvider),
 	)
+	defer client.Close()
 
 	cmd := client.B().Set().Key("key").Value("val").Build()
 	client.Do(context.Background(), cmd)
