@@ -415,5 +415,5 @@ module mymodule
 
 go 1.18
 
-require github.com/redis/rueidis v1.0.6-go1.18
+require github.com/redis/rueidis v1.0.8-go1.18
 ```
