@@ -399,6 +399,8 @@ client.Do(ctx, client.B().Lpop().Key("k").Build()).ToString()
 client.Do(ctx, client.B().Lpop().Key("k").Count(2).Build()).AsStrSlice()
 // FT.SEARCH
 client.Do(ctx, client.B().FtSearch().Index("idx").Query("@f:v").Build()).AsFtSearch()
+// GEOSEARCH
+client.Do(ctx, client.B().Geosearch().Key("k").Fromlonlat(1, 1).Bybox(1).Height(1).Km().Build()).AsGeosearch()
 ```
 
 ## Supporting Go mod 1.18
