@@ -16,7 +16,6 @@ A fast Golang Redis client that does auto pipelining and supports client side ca
 * [Generic Object Mapping with client side caching and optimistic locking](./om)
 * [Distributed Locks with client side caching](./rueidislock)
 * [Helpers for writing tests with rueidis mock](./mock)
-* [OpenTelemetry integration](./rueidisotel)
 * [Hooks and other integrations](./rueidishook)
 * [Go-redis like API adapter](./rueidiscompat) by [@418Coffee](https://github.com/418Coffee)
 
@@ -142,10 +141,6 @@ Use `IsCacheHit()` to verify that if the response came from the client side memo
 ```golang
 client.DoCache(ctx, client.B().Get().Key("k1").Cache(), time.Minute).IsCacheHit() == true
 ```
-
-If the OpenTelemetry is enabled by the `rueidisotel.WithClient(client)`, then there are also two metrics instrumented:
-* rueidis_do_cache_miss
-* rueidis_do_cache_hits
 
 ### MGET/JSON.MGET Client Side Caching Helpers
 
