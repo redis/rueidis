@@ -1,4 +1,4 @@
-module github.com/redis/rueidis
+module github.com/Datadog/rueidis
 
 go 1.20
 

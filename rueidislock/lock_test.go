@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/redis/rueidis"
+	"github.com/Datadog/rueidis"
 )
 
 var address = []string{"127.0.0.1:6376"}

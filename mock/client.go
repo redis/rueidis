@@ -5,9 +5,9 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/Datadog/rueidis"
+	"github.com/Datadog/rueidis/internal/cmds"
 	"github.com/golang/mock/gomock"
-	"github.com/redis/rueidis"
-	"github.com/redis/rueidis/internal/cmds"
 )
 
 var _ rueidis.Client = (*Client)(nil)

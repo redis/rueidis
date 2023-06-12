@@ -12,7 +12,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/redis/rueidis"
+	"github.com/Datadog/rueidis"
 )
 
 var sources sync.Pool

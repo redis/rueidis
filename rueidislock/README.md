@@ -7,8 +7,8 @@ package main
 
 import (
 	"context"
-	"github.com/redis/rueidis"
-	"github.com/redis/rueidis/rueidislock"
+	"github.com/Datadog/rueidis"
+	"github.com/Datadog/rueidis/rueidislock"
 )
 
 func main() {

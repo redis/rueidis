@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/redis/rueidis/internal/cmds"
+	"github.com/Datadog/rueidis/internal/cmds"
 )
 
 const (
@@ -125,7 +125,7 @@ type ClientOption struct {
 	// application and Redis CPU utilization due to less executed system calls. By default, Rueidis flushes data to the
 	// connection without extra delays. Depending on network latency and application-specific conditions the value
 	// of MaxFlushDelay may vary, sth like 20 microseconds should not affect latency/throughput a lot but still
-	// produce notable CPU usage reduction under load. Ref: https://github.com/redis/rueidis/issues/156
+	// produce notable CPU usage reduction under load. Ref: https://github.com/Datadog/rueidis/issues/156
 	MaxFlushDelay time.Duration
 
 	// ShuffleInit is a handy flag that shuffles the InitAddress after passing to the NewClient() if it is true

@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"unsafe"
 
-	"github.com/redis/rueidis"
+	"github.com/Datadog/rueidis"
 )
 
 func newHashConvFactory(t reflect.Type, schema schema) *hashConvFactory {

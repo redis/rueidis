@@ -1,8 +1,8 @@
 # rueidis
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/redis/rueidis.svg)](https://pkg.go.dev/github.com/redis/rueidis)
+[![Go Reference](https://pkg.go.dev/badge/github.com/Datadog/rueidis.svg)](https://pkg.go.dev/github.com/Datadog/rueidis)
 [![CircleCI](https://dl.circleci.com/status-badge/img/gh/redis/rueidis/tree/main.svg?style=shield)](https://dl.circleci.com/status-badge/redirect/gh/redis/rueidis/tree/main)
-[![Go Report Card](https://goreportcard.com/badge/github.com/redis/rueidis)](https://goreportcard.com/report/github.com/redis/rueidis)
+[![Go Report Card](https://goreportcard.com/badge/github.com/Datadog/rueidis)](https://goreportcard.com/report/github.com/Datadog/rueidis)
 [![codecov](https://codecov.io/gh/redis/rueidis/branch/master/graph/badge.svg?token=wGTB8GdY06)](https://codecov.io/gh/redis/rueidis)
 
 A fast Golang Redis client that does auto pipelining and supports client side caching.
@@ -26,7 +26,7 @@ package main
 
 import (
 	"context"
-	"github.com/redis/rueidis"
+	"github.com/Datadog/rueidis"
 )
 
 func main() {
@@ -44,7 +44,7 @@ func main() {
 }
 ```
 
-Checkout more examples: [Command Response Cheatsheet](https://github.com/redis/rueidis#command-response-cheatsheet)
+Checkout more examples: [Command Response Cheatsheet](https://github.com/Datadog/rueidis#command-response-cheatsheet)
 
 ## Developer friendly Command Builder
 
@@ -88,7 +88,7 @@ It is even able to achieve ~14x throughput over go-redis in a local benchmark of
 
 Benchmark source code: https://github.com/rueian/rueidis-benchmark
 
-A benchmark result performed on two GCP n2-highcpu-2 machines also shows that rueidis can achieve higher throughput with lower latencies: https://github.com/redis/rueidis/pull/93
+A benchmark result performed on two GCP n2-highcpu-2 machines also shows that rueidis can achieve higher throughput with lower latencies: https://github.com/Datadog/rueidis/pull/93
 
 ### Pipelining Bulk Operations Manually
 
@@ -410,5 +410,5 @@ module mymodule
 
 go 1.18
 
-require github.com/redis/rueidis v1.0.8-go1.18
+require github.com/Datadog/rueidis v1.0.8-go1.18
 ```

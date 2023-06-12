@@ -15,7 +15,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/redis/rueidis/internal/cmds"
+	"github.com/Datadog/rueidis/internal/cmds"
 )
 
 var noHello = regexp.MustCompile("unknown command .?HELLO.?")
@@ -336,7 +336,7 @@ func (p *pipe) _backgroundWrite() (err error) {
 					continue
 				}
 				if flushDelay != 0 && atomic.LoadInt32(&p.waits) > 1 { // do not delay for sequential usage
-					time.Sleep(flushDelay - time.Since(flushStart)) // ref: https://github.com/redis/rueidis/issues/156
+					time.Sleep(flushDelay - time.Since(flushStart)) // ref: https://github.com/Datadog/rueidis/issues/156
 				}
 			}
 		}

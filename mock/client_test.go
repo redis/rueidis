@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Datadog/rueidis"
 	"github.com/golang/mock/gomock"
-	"github.com/redis/rueidis"
 )
 
 func TestNewClient(t *testing.T) {

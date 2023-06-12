@@ -1184,7 +1184,7 @@
         "command": "TIMEOUT"
       },
       {
-        "comment": "https://github.com/redis/rueidis/issues/57",
+        "comment": "https://github.com/Datadog/rueidis/issues/57",
         "name": "op",
         "type": "block",
         "optional": true,

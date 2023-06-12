@@ -20,8 +20,8 @@ package main
 import (
 	"context"
 	"time"
-	"github.com/redis/rueidis"
-	"github.com/redis/rueidis/rueidiscompat"
+	"github.com/Datadog/rueidis"
+	"github.com/Datadog/rueidis/rueidiscompat"
 )
 
 func main() {

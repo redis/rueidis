@@ -34,9 +34,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Datadog/rueidis"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/redis/rueidis"
 )
 
 func TestAdapter(t *testing.T) {

@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Datadog/rueidis"
+	"github.com/Datadog/rueidis/mock"
 	"github.com/golang/mock/gomock"
-	"github.com/redis/rueidis"
-	"github.com/redis/rueidis/mock"
 )
 
 type hook struct{}

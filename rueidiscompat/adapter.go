@@ -36,9 +36,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/redis/rueidis"
-	"github.com/redis/rueidis/internal/cmds"
-	"github.com/redis/rueidis/internal/util"
+	"github.com/Datadog/rueidis"
+	"github.com/Datadog/rueidis/internal/cmds"
+	"github.com/Datadog/rueidis/internal/util"
 )
 
 const KeepTTL = -1

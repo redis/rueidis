@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Datadog/rueidis"
 	"github.com/oklog/ulid/v2"
-	"github.com/redis/rueidis"
 )
 
 type JSONTestStruct struct {

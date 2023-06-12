@@ -6,7 +6,7 @@ import (
 	"encoding/hex"
 	"sync/atomic"
 
-	"github.com/redis/rueidis/internal/util"
+	"github.com/Datadog/rueidis/internal/util"
 )
 
 // NewLuaScript creates a Lua instance whose Lua.Exec uses EVALSHA and EVAL.

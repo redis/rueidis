@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/redis/rueidis"
-	"github.com/redis/rueidis/internal/cmds"
+	"github.com/Datadog/rueidis"
+	"github.com/Datadog/rueidis/internal/cmds"
 )
 
 var _ rueidis.Client = (*hookclient)(nil)

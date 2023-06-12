@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/redis/rueidis"
+	"github.com/Datadog/rueidis"
 )
 
 type Book struct {
