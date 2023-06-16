@@ -14,6 +14,7 @@ import (
 	"math/rand"
 
 	"github.com/redis/rueidis/internal/cmds"
+	"strconv"
 )
 
 func newSentinelClient(opt *ClientOption, connFn connFn) (client *sentinelClient, err error) {
@@ -390,6 +391,16 @@ func (c *sentinelClient) listWatch(cc conn) (target string, sentinels []string, 
 		return "", nil, err
 	}
 	return net.JoinHostPort(m[0], m[1]), sentinels, nil
+}
+
+func (c *sentinelClient) commandConnectionID(slot uint16) string {
+	if master := c.mConn.Load(); master != nil {
+		if mux, ok := master.(*mux); ok {
+			return strconv.Itoa(int(slot & uint16(len(mux.wire)-1)))
+		}
+	}
+
+	return ""
 }
 
 func pickReplica(resp []RedisResult) (string, error) {

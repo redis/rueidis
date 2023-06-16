@@ -15,7 +15,18 @@ func MGetCache(client Client, ctx context.Context, ttl time.Duration, keys []str
 	if len(keys) == 0 {
 		return make(map[string]RedisMessage), nil
 	}
-	return parallelMGetCache(client, ctx, ttl, cmds.MGets(keys), keys)
+	var slotIDFunc func(uint16) string
+
+	switch client.(type) {
+	case *sentinelClient:
+		slotIDFunc = client.(*sentinelClient).commandConnectionID
+	case *clusterClient:
+		slotIDFunc = client.(*clusterClient).commandConnectionID
+	case *singleClient:
+		slotIDFunc = client.(*singleClient).commandConnectionID
+	}
+
+	return parallelMGetCache(client, ctx, ttl, cmds.UniqueMGets(keys, slotIDFunc), keys)
 }
 
 // MGet is a helper that consults the redis directly with multiple keys by grouping keys within same slot into MGETs

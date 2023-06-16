@@ -206,6 +206,11 @@ func parseSlots(slots RedisMessage) map[string]group {
 	return groups
 }
 
+func (c *clusterClient) commandConnectionID(slot uint16) string {
+	slotConnection := c._pick(slot)
+	return slotConnection.Addr()
+}
+
 func (c *clusterClient) _pick(slot uint16) (p conn) {
 	c.mu.RLock()
 	if slot == cmds.InitSlot {

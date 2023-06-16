@@ -245,6 +245,11 @@ func MGets(keys []string) map[uint16]Completed {
 	return slotMCMDs("MGET", keys, mtGetTag)
 }
 
+// UniqueMGets groups keys by their slot and returns multi MGET commands
+func UniqueMGets(keys []string, slotIDFunc func(uint16) string) map[uint16]Completed {
+	return uniqueSlotMCMDs("MGET", keys, mtGetTag, slotIDFunc)
+}
+
 // MDels groups keys by their slot and returns multi DEL commands
 func MDels(keys []string) map[uint16]Completed {
 	return slotMCMDs("DEL", keys, 0)
@@ -307,6 +312,33 @@ func slotMCMDs(cmd string, keys []string, cf uint16) map[uint16]Completed {
 		cs.l++
 	}
 	return ret
+}
+
+// uniqueSlotMCMDs will divide an MGET, MDel or JsonMget to multiple commands
+// based on keys provided and the slotIDFunc. slotIDFunc is used to define
+// what slots are considered equal to group them together.
+func uniqueSlotMCMDs(cmd string, keys []string, cf uint16, slotIDFunc func(uint16) string) map[uint16]Completed {
+	result := make(map[uint16]Completed, 8)
+
+	slotIDMap := make(map[string]uint16)
+
+	for _, key := range keys {
+		var cs *CommandSlice
+		ks := slot(key)
+		slotID := slotIDFunc(ks)
+		if s, ok := slotIDMap[slotID]; ok {
+			cs = result[s].cs
+		} else {
+			cs = get()
+			cs.s = append(cs.s, cmd)
+			cs.l = 1
+			result[ks] = Completed{cs: cs, cf: cf, ks: ks}
+			slotIDMap[slotID] = ks
+		}
+		cs.s = append(cs.s, key)
+		cs.l++
+	}
+	return result
 }
 
 func slotMSets(cmd string, kvs map[string]string) map[uint16]Completed {

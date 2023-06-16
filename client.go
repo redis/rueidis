@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/redis/rueidis/internal/cmds"
+	"strconv"
 )
 
 type singleClient struct {
@@ -30,6 +31,14 @@ func newSingleClient(opt *ClientOption, prev conn, connFn connFn) (*singleClient
 
 func newSingleClientWithConn(conn conn, builder cmds.Builder, retry bool) *singleClient {
 	return &singleClient{cmd: builder, conn: conn, retry: retry}
+}
+
+func (c *singleClient) commandConnectionID(slot uint16) string {
+	if mux, ok := c.conn.(*mux); ok {
+		return strconv.Itoa(int(slot & uint16(len(mux.wire)-1)))
+	}
+
+	return ""
 }
 
 func (c *singleClient) B() cmds.Builder {
