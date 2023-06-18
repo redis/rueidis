@@ -5,7 +5,6 @@ import (
 	"reflect"
 	"strconv"
 	"testing"
-	"time"
 )
 
 //gocyclo:ignore
@@ -20,15 +19,16 @@ func TestMGetCache(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 		t.Run("Delegate DoCache", func(t *testing.T) {
-			m.DoCacheFn = func(cmd Cacheable, ttl time.Duration) RedisResult {
-				if reflect.DeepEqual(cmd.Commands(), []string{"MGET", "1"}) && ttl == 100 {
-					return newResult(RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "1"}}}, nil)
+			m.DoMultiCacheFn = func(multi ...CacheableTTL) []RedisResult {
+				if reflect.DeepEqual(multi[0].Cmd.Commands(), []string{"GET", "1"}) && multi[0].TTL == 100 &&
+					reflect.DeepEqual(multi[1].Cmd.Commands(), []string{"GET", "2"}) && multi[1].TTL == 100 {
+					return []RedisResult{
+						newResult(RedisMessage{typ: '+', string: "1"}, nil),
+						newResult(RedisMessage{typ: '+', string: "2"}, nil),
+					}
 				}
-				if reflect.DeepEqual(cmd.Commands(), []string{"MGET", "2"}) && ttl == 100 {
-					return newResult(RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "2"}}}, nil)
-				}
-				t.Fatalf("unexpected command %v, %v", cmd, ttl)
-				return RedisResult{}
+				t.Fatalf("unexpected command %v", multi)
+				return nil
 			}
 			if v, err := MGetCache(client, context.Background(), 100, []string{"1", "2"}); err != nil || v["1"].string != "1" || v["2"].string != "2" {
 				t.Fatalf("unexpected response %v %v", v, err)
@@ -42,8 +42,8 @@ func TestMGetCache(t *testing.T) {
 		t.Run("Delegate DoCache Err", func(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			cancel()
-			m.DoCacheFn = func(cmd Cacheable, ttl time.Duration) RedisResult {
-				return newResult(RedisMessage{}, context.Canceled)
+			m.DoMultiCacheFn = func(multi ...CacheableTTL) []RedisResult {
+				return []RedisResult{newResult(RedisMessage{}, context.Canceled), newResult(RedisMessage{}, context.Canceled)}
 			}
 			if v, err := MGetCache(client, ctx, 100, []string{"1", "2"}); err != context.Canceled {
 				t.Fatalf("unexpected response %v %v", v, err)
@@ -67,14 +67,16 @@ func TestMGetCache(t *testing.T) {
 			for i := range keys {
 				keys[i] = strconv.Itoa(i)
 			}
-			m.DoCacheFn = func(cmd Cacheable, ttl time.Duration) RedisResult {
-				for _, key := range keys {
-					if reflect.DeepEqual(cmd.Commands(), []string{"MGET", key}) && ttl == 100 {
-						return newResult(RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: key}}}, nil)
+			m.DoMultiCacheFn = func(multi ...CacheableTTL) []RedisResult {
+				result := make([]RedisResult, len(multi))
+				for i, key := range keys {
+					if !reflect.DeepEqual(multi[i].Cmd.Commands(), []string{"GET", key}) || multi[i].TTL != 100 {
+						t.Fatalf("unexpected command %v", multi)
+						return nil
 					}
+					result[i] = newResult(RedisMessage{typ: '+', string: key}, nil)
 				}
-				t.Fatalf("unexpected command %v, %v", cmd, ttl)
-				return RedisResult{}
+				return result
 			}
 			v, err := MGetCache(client, context.Background(), 100, keys)
 			if err != nil {
@@ -94,8 +96,12 @@ func TestMGetCache(t *testing.T) {
 		t.Run("Delegate DoCache Err", func(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			cancel()
-			m.DoCacheFn = func(cmd Cacheable, ttl time.Duration) RedisResult {
-				return newResult(RedisMessage{}, context.Canceled)
+			m.DoMultiCacheFn = func(multi ...CacheableTTL) []RedisResult {
+				result := make([]RedisResult, len(multi))
+				for i := range result {
+					result[i] = newErrResult(context.Canceled)
+				}
+				return result
 			}
 			if v, err := MGetCache(client, ctx, 100, []string{"1", "2"}); err != context.Canceled {
 				t.Fatalf("unexpected response %v %v", v, err)
@@ -159,14 +165,16 @@ func TestMGet(t *testing.T) {
 			for i := range keys {
 				keys[i] = strconv.Itoa(i)
 			}
-			m.DoFn = func(cmd Completed) RedisResult {
-				for _, key := range keys {
-					if reflect.DeepEqual(cmd.Commands(), []string{"MGET", key}) {
-						return newResult(RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: key}}}, nil)
+			m.DoMultiFn = func(cmd ...Completed) []RedisResult {
+				result := make([]RedisResult, len(cmd))
+				for i, key := range keys {
+					if !reflect.DeepEqual(cmd[i].Commands(), []string{"GET", key}) {
+						t.Fatalf("unexpected command %v", cmd)
+						return nil
 					}
+					result[i] = newResult(RedisMessage{typ: '+', string: key}, nil)
 				}
-				t.Fatalf("unexpected command %v", cmd)
-				return RedisResult{}
+				return result
 			}
 			v, err := MGet(client, context.Background(), keys)
 			if err != nil {
@@ -186,8 +194,8 @@ func TestMGet(t *testing.T) {
 		t.Run("Delegate Do Err", func(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			cancel()
-			m.DoFn = func(cmd Completed) RedisResult {
-				return newResult(RedisMessage{}, context.Canceled)
+			m.DoMultiFn = func(cmd ...Completed) []RedisResult {
+				return []RedisResult{newErrResult(context.Canceled), newErrResult(context.Canceled)}
 			}
 			if v, err := MGet(client, ctx, []string{"1", "2"}); err != context.Canceled {
 				t.Fatalf("unexpected response %v %v", v, err)
@@ -251,14 +259,16 @@ func TestMDel(t *testing.T) {
 			for i := range keys {
 				keys[i] = strconv.Itoa(i)
 			}
-			m.DoFn = func(cmd Completed) RedisResult {
-				for _, key := range keys {
-					if reflect.DeepEqual(cmd.Commands(), []string{"DEL", key}) {
-						return newResult(RedisMessage{typ: ':', integer: 1}, nil)
+			m.DoMultiFn = func(cmd ...Completed) []RedisResult {
+				result := make([]RedisResult, len(cmd))
+				for i, key := range keys {
+					if !reflect.DeepEqual(cmd[i].Commands(), []string{"DEL", key}) {
+						t.Fatalf("unexpected command %v", cmd)
+						return nil
 					}
+					result[i] = newResult(RedisMessage{typ: ':', integer: 1}, nil)
 				}
-				t.Fatalf("unexpected command %v", cmd)
-				return RedisResult{}
+				return result
 			}
 			v := MDel(client, context.Background(), keys)
 			for _, key := range keys {
@@ -275,8 +285,8 @@ func TestMDel(t *testing.T) {
 		t.Run("Delegate Do Err", func(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			cancel()
-			m.DoFn = func(cmd Completed) RedisResult {
-				return newResult(RedisMessage{}, context.Canceled)
+			m.DoMultiFn = func(cmd ...Completed) []RedisResult {
+				return []RedisResult{newErrResult(context.Canceled), newErrResult(context.Canceled)}
 			}
 			if v := MDel(client, ctx, []string{"1", "2"}); v["1"] != context.Canceled || v["2"] != context.Canceled {
 				t.Fatalf("unexpected response %v %v", v, err)
@@ -340,14 +350,25 @@ func TestMSet(t *testing.T) {
 			for i := 0; i < 100; i++ {
 				keys[strconv.Itoa(i)] = strconv.Itoa(i)
 			}
-			m.DoFn = func(cmd Completed) RedisResult {
-				for key := range keys {
-					if reflect.DeepEqual(cmd.Commands(), []string{"MSET", key, key}) {
-						return newResult(RedisMessage{typ: '+', string: "OK"}, nil)
+			cpy := make(map[string]struct{}, len(keys))
+			for k := range keys {
+				cpy[k] = struct{}{}
+			}
+			m.DoMultiFn = func(cmd ...Completed) []RedisResult {
+				result := make([]RedisResult, len(cmd))
+				for i, c := range cmd {
+					delete(cpy, c.Commands()[1])
+					if c.Commands()[0] != "SET" || keys[c.Commands()[1]] != c.Commands()[2] {
+						t.Fatalf("unexpected command %v", cmd)
+						return nil
 					}
+					result[i] = newResult(RedisMessage{typ: '+', string: "OK"}, nil)
 				}
-				t.Fatalf("unexpected command %v", cmd)
-				return RedisResult{}
+				if len(cpy) != 0 {
+					t.Fatalf("unexpected command %v", cmd)
+					return nil
+				}
+				return result
 			}
 			err := MSet(client, context.Background(), keys)
 			for key := range keys {
@@ -364,8 +385,8 @@ func TestMSet(t *testing.T) {
 		t.Run("Delegate Do Err", func(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			cancel()
-			m.DoFn = func(cmd Completed) RedisResult {
-				return newResult(RedisMessage{}, context.Canceled)
+			m.DoMultiFn = func(cmd ...Completed) []RedisResult {
+				return []RedisResult{newErrResult(context.Canceled), newErrResult(context.Canceled)}
 			}
 			if err := MSet(client, ctx, map[string]string{"1": "1", "2": "2"}); err["1"] != context.Canceled || err["2"] != context.Canceled {
 				t.Fatalf("unexpected response %v", err)
@@ -429,14 +450,25 @@ func TestMSetNX(t *testing.T) {
 			for i := 0; i < 100; i++ {
 				keys[strconv.Itoa(i)] = strconv.Itoa(i)
 			}
-			m.DoFn = func(cmd Completed) RedisResult {
-				for key := range keys {
-					if reflect.DeepEqual(cmd.Commands(), []string{"MSETNX", key, key}) {
-						return newResult(RedisMessage{typ: '+', string: "OK"}, nil)
+			cpy := make(map[string]struct{}, len(keys))
+			for k := range keys {
+				cpy[k] = struct{}{}
+			}
+			m.DoMultiFn = func(cmd ...Completed) []RedisResult {
+				result := make([]RedisResult, len(cmd))
+				for i, c := range cmd {
+					delete(cpy, c.Commands()[1])
+					if c.Commands()[0] != "SET" || c.Commands()[3] != "NX" || keys[c.Commands()[1]] != c.Commands()[2] {
+						t.Fatalf("unexpected command %v", cmd)
+						return nil
 					}
+					result[i] = newResult(RedisMessage{typ: '+', string: "OK"}, nil)
 				}
-				t.Fatalf("unexpected command %v", cmd)
-				return RedisResult{}
+				if len(cpy) != 0 {
+					t.Fatalf("unexpected command %v", cmd)
+					return nil
+				}
+				return result
 			}
 			err := MSetNX(client, context.Background(), keys)
 			for key := range keys {
@@ -453,8 +485,8 @@ func TestMSetNX(t *testing.T) {
 		t.Run("Delegate Do Err", func(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			cancel()
-			m.DoFn = func(cmd Completed) RedisResult {
-				return newResult(RedisMessage{}, context.Canceled)
+			m.DoMultiFn = func(cmd ...Completed) []RedisResult {
+				return []RedisResult{newErrResult(context.Canceled), newErrResult(context.Canceled)}
 			}
 			if err := MSetNX(client, ctx, map[string]string{"1": "1", "2": "2"}); err["1"] != context.Canceled || err["2"] != context.Canceled {
 				t.Fatalf("unexpected response %v", err)
@@ -468,27 +500,6 @@ func TestMSetNXNotSet(t *testing.T) {
 	t.Run("single client", func(t *testing.T) {
 		m := &mockConn{}
 		client, err := newSingleClient(&ClientOption{InitAddress: []string{""}}, m, func(dst string, opt *ClientOption) conn {
-			return m
-		})
-		if err != nil {
-			t.Fatalf("unexpected err %v", err)
-		}
-		t.Run("Delegate Do Not Set", func(t *testing.T) {
-			m.DoFn = func(cmd Completed) RedisResult {
-				return newResult(RedisMessage{typ: ':', integer: 0}, nil)
-			}
-			if err := MSetNX(client, context.Background(), map[string]string{"1": "1", "2": "2"}); err["1"] != ErrMSetNXNotSet || err["2"] != ErrMSetNXNotSet {
-				t.Fatalf("unexpected response %v", err)
-			}
-		})
-	})
-	t.Run("cluster client", func(t *testing.T) {
-		m := &mockConn{
-			DoFn: func(cmd Completed) RedisResult {
-				return slotsResp
-			},
-		}
-		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
 			return m
 		})
 		if err != nil {
@@ -517,15 +528,16 @@ func TestJsonMGetCache(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 		t.Run("Delegate DoCache", func(t *testing.T) {
-			m.DoCacheFn = func(cmd Cacheable, ttl time.Duration) RedisResult {
-				if reflect.DeepEqual(cmd.Commands(), []string{"JSON.MGET", "1", "$"}) && ttl == 100 {
-					return newResult(RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "1"}}}, nil)
+			m.DoMultiCacheFn = func(multi ...CacheableTTL) []RedisResult {
+				if reflect.DeepEqual(multi[0].Cmd.Commands(), []string{"JSON.GET", "1", "$"}) && multi[0].TTL == 100 &&
+					reflect.DeepEqual(multi[1].Cmd.Commands(), []string{"JSON.GET", "2", "$"}) && multi[1].TTL == 100 {
+					return []RedisResult{
+						newResult(RedisMessage{typ: '+', string: "1"}, nil),
+						newResult(RedisMessage{typ: '+', string: "2"}, nil),
+					}
 				}
-				if reflect.DeepEqual(cmd.Commands(), []string{"JSON.MGET", "2", "$"}) && ttl == 100 {
-					return newResult(RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "2"}}}, nil)
-				}
-				t.Fatalf("unexpected command %v, %v", cmd, ttl)
-				return RedisResult{}
+				t.Fatalf("unexpected command %v", multi)
+				return nil
 			}
 			if v, err := JsonMGetCache(client, context.Background(), 100, []string{"1", "2"}, "$"); err != nil || v["1"].string != "1" || v["2"].string != "2" {
 				t.Fatalf("unexpected response %v %v", v, err)
@@ -539,8 +551,8 @@ func TestJsonMGetCache(t *testing.T) {
 		t.Run("Delegate DoCache Err", func(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			cancel()
-			m.DoCacheFn = func(cmd Cacheable, ttl time.Duration) RedisResult {
-				return newResult(RedisMessage{}, context.Canceled)
+			m.DoMultiCacheFn = func(multi ...CacheableTTL) []RedisResult {
+				return []RedisResult{newResult(RedisMessage{}, context.Canceled), newResult(RedisMessage{}, context.Canceled)}
 			}
 			if v, err := JsonMGetCache(client, ctx, 100, []string{"1", "2"}, "$"); err != context.Canceled {
 				t.Fatalf("unexpected response %v %v", v, err)
@@ -564,14 +576,16 @@ func TestJsonMGetCache(t *testing.T) {
 			for i := range keys {
 				keys[i] = strconv.Itoa(i)
 			}
-			m.DoCacheFn = func(cmd Cacheable, ttl time.Duration) RedisResult {
-				for _, key := range keys {
-					if reflect.DeepEqual(cmd.Commands(), []string{"JSON.MGET", key, "$"}) && ttl == 100 {
-						return newResult(RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: key}}}, nil)
+			m.DoMultiCacheFn = func(multi ...CacheableTTL) []RedisResult {
+				result := make([]RedisResult, len(multi))
+				for i, key := range keys {
+					if !reflect.DeepEqual(multi[i].Cmd.Commands(), []string{"JSON.GET", key, "$"}) || multi[i].TTL != 100 {
+						t.Fatalf("unexpected command %v", multi)
+						return nil
 					}
+					result[i] = newResult(RedisMessage{typ: '+', string: key}, nil)
 				}
-				t.Fatalf("unexpected command %v, %v", cmd, ttl)
-				return RedisResult{}
+				return result
 			}
 			v, err := JsonMGetCache(client, context.Background(), 100, keys, "$")
 			if err != nil {
@@ -591,8 +605,12 @@ func TestJsonMGetCache(t *testing.T) {
 		t.Run("Delegate DoCache Err", func(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			cancel()
-			m.DoCacheFn = func(cmd Cacheable, ttl time.Duration) RedisResult {
-				return newResult(RedisMessage{}, context.Canceled)
+			m.DoMultiCacheFn = func(multi ...CacheableTTL) []RedisResult {
+				result := make([]RedisResult, len(multi))
+				for i := range result {
+					result[i] = newErrResult(context.Canceled)
+				}
+				return result
 			}
 			if v, err := JsonMGetCache(client, ctx, 100, []string{"1", "2"}, "$"); err != context.Canceled {
 				t.Fatalf("unexpected response %v %v", v, err)
@@ -656,14 +674,16 @@ func TestJsonMGet(t *testing.T) {
 			for i := range keys {
 				keys[i] = strconv.Itoa(i)
 			}
-			m.DoFn = func(cmd Completed) RedisResult {
-				for _, key := range keys {
-					if reflect.DeepEqual(cmd.Commands(), []string{"JSON.MGET", key, "$"}) {
-						return newResult(RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: key}}}, nil)
+			m.DoMultiFn = func(cmd ...Completed) []RedisResult {
+				result := make([]RedisResult, len(cmd))
+				for i, key := range keys {
+					if !reflect.DeepEqual(cmd[i].Commands(), []string{"JSON.GET", key, "$"}) {
+						t.Fatalf("unexpected command %v", cmd)
+						return nil
 					}
+					result[i] = newResult(RedisMessage{typ: '+', string: key}, nil)
 				}
-				t.Fatalf("unexpected command %v", cmd)
-				return RedisResult{}
+				return result
 			}
 			v, err := JsonMGet(client, context.Background(), keys, "$")
 			if err != nil {
@@ -683,8 +703,8 @@ func TestJsonMGet(t *testing.T) {
 		t.Run("Delegate Do Err", func(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			cancel()
-			m.DoFn = func(cmd Completed) RedisResult {
-				return newResult(RedisMessage{}, context.Canceled)
+			m.DoMultiFn = func(cmd ...Completed) []RedisResult {
+				return []RedisResult{newErrResult(context.Canceled), newErrResult(context.Canceled)}
 			}
 			if v, err := JsonMGet(client, ctx, []string{"1", "2"}, "$"); err != context.Canceled {
 				t.Fatalf("unexpected response %v %v", v, err)
@@ -748,14 +768,25 @@ func TestJsonMSet(t *testing.T) {
 			for i := 0; i < 100; i++ {
 				keys[strconv.Itoa(i)] = strconv.Itoa(i)
 			}
-			m.DoFn = func(cmd Completed) RedisResult {
-				for key := range keys {
-					if reflect.DeepEqual(cmd.Commands(), []string{"JSON.MSET", key, "$", key}) {
-						return newResult(RedisMessage{typ: '+', string: "OK"}, nil)
+			cpy := make(map[string]struct{}, len(keys))
+			for k := range keys {
+				cpy[k] = struct{}{}
+			}
+			m.DoMultiFn = func(cmd ...Completed) []RedisResult {
+				result := make([]RedisResult, len(cmd))
+				for i, c := range cmd {
+					delete(cpy, c.Commands()[1])
+					if c.Commands()[0] != "JSON.SET" || keys[c.Commands()[1]] != c.Commands()[3] || c.Commands()[2] != "$" {
+						t.Fatalf("unexpected command %v", cmd)
+						return nil
 					}
+					result[i] = newResult(RedisMessage{typ: '+', string: "OK"}, nil)
 				}
-				t.Fatalf("unexpected command %v", cmd)
-				return RedisResult{}
+				if len(cpy) != 0 {
+					t.Fatalf("unexpected command %v", cmd)
+					return nil
+				}
+				return result
 			}
 			err := JsonMSet(client, context.Background(), keys, "$")
 			for key := range keys {
@@ -772,8 +803,8 @@ func TestJsonMSet(t *testing.T) {
 		t.Run("Delegate Do Err", func(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			cancel()
-			m.DoFn = func(cmd Completed) RedisResult {
-				return newResult(RedisMessage{}, context.Canceled)
+			m.DoMultiFn = func(cmd ...Completed) []RedisResult {
+				return []RedisResult{newErrResult(context.Canceled), newErrResult(context.Canceled)}
 			}
 			if err := JsonMSet(client, ctx, map[string]string{"1": "1", "2": "2"}, "$"); err["1"] != context.Canceled || err["2"] != context.Canceled {
 				t.Fatalf("unexpected response %v", err)
