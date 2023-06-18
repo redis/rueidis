@@ -1159,8 +1159,14 @@ func TestClientSideCachingDoMultiCache(t *testing.T) {
 			Expect("MULTI").
 			Expect("PTTL", "a1").
 			Expect("GET", "a1").
+			Expect("EXEC").
+			Expect("CLIENT", "CACHING", "YES").
+			Expect("MULTI").
 			Expect("PTTL", "a2").
 			Expect("GET", "a2").
+			Expect("EXEC").
+			Expect("CLIENT", "CACHING", "YES").
+			Expect("MULTI").
 			Expect("PTTL", "a3").
 			Expect("GET", "a3").
 			Expect("EXEC").
@@ -1168,15 +1174,23 @@ func TestClientSideCachingDoMultiCache(t *testing.T) {
 			ReplyString("OK").
 			ReplyString("OK").
 			ReplyString("OK").
+			Reply(RedisMessage{typ: '*', values: []RedisMessage{
+				{typ: ':', integer: 1000},
+				{typ: ':', integer: 1},
+			}}).
 			ReplyString("OK").
 			ReplyString("OK").
 			ReplyString("OK").
 			ReplyString("OK").
 			Reply(RedisMessage{typ: '*', values: []RedisMessage{
-				{typ: ':', integer: 1000},
-				{typ: ':', integer: 1},
 				{typ: ':', integer: 2000},
 				{typ: ':', integer: 2},
+			}}).
+			ReplyString("OK").
+			ReplyString("OK").
+			ReplyString("OK").
+			ReplyString("OK").
+			Reply(RedisMessage{typ: '*', values: []RedisMessage{
 				{typ: ':', integer: 3000},
 				{typ: ':', integer: 3},
 			}})
@@ -1229,6 +1243,9 @@ func TestClientSideCachingDoMultiCache(t *testing.T) {
 			Expect("MULTI").
 			Expect("PTTL", "a1").
 			Expect("GET", "a1").
+			Expect("EXEC").
+			Expect("CLIENT", "CACHING", "YES").
+			Expect("MULTI").
 			Expect("PTTL", "a3").
 			Expect("GET", "a3").
 			Expect("EXEC").
@@ -1236,11 +1253,15 @@ func TestClientSideCachingDoMultiCache(t *testing.T) {
 			ReplyString("OK").
 			ReplyString("OK").
 			ReplyString("OK").
-			ReplyString("OK").
-			ReplyString("OK").
 			Reply(RedisMessage{typ: '*', values: []RedisMessage{
 				{typ: ':', integer: 10000},
 				{typ: ':', integer: 10},
+			}}).
+			ReplyString("OK").
+			ReplyString("OK").
+			ReplyString("OK").
+			ReplyString("OK").
+			Reply(RedisMessage{typ: '*', values: []RedisMessage{
 				{typ: ':', integer: 30000},
 				{typ: ':', integer: 30},
 			}})
@@ -1290,11 +1311,20 @@ func TestClientSideCachingExecAbortDoMultiCache(t *testing.T) {
 			Expect("MULTI").
 			Expect("PTTL", "a1").
 			Expect("GET", "a1").
+			Expect("EXEC").
+			Expect("CLIENT", "CACHING", "YES").
+			Expect("MULTI").
 			Expect("PTTL", "a2").
 			Expect("GET", "a2").
 			Expect("EXEC").
 			ReplyString("OK").
 			ReplyString("OK").
+			ReplyString("OK").
+			ReplyString("OK").
+			Reply(RedisMessage{typ: '*', values: []RedisMessage{
+				{typ: ':', integer: 1000},
+				{typ: ':', integer: 1},
+			}}).
 			ReplyString("OK").
 			ReplyString("OK").
 			ReplyString("OK").
@@ -1306,17 +1336,26 @@ func TestClientSideCachingExecAbortDoMultiCache(t *testing.T) {
 		CT(Cacheable(cmds.NewCompleted([]string{"GET", "a1"})), time.Second*10),
 		CT(Cacheable(cmds.NewCompleted([]string{"GET", "a2"})), time.Second*10),
 	}...)
-	for _, resp := range arr {
+	for i, resp := range arr {
 		v, err := resp.ToMessage()
-		if err != ErrDoCacheAborted {
-			t.Errorf("unexpected err, got %v", err)
-		}
-		if v.IsCacheHit() {
-			t.Errorf("unexpected cache hit")
+		if i == 0 {
+			if v.integer != 1 {
+				t.Errorf("unexpected cached response, expected %v, got %v", 1, v.integer)
+			}
+		} else {
+			if err != ErrDoCacheAborted {
+				t.Errorf("unexpected err, got %v", err)
+			}
+			if v.IsCacheHit() {
+				t.Errorf("unexpected cache hit")
+			}
 		}
 	}
-	if v, entry := p.cache.Flight("a1", "GET", time.Second, time.Now()); v.typ != 0 || entry != nil {
+	if v, entry := p.cache.Flight("a1", "GET", time.Second, time.Now()); v.integer != 1 || entry == nil {
 		t.Errorf("unexpected cache value and entry %v %v", v, entry)
+	}
+	if ttl := p.cache.(*lru).GetTTL("a1", "GET"); !roughly(ttl, time.Second) {
+		t.Errorf("unexpected ttl %v", ttl)
 	}
 	if v, entry := p.cache.Flight("a2", "GET", time.Second, time.Now()); v.typ != 0 || entry != nil {
 		t.Errorf("unexpected cache value and entry %v %v", v, entry)
@@ -1470,8 +1509,14 @@ func TestClientSideCachingMissCacheTTL(t *testing.T) {
 				Expect("MULTI").
 				Expect("PTTL", "a1").
 				Expect("GET", "a1").
+				Expect("EXEC").
+				Expect("CLIENT", "CACHING", "YES").
+				Expect("MULTI").
 				Expect("PTTL", "a2").
 				Expect("GET", "a2").
+				Expect("EXEC").
+				Expect("CLIENT", "CACHING", "YES").
+				Expect("MULTI").
 				Expect("PTTL", "a3").
 				Expect("GET", "a3").
 				Expect("EXEC").
@@ -1479,15 +1524,23 @@ func TestClientSideCachingMissCacheTTL(t *testing.T) {
 				ReplyString("OK").
 				ReplyString("OK").
 				ReplyString("OK").
+				Reply(RedisMessage{typ: '*', values: []RedisMessage{
+					{typ: ':', integer: -1},
+					{typ: ':', integer: 1},
+				}}).
 				ReplyString("OK").
 				ReplyString("OK").
 				ReplyString("OK").
 				ReplyString("OK").
 				Reply(RedisMessage{typ: '*', values: []RedisMessage{
-					{typ: ':', integer: -1},
-					{typ: ':', integer: 1},
 					{typ: ':', integer: 1000},
 					{typ: ':', integer: 2},
+				}}).
+				ReplyString("OK").
+				ReplyString("OK").
+				ReplyString("OK").
+				ReplyString("OK").
+				Reply(RedisMessage{typ: '*', values: []RedisMessage{
 					{typ: ':', integer: 20000},
 					{typ: ':', integer: 3},
 				}})

@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/redis/rueidis/internal/cmds"
-	"github.com/redis/rueidis/internal/util"
 )
 
 // ErrNoSlot indicates that there is no redis node owns the key slot.
@@ -293,40 +292,132 @@ process:
 	return resp
 }
 
-func (c *clusterClient) DoMulti(ctx context.Context, multi ...Completed) (results []RedisResult) {
+func (c *clusterClient) _pickMulti(slots map[uint16]int) (map[uint16]conn, map[conn]int) {
+	conns := make(map[uint16]conn, len(slots))
+	c.mu.RLock()
+	count := make(map[conn]int, len(c.conns))
+	for s, n := range slots {
+		p := c.slots[s]
+		conns[s] = p
+		count[p] += n
+	}
+	c.mu.RUnlock()
+	return conns, count
+}
+
+func (c *clusterClient) pickMulti(slots map[uint16]int) (map[uint16]conn, map[conn]int, error) {
+	conns, count := c._pickMulti(slots)
+	if count[nil] > 0 {
+		if err := c.refresh(); err != nil {
+			return nil, nil, err
+		}
+		if conns, count = c._pickMulti(slots); count[nil] > 0 {
+			return nil, nil, ErrNoSlot
+		}
+	}
+	return conns, count, nil
+}
+
+type retry struct {
+	cIndexes []int
+	commands []Completed
+	aIndexes []int
+	cAskings []Completed
+}
+
+func (c *clusterClient) DoMulti(ctx context.Context, multi ...Completed) []RedisResult {
 	if len(multi) == 0 {
 		return nil
 	}
+
 	slots := make(map[uint16]int, 8)
 	for _, cmd := range multi {
 		slots[cmd.Slot()]++
 	}
+
 	if len(slots) > 2 && slots[cmds.InitSlot] > 0 {
 		panic(panicMixCxSlot)
 	}
-	commands := make(map[uint16][]Completed, len(slots))
-	cIndexes := make(map[uint16][]int, len(slots))
-	if len(slots) == 2 && slots[cmds.InitSlot] > 0 {
+
+	if len(slots) == 1 || (len(slots) == 2 && slots[cmds.InitSlot] > 0) {
 		delete(slots, cmds.InitSlot)
 		for slot := range slots {
-			commands[slot] = multi
-		}
-	} else {
-		for slot, count := range slots {
-			cIndexes[slot] = make([]int, 0, count)
-			commands[slot] = make([]Completed, 0, count)
-		}
-		for i, cmd := range multi {
-			slot := cmd.Slot()
-			commands[slot] = append(commands[slot], cmd)
-			cIndexes[slot] = append(cIndexes[slot], i)
+			return c.doMulti(ctx, slot, multi)
 		}
 	}
 
-	results = make([]RedisResult, len(multi))
-	util.ParallelKeys(commands, func(slot uint16) {
-		c.doMulti(ctx, slot, commands[slot], cIndexes[slot], results)
-	})
+	conns, count, err := c.pickMulti(slots)
+	if err != nil {
+		return fillErrs(len(multi), err)
+	}
+
+	retries := make(map[conn]retry, len(count))
+
+	for cc, n := range count {
+		retries[cc] = retry{
+			cIndexes: make([]int, 0, n),
+			commands: make([]Completed, 0, n),
+		}
+	}
+	for i, cmd := range multi {
+		cc := conns[cmd.Slot()]
+		re := retries[cc]
+		re.commands = append(re.commands, cmd)
+		re.cIndexes = append(re.cIndexes, i)
+		retries[cc] = re
+	}
+
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+
+	results := make([]RedisResult, len(multi))
+	respsfn := func(cc conn, cIndexes []int, commands []Completed, resps []RedisResult) {
+		for i, resp := range resps {
+			ii := cIndexes[i]
+			cm := commands[i]
+			results[ii] = resp
+			addr, mode := c.shouldRefreshRetry(resp.Error(), ctx)
+			if c.retry && mode != RedirectNone && cm.IsReadOnly() {
+				nc := cc
+				if mode != RedirectRetry {
+					nc = c.redirectOrNew(addr, cc)
+				}
+				mu.Lock()
+				nr := retries[nc]
+				if mode == RedirectAsk {
+					nr.aIndexes = append(nr.aIndexes, ii)
+					nr.cAskings = append(nr.cAskings, cm)
+				} else {
+					nr.cIndexes = append(nr.cIndexes, ii)
+					nr.commands = append(nr.commands, cm)
+				}
+				retries[nc] = nr
+				mu.Unlock()
+			}
+		}
+	}
+
+retry:
+	wg.Add(len(retries))
+	mu.Lock()
+	for cc, re := range retries {
+		delete(retries, cc)
+		go func(cc conn, re retry) {
+			defer wg.Done()
+			if len(re.commands) != 0 {
+				respsfn(cc, re.cIndexes, re.commands, cc.DoMulti(ctx, re.commands...))
+			}
+			if len(re.cAskings) != 0 {
+				respsfn(cc, re.aIndexes, re.cAskings, askingMulti(cc, ctx, re.cAskings))
+			}
+		}(cc, re)
+	}
+	mu.Unlock()
+	wg.Wait()
+
+	if len(retries) != 0 {
+		goto retry
+	}
 
 	for i, cmd := range multi {
 		if results[i].NonRedisError() == nil {
@@ -336,24 +427,19 @@ func (c *clusterClient) DoMulti(ctx context.Context, multi ...Completed) (result
 	return results
 }
 
-func fillErrs(idx []int, results []RedisResult, err error) {
-	if idx == nil {
-		for i := range results {
-			results[i] = newErrResult(err)
-		}
-	} else {
-		for _, i := range idx {
-			results[i] = newErrResult(err)
-		}
+func fillErrs(n int, err error) (results []RedisResult) {
+	results = make([]RedisResult, n)
+	for i := range results {
+		results[i] = newErrResult(err)
 	}
+	return results
 }
 
-func (c *clusterClient) doMulti(ctx context.Context, slot uint16, multi []Completed, idx []int, results []RedisResult) {
+func (c *clusterClient) doMulti(ctx context.Context, slot uint16, multi []Completed) []RedisResult {
 retry:
 	cc, err := c.pick(slot)
 	if err != nil {
-		fillErrs(idx, results, err)
-		return
+		return fillErrs(len(multi), err)
 	}
 	resps := cc.DoMulti(ctx, multi...)
 process:
@@ -366,7 +452,7 @@ process:
 			}
 		case RedirectAsk:
 			if c.retry && allReadOnly(multi) {
-				resps = c.redirectOrNew(addr, cc).DoMulti(ctx, append([]Completed{cmds.AskingCmd}, multi...)...)[1:]
+				resps = askingMulti(c.redirectOrNew(addr, cc), ctx, multi)
 				goto process
 			}
 		case RedirectRetry:
@@ -376,15 +462,7 @@ process:
 			}
 		}
 	}
-	if idx == nil {
-		for i, res := range resps {
-			results[i] = res
-		}
-	} else {
-		for i, res := range resps {
-			results[idx[i]] = res
-		}
-	}
+	return resps
 }
 
 func (c *clusterClient) doCache(ctx context.Context, cmd Cacheable, ttl time.Duration) (resp RedisResult) {
@@ -400,8 +478,7 @@ process:
 		resp = c.redirectOrNew(addr, cc).DoCache(ctx, cmd, ttl)
 		goto process
 	case RedirectAsk:
-		// TODO ASKING OPT-IN Caching
-		resp = c.redirectOrNew(addr, cc).DoMulti(ctx, cmds.AskingCmd, Completed(cmd))[1]
+		resp = askingMultiCache(c.redirectOrNew(addr, cc), ctx, []CacheableTTL{CT(cmd, ttl)})[0]
 		goto process
 	case RedirectRetry:
 		if c.retry {
@@ -420,12 +497,42 @@ func (c *clusterClient) DoCache(ctx context.Context, cmd Cacheable, ttl time.Dur
 	return resp
 }
 
-func (c *clusterClient) doMultiCache(ctx context.Context, slot uint16, multi []CacheableTTL, idx []int, results []RedisResult) {
+func askingMulti(cc conn, ctx context.Context, multi []Completed) []RedisResult {
+	commands := make([]Completed, 0, len(multi)*2)
+	for _, cmd := range multi {
+		commands = append(commands, cmds.AskingCmd, cmd)
+	}
+	results := make([]RedisResult, 0, len(multi))
+	resps := cc.DoMulti(ctx, commands...)
+	for i := 1; i < len(resps); i += 2 {
+		results = append(results, resps[i])
+	}
+	return results
+}
+
+func askingMultiCache(cc conn, ctx context.Context, multi []CacheableTTL) []RedisResult {
+	commands := make([]Completed, 0, len(multi)*6)
+	for _, cmd := range multi {
+		ck, _ := cmds.CacheKey(cmd.Cmd)
+		commands = append(commands, cmds.OptInCmd, cmds.MultiCmd, cmds.AskingCmd, cmds.NewCompleted([]string{"PTTL", ck}), Completed(cmd.Cmd), cmds.ExecCmd)
+	}
+	results := make([]RedisResult, 0, len(multi))
+	resps := cc.DoMulti(ctx, commands...)
+	for i := 5; i < len(resps); i += 6 {
+		if arr, err := resps[i].ToArray(); err != nil {
+			results = append(results, newErrResult(err))
+		} else {
+			results = append(results, newResult(arr[len(arr)-1], nil))
+		}
+	}
+	return results
+}
+
+func (c *clusterClient) doMultiCache(ctx context.Context, slot uint16, multi []CacheableTTL) []RedisResult {
 retry:
 	cc, err := c.pick(slot)
 	if err != nil {
-		fillErrs(idx, results, err)
-		return
+		return fillErrs(len(multi), err)
 	}
 	resps := cc.DoMultiCache(ctx, multi...)
 process:
@@ -435,21 +542,7 @@ process:
 			resps = c.redirectOrNew(addr, cc).DoMultiCache(ctx, multi...)
 			goto process
 		case RedirectAsk:
-			commands := make([]Completed, 0, len(multi)+3)
-			commands = append(commands, cmds.AskingCmd, cmds.MultiCmd)
-			for _, cmd := range multi {
-				commands = append(commands, Completed(cmd.Cmd))
-			}
-			commands = append(commands, cmds.ExecCmd)
-			if asked, err := c.redirectOrNew(addr, cc).DoMulti(ctx, commands...)[len(commands)-1].ToArray(); err != nil {
-				for i := range resps {
-					resps[i] = newErrResult(err)
-				}
-			} else {
-				for i, ret := range asked {
-					resps[i] = newResult(ret, nil)
-				}
-			}
+			resps = askingMultiCache(c.redirectOrNew(addr, cc), ctx, multi)
 			goto process
 		case RedirectRetry:
 			if c.retry {
@@ -458,45 +551,104 @@ process:
 			}
 		}
 	}
-	if idx == nil {
-		copy(results, resps)
-	} else {
-		for i, resp := range resps {
-			results[idx[i]] = resp
-		}
-	}
+	return resps
 }
 
-func (c *clusterClient) DoMultiCache(ctx context.Context, multi ...CacheableTTL) (results []RedisResult) {
+type retrycache struct {
+	cIndexes []int
+	commands []CacheableTTL
+	aIndexes []int
+	cAskings []CacheableTTL
+}
+
+func (c *clusterClient) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisResult {
 	if len(multi) == 0 {
 		return nil
 	}
+
 	slots := make(map[uint16]int, 8)
 	for _, cmd := range multi {
 		slots[cmd.Cmd.Slot()]++
 	}
-	commands := make(map[uint16][]CacheableTTL, len(slots))
-	cIndexes := make(map[uint16][]int, len(slots))
+
 	if len(slots) == 1 {
 		for slot := range slots {
-			commands[slot] = multi
-		}
-	} else {
-		for slot, count := range slots {
-			cIndexes[slot] = make([]int, 0, count)
-			commands[slot] = make([]CacheableTTL, 0, count)
-		}
-		for i, cmd := range multi {
-			slot := cmd.Cmd.Slot()
-			commands[slot] = append(commands[slot], cmd)
-			cIndexes[slot] = append(cIndexes[slot], i)
+			return c.doMultiCache(ctx, slot, multi)
 		}
 	}
 
-	results = make([]RedisResult, len(multi))
-	util.ParallelKeys(commands, func(slot uint16) {
-		c.doMultiCache(ctx, slot, commands[slot], cIndexes[slot], results)
-	})
+	conns, count, err := c.pickMulti(slots)
+	if err != nil {
+		return fillErrs(len(multi), err)
+	}
+
+	retries := make(map[conn]retrycache, len(count))
+
+	for cc, n := range count {
+		retries[cc] = retrycache{
+			cIndexes: make([]int, 0, n),
+			commands: make([]CacheableTTL, 0, n),
+		}
+	}
+	for i, cmd := range multi {
+		cc := conns[cmd.Cmd.Slot()]
+		re := retries[cc]
+		re.commands = append(re.commands, cmd)
+		re.cIndexes = append(re.cIndexes, i)
+		retries[cc] = re
+	}
+
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+
+	results := make([]RedisResult, len(multi))
+	respsfn := func(cc conn, cIndexes []int, commands []CacheableTTL, resps []RedisResult) {
+		for i, resp := range resps {
+			ii := cIndexes[i]
+			cm := commands[i]
+			results[ii] = resp
+			addr, mode := c.shouldRefreshRetry(resp.Error(), ctx)
+			if c.retry && mode != RedirectNone {
+				nc := cc
+				if mode != RedirectRetry {
+					nc = c.redirectOrNew(addr, cc)
+				}
+				mu.Lock()
+				nr := retries[nc]
+				if mode == RedirectAsk {
+					nr.aIndexes = append(nr.aIndexes, ii)
+					nr.cAskings = append(nr.cAskings, cm)
+				} else {
+					nr.cIndexes = append(nr.cIndexes, ii)
+					nr.commands = append(nr.commands, cm)
+				}
+				retries[nc] = nr
+				mu.Unlock()
+			}
+		}
+	}
+
+retry:
+	wg.Add(len(retries))
+	mu.Lock()
+	for cc, re := range retries {
+		delete(retries, cc)
+		go func(cc conn, re retrycache) {
+			defer wg.Done()
+			if len(re.commands) != 0 {
+				respsfn(cc, re.cIndexes, re.commands, cc.DoMultiCache(ctx, re.commands...))
+			}
+			if len(re.cAskings) != 0 {
+				respsfn(cc, re.aIndexes, re.cAskings, askingMultiCache(cc, ctx, re.cAskings))
+			}
+		}(cc, re)
+	}
+	mu.Unlock()
+	wg.Wait()
+
+	if len(retries) != 0 {
+		goto retry
+	}
 
 	for i, cmd := range multi {
 		if err := results[i].NonRedisError(); err == nil || err == ErrDoCacheAborted {
