@@ -418,9 +418,9 @@ func (p *pipe) _backgroundRead() (err error) {
 			}
 		}
 		// if unfulfilled multi commands are lead by opt-in and get success response
-		if ff == len(multi)-1 && multi[0].IsOptIn() && len(msg.values) >= 2 {
+		if ff >= 4 && len(msg.values) >= 2 && multi[0].IsOptIn() {
 			now := time.Now()
-			if cacheable := Cacheable(multi[len(multi)-2]); cacheable.IsMGet() {
+			if cacheable := Cacheable(multi[ff-1]); cacheable.IsMGet() {
 				cc := cmds.MGetCacheCmd(cacheable)
 				msgs := msg.values[len(msg.values)-1].values
 				for i, cp := range msgs {
@@ -432,17 +432,14 @@ func (p *pipe) _backgroundRead() (err error) {
 					msgs[i].setExpireAt(p.cache.Update(ck, cc, cp))
 				}
 			} else {
-				msgs := msg.values
-				for i := 1; i < len(msgs); i += 2 {
-					cacheable = Cacheable(multi[i+2])
-					ck, cc := cmds.CacheKey(cacheable)
-					cp := msg.values[i]
-					cp.attrs = cacheMark
-					if pttl := msg.values[i-1].integer; pttl >= 0 {
-						cp.setExpireAt(now.Add(time.Duration(pttl) * time.Millisecond).UnixMilli())
-					}
-					msgs[i].setExpireAt(p.cache.Update(ck, cc, cp))
+				ck, cc := cmds.CacheKey(cacheable)
+				ci := len(msg.values) - 1
+				cp := msg.values[ci]
+				cp.attrs = cacheMark
+				if pttl := msg.values[ci-1].integer; pttl >= 0 {
+					cp.setExpireAt(now.Add(time.Duration(pttl) * time.Millisecond).UnixMilli())
 				}
+				msg.values[ci].setExpireAt(p.cache.Update(ck, cc, cp))
 			}
 		}
 		if ff == len(multi) {
@@ -1024,14 +1021,14 @@ func (p *pipe) DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) Re
 
 func (p *pipe) doCacheMGet(ctx context.Context, cmd Cacheable, ttl time.Duration) RedisResult {
 	commands := cmd.Commands()
-	entries := make(map[int]CacheEntry)
+	keys := len(commands) - 1
 	builder := cmds.NewBuilder(cmds.InitSlot)
 	result := RedisResult{val: RedisMessage{typ: '*', values: nil}}
 	mgetcc := cmds.MGetCacheCmd(cmd)
-	keys := len(commands) - 1
 	if mgetcc[0] == 'J' {
 		keys-- // the last one of JSON.MGET is a path, not a key
 	}
+	entries := make(map[int]CacheEntry, keys)
 	var now = time.Now()
 	var rewrite cmds.Arbitrary
 	for i, key := range commands[1 : keys+1] {
@@ -1132,8 +1129,8 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisR
 	cmds.CacheableCS(multi[0].Cmd).Verify()
 
 	results := make([]RedisResult, len(multi))
-	entries := make(map[int]CacheEntry)
-	missing := []Completed{cmds.OptInCmd, cmds.MultiCmd}
+	entries := make(map[int]CacheEntry, len(multi))
+	var missing []Completed
 	now := time.Now()
 	for i, ct := range multi {
 		if ct.Cmd.IsMGet() {
@@ -1149,28 +1146,20 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisR
 			entries[i] = entry // store entries for later entry.Wait() to avoid MGET deadlock each others.
 			continue
 		}
-		missing = append(missing, cmds.NewCompleted([]string{"PTTL", ck}), Completed(ct.Cmd))
+		missing = append(missing, cmds.OptInCmd, cmds.MultiCmd, cmds.NewCompleted([]string{"PTTL", ck}), Completed(ct.Cmd), cmds.ExecCmd)
 	}
 
-	var exec []RedisMessage
-	var err error
-	if len(missing) > 2 {
-		missing = append(missing, cmds.ExecCmd)
-		resp := p.DoMulti(ctx, missing...)
-		exec, err = resp[len(missing)-1].ToArray()
-		if err != nil {
-			if _, ok := err.(*RedisError); ok {
-				err = ErrDoCacheAborted
-			}
-			for i := 3; i < len(missing); i += 2 {
-				cacheable := Cacheable(missing[i])
-				ck, cc := cmds.CacheKey(cacheable)
+	var resp []RedisResult
+	if len(missing) > 0 {
+		resp = p.DoMulti(ctx, missing...)
+		for i := 4; i < len(resp); i += 5 {
+			if err := resp[i].Error(); err != nil {
+				if _, ok := err.(*RedisError); ok {
+					err = ErrDoCacheAborted
+				}
+				ck, cc := cmds.CacheKey(Cacheable(missing[i-1]))
 				p.cache.Cancel(ck, cc, err)
 			}
-			for i := range results {
-				results[i] = newErrResult(err)
-			}
-			return results
 		}
 	}
 
@@ -1179,10 +1168,18 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisR
 	}
 
 	j := 0
-	for i := 1; i < len(exec); i += 2 {
+	for i := 4; i < len(resp); i += 5 {
 		for ; j < len(results); j++ {
 			if results[j].val.typ == 0 && results[j].err == nil {
-				results[j] = newResult(exec[i], nil)
+				exec, err := resp[i].ToArray()
+				if err != nil {
+					if _, ok := err.(*RedisError); ok {
+						err = ErrDoCacheAborted
+					}
+					results[j] = newErrResult(err)
+				} else {
+					results[j] = newResult(exec[len(exec)-1], nil)
+				}
 				break
 			}
 		}
