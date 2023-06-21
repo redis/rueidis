@@ -230,43 +230,67 @@ func (m *mux) DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) Red
 	return resp
 }
 
-func (m *mux) DoMultiCache(ctx context.Context, multi ...CacheableTTL) (results []RedisResult) {
-	var slots map[uint16]int
+var recsp = util.NewPool(func(capacity int) *retrycache {
+	return &retrycache{
+		cIndexes: make([]int, 0, capacity),
+		commands: make([]CacheableTTL, 0, capacity),
+	}
+})
+
+func (m *mux) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisResult {
+	var slots []int
 	var mask = uint16(len(m.wire) - 1)
 
 	if mask == 0 {
 		return m.doMultiCache(ctx, 0, multi)
 	}
 
-	slots = make(map[uint16]int, len(m.wire))
+	slots = make([]int, len(m.wire))
 	for _, cmd := range multi {
 		slots[cmd.Cmd.Slot()&mask]++
 	}
 
-	if len(slots) == 1 {
+	sc := 0
+	for _, count := range slots {
+		if count > 0 {
+			sc++
+		}
+	}
+	if sc == 1 {
 		return m.doMultiCache(ctx, multi[0].Cmd.Slot()&mask, multi)
 	}
 
-	commands := make(map[uint16][]CacheableTTL, len(slots))
-	cIndexes := make(map[uint16][]int, len(slots))
+	retries := make([]*retrycache, len(slots))
 	for slot, count := range slots {
-		cIndexes[slot] = make([]int, 0, count)
-		commands[slot] = make([]CacheableTTL, 0, count)
+		if count > 0 {
+			retries[slot] = recsp.Get(0, count)
+		}
 	}
 	for i, cmd := range multi {
-		slot := cmd.Cmd.Slot() & mask
-		commands[slot] = append(commands[slot], cmd)
-		cIndexes[slot] = append(cIndexes[slot], i)
+		re := retries[cmd.Cmd.Slot()&mask]
+		re.commands = append(re.commands, cmd)
+		re.cIndexes = append(re.cIndexes, i)
 	}
 
-	results = make([]RedisResult, len(multi))
-	util.ParallelKeys(commands, func(slot uint16) {
-		for i, r := range m.doMultiCache(ctx, slot, commands[slot]) {
-			results[cIndexes[slot][i]] = r
+	results := rrssp.Get(len(multi), len(multi))
+	util.ParallelArrI(retries, func(slot int) {
+		re := retries[slot]
+		if len(re.commands) > 0 {
+			resps := m.doMultiCache(ctx, uint16(slot), re.commands)
+			for i, r := range resps {
+				results.rs[re.cIndexes[i]] = r
+			}
+			rrssp.Put(&rrs{rs: resps})
 		}
 	})
 
-	return results
+	for slot, count := range slots {
+		if count > 0 {
+			recsp.Put(retries[slot])
+		}
+	}
+
+	return results.rs
 }
 
 func (m *mux) doMultiCache(ctx context.Context, slot uint16, multi []CacheableTTL) (resps []RedisResult) {

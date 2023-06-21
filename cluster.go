@@ -325,6 +325,17 @@ type retry struct {
 	cAskings []Completed
 }
 
+func (r *retry) Capacity() int {
+	return cap(r.commands)
+}
+
+func (r *retry) ResetLen(n int) {
+	r.cIndexes = r.cIndexes[:n]
+	r.commands = r.commands[:n]
+	r.aIndexes = r.aIndexes[:0]
+	r.cAskings = r.cAskings[:0]
+}
+
 func (c *clusterClient) DoMulti(ctx context.Context, multi ...Completed) []RedisResult {
 	if len(multi) == 0 {
 		return nil
@@ -559,6 +570,17 @@ type retrycache struct {
 	commands []CacheableTTL
 	aIndexes []int
 	cAskings []CacheableTTL
+}
+
+func (r *retrycache) Capacity() int {
+	return cap(r.commands)
+}
+
+func (r *retrycache) ResetLen(n int) {
+	r.cIndexes = r.cIndexes[:n]
+	r.commands = r.commands[:n]
+	r.aIndexes = r.aIndexes[:0]
+	r.cAskings = r.cAskings[:0]
 }
 
 func (c *clusterClient) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisResult {

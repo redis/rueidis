@@ -174,7 +174,9 @@ func clientMDel(client Client, ctx context.Context, keys []string) map[string]er
 
 func doMultiCache(cc Client, ctx context.Context, cmds []CacheableTTL, keys []string) (ret map[string]RedisMessage, err error) {
 	ret = make(map[string]RedisMessage, len(keys))
-	for i, resp := range cc.DoMultiCache(ctx, cmds...) {
+	resps := cc.DoMultiCache(ctx, cmds...)
+	defer rrssp.Put(&rrs{rs: resps})
+	for i, resp := range resps {
 		if err := resp.NonRedisError(); err != nil {
 			return nil, err
 		}

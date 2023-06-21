@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/redis/rueidis/internal/cmds"
+	"github.com/redis/rueidis/internal/util"
 )
 
 var noHello = regexp.MustCompile("unknown command .?HELLO.?")
@@ -1117,6 +1118,41 @@ func (p *pipe) doCacheMGet(ctx context.Context, cmd Cacheable, ttl time.Duration
 	return result
 }
 
+type rrs struct {
+	rs []RedisResult
+}
+
+func (r *rrs) Capacity() int {
+	return cap(r.rs)
+}
+
+func (r *rrs) ResetLen(n int) {
+	r.rs = r.rs[:n]
+}
+
+type ces struct {
+	ce map[int]CacheEntry
+	ca int
+}
+
+func (c *ces) Capacity() int {
+	return c.ca
+}
+
+func (c *ces) ResetLen(n int) {
+	for k := range c.ce {
+		delete(c.ce, k)
+	}
+}
+
+var rrssp = util.NewPool(func(capacity int) *rrs {
+	return &rrs{rs: make([]RedisResult, 0, capacity)}
+})
+
+var cessp = util.NewPool(func(capacity int) *ces {
+	return &ces{ce: make(map[int]CacheEntry, capacity), ca: capacity}
+})
+
 func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisResult {
 	if p.cache == nil {
 		commands := make([]Completed, len(multi))
@@ -1128,8 +1164,9 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisR
 
 	cmds.CacheableCS(multi[0].Cmd).Verify()
 
-	results := make([]RedisResult, len(multi))
-	entries := make(map[int]CacheEntry, len(multi))
+	results := rrssp.Get(len(multi), len(multi))
+	entries := cessp.Get(len(multi), len(multi))
+
 	var missing []Completed
 	now := time.Now()
 	for i, ct := range multi {
@@ -1139,11 +1176,11 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisR
 		ck, cc := cmds.CacheKey(ct.Cmd)
 		v, entry := p.cache.Flight(ck, cc, ct.TTL, now)
 		if v.typ != 0 { // cache hit for one key
-			results[i] = newResult(v, nil)
+			results.rs[i] = newResult(v, nil)
 			continue
 		}
 		if entry != nil {
-			entries[i] = entry // store entries for later entry.Wait() to avoid MGET deadlock each others.
+			entries.ce[i] = entry // store entries for later entry.Wait() to avoid MGET deadlock each others.
 			continue
 		}
 		missing = append(missing, cmds.OptInCmd, cmds.MultiCmd, cmds.NewCompleted([]string{"PTTL", ck}), Completed(ct.Cmd), cmds.ExecCmd)
@@ -1163,28 +1200,29 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisR
 		}
 	}
 
-	for i, entry := range entries {
-		results[i] = newResult(entry.Wait(ctx))
+	for i, entry := range entries.ce {
+		results.rs[i] = newResult(entry.Wait(ctx))
 	}
+	cessp.Put(entries)
 
 	j := 0
 	for i := 4; i < len(resp); i += 5 {
-		for ; j < len(results); j++ {
-			if results[j].val.typ == 0 && results[j].err == nil {
+		for ; j < len(results.rs); j++ {
+			if results.rs[j].val.typ == 0 && results.rs[j].err == nil {
 				exec, err := resp[i].ToArray()
 				if err != nil {
 					if _, ok := err.(*RedisError); ok {
 						err = ErrDoCacheAborted
 					}
-					results[j] = newErrResult(err)
+					results.rs[j] = newErrResult(err)
 				} else {
-					results[j] = newResult(exec[len(exec)-1], nil)
+					results.rs[j] = newResult(exec[len(exec)-1], nil)
 				}
 				break
 			}
 		}
 	}
-	return results
+	return results.rs
 }
 
 func (p *pipe) Error() error {
