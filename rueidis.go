@@ -81,7 +81,12 @@ type ClientOption struct {
 	// Rueidis will connect to them one by one and issue CLUSTER SLOT command to initialize the cluster client until success.
 	// If len(InitAddress) == 1 and the address is not running in cluster mode, rueidis will fall back to the single client mode.
 	// If ClientOption.Sentinel.MasterSet is set, then InitAddress will be used to connect sentinels
+	// You can bypass this behaviour by using ClientOption.ForceSingleClient.
 	InitAddress []string
+
+	//  ForceSingleClient force the usage of a single client connection, without letting the lib guessing
+	//  if redis instance is a cluster or a single redis instance.
+	ForceSingleClient bool
 
 	// ClientTrackingOptions will be appended to CLIENT TRACKING ON command when the connection is established.
 	// The default is []string{"OPTIN"}
@@ -296,6 +301,12 @@ func NewClient(option ClientOption) (client Client, err error) {
 	}
 	pmbk := option.PipelineMultiplex
 	option.PipelineMultiplex = 0 // PipelineMultiplex is meaningless for cluster client
+
+	if option.ForceSingleClient {
+		option.PipelineMultiplex = singleClientMultiplex(pmbk)
+		conn := makeConn(option.InitAddress[0], &option)
+		return newSingleClientWithConn(conn, cmds.NewBuilder(cmds.NoSlot), !option.DisableRetry), nil
+	}
 	if client, err = newClusterClient(&option, makeConn); err != nil {
 		if len(option.InitAddress) == 1 && (err.Error() == redisErrMsgCommandNotAllow || strings.Contains(strings.ToUpper(err.Error()), "CLUSTER")) {
 			option.PipelineMultiplex = singleClientMultiplex(pmbk)
