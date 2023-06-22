@@ -1169,20 +1169,17 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisR
 
 	var missing []Completed
 	now := time.Now()
-	for i, ct := range multi {
+	for _, ct := range multi {
 		if ct.Cmd.IsMGet() {
 			panic(panicmgetcsc)
 		}
-		ck, cc := cmds.CacheKey(ct.Cmd)
-		v, entry := p.cache.Flight(ck, cc, ct.TTL, now)
-		if v.typ != 0 { // cache hit for one key
-			results.rs[i] = newResult(v, nil)
+	}
+	p.cache.(*lru).Flights(now, multi, results.rs, entries.ce)
+	for i, ct := range multi {
+		if results.rs[i].val.typ != 0 || entries.ce[i] != nil {
 			continue
 		}
-		if entry != nil {
-			entries.ce[i] = entry // store entries for later entry.Wait() to avoid MGET deadlock each others.
-			continue
-		}
+		ck, _ := cmds.CacheKey(ct.Cmd)
 		missing = append(missing, cmds.OptInCmd, cmds.MultiCmd, cmds.NewCompleted([]string{"PTTL", ck}), Completed(ct.Cmd), cmds.ExecCmd)
 	}
 

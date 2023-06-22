@@ -7,6 +7,8 @@ import (
 	"sync/atomic"
 	"time"
 	"unsafe"
+
+	"github.com/redis/rueidis/internal/cmds"
 )
 
 const (
@@ -126,6 +128,75 @@ func (c *lru) Flight(key, cmd string, ttl time.Duration, now time.Time) (v Redis
 ret:
 	c.mu.Unlock()
 	return v, ce
+}
+
+func (c *lru) Flights(now time.Time, multi []CacheableTTL, results []RedisResult, entries map[int]CacheEntry) {
+	missed := false
+	c.mu.RLock()
+	for i, ct := range multi {
+		key, cmd := cmds.CacheKey(ct.Cmd)
+		if kc, ok := c.store[key]; ok {
+			if ele, ok := kc.cache[cmd]; ok {
+				e := ele.Value.(*cacheEntry)
+				v := e.val
+				if v.typ == 0 {
+					entries[i] = e
+				} else if v.relativePTTL(now) > 0 {
+					results[i] = newResult(v, nil)
+				}
+				atomic.AddUint64(&kc.hits, 1) // TODO move to back
+				continue
+			}
+		}
+		missed = true
+	}
+	c.mu.RUnlock()
+
+	if !missed {
+		return
+	}
+
+	c.mu.Lock()
+	for i, ct := range multi {
+		if results[i].val.typ != 0 || entries[i] != nil {
+			continue
+		}
+		key, cmd := cmds.CacheKey(ct.Cmd)
+		kc, ok := c.store[key]
+		if !ok {
+			if c.store == nil {
+				goto ret
+			}
+			kc = &keyCache{cache: make(map[string]*list.Element, 1), key: key}
+			c.store[key] = kc
+		}
+		if ele, ok := kc.cache[cmd]; ok {
+			e := ele.Value.(*cacheEntry)
+			v := e.val
+			if v.typ == 0 {
+				entries[i] = e
+				atomic.AddUint64(&kc.hits, 1)
+				c.list.MoveToBack(ele)
+				continue
+			} else if v.relativePTTL(now) > 0 {
+				results[i] = newResult(v, nil)
+				atomic.AddUint64(&kc.hits, 1)
+				c.list.MoveToBack(ele)
+				continue
+			} else {
+				c.list.Remove(ele)
+				c.size -= e.size
+			}
+		}
+		atomic.AddUint64(&kc.miss, 1)
+		v := RedisMessage{}
+		v.setExpireAt(now.Add(ct.TTL).UnixMilli())
+		c.list.PushBack(&cacheEntry{cmd: cmd, kc: kc, val: v, ch: make(chan struct{})})
+		kc.cache[cmd] = c.list.Back()
+	}
+ret:
+	c.mu.Unlock()
+	return
 }
 
 func (c *lru) Update(key, cmd string, value RedisMessage) (pxat int64) {
