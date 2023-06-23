@@ -85,15 +85,17 @@ func (c *clusterClient) refresh() (err error) {
 	return c.sc.Do(c._refresh)
 }
 
+type clusterslots struct {
+	reply RedisResult
+	addr  string
+}
+
 func (c *clusterClient) _refresh() (err error) {
 	var reply RedisMessage
 	var addr string
 
 	c.mu.RLock()
-	results := make(chan struct {
-		reply RedisResult
-		conn  conn
-	}, len(c.conns))
+	results := make(chan clusterslots, len(c.conns))
 	pending := make([]conn, 0, len(c.conns))
 	for _, cc := range c.conns {
 		pending = append(pending, cc)
@@ -104,15 +106,12 @@ func (c *clusterClient) _refresh() (err error) {
 		if i&3 == 0 { // batch CLUSTER SLOTS for every 4 connections
 			for j := i; j < i+4 && j < len(pending); j++ {
 				go func(c conn) {
-					results <- struct {
-						reply RedisResult
-						conn  conn
-					}{c.Do(context.Background(), cmds.SlotCmd), c}
+					results <- clusterslots{reply: c.Do(context.Background(), cmds.SlotCmd), addr: c.Addr()}
 				}(pending[j])
 			}
 		}
 		r := <-results
-		addr = r.conn.Addr()
+		addr = r.addr
 		reply, err = r.reply.ToMessage()
 		if len(reply.values) != 0 {
 			break

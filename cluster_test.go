@@ -64,6 +64,20 @@ var singleSlotWithoutIP = newResult(RedisMessage{typ: '*', values: []RedisMessag
 			{typ: ':', integer: 4},
 			{typ: '+', string: ""},
 		}},
+		{typ: '*', values: []RedisMessage{ // replica
+			{typ: '+', string: "?"},
+			{typ: ':', integer: 1},
+			{typ: '+', string: ""},
+		}},
+	}},
+	{typ: '*', values: []RedisMessage{
+		{typ: ':', integer: 0},
+		{typ: ':', integer: 0},
+		{typ: '*', values: []RedisMessage{ // master
+			{typ: '+', string: "?"},
+			{typ: ':', integer: 4},
+			{typ: '+', string: ""},
+		}},
 	}},
 }}, nil)
 
