@@ -87,9 +87,13 @@ func (c *clusterClient) refresh() (err error) {
 
 func (c *clusterClient) _refresh() (err error) {
 	var reply RedisMessage
+	var addr string
 
 	c.mu.RLock()
-	results := make(chan RedisResult, len(c.conns))
+	results := make(chan struct {
+		reply RedisResult
+		conn  conn
+	}, len(c.conns))
 	pending := make([]conn, 0, len(c.conns))
 	for _, cc := range c.conns {
 		pending = append(pending, cc)
@@ -99,10 +103,18 @@ func (c *clusterClient) _refresh() (err error) {
 	for i := 0; i < cap(results); i++ {
 		if i&3 == 0 { // batch CLUSTER SLOTS for every 4 connections
 			for j := i; j < i+4 && j < len(pending); j++ {
-				go func(c conn) { results <- c.Do(context.Background(), cmds.SlotCmd) }(pending[j])
+				go func(c conn) {
+					results <- struct {
+						reply RedisResult
+						conn  conn
+					}{c.Do(context.Background(), cmds.SlotCmd), c}
+				}(pending[j])
 			}
 		}
-		if reply, err = (<-results).ToMessage(); len(reply.values) != 0 {
+		r := <-results
+		addr = r.conn.Addr()
+		reply, err = r.reply.ToMessage()
+		if len(reply.values) != 0 {
 			break
 		}
 	}
@@ -112,7 +124,7 @@ func (c *clusterClient) _refresh() (err error) {
 		return err
 	}
 
-	groups := parseSlots(reply)
+	groups := parseSlots(reply, addr)
 
 	// TODO support read from replicas
 	conns := make(map[string]conn, len(groups))
@@ -186,16 +198,34 @@ type group struct {
 	slots [][2]int64
 }
 
-func parseSlots(slots RedisMessage) map[string]group {
+// parseSlots - map redis slots for each redis nodes/addresses
+// defaultAddr is needed in case the node does not know its own IP
+func parseSlots(slots RedisMessage, defaultAddr string) map[string]group {
 	groups := make(map[string]group, len(slots.values))
 	for _, v := range slots.values {
-		master := net.JoinHostPort(v.values[2].values[0].string, strconv.FormatInt(v.values[2].values[1].integer, 10))
+		var master string
+		switch v.values[2].values[0].string {
+		case "":
+			master = defaultAddr
+		case "?":
+			continue
+		default:
+			master = net.JoinHostPort(v.values[2].values[0].string, strconv.FormatInt(v.values[2].values[1].integer, 10))
+		}
 		g, ok := groups[master]
 		if !ok {
 			g.slots = make([][2]int64, 0)
 			g.nodes = make([]string, 0, len(v.values)-2)
 			for i := 2; i < len(v.values); i++ {
-				dst := net.JoinHostPort(v.values[i].values[0].string, strconv.FormatInt(v.values[i].values[1].integer, 10))
+				var dst string
+				switch v.values[i].values[0].string {
+				case "":
+					dst = defaultAddr
+				case "?":
+					continue
+				default:
+					dst = net.JoinHostPort(v.values[i].values[0].string, strconv.FormatInt(v.values[i].values[1].integer, 10))
+				}
 				g.nodes = append(g.nodes, dst)
 			}
 		}
