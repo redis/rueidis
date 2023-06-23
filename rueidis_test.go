@@ -156,6 +156,38 @@ func TestFallBackSingleClient(t *testing.T) {
 	<-done
 }
 
+func TestForceSingleClient(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ln.Close()
+	done := make(chan struct{})
+	go func() {
+		mock, err := accept(t, ln)
+		if err != nil {
+			return
+		}
+		mock.Expect("QUIT").ReplyString("OK")
+		mock.Close()
+		close(done)
+	}()
+	_, port, _ := net.SplitHostPort(ln.Addr().String())
+	client, err := NewClient(ClientOption{
+		InitAddress: []string{"127.0.0.1:" + port},
+		ForceSingleClient: true,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := client.(*singleClient); !ok {
+		t.Fatal("client should be a singleClient")
+	}
+	client.Close()
+	<-done
+}
+
 func TestTLSClient(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	pub, priv, err := ed25519.GenerateKey(rand.Reader)
