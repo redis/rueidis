@@ -25,8 +25,8 @@ type singleconnect struct {
 type conn interface {
 	Do(ctx context.Context, cmd Completed) RedisResult
 	DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) RedisResult
-	DoMulti(ctx context.Context, multi ...Completed) []RedisResult
-	DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisResult
+	DoMulti(ctx context.Context, multi ...Completed) *redisresults
+	DoMultiCache(ctx context.Context, multi ...CacheableTTL) *redisresults
 	Receive(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error
 	Info() map[string]RedisMessage
 	Error() error
@@ -166,7 +166,7 @@ func (m *mux) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 	return resp
 }
 
-func (m *mux) DoMulti(ctx context.Context, multi ...Completed) (resp []RedisResult) {
+func (m *mux) DoMulti(ctx context.Context, multi ...Completed) (resp *redisresults) {
 	for _, cmd := range multi {
 		if cmd.IsBlock() {
 			goto block
@@ -188,10 +188,10 @@ func (m *mux) blocking(ctx context.Context, cmd Completed) (resp RedisResult) {
 	return resp
 }
 
-func (m *mux) blockingMulti(ctx context.Context, cmd []Completed) (resp []RedisResult) {
+func (m *mux) blockingMulti(ctx context.Context, cmd []Completed) (resp *redisresults) {
 	wire := m.pool.Acquire()
 	resp = wire.DoMulti(ctx, cmd...)
-	for _, res := range resp {
+	for _, res := range resp.s {
 		if res.NonRedisError() != nil { // abort the wire if blocking command return early (ex. context.DeadlineExceeded)
 			wire.Close()
 			break
@@ -210,11 +210,11 @@ func (m *mux) pipeline(ctx context.Context, cmd Completed) (resp RedisResult) {
 	return resp
 }
 
-func (m *mux) pipelineMulti(ctx context.Context, cmd []Completed) (resp []RedisResult) {
+func (m *mux) pipelineMulti(ctx context.Context, cmd []Completed) (resp *redisresults) {
 	slot := cmd[0].Slot() & uint16(len(m.wire)-1)
 	wire := m.pipe(slot)
 	resp = wire.DoMulti(ctx, cmd...)
-	for _, r := range resp {
+	for _, r := range resp.s {
 		if isBroken(r.NonRedisError(), wire) {
 			m.wire[slot].CompareAndSwap(wire, m.init)
 			return resp
@@ -233,7 +233,7 @@ func (m *mux) DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) Red
 	return resp
 }
 
-func (m *mux) DoMultiCache(ctx context.Context, multi ...CacheableTTL) (results []RedisResult) {
+func (m *mux) DoMultiCache(ctx context.Context, multi ...CacheableTTL) (results *redisresults) {
 	var slots map[uint16]int
 	var mask = uint16(len(m.wire) - 1)
 
@@ -262,20 +262,22 @@ func (m *mux) DoMultiCache(ctx context.Context, multi ...CacheableTTL) (results 
 		cIndexes[slot] = append(cIndexes[slot], i)
 	}
 
-	results = make([]RedisResult, len(multi))
+	results = resultsp.Get(len(multi), len(multi))
 	util.ParallelKeys(m.maxp, commands, func(slot uint16) {
-		for i, r := range m.doMultiCache(ctx, slot, commands[slot]) {
-			results[cIndexes[slot][i]] = r
+		resp := m.doMultiCache(ctx, slot, commands[slot])
+		for i, r := range resp.s {
+			results.s[cIndexes[slot][i]] = r
 		}
+		resultsp.Put(resp)
 	})
 
 	return results
 }
 
-func (m *mux) doMultiCache(ctx context.Context, slot uint16, multi []CacheableTTL) (resps []RedisResult) {
+func (m *mux) doMultiCache(ctx context.Context, slot uint16, multi []CacheableTTL) (resps *redisresults) {
 	wire := m.pipe(slot)
 	resps = wire.DoMultiCache(ctx, multi...)
-	for _, r := range resps {
+	for _, r := range resps.s {
 		if isBroken(r.NonRedisError(), wire) {
 			m.wire[slot].CompareAndSwap(wire, m.init)
 			return resps

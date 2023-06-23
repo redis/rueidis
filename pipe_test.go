@@ -542,7 +542,7 @@ func TestWriteMultiFlush(t *testing.T) {
 	go func() {
 		mock.Expect("PING").Expect("PING").ReplyString("OK").ReplyString("OK")
 	}()
-	for _, resp := range p.DoMulti(context.Background(), cmds.NewCompleted([]string{"PING"}), cmds.NewCompleted([]string{"PING"})) {
+	for _, resp := range p.DoMulti(context.Background(), cmds.NewCompleted([]string{"PING"}), cmds.NewCompleted([]string{"PING"})).s {
 		ExpectOK(t, resp)
 	}
 }
@@ -557,7 +557,7 @@ func TestWriteMultiPipelineFlush(t *testing.T) {
 
 	for i := 0; i < times; i++ {
 		go func() {
-			for _, resp := range p.DoMulti(context.Background(), cmds.NewCompleted([]string{"PING"}), cmds.NewCompleted([]string{"PING"})) {
+			for _, resp := range p.DoMulti(context.Background(), cmds.NewCompleted([]string{"PING"}), cmds.NewCompleted([]string{"PING"})).s {
 				ExpectOK(t, resp)
 			}
 		}()
@@ -1203,7 +1203,7 @@ func TestClientSideCachingDoMultiCache(t *testing.T) {
 			CT(Cacheable(cmds.NewCompleted([]string{"GET", "a1"})), time.Second*10),
 			CT(Cacheable(cmds.NewCompleted([]string{"GET", "a2"})), time.Second*10),
 			CT(Cacheable(cmds.NewCompleted([]string{"GET", "a3"})), time.Second*10),
-		}...)
+		}...).s
 		if len(arr) != 3 {
 			t.Errorf("unexpected cached mget length, expected 3, got %v", len(arr))
 		}
@@ -1278,7 +1278,7 @@ func TestClientSideCachingDoMultiCache(t *testing.T) {
 		CT(Cacheable(cmds.NewCompleted([]string{"GET", "a1"})), time.Second*10),
 		CT(Cacheable(cmds.NewCompleted([]string{"GET", "a2"})), time.Second*10),
 		CT(Cacheable(cmds.NewCompleted([]string{"GET", "a3"})), time.Second*10),
-	}...)
+	}...).s
 	if len(arr) != 3 {
 		t.Errorf("unexpected cached mget length, expected 3, got %v", len(arr))
 	}
@@ -1335,7 +1335,7 @@ func TestClientSideCachingExecAbortDoMultiCache(t *testing.T) {
 	arr := p.DoMultiCache(context.Background(), []CacheableTTL{
 		CT(Cacheable(cmds.NewCompleted([]string{"GET", "a1"})), time.Second*10),
 		CT(Cacheable(cmds.NewCompleted([]string{"GET", "a2"})), time.Second*10),
-	}...)
+	}...).s
 	for i, resp := range arr {
 		v, err := resp.ToMessage()
 		if i == 0 {
@@ -1369,7 +1369,7 @@ func TestClientSideCachingWithNonRedisErrorDoMultiCache(t *testing.T) {
 	arr := p.DoMultiCache(context.Background(), []CacheableTTL{
 		CT(Cacheable(cmds.NewCompleted([]string{"GET", "a1"})), time.Second*10),
 		CT(Cacheable(cmds.NewCompleted([]string{"GET", "a2"})), time.Second*10),
-	}...)
+	}...).s
 	for _, resp := range arr {
 		v, err := resp.ToMessage()
 		if err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
@@ -1401,7 +1401,7 @@ func TestClientSideCachingWithSideChannelDoMultiCache(t *testing.T) {
 
 	arr := p.DoMultiCache(context.Background(), []CacheableTTL{
 		CT(Cacheable(cmds.NewCompleted([]string{"GET", "a1"})), time.Second*10),
-	}...)
+	}...).s
 	if arr[0].val.string != "OK" {
 		t.Errorf("unexpected value, got %v", arr[0].val.string)
 	}
@@ -1419,7 +1419,7 @@ func TestClientSideCachingWithSideChannelErrorDoMultiCache(t *testing.T) {
 
 	arr := p.DoMultiCache(context.Background(), []CacheableTTL{
 		CT(Cacheable(cmds.NewCompleted([]string{"GET", "a1"})), time.Second*10),
-	}...)
+	}...).s
 	if arr[0].err != io.EOF {
 		t.Errorf("unexpected err, got %v", arr[0].err)
 	}
@@ -1549,7 +1549,7 @@ func TestClientSideCachingMissCacheTTL(t *testing.T) {
 			CT(Cacheable(cmds.NewCompleted([]string{"GET", "a1"})), time.Second*10),
 			CT(Cacheable(cmds.NewCompleted([]string{"GET", "a2"})), time.Second*10),
 			CT(Cacheable(cmds.NewCompleted([]string{"GET", "a3"})), time.Second*10),
-		}...)
+		}...).s
 		if ttl := arr[0].CacheTTL(); ttl != 10 {
 			t.Errorf("unexpected cached ttl, expected %v, got %v", 10, ttl)
 		}
@@ -1749,7 +1749,7 @@ func TestDisableClientSideCaching(t *testing.T) {
 
 	vs := p.DoMultiCache(context.Background(),
 		CT(Cacheable(cmds.NewCompleted([]string{"GET", "b"})), 10*time.Second),
-		CT(Cacheable(cmds.NewCompleted([]string{"GET", "c"})), 10*time.Second))
+		CT(Cacheable(cmds.NewCompleted([]string{"GET", "c"})), 10*time.Second)).s
 	if vs[0].val.string != "2" {
 		t.Errorf("unexpected cached result, expected %v, got %v", "1", v.string)
 	}
@@ -2368,7 +2368,7 @@ func TestPubSub(t *testing.T) {
 			builder.Psubscribe().Pattern("b").Build(),
 			builder.Get().Key("c").Build(),
 		}
-		for _, resp := range p.DoMulti(context.Background(), commands...) {
+		for _, resp := range p.DoMulti(context.Background(), commands...).s {
 			if e := resp.Error(); e != ErrRESP2PubSubMixed {
 				t.Fatalf("unexpected err %v", e)
 			}
@@ -2392,7 +2392,7 @@ func TestPubSub(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 
-		if err := p.DoMulti(context.Background(), builder.Subscribe().Channel("a").Build())[0].Error(); err != e {
+		if err := p.DoMulti(context.Background(), builder.Subscribe().Channel("a").Build()).s[0].Error(); err != e {
 			t.Fatalf("unexpected err %v", err)
 		}
 	})
@@ -2509,12 +2509,12 @@ func TestPubSubHooks(t *testing.T) {
 			cancel()
 		}()
 
-		for _, r := range p.DoMulti(ctx, activate1, activate2) {
+		for _, r := range p.DoMulti(ctx, activate1, activate2).s {
 			if err := r.Error(); err != nil {
 				t.Fatalf("unexpected err %v", err)
 			}
 		}
-		for _, r := range p.DoMulti(ctx, deactivate1, deactivate2) {
+		for _, r := range p.DoMulti(ctx, deactivate1, deactivate2).s {
 			if err := r.Error(); err != nil {
 				t.Fatalf("unexpected err %v", err)
 			}
@@ -2596,12 +2596,12 @@ func TestPubSubHooks(t *testing.T) {
 			cancel()
 		}()
 
-		for _, r := range p.DoMulti(ctx, activate1, activate2) {
+		for _, r := range p.DoMulti(ctx, activate1, activate2).s {
 			if err := r.Error(); err != nil {
 				t.Fatalf("unexpected err %v", err)
 			}
 		}
-		for _, r := range p.DoMulti(ctx, deactivate1, deactivate2) {
+		for _, r := range p.DoMulti(ctx, deactivate1, deactivate2).s {
 			if err := r.Error(); err != nil {
 				t.Fatalf("unexpected err %v", err)
 			}
@@ -2661,7 +2661,7 @@ func TestExitOnWriteMultiError(t *testing.T) {
 	closeConn()
 
 	for i := 0; i < 2; i++ {
-		if err := p.DoMulti(context.Background(), cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
+		if err := p.DoMulti(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).s[0].NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 			t.Errorf("unexpected result, expected io err, got %v", err)
 		}
 	}
@@ -2738,7 +2738,7 @@ func TestExitAllGoroutineOnWriteError(t *testing.T) {
 			if err := conn.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 				t.Errorf("unexpected result, expected io err, got %v", err)
 			}
-			if err := conn.DoMulti(context.Background(), cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
+			if err := conn.DoMulti(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).s[0].NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 				t.Errorf("unexpected result, expected io err, got %v", err)
 			}
 		}()
@@ -2770,7 +2770,7 @@ func TestExitOnReadMultiError(t *testing.T) {
 	}()
 
 	for i := 0; i < 2; i++ {
-		if err := p.DoMulti(context.Background(), cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
+		if err := p.DoMulti(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).s[0].NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 			t.Errorf("unexpected result, expected io err, got %v", err)
 		}
 	}
@@ -2793,7 +2793,7 @@ func TestExitAllGoroutineOnReadError(t *testing.T) {
 			if err := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 				t.Errorf("unexpected result, expected io err, got %v", err)
 			}
-			if err := p.DoMulti(context.Background(), cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
+			if err := p.DoMulti(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).s[0].NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 				t.Errorf("unexpected result, expected io err, got %v", err)
 			}
 		}()
@@ -2841,7 +2841,7 @@ func TestAlreadyCanceledContext(t *testing.T) {
 	if err := p.Do(ctx, cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); !errors.Is(err, context.Canceled) {
 		t.Fatalf("unexpected err %v", err)
 	}
-	if err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); !errors.Is(err, context.Canceled) {
+	if err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"})).s[0].NonRedisError(); !errors.Is(err, context.Canceled) {
 		t.Fatalf("unexpected err %v", err)
 	}
 
@@ -2851,7 +2851,7 @@ func TestAlreadyCanceledContext(t *testing.T) {
 	if err := p.Do(ctx, cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); !errors.Is(err, context.DeadlineExceeded) {
 		t.Fatalf("unexpected err %v", err)
 	}
-	if err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); !errors.Is(err, context.DeadlineExceeded) {
+	if err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"})).s[0].NonRedisError(); !errors.Is(err, context.DeadlineExceeded) {
 		t.Fatalf("unexpected err %v", err)
 	}
 	close()
@@ -2902,7 +2902,7 @@ func TestCancelContext_DoMulti(t *testing.T) {
 		mock.Expect().ReplyString("OK")
 	}()
 
-	if err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); !errors.Is(err, context.Canceled) {
+	if err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"})).s[0].NonRedisError(); !errors.Is(err, context.Canceled) {
 		t.Fatalf("unexpected err %v", err)
 	}
 	shutdown()
@@ -2919,7 +2919,7 @@ func TestCancelContext_DoMulti_Block(t *testing.T) {
 		mock.Expect().ReplyString("OK")
 	}()
 
-	if err := p.DoMulti(ctx, cmds.NewBlockingCompleted([]string{"GET", "a"}))[0].NonRedisError(); !errors.Is(err, context.Canceled) {
+	if err := p.DoMulti(ctx, cmds.NewBlockingCompleted([]string{"GET", "a"})).s[0].NonRedisError(); !errors.Is(err, context.Canceled) {
 		t.Fatalf("unexpected err %v", err)
 	}
 	shutdown()
@@ -2963,7 +2963,7 @@ func TestForceClose_DoMulti_Block(t *testing.T) {
 		p.Close()
 	}()
 
-	if err := p.DoMulti(context.Background(), cmds.NewBlockingCompleted([]string{"GET", "a"}))[0].NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
+	if err := p.DoMulti(context.Background(), cmds.NewBlockingCompleted([]string{"GET", "a"})).s[0].NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 		t.Fatalf("unexpected err %v", err)
 	}
 }
@@ -2979,7 +2979,7 @@ func TestForceClose_DoMulti_Canceled_Block(t *testing.T) {
 		mock.Expect().ReplyString("OK")
 	}()
 
-	if err := p.DoMulti(ctx, cmds.NewBlockingCompleted([]string{"GET", "a"}))[0].NonRedisError(); !errors.Is(err, context.Canceled) {
+	if err := p.DoMulti(ctx, cmds.NewBlockingCompleted([]string{"GET", "a"})).s[0].NonRedisError(); !errors.Is(err, context.Canceled) {
 		t.Fatalf("unexpected err %v", err)
 	}
 	p.Close()
@@ -3021,7 +3021,7 @@ func TestSyncModeSwitchingWithDeadlineExceed_DoMulti(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		wg.Add(1)
 		go func() {
-			if err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); !errors.Is(err, context.DeadlineExceeded) {
+			if err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"})).s[0].NonRedisError(); !errors.Is(err, context.DeadlineExceeded) {
 				t.Errorf("unexpected err %v", err)
 			}
 			wg.Done()
@@ -3065,7 +3065,7 @@ func TestOngoingDeadlineContextInSyncMode_DoMulti(t *testing.T) {
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1*time.Second/2))
 	defer cancel()
 
-	if err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); !errors.Is(err, context.DeadlineExceeded) {
+	if err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"})).s[0].NonRedisError(); !errors.Is(err, context.DeadlineExceeded) {
 		t.Fatalf("unexpected err %v", err)
 	}
 	p.Close()
@@ -3075,7 +3075,7 @@ func TestWriteDeadlineInSyncMode_DoMulti(t *testing.T) {
 	p, _, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: time.Second / 2, Dialer: net.Dialer{KeepAlive: time.Second / 3}})
 	defer closeConn()
 
-	if err := p.DoMulti(context.Background(), cmds.NewCompleted([]string{"GET", "a"}))[0].NonRedisError(); !errors.Is(err, context.DeadlineExceeded) {
+	if err := p.DoMulti(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).s[0].NonRedisError(); !errors.Is(err, context.DeadlineExceeded) {
 		t.Fatalf("unexpected err %v", err)
 	}
 	p.Close()
@@ -3166,7 +3166,7 @@ func TestOngoingCancelContextInPipelineMode_DoMulti(t *testing.T) {
 
 	for i := 0; i < 5; i++ {
 		go func() {
-			_, err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"}))[0].ToString()
+			_, err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"})).s[0].ToString()
 			if errors.Is(err, context.Canceled) {
 				atomic.AddInt32(&canceled, 1)
 			} else {
@@ -3206,7 +3206,7 @@ func TestOngoingWriteTimeoutInPipelineMode_DoMulti(t *testing.T) {
 
 	for i := 0; i < 5; i++ {
 		go func() {
-			_, err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"}))[0].ToString()
+			_, err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"})).s[0].ToString()
 			if errors.Is(err, context.DeadlineExceeded) {
 				atomic.AddInt32(&timeout, 1)
 			} else {
@@ -3320,7 +3320,7 @@ func TestBlockingCommandNoDeadline(t *testing.T) {
 		}()
 		if val, err := p.DoMulti(context.Background(),
 			cmds.NewReadOnlyCompleted([]string{"READ"}),
-			cmds.NewBlockingCompleted([]string{"BLOCK"}))[1].ToString(); err != nil || val != "OK" {
+			cmds.NewBlockingCompleted([]string{"BLOCK"})).s[1].ToString(); err != nil || val != "OK" {
 			t.Fatalf("unexpect resp %v %v", err, val)
 		}
 	})
@@ -3363,7 +3363,7 @@ func TestBlockingCommandNoDeadline(t *testing.T) {
 		}()
 		if val, err := p.DoMulti(context.Background(),
 			cmds.NewReadOnlyCompleted([]string{"READ"}),
-			cmds.NewBlockingCompleted([]string{"BLOCK"}))[1].ToString(); err != nil || val != "OK" {
+			cmds.NewBlockingCompleted([]string{"BLOCK"})).s[1].ToString(); err != nil || val != "OK" {
 			t.Fatalf("unexpect resp %v %v", err, val)
 		}
 	})
@@ -3382,7 +3382,7 @@ func TestBlockingCommandNoDeadline(t *testing.T) {
 		<-wait
 		if val, err := p.DoMulti(context.Background(),
 			cmds.NewReadOnlyCompleted([]string{"READ"}),
-			cmds.NewBlockingCompleted([]string{"BLOCK"}))[1].ToString(); err != nil || val != "OK" {
+			cmds.NewBlockingCompleted([]string{"BLOCK"})).s[1].ToString(); err != nil || val != "OK" {
 			t.Fatalf("unexpect resp %v %v", err, val)
 		}
 	})
@@ -3396,7 +3396,7 @@ func TestDeadPipe(t *testing.T) {
 	if err := deadFn().Do(ctx, cmds.NewCompleted(nil)).Error(); err != ErrClosing {
 		t.Fatalf("unexpected err %v", err)
 	}
-	if err := deadFn().DoMulti(ctx, cmds.NewCompleted(nil))[0].Error(); err != ErrClosing {
+	if err := deadFn().DoMulti(ctx, cmds.NewCompleted(nil)).s[0].Error(); err != ErrClosing {
 		t.Fatalf("unexpected err %v", err)
 	}
 	if err := deadFn().DoCache(ctx, Cacheable(cmds.NewCompleted(nil)), time.Second).Error(); err != ErrClosing {
@@ -3419,7 +3419,7 @@ func TestErrorPipe(t *testing.T) {
 	if err := epipeFn(target).Do(ctx, cmds.NewCompleted(nil)).Error(); err != target {
 		t.Fatalf("unexpected err %v", err)
 	}
-	if err := epipeFn(target).DoMulti(ctx, cmds.NewCompleted(nil))[0].Error(); err != target {
+	if err := epipeFn(target).DoMulti(ctx, cmds.NewCompleted(nil)).s[0].Error(); err != target {
 		t.Fatalf("unexpected err %v", err)
 	}
 	if err := epipeFn(target).DoCache(ctx, Cacheable(cmds.NewCompleted(nil)), time.Second).Error(); err != target {

@@ -28,6 +28,7 @@ func TestPool(t *testing.T) {
 	if c.s[0] != 1 {
 		t.Fatal("should use recycled")
 	}
+	p.Put(c)
 	c = p.Get(5, 20)
 	if c.s[0] != 0 {
 		t.Fatal("should not use recycled")
