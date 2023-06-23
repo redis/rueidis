@@ -199,14 +199,14 @@ type group struct {
 }
 
 // parseSlots - map redis slots for each redis nodes/addresses
-// firstAddr is needed in case the cluster only has one node and this node does not know its own IP
-func parseSlots(slots RedisMessage, firstAddr string) map[string]group {
+// defaultAddr is needed in case the node does not know its own IP
+func parseSlots(slots RedisMessage, defaultAddr string) map[string]group {
 	groups := make(map[string]group, len(slots.values))
 	for _, v := range slots.values {
 		var master string
 		switch v.values[2].values[0].string {
 		case "":
-			master = firstAddr
+			master = defaultAddr
 		case "?":
 			continue
 		default:
@@ -220,7 +220,7 @@ func parseSlots(slots RedisMessage, firstAddr string) map[string]group {
 				var dst string
 				switch v.values[i].values[0].string {
 				case "":
-					dst = firstAddr
+					dst = defaultAddr
 				case "?":
 					continue
 				default:
