@@ -3,6 +3,7 @@ package rueidis
 import (
 	"context"
 	"net"
+	"runtime"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -48,6 +49,7 @@ type mux struct {
 	wire   []atomic.Value
 	sc     []*singleconnect
 	mu     []sync.Mutex
+	maxp   int
 }
 
 func makeMux(dst string, option *ClientOption, dialFn dialFn) *mux {
@@ -75,6 +77,7 @@ func newMux(dst string, option *ClientOption, init, dead wire, wireFn wireFn) *m
 		wire: make([]atomic.Value, multiplex),
 		mu:   make([]sync.Mutex, multiplex),
 		sc:   make([]*singleconnect, multiplex),
+		maxp: runtime.GOMAXPROCS(0),
 	}
 	for i := 0; i < len(m.wire); i++ {
 		m.wire[i].Store(init)
@@ -260,7 +263,7 @@ func (m *mux) DoMultiCache(ctx context.Context, multi ...CacheableTTL) (results 
 	}
 
 	results = make([]RedisResult, len(multi))
-	util.ParallelKeys(commands, func(slot uint16) {
+	util.ParallelKeys(m.maxp, commands, func(slot uint16) {
 		for i, r := range m.doMultiCache(ctx, slot, commands[slot]) {
 			results[cIndexes[slot][i]] = r
 		}

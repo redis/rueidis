@@ -30,6 +30,7 @@ import (
 	"context"
 	"encoding"
 	"fmt"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -389,6 +390,7 @@ type Cmdable interface {
 
 type Compat struct {
 	client rueidis.Client
+	maxp   int
 }
 
 type CacheCompat struct {
@@ -397,7 +399,7 @@ type CacheCompat struct {
 }
 
 func NewAdapter(client rueidis.Client) Cmdable {
-	return &Compat{client: client}
+	return &Compat{client: client, maxp: runtime.GOMAXPROCS(0)}
 }
 
 func (c *Compat) Cache(ttl time.Duration) CacheCompat {
@@ -2799,7 +2801,7 @@ func (c *Compat) ACLDryRun(ctx context.Context, username string, command ...any)
 
 func (c *Compat) doPrimaries(ctx context.Context, fn func(c rueidis.Client) error) error {
 	var firsterr atomic.Value
-	util.ParallelVals(c.client.Nodes(), func(client rueidis.Client) {
+	util.ParallelVals(c.maxp, c.client.Nodes(), func(client rueidis.Client) {
 		msgs, err := client.Do(ctx, client.B().Role().Build()).ToArray()
 		if err == nil {
 			if role, _ := msgs[0].ToString(); role == "master" {
