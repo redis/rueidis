@@ -55,6 +55,25 @@ var resultsp = util.NewPool(func(capacity int) *redisresults {
 	return &redisresults{s: make([]RedisResult, 0, capacity)}
 })
 
+type cacheentries struct {
+	e map[int]CacheEntry
+	c int
+}
+
+func (c *cacheentries) Capacity() int {
+	return c.c
+}
+
+func (c *cacheentries) ResetLen(n int) {
+	for k := range c.e {
+		delete(c.e, k)
+	}
+}
+
+var entriesp = util.NewPool(func(capacity int) *cacheentries {
+	return &cacheentries{e: make(map[int]CacheEntry, capacity), c: capacity}
+})
+
 var _ wire = (*pipe)(nil)
 
 type pipe struct {
@@ -1053,7 +1072,8 @@ func (p *pipe) doCacheMGet(ctx context.Context, cmd Cacheable, ttl time.Duration
 	if mgetcc[0] == 'J' {
 		keys-- // the last one of JSON.MGET is a path, not a key
 	}
-	entries := make(map[int]CacheEntry, keys)
+	entries := entriesp.Get(keys, keys)
+	defer entriesp.Put(entries)
 	var now = time.Now()
 	var rewrite cmds.Arbitrary
 	for i, key := range commands[1 : keys+1] {
@@ -1066,7 +1086,7 @@ func (p *pipe) doCacheMGet(ctx context.Context, cmd Cacheable, ttl time.Duration
 			continue
 		}
 		if entry != nil {
-			entries[i] = entry // store entries for later entry.Wait() to avoid MGET deadlock each others.
+			entries.e[i] = entry // store entries for later entry.Wait() to avoid MGET deadlock each others.
 			continue
 		}
 		if rewrite.IsZero() {
@@ -1123,7 +1143,7 @@ func (p *pipe) doCacheMGet(ctx context.Context, cmd Cacheable, ttl time.Duration
 	if len(result.val.values) == 0 {
 		result.val.values = make([]RedisMessage, keys)
 	}
-	for i, entry := range entries {
+	for i, entry := range entries.e {
 		v, err := entry.Wait(ctx)
 		if err != nil {
 			return newErrResult(err)
@@ -1155,7 +1175,8 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) *redisre
 	cmds.CacheableCS(multi[0].Cmd).Verify()
 
 	results := resultsp.Get(len(multi), len(multi))
-	entries := make(map[int]CacheEntry, len(multi))
+	entries := entriesp.Get(len(multi), len(multi))
+	defer entriesp.Put(entries)
 	var missing []Completed
 	now := time.Now()
 	for i, ct := range multi {
@@ -1169,7 +1190,7 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) *redisre
 			continue
 		}
 		if entry != nil {
-			entries[i] = entry // store entries for later entry.Wait() to avoid MGET deadlock each others.
+			entries.e[i] = entry // store entries for later entry.Wait() to avoid MGET deadlock each others.
 			continue
 		}
 		missing = append(missing, cmds.OptInCmd, cmds.MultiCmd, cmds.NewCompleted([]string{"PTTL", ck}), Completed(ct.Cmd), cmds.ExecCmd)
@@ -1190,7 +1211,7 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) *redisre
 		}
 	}
 
-	for i, entry := range entries {
+	for i, entry := range entries.e {
 		results.s[i] = newResult(entry.Wait(ctx))
 	}
 
