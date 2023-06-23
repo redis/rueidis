@@ -112,7 +112,7 @@ func (c *clusterClient) _refresh() (err error) {
 		return err
 	}
 
-	groups := parseSlots(reply)
+	groups := parseSlots(reply, c.opt.InitAddress[0])
 
 	// TODO support read from replicas
 	conns := make(map[string]conn, len(groups))
@@ -186,10 +186,20 @@ type group struct {
 	slots [][2]int64
 }
 
-func parseSlots(slots RedisMessage) map[string]group {
+// parseSlots - map redis slots for each redis nodes/addresses
+// firstAddr is needed in case the cluster only has one node and this node does not know its own IP
+func parseSlots(slots RedisMessage, firstAddr string) map[string]group {
 	groups := make(map[string]group, len(slots.values))
 	for _, v := range slots.values {
-		master := net.JoinHostPort(v.values[2].values[0].string, strconv.FormatInt(v.values[2].values[1].integer, 10))
+		var master string
+		switch v.values[2].values[0].string {
+		case "":
+			master = firstAddr
+		case "?":
+			continue
+		default:
+			master = net.JoinHostPort(v.values[2].values[0].string, strconv.FormatInt(v.values[2].values[1].integer, 10))
+		}
 		g, ok := groups[master]
 		if !ok {
 			g.slots = make([][2]int64, 0)
