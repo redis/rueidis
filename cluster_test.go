@@ -128,6 +128,7 @@ func TestClusterClientInit(t *testing.T) {
 				DoFn: func(cmd Completed) RedisResult {
 					return singleSlotWithoutIP
 				},
+				AddrFn: func() string { return "127.0.4.1:4" },
 			}
 		})
 		if err != nil {

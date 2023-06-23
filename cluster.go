@@ -87,9 +87,13 @@ func (c *clusterClient) refresh() (err error) {
 
 func (c *clusterClient) _refresh() (err error) {
 	var reply RedisMessage
+	var addr string
 
 	c.mu.RLock()
-	results := make(chan RedisResult, len(c.conns))
+	results := make(chan struct {
+		reply RedisResult
+		conn  conn
+	}, len(c.conns))
 	pending := make([]conn, 0, len(c.conns))
 	for _, cc := range c.conns {
 		pending = append(pending, cc)
@@ -99,10 +103,18 @@ func (c *clusterClient) _refresh() (err error) {
 	for i := 0; i < cap(results); i++ {
 		if i&3 == 0 { // batch CLUSTER SLOTS for every 4 connections
 			for j := i; j < i+4 && j < len(pending); j++ {
-				go func(c conn) { results <- c.Do(context.Background(), cmds.SlotCmd) }(pending[j])
+				go func(c conn) {
+					results <- struct {
+						reply RedisResult
+						conn  conn
+					}{c.Do(context.Background(), cmds.SlotCmd), c}
+				}(pending[j])
 			}
 		}
-		if reply, err = (<-results).ToMessage(); len(reply.values) != 0 {
+		r := <-results
+		addr = r.conn.Addr()
+		reply, err = r.reply.ToMessage()
+		if len(reply.values) != 0 {
 			break
 		}
 	}
@@ -112,7 +124,7 @@ func (c *clusterClient) _refresh() (err error) {
 		return err
 	}
 
-	groups := parseSlots(reply, c.opt.InitAddress[0])
+	groups := parseSlots(reply, addr)
 
 	// TODO support read from replicas
 	conns := make(map[string]conn, len(groups))
