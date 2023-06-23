@@ -11,10 +11,61 @@ import (
 	"time"
 
 	"github.com/redis/rueidis/internal/cmds"
+	"github.com/redis/rueidis/internal/util"
 )
 
 // ErrNoSlot indicates that there is no redis node owns the key slot.
 var ErrNoSlot = errors.New("the slot has no redis node")
+
+type retry struct {
+	cIndexes []int
+	commands []Completed
+	aIndexes []int
+	cAskings []Completed
+}
+
+func (r *retry) Capacity() int {
+	return cap(r.commands)
+}
+
+func (r *retry) ResetLen(n int) {
+	r.cIndexes = r.cIndexes[:n]
+	r.commands = r.commands[:n]
+	r.aIndexes = r.aIndexes[:0]
+	r.cAskings = r.cAskings[:0]
+}
+
+var retryp = util.NewPool(func(capacity int) *retry {
+	return &retry{
+		cIndexes: make([]int, 0, capacity),
+		commands: make([]Completed, 0, capacity),
+	}
+})
+
+type retrycache struct {
+	cIndexes []int
+	commands []CacheableTTL
+	aIndexes []int
+	cAskings []CacheableTTL
+}
+
+func (r *retrycache) Capacity() int {
+	return cap(r.commands)
+}
+
+func (r *retrycache) ResetLen(n int) {
+	r.cIndexes = r.cIndexes[:n]
+	r.commands = r.commands[:n]
+	r.aIndexes = r.aIndexes[:0]
+	r.cAskings = r.cAskings[:0]
+}
+
+var retrycachep = util.NewPool(func(capacity int) *retrycache {
+	return &retrycache{
+		cIndexes: make([]int, 0, capacity),
+		commands: make([]CacheableTTL, 0, capacity),
+	}
+})
 
 type clusterClient struct {
 	slots  [16384]conn
@@ -349,13 +400,6 @@ func (c *clusterClient) pickMulti(slots map[uint16]int) (map[uint16]conn, map[co
 	return conns, count, nil
 }
 
-type retry struct {
-	cIndexes []int
-	commands []Completed
-	aIndexes []int
-	cAskings []Completed
-}
-
 func (c *clusterClient) DoMulti(ctx context.Context, multi ...Completed) []RedisResult {
 	if len(multi) == 0 {
 		return nil
@@ -382,20 +426,16 @@ func (c *clusterClient) DoMulti(ctx context.Context, multi ...Completed) []Redis
 		return fillErrs(len(multi), err)
 	}
 
-	retries := make(map[conn]retry, len(count))
+	retries := make(map[conn]*retry, len(count))
 
 	for cc, n := range count {
-		retries[cc] = retry{
-			cIndexes: make([]int, 0, n),
-			commands: make([]Completed, 0, n),
-		}
+		retries[cc] = retryp.Get(0, n)
 	}
 	for i, cmd := range multi {
 		cc := conns[cmd.Slot()]
 		re := retries[cc]
 		re.commands = append(re.commands, cmd)
 		re.cIndexes = append(re.cIndexes, i)
-		retries[cc] = re
 	}
 
 	var wg sync.WaitGroup
@@ -415,6 +455,10 @@ func (c *clusterClient) DoMulti(ctx context.Context, multi ...Completed) []Redis
 				}
 				mu.Lock()
 				nr := retries[nc]
+				if nr == nil {
+					nr = retryp.Get(0, len(commands))
+					retries[nc] = nr
+				}
 				if mode == RedirectAsk {
 					nr.aIndexes = append(nr.aIndexes, ii)
 					nr.cAskings = append(nr.cAskings, cm)
@@ -422,7 +466,6 @@ func (c *clusterClient) DoMulti(ctx context.Context, multi ...Completed) []Redis
 					nr.cIndexes = append(nr.cIndexes, ii)
 					nr.commands = append(nr.commands, cm)
 				}
-				retries[nc] = nr
 				mu.Unlock()
 			}
 		}
@@ -433,8 +476,7 @@ retry:
 	mu.Lock()
 	for cc, re := range retries {
 		delete(retries, cc)
-		go func(cc conn, re retry) {
-			defer wg.Done()
+		go func(cc conn, re *retry) {
 			if len(re.commands) != 0 {
 				resps := cc.DoMulti(ctx, re.commands...)
 				respsfn(cc, re.cIndexes, re.commands, resps.s)
@@ -445,6 +487,10 @@ retry:
 				respsfn(cc, re.aIndexes, re.cAskings, resps.s)
 				resultsp.Put(resps)
 			}
+			if ctx.Err() == nil {
+				retryp.Put(re)
+			}
+			wg.Done()
 		}(cc, re)
 	}
 	mu.Unlock()
@@ -599,13 +645,6 @@ process:
 	return resps.s
 }
 
-type retrycache struct {
-	cIndexes []int
-	commands []CacheableTTL
-	aIndexes []int
-	cAskings []CacheableTTL
-}
-
 func (c *clusterClient) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisResult {
 	if len(multi) == 0 {
 		return nil
@@ -627,20 +666,16 @@ func (c *clusterClient) DoMultiCache(ctx context.Context, multi ...CacheableTTL)
 		return fillErrs(len(multi), err)
 	}
 
-	retries := make(map[conn]retrycache, len(count))
+	retries := make(map[conn]*retrycache, len(count))
 
 	for cc, n := range count {
-		retries[cc] = retrycache{
-			cIndexes: make([]int, 0, n),
-			commands: make([]CacheableTTL, 0, n),
-		}
+		retries[cc] = retrycachep.Get(0, n)
 	}
 	for i, cmd := range multi {
 		cc := conns[cmd.Cmd.Slot()]
 		re := retries[cc]
 		re.commands = append(re.commands, cmd)
 		re.cIndexes = append(re.cIndexes, i)
-		retries[cc] = re
 	}
 
 	var wg sync.WaitGroup
@@ -660,6 +695,10 @@ func (c *clusterClient) DoMultiCache(ctx context.Context, multi ...CacheableTTL)
 				}
 				mu.Lock()
 				nr := retries[nc]
+				if nr == nil {
+					nr = retrycachep.Get(0, len(commands))
+					retries[nc] = nr
+				}
 				if mode == RedirectAsk {
 					nr.aIndexes = append(nr.aIndexes, ii)
 					nr.cAskings = append(nr.cAskings, cm)
@@ -667,7 +706,6 @@ func (c *clusterClient) DoMultiCache(ctx context.Context, multi ...CacheableTTL)
 					nr.cIndexes = append(nr.cIndexes, ii)
 					nr.commands = append(nr.commands, cm)
 				}
-				retries[nc] = nr
 				mu.Unlock()
 			}
 		}
@@ -678,8 +716,7 @@ retry:
 	mu.Lock()
 	for cc, re := range retries {
 		delete(retries, cc)
-		go func(cc conn, re retrycache) {
-			defer wg.Done()
+		go func(cc conn, re *retrycache) {
 			if len(re.commands) != 0 {
 				resps := cc.DoMultiCache(ctx, re.commands...)
 				respsfn(cc, re.cIndexes, re.commands, resps.s)
@@ -690,6 +727,8 @@ retry:
 				respsfn(cc, re.aIndexes, re.cAskings, resps.s)
 				resultsp.Put(resps)
 			}
+			retrycachep.Put(re)
+			wg.Done()
 		}(cc, re)
 	}
 	mu.Unlock()

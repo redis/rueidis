@@ -22,6 +22,27 @@ type singleconnect struct {
 	g sync.WaitGroup
 }
 
+type batchcache struct {
+	cIndexes []int
+	commands []CacheableTTL
+}
+
+func (r *batchcache) Capacity() int {
+	return cap(r.commands)
+}
+
+func (r *batchcache) ResetLen(n int) {
+	r.cIndexes = r.cIndexes[:n]
+	r.commands = r.commands[:n]
+}
+
+var batchcachep = util.NewPool(func(capacity int) *batchcache {
+	return &batchcache{
+		cIndexes: make([]int, 0, capacity),
+		commands: make([]CacheableTTL, 0, capacity),
+	}
+})
+
 type conn interface {
 	Do(ctx context.Context, cmd Completed) RedisResult
 	DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) RedisResult
@@ -250,26 +271,29 @@ func (m *mux) DoMultiCache(ctx context.Context, multi ...CacheableTTL) (results 
 		return m.doMultiCache(ctx, multi[0].Cmd.Slot()&mask, multi)
 	}
 
-	commands := make(map[uint16][]CacheableTTL, len(slots))
-	cIndexes := make(map[uint16][]int, len(slots))
+	batches := make(map[uint16]*batchcache, len(m.wire))
 	for slot, count := range slots {
-		cIndexes[slot] = make([]int, 0, count)
-		commands[slot] = make([]CacheableTTL, 0, count)
+		batches[slot] = batchcachep.Get(0, count)
 	}
 	for i, cmd := range multi {
-		slot := cmd.Cmd.Slot() & mask
-		commands[slot] = append(commands[slot], cmd)
-		cIndexes[slot] = append(cIndexes[slot], i)
+		batch := batches[cmd.Cmd.Slot()&mask]
+		batch.commands = append(batch.commands, cmd)
+		batch.cIndexes = append(batch.cIndexes, i)
 	}
 
 	results = resultsp.Get(len(multi), len(multi))
-	util.ParallelKeys(m.maxp, commands, func(slot uint16) {
-		resp := m.doMultiCache(ctx, slot, commands[slot])
+	util.ParallelKeys(m.maxp, batches, func(slot uint16) {
+		batch := batches[slot]
+		resp := m.doMultiCache(ctx, slot, batch.commands)
 		for i, r := range resp.s {
-			results.s[cIndexes[slot][i]] = r
+			results.s[batch.cIndexes[i]] = r
 		}
 		resultsp.Put(resp)
 	})
+
+	for _, batch := range batches {
+		batchcachep.Put(batch)
+	}
 
 	return results
 }

@@ -460,8 +460,26 @@ func (p *pipe) _backgroundRead() (err error) {
 				}
 			}
 		}
-		// if unfulfilled multi commands are lead by opt-in and get success response
-		if ff >= 4 && len(msg.values) >= 2 && multi[0].IsOptIn() {
+		if ff == len(multi) {
+			ff = 0
+			ones[0], multi, ch, cond = p.queue.NextResultCh() // ch should not be nil, otherwise it must be a protocol bug
+			if ch == nil {
+				cond.L.Unlock()
+				// Redis will send sunsubscribe notification proactively in the event of slot migration.
+				// We should ignore them and go fetch next message.
+				// We also treat all the other unsubscribe notifications just like sunsubscribe,
+				// so that we don't need to track how many channels we have subscribed to deal with wildcard unsubscribe command
+				if unsub {
+					prply = false
+					unsub = false
+					continue
+				}
+				panic(protocolbug)
+			}
+			if multi == nil {
+				multi = ones
+			}
+		} else if ff >= 4 && len(msg.values) >= 2 && multi[0].IsOptIn() { // if unfulfilled multi commands are lead by opt-in and get success response
 			now := time.Now()
 			if cacheable := Cacheable(multi[ff-1]); cacheable.IsMGet() {
 				cc := cmds.MGetCacheCmd(cacheable)
@@ -483,26 +501,6 @@ func (p *pipe) _backgroundRead() (err error) {
 					cp.setExpireAt(now.Add(time.Duration(pttl) * time.Millisecond).UnixMilli())
 				}
 				msg.values[ci].setExpireAt(p.cache.Update(ck, cc, cp))
-			}
-		}
-		if ff == len(multi) {
-			ff = 0
-			ones[0], multi, ch, cond = p.queue.NextResultCh() // ch should not be nil, otherwise it must be a protocol bug
-			if ch == nil {
-				cond.L.Unlock()
-				// Redis will send sunsubscribe notification proactively in the event of slot migration.
-				// We should ignore them and go fetch next message.
-				// We also treat all the other unsubscribe notifications just like sunsubscribe,
-				// so that we don't need to track how many channels we have subscribed to deal with wildcard unsubscribe command
-				if unsub {
-					prply = false
-					unsub = false
-					continue
-				}
-				panic(protocolbug)
-			}
-			if multi == nil {
-				multi = ones
 			}
 		}
 		if prply {
