@@ -163,6 +163,16 @@ func TestForceSingleClient(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer ln.Close()
+	done := make(chan struct{})
+	go func() {
+		mock, err := accept(t, ln)
+		if err != nil {
+			return
+		}
+		mock.Expect("QUIT").ReplyString("OK")
+		mock.Close()
+		close(done)
+	}()
 	_, port, _ := net.SplitHostPort(ln.Addr().String())
 	client, err := NewClient(ClientOption{
 		InitAddress: []string{"127.0.0.1:" + port},
@@ -175,6 +185,7 @@ func TestForceSingleClient(t *testing.T) {
 		t.Fatal("client should be a singleClient")
 	}
 	client.Close()
+	<-done
 }
 
 func TestTLSClient(t *testing.T) {

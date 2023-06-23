@@ -84,10 +84,6 @@ type ClientOption struct {
 	// You can bypass this behaviour by using ClientOption.ForceSingleClient.
 	InitAddress []string
 
-	//  ForceSingleClient force the usage of a single client connection, without letting the lib guessing
-	//  if redis instance is a cluster or a single redis instance.
-	ForceSingleClient bool
-
 	// ClientTrackingOptions will be appended to CLIENT TRACKING ON command when the connection is established.
 	// The default is []string{"OPTIN"}
 	ClientTrackingOptions []string
@@ -145,6 +141,9 @@ type ClientOption struct {
 	AlwaysPipelining bool
 	// AlwaysRESP2 makes rueidis.Client always uses RESP2, otherwise it will try using RESP3 first.
 	AlwaysRESP2 bool
+	//  ForceSingleClient force the usage of a single client connection, without letting the lib guessing
+	//  if redis instance is a cluster or a single redis instance.
+	ForceSingleClient bool
 
 	// ReplicaOnly indicates that this client will only try to connect to readonly replicas of redis setup.
 	// currently, it is only implemented for sentinel client
@@ -304,8 +303,7 @@ func NewClient(option ClientOption) (client Client, err error) {
 
 	if option.ForceSingleClient {
 		option.PipelineMultiplex = singleClientMultiplex(pmbk)
-		conn := makeConn(option.InitAddress[0], &option)
-		return newSingleClientWithConn(conn, cmds.NewBuilder(cmds.NoSlot), !option.DisableRetry), nil
+		return newSingleClient(&option, nil, makeConn)
 	}
 	if client, err = newClusterClient(&option, makeConn); err != nil {
 		if len(option.InitAddress) == 1 && (err.Error() == redisErrMsgCommandNotAllow || strings.Contains(strings.ToUpper(err.Error()), "CLUSTER")) {
