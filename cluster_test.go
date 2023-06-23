@@ -19,12 +19,12 @@ var slotsResp = newResult(RedisMessage{typ: '*', values: []RedisMessage{
 		{typ: ':', integer: 0},
 		{typ: ':', integer: 16383},
 		{typ: '*', values: []RedisMessage{ // master
-			{typ: '+', string: ""},
+			{typ: '+', string: "127.0.0.1"},
 			{typ: ':', integer: 0},
 			{typ: '+', string: ""},
 		}},
 		{typ: '*', values: []RedisMessage{ // replica
-			{typ: '+', string: ""},
+			{typ: '+', string: "127.0.1.1"},
 			{typ: ':', integer: 1},
 			{typ: '+', string: ""},
 		}},
@@ -36,7 +36,7 @@ var singleSlotResp = newResult(RedisMessage{typ: '*', values: []RedisMessage{
 		{typ: ':', integer: 0},
 		{typ: ':', integer: 0},
 		{typ: '*', values: []RedisMessage{ // master
-			{typ: '+', string: ""},
+			{typ: '+', string: "127.0.0.1"},
 			{typ: ':', integer: 0},
 			{typ: '+', string: ""},
 		}},
@@ -48,8 +48,20 @@ var singleSlotResp2 = newResult(RedisMessage{typ: '*', values: []RedisMessage{
 		{typ: ':', integer: 0},
 		{typ: ':', integer: 0},
 		{typ: '*', values: []RedisMessage{ // master
-			{typ: '+', string: ""},
+			{typ: '+', string: "127.0.3.1"},
 			{typ: ':', integer: 3},
+			{typ: '+', string: ""},
+		}},
+	}},
+}}, nil)
+
+var singleSlotWithoutIP = newResult(RedisMessage{typ: '*', values: []RedisMessage{
+	{typ: '*', values: []RedisMessage{
+		{typ: ':', integer: 0},
+		{typ: ':', integer: 0},
+		{typ: '*', values: []RedisMessage{ // master
+			{typ: '+', string: ""},
+			{typ: ':', integer: 4},
 			{typ: '+', string: ""},
 		}},
 	}},
@@ -84,7 +96,7 @@ func TestClusterClientInit(t *testing.T) {
 
 	t.Run("Refresh skip zero slots", func(t *testing.T) {
 		var first int64
-		if _, err := newClusterClient(&ClientOption{InitAddress: []string{":0", ":1"}}, func(dst string, opt *ClientOption) conn {
+		if _, err := newClusterClient(&ClientOption{InitAddress: []string{"127.0.0.1:0", "127.0.1.1:1"}}, func(dst string, opt *ClientOption) conn {
 			return &mockConn{
 				DoFn: func(cmd Completed) RedisResult {
 					if atomic.AddInt64(&first, 1) == 1 {
@@ -110,9 +122,29 @@ func TestClusterClientInit(t *testing.T) {
 		}
 	})
 
+	t.Run("Refresh cluster of 1 node without knowing its own ip", func(t *testing.T) {
+		client, err := newClusterClient(&ClientOption{InitAddress: []string{"127.0.4.1:4"}}, func(dst string, opt *ClientOption) conn {
+			return &mockConn{
+				DoFn: func(cmd Completed) RedisResult {
+					return singleSlotWithoutIP
+				},
+			}
+		})
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+
+		nodes := client.nodes()
+		sort.Strings(nodes)
+		if len(nodes) != 1 ||
+			nodes[0] != "127.0.4.1:4" {
+			t.Fatalf("unexpected nodes %v", nodes)
+		}
+	})
+
 	t.Run("Refresh replace", func(t *testing.T) {
 		var first int64
-		client, err := newClusterClient(&ClientOption{InitAddress: []string{":1", ":2"}}, func(dst string, opt *ClientOption) conn {
+		client, err := newClusterClient(&ClientOption{InitAddress: []string{"127.0.1.1:1", "127.0.2.1:2"}}, func(dst string, opt *ClientOption) conn {
 			return &mockConn{
 				DoFn: func(cmd Completed) RedisResult {
 					if atomic.LoadInt64(&first) == 1 {
@@ -129,9 +161,9 @@ func TestClusterClientInit(t *testing.T) {
 		nodes := client.nodes()
 		sort.Strings(nodes)
 		if len(nodes) != 3 ||
-			nodes[0] != ":0" ||
-			nodes[1] != ":1" ||
-			nodes[2] != ":2" {
+			nodes[0] != "127.0.0.1:0" ||
+			nodes[1] != "127.0.1.1:1" ||
+			nodes[2] != "127.0.2.1:2" {
 			t.Fatalf("unexpected nodes %v", nodes)
 		}
 
@@ -144,9 +176,9 @@ func TestClusterClientInit(t *testing.T) {
 		nodes = client.nodes()
 		sort.Strings(nodes)
 		if len(nodes) != 3 ||
-			nodes[0] != ":1" ||
-			nodes[1] != ":2" ||
-			nodes[2] != ":3" {
+			nodes[0] != "127.0.1.1:1" ||
+			nodes[1] != "127.0.2.1:2" ||
+			nodes[2] != "127.0.3.1:3" {
 			t.Fatalf("unexpected nodes %v", nodes)
 		}
 	})
@@ -191,7 +223,7 @@ func TestClusterClient(t *testing.T) {
 		},
 	}
 
-	client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
+	client, err := newClusterClient(&ClientOption{InitAddress: []string{"127.0.0.1:0"}}, func(dst string, opt *ClientOption) conn {
 		return m
 	})
 	if err != nil {
@@ -200,7 +232,7 @@ func TestClusterClient(t *testing.T) {
 
 	t.Run("Nodes", func(t *testing.T) {
 		nodes := client.Nodes()
-		if len(nodes) != 2 || nodes[":0"] == nil || nodes[":1"] == nil {
+		if len(nodes) != 2 || nodes["127.0.0.1:0"] == nil || nodes["127.0.1.1:1"] == nil {
 			t.Fatalf("unexpected Nodes")
 		}
 	})

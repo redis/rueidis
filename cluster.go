@@ -205,7 +205,15 @@ func parseSlots(slots RedisMessage, firstAddr string) map[string]group {
 			g.slots = make([][2]int64, 0)
 			g.nodes = make([]string, 0, len(v.values)-2)
 			for i := 2; i < len(v.values); i++ {
-				dst := net.JoinHostPort(v.values[i].values[0].string, strconv.FormatInt(v.values[i].values[1].integer, 10))
+				var dst string
+				switch v.values[i].values[0].string {
+				case "":
+					dst = firstAddr
+				case "?":
+					continue
+				default:
+					dst = net.JoinHostPort(v.values[i].values[0].string, strconv.FormatInt(v.values[i].values[1].integer, 10))
+				}
 				g.nodes = append(g.nodes, dst)
 			}
 		}
