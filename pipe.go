@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/redis/rueidis/internal/cmds"
+	"github.com/redis/rueidis/internal/util"
 )
 
 var noHello = regexp.MustCompile("unknown command .?HELLO.?")
@@ -23,8 +24,8 @@ var noHello = regexp.MustCompile("unknown command .?HELLO.?")
 type wire interface {
 	Do(ctx context.Context, cmd Completed) RedisResult
 	DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) RedisResult
-	DoMulti(ctx context.Context, multi ...Completed) []RedisResult
-	DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisResult
+	DoMulti(ctx context.Context, multi ...Completed) *redisresults
+	DoMultiCache(ctx context.Context, multi ...CacheableTTL) *redisresults
 	Receive(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error
 	Info() map[string]RedisMessage
 	Error() error
@@ -34,6 +35,44 @@ type wire interface {
 	SetPubSubHooks(hooks PubSubHooks) <-chan error
 	SetOnCloseHook(fn func(error))
 }
+
+type redisresults struct {
+	s []RedisResult
+}
+
+func (r *redisresults) Capacity() int {
+	return cap(r.s)
+}
+
+func (r *redisresults) ResetLen(n int) {
+	r.s = r.s[:n]
+	for i := 0; i < n; i++ {
+		r.s[i] = RedisResult{}
+	}
+}
+
+var resultsp = util.NewPool(func(capacity int) *redisresults {
+	return &redisresults{s: make([]RedisResult, 0, capacity)}
+})
+
+type cacheentries struct {
+	e map[int]CacheEntry
+	c int
+}
+
+func (c *cacheentries) Capacity() int {
+	return c.c
+}
+
+func (c *cacheentries) ResetLen(n int) {
+	for k := range c.e {
+		delete(c.e, k)
+	}
+}
+
+var entriesp = util.NewPool(func(capacity int) *cacheentries {
+	return &cacheentries{e: make(map[int]CacheEntry, capacity), c: capacity}
+})
 
 var _ wire = (*pipe)(nil)
 
@@ -153,7 +192,9 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 
 	r2 := option.AlwaysRESP2
 	if !r2 && !r2ps {
-		for i, r := range p.DoMulti(ctx, cmds.NewMultiCompleted(init)...) {
+		resp := p.DoMulti(ctx, cmds.NewMultiCompleted(init)...)
+		defer resultsp.Put(resp)
+		for i, r := range resp.s {
 			if i == 0 {
 				p.info, err = r.AsMap()
 			} else {
@@ -216,7 +257,9 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 		}
 
 		if len(init) != 0 {
-			for _, r := range p.DoMulti(ctx, cmds.NewMultiCompleted(init)...) {
+			resp := p.DoMulti(ctx, cmds.NewMultiCompleted(init)...)
+			defer resultsp.Put(resp)
+			for _, r := range resp.s {
 				if err = r.Error(); err != nil {
 					p.Close()
 					return nil, err
@@ -417,8 +460,26 @@ func (p *pipe) _backgroundRead() (err error) {
 				}
 			}
 		}
-		// if unfulfilled multi commands are lead by opt-in and get success response
-		if ff >= 4 && len(msg.values) >= 2 && multi[0].IsOptIn() {
+		if ff == len(multi) {
+			ff = 0
+			ones[0], multi, ch, cond = p.queue.NextResultCh() // ch should not be nil, otherwise it must be a protocol bug
+			if ch == nil {
+				cond.L.Unlock()
+				// Redis will send sunsubscribe notification proactively in the event of slot migration.
+				// We should ignore them and go fetch next message.
+				// We also treat all the other unsubscribe notifications just like sunsubscribe,
+				// so that we don't need to track how many channels we have subscribed to deal with wildcard unsubscribe command
+				if unsub {
+					prply = false
+					unsub = false
+					continue
+				}
+				panic(protocolbug)
+			}
+			if multi == nil {
+				multi = ones
+			}
+		} else if ff >= 4 && len(msg.values) >= 2 && multi[0].IsOptIn() { // if unfulfilled multi commands are lead by opt-in and get success response
 			now := time.Now()
 			if cacheable := Cacheable(multi[ff-1]); cacheable.IsMGet() {
 				cc := cmds.MGetCacheCmd(cacheable)
@@ -440,26 +501,6 @@ func (p *pipe) _backgroundRead() (err error) {
 					cp.setExpireAt(now.Add(time.Duration(pttl) * time.Millisecond).UnixMilli())
 				}
 				msg.values[ci].setExpireAt(p.cache.Update(ck, cc, cp))
-			}
-		}
-		if ff == len(multi) {
-			ff = 0
-			ones[0], multi, ch, cond = p.queue.NextResultCh() // ch should not be nil, otherwise it must be a protocol bug
-			if ch == nil {
-				cond.L.Unlock()
-				// Redis will send sunsubscribe notification proactively in the event of slot migration.
-				// We should ignore them and go fetch next message.
-				// We also treat all the other unsubscribe notifications just like sunsubscribe,
-				// so that we don't need to track how many channels we have subscribed to deal with wildcard unsubscribe command
-				if unsub {
-					prply = false
-					unsub = false
-					continue
-				}
-				panic(protocolbug)
-			}
-			if multi == nil {
-				multi = ones
 			}
 		}
 		if prply {
@@ -784,11 +825,11 @@ queue:
 	return resp
 }
 
-func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) []RedisResult {
-	resp := make([]RedisResult, len(multi))
+func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) *redisresults {
+	resp := resultsp.Get(len(multi), len(multi))
 	if err := ctx.Err(); err != nil {
-		for i := 0; i < len(resp); i++ {
-			resp[i] = newErrResult(err)
+		for i := 0; i < len(resp.s); i++ {
+			resp.s[i] = newErrResult(err)
 		}
 		return resp
 	}
@@ -807,8 +848,8 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) []RedisResult {
 
 	if p.version < 6 && noReply != 0 {
 		if noReply != len(multi) {
-			for i := 0; i < len(resp); i++ {
-				resp[i] = newErrResult(ErrRESP2PubSubMixed)
+			for i := 0; i < len(resp.s); i++ {
+				resp.s[i] = newErrResult(ErrRESP2PubSubMixed)
 			}
 			return resp
 		} else if p.r2psFn != nil {
@@ -826,7 +867,7 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) []RedisResult {
 	if isBlock {
 		atomic.AddInt32(&p.blcksig, 1)
 		defer func() {
-			for _, r := range resp {
+			for _, r := range resp.s {
 				if r.err != nil {
 					return
 				}
@@ -855,11 +896,11 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) []RedisResult {
 			p.background()
 			goto queue
 		}
-		resp = p.syncDoMulti(dl, ok, resp, multi)
+		resp.s = p.syncDoMulti(dl, ok, resp.s, multi)
 	} else {
 		err := newErrResult(p.Error())
-		for i := 0; i < len(resp); i++ {
-			resp[i] = err
+		for i := 0; i < len(resp.s); i++ {
+			resp.s[i] = err
 		}
 	}
 	if left := atomic.AddInt32(&p.waits, -1); state == 0 && waits == 1 && left != 0 {
@@ -872,13 +913,13 @@ queue:
 	ch := p.queue.PutMulti(multi)
 	var i int
 	if ctxCh := ctx.Done(); ctxCh == nil {
-		for ; i < len(resp); i++ {
-			resp[i] = <-ch
+		for ; i < len(resp.s); i++ {
+			resp.s[i] = <-ch
 		}
 	} else {
-		for ; i < len(resp); i++ {
+		for ; i < len(resp.s); i++ {
 			select {
-			case resp[i] = <-ch:
+			case resp.s[i] = <-ch:
 			case <-ctxCh:
 				goto abort
 			}
@@ -889,15 +930,15 @@ queue:
 	return resp
 abort:
 	go func(i int) {
-		for ; i < len(resp); i++ {
+		for ; i < len(resp.s); i++ {
 			<-ch
 		}
 		atomic.AddInt32(&p.waits, -1)
 		atomic.AddInt32(&p.recvs, 1)
 	}(i)
 	err := newErrResult(ctx.Err())
-	for ; i < len(resp); i++ {
-		resp[i] = err
+	for ; i < len(resp.s); i++ {
+		resp.s[i] = err
 	}
 	return resp
 }
@@ -1008,7 +1049,8 @@ func (p *pipe) DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) Re
 		Completed(cmd),
 		cmds.ExecCmd,
 	)
-	exec, err := resp[4].ToArray()
+	defer resultsp.Put(resp)
+	exec, err := resp.s[4].ToArray()
 	if err != nil {
 		if _, ok := err.(*RedisError); ok {
 			err = ErrDoCacheAborted
@@ -1028,7 +1070,8 @@ func (p *pipe) doCacheMGet(ctx context.Context, cmd Cacheable, ttl time.Duration
 	if mgetcc[0] == 'J' {
 		keys-- // the last one of JSON.MGET is a path, not a key
 	}
-	entries := make(map[int]CacheEntry, keys)
+	entries := entriesp.Get(keys, keys)
+	defer entriesp.Put(entries)
 	var now = time.Now()
 	var rewrite cmds.Arbitrary
 	for i, key := range commands[1 : keys+1] {
@@ -1041,7 +1084,7 @@ func (p *pipe) doCacheMGet(ctx context.Context, cmd Cacheable, ttl time.Duration
 			continue
 		}
 		if entry != nil {
-			entries[i] = entry // store entries for later entry.Wait() to avoid MGET deadlock each others.
+			entries.e[i] = entry // store entries for later entry.Wait() to avoid MGET deadlock each others.
 			continue
 		}
 		if rewrite.IsZero() {
@@ -1070,7 +1113,8 @@ func (p *pipe) doCacheMGet(ctx context.Context, cmd Cacheable, ttl time.Duration
 		multi = append(multi, rewritten, cmds.ExecCmd)
 
 		resp := p.DoMulti(ctx, multi...)
-		exec, err := resp[len(multi)-1].ToArray()
+		defer resultsp.Put(resp)
+		exec, err := resp.s[len(multi)-1].ToArray()
 		if err != nil {
 			if _, ok := err.(*RedisError); ok {
 				err = ErrDoCacheAborted
@@ -1097,7 +1141,7 @@ func (p *pipe) doCacheMGet(ctx context.Context, cmd Cacheable, ttl time.Duration
 	if len(result.val.values) == 0 {
 		result.val.values = make([]RedisMessage, keys)
 	}
-	for i, entry := range entries {
+	for i, entry := range entries.e {
 		v, err := entry.Wait(ctx)
 		if err != nil {
 			return newErrResult(err)
@@ -1117,7 +1161,7 @@ func (p *pipe) doCacheMGet(ctx context.Context, cmd Cacheable, ttl time.Duration
 	return result
 }
 
-func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisResult {
+func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) *redisresults {
 	if p.cache == nil {
 		commands := make([]Completed, len(multi))
 		for i, ct := range multi {
@@ -1128,8 +1172,9 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisR
 
 	cmds.CacheableCS(multi[0].Cmd).Verify()
 
-	results := make([]RedisResult, len(multi))
-	entries := make(map[int]CacheEntry, len(multi))
+	results := resultsp.Get(len(multi), len(multi))
+	entries := entriesp.Get(len(multi), len(multi))
+	defer entriesp.Put(entries)
 	var missing []Completed
 	now := time.Now()
 	for i, ct := range multi {
@@ -1139,21 +1184,22 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisR
 		ck, cc := cmds.CacheKey(ct.Cmd)
 		v, entry := p.cache.Flight(ck, cc, ct.TTL, now)
 		if v.typ != 0 { // cache hit for one key
-			results[i] = newResult(v, nil)
+			results.s[i] = newResult(v, nil)
 			continue
 		}
 		if entry != nil {
-			entries[i] = entry // store entries for later entry.Wait() to avoid MGET deadlock each others.
+			entries.e[i] = entry // store entries for later entry.Wait() to avoid MGET deadlock each others.
 			continue
 		}
 		missing = append(missing, cmds.OptInCmd, cmds.MultiCmd, cmds.NewCompleted([]string{"PTTL", ck}), Completed(ct.Cmd), cmds.ExecCmd)
 	}
 
-	var resp []RedisResult
+	var resp *redisresults
 	if len(missing) > 0 {
 		resp = p.DoMulti(ctx, missing...)
-		for i := 4; i < len(resp); i += 5 {
-			if err := resp[i].Error(); err != nil {
+		defer resultsp.Put(resp)
+		for i := 4; i < len(resp.s); i += 5 {
+			if err := resp.s[i].Error(); err != nil {
 				if _, ok := err.(*RedisError); ok {
 					err = ErrDoCacheAborted
 				}
@@ -1163,22 +1209,26 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisR
 		}
 	}
 
-	for i, entry := range entries {
-		results[i] = newResult(entry.Wait(ctx))
+	for i, entry := range entries.e {
+		results.s[i] = newResult(entry.Wait(ctx))
+	}
+
+	if len(missing) == 0 {
+		return results
 	}
 
 	j := 0
-	for i := 4; i < len(resp); i += 5 {
-		for ; j < len(results); j++ {
-			if results[j].val.typ == 0 && results[j].err == nil {
-				exec, err := resp[i].ToArray()
+	for i := 4; i < len(resp.s); i += 5 {
+		for ; j < len(results.s); j++ {
+			if results.s[j].val.typ == 0 && results.s[j].err == nil {
+				exec, err := resp.s[i].ToArray()
 				if err != nil {
 					if _, ok := err.(*RedisError); ok {
 						err = ErrDoCacheAborted
 					}
-					results[j] = newErrResult(err)
+					results.s[j] = newErrResult(err)
 				} else {
-					results[j] = newResult(exec[len(exec)-1], nil)
+					results.s[j] = newResult(exec[len(exec)-1], nil)
 				}
 				break
 			}

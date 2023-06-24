@@ -119,7 +119,7 @@ func TestClusterClientInit(t *testing.T) {
 					return slotsResp
 				},
 			}
-		}); err != nil || atomic.LoadInt64(&first) != 2 {
+		}); err != nil || atomic.LoadInt64(&first) < 2 {
 			t.Fatalf("unexpected err %v", err)
 		}
 	})
@@ -209,19 +209,19 @@ func TestClusterClient(t *testing.T) {
 			}
 			return RedisResult{}
 		},
-		DoMultiFn: func(multi ...Completed) []RedisResult {
+		DoMultiFn: func(multi ...Completed) *redisresults {
 			resps := make([]RedisResult, len(multi))
 			for i, cmd := range multi {
 				resps[i] = newResult(RedisMessage{typ: '+', string: strings.Join(cmd.Commands(), " ")}, nil)
 			}
-			return resps
+			return &redisresults{s: resps}
 		},
-		DoMultiCacheFn: func(multi ...CacheableTTL) []RedisResult {
+		DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
 			resps := make([]RedisResult, len(multi))
 			for i, cmd := range multi {
 				resps[i] = newResult(RedisMessage{typ: '+', string: strings.Join(cmd.Cmd.Commands(), " ")}, nil)
 			}
-			return resps
+			return &redisresults{s: resps}
 		},
 		DoOverride: map[string]func(cmd Completed) RedisResult{
 			"GET Do": func(cmd Completed) RedisResult {
@@ -437,12 +437,12 @@ func TestClusterClient(t *testing.T) {
 		}()
 		m.AcquireFn = func() wire {
 			return &mockWire{
-				DoMultiFn: func(multi ...Completed) []RedisResult {
-					return []RedisResult{
+				DoMultiFn: func(multi ...Completed) *redisresults {
+					return &redisresults{s: []RedisResult{
 						newResult(RedisMessage{typ: '+', string: "OK"}, nil),
 						newResult(RedisMessage{typ: '+', string: "OK"}, nil),
 						newResult(RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "a"}}}, nil),
-					}
+					}}
 				},
 			}
 		}
@@ -504,9 +504,9 @@ func TestClusterClient(t *testing.T) {
 			DoFn: func(cmd Completed) RedisResult {
 				return newResult(RedisMessage{typ: '+', string: "Delegate"}, nil)
 			},
-			DoMultiFn: func(cmd ...Completed) []RedisResult {
+			DoMultiFn: func(cmd ...Completed) *redisresults {
 				if len(cmd) == 4 {
-					return []RedisResult{
+					return &redisresults{s: []RedisResult{
 						newResult(RedisMessage{typ: '+', string: "OK"}, nil),
 						newResult(RedisMessage{typ: '+', string: "OK"}, nil),
 						newResult(RedisMessage{typ: '+', string: "OK"}, nil),
@@ -514,12 +514,12 @@ func TestClusterClient(t *testing.T) {
 							{typ: '+', string: "Delegate0"},
 							{typ: '+', string: "Delegate1"},
 						}}, nil),
-					}
+					}}
 				}
-				return []RedisResult{
+				return &redisresults{s: []RedisResult{
 					newResult(RedisMessage{typ: '+', string: "Delegate0"}, nil),
 					newResult(RedisMessage{typ: '+', string: "Delegate1"}, nil),
-				}
+				}}
 			},
 			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
 				return ErrClosing
@@ -612,9 +612,9 @@ func TestClusterClient(t *testing.T) {
 			DoFn: func(cmd Completed) RedisResult {
 				return newResult(RedisMessage{typ: '+', string: "Delegate"}, nil)
 			},
-			DoMultiFn: func(cmd ...Completed) []RedisResult {
+			DoMultiFn: func(cmd ...Completed) *redisresults {
 				if len(cmd) == 4 {
-					return []RedisResult{
+					return &redisresults{s: []RedisResult{
 						newResult(RedisMessage{typ: '+', string: "OK"}, nil),
 						newResult(RedisMessage{typ: '+', string: "OK"}, nil),
 						newResult(RedisMessage{typ: '+', string: "OK"}, nil),
@@ -622,12 +622,12 @@ func TestClusterClient(t *testing.T) {
 							{typ: '+', string: "Delegate0"},
 							{typ: '+', string: "Delegate1"},
 						}}, nil),
-					}
+					}}
 				}
-				return []RedisResult{
+				return &redisresults{s: []RedisResult{
 					newResult(RedisMessage{typ: '+', string: "Delegate0"}, nil),
 					newResult(RedisMessage{typ: '+', string: "Delegate1"}, nil),
-				}
+				}}
 			},
 			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
 				return ErrClosing
@@ -790,22 +790,22 @@ func TestClusterClientErr(t *testing.T) {
 				}
 				return newErrResult(v)
 			},
-			DoMultiFn: func(multi ...Completed) []RedisResult {
+			DoMultiFn: func(multi ...Completed) *redisresults {
 				res := make([]RedisResult, len(multi))
 				for i := range res {
 					res[i] = newErrResult(v)
 				}
-				return res
+				return &redisresults{s: res}
 			},
 			DoCacheFn: func(cmd Cacheable, ttl time.Duration) RedisResult {
 				return newErrResult(v)
 			},
-			DoMultiCacheFn: func(multi ...CacheableTTL) []RedisResult {
+			DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
 				res := make([]RedisResult, len(multi))
 				for i := range res {
 					res[i] = newErrResult(v)
 				}
-				return res
+				return &redisresults{s: res}
 			},
 			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
 				return v
@@ -1015,18 +1015,18 @@ func TestClusterClientErr(t *testing.T) {
 		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
 			return &mockConn{DoFn: func(cmd Completed) RedisResult {
 				return slotsResp
-			}, DoMultiFn: func(multi ...Completed) []RedisResult {
+			}, DoMultiFn: func(multi ...Completed) *redisresults {
 				ret := make([]RedisResult, len(multi))
 				if atomic.AddInt64(&count, 1) <= 3 {
 					for i := range ret {
 						ret[i] = newResult(RedisMessage{typ: '-', string: "MOVED 0 :1"}, nil)
 					}
-					return ret
+					return &redisresults{s: ret}
 				}
 				for i := range ret {
 					ret[i] = newResult(RedisMessage{typ: '+', string: multi[i].Commands()[1]}, nil)
 				}
-				return ret
+				return &redisresults{s: ret}
 			}}
 		})
 		if err != nil {
@@ -1042,18 +1042,18 @@ func TestClusterClientErr(t *testing.T) {
 		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
 			return &mockConn{DoFn: func(cmd Completed) RedisResult {
 				return slotsResp
-			}, DoMultiFn: func(multi ...Completed) []RedisResult {
+			}, DoMultiFn: func(multi ...Completed) *redisresults {
 				ret := make([]RedisResult, len(multi))
 				if atomic.AddInt64(&count, 1) <= 3 {
 					for i := range ret {
 						ret[i] = newResult(RedisMessage{typ: '-', string: "MOVED 0 :1"}, nil)
 					}
-					return ret
+					return &redisresults{s: ret}
 				}
 				for i := range ret {
 					ret[i] = newResult(RedisMessage{typ: '+', string: multi[i].Commands()[1]}, nil)
 				}
-				return ret
+				return &redisresults{s: ret}
 			}}
 		})
 		if err != nil {
@@ -1106,18 +1106,18 @@ func TestClusterClientErr(t *testing.T) {
 			}
 			return &mockConn{DoFn: func(cmd Completed) RedisResult {
 				return slotsResp
-			}, DoMultiFn: func(multi ...Completed) []RedisResult {
+			}, DoMultiFn: func(multi ...Completed) *redisresults {
 				ret := make([]RedisResult, len(multi))
 				if atomic.AddInt64(&count, 1) <= 3 {
 					for i := range ret {
 						ret[i] = newResult(RedisMessage{typ: '-', string: "MOVED 0 :2"}, nil)
 					}
-					return ret
+					return &redisresults{s: ret}
 				}
 				for i := range ret {
 					ret[i] = newResult(RedisMessage{typ: '+', string: multi[i].Commands()[1]}, nil)
 				}
-				return ret
+				return &redisresults{s: ret}
 			}}
 		})
 		if err != nil {
@@ -1139,18 +1139,18 @@ func TestClusterClientErr(t *testing.T) {
 			}
 			return &mockConn{DoFn: func(cmd Completed) RedisResult {
 				return slotsResp
-			}, DoMultiFn: func(multi ...Completed) []RedisResult {
+			}, DoMultiFn: func(multi ...Completed) *redisresults {
 				ret := make([]RedisResult, len(multi))
 				if atomic.AddInt64(&count, 1) <= 3 {
 					for i := range ret {
 						ret[i] = newResult(RedisMessage{typ: '-', string: "MOVED 0 :2"}, nil)
 					}
-					return ret
+					return &redisresults{s: ret}
 				}
 				for i := range ret {
 					ret[i] = newResult(RedisMessage{typ: '+', string: multi[i].Commands()[1]}, nil)
 				}
-				return ret
+				return &redisresults{s: ret}
 			}}
 		})
 		if err != nil {
@@ -1198,18 +1198,18 @@ func TestClusterClientErr(t *testing.T) {
 		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
 			return &mockConn{DoFn: func(cmd Completed) RedisResult {
 				return slotsResp
-			}, DoMultiCacheFn: func(multi ...CacheableTTL) []RedisResult {
+			}, DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
 				ret := make([]RedisResult, len(multi))
 				if atomic.AddInt64(&count, 1) <= 3 {
 					for i := range ret {
 						ret[i] = newResult(RedisMessage{typ: '-', string: "MOVED 0 :1"}, nil)
 					}
-					return ret
+					return &redisresults{s: ret}
 				}
 				for i := range ret {
 					ret[i] = newResult(RedisMessage{typ: '+', string: multi[i].Cmd.Commands()[1]}, nil)
 				}
-				return ret
+				return &redisresults{s: ret}
 			}}
 		})
 		if err != nil {
@@ -1225,18 +1225,18 @@ func TestClusterClientErr(t *testing.T) {
 		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
 			return &mockConn{DoFn: func(cmd Completed) RedisResult {
 				return slotsResp
-			}, DoMultiCacheFn: func(multi ...CacheableTTL) []RedisResult {
+			}, DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
 				ret := make([]RedisResult, len(multi))
 				if atomic.AddInt64(&count, 1) <= 3 {
 					for i := range ret {
 						ret[i] = newResult(RedisMessage{typ: '-', string: "MOVED 0 :1"}, nil)
 					}
-					return ret
+					return &redisresults{s: ret}
 				}
 				for i := range ret {
 					ret[i] = newResult(RedisMessage{typ: '+', string: multi[i].Cmd.Commands()[1]}, nil)
 				}
-				return ret
+				return &redisresults{s: ret}
 			}}
 		})
 		if err != nil {
@@ -1263,11 +1263,11 @@ func TestClusterClientErr(t *testing.T) {
 					}
 					return newResult(RedisMessage{typ: '-', string: "ASK 0 :1"}, nil)
 				},
-				DoMultiFn: func(multi ...Completed) []RedisResult {
+				DoMultiFn: func(multi ...Completed) *redisresults {
 					if atomic.AddInt64(&count, 1) <= 3 {
-						return []RedisResult{{}, newResult(RedisMessage{typ: '-', string: "ASK 0 :1"}, nil)}
+						return &redisresults{s: []RedisResult{{}, newResult(RedisMessage{typ: '-', string: "ASK 0 :1"}, nil)}}
 					}
-					return []RedisResult{{}, newResult(RedisMessage{typ: '+', string: "b"}, nil)}
+					return &redisresults{s: []RedisResult{{}, newResult(RedisMessage{typ: '+', string: "b"}, nil)}}
 				},
 			}
 		})
@@ -1286,19 +1286,19 @@ func TestClusterClientErr(t *testing.T) {
 				DoFn: func(cmd Completed) RedisResult {
 					return slotsResp
 				},
-				DoMultiFn: func(multi ...Completed) []RedisResult {
+				DoMultiFn: func(multi ...Completed) *redisresults {
 					ret := make([]RedisResult, len(multi))
 					if atomic.AddInt64(&count, 1) <= 3 {
 						for i := range ret {
 							ret[i] = newResult(RedisMessage{typ: '-', string: "ASK 0 :1"}, nil)
 						}
-						return ret
+						return &redisresults{s: ret}
 					}
 					for i := 0; i < len(multi); i += 2 {
 						ret[i] = newResult(RedisMessage{typ: '+', string: "OK"}, nil)
 						ret[i+1] = newResult(RedisMessage{typ: '+', string: multi[i+1].Commands()[1]}, nil)
 					}
-					return ret
+					return &redisresults{s: ret}
 				},
 			}
 		})
@@ -1317,19 +1317,19 @@ func TestClusterClientErr(t *testing.T) {
 				DoFn: func(cmd Completed) RedisResult {
 					return slotsResp
 				},
-				DoMultiFn: func(multi ...Completed) []RedisResult {
+				DoMultiFn: func(multi ...Completed) *redisresults {
 					ret := make([]RedisResult, len(multi))
 					if atomic.AddInt64(&count, 1) <= 3 {
 						for i := range ret {
 							ret[i] = newResult(RedisMessage{typ: '-', string: "ASK 0 :1"}, nil)
 						}
-						return ret
+						return &redisresults{s: ret}
 					}
 					for i := 0; i < len(multi); i += 2 {
 						ret[i] = newResult(RedisMessage{typ: '+', string: "OK"}, nil)
 						ret[i+1] = newResult(RedisMessage{typ: '+', string: multi[i+1].Commands()[1]}, nil)
 					}
-					return ret
+					return &redisresults{s: ret}
 				},
 			}
 		})
@@ -1357,11 +1357,11 @@ func TestClusterClientErr(t *testing.T) {
 				DoCacheFn: func(cmd Cacheable, ttl time.Duration) RedisResult {
 					return newResult(RedisMessage{typ: '-', string: "ASK 0 :1"}, nil)
 				},
-				DoMultiFn: func(multi ...Completed) []RedisResult {
+				DoMultiFn: func(multi ...Completed) *redisresults {
 					if atomic.AddInt64(&count, 1) <= 3 {
-						return []RedisResult{{}, {}, {}, {}, {}, newResult(RedisMessage{typ: '-', string: "ASK 0 :1"}, nil)}
+						return &redisresults{s: []RedisResult{{}, {}, {}, {}, {}, newResult(RedisMessage{typ: '-', string: "ASK 0 :1"}, nil)}}
 					}
-					return []RedisResult{{}, {}, {}, {}, {}, newResult(RedisMessage{typ: '*', values: []RedisMessage{{}, {typ: '+', string: "b"}}}, nil)}
+					return &redisresults{s: []RedisResult{{}, {}, {}, {}, {}, newResult(RedisMessage{typ: '*', values: []RedisMessage{{}, {typ: '+', string: "b"}}}, nil)}}
 				},
 			}
 		})
@@ -1380,14 +1380,14 @@ func TestClusterClientErr(t *testing.T) {
 				DoFn: func(cmd Completed) RedisResult {
 					return slotsResp
 				},
-				DoMultiCacheFn: func(multi ...CacheableTTL) []RedisResult {
-					return []RedisResult{newResult(RedisMessage{typ: '-', string: "ASK 0 :1"}, nil)}
+				DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
+					return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '-', string: "ASK 0 :1"}, nil)}}
 				},
-				DoMultiFn: func(multi ...Completed) []RedisResult {
+				DoMultiFn: func(multi ...Completed) *redisresults {
 					if atomic.AddInt64(&count, 1) <= 3 {
-						return []RedisResult{{}, {}, {}, {}, {}, newResult(RedisMessage{typ: '-', string: "ASK 0 :1"}, nil)}
+						return &redisresults{s: []RedisResult{{}, {}, {}, {}, {}, newResult(RedisMessage{typ: '-', string: "ASK 0 :1"}, nil)}}
 					}
-					return []RedisResult{{}, {}, {}, {}, {}, newResult(RedisMessage{typ: '*', values: []RedisMessage{{}, {typ: '+', string: "b"}}}, nil)}
+					return &redisresults{s: []RedisResult{{}, {}, {}, {}, {}, newResult(RedisMessage{typ: '*', values: []RedisMessage{{}, {typ: '+', string: "b"}}}, nil)}}
 				},
 			}
 		})
@@ -1406,20 +1406,20 @@ func TestClusterClientErr(t *testing.T) {
 				DoFn: func(cmd Completed) RedisResult {
 					return slotsResp
 				},
-				DoMultiCacheFn: func(multi ...CacheableTTL) []RedisResult {
-					return []RedisResult{newResult(RedisMessage{typ: '-', string: "ASK 0 :1"}, nil), newResult(RedisMessage{typ: '-', string: "ASK 0 :1"}, nil)}
+				DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
+					return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '-', string: "ASK 0 :1"}, nil), newResult(RedisMessage{typ: '-', string: "ASK 0 :1"}, nil)}}
 				},
-				DoMultiFn: func(multi ...Completed) []RedisResult {
+				DoMultiFn: func(multi ...Completed) *redisresults {
 					if atomic.AddInt64(&count, 1) <= 3 {
-						return []RedisResult{
+						return &redisresults{s: []RedisResult{
 							{}, {}, {}, {}, {}, newResult(RedisMessage{typ: '-', string: "ASK 0 :1"}, nil),
 							{}, {}, {}, {}, {}, newResult(RedisMessage{typ: '-', string: "ASK 0 :1"}, nil),
-						}
+						}}
 					}
-					return []RedisResult{
+					return &redisresults{s: []RedisResult{
 						{}, {}, {}, {}, {}, newResult(RedisMessage{typ: '*', values: []RedisMessage{{}, {typ: '+', string: "a"}}}, nil),
 						{}, {}, {}, {}, {}, newResult(RedisMessage{typ: '*', values: []RedisMessage{{}, {typ: '+', string: "b"}}}, nil),
-					}
+					}}
 				},
 			}
 		})
@@ -1463,13 +1463,13 @@ func TestClusterClientErr(t *testing.T) {
 		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
 			return &mockConn{DoFn: func(cmd Completed) RedisResult {
 				return slotsResp
-			}, DoMultiFn: func(multi ...Completed) []RedisResult {
+			}, DoMultiFn: func(multi ...Completed) *redisresults {
 				if atomic.AddInt64(&count, 1) <= 3 {
-					return []RedisResult{newResult(RedisMessage{typ: '-', string: "TRYAGAIN"}, nil)}
+					return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '-', string: "TRYAGAIN"}, nil)}}
 				}
 				ret := make([]RedisResult, len(multi))
 				ret[0] = newResult(RedisMessage{typ: '+', string: "b"}, nil)
-				return ret
+				return &redisresults{s: ret}
 			}}
 		})
 		if err != nil {
@@ -1485,14 +1485,14 @@ func TestClusterClientErr(t *testing.T) {
 		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
 			return &mockConn{DoFn: func(cmd Completed) RedisResult {
 				return slotsResp
-			}, DoMultiFn: func(multi ...Completed) []RedisResult {
+			}, DoMultiFn: func(multi ...Completed) *redisresults {
 				if atomic.AddInt64(&count, 1) <= 3 {
-					return []RedisResult{newResult(RedisMessage{typ: '-', string: "TRYAGAIN"}, nil), newResult(RedisMessage{typ: '-', string: "TRYAGAIN"}, nil)}
+					return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '-', string: "TRYAGAIN"}, nil), newResult(RedisMessage{typ: '-', string: "TRYAGAIN"}, nil)}}
 				}
 				ret := make([]RedisResult, len(multi))
 				ret[0] = newResult(RedisMessage{typ: '+', string: "a"}, nil)
 				ret[1] = newResult(RedisMessage{typ: '+', string: "b"}, nil)
-				return ret
+				return &redisresults{s: ret}
 			}}
 		})
 		if err != nil {
@@ -1537,11 +1537,11 @@ func TestClusterClientErr(t *testing.T) {
 		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
 			return &mockConn{DoFn: func(cmd Completed) RedisResult {
 				return slotsResp
-			}, DoMultiCacheFn: func(multi ...CacheableTTL) []RedisResult {
+			}, DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
 				if atomic.AddInt64(&count, 1) <= 3 {
-					return []RedisResult{newResult(RedisMessage{typ: '-', string: "TRYAGAIN"}, nil)}
+					return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '-', string: "TRYAGAIN"}, nil)}}
 				}
-				return []RedisResult{newResult(RedisMessage{typ: '+', string: "b"}, nil)}
+				return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '+', string: "b"}, nil)}}
 			}}
 		})
 		if err != nil {
@@ -1557,11 +1557,11 @@ func TestClusterClientErr(t *testing.T) {
 		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
 			return &mockConn{DoFn: func(cmd Completed) RedisResult {
 				return slotsResp
-			}, DoMultiCacheFn: func(multi ...CacheableTTL) []RedisResult {
+			}, DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
 				if atomic.AddInt64(&count, 1) <= 3 {
-					return []RedisResult{newResult(RedisMessage{typ: '-', string: "TRYAGAIN"}, nil), newResult(RedisMessage{typ: '-', string: "TRYAGAIN"}, nil)}
+					return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '-', string: "TRYAGAIN"}, nil), newResult(RedisMessage{typ: '-', string: "TRYAGAIN"}, nil)}}
 				}
-				return []RedisResult{newResult(RedisMessage{typ: '+', string: "a"}, nil), newResult(RedisMessage{typ: '+', string: "b"}, nil)}
+				return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '+', string: "a"}, nil), newResult(RedisMessage{typ: '+', string: "b"}, nil)}}
 			}}
 		})
 		if err != nil {

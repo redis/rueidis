@@ -174,7 +174,9 @@ func clientMDel(client Client, ctx context.Context, keys []string) map[string]er
 
 func doMultiCache(cc Client, ctx context.Context, cmds []CacheableTTL, keys []string) (ret map[string]RedisMessage, err error) {
 	ret = make(map[string]RedisMessage, len(keys))
-	for i, resp := range cc.DoMultiCache(ctx, cmds...) {
+	resps := cc.DoMultiCache(ctx, cmds...)
+	defer resultsp.Put(&redisresults{s: resps})
+	for i, resp := range resps {
 		if err := resp.NonRedisError(); err != nil {
 			return nil, err
 		}
@@ -185,7 +187,9 @@ func doMultiCache(cc Client, ctx context.Context, cmds []CacheableTTL, keys []st
 
 func doMultiGet(cc Client, ctx context.Context, cmds []Completed, keys []string) (ret map[string]RedisMessage, err error) {
 	ret = make(map[string]RedisMessage, len(keys))
-	for i, resp := range cc.DoMulti(ctx, cmds...) {
+	resps := cc.DoMulti(ctx, cmds...)
+	defer resultsp.Put(&redisresults{s: resps})
+	for i, resp := range resps {
 		if err := resp.NonRedisError(); err != nil {
 			return nil, err
 		}
@@ -196,9 +200,11 @@ func doMultiGet(cc Client, ctx context.Context, cmds []Completed, keys []string)
 
 func doMultiSet(cc Client, ctx context.Context, cmds []Completed, keys []string) (ret map[string]error) {
 	ret = make(map[string]error, len(keys))
-	for i, resp := range cc.DoMulti(ctx, cmds...) {
+	resps := cc.DoMulti(ctx, cmds...)
+	for i, resp := range resps {
 		ret[keys[i]] = resp.Error()
 	}
+	resultsp.Put(&redisresults{s: resps})
 	return ret
 }
 
