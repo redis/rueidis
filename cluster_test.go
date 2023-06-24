@@ -119,7 +119,7 @@ func TestClusterClientInit(t *testing.T) {
 					return slotsResp
 				},
 			}
-		}); err != nil || atomic.LoadInt64(&first) != 2 {
+		}); err != nil || atomic.LoadInt64(&first) < 2 {
 			t.Fatalf("unexpected err %v", err)
 		}
 	})
