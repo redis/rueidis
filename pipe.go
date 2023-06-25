@@ -1177,21 +1177,32 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) *redisre
 	defer entriesp.Put(entries)
 	var missing []Completed
 	now := time.Now()
-	for i, ct := range multi {
+	for _, ct := range multi {
 		if ct.Cmd.IsMGet() {
 			panic(panicmgetcsc)
 		}
-		ck, cc := cmds.CacheKey(ct.Cmd)
-		v, entry := p.cache.Flight(ck, cc, ct.TTL, now)
-		if v.typ != 0 { // cache hit for one key
-			results.s[i] = newResult(v, nil)
-			continue
+	}
+	if cache, ok := p.cache.(*lru); ok {
+		missed := cache.Flights(now, multi, results.s, entries.e)
+		for _, i := range missed {
+			ct := multi[i]
+			ck, _ := cmds.CacheKey(ct.Cmd)
+			missing = append(missing, cmds.OptInCmd, cmds.MultiCmd, cmds.NewCompleted([]string{"PTTL", ck}), Completed(ct.Cmd), cmds.ExecCmd)
 		}
-		if entry != nil {
-			entries.e[i] = entry // store entries for later entry.Wait() to avoid MGET deadlock each others.
-			continue
+	} else {
+		for i, ct := range multi {
+			ck, cc := cmds.CacheKey(ct.Cmd)
+			v, entry := p.cache.Flight(ck, cc, ct.TTL, now)
+			if v.typ != 0 { // cache hit for one key
+				results.s[i] = newResult(v, nil)
+				continue
+			}
+			if entry != nil {
+				entries.e[i] = entry // store entries for later entry.Wait() to avoid MGET deadlock each others.
+				continue
+			}
+			missing = append(missing, cmds.OptInCmd, cmds.MultiCmd, cmds.NewCompleted([]string{"PTTL", ck}), Completed(ct.Cmd), cmds.ExecCmd)
 		}
-		missing = append(missing, cmds.OptInCmd, cmds.MultiCmd, cmds.NewCompleted([]string{"PTTL", ck}), Completed(ct.Cmd), cmds.ExecCmd)
 	}
 
 	var resp *redisresults
