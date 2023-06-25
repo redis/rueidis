@@ -658,6 +658,9 @@ func run(t *testing.T, client Client, cases ...func(*testing.T, Client)) {
 }
 
 func TestSingleClientIntegration(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
 	defer ShouldNotLeaked(SetupLeakDetection())
 	client, err := NewClient(ClientOption{
 		InitAddress:      []string{"127.0.0.1:6379"},
@@ -674,6 +677,9 @@ func TestSingleClientIntegration(t *testing.T) {
 }
 
 func TestSentinelClientIntegration(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
 	defer ShouldNotLeaked(SetupLeakDetection())
 	client, err := NewClient(ClientOption{
 		InitAddress:      []string{"127.0.0.1:26379"},
@@ -694,6 +700,9 @@ func TestSentinelClientIntegration(t *testing.T) {
 }
 
 func TestClusterClientIntegration(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
 	defer ShouldNotLeaked(SetupLeakDetection())
 	client, err := NewClient(ClientOption{
 		InitAddress:      []string{"127.0.0.1:7001", "127.0.0.1:7002", "127.0.0.1:7003"},
@@ -710,6 +719,9 @@ func TestClusterClientIntegration(t *testing.T) {
 }
 
 func TestSingleClient5Integration(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
 	defer ShouldNotLeaked(SetupLeakDetection())
 	client, err := NewClient(ClientOption{
 		InitAddress:      []string{"127.0.0.1:6355"},
@@ -726,6 +738,9 @@ func TestSingleClient5Integration(t *testing.T) {
 }
 
 func TestCluster5ClientIntegration(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
 	defer ShouldNotLeaked(SetupLeakDetection())
 	client, err := NewClient(ClientOption{
 		InitAddress:      []string{"127.0.0.1:7004", "127.0.0.1:7005", "127.0.0.1:7006"},
@@ -743,6 +758,9 @@ func TestCluster5ClientIntegration(t *testing.T) {
 }
 
 func TestSentinel5ClientIntegration(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
 	defer ShouldNotLeaked(SetupLeakDetection())
 	client, err := NewClient(ClientOption{
 		InitAddress:      []string{"127.0.0.1:26355"},
@@ -762,6 +780,9 @@ func TestSentinel5ClientIntegration(t *testing.T) {
 }
 
 func TestKeyDBSingleClientIntegration(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
 	defer ShouldNotLeaked(SetupLeakDetection())
 	client, err := NewClient(ClientOption{
 		InitAddress:      []string{"127.0.0.1:6344"},
@@ -778,6 +799,9 @@ func TestKeyDBSingleClientIntegration(t *testing.T) {
 }
 
 func TestDragonflyDBSingleClientIntegration(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
 	defer ShouldNotLeaked(SetupLeakDetection())
 	client, err := NewClient(ClientOption{
 		InitAddress:      []string{"127.0.0.1:6333"},
@@ -794,6 +818,9 @@ func TestDragonflyDBSingleClientIntegration(t *testing.T) {
 }
 
 func TestKvrocksSingleClientIntegration(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
 	defer ShouldNotLeaked(SetupLeakDetection())
 	client, err := NewClient(ClientOption{
 		InitAddress:      []string{"127.0.0.1:6666"},
