@@ -47,7 +47,7 @@ func main() {
 
 Checkout more examples: [Command Response Cheatsheet](https://github.com/redis/rueidis#command-response-cheatsheet)
 
-## Developer friendly Command Builder
+## Developer Friendly Command Builder
 
 `client.B()` is the builder entrypoint to construct a redis command:
 
@@ -415,5 +415,5 @@ module mymodule
 
 go 1.18
 
-require github.com/redis/rueidis v1.0.9-go1.18
+require github.com/redis/rueidis v1.0.10-go1.18
 ```
