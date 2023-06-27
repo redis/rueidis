@@ -853,6 +853,7 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) *redisresults {
 			}
 			return resp
 		} else if p.r2psFn != nil {
+			resultsp.Put(resp)
 			return p._r2pipe().DoMulti(ctx, multi...)
 		}
 	}
@@ -896,7 +897,7 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) *redisresults {
 			p.background()
 			goto queue
 		}
-		resp.s = p.syncDoMulti(dl, ok, resp.s, multi)
+		p.syncDoMulti(dl, ok, resp.s, multi)
 	} else {
 		err := newErrResult(p.Error())
 		for i := 0; i < len(resp.s); i++ {
@@ -970,7 +971,7 @@ func (p *pipe) syncDo(dl time.Time, dlOk bool, cmd Completed) (resp RedisResult)
 	return newResult(msg, err)
 }
 
-func (p *pipe) syncDoMulti(dl time.Time, dlOk bool, resp []RedisResult, multi []Completed) []RedisResult {
+func (p *pipe) syncDoMulti(dl time.Time, dlOk bool, resp []RedisResult, multi []Completed) {
 	if dlOk {
 		p.conn.SetDeadline(dl)
 		defer p.conn.SetDeadline(time.Time{})
@@ -999,7 +1000,7 @@ process:
 		}
 		resp[i] = newResult(msg, err)
 	}
-	return resp
+	return
 abort:
 	if errors.Is(err, os.ErrDeadlineExceeded) {
 		err = context.DeadlineExceeded
@@ -1010,7 +1011,7 @@ abort:
 	for i := 0; i < len(resp); i++ {
 		resp[i] = newErrResult(err)
 	}
-	return resp
+	return
 }
 
 func syncRead(r *bufio.Reader) (m RedisMessage, err error) {
