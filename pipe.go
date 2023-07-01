@@ -313,8 +313,7 @@ func (p *pipe) _background() {
 	}
 
 	var (
-		ones  = make([]Completed, 1)
-		multi []Completed
+		resps []RedisResult
 		ch    chan RedisResult
 		cond  *sync.Cond
 	)
@@ -332,13 +331,12 @@ func (p *pipe) _background() {
 			_, _, _ = p.queue.NextWriteCmd()
 		default:
 		}
-		if ones[0], multi, ch, cond = p.queue.NextResultCh(); ch != nil {
-			if multi == nil {
-				multi = ones
+		if _, _, ch, resps, cond = p.queue.NextResultCh(); ch != nil {
+			err := newErrResult(p.Error())
+			for i := range resps {
+				resps[i] = err
 			}
-			for range multi {
-				ch <- newErrResult(p.Error())
-			}
+			ch <- err
 			cond.L.Unlock()
 			cond.Signal()
 		} else {
@@ -405,6 +403,7 @@ func (p *pipe) _backgroundRead() (err error) {
 		cond  *sync.Cond
 		ones  = make([]Completed, 1)
 		multi []Completed
+		resps []RedisResult
 		ch    chan RedisResult
 		ff    int // fulfilled count
 		skip  int // skip rest push messages
@@ -415,10 +414,12 @@ func (p *pipe) _backgroundRead() (err error) {
 	)
 
 	defer func() {
+		resp := newErrResult(err)
 		if err != nil && ff < len(multi) {
-			for ; ff < len(multi); ff++ {
-				ch <- newErrResult(err)
+			for ; ff < len(resps); ff++ {
+				resps[ff] = resp
 			}
+			ch <- resp
 			cond.L.Unlock()
 			cond.Signal()
 		}
@@ -462,7 +463,7 @@ func (p *pipe) _backgroundRead() (err error) {
 		}
 		if ff == len(multi) {
 			ff = 0
-			ones[0], multi, ch, cond = p.queue.NextResultCh() // ch should not be nil, otherwise it must be a protocol bug
+			ones[0], multi, ch, resps, cond = p.queue.NextResultCh() // ch should not be nil, otherwise it must be a protocol bug
 			if ch == nil {
 				cond.L.Unlock()
 				// Redis will send sunsubscribe notification proactively in the event of slot migration.
@@ -523,8 +524,12 @@ func (p *pipe) _backgroundRead() (err error) {
 		} else if multi[ff].NoReply() && msg.string == "QUEUED" {
 			panic(multiexecsub)
 		}
-		ch <- newResult(msg, err)
+		resp := newResult(msg, err)
+		if resps != nil {
+			resps[ff] = resp
+		}
 		if ff++; ff == len(multi) {
+			ch <- resp
 			cond.L.Unlock()
 			cond.Signal()
 		}
@@ -911,32 +916,28 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) *redisresults {
 	return resp
 
 queue:
-	ch := p.queue.PutMulti(multi)
+	ch := p.queue.PutMulti(multi, resp.s)
 	var i int
 	if ctxCh := ctx.Done(); ctxCh == nil {
-		for ; i < len(resp.s); i++ {
-			resp.s[i] = <-ch
-		}
+		<-ch
 	} else {
-		for ; i < len(resp.s); i++ {
-			select {
-			case resp.s[i] = <-ch:
-			case <-ctxCh:
-				goto abort
-			}
+		select {
+		case <-ch:
+		case <-ctxCh:
+			goto abort
 		}
 	}
 	atomic.AddInt32(&p.waits, -1)
 	atomic.AddInt32(&p.recvs, 1)
 	return resp
 abort:
-	go func(i int) {
-		for ; i < len(resp.s); i++ {
-			<-ch
-		}
+	go func(i int, resp *redisresults) {
+		<-ch
+		resultsp.Put(resp)
 		atomic.AddInt32(&p.waits, -1)
 		atomic.AddInt32(&p.recvs, 1)
-	}(i)
+	}(i, resp)
+	resp = resultsp.Get(len(multi), len(multi))
 	err := newErrResult(ctx.Err())
 	for ; i < len(resp.s); i++ {
 		resp.s[i] = err
