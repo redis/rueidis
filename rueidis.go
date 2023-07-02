@@ -5,8 +5,10 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
+	"math"
 	"math/rand"
 	"net"
+	"runtime"
 	"strings"
 	"time"
 
@@ -319,7 +321,9 @@ func NewClient(option ClientOption) (client Client, err error) {
 
 func singleClientMultiplex(multiplex int) int {
 	if multiplex == 0 {
-		multiplex = 2
+		if multiplex = int(math.Log2(float64(runtime.GOMAXPROCS(0)))); multiplex >= 2 {
+			multiplex = 2
+		}
 	}
 	if multiplex < 0 {
 		multiplex = 0

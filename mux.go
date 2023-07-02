@@ -2,6 +2,7 @@ package rueidis
 
 import (
 	"context"
+	"math/rand"
 	"net"
 	"runtime"
 	"sync"
@@ -223,7 +224,7 @@ func (m *mux) blockingMulti(ctx context.Context, cmd []Completed) (resp *redisre
 }
 
 func (m *mux) pipeline(ctx context.Context, cmd Completed) (resp RedisResult) {
-	slot := cmd.Slot() & uint16(len(m.wire)-1)
+	slot := slotfn(cmd.Slot(), len(m.wire))
 	wire := m.pipe(slot)
 	if resp = wire.Do(ctx, cmd); isBroken(resp.NonRedisError(), wire) {
 		m.wire[slot].CompareAndSwap(wire, m.init)
@@ -232,7 +233,7 @@ func (m *mux) pipeline(ctx context.Context, cmd Completed) (resp RedisResult) {
 }
 
 func (m *mux) pipelineMulti(ctx context.Context, cmd []Completed) (resp *redisresults) {
-	slot := cmd[0].Slot() & uint16(len(m.wire)-1)
+	slot := slotfn(cmd[0].Slot(), len(m.wire))
 	wire := m.pipe(slot)
 	resp = wire.DoMulti(ctx, cmd...)
 	for _, r := range resp.s {
@@ -311,7 +312,7 @@ func (m *mux) doMultiCache(ctx context.Context, slot uint16, multi []CacheableTT
 }
 
 func (m *mux) Receive(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
-	slot := subscribe.Slot() & uint16(len(m.wire)-1)
+	slot := slotfn(subscribe.Slot(), len(m.wire))
 	wire := m.pipe(slot)
 	err := wire.Receive(ctx, subscribe, fn)
 	if isBroken(err, wire) {
@@ -345,4 +346,24 @@ func (m *mux) Addr() string {
 
 func isBroken(err error, w wire) bool {
 	return err != nil && err != ErrClosing && w.Error() != nil
+}
+
+var rngPool = sync.Pool{
+	New: func() any {
+		return rand.New(rand.NewSource(time.Now().UnixNano()))
+	},
+}
+
+func fastrand(n int) (r int) {
+	s := rngPool.Get().(*rand.Rand)
+	r = s.Intn(n)
+	rngPool.Put(s)
+	return
+}
+
+func slotfn(ks uint16, n int) uint16 {
+	if n == 1 || ks == cmds.NoSlot {
+		return 0
+	}
+	return uint16(fastrand(n))
 }

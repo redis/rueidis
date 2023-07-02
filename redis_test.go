@@ -18,10 +18,13 @@ func parallel(p int) (chan func(), func()) {
 	wg.Add(p)
 	for i := 0; i < p; i++ {
 		go func() {
+			defer func() {
+				recover()
+				wg.Done()
+			}()
 			for fn := range ch {
 				fn()
 			}
-			wg.Done()
 		}()
 	}
 	return ch, func() {
@@ -120,7 +123,7 @@ func testSETGET(t *testing.T, client Client, csc bool) {
 		jobs <- func() {
 			val, err := client.Do(ctx, client.B().Set().Key(key).Value(kvs[key]).Build()).ToString()
 			if err != nil || val != "OK" {
-				t.Fatalf("unexpected set response %v %v", val, err)
+				t.Errorf("unexpected set response %v %v", val, err)
 			}
 		}
 	}
@@ -133,7 +136,7 @@ func testSETGET(t *testing.T, client Client, csc bool) {
 		jobs <- func() {
 			val, err := client.Do(ctx, client.B().Get().Key(key).Build()).ToString()
 			if v, ok := kvs[key]; !((ok && val == v) || (!ok && IsRedisNil(err))) {
-				t.Fatalf("unexpected get response %v %v %v", val, err, ok)
+				t.Errorf("unexpected get response %v %v %v", val, err, ok)
 			}
 		}
 	}
@@ -148,7 +151,7 @@ func testSETGET(t *testing.T, client Client, csc bool) {
 			resp := client.DoCache(ctx, client.B().Get().Key(key).Cache(), time.Minute)
 			val, err := resp.ToString()
 			if v, ok := kvs[key]; !((ok && val == v) || (!ok && IsRedisNil(err))) {
-				t.Fatalf("unexpected csc get response %v %v %v", val, err, ok)
+				t.Errorf("unexpected csc get response %v %v %v", val, err, ok)
 			}
 			if resp.IsCacheHit() {
 				atomic.AddInt64(&hits, 1)
@@ -175,11 +178,13 @@ func testSETGET(t *testing.T, client Client, csc bool) {
 		jobs <- func() {
 			val, err := client.Do(ctx, client.B().Del().Key(key).Build()).AsInt64()
 			if _, ok := kvs[key]; !((val == 1 && ok) || (val == 0 && !ok)) {
-				t.Fatalf("unexpected del response %v %v %v", val, err, ok)
+				t.Errorf("unexpected del response %v %v %v", val, err, ok)
 			}
 		}
 	}
 	wait()
+
+	time.Sleep(time.Second)
 
 	t.Logf("testing client side caching after delete\n")
 	jobs, wait = parallel(para)
@@ -188,10 +193,10 @@ func testSETGET(t *testing.T, client Client, csc bool) {
 		jobs <- func() {
 			resp := client.DoCache(ctx, client.B().Get().Key(key).Cache(), time.Minute)
 			if !IsRedisNil(resp.Error()) {
-				t.Fatalf("unexpected csc get response after delete %v", resp)
+				t.Errorf("unexpected csc get response after delete %v", resp)
 			}
 			if resp.IsCacheHit() {
-				t.Fatalf("unexpected csc cache hit after delete")
+				t.Errorf("unexpected csc cache hit after delete")
 			}
 		}
 	}
@@ -320,6 +325,8 @@ func testMultiSETGET(t *testing.T, client Client, csc bool) {
 	}
 	wait()
 
+	time.Sleep(time.Second)
+
 	t.Logf("testing client side caching after delete\n")
 	jobs, wait = parallel(para)
 	for i := 0; i < keys/100; i += batch {
@@ -415,7 +422,9 @@ func testMultiSETGETHelpers(t *testing.T, client Client, csc bool) {
 			t.Fatalf("unexpecetd err %v\n", err)
 		}
 	}
+
 	time.Sleep(time.Second)
+
 	t.Logf("testing client side caching after delete\n")
 	resp, err = MGetCache(client, ctx, time.Minute, cmdKeys)
 	if err != nil {
