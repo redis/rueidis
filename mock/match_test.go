@@ -5,9 +5,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/redis/rueidis"
 	"github.com/redis/rueidis/internal/cmds"
+	"go.uber.org/mock/gomock"
 )
 
 func TestMatch_Completed(t *testing.T) {
