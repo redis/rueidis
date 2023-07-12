@@ -215,7 +215,7 @@ func (m *locker) waitgate(ctx context.Context, name string) (g *gate, err error)
 
 func (m *locker) trygate(name string) (g *gate) {
 	m.mu.Lock()
-	g, ok := m.gates[name]
+	_, ok := m.gates[name]
 	if !ok {
 		g = makegate(m.totalcnt)
 		g.w++

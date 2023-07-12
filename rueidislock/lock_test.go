@@ -324,6 +324,64 @@ func TestLocker_TryWithContext(t *testing.T) {
 	}
 }
 
+func TestLocker_TryWithContext_MultipleLocker(t *testing.T) {
+	test := func(t *testing.T, noLoop, setpx, nocsc bool) {
+		lockers := make([]*locker, 10)
+		sum := make([]int, len(lockers))
+		for i := 0; i < len(lockers); i++ {
+			lockers[i] = newLocker(t, noLoop, setpx, nocsc)
+			lockers[i].timeout = time.Second
+		}
+		defer func() {
+			for _, locker := range lockers {
+				locker.Close()
+			}
+		}()
+		cnt := 1000
+		lck := strconv.Itoa(rand.Int())
+		ctx := context.Background()
+		var wg sync.WaitGroup
+		wg.Add(len(lockers))
+		for i, l := range lockers {
+			go func(i int, l *locker) {
+				defer wg.Done()
+				for j := 0; j < cnt; j++ {
+					for {
+						_, cancel, err := l.TryWithContext(ctx, lck)
+						if err != nil && err != ErrNotLocked {
+							t.Error(err)
+							return
+						}
+						if cancel != nil {
+							cancel()
+							sum[i]++
+							break
+						}
+						time.Sleep(time.Millisecond)
+					}
+				}
+			}(i, l)
+		}
+		wg.Wait()
+		for i, s := range sum {
+			if s != cnt {
+				t.Fatalf("unexpected sum %v %v %v", i, s, cnt)
+			}
+		}
+	}
+	for _, nocsc := range []bool{false, true} {
+		t.Run("Tracking Loop", func(t *testing.T) {
+			test(t, false, false, nocsc)
+		})
+		t.Run("Tracking NoLoop", func(t *testing.T) {
+			test(t, true, false, nocsc)
+		})
+		t.Run("SET PX", func(t *testing.T) {
+			test(t, true, true, nocsc)
+		})
+	}
+}
+
 func TestLocker_WithContext_Cleanup(t *testing.T) {
 	test := func(t *testing.T, noLoop, setpx, nocsc bool) {
 		locker := newLocker(t, noLoop, setpx, nocsc)
