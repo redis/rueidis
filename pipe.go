@@ -290,6 +290,7 @@ func (p *pipe) _exit(err error) {
 }
 
 func (p *pipe) _background() {
+	p.conn.SetDeadline(time.Time{})
 	go func() {
 		p._exit(p._backgroundWrite())
 		close(p.close)
@@ -948,10 +949,10 @@ abort:
 func (p *pipe) syncDo(dl time.Time, dlOk bool, cmd Completed) (resp RedisResult) {
 	if dlOk {
 		p.conn.SetDeadline(dl)
-		defer p.conn.SetDeadline(time.Time{})
 	} else if p.timeout > 0 && !cmd.IsBlock() {
 		p.conn.SetDeadline(time.Now().Add(p.timeout))
-		defer p.conn.SetDeadline(time.Time{})
+	} else {
+		p.conn.SetDeadline(time.Time{})
 	}
 
 	var msg RedisMessage
@@ -975,7 +976,6 @@ func (p *pipe) syncDo(dl time.Time, dlOk bool, cmd Completed) (resp RedisResult)
 func (p *pipe) syncDoMulti(dl time.Time, dlOk bool, resp []RedisResult, multi []Completed) {
 	if dlOk {
 		p.conn.SetDeadline(dl)
-		defer p.conn.SetDeadline(time.Time{})
 	} else if p.timeout > 0 {
 		for _, cmd := range multi {
 			if cmd.IsBlock() {
@@ -983,7 +983,8 @@ func (p *pipe) syncDoMulti(dl time.Time, dlOk bool, resp []RedisResult, multi []
 			}
 		}
 		p.conn.SetDeadline(time.Now().Add(p.timeout))
-		defer p.conn.SetDeadline(time.Time{})
+	} else {
+		p.conn.SetDeadline(time.Time{})
 	}
 process:
 	var err error
