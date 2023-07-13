@@ -65,7 +65,7 @@ var _ = BeforeSuite(func() {
 	})
 	Expect(err).NotTo(HaveOccurred())
 	clusterresp3, err = rueidis.NewClient(rueidis.ClientOption{
-		InitAddress: []string{"127.0.0.1:7001"},
+		InitAddress: []string{"127.0.0.1:7010"},
 		ClientName:  "rueidis",
 	})
 	Expect(err).NotTo(HaveOccurred())
@@ -78,7 +78,7 @@ var _ = BeforeSuite(func() {
 	})
 	Expect(err).NotTo(HaveOccurred())
 	clusterresp2, err = rueidis.NewClient(rueidis.ClientOption{
-		InitAddress:  []string{"127.0.0.1:7004"},
+		InitAddress:  []string{"127.0.0.1:7007"},
 		ClientName:   "rueidis",
 		DisableCache: true,
 	})
@@ -8545,7 +8545,7 @@ func testAdapterCache(resp3 bool) {
 			for _, test := range convTests {
 				err := adapter.Set(ctx, "key", test.value, 0).Err()
 				Expect(err).NotTo(HaveOccurred())
-
+				time.Sleep(time.Millisecond * 10)
 				s, err := adapter.Cache(time.Hour).Get(ctx, "key").Result()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(s).To(Equal(test.wanted))

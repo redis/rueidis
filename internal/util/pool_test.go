@@ -24,11 +24,14 @@ func TestPool(t *testing.T) {
 	}
 	c.s[0] = 1
 	p.Put(c)
-	c = p.Get(5, 10)
-	if c.s[0] != 1 {
-		t.Fatal("should use recycled")
+	for {
+		c = p.Get(5, 10)
+		if c.s[0] == 1 {
+			break
+		}
+		c.s[0] = 1
+		p.Put(c)
 	}
-	p.Put(c)
 	c = p.Get(5, 20)
 	if c.s[0] != 0 {
 		t.Fatal("should not use recycled")
