@@ -150,7 +150,16 @@ func readMap(i *bufio.Reader) (m RedisMessage, err error) {
 	return m, err
 }
 
+const ok = "OK"
+const okrn = "OK\r\n"
+
 func readS(i *bufio.Reader) (string, error) {
+	if peek, _ := i.Peek(2); string(peek) == ok {
+		if peek, _ = i.Peek(4); string(peek) == okrn {
+			_, _ = i.Discard(4)
+			return ok, nil
+		}
+	}
 	bs, err := i.ReadBytes('\n')
 	if err != nil {
 		return "", err
