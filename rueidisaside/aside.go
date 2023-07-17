@@ -13,7 +13,7 @@ import (
 
 type ClientOption struct {
 	ClientOption rueidis.ClientOption
-	ClientTTL    time.Duration //
+	ClientTTL    time.Duration // TTL for the client marker, refreshed every 1/2 TTL. Defaults to 10s. The marker allows other client to know if this client is still alive.
 }
 
 type CacheAsideClient interface {

@@ -53,3 +53,7 @@ func main() {
 	}
 }
 ```
+
+## Limitation
+
+Currently, requires Redis >= 7.0.
