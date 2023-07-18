@@ -777,7 +777,7 @@ func toZScore(values []RedisMessage) (s ZScore, err error) {
 		}
 		return s, err
 	}
-	panic(fmt.Sprintf("redis message is not a map/array/set or its length is not 2"))
+	panic("redis message is not a map/array/set or its length is not 2")
 }
 
 // AsZScore converts ZPOPMAX and ZPOPMIN command with count 1 response to a single ZScore
