@@ -30,6 +30,7 @@ import (
 	"context"
 	"encoding"
 	"fmt"
+	"reflect"
 	"runtime"
 	"strconv"
 	"strings"
@@ -3346,6 +3347,74 @@ func argToSlice(arg any) []string {
 		}
 		return dst
 	default:
+		// scan struct field
+		v := reflect.ValueOf(arg)
+		if v.Type().Kind() == reflect.Ptr {
+			if v.IsNil() {
+				return nil
+			}
+			v = v.Elem()
+		}
+		if v.Type().Kind() == reflect.Struct {
+			return appendStructField(v)
+		}
 		return []string{str(arg)}
 	}
+}
+
+func appendStructField(v reflect.Value) []string {
+	typ := v.Type()
+	dst := make([]string, 0, typ.NumField())
+	for i := 0; i < typ.NumField(); i++ {
+		tag := typ.Field(i).Tag.Get("redis")
+		if tag == "" || tag == "-" {
+			continue
+		}
+		name, opt, _ := strings.Cut(tag, ",")
+		if name == "" {
+			continue
+		}
+
+		field := v.Field(i)
+
+		// miss field
+		if omitEmpty(opt) && isEmptyValue(field) {
+			continue
+		}
+
+		if field.CanInterface() {
+			dst = append(dst, name, str(field.Interface()))
+		}
+	}
+
+	return dst
+}
+
+func omitEmpty(opt string) bool {
+	for opt != "" {
+		var name string
+		name, opt, _ = strings.Cut(opt, ",")
+		if name == "omitempty" {
+			return true
+		}
+	}
+	return false
+}
+
+func isEmptyValue(v reflect.Value) bool {
+	switch v.Kind() {
+	case reflect.Array, reflect.Map, reflect.Slice, reflect.String:
+		return v.Len() == 0
+	case reflect.Bool:
+		return !v.Bool()
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return v.Int() == 0
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		return v.Uint() == 0
+	case reflect.Float32, reflect.Float64:
+		return v.Float() == 0
+	case reflect.Interface, reflect.Pointer:
+		return v.IsNil()
+	}
+	return false
 }
