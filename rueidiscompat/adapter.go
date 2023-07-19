@@ -30,6 +30,7 @@ import (
 	"context"
 	"encoding"
 	"fmt"
+	"reflect"
 	"runtime"
 	"strconv"
 	"strings"
@@ -779,7 +780,7 @@ func (c *Compat) IncrByFloat(ctx context.Context, key string, increment float64)
 func (c *Compat) MGet(ctx context.Context, keys ...string) *SliceCmd {
 	cmd := c.client.B().Mget().Key(keys...).Build()
 	resp := c.client.Do(ctx, cmd)
-	return newSliceCmd(resp)
+	return newSliceCmd(resp, keys...)
 }
 
 func (c *Compat) MSet(ctx context.Context, values ...any) *StatusCmd {
@@ -1114,7 +1115,7 @@ func (c *Compat) HLen(ctx context.Context, key string) *IntCmd {
 func (c *Compat) HMGet(ctx context.Context, key string, fields ...string) *SliceCmd {
 	cmd := c.client.B().Hmget().Key(key).Field(fields...).Build()
 	resp := c.client.Do(ctx, cmd)
-	return newSliceCmd(resp)
+	return newSliceCmd(resp, fields...)
 }
 
 // HSet requires Redis v4 for multiple field/value pairs support.
@@ -3007,7 +3008,7 @@ func (c CacheCompat) HLen(ctx context.Context, key string) *IntCmd {
 func (c CacheCompat) HMGet(ctx context.Context, key string, fields ...string) *SliceCmd {
 	cmd := c.client.B().Hmget().Key(key).Field(fields...).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
-	return newSliceCmd(resp)
+	return newSliceCmd(resp, fields...)
 }
 
 func (c CacheCompat) HVals(ctx context.Context, key string) *StringSliceCmd {
@@ -3292,6 +3293,9 @@ func (c CacheCompat) ZScore(ctx context.Context, key, member string) *FloatCmd {
 }
 
 func str(arg any) string {
+	if arg == nil {
+		return ""
+	}
 	switch v := arg.(type) {
 	case string:
 		return v
@@ -3304,6 +3308,8 @@ func str(arg any) string {
 		return "0"
 	case time.Time:
 		return v.Format(time.RFC3339Nano)
+	case time.Duration:
+		return strconv.FormatInt(v.Nanoseconds(), 10)
 	case encoding.BinaryMarshaler:
 		if data, err := v.MarshalBinary(); err == nil {
 			return rueidis.BinaryString(data)
@@ -3346,6 +3352,74 @@ func argToSlice(arg any) []string {
 		}
 		return dst
 	default:
+		// scan struct field
+		v := reflect.ValueOf(arg)
+		if v.Type().Kind() == reflect.Ptr {
+			if v.IsNil() {
+				return nil
+			}
+			v = v.Elem()
+		}
+		if v.Type().Kind() == reflect.Struct {
+			return appendStructField(v)
+		}
 		return []string{str(arg)}
 	}
+}
+
+func appendStructField(v reflect.Value) []string {
+	typ := v.Type()
+	dst := make([]string, 0, typ.NumField())
+	for i := 0; i < typ.NumField(); i++ {
+		tag := typ.Field(i).Tag.Get("redis")
+		if tag == "" || tag == "-" {
+			continue
+		}
+		name, opt, _ := strings.Cut(tag, ",")
+		if name == "" {
+			continue
+		}
+
+		field := v.Field(i)
+
+		// miss field
+		if omitEmpty(opt) && isEmptyValue(field) {
+			continue
+		}
+
+		if field.CanInterface() {
+			dst = append(dst, name, str(field.Interface()))
+		}
+	}
+
+	return dst
+}
+
+func omitEmpty(opt string) bool {
+	for opt != "" {
+		var name string
+		name, opt, _ = strings.Cut(opt, ",")
+		if name == "omitempty" {
+			return true
+		}
+	}
+	return false
+}
+
+func isEmptyValue(v reflect.Value) bool {
+	switch v.Kind() {
+	case reflect.Array, reflect.Map, reflect.Slice, reflect.String:
+		return v.Len() == 0
+	case reflect.Bool:
+		return !v.Bool()
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return v.Int() == 0
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		return v.Uint() == 0
+	case reflect.Float32, reflect.Float64:
+		return v.Float() == 0
+	case reflect.Interface, reflect.Pointer:
+		return v.IsNil()
+	}
+	return false
 }
