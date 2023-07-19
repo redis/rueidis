@@ -30,6 +30,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -38,6 +39,15 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/redis/rueidis"
 )
+
+type TimeValue struct {
+	time.Time
+}
+
+func (t *TimeValue) ScanRedis(s string) (err error) {
+	t.Time, err = time.Parse(time.RFC3339Nano, s)
+	return
+}
 
 func TestAdapter(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -1467,24 +1477,59 @@ func testAdapter(resp3 bool) {
 
 			mGet := adapter.MGet(ctx, "key1", "key2", "_")
 			Expect(mGet.Err()).NotTo(HaveOccurred())
-			Expect(mGet.Val()).To(Equal([]any{"hello1", "hello2", nil}))
+			Expect(mGet.Val()).To(Equal([]interface{}{"hello1", "hello2", nil}))
+
+			// MSet struct
+			type set struct {
+				Set1 string                 `redis:"set1"`
+				Set2 int16                  `redis:"set2"`
+				Set3 time.Duration          `redis:"set3"`
+				Set4 interface{}            `redis:"set4"`
+				Set5 map[string]interface{} `redis:"-"`
+			}
+			mSet = adapter.MSet(ctx, &set{
+				Set1: "val1",
+				Set2: 1024,
+				Set3: 2 * time.Millisecond,
+				Set4: nil,
+				Set5: map[string]interface{}{"k1": 1},
+			})
+			Expect(mSet.Err()).NotTo(HaveOccurred())
+			Expect(mSet.Val()).To(Equal("OK"))
+
+			mGet = adapter.MGet(ctx, "set1", "set2", "set3", "set4")
+			Expect(mGet.Err()).NotTo(HaveOccurred())
+			Expect(mGet.Val()).To(Equal([]interface{}{
+				"val1",
+				"1024",
+				strconv.Itoa(int(2 * time.Millisecond.Nanoseconds())),
+				"",
+			}))
 		})
 
 		It("should scan Mget", func() {
-			err := adapter.MSet(ctx, "key1", "hello1", "key2", 123).Err()
+			now := time.Now()
+
+			err := adapter.MSet(ctx, "key1", "hello1", "key2", 123, "time", now.Format(time.RFC3339Nano)).Err()
 			Expect(err).NotTo(HaveOccurred())
 
-			res := adapter.MGet(ctx, "key1", "key2", "_")
+			res := adapter.MGet(ctx, "key1", "key2", "_", "time")
 			Expect(res.Err()).NotTo(HaveOccurred())
 
-			// TODO
-			//type data struct {
-			//	Key1 string `redis:"key1"`
-			//	Key2 int    `redis:"key2"`
-			//}
-			//var d data
-			//Expect(res.Scan(&d)).NotTo(HaveOccurred())
-			//Expect(d).To(Equal(data{Key1: "hello1", Key2: 123}))
+			type data struct {
+				Key1 string    `redis:"key1"`
+				Key2 int       `redis:"key2"`
+				Time TimeValue `redis:"time"`
+			}
+			var d data
+			Expect(res.Scan(&d)).NotTo(HaveOccurred())
+			Expect(d.Time.UnixNano()).To(Equal(now.UnixNano()))
+			d.Time.Time = time.Time{}
+			Expect(d).To(Equal(data{
+				Key1: "hello1",
+				Key2: 123,
+				Time: TimeValue{Time: time.Time{}},
+			}))
 		})
 
 		It("should MSetNX", func() {
@@ -1495,8 +1540,26 @@ func testAdapter(resp3 bool) {
 			mSetNX = adapter.MSetNX(ctx, "key2", "hello1", "key3", "hello2")
 			Expect(mSetNX.Err()).NotTo(HaveOccurred())
 			Expect(mSetNX.Val()).To(Equal(false))
-		})
 
+			// set struct
+			// MSet struct
+			type set struct {
+				Set1 string                 `redis:"set1"`
+				Set2 int16                  `redis:"set2"`
+				Set3 time.Duration          `redis:"set3"`
+				Set4 interface{}            `redis:"set4"`
+				Set5 map[string]interface{} `redis:"-"`
+			}
+			mSetNX = adapter.MSetNX(ctx, &set{
+				Set1: "val1",
+				Set2: 1024,
+				Set3: 2 * time.Millisecond,
+				Set4: nil,
+				Set5: map[string]interface{}{"k1": 1},
+			})
+			Expect(mSetNX.Err()).NotTo(HaveOccurred())
+			Expect(mSetNX.Val()).To(Equal(true))
+		})
 		It("SetWithArgs should panic wrong mode", func() {
 			Expect(func() {
 				adapter.SetArgs(ctx, "key", "hello", SetArgs{Mode: "ANY"})
@@ -2027,20 +2090,47 @@ func testAdapter(resp3 bool) {
 		})
 
 		It("should scan", func() {
-			err := adapter.HMSet(ctx, "hash", "key1", "hello1", "key2", 123).Err()
+			now := time.Now()
+
+			err := adapter.HMSet(ctx, "hash", "key1", "hello1", "key2", 123, "time", now.Format(time.RFC3339Nano)).Err()
 			Expect(err).NotTo(HaveOccurred())
 
 			res := adapter.HGetAll(ctx, "hash")
 			Expect(res.Err()).NotTo(HaveOccurred())
 
-			// TODO
-			//type data struct {
-			//	Key1 string `redis:"key1"`
-			//	Key2 int    `redis:"key2"`
-			//}
-			//var d data
-			//Expect(res.Scan(&d)).NotTo(HaveOccurred())
-			//Expect(d).To(Equal(data{Key1: "hello1", Key2: 123}))
+			type data struct {
+				Key1 string    `redis:"key1"`
+				Key2 int       `redis:"key2"`
+				Time TimeValue `redis:"time"`
+			}
+			var d data
+			Expect(res.Scan(&d)).NotTo(HaveOccurred())
+			Expect(d.Time.UnixNano()).To(Equal(now.UnixNano()))
+			d.Time.Time = time.Time{}
+			Expect(d).To(Equal(data{
+				Key1: "hello1",
+				Key2: 123,
+				Time: TimeValue{Time: time.Time{}},
+			}))
+
+			type data2 struct {
+				Key1 string    `redis:"key1"`
+				Key2 int       `redis:"key2"`
+				Time time.Time `redis:"time"`
+			}
+			err = adapter.HSet(ctx, "hash", &data2{
+				Key1: "hello2",
+				Key2: 200,
+				Time: now,
+			}).Err()
+			Expect(err).NotTo(HaveOccurred())
+
+			var d2 data2
+			err = adapter.HMGet(ctx, "hash", "key1", "key2", "time").Scan(&d2)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(d2.Key1).To(Equal("hello2"))
+			Expect(d2.Key2).To(Equal(200))
+			Expect(d2.Time.Unix()).To(Equal(now.Unix()))
 		})
 
 		It("should HIncrBy", func() {
@@ -2114,7 +2204,7 @@ func testAdapter(resp3 bool) {
 		})
 
 		It("should HSet", func() {
-			ok, err := adapter.HSet(ctx, "hash", map[string]any{
+			ok, err := adapter.HSet(ctx, "hash", map[string]interface{}{
 				"key1": "hello1",
 				"key2": "hello2",
 			}).Result()
@@ -2142,6 +2232,52 @@ func testAdapter(resp3 bool) {
 			hGet := adapter.HGet(ctx, "hash", "key")
 			Expect(hGet.Err()).NotTo(HaveOccurred())
 			Expect(hGet.Val()).To(Equal("hello"))
+
+			// set struct
+			// MSet struct
+			type set struct {
+				Set1 string                 `redis:"set1"`
+				Set2 int16                  `redis:"set2"`
+				Set3 time.Duration          `redis:"set3"`
+				Set4 interface{}            `redis:"set4"`
+				Set5 map[string]interface{} `redis:"-"`
+				Set6 string                 `redis:"set6,omitempty"`
+			}
+
+			hSet = adapter.HSet(ctx, "hash", &set{
+				Set1: "val1",
+				Set2: 1024,
+				Set3: 2 * time.Millisecond,
+				Set4: nil,
+				Set5: map[string]interface{}{"k1": 1},
+			})
+			Expect(hSet.Err()).NotTo(HaveOccurred())
+			Expect(hSet.Val()).To(Equal(int64(4)))
+
+			hMGet := adapter.HMGet(ctx, "hash", "set1", "set2", "set3", "set4", "set5", "set6")
+			Expect(hMGet.Err()).NotTo(HaveOccurred())
+			Expect(hMGet.Val()).To(Equal([]interface{}{
+				"val1",
+				"1024",
+				strconv.Itoa(int(2 * time.Millisecond.Nanoseconds())),
+				"",
+				nil,
+				nil,
+			}))
+
+			hSet = adapter.HSet(ctx, "hash2", &set{
+				Set1: "val2",
+				Set6: "val",
+			})
+			Expect(hSet.Err()).NotTo(HaveOccurred())
+			Expect(hSet.Val()).To(Equal(int64(5)))
+
+			hMGet = adapter.HMGet(ctx, "hash2", "set1", "set6")
+			Expect(hMGet.Err()).NotTo(HaveOccurred())
+			Expect(hMGet.Val()).To(Equal([]interface{}{
+				"val2",
+				"val",
+			}))
 		})
 
 		It("should HSetNX", func() {

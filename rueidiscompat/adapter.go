@@ -780,7 +780,7 @@ func (c *Compat) IncrByFloat(ctx context.Context, key string, increment float64)
 func (c *Compat) MGet(ctx context.Context, keys ...string) *SliceCmd {
 	cmd := c.client.B().Mget().Key(keys...).Build()
 	resp := c.client.Do(ctx, cmd)
-	return newSliceCmd(resp)
+	return newSliceCmd(resp, keys...)
 }
 
 func (c *Compat) MSet(ctx context.Context, values ...any) *StatusCmd {
@@ -1115,7 +1115,7 @@ func (c *Compat) HLen(ctx context.Context, key string) *IntCmd {
 func (c *Compat) HMGet(ctx context.Context, key string, fields ...string) *SliceCmd {
 	cmd := c.client.B().Hmget().Key(key).Field(fields...).Build()
 	resp := c.client.Do(ctx, cmd)
-	return newSliceCmd(resp)
+	return newSliceCmd(resp, fields...)
 }
 
 // HSet requires Redis v4 for multiple field/value pairs support.
@@ -3008,7 +3008,7 @@ func (c CacheCompat) HLen(ctx context.Context, key string) *IntCmd {
 func (c CacheCompat) HMGet(ctx context.Context, key string, fields ...string) *SliceCmd {
 	cmd := c.client.B().Hmget().Key(key).Field(fields...).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
-	return newSliceCmd(resp)
+	return newSliceCmd(resp, fields...)
 }
 
 func (c CacheCompat) HVals(ctx context.Context, key string) *StringSliceCmd {
@@ -3293,6 +3293,9 @@ func (c CacheCompat) ZScore(ctx context.Context, key, member string) *FloatCmd {
 }
 
 func str(arg any) string {
+	if arg == nil {
+		return ""
+	}
 	switch v := arg.(type) {
 	case string:
 		return v
@@ -3305,6 +3308,8 @@ func str(arg any) string {
 		return "0"
 	case time.Time:
 		return v.Format(time.RFC3339Nano)
+	case time.Duration:
+		return strconv.FormatInt(v.Nanoseconds(), 10)
 	case encoding.BinaryMarshaler:
 		if data, err := v.MarshalBinary(); err == nil {
 			return rueidis.BinaryString(data)

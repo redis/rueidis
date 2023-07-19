@@ -508,13 +508,14 @@ func newStatusCmd(res rueidis.RedisResult) *StatusCmd {
 }
 
 type SliceCmd struct {
-	err error
-	val []any
+	err  error
+	val  []any
+	keys []string
 }
 
-func newSliceCmd(res rueidis.RedisResult) *SliceCmd {
+func newSliceCmd(res rueidis.RedisResult, keys ...string) *SliceCmd {
 	val, err := res.ToArray()
-	slice := &SliceCmd{val: make([]any, len(val)), err: err}
+	slice := &SliceCmd{val: make([]any, len(val)), err: err, keys: keys}
 	for i, v := range val {
 		if s, err := v.ToString(); err == nil {
 			slice.val[i] = s
@@ -541,6 +542,15 @@ func (cmd *SliceCmd) Err() error {
 
 func (cmd *SliceCmd) Result() ([]any, error) {
 	return cmd.val, cmd.err
+}
+
+// Scan scans the results from the map into a destination struct. The map keys
+// are matched in the Redis struct fields by the `redis:"field"` tag.
+func (cmd *SliceCmd) Scan(dst any) error {
+	if cmd.err != nil {
+		return cmd.err
+	}
+	return Scan(dst, cmd.keys, cmd.val)
 }
 
 type StringSliceCmd struct {
@@ -960,6 +970,27 @@ func (cmd *StringStringMapCmd) Err() error {
 
 func (cmd *StringStringMapCmd) Result() (map[string]string, error) {
 	return cmd.val, cmd.err
+}
+
+// Scan scans the results from the map into a destination struct. The map keys
+// are matched in the Redis struct fields by the `redis:"field"` tag.
+func (cmd *StringStringMapCmd) Scan(dest interface{}) error {
+	if cmd.err != nil {
+		return cmd.err
+	}
+
+	strct, err := Struct(dest)
+	if err != nil {
+		return err
+	}
+
+	for k, v := range cmd.val {
+		if err := strct.Scan(k, v); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 type StringIntMapCmd struct {
