@@ -12,8 +12,10 @@ import (
 )
 
 type ClientOption struct {
-	ClientOption rueidis.ClientOption
-	ClientTTL    time.Duration // TTL for the client marker, refreshed every 1/2 TTL. Defaults to 10s. The marker allows other client to know if this client is still alive.
+	// ClientBuilder can be used to modify rueidis.Client used by Locker
+	ClientBuilder func(option rueidis.ClientOption) (rueidis.Client, error)
+	ClientOption  rueidis.ClientOption
+	ClientTTL     time.Duration // TTL for the client marker, refreshed every 1/2 TTL. Defaults to 10s. The marker allows other client to know if this client is still alive.
 }
 
 type CacheAsideClient interface {
@@ -22,7 +24,7 @@ type CacheAsideClient interface {
 	Close()
 }
 
-func NewClient(option ClientOption) (CacheAsideClient, error) {
+func NewClient(option ClientOption) (cc CacheAsideClient, err error) {
 	if option.ClientTTL <= 0 {
 		option.ClientTTL = 10 * time.Second
 	}
@@ -31,13 +33,15 @@ func NewClient(option ClientOption) (CacheAsideClient, error) {
 		ttl:   option.ClientTTL,
 	}
 	option.ClientOption.OnInvalidations = ca.onInvalidation
-	client, err := rueidis.NewClient(option.ClientOption)
+	if option.ClientBuilder != nil {
+		ca.client, err = option.ClientBuilder(option.ClientOption)
+	} else {
+		ca.client, err = rueidis.NewClient(option.ClientOption)
+	}
 	if err != nil {
 		return nil, err
 	}
-	ca.client = client
 	ca.ctx, ca.cancel = context.WithCancel(context.Background())
-
 	return ca, nil
 }
 
