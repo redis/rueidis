@@ -31,6 +31,19 @@ func TestClientErr(t *testing.T) {
 	}
 }
 
+func TestWithClientBuilder(t *testing.T) {
+	client, err := NewClient(ClientOption{
+		ClientOption: rueidis.ClientOption{InitAddress: addr},
+		ClientBuilder: func(option rueidis.ClientOption) (rueidis.Client, error) {
+			return rueidis.NewClient(option)
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer client.Close()
+}
+
 func TestCacheFilled(t *testing.T) {
 	client := makeClient(t, addr)
 	defer client.Close()
