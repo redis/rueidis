@@ -3554,7 +3554,7 @@ func TestNoHelloRegex(t *testing.T) {
 		{
 			name:  "not hello",
 			match: false,
-			resp:  "not hello",
+			resp:  "unknown command not hello",
 		},
 	}
 
