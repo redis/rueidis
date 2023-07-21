@@ -19,7 +19,7 @@ import (
 	"github.com/redis/rueidis/internal/util"
 )
 
-var noHello = regexp.MustCompile("unknown command .?HELLO.?")
+var noHello = regexp.MustCompile("unknown command .?(HELLO|hello).?")
 
 type wire interface {
 	Do(ctx context.Context, cmd Completed) RedisResult

@@ -3534,3 +3534,36 @@ func TestCloseHook(t *testing.T) {
 		}
 	})
 }
+
+func TestNoHelloRegex(t *testing.T) {
+	tests := []struct {
+		name  string
+		match bool
+		resp  string
+	}{
+		{
+			name:  "lowercase hello",
+			match: true,
+			resp:  "unknown command hello",
+		},
+		{
+			name:  "uppercase hello",
+			match: true,
+			resp:  "unknown command HELLO",
+		},
+		{
+			name:  "not hello",
+			match: false,
+			resp:  "unknown command not hello",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if match := noHello.MatchString(tt.resp); match != tt.match {
+				t.Fatalf("unexpected match %v", match)
+			}
+		})
+	}
+
+}
