@@ -14,7 +14,7 @@ A fast Golang Redis client that does auto pipelining and supports client side ca
 * Pub/Sub, Sharded Pub/Sub, Streams
 * Redis Cluster, Sentinel, RedisJSON, RedisBloom, RediSearch, RedisTimeseries, etc.
 * [Generic Object Mapping with client side caching](./om)
-* [Cache-Aside Pattern with client side caching](./rueidislock)
+* [Cache-Aside Pattern with client side caching](./rueidisaside)
 * [Distributed Locks with client side caching](./rueidislock)
 * [Helpers for writing tests with rueidis mock](./mock)
 * [OpenTelemetry integration](./rueidisotel)
