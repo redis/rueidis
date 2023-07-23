@@ -16,7 +16,7 @@ import (
 	"context"
 	"testing"
 
-	"go.uber.org/mock/gomock"
+	"github.com/golang/mock/gomock"
 	"github.com/redis/rueidis/mock"
 )
 
@@ -52,7 +52,7 @@ import (
 	"context"
 	"testing"
 
-	"go.uber.org/mock/gomock"
+	"github.com/golang/mock/gomock"
 	"github.com/redis/rueidis/mock"
 )
 
