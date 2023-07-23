@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/golang/mock/gomock"
 	"github.com/redis/rueidis"
-	"go.uber.org/mock/gomock"
 )
 
 func Match(cmd ...string) gomock.Matcher {

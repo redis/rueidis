@@ -5,9 +5,9 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/golang/mock/gomock"
 	"github.com/redis/rueidis"
 	"github.com/redis/rueidis/internal/cmds"
-	"go.uber.org/mock/gomock"
 )
 
 var _ rueidis.Client = (*Client)(nil)
