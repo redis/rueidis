@@ -76,6 +76,8 @@ func TestNewClusterClient(t *testing.T) {
 			return
 		}
 		slots, _ := slotsResp.ToMessage()
+		mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+			ReplyError("UNKNOWN COMMAND")
 		mock.Expect("CLUSTER", "SLOTS").Reply(slots)
 		mock.Close()
 		close(done)
@@ -108,6 +110,8 @@ func TestNewClusterClientError(t *testing.T) {
 		if err != nil {
 			return
 		}
+		mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+			ReplyError("UNKNOWN COMMAND")
 		mock.Expect("CLUSTER", "SLOTS").Reply(RedisMessage{typ: '-', string: "other error"})
 		mock.Expect("QUIT").ReplyString("OK")
 		mock.Close()
@@ -136,6 +140,8 @@ func TestFallBackSingleClient(t *testing.T) {
 		if err != nil {
 			return
 		}
+		mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+			ReplyError("UNKNOWN COMMAND")
 		mock.Expect("CLUSTER", "SLOTS").Reply(RedisMessage{typ: '-', string: "ERR This instance has cluster support disabled"})
 		mock.Expect("QUIT").ReplyString("OK")
 		mock.Close()
@@ -169,13 +175,15 @@ func TestForceSingleClient(t *testing.T) {
 		if err != nil {
 			return
 		}
+		mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+			ReplyError("UNKNOWN COMMAND")
 		mock.Expect("QUIT").ReplyString("OK")
 		mock.Close()
 		close(done)
 	}()
 	_, port, _ := net.SplitHostPort(ln.Addr().String())
 	client, err := NewClient(ClientOption{
-		InitAddress: []string{"127.0.0.1:" + port},
+		InitAddress:       []string{"127.0.0.1:" + port},
 		ForceSingleClient: true,
 	})
 	if err != nil {
@@ -247,6 +255,8 @@ func TestTLSClient(t *testing.T) {
 		if err != nil {
 			return
 		}
+		mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+			ReplyError("UNKNOWN COMMAND")
 		mock.Expect("CLUSTER", "SLOTS").Reply(RedisMessage{typ: '-', string: "ERR This instance has cluster support disabled"})
 		mock.Expect("QUIT").ReplyString("OK")
 		mock.Close()

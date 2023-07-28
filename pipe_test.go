@@ -145,6 +145,8 @@ func setup(t *testing.T, option ClientOption) (*pipe, *redisMock, func(), func()
 			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
 				ReplyString("OK")
 		}
+		mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+			ReplyError("UNKNOWN COMMAND")
 	}()
 	p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &option)
 	if err != nil {
@@ -271,6 +273,8 @@ func TestNewPipe(t *testing.T) {
 				ReplyString("OK")
 			mock.Expect("SELECT", "1").
 				ReplyString("OK")
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+				ReplyError("UNKNOWN COMMAND")
 		}()
 		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
 			SelectDB:   1,
@@ -301,6 +305,8 @@ func TestNewPipe(t *testing.T) {
 				})
 			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN", "NOLOOP").
 				ReplyString("OK")
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+				ReplyError("UNKNOWN COMMAND")
 		}()
 		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
 			ClientTrackingOptions: []string{"OPTIN", "NOLOOP"},
@@ -334,6 +340,8 @@ func TestNewRESP2Pipe(t *testing.T) {
 				ReplyError("ERR unknown command `HELLO`")
 			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
 				ReplyError("ERR unknown subcommand or wrong number of arguments for 'TRACKING'. Try CLIENT HELP")
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+				ReplyError("UNKNOWN COMMAND")
 			mock.Expect("QUIT").ReplyString("OK")
 		}()
 		if _, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{}); !errors.Is(err, ErrNoCache) {
@@ -351,6 +359,8 @@ func TestNewRESP2Pipe(t *testing.T) {
 				ReplyError("ERR unknown command `HELLO`")
 			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
 				ReplyString("OK")
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+				ReplyError("UNKNOWN COMMAND")
 			mock.Expect("QUIT").ReplyString("OK")
 		}()
 		if _, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{}); !errors.Is(err, ErrNoCache) {
@@ -371,6 +381,8 @@ func TestNewRESP2Pipe(t *testing.T) {
 					{typ: '+', string: "proto"},
 					{typ: ':', integer: 2},
 				}})
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+				ReplyError("UNKNOWN COMMAND")
 		}()
 		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
 			DisableCache: true,
@@ -395,12 +407,16 @@ func TestNewRESP2Pipe(t *testing.T) {
 				ReplyError("ERR unknown command `HELLO`")
 			mock.Expect("SELECT", "1").
 				ReplyError("ERR ACL")
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+				ReplyError("UNKNOWN COMMAND")
 			mock.Expect("AUTH", "pa").
 				ReplyString("OK")
 			mock.Expect("CLIENT", "SETNAME", "cn").
 				ReplyString("OK")
 			mock.Expect("SELECT", "1").
 				ReplyString("OK")
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+				ReplyError("UNKNOWN COMMAND")
 		}()
 		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
 			SelectDB:     1,
@@ -428,12 +444,16 @@ func TestNewRESP2Pipe(t *testing.T) {
 				ReplyError("ERR unknown command `HELLO`")
 			mock.Expect("SELECT", "1").
 				ReplyError("ERR ACL")
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+				ReplyError("UNKNOWN COMMAND")
 			mock.Expect("AUTH", "ua", "pa").
 				ReplyString("OK")
 			mock.Expect("CLIENT", "SETNAME", "cn").
 				ReplyString("OK")
 			mock.Expect("SELECT", "1").
 				ReplyString("OK")
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+				ReplyError("UNKNOWN COMMAND")
 		}()
 		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
 			SelectDB:     1,
@@ -462,6 +482,8 @@ func TestNewRESP2Pipe(t *testing.T) {
 				ReplyError("ERR unknown command `HELLO`")
 			mock.Expect("SELECT", "1").
 				ReplyError("ERR ACL")
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+				ReplyError("UNKNOWN COMMAND")
 			n1.Close()
 			n2.Close()
 		}()
