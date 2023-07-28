@@ -19,6 +19,9 @@ import (
 	"github.com/redis/rueidis/internal/util"
 )
 
+const LIB_NAME = "rueidis"
+const LIB_VER = "1.0.14"
+
 var noHello = regexp.MustCompile("unknown command .?(HELLO|hello).?")
 
 type wire interface {
@@ -158,7 +161,7 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 		helloCmd = append(helloCmd, "SETNAME", option.ClientName)
 	}
 
-	init := make([][]string, 0, 3)
+	init := make([][]string, 0, 4)
 	if option.ClientTrackingOptions == nil {
 		init = append(init, helloCmd, []string{"CLIENT", "TRACKING", "ON", "OPTIN"})
 	} else {
@@ -178,6 +181,8 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 	}
 	if option.ClientSetInfo != nil {
 		init = append(init, append([]string{"CLIENT", "SETINFO"}, option.ClientSetInfo...))
+	} else {
+		init = append(init, []string{"CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER})
 	}
 
 	timeout := option.Dialer.Timeout
@@ -192,7 +197,7 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 	if !r2 && !r2ps {
 		resp := p.DoMulti(ctx, cmds.NewMultiCompleted(init)...)
 		defer resultsp.Put(resp)
-		for i, r := range resp.s {
+		for i, r := range resp.s[:len(resp.s)-1] { // skip error checking on the last CLIENT SETINFO
 			if i == 0 {
 				p.info, err = r.AsMap()
 			} else {
@@ -250,19 +255,20 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 		}
 		if option.ClientSetInfo != nil {
 			init = append(init, append([]string{"CLIENT", "SETINFO"}, option.ClientSetInfo...))
+		} else {
+			init = append(init, []string{"CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER})
 		}
-
+		p.version = 5
 		if len(init) != 0 {
 			resp := p.DoMulti(ctx, cmds.NewMultiCompleted(init)...)
 			defer resultsp.Put(resp)
-			for _, r := range resp.s {
+			for _, r := range resp.s[:len(resp.s)-1] { // skip error checking on the last CLIENT SETINFO
 				if err = r.Error(); err != nil {
 					p.Close()
 					return nil, err
 				}
 			}
 		}
-		p.version = 5
 	}
 	if p.onInvalidations != nil || option.AlwaysPipelining {
 		p.background()
