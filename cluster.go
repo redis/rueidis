@@ -75,7 +75,7 @@ type clusterClient struct {
 	sc     call
 	mu     sync.RWMutex
 	stop   uint32
-	cmd    cmds.Builder
+	cmd    Builder
 	retry  bool
 }
 
@@ -337,7 +337,7 @@ func (c *clusterClient) redirectOrNew(addr string, prev conn) (p conn) {
 	return p
 }
 
-func (c *clusterClient) B() cmds.Builder {
+func (c *clusterClient) B() Builder {
 	return c.cmd
 }
 
@@ -831,7 +831,7 @@ type dedicatedClusterClient struct {
 	pshks  *pshks
 
 	mu    sync.Mutex
-	cmd   cmds.Builder
+	cmd   Builder
 	slot  uint16
 	mark  bool
 	retry bool
@@ -885,7 +885,7 @@ func (c *dedicatedClusterClient) release() {
 	c.mu.Unlock()
 }
 
-func (c *dedicatedClusterClient) B() cmds.Builder {
+func (c *dedicatedClusterClient) B() Builder {
 	return c.cmd
 }
 
