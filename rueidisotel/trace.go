@@ -12,7 +12,6 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/redis/rueidis"
-	"github.com/redis/rueidis/internal/cmds"
 )
 
 var (
@@ -89,7 +88,7 @@ type otelclient struct {
 	cscHits        metric.Int64Counter
 }
 
-func (o *otelclient) B() cmds.Builder {
+func (o *otelclient) B() rueidis.Builder {
 	return o.client.B()
 }
 
@@ -205,7 +204,7 @@ type dedicated struct {
 	cscHits metric.Int64Counter
 }
 
-func (d *dedicated) B() cmds.Builder {
+func (d *dedicated) B() rueidis.Builder {
 	return d.client.B()
 }
 

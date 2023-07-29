@@ -11,8 +11,6 @@ import (
 	"runtime"
 	"strings"
 	"time"
-
-	"github.com/redis/rueidis/internal/cmds"
 )
 
 const (
@@ -178,7 +176,7 @@ type SentinelOption struct {
 type Client interface {
 	// B is the getter function to the command builder for the client
 	// If the client is a cluster client, the command builder also prohibits cross key slots in one command.
-	B() cmds.Builder
+	B() Builder
 	// Do is the method sending user's redis command building from the B() to a redis node.
 	//  client.Do(ctx, client.B().Get().Key("k").Build()).ToString()
 	// All concurrent non-blocking commands will be pipelined automatically and have better throughput.
@@ -235,7 +233,7 @@ type Client interface {
 // If the DedicatedClient is obtained from cluster client, the first command to it must have a Key() to identify the redis node.
 type DedicatedClient interface {
 	// B is inherited from the Client
-	B() cmds.Builder
+	B() Builder
 	// Do is the same as Client's
 	// The cmd parameter is recycled after passing into Do() and should not be reused.
 	Do(ctx context.Context, cmd Completed) (resp RedisResult)
