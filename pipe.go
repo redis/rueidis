@@ -549,7 +549,7 @@ func (p *pipe) backgroundPing() {
 		select {
 		case <-ticker.C:
 			recv = atomic.LoadInt32(&p.recvs)
-			if recv != prev || atomic.LoadInt32(&p.blcksig) != 0 || (atomic.LoadInt32(&p.state) == 0 && atomic.LoadInt32(&p.waits) != 0) {
+			if recv != prev || atomic.LoadInt32(&p.blcksig) != 0 || atomic.LoadInt32(&p.state) == 0 {
 				continue
 			}
 			ch := make(chan error, 1)
