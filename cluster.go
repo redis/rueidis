@@ -436,9 +436,13 @@ func (c *clusterClient) doresultfn(ctx context.Context, results *redisresults, r
 		cm := commands[i]
 		results.s[ii] = resp
 		addr, mode := c.shouldRefreshRetry(resp.Error(), ctx)
-		if c.retry && mode != RedirectNone && cm.IsReadOnly() {
+		if mode != RedirectNone {
 			nc := cc
-			if mode != RedirectRetry {
+			if mode == RedirectRetry {
+				if !c.retry || !cm.IsReadOnly() {
+					continue
+				}
+			} else {
 				nc = c.redirectOrNew(addr, cc)
 			}
 			mu.Lock()
@@ -677,9 +681,13 @@ func (c *clusterClient) resultcachefn(ctx context.Context, results *redisresults
 		cm := commands[i]
 		results.s[ii] = resp
 		addr, mode := c.shouldRefreshRetry(resp.Error(), ctx)
-		if c.retry && mode != RedirectNone {
+		if mode != RedirectNone {
 			nc := cc
-			if mode != RedirectRetry {
+			if mode == RedirectRetry {
+				if !c.retry {
+					continue
+				}
+			} else {
 				nc = c.redirectOrNew(addr, cc)
 			}
 			mu.Lock()
