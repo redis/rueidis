@@ -940,6 +940,33 @@ func (m *RedisMessage) AsFtSearch() (total int64, docs []FtSearchDoc, err error)
 	if err = m.Error(); err != nil {
 		return 0, nil, err
 	}
+	if m.IsMap() {
+		for i := 0; i < len(m.values); i += 2 {
+			switch m.values[i].string {
+			case "total_results":
+				total = m.values[i+1].integer
+			case "results":
+				records := m.values[i+1].values
+				docs = make([]FtSearchDoc, len(records))
+				for d, record := range records {
+					for j := 0; j < len(record.values); j += 2 {
+						switch record.values[j].string {
+						case "id":
+							docs[d].Key = record.values[j+1].string
+						case "extra_attributes":
+							docs[d].Doc, _ = record.values[j+1].AsStrMap()
+						}
+					}
+				}
+			case "error":
+				for _, e := range m.values[i+1].values {
+					e := e
+					return 0, nil, (*RedisError)(&e)
+				}
+			}
+		}
+		return
+	}
 	if len(m.values) > 0 {
 		total = m.values[0].integer
 		if len(m.values) > 2 && m.values[2].string == "" {
