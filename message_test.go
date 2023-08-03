@@ -636,6 +636,63 @@ func TestRedisResult(t *testing.T) {
 		}
 	})
 
+	t.Run("AsFtSearch RESP3", func(t *testing.T) {
+		if n, ret, _ := (RedisResult{val: RedisMessage{typ: '%', values: []RedisMessage{
+			{typ: '+', string: "total_results"},
+			{typ: ':', integer: 3},
+			{typ: '+', string: "results"},
+			{typ: '*', values: []RedisMessage{
+				{typ: '%', values: []RedisMessage{
+					{typ: '+', string: "id"},
+					{typ: '+', string: "1"},
+					{typ: '+', string: "extra_attributes"},
+					{typ: '%', values: []RedisMessage{
+						{typ: '+', string: "$"},
+						{typ: '+', string: "1"},
+					}},
+				}},
+				{typ: '%', values: []RedisMessage{
+					{typ: '+', string: "id"},
+					{typ: '+', string: "2"},
+					{typ: '+', string: "extra_attributes"},
+					{typ: '%', values: []RedisMessage{
+						{typ: '+', string: "$"},
+						{typ: '+', string: "2"},
+					}},
+				}},
+			}},
+			{typ: '+', string: "error"},
+			{typ: '*', values: []RedisMessage{}},
+		}}}).AsFtSearch(); n != 3 || !reflect.DeepEqual([]FtSearchDoc{
+			{Key: "1", Doc: map[string]string{"$": "1"}},
+			{Key: "2", Doc: map[string]string{"$": "2"}},
+		}, ret) {
+			t.Fatal("AsFtSearch not get value as expected")
+		}
+		if _, _, err := (RedisResult{val: RedisMessage{typ: '%', values: []RedisMessage{
+			{typ: '+', string: "total_results"},
+			{typ: ':', integer: 3},
+			{typ: '+', string: "results"},
+			{typ: '*', values: []RedisMessage{
+				{typ: '%', values: []RedisMessage{
+					{typ: '+', string: "id"},
+					{typ: '+', string: "1"},
+					{typ: '+', string: "extra_attributes"},
+					{typ: '%', values: []RedisMessage{
+						{typ: '+', string: "$"},
+						{typ: '+', string: "1"},
+					}},
+				}},
+			}},
+			{typ: '+', string: "error"},
+			{typ: '*', values: []RedisMessage{
+				{typ: '+', string: "mytimeout"},
+			}},
+		}}}).AsFtSearch(); err == nil || err.Error() != "mytimeout" {
+			t.Fatal("AsFtSearch not get value as expected")
+		}
+	})
+
 	t.Run("AsGeosearch", func(t *testing.T) {
 		if _, err := (RedisResult{err: errors.New("other")}).AsGeosearch(); err == nil {
 			t.Fatal("AsGeosearch not failed as expected")
