@@ -693,6 +693,217 @@ func TestRedisResult(t *testing.T) {
 		}
 	})
 
+	t.Run("AsFtAggregate", func(t *testing.T) {
+		if _, _, err := (RedisResult{err: errors.New("other")}).AsFtAggregate(); err == nil {
+			t.Fatal("AsFtAggregate not failed as expected")
+		}
+		if _, _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsFtAggregate(); err == nil {
+			t.Fatal("AsFtAggregate not failed as expected")
+		}
+		if n, ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+			{typ: ':', integer: 3},
+			{typ: '*', values: []RedisMessage{
+				{typ: '+', string: "k1"},
+				{typ: '+', string: "v1"},
+				{typ: '+', string: "kk"},
+				{typ: '+', string: "vv"},
+			}},
+			{typ: '*', values: []RedisMessage{
+				{typ: '+', string: "k2"},
+				{typ: '+', string: "v2"},
+				{typ: '+', string: "kk"},
+				{typ: '+', string: "vv"},
+			}},
+		}}}).AsFtAggregate(); n != 3 || !reflect.DeepEqual([]map[string]string{
+			{"k1": "v1", "kk": "vv"},
+			{"k2": "v2", "kk": "vv"},
+		}, ret) {
+			t.Fatal("AsFtAggregate not get value as expected")
+		}
+		if n, ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+			{typ: ':', integer: 3},
+			{typ: '*', values: []RedisMessage{
+				{typ: '+', string: "k1"},
+				{typ: '+', string: "v1"},
+				{typ: '+', string: "kk"},
+				{typ: '+', string: "vv"},
+			}},
+		}}}).AsFtAggregate(); n != 3 || !reflect.DeepEqual([]map[string]string{
+			{"k1": "v1", "kk": "vv"},
+		}, ret) {
+			t.Fatal("AsFtAggregate not get value as expected")
+		}
+		if n, ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+			{typ: ':', integer: 3},
+		}}}).AsFtAggregate(); n != 3 || !reflect.DeepEqual([]map[string]string{}, ret) {
+			t.Fatal("AsFtAggregate not get value as expected")
+		}
+	})
+
+	t.Run("AsFtAggregate RESP3", func(t *testing.T) {
+		if n, ret, _ := (RedisResult{val: RedisMessage{typ: '%', values: []RedisMessage{
+			{typ: '+', string: "total_results"},
+			{typ: ':', integer: 3},
+			{typ: '+', string: "results"},
+			{typ: '*', values: []RedisMessage{
+				{typ: '%', values: []RedisMessage{
+					{typ: '+', string: "extra_attributes"},
+					{typ: '%', values: []RedisMessage{
+						{typ: '+', string: "$"},
+						{typ: '+', string: "1"},
+					}},
+				}},
+				{typ: '%', values: []RedisMessage{
+					{typ: '+', string: "extra_attributes"},
+					{typ: '%', values: []RedisMessage{
+						{typ: '+', string: "$"},
+						{typ: '+', string: "2"},
+					}},
+				}},
+			}},
+			{typ: '+', string: "error"},
+			{typ: '*', values: []RedisMessage{}},
+		}}}).AsFtAggregate(); n != 3 || !reflect.DeepEqual([]map[string]string{
+			{"$": "1"},
+			{"$": "2"},
+		}, ret) {
+			t.Fatal("AsFtAggregate not get value as expected")
+		}
+		if _, _, err := (RedisResult{val: RedisMessage{typ: '%', values: []RedisMessage{
+			{typ: '+', string: "total_results"},
+			{typ: ':', integer: 3},
+			{typ: '+', string: "results"},
+			{typ: '*', values: []RedisMessage{
+				{typ: '%', values: []RedisMessage{
+					{typ: '+', string: "extra_attributes"},
+					{typ: '%', values: []RedisMessage{
+						{typ: '+', string: "$"},
+						{typ: '+', string: "1"},
+					}},
+				}},
+			}},
+			{typ: '+', string: "error"},
+			{typ: '*', values: []RedisMessage{
+				{typ: '+', string: "mytimeout"},
+			}},
+		}}}).AsFtAggregate(); err == nil || err.Error() != "mytimeout" {
+			t.Fatal("AsFtAggregate not get value as expected")
+		}
+	})
+
+	t.Run("AsFtAggregate Cursor", func(t *testing.T) {
+		if _, _, _, err := (RedisResult{err: errors.New("other")}).AsFtAggregateCursor(); err == nil {
+			t.Fatal("AsFtAggregate not failed as expected")
+		}
+		if _, _, _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsFtAggregateCursor(); err == nil {
+			t.Fatal("AsFtAggregate not failed as expected")
+		}
+		if c, n, ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+			{typ: '*', values: []RedisMessage{
+				{typ: ':', integer: 3},
+				{typ: '*', values: []RedisMessage{
+					{typ: '+', string: "k1"},
+					{typ: '+', string: "v1"},
+					{typ: '+', string: "kk"},
+					{typ: '+', string: "vv"},
+				}},
+				{typ: '*', values: []RedisMessage{
+					{typ: '+', string: "k2"},
+					{typ: '+', string: "v2"},
+					{typ: '+', string: "kk"},
+					{typ: '+', string: "vv"},
+				}},
+			}},
+			{typ: ':', integer: 1},
+		}}}).AsFtAggregateCursor(); c != 1 || n != 3 || !reflect.DeepEqual([]map[string]string{
+			{"k1": "v1", "kk": "vv"},
+			{"k2": "v2", "kk": "vv"},
+		}, ret) {
+			t.Fatal("AsFtAggregate not get value as expected")
+		}
+		if c, n, ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+			{typ: '*', values: []RedisMessage{
+				{typ: ':', integer: 3},
+				{typ: '*', values: []RedisMessage{
+					{typ: '+', string: "k1"},
+					{typ: '+', string: "v1"},
+					{typ: '+', string: "kk"},
+					{typ: '+', string: "vv"},
+				}},
+			}},
+			{typ: ':', integer: 1},
+		}}}).AsFtAggregateCursor(); c != 1 || n != 3 || !reflect.DeepEqual([]map[string]string{
+			{"k1": "v1", "kk": "vv"},
+		}, ret) {
+			t.Fatal("AsFtAggregate not get value as expected")
+		}
+		if c, n, ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+			{typ: '*', values: []RedisMessage{
+				{typ: ':', integer: 3},
+			}},
+			{typ: ':', integer: 1},
+		}}}).AsFtAggregateCursor(); c != 1 || n != 3 || !reflect.DeepEqual([]map[string]string{}, ret) {
+			t.Fatal("AsFtAggregate not get value as expected")
+		}
+	})
+
+	t.Run("AsFtAggregate Cursor RESP3", func(t *testing.T) {
+		if c, n, ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+			{typ: '%', values: []RedisMessage{
+				{typ: '+', string: "total_results"},
+				{typ: ':', integer: 3},
+				{typ: '+', string: "results"},
+				{typ: '*', values: []RedisMessage{
+					{typ: '%', values: []RedisMessage{
+						{typ: '+', string: "extra_attributes"},
+						{typ: '%', values: []RedisMessage{
+							{typ: '+', string: "$"},
+							{typ: '+', string: "1"},
+						}},
+					}},
+					{typ: '%', values: []RedisMessage{
+						{typ: '+', string: "extra_attributes"},
+						{typ: '%', values: []RedisMessage{
+							{typ: '+', string: "$"},
+							{typ: '+', string: "2"},
+						}},
+					}},
+				}},
+				{typ: '+', string: "error"},
+				{typ: '*', values: []RedisMessage{}},
+			}},
+			{typ: ':', integer: 1},
+		}}}).AsFtAggregateCursor(); c != 1 || n != 3 || !reflect.DeepEqual([]map[string]string{
+			{"$": "1"},
+			{"$": "2"},
+		}, ret) {
+			t.Fatal("AsFtAggregate not get value as expected")
+		}
+		if _, _, _, err := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+			{typ: '%', values: []RedisMessage{
+				{typ: '+', string: "total_results"},
+				{typ: ':', integer: 3},
+				{typ: '+', string: "results"},
+				{typ: '*', values: []RedisMessage{
+					{typ: '%', values: []RedisMessage{
+						{typ: '+', string: "extra_attributes"},
+						{typ: '%', values: []RedisMessage{
+							{typ: '+', string: "$"},
+							{typ: '+', string: "1"},
+						}},
+					}},
+				}},
+				{typ: '+', string: "error"},
+				{typ: '*', values: []RedisMessage{
+					{typ: '+', string: "mytimeout"},
+				}},
+			}},
+			{typ: ':', integer: 1},
+		}}}).AsFtAggregateCursor(); err == nil || err.Error() != "mytimeout" {
+			t.Fatal("AsFtAggregate not get value as expected")
+		}
+	})
+
 	t.Run("AsGeosearch", func(t *testing.T) {
 		if _, err := (RedisResult{err: errors.New("other")}).AsGeosearch(); err == nil {
 			t.Fatal("AsGeosearch not failed as expected")
@@ -1352,6 +1563,30 @@ func TestRedisMessage(t *testing.T) {
 			}
 		}()
 		(&RedisMessage{typ: '*', values: []RedisMessage{}}).AsFtSearch()
+	})
+
+	t.Run("AsFtAggregate", func(t *testing.T) {
+		if _, _, err := (&RedisMessage{typ: '_'}).AsFtAggregate(); err == nil {
+			t.Fatal("AsFtAggregate not failed as expected")
+		}
+		defer func() {
+			if !strings.Contains(recover().(string), fmt.Sprintf("redis message type %s is not a FT.AGGREGATE response", typeNames['*'])) {
+				t.Fatal("AsFtAggregate not panic as expected")
+			}
+		}()
+		(&RedisMessage{typ: '*', values: []RedisMessage{}}).AsFtAggregate()
+	})
+
+	t.Run("AsFtAggregateCursor", func(t *testing.T) {
+		if _, _, _, err := (&RedisMessage{typ: '_'}).AsFtAggregateCursor(); err == nil {
+			t.Fatal("AsFtAggregate not failed as expected")
+		}
+		defer func() {
+			if !strings.Contains(recover().(string), fmt.Sprintf("redis message type %s is not a FT.AGGREGATE response", typeNames['*'])) {
+				t.Fatal("AsFtAggregate not panic as expected")
+			}
+		}()
+		(&RedisMessage{typ: '*', values: []RedisMessage{}}).AsFtAggregateCursor()
 	})
 
 	t.Run("AsScanEntry", func(t *testing.T) {
