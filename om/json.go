@@ -154,11 +154,11 @@ func (r *JSONRepository[T]) Search(ctx context.Context, cmdFn func(search FtSear
 
 // Aggregate performs the FT.AGGREGATE and returns a *AggregateCursor for accessing the results
 func (r *JSONRepository[T]) Aggregate(ctx context.Context, cmdFn func(agg FtAggregateIndex) rueidis.Completed) (cursor *AggregateCursor, err error) {
-	resp, err := r.client.Do(ctx, cmdFn(r.client.B().FtAggregate().Index(r.idx))).ToArray()
+	cid, total, resp, err := r.client.Do(ctx, cmdFn(r.client.B().FtAggregate().Index(r.idx))).AsFtAggregateCursor()
 	if err != nil {
 		return nil, err
 	}
-	return newAggregateCursor(r.idx, r.client, resp), nil
+	return newAggregateCursor(r.idx, r.client, resp, cid, total), nil
 }
 
 // IndexName returns the index name used in the FT.CREATE

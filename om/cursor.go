@@ -9,10 +9,8 @@ import (
 
 var EndOfCursor = errors.New("end of cursor")
 
-func newAggregateCursor(idx string, client rueidis.Client, resp []rueidis.RedisMessage) *AggregateCursor {
-	c := &AggregateCursor{client: client, idx: idx}
-	c.n, c.first, c.id = readAggregateResponse(resp)
-	return c
+func newAggregateCursor(idx string, client rueidis.Client, first []map[string]string, cursor, total int64) *AggregateCursor {
+	return &AggregateCursor{client: client, idx: idx, first: first, id: cursor, n: total}
 }
 
 // AggregateCursor unifies the response of FT.AGGREGATE with or without WITHCURSOR
@@ -39,11 +37,7 @@ func (c *AggregateCursor) Read(ctx context.Context) (partial []map[string]string
 	if c.id == 0 {
 		return nil, EndOfCursor
 	}
-	resp, err := c.client.Do(ctx, c.client.B().FtCursorRead().Index(c.idx).CursorId(c.id).Build()).ToArray()
-	if err != nil {
-		return nil, err
-	}
-	_, partial, c.id = readAggregateResponse(resp)
+	c.id, _, partial, err = c.client.Do(ctx, c.client.B().FtCursorRead().Index(c.idx).CursorId(c.id).Build()).AsFtAggregateCursor()
 	return
 }
 
@@ -53,20 +47,4 @@ func (c *AggregateCursor) Del(ctx context.Context) (err error) {
 		return nil
 	}
 	return c.client.Do(ctx, c.client.B().FtCursorDel().Index(c.idx).CursorId(c.id).Build()).Error()
-}
-
-func readAggregateResponse(resp []rueidis.RedisMessage) (n int64, partial []map[string]string, cursor int64) {
-	var results []rueidis.RedisMessage
-	if resp[0].IsArray() {
-		results, _ = resp[0].ToArray()
-		cursor, _ = resp[1].ToInt64()
-	} else {
-		results = resp
-	}
-	n, _ = results[0].ToInt64()
-	partial = make([]map[string]string, len(results[1:]))
-	for i, record := range results[1:] {
-		partial[i], _ = record.AsStrMap()
-	}
-	return
 }
