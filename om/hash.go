@@ -151,7 +151,7 @@ func (r *HashRepository[T]) Search(ctx context.Context, cmdFn func(search FtSear
 }
 
 // Aggregate performs the FT.AGGREGATE and returns a *AggregateCursor for accessing the results
-func (r *HashRepository[T]) Aggregate(ctx context.Context, cmdFn func(search FtAggregateIndex) rueidis.Completed) (cursor *AggregateCursor, err error) {
+func (r *HashRepository[T]) Aggregate(ctx context.Context, cmdFn func(agg FtAggregateIndex) rueidis.Completed) (cursor *AggregateCursor, err error) {
 	resp, err := r.client.Do(ctx, cmdFn(r.client.B().FtAggregate().Index(r.idx))).ToArray()
 	if err != nil {
 		return nil, err
