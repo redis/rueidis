@@ -920,7 +920,6 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) *redisresults {
 
 queue:
 	ch := p.queue.PutMulti(multi, resp.s)
-	var i int
 	if ctxCh := ctx.Done(); ctxCh == nil {
 		<-ch
 	} else {
@@ -934,15 +933,15 @@ queue:
 	atomic.AddInt32(&p.recvs, 1)
 	return resp
 abort:
-	go func(i int, resp *redisresults) {
+	go func(resp *redisresults) {
 		<-ch
 		resultsp.Put(resp)
 		atomic.AddInt32(&p.waits, -1)
 		atomic.AddInt32(&p.recvs, 1)
-	}(i, resp)
+	}(resp)
 	resp = resultsp.Get(len(multi), len(multi))
 	err := newErrResult(ctx.Err())
-	for ; i < len(resp.s); i++ {
+	for i := 0; i < len(resp.s); i++ {
 		resp.s[i] = err
 	}
 	return resp
