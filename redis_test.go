@@ -142,6 +142,23 @@ func testSETGET(t *testing.T, client Client, csc bool) {
 	}
 	wait()
 
+	t.Logf("testing GET with %d keys and %d parallelism with timeout\n", keys*100, para)
+	jobs, wait = parallel(para)
+	for i := 0; i < keys*100; i++ {
+		key := strconv.Itoa(rand.Intn(keys))
+		jobs <- func() {
+			ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond)
+			defer cancel()
+			val, err := client.Do(ctx, client.B().Get().Key(key).Build()).ToString()
+			if err != context.DeadlineExceeded {
+				if v, ok := kvs[key]; !((ok && val == v) || (!ok && IsRedisNil(err))) {
+					t.Errorf("unexpected get response %v %v %v", val, err, ok)
+				}
+			}
+		}
+	}
+	wait()
+
 	t.Logf("testing client side caching with %d interations and %d parallelism\n", keys*5, para)
 	jobs, wait = parallel(para)
 	hits, miss := int64(0), int64(0)
@@ -264,6 +281,30 @@ func testMultiSETGET(t *testing.T, client Client, csc bool) {
 				val, err := resp.ToString()
 				if v, ok := kvs[cmdkeys[j]]; !((ok && val == v) || (!ok && IsRedisNil(err))) {
 					t.Fatalf("unexpected get response %v %v %v", val, err, ok)
+				}
+			}
+		}
+	}
+	wait()
+
+	t.Logf("testing GET with %d keys and %d parallelism with timeout\n", keys*100, para)
+	jobs, wait = parallel(para)
+	for i := 0; i < keys*100; i += batch {
+		cmdkeys := make([]string, 0, batch)
+		commands := make(Commands, 0, batch)
+		for j := 0; j < batch; j++ {
+			cmdkeys = append(cmdkeys, "m"+strconv.Itoa(rand.Intn(keys)))
+			commands = append(commands, client.B().Get().Key(cmdkeys[len(cmdkeys)-1]).Build())
+		}
+		jobs <- func() {
+			ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond)
+			defer cancel()
+			for j, resp := range client.DoMulti(ctx, commands...) {
+				val, err := resp.ToString()
+				if err != context.DeadlineExceeded {
+					if v, ok := kvs[cmdkeys[j]]; !((ok && val == v) || (!ok && IsRedisNil(err))) {
+						t.Fatalf("unexpected get response %v %v %v", val, err, ok)
+					}
 				}
 			}
 		}
