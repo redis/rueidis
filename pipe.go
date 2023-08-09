@@ -823,11 +823,11 @@ queue:
 			atomic.AddInt32(&p.recvs, 1)
 		case <-ctxCh:
 			resp = newErrResult(ctx.Err())
-			go func() {
+			go func(ch chan RedisResult) {
 				<-ch
 				atomic.AddInt32(&p.waits, -1)
 				atomic.AddInt32(&p.recvs, 1)
-			}()
+			}(ch)
 		}
 	}
 	return resp
@@ -933,12 +933,12 @@ queue:
 	atomic.AddInt32(&p.recvs, 1)
 	return resp
 abort:
-	go func(resp *redisresults) {
+	go func(resp *redisresults, ch chan RedisResult) {
 		<-ch
 		resultsp.Put(resp)
 		atomic.AddInt32(&p.waits, -1)
 		atomic.AddInt32(&p.recvs, 1)
-	}(resp)
+	}(resp, ch)
 	resp = resultsp.Get(len(multi), len(multi))
 	err := newErrResult(ctx.Err())
 	for i := 0; i < len(resp.s); i++ {
