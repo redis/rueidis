@@ -163,8 +163,8 @@ func (c TsAddEncodingUncompressed) Build() Completed {
 
 type TsAddKey Completed
 
-func (c TsAddKey) Timestamp(timestamp int64) TsAddTimestamp {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(timestamp, 10))
+func (c TsAddKey) Timestamp(timestamp string) TsAddTimestamp {
+	c.cs.s = append(c.cs.s, timestamp)
 	return (TsAddTimestamp)(c)
 }
 
@@ -1312,8 +1312,8 @@ func (c TsDecrbyUncompressed) Build() Completed {
 
 type TsDecrbyValue Completed
 
-func (c TsDecrbyValue) Timestamp(timestamp int64) TsDecrbyTimestamp {
-	c.cs.s = append(c.cs.s, "TIMESTAMP", strconv.FormatInt(timestamp, 10))
+func (c TsDecrbyValue) Timestamp(timestamp string) TsDecrbyTimestamp {
+	c.cs.s = append(c.cs.s, "TIMESTAMP", timestamp)
 	return (TsDecrbyTimestamp)(c)
 }
 
@@ -1572,8 +1572,8 @@ func (c TsIncrbyUncompressed) Build() Completed {
 
 type TsIncrbyValue Completed
 
-func (c TsIncrbyValue) Timestamp(timestamp int64) TsIncrbyTimestamp {
-	c.cs.s = append(c.cs.s, "TIMESTAMP", strconv.FormatInt(timestamp, 10))
+func (c TsIncrbyValue) Timestamp(timestamp string) TsIncrbyTimestamp {
+	c.cs.s = append(c.cs.s, "TIMESTAMP", timestamp)
 	return (TsIncrbyTimestamp)(c)
 }
 
@@ -1754,8 +1754,8 @@ func (b Builder) TsMrange() (c TsMrange) {
 	return c
 }
 
-func (c TsMrange) Fromtimestamp(fromtimestamp int64) TsMrangeFromtimestamp {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(fromtimestamp, 10))
+func (c TsMrange) Fromtimestamp(fromtimestamp string) TsMrangeFromtimestamp {
+	c.cs.s = append(c.cs.s, fromtimestamp)
 	return (TsMrangeFromtimestamp)(c)
 }
 
@@ -2261,8 +2261,8 @@ func (c TsMrangeFilterByValue) Filter(filter ...string) TsMrangeFilter {
 
 type TsMrangeFromtimestamp Completed
 
-func (c TsMrangeFromtimestamp) Totimestamp(totimestamp int64) TsMrangeTotimestamp {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(totimestamp, 10))
+func (c TsMrangeFromtimestamp) Totimestamp(totimestamp string) TsMrangeTotimestamp {
+	c.cs.s = append(c.cs.s, totimestamp)
 	return (TsMrangeTotimestamp)(c)
 }
 
@@ -2666,8 +2666,8 @@ func (b Builder) TsMrevrange() (c TsMrevrange) {
 	return c
 }
 
-func (c TsMrevrange) Fromtimestamp(fromtimestamp int64) TsMrevrangeFromtimestamp {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(fromtimestamp, 10))
+func (c TsMrevrange) Fromtimestamp(fromtimestamp string) TsMrevrangeFromtimestamp {
+	c.cs.s = append(c.cs.s, fromtimestamp)
 	return (TsMrevrangeFromtimestamp)(c)
 }
 
@@ -3173,8 +3173,8 @@ func (c TsMrevrangeFilterByValue) Filter(filter ...string) TsMrevrangeFilter {
 
 type TsMrevrangeFromtimestamp Completed
 
-func (c TsMrevrangeFromtimestamp) Totimestamp(totimestamp int64) TsMrevrangeTotimestamp {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(totimestamp, 10))
+func (c TsMrevrangeFromtimestamp) Totimestamp(totimestamp string) TsMrevrangeTotimestamp {
+	c.cs.s = append(c.cs.s, totimestamp)
 	return (TsMrevrangeTotimestamp)(c)
 }
 
@@ -4068,15 +4068,15 @@ func (c TsRangeFilterByValue) Build() Completed {
 
 type TsRangeFromtimestamp Completed
 
-func (c TsRangeFromtimestamp) Totimestamp(totimestamp int64) TsRangeTotimestamp {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(totimestamp, 10))
+func (c TsRangeFromtimestamp) Totimestamp(totimestamp string) TsRangeTotimestamp {
+	c.cs.s = append(c.cs.s, totimestamp)
 	return (TsRangeTotimestamp)(c)
 }
 
 type TsRangeKey Completed
 
-func (c TsRangeKey) Fromtimestamp(fromtimestamp int64) TsRangeFromtimestamp {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(fromtimestamp, 10))
+func (c TsRangeKey) Fromtimestamp(fromtimestamp string) TsRangeFromtimestamp {
+	c.cs.s = append(c.cs.s, fromtimestamp)
 	return (TsRangeFromtimestamp)(c)
 }
 
@@ -4748,15 +4748,15 @@ func (c TsRevrangeFilterByValue) Build() Completed {
 
 type TsRevrangeFromtimestamp Completed
 
-func (c TsRevrangeFromtimestamp) Totimestamp(totimestamp int64) TsRevrangeTotimestamp {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(totimestamp, 10))
+func (c TsRevrangeFromtimestamp) Totimestamp(totimestamp string) TsRevrangeTotimestamp {
+	c.cs.s = append(c.cs.s, totimestamp)
 	return (TsRevrangeTotimestamp)(c)
 }
 
 type TsRevrangeKey Completed
 
-func (c TsRevrangeKey) Fromtimestamp(fromtimestamp int64) TsRevrangeFromtimestamp {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(fromtimestamp, 10))
+func (c TsRevrangeKey) Fromtimestamp(fromtimestamp string) TsRevrangeFromtimestamp {
+	c.cs.s = append(c.cs.s, fromtimestamp)
 	return (TsRevrangeFromtimestamp)(c)
 }
 
