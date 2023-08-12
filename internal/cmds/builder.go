@@ -50,6 +50,11 @@ func get() *CommandSlice {
 	return pool.Get().(*CommandSlice)
 }
 
+// PutCompletedForce recycles the Completed regardless of the c.cs.r
+func PutCompletedForce(c Completed) {
+	Put(c.cs)
+}
+
 // PutCompleted recycles the Completed
 func PutCompleted(c Completed) {
 	if c.cs.r == 0 {
