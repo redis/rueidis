@@ -51,6 +51,7 @@ type argument struct {
 	Name      any        `json:"name"`
 	Type      any        `json:"type"`
 	Command   string     `json:"command"`
+	Token     string     `json:"token"`
 	Enum      []string   `json:"enum"`
 	Block     []argument `json:"block"`
 	Arguments []argument `json:"arguments"`
@@ -879,13 +880,21 @@ func makeChildNodes(parent *node, args []argument) (first *node) {
 	}
 	var nodes []*node
 	for _, arg := range args {
-
 		if len(arg.Arguments) != 0 {
 			arg.Block = arg.Arguments
 		}
-		if arg.Type == "enum" && len(arg.Enum) == 0 && arg.Command != "" {
-			arg.Enum = []string{arg.Command}
-			arg.Command = ""
+		if arg.Type == "pure-token" {
+			arg.Type = "enum"
+		}
+		if arg.Type == "enum" && len(arg.Enum) == 0 {
+			if arg.Command != "" {
+				arg.Enum = []string{arg.Command}
+				arg.Command = ""
+			}
+			if arg.Token != "" {
+				arg.Enum = []string{arg.Token}
+				arg.Token = ""
+			}
 		}
 		if arg.Type == "oneof" && len(arg.Block) == 0 && arg.Command != "" {
 			arg.Enum = []string{arg.Command}
