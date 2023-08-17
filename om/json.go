@@ -48,7 +48,7 @@ func (r *JSONRepository[T]) NewEntity() *T {
 
 // Fetch an entity whose name is `{prefix}:{id}`
 func (r *JSONRepository[T]) Fetch(ctx context.Context, id string) (v *T, err error) {
-	record, err := r.client.Do(ctx, r.client.B().JsonGet().Key(key(r.prefix, id)).Build()).ToString()
+	record, err := r.client.Do(ctx, r.client.B().JsonGet().Key(key(r.prefix, id)).Path(".").Build()).ToString()
 	if err == nil {
 		v, err = r.decode(record)
 	}
@@ -57,7 +57,7 @@ func (r *JSONRepository[T]) Fetch(ctx context.Context, id string) (v *T, err err
 
 // FetchCache is like Fetch, but it uses client side caching mechanism.
 func (r *JSONRepository[T]) FetchCache(ctx context.Context, id string, ttl time.Duration) (v *T, err error) {
-	record, err := r.client.DoCache(ctx, r.client.B().JsonGet().Key(key(r.prefix, id)).Cache(), ttl).ToString()
+	record, err := r.client.DoCache(ctx, r.client.B().JsonGet().Key(key(r.prefix, id)).Path(".").Cache(), ttl).ToString()
 	if err == nil {
 		v, err = r.decode(record)
 	}
