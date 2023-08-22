@@ -143,6 +143,21 @@ func TestNewJSONRepository(t *testing.T) {
 			if !reflect.DeepEqual(e, records[0]) {
 				t.Fatalf("items[0] should be the same as e")
 			}
+			n, records, err = repo.Search(ctx, func(search FtSearchIndex) rueidis.Completed {
+				return search.Query("*").Dialect(3).Build()
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if n != 1 {
+				t.Fatalf("unexpected total count %v", n)
+			}
+			if len(records) != 1 {
+				t.Fatalf("unexpected return count %v", n)
+			}
+			if !reflect.DeepEqual(e, records[0]) {
+				t.Fatalf("items[0] should be the same as e")
+			}
 			if err = repo.DropIndex(ctx); err != nil {
 				t.Fatal(err)
 			}
