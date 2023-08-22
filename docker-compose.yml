@@ -26,7 +26,7 @@ services:
     ports:
       - "6666:6666"
   redisearch:
-    image: redislabs/redisearch:2.4.9
+    image: redislabs/redisearch:2.8.4
     ports:
       - "6377:6379"
   compat:

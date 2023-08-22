@@ -144,7 +144,10 @@ func (r *JSONRepository[T]) Search(ctx context.Context, cmdFn func(search FtSear
 	if err == nil {
 		s = make([]*T, len(resp))
 		for i, v := range resp {
-			if s[i], err = r.decode(v.Doc["$"]); err != nil {
+			doc := v.Doc["$"]
+			doc = strings.TrimPrefix(doc, "[") // supports dialect 3
+			doc = strings.TrimSuffix(doc, "]")
+			if s[i], err = r.decode(doc); err != nil {
 				return 0, nil, err
 			}
 		}
