@@ -320,6 +320,21 @@ client, err := rueidis.NewClient(rueidis.ClientOption{
 })
 ```
 
+### Redis URL
+
+You can use `ParseURL` or `MustParseURL` to construct a `ClientOption`:
+
+```go
+// connect to a redis cluster
+client, err = rueidis.NewClient(rueidis.MustParseURL("redis://127.0.0.1:7001"))
+// connect to a redis node
+client, err = rueidis.NewClient(rueidis.MustParseURL("redis://127.0.0.1:6379"))
+// connect to a redis sentinel
+client, err = rueidis.NewClient(rueidis.MustParseURL("redis://127.0.0.1:26379?master_set=my_master"))
+```
+
+The url must be started with either `redis://`, `rediss://` or `unix://`.
+
 ## Arbitrary Command
 
 If you want to construct commands that are absent from the command builder, you can use `client.B().Arbitrary()`:
