@@ -3841,7 +3841,7 @@ func (c FtProfileQuerytypeSearch) Query(query string) FtProfileQuery {
 type FtSearch Completed
 
 func (b Builder) FtSearch() (c FtSearch) {
-	c = FtSearch{cs: get(), ks: b.ks}
+	c = FtSearch{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "FT.SEARCH")
 	return c
 }
