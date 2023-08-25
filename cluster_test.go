@@ -1687,3 +1687,62 @@ func TestClusterClientRetry(t *testing.T) {
 		return c
 	})
 }
+
+func TestClusterClientReplicaOnly_PickReplica(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	m := &mockConn{
+		DoFn: func(cmd Completed) RedisResult {
+			if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
+				return slotsMultiResp
+			}
+			return RedisResult{}
+		},
+	}
+
+	client, err := newClusterClient(&ClientOption{InitAddress: []string{"127.0.0.1:0"}, ReplicaOnly: true}, func(dst string, opt *ClientOption) conn {
+		copiedM := *m
+		return &copiedM
+	})
+	if err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+	t.Run("replicas should be picked", func(t *testing.T) {
+		if client.slots[0] != client.conns["127.0.1.1:1"] {
+			t.Fatalf("unexpected replica node assigned to slot 0")
+		}
+		if client.slots[8192] != client.conns["127.0.1.1:1"] {
+			t.Fatalf("unexpected replica node assigned to slot 8192")
+		}
+		if client.slots[8193] != client.conns["127.0.3.1:1"] {
+			t.Fatalf("unexpected replica node assigned to slot 8193")
+		}
+		if client.slots[16383] != client.conns["127.0.3.1:1"] {
+			t.Fatalf("unexpected replica node assigned to slot 16383")
+		}
+	})
+}
+
+func TestClusterClientReplicaOnly_PickMasterIfNoReplica(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	m := &mockConn{
+		DoFn: func(cmd Completed) RedisResult {
+			if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
+				return singleSlotResp
+			}
+			return RedisResult{}
+		},
+	}
+
+	client, err := newClusterClient(&ClientOption{InitAddress: []string{"127.0.0.1:0"}, ReplicaOnly: true}, func(dst string, opt *ClientOption) conn {
+		copiedM := *m
+		return &copiedM
+	})
+	if err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+	t.Run("replicas should be picked", func(t *testing.T) {
+		if client.slots[0] != client.conns["127.0.0.1:0"] {
+			t.Fatalf("unexpected node assigned to slot 0")
+		}
+	})
+}

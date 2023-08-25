@@ -3,6 +3,7 @@ package rueidis
 import (
 	"context"
 	"errors"
+	"math/rand"
 	"net"
 	"runtime"
 	"strconv"
@@ -176,7 +177,6 @@ func (c *clusterClient) _refresh() (err error) {
 
 	groups := parseSlots(reply, addr)
 
-	// TODO support read from replicas
 	conns := make(map[string]conn, len(groups))
 	for _, g := range groups {
 		for _, addr := range g.nodes {
@@ -204,7 +204,11 @@ func (c *clusterClient) _refresh() (err error) {
 
 	slots := [16384]conn{}
 	for master, g := range groups {
-		cc := conns[master]
+		addr := master
+		if c.opt.ReplicaOnly && len(g.nodes) > 1 {
+			addr = g.nodes[1+rand.Intn(len(g.nodes)-1)]
+		}
+		cc := conns[addr]
 		for _, slot := range g.slots {
 			for i := slot[0]; i <= slot[1]; i++ {
 				slots[i] = cc

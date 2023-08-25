@@ -41,6 +41,9 @@ var (
 	ErrRESP2PubSubMixed = errors.New("rueidis does not support SUBSCRIBE/PSUBSCRIBE/SSUBSCRIBE mixed with other commands in RESP2")
 	// ErrDoCacheAborted means redis abort EXEC request or connection closed
 	ErrDoCacheAborted = errors.New("failed to fetch the cache because EXEC was aborted by redis or connection closed")
+	// ErrReplicaOnlyNotSupported means ReplicaOnly flag is not supported by
+	// current client
+	ErrReplicaOnlyNotSupported = errors.New("ReplicaOnly is not supported for single client")
 )
 
 // ClientOption should be passed to NewClient to construct a Client
@@ -146,7 +149,6 @@ type ClientOption struct {
 	ForceSingleClient bool
 
 	// ReplicaOnly indicates that this client will only try to connect to readonly replicas of redis setup.
-	// currently, it is only implemented for sentinel client
 	ReplicaOnly bool
 
 	// ClientNoEvict sets the client eviction mode for the current connection.
@@ -301,10 +303,14 @@ func NewClient(option ClientOption) (client Client, err error) {
 		return newSingleClient(&option, nil, makeConn)
 	}
 	if client, err = newClusterClient(&option, makeConn); err != nil {
+		if client == nil || client == (*clusterClient)(nil) {
+			return nil, err
+		}
+
 		if len(option.InitAddress) == 1 && (err.Error() == redisErrMsgCommandNotAllow || strings.Contains(strings.ToUpper(err.Error()), "CLUSTER")) {
 			option.PipelineMultiplex = singleClientMultiplex(pmbk)
 			client, err = newSingleClient(&option, client.(*clusterClient).single(), makeConn)
-		} else if client != (*clusterClient)(nil) {
+		} else {
 			client.Close()
 			return nil, err
 		}
