@@ -413,6 +413,8 @@ client.Do(ctx, client.B().Lindex().Key("k").Index(0).Build()).ToString()
 // LPOP
 client.Do(ctx, client.B().Lpop().Key("k").Build()).ToString()
 client.Do(ctx, client.B().Lpop().Key("k").Count(2).Build()).AsStrSlice()
+// SCAN
+client.Do(ctx, client.B().Scan().Cursor(0).Build()).AsScanEntry()
 // FT.SEARCH
 client.Do(ctx, client.B().FtSearch().Index("idx").Query("@f:v").Build()).AsFtSearch()
 // GEOSEARCH
