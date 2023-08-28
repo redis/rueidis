@@ -1284,7 +1284,7 @@ func (m RedisMessage) MarshalJSON() ([]byte, error) {
 	}
 	obj := PrettyRedisMessage{Type: strType}
 	if m.ttl != [7]byte{} {
-		obj.Ttl = time.UnixMilli(m.CachePXAT()).String()
+		obj.Ttl = time.UnixMilli(m.CachePXAT()).UTC().String()
 	}
 	if err := m.Error(); err != nil {
 		obj.Error = err.Error()

@@ -1731,7 +1731,7 @@ func TestRedisMessage(t *testing.T) {
 			},
 			{
 				input:    RedisMessage{typ: '+', string: "127.0.3.1", ttl: [7]byte{97, 77, 74, 61, 138, 1, 0}},
-				expected: `{"Type":"simple string","Ttl":"2023-08-28 19:56:34.273 +0200 CEST","Value":"127.0.3.1"}`,
+				expected: `{"Type":"simple string","Ttl":"2023-08-28 17:56:34.273 +0000 UTC","Value":"127.0.3.1"}`,
 			},
 		}
 		for _, test := range tests {
