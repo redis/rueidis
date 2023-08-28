@@ -449,6 +449,30 @@ func (r RedisResult) CachePXAT() int64 {
 	return r.val.CachePXAT()
 }
 
+// String returns human-readable representation of RedisResult
+func (r RedisResult) String() string {
+	v, err := r.MarshalJSON()
+	if err != nil {
+		return ""
+	}
+	return string(v)
+}
+
+// MarshalJSON implements json.Marshaler interface
+func (r *RedisResult) MarshalJSON() ([]byte, error) {
+	type PrettyRedisResult struct {
+		Error   string        `json:"Error,omitempty"`
+		Message *RedisMessage `json:"Message,omitempty"`
+	}
+	obj := PrettyRedisResult{}
+	if r.err != nil {
+		obj.Error = r.err.Error()
+	} else {
+		obj.Message = &r.val
+	}
+	return json.Marshal(obj)
+}
+
 // RedisMessage is a redis response message, it may be a nil response
 type RedisMessage struct {
 	attrs   *RedisMessage
@@ -1235,4 +1259,45 @@ func (m *RedisMessage) approximateSize() (s int) {
 		s += v.approximateSize()
 	}
 	return
+}
+
+// String returns human-readable representation of RedisMessage
+func (m RedisMessage) String() string {
+	v, err := m.MarshalJSON()
+	if err != nil {
+		return ""
+	}
+	return string(v)
+}
+
+// MarshalJSON implements json.Marshaler interface
+func (m RedisMessage) MarshalJSON() ([]byte, error) {
+	type PrettyRedisMessage struct {
+		Type  string `json:"Type,omitempty"`
+		Error string `json:"Error,omitempty"`
+		Ttl   string `json:"Ttl,omitempty"`
+		Value any    `json:"Value,omitempty"`
+	}
+	strType, ok := typeNames[m.typ]
+	if !ok {
+		strType = "unknown"
+	}
+	obj := PrettyRedisMessage{Type: strType}
+	if m.ttl != [7]byte{} {
+		obj.Ttl = time.UnixMilli(m.CachePXAT()).String()
+	}
+	if err := m.Error(); err != nil {
+		obj.Error = err.Error()
+	}
+	switch m.typ {
+	case typeFloat, typeBlobString, typeSimpleString, typeVerbatimString, typeBigNumber:
+		obj.Value = m.string
+	case typeBool:
+		obj.Value = strconv.FormatBool(m.integer == 1)
+	case typeInteger:
+		obj.Value = m.integer
+	case typeMap, typeSet, typeArray:
+		obj.Value = m.values
+	}
+	return json.Marshal(obj)
 }
