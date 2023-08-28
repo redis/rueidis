@@ -173,6 +173,9 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 	if option.SelectDB != 0 {
 		init = append(init, []string{"SELECT", strconv.Itoa(option.SelectDB)})
 	}
+	if option.ReplicaOnly && option.Sentinel.MasterSet == "" {
+		init = append(init, []string{"READONLY"})
+	}
 	if option.ClientNoTouch {
 		init = append(init, []string{"CLIENT", "NO-TOUCH", "ON"})
 	}
@@ -204,6 +207,10 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 				err = r.Error()
 			}
 			if err != nil {
+				if init[i][0] == "READONLY" {
+					// igore READONLY command error
+					continue
+				}
 				if re, ok := err.(*RedisError); ok {
 					if !r2 && noHello.MatchString(re.string) {
 						r2 = true
@@ -247,6 +254,9 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 		if option.SelectDB != 0 {
 			init = append(init, []string{"SELECT", strconv.Itoa(option.SelectDB)})
 		}
+		if option.ReplicaOnly && option.Sentinel.MasterSet == "" {
+			init = append(init, []string{"READONLY"})
+		}
 		if option.ClientNoTouch {
 			init = append(init, []string{"CLIENT", "NO-TOUCH", "ON"})
 		}
@@ -262,7 +272,11 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 		if len(init) != 0 {
 			resp := p.DoMulti(ctx, cmds.NewMultiCompleted(init)...)
 			defer resultsp.Put(resp)
-			for _, r := range resp.s[:len(resp.s)-1] { // skip error checking on the last CLIENT SETINFO
+			for i, r := range resp.s[:len(resp.s)-1] { // skip error checking on the last CLIENT SETINFO
+				if init[i][0] == "READONLY" {
+					// igore READONLY command error
+					continue
+				}
 				if err = r.Error(); err != nil {
 					p.Close()
 					return nil, err

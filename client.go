@@ -20,6 +20,10 @@ func newSingleClient(opt *ClientOption, prev conn, connFn connFn) (*singleClient
 		return nil, ErrNoAddr
 	}
 
+	if opt.ReplicaOnly {
+		return nil, ErrReplicaOnlyNotSupported
+	}
+
 	conn := connFn(opt.InitAddress[0], opt)
 	conn.Override(prev)
 	if err := conn.Dial(); err != nil {

@@ -183,7 +183,7 @@ func TestNewPipe(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	t.Run("Auth without Username", func(t *testing.T) {
 		n1, n2 := net.Pipe()
-		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2}
+		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
 		go func() {
 			mock.Expect("HELLO", "3", "AUTH", "default", "pa", "SETNAME", "cn").
 				Reply(RedisMessage{
@@ -223,7 +223,7 @@ func TestNewPipe(t *testing.T) {
 	})
 	t.Run("AlwaysRESP2", func(t *testing.T) {
 		n1, n2 := net.Pipe()
-		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2}
+		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
 		go func() {
 			mock.Expect("AUTH", "pa").
 				ReplyString("OK")
@@ -259,7 +259,7 @@ func TestNewPipe(t *testing.T) {
 	})
 	t.Run("Auth with Username", func(t *testing.T) {
 		n1, n2 := net.Pipe()
-		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2}
+		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
 		go func() {
 			mock.Expect("HELLO", "3", "AUTH", "ua", "pa", "SETNAME", "cn").
 				Reply(RedisMessage{
@@ -293,7 +293,7 @@ func TestNewPipe(t *testing.T) {
 	})
 	t.Run("With ClientSideTrackingOptions", func(t *testing.T) {
 		n1, n2 := net.Pipe()
-		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2}
+		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
 		go func() {
 			mock.Expect("HELLO", "3").
 				Reply(RedisMessage{
@@ -320,6 +320,80 @@ func TestNewPipe(t *testing.T) {
 		n1.Close()
 		n2.Close()
 	})
+	t.Run("Init with ReplicaOnly", func(t *testing.T) {
+		n1, n2 := net.Pipe()
+		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
+		go func() {
+			mock.Expect("HELLO", "3", "AUTH", "ua", "pa", "SETNAME", "cn").
+				Reply(RedisMessage{
+					typ: '%',
+					values: []RedisMessage{
+						{typ: '+', string: "proto"},
+						{typ: ':', integer: 3},
+					},
+				})
+			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
+				ReplyString("OK")
+			mock.Expect("SELECT", "1").
+				ReplyString("OK")
+			mock.Expect("READONLY").
+				ReplyString("OK")
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+				ReplyError("UNKNOWN COMMAND")
+		}()
+		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
+			SelectDB:    1,
+			Username:    "ua",
+			Password:    "pa",
+			ClientName:  "cn",
+			ReplicaOnly: true,
+		})
+		if err != nil {
+			t.Fatalf("pipe setup failed: %v", err)
+		}
+		go func() { mock.Expect("QUIT").ReplyString("OK") }()
+		p.Close()
+		mock.Close()
+		n1.Close()
+		n2.Close()
+	})
+	t.Run("Init with ReplicaOnly ignores READONLY Error", func(t *testing.T) {
+		n1, n2 := net.Pipe()
+		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
+		go func() {
+			mock.Expect("HELLO", "3", "AUTH", "ua", "pa", "SETNAME", "cn").
+				Reply(RedisMessage{
+					typ: '%',
+					values: []RedisMessage{
+						{typ: '+', string: "proto"},
+						{typ: ':', integer: 3},
+					},
+				})
+			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
+				ReplyString("OK")
+			mock.Expect("SELECT", "1").
+				ReplyString("OK")
+			mock.Expect("READONLY").
+				ReplyError("This instance has cluster support disabled")
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+				ReplyError("UNKNOWN COMMAND")
+		}()
+		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
+			SelectDB:    1,
+			Username:    "ua",
+			Password:    "pa",
+			ClientName:  "cn",
+			ReplicaOnly: true,
+		})
+		if err != nil {
+			t.Fatalf("pipe setup failed: %v", err)
+		}
+		go func() { mock.Expect("QUIT").ReplyString("OK") }()
+		p.Close()
+		mock.Close()
+		n1.Close()
+		n2.Close()
+	})
 	t.Run("Network Error", func(t *testing.T) {
 		n1, n2 := net.Pipe()
 		n1.Close()
@@ -334,7 +408,7 @@ func TestNewRESP2Pipe(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	t.Run("Without DisableCache", func(t *testing.T) {
 		n1, n2 := net.Pipe()
-		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2}
+		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
 		go func() {
 			mock.Expect("HELLO", "3").
 				ReplyError("ERR unknown command `HELLO`")
@@ -353,7 +427,7 @@ func TestNewRESP2Pipe(t *testing.T) {
 	})
 	t.Run("Without DisableCache 2", func(t *testing.T) {
 		n1, n2 := net.Pipe()
-		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2}
+		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
 		go func() {
 			mock.Expect("HELLO", "3").
 				ReplyError("ERR unknown command `HELLO`")
@@ -372,7 +446,7 @@ func TestNewRESP2Pipe(t *testing.T) {
 	})
 	t.Run("With Hello Proto 2", func(t *testing.T) { // kvrocks version 2.2.0
 		n1, n2 := net.Pipe()
-		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2}
+		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
 		go func() {
 			mock.Expect("HELLO", "3").
 				Reply(RedisMessage{typ: '*', values: []RedisMessage{
@@ -401,7 +475,7 @@ func TestNewRESP2Pipe(t *testing.T) {
 	})
 	t.Run("Auth without Username", func(t *testing.T) {
 		n1, n2 := net.Pipe()
-		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2}
+		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
 		go func() {
 			mock.Expect("HELLO", "3", "AUTH", "default", "pa", "SETNAME", "cn").
 				ReplyError("ERR unknown command `HELLO`")
@@ -438,7 +512,7 @@ func TestNewRESP2Pipe(t *testing.T) {
 	})
 	t.Run("Auth with Username", func(t *testing.T) {
 		n1, n2 := net.Pipe()
-		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2}
+		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
 		go func() {
 			mock.Expect("HELLO", "3", "AUTH", "ua", "pa", "SETNAME", "cn").
 				ReplyError("ERR unknown command `HELLO`")
@@ -474,9 +548,93 @@ func TestNewRESP2Pipe(t *testing.T) {
 		n1.Close()
 		n2.Close()
 	})
+	t.Run("Init with ReplicaOnly", func(t *testing.T) {
+		n1, n2 := net.Pipe()
+		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
+		go func() {
+			mock.Expect("HELLO", "3", "AUTH", "default", "pa", "SETNAME", "cn").
+				ReplyError("ERR unknown command `HELLO`")
+			mock.Expect("SELECT", "1").
+				ReplyError("ERR ACL")
+			mock.Expect("READONLY").
+				ReplyError("ERR ACL")
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("AUTH", "pa").
+				ReplyString("OK")
+			mock.Expect("CLIENT", "SETNAME", "cn").
+				ReplyString("OK")
+			mock.Expect("SELECT", "1").
+				ReplyString("OK")
+			mock.Expect("READONLY").
+				ReplyString("OK")
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+				ReplyError("UNKNOWN COMMAND")
+		}()
+		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
+			SelectDB:     1,
+			Password:     "pa",
+			ClientName:   "cn",
+			DisableCache: true,
+			ReplicaOnly:  true,
+		})
+		if err != nil {
+			t.Fatalf("pipe setup failed: %v", err)
+		}
+		if p.version >= 6 {
+			t.Fatalf("unexpected p.version: %v", p.version)
+		}
+		go func() { mock.Expect("QUIT").ReplyString("OK") }()
+		p.Close()
+		mock.Close()
+		n1.Close()
+		n2.Close()
+	})
+	t.Run("Init with ReplicaOnly ignores READONLY error", func(t *testing.T) {
+		n1, n2 := net.Pipe()
+		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
+		go func() {
+			mock.Expect("HELLO", "3", "AUTH", "default", "pa", "SETNAME", "cn").
+				ReplyError("ERR unknown command `HELLO`")
+			mock.Expect("SELECT", "1").
+				ReplyError("ERR ACL")
+			mock.Expect("READONLY").
+				ReplyError("ERR ACL")
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("AUTH", "pa").
+				ReplyString("OK")
+			mock.Expect("CLIENT", "SETNAME", "cn").
+				ReplyString("OK")
+			mock.Expect("SELECT", "1").
+				ReplyString("OK")
+			mock.Expect("READONLY").
+				ReplyError("This instance has cluster support disabled")
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+				ReplyError("UNKNOWN COMMAND")
+		}()
+		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
+			SelectDB:     1,
+			Password:     "pa",
+			ClientName:   "cn",
+			DisableCache: true,
+			ReplicaOnly:  true,
+		})
+		if err != nil {
+			t.Fatalf("pipe setup failed: %v", err)
+		}
+		if p.version >= 6 {
+			t.Fatalf("unexpected p.version: %v", p.version)
+		}
+		go func() { mock.Expect("QUIT").ReplyString("OK") }()
+		p.Close()
+		mock.Close()
+		n1.Close()
+		n2.Close()
+	})
 	t.Run("Network Error", func(t *testing.T) {
 		n1, n2 := net.Pipe()
-		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2}
+		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
 		go func() {
 			mock.Expect("HELLO", "3", "AUTH", "ua", "pa", "SETNAME", "cn").
 				ReplyError("ERR unknown command `HELLO`")

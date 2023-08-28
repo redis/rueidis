@@ -167,6 +167,15 @@ func TestNewSingleClientNoNode(t *testing.T) {
 	}
 }
 
+func TestNewSingleClientReplicaOnlyNotSupported(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	if _, err := newSingleClient(&ClientOption{ReplicaOnly: true, InitAddress: []string{"localhost"}}, nil, func(dst string, opt *ClientOption) conn {
+		return nil
+	}); err != ErrReplicaOnlyNotSupported {
+		t.Fatalf("unexpected err %v", err)
+	}
+}
+
 func TestNewSingleClientError(t *testing.T) {
 	v := errors.New("dail err")
 	if _, err := newSingleClient(&ClientOption{InitAddress: []string{""}}, nil, func(dst string, opt *ClientOption) conn {
