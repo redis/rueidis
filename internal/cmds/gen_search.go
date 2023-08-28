@@ -7,7 +7,7 @@ import "strconv"
 type FtAggregate Completed
 
 func (b Builder) FtAggregate() (c FtAggregate) {
-	c = FtAggregate{cs: get(), ks: b.ks}
+	c = FtAggregate{cs: get(), ks: b.ks, cf: readonly}
 	c.cs.s = append(c.cs.s, "FT.AGGREGATE")
 	return c
 }

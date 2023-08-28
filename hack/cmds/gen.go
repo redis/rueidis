@@ -1223,4 +1223,5 @@ var readOnlyCMDs = map[string]bool{
 	"aimodelexecute":      false,
 	"aiscriptget":         false,
 	"ftsearch":            false,
+	"ftaggregate":         false,
 }
