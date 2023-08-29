@@ -450,25 +450,27 @@ func (r RedisResult) CachePXAT() int64 {
 }
 
 // String returns human-readable representation of RedisResult
-func (r RedisResult) String() string {
-	v, err := r.MarshalJSON()
+func (r *RedisResult) String() string {
+	v, err := (*prettyRedisResult)(r).MarshalJSON()
 	if err != nil {
 		return ""
 	}
 	return string(v)
 }
 
+type prettyRedisResult RedisResult
+
 // MarshalJSON implements json.Marshaler interface
-func (r *RedisResult) MarshalJSON() ([]byte, error) {
+func (r *prettyRedisResult) MarshalJSON() ([]byte, error) {
 	type PrettyRedisResult struct {
-		Error   string        `json:"Error,omitempty"`
-		Message *RedisMessage `json:"Message,omitempty"`
+		Error   string              `json:"Error,omitempty"`
+		Message *prettyRedisMessage `json:"Message,omitempty"`
 	}
 	obj := PrettyRedisResult{}
 	if r.err != nil {
 		obj.Error = r.err.Error()
 	} else {
-		obj.Message = &r.val
+		obj.Message = (*prettyRedisMessage)(&r.val)
 	}
 	return json.Marshal(obj)
 }
@@ -1262,42 +1264,49 @@ func (m *RedisMessage) approximateSize() (s int) {
 }
 
 // String returns human-readable representation of RedisMessage
-func (m RedisMessage) String() string {
-	v, err := m.MarshalJSON()
+func (m *RedisMessage) String() string {
+	v, err := (*prettyRedisMessage)(m).MarshalJSON()
 	if err != nil {
 		return ""
 	}
 	return string(v)
 }
 
+type prettyRedisMessage RedisMessage
+
 // MarshalJSON implements json.Marshaler interface
-func (m RedisMessage) MarshalJSON() ([]byte, error) {
+func (m *prettyRedisMessage) MarshalJSON() ([]byte, error) {
 	type PrettyRedisMessage struct {
 		Type  string `json:"Type,omitempty"`
 		Error string `json:"Error,omitempty"`
 		Ttl   string `json:"Ttl,omitempty"`
 		Value any    `json:"Value,omitempty"`
 	}
+	org := (*RedisMessage)(m)
 	strType, ok := typeNames[m.typ]
 	if !ok {
 		strType = "unknown"
 	}
 	obj := PrettyRedisMessage{Type: strType}
 	if m.ttl != [7]byte{} {
-		obj.Ttl = time.UnixMilli(m.CachePXAT()).UTC().String()
+		obj.Ttl = time.UnixMilli(org.CachePXAT()).UTC().String()
 	}
-	if err := m.Error(); err != nil {
+	if err := org.Error(); err != nil {
 		obj.Error = err.Error()
 	}
 	switch m.typ {
 	case typeFloat, typeBlobString, typeSimpleString, typeVerbatimString, typeBigNumber:
 		obj.Value = m.string
 	case typeBool:
-		obj.Value = strconv.FormatBool(m.integer == 1)
+		obj.Value = m.integer == 1
 	case typeInteger:
 		obj.Value = m.integer
 	case typeMap, typeSet, typeArray:
-		obj.Value = m.values
+		values := make([]prettyRedisMessage, len(m.values))
+		for i, value := range m.values {
+			values[i] = prettyRedisMessage(value)
+		}
+		obj.Value = values
 	}
 	return json.Marshal(obj)
 }

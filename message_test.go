@@ -1121,7 +1121,7 @@ func TestRedisResult(t *testing.T) {
 		}
 	})
 
-	t.Run("Marshalling", func(t *testing.T) {
+	t.Run("Stringer", func(t *testing.T) {
 		tests := []struct {
 			input    RedisResult
 			expected string
@@ -1148,12 +1148,9 @@ func TestRedisResult(t *testing.T) {
 			},
 		}
 		for _, test := range tests {
-			marshalled, err := test.input.MarshalJSON()
-			if err != nil {
-				t.Fatalf("unexpected err %v", err)
-			}
-			if string(marshalled) != test.expected {
-				t.Fatalf("marshalling failed. got %v expected %v", string(marshalled), test.expected)
+			msg := test.input.String()
+			if msg != test.expected {
+				t.Fatalf("unexpected string. got %v expected %v", msg, test.expected)
 			}
 		}
 	})
@@ -1710,7 +1707,7 @@ func TestRedisMessage(t *testing.T) {
 		}
 	})
 
-	t.Run("Marshalling", func(t *testing.T) {
+	t.Run("Stringer", func(t *testing.T) {
 		tests := []struct {
 			input    RedisMessage
 			expected string
@@ -1735,12 +1732,9 @@ func TestRedisMessage(t *testing.T) {
 			},
 		}
 		for _, test := range tests {
-			marshalled, err := test.input.MarshalJSON()
-			if err != nil {
-				t.Fatalf("unexpected err %v", err)
-			}
-			if string(marshalled) != test.expected {
-				t.Fatalf("marshalling failed. got %v expected %v", string(marshalled), test.expected)
+			msg := test.input.String()
+			if msg != test.expected {
+				t.Fatalf("unexpected string. got %v expected %v", msg, test.expected)
 			}
 		}
 	})
