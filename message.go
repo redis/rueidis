@@ -451,10 +451,7 @@ func (r RedisResult) CachePXAT() int64 {
 
 // String returns human-readable representation of RedisResult
 func (r *RedisResult) String() string {
-	v, err := (*prettyRedisResult)(r).MarshalJSON()
-	if err != nil {
-		return ""
-	}
+	v, _ := (*prettyRedisResult)(r).MarshalJSON()
 	return string(v)
 }
 
@@ -1265,10 +1262,7 @@ func (m *RedisMessage) approximateSize() (s int) {
 
 // String returns human-readable representation of RedisMessage
 func (m *RedisMessage) String() string {
-	v, err := (*prettyRedisMessage)(m).MarshalJSON()
-	if err != nil {
-		return ""
-	}
+	v, _ := (*prettyRedisMessage)(m).MarshalJSON()
 	return string(v)
 }
 

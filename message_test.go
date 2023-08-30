@@ -1717,7 +1717,7 @@ func TestRedisMessage(t *testing.T) {
 					{typ: '*', values: []RedisMessage{
 						{typ: ':', integer: 0},
 						{typ: ':', integer: 0},
-						{typ: '*', values: []RedisMessage{ // master
+						{typ: '*', values: []RedisMessage{
 							{typ: '+', string: "127.0.3.1"},
 							{typ: ':', integer: 3},
 							{typ: '+', string: ""},
@@ -1729,6 +1729,26 @@ func TestRedisMessage(t *testing.T) {
 			{
 				input:    RedisMessage{typ: '+', string: "127.0.3.1", ttl: [7]byte{97, 77, 74, 61, 138, 1, 0}},
 				expected: `{"Type":"simple string","TTL":"2023-08-28 17:56:34.273 +0000 UTC","Value":"127.0.3.1"}`,
+			},
+			{
+				input:    RedisMessage{typ: '0'},
+				expected: `{"Type":"unknown"}`,
+			},
+			{
+				input:    RedisMessage{typ: typeBool, integer: 1},
+				expected: `{"Type":"boolean","Value":true}`,
+			},
+			{
+				input:    RedisMessage{typ: typeNull},
+				expected: `{"Type":"null","Error":"redis nil message"}`,
+			},
+			{
+				input:    RedisMessage{typ: typeSimpleErr, string: "ERR foo"},
+				expected: `{"Type":"simple error","Error":"foo"}`,
+			},
+			{
+				input:    RedisMessage{typ: typeBlobErr, string: "ERR foo"},
+				expected: `{"Type":"blob error","Error":"foo"}`,
 			},
 		}
 		for _, test := range tests {
