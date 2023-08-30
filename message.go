@@ -1279,7 +1279,7 @@ func (m *prettyRedisMessage) MarshalJSON() ([]byte, error) {
 	type PrettyRedisMessage struct {
 		Type  string `json:"Type,omitempty"`
 		Error string `json:"Error,omitempty"`
-		Ttl   string `json:"Ttl,omitempty"`
+		Ttl   string `json:"TTL,omitempty"`
 		Value any    `json:"Value,omitempty"`
 	}
 	org := (*RedisMessage)(m)
