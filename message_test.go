@@ -1120,6 +1120,40 @@ func TestRedisResult(t *testing.T) {
 			t.Fatal("CachePXAT <= 0")
 		}
 	})
+
+	t.Run("Stringer", func(t *testing.T) {
+		tests := []struct {
+			input    RedisResult
+			expected string
+		}{
+			{
+				input: RedisResult{
+					val: RedisMessage{typ: '*', values: []RedisMessage{
+						{typ: '*', values: []RedisMessage{
+							{typ: ':', integer: 0},
+							{typ: ':', integer: 0},
+							{typ: '*', values: []RedisMessage{ // master
+								{typ: '+', string: "127.0.3.1"},
+								{typ: ':', integer: 3},
+								{typ: '+', string: ""},
+							}},
+						}},
+					}},
+				},
+				expected: `{"Message":{"Type":"array","Value":[{"Type":"array","Value":[{"Type":"int64","Value":0},{"Type":"int64","Value":0},{"Type":"array","Value":[{"Type":"simple string","Value":"127.0.3.1"},{"Type":"int64","Value":3},{"Type":"simple string","Value":""}]}]}]}}`,
+			},
+			{
+				input:    RedisResult{err: errors.New("foo")},
+				expected: `{"Error":"foo"}`,
+			},
+		}
+		for _, test := range tests {
+			msg := test.input.String()
+			if msg != test.expected {
+				t.Fatalf("unexpected string. got %v expected %v", msg, test.expected)
+			}
+		}
+	})
 }
 
 //gocyclo:ignore
@@ -1670,6 +1704,58 @@ func TestRedisMessage(t *testing.T) {
 		m.setExpireAt(time.Now().Add(time.Millisecond * 100).UnixMilli())
 		if m.CachePXAT() <= 0 {
 			t.Fatal("CachePXAT <= 0")
+		}
+	})
+
+	t.Run("Stringer", func(t *testing.T) {
+		tests := []struct {
+			input    RedisMessage
+			expected string
+		}{
+			{
+				input: RedisMessage{typ: '*', values: []RedisMessage{
+					{typ: '*', values: []RedisMessage{
+						{typ: ':', integer: 0},
+						{typ: ':', integer: 0},
+						{typ: '*', values: []RedisMessage{
+							{typ: '+', string: "127.0.3.1"},
+							{typ: ':', integer: 3},
+							{typ: '+', string: ""},
+						}},
+					}},
+				}},
+				expected: `{"Type":"array","Value":[{"Type":"array","Value":[{"Type":"int64","Value":0},{"Type":"int64","Value":0},{"Type":"array","Value":[{"Type":"simple string","Value":"127.0.3.1"},{"Type":"int64","Value":3},{"Type":"simple string","Value":""}]}]}]}`,
+			},
+			{
+				input:    RedisMessage{typ: '+', string: "127.0.3.1", ttl: [7]byte{97, 77, 74, 61, 138, 1, 0}},
+				expected: `{"Type":"simple string","TTL":"2023-08-28 17:56:34.273 +0000 UTC","Value":"127.0.3.1"}`,
+			},
+			{
+				input:    RedisMessage{typ: '0'},
+				expected: `{"Type":"unknown"}`,
+			},
+			{
+				input:    RedisMessage{typ: typeBool, integer: 1},
+				expected: `{"Type":"boolean","Value":true}`,
+			},
+			{
+				input:    RedisMessage{typ: typeNull},
+				expected: `{"Type":"null","Error":"redis nil message"}`,
+			},
+			{
+				input:    RedisMessage{typ: typeSimpleErr, string: "ERR foo"},
+				expected: `{"Type":"simple error","Error":"foo"}`,
+			},
+			{
+				input:    RedisMessage{typ: typeBlobErr, string: "ERR foo"},
+				expected: `{"Type":"blob error","Error":"foo"}`,
+			},
+		}
+		for _, test := range tests {
+			msg := test.input.String()
+			if msg != test.expected {
+				t.Fatalf("unexpected string. got %v expected %v", msg, test.expected)
+			}
 		}
 	})
 }

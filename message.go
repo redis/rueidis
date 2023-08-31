@@ -449,6 +449,29 @@ func (r RedisResult) CachePXAT() int64 {
 	return r.val.CachePXAT()
 }
 
+// String returns human-readable representation of RedisResult
+func (r *RedisResult) String() string {
+	v, _ := (*prettyRedisResult)(r).MarshalJSON()
+	return string(v)
+}
+
+type prettyRedisResult RedisResult
+
+// MarshalJSON implements json.Marshaler interface
+func (r *prettyRedisResult) MarshalJSON() ([]byte, error) {
+	type PrettyRedisResult struct {
+		Error   string              `json:"Error,omitempty"`
+		Message *prettyRedisMessage `json:"Message,omitempty"`
+	}
+	obj := PrettyRedisResult{}
+	if r.err != nil {
+		obj.Error = r.err.Error()
+	} else {
+		obj.Message = (*prettyRedisMessage)(&r.val)
+	}
+	return json.Marshal(obj)
+}
+
 // RedisMessage is a redis response message, it may be a nil response
 type RedisMessage struct {
 	attrs   *RedisMessage
@@ -1235,4 +1258,49 @@ func (m *RedisMessage) approximateSize() (s int) {
 		s += v.approximateSize()
 	}
 	return
+}
+
+// String returns human-readable representation of RedisMessage
+func (m *RedisMessage) String() string {
+	v, _ := (*prettyRedisMessage)(m).MarshalJSON()
+	return string(v)
+}
+
+type prettyRedisMessage RedisMessage
+
+// MarshalJSON implements json.Marshaler interface
+func (m *prettyRedisMessage) MarshalJSON() ([]byte, error) {
+	type PrettyRedisMessage struct {
+		Type  string `json:"Type,omitempty"`
+		Error string `json:"Error,omitempty"`
+		Ttl   string `json:"TTL,omitempty"`
+		Value any    `json:"Value,omitempty"`
+	}
+	org := (*RedisMessage)(m)
+	strType, ok := typeNames[m.typ]
+	if !ok {
+		strType = "unknown"
+	}
+	obj := PrettyRedisMessage{Type: strType}
+	if m.ttl != [7]byte{} {
+		obj.Ttl = time.UnixMilli(org.CachePXAT()).UTC().String()
+	}
+	if err := org.Error(); err != nil {
+		obj.Error = err.Error()
+	}
+	switch m.typ {
+	case typeFloat, typeBlobString, typeSimpleString, typeVerbatimString, typeBigNumber:
+		obj.Value = m.string
+	case typeBool:
+		obj.Value = m.integer == 1
+	case typeInteger:
+		obj.Value = m.integer
+	case typeMap, typeSet, typeArray:
+		values := make([]prettyRedisMessage, len(m.values))
+		for i, value := range m.values {
+			values[i] = prettyRedisMessage(value)
+		}
+		obj.Value = values
+	}
+	return json.Marshal(obj)
 }
