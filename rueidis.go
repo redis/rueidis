@@ -347,3 +347,4 @@ func dial(dst string, opt *ClientOption) (conn net.Conn, err error) {
 }
 
 const redisErrMsgCommandNotAllow = "command is not allowed"
+const dedicatedClientUsedAfterReleased = "DedicatedClient should not be used after recycled"
