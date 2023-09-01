@@ -803,6 +803,45 @@ func TestClusterClient(t *testing.T) {
 			t.Fatalf("unexpected ret %v", ch)
 		}
 	})
+
+	t.Run("Dedicate panic after released", func(t *testing.T) {
+		check := func() {
+			if err := recover(); err != dedicatedClientUsedAfterReleased {
+				t.Fatalf("unexpected err %v", err)
+			}
+		}
+		for _, closeFn := range []func(client DedicatedClient, cancel func()){
+			func(client DedicatedClient, cancel func()) {
+				client.Close()
+			},
+			func(client DedicatedClient, cancel func()) {
+				cancel()
+			},
+		} {
+			c, cancel := client.Dedicate()
+			closeFn(c, cancel)
+			for _, fn := range []func(){
+				func() {
+					defer check()
+					c.Do(context.Background(), c.B().Get().Key("k").Build())
+				},
+				func() {
+					defer check()
+					c.DoMulti(context.Background(), c.B().Get().Key("k").Build())
+				},
+				func() {
+					defer check()
+					c.Receive(context.Background(), c.B().Subscribe().Channel("k").Build(), func(msg PubSubMessage) {})
+				},
+				func() {
+					defer check()
+					c.SetPubSubHooks(PubSubHooks{})
+				},
+			} {
+				fn()
+			}
+		}
+	})
 }
 
 //gocyclo:ignore

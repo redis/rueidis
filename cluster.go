@@ -852,6 +852,9 @@ type dedicatedClusterClient struct {
 func (c *dedicatedClusterClient) acquire(slot uint16) (wire wire, err error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	if c.mark {
+		panic(dedicatedClientUsedAfterReleased)
+	}
 	if c.slot == cmds.NoSlot {
 		c.slot = slot
 	} else if c.slot != slot && slot != cmds.InitSlot {
@@ -979,6 +982,9 @@ retry:
 func (c *dedicatedClusterClient) SetPubSubHooks(hooks PubSubHooks) <-chan error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	if c.mark {
+		panic(dedicatedClientUsedAfterReleased)
+	}
 	if p := c.pshks; p != nil {
 		c.pshks = nil
 		close(p.close)
