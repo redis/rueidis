@@ -487,6 +487,15 @@ var _ = Describe("Commands", func() {
 			Expect(cmd.Err()).To(Equal(err))
 		}
 		{
+			cmd := &ClusterShardsCmd{}
+			cmd.SetVal([]ClusterShard{{Start: 1}})
+			Expect(cmd.Val()).To(Equal([]ClusterShard{{Start: 1}}))
+			v, _ := cmd.Result()
+			Expect(v).To(Equal([]ClusterShard{{Start: 1}}))
+			cmd.SetErr(err)
+			Expect(cmd.Err()).To(Equal(err))
+		}
+		{
 			cmd := &GeoPosCmd{}
 			cmd.SetVal([]*GeoPos{nil})
 			Expect(cmd.Val()).To(Equal([]*GeoPos{nil}))

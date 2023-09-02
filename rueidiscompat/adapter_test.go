@@ -129,6 +129,30 @@ func testCluster(resp3 bool) {
 	})
 
 	Describe("Cluster", func() {
+		It("ClusterShards", func() {
+			// TODO Is there other way to ensure that it runs only on server which supports it?? resp3 can be v6.
+			result, err := adapter.Info(context.Background(), "Server").Result()
+			Expect(err).NotTo(HaveOccurred())
+			c := strings.Index(result, "redis_version:")
+			Expect(c).ToNot(Equal(-1))
+			stripped := result[c+len("redis_version:"):]
+			floatStrings := strings.Split(stripped, ".")
+			Expect(floatStrings).NotTo(HaveLen(0))
+			version, err := strconv.Atoi(floatStrings[0])
+			Expect(err).NotTo(HaveOccurred())
+			if version < 7 {
+				return
+			}
+			slots, err := adapter.ClusterShards(ctx).Result()
+			Expect(err).NotTo(HaveOccurred())
+			m := make(map[int64]struct{})
+			for _, slot := range slots {
+				for i := slot.Start; i <= slot.End; i++ {
+					m[i] = struct{}{}
+				}
+			}
+			Expect(m).To(HaveLen(16384))
+		})
 		It("ClusterSlots", func() {
 			slots, err := adapter.ClusterSlots(ctx).Result()
 			Expect(err).NotTo(HaveOccurred())

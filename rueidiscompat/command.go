@@ -27,6 +27,7 @@
 package rueidiscompat
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"strconv"
@@ -2106,6 +2107,121 @@ func (cmd *ClusterSlotsCmd) Err() error {
 }
 
 func (cmd *ClusterSlotsCmd) Result() ([]ClusterSlot, error) {
+	return cmd.val, cmd.err
+}
+
+func newClusterShardsCmd(res rueidis.RedisResult) *ClusterShardsCmd {
+	arr, err := res.ToArray()
+	if err != nil {
+		return &ClusterShardsCmd{err: err}
+	}
+	val := make([]ClusterShard, 0, len(arr))
+	for _, v := range arr {
+		dict, err := v.ToMap()
+		if err != nil {
+			return &ClusterShardsCmd{err: err}
+		}
+		var (
+			start, end int64
+			nodesArr   []ClusterNode
+		)
+		{
+			slots, ok := dict["slots"]
+			if !ok {
+				return &ClusterShardsCmd{err: errors.New("slots not found")}
+			}
+			arr, err := slots.ToArray()
+			if err != nil {
+				return &ClusterShardsCmd{err: err}
+			}
+			if len(arr) != 2 {
+				return &ClusterShardsCmd{err: fmt.Errorf("got %d, expected 2", len(arr))}
+			}
+			start, err = arr[0].AsInt64()
+			if err != nil {
+				return &ClusterShardsCmd{err: err}
+			}
+			end, err = arr[1].AsInt64()
+			if err != nil {
+				return &ClusterShardsCmd{err: err}
+			}
+		}
+		{
+			nodes, ok := dict["nodes"]
+			if !ok {
+				return &ClusterShardsCmd{err: errors.New("nodes not found")}
+			}
+			arr, err := nodes.ToArray()
+			if err != nil {
+				return &ClusterShardsCmd{err: err}
+			}
+			nodesArr = make([]ClusterNode, len(arr))
+			for i := 0; i < len(arr); i++ {
+				var (
+					err  error
+					elem rueidis.RedisMessage
+				)
+				nodeMap, err := arr[i].ToMap()
+				if err != nil {
+					return &ClusterShardsCmd{err: err}
+				}
+
+				elem = nodeMap["id"]
+				nodesArr[i].ID, err = elem.ToString()
+				if err != nil {
+					return &ClusterShardsCmd{err: err}
+				}
+
+				elem = nodeMap["ip"]
+				ip, err := elem.ToString()
+				if err != nil {
+					return &ClusterShardsCmd{err: err}
+				}
+
+				elem = nodeMap["port"]
+				port, err := elem.AsInt64()
+				if err != nil {
+					return &ClusterShardsCmd{err: err}
+				}
+				nodesArr[i].Addr = net.JoinHostPort(ip, strconv.FormatInt(port, 10))
+			}
+		}
+		val = append(val, ClusterShard{
+			Start: start,
+			End:   end,
+		})
+	}
+	return &ClusterShardsCmd{val: val, err: err}
+}
+
+type ClusterShard struct {
+	Nodes []ClusterNode // TODO should hold new data too? eg. health etc.
+	Start int64
+	End   int64
+}
+
+type ClusterShardsCmd struct {
+	err error
+	val []ClusterShard
+}
+
+func (cmd *ClusterShardsCmd) SetVal(val []ClusterShard) {
+	cmd.val = val
+}
+
+func (cmd *ClusterShardsCmd) SetErr(err error) {
+	cmd.err = err
+}
+
+func (cmd *ClusterShardsCmd) Val() []ClusterShard {
+	return cmd.val
+}
+
+func (cmd *ClusterShardsCmd) Err() error {
+	return cmd.err
+}
+
+func (cmd *ClusterShardsCmd) Result() ([]ClusterShard, error) {
 	return cmd.val, cmd.err
 }
 

@@ -264,6 +264,21 @@ func TestMuxDelegation(t *testing.T) {
 		}
 	})
 
+	t.Run("wire version", func(t *testing.T) {
+		m, checkClean := setupMux([]*mockWire{
+			{
+				VersionFn: func() int {
+					return 7
+				},
+			},
+		})
+		defer checkClean(t)
+		defer m.Close()
+		if version := m.Version(); version != 7 {
+			t.Fatalf("unexpected version %v", version)
+		}
+	})
+
 	t.Run("wire err", func(t *testing.T) {
 		e := errors.New("err")
 		m, checkClean := setupMux([]*mockWire{
@@ -781,6 +796,7 @@ type mockWire struct {
 	DoMultiCacheFn func(multi ...CacheableTTL) *redisresults
 	ReceiveFn      func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error
 	InfoFn         func() map[string]RedisMessage
+	VersionFn      func() int
 	ErrorFn        func() error
 	CloseFn        func()
 
@@ -850,6 +866,13 @@ func (m *mockWire) Info() map[string]RedisMessage {
 		return m.InfoFn()
 	}
 	return nil
+}
+
+func (m *mockWire) Version() int {
+	if m.VersionFn != nil {
+		return m.VersionFn()
+	}
+	return 0
 }
 
 func (m *mockWire) Error() error {

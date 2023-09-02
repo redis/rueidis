@@ -143,11 +143,18 @@ type clusterslots struct {
 }
 
 func (c *clusterClient) _refresh() (err error) {
-	var reply RedisMessage
-	var addr string
-
+	type versionedResult struct {
+		version int
+		reply   RedisResult
+		addr    string
+	}
+	var (
+		reply   RedisMessage
+		addr    string
+		version int
+	)
 	c.mu.RLock()
-	results := make(chan clusterslots, len(c.conns))
+	results := make(chan versionedResult, len(c.conns))
 	pending := make([]conn, 0, len(c.conns))
 	for _, cc := range c.conns {
 		pending = append(pending, cc)
@@ -155,14 +162,25 @@ func (c *clusterClient) _refresh() (err error) {
 	c.mu.RUnlock()
 
 	for i := 0; i < cap(results); i++ {
-		if i&3 == 0 { // batch CLUSTER SLOTS for every 4 connections
+		if i&3 == 0 { // batch CLUSTER SLOTS/CLUSTER SHARDS for every 4 connections
 			for j := i; j < i+4 && j < len(pending); j++ {
 				go func(c conn) {
-					results <- clusterslots{reply: c.Do(context.Background(), cmds.SlotCmd), addr: c.Addr()}
+					var reply RedisResult
+					if version < c.Version() {
+						reply = c.Do(context.Background(), cmds.SlotCmd)
+					} else {
+						reply = c.Do(context.Background(), cmds.ShardsCmd)
+					}
+					results <- versionedResult{
+						version: c.Version(),
+						reply:   reply,
+						addr:    c.Addr(),
+					}
 				}(pending[j])
 			}
 		}
 		r := <-results
+		version = r.version
 		addr = r.addr
 		reply, err = r.reply.ToMessage()
 		if len(reply.values) != 0 {
@@ -175,7 +193,12 @@ func (c *clusterClient) _refresh() (err error) {
 		return err
 	}
 
-	groups := parseSlots(reply, addr)
+	var groups map[string]group
+	if version < 7 {
+		groups = parseSlots(reply, addr)
+	} else {
+		groups = parseShards(reply, addr)
+	}
 
 	conns := make(map[string]conn, len(groups))
 	for _, g := range groups {
@@ -287,6 +310,13 @@ func parseSlots(slots RedisMessage, defaultAddr string) map[string]group {
 		groups[master] = g
 	}
 	return groups
+}
+
+// parseShards - map redis shards for each redis nodes/addresses
+// defaultAddr is needed in case the node does not know its own IP
+func parseShards(shards RedisMessage, defaultAddr string) map[string]group {
+	// TODO how does msg look like??
+	return nil
 }
 
 func (c *clusterClient) _pick(slot uint16) (p conn) {
@@ -1082,3 +1112,8 @@ func (r *connretrycache) ResetLen(n int) {
 var connretrycachep = util.NewPool(func(capacity int) *connretrycache {
 	return &connretrycache{m: make(map[conn]*retrycache, capacity), n: capacity}
 })
+
+func versionFromInfo(map[string]RedisMessage) int {
+	// TODO how does the message look like??
+	return 0
+}
