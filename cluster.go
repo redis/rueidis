@@ -1112,8 +1112,3 @@ func (r *connretrycache) ResetLen(n int) {
 var connretrycachep = util.NewPool(func(capacity int) *connretrycache {
 	return &connretrycache{m: make(map[conn]*retrycache, capacity), n: capacity}
 })
-
-func versionFromInfo(map[string]RedisMessage) int {
-	// TODO how does the message look like??
-	return 0
-}
