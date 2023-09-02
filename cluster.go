@@ -166,7 +166,7 @@ func (c *clusterClient) _refresh() (err error) {
 			for j := i; j < i+4 && j < len(pending); j++ {
 				go func(c conn) {
 					var reply RedisResult
-					if version < c.Version() {
+					if c.Version() < 7 {
 						reply = c.Do(context.Background(), cmds.SlotCmd)
 					} else {
 						reply = c.Do(context.Background(), cmds.ShardsCmd)
