@@ -2195,7 +2195,7 @@ func newClusterShardsCmd(res rueidis.RedisResult) *ClusterShardsCmd {
 }
 
 type ClusterShard struct {
-	Nodes []ClusterNode // TODO should hold new data too? eg. health etc.
+	Nodes []ClusterNode
 	Start int64
 	End   int64
 }

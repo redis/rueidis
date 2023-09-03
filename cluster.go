@@ -315,8 +315,69 @@ func parseSlots(slots RedisMessage, defaultAddr string) map[string]group {
 // parseShards - map redis shards for each redis nodes/addresses
 // defaultAddr is needed in case the node does not know its own IP
 func parseShards(shards RedisMessage, defaultAddr string) map[string]group {
-	// TODO how does msg look like??
-	return nil
+	parseNodeEndpoint := func(msg map[string]RedisMessage) string {
+		var ip string
+		switch msg["ip"].string {
+		case "":
+			return defaultAddr
+		case "?":
+			return ""
+		default:
+			ip = msg["ip"].string
+		}
+
+		_, isPort := msg["port"]
+		_, isTlsPort := msg["tls-port"]
+		var port int64
+		switch {
+		case isPort && !isTlsPort:
+			port = msg["port"].integer
+		case !isPort && isTlsPort:
+			port = msg["tls-port"].integer
+		default:
+			// TODO which one to choose if both set?
+			port = msg["port"].integer
+		}
+		return net.JoinHostPort(ip, strconv.FormatInt(port, 10))
+	}
+
+	groups := make(map[string]group, len(shards.values))
+	for _, v := range shards.values {
+		var master string
+		nodes := v.values[3].values
+		// Not specified that 1st entry is always master
+		for i := 0; i < len(nodes); i++ {
+			if nodes[i].values[len(nodes[i].values)-3*2+1].string != "master" {
+				continue
+			}
+			dict, _ := nodes[i].ToMap()
+			master = parseNodeEndpoint(dict)
+			break
+		}
+
+		if master == "" {
+			continue
+		}
+
+		g, ok := groups[master]
+		if !ok {
+			g.slots = make([][2]int64, 0)
+			g.nodes = make([]string, 0, len(nodes)-1)
+			for i := 0; i < len(nodes); i++ {
+				dict, _ := nodes[i].ToMap()
+				dst := parseNodeEndpoint(dict)
+				if dst == "" {
+					continue
+				}
+				g.nodes = append(g.nodes, dst)
+			}
+		}
+		start, _ := strconv.Atoi(v.values[1].values[0].string)
+		end, _ := strconv.Atoi(v.values[1].values[1].string)
+		g.slots = append(g.slots, [2]int64{int64(start), int64(end)})
+		groups[master] = g
+	}
+	return groups
 }
 
 func (c *clusterClient) _pick(slot uint16) (p conn) {
