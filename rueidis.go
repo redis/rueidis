@@ -303,10 +303,9 @@ func NewClient(option ClientOption) (client Client, err error) {
 		return newSingleClient(&option, nil, makeConn)
 	}
 	if client, err = newClusterClient(&option, makeConn); err != nil {
-		if client == nil || client == (*clusterClient)(nil) {
+		if client == (*clusterClient)(nil) {
 			return nil, err
 		}
-
 		if len(option.InitAddress) == 1 && (err.Error() == redisErrMsgCommandNotAllow || strings.Contains(strings.ToUpper(err.Error()), "CLUSTER")) {
 			option.PipelineMultiplex = singleClientMultiplex(pmbk)
 			client, err = newSingleClient(&option, client.(*clusterClient).single(), makeConn)
