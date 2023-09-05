@@ -197,7 +197,7 @@ func (c *clusterClient) _refresh() (err error) {
 	if version < 7 {
 		groups = parseSlots(reply, addr)
 	} else {
-		groups = parseShards(reply, addr)
+		groups = parseShards(reply, addr, c.opt.TLSConfig != nil)
 	}
 
 	conns := make(map[string]conn, len(groups))
@@ -314,7 +314,7 @@ func parseSlots(slots RedisMessage, defaultAddr string) map[string]group {
 
 // parseShards - map redis shards for each redis nodes/addresses
 // defaultAddr is needed in case the node does not know its own IP
-func parseShards(shards RedisMessage, defaultAddr string) map[string]group {
+func parseShards(shards RedisMessage, defaultAddr string, tls bool) map[string]group {
 	parseNodeEndpoint := func(msg map[string]RedisMessage) string {
 		var ip string
 		switch msg["ip"].string {
@@ -326,18 +326,20 @@ func parseShards(shards RedisMessage, defaultAddr string) map[string]group {
 			ip = msg["ip"].string
 		}
 
-		_, isPort := msg["port"]
-		_, isTlsPort := msg["tls-port"]
 		var port int64
-		switch {
-		case isPort && !isTlsPort:
-			port = msg["port"].integer
-		case !isPort && isTlsPort:
+		switch tls {
+		case true:
+			if _, ok := msg["tls-port"]; !ok {
+				return ""
+			}
 			port = msg["tls-port"].integer
-		default:
-			// TODO which one to choose if both set?
+		case false:
+			if _, ok := msg["port"]; !ok {
+				return ""
+			}
 			port = msg["port"].integer
 		}
+
 		return net.JoinHostPort(ip, strconv.FormatInt(port, 10))
 	}
 
@@ -345,12 +347,11 @@ func parseShards(shards RedisMessage, defaultAddr string) map[string]group {
 	for _, v := range shards.values {
 		var master string
 		nodes := v.values[3].values
-		// Not specified that 1st entry is always master
 		for i := 0; i < len(nodes); i++ {
-			if nodes[i].values[len(nodes[i].values)-3*2+1].string != "master" {
+			dict, _ := nodes[i].ToMap()
+			if dict["role"].string != "master" {
 				continue
 			}
-			dict, _ := nodes[i].ToMap()
 			master = parseNodeEndpoint(dict)
 			break
 		}
