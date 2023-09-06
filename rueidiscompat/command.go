@@ -29,7 +29,6 @@ package rueidiscompat
 import (
 	"errors"
 	"fmt"
-	"net"
 	"strconv"
 	"time"
 
@@ -2018,8 +2017,10 @@ func (cmd *TimeCmd) Result() (time.Time, error) {
 }
 
 type ClusterNode struct {
-	ID   string
-	Addr string
+	ID      string
+	Host    string
+	Port    int64
+	TlsPort int64
 }
 
 type ClusterSlot struct {
@@ -2072,7 +2073,8 @@ func newClusterSlotsCmd(res rueidis.RedisResult) *ClusterSlotsCmd {
 			if err != nil {
 				return &ClusterSlotsCmd{err: err}
 			}
-			nodes[j].Addr = net.JoinHostPort(ip, strconv.FormatInt(port, 10))
+			nodes[j].Host = ip
+			nodes[j].Port = port
 			if len(node) > 2 {
 				id, err := node[2].ToString()
 				if err != nil {
@@ -2177,18 +2179,31 @@ func newClusterShardsCmd(res rueidis.RedisResult) *ClusterShardsCmd {
 				if err != nil {
 					return &ClusterShardsCmd{err: err}
 				}
+				nodesArr[i].Host = ip
 
-				elem = nodeMap["port"]
-				port, err := elem.AsInt64()
-				if err != nil {
-					return &ClusterShardsCmd{err: err}
+				elem, ok = nodeMap["port"]
+				if ok {
+					port, err := elem.AsInt64()
+					if err != nil {
+						return &ClusterShardsCmd{err: err}
+					}
+					nodesArr[i].Port = port
 				}
-				nodesArr[i].Addr = net.JoinHostPort(ip, strconv.FormatInt(port, 10))
+
+				elem, ok = nodeMap["tls-port"]
+				if ok {
+					port, err := elem.AsInt64()
+					if err != nil {
+						return &ClusterShardsCmd{err: err}
+					}
+					nodesArr[i].TlsPort = port
+				}
 			}
 		}
 		val = append(val, ClusterShard{
 			Start: start,
 			End:   end,
+			Nodes: nodesArr,
 		})
 	}
 	return &ClusterShardsCmd{val: val, err: err}

@@ -131,12 +131,11 @@ func testCluster(resp3 bool) {
 	Describe("Cluster", func() {
 		if resp3 {
 			It("ClusterShards", func() {
-
-				slots, err := adapter.ClusterShards(ctx).Result()
+				shards, err := adapter.ClusterShards(ctx).Result()
 				Expect(err).NotTo(HaveOccurred())
 				m := make(map[int64]struct{})
-				for _, slot := range slots {
-					for i := slot.Start; i <= slot.End; i++ {
+				for _, shard := range shards {
+					for i := shard.Start; i <= shard.End; i++ {
 						m[i] = struct{}{}
 					}
 				}
