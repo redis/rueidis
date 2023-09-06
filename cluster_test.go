@@ -540,6 +540,7 @@ func TestClusterClientInit(t *testing.T) {
 					}
 					return shardsResp
 				},
+				VersionFn: func() int { return 7 },
 			}
 		}); err != nil || atomic.AddInt64(&first, 1) < 2 {
 			t.Fatalf("unexpected err %v", err)
