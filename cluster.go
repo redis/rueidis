@@ -326,20 +326,21 @@ func parseShards(shards RedisMessage, defaultAddr string, tls bool) map[string]g
 			ip = msg["ip"].string
 		}
 
+		_, isPort := msg["port"]
+		_, isTlsPort := msg["tls-port"]
 		var port int64
-		switch tls {
-		case true:
-			if _, ok := msg["tls-port"]; !ok {
-				return ""
-			}
-			port = msg["tls-port"].integer
-		case false:
-			if _, ok := msg["port"]; !ok {
-				return ""
-			}
+		switch {
+		case isPort && !isTlsPort:
 			port = msg["port"].integer
+		case !isPort && isTlsPort:
+			port = msg["tls-port"].integer
+		default:
+			if tls {
+				port = msg["tls-port"].integer
+			} else {
+				port = msg["port"].integer
+			}
 		}
-
 		return net.JoinHostPort(ip, strconv.FormatInt(port, 10))
 	}
 

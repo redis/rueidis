@@ -694,10 +694,11 @@ func TestClusterClientInit(t *testing.T) {
 		}
 		nodes := client.nodes()
 		sort.Strings(nodes)
-		if len(nodes) != 3 ||
+		if len(nodes) != 4 ||
 			nodes[0] != "127.0.0.1:0" ||
 			nodes[1] != "127.0.1.1:1" ||
-			nodes[2] != "127.0.2.1:2" {
+			nodes[2] != "127.0.2.1:2" ||
+			nodes[3] != "127.0.3.1:3" {
 			t.Fatalf("unexpected nodes %v", nodes)
 		}
 	})
