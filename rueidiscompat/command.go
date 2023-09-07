@@ -29,6 +29,7 @@ package rueidiscompat
 import (
 	"errors"
 	"fmt"
+	"net"
 	"strconv"
 	"time"
 
@@ -2017,10 +2018,8 @@ func (cmd *TimeCmd) Result() (time.Time, error) {
 }
 
 type ClusterNode struct {
-	ID      string
-	Host    string
-	Port    int64
-	TlsPort int64
+	ID   string
+	Addr string
 }
 
 type ClusterSlot struct {
@@ -2073,8 +2072,7 @@ func newClusterSlotsCmd(res rueidis.RedisResult) *ClusterSlotsCmd {
 			if err != nil {
 				return &ClusterSlotsCmd{err: err}
 			}
-			nodes[j].Host = ip
-			nodes[j].Port = port
+			nodes[j].Addr = net.JoinHostPort(ip, strconv.FormatInt(port, 10))
 			if len(node) > 2 {
 				id, err := node[2].ToString()
 				if err != nil {
@@ -2123,29 +2121,14 @@ func newClusterShardsCmd(res rueidis.RedisResult) *ClusterShardsCmd {
 		if err != nil {
 			return &ClusterShardsCmd{err: err}
 		}
-		var (
-			start, end int64
-			nodesArr   []ClusterNode
-		)
+		shard := ClusterShard{}
 		{
-			slots, ok := dict["slots"]
-			if !ok {
-				return &ClusterShardsCmd{err: errors.New("slots not found")}
-			}
-			arr, err := slots.ToArray()
-			if err != nil {
-				return &ClusterShardsCmd{err: err}
-			}
-			if len(arr) != 2 {
-				return &ClusterShardsCmd{err: fmt.Errorf("got %d, expected 2", len(arr))}
-			}
-			start, err = arr[0].AsInt64()
-			if err != nil {
-				return &ClusterShardsCmd{err: err}
-			}
-			end, err = arr[1].AsInt64()
-			if err != nil {
-				return &ClusterShardsCmd{err: err}
+			slots := dict["slots"]
+			arr, _ := slots.ToArray()
+			for i := 0; i < len(arr); i += 2 {
+				start, _ := arr[i].AsInt64()
+				end, _ := arr[i+1].AsInt64()
+				shard.Slots = append(shard.Slots, SlotRange{Start: start, End: end})
 			}
 		}
 		{
@@ -2157,62 +2140,59 @@ func newClusterShardsCmd(res rueidis.RedisResult) *ClusterShardsCmd {
 			if err != nil {
 				return &ClusterShardsCmd{err: err}
 			}
-			nodesArr = make([]ClusterNode, len(arr))
+			shard.Nodes = make([]Node, len(arr))
 			for i := 0; i < len(arr); i++ {
-				var (
-					err  error
-					elem rueidis.RedisMessage
-				)
 				nodeMap, err := arr[i].ToMap()
 				if err != nil {
 					return &ClusterShardsCmd{err: err}
 				}
-
-				elem = nodeMap["id"]
-				nodesArr[i].ID, err = elem.ToString()
-				if err != nil {
-					return &ClusterShardsCmd{err: err}
-				}
-
-				elem = nodeMap["ip"]
-				ip, err := elem.ToString()
-				if err != nil {
-					return &ClusterShardsCmd{err: err}
-				}
-				nodesArr[i].Host = ip
-
-				elem, ok = nodeMap["port"]
-				if ok {
-					port, err := elem.AsInt64()
-					if err != nil {
-						return &ClusterShardsCmd{err: err}
+				for k, v := range nodeMap {
+					switch k {
+					case "id":
+						shard.Nodes[i].ID, _ = v.ToString()
+					case "endpoint":
+						shard.Nodes[i].Endpoint, _ = v.ToString()
+					case "ip":
+						shard.Nodes[i].IP, _ = v.ToString()
+					case "hostname":
+						shard.Nodes[i].Hostname, _ = v.ToString()
+					case "port":
+						shard.Nodes[i].Port, _ = v.ToInt64()
+					case "tls-port":
+						shard.Nodes[i].TLSPort, _ = v.ToInt64()
+					case "role":
+						shard.Nodes[i].Role, _ = v.ToString()
+					case "replication-offset":
+						shard.Nodes[i].ReplicationOffset, _ = v.ToInt64()
+					case "health":
+						shard.Nodes[i].Health, _ = v.ToString()
 					}
-					nodesArr[i].Port = port
-				}
-
-				elem, ok = nodeMap["tls-port"]
-				if ok {
-					port, err := elem.AsInt64()
-					if err != nil {
-						return &ClusterShardsCmd{err: err}
-					}
-					nodesArr[i].TlsPort = port
 				}
 			}
 		}
-		val = append(val, ClusterShard{
-			Start: start,
-			End:   end,
-			Nodes: nodesArr,
-		})
+		val = append(val, shard)
 	}
 	return &ClusterShardsCmd{val: val, err: err}
 }
 
-type ClusterShard struct {
-	Nodes []ClusterNode
+type SlotRange struct {
 	Start int64
 	End   int64
+}
+type Node struct {
+	ID                string
+	Endpoint          string
+	IP                string
+	Hostname          string
+	Port              int64
+	TLSPort           int64
+	Role              string
+	ReplicationOffset int64
+	Health            string
+}
+type ClusterShard struct {
+	Slots []SlotRange
+	Nodes []Node
 }
 
 type ClusterShardsCmd struct {

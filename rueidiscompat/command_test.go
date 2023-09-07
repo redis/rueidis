@@ -488,10 +488,10 @@ var _ = Describe("Commands", func() {
 		}
 		{
 			cmd := &ClusterShardsCmd{}
-			cmd.SetVal([]ClusterShard{{Start: 1}})
-			Expect(cmd.Val()).To(Equal([]ClusterShard{{Start: 1}}))
+			cmd.SetVal([]ClusterShard{{Slots: []SlotRange{{Start: 1}}}})
+			Expect(cmd.Val()).To(Equal([]ClusterShard{{Slots: []SlotRange{{Start: 1}}}}))
 			v, _ := cmd.Result()
-			Expect(v).To(Equal([]ClusterShard{{Start: 1}}))
+			Expect(v).To(Equal([]ClusterShard{{Slots: []SlotRange{{Start: 1}}}}))
 			cmd.SetErr(err)
 			Expect(cmd.Err()).To(Equal(err))
 		}

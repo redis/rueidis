@@ -135,8 +135,10 @@ func testCluster(resp3 bool) {
 				Expect(err).NotTo(HaveOccurred())
 				m := make(map[int64]struct{})
 				for _, shard := range shards {
-					for i := shard.Start; i <= shard.End; i++ {
-						m[i] = struct{}{}
+					for _, slot := range shard.Slots {
+						for i := slot.Start; i <= slot.End; i++ {
+							m[i] = struct{}{}
+						}
 					}
 				}
 				Expect(m).To(HaveLen(16384))

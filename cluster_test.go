@@ -179,6 +179,28 @@ var shardsRespTls = newResult(RedisMessage{typ: typeArray, values: []RedisMessag
 		}},
 		{typ: typeBlobString, string: "nodes"},
 		{typ: typeArray, values: []RedisMessage{
+			{typ: typeMap, values: []RedisMessage{ // replica, tls
+				{typ: typeBlobString, string: "id"},
+				{typ: typeBlobString, string: ""},
+
+				{typ: typeBlobString, string: "tls-port"},
+				{typ: typeInteger, integer: 2},
+
+				{typ: typeBlobString, string: "ip"},
+				{typ: typeBlobString, string: "127.0.2.1"},
+
+				{typ: typeBlobString, string: "endpoint"},
+				{typ: typeBlobString, string: ""},
+
+				{typ: typeBlobString, string: "role"},
+				{typ: typeBlobString, string: "replica"},
+
+				{typ: typeBlobString, string: "replication-offset"},
+				{typ: typeInteger, integer: 72156},
+
+				{typ: typeBlobString, string: "health"},
+				{typ: typeBlobString, string: "online"},
+			}},
 			{typ: typeMap, values: []RedisMessage{ // master, tls + port
 				{typ: typeBlobString, string: "id"},
 				{typ: typeBlobString, string: ""},
@@ -197,28 +219,6 @@ var shardsRespTls = newResult(RedisMessage{typ: typeArray, values: []RedisMessag
 
 				{typ: typeBlobString, string: "role"},
 				{typ: typeBlobString, string: "master"},
-
-				{typ: typeBlobString, string: "replication-offset"},
-				{typ: typeInteger, integer: 72156},
-
-				{typ: typeBlobString, string: "health"},
-				{typ: typeBlobString, string: "online"},
-			}},
-			{typ: typeMap, values: []RedisMessage{ // replica, tls
-				{typ: typeBlobString, string: "id"},
-				{typ: typeBlobString, string: ""},
-
-				{typ: typeBlobString, string: "tls-port"},
-				{typ: typeInteger, integer: 2},
-
-				{typ: typeBlobString, string: "ip"},
-				{typ: typeBlobString, string: "127.0.2.1"},
-
-				{typ: typeBlobString, string: "endpoint"},
-				{typ: typeBlobString, string: ""},
-
-				{typ: typeBlobString, string: "role"},
-				{typ: typeBlobString, string: "replica"},
 
 				{typ: typeBlobString, string: "replication-offset"},
 				{typ: typeInteger, integer: 72156},
@@ -2259,6 +2259,51 @@ func TestClusterClientReplicaOnly_PickMasterIfNoReplica(t *testing.T) {
 	t.Run("replicas should be picked", func(t *testing.T) {
 		if client.slots[0] != client.conns["127.0.0.1:0"] {
 			t.Fatalf("unexpected node assigned to slot 0")
+		}
+	})
+}
+
+func TestClusterShardsParsing(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	t.Run("master selection", func(t *testing.T) {
+		result := parseShards(shardsRespTls.val, "127.0.0.1:5", true)
+		if len(result) != 1 {
+			t.Fatalf("unexpected result %v", result)
+		}
+		if _, ok := result["127.0.1.1:1"]; !ok {
+			t.Fatal("unexpected master node")
+		}
+	})
+
+	t.Run("port selection", func(t *testing.T) {
+		result := parseShards(shardsRespTls.val, "127.0.0.1:5", true)
+		if len(result) != 1 {
+			t.Fatalf("unexpected result %v", result)
+		}
+		for _, val := range result {
+			nodes := val.nodes
+			sort.Strings(nodes)
+			if len(nodes) != 3 ||
+				nodes[0] != "127.0.1.1:1" ||
+				nodes[1] != "127.0.2.1:2" ||
+				nodes[2] != "127.0.3.1:3" {
+				t.Fatalf("unexpected nodes %v", nodes)
+			}
+		}
+
+		result = parseShards(shardsRespTls.val, "127.0.0.1:5", false)
+		if len(result) != 1 {
+			t.Fatalf("unexpected result %v", result)
+		}
+		for _, val := range result {
+			nodes := val.nodes
+			sort.Strings(nodes)
+			if len(nodes) != 3 ||
+				nodes[0] != "127.0.1.1:0" ||
+				nodes[1] != "127.0.2.1:2" ||
+				nodes[2] != "127.0.3.1:3" {
+				t.Fatalf("unexpected nodes %v", nodes)
+			}
 		}
 	})
 }
