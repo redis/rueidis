@@ -58,8 +58,6 @@ func (r *ring) PutOne(m Completed) chan RedisResult {
 		n.c1.Wait()
 	}
 	n.one = m
-	n.multi = nil
-	n.resps = nil
 	n.mark = 1
 	s := n.slept
 	n.c1.L.Unlock()
@@ -75,7 +73,6 @@ func (r *ring) PutMulti(m []Completed, resps []RedisResult) chan RedisResult {
 	for n.mark != 0 {
 		n.c1.Wait()
 	}
-	n.one = Completed{}
 	n.multi = m
 	n.resps = resps
 	n.mark = 1
@@ -130,6 +127,9 @@ func (r *ring) NextResultCh() (one Completed, multi []Completed, ch chan RedisRe
 	if n.mark == 2 {
 		one, multi, ch, resps = n.one, n.multi, n.ch, n.resps
 		n.mark = 0
+		n.one = Completed{}
+		n.multi = nil
+		n.resps = nil
 	} else {
 		r.read2--
 	}
