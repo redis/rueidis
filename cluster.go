@@ -316,32 +316,20 @@ func parseSlots(slots RedisMessage, defaultAddr string) map[string]group {
 // defaultAddr is needed in case the node does not know its own IP
 func parseShards(shards RedisMessage, defaultAddr string, tls bool) map[string]group {
 	parseNodeEndpoint := func(msg map[string]RedisMessage) string {
-		var ip string
-		switch msg["ip"].string {
+		endpoint := msg["endpoint"].string
+		switch endpoint {
 		case "":
 			return defaultAddr
 		case "?":
 			return ""
-		default:
-			ip = msg["ip"].string
 		}
 
-		_, isPort := msg["port"]
-		_, isTlsPort := msg["tls-port"]
-		var port int64
-		switch {
-		case isPort && !isTlsPort:
-			port = msg["port"].integer
-		case !isPort && isTlsPort:
+		port := msg["port"].integer
+		if tls && msg["tls-port"].integer > 0 {
 			port = msg["tls-port"].integer
-		default:
-			if tls {
-				port = msg["tls-port"].integer
-			} else {
-				port = msg["port"].integer
-			}
 		}
-		return net.JoinHostPort(ip, strconv.FormatInt(port, 10))
+
+		return net.JoinHostPort(endpoint, strconv.FormatInt(port, 10))
 	}
 
 	groups := make(map[string]group, len(shards.values))

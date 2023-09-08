@@ -133,7 +133,7 @@ var shardsResp = newResult(RedisMessage{typ: typeArray, values: []RedisMessage{
 				{typ: typeBlobString, string: "127.0.0.1"},
 
 				{typ: typeBlobString, string: "endpoint"},
-				{typ: typeBlobString, string: ""},
+				{typ: typeBlobString, string: "127.0.0.1"},
 
 				{typ: typeBlobString, string: "role"},
 				{typ: typeBlobString, string: "master"},
@@ -155,7 +155,7 @@ var shardsResp = newResult(RedisMessage{typ: typeArray, values: []RedisMessage{
 				{typ: typeBlobString, string: "127.0.1.1"},
 
 				{typ: typeBlobString, string: "endpoint"},
-				{typ: typeBlobString, string: ""},
+				{typ: typeBlobString, string: "127.0.1.1"},
 
 				{typ: typeBlobString, string: "role"},
 				{typ: typeBlobString, string: "replica"},
@@ -190,7 +190,7 @@ var shardsRespTls = newResult(RedisMessage{typ: typeArray, values: []RedisMessag
 				{typ: typeBlobString, string: "127.0.2.1"},
 
 				{typ: typeBlobString, string: "endpoint"},
-				{typ: typeBlobString, string: ""},
+				{typ: typeBlobString, string: "127.0.2.1"},
 
 				{typ: typeBlobString, string: "role"},
 				{typ: typeBlobString, string: "replica"},
@@ -215,7 +215,7 @@ var shardsRespTls = newResult(RedisMessage{typ: typeArray, values: []RedisMessag
 				{typ: typeBlobString, string: "127.0.1.1"},
 
 				{typ: typeBlobString, string: "endpoint"},
-				{typ: typeBlobString, string: ""},
+				{typ: typeBlobString, string: "127.0.1.1"},
 
 				{typ: typeBlobString, string: "role"},
 				{typ: typeBlobString, string: "master"},
@@ -237,7 +237,7 @@ var shardsRespTls = newResult(RedisMessage{typ: typeArray, values: []RedisMessag
 				{typ: typeBlobString, string: "127.0.3.1"},
 
 				{typ: typeBlobString, string: "endpoint"},
-				{typ: typeBlobString, string: ""},
+				{typ: typeBlobString, string: "127.0.3.1"},
 
 				{typ: typeBlobString, string: "role"},
 				{typ: typeBlobString, string: "replica"},
@@ -272,7 +272,7 @@ var shardsMultiResp = newResult(RedisMessage{typ: '*', values: []RedisMessage{
 				{typ: typeBlobString, string: "127.0.0.1"},
 
 				{typ: typeBlobString, string: "endpoint"},
-				{typ: typeBlobString, string: ""},
+				{typ: typeBlobString, string: "127.0.0.1"},
 
 				{typ: typeBlobString, string: "role"},
 				{typ: typeBlobString, string: "master"},
@@ -294,7 +294,7 @@ var shardsMultiResp = newResult(RedisMessage{typ: '*', values: []RedisMessage{
 				{typ: typeBlobString, string: "127.0.1.1"},
 
 				{typ: typeBlobString, string: "endpoint"},
-				{typ: typeBlobString, string: ""},
+				{typ: typeBlobString, string: "127.0.1.1"},
 
 				{typ: typeBlobString, string: "role"},
 				{typ: typeBlobString, string: "replica"},
@@ -326,7 +326,7 @@ var shardsMultiResp = newResult(RedisMessage{typ: '*', values: []RedisMessage{
 				{typ: typeBlobString, string: "127.0.2.1"},
 
 				{typ: typeBlobString, string: "endpoint"},
-				{typ: typeBlobString, string: ""},
+				{typ: typeBlobString, string: "127.0.2.1"},
 
 				{typ: typeBlobString, string: "role"},
 				{typ: typeBlobString, string: "master"},
@@ -348,7 +348,7 @@ var shardsMultiResp = newResult(RedisMessage{typ: '*', values: []RedisMessage{
 				{typ: typeBlobString, string: "127.0.3.1"},
 
 				{typ: typeBlobString, string: "endpoint"},
-				{typ: typeBlobString, string: ""},
+				{typ: typeBlobString, string: "127.0.3.1"},
 
 				{typ: typeBlobString, string: "role"},
 				{typ: typeBlobString, string: "replica"},
@@ -383,7 +383,7 @@ var singleShardResp2 = newResult(RedisMessage{typ: '*', values: []RedisMessage{
 				{typ: typeBlobString, string: "127.0.3.1"},
 
 				{typ: typeBlobString, string: "endpoint"},
-				{typ: typeBlobString, string: ""},
+				{typ: typeBlobString, string: "127.0.3.1"},
 
 				{typ: typeBlobString, string: "role"},
 				{typ: typeBlobString, string: "master"},
@@ -440,7 +440,7 @@ var singleShardWithoutIP = newResult(RedisMessage{typ: typeArray, values: []Redi
 				{typ: typeBlobString, string: "?"},
 
 				{typ: typeBlobString, string: "endpoint"},
-				{typ: typeBlobString, string: ""},
+				{typ: typeBlobString, string: "?"},
 
 				{typ: typeBlobString, string: "role"},
 				{typ: typeBlobString, string: "replica"},
@@ -472,7 +472,7 @@ var singleShardWithoutIP = newResult(RedisMessage{typ: typeArray, values: []Redi
 				{typ: typeBlobString, string: "?"},
 
 				{typ: typeBlobString, string: "endpoint"},
-				{typ: typeBlobString, string: ""},
+				{typ: typeBlobString, string: "?"},
 
 				{typ: typeBlobString, string: "role"},
 				{typ: typeBlobString, string: "master"},
@@ -2300,7 +2300,7 @@ func TestClusterShardsParsing(t *testing.T) {
 			sort.Strings(nodes)
 			if len(nodes) != 3 ||
 				nodes[0] != "127.0.1.1:0" ||
-				nodes[1] != "127.0.2.1:2" ||
+				nodes[1] != "127.0.2.1:0" ||
 				nodes[2] != "127.0.3.1:3" {
 				t.Fatalf("unexpected nodes %v", nodes)
 			}
