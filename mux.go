@@ -51,6 +51,7 @@ type conn interface {
 	DoMultiCache(ctx context.Context, multi ...CacheableTTL) *redisresults
 	Receive(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error
 	Info() map[string]RedisMessage
+	Version() int
 	Error() error
 	Close()
 	Dial() error
@@ -173,6 +174,10 @@ func (m *mux) Dial() error {
 
 func (m *mux) Info() map[string]RedisMessage {
 	return m.pipe(0).Info()
+}
+
+func (m *mux) Version() int {
+	return m.pipe(0).Version()
 }
 
 func (m *mux) Error() error {

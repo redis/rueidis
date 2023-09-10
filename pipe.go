@@ -31,6 +31,7 @@ type wire interface {
 	DoMultiCache(ctx context.Context, multi ...CacheableTTL) *redisresults
 	Receive(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error
 	Info() map[string]RedisMessage
+	Version() int
 	Error() error
 	Close()
 
@@ -770,6 +771,10 @@ func (p *pipe) SetOnCloseHook(fn func(error)) {
 
 func (p *pipe) Info() map[string]RedisMessage {
 	return p.info
+}
+
+func (p *pipe) Version() int {
+	return int(p.version)
 }
 
 func (p *pipe) Do(ctx context.Context, cmd Completed) (resp RedisResult) {

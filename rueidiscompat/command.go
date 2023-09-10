@@ -27,6 +27,7 @@
 package rueidiscompat
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"strconv"
@@ -2106,6 +2107,116 @@ func (cmd *ClusterSlotsCmd) Err() error {
 }
 
 func (cmd *ClusterSlotsCmd) Result() ([]ClusterSlot, error) {
+	return cmd.val, cmd.err
+}
+
+func newClusterShardsCmd(res rueidis.RedisResult) *ClusterShardsCmd {
+	arr, err := res.ToArray()
+	if err != nil {
+		return &ClusterShardsCmd{err: err}
+	}
+	val := make([]ClusterShard, 0, len(arr))
+	for _, v := range arr {
+		dict, err := v.ToMap()
+		if err != nil {
+			return &ClusterShardsCmd{err: err}
+		}
+		shard := ClusterShard{}
+		{
+			slots := dict["slots"]
+			arr, _ := slots.ToArray()
+			for i := 0; i+1 < len(arr); i += 2 {
+				start, _ := arr[i].AsInt64()
+				end, _ := arr[i+1].AsInt64()
+				shard.Slots = append(shard.Slots, SlotRange{Start: start, End: end})
+			}
+		}
+		{
+			nodes, ok := dict["nodes"]
+			if !ok {
+				return &ClusterShardsCmd{err: errors.New("nodes not found")}
+			}
+			arr, err := nodes.ToArray()
+			if err != nil {
+				return &ClusterShardsCmd{err: err}
+			}
+			shard.Nodes = make([]Node, len(arr))
+			for i := 0; i < len(arr); i++ {
+				nodeMap, err := arr[i].ToMap()
+				if err != nil {
+					return &ClusterShardsCmd{err: err}
+				}
+				for k, v := range nodeMap {
+					switch k {
+					case "id":
+						shard.Nodes[i].ID, _ = v.ToString()
+					case "endpoint":
+						shard.Nodes[i].Endpoint, _ = v.ToString()
+					case "ip":
+						shard.Nodes[i].IP, _ = v.ToString()
+					case "hostname":
+						shard.Nodes[i].Hostname, _ = v.ToString()
+					case "port":
+						shard.Nodes[i].Port, _ = v.ToInt64()
+					case "tls-port":
+						shard.Nodes[i].TLSPort, _ = v.ToInt64()
+					case "role":
+						shard.Nodes[i].Role, _ = v.ToString()
+					case "replication-offset":
+						shard.Nodes[i].ReplicationOffset, _ = v.ToInt64()
+					case "health":
+						shard.Nodes[i].Health, _ = v.ToString()
+					}
+				}
+			}
+		}
+		val = append(val, shard)
+	}
+	return &ClusterShardsCmd{val: val, err: err}
+}
+
+type SlotRange struct {
+	Start int64
+	End   int64
+}
+type Node struct {
+	ID                string
+	Endpoint          string
+	IP                string
+	Hostname          string
+	Port              int64
+	TLSPort           int64
+	Role              string
+	ReplicationOffset int64
+	Health            string
+}
+type ClusterShard struct {
+	Slots []SlotRange
+	Nodes []Node
+}
+
+type ClusterShardsCmd struct {
+	err error
+	val []ClusterShard
+}
+
+func (cmd *ClusterShardsCmd) SetVal(val []ClusterShard) {
+	cmd.val = val
+}
+
+func (cmd *ClusterShardsCmd) SetErr(err error) {
+	cmd.err = err
+}
+
+func (cmd *ClusterShardsCmd) Val() []ClusterShard {
+	return cmd.val
+}
+
+func (cmd *ClusterShardsCmd) Err() error {
+	return cmd.err
+}
+
+func (cmd *ClusterShardsCmd) Result() ([]ClusterShard, error) {
 	return cmd.val, cmd.err
 }
 

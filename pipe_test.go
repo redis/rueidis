@@ -155,6 +155,9 @@ func setup(t *testing.T, option ClientOption) (*pipe, *redisMock, func(), func()
 	if info := p.Info(); info["version"].string != "6.0.0" {
 		t.Fatalf("pipe setup failed, unexpected hello response: %v", p.Info())
 	}
+	if version := p.Version(); version != 6 {
+		t.Fatalf("pipe setup failed, unexpected version: %v", p.Version())
+	}
 	return p, mock, func() {
 			go func() { mock.Expect("QUIT").ReplyString("OK") }()
 			p.Close()

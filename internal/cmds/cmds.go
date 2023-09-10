@@ -60,6 +60,10 @@ var (
 	SlotCmd = Completed{
 		cs: newCommandSlice([]string{"CLUSTER", "SLOTS"}),
 	}
+	// ShardsCmd is predefined CLUSTER SHARDS
+	ShardsCmd = Completed{
+		cs: newCommandSlice([]string{"CLUSTER", "SHARDS"}),
+	}
 	// AskingCmd is predefined CLUSTER ASKING
 	AskingCmd = Completed{
 		cs: newCommandSlice([]string{"ASKING"}),

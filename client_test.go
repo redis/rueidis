@@ -18,6 +18,7 @@ type mockConn struct {
 	DoMultiCacheFn func(multi ...CacheableTTL) *redisresults
 	ReceiveFn      func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error
 	InfoFn         func() map[string]RedisMessage
+	VersionFn      func() int
 	ErrorFn        func() error
 	CloseFn        func()
 	DialFn         func() error
@@ -136,6 +137,13 @@ func (m *mockConn) Info() map[string]RedisMessage {
 		return m.InfoFn()
 	}
 	return nil
+}
+
+func (m *mockConn) Version() int {
+	if m.VersionFn != nil {
+		return m.VersionFn()
+	}
+	return 0
 }
 
 func (m *mockConn) Error() error {
