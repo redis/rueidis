@@ -329,24 +329,24 @@ func (c GeoradiusCountAny) Desc() GeoradiusOrderDesc {
 	return (GeoradiusOrderDesc)(c)
 }
 
-func (c GeoradiusCountAny) Store(key string) GeoradiusStore {
+func (c GeoradiusCountAny) Store(key string) GeoradiusStoreKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STORE", key)
-	return (GeoradiusStore)(c)
+	return (GeoradiusStoreKey)(c)
 }
 
-func (c GeoradiusCountAny) Storedist(key string) GeoradiusStoredist {
+func (c GeoradiusCountAny) Storedist(key string) GeoradiusStoredistKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusStoredist)(c)
+	return (GeoradiusStoredistKey)(c)
 }
 
 func (c GeoradiusCountAny) Build() Completed {
@@ -371,24 +371,24 @@ func (c GeoradiusCountCount) Desc() GeoradiusOrderDesc {
 	return (GeoradiusOrderDesc)(c)
 }
 
-func (c GeoradiusCountCount) Store(key string) GeoradiusStore {
+func (c GeoradiusCountCount) Store(key string) GeoradiusStoreKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STORE", key)
-	return (GeoradiusStore)(c)
+	return (GeoradiusStoreKey)(c)
 }
 
-func (c GeoradiusCountCount) Storedist(key string) GeoradiusStoredist {
+func (c GeoradiusCountCount) Storedist(key string) GeoradiusStoredistKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusStoredist)(c)
+	return (GeoradiusStoredistKey)(c)
 }
 
 func (c GeoradiusCountCount) Build() Completed {
@@ -419,24 +419,24 @@ func (c GeoradiusLongitude) Latitude(latitude float64) GeoradiusLatitude {
 
 type GeoradiusOrderAsc Completed
 
-func (c GeoradiusOrderAsc) Store(key string) GeoradiusStore {
+func (c GeoradiusOrderAsc) Store(key string) GeoradiusStoreKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STORE", key)
-	return (GeoradiusStore)(c)
+	return (GeoradiusStoreKey)(c)
 }
 
-func (c GeoradiusOrderAsc) Storedist(key string) GeoradiusStoredist {
+func (c GeoradiusOrderAsc) Storedist(key string) GeoradiusStoredistKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusStoredist)(c)
+	return (GeoradiusStoredistKey)(c)
 }
 
 func (c GeoradiusOrderAsc) Build() Completed {
@@ -446,24 +446,24 @@ func (c GeoradiusOrderAsc) Build() Completed {
 
 type GeoradiusOrderDesc Completed
 
-func (c GeoradiusOrderDesc) Store(key string) GeoradiusStore {
+func (c GeoradiusOrderDesc) Store(key string) GeoradiusStoreKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STORE", key)
-	return (GeoradiusStore)(c)
+	return (GeoradiusStoreKey)(c)
 }
 
-func (c GeoradiusOrderDesc) Storedist(key string) GeoradiusStoredist {
+func (c GeoradiusOrderDesc) Storedist(key string) GeoradiusStoredistKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusStoredist)(c)
+	return (GeoradiusStoredistKey)(c)
 }
 
 func (c GeoradiusOrderDesc) Build() Completed {
@@ -891,26 +891,16 @@ func (c GeoradiusRoWithhash) Cache() Cacheable {
 	return Cacheable(c)
 }
 
-type GeoradiusStore Completed
+type GeoradiusStoreKey Completed
 
-func (c GeoradiusStore) Storedist(key string) GeoradiusStoredist {
-	if c.ks&NoSlot == NoSlot {
-		c.ks = NoSlot | slot(key)
-	} else {
-		c.ks = check(c.ks, slot(key))
-	}
-	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusStoredist)(c)
-}
-
-func (c GeoradiusStore) Build() Completed {
+func (c GeoradiusStoreKey) Build() Completed {
 	c.cs.Build()
 	return Completed(c)
 }
 
-type GeoradiusStoredist Completed
+type GeoradiusStoredistKey Completed
 
-func (c GeoradiusStoredist) Build() Completed {
+func (c GeoradiusStoredistKey) Build() Completed {
 	c.cs.Build()
 	return Completed(c)
 }
@@ -947,24 +937,24 @@ func (c GeoradiusUnitFt) Desc() GeoradiusOrderDesc {
 	return (GeoradiusOrderDesc)(c)
 }
 
-func (c GeoradiusUnitFt) Store(key string) GeoradiusStore {
+func (c GeoradiusUnitFt) Store(key string) GeoradiusStoreKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STORE", key)
-	return (GeoradiusStore)(c)
+	return (GeoradiusStoreKey)(c)
 }
 
-func (c GeoradiusUnitFt) Storedist(key string) GeoradiusStoredist {
+func (c GeoradiusUnitFt) Storedist(key string) GeoradiusStoredistKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusStoredist)(c)
+	return (GeoradiusStoredistKey)(c)
 }
 
 func (c GeoradiusUnitFt) Build() Completed {
@@ -1004,24 +994,24 @@ func (c GeoradiusUnitKm) Desc() GeoradiusOrderDesc {
 	return (GeoradiusOrderDesc)(c)
 }
 
-func (c GeoradiusUnitKm) Store(key string) GeoradiusStore {
+func (c GeoradiusUnitKm) Store(key string) GeoradiusStoreKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STORE", key)
-	return (GeoradiusStore)(c)
+	return (GeoradiusStoreKey)(c)
 }
 
-func (c GeoradiusUnitKm) Storedist(key string) GeoradiusStoredist {
+func (c GeoradiusUnitKm) Storedist(key string) GeoradiusStoredistKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusStoredist)(c)
+	return (GeoradiusStoredistKey)(c)
 }
 
 func (c GeoradiusUnitKm) Build() Completed {
@@ -1061,24 +1051,24 @@ func (c GeoradiusUnitM) Desc() GeoradiusOrderDesc {
 	return (GeoradiusOrderDesc)(c)
 }
 
-func (c GeoradiusUnitM) Store(key string) GeoradiusStore {
+func (c GeoradiusUnitM) Store(key string) GeoradiusStoreKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STORE", key)
-	return (GeoradiusStore)(c)
+	return (GeoradiusStoreKey)(c)
 }
 
-func (c GeoradiusUnitM) Storedist(key string) GeoradiusStoredist {
+func (c GeoradiusUnitM) Storedist(key string) GeoradiusStoredistKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusStoredist)(c)
+	return (GeoradiusStoredistKey)(c)
 }
 
 func (c GeoradiusUnitM) Build() Completed {
@@ -1118,24 +1108,24 @@ func (c GeoradiusUnitMi) Desc() GeoradiusOrderDesc {
 	return (GeoradiusOrderDesc)(c)
 }
 
-func (c GeoradiusUnitMi) Store(key string) GeoradiusStore {
+func (c GeoradiusUnitMi) Store(key string) GeoradiusStoreKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STORE", key)
-	return (GeoradiusStore)(c)
+	return (GeoradiusStoreKey)(c)
 }
 
-func (c GeoradiusUnitMi) Storedist(key string) GeoradiusStoredist {
+func (c GeoradiusUnitMi) Storedist(key string) GeoradiusStoredistKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusStoredist)(c)
+	return (GeoradiusStoredistKey)(c)
 }
 
 func (c GeoradiusUnitMi) Build() Completed {
@@ -1170,24 +1160,24 @@ func (c GeoradiusWithcoord) Desc() GeoradiusOrderDesc {
 	return (GeoradiusOrderDesc)(c)
 }
 
-func (c GeoradiusWithcoord) Store(key string) GeoradiusStore {
+func (c GeoradiusWithcoord) Store(key string) GeoradiusStoreKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STORE", key)
-	return (GeoradiusStore)(c)
+	return (GeoradiusStoreKey)(c)
 }
 
-func (c GeoradiusWithcoord) Storedist(key string) GeoradiusStoredist {
+func (c GeoradiusWithcoord) Storedist(key string) GeoradiusStoredistKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusStoredist)(c)
+	return (GeoradiusStoredistKey)(c)
 }
 
 func (c GeoradiusWithcoord) Build() Completed {
@@ -1217,24 +1207,24 @@ func (c GeoradiusWithdist) Desc() GeoradiusOrderDesc {
 	return (GeoradiusOrderDesc)(c)
 }
 
-func (c GeoradiusWithdist) Store(key string) GeoradiusStore {
+func (c GeoradiusWithdist) Store(key string) GeoradiusStoreKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STORE", key)
-	return (GeoradiusStore)(c)
+	return (GeoradiusStoreKey)(c)
 }
 
-func (c GeoradiusWithdist) Storedist(key string) GeoradiusStoredist {
+func (c GeoradiusWithdist) Storedist(key string) GeoradiusStoredistKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusStoredist)(c)
+	return (GeoradiusStoredistKey)(c)
 }
 
 func (c GeoradiusWithdist) Build() Completed {
@@ -1259,24 +1249,24 @@ func (c GeoradiusWithhash) Desc() GeoradiusOrderDesc {
 	return (GeoradiusOrderDesc)(c)
 }
 
-func (c GeoradiusWithhash) Store(key string) GeoradiusStore {
+func (c GeoradiusWithhash) Store(key string) GeoradiusStoreKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STORE", key)
-	return (GeoradiusStore)(c)
+	return (GeoradiusStoreKey)(c)
 }
 
-func (c GeoradiusWithhash) Storedist(key string) GeoradiusStoredist {
+func (c GeoradiusWithhash) Storedist(key string) GeoradiusStoredistKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusStoredist)(c)
+	return (GeoradiusStoredistKey)(c)
 }
 
 func (c GeoradiusWithhash) Build() Completed {
@@ -1314,24 +1304,24 @@ func (c GeoradiusbymemberCountAny) Desc() GeoradiusbymemberOrderDesc {
 	return (GeoradiusbymemberOrderDesc)(c)
 }
 
-func (c GeoradiusbymemberCountAny) Store(key string) GeoradiusbymemberStore {
+func (c GeoradiusbymemberCountAny) Store(key string) GeoradiusbymemberStoreStoreKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STORE", key)
-	return (GeoradiusbymemberStore)(c)
+	return (GeoradiusbymemberStoreStoreKey)(c)
 }
 
-func (c GeoradiusbymemberCountAny) Storedist(key string) GeoradiusbymemberStoredist {
+func (c GeoradiusbymemberCountAny) Storedist(key string) GeoradiusbymemberStoreStoredistKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusbymemberStoredist)(c)
+	return (GeoradiusbymemberStoreStoredistKey)(c)
 }
 
 func (c GeoradiusbymemberCountAny) Build() Completed {
@@ -1356,24 +1346,24 @@ func (c GeoradiusbymemberCountCount) Desc() GeoradiusbymemberOrderDesc {
 	return (GeoradiusbymemberOrderDesc)(c)
 }
 
-func (c GeoradiusbymemberCountCount) Store(key string) GeoradiusbymemberStore {
+func (c GeoradiusbymemberCountCount) Store(key string) GeoradiusbymemberStoreStoreKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STORE", key)
-	return (GeoradiusbymemberStore)(c)
+	return (GeoradiusbymemberStoreStoreKey)(c)
 }
 
-func (c GeoradiusbymemberCountCount) Storedist(key string) GeoradiusbymemberStoredist {
+func (c GeoradiusbymemberCountCount) Storedist(key string) GeoradiusbymemberStoreStoredistKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusbymemberStoredist)(c)
+	return (GeoradiusbymemberStoreStoredistKey)(c)
 }
 
 func (c GeoradiusbymemberCountCount) Build() Completed {
@@ -1397,24 +1387,24 @@ func (c GeoradiusbymemberMember) Radius(radius float64) GeoradiusbymemberRadius 
 
 type GeoradiusbymemberOrderAsc Completed
 
-func (c GeoradiusbymemberOrderAsc) Store(key string) GeoradiusbymemberStore {
+func (c GeoradiusbymemberOrderAsc) Store(key string) GeoradiusbymemberStoreStoreKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STORE", key)
-	return (GeoradiusbymemberStore)(c)
+	return (GeoradiusbymemberStoreStoreKey)(c)
 }
 
-func (c GeoradiusbymemberOrderAsc) Storedist(key string) GeoradiusbymemberStoredist {
+func (c GeoradiusbymemberOrderAsc) Storedist(key string) GeoradiusbymemberStoreStoredistKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusbymemberStoredist)(c)
+	return (GeoradiusbymemberStoreStoredistKey)(c)
 }
 
 func (c GeoradiusbymemberOrderAsc) Build() Completed {
@@ -1424,24 +1414,24 @@ func (c GeoradiusbymemberOrderAsc) Build() Completed {
 
 type GeoradiusbymemberOrderDesc Completed
 
-func (c GeoradiusbymemberOrderDesc) Store(key string) GeoradiusbymemberStore {
+func (c GeoradiusbymemberOrderDesc) Store(key string) GeoradiusbymemberStoreStoreKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STORE", key)
-	return (GeoradiusbymemberStore)(c)
+	return (GeoradiusbymemberStoreStoreKey)(c)
 }
 
-func (c GeoradiusbymemberOrderDesc) Storedist(key string) GeoradiusbymemberStoredist {
+func (c GeoradiusbymemberOrderDesc) Storedist(key string) GeoradiusbymemberStoreStoredistKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusbymemberStoredist)(c)
+	return (GeoradiusbymemberStoreStoredistKey)(c)
 }
 
 func (c GeoradiusbymemberOrderDesc) Build() Completed {
@@ -1862,26 +1852,16 @@ func (c GeoradiusbymemberRoWithhash) Cache() Cacheable {
 	return Cacheable(c)
 }
 
-type GeoradiusbymemberStore Completed
+type GeoradiusbymemberStoreStoreKey Completed
 
-func (c GeoradiusbymemberStore) Storedist(key string) GeoradiusbymemberStoredist {
-	if c.ks&NoSlot == NoSlot {
-		c.ks = NoSlot | slot(key)
-	} else {
-		c.ks = check(c.ks, slot(key))
-	}
-	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusbymemberStoredist)(c)
-}
-
-func (c GeoradiusbymemberStore) Build() Completed {
+func (c GeoradiusbymemberStoreStoreKey) Build() Completed {
 	c.cs.Build()
 	return Completed(c)
 }
 
-type GeoradiusbymemberStoredist Completed
+type GeoradiusbymemberStoreStoredistKey Completed
 
-func (c GeoradiusbymemberStoredist) Build() Completed {
+func (c GeoradiusbymemberStoreStoredistKey) Build() Completed {
 	c.cs.Build()
 	return Completed(c)
 }
@@ -1918,24 +1898,24 @@ func (c GeoradiusbymemberUnitFt) Desc() GeoradiusbymemberOrderDesc {
 	return (GeoradiusbymemberOrderDesc)(c)
 }
 
-func (c GeoradiusbymemberUnitFt) Store(key string) GeoradiusbymemberStore {
+func (c GeoradiusbymemberUnitFt) Store(key string) GeoradiusbymemberStoreStoreKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STORE", key)
-	return (GeoradiusbymemberStore)(c)
+	return (GeoradiusbymemberStoreStoreKey)(c)
 }
 
-func (c GeoradiusbymemberUnitFt) Storedist(key string) GeoradiusbymemberStoredist {
+func (c GeoradiusbymemberUnitFt) Storedist(key string) GeoradiusbymemberStoreStoredistKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusbymemberStoredist)(c)
+	return (GeoradiusbymemberStoreStoredistKey)(c)
 }
 
 func (c GeoradiusbymemberUnitFt) Build() Completed {
@@ -1975,24 +1955,24 @@ func (c GeoradiusbymemberUnitKm) Desc() GeoradiusbymemberOrderDesc {
 	return (GeoradiusbymemberOrderDesc)(c)
 }
 
-func (c GeoradiusbymemberUnitKm) Store(key string) GeoradiusbymemberStore {
+func (c GeoradiusbymemberUnitKm) Store(key string) GeoradiusbymemberStoreStoreKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STORE", key)
-	return (GeoradiusbymemberStore)(c)
+	return (GeoradiusbymemberStoreStoreKey)(c)
 }
 
-func (c GeoradiusbymemberUnitKm) Storedist(key string) GeoradiusbymemberStoredist {
+func (c GeoradiusbymemberUnitKm) Storedist(key string) GeoradiusbymemberStoreStoredistKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusbymemberStoredist)(c)
+	return (GeoradiusbymemberStoreStoredistKey)(c)
 }
 
 func (c GeoradiusbymemberUnitKm) Build() Completed {
@@ -2032,24 +2012,24 @@ func (c GeoradiusbymemberUnitM) Desc() GeoradiusbymemberOrderDesc {
 	return (GeoradiusbymemberOrderDesc)(c)
 }
 
-func (c GeoradiusbymemberUnitM) Store(key string) GeoradiusbymemberStore {
+func (c GeoradiusbymemberUnitM) Store(key string) GeoradiusbymemberStoreStoreKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STORE", key)
-	return (GeoradiusbymemberStore)(c)
+	return (GeoradiusbymemberStoreStoreKey)(c)
 }
 
-func (c GeoradiusbymemberUnitM) Storedist(key string) GeoradiusbymemberStoredist {
+func (c GeoradiusbymemberUnitM) Storedist(key string) GeoradiusbymemberStoreStoredistKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusbymemberStoredist)(c)
+	return (GeoradiusbymemberStoreStoredistKey)(c)
 }
 
 func (c GeoradiusbymemberUnitM) Build() Completed {
@@ -2089,24 +2069,24 @@ func (c GeoradiusbymemberUnitMi) Desc() GeoradiusbymemberOrderDesc {
 	return (GeoradiusbymemberOrderDesc)(c)
 }
 
-func (c GeoradiusbymemberUnitMi) Store(key string) GeoradiusbymemberStore {
+func (c GeoradiusbymemberUnitMi) Store(key string) GeoradiusbymemberStoreStoreKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STORE", key)
-	return (GeoradiusbymemberStore)(c)
+	return (GeoradiusbymemberStoreStoreKey)(c)
 }
 
-func (c GeoradiusbymemberUnitMi) Storedist(key string) GeoradiusbymemberStoredist {
+func (c GeoradiusbymemberUnitMi) Storedist(key string) GeoradiusbymemberStoreStoredistKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusbymemberStoredist)(c)
+	return (GeoradiusbymemberStoreStoredistKey)(c)
 }
 
 func (c GeoradiusbymemberUnitMi) Build() Completed {
@@ -2141,24 +2121,24 @@ func (c GeoradiusbymemberWithcoord) Desc() GeoradiusbymemberOrderDesc {
 	return (GeoradiusbymemberOrderDesc)(c)
 }
 
-func (c GeoradiusbymemberWithcoord) Store(key string) GeoradiusbymemberStore {
+func (c GeoradiusbymemberWithcoord) Store(key string) GeoradiusbymemberStoreStoreKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STORE", key)
-	return (GeoradiusbymemberStore)(c)
+	return (GeoradiusbymemberStoreStoreKey)(c)
 }
 
-func (c GeoradiusbymemberWithcoord) Storedist(key string) GeoradiusbymemberStoredist {
+func (c GeoradiusbymemberWithcoord) Storedist(key string) GeoradiusbymemberStoreStoredistKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusbymemberStoredist)(c)
+	return (GeoradiusbymemberStoreStoredistKey)(c)
 }
 
 func (c GeoradiusbymemberWithcoord) Build() Completed {
@@ -2188,24 +2168,24 @@ func (c GeoradiusbymemberWithdist) Desc() GeoradiusbymemberOrderDesc {
 	return (GeoradiusbymemberOrderDesc)(c)
 }
 
-func (c GeoradiusbymemberWithdist) Store(key string) GeoradiusbymemberStore {
+func (c GeoradiusbymemberWithdist) Store(key string) GeoradiusbymemberStoreStoreKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STORE", key)
-	return (GeoradiusbymemberStore)(c)
+	return (GeoradiusbymemberStoreStoreKey)(c)
 }
 
-func (c GeoradiusbymemberWithdist) Storedist(key string) GeoradiusbymemberStoredist {
+func (c GeoradiusbymemberWithdist) Storedist(key string) GeoradiusbymemberStoreStoredistKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusbymemberStoredist)(c)
+	return (GeoradiusbymemberStoreStoredistKey)(c)
 }
 
 func (c GeoradiusbymemberWithdist) Build() Completed {
@@ -2230,24 +2210,24 @@ func (c GeoradiusbymemberWithhash) Desc() GeoradiusbymemberOrderDesc {
 	return (GeoradiusbymemberOrderDesc)(c)
 }
 
-func (c GeoradiusbymemberWithhash) Store(key string) GeoradiusbymemberStore {
+func (c GeoradiusbymemberWithhash) Store(key string) GeoradiusbymemberStoreStoreKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STORE", key)
-	return (GeoradiusbymemberStore)(c)
+	return (GeoradiusbymemberStoreStoreKey)(c)
 }
 
-func (c GeoradiusbymemberWithhash) Storedist(key string) GeoradiusbymemberStoredist {
+func (c GeoradiusbymemberWithhash) Storedist(key string) GeoradiusbymemberStoreStoredistKey {
 	if c.ks&NoSlot == NoSlot {
 		c.ks = NoSlot | slot(key)
 	} else {
 		c.ks = check(c.ks, slot(key))
 	}
 	c.cs.s = append(c.cs.s, "STOREDIST", key)
-	return (GeoradiusbymemberStoredist)(c)
+	return (GeoradiusbymemberStoreStoredistKey)(c)
 }
 
 func (c GeoradiusbymemberWithhash) Build() Completed {

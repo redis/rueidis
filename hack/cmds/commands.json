@@ -2115,15 +2115,11 @@
         "optional": true
       },
       {
-        "command": "STORE",
-        "name": "key",
-        "type": "key",
-        "optional": true
-      },
-      {
-        "command": "STOREDIST",
-        "name": "key",
-        "type": "key",
+        "type": "enum",
+        "enum": [
+          "STORE key",
+          "STOREDIST key"
+        ],
         "optional": true
       }
     ],
@@ -2210,15 +2206,12 @@
         "optional": true
       },
       {
-        "command": "STORE",
-        "name": "key",
-        "type": "key",
-        "optional": true
-      },
-      {
-        "command": "STOREDIST",
-        "name": "key",
-        "type": "key",
+        "name": "store",
+        "type": "enum",
+        "enum": [
+          "STORE key",
+          "STOREDIST key"
+        ],
         "optional": true
       }
     ],

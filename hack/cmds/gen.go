@@ -144,6 +144,10 @@ func (n *node) GoStructs() (out []goStruct) {
 				}
 			} else {
 				switch cmds[1] {
+				case "key":
+					s.BuildDef.Command = append(s.BuildDef.Command, cmds[:1]...)
+					s.BuildDef.Parameters = []parameter{{Name: lcFirst(name(cmds[1])), Type: "key"}}
+					s.BuildDef.MethodName = strings.TrimSuffix(s.BuildDef.MethodName, "Key")
 				case "name", "category", "pattern":
 					s.BuildDef.Command = append(s.BuildDef.Command, cmds[:1]...)
 					s.BuildDef.Parameters = []parameter{{Name: lcFirst(name(cmds[1])), Type: "string"}}
