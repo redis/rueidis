@@ -2125,7 +2125,7 @@ func newClusterShardsCmd(res rueidis.RedisResult) *ClusterShardsCmd {
 		{
 			slots := dict["slots"]
 			arr, _ := slots.ToArray()
-			for i := 0; i < len(arr); i += 2 {
+			for i := 0; i+1 < len(arr); i += 2 {
 				start, _ := arr[i].AsInt64()
 				end, _ := arr[i+1].AsInt64()
 				shard.Slots = append(shard.Slots, SlotRange{Start: start, End: end})

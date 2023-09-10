@@ -335,7 +335,10 @@ func parseShards(shards RedisMessage, defaultAddr string, tls bool) map[string]g
 	groups := make(map[string]group, len(shards.values))
 	for _, v := range shards.values {
 		slotsAndNodes, _ := v.ToMap()
-		var master string
+		var (
+			master    string
+			masterPos int
+		)
 		nodes := slotsAndNodes["nodes"].values
 		for i := 0; i < len(nodes); i++ {
 			dict, _ := nodes[i].ToMap()
@@ -343,6 +346,7 @@ func parseShards(shards RedisMessage, defaultAddr string, tls bool) map[string]g
 				continue
 			}
 			master = parseNodeEndpoint(dict)
+			masterPos = i
 			break
 		}
 
@@ -353,8 +357,12 @@ func parseShards(shards RedisMessage, defaultAddr string, tls bool) map[string]g
 		g, ok := groups[master]
 		if !ok {
 			g.slots = make([][2]int64, 0)
-			g.nodes = make([]string, 0, len(nodes)-1)
+			g.nodes = make([]string, 0, len(nodes))
+			g.nodes = append(g.nodes, master)
 			for i := 0; i < len(nodes); i++ {
+				if i == masterPos {
+					continue
+				}
 				dict, _ := nodes[i].ToMap()
 				dst := parseNodeEndpoint(dict)
 				if dst == "" {
@@ -365,7 +373,7 @@ func parseShards(shards RedisMessage, defaultAddr string, tls bool) map[string]g
 		}
 		slots := slotsAndNodes["slots"]
 		arr, _ := slots.ToArray()
-		for i := 0; i < len(arr); i += 2 {
+		for i := 0; i+1 < len(arr); i += 2 {
 			start, _ := arr[i].AsInt64()
 			end, _ := arr[i+1].AsInt64()
 			g.slots = append(g.slots, [2]int64{start, end})

@@ -2306,4 +2306,16 @@ func TestClusterShardsParsing(t *testing.T) {
 			}
 		}
 	})
+
+	t.Run("master position", func(t *testing.T) {
+		result := parseShards(shardsRespTls.val, "127.0.0.1:5", true)
+		if len(result) != 1 {
+			t.Fatalf("unexpected result %v", result)
+		}
+		for master, group := range result {
+			if len(group.nodes) == 0 || group.nodes[0] != master {
+				t.Fatalf("unexpected first node %v", group)
+			}
+		}
+	})
 }
