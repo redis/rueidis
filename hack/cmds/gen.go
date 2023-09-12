@@ -568,7 +568,7 @@ func generate(f io.Writer, structs map[string]goStruct) {
 	for _, name := range names {
 		s := structs[name]
 
-		fmt.Fprintf(f, "type %s Completed\n\n", s.FullName)
+		fmt.Fprintf(f, "type %s Incomplete\n\n", s.FullName)
 
 		if s.Node.Root {
 			printRootBuilder(f, s)
@@ -666,7 +666,7 @@ func printRootBuilder(w io.Writer, root goStruct) {
 	}
 
 	if tag := rootCf(root); tag != "" {
-		fmt.Fprintf(w, "\tc = %s{cs: get(), ks: b.ks, cf: %s}\n", root.FullName, tag)
+		fmt.Fprintf(w, "\tc = %s{cs: get(), ks: b.ks, cf: int16(%s)}\n", root.FullName, tag)
 	} else {
 		fmt.Fprintf(w, "\tc = %s{cs: get(), ks: b.ks}\n", root.FullName)
 	}
@@ -714,7 +714,7 @@ func rootCf(root goStruct) (tag string) {
 func printFinalBuilder(w io.Writer, parent goStruct, method, ss string) {
 	fmt.Fprintf(w, "func (c %s) %s() %s {\n", parent.FullName, method, ss)
 	fmt.Fprintf(w, "\tc.cs.Build()\n")
-	fmt.Fprintf(w, "\treturn %s(c)\n", ss)
+	fmt.Fprintf(w, "\treturn %s{cs: c.cs, cf: uint16(c.cf), ks: c.ks}\n", ss)
 	fmt.Fprintf(w, "}\n\n")
 }
 
@@ -766,7 +766,7 @@ func printBuilder(w io.Writer, parent, next goStruct) {
 
 	for _, cmd := range next.BuildDef.Command {
 		if cmd == "BLOCK" {
-			fmt.Fprintf(w, "\tc.cf = blockTag\n")
+			fmt.Fprintf(w, "\tc.cf = int16(blockTag)\n")
 			break
 		}
 	}

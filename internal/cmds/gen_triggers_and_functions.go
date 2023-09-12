@@ -4,7 +4,7 @@ package cmds
 
 import "strconv"
 
-type Tfcall Completed
+type Tfcall Incomplete
 
 func (b Builder) Tfcall() (c Tfcall) {
 	c = Tfcall{cs: get(), ks: b.ks}
@@ -17,7 +17,7 @@ func (c Tfcall) LibraryFunction(libraryFunction string) TfcallLibraryFunction {
 	return (TfcallLibraryFunction)(c)
 }
 
-type TfcallArg Completed
+type TfcallArg Incomplete
 
 func (c TfcallArg) Arg(arg ...string) TfcallArg {
 	c.cs.s = append(c.cs.s, arg...)
@@ -26,10 +26,10 @@ func (c TfcallArg) Arg(arg ...string) TfcallArg {
 
 func (c TfcallArg) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type TfcallKey Completed
+type TfcallKey Incomplete
 
 func (c TfcallKey) Key(key ...string) TfcallKey {
 	if c.ks&NoSlot == NoSlot {
@@ -53,17 +53,17 @@ func (c TfcallKey) Arg(arg ...string) TfcallArg {
 
 func (c TfcallKey) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type TfcallLibraryFunction Completed
+type TfcallLibraryFunction Incomplete
 
 func (c TfcallLibraryFunction) Numkeys(numkeys int64) TfcallNumkeys {
 	c.cs.s = append(c.cs.s, strconv.FormatInt(numkeys, 10))
 	return (TfcallNumkeys)(c)
 }
 
-type TfcallNumkeys Completed
+type TfcallNumkeys Incomplete
 
 func (c TfcallNumkeys) Key(key ...string) TfcallKey {
 	if c.ks&NoSlot == NoSlot {
@@ -87,10 +87,10 @@ func (c TfcallNumkeys) Arg(arg ...string) TfcallArg {
 
 func (c TfcallNumkeys) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type Tfcallasync Completed
+type Tfcallasync Incomplete
 
 func (b Builder) Tfcallasync() (c Tfcallasync) {
 	c = Tfcallasync{cs: get(), ks: b.ks}
@@ -103,7 +103,7 @@ func (c Tfcallasync) LibraryFunction(libraryFunction string) TfcallasyncLibraryF
 	return (TfcallasyncLibraryFunction)(c)
 }
 
-type TfcallasyncArg Completed
+type TfcallasyncArg Incomplete
 
 func (c TfcallasyncArg) Arg(arg ...string) TfcallasyncArg {
 	c.cs.s = append(c.cs.s, arg...)
@@ -112,10 +112,10 @@ func (c TfcallasyncArg) Arg(arg ...string) TfcallasyncArg {
 
 func (c TfcallasyncArg) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type TfcallasyncKey Completed
+type TfcallasyncKey Incomplete
 
 func (c TfcallasyncKey) Key(key ...string) TfcallasyncKey {
 	if c.ks&NoSlot == NoSlot {
@@ -139,17 +139,17 @@ func (c TfcallasyncKey) Arg(arg ...string) TfcallasyncArg {
 
 func (c TfcallasyncKey) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type TfcallasyncLibraryFunction Completed
+type TfcallasyncLibraryFunction Incomplete
 
 func (c TfcallasyncLibraryFunction) Numkeys(numkeys int64) TfcallasyncNumkeys {
 	c.cs.s = append(c.cs.s, strconv.FormatInt(numkeys, 10))
 	return (TfcallasyncNumkeys)(c)
 }
 
-type TfcallasyncNumkeys Completed
+type TfcallasyncNumkeys Incomplete
 
 func (c TfcallasyncNumkeys) Key(key ...string) TfcallasyncKey {
 	if c.ks&NoSlot == NoSlot {
@@ -173,10 +173,10 @@ func (c TfcallasyncNumkeys) Arg(arg ...string) TfcallasyncArg {
 
 func (c TfcallasyncNumkeys) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type TfunctionDelete Completed
+type TfunctionDelete Incomplete
 
 func (b Builder) TfunctionDelete() (c TfunctionDelete) {
 	c = TfunctionDelete{cs: get(), ks: b.ks}
@@ -189,14 +189,14 @@ func (c TfunctionDelete) LibraryName(libraryName string) TfunctionDeleteLibraryN
 	return (TfunctionDeleteLibraryName)(c)
 }
 
-type TfunctionDeleteLibraryName Completed
+type TfunctionDeleteLibraryName Incomplete
 
 func (c TfunctionDeleteLibraryName) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type TfunctionList Completed
+type TfunctionList Incomplete
 
 func (b Builder) TfunctionList() (c TfunctionList) {
 	c = TfunctionList{cs: get(), ks: b.ks}
@@ -226,10 +226,10 @@ func (c TfunctionList) V() TfunctionListV {
 
 func (c TfunctionList) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type TfunctionListLibraryName Completed
+type TfunctionListLibraryName Incomplete
 
 func (c TfunctionListLibraryName) Withcode() TfunctionListWithcode {
 	c.cs.s = append(c.cs.s, "WITHCODE")
@@ -248,17 +248,17 @@ func (c TfunctionListLibraryName) V() TfunctionListV {
 
 func (c TfunctionListLibraryName) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type TfunctionListV Completed
+type TfunctionListV Incomplete
 
 func (c TfunctionListV) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type TfunctionListVerbose Completed
+type TfunctionListVerbose Incomplete
 
 func (c TfunctionListVerbose) V() TfunctionListV {
 	c.cs.s = append(c.cs.s, "V")
@@ -267,10 +267,10 @@ func (c TfunctionListVerbose) V() TfunctionListV {
 
 func (c TfunctionListVerbose) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type TfunctionListWithcode Completed
+type TfunctionListWithcode Incomplete
 
 func (c TfunctionListWithcode) Verbose() TfunctionListVerbose {
 	c.cs.s = append(c.cs.s, "VERBOSE")
@@ -284,10 +284,10 @@ func (c TfunctionListWithcode) V() TfunctionListV {
 
 func (c TfunctionListWithcode) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type TfunctionLoad Completed
+type TfunctionLoad Incomplete
 
 func (b Builder) TfunctionLoad() (c TfunctionLoad) {
 	c = TfunctionLoad{cs: get(), ks: b.ks}
@@ -310,21 +310,21 @@ func (c TfunctionLoad) LibraryCode(libraryCode string) TfunctionLoadLibraryCode 
 	return (TfunctionLoadLibraryCode)(c)
 }
 
-type TfunctionLoadConfig Completed
+type TfunctionLoadConfig Incomplete
 
 func (c TfunctionLoadConfig) LibraryCode(libraryCode string) TfunctionLoadLibraryCode {
 	c.cs.s = append(c.cs.s, libraryCode)
 	return (TfunctionLoadLibraryCode)(c)
 }
 
-type TfunctionLoadLibraryCode Completed
+type TfunctionLoadLibraryCode Incomplete
 
 func (c TfunctionLoadLibraryCode) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type TfunctionLoadReplace Completed
+type TfunctionLoadReplace Incomplete
 
 func (c TfunctionLoadReplace) Config(config string) TfunctionLoadConfig {
 	c.cs.s = append(c.cs.s, config)
