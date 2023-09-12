@@ -85,6 +85,13 @@ func ToBlock(c *Completed) {
 	c.cf |= blockTag
 }
 
+// Incomplete represents an incomplete Redis command. It should then be completed by calling the Build().
+type Incomplete struct {
+	cs *CommandSlice
+	cf int16 // use int16 instead of uint16 to make a difference with Completed
+	ks uint16
+}
+
 // Completed represents a completed Redis command, should be created by the Build() of command builder.
 type Completed struct {
 	cs *CommandSlice

@@ -4,7 +4,7 @@ package cmds
 
 import "strconv"
 
-type Geoadd Completed
+type Geoadd Incomplete
 
 func (b Builder) Geoadd() (c Geoadd) {
 	c = Geoadd{cs: get(), ks: b.ks}
@@ -22,13 +22,13 @@ func (c Geoadd) Key(key string) GeoaddKey {
 	return (GeoaddKey)(c)
 }
 
-type GeoaddChangeCh Completed
+type GeoaddChangeCh Incomplete
 
 func (c GeoaddChangeCh) LongitudeLatitudeMember() GeoaddLongitudeLatitudeMember {
 	return (GeoaddLongitudeLatitudeMember)(c)
 }
 
-type GeoaddConditionNx Completed
+type GeoaddConditionNx Incomplete
 
 func (c GeoaddConditionNx) Ch() GeoaddChangeCh {
 	c.cs.s = append(c.cs.s, "CH")
@@ -39,7 +39,7 @@ func (c GeoaddConditionNx) LongitudeLatitudeMember() GeoaddLongitudeLatitudeMemb
 	return (GeoaddLongitudeLatitudeMember)(c)
 }
 
-type GeoaddConditionXx Completed
+type GeoaddConditionXx Incomplete
 
 func (c GeoaddConditionXx) Ch() GeoaddChangeCh {
 	c.cs.s = append(c.cs.s, "CH")
@@ -50,7 +50,7 @@ func (c GeoaddConditionXx) LongitudeLatitudeMember() GeoaddLongitudeLatitudeMemb
 	return (GeoaddLongitudeLatitudeMember)(c)
 }
 
-type GeoaddKey Completed
+type GeoaddKey Incomplete
 
 func (c GeoaddKey) Nx() GeoaddConditionNx {
 	c.cs.s = append(c.cs.s, "NX")
@@ -71,7 +71,7 @@ func (c GeoaddKey) LongitudeLatitudeMember() GeoaddLongitudeLatitudeMember {
 	return (GeoaddLongitudeLatitudeMember)(c)
 }
 
-type GeoaddLongitudeLatitudeMember Completed
+type GeoaddLongitudeLatitudeMember Incomplete
 
 func (c GeoaddLongitudeLatitudeMember) LongitudeLatitudeMember(longitude float64, latitude float64, member string) GeoaddLongitudeLatitudeMember {
 	c.cs.s = append(c.cs.s, strconv.FormatFloat(longitude, 'f', -1, 64), strconv.FormatFloat(latitude, 'f', -1, 64), member)
@@ -80,13 +80,13 @@ func (c GeoaddLongitudeLatitudeMember) LongitudeLatitudeMember(longitude float64
 
 func (c GeoaddLongitudeLatitudeMember) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type Geodist Completed
+type Geodist Incomplete
 
 func (b Builder) Geodist() (c Geodist) {
-	c = Geodist{cs: get(), ks: b.ks, cf: readonly}
+	c = Geodist{cs: get(), ks: b.ks, cf: int16(readonly)}
 	c.cs.s = append(c.cs.s, "GEODIST")
 	return c
 }
@@ -101,21 +101,21 @@ func (c Geodist) Key(key string) GeodistKey {
 	return (GeodistKey)(c)
 }
 
-type GeodistKey Completed
+type GeodistKey Incomplete
 
 func (c GeodistKey) Member1(member1 string) GeodistMember1 {
 	c.cs.s = append(c.cs.s, member1)
 	return (GeodistMember1)(c)
 }
 
-type GeodistMember1 Completed
+type GeodistMember1 Incomplete
 
 func (c GeodistMember1) Member2(member2 string) GeodistMember2 {
 	c.cs.s = append(c.cs.s, member2)
 	return (GeodistMember2)(c)
 }
 
-type GeodistMember2 Completed
+type GeodistMember2 Incomplete
 
 func (c GeodistMember2) M() GeodistUnitM {
 	c.cs.s = append(c.cs.s, "m")
@@ -139,66 +139,66 @@ func (c GeodistMember2) Mi() GeodistUnitMi {
 
 func (c GeodistMember2) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeodistMember2) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeodistUnitFt Completed
+type GeodistUnitFt Incomplete
 
 func (c GeodistUnitFt) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeodistUnitFt) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeodistUnitKm Completed
+type GeodistUnitKm Incomplete
 
 func (c GeodistUnitKm) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeodistUnitKm) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeodistUnitM Completed
+type GeodistUnitM Incomplete
 
 func (c GeodistUnitM) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeodistUnitM) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeodistUnitMi Completed
+type GeodistUnitMi Incomplete
 
 func (c GeodistUnitMi) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeodistUnitMi) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type Geohash Completed
+type Geohash Incomplete
 
 func (b Builder) Geohash() (c Geohash) {
-	c = Geohash{cs: get(), ks: b.ks, cf: readonly}
+	c = Geohash{cs: get(), ks: b.ks, cf: int16(readonly)}
 	c.cs.s = append(c.cs.s, "GEOHASH")
 	return c
 }
@@ -213,7 +213,7 @@ func (c Geohash) Key(key string) GeohashKey {
 	return (GeohashKey)(c)
 }
 
-type GeohashKey Completed
+type GeohashKey Incomplete
 
 func (c GeohashKey) Member(member ...string) GeohashMember {
 	c.cs.s = append(c.cs.s, member...)
@@ -222,15 +222,15 @@ func (c GeohashKey) Member(member ...string) GeohashMember {
 
 func (c GeohashKey) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeohashKey) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeohashMember Completed
+type GeohashMember Incomplete
 
 func (c GeohashMember) Member(member ...string) GeohashMember {
 	c.cs.s = append(c.cs.s, member...)
@@ -239,18 +239,18 @@ func (c GeohashMember) Member(member ...string) GeohashMember {
 
 func (c GeohashMember) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeohashMember) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type Geopos Completed
+type Geopos Incomplete
 
 func (b Builder) Geopos() (c Geopos) {
-	c = Geopos{cs: get(), ks: b.ks, cf: readonly}
+	c = Geopos{cs: get(), ks: b.ks, cf: int16(readonly)}
 	c.cs.s = append(c.cs.s, "GEOPOS")
 	return c
 }
@@ -265,7 +265,7 @@ func (c Geopos) Key(key string) GeoposKey {
 	return (GeoposKey)(c)
 }
 
-type GeoposKey Completed
+type GeoposKey Incomplete
 
 func (c GeoposKey) Member(member ...string) GeoposMember {
 	c.cs.s = append(c.cs.s, member...)
@@ -274,15 +274,15 @@ func (c GeoposKey) Member(member ...string) GeoposMember {
 
 func (c GeoposKey) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeoposKey) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoposMember Completed
+type GeoposMember Incomplete
 
 func (c GeoposMember) Member(member ...string) GeoposMember {
 	c.cs.s = append(c.cs.s, member...)
@@ -291,15 +291,15 @@ func (c GeoposMember) Member(member ...string) GeoposMember {
 
 func (c GeoposMember) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeoposMember) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type Georadius Completed
+type Georadius Incomplete
 
 func (b Builder) Georadius() (c Georadius) {
 	c = Georadius{cs: get(), ks: b.ks}
@@ -317,7 +317,7 @@ func (c Georadius) Key(key string) GeoradiusKey {
 	return (GeoradiusKey)(c)
 }
 
-type GeoradiusCountAny Completed
+type GeoradiusCountAny Incomplete
 
 func (c GeoradiusCountAny) Asc() GeoradiusOrderAsc {
 	c.cs.s = append(c.cs.s, "ASC")
@@ -351,10 +351,10 @@ func (c GeoradiusCountAny) Storedist(key string) GeoradiusStoredistKey {
 
 func (c GeoradiusCountAny) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusCountCount Completed
+type GeoradiusCountCount Incomplete
 
 func (c GeoradiusCountCount) Any() GeoradiusCountAny {
 	c.cs.s = append(c.cs.s, "ANY")
@@ -393,31 +393,31 @@ func (c GeoradiusCountCount) Storedist(key string) GeoradiusStoredistKey {
 
 func (c GeoradiusCountCount) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusKey Completed
+type GeoradiusKey Incomplete
 
 func (c GeoradiusKey) Longitude(longitude float64) GeoradiusLongitude {
 	c.cs.s = append(c.cs.s, strconv.FormatFloat(longitude, 'f', -1, 64))
 	return (GeoradiusLongitude)(c)
 }
 
-type GeoradiusLatitude Completed
+type GeoradiusLatitude Incomplete
 
 func (c GeoradiusLatitude) Radius(radius float64) GeoradiusRadius {
 	c.cs.s = append(c.cs.s, strconv.FormatFloat(radius, 'f', -1, 64))
 	return (GeoradiusRadius)(c)
 }
 
-type GeoradiusLongitude Completed
+type GeoradiusLongitude Incomplete
 
 func (c GeoradiusLongitude) Latitude(latitude float64) GeoradiusLatitude {
 	c.cs.s = append(c.cs.s, strconv.FormatFloat(latitude, 'f', -1, 64))
 	return (GeoradiusLatitude)(c)
 }
 
-type GeoradiusOrderAsc Completed
+type GeoradiusOrderAsc Incomplete
 
 func (c GeoradiusOrderAsc) Store(key string) GeoradiusStoreKey {
 	if c.ks&NoSlot == NoSlot {
@@ -441,10 +441,10 @@ func (c GeoradiusOrderAsc) Storedist(key string) GeoradiusStoredistKey {
 
 func (c GeoradiusOrderAsc) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusOrderDesc Completed
+type GeoradiusOrderDesc Incomplete
 
 func (c GeoradiusOrderDesc) Store(key string) GeoradiusStoreKey {
 	if c.ks&NoSlot == NoSlot {
@@ -468,10 +468,10 @@ func (c GeoradiusOrderDesc) Storedist(key string) GeoradiusStoredistKey {
 
 func (c GeoradiusOrderDesc) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusRadius Completed
+type GeoradiusRadius Incomplete
 
 func (c GeoradiusRadius) M() GeoradiusUnitM {
 	c.cs.s = append(c.cs.s, "m")
@@ -493,10 +493,10 @@ func (c GeoradiusRadius) Mi() GeoradiusUnitMi {
 	return (GeoradiusUnitMi)(c)
 }
 
-type GeoradiusRo Completed
+type GeoradiusRo Incomplete
 
 func (b Builder) GeoradiusRo() (c GeoradiusRo) {
-	c = GeoradiusRo{cs: get(), ks: b.ks, cf: readonly}
+	c = GeoradiusRo{cs: get(), ks: b.ks, cf: int16(readonly)}
 	c.cs.s = append(c.cs.s, "GEORADIUS_RO")
 	return c
 }
@@ -511,7 +511,7 @@ func (c GeoradiusRo) Key(key string) GeoradiusRoKey {
 	return (GeoradiusRoKey)(c)
 }
 
-type GeoradiusRoCountAny Completed
+type GeoradiusRoCountAny Incomplete
 
 func (c GeoradiusRoCountAny) Asc() GeoradiusRoOrderAsc {
 	c.cs.s = append(c.cs.s, "ASC")
@@ -525,15 +525,15 @@ func (c GeoradiusRoCountAny) Desc() GeoradiusRoOrderDesc {
 
 func (c GeoradiusRoCountAny) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeoradiusRoCountAny) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusRoCountCount Completed
+type GeoradiusRoCountCount Incomplete
 
 func (c GeoradiusRoCountCount) Any() GeoradiusRoCountAny {
 	c.cs.s = append(c.cs.s, "ANY")
@@ -552,60 +552,60 @@ func (c GeoradiusRoCountCount) Desc() GeoradiusRoOrderDesc {
 
 func (c GeoradiusRoCountCount) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeoradiusRoCountCount) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusRoKey Completed
+type GeoradiusRoKey Incomplete
 
 func (c GeoradiusRoKey) Longitude(longitude float64) GeoradiusRoLongitude {
 	c.cs.s = append(c.cs.s, strconv.FormatFloat(longitude, 'f', -1, 64))
 	return (GeoradiusRoLongitude)(c)
 }
 
-type GeoradiusRoLatitude Completed
+type GeoradiusRoLatitude Incomplete
 
 func (c GeoradiusRoLatitude) Radius(radius float64) GeoradiusRoRadius {
 	c.cs.s = append(c.cs.s, strconv.FormatFloat(radius, 'f', -1, 64))
 	return (GeoradiusRoRadius)(c)
 }
 
-type GeoradiusRoLongitude Completed
+type GeoradiusRoLongitude Incomplete
 
 func (c GeoradiusRoLongitude) Latitude(latitude float64) GeoradiusRoLatitude {
 	c.cs.s = append(c.cs.s, strconv.FormatFloat(latitude, 'f', -1, 64))
 	return (GeoradiusRoLatitude)(c)
 }
 
-type GeoradiusRoOrderAsc Completed
+type GeoradiusRoOrderAsc Incomplete
 
 func (c GeoradiusRoOrderAsc) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeoradiusRoOrderAsc) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusRoOrderDesc Completed
+type GeoradiusRoOrderDesc Incomplete
 
 func (c GeoradiusRoOrderDesc) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeoradiusRoOrderDesc) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusRoRadius Completed
+type GeoradiusRoRadius Incomplete
 
 func (c GeoradiusRoRadius) M() GeoradiusRoUnitM {
 	c.cs.s = append(c.cs.s, "m")
@@ -627,7 +627,7 @@ func (c GeoradiusRoRadius) Mi() GeoradiusRoUnitMi {
 	return (GeoradiusRoUnitMi)(c)
 }
 
-type GeoradiusRoUnitFt Completed
+type GeoradiusRoUnitFt Incomplete
 
 func (c GeoradiusRoUnitFt) Withcoord() GeoradiusRoWithcoord {
 	c.cs.s = append(c.cs.s, "WITHCOORD")
@@ -661,15 +661,15 @@ func (c GeoradiusRoUnitFt) Desc() GeoradiusRoOrderDesc {
 
 func (c GeoradiusRoUnitFt) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeoradiusRoUnitFt) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusRoUnitKm Completed
+type GeoradiusRoUnitKm Incomplete
 
 func (c GeoradiusRoUnitKm) Withcoord() GeoradiusRoWithcoord {
 	c.cs.s = append(c.cs.s, "WITHCOORD")
@@ -703,15 +703,15 @@ func (c GeoradiusRoUnitKm) Desc() GeoradiusRoOrderDesc {
 
 func (c GeoradiusRoUnitKm) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeoradiusRoUnitKm) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusRoUnitM Completed
+type GeoradiusRoUnitM Incomplete
 
 func (c GeoradiusRoUnitM) Withcoord() GeoradiusRoWithcoord {
 	c.cs.s = append(c.cs.s, "WITHCOORD")
@@ -745,15 +745,15 @@ func (c GeoradiusRoUnitM) Desc() GeoradiusRoOrderDesc {
 
 func (c GeoradiusRoUnitM) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeoradiusRoUnitM) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusRoUnitMi Completed
+type GeoradiusRoUnitMi Incomplete
 
 func (c GeoradiusRoUnitMi) Withcoord() GeoradiusRoWithcoord {
 	c.cs.s = append(c.cs.s, "WITHCOORD")
@@ -787,15 +787,15 @@ func (c GeoradiusRoUnitMi) Desc() GeoradiusRoOrderDesc {
 
 func (c GeoradiusRoUnitMi) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeoradiusRoUnitMi) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusRoWithcoord Completed
+type GeoradiusRoWithcoord Incomplete
 
 func (c GeoradiusRoWithcoord) Withdist() GeoradiusRoWithdist {
 	c.cs.s = append(c.cs.s, "WITHDIST")
@@ -824,15 +824,15 @@ func (c GeoradiusRoWithcoord) Desc() GeoradiusRoOrderDesc {
 
 func (c GeoradiusRoWithcoord) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeoradiusRoWithcoord) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusRoWithdist Completed
+type GeoradiusRoWithdist Incomplete
 
 func (c GeoradiusRoWithdist) Withhash() GeoradiusRoWithhash {
 	c.cs.s = append(c.cs.s, "WITHHASH")
@@ -856,15 +856,15 @@ func (c GeoradiusRoWithdist) Desc() GeoradiusRoOrderDesc {
 
 func (c GeoradiusRoWithdist) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeoradiusRoWithdist) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusRoWithhash Completed
+type GeoradiusRoWithhash Incomplete
 
 func (c GeoradiusRoWithhash) Count(count int64) GeoradiusRoCountCount {
 	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
@@ -883,29 +883,29 @@ func (c GeoradiusRoWithhash) Desc() GeoradiusRoOrderDesc {
 
 func (c GeoradiusRoWithhash) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeoradiusRoWithhash) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusStoreKey Completed
+type GeoradiusStoreKey Incomplete
 
 func (c GeoradiusStoreKey) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusStoredistKey Completed
+type GeoradiusStoredistKey Incomplete
 
 func (c GeoradiusStoredistKey) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusUnitFt Completed
+type GeoradiusUnitFt Incomplete
 
 func (c GeoradiusUnitFt) Withcoord() GeoradiusWithcoord {
 	c.cs.s = append(c.cs.s, "WITHCOORD")
@@ -959,10 +959,10 @@ func (c GeoradiusUnitFt) Storedist(key string) GeoradiusStoredistKey {
 
 func (c GeoradiusUnitFt) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusUnitKm Completed
+type GeoradiusUnitKm Incomplete
 
 func (c GeoradiusUnitKm) Withcoord() GeoradiusWithcoord {
 	c.cs.s = append(c.cs.s, "WITHCOORD")
@@ -1016,10 +1016,10 @@ func (c GeoradiusUnitKm) Storedist(key string) GeoradiusStoredistKey {
 
 func (c GeoradiusUnitKm) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusUnitM Completed
+type GeoradiusUnitM Incomplete
 
 func (c GeoradiusUnitM) Withcoord() GeoradiusWithcoord {
 	c.cs.s = append(c.cs.s, "WITHCOORD")
@@ -1073,10 +1073,10 @@ func (c GeoradiusUnitM) Storedist(key string) GeoradiusStoredistKey {
 
 func (c GeoradiusUnitM) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusUnitMi Completed
+type GeoradiusUnitMi Incomplete
 
 func (c GeoradiusUnitMi) Withcoord() GeoradiusWithcoord {
 	c.cs.s = append(c.cs.s, "WITHCOORD")
@@ -1130,10 +1130,10 @@ func (c GeoradiusUnitMi) Storedist(key string) GeoradiusStoredistKey {
 
 func (c GeoradiusUnitMi) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusWithcoord Completed
+type GeoradiusWithcoord Incomplete
 
 func (c GeoradiusWithcoord) Withdist() GeoradiusWithdist {
 	c.cs.s = append(c.cs.s, "WITHDIST")
@@ -1182,10 +1182,10 @@ func (c GeoradiusWithcoord) Storedist(key string) GeoradiusStoredistKey {
 
 func (c GeoradiusWithcoord) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusWithdist Completed
+type GeoradiusWithdist Incomplete
 
 func (c GeoradiusWithdist) Withhash() GeoradiusWithhash {
 	c.cs.s = append(c.cs.s, "WITHHASH")
@@ -1229,10 +1229,10 @@ func (c GeoradiusWithdist) Storedist(key string) GeoradiusStoredistKey {
 
 func (c GeoradiusWithdist) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusWithhash Completed
+type GeoradiusWithhash Incomplete
 
 func (c GeoradiusWithhash) Count(count int64) GeoradiusCountCount {
 	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
@@ -1271,10 +1271,10 @@ func (c GeoradiusWithhash) Storedist(key string) GeoradiusStoredistKey {
 
 func (c GeoradiusWithhash) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type Georadiusbymember Completed
+type Georadiusbymember Incomplete
 
 func (b Builder) Georadiusbymember() (c Georadiusbymember) {
 	c = Georadiusbymember{cs: get(), ks: b.ks}
@@ -1292,7 +1292,7 @@ func (c Georadiusbymember) Key(key string) GeoradiusbymemberKey {
 	return (GeoradiusbymemberKey)(c)
 }
 
-type GeoradiusbymemberCountAny Completed
+type GeoradiusbymemberCountAny Incomplete
 
 func (c GeoradiusbymemberCountAny) Asc() GeoradiusbymemberOrderAsc {
 	c.cs.s = append(c.cs.s, "ASC")
@@ -1326,10 +1326,10 @@ func (c GeoradiusbymemberCountAny) Storedist(key string) GeoradiusbymemberStoreS
 
 func (c GeoradiusbymemberCountAny) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusbymemberCountCount Completed
+type GeoradiusbymemberCountCount Incomplete
 
 func (c GeoradiusbymemberCountCount) Any() GeoradiusbymemberCountAny {
 	c.cs.s = append(c.cs.s, "ANY")
@@ -1368,24 +1368,24 @@ func (c GeoradiusbymemberCountCount) Storedist(key string) GeoradiusbymemberStor
 
 func (c GeoradiusbymemberCountCount) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusbymemberKey Completed
+type GeoradiusbymemberKey Incomplete
 
 func (c GeoradiusbymemberKey) Member(member string) GeoradiusbymemberMember {
 	c.cs.s = append(c.cs.s, member)
 	return (GeoradiusbymemberMember)(c)
 }
 
-type GeoradiusbymemberMember Completed
+type GeoradiusbymemberMember Incomplete
 
 func (c GeoradiusbymemberMember) Radius(radius float64) GeoradiusbymemberRadius {
 	c.cs.s = append(c.cs.s, strconv.FormatFloat(radius, 'f', -1, 64))
 	return (GeoradiusbymemberRadius)(c)
 }
 
-type GeoradiusbymemberOrderAsc Completed
+type GeoradiusbymemberOrderAsc Incomplete
 
 func (c GeoradiusbymemberOrderAsc) Store(key string) GeoradiusbymemberStoreStoreKey {
 	if c.ks&NoSlot == NoSlot {
@@ -1409,10 +1409,10 @@ func (c GeoradiusbymemberOrderAsc) Storedist(key string) GeoradiusbymemberStoreS
 
 func (c GeoradiusbymemberOrderAsc) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusbymemberOrderDesc Completed
+type GeoradiusbymemberOrderDesc Incomplete
 
 func (c GeoradiusbymemberOrderDesc) Store(key string) GeoradiusbymemberStoreStoreKey {
 	if c.ks&NoSlot == NoSlot {
@@ -1436,10 +1436,10 @@ func (c GeoradiusbymemberOrderDesc) Storedist(key string) GeoradiusbymemberStore
 
 func (c GeoradiusbymemberOrderDesc) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusbymemberRadius Completed
+type GeoradiusbymemberRadius Incomplete
 
 func (c GeoradiusbymemberRadius) M() GeoradiusbymemberUnitM {
 	c.cs.s = append(c.cs.s, "m")
@@ -1461,10 +1461,10 @@ func (c GeoradiusbymemberRadius) Mi() GeoradiusbymemberUnitMi {
 	return (GeoradiusbymemberUnitMi)(c)
 }
 
-type GeoradiusbymemberRo Completed
+type GeoradiusbymemberRo Incomplete
 
 func (b Builder) GeoradiusbymemberRo() (c GeoradiusbymemberRo) {
-	c = GeoradiusbymemberRo{cs: get(), ks: b.ks, cf: readonly}
+	c = GeoradiusbymemberRo{cs: get(), ks: b.ks, cf: int16(readonly)}
 	c.cs.s = append(c.cs.s, "GEORADIUSBYMEMBER_RO")
 	return c
 }
@@ -1479,7 +1479,7 @@ func (c GeoradiusbymemberRo) Key(key string) GeoradiusbymemberRoKey {
 	return (GeoradiusbymemberRoKey)(c)
 }
 
-type GeoradiusbymemberRoCountAny Completed
+type GeoradiusbymemberRoCountAny Incomplete
 
 func (c GeoradiusbymemberRoCountAny) Asc() GeoradiusbymemberRoOrderAsc {
 	c.cs.s = append(c.cs.s, "ASC")
@@ -1493,15 +1493,15 @@ func (c GeoradiusbymemberRoCountAny) Desc() GeoradiusbymemberRoOrderDesc {
 
 func (c GeoradiusbymemberRoCountAny) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoCountAny) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusbymemberRoCountCount Completed
+type GeoradiusbymemberRoCountCount Incomplete
 
 func (c GeoradiusbymemberRoCountCount) Any() GeoradiusbymemberRoCountAny {
 	c.cs.s = append(c.cs.s, "ANY")
@@ -1520,53 +1520,53 @@ func (c GeoradiusbymemberRoCountCount) Desc() GeoradiusbymemberRoOrderDesc {
 
 func (c GeoradiusbymemberRoCountCount) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoCountCount) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusbymemberRoKey Completed
+type GeoradiusbymemberRoKey Incomplete
 
 func (c GeoradiusbymemberRoKey) Member(member string) GeoradiusbymemberRoMember {
 	c.cs.s = append(c.cs.s, member)
 	return (GeoradiusbymemberRoMember)(c)
 }
 
-type GeoradiusbymemberRoMember Completed
+type GeoradiusbymemberRoMember Incomplete
 
 func (c GeoradiusbymemberRoMember) Radius(radius float64) GeoradiusbymemberRoRadius {
 	c.cs.s = append(c.cs.s, strconv.FormatFloat(radius, 'f', -1, 64))
 	return (GeoradiusbymemberRoRadius)(c)
 }
 
-type GeoradiusbymemberRoOrderAsc Completed
+type GeoradiusbymemberRoOrderAsc Incomplete
 
 func (c GeoradiusbymemberRoOrderAsc) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoOrderAsc) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusbymemberRoOrderDesc Completed
+type GeoradiusbymemberRoOrderDesc Incomplete
 
 func (c GeoradiusbymemberRoOrderDesc) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoOrderDesc) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusbymemberRoRadius Completed
+type GeoradiusbymemberRoRadius Incomplete
 
 func (c GeoradiusbymemberRoRadius) M() GeoradiusbymemberRoUnitM {
 	c.cs.s = append(c.cs.s, "m")
@@ -1588,7 +1588,7 @@ func (c GeoradiusbymemberRoRadius) Mi() GeoradiusbymemberRoUnitMi {
 	return (GeoradiusbymemberRoUnitMi)(c)
 }
 
-type GeoradiusbymemberRoUnitFt Completed
+type GeoradiusbymemberRoUnitFt Incomplete
 
 func (c GeoradiusbymemberRoUnitFt) Withcoord() GeoradiusbymemberRoWithcoord {
 	c.cs.s = append(c.cs.s, "WITHCOORD")
@@ -1622,15 +1622,15 @@ func (c GeoradiusbymemberRoUnitFt) Desc() GeoradiusbymemberRoOrderDesc {
 
 func (c GeoradiusbymemberRoUnitFt) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoUnitFt) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusbymemberRoUnitKm Completed
+type GeoradiusbymemberRoUnitKm Incomplete
 
 func (c GeoradiusbymemberRoUnitKm) Withcoord() GeoradiusbymemberRoWithcoord {
 	c.cs.s = append(c.cs.s, "WITHCOORD")
@@ -1664,15 +1664,15 @@ func (c GeoradiusbymemberRoUnitKm) Desc() GeoradiusbymemberRoOrderDesc {
 
 func (c GeoradiusbymemberRoUnitKm) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoUnitKm) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusbymemberRoUnitM Completed
+type GeoradiusbymemberRoUnitM Incomplete
 
 func (c GeoradiusbymemberRoUnitM) Withcoord() GeoradiusbymemberRoWithcoord {
 	c.cs.s = append(c.cs.s, "WITHCOORD")
@@ -1706,15 +1706,15 @@ func (c GeoradiusbymemberRoUnitM) Desc() GeoradiusbymemberRoOrderDesc {
 
 func (c GeoradiusbymemberRoUnitM) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoUnitM) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusbymemberRoUnitMi Completed
+type GeoradiusbymemberRoUnitMi Incomplete
 
 func (c GeoradiusbymemberRoUnitMi) Withcoord() GeoradiusbymemberRoWithcoord {
 	c.cs.s = append(c.cs.s, "WITHCOORD")
@@ -1748,15 +1748,15 @@ func (c GeoradiusbymemberRoUnitMi) Desc() GeoradiusbymemberRoOrderDesc {
 
 func (c GeoradiusbymemberRoUnitMi) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoUnitMi) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusbymemberRoWithcoord Completed
+type GeoradiusbymemberRoWithcoord Incomplete
 
 func (c GeoradiusbymemberRoWithcoord) Withdist() GeoradiusbymemberRoWithdist {
 	c.cs.s = append(c.cs.s, "WITHDIST")
@@ -1785,15 +1785,15 @@ func (c GeoradiusbymemberRoWithcoord) Desc() GeoradiusbymemberRoOrderDesc {
 
 func (c GeoradiusbymemberRoWithcoord) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoWithcoord) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusbymemberRoWithdist Completed
+type GeoradiusbymemberRoWithdist Incomplete
 
 func (c GeoradiusbymemberRoWithdist) Withhash() GeoradiusbymemberRoWithhash {
 	c.cs.s = append(c.cs.s, "WITHHASH")
@@ -1817,15 +1817,15 @@ func (c GeoradiusbymemberRoWithdist) Desc() GeoradiusbymemberRoOrderDesc {
 
 func (c GeoradiusbymemberRoWithdist) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoWithdist) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusbymemberRoWithhash Completed
+type GeoradiusbymemberRoWithhash Incomplete
 
 func (c GeoradiusbymemberRoWithhash) Count(count int64) GeoradiusbymemberRoCountCount {
 	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
@@ -1844,29 +1844,29 @@ func (c GeoradiusbymemberRoWithhash) Desc() GeoradiusbymemberRoOrderDesc {
 
 func (c GeoradiusbymemberRoWithhash) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeoradiusbymemberRoWithhash) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusbymemberStoreStoreKey Completed
+type GeoradiusbymemberStoreStoreKey Incomplete
 
 func (c GeoradiusbymemberStoreStoreKey) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusbymemberStoreStoredistKey Completed
+type GeoradiusbymemberStoreStoredistKey Incomplete
 
 func (c GeoradiusbymemberStoreStoredistKey) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusbymemberUnitFt Completed
+type GeoradiusbymemberUnitFt Incomplete
 
 func (c GeoradiusbymemberUnitFt) Withcoord() GeoradiusbymemberWithcoord {
 	c.cs.s = append(c.cs.s, "WITHCOORD")
@@ -1920,10 +1920,10 @@ func (c GeoradiusbymemberUnitFt) Storedist(key string) GeoradiusbymemberStoreSto
 
 func (c GeoradiusbymemberUnitFt) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusbymemberUnitKm Completed
+type GeoradiusbymemberUnitKm Incomplete
 
 func (c GeoradiusbymemberUnitKm) Withcoord() GeoradiusbymemberWithcoord {
 	c.cs.s = append(c.cs.s, "WITHCOORD")
@@ -1977,10 +1977,10 @@ func (c GeoradiusbymemberUnitKm) Storedist(key string) GeoradiusbymemberStoreSto
 
 func (c GeoradiusbymemberUnitKm) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusbymemberUnitM Completed
+type GeoradiusbymemberUnitM Incomplete
 
 func (c GeoradiusbymemberUnitM) Withcoord() GeoradiusbymemberWithcoord {
 	c.cs.s = append(c.cs.s, "WITHCOORD")
@@ -2034,10 +2034,10 @@ func (c GeoradiusbymemberUnitM) Storedist(key string) GeoradiusbymemberStoreStor
 
 func (c GeoradiusbymemberUnitM) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusbymemberUnitMi Completed
+type GeoradiusbymemberUnitMi Incomplete
 
 func (c GeoradiusbymemberUnitMi) Withcoord() GeoradiusbymemberWithcoord {
 	c.cs.s = append(c.cs.s, "WITHCOORD")
@@ -2091,10 +2091,10 @@ func (c GeoradiusbymemberUnitMi) Storedist(key string) GeoradiusbymemberStoreSto
 
 func (c GeoradiusbymemberUnitMi) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusbymemberWithcoord Completed
+type GeoradiusbymemberWithcoord Incomplete
 
 func (c GeoradiusbymemberWithcoord) Withdist() GeoradiusbymemberWithdist {
 	c.cs.s = append(c.cs.s, "WITHDIST")
@@ -2143,10 +2143,10 @@ func (c GeoradiusbymemberWithcoord) Storedist(key string) GeoradiusbymemberStore
 
 func (c GeoradiusbymemberWithcoord) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusbymemberWithdist Completed
+type GeoradiusbymemberWithdist Incomplete
 
 func (c GeoradiusbymemberWithdist) Withhash() GeoradiusbymemberWithhash {
 	c.cs.s = append(c.cs.s, "WITHHASH")
@@ -2190,10 +2190,10 @@ func (c GeoradiusbymemberWithdist) Storedist(key string) GeoradiusbymemberStoreS
 
 func (c GeoradiusbymemberWithdist) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeoradiusbymemberWithhash Completed
+type GeoradiusbymemberWithhash Incomplete
 
 func (c GeoradiusbymemberWithhash) Count(count int64) GeoradiusbymemberCountCount {
 	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
@@ -2232,13 +2232,13 @@ func (c GeoradiusbymemberWithhash) Storedist(key string) GeoradiusbymemberStoreS
 
 func (c GeoradiusbymemberWithhash) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type Geosearch Completed
+type Geosearch Incomplete
 
 func (b Builder) Geosearch() (c Geosearch) {
-	c = Geosearch{cs: get(), ks: b.ks, cf: readonly}
+	c = Geosearch{cs: get(), ks: b.ks, cf: int16(readonly)}
 	c.cs.s = append(c.cs.s, "GEOSEARCH")
 	return c
 }
@@ -2253,14 +2253,14 @@ func (c Geosearch) Key(key string) GeosearchKey {
 	return (GeosearchKey)(c)
 }
 
-type GeosearchCircleBoxBybox Completed
+type GeosearchCircleBoxBybox Incomplete
 
 func (c GeosearchCircleBoxBybox) Height(height float64) GeosearchCircleBoxHeight {
 	c.cs.s = append(c.cs.s, strconv.FormatFloat(height, 'f', -1, 64))
 	return (GeosearchCircleBoxHeight)(c)
 }
 
-type GeosearchCircleBoxHeight Completed
+type GeosearchCircleBoxHeight Incomplete
 
 func (c GeosearchCircleBoxHeight) M() GeosearchCircleBoxUnitM {
 	c.cs.s = append(c.cs.s, "m")
@@ -2282,7 +2282,7 @@ func (c GeosearchCircleBoxHeight) Mi() GeosearchCircleBoxUnitMi {
 	return (GeosearchCircleBoxUnitMi)(c)
 }
 
-type GeosearchCircleBoxUnitFt Completed
+type GeosearchCircleBoxUnitFt Incomplete
 
 func (c GeosearchCircleBoxUnitFt) Asc() GeosearchOrderAsc {
 	c.cs.s = append(c.cs.s, "ASC")
@@ -2316,15 +2316,15 @@ func (c GeosearchCircleBoxUnitFt) Withhash() GeosearchWithhash {
 
 func (c GeosearchCircleBoxUnitFt) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeosearchCircleBoxUnitFt) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeosearchCircleBoxUnitKm Completed
+type GeosearchCircleBoxUnitKm Incomplete
 
 func (c GeosearchCircleBoxUnitKm) Asc() GeosearchOrderAsc {
 	c.cs.s = append(c.cs.s, "ASC")
@@ -2358,15 +2358,15 @@ func (c GeosearchCircleBoxUnitKm) Withhash() GeosearchWithhash {
 
 func (c GeosearchCircleBoxUnitKm) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeosearchCircleBoxUnitKm) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeosearchCircleBoxUnitM Completed
+type GeosearchCircleBoxUnitM Incomplete
 
 func (c GeosearchCircleBoxUnitM) Asc() GeosearchOrderAsc {
 	c.cs.s = append(c.cs.s, "ASC")
@@ -2400,15 +2400,15 @@ func (c GeosearchCircleBoxUnitM) Withhash() GeosearchWithhash {
 
 func (c GeosearchCircleBoxUnitM) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeosearchCircleBoxUnitM) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeosearchCircleBoxUnitMi Completed
+type GeosearchCircleBoxUnitMi Incomplete
 
 func (c GeosearchCircleBoxUnitMi) Asc() GeosearchOrderAsc {
 	c.cs.s = append(c.cs.s, "ASC")
@@ -2442,15 +2442,15 @@ func (c GeosearchCircleBoxUnitMi) Withhash() GeosearchWithhash {
 
 func (c GeosearchCircleBoxUnitMi) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeosearchCircleBoxUnitMi) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeosearchCircleCircleByradius Completed
+type GeosearchCircleCircleByradius Incomplete
 
 func (c GeosearchCircleCircleByradius) M() GeosearchCircleCircleUnitM {
 	c.cs.s = append(c.cs.s, "m")
@@ -2472,7 +2472,7 @@ func (c GeosearchCircleCircleByradius) Mi() GeosearchCircleCircleUnitMi {
 	return (GeosearchCircleCircleUnitMi)(c)
 }
 
-type GeosearchCircleCircleUnitFt Completed
+type GeosearchCircleCircleUnitFt Incomplete
 
 func (c GeosearchCircleCircleUnitFt) Bybox(width float64) GeosearchCircleBoxBybox {
 	c.cs.s = append(c.cs.s, "BYBOX", strconv.FormatFloat(width, 'f', -1, 64))
@@ -2511,15 +2511,15 @@ func (c GeosearchCircleCircleUnitFt) Withhash() GeosearchWithhash {
 
 func (c GeosearchCircleCircleUnitFt) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeosearchCircleCircleUnitFt) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeosearchCircleCircleUnitKm Completed
+type GeosearchCircleCircleUnitKm Incomplete
 
 func (c GeosearchCircleCircleUnitKm) Bybox(width float64) GeosearchCircleBoxBybox {
 	c.cs.s = append(c.cs.s, "BYBOX", strconv.FormatFloat(width, 'f', -1, 64))
@@ -2558,15 +2558,15 @@ func (c GeosearchCircleCircleUnitKm) Withhash() GeosearchWithhash {
 
 func (c GeosearchCircleCircleUnitKm) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeosearchCircleCircleUnitKm) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeosearchCircleCircleUnitM Completed
+type GeosearchCircleCircleUnitM Incomplete
 
 func (c GeosearchCircleCircleUnitM) Bybox(width float64) GeosearchCircleBoxBybox {
 	c.cs.s = append(c.cs.s, "BYBOX", strconv.FormatFloat(width, 'f', -1, 64))
@@ -2605,15 +2605,15 @@ func (c GeosearchCircleCircleUnitM) Withhash() GeosearchWithhash {
 
 func (c GeosearchCircleCircleUnitM) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeosearchCircleCircleUnitM) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeosearchCircleCircleUnitMi Completed
+type GeosearchCircleCircleUnitMi Incomplete
 
 func (c GeosearchCircleCircleUnitMi) Bybox(width float64) GeosearchCircleBoxBybox {
 	c.cs.s = append(c.cs.s, "BYBOX", strconv.FormatFloat(width, 'f', -1, 64))
@@ -2652,15 +2652,15 @@ func (c GeosearchCircleCircleUnitMi) Withhash() GeosearchWithhash {
 
 func (c GeosearchCircleCircleUnitMi) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeosearchCircleCircleUnitMi) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeosearchCountAny Completed
+type GeosearchCountAny Incomplete
 
 func (c GeosearchCountAny) Withcoord() GeosearchWithcoord {
 	c.cs.s = append(c.cs.s, "WITHCOORD")
@@ -2679,15 +2679,15 @@ func (c GeosearchCountAny) Withhash() GeosearchWithhash {
 
 func (c GeosearchCountAny) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeosearchCountAny) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeosearchCountCount Completed
+type GeosearchCountCount Incomplete
 
 func (c GeosearchCountCount) Any() GeosearchCountAny {
 	c.cs.s = append(c.cs.s, "ANY")
@@ -2711,15 +2711,15 @@ func (c GeosearchCountCount) Withhash() GeosearchWithhash {
 
 func (c GeosearchCountCount) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeosearchCountCount) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeosearchFrommemberFromlonlat Completed
+type GeosearchFrommemberFromlonlat Incomplete
 
 func (c GeosearchFrommemberFromlonlat) Byradius(radius float64) GeosearchCircleCircleByradius {
 	c.cs.s = append(c.cs.s, "BYRADIUS", strconv.FormatFloat(radius, 'f', -1, 64))
@@ -2731,7 +2731,7 @@ func (c GeosearchFrommemberFromlonlat) Bybox(width float64) GeosearchCircleBoxBy
 	return (GeosearchCircleBoxBybox)(c)
 }
 
-type GeosearchFrommemberFrommember Completed
+type GeosearchFrommemberFrommember Incomplete
 
 func (c GeosearchFrommemberFrommember) Fromlonlat(longitude float64, latitude float64) GeosearchFrommemberFromlonlat {
 	c.cs.s = append(c.cs.s, "FROMLONLAT", strconv.FormatFloat(longitude, 'f', -1, 64), strconv.FormatFloat(latitude, 'f', -1, 64))
@@ -2748,7 +2748,7 @@ func (c GeosearchFrommemberFrommember) Bybox(width float64) GeosearchCircleBoxBy
 	return (GeosearchCircleBoxBybox)(c)
 }
 
-type GeosearchKey Completed
+type GeosearchKey Incomplete
 
 func (c GeosearchKey) Frommember(member string) GeosearchFrommemberFrommember {
 	c.cs.s = append(c.cs.s, "FROMMEMBER", member)
@@ -2760,7 +2760,7 @@ func (c GeosearchKey) Fromlonlat(longitude float64, latitude float64) GeosearchF
 	return (GeosearchFrommemberFromlonlat)(c)
 }
 
-type GeosearchOrderAsc Completed
+type GeosearchOrderAsc Incomplete
 
 func (c GeosearchOrderAsc) Count(count int64) GeosearchCountCount {
 	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
@@ -2784,15 +2784,15 @@ func (c GeosearchOrderAsc) Withhash() GeosearchWithhash {
 
 func (c GeosearchOrderAsc) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeosearchOrderAsc) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeosearchOrderDesc Completed
+type GeosearchOrderDesc Incomplete
 
 func (c GeosearchOrderDesc) Count(count int64) GeosearchCountCount {
 	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
@@ -2816,15 +2816,15 @@ func (c GeosearchOrderDesc) Withhash() GeosearchWithhash {
 
 func (c GeosearchOrderDesc) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeosearchOrderDesc) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeosearchWithcoord Completed
+type GeosearchWithcoord Incomplete
 
 func (c GeosearchWithcoord) Withdist() GeosearchWithdist {
 	c.cs.s = append(c.cs.s, "WITHDIST")
@@ -2838,15 +2838,15 @@ func (c GeosearchWithcoord) Withhash() GeosearchWithhash {
 
 func (c GeosearchWithcoord) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeosearchWithcoord) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeosearchWithdist Completed
+type GeosearchWithdist Incomplete
 
 func (c GeosearchWithdist) Withhash() GeosearchWithhash {
 	c.cs.s = append(c.cs.s, "WITHHASH")
@@ -2855,27 +2855,27 @@ func (c GeosearchWithdist) Withhash() GeosearchWithhash {
 
 func (c GeosearchWithdist) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeosearchWithdist) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeosearchWithhash Completed
+type GeosearchWithhash Incomplete
 
 func (c GeosearchWithhash) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 func (c GeosearchWithhash) Cache() Cacheable {
 	c.cs.Build()
-	return Cacheable(c)
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type Geosearchstore Completed
+type Geosearchstore Incomplete
 
 func (b Builder) Geosearchstore() (c Geosearchstore) {
 	c = Geosearchstore{cs: get(), ks: b.ks}
@@ -2893,14 +2893,14 @@ func (c Geosearchstore) Destination(destination string) GeosearchstoreDestinatio
 	return (GeosearchstoreDestination)(c)
 }
 
-type GeosearchstoreCircleBoxBybox Completed
+type GeosearchstoreCircleBoxBybox Incomplete
 
 func (c GeosearchstoreCircleBoxBybox) Height(height float64) GeosearchstoreCircleBoxHeight {
 	c.cs.s = append(c.cs.s, strconv.FormatFloat(height, 'f', -1, 64))
 	return (GeosearchstoreCircleBoxHeight)(c)
 }
 
-type GeosearchstoreCircleBoxHeight Completed
+type GeosearchstoreCircleBoxHeight Incomplete
 
 func (c GeosearchstoreCircleBoxHeight) M() GeosearchstoreCircleBoxUnitM {
 	c.cs.s = append(c.cs.s, "m")
@@ -2922,7 +2922,7 @@ func (c GeosearchstoreCircleBoxHeight) Mi() GeosearchstoreCircleBoxUnitMi {
 	return (GeosearchstoreCircleBoxUnitMi)(c)
 }
 
-type GeosearchstoreCircleBoxUnitFt Completed
+type GeosearchstoreCircleBoxUnitFt Incomplete
 
 func (c GeosearchstoreCircleBoxUnitFt) Asc() GeosearchstoreOrderAsc {
 	c.cs.s = append(c.cs.s, "ASC")
@@ -2946,10 +2946,10 @@ func (c GeosearchstoreCircleBoxUnitFt) Storedist() GeosearchstoreStoredist {
 
 func (c GeosearchstoreCircleBoxUnitFt) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeosearchstoreCircleBoxUnitKm Completed
+type GeosearchstoreCircleBoxUnitKm Incomplete
 
 func (c GeosearchstoreCircleBoxUnitKm) Asc() GeosearchstoreOrderAsc {
 	c.cs.s = append(c.cs.s, "ASC")
@@ -2973,10 +2973,10 @@ func (c GeosearchstoreCircleBoxUnitKm) Storedist() GeosearchstoreStoredist {
 
 func (c GeosearchstoreCircleBoxUnitKm) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeosearchstoreCircleBoxUnitM Completed
+type GeosearchstoreCircleBoxUnitM Incomplete
 
 func (c GeosearchstoreCircleBoxUnitM) Asc() GeosearchstoreOrderAsc {
 	c.cs.s = append(c.cs.s, "ASC")
@@ -3000,10 +3000,10 @@ func (c GeosearchstoreCircleBoxUnitM) Storedist() GeosearchstoreStoredist {
 
 func (c GeosearchstoreCircleBoxUnitM) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeosearchstoreCircleBoxUnitMi Completed
+type GeosearchstoreCircleBoxUnitMi Incomplete
 
 func (c GeosearchstoreCircleBoxUnitMi) Asc() GeosearchstoreOrderAsc {
 	c.cs.s = append(c.cs.s, "ASC")
@@ -3027,10 +3027,10 @@ func (c GeosearchstoreCircleBoxUnitMi) Storedist() GeosearchstoreStoredist {
 
 func (c GeosearchstoreCircleBoxUnitMi) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeosearchstoreCircleCircleByradius Completed
+type GeosearchstoreCircleCircleByradius Incomplete
 
 func (c GeosearchstoreCircleCircleByradius) M() GeosearchstoreCircleCircleUnitM {
 	c.cs.s = append(c.cs.s, "m")
@@ -3052,7 +3052,7 @@ func (c GeosearchstoreCircleCircleByradius) Mi() GeosearchstoreCircleCircleUnitM
 	return (GeosearchstoreCircleCircleUnitMi)(c)
 }
 
-type GeosearchstoreCircleCircleUnitFt Completed
+type GeosearchstoreCircleCircleUnitFt Incomplete
 
 func (c GeosearchstoreCircleCircleUnitFt) Bybox(width float64) GeosearchstoreCircleBoxBybox {
 	c.cs.s = append(c.cs.s, "BYBOX", strconv.FormatFloat(width, 'f', -1, 64))
@@ -3081,10 +3081,10 @@ func (c GeosearchstoreCircleCircleUnitFt) Storedist() GeosearchstoreStoredist {
 
 func (c GeosearchstoreCircleCircleUnitFt) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeosearchstoreCircleCircleUnitKm Completed
+type GeosearchstoreCircleCircleUnitKm Incomplete
 
 func (c GeosearchstoreCircleCircleUnitKm) Bybox(width float64) GeosearchstoreCircleBoxBybox {
 	c.cs.s = append(c.cs.s, "BYBOX", strconv.FormatFloat(width, 'f', -1, 64))
@@ -3113,10 +3113,10 @@ func (c GeosearchstoreCircleCircleUnitKm) Storedist() GeosearchstoreStoredist {
 
 func (c GeosearchstoreCircleCircleUnitKm) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeosearchstoreCircleCircleUnitM Completed
+type GeosearchstoreCircleCircleUnitM Incomplete
 
 func (c GeosearchstoreCircleCircleUnitM) Bybox(width float64) GeosearchstoreCircleBoxBybox {
 	c.cs.s = append(c.cs.s, "BYBOX", strconv.FormatFloat(width, 'f', -1, 64))
@@ -3145,10 +3145,10 @@ func (c GeosearchstoreCircleCircleUnitM) Storedist() GeosearchstoreStoredist {
 
 func (c GeosearchstoreCircleCircleUnitM) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeosearchstoreCircleCircleUnitMi Completed
+type GeosearchstoreCircleCircleUnitMi Incomplete
 
 func (c GeosearchstoreCircleCircleUnitMi) Bybox(width float64) GeosearchstoreCircleBoxBybox {
 	c.cs.s = append(c.cs.s, "BYBOX", strconv.FormatFloat(width, 'f', -1, 64))
@@ -3177,10 +3177,10 @@ func (c GeosearchstoreCircleCircleUnitMi) Storedist() GeosearchstoreStoredist {
 
 func (c GeosearchstoreCircleCircleUnitMi) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeosearchstoreCountAny Completed
+type GeosearchstoreCountAny Incomplete
 
 func (c GeosearchstoreCountAny) Storedist() GeosearchstoreStoredist {
 	c.cs.s = append(c.cs.s, "STOREDIST")
@@ -3189,10 +3189,10 @@ func (c GeosearchstoreCountAny) Storedist() GeosearchstoreStoredist {
 
 func (c GeosearchstoreCountAny) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeosearchstoreCountCount Completed
+type GeosearchstoreCountCount Incomplete
 
 func (c GeosearchstoreCountCount) Any() GeosearchstoreCountAny {
 	c.cs.s = append(c.cs.s, "ANY")
@@ -3206,10 +3206,10 @@ func (c GeosearchstoreCountCount) Storedist() GeosearchstoreStoredist {
 
 func (c GeosearchstoreCountCount) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeosearchstoreDestination Completed
+type GeosearchstoreDestination Incomplete
 
 func (c GeosearchstoreDestination) Source(source string) GeosearchstoreSource {
 	if c.ks&NoSlot == NoSlot {
@@ -3221,7 +3221,7 @@ func (c GeosearchstoreDestination) Source(source string) GeosearchstoreSource {
 	return (GeosearchstoreSource)(c)
 }
 
-type GeosearchstoreFrommemberFromlonlat Completed
+type GeosearchstoreFrommemberFromlonlat Incomplete
 
 func (c GeosearchstoreFrommemberFromlonlat) Byradius(radius float64) GeosearchstoreCircleCircleByradius {
 	c.cs.s = append(c.cs.s, "BYRADIUS", strconv.FormatFloat(radius, 'f', -1, 64))
@@ -3233,7 +3233,7 @@ func (c GeosearchstoreFrommemberFromlonlat) Bybox(width float64) GeosearchstoreC
 	return (GeosearchstoreCircleBoxBybox)(c)
 }
 
-type GeosearchstoreFrommemberFrommember Completed
+type GeosearchstoreFrommemberFrommember Incomplete
 
 func (c GeosearchstoreFrommemberFrommember) Fromlonlat(longitude float64, latitude float64) GeosearchstoreFrommemberFromlonlat {
 	c.cs.s = append(c.cs.s, "FROMLONLAT", strconv.FormatFloat(longitude, 'f', -1, 64), strconv.FormatFloat(latitude, 'f', -1, 64))
@@ -3250,7 +3250,7 @@ func (c GeosearchstoreFrommemberFrommember) Bybox(width float64) GeosearchstoreC
 	return (GeosearchstoreCircleBoxBybox)(c)
 }
 
-type GeosearchstoreOrderAsc Completed
+type GeosearchstoreOrderAsc Incomplete
 
 func (c GeosearchstoreOrderAsc) Count(count int64) GeosearchstoreCountCount {
 	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
@@ -3264,10 +3264,10 @@ func (c GeosearchstoreOrderAsc) Storedist() GeosearchstoreStoredist {
 
 func (c GeosearchstoreOrderAsc) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeosearchstoreOrderDesc Completed
+type GeosearchstoreOrderDesc Incomplete
 
 func (c GeosearchstoreOrderDesc) Count(count int64) GeosearchstoreCountCount {
 	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
@@ -3281,10 +3281,10 @@ func (c GeosearchstoreOrderDesc) Storedist() GeosearchstoreStoredist {
 
 func (c GeosearchstoreOrderDesc) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type GeosearchstoreSource Completed
+type GeosearchstoreSource Incomplete
 
 func (c GeosearchstoreSource) Frommember(member string) GeosearchstoreFrommemberFrommember {
 	c.cs.s = append(c.cs.s, "FROMMEMBER", member)
@@ -3296,9 +3296,9 @@ func (c GeosearchstoreSource) Fromlonlat(longitude float64, latitude float64) Ge
 	return (GeosearchstoreFrommemberFromlonlat)(c)
 }
 
-type GeosearchstoreStoredist Completed
+type GeosearchstoreStoredist Incomplete
 
 func (c GeosearchstoreStoredist) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
