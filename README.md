@@ -278,6 +278,8 @@ Its size is controlled by the `ClientOption.RingScaleEachConn` and the default v
 If you have many rueidis connections, you may find that they occupy quite amount of memory.
 In that case, you may consider reducing `ClientOption.RingScaleEachConn` to 8 or 9 at the cost of potential throughput degradation.
 
+You may also consider setting the value of `ClientOption.PipelineMultiplex` to `-1`, which will let rueidis use only 1 connection for pipelining to each redis node.
+
 ## Lua Script
 
 The `NewLuaScript` or `NewLuaScriptReadOnly` will create a script which is safe for concurrent usage.
