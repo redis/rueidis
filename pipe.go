@@ -152,6 +152,14 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 	p.pshks.Store(emptypshks)
 	p.clhks.Store(emptyclhks)
 
+	if option.AuthCredentialsFn != nil {
+		username, password, err := option.AuthCredentialsFn()
+		if err == nil {
+			option.Username = username
+			option.Password = password
+		}
+	}
+
 	helloCmd := []string{"HELLO", "3"}
 	if option.Password != "" && option.Username == "" {
 		helloCmd = append(helloCmd, "AUTH", "default", option.Password)

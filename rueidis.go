@@ -77,6 +77,10 @@ type ClientOption struct {
 	Password   string
 	ClientName string
 
+	// AuthCredentialsFn allows for setting the AUTH username and password dynamically on each connection attempt to
+	// support rotating credentials
+	AuthCredentialsFn func() (username string, password string, err error)
+
 	// ClientSetInfo will assign various info attributes to the current connection
 	ClientSetInfo []string
 
