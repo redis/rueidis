@@ -22,6 +22,8 @@ func bitmap0(s Builder) {
 	s.Bitfield().Key("1").Get("1", 1).OverflowWrap().Set("1", 1, 1).Incrby("1", 1, 1).Get("1", 1).OverflowFail().Incrby("1", 1, 1).Build()
 	s.Bitfield().Key("1").Get("1", 1).OverflowWrap().Set("1", 1, 1).Incrby("1", 1, 1).Get("1", 1).Set("1", 1, 1).Build()
 	s.Bitfield().Key("1").Get("1", 1).OverflowWrap().Set("1", 1, 1).Incrby("1", 1, 1).Get("1", 1).Incrby("1", 1, 1).Build()
+	s.Bitfield().Key("1").Get("1", 1).OverflowWrap().Set("1", 1, 1).Incrby("1", 1, 1).Get("1", 1).Get("1", 1).Incrby("1", 1, 1).Build()
+	s.Bitfield().Key("1").Get("1", 1).OverflowWrap().Set("1", 1, 1).Incrby("1", 1, 1).Get("1", 1).Get("1", 1).Build()
 	s.Bitfield().Key("1").OverflowWrap().Set("1", 1, 1).Build()
 	s.Bitfield().Key("1").OverflowSat().Set("1", 1, 1).Build()
 	s.Bitfield().Key("1").OverflowFail().Set("1", 1, 1).Build()

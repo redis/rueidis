@@ -174,6 +174,16 @@ func (c BitfieldOperationGet) Incrby(encoding string, offset int64, increment in
 	return (BitfieldOperationWriteSetIncrby)(c)
 }
 
+func (c BitfieldOperationGet) Get(encoding string, offset int64) BitfieldOperationGet {
+	c.cs.s = append(c.cs.s, "GET", encoding, strconv.FormatInt(offset, 10))
+	return c
+}
+
+func (c BitfieldOperationGet) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
 type BitfieldOperationWriteOverflowFail Incomplete
 
 func (c BitfieldOperationWriteOverflowFail) Set(encoding string, offset int64, value int64) BitfieldOperationWriteSetSet {
