@@ -451,6 +451,9 @@ func TestLocker_Close(t *testing.T) {
 		if err := ctx.Err(); !errors.Is(err, context.Canceled) {
 			t.Fatal(err)
 		}
+		if _, _, err := locker.WithContext(context.Background(), lck); err != ErrLockerClosed {
+			t.Error(err)
+		}
 	}
 	for _, nocsc := range []bool{false, true} {
 		t.Run("Tracking Loop", func(t *testing.T) {
