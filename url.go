@@ -25,7 +25,9 @@ func ParseURL(str string) (opt ClientOption, err error) {
 		}
 		opt.InitAddress = []string{strings.TrimSpace(u.Path)}
 	case "rediss":
-		opt.TLSConfig = &tls.Config{}
+		opt.TLSConfig = &tls.Config{
+			MinVersion: tls.VersionTLS12,
+		}
 	case "redis":
 	default:
 		return opt, fmt.Errorf("redis: invalid URL scheme: %s", u.Scheme)
@@ -42,6 +44,9 @@ func ParseURL(str string) (opt ClientOption, err error) {
 			port = "6379"
 		}
 		opt.InitAddress = []string{net.JoinHostPort(host, port)}
+		if opt.TLSConfig != nil {
+			opt.TLSConfig.ServerName = host
+		}
 	}
 	if u.User != nil {
 		opt.Username = u.User.Username()
