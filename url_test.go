@@ -57,6 +57,9 @@ func TestParseURL(t *testing.T) {
 	if opt, err := ParseURL("redis://?master_set=0"); opt.Sentinel.MasterSet != "0" {
 		t.Fatalf("unexpected %v %v", opt, err)
 	}
+	if opt, err := ParseURL("rediss://myhost:6379"); err != nil || opt.TLSConfig.ServerName != "myhost" {
+		t.Fatalf("unexpected %v %v", opt, err)
+	}
 }
 
 func TestMustParseURL(t *testing.T) {
