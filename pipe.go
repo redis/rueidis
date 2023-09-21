@@ -152,19 +152,26 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 	p.pshks.Store(emptypshks)
 	p.clhks.Store(emptyclhks)
 
+	username := option.Username
+	password := option.Password
 	if option.AuthCredentialsFn != nil {
-		username, password, err := option.AuthCredentialsFn()
-		if err == nil {
-			option.Username = username
-			option.Password = password
+		authCredentialsContext := AuthCredentialsContext{
+			Address: conn.RemoteAddr(),
 		}
+		authCredentials, err := option.AuthCredentialsFn(authCredentialsContext)
+		if err != nil {
+			p.Close()
+			return nil, err
+		}
+		username = authCredentials.Username
+		password = authCredentials.Password
 	}
 
 	helloCmd := []string{"HELLO", "3"}
-	if option.Password != "" && option.Username == "" {
-		helloCmd = append(helloCmd, "AUTH", "default", option.Password)
-	} else if option.Username != "" {
-		helloCmd = append(helloCmd, "AUTH", option.Username, option.Password)
+	if password != "" && username == "" {
+		helloCmd = append(helloCmd, "AUTH", "default", password)
+	} else if username != "" {
+		helloCmd = append(helloCmd, "AUTH", username, password)
 	}
 	if option.ClientName != "" {
 		helloCmd = append(helloCmd, "SETNAME", option.ClientName)
@@ -252,10 +259,10 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 			return nil, ErrNoCache
 		}
 		init = init[:0]
-		if option.Password != "" && option.Username == "" {
-			init = append(init, []string{"AUTH", option.Password})
-		} else if option.Username != "" {
-			init = append(init, []string{"AUTH", option.Username, option.Password})
+		if password != "" && username == "" {
+			init = append(init, []string{"AUTH", password})
+		} else if username != "" {
+			init = append(init, []string{"AUTH", username, password})
 		}
 		if option.ClientName != "" {
 			init = append(init, []string{"CLIENT", "SETNAME", option.ClientName})

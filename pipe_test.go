@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"net"
 	"runtime"
@@ -315,8 +316,11 @@ func TestNewPipe(t *testing.T) {
 		}()
 		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
 			SelectDB: 1,
-			AuthCredentialsFn: func() (username string, password string, err error) {
-				return "ua", "pa", nil
+			AuthCredentialsFn: func(context AuthCredentialsContext) (AuthCredentials, error) {
+				return AuthCredentials{
+					Username: "ua",
+					Password: "pa",
+				}, nil
 			},
 			ClientName: "cn",
 		})
@@ -439,6 +443,24 @@ func TestNewPipe(t *testing.T) {
 		if _, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{}); err != io.ErrClosedPipe {
 			t.Fatalf("pipe setup should failed with io.ErrClosedPipe, but got %v", err)
 		}
+	})
+	t.Run("Auth Credentials Function Error", func(t *testing.T) {
+		n1, n2 := net.Pipe()
+		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
+		go func() { mock.Expect("QUIT").ReplyString("OK") }()
+		_, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
+			SelectDB: 1,
+			AuthCredentialsFn: func(context AuthCredentialsContext) (AuthCredentials, error) {
+				return AuthCredentials{}, fmt.Errorf("auth credential failure")
+			},
+			ClientName: "cn",
+		})
+		if err.Error() != "auth credential failure" {
+			t.Fatalf("pipe setup failed: %v", err)
+		}
+		mock.Close()
+		n1.Close()
+		n2.Close()
 	})
 }
 

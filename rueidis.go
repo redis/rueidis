@@ -79,7 +79,7 @@ type ClientOption struct {
 
 	// AuthCredentialsFn allows for setting the AUTH username and password dynamically on each connection attempt to
 	// support rotating credentials
-	AuthCredentialsFn func() (username string, password string, err error)
+	AuthCredentialsFn func(AuthCredentialsContext) (AuthCredentials, error)
 
 	// ClientSetInfo will assign various info attributes to the current connection
 	ClientSetInfo []string
@@ -266,6 +266,17 @@ func CT(cmd Cacheable, ttl time.Duration) CacheableTTL {
 type CacheableTTL struct {
 	Cmd Cacheable
 	TTL time.Duration
+}
+
+// AuthCredentialsContext is the parameter container of AuthCredentialsFn
+type AuthCredentialsContext struct {
+	Address net.Addr
+}
+
+// AuthCredentials is the output of AuthCredentialsFn
+type AuthCredentials struct {
+	Username string
+	Password string
 }
 
 // NewClient uses ClientOption to initialize the Client for both cluster client and single client.
