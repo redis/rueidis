@@ -385,14 +385,6 @@ func (m *locker) WithContext(ctx context.Context, name string) (context.Context,
 			}
 		}
 		if cancel(); err != nil {
-			if err == ErrLockerClosed {
-				m.mu.RLock()
-				closed := m.gates == nil
-				m.mu.RUnlock()
-				if !closed {
-					continue
-				}
-			}
 			return ctx, cancel, err
 		}
 	}
