@@ -328,14 +328,16 @@ You can use `ParseURL` or `MustParseURL` to construct a `ClientOption`:
 
 ```go
 // connect to a redis cluster
-client, err = rueidis.NewClient(rueidis.MustParseURL("redis://127.0.0.1:7001"))
+client, err = rueidis.NewClient(rueidis.MustParseURL("redis://127.0.0.1:7001?addr=127.0.0.1:7002&addr=127.0.0.1:7003"))
 // connect to a redis node
-client, err = rueidis.NewClient(rueidis.MustParseURL("redis://127.0.0.1:6379"))
+client, err = rueidis.NewClient(rueidis.MustParseURL("redis://127.0.0.1:6379/0"))
 // connect to a redis sentinel
-client, err = rueidis.NewClient(rueidis.MustParseURL("redis://127.0.0.1:26379?master_set=my_master"))
+client, err = rueidis.NewClient(rueidis.MustParseURL("redis://127.0.0.1:26379/0?master_set=my_master"))
 ```
 
 The url must be started with either `redis://`, `rediss://` or `unix://`.
+
+Currently supported parameters `dial_timeout`, `write_timeout`, `protocol`, `client_cache`, `client_name`, `max_retries`
 
 ## Arbitrary Command
 
