@@ -119,7 +119,6 @@ type locker struct {
 	totalcnt int32
 	noloop   bool
 	setpx    bool
-	closed   bool
 }
 
 type gate struct {
@@ -188,6 +187,10 @@ func (m *locker) waitgate(ctx context.Context, name string) (g *gate, err error)
 	m.mu.Lock()
 	g, ok := m.gates[name]
 	if !ok {
+		if m.gates == nil {
+			m.mu.Unlock()
+			return nil, ErrLockerClosed
+		}
 		g = makegate(m.totalcnt)
 		g.w++
 		m.gates[name] = g
@@ -200,7 +203,7 @@ func (m *locker) waitgate(ctx context.Context, name string) (g *gate, err error)
 	select {
 	case <-ctx.Done():
 		m.mu.Lock()
-		if g.w--; g.w == 0 {
+		if g.w--; g.w == 0 && m.gates[name] == g {
 			delete(m.gates, name)
 		}
 		m.mu.Unlock()
@@ -216,7 +219,7 @@ func (m *locker) waitgate(ctx context.Context, name string) (g *gate, err error)
 func (m *locker) trygate(name string) (g *gate) {
 	m.mu.Lock()
 	_, ok := m.gates[name]
-	if !ok {
+	if !ok && m.gates != nil {
 		g = makegate(m.totalcnt)
 		g.w++
 		m.gates[name] = g
@@ -227,15 +230,20 @@ func (m *locker) trygate(name string) (g *gate) {
 
 func (m *locker) onInvalidations(messages []rueidis.RedisMessage) {
 	if messages == nil {
-		m.mu.Lock()
+		m.mu.RLock()
 		for _, g := range m.gates {
-			close(g.ch)
+			select {
+			case g.ch <- struct{}{}:
+			default:
+			}
 			for _, ch := range g.csc {
-				close(ch)
+				select {
+				case ch <- struct{}{}:
+				default:
+				}
 			}
 		}
-		m.gates = make(map[string]*gate)
-		m.mu.Unlock()
+		m.mu.RUnlock()
 	}
 	for _, msg := range messages {
 		k, _ := msg.ToString()
@@ -306,7 +314,9 @@ func (m *locker) try(ctx context.Context, cancel context.CancelFunc, name string
 				}
 				m.mu.Lock()
 				if g.w--; g.w == 0 {
-					delete(m.gates, name)
+					if m.gates[name] == g {
+						delete(m.gates, name)
+					}
 				} else {
 					if g, ok := m.gates[name]; ok {
 						g.ch <- struct{}{}
@@ -375,14 +385,6 @@ func (m *locker) WithContext(ctx context.Context, name string) (context.Context,
 			}
 		}
 		if cancel(); err != nil {
-			if err == ErrLockerClosed {
-				m.mu.RLock()
-				closed := m.closed
-				m.mu.RUnlock()
-				if !closed {
-					continue
-				}
-			}
 			return ctx, cancel, err
 		}
 	}
@@ -390,12 +392,12 @@ func (m *locker) WithContext(ctx context.Context, name string) (context.Context,
 
 func (m *locker) Close() {
 	m.mu.Lock()
-	m.closed = true
+	for _, g := range m.gates {
+		close(g.ch)
+	}
+	m.gates = nil
 	m.mu.Unlock()
 	m.client.Close()
-	if m.noloop {
-		m.onInvalidations(nil)
-	}
 }
 
 var (

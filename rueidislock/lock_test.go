@@ -12,7 +12,7 @@ import (
 	"github.com/redis/rueidis"
 )
 
-var address = []string{"127.0.0.1:6376"}
+var address = []string{"127.0.0.1:6379"}
 
 func newLocker(t *testing.T, noLoop, setpx, nocsc bool) *locker {
 	impl, err := NewLocker(LockerOption{
@@ -451,6 +451,9 @@ func TestLocker_Close(t *testing.T) {
 		if err := ctx.Err(); !errors.Is(err, context.Canceled) {
 			t.Fatal(err)
 		}
+		if _, _, err := locker.WithContext(context.Background(), lck); err != ErrLockerClosed {
+			t.Error(err)
+		}
 	}
 	for _, nocsc := range []bool{false, true} {
 		t.Run("Tracking Loop", func(t *testing.T) {
@@ -496,6 +499,51 @@ func TestLocker_RetryErrLockerClosed(t *testing.T) {
 		if err := ctx.Err(); !errors.Is(err, context.Canceled) {
 			t.Fatal(err)
 		}
+	}
+	for _, nocsc := range []bool{false, true} {
+		t.Run("Tracking Loop", func(t *testing.T) {
+			test(t, false, false, nocsc)
+		})
+		t.Run("Tracking NoLoop", func(t *testing.T) {
+			test(t, true, false, nocsc)
+		})
+		t.Run("SET PX", func(t *testing.T) {
+			test(t, true, true, nocsc)
+		})
+	}
+}
+
+func TestLocker_Flush(t *testing.T) {
+	test := func(t *testing.T, noLoop, setpx, nocsc bool) {
+		client, err := rueidis.NewClient(rueidis.ClientOption{InitAddress: address})
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer client.Close()
+
+		locker := newLocker(t, noLoop, setpx, nocsc)
+
+		lck := strconv.Itoa(rand.Int())
+		ctx, _, err := locker.WithContext(context.Background(), lck)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if err := client.Do(context.Background(), client.B().Flushall().Build()).Error(); err != nil {
+			t.Fatal(err)
+		}
+
+		<-ctx.Done()
+
+		if err := ctx.Err(); !errors.Is(err, context.Canceled) {
+			t.Fatal(err)
+		}
+
+		ctx, cancel, err := locker.WithContext(context.Background(), strconv.Itoa(rand.Int()))
+		if err != nil {
+			t.Fatal(err)
+		}
+		cancel()
 	}
 	for _, nocsc := range []bool{false, true} {
 		t.Run("Tracking Loop", func(t *testing.T) {
