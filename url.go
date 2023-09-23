@@ -80,11 +80,9 @@ func ParseURL(str string) (opt ClientOption, err error) {
 			return opt, fmt.Errorf("redis: invalid write timeout: %q", q.Get("write_timeout"))
 		}
 	}
-	if q.Has("addr") {
-		for _, addr := range q["addr"] {
-			_, addr = parseAddr(addr)
-			opt.InitAddress = append(opt.InitAddress, addr)
-		}
+	for _, addr := range q["addr"] {
+		_, addr = parseAddr(addr)
+		opt.InitAddress = append(opt.InitAddress, addr)
 	}
 	opt.AlwaysRESP2 = q.Get("protocol") == "2"
 	opt.DisableCache = q.Get("client_cache") == "0"
