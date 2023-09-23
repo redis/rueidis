@@ -21,6 +21,9 @@ func TestParseURL(t *testing.T) {
 	if opt, err := ParseURL("redis://localhost"); err != nil || opt.InitAddress[0] != "localhost:6379" {
 		t.Fatalf("unexpected %v %v", opt, err)
 	}
+	if opt, err := ParseURL("redis://?addr=:6380&addr=:6381"); err != nil || opt.InitAddress[0] != "localhost:6379" || opt.InitAddress[1] != "localhost:6380" || opt.InitAddress[2] != "localhost:6381" {
+		t.Fatalf("unexpected %v %v", opt, err)
+	}
 	if opt, err := ParseURL("redis://myhost:1234"); err != nil || opt.InitAddress[0] != "myhost:1234" {
 		t.Fatalf("unexpected %v %v", opt, err)
 	}
@@ -46,6 +49,9 @@ func TestParseURL(t *testing.T) {
 		t.Fatalf("unexpected %v %v", opt, err)
 	}
 	if opt, err := ParseURL("redis://?protocol=2"); !opt.AlwaysRESP2 {
+		t.Fatalf("unexpected %v %v", opt, err)
+	}
+	if opt, err := ParseURL("redis://?client_cache=0"); !opt.DisableCache {
 		t.Fatalf("unexpected %v %v", opt, err)
 	}
 	if opt, err := ParseURL("redis://?max_retries=0"); !opt.DisableRetry {
