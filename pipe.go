@@ -332,7 +332,7 @@ func (p *pipe) _background() {
 		atomic.CompareAndSwapInt32(&p.state, 2, 3) // make write goroutine to exit
 		atomic.AddInt32(&p.waits, 1)
 		go func() {
-			<-p.queue.PutOne(cmds.QuitCmd)
+			<-p.queue.PutOne(cmds.PingCmd)
 			atomic.AddInt32(&p.waits, -1)
 		}()
 	}
@@ -421,7 +421,7 @@ func (p *pipe) _backgroundWrite() (err error) {
 			err = writeCmd(p.w, cmd.Commands())
 		}
 		if err != nil {
-			if err != ErrClosing { // ignore ErrClosing to allow final QUIT command to be sent
+			if err != ErrClosing { // ignore ErrClosing to allow final PING command to be sent
 				return
 			}
 			runtime.Gosched()
@@ -1304,7 +1304,7 @@ func (p *pipe) Close() {
 			p.background()
 		}
 		if block == 1 && (stopping1 || stopping2) { // make sure there is no block cmd
-			<-p.queue.PutOne(cmds.QuitCmd)
+			<-p.queue.PutOne(cmds.PingCmd)
 		}
 	}
 	atomic.AddInt32(&p.waits, -1)
