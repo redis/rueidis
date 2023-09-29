@@ -117,9 +117,9 @@ func TestRing(t *testing.T) {
 		if one, _, ch := ring.NextWriteCmd(); ch == nil {
 			go func() {
 				time.Sleep(time.Millisecond * 100)
-				ring.PutOne(cmds.QuitCmd)
+				ring.PutOne(cmds.PingCmd)
 			}()
-			if one, _, ch = ring.WaitForWrite(); ch != nil && one.Commands()[0] == cmds.QuitCmd.Commands()[0] {
+			if one, _, ch = ring.WaitForWrite(); ch != nil && one.Commands()[0] == cmds.PingCmd.Commands()[0] {
 				return
 			}
 		}
@@ -131,9 +131,9 @@ func TestRing(t *testing.T) {
 		if _, multi, ch := ring.NextWriteCmd(); ch == nil {
 			go func() {
 				time.Sleep(time.Millisecond * 100)
-				ring.PutMulti([]Completed{cmds.QuitCmd}, nil)
+				ring.PutMulti([]Completed{cmds.PingCmd}, nil)
 			}()
-			if _, multi, ch = ring.WaitForWrite(); ch != nil && multi[0].Commands()[0] == cmds.QuitCmd.Commands()[0] {
+			if _, multi, ch = ring.WaitForWrite(); ch != nil && multi[0].Commands()[0] == cmds.PingCmd.Commands()[0] {
 				return
 			}
 		}

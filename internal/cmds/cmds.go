@@ -33,10 +33,7 @@ var (
 	RoleCmd = Completed{
 		cs: newCommandSlice([]string{"ROLE"}),
 	}
-	// QuitCmd is predefined QUIT
-	QuitCmd = Completed{
-		cs: newCommandSlice([]string{"QUIT"}),
-	}
+
 	// UnsubscribeCmd is predefined UNSUBSCRIBE
 	UnsubscribeCmd = Completed{
 		cs: newCommandSlice([]string{"UNSUBSCRIBE"}),

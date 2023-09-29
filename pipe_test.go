@@ -160,7 +160,7 @@ func setup(t *testing.T, option ClientOption) (*pipe, *redisMock, func(), func()
 		t.Fatalf("pipe setup failed, unexpected version: %v", p.Version())
 	}
 	return p, mock, func() {
-			go func() { mock.Expect("QUIT").ReplyString("OK") }()
+			go func() { mock.Expect("PING").ReplyString("OK") }()
 			p.Close()
 			mock.Close()
 			for atomic.LoadInt32(&p.state) != 4 {
@@ -219,7 +219,7 @@ func TestNewPipe(t *testing.T) {
 		if err != nil {
 			t.Fatalf("pipe setup failed: %v", err)
 		}
-		go func() { mock.Expect("QUIT").ReplyString("OK") }()
+		go func() { mock.Expect("PING").ReplyString("OK") }()
 		p.Close()
 		mock.Close()
 		n1.Close()
@@ -255,7 +255,7 @@ func TestNewPipe(t *testing.T) {
 		if err != nil {
 			t.Fatalf("pipe setup failed: %v", err)
 		}
-		go func() { mock.Expect("QUIT").ReplyString("OK") }()
+		go func() { mock.Expect("PING").ReplyString("OK") }()
 		p.Close()
 		mock.Close()
 		n1.Close()
@@ -289,7 +289,7 @@ func TestNewPipe(t *testing.T) {
 		if err != nil {
 			t.Fatalf("pipe setup failed: %v", err)
 		}
-		go func() { mock.Expect("QUIT").ReplyString("OK") }()
+		go func() { mock.Expect("PING").ReplyString("OK") }()
 		p.Close()
 		mock.Close()
 		n1.Close()
@@ -327,7 +327,7 @@ func TestNewPipe(t *testing.T) {
 		if err != nil {
 			t.Fatalf("pipe setup failed: %v", err)
 		}
-		go func() { mock.Expect("QUIT").ReplyString("OK") }()
+		go func() { mock.Expect("PING").ReplyString("OK") }()
 		p.Close()
 		mock.Close()
 		n1.Close()
@@ -356,7 +356,7 @@ func TestNewPipe(t *testing.T) {
 		if err != nil {
 			t.Fatalf("pipe setup failed: %v", err)
 		}
-		go func() { mock.Expect("QUIT").ReplyString("OK") }()
+		go func() { mock.Expect("PING").ReplyString("OK") }()
 		p.Close()
 		mock.Close()
 		n1.Close()
@@ -393,7 +393,7 @@ func TestNewPipe(t *testing.T) {
 		if err != nil {
 			t.Fatalf("pipe setup failed: %v", err)
 		}
-		go func() { mock.Expect("QUIT").ReplyString("OK") }()
+		go func() { mock.Expect("PING").ReplyString("OK") }()
 		p.Close()
 		mock.Close()
 		n1.Close()
@@ -430,7 +430,7 @@ func TestNewPipe(t *testing.T) {
 		if err != nil {
 			t.Fatalf("pipe setup failed: %v", err)
 		}
-		go func() { mock.Expect("QUIT").ReplyString("OK") }()
+		go func() { mock.Expect("PING").ReplyString("OK") }()
 		p.Close()
 		mock.Close()
 		n1.Close()
@@ -447,7 +447,7 @@ func TestNewPipe(t *testing.T) {
 	t.Run("Auth Credentials Function Error", func(t *testing.T) {
 		n1, n2 := net.Pipe()
 		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
-		go func() { mock.Expect("QUIT").ReplyString("OK") }()
+		go func() { mock.Expect("PING").ReplyString("OK") }()
 		_, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
 			SelectDB: 1,
 			AuthCredentialsFn: func(context AuthCredentialsContext) (AuthCredentials, error) {
@@ -476,7 +476,7 @@ func TestNewRESP2Pipe(t *testing.T) {
 				ReplyError("ERR unknown subcommand or wrong number of arguments for 'TRACKING'. Try CLIENT HELP")
 			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
 				ReplyError("UNKNOWN COMMAND")
-			mock.Expect("QUIT").ReplyString("OK")
+			mock.Expect("PING").ReplyString("OK")
 		}()
 		if _, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{}); !errors.Is(err, ErrNoCache) {
 			t.Fatalf("unexpected err: %v", err)
@@ -495,7 +495,7 @@ func TestNewRESP2Pipe(t *testing.T) {
 				ReplyString("OK")
 			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
 				ReplyError("UNKNOWN COMMAND")
-			mock.Expect("QUIT").ReplyString("OK")
+			mock.Expect("PING").ReplyString("OK")
 		}()
 		if _, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{}); !errors.Is(err, ErrNoCache) {
 			t.Fatalf("unexpected err: %v", err)
@@ -527,7 +527,7 @@ func TestNewRESP2Pipe(t *testing.T) {
 		if p.version >= 6 {
 			t.Fatalf("unexpected p.version: %v", p.version)
 		}
-		go func() { mock.Expect("QUIT").ReplyString("OK") }()
+		go func() { mock.Expect("PING").ReplyString("OK") }()
 		p.Close()
 		mock.Close()
 		n1.Close()
@@ -564,7 +564,7 @@ func TestNewRESP2Pipe(t *testing.T) {
 		if p.version >= 6 {
 			t.Fatalf("unexpected p.version: %v", p.version)
 		}
-		go func() { mock.Expect("QUIT").ReplyString("OK") }()
+		go func() { mock.Expect("PING").ReplyString("OK") }()
 		p.Close()
 		mock.Close()
 		n1.Close()
@@ -602,7 +602,7 @@ func TestNewRESP2Pipe(t *testing.T) {
 		if p.version >= 6 {
 			t.Fatalf("unexpected p.version: %v", p.version)
 		}
-		go func() { mock.Expect("QUIT").ReplyString("OK") }()
+		go func() { mock.Expect("PING").ReplyString("OK") }()
 		p.Close()
 		mock.Close()
 		n1.Close()
@@ -644,7 +644,7 @@ func TestNewRESP2Pipe(t *testing.T) {
 		if p.version >= 6 {
 			t.Fatalf("unexpected p.version: %v", p.version)
 		}
-		go func() { mock.Expect("QUIT").ReplyString("OK") }()
+		go func() { mock.Expect("PING").ReplyString("OK") }()
 		p.Close()
 		mock.Close()
 		n1.Close()
@@ -686,7 +686,7 @@ func TestNewRESP2Pipe(t *testing.T) {
 		if p.version >= 6 {
 			t.Fatalf("unexpected p.version: %v", p.version)
 		}
-		go func() { mock.Expect("QUIT").ReplyString("OK") }()
+		go func() { mock.Expect("PING").ReplyString("OK") }()
 		p.Close()
 		mock.Close()
 		n1.Close()
@@ -2054,7 +2054,6 @@ func TestDisableClientSideCaching(t *testing.T) {
 			Expect("GET", "c").
 			ReplyString("2").
 			ReplyString("3")
-
 	}()
 
 	v, _ := p.DoCache(context.Background(), Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage()
@@ -2616,7 +2615,7 @@ func TestPubSub(t *testing.T) {
 	})
 
 	t.Run("PubSub Unexpected Subscribe", func(t *testing.T) {
-		var shouldPanic = func(push string) (pass bool) {
+		shouldPanic := func(push string) (pass bool) {
 			defer func() { pass = recover() == protocolbug }()
 
 			p, mock, _, _ := setup(t, ClientOption{})
@@ -2646,7 +2645,7 @@ func TestPubSub(t *testing.T) {
 	})
 
 	t.Run("PubSub MULTI/EXEC Subscribe", func(t *testing.T) {
-		var shouldPanic = func(cmd Completed) (pass bool) {
+		shouldPanic := func(cmd Completed) (pass bool) {
 			defer func() { pass = recover() == multiexecsub }()
 
 			p, mock, _, _ := setup(t, ClientOption{})
@@ -3141,7 +3140,7 @@ func TestCloseAndWaitPendingCMDs(t *testing.T) {
 		}
 		r.ReplyString("b")
 	}
-	mock.Expect("QUIT").ReplyString("OK")
+	mock.Expect("PING").ReplyString("OK")
 	mock.Close()
 	wg.Wait()
 }
@@ -3692,7 +3691,6 @@ func TestBlockingCommandNoDeadline(t *testing.T) {
 			close(wait)
 			time.Sleep(2 * timeout)
 			mock.Expect("READ").Expect("BLOCK").ReplyString("OK").ReplyString("READ").ReplyString("OK")
-
 		}()
 		<-wait
 		if val, err := p.DoMulti(context.Background(),
@@ -3805,5 +3803,4 @@ func TestNoHelloRegex(t *testing.T) {
 			}
 		})
 	}
-
 }
