@@ -80,7 +80,7 @@ func TestNewMux(t *testing.T) {
 			ReplyString("OK")
 		mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
 			ReplyError("UNKNOWN COMMAND")
-		mock.Expect("QUIT").ReplyString("OK")
+		mock.Expect("PING").ReplyString("OK")
 		mock.Close()
 	}()
 	m := makeMux("", &ClientOption{}, func(dst string, opt *ClientOption) (net.Conn, error) {

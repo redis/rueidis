@@ -2054,7 +2054,6 @@ func TestDisableClientSideCaching(t *testing.T) {
 			Expect("GET", "c").
 			ReplyString("2").
 			ReplyString("3")
-
 	}()
 
 	v, _ := p.DoCache(context.Background(), Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage()
@@ -2616,7 +2615,7 @@ func TestPubSub(t *testing.T) {
 	})
 
 	t.Run("PubSub Unexpected Subscribe", func(t *testing.T) {
-		var shouldPanic = func(push string) (pass bool) {
+		shouldPanic := func(push string) (pass bool) {
 			defer func() { pass = recover() == protocolbug }()
 
 			p, mock, _, _ := setup(t, ClientOption{})
@@ -2646,7 +2645,7 @@ func TestPubSub(t *testing.T) {
 	})
 
 	t.Run("PubSub MULTI/EXEC Subscribe", func(t *testing.T) {
-		var shouldPanic = func(cmd Completed) (pass bool) {
+		shouldPanic := func(cmd Completed) (pass bool) {
 			defer func() { pass = recover() == multiexecsub }()
 
 			p, mock, _, _ := setup(t, ClientOption{})
@@ -3692,7 +3691,6 @@ func TestBlockingCommandNoDeadline(t *testing.T) {
 			close(wait)
 			time.Sleep(2 * timeout)
 			mock.Expect("READ").Expect("BLOCK").ReplyString("OK").ReplyString("READ").ReplyString("OK")
-
 		}()
 		<-wait
 		if val, err := p.DoMulti(context.Background(),
@@ -3805,5 +3803,4 @@ func TestNoHelloRegex(t *testing.T) {
 			}
 		})
 	}
-
 }
