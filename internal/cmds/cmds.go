@@ -33,12 +33,7 @@ var (
 	RoleCmd = Completed{
 		cs: newCommandSlice([]string{"ROLE"}),
 	}
-	// QuitCmd is predefined QUIT
-	// We shouldn't use this because its deprecated
-	// https://github.com/redis/rueidis/issues/377
-	QuitCmd = Completed{
-		cs: newCommandSlice([]string{"QUIT"}),
-	}
+
 	// UnsubscribeCmd is predefined UNSUBSCRIBE
 	UnsubscribeCmd = Completed{
 		cs: newCommandSlice([]string{"UNSUBSCRIBE"}),
