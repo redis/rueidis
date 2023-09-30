@@ -439,3 +439,12 @@ go 1.18
 
 require github.com/redis/rueidis v1.0.19-go1.18
 ```
+
+## Contributing
+
+Any contribution is welcome. Contributions mean a lot to us.
+
+### Testing
+
+Please use the [./dockertest.sh](./dockertest.sh) script for running test cases locally.
+And please try your best to have 100% test coverage on code changes.
