@@ -442,7 +442,8 @@ require github.com/redis/rueidis v1.0.19-go1.18
 
 ## Contributing
 
-Any contribution is welcome. Contributions mean a lot to us.
+Contributions are welcome, including [issues](https://github.com/redis/rueidis/issues), [pull requests](https://github.com/redis/rueidis/pulls), and [discussions](https://github.com/redis/rueidis/discussions).
+Contributions mean a lot to us and help us improve this library and the community!
 
 ### Testing
 
