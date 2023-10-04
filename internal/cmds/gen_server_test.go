@@ -96,6 +96,7 @@ func server0(s Builder) {
 	s.Monitor().Build()
 	s.Psync().Replicationid("1").Offset(1).Build()
 	s.Replicaof().Host("1").Port(1).Build()
+	s.Replicaof().NoOne().Build()
 	s.Role().Build()
 	s.Save().Build()
 	s.Shutdown().Nosave().Now().Force().Abort().Build()

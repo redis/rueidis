@@ -1342,6 +1342,11 @@ func (c ReplicaofHost) Port(port int64) ReplicaofPort {
 	return (ReplicaofPort)(c)
 }
 
+func (c Replicaof) NoOne() ReplicaofPort {
+	c.cs.s = append(c.cs.s, "NO ONE")
+	return (ReplicaofPort)(c)
+}
+
 type ReplicaofPort Incomplete
 
 func (c ReplicaofPort) Build() Completed {
