@@ -445,6 +445,14 @@ require github.com/redis/rueidis v1.0.19-go1.18
 Contributions are welcome, including [issues](https://github.com/redis/rueidis/issues), [pull requests](https://github.com/redis/rueidis/pulls), and [discussions](https://github.com/redis/rueidis/discussions).
 Contributions mean a lot to us and help us improve this library and the community!
 
+### Generate command builders
+
+Command builders are generated based on the definitions in [./hack/cmds](./hack/cmds) by running:
+
+```sh
+go generate
+```
+
 ### Testing
 
 Please use the [./dockertest.sh](./dockertest.sh) script for running test cases locally.

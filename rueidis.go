@@ -1,6 +1,8 @@
 // Package rueidis is a fast Golang Redis RESP3 client that does auto pipelining and supports client side caching.
 package rueidis
 
+//go:generate go run hack/cmds/gen.go internal/cmds hack/cmds/*.json
+
 import (
 	"context"
 	"crypto/tls"
