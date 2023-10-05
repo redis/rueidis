@@ -409,7 +409,19 @@ func (p *pipe) _backgroundWrite() (err error) {
 					runtime.Gosched()
 					continue
 				}
-				if flushDelay != 0 && atomic.LoadInt32(&p.waits) > 1 { // do not delay for sequential usage
+				// when one is block
+				// Blocking commands are executed in dedicated client which is aquired from pool.
+				// So, there is no sense to wait other commands to be written.
+				// https://github.com/redis/rueidis/issues/379
+				var multiHasBlockCmd bool
+				for _, cmd := range multi {
+					if cmd.IsBlock() {
+						multiHasBlockCmd = true
+						break
+					}
+				}
+				oneIsBlockCmd := ones[0].IsBlock()
+				if flushDelay != 0 && !oneIsBlockCmd && !multiHasBlockCmd && atomic.LoadInt32(&p.waits) > 1 { // do not delay for sequential usage
 					time.Sleep(flushDelay - time.Since(flushStart)) // ref: https://github.com/redis/rueidis/issues/156
 				}
 			}
