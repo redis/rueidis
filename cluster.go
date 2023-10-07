@@ -100,6 +100,15 @@ func newClusterClient(opt *ClientOption, connFn connFn) (client *clusterClient, 
 		return client, err
 	}
 
+	if client.aws {
+		go func() {
+			for atomic.LoadUint32(&client.stop) == 0 {
+				time.Sleep(time.Second)
+				_ = client.refresh()
+			}
+		}()
+	}
+
 	return client, nil
 }
 
@@ -164,21 +173,14 @@ func (c *clusterClient) _refresh() (err error) {
 	c.mu.RLock()
 	results := make(chan clusterslots, len(c.conns))
 	pending := make([]conn, 0, len(c.conns))
-	for _, cc := range c.conns {
-		pending = append(pending, cc)
+	if c.aws {
+		pending = append(pending, c.conns[c.opt.InitAddress[0]])
+	} else {
+		for _, cc := range c.conns {
+			pending = append(pending, cc)
+		}
 	}
 	c.mu.RUnlock()
-
-	if c.aws { // for aws memorydb and elasticache, we only consult their configuration endpoint with fresh connection.
-		addr := c.opt.InitAddress[0]
-		cc := c.connFn(c.opt.InitAddress[0], c.opt)
-		c.mu.Lock()
-		c.conns[addr].Close()
-		c.conns[addr] = cc
-		c.mu.Unlock()
-		pending = pending[:1]
-		pending[0] = cc
-	}
 
 	var result clusterslots
 	for i := 0; i < cap(results); i++ {
