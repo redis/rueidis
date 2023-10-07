@@ -317,7 +317,7 @@ func parseShards(shards RedisMessage, defaultAddr string, tls bool) map[string]g
 	groups := make(map[string]group, len(shards.values))
 	for _, v := range shards.values {
 		m := -1
-		shard, _ := v.ToMap()
+		shard, _ := v.AsMap()
 		slots := shard["slots"].values
 		nodes := shard["nodes"].values
 		g := group{
@@ -329,7 +329,7 @@ func parseShards(shards RedisMessage, defaultAddr string, tls bool) map[string]g
 			g.slots[i][1], _ = slots[i*2+1].AsInt64()
 		}
 		for _, n := range nodes {
-			dict, _ := n.ToMap()
+			dict, _ := n.AsMap()
 			port := dict["port"].integer
 			if tls && dict["tls-port"].integer > 0 {
 				port = dict["tls-port"].integer
