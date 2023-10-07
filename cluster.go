@@ -7,6 +7,7 @@ import (
 	"net"
 	"runtime"
 	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -78,6 +79,7 @@ type clusterClient struct {
 	stop   uint32
 	cmd    Builder
 	retry  bool
+	aws    bool
 }
 
 func newClusterClient(opt *ClientOption, connFn connFn) (client *clusterClient, err error) {
@@ -87,6 +89,7 @@ func newClusterClient(opt *ClientOption, connFn connFn) (client *clusterClient, 
 		connFn: connFn,
 		conns:  make(map[string]conn),
 		retry:  !opt.DisableRetry,
+		aws:    len(opt.InitAddress) == 1 && strings.Contains(opt.InitAddress[0], "amazonaws.com"),
 	}
 
 	if err = client.init(); err != nil {
@@ -165,6 +168,17 @@ func (c *clusterClient) _refresh() (err error) {
 		pending = append(pending, cc)
 	}
 	c.mu.RUnlock()
+
+	if c.aws { // for aws memorydb and elasticache, we only consult their configuration endpoint with fresh connection.
+		addr := c.opt.InitAddress[0]
+		cc := c.connFn(c.opt.InitAddress[0], c.opt)
+		c.mu.Lock()
+		c.conns[addr].Close()
+		c.conns[addr] = cc
+		c.mu.Unlock()
+		pending = pending[:1]
+		pending[0] = cc
+	}
 
 	var result clusterslots
 	for i := 0; i < cap(results); i++ {

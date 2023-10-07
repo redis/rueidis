@@ -702,6 +702,47 @@ func TestClusterClientInit(t *testing.T) {
 			t.Fatalf("unexpected nodes %v", nodes)
 		}
 	})
+
+	t.Run("Refresh aws cluster", func(t *testing.T) {
+		getClient := func(version int, closecount *int64) (client *clusterClient, err error) {
+			return newClusterClient(&ClientOption{InitAddress: []string{"xxxxx.amazonaws.com:1"}}, func(dst string, opt *ClientOption) conn {
+				return &mockConn{
+					DoFn: func(cmd Completed) RedisResult {
+						if dst == "xxxxx.amazonaws.com:1" && atomic.LoadInt64(closecount) > 0 { // the old connection should be closed first
+							return shardsResp
+						}
+						return newErrResult(errors.New("unexpected call"))
+					},
+					AddrFn:    func() string { return "xxxxx.amazonaws.com:1" },
+					VersionFn: func() int { return version },
+					CloseFn: func() {
+						if dst == "xxxxx.amazonaws.com:1" {
+							atomic.AddInt64(closecount, 1)
+						}
+					},
+				}
+			})
+		}
+
+		t.Run("shards", func(t *testing.T) {
+			closecount := int64(0)
+			client, err := getClient(7, &closecount)
+			if err != nil {
+				t.Fatalf("unexpected err %v", err)
+			}
+			nodes := client.nodes()
+			sort.Strings(nodes)
+			if len(nodes) != 3 ||
+				nodes[0] != "127.0.0.1:0" ||
+				nodes[1] != "127.0.1.1:1" ||
+				nodes[2] != "xxxxx.amazonaws.com:1" {
+				t.Fatalf("unexpected nodes %v", nodes)
+			}
+			if c := atomic.LoadInt64(&closecount); c != 1 {
+				t.Fatalf("unexpected connection close count %v", c)
+			}
+		})
+	})
 }
 
 //gocyclo:ignore
