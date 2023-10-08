@@ -3393,6 +3393,17 @@ func appendStructField(v reflect.Value) []string {
 			continue
 		}
 
+		// if its a nil pointer
+		if field.Kind() == reflect.Pointer && field.IsNil() {
+			continue
+		}
+
+		// if its a valid pointer
+		if field.Kind() == reflect.Pointer && field.Elem().CanInterface() {
+			dst = append(dst, name, str(field.Elem().Interface()))
+			continue
+		}
+
 		if field.CanInterface() {
 			dst = append(dst, name, str(field.Interface()))
 		}
