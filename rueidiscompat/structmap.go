@@ -84,8 +84,19 @@ func newStructSpec(t reflect.Type, fieldTag string) *structSpec {
 			continue
 		}
 
-		// Use the built-in decoder.
-		out.set(tag, &structField{index: i, fn: decoders[f.Type.Kind()]})
+		// Added a check for Pointer here. If it's a Poiner use the built-in decoder of the element.
+		// This works, because in Scan() #129-131
+		// if isPtr && v.IsNil() {
+		//     v.Set(reflect.New(v.Type().Elem()))
+		// }
+		// A new value is set
+		
+		if f.Type.Kind() == reflect.Pointer {
+			out.set(tag, &structField{index: i, fn: decoders[f.Type.Elem().Kind()]})
+		} else {
+			// Use the built-in decoder.
+			out.set(tag, &structField{index: i, fn: decoders[f.Type.Kind()]})
+		}
 	}
 
 	return out

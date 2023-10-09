@@ -39,21 +39,35 @@ type data struct {
 	Omit  string `redis:"-"`
 	Empty string
 
-	String  string  `redis:"string"`
-	Bytes   []byte  `redis:"byte"`
-	Int     int     `redis:"int"`
-	Int8    int8    `redis:"int8"`
-	Int16   int16   `redis:"int16"`
-	Int32   int32   `redis:"int32"`
-	Int64   int64   `redis:"int64"`
-	Uint    uint    `redis:"uint"`
-	Uint8   uint8   `redis:"uint8"`
-	Uint16  uint16  `redis:"uint16"`
-	Uint32  uint32  `redis:"uint32"`
-	Uint64  uint64  `redis:"uint64"`
-	Float   float32 `redis:"float"`
-	Float64 float64 `redis:"float64"`
-	Bool    bool    `redis:"bool"`
+	String         string   `redis:"string"`
+	Bytes          []byte   `redis:"byte"`
+	Int            int      `redis:"int"`
+	Int8           int8     `redis:"int8"`
+	Int16          int16    `redis:"int16"`
+	Int32          int32    `redis:"int32"`
+	Int64          int64    `redis:"int64"`
+	Uint           uint     `redis:"uint"`
+	Uint8          uint8    `redis:"uint8"`
+	Uint16         uint16   `redis:"uint16"`
+	Uint32         uint32   `redis:"uint32"`
+	Uint64         uint64   `redis:"uint64"`
+	Float          float32  `redis:"float"`
+	Float64        float64  `redis:"float64"`
+	Bool           bool     `redis:"bool"`
+	StringPointer  *string  `redis:"stringPointer"`
+	IntPointer     *int     `redis:"intPointer"`
+	Int8Pointer    *int8    `redis:"int8Pointer"`
+	Int16Pointer   *int16   `redis:"int16Pointer"`
+	Int32Pointer   *int32   `redis:"int32Pointer"`
+	Int64Pointer   *int64   `redis:"int64Pointer"`
+	UintPointer    *uint    `redis:"uintPointer"`
+	Uint8Pointer   *uint8   `redis:"uint8Pointer"`
+	Uint16Pointer  *uint16  `redis:"uint16Pointer"`
+	Uint32Pointer  *uint32  `redis:"uint32Pointer"`
+	Uint64Pointer  *uint64  `redis:"uint64Pointer"`
+	FloatPointer   *float32 `redis:"floatPointer"`
+	Float64Pointer *float64 `redis:"float64Pointer"`
+	BoolPointer    *bool    `redis:"boolPointer"`
 }
 
 type TimeRFC3339Nano struct {
@@ -187,6 +201,31 @@ var _ = Describe("Scan", func() {
 			Float:   1.0,
 			Float64: 1.2345678912345678e+17,
 			Bool:    true,
+		}))
+
+		// Scan to pointers
+		var String = "str"
+		var Int int = 123
+		var Int64 int64 = 123456789123456789
+		var Uint uint = 456
+		var Uint64 uint64 = 987654321987654321
+		var Float float32 = 123.456
+		var Float64 float64 = 1.2345678912345678e+17
+		var Bool bool = true
+
+		var d3 data
+		keys = []string{"stringPointer", "intPointer", "int64Pointer", "uintPointer", "uint64Pointer", "floatPointer", "float64Pointer", "boolPointer"}
+		vals = i{"str", "123", "123456789123456789", "456", "987654321987654321", "123.456", "123456789123456789.987654321987654321", "1"}
+		Expect(Scan(&d3, keys, vals)).NotTo(HaveOccurred())
+		Expect(d3).To(Equal(data{
+			StringPointer:  &String,
+			IntPointer:     &Int,
+			Int64Pointer:   &Int64,
+			UintPointer:    &Uint,
+			Uint64Pointer:  &Uint64,
+			FloatPointer:   &Float,
+			Float64Pointer: &Float64,
+			BoolPointer:    &Bool,
 		}))
 	})
 

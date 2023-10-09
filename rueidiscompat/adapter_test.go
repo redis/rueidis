@@ -2257,19 +2257,23 @@ func testAdapter(resp3 bool) {
 				Set4 interface{}            `redis:"set4"`
 				Set5 map[string]interface{} `redis:"-"`
 				Set6 string                 `redis:"set6,omitempty"`
+				Set7 *string                `redis:"set7"`
+				Set8 *string                `redis:"set8"`
 			}
-
+			str := "str"
 			hSet = adapter.HSet(ctx, "hash", &set{
 				Set1: "val1",
 				Set2: 1024,
 				Set3: 2 * time.Millisecond,
 				Set4: nil,
 				Set5: map[string]interface{}{"k1": 1},
+				Set7: &str,
+				Set8: nil,
 			})
 			Expect(hSet.Err()).NotTo(HaveOccurred())
-			Expect(hSet.Val()).To(Equal(int64(4)))
+			Expect(hSet.Val()).To(Equal(int64(5)))
 
-			hMGet := adapter.HMGet(ctx, "hash", "set1", "set2", "set3", "set4", "set5", "set6")
+			hMGet := adapter.HMGet(ctx, "hash", "set1", "set2", "set3", "set4", "set5", "set6", "set7", "set8")
 			Expect(hMGet.Err()).NotTo(HaveOccurred())
 			Expect(hMGet.Val()).To(Equal([]interface{}{
 				"val1",
@@ -2277,6 +2281,8 @@ func testAdapter(resp3 bool) {
 				strconv.Itoa(int(2 * time.Millisecond.Nanoseconds())),
 				"",
 				nil,
+				nil,
+				str,
 				nil,
 			}))
 
