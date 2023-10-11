@@ -109,15 +109,6 @@ func newClusterClient(opt *ClientOption, connFn connFn) (client *clusterClient, 
 		return client, err
 	}
 
-	if client.aws {
-		go func() {
-			for atomic.LoadUint32(&client.stop) == 0 {
-				time.Sleep(time.Second)
-				_ = client.refresh()
-			}
-		}()
-	}
-
 	return client, nil
 }
 
