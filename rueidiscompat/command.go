@@ -2792,3 +2792,25 @@ func formatSec(dur time.Duration) int64 {
 	}
 	return int64(dur / time.Second)
 }
+
+// https://github.com/redis/go-redis/blob/f994ff1cd96299a5c8029ae3403af7b17ef06e8a/gears_commands.go#L21C1-L35C2
+type TFunctionLoadOptions struct {
+	Replace bool
+	Config  string
+}
+
+type TFunctionListOptions struct {
+	Withcode bool
+	Verbose  int
+	Library  string
+}
+
+type TFCallOptions struct {
+	Keys      []string
+	Arguments []string
+}
+
+type MapStringInterfaceSliceCmd struct {
+	err error
+	val []map[string]interface{}
+}
