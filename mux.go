@@ -72,6 +72,7 @@ type mux struct {
 	wire   []atomic.Value
 	sc     []*singleconnect
 	mu     []sync.Mutex
+	clhks  func(error)
 	maxp   int
 }
 
@@ -141,12 +142,16 @@ func (m *mux) _pipe(i uint16) (w wire, err error) {
 			w := w
 			w.SetOnCloseHook(func(err error) {
 				if err != ErrClosing {
-					m.wire[i].CompareAndSwap(w, m.init)
+					if m.wire[i].CompareAndSwap(w, m.init) && m.clhks != nil {
+						m.clhks(err)
+					}
 				}
 			})
 			m.wire[i].Store(w)
 		} else {
-			err = w.Error()
+			if err = w.Error(); err != ErrClosing && m.clhks != nil {
+				m.clhks(err)
+			}
 		}
 	}
 
