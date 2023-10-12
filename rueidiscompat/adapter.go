@@ -2880,17 +2880,27 @@ func (c *Compat) TFunctionLoad(ctx context.Context, lib string) *StatusCmd {
 }
 
 func (c *Compat) TFunctionLoadArgs(ctx context.Context, lib string, options *TFunctionLoadOptions) *StatusCmd {
-	return nil
+	cmd := c.client.
+		B().
+		TfunctionLoad().
+		Replace().
+		Config(options.Config).
+		LibraryCode(lib).
+		Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
 }
 
 func (c *Compat) TFunctionDelete(ctx context.Context, libName string) *StatusCmd {
-
-	return nil
+	cmd := c.client.B().TfunctionDelete().LibraryName(libName).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
 }
 
 func (c *Compat) TFunctionList(ctx context.Context) *MapStringInterfaceSliceCmd {
-	return nil
-
+	cmd := c.client.B().TfunctionList().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newMapStringInterfaceSliceCmd(resp)
 }
 
 func (c *Compat) TFunctionListArgs(ctx context.Context, options *TFunctionListOptions) *MapStringInterfaceSliceCmd {

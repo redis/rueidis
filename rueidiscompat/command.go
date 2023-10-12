@@ -2814,3 +2814,33 @@ type MapStringInterfaceSliceCmd struct {
 	err error
 	val []map[string]interface{}
 }
+
+func newMapStringInterfaceSliceCmd(res rueidis.RedisResult) *MapStringInterfaceSliceCmd {
+	arr, err := res.ToArray()
+	if err != nil {
+		return &MapStringInterfaceSliceCmd{err: err}
+	}
+	out := &MapStringInterfaceSliceCmd{val: make([]map[string]any, 0, len(arr))}
+	for _, ele := range arr {
+		eleMap := map[string]any{}
+		m, err := ele.AsMap()
+		if err != nil {
+			// TODO: return all errors
+			out.err = err
+			out.val = nil
+			return out
+		}
+		for k, v := range m {
+			// TODO: return all errors
+			val, err := v.ToAny()
+			if err != nil {
+				out.err = err
+				out.val = nil
+				return out
+			}
+			eleMap[k] = val
+		}
+		out.val = append(out.val, eleMap)
+	}
+	return out
+}
