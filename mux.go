@@ -143,14 +143,14 @@ func (m *mux) _pipe(i uint16) (w wire, err error) {
 			w.SetOnCloseHook(func(err error) {
 				if err != ErrClosing {
 					if m.wire[i].CompareAndSwap(w, m.init) && m.clhks != nil {
-						m.clhks(err)
+						go m.clhks(err)
 					}
 				}
 			})
 			m.wire[i].Store(w)
 		} else {
 			if err = w.Error(); err != ErrClosing && m.clhks != nil {
-				m.clhks(err)
+				go m.clhks(err)
 			}
 		}
 	}
