@@ -8739,6 +8739,12 @@ func testAdapterCache(resp3 bool) {
 		//	Expect(value.Number).To(Equal(42))
 		//})
 	})
+
+	Describe("GearsCmdable", func() {
+		It("should build commands", Pending, func() {
+
+		})
+	})
 }
 
 type numberStruct struct {

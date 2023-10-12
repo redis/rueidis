@@ -2825,13 +2825,11 @@ func newMapStringInterfaceSliceCmd(res rueidis.RedisResult) *MapStringInterfaceS
 		eleMap := map[string]any{}
 		m, err := ele.AsMap()
 		if err != nil {
-			// TODO: return all errors
 			out.err = err
 			out.val = nil
 			return out
 		}
 		for k, v := range m {
-			// TODO: return all errors
 			val, err := v.ToAny()
 			if err != nil {
 				out.err = err

@@ -2904,26 +2904,70 @@ func (c *Compat) TFunctionList(ctx context.Context) *MapStringInterfaceSliceCmd 
 }
 
 func (c *Compat) TFunctionListArgs(ctx context.Context, options *TFunctionListOptions) *MapStringInterfaceSliceCmd {
-	return nil
-
+	cmd := c.client.B().TfunctionList()
+	if options.Library != "" {
+		cmd.LibraryName(options.Library)
+	}
+	if options.Withcode {
+		cmd.Withcode()
+	}
+	if options.Verbose > 0 {
+		cmd.Verbose()
+		for i := 0; i < options.Verbose; i++ {
+			cmd.V()
+		}
+	}
+	cmdCompleted := cmd.Build()
+	resp := c.client.Do(ctx, cmdCompleted)
+	return newMapStringInterfaceSliceCmd(resp)
 }
 
 func (c *Compat) TFCall(ctx context.Context, libName string, funcName string, numKeys int) *Cmd {
-	return nil
-
+	cmd := c.client.
+		B().
+		Tfcall().
+		LibraryFunction(fmt.Sprintf("%s.%s", libName, funcName)).
+		Numkeys(int64(numKeys)).
+		Build()
+	resp := c.client.Do(ctx, cmd)
+	return newCmd(resp)
 }
 
 func (c *Compat) TFCallArgs(ctx context.Context, libName string, funcName string, numKeys int, options *TFCallOptions) *Cmd {
-	return nil
-
+	cmd := c.client.
+		B().
+		Tfcall().
+		LibraryFunction(fmt.Sprintf("%s.%s", libName, funcName)).
+		Numkeys(int64(numKeys)).
+		Key(options.Keys...).
+		Arg(options.Arguments...).
+		Build()
+	resp := c.client.Do(ctx, cmd)
+	return newCmd(resp)
 }
 
 func (c *Compat) TFCallASYNC(ctx context.Context, libName string, funcName string, numKeys int) *Cmd {
-	return nil
+	cmd := c.client.
+		B().
+		Tfcallasync().
+		LibraryFunction(fmt.Sprintf("%s.%s", libName, funcName)).
+		Numkeys(int64(numKeys)).
+		Build()
+	resp := c.client.Do(ctx, cmd)
+	return newCmd(resp)
 }
 
 func (c *Compat) TFCallASYNCArgs(ctx context.Context, libName string, funcName string, numKeys int, options *TFCallOptions) *Cmd {
-	return nil
+	cmd := c.client.
+		B().
+		Tfcallasync().
+		LibraryFunction(fmt.Sprintf("%s.%s", libName, funcName)).
+		Numkeys(int64(numKeys)).
+		Key(options.Keys...).
+		Arg(options.Arguments...).
+		Build()
+	resp := c.client.Do(ctx, cmd)
+	return newCmd(resp)
 }
 
 func (c CacheCompat) BitCount(ctx context.Context, key string, bitCount *BitCount) *IntCmd {
