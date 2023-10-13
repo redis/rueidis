@@ -92,13 +92,11 @@ func newClusterClient(opt *ClientOption, connFn connFn) (client *clusterClient, 
 		aws:    len(opt.InitAddress) == 1 && strings.Contains(opt.InitAddress[0], "amazonaws.com"),
 	}
 	client.connFn = func(dst string, opt *ClientOption) conn {
-		conn := connFn(dst, opt)
-		if m, ok := conn.(*mux); ok {
-			m.clhks = func(err error) {
-				client.refresh()
-			}
-		}
-		return conn
+		cc := connFn(dst, opt)
+		cc.SetOnCloseHook(func(err error) {
+			go client.refresh()
+		})
+		return cc
 	}
 
 	if err = client.init(); err != nil {
@@ -261,11 +259,7 @@ func (c *clusterClient) _refresh() (err error) {
 }
 
 func (c *clusterClient) single() (conn conn) {
-	conn = c._pick(cmds.InitSlot)
-	if cc, ok := conn.(*mux); ok {
-		cc.clhks = nil
-	}
-	return conn
+	return c._pick(cmds.InitSlot)
 }
 
 func (c *clusterClient) nodes() []string {
