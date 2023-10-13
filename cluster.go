@@ -163,10 +163,11 @@ func (s clusterslots) parse(tls bool) map[string]group {
 }
 
 func getClusterSlots(c conn) clusterslots {
-	if c.Version() < 7 {
-		return clusterslots{reply: c.Do(context.Background(), cmds.SlotCmd), addr: c.Addr(), ver: c.Version()}
+	v := c.Version()
+	if v < 7 {
+		return clusterslots{reply: c.Do(context.Background(), cmds.SlotCmd), addr: c.Addr(), ver: v}
 	}
-	return clusterslots{reply: c.Do(context.Background(), cmds.ShardsCmd), addr: c.Addr(), ver: c.Version()}
+	return clusterslots{reply: c.Do(context.Background(), cmds.ShardsCmd), addr: c.Addr(), ver: v}
 }
 
 func (c *clusterClient) _refresh() (err error) {
