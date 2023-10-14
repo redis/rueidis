@@ -628,7 +628,7 @@ func TestClusterClientInit(t *testing.T) {
 
 			atomic.AddInt64(num, 1)
 
-			if err := client.refresh(); err != nil {
+			if err := client.refresh(context.Background()); err != nil {
 				t.Fatalf("unexpected err %v", err)
 			}
 
@@ -701,6 +701,39 @@ func TestClusterClientInit(t *testing.T) {
 			nodes[3] != "127.0.3.1:3" {
 			t.Fatalf("unexpected nodes %v", nodes)
 		}
+	})
+
+	t.Run("Refresh aws cluster", func(t *testing.T) {
+		getClient := func(version int) (client *clusterClient, err error) {
+			return newClusterClient(&ClientOption{InitAddress: []string{"xxxxx.amazonaws.com:1"}}, func(dst string, opt *ClientOption) conn {
+				return &mockConn{
+					DoFn: func(cmd Completed) RedisResult {
+						if dst == "xxxxx.amazonaws.com:1" && strings.Join(cmd.Commands(), " ") == "CLUSTER SHARDS" {
+							return shardsResp
+						}
+						return newErrResult(errors.New("unexpected call"))
+					},
+					AddrFn:    func() string { return "xxxxx.amazonaws.com:1" },
+					VersionFn: func() int { return version },
+				}
+			})
+		}
+
+		t.Run("shards", func(t *testing.T) {
+			client, err := getClient(7)
+			if err != nil {
+				t.Fatalf("unexpected err %v", err)
+			}
+			nodes := client.nodes()
+			sort.Strings(nodes)
+			if len(nodes) != 3 ||
+				nodes[0] != "127.0.0.1:0" ||
+				nodes[1] != "127.0.1.1:1" ||
+				nodes[2] != "xxxxx.amazonaws.com:1" {
+				t.Fatalf("unexpected nodes %v", nodes)
+			}
+			client.Close()
+		})
 	})
 }
 

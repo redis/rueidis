@@ -59,6 +59,7 @@ type conn interface {
 	Acquire() wire
 	Store(w wire)
 	Addr() string
+	SetOnCloseHook(func(error))
 }
 
 var _ conn = (*mux)(nil)
@@ -72,6 +73,7 @@ type mux struct {
 	wire   []atomic.Value
 	sc     []*singleconnect
 	mu     []sync.Mutex
+	clhks  atomic.Value
 	maxp   int
 }
 
@@ -102,6 +104,7 @@ func newMux(dst string, option *ClientOption, init, dead wire, wireFn wireFn) *m
 		sc:   make([]*singleconnect, multiplex),
 		maxp: runtime.GOMAXPROCS(0),
 	}
+	m.clhks.Store(emptyclhks)
 	for i := 0; i < len(m.wire); i++ {
 		m.wire[i].Store(init)
 	}
@@ -109,10 +112,28 @@ func newMux(dst string, option *ClientOption, init, dead wire, wireFn wireFn) *m
 	return m
 }
 
+func (m *mux) SetOnCloseHook(fn func(error)) {
+	m.clhks.Store(fn)
+}
+
+func (m *mux) setCloseHookOnWire(i uint16, w wire) {
+	if w != m.dead {
+		w.SetOnCloseHook(func(err error) {
+			if err != ErrClosing {
+				if m.wire[i].CompareAndSwap(w, m.init) {
+					m.clhks.Load().(func(error))(err)
+				}
+			}
+		})
+	}
+}
+
 func (m *mux) Override(cc conn) {
 	if m2, ok := cc.(*mux); ok {
 		for i := 0; i < len(m.wire) && i < len(m2.wire); i++ {
-			m.wire[i].CompareAndSwap(m.init, m2.wire[i].Load())
+			w := m2.wire[i].Load().(wire)
+			m.setCloseHookOnWire(uint16(i), w) // bind the new m to the old w
+			m.wire[i].CompareAndSwap(m.init, w)
 		}
 	}
 }
@@ -137,16 +158,12 @@ func (m *mux) _pipe(i uint16) (w wire, err error) {
 
 	if w = m.wire[i].Load().(wire); w == m.init {
 		if w = m.wireFn(); w != m.dead {
-			i := i
-			w := w
-			w.SetOnCloseHook(func(err error) {
-				if err != ErrClosing {
-					m.wire[i].CompareAndSwap(w, m.init)
-				}
-			})
+			m.setCloseHookOnWire(i, w)
 			m.wire[i].Store(w)
 		} else {
-			err = w.Error()
+			if err = w.Error(); err != ErrClosing {
+				m.clhks.Load().(func(error))(err)
+			}
 		}
 	}
 

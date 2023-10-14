@@ -336,12 +336,12 @@ func (p *pipe) _background() {
 			atomic.AddInt32(&p.waits, -1)
 		}()
 	}
-
+	err := p.Error()
 	p.nsubs.Close()
 	p.psubs.Close()
 	p.ssubs.Close()
 	if old := p.pshks.Swap(emptypshks).(*pshks); old.close != nil {
-		old.close <- p.Error()
+		old.close <- err
 		close(old.close)
 	}
 
@@ -358,6 +358,8 @@ func (p *pipe) _background() {
 	if p.onInvalidations != nil {
 		p.onInvalidations(nil)
 	}
+
+	resp := newErrResult(err)
 	for atomic.LoadInt32(&p.waits) != 0 {
 		select {
 		case <-p.close:
@@ -365,11 +367,10 @@ func (p *pipe) _background() {
 		default:
 		}
 		if _, _, ch, resps, cond = p.queue.NextResultCh(); ch != nil {
-			err := newErrResult(p.Error())
 			for i := range resps {
-				resps[i] = err
+				resps[i] = resp
 			}
-			ch <- err
+			ch <- resp
 			cond.L.Unlock()
 			cond.Signal()
 		} else {
