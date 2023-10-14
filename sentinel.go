@@ -252,7 +252,7 @@ retry:
 }
 
 func (c *sentinelClient) refresh() (err error) {
-	return c.sc.Do(c._refresh)
+	return c.sc.Do(context.Background(), c._refresh)
 }
 
 func (c *sentinelClient) _refresh() (err error) {

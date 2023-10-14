@@ -1,10 +1,12 @@
 package rueidis
 
 import (
+	"context"
 	"errors"
 	"runtime"
 	"sync/atomic"
 	"testing"
+	"time"
 )
 
 func TestSingleFlight(t *testing.T) {
@@ -15,8 +17,7 @@ func TestSingleFlight(t *testing.T) {
 
 	for i := 0; i < 1000; i++ {
 		go func() {
-
-			if ret := sg.Do(func() error {
+			if ret := sg.Do(context.Background(), func() error {
 				atomic.AddInt64(&calls, 1)
 				// wait for all goroutine invoked then return
 				for sg.suppressing() != 1000 {
@@ -46,4 +47,50 @@ func TestSingleFlight(t *testing.T) {
 	if atomic.LoadInt64(&err) != 1 {
 		t.Fatalf("singleflight should that one call get the return value")
 	}
+}
+
+func TestSingleFlightWithContext(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	ch := make(chan struct{})
+	sg := call{}
+	go func() {
+		sg.Do(context.Background(), func() error {
+			<-ch
+			return nil
+		})
+	}()
+	for sg.suppressing() != 1 {
+		time.Sleep(time.Millisecond)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	if err := sg.Do(ctx, func() error { return nil }); err != context.Canceled {
+		t.Fatalf("unexpected err %v", err)
+	}
+	close(ch)
+	if err := sg.Do(context.Background(), func() error { return nil }); err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+}
+
+func TestSingleFlightLazyDo(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	ch := make(chan struct{})
+	sg := call{}
+	sg.LazyDo(time.Second, func() error {
+		<-ch
+		return nil
+	})
+	cn := 0
+	sg.LazyDo(time.Second, func() error {
+		cn++ // this should not occur
+		return nil
+	})
+	if cn != 0 {
+		t.Fatalf("unexpected cn %v", cn)
+	}
+	if sc := sg.suppressing(); sc != 1 {
+		t.Fatalf("unexpected suppressing %v", sc)
+	}
+	close(ch)
 }
