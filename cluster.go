@@ -94,7 +94,7 @@ func newClusterClient(opt *ClientOption, connFn connFn) (client *clusterClient, 
 	client.connFn = func(dst string, opt *ClientOption) conn {
 		cc := connFn(dst, opt)
 		cc.SetOnCloseHook(func(err error) {
-			go client.refresh()
+			client.lazyRefresh()
 		})
 		return cc
 	}
@@ -103,7 +103,7 @@ func newClusterClient(opt *ClientOption, connFn connFn) (client *clusterClient, 
 		return nil, err
 	}
 
-	if err = client.refresh(); err != nil {
+	if err = client.refresh(context.Background()); err != nil {
 		return client, err
 	}
 
@@ -143,8 +143,12 @@ func (c *clusterClient) init() error {
 	return es[0]
 }
 
-func (c *clusterClient) refresh() (err error) {
-	return c.sc.Do(c._refresh)
+func (c *clusterClient) refresh(ctx context.Context) (err error) {
+	return c.sc.Do(ctx, c._refresh)
+}
+
+func (c *clusterClient) lazyRefresh() {
+	c.sc.LazyDo(time.Second, c._refresh)
 }
 
 type clusterslots struct {
@@ -364,9 +368,9 @@ func (c *clusterClient) _pick(slot uint16) (p conn) {
 	return p
 }
 
-func (c *clusterClient) pick(slot uint16) (p conn, err error) {
+func (c *clusterClient) pick(ctx context.Context, slot uint16) (p conn, err error) {
 	if p = c._pick(slot); p == nil {
-		if err := c.refresh(); err != nil {
+		if err := c.refresh(ctx); err != nil {
 			return nil, err
 		}
 		if p = c._pick(slot); p == nil {
@@ -415,7 +419,7 @@ func (c *clusterClient) Do(ctx context.Context, cmd Completed) (resp RedisResult
 
 func (c *clusterClient) do(ctx context.Context, cmd Completed) (resp RedisResult) {
 retry:
-	cc, err := c.pick(cmd.Slot())
+	cc, err := c.pick(ctx, cmd.Slot())
 	if err != nil {
 		return newErrResult(err)
 	}
@@ -482,10 +486,10 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, last 
 	return retries, last
 }
 
-func (c *clusterClient) pickMulti(multi []Completed) (*connretry, uint16, error) {
+func (c *clusterClient) pickMulti(ctx context.Context, multi []Completed) (*connretry, uint16, error) {
 	conns, slot := c._pickMulti(multi)
 	if conns == nil {
-		if err := c.refresh(); err != nil {
+		if err := c.refresh(ctx); err != nil {
 			return nil, 0, err
 		}
 		if conns, slot = c._pickMulti(multi); conns == nil {
@@ -550,7 +554,7 @@ func (c *clusterClient) DoMulti(ctx context.Context, multi ...Completed) []Redis
 		return nil
 	}
 
-	retries, slot, err := c.pickMulti(multi)
+	retries, slot, err := c.pickMulti(ctx, multi)
 	if err != nil {
 		return fillErrs(len(multi), err)
 	}
@@ -600,7 +604,7 @@ func fillErrs(n int, err error) (results []RedisResult) {
 
 func (c *clusterClient) doMulti(ctx context.Context, slot uint16, multi []Completed) []RedisResult {
 retry:
-	cc, err := c.pick(slot)
+	cc, err := c.pick(ctx, slot)
 	if err != nil {
 		return fillErrs(len(multi), err)
 	}
@@ -633,7 +637,7 @@ process:
 
 func (c *clusterClient) doCache(ctx context.Context, cmd Cacheable, ttl time.Duration) (resp RedisResult) {
 retry:
-	cc, err := c.pick(cmd.Slot())
+	cc, err := c.pick(ctx, cmd.Slot())
 	if err != nil {
 		return newErrResult(err)
 	}
@@ -727,10 +731,10 @@ func (c *clusterClient) _pickMultiCache(multi []CacheableTTL) *connretrycache {
 	return retries
 }
 
-func (c *clusterClient) pickMultiCache(multi []CacheableTTL) (*connretrycache, error) {
+func (c *clusterClient) pickMultiCache(ctx context.Context, multi []CacheableTTL) (*connretrycache, error) {
 	conns := c._pickMultiCache(multi)
 	if conns == nil {
-		if err := c.refresh(); err != nil {
+		if err := c.refresh(ctx); err != nil {
 			return nil, err
 		}
 		if conns = c._pickMultiCache(multi); conns == nil {
@@ -795,7 +799,7 @@ func (c *clusterClient) DoMultiCache(ctx context.Context, multi ...CacheableTTL)
 		return nil
 	}
 
-	retries, err := c.pickMultiCache(multi)
+	retries, err := c.pickMultiCache(ctx, multi)
 	if err != nil {
 		return fillErrs(len(multi), err)
 	}
@@ -830,7 +834,7 @@ retry:
 
 func (c *clusterClient) Receive(ctx context.Context, subscribe Completed, fn func(msg PubSubMessage)) (err error) {
 retry:
-	cc, err := c.pick(subscribe.Slot())
+	cc, err := c.pick(ctx, subscribe.Slot())
 	if err != nil {
 		goto ret
 	}
@@ -891,7 +895,7 @@ func (c *clusterClient) shouldRefreshRetry(err error, ctx context.Context) (addr
 			mode = RedirectRetry
 		}
 		if mode != RedirectNone {
-			go c.refresh()
+			c.lazyRefresh()
 		}
 	}
 	return
@@ -910,7 +914,7 @@ type dedicatedClusterClient struct {
 	retry bool
 }
 
-func (c *dedicatedClusterClient) acquire(slot uint16) (wire wire, err error) {
+func (c *dedicatedClusterClient) acquire(ctx context.Context, slot uint16) (wire wire, err error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.mark {
@@ -924,7 +928,7 @@ func (c *dedicatedClusterClient) acquire(slot uint16) (wire wire, err error) {
 	if c.wire != nil {
 		return c.wire, nil
 	}
-	if c.conn, err = c.client.pick(c.slot); err != nil {
+	if c.conn, err = c.client.pick(ctx, c.slot); err != nil {
 		if p := c.pshks; p != nil {
 			c.pshks = nil
 			p.close <- err
@@ -967,7 +971,7 @@ func (c *dedicatedClusterClient) B() Builder {
 
 func (c *dedicatedClusterClient) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 retry:
-	if w, err := c.acquire(cmd.Slot()); err != nil {
+	if w, err := c.acquire(ctx, cmd.Slot()); err != nil {
 		resp = newErrResult(err)
 	} else {
 		resp = w.Do(ctx, cmd)
@@ -998,7 +1002,7 @@ func (c *dedicatedClusterClient) DoMulti(ctx context.Context, multi ...Completed
 		retryable = allReadOnly(multi)
 	}
 retry:
-	if w, err := c.acquire(slot); err == nil {
+	if w, err := c.acquire(ctx, slot); err == nil {
 		resp = w.DoMulti(ctx, multi...).s
 		for _, r := range resp {
 			_, mode := c.client.shouldRefreshRetry(r.Error(), ctx)
@@ -1027,7 +1031,7 @@ retry:
 func (c *dedicatedClusterClient) Receive(ctx context.Context, subscribe Completed, fn func(msg PubSubMessage)) (err error) {
 	var w wire
 retry:
-	if w, err = c.acquire(subscribe.Slot()); err == nil {
+	if w, err = c.acquire(ctx, subscribe.Slot()); err == nil {
 		err = w.Receive(ctx, subscribe, fn)
 		if _, mode := c.client.shouldRefreshRetry(err, ctx); c.retry && mode == RedirectRetry && w.Error() == nil {
 			runtime.Gosched()
