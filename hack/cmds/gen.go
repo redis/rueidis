@@ -104,7 +104,18 @@ func (n *node) GoStructs() (out []goStruct) {
 	}
 
 	if len(n.Arg.Block) > 0 {
-		panic("GoStructs should not be called on Block node")
+		if n.Arg.Type != "oneof" {
+			panic("GoStructs should not be called on Block node")
+		}
+		for child := makeChildNodes(n, n.Arg.Block); child != nil; child = child.Next {
+			if child.Child != nil {
+				for _, b := range blockEntries(child) {
+					out = append(out, b.GoStructs()...)
+				}
+			} else {
+				out = append(out, child.GoStructs()...)
+			}
+		}
 	} else if len(n.Arg.Enum) > 0 {
 		for _, e := range n.Arg.Enum {
 			s := goStruct{
@@ -299,7 +310,7 @@ func (n *node) NextNodes() (nodes []*node) {
 	parent := n
 	for parent != nil {
 		next := parent.Next
-		for next != nil {
+		for next != nil && next.Parent.Arg.Type != "oneof" {
 			nodes = append(nodes, next)
 			if !next.Arg.Optional {
 				return nodes
@@ -926,8 +937,10 @@ func makeChildNodes(parent *node, args []argument) (first *node) {
 		nodes = append(nodes, &node{Parent: parent, Arg: arg})
 	}
 	for i, node := range nodes {
-		node.Child = makeChildNodes(node, node.Arg.Block)
-		if len(node.Arg.Block) != 0 && node.Arg.Command != "" {
+		if node.Arg.Type != "oneof" {
+			node.Child = makeChildNodes(node, node.Arg.Block)
+		}
+		if node.Child != nil && node.Arg.Command != "" {
 			if node.Child.Arg.Optional {
 				panic("unexpected block command with optional child")
 			}

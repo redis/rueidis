@@ -779,11 +779,16 @@ func (c ClientSetinfo) Libname(libname string) ClientSetinfoAttrLibname {
 	return (ClientSetinfoAttrLibname)(c)
 }
 
-type ClientSetinfoAttrLibname Incomplete
-
-func (c ClientSetinfoAttrLibname) Libver(libver string) ClientSetinfoAttrLibver {
+func (c ClientSetinfo) Libver(libver string) ClientSetinfoAttrLibver {
 	c.cs.s = append(c.cs.s, libver)
 	return (ClientSetinfoAttrLibver)(c)
+}
+
+type ClientSetinfoAttrLibname Incomplete
+
+func (c ClientSetinfoAttrLibname) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 type ClientSetinfoAttrLibver Incomplete
