@@ -2880,13 +2880,13 @@ func (c *Compat) TFunctionLoad(ctx context.Context, lib string) *StatusCmd {
 }
 
 func (c *Compat) TFunctionLoadArgs(ctx context.Context, lib string, options *TFunctionLoadOptions) *StatusCmd {
-	cmd := c.client.
-		B().
-		TfunctionLoad().
-		Replace().
-		Config(options.Config).
-		LibraryCode(lib).
-		Build()
+	b := c.client.B()
+	var cmd cmds.Completed
+	if options.Replace {
+		cmd = b.TfunctionLoad().Replace().Config(options.Config).LibraryCode(lib).Build()
+	} else {
+		cmd = b.TfunctionLoad().Config(options.Config).LibraryCode(lib).Build()
+	}
 	resp := c.client.Do(ctx, cmd)
 	return newStatusCmd(resp)
 }

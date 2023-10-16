@@ -301,6 +301,7 @@ func (c TfunctionLoad) Replace() TfunctionLoadReplace {
 }
 
 func (c TfunctionLoad) Config(config string) TfunctionLoadConfig {
+	c.cs.s = append(c.cs.s, "CONFIG")
 	c.cs.s = append(c.cs.s, config)
 	return (TfunctionLoadConfig)(c)
 }
@@ -327,6 +328,7 @@ func (c TfunctionLoadLibraryCode) Build() Completed {
 type TfunctionLoadReplace Incomplete
 
 func (c TfunctionLoadReplace) Config(config string) TfunctionLoadConfig {
+	c.cs.s = append(c.cs.s, "CONFIG")
 	c.cs.s = append(c.cs.s, config)
 	return (TfunctionLoadConfig)(c)
 }

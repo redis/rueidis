@@ -2815,6 +2815,22 @@ type MapStringInterfaceSliceCmd struct {
 	val []map[string]interface{}
 }
 
+func (cmd *MapStringInterfaceSliceCmd) SetVal(val []map[string]interface{}) {
+	cmd.val = val
+}
+
+func (cmd *MapStringInterfaceSliceCmd) Val() []map[string]interface{} {
+	return cmd.val
+}
+
+func (cmd *MapStringInterfaceSliceCmd) Err() error {
+	return cmd.err
+}
+
+func (cmd *MapStringInterfaceSliceCmd) Result() ([]map[string]interface{}, error) {
+	return cmd.Val(), cmd.Err()
+}
+
 func newMapStringInterfaceSliceCmd(res rueidis.RedisResult) *MapStringInterfaceSliceCmd {
 	arr, err := res.ToArray()
 	if err != nil {
