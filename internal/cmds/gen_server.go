@@ -1330,21 +1330,40 @@ func (b Builder) Replicaof() (c Replicaof) {
 	return c
 }
 
-func (c Replicaof) Host(host string) ReplicaofHost {
+func (c Replicaof) Host(host string) ReplicaofArgsHostPortHost {
 	c.cs.s = append(c.cs.s, host)
-	return (ReplicaofHost)(c)
+	return (ReplicaofArgsHostPortHost)(c)
 }
 
-type ReplicaofHost Incomplete
+func (c Replicaof) No() ReplicaofArgsNoOneNo {
+	c.cs.s = append(c.cs.s, "NO")
+	return (ReplicaofArgsNoOneNo)(c)
+}
 
-func (c ReplicaofHost) Port(port int64) ReplicaofPort {
+type ReplicaofArgsHostPortHost Incomplete
+
+func (c ReplicaofArgsHostPortHost) Port(port int64) ReplicaofArgsHostPortPort {
 	c.cs.s = append(c.cs.s, strconv.FormatInt(port, 10))
-	return (ReplicaofPort)(c)
+	return (ReplicaofArgsHostPortPort)(c)
 }
 
-type ReplicaofPort Incomplete
+type ReplicaofArgsHostPortPort Incomplete
 
-func (c ReplicaofPort) Build() Completed {
+func (c ReplicaofArgsHostPortPort) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type ReplicaofArgsNoOneNo Incomplete
+
+func (c ReplicaofArgsNoOneNo) One() ReplicaofArgsNoOneOne {
+	c.cs.s = append(c.cs.s, "ONE")
+	return (ReplicaofArgsNoOneOne)(c)
+}
+
+type ReplicaofArgsNoOneOne Incomplete
+
+func (c ReplicaofArgsNoOneOne) Build() Completed {
 	c.cs.Build()
 	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
@@ -1501,21 +1520,40 @@ func (b Builder) Slaveof() (c Slaveof) {
 	return c
 }
 
-func (c Slaveof) Host(host string) SlaveofHost {
+func (c Slaveof) Host(host string) SlaveofArgsHostPortHost {
 	c.cs.s = append(c.cs.s, host)
-	return (SlaveofHost)(c)
+	return (SlaveofArgsHostPortHost)(c)
 }
 
-type SlaveofHost Incomplete
+func (c Slaveof) No() SlaveofArgsNoOneNo {
+	c.cs.s = append(c.cs.s, "NO")
+	return (SlaveofArgsNoOneNo)(c)
+}
 
-func (c SlaveofHost) Port(port int64) SlaveofPort {
+type SlaveofArgsHostPortHost Incomplete
+
+func (c SlaveofArgsHostPortHost) Port(port int64) SlaveofArgsHostPortPort {
 	c.cs.s = append(c.cs.s, strconv.FormatInt(port, 10))
-	return (SlaveofPort)(c)
+	return (SlaveofArgsHostPortPort)(c)
 }
 
-type SlaveofPort Incomplete
+type SlaveofArgsHostPortPort Incomplete
 
-func (c SlaveofPort) Build() Completed {
+func (c SlaveofArgsHostPortPort) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type SlaveofArgsNoOneNo Incomplete
+
+func (c SlaveofArgsNoOneNo) One() SlaveofArgsNoOneOne {
+	c.cs.s = append(c.cs.s, "ONE")
+	return (SlaveofArgsNoOneOne)(c)
+}
+
+type SlaveofArgsNoOneOne Incomplete
+
+func (c SlaveofArgsNoOneOne) Build() Completed {
 	c.cs.Build()
 	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
