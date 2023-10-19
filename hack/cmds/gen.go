@@ -337,6 +337,13 @@ func (n *node) Walk(fn func(node *node)) {
 			next.Child.Walk(fn)
 		} else {
 			fn(next)
+			if next.Arg.Type == "oneof" {
+				for _, s := range next.GoStructs() {
+					for _, ns := range s.NextNodes {
+						ns.Walk(fn)
+					}
+				}
+			}
 		}
 		next = next.Next
 	}
