@@ -8746,6 +8746,7 @@ func testAdapterCache(resp3 bool) {
 			adapter.TFunctionDelete(ctx, "lib1")
 		})
 		// Copied from go-redis
+		// FIXME: Where should we add license ?
 		// https://github.com/redis/go-redis/blob/f994ff1cd96299a5c8029ae3403af7b17ef06e8a/gears_commands_test.go
 		It("should TFunctionLoad, TFunctionLoadArgs and TFunctionDelete ", Label("gears", "tfunctionload"), func() {
 			resultAdd, err := adapter.TFunctionLoad(ctx, libCode("lib1")).Result()

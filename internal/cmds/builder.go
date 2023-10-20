@@ -1,6 +1,7 @@
 package cmds
 
 import (
+	"fmt"
 	"strings"
 	"sync"
 )
@@ -20,6 +21,7 @@ type CommandSlice struct {
 }
 
 func (cs *CommandSlice) Build() {
+	fmt.Println("cs", cs)
 	if cs.l != -1 {
 		panic(ErrBuiltTwice)
 	}
