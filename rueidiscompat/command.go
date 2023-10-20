@@ -2838,8 +2838,8 @@ func newMapStringInterfaceSliceCmd(res rueidis.RedisResult) *MapStringInterfaceS
 	}
 	out := &MapStringInterfaceSliceCmd{val: make([]map[string]any, 0, len(arr))}
 	for _, ele := range arr {
-		eleMap := map[string]any{}
 		m, err := ele.AsMap()
+		eleMap := make(map[string]any, len(m))
 		if err != nil {
 			out.err = err
 			return out
