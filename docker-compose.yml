@@ -30,7 +30,7 @@ services:
     ports:
       - "6377:6379"
   compat:
-    image: redis:7.2-rc-alpine
+    image: redis/redis-stack:7.2.0-v3
     ports:
       - "6378:6379"
   compat5:

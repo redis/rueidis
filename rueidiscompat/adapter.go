@@ -387,13 +387,31 @@ type Cmdable interface {
 	ACLDryRun(ctx context.Context, username string, command ...any) *StringCmd
 
 	// TODO ModuleLoadex(ctx context.Context, conf *ModuleLoadexConfig) *StringCmd
+	GearsCmdable
 }
+
+// Align with go-redis
+// https://github.com/redis/go-redis/blob/f994ff1cd96299a5c8029ae3403af7b17ef06e8a/gears_commands.go#L9-L19
+type GearsCmdable interface {
+	TFunctionLoad(ctx context.Context, lib string) *StatusCmd
+	TFunctionLoadArgs(ctx context.Context, lib string, options *TFunctionLoadOptions) *StatusCmd
+	TFunctionDelete(ctx context.Context, libName string) *StatusCmd
+	TFunctionList(ctx context.Context) *MapStringInterfaceSliceCmd
+	TFunctionListArgs(ctx context.Context, options *TFunctionListOptions) *MapStringInterfaceSliceCmd
+	TFCall(ctx context.Context, libName string, funcName string, numKeys int) *Cmd
+	TFCallArgs(ctx context.Context, libName string, funcName string, numKeys int, options *TFCallOptions) *Cmd
+	TFCallASYNC(ctx context.Context, libName string, funcName string, numKeys int) *Cmd
+	TFCallASYNCArgs(ctx context.Context, libName string, funcName string, numKeys int, options *TFCallOptions) *Cmd
+}
+
+var _ Cmdable = (*Compat)(nil)
 
 type Compat struct {
 	client rueidis.Client
 	maxp   int
 }
 
+// CacheCompat implements commands that support client-side caching.
 type CacheCompat struct {
 	client rueidis.Client
 	ttl    time.Duration
@@ -2853,6 +2871,103 @@ func (c *Compat) doIntCmdPrimaries(ctx context.Context, fn func(c rueidis.Client
 		return err
 	})
 	return ret
+}
+
+func (c *Compat) TFunctionLoad(ctx context.Context, lib string) *StatusCmd {
+	cmd := c.client.B().TfunctionLoad().LibraryCode(lib).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) TFunctionLoadArgs(ctx context.Context, lib string, options *TFunctionLoadOptions) *StatusCmd {
+	b := c.client.B()
+	var cmd cmds.Completed
+	if options.Replace {
+		cmd = b.TfunctionLoad().Replace().Config(options.Config).LibraryCode(lib).Build()
+	} else {
+		cmd = b.TfunctionLoad().Config(options.Config).LibraryCode(lib).Build()
+	}
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) TFunctionDelete(ctx context.Context, libName string) *StatusCmd {
+	cmd := c.client.B().TfunctionDelete().LibraryName(libName).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) TFunctionList(ctx context.Context) *MapStringInterfaceSliceCmd {
+	cmd := c.client.B().TfunctionList().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newMapStringInterfaceSliceCmd(resp)
+}
+
+func (c *Compat) TFunctionListArgs(ctx context.Context, options *TFunctionListOptions) *MapStringInterfaceSliceCmd {
+	cmd := c.client.B().TfunctionList()
+	if options.Library != "" {
+		cmd.LibraryName(options.Library)
+	}
+	if options.Withcode {
+		cmd.Withcode()
+	}
+	if options.Verbose > 0 {
+		cmd.Verbose()
+		for i := 0; i < options.Verbose; i++ {
+			cmd.V()
+		}
+	}
+	cmdCompleted := cmd.Build()
+	resp := c.client.Do(ctx, cmdCompleted)
+	return newMapStringInterfaceSliceCmd(resp)
+}
+
+func (c *Compat) TFCall(ctx context.Context, libName string, funcName string, numKeys int) *Cmd {
+	cmd := c.client.
+		B().
+		Tfcall().
+		LibraryFunction(fmt.Sprintf("%s.%s", libName, funcName)).
+		Numkeys(int64(numKeys)).
+		Build()
+	resp := c.client.Do(ctx, cmd)
+	return newCmd(resp)
+}
+
+func (c *Compat) TFCallArgs(ctx context.Context, libName string, funcName string, numKeys int, options *TFCallOptions) *Cmd {
+	cmd := c.client.
+		B().
+		Tfcall().
+		LibraryFunction(fmt.Sprintf("%s.%s", libName, funcName)).
+		Numkeys(int64(numKeys)).
+		Key(options.Keys...).
+		Arg(options.Arguments...).
+		Build()
+	resp := c.client.Do(ctx, cmd)
+	return newCmd(resp)
+}
+
+func (c *Compat) TFCallASYNC(ctx context.Context, libName string, funcName string, numKeys int) *Cmd {
+	cmd := c.client.
+		B().
+		Tfcallasync().
+		LibraryFunction(fmt.Sprintf("%s.%s", libName, funcName)).
+		Numkeys(int64(numKeys)).
+		Build()
+	resp := c.client.Do(ctx, cmd)
+	return newCmd(resp)
+}
+
+func (c *Compat) TFCallASYNCArgs(ctx context.Context, libName string, funcName string, numKeys int, options *TFCallOptions) *Cmd {
+	cmd := c.client.
+		B().
+		Tfcallasync().
+		LibraryFunction(fmt.Sprintf("%s.%s", libName, funcName)).
+		Numkeys(int64(numKeys)).
+		Key(options.Keys...).
+		Arg(options.Arguments...).
+		Build()
+	resp := c.client.Do(ctx, cmd)
+	return newCmd(resp)
 }
 
 func (c CacheCompat) BitCount(ctx context.Context, key string, bitCount *BitCount) *IntCmd {

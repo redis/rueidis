@@ -2792,3 +2792,71 @@ func formatSec(dur time.Duration) int64 {
 	}
 	return int64(dur / time.Second)
 }
+
+// https://github.com/redis/go-redis/blob/f994ff1cd96299a5c8029ae3403af7b17ef06e8a/gears_commands.go#L21C1-L35C2
+type TFunctionLoadOptions struct {
+	Replace bool
+	Config  string
+}
+
+type TFunctionListOptions struct {
+	Withcode bool
+	Verbose  int
+	Library  string
+}
+
+type TFCallOptions struct {
+	Keys      []string
+	Arguments []string
+}
+
+type MapStringInterfaceSliceCmd struct {
+	err error
+	val []map[string]interface{}
+}
+
+func (cmd *MapStringInterfaceSliceCmd) SetVal(val []map[string]interface{}) {
+	cmd.val = val
+}
+
+func (cmd *MapStringInterfaceSliceCmd) Val() []map[string]interface{} {
+	return cmd.val
+}
+
+func (cmd *MapStringInterfaceSliceCmd) Err() error {
+	return cmd.err
+}
+
+func (cmd *MapStringInterfaceSliceCmd) Result() ([]map[string]interface{}, error) {
+	return cmd.Val(), cmd.Err()
+}
+
+func newMapStringInterfaceSliceCmd(res rueidis.RedisResult) *MapStringInterfaceSliceCmd {
+	arr, err := res.ToArray()
+	if err != nil {
+		return &MapStringInterfaceSliceCmd{err: err}
+	}
+	out := &MapStringInterfaceSliceCmd{val: make([]map[string]any, 0, len(arr))}
+	for _, ele := range arr {
+		m, err := ele.AsMap()
+		eleMap := make(map[string]any, len(m))
+		if err != nil {
+			out.err = err
+			return out
+		}
+		for k, v := range m {
+			var val any
+			if !v.IsNil() {
+				var err error
+				val, err = v.ToAny()
+				if err != nil {
+					out.err = err
+					return out
+				}
+			}
+			eleMap[k] = val
+		}
+		out.val = append(out.val, eleMap)
+	}
+	return out
+}

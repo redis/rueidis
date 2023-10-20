@@ -84,10 +84,13 @@
         "optional": true
       },
       {
-        "name": "config",
-        "type": "string",
-        "display_text": "config",
-        "token": "CONFIG",
+        "command": "CONFIG",
+        "name": [
+          "config"
+        ],
+        "type": [
+          "string"
+        ],
         "optional": true
       },
       {
