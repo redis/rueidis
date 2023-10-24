@@ -390,6 +390,107 @@ type Cmdable interface {
 	GearsCmdable
 }
 
+// https://github.com/redis/go-redis/blob/af4872cbd0de349855ce3f0978929c2f56eb995f/probabilistic.go#L10
+type ProbabilisticCmdable interface {
+	BFAdd(ctx context.Context, key string, element interface{}) *BoolCmd
+	BFCard(ctx context.Context, key string) *IntCmd
+	BFExists(ctx context.Context, key string, element interface{}) *BoolCmd
+	BFInfo(ctx context.Context, key string) *BFInfoCmd
+	BFInfoArg(ctx context.Context, key, option string) *BFInfoCmd
+	BFInfoCapacity(ctx context.Context, key string) *BFInfoCmd
+	BFInfoSize(ctx context.Context, key string) *BFInfoCmd
+	BFInfoFilters(ctx context.Context, key string) *BFInfoCmd
+	BFInfoItems(ctx context.Context, key string) *BFInfoCmd
+	BFInfoExpansion(ctx context.Context, key string) *BFInfoCmd
+	BFInsert(ctx context.Context, key string, options *BFInsertOptions, elements ...interface{}) *BoolSliceCmd
+	BFMAdd(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd
+	BFMExists(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd
+	BFReserve(ctx context.Context, key string, errorRate float64, capacity int64) *StatusCmd
+	BFReserveExpansion(ctx context.Context, key string, errorRate float64, capacity, expansion int64) *StatusCmd
+	BFReserveNonScaling(ctx context.Context, key string, errorRate float64, capacity int64) *StatusCmd
+	BFReserveWithArgs(ctx context.Context, key string, options *BFReserveOptions) *StatusCmd
+	BFScanDump(ctx context.Context, key string, iterator int64) *ScanDumpCmd
+	BFLoadChunk(ctx context.Context, key string, iterator int64, data interface{}) *StatusCmd
+
+	CFAdd(ctx context.Context, key string, element interface{}) *BoolCmd
+	CFAddNX(ctx context.Context, key string, element interface{}) *BoolCmd
+	CFCount(ctx context.Context, key string, element interface{}) *IntCmd
+	CFDel(ctx context.Context, key string, element interface{}) *BoolCmd
+	CFExists(ctx context.Context, key string, element interface{}) *BoolCmd
+	CFInfo(ctx context.Context, key string) *CFInfoCmd
+	CFInsert(ctx context.Context, key string, options *CFInsertOptions, elements ...interface{}) *BoolSliceCmd
+	CFInsertNX(ctx context.Context, key string, options *CFInsertOptions, elements ...interface{}) *IntSliceCmd
+	CFMExists(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd
+	CFReserve(ctx context.Context, key string, capacity int64) *StatusCmd
+	CFReserveWithArgs(ctx context.Context, key string, options *CFReserveOptions) *StatusCmd
+	CFReserveExpansion(ctx context.Context, key string, capacity int64, expansion int64) *StatusCmd
+	CFReserveBucketSize(ctx context.Context, key string, capacity int64, bucketsize int64) *StatusCmd
+	CFReserveMaxIterations(ctx context.Context, key string, capacity int64, maxiterations int64) *StatusCmd
+	CFScanDump(ctx context.Context, key string, iterator int64) *ScanDumpCmd
+	CFLoadChunk(ctx context.Context, key string, iterator int64, data interface{}) *StatusCmd
+
+	CMSIncrBy(ctx context.Context, key string, elements ...interface{}) *IntSliceCmd
+	CMSInfo(ctx context.Context, key string) *CMSInfoCmd
+	CMSInitByDim(ctx context.Context, key string, width, height int64) *StatusCmd
+	CMSInitByProb(ctx context.Context, key string, errorRate, probability float64) *StatusCmd
+	CMSMerge(ctx context.Context, destKey string, sourceKeys ...string) *StatusCmd
+	CMSMergeWithWeight(ctx context.Context, destKey string, sourceKeys map[string]int64) *StatusCmd
+	CMSQuery(ctx context.Context, key string, elements ...interface{}) *IntSliceCmd
+
+	TopKAdd(ctx context.Context, key string, elements ...interface{}) *StringSliceCmd
+	TopKCount(ctx context.Context, key string, elements ...interface{}) *IntSliceCmd
+	TopKIncrBy(ctx context.Context, key string, elements ...interface{}) *StringSliceCmd
+	TopKInfo(ctx context.Context, key string) *TopKInfoCmd
+	TopKList(ctx context.Context, key string) *StringSliceCmd
+	TopKListWithCount(ctx context.Context, key string) *MapStringIntCmd
+	TopKQuery(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd
+	TopKReserve(ctx context.Context, key string, k int64) *StatusCmd
+	TopKReserveWithOptions(ctx context.Context, key string, k int64, width, depth int64, decay float64) *StatusCmd
+
+	TDigestAdd(ctx context.Context, key string, elements ...float64) *StatusCmd
+	TDigestByRank(ctx context.Context, key string, rank ...uint64) *FloatSliceCmd
+	TDigestByRevRank(ctx context.Context, key string, rank ...uint64) *FloatSliceCmd
+	TDigestCDF(ctx context.Context, key string, elements ...float64) *FloatSliceCmd
+	TDigestCreate(ctx context.Context, key string) *StatusCmd
+	TDigestCreateWithCompression(ctx context.Context, key string, compression int64) *StatusCmd
+	TDigestInfo(ctx context.Context, key string) *TDigestInfoCmd
+	TDigestMax(ctx context.Context, key string) *FloatCmd
+	TDigestMin(ctx context.Context, key string) *FloatCmd
+	TDigestMerge(ctx context.Context, destKey string, options *TDigestMergeOptions, sourceKeys ...string) *StatusCmd
+	TDigestQuantile(ctx context.Context, key string, elements ...float64) *FloatSliceCmd
+	TDigestRank(ctx context.Context, key string, values ...float64) *IntSliceCmd
+	TDigestReset(ctx context.Context, key string) *StatusCmd
+	TDigestRevRank(ctx context.Context, key string, values ...float64) *IntSliceCmd
+	TDigestTrimmedMean(ctx context.Context, key string, lowCutQuantile, highCutQuantile float64) *FloatCmd
+}
+
+type BFInsertOptions struct {
+	Capacity   int64
+	Error      float64
+	Expansion  int64
+	NonScaling bool
+	NoCreate   bool
+}
+
+type BFReserveOptions struct {
+	Capacity   int64
+	Error      float64
+	Expansion  int64
+	NonScaling bool
+}
+
+type CFReserveOptions struct {
+	Capacity      int64
+	BucketSize    int64
+	MaxIterations int64
+	Expansion     int64
+}
+
+type CFInsertOptions struct {
+	Capacity int64
+	NoCreate bool
+}
+
 // Align with go-redis
 // https://github.com/redis/go-redis/blob/f994ff1cd96299a5c8029ae3403af7b17ef06e8a/gears_commands.go#L9-L19
 type GearsCmdable interface {
