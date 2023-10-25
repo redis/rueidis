@@ -388,6 +388,7 @@ type Cmdable interface {
 
 	// TODO ModuleLoadex(ctx context.Context, conf *ModuleLoadexConfig) *StringCmd
 	GearsCmdable
+	ProbabilisticCmdable
 }
 
 // https://github.com/redis/go-redis/blob/af4872cbd0de349855ce3f0978929c2f56eb995f/probabilistic.go#L10
@@ -462,33 +463,6 @@ type ProbabilisticCmdable interface {
 	TDigestReset(ctx context.Context, key string) *StatusCmd
 	TDigestRevRank(ctx context.Context, key string, values ...float64) *IntSliceCmd
 	TDigestTrimmedMean(ctx context.Context, key string, lowCutQuantile, highCutQuantile float64) *FloatCmd
-}
-
-type BFInsertOptions struct {
-	Capacity   int64
-	Error      float64
-	Expansion  int64
-	NonScaling bool
-	NoCreate   bool
-}
-
-type BFReserveOptions struct {
-	Capacity   int64
-	Error      float64
-	Expansion  int64
-	NonScaling bool
-}
-
-type CFReserveOptions struct {
-	Capacity      int64
-	BucketSize    int64
-	MaxIterations int64
-	Expansion     int64
-}
-
-type CFInsertOptions struct {
-	Capacity int64
-	NoCreate bool
 }
 
 // Align with go-redis

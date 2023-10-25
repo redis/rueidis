@@ -2860,3 +2860,39 @@ func newMapStringInterfaceSliceCmd(res rueidis.RedisResult) *MapStringInterfaceS
 	}
 	return out
 }
+
+type BFInsertOptions struct {
+	Capacity   int64
+	Error      float64
+	Expansion  int64
+	NonScaling bool
+	NoCreate   bool
+}
+
+type BFReserveOptions struct {
+	Capacity   int64
+	Error      float64
+	Expansion  int64
+	NonScaling bool
+}
+
+type CFReserveOptions struct {
+	Capacity      int64
+	BucketSize    int64
+	MaxIterations int64
+	Expansion     int64
+}
+
+type CFInsertOptions struct {
+	Capacity int64
+	NoCreate bool
+}
+
+type BFInfoCmd struct{}
+type ScanDumpCmd struct{}
+type CFInfoCmd struct{}
+type CMSInfoCmd struct{}
+type TopKInfoCmd struct{}
+type MapStringIntCmd struct{}
+type TDigestInfoCmd struct{}
+type TDigestMergeOptions struct{}
