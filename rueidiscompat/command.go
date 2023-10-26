@@ -2888,10 +2888,37 @@ type CFInsertOptions struct {
 	NoCreate bool
 }
 
+type BFInfo struct {
+	Capacity      int64
+	Size          int64
+	Filters       int64
+	ItemsInserted int64
+	ExpansionRate int64
+}
+
 type BFInfoCmd struct{}
 type ScanDumpCmd struct{}
+
+type CFInfo struct {
+	Size             int64
+	NumBuckets       int64
+	NumFilters       int64
+	NumItemsInserted int64
+	NumItemsDeleted  int64
+	BucketSize       int64
+	ExpansionRate    int64
+	MaxIteration     int64
+}
+
 type CFInfoCmd struct{}
+type CMSInfo struct {
+	Width int64
+	Depth int64
+	Count int64
+}
+
 type CMSInfoCmd struct{}
+
 type TopKInfoCmd struct{}
 type MapStringIntCmd struct{}
 type TDigestInfoCmd struct{}
