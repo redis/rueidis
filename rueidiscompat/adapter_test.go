@@ -8812,6 +8812,7 @@ func testAdapterCache(resp3 bool) {
 			Expect(resultAdd).To(BeEquivalentTo("bar"))
 		})
 	})
+	// https://github.com/redis/go-redis/blob/master/probabilistic_test.go#L14
 	Describe("ProbabilisticCmdable", func() {
 		ctx := context.TODO()
 		BeforeEach(func() {
