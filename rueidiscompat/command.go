@@ -2896,8 +2896,63 @@ type BFInfo struct {
 	ExpansionRate int64
 }
 
-type BFInfoCmd struct{}
+type BFInfoCmd struct {
+	err error
+	val BFInfo
+}
+
+func (cmd *BFInfoCmd) SetVal(val BFInfo) {
+	cmd.val = val
+}
+
+func (cmd *BFInfoCmd) Val() BFInfo {
+	return cmd.val
+}
+
+func (cmd *BFInfoCmd) Err() error {
+	return cmd.err
+}
+
+func (cmd *BFInfoCmd) Result() (BFInfo, error) {
+	return cmd.Val(), cmd.Err()
+}
+
+func newBFInfoCmd(res rueidis.RedisResult) *BFInfoCmd {
+	return nil
+	// arr, err := res.ToArray()
+	// if err != nil {
+	// 	return &MapStringInterfaceSliceCmd{err: err}
+	// }
+	// out := &MapStringInterfaceSliceCmd{val: make([]map[string]any, 0, len(arr))}
+	// for _, ele := range arr {
+	// 	m, err := ele.AsMap()
+	// 	eleMap := make(map[string]any, len(m))
+	// 	if err != nil {
+	// 		out.err = err
+	// 		return out
+	// 	}
+	// 	for k, v := range m {
+	// 		var val any
+	// 		if !v.IsNil() {
+	// 			var err error
+	// 			val, err = v.ToAny()
+	// 			if err != nil {
+	// 				out.err = err
+	// 				return out
+	// 			}
+	// 		}
+	// 		eleMap[k] = val
+	// 	}
+	// 	out.val = append(out.val, eleMap)
+	// }
+	// return out
+}
+
 type ScanDumpCmd struct{}
+
+func newScanDumpCmd(res rueidis.RedisResult) *ScanDumpCmd {
+	return nil
+}
 
 type CFInfo struct {
 	Size             int64

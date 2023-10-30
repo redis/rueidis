@@ -3045,6 +3045,148 @@ func (c *Compat) TFCallASYNCArgs(ctx context.Context, libName string, funcName s
 	return newCmd(resp)
 }
 
+func (c *Compat) BFAdd(ctx context.Context, key string, element interface{}) *BoolCmd {
+	cmd := c.client.B().BfAdd().Key(key).Item(fmt.Sprint(element)).Build()
+	return newBoolCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) BFCard(ctx context.Context, key string) *IntCmd {
+	cmd := c.client.B().BfCard().Key(key).Build()
+	return newIntCmd(c.client.Do(ctx, cmd))
+}
+
+// TODO:CacheCompat
+func (c *Compat) BFExists(ctx context.Context, key string, element interface{}) *BoolCmd {
+	cmd := c.client.B().BfExists().Key(key).Item(fmt.Sprint(element)).Build()
+	return newBoolCmd(c.client.Do(ctx, cmd))
+}
+
+// TODO:CacheCompat
+func (c *Compat) BFInfo(ctx context.Context, key string) *BFInfoCmd {
+	cmd := c.client.B().BfInfo().Key(key).Build()
+	return newBFInfoCmd(c.client.Do(ctx, cmd))
+}
+
+// TODO:CacheCompat
+func (c *Compat) BFInfoArg(ctx context.Context, key, option string) *BFInfoCmd {
+	switch option {
+	case "CAPACITY":
+		return c.BFInfoCapacity(ctx, key)
+	case "SIZE":
+		return c.BFInfoSize(ctx, key)
+	case "FILTERS":
+		return c.BFInfoFilters(ctx, key)
+	case "ITEMS":
+		return c.BFInfoItems(ctx, key)
+	case "EXPANSION":
+		return c.BFInfoExpansion(ctx, key)
+	default:
+		panic(fmt.Sprintf("unknown option %v", option))
+	}
+}
+
+// TODO:CacheCompat
+func (c *Compat) BFInfoCapacity(ctx context.Context, key string) *BFInfoCmd {
+	cmd := c.client.B().BfInfo().Key(key).Capacity().Build()
+	return newBFInfoCmd(c.client.Do(ctx, cmd))
+}
+
+// TODO:CacheCompat
+func (c *Compat) BFInfoSize(ctx context.Context, key string) *BFInfoCmd {
+	cmd := c.client.B().BfInfo().Key(key).Size().Build()
+	return newBFInfoCmd(c.client.Do(ctx, cmd))
+}
+
+// TODO:CacheCompat
+func (c *Compat) BFInfoFilters(ctx context.Context, key string) *BFInfoCmd {
+	cmd := c.client.B().BfInfo().Key(key).Filters().Build()
+	return newBFInfoCmd(c.client.Do(ctx, cmd))
+}
+
+// TODO:CacheCompat
+func (c *Compat) BFInfoItems(ctx context.Context, key string) *BFInfoCmd {
+	cmd := c.client.B().BfInfo().Key(key).Items().Build()
+	return newBFInfoCmd(c.client.Do(ctx, cmd))
+}
+
+// TODO:CacheCompat
+func (c *Compat) BFInfoExpansion(ctx context.Context, key string) *BFInfoCmd {
+	cmd := c.client.B().BfInfo().Key(key).Expansion().Build()
+	return newBFInfoCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) BFInsert(ctx context.Context, key string, options *BFInsertOptions, elements ...interface{}) *BoolSliceCmd {
+	_cmd := c.client.B().
+		BfInsert().
+		Key(key).
+		Capacity(options.Capacity).
+		Error(options.Error).
+		Expansion(options.Expansion)
+	if options.NonScaling {
+		_cmd.Nonscaling()
+	}
+	if options.NoCreate {
+		_cmd.Nocreate()
+	}
+	cmd := _cmd.Items()
+	var last cmds.BfInsertItem
+	for _, e := range elements {
+		last = cmd.Item(fmt.Sprint(e))
+	}
+	return newBoolSliceCmd(c.client.Do(ctx, last.Build()))
+}
+
+func (c *Compat) BFMAdd(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd {
+	cmd := c.client.B().BfMadd().Key(key)
+	var last cmds.BfMaddItem
+	for _, e := range elements {
+		last = cmd.Item(fmt.Sprint(e))
+	}
+	return newBoolSliceCmd(c.client.Do(ctx, last.Build()))
+}
+
+func (c *Compat) BFMExists(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd {
+	cmd := c.client.B().BfMexists().Key(key)
+	var last cmds.BfMexistsItem
+	for _, e := range elements {
+		last = cmd.Item(fmt.Sprint(e))
+	}
+	return newBoolSliceCmd(c.client.Do(ctx, last.Build()))
+}
+
+func (c *Compat) BFReserve(ctx context.Context, key string, errorRate float64, capacity int64) *StatusCmd {
+	cmd := c.client.B().BfReserve().Key(key).ErrorRate(errorRate).Capacity(capacity).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) BFReserveExpansion(ctx context.Context, key string, errorRate float64, capacity, expansion int64) *StatusCmd {
+	cmd := c.client.B().BfReserve().Key(key).ErrorRate(errorRate).Capacity(capacity).Expansion(expansion).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) BFReserveNonScaling(ctx context.Context, key string, errorRate float64, capacity int64) *StatusCmd {
+	cmd := c.client.B().BfReserve().Key(key).ErrorRate(errorRate).Capacity(capacity).Nonscaling().Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) BFReserveWithArgs(ctx context.Context, key string, options *BFReserveOptions) *StatusCmd {
+	cmd := c.client.B().BfReserve().Key(key).ErrorRate(options.Error).Capacity(options.Capacity).Expansion(options.Expansion)
+	if options.NonScaling {
+		cmd.Nonscaling()
+	}
+	return newStatusCmd(c.client.Do(ctx, cmd.Build()))
+}
+
+func (c *Compat) BFScanDump(ctx context.Context, key string, iterator int64) *ScanDumpCmd {
+	cmd := c.client.B().BfScandump().Key(key).Iterator(iterator).Build()
+	return newScanDumpCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) BFLoadChunk(ctx context.Context, key string, iterator int64, data interface{}) *StatusCmd {
+	cmd := c.client.B().BfLoadchunk().Key(key).Iterator(iterator).Data(fmt.Sprint(data)).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
 func (c CacheCompat) BitCount(ctx context.Context, key string, bitCount *BitCount) *IntCmd {
 	var resp rueidis.RedisResult
 	if bitCount == nil {
