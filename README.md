@@ -172,6 +172,29 @@ client.DoCache(ctx, client.B().Get().Key("prefix1:1").Cache(), time.Minute).IsCa
 Please make sure that commands passed to `DoCache()` and `DoMultiCache()` are covered by your prefixes.
 Otherwise, their client-side cache will not be invalidated by redis.
 
+### Client Side Caching with Cache Aside Pattern
+
+Cache-Aside is a widely used pattern to cache other data sources into Redis. For example:
+
+```go
+client, err := rueidisaside.NewClient(rueidisaside.ClientOption{
+    ClientOption: rueidis.ClientOption{InitAddress: []string{"127.0.0.1:6379"}},
+})
+if err != nil {
+    panic(err)
+}
+val, err := client.Get(context.Background(), time.Minute, "mykey", func(ctx context.Context, key string) (val string, err error) {
+    if err = db.QueryRowContext(ctx, "SELECT val FROM mytab WHERE id = ?", key).Scan(&val); err == sql.ErrNoRows {
+        val = "_nil_" // cache nil to avoid penetration.
+        err = nil     // clear err in case of sql.ErrNoRows.
+    }
+    return
+})
+// ...
+```
+
+Please refer to the full example at [rueidisaside](https://github.com/redis/rueidis/blob/main/rueidisaside/README.md).
+
 ### Disable Client Side Caching
 
 Some Redis provider doesn't support client-side caching, ex. Google Cloud Memorystore.
