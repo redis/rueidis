@@ -3630,6 +3630,65 @@ func (c CacheCompat) ZScore(ctx context.Context, key, member string) *FloatCmd {
 	return newFloatCmd(resp)
 }
 
+func (c CacheCompat) BFExists(ctx context.Context, key string, element interface{}) *BoolCmd {
+	cmd := c.client.B().BfExists().Key(key).Item(fmt.Sprint(element)).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newBoolCmd(resp)
+}
+
+func (c CacheCompat) BFInfo(ctx context.Context, key string) *BFInfoCmd {
+	cmd := c.client.B().BfInfo().Key(key).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newBFInfoCmd(resp)
+}
+
+func (c CacheCompat) BFInfoArg(ctx context.Context, key, option string) *BFInfoCmd {
+	switch option {
+	case "CAPACITY":
+		return c.BFInfoCapacity(ctx, key)
+	case "SIZE":
+		return c.BFInfoSize(ctx, key)
+	case "FILTERS":
+		return c.BFInfoFilters(ctx, key)
+	case "ITEMS":
+		return c.BFInfoItems(ctx, key)
+	case "EXPANSION":
+		return c.BFInfoExpansion(ctx, key)
+	default:
+		panic(fmt.Sprintf("unknown option %v", option))
+	}
+}
+
+func (c CacheCompat) BFInfoCapacity(ctx context.Context, key string) *BFInfoCmd {
+	cmd := c.client.B().BfInfo().Key(key).Capacity().Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newBFInfoCmd(resp)
+}
+
+func (c CacheCompat) BFInfoSize(ctx context.Context, key string) *BFInfoCmd {
+	cmd := c.client.B().BfInfo().Key(key).Size().Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newBFInfoCmd(resp)
+}
+
+func (c CacheCompat) BFInfoFilters(ctx context.Context, key string) *BFInfoCmd {
+	cmd := c.client.B().BfInfo().Key(key).Filters().Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newBFInfoCmd(resp)
+}
+
+func (c CacheCompat) BFInfoItems(ctx context.Context, key string) *BFInfoCmd {
+	cmd := c.client.B().BfInfo().Key(key).Items().Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newBFInfoCmd(resp)
+}
+
+func (c CacheCompat) BFInfoExpansion(ctx context.Context, key string) *BFInfoCmd {
+	cmd := c.client.B().BfInfo().Key(key).Expansion().Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newBFInfoCmd(resp)
+}
+
 func str(arg any) string {
 	if arg == nil {
 		return ""
