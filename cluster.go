@@ -233,13 +233,17 @@ func (c *clusterClient) _refresh() (err error) {
 
 	slots := [16384]conn{}
 	for master, g := range groups {
-		addr := master
-		if c.opt.ReplicaOnly && len(g.nodes) > 1 {
-			addr = g.nodes[1+rand.Intn(len(g.nodes)-1)]
-		}
-		cc := conns[addr]
+		nodesCount := len(g.nodes)
 		for _, slot := range g.slots {
 			for i := slot[0]; i <= slot[1]; i++ {
+				var cc conn
+				if c.opt.ReplicaOnly && nodesCount > 1 {
+					addr := g.nodes[1+rand.Intn(nodesCount-1)]
+					cc = conns[addr]
+				} else {
+					cc = conns[master]
+				}
+
 				slots[i] = cc
 			}
 		}
