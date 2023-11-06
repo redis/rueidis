@@ -2954,6 +2954,7 @@ func (c *Compat) TFunctionLoad(ctx context.Context, lib string) *StatusCmd {
 	return newStatusCmd(resp)
 }
 
+// FIXME: should check nil of options
 func (c *Compat) TFunctionLoadArgs(ctx context.Context, lib string, options *TFunctionLoadOptions) *StatusCmd {
 	b := c.client.B()
 	var cmd cmds.Completed
@@ -3128,12 +3129,12 @@ func (c *Compat) BFInsert(ctx context.Context, key string, options *BFInsertOpti
 	if options.NoCreate {
 		_cmd.Nocreate()
 	}
-	cmd := _cmd.Items()
-	var last cmds.BfInsertItem
+	items := _cmd.Items()
 	for _, e := range elements {
-		last = cmd.Item(fmt.Sprint(e))
+		items.Item(fmt.Sprint(e))
 	}
-	return newBoolSliceCmd(c.client.Do(ctx, last.Build()))
+	cmd := (cmds.BfInsertItem)(items).Build()
+	return newBoolSliceCmd(c.client.Do(ctx, cmd))
 }
 
 func (c *Compat) BFMAdd(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd {
@@ -3185,6 +3186,318 @@ func (c *Compat) BFScanDump(ctx context.Context, key string, iterator int64) *Sc
 func (c *Compat) BFLoadChunk(ctx context.Context, key string, iterator int64, data interface{}) *StatusCmd {
 	cmd := c.client.B().BfLoadchunk().Key(key).Iterator(iterator).Data(fmt.Sprint(data)).Build()
 	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) CFAdd(ctx context.Context, key string, element interface{}) *BoolCmd {
+	cmd := c.client.B().CfAdd().Key(key).Item(fmt.Sprint(element)).Build()
+	return newBoolCmd(c.client.Do(ctx, cmd))
+}
+func (c *Compat) CFAddNX(ctx context.Context, key string, element interface{}) *BoolCmd {
+	cmd := c.client.B().CfAddnx().Key(key).Item(fmt.Sprint(element)).Build()
+	return newBoolCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) CFCount(ctx context.Context, key string, element interface{}) *IntCmd {
+	cmd := c.client.B().CfCount().Key(key).Item(fmt.Sprint(element)).Build()
+	return newIntCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) CFDel(ctx context.Context, key string, element interface{}) *BoolCmd {
+	cmd := c.client.B().CfDel().Key(key).Item(fmt.Sprint(element)).Build()
+	return newBoolCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) CFExists(ctx context.Context, key string, element interface{}) *BoolCmd {
+	cmd := c.client.B().CfExists().Key(key).Item(fmt.Sprint(element)).Build()
+	return newBoolCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) CFInfo(ctx context.Context, key string) *CFInfoCmd {
+	cmd := c.client.B().CfInfo().Key(key).Build()
+	return newCFInfoCmd(c.client.Do(ctx, cmd))
+}
+
+// XXX
+func (c *Compat) CFInsert(ctx context.Context, key string, options *CFInsertOptions, elements ...interface{}) *BoolSliceCmd {
+	_cmd := c.client.B().CfInsert().Key(key).Items()
+	for _, e := range elements {
+		_cmd.Item(fmt.Sprint(e))
+	}
+	cmd := (cmds.CfInsertItem)(_cmd).Build()
+	return newBoolSliceCmd(c.client.Do(ctx, cmd))
+}
+
+// Capacity int64
+// NoCreate bool
+func (c *Compat) CFInsertNX(ctx context.Context, key string, options *CFInsertOptions, elements ...interface{}) *IntSliceCmd {
+	_cmd := c.client.B().CfInsertnx().Key(key)
+	if options != nil {
+		_cmd.Capacity(options.Capacity)
+		if options.NoCreate {
+			_cmd.Nocreate()
+		}
+	}
+	items := _cmd.Items()
+	for _, e := range elements {
+		items.Item(fmt.Sprint(e))
+	}
+	cmd := (cmds.CfInsertItem)(items).Build()
+	return newIntSliceCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) CFMExists(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd {
+	_cmd := c.client.B().CfMexists().Key(key)
+	for _, e := range elements {
+		_cmd.Item(fmt.Sprint(e))
+	}
+	cmd := (cmds.CfMexistsItem)(_cmd).Build()
+	return newBoolSliceCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) CFReserve(ctx context.Context, key string, capacity int64) *StatusCmd {
+	cmd := c.client.B().CfReserve().Key(key).Capacity(capacity).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+// Capacity      int64
+// BucketSize    int64
+// MaxIterations int64
+// Expansion     int64
+func (c *Compat) CFReserveWithArgs(ctx context.Context, key string, options *CFReserveOptions) *StatusCmd {
+	cmd := c.client.B().
+		CfReserve().
+		Key(key).
+		Capacity(options.Capacity).
+		Bucketsize(options.BucketSize).
+		Maxiterations(options.MaxIterations).
+		Expansion(options.Expansion).
+		Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+func (c *Compat) CFReserveExpansion(ctx context.Context, key string, capacity int64, expansion int64) *StatusCmd {
+	cmd := c.client.B().
+		CfReserve().
+		Key(key).
+		Capacity(capacity).
+		Expansion(expansion).
+		Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) CFReserveBucketSize(ctx context.Context, key string, capacity int64, bucketsize int64) *StatusCmd {
+	cmd := c.client.B().
+		CfReserve().
+		Key(key).
+		Capacity(capacity).
+		Bucketsize(bucketsize).
+		Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) CFReserveMaxIterations(ctx context.Context, key string, capacity int64, maxiterations int64) *StatusCmd {
+	cmd := c.client.B().
+		CfReserve().
+		Key(key).
+		Capacity(capacity).
+		Maxiterations(maxiterations).
+		Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) CFScanDump(ctx context.Context, key string, iterator int64) *ScanDumpCmd {
+	cmd := c.client.B().CfScandump().Key(key).Iterator(iterator).Build()
+	return newScanDumpCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) CFLoadChunk(ctx context.Context, key string, iterator int64, data interface{}) *StatusCmd {
+	cmd := c.client.B().CfLoadchunk().Key(key).Iterator(iterator).Data(fmt.Sprint(data)).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) CMSIncrBy(ctx context.Context, key string, elements ...interface{}) *IntSliceCmd {
+	_cmd := c.client.B().CmsIncrby().Key(key)
+	for i := 0; i < len(elements); i += 2 {
+		_cmd.Item(fmt.Sprint(elements[i])).Increment((int64)(elements[i+1].(int)))
+	}
+	cmd := (cmds.CmsIncrbyItemsIncrement)(_cmd).Build()
+	return newIntSliceCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) CMSInfo(ctx context.Context, key string) *CMSInfoCmd {
+	cmd := c.client.B().CmsInfo().Key(key).Build()
+	return newCMSInfoCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) CMSInitByDim(ctx context.Context, key string, width, height int64) *StatusCmd {
+	cmd := c.client.B().CmsInitbydim().Key(key).Width(width).Depth(height).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) CMSInitByProb(ctx context.Context, key string, errorRate, probability float64) *StatusCmd {
+	cmd := c.client.B().CmsInitbyprob().Key(key).Error(errorRate).Probability(probability).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) CMSMerge(ctx context.Context, destKey string, sourceKeys ...string) *StatusCmd {
+	cmd := c.client.B().CmsMerge().Destination(destKey).Numkeys((int64)(len(sourceKeys))).Source(sourceKeys...).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) CMSMergeWithWeight(ctx context.Context, destKey string, sourceKeys map[string]int64) *StatusCmd {
+	_cmd := c.client.B().CmsMerge().Destination(destKey).Numkeys((int64)(len(sourceKeys)))
+	keys := make([]string, 0, len(sourceKeys))
+	weights := make([]int64, 0, len(sourceKeys))
+	for k := range sourceKeys {
+		keys = append(keys, k)
+		weights = append(weights, sourceKeys[k])
+	}
+	for _, k := range keys {
+		_cmd.Source(k)
+	}
+	cmd := (cmds.CmsMergeSource)(_cmd).Weights().Weight(weights...).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+// Cache
+func (c *Compat) CMSQuery(ctx context.Context, key string, elements ...interface{}) *IntSliceCmd {
+	_cmd := c.client.B().CmsQuery().Key(key)
+	for _, e := range elements {
+		_cmd.Item(fmt.Sprint(e))
+	}
+	cmd := (cmds.CmsQueryItem)(_cmd).Build()
+	return newIntSliceCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) TopKAdd(ctx context.Context, key string, elements ...interface{}) *StringSliceCmd {
+	_cmd := c.client.B().TopkAdd().Key(key)
+	for _, e := range elements {
+		_cmd.Items(fmt.Sprint(e))
+	}
+	cmd := (cmds.TopkAddItems)(_cmd).Build()
+	return newStringSliceCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) TopKCount(ctx context.Context, key string, elements ...interface{}) *IntSliceCmd {
+	_cmd := c.client.B().TopkCount().Key(key)
+	for _, e := range elements {
+		_cmd.Item(fmt.Sprint(e))
+	}
+	cmd := (cmds.TopkCountItem)(_cmd).Build()
+	return newIntSliceCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) TopKIncrBy(ctx context.Context, key string, elements ...interface{}) *StringSliceCmd {
+	_cmd := c.client.B().TopkIncrby().Key(key)
+	for _, e := range elements {
+		_cmd.Item(fmt.Sprint(e))
+	}
+	cmd := (cmds.TopkIncrbyItemsIncrement)(_cmd).Build()
+	return newStringSliceCmd(c.client.Do(ctx, cmd))
+}
+func (c *Compat) TopKInfo(ctx context.Context, key string) *TopKInfoCmd {
+	cmd := c.client.B().CfInfo().Key(key).Build()
+	return newCFInfoCmd(c.client.Do(ctx, cmd))
+
+}
+func (c *Compat) TopKList(ctx context.Context, key string) *StringSliceCmd {
+	cmd := c.client.B().CfInfo().Key(key).Build()
+	return newCFInfoCmd(c.client.Do(ctx, cmd))
+
+}
+func (c *Compat) TopKListWithCount(ctx context.Context, key string) *MapStringIntCmd {
+	cmd := c.client.B().CfInfo().Key(key).Build()
+	return newCFInfoCmd(c.client.Do(ctx, cmd))
+
+}
+func (c *Compat) TopKQuery(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd {
+	cmd := c.client.B().CfInfo().Key(key).Build()
+	return newCFInfoCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) TopKReserve(ctx context.Context, key string, k int64) *StatusCmd {
+	cmd := c.client.B().CfInfo().Key(key).Build()
+	return newCFInfoCmd(c.client.Do(ctx, cmd))
+
+}
+func (c *Compat) TopKReserveWithOptions(ctx context.Context, key string, k int64, width, depth int64, decay float64) *StatusCmd {
+	cmd := c.client.B().CfInfo().Key(key).Build()
+	return newCFInfoCmd(c.client.Do(ctx, cmd))
+
+}
+
+func (c *Compat) TDigestAdd(ctx context.Context, key string, elements ...float64) *StatusCmd {
+	cmd := c.client.B().CfInfo().Key(key).Build()
+	return newCFInfoCmd(c.client.Do(ctx, cmd))
+
+}
+func (c *Compat) TDigestByRank(ctx context.Context, key string, rank ...uint64) *FloatSliceCmd {
+	cmd := c.client.B().CfInfo().Key(key).Build()
+	return newCFInfoCmd(c.client.Do(ctx, cmd))
+
+}
+func (c *Compat) TDigestByRevRank(ctx context.Context, key string, rank ...uint64) *FloatSliceCmd {
+	cmd := c.client.B().CfInfo().Key(key).Build()
+	return newCFInfoCmd(c.client.Do(ctx, cmd))
+
+}
+func (c *Compat) TDigestCDF(ctx context.Context, key string, elements ...float64) *FloatSliceCmd {
+	cmd := c.client.B().CfInfo().Key(key).Build()
+	return newCFInfoCmd(c.client.Do(ctx, cmd))
+
+}
+func (c *Compat) TDigestCreate(ctx context.Context, key string) *StatusCmd {
+	cmd := c.client.B().CfInfo().Key(key).Build()
+	return newCFInfoCmd(c.client.Do(ctx, cmd))
+
+}
+func (c *Compat) TDigestCreateWithCompression(ctx context.Context, key string, compression int64) *StatusCmd {
+	cmd := c.client.B().CfInfo().Key(key).Build()
+	return newCFInfoCmd(c.client.Do(ctx, cmd))
+
+}
+func (c *Compat) TDigestInfo(ctx context.Context, key string) *TDigestInfoCmd {
+	cmd := c.client.B().CfInfo().Key(key).Build()
+	return newCFInfoCmd(c.client.Do(ctx, cmd))
+
+}
+func (c *Compat) TDigestMax(ctx context.Context, key string) *FloatCmd {
+	cmd := c.client.B().CfInfo().Key(key).Build()
+	return newCFInfoCmd(c.client.Do(ctx, cmd))
+
+}
+func (c *Compat) TDigestMin(ctx context.Context, key string) *FloatCmd {
+	cmd := c.client.B().CfInfo().Key(key).Build()
+	return newCFInfoCmd(c.client.Do(ctx, cmd))
+
+}
+func (c *Compat) TDigestMerge(ctx context.Context, destKey string, options *TDigestMergeOptions, sourceKeys ...string) *StatusCmd {
+	cmd := c.client.B().CfInfo().Key(key).Build()
+	return newCFInfoCmd(c.client.Do(ctx, cmd))
+
+}
+func (c *Compat) TDigestQuantile(ctx context.Context, key string, elements ...float64) *FloatSliceCmd {
+	cmd := c.client.B().CfInfo().Key(key).Build()
+	return newCFInfoCmd(c.client.Do(ctx, cmd))
+
+}
+func (c *Compat) TDigestRank(ctx context.Context, key string, values ...float64) *IntSliceCmd {
+	cmd := c.client.B().CfInfo().Key(key).Build()
+	return newCFInfoCmd(c.client.Do(ctx, cmd))
+
+}
+func (c *Compat) TDigestReset(ctx context.Context, key string) *StatusCmd {
+	cmd := c.client.B().CfInfo().Key(key).Build()
+	return newCFInfoCmd(c.client.Do(ctx, cmd))
+
+}
+func (c *Compat) TDigestRevRank(ctx context.Context, key string, values ...float64) *IntSliceCmd {
+	cmd := c.client.B().CfInfo().Key(key).Build()
+	return newCFInfoCmd(c.client.Do(ctx, cmd))
+
+}
+func (c *Compat) TDigestTrimmedMean(ctx context.Context, key string, lowCutQuantile, highCutQuantile float64) *FloatCmd {
+	cmd := c.client.B().CfInfo().Key(key).Build()
+	return newCFInfoCmd(c.client.Do(ctx, cmd))
 }
 
 func (c CacheCompat) BitCount(ctx context.Context, key string, bitCount *BitCount) *IntCmd {
@@ -3688,6 +4001,15 @@ func (c CacheCompat) BFInfoExpansion(ctx context.Context, key string) *BFInfoCmd
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newBFInfoCmd(resp)
 }
+
+func (c *CacheCompat) CFCount(ctx context.Context, key string, element interface{}) *IntCmd
+func (c *CacheCompat) CFExists(ctx context.Context, key string, element interface{}) *BoolCmd
+func (c *CacheCompat) CFInfo(ctx context.Context, key string) *CFInfoCmd
+func (c *CacheCompat) CMSInfo(ctx context.Context, key string) *CMSInfoCmd
+func (c *CacheCompat) CMSQuery(ctx context.Context, key string, elements ...interface{}) *IntSliceCmd
+func (c *CacheCompat) TopKInfo(ctx context.Context, key string) *TopKInfoCmd
+func (c *CacheCompat) TopKList(ctx context.Context, key string) *StringSliceCmd
+func (c *CacheCompat) TopKQuery(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd
 
 func str(arg any) string {
 	if arg == nil {

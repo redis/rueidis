@@ -2966,6 +2966,11 @@ type CFInfo struct {
 }
 
 type CFInfoCmd struct{}
+
+func newCFInfoCmd(res rueidis.RedisResult) *CFInfoCmd {
+	return nil
+}
+
 type CMSInfo struct {
 	Width int64
 	Depth int64
@@ -2973,6 +2978,10 @@ type CMSInfo struct {
 }
 
 type CMSInfoCmd struct{}
+
+func newCMSInfoCmd(res rueidis.RedisResult) *CMSInfoCmd {
+	return nil
+}
 
 type TopKInfoCmd struct{}
 type MapStringIntCmd struct{}
