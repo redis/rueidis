@@ -2984,6 +2984,21 @@ func newCMSInfoCmd(res rueidis.RedisResult) *CMSInfoCmd {
 }
 
 type TopKInfoCmd struct{}
+
+func newTopKInfoCmd(res rueidis.RedisResult) *TopKInfoCmd {
+	return nil
+}
+
 type MapStringIntCmd struct{}
+
+func newMapStringIntCmd(res rueidis.RedisResult) *MapStringIntCmd {
+	return nil
+}
+
 type TDigestInfoCmd struct{}
+
+func newTDigestInfoCmd(res rueidis.RedisResult) *TDigestInfoCmd {
+	return nil
+}
+
 type TDigestMergeOptions struct{}

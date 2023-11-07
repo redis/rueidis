@@ -786,14 +786,8 @@
       },
       {
         "name": "values",
-        "type": "block",
-        "multiple": true,
-        "arguments": [
-          {
-            "name": "value",
-            "type": "double"
-          }
-        ]
+        "type": "double",
+        "multiple": true
       }
     ],
     "since": "2.4.0",
@@ -926,7 +920,7 @@
       },
       {
         "name": "value",
-        "type": "double",
+        "type": "integer",
         "multiple": true
       }
     ],
@@ -960,7 +954,7 @@
       },
       {
         "name": "rank",
-        "type": "double",
+        "type": "integer",
         "multiple": true
       }
     ],

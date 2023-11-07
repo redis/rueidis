@@ -3395,46 +3395,53 @@ func (c *Compat) TopKIncrBy(ctx context.Context, key string, elements ...interfa
 	return newStringSliceCmd(c.client.Do(ctx, cmd))
 }
 func (c *Compat) TopKInfo(ctx context.Context, key string) *TopKInfoCmd {
-	cmd := c.client.B().CfInfo().Key(key).Build()
-	return newCFInfoCmd(c.client.Do(ctx, cmd))
+	cmd := c.client.B().TopkInfo().Key(key).Build()
+	return newTopKInfoCmd(c.client.Do(ctx, cmd))
 
 }
 func (c *Compat) TopKList(ctx context.Context, key string) *StringSliceCmd {
-	cmd := c.client.B().CfInfo().Key(key).Build()
-	return newCFInfoCmd(c.client.Do(ctx, cmd))
-
+	cmd := c.client.B().TopkList().Key(key).Build()
+	return newStringSliceCmd(c.client.Do(ctx, cmd))
 }
+
 func (c *Compat) TopKListWithCount(ctx context.Context, key string) *MapStringIntCmd {
-	cmd := c.client.B().CfInfo().Key(key).Build()
-	return newCFInfoCmd(c.client.Do(ctx, cmd))
-
+	cmd := c.client.B().TopkList().Key(key).Withcount().Build()
+	return newMapStringIntCmd(c.client.Do(ctx, cmd))
 }
+
 func (c *Compat) TopKQuery(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd {
-	cmd := c.client.B().CfInfo().Key(key).Build()
-	return newCFInfoCmd(c.client.Do(ctx, cmd))
+	_cmd := c.client.B().TopkQuery().Key(key)
+	for _, e := range elements {
+		_cmd.Item(fmt.Sprint(e))
+	}
+	cmd := (cmds.TopkQueryItem)(_cmd).Build()
+	return newBoolSliceCmd(c.client.Do(ctx, cmd))
 }
 
 func (c *Compat) TopKReserve(ctx context.Context, key string, k int64) *StatusCmd {
-	cmd := c.client.B().CfInfo().Key(key).Build()
-	return newCFInfoCmd(c.client.Do(ctx, cmd))
-
+	cmd := c.client.B().TopkReserve().Key(key).Topk(k).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
 }
-func (c *Compat) TopKReserveWithOptions(ctx context.Context, key string, k int64, width, depth int64, decay float64) *StatusCmd {
-	cmd := c.client.B().CfInfo().Key(key).Build()
-	return newCFInfoCmd(c.client.Do(ctx, cmd))
 
+func (c *Compat) TopKReserveWithOptions(ctx context.Context, key string, k int64, width, depth int64, decay float64) *StatusCmd {
+	cmd := c.client.B().TopkReserve().Key(key).Topk(k).Width(width).Depth(depth).Decay(decay).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
 }
 
 func (c *Compat) TDigestAdd(ctx context.Context, key string, elements ...float64) *StatusCmd {
-	cmd := c.client.B().CfInfo().Key(key).Build()
-	return newCFInfoCmd(c.client.Do(ctx, cmd))
-
+	cmd := c.client.B().TdigestAdd().Key(key).Values(elements...).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
 }
+
 func (c *Compat) TDigestByRank(ctx context.Context, key string, rank ...uint64) *FloatSliceCmd {
-	cmd := c.client.B().CfInfo().Key(key).Build()
-	return newCFInfoCmd(c.client.Do(ctx, cmd))
-
+	_cmd := c.client.B().TdigestByrank().Key(key)
+	for _, r := range rank {
+		_cmd.Rank((int64)(r))
+	}
+	cmd := (cmds.TdigestByrankRank)(_cmd).Build()
+	return newFloatSliceCmd(c.client.Do(ctx, cmd))
 }
+
 func (c *Compat) TDigestByRevRank(ctx context.Context, key string, rank ...uint64) *FloatSliceCmd {
 	cmd := c.client.B().CfInfo().Key(key).Build()
 	return newCFInfoCmd(c.client.Do(ctx, cmd))

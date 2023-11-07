@@ -24,19 +24,23 @@ func (c TdigestAdd) Key(key string) TdigestAddKey {
 
 type TdigestAddKey Incomplete
 
-func (c TdigestAddKey) Value(value float64) TdigestAddValuesValue {
-	c.cs.s = append(c.cs.s, strconv.FormatFloat(value, 'f', -1, 64))
-	return (TdigestAddValuesValue)(c)
+func (c TdigestAddKey) Values(values ...float64) TdigestAddValues {
+	for _, n := range values {
+		c.cs.s = append(c.cs.s, strconv.FormatFloat(n, 'f', -1, 64))
+	}
+	return (TdigestAddValues)(c)
 }
 
-type TdigestAddValuesValue Incomplete
+type TdigestAddValues Incomplete
 
-func (c TdigestAddValuesValue) Value(value float64) TdigestAddValuesValue {
-	c.cs.s = append(c.cs.s, strconv.FormatFloat(value, 'f', -1, 64))
+func (c TdigestAddValues) Values(values ...float64) TdigestAddValues {
+	for _, n := range values {
+		c.cs.s = append(c.cs.s, strconv.FormatFloat(n, 'f', -1, 64))
+	}
 	return c
 }
 
-func (c TdigestAddValuesValue) Build() Completed {
+func (c TdigestAddValues) Build() Completed {
 	c.cs.Build()
 	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
@@ -61,18 +65,18 @@ func (c TdigestByrank) Key(key string) TdigestByrankKey {
 
 type TdigestByrankKey Incomplete
 
-func (c TdigestByrankKey) Rank(rank ...float64) TdigestByrankRank {
+func (c TdigestByrankKey) Rank(rank ...int64) TdigestByrankRank {
 	for _, n := range rank {
-		c.cs.s = append(c.cs.s, strconv.FormatFloat(n, 'f', -1, 64))
+		c.cs.s = append(c.cs.s, strconv.FormatInt(n, 10))
 	}
 	return (TdigestByrankRank)(c)
 }
 
 type TdigestByrankRank Incomplete
 
-func (c TdigestByrankRank) Rank(rank ...float64) TdigestByrankRank {
+func (c TdigestByrankRank) Rank(rank ...int64) TdigestByrankRank {
 	for _, n := range rank {
-		c.cs.s = append(c.cs.s, strconv.FormatFloat(n, 'f', -1, 64))
+		c.cs.s = append(c.cs.s, strconv.FormatInt(n, 10))
 	}
 	return c
 }
@@ -430,18 +434,18 @@ func (c TdigestRank) Key(key string) TdigestRankKey {
 
 type TdigestRankKey Incomplete
 
-func (c TdigestRankKey) Value(value ...float64) TdigestRankValue {
+func (c TdigestRankKey) Value(value ...int64) TdigestRankValue {
 	for _, n := range value {
-		c.cs.s = append(c.cs.s, strconv.FormatFloat(n, 'f', -1, 64))
+		c.cs.s = append(c.cs.s, strconv.FormatInt(n, 10))
 	}
 	return (TdigestRankValue)(c)
 }
 
 type TdigestRankValue Incomplete
 
-func (c TdigestRankValue) Value(value ...float64) TdigestRankValue {
+func (c TdigestRankValue) Value(value ...int64) TdigestRankValue {
 	for _, n := range value {
-		c.cs.s = append(c.cs.s, strconv.FormatFloat(n, 'f', -1, 64))
+		c.cs.s = append(c.cs.s, strconv.FormatInt(n, 10))
 	}
 	return c
 }
