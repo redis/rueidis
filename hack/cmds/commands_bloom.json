@@ -920,7 +920,7 @@
       },
       {
         "name": "value",
-        "type": "integer",
+        "type": "double",
         "multiple": true
       }
     ],
@@ -971,7 +971,7 @@
       },
       {
         "name": "reverse_rank",
-        "type": "double",
+        "type": "integer",
         "multiple": true
       }
     ],

@@ -3001,4 +3001,7 @@ func newTDigestInfoCmd(res rueidis.RedisResult) *TDigestInfoCmd {
 	return nil
 }
 
-type TDigestMergeOptions struct{}
+type TDigestMergeOptions struct {
+	Compression int64
+	Override    bool
+}
