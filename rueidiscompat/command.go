@@ -30,6 +30,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"reflect"
 	"strconv"
 	"time"
 
@@ -2889,11 +2890,11 @@ type CFInsertOptions struct {
 }
 
 type BFInfo struct {
-	Capacity      int64
-	Size          int64
-	Filters       int64
-	ItemsInserted int64
-	ExpansionRate int64
+	Capacity      int64 `cmd:"CAPACITY"`
+	Size          int64 `cmd:"SIZE"`
+	Filters       int64 `cmd:"FILTERS"`
+	ItemsInserted int64 `cmd:"ITEMS"`
+	ExpansionRate int64 `cmd:"EXPANSION"`
 }
 
 type BFInfoCmd struct {
@@ -2917,41 +2918,73 @@ func (cmd *BFInfoCmd) Result() (BFInfo, error) {
 	return cmd.Val(), cmd.Err()
 }
 
-func newBFInfoCmd(res rueidis.RedisResult) *BFInfoCmd {
-	return nil
-	// arr, err := res.ToArray()
-	// if err != nil {
-	// 	return &MapStringInterfaceSliceCmd{err: err}
-	// }
-	// out := &MapStringInterfaceSliceCmd{val: make([]map[string]any, 0, len(arr))}
-	// for _, ele := range arr {
-	// 	m, err := ele.AsMap()
-	// 	eleMap := make(map[string]any, len(m))
-	// 	if err != nil {
-	// 		out.err = err
-	// 		return out
-	// 	}
-	// 	for k, v := range m {
-	// 		var val any
-	// 		if !v.IsNil() {
-	// 			var err error
-	// 			val, err = v.ToAny()
-	// 			if err != nil {
-	// 				out.err = err
-	// 				return out
-	// 			}
-	// 		}
-	// 		eleMap[k] = val
-	// 	}
-	// 	out.val = append(out.val, eleMap)
-	// }
-	// return out
+// newBFInfoCmd returns BFInfoCmd,
+// if arg is empty string, it returns results of all arguments.
+// if arg is not empty, e.g. CAPACITY, SIZE, ... , it returns the result of it.
+// NOTE: arg is Optional arguments in BF.INFO, and should be all capitalized.
+// see https://redis.io/commands/bf.info/ for more info.
+func newBFInfoCmd(res rueidis.RedisResult, arg string) *BFInfoCmd {
+	cmd := &BFInfoCmd{}
+	if err := res.Error(); err != nil {
+		cmd.err = err
+		return cmd
+	}
+	if arg == "" {
+		m, err := res.AsIntMap()
+		if err != nil {
+			cmd.err = err
+			return cmd
+		}
+		for _arg, val := range m {
+			v := reflect.ValueOf(cmd)
+			v.FieldByName(_arg).SetInt(val)
+		}
+	} else {
+		val, err := res.ToInt64()
+		if err != nil {
+			cmd.err = err
+			return cmd
+		}
+		v := reflect.ValueOf(cmd)
+		t := v.Type()
+		for i := 0; i < v.NumField(); i++ {
+			f := t.Field(i)
+			if f.Tag.Get("cmd") == arg {
+				v.FieldByName(f.Name).SetInt(val)
+			}
+		}
+	}
+	return cmd
 }
 
-type ScanDumpCmd struct{}
+type ScanDump struct {
+	Iter int64
+	Data string
+}
+
+type ScanDumpCmd struct {
+	err error
+	val ScanDump
+}
 
 func newScanDumpCmd(res rueidis.RedisResult) *ScanDumpCmd {
 	return nil
+}
+
+func (cmd *ScanDumpCmd) SetVal(val ScanDump) {
+	cmd.val = val
+}
+
+func (cmd *ScanDumpCmd) Val() ScanDump {
+	return cmd.val
+}
+
+func (cmd *ScanDumpCmd) Err() error {
+	return cmd.err
+}
+
+func (cmd *ScanDumpCmd) Result() (ScanDump, error) {
+	return cmd.Val(), cmd.Err()
 }
 
 type CFInfo struct {

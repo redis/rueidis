@@ -9003,7 +9003,7 @@ func testAdapterCache(resp3 bool) {
 					adapter.BFAdd(ctx, "testbfsd1", i)
 				}
 				infBefore := adapter.BFInfoSize(ctx, "testbfsd1")
-				fd := []redis.ScanDump{}
+				fd := []ScanDump{}
 				sd, err := adapter.BFScanDump(ctx, "testbfsd1", 0).Result()
 				for {
 					if sd.Iter == 0 {
