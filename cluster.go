@@ -18,6 +18,7 @@ import (
 
 // ErrNoSlot indicates that there is no redis node owns the key slot.
 var ErrNoSlot = errors.New("the slot has no redis node")
+var ErrReplicaOnlyConflictsWithSendToReplicas = errors.New("ReplicaOnly conflicts with SendToReplicas option")
 
 type retry struct {
 	cIndexes []int
@@ -70,7 +71,8 @@ var retrycachep = util.NewPool(func(capacity int) *retrycache {
 })
 
 type clusterClient struct {
-	slots  [16384]conn
+	pslots [16384]conn
+	rslots []conn
 	opt    *ClientOption
 	conns  map[string]conn
 	connFn connFn
@@ -91,6 +93,11 @@ func newClusterClient(opt *ClientOption, connFn connFn) (client *clusterClient, 
 		retry:  !opt.DisableRetry,
 		aws:    len(opt.InitAddress) == 1 && strings.Contains(opt.InitAddress[0], "amazonaws.com"),
 	}
+
+	if opt.ReplicaOnly && opt.SendToReplicas != nil {
+		return nil, ErrReplicaOnlyConflictsWithSendToReplicas
+	}
+
 	client.connFn = func(dst string, opt *ClientOption) conn {
 		cc := connFn(dst, opt)
 		cc.SetOnCloseHook(func(err error) {
@@ -231,26 +238,49 @@ func (c *clusterClient) _refresh() (err error) {
 	}
 	c.mu.RUnlock()
 
-	slots := [16384]conn{}
+	pslots := [16384]conn{}
+	var rslots []conn
 	for master, g := range groups {
-		if c.opt.ReplicaOnly && len(g.nodes) > 1 {
+		switch {
+		case c.opt.ReplicaOnly && len(g.nodes) > 1:
 			nodesCount := len(g.nodes)
 			for _, slot := range g.slots {
 				for i := slot[0]; i <= slot[1]; i++ {
-					slots[i] = conns[g.nodes[1+rand.Intn(nodesCount-1)]]
+					pslots[i] = conns[g.nodes[1+rand.Intn(nodesCount-1)]]
 				}
 			}
-		} else {
+		case c.opt.SendToReplicas != nil:
+			if len(rslots) == 0 { // lazy init
+				rslots = make([]conn, 16384)
+			}
+
+			if len(g.nodes) > 1 {
+				for _, slot := range g.slots {
+					for i := slot[0]; i <= slot[1]; i++ {
+						pslots[i] = conns[master]
+						rslots[i] = conns[g.nodes[1+rand.Intn(len(g.nodes)-1)]]
+					}
+				}
+			} else {
+				for _, slot := range g.slots {
+					for i := slot[0]; i <= slot[1]; i++ {
+						pslots[i] = conns[master]
+						rslots[i] = conns[master]
+					}
+				}
+			}
+		default:
 			for _, slot := range g.slots {
 				for i := slot[0]; i <= slot[1]; i++ {
-					slots[i] = conns[master]
+					pslots[i] = conns[master]
 				}
 			}
 		}
 	}
 
 	c.mu.Lock()
-	c.slots = slots
+	c.pslots = pslots
+	c.rslots = rslots
 	c.conns = conns
 	c.mu.Unlock()
 
@@ -267,7 +297,7 @@ func (c *clusterClient) _refresh() (err error) {
 }
 
 func (c *clusterClient) single() (conn conn) {
-	return c._pick(cmds.InitSlot)
+	return c._pick(cmds.InitSlot, false)
 }
 
 func (c *clusterClient) nodes() []string {
@@ -358,26 +388,39 @@ func parseShards(shards RedisMessage, defaultAddr string, tls bool) map[string]g
 	return groups
 }
 
-func (c *clusterClient) _pick(slot uint16) (p conn) {
+func (c *clusterClient) _pick(slot uint16, isSendToReplicas bool) (p conn) {
 	c.mu.RLock()
-	if slot == cmds.InitSlot {
-		for _, cc := range c.conns {
-			p = cc
-			break
+	if c.opt.SendToReplicas == nil {
+		if slot == cmds.InitSlot {
+			for _, cc := range c.conns {
+				p = cc
+				break
+			}
+		} else {
+			p = c.pslots[slot]
 		}
 	} else {
-		p = c.slots[slot]
+		switch {
+		case slot == cmds.InitSlot && isSendToReplicas:
+			p = c.rslots[rand.Intn(int(cmds.InitSlot))]
+		case slot == cmds.InitSlot && !isSendToReplicas:
+			p = c.pslots[rand.Intn(int(cmds.InitSlot))]
+		case isSendToReplicas:
+			p = c.rslots[slot]
+		default:
+			p = c.pslots[slot]
+		}
 	}
 	c.mu.RUnlock()
 	return p
 }
 
-func (c *clusterClient) pick(ctx context.Context, slot uint16) (p conn, err error) {
-	if p = c._pick(slot); p == nil {
+func (c *clusterClient) pick(ctx context.Context, slot uint16, isSendToReplicas bool) (p conn, err error) {
+	if p = c._pick(slot, isSendToReplicas); p == nil {
 		if err := c.refresh(ctx); err != nil {
 			return nil, err
 		}
-		if p = c._pick(slot); p == nil {
+		if p = c._pick(slot, isSendToReplicas); p == nil {
 			return nil, ErrNoSlot
 		}
 	}
@@ -423,7 +466,11 @@ func (c *clusterClient) Do(ctx context.Context, cmd Completed) (resp RedisResult
 
 func (c *clusterClient) do(ctx context.Context, cmd Completed) (resp RedisResult) {
 retry:
-	cc, err := c.pick(ctx, cmd.Slot())
+	isSendToReplicas := false
+	if c.opt.SendToReplicas != nil {
+		isSendToReplicas = c.opt.SendToReplicas(cmd)
+	}
+	cc, err := c.pick(ctx, cmd.Slot(), isSendToReplicas)
 	if err != nil {
 		return newErrResult(err)
 	}
@@ -455,16 +502,58 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, last 
 	defer c.mu.RUnlock()
 
 	count := conncountp.Get(len(c.conns), len(c.conns))
-	for _, cmd := range multi {
-		if cmd.Slot() == cmds.InitSlot {
-			init = true
-			continue
+	var connIndexes []conn
+	if c.opt.SendToReplicas == nil {
+		for _, cmd := range multi {
+			if cmd.Slot() == cmds.InitSlot {
+				init = true
+				continue
+			}
+			p := c.pslots[cmd.Slot()]
+			if p == nil {
+				return nil, 0
+			}
+			count.m[p]++
 		}
-		p := c.slots[cmd.Slot()]
-		if p == nil {
-			return nil, 0
+	} else {
+		connIndexes = make([]conn, len(multi)) // lazy init
+		for i, cmd := range multi {
+			if cmd.Slot() == cmds.InitSlot {
+				init = true
+
+				var p conn
+				isSendToReplicas := c.opt.SendToReplicas(cmd)
+				if isSendToReplicas {
+					p = c.rslots[rand.Intn(int(cmds.InitSlot))]
+				} else {
+					p = c.pslots[rand.Intn(int(cmds.InitSlot))]
+				}
+
+				if p == nil {
+					return nil, 0
+				}
+
+				count.m[p]++
+				connIndexes[i] = p
+
+				continue
+			}
+
+			var p conn
+			isSendToReplicas := c.opt.SendToReplicas(cmd)
+			if isSendToReplicas {
+				p = c.rslots[cmd.Slot()]
+			} else {
+				p = c.pslots[cmd.Slot()]
+			}
+
+			if p == nil {
+				return nil, 0
+			}
+
+			count.m[p]++
+			connIndexes[i] = p
 		}
-		count.m[p]++
 	}
 
 	retries = connretryp.Get(len(count.m), len(count.m))
@@ -473,14 +562,31 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, last 
 	}
 	conncountp.Put(count)
 
-	for i, cmd := range multi {
-		if cmd.Slot() != cmds.InitSlot {
-			if last == cmds.InitSlot {
-				last = cmd.Slot()
-			} else if init && last != cmd.Slot() {
-				panic(panicMixCxSlot)
+	if c.opt.SendToReplicas == nil {
+		for i, cmd := range multi {
+			if cmd.Slot() != cmds.InitSlot {
+				if last == cmds.InitSlot {
+					last = cmd.Slot()
+				} else if init && last != cmd.Slot() {
+					panic(panicMixCxSlot)
+				}
+				cc := c.pslots[cmd.Slot()]
+				re := retries.m[cc]
+				re.commands = append(re.commands, cmd)
+				re.cIndexes = append(re.cIndexes, i)
 			}
-			cc := c.slots[cmd.Slot()]
+		}
+	} else {
+		for i, cmd := range multi {
+			if cmd.Slot() != cmds.InitSlot {
+				if last == cmds.InitSlot {
+					last = cmd.Slot()
+				} else if init && last != cmd.Slot() {
+					panic(panicMixCxSlot)
+				}
+			}
+
+			cc := connIndexes[i]
 			re := retries.m[cc]
 			re.commands = append(re.commands, cmd)
 			re.cIndexes = append(re.cIndexes, i)
@@ -608,7 +714,21 @@ func fillErrs(n int, err error) (results []RedisResult) {
 
 func (c *clusterClient) doMulti(ctx context.Context, slot uint16, multi []Completed) []RedisResult {
 retry:
-	cc, err := c.pick(ctx, slot)
+	isSendToReplicas := false
+	if c.opt.SendToReplicas != nil {
+		isSendToReplicas = true
+		for _, cmd := range multi {
+			if cmd.Slot() == cmds.InitSlot {
+				continue
+			}
+
+			isSendToReplicas = isSendToReplicas && c.opt.SendToReplicas(cmd)
+			if !isSendToReplicas {
+				break
+			}
+		}
+	}
+	cc, err := c.pick(ctx, slot, isSendToReplicas)
 	if err != nil {
 		return fillErrs(len(multi), err)
 	}
@@ -641,7 +761,11 @@ process:
 
 func (c *clusterClient) doCache(ctx context.Context, cmd Cacheable, ttl time.Duration) (resp RedisResult) {
 retry:
-	cc, err := c.pick(ctx, cmd.Slot())
+	isSendToReplicas := false
+	if c.opt.SendToReplicas != nil {
+		isSendToReplicas = c.opt.SendToReplicas(Completed(cmd))
+	}
+	cc, err := c.pick(ctx, cmd.Slot(), isSendToReplicas)
 	if err != nil {
 		return newErrResult(err)
 	}
@@ -711,12 +835,29 @@ func (c *clusterClient) _pickMultiCache(multi []CacheableTTL) *connretrycache {
 	defer c.mu.RUnlock()
 
 	count := conncountp.Get(len(c.conns), len(c.conns))
-	for _, cmd := range multi {
-		p := c.slots[cmd.Cmd.Slot()]
-		if p == nil {
-			return nil
+	if c.opt.SendToReplicas == nil {
+		for _, cmd := range multi {
+			p := c.pslots[cmd.Cmd.Slot()]
+			if p == nil {
+				return nil
+			}
+			count.m[p]++
 		}
-		count.m[p]++
+	} else {
+		for _, cmd := range multi {
+			var p conn
+			isSendToReplicas := c.opt.SendToReplicas(Completed(cmd.Cmd))
+			if isSendToReplicas {
+				p = c.rslots[cmd.Cmd.Slot()]
+			} else {
+				p = c.pslots[cmd.Cmd.Slot()]
+			}
+
+			if p == nil {
+				return nil
+			}
+			count.m[p]++
+		}
 	}
 
 	retries := connretrycachep.Get(len(count.m), len(count.m))
@@ -725,11 +866,27 @@ func (c *clusterClient) _pickMultiCache(multi []CacheableTTL) *connretrycache {
 	}
 	conncountp.Put(count)
 
-	for i, cmd := range multi {
-		cc := c.slots[cmd.Cmd.Slot()]
-		re := retries.m[cc]
-		re.commands = append(re.commands, cmd)
-		re.cIndexes = append(re.cIndexes, i)
+	if c.opt.SendToReplicas == nil {
+		for i, cmd := range multi {
+			cc := c.pslots[cmd.Cmd.Slot()]
+			re := retries.m[cc]
+			re.commands = append(re.commands, cmd)
+			re.cIndexes = append(re.cIndexes, i)
+		}
+	} else {
+		for i, cmd := range multi {
+			var cc conn
+			isSendToReplicas := c.opt.SendToReplicas(Completed(cmd.Cmd))
+			if isSendToReplicas {
+				cc = c.rslots[cmd.Cmd.Slot()]
+			} else {
+				cc = c.pslots[cmd.Cmd.Slot()]
+			}
+
+			re := retries.m[cc]
+			re.commands = append(re.commands, cmd)
+			re.cIndexes = append(re.cIndexes, i)
+		}
 	}
 
 	return retries
@@ -838,7 +995,11 @@ retry:
 
 func (c *clusterClient) Receive(ctx context.Context, subscribe Completed, fn func(msg PubSubMessage)) (err error) {
 retry:
-	cc, err := c.pick(ctx, subscribe.Slot())
+	isSendToReplicas := false
+	if c.opt.SendToReplicas != nil {
+		isSendToReplicas = c.opt.SendToReplicas(subscribe)
+	}
+	cc, err := c.pick(ctx, subscribe.Slot(), isSendToReplicas)
 	if err != nil {
 		goto ret
 	}
@@ -932,7 +1093,7 @@ func (c *dedicatedClusterClient) acquire(ctx context.Context, slot uint16) (wire
 	if c.wire != nil {
 		return c.wire, nil
 	}
-	if c.conn, err = c.client.pick(ctx, c.slot); err != nil {
+	if c.conn, err = c.client.pick(ctx, c.slot, false); err != nil {
 		if p := c.pshks; p != nil {
 			c.pshks = nil
 			p.close <- err

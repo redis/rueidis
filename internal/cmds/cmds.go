@@ -10,6 +10,8 @@ const (
 	mtGetTag = uint16(1<<11) | readonly // make mtGetTag can also be retried
 	scrRoTag = uint16(1<<10) | readonly // make scrRoTag can also be retried
 	// InitSlot indicates that the command be sent to any redis node in cluster
+	// When SendToReplicas is set, if SendToReplicas returns true then the command will be sent to replicas,
+	// otherwise it will be sent to primary.
 	InitSlot = uint16(1 << 14)
 	// NoSlot indicates that the command has no key slot specified
 	NoSlot = uint16(1 << 15)
