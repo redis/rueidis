@@ -35,6 +35,7 @@ import (
 	"time"
 
 	"github.com/redis/rueidis"
+	"github.com/redis/rueidis/internal/cmds"
 	"github.com/redis/rueidis/internal/util"
 )
 
@@ -2918,18 +2919,26 @@ func (cmd *BFInfoCmd) Result() (BFInfo, error) {
 	return cmd.Val(), cmd.Err()
 }
 
+type BfInfoArgType interface {
+	cmds.BfInfoSingleValueCapacity |
+		cmds.BfInfoSingleValueSize |
+		cmds.BfInfoSingleValueFilters |
+		cmds.BfInfoSingleValueItems |
+		cmds.BfInfoSingleValueExpansion | cmds.BfInfoKey
+}
+
 // newBFInfoCmd returns BFInfoCmd,
 // if arg is empty string, it returns results of all arguments.
-// if arg is not empty, e.g. CAPACITY, SIZE, ... , it returns the result of it.
-// NOTE: arg is Optional arguments in BF.INFO, and should be all capitalized.
+// if arg is not empty, it returns the result of it.
 // see https://redis.io/commands/bf.info/ for more info.
-func newBFInfoCmd(res rueidis.RedisResult, arg string) *BFInfoCmd {
+func newBFInfoCmd[T BfInfoArgType](res rueidis.RedisResult, arg T) *BFInfoCmd {
 	cmd := &BFInfoCmd{}
 	if err := res.Error(); err != nil {
 		cmd.err = err
 		return cmd
 	}
-	if arg == "" {
+	if _, ok := any(arg).(cmds.BfInfoKey); ok {
+		// contains all arguments
 		m, err := res.AsIntMap()
 		if err != nil {
 			cmd.err = err
@@ -2939,22 +2948,27 @@ func newBFInfoCmd(res rueidis.RedisResult, arg string) *BFInfoCmd {
 			v := reflect.ValueOf(cmd)
 			v.FieldByName(_arg).SetInt(val)
 		}
-	} else {
-		val, err := res.ToInt64()
-		if err != nil {
-			cmd.err = err
-			return cmd
-		}
-		v := reflect.ValueOf(cmd)
-		t := v.Type()
-		for i := 0; i < v.NumField(); i++ {
-			f := t.Field(i)
-			if f.Tag.Get("cmd") == arg {
-				v.FieldByName(f.Name).SetInt(val)
-			}
-		}
 	}
-	return cmd
+	// is single argument
+	val, err := res.ToInt64()
+	if err != nil {
+		cmd.err = err
+		return cmd
+	}
+	v := reflect.ValueOf(cmd)
+	switch any(arg).(type) {
+	case cmds.BfInfoSingleValueCapacity:
+		v.FieldByName("Capacity").SetInt(val)
+	case cmds.BfInfoSingleValueSize:
+		v.FieldByName("Size").SetInt(val)
+	case cmds.BfInfoSingleValueFilters:
+		v.FieldByName("Filters").SetInt(val)
+	case cmds.BfInfoSingleValueItems:
+		v.FieldByName("Items").SetInt(val)
+	case cmds.BfInfoSingleValueExpansion:
+		v.FieldByName("Expansioin").SetInt(val)
+	}
+	return v.Interface().(*BFInfoCmd)
 }
 
 type ScanDump struct {

@@ -9022,7 +9022,7 @@ func testAdapterCache(resp3 bool) {
 			})
 
 			It("should BFReserveWithArgs", Label("bloom", "bfreserveargs"), func() {
-				options := &redis.BFReserveOptions{
+				options := &BFReserveOptions{
 					Capacity:   2000,
 					Error:      0.001,
 					Expansion:  3,
