@@ -2863,6 +2863,27 @@ func newMapStringInterfaceSliceCmd(res rueidis.RedisResult) *MapStringInterfaceS
 	return out
 }
 
+type baseCmd[T any] struct {
+	err error
+	val T
+}
+
+func (cmd *baseCmd[T]) SetVal(val T) {
+	cmd.val = val
+}
+
+func (cmd *baseCmd[T]) Val() T {
+	return cmd.val
+}
+
+func (cmd *baseCmd[T]) Err() error {
+	return cmd.err
+}
+
+func (cmd *baseCmd[T]) Result() (T, error) {
+	return cmd.Val(), cmd.Err()
+}
+
 type BFInsertOptions struct {
 	Capacity   int64
 	Error      float64
@@ -3020,27 +3041,6 @@ type CMSInfoCmd struct {
 
 func newCMSInfoCmd(res rueidis.RedisResult) *CMSInfoCmd {
 	return nil
-}
-
-type baseCmd[T any] struct {
-	err error
-	val T
-}
-
-func (cmd *baseCmd[T]) SetVal(val T) {
-	cmd.val = val
-}
-
-func (cmd *baseCmd[T]) Val() T {
-	return cmd.val
-}
-
-func (cmd *baseCmd[T]) Err() error {
-	return cmd.err
-}
-
-func (cmd *baseCmd[T]) Result() (T, error) {
-	return cmd.Val(), cmd.Err()
 }
 
 type TopKInfo struct {
