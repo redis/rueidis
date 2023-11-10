@@ -2990,14 +2990,14 @@ func newScanDumpCmd(res rueidis.RedisResult) *ScanDumpCmd {
 
 // NOTE: the order of fields in CFInfo should be  https://redis.io/commands/cf.info/
 type CFInfo struct {
-	Size             int64 `cmd:"Size"`
-	NumBuckets       int64 `cmd:"Number of buckets"`
-	NumFilters       int64 `cmd:"Number of filters"`
-	NumItemsInserted int64 `cmd:"Number of items inserted"`
-	NumItemsDeleted  int64 `cmd:"Number of items deleted"`
-	BucketSize       int64 `cmd:"Bucket size"`
-	ExpansionRate    int64 `cmd:"Expansion"`
-	MaxIteration     int64 `cmd:"Size"`
+	Size             int64 `redis:"Size"`
+	NumBuckets       int64 `redis:"Number of buckets"`
+	NumFilters       int64 `redis:"Number of filters"`
+	NumItemsInserted int64 `redis:"Number of items inserted"`
+	NumItemsDeleted  int64 `redis:"Number of items deleted"`
+	BucketSize       int64 `redis:"Bucket size"`
+	ExpansionRate    int64 `redis:"Expansion"`
+	MaxIteration     int64 `redis:"Size"`
 }
 
 type CFInfoCmd struct {
