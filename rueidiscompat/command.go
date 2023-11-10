@@ -2899,24 +2899,7 @@ type BFInfo struct {
 }
 
 type BFInfoCmd struct {
-	err error
-	val BFInfo
-}
-
-func (cmd *BFInfoCmd) SetVal(val BFInfo) {
-	cmd.val = val
-}
-
-func (cmd *BFInfoCmd) Val() BFInfo {
-	return cmd.val
-}
-
-func (cmd *BFInfoCmd) Err() error {
-	return cmd.err
-}
-
-func (cmd *BFInfoCmd) Result() (BFInfo, error) {
-	return cmd.Val(), cmd.Err()
+	baseCmd[BFInfo]
 }
 
 type BfInfoArgType interface {
@@ -2966,7 +2949,7 @@ func newBFInfoCmd[T BfInfoArgType](res rueidis.RedisResult, arg T) *BFInfoCmd {
 	case cmds.BfInfoSingleValueItems:
 		v.FieldByName("Items").SetInt(val)
 	case cmds.BfInfoSingleValueExpansion:
-		v.FieldByName("Expansioin").SetInt(val)
+		v.FieldByName("Expansion").SetInt(val)
 	}
 	return v.Interface().(*BFInfoCmd)
 }
@@ -2977,45 +2960,52 @@ type ScanDump struct {
 }
 
 type ScanDumpCmd struct {
-	err error
-	val ScanDump
+	baseCmd[ScanDump]
 }
 
 func newScanDumpCmd(res rueidis.RedisResult) *ScanDumpCmd {
 	return nil
 }
 
-func (cmd *ScanDumpCmd) SetVal(val ScanDump) {
-	cmd.val = val
-}
-
-func (cmd *ScanDumpCmd) Val() ScanDump {
-	return cmd.val
-}
-
-func (cmd *ScanDumpCmd) Err() error {
-	return cmd.err
-}
-
-func (cmd *ScanDumpCmd) Result() (ScanDump, error) {
-	return cmd.Val(), cmd.Err()
-}
-
+// NOTE: the order of fields in CFInfo should be  https://redis.io/commands/cf.info/
 type CFInfo struct {
-	Size             int64
-	NumBuckets       int64
-	NumFilters       int64
-	NumItemsInserted int64
-	NumItemsDeleted  int64
-	BucketSize       int64
-	ExpansionRate    int64
-	MaxIteration     int64
+	Size             int64 `cmd:"Size"`
+	NumBuckets       int64 `cmd:"Number of buckets"`
+	NumFilters       int64 `cmd:"Number of filters"`
+	NumItemsInserted int64 `cmd:"Number of items inserted"`
+	NumItemsDeleted  int64 `cmd:"Number of items deleted"`
+	BucketSize       int64 `cmd:"Bucket size"`
+	ExpansionRate    int64 `cmd:"Expansion"`
+	MaxIteration     int64 `cmd:"Size"`
 }
 
-type CFInfoCmd struct{}
+type CFInfoCmd struct {
+	baseCmd[CFInfo]
+}
 
 func newCFInfoCmd(res rueidis.RedisResult) *CFInfoCmd {
-	return nil
+	cmd := &CFInfoCmd{}
+	m, err := res.AsMap()
+	if err != nil {
+		cmd.err = err
+		return cmd
+	}
+	keys := make([]string, 0, len(m))
+	values := make([]any, 0, len(m))
+	for k, v := range m {
+		keys = append(keys, k)
+		vAny, err := v.ToAny()
+		if err != nil {
+			cmd.err = err
+			return cmd
+		}
+		values = append(values, vAny)
+	}
+	if err := Scan(cmd, keys, values); err != nil {
+		cmd.err = err
+		return cmd
+	}
+	return cmd
 }
 
 type CMSInfo struct {
@@ -3024,25 +3014,73 @@ type CMSInfo struct {
 	Count int64
 }
 
-type CMSInfoCmd struct{}
+type CMSInfoCmd struct {
+	baseCmd[CMSInfo]
+}
 
 func newCMSInfoCmd(res rueidis.RedisResult) *CMSInfoCmd {
 	return nil
 }
 
-type TopKInfoCmd struct{}
+type baseCmd[T any] struct {
+	err error
+	val T
+}
+
+func (cmd *baseCmd[T]) SetVal(val T) {
+	cmd.val = val
+}
+
+func (cmd *baseCmd[T]) Val() T {
+	return cmd.val
+}
+
+func (cmd *baseCmd[T]) Err() error {
+	return cmd.err
+}
+
+func (cmd *baseCmd[T]) Result() (T, error) {
+	return cmd.Val(), cmd.Err()
+}
+
+type TopKInfo struct {
+	K     int64
+	Width int64
+	Depth int64
+	Decay float64
+}
+
+type TopKInfoCmd struct {
+	baseCmd[TopKInfo]
+}
 
 func newTopKInfoCmd(res rueidis.RedisResult) *TopKInfoCmd {
 	return nil
 }
 
-type MapStringIntCmd struct{}
+type MapStringIntCmd struct {
+	baseCmd[map[string]int64]
+}
 
 func newMapStringIntCmd(res rueidis.RedisResult) *MapStringIntCmd {
 	return nil
 }
 
-type TDigestInfoCmd struct{}
+type TDigestInfo struct {
+	Compression       int64
+	Capacity          int64
+	MergedNodes       int64
+	UnmergedNodes     int64
+	MergedWeight      int64
+	UnmergedWeight    int64
+	Observations      int64
+	TotalCompressions int64
+	MemoryUsage       int64
+}
+
+type TDigestInfoCmd struct {
+	baseCmd[TDigestInfo]
+}
 
 func newTDigestInfoCmd(res rueidis.RedisResult) *TDigestInfoCmd {
 	return nil

@@ -9128,7 +9128,7 @@ func testAdapterCache(resp3 bool) {
 					adapter.CFAdd(ctx, "testcfsd1", Item)
 				}
 				infBefore := adapter.CFInfo(ctx, "testcfsd1")
-				fd := []redis.ScanDump{}
+				fd := []ScanDump{}
 				sd, err := adapter.CFScanDump(ctx, "testcfsd1", 0).Result()
 				for {
 					if sd.Iter == 0 {
@@ -9147,7 +9147,7 @@ func testAdapterCache(resp3 bool) {
 			})
 
 			It("should CFInfo and CFReserveWithArgs", Label("cuckoo", "cfinfo", "cfreserveargs"), func() {
-				args := &redis.CFReserveOptions{
+				args := &CFReserveOptions{
 					Capacity:      2048,
 					BucketSize:    3,
 					MaxIterations: 15,
