@@ -9507,7 +9507,7 @@ func testAdapterCache(resp3 bool) {
 				err = adapter.TDigestAdd(ctx, "tdigest3", 50, 60, 70, 80, 90, 100, 110, 120, 130, 140).Err()
 				Expect(err).NotTo(HaveOccurred())
 
-				options := &redis.TDigestMergeOptions{
+				options := &TDigestMergeOptions{
 					Compression: 1000,
 					Override:    false,
 				}

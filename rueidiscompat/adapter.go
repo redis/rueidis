@@ -3056,19 +3056,16 @@ func (c *Compat) BFCard(ctx context.Context, key string) *IntCmd {
 	return newIntCmd(c.client.Do(ctx, cmd))
 }
 
-// TODO:CacheCompat
 func (c *Compat) BFExists(ctx context.Context, key string, element interface{}) *BoolCmd {
 	cmd := c.client.B().BfExists().Key(key).Item(fmt.Sprint(element)).Build()
 	return newBoolCmd(c.client.Do(ctx, cmd))
 }
 
-// TODO:CacheCompat
 func (c *Compat) BFInfo(ctx context.Context, key string) *BFInfoCmd {
 	cmd := c.client.B().BfInfo().Key(key).Build()
-	return newBFInfoCmd(c.client.Do(ctx, cmd), cmds.BfInfoKey{})
+	return newBFInfoCmd(c.client.Do(ctx, cmd))
 }
 
-// TODO:CacheCompat
 func (c *Compat) BFInfoArg(ctx context.Context, key, option string) *BFInfoCmd {
 	switch option {
 	case "CAPACITY":
@@ -3088,27 +3085,27 @@ func (c *Compat) BFInfoArg(ctx context.Context, key, option string) *BFInfoCmd {
 
 func (c *Compat) BFInfoCapacity(ctx context.Context, key string) *BFInfoCmd {
 	cmd := c.client.B().BfInfo().Key(key).Capacity().Build()
-	return newBFInfoCmd(c.client.Do(ctx, cmd), cmds.BfInfoSingleValueCapacity{})
+	return newBFInfoCmd(c.client.Do(ctx, cmd))
 }
 
 func (c *Compat) BFInfoSize(ctx context.Context, key string) *BFInfoCmd {
 	cmd := c.client.B().BfInfo().Key(key).Size().Build()
-	return newBFInfoCmd(c.client.Do(ctx, cmd), cmds.BfInfoSingleValueSize{})
+	return newBFInfoCmd(c.client.Do(ctx, cmd))
 }
 
 func (c *Compat) BFInfoFilters(ctx context.Context, key string) *BFInfoCmd {
 	cmd := c.client.B().BfInfo().Key(key).Filters().Build()
-	return newBFInfoCmd(c.client.Do(ctx, cmd), cmds.BfInfoSingleValueFilters{})
+	return newBFInfoCmd(c.client.Do(ctx, cmd))
 }
 
 func (c *Compat) BFInfoItems(ctx context.Context, key string) *BFInfoCmd {
 	cmd := c.client.B().BfInfo().Key(key).Items().Build()
-	return newBFInfoCmd(c.client.Do(ctx, cmd), cmds.BfInfoSingleValueItems{})
+	return newBFInfoCmd(c.client.Do(ctx, cmd))
 }
 
 func (c *Compat) BFInfoExpansion(ctx context.Context, key string) *BFInfoCmd {
 	cmd := c.client.B().BfInfo().Key(key).Expansion().Build()
-	return newBFInfoCmd(c.client.Do(ctx, cmd), cmds.BfInfoSingleValueExpansion{})
+	return newBFInfoCmd(c.client.Do(ctx, cmd))
 }
 
 func (c *Compat) BFInsert(ctx context.Context, key string, options *BFInsertOptions, elements ...interface{}) *BoolSliceCmd {
@@ -3955,7 +3952,7 @@ func (c CacheCompat) BFExists(ctx context.Context, key string, element interface
 func (c CacheCompat) BFInfo(ctx context.Context, key string) *BFInfoCmd {
 	cmd := c.client.B().BfInfo().Key(key).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
-	return newBFInfoCmd(resp, cmds.BfInfoKey{})
+	return newBFInfoCmd(resp)
 }
 
 func (c CacheCompat) BFInfoArg(ctx context.Context, key, option string) *BFInfoCmd {
@@ -3978,31 +3975,31 @@ func (c CacheCompat) BFInfoArg(ctx context.Context, key, option string) *BFInfoC
 func (c CacheCompat) BFInfoCapacity(ctx context.Context, key string) *BFInfoCmd {
 	cmd := c.client.B().BfInfo().Key(key).Capacity().Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
-	return newBFInfoCmd(resp, cmds.BfInfoSingleValueCapacity{})
+	return newBFInfoCmd(resp)
 }
 
 func (c CacheCompat) BFInfoSize(ctx context.Context, key string) *BFInfoCmd {
 	cmd := c.client.B().BfInfo().Key(key).Size().Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
-	return newBFInfoCmd(resp, cmds.BfInfoSingleValueSize{})
+	return newBFInfoCmd(resp)
 }
 
 func (c CacheCompat) BFInfoFilters(ctx context.Context, key string) *BFInfoCmd {
 	cmd := c.client.B().BfInfo().Key(key).Filters().Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
-	return newBFInfoCmd(resp, cmds.BfInfoSingleValueFilters{})
+	return newBFInfoCmd(resp)
 }
 
 func (c CacheCompat) BFInfoItems(ctx context.Context, key string) *BFInfoCmd {
 	cmd := c.client.B().BfInfo().Key(key).Items().Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
-	return newBFInfoCmd(resp, cmds.BfInfoSingleValueItems{})
+	return newBFInfoCmd(resp)
 }
 
 func (c CacheCompat) BFInfoExpansion(ctx context.Context, key string) *BFInfoCmd {
 	cmd := c.client.B().BfInfo().Key(key).Expansion().Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
-	return newBFInfoCmd(resp, cmds.BfInfoSingleValueExpansion{})
+	return newBFInfoCmd(resp)
 }
 
 func (c *CacheCompat) CFCount(ctx context.Context, key string, element interface{}) *IntCmd {
