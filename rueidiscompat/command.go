@@ -3030,9 +3030,9 @@ func newCFInfoCmd(res rueidis.RedisResult) *CFInfoCmd {
 }
 
 type CMSInfo struct {
-	Width int64
-	Depth int64
-	Count int64
+	Width int64 `redis:"width"`
+	Depth int64 `redis:"depth"`
+	Count int64 `redis:"count"`
 }
 
 type CMSInfoCmd struct {
@@ -3040,7 +3040,25 @@ type CMSInfoCmd struct {
 }
 
 func newCMSInfoCmd(res rueidis.RedisResult) *CMSInfoCmd {
-	return nil
+	cmd := &CMSInfoCmd{}
+	info := CMSInfo{}
+	m, err := res.AsIntMap()
+	if err != nil {
+		cmd.err = err
+		return cmd
+	}
+	keys := make([]string, 0, len(m))
+	values := make([]any, 0, len(m))
+	for k, v := range m {
+		keys = append(keys, k)
+		values = append(values, strconv.FormatInt(v, 10))
+	}
+	if err := Scan(&info, keys, values); err != nil {
+		cmd.err = err
+		return cmd
+	}
+	cmd.SetVal(info)
+	return cmd
 }
 
 type TopKInfo struct {
