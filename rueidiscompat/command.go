@@ -2958,7 +2958,34 @@ type ScanDumpCmd struct {
 }
 
 func newScanDumpCmd(res rueidis.RedisResult) *ScanDumpCmd {
-	return nil
+	cmd := &ScanDumpCmd{}
+	scanDump := ScanDump{}
+	if err := res.Error(); err != nil {
+		cmd.err = err
+		return cmd
+	}
+	arr, err := res.ToArray()
+	if err != nil {
+		cmd.err = err
+		return cmd
+	}
+	if len(arr) != 2 {
+		panic(fmt.Sprintf("wrong length of redis message, got %v, want %v", len(arr), 2))
+	}
+	iter, err := arr[0].AsInt64()
+	if err != nil {
+		cmd.err = err
+		return cmd
+	}
+	data, err := arr[1].ToString()
+	if err != nil {
+		cmd.err = err
+		return cmd
+	}
+	scanDump.Iter = iter
+	scanDump.Data = data
+	cmd.SetVal(scanDump)
+	return cmd
 }
 
 // NOTE: the order of fields in CFInfo should be  https://redis.io/commands/cf.info/

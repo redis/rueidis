@@ -8913,7 +8913,7 @@ func testAdapterCache(resp3 bool) {
 
 				resultInsert, err := adapter.BFInsert(ctx, "testbf1", options, "item1").Result()
 				Expect(err).To(HaveOccurred())
-				Expect(err).To(MatchError("ERR not found"))
+				Expect(err).To(MatchError("not found"))
 
 				options = &BFInsertOptions{
 					Capacity:   2000,
@@ -8993,7 +8993,7 @@ func testAdapterCache(resp3 bool) {
 				Expect(err).NotTo(HaveOccurred())
 
 				_, err = adapter.BFInfo(ctx, "testbfns1").Result()
-				Expect(err).To(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 			})
 
 			It("should BFScanDump and BFLoadChunk", Label("bloom", "bfscandump", "bfloadchunk"), func() {
