@@ -2996,8 +2996,8 @@ type CFInfo struct {
 	NumItemsInserted int64 `redis:"Number of items inserted"`
 	NumItemsDeleted  int64 `redis:"Number of items deleted"`
 	BucketSize       int64 `redis:"Bucket size"`
-	ExpansionRate    int64 `redis:"Expansion"`
-	MaxIteration     int64 `redis:"Size"`
+	ExpansionRate    int64 `redis:"Expansion rate"`
+	MaxIteration     int64 `redis:"Max iterations"`
 }
 
 type CFInfoCmd struct {
@@ -3006,6 +3006,7 @@ type CFInfoCmd struct {
 
 func newCFInfoCmd(res rueidis.RedisResult) *CFInfoCmd {
 	cmd := &CFInfoCmd{}
+	info := CFInfo{}
 	m, err := res.AsMap()
 	if err != nil {
 		cmd.err = err
@@ -3015,17 +3016,18 @@ func newCFInfoCmd(res rueidis.RedisResult) *CFInfoCmd {
 	values := make([]any, 0, len(m))
 	for k, v := range m {
 		keys = append(keys, k)
-		vAny, err := v.ToAny()
+		val, err := v.AsInt64()
 		if err != nil {
 			cmd.err = err
 			return cmd
 		}
-		values = append(values, vAny)
+		values = append(values, strconv.FormatInt(val, 10))
 	}
-	if err := Scan(cmd, keys, values); err != nil {
+	if err := Scan(&info, keys, values); err != nil {
 		cmd.err = err
 		return cmd
 	}
+	cmd.SetVal(info)
 	return cmd
 }
 

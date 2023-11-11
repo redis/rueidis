@@ -3210,21 +3210,25 @@ func (c *Compat) CFInfo(ctx context.Context, key string) *CFInfoCmd {
 }
 
 func (c *Compat) CFInsert(ctx context.Context, key string, options *CFInsertOptions, elements ...interface{}) *BoolSliceCmd {
-	_cmd := c.client.B().CfInsert().Key(key).Items()
-	for _, e := range elements {
-		_cmd.Item(fmt.Sprint(e))
-	}
-	cmd := (cmds.CfInsertItem)(_cmd).Build()
-	return newBoolSliceCmd(c.client.Do(ctx, cmd))
-}
-
-func (c *Compat) CFInsertNX(ctx context.Context, key string, options *CFInsertOptions, elements ...interface{}) *IntSliceCmd {
-	_cmd := c.client.B().CfInsertnx().Key(key)
+	_cmd := c.client.B().CfInsert().Key(key)
 	if options != nil {
 		_cmd.Capacity(options.Capacity)
 		if options.NoCreate {
 			_cmd.Nocreate()
 		}
+	}
+	items := _cmd.Items()
+	for _, e := range elements {
+		items.Item(fmt.Sprint(e))
+	}
+	cmd := (cmds.CfInsertItem)(items).Build()
+	return newBoolSliceCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) CFInsertNX(ctx context.Context, key string, options *CFInsertOptions, elements ...interface{}) *IntSliceCmd {
+	_cmd := c.client.B().CfInsertnx().Key(key).Capacity(options.Capacity)
+	if options.NoCreate {
+		_cmd.Nocreate()
 	}
 	items := _cmd.Items()
 	for _, e := range elements {
@@ -3259,6 +3263,7 @@ func (c *Compat) CFReserveWithArgs(ctx context.Context, key string, options *CFR
 		Build()
 	return newStatusCmd(c.client.Do(ctx, cmd))
 }
+
 func (c *Compat) CFReserveExpansion(ctx context.Context, key string, capacity int64, expansion int64) *StatusCmd {
 	cmd := c.client.B().
 		CfReserve().
