@@ -3064,10 +3064,10 @@ func newCMSInfoCmd(res rueidis.RedisResult) *CMSInfoCmd {
 }
 
 type TopKInfo struct {
-	K     int64
-	Width int64
-	Depth int64
-	Decay float64
+	K     int64   `redis:"k"`
+	Width int64   `redis:"width"`
+	Depth int64   `redis:"depth"`
+	Decay float64 `redis:"decay"`
 }
 
 type TopKInfoCmd struct {
@@ -3075,7 +3075,43 @@ type TopKInfoCmd struct {
 }
 
 func newTopKInfoCmd(res rueidis.RedisResult) *TopKInfoCmd {
-	return nil
+	cmd := &TopKInfoCmd{}
+	info := TopKInfo{}
+	m, err := res.ToMap()
+	if err != nil {
+		cmd.err = err
+		return cmd
+	}
+	keys := make([]string, 0, len(m))
+	values := make([]any, 0, len(m))
+	for k, v := range m {
+		keys = append(keys, k)
+		switch k {
+		case "k", "width", "depth":
+			intVal, err := v.AsInt64()
+			if err != nil {
+				cmd.err = err
+				return cmd
+			}
+			values = append(values, strconv.FormatInt(intVal, 10))
+		case "decay":
+			decay, err := v.AsFloat64()
+			if err != nil {
+				cmd.err = err
+				return cmd
+			}
+			// args of strconv.FormatFloat is copied from cmds.TopkReserveParamsDepth.Decay
+			values = append(values, strconv.FormatFloat(decay, 'f', -1, 64))
+		default:
+			panic("unexpected key")
+		}
+	}
+	if err := Scan(&info, keys, values); err != nil {
+		cmd.err = err
+		return cmd
+	}
+	cmd.SetVal(info)
+	return cmd
 }
 
 type MapStringIntCmd struct {
@@ -3083,19 +3119,27 @@ type MapStringIntCmd struct {
 }
 
 func newMapStringIntCmd(res rueidis.RedisResult) *MapStringIntCmd {
-	return nil
+	cmd := &MapStringIntCmd{}
+	m, err := res.AsIntMap()
+	if err != nil {
+		cmd.err = err
+		return cmd
+	}
+	cmd.SetVal(m)
+	return cmd
 }
 
+// Ref: https://redis.io/commands/tdigest.info/
 type TDigestInfo struct {
-	Compression       int64
-	Capacity          int64
-	MergedNodes       int64
-	UnmergedNodes     int64
-	MergedWeight      int64
-	UnmergedWeight    int64
-	Observations      int64
-	TotalCompressions int64
-	MemoryUsage       int64
+	Compression       int64 `redis:"Compression"`
+	Capacity          int64 `redis:"Capacity"`
+	MergedNodes       int64 `redis:"Merged nodes"`
+	UnmergedNodes     int64 `redis:"UnmergedNodes"`
+	MergedWeight      int64 `redis:"MergedWeight"`
+	UnmergedWeight    int64 `redis:"Unmerged weight"`
+	Observations      int64 `redis:"Observations"`
+	TotalCompressions int64 `redis:"Total compressions"`
+	MemoryUsage       int64 `redis:"Memory usage"`
 }
 
 type TDigestInfoCmd struct {
@@ -3103,7 +3147,25 @@ type TDigestInfoCmd struct {
 }
 
 func newTDigestInfoCmd(res rueidis.RedisResult) *TDigestInfoCmd {
-	return nil
+	cmd := &TDigestInfoCmd{}
+	info := TDigestInfo{}
+	m, err := res.AsIntMap()
+	if err != nil {
+		cmd.err = err
+		return cmd
+	}
+	keys := make([]string, 0, len(m))
+	values := make([]any, 0, len(m))
+	for k, v := range m {
+		keys = append(keys, k)
+		values = append(values, strconv.FormatInt(v, 10))
+	}
+	if err := Scan(&info, keys, values); err != nil {
+		cmd.err = err
+		return cmd
+	}
+	cmd.SetVal(info)
+	return cmd
 }
 
 type TDigestMergeOptions struct {

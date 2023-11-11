@@ -3457,7 +3457,7 @@ func (c *Compat) TDigestCreateWithCompression(ctx context.Context, key string, c
 }
 
 func (c *Compat) TDigestInfo(ctx context.Context, key string) *TDigestInfoCmd {
-	cmd := c.client.B().CfInfo().Key(key).Build()
+	cmd := c.client.B().TdigestInfo().Key(key).Build()
 	return newTDigestInfoCmd(c.client.Do(ctx, cmd))
 }
 
