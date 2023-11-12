@@ -3426,7 +3426,7 @@ func (c *Compat) TDigestAdd(ctx context.Context, key string, elements ...float64
 func (c *Compat) TDigestByRank(ctx context.Context, key string, rank ...uint64) *FloatSliceCmd {
 	_cmd := c.client.B().TdigestByrank().Key(key)
 	for _, r := range rank {
-		_cmd.Rank((int64)(r))
+		_cmd.Rank((float64)(r))
 	}
 	cmd := (cmds.TdigestByrankRank)(_cmd).Build()
 	return newFloatSliceCmd(c.client.Do(ctx, cmd))

@@ -961,7 +961,7 @@
       },
       {
         "name": "rank",
-        "type": "integer",
+        "type": "double",
         "multiple": true
       }
     ],

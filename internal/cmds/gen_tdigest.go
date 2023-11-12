@@ -65,18 +65,18 @@ func (c TdigestByrank) Key(key string) TdigestByrankKey {
 
 type TdigestByrankKey Incomplete
 
-func (c TdigestByrankKey) Rank(rank ...int64) TdigestByrankRank {
+func (c TdigestByrankKey) Rank(rank ...float64) TdigestByrankRank {
 	for _, n := range rank {
-		c.cs.s = append(c.cs.s, strconv.FormatInt(n, 10))
+		c.cs.s = append(c.cs.s, strconv.FormatFloat(n, 'f', -1, 64))
 	}
 	return (TdigestByrankRank)(c)
 }
 
 type TdigestByrankRank Incomplete
 
-func (c TdigestByrankRank) Rank(rank ...int64) TdigestByrankRank {
+func (c TdigestByrankRank) Rank(rank ...float64) TdigestByrankRank {
 	for _, n := range rank {
-		c.cs.s = append(c.cs.s, strconv.FormatInt(n, 10))
+		c.cs.s = append(c.cs.s, strconv.FormatFloat(n, 'f', -1, 64))
 	}
 	return c
 }
