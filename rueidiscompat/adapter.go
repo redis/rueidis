@@ -3336,15 +3336,19 @@ func (c *Compat) CMSMerge(ctx context.Context, destKey string, sourceKeys ...str
 func (c *Compat) CMSMergeWithWeight(ctx context.Context, destKey string, sourceKeys map[string]int64) *StatusCmd {
 	_cmd := c.client.B().CmsMerge().Destination(destKey).Numkeys((int64)(len(sourceKeys)))
 	keys := make([]string, 0, len(sourceKeys))
-	weights := make([]int64, 0, len(sourceKeys))
 	for k := range sourceKeys {
 		keys = append(keys, k)
-		weights = append(weights, sourceKeys[k])
 	}
 	for _, k := range keys {
 		_cmd.Source(k)
 	}
-	cmd := (cmds.CmsMergeSource)(_cmd).Weights().Weight(weights...).Build()
+	wCmd := (cmds.CmsMergeSource)(_cmd).Weights()
+	for _, k := range keys {
+		// weight should be integer
+		// we converts int64 to float64 to avoid API breaking change
+		wCmd.Weight((float64)(sourceKeys[k]))
+	}
+	cmd := (cmds.CmsMergeWeightWeight)(wCmd).Build()
 	return newStatusCmd(c.client.Do(ctx, cmd))
 }
 

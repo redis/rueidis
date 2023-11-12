@@ -581,7 +581,7 @@
           },
           {
             "name": "weight",
-            "type": "integer",
+            "type": "double",
             "multiple": true
           }
         ]

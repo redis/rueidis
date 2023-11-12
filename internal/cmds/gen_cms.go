@@ -227,9 +227,9 @@ func (c CmsMergeSource) Build() Completed {
 
 type CmsMergeWeightWeight Incomplete
 
-func (c CmsMergeWeightWeight) Weight(weight ...int64) CmsMergeWeightWeight {
+func (c CmsMergeWeightWeight) Weight(weight ...float64) CmsMergeWeightWeight {
 	for _, n := range weight {
-		c.cs.s = append(c.cs.s, strconv.FormatInt(n, 10))
+		c.cs.s = append(c.cs.s, strconv.FormatFloat(n, 'f', -1, 64))
 	}
 	return c
 }
@@ -241,9 +241,9 @@ func (c CmsMergeWeightWeight) Build() Completed {
 
 type CmsMergeWeightWeights Incomplete
 
-func (c CmsMergeWeightWeights) Weight(weight ...int64) CmsMergeWeightWeight {
+func (c CmsMergeWeightWeights) Weight(weight ...float64) CmsMergeWeightWeight {
 	for _, n := range weight {
-		c.cs.s = append(c.cs.s, strconv.FormatInt(n, 10))
+		c.cs.s = append(c.cs.s, strconv.FormatFloat(n, 'f', -1, 64))
 	}
 	return (CmsMergeWeightWeight)(c)
 }
