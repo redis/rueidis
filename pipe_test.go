@@ -818,7 +818,7 @@ func TestNoReplyExceedRingSize(t *testing.T) {
 	go func() {
 		for i := 0; i < times; i++ {
 			if err := p.Do(context.Background(), cmds.UnsubscribeCmd).Error(); err != nil {
-				t.Fatalf("unexpected err %v", err)
+				t.Errorf("unexpected err %v", err)
 			}
 		}
 		close(wait)
