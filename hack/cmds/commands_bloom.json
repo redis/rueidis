@@ -786,8 +786,15 @@
       },
       {
         "name": "values",
-        "type": "double",
-        "multiple": true
+        "type": "block",
+        "multiple": true,
+        "arguments": [
+          {
+            "name": "value",
+            "type": "double",
+            "multiple": true
+          }
+        ]
       }
     ],
     "since": "2.4.0",
