@@ -106,18 +106,18 @@ func (c TdigestByrevrank) Key(key string) TdigestByrevrankKey {
 
 type TdigestByrevrankKey Incomplete
 
-func (c TdigestByrevrankKey) ReverseRank(reverseRank ...int64) TdigestByrevrankReverseRank {
+func (c TdigestByrevrankKey) ReverseRank(reverseRank ...float64) TdigestByrevrankReverseRank {
 	for _, n := range reverseRank {
-		c.cs.s = append(c.cs.s, strconv.FormatInt(n, 10))
+		c.cs.s = append(c.cs.s, strconv.FormatFloat(n, 'f', -1, 64))
 	}
 	return (TdigestByrevrankReverseRank)(c)
 }
 
 type TdigestByrevrankReverseRank Incomplete
 
-func (c TdigestByrevrankReverseRank) ReverseRank(reverseRank ...int64) TdigestByrevrankReverseRank {
+func (c TdigestByrevrankReverseRank) ReverseRank(reverseRank ...float64) TdigestByrevrankReverseRank {
 	for _, n := range reverseRank {
-		c.cs.s = append(c.cs.s, strconv.FormatInt(n, 10))
+		c.cs.s = append(c.cs.s, strconv.FormatFloat(n, 'f', -1, 64))
 	}
 	return c
 }

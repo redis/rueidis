@@ -978,7 +978,7 @@
       },
       {
         "name": "reverse_rank",
-        "type": "integer",
+        "type": "double",
         "multiple": true
       }
     ],

@@ -3439,7 +3439,7 @@ func (c *Compat) TDigestByRank(ctx context.Context, key string, rank ...uint64) 
 func (c *Compat) TDigestByRevRank(ctx context.Context, key string, rank ...uint64) *FloatSliceCmd {
 	_cmd := c.client.B().TdigestByrevrank().Key(key)
 	for _, r := range rank {
-		_cmd.ReverseRank((int64)(r))
+		_cmd.ReverseRank((float64)(r))
 	}
 	cmd := (cmds.TdigestByrevrankReverseRank)(_cmd).Build()
 	return newFloatSliceCmd(c.client.Do(ctx, cmd))
