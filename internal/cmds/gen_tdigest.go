@@ -24,19 +24,15 @@ func (c TdigestAdd) Key(key string) TdigestAddKey {
 
 type TdigestAddKey Incomplete
 
-func (c TdigestAddKey) Value(value ...float64) TdigestAddValuesValue {
-	for _, n := range value {
-		c.cs.s = append(c.cs.s, strconv.FormatFloat(n, 'f', -1, 64))
-	}
+func (c TdigestAddKey) Value(value float64) TdigestAddValuesValue {
+	c.cs.s = append(c.cs.s, strconv.FormatFloat(value, 'f', -1, 64))
 	return (TdigestAddValuesValue)(c)
 }
 
 type TdigestAddValuesValue Incomplete
 
-func (c TdigestAddValuesValue) Value(value ...float64) TdigestAddValuesValue {
-	for _, n := range value {
-		c.cs.s = append(c.cs.s, strconv.FormatFloat(n, 'f', -1, 64))
-	}
+func (c TdigestAddValuesValue) Value(value float64) TdigestAddValuesValue {
+	c.cs.s = append(c.cs.s, strconv.FormatFloat(value, 'f', -1, 64))
 	return c
 }
 

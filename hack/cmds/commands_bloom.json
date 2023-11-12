@@ -791,8 +791,7 @@
         "arguments": [
           {
             "name": "value",
-            "type": "double",
-            "multiple": true
+            "type": "double"
           }
         ]
       }

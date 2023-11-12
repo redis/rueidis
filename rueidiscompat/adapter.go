@@ -3423,7 +3423,11 @@ func (c *Compat) TopKReserveWithOptions(ctx context.Context, key string, k int64
 }
 
 func (c *Compat) TDigestAdd(ctx context.Context, key string, elements ...float64) *StatusCmd {
-	cmd := c.client.B().TdigestAdd().Key(key).Value(elements...).Build()
+	_cmd := c.client.B().TdigestAdd().Key(key)
+	for _, e := range elements {
+		_cmd.Value(e)
+	}
+	cmd := (cmds.TdigestAddValuesValue)(_cmd).Build()
 	return newStatusCmd(c.client.Do(ctx, cmd))
 }
 
