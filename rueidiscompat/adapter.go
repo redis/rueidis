@@ -3176,7 +3176,7 @@ func (c *Compat) BFScanDump(ctx context.Context, key string, iterator int64) *Sc
 }
 
 func (c *Compat) BFLoadChunk(ctx context.Context, key string, iterator int64, data interface{}) *StatusCmd {
-	cmd := c.client.B().BfLoadchunk().Key(key).Iterator(iterator).Data(fmt.Sprint(data)).Build()
+	cmd := c.client.B().BfLoadchunk().Key(key).Iterator(iterator).Data(str(data)).Build()
 	return newStatusCmd(c.client.Do(ctx, cmd))
 }
 
@@ -3300,14 +3300,14 @@ func (c *Compat) CFScanDump(ctx context.Context, key string, iterator int64) *Sc
 }
 
 func (c *Compat) CFLoadChunk(ctx context.Context, key string, iterator int64, data interface{}) *StatusCmd {
-	cmd := c.client.B().CfLoadchunk().Key(key).Iterator(iterator).Data(fmt.Sprint(data)).Build()
+	cmd := c.client.B().CfLoadchunk().Key(key).Iterator(iterator).Data(str(data)).Build()
 	return newStatusCmd(c.client.Do(ctx, cmd))
 }
 
 func (c *Compat) CMSIncrBy(ctx context.Context, key string, elements ...interface{}) *IntSliceCmd {
 	_cmd := c.client.B().CmsIncrby().Key(key)
 	for i := 0; i < len(elements); i += 2 {
-		_cmd.Item(fmt.Sprint(elements[i])).Increment((int64)(elements[i+1].(int)))
+		_cmd.Item(str(elements[i])).Increment((int64)(elements[i+1].(int)))
 	}
 	cmd := (cmds.CmsIncrbyItemsIncrement)(_cmd).Build()
 	return newIntSliceCmd(c.client.Do(ctx, cmd))
