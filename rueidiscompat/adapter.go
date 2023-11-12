@@ -3047,7 +3047,7 @@ func (c *Compat) TFCallASYNCArgs(ctx context.Context, libName string, funcName s
 }
 
 func (c *Compat) BFAdd(ctx context.Context, key string, element interface{}) *BoolCmd {
-	cmd := c.client.B().BfAdd().Key(key).Item(fmt.Sprint(element)).Build()
+	cmd := c.client.B().BfAdd().Key(key).Item(str(element)).Build()
 	return newBoolCmd(c.client.Do(ctx, cmd))
 }
 
@@ -3057,7 +3057,7 @@ func (c *Compat) BFCard(ctx context.Context, key string) *IntCmd {
 }
 
 func (c *Compat) BFExists(ctx context.Context, key string, element interface{}) *BoolCmd {
-	cmd := c.client.B().BfExists().Key(key).Item(fmt.Sprint(element)).Build()
+	cmd := c.client.B().BfExists().Key(key).Item(str(element)).Build()
 	return newBoolCmd(c.client.Do(ctx, cmd))
 }
 
@@ -3123,7 +3123,7 @@ func (c *Compat) BFInsert(ctx context.Context, key string, options *BFInsertOpti
 	}
 	items := _cmd.Items()
 	for _, e := range elements {
-		items.Item(fmt.Sprint(e))
+		items.Item(str(e))
 	}
 	cmd := (cmds.BfInsertItem)(items).Build()
 	return newBoolSliceCmd(c.client.Do(ctx, cmd))
@@ -3133,7 +3133,7 @@ func (c *Compat) BFMAdd(ctx context.Context, key string, elements ...interface{}
 	cmd := c.client.B().BfMadd().Key(key)
 	var last cmds.BfMaddItem
 	for _, e := range elements {
-		last = cmd.Item(fmt.Sprint(e))
+		last = cmd.Item(str(e))
 	}
 	return newBoolSliceCmd(c.client.Do(ctx, last.Build()))
 }
@@ -3142,7 +3142,7 @@ func (c *Compat) BFMExists(ctx context.Context, key string, elements ...interfac
 	cmd := c.client.B().BfMexists().Key(key)
 	var last cmds.BfMexistsItem
 	for _, e := range elements {
-		last = cmd.Item(fmt.Sprint(e))
+		last = cmd.Item(str(e))
 	}
 	return newBoolSliceCmd(c.client.Do(ctx, last.Build()))
 }
@@ -3181,26 +3181,26 @@ func (c *Compat) BFLoadChunk(ctx context.Context, key string, iterator int64, da
 }
 
 func (c *Compat) CFAdd(ctx context.Context, key string, element interface{}) *BoolCmd {
-	cmd := c.client.B().CfAdd().Key(key).Item(fmt.Sprint(element)).Build()
+	cmd := c.client.B().CfAdd().Key(key).Item(str(element)).Build()
 	return newBoolCmd(c.client.Do(ctx, cmd))
 }
 func (c *Compat) CFAddNX(ctx context.Context, key string, element interface{}) *BoolCmd {
-	cmd := c.client.B().CfAddnx().Key(key).Item(fmt.Sprint(element)).Build()
+	cmd := c.client.B().CfAddnx().Key(key).Item(str(element)).Build()
 	return newBoolCmd(c.client.Do(ctx, cmd))
 }
 
 func (c *Compat) CFCount(ctx context.Context, key string, element interface{}) *IntCmd {
-	cmd := c.client.B().CfCount().Key(key).Item(fmt.Sprint(element)).Build()
+	cmd := c.client.B().CfCount().Key(key).Item(str(element)).Build()
 	return newIntCmd(c.client.Do(ctx, cmd))
 }
 
 func (c *Compat) CFDel(ctx context.Context, key string, element interface{}) *BoolCmd {
-	cmd := c.client.B().CfDel().Key(key).Item(fmt.Sprint(element)).Build()
+	cmd := c.client.B().CfDel().Key(key).Item(str(element)).Build()
 	return newBoolCmd(c.client.Do(ctx, cmd))
 }
 
 func (c *Compat) CFExists(ctx context.Context, key string, element interface{}) *BoolCmd {
-	cmd := c.client.B().CfExists().Key(key).Item(fmt.Sprint(element)).Build()
+	cmd := c.client.B().CfExists().Key(key).Item(str(element)).Build()
 	return newBoolCmd(c.client.Do(ctx, cmd))
 }
 
@@ -3219,7 +3219,7 @@ func (c *Compat) CFInsert(ctx context.Context, key string, options *CFInsertOpti
 	}
 	items := _cmd.Items()
 	for _, e := range elements {
-		items.Item(fmt.Sprint(e))
+		items.Item(str(e))
 	}
 	cmd := (cmds.CfInsertItem)(items).Build()
 	return newBoolSliceCmd(c.client.Do(ctx, cmd))
@@ -3232,7 +3232,7 @@ func (c *Compat) CFInsertNX(ctx context.Context, key string, options *CFInsertOp
 	}
 	items := _cmd.Items()
 	for _, e := range elements {
-		items.Item(fmt.Sprint(e))
+		items.Item(str(e))
 	}
 	cmd := (cmds.CfInsertItem)(items).Build()
 	return newIntSliceCmd(c.client.Do(ctx, cmd))
@@ -3241,7 +3241,7 @@ func (c *Compat) CFInsertNX(ctx context.Context, key string, options *CFInsertOp
 func (c *Compat) CFMExists(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd {
 	_cmd := c.client.B().CfMexists().Key(key)
 	for _, e := range elements {
-		_cmd.Item(fmt.Sprint(e))
+		_cmd.Item(str(e))
 	}
 	cmd := (cmds.CfMexistsItem)(_cmd).Build()
 	return newBoolSliceCmd(c.client.Do(ctx, cmd))
@@ -3355,7 +3355,7 @@ func (c *Compat) CMSMergeWithWeight(ctx context.Context, destKey string, sourceK
 func (c *Compat) CMSQuery(ctx context.Context, key string, elements ...interface{}) *IntSliceCmd {
 	_cmd := c.client.B().CmsQuery().Key(key)
 	for _, e := range elements {
-		_cmd.Item(fmt.Sprint(e))
+		_cmd.Item(str(e))
 	}
 	cmd := (cmds.CmsQueryItem)(_cmd).Build()
 	return newIntSliceCmd(c.client.Do(ctx, cmd))
@@ -3364,7 +3364,7 @@ func (c *Compat) CMSQuery(ctx context.Context, key string, elements ...interface
 func (c *Compat) TopKAdd(ctx context.Context, key string, elements ...interface{}) *StringSliceCmd {
 	_cmd := c.client.B().TopkAdd().Key(key)
 	for _, e := range elements {
-		_cmd.Items(fmt.Sprint(e))
+		_cmd.Items(str(e))
 	}
 	cmd := (cmds.TopkAddItems)(_cmd).Build()
 	return newStringSliceCmd(c.client.Do(ctx, cmd))
@@ -3373,7 +3373,7 @@ func (c *Compat) TopKAdd(ctx context.Context, key string, elements ...interface{
 func (c *Compat) TopKCount(ctx context.Context, key string, elements ...interface{}) *IntSliceCmd {
 	_cmd := c.client.B().TopkCount().Key(key)
 	for _, e := range elements {
-		_cmd.Item(fmt.Sprint(e))
+		_cmd.Item(str(e))
 	}
 	cmd := (cmds.TopkCountItem)(_cmd).Build()
 	return newIntSliceCmd(c.client.Do(ctx, cmd))
@@ -3382,7 +3382,7 @@ func (c *Compat) TopKCount(ctx context.Context, key string, elements ...interfac
 func (c *Compat) TopKIncrBy(ctx context.Context, key string, elements ...interface{}) *StringSliceCmd {
 	_cmd := c.client.B().TopkIncrby().Key(key)
 	for _, e := range elements {
-		_cmd.Item(fmt.Sprint(e))
+		_cmd.Item(str(e))
 	}
 	cmd := (cmds.TopkIncrbyItemsIncrement)(_cmd).Build()
 	return newStringSliceCmd(c.client.Do(ctx, cmd))
@@ -3406,7 +3406,7 @@ func (c *Compat) TopKListWithCount(ctx context.Context, key string) *MapStringIn
 func (c *Compat) TopKQuery(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd {
 	_cmd := c.client.B().TopkQuery().Key(key)
 	for _, e := range elements {
-		_cmd.Item(fmt.Sprint(e))
+		_cmd.Item(str(e))
 	}
 	cmd := (cmds.TopkQueryItem)(_cmd).Build()
 	return newBoolSliceCmd(c.client.Do(ctx, cmd))
@@ -3953,7 +3953,7 @@ func (c CacheCompat) ZScore(ctx context.Context, key, member string) *FloatCmd {
 }
 
 func (c CacheCompat) BFExists(ctx context.Context, key string, element interface{}) *BoolCmd {
-	cmd := c.client.B().BfExists().Key(key).Item(fmt.Sprint(element)).Cache()
+	cmd := c.client.B().BfExists().Key(key).Item(str(element)).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newBoolCmd(resp)
 }
@@ -4012,12 +4012,12 @@ func (c CacheCompat) BFInfoExpansion(ctx context.Context, key string) *BFInfoCmd
 }
 
 func (c *CacheCompat) CFCount(ctx context.Context, key string, element interface{}) *IntCmd {
-	cmd := c.client.B().CfCount().Key(key).Item(fmt.Sprint(element)).Cache()
+	cmd := c.client.B().CfCount().Key(key).Item(str(element)).Cache()
 	return newIntCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
 
 func (c *CacheCompat) CFExists(ctx context.Context, key string, element interface{}) *BoolCmd {
-	cmd := c.client.B().CfExists().Key(key).Item(fmt.Sprint(element)).Cache()
+	cmd := c.client.B().CfExists().Key(key).Item(str(element)).Cache()
 	return newBoolCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
 
@@ -4034,7 +4034,7 @@ func (c *CacheCompat) CMSInfo(ctx context.Context, key string) *CMSInfoCmd {
 func (c *CacheCompat) CMSQuery(ctx context.Context, key string, elements ...interface{}) *IntSliceCmd {
 	_cmd := c.client.B().CmsQuery().Key(key)
 	for _, e := range elements {
-		_cmd.Item(fmt.Sprint(e))
+		_cmd.Item(str(e))
 	}
 	cmd := (cmds.CmsQueryItem)(_cmd).Cache()
 	return newIntSliceCmd(c.client.DoCache(ctx, cmd, c.ttl))
@@ -4053,7 +4053,7 @@ func (c *CacheCompat) TopKList(ctx context.Context, key string) *StringSliceCmd 
 func (c *CacheCompat) TopKQuery(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd {
 	_cmd := c.client.B().TopkQuery().Key(key)
 	for _, e := range elements {
-		_cmd.Item(fmt.Sprint(e))
+		_cmd.Item(str(e))
 	}
 	cmd := (cmds.TopkQueryItem)(_cmd).Cache()
 	return newBoolSliceCmd(c.client.DoCache(ctx, cmd, c.ttl))
