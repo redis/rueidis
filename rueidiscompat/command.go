@@ -2921,7 +2921,6 @@ type BFInfoCmd struct {
 	baseCmd[BFInfo]
 }
 
-// newBFInfoCmd returns BFInfoCmd
 func newBFInfoCmd(res rueidis.RedisResult) *BFInfoCmd {
 	cmd := &BFInfoCmd{}
 	info := BFInfo{}
