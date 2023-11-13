@@ -466,11 +466,7 @@ func (c *clusterClient) Do(ctx context.Context, cmd Completed) (resp RedisResult
 
 func (c *clusterClient) do(ctx context.Context, cmd Completed) (resp RedisResult) {
 retry:
-	isSendToReplicas := false
-	if c.opt.SendToReplicas != nil {
-		isSendToReplicas = c.opt.SendToReplicas(cmd)
-	}
-	cc, err := c.pick(ctx, cmd.Slot(), isSendToReplicas)
+	cc, err := c.pick(ctx, cmd.Slot(), c.isSendToReplicas(cmd))
 	if err != nil {
 		return newErrResult(err)
 	}
@@ -492,6 +488,14 @@ process:
 		}
 	}
 	return resp
+}
+
+func (c *clusterClient) isSendToReplicas(cmd Completed) bool {
+	isSendToReplicas := false
+	if c.opt.SendToReplicas != nil {
+		isSendToReplicas = c.opt.SendToReplicas(cmd)
+	}
+	return isSendToReplicas
 }
 
 func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, last uint16) {
@@ -761,11 +765,7 @@ process:
 
 func (c *clusterClient) doCache(ctx context.Context, cmd Cacheable, ttl time.Duration) (resp RedisResult) {
 retry:
-	isSendToReplicas := false
-	if c.opt.SendToReplicas != nil {
-		isSendToReplicas = c.opt.SendToReplicas(Completed(cmd))
-	}
-	cc, err := c.pick(ctx, cmd.Slot(), isSendToReplicas)
+	cc, err := c.pick(ctx, cmd.Slot(), c.isSendToReplicas(Completed(cmd)))
 	if err != nil {
 		return newErrResult(err)
 	}
@@ -995,11 +995,7 @@ retry:
 
 func (c *clusterClient) Receive(ctx context.Context, subscribe Completed, fn func(msg PubSubMessage)) (err error) {
 retry:
-	isSendToReplicas := false
-	if c.opt.SendToReplicas != nil {
-		isSendToReplicas = c.opt.SendToReplicas(subscribe)
-	}
-	cc, err := c.pick(ctx, subscribe.Slot(), isSendToReplicas)
+	cc, err := c.pick(ctx, subscribe.Slot(), c.isSendToReplicas(subscribe))
 	if err != nil {
 		goto ret
 	}
