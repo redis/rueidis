@@ -1140,7 +1140,7 @@ func TestRedisResult(t *testing.T) {
 						}},
 					}},
 				},
-				expected: `{"Message":{"Type":"array","Value":[{"Type":"array","Value":[{"Type":"int64","Value":0},{"Type":"int64","Value":0},{"Type":"array","Value":[{"Type":"simple string","Value":"127.0.3.1"},{"Type":"int64","Value":3},{"Type":"simple string","Value":""}]}]}]}}`,
+				expected: `{"Message":{"Value":[{"Value":[{"Value":0,"Type":"int64"},{"Value":0,"Type":"int64"},{"Value":[{"Value":"127.0.3.1","Type":"simple string"},{"Value":3,"Type":"int64"},{"Value":"","Type":"simple string"}],"Type":"array"}],"Type":"array"}],"Type":"array"}}`,
 			},
 			{
 				input:    RedisResult{err: errors.New("foo")},
@@ -1724,11 +1724,11 @@ func TestRedisMessage(t *testing.T) {
 						}},
 					}},
 				}},
-				expected: `{"Type":"array","Value":[{"Type":"array","Value":[{"Type":"int64","Value":0},{"Type":"int64","Value":0},{"Type":"array","Value":[{"Type":"simple string","Value":"127.0.3.1"},{"Type":"int64","Value":3},{"Type":"simple string","Value":""}]}]}]}`,
+				expected: `{"Value":[{"Value":[{"Value":0,"Type":"int64"},{"Value":0,"Type":"int64"},{"Value":[{"Value":"127.0.3.1","Type":"simple string"},{"Value":3,"Type":"int64"},{"Value":"","Type":"simple string"}],"Type":"array"}],"Type":"array"}],"Type":"array"}`,
 			},
 			{
 				input:    RedisMessage{typ: '+', string: "127.0.3.1", ttl: [7]byte{97, 77, 74, 61, 138, 1, 0}},
-				expected: `{"Type":"simple string","TTL":"2023-08-28 17:56:34.273 +0000 UTC","Value":"127.0.3.1"}`,
+				expected: `{"Value":"127.0.3.1","Type":"simple string","TTL":"2023-08-28 17:56:34.273 +0000 UTC"}`,
 			},
 			{
 				input:    RedisMessage{typ: '0'},
@@ -1736,7 +1736,7 @@ func TestRedisMessage(t *testing.T) {
 			},
 			{
 				input:    RedisMessage{typ: typeBool, integer: 1},
-				expected: `{"Type":"boolean","Value":true}`,
+				expected: `{"Value":true,"Type":"boolean"}`,
 			},
 			{
 				input:    RedisMessage{typ: typeNull},

@@ -2184,11 +2184,11 @@ type Node struct {
 	Endpoint          string
 	IP                string
 	Hostname          string
+	Role              string
+	Health            string
 	Port              int64
 	TLSPort           int64
-	Role              string
 	ReplicationOffset int64
-	Health            string
 }
 type ClusterShard struct {
 	Slots []SlotRange
@@ -2691,8 +2691,8 @@ type Function struct {
 type Library struct {
 	Name      string
 	Engine    string
-	Functions []Function
 	Code      string
+	Functions []Function
 }
 
 type FunctionListQuery struct {
@@ -2795,14 +2795,14 @@ func formatSec(dur time.Duration) int64 {
 
 // https://github.com/redis/go-redis/blob/f994ff1cd96299a5c8029ae3403af7b17ef06e8a/gears_commands.go#L21C1-L35C2
 type TFunctionLoadOptions struct {
-	Replace bool
 	Config  string
+	Replace bool
 }
 
 type TFunctionListOptions struct {
-	Withcode bool
-	Verbose  int
 	Library  string
+	Verbose  int
+	Withcode bool
 }
 
 type TFCallOptions struct {
@@ -2948,8 +2948,8 @@ func newBFInfoCmd(res rueidis.RedisResult) *BFInfoCmd {
 }
 
 type ScanDump struct {
-	Iter int64
 	Data string
+	Iter int64
 }
 
 type ScanDumpCmd struct {

@@ -460,8 +460,8 @@ type prettyRedisResult RedisResult
 // MarshalJSON implements json.Marshaler interface
 func (r *prettyRedisResult) MarshalJSON() ([]byte, error) {
 	type PrettyRedisResult struct {
-		Error   string              `json:"Error,omitempty"`
 		Message *prettyRedisMessage `json:"Message,omitempty"`
+		Error   string              `json:"Error,omitempty"`
 	}
 	obj := PrettyRedisResult{}
 	if r.err != nil {
@@ -857,8 +857,8 @@ func (m *RedisMessage) AsZScores() ([]ZScore, error) {
 
 // ScanEntry is the element type of both SCAN, SSCAN, HSCAN and ZSCAN command response.
 type ScanEntry struct {
-	Cursor   uint64
 	Elements []string
+	Cursor   uint64
 }
 
 // AsScanEntry check if message is a redis array/set response of length 2, and convert to ScanEntry.
@@ -1271,10 +1271,10 @@ type prettyRedisMessage RedisMessage
 // MarshalJSON implements json.Marshaler interface
 func (m *prettyRedisMessage) MarshalJSON() ([]byte, error) {
 	type PrettyRedisMessage struct {
+		Value any    `json:"Value,omitempty"`
 		Type  string `json:"Type,omitempty"`
 		Error string `json:"Error,omitempty"`
 		Ttl   string `json:"TTL,omitempty"`
-		Value any    `json:"Value,omitempty"`
 	}
 	org := (*RedisMessage)(m)
 	strType, ok := typeNames[m.typ]

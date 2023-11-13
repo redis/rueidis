@@ -67,13 +67,13 @@ var _ conn = (*mux)(nil)
 type mux struct {
 	init   wire
 	dead   wire
+	clhks  atomic.Value
 	pool   *pool
 	wireFn wireFn
 	dst    string
 	wire   []atomic.Value
 	sc     []*singleconnect
 	mu     []sync.Mutex
-	clhks  atomic.Value
 	maxp   int
 }
 

@@ -47,10 +47,10 @@ func NewClient(option ClientOption) (cc CacheAsideClient, err error) {
 
 type Client struct {
 	client rueidis.Client
-	id     string
-	waits  map[string]chan struct{}
 	ctx    context.Context
+	waits  map[string]chan struct{}
 	cancel context.CancelFunc
+	id     string
 	ttl    time.Duration
 	mu     sync.Mutex
 }

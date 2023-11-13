@@ -152,8 +152,8 @@ func (c *clusterClient) lazyRefresh() {
 }
 
 type clusterslots struct {
-	reply RedisResult
 	addr  string
+	reply RedisResult
 	ver   int
 }
 

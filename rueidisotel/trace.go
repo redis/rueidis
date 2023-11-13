@@ -78,14 +78,14 @@ func WithTracerProvider(provider trace.TracerProvider) Option {
 
 type otelclient struct {
 	client         rueidis.Client
-	mAttrs         []attribute.KeyValue
-	tAttrs         []attribute.KeyValue
 	meterProvider  metric.MeterProvider
 	tracerProvider trace.TracerProvider
 	tracer         trace.Tracer
 	meter          metric.Meter
 	cscMiss        metric.Int64Counter
 	cscHits        metric.Int64Counter
+	mAttrs         []attribute.KeyValue
+	tAttrs         []attribute.KeyValue
 }
 
 func (o *otelclient) B() rueidis.Builder {
@@ -196,12 +196,12 @@ var _ rueidis.DedicatedClient = (*dedicated)(nil)
 
 type dedicated struct {
 	client  rueidis.DedicatedClient
-	mAttrs  []attribute.KeyValue
-	tAttrs  []attribute.KeyValue
 	tracer  trace.Tracer
 	meter   metric.Meter
 	cscMiss metric.Int64Counter
 	cscHits metric.Int64Counter
+	mAttrs  []attribute.KeyValue
+	tAttrs  []attribute.KeyValue
 }
 
 func (d *dedicated) B() rueidis.Builder {

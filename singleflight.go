@@ -7,10 +7,10 @@ import (
 )
 
 type call struct {
-	ch chan struct{}
-	mu sync.Mutex
 	ts time.Time
+	ch chan struct{}
 	cn int
+	mu sync.Mutex
 }
 
 func (c *call) Do(ctx context.Context, fn func() error) error {
