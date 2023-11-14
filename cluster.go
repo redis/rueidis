@@ -525,8 +525,7 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, last 
 				init = true
 
 				var p conn
-				isSendToReplicas := c.opt.SendToReplicas(cmd)
-				if isSendToReplicas {
+				if c.opt.SendToReplicas(cmd) {
 					p = c.rslots[rand.Intn(int(cmds.InitSlot))]
 				} else {
 					p = c.pslots[rand.Intn(int(cmds.InitSlot))]
@@ -543,8 +542,7 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, last 
 			}
 
 			var p conn
-			isSendToReplicas := c.opt.SendToReplicas(cmd)
-			if isSendToReplicas {
+			if c.opt.SendToReplicas(cmd) {
 				p = c.rslots[cmd.Slot()]
 			} else {
 				p = c.pslots[cmd.Slot()]
