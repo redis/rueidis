@@ -491,11 +491,10 @@ process:
 }
 
 func (c *clusterClient) isSendToReplicas(cmd Completed) bool {
-	isSendToReplicas := false
 	if c.opt.SendToReplicas != nil {
-		isSendToReplicas = c.opt.SendToReplicas(cmd)
+		return c.opt.SendToReplicas(cmd)
 	}
-	return isSendToReplicas
+	return false
 }
 
 func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, last uint16) {
@@ -846,8 +845,7 @@ func (c *clusterClient) _pickMultiCache(multi []CacheableTTL) *connretrycache {
 	} else {
 		for _, cmd := range multi {
 			var p conn
-			isSendToReplicas := c.opt.SendToReplicas(Completed(cmd.Cmd))
-			if isSendToReplicas {
+			if c.opt.SendToReplicas(Completed(cmd.Cmd)) {
 				p = c.rslots[cmd.Cmd.Slot()]
 			} else {
 				p = c.pslots[cmd.Cmd.Slot()]
@@ -876,8 +874,7 @@ func (c *clusterClient) _pickMultiCache(multi []CacheableTTL) *connretrycache {
 	} else {
 		for i, cmd := range multi {
 			var cc conn
-			isSendToReplicas := c.opt.SendToReplicas(Completed(cmd.Cmd))
-			if isSendToReplicas {
+			if c.opt.SendToReplicas(Completed(cmd.Cmd)) {
 				cc = c.rslots[cmd.Cmd.Slot()]
 			} else {
 				cc = c.pslots[cmd.Cmd.Slot()]
