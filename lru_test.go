@@ -78,16 +78,16 @@ func TestLRU(t *testing.T) {
 		store1 := lru.store["1"]
 		store2 := lru.store["2"]
 		lru.mu.RUnlock()
-		if miss := atomic.LoadUint64(&store1.miss); miss != 1 {
+		if miss := atomic.LoadUint32(&store1.miss); miss != 1 {
 			t.Fatalf("unexpected miss count %v", miss)
 		}
-		if hits := atomic.LoadUint64(&store1.hits); hits != uint64(count-1) {
+		if hits := atomic.LoadUint32(&store1.hits); hits != uint32(count-1) {
 			t.Fatalf("unexpected hits count %v", hits)
 		}
-		if miss := atomic.LoadUint64(&store2.miss); miss != 1 {
+		if miss := atomic.LoadUint32(&store2.miss); miss != 1 {
 			t.Fatalf("unexpected miss count %v", miss)
 		}
-		if hits := atomic.LoadUint64(&store2.hits); hits != uint64(count-1) {
+		if hits := atomic.LoadUint32(&store2.hits); hits != uint32(count-1) {
 			t.Fatalf("unexpected hits count %v", hits)
 		}
 	})
@@ -289,16 +289,16 @@ func TestLRU(t *testing.T) {
 		store1 := lru.store["1"]
 		store2 := lru.store["2"]
 		lru.mu.RUnlock()
-		if miss := atomic.LoadUint64(&store1.miss); miss != 1 {
+		if miss := atomic.LoadUint32(&store1.miss); miss != 1 {
 			t.Fatalf("unexpected miss count %v", miss)
 		}
-		if hits := atomic.LoadUint64(&store1.hits); hits != uint64(count-1) {
+		if hits := atomic.LoadUint32(&store1.hits); hits != uint32(count-1) {
 			t.Fatalf("unexpected hits count %v", hits)
 		}
-		if miss := atomic.LoadUint64(&store2.miss); miss != 1 {
+		if miss := atomic.LoadUint32(&store2.miss); miss != 1 {
 			t.Fatalf("unexpected miss count %v", miss)
 		}
-		if hits := atomic.LoadUint64(&store2.hits); hits != uint64(count-1) {
+		if hits := atomic.LoadUint32(&store2.hits); hits != uint32(count-1) {
 			t.Fatalf("unexpected hits count %v", hits)
 		}
 	})

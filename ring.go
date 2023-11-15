@@ -3,6 +3,8 @@ package rueidis
 import (
 	"sync"
 	"sync/atomic"
+
+	"golang.org/x/sys/cpu"
 )
 
 type queue interface {
@@ -20,7 +22,7 @@ func newRing(factor int) *ring {
 		factor = DefaultRingScale
 	}
 	r := &ring{store: make([]node, 2<<(factor-1))}
-	r.mask = uint64(len(r.store) - 1)
+	r.mask = uint32(len(r.store) - 1)
 	for i := range r.store {
 		m := &sync.Mutex{}
 		r.store[i].c1 = sync.NewCond(m)
@@ -32,12 +34,12 @@ func newRing(factor int) *ring {
 
 type ring struct {
 	store []node // store's size must be 2^N to work with the mask
-	_     [5]uint64
-	write uint64
-	_     [7]uint64
-	read1 uint64
-	read2 uint64
-	mask  uint64
+	_     cpu.CacheLinePad
+	write uint32
+	_     cpu.CacheLinePad
+	read1 uint32
+	read2 uint32
+	mask  uint32
 }
 
 type node struct {
@@ -52,7 +54,7 @@ type node struct {
 }
 
 func (r *ring) PutOne(m Completed) chan RedisResult {
-	n := &r.store[atomic.AddUint64(&r.write, 1)&r.mask]
+	n := &r.store[atomic.AddUint32(&r.write, 1)&r.mask]
 	n.c1.L.Lock()
 	for n.mark != 0 {
 		n.c1.Wait()
@@ -68,7 +70,7 @@ func (r *ring) PutOne(m Completed) chan RedisResult {
 }
 
 func (r *ring) PutMulti(m []Completed, resps []RedisResult) chan RedisResult {
-	n := &r.store[atomic.AddUint64(&r.write, 1)&r.mask]
+	n := &r.store[atomic.AddUint32(&r.write, 1)&r.mask]
 	n.c1.L.Lock()
 	for n.mark != 0 {
 		n.c1.Wait()
