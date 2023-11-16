@@ -2041,6 +2041,12 @@ func TestClusterClient_SendToOnlyReplicaNodes(t *testing.T) {
 			"CLUSTER SLOTS": func(cmd Completed) RedisResult {
 				return slotsMultiResp
 			},
+			"INFO": func(cmd Completed) RedisResult {
+				return newResult(RedisMessage{typ: '+', string: "INFO"}, nil)
+			},
+			"GET K1{a}": func(cmd Completed) RedisResult {
+				return newResult(RedisMessage{typ: '+', string: "GET K1{a}"}, nil)
+			},
 		},
 	}
 	replicaNodeConn := &mockConn{
@@ -2061,9 +2067,6 @@ func TestClusterClient_SendToOnlyReplicaNodes(t *testing.T) {
 		DoOverride: map[string]func(cmd Completed) RedisResult{
 			"GET Do": func(cmd Completed) RedisResult {
 				return newResult(RedisMessage{typ: '+', string: "GET Do"}, nil)
-			},
-			"INFO": func(cmd Completed) RedisResult {
-				return newResult(RedisMessage{typ: '+', string: "INFO"}, nil)
 			},
 			"GET K1{a}": func(cmd Completed) RedisResult {
 				return newResult(RedisMessage{typ: '+', string: "GET K1{a}"}, nil)
@@ -2546,8 +2549,20 @@ func TestClusterClient_SendReadOperationToReplicaNodesWriteOperationToPrimaryNod
 		DoMultiFn: func(multi ...Completed) *redisresults {
 			resps := make([]RedisResult, len(multi))
 			for i, cmd := range multi {
+				if strings.HasPrefix(strings.Join(cmd.Commands(), " "), "SET K1") {
+					resps[i] = newResult(RedisMessage{typ: '+', string: strings.Join(cmd.Commands(), " ")}, nil)
+					continue
+				}
 				if strings.HasPrefix(strings.Join(cmd.Commands(), " "), "SET K2") {
 					resps[i] = newResult(RedisMessage{typ: '+', string: strings.Join(cmd.Commands(), " ")}, nil)
+					continue
+				}
+				if strings.HasPrefix(strings.Join(cmd.Commands(), " "), "MULTI") {
+					resps[i] = newResult(RedisMessage{typ: '+', string: "MULTI"}, nil)
+					continue
+				}
+				if strings.HasPrefix(strings.Join(cmd.Commands(), " "), "EXEC") {
+					resps[i] = newResult(RedisMessage{typ: '+', string: "EXEC"}, nil)
 					continue
 				}
 
@@ -2560,9 +2575,6 @@ func TestClusterClient_SendReadOperationToReplicaNodesWriteOperationToPrimaryNod
 	}
 	replicaNodeConn := &mockConn{
 		DoOverride: map[string]func(cmd Completed) RedisResult{
-			"INFO": func(cmd Completed) RedisResult {
-				return newResult(RedisMessage{typ: '+', string: "INFO"}, nil)
-			},
 			"GET Do": func(cmd Completed) RedisResult {
 				return newResult(RedisMessage{typ: '+', string: "GET Do"}, nil)
 			},
@@ -2681,34 +2693,22 @@ func TestClusterClient_SendReadOperationToReplicaNodesWriteOperationToPrimaryNod
 		}
 	})
 
-	t.Run("DoMulti Single Slot Read Operations + Init Slot", func(t *testing.T) {
-		c1 := client.B().Get().Key("K1{a}").Build()
-		c2 := client.B().Get().Key("K2{a}").Build()
-		c3 := client.B().Info().Build()
-		resps := client.DoMulti(context.Background(), c1, c2, c3)
-		if v, err := resps[0].ToString(); err != nil || v != "GET K1{a}" {
+	t.Run("DoMulti Single Slot Operations + Init Slot", func(t *testing.T) {
+		c1 := client.B().Multi().Build()
+		c2 := client.B().Set().Key("K1{a}").Value("V1{a}").Build()
+		c3 := client.B().Set().Key("K2{a}").Value("V2{a}").Build()
+		c4 := client.B().Exec().Build()
+		resps := client.DoMulti(context.Background(), c1, c2, c3, c4)
+		if v, err := resps[0].ToString(); err != nil || v != "MULTI" {
 			t.Fatalf("unexpected response %v %v", v, err)
 		}
-		if v, err := resps[1].ToString(); err != nil || v != "GET K2{a}" {
+		if v, err := resps[1].ToString(); err != nil || v != "SET K1{a} V1{a}" {
 			t.Fatalf("unexpected response %v %v", v, err)
 		}
-		if v, err := resps[2].ToString(); err != nil || v != "INFO" {
+		if v, err := resps[2].ToString(); err != nil || v != "SET K2{a} V2{a}" {
 			t.Fatalf("unexpected response %v %v", v, err)
 		}
-	})
-
-	t.Run("DoMulti Single Slot Read Operation And Write Operation + Init Slot", func(t *testing.T) {
-		c1 := client.B().Get().Key("K1{a}").Build()
-		c2 := client.B().Set().Key("K2{a}").Value("V2{a}").Build()
-		c3 := client.B().Info().Build()
-		resps := client.DoMulti(context.Background(), c1, c2, c3)
-		if v, err := resps[0].ToString(); err != nil || v != "GET K1{a}" {
-			t.Fatalf("unexpected response %v %v", v, err)
-		}
-		if v, err := resps[1].ToString(); err != nil || v != "SET K2{a} V2{a}" {
-			t.Fatalf("unexpected response %v %v", v, err)
-		}
-		if v, err := resps[2].ToString(); err != nil || v != "INFO" {
+		if v, err := resps[3].ToString(); err != nil || v != "EXEC" {
 			t.Fatalf("unexpected response %v %v", v, err)
 		}
 	})
