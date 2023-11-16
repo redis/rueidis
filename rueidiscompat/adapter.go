@@ -740,8 +740,8 @@ func (c *Compat) sort(command, key string, sort Sort) cmds.Arbitrary {
 	if sort.Offset != 0 || sort.Count != 0 {
 		cmd = cmd.Args("LIMIT", strconv.FormatInt(sort.Offset, 10), strconv.FormatInt(sort.Count, 10))
 	}
-	if len(sort.Get) > 0 {
-		cmd = cmd.Args("GET").Args(sort.Get...)
+	for _, get := range sort.Get {
+		cmd = cmd.Args("GET").Args(get)
 	}
 	switch order := strings.ToUpper(sort.Order); order {
 	case "ASC", "DESC":
