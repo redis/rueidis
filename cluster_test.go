@@ -3124,6 +3124,74 @@ func TestClusterClient_SendReadOperationToReplicaNodesWriteOperationToPrimaryNod
 }
 
 //gocyclo:ignore
+func TestClusterClient_SendPrimaryNodeOnlyButOneSlotAssigned(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+
+	primaryNodeConn := &mockConn{
+		DoOverride: map[string]func(cmd Completed) RedisResult{
+			"CLUSTER SLOTS": func(cmd Completed) RedisResult {
+				return singleSlotResp
+			},
+			"INFO": func(cmd Completed) RedisResult {
+				return newResult(RedisMessage{typ: '+', string: "INFO"}, nil)
+			},
+		},
+		DoMultiFn: func(multi ...Completed) *redisresults {
+			resps := make([]RedisResult, len(multi))
+			for i, cmd := range multi {
+				if strings.HasPrefix(strings.Join(cmd.Commands(), " "), "MULTI") {
+					resps[i] = newResult(RedisMessage{typ: '+', string: "MULTI"}, nil)
+					continue
+				}
+				if strings.HasPrefix(strings.Join(cmd.Commands(), " "), "EXEC") {
+					resps[i] = newResult(RedisMessage{typ: '+', string: "EXEC"}, nil)
+					continue
+				}
+
+				return &redisresults{
+					s: []RedisResult{},
+				}
+			}
+			return &redisresults{s: resps}
+		},
+	}
+
+	client, err := newClusterClient(
+		&ClientOption{
+			InitAddress: []string{"127.0.0.1:0"},
+			SendToReplicas: func(cmd Completed) bool {
+				return false
+			},
+		},
+		func(dst string, opt *ClientOption) conn {
+			return primaryNodeConn
+		},
+	)
+	if err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+
+	t.Run("Do with no slot", func(t *testing.T) {
+		c := client.B().Info().Build()
+		if v, err := client.Do(context.Background(), c).ToString(); err != nil || v != "INFO" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("DoMulti Init Slot Operations", func(t *testing.T) {
+		c1 := client.B().Multi().Build()
+		c2 := client.B().Exec().Build()
+		resps := client.DoMulti(context.Background(), c1, c2)
+		if v, err := resps[0].ToString(); err != nil || v != "MULTI" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+		if v, err := resps[1].ToString(); err != nil || v != "EXEC" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+}
+
+//gocyclo:ignore
 func TestClusterClientErr(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 

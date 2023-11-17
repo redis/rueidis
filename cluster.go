@@ -75,6 +75,7 @@ type clusterClient struct {
 	rslots []conn
 	opt    *ClientOption
 	conns  map[string]conn
+	pconns map[string]conn
 	connFn connFn
 	sc     call
 	mu     sync.RWMutex
@@ -240,6 +241,7 @@ func (c *clusterClient) _refresh() (err error) {
 
 	pslots := [16384]conn{}
 	var rslots []conn
+	pconns := map[string]conn{}
 	for master, g := range groups {
 		switch {
 		case c.opt.ReplicaOnly && len(g.nodes) > 1:
@@ -250,6 +252,11 @@ func (c *clusterClient) _refresh() (err error) {
 				}
 			}
 		case c.opt.SendToReplicas != nil:
+			if len(pconns) == 0 { // lazy init
+				pconns = make(map[string]conn, len(groups))
+			}
+			pconns[master] = conns[master]
+
 			if len(rslots) == 0 { // lazy init
 				rslots = make([]conn, 16384)
 			}
@@ -282,6 +289,7 @@ func (c *clusterClient) _refresh() (err error) {
 	c.pslots = pslots
 	c.rslots = rslots
 	c.conns = conns
+	c.pconns = pconns
 	c.mu.Unlock()
 
 	if len(removes) > 0 {
@@ -402,7 +410,10 @@ func (c *clusterClient) _pick(slot uint16, isSendToReplicas bool) (p conn) {
 	} else {
 		switch {
 		case slot == cmds.InitSlot:
-			p = c.pslots[rand.Intn(int(cmds.InitSlot))]
+			for _, cc := range c.pconns {
+				p = cc
+				break
+			}
 		case isSendToReplicas:
 			p = c.rslots[slot]
 		default:
@@ -436,6 +447,9 @@ func (c *clusterClient) redirectOrNew(addr string, prev conn) (p conn) {
 	if p = c.conns[addr]; p == nil {
 		p = c.connFn(addr, c.opt)
 		c.conns[addr] = p
+		if _, ok := c.pconns[addr]; ok {
+			c.pconns[addr] = p
+		}
 	} else if prev == p {
 		// try reconnection if the MOVED redirects to the same host,
 		// because the same hostname may actually be resolved into another destination
@@ -446,6 +460,9 @@ func (c *clusterClient) redirectOrNew(addr string, prev conn) (p conn) {
 		}(prev)
 		p = c.connFn(addr, c.opt)
 		c.conns[addr] = p
+		if _, ok := c.pconns[addr]; ok {
+			c.pconns[addr] = p
+		}
 	}
 	c.mu.Unlock()
 	return p
@@ -498,22 +515,31 @@ func (c *clusterClient) isSendToReplicas(cmd Completed) bool {
 func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, last uint16, isSendToReplicas bool) {
 	last = cmds.InitSlot
 	init := false
-	isSendToReplicas = false
+
+	for _, cmd := range multi {
+		if cmd.Slot() == cmds.InitSlot {
+			init = true
+			break
+		}
+	}
 
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
 	count := conncountp.Get(len(c.conns), len(c.conns))
-	if c.opt.SendToReplicas == nil {
+
+	if !init && c.opt.SendToReplicas != nil {
 		for _, cmd := range multi {
-			if cmd.Slot() == cmds.InitSlot {
-				init = true
-				continue
+			var p conn
+			if c.opt.SendToReplicas(cmd) {
+				p = c.rslots[cmd.Slot()]
+			} else {
+				p = c.pslots[cmd.Slot()]
 			}
-			p := c.pslots[cmd.Slot()]
 			if p == nil {
 				return nil, 0, false
 			}
+
 			count.m[p]++
 		}
 
@@ -523,93 +549,60 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, last 
 		}
 		conncountp.Put(count)
 
+		replicaCommandCount := 0
 		for i, cmd := range multi {
-			if cmd.Slot() != cmds.InitSlot {
-				if last == cmds.InitSlot {
-					last = cmd.Slot()
-				} else if init && last != cmd.Slot() {
-					panic(panicMixCxSlot)
-				}
-				cc := c.pslots[cmd.Slot()]
-				re := retries.m[cc]
-				re.commands = append(re.commands, cmd)
-				re.cIndexes = append(re.cIndexes, i)
-			}
-		}
-	} else {
-		for _, cmd := range multi {
-			if cmd.Slot() == cmds.InitSlot {
-				init = true
-				continue
+			if i == 0 {
+				last = cmd.Slot()
 			}
 
-			rc := c.rslots[cmd.Slot()]
-			pc := c.pslots[cmd.Slot()]
-			if rc == nil || pc == nil {
-				return nil, 0, false
+			var cc conn
+			if c.opt.SendToReplicas(cmd) {
+				replicaCommandCount++
+				cc = c.rslots[cmd.Slot()]
+			} else {
+				cc = c.pslots[cmd.Slot()]
 			}
 
-			count.m[rc]++
-			count.m[pc]++
+			re := retries.m[cc]
+			re.commands = append(re.commands, cmd)
+			re.cIndexes = append(re.cIndexes, i)
 		}
 
-		retries = connretryp.Get(len(count.m), len(count.m))
-		for cc, n := range count.m {
-			retries.m[cc] = retryp.Get(0, n)
+		return retries, last, replicaCommandCount == len(multi)
+	}
+
+	for _, cmd := range multi {
+		if cmd.Slot() == cmds.InitSlot {
+			continue
 		}
-		conncountp.Put(count)
+		p := c.pslots[cmd.Slot()]
+		if p == nil {
+			return nil, 0, false
+		}
+		count.m[p]++
+	}
 
-		if init {
-			for i, cmd := range multi {
-				if cmd.Slot() != cmds.InitSlot {
-					if last == cmds.InitSlot {
-						last = cmd.Slot()
-					} else if last != cmd.Slot() {
-						panic(panicMixCxSlot)
-					}
+	retries = connretryp.Get(len(count.m), len(count.m))
+	for cc, n := range count.m {
+		retries.m[cc] = retryp.Get(0, n)
+	}
+	conncountp.Put(count)
 
-					cc := c.pslots[cmd.Slot()]
-					re := retries.m[cc]
-					re.commands = append(re.commands, cmd)
-					re.cIndexes = append(re.cIndexes, i)
-
-					rc := c.rslots[cmd.Slot()]
-					delete(retries.m, rc)
-				}
+	for i, cmd := range multi {
+		if cmd.Slot() != cmds.InitSlot {
+			if last == cmds.InitSlot {
+				last = cmd.Slot()
+			} else if init && last != cmd.Slot() {
+				panic(panicMixCxSlot)
 			}
-		} else {
-			replicaCommandCount := 0
-			for i, cmd := range multi {
-				if cmd.Slot() != cmds.InitSlot {
-					if last == cmds.InitSlot {
-						last = cmd.Slot()
-					}
-
-					var cc conn
-					if c.opt.SendToReplicas(cmd) {
-						cc = c.rslots[cmd.Slot()]
-						replicaCommandCount++
-					} else {
-						cc = c.pslots[cmd.Slot()]
-					}
-
-					re := retries.m[cc]
-					re.commands = append(re.commands, cmd)
-					re.cIndexes = append(re.cIndexes, i)
-				}
-			}
-
-			for cc, re := range retries.m {
-				if len(re.commands) == 0 {
-					delete(retries.m, cc)
-				}
-			}
-
-			isSendToReplicas = replicaCommandCount == len(multi)
+			cc := c.pslots[cmd.Slot()]
+			re := retries.m[cc]
+			re.commands = append(re.commands, cmd)
+			re.cIndexes = append(re.cIndexes, i)
 		}
 	}
 
-	return retries, last, isSendToReplicas
+	return retries, last, false
 }
 
 func (c *clusterClient) pickMulti(ctx context.Context, multi []Completed) (*connretry, uint16, bool, error) {
