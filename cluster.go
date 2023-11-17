@@ -834,6 +834,21 @@ func (c *clusterClient) _pickMultiCache(multi []CacheableTTL) *connretrycache {
 			}
 			count.m[p]++
 		}
+
+		retries := connretrycachep.Get(len(count.m), len(count.m))
+		for cc, n := range count.m {
+			retries.m[cc] = retrycachep.Get(0, n)
+		}
+		conncountp.Put(count)
+
+		for i, cmd := range multi {
+			cc := c.pslots[cmd.Cmd.Slot()]
+			re := retries.m[cc]
+			re.commands = append(re.commands, cmd)
+			re.cIndexes = append(re.cIndexes, i)
+		}
+
+		return retries
 	} else {
 		for _, cmd := range multi {
 			var p conn
@@ -848,22 +863,13 @@ func (c *clusterClient) _pickMultiCache(multi []CacheableTTL) *connretrycache {
 			}
 			count.m[p]++
 		}
-	}
 
-	retries := connretrycachep.Get(len(count.m), len(count.m))
-	for cc, n := range count.m {
-		retries.m[cc] = retrycachep.Get(0, n)
-	}
-	conncountp.Put(count)
-
-	if c.opt.SendToReplicas == nil {
-		for i, cmd := range multi {
-			cc := c.pslots[cmd.Cmd.Slot()]
-			re := retries.m[cc]
-			re.commands = append(re.commands, cmd)
-			re.cIndexes = append(re.cIndexes, i)
+		retries := connretrycachep.Get(len(count.m), len(count.m))
+		for cc, n := range count.m {
+			retries.m[cc] = retrycachep.Get(0, n)
 		}
-	} else {
+		conncountp.Put(count)
+
 		for i, cmd := range multi {
 			var cc conn
 			if c.opt.SendToReplicas(Completed(cmd.Cmd)) {
@@ -876,9 +882,9 @@ func (c *clusterClient) _pickMultiCache(multi []CacheableTTL) *connretrycache {
 			re.commands = append(re.commands, cmd)
 			re.cIndexes = append(re.cIndexes, i)
 		}
-	}
 
-	return retries
+		return retries
+	}
 }
 
 func (c *clusterClient) pickMultiCache(ctx context.Context, multi []CacheableTTL) (*connretrycache, error) {
