@@ -58,10 +58,10 @@ func TestAdapter(t *testing.T) {
 var (
 	err             error
 	ctx             context.Context
-	clientresp2     rueidis.Client
-	clusterresp2    rueidis.Client
-	clientresp3     rueidis.Client
-	clusterresp3    rueidis.Client
+	adapterresp2    rueidis.adapter
+	clusterresp2    rueidis.adapter
+	adapterresp3    rueidis.adapter
+	clusterresp3    rueidis.adapter
 	adapterresp2    Cmdable
 	adaptercluster2 Cmdable
 	adapterresp3    Cmdable
@@ -70,41 +70,41 @@ var (
 
 var _ = BeforeSuite(func() {
 	ctx = context.Background()
-	clientresp3, err = rueidis.NewClient(rueidis.ClientOption{
+	adapterresp3, err = rueidis.Newadapter(rueidis.adapterOption{
 		InitAddress: []string{"127.0.0.1:6378"},
-		ClientName:  "rueidis",
+		adapterName: "rueidis",
 	})
 	Expect(err).NotTo(HaveOccurred())
-	clusterresp3, err = rueidis.NewClient(rueidis.ClientOption{
+	clusterresp3, err = rueidis.Newadapter(rueidis.adapterOption{
 		InitAddress: []string{"127.0.0.1:7010"},
-		ClientName:  "rueidis",
+		adapterName: "rueidis",
 	})
 	Expect(err).NotTo(HaveOccurred())
-	adapterresp3 = NewAdapter(clientresp3)
+	adapterresp3 = NewAdapter(adapterresp3)
 	adaptercluster3 = NewAdapter(clusterresp3)
-	clientresp2, err = rueidis.NewClient(rueidis.ClientOption{
+	adapterresp2, err = rueidis.Newadapter(rueidis.adapterOption{
 		InitAddress:  []string{"127.0.0.1:6356"},
-		ClientName:   "rueidis",
+		adapterName:  "rueidis",
 		DisableCache: true,
 	})
 	Expect(err).NotTo(HaveOccurred())
-	clusterresp2, err = rueidis.NewClient(rueidis.ClientOption{
+	clusterresp2, err = rueidis.Newadapter(rueidis.adapterOption{
 		InitAddress:  []string{"127.0.0.1:7007"},
-		ClientName:   "rueidis",
+		adapterName:  "rueidis",
 		DisableCache: true,
 	})
 	Expect(err).NotTo(HaveOccurred())
-	adapterresp2 = NewAdapter(clientresp2)
+	adapterresp2 = NewAdapter(adapterresp2)
 	adaptercluster2 = NewAdapter(clusterresp2)
 })
 
 var _ = AfterSuite(func() {
 	Expect(adapterresp3.FlushDB(ctx).Err()).NotTo(HaveOccurred())
 	Expect(adapterresp3.Quit(ctx).Err()).NotTo(HaveOccurred())
-	clientresp3.Close()
+	adapterresp3.Close()
 	Expect(adapterresp2.FlushDB(ctx).Err()).NotTo(HaveOccurred())
 	Expect(adapterresp2.Quit(ctx).Err()).NotTo(HaveOccurred())
-	clientresp2.Close()
+	adapterresp2.Close()
 })
 
 var _ = Describe("RESP3 Commands", func() {
@@ -235,32 +235,32 @@ func testAdapter(resp3 bool) {
 			Expect(r.Val()).To(BeTrue())
 		})
 
-		It("should ClientKill", func() {
-			r := adapter.ClientKill(ctx, "1.1.1.1:1111")
-			Expect(r.Err()).To(MatchError("No such client"))
+		It("should adapterKill", func() {
+			r := adapter.adapterKill(ctx, "1.1.1.1:1111")
+			Expect(r.Err()).To(MatchError("No such adapter"))
 			Expect(r.Val()).To(Equal(""))
 		})
 
-		It("should ClientKillByFilter", func() {
-			r := adapter.ClientKillByFilter(ctx, "ID", "12039487")
+		It("should adapterKillByFilter", func() {
+			r := adapter.adapterKillByFilter(ctx, "ID", "12039487")
 			Expect(r.Err()).To(BeNil())
 			Expect(r.Val()).To(Equal(int64(0)))
 		})
 
-		It("should ClientList", func() {
-			r := adapter.ClientList(ctx)
+		It("should adapterList", func() {
+			r := adapter.adapterList(ctx)
 			Expect(r.Err()).To(BeNil())
 			Expect(r.Val()).NotTo(Equal(""))
 		})
 
-		It("should ClientID", func() {
-			err := adapter.ClientID(ctx).Err()
+		It("should adapterID", func() {
+			err := adapter.adapterID(ctx).Err()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(adapter.ClientID(ctx).Val()).To(BeNumerically(">=", 0))
+			Expect(adapter.adapterID(ctx).Val()).To(BeNumerically(">=", 0))
 		})
 
-		It("should ClientGetName", func() {
-			r := adapter.ClientGetName(ctx)
+		It("should adapterGetName", func() {
+			r := adapter.adapterGetName(ctx)
 			Expect(r.Err()).NotTo(HaveOccurred())
 			Expect(r.Val()).To(Equal("rueidis"))
 		})
@@ -3175,7 +3175,7 @@ func testAdapter(resp3 bool) {
 				Expect(sAdd.Err()).NotTo(HaveOccurred())
 				sAdd = adapter.SAdd(ctx, "set2", "e")
 				Expect(sAdd.Err()).NotTo(HaveOccurred())
-				// limit 0 means no limit,see https://redis.io/commands/sintercard/ for more details
+				// limit 0 means no limit,see https://io/commands/sintercard/ for more details
 				sInterCard := adapter.SInterCard(ctx, 0, "set1", "set2")
 				Expect(sInterCard.Err()).NotTo(HaveOccurred())
 				Expect(sInterCard.Val()).To(Equal(int64(2)))
@@ -6525,27 +6525,27 @@ func testAdapterCache(resp3 bool) {
 		})
 	})
 
-	Describe("Client", func() {
-		It("should ClientUnblock", func() {
-			id := adapter.ClientID(ctx).Val()
-			r, err := adapter.ClientUnblock(ctx, id).Result()
+	Describe("adapter", func() {
+		It("should adapterUnblock", func() {
+			id := adapter.adapterID(ctx).Val()
+			r, err := adapter.adapterUnblock(ctx, id).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(r).To(Equal(int64(0)))
 		})
 
-		It("should ClientUnblockWithError", func() {
-			id := adapter.ClientID(ctx).Val()
-			r, err := adapter.ClientUnblockWithError(ctx, id).Result()
+		It("should adapterUnblockWithError", func() {
+			id := adapter.adapterID(ctx).Val()
+			r, err := adapter.adapterUnblockWithError(ctx, id).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(r).To(Equal(int64(0)))
 		})
 
-		It("ClientPause", func() {
-			Expect(adapter.ClientPause(ctx, time.Second).Err()).NotTo(HaveOccurred())
+		It("adapterPause", func() {
+			Expect(adapter.adapterPause(ctx, time.Second).Err()).NotTo(HaveOccurred())
 		})
 
-		It("ClientUnpause", func() {
-			Expect(adapter.ClientUnpause(ctx).Err()).NotTo(HaveOccurred())
+		It("adapterUnpause", func() {
+			Expect(adapter.adapterUnpause(ctx).Err()).NotTo(HaveOccurred())
 		})
 	})
 
@@ -6602,17 +6602,17 @@ func testAdapterCache(resp3 bool) {
 
                      local function f1(keys, args)
                         local hash = keys[1]  -- Get the key name
-                        local time = redis.call('TIME')[1]  -- Get the current time from the Redis server
+                        local time = call('TIME')[1]  -- Get the current time from the Redis server
 
                         -- Add the current timestamp to the arguments that the user passed to the function, stored in args
                         table.insert(args, '_updated_at')
                         table.insert(args, time)
 
                         -- Run HSET with the updated argument list
-                        return redis.call('HSET', hash, unpack(args))
+                        return call('HSET', hash, unpack(args))
                      end
 
-					redis.register_function{
+					register_function{
 						function_name='%s',
 						description ='%s',
 						callback=f1,
@@ -6644,8 +6644,8 @@ func testAdapterCache(resp3 bool) {
 						 return 'Function 2'
 					end
 
-					redis.register_function('%s', f1)
-					redis.register_function{
+					register_function('%s', f1)
+					register_function{
 						function_name='%s',
 						description ='%s',
 						callback=f2,
@@ -7190,17 +7190,17 @@ func testAdapterCache(resp3 bool) {
 
                      local function f1(keys, args)
                         local hash = keys[1]  -- Get the key name
-                        local time = redis.call('TIME')[1]  -- Get the current time from the Redis server
+                        local time = call('TIME')[1]  -- Get the current time from the Redis server
 
                         -- Add the current timestamp to the arguments that the user passed to the function, stored in args
                         table.insert(args, '_updated_at')
                         table.insert(args, time)
 
                         -- Run HSET with the updated argument list
-                        return redis.call('HSET', hash, unpack(args))
+                        return call('HSET', hash, unpack(args))
                      end
 
-					redis.register_function{
+					register_function{
 						function_name='%s',
 						description ='%s',
 						callback=f1,
@@ -7232,8 +7232,8 @@ func testAdapterCache(resp3 bool) {
 						 return 'Function 2'
 					end
 
-					redis.register_function('%s', f1)
-					redis.register_function{
+					register_function('%s', f1)
+					register_function{
 						function_name='%s',
 						description ='%s',
 						callback=f2,
@@ -9525,10 +9525,930 @@ func testAdapterCache(resp3 bool) {
 			})
 		})
 	})
+	Describe("RedisTimeseries commands", Label("timeseries"), func() {
+		ctx := context.TODO()
+
+		BeforeEach(func() {
+			Expect(adapter.FlushDB(ctx).Err()).NotTo(HaveOccurred())
+		})
+
+		It("should TSCreate and TSCreateWithArgs", Label("timeseries", "tscreate", "tscreateWithArgs"), func() {
+			result, err := adapter.TSCreate(ctx, "1").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result).To(BeEquivalentTo("OK"))
+			// Test TSCreateWithArgs
+			opt := &TSOptions{Retention: 5}
+			result, err = adapter.TSCreateWithArgs(ctx, "2", opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result).To(BeEquivalentTo("OK"))
+			opt = &TSOptions{Labels: map[string]string{"Redis": "Labs"}}
+			result, err = adapter.TSCreateWithArgs(ctx, "3", opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result).To(BeEquivalentTo("OK"))
+			opt = &TSOptions{Labels: map[string]string{"Time": "Series"}, Retention: 20}
+			result, err = adapter.TSCreateWithArgs(ctx, "4", opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result).To(BeEquivalentTo("OK"))
+			resultInfo, err := adapter.TSInfo(ctx, "4").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultInfo["labels"].(map[interface{}]interface{})["Time"]).To(BeEquivalentTo("Series"))
+			// Test chunk size
+			opt = &TSOptions{ChunkSize: 128}
+			result, err = adapter.TSCreateWithArgs(ctx, "ts-cs-1", opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result).To(BeEquivalentTo("OK"))
+			resultInfo, err = adapter.TSInfo(ctx, "ts-cs-1").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultInfo["chunkSize"]).To(BeEquivalentTo(128))
+			// Test duplicate policy
+			duplicate_policies := []string{"BLOCK", "LAST", "FIRST", "MIN", "MAX"}
+			for _, dup := range duplicate_policies {
+				keyName := "ts-dup-" + dup
+				opt = &TSOptions{DuplicatePolicy: dup}
+				result, err = adapter.TSCreateWithArgs(ctx, keyName, opt).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(result).To(BeEquivalentTo("OK"))
+				resultInfo, err = adapter.TSInfo(ctx, keyName).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(strings.ToUpper(resultInfo["duplicatePolicy"].(string))).To(BeEquivalentTo(dup))
+
+			}
+		})
+		It("should TSAdd and TSAddWithArgs", Label("timeseries", "tsadd", "tsaddWithArgs"), func() {
+			result, err := adapter.TSAdd(ctx, "1", 1, 1).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result).To(BeEquivalentTo(1))
+			// Test TSAddWithArgs
+			opt := &TSOptions{Retention: 10}
+			result, err = adapter.TSAddWithArgs(ctx, "2", 2, 3, opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result).To(BeEquivalentTo(2))
+			opt = &TSOptions{Labels: map[string]string{"Redis": "Labs"}}
+			result, err = adapter.TSAddWithArgs(ctx, "3", 3, 2, opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result).To(BeEquivalentTo(3))
+			opt = &TSOptions{Labels: map[string]string{"Redis": "Labs", "Time": "Series"}, Retention: 10}
+			result, err = adapter.TSAddWithArgs(ctx, "4", 4, 2, opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result).To(BeEquivalentTo(4))
+			resultInfo, err := adapter.TSInfo(ctx, "4").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultInfo["labels"].(map[interface{}]interface{})["Time"]).To(BeEquivalentTo("Series"))
+			// Test chunk size
+			opt = &TSOptions{ChunkSize: 128}
+			result, err = adapter.TSAddWithArgs(ctx, "ts-cs-1", 1, 10, opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result).To(BeEquivalentTo(1))
+			resultInfo, err = adapter.TSInfo(ctx, "ts-cs-1").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultInfo["chunkSize"]).To(BeEquivalentTo(128))
+			// Test duplicate policy
+			// LAST
+			opt = &TSOptions{DuplicatePolicy: "LAST"}
+			result, err = adapter.TSAddWithArgs(ctx, "tsal-1", 1, 5, opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result).To(BeEquivalentTo(1))
+			result, err = adapter.TSAddWithArgs(ctx, "tsal-1", 1, 10, opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result).To(BeEquivalentTo(1))
+			resultGet, err := adapter.TSGet(ctx, "tsal-1").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultGet.Value).To(BeEquivalentTo(10))
+			// FIRST
+			opt = &TSOptions{DuplicatePolicy: "FIRST"}
+			result, err = adapter.TSAddWithArgs(ctx, "tsaf-1", 1, 5, opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result).To(BeEquivalentTo(1))
+			result, err = adapter.TSAddWithArgs(ctx, "tsaf-1", 1, 10, opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result).To(BeEquivalentTo(1))
+			resultGet, err = adapter.TSGet(ctx, "tsaf-1").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultGet.Value).To(BeEquivalentTo(5))
+			// MAX
+			opt = &TSOptions{DuplicatePolicy: "MAX"}
+			result, err = adapter.TSAddWithArgs(ctx, "tsam-1", 1, 5, opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result).To(BeEquivalentTo(1))
+			result, err = adapter.TSAddWithArgs(ctx, "tsam-1", 1, 10, opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result).To(BeEquivalentTo(1))
+			resultGet, err = adapter.TSGet(ctx, "tsam-1").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultGet.Value).To(BeEquivalentTo(10))
+			// MIN
+			opt = &TSOptions{DuplicatePolicy: "MIN"}
+			result, err = adapter.TSAddWithArgs(ctx, "tsami-1", 1, 5, opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result).To(BeEquivalentTo(1))
+			result, err = adapter.TSAddWithArgs(ctx, "tsami-1", 1, 10, opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result).To(BeEquivalentTo(1))
+			resultGet, err = adapter.TSGet(ctx, "tsami-1").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultGet.Value).To(BeEquivalentTo(5))
+		})
+
+		It("should TSAlter", Label("timeseries", "tsalter"), func() {
+			result, err := adapter.TSCreate(ctx, "1").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result).To(BeEquivalentTo("OK"))
+			resultInfo, err := adapter.TSInfo(ctx, "1").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultInfo["retentionTime"]).To(BeEquivalentTo(0))
+
+			opt := &TSAlterOptions{Retention: 10}
+			resultAlter, err := adapter.TSAlter(ctx, "1", opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultAlter).To(BeEquivalentTo("OK"))
+
+			resultInfo, err = adapter.TSInfo(ctx, "1").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultInfo["retentionTime"]).To(BeEquivalentTo(10))
+
+			resultInfo, err = adapter.TSInfo(ctx, "1").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultInfo["labels"]).To(BeEquivalentTo(map[interface{}]interface{}{}))
+
+			opt = &TSAlterOptions{Labels: map[string]string{"Time": "Series"}}
+			resultAlter, err = adapter.TSAlter(ctx, "1", opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultAlter).To(BeEquivalentTo("OK"))
+
+			resultInfo, err = adapter.TSInfo(ctx, "1").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultInfo["labels"].(map[interface{}]interface{})["Time"]).To(BeEquivalentTo("Series"))
+			Expect(resultInfo["retentionTime"]).To(BeEquivalentTo(10))
+			Expect(resultInfo["duplicatePolicy"]).To(BeEquivalentTo(Nil))
+			opt = &TSAlterOptions{DuplicatePolicy: "min"}
+			resultAlter, err = adapter.TSAlter(ctx, "1", opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultAlter).To(BeEquivalentTo("OK"))
+
+			resultInfo, err = adapter.TSInfo(ctx, "1").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultInfo["duplicatePolicy"]).To(BeEquivalentTo("min"))
+		})
+
+		It("should TSCreateRule and TSDeleteRule", Label("timeseries", "tscreaterule", "tsdeleterule"), func() {
+			result, err := adapter.TSCreate(ctx, "1").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result).To(BeEquivalentTo("OK"))
+			result, err = adapter.TSCreate(ctx, "2").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result).To(BeEquivalentTo("OK"))
+			result, err = adapter.TSCreateRule(ctx, "1", "2", Avg, 100).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result).To(BeEquivalentTo("OK"))
+			for i := 0; i < 50; i++ {
+				resultAdd, err := adapter.TSAdd(ctx, "1", 100+i*2, 1).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(resultAdd).To(BeEquivalentTo(100 + i*2))
+				resultAdd, err = adapter.TSAdd(ctx, "1", 100+i*2+1, 2).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(resultAdd).To(BeEquivalentTo(100 + i*2 + 1))
+
+			}
+			resultAdd, err := adapter.TSAdd(ctx, "1", 100*2, 1.5).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultAdd).To(BeEquivalentTo(100 * 2))
+			resultGet, err := adapter.TSGet(ctx, "2").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultGet.Value).To(BeEquivalentTo(1.5))
+			Expect(resultGet.Timestamp).To(BeEquivalentTo(100))
+
+			resultDeleteRule, err := adapter.TSDeleteRule(ctx, "1", "2").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultDeleteRule).To(BeEquivalentTo("OK"))
+			resultInfo, err := adapter.TSInfo(ctx, "1").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultInfo["rules"]).To(BeEquivalentTo(map[interface{}]interface{}{}))
+		})
+
+		It("should TSIncrBy, TSIncrByWithArgs, TSDecrBy and TSDecrByWithArgs", Label("timeseries", "tsincrby", "tsdecrby", "tsincrbyWithArgs", "tsdecrbyWithArgs"), func() {
+			for i := 0; i < 100; i++ {
+				_, err := adapter.TSIncrBy(ctx, "1", 1).Result()
+				Expect(err).NotTo(HaveOccurred())
+			}
+			result, err := adapter.TSGet(ctx, "1").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result.Value).To(BeEquivalentTo(100))
+
+			for i := 0; i < 100; i++ {
+				_, err := adapter.TSDecrBy(ctx, "1", 1).Result()
+				Expect(err).NotTo(HaveOccurred())
+			}
+			result, err = adapter.TSGet(ctx, "1").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result.Value).To(BeEquivalentTo(0))
+
+			opt := &TSIncrDecrOptions{Timestamp: 5}
+			_, err = adapter.TSIncrByWithArgs(ctx, "2", 1.5, opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+
+			result, err = adapter.TSGet(ctx, "2").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result.Timestamp).To(BeEquivalentTo(5))
+			Expect(result.Value).To(BeEquivalentTo(1.5))
+
+			opt = &TSIncrDecrOptions{Timestamp: 7}
+			_, err = adapter.TSIncrByWithArgs(ctx, "2", 2.25, opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+
+			result, err = adapter.TSGet(ctx, "2").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result.Timestamp).To(BeEquivalentTo(7))
+			Expect(result.Value).To(BeEquivalentTo(3.75))
+
+			opt = &TSIncrDecrOptions{Timestamp: 15}
+			_, err = adapter.TSDecrByWithArgs(ctx, "2", 1.5, opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+
+			result, err = adapter.TSGet(ctx, "2").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result.Timestamp).To(BeEquivalentTo(15))
+			Expect(result.Value).To(BeEquivalentTo(2.25))
+
+			// Test chunk size INCRBY
+			opt = &TSIncrDecrOptions{ChunkSize: 128}
+			_, err = adapter.TSIncrByWithArgs(ctx, "3", 10, opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+
+			resultInfo, err := adapter.TSInfo(ctx, "3").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultInfo["chunkSize"]).To(BeEquivalentTo(128))
+
+			// Test chunk size DECRBY
+			opt = &TSIncrDecrOptions{ChunkSize: 128}
+			_, err = adapter.TSDecrByWithArgs(ctx, "4", 10, opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+
+			resultInfo, err = adapter.TSInfo(ctx, "4").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultInfo["chunkSize"]).To(BeEquivalentTo(128))
+		})
+
+		It("should TSGet", Label("timeseries", "tsget"), func() {
+			opt := &TSOptions{DuplicatePolicy: "max"}
+			resultGet, err := adapter.TSAddWithArgs(ctx, "foo", 2265985, 151, opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultGet).To(BeEquivalentTo(2265985))
+			result, err := adapter.TSGet(ctx, "foo").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result.Timestamp).To(BeEquivalentTo(2265985))
+			Expect(result.Value).To(BeEquivalentTo(151))
+		})
+
+		It("should TSGet Latest", Label("timeseries", "tsgetlatest"), func() {
+			resultGet, err := adapter.TSCreate(ctx, "tsgl-1").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultGet).To(BeEquivalentTo("OK"))
+			resultGet, err = adapter.TSCreate(ctx, "tsgl-2").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultGet).To(BeEquivalentTo("OK"))
+			resultGet, err = adapter.TSCreateRule(ctx, "tsgl-1", "tsgl-2", Sum, 10).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultGet).To(BeEquivalentTo("OK"))
+			_, err = adapter.TSAdd(ctx, "tsgl-1", 1, 1).Result()
+			Expect(err).NotTo(HaveOccurred())
+			_, err = adapter.TSAdd(ctx, "tsgl-1", 2, 3).Result()
+			Expect(err).NotTo(HaveOccurred())
+			_, err = adapter.TSAdd(ctx, "tsgl-1", 11, 7).Result()
+			Expect(err).NotTo(HaveOccurred())
+			_, err = adapter.TSAdd(ctx, "tsgl-1", 13, 1).Result()
+			Expect(err).NotTo(HaveOccurred())
+			result, errGet := adapter.TSGet(ctx, "tsgl-2").Result()
+			Expect(errGet).NotTo(HaveOccurred())
+			Expect(result.Timestamp).To(BeEquivalentTo(0))
+			Expect(result.Value).To(BeEquivalentTo(4))
+			result, errGet = adapter.TSGetWithArgs(ctx, "tsgl-2", &TSGetOptions{Latest: true}).Result()
+			Expect(errGet).NotTo(HaveOccurred())
+			Expect(result.Timestamp).To(BeEquivalentTo(10))
+			Expect(result.Value).To(BeEquivalentTo(8))
+		})
+
+		It("should TSInfo", Label("timeseries", "tsinfo"), func() {
+			resultGet, err := adapter.TSAdd(ctx, "foo", 2265985, 151).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultGet).To(BeEquivalentTo(2265985))
+			result, err := adapter.TSInfo(ctx, "foo").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result["firstTimestamp"]).To(BeEquivalentTo(2265985))
+		})
+
+		It("should TSMAdd", Label("timeseries", "tsmadd"), func() {
+			resultGet, err := adapter.TSCreate(ctx, "a").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultGet).To(BeEquivalentTo("OK"))
+			ktvSlices := make([][]interface{}, 3)
+			for i := 0; i < 3; i++ {
+				ktvSlices[i] = make([]interface{}, 3)
+				ktvSlices[i][0] = "a"
+				for j := 1; j < 3; j++ {
+					ktvSlices[i][j] = (i + j) * j
+				}
+			}
+			result, err := adapter.TSMAdd(ctx, ktvSlices).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result).To(BeEquivalentTo([]int64{1, 2, 3}))
+		})
+
+		It("should TSMGet and TSMGetWithArgs", Label("timeseries", "tsmget", "tsmgetWithArgs"), func() {
+			opt := &TSOptions{Labels: map[string]string{"Test": "This"}}
+			resultCreate, err := adapter.TSCreateWithArgs(ctx, "a", opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			opt = &TSOptions{Labels: map[string]string{"Test": "This", "Taste": "That"}}
+			resultCreate, err = adapter.TSCreateWithArgs(ctx, "b", opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			_, err = adapter.TSAdd(ctx, "a", "*", 15).Result()
+			Expect(err).NotTo(HaveOccurred())
+			_, err = adapter.TSAdd(ctx, "b", "*", 25).Result()
+			Expect(err).NotTo(HaveOccurred())
+
+			result, err := adapter.TSMGet(ctx, []string{"Test=This"}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result["a"][1].([]interface{})[1]).To(BeEquivalentTo(15))
+			Expect(result["b"][1].([]interface{})[1]).To(BeEquivalentTo(25))
+			mgetOpt := &TSMGetOptions{WithLabels: true}
+			result, err = adapter.TSMGetWithArgs(ctx, []string{"Test=This"}, mgetOpt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result["b"][0]).To(BeEquivalentTo(map[interface{}]interface{}{"Test": "This", "Taste": "That"}))
+
+			resultCreate, err = adapter.TSCreate(ctx, "c").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			opt = &TSOptions{Labels: map[string]string{"is_compaction": "true"}}
+			resultCreate, err = adapter.TSCreateWithArgs(ctx, "d", opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			resultCreateRule, err := adapter.TSCreateRule(ctx, "c", "d", Sum, 10).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultCreateRule).To(BeEquivalentTo("OK"))
+			_, err = adapter.TSAdd(ctx, "c", 1, 1).Result()
+			Expect(err).NotTo(HaveOccurred())
+			_, err = adapter.TSAdd(ctx, "c", 2, 3).Result()
+			Expect(err).NotTo(HaveOccurred())
+			_, err = adapter.TSAdd(ctx, "c", 11, 7).Result()
+			Expect(err).NotTo(HaveOccurred())
+			_, err = adapter.TSAdd(ctx, "c", 13, 1).Result()
+			Expect(err).NotTo(HaveOccurred())
+			result, err = adapter.TSMGet(ctx, []string{"is_compaction=true"}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result["d"][1]).To(BeEquivalentTo([]interface{}{int64(0), 4.0}))
+			mgetOpt = &TSMGetOptions{Latest: true}
+			result, err = adapter.TSMGetWithArgs(ctx, []string{"is_compaction=true"}, mgetOpt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result["d"][1]).To(BeEquivalentTo([]interface{}{int64(10), 8.0}))
+		})
+
+		It("should TSQueryIndex", Label("timeseries", "tsqueryindex"), func() {
+			opt := &TSOptions{Labels: map[string]string{"Test": "This"}}
+			resultCreate, err := adapter.TSCreateWithArgs(ctx, "a", opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			opt = &TSOptions{Labels: map[string]string{"Test": "This", "Taste": "That"}}
+			resultCreate, err = adapter.TSCreateWithArgs(ctx, "b", opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			result, err := adapter.TSQueryIndex(ctx, []string{"Test=This"}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(len(result)).To(BeEquivalentTo(2))
+			result, err = adapter.TSQueryIndex(ctx, []string{"Taste=That"}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(len(result)).To(BeEquivalentTo(1))
+		})
+
+		It("should TSDel and TSRange", Label("timeseries", "tsdel", "tsrange"), func() {
+			for i := 0; i < 100; i++ {
+				_, err := adapter.TSAdd(ctx, "a", i, float64(i%7)).Result()
+				Expect(err).NotTo(HaveOccurred())
+			}
+			resultDelete, err := adapter.TSDel(ctx, "a", 0, 21).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultDelete).To(BeEquivalentTo(22))
+
+			resultRange, err := adapter.TSRange(ctx, "a", 0, 21).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultRange).To(BeEquivalentTo([]TSTimestampValue{}))
+
+			resultRange, err = adapter.TSRange(ctx, "a", 22, 22).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultRange[0]).To(BeEquivalentTo(TSTimestampValue{Timestamp: 22, Value: 1}))
+		})
+
+		It("should TSRange, TSRangeWithArgs", Label("timeseries", "tsrange", "tsrangeWithArgs"), func() {
+			for i := 0; i < 100; i++ {
+				_, err := adapter.TSAdd(ctx, "a", i, float64(i%7)).Result()
+				Expect(err).NotTo(HaveOccurred())
+
+			}
+			result, err := adapter.TSRange(ctx, "a", 0, 200).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(len(result)).To(BeEquivalentTo(100))
+			for i := 0; i < 100; i++ {
+				adapter.TSAdd(ctx, "a", i+200, float64(i%7))
+			}
+			result, err = adapter.TSRange(ctx, "a", 0, 500).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(len(result)).To(BeEquivalentTo(200))
+			fts := make([]int, 0)
+			for i := 10; i < 20; i++ {
+				fts = append(fts, i)
+			}
+			opt := &TSRangeOptions{FilterByTS: fts, FilterByValue: []int{1, 2}}
+			result, err = adapter.TSRangeWithArgs(ctx, "a", 0, 500, opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(len(result)).To(BeEquivalentTo(2))
+			opt = &TSRangeOptions{Aggregator: Count, BucketDuration: 10, Align: "+"}
+			result, err = adapter.TSRangeWithArgs(ctx, "a", 0, 10, opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result).To(BeEquivalentTo([]TSTimestampValue{{Timestamp: 0, Value: 10}, {Timestamp: 10, Value: 1}}))
+			opt = &TSRangeOptions{Aggregator: Count, BucketDuration: 10, Align: "5"}
+			result, err = adapter.TSRangeWithArgs(ctx, "a", 0, 10, opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result).To(BeEquivalentTo([]TSTimestampValue{{Timestamp: 0, Value: 5}, {Timestamp: 5, Value: 6}}))
+			opt = &TSRangeOptions{Aggregator: Twa, BucketDuration: 10}
+			result, err = adapter.TSRangeWithArgs(ctx, "a", 0, 10, opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result).To(BeEquivalentTo([]TSTimestampValue{{Timestamp: 0, Value: 2.55}, {Timestamp: 10, Value: 3}}))
+			// Test Range Latest
+			resultCreate, err := adapter.TSCreate(ctx, "t1").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			resultCreate, err = adapter.TSCreate(ctx, "t2").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			resultRule, err := adapter.TSCreateRule(ctx, "t1", "t2", Sum, 10).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultRule).To(BeEquivalentTo("OK"))
+			_, errAdd := adapter.TSAdd(ctx, "t1", 1, 1).Result()
+			Expect(errAdd).NotTo(HaveOccurred())
+			_, errAdd = adapter.TSAdd(ctx, "t1", 2, 3).Result()
+			Expect(errAdd).NotTo(HaveOccurred())
+			_, errAdd = adapter.TSAdd(ctx, "t1", 11, 7).Result()
+			Expect(errAdd).NotTo(HaveOccurred())
+			_, errAdd = adapter.TSAdd(ctx, "t1", 13, 1).Result()
+			Expect(errAdd).NotTo(HaveOccurred())
+			resultRange, err := adapter.TSRange(ctx, "t1", 0, 20).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultRange[0]).To(BeEquivalentTo(TSTimestampValue{Timestamp: 1, Value: 1}))
+
+			opt = &TSRangeOptions{Latest: true}
+			resultRange, err = adapter.TSRangeWithArgs(ctx, "t2", 0, 10, opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultRange[0]).To(BeEquivalentTo(TSTimestampValue{Timestamp: 0, Value: 4}))
+			// Test Bucket Timestamp
+			resultCreate, err = adapter.TSCreate(ctx, "t3").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			_, errAdd = adapter.TSAdd(ctx, "t3", 15, 1).Result()
+			Expect(errAdd).NotTo(HaveOccurred())
+			_, errAdd = adapter.TSAdd(ctx, "t3", 17, 4).Result()
+			Expect(errAdd).NotTo(HaveOccurred())
+			_, errAdd = adapter.TSAdd(ctx, "t3", 51, 3).Result()
+			Expect(errAdd).NotTo(HaveOccurred())
+			_, errAdd = adapter.TSAdd(ctx, "t3", 73, 5).Result()
+			Expect(errAdd).NotTo(HaveOccurred())
+			_, errAdd = adapter.TSAdd(ctx, "t3", 75, 3).Result()
+			Expect(errAdd).NotTo(HaveOccurred())
+
+			opt = &TSRangeOptions{Aggregator: Max, Align: 0, BucketDuration: 10}
+			resultRange, err = adapter.TSRangeWithArgs(ctx, "t3", 0, 100, opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultRange[0]).To(BeEquivalentTo(TSTimestampValue{Timestamp: 10, Value: 4}))
+			Expect(len(resultRange)).To(BeEquivalentTo(3))
+
+			opt = &TSRangeOptions{Aggregator: Max, Align: 0, BucketDuration: 10, BucketTimestamp: "+"}
+			resultRange, err = adapter.TSRangeWithArgs(ctx, "t3", 0, 100, opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultRange[0]).To(BeEquivalentTo(TSTimestampValue{Timestamp: 20, Value: 4}))
+			Expect(len(resultRange)).To(BeEquivalentTo(3))
+			// Test Empty
+			_, errAdd = adapter.TSAdd(ctx, "t4", 15, 1).Result()
+			Expect(errAdd).NotTo(HaveOccurred())
+			_, errAdd = adapter.TSAdd(ctx, "t4", 17, 4).Result()
+			Expect(errAdd).NotTo(HaveOccurred())
+			_, errAdd = adapter.TSAdd(ctx, "t4", 51, 3).Result()
+			Expect(errAdd).NotTo(HaveOccurred())
+			_, errAdd = adapter.TSAdd(ctx, "t4", 73, 5).Result()
+			Expect(errAdd).NotTo(HaveOccurred())
+			_, errAdd = adapter.TSAdd(ctx, "t4", 75, 3).Result()
+			Expect(errAdd).NotTo(HaveOccurred())
+
+			opt = &TSRangeOptions{Aggregator: Max, Align: 0, BucketDuration: 10}
+			resultRange, err = adapter.TSRangeWithArgs(ctx, "t4", 0, 100, opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultRange[0]).To(BeEquivalentTo(TSTimestampValue{Timestamp: 10, Value: 4}))
+			Expect(len(resultRange)).To(BeEquivalentTo(3))
+
+			opt = &TSRangeOptions{Aggregator: Max, Align: 0, BucketDuration: 10, Empty: true}
+			resultRange, err = adapter.TSRangeWithArgs(ctx, "t4", 0, 100, opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultRange[0]).To(BeEquivalentTo(TSTimestampValue{Timestamp: 10, Value: 4}))
+			Expect(len(resultRange)).To(BeEquivalentTo(7))
+		})
+
+		It("should TSRevRange, TSRevRangeWithArgs", Label("timeseries", "tsrevrange", "tsrevrangeWithArgs"), func() {
+			for i := 0; i < 100; i++ {
+				_, err := adapter.TSAdd(ctx, "a", i, float64(i%7)).Result()
+				Expect(err).NotTo(HaveOccurred())
+
+			}
+			result, err := adapter.TSRange(ctx, "a", 0, 200).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(len(result)).To(BeEquivalentTo(100))
+			for i := 0; i < 100; i++ {
+				adapter.TSAdd(ctx, "a", i+200, float64(i%7))
+			}
+			result, err = adapter.TSRange(ctx, "a", 0, 500).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(len(result)).To(BeEquivalentTo(200))
+
+			opt := &TSRevRangeOptions{Aggregator: Avg, BucketDuration: 10}
+			result, err = adapter.TSRevRangeWithArgs(ctx, "a", 0, 500, opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(len(result)).To(BeEquivalentTo(20))
+
+			opt = &TSRevRangeOptions{Count: 10}
+			result, err = adapter.TSRevRangeWithArgs(ctx, "a", 0, 500, opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(len(result)).To(BeEquivalentTo(10))
+
+			fts := make([]int, 0)
+			for i := 10; i < 20; i++ {
+				fts = append(fts, i)
+			}
+			opt = &TSRevRangeOptions{FilterByTS: fts, FilterByValue: []int{1, 2}}
+			result, err = adapter.TSRevRangeWithArgs(ctx, "a", 0, 500, opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(len(result)).To(BeEquivalentTo(2))
+
+			opt = &TSRevRangeOptions{Aggregator: Count, BucketDuration: 10, Align: "+"}
+			result, err = adapter.TSRevRangeWithArgs(ctx, "a", 0, 10, opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result).To(BeEquivalentTo([]TSTimestampValue{{Timestamp: 10, Value: 1}, {Timestamp: 0, Value: 10}}))
+
+			opt = &TSRevRangeOptions{Aggregator: Count, BucketDuration: 10, Align: "1"}
+			result, err = adapter.TSRevRangeWithArgs(ctx, "a", 0, 10, opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result).To(BeEquivalentTo([]TSTimestampValue{{Timestamp: 1, Value: 10}, {Timestamp: 0, Value: 1}}))
+
+			opt = &TSRevRangeOptions{Aggregator: Twa, BucketDuration: 10}
+			result, err = adapter.TSRevRangeWithArgs(ctx, "a", 0, 10, opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result).To(BeEquivalentTo([]TSTimestampValue{{Timestamp: 10, Value: 3}, {Timestamp: 0, Value: 2.55}}))
+			// Test Range Latest
+			resultCreate, err := adapter.TSCreate(ctx, "t1").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			resultCreate, err = adapter.TSCreate(ctx, "t2").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			resultRule, err := adapter.TSCreateRule(ctx, "t1", "t2", Sum, 10).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultRule).To(BeEquivalentTo("OK"))
+			_, errAdd := adapter.TSAdd(ctx, "t1", 1, 1).Result()
+			Expect(errAdd).NotTo(HaveOccurred())
+			_, errAdd = adapter.TSAdd(ctx, "t1", 2, 3).Result()
+			Expect(errAdd).NotTo(HaveOccurred())
+			_, errAdd = adapter.TSAdd(ctx, "t1", 11, 7).Result()
+			Expect(errAdd).NotTo(HaveOccurred())
+			_, errAdd = adapter.TSAdd(ctx, "t1", 13, 1).Result()
+			Expect(errAdd).NotTo(HaveOccurred())
+			resultRange, err := adapter.TSRange(ctx, "t2", 0, 10).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultRange[0]).To(BeEquivalentTo(TSTimestampValue{Timestamp: 0, Value: 4}))
+			opt = &TSRevRangeOptions{Latest: true}
+			resultRange, err = adapter.TSRevRangeWithArgs(ctx, "t2", 0, 10, opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultRange[0]).To(BeEquivalentTo(TSTimestampValue{Timestamp: 10, Value: 8}))
+			resultRange, err = adapter.TSRevRangeWithArgs(ctx, "t2", 0, 9, opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultRange[0]).To(BeEquivalentTo(TSTimestampValue{Timestamp: 0, Value: 4}))
+			// Test Bucket Timestamp
+			resultCreate, err = adapter.TSCreate(ctx, "t3").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			_, errAdd = adapter.TSAdd(ctx, "t3", 15, 1).Result()
+			Expect(errAdd).NotTo(HaveOccurred())
+			_, errAdd = adapter.TSAdd(ctx, "t3", 17, 4).Result()
+			Expect(errAdd).NotTo(HaveOccurred())
+			_, errAdd = adapter.TSAdd(ctx, "t3", 51, 3).Result()
+			Expect(errAdd).NotTo(HaveOccurred())
+			_, errAdd = adapter.TSAdd(ctx, "t3", 73, 5).Result()
+			Expect(errAdd).NotTo(HaveOccurred())
+			_, errAdd = adapter.TSAdd(ctx, "t3", 75, 3).Result()
+			Expect(errAdd).NotTo(HaveOccurred())
+
+			opt = &TSRevRangeOptions{Aggregator: Max, Align: 0, BucketDuration: 10}
+			resultRange, err = adapter.TSRevRangeWithArgs(ctx, "t3", 0, 100, opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultRange[0]).To(BeEquivalentTo(TSTimestampValue{Timestamp: 70, Value: 5}))
+			Expect(len(resultRange)).To(BeEquivalentTo(3))
+
+			opt = &TSRevRangeOptions{Aggregator: Max, Align: 0, BucketDuration: 10, BucketTimestamp: "+"}
+			resultRange, err = adapter.TSRevRangeWithArgs(ctx, "t3", 0, 100, opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultRange[0]).To(BeEquivalentTo(TSTimestampValue{Timestamp: 80, Value: 5}))
+			Expect(len(resultRange)).To(BeEquivalentTo(3))
+			// Test Empty
+			_, errAdd = adapter.TSAdd(ctx, "t4", 15, 1).Result()
+			Expect(errAdd).NotTo(HaveOccurred())
+			_, errAdd = adapter.TSAdd(ctx, "t4", 17, 4).Result()
+			Expect(errAdd).NotTo(HaveOccurred())
+			_, errAdd = adapter.TSAdd(ctx, "t4", 51, 3).Result()
+			Expect(errAdd).NotTo(HaveOccurred())
+			_, errAdd = adapter.TSAdd(ctx, "t4", 73, 5).Result()
+			Expect(errAdd).NotTo(HaveOccurred())
+			_, errAdd = adapter.TSAdd(ctx, "t4", 75, 3).Result()
+			Expect(errAdd).NotTo(HaveOccurred())
+
+			opt = &TSRevRangeOptions{Aggregator: Max, Align: 0, BucketDuration: 10}
+			resultRange, err = adapter.TSRevRangeWithArgs(ctx, "t4", 0, 100, opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultRange[0]).To(BeEquivalentTo(TSTimestampValue{Timestamp: 70, Value: 5}))
+			Expect(len(resultRange)).To(BeEquivalentTo(3))
+
+			opt = &TSRevRangeOptions{Aggregator: Max, Align: 0, BucketDuration: 10, Empty: true}
+			resultRange, err = adapter.TSRevRangeWithArgs(ctx, "t4", 0, 100, opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultRange[0]).To(BeEquivalentTo(TSTimestampValue{Timestamp: 70, Value: 5}))
+			Expect(len(resultRange)).To(BeEquivalentTo(7))
+		})
+
+		It("should TSMRange and TSMRangeWithArgs", Label("timeseries", "tsmrange", "tsmrangeWithArgs"), func() {
+			createOpt := &TSOptions{Labels: map[string]string{"Test": "This", "team": "ny"}}
+			resultCreate, err := adapter.TSCreateWithArgs(ctx, "a", createOpt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			createOpt = &TSOptions{Labels: map[string]string{"Test": "This", "Taste": "That", "team": "sf"}}
+			resultCreate, err = adapter.TSCreateWithArgs(ctx, "b", createOpt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultCreate).To(BeEquivalentTo("OK"))
+
+			for i := 0; i < 100; i++ {
+				_, err := adapter.TSAdd(ctx, "a", i, float64(i%7)).Result()
+				Expect(err).NotTo(HaveOccurred())
+				_, err = adapter.TSAdd(ctx, "b", i, float64(i%11)).Result()
+				Expect(err).NotTo(HaveOccurred())
+			}
+
+			result, err := adapter.TSMRange(ctx, 0, 200, []string{"Test=This"}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(len(result)).To(BeEquivalentTo(2))
+			Expect(len(result["a"][2].([]interface{}))).To(BeEquivalentTo(100))
+			// Test Count
+			mrangeOpt := &TSMRangeOptions{Count: 10}
+			result, err = adapter.TSMRangeWithArgs(ctx, 0, 200, []string{"Test=This"}, mrangeOpt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(len(result["a"][2].([]interface{}))).To(BeEquivalentTo(10))
+			// Test Aggregation and BucketDuration
+			for i := 0; i < 100; i++ {
+				_, err := adapter.TSAdd(ctx, "a", i+200, float64(i%7)).Result()
+				Expect(err).NotTo(HaveOccurred())
+			}
+			mrangeOpt = &TSMRangeOptions{Aggregator: Avg, BucketDuration: 10}
+			result, err = adapter.TSMRangeWithArgs(ctx, 0, 500, []string{"Test=This"}, mrangeOpt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(len(result)).To(BeEquivalentTo(2))
+			Expect(len(result["a"][2].([]interface{}))).To(BeEquivalentTo(20))
+			// Test WithLabels
+			Expect(result["a"][0]).To(BeEquivalentTo(map[interface{}]interface{}{}))
+			mrangeOpt = &TSMRangeOptions{WithLabels: true}
+			result, err = adapter.TSMRangeWithArgs(ctx, 0, 200, []string{"Test=This"}, mrangeOpt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result["a"][0]).To(BeEquivalentTo(map[interface{}]interface{}{"Test": "This", "team": "ny"}))
+			// Test SelectedLabels
+			mrangeOpt = &TSMRangeOptions{SelectedLabels: []interface{}{"team"}}
+			result, err = adapter.TSMRangeWithArgs(ctx, 0, 200, []string{"Test=This"}, mrangeOpt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result["a"][0]).To(BeEquivalentTo(map[interface{}]interface{}{"team": "ny"}))
+			Expect(result["b"][0]).To(BeEquivalentTo(map[interface{}]interface{}{"team": "sf"}))
+			// Test FilterBy
+			fts := make([]int, 0)
+			for i := 10; i < 20; i++ {
+				fts = append(fts, i)
+			}
+			mrangeOpt = &TSMRangeOptions{FilterByTS: fts, FilterByValue: []int{1, 2}}
+			result, err = adapter.TSMRangeWithArgs(ctx, 0, 200, []string{"Test=This"}, mrangeOpt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result["a"][2]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(15), 1.0}, []interface{}{int64(16), 2.0}}))
+			// Test GroupBy
+			mrangeOpt = &TSMRangeOptions{GroupByLabel: "Test", Reducer: "sum"}
+			result, err = adapter.TSMRangeWithArgs(ctx, 0, 3, []string{"Test=This"}, mrangeOpt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result["Test=This"][3]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(0), 0.0}, []interface{}{int64(1), 2.0}, []interface{}{int64(2), 4.0}, []interface{}{int64(3), 6.0}}))
+
+			mrangeOpt = &TSMRangeOptions{GroupByLabel: "Test", Reducer: "max"}
+			result, err = adapter.TSMRangeWithArgs(ctx, 0, 3, []string{"Test=This"}, mrangeOpt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result["Test=This"][3]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(0), 0.0}, []interface{}{int64(1), 1.0}, []interface{}{int64(2), 2.0}, []interface{}{int64(3), 3.0}}))
+
+			mrangeOpt = &TSMRangeOptions{GroupByLabel: "team", Reducer: "min"}
+			result, err = adapter.TSMRangeWithArgs(ctx, 0, 3, []string{"Test=This"}, mrangeOpt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(len(result)).To(BeEquivalentTo(2))
+			Expect(result["team=ny"][3]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(0), 0.0}, []interface{}{int64(1), 1.0}, []interface{}{int64(2), 2.0}, []interface{}{int64(3), 3.0}}))
+			Expect(result["team=sf"][3]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(0), 0.0}, []interface{}{int64(1), 1.0}, []interface{}{int64(2), 2.0}, []interface{}{int64(3), 3.0}}))
+			// Test Align
+			mrangeOpt = &TSMRangeOptions{Aggregator: Count, BucketDuration: 10, Align: "-"}
+			result, err = adapter.TSMRangeWithArgs(ctx, 0, 10, []string{"team=ny"}, mrangeOpt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result["a"][2]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(0), 10.0}, []interface{}{int64(10), 1.0}}))
+
+			mrangeOpt = &TSMRangeOptions{Aggregator: Count, BucketDuration: 10, Align: 5}
+			result, err = adapter.TSMRangeWithArgs(ctx, 0, 10, []string{"team=ny"}, mrangeOpt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result["a"][2]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(0), 5.0}, []interface{}{int64(5), 6.0}}))
+		})
+
+		It("should TSMRangeWithArgs Latest", Label("timeseries", "tsmrangeWithArgs", "tsmrangelatest"), func() {
+			resultCreate, err := adapter.TSCreate(ctx, "a").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			opt := &TSOptions{Labels: map[string]string{"is_compaction": "true"}}
+			resultCreate, err = adapter.TSCreateWithArgs(ctx, "b", opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultCreate).To(BeEquivalentTo("OK"))
+
+			resultCreate, err = adapter.TSCreate(ctx, "c").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			opt = &TSOptions{Labels: map[string]string{"is_compaction": "true"}}
+			resultCreate, err = adapter.TSCreateWithArgs(ctx, "d", opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultCreate).To(BeEquivalentTo("OK"))
+
+			resultCreateRule, err := adapter.TSCreateRule(ctx, "a", "b", Sum, 10).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultCreateRule).To(BeEquivalentTo("OK"))
+			resultCreateRule, err = adapter.TSCreateRule(ctx, "c", "d", Sum, 10).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultCreateRule).To(BeEquivalentTo("OK"))
+
+			_, err = adapter.TSAdd(ctx, "a", 1, 1).Result()
+			Expect(err).NotTo(HaveOccurred())
+			_, err = adapter.TSAdd(ctx, "a", 2, 3).Result()
+			Expect(err).NotTo(HaveOccurred())
+			_, err = adapter.TSAdd(ctx, "a", 11, 7).Result()
+			Expect(err).NotTo(HaveOccurred())
+			_, err = adapter.TSAdd(ctx, "a", 13, 1).Result()
+			Expect(err).NotTo(HaveOccurred())
+
+			_, err = adapter.TSAdd(ctx, "c", 1, 1).Result()
+			Expect(err).NotTo(HaveOccurred())
+			_, err = adapter.TSAdd(ctx, "c", 2, 3).Result()
+			Expect(err).NotTo(HaveOccurred())
+			_, err = adapter.TSAdd(ctx, "c", 11, 7).Result()
+			Expect(err).NotTo(HaveOccurred())
+			_, err = adapter.TSAdd(ctx, "c", 13, 1).Result()
+			Expect(err).NotTo(HaveOccurred())
+			mrangeOpt := &TSMRangeOptions{Latest: true}
+			result, err := adapter.TSMRangeWithArgs(ctx, 0, 10, []string{"is_compaction=true"}, mrangeOpt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result["b"][2]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(0), 4.0}, []interface{}{int64(10), 8.0}}))
+			Expect(result["d"][2]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(0), 4.0}, []interface{}{int64(10), 8.0}}))
+		})
+		It("should TSMRevRange and TSMRevRangeWithArgs", Label("timeseries", "tsmrevrange", "tsmrevrangeWithArgs"), func() {
+			createOpt := &TSOptions{Labels: map[string]string{"Test": "This", "team": "ny"}}
+			resultCreate, err := adapter.TSCreateWithArgs(ctx, "a", createOpt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			createOpt = &TSOptions{Labels: map[string]string{"Test": "This", "Taste": "That", "team": "sf"}}
+			resultCreate, err = adapter.TSCreateWithArgs(ctx, "b", createOpt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultCreate).To(BeEquivalentTo("OK"))
+
+			for i := 0; i < 100; i++ {
+				_, err := adapter.TSAdd(ctx, "a", i, float64(i%7)).Result()
+				Expect(err).NotTo(HaveOccurred())
+				_, err = adapter.TSAdd(ctx, "b", i, float64(i%11)).Result()
+				Expect(err).NotTo(HaveOccurred())
+			}
+			result, err := adapter.TSMRevRange(ctx, 0, 200, []string{"Test=This"}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(len(result)).To(BeEquivalentTo(2))
+			Expect(len(result["a"][2].([]interface{}))).To(BeEquivalentTo(100))
+			// Test Count
+			mrangeOpt := &TSMRevRangeOptions{Count: 10}
+			result, err = adapter.TSMRevRangeWithArgs(ctx, 0, 200, []string{"Test=This"}, mrangeOpt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(len(result["a"][2].([]interface{}))).To(BeEquivalentTo(10))
+			// Test Aggregation and BucketDuration
+			for i := 0; i < 100; i++ {
+				_, err := adapter.TSAdd(ctx, "a", i+200, float64(i%7)).Result()
+				Expect(err).NotTo(HaveOccurred())
+			}
+			mrangeOpt = &TSMRevRangeOptions{Aggregator: Avg, BucketDuration: 10}
+			result, err = adapter.TSMRevRangeWithArgs(ctx, 0, 500, []string{"Test=This"}, mrangeOpt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(len(result)).To(BeEquivalentTo(2))
+			Expect(len(result["a"][2].([]interface{}))).To(BeEquivalentTo(20))
+			Expect(result["a"][0]).To(BeEquivalentTo(map[interface{}]interface{}{}))
+			// Test WithLabels
+			Expect(result["a"][0]).To(BeEquivalentTo(map[interface{}]interface{}{}))
+			mrangeOpt = &TSMRevRangeOptions{WithLabels: true}
+			result, err = adapter.TSMRevRangeWithArgs(ctx, 0, 200, []string{"Test=This"}, mrangeOpt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result["a"][0]).To(BeEquivalentTo(map[interface{}]interface{}{"Test": "This", "team": "ny"}))
+			// Test SelectedLabels
+			mrangeOpt = &TSMRevRangeOptions{SelectedLabels: []interface{}{"team"}}
+			result, err = adapter.TSMRevRangeWithArgs(ctx, 0, 200, []string{"Test=This"}, mrangeOpt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result["a"][0]).To(BeEquivalentTo(map[interface{}]interface{}{"team": "ny"}))
+			Expect(result["b"][0]).To(BeEquivalentTo(map[interface{}]interface{}{"team": "sf"}))
+			// Test FilterBy
+			fts := make([]int, 0)
+			for i := 10; i < 20; i++ {
+				fts = append(fts, i)
+			}
+			mrangeOpt = &TSMRevRangeOptions{FilterByTS: fts, FilterByValue: []int{1, 2}}
+			result, err = adapter.TSMRevRangeWithArgs(ctx, 0, 200, []string{"Test=This"}, mrangeOpt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result["a"][2]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(16), 2.0}, []interface{}{int64(15), 1.0}}))
+			// Test GroupBy
+			mrangeOpt = &TSMRevRangeOptions{GroupByLabel: "Test", Reducer: "sum"}
+			result, err = adapter.TSMRevRangeWithArgs(ctx, 0, 3, []string{"Test=This"}, mrangeOpt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result["Test=This"][3]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(3), 6.0}, []interface{}{int64(2), 4.0}, []interface{}{int64(1), 2.0}, []interface{}{int64(0), 0.0}}))
+
+			mrangeOpt = &TSMRevRangeOptions{GroupByLabel: "Test", Reducer: "max"}
+			result, err = adapter.TSMRevRangeWithArgs(ctx, 0, 3, []string{"Test=This"}, mrangeOpt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result["Test=This"][3]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(3), 3.0}, []interface{}{int64(2), 2.0}, []interface{}{int64(1), 1.0}, []interface{}{int64(0), 0.0}}))
+
+			mrangeOpt = &TSMRevRangeOptions{GroupByLabel: "team", Reducer: "min"}
+			result, err = adapter.TSMRevRangeWithArgs(ctx, 0, 3, []string{"Test=This"}, mrangeOpt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(len(result)).To(BeEquivalentTo(2))
+			Expect(result["team=ny"][3]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(3), 3.0}, []interface{}{int64(2), 2.0}, []interface{}{int64(1), 1.0}, []interface{}{int64(0), 0.0}}))
+			Expect(result["team=sf"][3]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(3), 3.0}, []interface{}{int64(2), 2.0}, []interface{}{int64(1), 1.0}, []interface{}{int64(0), 0.0}}))
+			// Test Align
+			mrangeOpt = &TSMRevRangeOptions{Aggregator: Count, BucketDuration: 10, Align: "-"}
+			result, err = adapter.TSMRevRangeWithArgs(ctx, 0, 10, []string{"team=ny"}, mrangeOpt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result["a"][2]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(10), 1.0}, []interface{}{int64(0), 10.0}}))
+
+			mrangeOpt = &TSMRevRangeOptions{Aggregator: Count, BucketDuration: 10, Align: 1}
+			result, err = adapter.TSMRevRangeWithArgs(ctx, 0, 10, []string{"team=ny"}, mrangeOpt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result["a"][2]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(1), 10.0}, []interface{}{int64(0), 1.0}}))
+		})
+
+		It("should TSMRevRangeWithArgs Latest", Label("timeseries", "tsmrevrangeWithArgs", "tsmrevrangelatest"), func() {
+			resultCreate, err := adapter.TSCreate(ctx, "a").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			opt := &TSOptions{Labels: map[string]string{"is_compaction": "true"}}
+			resultCreate, err = adapter.TSCreateWithArgs(ctx, "b", opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultCreate).To(BeEquivalentTo("OK"))
+
+			resultCreate, err = adapter.TSCreate(ctx, "c").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			opt = &TSOptions{Labels: map[string]string{"is_compaction": "true"}}
+			resultCreate, err = adapter.TSCreateWithArgs(ctx, "d", opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultCreate).To(BeEquivalentTo("OK"))
+
+			resultCreateRule, err := adapter.TSCreateRule(ctx, "a", "b", Sum, 10).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultCreateRule).To(BeEquivalentTo("OK"))
+			resultCreateRule, err = adapter.TSCreateRule(ctx, "c", "d", Sum, 10).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultCreateRule).To(BeEquivalentTo("OK"))
+
+			_, err = adapter.TSAdd(ctx, "a", 1, 1).Result()
+			Expect(err).NotTo(HaveOccurred())
+			_, err = adapter.TSAdd(ctx, "a", 2, 3).Result()
+			Expect(err).NotTo(HaveOccurred())
+			_, err = adapter.TSAdd(ctx, "a", 11, 7).Result()
+			Expect(err).NotTo(HaveOccurred())
+			_, err = adapter.TSAdd(ctx, "a", 13, 1).Result()
+			Expect(err).NotTo(HaveOccurred())
+
+			_, err = adapter.TSAdd(ctx, "c", 1, 1).Result()
+			Expect(err).NotTo(HaveOccurred())
+			_, err = adapter.TSAdd(ctx, "c", 2, 3).Result()
+			Expect(err).NotTo(HaveOccurred())
+			_, err = adapter.TSAdd(ctx, "c", 11, 7).Result()
+			Expect(err).NotTo(HaveOccurred())
+			_, err = adapter.TSAdd(ctx, "c", 13, 1).Result()
+			Expect(err).NotTo(HaveOccurred())
+			mrangeOpt := &TSMRevRangeOptions{Latest: true}
+			result, err := adapter.TSMRevRangeWithArgs(ctx, 0, 10, []string{"is_compaction=true"}, mrangeOpt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result["b"][2]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(10), 8.0}, []interface{}{int64(0), 4.0}}))
+			Expect(result["d"][2]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(10), 8.0}, []interface{}{int64(0), 4.0}}))
+		})
+	})
 }
 
 func libCode(libName string) string {
-	return fmt.Sprintf("#!js api_version=1.0 name=%s\n redis.registerFunction('foo', ()=>{{return 'bar'}})", libName)
+	return fmt.Sprintf("#!js api_version=1.0 name=%s\n registerFunction('foo', ()=>{{return 'bar'}})", libName)
 }
 
 func libCodeWithConfig(libName string) string {
@@ -9536,17 +10456,17 @@ func libCodeWithConfig(libName string) string {
 
 	var last_update_field_name = "__last_update__"
 	
-	if (redis.config.last_update_field_name !== undefined) {
-		if (typeof redis.config.last_update_field_name != 'string') {
+	if (config.last_update_field_name !== undefined) {
+		if (typeof config.last_update_field_name != 'string') {
 			throw "last_update_field_name must be a string";
 		}
-		last_update_field_name = redis.config.last_update_field_name
+		last_update_field_name = config.last_update_field_name
 	}
 	
-	redis.registerFunction("hset", function(client, key, field, val){
+	registerFunction("hset", function(adapter, key, field, val){
 		// get the current time in ms
-		var curr_time = client.call("time")[0];
-		return client.call('hset', key, field, val, last_update_field_name, curr_time);
+		var curr_time = adapter.call("time")[0];
+		return adapter.call('hset', key, field, val, last_update_field_name, curr_time);
 	});`
 	return fmt.Sprintf(lib, libName)
 }

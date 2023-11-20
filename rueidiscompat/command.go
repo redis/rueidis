@@ -3170,3 +3170,152 @@ type TDigestMergeOptions struct {
 	Compression int64
 	Override    bool
 }
+
+type TSOptions struct {
+	Retention       int
+	ChunkSize       int
+	Encoding        string
+	DuplicatePolicy string
+	Labels          map[string]string
+}
+type TSIncrDecrOptions struct {
+	Timestamp    int64
+	Retention    int
+	ChunkSize    int
+	Uncompressed bool
+	Labels       map[string]string
+}
+
+type TSAlterOptions struct {
+	Retention       int
+	ChunkSize       int
+	DuplicatePolicy string
+	Labels          map[string]string
+}
+
+type TSCreateRuleOptions struct {
+	alignTimestamp int64
+}
+
+type TSGetOptions struct {
+	Latest bool
+}
+
+type TSInfoOptions struct {
+	Debug bool
+}
+type Aggregator int
+
+const (
+	Invalid = Aggregator(iota)
+	Avg
+	Sum
+	Min
+	Max
+	Range
+	Count
+	First
+	Last
+	StdP
+	StdS
+	VarP
+	VarS
+	Twa
+)
+
+func (a Aggregator) String() string {
+	switch a {
+	case Invalid:
+		return ""
+	case Avg:
+		return "AVG"
+	case Sum:
+		return "SUM"
+	case Min:
+		return "MIN"
+	case Max:
+		return "MAX"
+	case Range:
+		return "RANGE"
+	case Count:
+		return "COUNT"
+	case First:
+		return "FIRST"
+	case Last:
+		return "LAST"
+	case StdP:
+		return "STD.P"
+	case StdS:
+		return "STD.S"
+	case VarP:
+		return "VAR.P"
+	case VarS:
+		return "VAR.S"
+	case Twa:
+		return "TWA"
+	default:
+		return ""
+	}
+}
+
+type TSRangeOptions struct {
+	Latest          bool
+	FilterByTS      []int
+	FilterByValue   []int
+	Count           int
+	Align           interface{}
+	Aggregator      Aggregator
+	BucketDuration  int
+	BucketTimestamp interface{}
+	Empty           bool
+}
+
+type TSRevRangeOptions struct {
+	Latest          bool
+	FilterByTS      []int
+	FilterByValue   []int
+	Count           int
+	Align           interface{}
+	Aggregator      Aggregator
+	BucketDuration  int
+	BucketTimestamp interface{}
+	Empty           bool
+}
+
+type TSMRangeOptions struct {
+	Latest          bool
+	FilterByTS      []int
+	FilterByValue   []int
+	WithLabels      bool
+	SelectedLabels  []interface{}
+	Count           int
+	Align           interface{}
+	Aggregator      Aggregator
+	BucketDuration  int
+	BucketTimestamp interface{}
+	Empty           bool
+	GroupByLabel    interface{}
+	Reducer         interface{}
+}
+
+type TSMRevRangeOptions struct {
+	Latest          bool
+	FilterByTS      []int
+	FilterByValue   []int
+	WithLabels      bool
+	SelectedLabels  []interface{}
+	Count           int
+	Align           interface{}
+	Aggregator      Aggregator
+	BucketDuration  int
+	BucketTimestamp interface{}
+	Empty           bool
+	GroupByLabel    interface{}
+	Reducer         interface{}
+}
+
+type TSMGetOptions struct {
+	Latest         bool
+	WithLabels     bool
+	SelectedLabels []interface{}
+}
