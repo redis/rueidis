@@ -74,8 +74,7 @@ type clusterClient struct {
 	pslots [16384]conn
 	rslots []conn
 	opt    *ClientOption
-	conns  map[string]conn
-	pconns map[string]conn
+	conns  map[string]*clusterConnection
 	connFn connFn
 	sc     call
 	mu     sync.RWMutex
@@ -85,12 +84,18 @@ type clusterClient struct {
 	aws    bool
 }
 
+// NOTE: clusterConnection and conn must be initialized at the same time
+type clusterConnection struct {
+	conn              conn
+	isPrimaryNodeConn bool
+}
+
 func newClusterClient(opt *ClientOption, connFn connFn) (client *clusterClient, err error) {
 	client = &clusterClient{
 		cmd:    cmds.NewBuilder(cmds.InitSlot),
 		opt:    opt,
 		connFn: connFn,
-		conns:  make(map[string]conn),
+		conns:  make(map[string]*clusterConnection),
 		retry:  !opt.DisableRetry,
 		aws:    len(opt.InitAddress) == 1 && strings.Contains(opt.InitAddress[0], "amazonaws.com"),
 	}
@@ -131,7 +136,9 @@ func (c *clusterClient) init() error {
 				if _, ok := c.conns[addr]; ok {
 					go cc.Close() // abort the new connection instead of closing the old one which may already been used
 				} else {
-					c.conns[addr] = cc
+					c.conns[addr] = &clusterConnection{
+						conn: cc,
+					}
 				}
 				c.mu.Unlock()
 				results <- nil
@@ -185,10 +192,10 @@ func (c *clusterClient) _refresh() (err error) {
 	results := make(chan clusterslots, len(c.conns))
 	pending := make([]conn, 0, len(c.conns))
 	if c.aws {
-		pending = append(pending, c.conns[c.opt.InitAddress[0]])
+		pending = append(pending, c.conns[c.opt.InitAddress[0]].conn)
 	} else {
 		for _, cc := range c.conns {
-			pending = append(pending, cc)
+			pending = append(pending, cc.conn)
 		}
 	}
 	c.mu.RUnlock()
@@ -214,16 +221,28 @@ func (c *clusterClient) _refresh() (err error) {
 	pending = nil
 
 	groups := result.parse(c.opt.TLSConfig != nil)
-	conns := make(map[string]conn, len(groups))
+	conns := make(map[string]*clusterConnection, len(groups))
 	for _, g := range groups {
-		for _, addr := range g.nodes {
-			conns[addr] = c.connFn(addr, c.opt)
+		for i, addr := range g.nodes {
+			if i == 0 {
+				conns[addr] = &clusterConnection{
+					conn:              c.connFn(addr, c.opt),
+					isPrimaryNodeConn: true,
+				}
+			} else {
+				conns[addr] = &clusterConnection{
+					conn:              c.connFn(addr, c.opt),
+					isPrimaryNodeConn: false,
+				}
+			}
 		}
 	}
 	// make sure InitAddress always be present
 	for _, addr := range c.opt.InitAddress {
 		if _, ok := conns[addr]; !ok {
-			conns[addr] = c.connFn(addr, c.opt)
+			conns[addr] = &clusterConnection{
+				conn: c.connFn(addr, c.opt),
+			}
 		}
 	}
 
@@ -234,29 +253,23 @@ func (c *clusterClient) _refresh() (err error) {
 		if _, ok := conns[addr]; ok {
 			conns[addr] = cc
 		} else {
-			removes = append(removes, cc)
+			removes = append(removes, cc.conn)
 		}
 	}
 	c.mu.RUnlock()
 
 	pslots := [16384]conn{}
 	var rslots []conn
-	pconns := map[string]conn{}
 	for master, g := range groups {
 		switch {
 		case c.opt.ReplicaOnly && len(g.nodes) > 1:
 			nodesCount := len(g.nodes)
 			for _, slot := range g.slots {
 				for i := slot[0]; i <= slot[1]; i++ {
-					pslots[i] = conns[g.nodes[1+rand.Intn(nodesCount-1)]]
+					pslots[i] = conns[g.nodes[1+rand.Intn(nodesCount-1)]].conn
 				}
 			}
 		case c.opt.SendToReplicas != nil:
-			if len(pconns) == 0 { // lazy init
-				pconns = make(map[string]conn, len(groups))
-			}
-			pconns[master] = conns[master]
-
 			if len(rslots) == 0 { // lazy init
 				rslots = make([]conn, 16384)
 			}
@@ -264,22 +277,22 @@ func (c *clusterClient) _refresh() (err error) {
 			if len(g.nodes) > 1 {
 				for _, slot := range g.slots {
 					for i := slot[0]; i <= slot[1]; i++ {
-						pslots[i] = conns[master]
-						rslots[i] = conns[g.nodes[1+rand.Intn(len(g.nodes)-1)]]
+						pslots[i] = conns[master].conn
+						rslots[i] = conns[g.nodes[1+rand.Intn(len(g.nodes)-1)]].conn
 					}
 				}
 			} else {
 				for _, slot := range g.slots {
 					for i := slot[0]; i <= slot[1]; i++ {
-						pslots[i] = conns[master]
-						rslots[i] = conns[master]
+						pslots[i] = conns[master].conn
+						rslots[i] = conns[master].conn
 					}
 				}
 			}
 		default:
 			for _, slot := range g.slots {
 				for i := slot[0]; i <= slot[1]; i++ {
-					pslots[i] = conns[master]
+					pslots[i] = conns[master].conn
 				}
 			}
 		}
@@ -289,7 +302,6 @@ func (c *clusterClient) _refresh() (err error) {
 	c.pslots = pslots
 	c.rslots = rslots
 	c.conns = conns
-	c.pconns = pconns
 	c.mu.Unlock()
 
 	if len(removes) > 0 {
@@ -401,7 +413,7 @@ func (c *clusterClient) _pick(slot uint16, isSendToReplicas bool) (p conn) {
 	if c.opt.SendToReplicas == nil {
 		if slot == cmds.InitSlot {
 			for _, cc := range c.conns {
-				p = cc
+				p = cc.conn
 				break
 			}
 		} else {
@@ -410,8 +422,12 @@ func (c *clusterClient) _pick(slot uint16, isSendToReplicas bool) (p conn) {
 	} else {
 		switch {
 		case slot == cmds.InitSlot:
-			for _, cc := range c.pconns {
-				p = cc
+			for _, cc := range c.conns {
+				if !cc.isPrimaryNodeConn {
+					continue
+				}
+
+				p = cc.conn
 				break
 			}
 		case isSendToReplicas:
@@ -438,19 +454,20 @@ func (c *clusterClient) pick(ctx context.Context, slot uint16, isSendToReplicas 
 
 func (c *clusterClient) redirectOrNew(addr string, prev conn) (p conn) {
 	c.mu.RLock()
-	p = c.conns[addr]
+	cc := c.conns[addr]
 	c.mu.RUnlock()
-	if p != nil && prev != p {
-		return p
+	if cc != nil && cc.conn != nil && prev != cc.conn {
+		return cc.conn
 	}
 	c.mu.Lock()
-	if p = c.conns[addr]; p == nil {
+
+	if cc = c.conns[addr]; cc == nil {
 		p = c.connFn(addr, c.opt)
-		c.conns[addr] = p
-		if _, ok := c.pconns[addr]; ok {
-			c.pconns[addr] = p
+		// how to know if the new connection is primary node connection?
+		c.conns[addr] = &clusterConnection{
+			conn: p,
 		}
-	} else if prev == p {
+	} else if prev == cc.conn {
 		// try reconnection if the MOVED redirects to the same host,
 		// because the same hostname may actually be resolved into another destination
 		// depending on the fail-over implementation. ex: AWS MemoryDB's resize process.
@@ -459,9 +476,9 @@ func (c *clusterClient) redirectOrNew(addr string, prev conn) (p conn) {
 			prev.Close()
 		}(prev)
 		p = c.connFn(addr, c.opt)
-		c.conns[addr] = p
-		if _, ok := c.pconns[addr]; ok {
-			c.pconns[addr] = p
+		c.conns[addr] = &clusterConnection{
+			conn:              p,
+			isPrimaryNodeConn: cc.isPrimaryNodeConn,
 		}
 	}
 	c.mu.Unlock()
@@ -1021,8 +1038,8 @@ func (c *clusterClient) Dedicate() (DedicatedClient, func()) {
 func (c *clusterClient) Nodes() map[string]Client {
 	c.mu.RLock()
 	nodes := make(map[string]Client, len(c.conns))
-	for addr, conn := range c.conns {
-		nodes[addr] = newSingleClientWithConn(conn, c.cmd, c.retry)
+	for addr, cc := range c.conns {
+		nodes[addr] = newSingleClientWithConn(cc.conn, c.cmd, c.retry)
 	}
 	c.mu.RUnlock()
 	return nodes
@@ -1032,7 +1049,7 @@ func (c *clusterClient) Close() {
 	atomic.StoreUint32(&c.stop, 1)
 	c.mu.RLock()
 	for _, cc := range c.conns {
-		go cc.Close()
+		go cc.conn.Close()
 	}
 	c.mu.RUnlock()
 }

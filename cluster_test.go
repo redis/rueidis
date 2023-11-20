@@ -834,28 +834,28 @@ func TestClusterClientInit(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 
-		if client.pslots[0] != client.conns["127.0.0.1:0"] {
+		if client.pslots[0] != client.conns["127.0.0.1:0"].conn {
 			t.Fatalf("unexpected node assigned to pslot 0")
 		}
-		if client.pslots[8192] != client.conns["127.0.0.1:0"] {
+		if client.pslots[8192] != client.conns["127.0.0.1:0"].conn {
 			t.Fatalf("unexpected node assigned to pslot 8192")
 		}
-		if client.pslots[8193] != client.conns["127.0.1.1:0"] {
+		if client.pslots[8193] != client.conns["127.0.1.1:0"].conn {
 			t.Fatalf("unexpected node assigned to pslot 8193")
 		}
-		if client.pslots[16383] != client.conns["127.0.1.1:0"] {
+		if client.pslots[16383] != client.conns["127.0.1.1:0"].conn {
 			t.Fatalf("unexpected node assigned to pslot 16383")
 		}
-		if client.rslots[0] != client.conns["127.0.0.1:0"] {
+		if client.rslots[0] != client.conns["127.0.0.1:0"].conn {
 			t.Fatalf("unexpected node assigned to rslot 0")
 		}
-		if client.rslots[8192] != client.conns["127.0.0.1:0"] {
+		if client.rslots[8192] != client.conns["127.0.0.1:0"].conn {
 			t.Fatalf("unexpected node assigned to rslot 8192")
 		}
-		if client.rslots[8193] != client.conns["127.0.1.1:0"] {
+		if client.rslots[8193] != client.conns["127.0.1.1:0"].conn {
 			t.Fatalf("unexpected node assigned to rslot 8193")
 		}
-		if client.rslots[16383] != client.conns["127.0.1.1:0"] {
+		if client.rslots[16383] != client.conns["127.0.1.1:0"].conn {
 			t.Fatalf("unexpected node assigned to rslot 16383")
 		}
 	})
@@ -886,28 +886,28 @@ func TestClusterClientInit(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 
-		if client.pslots[0] != client.conns["127.0.0.1:0"] {
+		if client.pslots[0] != client.conns["127.0.0.1:0"].conn {
 			t.Fatalf("unexpected node assigned to pslot 0")
 		}
-		if client.pslots[8192] != client.conns["127.0.0.1:0"] {
+		if client.pslots[8192] != client.conns["127.0.0.1:0"].conn {
 			t.Fatalf("unexpected node assigned to pslot 8192")
 		}
-		if client.pslots[8193] != client.conns["127.0.2.1:0"] {
+		if client.pslots[8193] != client.conns["127.0.2.1:0"].conn {
 			t.Fatalf("unexpected node assigned to pslot 8193")
 		}
-		if client.pslots[16383] != client.conns["127.0.2.1:0"] {
+		if client.pslots[16383] != client.conns["127.0.2.1:0"].conn {
 			t.Fatalf("unexpected node assigned to pslot 16383")
 		}
-		if client.rslots[0] != client.conns["127.0.1.1:1"] {
+		if client.rslots[0] != client.conns["127.0.1.1:1"].conn {
 			t.Fatalf("unexpected node assigned to rslot 0")
 		}
-		if client.rslots[8192] != client.conns["127.0.1.1:1"] {
+		if client.rslots[8192] != client.conns["127.0.1.1:1"].conn {
 			t.Fatalf("unexpected node assigned to rslot 8192")
 		}
-		if client.rslots[8193] != client.conns["127.0.3.1:1"] {
+		if client.rslots[8193] != client.conns["127.0.3.1:1"].conn {
 			t.Fatalf("unexpected node assigned to rslot 8193")
 		}
-		if client.rslots[16383] != client.conns["127.0.3.1:1"] {
+		if client.rslots[16383] != client.conns["127.0.3.1:1"].conn {
 			t.Fatalf("unexpected node assigned to rslot 16383")
 		}
 	})
@@ -4096,16 +4096,16 @@ func TestClusterClientReplicaOnly_PickReplica(t *testing.T) {
 		t.Fatalf("unexpected err %v", err)
 	}
 	t.Run("replicas should be picked", func(t *testing.T) {
-		if client.pslots[0] != client.conns["127.0.1.1:1"] {
+		if client.pslots[0] != client.conns["127.0.1.1:1"].conn {
 			t.Fatalf("unexpected replica node assigned to slot 0")
 		}
-		if client.pslots[8192] != client.conns["127.0.1.1:1"] {
+		if client.pslots[8192] != client.conns["127.0.1.1:1"].conn {
 			t.Fatalf("unexpected replica node assigned to slot 8192")
 		}
-		if client.pslots[8193] != client.conns["127.0.3.1:1"] {
+		if client.pslots[8193] != client.conns["127.0.3.1:1"].conn {
 			t.Fatalf("unexpected replica node assigned to slot 8193")
 		}
-		if client.pslots[16383] != client.conns["127.0.3.1:1"] {
+		if client.pslots[16383] != client.conns["127.0.3.1:1"].conn {
 			t.Fatalf("unexpected replica node assigned to slot 16383")
 		}
 	})
@@ -4131,16 +4131,16 @@ func TestClusterClientReplicaOnly_PickMasterIfNoReplica(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 
-		if client.pslots[0] != client.conns["127.0.1.1:1"] {
+		if client.pslots[0] != client.conns["127.0.1.1:1"].conn {
 			t.Fatalf("unexpected replica node assigned to slot 0")
 		}
-		if client.pslots[8192] != client.conns["127.0.1.1:1"] {
+		if client.pslots[8192] != client.conns["127.0.1.1:1"].conn {
 			t.Fatalf("unexpected replica node assigned to slot 8192")
 		}
-		if client.pslots[8193] != client.conns["127.0.3.1:1"] {
+		if client.pslots[8193] != client.conns["127.0.3.1:1"].conn {
 			t.Fatalf("unexpected replica node assigned to slot 8193")
 		}
-		if client.pslots[16383] != client.conns["127.0.3.1:1"] {
+		if client.pslots[16383] != client.conns["127.0.3.1:1"].conn {
 			t.Fatalf("unexpected replica node assigned to slot 16383")
 		}
 	})
@@ -4164,13 +4164,13 @@ func TestClusterClientReplicaOnly_PickMasterIfNoReplica(t *testing.T) {
 		}
 
 		for slot := 0; slot < 8193; slot++ {
-			if client.pslots[slot] == client.conns["127.0.0.2:1"] {
+			if client.pslots[slot] == client.conns["127.0.0.2:1"].conn {
 				continue
 			}
-			if client.pslots[slot] == client.conns["127.0.0.3:2"] {
+			if client.pslots[slot] == client.conns["127.0.0.3:2"].conn {
 				continue
 			}
-			if client.pslots[slot] == client.conns["127.0.0.4:3"] {
+			if client.pslots[slot] == client.conns["127.0.0.4:3"].conn {
 				continue
 			}
 
@@ -4178,13 +4178,13 @@ func TestClusterClientReplicaOnly_PickMasterIfNoReplica(t *testing.T) {
 		}
 
 		for slot := 8193; slot < 16384; slot++ {
-			if client.pslots[slot] == client.conns["127.0.1.2:1"] {
+			if client.pslots[slot] == client.conns["127.0.1.2:1"].conn {
 				continue
 			}
-			if client.pslots[slot] == client.conns["127.0.1.3:2"] {
+			if client.pslots[slot] == client.conns["127.0.1.3:2"].conn {
 				continue
 			}
-			if client.pslots[slot] == client.conns["127.0.1.4:3"] {
+			if client.pslots[slot] == client.conns["127.0.1.4:3"].conn {
 				continue
 			}
 
