@@ -249,8 +249,11 @@ func (c *clusterClient) _refresh() (err error) {
 
 	c.mu.RLock()
 	for addr, cc := range c.conns {
-		if _, ok := conns[addr]; ok {
-			conns[addr] = cc
+		if newConn, ok := conns[addr]; ok {
+			conns[addr] = connrole{
+				conn:    cc.conn,
+				replica: newConn.replica,
+			}
 		} else {
 			removes = append(removes, cc.conn)
 		}
