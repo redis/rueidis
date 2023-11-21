@@ -74,7 +74,7 @@ type clusterClient struct {
 	pslots [16384]conn
 	rslots []conn
 	opt    *ClientOption
-	conns  map[string]*clusterConnection
+	conns  map[string]connrole
 	connFn connFn
 	sc     call
 	mu     sync.RWMutex
@@ -84,10 +84,10 @@ type clusterClient struct {
 	aws    bool
 }
 
-// NOTE: clusterConnection and conn must be initialized at the same time
-type clusterConnection struct {
-	conn              conn
-	isPrimaryNodeConn bool
+// NOTE: connrole and conn must be initialized at the same time
+type connrole struct {
+	conn    conn
+	replica bool
 }
 
 func newClusterClient(opt *ClientOption, connFn connFn) (client *clusterClient, err error) {
@@ -95,7 +95,7 @@ func newClusterClient(opt *ClientOption, connFn connFn) (client *clusterClient, 
 		cmd:    cmds.NewBuilder(cmds.InitSlot),
 		opt:    opt,
 		connFn: connFn,
-		conns:  make(map[string]*clusterConnection),
+		conns:  make(map[string]connrole),
 		retry:  !opt.DisableRetry,
 		aws:    len(opt.InitAddress) == 1 && strings.Contains(opt.InitAddress[0], "amazonaws.com"),
 	}
@@ -136,7 +136,7 @@ func (c *clusterClient) init() error {
 				if _, ok := c.conns[addr]; ok {
 					go cc.Close() // abort the new connection instead of closing the old one which may already been used
 				} else {
-					c.conns[addr] = &clusterConnection{
+					c.conns[addr] = connrole{
 						conn: cc,
 					}
 				}
@@ -221,18 +221,17 @@ func (c *clusterClient) _refresh() (err error) {
 	pending = nil
 
 	groups := result.parse(c.opt.TLSConfig != nil)
-	conns := make(map[string]*clusterConnection, len(groups))
+	conns := make(map[string]connrole, len(groups))
 	for _, g := range groups {
 		for i, addr := range g.nodes {
 			if i == 0 {
-				conns[addr] = &clusterConnection{
-					conn:              c.connFn(addr, c.opt),
-					isPrimaryNodeConn: true,
+				conns[addr] = connrole{
+					conn: c.connFn(addr, c.opt),
 				}
 			} else {
-				conns[addr] = &clusterConnection{
-					conn:              c.connFn(addr, c.opt),
-					isPrimaryNodeConn: false,
+				conns[addr] = connrole{
+					conn:    c.connFn(addr, c.opt),
+					replica: true,
 				}
 			}
 		}
@@ -240,7 +239,7 @@ func (c *clusterClient) _refresh() (err error) {
 	// make sure InitAddress always be present
 	for _, addr := range c.opt.InitAddress {
 		if _, ok := conns[addr]; !ok {
-			conns[addr] = &clusterConnection{
+			conns[addr] = connrole{
 				conn: c.connFn(addr, c.opt),
 			}
 		}
@@ -423,7 +422,7 @@ func (c *clusterClient) _pick(slot uint16, isSendToReplicas bool) (p conn) {
 		switch {
 		case slot == cmds.InitSlot:
 			for _, cc := range c.conns {
-				if !cc.isPrimaryNodeConn {
+				if cc.replica {
 					continue
 				}
 
@@ -456,15 +455,15 @@ func (c *clusterClient) redirectOrNew(addr string, prev conn) (p conn) {
 	c.mu.RLock()
 	cc := c.conns[addr]
 	c.mu.RUnlock()
-	if cc != nil && cc.conn != nil && prev != cc.conn {
+	if cc.conn != nil && prev != cc.conn {
 		return cc.conn
 	}
 	c.mu.Lock()
 
-	if cc = c.conns[addr]; cc == nil {
+	if cc = c.conns[addr]; cc.conn == nil {
 		p = c.connFn(addr, c.opt)
-		// how to know if the new connection is primary node connection?
-		c.conns[addr] = &clusterConnection{
+		// how to know if the new connection is replica node connection?
+		c.conns[addr] = connrole{
 			conn: p,
 		}
 	} else if prev == cc.conn {
@@ -476,9 +475,9 @@ func (c *clusterClient) redirectOrNew(addr string, prev conn) (p conn) {
 			prev.Close()
 		}(prev)
 		p = c.connFn(addr, c.opt)
-		c.conns[addr] = &clusterConnection{
-			conn:              p,
-			isPrimaryNodeConn: cc.isPrimaryNodeConn,
+		c.conns[addr] = connrole{
+			conn:    p,
+			replica: cc.replica,
 		}
 	}
 	c.mu.Unlock()
