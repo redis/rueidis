@@ -148,7 +148,7 @@ func TestNewClusterClientError(t *testing.T) {
 			t.Errorf("unexpected return %v %v", client, err)
 		}
 
-		if !strings.Contains(err.Error(), ErrReplicaOnlyConflictsWithSendToReplicas.Error()) {
+		if !strings.Contains(err.Error(), ErrReplicaOnlyConflict.Error()) {
 			t.Errorf("unexpected error %v", err)
 		}
 	})
