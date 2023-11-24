@@ -32,16 +32,21 @@ func TestClientErr(t *testing.T) {
 }
 
 func TestWithClientBuilder(t *testing.T) {
-	client, err := NewClient(ClientOption{
+	var client rueidis.Client
+	c, err := NewClient(ClientOption{
 		ClientOption: rueidis.ClientOption{InitAddress: addr},
-		ClientBuilder: func(option rueidis.ClientOption) (rueidis.Client, error) {
-			return rueidis.NewClient(option)
+		ClientBuilder: func(option rueidis.ClientOption) (_ rueidis.Client, err error) {
+			client, err = rueidis.NewClient(option)
+			return client, err
 		},
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer client.Close()
+	defer c.Close()
+	if c.Client() != client {
+		t.Fatal("client mismatched")
+	}
 }
 
 func TestCacheFilled(t *testing.T) {

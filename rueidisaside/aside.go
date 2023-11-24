@@ -21,6 +21,7 @@ type ClientOption struct {
 type CacheAsideClient interface {
 	Get(ctx context.Context, ttl time.Duration, key string, fn func(ctx context.Context, key string) (val string, err error)) (val string, err error)
 	Del(ctx context.Context, key string) error
+	Client() rueidis.Client
 	Close()
 }
 
@@ -175,6 +176,11 @@ retry:
 
 func (c *Client) Del(ctx context.Context, key string) error {
 	return c.client.Do(ctx, c.client.B().Del().Key(key).Build()).Error()
+}
+
+// Client exports the underlying rueidis.Client
+func (c *Client) Client() rueidis.Client {
+	return c.client
 }
 
 func (c *Client) Close() {
