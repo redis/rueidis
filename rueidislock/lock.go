@@ -51,6 +51,8 @@ type Locker interface {
 	WithContext(ctx context.Context, name string) (context.Context, context.CancelFunc, error)
 	// TryWithContext tries to acquire a distributed redis lock by name without waiting. It may return ErrNotLocked.
 	TryWithContext(ctx context.Context, name string) (context.Context, context.CancelFunc, error)
+	// Client exports the underlying rueidis.Client
+	Client() rueidis.Client
 	// Close closes the underlying rueidis.Client
 	Close()
 }
@@ -388,6 +390,10 @@ func (m *locker) WithContext(ctx context.Context, name string) (context.Context,
 			return ctx, cancel, err
 		}
 	}
+}
+
+func (m *locker) Client() rueidis.Client {
+	return m.client
 }
 
 func (m *locker) Close() {

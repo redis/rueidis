@@ -57,16 +57,21 @@ func TestNewLocker(t *testing.T) {
 }
 
 func TestNewLocker_WithClientBuilder(t *testing.T) {
+	var client rueidis.Client
 	l, err := NewLocker(LockerOption{
 		ClientOption: rueidis.ClientOption{InitAddress: address},
-		ClientBuilder: func(option rueidis.ClientOption) (rueidis.Client, error) {
-			return rueidis.NewClient(option)
+		ClientBuilder: func(option rueidis.ClientOption) (_ rueidis.Client, err error) {
+			client, err = rueidis.NewClient(option)
+			return client, err
 		},
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer l.Close()
+	if l.Client() != client {
+		t.Fatal("client mismatched")
+	}
 }
 
 func TestLocker_WithContext_MultipleLocker(t *testing.T) {
