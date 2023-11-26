@@ -3549,10 +3549,8 @@ func (c *Compat) TDigestTrimmedMean(ctx context.Context, key string, lowCutQuant
 // TSAdd - Adds one or more observations to a t-digest sketch.
 // For more information - https://redis.io/commands/ts.add/
 func (c *Compat) TSAdd(ctx context.Context, key string, timestamp interface{}, value float64) *IntCmd {
-	args := []interface{}{"TS.ADD", key, timestamp, value}
-	cmd := NewIntCmd(ctx, args...)
-	_ = c(ctx, cmd)
-	return cmd
+	cmd := c.client.B().TsAdd().Key(key).Timestamp(str(timestamp)).Value(value).Build()
+	return newIntCmd(c.client.Do(ctx, cmd))
 }
 
 // TSAddWithArgs - Adds one or more observations to a t-digest sketch.
@@ -3560,31 +3558,54 @@ func (c *Compat) TSAdd(ctx context.Context, key string, timestamp interface{}, v
 // Retention, ChunkSize, Encoding, DuplicatePolicy and Labels.
 // For more information - https://redis.io/commands/ts.add/
 func (c *Compat) TSAddWithArgs(ctx context.Context, key string, timestamp interface{}, value float64, options *TSOptions) *IntCmd {
-	args := []interface{}{"TS.ADD", key, timestamp, value}
-	if options != nil {
-		if options.Retention != 0 {
-			args = append(args, "RETENTION", options.Retention)
-		}
-		if options.ChunkSize != 0 {
-			args = append(args, "CHUNK_SIZE", options.ChunkSize)
-		}
-		if options.Encoding != "" {
-			args = append(args, "ENCODING", options.Encoding)
-		}
-
-		if options.DuplicatePolicy != "" {
-			args = append(args, "DUPLICATE_POLICY", options.DuplicatePolicy)
-		}
-		if options.Labels != nil {
-			args = append(args, "LABELS")
-			for label, value := range options.Labels {
-				args = append(args, label, value)
-			}
+	_cmd := c.client.B().
+		TsAdd().
+		Key(key).
+		Timestamp(str(timestamp)).
+		Value(value)
+	if options.ChunkSize != 0 {
+		_cmd.ChunkSize(int64(options.ChunkSize))
+	}
+	if options.Retention != 0 {
+		_cmd.Retention(int64(options.Retention))
+	}
+	switch options.Encoding {
+	case "COMPRESSED", "":
+		_cmd.EncodingCompressed()
+	case "UNCOMPRESSED":
+		_cmd.EncodingUncompressed()
+	}
+	if options.DuplicatePolicy != "" {
+		switch options.DuplicatePolicy {
+		case "BLOCK":
+			_cmd.OnDuplicateBlock()
+		case "FIRST":
+			_cmd.OnDuplicateFirst()
+		case "LAST":
+			_cmd.OnDuplicateLast()
+		case "MIN":
+			_cmd.OnDuplicateMin()
+		case "MAX":
+			_cmd.OnDuplicateMax()
+		case "SUM":
+			_cmd.OnDuplicateSum()
+		default:
+			panic(fmt.Sprintf("invalid ON_DUPLICATE policy, want one of [BLOCK|FIRST|LAST|MIN|MAX|SUM], got %v", options.DuplicatePolicy))
 		}
 	}
-	cmd := NewIntCmd(ctx, args...)
-	_ = c(ctx, cmd)
-	return cmd
+	dup := (cmds.TsAddOnDuplicateBlock)(_cmd)
+	var labels cmds.TsAddLabels
+	var cmd cmds.Completed
+	if options.Labels != nil {
+		labels = dup.Labels()
+		for k, v := range options.Labels {
+			labels.Labels(k, v)
+		}
+		cmd = labels.Build()
+	} else {
+		cmd = dup.Build()
+	}
+	return newIntCmd(c.client.Do(ctx, cmd))
 }
 
 // TSCreate - Creates a new time-series key.
