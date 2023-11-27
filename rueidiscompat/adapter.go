@@ -3611,10 +3611,8 @@ func (c *Compat) TSAddWithArgs(ctx context.Context, key string, timestamp interf
 // TSCreate - Creates a new time-series key.
 // For more information - https://redis.io/commands/ts.create/
 func (c *Compat) TSCreate(ctx context.Context, key string) *StatusCmd {
-	args := []interface{}{"TS.CREATE", key}
-	cmd := NewStatusCmd(ctx, args...)
-	_ = c(ctx, cmd)
-	return cmd
+	cmd := c.client.B().TsCreate().Key(key).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
 }
 
 // TSCreateWithArgs - Creates a new time-series key with additional options.
@@ -3622,31 +3620,47 @@ func (c *Compat) TSCreate(ctx context.Context, key string) *StatusCmd {
 // Retention, ChunkSize, Encoding, DuplicatePolicy and Labels.
 // For more information - https://redis.io/commands/ts.create/
 func (c *Compat) TSCreateWithArgs(ctx context.Context, key string, options *TSOptions) *StatusCmd {
-	args := []interface{}{"TS.CREATE", key}
-	if options != nil {
-		if options.Retention != 0 {
-			args = append(args, "RETENTION", options.Retention)
-		}
-		if options.ChunkSize != 0 {
-			args = append(args, "CHUNK_SIZE", options.ChunkSize)
-		}
-		if options.Encoding != "" {
-			args = append(args, "ENCODING", options.Encoding)
-		}
-
-		if options.DuplicatePolicy != "" {
-			args = append(args, "DUPLICATE_POLICY", options.DuplicatePolicy)
-		}
-		if options.Labels != nil {
-			args = append(args, "LABELS")
-			for label, value := range options.Labels {
-				args = append(args, label, value)
-			}
+	_cmd := c.client.B().TsCreate().Key(key)
+	if options.Retention != 0 {
+		_cmd.Retention(int64(options.Retention))
+	}
+	if options.ChunkSize != 0 {
+		_cmd.ChunkSize(int64(options.ChunkSize))
+	}
+	if options.Encoding != "" {
+		_cmd.EncodingCompressed()
+	} else {
+		_cmd.EncodingUncompressed()
+	}
+	if options.DuplicatePolicy != "" {
+		switch options.DuplicatePolicy {
+		case "BLOCK":
+			_cmd.DuplicatePolicyBlock()
+		case "FIRST":
+			_cmd.DuplicatePolicyFirst()
+		case "LAST":
+			_cmd.DuplicatePolicyLast()
+		case "MIN":
+			_cmd.DuplicatePolicyMin()
+		case "MAX":
+			_cmd.DuplicatePolicyMax()
+		case "SUM":
+			_cmd.DuplicatePolicySum()
+		default:
+			panic(fmt.Sprintf("invalid ON_DUPLICATE policy, want one of [BLOCK|FIRST|LAST|MIN|MAX|SUM], got %v", options.DuplicatePolicy))
 		}
 	}
-	cmd := NewStatusCmd(ctx, args...)
-	_ = c(ctx, cmd)
-	return cmd
+	var cmd cmds.Completed
+	if options.Labels != nil {
+		labels := _cmd.Labels()
+		for k, v := range options.Labels {
+			labels.Labels(k, v)
+		}
+		cmd = labels.Build()
+	} else {
+		cmd = _cmd.Build()
+	}
+	return newStatusCmd(c.client.Do(ctx, cmd))
 }
 
 // TSAlter - Alters an existing time-series key with additional options.
