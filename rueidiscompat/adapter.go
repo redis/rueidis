@@ -3590,7 +3590,7 @@ func (c *Compat) TSAddWithArgs(ctx context.Context, key string, timestamp interf
 		case "SUM":
 			_cmd.OnDuplicateSum()
 		default:
-			panic(fmt.Sprintf("invalid ON_DUPLICATE policy, want one of [BLOCK|FIRST|LAST|MIN|MAX|SUM], got %v", options.DuplicatePolicy))
+			panic(fmt.Sprintf("invalid duplicate policy, want one of [BLOCK|FIRST|LAST|MIN|MAX|SUM], got %v", options.DuplicatePolicy))
 		}
 	}
 	dup := (cmds.TsAddOnDuplicateBlock)(_cmd)
@@ -3647,7 +3647,7 @@ func (c *Compat) TSCreateWithArgs(ctx context.Context, key string, options *TSOp
 		case "SUM":
 			_cmd.DuplicatePolicySum()
 		default:
-			panic(fmt.Sprintf("invalid ON_DUPLICATE policy, want one of [BLOCK|FIRST|LAST|MIN|MAX|SUM], got %v", options.DuplicatePolicy))
+			panic(fmt.Sprintf("invalid duplicate policy, want one of [BLOCK|FIRST|LAST|MIN|MAX|SUM], got %v", options.DuplicatePolicy))
 		}
 	}
 	var cmd cmds.Completed
@@ -3668,36 +3668,81 @@ func (c *Compat) TSCreateWithArgs(ctx context.Context, key string, options *TSOp
 // Retention, ChunkSize and DuplicatePolicy.
 // For more information - https://redis.io/commands/ts.alter/
 func (c *Compat) TSAlter(ctx context.Context, key string, options *TSAlterOptions) *StatusCmd {
-	args := []interface{}{"TS.ALTER", key}
+	_cmd := c.client.B().TsAlter().Key(key)
+	var cmd cmds.Completed
 	if options != nil {
 		if options.Retention != 0 {
-			args = append(args, "RETENTION", options.Retention)
+			_cmd.Retention(int64(options.Retention))
 		}
 		if options.ChunkSize != 0 {
-			args = append(args, "CHUNK_SIZE", options.ChunkSize)
+			_cmd.ChunkSize(int64(options.ChunkSize))
 		}
 		if options.DuplicatePolicy != "" {
-			args = append(args, "DUPLICATE_POLICY", options.DuplicatePolicy)
-		}
-		if options.Labels != nil {
-			args = append(args, "LABELS")
-			for label, value := range options.Labels {
-				args = append(args, label, value)
+			switch options.DuplicatePolicy {
+			case "BLOCK":
+				_cmd.DuplicatePolicyBlock()
+			case "FIRST":
+				_cmd.DuplicatePolicyFirst()
+			case "LAST":
+				_cmd.DuplicatePolicyLast()
+			case "MIN":
+				_cmd.DuplicatePolicyMin()
+			case "MAX":
+				_cmd.DuplicatePolicyMax()
+			case "SUM":
+				_cmd.DuplicatePolicySum()
+			default:
+				panic(fmt.Sprintf("invalid duplicate policy, want one of [BLOCK|FIRST|LAST|MIN|MAX|SUM], got %v", options.DuplicatePolicy))
 			}
 		}
+		var labels cmds.TsAlterLabels
+		if options.Labels != nil {
+			labels = _cmd.Labels()
+			for label, value := range options.Labels {
+				labels.Labels(label, value)
+			}
+		}
+		cmd = labels.Build()
+	} else {
+		cmd = _cmd.Build()
 	}
-	cmd := NewStatusCmd(ctx, args...)
-	_ = c(ctx, cmd)
-	return cmd
+	return newStatusCmd(c.client.Do(ctx, cmd))
 }
 
 // TSCreateRule - Creates a compaction rule from sourceKey to destKey.
 // For more information - https://redis.io/commands/ts.createrule/
 func (c *Compat) TSCreateRule(ctx context.Context, sourceKey string, destKey string, aggregator Aggregator, bucketDuration int) *StatusCmd {
-	args := []interface{}{"TS.CREATERULE", sourceKey, destKey, "AGGREGATION", aggregator.String(), bucketDuration}
-	cmd := NewStatusCmd(ctx, args...)
-	_ = c(ctx, cmd)
-	return cmd
+	_cmd := c.client.B().TsCreaterule().Sourcekey(sourceKey).Destkey(destKey)
+	var cmd cmds.Completed
+	switch aggregator {
+	case Avg:
+		cmd = _cmd.AggregationAvg().Bucketduration(int64(bucketDuration)).Build()
+	case Sum:
+		cmd = _cmd.AggregationSum().Bucketduration(int64(bucketDuration)).Build()
+	case Min:
+		cmd = _cmd.AggregationMin().Bucketduration(int64(bucketDuration)).Build()
+	case Max:
+		cmd = _cmd.AggregationMax().Bucketduration(int64(bucketDuration)).Build()
+	case Range:
+		cmd = _cmd.AggregationRange().Bucketduration(int64(bucketDuration)).Build()
+	case Count:
+		cmd = _cmd.AggregationCount().Bucketduration(int64(bucketDuration)).Build()
+	case First:
+		cmd = _cmd.AggregationFirst().Bucketduration(int64(bucketDuration)).Build()
+	case Last:
+		cmd = _cmd.AggregationLast().Bucketduration(int64(bucketDuration)).Build()
+	case StdP:
+		cmd = _cmd.AggregationStdP().Bucketduration(int64(bucketDuration)).Build()
+	case StdS:
+		cmd = _cmd.AggregationStdS().Bucketduration(int64(bucketDuration)).Build()
+	case VarP:
+		cmd = _cmd.AggregationVarP().Bucketduration(int64(bucketDuration)).Build()
+	case VarS:
+		cmd = _cmd.AggregationVarS().Bucketduration(int64(bucketDuration)).Build()
+	case Twa:
+		cmd = _cmd.AggregationTwa().Bucketduration(int64(bucketDuration)).Build()
+	}
+	return newStatusCmd(c.client.Do(ctx, cmd))
 }
 
 // TSCreateRuleWithArgs - Creates a compaction rule from sourceKey to destKey with additional option.
