@@ -69,12 +69,25 @@ func (r *HashRepository[T]) toExec(entity *T) (val reflect.Value, exec rueidis.L
 	fields := r.factory.NewConverter(val).ToHash()
 	keyVal := fields[r.schema.key.name]
 	verVal := fields[r.schema.ver.name]
+	extVal := int64(0)
+	if r.schema.ext != nil {
+		if ext, ok := val.Field(r.schema.ext.idx).Interface().(time.Time); ok && !ext.IsZero() {
+			extVal = ext.UnixMilli()
+		}
+	}
 	exec.Keys = []string{key(r.prefix, keyVal)}
-	exec.Args = make([]string, 0, len(fields)*2)
+	if extVal != 0 {
+		exec.Args = make([]string, 0, len(fields)*2+1)
+	} else {
+		exec.Args = make([]string, 0, len(fields)*2)
+	}
 	exec.Args = append(exec.Args, r.schema.ver.name, verVal) // keep the ver field be the first pair for the hashSaveScript
 	delete(fields, r.schema.ver.name)
 	for k, v := range fields {
 		exec.Args = append(exec.Args, k, v)
+	}
+	if extVal != 0 {
+		exec.Args = append(exec.Args, strconv.FormatInt(extVal, 10))
 	}
 	return
 }
@@ -184,7 +197,12 @@ local v = redis.call('HGET',KEYS[1],ARGV[1])
 if (not v or v == ARGV[2])
 then
   ARGV[2] = tostring(tonumber(ARGV[2])+1)
-  if redis.call('HSET',KEYS[1],unpack(ARGV)) then return ARGV[2] end
+  local e = (#ARGV % 2 == 1) and table.remove(ARGV) or nil
+  if redis.call('HSET',KEYS[1],unpack(ARGV))
+  then
+    if e then redis.call('PEXPIREAT',KEYS[1],e) end
+    return ARGV[2]
+  end
 end
 return nil
 `)

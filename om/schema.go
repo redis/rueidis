@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 )
 
 const ignoreField = "-"
@@ -11,6 +12,7 @@ const ignoreField = "-"
 type schema struct {
 	key    *field
 	ver    *field
+	ext    *field
 	fields map[string]*field
 }
 
@@ -20,6 +22,7 @@ type field struct {
 	idx   int
 	isKey bool
 	isVer bool
+	isExt bool
 }
 
 func newSchema(t reflect.Type) schema {
@@ -53,6 +56,12 @@ func newSchema(t reflect.Type) schema {
 			}
 			s.ver = &f
 		}
+		if f.isExt {
+			if sf.Type != reflect.TypeOf(time.Time{}) {
+				panic(fmt.Sprintf("field with tag `redis:\",exat\"` in schema %q should be a time.Time", t))
+			}
+			s.ext = &f
+		}
 	}
 
 	if s.key == nil {
@@ -77,6 +86,7 @@ func parse(f reflect.StructField) (field field) {
 	v, _ = f.Tag.Lookup("redis")
 	field.isKey = strings.Contains(v, ",key")
 	field.isVer = strings.Contains(v, ",ver")
+	field.isExt = strings.Contains(v, ",exat")
 	field.typ = f.Type
 	return field
 }

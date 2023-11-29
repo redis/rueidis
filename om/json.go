@@ -75,8 +75,18 @@ func (r *JSONRepository[T]) decode(record string) (*T, error) {
 func (r *JSONRepository[T]) toExec(entity *T) (verf reflect.Value, exec rueidis.LuaExec) {
 	val := reflect.ValueOf(entity).Elem()
 	verf = val.Field(r.schema.ver.idx)
+	extVal := int64(0)
+	if r.schema.ext != nil {
+		if ext, ok := val.Field(r.schema.ext.idx).Interface().(time.Time); ok && !ext.IsZero() {
+			extVal = ext.UnixMilli()
+		}
+	}
 	exec.Keys = []string{key(r.prefix, val.Field(r.schema.key.idx).String())}
-	exec.Args = []string{r.schema.ver.name, strconv.FormatInt(verf.Int(), 10), rueidis.JSON(entity)}
+	if extVal != 0 {
+		exec.Args = []string{r.schema.ver.name, strconv.FormatInt(verf.Int(), 10), rueidis.JSON(entity), strconv.FormatInt(extVal, 10)}
+	} else {
+		exec.Args = []string{r.schema.ver.name, strconv.FormatInt(verf.Int(), 10), rueidis.JSON(entity)}
+	}
 	return
 }
 
@@ -174,7 +184,9 @@ local v = redis.call('JSON.GET',KEYS[1],ARGV[1])
 if (not v or v == ARGV[2])
 then
   redis.call('JSON.SET',KEYS[1],'$',ARGV[3])
-  return redis.call('JSON.NUMINCRBY',KEYS[1],ARGV[1],1)
+  local v = redis.call('JSON.NUMINCRBY',KEYS[1],ARGV[1],1)
+  if #ARGV == 4 then redis.call('PEXPIREAT',KEYS[1],ARGV[4]) end
+  return v
 end
 return nil
 `)
