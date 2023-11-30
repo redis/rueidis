@@ -24,13 +24,6 @@ func newHashConvFactory(t reflect.Type, schema schema) *hashConvFactory {
 			k := f.typ.Kind()
 			panic(fmt.Sprintf("schema %q should not contain unsupported field type %s.", t, k))
 		}
-		if conv.ValueToString == nil && conv.StringToValue == nil {
-			ptr := reflect.PointerTo(f.typ)
-			if !ptr.Implements(reflect.TypeOf((*json.Marshaler)(nil)).Elem()) || !ptr.Implements(reflect.TypeOf((*json.Unmarshaler)(nil)).Elem()) {
-				k := f.typ.Kind()
-				panic(fmt.Sprintf("schema %q should not contain unsupported field type %s.", t, k))
-			}
-		}
 		factory.fields[name] = fieldConv{conv: conv, idx: f.idx}
 	}
 	return factory
@@ -59,7 +52,7 @@ func (r hashConv) ToHash() (fields map[string]string) {
 	for k, f := range r.factory.fields {
 		ref := r.entity.Field(f.idx)
 		if f.conv.ValueToString == nil {
-			if bs, err := ref.Interface().(json.Marshaler).MarshalJSON(); err == nil {
+			if bs, err := json.Marshal(ref.Interface()); err == nil {
 				fields[k] = rueidis.BinaryString(bs)
 			}
 		} else if v, ok := f.conv.ValueToString(ref); ok {
@@ -76,7 +69,7 @@ func (r hashConv) FromHash(fields map[string]string) error {
 			continue
 		}
 		if f.conv.StringToValue == nil {
-			if err := r.entity.Field(f.idx).Addr().Interface().(json.Unmarshaler).UnmarshalJSON([]byte(v)); err != nil {
+			if err := json.Unmarshal(unsafe.Slice(unsafe.StringData(v), len(v)), r.entity.Field(f.idx).Addr().Interface()); err != nil {
 				return err
 			}
 		} else {
@@ -141,6 +134,10 @@ var converters = struct {
 				b := value == "t"
 				return reflect.ValueOf(&b), nil
 			},
+		},
+		reflect.Struct: {
+			ValueToString: nil,
+			StringToValue: nil,
 		},
 	},
 	val: map[reflect.Kind]converter{
@@ -208,6 +205,10 @@ var converters = struct {
 			StringToValue: func(value string) (reflect.Value, error) {
 				return reflect.ValueOf(rueidis.ToVector64(value)), nil
 			},
+		},
+		reflect.Struct: {
+			ValueToString: nil,
+			StringToValue: nil,
 		},
 	},
 }
