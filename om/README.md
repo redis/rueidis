@@ -17,7 +17,7 @@ import (
 type Example struct {
     Key  string    `json:"key" redis:",key"`   // the redis:",key" is required to indicate which field is the ULID key
     Ver  int64     `json:"ver" redis:",ver"`   // the redis:",ver" is required to do optimistic locking to prevent lost update
-    Exat time.Time `json:"exat" redis:",exat"` // the redis:",exat" is optional for setting record expiry with unix timestamp
+    ExAt time.Time `json:"exat" redis:",exat"` // the redis:",exat" is optional for setting record expiry with unix timestamp
     Str  string    `json:"str"`                // both NewHashRepository and NewJSONRepository use json tag as field name
 }
 
@@ -32,7 +32,7 @@ func main() {
 
     exp := repo.NewEntity()
     exp.Str = "mystr"
-    exp.Exat = time.Now().Add(time.Hour)
+    exp.ExAt = time.Now().Add(time.Hour)
     fmt.Println(exp.Key) // output 01FNH4FCXV9JTB9WTVFAAKGSYB
     repo.Save(ctx, exp) // success
 
@@ -90,14 +90,20 @@ repo1 := om.NewHashRepository("my_prefix", Example{}, c, om.WithIndexName("my_in
 repo2 := om.NewHashRepository("my_prefix", Example{}, c, om.WithIndexName("my_index2"))
 ```
 
+### Object Expiry Timestamp
+
+Setting a `redis:",exat"` tag on a `time.Time` field will set `PEXPIREAT` on the record accordingly when calling `.Save()`.
+
+If the `time.Time` is zero, then the expiry will be untouched when calling `.Save()`.
+
 ### Object Mapping Limitation
 
 `NewHashRepository` only accepts these field types:
 * `string`, `*string`
 * `int64`, `*int64`
 * `bool`, `*bool`
-* `time.Time`
 * `[]byte`, `json.RawMessage`
 * `[]float32`, `[]float64` for vector search
+* `json.Marshaler+json.Unmarshaler`
 
 Field projection by RediSearch is not supported.
