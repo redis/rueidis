@@ -3258,6 +3258,151 @@ func (a Aggregator) String() string {
 	}
 }
 
+type TSTimestampValue struct {
+	Timestamp int64
+	Value     float64
+}
+type TSTimestampValueCmd struct {
+	baseCmd
+	val TSTimestampValue
+}
+
+func newTSTimestampValueCmd(res rueidis.RedisResult) *TSTimestampValueCmd {
+	return &TSTimestampValueCmd{}
+}
+
+func (cmd *TSTimestampValueCmd) String() string {
+	return cmdString(cmd, cmd.val)
+}
+
+func (cmd *TSTimestampValueCmd) SetVal(val TSTimestampValue) {
+	cmd.val = val
+}
+
+func (cmd *TSTimestampValueCmd) Result() (TSTimestampValue, error) {
+	return cmd.val, cmd.err
+}
+
+func (cmd *TSTimestampValueCmd) Val() TSTimestampValue {
+	return cmd.val
+}
+
+func (cmd *TSTimestampValueCmd) readReply(rd *proto.Reader) (err error) {
+	n, err := rd.ReadMapLen()
+	if err != nil {
+		return err
+	}
+	cmd.val = TSTimestampValue{}
+	for i := 0; i < n; i++ {
+		timestamp, err := rd.ReadInt()
+		if err != nil {
+			return err
+		}
+		value, err := rd.ReadString()
+		if err != nil {
+			return err
+		}
+		cmd.val.Timestamp = timestamp
+		cmd.val.Value, err = strconv.ParseFloat(value, 64)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+type MapStringInterfaceCmd struct {
+	baseCmd[map[string]any]
+}
+
+func newMapStringInterfaceCmd(res rueidis.RedisResult) *MapStringInterfaceCmd {
+	panic("todo: implementation")
+	// arr, err := res.ToArray()
+	// if err != nil {
+	// 	return &MapStringInterfaceCmd{err: err}
+	// }
+	// out := &MapStringInterfaceSliceCmd{val: make([]map[string]any, 0, len(arr))}
+	// for _, ele := range arr {
+	// 	m, err := ele.AsMap()
+	// 	eleMap := make(map[string]any, len(m))
+	// 	if err != nil {
+	// 		out.err = err
+	// 		return out
+	// 	}
+	// 	for k, v := range m {
+	// 		var val any
+	// 		if !v.IsNil() {
+	// 			var err error
+	// 			val, err = v.ToAny()
+	// 			if err != nil {
+	// 				out.err = err
+	// 				return out
+	// 			}
+	// 		}
+	// 		eleMap[k] = val
+	// 	}
+	// 	out.val = append(out.val, eleMap)
+	// }
+	// return out
+}
+
+type TSTimestampValueSliceCmd struct {
+	baseCmd
+	val []TSTimestampValue
+}
+
+func newTSTimestampValueSliceCmd(res rueidis.RedisResult) *TSTimestampValueSliceCmd {
+	return &TSTimestampValueSliceCmd{
+		baseCmd: baseCmd{
+			ctx:  ctx,
+			args: args,
+		},
+	}
+}
+
+func (cmd *TSTimestampValueSliceCmd) String() string {
+	return cmdString(cmd, cmd.val)
+}
+
+func (cmd *TSTimestampValueSliceCmd) SetVal(val []TSTimestampValue) {
+	cmd.val = val
+}
+
+func (cmd *TSTimestampValueSliceCmd) Result() ([]TSTimestampValue, error) {
+	return cmd.val, cmd.err
+}
+
+func (cmd *TSTimestampValueSliceCmd) Val() []TSTimestampValue {
+	return cmd.val
+}
+
+func (cmd *TSTimestampValueSliceCmd) readReply(rd *proto.Reader) (err error) {
+	n, err := rd.ReadArrayLen()
+	if err != nil {
+		return err
+	}
+	cmd.val = make([]TSTimestampValue, n)
+	for i := 0; i < n; i++ {
+		_, _ = rd.ReadArrayLen()
+		timestamp, err := rd.ReadInt()
+		if err != nil {
+			return err
+		}
+		value, err := rd.ReadString()
+		if err != nil {
+			return err
+		}
+		cmd.val[i].Timestamp = timestamp
+		cmd.val[i].Value, err = strconv.ParseFloat(value, 64)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 type TSRangeOptions struct {
 	Latest          bool
 	FilterByTS      []int

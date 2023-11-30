@@ -3750,64 +3750,88 @@ func (c *Compat) TSCreateRule(ctx context.Context, sourceKey string, destKey str
 // alignTimestamp.
 // For more information - https://redis.io/commands/ts.createrule/
 func (c *Compat) TSCreateRuleWithArgs(ctx context.Context, sourceKey string, destKey string, aggregator Aggregator, bucketDuration int, options *TSCreateRuleOptions) *StatusCmd {
-	args := []interface{}{"TS.CREATERULE", sourceKey, destKey, "AGGREGATION", aggregator.String(), bucketDuration}
-	if options != nil {
-		if options.alignTimestamp != 0 {
-			args = append(args, options.alignTimestamp)
-		}
+	_cmd := c.client.B().TsCreaterule().Sourcekey(sourceKey).Destkey(destKey)
+	var duration cmds.TsCreateruleBucketduration
+	switch aggregator {
+	case Avg:
+		duration = _cmd.AggregationAvg().Bucketduration(int64(bucketDuration))
+	case Sum:
+		duration = _cmd.AggregationSum().Bucketduration(int64(bucketDuration))
+	case Min:
+		duration = _cmd.AggregationMin().Bucketduration(int64(bucketDuration))
+	case Max:
+		duration = _cmd.AggregationMax().Bucketduration(int64(bucketDuration))
+	case Range:
+		duration = _cmd.AggregationRange().Bucketduration(int64(bucketDuration))
+	case Count:
+		duration = _cmd.AggregationCount().Bucketduration(int64(bucketDuration))
+	case First:
+		duration = _cmd.AggregationFirst().Bucketduration(int64(bucketDuration))
+	case Last:
+		duration = _cmd.AggregationLast().Bucketduration(int64(bucketDuration))
+	case StdP:
+		duration = _cmd.AggregationStdP().Bucketduration(int64(bucketDuration))
+	case StdS:
+		duration = _cmd.AggregationStdS().Bucketduration(int64(bucketDuration))
+	case VarP:
+		duration = _cmd.AggregationVarP().Bucketduration(int64(bucketDuration))
+	case VarS:
+		duration = _cmd.AggregationVarS().Bucketduration(int64(bucketDuration))
+	case Twa:
+		duration = _cmd.AggregationTwa().Bucketduration(int64(bucketDuration))
 	}
-	cmd := NewStatusCmd(ctx, args...)
-	_ = c(ctx, cmd)
-	return cmd
+	if options != nil && options.alignTimestamp != 0 {
+		duration.Aligntimestamp(options.alignTimestamp)
+	}
+	cmd := duration.Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
 }
 
 // TSIncrBy - Increments the value of a time-series key by the specified timestamp.
 // For more information - https://redis.io/commands/ts.incrby/
+// FIXME: timestamp should be addend
 func (c *Compat) TSIncrBy(ctx context.Context, Key string, timestamp float64) *IntCmd {
-	args := []interface{}{"TS.INCRBY", Key, timestamp}
-	cmd := NewIntCmd(ctx, args...)
-	_ = c(ctx, cmd)
-	return cmd
+	cmd := c.client.B().TsIncrby().Key(Key).Value(timestamp).Build()
+	return newIntCmd(c.client.Do(ctx, cmd))
 }
 
 // TSIncrByWithArgs - Increments the value of a time-series key by the specified timestamp with additional options.
 // This function allows for specifying additional options such as:
 // Timestamp, Retention, ChunkSize, Uncompressed and Labels.
 // For more information - https://redis.io/commands/ts.incrby/
+// FIXME: timestamp should be addend
 func (c *Compat) TSIncrByWithArgs(ctx context.Context, key string, timestamp float64, options *TSIncrDecrOptions) *IntCmd {
-	args := []interface{}{"TS.INCRBY", key, timestamp}
+	_cmd := c.client.B().TsIncrby().Key(key).Value(timestamp)
 	if options != nil {
 		if options.Timestamp != 0 {
-			args = append(args, "TIMESTAMP", options.Timestamp)
+			_cmd.Timestamp(str(options.Timestamp))
 		}
 		if options.Retention != 0 {
-			args = append(args, "RETENTION", options.Retention)
+			_cmd.Retention(int64(options.Retention))
 		}
 		if options.ChunkSize != 0 {
-			args = append(args, "CHUNK_SIZE", options.ChunkSize)
+			_cmd.ChunkSize(int64(options.ChunkSize))
 		}
 		if options.Uncompressed {
-			args = append(args, "UNCOMPRESSED")
+			_cmd.Uncompressed()
 		}
 		if options.Labels != nil {
-			args = append(args, "LABELS")
+			_cmd.Labels()
 			for label, value := range options.Labels {
-				args = append(args, label, value)
+				(cmds.TsIncrbyLabels)(_cmd).Labels(label, value)
 			}
 		}
 	}
-	cmd := NewIntCmd(ctx, args...)
-	_ = c(ctx, cmd)
-	return cmd
+	cmd := (cmds.TsIncrbyLabels)(_cmd).Build()
+	return newIntCmd(c.client.Do(ctx, cmd))
 }
 
 // TSDecrBy - Decrements the value of a time-series key by the specified timestamp.
 // For more information - https://redis.io/commands/ts.decrby/
+// FIXME: timestamp should be subtrahend
 func (c *Compat) TSDecrBy(ctx context.Context, Key string, timestamp float64) *IntCmd {
-	args := []interface{}{"TS.DECRBY", Key, timestamp}
-	cmd := NewIntCmd(ctx, args...)
-	_ = c(ctx, cmd)
-	return cmd
+	cmd := c.client.B().TsDecrby().Key(Key).Value(timestamp).Build()
+	return newIntCmd(c.client.Do(ctx, cmd))
 }
 
 // TSDecrByWithArgs - Decrements the value of a time-series key by the specified timestamp with additional options.
@@ -3815,48 +3839,43 @@ func (c *Compat) TSDecrBy(ctx context.Context, Key string, timestamp float64) *I
 // Timestamp, Retention, ChunkSize, Uncompressed and Labels.
 // For more information - https://redis.io/commands/ts.decrby/
 func (c *Compat) TSDecrByWithArgs(ctx context.Context, key string, timestamp float64, options *TSIncrDecrOptions) *IntCmd {
-	args := []interface{}{"TS.DECRBY", key, timestamp}
+	_cmd := c.client.B().TsDecrby().Key(key).Value(timestamp)
 	if options != nil {
 		if options.Timestamp != 0 {
-			args = append(args, "TIMESTAMP", options.Timestamp)
+			_cmd.Timestamp(str(options.Timestamp))
 		}
 		if options.Retention != 0 {
-			args = append(args, "RETENTION", options.Retention)
+			_cmd.Retention(int64(options.Retention))
 		}
 		if options.ChunkSize != 0 {
-			args = append(args, "CHUNK_SIZE", options.ChunkSize)
+			_cmd.ChunkSize(int64(options.ChunkSize))
 		}
 		if options.Uncompressed {
-			args = append(args, "UNCOMPRESSED")
+			_cmd.Uncompressed()
 		}
 		if options.Labels != nil {
-			args = append(args, "LABELS")
+			_cmd.Labels()
 			for label, value := range options.Labels {
-				args = append(args, label, value)
+				(cmds.TsDecrbyLabels)(_cmd).Labels(label, value)
 			}
 		}
 	}
-	cmd := NewIntCmd(ctx, args...)
-	_ = c(ctx, cmd)
-	return cmd
+	cmd := (cmds.TsDecrbyLabels)(_cmd).Build()
+	return newIntCmd(c.client.Do(ctx, cmd))
 }
 
 // TSDel - Deletes a range of samples from a time-series key.
 // For more information - https://redis.io/commands/ts.del/
 func (c *Compat) TSDel(ctx context.Context, Key string, fromTimestamp int, toTimestamp int) *IntCmd {
-	args := []interface{}{"TS.DEL", Key, fromTimestamp, toTimestamp}
-	cmd := NewIntCmd(ctx, args...)
-	_ = c(ctx, cmd)
-	return cmd
+	cmd := c.client.B().TsDel().Key(Key).FromTimestamp(int64(fromTimestamp)).ToTimestamp(int64(toTimestamp)).Build()
+	return newIntCmd(c.client.Do(ctx, cmd))
 }
 
 // TSDeleteRule - Deletes a compaction rule from sourceKey to destKey.
 // For more information - https://redis.io/commands/ts.deleterule/
 func (c *Compat) TSDeleteRule(ctx context.Context, sourceKey string, destKey string) *StatusCmd {
-	args := []interface{}{"TS.DELETERULE", sourceKey, destKey}
-	cmd := NewStatusCmd(ctx, args...)
-	_ = c(ctx, cmd)
-	return cmd
+	cmd := c.client.B().TsDeleterule().Sourcekey(sourceKey).Destkey(destKey).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
 }
 
 // TSGetWithArgs - Gets the last sample of a time-series key with additional option.
@@ -3864,92 +3883,25 @@ func (c *Compat) TSDeleteRule(ctx context.Context, sourceKey string, destKey str
 // Latest.
 // For more information - https://redis.io/commands/ts.get/
 func (c *Compat) TSGetWithArgs(ctx context.Context, key string, options *TSGetOptions) *TSTimestampValueCmd {
-	args := []interface{}{"TS.GET", key}
-	if options != nil {
-		if options.Latest {
-			args = append(args, "LATEST")
-		}
+	_cmd := c.client.B().TsGet().Key(key)
+	if options != nil && options.Latest {
+		_cmd.Latest()
 	}
-	cmd := newTSTimestampValueCmd(ctx, args...)
-	_ = c(ctx, cmd)
-	return cmd
+	return newTSTimestampValueCmd(c.client.Do(ctx, cmd))
 }
 
 // TSGet - Gets the last sample of a time-series key.
 // For more information - https://redis.io/commands/ts.get/
 func (c *Compat) TSGet(ctx context.Context, key string) *TSTimestampValueCmd {
-	args := []interface{}{"TS.GET", key}
-	cmd := newTSTimestampValueCmd(ctx, args...)
-	_ = c(ctx, cmd)
-	return cmd
-}
-
-type TSTimestampValue struct {
-	Timestamp int64
-	Value     float64
-}
-type TSTimestampValueCmd struct {
-	baseCmd
-	val TSTimestampValue
-}
-
-func newTSTimestampValueCmd(ctx context.Context, args ...interface{}) *TSTimestampValueCmd {
-	return &TSTimestampValueCmd{
-		baseCmd: baseCmd{
-			ctx:  ctx,
-			args: args,
-		},
-	}
-}
-
-func (cmd *TSTimestampValueCmd) String() string {
-	return cmdString(cmd, cmd.val)
-}
-
-func (cmd *TSTimestampValueCmd) SetVal(val TSTimestampValue) {
-	cmd.val = val
-}
-
-func (cmd *TSTimestampValueCmd) Result() (TSTimestampValue, error) {
-	return cmd.val, cmd.err
-}
-
-func (cmd *TSTimestampValueCmd) Val() TSTimestampValue {
-	return cmd.val
-}
-
-func (cmd *TSTimestampValueCmd) readReply(rd *proto.Reader) (err error) {
-	n, err := rd.ReadMapLen()
-	if err != nil {
-		return err
-	}
-	cmd.val = TSTimestampValue{}
-	for i := 0; i < n; i++ {
-		timestamp, err := rd.ReadInt()
-		if err != nil {
-			return err
-		}
-		value, err := rd.ReadString()
-		if err != nil {
-			return err
-		}
-		cmd.val.Timestamp = timestamp
-		cmd.val.Value, err = strconv.ParseFloat(value, 64)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	cmd := c.client.B().TsGet().Key(key).Build()
+	return newTSTimestampValueCmd(c.client.Do(ctx, cmd))
 }
 
 // TSInfo - Returns information about a time-series key.
 // For more information - https://redis.io/commands/ts.info/
 func (c *Compat) TSInfo(ctx context.Context, key string) *MapStringInterfaceCmd {
-	args := []interface{}{"TS.INFO", key}
-	cmd := NewMapStringInterfaceCmd(ctx, args...)
-	_ = c(ctx, cmd)
-	return cmd
+	c.client.B().TsInfo().Key(key).Build()
+	return newMapStringInterfaceCmd(c.client.Do(ctx, cmd))
 }
 
 // TSInfoWithArgs - Returns information about a time-series key with additional option.
@@ -3957,48 +3909,37 @@ func (c *Compat) TSInfo(ctx context.Context, key string) *MapStringInterfaceCmd 
 // Debug.
 // For more information - https://redis.io/commands/ts.info/
 func (c *Compat) TSInfoWithArgs(ctx context.Context, key string, options *TSInfoOptions) *MapStringInterfaceCmd {
-	args := []interface{}{"TS.INFO", key}
-	if options != nil {
-		if options.Debug {
-			args = append(args, "DEBUG")
-		}
+	_cmd := c.client.B().TsInfo().Key(key)
+	if options != nil && options.Debug {
+		_cmd.Debug()
 	}
-	cmd := NewMapStringInterfaceCmd(ctx, args...)
-	_ = c(ctx, cmd)
-	return cmd
+	cmd := (cmds.TsInfoKey)(_cmd).Build()
+	return newMapStringInterfaceCmd(c.client.Do(ctx, cmd))
 }
 
 // TSMAdd - Adds multiple samples to multiple time-series keys.
 // For more information - https://redis.io/commands/ts.madd/
 func (c *Compat) TSMAdd(ctx context.Context, ktvSlices [][]interface{}) *IntSliceCmd {
-	args := []interface{}{"TS.MADD"}
+	_cmd := c.client.B().TsMadd().KeyTimestampValue()
 	for _, ktv := range ktvSlices {
-		args = append(args, ktv...)
+		_cmd.KeyTimestampValue(str(ktv[0]), ktv[1].(int64), ktv[2].(float64))
 	}
-	cmd := NewIntSliceCmd(ctx, args...)
-	_ = c(ctx, cmd)
-	return cmd
+	cmd := (cmds.TsMaddKeyTimestampValue)(_cmd).Build()
+	return newIntSliceCmd(c.client.Do(ctx, cmd))
 }
 
 // TSQueryIndex - Returns all the keys matching the filter expression.
 // For more information - https://redis.io/commands/ts.queryindex/
 func (c *Compat) TSQueryIndex(ctx context.Context, filterExpr []string) *StringSliceCmd {
-	args := []interface{}{"TS.QUERYINDEX"}
-	for _, f := range filterExpr {
-		args = append(args, f)
-	}
-	cmd := NewStringSliceCmd(ctx, args...)
-	_ = c(ctx, cmd)
-	return cmd
+	cmd := c.client.B().TsQueryindex().Filter(filterExpr...).Build()
+	return newStringSliceCmd(c.client.Do(ctx, cmd))
 }
 
 // TSRevRange - Returns a range of samples from a time-series key in reverse order.
 // For more information - https://redis.io/commands/ts.revrange/
 func (c *Compat) TSRevRange(ctx context.Context, key string, fromTimestamp int, toTimestamp int) *TSTimestampValueSliceCmd {
-	args := []interface{}{"TS.REVRANGE", key, fromTimestamp, toTimestamp}
-	cmd := newTSTimestampValueSliceCmd(ctx, args...)
-	_ = c(ctx, cmd)
-	return cmd
+	cmd := c.client.B().TsRevrange().Key(key).Fromtimestamp(str(fromTimestamp)).Totimestamp(str(toTimestamp)).Build()
+	return newTSTimestampValueSliceCmd(c.client.Do(ctx, cmd))
 }
 
 // TSRevRangeWithArgs - Returns a range of samples from a time-series key in reverse order with additional options.
@@ -4102,62 +4043,6 @@ func (c *Compat) TSRangeWithArgs(ctx context.Context, key string, fromTimestamp 
 	cmd := newTSTimestampValueSliceCmd(ctx, args...)
 	_ = c(ctx, cmd)
 	return cmd
-}
-
-type TSTimestampValueSliceCmd struct {
-	baseCmd
-	val []TSTimestampValue
-}
-
-func newTSTimestampValueSliceCmd(ctx context.Context, args ...interface{}) *TSTimestampValueSliceCmd {
-	return &TSTimestampValueSliceCmd{
-		baseCmd: baseCmd{
-			ctx:  ctx,
-			args: args,
-		},
-	}
-}
-
-func (cmd *TSTimestampValueSliceCmd) String() string {
-	return cmdString(cmd, cmd.val)
-}
-
-func (cmd *TSTimestampValueSliceCmd) SetVal(val []TSTimestampValue) {
-	cmd.val = val
-}
-
-func (cmd *TSTimestampValueSliceCmd) Result() ([]TSTimestampValue, error) {
-	return cmd.val, cmd.err
-}
-
-func (cmd *TSTimestampValueSliceCmd) Val() []TSTimestampValue {
-	return cmd.val
-}
-
-func (cmd *TSTimestampValueSliceCmd) readReply(rd *proto.Reader) (err error) {
-	n, err := rd.ReadArrayLen()
-	if err != nil {
-		return err
-	}
-	cmd.val = make([]TSTimestampValue, n)
-	for i := 0; i < n; i++ {
-		_, _ = rd.ReadArrayLen()
-		timestamp, err := rd.ReadInt()
-		if err != nil {
-			return err
-		}
-		value, err := rd.ReadString()
-		if err != nil {
-			return err
-		}
-		cmd.val[i].Timestamp = timestamp
-		cmd.val[i].Value, err = strconv.ParseFloat(value, 64)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 // TSMRange - Returns a range of samples from multiple time-series keys.
