@@ -3948,54 +3948,81 @@ func (c *Compat) TSRevRange(ctx context.Context, key string, fromTimestamp int, 
 // BucketDuration, BucketTimestamp and Empty.
 // For more information - https://redis.io/commands/ts.revrange/
 func (c *Compat) TSRevRangeWithArgs(ctx context.Context, key string, fromTimestamp int, toTimestamp int, options *TSRevRangeOptions) *TSTimestampValueSliceCmd {
-	args := []interface{}{"TS.REVRANGE", key, fromTimestamp, toTimestamp}
+	_cmd := c.client.B().TsRevrange().Key(key).Fromtimestamp(str(fromTimestamp)).Totimestamp(str(toTimestamp))
 	if options != nil {
 		if options.Latest {
-			args = append(args, "LATEST")
+			_cmd.Latest()
 		}
 		if options.FilterByTS != nil {
-			args = append(args, "FILTER_BY_TS")
-			for _, f := range options.FilterByTS {
-				args = append(args, f)
+			tss := make([]int64, 0, len(options.FilterByTS))
+			for _, ts := range options.FilterByTS {
+				tss = append(tss, int64(ts))
 			}
+			_cmd.FilterByTs(tss...)
 		}
 		if options.FilterByValue != nil {
-			args = append(args, "FILTER_BY_VALUE")
-			for _, f := range options.FilterByValue {
-				args = append(args, f)
+			if len(options.FilterByValue) != 2 {
+				panic(fmt.Sprintf("wrong number of arguments in options.FilterByValue, expect min, max, got %v", options.FilterByValue))
 			}
+			_cmd.FilterByValue(float64(options.FilterByValue[0]), float64(options.FilterByValue[1]))
 		}
 		if options.Count != 0 {
-			args = append(args, "COUNT", options.Count)
+			_cmd.Count(int64(options.Count))
 		}
 		if options.Align != nil {
-			args = append(args, "ALIGN", options.Align)
+			_cmd.Align(str(options.Align))
 		}
 		if options.Aggregator != 0 {
-			args = append(args, "AGGREGATION", options.Aggregator.String())
+			switch options.Aggregator {
+			case Invalid:
+				break
+			case Avg:
+				_cmd.AggregationAvg()
+			case Sum:
+				_cmd.AggregationSum()
+			case Min:
+				_cmd.AggregationMin()
+			case Max:
+				_cmd.AggregationMax()
+			case Range:
+				_cmd.AggregationRange()
+			case Count:
+				_cmd.AggregationCount()
+			case First:
+				_cmd.AggregationFirst()
+			case Last:
+				_cmd.AggregationLast()
+			case StdP:
+				_cmd.AggregationStdP()
+			case StdS:
+				_cmd.AggregationStdS()
+			case VarP:
+				_cmd.AggregationVarP()
+			case VarS:
+				_cmd.AggregationVarS()
+			case Twa:
+				_cmd.AggregationTwa()
+			}
 		}
 		if options.BucketDuration != 0 {
-			args = append(args, options.BucketDuration)
+			(cmds.TsRevrangeAggregationAggregationAvg)(_cmd).Bucketduration(int64(options.BucketDuration))
 		}
 		if options.BucketTimestamp != nil {
-			args = append(args, "BUCKETTIMESTAMP", options.BucketTimestamp)
+			(cmds.TsRevrangeAggregationBucketduration)(_cmd).Buckettimestamp(str(options.BucketTimestamp))
 		}
 		if options.Empty {
-			args = append(args, "EMPTY")
+			(cmds.TsRevrangeAggregationBuckettimestamp)(_cmd).Empty()
 		}
 	}
-	cmd := newTSTimestampValueSliceCmd(ctx, args...)
-	_ = c(ctx, cmd)
-	return cmd
+	cmd := cmds.TsRevrangeTotimestamp(_cmd).Build()
+	return newTSTimestampValueSliceCmd(c.client.Do(ctx, cmd))
 }
 
 // TSRange - Returns a range of samples from a time-series key.
 // For more information - https://redis.io/commands/ts.range/
 func (c *Compat) TSRange(ctx context.Context, key string, fromTimestamp int, toTimestamp int) *TSTimestampValueSliceCmd {
-	args := []interface{}{"TS.RANGE", key, fromTimestamp, toTimestamp}
-	cmd := newTSTimestampValueSliceCmd(ctx, args...)
-	_ = c(ctx, cmd)
-	return cmd
+	cmd := c.client.B().TsRange().Key(key).Fromtimestamp(str(fromTimestamp)).Totimestamp(str(toTimestamp)).Build()
+	return newTSTimestampValueSliceCmd(c.client.Do(ctx, cmd))
 }
 
 // TSRangeWithArgs - Returns a range of samples from a time-series key with additional options.
