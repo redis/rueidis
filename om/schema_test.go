@@ -26,6 +26,12 @@ type s4 struct {
 	private int64
 }
 
+type s5 struct {
+	A string `redis:",key"`
+	B int64  `redis:",ver"`
+	C int64  `redis:",exat"`
+}
+
 func TestSchema(t *testing.T) {
 	t.Run("non struct", func(t *testing.T) {
 		if v := recovered(func() {
@@ -59,6 +65,13 @@ func TestSchema(t *testing.T) {
 		if v := recovered(func() {
 			newSchema(reflect.TypeOf(s4{}))
 		}); !strings.Contains(v, "should have one field with `redis:\",ver\"` tag") {
+			t.Fatalf("unexpected msg %v", v)
+		}
+	})
+	t.Run("non time.Time `redis:\",exat\"`", func(t *testing.T) {
+		if v := recovered(func() {
+			newSchema(reflect.TypeOf(s5{}))
+		}); !strings.Contains(v, "should be a time.Time") {
 			t.Fatalf("unexpected msg %v", v)
 		}
 	})

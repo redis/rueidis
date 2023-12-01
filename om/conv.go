@@ -1,6 +1,7 @@
 package om
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -50,7 +51,11 @@ func (r hashConv) ToHash() (fields map[string]string) {
 	fields = make(map[string]string, len(r.factory.fields))
 	for k, f := range r.factory.fields {
 		ref := r.entity.Field(f.idx)
-		if v, ok := f.conv.ValueToString(ref); ok {
+		if f.conv.ValueToString == nil {
+			if bs, err := json.Marshal(ref.Interface()); err == nil {
+				fields[k] = rueidis.BinaryString(bs)
+			}
+		} else if v, ok := f.conv.ValueToString(ref); ok {
 			fields[k] = v
 		}
 	}
@@ -63,11 +68,17 @@ func (r hashConv) FromHash(fields map[string]string) error {
 		if !ok {
 			continue
 		}
-		val, err := f.conv.StringToValue(v)
-		if err != nil {
-			return err
+		if f.conv.StringToValue == nil {
+			if err := json.Unmarshal(unsafe.Slice(unsafe.StringData(v), len(v)), r.entity.Field(f.idx).Addr().Interface()); err != nil {
+				return err
+			}
+		} else {
+			val, err := f.conv.StringToValue(v)
+			if err != nil {
+				return err
+			}
+			r.entity.Field(f.idx).Set(val)
 		}
-		r.entity.Field(f.idx).Set(val)
 	}
 	return nil
 }
@@ -124,6 +135,10 @@ var converters = struct {
 				return reflect.ValueOf(&b), nil
 			},
 		},
+		reflect.Struct: {
+			ValueToString: nil,
+			StringToValue: nil,
+		},
 	},
 	val: map[reflect.Kind]converter{
 		reflect.Int64: {
@@ -158,6 +173,10 @@ var converters = struct {
 				return reflect.ValueOf(b), nil
 			},
 		},
+		reflect.Struct: {
+			ValueToString: nil,
+			StringToValue: nil,
+		},
 	},
 	slice: map[reflect.Kind]converter{
 		reflect.Uint8: {
@@ -186,6 +205,10 @@ var converters = struct {
 			StringToValue: func(value string) (reflect.Value, error) {
 				return reflect.ValueOf(rueidis.ToVector64(value)), nil
 			},
+		},
+		reflect.Struct: {
+			ValueToString: nil,
+			StringToValue: nil,
 		},
 	},
 }
