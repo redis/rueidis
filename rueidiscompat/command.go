@@ -3318,6 +3318,7 @@ type MapStringInterfaceCmd struct {
 
 func newMapStringInterfaceCmd(res rueidis.RedisResult) *MapStringInterfaceCmd {
 	panic("todo: implementation")
+	return nil
 	// arr, err := res.ToArray()
 	// if err != nil {
 	// 	return &MapStringInterfaceCmd{err: err}
@@ -3348,59 +3349,22 @@ func newMapStringInterfaceCmd(res rueidis.RedisResult) *MapStringInterfaceCmd {
 }
 
 type TSTimestampValueSliceCmd struct {
-	baseCmd
-	val []TSTimestampValue
+	baseCmd[[]TSTimestampValue]
 }
 
 func newTSTimestampValueSliceCmd(res rueidis.RedisResult) *TSTimestampValueSliceCmd {
-	return &TSTimestampValueSliceCmd{
-		baseCmd: baseCmd{
-			ctx:  ctx,
-			args: args,
-		},
-	}
+	panic("todo: implementation")
+
+	return &TSTimestampValueSliceCmd{}
 }
 
-func (cmd *TSTimestampValueSliceCmd) String() string {
-	return cmdString(cmd, cmd.val)
+type MapStringSliceInterfaceCmd struct {
+	baseCmd[map[string][]any]
 }
 
-func (cmd *TSTimestampValueSliceCmd) SetVal(val []TSTimestampValue) {
-	cmd.val = val
-}
-
-func (cmd *TSTimestampValueSliceCmd) Result() ([]TSTimestampValue, error) {
-	return cmd.val, cmd.err
-}
-
-func (cmd *TSTimestampValueSliceCmd) Val() []TSTimestampValue {
-	return cmd.val
-}
-
-func (cmd *TSTimestampValueSliceCmd) readReply(rd *proto.Reader) (err error) {
-	n, err := rd.ReadArrayLen()
-	if err != nil {
-		return err
-	}
-	cmd.val = make([]TSTimestampValue, n)
-	for i := 0; i < n; i++ {
-		_, _ = rd.ReadArrayLen()
-		timestamp, err := rd.ReadInt()
-		if err != nil {
-			return err
-		}
-		value, err := rd.ReadString()
-		if err != nil {
-			return err
-		}
-		cmd.val[i].Timestamp = timestamp
-		cmd.val[i].Value, err = strconv.ParseFloat(value, 64)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+func newMapStringSliceInterfaceCmd(res rueidis.RedisResult) *MapStringSliceInterfaceCmd {
+	panic("todo: implementation")
+	return &MapStringSliceInterfaceCmd{}
 }
 
 type TSRangeOptions struct {
