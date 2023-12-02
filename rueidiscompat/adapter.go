@@ -4196,7 +4196,7 @@ func (c *Compat) TSMRangeWithArgs(ctx context.Context, fromTimestamp int, toTime
 			cmds.TsMrangeFilter(_cmd).Groupby(str(options.GroupByLabel), "REDUCE", str(options.Reducer))
 		}
 	}
-	cmd := (cmds.TsRangeTotimestamp)(_cmd).Build()
+	cmd := (cmds.TsMrangeFilter)(_cmd).Build()
 	return newMapStringSliceInterfaceCmd(c.client.Do(ctx, cmd))
 }
 
@@ -4205,14 +4205,6 @@ func (c *Compat) TSMRangeWithArgs(ctx context.Context, fromTimestamp int, toTime
 func (c *Compat) TSMRevRange(ctx context.Context, fromTimestamp int, toTimestamp int, filterExpr []string) *MapStringSliceInterfaceCmd {
 	cmd := c.client.B().TsMrange().Fromtimestamp(str(fromTimestamp)).Totimestamp(str(toTimestamp)).Filter(filterExpr...).Build()
 	return newMapStringSliceInterfaceCmd(c.client.Do(ctx, cmd))
-
-	args := []interface{}{"TS.MREVRANGE", fromTimestamp, toTimestamp, "FILTER"}
-	for _, f := range filterExpr {
-		args = append(args, f)
-	}
-	cmd := NewMapStringSliceInterfaceCmd(ctx, args...)
-	_ = c(ctx, cmd)
-	return cmd
 }
 
 // TSMRevRangeWithArgs - Returns a range of samples from multiple time-series keys in reverse order with additional options.
@@ -4222,76 +4214,96 @@ func (c *Compat) TSMRevRange(ctx context.Context, fromTimestamp int, toTimestamp
 // Empty, GroupByLabel and Reducer.
 // For more information - https://redis.io/commands/ts.mrevrange/
 func (c *Compat) TSMRevRangeWithArgs(ctx context.Context, fromTimestamp int, toTimestamp int, filterExpr []string, options *TSMRevRangeOptions) *MapStringSliceInterfaceCmd {
-	args := []interface{}{"TS.MREVRANGE", fromTimestamp, toTimestamp}
+	_cmd := c.client.B().TsMrevrange().Fromtimestamp(str(fromTimestamp)).Totimestamp(str(toTimestamp))
 	if options != nil {
 		if options.Latest {
-			args = append(args, "LATEST")
+			_cmd.Latest()
 		}
 		if options.FilterByTS != nil {
-			args = append(args, "FILTER_BY_TS")
-			for _, f := range options.FilterByTS {
-				args = append(args, f)
+			tss := make([]int64, 0, len(options.FilterByTS))
+			for _, ts := range options.FilterByTS {
+				tss = append(tss, int64(ts))
 			}
+			_cmd.FilterByTs(tss...)
 		}
 		if options.FilterByValue != nil {
-			args = append(args, "FILTER_BY_VALUE")
-			for _, f := range options.FilterByValue {
-				args = append(args, f)
+			if len(options.FilterByValue) != 2 {
+				panic(fmt.Sprintf("wrong number of arguments in options.FilterByValue, expect min, max, got %v", options.FilterByValue))
 			}
+			_cmd.FilterByValue(float64(options.FilterByValue[0]), float64(options.FilterByValue[1]))
 		}
 		if options.WithLabels {
-			args = append(args, "WITHLABELS")
+			_cmd.Withlabels()
 		}
 		if options.SelectedLabels != nil {
-			args = append(args, "SELECTED_LABELS")
-			args = append(args, options.SelectedLabels...)
+			labels := make([]string, 0, len(options.SelectedLabels))
+			for _, l := range options.SelectedLabels {
+				labels = append(labels, str(l))
+			}
+			_cmd.SelectedLabels(labels)
 		}
 		if options.Count != 0 {
-			args = append(args, "COUNT", options.Count)
+			_cmd.Count(int64(options.Count))
 		}
 		if options.Align != nil {
-			args = append(args, "ALIGN", options.Align)
+			_cmd.Align(str(options.Align))
 		}
 		if options.Aggregator != 0 {
-			args = append(args, "AGGREGATION", options.Aggregator.String())
+			switch options.Aggregator {
+			case Invalid:
+				break
+			case Avg:
+				_cmd.AggregationAvg()
+			case Sum:
+				_cmd.AggregationSum()
+			case Min:
+				_cmd.AggregationMin()
+			case Max:
+				_cmd.AggregationMax()
+			case Range:
+				_cmd.AggregationRange()
+			case Count:
+				_cmd.AggregationCount()
+			case First:
+				_cmd.AggregationFirst()
+			case Last:
+				_cmd.AggregationLast()
+			case StdP:
+				_cmd.AggregationStdP()
+			case StdS:
+				_cmd.AggregationStdS()
+			case VarP:
+				_cmd.AggregationVarP()
+			case VarS:
+				_cmd.AggregationVarS()
+			case Twa:
+				_cmd.AggregationTwa()
+			}
 		}
 		if options.BucketDuration != 0 {
-			args = append(args, options.BucketDuration)
+			cmds.TsMrevrangeAggregationAggregationAvg(_cmd).Bucketduration(int64(options.BucketDuration))
 		}
 		if options.BucketTimestamp != nil {
-			args = append(args, "BUCKETTIMESTAMP", options.BucketTimestamp)
+			cmds.TsMrevrangeAggregationBucketduration(_cmd).Buckettimestamp(str(options.BucketTimestamp))
 		}
 		if options.Empty {
-			args = append(args, "EMPTY")
+			cmds.TsMrevrangeAggregationBuckettimestamp(_cmd).Empty()
 		}
-	}
-	args = append(args, "FILTER")
-	for _, f := range filterExpr {
-		args = append(args, f)
-	}
-	if options != nil {
+		cmds.TsMrevrangeTotimestamp(_cmd).Filter(filterExpr...)
 		if options.GroupByLabel != nil {
-			args = append(args, "GROUPBY", options.GroupByLabel)
-		}
-		if options.Reducer != nil {
-			args = append(args, "REDUCE", options.Reducer)
+			// FIXME: Wrong API definition: REDUCE
+			cmds.TsMrevrangeFilter(_cmd).Groupby(str(options.GroupByLabel), "REDUCE", str(options.Reducer))
 		}
 	}
-	cmd := NewMapStringSliceInterfaceCmd(ctx, args...)
-	_ = c(ctx, cmd)
-	return cmd
+	cmd := (cmds.TsMrevrangeFilter)(_cmd).Build()
+	return newMapStringSliceInterfaceCmd(c.client.Do(ctx, cmd))
 }
 
 // TSMGet - Returns the last sample of multiple time-series keys.
 // For more information - https://redis.io/commands/ts.mget/
 func (c *Compat) TSMGet(ctx context.Context, filters []string) *MapStringSliceInterfaceCmd {
-	args := []interface{}{"TS.MGET", "FILTER"}
-	for _, f := range filters {
-		args = append(args, f)
-	}
-	cmd := NewMapStringSliceInterfaceCmd(ctx, args...)
-	_ = c(ctx, cmd)
-	return cmd
+	cmd := c.client.B().TsMget().Filter(filters...).Build()
+	return newMapStringSliceInterfaceCmd(c.client.Do(ctx, cmd))
 }
 
 // TSMGetWithArgs - Returns the last sample of multiple time-series keys with additional options.
@@ -4299,26 +4311,24 @@ func (c *Compat) TSMGet(ctx context.Context, filters []string) *MapStringSliceIn
 // Latest, WithLabels and SelectedLabels.
 // For more information - https://redis.io/commands/ts.mget/
 func (c *Compat) TSMGetWithArgs(ctx context.Context, filters []string, options *TSMGetOptions) *MapStringSliceInterfaceCmd {
-	args := []interface{}{"TS.MGET"}
+	_cmd := c.client.B().TsMget()
 	if options != nil {
 		if options.Latest {
-			args = append(args, "LATEST")
+			_cmd.Latest()
 		}
 		if options.WithLabels {
-			args = append(args, "WITHLABELS")
+			_cmd.Withlabels()
 		}
 		if options.SelectedLabels != nil {
-			args = append(args, "SELECTED_LABELS")
-			args = append(args, options.SelectedLabels...)
+			labels := make([]string, 0, len(options.SelectedLabels))
+			for _, l := range options.SelectedLabels {
+				labels = append(labels, str(l))
+			}
+			_cmd.SelectedLabels(labels)
 		}
 	}
-	args = append(args, "FILTER")
-	for _, f := range filters {
-		args = append(args, f)
-	}
-	cmd := NewMapStringSliceInterfaceCmd(ctx, args...)
-	_ = c(ctx, cmd)
-	return cmd
+	cmd := _cmd.Filter(filters...).Build()
+	return newMapStringSliceInterfaceCmd(c.client.Do(ctx, cmd))
 }
 
 func (c CacheCompat) BitCount(ctx context.Context, key string, bitCount *BitCount) *IntCmd {
