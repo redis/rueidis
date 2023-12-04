@@ -68,7 +68,7 @@ func (r hashConv) FromHash(fields map[string]string) error {
 			continue
 		}
 		if f.conv.StringToValue == nil {
-			if err := json.Unmarshal(unsafe.Slice(unsafe.StringData(v), len(v)), r.entity.Field(f.idx).Addr().Interface()); err != nil {
+			if err := json.Unmarshal([]byte(v), r.entity.Field(f.idx).Addr().Interface()); err != nil {
 				return err
 			}
 		} else {
