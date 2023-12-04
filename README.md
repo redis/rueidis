@@ -460,7 +460,7 @@ module mymodule
 
 go 1.18
 
-require github.com/redis/rueidis v1.0.22-go1.18
+require github.com/redis/rueidis v1.0.23-go1.18
 ```
 
 ## Contributing
