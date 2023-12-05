@@ -3887,7 +3887,7 @@ func (c *Compat) TSGetWithArgs(ctx context.Context, key string, options *TSGetOp
 	if options != nil && options.Latest {
 		_cmd.Latest()
 	}
-	return newTSTimestampValueCmd(c.client.Do(ctx, cmd))
+	return newTSTimestampValueCmd(c.client.Do(ctx, _cmd.Build()))
 }
 
 // TSGet - Gets the last sample of a time-series key.
@@ -3900,7 +3900,7 @@ func (c *Compat) TSGet(ctx context.Context, key string) *TSTimestampValueCmd {
 // TSInfo - Returns information about a time-series key.
 // For more information - https://redis.io/commands/ts.info/
 func (c *Compat) TSInfo(ctx context.Context, key string) *MapStringInterfaceCmd {
-	c.client.B().TsInfo().Key(key).Build()
+	cmd := c.client.B().TsInfo().Key(key).Build()
 	return newMapStringInterfaceCmd(c.client.Do(ctx, cmd))
 }
 
@@ -3911,7 +3911,8 @@ func (c *Compat) TSInfo(ctx context.Context, key string) *MapStringInterfaceCmd 
 func (c *Compat) TSInfoWithArgs(ctx context.Context, key string, options *TSInfoOptions) *MapStringInterfaceCmd {
 	_cmd := c.client.B().TsInfo().Key(key)
 	if options != nil && options.Debug {
-		_cmd.Debug()
+		// FIXME: should not accept arg, just append "DEBUG"
+		_cmd.Debug("DEBUG")
 	}
 	cmd := (cmds.TsInfoKey)(_cmd).Build()
 	return newMapStringInterfaceCmd(c.client.Do(ctx, cmd))

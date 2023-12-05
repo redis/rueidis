@@ -3263,53 +3263,11 @@ type TSTimestampValue struct {
 	Value     float64
 }
 type TSTimestampValueCmd struct {
-	baseCmd
-	val TSTimestampValue
+	baseCmd[TSTimestampValue]
 }
 
 func newTSTimestampValueCmd(res rueidis.RedisResult) *TSTimestampValueCmd {
 	return &TSTimestampValueCmd{}
-}
-
-func (cmd *TSTimestampValueCmd) String() string {
-	return cmdString(cmd, cmd.val)
-}
-
-func (cmd *TSTimestampValueCmd) SetVal(val TSTimestampValue) {
-	cmd.val = val
-}
-
-func (cmd *TSTimestampValueCmd) Result() (TSTimestampValue, error) {
-	return cmd.val, cmd.err
-}
-
-func (cmd *TSTimestampValueCmd) Val() TSTimestampValue {
-	return cmd.val
-}
-
-func (cmd *TSTimestampValueCmd) readReply(rd *proto.Reader) (err error) {
-	n, err := rd.ReadMapLen()
-	if err != nil {
-		return err
-	}
-	cmd.val = TSTimestampValue{}
-	for i := 0; i < n; i++ {
-		timestamp, err := rd.ReadInt()
-		if err != nil {
-			return err
-		}
-		value, err := rd.ReadString()
-		if err != nil {
-			return err
-		}
-		cmd.val.Timestamp = timestamp
-		cmd.val.Value, err = strconv.ParseFloat(value, 64)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 type MapStringInterfaceCmd struct {
@@ -3317,35 +3275,23 @@ type MapStringInterfaceCmd struct {
 }
 
 func newMapStringInterfaceCmd(res rueidis.RedisResult) *MapStringInterfaceCmd {
-	panic("todo: implementation")
-	return nil
-	// arr, err := res.ToArray()
-	// if err != nil {
-	// 	return &MapStringInterfaceCmd{err: err}
-	// }
-	// out := &MapStringInterfaceSliceCmd{val: make([]map[string]any, 0, len(arr))}
-	// for _, ele := range arr {
-	// 	m, err := ele.AsMap()
-	// 	eleMap := make(map[string]any, len(m))
-	// 	if err != nil {
-	// 		out.err = err
-	// 		return out
-	// 	}
-	// 	for k, v := range m {
-	// 		var val any
-	// 		if !v.IsNil() {
-	// 			var err error
-	// 			val, err = v.ToAny()
-	// 			if err != nil {
-	// 				out.err = err
-	// 				return out
-	// 			}
-	// 		}
-	// 		eleMap[k] = val
-	// 	}
-	// 	out.val = append(out.val, eleMap)
-	// }
-	// return out
+	cmd := &MapStringInterfaceCmd{}
+	m, err := res.AsMap()
+	if err != nil {
+		cmd.err = err
+		return cmd
+	}
+	strIntMap := make(map[string]any, len(m))
+	for k, ele := range m {
+		v, err := ele.ToAny()
+		if err != nil {
+			cmd.err = err
+			return cmd
+		}
+		strIntMap[k] = v
+	}
+	cmd.SetVal(strIntMap)
+	return cmd
 }
 
 type TSTimestampValueSliceCmd struct {
@@ -3353,9 +3299,34 @@ type TSTimestampValueSliceCmd struct {
 }
 
 func newTSTimestampValueSliceCmd(res rueidis.RedisResult) *TSTimestampValueSliceCmd {
-	panic("todo: implementation")
-
-	return &TSTimestampValueSliceCmd{}
+	cmd := &TSTimestampValueSliceCmd{}
+	msgSlice, err := res.ToArray()
+	if err != nil {
+		cmd.err = err
+		return cmd
+	}
+	tsValSlice := make([]TSTimestampValue, 0, len(msgSlice))
+	for i := 0; i < len(tsValSlice); i++ {
+		msgArray, err := msgSlice[i].ToArray()
+		if err != nil {
+			cmd.err = err
+			return cmd
+		}
+		tstmp, err := msgArray[0].AsInt64()
+		if err != nil {
+			cmd.err = err
+			return cmd
+		}
+		val, err := msgArray[0].AsFloat64()
+		if err != nil {
+			cmd.err = err
+			return cmd
+		}
+		tsValSlice[i].Timestamp = tstmp
+		tsValSlice[i].Value = val
+	}
+	cmd.SetVal(tsValSlice)
+	return cmd
 }
 
 type MapStringSliceInterfaceCmd struct {
@@ -3363,8 +3334,32 @@ type MapStringSliceInterfaceCmd struct {
 }
 
 func newMapStringSliceInterfaceCmd(res rueidis.RedisResult) *MapStringSliceInterfaceCmd {
-	panic("todo: implementation")
-	return &MapStringSliceInterfaceCmd{}
+	cmd := &MapStringSliceInterfaceCmd{}
+	m, err := res.ToMap()
+	if err != nil {
+		cmd.err = err
+		return cmd
+	}
+	mapStrSliceInt := make(map[string][]any, len(m))
+	for k, entry := range m {
+		val, err := entry.ToArray()
+		if err != nil {
+			cmd.err = err
+			return cmd
+		}
+		anySlice := make([]any, 0, len(val))
+		for _, v := range val {
+			a, err := v.ToAny()
+			if err != nil {
+				cmd.err = err
+				return cmd
+			}
+			anySlice = append(anySlice, a)
+		}
+		mapStrSliceInt[k] = anySlice
+	}
+	cmd.SetVal(mapStrSliceInt)
+	return cmd
 }
 
 type TSRangeOptions struct {

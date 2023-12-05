@@ -58,10 +58,10 @@ func TestAdapter(t *testing.T) {
 var (
 	err             error
 	ctx             context.Context
-	adapterresp2    rueidis.adapter
-	clusterresp2    rueidis.adapter
-	adapterresp3    rueidis.adapter
-	clusterresp3    rueidis.adapter
+	clientresp2     rueidis.Client
+	clusterresp2    rueidis.Client
+	clientresp3     rueidis.Client
+	clusterresp3    rueidis.Client
 	adapterresp2    Cmdable
 	adaptercluster2 Cmdable
 	adapterresp3    Cmdable
@@ -70,41 +70,41 @@ var (
 
 var _ = BeforeSuite(func() {
 	ctx = context.Background()
-	adapterresp3, err = rueidis.Newadapter(rueidis.adapterOption{
+	clientresp3, err = rueidis.NewClient(rueidis.ClientOption{
 		InitAddress: []string{"127.0.0.1:6378"},
-		adapterName: "rueidis",
+		ClientName:  "rueidis",
 	})
 	Expect(err).NotTo(HaveOccurred())
-	clusterresp3, err = rueidis.Newadapter(rueidis.adapterOption{
+	clusterresp3, err = rueidis.NewClient(rueidis.ClientOption{
 		InitAddress: []string{"127.0.0.1:7010"},
-		adapterName: "rueidis",
+		ClientName:  "rueidis",
 	})
 	Expect(err).NotTo(HaveOccurred())
-	adapterresp3 = NewAdapter(adapterresp3)
+	adapterresp3 = NewAdapter(clientresp3)
 	adaptercluster3 = NewAdapter(clusterresp3)
-	adapterresp2, err = rueidis.Newadapter(rueidis.adapterOption{
+	clientresp2, err = rueidis.NewClient(rueidis.ClientOption{
 		InitAddress:  []string{"127.0.0.1:6356"},
-		adapterName:  "rueidis",
+		ClientName:   "rueidis",
 		DisableCache: true,
 	})
 	Expect(err).NotTo(HaveOccurred())
-	clusterresp2, err = rueidis.Newadapter(rueidis.adapterOption{
+	clusterresp2, err = rueidis.NewClient(rueidis.ClientOption{
 		InitAddress:  []string{"127.0.0.1:7007"},
-		adapterName:  "rueidis",
+		ClientName:   "rueidis",
 		DisableCache: true,
 	})
 	Expect(err).NotTo(HaveOccurred())
-	adapterresp2 = NewAdapter(adapterresp2)
+	adapterresp2 = NewAdapter(clientresp2)
 	adaptercluster2 = NewAdapter(clusterresp2)
 })
 
 var _ = AfterSuite(func() {
 	Expect(adapterresp3.FlushDB(ctx).Err()).NotTo(HaveOccurred())
 	Expect(adapterresp3.Quit(ctx).Err()).NotTo(HaveOccurred())
-	adapterresp3.Close()
+	clientresp3.Close()
 	Expect(adapterresp2.FlushDB(ctx).Err()).NotTo(HaveOccurred())
 	Expect(adapterresp2.Quit(ctx).Err()).NotTo(HaveOccurred())
-	adapterresp2.Close()
+	clientresp2.Close()
 })
 
 var _ = Describe("RESP3 Commands", func() {
@@ -236,31 +236,31 @@ func testAdapter(resp3 bool) {
 		})
 
 		It("should adapterKill", func() {
-			r := adapter.adapterKill(ctx, "1.1.1.1:1111")
+			r := adapter.ClientKill(ctx, "1.1.1.1:1111")
 			Expect(r.Err()).To(MatchError("No such adapter"))
 			Expect(r.Val()).To(Equal(""))
 		})
 
 		It("should adapterKillByFilter", func() {
-			r := adapter.adapterKillByFilter(ctx, "ID", "12039487")
+			r := adapter.ClientKillByFilter(ctx, "ID", "12039487")
 			Expect(r.Err()).To(BeNil())
 			Expect(r.Val()).To(Equal(int64(0)))
 		})
 
-		It("should adapterList", func() {
-			r := adapter.adapterList(ctx)
+		It("should ClientList", func() {
+			r := adapter.ClientList(ctx)
 			Expect(r.Err()).To(BeNil())
 			Expect(r.Val()).NotTo(Equal(""))
 		})
 
-		It("should adapterID", func() {
-			err := adapter.adapterID(ctx).Err()
+		It("should ClientID", func() {
+			err := adapter.ClientID(ctx).Err()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(adapter.adapterID(ctx).Val()).To(BeNumerically(">=", 0))
+			Expect(adapter.ClientID(ctx).Val()).To(BeNumerically(">=", 0))
 		})
 
-		It("should adapterGetName", func() {
-			r := adapter.adapterGetName(ctx)
+		It("should ClientGetName", func() {
+			r := adapter.ClientGetName(ctx)
 			Expect(r.Err()).NotTo(HaveOccurred())
 			Expect(r.Val()).To(Equal("rueidis"))
 		})
@@ -6526,26 +6526,26 @@ func testAdapterCache(resp3 bool) {
 	})
 
 	Describe("adapter", func() {
-		It("should adapterUnblock", func() {
-			id := adapter.adapterID(ctx).Val()
-			r, err := adapter.adapterUnblock(ctx, id).Result()
+		It("should ClientUnblock", func() {
+			id := adapter.ClientID(ctx).Val()
+			r, err := adapter.ClientUnblock(ctx, id).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(r).To(Equal(int64(0)))
 		})
 
-		It("should adapterUnblockWithError", func() {
-			id := adapter.adapterID(ctx).Val()
-			r, err := adapter.adapterUnblockWithError(ctx, id).Result()
+		It("should ClientUnblockWithError", func() {
+			id := adapter.ClientID(ctx).Val()
+			r, err := adapter.ClientUnblockWithError(ctx, id).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(r).To(Equal(int64(0)))
 		})
 
-		It("adapterPause", func() {
-			Expect(adapter.adapterPause(ctx, time.Second).Err()).NotTo(HaveOccurred())
+		It("ClientPause", func() {
+			Expect(adapter.ClientPause(ctx, time.Second).Err()).NotTo(HaveOccurred())
 		})
 
-		It("adapterUnpause", func() {
-			Expect(adapter.adapterUnpause(ctx).Err()).NotTo(HaveOccurred())
+		It("ClientUnpause", func() {
+			Expect(adapter.ClientUnpause(ctx).Err()).NotTo(HaveOccurred())
 		})
 	})
 
@@ -9679,7 +9679,7 @@ func testAdapterCache(resp3 bool) {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(resultInfo["labels"].(map[interface{}]interface{})["Time"]).To(BeEquivalentTo("Series"))
 			Expect(resultInfo["retentionTime"]).To(BeEquivalentTo(10))
-			Expect(resultInfo["duplicatePolicy"]).To(BeEquivalentTo(Nil))
+			Expect(resultInfo["duplicatePolicy"]).To(BeEquivalentTo(BeNil()))
 			opt = &TSAlterOptions{DuplicatePolicy: "min"}
 			resultAlter, err = adapter.TSAlter(ctx, "1", opt).Result()
 			Expect(err).NotTo(HaveOccurred())
