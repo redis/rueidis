@@ -1865,7 +1865,7 @@ func (cmd *XInfoConsumersCmd) Result() ([]XInfoConsumer, error) {
 
 // Z represents sorted set member.
 type Z struct {
-	Member any
+	Member string
 	Score  float64
 }
 

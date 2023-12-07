@@ -1905,7 +1905,7 @@ func (c *Compat) zAddArgs(ctx context.Context, key string, incr bool, args ZAddA
 		cmd = cmd.Args("INCR")
 	}
 	for _, v := range args.Members {
-		cmd = cmd.Args(strconv.FormatFloat(v.Score, 'f', -1, 64), str(v.Member))
+		cmd = cmd.Args(strconv.FormatFloat(v.Score, 'f', -1, 64), v.Member)
 	}
 	resp := c.client.Do(ctx, cmd.Build())
 	return resp
