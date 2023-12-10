@@ -125,7 +125,7 @@ type ClientOption struct {
 
 	// PipelineMultiplex determines how many tcp connections used to pipeline commands to one redis instance.
 	// The default for single and sentinel clients is 2, which means 4 connections (2^2).
-	// For cluster client, PipelineMultiplex doesn't have any effect.
+	// The default for cluster clients is 0, which means 1 connection (2^0).
 	PipelineMultiplex int
 
 	// ConnWriteTimeout is applied net.Conn.SetWriteDeadline and periodic PING to redis
@@ -317,11 +317,8 @@ func NewClient(option ClientOption) (client Client, err error) {
 		option.PipelineMultiplex = singleClientMultiplex(option.PipelineMultiplex)
 		return newSentinelClient(&option, makeConn)
 	}
-	pmbk := option.PipelineMultiplex
-	option.PipelineMultiplex = 0 // PipelineMultiplex is meaningless for cluster client
-
 	if option.ForceSingleClient {
-		option.PipelineMultiplex = singleClientMultiplex(pmbk)
+		option.PipelineMultiplex = singleClientMultiplex(option.PipelineMultiplex)
 		return newSingleClient(&option, nil, makeConn)
 	}
 	if client, err = newClusterClient(&option, makeConn); err != nil {
@@ -329,7 +326,7 @@ func NewClient(option ClientOption) (client Client, err error) {
 			return nil, err
 		}
 		if len(option.InitAddress) == 1 && (err.Error() == redisErrMsgCommandNotAllow || strings.Contains(strings.ToUpper(err.Error()), "CLUSTER")) {
-			option.PipelineMultiplex = singleClientMultiplex(pmbk)
+			option.PipelineMultiplex = singleClientMultiplex(option.PipelineMultiplex)
 			client, err = newSingleClient(&option, client.(*clusterClient).single(), makeConn)
 		} else {
 			client.Close()
