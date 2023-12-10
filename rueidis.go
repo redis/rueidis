@@ -125,7 +125,7 @@ type ClientOption struct {
 
 	// PipelineMultiplex determines how many tcp connections used to pipeline commands to one redis instance.
 	// The default for single and sentinel clients is 2, which means 4 connections (2^2).
-	// For cluster client, PipelineMultiplex doesn't have any effect.
+	// The default for cluster clients is 0, which means 1 connection (2^0).
 	PipelineMultiplex int
 
 	// ConnWriteTimeout is applied net.Conn.SetWriteDeadline and periodic PING to redis
