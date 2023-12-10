@@ -3267,7 +3267,32 @@ type TSTimestampValueCmd struct {
 }
 
 func newTSTimestampValueCmd(res rueidis.RedisResult) *TSTimestampValueCmd {
-	return &TSTimestampValueCmd{}
+	cmd := &TSTimestampValueCmd{}
+	val := TSTimestampValue{}
+	if err := res.Error(); err != nil {
+		cmd.err = err
+		return cmd
+	}
+	arr, err := res.ToArray()
+	if err != nil {
+		cmd.err = err
+		return cmd
+	}
+	if len(arr) != 2 {
+		panic(fmt.Sprintf("wrong len of array reply, should be 2, got %v", len(arr)))
+	}
+	val.Timestamp, err = arr[0].AsInt64()
+	if err != nil {
+		cmd.err = err
+		return cmd
+	}
+	val.Value, err = arr[1].AsFloat64()
+	if err != nil {
+		cmd.err = err
+		return cmd
+	}
+	cmd.SetVal(val)
+	return cmd
 }
 
 type MapStringInterfaceCmd struct {
