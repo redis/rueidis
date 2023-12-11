@@ -3593,18 +3593,14 @@ func (c *Compat) TSAddWithArgs(ctx context.Context, key string, timestamp interf
 			panic(fmt.Sprintf("invalid duplicate policy, want one of [BLOCK|FIRST|LAST|MIN|MAX|SUM], got %v", options.DuplicatePolicy))
 		}
 	}
-	dup := (cmds.TsAddOnDuplicateBlock)(_cmd)
-	var labels cmds.TsAddLabels
-	var cmd cmds.Completed
 	if options.Labels != nil {
-		labels = dup.Labels()
+		labels := (cmds.TsAddOnDuplicateBlock)(_cmd).Labels()
 		for k, v := range options.Labels {
 			labels.Labels(k, v)
 		}
-		cmd = labels.Build()
-	} else {
-		cmd = dup.Build()
+		_cmd = cmds.TsAddValue(labels)
 	}
+	cmd := _cmd.Build()
 	return newIntCmd(c.client.Do(ctx, cmd))
 }
 
@@ -3650,16 +3646,15 @@ func (c *Compat) TSCreateWithArgs(ctx context.Context, key string, options *TSOp
 			panic(fmt.Sprintf("invalid duplicate policy, want one of [BLOCK|FIRST|LAST|MIN|MAX|SUM], got %v", options.DuplicatePolicy))
 		}
 	}
-	var cmd cmds.Completed
+	// var cmd cmds.Completed
 	if options.Labels != nil {
 		labels := _cmd.Labels()
 		for k, v := range options.Labels {
 			labels.Labels(k, v)
 		}
-		cmd = labels.Build()
-	} else {
-		cmd = _cmd.Build()
+		_cmd = cmds.TsCreateKey(labels)
 	}
+	cmd := (cmds.TsCreateKey)(_cmd).Build()
 	return newStatusCmd(c.client.Do(ctx, cmd))
 }
 
@@ -3669,7 +3664,6 @@ func (c *Compat) TSCreateWithArgs(ctx context.Context, key string, options *TSOp
 // For more information - https://redis.io/commands/ts.alter/
 func (c *Compat) TSAlter(ctx context.Context, key string, options *TSAlterOptions) *StatusCmd {
 	_cmd := c.client.B().TsAlter().Key(key)
-	var cmd cmds.Completed
 	if options != nil {
 		if options.Retention != 0 {
 			_cmd.Retention(int64(options.Retention))
@@ -3695,17 +3689,15 @@ func (c *Compat) TSAlter(ctx context.Context, key string, options *TSAlterOption
 				panic(fmt.Sprintf("invalid duplicate policy, want one of [BLOCK|FIRST|LAST|MIN|MAX|SUM], got %v", options.DuplicatePolicy))
 			}
 		}
-		var labels cmds.TsAlterLabels
 		if options.Labels != nil {
-			labels = _cmd.Labels()
+			labels := _cmd.Labels()
 			for label, value := range options.Labels {
 				labels.Labels(label, value)
 			}
+			_cmd = cmds.TsAlterKey(labels)
 		}
-		cmd = labels.Build()
-	} else {
-		cmd = _cmd.Build()
 	}
+	cmd := _cmd.Build()
 	return newStatusCmd(c.client.Do(ctx, cmd))
 }
 
