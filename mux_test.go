@@ -78,7 +78,9 @@ func TestNewMux(t *testing.T) {
 			})
 		mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
 			ReplyString("OK")
-		mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+		mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME).
+			ReplyError("UNKNOWN COMMAND")
+		mock.Expect("CLIENT", "SETINFO", "LIB-VER", LIB_VER).
 			ReplyError("UNKNOWN COMMAND")
 		mock.Expect("PING").ReplyString("OK")
 		mock.Close()
