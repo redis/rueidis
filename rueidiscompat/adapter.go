@@ -3915,7 +3915,15 @@ func (c *Compat) TSInfoWithArgs(ctx context.Context, key string, options *TSInfo
 func (c *Compat) TSMAdd(ctx context.Context, ktvSlices [][]interface{}) *IntSliceCmd {
 	_cmd := c.client.B().TsMadd().KeyTimestampValue()
 	for _, ktv := range ktvSlices {
-		_cmd.KeyTimestampValue(str(ktv[0]), ktv[1].(int64), ktv[2].(float64))
+		tstmp, err := toInt64(int64(ktv[1].(int)))
+		if err != nil {
+			panic(err)
+		}
+		val, err := toFloat64(int64(ktv[2].(int)))
+		if err != nil {
+			panic(err)
+		}
+		_cmd.KeyTimestampValue(str(ktv[0]), tstmp, val)
 	}
 	cmd := (cmds.TsMaddKeyTimestampValue)(_cmd).Build()
 	return newIntSliceCmd(c.client.Do(ctx, cmd))
