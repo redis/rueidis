@@ -9679,7 +9679,7 @@ func testAdapterCache(resp3 bool) {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(resultInfo["labels"].(map[interface{}]interface{})["Time"]).To(BeEquivalentTo("Series"))
 			Expect(resultInfo["retentionTime"]).To(BeEquivalentTo(10))
-			Expect(resultInfo["duplicatePolicy"]).To(BeEquivalentTo(BeNil()))
+			Expect(resultInfo["duplicatePolicy"]).To(BeEquivalentTo(rueidis.Nil))
 			opt = &TSAlterOptions{DuplicatePolicy: "min"}
 			resultAlter, err = adapter.TSAlter(ctx, "1", opt).Result()
 			Expect(err).NotTo(HaveOccurred())

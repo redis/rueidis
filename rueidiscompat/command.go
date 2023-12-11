@@ -3308,8 +3308,6 @@ func newMapStringInterfaceCmd(res rueidis.RedisResult) *MapStringInterfaceCmd {
 	}
 	strIntMap := make(map[string]any, len(m))
 	for k, ele := range m {
-		fmt.Println("k: ", k)
-		fmt.Printf("ele: %#v\n", ele)
 		var v any
 		var err error
 		if !ele.IsNil() {
@@ -3329,8 +3327,10 @@ func newMapStringInterfaceCmd(res rueidis.RedisResult) *MapStringInterfaceCmd {
 				}
 				v = any(iFaceMap)
 			}
-			strIntMap[k] = v
+		} else {
+			v = rueidis.Nil
 		}
+		strIntMap[k] = v
 	}
 	cmd.SetVal(strIntMap)
 	return cmd
