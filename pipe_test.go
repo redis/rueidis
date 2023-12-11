@@ -217,7 +217,7 @@ func TestNewPipe(t *testing.T) {
 			Password:      "pa",
 			ClientName:    "cn",
 			ClientNoEvict: true,
-			ClientSetInfo: []string{"LIB-NAME", "libname", "LIB-VER", "1"},
+			ClientSetInfo: []string{"libname", "1"},
 			ClientNoTouch: true,
 		})
 		if err != nil {
@@ -253,7 +253,7 @@ func TestNewPipe(t *testing.T) {
 			Password:      "pa",
 			ClientName:    "cn",
 			ClientNoEvict: true,
-			ClientSetInfo: []string{"LIB-NAME", "libname", "LIB-VER", "1"},
+			ClientSetInfo: []string{"libname", "1"},
 			ClientNoTouch: true,
 			AlwaysRESP2:   true,
 			DisableCache:  true,
