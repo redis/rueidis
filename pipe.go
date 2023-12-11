@@ -177,7 +177,7 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 		helloCmd = append(helloCmd, "SETNAME", option.ClientName)
 	}
 
-	init := make([][]string, 0, 4)
+	init := make([][]string, 0, 5)
 	if option.ClientTrackingOptions == nil {
 		init = append(init, helloCmd, []string{"CLIENT", "TRACKING", "ON", "OPTIN"})
 	} else {
@@ -198,10 +198,10 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 	if option.ClientNoEvict {
 		init = append(init, []string{"CLIENT", "NO-EVICT", "ON"})
 	}
-	if option.ClientSetInfo != nil {
-		init = append(init, append([]string{"CLIENT", "SETINFO"}, option.ClientSetInfo...))
+	if len(option.ClientSetInfo) == 2 {
+		init = append(init, []string{"CLIENT", "SETINFO", "LIB-NAME", option.ClientSetInfo[0]}, []string{"CLIENT", "SETINFO", "LIB-VER", option.ClientSetInfo[1]})
 	} else {
-		init = append(init, []string{"CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER})
+		init = append(init, []string{"CLIENT", "SETINFO", "LIB-NAME", LIB_NAME}, []string{"CLIENT", "SETINFO", "LIB-VER", LIB_VER})
 	}
 
 	timeout := option.Dialer.Timeout
@@ -216,7 +216,7 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 	if !r2 && !r2ps {
 		resp := p.DoMulti(ctx, cmds.NewMultiCompleted(init)...)
 		defer resultsp.Put(resp)
-		for i, r := range resp.s[:len(resp.s)-1] { // skip error checking on the last CLIENT SETINFO
+		for i, r := range resp.s[:len(resp.s)-2] { // skip error checking on the last CLIENT SETINFO
 			if i == 0 {
 				p.info, err = r.AsMap()
 			} else {
@@ -279,16 +279,16 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 		if option.ClientNoEvict {
 			init = append(init, []string{"CLIENT", "NO-EVICT", "ON"})
 		}
-		if option.ClientSetInfo != nil {
-			init = append(init, append([]string{"CLIENT", "SETINFO"}, option.ClientSetInfo...))
+		if len(option.ClientSetInfo) == 2 {
+			init = append(init, []string{"CLIENT", "SETINFO", "LIB-NAME", option.ClientSetInfo[0]}, []string{"CLIENT", "SETINFO", "LIB-VER", option.ClientSetInfo[1]})
 		} else {
-			init = append(init, []string{"CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER})
+			init = append(init, []string{"CLIENT", "SETINFO", "LIB-NAME", LIB_NAME}, []string{"CLIENT", "SETINFO", "LIB-VER", LIB_VER})
 		}
 		p.version = 5
 		if len(init) != 0 {
 			resp := p.DoMulti(ctx, cmds.NewMultiCompleted(init)...)
 			defer resultsp.Put(resp)
-			for i, r := range resp.s[:len(resp.s)-1] { // skip error checking on the last CLIENT SETINFO
+			for i, r := range resp.s[:len(resp.s)-2] { // skip error checking on the last CLIENT SETINFO
 				if init[i][0] == "READONLY" {
 					// igore READONLY command error
 					continue

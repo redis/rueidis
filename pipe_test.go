@@ -146,7 +146,9 @@ func setup(t *testing.T, option ClientOption) (*pipe, *redisMock, func(), func()
 			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
 				ReplyString("OK")
 		}
-		mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+		mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME).
+			ReplyError("UNKNOWN COMMAND")
+		mock.Expect("CLIENT", "SETINFO", "LIB-VER", LIB_VER).
 			ReplyError("UNKNOWN COMMAND")
 	}()
 	p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &option)
@@ -205,7 +207,9 @@ func TestNewPipe(t *testing.T) {
 				ReplyString("OK")
 			mock.Expect("CLIENT", "NO-EVICT", "ON").
 				ReplyString("OK")
-			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", "libname", "LIB-VER", "1").
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", "libname").
+				ReplyString("OK")
+			mock.Expect("CLIENT", "SETINFO", "LIB-VER", "1").
 				ReplyString("OK")
 		}()
 		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
@@ -213,7 +217,7 @@ func TestNewPipe(t *testing.T) {
 			Password:      "pa",
 			ClientName:    "cn",
 			ClientNoEvict: true,
-			ClientSetInfo: []string{"LIB-NAME", "libname", "LIB-VER", "1"},
+			ClientSetInfo: []string{"libname", "1"},
 			ClientNoTouch: true,
 		})
 		if err != nil {
@@ -239,7 +243,9 @@ func TestNewPipe(t *testing.T) {
 				ReplyString("OK")
 			mock.Expect("CLIENT", "NO-EVICT", "ON").
 				ReplyString("OK")
-			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", "libname", "LIB-VER", "1").
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", "libname").
+				ReplyString("OK")
+			mock.Expect("CLIENT", "SETINFO", "LIB-VER", "1").
 				ReplyString("OK")
 		}()
 		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
@@ -247,7 +253,7 @@ func TestNewPipe(t *testing.T) {
 			Password:      "pa",
 			ClientName:    "cn",
 			ClientNoEvict: true,
-			ClientSetInfo: []string{"LIB-NAME", "libname", "LIB-VER", "1"},
+			ClientSetInfo: []string{"libname", "1"},
 			ClientNoTouch: true,
 			AlwaysRESP2:   true,
 			DisableCache:  true,
@@ -277,7 +283,9 @@ func TestNewPipe(t *testing.T) {
 				ReplyString("OK")
 			mock.Expect("SELECT", "1").
 				ReplyString("OK")
-			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME).
+				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LIB_VER).
 				ReplyError("UNKNOWN COMMAND")
 		}()
 		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
@@ -311,7 +319,9 @@ func TestNewPipe(t *testing.T) {
 				ReplyString("OK")
 			mock.Expect("SELECT", "1").
 				ReplyString("OK")
-			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME).
+				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LIB_VER).
 				ReplyError("UNKNOWN COMMAND")
 		}()
 		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
@@ -347,7 +357,9 @@ func TestNewPipe(t *testing.T) {
 				})
 			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN", "NOLOOP").
 				ReplyString("OK")
-			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME).
+				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LIB_VER).
 				ReplyError("UNKNOWN COMMAND")
 		}()
 		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
@@ -380,7 +392,9 @@ func TestNewPipe(t *testing.T) {
 				ReplyString("OK")
 			mock.Expect("READONLY").
 				ReplyString("OK")
-			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME).
+				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LIB_VER).
 				ReplyError("UNKNOWN COMMAND")
 		}()
 		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
@@ -417,7 +431,9 @@ func TestNewPipe(t *testing.T) {
 				ReplyString("OK")
 			mock.Expect("READONLY").
 				ReplyError("This instance has cluster support disabled")
-			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME).
+				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LIB_VER).
 				ReplyError("UNKNOWN COMMAND")
 		}()
 		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
@@ -474,7 +490,9 @@ func TestNewRESP2Pipe(t *testing.T) {
 				ReplyError("ERR unknown command `HELLO`")
 			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
 				ReplyError("ERR unknown subcommand or wrong number of arguments for 'TRACKING'. Try CLIENT HELP")
-			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME).
+				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LIB_VER).
 				ReplyError("UNKNOWN COMMAND")
 			mock.Expect("PING").ReplyString("OK")
 		}()
@@ -493,7 +511,9 @@ func TestNewRESP2Pipe(t *testing.T) {
 				ReplyError("ERR unknown command `HELLO`")
 			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
 				ReplyString("OK")
-			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME).
+				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LIB_VER).
 				ReplyError("UNKNOWN COMMAND")
 			mock.Expect("PING").ReplyString("OK")
 		}()
@@ -515,7 +535,9 @@ func TestNewRESP2Pipe(t *testing.T) {
 					{typ: '+', string: "proto"},
 					{typ: ':', integer: 2},
 				}})
-			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME).
+				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LIB_VER).
 				ReplyError("UNKNOWN COMMAND")
 		}()
 		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
@@ -541,7 +563,9 @@ func TestNewRESP2Pipe(t *testing.T) {
 				ReplyError("ERR unknown command `HELLO`")
 			mock.Expect("SELECT", "1").
 				ReplyError("ERR ACL")
-			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME).
+				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LIB_VER).
 				ReplyError("UNKNOWN COMMAND")
 			mock.Expect("AUTH", "pa").
 				ReplyString("OK")
@@ -549,7 +573,9 @@ func TestNewRESP2Pipe(t *testing.T) {
 				ReplyString("OK")
 			mock.Expect("SELECT", "1").
 				ReplyString("OK")
-			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME).
+				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LIB_VER).
 				ReplyError("UNKNOWN COMMAND")
 		}()
 		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
@@ -578,7 +604,9 @@ func TestNewRESP2Pipe(t *testing.T) {
 				ReplyError("ERR unknown command `HELLO`")
 			mock.Expect("SELECT", "1").
 				ReplyError("ERR ACL")
-			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME).
+				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LIB_VER).
 				ReplyError("UNKNOWN COMMAND")
 			mock.Expect("AUTH", "ua", "pa").
 				ReplyString("OK")
@@ -586,7 +614,9 @@ func TestNewRESP2Pipe(t *testing.T) {
 				ReplyString("OK")
 			mock.Expect("SELECT", "1").
 				ReplyString("OK")
-			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME).
+				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LIB_VER).
 				ReplyError("UNKNOWN COMMAND")
 		}()
 		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
@@ -618,7 +648,9 @@ func TestNewRESP2Pipe(t *testing.T) {
 				ReplyError("ERR ACL")
 			mock.Expect("READONLY").
 				ReplyError("ERR ACL")
-			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME).
+				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LIB_VER).
 				ReplyError("UNKNOWN COMMAND")
 			mock.Expect("AUTH", "pa").
 				ReplyString("OK")
@@ -628,7 +660,9 @@ func TestNewRESP2Pipe(t *testing.T) {
 				ReplyString("OK")
 			mock.Expect("READONLY").
 				ReplyString("OK")
-			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME).
+				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LIB_VER).
 				ReplyError("UNKNOWN COMMAND")
 		}()
 		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
@@ -660,7 +694,9 @@ func TestNewRESP2Pipe(t *testing.T) {
 				ReplyError("ERR ACL")
 			mock.Expect("READONLY").
 				ReplyError("ERR ACL")
-			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME).
+				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LIB_VER).
 				ReplyError("UNKNOWN COMMAND")
 			mock.Expect("AUTH", "pa").
 				ReplyString("OK")
@@ -670,7 +706,9 @@ func TestNewRESP2Pipe(t *testing.T) {
 				ReplyString("OK")
 			mock.Expect("READONLY").
 				ReplyError("This instance has cluster support disabled")
-			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME).
+				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LIB_VER).
 				ReplyError("UNKNOWN COMMAND")
 		}()
 		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
@@ -700,7 +738,9 @@ func TestNewRESP2Pipe(t *testing.T) {
 				ReplyError("ERR unknown command `HELLO`")
 			mock.Expect("SELECT", "1").
 				ReplyError("ERR ACL")
-			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME).
+				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LIB_VER).
 				ReplyError("UNKNOWN COMMAND")
 			n1.Close()
 			n2.Close()

@@ -77,7 +77,9 @@ func TestNewClusterClient(t *testing.T) {
 			return
 		}
 		slots, _ := slotsResp.ToMessage()
-		mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+		mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME).
+			ReplyError("UNKNOWN COMMAND")
+		mock.Expect("CLIENT", "SETINFO", "LIB-VER", LIB_VER).
 			ReplyError("UNKNOWN COMMAND")
 		mock.Expect("CLUSTER", "SLOTS").Reply(slots)
 		mock.Close()
@@ -112,7 +114,9 @@ func TestNewClusterClientError(t *testing.T) {
 			if err != nil {
 				return
 			}
-			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME).
+				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LIB_VER).
 				ReplyError("UNKNOWN COMMAND")
 			mock.Expect("CLUSTER", "SLOTS").Reply(RedisMessage{typ: '-', string: "other error"})
 			mock.Expect("PING").ReplyString("OK")
@@ -167,7 +171,9 @@ func TestFallBackSingleClient(t *testing.T) {
 		if err != nil {
 			return
 		}
-		mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+		mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME).
+			ReplyError("UNKNOWN COMMAND")
+		mock.Expect("CLIENT", "SETINFO", "LIB-VER", LIB_VER).
 			ReplyError("UNKNOWN COMMAND")
 		mock.Expect("CLUSTER", "SLOTS").Reply(RedisMessage{typ: '-', string: "ERR This instance has cluster support disabled"})
 		mock.Expect("PING").ReplyString("OK")
@@ -202,7 +208,9 @@ func TestForceSingleClient(t *testing.T) {
 		if err != nil {
 			return
 		}
-		mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+		mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME).
+			ReplyError("UNKNOWN COMMAND")
+		mock.Expect("CLIENT", "SETINFO", "LIB-VER", LIB_VER).
 			ReplyError("UNKNOWN COMMAND")
 		mock.Expect("PING").ReplyString("OK")
 		mock.Close()
@@ -282,7 +290,9 @@ func TestTLSClient(t *testing.T) {
 		if err != nil {
 			return
 		}
-		mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME, "LIB-VER", LIB_VER).
+		mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LIB_NAME).
+			ReplyError("UNKNOWN COMMAND")
+		mock.Expect("CLIENT", "SETINFO", "LIB-VER", LIB_VER).
 			ReplyError("UNKNOWN COMMAND")
 		mock.Expect("CLUSTER", "SLOTS").Reply(RedisMessage{typ: '-', string: "ERR This instance has cluster support disabled"})
 		mock.Expect("PING").ReplyString("OK")

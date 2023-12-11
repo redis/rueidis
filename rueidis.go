@@ -88,7 +88,8 @@ type ClientOption struct {
 	// support rotating credentials
 	AuthCredentialsFn func(AuthCredentialsContext) (AuthCredentials, error)
 
-	// ClientSetInfo will assign various info attributes to the current connection
+	// ClientSetInfo will assign various info attributes to the current connection.
+	// Note that ClientSetInfo should have exactly 2 values, the lib name and the lib version respectively.
 	ClientSetInfo []string
 
 	// InitAddress point to redis nodes.
