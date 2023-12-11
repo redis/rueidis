@@ -3577,17 +3577,17 @@ func (c *Compat) TSAddWithArgs(ctx context.Context, key string, timestamp interf
 	}
 	if options.DuplicatePolicy != "" {
 		switch options.DuplicatePolicy {
-		case "BLOCK":
+		case "BLOCK", "block":
 			_cmd.OnDuplicateBlock()
-		case "FIRST":
+		case "FIRST", "first":
 			_cmd.OnDuplicateFirst()
-		case "LAST":
+		case "LAST", "last":
 			_cmd.OnDuplicateLast()
-		case "MIN":
+		case "MIN", "min":
 			_cmd.OnDuplicateMin()
-		case "MAX":
+		case "MAX", "max":
 			_cmd.OnDuplicateMax()
-		case "SUM":
+		case "SUM", "sum":
 			_cmd.OnDuplicateSum()
 		default:
 			panic(fmt.Sprintf("invalid duplicate policy, want one of [BLOCK|FIRST|LAST|MIN|MAX|SUM], got %v", options.DuplicatePolicy))
@@ -3630,17 +3630,17 @@ func (c *Compat) TSCreateWithArgs(ctx context.Context, key string, options *TSOp
 	}
 	if options.DuplicatePolicy != "" {
 		switch options.DuplicatePolicy {
-		case "BLOCK":
+		case "BLOCK", "block":
 			_cmd.DuplicatePolicyBlock()
-		case "FIRST":
+		case "FIRST", "first":
 			_cmd.DuplicatePolicyFirst()
-		case "LAST":
+		case "LAST", "last":
 			_cmd.DuplicatePolicyLast()
-		case "MIN":
+		case "MIN", "min":
 			_cmd.DuplicatePolicyMin()
-		case "MAX":
+		case "MAX", "max":
 			_cmd.DuplicatePolicyMax()
-		case "SUM":
+		case "SUM", "sum":
 			_cmd.DuplicatePolicySum()
 		default:
 			panic(fmt.Sprintf("invalid duplicate policy, want one of [BLOCK|FIRST|LAST|MIN|MAX|SUM], got %v", options.DuplicatePolicy))
@@ -3673,17 +3673,17 @@ func (c *Compat) TSAlter(ctx context.Context, key string, options *TSAlterOption
 		}
 		if options.DuplicatePolicy != "" {
 			switch options.DuplicatePolicy {
-			case "BLOCK":
+			case "BLOCK", "block":
 				_cmd.DuplicatePolicyBlock()
-			case "FIRST":
+			case "FIRST", "first":
 				_cmd.DuplicatePolicyFirst()
-			case "LAST":
+			case "LAST", "last":
 				_cmd.DuplicatePolicyLast()
-			case "MIN":
+			case "MIN", "min":
 				_cmd.DuplicatePolicyMin()
-			case "MAX":
+			case "MAX", "max":
 				_cmd.DuplicatePolicyMax()
-			case "SUM":
+			case "SUM", "sum":
 				_cmd.DuplicatePolicySum()
 			default:
 				panic(fmt.Sprintf("invalid duplicate policy, want one of [BLOCK|FIRST|LAST|MIN|MAX|SUM], got %v", options.DuplicatePolicy))
