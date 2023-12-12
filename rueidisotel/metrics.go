@@ -159,10 +159,5 @@ func (t *connTracker) Close() error {
 		t.conns.Add(context.Background(), -1)
 	}
 
-	err := t.Conn.Close()
-
-	if err != nil {
-		return err
-	}
-	return nil
+	return t.Conn.Close()
 }
