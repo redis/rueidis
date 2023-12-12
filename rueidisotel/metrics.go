@@ -4,7 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"net"
-	"sync"
+	"sync/atomic"
 	"time"
 
 	"go.opentelemetry.io/otel"
@@ -142,6 +142,7 @@ func trackDialing(
 		return &connTracker{
 			Conn:  conn,
 			conns: conns,
+			once:  0,
 		}, nil
 	}
 }
@@ -149,14 +150,16 @@ func trackDialing(
 type connTracker struct {
 	net.Conn
 	conns metric.Int64UpDownCounter
-	once  sync.Once
+	once  int32
 }
 
 func (t *connTracker) Close() error {
-	err := t.Conn.Close()
-	t.once.Do(func() {
+	v := atomic.AddInt32(&t.once, 1)
+	if v == 1 {
 		t.conns.Add(context.Background(), -1)
-	})
+	}
+
+	err := t.Conn.Close()
 
 	if err != nil {
 		return err
