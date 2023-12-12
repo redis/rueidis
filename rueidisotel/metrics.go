@@ -16,14 +16,14 @@ import (
 
 const metricNamespace = "github.com/redis/rueidis"
 
-var DefaultDialLatencyHistogramDefaultBucketBoundaries = []float64{
+var DefaultDialLatencyHistogramDefaultBuckets = []float64{
 	.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10,
 }
 
 var ErrDialFnRequired = errors.New("rueidisotel: clientOption.DialFn is required")
 
 type DialLatencyHistogramOption struct {
-	ExplicitBucketBoundaries []float64
+	Buckets []float64
 }
 
 type config struct {
@@ -50,7 +50,7 @@ func WithMetricMeterProvider(meter metric.MeterProvider) OptionFunc {
 }
 
 // WithDialLatencyHistogramOption sets the DialLatencyHistogramOption.
-// If not set, DefaultDialLatencyHistogramDefaultBucketBoundaries will be used.
+// If not set, DefaultDialLatencyHistogramDefaultBuckets will be used.
 func WithDialLatencyHistogramOption(histogramOption DialLatencyHistogramOption) OptionFunc {
 	return func(o *config) {
 		o.dialLatencyHistogramOption = histogramOption
@@ -84,8 +84,8 @@ func NewClient(opts ...OptionFunc) (rueidis.Client, error) {
 	if cfg.meter == nil {
 		cfg.meter = otel.GetMeterProvider()
 	}
-	if cfg.dialLatencyHistogramOption.ExplicitBucketBoundaries == nil {
-		cfg.dialLatencyHistogramOption.ExplicitBucketBoundaries = DefaultDialLatencyHistogramDefaultBucketBoundaries
+	if cfg.dialLatencyHistogramOption.Buckets == nil {
+		cfg.dialLatencyHistogramOption.Buckets = DefaultDialLatencyHistogramDefaultBuckets
 	}
 
 	meter := cfg.meter.Meter(metricNamespace)
@@ -104,7 +104,7 @@ func NewClient(opts ...OptionFunc) (rueidis.Client, error) {
 	dialLatency, err := meter.Float64Histogram(
 		"rueidis_dial_latency",
 		metric.WithUnit("s"),
-		metric.WithExplicitBucketBoundaries(cfg.dialLatencyHistogramOption.ExplicitBucketBoundaries...),
+		metric.WithExplicitBucketBoundaries(cfg.dialLatencyHistogramOption.Buckets...),
 	)
 	if err != nil {
 		return nil, err

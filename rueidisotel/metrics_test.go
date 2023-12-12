@@ -54,7 +54,7 @@ func TestNewClient(t *testing.T) {
 				},
 			}),
 			WithDialLatencyHistogramOption(DialLatencyHistogramOption{
-				ExplicitBucketBoundaries: []float64{1, 2, 3},
+				Buckets: []float64{1, 2, 3},
 			}),
 		)
 		if err != nil {
