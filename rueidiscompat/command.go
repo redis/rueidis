@@ -3320,12 +3320,11 @@ func newMapStringInterfaceCmd(res rueidis.RedisResult) *MapStringInterfaceCmd {
 				// WORKAROUND: manually convert map[string]any to map[any]any to make go-redis test PASS
 				// we don't use (*RedisMessage).ToAny() on map type because it will convert ele
 				// to map[string]any
-				eleM := v.(map[string]any)
-				iFaceMap := make(map[any]any, len(eleM))
-				for _k, _v := range eleM {
-					iFaceMap[_k] = _v
+				v, err = ele.AsAnyAnyMap()
+				if err != nil {
+					cmd.err = err
+					return cmd
 				}
-				v = any(iFaceMap)
 			}
 		} else {
 			v = rueidis.Nil
@@ -3394,21 +3393,11 @@ func newMapStringSliceInterfaceCmd(res rueidis.RedisResult) *MapStringSliceInter
 			var ele any
 			var err error
 			if v.IsMap() {
-				_m, err := v.ToMap()
+				ele, err = v.AsAnyAnyMap()
 				if err != nil {
 					cmd.err = err
 					return cmd
 				}
-				anyMap := make(map[any]any, len(_m))
-				for k, e := range _m {
-					_e, err := e.ToAny()
-					if err != nil {
-						cmd.err = err
-						return cmd
-					}
-					anyMap[k] = _e
-				}
-				ele = anyMap
 			} else {
 				ele, err = v.ToAny()
 				if err != nil {
