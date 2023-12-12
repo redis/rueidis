@@ -3384,19 +3384,39 @@ func newMapStringSliceInterfaceCmd(res rueidis.RedisResult) *MapStringSliceInter
 	}
 	mapStrSliceInt := make(map[string][]any, len(m))
 	for k, entry := range m {
-		val, err := entry.ToArray()
+		vals, err := entry.ToArray()
 		if err != nil {
 			cmd.err = err
 			return cmd
 		}
-		anySlice := make([]any, 0, len(val))
-		for _, v := range val {
-			a, err := v.ToAny()
-			if err != nil {
-				cmd.err = err
-				return cmd
+		anySlice := make([]any, 0, len(vals))
+		for _, v := range vals {
+			var ele any
+			var err error
+			if v.IsMap() {
+				_m, err := v.ToMap()
+				if err != nil {
+					cmd.err = err
+					return cmd
+				}
+				anyMap := make(map[any]any, len(_m))
+				for k, e := range _m {
+					_e, err := e.ToAny()
+					if err != nil {
+						cmd.err = err
+						return cmd
+					}
+					anyMap[k] = _e
+				}
+				ele = anyMap
+			} else {
+				ele, err = v.ToAny()
+				if err != nil {
+					cmd.err = err
+					return cmd
+				}
 			}
-			anySlice = append(anySlice, a)
+			anySlice = append(anySlice, ele)
 		}
 		mapStrSliceInt[k] = anySlice
 	}
