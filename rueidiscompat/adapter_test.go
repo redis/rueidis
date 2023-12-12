@@ -235,13 +235,13 @@ func testAdapter(resp3 bool) {
 			Expect(r.Val()).To(BeTrue())
 		})
 
-		It("should adapterKill", func() {
+		It("should ClientKill", func() {
 			r := adapter.ClientKill(ctx, "1.1.1.1:1111")
-			Expect(r.Err()).To(MatchError("No such adapter"))
+			Expect(r.Err()).To(MatchError("No such client"))
 			Expect(r.Val()).To(Equal(""))
 		})
 
-		It("should adapterKillByFilter", func() {
+		It("should ClientKillByFilter", func() {
 			r := adapter.ClientKillByFilter(ctx, "ID", "12039487")
 			Expect(r.Err()).To(BeNil())
 			Expect(r.Val()).To(Equal(int64(0)))
@@ -3175,7 +3175,7 @@ func testAdapter(resp3 bool) {
 				Expect(sAdd.Err()).NotTo(HaveOccurred())
 				sAdd = adapter.SAdd(ctx, "set2", "e")
 				Expect(sAdd.Err()).NotTo(HaveOccurred())
-				// limit 0 means no limit,see https://io/commands/sintercard/ for more details
+				// limit 0 means no limit,see https://redis.io/commands/sintercard/ for more details
 				sInterCard := adapter.SInterCard(ctx, 0, "set1", "set2")
 				Expect(sInterCard.Err()).NotTo(HaveOccurred())
 				Expect(sInterCard.Val()).To(Equal(int64(2)))
@@ -6525,7 +6525,7 @@ func testAdapterCache(resp3 bool) {
 		})
 	})
 
-	Describe("adapter", func() {
+	Describe("Client", func() {
 		It("should ClientUnblock", func() {
 			id := adapter.ClientID(ctx).Val()
 			r, err := adapter.ClientUnblock(ctx, id).Result()
@@ -6602,17 +6602,17 @@ func testAdapterCache(resp3 bool) {
 
                      local function f1(keys, args)
                         local hash = keys[1]  -- Get the key name
-                        local time = call('TIME')[1]  -- Get the current time from the Redis server
+                        local time = redis.call('TIME')[1]  -- Get the current time from the Redis server
 
                         -- Add the current timestamp to the arguments that the user passed to the function, stored in args
                         table.insert(args, '_updated_at')
                         table.insert(args, time)
 
                         -- Run HSET with the updated argument list
-                        return call('HSET', hash, unpack(args))
+                        return redis.call('HSET', hash, unpack(args))
                      end
 
-					register_function{
+					redis.register_function{
 						function_name='%s',
 						description ='%s',
 						callback=f1,
@@ -6644,8 +6644,8 @@ func testAdapterCache(resp3 bool) {
 						 return 'Function 2'
 					end
 
-					register_function('%s', f1)
-					register_function{
+					redis.register_function('%s', f1)
+					redis.register_function{
 						function_name='%s',
 						description ='%s',
 						callback=f2,
@@ -7190,17 +7190,17 @@ func testAdapterCache(resp3 bool) {
 
                      local function f1(keys, args)
                         local hash = keys[1]  -- Get the key name
-                        local time = call('TIME')[1]  -- Get the current time from the Redis server
+                        local time = redis.call('TIME')[1]  -- Get the current time from the Redis server
 
                         -- Add the current timestamp to the arguments that the user passed to the function, stored in args
                         table.insert(args, '_updated_at')
                         table.insert(args, time)
 
                         -- Run HSET with the updated argument list
-                        return call('HSET', hash, unpack(args))
+                        return redis.call('HSET', hash, unpack(args))
                      end
 
-					register_function{
+					redis.register_function{
 						function_name='%s',
 						description ='%s',
 						callback=f1,
@@ -7232,8 +7232,8 @@ func testAdapterCache(resp3 bool) {
 						 return 'Function 2'
 					end
 
-					register_function('%s', f1)
-					register_function{
+					redis.register_function('%s', f1)
+					redis.register_function{
 						function_name='%s',
 						description ='%s',
 						callback=f2,
@@ -10448,7 +10448,7 @@ func testAdapterCache(resp3 bool) {
 }
 
 func libCode(libName string) string {
-	return fmt.Sprintf("#!js api_version=1.0 name=%s\n registerFunction('foo', ()=>{{return 'bar'}})", libName)
+	return fmt.Sprintf("#!js api_version=1.0 name=%s\n redis.registerFunction('foo', ()=>{{return 'bar'}})", libName)
 }
 
 func libCodeWithConfig(libName string) string {
@@ -10456,17 +10456,17 @@ func libCodeWithConfig(libName string) string {
 
 	var last_update_field_name = "__last_update__"
 	
-	if (config.last_update_field_name !== undefined) {
-		if (typeof config.last_update_field_name != 'string') {
+	if (redis.config.last_update_field_name !== undefined) {
+		if (typeof redis.config.last_update_field_name != 'string') {
 			throw "last_update_field_name must be a string";
 		}
-		last_update_field_name = config.last_update_field_name
+		last_update_field_name = redis.config.last_update_field_name
 	}
 	
-	registerFunction("hset", function(adapter, key, field, val){
+	redis.registerFunction("hset", function(client, key, field, val){
 		// get the current time in ms
-		var curr_time = adapter.call("time")[0];
-		return adapter.call('hset', key, field, val, last_update_field_name, curr_time);
+		var curr_time = client.call("time")[0];
+		return client.call('hset', key, field, val, last_update_field_name, curr_time);
 	});`
 	return fmt.Sprintf(lib, libName)
 }
