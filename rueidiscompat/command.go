@@ -3346,7 +3346,7 @@ func newTSTimestampValueSliceCmd(res rueidis.RedisResult) *TSTimestampValueSlice
 		return cmd
 	}
 	tsValSlice := make([]TSTimestampValue, 0, len(msgSlice))
-	for i := 0; i < len(tsValSlice); i++ {
+	for i := 0; i < len(msgSlice); i++ {
 		msgArray, err := msgSlice[i].ToArray()
 		if err != nil {
 			cmd.err = err
@@ -3357,13 +3357,12 @@ func newTSTimestampValueSliceCmd(res rueidis.RedisResult) *TSTimestampValueSlice
 			cmd.err = err
 			return cmd
 		}
-		val, err := msgArray[0].AsFloat64()
+		val, err := msgArray[1].AsFloat64()
 		if err != nil {
 			cmd.err = err
 			return cmd
 		}
-		tsValSlice[i].Timestamp = tstmp
-		tsValSlice[i].Value = val
+		tsValSlice = append(tsValSlice, TSTimestampValue{Timestamp: tstmp, Value: val})
 	}
 	cmd.SetVal(tsValSlice)
 	return cmd
