@@ -57,12 +57,14 @@ func ParseURL(str string) (opt ClientOption, err error) {
 		opt.Username = u.User.Username()
 		opt.Password, _ = u.User.Password()
 	}
-	if ps := strings.Split(u.Path, "/"); len(ps) == 2 {
-		if opt.SelectDB, err = strconv.Atoi(ps[1]); err != nil {
-			return opt, fmt.Errorf("redis: invalid database number: %q", ps[1])
+	if u.Scheme != "unix" {
+		if ps := strings.Split(u.Path, "/"); len(ps) == 2 {
+			if opt.SelectDB, err = strconv.Atoi(ps[1]); err != nil {
+				return opt, fmt.Errorf("redis: invalid database number: %q", ps[1])
+			}
+		} else if len(ps) > 2 {
+			return opt, fmt.Errorf("redis: invalid URL path: %s", u.Path)
 		}
-	} else if len(ps) > 2 {
-		return opt, fmt.Errorf("redis: invalid URL path: %s", u.Path)
 	}
 	q := u.Query()
 	if q.Has("db") {

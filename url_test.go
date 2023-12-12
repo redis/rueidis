@@ -66,6 +66,9 @@ func TestParseURL(t *testing.T) {
 	if opt, err := ParseURL("rediss://myhost:6379"); err != nil || opt.TLSConfig.ServerName != "myhost" {
 		t.Fatalf("unexpected %v %v", opt, err)
 	}
+	if opt, err := ParseURL("unix:///path/to/redis.sock?db=1"); opt.DialFn == nil || opt.InitAddress[0] != "/path/to/redis.sock" || opt.SelectDB != 1 {
+		t.Fatalf("unexpected %v %v", opt, err)
+	}
 }
 
 func TestMustParseURL(t *testing.T) {
