@@ -3,7 +3,6 @@ package rueidisotel
 import (
 	"context"
 	"crypto/tls"
-	"errors"
 	"net"
 	"testing"
 
@@ -37,7 +36,7 @@ func TestNewClient(t *testing.T) {
 					return dialer.Dial("tcp", dst)
 				},
 			}),
-			WithMetricMeterProvider(meterProvider),
+			WithMeterProvider(meterProvider),
 		)
 		if err != nil {
 			t.Fatal(err)
@@ -65,16 +64,6 @@ func TestNewClient(t *testing.T) {
 }
 
 func TestNewClientError(t *testing.T) {
-	t.Run("missing dial fn", func(t *testing.T) {
-		_, err := NewClient(WithClientOption(rueidis.ClientOption{
-			InitAddress: []string{"127.0.0.1:6379"},
-			DialFn:      nil,
-		}))
-		if !errors.Is(err, ErrDialFnRequired) {
-			t.Fatal(err)
-		}
-	})
-
 	t.Run("invalid client option", func(t *testing.T) {
 		_, err := NewClient(WithClientOption(rueidis.ClientOption{
 			InitAddress: []string{""},
@@ -99,7 +88,7 @@ func TestTrackDialing(t *testing.T) {
 					return dialer.Dial("tcp", dst)
 				},
 			}),
-			WithMetricMeterProvider(meterProvider),
+			WithMeterProvider(meterProvider),
 		)
 		if err != nil {
 			t.Fatal(err)
@@ -148,7 +137,7 @@ func TestTrackDialing(t *testing.T) {
 					return dialer.Dial("tcp", dst)
 				},
 			}),
-			WithMetricMeterProvider(meterProvider),
+			WithMeterProvider(meterProvider),
 		)
 		if err != nil {
 			t.Fatal(err)
@@ -177,7 +166,7 @@ func TestTrackDialing(t *testing.T) {
 					return dialer.Dial("tcp", dst)
 				},
 			}),
-			WithMetricMeterProvider(meterProvider),
+			WithMeterProvider(meterProvider),
 		)
 		if err == nil {
 			t.Fatal(err)
