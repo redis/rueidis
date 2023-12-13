@@ -17,7 +17,10 @@ var (
 	DefaultDialLatencyHistogramDefaultBuckets = []float64{
 		.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10,
 	}
-	DefaultDialFn = func(dst string, dialer *net.Dialer, _ *tls.Config) (conn net.Conn, err error) {
+	DefaultDialFn = func(dst string, dialer *net.Dialer, cfg *tls.Config) (conn net.Conn, err error) {
+		if cfg != nil {
+			return tls.DialWithDialer(dialer, "tcp", dst, cfg)
+		}
 		return dialer.Dial("tcp", dst)
 	}
 )
