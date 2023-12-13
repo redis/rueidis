@@ -29,13 +29,6 @@ type HistogramOption struct {
 	Buckets []float64
 }
 
-// WithClientOption sets the rueidis.ClientOption.
-func WithClientOption(clientOption rueidis.ClientOption) Option {
-	return func(cli *otelclient) {
-		cli.clientOption = clientOption
-	}
-}
-
 // WithHistogramOption sets the HistogramOption.
 // If not set, DefaultHistogramDefaultBuckets will be used.
 func WithHistogramOption(histogramOption HistogramOption) Option {
@@ -50,8 +43,12 @@ func WithHistogramOption(histogramOption HistogramOption) Option {
 // - rueidis_dial_success: number of successful dials
 // - rueidis_dial_conns: number of active connections
 // - rueidis_dial_latency: dial latency in seconds
-func NewClient(opts ...Option) (rueidis.Client, error) {
+func NewClient(clientOption rueidis.ClientOption, opts ...Option) (rueidis.Client, error) {
 	oclient := newClient(opts...)
+
+	if clientOption.DialFn == nil {
+		clientOption.DialFn = DefaultDialFn
+	}
 
 	attempt, err := oclient.meter.Int64Counter("rueidis_dial_attempt")
 	if err != nil {
@@ -81,10 +78,10 @@ func NewClient(opts ...Option) (rueidis.Client, error) {
 	}
 	oclient.dialLatency = dialLatency
 
-	oclient.clientOption.DialFn = trackDialing(
-		attempt, success, conns, dialLatency, oclient.clientOption.DialFn,
+	clientOption.DialFn = trackDialing(
+		attempt, success, conns, dialLatency, clientOption.DialFn,
 	)
-	cli, err := rueidis.NewClient(oclient.clientOption)
+	cli, err := rueidis.NewClient(clientOption)
 	if err != nil {
 		return nil, err
 	}
@@ -97,9 +94,6 @@ func newClient(opts ...Option) *otelclient {
 	cli := &otelclient{}
 	for _, opt := range opts {
 		opt(cli)
-	}
-	if cli.clientOption.DialFn == nil {
-		cli.clientOption.DialFn = DefaultDialFn
 	}
 	if cli.histogramOption.Buckets == nil {
 		cli.histogramOption.Buckets = DefaultHistogramDefaultBuckets

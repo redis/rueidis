@@ -14,12 +14,12 @@ import (
 
 func TestNewClient(t *testing.T) {
 	t.Run("client option only", func(t *testing.T) {
-		c, err := NewClient(WithClientOption(rueidis.ClientOption{
+		c, err := NewClient(rueidis.ClientOption{
 			InitAddress: []string{"127.0.0.1:6379"},
 			DialFn: func(dst string, dialer *net.Dialer, _ *tls.Config) (conn net.Conn, err error) {
 				return dialer.Dial("tcp", dst)
 			},
-		}))
+		})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -30,12 +30,12 @@ func TestNewClient(t *testing.T) {
 		mr := metric.NewManualReader()
 		meterProvider := metric.NewMeterProvider(metric.WithReader(mr))
 		c, err := NewClient(
-			WithClientOption(rueidis.ClientOption{
+			rueidis.ClientOption{
 				InitAddress: []string{"127.0.0.1:6379"},
 				DialFn: func(dst string, dialer *net.Dialer, _ *tls.Config) (conn net.Conn, err error) {
 					return dialer.Dial("tcp", dst)
 				},
-			}),
+			},
 			WithMeterProvider(meterProvider),
 		)
 		if err != nil {
@@ -46,12 +46,12 @@ func TestNewClient(t *testing.T) {
 
 	t.Run("dial latency histogram option", func(t *testing.T) {
 		c, err := NewClient(
-			WithClientOption(rueidis.ClientOption{
+			rueidis.ClientOption{
 				InitAddress: []string{"127.0.0.1:6379"},
 				DialFn: func(dst string, dialer *net.Dialer, _ *tls.Config) (conn net.Conn, err error) {
 					return dialer.Dial("tcp", dst)
 				},
-			}),
+			},
 			WithHistogramOption(HistogramOption{
 				Buckets: []float64{1, 2, 3},
 			}),
@@ -65,12 +65,12 @@ func TestNewClient(t *testing.T) {
 
 func TestNewClientError(t *testing.T) {
 	t.Run("invalid client option", func(t *testing.T) {
-		_, err := NewClient(WithClientOption(rueidis.ClientOption{
+		_, err := NewClient(rueidis.ClientOption{
 			InitAddress: []string{""},
 			DialFn: func(dst string, dialer *net.Dialer, _ *tls.Config) (conn net.Conn, err error) {
 				return dialer.Dial("tcp", dst)
 			},
-		}))
+		})
 		if err == nil {
 			t.Error(err)
 		}
@@ -82,12 +82,12 @@ func TestTrackDialing(t *testing.T) {
 		mr := metric.NewManualReader()
 		meterProvider := metric.NewMeterProvider(metric.WithReader(mr))
 		c, err := NewClient(
-			WithClientOption(rueidis.ClientOption{
+			rueidis.ClientOption{
 				InitAddress: []string{"127.0.0.1:6379"},
 				DialFn: func(dst string, dialer *net.Dialer, _ *tls.Config) (conn net.Conn, err error) {
 					return dialer.Dial("tcp", dst)
 				},
-			}),
+			},
 			WithMeterProvider(meterProvider),
 		)
 		if err != nil {
@@ -131,12 +131,12 @@ func TestTrackDialing(t *testing.T) {
 		mr := metric.NewManualReader()
 		meterProvider := metric.NewMeterProvider(metric.WithReader(mr))
 		c, err := NewClient(
-			WithClientOption(rueidis.ClientOption{
+			rueidis.ClientOption{
 				InitAddress: []string{"127.0.0.1:6379"},
 				DialFn: func(dst string, dialer *net.Dialer, _ *tls.Config) (conn net.Conn, err error) {
 					return dialer.Dial("tcp", dst)
 				},
-			}),
+			},
 			WithMeterProvider(meterProvider),
 		)
 		if err != nil {
@@ -160,12 +160,12 @@ func TestTrackDialing(t *testing.T) {
 		mr := metric.NewManualReader()
 		meterProvider := metric.NewMeterProvider(metric.WithReader(mr))
 		_, err := NewClient(
-			WithClientOption(rueidis.ClientOption{
+			rueidis.ClientOption{
 				InitAddress: []string{""},
 				DialFn: func(dst string, dialer *net.Dialer, _ *tls.Config) (conn net.Conn, err error) {
 					return dialer.Dial("tcp", dst)
 				},
-			}),
+			},
 			WithMeterProvider(meterProvider),
 		)
 		if err == nil {
