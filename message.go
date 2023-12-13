@@ -1130,28 +1130,6 @@ func (m *RedisMessage) AsGeosearch() ([]GeoLocation, error) {
 	return geoLocations, nil
 }
 
-// AsAnyAnyMap converts RedisMessage to map[any]any.
-// we don't use (*RedisMessage).ToAny() on map type because it will convert ele
-// to map[string]any
-func (m *RedisMessage) AsAnyAnyMap() (map[any]any, error) {
-	if !m.IsMap() {
-		panic(fmt.Sprintf("redis message type %s is not a RESP3 map", typeNames[m.typ]))
-	}
-	_m, err := m.ToMap()
-	if err != nil {
-		return nil, err
-	}
-	anyMap := make(map[any]any, len(_m))
-	for k, e := range _m {
-		_e, err := e.ToAny()
-		if err != nil {
-			return nil, err
-		}
-		anyMap[k] = _e
-	}
-	return anyMap, nil
-}
-
 // ToMap check if message is a redis RESP3 map response, and return it
 func (m *RedisMessage) ToMap() (map[string]RedisMessage, error) {
 	if m.IsMap() {

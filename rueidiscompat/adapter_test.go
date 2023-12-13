@@ -9551,7 +9551,7 @@ func testAdapterCache(resp3 bool) {
 			Expect(result).To(BeEquivalentTo("OK"))
 			resultInfo, err := adapter.TSInfo(ctx, "4").Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(resultInfo["labels"].(map[interface{}]interface{})["Time"]).To(BeEquivalentTo("Series"))
+			Expect(resultInfo["labels"].(map[string]interface{})["Time"]).To(BeEquivalentTo("Series"))
 			// Test chunk size
 			opt = &TSOptions{ChunkSize: 128}
 			result, err = adapter.TSCreateWithArgs(ctx, "ts-cs-1", opt).Result()
@@ -9593,7 +9593,7 @@ func testAdapterCache(resp3 bool) {
 			Expect(result).To(BeEquivalentTo(4))
 			resultInfo, err := adapter.TSInfo(ctx, "4").Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(resultInfo["labels"].(map[interface{}]interface{})["Time"]).To(BeEquivalentTo("Series"))
+			Expect(resultInfo["labels"].(map[string]interface{})["Time"]).To(BeEquivalentTo("Series"))
 			// Test chunk size
 			opt = &TSOptions{ChunkSize: 128}
 			result, err = adapter.TSAddWithArgs(ctx, "ts-cs-1", 1, 10, opt).Result()
@@ -9668,7 +9668,7 @@ func testAdapterCache(resp3 bool) {
 
 			resultInfo, err = adapter.TSInfo(ctx, "1").Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(resultInfo["labels"]).To(BeEquivalentTo(map[interface{}]interface{}{}))
+			Expect(resultInfo["labels"]).To(BeEquivalentTo(map[string]interface{}{}))
 
 			opt = &TSAlterOptions{Labels: map[string]string{"Time": "Series"}}
 			resultAlter, err = adapter.TSAlter(ctx, "1", opt).Result()
@@ -9677,7 +9677,7 @@ func testAdapterCache(resp3 bool) {
 
 			resultInfo, err = adapter.TSInfo(ctx, "1").Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(resultInfo["labels"].(map[interface{}]interface{})["Time"]).To(BeEquivalentTo("Series"))
+			Expect(resultInfo["labels"].(map[string]interface{})["Time"]).To(BeEquivalentTo("Series"))
 			Expect(resultInfo["retentionTime"]).To(BeEquivalentTo(10))
 			Expect(resultInfo["duplicatePolicy"]).To(BeEquivalentTo(rueidis.Nil))
 			opt = &TSAlterOptions{DuplicatePolicy: "min"}
@@ -9722,7 +9722,7 @@ func testAdapterCache(resp3 bool) {
 			Expect(resultDeleteRule).To(BeEquivalentTo("OK"))
 			resultInfo, err := adapter.TSInfo(ctx, "1").Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(resultInfo["rules"]).To(BeEquivalentTo(map[interface{}]interface{}{}))
+			Expect(resultInfo["rules"]).To(BeEquivalentTo(map[string]interface{}{}))
 		})
 
 		It("should TSIncrBy, TSIncrByWithArgs, TSDecrBy and TSDecrByWithArgs", Label("timeseries", "tsincrby", "tsdecrby", "tsincrbyWithArgs", "tsdecrbyWithArgs"), func() {
@@ -9874,7 +9874,7 @@ func testAdapterCache(resp3 bool) {
 			mgetOpt := &TSMGetOptions{WithLabels: true}
 			result, err = adapter.TSMGetWithArgs(ctx, []string{"Test=This"}, mgetOpt).Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(result["b"][0]).To(BeEquivalentTo(map[interface{}]interface{}{"Test": "This", "Taste": "That"}))
+			Expect(result["b"][0]).To(BeEquivalentTo(map[string]interface{}{"Test": "This", "Taste": "That"}))
 
 			resultCreate, err = adapter.TSCreate(ctx, "c").Result()
 			Expect(err).NotTo(HaveOccurred())
@@ -10215,17 +10215,17 @@ func testAdapterCache(resp3 bool) {
 			Expect(len(result)).To(BeEquivalentTo(2))
 			Expect(len(result["a"][2].([]interface{}))).To(BeEquivalentTo(20))
 			// Test WithLabels
-			Expect(result["a"][0]).To(BeEquivalentTo(map[interface{}]interface{}{}))
+			Expect(result["a"][0]).To(BeEquivalentTo(map[string]interface{}{}))
 			mrangeOpt = &TSMRangeOptions{WithLabels: true}
 			result, err = adapter.TSMRangeWithArgs(ctx, 0, 200, []string{"Test=This"}, mrangeOpt).Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(result["a"][0]).To(BeEquivalentTo(map[interface{}]interface{}{"Test": "This", "team": "ny"}))
+			Expect(result["a"][0]).To(BeEquivalentTo(map[string]interface{}{"Test": "This", "team": "ny"}))
 			// Test SelectedLabels
 			mrangeOpt = &TSMRangeOptions{SelectedLabels: []interface{}{"team"}}
 			result, err = adapter.TSMRangeWithArgs(ctx, 0, 200, []string{"Test=This"}, mrangeOpt).Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(result["a"][0]).To(BeEquivalentTo(map[interface{}]interface{}{"team": "ny"}))
-			Expect(result["b"][0]).To(BeEquivalentTo(map[interface{}]interface{}{"team": "sf"}))
+			Expect(result["a"][0]).To(BeEquivalentTo(map[string]interface{}{"team": "ny"}))
+			Expect(result["b"][0]).To(BeEquivalentTo(map[string]interface{}{"team": "sf"}))
 			// Test FilterBy
 			fts := make([]int, 0)
 			for i := 10; i < 20; i++ {
@@ -10346,19 +10346,19 @@ func testAdapterCache(resp3 bool) {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(len(result)).To(BeEquivalentTo(2))
 			Expect(len(result["a"][2].([]interface{}))).To(BeEquivalentTo(20))
-			Expect(result["a"][0]).To(BeEquivalentTo(map[interface{}]interface{}{}))
+			Expect(result["a"][0]).To(BeEquivalentTo(map[string]interface{}{}))
 			// Test WithLabels
-			Expect(result["a"][0]).To(BeEquivalentTo(map[interface{}]interface{}{}))
+			Expect(result["a"][0]).To(BeEquivalentTo(map[string]interface{}{}))
 			mrangeOpt = &TSMRevRangeOptions{WithLabels: true}
 			result, err = adapter.TSMRevRangeWithArgs(ctx, 0, 200, []string{"Test=This"}, mrangeOpt).Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(result["a"][0]).To(BeEquivalentTo(map[interface{}]interface{}{"Test": "This", "team": "ny"}))
+			Expect(result["a"][0]).To(BeEquivalentTo(map[string]interface{}{"Test": "This", "team": "ny"}))
 			// Test SelectedLabels
 			mrangeOpt = &TSMRevRangeOptions{SelectedLabels: []interface{}{"team"}}
 			result, err = adapter.TSMRevRangeWithArgs(ctx, 0, 200, []string{"Test=This"}, mrangeOpt).Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(result["a"][0]).To(BeEquivalentTo(map[interface{}]interface{}{"team": "ny"}))
-			Expect(result["b"][0]).To(BeEquivalentTo(map[interface{}]interface{}{"team": "sf"}))
+			Expect(result["a"][0]).To(BeEquivalentTo(map[string]interface{}{"team": "ny"}))
+			Expect(result["b"][0]).To(BeEquivalentTo(map[string]interface{}{"team": "sf"}))
 			// Test FilterBy
 			fts := make([]int, 0)
 			for i := 10; i < 20; i++ {

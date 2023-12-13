@@ -3311,21 +3311,10 @@ func newMapStringInterfaceCmd(res rueidis.RedisResult) *MapStringInterfaceCmd {
 		var v any = rueidis.Nil
 		var err error
 		if !ele.IsNil() {
-			if ele.IsMap() {
-				// WORKAROUND: manually convert map[string]any to map[any]any to make go-redis test PASS
-				// we don't use (*RedisMessage).ToAny() on map type because it will convert ele
-				// to map[string]any
-				v, err = ele.AsAnyAnyMap()
-				if err != nil {
-					cmd.err = err
-					return cmd
-				}
-			} else {
-				v, err = ele.ToAny()
-				if err != nil {
-					cmd.err = err
-					return cmd
-				}
+			v, err = ele.ToAny()
+			if err != nil {
+				cmd.err = err
+				return cmd
 			}
 		}
 		strIntMap[k] = v
@@ -3388,20 +3377,11 @@ func newMapStringSliceInterfaceCmd(res rueidis.RedisResult) *MapStringSliceInter
 		}
 		anySlice := make([]any, 0, len(vals))
 		for _, v := range vals {
-			var ele any
 			var err error
-			if v.IsMap() {
-				ele, err = v.AsAnyAnyMap()
-				if err != nil {
-					cmd.err = err
-					return cmd
-				}
-			} else {
-				ele, err = v.ToAny()
-				if err != nil {
-					cmd.err = err
-					return cmd
-				}
+			ele, err := v.ToAny()
+			if err != nil {
+				cmd.err = err
+				return cmd
 			}
 			anySlice = append(anySlice, ele)
 		}
