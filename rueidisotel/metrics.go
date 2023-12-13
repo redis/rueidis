@@ -157,8 +157,7 @@ type connTracker struct {
 }
 
 func (t *connTracker) Close() error {
-	v := atomic.AddInt32(&t.once, 1)
-	if v == 1 {
+	if atomic.CompareAndSwapInt32(&t.once, 0, 1) {
 		t.conns.Add(context.Background(), -1)
 	}
 
