@@ -60,21 +60,21 @@ func WithTracerProvider(provider trace.TracerProvider) Option {
 }
 
 type otelclient struct {
-	client                     rueidis.Client
-	meterProvider              metric.MeterProvider
-	tracerProvider             trace.TracerProvider
-	tracer                     trace.Tracer
-	meter                      metric.Meter
-	cscMiss                    metric.Int64Counter
-	cscHits                    metric.Int64Counter
-	mAttrs                     []attribute.KeyValue
-	tAttrs                     []attribute.KeyValue
-	clientOption               rueidis.ClientOption
-	dialLatencyHistogramOption DialLatencyHistogramOption
-	attempt                    metric.Int64Counter
-	success                    metric.Int64Counter
-	conns                      metric.Int64UpDownCounter
-	dialLatency                metric.Float64Histogram
+	client          rueidis.Client
+	meterProvider   metric.MeterProvider
+	tracerProvider  trace.TracerProvider
+	tracer          trace.Tracer
+	meter           metric.Meter
+	cscMiss         metric.Int64Counter
+	cscHits         metric.Int64Counter
+	mAttrs          []attribute.KeyValue
+	tAttrs          []attribute.KeyValue
+	clientOption    rueidis.ClientOption
+	histogramOption HistogramOption
+	attempt         metric.Int64Counter
+	success         metric.Int64Counter
+	conns           metric.Int64UpDownCounter
+	dialLatency     metric.Float64Histogram
 }
 
 func (o *otelclient) B() rueidis.Builder {

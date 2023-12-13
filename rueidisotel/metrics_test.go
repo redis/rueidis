@@ -52,7 +52,7 @@ func TestNewClient(t *testing.T) {
 					return dialer.Dial("tcp", dst)
 				},
 			}),
-			WithDialLatencyHistogramOption(DialLatencyHistogramOption{
+			WithHistogramOption(HistogramOption{
 				Buckets: []float64{1, 2, 3},
 			}),
 		)

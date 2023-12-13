@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	DefaultDialLatencyHistogramDefaultBuckets = []float64{
+	DefaultHistogramDefaultBuckets = []float64{
 		.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10,
 	}
 	DefaultDialFn = func(dst string, dialer *net.Dialer, cfg *tls.Config) (conn net.Conn, err error) {
@@ -25,7 +25,7 @@ var (
 	}
 )
 
-type DialLatencyHistogramOption struct {
+type HistogramOption struct {
 	Buckets []float64
 }
 
@@ -36,11 +36,11 @@ func WithClientOption(clientOption rueidis.ClientOption) Option {
 	}
 }
 
-// WithDialLatencyHistogramOption sets the DialLatencyHistogramOption.
-// If not set, DefaultDialLatencyHistogramDefaultBuckets will be used.
-func WithDialLatencyHistogramOption(histogramOption DialLatencyHistogramOption) Option {
+// WithHistogramOption sets the HistogramOption.
+// If not set, DefaultHistogramDefaultBuckets will be used.
+func WithHistogramOption(histogramOption HistogramOption) Option {
 	return func(cli *otelclient) {
-		cli.dialLatencyHistogramOption = histogramOption
+		cli.histogramOption = histogramOption
 	}
 }
 
@@ -74,7 +74,7 @@ func NewClient(opts ...Option) (rueidis.Client, error) {
 	dialLatency, err := oclient.meter.Float64Histogram(
 		"rueidis_dial_latency",
 		metric.WithUnit("s"),
-		metric.WithExplicitBucketBoundaries(oclient.dialLatencyHistogramOption.Buckets...),
+		metric.WithExplicitBucketBoundaries(oclient.histogramOption.Buckets...),
 	)
 	if err != nil {
 		return nil, err
@@ -101,8 +101,8 @@ func newClient(opts ...Option) *otelclient {
 	if cli.clientOption.DialFn == nil {
 		cli.clientOption.DialFn = DefaultDialFn
 	}
-	if cli.dialLatencyHistogramOption.Buckets == nil {
-		cli.dialLatencyHistogramOption.Buckets = DefaultDialLatencyHistogramDefaultBuckets
+	if cli.histogramOption.Buckets == nil {
+		cli.histogramOption.Buckets = DefaultHistogramDefaultBuckets
 	}
 	if cli.meterProvider == nil {
 		cli.meterProvider = otel.GetMeterProvider() // Default to global MeterProvider
