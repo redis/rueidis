@@ -3308,7 +3308,7 @@ func newMapStringInterfaceCmd(res rueidis.RedisResult) *MapStringInterfaceCmd {
 	}
 	strIntMap := make(map[string]any, len(m))
 	for k, ele := range m {
-		var v any = rueidis.Nil
+		var v any
 		var err error
 		if !ele.IsNil() {
 			v, err = ele.ToAny()
