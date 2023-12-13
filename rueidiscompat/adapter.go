@@ -389,6 +389,7 @@ type Cmdable interface {
 	// TODO ModuleLoadex(ctx context.Context, conf *ModuleLoadexConfig) *StringCmd
 	GearsCmdable
 	ProbabilisticCmdable
+	TimeseriesCmdable
 }
 
 // https://github.com/redis/go-redis/blob/af4872cbd0de349855ce3f0978929c2f56eb995f/probabilistic.go#L10
@@ -477,6 +478,38 @@ type GearsCmdable interface {
 	TFCallArgs(ctx context.Context, libName string, funcName string, numKeys int, options *TFCallOptions) *Cmd
 	TFCallASYNC(ctx context.Context, libName string, funcName string, numKeys int) *Cmd
 	TFCallASYNCArgs(ctx context.Context, libName string, funcName string, numKeys int, options *TFCallOptions) *Cmd
+}
+
+type TimeseriesCmdable interface {
+	TSAdd(ctx context.Context, key string, timestamp interface{}, value float64) *IntCmd
+	TSAddWithArgs(ctx context.Context, key string, timestamp interface{}, value float64, options *TSOptions) *IntCmd
+	TSCreate(ctx context.Context, key string) *StatusCmd
+	TSCreateWithArgs(ctx context.Context, key string, options *TSOptions) *StatusCmd
+	TSAlter(ctx context.Context, key string, options *TSAlterOptions) *StatusCmd
+	TSCreateRule(ctx context.Context, sourceKey string, destKey string, aggregator Aggregator, bucketDuration int) *StatusCmd
+	TSCreateRuleWithArgs(ctx context.Context, sourceKey string, destKey string, aggregator Aggregator, bucketDuration int, options *TSCreateRuleOptions) *StatusCmd
+	TSIncrBy(ctx context.Context, Key string, timestamp float64) *IntCmd
+	TSIncrByWithArgs(ctx context.Context, key string, timestamp float64, options *TSIncrDecrOptions) *IntCmd
+	TSDecrBy(ctx context.Context, Key string, timestamp float64) *IntCmd
+	TSDecrByWithArgs(ctx context.Context, key string, timestamp float64, options *TSIncrDecrOptions) *IntCmd
+	TSDel(ctx context.Context, Key string, fromTimestamp int, toTimestamp int) *IntCmd
+	TSDeleteRule(ctx context.Context, sourceKey string, destKey string) *StatusCmd
+	TSGet(ctx context.Context, key string) *TSTimestampValueCmd
+	TSGetWithArgs(ctx context.Context, key string, options *TSGetOptions) *TSTimestampValueCmd
+	TSInfo(ctx context.Context, key string) *MapStringInterfaceCmd
+	TSInfoWithArgs(ctx context.Context, key string, options *TSInfoOptions) *MapStringInterfaceCmd
+	TSMAdd(ctx context.Context, ktvSlices [][]interface{}) *IntSliceCmd
+	TSQueryIndex(ctx context.Context, filterExpr []string) *StringSliceCmd
+	TSRevRange(ctx context.Context, key string, fromTimestamp int, toTimestamp int) *TSTimestampValueSliceCmd
+	TSRevRangeWithArgs(ctx context.Context, key string, fromTimestamp int, toTimestamp int, options *TSRevRangeOptions) *TSTimestampValueSliceCmd
+	TSRange(ctx context.Context, key string, fromTimestamp int, toTimestamp int) *TSTimestampValueSliceCmd
+	TSRangeWithArgs(ctx context.Context, key string, fromTimestamp int, toTimestamp int, options *TSRangeOptions) *TSTimestampValueSliceCmd
+	TSMRange(ctx context.Context, fromTimestamp int, toTimestamp int, filterExpr []string) *MapStringSliceInterfaceCmd
+	TSMRangeWithArgs(ctx context.Context, fromTimestamp int, toTimestamp int, filterExpr []string, options *TSMRangeOptions) *MapStringSliceInterfaceCmd
+	TSMRevRange(ctx context.Context, fromTimestamp int, toTimestamp int, filterExpr []string) *MapStringSliceInterfaceCmd
+	TSMRevRangeWithArgs(ctx context.Context, fromTimestamp int, toTimestamp int, filterExpr []string, options *TSMRevRangeOptions) *MapStringSliceInterfaceCmd
+	TSMGet(ctx context.Context, filters []string) *MapStringSliceInterfaceCmd
+	TSMGetWithArgs(ctx context.Context, filters []string, options *TSMGetOptions) *MapStringSliceInterfaceCmd
 }
 
 var _ Cmdable = (*Compat)(nil)
@@ -3511,6 +3544,792 @@ func (c *Compat) TDigestRevRank(ctx context.Context, key string, values ...float
 func (c *Compat) TDigestTrimmedMean(ctx context.Context, key string, lowCutQuantile, highCutQuantile float64) *FloatCmd {
 	cmd := c.client.B().TdigestTrimmedMean().Key(key).LowCutQuantile(lowCutQuantile).HighCutQuantile(highCutQuantile).Build()
 	return newFloatCmd(c.client.Do(ctx, cmd))
+}
+
+// TSAdd - Adds one or more observations to a t-digest sketch.
+// For more information - https://redis.io/commands/ts.add/
+func (c *Compat) TSAdd(ctx context.Context, key string, timestamp interface{}, value float64) *IntCmd {
+	cmd := c.client.B().TsAdd().Key(key).Timestamp(str(timestamp)).Value(value).Build()
+	return newIntCmd(c.client.Do(ctx, cmd))
+}
+
+// TSAddWithArgs - Adds one or more observations to a t-digest sketch.
+// This function also allows for specifying additional options such as:
+// Retention, ChunkSize, Encoding, DuplicatePolicy and Labels.
+// For more information - https://redis.io/commands/ts.add/
+func (c *Compat) TSAddWithArgs(ctx context.Context, key string, timestamp interface{}, value float64, options *TSOptions) *IntCmd {
+	_cmd := c.client.B().
+		TsAdd().
+		Key(key).
+		Timestamp(str(timestamp)).
+		Value(value)
+	if options.ChunkSize != 0 {
+		_cmd.ChunkSize(int64(options.ChunkSize))
+	}
+	if options.Retention != 0 {
+		_cmd.Retention(int64(options.Retention))
+	}
+	switch options.Encoding {
+	case "COMPRESSED", "":
+		_cmd.EncodingCompressed()
+	case "UNCOMPRESSED":
+		_cmd.EncodingUncompressed()
+	}
+	if options.DuplicatePolicy != "" {
+		switch options.DuplicatePolicy {
+		case "BLOCK", "block":
+			_cmd.OnDuplicateBlock()
+		case "FIRST", "first":
+			_cmd.OnDuplicateFirst()
+		case "LAST", "last":
+			_cmd.OnDuplicateLast()
+		case "MIN", "min":
+			_cmd.OnDuplicateMin()
+		case "MAX", "max":
+			_cmd.OnDuplicateMax()
+		case "SUM", "sum":
+			_cmd.OnDuplicateSum()
+		default:
+			panic(fmt.Sprintf("invalid duplicate policy, want one of [BLOCK|FIRST|LAST|MIN|MAX|SUM], got %v", options.DuplicatePolicy))
+		}
+	}
+	if options.Labels != nil {
+		labels := (cmds.TsAddOnDuplicateBlock)(_cmd).Labels()
+		for k, v := range options.Labels {
+			labels.Labels(k, v)
+		}
+		_cmd = cmds.TsAddValue(labels)
+	}
+	cmd := _cmd.Build()
+	return newIntCmd(c.client.Do(ctx, cmd))
+}
+
+// TSCreate - Creates a new time-series key.
+// For more information - https://redis.io/commands/ts.create/
+func (c *Compat) TSCreate(ctx context.Context, key string) *StatusCmd {
+	cmd := c.client.B().TsCreate().Key(key).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+// TSCreateWithArgs - Creates a new time-series key with additional options.
+// This function allows for specifying additional options such as:
+// Retention, ChunkSize, Encoding, DuplicatePolicy and Labels.
+// For more information - https://redis.io/commands/ts.create/
+func (c *Compat) TSCreateWithArgs(ctx context.Context, key string, options *TSOptions) *StatusCmd {
+	_cmd := c.client.B().TsCreate().Key(key)
+	if options.Retention != 0 {
+		_cmd.Retention(int64(options.Retention))
+	}
+	if options.ChunkSize != 0 {
+		_cmd.ChunkSize(int64(options.ChunkSize))
+	}
+	if options.Encoding != "" {
+		_cmd.EncodingCompressed()
+	} else {
+		_cmd.EncodingUncompressed()
+	}
+	if options.DuplicatePolicy != "" {
+		switch options.DuplicatePolicy {
+		case "BLOCK", "block":
+			_cmd.DuplicatePolicyBlock()
+		case "FIRST", "first":
+			_cmd.DuplicatePolicyFirst()
+		case "LAST", "last":
+			_cmd.DuplicatePolicyLast()
+		case "MIN", "min":
+			_cmd.DuplicatePolicyMin()
+		case "MAX", "max":
+			_cmd.DuplicatePolicyMax()
+		case "SUM", "sum":
+			_cmd.DuplicatePolicySum()
+		default:
+			panic(fmt.Sprintf("invalid duplicate policy, want one of [BLOCK|FIRST|LAST|MIN|MAX|SUM], got %v", options.DuplicatePolicy))
+		}
+	}
+	// var cmd cmds.Completed
+	if options.Labels != nil {
+		labels := _cmd.Labels()
+		for k, v := range options.Labels {
+			labels.Labels(k, v)
+		}
+		_cmd = cmds.TsCreateKey(labels)
+	}
+	cmd := (cmds.TsCreateKey)(_cmd).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+// TSAlter - Alters an existing time-series key with additional options.
+// This function allows for specifying additional options such as:
+// Retention, ChunkSize and DuplicatePolicy.
+// For more information - https://redis.io/commands/ts.alter/
+func (c *Compat) TSAlter(ctx context.Context, key string, options *TSAlterOptions) *StatusCmd {
+	_cmd := c.client.B().TsAlter().Key(key)
+	if options != nil {
+		if options.Retention != 0 {
+			_cmd.Retention(int64(options.Retention))
+		}
+		if options.ChunkSize != 0 {
+			_cmd.ChunkSize(int64(options.ChunkSize))
+		}
+		if options.DuplicatePolicy != "" {
+			switch options.DuplicatePolicy {
+			case "BLOCK", "block":
+				_cmd.DuplicatePolicyBlock()
+			case "FIRST", "first":
+				_cmd.DuplicatePolicyFirst()
+			case "LAST", "last":
+				_cmd.DuplicatePolicyLast()
+			case "MIN", "min":
+				_cmd.DuplicatePolicyMin()
+			case "MAX", "max":
+				_cmd.DuplicatePolicyMax()
+			case "SUM", "sum":
+				_cmd.DuplicatePolicySum()
+			default:
+				panic(fmt.Sprintf("invalid duplicate policy, want one of [BLOCK|FIRST|LAST|MIN|MAX|SUM], got %v", options.DuplicatePolicy))
+			}
+		}
+		if options.Labels != nil {
+			labels := _cmd.Labels()
+			for label, value := range options.Labels {
+				labels.Labels(label, value)
+			}
+			_cmd = cmds.TsAlterKey(labels)
+		}
+	}
+	cmd := _cmd.Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+// TSCreateRule - Creates a compaction rule from sourceKey to destKey.
+// For more information - https://redis.io/commands/ts.createrule/
+func (c *Compat) TSCreateRule(ctx context.Context, sourceKey string, destKey string, aggregator Aggregator, bucketDuration int) *StatusCmd {
+	_cmd := c.client.B().TsCreaterule().Sourcekey(sourceKey).Destkey(destKey)
+	var cmd cmds.Completed
+	switch aggregator {
+	case Avg:
+		cmd = _cmd.AggregationAvg().Bucketduration(int64(bucketDuration)).Build()
+	case Sum:
+		cmd = _cmd.AggregationSum().Bucketduration(int64(bucketDuration)).Build()
+	case Min:
+		cmd = _cmd.AggregationMin().Bucketduration(int64(bucketDuration)).Build()
+	case Max:
+		cmd = _cmd.AggregationMax().Bucketduration(int64(bucketDuration)).Build()
+	case Range:
+		cmd = _cmd.AggregationRange().Bucketduration(int64(bucketDuration)).Build()
+	case Count:
+		cmd = _cmd.AggregationCount().Bucketduration(int64(bucketDuration)).Build()
+	case First:
+		cmd = _cmd.AggregationFirst().Bucketduration(int64(bucketDuration)).Build()
+	case Last:
+		cmd = _cmd.AggregationLast().Bucketduration(int64(bucketDuration)).Build()
+	case StdP:
+		cmd = _cmd.AggregationStdP().Bucketduration(int64(bucketDuration)).Build()
+	case StdS:
+		cmd = _cmd.AggregationStdS().Bucketduration(int64(bucketDuration)).Build()
+	case VarP:
+		cmd = _cmd.AggregationVarP().Bucketduration(int64(bucketDuration)).Build()
+	case VarS:
+		cmd = _cmd.AggregationVarS().Bucketduration(int64(bucketDuration)).Build()
+	case Twa:
+		cmd = _cmd.AggregationTwa().Bucketduration(int64(bucketDuration)).Build()
+	}
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+// TSCreateRuleWithArgs - Creates a compaction rule from sourceKey to destKey with additional option.
+// This function allows for specifying additional option such as:
+// alignTimestamp.
+// For more information - https://redis.io/commands/ts.createrule/
+func (c *Compat) TSCreateRuleWithArgs(ctx context.Context, sourceKey string, destKey string, aggregator Aggregator, bucketDuration int, options *TSCreateRuleOptions) *StatusCmd {
+	_cmd := c.client.B().TsCreaterule().Sourcekey(sourceKey).Destkey(destKey)
+	var duration cmds.TsCreateruleBucketduration
+	switch aggregator {
+	case Avg:
+		duration = _cmd.AggregationAvg().Bucketduration(int64(bucketDuration))
+	case Sum:
+		duration = _cmd.AggregationSum().Bucketduration(int64(bucketDuration))
+	case Min:
+		duration = _cmd.AggregationMin().Bucketduration(int64(bucketDuration))
+	case Max:
+		duration = _cmd.AggregationMax().Bucketduration(int64(bucketDuration))
+	case Range:
+		duration = _cmd.AggregationRange().Bucketduration(int64(bucketDuration))
+	case Count:
+		duration = _cmd.AggregationCount().Bucketduration(int64(bucketDuration))
+	case First:
+		duration = _cmd.AggregationFirst().Bucketduration(int64(bucketDuration))
+	case Last:
+		duration = _cmd.AggregationLast().Bucketduration(int64(bucketDuration))
+	case StdP:
+		duration = _cmd.AggregationStdP().Bucketduration(int64(bucketDuration))
+	case StdS:
+		duration = _cmd.AggregationStdS().Bucketduration(int64(bucketDuration))
+	case VarP:
+		duration = _cmd.AggregationVarP().Bucketduration(int64(bucketDuration))
+	case VarS:
+		duration = _cmd.AggregationVarS().Bucketduration(int64(bucketDuration))
+	case Twa:
+		duration = _cmd.AggregationTwa().Bucketduration(int64(bucketDuration))
+	}
+	if options != nil && options.alignTimestamp != 0 {
+		duration.Aligntimestamp(options.alignTimestamp)
+	}
+	cmd := duration.Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+// TSIncrBy - Increments the value of a time-series key by the specified timestamp.
+// For more information - https://redis.io/commands/ts.incrby/
+// FIXME: timestamp should be addend
+func (c *Compat) TSIncrBy(ctx context.Context, Key string, timestamp float64) *IntCmd {
+	cmd := c.client.B().TsIncrby().Key(Key).Value(timestamp).Build()
+	return newIntCmd(c.client.Do(ctx, cmd))
+}
+
+// TSIncrByWithArgs - Increments the value of a time-series key by the specified timestamp with additional options.
+// This function allows for specifying additional options such as:
+// Timestamp, Retention, ChunkSize, Uncompressed and Labels.
+// For more information - https://redis.io/commands/ts.incrby/
+// FIXME: timestamp should be addend
+func (c *Compat) TSIncrByWithArgs(ctx context.Context, key string, timestamp float64, options *TSIncrDecrOptions) *IntCmd {
+	_cmd := c.client.B().TsIncrby().Key(key).Value(timestamp)
+	if options != nil {
+		if options.Timestamp != 0 {
+			_cmd.Timestamp(str(options.Timestamp))
+		}
+		if options.Retention != 0 {
+			_cmd.Retention(int64(options.Retention))
+		}
+		if options.ChunkSize != 0 {
+			_cmd.ChunkSize(int64(options.ChunkSize))
+		}
+		if options.Uncompressed {
+			_cmd.Uncompressed()
+		}
+		if options.Labels != nil {
+			_cmd.Labels()
+			for label, value := range options.Labels {
+				(cmds.TsIncrbyLabels)(_cmd).Labels(label, value)
+			}
+		}
+	}
+	cmd := (cmds.TsIncrbyLabels)(_cmd).Build()
+	return newIntCmd(c.client.Do(ctx, cmd))
+}
+
+// TSDecrBy - Decrements the value of a time-series key by the specified timestamp.
+// For more information - https://redis.io/commands/ts.decrby/
+// FIXME: timestamp should be subtrahend
+func (c *Compat) TSDecrBy(ctx context.Context, Key string, timestamp float64) *IntCmd {
+	cmd := c.client.B().TsDecrby().Key(Key).Value(timestamp).Build()
+	return newIntCmd(c.client.Do(ctx, cmd))
+}
+
+// TSDecrByWithArgs - Decrements the value of a time-series key by the specified timestamp with additional options.
+// This function allows for specifying additional options such as:
+// Timestamp, Retention, ChunkSize, Uncompressed and Labels.
+// For more information - https://redis.io/commands/ts.decrby/
+func (c *Compat) TSDecrByWithArgs(ctx context.Context, key string, timestamp float64, options *TSIncrDecrOptions) *IntCmd {
+	_cmd := c.client.B().TsDecrby().Key(key).Value(timestamp)
+	if options != nil {
+		if options.Timestamp != 0 {
+			_cmd.Timestamp(str(options.Timestamp))
+		}
+		if options.Retention != 0 {
+			_cmd.Retention(int64(options.Retention))
+		}
+		if options.ChunkSize != 0 {
+			_cmd.ChunkSize(int64(options.ChunkSize))
+		}
+		if options.Uncompressed {
+			_cmd.Uncompressed()
+		}
+		if options.Labels != nil {
+			_cmd.Labels()
+			for label, value := range options.Labels {
+				(cmds.TsDecrbyLabels)(_cmd).Labels(label, value)
+			}
+		}
+	}
+	cmd := (cmds.TsDecrbyLabels)(_cmd).Build()
+	return newIntCmd(c.client.Do(ctx, cmd))
+}
+
+// TSDel - Deletes a range of samples from a time-series key.
+// For more information - https://redis.io/commands/ts.del/
+func (c *Compat) TSDel(ctx context.Context, Key string, fromTimestamp int, toTimestamp int) *IntCmd {
+	cmd := c.client.B().TsDel().Key(Key).FromTimestamp(int64(fromTimestamp)).ToTimestamp(int64(toTimestamp)).Build()
+	return newIntCmd(c.client.Do(ctx, cmd))
+}
+
+// TSDeleteRule - Deletes a compaction rule from sourceKey to destKey.
+// For more information - https://redis.io/commands/ts.deleterule/
+func (c *Compat) TSDeleteRule(ctx context.Context, sourceKey string, destKey string) *StatusCmd {
+	cmd := c.client.B().TsDeleterule().Sourcekey(sourceKey).Destkey(destKey).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+// TSGetWithArgs - Gets the last sample of a time-series key with additional option.
+// This function allows for specifying additional option such as:
+// Latest.
+// For more information - https://redis.io/commands/ts.get/
+func (c *Compat) TSGetWithArgs(ctx context.Context, key string, options *TSGetOptions) *TSTimestampValueCmd {
+	_cmd := c.client.B().TsGet().Key(key)
+	if options != nil && options.Latest {
+		_cmd.Latest()
+	}
+	return newTSTimestampValueCmd(c.client.Do(ctx, _cmd.Build()))
+}
+
+// TSGet - Gets the last sample of a time-series key.
+// For more information - https://redis.io/commands/ts.get/
+func (c *Compat) TSGet(ctx context.Context, key string) *TSTimestampValueCmd {
+	cmd := c.client.B().TsGet().Key(key).Build()
+	return newTSTimestampValueCmd(c.client.Do(ctx, cmd))
+}
+
+// TSInfo - Returns information about a time-series key.
+// For more information - https://redis.io/commands/ts.info/
+func (c *Compat) TSInfo(ctx context.Context, key string) *MapStringInterfaceCmd {
+	cmd := c.client.B().TsInfo().Key(key).Build()
+	return newMapStringInterfaceCmd(c.client.Do(ctx, cmd))
+}
+
+// TSInfoWithArgs - Returns information about a time-series key with additional option.
+// This function allows for specifying additional option such as:
+// Debug.
+// For more information - https://redis.io/commands/ts.info/
+func (c *Compat) TSInfoWithArgs(ctx context.Context, key string, options *TSInfoOptions) *MapStringInterfaceCmd {
+	_cmd := c.client.B().TsInfo().Key(key)
+	if options != nil && options.Debug {
+		// FIXME: should not accept arg, just append "DEBUG"
+		_cmd.Debug("DEBUG")
+	}
+	cmd := (cmds.TsInfoKey)(_cmd).Build()
+	return newMapStringInterfaceCmd(c.client.Do(ctx, cmd))
+}
+
+// TSMAdd - Adds multiple samples to multiple time-series keys.
+// For more information - https://redis.io/commands/ts.madd/
+func (c *Compat) TSMAdd(ctx context.Context, ktvSlices [][]interface{}) *IntSliceCmd {
+	_cmd := c.client.B().TsMadd().KeyTimestampValue()
+	for _, ktv := range ktvSlices {
+		tstmp, err := toInt64(int64(ktv[1].(int)))
+		if err != nil {
+			panic(err)
+		}
+		val, err := toFloat64(int64(ktv[2].(int)))
+		if err != nil {
+			panic(err)
+		}
+		_cmd.KeyTimestampValue(str(ktv[0]), tstmp, val)
+	}
+	cmd := (cmds.TsMaddKeyTimestampValue)(_cmd).Build()
+	return newIntSliceCmd(c.client.Do(ctx, cmd))
+}
+
+// TSQueryIndex - Returns all the keys matching the filter expression.
+// For more information - https://redis.io/commands/ts.queryindex/
+func (c *Compat) TSQueryIndex(ctx context.Context, filterExpr []string) *StringSliceCmd {
+	cmd := c.client.B().TsQueryindex().Filter(filterExpr...).Build()
+	return newStringSliceCmd(c.client.Do(ctx, cmd))
+}
+
+// TSRevRange - Returns a range of samples from a time-series key in reverse order.
+// For more information - https://redis.io/commands/ts.revrange/
+func (c *Compat) TSRevRange(ctx context.Context, key string, fromTimestamp int, toTimestamp int) *TSTimestampValueSliceCmd {
+	cmd := c.client.B().TsRevrange().Key(key).Fromtimestamp(str(fromTimestamp)).Totimestamp(str(toTimestamp)).Build()
+	return newTSTimestampValueSliceCmd(c.client.Do(ctx, cmd))
+}
+
+// TSRevRangeWithArgs - Returns a range of samples from a time-series key in reverse order with additional options.
+// This function allows for specifying additional options such as:
+// Latest, FilterByTS, FilterByValue, Count, Align, Aggregator,
+// BucketDuration, BucketTimestamp and Empty.
+// For more information - https://redis.io/commands/ts.revrange/
+func (c *Compat) TSRevRangeWithArgs(ctx context.Context, key string, fromTimestamp int, toTimestamp int, options *TSRevRangeOptions) *TSTimestampValueSliceCmd {
+	_cmd := c.client.B().TsRevrange().Key(key).Fromtimestamp(str(fromTimestamp)).Totimestamp(str(toTimestamp))
+	if options != nil {
+		if options.Latest {
+			_cmd.Latest()
+		}
+		if options.FilterByTS != nil {
+			tss := make([]int64, 0, len(options.FilterByTS))
+			for _, ts := range options.FilterByTS {
+				tss = append(tss, int64(ts))
+			}
+			_cmd.FilterByTs(tss...)
+		}
+		if options.FilterByValue != nil {
+			if len(options.FilterByValue) != 2 {
+				panic(fmt.Sprintf("wrong number of arguments in options.FilterByValue, expect min, max, got %v", options.FilterByValue))
+			}
+			_cmd.FilterByValue(float64(options.FilterByValue[0]), float64(options.FilterByValue[1]))
+		}
+		if options.Count != 0 {
+			_cmd.Count(int64(options.Count))
+		}
+		if options.Align != nil {
+			_cmd.Align(str(options.Align))
+		}
+		if options.Aggregator != 0 {
+			switch options.Aggregator {
+			case Invalid:
+				break
+			case Avg:
+				_cmd.AggregationAvg()
+			case Sum:
+				_cmd.AggregationSum()
+			case Min:
+				_cmd.AggregationMin()
+			case Max:
+				_cmd.AggregationMax()
+			case Range:
+				_cmd.AggregationRange()
+			case Count:
+				_cmd.AggregationCount()
+			case First:
+				_cmd.AggregationFirst()
+			case Last:
+				_cmd.AggregationLast()
+			case StdP:
+				_cmd.AggregationStdP()
+			case StdS:
+				_cmd.AggregationStdS()
+			case VarP:
+				_cmd.AggregationVarP()
+			case VarS:
+				_cmd.AggregationVarS()
+			case Twa:
+				_cmd.AggregationTwa()
+			}
+		}
+		if options.BucketDuration != 0 {
+			cmds.TsRevrangeAggregationAggregationAvg(_cmd).Bucketduration(int64(options.BucketDuration))
+		}
+		if options.BucketTimestamp != nil {
+			cmds.TsRevrangeAggregationBucketduration(_cmd).Buckettimestamp(str(options.BucketTimestamp))
+		}
+		if options.Empty {
+			cmds.TsRevrangeAggregationBuckettimestamp(_cmd).Empty()
+		}
+	}
+	cmd := cmds.TsRevrangeTotimestamp(_cmd).Build()
+	return newTSTimestampValueSliceCmd(c.client.Do(ctx, cmd))
+}
+
+// TSRange - Returns a range of samples from a time-series key.
+// For more information - https://redis.io/commands/ts.range/
+func (c *Compat) TSRange(ctx context.Context, key string, fromTimestamp int, toTimestamp int) *TSTimestampValueSliceCmd {
+	cmd := c.client.B().TsRange().Key(key).Fromtimestamp(str(fromTimestamp)).Totimestamp(str(toTimestamp)).Build()
+	return newTSTimestampValueSliceCmd(c.client.Do(ctx, cmd))
+}
+
+// TSRangeWithArgs - Returns a range of samples from a time-series key with additional options.
+// This function allows for specifying additional options such as:
+// Latest, FilterByTS, FilterByValue, Count, Align, Aggregator,
+// BucketDuration, BucketTimestamp and Empty.
+// For more information - https://redis.io/commands/ts.range/
+func (c *Compat) TSRangeWithArgs(ctx context.Context, key string, fromTimestamp int, toTimestamp int, options *TSRangeOptions) *TSTimestampValueSliceCmd {
+	_cmd := c.client.B().TsRange().Key(key).Fromtimestamp(str(fromTimestamp)).Totimestamp(str(toTimestamp))
+	if options != nil {
+		if options.Latest {
+			_cmd.Latest()
+		}
+		if options.FilterByTS != nil {
+			tss := make([]int64, 0, len(options.FilterByTS))
+			for _, ts := range options.FilterByTS {
+				tss = append(tss, int64(ts))
+			}
+			_cmd.FilterByTs(tss...)
+		}
+		if options.FilterByValue != nil {
+			if len(options.FilterByValue) != 2 {
+				panic(fmt.Sprintf("wrong number of arguments in options.FilterByValue, expect min, max, got %v", options.FilterByValue))
+			}
+			_cmd.FilterByValue(float64(options.FilterByValue[0]), float64(options.FilterByValue[1]))
+		}
+		if options.Count != 0 {
+			_cmd.Count(int64(options.Count))
+		}
+		if options.Align != nil {
+			_cmd.Align(str(options.Align))
+		}
+		if options.Aggregator != 0 {
+			switch options.Aggregator {
+			case Invalid:
+				break
+			case Avg:
+				_cmd.AggregationAvg()
+			case Sum:
+				_cmd.AggregationSum()
+			case Min:
+				_cmd.AggregationMin()
+			case Max:
+				_cmd.AggregationMax()
+			case Range:
+				_cmd.AggregationRange()
+			case Count:
+				_cmd.AggregationCount()
+			case First:
+				_cmd.AggregationFirst()
+			case Last:
+				_cmd.AggregationLast()
+			case StdP:
+				_cmd.AggregationStdP()
+			case StdS:
+				_cmd.AggregationStdS()
+			case VarP:
+				_cmd.AggregationVarP()
+			case VarS:
+				_cmd.AggregationVarS()
+			case Twa:
+				_cmd.AggregationTwa()
+			}
+		}
+		if options.BucketDuration != 0 {
+			cmds.TsRangeAggregationAggregationAvg(_cmd).Bucketduration(int64(options.BucketDuration))
+		}
+		if options.BucketTimestamp != nil {
+			cmds.TsRangeAggregationBucketduration(_cmd).Buckettimestamp(str(options.BucketTimestamp))
+		}
+		if options.Empty {
+			cmds.TsRangeAggregationBuckettimestamp(_cmd).Empty()
+		}
+	}
+	cmd := cmds.TsRangeTotimestamp(_cmd).Build()
+	return newTSTimestampValueSliceCmd(c.client.Do(ctx, cmd))
+}
+
+// TSMRange - Returns a range of samples from multiple time-series keys.
+// For more information - https://redis.io/commands/ts.mrange/
+func (c *Compat) TSMRange(ctx context.Context, fromTimestamp int, toTimestamp int, filterExpr []string) *MapStringSliceInterfaceCmd {
+	cmd := c.client.B().TsMrange().Fromtimestamp(str(fromTimestamp)).Totimestamp(str(toTimestamp)).Filter(filterExpr...).Build()
+	return newMapStringSliceInterfaceCmd(c.client.Do(ctx, cmd))
+}
+
+// TSMRangeWithArgs - Returns a range of samples from multiple time-series keys with additional options.
+// This function allows for specifying additional options such as:
+// Latest, FilterByTS, FilterByValue, WithLabels, SelectedLabels,
+// Count, Align, Aggregator, BucketDuration, BucketTimestamp,
+// Empty, GroupByLabel and Reducer.
+// For more information - https://redis.io/commands/ts.mrange/
+func (c *Compat) TSMRangeWithArgs(ctx context.Context, fromTimestamp int, toTimestamp int, filterExpr []string, options *TSMRangeOptions) *MapStringSliceInterfaceCmd {
+	_cmd := c.client.B().TsMrange().Fromtimestamp(str(fromTimestamp)).Totimestamp(str(toTimestamp))
+	if options != nil {
+		if options.Latest {
+			_cmd.Latest()
+		}
+		if options.FilterByTS != nil {
+			tss := make([]int64, 0, len(options.FilterByTS))
+			for _, ts := range options.FilterByTS {
+				tss = append(tss, int64(ts))
+			}
+			_cmd.FilterByTs(tss...)
+		}
+		if options.FilterByValue != nil {
+			if len(options.FilterByValue) != 2 {
+				panic(fmt.Sprintf("wrong number of arguments in options.FilterByValue, expect min, max, got %v", options.FilterByValue))
+			}
+			_cmd.FilterByValue(float64(options.FilterByValue[0]), float64(options.FilterByValue[1]))
+		}
+		if options.WithLabels {
+			_cmd.Withlabels()
+		}
+		if options.SelectedLabels != nil {
+			labels := make([]string, 0, len(options.SelectedLabels))
+			for _, l := range options.SelectedLabels {
+				labels = append(labels, str(l))
+			}
+			_cmd.SelectedLabels(labels)
+		}
+		if options.Count != 0 {
+			_cmd.Count(int64(options.Count))
+		}
+		if options.Align != nil {
+			_cmd.Align(str(options.Align))
+		}
+		if options.Aggregator != 0 {
+			switch options.Aggregator {
+			case Invalid:
+				break
+			case Avg:
+				_cmd.AggregationAvg()
+			case Sum:
+				_cmd.AggregationSum()
+			case Min:
+				_cmd.AggregationMin()
+			case Max:
+				_cmd.AggregationMax()
+			case Range:
+				_cmd.AggregationRange()
+			case Count:
+				_cmd.AggregationCount()
+			case First:
+				_cmd.AggregationFirst()
+			case Last:
+				_cmd.AggregationLast()
+			case StdP:
+				_cmd.AggregationStdP()
+			case StdS:
+				_cmd.AggregationStdS()
+			case VarP:
+				_cmd.AggregationVarP()
+			case VarS:
+				_cmd.AggregationVarS()
+			case Twa:
+				_cmd.AggregationTwa()
+			}
+		}
+		if options.BucketDuration != 0 {
+			cmds.TsMrangeAggregationAggregationAvg(_cmd).Bucketduration(int64(options.BucketDuration))
+		}
+		if options.BucketTimestamp != nil {
+			cmds.TsMrangeAggregationBucketduration(_cmd).Buckettimestamp(str(options.BucketTimestamp))
+		}
+		if options.Empty {
+			cmds.TsMrangeAggregationBuckettimestamp(_cmd).Empty()
+		}
+		cmds.TsMrangeTotimestamp(_cmd).Filter(filterExpr...)
+		if options.GroupByLabel != nil {
+			// FIXME: Wrong API definition: REDUCE
+			cmds.TsMrangeFilter(_cmd).Groupby(str(options.GroupByLabel), "REDUCE", str(options.Reducer))
+		}
+	}
+	cmd := (cmds.TsMrangeFilter)(_cmd).Build()
+	return newMapStringSliceInterfaceCmd(c.client.Do(ctx, cmd))
+}
+
+// TSMRevRange - Returns a range of samples from multiple time-series keys in reverse order.
+// For more information - https://redis.io/commands/ts.mrevrange/
+func (c *Compat) TSMRevRange(ctx context.Context, fromTimestamp int, toTimestamp int, filterExpr []string) *MapStringSliceInterfaceCmd {
+	cmd := c.client.B().TsMrange().Fromtimestamp(str(fromTimestamp)).Totimestamp(str(toTimestamp)).Filter(filterExpr...).Build()
+	return newMapStringSliceInterfaceCmd(c.client.Do(ctx, cmd))
+}
+
+// TSMRevRangeWithArgs - Returns a range of samples from multiple time-series keys in reverse order with additional options.
+// This function allows for specifying additional options such as:
+// Latest, FilterByTS, FilterByValue, WithLabels, SelectedLabels,
+// Count, Align, Aggregator, BucketDuration, BucketTimestamp,
+// Empty, GroupByLabel and Reducer.
+// For more information - https://redis.io/commands/ts.mrevrange/
+func (c *Compat) TSMRevRangeWithArgs(ctx context.Context, fromTimestamp int, toTimestamp int, filterExpr []string, options *TSMRevRangeOptions) *MapStringSliceInterfaceCmd {
+	_cmd := c.client.B().TsMrevrange().Fromtimestamp(str(fromTimestamp)).Totimestamp(str(toTimestamp))
+	if options != nil {
+		if options.Latest {
+			_cmd.Latest()
+		}
+		if options.FilterByTS != nil {
+			tss := make([]int64, 0, len(options.FilterByTS))
+			for _, ts := range options.FilterByTS {
+				tss = append(tss, int64(ts))
+			}
+			_cmd.FilterByTs(tss...)
+		}
+		if options.FilterByValue != nil {
+			if len(options.FilterByValue) != 2 {
+				panic(fmt.Sprintf("wrong number of arguments in options.FilterByValue, expect min, max, got %v", options.FilterByValue))
+			}
+			_cmd.FilterByValue(float64(options.FilterByValue[0]), float64(options.FilterByValue[1]))
+		}
+		if options.WithLabels {
+			_cmd.Withlabels()
+		}
+		if options.SelectedLabels != nil {
+			labels := make([]string, 0, len(options.SelectedLabels))
+			for _, l := range options.SelectedLabels {
+				labels = append(labels, str(l))
+			}
+			_cmd.SelectedLabels(labels)
+		}
+		if options.Count != 0 {
+			_cmd.Count(int64(options.Count))
+		}
+		if options.Align != nil {
+			_cmd.Align(str(options.Align))
+		}
+		if options.Aggregator != 0 {
+			switch options.Aggregator {
+			case Invalid:
+				break
+			case Avg:
+				_cmd.AggregationAvg()
+			case Sum:
+				_cmd.AggregationSum()
+			case Min:
+				_cmd.AggregationMin()
+			case Max:
+				_cmd.AggregationMax()
+			case Range:
+				_cmd.AggregationRange()
+			case Count:
+				_cmd.AggregationCount()
+			case First:
+				_cmd.AggregationFirst()
+			case Last:
+				_cmd.AggregationLast()
+			case StdP:
+				_cmd.AggregationStdP()
+			case StdS:
+				_cmd.AggregationStdS()
+			case VarP:
+				_cmd.AggregationVarP()
+			case VarS:
+				_cmd.AggregationVarS()
+			case Twa:
+				_cmd.AggregationTwa()
+			}
+		}
+		if options.BucketDuration != 0 {
+			cmds.TsMrevrangeAggregationAggregationAvg(_cmd).Bucketduration(int64(options.BucketDuration))
+		}
+		if options.BucketTimestamp != nil {
+			cmds.TsMrevrangeAggregationBucketduration(_cmd).Buckettimestamp(str(options.BucketTimestamp))
+		}
+		if options.Empty {
+			cmds.TsMrevrangeAggregationBuckettimestamp(_cmd).Empty()
+		}
+		cmds.TsMrevrangeTotimestamp(_cmd).Filter(filterExpr...)
+		if options.GroupByLabel != nil {
+			// FIXME: Wrong API definition: REDUCE
+			cmds.TsMrevrangeFilter(_cmd).Groupby(str(options.GroupByLabel), "REDUCE", str(options.Reducer))
+		}
+	}
+	cmd := (cmds.TsMrevrangeFilter)(_cmd).Build()
+	return newMapStringSliceInterfaceCmd(c.client.Do(ctx, cmd))
+}
+
+// TSMGet - Returns the last sample of multiple time-series keys.
+// For more information - https://redis.io/commands/ts.mget/
+func (c *Compat) TSMGet(ctx context.Context, filters []string) *MapStringSliceInterfaceCmd {
+	cmd := c.client.B().TsMget().Filter(filters...).Build()
+	return newMapStringSliceInterfaceCmd(c.client.Do(ctx, cmd))
+}
+
+// TSMGetWithArgs - Returns the last sample of multiple time-series keys with additional options.
+// This function allows for specifying additional options such as:
+// Latest, WithLabels and SelectedLabels.
+// For more information - https://redis.io/commands/ts.mget/
+func (c *Compat) TSMGetWithArgs(ctx context.Context, filters []string, options *TSMGetOptions) *MapStringSliceInterfaceCmd {
+	_cmd := c.client.B().TsMget()
+	if options != nil {
+		if options.Latest {
+			_cmd.Latest()
+		}
+		if options.WithLabels {
+			_cmd.Withlabels()
+		}
+		if options.SelectedLabels != nil {
+			labels := make([]string, 0, len(options.SelectedLabels))
+			for _, l := range options.SelectedLabels {
+				labels = append(labels, str(l))
+			}
+			_cmd.SelectedLabels(labels)
+		}
+	}
+	cmd := _cmd.Filter(filters...).Build()
+	return newMapStringSliceInterfaceCmd(c.client.Do(ctx, cmd))
 }
 
 func (c CacheCompat) BitCount(ctx context.Context, key string, bitCount *BitCount) *IntCmd {

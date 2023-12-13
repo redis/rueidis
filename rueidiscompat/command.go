@@ -3170,3 +3170,285 @@ type TDigestMergeOptions struct {
 	Compression int64
 	Override    bool
 }
+
+type TSOptions struct {
+	Retention       int
+	ChunkSize       int
+	Encoding        string
+	DuplicatePolicy string
+	Labels          map[string]string
+}
+type TSIncrDecrOptions struct {
+	Timestamp    int64
+	Retention    int
+	ChunkSize    int
+	Uncompressed bool
+	Labels       map[string]string
+}
+
+type TSAlterOptions struct {
+	Retention       int
+	ChunkSize       int
+	DuplicatePolicy string
+	Labels          map[string]string
+}
+
+type TSCreateRuleOptions struct {
+	alignTimestamp int64
+}
+
+type TSGetOptions struct {
+	Latest bool
+}
+
+type TSInfoOptions struct {
+	Debug bool
+}
+type Aggregator int
+
+const (
+	Invalid = Aggregator(iota)
+	Avg
+	Sum
+	Min
+	Max
+	Range
+	Count
+	First
+	Last
+	StdP
+	StdS
+	VarP
+	VarS
+	Twa
+)
+
+func (a Aggregator) String() string {
+	switch a {
+	case Invalid:
+		return ""
+	case Avg:
+		return "AVG"
+	case Sum:
+		return "SUM"
+	case Min:
+		return "MIN"
+	case Max:
+		return "MAX"
+	case Range:
+		return "RANGE"
+	case Count:
+		return "COUNT"
+	case First:
+		return "FIRST"
+	case Last:
+		return "LAST"
+	case StdP:
+		return "STD.P"
+	case StdS:
+		return "STD.S"
+	case VarP:
+		return "VAR.P"
+	case VarS:
+		return "VAR.S"
+	case Twa:
+		return "TWA"
+	default:
+		return ""
+	}
+}
+
+type TSTimestampValue struct {
+	Timestamp int64
+	Value     float64
+}
+type TSTimestampValueCmd struct {
+	baseCmd[TSTimestampValue]
+}
+
+func newTSTimestampValueCmd(res rueidis.RedisResult) *TSTimestampValueCmd {
+	cmd := &TSTimestampValueCmd{}
+	val := TSTimestampValue{}
+	if err := res.Error(); err != nil {
+		cmd.err = err
+		return cmd
+	}
+	arr, err := res.ToArray()
+	if err != nil {
+		cmd.err = err
+		return cmd
+	}
+	if len(arr) != 2 {
+		panic(fmt.Sprintf("wrong len of array reply, should be 2, got %v", len(arr)))
+	}
+	val.Timestamp, err = arr[0].AsInt64()
+	if err != nil {
+		cmd.err = err
+		return cmd
+	}
+	val.Value, err = arr[1].AsFloat64()
+	if err != nil {
+		cmd.err = err
+		return cmd
+	}
+	cmd.SetVal(val)
+	return cmd
+}
+
+type MapStringInterfaceCmd struct {
+	baseCmd[map[string]any]
+}
+
+func newMapStringInterfaceCmd(res rueidis.RedisResult) *MapStringInterfaceCmd {
+	cmd := &MapStringInterfaceCmd{}
+	m, err := res.AsMap()
+	if err != nil {
+		cmd.err = err
+		return cmd
+	}
+	strIntMap := make(map[string]any, len(m))
+	for k, ele := range m {
+		var v any
+		var err error
+		if !ele.IsNil() {
+			v, err = ele.ToAny()
+			if err != nil {
+				cmd.err = err
+				return cmd
+			}
+		}
+		strIntMap[k] = v
+	}
+	cmd.SetVal(strIntMap)
+	return cmd
+}
+
+type TSTimestampValueSliceCmd struct {
+	baseCmd[[]TSTimestampValue]
+}
+
+func newTSTimestampValueSliceCmd(res rueidis.RedisResult) *TSTimestampValueSliceCmd {
+	cmd := &TSTimestampValueSliceCmd{}
+	msgSlice, err := res.ToArray()
+	if err != nil {
+		cmd.err = err
+		return cmd
+	}
+	tsValSlice := make([]TSTimestampValue, 0, len(msgSlice))
+	for i := 0; i < len(msgSlice); i++ {
+		msgArray, err := msgSlice[i].ToArray()
+		if err != nil {
+			cmd.err = err
+			return cmd
+		}
+		tstmp, err := msgArray[0].AsInt64()
+		if err != nil {
+			cmd.err = err
+			return cmd
+		}
+		val, err := msgArray[1].AsFloat64()
+		if err != nil {
+			cmd.err = err
+			return cmd
+		}
+		tsValSlice = append(tsValSlice, TSTimestampValue{Timestamp: tstmp, Value: val})
+	}
+	cmd.SetVal(tsValSlice)
+	return cmd
+}
+
+type MapStringSliceInterfaceCmd struct {
+	baseCmd[map[string][]any]
+}
+
+func newMapStringSliceInterfaceCmd(res rueidis.RedisResult) *MapStringSliceInterfaceCmd {
+	cmd := &MapStringSliceInterfaceCmd{}
+	m, err := res.ToMap()
+	if err != nil {
+		cmd.err = err
+		return cmd
+	}
+	mapStrSliceInt := make(map[string][]any, len(m))
+	for k, entry := range m {
+		vals, err := entry.ToArray()
+		if err != nil {
+			cmd.err = err
+			return cmd
+		}
+		anySlice := make([]any, 0, len(vals))
+		for _, v := range vals {
+			var err error
+			ele, err := v.ToAny()
+			if err != nil {
+				cmd.err = err
+				return cmd
+			}
+			anySlice = append(anySlice, ele)
+		}
+		mapStrSliceInt[k] = anySlice
+	}
+	cmd.SetVal(mapStrSliceInt)
+	return cmd
+}
+
+type TSRangeOptions struct {
+	Latest          bool
+	FilterByTS      []int
+	FilterByValue   []int
+	Count           int
+	Align           interface{}
+	Aggregator      Aggregator
+	BucketDuration  int
+	BucketTimestamp interface{}
+	Empty           bool
+}
+
+type TSRevRangeOptions struct {
+	Latest          bool
+	FilterByTS      []int
+	FilterByValue   []int
+	Count           int
+	Align           interface{}
+	Aggregator      Aggregator
+	BucketDuration  int
+	BucketTimestamp interface{}
+	Empty           bool
+}
+
+type TSMRangeOptions struct {
+	Latest          bool
+	FilterByTS      []int
+	FilterByValue   []int
+	WithLabels      bool
+	SelectedLabels  []interface{}
+	Count           int
+	Align           interface{}
+	Aggregator      Aggregator
+	BucketDuration  int
+	BucketTimestamp interface{}
+	Empty           bool
+	GroupByLabel    interface{}
+	Reducer         interface{}
+}
+
+type TSMRevRangeOptions struct {
+	Latest          bool
+	FilterByTS      []int
+	FilterByValue   []int
+	WithLabels      bool
+	SelectedLabels  []interface{}
+	Count           int
+	Align           interface{}
+	Aggregator      Aggregator
+	BucketDuration  int
+	BucketTimestamp interface{}
+	Empty           bool
+	GroupByLabel    interface{}
+	Reducer         interface{}
+}
+
+type TSMGetOptions struct {
+	Latest         bool
+	WithLabels     bool
+	SelectedLabels []interface{}
+}
