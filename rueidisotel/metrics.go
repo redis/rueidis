@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	DefaultHistogramDefaultBuckets = []float64{
+	DefaultHistogramBuckets = []float64{
 		.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10,
 	}
 	DefaultDialFn = func(dst string, dialer *net.Dialer, cfg *tls.Config) (conn net.Conn, err error) {
@@ -30,7 +30,7 @@ type HistogramOption struct {
 }
 
 // WithHistogramOption sets the HistogramOption.
-// If not set, DefaultHistogramDefaultBuckets will be used.
+// If not set, DefaultHistogramBuckets will be used.
 func WithHistogramOption(histogramOption HistogramOption) Option {
 	return func(cli *otelclient) {
 		cli.histogramOption = histogramOption
@@ -96,7 +96,7 @@ func newClient(opts ...Option) *otelclient {
 		opt(cli)
 	}
 	if cli.histogramOption.Buckets == nil {
-		cli.histogramOption.Buckets = DefaultHistogramDefaultBuckets
+		cli.histogramOption.Buckets = DefaultHistogramBuckets
 	}
 	if cli.meterProvider == nil {
 		cli.meterProvider = otel.GetMeterProvider() // Default to global MeterProvider
