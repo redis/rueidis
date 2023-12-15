@@ -19,8 +19,8 @@ import (
 	"github.com/redis/rueidis/internal/util"
 )
 
-const LIB_NAME = "rueidis"
-const LIB_VER = "1.0.23"
+const LibName = "rueidis"
+const LibVer = "1.0.24"
 
 var noHello = regexp.MustCompile("unknown command .?(HELLO|hello).?")
 
@@ -201,7 +201,7 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 	if len(option.ClientSetInfo) == 2 {
 		init = append(init, []string{"CLIENT", "SETINFO", "LIB-NAME", option.ClientSetInfo[0]}, []string{"CLIENT", "SETINFO", "LIB-VER", option.ClientSetInfo[1]})
 	} else {
-		init = append(init, []string{"CLIENT", "SETINFO", "LIB-NAME", LIB_NAME}, []string{"CLIENT", "SETINFO", "LIB-VER", LIB_VER})
+		init = append(init, []string{"CLIENT", "SETINFO", "LIB-NAME", LibName}, []string{"CLIENT", "SETINFO", "LIB-VER", LibVer})
 	}
 
 	timeout := option.Dialer.Timeout
@@ -282,7 +282,7 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 		if len(option.ClientSetInfo) == 2 {
 			init = append(init, []string{"CLIENT", "SETINFO", "LIB-NAME", option.ClientSetInfo[0]}, []string{"CLIENT", "SETINFO", "LIB-VER", option.ClientSetInfo[1]})
 		} else {
-			init = append(init, []string{"CLIENT", "SETINFO", "LIB-NAME", LIB_NAME}, []string{"CLIENT", "SETINFO", "LIB-VER", LIB_VER})
+			init = append(init, []string{"CLIENT", "SETINFO", "LIB-NAME", LibName}, []string{"CLIENT", "SETINFO", "LIB-VER", LibVer})
 		}
 		p.version = 5
 		if len(init) != 0 {
