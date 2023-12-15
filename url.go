@@ -18,7 +18,10 @@ import (
 // redis://<user>:<password>@<host>:<port>?addr=<host2>:<port2>&addr=<host3>:<port3>
 // unix://<user>:<password>@</path/to/redis.sock>?db=<db_number>
 func ParseURL(str string) (opt ClientOption, err error) {
-	u, _ := url.Parse(str)
+	u, err := url.Parse(str)
+	if err != nil {
+		return opt, err
+	}
 	parseAddr := func(hostport string) (host string, addr string) {
 		host, port, _ := net.SplitHostPort(hostport)
 		if host == "" {
