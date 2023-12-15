@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
@@ -22,15 +23,26 @@ var (
 var _ rueidis.Client = (*otelclient)(nil)
 
 // WithClient creates a new rueidis.Client with OpenTelemetry tracing enabled.
-//
-// Deprecated: use NewClient() instead.
 func WithClient(client rueidis.Client, opts ...Option) rueidis.Client {
-	cli, err := newClient(opts...)
-	if err != nil {
-		panic(err)
+	o := &otelclient{
+		client: client,
 	}
-	cli.client = client
-	return cli
+	for _, opt := range opts {
+		opt(o)
+	}
+	if o.meterProvider == nil {
+		o.meterProvider = otel.GetMeterProvider() // Default to global MeterProvider
+	}
+	if o.tracerProvider == nil {
+		o.tracerProvider = otel.GetTracerProvider() // Default to global TracerProvider
+	}
+	// Now that we have the meterProvider and tracerProvider, get the Meter and Tracer
+	o.meter = o.meterProvider.Meter(name)
+	o.tracer = o.tracerProvider.Tracer(name)
+	// Now create the counters using the meter
+	o.cscMiss, _ = o.meter.Int64Counter("rueidis_do_cache_miss")
+	o.cscHits, _ = o.meter.Int64Counter("rueidis_do_cache_hits")
+	return o
 }
 
 // Option is the Functional Options interface
@@ -65,20 +77,15 @@ func WithTracerProvider(provider trace.TracerProvider) Option {
 }
 
 type otelclient struct {
-	client          rueidis.Client
-	meterProvider   metric.MeterProvider
-	tracerProvider  trace.TracerProvider
-	tracer          trace.Tracer
-	meter           metric.Meter
-	cscMiss         metric.Int64Counter
-	cscHits         metric.Int64Counter
-	mAttrs          []attribute.KeyValue
-	tAttrs          []attribute.KeyValue
-	histogramOption HistogramOption
-	attempt         metric.Int64Counter
-	success         metric.Int64Counter
-	conns           metric.Int64UpDownCounter
-	dialLatency     metric.Float64Histogram
+	client         rueidis.Client
+	meterProvider  metric.MeterProvider
+	tracerProvider trace.TracerProvider
+	tracer         trace.Tracer
+	meter          metric.Meter
+	cscMiss        metric.Int64Counter
+	cscHits        metric.Int64Counter
+	mAttrs         []attribute.KeyValue
+	tAttrs         []attribute.KeyValue
 }
 
 func (o *otelclient) B() rueidis.Builder {
