@@ -14,14 +14,8 @@ import (
 )
 
 var (
-	DefaultHistogramBuckets = []float64{
+	defaultHistogramBuckets = []float64{
 		.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10,
-	}
-	DefaultDialFn = func(dst string, dialer *net.Dialer, cfg *tls.Config) (conn net.Conn, err error) {
-		if cfg != nil {
-			return tls.DialWithDialer(dialer, "tcp", dst, cfg)
-		}
-		return dialer.Dial("tcp", dst)
 	}
 )
 
@@ -47,7 +41,7 @@ func NewClient(clientOption rueidis.ClientOption, opts ...Option) (rueidis.Clien
 	oclient := newClient(opts...)
 
 	if clientOption.DialFn == nil {
-		clientOption.DialFn = DefaultDialFn
+		clientOption.DialFn = defaultDialFn
 	}
 
 	attempt, err := oclient.meter.Int64Counter("rueidis_dial_attempt")
@@ -96,7 +90,7 @@ func newClient(opts ...Option) *otelclient {
 		opt(cli)
 	}
 	if cli.histogramOption.Buckets == nil {
-		cli.histogramOption.Buckets = DefaultHistogramBuckets
+		cli.histogramOption.Buckets = defaultHistogramBuckets
 	}
 	if cli.meterProvider == nil {
 		cli.meterProvider = otel.GetMeterProvider() // Default to global MeterProvider
@@ -156,4 +150,11 @@ func (t *connTracker) Close() error {
 	}
 
 	return t.Conn.Close()
+}
+
+func defaultDialFn(dst string, dialer *net.Dialer, cfg *tls.Config) (conn net.Conn, err error) {
+	if cfg != nil {
+		return tls.DialWithDialer(dialer, "tcp", dst, cfg)
+	}
+	return dialer.Dial("tcp", dst)
 }
