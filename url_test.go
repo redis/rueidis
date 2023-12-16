@@ -6,6 +6,9 @@ import (
 )
 
 func TestParseURL(t *testing.T) {
+	if opt, err := ParseURL("re dis://"); err == nil {
+		t.Fatalf("unexpected %v %v", opt, err)
+	}
 	if opt, err := ParseURL(""); !strings.HasPrefix(err.Error(), "redis: invalid URL scheme") {
 		t.Fatalf("unexpected %v %v", opt, err)
 	}
