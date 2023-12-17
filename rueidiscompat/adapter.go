@@ -2560,7 +2560,8 @@ func (c *Compat) EvalShaRO(ctx context.Context, sha1 string, keys []string, args
 
 func (c *Compat) ScriptExists(ctx context.Context, hashes ...string) *BoolSliceCmd {
 	var mu sync.Mutex
-	ret := &BoolSliceCmd{val: make([]bool, len(hashes))}
+	ret := &BoolSliceCmd{}
+	ret.val = make([]bool, len(hashes))
 	for i := range hashes {
 		ret.val[i] = true
 	}
