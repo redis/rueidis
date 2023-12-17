@@ -136,7 +136,8 @@ func trackDialing(
 			return nil, err
 		}
 
-		dialLatency.Record(ctx, time.Since(start).Seconds())
+		// Use floating point division for higher precision (instead of Seconds method).
+		dialLatency.Record(ctx, float64(time.Since(start))/float64(time.Second))
 		success.Add(ctx, 1)
 		conns.Add(ctx, 1)
 
