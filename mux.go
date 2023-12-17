@@ -117,7 +117,7 @@ func (m *mux) SetOnCloseHook(fn func(error)) {
 }
 
 func (m *mux) setCloseHookOnWire(i uint16, w wire) {
-	if w != m.dead {
+	if w != m.dead && w != m.init {
 		w.SetOnCloseHook(func(err error) {
 			if err != ErrClosing {
 				if m.wire[i].CompareAndSwap(w, m.init) {
