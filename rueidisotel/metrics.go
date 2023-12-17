@@ -14,14 +14,8 @@ import (
 )
 
 var (
-	DefaultHistogramBuckets = []float64{
+	defaultHistogramBuckets = []float64{
 		.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10,
-	}
-	DefaultDialFn = func(dst string, dialer *net.Dialer, cfg *tls.Config) (conn net.Conn, err error) {
-		if cfg != nil {
-			return tls.DialWithDialer(dialer, "tcp", dst, cfg)
-		}
-		return dialer.Dial("tcp", dst)
 	}
 )
 
@@ -44,10 +38,13 @@ func WithHistogramOption(histogramOption HistogramOption) Option {
 // - rueidis_dial_conns: number of active connections
 // - rueidis_dial_latency: dial latency in seconds
 func NewClient(clientOption rueidis.ClientOption, opts ...Option) (rueidis.Client, error) {
-	oclient := newClient(opts...)
+	oclient, err := newClient(opts...)
+	if err != nil {
+		return nil, err
+	}
 
 	if clientOption.DialFn == nil {
-		clientOption.DialFn = DefaultDialFn
+		clientOption.DialFn = defaultDialFn
 	}
 
 	attempt, err := oclient.meter.Int64Counter("rueidis_dial_attempt")
@@ -90,13 +87,13 @@ func NewClient(clientOption rueidis.ClientOption, opts ...Option) (rueidis.Clien
 	return oclient, nil
 }
 
-func newClient(opts ...Option) *otelclient {
+func newClient(opts ...Option) (*otelclient, error) {
 	cli := &otelclient{}
 	for _, opt := range opts {
 		opt(cli)
 	}
 	if cli.histogramOption.Buckets == nil {
-		cli.histogramOption.Buckets = DefaultHistogramBuckets
+		cli.histogramOption.Buckets = defaultHistogramBuckets
 	}
 	if cli.meterProvider == nil {
 		cli.meterProvider = otel.GetMeterProvider() // Default to global MeterProvider
@@ -109,9 +106,16 @@ func newClient(opts ...Option) *otelclient {
 	cli.meter = cli.meterProvider.Meter(name)
 	cli.tracer = cli.tracerProvider.Tracer(name)
 	// Now create the counters using the meter
-	cli.cscMiss, _ = cli.meter.Int64Counter("rueidis_do_cache_miss")
-	cli.cscHits, _ = cli.meter.Int64Counter("rueidis_do_cache_hits")
-	return cli
+	var err error
+	cli.cscMiss, err = cli.meter.Int64Counter("rueidis_do_cache_miss")
+	if err != nil {
+		return nil, err
+	}
+	cli.cscHits, err = cli.meter.Int64Counter("rueidis_do_cache_hits")
+	if err != nil {
+		return nil, err
+	}
+	return cli, nil
 }
 
 func trackDialing(
@@ -132,7 +136,8 @@ func trackDialing(
 			return nil, err
 		}
 
-		dialLatency.Record(ctx, time.Since(start).Seconds())
+		// Use floating point division for higher precision (instead of Seconds method).
+		dialLatency.Record(ctx, float64(time.Since(start))/float64(time.Second))
 		success.Add(ctx, 1)
 		conns.Add(ctx, 1)
 
@@ -156,4 +161,11 @@ func (t *connTracker) Close() error {
 	}
 
 	return t.Conn.Close()
+}
+
+func defaultDialFn(dst string, dialer *net.Dialer, cfg *tls.Config) (conn net.Conn, err error) {
+	if cfg != nil {
+		return tls.DialWithDialer(dialer, "tcp", dst, cfg)
+	}
+	return dialer.Dial("tcp", dst)
 }
