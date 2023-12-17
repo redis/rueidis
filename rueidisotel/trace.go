@@ -23,7 +23,10 @@ var _ rueidis.Client = (*otelclient)(nil)
 
 // WithClient creates a new rueidis.Client with OpenTelemetry tracing enabled.
 func WithClient(client rueidis.Client, opts ...Option) rueidis.Client {
-	cli := newClient(opts...)
+	cli, err := newClient(opts...)
+	if err != nil {
+		panic(err)
+	}
 	cli.client = client
 	return cli
 }

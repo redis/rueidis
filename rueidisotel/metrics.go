@@ -38,7 +38,10 @@ func WithHistogramOption(histogramOption HistogramOption) Option {
 // - rueidis_dial_conns: number of active connections
 // - rueidis_dial_latency: dial latency in seconds
 func NewClient(clientOption rueidis.ClientOption, opts ...Option) (rueidis.Client, error) {
-	oclient := newClient(opts...)
+	oclient, err := newClient(opts...)
+	if err != nil {
+		return nil, err
+	}
 
 	if clientOption.DialFn == nil {
 		clientOption.DialFn = defaultDialFn
@@ -84,7 +87,7 @@ func NewClient(clientOption rueidis.ClientOption, opts ...Option) (rueidis.Clien
 	return oclient, nil
 }
 
-func newClient(opts ...Option) *otelclient {
+func newClient(opts ...Option) (*otelclient, error) {
 	cli := &otelclient{}
 	for _, opt := range opts {
 		opt(cli)
@@ -103,9 +106,16 @@ func newClient(opts ...Option) *otelclient {
 	cli.meter = cli.meterProvider.Meter(name)
 	cli.tracer = cli.tracerProvider.Tracer(name)
 	// Now create the counters using the meter
-	cli.cscMiss, _ = cli.meter.Int64Counter("rueidis_do_cache_miss")
-	cli.cscHits, _ = cli.meter.Int64Counter("rueidis_do_cache_hits")
-	return cli
+	var err error
+	cli.cscMiss, err = cli.meter.Int64Counter("rueidis_do_cache_miss")
+	if err != nil {
+		return nil, err
+	}
+	cli.cscHits, err = cli.meter.Int64Counter("rueidis_do_cache_hits")
+	if err != nil {
+		return nil, err
+	}
+	return cli, nil
 }
 
 func trackDialing(
