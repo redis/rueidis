@@ -861,12 +861,24 @@ func TestClusterClientInit(t *testing.T) {
 	})
 
 	t.Run("Refresh cluster which has multi nodes per shard with SendToReplica option", func(t *testing.T) {
-		m := &mockConn{
+		primaryNodeConn := &mockConn{
 			DoFn: func(cmd Completed) RedisResult {
 				if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
 					return slotsMultiResp
 				}
-				return RedisResult{}
+				return RedisResult{
+					err: errors.New("unexpected call"),
+				}
+			},
+		}
+		replicaNodeConn := &mockConn{
+			DoFn: func(cmd Completed) RedisResult {
+				if strings.Join(cmd.Commands(), " ") == "READONLY" {
+					return RedisResult{}
+				}
+				return RedisResult{
+					err: errors.New("unexpected call"),
+				}
 			},
 		}
 
@@ -878,8 +890,11 @@ func TestClusterClientInit(t *testing.T) {
 				},
 			},
 			func(dst string, opt *ClientOption) conn {
-				copiedM := *m
-				return &copiedM
+				if dst == "127.0.0.1:0" || dst == "127.0.2.1:0" {
+					return primaryNodeConn
+				} else {
+					return replicaNodeConn
+				}
 			},
 		)
 		if err != nil {
@@ -1575,7 +1590,13 @@ func TestClusterClient_SendToOnlyPrimaryNodes(t *testing.T) {
 			return &redisresults{s: resps}
 		},
 	}
-	replicaNodeConn := &mockConn{}
+	replicaNodeConn := &mockConn{
+		DoOverride: map[string]func(cmd Completed) RedisResult{
+			"READONLY": func(cmd Completed) RedisResult {
+				return newResult(RedisMessage{typ: '+', string: "READONLY"}, nil)
+			},
+		},
+	}
 
 	client, err := newClusterClient(
 		&ClientOption{
@@ -2073,6 +2094,9 @@ func TestClusterClient_SendToOnlyReplicaNodes(t *testing.T) {
 			},
 			"GET K2{a}": func(cmd Completed) RedisResult {
 				return newResult(RedisMessage{typ: '+', string: "GET K2{a}"}, nil)
+			},
+			"READONLY": func(cmd Completed) RedisResult {
+				return newResult(RedisMessage{typ: '+', string: "READONLY"}, nil)
 			},
 		},
 		DoCacheOverride: map[string]func(cmd Cacheable, ttl time.Duration) RedisResult{
@@ -2583,6 +2607,9 @@ func TestClusterClient_SendReadOperationToReplicaNodesWriteOperationToPrimaryNod
 			},
 			"GET K2{a}": func(cmd Completed) RedisResult {
 				return newResult(RedisMessage{typ: '+', string: "GET K2{a}"}, nil)
+			},
+			"READONLY": func(cmd Completed) RedisResult {
+				return newResult(RedisMessage{typ: '+', string: "READONLY"}, nil)
 			},
 		},
 		DoMultiFn: func(multi ...Completed) *redisresults {
