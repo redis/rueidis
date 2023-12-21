@@ -14,10 +14,11 @@ import (
 type mockConn struct {
 	DoFn           func(cmd Completed) RedisResult
 	DoCacheFn      func(cmd Cacheable, ttl time.Duration) RedisResult
-	DoMultiFn      func(multi ...Completed) []RedisResult
-	DoMultiCacheFn func(multi ...CacheableTTL) []RedisResult
+	DoMultiFn      func(multi ...Completed) *redisresults
+	DoMultiCacheFn func(multi ...CacheableTTL) *redisresults
 	ReceiveFn      func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error
 	InfoFn         func() map[string]RedisMessage
+	VersionFn      func() int
 	ErrorFn        func() error
 	CloseFn        func()
 	DialFn         func() error
@@ -77,7 +78,7 @@ func (m *mockConn) DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration
 	return RedisResult{}
 }
 
-func (m *mockConn) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisResult {
+func (m *mockConn) DoMultiCache(ctx context.Context, multi ...CacheableTTL) *redisresults {
 	overrides := make([]RedisResult, 0, len(multi))
 	for _, cmd := range multi {
 		if fn := m.DoCacheOverride[strings.Join(cmd.Cmd.Commands(), " ")]; fn != nil {
@@ -85,7 +86,7 @@ func (m *mockConn) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []Re
 		}
 	}
 	if len(overrides) == len(multi) {
-		return overrides
+		return &redisresults{s: overrides}
 	}
 	if m.DoMultiCacheFn != nil {
 		return m.DoMultiCacheFn(multi...)
@@ -93,7 +94,7 @@ func (m *mockConn) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []Re
 	return nil
 }
 
-func (m *mockConn) DoMulti(ctx context.Context, multi ...Completed) []RedisResult {
+func (m *mockConn) DoMulti(ctx context.Context, multi ...Completed) *redisresults {
 	overrides := make([]RedisResult, 0, len(multi))
 	for _, cmd := range multi {
 		if fn := m.DoOverride[strings.Join(cmd.Commands(), " ")]; fn != nil {
@@ -101,7 +102,7 @@ func (m *mockConn) DoMulti(ctx context.Context, multi ...Completed) []RedisResul
 		}
 	}
 	if len(overrides) == len(multi) {
-		return overrides
+		return &redisresults{s: overrides}
 	}
 	if m.DoMultiFn != nil {
 		return m.DoMultiFn(multi...)
@@ -128,7 +129,7 @@ func (m *mockConn) SetPubSubHooks(_ PubSubHooks) <-chan error {
 }
 
 func (m *mockConn) SetOnCloseHook(func(error)) {
-	panic("not implemented")
+
 }
 
 func (m *mockConn) Info() map[string]RedisMessage {
@@ -136,6 +137,13 @@ func (m *mockConn) Info() map[string]RedisMessage {
 		return m.InfoFn()
 	}
 	return nil
+}
+
+func (m *mockConn) Version() int {
+	if m.VersionFn != nil {
+		return m.VersionFn()
+	}
+	return 0
 }
 
 func (m *mockConn) Error() error {
@@ -163,6 +171,15 @@ func TestNewSingleClientNoNode(t *testing.T) {
 	if _, err := newSingleClient(&ClientOption{}, nil, func(dst string, opt *ClientOption) conn {
 		return nil
 	}); err != ErrNoAddr {
+		t.Fatalf("unexpected err %v", err)
+	}
+}
+
+func TestNewSingleClientReplicaOnlyNotSupported(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	if _, err := newSingleClient(&ClientOption{ReplicaOnly: true, InitAddress: []string{"localhost"}}, nil, func(dst string, opt *ClientOption) conn {
+		return nil
+	}); err != ErrReplicaOnlyNotSupported {
 		t.Fatalf("unexpected err %v", err)
 	}
 }
@@ -222,11 +239,11 @@ func TestSingleClient(t *testing.T) {
 
 	t.Run("Delegate DoMulti", func(t *testing.T) {
 		c := client.B().Get().Key("Do").Build()
-		m.DoMultiFn = func(cmd ...Completed) []RedisResult {
+		m.DoMultiFn = func(cmd ...Completed) *redisresults {
 			if !reflect.DeepEqual(cmd[0].Commands(), c.Commands()) {
 				t.Fatalf("unexpected command %v", cmd)
 			}
-			return []RedisResult{newResult(RedisMessage{typ: '+', string: "Do"}, nil)}
+			return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '+', string: "Do"}, nil)}}
 		}
 		if len(client.DoMulti(context.Background())) != 0 {
 			t.Fatalf("unexpected response length")
@@ -251,11 +268,11 @@ func TestSingleClient(t *testing.T) {
 
 	t.Run("Delegate DoMultiCache", func(t *testing.T) {
 		c := client.B().Get().Key("DoCache").Cache()
-		m.DoMultiCacheFn = func(multi ...CacheableTTL) []RedisResult {
+		m.DoMultiCacheFn = func(multi ...CacheableTTL) *redisresults {
 			if !reflect.DeepEqual(multi[0].Cmd.Commands(), c.Commands()) || multi[0].TTL != 100 {
 				t.Fatalf("unexpected command %v, %v", multi[0].Cmd, multi[0].TTL)
 			}
-			return []RedisResult{newResult(RedisMessage{typ: '+', string: "DoCache"}, nil)}
+			return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '+', string: "DoCache"}, nil)}}
 		}
 		if len(client.DoMultiCache(context.Background())) != 0 {
 			t.Fatalf("unexpected response length")
@@ -331,8 +348,8 @@ func TestSingleClient(t *testing.T) {
 			DoFn: func(cmd Completed) RedisResult {
 				return newResult(RedisMessage{typ: '+', string: "Delegate"}, nil)
 			},
-			DoMultiFn: func(cmd ...Completed) []RedisResult {
-				return []RedisResult{newResult(RedisMessage{typ: '+', string: "Delegate"}, nil)}
+			DoMultiFn: func(cmd ...Completed) *redisresults {
+				return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '+', string: "Delegate"}, nil)}}
 			},
 			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
 				return ErrClosing
@@ -397,8 +414,8 @@ func TestSingleClient(t *testing.T) {
 			DoFn: func(cmd Completed) RedisResult {
 				return newResult(RedisMessage{typ: '+', string: "Delegate"}, nil)
 			},
-			DoMultiFn: func(cmd ...Completed) []RedisResult {
-				return []RedisResult{newResult(RedisMessage{typ: '+', string: "Delegate"}, nil)}
+			DoMultiFn: func(cmd ...Completed) *redisresults {
+				return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '+', string: "Delegate"}, nil)}}
 			},
 			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
 				return ErrClosing
@@ -487,6 +504,46 @@ func TestSingleClient(t *testing.T) {
 			t.Fatalf("unexpected stored count %v", stored)
 		}
 	})
+
+	t.Run("Dedicate panic after released", func(t *testing.T) {
+		m.AcquireFn = func() wire { return &mockWire{} }
+		check := func() {
+			if err := recover(); err != dedicatedClientUsedAfterReleased {
+				t.Fatalf("unexpected err %v", err)
+			}
+		}
+		for _, closeFn := range []func(client DedicatedClient, cancel func()){
+			func(client DedicatedClient, cancel func()) {
+				client.Close()
+			},
+			func(client DedicatedClient, cancel func()) {
+				cancel()
+			},
+		} {
+			c, cancel := client.Dedicate()
+			closeFn(c, cancel)
+			for _, fn := range []func(){
+				func() {
+					defer check()
+					c.Do(context.Background(), c.B().Get().Key("k").Build())
+				},
+				func() {
+					defer check()
+					c.DoMulti(context.Background(), c.B().Get().Key("k").Build())
+				},
+				func() {
+					defer check()
+					c.Receive(context.Background(), c.B().Subscribe().Channel("k").Build(), func(msg PubSubMessage) {})
+				},
+				func() {
+					defer check()
+					c.SetPubSubHooks(PubSubHooks{})
+				},
+			} {
+				fn()
+			}
+		}
+	})
 }
 
 func TestSingleClientRetry(t *testing.T) {
@@ -532,19 +589,19 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 		}
 	}
 
-	makeDoMultiFn := func(results ...[]RedisResult) func(multi ...Completed) []RedisResult {
+	makeDoMultiFn := func(results ...[]RedisResult) func(multi ...Completed) *redisresults {
 		count := -1
-		return func(multi ...Completed) []RedisResult {
+		return func(multi ...Completed) *redisresults {
 			count++
-			return results[count]
+			return &redisresults{s: results[count]}
 		}
 	}
 
-	makeDoMultiCacheFn := func(results ...[]RedisResult) func(multi ...CacheableTTL) []RedisResult {
+	makeDoMultiCacheFn := func(results ...[]RedisResult) func(multi ...CacheableTTL) *redisresults {
 		count := -1
-		return func(multi ...CacheableTTL) []RedisResult {
+		return func(multi ...CacheableTTL) *redisresults {
 			count++
-			return results[count]
+			return &redisresults{s: results[count]}
 		}
 	}
 
@@ -816,8 +873,6 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 			t.Fatalf("unexpected response %v", ret)
 		}
 	})
-
-	////
 
 	t.Run("Delegate Receive Retry", func(t *testing.T) {
 		c, m := setup()

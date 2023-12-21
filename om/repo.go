@@ -38,7 +38,7 @@ type Repository[T any] interface {
 	Fetch(ctx context.Context, id string) (*T, error)
 	FetchCache(ctx context.Context, id string, ttl time.Duration) (v *T, err error)
 	Search(ctx context.Context, cmdFn func(search FtSearchIndex) rueidis.Completed) (int64, []*T, error)
-	Aggregate(ctx context.Context, cmdFn func(search FtAggregateIndex) rueidis.Completed) (*AggregateCursor, error)
+	Aggregate(ctx context.Context, cmdFn func(agg FtAggregateIndex) rueidis.Completed) (*AggregateCursor, error)
 	Save(ctx context.Context, entity *T) (err error)
 	SaveMulti(ctx context.Context, entity ...*T) (errs []error)
 	Remove(ctx context.Context, id string) error

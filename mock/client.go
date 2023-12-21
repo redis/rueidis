@@ -7,7 +7,7 @@ import (
 
 	"github.com/Datadog/rueidis"
 	"github.com/Datadog/rueidis/internal/cmds"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 )
 
 var _ rueidis.Client = (*Client)(nil)
@@ -56,7 +56,7 @@ func (m *Client) EXPECT() *ClientMockRecorder {
 }
 
 // B mocks base method.
-func (m *Client) B() cmds.Builder {
+func (m *Client) B() rueidis.Builder {
 	return cmds.NewBuilder(m.slot)
 }
 
@@ -223,7 +223,7 @@ func (m *DedicatedClient) EXPECT() *DedicatedClientMockRecorder {
 }
 
 // B mocks base method.
-func (m *DedicatedClient) B() cmds.Builder {
+func (m *DedicatedClient) B() rueidis.Builder {
 	return cmds.NewBuilder(m.slot)
 }
 

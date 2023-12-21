@@ -1,16 +1,18 @@
 // Package rueidis is a fast Golang Redis RESP3 client that does auto pipelining and supports client side caching.
 package rueidis
 
+//go:generate go run hack/cmds/gen.go internal/cmds hack/cmds/*.json
+
 import (
 	"context"
 	"crypto/tls"
 	"errors"
+	"math"
 	"math/rand"
 	"net"
+	"runtime"
 	"strings"
 	"time"
-
-	"github.com/Datadog/rueidis/internal/cmds"
 )
 
 const (
@@ -41,6 +43,9 @@ var (
 	ErrRESP2PubSubMixed = errors.New("rueidis does not support SUBSCRIBE/PSUBSCRIBE/SSUBSCRIBE mixed with other commands in RESP2")
 	// ErrDoCacheAborted means redis abort EXEC request or connection closed
 	ErrDoCacheAborted = errors.New("failed to fetch the cache because EXEC was aborted by redis or connection closed")
+	// ErrReplicaOnlyNotSupported means ReplicaOnly flag is not supported by
+	// current client
+	ErrReplicaOnlyNotSupported = errors.New("ReplicaOnly is not supported for single client")
 )
 
 // ClientOption should be passed to NewClient to construct a Client
@@ -66,6 +71,11 @@ type ClientOption struct {
 	// Note that this function must be fast, otherwise other redis messages will be blocked.
 	OnInvalidations func([]RedisMessage)
 
+	// SendToReplicas is a function that returns true if the command should be sent to replicas.
+	// currently only used for cluster client.
+	// NOTE: This function can't be used with ReplicaOnly option.
+	SendToReplicas func(cmd Completed) bool
+
 	// Sentinel options, including MasterSet and Auth options
 	Sentinel SentinelOption
 
@@ -74,13 +84,19 @@ type ClientOption struct {
 	Password   string
 	ClientName string
 
-	// ClientSetInfo will assign various info attributes to the current connection
+	// AuthCredentialsFn allows for setting the AUTH username and password dynamically on each connection attempt to
+	// support rotating credentials
+	AuthCredentialsFn func(AuthCredentialsContext) (AuthCredentials, error)
+
+	// ClientSetInfo will assign various info attributes to the current connection.
+	// Note that ClientSetInfo should have exactly 2 values, the lib name and the lib version respectively.
 	ClientSetInfo []string
 
 	// InitAddress point to redis nodes.
 	// Rueidis will connect to them one by one and issue CLUSTER SLOT command to initialize the cluster client until success.
 	// If len(InitAddress) == 1 and the address is not running in cluster mode, rueidis will fall back to the single client mode.
 	// If ClientOption.Sentinel.MasterSet is set, then InitAddress will be used to connect sentinels
+	// You can bypass this behaviour by using ClientOption.ForceSingleClient.
 	InitAddress []string
 
 	// ClientTrackingOptions will be appended to CLIENT TRACKING ON command when the connection is established.
@@ -110,7 +126,7 @@ type ClientOption struct {
 
 	// PipelineMultiplex determines how many tcp connections used to pipeline commands to one redis instance.
 	// The default for single and sentinel clients is 2, which means 4 connections (2^2).
-	// For cluster client, PipelineMultiplex doesn't have any effect.
+	// The default for cluster clients is 0, which means 1 connection (2^0).
 	PipelineMultiplex int
 
 	// ConnWriteTimeout is applied net.Conn.SetWriteDeadline and periodic PING to redis
@@ -140,9 +156,11 @@ type ClientOption struct {
 	AlwaysPipelining bool
 	// AlwaysRESP2 makes rueidis.Client always uses RESP2, otherwise it will try using RESP3 first.
 	AlwaysRESP2 bool
+	//  ForceSingleClient force the usage of a single client connection, without letting the lib guessing
+	//  if redis instance is a cluster or a single redis instance.
+	ForceSingleClient bool
 
 	// ReplicaOnly indicates that this client will only try to connect to readonly replicas of redis setup.
-	// currently, it is only implemented for sentinel client
 	ReplicaOnly bool
 
 	// ClientNoEvict sets the client eviction mode for the current connection.
@@ -170,18 +188,8 @@ type SentinelOption struct {
 
 // Client is the redis client interface for both single redis instance and redis cluster. It should be created from the NewClient()
 type Client interface {
-	// B is the getter function to the command builder for the client
-	// If the client is a cluster client, the command builder also prohibits cross key slots in one command.
-	B() cmds.Builder
-	// Do is the method sending user's redis command building from the B() to a redis node.
-	//  client.Do(ctx, client.B().Get().Key("k").Build()).ToString()
-	// All concurrent non-blocking commands will be pipelined automatically and have better throughput.
-	// Blocking commands will use another separated connection pool.
-	// The cmd parameter is recycled after passing into Do() and should not be reused.
-	Do(ctx context.Context, cmd Completed) (resp RedisResult)
-	// DoMulti takes multiple redis commands and sends them together, reducing RTT from the user code.
-	// The multi parameters are recycled after passing into DoMulti() and should not be reused.
-	DoMulti(ctx context.Context, multi ...Completed) (resp []RedisResult)
+	CoreClient
+
 	// DoCache is similar to Do, but it uses opt-in client side caching and requires a client side TTL.
 	// The explicit client side TTL specifies the maximum TTL on the client side.
 	// If the key's TTL on the server is smaller than the client side TTL, the client side TTL will be capped.
@@ -193,17 +201,10 @@ type Client interface {
 	// The in-memory cache size is configured by ClientOption.CacheSizeEachConn.
 	// The cmd parameter is recycled after passing into DoCache() and should not be reused.
 	DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) (resp RedisResult)
+
 	// DoMultiCache is similar to DoCache, but works with multiple cacheable commands across different slots.
 	// It will first group commands by slots and will send only cache missed commands to redis.
 	DoMultiCache(ctx context.Context, multi ...CacheableTTL) (resp []RedisResult)
-
-	// Receive accepts SUBSCRIBE, SSUBSCRIBE, PSUBSCRIBE command and a message handler.
-	// Receive will block and then return value only when the following cases:
-	//   1. return nil when received any unsubscribe/punsubscribe message related to the provided `subscribe` command.
-	//   2. return ErrClosing when the client is closed manually.
-	//   3. return ctx.Err() when the `ctx` is done.
-	//   4. return non-nil err when the provided `subscribe` command failed.
-	Receive(ctx context.Context, subscribe Completed, fn func(msg PubSubMessage)) error
 
 	// Dedicated acquire a connection from the blocking connection pool, no one else can use the connection
 	// during Dedicated. The main usage of Dedicated is CAS operation, which is WATCH + MULTI + EXEC.
@@ -218,26 +219,14 @@ type Client interface {
 	// Nodes returns each redis node this client known as rueidis.Client. This is useful if you want to
 	// send commands to some specific redis nodes in the cluster.
 	Nodes() map[string]Client
-
-	// Close will make further calls to the client be rejected with ErrClosing,
-	// and Close will wait until all pending calls finished.
-	Close()
 }
 
 // DedicatedClient is obtained from Client.Dedicated() and it will be bound to single redis connection and
 // no other commands can be pipelined in to this connection during Client.Dedicated().
 // If the DedicatedClient is obtained from cluster client, the first command to it must have a Key() to identify the redis node.
 type DedicatedClient interface {
-	// B is inherited from the Client
-	B() cmds.Builder
-	// Do is the same as Client's
-	// The cmd parameter is recycled after passing into Do() and should not be reused.
-	Do(ctx context.Context, cmd Completed) (resp RedisResult)
-	// DoMulti takes multiple redis commands and sends them together, reducing RTT from the user code.
-	// The multi parameters are recycled after passing into DoMulti() and should not be reused.
-	DoMulti(ctx context.Context, multi ...Completed) (resp []RedisResult)
-	// Receive is the same as Client's
-	Receive(ctx context.Context, subscribe Completed, fn func(msg PubSubMessage)) error
+	CoreClient
+
 	// SetPubSubHooks is an alternative way to processing Pub/Sub messages instead of using Receive.
 	// SetPubSubHooks is non-blocking and allows users to subscribe/unsubscribe channels later.
 	// Note that the hooks will be called sequentially but in another goroutine.
@@ -248,7 +237,31 @@ type DedicatedClient interface {
 	// and has at most one error describing the reason why the hooks will not be called anymore.
 	// Users can use the error channel to detect disconnection.
 	SetPubSubHooks(hooks PubSubHooks) <-chan error
-	// Close closes the dedicated connection and prevent the connection be put back into the pool.
+}
+
+// CoreClient is the minimum interface shared by the Client and the DedicatedClient.
+type CoreClient interface {
+	// B is the getter function to the command builder for the client
+	// If the client is a cluster client, the command builder also prohibits cross key slots in one command.
+	B() Builder
+	// Do is the method sending user's redis command building from the B() to a redis node.
+	//  client.Do(ctx, client.B().Get().Key("k").Build()).ToString()
+	// All concurrent non-blocking commands will be pipelined automatically and have better throughput.
+	// Blocking commands will use another separated connection pool.
+	// The cmd parameter is recycled after passing into Do() and should not be reused.
+	Do(ctx context.Context, cmd Completed) (resp RedisResult)
+	// DoMulti takes multiple redis commands and sends them together, reducing RTT from the user code.
+	// The multi parameters are recycled after passing into DoMulti() and should not be reused.
+	DoMulti(ctx context.Context, multi ...Completed) (resp []RedisResult)
+	// Receive accepts SUBSCRIBE, SSUBSCRIBE, PSUBSCRIBE command and a message handler.
+	// Receive will block and then return value only when the following cases:
+	//   1. return nil when received any unsubscribe/punsubscribe message related to the provided `subscribe` command.
+	//   2. return ErrClosing when the client is closed manually.
+	//   3. return ctx.Err() when the `ctx` is done.
+	//   4. return non-nil err when the provided `subscribe` command failed.
+	Receive(ctx context.Context, subscribe Completed, fn func(msg PubSubMessage)) error
+	// Close will make further calls to the client be rejected with ErrClosing,
+	// and Close will wait until all pending calls finished.
 	Close()
 }
 
@@ -261,6 +274,17 @@ func CT(cmd Cacheable, ttl time.Duration) CacheableTTL {
 type CacheableTTL struct {
 	Cmd Cacheable
 	TTL time.Duration
+}
+
+// AuthCredentialsContext is the parameter container of AuthCredentialsFn
+type AuthCredentialsContext struct {
+	Address net.Addr
+}
+
+// AuthCredentials is the output of AuthCredentialsFn
+type AuthCredentials struct {
+	Username string
+	Password string
 }
 
 // NewClient uses ClientOption to initialize the Client for both cluster client and single client.
@@ -294,13 +318,18 @@ func NewClient(option ClientOption) (client Client, err error) {
 		option.PipelineMultiplex = singleClientMultiplex(option.PipelineMultiplex)
 		return newSentinelClient(&option, makeConn)
 	}
-	pmbk := option.PipelineMultiplex
-	option.PipelineMultiplex = 0 // PipelineMultiplex is meaningless for cluster client
+	if option.ForceSingleClient {
+		option.PipelineMultiplex = singleClientMultiplex(option.PipelineMultiplex)
+		return newSingleClient(&option, nil, makeConn)
+	}
 	if client, err = newClusterClient(&option, makeConn); err != nil {
+		if client == (*clusterClient)(nil) {
+			return nil, err
+		}
 		if len(option.InitAddress) == 1 && (err.Error() == redisErrMsgCommandNotAllow || strings.Contains(strings.ToUpper(err.Error()), "CLUSTER")) {
-			option.PipelineMultiplex = singleClientMultiplex(pmbk)
+			option.PipelineMultiplex = singleClientMultiplex(option.PipelineMultiplex)
 			client, err = newSingleClient(&option, client.(*clusterClient).single(), makeConn)
-		} else if client != (*clusterClient)(nil) {
+		} else {
 			client.Close()
 			return nil, err
 		}
@@ -310,7 +339,9 @@ func NewClient(option ClientOption) (client Client, err error) {
 
 func singleClientMultiplex(multiplex int) int {
 	if multiplex == 0 {
-		multiplex = 2
+		if multiplex = int(math.Log2(float64(runtime.GOMAXPROCS(0)))); multiplex >= 2 {
+			multiplex = 2
+		}
 	}
 	if multiplex < 0 {
 		multiplex = 0
@@ -335,3 +366,4 @@ func dial(dst string, opt *ClientOption) (conn net.Conn, err error) {
 }
 
 const redisErrMsgCommandNotAllow = "command is not allowed"
+const dedicatedClientUsedAfterReleased = "DedicatedClient should not be used after recycled"

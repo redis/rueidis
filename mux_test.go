@@ -78,7 +78,11 @@ func TestNewMux(t *testing.T) {
 			})
 		mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
 			ReplyString("OK")
-		mock.Expect("QUIT").ReplyString("OK")
+		mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LibName).
+			ReplyError("UNKNOWN COMMAND")
+		mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
+			ReplyError("UNKNOWN COMMAND")
+		mock.Expect("PING").ReplyString("OK")
 		mock.Close()
 	}()
 	m := makeMux("", &ClientOption{}, func(dst string, opt *ClientOption) (net.Conn, error) {
@@ -262,6 +266,21 @@ func TestMuxDelegation(t *testing.T) {
 		}
 	})
 
+	t.Run("wire version", func(t *testing.T) {
+		m, checkClean := setupMux([]*mockWire{
+			{
+				VersionFn: func() int {
+					return 7
+				},
+			},
+		})
+		defer checkClean(t)
+		defer m.Close()
+		if version := m.Version(); version != 7 {
+			t.Fatalf("unexpected version %v", version)
+		}
+	})
+
 	t.Run("wire err", func(t *testing.T) {
 		e := errors.New("err")
 		m, checkClean := setupMux([]*mockWire{
@@ -312,25 +331,25 @@ func TestMuxDelegation(t *testing.T) {
 	t.Run("wire do multi", func(t *testing.T) {
 		m, checkClean := setupMux([]*mockWire{
 			{
-				DoMultiFn: func(multi ...Completed) []RedisResult {
-					return []RedisResult{newErrResult(context.DeadlineExceeded)}
+				DoMultiFn: func(multi ...Completed) *redisresults {
+					return &redisresults{s: []RedisResult{newErrResult(context.DeadlineExceeded)}}
 				},
 				ErrorFn: func() error {
 					return context.DeadlineExceeded
 				},
 			},
 			{
-				DoMultiFn: func(multi ...Completed) []RedisResult {
-					return []RedisResult{newResult(RedisMessage{typ: '+', string: "MULTI_COMMANDS_RESPONSE"}, nil)}
+				DoMultiFn: func(multi ...Completed) *redisresults {
+					return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '+', string: "MULTI_COMMANDS_RESPONSE"}, nil)}}
 				},
 			},
 		})
 		defer checkClean(t)
 		defer m.Close()
-		if err := m.DoMulti(context.Background(), cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"}))[0].Error(); !errors.Is(err, context.DeadlineExceeded) {
+		if err := m.DoMulti(context.Background(), cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"})).s[0].Error(); !errors.Is(err, context.DeadlineExceeded) {
 			t.Fatalf("unexpected error %v", err)
 		}
-		if val, err := m.DoMulti(context.Background(), cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"}))[0].ToString(); err != nil {
+		if val, err := m.DoMulti(context.Background(), cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"})).s[0].ToString(); err != nil {
 			t.Fatalf("unexpected error %v", err)
 		} else if val != "MULTI_COMMANDS_RESPONSE" {
 			t.Fatalf("unexpected response %v", val)
@@ -368,25 +387,25 @@ func TestMuxDelegation(t *testing.T) {
 	t.Run("wire do multi cache", func(t *testing.T) {
 		m, checkClean := setupMux([]*mockWire{
 			{
-				DoMultiCacheFn: func(multi ...CacheableTTL) []RedisResult {
-					return []RedisResult{newErrResult(context.DeadlineExceeded)}
+				DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
+					return &redisresults{s: []RedisResult{newErrResult(context.DeadlineExceeded)}}
 				},
 				ErrorFn: func() error {
 					return context.DeadlineExceeded
 				},
 			},
 			{
-				DoMultiCacheFn: func(multi ...CacheableTTL) []RedisResult {
-					return []RedisResult{newResult(RedisMessage{typ: '+', string: "MULTI_COMMANDS_RESPONSE"}, nil)}
+				DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
+					return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '+', string: "MULTI_COMMANDS_RESPONSE"}, nil)}}
 				},
 			},
 		})
 		defer checkClean(t)
 		defer m.Close()
-		if err := m.DoMultiCache(context.Background(), CT(Cacheable(cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"})), time.Second))[0].Error(); !errors.Is(err, context.DeadlineExceeded) {
+		if err := m.DoMultiCache(context.Background(), CT(Cacheable(cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"})), time.Second)).s[0].Error(); !errors.Is(err, context.DeadlineExceeded) {
 			t.Fatalf("unexpected error %v", err)
 		}
-		if val, err := m.DoMultiCache(context.Background(), CT(Cacheable(cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"})), time.Second))[0].ToString(); err != nil {
+		if val, err := m.DoMultiCache(context.Background(), CT(Cacheable(cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"})), time.Second)).s[0].ToString(); err != nil {
 			t.Fatalf("unexpected error %v", err)
 		} else if val != "MULTI_COMMANDS_RESPONSE" {
 			t.Fatalf("unexpected response %v", val)
@@ -399,7 +418,7 @@ func TestMuxDelegation(t *testing.T) {
 		for i := range wires {
 			idx := uint16(i)
 			wires[i] = &mockWire{
-				DoMultiCacheFn: func(multi ...CacheableTTL) []RedisResult {
+				DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
 					result := make([]RedisResult, len(multi))
 					for j, cmd := range multi {
 						if s := cmd.Cmd.Slot() & uint16(len(wires)-1); s != idx {
@@ -408,7 +427,7 @@ func TestMuxDelegation(t *testing.T) {
 							result[j] = newResult(RedisMessage{typ: '+', string: cmd.Cmd.Commands()[1]}, nil)
 						}
 					}
-					return result
+					return &redisresults{s: result}
 				},
 			}
 		}
@@ -427,7 +446,7 @@ func TestMuxDelegation(t *testing.T) {
 			for c := 0; c < count; c++ {
 				commands[c] = CT(builder.Get().Key(strconv.Itoa(c)).Cache(), time.Second)
 			}
-			for i, resp := range m.DoMultiCache(context.Background(), commands...) {
+			for i, resp := range m.DoMultiCache(context.Background(), commands...).s {
 				if v, err := resp.ToString(); err != nil || v != strconv.Itoa(i) {
 					t.Fatalf("unexpected resp %v %v", v, err)
 				}
@@ -441,13 +460,13 @@ func TestMuxDelegation(t *testing.T) {
 		for i := range wires {
 			idx := uint16(i)
 			wires[i] = &mockWire{
-				DoMultiCacheFn: func(multi ...CacheableTTL) []RedisResult {
+				DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
 					for _, cmd := range multi {
 						if s := cmd.Cmd.Slot() & uint16(len(wires)-1); s != idx {
-							return []RedisResult{newErrResult(errors.New(fmt.Sprintf("wrong slot %v %v", s, idx)))}
+							return &redisresults{s: []RedisResult{newErrResult(errors.New(fmt.Sprintf("wrong slot %v %v", s, idx)))}}
 						}
 					}
-					return []RedisResult{newErrResult(context.DeadlineExceeded)}
+					return &redisresults{s: []RedisResult{newErrResult(context.DeadlineExceeded)}}
 				},
 				ErrorFn: func() error {
 					return context.DeadlineExceeded
@@ -467,7 +486,7 @@ func TestMuxDelegation(t *testing.T) {
 		for c := 0; c < len(commands); c++ {
 			commands[c] = CT(builder.Get().Key(strconv.Itoa(c)).Cache(), time.Second)
 		}
-		if err := m.DoMultiCache(context.Background(), commands...)[0].Error(); !errors.Is(err, context.DeadlineExceeded) {
+		if err := m.DoMultiCache(context.Background(), commands...).s[0].Error(); !errors.Is(err, context.DeadlineExceeded) {
 			t.Fatalf("unexpected error %v", err)
 		}
 	})
@@ -598,15 +617,15 @@ func TestMuxDelegation(t *testing.T) {
 				// leave first wire for pipeline calls
 			},
 			{
-				DoMultiFn: func(cmd ...Completed) []RedisResult {
+				DoMultiFn: func(cmd ...Completed) *redisresults {
 					blocked <- struct{}{}
-					return []RedisResult{<-responses}
+					return &redisresults{s: []RedisResult{<-responses}}
 				},
 			},
 			{
-				DoMultiFn: func(cmd ...Completed) []RedisResult {
+				DoMultiFn: func(cmd ...Completed) *redisresults {
 					blocked <- struct{}{}
-					return []RedisResult{<-responses}
+					return &redisresults{s: []RedisResult{<-responses}}
 				},
 			},
 		})
@@ -624,7 +643,7 @@ func TestMuxDelegation(t *testing.T) {
 					context.Background(),
 					cmds.NewReadOnlyCompleted([]string{"READONLY"}),
 					cmds.NewBlockingCompleted([]string{"BLOCK"}),
-				)[0].ToString(); err != nil {
+				).s[0].ToString(); err != nil {
 					t.Errorf("unexpected error %v", err)
 				} else if val != "BLOCK_COMMANDS_RESPONSE" {
 					t.Errorf("unexpected response %v", val)
@@ -649,8 +668,8 @@ func TestMuxDelegation(t *testing.T) {
 				// leave first wire for pipeline calls
 			},
 			{
-				DoMultiFn: func(cmd ...Completed) []RedisResult {
-					return []RedisResult{newErrResult(context.DeadlineExceeded)}
+				DoMultiFn: func(cmd ...Completed) *redisresults {
+					return &redisresults{s: []RedisResult{newErrResult(context.DeadlineExceeded)}}
 				},
 				ErrorFn: func() error {
 					return context.DeadlineExceeded
@@ -674,7 +693,7 @@ func TestMuxDelegation(t *testing.T) {
 			context.Background(),
 			cmds.NewReadOnlyCompleted([]string{"READONLY"}),
 			cmds.NewBlockingCompleted([]string{"BLOCK"}),
-		)[0].Error(); err != context.DeadlineExceeded {
+		).s[0].Error(); err != context.DeadlineExceeded {
 			t.Errorf("unexpected error %v", err)
 		}
 		if val, err := m.Do(context.Background(), cmds.NewBlockingCompleted([]string{"BLOCK"})).ToString(); err != nil || val != "OK" {
@@ -775,10 +794,11 @@ func BenchmarkClientSideCaching(b *testing.B) {
 type mockWire struct {
 	DoFn           func(cmd Completed) RedisResult
 	DoCacheFn      func(cmd Cacheable, ttl time.Duration) RedisResult
-	DoMultiFn      func(multi ...Completed) []RedisResult
-	DoMultiCacheFn func(multi ...CacheableTTL) []RedisResult
+	DoMultiFn      func(multi ...Completed) *redisresults
+	DoMultiCacheFn func(multi ...CacheableTTL) *redisresults
 	ReceiveFn      func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error
 	InfoFn         func() map[string]RedisMessage
+	VersionFn      func() int
 	ErrorFn        func() error
 	CloseFn        func()
 
@@ -801,14 +821,14 @@ func (m *mockWire) DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration
 	return RedisResult{}
 }
 
-func (m *mockWire) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisResult {
+func (m *mockWire) DoMultiCache(ctx context.Context, multi ...CacheableTTL) *redisresults {
 	if m.DoMultiCacheFn != nil {
 		return m.DoMultiCacheFn(multi...)
 	}
 	return nil
 }
 
-func (m *mockWire) DoMulti(ctx context.Context, multi ...Completed) []RedisResult {
+func (m *mockWire) DoMulti(ctx context.Context, multi ...Completed) *redisresults {
 	if m.DoMultiFn != nil {
 		return m.DoMultiFn(multi...)
 	}
@@ -848,6 +868,13 @@ func (m *mockWire) Info() map[string]RedisMessage {
 		return m.InfoFn()
 	}
 	return nil
+}
+
+func (m *mockWire) Version() int {
+	if m.VersionFn != nil {
+		return m.VersionFn()
+	}
+	return 0
 }
 
 func (m *mockWire) Error() error {

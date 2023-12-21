@@ -342,6 +342,24 @@ func (r RedisResult) AsFtSearch() (total int64, docs []FtSearchDoc, err error) {
 	return
 }
 
+func (r RedisResult) AsFtAggregate() (total int64, docs []map[string]string, err error) {
+	if r.err != nil {
+		err = r.err
+	} else {
+		total, docs, err = r.val.AsFtAggregate()
+	}
+	return
+}
+
+func (r RedisResult) AsFtAggregateCursor() (cursor, total int64, docs []map[string]string, err error) {
+	if r.err != nil {
+		err = r.err
+	} else {
+		cursor, total, docs, err = r.val.AsFtAggregateCursor()
+	}
+	return
+}
+
 func (r RedisResult) AsGeosearch() (locations []GeoLocation, err error) {
 	if r.err != nil {
 		err = r.err
@@ -429,6 +447,29 @@ func (r RedisResult) CachePTTL() int64 {
 // CachePXAT delegates to RedisMessage.CachePXAT
 func (r RedisResult) CachePXAT() int64 {
 	return r.val.CachePXAT()
+}
+
+// String returns human-readable representation of RedisResult
+func (r *RedisResult) String() string {
+	v, _ := (*prettyRedisResult)(r).MarshalJSON()
+	return string(v)
+}
+
+type prettyRedisResult RedisResult
+
+// MarshalJSON implements json.Marshaler interface
+func (r *prettyRedisResult) MarshalJSON() ([]byte, error) {
+	type PrettyRedisResult struct {
+		Message *prettyRedisMessage `json:"Message,omitempty"`
+		Error   string              `json:"Error,omitempty"`
+	}
+	obj := PrettyRedisResult{}
+	if r.err != nil {
+		obj.Error = r.err.Error()
+	} else {
+		obj.Message = (*prettyRedisMessage)(&r.val)
+	}
+	return json.Marshal(obj)
 }
 
 // RedisMessage is a redis response message, it may be a nil response
@@ -777,7 +818,7 @@ func toZScore(values []RedisMessage) (s ZScore, err error) {
 		}
 		return s, err
 	}
-	panic(fmt.Sprintf("redis message is not a map/array/set or its length is not 2"))
+	panic("redis message is not a map/array/set or its length is not 2")
 }
 
 // AsZScore converts ZPOPMAX and ZPOPMIN command with count 1 response to a single ZScore
@@ -816,8 +857,8 @@ func (m *RedisMessage) AsZScores() ([]ZScore, error) {
 
 // ScanEntry is the element type of both SCAN, SSCAN, HSCAN and ZSCAN command response.
 type ScanEntry struct {
-	Cursor   uint64
 	Elements []string
+	Cursor   uint64
 }
 
 // AsScanEntry check if message is a redis array/set response of length 2, and convert to ScanEntry.
@@ -940,6 +981,33 @@ func (m *RedisMessage) AsFtSearch() (total int64, docs []FtSearchDoc, err error)
 	if err = m.Error(); err != nil {
 		return 0, nil, err
 	}
+	if m.IsMap() {
+		for i := 0; i < len(m.values); i += 2 {
+			switch m.values[i].string {
+			case "total_results":
+				total = m.values[i+1].integer
+			case "results":
+				records := m.values[i+1].values
+				docs = make([]FtSearchDoc, len(records))
+				for d, record := range records {
+					for j := 0; j < len(record.values); j += 2 {
+						switch record.values[j].string {
+						case "id":
+							docs[d].Key = record.values[j+1].string
+						case "extra_attributes":
+							docs[d].Doc, _ = record.values[j+1].AsStrMap()
+						}
+					}
+				}
+			case "error":
+				for _, e := range m.values[i+1].values {
+					e := e
+					return 0, nil, (*RedisError)(&e)
+				}
+			}
+		}
+		return
+	}
 	if len(m.values) > 0 {
 		total = m.values[0].integer
 		if len(m.values) > 2 && m.values[2].string == "" {
@@ -958,6 +1026,57 @@ func (m *RedisMessage) AsFtSearch() (total int64, docs []FtSearchDoc, err error)
 	}
 	typ := m.typ
 	panic(fmt.Sprintf("redis message type %s is not a FT.SEARCH response", typeNames[typ]))
+}
+
+func (m *RedisMessage) AsFtAggregate() (total int64, docs []map[string]string, err error) {
+	if err = m.Error(); err != nil {
+		return 0, nil, err
+	}
+	if m.IsMap() {
+		for i := 0; i < len(m.values); i += 2 {
+			switch m.values[i].string {
+			case "total_results":
+				total = m.values[i+1].integer
+			case "results":
+				records := m.values[i+1].values
+				docs = make([]map[string]string, len(records))
+				for d, record := range records {
+					for j := 0; j < len(record.values); j += 2 {
+						switch record.values[j].string {
+						case "extra_attributes":
+							docs[d], _ = record.values[j+1].AsStrMap()
+						}
+					}
+				}
+			case "error":
+				for _, e := range m.values[i+1].values {
+					e := e
+					return 0, nil, (*RedisError)(&e)
+				}
+			}
+		}
+		return
+	}
+	if len(m.values) > 0 {
+		total = m.values[0].integer
+		docs = make([]map[string]string, len(m.values)-1)
+		for d, record := range m.values[1:] {
+			docs[d], _ = record.AsStrMap()
+		}
+		return
+	}
+	typ := m.typ
+	panic(fmt.Sprintf("redis message type %s is not a FT.AGGREGATE response", typeNames[typ]))
+}
+
+func (m *RedisMessage) AsFtAggregateCursor() (cursor, total int64, docs []map[string]string, err error) {
+	if m.IsArray() && len(m.values) == 2 && (m.values[0].IsArray() || m.values[0].IsMap()) {
+		total, docs, err = m.values[0].AsFtAggregate()
+		cursor = m.values[1].integer
+	} else {
+		total, docs, err = m.AsFtAggregate()
+	}
+	return
 }
 
 type GeoLocation struct {
@@ -1139,4 +1258,49 @@ func (m *RedisMessage) approximateSize() (s int) {
 		s += v.approximateSize()
 	}
 	return
+}
+
+// String returns human-readable representation of RedisMessage
+func (m *RedisMessage) String() string {
+	v, _ := (*prettyRedisMessage)(m).MarshalJSON()
+	return string(v)
+}
+
+type prettyRedisMessage RedisMessage
+
+// MarshalJSON implements json.Marshaler interface
+func (m *prettyRedisMessage) MarshalJSON() ([]byte, error) {
+	type PrettyRedisMessage struct {
+		Value any    `json:"Value,omitempty"`
+		Type  string `json:"Type,omitempty"`
+		Error string `json:"Error,omitempty"`
+		Ttl   string `json:"TTL,omitempty"`
+	}
+	org := (*RedisMessage)(m)
+	strType, ok := typeNames[m.typ]
+	if !ok {
+		strType = "unknown"
+	}
+	obj := PrettyRedisMessage{Type: strType}
+	if m.ttl != [7]byte{} {
+		obj.Ttl = time.UnixMilli(org.CachePXAT()).UTC().String()
+	}
+	if err := org.Error(); err != nil {
+		obj.Error = err.Error()
+	}
+	switch m.typ {
+	case typeFloat, typeBlobString, typeSimpleString, typeVerbatimString, typeBigNumber:
+		obj.Value = m.string
+	case typeBool:
+		obj.Value = m.integer == 1
+	case typeInteger:
+		obj.Value = m.integer
+	case typeMap, typeSet, typeArray:
+		values := make([]prettyRedisMessage, len(m.values))
+		for i, value := range m.values {
+			values[i] = prettyRedisMessage(value)
+		}
+		obj.Value = values
+	}
+	return json.Marshal(obj)
 }

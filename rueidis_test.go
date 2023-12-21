@@ -14,6 +14,7 @@ import (
 	"math/big"
 	"net"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -76,6 +77,10 @@ func TestNewClusterClient(t *testing.T) {
 			return
 		}
 		slots, _ := slotsResp.ToMessage()
+		mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LibName).
+			ReplyError("UNKNOWN COMMAND")
+		mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
+			ReplyError("UNKNOWN COMMAND")
 		mock.Expect("CLUSTER", "SLOTS").Reply(slots)
 		mock.Close()
 		close(done)
@@ -97,30 +102,60 @@ func TestNewClusterClient(t *testing.T) {
 
 func TestNewClusterClientError(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
-	ln, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer ln.Close()
-	done := make(chan struct{})
-	go func() {
-		mock, err := accept(t, ln)
+	t.Run("cluster slots command error", func(t *testing.T) {
+		ln, err := net.Listen("tcp", "127.0.0.1:0")
 		if err != nil {
-			return
+			t.Fatal(err)
 		}
-		mock.Expect("CLUSTER", "SLOTS").Reply(RedisMessage{typ: '-', string: "other error"})
-		mock.Expect("QUIT").ReplyString("OK")
-		mock.Close()
-		close(done)
-	}()
-	_, port, _ := net.SplitHostPort(ln.Addr().String())
-	client, err := NewClient(ClientOption{
-		InitAddress: []string{"127.0.0.1:" + port},
+		defer ln.Close()
+		done := make(chan struct{})
+		go func() {
+			mock, err := accept(t, ln)
+			if err != nil {
+				return
+			}
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LibName).
+				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
+				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("CLUSTER", "SLOTS").Reply(RedisMessage{typ: '-', string: "other error"})
+			mock.Expect("PING").ReplyString("OK")
+			mock.Close()
+			close(done)
+		}()
+		_, port, _ := net.SplitHostPort(ln.Addr().String())
+		client, err := NewClient(ClientOption{
+			InitAddress: []string{"127.0.0.1:" + port},
+		})
+		if client != nil || err == nil {
+			t.Errorf("unexpected return %v %v", client, err)
+		}
+		<-done
 	})
-	if client != nil || err == nil {
-		t.Errorf("unexpected return %v %v", client, err)
-	}
-	<-done
+
+	t.Run("replica only and send to replicas option conflict", func(t *testing.T) {
+		ln, err := net.Listen("tcp", "127.0.0.1:0")
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer ln.Close()
+
+		_, port, _ := net.SplitHostPort(ln.Addr().String())
+		client, err := NewClient(ClientOption{
+			InitAddress: []string{"127.0.0.1:" + port},
+			ReplicaOnly: true,
+			SendToReplicas: func(cmd Completed) bool {
+				return true
+			},
+		})
+		if client != nil || err == nil {
+			t.Errorf("unexpected return %v %v", client, err)
+		}
+
+		if !strings.Contains(err.Error(), ErrReplicaOnlyConflict.Error()) {
+			t.Errorf("unexpected error %v", err)
+		}
+	})
 }
 
 func TestFallBackSingleClient(t *testing.T) {
@@ -136,8 +171,12 @@ func TestFallBackSingleClient(t *testing.T) {
 		if err != nil {
 			return
 		}
+		mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LibName).
+			ReplyError("UNKNOWN COMMAND")
+		mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
+			ReplyError("UNKNOWN COMMAND")
 		mock.Expect("CLUSTER", "SLOTS").Reply(RedisMessage{typ: '-', string: "ERR This instance has cluster support disabled"})
-		mock.Expect("QUIT").ReplyString("OK")
+		mock.Expect("PING").ReplyString("OK")
 		mock.Close()
 		close(done)
 	}()
@@ -145,6 +184,42 @@ func TestFallBackSingleClient(t *testing.T) {
 	_, port, _ := net.SplitHostPort(ln.Addr().String())
 	client, err := NewClient(ClientOption{
 		InitAddress: []string{"127.0.0.1:" + port},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := client.(*singleClient); !ok {
+		t.Fatal("client should be a singleClient")
+	}
+	client.Close()
+	<-done
+}
+
+func TestForceSingleClient(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ln.Close()
+	done := make(chan struct{})
+	go func() {
+		mock, err := accept(t, ln)
+		if err != nil {
+			return
+		}
+		mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LibName).
+			ReplyError("UNKNOWN COMMAND")
+		mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
+			ReplyError("UNKNOWN COMMAND")
+		mock.Expect("PING").ReplyString("OK")
+		mock.Close()
+		close(done)
+	}()
+	_, port, _ := net.SplitHostPort(ln.Addr().String())
+	client, err := NewClient(ClientOption{
+		InitAddress:       []string{"127.0.0.1:" + port},
+		ForceSingleClient: true,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -215,8 +290,12 @@ func TestTLSClient(t *testing.T) {
 		if err != nil {
 			return
 		}
+		mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LibName).
+			ReplyError("UNKNOWN COMMAND")
+		mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
+			ReplyError("UNKNOWN COMMAND")
 		mock.Expect("CLUSTER", "SLOTS").Reply(RedisMessage{typ: '-', string: "ERR This instance has cluster support disabled"})
-		mock.Expect("QUIT").ReplyString("OK")
+		mock.Expect("PING").ReplyString("OK")
 		mock.Close()
 		close(done)
 	}()

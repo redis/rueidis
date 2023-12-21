@@ -48,7 +48,7 @@ func (r *JSONRepository[T]) NewEntity() *T {
 
 // Fetch an entity whose name is `{prefix}:{id}`
 func (r *JSONRepository[T]) Fetch(ctx context.Context, id string) (v *T, err error) {
-	record, err := r.client.Do(ctx, r.client.B().JsonGet().Key(key(r.prefix, id)).Build()).ToString()
+	record, err := r.client.Do(ctx, r.client.B().JsonGet().Key(key(r.prefix, id)).Path(".").Build()).ToString()
 	if err == nil {
 		v, err = r.decode(record)
 	}
@@ -57,7 +57,7 @@ func (r *JSONRepository[T]) Fetch(ctx context.Context, id string) (v *T, err err
 
 // FetchCache is like Fetch, but it uses client side caching mechanism.
 func (r *JSONRepository[T]) FetchCache(ctx context.Context, id string, ttl time.Duration) (v *T, err error) {
-	record, err := r.client.DoCache(ctx, r.client.B().JsonGet().Key(key(r.prefix, id)).Cache(), ttl).ToString()
+	record, err := r.client.DoCache(ctx, r.client.B().JsonGet().Key(key(r.prefix, id)).Path(".").Cache(), ttl).ToString()
 	if err == nil {
 		v, err = r.decode(record)
 	}
@@ -75,8 +75,18 @@ func (r *JSONRepository[T]) decode(record string) (*T, error) {
 func (r *JSONRepository[T]) toExec(entity *T) (verf reflect.Value, exec rueidis.LuaExec) {
 	val := reflect.ValueOf(entity).Elem()
 	verf = val.Field(r.schema.ver.idx)
+	extVal := int64(0)
+	if r.schema.ext != nil {
+		if ext, ok := val.Field(r.schema.ext.idx).Interface().(time.Time); ok && !ext.IsZero() {
+			extVal = ext.UnixMilli()
+		}
+	}
 	exec.Keys = []string{key(r.prefix, val.Field(r.schema.key.idx).String())}
-	exec.Args = []string{r.schema.ver.name, strconv.FormatInt(verf.Int(), 10), rueidis.JSON(entity)}
+	if extVal != 0 {
+		exec.Args = []string{r.schema.ver.name, strconv.FormatInt(verf.Int(), 10), rueidis.JSON(entity), strconv.FormatInt(extVal, 10)}
+	} else {
+		exec.Args = []string{r.schema.ver.name, strconv.FormatInt(verf.Int(), 10), rueidis.JSON(entity)}
+	}
 	return
 }
 
@@ -144,7 +154,10 @@ func (r *JSONRepository[T]) Search(ctx context.Context, cmdFn func(search FtSear
 	if err == nil {
 		s = make([]*T, len(resp))
 		for i, v := range resp {
-			if s[i], err = r.decode(v.Doc["$"]); err != nil {
+			doc := v.Doc["$"]
+			doc = strings.TrimPrefix(doc, "[") // supports dialect 3
+			doc = strings.TrimSuffix(doc, "]")
+			if s[i], err = r.decode(doc); err != nil {
 				return 0, nil, err
 			}
 		}
@@ -153,12 +166,12 @@ func (r *JSONRepository[T]) Search(ctx context.Context, cmdFn func(search FtSear
 }
 
 // Aggregate performs the FT.AGGREGATE and returns a *AggregateCursor for accessing the results
-func (r *JSONRepository[T]) Aggregate(ctx context.Context, cmdFn func(search FtAggregateIndex) rueidis.Completed) (cursor *AggregateCursor, err error) {
-	resp, err := r.client.Do(ctx, cmdFn(r.client.B().FtAggregate().Index(r.idx))).ToArray()
+func (r *JSONRepository[T]) Aggregate(ctx context.Context, cmdFn func(agg FtAggregateIndex) rueidis.Completed) (cursor *AggregateCursor, err error) {
+	cid, total, resp, err := r.client.Do(ctx, cmdFn(r.client.B().FtAggregate().Index(r.idx))).AsFtAggregateCursor()
 	if err != nil {
 		return nil, err
 	}
-	return newAggregateCursor(r.idx, r.client, resp), nil
+	return newAggregateCursor(r.idx, r.client, resp, cid, total), nil
 }
 
 // IndexName returns the index name used in the FT.CREATE
@@ -171,7 +184,9 @@ local v = redis.call('JSON.GET',KEYS[1],ARGV[1])
 if (not v or v == ARGV[2])
 then
   redis.call('JSON.SET',KEYS[1],'$',ARGV[3])
-  return redis.call('JSON.NUMINCRBY',KEYS[1],ARGV[1],1)
+  local v = redis.call('JSON.NUMINCRBY',KEYS[1],ARGV[1],1)
+  if #ARGV == 4 then redis.call('PEXPIREAT',KEYS[1],ARGV[4]) end
+  return v
 end
 return nil
 `)

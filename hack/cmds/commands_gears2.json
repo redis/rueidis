@@ -1,0 +1,139 @@
+{
+  "TFCALL": {
+    "summary": "Invoke a JavaScript function",
+    "since": "2.0.0",
+    "group": "triggers_and_functions",
+    "complexity": "Depends on the function that is executed.",
+    "arguments": [
+      {
+        "name": "library.function",
+        "type": "string"
+      },
+      {
+        "name": "numkeys",
+        "type": "integer"
+      },
+      {
+        "name": "key",
+        "type": "key",
+        "key_space_index": 0,
+        "optional": true,
+        "multiple": true
+      },
+      {
+        "name": "arg",
+        "type": "string",
+        "optional": true,
+        "multiple": true
+      }
+    ]
+  },
+  "TFCALLASYNC": {
+    "summary": "Invoke an asynchronous JavaScript function",
+    "since": "2.0.0",
+    "group": "triggers_and_functions",
+    "complexity": "Depends on the function that is executed.",
+    "arguments": [
+      {
+        "name": "library.function",
+        "type": "string"
+      },
+      {
+        "name": "numkeys",
+        "type": "integer"
+      },
+      {
+        "name": "key",
+        "type": "key",
+        "key_space_index": 0,
+        "optional": true,
+        "multiple": true
+      },
+      {
+        "name": "arg",
+        "type": "string",
+        "optional": true,
+        "multiple": true
+      }
+    ]
+  },
+  "TFUNCTION DELETE": {
+    "summary": "Delete a JavaScript library from Redis by name",
+    "since": "2.0.0",
+    "group": "triggers_and_functions",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "library-name",
+        "type": "string",
+        "display_text": "library name"
+      }
+    ]
+  },
+  "TFUNCTION LOAD": {
+    "summary": "Load a new JavaScript library into Redis",
+    "since": "2.0.0",
+    "group": "triggers_and_functions",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "replace",
+        "type": "pure-token",
+        "display_text": "replace",
+        "token": "REPLACE",
+        "optional": true
+      },
+      {
+        "command": "CONFIG",
+        "name": [
+          "config"
+        ],
+        "type": [
+          "string"
+        ],
+        "optional": true
+      },
+      {
+        "name": "library-code",
+        "type": "string",
+        "display_text": "library code"
+      }
+    ]
+  },
+  "TFUNCTION LIST": {
+    "summary": "List all JavaScript libraries loaded into Redis",
+    "since": "2.0.0",
+    "group": "triggers_and_functions",
+    "complexity": "O(N) where N is the number of libraries loaded into Redis",
+    "arguments": [
+      {
+        "name": "library-name",
+        "type": "string",
+        "display_text": "library name",
+        "token": "LIBRARYNAME",
+        "optional": true
+      },
+      {
+        "name": "withcode",
+        "type": "pure-token",
+        "display_text": "withcode",
+        "token": "WITHCODE",
+        "optional": true
+      },
+      {
+        "name": "verbose",
+        "type": "pure-token",
+        "display_text": "verbose",
+        "token": "VERBOSE",
+        "optional": true
+      },
+      {
+        "name": "v",
+        "type": "pure-token",
+        "display_text": "v",
+        "token": "V",
+        "optional": true
+      }
+    ]
+  }
+}

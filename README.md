@@ -1,8 +1,8 @@
 # rueidis
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/Datadog/rueidis.svg)](https://pkg.go.dev/github.com/Datadog/rueidis)
+[![Go Reference](https://pkg.go.dev/badge/github.com/redis/rueidis.svg)](https://pkg.go.dev/github.com/redis/rueidis)
 [![CircleCI](https://dl.circleci.com/status-badge/img/gh/redis/rueidis/tree/main.svg?style=shield)](https://dl.circleci.com/status-badge/redirect/gh/redis/rueidis/tree/main)
-[![Go Report Card](https://goreportcard.com/badge/github.com/Datadog/rueidis)](https://goreportcard.com/report/github.com/Datadog/rueidis)
+[![Go Report Card](https://goreportcard.com/badge/github.com/redis/rueidis)](https://goreportcard.com/report/github.com/redis/rueidis)
 [![codecov](https://codecov.io/gh/redis/rueidis/branch/master/graph/badge.svg?token=wGTB8GdY06)](https://codecov.io/gh/redis/rueidis)
 
 A fast Golang Redis client that does auto pipelining and supports client side caching.
@@ -10,10 +10,11 @@ A fast Golang Redis client that does auto pipelining and supports client side ca
 ## Features
 
 * [Auto pipelining for non-blocking redis commands](https://redis.io/docs/manual/pipelining/)
-* [Client side caching in RESP3](https://redis.io/docs/manual/client-side-caching/)
+* [Client Side Caching in RESP3](https://redis.io/docs/manual/client-side-caching/)
 * Pub/Sub, Sharded Pub/Sub, Streams
 * Redis Cluster, Sentinel, RedisJSON, RedisBloom, RediSearch, RedisTimeseries, etc.
-* [Generic Object Mapping with client side caching and optimistic locking](./om)
+* [Generic Object Mapping with client side caching](./om)
+* [Cache-Aside Pattern with client side caching](./rueidisaside)
 * [Distributed Locks with client side caching](./rueidislock)
 * [Helpers for writing tests with rueidis mock](./mock)
 * [Hooks and other integrations](./rueidishook)
@@ -26,7 +27,7 @@ package main
 
 import (
 	"context"
-	"github.com/Datadog/rueidis"
+	"github.com/redis/rueidis"
 )
 
 func main() {
@@ -44,9 +45,9 @@ func main() {
 }
 ```
 
-Checkout more examples: [Command Response Cheatsheet](https://github.com/Datadog/rueidis#command-response-cheatsheet)
+Checkout more examples: [Command Response Cheatsheet](https://github.com/redis/rueidis#command-response-cheatsheet)
 
-## Developer friendly Command Builder
+## Developer Friendly Command Builder
 
 `client.B()` is the builder entrypoint to construct a redis command:
 
@@ -57,7 +58,7 @@ Checkout more examples: [Command Response Cheatsheet](https://github.com/Datadog
 Once a command is built, use either `client.Do()` or `client.DoMulti()` to send it to redis.
 
 **Constructed commands will be recycled to underlying `sync.Pool` by default and you ❗️SHOULD NOT❗️ reuse them across multiple `client.Do()` or `client.DoMulti()` calls.**
-To reuse a command, use `Pin()` after `Build()` and it will prevent the command being recycled. 
+To reuse a command, use `Pin()` after `Build()` and it will prevent the command being recycled.
 
 ## [Auto Pipelining](https://redis.io/docs/manual/pipelining/)
 
@@ -88,7 +89,7 @@ It is even able to achieve ~14x throughput over go-redis in a local benchmark of
 
 Benchmark source code: https://github.com/rueian/rueidis-benchmark
 
-A benchmark result performed on two GCP n2-highcpu-2 machines also shows that rueidis can achieve higher throughput with lower latencies: https://github.com/Datadog/rueidis/pull/93
+A benchmark result performed on two GCP n2-highcpu-2 machines also shows that rueidis can achieve higher throughput with lower latencies: https://github.com/redis/rueidis/pull/93
 
 ### Pipelining Bulk Operations Manually
 
@@ -165,6 +166,29 @@ client.DoCache(ctx, client.B().Get().Key("prefix1:1").Cache(), time.Minute).IsCa
 
 Please make sure that commands passed to `DoCache()` and `DoMultiCache()` are covered by your prefixes.
 Otherwise, their client-side cache will not be invalidated by redis.
+
+### Client Side Caching with Cache Aside Pattern
+
+Cache-Aside is a widely used pattern to cache other data sources into Redis. For example:
+
+```go
+client, err := rueidisaside.NewClient(rueidisaside.ClientOption{
+    ClientOption: rueidis.ClientOption{InitAddress: []string{"127.0.0.1:6379"}},
+})
+if err != nil {
+    panic(err)
+}
+val, err := client.Get(context.Background(), time.Minute, "mykey", func(ctx context.Context, key string) (val string, err error) {
+    if err = db.QueryRowContext(ctx, "SELECT val FROM mytab WHERE id = ?", key).Scan(&val); err == sql.ErrNoRows {
+        val = "_nil_" // cache nil to avoid penetration.
+        err = nil     // clear err in case of sql.ErrNoRows.
+    }
+    return
+})
+// ...
+```
+
+Please refer to the full example at [rueidisaside](https://github.com/redis/rueidis/blob/main/rueidisaside/README.md).
 
 ### Disable Client Side Caching
 
@@ -258,7 +282,7 @@ c, cancel := client.Dedicate()
 defer cancel()
 
 c.Do(ctx, c.B().Watch().Key("k1", "k2").Build())
-// do the rest CAS operations with the `client` who occupying a connection 
+// do the rest CAS operations with the `client` who occupying a connection
 ```
 
 However, occupying a connection is not good in terms of throughput. It is better to use Lua script to perform
@@ -271,6 +295,8 @@ Its size is controlled by the `ClientOption.RingScaleEachConn` and the default v
 
 If you have many rueidis connections, you may find that they occupy quite amount of memory.
 In that case, you may consider reducing `ClientOption.RingScaleEachConn` to 8 or 9 at the cost of potential throughput degradation.
+
+You may also consider setting the value of `ClientOption.PipelineMultiplex` to `-1`, which will let rueidis use only 1 connection for pipelining to each redis node.
 
 ## Lua Script
 
@@ -313,6 +339,23 @@ client, err := rueidis.NewClient(rueidis.ClientOption{
     },
 })
 ```
+
+### Redis URL
+
+You can use `ParseURL` or `MustParseURL` to construct a `ClientOption`:
+
+```go
+// connect to a redis cluster
+client, err = rueidis.NewClient(rueidis.MustParseURL("redis://127.0.0.1:7001?addr=127.0.0.1:7002&addr=127.0.0.1:7003"))
+// connect to a redis node
+client, err = rueidis.NewClient(rueidis.MustParseURL("redis://127.0.0.1:6379/0"))
+// connect to a redis sentinel
+client, err = rueidis.NewClient(rueidis.MustParseURL("redis://127.0.0.1:26379/0?master_set=my_master"))
+```
+
+The url must be started with either `redis://`, `rediss://` or `unix://`.
+
+Currently supported parameters `dial_timeout`, `write_timeout`, `protocol`, `client_cache`, `client_name`, `max_retries`
 
 ## Arbitrary Command
 
@@ -392,6 +435,8 @@ client.Do(ctx, client.B().Lindex().Key("k").Index(0).Build()).ToString()
 // LPOP
 client.Do(ctx, client.B().Lpop().Key("k").Build()).ToString()
 client.Do(ctx, client.B().Lpop().Key("k").Count(2).Build()).AsStrSlice()
+// SCAN
+client.Do(ctx, client.B().Scan().Cursor(0).Build()).AsScanEntry()
 // FT.SEARCH
 client.Do(ctx, client.B().FtSearch().Index("idx").Query("@f:v").Build()).AsFtSearch()
 // GEOSEARCH
@@ -410,5 +455,23 @@ module mymodule
 
 go 1.18
 
-require github.com/Datadog/rueidis v1.0.8-go1.18
+require github.com/redis/rueidis v1.0.25-go1.18
 ```
+
+## Contributing
+
+Contributions are welcome, including [issues](https://github.com/redis/rueidis/issues), [pull requests](https://github.com/redis/rueidis/pulls), and [discussions](https://github.com/redis/rueidis/discussions).
+Contributions mean a lot to us and help us improve this library and the community!
+
+### Generate command builders
+
+Command builders are generated based on the definitions in [./hack/cmds](./hack/cmds) by running:
+
+```sh
+go generate
+```
+
+### Testing
+
+Please use the [./dockertest.sh](./dockertest.sh) script for running test cases locally.
+And please try your best to have 100% test coverage on code changes.

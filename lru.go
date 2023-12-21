@@ -7,6 +7,8 @@ import (
 	"sync/atomic"
 	"time"
 	"unsafe"
+
+	"github.com/Datadog/rueidis/internal/cmds"
 )
 
 const (
@@ -18,7 +20,7 @@ const (
 	entryBaseSize = (keyCacheSize + entrySize + elementSize + stringSSize*2) * 3 / 2
 	entryMinSize  = entryBaseSize + messageStructSize
 
-	moveThreshold = uint64(1024 - 1)
+	moveThreshold = uint32(1024 - 1)
 )
 
 type cacheEntry struct {
@@ -46,8 +48,8 @@ func (e *cacheEntry) Wait(ctx context.Context) (RedisMessage, error) {
 type keyCache struct {
 	cache map[string]*list.Element
 	key   string
-	hits  uint64
-	miss  uint64
+	hits  uint32
+	miss  uint32
 }
 
 var _ CacheStore = (*lru)(nil)
@@ -85,7 +87,7 @@ func (c *lru) Flight(key, cmd string, ttl time.Duration, now time.Time) (v Redis
 	c.mu.RUnlock()
 
 	if e != nil && (v.typ == 0 || v.relativePTTL(now) > 0) {
-		hits := atomic.AddUint64(&kc.hits, 1)
+		hits := atomic.AddUint32(&kc.hits, 1)
 		if ele != back && hits&moveThreshold == 0 {
 			c.mu.Lock()
 			if c.list != nil {
@@ -109,7 +111,7 @@ func (c *lru) Flight(key, cmd string, ttl time.Duration, now time.Time) (v Redis
 	}
 	if ele, ok = kc.cache[cmd]; ok {
 		if e = ele.Value.(*cacheEntry); e.val.typ == 0 || e.val.relativePTTL(now) > 0 {
-			atomic.AddUint64(&kc.hits, 1)
+			atomic.AddUint32(&kc.hits, 1)
 			v = e.val
 			c.list.MoveToBack(ele)
 			ce = e
@@ -119,13 +121,103 @@ func (c *lru) Flight(key, cmd string, ttl time.Duration, now time.Time) (v Redis
 			c.size -= e.size
 		}
 	}
-	atomic.AddUint64(&kc.miss, 1)
+	atomic.AddUint32(&kc.miss, 1)
 	v.setExpireAt(now.Add(ttl).UnixMilli())
 	c.list.PushBack(&cacheEntry{cmd: cmd, kc: kc, val: v, ch: make(chan struct{})})
 	kc.cache[cmd] = c.list.Back()
 ret:
 	c.mu.Unlock()
 	return v, ce
+}
+
+func (c *lru) Flights(now time.Time, multi []CacheableTTL, results []RedisResult, entries map[int]CacheEntry) (missed []int) {
+	var moves []*list.Element
+
+	c.mu.RLock()
+	for i, ct := range multi {
+		key, cmd := cmds.CacheKey(ct.Cmd)
+		if kc, ok := c.store[key]; ok {
+			if ele, ok := kc.cache[cmd]; ok {
+				e := ele.Value.(*cacheEntry)
+				v := e.val
+				if v.typ == 0 {
+					entries[i] = e
+				} else if v.relativePTTL(now) > 0 {
+					results[i] = newResult(v, nil)
+				} else {
+					goto miss1
+				}
+				if atomic.AddUint32(&kc.hits, 1)&moveThreshold == 0 {
+					if moves == nil {
+						moves = make([]*list.Element, 0, len(multi))
+					}
+					moves = append(moves, ele)
+				}
+				continue
+			}
+		}
+	miss1:
+		if missed == nil {
+			missed = make([]int, 0, len(multi))
+		}
+		missed = append(missed, i)
+	}
+	c.mu.RUnlock()
+
+	if len(moves) > 0 {
+		c.mu.Lock()
+		if c.list != nil {
+			for _, ele := range moves {
+				c.list.MoveToBack(ele)
+			}
+		}
+		c.mu.Unlock()
+	}
+
+	if len(missed) == 0 {
+		return missed
+	}
+
+	j := 0
+	c.mu.Lock()
+	if c.store == nil {
+		c.mu.Unlock()
+		return missed
+	}
+	for _, i := range missed {
+		key, cmd := cmds.CacheKey(multi[i].Cmd)
+		kc, ok := c.store[key]
+		if !ok {
+			kc = &keyCache{cache: make(map[string]*list.Element, 1), key: key}
+			c.store[key] = kc
+		}
+		if ele, ok := kc.cache[cmd]; ok {
+			e := ele.Value.(*cacheEntry)
+			v := e.val
+			if v.typ == 0 {
+				entries[i] = e
+			} else if v.relativePTTL(now) > 0 {
+				results[i] = newResult(v, nil)
+			} else {
+				c.list.Remove(ele)
+				c.size -= e.size
+				goto miss2
+			}
+			atomic.AddUint32(&kc.hits, 1)
+			c.list.MoveToBack(ele)
+			continue
+		}
+	miss2:
+		atomic.AddUint32(&kc.miss, 1)
+		v := RedisMessage{}
+		v.setExpireAt(now.Add(multi[i].TTL).UnixMilli())
+		c.list.PushBack(&cacheEntry{cmd: cmd, kc: kc, val: v, ch: make(chan struct{})})
+		kc.cache[cmd] = c.list.Back()
+		missed[j] = i
+		j++
+	}
+	c.mu.Unlock()
+	return missed[:j]
 }
 
 func (c *lru) Update(key, cmd string, value RedisMessage) (pxat int64) {

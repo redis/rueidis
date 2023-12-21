@@ -9,7 +9,7 @@ import (
 func TestParallelKeys(t *testing.T) {
 	var sum int64
 	data, sk, _ := gen(int64(runtime.NumCPU() * 1000))
-	ParallelKeys(data, func(i int64) {
+	ParallelKeys(runtime.GOMAXPROCS(0), data, func(i int64) {
 		atomic.AddInt64(&sum, i)
 	})
 	if atomic.LoadInt64(&sum) != sk {
@@ -20,7 +20,7 @@ func TestParallelKeys(t *testing.T) {
 func TestParallelVals(t *testing.T) {
 	var sum int64
 	data, _, sv := gen(int64(runtime.NumCPU() * 1000))
-	ParallelVals(data, func(i int64) {
+	ParallelVals(runtime.GOMAXPROCS(0), data, func(i int64) {
 		atomic.AddInt64(&sum, i)
 	})
 	if atomic.LoadInt64(&sum) != sv {

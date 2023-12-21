@@ -27,6 +27,7 @@
 package rueidiscompat
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"strconv"
@@ -508,13 +509,14 @@ func newStatusCmd(res rueidis.RedisResult) *StatusCmd {
 }
 
 type SliceCmd struct {
-	err error
-	val []any
+	err  error
+	val  []any
+	keys []string
 }
 
-func newSliceCmd(res rueidis.RedisResult) *SliceCmd {
+func newSliceCmd(res rueidis.RedisResult, keys ...string) *SliceCmd {
 	val, err := res.ToArray()
-	slice := &SliceCmd{val: make([]any, len(val)), err: err}
+	slice := &SliceCmd{val: make([]any, len(val)), err: err, keys: keys}
 	for i, v := range val {
 		if s, err := v.ToString(); err == nil {
 			slice.val[i] = s
@@ -541,6 +543,15 @@ func (cmd *SliceCmd) Err() error {
 
 func (cmd *SliceCmd) Result() ([]any, error) {
 	return cmd.val, cmd.err
+}
+
+// Scan scans the results from the map into a destination struct. The map keys
+// are matched in the Redis struct fields by the `redis:"field"` tag.
+func (cmd *SliceCmd) Scan(dst any) error {
+	if cmd.err != nil {
+		return cmd.err
+	}
+	return Scan(dst, cmd.keys, cmd.val)
 }
 
 type StringSliceCmd struct {
@@ -960,6 +971,27 @@ func (cmd *StringStringMapCmd) Err() error {
 
 func (cmd *StringStringMapCmd) Result() (map[string]string, error) {
 	return cmd.val, cmd.err
+}
+
+// Scan scans the results from the map into a destination struct. The map keys
+// are matched in the Redis struct fields by the `redis:"field"` tag.
+func (cmd *StringStringMapCmd) Scan(dest interface{}) error {
+	if cmd.err != nil {
+		return cmd.err
+	}
+
+	strct, err := Struct(dest)
+	if err != nil {
+		return err
+	}
+
+	for k, v := range cmd.val {
+		if err := strct.Scan(k, v); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 type StringIntMapCmd struct {
@@ -1833,7 +1865,7 @@ func (cmd *XInfoConsumersCmd) Result() ([]XInfoConsumer, error) {
 
 // Z represents sorted set member.
 type Z struct {
-	Member any
+	Member string
 	Score  float64
 }
 
@@ -2075,6 +2107,116 @@ func (cmd *ClusterSlotsCmd) Err() error {
 }
 
 func (cmd *ClusterSlotsCmd) Result() ([]ClusterSlot, error) {
+	return cmd.val, cmd.err
+}
+
+func newClusterShardsCmd(res rueidis.RedisResult) *ClusterShardsCmd {
+	arr, err := res.ToArray()
+	if err != nil {
+		return &ClusterShardsCmd{err: err}
+	}
+	val := make([]ClusterShard, 0, len(arr))
+	for _, v := range arr {
+		dict, err := v.ToMap()
+		if err != nil {
+			return &ClusterShardsCmd{err: err}
+		}
+		shard := ClusterShard{}
+		{
+			slots := dict["slots"]
+			arr, _ := slots.ToArray()
+			for i := 0; i+1 < len(arr); i += 2 {
+				start, _ := arr[i].AsInt64()
+				end, _ := arr[i+1].AsInt64()
+				shard.Slots = append(shard.Slots, SlotRange{Start: start, End: end})
+			}
+		}
+		{
+			nodes, ok := dict["nodes"]
+			if !ok {
+				return &ClusterShardsCmd{err: errors.New("nodes not found")}
+			}
+			arr, err := nodes.ToArray()
+			if err != nil {
+				return &ClusterShardsCmd{err: err}
+			}
+			shard.Nodes = make([]Node, len(arr))
+			for i := 0; i < len(arr); i++ {
+				nodeMap, err := arr[i].ToMap()
+				if err != nil {
+					return &ClusterShardsCmd{err: err}
+				}
+				for k, v := range nodeMap {
+					switch k {
+					case "id":
+						shard.Nodes[i].ID, _ = v.ToString()
+					case "endpoint":
+						shard.Nodes[i].Endpoint, _ = v.ToString()
+					case "ip":
+						shard.Nodes[i].IP, _ = v.ToString()
+					case "hostname":
+						shard.Nodes[i].Hostname, _ = v.ToString()
+					case "port":
+						shard.Nodes[i].Port, _ = v.ToInt64()
+					case "tls-port":
+						shard.Nodes[i].TLSPort, _ = v.ToInt64()
+					case "role":
+						shard.Nodes[i].Role, _ = v.ToString()
+					case "replication-offset":
+						shard.Nodes[i].ReplicationOffset, _ = v.ToInt64()
+					case "health":
+						shard.Nodes[i].Health, _ = v.ToString()
+					}
+				}
+			}
+		}
+		val = append(val, shard)
+	}
+	return &ClusterShardsCmd{val: val, err: err}
+}
+
+type SlotRange struct {
+	Start int64
+	End   int64
+}
+type Node struct {
+	ID                string
+	Endpoint          string
+	IP                string
+	Hostname          string
+	Role              string
+	Health            string
+	Port              int64
+	TLSPort           int64
+	ReplicationOffset int64
+}
+type ClusterShard struct {
+	Slots []SlotRange
+	Nodes []Node
+}
+
+type ClusterShardsCmd struct {
+	err error
+	val []ClusterShard
+}
+
+func (cmd *ClusterShardsCmd) SetVal(val []ClusterShard) {
+	cmd.val = val
+}
+
+func (cmd *ClusterShardsCmd) SetErr(err error) {
+	cmd.err = err
+}
+
+func (cmd *ClusterShardsCmd) Val() []ClusterShard {
+	return cmd.val
+}
+
+func (cmd *ClusterShardsCmd) Err() error {
+	return cmd.err
+}
+
+func (cmd *ClusterShardsCmd) Result() ([]ClusterShard, error) {
 	return cmd.val, cmd.err
 }
 
@@ -2549,8 +2691,8 @@ type Function struct {
 type Library struct {
 	Name      string
 	Engine    string
-	Functions []Function
 	Code      string
+	Functions []Function
 }
 
 type FunctionListQuery struct {
@@ -2649,4 +2791,664 @@ func formatSec(dur time.Duration) int64 {
 		return 1
 	}
 	return int64(dur / time.Second)
+}
+
+// https://github.com/redis/go-redis/blob/f994ff1cd96299a5c8029ae3403af7b17ef06e8a/gears_commands.go#L21C1-L35C2
+type TFunctionLoadOptions struct {
+	Config  string
+	Replace bool
+}
+
+type TFunctionListOptions struct {
+	Library  string
+	Verbose  int
+	Withcode bool
+}
+
+type TFCallOptions struct {
+	Keys      []string
+	Arguments []string
+}
+
+type MapStringInterfaceSliceCmd struct {
+	err error
+	val []map[string]interface{}
+}
+
+func (cmd *MapStringInterfaceSliceCmd) SetVal(val []map[string]interface{}) {
+	cmd.val = val
+}
+
+func (cmd *MapStringInterfaceSliceCmd) Val() []map[string]interface{} {
+	return cmd.val
+}
+
+func (cmd *MapStringInterfaceSliceCmd) Err() error {
+	return cmd.err
+}
+
+func (cmd *MapStringInterfaceSliceCmd) Result() ([]map[string]interface{}, error) {
+	return cmd.Val(), cmd.Err()
+}
+
+func newMapStringInterfaceSliceCmd(res rueidis.RedisResult) *MapStringInterfaceSliceCmd {
+	arr, err := res.ToArray()
+	if err != nil {
+		return &MapStringInterfaceSliceCmd{err: err}
+	}
+	out := &MapStringInterfaceSliceCmd{val: make([]map[string]any, 0, len(arr))}
+	for _, ele := range arr {
+		m, err := ele.AsMap()
+		eleMap := make(map[string]any, len(m))
+		if err != nil {
+			out.err = err
+			return out
+		}
+		for k, v := range m {
+			var val any
+			if !v.IsNil() {
+				var err error
+				val, err = v.ToAny()
+				if err != nil {
+					out.err = err
+					return out
+				}
+			}
+			eleMap[k] = val
+		}
+		out.val = append(out.val, eleMap)
+	}
+	return out
+}
+
+type baseCmd[T any] struct {
+	err error
+	val T
+}
+
+func (cmd *baseCmd[T]) SetVal(val T) {
+	cmd.val = val
+}
+
+func (cmd *baseCmd[T]) Val() T {
+	return cmd.val
+}
+
+func (cmd *baseCmd[T]) Err() error {
+	return cmd.err
+}
+
+func (cmd *baseCmd[T]) Result() (T, error) {
+	return cmd.Val(), cmd.Err()
+}
+
+type BFInsertOptions struct {
+	Capacity   int64
+	Error      float64
+	Expansion  int64
+	NonScaling bool
+	NoCreate   bool
+}
+
+type BFReserveOptions struct {
+	Capacity   int64
+	Error      float64
+	Expansion  int64
+	NonScaling bool
+}
+
+type CFReserveOptions struct {
+	Capacity      int64
+	BucketSize    int64
+	MaxIterations int64
+	Expansion     int64
+}
+
+type CFInsertOptions struct {
+	Capacity int64
+	NoCreate bool
+}
+
+type BFInfo struct {
+	Capacity      int64 `redis:"Capacity"`
+	Size          int64 `redis:"Size"`
+	Filters       int64 `redis:"Number of filters"`
+	ItemsInserted int64 `redis:"Number of items inserted"`
+	ExpansionRate int64 `redis:"Expansion rate"`
+}
+
+type BFInfoCmd struct {
+	baseCmd[BFInfo]
+}
+
+func newBFInfoCmd(res rueidis.RedisResult) *BFInfoCmd {
+	cmd := &BFInfoCmd{}
+	info := BFInfo{}
+	if err := res.Error(); err != nil {
+		cmd.err = err
+		return cmd
+	}
+	m, err := res.AsIntMap()
+	if err != nil {
+		cmd.err = err
+		return cmd
+	}
+	keys := make([]string, 0, len(m))
+	values := make([]any, 0, len(m))
+	for k, v := range m {
+		keys = append(keys, k)
+		values = append(values, strconv.FormatInt(v, 10))
+	}
+	if err := Scan(&info, keys, values); err != nil {
+		cmd.err = err
+		return cmd
+	}
+	cmd.SetVal(info)
+	return cmd
+}
+
+type ScanDump struct {
+	Data string
+	Iter int64
+}
+
+type ScanDumpCmd struct {
+	baseCmd[ScanDump]
+}
+
+func newScanDumpCmd(res rueidis.RedisResult) *ScanDumpCmd {
+	cmd := &ScanDumpCmd{}
+	scanDump := ScanDump{}
+	if err := res.Error(); err != nil {
+		cmd.err = err
+		return cmd
+	}
+	arr, err := res.ToArray()
+	if err != nil {
+		cmd.err = err
+		return cmd
+	}
+	if len(arr) != 2 {
+		panic(fmt.Sprintf("wrong length of redis message, got %v, want %v", len(arr), 2))
+	}
+	iter, err := arr[0].AsInt64()
+	if err != nil {
+		cmd.err = err
+		return cmd
+	}
+	data, err := arr[1].ToString()
+	if err != nil {
+		cmd.err = err
+		return cmd
+	}
+	scanDump.Iter = iter
+	scanDump.Data = data
+	cmd.SetVal(scanDump)
+	return cmd
+}
+
+type CFInfo struct {
+	Size             int64 `redis:"Size"`
+	NumBuckets       int64 `redis:"Number of buckets"`
+	NumFilters       int64 `redis:"Number of filters"`
+	NumItemsInserted int64 `redis:"Number of items inserted"`
+	NumItemsDeleted  int64 `redis:"Number of items deleted"`
+	BucketSize       int64 `redis:"Bucket size"`
+	ExpansionRate    int64 `redis:"Expansion rate"`
+	MaxIteration     int64 `redis:"Max iterations"`
+}
+
+type CFInfoCmd struct {
+	baseCmd[CFInfo]
+}
+
+func newCFInfoCmd(res rueidis.RedisResult) *CFInfoCmd {
+	cmd := &CFInfoCmd{}
+	info := CFInfo{}
+	m, err := res.AsMap()
+	if err != nil {
+		cmd.err = err
+		return cmd
+	}
+	keys := make([]string, 0, len(m))
+	values := make([]any, 0, len(m))
+	for k, v := range m {
+		keys = append(keys, k)
+		val, err := v.AsInt64()
+		if err != nil {
+			cmd.err = err
+			return cmd
+		}
+		values = append(values, strconv.FormatInt(val, 10))
+	}
+	if err := Scan(&info, keys, values); err != nil {
+		cmd.err = err
+		return cmd
+	}
+	cmd.SetVal(info)
+	return cmd
+}
+
+type CMSInfo struct {
+	Width int64 `redis:"width"`
+	Depth int64 `redis:"depth"`
+	Count int64 `redis:"count"`
+}
+
+type CMSInfoCmd struct {
+	baseCmd[CMSInfo]
+}
+
+func newCMSInfoCmd(res rueidis.RedisResult) *CMSInfoCmd {
+	cmd := &CMSInfoCmd{}
+	info := CMSInfo{}
+	m, err := res.AsIntMap()
+	if err != nil {
+		cmd.err = err
+		return cmd
+	}
+	keys := make([]string, 0, len(m))
+	values := make([]any, 0, len(m))
+	for k, v := range m {
+		keys = append(keys, k)
+		values = append(values, strconv.FormatInt(v, 10))
+	}
+	if err := Scan(&info, keys, values); err != nil {
+		cmd.err = err
+		return cmd
+	}
+	cmd.SetVal(info)
+	return cmd
+}
+
+type TopKInfo struct {
+	K     int64   `redis:"k"`
+	Width int64   `redis:"width"`
+	Depth int64   `redis:"depth"`
+	Decay float64 `redis:"decay"`
+}
+
+type TopKInfoCmd struct {
+	baseCmd[TopKInfo]
+}
+
+func newTopKInfoCmd(res rueidis.RedisResult) *TopKInfoCmd {
+	cmd := &TopKInfoCmd{}
+	info := TopKInfo{}
+	m, err := res.ToMap()
+	if err != nil {
+		cmd.err = err
+		return cmd
+	}
+	keys := make([]string, 0, len(m))
+	values := make([]any, 0, len(m))
+	for k, v := range m {
+		keys = append(keys, k)
+		switch k {
+		case "k", "width", "depth":
+			intVal, err := v.AsInt64()
+			if err != nil {
+				cmd.err = err
+				return cmd
+			}
+			values = append(values, strconv.FormatInt(intVal, 10))
+		case "decay":
+			decay, err := v.AsFloat64()
+			if err != nil {
+				cmd.err = err
+				return cmd
+			}
+			// args of strconv.FormatFloat is copied from cmds.TopkReserveParamsDepth.Decay
+			values = append(values, strconv.FormatFloat(decay, 'f', -1, 64))
+		default:
+			panic("unexpected key")
+		}
+	}
+	if err := Scan(&info, keys, values); err != nil {
+		cmd.err = err
+		return cmd
+	}
+	cmd.SetVal(info)
+	return cmd
+}
+
+type MapStringIntCmd struct {
+	baseCmd[map[string]int64]
+}
+
+func newMapStringIntCmd(res rueidis.RedisResult) *MapStringIntCmd {
+	cmd := &MapStringIntCmd{}
+	m, err := res.AsIntMap()
+	if err != nil {
+		cmd.err = err
+		return cmd
+	}
+	cmd.SetVal(m)
+	return cmd
+}
+
+// Ref: https://redis.io/commands/tdigest.info/
+type TDigestInfo struct {
+	Compression       int64 `redis:"Compression"`
+	Capacity          int64 `redis:"Capacity"`
+	MergedNodes       int64 `redis:"Merged nodes"`
+	UnmergedNodes     int64 `redis:"UnmergedNodes"`
+	MergedWeight      int64 `redis:"MergedWeight"`
+	UnmergedWeight    int64 `redis:"Unmerged weight"`
+	Observations      int64 `redis:"Observations"`
+	TotalCompressions int64 `redis:"Total compressions"`
+	MemoryUsage       int64 `redis:"Memory usage"`
+}
+
+type TDigestInfoCmd struct {
+	baseCmd[TDigestInfo]
+}
+
+func newTDigestInfoCmd(res rueidis.RedisResult) *TDigestInfoCmd {
+	cmd := &TDigestInfoCmd{}
+	info := TDigestInfo{}
+	m, err := res.AsIntMap()
+	if err != nil {
+		cmd.err = err
+		return cmd
+	}
+	keys := make([]string, 0, len(m))
+	values := make([]any, 0, len(m))
+	for k, v := range m {
+		keys = append(keys, k)
+		values = append(values, strconv.FormatInt(v, 10))
+	}
+	if err := Scan(&info, keys, values); err != nil {
+		cmd.err = err
+		return cmd
+	}
+	cmd.SetVal(info)
+	return cmd
+}
+
+type TDigestMergeOptions struct {
+	Compression int64
+	Override    bool
+}
+
+type TSOptions struct {
+	Retention       int
+	ChunkSize       int
+	Encoding        string
+	DuplicatePolicy string
+	Labels          map[string]string
+}
+type TSIncrDecrOptions struct {
+	Timestamp    int64
+	Retention    int
+	ChunkSize    int
+	Uncompressed bool
+	Labels       map[string]string
+}
+
+type TSAlterOptions struct {
+	Retention       int
+	ChunkSize       int
+	DuplicatePolicy string
+	Labels          map[string]string
+}
+
+type TSCreateRuleOptions struct {
+	alignTimestamp int64
+}
+
+type TSGetOptions struct {
+	Latest bool
+}
+
+type TSInfoOptions struct {
+	Debug bool
+}
+type Aggregator int
+
+const (
+	Invalid = Aggregator(iota)
+	Avg
+	Sum
+	Min
+	Max
+	Range
+	Count
+	First
+	Last
+	StdP
+	StdS
+	VarP
+	VarS
+	Twa
+)
+
+func (a Aggregator) String() string {
+	switch a {
+	case Invalid:
+		return ""
+	case Avg:
+		return "AVG"
+	case Sum:
+		return "SUM"
+	case Min:
+		return "MIN"
+	case Max:
+		return "MAX"
+	case Range:
+		return "RANGE"
+	case Count:
+		return "COUNT"
+	case First:
+		return "FIRST"
+	case Last:
+		return "LAST"
+	case StdP:
+		return "STD.P"
+	case StdS:
+		return "STD.S"
+	case VarP:
+		return "VAR.P"
+	case VarS:
+		return "VAR.S"
+	case Twa:
+		return "TWA"
+	default:
+		return ""
+	}
+}
+
+type TSTimestampValue struct {
+	Timestamp int64
+	Value     float64
+}
+type TSTimestampValueCmd struct {
+	baseCmd[TSTimestampValue]
+}
+
+func newTSTimestampValueCmd(res rueidis.RedisResult) *TSTimestampValueCmd {
+	cmd := &TSTimestampValueCmd{}
+	val := TSTimestampValue{}
+	if err := res.Error(); err != nil {
+		cmd.err = err
+		return cmd
+	}
+	arr, err := res.ToArray()
+	if err != nil {
+		cmd.err = err
+		return cmd
+	}
+	if len(arr) != 2 {
+		panic(fmt.Sprintf("wrong len of array reply, should be 2, got %v", len(arr)))
+	}
+	val.Timestamp, err = arr[0].AsInt64()
+	if err != nil {
+		cmd.err = err
+		return cmd
+	}
+	val.Value, err = arr[1].AsFloat64()
+	if err != nil {
+		cmd.err = err
+		return cmd
+	}
+	cmd.SetVal(val)
+	return cmd
+}
+
+type MapStringInterfaceCmd struct {
+	baseCmd[map[string]any]
+}
+
+func newMapStringInterfaceCmd(res rueidis.RedisResult) *MapStringInterfaceCmd {
+	cmd := &MapStringInterfaceCmd{}
+	m, err := res.AsMap()
+	if err != nil {
+		cmd.err = err
+		return cmd
+	}
+	strIntMap := make(map[string]any, len(m))
+	for k, ele := range m {
+		var v any
+		var err error
+		if !ele.IsNil() {
+			v, err = ele.ToAny()
+			if err != nil {
+				cmd.err = err
+				return cmd
+			}
+		}
+		strIntMap[k] = v
+	}
+	cmd.SetVal(strIntMap)
+	return cmd
+}
+
+type TSTimestampValueSliceCmd struct {
+	baseCmd[[]TSTimestampValue]
+}
+
+func newTSTimestampValueSliceCmd(res rueidis.RedisResult) *TSTimestampValueSliceCmd {
+	cmd := &TSTimestampValueSliceCmd{}
+	msgSlice, err := res.ToArray()
+	if err != nil {
+		cmd.err = err
+		return cmd
+	}
+	tsValSlice := make([]TSTimestampValue, 0, len(msgSlice))
+	for i := 0; i < len(msgSlice); i++ {
+		msgArray, err := msgSlice[i].ToArray()
+		if err != nil {
+			cmd.err = err
+			return cmd
+		}
+		tstmp, err := msgArray[0].AsInt64()
+		if err != nil {
+			cmd.err = err
+			return cmd
+		}
+		val, err := msgArray[1].AsFloat64()
+		if err != nil {
+			cmd.err = err
+			return cmd
+		}
+		tsValSlice = append(tsValSlice, TSTimestampValue{Timestamp: tstmp, Value: val})
+	}
+	cmd.SetVal(tsValSlice)
+	return cmd
+}
+
+type MapStringSliceInterfaceCmd struct {
+	baseCmd[map[string][]any]
+}
+
+func newMapStringSliceInterfaceCmd(res rueidis.RedisResult) *MapStringSliceInterfaceCmd {
+	cmd := &MapStringSliceInterfaceCmd{}
+	m, err := res.ToMap()
+	if err != nil {
+		cmd.err = err
+		return cmd
+	}
+	mapStrSliceInt := make(map[string][]any, len(m))
+	for k, entry := range m {
+		vals, err := entry.ToArray()
+		if err != nil {
+			cmd.err = err
+			return cmd
+		}
+		anySlice := make([]any, 0, len(vals))
+		for _, v := range vals {
+			var err error
+			ele, err := v.ToAny()
+			if err != nil {
+				cmd.err = err
+				return cmd
+			}
+			anySlice = append(anySlice, ele)
+		}
+		mapStrSliceInt[k] = anySlice
+	}
+	cmd.SetVal(mapStrSliceInt)
+	return cmd
+}
+
+type TSRangeOptions struct {
+	Latest          bool
+	FilterByTS      []int
+	FilterByValue   []int
+	Count           int
+	Align           interface{}
+	Aggregator      Aggregator
+	BucketDuration  int
+	BucketTimestamp interface{}
+	Empty           bool
+}
+
+type TSRevRangeOptions struct {
+	Latest          bool
+	FilterByTS      []int
+	FilterByValue   []int
+	Count           int
+	Align           interface{}
+	Aggregator      Aggregator
+	BucketDuration  int
+	BucketTimestamp interface{}
+	Empty           bool
+}
+
+type TSMRangeOptions struct {
+	Latest          bool
+	FilterByTS      []int
+	FilterByValue   []int
+	WithLabels      bool
+	SelectedLabels  []interface{}
+	Count           int
+	Align           interface{}
+	Aggregator      Aggregator
+	BucketDuration  int
+	BucketTimestamp interface{}
+	Empty           bool
+	GroupByLabel    interface{}
+	Reducer         interface{}
+}
+
+type TSMRevRangeOptions struct {
+	Latest          bool
+	FilterByTS      []int
+	FilterByValue   []int
+	WithLabels      bool
+	SelectedLabels  []interface{}
+	Count           int
+	Align           interface{}
+	Aggregator      Aggregator
+	BucketDuration  int
+	BucketTimestamp interface{}
+	Empty           bool
+	GroupByLabel    interface{}
+	Reducer         interface{}
+}
+
+type TSMGetOptions struct {
+	Latest         bool
+	WithLabels     bool
+	SelectedLabels []interface{}
 }

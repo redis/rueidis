@@ -3,41 +3,93 @@ package rueidis
 import (
 	"context"
 	"errors"
-	"sync"
 	"time"
 
-	"github.com/Datadog/rueidis/internal/cmds"
+	intl "github.com/Datadog/rueidis/internal/cmds"
 	"github.com/Datadog/rueidis/internal/util"
 )
 
-// MGetCache is a helper that consults the client-side caches with multiple keys by grouping keys within same slot into MGETs
+type mgetcachecmds struct {
+	s []CacheableTTL
+}
+
+func (r *mgetcachecmds) Capacity() int {
+	return cap(r.s)
+}
+
+func (r *mgetcachecmds) ResetLen(n int) {
+	r.s = r.s[:n]
+}
+
+var mgetcachecmdsp = util.NewPool(func(capacity int) *mgetcachecmds {
+	return &mgetcachecmds{s: make([]CacheableTTL, 0, capacity)}
+})
+
+type mgetcmds struct {
+	s []Completed
+}
+
+func (r *mgetcmds) Capacity() int {
+	return cap(r.s)
+}
+
+func (r *mgetcmds) ResetLen(n int) {
+	r.s = r.s[:n]
+}
+
+var mgetcmdsp = util.NewPool(func(capacity int) *mgetcmds {
+	return &mgetcmds{s: make([]Completed, 0, capacity)}
+})
+
+// MGetCache is a helper that consults the client-side caches with multiple keys by grouping keys within same slot into multiple GETs
 func MGetCache(client Client, ctx context.Context, ttl time.Duration, keys []string) (ret map[string]RedisMessage, err error) {
 	if len(keys) == 0 {
 		return make(map[string]RedisMessage), nil
 	}
-	return parallelMGetCache(client, ctx, ttl, cmds.MGets(keys), keys)
+	cmds := mgetcachecmdsp.Get(len(keys), len(keys))
+	defer mgetcachecmdsp.Put(cmds)
+	for i := range cmds.s {
+		cmds.s[i] = CT(client.B().Get().Key(keys[i]).Cache(), ttl)
+	}
+	return doMultiCache(client, ctx, cmds.s, keys)
 }
 
-// MGet is a helper that consults the redis directly with multiple keys by grouping keys within same slot into MGETs
+// MGet is a helper that consults the redis directly with multiple keys by grouping keys within same slot into MGET or multiple GETs
 func MGet(client Client, ctx context.Context, keys []string) (ret map[string]RedisMessage, err error) {
 	if len(keys) == 0 {
 		return make(map[string]RedisMessage), nil
 	}
-	if _, ok := client.(*singleClient); ok {
+
+	switch client.(type) {
+	case *singleClient, *sentinelClient:
 		return clientMGet(client, ctx, client.B().Mget().Key(keys...).Build(), keys)
 	}
-	return parallelMGet(client, ctx, cmds.MGets(keys), keys)
+
+	cmds := mgetcmdsp.Get(len(keys), len(keys))
+	defer mgetcmdsp.Put(cmds)
+	for i := range cmds.s {
+		cmds.s[i] = client.B().Get().Key(keys[i]).Build()
+	}
+	return doMultiGet(client, ctx, cmds.s, keys)
 }
 
-// MSet is a helper that consults the redis directly with multiple keys by grouping keys within same slot into MSETs
+// MSet is a helper that consults the redis directly with multiple keys by grouping keys within same slot into MSETs or multiple SETs
 func MSet(client Client, ctx context.Context, kvs map[string]string) map[string]error {
 	if len(kvs) == 0 {
 		return make(map[string]error)
 	}
-	if _, ok := client.(*singleClient); ok {
+
+	switch client.(type) {
+	case *singleClient, *sentinelClient:
 		return clientMSet(client, ctx, "MSET", kvs, make(map[string]error, len(kvs)))
 	}
-	return parallelMSet(client, ctx, cmds.MSets(kvs), make(map[string]error, len(kvs)))
+
+	cmds := mgetcmdsp.Get(0, len(kvs))
+	defer mgetcmdsp.Put(cmds)
+	for k, v := range kvs {
+		cmds.s = append(cmds.s, client.B().Set().Key(k).Value(v).Build().Pin())
+	}
+	return doMultiSet(client, ctx, cmds.s)
 }
 
 // MDel is a helper that consults the redis directly with multiple keys by grouping keys within same slot into DELs
@@ -45,51 +97,88 @@ func MDel(client Client, ctx context.Context, keys []string) map[string]error {
 	if len(keys) == 0 {
 		return make(map[string]error)
 	}
-	if _, ok := client.(*singleClient); ok {
+
+	switch client.(type) {
+	case *singleClient, *sentinelClient:
 		return clientMDel(client, ctx, keys)
 	}
-	return parallelMDel(client, ctx, cmds.MDels(keys), make(map[string]error, len(keys)))
+
+	cmds := mgetcmdsp.Get(len(keys), len(keys))
+	defer mgetcmdsp.Put(cmds)
+	for i, k := range keys {
+		cmds.s[i] = client.B().Del().Key(k).Build().Pin()
+	}
+	return doMultiSet(client, ctx, cmds.s)
 }
 
-// MSetNX is a helper that consults the redis directly with multiple keys by grouping keys within same slot into MSETNXs
+// MSetNX is a helper that consults the redis directly with multiple keys by grouping keys within same slot into MSETNXs or multiple SETNXs
 func MSetNX(client Client, ctx context.Context, kvs map[string]string) map[string]error {
 	if len(kvs) == 0 {
 		return make(map[string]error)
 	}
-	if _, ok := client.(*singleClient); ok {
+
+	switch client.(type) {
+	case *singleClient, *sentinelClient:
 		return clientMSet(client, ctx, "MSETNX", kvs, make(map[string]error, len(kvs)))
 	}
-	return parallelMSet(client, ctx, cmds.MSetNXs(kvs), make(map[string]error, len(kvs)))
+
+	cmds := mgetcmdsp.Get(0, len(kvs))
+	defer mgetcmdsp.Put(cmds)
+	for k, v := range kvs {
+		cmds.s = append(cmds.s, client.B().Set().Key(k).Value(v).Nx().Build().Pin())
+	}
+	return doMultiSet(client, ctx, cmds.s)
 }
 
-// JsonMGetCache is a helper that consults the client-side caches with multiple keys by grouping keys within same slot into JSON.MGETs
+// JsonMGetCache is a helper that consults the client-side caches with multiple keys by grouping keys within same slot into multiple JSON.GETs
 func JsonMGetCache(client Client, ctx context.Context, ttl time.Duration, keys []string, path string) (ret map[string]RedisMessage, err error) {
 	if len(keys) == 0 {
 		return make(map[string]RedisMessage), nil
 	}
-	return parallelMGetCache(client, ctx, ttl, cmds.JsonMGets(keys, path), keys)
+	cmds := mgetcachecmdsp.Get(len(keys), len(keys))
+	defer mgetcachecmdsp.Put(cmds)
+	for i := range cmds.s {
+		cmds.s[i] = CT(client.B().JsonGet().Key(keys[i]).Path(path).Cache(), ttl)
+	}
+	return doMultiCache(client, ctx, cmds.s, keys)
 }
 
-// JsonMGet is a helper that consults redis directly with multiple keys by grouping keys within same slot into JSON.MGETs
+// JsonMGet is a helper that consults redis directly with multiple keys by grouping keys within same slot into JSON.MGETs or multiple JSON.GETs
 func JsonMGet(client Client, ctx context.Context, keys []string, path string) (ret map[string]RedisMessage, err error) {
 	if len(keys) == 0 {
 		return make(map[string]RedisMessage), nil
 	}
-	if _, ok := client.(*singleClient); ok {
+
+	switch client.(type) {
+	case *singleClient, *sentinelClient:
 		return clientMGet(client, ctx, client.B().JsonMget().Key(keys...).Path(path).Build(), keys)
 	}
-	return parallelMGet(client, ctx, cmds.JsonMGets(keys, path), keys)
+
+	cmds := mgetcmdsp.Get(len(keys), len(keys))
+	defer mgetcmdsp.Put(cmds)
+	for i := range cmds.s {
+		cmds.s[i] = client.B().JsonGet().Key(keys[i]).Path(path).Build()
+	}
+	return doMultiGet(client, ctx, cmds.s, keys)
 }
 
-// JsonMSet is a helper that consults redis directly with multiple keys by grouping keys within same slot into JSON.MSETs
+// JsonMSet is a helper that consults redis directly with multiple keys by grouping keys within same slot into JSON.MSETs or multiple JOSN.SETs
 func JsonMSet(client Client, ctx context.Context, kvs map[string]string, path string) map[string]error {
 	if len(kvs) == 0 {
 		return make(map[string]error)
 	}
-	if _, ok := client.(*singleClient); ok {
+
+	switch client.(type) {
+	case *singleClient, *sentinelClient:
 		return clientJSONMSet(client, ctx, kvs, path, make(map[string]error, len(kvs)))
 	}
-	return parallelMSet(client, ctx, cmds.JsonMSets(kvs, path), make(map[string]error, len(kvs)))
+
+	cmds := mgetcmdsp.Get(0, len(kvs))
+	defer mgetcmdsp.Put(cmds)
+	for k, v := range kvs {
+		cmds.s = append(cmds.s, client.B().JsonSet().Key(k).Path(path).Value(v).Build().Pin())
+	}
+	return doMultiSet(client, ctx, cmds.s)
 }
 
 func clientMGet(client Client, ctx context.Context, cmd Completed, keys []string) (ret map[string]RedisMessage, err error) {
@@ -116,7 +205,7 @@ func clientMSet(client Client, ctx context.Context, mset string, kvs map[string]
 }
 
 func clientJSONMSet(client Client, ctx context.Context, kvs map[string]string, path string, ret map[string]error) map[string]error {
-	cmd := cmds.JsonMsetTripletValue(client.B().JsonMset())
+	cmd := intl.JsonMsetTripletValue(client.B().JsonMset())
 	for k, v := range kvs {
 		cmd = cmd.Key(k).Path(path).Value(v)
 	}
@@ -136,82 +225,42 @@ func clientMDel(client Client, ctx context.Context, keys []string) map[string]er
 	return ret
 }
 
-func parallelMGetCache(cc Client, ctx context.Context, ttl time.Duration, mgets map[uint16]Completed, keys []string) (ret map[string]RedisMessage, err error) {
-	return doMGets(make(map[string]RedisMessage, len(keys)), mgets, func(cmd Completed) RedisResult {
-		return cc.DoCache(ctx, Cacheable(cmd), ttl)
-	})
-}
-
-func parallelMGet(cc Client, ctx context.Context, mgets map[uint16]Completed, keys []string) (ret map[string]RedisMessage, err error) {
-	return doMGets(make(map[string]RedisMessage, len(keys)), mgets, func(cmd Completed) RedisResult {
-		return cc.Do(ctx, cmd)
-	})
-}
-
-func parallelMSet(cc Client, ctx context.Context, msets map[uint16]Completed, ret map[string]error) map[string]error {
-	var mu sync.Mutex
-	for _, cmd := range msets {
-		cmd.Pin()
+func doMultiCache(cc Client, ctx context.Context, cmds []CacheableTTL, keys []string) (ret map[string]RedisMessage, err error) {
+	ret = make(map[string]RedisMessage, len(keys))
+	resps := cc.DoMultiCache(ctx, cmds...)
+	defer resultsp.Put(&redisresults{s: resps})
+	for i, resp := range resps {
+		if err := resp.NonRedisError(); err != nil {
+			return nil, err
+		}
+		ret[keys[i]] = resp.val
 	}
-	util.ParallelVals(msets, func(cmd Completed) {
-		ok, err := cc.Do(ctx, cmd).AsBool()
-		err2 := err
-		if err2 == nil && !ok {
-			err2 = ErrMSetNXNotSet
+	return ret, nil
+}
+
+func doMultiGet(cc Client, ctx context.Context, cmds []Completed, keys []string) (ret map[string]RedisMessage, err error) {
+	ret = make(map[string]RedisMessage, len(keys))
+	resps := cc.DoMulti(ctx, cmds...)
+	defer resultsp.Put(&redisresults{s: resps})
+	for i, resp := range resps {
+		if err := resp.NonRedisError(); err != nil {
+			return nil, err
 		}
-		mu.Lock()
-		for i := 1; i < len(cmd.Commands()); i += 2 {
-			ret[cmd.Commands()[i]] = err2
+		ret[keys[i]] = resp.val
+	}
+	return ret, nil
+}
+
+func doMultiSet(cc Client, ctx context.Context, cmds []Completed) (ret map[string]error) {
+	ret = make(map[string]error, len(cmds))
+	resps := cc.DoMulti(ctx, cmds...)
+	for i, resp := range resps {
+		if ret[cmds[i].Commands()[1]] = resp.Error(); resp.NonRedisError() == nil {
+			intl.PutCompletedForce(cmds[i])
 		}
-		mu.Unlock()
-		if err == nil {
-			cmds.Put(cmds.CompletedCS(cmd))
-		}
-	})
+	}
+	resultsp.Put(&redisresults{s: resps})
 	return ret
-}
-
-func parallelMDel(cc Client, ctx context.Context, mdels map[uint16]Completed, ret map[string]error) map[string]error {
-	var mu sync.Mutex
-	for _, cmd := range mdels {
-		cmd.Pin()
-	}
-	util.ParallelVals(mdels, func(cmd Completed) {
-		err := cc.Do(ctx, cmd).Error()
-		mu.Lock()
-		for i := 1; i < len(cmd.Commands()); i += 2 {
-			ret[cmd.Commands()[i]] = err
-		}
-		mu.Unlock()
-		if err == nil {
-			cmds.Put(cmds.CompletedCS(cmd))
-		}
-	})
-	return ret
-}
-
-func doMGets(m map[string]RedisMessage, mgets map[uint16]Completed, fn func(cmd Completed) RedisResult) (ret map[string]RedisMessage, err error) {
-	var mu sync.Mutex
-	for _, cmd := range mgets {
-		cmd.Pin()
-	}
-	util.ParallelVals(mgets, func(cmd Completed) {
-		arr, err2 := fn(cmd).ToArray()
-		mu.Lock()
-		if err2 != nil {
-			err = err2
-		} else {
-			arrayToKV(m, arr, cmd.Commands()[1:])
-		}
-		mu.Unlock()
-	})
-	if err != nil {
-		return nil, err
-	}
-	for _, cmd := range mgets {
-		cmds.Put(cmds.CompletedCS(cmd))
-	}
-	return m, nil
 }
 
 func arrayToKV(m map[string]RedisMessage, arr []RedisMessage, keys []string) map[string]RedisMessage {

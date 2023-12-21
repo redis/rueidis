@@ -23,7 +23,7 @@ func TestNewLuaScriptOnePass(t *testing.T) {
 	a := []string{"3", "4"}
 
 	c := &client{
-		BFn: func() cmds.Builder {
+		BFn: func() Builder {
 			return cmds.NewBuilder(cmds.NoSlot)
 		},
 		DoFn: func(ctx context.Context, cmd Completed) (resp RedisResult) {
@@ -53,7 +53,7 @@ func TestNewLuaScript(t *testing.T) {
 	eval := false
 
 	c := &client{
-		BFn: func() cmds.Builder {
+		BFn: func() Builder {
 			return cmds.NewBuilder(cmds.NoSlot)
 		},
 		DoFn: func(ctx context.Context, cmd Completed) (resp RedisResult) {
@@ -87,7 +87,7 @@ func TestNewLuaScriptReadOnly(t *testing.T) {
 	eval := false
 
 	c := &client{
-		BFn: func() cmds.Builder {
+		BFn: func() Builder {
 			return cmds.NewBuilder(cmds.NoSlot)
 		},
 		DoFn: func(ctx context.Context, cmd Completed) (resp RedisResult) {
@@ -117,7 +117,7 @@ func TestNewLuaScriptExecMultiError(t *testing.T) {
 	a := []string{"3", "4"}
 
 	c := &client{
-		BFn: func() cmds.Builder {
+		BFn: func() Builder {
 			return cmds.NewBuilder(cmds.NoSlot)
 		},
 		DoFn: func(ctx context.Context, cmd Completed) (resp RedisResult) {
@@ -141,7 +141,7 @@ func TestNewLuaScriptExecMulti(t *testing.T) {
 	a := []string{"3", "4"}
 
 	c := &client{
-		BFn: func() cmds.Builder {
+		BFn: func() Builder {
 			return cmds.NewBuilder(cmds.NoSlot)
 		},
 		DoFn: func(ctx context.Context, cmd Completed) (resp RedisResult) {
@@ -173,7 +173,7 @@ func TestNewLuaScriptExecMultiRo(t *testing.T) {
 	a := []string{"3", "4"}
 
 	c := &client{
-		BFn: func() cmds.Builder {
+		BFn: func() Builder {
 			return cmds.NewBuilder(cmds.NoSlot)
 		},
 		DoFn: func(ctx context.Context, cmd Completed) (resp RedisResult) {
@@ -196,7 +196,7 @@ func TestNewLuaScriptExecMultiRo(t *testing.T) {
 }
 
 type client struct {
-	BFn            func() cmds.Builder
+	BFn            func() Builder
 	DoFn           func(ctx context.Context, cmd Completed) (resp RedisResult)
 	DoMultiFn      func(ctx context.Context, cmd ...Completed) (resp []RedisResult)
 	DoCacheFn      func(ctx context.Context, cmd Cacheable, ttl time.Duration) (resp RedisResult)
@@ -210,11 +210,11 @@ func (c *client) Receive(ctx context.Context, subscribe Completed, fn func(msg P
 	return nil
 }
 
-func (c *client) B() cmds.Builder {
+func (c *client) B() Builder {
 	if c.BFn != nil {
 		return c.BFn()
 	}
-	return cmds.Builder{}
+	return Builder{}
 }
 
 func (c *client) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
