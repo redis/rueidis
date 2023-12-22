@@ -83,19 +83,19 @@ var _ wire = (*pipe)(nil)
 type pipe struct {
 	conn            net.Conn
 	error           atomic.Value
-	clhks           atomic.Value
-	pshks           atomic.Value
+	clhks           atomic.Value // closed hook, invoked after the conn is closed
+	pshks           atomic.Value // pubsub hook, registered by the SetPubSubHooks
 	queue           queue
 	cache           CacheStore
 	r               *bufio.Reader
 	w               *bufio.Writer
 	close           chan struct{}
 	onInvalidations func([]RedisMessage)
-	r2psFn          func() (p *pipe, err error)
-	r2pipe          *pipe
-	ssubs           *subs
-	nsubs           *subs
-	psubs           *subs
+	r2psFn          func() (p *pipe, err error) // func to build pipe for resp2 pubsub
+	r2pipe          *pipe                       // internal pipe for resp2 pubsub only
+	ssubs           *subs                       // pubsub smessage subscriptions
+	nsubs           *subs                       // pubsub  message subscriptions
+	psubs           *subs                       // pubsub pmessage subscriptions
 	info            map[string]RedisMessage
 	timeout         time.Duration
 	pinggap         time.Duration
@@ -108,7 +108,7 @@ type pipe struct {
 	state           int32
 	waits           int32
 	recvs           int32
-	r2ps            bool
+	r2ps            bool // identify this pipe is used for resp2 pubsub or not
 }
 
 func newPipe(connFn func() (net.Conn, error), option *ClientOption) (p *pipe, err error) {
@@ -224,7 +224,7 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 			}
 			if err != nil {
 				if init[i][0] == "READONLY" {
-					// igore READONLY command error
+					// ignore READONLY command error
 					continue
 				}
 				if re, ok := err.(*RedisError); ok {
@@ -290,7 +290,7 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 			defer resultsp.Put(resp)
 			for i, r := range resp.s[:len(resp.s)-2] { // skip error checking on the last CLIENT SETINFO
 				if init[i][0] == "READONLY" {
-					// igore READONLY command error
+					// ignore READONLY command error
 					continue
 				}
 				if err = r.Error(); err != nil {

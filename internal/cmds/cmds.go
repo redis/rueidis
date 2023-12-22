@@ -93,8 +93,8 @@ type Incomplete struct {
 // Completed represents a completed Redis command, should be created by the Build() of command builder.
 type Completed struct {
 	cs *CommandSlice
-	cf uint16
-	ks uint16
+	cf uint16 // cmd flag
+	ks uint16 // key slot
 }
 
 // Pin prevents a Completed to be recycled
