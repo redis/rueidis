@@ -8,7 +8,7 @@ import (
 
 	"github.com/Datadog/rueidis"
 	"github.com/Datadog/rueidis/mock"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 )
 
 type hook struct{}

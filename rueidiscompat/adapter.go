@@ -30,6 +30,8 @@ import (
 	"context"
 	"encoding"
 	"fmt"
+	"reflect"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -349,7 +351,7 @@ type Cmdable interface {
 
 	// TODO ClusterMyShardID(ctx context.Context) *StringCmd
 	ClusterSlots(ctx context.Context) *ClusterSlotsCmd
-	// TODO ClusterShards(ctx context.Context) *ClusterShardsCmd
+	ClusterShards(ctx context.Context) *ClusterShardsCmd
 	// TODO ClusterLinks(ctx context.Context) *ClusterLinksCmd
 	ClusterNodes(ctx context.Context) *StringCmd
 	ClusterMeet(ctx context.Context, host string, port int64) *StatusCmd
@@ -385,19 +387,146 @@ type Cmdable interface {
 	ACLDryRun(ctx context.Context, username string, command ...any) *StringCmd
 
 	// TODO ModuleLoadex(ctx context.Context, conf *ModuleLoadexConfig) *StringCmd
+	GearsCmdable
+	ProbabilisticCmdable
+	TimeseriesCmdable
 }
+
+// https://github.com/redis/go-redis/blob/af4872cbd0de349855ce3f0978929c2f56eb995f/probabilistic.go#L10
+type ProbabilisticCmdable interface {
+	BFAdd(ctx context.Context, key string, element interface{}) *BoolCmd
+	BFCard(ctx context.Context, key string) *IntCmd
+	BFExists(ctx context.Context, key string, element interface{}) *BoolCmd
+	BFInfo(ctx context.Context, key string) *BFInfoCmd
+	BFInfoArg(ctx context.Context, key, option string) *BFInfoCmd
+	BFInfoCapacity(ctx context.Context, key string) *BFInfoCmd
+	BFInfoSize(ctx context.Context, key string) *BFInfoCmd
+	BFInfoFilters(ctx context.Context, key string) *BFInfoCmd
+	BFInfoItems(ctx context.Context, key string) *BFInfoCmd
+	BFInfoExpansion(ctx context.Context, key string) *BFInfoCmd
+	BFInsert(ctx context.Context, key string, options *BFInsertOptions, elements ...interface{}) *BoolSliceCmd
+	BFMAdd(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd
+	BFMExists(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd
+	BFReserve(ctx context.Context, key string, errorRate float64, capacity int64) *StatusCmd
+	BFReserveExpansion(ctx context.Context, key string, errorRate float64, capacity, expansion int64) *StatusCmd
+	BFReserveNonScaling(ctx context.Context, key string, errorRate float64, capacity int64) *StatusCmd
+	BFReserveWithArgs(ctx context.Context, key string, options *BFReserveOptions) *StatusCmd
+	BFScanDump(ctx context.Context, key string, iterator int64) *ScanDumpCmd
+	BFLoadChunk(ctx context.Context, key string, iterator int64, data interface{}) *StatusCmd
+
+	CFAdd(ctx context.Context, key string, element interface{}) *BoolCmd
+	CFAddNX(ctx context.Context, key string, element interface{}) *BoolCmd
+	CFCount(ctx context.Context, key string, element interface{}) *IntCmd
+	CFDel(ctx context.Context, key string, element interface{}) *BoolCmd
+	CFExists(ctx context.Context, key string, element interface{}) *BoolCmd
+	CFInfo(ctx context.Context, key string) *CFInfoCmd
+	CFInsert(ctx context.Context, key string, options *CFInsertOptions, elements ...interface{}) *BoolSliceCmd
+	CFInsertNX(ctx context.Context, key string, options *CFInsertOptions, elements ...interface{}) *IntSliceCmd
+	CFMExists(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd
+	CFReserve(ctx context.Context, key string, capacity int64) *StatusCmd
+	CFReserveWithArgs(ctx context.Context, key string, options *CFReserveOptions) *StatusCmd
+	CFReserveExpansion(ctx context.Context, key string, capacity int64, expansion int64) *StatusCmd
+	CFReserveBucketSize(ctx context.Context, key string, capacity int64, bucketsize int64) *StatusCmd
+	CFReserveMaxIterations(ctx context.Context, key string, capacity int64, maxiterations int64) *StatusCmd
+	CFScanDump(ctx context.Context, key string, iterator int64) *ScanDumpCmd
+	CFLoadChunk(ctx context.Context, key string, iterator int64, data interface{}) *StatusCmd
+
+	CMSIncrBy(ctx context.Context, key string, elements ...interface{}) *IntSliceCmd
+	CMSInfo(ctx context.Context, key string) *CMSInfoCmd
+	CMSInitByDim(ctx context.Context, key string, width, height int64) *StatusCmd
+	CMSInitByProb(ctx context.Context, key string, errorRate, probability float64) *StatusCmd
+	CMSMerge(ctx context.Context, destKey string, sourceKeys ...string) *StatusCmd
+	CMSMergeWithWeight(ctx context.Context, destKey string, sourceKeys map[string]int64) *StatusCmd
+	CMSQuery(ctx context.Context, key string, elements ...interface{}) *IntSliceCmd
+
+	TopKAdd(ctx context.Context, key string, elements ...interface{}) *StringSliceCmd
+	TopKCount(ctx context.Context, key string, elements ...interface{}) *IntSliceCmd
+	TopKIncrBy(ctx context.Context, key string, elements ...interface{}) *StringSliceCmd
+	TopKInfo(ctx context.Context, key string) *TopKInfoCmd
+	TopKList(ctx context.Context, key string) *StringSliceCmd
+	TopKListWithCount(ctx context.Context, key string) *MapStringIntCmd
+	TopKQuery(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd
+	TopKReserve(ctx context.Context, key string, k int64) *StatusCmd
+	TopKReserveWithOptions(ctx context.Context, key string, k int64, width, depth int64, decay float64) *StatusCmd
+
+	TDigestAdd(ctx context.Context, key string, elements ...float64) *StatusCmd
+	TDigestByRank(ctx context.Context, key string, rank ...uint64) *FloatSliceCmd
+	TDigestByRevRank(ctx context.Context, key string, rank ...uint64) *FloatSliceCmd
+	TDigestCDF(ctx context.Context, key string, elements ...float64) *FloatSliceCmd
+	TDigestCreate(ctx context.Context, key string) *StatusCmd
+	TDigestCreateWithCompression(ctx context.Context, key string, compression int64) *StatusCmd
+	TDigestInfo(ctx context.Context, key string) *TDigestInfoCmd
+	TDigestMax(ctx context.Context, key string) *FloatCmd
+	TDigestMin(ctx context.Context, key string) *FloatCmd
+	TDigestMerge(ctx context.Context, destKey string, options *TDigestMergeOptions, sourceKeys ...string) *StatusCmd
+	TDigestQuantile(ctx context.Context, key string, elements ...float64) *FloatSliceCmd
+	TDigestRank(ctx context.Context, key string, values ...float64) *IntSliceCmd
+	TDigestReset(ctx context.Context, key string) *StatusCmd
+	TDigestRevRank(ctx context.Context, key string, values ...float64) *IntSliceCmd
+	TDigestTrimmedMean(ctx context.Context, key string, lowCutQuantile, highCutQuantile float64) *FloatCmd
+}
+
+// Align with go-redis
+// https://github.com/redis/go-redis/blob/f994ff1cd96299a5c8029ae3403af7b17ef06e8a/gears_commands.go#L9-L19
+type GearsCmdable interface {
+	TFunctionLoad(ctx context.Context, lib string) *StatusCmd
+	TFunctionLoadArgs(ctx context.Context, lib string, options *TFunctionLoadOptions) *StatusCmd
+	TFunctionDelete(ctx context.Context, libName string) *StatusCmd
+	TFunctionList(ctx context.Context) *MapStringInterfaceSliceCmd
+	TFunctionListArgs(ctx context.Context, options *TFunctionListOptions) *MapStringInterfaceSliceCmd
+	TFCall(ctx context.Context, libName string, funcName string, numKeys int) *Cmd
+	TFCallArgs(ctx context.Context, libName string, funcName string, numKeys int, options *TFCallOptions) *Cmd
+	TFCallASYNC(ctx context.Context, libName string, funcName string, numKeys int) *Cmd
+	TFCallASYNCArgs(ctx context.Context, libName string, funcName string, numKeys int, options *TFCallOptions) *Cmd
+}
+
+type TimeseriesCmdable interface {
+	TSAdd(ctx context.Context, key string, timestamp interface{}, value float64) *IntCmd
+	TSAddWithArgs(ctx context.Context, key string, timestamp interface{}, value float64, options *TSOptions) *IntCmd
+	TSCreate(ctx context.Context, key string) *StatusCmd
+	TSCreateWithArgs(ctx context.Context, key string, options *TSOptions) *StatusCmd
+	TSAlter(ctx context.Context, key string, options *TSAlterOptions) *StatusCmd
+	TSCreateRule(ctx context.Context, sourceKey string, destKey string, aggregator Aggregator, bucketDuration int) *StatusCmd
+	TSCreateRuleWithArgs(ctx context.Context, sourceKey string, destKey string, aggregator Aggregator, bucketDuration int, options *TSCreateRuleOptions) *StatusCmd
+	TSIncrBy(ctx context.Context, Key string, timestamp float64) *IntCmd
+	TSIncrByWithArgs(ctx context.Context, key string, timestamp float64, options *TSIncrDecrOptions) *IntCmd
+	TSDecrBy(ctx context.Context, Key string, timestamp float64) *IntCmd
+	TSDecrByWithArgs(ctx context.Context, key string, timestamp float64, options *TSIncrDecrOptions) *IntCmd
+	TSDel(ctx context.Context, Key string, fromTimestamp int, toTimestamp int) *IntCmd
+	TSDeleteRule(ctx context.Context, sourceKey string, destKey string) *StatusCmd
+	TSGet(ctx context.Context, key string) *TSTimestampValueCmd
+	TSGetWithArgs(ctx context.Context, key string, options *TSGetOptions) *TSTimestampValueCmd
+	TSInfo(ctx context.Context, key string) *MapStringInterfaceCmd
+	TSInfoWithArgs(ctx context.Context, key string, options *TSInfoOptions) *MapStringInterfaceCmd
+	TSMAdd(ctx context.Context, ktvSlices [][]interface{}) *IntSliceCmd
+	TSQueryIndex(ctx context.Context, filterExpr []string) *StringSliceCmd
+	TSRevRange(ctx context.Context, key string, fromTimestamp int, toTimestamp int) *TSTimestampValueSliceCmd
+	TSRevRangeWithArgs(ctx context.Context, key string, fromTimestamp int, toTimestamp int, options *TSRevRangeOptions) *TSTimestampValueSliceCmd
+	TSRange(ctx context.Context, key string, fromTimestamp int, toTimestamp int) *TSTimestampValueSliceCmd
+	TSRangeWithArgs(ctx context.Context, key string, fromTimestamp int, toTimestamp int, options *TSRangeOptions) *TSTimestampValueSliceCmd
+	TSMRange(ctx context.Context, fromTimestamp int, toTimestamp int, filterExpr []string) *MapStringSliceInterfaceCmd
+	TSMRangeWithArgs(ctx context.Context, fromTimestamp int, toTimestamp int, filterExpr []string, options *TSMRangeOptions) *MapStringSliceInterfaceCmd
+	TSMRevRange(ctx context.Context, fromTimestamp int, toTimestamp int, filterExpr []string) *MapStringSliceInterfaceCmd
+	TSMRevRangeWithArgs(ctx context.Context, fromTimestamp int, toTimestamp int, filterExpr []string, options *TSMRevRangeOptions) *MapStringSliceInterfaceCmd
+	TSMGet(ctx context.Context, filters []string) *MapStringSliceInterfaceCmd
+	TSMGetWithArgs(ctx context.Context, filters []string, options *TSMGetOptions) *MapStringSliceInterfaceCmd
+}
+
+var _ Cmdable = (*Compat)(nil)
 
 type Compat struct {
 	client rueidis.Client
+	maxp   int
 }
 
+// CacheCompat implements commands that support client-side caching.
 type CacheCompat struct {
 	client rueidis.Client
 	ttl    time.Duration
 }
 
 func NewAdapter(client rueidis.Client) Cmdable {
-	return &Compat{client: client}
+	return &Compat{client: client, maxp: runtime.GOMAXPROCS(0)}
 }
 
 func (c *Compat) Cache(ttl time.Duration) CacheCompat {
@@ -644,8 +773,8 @@ func (c *Compat) sort(command, key string, sort Sort) cmds.Arbitrary {
 	if sort.Offset != 0 || sort.Count != 0 {
 		cmd = cmd.Args("LIMIT", strconv.FormatInt(sort.Offset, 10), strconv.FormatInt(sort.Count, 10))
 	}
-	if len(sort.Get) > 0 {
-		cmd = cmd.Args("GET").Args(sort.Get...)
+	for _, get := range sort.Get {
+		cmd = cmd.Args("GET").Args(get)
 	}
 	switch order := strings.ToUpper(sort.Order); order {
 	case "ASC", "DESC":
@@ -777,7 +906,7 @@ func (c *Compat) IncrByFloat(ctx context.Context, key string, increment float64)
 func (c *Compat) MGet(ctx context.Context, keys ...string) *SliceCmd {
 	cmd := c.client.B().Mget().Key(keys...).Build()
 	resp := c.client.Do(ctx, cmd)
-	return newSliceCmd(resp)
+	return newSliceCmd(resp, keys...)
 }
 
 func (c *Compat) MSet(ctx context.Context, values ...any) *StatusCmd {
@@ -1112,7 +1241,7 @@ func (c *Compat) HLen(ctx context.Context, key string) *IntCmd {
 func (c *Compat) HMGet(ctx context.Context, key string, fields ...string) *SliceCmd {
 	cmd := c.client.B().Hmget().Key(key).Field(fields...).Build()
 	resp := c.client.Do(ctx, cmd)
-	return newSliceCmd(resp)
+	return newSliceCmd(resp, fields...)
 }
 
 // HSet requires Redis v4 for multiple field/value pairs support.
@@ -1809,7 +1938,7 @@ func (c *Compat) zAddArgs(ctx context.Context, key string, incr bool, args ZAddA
 		cmd = cmd.Args("INCR")
 	}
 	for _, v := range args.Members {
-		cmd = cmd.Args(strconv.FormatFloat(v.Score, 'f', -1, 64), str(v.Member))
+		cmd = cmd.Args(strconv.FormatFloat(v.Score, 'f', -1, 64), v.Member)
 	}
 	resp := c.client.Do(ctx, cmd.Build())
 	return resp
@@ -2557,6 +2686,12 @@ func (c *Compat) ClusterSlots(ctx context.Context) *ClusterSlotsCmd {
 	return newClusterSlotsCmd(resp)
 }
 
+func (c *Compat) ClusterShards(ctx context.Context) *ClusterShardsCmd {
+	cmd := c.client.B().ClusterShards().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newClusterShardsCmd(resp)
+}
+
 func (c *Compat) ClusterNodes(ctx context.Context) *StringCmd {
 	cmd := c.client.B().ClusterNodes().Build()
 	resp := c.client.Do(ctx, cmd)
@@ -2799,7 +2934,7 @@ func (c *Compat) ACLDryRun(ctx context.Context, username string, command ...any)
 
 func (c *Compat) doPrimaries(ctx context.Context, fn func(c rueidis.Client) error) error {
 	var firsterr atomic.Value
-	util.ParallelVals(c.client.Nodes(), func(client rueidis.Client) {
+	util.ParallelVals(c.maxp, c.client.Nodes(), func(client rueidis.Client) {
 		msgs, err := client.Do(ctx, client.B().Role().Build()).ToArray()
 		if err == nil {
 			if role, _ := msgs[0].ToString(); role == "master" {
@@ -2844,6 +2979,1357 @@ func (c *Compat) doIntCmdPrimaries(ctx context.Context, fn func(c rueidis.Client
 		return err
 	})
 	return ret
+}
+
+func (c *Compat) TFunctionLoad(ctx context.Context, lib string) *StatusCmd {
+	cmd := c.client.B().TfunctionLoad().LibraryCode(lib).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+// FIXME: should check nil of options
+func (c *Compat) TFunctionLoadArgs(ctx context.Context, lib string, options *TFunctionLoadOptions) *StatusCmd {
+	b := c.client.B()
+	var cmd cmds.Completed
+	if options.Replace {
+		cmd = b.TfunctionLoad().Replace().Config(options.Config).LibraryCode(lib).Build()
+	} else {
+		cmd = b.TfunctionLoad().Config(options.Config).LibraryCode(lib).Build()
+	}
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) TFunctionDelete(ctx context.Context, libName string) *StatusCmd {
+	cmd := c.client.B().TfunctionDelete().LibraryName(libName).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) TFunctionList(ctx context.Context) *MapStringInterfaceSliceCmd {
+	cmd := c.client.B().TfunctionList().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newMapStringInterfaceSliceCmd(resp)
+}
+
+func (c *Compat) TFunctionListArgs(ctx context.Context, options *TFunctionListOptions) *MapStringInterfaceSliceCmd {
+	cmd := c.client.B().TfunctionList()
+	if options.Library != "" {
+		cmd.LibraryName(options.Library)
+	}
+	if options.Withcode {
+		cmd.Withcode()
+	}
+	if options.Verbose > 0 {
+		cmd.Verbose()
+		for i := 0; i < options.Verbose; i++ {
+			cmd.V()
+		}
+	}
+	cmdCompleted := cmd.Build()
+	resp := c.client.Do(ctx, cmdCompleted)
+	return newMapStringInterfaceSliceCmd(resp)
+}
+
+func (c *Compat) TFCall(ctx context.Context, libName string, funcName string, numKeys int) *Cmd {
+	cmd := c.client.
+		B().
+		Tfcall().
+		LibraryFunction(fmt.Sprintf("%s.%s", libName, funcName)).
+		Numkeys(int64(numKeys)).
+		Build()
+	resp := c.client.Do(ctx, cmd)
+	return newCmd(resp)
+}
+
+func (c *Compat) TFCallArgs(ctx context.Context, libName string, funcName string, numKeys int, options *TFCallOptions) *Cmd {
+	cmd := c.client.
+		B().
+		Tfcall().
+		LibraryFunction(fmt.Sprintf("%s.%s", libName, funcName)).
+		Numkeys(int64(numKeys)).
+		Key(options.Keys...).
+		Arg(options.Arguments...).
+		Build()
+	resp := c.client.Do(ctx, cmd)
+	return newCmd(resp)
+}
+
+func (c *Compat) TFCallASYNC(ctx context.Context, libName string, funcName string, numKeys int) *Cmd {
+	cmd := c.client.
+		B().
+		Tfcallasync().
+		LibraryFunction(fmt.Sprintf("%s.%s", libName, funcName)).
+		Numkeys(int64(numKeys)).
+		Build()
+	resp := c.client.Do(ctx, cmd)
+	return newCmd(resp)
+}
+
+func (c *Compat) TFCallASYNCArgs(ctx context.Context, libName string, funcName string, numKeys int, options *TFCallOptions) *Cmd {
+	cmd := c.client.
+		B().
+		Tfcallasync().
+		LibraryFunction(fmt.Sprintf("%s.%s", libName, funcName)).
+		Numkeys(int64(numKeys)).
+		Key(options.Keys...).
+		Arg(options.Arguments...).
+		Build()
+	resp := c.client.Do(ctx, cmd)
+	return newCmd(resp)
+}
+
+func (c *Compat) BFAdd(ctx context.Context, key string, element interface{}) *BoolCmd {
+	cmd := c.client.B().BfAdd().Key(key).Item(str(element)).Build()
+	return newBoolCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) BFCard(ctx context.Context, key string) *IntCmd {
+	cmd := c.client.B().BfCard().Key(key).Build()
+	return newIntCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) BFExists(ctx context.Context, key string, element interface{}) *BoolCmd {
+	cmd := c.client.B().BfExists().Key(key).Item(str(element)).Build()
+	return newBoolCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) BFInfo(ctx context.Context, key string) *BFInfoCmd {
+	cmd := c.client.B().BfInfo().Key(key).Build()
+	return newBFInfoCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) BFInfoArg(ctx context.Context, key, option string) *BFInfoCmd {
+	switch option {
+	case "CAPACITY":
+		return c.BFInfoCapacity(ctx, key)
+	case "SIZE":
+		return c.BFInfoSize(ctx, key)
+	case "FILTERS":
+		return c.BFInfoFilters(ctx, key)
+	case "ITEMS":
+		return c.BFInfoItems(ctx, key)
+	case "EXPANSION":
+		return c.BFInfoExpansion(ctx, key)
+	default:
+		panic(fmt.Sprintf("unknown option %v", option))
+	}
+}
+
+func (c *Compat) BFInfoCapacity(ctx context.Context, key string) *BFInfoCmd {
+	cmd := c.client.B().BfInfo().Key(key).Capacity().Build()
+	return newBFInfoCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) BFInfoSize(ctx context.Context, key string) *BFInfoCmd {
+	cmd := c.client.B().BfInfo().Key(key).Size().Build()
+	return newBFInfoCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) BFInfoFilters(ctx context.Context, key string) *BFInfoCmd {
+	cmd := c.client.B().BfInfo().Key(key).Filters().Build()
+	return newBFInfoCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) BFInfoItems(ctx context.Context, key string) *BFInfoCmd {
+	cmd := c.client.B().BfInfo().Key(key).Items().Build()
+	return newBFInfoCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) BFInfoExpansion(ctx context.Context, key string) *BFInfoCmd {
+	cmd := c.client.B().BfInfo().Key(key).Expansion().Build()
+	return newBFInfoCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) BFInsert(ctx context.Context, key string, options *BFInsertOptions, elements ...interface{}) *BoolSliceCmd {
+	_cmd := c.client.B().
+		BfInsert().
+		Key(key).
+		Capacity(options.Capacity).
+		Error(options.Error).
+		Expansion(options.Expansion)
+	if options.NonScaling {
+		_cmd.Nonscaling()
+	}
+	if options.NoCreate {
+		_cmd.Nocreate()
+	}
+	items := _cmd.Items()
+	for _, e := range elements {
+		items.Item(str(e))
+	}
+	cmd := (cmds.BfInsertItem)(items).Build()
+	return newBoolSliceCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) BFMAdd(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd {
+	cmd := c.client.B().BfMadd().Key(key)
+	var last cmds.BfMaddItem
+	for _, e := range elements {
+		last = cmd.Item(str(e))
+	}
+	return newBoolSliceCmd(c.client.Do(ctx, last.Build()))
+}
+
+func (c *Compat) BFMExists(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd {
+	cmd := c.client.B().BfMexists().Key(key)
+	var last cmds.BfMexistsItem
+	for _, e := range elements {
+		last = cmd.Item(str(e))
+	}
+	return newBoolSliceCmd(c.client.Do(ctx, last.Build()))
+}
+
+func (c *Compat) BFReserve(ctx context.Context, key string, errorRate float64, capacity int64) *StatusCmd {
+	cmd := c.client.B().BfReserve().Key(key).ErrorRate(errorRate).Capacity(capacity).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) BFReserveExpansion(ctx context.Context, key string, errorRate float64, capacity, expansion int64) *StatusCmd {
+	cmd := c.client.B().BfReserve().Key(key).ErrorRate(errorRate).Capacity(capacity).Expansion(expansion).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) BFReserveNonScaling(ctx context.Context, key string, errorRate float64, capacity int64) *StatusCmd {
+	cmd := c.client.B().BfReserve().Key(key).ErrorRate(errorRate).Capacity(capacity).Nonscaling().Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) BFReserveWithArgs(ctx context.Context, key string, options *BFReserveOptions) *StatusCmd {
+	cmd := c.client.B().BfReserve().Key(key).ErrorRate(options.Error).Capacity(options.Capacity).Expansion(options.Expansion)
+	if options.NonScaling {
+		cmd.Nonscaling()
+	}
+	return newStatusCmd(c.client.Do(ctx, cmd.Build()))
+}
+
+func (c *Compat) BFScanDump(ctx context.Context, key string, iterator int64) *ScanDumpCmd {
+	cmd := c.client.B().BfScandump().Key(key).Iterator(iterator).Build()
+	return newScanDumpCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) BFLoadChunk(ctx context.Context, key string, iterator int64, data interface{}) *StatusCmd {
+	cmd := c.client.B().BfLoadchunk().Key(key).Iterator(iterator).Data(str(data)).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) CFAdd(ctx context.Context, key string, element interface{}) *BoolCmd {
+	cmd := c.client.B().CfAdd().Key(key).Item(str(element)).Build()
+	return newBoolCmd(c.client.Do(ctx, cmd))
+}
+func (c *Compat) CFAddNX(ctx context.Context, key string, element interface{}) *BoolCmd {
+	cmd := c.client.B().CfAddnx().Key(key).Item(str(element)).Build()
+	return newBoolCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) CFCount(ctx context.Context, key string, element interface{}) *IntCmd {
+	cmd := c.client.B().CfCount().Key(key).Item(str(element)).Build()
+	return newIntCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) CFDel(ctx context.Context, key string, element interface{}) *BoolCmd {
+	cmd := c.client.B().CfDel().Key(key).Item(str(element)).Build()
+	return newBoolCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) CFExists(ctx context.Context, key string, element interface{}) *BoolCmd {
+	cmd := c.client.B().CfExists().Key(key).Item(str(element)).Build()
+	return newBoolCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) CFInfo(ctx context.Context, key string) *CFInfoCmd {
+	cmd := c.client.B().CfInfo().Key(key).Build()
+	return newCFInfoCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) CFInsert(ctx context.Context, key string, options *CFInsertOptions, elements ...interface{}) *BoolSliceCmd {
+	_cmd := c.client.B().CfInsert().Key(key)
+	if options != nil {
+		_cmd.Capacity(options.Capacity)
+		if options.NoCreate {
+			_cmd.Nocreate()
+		}
+	}
+	items := _cmd.Items()
+	for _, e := range elements {
+		items.Item(str(e))
+	}
+	cmd := (cmds.CfInsertItem)(items).Build()
+	return newBoolSliceCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) CFInsertNX(ctx context.Context, key string, options *CFInsertOptions, elements ...interface{}) *IntSliceCmd {
+	_cmd := c.client.B().CfInsertnx().Key(key).Capacity(options.Capacity)
+	if options.NoCreate {
+		_cmd.Nocreate()
+	}
+	items := _cmd.Items()
+	for _, e := range elements {
+		items.Item(str(e))
+	}
+	cmd := (cmds.CfInsertItem)(items).Build()
+	return newIntSliceCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) CFMExists(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd {
+	_cmd := c.client.B().CfMexists().Key(key)
+	for _, e := range elements {
+		_cmd.Item(str(e))
+	}
+	cmd := (cmds.CfMexistsItem)(_cmd).Build()
+	return newBoolSliceCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) CFReserve(ctx context.Context, key string, capacity int64) *StatusCmd {
+	cmd := c.client.B().CfReserve().Key(key).Capacity(capacity).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) CFReserveWithArgs(ctx context.Context, key string, options *CFReserveOptions) *StatusCmd {
+	cmd := c.client.B().
+		CfReserve().
+		Key(key).
+		Capacity(options.Capacity).
+		Bucketsize(options.BucketSize).
+		Maxiterations(options.MaxIterations).
+		Expansion(options.Expansion).
+		Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) CFReserveExpansion(ctx context.Context, key string, capacity int64, expansion int64) *StatusCmd {
+	cmd := c.client.B().
+		CfReserve().
+		Key(key).
+		Capacity(capacity).
+		Expansion(expansion).
+		Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) CFReserveBucketSize(ctx context.Context, key string, capacity int64, bucketsize int64) *StatusCmd {
+	cmd := c.client.B().
+		CfReserve().
+		Key(key).
+		Capacity(capacity).
+		Bucketsize(bucketsize).
+		Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) CFReserveMaxIterations(ctx context.Context, key string, capacity int64, maxiterations int64) *StatusCmd {
+	cmd := c.client.B().
+		CfReserve().
+		Key(key).
+		Capacity(capacity).
+		Maxiterations(maxiterations).
+		Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) CFScanDump(ctx context.Context, key string, iterator int64) *ScanDumpCmd {
+	cmd := c.client.B().CfScandump().Key(key).Iterator(iterator).Build()
+	return newScanDumpCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) CFLoadChunk(ctx context.Context, key string, iterator int64, data interface{}) *StatusCmd {
+	cmd := c.client.B().CfLoadchunk().Key(key).Iterator(iterator).Data(str(data)).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) CMSIncrBy(ctx context.Context, key string, elements ...interface{}) *IntSliceCmd {
+	_cmd := c.client.B().CmsIncrby().Key(key)
+	for i := 0; i < len(elements); i += 2 {
+		_cmd.Item(str(elements[i])).Increment((int64)(elements[i+1].(int)))
+	}
+	cmd := (cmds.CmsIncrbyItemsIncrement)(_cmd).Build()
+	return newIntSliceCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) CMSInfo(ctx context.Context, key string) *CMSInfoCmd {
+	cmd := c.client.B().CmsInfo().Key(key).Build()
+	return newCMSInfoCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) CMSInitByDim(ctx context.Context, key string, width, height int64) *StatusCmd {
+	cmd := c.client.B().CmsInitbydim().Key(key).Width(width).Depth(height).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) CMSInitByProb(ctx context.Context, key string, errorRate, probability float64) *StatusCmd {
+	cmd := c.client.B().CmsInitbyprob().Key(key).Error(errorRate).Probability(probability).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) CMSMerge(ctx context.Context, destKey string, sourceKeys ...string) *StatusCmd {
+	cmd := c.client.B().CmsMerge().Destination(destKey).Numkeys((int64)(len(sourceKeys))).Source(sourceKeys...).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) CMSMergeWithWeight(ctx context.Context, destKey string, sourceKeys map[string]int64) *StatusCmd {
+	_cmd := c.client.B().CmsMerge().Destination(destKey).Numkeys((int64)(len(sourceKeys)))
+	keys := make([]string, 0, len(sourceKeys))
+	for k := range sourceKeys {
+		keys = append(keys, k)
+	}
+	for _, k := range keys {
+		_cmd.Source(k)
+	}
+	wCmd := (cmds.CmsMergeSource)(_cmd).Weights()
+	for _, k := range keys {
+		// weight should be integer
+		// we converts int64 to float64 to avoid API breaking change
+		wCmd.Weight((float64)(sourceKeys[k]))
+	}
+	cmd := (cmds.CmsMergeWeightWeight)(wCmd).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) CMSQuery(ctx context.Context, key string, elements ...interface{}) *IntSliceCmd {
+	_cmd := c.client.B().CmsQuery().Key(key)
+	for _, e := range elements {
+		_cmd.Item(str(e))
+	}
+	cmd := (cmds.CmsQueryItem)(_cmd).Build()
+	return newIntSliceCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) TopKAdd(ctx context.Context, key string, elements ...interface{}) *StringSliceCmd {
+	_cmd := c.client.B().TopkAdd().Key(key)
+	for _, e := range elements {
+		_cmd.Items(str(e))
+	}
+	cmd := (cmds.TopkAddItems)(_cmd).Build()
+	return newStringSliceCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) TopKCount(ctx context.Context, key string, elements ...interface{}) *IntSliceCmd {
+	_cmd := c.client.B().TopkCount().Key(key)
+	for _, e := range elements {
+		_cmd.Item(str(e))
+	}
+	cmd := (cmds.TopkCountItem)(_cmd).Build()
+	return newIntSliceCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) TopKIncrBy(ctx context.Context, key string, elements ...interface{}) *StringSliceCmd {
+	_cmd := c.client.B().TopkIncrby().Key(key)
+	for _, e := range elements {
+		_cmd.Item(str(e))
+	}
+	cmd := (cmds.TopkIncrbyItemsIncrement)(_cmd).Build()
+	return newStringSliceCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) TopKInfo(ctx context.Context, key string) *TopKInfoCmd {
+	cmd := c.client.B().TopkInfo().Key(key).Build()
+	return newTopKInfoCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) TopKList(ctx context.Context, key string) *StringSliceCmd {
+	cmd := c.client.B().TopkList().Key(key).Build()
+	return newStringSliceCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) TopKListWithCount(ctx context.Context, key string) *MapStringIntCmd {
+	cmd := c.client.B().TopkList().Key(key).Withcount().Build()
+	return newMapStringIntCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) TopKQuery(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd {
+	_cmd := c.client.B().TopkQuery().Key(key)
+	for _, e := range elements {
+		_cmd.Item(str(e))
+	}
+	cmd := (cmds.TopkQueryItem)(_cmd).Build()
+	return newBoolSliceCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) TopKReserve(ctx context.Context, key string, k int64) *StatusCmd {
+	cmd := c.client.B().TopkReserve().Key(key).Topk(k).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) TopKReserveWithOptions(ctx context.Context, key string, k int64, width, depth int64, decay float64) *StatusCmd {
+	cmd := c.client.B().TopkReserve().Key(key).Topk(k).Width(width).Depth(depth).Decay(decay).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) TDigestAdd(ctx context.Context, key string, elements ...float64) *StatusCmd {
+	_cmd := c.client.B().TdigestAdd().Key(key)
+	for _, e := range elements {
+		_cmd.Value(e)
+	}
+	cmd := (cmds.TdigestAddValuesValue)(_cmd).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) TDigestByRank(ctx context.Context, key string, rank ...uint64) *FloatSliceCmd {
+	_cmd := c.client.B().TdigestByrank().Key(key)
+	for _, r := range rank {
+		_cmd.Rank((float64)(r))
+	}
+	cmd := (cmds.TdigestByrankRank)(_cmd).Build()
+	return newFloatSliceCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) TDigestByRevRank(ctx context.Context, key string, rank ...uint64) *FloatSliceCmd {
+	_cmd := c.client.B().TdigestByrevrank().Key(key)
+	for _, r := range rank {
+		_cmd.ReverseRank((float64)(r))
+	}
+	cmd := (cmds.TdigestByrevrankReverseRank)(_cmd).Build()
+	return newFloatSliceCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) TDigestCDF(ctx context.Context, key string, elements ...float64) *FloatSliceCmd {
+	cmd := c.client.B().TdigestCdf().Key(key).Value(elements...).Build()
+	return newFloatSliceCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) TDigestCreate(ctx context.Context, key string) *StatusCmd {
+	cmd := c.client.B().TdigestCreate().Key(key).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+
+}
+func (c *Compat) TDigestCreateWithCompression(ctx context.Context, key string, compression int64) *StatusCmd {
+	cmd := c.client.B().TdigestCreate().Key(key).Compression(compression).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) TDigestInfo(ctx context.Context, key string) *TDigestInfoCmd {
+	cmd := c.client.B().TdigestInfo().Key(key).Build()
+	return newTDigestInfoCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) TDigestMax(ctx context.Context, key string) *FloatCmd {
+	cmd := c.client.B().TdigestMax().Key(key).Build()
+	return newFloatCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) TDigestMin(ctx context.Context, key string) *FloatCmd {
+	cmd := c.client.B().TdigestMin().Key(key).Build()
+	return newFloatCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) TDigestMerge(ctx context.Context, destKey string, options *TDigestMergeOptions, sourceKeys ...string) *StatusCmd {
+	_cmd := c.client.B().TdigestMerge().DestinationKey(destKey).Numkeys(int64(len(sourceKeys))).SourceKey(sourceKeys...).Compression(options.Compression)
+	if options.Override {
+		_cmd.Override()
+	}
+	cmd := (cmds.TdigestMergeOverride)(_cmd).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) TDigestQuantile(ctx context.Context, key string, elements ...float64) *FloatSliceCmd {
+	cmd := c.client.B().TdigestQuantile().Key(key).Quantile(elements...).Build()
+	return newFloatSliceCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) TDigestRank(ctx context.Context, key string, values ...float64) *IntSliceCmd {
+	cmd := c.client.B().TdigestRank().Key(key).Value(values...).Build()
+	return newIntSliceCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) TDigestReset(ctx context.Context, key string) *StatusCmd {
+	cmd := c.client.B().TdigestReset().Key(key).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) TDigestRevRank(ctx context.Context, key string, values ...float64) *IntSliceCmd {
+	cmd := c.client.B().TdigestRevrank().Key(key).Value(values...).Build()
+	return newIntSliceCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) TDigestTrimmedMean(ctx context.Context, key string, lowCutQuantile, highCutQuantile float64) *FloatCmd {
+	cmd := c.client.B().TdigestTrimmedMean().Key(key).LowCutQuantile(lowCutQuantile).HighCutQuantile(highCutQuantile).Build()
+	return newFloatCmd(c.client.Do(ctx, cmd))
+}
+
+// TSAdd - Adds one or more observations to a t-digest sketch.
+// For more information - https://redis.io/commands/ts.add/
+func (c *Compat) TSAdd(ctx context.Context, key string, timestamp interface{}, value float64) *IntCmd {
+	cmd := c.client.B().TsAdd().Key(key).Timestamp(str(timestamp)).Value(value).Build()
+	return newIntCmd(c.client.Do(ctx, cmd))
+}
+
+// TSAddWithArgs - Adds one or more observations to a t-digest sketch.
+// This function also allows for specifying additional options such as:
+// Retention, ChunkSize, Encoding, DuplicatePolicy and Labels.
+// For more information - https://redis.io/commands/ts.add/
+func (c *Compat) TSAddWithArgs(ctx context.Context, key string, timestamp interface{}, value float64, options *TSOptions) *IntCmd {
+	_cmd := c.client.B().
+		TsAdd().
+		Key(key).
+		Timestamp(str(timestamp)).
+		Value(value)
+	if options.ChunkSize != 0 {
+		_cmd.ChunkSize(int64(options.ChunkSize))
+	}
+	if options.Retention != 0 {
+		_cmd.Retention(int64(options.Retention))
+	}
+	switch options.Encoding {
+	case "COMPRESSED", "":
+		_cmd.EncodingCompressed()
+	case "UNCOMPRESSED":
+		_cmd.EncodingUncompressed()
+	}
+	if options.DuplicatePolicy != "" {
+		switch options.DuplicatePolicy {
+		case "BLOCK", "block":
+			_cmd.OnDuplicateBlock()
+		case "FIRST", "first":
+			_cmd.OnDuplicateFirst()
+		case "LAST", "last":
+			_cmd.OnDuplicateLast()
+		case "MIN", "min":
+			_cmd.OnDuplicateMin()
+		case "MAX", "max":
+			_cmd.OnDuplicateMax()
+		case "SUM", "sum":
+			_cmd.OnDuplicateSum()
+		default:
+			panic(fmt.Sprintf("invalid duplicate policy, want one of [BLOCK|FIRST|LAST|MIN|MAX|SUM], got %v", options.DuplicatePolicy))
+		}
+	}
+	if options.Labels != nil {
+		labels := (cmds.TsAddOnDuplicateBlock)(_cmd).Labels()
+		for k, v := range options.Labels {
+			labels.Labels(k, v)
+		}
+		_cmd = cmds.TsAddValue(labels)
+	}
+	cmd := _cmd.Build()
+	return newIntCmd(c.client.Do(ctx, cmd))
+}
+
+// TSCreate - Creates a new time-series key.
+// For more information - https://redis.io/commands/ts.create/
+func (c *Compat) TSCreate(ctx context.Context, key string) *StatusCmd {
+	cmd := c.client.B().TsCreate().Key(key).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+// TSCreateWithArgs - Creates a new time-series key with additional options.
+// This function allows for specifying additional options such as:
+// Retention, ChunkSize, Encoding, DuplicatePolicy and Labels.
+// For more information - https://redis.io/commands/ts.create/
+func (c *Compat) TSCreateWithArgs(ctx context.Context, key string, options *TSOptions) *StatusCmd {
+	_cmd := c.client.B().TsCreate().Key(key)
+	if options.Retention != 0 {
+		_cmd.Retention(int64(options.Retention))
+	}
+	if options.ChunkSize != 0 {
+		_cmd.ChunkSize(int64(options.ChunkSize))
+	}
+	if options.Encoding != "" {
+		_cmd.EncodingCompressed()
+	} else {
+		_cmd.EncodingUncompressed()
+	}
+	if options.DuplicatePolicy != "" {
+		switch options.DuplicatePolicy {
+		case "BLOCK", "block":
+			_cmd.DuplicatePolicyBlock()
+		case "FIRST", "first":
+			_cmd.DuplicatePolicyFirst()
+		case "LAST", "last":
+			_cmd.DuplicatePolicyLast()
+		case "MIN", "min":
+			_cmd.DuplicatePolicyMin()
+		case "MAX", "max":
+			_cmd.DuplicatePolicyMax()
+		case "SUM", "sum":
+			_cmd.DuplicatePolicySum()
+		default:
+			panic(fmt.Sprintf("invalid duplicate policy, want one of [BLOCK|FIRST|LAST|MIN|MAX|SUM], got %v", options.DuplicatePolicy))
+		}
+	}
+	// var cmd cmds.Completed
+	if options.Labels != nil {
+		labels := _cmd.Labels()
+		for k, v := range options.Labels {
+			labels.Labels(k, v)
+		}
+		_cmd = cmds.TsCreateKey(labels)
+	}
+	cmd := (cmds.TsCreateKey)(_cmd).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+// TSAlter - Alters an existing time-series key with additional options.
+// This function allows for specifying additional options such as:
+// Retention, ChunkSize and DuplicatePolicy.
+// For more information - https://redis.io/commands/ts.alter/
+func (c *Compat) TSAlter(ctx context.Context, key string, options *TSAlterOptions) *StatusCmd {
+	_cmd := c.client.B().TsAlter().Key(key)
+	if options != nil {
+		if options.Retention != 0 {
+			_cmd.Retention(int64(options.Retention))
+		}
+		if options.ChunkSize != 0 {
+			_cmd.ChunkSize(int64(options.ChunkSize))
+		}
+		if options.DuplicatePolicy != "" {
+			switch options.DuplicatePolicy {
+			case "BLOCK", "block":
+				_cmd.DuplicatePolicyBlock()
+			case "FIRST", "first":
+				_cmd.DuplicatePolicyFirst()
+			case "LAST", "last":
+				_cmd.DuplicatePolicyLast()
+			case "MIN", "min":
+				_cmd.DuplicatePolicyMin()
+			case "MAX", "max":
+				_cmd.DuplicatePolicyMax()
+			case "SUM", "sum":
+				_cmd.DuplicatePolicySum()
+			default:
+				panic(fmt.Sprintf("invalid duplicate policy, want one of [BLOCK|FIRST|LAST|MIN|MAX|SUM], got %v", options.DuplicatePolicy))
+			}
+		}
+		if options.Labels != nil {
+			labels := _cmd.Labels()
+			for label, value := range options.Labels {
+				labels.Labels(label, value)
+			}
+			_cmd = cmds.TsAlterKey(labels)
+		}
+	}
+	cmd := _cmd.Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+// TSCreateRule - Creates a compaction rule from sourceKey to destKey.
+// For more information - https://redis.io/commands/ts.createrule/
+func (c *Compat) TSCreateRule(ctx context.Context, sourceKey string, destKey string, aggregator Aggregator, bucketDuration int) *StatusCmd {
+	_cmd := c.client.B().TsCreaterule().Sourcekey(sourceKey).Destkey(destKey)
+	var cmd cmds.Completed
+	switch aggregator {
+	case Avg:
+		cmd = _cmd.AggregationAvg().Bucketduration(int64(bucketDuration)).Build()
+	case Sum:
+		cmd = _cmd.AggregationSum().Bucketduration(int64(bucketDuration)).Build()
+	case Min:
+		cmd = _cmd.AggregationMin().Bucketduration(int64(bucketDuration)).Build()
+	case Max:
+		cmd = _cmd.AggregationMax().Bucketduration(int64(bucketDuration)).Build()
+	case Range:
+		cmd = _cmd.AggregationRange().Bucketduration(int64(bucketDuration)).Build()
+	case Count:
+		cmd = _cmd.AggregationCount().Bucketduration(int64(bucketDuration)).Build()
+	case First:
+		cmd = _cmd.AggregationFirst().Bucketduration(int64(bucketDuration)).Build()
+	case Last:
+		cmd = _cmd.AggregationLast().Bucketduration(int64(bucketDuration)).Build()
+	case StdP:
+		cmd = _cmd.AggregationStdP().Bucketduration(int64(bucketDuration)).Build()
+	case StdS:
+		cmd = _cmd.AggregationStdS().Bucketduration(int64(bucketDuration)).Build()
+	case VarP:
+		cmd = _cmd.AggregationVarP().Bucketduration(int64(bucketDuration)).Build()
+	case VarS:
+		cmd = _cmd.AggregationVarS().Bucketduration(int64(bucketDuration)).Build()
+	case Twa:
+		cmd = _cmd.AggregationTwa().Bucketduration(int64(bucketDuration)).Build()
+	}
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+// TSCreateRuleWithArgs - Creates a compaction rule from sourceKey to destKey with additional option.
+// This function allows for specifying additional option such as:
+// alignTimestamp.
+// For more information - https://redis.io/commands/ts.createrule/
+func (c *Compat) TSCreateRuleWithArgs(ctx context.Context, sourceKey string, destKey string, aggregator Aggregator, bucketDuration int, options *TSCreateRuleOptions) *StatusCmd {
+	_cmd := c.client.B().TsCreaterule().Sourcekey(sourceKey).Destkey(destKey)
+	var duration cmds.TsCreateruleBucketduration
+	switch aggregator {
+	case Avg:
+		duration = _cmd.AggregationAvg().Bucketduration(int64(bucketDuration))
+	case Sum:
+		duration = _cmd.AggregationSum().Bucketduration(int64(bucketDuration))
+	case Min:
+		duration = _cmd.AggregationMin().Bucketduration(int64(bucketDuration))
+	case Max:
+		duration = _cmd.AggregationMax().Bucketduration(int64(bucketDuration))
+	case Range:
+		duration = _cmd.AggregationRange().Bucketduration(int64(bucketDuration))
+	case Count:
+		duration = _cmd.AggregationCount().Bucketduration(int64(bucketDuration))
+	case First:
+		duration = _cmd.AggregationFirst().Bucketduration(int64(bucketDuration))
+	case Last:
+		duration = _cmd.AggregationLast().Bucketduration(int64(bucketDuration))
+	case StdP:
+		duration = _cmd.AggregationStdP().Bucketduration(int64(bucketDuration))
+	case StdS:
+		duration = _cmd.AggregationStdS().Bucketduration(int64(bucketDuration))
+	case VarP:
+		duration = _cmd.AggregationVarP().Bucketduration(int64(bucketDuration))
+	case VarS:
+		duration = _cmd.AggregationVarS().Bucketduration(int64(bucketDuration))
+	case Twa:
+		duration = _cmd.AggregationTwa().Bucketduration(int64(bucketDuration))
+	}
+	if options != nil && options.alignTimestamp != 0 {
+		duration.Aligntimestamp(options.alignTimestamp)
+	}
+	cmd := duration.Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+// TSIncrBy - Increments the value of a time-series key by the specified timestamp.
+// For more information - https://redis.io/commands/ts.incrby/
+// FIXME: timestamp should be addend
+func (c *Compat) TSIncrBy(ctx context.Context, Key string, timestamp float64) *IntCmd {
+	cmd := c.client.B().TsIncrby().Key(Key).Value(timestamp).Build()
+	return newIntCmd(c.client.Do(ctx, cmd))
+}
+
+// TSIncrByWithArgs - Increments the value of a time-series key by the specified timestamp with additional options.
+// This function allows for specifying additional options such as:
+// Timestamp, Retention, ChunkSize, Uncompressed and Labels.
+// For more information - https://redis.io/commands/ts.incrby/
+// FIXME: timestamp should be addend
+func (c *Compat) TSIncrByWithArgs(ctx context.Context, key string, timestamp float64, options *TSIncrDecrOptions) *IntCmd {
+	_cmd := c.client.B().TsIncrby().Key(key).Value(timestamp)
+	if options != nil {
+		if options.Timestamp != 0 {
+			_cmd.Timestamp(str(options.Timestamp))
+		}
+		if options.Retention != 0 {
+			_cmd.Retention(int64(options.Retention))
+		}
+		if options.ChunkSize != 0 {
+			_cmd.ChunkSize(int64(options.ChunkSize))
+		}
+		if options.Uncompressed {
+			_cmd.Uncompressed()
+		}
+		if options.Labels != nil {
+			_cmd.Labels()
+			for label, value := range options.Labels {
+				(cmds.TsIncrbyLabels)(_cmd).Labels(label, value)
+			}
+		}
+	}
+	cmd := (cmds.TsIncrbyLabels)(_cmd).Build()
+	return newIntCmd(c.client.Do(ctx, cmd))
+}
+
+// TSDecrBy - Decrements the value of a time-series key by the specified timestamp.
+// For more information - https://redis.io/commands/ts.decrby/
+// FIXME: timestamp should be subtrahend
+func (c *Compat) TSDecrBy(ctx context.Context, Key string, timestamp float64) *IntCmd {
+	cmd := c.client.B().TsDecrby().Key(Key).Value(timestamp).Build()
+	return newIntCmd(c.client.Do(ctx, cmd))
+}
+
+// TSDecrByWithArgs - Decrements the value of a time-series key by the specified timestamp with additional options.
+// This function allows for specifying additional options such as:
+// Timestamp, Retention, ChunkSize, Uncompressed and Labels.
+// For more information - https://redis.io/commands/ts.decrby/
+func (c *Compat) TSDecrByWithArgs(ctx context.Context, key string, timestamp float64, options *TSIncrDecrOptions) *IntCmd {
+	_cmd := c.client.B().TsDecrby().Key(key).Value(timestamp)
+	if options != nil {
+		if options.Timestamp != 0 {
+			_cmd.Timestamp(str(options.Timestamp))
+		}
+		if options.Retention != 0 {
+			_cmd.Retention(int64(options.Retention))
+		}
+		if options.ChunkSize != 0 {
+			_cmd.ChunkSize(int64(options.ChunkSize))
+		}
+		if options.Uncompressed {
+			_cmd.Uncompressed()
+		}
+		if options.Labels != nil {
+			_cmd.Labels()
+			for label, value := range options.Labels {
+				(cmds.TsDecrbyLabels)(_cmd).Labels(label, value)
+			}
+		}
+	}
+	cmd := (cmds.TsDecrbyLabels)(_cmd).Build()
+	return newIntCmd(c.client.Do(ctx, cmd))
+}
+
+// TSDel - Deletes a range of samples from a time-series key.
+// For more information - https://redis.io/commands/ts.del/
+func (c *Compat) TSDel(ctx context.Context, Key string, fromTimestamp int, toTimestamp int) *IntCmd {
+	cmd := c.client.B().TsDel().Key(Key).FromTimestamp(int64(fromTimestamp)).ToTimestamp(int64(toTimestamp)).Build()
+	return newIntCmd(c.client.Do(ctx, cmd))
+}
+
+// TSDeleteRule - Deletes a compaction rule from sourceKey to destKey.
+// For more information - https://redis.io/commands/ts.deleterule/
+func (c *Compat) TSDeleteRule(ctx context.Context, sourceKey string, destKey string) *StatusCmd {
+	cmd := c.client.B().TsDeleterule().Sourcekey(sourceKey).Destkey(destKey).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+// TSGetWithArgs - Gets the last sample of a time-series key with additional option.
+// This function allows for specifying additional option such as:
+// Latest.
+// For more information - https://redis.io/commands/ts.get/
+func (c *Compat) TSGetWithArgs(ctx context.Context, key string, options *TSGetOptions) *TSTimestampValueCmd {
+	_cmd := c.client.B().TsGet().Key(key)
+	if options != nil && options.Latest {
+		_cmd.Latest()
+	}
+	return newTSTimestampValueCmd(c.client.Do(ctx, _cmd.Build()))
+}
+
+// TSGet - Gets the last sample of a time-series key.
+// For more information - https://redis.io/commands/ts.get/
+func (c *Compat) TSGet(ctx context.Context, key string) *TSTimestampValueCmd {
+	cmd := c.client.B().TsGet().Key(key).Build()
+	return newTSTimestampValueCmd(c.client.Do(ctx, cmd))
+}
+
+// TSInfo - Returns information about a time-series key.
+// For more information - https://redis.io/commands/ts.info/
+func (c *Compat) TSInfo(ctx context.Context, key string) *MapStringInterfaceCmd {
+	cmd := c.client.B().TsInfo().Key(key).Build()
+	return newMapStringInterfaceCmd(c.client.Do(ctx, cmd))
+}
+
+// TSInfoWithArgs - Returns information about a time-series key with additional option.
+// This function allows for specifying additional option such as:
+// Debug.
+// For more information - https://redis.io/commands/ts.info/
+func (c *Compat) TSInfoWithArgs(ctx context.Context, key string, options *TSInfoOptions) *MapStringInterfaceCmd {
+	_cmd := c.client.B().TsInfo().Key(key)
+	if options != nil && options.Debug {
+		// FIXME: should not accept arg, just append "DEBUG"
+		_cmd.Debug("DEBUG")
+	}
+	cmd := (cmds.TsInfoKey)(_cmd).Build()
+	return newMapStringInterfaceCmd(c.client.Do(ctx, cmd))
+}
+
+// TSMAdd - Adds multiple samples to multiple time-series keys.
+// For more information - https://redis.io/commands/ts.madd/
+func (c *Compat) TSMAdd(ctx context.Context, ktvSlices [][]interface{}) *IntSliceCmd {
+	_cmd := c.client.B().TsMadd().KeyTimestampValue()
+	for _, ktv := range ktvSlices {
+		tstmp, err := toInt64(int64(ktv[1].(int)))
+		if err != nil {
+			panic(err)
+		}
+		val, err := toFloat64(int64(ktv[2].(int)))
+		if err != nil {
+			panic(err)
+		}
+		_cmd.KeyTimestampValue(str(ktv[0]), tstmp, val)
+	}
+	cmd := (cmds.TsMaddKeyTimestampValue)(_cmd).Build()
+	return newIntSliceCmd(c.client.Do(ctx, cmd))
+}
+
+// TSQueryIndex - Returns all the keys matching the filter expression.
+// For more information - https://redis.io/commands/ts.queryindex/
+func (c *Compat) TSQueryIndex(ctx context.Context, filterExpr []string) *StringSliceCmd {
+	cmd := c.client.B().TsQueryindex().Filter(filterExpr...).Build()
+	return newStringSliceCmd(c.client.Do(ctx, cmd))
+}
+
+// TSRevRange - Returns a range of samples from a time-series key in reverse order.
+// For more information - https://redis.io/commands/ts.revrange/
+func (c *Compat) TSRevRange(ctx context.Context, key string, fromTimestamp int, toTimestamp int) *TSTimestampValueSliceCmd {
+	cmd := c.client.B().TsRevrange().Key(key).Fromtimestamp(str(fromTimestamp)).Totimestamp(str(toTimestamp)).Build()
+	return newTSTimestampValueSliceCmd(c.client.Do(ctx, cmd))
+}
+
+// TSRevRangeWithArgs - Returns a range of samples from a time-series key in reverse order with additional options.
+// This function allows for specifying additional options such as:
+// Latest, FilterByTS, FilterByValue, Count, Align, Aggregator,
+// BucketDuration, BucketTimestamp and Empty.
+// For more information - https://redis.io/commands/ts.revrange/
+func (c *Compat) TSRevRangeWithArgs(ctx context.Context, key string, fromTimestamp int, toTimestamp int, options *TSRevRangeOptions) *TSTimestampValueSliceCmd {
+	_cmd := c.client.B().TsRevrange().Key(key).Fromtimestamp(str(fromTimestamp)).Totimestamp(str(toTimestamp))
+	if options != nil {
+		if options.Latest {
+			_cmd.Latest()
+		}
+		if options.FilterByTS != nil {
+			tss := make([]int64, 0, len(options.FilterByTS))
+			for _, ts := range options.FilterByTS {
+				tss = append(tss, int64(ts))
+			}
+			_cmd.FilterByTs(tss...)
+		}
+		if options.FilterByValue != nil {
+			if len(options.FilterByValue) != 2 {
+				panic(fmt.Sprintf("wrong number of arguments in options.FilterByValue, expect min, max, got %v", options.FilterByValue))
+			}
+			_cmd.FilterByValue(float64(options.FilterByValue[0]), float64(options.FilterByValue[1]))
+		}
+		if options.Count != 0 {
+			_cmd.Count(int64(options.Count))
+		}
+		if options.Align != nil {
+			_cmd.Align(str(options.Align))
+		}
+		if options.Aggregator != 0 {
+			switch options.Aggregator {
+			case Invalid:
+				break
+			case Avg:
+				_cmd.AggregationAvg()
+			case Sum:
+				_cmd.AggregationSum()
+			case Min:
+				_cmd.AggregationMin()
+			case Max:
+				_cmd.AggregationMax()
+			case Range:
+				_cmd.AggregationRange()
+			case Count:
+				_cmd.AggregationCount()
+			case First:
+				_cmd.AggregationFirst()
+			case Last:
+				_cmd.AggregationLast()
+			case StdP:
+				_cmd.AggregationStdP()
+			case StdS:
+				_cmd.AggregationStdS()
+			case VarP:
+				_cmd.AggregationVarP()
+			case VarS:
+				_cmd.AggregationVarS()
+			case Twa:
+				_cmd.AggregationTwa()
+			}
+		}
+		if options.BucketDuration != 0 {
+			cmds.TsRevrangeAggregationAggregationAvg(_cmd).Bucketduration(int64(options.BucketDuration))
+		}
+		if options.BucketTimestamp != nil {
+			cmds.TsRevrangeAggregationBucketduration(_cmd).Buckettimestamp(str(options.BucketTimestamp))
+		}
+		if options.Empty {
+			cmds.TsRevrangeAggregationBuckettimestamp(_cmd).Empty()
+		}
+	}
+	cmd := cmds.TsRevrangeTotimestamp(_cmd).Build()
+	return newTSTimestampValueSliceCmd(c.client.Do(ctx, cmd))
+}
+
+// TSRange - Returns a range of samples from a time-series key.
+// For more information - https://redis.io/commands/ts.range/
+func (c *Compat) TSRange(ctx context.Context, key string, fromTimestamp int, toTimestamp int) *TSTimestampValueSliceCmd {
+	cmd := c.client.B().TsRange().Key(key).Fromtimestamp(str(fromTimestamp)).Totimestamp(str(toTimestamp)).Build()
+	return newTSTimestampValueSliceCmd(c.client.Do(ctx, cmd))
+}
+
+// TSRangeWithArgs - Returns a range of samples from a time-series key with additional options.
+// This function allows for specifying additional options such as:
+// Latest, FilterByTS, FilterByValue, Count, Align, Aggregator,
+// BucketDuration, BucketTimestamp and Empty.
+// For more information - https://redis.io/commands/ts.range/
+func (c *Compat) TSRangeWithArgs(ctx context.Context, key string, fromTimestamp int, toTimestamp int, options *TSRangeOptions) *TSTimestampValueSliceCmd {
+	_cmd := c.client.B().TsRange().Key(key).Fromtimestamp(str(fromTimestamp)).Totimestamp(str(toTimestamp))
+	if options != nil {
+		if options.Latest {
+			_cmd.Latest()
+		}
+		if options.FilterByTS != nil {
+			tss := make([]int64, 0, len(options.FilterByTS))
+			for _, ts := range options.FilterByTS {
+				tss = append(tss, int64(ts))
+			}
+			_cmd.FilterByTs(tss...)
+		}
+		if options.FilterByValue != nil {
+			if len(options.FilterByValue) != 2 {
+				panic(fmt.Sprintf("wrong number of arguments in options.FilterByValue, expect min, max, got %v", options.FilterByValue))
+			}
+			_cmd.FilterByValue(float64(options.FilterByValue[0]), float64(options.FilterByValue[1]))
+		}
+		if options.Count != 0 {
+			_cmd.Count(int64(options.Count))
+		}
+		if options.Align != nil {
+			_cmd.Align(str(options.Align))
+		}
+		if options.Aggregator != 0 {
+			switch options.Aggregator {
+			case Invalid:
+				break
+			case Avg:
+				_cmd.AggregationAvg()
+			case Sum:
+				_cmd.AggregationSum()
+			case Min:
+				_cmd.AggregationMin()
+			case Max:
+				_cmd.AggregationMax()
+			case Range:
+				_cmd.AggregationRange()
+			case Count:
+				_cmd.AggregationCount()
+			case First:
+				_cmd.AggregationFirst()
+			case Last:
+				_cmd.AggregationLast()
+			case StdP:
+				_cmd.AggregationStdP()
+			case StdS:
+				_cmd.AggregationStdS()
+			case VarP:
+				_cmd.AggregationVarP()
+			case VarS:
+				_cmd.AggregationVarS()
+			case Twa:
+				_cmd.AggregationTwa()
+			}
+		}
+		if options.BucketDuration != 0 {
+			cmds.TsRangeAggregationAggregationAvg(_cmd).Bucketduration(int64(options.BucketDuration))
+		}
+		if options.BucketTimestamp != nil {
+			cmds.TsRangeAggregationBucketduration(_cmd).Buckettimestamp(str(options.BucketTimestamp))
+		}
+		if options.Empty {
+			cmds.TsRangeAggregationBuckettimestamp(_cmd).Empty()
+		}
+	}
+	cmd := cmds.TsRangeTotimestamp(_cmd).Build()
+	return newTSTimestampValueSliceCmd(c.client.Do(ctx, cmd))
+}
+
+// TSMRange - Returns a range of samples from multiple time-series keys.
+// For more information - https://redis.io/commands/ts.mrange/
+func (c *Compat) TSMRange(ctx context.Context, fromTimestamp int, toTimestamp int, filterExpr []string) *MapStringSliceInterfaceCmd {
+	cmd := c.client.B().TsMrange().Fromtimestamp(str(fromTimestamp)).Totimestamp(str(toTimestamp)).Filter(filterExpr...).Build()
+	return newMapStringSliceInterfaceCmd(c.client.Do(ctx, cmd))
+}
+
+// TSMRangeWithArgs - Returns a range of samples from multiple time-series keys with additional options.
+// This function allows for specifying additional options such as:
+// Latest, FilterByTS, FilterByValue, WithLabels, SelectedLabels,
+// Count, Align, Aggregator, BucketDuration, BucketTimestamp,
+// Empty, GroupByLabel and Reducer.
+// For more information - https://redis.io/commands/ts.mrange/
+func (c *Compat) TSMRangeWithArgs(ctx context.Context, fromTimestamp int, toTimestamp int, filterExpr []string, options *TSMRangeOptions) *MapStringSliceInterfaceCmd {
+	_cmd := c.client.B().TsMrange().Fromtimestamp(str(fromTimestamp)).Totimestamp(str(toTimestamp))
+	if options != nil {
+		if options.Latest {
+			_cmd.Latest()
+		}
+		if options.FilterByTS != nil {
+			tss := make([]int64, 0, len(options.FilterByTS))
+			for _, ts := range options.FilterByTS {
+				tss = append(tss, int64(ts))
+			}
+			_cmd.FilterByTs(tss...)
+		}
+		if options.FilterByValue != nil {
+			if len(options.FilterByValue) != 2 {
+				panic(fmt.Sprintf("wrong number of arguments in options.FilterByValue, expect min, max, got %v", options.FilterByValue))
+			}
+			_cmd.FilterByValue(float64(options.FilterByValue[0]), float64(options.FilterByValue[1]))
+		}
+		if options.WithLabels {
+			_cmd.Withlabels()
+		}
+		if options.SelectedLabels != nil {
+			labels := make([]string, 0, len(options.SelectedLabels))
+			for _, l := range options.SelectedLabels {
+				labels = append(labels, str(l))
+			}
+			_cmd.SelectedLabels(labels)
+		}
+		if options.Count != 0 {
+			_cmd.Count(int64(options.Count))
+		}
+		if options.Align != nil {
+			_cmd.Align(str(options.Align))
+		}
+		if options.Aggregator != 0 {
+			switch options.Aggregator {
+			case Invalid:
+				break
+			case Avg:
+				_cmd.AggregationAvg()
+			case Sum:
+				_cmd.AggregationSum()
+			case Min:
+				_cmd.AggregationMin()
+			case Max:
+				_cmd.AggregationMax()
+			case Range:
+				_cmd.AggregationRange()
+			case Count:
+				_cmd.AggregationCount()
+			case First:
+				_cmd.AggregationFirst()
+			case Last:
+				_cmd.AggregationLast()
+			case StdP:
+				_cmd.AggregationStdP()
+			case StdS:
+				_cmd.AggregationStdS()
+			case VarP:
+				_cmd.AggregationVarP()
+			case VarS:
+				_cmd.AggregationVarS()
+			case Twa:
+				_cmd.AggregationTwa()
+			}
+		}
+		if options.BucketDuration != 0 {
+			cmds.TsMrangeAggregationAggregationAvg(_cmd).Bucketduration(int64(options.BucketDuration))
+		}
+		if options.BucketTimestamp != nil {
+			cmds.TsMrangeAggregationBucketduration(_cmd).Buckettimestamp(str(options.BucketTimestamp))
+		}
+		if options.Empty {
+			cmds.TsMrangeAggregationBuckettimestamp(_cmd).Empty()
+		}
+		cmds.TsMrangeTotimestamp(_cmd).Filter(filterExpr...)
+		if options.GroupByLabel != nil {
+			// FIXME: Wrong API definition: REDUCE
+			cmds.TsMrangeFilter(_cmd).Groupby(str(options.GroupByLabel), "REDUCE", str(options.Reducer))
+		}
+	}
+	cmd := (cmds.TsMrangeFilter)(_cmd).Build()
+	return newMapStringSliceInterfaceCmd(c.client.Do(ctx, cmd))
+}
+
+// TSMRevRange - Returns a range of samples from multiple time-series keys in reverse order.
+// For more information - https://redis.io/commands/ts.mrevrange/
+func (c *Compat) TSMRevRange(ctx context.Context, fromTimestamp int, toTimestamp int, filterExpr []string) *MapStringSliceInterfaceCmd {
+	cmd := c.client.B().TsMrange().Fromtimestamp(str(fromTimestamp)).Totimestamp(str(toTimestamp)).Filter(filterExpr...).Build()
+	return newMapStringSliceInterfaceCmd(c.client.Do(ctx, cmd))
+}
+
+// TSMRevRangeWithArgs - Returns a range of samples from multiple time-series keys in reverse order with additional options.
+// This function allows for specifying additional options such as:
+// Latest, FilterByTS, FilterByValue, WithLabels, SelectedLabels,
+// Count, Align, Aggregator, BucketDuration, BucketTimestamp,
+// Empty, GroupByLabel and Reducer.
+// For more information - https://redis.io/commands/ts.mrevrange/
+func (c *Compat) TSMRevRangeWithArgs(ctx context.Context, fromTimestamp int, toTimestamp int, filterExpr []string, options *TSMRevRangeOptions) *MapStringSliceInterfaceCmd {
+	_cmd := c.client.B().TsMrevrange().Fromtimestamp(str(fromTimestamp)).Totimestamp(str(toTimestamp))
+	if options != nil {
+		if options.Latest {
+			_cmd.Latest()
+		}
+		if options.FilterByTS != nil {
+			tss := make([]int64, 0, len(options.FilterByTS))
+			for _, ts := range options.FilterByTS {
+				tss = append(tss, int64(ts))
+			}
+			_cmd.FilterByTs(tss...)
+		}
+		if options.FilterByValue != nil {
+			if len(options.FilterByValue) != 2 {
+				panic(fmt.Sprintf("wrong number of arguments in options.FilterByValue, expect min, max, got %v", options.FilterByValue))
+			}
+			_cmd.FilterByValue(float64(options.FilterByValue[0]), float64(options.FilterByValue[1]))
+		}
+		if options.WithLabels {
+			_cmd.Withlabels()
+		}
+		if options.SelectedLabels != nil {
+			labels := make([]string, 0, len(options.SelectedLabels))
+			for _, l := range options.SelectedLabels {
+				labels = append(labels, str(l))
+			}
+			_cmd.SelectedLabels(labels)
+		}
+		if options.Count != 0 {
+			_cmd.Count(int64(options.Count))
+		}
+		if options.Align != nil {
+			_cmd.Align(str(options.Align))
+		}
+		if options.Aggregator != 0 {
+			switch options.Aggregator {
+			case Invalid:
+				break
+			case Avg:
+				_cmd.AggregationAvg()
+			case Sum:
+				_cmd.AggregationSum()
+			case Min:
+				_cmd.AggregationMin()
+			case Max:
+				_cmd.AggregationMax()
+			case Range:
+				_cmd.AggregationRange()
+			case Count:
+				_cmd.AggregationCount()
+			case First:
+				_cmd.AggregationFirst()
+			case Last:
+				_cmd.AggregationLast()
+			case StdP:
+				_cmd.AggregationStdP()
+			case StdS:
+				_cmd.AggregationStdS()
+			case VarP:
+				_cmd.AggregationVarP()
+			case VarS:
+				_cmd.AggregationVarS()
+			case Twa:
+				_cmd.AggregationTwa()
+			}
+		}
+		if options.BucketDuration != 0 {
+			cmds.TsMrevrangeAggregationAggregationAvg(_cmd).Bucketduration(int64(options.BucketDuration))
+		}
+		if options.BucketTimestamp != nil {
+			cmds.TsMrevrangeAggregationBucketduration(_cmd).Buckettimestamp(str(options.BucketTimestamp))
+		}
+		if options.Empty {
+			cmds.TsMrevrangeAggregationBuckettimestamp(_cmd).Empty()
+		}
+		cmds.TsMrevrangeTotimestamp(_cmd).Filter(filterExpr...)
+		if options.GroupByLabel != nil {
+			// FIXME: Wrong API definition: REDUCE
+			cmds.TsMrevrangeFilter(_cmd).Groupby(str(options.GroupByLabel), "REDUCE", str(options.Reducer))
+		}
+	}
+	cmd := (cmds.TsMrevrangeFilter)(_cmd).Build()
+	return newMapStringSliceInterfaceCmd(c.client.Do(ctx, cmd))
+}
+
+// TSMGet - Returns the last sample of multiple time-series keys.
+// For more information - https://redis.io/commands/ts.mget/
+func (c *Compat) TSMGet(ctx context.Context, filters []string) *MapStringSliceInterfaceCmd {
+	cmd := c.client.B().TsMget().Filter(filters...).Build()
+	return newMapStringSliceInterfaceCmd(c.client.Do(ctx, cmd))
+}
+
+// TSMGetWithArgs - Returns the last sample of multiple time-series keys with additional options.
+// This function allows for specifying additional options such as:
+// Latest, WithLabels and SelectedLabels.
+// For more information - https://redis.io/commands/ts.mget/
+func (c *Compat) TSMGetWithArgs(ctx context.Context, filters []string, options *TSMGetOptions) *MapStringSliceInterfaceCmd {
+	_cmd := c.client.B().TsMget()
+	if options != nil {
+		if options.Latest {
+			_cmd.Latest()
+		}
+		if options.WithLabels {
+			_cmd.Withlabels()
+		}
+		if options.SelectedLabels != nil {
+			labels := make([]string, 0, len(options.SelectedLabels))
+			for _, l := range options.SelectedLabels {
+				labels = append(labels, str(l))
+			}
+			_cmd.SelectedLabels(labels)
+		}
+	}
+	cmd := _cmd.Filter(filters...).Build()
+	return newMapStringSliceInterfaceCmd(c.client.Do(ctx, cmd))
 }
 
 func (c CacheCompat) BitCount(ctx context.Context, key string, bitCount *BitCount) *IntCmd {
@@ -3005,7 +4491,7 @@ func (c CacheCompat) HLen(ctx context.Context, key string) *IntCmd {
 func (c CacheCompat) HMGet(ctx context.Context, key string, fields ...string) *SliceCmd {
 	cmd := c.client.B().Hmget().Key(key).Field(fields...).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
-	return newSliceCmd(resp)
+	return newSliceCmd(resp, fields...)
 }
 
 func (c CacheCompat) HVals(ctx context.Context, key string) *StringSliceCmd {
@@ -3289,7 +4775,117 @@ func (c CacheCompat) ZScore(ctx context.Context, key, member string) *FloatCmd {
 	return newFloatCmd(resp)
 }
 
+func (c CacheCompat) BFExists(ctx context.Context, key string, element interface{}) *BoolCmd {
+	cmd := c.client.B().BfExists().Key(key).Item(str(element)).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newBoolCmd(resp)
+}
+
+func (c CacheCompat) BFInfo(ctx context.Context, key string) *BFInfoCmd {
+	cmd := c.client.B().BfInfo().Key(key).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newBFInfoCmd(resp)
+}
+
+func (c CacheCompat) BFInfoArg(ctx context.Context, key, option string) *BFInfoCmd {
+	switch option {
+	case "CAPACITY":
+		return c.BFInfoCapacity(ctx, key)
+	case "SIZE":
+		return c.BFInfoSize(ctx, key)
+	case "FILTERS":
+		return c.BFInfoFilters(ctx, key)
+	case "ITEMS":
+		return c.BFInfoItems(ctx, key)
+	case "EXPANSION":
+		return c.BFInfoExpansion(ctx, key)
+	default:
+		panic(fmt.Sprintf("unknown option %v", option))
+	}
+}
+
+func (c CacheCompat) BFInfoCapacity(ctx context.Context, key string) *BFInfoCmd {
+	cmd := c.client.B().BfInfo().Key(key).Capacity().Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newBFInfoCmd(resp)
+}
+
+func (c CacheCompat) BFInfoSize(ctx context.Context, key string) *BFInfoCmd {
+	cmd := c.client.B().BfInfo().Key(key).Size().Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newBFInfoCmd(resp)
+}
+
+func (c CacheCompat) BFInfoFilters(ctx context.Context, key string) *BFInfoCmd {
+	cmd := c.client.B().BfInfo().Key(key).Filters().Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newBFInfoCmd(resp)
+}
+
+func (c CacheCompat) BFInfoItems(ctx context.Context, key string) *BFInfoCmd {
+	cmd := c.client.B().BfInfo().Key(key).Items().Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newBFInfoCmd(resp)
+}
+
+func (c CacheCompat) BFInfoExpansion(ctx context.Context, key string) *BFInfoCmd {
+	cmd := c.client.B().BfInfo().Key(key).Expansion().Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newBFInfoCmd(resp)
+}
+
+func (c *CacheCompat) CFCount(ctx context.Context, key string, element interface{}) *IntCmd {
+	cmd := c.client.B().CfCount().Key(key).Item(str(element)).Cache()
+	return newIntCmd(c.client.DoCache(ctx, cmd, c.ttl))
+}
+
+func (c *CacheCompat) CFExists(ctx context.Context, key string, element interface{}) *BoolCmd {
+	cmd := c.client.B().CfExists().Key(key).Item(str(element)).Cache()
+	return newBoolCmd(c.client.DoCache(ctx, cmd, c.ttl))
+}
+
+func (c *CacheCompat) CFInfo(ctx context.Context, key string) *CFInfoCmd {
+	cmd := c.client.B().CfInfo().Key(key).Cache()
+	return newCFInfoCmd(c.client.DoCache(ctx, cmd, c.ttl))
+}
+
+func (c *CacheCompat) CMSInfo(ctx context.Context, key string) *CMSInfoCmd {
+	cmd := c.client.B().CmsInfo().Key(key).Cache()
+	return newCMSInfoCmd(c.client.DoCache(ctx, cmd, c.ttl))
+}
+
+func (c *CacheCompat) CMSQuery(ctx context.Context, key string, elements ...interface{}) *IntSliceCmd {
+	_cmd := c.client.B().CmsQuery().Key(key)
+	for _, e := range elements {
+		_cmd.Item(str(e))
+	}
+	cmd := (cmds.CmsQueryItem)(_cmd).Cache()
+	return newIntSliceCmd(c.client.DoCache(ctx, cmd, c.ttl))
+}
+
+func (c *CacheCompat) TopKInfo(ctx context.Context, key string) *TopKInfoCmd {
+	cmd := c.client.B().TopkInfo().Key(key).Cache()
+	return newTopKInfoCmd(c.client.DoCache(ctx, cmd, c.ttl))
+}
+
+func (c *CacheCompat) TopKList(ctx context.Context, key string) *StringSliceCmd {
+	cmd := c.client.B().TopkList().Key(key).Cache()
+	return newStringSliceCmd(c.client.DoCache(ctx, cmd, c.ttl))
+}
+
+func (c *CacheCompat) TopKQuery(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd {
+	_cmd := c.client.B().TopkQuery().Key(key)
+	for _, e := range elements {
+		_cmd.Item(str(e))
+	}
+	cmd := (cmds.TopkQueryItem)(_cmd).Cache()
+	return newBoolSliceCmd(c.client.DoCache(ctx, cmd, c.ttl))
+}
+
 func str(arg any) string {
+	if arg == nil {
+		return ""
+	}
 	switch v := arg.(type) {
 	case string:
 		return v
@@ -3302,6 +4898,8 @@ func str(arg any) string {
 		return "0"
 	case time.Time:
 		return v.Format(time.RFC3339Nano)
+	case time.Duration:
+		return strconv.FormatInt(v.Nanoseconds(), 10)
 	case encoding.BinaryMarshaler:
 		if data, err := v.MarshalBinary(); err == nil {
 			return rueidis.BinaryString(data)
@@ -3344,6 +4942,85 @@ func argToSlice(arg any) []string {
 		}
 		return dst
 	default:
+		// scan struct field
+		v := reflect.ValueOf(arg)
+		if v.Type().Kind() == reflect.Ptr {
+			if v.IsNil() {
+				return nil
+			}
+			v = v.Elem()
+		}
+		if v.Type().Kind() == reflect.Struct {
+			return appendStructField(v)
+		}
 		return []string{str(arg)}
 	}
+}
+
+func appendStructField(v reflect.Value) []string {
+	typ := v.Type()
+	dst := make([]string, 0, typ.NumField())
+	for i := 0; i < typ.NumField(); i++ {
+		tag := typ.Field(i).Tag.Get("redis")
+		if tag == "" || tag == "-" {
+			continue
+		}
+		name, opt, _ := strings.Cut(tag, ",")
+		if name == "" {
+			continue
+		}
+
+		field := v.Field(i)
+
+		// miss field
+		if omitEmpty(opt) && isEmptyValue(field) {
+			continue
+		}
+
+		// if its a nil pointer
+		if field.Kind() == reflect.Pointer && field.IsNil() {
+			continue
+		}
+
+		// if its a valid pointer
+		if field.Kind() == reflect.Pointer && field.Elem().CanInterface() {
+			dst = append(dst, name, str(field.Elem().Interface()))
+			continue
+		}
+
+		if field.CanInterface() {
+			dst = append(dst, name, str(field.Interface()))
+		}
+	}
+
+	return dst
+}
+
+func omitEmpty(opt string) bool {
+	for opt != "" {
+		var name string
+		name, opt, _ = strings.Cut(opt, ",")
+		if name == "omitempty" {
+			return true
+		}
+	}
+	return false
+}
+
+func isEmptyValue(v reflect.Value) bool {
+	switch v.Kind() {
+	case reflect.Array, reflect.Map, reflect.Slice, reflect.String:
+		return v.Len() == 0
+	case reflect.Bool:
+		return !v.Bool()
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return v.Int() == 0
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		return v.Uint() == 0
+	case reflect.Float32, reflect.Float64:
+		return v.Float() == 0
+	case reflect.Interface, reflect.Pointer:
+		return v.IsNil()
+	}
+	return false
 }

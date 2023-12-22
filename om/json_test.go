@@ -143,6 +143,21 @@ func TestNewJSONRepository(t *testing.T) {
 			if !reflect.DeepEqual(e, records[0]) {
 				t.Fatalf("items[0] should be the same as e")
 			}
+			n, records, err = repo.Search(ctx, func(search FtSearchIndex) rueidis.Completed {
+				return search.Query("*").Dialect(3).Build()
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if n != 1 {
+				t.Fatalf("unexpected total count %v", n)
+			}
+			if len(records) != 1 {
+				t.Fatalf("unexpected return count %v", n)
+			}
+			if !reflect.DeepEqual(e, records[0]) {
+				t.Fatalf("items[0] should be the same as e")
+			}
 			if err = repo.DropIndex(ctx); err != nil {
 				t.Fatal(err)
 			}
@@ -225,6 +240,150 @@ func TestNewJSONRepository(t *testing.T) {
 				if entities[i].Ver != 2 {
 					t.Fatalf("unexpected ver %d", entities[i].Ver)
 				}
+			}
+		}
+	})
+}
+
+type JSONTestTTLStruct struct {
+	Key  string    `redis:",key"`
+	Ver  int64     `redis:",ver"`
+	Exat time.Time `redis:",exat"`
+}
+
+//gocyclo:ignore
+func TestNewJSONTTLRepository(t *testing.T) {
+	ctx := context.Background()
+
+	client := setup(t)
+	client.Do(ctx, client.B().Flushall().Build())
+	defer client.Close()
+
+	repo := NewJSONRepository("jsonttl", JSONTestTTLStruct{}, client)
+
+	t.Run("NewEntity", func(t *testing.T) {
+		e := repo.NewEntity()
+		ulid.MustParse(e.Key)
+	})
+
+	t.Run("Save", func(t *testing.T) {
+		e := repo.NewEntity()
+
+		// test save
+		e.Exat = time.Now().Add(time.Minute)
+		if err := repo.Save(ctx, e); err != nil {
+			t.Fatal(err)
+		}
+		if e.Ver != 1 {
+			t.Fatalf("ver should be increment")
+		}
+
+		// test ErrVersionMismatch
+		e.Ver = 0
+		if err := repo.Save(ctx, e); err != ErrVersionMismatch {
+			t.Fatalf("save should fail if ErrVersionMismatch, got: %v", err)
+		}
+		e.Ver = 1 // restore
+
+		t.Run("ExpireAt", func(t *testing.T) {
+			exat, err := client.Do(ctx, client.B().Pexpiretime().Key("jsonttl:"+e.Key).Build()).AsInt64()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if exat != e.Exat.UnixMilli() {
+				t.Fatalf("wrong exat")
+			}
+		})
+
+		t.Run("Fetch", func(t *testing.T) {
+			ei, err := repo.Fetch(ctx, e.Key)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if e == ei {
+				t.Fatalf("e's address should not be the same as ee's")
+			}
+			e.Exat = e.Exat.Truncate(time.Nanosecond)
+			ei.Exat = ei.Exat.Truncate(time.Nanosecond)
+			if !e.Exat.Equal(ei.Exat) {
+				t.Fatalf("e should be the same as ee %v, %v", e, ei)
+			}
+		})
+
+		t.Run("FetchCache", func(t *testing.T) {
+			ei, err := repo.FetchCache(ctx, e.Key, time.Minute)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if e == ei {
+				t.Fatalf("e's address should not be the same as ee's")
+			}
+			e.Exat = e.Exat.Truncate(time.Nanosecond)
+			ei.Exat = ei.Exat.Truncate(time.Nanosecond)
+			if !e.Exat.Equal(ei.Exat) {
+				t.Fatalf("ee should be the same as e %v, %v", e, ei)
+			}
+		})
+
+		t.Run("Delete", func(t *testing.T) {
+			if err := repo.Remove(ctx, e.Key); err != nil {
+				t.Fatal(err)
+			}
+			ei, err := repo.Fetch(ctx, e.Key)
+			if !IsRecordNotFound(err) {
+				t.Fatalf("should not be found, but got %v", ei)
+			}
+			_, err = repo.FetchCache(ctx, e.Key, time.Minute)
+			if !IsRecordNotFound(err) {
+				t.Fatalf("should not be found, but got %v", e)
+			}
+		})
+	})
+
+	t.Run("SaveMulti", func(t *testing.T) {
+		entities := []*JSONTestTTLStruct{
+			repo.NewEntity(),
+			repo.NewEntity(),
+			repo.NewEntity(),
+		}
+
+		for _, e := range entities {
+			e.Exat = time.Now().Add(time.Minute)
+		}
+
+		for i, err := range repo.SaveMulti(context.Background(), entities...) {
+			if err != nil {
+				t.Fatal(err)
+			}
+			if entities[i].Ver != 1 {
+				t.Fatalf("unexpected ver %d", entities[i].Ver)
+			}
+		}
+
+		entities[len(entities)-1].Ver = 0
+
+		for i, err := range repo.SaveMulti(context.Background(), entities...) {
+			if i == len(entities)-1 {
+				if err != ErrVersionMismatch {
+					t.Fatalf("unexpected err %v", err)
+				}
+			} else {
+				if err != nil {
+					t.Fatal(err)
+				}
+				if entities[i].Ver != 2 {
+					t.Fatalf("unexpected ver %d", entities[i].Ver)
+				}
+			}
+		}
+
+		for _, e := range entities {
+			exat, err := client.Do(ctx, client.B().Pexpiretime().Key("jsonttl:"+e.Key).Build()).AsInt64()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if exat != e.Exat.UnixMilli() {
+				t.Fatalf("wrong exat")
 			}
 		}
 	})

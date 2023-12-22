@@ -18,10 +18,13 @@ func parallel(p int) (chan func(), func()) {
 	wg.Add(p)
 	for i := 0; i < p; i++ {
 		go func() {
+			defer func() {
+				recover()
+				wg.Done()
+			}()
 			for fn := range ch {
 				fn()
 			}
-			wg.Done()
 		}()
 	}
 	return ch, func() {
@@ -120,7 +123,7 @@ func testSETGET(t *testing.T, client Client, csc bool) {
 		jobs <- func() {
 			val, err := client.Do(ctx, client.B().Set().Key(key).Value(kvs[key]).Build()).ToString()
 			if err != nil || val != "OK" {
-				t.Fatalf("unexpected set response %v %v", val, err)
+				t.Errorf("unexpected set response %v %v", val, err)
 			}
 		}
 	}
@@ -133,7 +136,24 @@ func testSETGET(t *testing.T, client Client, csc bool) {
 		jobs <- func() {
 			val, err := client.Do(ctx, client.B().Get().Key(key).Build()).ToString()
 			if v, ok := kvs[key]; !((ok && val == v) || (!ok && IsRedisNil(err))) {
-				t.Fatalf("unexpected get response %v %v %v", val, err, ok)
+				t.Errorf("unexpected get response %v %v %v", val, err, ok)
+			}
+		}
+	}
+	wait()
+
+	t.Logf("testing GET with %d keys and %d parallelism with timeout\n", keys*100, para)
+	jobs, wait = parallel(para)
+	for i := 0; i < keys*100; i++ {
+		key := strconv.Itoa(rand.Intn(keys))
+		jobs <- func() {
+			ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond)
+			defer cancel()
+			val, err := client.Do(ctx, client.B().Get().Key(key).Build()).ToString()
+			if err != context.DeadlineExceeded {
+				if v, ok := kvs[key]; !((ok && val == v) || (!ok && IsRedisNil(err))) {
+					t.Errorf("unexpected get response %v %v %v", val, err, ok)
+				}
 			}
 		}
 	}
@@ -148,7 +168,7 @@ func testSETGET(t *testing.T, client Client, csc bool) {
 			resp := client.DoCache(ctx, client.B().Get().Key(key).Cache(), time.Minute)
 			val, err := resp.ToString()
 			if v, ok := kvs[key]; !((ok && val == v) || (!ok && IsRedisNil(err))) {
-				t.Fatalf("unexpected csc get response %v %v %v", val, err, ok)
+				t.Errorf("unexpected csc get response %v %v %v", val, err, ok)
 			}
 			if resp.IsCacheHit() {
 				atomic.AddInt64(&hits, 1)
@@ -175,11 +195,13 @@ func testSETGET(t *testing.T, client Client, csc bool) {
 		jobs <- func() {
 			val, err := client.Do(ctx, client.B().Del().Key(key).Build()).AsInt64()
 			if _, ok := kvs[key]; !((val == 1 && ok) || (val == 0 && !ok)) {
-				t.Fatalf("unexpected del response %v %v %v", val, err, ok)
+				t.Errorf("unexpected del response %v %v %v", val, err, ok)
 			}
 		}
 	}
 	wait()
+
+	time.Sleep(time.Second)
 
 	t.Logf("testing client side caching after delete\n")
 	jobs, wait = parallel(para)
@@ -188,10 +210,10 @@ func testSETGET(t *testing.T, client Client, csc bool) {
 		jobs <- func() {
 			resp := client.DoCache(ctx, client.B().Get().Key(key).Cache(), time.Minute)
 			if !IsRedisNil(resp.Error()) {
-				t.Fatalf("unexpected csc get response after delete %v", resp)
+				t.Errorf("unexpected csc get response after delete %v", resp)
 			}
 			if resp.IsCacheHit() {
-				t.Fatalf("unexpected csc cache hit after delete")
+				t.Errorf("unexpected csc cache hit after delete")
 			}
 		}
 	}
@@ -265,6 +287,30 @@ func testMultiSETGET(t *testing.T, client Client, csc bool) {
 	}
 	wait()
 
+	t.Logf("testing GET with %d keys and %d parallelism with timeout\n", keys*100, para)
+	jobs, wait = parallel(para)
+	for i := 0; i < keys*100; i += batch {
+		cmdkeys := make([]string, 0, batch)
+		commands := make(Commands, 0, batch)
+		for j := 0; j < batch; j++ {
+			cmdkeys = append(cmdkeys, "m"+strconv.Itoa(rand.Intn(keys)))
+			commands = append(commands, client.B().Get().Key(cmdkeys[len(cmdkeys)-1]).Build())
+		}
+		jobs <- func() {
+			ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond)
+			defer cancel()
+			for j, resp := range client.DoMulti(ctx, commands...) {
+				val, err := resp.ToString()
+				if err != context.DeadlineExceeded {
+					if v, ok := kvs[cmdkeys[j]]; !((ok && val == v) || (!ok && IsRedisNil(err))) {
+						t.Fatalf("unexpected get response %v %v %v", val, err, ok)
+					}
+				}
+			}
+		}
+	}
+	wait()
+
 	t.Logf("testing client side caching with %d interations and %d parallelism\n", keys*5, para)
 	jobs, wait = parallel(para)
 	hits, miss := int64(0), int64(0)
@@ -319,6 +365,8 @@ func testMultiSETGET(t *testing.T, client Client, csc bool) {
 		}
 	}
 	wait()
+
+	time.Sleep(time.Second)
 
 	t.Logf("testing client side caching after delete\n")
 	jobs, wait = parallel(para)
@@ -415,7 +463,9 @@ func testMultiSETGETHelpers(t *testing.T, client Client, csc bool) {
 			t.Fatalf("unexpecetd err %v\n", err)
 		}
 	}
+
 	time.Sleep(time.Second)
+
 	t.Logf("testing client side caching after delete\n")
 	resp, err = MGetCache(client, ctx, time.Minute, cmdKeys)
 	if err != nil {
@@ -619,6 +669,83 @@ func testPubSub(t *testing.T, client Client) {
 	}
 }
 
+func testPubSubSharded(t *testing.T, client Client) {
+	msgs := 5000
+	mmap := make(map[string]struct{})
+	for i := 0; i < msgs; i++ {
+		mmap[strconv.Itoa(i)] = struct{}{}
+	}
+	t.Logf("testing pubsub with %v messages\n", msgs)
+	jobs, wait := parallel(10)
+
+	ctx := context.Background()
+
+	messages := make(chan string, 10)
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		err := client.Receive(ctx, client.B().Ssubscribe().Channel("ch1").Build(), func(msg PubSubMessage) {
+			messages <- msg.Message
+		})
+		if err != nil {
+			t.Errorf("unexpected subscribe response %v", err)
+		}
+		wg.Done()
+	}()
+
+	go func() {
+		time.Sleep(time.Second)
+		for i := 0; i < msgs; i++ {
+			msg := strconv.Itoa(i)
+			ch := "ch1"
+			jobs <- func() {
+				if err := client.Do(context.Background(), client.B().Spublish().Channel(ch).Message(msg).Build()).Error(); err != nil {
+					t.Errorf("unexpected publish response %v", err)
+				}
+			}
+		}
+		wait()
+	}()
+
+	for message := range messages {
+		delete(mmap, message)
+		if len(mmap) == 0 {
+			close(messages)
+		}
+	}
+
+	for _, resp := range client.DoMulti(context.Background(),
+		client.B().Sunsubscribe().Channel("ch1").Build()) {
+		if err := resp.Error(); err != nil {
+			t.Fatal(err)
+		}
+	}
+	wg.Wait()
+
+	t.Logf("testing pubsub hooks with 500 messages\n")
+
+	for i := 0; i < 500; i++ {
+		cc, cancel := client.Dedicate()
+		msg := strconv.Itoa(i)
+		ch := cc.SetPubSubHooks(PubSubHooks{
+			OnMessage: func(m PubSubMessage) {
+				cc.SetPubSubHooks(PubSubHooks{})
+			},
+		})
+		if err := cc.Do(context.Background(), client.B().Ssubscribe().Channel("ch2").Build()).Error(); err != nil {
+			t.Fatal(err)
+		}
+		if err := client.Do(context.Background(), client.B().Spublish().Channel("ch2").Message(msg).Build()).Error(); err != nil {
+			t.Fatal(err)
+		}
+		if err := <-ch; err != nil {
+			t.Fatal(err)
+		}
+		cancel()
+	}
+}
+
 func testLua(t *testing.T, client Client) {
 	script := NewLuaScript("return {KEYS[1],ARGV[1]}")
 
@@ -658,22 +785,29 @@ func run(t *testing.T, client Client, cases ...func(*testing.T, Client)) {
 }
 
 func TestSingleClientIntegration(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
 	defer ShouldNotLeaked(SetupLeakDetection())
 	client, err := NewClient(ClientOption{
-		InitAddress:      []string{"127.0.0.1:6379"},
-		ConnWriteTimeout: 180 * time.Second,
+		InitAddress:       []string{"127.0.0.1:6379"},
+		ConnWriteTimeout:  180 * time.Second,
+		PipelineMultiplex: 1,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	run(t, client, testSETGETCSC, testMultiSETGETCSC, testMultiSETGETCSCHelpers, testMultiExec, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
+	run(t, client, testSETGETCSC, testMultiSETGETCSC, testMultiSETGETCSCHelpers, testMultiExec, testBlockingZPOP, testBlockingXREAD, testPubSub, testPubSubSharded, testLua)
 	run(t, client, testFlush)
 
 	client.Close()
 }
 
 func TestSentinelClientIntegration(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
 	defer ShouldNotLeaked(SetupLeakDetection())
 	client, err := NewClient(ClientOption{
 		InitAddress:      []string{"127.0.0.1:26379"},
@@ -681,40 +815,49 @@ func TestSentinelClientIntegration(t *testing.T) {
 		Sentinel: SentinelOption{
 			MasterSet: "test",
 		},
-		SelectDB: 2, // https://github.com/Datadog/rueidis/issues/138
+		SelectDB:          2, // https://github.com/redis/rueidis/issues/138
+		PipelineMultiplex: 1,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	run(t, client, testSETGETCSC, testMultiSETGETCSC, testMultiSETGETCSCHelpers, testMultiExec, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
+	run(t, client, testSETGETCSC, testMultiSETGETCSC, testMultiSETGETCSCHelpers, testMultiExec, testBlockingZPOP, testBlockingXREAD, testPubSub, testPubSubSharded, testLua)
 	run(t, client, testFlush)
 
 	client.Close()
 }
 
 func TestClusterClientIntegration(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
 	defer ShouldNotLeaked(SetupLeakDetection())
 	client, err := NewClient(ClientOption{
-		InitAddress:      []string{"127.0.0.1:7001", "127.0.0.1:7002", "127.0.0.1:7003"},
-		ConnWriteTimeout: 180 * time.Second,
-		ShuffleInit:      true,
-		Dialer:           net.Dialer{KeepAlive: -1},
+		InitAddress:       []string{"127.0.0.1:7001", "127.0.0.1:7002", "127.0.0.1:7003"},
+		ConnWriteTimeout:  180 * time.Second,
+		ShuffleInit:       true,
+		Dialer:            net.Dialer{KeepAlive: -1},
+		PipelineMultiplex: 1,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	run(t, client, testSETGETCSC, testMultiSETGETCSC, testMultiSETGETCSCHelpers, testMultiExec, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
+	run(t, client, testSETGETCSC, testMultiSETGETCSC, testMultiSETGETCSCHelpers, testMultiExec, testBlockingZPOP, testBlockingXREAD, testPubSub, testPubSubSharded, testLua)
 
 	client.Close()
 }
 
 func TestSingleClient5Integration(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
 	defer ShouldNotLeaked(SetupLeakDetection())
 	client, err := NewClient(ClientOption{
-		InitAddress:      []string{"127.0.0.1:6355"},
-		ConnWriteTimeout: 180 * time.Second,
-		DisableCache:     true,
+		InitAddress:       []string{"127.0.0.1:6355"},
+		ConnWriteTimeout:  180 * time.Second,
+		DisableCache:      true,
+		PipelineMultiplex: 1,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -726,13 +869,17 @@ func TestSingleClient5Integration(t *testing.T) {
 }
 
 func TestCluster5ClientIntegration(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
 	defer ShouldNotLeaked(SetupLeakDetection())
 	client, err := NewClient(ClientOption{
-		InitAddress:      []string{"127.0.0.1:7004", "127.0.0.1:7005", "127.0.0.1:7006"},
-		ConnWriteTimeout: 180 * time.Second,
-		ShuffleInit:      true,
-		DisableCache:     true,
-		Dialer:           net.Dialer{KeepAlive: -1},
+		InitAddress:       []string{"127.0.0.1:7004", "127.0.0.1:7005", "127.0.0.1:7006"},
+		ConnWriteTimeout:  180 * time.Second,
+		ShuffleInit:       true,
+		DisableCache:      true,
+		Dialer:            net.Dialer{KeepAlive: -1},
+		PipelineMultiplex: 1,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -743,6 +890,9 @@ func TestCluster5ClientIntegration(t *testing.T) {
 }
 
 func TestSentinel5ClientIntegration(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
 	defer ShouldNotLeaked(SetupLeakDetection())
 	client, err := NewClient(ClientOption{
 		InitAddress:      []string{"127.0.0.1:26355"},
@@ -751,6 +901,7 @@ func TestSentinel5ClientIntegration(t *testing.T) {
 		Sentinel: SentinelOption{
 			MasterSet: "test5",
 		},
+		PipelineMultiplex: 1,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -762,10 +913,14 @@ func TestSentinel5ClientIntegration(t *testing.T) {
 }
 
 func TestKeyDBSingleClientIntegration(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
 	defer ShouldNotLeaked(SetupLeakDetection())
 	client, err := NewClient(ClientOption{
-		InitAddress:      []string{"127.0.0.1:6344"},
-		ConnWriteTimeout: 180 * time.Second,
+		InitAddress:       []string{"127.0.0.1:6344"},
+		ConnWriteTimeout:  180 * time.Second,
+		PipelineMultiplex: 1,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -778,12 +933,14 @@ func TestKeyDBSingleClientIntegration(t *testing.T) {
 }
 
 func TestDragonflyDBSingleClientIntegration(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
 	defer ShouldNotLeaked(SetupLeakDetection())
 	client, err := NewClient(ClientOption{
 		InitAddress:      []string{"127.0.0.1:6333"},
 		ConnWriteTimeout: 180 * time.Second,
 		DisableCache:     true,
-		AlwaysRESP2:      true,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -795,6 +952,9 @@ func TestDragonflyDBSingleClientIntegration(t *testing.T) {
 }
 
 func TestKvrocksSingleClientIntegration(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
 	defer ShouldNotLeaked(SetupLeakDetection())
 	client, err := NewClient(ClientOption{
 		InitAddress:      []string{"127.0.0.1:6666"},

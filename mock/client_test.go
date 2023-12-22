@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/Datadog/rueidis"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 )
 
 func TestNewClient(t *testing.T) {

@@ -4,7 +4,7 @@ package cmds
 
 import "strconv"
 
-type Auth Completed
+type Auth Incomplete
 
 func (b Builder) Auth() (c Auth) {
 	c = Auth{cs: get(), ks: b.ks}
@@ -22,21 +22,21 @@ func (c Auth) Password(password string) AuthPassword {
 	return (AuthPassword)(c)
 }
 
-type AuthPassword Completed
+type AuthPassword Incomplete
 
 func (c AuthPassword) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type AuthUsername Completed
+type AuthUsername Incomplete
 
 func (c AuthUsername) Password(password string) AuthPassword {
 	c.cs.s = append(c.cs.s, password)
 	return (AuthPassword)(c)
 }
 
-type ClientCaching Completed
+type ClientCaching Incomplete
 
 func (b Builder) ClientCaching() (c ClientCaching) {
 	c = ClientCaching{cs: get(), ks: b.ks}
@@ -54,21 +54,21 @@ func (c ClientCaching) No() ClientCachingModeNo {
 	return (ClientCachingModeNo)(c)
 }
 
-type ClientCachingModeNo Completed
+type ClientCachingModeNo Incomplete
 
 func (c ClientCachingModeNo) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientCachingModeYes Completed
+type ClientCachingModeYes Incomplete
 
 func (c ClientCachingModeYes) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientGetname Completed
+type ClientGetname Incomplete
 
 func (b Builder) ClientGetname() (c ClientGetname) {
 	c = ClientGetname{cs: get(), ks: b.ks}
@@ -78,10 +78,10 @@ func (b Builder) ClientGetname() (c ClientGetname) {
 
 func (c ClientGetname) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientGetredir Completed
+type ClientGetredir Incomplete
 
 func (b Builder) ClientGetredir() (c ClientGetredir) {
 	c = ClientGetredir{cs: get(), ks: b.ks}
@@ -91,10 +91,10 @@ func (b Builder) ClientGetredir() (c ClientGetredir) {
 
 func (c ClientGetredir) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientId Completed
+type ClientId Incomplete
 
 func (b Builder) ClientId() (c ClientId) {
 	c = ClientId{cs: get(), ks: b.ks}
@@ -104,10 +104,10 @@ func (b Builder) ClientId() (c ClientId) {
 
 func (c ClientId) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientInfo Completed
+type ClientInfo Incomplete
 
 func (b Builder) ClientInfo() (c ClientInfo) {
 	c = ClientInfo{cs: get(), ks: b.ks}
@@ -117,10 +117,10 @@ func (b Builder) ClientInfo() (c ClientInfo) {
 
 func (c ClientInfo) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientKill Completed
+type ClientKill Incomplete
 
 func (b Builder) ClientKill() (c ClientKill) {
 	c = ClientKill{cs: get(), ks: b.ks}
@@ -185,10 +185,10 @@ func (c ClientKill) SkipmeNo() ClientKillSkipmeNo {
 
 func (c ClientKill) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientKillAddr Completed
+type ClientKillAddr Incomplete
 
 func (c ClientKillAddr) Laddr(ipPort string) ClientKillLaddr {
 	c.cs.s = append(c.cs.s, "LADDR", ipPort)
@@ -207,10 +207,10 @@ func (c ClientKillAddr) SkipmeNo() ClientKillSkipmeNo {
 
 func (c ClientKillAddr) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientKillId Completed
+type ClientKillId Incomplete
 
 func (c ClientKillId) TypeNormal() ClientKillTypeNormal {
 	c.cs.s = append(c.cs.s, "TYPE", "NORMAL")
@@ -259,10 +259,10 @@ func (c ClientKillId) SkipmeNo() ClientKillSkipmeNo {
 
 func (c ClientKillId) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientKillIpPort Completed
+type ClientKillIpPort Incomplete
 
 func (c ClientKillIpPort) Id(clientId int64) ClientKillId {
 	c.cs.s = append(c.cs.s, "ID", strconv.FormatInt(clientId, 10))
@@ -316,10 +316,10 @@ func (c ClientKillIpPort) SkipmeNo() ClientKillSkipmeNo {
 
 func (c ClientKillIpPort) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientKillLaddr Completed
+type ClientKillLaddr Incomplete
 
 func (c ClientKillLaddr) SkipmeYes() ClientKillSkipmeYes {
 	c.cs.s = append(c.cs.s, "SKIPME", "YES")
@@ -333,24 +333,24 @@ func (c ClientKillLaddr) SkipmeNo() ClientKillSkipmeNo {
 
 func (c ClientKillLaddr) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientKillSkipmeNo Completed
+type ClientKillSkipmeNo Incomplete
 
 func (c ClientKillSkipmeNo) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientKillSkipmeYes Completed
+type ClientKillSkipmeYes Incomplete
 
 func (c ClientKillSkipmeYes) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientKillTypeMaster Completed
+type ClientKillTypeMaster Incomplete
 
 func (c ClientKillTypeMaster) User(username string) ClientKillUser {
 	c.cs.s = append(c.cs.s, "USER", username)
@@ -379,10 +379,10 @@ func (c ClientKillTypeMaster) SkipmeNo() ClientKillSkipmeNo {
 
 func (c ClientKillTypeMaster) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientKillTypeNormal Completed
+type ClientKillTypeNormal Incomplete
 
 func (c ClientKillTypeNormal) User(username string) ClientKillUser {
 	c.cs.s = append(c.cs.s, "USER", username)
@@ -411,10 +411,10 @@ func (c ClientKillTypeNormal) SkipmeNo() ClientKillSkipmeNo {
 
 func (c ClientKillTypeNormal) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientKillTypePubsub Completed
+type ClientKillTypePubsub Incomplete
 
 func (c ClientKillTypePubsub) User(username string) ClientKillUser {
 	c.cs.s = append(c.cs.s, "USER", username)
@@ -443,10 +443,10 @@ func (c ClientKillTypePubsub) SkipmeNo() ClientKillSkipmeNo {
 
 func (c ClientKillTypePubsub) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientKillTypeReplica Completed
+type ClientKillTypeReplica Incomplete
 
 func (c ClientKillTypeReplica) User(username string) ClientKillUser {
 	c.cs.s = append(c.cs.s, "USER", username)
@@ -475,10 +475,10 @@ func (c ClientKillTypeReplica) SkipmeNo() ClientKillSkipmeNo {
 
 func (c ClientKillTypeReplica) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientKillUser Completed
+type ClientKillUser Incomplete
 
 func (c ClientKillUser) Addr(ipPort string) ClientKillAddr {
 	c.cs.s = append(c.cs.s, "ADDR", ipPort)
@@ -502,10 +502,10 @@ func (c ClientKillUser) SkipmeNo() ClientKillSkipmeNo {
 
 func (c ClientKillUser) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientList Completed
+type ClientList Incomplete
 
 func (b Builder) ClientList() (c ClientList) {
 	c = ClientList{cs: get(), ks: b.ks}
@@ -540,10 +540,10 @@ func (c ClientList) Id() ClientListIdId {
 
 func (c ClientList) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientListIdClientId Completed
+type ClientListIdClientId Incomplete
 
 func (c ClientListIdClientId) ClientId(clientId ...int64) ClientListIdClientId {
 	for _, n := range clientId {
@@ -554,10 +554,10 @@ func (c ClientListIdClientId) ClientId(clientId ...int64) ClientListIdClientId {
 
 func (c ClientListIdClientId) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientListIdId Completed
+type ClientListIdId Incomplete
 
 func (c ClientListIdId) ClientId(clientId ...int64) ClientListIdClientId {
 	for _, n := range clientId {
@@ -566,7 +566,7 @@ func (c ClientListIdId) ClientId(clientId ...int64) ClientListIdClientId {
 	return (ClientListIdClientId)(c)
 }
 
-type ClientListTypeMaster Completed
+type ClientListTypeMaster Incomplete
 
 func (c ClientListTypeMaster) Id() ClientListIdId {
 	c.cs.s = append(c.cs.s, "ID")
@@ -575,10 +575,10 @@ func (c ClientListTypeMaster) Id() ClientListIdId {
 
 func (c ClientListTypeMaster) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientListTypeNormal Completed
+type ClientListTypeNormal Incomplete
 
 func (c ClientListTypeNormal) Id() ClientListIdId {
 	c.cs.s = append(c.cs.s, "ID")
@@ -587,10 +587,10 @@ func (c ClientListTypeNormal) Id() ClientListIdId {
 
 func (c ClientListTypeNormal) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientListTypePubsub Completed
+type ClientListTypePubsub Incomplete
 
 func (c ClientListTypePubsub) Id() ClientListIdId {
 	c.cs.s = append(c.cs.s, "ID")
@@ -599,10 +599,10 @@ func (c ClientListTypePubsub) Id() ClientListIdId {
 
 func (c ClientListTypePubsub) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientListTypeReplica Completed
+type ClientListTypeReplica Incomplete
 
 func (c ClientListTypeReplica) Id() ClientListIdId {
 	c.cs.s = append(c.cs.s, "ID")
@@ -611,10 +611,10 @@ func (c ClientListTypeReplica) Id() ClientListIdId {
 
 func (c ClientListTypeReplica) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientNoEvict Completed
+type ClientNoEvict Incomplete
 
 func (b Builder) ClientNoEvict() (c ClientNoEvict) {
 	c = ClientNoEvict{cs: get(), ks: b.ks}
@@ -632,21 +632,21 @@ func (c ClientNoEvict) Off() ClientNoEvictEnabledOff {
 	return (ClientNoEvictEnabledOff)(c)
 }
 
-type ClientNoEvictEnabledOff Completed
+type ClientNoEvictEnabledOff Incomplete
 
 func (c ClientNoEvictEnabledOff) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientNoEvictEnabledOn Completed
+type ClientNoEvictEnabledOn Incomplete
 
 func (c ClientNoEvictEnabledOn) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientNoTouch Completed
+type ClientNoTouch Incomplete
 
 func (b Builder) ClientNoTouch() (c ClientNoTouch) {
 	c = ClientNoTouch{cs: get(), ks: b.ks}
@@ -664,24 +664,24 @@ func (c ClientNoTouch) Off() ClientNoTouchEnabledOff {
 	return (ClientNoTouchEnabledOff)(c)
 }
 
-type ClientNoTouchEnabledOff Completed
+type ClientNoTouchEnabledOff Incomplete
 
 func (c ClientNoTouchEnabledOff) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientNoTouchEnabledOn Completed
+type ClientNoTouchEnabledOn Incomplete
 
 func (c ClientNoTouchEnabledOn) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientPause Completed
+type ClientPause Incomplete
 
 func (b Builder) ClientPause() (c ClientPause) {
-	c = ClientPause{cs: get(), ks: b.ks, cf: blockTag}
+	c = ClientPause{cs: get(), ks: b.ks, cf: int16(blockTag)}
 	c.cs.s = append(c.cs.s, "CLIENT", "PAUSE")
 	return c
 }
@@ -691,21 +691,21 @@ func (c ClientPause) Timeout(timeout int64) ClientPauseTimeout {
 	return (ClientPauseTimeout)(c)
 }
 
-type ClientPauseModeAll Completed
+type ClientPauseModeAll Incomplete
 
 func (c ClientPauseModeAll) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientPauseModeWrite Completed
+type ClientPauseModeWrite Incomplete
 
 func (c ClientPauseModeWrite) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientPauseTimeout Completed
+type ClientPauseTimeout Incomplete
 
 func (c ClientPauseTimeout) Write() ClientPauseModeWrite {
 	c.cs.s = append(c.cs.s, "WRITE")
@@ -719,10 +719,10 @@ func (c ClientPauseTimeout) All() ClientPauseModeAll {
 
 func (c ClientPauseTimeout) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientReply Completed
+type ClientReply Incomplete
 
 func (b Builder) ClientReply() (c ClientReply) {
 	c = ClientReply{cs: get(), ks: b.ks}
@@ -745,28 +745,28 @@ func (c ClientReply) Skip() ClientReplyReplyModeSkip {
 	return (ClientReplyReplyModeSkip)(c)
 }
 
-type ClientReplyReplyModeOff Completed
+type ClientReplyReplyModeOff Incomplete
 
 func (c ClientReplyReplyModeOff) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientReplyReplyModeOn Completed
+type ClientReplyReplyModeOn Incomplete
 
 func (c ClientReplyReplyModeOn) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientReplyReplyModeSkip Completed
+type ClientReplyReplyModeSkip Incomplete
 
 func (c ClientReplyReplyModeSkip) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientSetinfo Completed
+type ClientSetinfo Incomplete
 
 func (b Builder) ClientSetinfo() (c ClientSetinfo) {
 	c = ClientSetinfo{cs: get(), ks: b.ks}
@@ -779,21 +779,26 @@ func (c ClientSetinfo) Libname(libname string) ClientSetinfoAttrLibname {
 	return (ClientSetinfoAttrLibname)(c)
 }
 
-type ClientSetinfoAttrLibname Completed
-
-func (c ClientSetinfoAttrLibname) Libver(libver string) ClientSetinfoAttrLibver {
+func (c ClientSetinfo) Libver(libver string) ClientSetinfoAttrLibver {
 	c.cs.s = append(c.cs.s, libver)
 	return (ClientSetinfoAttrLibver)(c)
 }
 
-type ClientSetinfoAttrLibver Completed
+type ClientSetinfoAttrLibname Incomplete
+
+func (c ClientSetinfoAttrLibname) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type ClientSetinfoAttrLibver Incomplete
 
 func (c ClientSetinfoAttrLibver) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientSetname Completed
+type ClientSetname Incomplete
 
 func (b Builder) ClientSetname() (c ClientSetname) {
 	c = ClientSetname{cs: get(), ks: b.ks}
@@ -806,14 +811,14 @@ func (c ClientSetname) ConnectionName(connectionName string) ClientSetnameConnec
 	return (ClientSetnameConnectionName)(c)
 }
 
-type ClientSetnameConnectionName Completed
+type ClientSetnameConnectionName Incomplete
 
 func (c ClientSetnameConnectionName) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientTracking Completed
+type ClientTracking Incomplete
 
 func (b Builder) ClientTracking() (c ClientTracking) {
 	c = ClientTracking{cs: get(), ks: b.ks}
@@ -831,7 +836,7 @@ func (c ClientTracking) Off() ClientTrackingStatusOff {
 	return (ClientTrackingStatusOff)(c)
 }
 
-type ClientTrackingBcast Completed
+type ClientTrackingBcast Incomplete
 
 func (c ClientTrackingBcast) Optin() ClientTrackingOptin {
 	c.cs.s = append(c.cs.s, "OPTIN")
@@ -850,17 +855,17 @@ func (c ClientTrackingBcast) Noloop() ClientTrackingNoloop {
 
 func (c ClientTrackingBcast) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientTrackingNoloop Completed
+type ClientTrackingNoloop Incomplete
 
 func (c ClientTrackingNoloop) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientTrackingOptin Completed
+type ClientTrackingOptin Incomplete
 
 func (c ClientTrackingOptin) Optout() ClientTrackingOptout {
 	c.cs.s = append(c.cs.s, "OPTOUT")
@@ -874,10 +879,10 @@ func (c ClientTrackingOptin) Noloop() ClientTrackingNoloop {
 
 func (c ClientTrackingOptin) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientTrackingOptout Completed
+type ClientTrackingOptout Incomplete
 
 func (c ClientTrackingOptout) Noloop() ClientTrackingNoloop {
 	c.cs.s = append(c.cs.s, "NOLOOP")
@@ -886,10 +891,10 @@ func (c ClientTrackingOptout) Noloop() ClientTrackingNoloop {
 
 func (c ClientTrackingOptout) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientTrackingPrefix Completed
+type ClientTrackingPrefix Incomplete
 
 func (c ClientTrackingPrefix) Prefix(prefix string) ClientTrackingPrefix {
 	c.cs.s = append(c.cs.s, "PREFIX", prefix)
@@ -918,10 +923,10 @@ func (c ClientTrackingPrefix) Noloop() ClientTrackingNoloop {
 
 func (c ClientTrackingPrefix) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientTrackingRedirect Completed
+type ClientTrackingRedirect Incomplete
 
 func (c ClientTrackingRedirect) Prefix() ClientTrackingPrefix {
 	return (ClientTrackingPrefix)(c)
@@ -949,10 +954,10 @@ func (c ClientTrackingRedirect) Noloop() ClientTrackingNoloop {
 
 func (c ClientTrackingRedirect) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientTrackingStatusOff Completed
+type ClientTrackingStatusOff Incomplete
 
 func (c ClientTrackingStatusOff) Redirect(clientId int64) ClientTrackingRedirect {
 	c.cs.s = append(c.cs.s, "REDIRECT", strconv.FormatInt(clientId, 10))
@@ -985,10 +990,10 @@ func (c ClientTrackingStatusOff) Noloop() ClientTrackingNoloop {
 
 func (c ClientTrackingStatusOff) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientTrackingStatusOn Completed
+type ClientTrackingStatusOn Incomplete
 
 func (c ClientTrackingStatusOn) Redirect(clientId int64) ClientTrackingRedirect {
 	c.cs.s = append(c.cs.s, "REDIRECT", strconv.FormatInt(clientId, 10))
@@ -1021,10 +1026,10 @@ func (c ClientTrackingStatusOn) Noloop() ClientTrackingNoloop {
 
 func (c ClientTrackingStatusOn) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientTrackinginfo Completed
+type ClientTrackinginfo Incomplete
 
 func (b Builder) ClientTrackinginfo() (c ClientTrackinginfo) {
 	c = ClientTrackinginfo{cs: get(), ks: b.ks}
@@ -1034,10 +1039,10 @@ func (b Builder) ClientTrackinginfo() (c ClientTrackinginfo) {
 
 func (c ClientTrackinginfo) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientUnblock Completed
+type ClientUnblock Incomplete
 
 func (b Builder) ClientUnblock() (c ClientUnblock) {
 	c = ClientUnblock{cs: get(), ks: b.ks}
@@ -1050,7 +1055,7 @@ func (c ClientUnblock) ClientId(clientId int64) ClientUnblockClientId {
 	return (ClientUnblockClientId)(c)
 }
 
-type ClientUnblockClientId Completed
+type ClientUnblockClientId Incomplete
 
 func (c ClientUnblockClientId) Timeout() ClientUnblockUnblockTypeTimeout {
 	c.cs.s = append(c.cs.s, "TIMEOUT")
@@ -1064,24 +1069,24 @@ func (c ClientUnblockClientId) Error() ClientUnblockUnblockTypeError {
 
 func (c ClientUnblockClientId) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientUnblockUnblockTypeError Completed
+type ClientUnblockUnblockTypeError Incomplete
 
 func (c ClientUnblockUnblockTypeError) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientUnblockUnblockTypeTimeout Completed
+type ClientUnblockUnblockTypeTimeout Incomplete
 
 func (c ClientUnblockUnblockTypeTimeout) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ClientUnpause Completed
+type ClientUnpause Incomplete
 
 func (b Builder) ClientUnpause() (c ClientUnpause) {
 	c = ClientUnpause{cs: get(), ks: b.ks}
@@ -1091,10 +1096,10 @@ func (b Builder) ClientUnpause() (c ClientUnpause) {
 
 func (c ClientUnpause) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type Echo Completed
+type Echo Incomplete
 
 func (b Builder) Echo() (c Echo) {
 	c = Echo{cs: get(), ks: b.ks}
@@ -1107,14 +1112,14 @@ func (c Echo) Message(message string) EchoMessage {
 	return (EchoMessage)(c)
 }
 
-type EchoMessage Completed
+type EchoMessage Incomplete
 
 func (c EchoMessage) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type Hello Completed
+type Hello Incomplete
 
 func (b Builder) Hello() (c Hello) {
 	c = Hello{cs: get(), ks: b.ks}
@@ -1129,10 +1134,10 @@ func (c Hello) Protover(protover int64) HelloArgumentsProtover {
 
 func (c Hello) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type HelloArgumentsAuth Completed
+type HelloArgumentsAuth Incomplete
 
 func (c HelloArgumentsAuth) Setname(clientname string) HelloArgumentsSetname {
 	c.cs.s = append(c.cs.s, "SETNAME", clientname)
@@ -1141,10 +1146,10 @@ func (c HelloArgumentsAuth) Setname(clientname string) HelloArgumentsSetname {
 
 func (c HelloArgumentsAuth) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type HelloArgumentsProtover Completed
+type HelloArgumentsProtover Incomplete
 
 func (c HelloArgumentsProtover) Auth(username string, password string) HelloArgumentsAuth {
 	c.cs.s = append(c.cs.s, "AUTH", username, password)
@@ -1158,17 +1163,17 @@ func (c HelloArgumentsProtover) Setname(clientname string) HelloArgumentsSetname
 
 func (c HelloArgumentsProtover) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type HelloArgumentsSetname Completed
+type HelloArgumentsSetname Incomplete
 
 func (c HelloArgumentsSetname) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type Ping Completed
+type Ping Incomplete
 
 func (b Builder) Ping() (c Ping) {
 	c = Ping{cs: get(), ks: b.ks}
@@ -1183,17 +1188,17 @@ func (c Ping) Message(message string) PingMessage {
 
 func (c Ping) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type PingMessage Completed
+type PingMessage Incomplete
 
 func (c PingMessage) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type Quit Completed
+type Quit Incomplete
 
 func (b Builder) Quit() (c Quit) {
 	c = Quit{cs: get(), ks: b.ks}
@@ -1203,10 +1208,10 @@ func (b Builder) Quit() (c Quit) {
 
 func (c Quit) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type Reset Completed
+type Reset Incomplete
 
 func (b Builder) Reset() (c Reset) {
 	c = Reset{cs: get(), ks: b.ks}
@@ -1216,10 +1221,10 @@ func (b Builder) Reset() (c Reset) {
 
 func (c Reset) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type Select Completed
+type Select Incomplete
 
 func (b Builder) Select() (c Select) {
 	c = Select{cs: get(), ks: b.ks}
@@ -1232,9 +1237,9 @@ func (c Select) Index(index int64) SelectIndex {
 	return (SelectIndex)(c)
 }
 
-type SelectIndex Completed
+type SelectIndex Incomplete
 
 func (c SelectIndex) Build() Completed {
 	c.cs.Build()
-	return Completed(c)
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }

@@ -30,12 +30,16 @@ func TestJSONPanic(t *testing.T) {
 	JSON(a)
 }
 
+
 func TestVectorString32(t *testing.T) {
 	for _, test := range [][]float32{
 		{},
 		{0, 0, 0, 0},
 		{9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9},
 		{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+		{.9, .9, .9, .9, .9, .9, .9, .9, .9, .9, .9},
+		{-.1, -.1, -.1, -.1, -.1, -.1, -.1, -.1, -.1, -.1},
+		{.1, -.1, .1, -.1, .1, -.1, .1, -.1, .1, -.1},
 	} {
 		if !reflect.DeepEqual(test, ToVector32(VectorString32(test))) {
 			t.Fatalf("fail to convert %v", test)
@@ -49,6 +53,9 @@ func TestVectorString64(t *testing.T) {
 		{0, 0, 0, 0},
 		{9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9},
 		{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+		{.9, .9, .9, .9, .9, .9, .9, .9, .9, .9, .9},
+		{-.1, -.1, -.1, -.1, -.1, -.1, -.1, -.1, -.1, -.1},
+		{.1, -.1, .1, -.1, .1, -.1, .1, -.1, .1, -.1},
 	} {
 		if !reflect.DeepEqual(test, ToVector64(VectorString64(test))) {
 			t.Fatalf("fail to convert %v", test)

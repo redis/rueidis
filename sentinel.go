@@ -51,12 +51,12 @@ type sentinelClient struct {
 	sc        call
 	mu        sync.Mutex
 	stop      uint32
-	cmd       cmds.Builder
+	cmd       Builder
 	retry     bool
 	replica   bool
 }
 
-func (c *sentinelClient) B() cmds.Builder {
+func (c *sentinelClient) B() Builder {
 	return c.cmd
 }
 
@@ -72,25 +72,26 @@ retry:
 	return resp
 }
 
-func (c *sentinelClient) DoMulti(ctx context.Context, multi ...Completed) (resps []RedisResult) {
+func (c *sentinelClient) DoMulti(ctx context.Context, multi ...Completed) []RedisResult {
 	if len(multi) == 0 {
 		return nil
 	}
 retry:
-	resps = c.mConn.Load().(conn).DoMulti(ctx, multi...)
+	resps := c.mConn.Load().(conn).DoMulti(ctx, multi...)
 	if c.retry && allReadOnly(multi) {
-		for _, resp := range resps {
+		for _, resp := range resps.s {
 			if c.isRetryable(resp.NonRedisError(), ctx) {
+				resultsp.Put(resps)
 				goto retry
 			}
 		}
 	}
 	for i, cmd := range multi {
-		if resps[i].NonRedisError() == nil {
+		if resps.s[i].NonRedisError() == nil {
 			cmds.PutCompleted(cmd)
 		}
 	}
-	return resps
+	return resps.s
 }
 
 func (c *sentinelClient) DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) (resp RedisResult) {
@@ -105,25 +106,26 @@ retry:
 	return resp
 }
 
-func (c *sentinelClient) DoMultiCache(ctx context.Context, multi ...CacheableTTL) (resps []RedisResult) {
+func (c *sentinelClient) DoMultiCache(ctx context.Context, multi ...CacheableTTL) []RedisResult {
 	if len(multi) == 0 {
 		return nil
 	}
 retry:
-	resps = c.mConn.Load().(conn).DoMultiCache(ctx, multi...)
+	resps := c.mConn.Load().(conn).DoMultiCache(ctx, multi...)
 	if c.retry {
-		for _, resp := range resps {
+		for _, resp := range resps.s {
 			if c.isRetryable(resp.NonRedisError(), ctx) {
+				resultsp.Put(resps)
 				goto retry
 			}
 		}
 	}
 	for i, cmd := range multi {
-		if err := resps[i].NonRedisError(); err == nil || err == ErrDoCacheAborted {
+		if err := resps.s[i].NonRedisError(); err == nil || err == ErrDoCacheAborted {
 			cmds.PutCacheable(cmd.Cmd)
 		}
 	}
-	return resps
+	return resps.s
 }
 
 func (c *sentinelClient) Receive(ctx context.Context, subscribe Completed, fn func(msg PubSubMessage)) (err error) {
@@ -250,7 +252,7 @@ retry:
 }
 
 func (c *sentinelClient) refresh() (err error) {
-	return c.sc.Do(c._refresh)
+	return c.sc.Do(context.Background(), c._refresh)
 }
 
 func (c *sentinelClient) _refresh() (err error) {
@@ -364,7 +366,8 @@ func (c *sentinelClient) listWatch(cc conn) (target string, sentinels []string, 
 	}
 
 	resp := cc.DoMulti(ctx, commands...)
-	others, err := resp[0].ToArray()
+	defer resultsp.Put(resp)
+	others, err := resp.s[0].ToArray()
 	if err != nil {
 		return "", nil, err
 	}
@@ -376,7 +379,7 @@ func (c *sentinelClient) listWatch(cc conn) (target string, sentinels []string, 
 
 	// we return random slave address instead of master
 	if c.replica {
-		addr, err := pickReplica(resp)
+		addr, err := pickReplica(resp.s)
 		if err != nil {
 			return "", nil, err
 		}
@@ -385,7 +388,7 @@ func (c *sentinelClient) listWatch(cc conn) (target string, sentinels []string, 
 	}
 
 	// otherwise send master as address
-	m, err := resp[1].AsStrSlice()
+	m, err := resp.s[1].AsStrSlice()
 	if err != nil {
 		return "", nil, err
 	}
@@ -426,7 +429,7 @@ func newSentinelOpt(opt *ClientOption) *ClientOption {
 	o.ClientName = o.Sentinel.ClientName
 	o.Dialer = o.Sentinel.Dialer
 	o.TLSConfig = o.Sentinel.TLSConfig
-	o.SelectDB = 0 // https://github.com/Datadog/rueidis/issues/138
+	o.SelectDB = 0 // https://github.com/redis/rueidis/issues/138
 	return &o
 }
 

@@ -16,8 +16,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/golang/mock/gomock"
-	"github.com/Datadog/rueidis/mock"
+	"go.uber.org/mock/gomock"
+	"github.com/redis/rueidis/mock"
 )
 
 func TestWithRueidis(t *testing.T) {
@@ -52,8 +52,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/golang/mock/gomock"
-	"github.com/Datadog/rueidis/mock"
+	"go.uber.org/mock/gomock"
+	"github.com/redis/rueidis/mock"
 )
 
 func TestWithRueidisReceive(t *testing.T) {

@@ -7,7 +7,7 @@ import (
 
 	"github.com/Datadog/rueidis"
 	"github.com/Datadog/rueidis/internal/cmds"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 )
 
 func TestMatch_Completed(t *testing.T) {

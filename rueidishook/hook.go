@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/Datadog/rueidis"
-	"github.com/Datadog/rueidis/internal/cmds"
 )
 
 var _ rueidis.Client = (*hookclient)(nil)
@@ -29,7 +28,7 @@ type hookclient struct {
 	hook   Hook
 }
 
-func (c *hookclient) B() cmds.Builder {
+func (c *hookclient) B() rueidis.Builder {
 	return c.client.B()
 }
 
@@ -83,7 +82,7 @@ type dedicated struct {
 	hook   Hook
 }
 
-func (d *dedicated) B() cmds.Builder {
+func (d *dedicated) B() rueidis.Builder {
 	return d.client.B()
 }
 

@@ -33,7 +33,7 @@ func TestSentinelClientInit(t *testing.T) {
 		v := errors.New("refresh err")
 		if _, err := newSentinelClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
 			return &mockConn{
-				DoMultiFn: func(cmd ...Completed) []RedisResult { return []RedisResult{newErrResult(v)} },
+				DoMultiFn: func(cmd ...Completed) *redisresults { return &redisresults{s: []RedisResult{newErrResult(v)}} },
 			}
 		}); err != v {
 			t.Fatalf("unexpected err %v", err)
@@ -44,17 +44,17 @@ func TestSentinelClientInit(t *testing.T) {
 		v := errors.New("refresh err")
 		s0 := &mockConn{
 			DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
-			DoMultiFn: func(multi ...Completed) []RedisResult {
-				return []RedisResult{
+			DoMultiFn: func(multi ...Completed) *redisresults {
+				return &redisresults{s: []RedisResult{
 					newErrResult(v),
 					newErrResult(v),
-				}
+				}}
 			},
 		}
 		s1 := &mockConn{
 			DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
-			DoMultiFn: func(multi ...Completed) []RedisResult {
-				return []RedisResult{
+			DoMultiFn: func(multi ...Completed) *redisresults {
+				return &redisresults{s: []RedisResult{
 					{val: RedisMessage{typ: '*', values: []RedisMessage{
 						{typ: '%', values: []RedisMessage{
 							{typ: '+', string: "ip"}, {typ: '+', string: ""},
@@ -62,13 +62,13 @@ func TestSentinelClientInit(t *testing.T) {
 						}},
 					}}},
 					newErrResult(v),
-				}
+				}}
 			},
 		}
 		s2 := &mockConn{
 			DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
-			DoMultiFn: func(multi ...Completed) []RedisResult {
-				return []RedisResult{
+			DoMultiFn: func(multi ...Completed) *redisresults {
+				return &redisresults{s: []RedisResult{
 					{val: RedisMessage{typ: '*', values: []RedisMessage{
 						{typ: '%', values: []RedisMessage{
 							{typ: '+', string: "ip"}, {typ: '+', string: ""},
@@ -78,13 +78,13 @@ func TestSentinelClientInit(t *testing.T) {
 					{val: RedisMessage{typ: '*', values: []RedisMessage{
 						{typ: '+', string: ""}, {typ: '+', string: "5"},
 					}}},
-				}
+				}}
 			},
 		}
 		s3 := &mockConn{
 			DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
-			DoMultiFn: func(multi ...Completed) []RedisResult {
-				return []RedisResult{
+			DoMultiFn: func(multi ...Completed) *redisresults {
+				return &redisresults{s: []RedisResult{
 					{val: RedisMessage{typ: '*', values: []RedisMessage{
 						{typ: '%', values: []RedisMessage{
 							{typ: '+', string: "ip"}, {typ: '+', string: ""},
@@ -94,13 +94,13 @@ func TestSentinelClientInit(t *testing.T) {
 					{val: RedisMessage{typ: '*', values: []RedisMessage{
 						{typ: '+', string: ""}, {typ: '+', string: "6"},
 					}}},
-				}
+				}}
 			},
 		}
 		s4 := &mockConn{
 			DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
-			DoMultiFn: func(multi ...Completed) []RedisResult {
-				return []RedisResult{
+			DoMultiFn: func(multi ...Completed) *redisresults {
+				return &redisresults{s: []RedisResult{
 					{val: RedisMessage{typ: '*', values: []RedisMessage{
 						{typ: '%', values: []RedisMessage{
 							{typ: '+', string: "ip"}, {typ: '+', string: ""},
@@ -110,7 +110,7 @@ func TestSentinelClientInit(t *testing.T) {
 					{val: RedisMessage{typ: '*', values: []RedisMessage{
 						{typ: '+', string: ""}, {typ: '+', string: "7"},
 					}}},
-				}
+				}}
 			},
 		}
 		client, err := newSentinelClient(&ClientOption{InitAddress: []string{":0", ":1", ":2"}}, func(dst string, opt *ClientOption) conn {
@@ -166,17 +166,17 @@ func TestSentinelClientInit(t *testing.T) {
 		v := errors.New("refresh err")
 		slaveWithMultiError := &mockConn{
 			DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
-			DoMultiFn: func(multi ...Completed) []RedisResult {
-				return []RedisResult{
+			DoMultiFn: func(multi ...Completed) *redisresults {
+				return &redisresults{s: []RedisResult{
 					newErrResult(v),
 					newErrResult(v),
-				}
+				}}
 			},
 		}
 		slaveWithReplicaResponseErr := &mockConn{
 			DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
-			DoMultiFn: func(multi ...Completed) []RedisResult {
-				return []RedisResult{
+			DoMultiFn: func(multi ...Completed) *redisresults {
+				return &redisresults{s: []RedisResult{
 					{val: RedisMessage{typ: '*', values: []RedisMessage{
 						{typ: '%', values: []RedisMessage{
 							{typ: '+', string: "ip"}, {typ: '+', string: ""},
@@ -184,13 +184,13 @@ func TestSentinelClientInit(t *testing.T) {
 						}},
 					}}},
 					newErrResult(v),
-				}
+				}}
 			},
 		}
 		sentinelWithFaultiSlave := &mockConn{
 			DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
-			DoMultiFn: func(multi ...Completed) []RedisResult {
-				return []RedisResult{
+			DoMultiFn: func(multi ...Completed) *redisresults {
+				return &redisresults{s: []RedisResult{
 					{val: RedisMessage{typ: '*', values: []RedisMessage{
 						{typ: '%', values: []RedisMessage{
 							{typ: '+', string: "ip"}, {typ: '+', string: ""},
@@ -203,7 +203,7 @@ func TestSentinelClientInit(t *testing.T) {
 							{typ: '+', string: "port"}, {typ: '+', string: "6"},
 						}},
 					}}},
-				}
+				}}
 			},
 		}
 		// this connection will fail because OK slave is in 's-down' status
@@ -211,8 +211,8 @@ func TestSentinelClientInit(t *testing.T) {
 		// we update the list here.
 		sentinelWithHealthySlaveInSDown := &mockConn{
 			DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
-			DoMultiFn: func(multi ...Completed) []RedisResult {
-				return []RedisResult{
+			DoMultiFn: func(multi ...Completed) *redisresults {
+				return &redisresults{s: []RedisResult{
 					{val: RedisMessage{typ: '*', values: []RedisMessage{
 						{typ: '%', values: []RedisMessage{
 							{typ: '+', string: "ip"}, {typ: '+', string: ""},
@@ -238,13 +238,13 @@ func TestSentinelClientInit(t *testing.T) {
 							{typ: '+', string: "s-down-time"}, {typ: '+', string: "1"},
 						}},
 					}}},
-				}
+				}}
 			},
 		}
 		sentinelWithoutEligibleSlave := &mockConn{
 			DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
-			DoMultiFn: func(multi ...Completed) []RedisResult {
-				return []RedisResult{
+			DoMultiFn: func(multi ...Completed) *redisresults {
+				return &redisresults{s: []RedisResult{
 					{val: RedisMessage{typ: '*', values: []RedisMessage{
 						{typ: '%', values: []RedisMessage{
 							{typ: '+', string: "ip"}, {typ: '+', string: ""},
@@ -258,14 +258,14 @@ func TestSentinelClientInit(t *testing.T) {
 							{typ: '+', string: "s-down-time"}, {typ: '+', string: "1"},
 						}},
 					}}},
-				}
+				}}
 			},
 		}
 
 		sentinelWithInvalidMapResponse := &mockConn{
 			DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
-			DoMultiFn: func(multi ...Completed) []RedisResult {
-				return []RedisResult{
+			DoMultiFn: func(multi ...Completed) *redisresults {
+				return &redisresults{s: []RedisResult{
 					{val: RedisMessage{typ: '*', values: []RedisMessage{
 						{typ: '%', values: []RedisMessage{
 							{typ: '+', string: "ip"}, {typ: '+', string: ""},
@@ -275,13 +275,13 @@ func TestSentinelClientInit(t *testing.T) {
 					{val: RedisMessage{typ: '*', values: []RedisMessage{
 						RedisMessage(*Nil),
 					}}},
-				}
+				}}
 			},
 		}
 		sentinelWithMasterRoleAsSlave := &mockConn{
 			DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
-			DoMultiFn: func(multi ...Completed) []RedisResult {
-				return []RedisResult{
+			DoMultiFn: func(multi ...Completed) *redisresults {
+				return &redisresults{s: []RedisResult{
 					{val: RedisMessage{typ: '*', values: []RedisMessage{
 						{typ: '%', values: []RedisMessage{
 							{typ: '+', string: "ip"}, {typ: '+', string: ""},
@@ -294,13 +294,13 @@ func TestSentinelClientInit(t *testing.T) {
 							{typ: '+', string: "port"}, {typ: '+', string: "7"},
 						}},
 					}}},
-				}
+				}}
 			},
 		}
 		sentinelWithOKResponse := &mockConn{
 			DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
-			DoMultiFn: func(multi ...Completed) []RedisResult {
-				return []RedisResult{
+			DoMultiFn: func(multi ...Completed) *redisresults {
+				return &redisresults{s: []RedisResult{
 					{val: RedisMessage{typ: '*', values: []RedisMessage{
 						{typ: '%', values: []RedisMessage{
 							{typ: '+', string: "ip"}, {typ: '+', string: ""},
@@ -313,7 +313,7 @@ func TestSentinelClientInit(t *testing.T) {
 							{typ: '+', string: "port"}, {typ: '+', string: "8"},
 						}},
 					}}},
-				}
+				}}
 			},
 		}
 
@@ -385,8 +385,8 @@ func TestSentinelClientInit(t *testing.T) {
 		v := errors.New("refresh err")
 		s0 := &mockConn{
 			DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
-			DoMultiFn: func(multi ...Completed) []RedisResult {
-				return []RedisResult{
+			DoMultiFn: func(multi ...Completed) *redisresults {
+				return &redisresults{s: []RedisResult{
 					{val: RedisMessage{typ: '*', values: []RedisMessage{
 						{typ: '%', values: []RedisMessage{
 							{typ: '+', string: "ip"}, {typ: '+', string: ""},
@@ -396,13 +396,13 @@ func TestSentinelClientInit(t *testing.T) {
 					{val: RedisMessage{typ: '*', values: []RedisMessage{
 						{typ: '+', string: ""}, {typ: '+', string: "2"},
 					}}},
-				}
+				}}
 			},
 		}
 		s1 := &mockConn{
 			DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
-			DoMultiFn: func(multi ...Completed) []RedisResult {
-				return []RedisResult{
+			DoMultiFn: func(multi ...Completed) *redisresults {
+				return &redisresults{s: []RedisResult{
 					{val: RedisMessage{typ: '*', values: []RedisMessage{
 						{typ: '%', values: []RedisMessage{
 							{typ: '+', string: "ip"}, {typ: '+', string: ""},
@@ -412,7 +412,7 @@ func TestSentinelClientInit(t *testing.T) {
 					{val: RedisMessage{typ: '*', values: []RedisMessage{
 						{typ: '+', string: ""}, {typ: '+', string: "3"},
 					}}},
-				}
+				}}
 			},
 		}
 		client, err := newSentinelClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
@@ -460,8 +460,8 @@ func TestSentinelClientInit(t *testing.T) {
 				}
 				return RedisResult{}
 			},
-			DoMultiFn: func(multi ...Completed) []RedisResult {
-				return []RedisResult{
+			DoMultiFn: func(multi ...Completed) *redisresults {
+				return &redisresults{s: []RedisResult{
 					{val: RedisMessage{typ: '*', values: []RedisMessage{
 						{typ: '%', values: []RedisMessage{
 							{typ: '+', string: "ip"}, {typ: '+', string: ""},
@@ -471,7 +471,7 @@ func TestSentinelClientInit(t *testing.T) {
 					{val: RedisMessage{typ: '*', values: []RedisMessage{
 						{typ: '+', string: ""}, {typ: '+', string: "3"},
 					}}},
-				}
+				}}
 			},
 			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
 				if err, ok := <-trigger; ok {
@@ -485,8 +485,8 @@ func TestSentinelClientInit(t *testing.T) {
 		}
 		s1 := &mockConn{
 			DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
-			DoMultiFn: func(multi ...Completed) []RedisResult {
-				return []RedisResult{
+			DoMultiFn: func(multi ...Completed) *redisresults {
+				return &redisresults{s: []RedisResult{
 					{val: RedisMessage{typ: '*', values: []RedisMessage{
 						{typ: '%', values: []RedisMessage{
 							{typ: '+', string: "ip"}, {typ: '+', string: ""},
@@ -496,13 +496,13 @@ func TestSentinelClientInit(t *testing.T) {
 					{val: RedisMessage{typ: '*', values: []RedisMessage{
 						{typ: '+', string: ""}, {typ: '+', string: "3"},
 					}}},
-				}
+				}}
 			},
 		}
 		s2 := &mockConn{
 			DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
-			DoMultiFn: func(multi ...Completed) []RedisResult {
-				return []RedisResult{
+			DoMultiFn: func(multi ...Completed) *redisresults {
+				return &redisresults{s: []RedisResult{
 					{val: RedisMessage{typ: '*', values: []RedisMessage{
 						{typ: '%', values: []RedisMessage{
 							{typ: '+', string: "ip"}, {typ: '+', string: ""},
@@ -512,7 +512,7 @@ func TestSentinelClientInit(t *testing.T) {
 					{val: RedisMessage{typ: '*', values: []RedisMessage{
 						{typ: '+', string: ""}, {typ: '+', string: "4"},
 					}}},
-				}
+				}}
 			},
 		}
 		r3 := &mockConn{
@@ -582,17 +582,17 @@ func TestSentinelRefreshAfterClose(t *testing.T) {
 	first := true
 	s0 := &mockConn{
 		DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
-		DoMultiFn: func(multi ...Completed) []RedisResult {
+		DoMultiFn: func(multi ...Completed) *redisresults {
 			if first {
 				first = true
-				return []RedisResult{
+				return &redisresults{s: []RedisResult{
 					{val: RedisMessage{typ: '*', values: []RedisMessage{}}},
 					{val: RedisMessage{typ: '*', values: []RedisMessage{
 						{typ: '+', string: ""}, {typ: '+', string: "1"},
 					}}},
-				}
+				}}
 			}
-			return []RedisResult{newErrResult(ErrClosing), newErrResult(ErrClosing)}
+			return &redisresults{s: []RedisResult{newErrResult(ErrClosing), newErrResult(ErrClosing)}}
 		},
 	}
 	m := &mockConn{
@@ -623,13 +623,13 @@ func TestSentinelSwitchAfterClose(t *testing.T) {
 	first := true
 	s0 := &mockConn{
 		DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
-		DoMultiFn: func(multi ...Completed) []RedisResult {
-			return []RedisResult{
+		DoMultiFn: func(multi ...Completed) *redisresults {
+			return &redisresults{s: []RedisResult{
 				{val: RedisMessage{typ: '*', values: []RedisMessage{}}},
 				{val: RedisMessage{typ: '*', values: []RedisMessage{
 					{typ: '+', string: ""}, {typ: '+', string: "1"},
 				}}},
-			}
+			}}
 		},
 	}
 	m := &mockConn{
@@ -664,13 +664,13 @@ func TestSentinelClientDelegate(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	s0 := &mockConn{
 		DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
-		DoMultiFn: func(multi ...Completed) []RedisResult {
-			return []RedisResult{
+		DoMultiFn: func(multi ...Completed) *redisresults {
+			return &redisresults{s: []RedisResult{
 				{val: RedisMessage{typ: '*', values: []RedisMessage{}}},
 				{val: RedisMessage{typ: '*', values: []RedisMessage{
 					{typ: '+', string: ""}, {typ: '+', string: "1"},
 				}}},
-			}
+			}}
 		},
 	}
 	m := &mockConn{
@@ -714,11 +714,11 @@ func TestSentinelClientDelegate(t *testing.T) {
 
 	t.Run("Delegate DoMulti", func(t *testing.T) {
 		c := client.B().Get().Key("Do").Build()
-		m.DoMultiFn = func(cmd ...Completed) []RedisResult {
+		m.DoMultiFn = func(cmd ...Completed) *redisresults {
 			if !reflect.DeepEqual(cmd[0].Commands(), c.Commands()) {
 				t.Fatalf("unexpected command %v", cmd)
 			}
-			return []RedisResult{newResult(RedisMessage{typ: '+', string: "Do"}, nil)}
+			return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '+', string: "Do"}, nil)}}
 		}
 		if len(client.DoMulti(context.Background())) != 0 {
 			t.Fatalf("unexpected response length")
@@ -743,11 +743,11 @@ func TestSentinelClientDelegate(t *testing.T) {
 
 	t.Run("Delegate DoMultiCache", func(t *testing.T) {
 		c := client.B().Get().Key("DoCache").Cache()
-		m.DoMultiCacheFn = func(multi ...CacheableTTL) []RedisResult {
+		m.DoMultiCacheFn = func(multi ...CacheableTTL) *redisresults {
 			if !reflect.DeepEqual(multi[0].Cmd.Commands(), c.Commands()) || multi[0].TTL != 100 {
 				t.Fatalf("unexpected command %v, %v", multi[0].Cmd, multi[0].TTL)
 			}
-			return []RedisResult{newResult(RedisMessage{typ: '+', string: "DoCache"}, nil)}
+			return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '+', string: "DoCache"}, nil)}}
 		}
 		if len(client.DoMultiCache(context.Background())) != 0 {
 			t.Fatalf("unexpected response length")
@@ -805,8 +805,8 @@ func TestSentinelClientDelegate(t *testing.T) {
 			DoFn: func(cmd Completed) RedisResult {
 				return newResult(RedisMessage{typ: '+', string: "Delegate"}, nil)
 			},
-			DoMultiFn: func(cmd ...Completed) []RedisResult {
-				return []RedisResult{newResult(RedisMessage{typ: '+', string: "Delegate"}, nil)}
+			DoMultiFn: func(cmd ...Completed) *redisresults {
+				return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '+', string: "Delegate"}, nil)}}
 			},
 			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
 				return ErrClosing
@@ -854,8 +854,8 @@ func TestSentinelClientDelegate(t *testing.T) {
 			DoFn: func(cmd Completed) RedisResult {
 				return newResult(RedisMessage{typ: '+', string: "Delegate"}, nil)
 			},
-			DoMultiFn: func(cmd ...Completed) []RedisResult {
-				return []RedisResult{newResult(RedisMessage{typ: '+', string: "Delegate"}, nil)}
+			DoMultiFn: func(cmd ...Completed) *redisresults {
+				return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '+', string: "Delegate"}, nil)}}
 			},
 			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
 				return ErrClosing
@@ -904,21 +904,21 @@ func TestSentinelClientDelegateRetry(t *testing.T) {
 		trigger := make(chan error)
 		s0 := &mockConn{
 			DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
-			DoMultiFn: func(multi ...Completed) []RedisResult {
+			DoMultiFn: func(multi ...Completed) *redisresults {
 				if atomic.LoadUint32(&retry) == 0 {
-					return []RedisResult{
+					return &redisresults{s: []RedisResult{
 						{val: RedisMessage{typ: '*', values: []RedisMessage{}}},
 						{val: RedisMessage{typ: '*', values: []RedisMessage{
 							{typ: '+', string: ""}, {typ: '+', string: "1"},
 						}}},
-					}
+					}}
 				}
-				return []RedisResult{
+				return &redisresults{s: []RedisResult{
 					{val: RedisMessage{typ: '*', values: []RedisMessage{}}},
 					{val: RedisMessage{typ: '*', values: []RedisMessage{
 						{typ: '+', string: ""}, {typ: '+', string: "2"},
 					}}},
-				}
+				}}
 			},
 			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
 				if err, ok := <-trigger; ok {
@@ -938,9 +938,9 @@ func TestSentinelClientDelegateRetry(t *testing.T) {
 				atomic.AddUint32(&retry, 1)
 				return newErrResult(ErrClosing)
 			},
-			DoMultiFn: func(multi ...Completed) []RedisResult {
+			DoMultiFn: func(multi ...Completed) *redisresults {
 				atomic.AddUint32(&retry, 1)
-				return []RedisResult{newErrResult(ErrClosing)}
+				return &redisresults{s: []RedisResult{newErrResult(ErrClosing)}}
 			},
 			DoCacheFn: func(cmd Cacheable, ttl time.Duration) RedisResult {
 				atomic.AddUint32(&retry, 1)
@@ -958,8 +958,8 @@ func TestSentinelClientDelegateRetry(t *testing.T) {
 				}
 				return RedisResult{val: RedisMessage{typ: '+', string: "OK"}}
 			},
-			DoMultiFn: func(multi ...Completed) []RedisResult {
-				return []RedisResult{{val: RedisMessage{typ: '+', string: "OK"}}}
+			DoMultiFn: func(multi ...Completed) *redisresults {
+				return &redisresults{s: []RedisResult{{val: RedisMessage{typ: '+', string: "OK"}}}}
 			},
 			DoCacheFn: func(cmd Cacheable, ttl time.Duration) RedisResult {
 				return RedisResult{val: RedisMessage{typ: '+', string: "OK"}}
@@ -1064,22 +1064,22 @@ func TestSentinelClientPubSub(t *testing.T) {
 
 	s0 := &mockConn{
 		DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
-		DoMultiFn: func(multi ...Completed) []RedisResult {
+		DoMultiFn: func(multi ...Completed) *redisresults {
 			count := atomic.AddInt32(&s0count, 1)
 			if (count-1)%2 == 0 {
-				return []RedisResult{
+				return &redisresults{s: []RedisResult{
 					{val: RedisMessage{typ: '*', values: []RedisMessage{}}},
 					{val: RedisMessage{typ: '*', values: []RedisMessage{
 						{typ: '+', string: ""}, {typ: '+', string: "1"},
 					}}},
-				}
+				}}
 			}
-			return []RedisResult{
+			return &redisresults{s: []RedisResult{
 				{val: RedisMessage{typ: '*', values: []RedisMessage{}}},
 				{val: RedisMessage{typ: '*', values: []RedisMessage{
 					{typ: '+', string: ""}, {typ: '+', string: "2"},
 				}}},
-			}
+			}}
 		},
 		ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
 			for msg := range messages {
@@ -1107,7 +1107,7 @@ func TestSentinelClientPubSub(t *testing.T) {
 		CloseFn: func() { atomic.AddInt32(&m2close, 1) },
 	}
 	s3 := &mockConn{
-		DoMultiFn: func(cmd ...Completed) []RedisResult { return []RedisResult{newErrResult(errClosing)} },
+		DoMultiFn: func(cmd ...Completed) *redisresults { return &redisresults{s: []RedisResult{newErrResult(errClosing)}} },
 	}
 	m4 := &mockConn{
 		DoFn: func(cmd Completed) RedisResult {
@@ -1210,11 +1210,11 @@ func TestSentinelReplicaOnlyClientPubSub(t *testing.T) {
 
 	s0 := &mockConn{
 		DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
-		DoMultiFn: func(multi ...Completed) []RedisResult {
+		DoMultiFn: func(multi ...Completed) *redisresults {
 			count := atomic.AddInt32(&s0count, 1)
 			remainder := (count - 1) % 3
 			if remainder == 0 {
-				return []RedisResult{
+				return &redisresults{s: []RedisResult{
 					{val: RedisMessage{typ: '*', values: []RedisMessage{}}},
 					{val: RedisMessage{typ: '*', values: []RedisMessage{
 						{typ: '%', values: []RedisMessage{
@@ -1222,9 +1222,9 @@ func TestSentinelReplicaOnlyClientPubSub(t *testing.T) {
 							{typ: '+', string: "port"}, {typ: '+', string: "1"},
 						}},
 					}}},
-				}
+				}}
 			} else if remainder == 1 {
-				return []RedisResult{
+				return &redisresults{s: []RedisResult{
 					{val: RedisMessage{typ: '*', values: []RedisMessage{}}},
 					{val: RedisMessage{typ: '*', values: []RedisMessage{
 						{typ: '%', values: []RedisMessage{
@@ -1232,9 +1232,9 @@ func TestSentinelReplicaOnlyClientPubSub(t *testing.T) {
 							{typ: '+', string: "port"}, {typ: '+', string: "2"},
 						}},
 					}}},
-				}
+				}}
 			} else {
-				return []RedisResult{
+				return &redisresults{s: []RedisResult{
 					{val: RedisMessage{typ: '*', values: []RedisMessage{}}},
 					{val: RedisMessage{typ: '*', values: []RedisMessage{
 						{typ: '%', values: []RedisMessage{
@@ -1242,7 +1242,7 @@ func TestSentinelReplicaOnlyClientPubSub(t *testing.T) {
 							{typ: '+', string: "port"}, {typ: '+', string: "4"},
 						}},
 					}}},
-				}
+				}}
 			}
 		},
 		ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
@@ -1271,7 +1271,7 @@ func TestSentinelReplicaOnlyClientPubSub(t *testing.T) {
 		CloseFn: func() { atomic.AddInt32(&slave2close, 1) },
 	}
 	s3 := &mockConn{
-		DoMultiFn: func(cmd ...Completed) []RedisResult { return []RedisResult{newErrResult(errClosing)} },
+		DoMultiFn: func(cmd ...Completed) *redisresults { return &redisresults{s: []RedisResult{newErrResult(errClosing)}} },
 	}
 	slave4 := &mockConn{
 		DoFn: func(cmd Completed) RedisResult {
