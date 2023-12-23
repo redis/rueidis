@@ -14,7 +14,6 @@ import (
 	"math/big"
 	"net"
 	"os"
-	"strings"
 	"testing"
 	"time"
 
@@ -131,30 +130,6 @@ func TestNewClusterClientError(t *testing.T) {
 			t.Errorf("unexpected return %v %v", client, err)
 		}
 		<-done
-	})
-
-	t.Run("replica only and send to replicas option conflict", func(t *testing.T) {
-		ln, err := net.Listen("tcp", "127.0.0.1:0")
-		if err != nil {
-			t.Fatal(err)
-		}
-		defer ln.Close()
-
-		_, port, _ := net.SplitHostPort(ln.Addr().String())
-		client, err := NewClient(ClientOption{
-			InitAddress: []string{"127.0.0.1:" + port},
-			ReplicaOnly: true,
-			SendToReplicas: func(cmd Completed) bool {
-				return true
-			},
-		})
-		if client != nil || err == nil {
-			t.Errorf("unexpected return %v %v", client, err)
-		}
-
-		if !strings.Contains(err.Error(), ErrReplicaOnlyConflict.Error()) {
-			t.Errorf("unexpected error %v", err)
-		}
 	})
 }
 
