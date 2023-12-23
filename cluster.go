@@ -218,7 +218,11 @@ func (c *clusterClient) _refresh() (err error) {
 	groups := result.parse(c.opt.TLSConfig != nil)
 	conns := make(map[string]connrole, len(groups))
 	for master, g := range groups {
-		conns[master] = connrole{conn: c.connFn(master, c.opt), replica: false}
+		opt := *c.opt
+		if c.opt.SendToReplicas != nil {
+			opt.ReplicaOnly = false
+		}
+		conns[master] = connrole{conn: c.connFn(master, &opt), replica: false}
 		for _, addr := range g.nodes[1:] {
 			conns[addr] = connrole{conn: c.connFn(addr, c.opt), replica: true}
 		}
