@@ -70,14 +70,12 @@ var retrycachep = util.NewPool(func(capacity int) *retrycache {
 	}
 })
 
-type clusterConnFn func(dst string, opt *ClientOption, isReplicaConn bool) conn
-
 type clusterClient struct {
 	pslots [16384]conn
 	rslots []conn
 	opt    *ClientOption
 	conns  map[string]connrole
-	connFn clusterConnFn
+	connFn connFn
 	sc     call
 	mu     sync.RWMutex
 	stop   uint32
@@ -94,33 +92,23 @@ type connrole struct {
 
 func newClusterClient(opt *ClientOption, connFn connFn) (client *clusterClient, err error) {
 	client = &clusterClient{
-		cmd:   cmds.NewBuilder(cmds.InitSlot),
-		opt:   opt,
-		conns: make(map[string]connrole),
-		retry: !opt.DisableRetry,
-		aws:   len(opt.InitAddress) == 1 && strings.Contains(opt.InitAddress[0], "amazonaws.com"),
+		cmd:    cmds.NewBuilder(cmds.InitSlot),
+		connFn: connFn,
+		opt:    opt,
+		conns:  make(map[string]connrole),
+		retry:  !opt.DisableRetry,
+		aws:    len(opt.InitAddress) == 1 && strings.Contains(opt.InitAddress[0], "amazonaws.com"),
 	}
 
 	if opt.ReplicaOnly && opt.SendToReplicas != nil {
 		return nil, ErrReplicaOnlyConflict
 	}
 
-	client.connFn = func(dst string, opt *ClientOption, isReplicaConn bool) conn {
+	client.connFn = func(dst string, opt *ClientOption) conn {
 		cc := connFn(dst, opt)
 		cc.SetOnCloseHook(func(err error) {
 			client.lazyRefresh()
 		})
-		if opt.SendToReplicas != nil && isReplicaConn {
-			timeout := opt.Dialer.Timeout
-			if timeout <= 0 {
-				timeout = DefaultDialTimeout
-			}
-
-			ctx, cancel := context.WithTimeout(context.Background(), timeout)
-			defer cancel()
-
-			cc.Do(ctx, cmds.NewCompleted([]string{"READONLY"})) // ignore error
-		}
 		return cc
 	}
 
@@ -141,7 +129,7 @@ func (c *clusterClient) init() error {
 	}
 	results := make(chan error, len(c.opt.InitAddress))
 	for _, addr := range c.opt.InitAddress {
-		cc := c.connFn(addr, c.opt, false)
+		cc := c.connFn(addr, c.opt)
 		go func(addr string, cc conn) {
 			if err := cc.Dial(); err == nil {
 				c.mu.Lock()
@@ -235,22 +223,16 @@ func (c *clusterClient) _refresh() (err error) {
 	groups := result.parse(c.opt.TLSConfig != nil)
 	conns := make(map[string]connrole, len(groups))
 	for master, g := range groups {
-		conns[master] = connrole{
-			conn:    c.connFn(master, c.opt, false),
-			replica: false,
-		}
+		conns[master] = connrole{conn: c.connFn(master, c.opt), replica: false}
 		for _, addr := range g.nodes[1:] {
-			conns[addr] = connrole{
-				conn:    c.connFn(addr, c.opt, true),
-				replica: true,
-			}
+			conns[addr] = connrole{conn: c.connFn(addr, c.opt), replica: true}
 		}
 	}
 	// make sure InitAddress always be present
 	for _, addr := range c.opt.InitAddress {
 		if _, ok := conns[addr]; !ok {
 			conns[addr] = connrole{
-				conn: c.connFn(addr, c.opt, false),
+				conn: c.connFn(addr, c.opt),
 			}
 		}
 	}
@@ -460,7 +442,7 @@ func (c *clusterClient) redirectOrNew(addr string, prev conn) (p conn) {
 	c.mu.Lock()
 
 	if cc = c.conns[addr]; cc.conn == nil {
-		p = c.connFn(addr, c.opt, false)
+		p = c.connFn(addr, c.opt)
 		c.conns[addr] = connrole{conn: p, replica: false}
 	} else if prev == cc.conn {
 		// try reconnection if the MOVED redirects to the same host,
@@ -470,7 +452,7 @@ func (c *clusterClient) redirectOrNew(addr string, prev conn) (p conn) {
 			time.Sleep(time.Second * 5)
 			prev.Close()
 		}(prev)
-		p = c.connFn(addr, c.opt, cc.replica)
+		p = c.connFn(addr, c.opt)
 		c.conns[addr] = connrole{conn: p, replica: cc.replica}
 	}
 	c.mu.Unlock()
