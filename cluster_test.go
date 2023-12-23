@@ -2074,9 +2074,6 @@ func TestClusterClient_SendToOnlyReplicaNodes(t *testing.T) {
 			"GET K2{a}": func(cmd Completed) RedisResult {
 				return newResult(RedisMessage{typ: '+', string: "GET K2{a}"}, nil)
 			},
-			"READONLY": func(cmd Completed) RedisResult {
-				return newResult(RedisMessage{typ: '+', string: "READONLY"}, nil)
-			},
 		},
 		DoCacheOverride: map[string]func(cmd Cacheable, ttl time.Duration) RedisResult{
 			"GET DoCache": func(cmd Cacheable, ttl time.Duration) RedisResult {
@@ -2586,9 +2583,6 @@ func TestClusterClient_SendReadOperationToReplicaNodesWriteOperationToPrimaryNod
 			},
 			"GET K2{a}": func(cmd Completed) RedisResult {
 				return newResult(RedisMessage{typ: '+', string: "GET K2{a}"}, nil)
-			},
-			"READONLY": func(cmd Completed) RedisResult {
-				return newResult(RedisMessage{typ: '+', string: "READONLY"}, nil)
 			},
 		},
 		DoMultiFn: func(multi ...Completed) *redisresults {
