@@ -220,15 +220,7 @@ func (c *clusterClient) _refresh() (err error) {
 	for master, g := range groups {
 		conns[master] = connrole{conn: c.connFn(master, c.opt), replica: false}
 		for _, addr := range g.nodes[1:] {
-			var cc conn
-			if c.opt.ReplicaOnly {
-				opt := *c.opt
-				cc = c.connFn(addr, &opt)
-			} else {
-				cc = c.connFn(addr, c.opt)
-			}
-
-			conns[addr] = connrole{conn: cc, replica: true}
+			conns[addr] = connrole{conn: c.connFn(addr, c.opt), replica: true}
 		}
 	}
 	// make sure InitAddress always be present
