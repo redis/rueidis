@@ -18,7 +18,6 @@ import (
 
 // ErrNoSlot indicates that there is no redis node owns the key slot.
 var ErrNoSlot = errors.New("the slot has no redis node")
-var ErrReplicaOnlyConflict = errors.New("ReplicaOnly conflicts with SendToReplicas option")
 
 type retry struct {
 	cIndexes []int
@@ -98,10 +97,6 @@ func newClusterClient(opt *ClientOption, connFn connFn) (client *clusterClient, 
 		conns:  make(map[string]connrole),
 		retry:  !opt.DisableRetry,
 		aws:    len(opt.InitAddress) == 1 && strings.Contains(opt.InitAddress[0], "amazonaws.com"),
-	}
-
-	if opt.ReplicaOnly && opt.SendToReplicas != nil {
-		return nil, ErrReplicaOnlyConflict
 	}
 
 	client.connFn = func(dst string, opt *ClientOption) conn {
@@ -222,10 +217,42 @@ func (c *clusterClient) _refresh() (err error) {
 
 	groups := result.parse(c.opt.TLSConfig != nil)
 	conns := make(map[string]connrole, len(groups))
+	var wg sync.WaitGroup
 	for master, g := range groups {
-		conns[master] = connrole{conn: c.connFn(master, c.opt), replica: false}
+		conns[master] = connrole{
+			conn:    c.connFn(master, c.opt),
+			replica: false,
+		}
 		for _, addr := range g.nodes[1:] {
-			conns[addr] = connrole{conn: c.connFn(addr, c.opt), replica: true}
+			cc := c.connFn(addr, c.opt)
+
+			if !c.opt.ReplicaOnly {
+				conns[addr] = connrole{
+					conn:    cc,
+					replica: true,
+				}
+				continue
+			}
+
+			wg.Add(1)
+			go func(cc conn) {
+				defer wg.Done()
+
+				timeout := c.opt.Dialer.Timeout
+				if timeout <= 0 {
+					timeout = DefaultDialTimeout
+				}
+
+				ctx, cancel := context.WithTimeout(context.Background(), timeout)
+				defer cancel()
+
+				cc.Do(ctx, cmds.NewCompleted([]string{"READONLY"})) // ignore error
+			}(cc)
+
+			conns[addr] = connrole{
+				conn:    cc,
+				replica: true,
+			}
 		}
 	}
 	// make sure InitAddress always be present
@@ -236,12 +263,14 @@ func (c *clusterClient) _refresh() (err error) {
 			}
 		}
 	}
+	wg.Wait()
 
 	var removes []conn
 
 	c.mu.RLock()
 	for addr, cc := range c.conns {
-		if fresh, ok := conns[addr]; ok {
+		fresh, ok := conns[addr]
+		if ok && cc.replica == fresh.replica {
 			conns[addr] = connrole{
 				conn:    cc.conn,
 				replica: fresh.replica,
@@ -256,7 +285,7 @@ func (c *clusterClient) _refresh() (err error) {
 	var rslots []conn
 	for master, g := range groups {
 		switch {
-		case c.opt.ReplicaOnly && len(g.nodes) > 1:
+		case c.opt.SendToReplicas == nil && c.opt.ReplicaOnly && len(g.nodes) > 1:
 			nodesCount := len(g.nodes)
 			for _, slot := range g.slots {
 				for i := slot[0]; i <= slot[1]; i++ {
