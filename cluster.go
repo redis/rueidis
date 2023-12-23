@@ -218,10 +218,7 @@ func (c *clusterClient) _refresh() (err error) {
 	groups := result.parse(c.opt.TLSConfig != nil)
 	conns := make(map[string]connrole, len(groups))
 	for master, g := range groups {
-		conns[master] = connrole{
-			conn:    c.connFn(master, c.opt),
-			replica: false,
-		}
+		conns[master] = connrole{conn: c.connFn(master, c.opt), replica: false}
 		for _, addr := range g.nodes[1:] {
 			var cc conn
 			if c.opt.ReplicaOnly {
@@ -231,10 +228,7 @@ func (c *clusterClient) _refresh() (err error) {
 				cc = c.connFn(addr, c.opt)
 			}
 
-			conns[addr] = connrole{
-				conn:    cc,
-				replica: true,
-			}
+			conns[addr] = connrole{conn: cc, replica: true}
 		}
 	}
 	// make sure InitAddress always be present
