@@ -2028,9 +2028,7 @@ func (c *Compat) ZPopMax(ctx context.Context, key string, count ...int64) *ZSlic
 		resp = c.client.Do(ctx, c.client.B().Zpopmax().Key(key).Build())
 	case 1:
 		resp = c.client.Do(ctx, c.client.B().Zpopmax().Key(key).Count(count[0]).Build())
-		if count[0] > 1 {
-			return newZSliceCmd(resp)
-		}
+		return newZSliceCmd(resp)
 	default:
 		panic("too many arguments")
 	}
@@ -2044,9 +2042,7 @@ func (c *Compat) ZPopMin(ctx context.Context, key string, count ...int64) *ZSlic
 		resp = c.client.Do(ctx, c.client.B().Zpopmin().Key(key).Build())
 	case 1:
 		resp = c.client.Do(ctx, c.client.B().Zpopmin().Key(key).Count(count[0]).Build())
-		if count[0] > 1 {
-			return newZSliceCmd(resp)
-		}
+		return newZSliceCmd(resp)
 	default:
 		panic("too many arguments")
 	}
