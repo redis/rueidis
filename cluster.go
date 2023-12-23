@@ -217,37 +217,19 @@ func (c *clusterClient) _refresh() (err error) {
 
 	groups := result.parse(c.opt.TLSConfig != nil)
 	conns := make(map[string]connrole, len(groups))
-	var wg sync.WaitGroup
 	for master, g := range groups {
 		conns[master] = connrole{
 			conn:    c.connFn(master, c.opt),
 			replica: false,
 		}
 		for _, addr := range g.nodes[1:] {
-			cc := c.connFn(addr, c.opt)
-
-			if !c.opt.ReplicaOnly {
-				conns[addr] = connrole{
-					conn:    cc,
-					replica: true,
-				}
-				continue
+			var cc conn
+			if c.opt.ReplicaOnly {
+				opt := *c.opt
+				cc = c.connFn(addr, &opt)
+			} else {
+				cc = c.connFn(addr, c.opt)
 			}
-
-			wg.Add(1)
-			go func(cc conn) {
-				defer wg.Done()
-
-				timeout := c.opt.Dialer.Timeout
-				if timeout <= 0 {
-					timeout = DefaultDialTimeout
-				}
-
-				ctx, cancel := context.WithTimeout(context.Background(), timeout)
-				defer cancel()
-
-				cc.Do(ctx, cmds.NewCompleted([]string{"READONLY"})) // ignore error
-			}(cc)
 
 			conns[addr] = connrole{
 				conn:    cc,
@@ -263,7 +245,6 @@ func (c *clusterClient) _refresh() (err error) {
 			}
 		}
 	}
-	wg.Wait()
 
 	var removes []conn
 
