@@ -18,6 +18,7 @@ import (
 
 // ErrNoSlot indicates that there is no redis node owns the key slot.
 var ErrNoSlot = errors.New("the slot has no redis node")
+var ErrReplicaOnlyConflict = errors.New("ReplicaOnly conflicts with SendToReplicas option")
 
 type retry struct {
 	cIndexes []int
@@ -70,17 +71,18 @@ var retrycachep = util.NewPool(func(capacity int) *retrycache {
 })
 
 type clusterClient struct {
-	pslots [16384]conn
-	rslots []conn
-	opt    *ClientOption
-	conns  map[string]connrole
-	connFn connFn
-	sc     call
-	mu     sync.RWMutex
-	stop   uint32
-	cmd    Builder
-	retry  bool
-	aws    bool
+	pslots     [16384]conn
+	rslots     []conn
+	opt        *ClientOption
+	replicaOpt *ClientOption
+	conns      map[string]connrole
+	connFn     connFn
+	sc         call
+	mu         sync.RWMutex
+	stop       uint32
+	cmd        Builder
+	retry      bool
+	aws        bool
 }
 
 // NOTE: connrole and conn must be initialized at the same time
@@ -97,6 +99,16 @@ func newClusterClient(opt *ClientOption, connFn connFn) (client *clusterClient, 
 		conns:  make(map[string]connrole),
 		retry:  !opt.DisableRetry,
 		aws:    len(opt.InitAddress) == 1 && strings.Contains(opt.InitAddress[0], "amazonaws.com"),
+	}
+
+	if opt.ReplicaOnly && opt.SendToReplicas != nil {
+		return nil, ErrReplicaOnlyConflict
+	}
+
+	if opt.SendToReplicas != nil {
+		replicaOpt := *opt
+		replicaOpt.ReplicaOnly = true
+		client.replicaOpt = &replicaOpt
 	}
 
 	client.connFn = func(dst string, opt *ClientOption) conn {
@@ -217,18 +229,16 @@ func (c *clusterClient) _refresh() (err error) {
 
 	groups := result.parse(c.opt.TLSConfig != nil)
 	conns := make(map[string]connrole, len(groups))
-	masterOpt := *c.opt
-	if c.opt.SendToReplicas != nil {
-		masterOpt.ReplicaOnly = false
-	}
-	replicaOpt := *c.opt
-	if c.opt.SendToReplicas != nil {
-		replicaOpt.ReplicaOnly = !c.opt.ReplicaOnly
-	}
 	for master, g := range groups {
-		conns[master] = connrole{conn: c.connFn(master, &masterOpt), replica: false}
+		conns[master] = connrole{conn: c.connFn(master, c.opt), replica: false}
 		for _, addr := range g.nodes[1:] {
-			conns[addr] = connrole{conn: c.connFn(addr, &replicaOpt), replica: true}
+			var cc conn
+			if c.opt.SendToReplicas != nil {
+				cc = c.connFn(addr, c.replicaOpt)
+			} else {
+				cc = c.connFn(addr, c.opt)
+			}
+			conns[addr] = connrole{conn: cc, replica: true}
 		}
 	}
 	// make sure InitAddress always be present

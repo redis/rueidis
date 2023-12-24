@@ -861,58 +861,6 @@ func TestClusterClientInit(t *testing.T) {
 	})
 
 	t.Run("Refresh cluster which has multi nodes per shard with SendToReplica option", func(t *testing.T) {
-		m := &mockConn{
-			DoFn: func(cmd Completed) RedisResult {
-				if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
-					return slotsMultiResp
-				}
-				return RedisResult{}
-			},
-		}
-
-		client, err := newClusterClient(
-			&ClientOption{
-				InitAddress: []string{"127.0.0.1:0"},
-				SendToReplicas: func(cmd Completed) bool {
-					return true
-				},
-			},
-			func(dst string, opt *ClientOption) conn {
-				copiedM := *m
-				return &copiedM
-			},
-		)
-		if err != nil {
-			t.Fatalf("unexpected err %v", err)
-		}
-
-		if client.pslots[0] != client.conns["127.0.0.1:0"].conn {
-			t.Fatalf("unexpected node assigned to pslot 0")
-		}
-		if client.pslots[8192] != client.conns["127.0.0.1:0"].conn {
-			t.Fatalf("unexpected node assigned to pslot 8192")
-		}
-		if client.pslots[8193] != client.conns["127.0.2.1:0"].conn {
-			t.Fatalf("unexpected node assigned to pslot 8193")
-		}
-		if client.pslots[16383] != client.conns["127.0.2.1:0"].conn {
-			t.Fatalf("unexpected node assigned to pslot 16383")
-		}
-		if client.rslots[0] != client.conns["127.0.1.1:1"].conn {
-			t.Fatalf("unexpected node assigned to rslot 0")
-		}
-		if client.rslots[8192] != client.conns["127.0.1.1:1"].conn {
-			t.Fatalf("unexpected node assigned to rslot 8192")
-		}
-		if client.rslots[8193] != client.conns["127.0.3.1:1"].conn {
-			t.Fatalf("unexpected node assigned to rslot 8193")
-		}
-		if client.rslots[16383] != client.conns["127.0.3.1:1"].conn {
-			t.Fatalf("unexpected node assigned to rslot 16383")
-		}
-	})
-
-	t.Run("Refresh cluster which has multi nodes per shard with SendToReplica, ReplicaOnly options", func(t *testing.T) {
 		primaryNodeConn := &mockConn{
 			DoFn: func(cmd Completed) RedisResult {
 				if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
@@ -925,9 +873,6 @@ func TestClusterClientInit(t *testing.T) {
 		}
 		replicaNodeConn := &mockConn{
 			DoFn: func(cmd Completed) RedisResult {
-				if strings.Join(cmd.Commands(), " ") == "READONLY" {
-					return newResult(RedisMessage{typ: '+', string: "READONLY"}, nil)
-				}
 				return RedisResult{
 					err: errors.New("unexpected call"),
 				}
@@ -940,12 +885,17 @@ func TestClusterClientInit(t *testing.T) {
 				SendToReplicas: func(cmd Completed) bool {
 					return true
 				},
-				ReplicaOnly: true,
 			},
 			func(dst string, opt *ClientOption) conn {
 				if dst == "127.0.0.1:0" || dst == "127.0.2.1:0" {
+					if opt.ReplicaOnly {
+						t.Fatalf("unexpected replicaOnly option in primary node")
+					}
 					return primaryNodeConn
 				} else {
+					if !opt.ReplicaOnly {
+						t.Fatalf("unexpected replicaOnly option in replica node")
+					}
 					return replicaNodeConn
 				}
 			},

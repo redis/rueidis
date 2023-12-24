@@ -73,6 +73,7 @@ type ClientOption struct {
 
 	// SendToReplicas is a function that returns true if the command should be sent to replicas.
 	// currently only used for cluster client.
+	// NOTE: This function can't be used with ReplicaOnly option.
 	SendToReplicas func(cmd Completed) bool
 
 	// Sentinel options, including MasterSet and Auth options
@@ -160,10 +161,6 @@ type ClientOption struct {
 	ForceSingleClient bool
 
 	// ReplicaOnly indicates that this client will only try to connect to readonly replicas of redis setup.
-	// If SendToReplicas is configured and ReplicaOnly is false,
-	// client will use read-only operations through replicas connection.
-	// If SendToReplicas is configured and ReplicaOnly is true,
-	// client will use read-write operations through replicas connection.
 	ReplicaOnly bool
 
 	// ClientNoEvict sets the client eviction mode for the current connection.
