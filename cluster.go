@@ -270,7 +270,7 @@ func (c *clusterClient) _refresh() (err error) {
 	var rslots []conn
 	for master, g := range groups {
 		switch {
-		case c.opt.SendToReplicas == nil && c.opt.ReplicaOnly && len(g.nodes) > 1:
+		case c.opt.ReplicaOnly && len(g.nodes) > 1:
 			nodesCount := len(g.nodes)
 			for _, slot := range g.slots {
 				for i := slot[0]; i <= slot[1]; i++ {
