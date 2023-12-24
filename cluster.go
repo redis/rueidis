@@ -217,14 +217,18 @@ func (c *clusterClient) _refresh() (err error) {
 
 	groups := result.parse(c.opt.TLSConfig != nil)
 	conns := make(map[string]connrole, len(groups))
+	masterOpt := *c.opt
+	if c.opt.SendToReplicas != nil {
+		masterOpt.ReplicaOnly = false
+	}
+	replicaOpt := *c.opt
+	if c.opt.SendToReplicas != nil {
+		replicaOpt.ReplicaOnly = !c.opt.ReplicaOnly
+	}
 	for master, g := range groups {
-		opt := *c.opt
-		if c.opt.SendToReplicas != nil {
-			opt.ReplicaOnly = false
-		}
-		conns[master] = connrole{conn: c.connFn(master, &opt), replica: false}
+		conns[master] = connrole{conn: c.connFn(master, &masterOpt), replica: false}
 		for _, addr := range g.nodes[1:] {
-			conns[addr] = connrole{conn: c.connFn(addr, c.opt), replica: true}
+			conns[addr] = connrole{conn: c.connFn(addr, &replicaOpt), replica: true}
 		}
 	}
 	// make sure InitAddress always be present
