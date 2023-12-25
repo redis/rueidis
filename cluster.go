@@ -71,17 +71,18 @@ var retrycachep = util.NewPool(func(capacity int) *retrycache {
 })
 
 type clusterClient struct {
-	pslots [16384]conn
-	rslots []conn
-	opt    *ClientOption
-	conns  map[string]connrole
-	connFn connFn
-	sc     call
-	mu     sync.RWMutex
-	stop   uint32
-	cmd    Builder
-	retry  bool
-	aws    bool
+	pslots     [16384]conn
+	rslots     []conn
+	opt        *ClientOption
+	replicaOpt *ClientOption
+	conns      map[string]connrole
+	connFn     connFn
+	sc         call
+	mu         sync.RWMutex
+	stop       uint32
+	cmd        Builder
+	retry      bool
+	aws        bool
 }
 
 // NOTE: connrole and conn must be initialized at the same time
@@ -93,8 +94,8 @@ type connrole struct {
 func newClusterClient(opt *ClientOption, connFn connFn) (client *clusterClient, err error) {
 	client = &clusterClient{
 		cmd:    cmds.NewBuilder(cmds.InitSlot),
-		opt:    opt,
 		connFn: connFn,
+		opt:    opt,
 		conns:  make(map[string]connrole),
 		retry:  !opt.DisableRetry,
 		aws:    len(opt.InitAddress) == 1 && strings.Contains(opt.InitAddress[0], "amazonaws.com"),
@@ -102,6 +103,12 @@ func newClusterClient(opt *ClientOption, connFn connFn) (client *clusterClient, 
 
 	if opt.ReplicaOnly && opt.SendToReplicas != nil {
 		return nil, ErrReplicaOnlyConflict
+	}
+
+	if opt.SendToReplicas != nil {
+		replicaOpt := *opt
+		replicaOpt.ReplicaOnly = true
+		client.replicaOpt = &replicaOpt
 	}
 
 	client.connFn = func(dst string, opt *ClientOption) conn {
@@ -225,7 +232,13 @@ func (c *clusterClient) _refresh() (err error) {
 	for master, g := range groups {
 		conns[master] = connrole{conn: c.connFn(master, c.opt), replica: false}
 		for _, addr := range g.nodes[1:] {
-			conns[addr] = connrole{conn: c.connFn(addr, c.opt), replica: true}
+			var cc conn
+			if c.opt.SendToReplicas != nil {
+				cc = c.connFn(addr, c.replicaOpt)
+			} else {
+				cc = c.connFn(addr, c.opt)
+			}
+			conns[addr] = connrole{conn: cc, replica: true}
 		}
 	}
 	// make sure InitAddress always be present
@@ -241,7 +254,8 @@ func (c *clusterClient) _refresh() (err error) {
 
 	c.mu.RLock()
 	for addr, cc := range c.conns {
-		if fresh, ok := conns[addr]; ok {
+		fresh, ok := conns[addr]
+		if ok && (cc.replica == fresh.replica || c.opt.SendToReplicas == nil) {
 			conns[addr] = connrole{
 				conn:    cc.conn,
 				replica: fresh.replica,
