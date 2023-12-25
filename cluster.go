@@ -255,7 +255,7 @@ func (c *clusterClient) _refresh() (err error) {
 	c.mu.RLock()
 	for addr, cc := range c.conns {
 		fresh, ok := conns[addr]
-		if ok && cc.replica == fresh.replica {
+		if ok && (cc.replica == fresh.replica || c.opt.SendToReplicas == nil) {
 			conns[addr] = connrole{
 				conn:    cc.conn,
 				replica: fresh.replica,
