@@ -30,6 +30,8 @@ const (
 	DefaultReadBuffer = 1 << 19
 	// DefaultWriteBuffer is the default value of bufio.NewWriterSize for each connection, which is 0.5MiB
 	DefaultWriteBuffer = 1 << 19
+	// MaxPipelineMultiplex is the maximum meaningful value for ClientOption.PipelineMultiplex
+	MaxPipelineMultiplex = 8
 )
 
 var (
@@ -46,6 +48,8 @@ var (
 	// ErrReplicaOnlyNotSupported means ReplicaOnly flag is not supported by
 	// current client
 	ErrReplicaOnlyNotSupported = errors.New("ReplicaOnly is not supported for single client")
+	// ErrWrongPipelineMultiplex means wrong value for ClientOption.PipelineMultiplex
+	ErrWrongPipelineMultiplex = errors.New("ClientOption.PipelineMultiplex must not be bigger than MaxPipelineMultiplex")
 )
 
 // ClientOption should be passed to NewClient to construct a Client
@@ -313,6 +317,9 @@ func NewClient(option ClientOption) (client Client, err error) {
 		rand.Shuffle(len(option.InitAddress), func(i, j int) {
 			option.InitAddress[i], option.InitAddress[j] = option.InitAddress[j], option.InitAddress[i]
 		})
+	}
+	if option.PipelineMultiplex > MaxPipelineMultiplex {
+		return nil, ErrWrongPipelineMultiplex
 	}
 	if option.Sentinel.MasterSet != "" {
 		option.PipelineMultiplex = singleClientMultiplex(option.PipelineMultiplex)
