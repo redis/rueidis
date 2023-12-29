@@ -71,18 +71,18 @@ var retrycachep = util.NewPool(func(capacity int) *retrycache {
 })
 
 type clusterClient struct {
-	pslots     [16384]conn
-	rslots     []conn
-	opt        *ClientOption
-	replicaOpt *ClientOption
-	conns      map[string]connrole
-	connFn     connFn
-	sc         call
-	mu         sync.RWMutex
-	stop       uint32
-	cmd        Builder
-	retry      bool
-	aws        bool
+	pslots [16384]conn
+	rslots []conn
+	opt    *ClientOption
+	rOpt   *ClientOption
+	conns  map[string]connrole
+	connFn connFn
+	sc     call
+	mu     sync.RWMutex
+	stop   uint32
+	cmd    Builder
+	retry  bool
+	aws    bool
 }
 
 // NOTE: connrole and conn must be initialized at the same time
@@ -106,9 +106,9 @@ func newClusterClient(opt *ClientOption, connFn connFn) (client *clusterClient, 
 	}
 
 	if opt.SendToReplicas != nil {
-		replicaOpt := *opt
-		replicaOpt.ReplicaOnly = true
-		client.replicaOpt = &replicaOpt
+		rOpt := *opt
+		rOpt.ReplicaOnly = true
+		client.rOpt = &rOpt
 	}
 
 	client.connFn = func(dst string, opt *ClientOption) conn {
@@ -232,13 +232,11 @@ func (c *clusterClient) _refresh() (err error) {
 	for master, g := range groups {
 		conns[master] = connrole{conn: c.connFn(master, c.opt), replica: false}
 		for _, addr := range g.nodes[1:] {
-			var cc conn
-			if c.opt.SendToReplicas != nil {
-				cc = c.connFn(addr, c.replicaOpt)
+			if c.rOpt != nil {
+				conns[addr] = connrole{conn: c.connFn(addr, c.rOpt), replica: true}
 			} else {
-				cc = c.connFn(addr, c.opt)
+				conns[addr] = connrole{conn: c.connFn(addr, c.opt), replica: true}
 			}
-			conns[addr] = connrole{conn: cc, replica: true}
 		}
 	}
 	// make sure InitAddress always be present
@@ -255,7 +253,7 @@ func (c *clusterClient) _refresh() (err error) {
 	c.mu.RLock()
 	for addr, cc := range c.conns {
 		fresh, ok := conns[addr]
-		if ok && (cc.replica == fresh.replica || c.opt.SendToReplicas == nil) {
+		if ok && (cc.replica == fresh.replica || c.rOpt == nil) {
 			conns[addr] = connrole{
 				conn:    cc.conn,
 				replica: fresh.replica,
@@ -277,7 +275,7 @@ func (c *clusterClient) _refresh() (err error) {
 					pslots[i] = conns[g.nodes[1+rand.Intn(nodesCount-1)]].conn
 				}
 			}
-		case c.opt.SendToReplicas != nil:
+		case c.rOpt != nil: // implies c.opt.SendToReplicas != nil
 			if len(rslots) == 0 { // lazy init
 				rslots = make([]conn, 16384)
 			}
