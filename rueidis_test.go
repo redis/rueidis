@@ -315,6 +315,16 @@ func TestTLSClient(t *testing.T) {
 	<-done
 }
 
+func TestNewClientMaxMultiplex(t *testing.T) {
+	_, err := NewClient(ClientOption{
+		InitAddress:       []string{"127.0.0.1:6379"},
+		PipelineMultiplex: MaxPipelineMultiplex + 1,
+	})
+	if err != ErrWrongPipelineMultiplex {
+		t.Fatalf("unexpected error %v", err)
+	}
+}
+
 func TestSingleClientMultiplex(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	option := ClientOption{}
