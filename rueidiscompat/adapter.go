@@ -390,6 +390,7 @@ type Cmdable interface {
 	GearsCmdable
 	ProbabilisticCmdable
 	TimeseriesCmdable
+	JSONCmdable
 }
 
 // https://github.com/redis/go-redis/blob/af4872cbd0de349855ce3f0978929c2f56eb995f/probabilistic.go#L10
@@ -510,6 +511,36 @@ type TimeseriesCmdable interface {
 	TSMRevRangeWithArgs(ctx context.Context, fromTimestamp int, toTimestamp int, filterExpr []string, options *TSMRevRangeOptions) *MapStringSliceInterfaceCmd
 	TSMGet(ctx context.Context, filters []string) *MapStringSliceInterfaceCmd
 	TSMGetWithArgs(ctx context.Context, filters []string, options *TSMGetOptions) *MapStringSliceInterfaceCmd
+}
+
+type JSONCmdable interface {
+	JSONArrAppend(ctx context.Context, key, path string, values ...interface{}) *IntSliceCmd
+	JSONArrIndex(ctx context.Context, key, path string, value ...interface{}) *IntSliceCmd
+	JSONArrIndexWithArgs(ctx context.Context, key, path string, options *JSONArrIndexArgs, value ...interface{}) *IntSliceCmd
+	JSONArrInsert(ctx context.Context, key, path string, index int64, values ...interface{}) *IntSliceCmd
+	JSONArrLen(ctx context.Context, key, path string) *IntSliceCmd
+	JSONArrPop(ctx context.Context, key, path string, index int) *StringSliceCmd
+	JSONArrTrim(ctx context.Context, key, path string) *IntSliceCmd
+	JSONArrTrimWithArgs(ctx context.Context, key, path string, options *JSONArrTrimArgs) *IntSliceCmd
+	JSONClear(ctx context.Context, key, path string) *IntCmd
+	JSONDebugMemory(ctx context.Context, key, path string) *IntCmd
+	JSONDel(ctx context.Context, key, path string) *IntCmd
+	JSONForget(ctx context.Context, key, path string) *IntCmd
+	JSONGet(ctx context.Context, key string, paths ...string) *JSONCmd
+	JSONGetWithArgs(ctx context.Context, key string, options *JSONGetArgs, paths ...string) *JSONCmd
+	JSONMerge(ctx context.Context, key, path string, value string) *StatusCmd
+	JSONMSetArgs(ctx context.Context, docs []JSONSetArgs) *StatusCmd
+	JSONMSet(ctx context.Context, params ...interface{}) *StatusCmd
+	JSONMGet(ctx context.Context, path string, keys ...string) *JSONSliceCmd
+	JSONNumIncrBy(ctx context.Context, key, path string, value float64) *JSONCmd
+	JSONObjKeys(ctx context.Context, key, path string) *SliceCmd
+	JSONObjLen(ctx context.Context, key, path string) *IntPointerSliceCmd
+	JSONSet(ctx context.Context, key, path string, value interface{}) *StatusCmd
+	JSONSetMode(ctx context.Context, key, path string, value interface{}, mode string) *StatusCmd
+	JSONStrAppend(ctx context.Context, key, path, value string) *IntPointerSliceCmd
+	JSONStrLen(ctx context.Context, key, path string) *IntPointerSliceCmd
+	JSONToggle(ctx context.Context, key, path string) *IntPointerSliceCmd
+	JSONType(ctx context.Context, key, path string) *JSONSliceCmd
 }
 
 var _ Cmdable = (*Compat)(nil)
@@ -806,7 +837,7 @@ func (c *Compat) SortStore(ctx context.Context, key, store string, sort Sort) *I
 
 func (c *Compat) SortInterfaces(ctx context.Context, key string, sort Sort) *SliceCmd {
 	resp := c.client.Do(ctx, c.sort("SORT", key, sort).Build())
-	return newSliceCmd(resp)
+	return newSliceCmd(resp, false)
 }
 
 func (c *Compat) Touch(ctx context.Context, keys ...string) *IntCmd {
@@ -906,7 +937,7 @@ func (c *Compat) IncrByFloat(ctx context.Context, key string, increment float64)
 func (c *Compat) MGet(ctx context.Context, keys ...string) *SliceCmd {
 	cmd := c.client.B().Mget().Key(keys...).Build()
 	resp := c.client.Do(ctx, cmd)
-	return newSliceCmd(resp, keys...)
+	return newSliceCmd(resp, false, keys...)
 }
 
 func (c *Compat) MSet(ctx context.Context, values ...any) *StatusCmd {
@@ -1241,7 +1272,7 @@ func (c *Compat) HLen(ctx context.Context, key string) *IntCmd {
 func (c *Compat) HMGet(ctx context.Context, key string, fields ...string) *SliceCmd {
 	cmd := c.client.B().Hmget().Key(key).Field(fields...).Build()
 	resp := c.client.Do(ctx, cmd)
-	return newSliceCmd(resp, fields...)
+	return newSliceCmd(resp, false, fields...)
 }
 
 // HSet requires Redis v4 for multiple field/value pairs support.
@@ -4332,6 +4363,227 @@ func (c *Compat) TSMGetWithArgs(ctx context.Context, filters []string, options *
 	return newMapStringSliceInterfaceCmd(c.client.Do(ctx, cmd))
 }
 
+// JSONArrAppend adds the provided JSON values to the end of the array at the given path.
+// For more information, see https://redis.io/commands/json.arrappend
+func (c *Compat) JSONArrAppend(ctx context.Context, key, path string, values ...interface{}) *IntSliceCmd {
+	cmd := c.client.B().JsonArrappend().Key(key).Path(path).Value(argToSlice(values)...).Build()
+	return newIntSliceCmd(c.client.Do(ctx, cmd))
+}
+
+// JSONArrIndex searches for the first occurrence of the provided JSON value in the array at the given path.
+// For more information, see https://redis.io/commands/json.arrindex
+// NOTE: value should have the format value start [stop]
+func (c *Compat) JSONArrIndex(ctx context.Context, key, path string, value ...interface{}) *IntSliceCmd {
+	_cmd := c.client.B().JsonArrindex().Key(key).Path(path)
+	switch len(value) {
+	case 1:
+		// format: value
+		_cmd.Value(str(value[0]))
+	case 2:
+		// format: value start
+		_cmd.Value(str(value[0])).Start((int64)(value[1].(int)))
+	case 3:
+		// format: value start stop
+		_cmd.Value(str(value[0])).Start((int64)(value[1].(int))).Stop((int64)(value[2].(int)))
+	default:
+		panic(fmt.Sprintf("the format of value should be value [start [stop]], got %v", value))
+	}
+	cmd := (cmds.JsonArrindexValue)(_cmd).Build()
+	return newIntSliceCmd(c.client.Do(ctx, cmd))
+}
+
+// JSONArrIndex searches for the first occurrence of the provided JSON value in the array at the given path.
+// For more information, see https://redis.io/commands/json.arrindex
+func (c *Compat) JSONArrIndexWithArgs(ctx context.Context, key, path string, options *JSONArrIndexArgs, value ...interface{}) *IntSliceCmd {
+	// FIXME: why value has 1..N ?
+	_cmd := c.client.B().JsonArrindex().Key(key).Path(path).Value(str(value[0]))
+	if options != nil {
+		if options.Start != 0 {
+			_cmd.Start(int64(options.Start))
+		} else {
+			_cmd.Start(int64(0))
+		}
+		if options.Stop != nil {
+			(cmds.JsonArrindexStartStart)(_cmd).Stop(int64(*options.Stop))
+		}
+	}
+	cmd := _cmd.Build()
+	return newIntSliceCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) JSONArrInsert(ctx context.Context, key, path string, index int64, values ...interface{}) *IntSliceCmd {
+	valStrs := make([]string, 0, len(values))
+	for _, val := range values {
+		valStrs = append(valStrs, str(val))
+	}
+	cmd := c.client.B().JsonArrinsert().Key(key).Path(path).Index(index).Value(valStrs...).Build()
+	return newIntSliceCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) JSONArrLen(ctx context.Context, key, path string) *IntSliceCmd {
+	cmd := c.client.B().JsonArrlen().Key(key).Path(path).Build()
+	return newIntSliceCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) JSONArrPop(ctx context.Context, key, path string, index int) *StringSliceCmd {
+	cmd := c.client.B().JsonArrpop().Key(key).Path(path).Index(int64(index)).Build()
+	return newStringSliceCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) JSONArrTrim(ctx context.Context, key, path string) *IntSliceCmd {
+	// both default value of start and stop are 0
+	// Ref: https://redis.io/commands/json.arrtrim/
+	cmd := c.client.B().JsonArrtrim().Key(key).Path(path).Start(0).Stop(0).Build()
+	return newIntSliceCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) JSONArrTrimWithArgs(ctx context.Context, key, path string, options *JSONArrTrimArgs) *IntSliceCmd {
+	_cmd := c.client.B().JsonArrtrim().Key(key).Path(path)
+	if options != nil {
+		if options.Start != 0 {
+			_cmd.Start(int64(options.Start))
+		} else {
+			_cmd.Start(0)
+		}
+		if options.Stop != nil {
+			(cmds.JsonArrtrimStart)(_cmd).Stop(int64(*options.Stop))
+		} else {
+			(cmds.JsonArrtrimStart)(_cmd).Stop(0)
+		}
+	}
+	cmd := (cmds.JsonArrtrimStop)(_cmd).Build()
+	return newIntSliceCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) JSONClear(ctx context.Context, key, path string) *IntCmd {
+	cmd := c.client.B().JsonClear().Key(key).Path(path).Build()
+	return newIntCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) JSONDebugMemory(ctx context.Context, key, path string) *IntCmd {
+	cmd := c.client.B().JsonDebugMemory().Key(key).Path(path).Build()
+	return newIntCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) JSONDel(ctx context.Context, key, path string) *IntCmd {
+	cmd := c.client.B().JsonDel().Key(key).Path(path).Build()
+	return newIntCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) JSONForget(ctx context.Context, key, path string) *IntCmd {
+	cmd := c.client.B().JsonForget().Key(key).Path(path).Build()
+	return newIntCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) JSONGet(ctx context.Context, key string, paths ...string) *JSONCmd {
+	cmd := c.client.B().JsonGet().Key(key).Path(paths...).Build()
+	return newJSONCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) JSONGetWithArgs(ctx context.Context, key string, options *JSONGetArgs, paths ...string) *JSONCmd {
+	// _cmd := c.client.B().JsonGet().Key(key).Path(paths...)
+	_cmd := c.client.B().JsonGet().Key(key)
+	if options != nil {
+		if options.Indent != "" {
+			_cmd.Indent(options.Indent)
+		}
+		if options.Newline != "" {
+			_cmd.Newline(options.Newline)
+		}
+		if options.Space != "" {
+			_cmd.Space(options.Space)
+		}
+	}
+	cmd := _cmd.Path(paths...).Build()
+	return newJSONCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) JSONMerge(ctx context.Context, key, path string, value string) *StatusCmd {
+	cmd := c.client.B().JsonMerge().Key(key).Path(path).Value(value).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) JSONMSetArgs(ctx context.Context, docs []JSONSetArgs) *StatusCmd {
+	_cmd := c.client.B().JsonMset()
+	for _, doc := range docs {
+		_cmd.Key(doc.Key).Path(doc.Path).Value(str(doc.Value))
+	}
+	cmd := (cmds.JsonMsetTripletValue)(_cmd).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) JSONMSet(ctx context.Context, params ...interface{}) *StatusCmd {
+	_cmd := c.client.B().JsonMset()
+	for i := 0; i < len(params); i += 3 {
+		_cmd.Key(str(params[i])).Path(str(params[i+1])).Value(str(params[i+2]))
+	}
+	cmd := (cmds.JsonMsetTripletValue)(_cmd).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) JSONMGet(ctx context.Context, path string, keys ...string) *JSONSliceCmd {
+	cmd := c.client.B().JsonMget().Key(keys...).Path(path).Build()
+	return newJSONSliceCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) JSONNumIncrBy(ctx context.Context, key, path string, value float64) *JSONCmd {
+	cmd := c.client.B().JsonNumincrby().Key(key).Path(path).Value(value).Build()
+	return newJSONCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) JSONObjKeys(ctx context.Context, key, path string) *SliceCmd {
+	cmd := c.client.B().JsonObjkeys().Key(key).Path(path).Build()
+	return newSliceCmd(c.client.Do(ctx, cmd), true)
+}
+
+func (c *Compat) JSONObjLen(ctx context.Context, key, path string) *IntPointerSliceCmd {
+	cmd := c.client.B().JsonObjlen().Key(key).Path(path).Build()
+	return newIntPointerSliceCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) JSONSet(ctx context.Context, key, path string, value interface{}) *StatusCmd {
+	cmd := c.client.B().JsonSet().Key(key).Path(path).Value(str(value)).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+// JSONSetMode sets the JSON value at the given path in the given key and allows the mode to be set
+// (the mode value must be "XX" or "NX"). The value must be something that can be marshaled to JSON (using encoding/JSON) unless
+// the argument is a string or []byte when we assume that it can be passed directly as JSON.
+// For more information, see https://redis.io/commands/json.set
+func (c *Compat) JSONSetMode(ctx context.Context, key, path string, value interface{}, mode string) *StatusCmd {
+	_cmd := c.client.B().JsonSet().Key(key).Path(path).Value(str(value))
+	switch mode {
+	case "XX":
+		_cmd.Nx()
+	case "NX":
+		_cmd.Xx()
+	default:
+		panic(`the mode value must be "XX" or "NX"`)
+	}
+	cmd := (cmds.JsonSetValue)(_cmd).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) JSONStrAppend(ctx context.Context, key, path, value string) *IntPointerSliceCmd {
+	cmd := c.client.B().JsonStrappend().Key(key).Path(path).Value(value).Build()
+	return newIntPointerSliceCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) JSONStrLen(ctx context.Context, key, path string) *IntPointerSliceCmd {
+	cmd := c.client.B().JsonStrlen().Key(key).Path(path).Build()
+	return newIntPointerSliceCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) JSONToggle(ctx context.Context, key, path string) *IntPointerSliceCmd {
+	cmd := c.client.B().JsonToggle().Key(key).Path(path).Build()
+	return newIntPointerSliceCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) JSONType(ctx context.Context, key, path string) *JSONSliceCmd {
+	cmd := c.client.B().JsonType().Key(key).Path(path).Build()
+	return newJSONSliceCmd(c.client.Do(ctx, cmd))
+}
+
 func (c CacheCompat) BitCount(ctx context.Context, key string, bitCount *BitCount) *IntCmd {
 	var resp rueidis.RedisResult
 	if bitCount == nil {
@@ -4491,7 +4743,7 @@ func (c CacheCompat) HLen(ctx context.Context, key string) *IntCmd {
 func (c CacheCompat) HMGet(ctx context.Context, key string, fields ...string) *SliceCmd {
 	cmd := c.client.B().Hmget().Key(key).Field(fields...).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
-	return newSliceCmd(resp, fields...)
+	return newSliceCmd(resp, false, fields...)
 }
 
 func (c CacheCompat) HVals(ctx context.Context, key string) *StringSliceCmd {
@@ -4880,6 +5132,60 @@ func (c *CacheCompat) TopKQuery(ctx context.Context, key string, elements ...int
 	}
 	cmd := (cmds.TopkQueryItem)(_cmd).Cache()
 	return newBoolSliceCmd(c.client.DoCache(ctx, cmd, c.ttl))
+}
+
+func (c *CacheCompat) JSONArrIndex(ctx context.Context, key, path string, value ...interface{}) *IntSliceCmd {
+	_cmd := c.client.B().JsonArrindex().Key(key).Path(path)
+	switch len(value) {
+	case 1:
+		// format: value
+		_cmd.Value(str(value[0]))
+	case 2:
+		// format: value start
+		_cmd.Value(str(value[0])).Start((int64)(value[1].(int)))
+	case 3:
+		// format: value start stop
+		_cmd.Value(str(value[0])).Start((int64)(value[1].(int))).Stop((int64)(value[2].(int)))
+	default:
+		panic(fmt.Sprintf("the format of value should be value [start [stop]], got %v", value))
+	}
+	cmd := (cmds.JsonArrindexValue)(_cmd).Cache()
+	return newIntSliceCmd(c.client.DoCache(ctx, cmd, c.ttl))
+}
+
+func (c *CacheCompat) JSONArrLen(ctx context.Context, key, path string) *IntSliceCmd {
+	cmd := c.client.B().JsonArrlen().Key(key).Path(path).Cache()
+	return newIntSliceCmd(c.client.DoCache(ctx, cmd, c.ttl))
+}
+
+func (c *CacheCompat) JSONGet(ctx context.Context, key string, paths ...string) *JSONCmd {
+	cmd := c.client.B().JsonGet().Key(key).Path(paths...).Cache()
+	return newJSONCmd(c.client.DoCache(ctx, cmd, c.ttl))
+}
+
+func (c *CacheCompat) JSONMGet(ctx context.Context, path string, keys ...string) *JSONSliceCmd {
+	cmd := c.client.B().JsonMget().Key(keys...).Path(path).Cache()
+	return newJSONSliceCmd(c.client.DoCache(ctx, cmd, c.ttl))
+}
+
+func (c *CacheCompat) JSONObjKeys(ctx context.Context, key, path string) *SliceCmd {
+	cmd := c.client.B().JsonObjkeys().Key(key).Path(path).Cache()
+	return newSliceCmd(c.client.DoCache(ctx, cmd, c.ttl), true)
+}
+
+func (c *CacheCompat) JSONObjLen(ctx context.Context, key, path string) *IntPointerSliceCmd {
+	cmd := c.client.B().JsonObjlen().Key(key).Path(path).Cache()
+	return newIntPointerSliceCmd(c.client.DoCache(ctx, cmd, c.ttl))
+}
+
+func (c *CacheCompat) JSONStrLen(ctx context.Context, key, path string) *IntPointerSliceCmd {
+	cmd := c.client.B().JsonStrlen().Key(key).Path(path).Cache()
+	return newIntPointerSliceCmd(c.client.DoCache(ctx, cmd, c.ttl))
+}
+
+func (c *CacheCompat) JSONType(ctx context.Context, key, path string) *JSONSliceCmd {
+	cmd := c.client.B().JsonType().Key(key).Path(path).Cache()
+	return newJSONSliceCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
 
 func str(arg any) string {

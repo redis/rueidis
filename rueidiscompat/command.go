@@ -27,6 +27,7 @@
 package rueidiscompat
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
@@ -509,44 +510,49 @@ func newStatusCmd(res rueidis.RedisResult) *StatusCmd {
 }
 
 type SliceCmd struct {
-	err  error
-	val  []any
+	baseCmd[[]any]
+	// val  []any
 	keys []string
 }
 
-func newSliceCmd(res rueidis.RedisResult, keys ...string) *SliceCmd {
-	val, err := res.ToArray()
-	slice := &SliceCmd{val: make([]any, len(val)), err: err, keys: keys}
-	for i, v := range val {
-		if s, err := v.ToString(); err == nil {
-			slice.val[i] = s
+// newSliceCmd returns SliceCmd according to input arguments, if the caller is JSONObjKeys,
+// set isJSONObjKeys to true.
+func newSliceCmd(res rueidis.RedisResult, isJSONObjKeys bool, keys ...string) *SliceCmd {
+	cmd := &SliceCmd{keys: keys}
+	arr, err := res.ToArray()
+	if err != nil {
+		cmd.SetErr(err)
+		return cmd
+	}
+	vals := make([]any, len(arr))
+	for i, v := range arr {
+		if isJSONObjKeys {
+			// for JSON.OBJKEYS
+			if v.IsNil() {
+				vals[i] = nil
+				continue
+			}
+			// convert to any which underlying type is []any
+			arr, err := v.ToAny()
+			if err != nil {
+				cmd.SetErr(err)
+				return cmd
+			}
+			vals[i] = arr
+		} else {
+			// keep the old behavior the same as before (don't handle error while parsing v as string)
+			if s, err := v.ToString(); err == nil {
+				vals[i] = s
+			}
 		}
 	}
-	return slice
-}
-
-func (cmd *SliceCmd) SetVal(val []any) {
-	cmd.val = val
-}
-
-func (cmd *SliceCmd) SetErr(err error) {
-	cmd.err = err
-}
-
-func (cmd *SliceCmd) Val() []any {
-	return cmd.val
-}
-
-func (cmd *SliceCmd) Err() error {
-	return cmd.err
-}
-
-func (cmd *SliceCmd) Result() ([]any, error) {
-	return cmd.val, cmd.err
+	cmd.SetVal(vals)
+	return cmd
 }
 
 // Scan scans the results from the map into a destination struct. The map keys
 // are matched in the Redis struct fields by the `redis:"field"` tag.
+// NOTE: result from JSON.ObjKeys should not call this.
 func (cmd *SliceCmd) Scan(dst any) error {
 	if cmd.err != nil {
 		return cmd.err
@@ -2878,6 +2884,10 @@ func (cmd *baseCmd[T]) Err() error {
 	return cmd.err
 }
 
+func (cmd *baseCmd[T]) SetErr(err error) {
+	cmd.err = err
+}
+
 func (cmd *baseCmd[T]) Result() (T, error) {
 	return cmd.Val(), cmd.Err()
 }
@@ -3451,4 +3461,169 @@ type TSMGetOptions struct {
 	Latest         bool
 	WithLabels     bool
 	SelectedLabels []interface{}
+}
+
+type JSONSetArgs struct {
+	Key   string
+	Path  string
+	Value interface{}
+}
+
+type JSONArrIndexArgs struct {
+	Start int
+	Stop  *int
+}
+
+type JSONArrTrimArgs struct {
+	Start int
+	Stop  *int
+}
+
+type JSONCmd struct {
+	baseCmd[string]
+	expanded []any // expanded will be used at JSONCmd.Expanded
+	typ      jsonCmdTyp
+}
+
+type jsonCmdTyp int
+
+const (
+	TYP_STRING jsonCmdTyp = iota
+	TYP_ARRAY
+)
+
+// https://github.com/redis/go-redis/blob/v9.3.0/json.go#L86
+func (cmd *JSONCmd) Val() string {
+	return cmd.val
+}
+
+// https://github.com/redis/go-redis/blob/v9.3.0/json.go#L105
+func (cmd *JSONCmd) Expanded() (any, error) {
+	if cmd.typ == TYP_STRING {
+		return cmd.Val(), nil
+	}
+	// TYP_ARRAY
+	return cmd.expanded, nil
+}
+
+func (cmd *JSONCmd) Result() (string, error) {
+	return cmd.Val(), nil
+}
+
+func newJSONCmd(res rueidis.RedisResult) *JSONCmd {
+	cmd := &JSONCmd{}
+	msg, err := res.ToMessage()
+	if err != nil {
+		if err == rueidis.Nil {
+			cmd.SetVal("")
+			return cmd
+		}
+		cmd.SetErr(err)
+		return cmd
+	}
+	switch {
+	// JSON.GET
+	case msg.IsString():
+		cmd.typ = TYP_STRING
+		str, err := res.ToString()
+		if err != nil {
+			cmd.SetErr(err)
+			return cmd
+		}
+		cmd.SetVal(str)
+	// JSON.NUMINCRBY
+	case msg.IsArray():
+		// we set marshaled string to cmd.val
+		// which will be used at cmd.Val()
+		// and also stored parsed result to cmd.expanded,
+		// which will be used at cmd.Expanded()
+		cmd.typ = TYP_ARRAY
+		arr, err := res.ToArray()
+		if err != nil {
+			cmd.SetErr(err)
+			return cmd
+		}
+		expanded := make([]any, len(arr))
+		for i, e := range arr {
+			anyE, err := e.ToAny()
+			if err != nil {
+				cmd.SetErr(err)
+				return cmd
+			}
+			expanded[i] = anyE
+		}
+		cmd.expanded = expanded
+		val, err := json.Marshal(cmd.expanded)
+		if err != nil {
+			cmd.SetErr(err)
+			return cmd
+		}
+		cmd.SetVal(string(val))
+	default:
+		panic("invalid type, expect array or string")
+	}
+	return cmd
+}
+
+type JSONGetArgs struct {
+	Indent  string
+	Newline string
+	Space   string
+}
+
+type IntPointerSliceCmd struct {
+	baseCmd[[]*int64]
+}
+
+// newIntPointerSliceCmd initialises an IntPointerSliceCmd
+func newIntPointerSliceCmd(res rueidis.RedisResult) *IntPointerSliceCmd {
+	cmd := &IntPointerSliceCmd{}
+	arr, err := res.ToArray()
+	if err != nil {
+		cmd.SetErr(err)
+		return cmd
+	}
+	intPtrSlice := make([]*int64, len(arr))
+	for i, e := range arr {
+		if e.IsNil() {
+			intPtrSlice[i] = nil
+			continue
+		}
+		len, err := e.ToInt64()
+		if err != nil {
+			cmd.SetErr(err)
+			return cmd
+		}
+		intPtrSlice[i] = &len
+	}
+	cmd.SetVal(intPtrSlice)
+	return cmd
+}
+
+type JSONSliceCmd struct {
+	baseCmd[[]any]
+}
+
+func newJSONSliceCmd(res rueidis.RedisResult) *JSONSliceCmd {
+	cmd := &JSONSliceCmd{}
+	arr, err := res.ToArray()
+	if err != nil {
+		cmd.SetErr(err)
+		return cmd
+	}
+	anySlice := make([]any, len(arr))
+	for i, e := range arr {
+		if e.IsNil() {
+			anySlice[i] = nil
+			continue
+		}
+		anyE, err := e.ToAny()
+		if err != nil {
+			cmd.SetErr(err)
+			return cmd
+		}
+		anySlice[i] = anyE
+	}
+	cmd.SetVal(anySlice)
+	return cmd
 }
