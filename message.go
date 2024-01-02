@@ -697,9 +697,15 @@ func (m *RedisMessage) AsIntSlice() ([]int64, error) {
 	if err != nil {
 		return nil, err
 	}
-	s := make([]int64, 0, len(values))
-	for _, v := range values {
-		s = append(s, v.integer)
+	s := make([]int64, len(values))
+	for i, v := range values {
+		if len(v.string) != 0 {
+			if s[i], err = strconv.ParseInt(v.string, 10, 64); err != nil {
+				return nil, err
+			}
+		} else {
+			s[i] = v.integer
+		}
 	}
 	return s, nil
 }
