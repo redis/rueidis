@@ -711,16 +711,14 @@ func (m *RedisMessage) AsFloatSlice() ([]float64, error) {
 	if err != nil {
 		return nil, err
 	}
-	s := make([]float64, 0, len(values))
-	for _, v := range values {
+	s := make([]float64, len(values))
+	for i, v := range values {
 		if len(v.string) != 0 {
-			i, err := util.ToFloat64(v.string)
-			if err != nil {
+			if s[i], err = util.ToFloat64(v.string); err != nil {
 				return nil, err
 			}
-			s = append(s, i)
 		} else {
-			s = append(s, float64(v.integer))
+			s[i] = float64(v.integer)
 		}
 	}
 	return s, nil
