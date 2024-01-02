@@ -254,6 +254,14 @@ func TestRedisResult(t *testing.T) {
 		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: values}}).AsIntSlice(); !reflect.DeepEqual(ret, []int64{2}) {
 			t.Fatal("AsIntSlice not get value as expected")
 		}
+		values = []RedisMessage{{string: "3", typ: '+'}}
+		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: values}}).AsIntSlice(); !reflect.DeepEqual(ret, []int64{3}) {
+			t.Fatal("AsIntSlice not get value as expected")
+		}
+		values = []RedisMessage{{string: "ab", typ: '+'}}
+		if _, err := (RedisResult{val: RedisMessage{typ: '*', values: values}}).AsIntSlice(); err == nil {
+			t.Fatal("AsIntSlice not failed as expected")
+		}
 	})
 
 	t.Run("AsFloatSlice", func(t *testing.T) {
