@@ -144,7 +144,7 @@ Use `IsCacheHit()` to verify that if the response came from the client side memo
 client.DoCache(ctx, client.B().Get().Key("k1").Cache(), time.Minute).IsCacheHit() == true
 ```
 
-If the OpenTelemetry is enabled by the `rueidisotel.WithClient(client)`, then there are also two metrics instrumented:
+If the OpenTelemetry is enabled by the `rueidisotel.NewClient(option)`, then there are also two metrics instrumented:
 * rueidis_do_cache_miss
 * rueidis_do_cache_hits
 

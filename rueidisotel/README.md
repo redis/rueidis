@@ -1,13 +1,15 @@
 # OpenTelemetry Tracing & Connection Metrics
 
-Use `rueidisotel.WithClient` to create a client with OpenTelemetry Tracing enabled.
-
 Use `rueidisotel.NewClient` to create a client with OpenTelemetry Tracing and Connection Metrics enabled.
-default metrics are:
+Builtin connection metrics are:
 - `rueidis_dial_attempt`: number of dial attempts
 - `rueidis_dial_success`: number of successful dials
 - `rueidis_dial_conns`: number of connections
 - `rueidis_dial_latency`: dial latency in seconds
+
+Client side caching metrics:
+- `rueidis_do_cache_miss`: number of cache miss on client side
+- `rueidis_do_cache_hits`: number of cache hits on client side
 
 ```golang
 package main
@@ -22,7 +24,6 @@ func main() {
     if err != nil {
         panic(err)
     }
-    client = rueidisotel.WithClient(client)
     defer client.Close()
 }
 ```
