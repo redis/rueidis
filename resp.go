@@ -3,6 +3,7 @@ package rueidis
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"io"
 	"math"
 	"strconv"
@@ -281,7 +282,7 @@ func readNextMessage(i *bufio.Reader) (m RedisMessage, err error) {
 		}
 		fn := readers[typ]
 		if fn == nil {
-			return RedisMessage{}, errors.New(unknownMessageType + strconv.Itoa(int(typ)))
+			return RedisMessage{}, fmt.Errorf("%s%d buf=%v", unknownMessageType, typ, i)
 		}
 		if m, err = fn(i); err != nil {
 			if err == errOldNull {
