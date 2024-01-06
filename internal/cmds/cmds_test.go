@@ -160,16 +160,23 @@ func TestCompleted_CommandSlice(t *testing.T) {
 }
 
 func TestCompleted_Slots(t *testing.T) {
-	builder := NewBuilder(InitSlot)
-	c1 := builder.Get().Key("a").Build()
-	c2 := builder.Get().Key("b").Build()
-	c3 := Cacheable(c1)
-	c4 := Cacheable(c2)
-	if c1.Slot() == c2.Slot() {
-		t.Fatalf("unexpected same slot")
-	}
-	if c3.Slot() == c4.Slot() {
-		t.Fatalf("unexpected same slot")
+	for _, init := range []uint16{InitSlot, NoSlot} {
+		builder := NewBuilder(init)
+		c1 := builder.Get().Key("a").Build()
+		c2 := builder.Get().Key("b").Build()
+		c3 := Cacheable(c1)
+		c4 := Cacheable(c2)
+		c5 := c1.SetSlot("c")
+		c6 := c2.SetSlot("c")
+		if c1.Slot() == c2.Slot() {
+			t.Fatalf("unexpected same slot")
+		}
+		if c3.Slot() == c4.Slot() {
+			t.Fatalf("unexpected same slot")
+		}
+		if c5.Slot() != c6.Slot() {
+			t.Fatalf("unexpected different slot")
+		}
 	}
 }
 

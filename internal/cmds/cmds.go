@@ -145,6 +145,16 @@ func (c *Completed) Slot() uint16 {
 	return c.ks
 }
 
+// SetSlot returns a new completed command with its key slot be overridden
+func (c Completed) SetSlot(key string) Completed {
+	if c.ks&NoSlot == NoSlot {
+		c.ks = NoSlot | slot(key)
+	} else {
+		c.ks = slot(key)
+	}
+	return c
+}
+
 // Cacheable represents a completed Redis command which supports server-assisted client side caching,
 // and it should be created by the Cache() of command builder.
 type Cacheable Completed
