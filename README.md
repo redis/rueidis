@@ -5,21 +5,21 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/redis/rueidis)](https://goreportcard.com/report/github.com/redis/rueidis)
 [![codecov](https://codecov.io/gh/redis/rueidis/branch/master/graph/badge.svg?token=wGTB8GdY06)](https://codecov.io/gh/redis/rueidis)
 
-A fast Golang Redis client that does auto pipelining and supports client side caching.
+A fast Golang Redis client that does auto pipelining and supports server-assisted client-side caching.
 
 ## Features
 
-* [Auto pipelining for non-blocking redis commands](https://redis.io/docs/manual/pipelining/)
-* [Client Side Caching in RESP3](https://redis.io/docs/manual/client-side-caching/)
-* Pub/Sub, Sharded Pub/Sub, Streams
-* Redis Cluster, Sentinel, RedisJSON, RedisBloom, RediSearch, RedisTimeseries, etc.
-* [Generic Object Mapping with client side caching](./om)
-* [Cache-Aside Pattern with client side caching](./rueidisaside)
+* [Auto pipelining for non-blocking redis commands](#auto-pipelining)
+* [Server-assisted client-side caching](#server-assisted-client-side-caching)
+* [Generic Object Mapping with client-side caching](./om)
+* [Cache-Aside pattern with client-side caching](./rueidisaside)
 * [Distributed Locks with client side caching](./rueidislock)
 * [Helpers for writing tests with rueidis mock](./mock)
 * [OpenTelemetry integration](./rueidisotel)
 * [Hooks and other integrations](./rueidishook)
 * [Go-redis like API adapter](./rueidiscompat) by [@418Coffee](https://github.com/418Coffee)
+* Pub/Sub, Sharded Pub/Sub, Streams
+* Redis Cluster, Sentinel, RedisJSON, RedisBloom, RediSearch, RedisTimeseries, etc.
 
 ## Getting Started
 
@@ -58,7 +58,8 @@ Checkout more examples: [Command Response Cheatsheet](https://github.com/redis/r
 
 Once a command is built, use either `client.Do()` or `client.DoMulti()` to send it to redis.
 
-**Constructed commands will be recycled to underlying `sync.Pool` by default and you ❗️SHOULD NOT❗️ reuse them across multiple `client.Do()` or `client.DoMulti()` calls.**
+**You ❗️SHOULD NOT❗️ reuse the command to another `client.Do()` or `client.DoMulti()` call because it has been recycled to the underlying `sync.Pool` by default.**
+
 To reuse a command, use `Pin()` after `Build()` and it will prevent the command being recycled. 
 
 ## [Auto Pipelining](https://redis.io/docs/manual/pipelining/)
@@ -108,9 +109,9 @@ for _, resp := range client.DoMulti(ctx, cmds...) {
 }
 ```
 
-## [Client Side Caching](https://redis.io/docs/manual/client-side-caching/)
+## [Server-Assisted Client-Side Caching](https://redis.io/docs/manual/client-side-caching/)
 
-The opt-in mode of [server-assisted client side caching](https://redis.io/docs/manual/client-side-caching/) is enabled by default, and can be used by calling `DoCache()` or `DoMultiCache()` with
+The opt-in mode of [server-assisted client-side caching](https://redis.io/docs/manual/client-side-caching/) is enabled by default, and can be used by calling `DoCache()` or `DoMultiCache()` with
 pairs of a readonly command and a client side TTL.
 
 ```golang
