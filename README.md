@@ -111,21 +111,20 @@ for _, resp := range client.DoMulti(ctx, cmds...) {
 
 ## [Server-Assisted Client-Side Caching](https://redis.io/docs/manual/client-side-caching/)
 
-The opt-in mode of [server-assisted client-side caching](https://redis.io/docs/manual/client-side-caching/) is enabled by default, and can be used by calling `DoCache()` or `DoMultiCache()` with
-pairs of a readonly command and a client side TTL.
+The opt-in mode of [server-assisted client-side caching](https://redis.io/docs/manual/client-side-caching/) is enabled by default, and can be used by calling `DoCache()` or `DoMultiCache()` with client-side TTLs specified.
 
 ```golang
-client.DoCache(ctx, client.B().Hmget().Key("myhash").Field("1", "2").Cache(), time.Minute).ToArray()
+client.DoCache(ctx, client.B().Hmget().Key("mk").Field("1", "2").Cache(), time.Minute).ToArray()
 client.DoMultiCache(ctx,
     rueidis.CT(client.B().Get().Key("k1").Cache(), 1*time.Minute),
     rueidis.CT(client.B().Get().Key("k2").Cache(), 2*time.Minute))
 ```
 
-Cached responses will be invalidated when being notified by redis or their client side ttl is reached.
+Cached responses will be invalidated either when being notified by redis servers or when their client side TTLs are reached.
 
 ### Benchmark
 
-Client Side Caching can boost read throughput just like **having a redis replica right inside your application**:
+Server-assisted client-side Caching can boost read throughput just like **having a redis replica right inside your application**:
 
 ![client_test_get](https://github.com/rueian/rueidis-benchmark/blob/master/client_test_get_10.png)
 
@@ -226,7 +225,7 @@ err = client.Receive(context.Background(), client.B().Subscribe().Channel("ch1",
 
 The provided handler will be called with received message.
 
-It is important to note that `client.Receive()` will keep blocking and return only when the following cases:
+It is important to note that `client.Receive()` will keep blocking until returning a value in the following cases:
 1. return `nil` when received any unsubscribe/punsubscribe message related to the provided `subscribe` command.
 2. return `rueidis.ErrClosing` when the client is closed manually.
 3. return `ctx.Err()` when the `ctx` is done.
@@ -291,7 +290,7 @@ c.Do(ctx, c.B().Watch().Key("k1", "k2").Build())
 // do the rest CAS operations with the `client` who occupying a connection 
 ```
 
-However, occupying a connection is not good in terms of throughput. It is better to use Lua script to perform
+However, occupying a connection is not good in terms of throughput. It is better to use [Lua script](#lua-script) to perform
 optimistic locking instead.
 
 ## Memory Consumption Consideration
@@ -402,7 +401,10 @@ n, resp, err := client.Do(ctx, cmd).AsFtSearch()
 
 ## Command Response Cheatsheet
 
-It is hard to remember what message type is returned from redis and which parsing method should be used with. So, here is some common examples:
+While the command builder is developer friendly, the response parser is a little unfriendly. Developers must know what
+type of Redis response will be returned from the server beforehand and which parser they should use. Otherwise, it panics. 
+
+It is hard to remember what type of message will be returned and which parsing to used. So, here are some common examples:
 
 ```golang
 // GET
