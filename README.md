@@ -64,9 +64,9 @@ To reuse a command, use `Pin()` after `Build()` and it will prevent the command 
 
 ## [Auto Pipelining](https://redis.io/docs/manual/pipelining/)
 
-All concurrent non-blocking redis commands (such as `GET`, `SET`) are automatically pipelined through connections,
+All concurrent non-blocking redis commands (such as `GET`, `SET`) are automatically pipelined,
 which reduces the overall round trips and system calls, and gets higher throughput. You can easily get the benefit
-of [pipelining technique](https://redis.io/docs/manual/pipelining/) by just calling `client.Do()` from multiple goroutines.
+of [pipelining technique](https://redis.io/docs/manual/pipelining/) by just calling `client.Do()` from multiple goroutines concurrently.
 For example:
 
 ```go
@@ -85,7 +85,7 @@ func BenchmarkPipelining(b *testing.B, client rueidis.Client) {
 
 Comparing to go-redis, Rueidis has higher throughput across 1, 8, and 64 parallelism settings.
 
-It is even able to achieve ~14x throughput over go-redis in a local benchmark of Macbook Pro 16" M1 Pro 2021. (see `parallelism(64)-key(16)-value(64)-10`)
+It is even able to achieve **~14x** throughput over go-redis in a local benchmark of Macbook Pro 16" M1 Pro 2021. (see `parallelism(64)-key(16)-value(64)-10`)
 
 ![client_test_set](https://github.com/rueian/rueidis-benchmark/blob/master/client_test_set_10.png)
 
@@ -93,9 +93,9 @@ Benchmark source code: https://github.com/rueian/rueidis-benchmark
 
 A benchmark result performed on two GCP n2-highcpu-2 machines also shows that rueidis can achieve higher throughput with lower latencies: https://github.com/redis/rueidis/pull/93
 
-### Pipelining Bulk Operations Manually
+### Manual Pipelining
 
-Though all concurrent non-blocking commands are automatically pipelined, you can still pipeline commands manually with `DoMulti()`:
+Besides auto pipelining, you can also pipeline commands manually with `DoMulti()`:
 
 ``` golang
 cmds := make(rueidis.Commands, 0, 10)
@@ -124,7 +124,7 @@ Cached responses will be invalidated either when being notified by redis servers
 
 ### Benchmark
 
-Server-assisted client-side Caching can boost read throughput just like **having a redis replica right inside your application**:
+Server-assisted client-side caching can dramatically boost latencies and throughput just like **having a redis replica right inside your application**. For example:
 
 ![client_test_get](https://github.com/rueian/rueidis-benchmark/blob/master/client_test_get_10.png)
 
@@ -174,7 +174,8 @@ Otherwise, their client-side cache will not be invalidated by redis.
 
 ### Client Side Caching with Cache Aside Pattern
 
-Cache-Aside is a widely used pattern to cache other data sources into Redis. For example:
+Cache-Aside is a widely used caching strategy.
+[rueidisaside](https://github.com/redis/rueidis/blob/main/rueidisaside/README.md) can help you cache data into your client-side cache backed by Redis. For example:
 
 ```go
 client, err := rueidisaside.NewClient(rueidisaside.ClientOption{
@@ -256,9 +257,9 @@ err := <-wait // disconnected with err
 If the hooks are not nil, the above `wait` channel is guaranteed to be close when the hooks will not be called anymore,
 and produce at most one error describing the reason. Users can use this channel to detect disconnection.
 
-## CAS Pattern
+## CAS Transaction
 
-To do a CAS operation (`WATCH` + `MULTI` + `EXEC`), a dedicated connection should be used, because there should be no
+To do a [CAS Transaction](https://redis.io/docs/interact/transactions/#optimistic-locking-using-check-and-set) (`WATCH` + `MULTI` + `EXEC`), a dedicated connection should be used because there should be no
 unintentional write commands between `WATCH` and `EXEC`. Otherwise, the `EXEC` may not fail as expected.
 
 ```golang
@@ -293,16 +294,6 @@ c.Do(ctx, c.B().Watch().Key("k1", "k2").Build())
 However, occupying a connection is not good in terms of throughput. It is better to use [Lua script](#lua-script) to perform
 optimistic locking instead.
 
-## Memory Consumption Consideration
-
-Each underlying connection in rueidis allocates a ring buffer for pipelining.
-Its size is controlled by the `ClientOption.RingScaleEachConn` and the default value is 10 which results into each ring of size 2^10.
-
-If you have many rueidis connections, you may find that they occupy quite amount of memory.
-In that case, you may consider reducing `ClientOption.RingScaleEachConn` to 8 or 9 at the cost of potential throughput degradation.
-
-You may also consider setting the value of `ClientOption.PipelineMultiplex` to `-1`, which will let rueidis use only 1 connection for pipelining to each redis node.
-
 ## Lua Script
 
 The `NewLuaScript` or `NewLuaScriptReadOnly` will create a script which is safe for concurrent usage.
@@ -314,6 +305,16 @@ script := rueidis.NewLuaScript("return {KEYS[1],KEYS[2],ARGV[1],ARGV[2]}")
 // the script.Exec is safe for concurrent call
 list, err := script.Exec(ctx, client, []string{"k1", "k2"}, []string{"a1", "a2"}).ToArray()
 ```
+
+## Memory Consumption Consideration
+
+Each underlying connection in rueidis allocates a ring buffer for pipelining.
+Its size is controlled by the `ClientOption.RingScaleEachConn` and the default value is 10 which results into each ring of size 2^10.
+
+If you have many rueidis connections, you may find that they occupy quite amount of memory.
+In that case, you may consider reducing `ClientOption.RingScaleEachConn` to 8 or 9 at the cost of potential throughput degradation.
+
+You may also consider setting the value of `ClientOption.PipelineMultiplex` to `-1`, which will let rueidis use only 1 connection for pipelining to each redis node.
 
 ## Redis Cluster, Single Redis and Sentinel
 
