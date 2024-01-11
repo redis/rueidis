@@ -20,7 +20,7 @@ import (
 )
 
 func main() {
-    client, err := rueidis.NewClient(rueidis.ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
+    client, err := rueidisotel.NewClient(rueidis.ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
     if err != nil {
         panic(err)
     }
@@ -29,3 +29,5 @@ func main() {
 ```
 
 See [rueidishook](../rueidishook) if you want more customizations.
+
+Note: `rueidisotel.NewClient` is not supported on go1.18 and go1.19 builds. [Reference](https://github.com/redis/rueidis/issues/442#issuecomment-1886993707)
