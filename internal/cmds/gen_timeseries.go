@@ -25,7 +25,7 @@ func (c TsAdd) Key(key string) TsAddKey {
 type TsAddChunkSize Incomplete
 
 func (c TsAddChunkSize) OnDuplicateBlock() TsAddOnDuplicateBlock {
-	c.cf = int16(blockTag)
+	c.cf |= int16(blockTag)
 	c.cs.s = append(c.cs.s, "ON_DUPLICATE", "BLOCK")
 	return (TsAddOnDuplicateBlock)(c)
 }
@@ -73,7 +73,7 @@ func (c TsAddEncodingCompressed) ChunkSize(size int64) TsAddChunkSize {
 }
 
 func (c TsAddEncodingCompressed) OnDuplicateBlock() TsAddOnDuplicateBlock {
-	c.cf = int16(blockTag)
+	c.cf |= int16(blockTag)
 	c.cs.s = append(c.cs.s, "ON_DUPLICATE", "BLOCK")
 	return (TsAddOnDuplicateBlock)(c)
 }
@@ -121,7 +121,7 @@ func (c TsAddEncodingUncompressed) ChunkSize(size int64) TsAddChunkSize {
 }
 
 func (c TsAddEncodingUncompressed) OnDuplicateBlock() TsAddOnDuplicateBlock {
-	c.cf = int16(blockTag)
+	c.cf |= int16(blockTag)
 	c.cs.s = append(c.cs.s, "ON_DUPLICATE", "BLOCK")
 	return (TsAddOnDuplicateBlock)(c)
 }
@@ -270,7 +270,7 @@ func (c TsAddRetention) ChunkSize(size int64) TsAddChunkSize {
 }
 
 func (c TsAddRetention) OnDuplicateBlock() TsAddOnDuplicateBlock {
-	c.cf = int16(blockTag)
+	c.cf |= int16(blockTag)
 	c.cs.s = append(c.cs.s, "ON_DUPLICATE", "BLOCK")
 	return (TsAddOnDuplicateBlock)(c)
 }
@@ -340,7 +340,7 @@ func (c TsAddValue) ChunkSize(size int64) TsAddChunkSize {
 }
 
 func (c TsAddValue) OnDuplicateBlock() TsAddOnDuplicateBlock {
-	c.cf = int16(blockTag)
+	c.cf |= int16(blockTag)
 	c.cs.s = append(c.cs.s, "ON_DUPLICATE", "BLOCK")
 	return (TsAddOnDuplicateBlock)(c)
 }
@@ -401,7 +401,7 @@ func (c TsAlter) Key(key string) TsAlterKey {
 type TsAlterChunkSize Incomplete
 
 func (c TsAlterChunkSize) DuplicatePolicyBlock() TsAlterDuplicatePolicyBlock {
-	c.cf = int16(blockTag)
+	c.cf |= int16(blockTag)
 	c.cs.s = append(c.cs.s, "DUPLICATE_POLICY", "BLOCK")
 	return (TsAlterDuplicatePolicyBlock)(c)
 }
@@ -526,7 +526,7 @@ func (c TsAlterKey) ChunkSize(size int64) TsAlterChunkSize {
 }
 
 func (c TsAlterKey) DuplicatePolicyBlock() TsAlterDuplicatePolicyBlock {
-	c.cf = int16(blockTag)
+	c.cf |= int16(blockTag)
 	c.cs.s = append(c.cs.s, "DUPLICATE_POLICY", "BLOCK")
 	return (TsAlterDuplicatePolicyBlock)(c)
 }
@@ -586,7 +586,7 @@ func (c TsAlterRetention) ChunkSize(size int64) TsAlterChunkSize {
 }
 
 func (c TsAlterRetention) DuplicatePolicyBlock() TsAlterDuplicatePolicyBlock {
-	c.cf = int16(blockTag)
+	c.cf |= int16(blockTag)
 	c.cs.s = append(c.cs.s, "DUPLICATE_POLICY", "BLOCK")
 	return (TsAlterDuplicatePolicyBlock)(c)
 }
@@ -647,7 +647,7 @@ func (c TsCreate) Key(key string) TsCreateKey {
 type TsCreateChunkSize Incomplete
 
 func (c TsCreateChunkSize) DuplicatePolicyBlock() TsCreateDuplicatePolicyBlock {
-	c.cf = int16(blockTag)
+	c.cf |= int16(blockTag)
 	c.cs.s = append(c.cs.s, "DUPLICATE_POLICY", "BLOCK")
 	return (TsCreateDuplicatePolicyBlock)(c)
 }
@@ -767,7 +767,7 @@ func (c TsCreateEncodingCompressed) ChunkSize(size int64) TsCreateChunkSize {
 }
 
 func (c TsCreateEncodingCompressed) DuplicatePolicyBlock() TsCreateDuplicatePolicyBlock {
-	c.cf = int16(blockTag)
+	c.cf |= int16(blockTag)
 	c.cs.s = append(c.cs.s, "DUPLICATE_POLICY", "BLOCK")
 	return (TsCreateDuplicatePolicyBlock)(c)
 }
@@ -815,7 +815,7 @@ func (c TsCreateEncodingUncompressed) ChunkSize(size int64) TsCreateChunkSize {
 }
 
 func (c TsCreateEncodingUncompressed) DuplicatePolicyBlock() TsCreateDuplicatePolicyBlock {
-	c.cf = int16(blockTag)
+	c.cf |= int16(blockTag)
 	c.cs.s = append(c.cs.s, "DUPLICATE_POLICY", "BLOCK")
 	return (TsCreateDuplicatePolicyBlock)(c)
 }
@@ -878,7 +878,7 @@ func (c TsCreateKey) ChunkSize(size int64) TsCreateChunkSize {
 }
 
 func (c TsCreateKey) DuplicatePolicyBlock() TsCreateDuplicatePolicyBlock {
-	c.cf = int16(blockTag)
+	c.cf |= int16(blockTag)
 	c.cs.s = append(c.cs.s, "DUPLICATE_POLICY", "BLOCK")
 	return (TsCreateDuplicatePolicyBlock)(c)
 }
@@ -948,7 +948,7 @@ func (c TsCreateRetention) ChunkSize(size int64) TsCreateChunkSize {
 }
 
 func (c TsCreateRetention) DuplicatePolicyBlock() TsCreateDuplicatePolicyBlock {
-	c.cf = int16(blockTag)
+	c.cf |= int16(blockTag)
 	c.cs.s = append(c.cs.s, "DUPLICATE_POLICY", "BLOCK")
 	return (TsCreateDuplicatePolicyBlock)(c)
 }
