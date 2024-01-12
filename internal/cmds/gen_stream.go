@@ -1047,7 +1047,7 @@ func (c Xread) Count(count int64) XreadCount {
 }
 
 func (c Xread) Block(milliseconds int64) XreadBlock {
-	c.cf = int16(blockTag)
+	c.cf |= int16(blockTag)
 	c.cs.s = append(c.cs.s, "BLOCK", strconv.FormatInt(milliseconds, 10))
 	return (XreadBlock)(c)
 }
@@ -1067,7 +1067,7 @@ func (c XreadBlock) Streams() XreadStreams {
 type XreadCount Incomplete
 
 func (c XreadCount) Block(milliseconds int64) XreadBlock {
-	c.cf = int16(blockTag)
+	c.cf |= int16(blockTag)
 	c.cs.s = append(c.cs.s, "BLOCK", strconv.FormatInt(milliseconds, 10))
 	return (XreadBlock)(c)
 }
@@ -1156,7 +1156,7 @@ func (c XreadgroupBlock) Streams() XreadgroupStreams {
 type XreadgroupCount Incomplete
 
 func (c XreadgroupCount) Block(milliseconds int64) XreadgroupBlock {
-	c.cf = int16(blockTag)
+	c.cf |= int16(blockTag)
 	c.cs.s = append(c.cs.s, "BLOCK", strconv.FormatInt(milliseconds, 10))
 	return (XreadgroupBlock)(c)
 }
@@ -1179,7 +1179,7 @@ func (c XreadgroupGroup) Count(count int64) XreadgroupCount {
 }
 
 func (c XreadgroupGroup) Block(milliseconds int64) XreadgroupBlock {
-	c.cf = int16(blockTag)
+	c.cf |= int16(blockTag)
 	c.cs.s = append(c.cs.s, "BLOCK", strconv.FormatInt(milliseconds, 10))
 	return (XreadgroupBlock)(c)
 }

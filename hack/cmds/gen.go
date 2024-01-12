@@ -803,7 +803,7 @@ func printBuilder(w io.Writer, parent, next goStruct) {
 
 	for _, cmd := range next.BuildDef.Command {
 		if cmd == "BLOCK" {
-			fmt.Fprintf(w, "\tc.cf = int16(blockTag)\n")
+			fmt.Fprintf(w, "\tc.cf |= int16(blockTag)\n")
 			break
 		}
 	}
