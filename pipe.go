@@ -846,7 +846,7 @@ func (p *pipe) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 	} else {
 		resp = newErrResult(p.Error())
 	}
-	if left := atomic.AddInt32(&p.waits, -1); state == 0 && waits == 1 && left != 0 {
+	if left := atomic.AddInt32(&p.waits, -1); state == 0 && left != 0 {
 		p.background()
 	}
 	atomic.AddInt32(&p.recvs, 1)
@@ -954,7 +954,7 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) *redisresults {
 			resp.s[i] = err
 		}
 	}
-	if left := atomic.AddInt32(&p.waits, -1); state == 0 && waits == 1 && left != 0 {
+	if left := atomic.AddInt32(&p.waits, -1); state == 0 && left != 0 {
 		p.background()
 	}
 	atomic.AddInt32(&p.recvs, 1)
