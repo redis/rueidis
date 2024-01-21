@@ -2,14 +2,7 @@ module github.com/redis/rueidis
 
 go 1.20
 
-require (
-	github.com/oklog/ulid/v2 v2.1.0
-	go.opentelemetry.io/otel v1.21.0
-	go.opentelemetry.io/otel/metric v1.21.0
-	go.opentelemetry.io/otel/sdk v1.21.0
-	go.opentelemetry.io/otel/sdk/metric v1.21.0
-	go.opentelemetry.io/otel/trace v1.21.0
-)
+require github.com/oklog/ulid/v2 v2.1.0
 
 require (
 	github.com/onsi/ginkgo/v2 v2.12.1
