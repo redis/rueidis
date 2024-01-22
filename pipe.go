@@ -856,23 +856,23 @@ queue:
 	ch := p.queue.PutOne(cmd)
 	if ctxCh := ctx.Done(); ctxCh == nil {
 		resp = <-ch
-		atomic.AddInt32(&p.waits, -1)
-		atomic.AddInt32(&p.recvs, 1)
 	} else {
 		select {
 		case resp = <-ch:
-			atomic.AddInt32(&p.waits, -1)
-			atomic.AddInt32(&p.recvs, 1)
 		case <-ctxCh:
-			resp = newErrResult(ctx.Err())
-			go func(ch chan RedisResult) {
-				<-ch
-				atomic.AddInt32(&p.waits, -1)
-				atomic.AddInt32(&p.recvs, 1)
-			}(ch)
+			goto abort
 		}
 	}
+	atomic.AddInt32(&p.waits, -1)
+	atomic.AddInt32(&p.recvs, 1)
 	return resp
+abort:
+	go func(ch chan RedisResult) {
+		<-ch
+		atomic.AddInt32(&p.waits, -1)
+		atomic.AddInt32(&p.recvs, 1)
+	}(ch)
+	return newErrResult(ctx.Err())
 }
 
 func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) *redisresults {
