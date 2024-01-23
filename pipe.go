@@ -888,7 +888,6 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) *redisresults {
 
 	isOptIn := multi[0].IsOptIn() // len(multi) > 0 should have already been checked by upper layer
 	noReply := 0
-	isBlock := false
 
 	for _, cmd := range multi {
 		if cmd.NoReply() {
@@ -910,21 +909,17 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) *redisresults {
 
 	for _, cmd := range multi {
 		if cmd.IsBlock() {
-			isBlock = true
+			atomic.AddInt32(&p.blcksig, 1)
+			defer func() {
+				for _, r := range resp.s {
+					if r.err != nil {
+						return
+					}
+				}
+				atomic.AddInt32(&p.blcksig, -1)
+			}()
 			break
 		}
-	}
-
-	if isBlock {
-		atomic.AddInt32(&p.blcksig, 1)
-		defer func() {
-			for _, r := range resp.s {
-				if r.err != nil {
-					return
-				}
-			}
-			atomic.AddInt32(&p.blcksig, -1)
-		}()
 	}
 
 	waits := atomic.AddInt32(&p.waits, 1) // if this is 1, and background worker is not started, no need to queue
