@@ -172,34 +172,30 @@ func readS(i *bufio.Reader) (string, error) {
 	return BinaryString(bs), nil
 }
 
-func readI(i *bufio.Reader) (int64, error) {
-	var v int64
-	var neg bool
-	for {
-		c, err := i.ReadByte()
-		if err != nil {
-			return 0, err
-		}
-		switch {
-		case c >= '0' && c <= '9':
-			v = v*10 + int64(c-'0')
-		case c == '\r':
-			_, err = i.Discard(1)
-			if neg {
-				return v * -1, err
-			}
-			return v, err
-		case c == '-':
-			neg = true
-		case c == '?':
-			if _, err = i.Discard(2); err == nil {
-				err = errChunked
-			}
-			return 0, err
-		default:
+func readI(i *bufio.Reader) (v int64, err error) {
+	bs, err := i.ReadSlice('\n')
+	if err != nil {
+		return 0, err
+	}
+	if len(bs) < 3 {
+		return 0, errors.New(unexpectedNoCRLF)
+	}
+	if bs[0] == '?' {
+		return 0, errChunked
+	}
+	var s = int64(1)
+	if bs[0] == '-' {
+		s = -1
+		bs = bs[1:]
+	}
+	for _, c := range bs[:len(bs)-2] {
+		if d := int64(c - '0'); d >= 0 && d <= 9 {
+			v = v*10 + d
+		} else {
 			return 0, errors.New(unexpectedNumByte + strconv.Itoa(int(c)))
 		}
 	}
+	return v * s, nil
 }
 
 func readB(i *bufio.Reader) (string, error) {

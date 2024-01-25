@@ -295,10 +295,10 @@ type AuthCredentials struct {
 // It will first try to connect as cluster client. If the len(ClientOption.InitAddress) == 1 and
 // the address does not enable cluster mode, the NewClient() will use single client instead.
 func NewClient(option ClientOption) (client Client, err error) {
-	if option.ReadBufferEachConn <= 0 {
+	if option.ReadBufferEachConn < 32 { // the buffer should be able to hold an int64 string at least
 		option.ReadBufferEachConn = DefaultReadBuffer
 	}
-	if option.WriteBufferEachConn <= 0 {
+	if option.WriteBufferEachConn < 32 {
 		option.WriteBufferEachConn = DefaultWriteBuffer
 	}
 	if option.CacheSizeEachConn <= 0 {
