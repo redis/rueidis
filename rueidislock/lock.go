@@ -350,12 +350,12 @@ func (m *locker) try(ctx context.Context, cancel context.CancelFunc, name string
 			f = atomic.AddInt32(&failures, 1)
 		}
 	}
-	if i != m.totalcnt {
-		go func() {
+	if i < m.totalcnt {
+		go func(i int32, err error) {
 			for ; i < m.totalcnt; i++ {
 				err = acquire(err, keyname(m.prefix, name, i), g.csc[i])
 			}
-		}()
+		}(i, err)
 	}
 	if cacneltm.Stop() && failures < m.majority {
 		return func() {
