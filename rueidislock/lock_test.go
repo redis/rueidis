@@ -387,6 +387,51 @@ func TestLocker_TryWithContext_MultipleLocker(t *testing.T) {
 	}
 }
 
+func TestLocker_WithContext_MissingPeers(t *testing.T) {
+	test := func(t *testing.T, noLoop, setpx, nocsc bool) {
+		locker := newLocker(t, noLoop, setpx, nocsc)
+		defer locker.Close()
+
+		lck := strconv.Itoa(rand.Int())
+		for i := 0; i < 100; i++ {
+			ctx, cancel, err := locker.WithContext(context.Background(), lck)
+			if err != nil {
+				t.Fatal(err)
+			}
+			locker.mu.RLock()
+			g := locker.gates[lck]
+			locker.mu.RUnlock()
+			var wg sync.WaitGroup
+			for i := 0; i < 100; i++ {
+				wg.Add(1)
+				go func() {
+					if _, _, err := locker.WithContext(ctx, lck); !errors.Is(err, context.Canceled) {
+						t.Error(err)
+					}
+					wg.Done()
+				}()
+			}
+			cancel()
+			select {
+			case g.ch <- struct{}{}:
+			default:
+			}
+			wg.Wait()
+		}
+	}
+	for _, nocsc := range []bool{false, true} {
+		t.Run("Tracking Loop", func(t *testing.T) {
+			test(t, false, false, nocsc)
+		})
+		t.Run("Tracking NoLoop", func(t *testing.T) {
+			test(t, true, false, nocsc)
+		})
+		t.Run("SET PX", func(t *testing.T) {
+			test(t, true, true, nocsc)
+		})
+	}
+}
+
 func TestLocker_WithContext_Cleanup(t *testing.T) {
 	test := func(t *testing.T, noLoop, setpx, nocsc bool) {
 		locker := newLocker(t, noLoop, setpx, nocsc)

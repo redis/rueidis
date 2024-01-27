@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"math/rand"
-	"reflect"
 	"strconv"
 	"strings"
 	"sync"
@@ -220,8 +219,7 @@ func (m *locker) waitgate(ctx context.Context, name string) (g *gate, err error)
 
 func (m *locker) trygate(name string) (g *gate) {
 	m.mu.Lock()
-	_, ok := m.gates[name]
-	if !ok && m.gates != nil {
+	if _, ok := m.gates[name]; !ok && m.gates != nil {
 		g = makegate(m.totalcnt)
 		g.w++
 		m.gates[name] = g
@@ -234,10 +232,6 @@ func (m *locker) onInvalidations(messages []rueidis.RedisMessage) {
 	if messages == nil {
 		m.mu.RLock()
 		for _, g := range m.gates {
-			select {
-			case g.ch <- struct{}{}:
-			default:
-			}
 			for _, ch := range g.csc {
 				select {
 				case ch <- struct{}{}:
@@ -271,8 +265,6 @@ func (m *locker) try(ctx context.Context, cancel context.CancelFunc, name string
 	deadline := time.Now().Add(m.validity)
 	cacneltm := time.AfterFunc(m.validity, cancel)
 	released := int32(0)
-	acquired := int32(0)
-	failures := int32(0)
 
 	done := make(chan struct{})
 	monitoring := func(err error, key string, deadline time.Time, csc chan struct{}) {
@@ -304,28 +296,19 @@ func (m *locker) try(ctx context.Context, cancel context.CancelFunc, name string
 		if released := atomic.AddInt32(&released, 1); released >= m.majority {
 			cancel()
 			if released == m.totalcnt {
-				if atomic.LoadInt32(&failures) >= m.majority {
-					timer := time.NewTimer(m.interval)
-					cases := make([]reflect.SelectCase, 0, m.totalcnt+1)
-					cases = append(cases, reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(timer.C)})
-					for i := int32(0); i < m.totalcnt; i++ {
-						cases = append(cases, reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(g.csc[i])})
-					}
-					reflect.Select(cases)
-					timer.Stop()
-				}
+				close(done)
 				m.mu.Lock()
 				if g.w--; g.w == 0 {
 					if m.gates[name] == g {
 						delete(m.gates, name)
 					}
-				} else {
-					if g, ok := m.gates[name]; ok {
-						g.ch <- struct{}{}
+				} else if m.gates != nil {
+					select {
+					case g.ch <- struct{}{}:
+					default:
 					}
 				}
 				m.mu.Unlock()
-				close(done)
 			}
 		}
 	}
@@ -342,12 +325,12 @@ func (m *locker) try(ctx context.Context, cancel context.CancelFunc, name string
 		return err
 	}
 
-	var i int32
-	for a, f := int32(0), int32(0); a < m.majority && f < m.majority; i++ {
+	var i, acquired, failures int32
+	for ; acquired < m.majority && failures < m.majority; i++ {
 		if err = acquire(err, keyname(m.prefix, name, i), g.csc[i]); err == nil {
-			a = atomic.AddInt32(&acquired, 1)
+			acquired++
 		} else {
-			f = atomic.AddInt32(&failures, 1)
+			failures++
 		}
 	}
 	if i < m.totalcnt {
