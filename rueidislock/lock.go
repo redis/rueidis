@@ -296,6 +296,7 @@ func (m *locker) try(ctx context.Context, cancel context.CancelFunc, name string
 		if released := atomic.AddInt32(&released, 1); released >= m.majority {
 			cancel()
 			if released == m.totalcnt {
+				close(done)
 				m.mu.Lock()
 				if g.w--; g.w == 0 {
 					if m.gates[name] == g {
@@ -308,7 +309,6 @@ func (m *locker) try(ctx context.Context, cancel context.CancelFunc, name string
 					}
 				}
 				m.mu.Unlock()
-				close(done)
 			}
 		}
 	}
