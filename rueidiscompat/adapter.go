@@ -4554,9 +4554,9 @@ func (c *Compat) JSONSetMode(ctx context.Context, key, path string, value interf
 	_cmd := c.client.B().JsonSet().Key(key).Path(path).Value(str(value))
 	switch mode {
 	case "XX":
-		_cmd.Nx()
-	case "NX":
 		_cmd.Xx()
+	case "NX":
+		_cmd.Nx()
 	default:
 		panic(`the mode value must be "XX" or "NX"`)
 	}
