@@ -511,7 +511,6 @@ func newStatusCmd(res rueidis.RedisResult) *StatusCmd {
 
 type SliceCmd struct {
 	baseCmd[[]any]
-	// val  []any
 	keys []string
 }
 
