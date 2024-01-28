@@ -528,7 +528,6 @@ func newSliceCmd(res rueidis.RedisResult, isJSONObjKeys bool, keys ...string) *S
 		if isJSONObjKeys {
 			// for JSON.OBJKEYS
 			if v.IsNil() {
-				vals[i] = nil
 				continue
 			}
 			// convert to any which underlying type is []any
@@ -3585,7 +3584,6 @@ func newIntPointerSliceCmd(res rueidis.RedisResult) *IntPointerSliceCmd {
 	intPtrSlice := make([]*int64, len(arr))
 	for i, e := range arr {
 		if e.IsNil() {
-			intPtrSlice[i] = nil
 			continue
 		}
 		len, err := e.ToInt64()
@@ -3613,7 +3611,6 @@ func newJSONSliceCmd(res rueidis.RedisResult) *JSONSliceCmd {
 	anySlice := make([]any, len(arr))
 	for i, e := range arr {
 		if e.IsNil() {
-			anySlice[i] = nil
 			continue
 		}
 		anyE, err := e.ToAny()
