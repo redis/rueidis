@@ -3515,10 +3515,6 @@ func newJSONCmd(res rueidis.RedisResult) *JSONCmd {
 	cmd := &JSONCmd{}
 	msg, err := res.ToMessage()
 	if err != nil {
-		if err == rueidis.Nil {
-			cmd.SetVal("")
-			return cmd
-		}
 		cmd.SetErr(err)
 		return cmd
 	}
@@ -3548,6 +3544,9 @@ func newJSONCmd(res rueidis.RedisResult) *JSONCmd {
 		for i, e := range arr {
 			anyE, err := e.ToAny()
 			if err != nil {
+				if err == rueidis.Nil {
+					continue
+				}
 				cmd.SetErr(err)
 				return cmd
 			}

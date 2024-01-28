@@ -10812,7 +10812,10 @@ func testAdapterCache(resp3 bool) {
 				Expect(cmd2.Val()).To(Equal(int64(1)))
 
 				cmd3 := adapter.JSONGet(ctx, "del1", "$")
-				Expect(cmd3.Err()).NotTo(HaveOccurred())
+				// go-redis's test assertion is wrong.
+				// based on the result from redis/redis-stack:7.2.0-v3,
+				// cmd3.Err() should be rueidis.Nil, not nil
+				Expect(cmd3.Err()).To(Equal(rueidis.Nil))
 				Expect(cmd3.Val()).To(HaveLen(0))
 			})
 
@@ -10941,6 +10944,15 @@ func testAdapterCache(resp3 bool) {
 				cmd2 := adapter.JSONNumIncrBy(ctx, "incr3", "$..a[1]", float64(1))
 				Expect(cmd2.Err()).NotTo(HaveOccurred())
 				Expect(cmd2.Val()).To(Equal(`[3,0]`))
+
+				cmd3 := adapter.JSONSet(ctx, "incr4", "$", `{"a": [1, 2], "b": {"a": [0, -1], "c": "z"}, "c": 2}`)
+				Expect(cmd3.Err()).NotTo(HaveOccurred())
+				Expect(cmd3.Val()).To(Equal("OK"))
+
+				cmd4 := adapter.JSONNumIncrBy(ctx, "incr4", "$..c", float64(1))
+				Expect(cmd4.Err()).NotTo(HaveOccurred())
+				// for NaN field, it should be null
+				Expect(cmd4.Val()).To(Equal(`[3,null]`))
 			})
 
 			It("should JSONNumIncrBy with $", Label("json.numincrby", "json"), func() {
