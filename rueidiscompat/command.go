@@ -524,8 +524,8 @@ func newSliceCmd(res rueidis.RedisResult, isJSONObjKeys bool, keys ...string) *S
 		return cmd
 	}
 	vals := make([]any, len(arr))
-	for i, v := range arr {
-		if isJSONObjKeys {
+	if isJSONObjKeys {
+		for i, v := range arr {
 			// for JSON.OBJKEYS
 			if v.IsNil() {
 				continue
@@ -537,11 +537,14 @@ func newSliceCmd(res rueidis.RedisResult, isJSONObjKeys bool, keys ...string) *S
 				return cmd
 			}
 			vals[i] = arr
-		} else {
-			// keep the old behavior the same as before (don't handle error while parsing v as string)
-			if s, err := v.ToString(); err == nil {
-				vals[i] = s
-			}
+		}
+		cmd.SetVal(vals)
+		return cmd
+	}
+	for i, v := range arr {
+		// keep the old behavior the same as before (don't handle error while parsing v as string)
+		if s, err := v.ToString(); err == nil {
+			vals[i] = s
 		}
 	}
 	cmd.SetVal(vals)
