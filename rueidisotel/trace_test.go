@@ -15,7 +15,6 @@ import (
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 
 	"github.com/redis/rueidis"
-	"github.com/redis/rueidis/internal/cmds"
 )
 
 // MockMeterProvider for testing purposes
@@ -151,10 +150,10 @@ func testWithClient(t *testing.T, client rueidis.Client, exp *tracetest.InMemory
 		)
 		validateTrace(t, exp, "SET SET SET SET SET", codes.Ok)
 
-		client.Do(ctx, cmds.NewCompleted([]string{"unknown", "command"}))
+		client.Do(ctx, client.B().Arbitrary("unknown", "command").Build())
 		validateTrace(t, exp, "unknown", codes.Error)
 
-		client.DoMulti(ctx, cmds.NewCompleted([]string{"unknown", "command"}))
+		client.DoMulti(ctx, client.B().Arbitrary("unknown", "command").Build())
 		validateTrace(t, exp, "unknown", codes.Error)
 
 		ctx2, cancel := context.WithTimeout(ctx, time.Second/2)
@@ -186,10 +185,10 @@ func testWithClient(t *testing.T, client rueidis.Client, exp *tracetest.InMemory
 		)
 		validateTrace(t, exp, "SET SET SET SET SET", codes.Ok)
 
-		c.Do(ctx, cmds.NewCompleted([]string{"unknown", "command"}))
+		c.Do(ctx, client.B().Arbitrary("unknown", "command").Build())
 		validateTrace(t, exp, "unknown", codes.Error)
 
-		c.DoMulti(ctx, cmds.NewCompleted([]string{"unknown", "command"}))
+		c.DoMulti(ctx, client.B().Arbitrary("unknown", "command").Build())
 		validateTrace(t, exp, "unknown", codes.Error)
 
 		ctx2, cancel := context.WithTimeout(ctx, time.Second/2)
@@ -204,10 +203,10 @@ func testWithClient(t *testing.T, client rueidis.Client, exp *tracetest.InMemory
 	cancel()
 	<-hookCh
 
-	client.Do(ctx, cmds.NewCompleted([]string{"unknown", "command"}))
+	client.Do(ctx, client.B().Arbitrary("unknown", "command").Build())
 	validateTrace(t, exp, "unknown", codes.Error)
 
-	client.Do(ctx, cmds.NewCompleted([]string{"unknown", "command"}))
+	client.Do(ctx, client.B().Arbitrary("unknown", "command").Build())
 	validateTrace(t, exp, "unknown", codes.Error)
 
 	nodes := client.Nodes()
