@@ -7,6 +7,7 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
+	"io"
 	"math"
 	"math/rand"
 	"net"
@@ -188,6 +189,12 @@ type SentinelOption struct {
 	Username   string
 	Password   string
 	ClientName string
+}
+
+type StreamClient interface {
+	B() Builder
+	DoReader(ctx context.Context, cmd Completed) (r io.Reader, err error)
+	Close()
 }
 
 // Client is the redis client interface for both single redis instance and redis cluster. It should be created from the NewClient()

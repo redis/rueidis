@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"regexp"
@@ -982,6 +983,56 @@ abort:
 		resp.s[i] = err
 	}
 	return resp
+}
+
+func (p *pipe) doReader(ctx context.Context, done func(), cmd Completed) (io.Reader, error) {
+	if cmd.NoReply() {
+		panic("NoReply is not supported")
+	}
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	cmds.CompletedCS(cmd).Verify()
+
+	state := atomic.LoadInt32(&p.state)
+
+	if state == 1 {
+		panic("DoReader with auto pipelining is a bug")
+	}
+
+	if state == 0 {
+		atomic.AddInt32(&p.blcksig, 1)
+		waits := atomic.AddInt32(&p.waits, 1)
+		donef := func() {
+			atomic.AddInt32(&p.blcksig, -1)
+			atomic.AddInt32(&p.waits, -1)
+			done()
+		}
+		if waits != 1 {
+			panic("DoReader with racing is a bug")
+		}
+		dl, ok := ctx.Deadline()
+		if ok {
+			p.conn.SetDeadline(dl)
+		} else if p.timeout > 0 && !cmd.IsBlock() {
+			p.conn.SetDeadline(time.Now().Add(p.timeout))
+		} else {
+			p.conn.SetDeadline(time.Time{})
+		}
+		err := writeCmd(p.w, cmd.Commands())
+		if err == nil {
+			err = p.w.Flush()
+		}
+		if err != nil {
+			p.error.CompareAndSwap(nil, &errs{error: err})
+			p.conn.Close()
+			p.background() // start the background worker to clean up goroutines
+			donef()
+			return nil, err
+		}
+		return nextStringReader(p.r, donef)
+	}
+	return nil, p.Error()
 }
 
 func (p *pipe) syncDo(dl time.Time, dlOk bool, cmd Completed) (resp RedisResult) {

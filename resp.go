@@ -297,6 +297,115 @@ func readNextMessage(i *bufio.Reader) (m RedisMessage, err error) {
 	}
 }
 
+type streamreader struct {
+	i    *bufio.Reader
+	n    int64
+	done func()
+	once bool
+}
+
+func (r *streamreader) eof() {
+	if !r.once && r.done != nil {
+		r.once = true
+		r.done()
+	}
+}
+
+func (r *streamreader) read(buf []byte) (n int, err error) {
+	if int64(len(buf)) > r.n {
+		buf = buf[0:r.n]
+	}
+	n, err = r.i.Read(buf)
+	if r.n -= int64(n); r.n == 0 && err == nil {
+		_, err = r.i.Discard(2)
+	}
+	return
+}
+
+type blobreader struct {
+	streamreader
+}
+
+func (r *blobreader) Read(buf []byte) (n int, err error) {
+	if r.n == 0 {
+		r.eof()
+		return 0, io.EOF
+	}
+	return r.read(buf)
+}
+
+type chunkreader struct {
+	streamreader
+}
+
+func (r *chunkreader) Read(buf []byte) (n int, err error) {
+	if r.n == 0 {
+		if _, err = r.i.Discard(1); err != nil { // discard the ';'
+			return 0, err
+		}
+		if r.n, err = readI(r.i); err != nil {
+			return 0, err
+		}
+		if r.n == 0 {
+			r.n = -1
+		}
+	}
+	if r.n == -1 {
+		r.eof()
+		return 0, io.EOF
+	}
+	return r.read(buf)
+}
+
+func nextStringReader(i *bufio.Reader, done func()) (io.Reader, error) {
+	var typ byte
+	var err error
+	for {
+		if typ, err = i.ReadByte(); err != nil {
+			done()
+			return nil, err
+		}
+		switch typ {
+		case typeBlobString, typeVerbatimString:
+			length, err := readI(i)
+			if err != nil {
+				if err == errChunked {
+					return &chunkreader{streamreader{i: i, done: done}}, nil
+				}
+				done()
+				return nil, err
+			}
+			if length == -1 {
+				done()
+				return nil, &RedisError{typ: typeNull}
+			}
+			return &blobreader{streamreader{i: i, n: length, done: done}}, nil
+		default:
+			_ = i.UnreadByte()
+			m, err := readNextMessage(i)
+			if err != nil {
+				done()
+				return nil, err
+			}
+			switch m.typ {
+			case typeSimpleString, typeFloat, typeBigNumber:
+				done()
+				return strings.NewReader(m.string), nil
+			case typeSimpleErr, typeBlobErr, typeNull:
+				done()
+				return nil, (*RedisError)(&m)
+			case typeInteger, typeBool:
+				done()
+				return strings.NewReader(strconv.FormatInt(m.integer, 10)), nil
+			case typePush, typeAttribute:
+				continue
+			default:
+				panic("")
+			}
+		}
+	}
+}
+
 func writeCmd(o *bufio.Writer, cmd []string) (err error) {
 	err = writeN(o, '*', len(cmd))
 	for _, m := range cmd {

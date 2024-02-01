@@ -2,6 +2,7 @@ package rueidis
 
 import (
 	"context"
+	"io"
 	"sync/atomic"
 	"time"
 
@@ -50,6 +51,12 @@ retry:
 		cmds.PutCompleted(cmd)
 	}
 	return resp
+}
+
+func (c *singleClient) DoReader(ctx context.Context, cmd Completed) (r io.Reader, err error) {
+	r, err = c.conn.(*mux).doReader(ctx, cmd)
+	cmds.PutCompleted(cmd)
+	return
 }
 
 func (c *singleClient) DoMulti(ctx context.Context, multi ...Completed) (resps []RedisResult) {

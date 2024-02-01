@@ -2,6 +2,7 @@ package rueidis
 
 import (
 	"context"
+	"io"
 	"math/rand"
 	"net"
 	"runtime"
@@ -199,6 +200,13 @@ func (m *mux) Version() int {
 
 func (m *mux) Error() error {
 	return m.pipe(0).Error()
+}
+
+func (m *mux) doReader(ctx context.Context, cmd Completed) (io.Reader, error) {
+	wire := m.pool.Acquire()
+	return wire.(*pipe).doReader(ctx, func() {
+		m.pool.Store(wire)
+	}, cmd)
 }
 
 func (m *mux) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
