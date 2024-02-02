@@ -202,11 +202,31 @@ func (m *mux) Error() error {
 	return m.pipe(0).Error()
 }
 
-func (m *mux) doReader(ctx context.Context, cmd Completed) (io.Reader, error) {
+type Stream struct {
+	m *mux
+	w *pipe
+	e error
+}
+
+func (s Stream) To(w io.Writer) (int64, error) {
+	if s.e != nil {
+		s.m.pool.Store(s.w)
+		return 0, s.e
+	}
+	n, err := nextStringReader(s.w.r, w)
+	atomic.AddInt32(&s.w.blcksig, -1)
+	atomic.AddInt32(&s.w.waits, -1)
+	if err != nil {
+		s.w.Close()
+	}
+	s.m.pool.Store(s.w)
+	return n, err
+}
+
+func (m *mux) doStream(ctx context.Context, cmd Completed) Stream {
 	wire := m.pool.Acquire()
-	return wire.(*pipe).doReader(ctx, func() {
-		m.pool.Store(wire)
-	}, cmd)
+	err := wire.(*pipe).doReader(ctx, cmd)
+	return Stream{m: m, w: wire.(*pipe), e: err}
 }
 
 func (m *mux) Do(ctx context.Context, cmd Completed) (resp RedisResult) {

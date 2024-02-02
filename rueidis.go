@@ -7,7 +7,6 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
-	"io"
 	"math"
 	"math/rand"
 	"net"
@@ -193,7 +192,7 @@ type SentinelOption struct {
 
 type StreamClient interface {
 	B() Builder
-	DoReader(ctx context.Context, cmd Completed) (r io.Reader, err error)
+	DoStream(ctx context.Context, cmd Completed) Stream
 	Close()
 }
 
