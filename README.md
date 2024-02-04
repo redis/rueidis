@@ -452,21 +452,6 @@ client.Do(ctx, client.B().FtSearch().Index("idx").Query("@f:v").Build()).AsFtSea
 client.Do(ctx, client.B().Geosearch().Key("k").Fromlonlat(1, 1).Bybox(1).Height(1).Km().Build()).AsGeosearch()
 ```
 
-## Supporting Go mod 1.18
-
-To support the old Go 1.18 at least until Go 1.21 comes, there will be a special build tagged with `-go1.18` for each release.
-
-Such releases remove `RedisResult.AsBytes()` and other related functionalities provided by later go versions.
-
-```
-# go.mod
-module mymodule
-
-go 1.18
-
-require github.com/redis/rueidis v1.0.27-go1.18
-```
-
 ## Contributing
 
 Contributions are welcome, including [issues](https://github.com/redis/rueidis/issues), [pull requests](https://github.com/redis/rueidis/pulls), and [discussions](https://github.com/redis/rueidis/discussions).
