@@ -1,0 +1,39 @@
+name: Tag Prefix Workflow
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  tag-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Git
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "GitHub Actions"
+
+      - name: Push Additional Tags with Dynamic Prefixes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ORIGINAL_TAG=${GITHUB_REF#refs/tags/}
+          # Find directories containing go.mod, extract directory names, and push tags with these names as prefixes
+          find . -maxdepth 2 -type f -name "go.mod" | while read -r line; do
+            DIR_NAME=$(dirname "$line")
+            PREFIX=${DIR_NAME#"./"} # Remove leading "./"
+          
+            # Check if PREFIX is not empty and not the root directory
+            if [[ -n "$PREFIX" && "$PREFIX" != "." ]]; then
+              NEW_TAG="${PREFIX}/${ORIGINAL_TAG}"
+              echo "Creating and pushing tag: $NEW_TAG"
+              git tag $NEW_TAG $ORIGINAL_TAG
+              git push origin $NEW_TAG
+            else
+              echo "Skipping root directory"
+            fi
+          done
