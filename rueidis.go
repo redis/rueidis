@@ -193,6 +193,7 @@ type SentinelOption struct {
 type StreamClient interface {
 	B() Builder
 	DoStream(ctx context.Context, cmd Completed) Stream
+	DoMultiStream(ctx context.Context, multi ...Completed) Stream
 	Close()
 }
 

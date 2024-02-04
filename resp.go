@@ -30,6 +30,7 @@ const (
 	typeSet            = byte('~')
 	typeAttribute      = byte('|')
 	typePush           = byte('>')
+	typeChunk          = byte(';')
 )
 
 var typeNames = make(map[byte]string, 16)
@@ -298,78 +299,57 @@ func readNextMessage(i *bufio.Reader) (m RedisMessage, err error) {
 	}
 }
 
-var limitedreaders = sync.Pool{New: func() any {
-	return &io.LimitedReader{}
-}}
+var lrs = sync.Pool{New: func() any { return &io.LimitedReader{} }}
 
-func nextStringReader(i *bufio.Reader, w io.Writer) (int64, error) {
+func streamTo(i *bufio.Reader, w io.Writer) (n int64, err error) {
+next:
 	var typ byte
-	var err error
-	for {
-		if typ, err = i.ReadByte(); err != nil {
-			return 0, err
-		}
-		switch typ {
-		case typeBlobString, typeVerbatimString:
-			length, err := readI(i)
-			if err != nil {
-				if err != errChunked {
-					return 0, err
+	if typ, err = i.ReadByte(); err != nil {
+		return 0, err
+	}
+	switch typ {
+	case typeBlobString, typeVerbatimString, typeChunk:
+		if n, err = readI(i); err != nil {
+			if err == errChunked {
+				var nn int64
+				nn, err = streamTo(i, w)
+				for n += nn; nn != 0 && err == nil; n += nn {
+					nn, err = streamTo(i, w)
 				}
-				lr := limitedreaders.Get().(*io.LimitedReader)
-				defer limitedreaders.Put(lr)
-				lr.R = i
-				var n int64
-				for {
-					if _, err = i.Discard(1); err != nil { // discard the ';'
-						return n, err
-					}
-					if length, err = readI(i); length == 0 || err != nil {
-						return n, err
-					}
-					lr.N = length
-					nn, err := io.Copy(w, lr)
-					n += nn
-					if err == nil {
-						_, err = i.Discard(2)
-					}
-					if err != nil {
-						return n, err
-					}
-				}
-			}
-			if length == -1 {
-				return 0, &RedisError{typ: typeNull}
-			}
-			lr := limitedreaders.Get().(*io.LimitedReader)
-			lr.R = i
-			lr.N = length
-			n, err := io.Copy(w, lr)
-			limitedreaders.Put(lr)
-			if err == nil {
-				_, err = i.Discard(2)
 			}
 			return n, err
+		}
+		if n == -1 {
+			return 0, &RedisError{typ: typeNull}
+		}
+		lr := lrs.Get().(*io.LimitedReader)
+		lr.R = i
+		lr.N = n
+		if n, err = io.Copy(w, lr); err == nil {
+			_, err = i.Discard(2)
+		}
+		lrs.Put(lr)
+		return n, err
+	default:
+		_ = i.UnreadByte()
+		m, err := readNextMessage(i)
+		if err != nil {
+			return 0, err
+		}
+		switch m.typ {
+		case typeSimpleString, typeFloat, typeBigNumber:
+			n, err := w.Write([]byte(m.string))
+			return int64(n), err
+		case typeNull, typeSimpleErr, typeBlobErr:
+			mm := m
+			return 0, (*RedisError)(&mm)
+		case typeInteger, typeBool:
+			n, err := w.Write([]byte(strconv.FormatInt(m.integer, 10)))
+			return int64(n), err
+		case typePush:
+			goto next
 		default:
-			_ = i.UnreadByte()
-			m, err := readNextMessage(i)
-			if err != nil {
-				return 0, err
-			}
-			switch m.typ {
-			case typeSimpleString, typeFloat, typeBigNumber:
-				n, err := w.Write([]byte(m.string))
-				return int64(n), err
-			case typeSimpleErr, typeBlobErr, typeNull:
-				return 0, (*RedisError)(&m)
-			case typeInteger, typeBool:
-				n, err := w.Write([]byte(strconv.FormatInt(m.integer, 10)))
-				return int64(n), err
-			case typePush, typeAttribute:
-				continue
-			default:
-				panic("unsupported message type")
-			}
+			panic("unsupported streaming message type: " + strconv.Itoa(int(typ)))
 		}
 	}
 }

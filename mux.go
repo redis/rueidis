@@ -2,6 +2,7 @@ package rueidis
 
 import (
 	"context"
+	"errors"
 	"io"
 	"math/rand"
 	"net"
@@ -206,27 +207,37 @@ type Stream struct {
 	m *mux
 	w *pipe
 	e error
+	n int
 }
 
-func (s Stream) To(w io.Writer) (int64, error) {
-	if s.e != nil {
-		s.m.pool.Store(s.w)
-		return 0, s.e
+var eos = errors.New("stream is ended")
+
+func (s *Stream) To(w io.Writer) (n int64, err error) {
+	if err = s.e; err == nil && s.n > 0 {
+		if n, err = streamTo(s.w.r, w); err != nil {
+			s.e = err
+			s.w.Close()
+		}
+		if s.n--; s.n == 0 {
+			atomic.AddInt32(&s.w.blcksig, -1)
+			atomic.AddInt32(&s.w.waits, -1)
+			s.m.pool.Store(s.w)
+			s.e = eos
+		}
 	}
-	n, err := nextStringReader(s.w.r, w)
-	atomic.AddInt32(&s.w.blcksig, -1)
-	atomic.AddInt32(&s.w.waits, -1)
-	if err != nil {
-		s.w.Close()
-	}
-	s.m.pool.Store(s.w)
 	return n, err
 }
 
 func (m *mux) doStream(ctx context.Context, cmd Completed) Stream {
 	wire := m.pool.Acquire()
-	err := wire.(*pipe).doReader(ctx, cmd)
-	return Stream{m: m, w: wire.(*pipe), e: err}
+	err := wire.(*pipe).doStream(ctx, cmd)
+	return Stream{m: m, w: wire.(*pipe), e: err, n: 1}
+}
+
+func (m *mux) doMultiStream(ctx context.Context, multi ...Completed) Stream {
+	wire := m.pool.Acquire()
+	err := wire.(*pipe).doMultiStream(ctx, multi...)
+	return Stream{m: m, w: wire.(*pipe), e: err, n: len(multi)}
 }
 
 func (m *mux) Do(ctx context.Context, cmd Completed) (resp RedisResult) {

@@ -984,14 +984,15 @@ abort:
 	return resp
 }
 
-func (p *pipe) doReader(ctx context.Context, cmd Completed) error {
+func (p *pipe) doStream(ctx context.Context, cmd Completed) error {
 	if cmd.NoReply() {
-		panic("NoReply is not supported")
+		panic("NoReply in DoStream is not supported")
 	}
+	cmds.CompletedCS(cmd).Verify()
+
 	if err := ctx.Err(); err != nil {
 		return err
 	}
-	cmds.CompletedCS(cmd).Verify()
 
 	state := atomic.LoadInt32(&p.state)
 
@@ -1013,16 +1014,64 @@ func (p *pipe) doReader(ctx context.Context, cmd Completed) error {
 		} else {
 			p.conn.SetDeadline(time.Time{})
 		}
-		err := writeCmd(p.w, cmd.Commands())
-		if err == nil {
-			err = p.w.Flush()
-		}
-		if err != nil {
+		_ = writeCmd(p.w, cmd.Commands())
+		if err := p.w.Flush(); err != nil {
 			p.error.CompareAndSwap(nil, &errs{error: err})
 			p.conn.Close()
 			p.background() // start the background worker to clean up goroutines
-			atomic.AddInt32(&p.blcksig, -1)
-			atomic.AddInt32(&p.waits, -1)
+			return err
+		}
+		return nil
+	}
+	return p.Error()
+}
+
+func (p *pipe) doMultiStream(ctx context.Context, multi ...Completed) error {
+	for _, cmd := range multi {
+		if cmd.NoReply() {
+			panic("NoReply in DoMultiStream is not supported")
+		}
+		cmds.CompletedCS(cmd).Verify()
+	}
+
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
+	state := atomic.LoadInt32(&p.state)
+
+	if state == 1 {
+		panic("DoMultiStream with auto pipelining is a bug")
+	}
+
+	if state == 0 {
+		atomic.AddInt32(&p.blcksig, 1)
+		waits := atomic.AddInt32(&p.waits, 1)
+		if waits != 1 {
+			panic("DoMultiStream with racing is a bug")
+		}
+		dl, ok := ctx.Deadline()
+		if ok {
+			p.conn.SetDeadline(dl)
+		} else if p.timeout > 0 {
+			for _, cmd := range multi {
+				if cmd.IsBlock() {
+					p.conn.SetDeadline(time.Time{})
+					goto process
+				}
+			}
+			p.conn.SetDeadline(time.Now().Add(p.timeout))
+		} else {
+			p.conn.SetDeadline(time.Time{})
+		}
+	process:
+		for _, cmd := range multi {
+			_ = writeCmd(p.w, cmd.Commands())
+		}
+		if err := p.w.Flush(); err != nil {
+			p.error.CompareAndSwap(nil, &errs{error: err})
+			p.conn.Close()
+			p.background() // start the background worker to clean up goroutines
 			return err
 		}
 		return nil

@@ -58,6 +58,14 @@ func (c *singleClient) DoStream(ctx context.Context, cmd Completed) Stream {
 	return s
 }
 
+func (c *singleClient) DoMultiStream(ctx context.Context, multi ...Completed) Stream {
+	s := c.conn.(*mux).doMultiStream(ctx, multi...)
+	for _, cmd := range multi {
+		cmds.PutCompleted(cmd)
+	}
+	return s
+}
+
 func (c *singleClient) DoMulti(ctx context.Context, multi ...Completed) (resps []RedisResult) {
 	if len(multi) == 0 {
 		return nil
