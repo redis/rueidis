@@ -1017,6 +1017,7 @@ func (p *pipe) syncDoMulti(dl time.Time, dlOk bool, resp []RedisResult, multi []
 	} else if p.timeout > 0 {
 		for _, cmd := range multi {
 			if cmd.IsBlock() {
+				p.conn.SetDeadline(time.Time{})
 				goto process
 			}
 		}
