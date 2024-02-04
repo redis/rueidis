@@ -995,10 +995,8 @@ func (p *pipe) syncDo(dl time.Time, dlOk bool, cmd Completed) (resp RedisResult)
 
 	var msg RedisMessage
 	err := writeCmd(p.w, cmd.Commands())
-	if err == nil {
-		if err = p.w.Flush(); err == nil {
-			msg, err = syncRead(p.r)
-		}
+	if err = p.w.Flush(); err == nil {
+		msg, err = syncRead(p.r)
 	}
 	if err != nil {
 		if errors.Is(err, os.ErrDeadlineExceeded) {
@@ -1028,7 +1026,6 @@ func (p *pipe) syncDoMulti(dl time.Time, dlOk bool, resp []RedisResult, multi []
 process:
 	var err error
 	var msg RedisMessage
-
 	for _, cmd := range multi {
 		_ = writeCmd(p.w, cmd.Commands())
 	}
