@@ -815,6 +815,31 @@ func TestWriteWithMaxFlushDelay(t *testing.T) {
 	}
 }
 
+func TestBlockWriteWithNoMaxFlushDelay(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	p, mock, cancel, _ := setup(t, ClientOption{
+		AlwaysPipelining: true,
+		MaxFlushDelay:    20 * time.Microsecond,
+	})
+	defer cancel()
+	times := 2000
+	wg := sync.WaitGroup{}
+	wg.Add(times)
+
+	for i := 0; i < times; i++ {
+		go func() {
+			for _, resp := range p.DoMulti(context.Background(),
+				cmds.NewBlockingCompleted([]string{"PING"}),
+				cmds.NewBlockingCompleted([]string{"PING"})).s {
+				ExpectOK(t, resp)
+			}
+		}()
+	}
+	for i := 0; i < times; i++ {
+		mock.Expect("PING").ReplyString("OK").Expect("PING").ReplyString("OK")
+	}
+}
+
 func TestWriteMultiFlush(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, cancel, _ := setup(t, ClientOption{})
