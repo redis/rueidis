@@ -190,13 +190,6 @@ type SentinelOption struct {
 	ClientName string
 }
 
-type StreamClient interface {
-	B() Builder
-	DoStream(ctx context.Context, cmd Completed) RedisResultStream
-	DoMultiStream(ctx context.Context, multi ...Completed) RedisResultStream
-	Close()
-}
-
 // Client is the redis client interface for both single redis instance and redis cluster. It should be created from the NewClient()
 type Client interface {
 	CoreClient
@@ -216,6 +209,9 @@ type Client interface {
 	// DoMultiCache is similar to DoCache, but works with multiple cacheable commands across different slots.
 	// It will first group commands by slots and will send only cache missed commands to redis.
 	DoMultiCache(ctx context.Context, multi ...CacheableTTL) (resp []RedisResult)
+
+	DoStream(ctx context.Context, cmd Completed) RedisResultStream
+	DoMultiStream(ctx context.Context, multi ...Completed) MultiRedisResultStream
 
 	// Dedicated acquire a connection from the blocking connection pool, no one else can use the connection
 	// during Dedicated. The main usage of Dedicated is CAS operation, which is WATCH + MULTI + EXEC.

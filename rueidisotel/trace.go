@@ -99,6 +99,20 @@ func (o *otelclient) DoMulti(ctx context.Context, multi ...rueidis.Completed) (r
 	return
 }
 
+func (o *otelclient) DoStream(ctx context.Context, cmd rueidis.Completed) (resp rueidis.RedisResultStream) {
+	ctx, span := o.start(ctx, first(cmd.Commands()), sum(cmd.Commands()), o.tAttrs)
+	resp = o.client.DoStream(ctx, cmd)
+	o.end(span, resp.Error())
+	return
+}
+
+func (o *otelclient) DoMultiStream(ctx context.Context, multi ...rueidis.Completed) (resp rueidis.MultiRedisResultStream) {
+	ctx, span := o.start(ctx, multiFirst(multi), multiSum(multi), o.tAttrs)
+	resp = o.client.DoMultiStream(ctx, multi...)
+	o.end(span, resp.Error())
+	return
+}
+
 func (o *otelclient) DoCache(ctx context.Context, cmd rueidis.Cacheable, ttl time.Duration) (resp rueidis.RedisResult) {
 	ctx, span := o.start(ctx, first(cmd.Commands()), sum(cmd.Commands()), o.tAttrs)
 	resp = o.client.DoCache(ctx, cmd, ttl)

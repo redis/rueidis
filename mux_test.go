@@ -796,15 +796,17 @@ func BenchmarkClientSideCaching(b *testing.B) {
 }
 
 type mockWire struct {
-	DoFn           func(cmd Completed) RedisResult
-	DoCacheFn      func(cmd Cacheable, ttl time.Duration) RedisResult
-	DoMultiFn      func(multi ...Completed) *redisresults
-	DoMultiCacheFn func(multi ...CacheableTTL) *redisresults
-	ReceiveFn      func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error
-	InfoFn         func() map[string]RedisMessage
-	VersionFn      func() int
-	ErrorFn        func() error
-	CloseFn        func()
+	DoFn            func(cmd Completed) RedisResult
+	DoCacheFn       func(cmd Cacheable, ttl time.Duration) RedisResult
+	DoMultiFn       func(multi ...Completed) *redisresults
+	DoMultiCacheFn  func(multi ...CacheableTTL) *redisresults
+	ReceiveFn       func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error
+	DoStreamFn      func(ctx context.Context, pool *pool, cmd Completed) RedisResultStream
+	DoMultiStreamFn func(ctx context.Context, pool *pool, cmd ...Completed) MultiRedisResultStream
+	InfoFn          func() map[string]RedisMessage
+	VersionFn       func() int
+	ErrorFn         func() error
+	CloseFn         func()
 
 	CleanSubscriptionsFn func()
 	SetPubSubHooksFn     func(hooks PubSubHooks) <-chan error
@@ -844,6 +846,20 @@ func (m *mockWire) Receive(ctx context.Context, subscribe Completed, fn func(mes
 		return m.ReceiveFn(ctx, subscribe, fn)
 	}
 	return nil
+}
+
+func (m *mockWire) DoStream(ctx context.Context, pool *pool, cmd Completed) RedisResultStream {
+	if m.DoStreamFn != nil {
+		return m.DoStreamFn(ctx, pool, cmd)
+	}
+	return RedisResultStream{}
+}
+
+func (m *mockWire) DoMultiStream(ctx context.Context, pool *pool, cmd ...Completed) MultiRedisResultStream {
+	if m.DoMultiStreamFn != nil {
+		return m.DoMultiStreamFn(ctx, pool, cmd...)
+	}
+	return MultiRedisResultStream{}
 }
 
 func (m *mockWire) CleanSubscriptions() {

@@ -115,6 +115,20 @@ func (mr *ClientMockRecorder) Do(arg0, arg1 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Do", reflect.TypeOf((*Client)(nil).Do), arg0, arg1)
 }
 
+// DoStream mocks base method.
+func (m *Client) DoStream(arg0 context.Context, arg1 rueidis.Completed) rueidis.RedisResultStream {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DoStream", arg0, arg1)
+	ret0, _ := ret[0].(rueidis.RedisResultStream)
+	return ret0
+}
+
+// DoStream indicates an expected call of DoStream.
+func (mr *ClientMockRecorder) DoStream(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DoStream", reflect.TypeOf((*Client)(nil).DoStream), arg0, arg1)
+}
+
 // DoCache mocks base method.
 func (m *Client) DoCache(arg0 context.Context, arg1 rueidis.Cacheable, arg2 time.Duration) rueidis.RedisResult {
 	m.ctrl.T.Helper()
@@ -146,6 +160,25 @@ func (mr *ClientMockRecorder) DoMulti(arg0 any, arg1 ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{arg0}, arg1...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DoMulti", reflect.TypeOf((*Client)(nil).DoMulti), varargs...)
+}
+
+// DoMultiStream mocks base method.
+func (m *Client) DoMultiStream(arg0 context.Context, arg1 ...rueidis.Completed) rueidis.MultiRedisResultStream {
+	m.ctrl.T.Helper()
+	varargs := []any{arg0}
+	for _, a := range arg1 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "DoMultiStream", varargs...)
+	ret0, _ := ret[0].(rueidis.MultiRedisResultStream)
+	return ret0
+}
+
+// DoMultiStream indicates an expected call of DoMultiStream.
+func (mr *ClientMockRecorder) DoMultiStream(arg0 any, arg1 ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{arg0}, arg1...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DoMultiStream", reflect.TypeOf((*Client)(nil).DoMultiStream), varargs...)
 }
 
 // DoMultiCache mocks base method.

@@ -2,7 +2,6 @@ package rueidis
 
 import (
 	"context"
-	"io"
 	"math/rand"
 	"net"
 	"runtime"
@@ -51,6 +50,8 @@ type conn interface {
 	DoMulti(ctx context.Context, multi ...Completed) *redisresults
 	DoMultiCache(ctx context.Context, multi ...CacheableTTL) *redisresults
 	Receive(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error
+	DoStream(ctx context.Context, cmd Completed) RedisResultStream
+	DoMultiStream(ctx context.Context, multi ...Completed) MultiRedisResultStream
 	Info() map[string]RedisMessage
 	Version() int
 	Error() error
@@ -208,46 +209,14 @@ func (m *mux) Error() error {
 	return m.pipe(0).Error()
 }
 
-type RedisResultStream struct {
-	p *pool
-	w *pipe
-	e error
-	n int
-}
-
-func (s *RedisResultStream) WriteTo(w io.Writer) (n int64, err error) {
-	if err = s.e; err == nil && s.n > 0 {
-		var clean bool
-		if n, err, clean = streamTo(s.w.r, w); err != nil {
-			for s.e = err; clean && s.n > 1; s.n-- {
-				_, _, clean = streamTo(s.w.r, io.Discard)
-			}
-			if !clean {
-				s.w.Close()
-			}
-		}
-		if s.n--; s.n == 0 {
-			atomic.AddInt32(&s.w.blcksig, -1)
-			atomic.AddInt32(&s.w.waits, -1)
-			s.p.Store(s.w)
-			if s.e == nil {
-				s.e = io.EOF
-			}
-		}
-	}
-	return n, err
-}
-
-func (m *mux) doStream(ctx context.Context, cmd Completed) RedisResultStream {
+func (m *mux) DoStream(ctx context.Context, cmd Completed) RedisResultStream {
 	wire := m.spool.Acquire()
-	err := wire.(*pipe).doStream(ctx, cmd)
-	return RedisResultStream{p: m.spool, w: wire.(*pipe), e: err, n: 1}
+	return wire.DoStream(ctx, m.spool, cmd)
 }
 
-func (m *mux) doMultiStream(ctx context.Context, multi ...Completed) RedisResultStream {
+func (m *mux) DoMultiStream(ctx context.Context, multi ...Completed) MultiRedisResultStream {
 	wire := m.spool.Acquire()
-	err := wire.(*pipe).doMultiStream(ctx, multi...)
-	return RedisResultStream{p: m.spool, w: wire.(*pipe), e: err, n: len(multi)}
+	return wire.DoMultiStream(ctx, m.spool, multi...)
 }
 
 func (m *mux) Do(ctx context.Context, cmd Completed) (resp RedisResult) {

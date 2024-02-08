@@ -231,6 +231,14 @@ func (c *client) DoMulti(ctx context.Context, cmd ...Completed) (resp []RedisRes
 	return nil
 }
 
+func (c *client) DoStream(ctx context.Context, cmd Completed) (resp RedisResultStream) {
+	return RedisResultStream{}
+}
+
+func (c *client) DoMultiStream(ctx context.Context, cmd ...Completed) (resp MultiRedisResultStream) {
+	return MultiRedisResultStream{}
+}
+
 func (c *client) DoMultiCache(ctx context.Context, cmd ...CacheableTTL) (resp []RedisResult) {
 	if c.DoMultiCacheFn != nil {
 		return c.DoMultiCacheFn(ctx, cmd...)

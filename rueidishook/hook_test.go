@@ -33,6 +33,14 @@ func (h *hook) Receive(client rueidis.Client, ctx context.Context, subscribe rue
 	return client.Receive(ctx, subscribe, fn)
 }
 
+func (h *hook) DoStream(client rueidis.Client, ctx context.Context, cmd rueidis.Completed) rueidis.RedisResultStream {
+	return client.DoStream(ctx, cmd)
+}
+
+func (h *hook) DoMultiStream(client rueidis.Client, ctx context.Context, multi ...rueidis.Completed) rueidis.MultiRedisResultStream {
+	return client.DoMultiStream(ctx, multi...)
+}
+
 type wronghook struct {
 	DoFn func(client rueidis.Client)
 }
@@ -55,6 +63,14 @@ func (w *wronghook) DoMultiCache(client rueidis.Client, ctx context.Context, mul
 }
 
 func (w *wronghook) Receive(client rueidis.Client, ctx context.Context, subscribe rueidis.Completed, fn func(msg rueidis.PubSubMessage)) (err error) {
+	panic("implement me")
+}
+
+func (w *wronghook) DoStream(client rueidis.Client, ctx context.Context, cmd rueidis.Completed) rueidis.RedisResultStream {
+	panic("implement me")
+}
+
+func (w *wronghook) DoMultiStream(client rueidis.Client, ctx context.Context, multi ...rueidis.Completed) rueidis.MultiRedisResultStream {
 	panic("implement me")
 }
 

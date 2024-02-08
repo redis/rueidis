@@ -2,6 +2,7 @@ package rueidis
 
 import (
 	"context"
+	"io"
 	"sync/atomic"
 	"time"
 
@@ -53,13 +54,16 @@ retry:
 }
 
 func (c *singleClient) DoStream(ctx context.Context, cmd Completed) RedisResultStream {
-	s := c.conn.(*mux).doStream(ctx, cmd)
+	s := c.conn.DoStream(ctx, cmd)
 	cmds.PutCompleted(cmd)
 	return s
 }
 
-func (c *singleClient) DoMultiStream(ctx context.Context, multi ...Completed) RedisResultStream {
-	s := c.conn.(*mux).doMultiStream(ctx, multi...)
+func (c *singleClient) DoMultiStream(ctx context.Context, multi ...Completed) MultiRedisResultStream {
+	if len(multi) == 0 {
+		return RedisResultStream{e: io.EOF}
+	}
+	s := c.conn.DoMultiStream(ctx, multi...)
 	for _, cmd := range multi {
 		cmds.PutCompleted(cmd)
 	}

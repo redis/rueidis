@@ -16,6 +16,8 @@ type Hook interface {
 	DoCache(client rueidis.Client, ctx context.Context, cmd rueidis.Cacheable, ttl time.Duration) (resp rueidis.RedisResult)
 	DoMultiCache(client rueidis.Client, ctx context.Context, multi ...rueidis.CacheableTTL) (resps []rueidis.RedisResult)
 	Receive(client rueidis.Client, ctx context.Context, subscribe rueidis.Completed, fn func(msg rueidis.PubSubMessage)) (err error)
+	DoStream(client rueidis.Client, ctx context.Context, cmd rueidis.Completed) rueidis.RedisResultStream
+	DoMultiStream(client rueidis.Client, ctx context.Context, multi ...rueidis.Completed) rueidis.MultiRedisResultStream
 }
 
 // WithHook wraps rueidis.Client with Hook and allows user to intercept rueidis.Client
@@ -46,6 +48,14 @@ func (c *hookclient) DoCache(ctx context.Context, cmd rueidis.Cacheable, ttl tim
 
 func (c *hookclient) DoMultiCache(ctx context.Context, multi ...rueidis.CacheableTTL) (resps []rueidis.RedisResult) {
 	return c.hook.DoMultiCache(c.client, ctx, multi...)
+}
+
+func (c *hookclient) DoStream(ctx context.Context, cmd rueidis.Completed) rueidis.RedisResultStream {
+	return c.hook.DoStream(c.client, ctx, cmd)
+}
+
+func (c *hookclient) DoMultiStream(ctx context.Context, multi ...rueidis.Completed) rueidis.MultiRedisResultStream {
+	return c.hook.DoMultiStream(c.client, ctx, multi...)
 }
 
 func (c *hookclient) Dedicated(fn func(rueidis.DedicatedClient) error) (err error) {
@@ -118,6 +128,13 @@ func (e *extended) DoCache(ctx context.Context, cmd rueidis.Cacheable, ttl time.
 
 func (e *extended) DoMultiCache(ctx context.Context, multi ...rueidis.CacheableTTL) (resp []rueidis.RedisResult) {
 	panic("DoMultiCache() is not allowed with rueidis.DedicatedClient")
+}
+func (c *extended) DoStream(ctx context.Context, cmd rueidis.Completed) rueidis.RedisResultStream {
+	panic("DoStream() is not allowed with rueidis.DedicatedClient")
+}
+
+func (c *extended) DoMultiStream(ctx context.Context, multi ...rueidis.Completed) rueidis.MultiRedisResultStream {
+	panic("DoMultiStream() is not allowed with rueidis.DedicatedClient")
 }
 
 func (e *extended) Dedicated(fn func(rueidis.DedicatedClient) error) (err error) {
