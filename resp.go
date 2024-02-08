@@ -301,51 +301,51 @@ func readNextMessage(i *bufio.Reader) (m RedisMessage, err error) {
 
 var lrs = sync.Pool{New: func() any { return &io.LimitedReader{} }}
 
-func streamTo(i *bufio.Reader, w io.Writer) (n int64, err error) {
+func streamTo(i *bufio.Reader, w io.Writer) (n int64, err error, clean bool) {
 next:
 	var typ byte
 	if typ, err = i.ReadByte(); err != nil {
-		return 0, err
+		return 0, err, false
 	}
 	switch typ {
 	case typeBlobString, typeVerbatimString, typeChunk:
 		if n, err = readI(i); err != nil {
 			if err == errChunked {
 				var nn int64
-				nn, err = streamTo(i, w)
-				for n += nn; nn != 0 && err == nil; n += nn {
-					nn, err = streamTo(i, w)
+				nn, err, clean = streamTo(i, w)
+				for n += nn; nn != 0 && clean && err == nil; n += nn {
+					nn, err, clean = streamTo(i, w)
 				}
 			}
-			return n, err
+			return n, err, clean
 		}
 		if n == -1 {
-			return 0, &RedisError{typ: typeNull}
+			return 0, &RedisError{typ: typeNull}, true
 		}
 		lr := lrs.Get().(*io.LimitedReader)
 		lr.R = i
 		lr.N = n
-		if n, err = io.Copy(w, lr); err == nil {
-			_, err = i.Discard(2)
-		}
+		full := n + 2
+		n, err = io.Copy(w, lr)
 		lrs.Put(lr)
-		return n, err
+		_, err2 := i.Discard(int(full - n))
+		return n, err, err2 == nil
 	default:
 		_ = i.UnreadByte()
 		m, err := readNextMessage(i)
 		if err != nil {
-			return 0, err
+			return 0, err, false
 		}
 		switch m.typ {
 		case typeSimpleString, typeFloat, typeBigNumber:
 			n, err := w.Write([]byte(m.string))
-			return int64(n), err
+			return int64(n), err, true
 		case typeNull, typeSimpleErr, typeBlobErr:
 			mm := m
-			return 0, (*RedisError)(&mm)
+			return 0, (*RedisError)(&mm), true
 		case typeInteger, typeBool:
 			n, err := w.Write([]byte(strconv.FormatInt(m.integer, 10)))
-			return int64(n), err
+			return int64(n), err, true
 		case typePush:
 			goto next
 		default:

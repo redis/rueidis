@@ -2,7 +2,6 @@ package rueidis
 
 import (
 	"context"
-	"errors"
 	"io"
 	"math/rand"
 	"net"
@@ -216,19 +215,24 @@ type RedisResultStream struct {
 	n int
 }
 
-var eos = errors.New("stream is ended")
-
-func (s *Stream) To(w io.Writer) (n int64, err error) {
+func (s *RedisResultStream) WriteTo(w io.Writer) (n int64, err error) {
 	if err = s.e; err == nil && s.n > 0 {
-		if n, err = streamTo(s.w.r, w); err != nil {
-			s.e = err
-			s.w.Close()
+		var clean bool
+		if n, err, clean = streamTo(s.w.r, w); err != nil {
+			for s.e = err; clean && s.n > 1; s.n-- {
+				_, _, clean = streamTo(s.w.r, io.Discard)
+			}
+			if !clean {
+				s.w.Close()
+			}
 		}
 		if s.n--; s.n == 0 {
 			atomic.AddInt32(&s.w.blcksig, -1)
 			atomic.AddInt32(&s.w.waits, -1)
-			s.m.pool.Store(s.w)
-			s.e = eos
+			s.p.Store(s.w)
+			if s.e == nil {
+				s.e = io.EOF
+			}
 		}
 	}
 	return n, err
