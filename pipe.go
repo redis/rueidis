@@ -410,15 +410,17 @@ func (p *pipe) _backgroundWrite() (err error) {
 					runtime.Gosched()
 					continue
 				}
-				// Blocking commands are executed in dedicated client which is aquired from pool.
-				// So, there is no sense to wait other commands to be written.
-				// https://github.com/redis/rueidis/issues/379
-				blocked := ones[0].IsBlock()
-				for i := 0; i < len(multi) && !blocked; i++ {
-					blocked = blocked || multi[i].IsBlock()
-				}
-				if flushDelay != 0 && !blocked && atomic.LoadInt32(&p.waits) > 1 { // do not delay for sequential usage
-					time.Sleep(flushDelay - time.Since(flushStart)) // ref: https://github.com/redis/rueidis/issues/156
+				if flushDelay != 0 && atomic.LoadInt32(&p.waits) > 1 { // do not delay for sequential usage
+					// Blocking commands are executed in dedicated client which is acquired from pool.
+					// So, there is no sense to wait other commands to be written.
+					// https://github.com/redis/rueidis/issues/379
+					var blocked bool
+					for i := 0; i < len(multi) && !blocked; i++ {
+						blocked = blocked || multi[i].IsBlock()
+					}
+					if !blocked {
+						time.Sleep(flushDelay - time.Since(flushStart)) // ref: https://github.com/redis/rueidis/issues/156
+					}
 				}
 			}
 		}
@@ -429,7 +431,7 @@ func (p *pipe) _backgroundWrite() (err error) {
 			err = writeCmd(p.w, cmd.Commands())
 		}
 		if err != nil {
-			if err != ErrClosing { // ignore ErrClosing to allow final PING command to be sent
+			if err != ErrClosing { // ignore ErrClosing to allow the final PING command to be sent
 				return
 			}
 			runtime.Gosched()
