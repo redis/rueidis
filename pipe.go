@@ -111,11 +111,17 @@ type pipe struct {
 	r2ps            bool // identify this pipe is used for resp2 pubsub or not
 }
 
+type pipeFn func(connFn func() (net.Conn, error), option *ClientOption) (p *pipe, err error)
+
 func newPipe(connFn func() (net.Conn, error), option *ClientOption) (p *pipe, err error) {
-	return _newPipe(connFn, option, false)
+	return _newPipe(connFn, option, false, false)
 }
 
-func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) (p *pipe, err error) {
+func newPipeNoBg(connFn func() (net.Conn, error), option *ClientOption) (p *pipe, err error) {
+	return _newPipe(connFn, option, false, true)
+}
+
+func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps, nobg bool) (p *pipe, err error) {
 	conn, err := connFn()
 	if err != nil {
 		return nil, err
@@ -139,7 +145,7 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 	}
 	if !r2ps {
 		p.r2psFn = func() (p *pipe, err error) {
-			return _newPipe(connFn, option, true)
+			return _newPipe(connFn, option, true, nobg)
 		}
 	}
 	if !option.DisableCache {
@@ -300,11 +306,13 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps bool) 
 			}
 		}
 	}
-	if p.onInvalidations != nil || option.AlwaysPipelining {
-		p.background()
-	}
-	if p.timeout > 0 && p.pinggap > 0 {
-		go p.backgroundPing()
+	if !nobg {
+		if p.onInvalidations != nil || option.AlwaysPipelining {
+			p.background()
+		}
+		if p.timeout > 0 && p.pinggap > 0 {
+			go p.backgroundPing()
+		}
 	}
 	return p, nil
 }

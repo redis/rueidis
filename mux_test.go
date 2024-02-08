@@ -28,6 +28,8 @@ func setupMuxWithOption(wires []*mockWire, option *ClientOption) (conn *mux, che
 			defer mu.Unlock()
 			count++
 			return wires[count]
+		}, func() wire {
+			return &mockWire{}
 		}), func(t *testing.T) {
 			if count != len(wires)-1 {
 				t.Fatalf("there is %d remaining unused wires", len(wires)-count-1)
@@ -128,6 +130,8 @@ func TestMuxDialSuppress(t *testing.T) {
 	m := newMux("", &ClientOption{}, (*mockWire)(nil), (*mockWire)(nil), func() wire {
 		atomic.AddInt64(&wires, 1)
 		<-blocking
+		return &mockWire{}
+	}, func() wire {
 		return &mockWire{}
 	})
 	for i := 0; i < 1000; i++ {

@@ -70,7 +70,8 @@ type mux struct {
 	init   wire
 	dead   wire
 	clhks  atomic.Value
-	pool   *pool
+	dpool  *pool
+	spool  *pool
 	wireFn wireFn
 	dst    string
 	wire   []atomic.Value
@@ -81,19 +82,23 @@ type mux struct {
 
 func makeMux(dst string, option *ClientOption, dialFn dialFn) *mux {
 	dead := deadFn()
-	return newMux(dst, option, (*pipe)(nil), dead, func() (w wire) {
-		w, err := newPipe(func() (net.Conn, error) {
-			return dialFn(dst, option)
-		}, option)
-		if err != nil {
-			dead.error.Store(&errs{error: err})
-			w = dead
+	connFn := func() (net.Conn, error) {
+		return dialFn(dst, option)
+	}
+	wireFn := func(pipeFn pipeFn) func() wire {
+		return func() (w wire) {
+			w, err := pipeFn(connFn, option)
+			if err != nil {
+				dead.error.Store(&errs{error: err})
+				w = dead
+			}
+			return w
 		}
-		return w
-	})
+	}
+	return newMux(dst, option, (*pipe)(nil), dead, wireFn(newPipe), wireFn(newPipeNoBg))
 }
 
-func newMux(dst string, option *ClientOption, init, dead wire, wireFn wireFn) *mux {
+func newMux(dst string, option *ClientOption, init, dead wire, wireFn wireFn, wireNoBgFn wireFn) *mux {
 	var multiplex int
 	if option.PipelineMultiplex >= 0 {
 		multiplex = 1 << option.PipelineMultiplex
@@ -110,7 +115,8 @@ func newMux(dst string, option *ClientOption, init, dead wire, wireFn wireFn) *m
 	for i := 0; i < len(m.wire); i++ {
 		m.wire[i].Store(init)
 	}
-	m.pool = newPool(option.BlockingPoolSize, dead, wireFn)
+	m.dpool = newPool(option.BlockingPoolSize, dead, wireFn)
+	m.spool = newPool(option.BlockingPoolSize, dead, wireNoBgFn)
 	return m
 }
 
@@ -262,17 +268,17 @@ block:
 }
 
 func (m *mux) blocking(ctx context.Context, cmd Completed) (resp RedisResult) {
-	wire := m.pool.Acquire()
+	wire := m.dpool.Acquire()
 	resp = wire.Do(ctx, cmd)
 	if resp.NonRedisError() != nil { // abort the wire if blocking command return early (ex. context.DeadlineExceeded)
 		wire.Close()
 	}
-	m.pool.Store(wire)
+	m.dpool.Store(wire)
 	return resp
 }
 
 func (m *mux) blockingMulti(ctx context.Context, cmd []Completed) (resp *redisresults) {
-	wire := m.pool.Acquire()
+	wire := m.dpool.Acquire()
 	resp = wire.DoMulti(ctx, cmd...)
 	for _, res := range resp.s {
 		if res.NonRedisError() != nil { // abort the wire if blocking command return early (ex. context.DeadlineExceeded)
@@ -280,7 +286,7 @@ func (m *mux) blockingMulti(ctx context.Context, cmd []Completed) (resp *redisre
 			break
 		}
 	}
-	m.pool.Store(wire)
+	m.dpool.Store(wire)
 	return resp
 }
 
@@ -388,13 +394,13 @@ func (m *mux) Receive(ctx context.Context, subscribe Completed, fn func(message 
 }
 
 func (m *mux) Acquire() wire {
-	return m.pool.Acquire()
+	return m.dpool.Acquire()
 }
 
 func (m *mux) Store(w wire) {
 	w.SetPubSubHooks(PubSubHooks{})
 	w.CleanSubscriptions()
-	m.pool.Store(w)
+	m.dpool.Store(w)
 }
 
 func (m *mux) Close() {
@@ -403,7 +409,7 @@ func (m *mux) Close() {
 			prev.Close()
 		}
 	}
-	m.pool.Close()
+	m.dpool.Close()
 }
 
 func (m *mux) Addr() string {
