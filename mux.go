@@ -203,8 +203,8 @@ func (m *mux) Error() error {
 	return m.pipe(0).Error()
 }
 
-type Stream struct {
-	m *mux
+type RedisResultStream struct {
+	p *pool
 	w *pipe
 	e error
 	n int
@@ -228,16 +228,16 @@ func (s *Stream) To(w io.Writer) (n int64, err error) {
 	return n, err
 }
 
-func (m *mux) doStream(ctx context.Context, cmd Completed) Stream {
-	wire := m.pool.Acquire()
+func (m *mux) doStream(ctx context.Context, cmd Completed) RedisResultStream {
+	wire := m.spool.Acquire()
 	err := wire.(*pipe).doStream(ctx, cmd)
-	return Stream{m: m, w: wire.(*pipe), e: err, n: 1}
+	return RedisResultStream{p: m.spool, w: wire.(*pipe), e: err, n: 1}
 }
 
-func (m *mux) doMultiStream(ctx context.Context, multi ...Completed) Stream {
-	wire := m.pool.Acquire()
+func (m *mux) doMultiStream(ctx context.Context, multi ...Completed) RedisResultStream {
+	wire := m.spool.Acquire()
 	err := wire.(*pipe).doMultiStream(ctx, multi...)
-	return Stream{m: m, w: wire.(*pipe), e: err, n: len(multi)}
+	return RedisResultStream{p: m.spool, w: wire.(*pipe), e: err, n: len(multi)}
 }
 
 func (m *mux) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
