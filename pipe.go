@@ -1004,14 +1004,20 @@ type RedisResultStream struct {
 	n int
 }
 
+// HasNext can be used in a for loop condition to check if a further WriteTo call is needed.
 func (s *RedisResultStream) HasNext() bool {
-	return s.n != 0
+	return s.n > 0 && s.e == nil
 }
 
+// Error returns the error happened when sending commands to redis or reading response from redis.
+// Usually a user is not required to use this function because the error is also reported by the WriteTo.
 func (s *RedisResultStream) Error() error {
 	return s.e
 }
 
+// WriteTo reads a redis response from redis and then write it to the given writer.
+// This function is not thread safe and should be called sequentially to read multiple responses.
+// An io.EOF error will be reported if all responses are read.
 func (s *RedisResultStream) WriteTo(w io.Writer) (n int64, err error) {
 	if err = s.e; err == nil && s.n > 0 {
 		var clean bool

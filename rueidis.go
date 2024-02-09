@@ -210,7 +210,20 @@ type Client interface {
 	// It will first group commands by slots and will send only cache missed commands to redis.
 	DoMultiCache(ctx context.Context, multi ...CacheableTTL) (resp []RedisResult)
 
+	// DoStream send a command to redis through a dedicated connection acquired from a connection pool.
+	// It returns a RedisResultStream, but it does not read the command response until the RedisResultStream.WriteTo is called.
+	// After the RedisResultStream.WriteTo is called, the underlying connection is then recycled.
+	// DoStream should only be used when you want to stream redis response directly to an io.Writer without additional allocation,
+	// otherwise, the normal Do() should be used instead.
+	// Also note that DoStream can only work with commands returning string, integer, or float response.
 	DoStream(ctx context.Context, cmd Completed) RedisResultStream
+
+	// DoMultiStream is similar to DoStream, but pipelines multiple commands to redis.
+	// It returns a MultiRedisResultStream, and users should call MultiRedisResultStream.WriteTo as many times as the number of commands sequentially
+	// to read each command response from redis. After all responses are read, the underlying connection is then recycled.
+	// DoMultiStream should only be used when you want to stream redis responses directly to an io.Writer without additional allocation,
+	// otherwise, the normal DoMulti() should be used instead.
+	// DoMultiStream does not support multiple key slots when connecting to a redis cluster.
 	DoMultiStream(ctx context.Context, multi ...Completed) MultiRedisResultStream
 
 	// Dedicated acquire a connection from the blocking connection pool, no one else can use the connection
