@@ -1019,8 +1019,12 @@ func (c *clusterClient) DoMultiStream(ctx context.Context, multi ...Completed) M
 	slot := multi[0].Slot()
 	repl := c.toReplica(multi[0])
 	for i := 1; i < len(multi); i++ {
-		if slot != multi[i].Slot() {
-			panic("DoMultiStream across multiple slots is not supported")
+		if s := multi[i].Slot(); s != cmds.InitSlot {
+			if slot == cmds.InitSlot {
+				slot = s
+			} else if slot != s {
+				panic("DoMultiStream across multiple slots is not supported")
+			}
 		}
 		repl = repl && c.toReplica(multi[i])
 	}

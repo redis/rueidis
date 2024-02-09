@@ -383,6 +383,7 @@ func (m *mux) Close() {
 		}
 	}
 	m.dpool.Close()
+	m.spool.Close()
 }
 
 func (m *mux) Addr() string {

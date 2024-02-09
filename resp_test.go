@@ -208,9 +208,144 @@ func TestReadString(t *testing.T) {
 	}
 }
 
+func TestReadStringStream(t *testing.T) {
+	data := "+Hello word\r\n"
+	for i := 1; i <= len(data); i++ {
+		buf := bytes.NewBuffer(nil)
+		n, err, clean := streamTo(bufio.NewReader(io.LimitReader(strings.NewReader(data), int64(i))), buf)
+		if i < len(data) {
+			if err == nil {
+				t.Fatalf("unexpected no error: %v", i)
+			}
+		} else {
+			if err != nil {
+				t.Fatal(err)
+			}
+			if buf.String() != "Hello word" {
+				t.Fatalf("unexpected msg string %v", buf.String())
+			}
+			if n != int64(buf.Len()) {
+				t.Fatalf("unexpected msg len %v", buf.Len())
+			}
+			if !clean {
+				t.Fatalf("unexpected clean value %v", clean)
+			}
+		}
+	}
+}
+
+func TestReadErrorStream(t *testing.T) {
+	data := "-Err: word\r\n"
+	for i := 1; i <= len(data); i++ {
+		buf := bytes.NewBuffer(nil)
+		n, err, clean := streamTo(bufio.NewReader(io.LimitReader(strings.NewReader(data), int64(i))), buf)
+		if i < len(data) {
+			if err == nil {
+				t.Fatalf("unexpected no error: %v", i)
+			}
+		} else {
+			if err == nil {
+				t.Fatal(err)
+			}
+			if err.Error() != "Err: word" {
+				t.Fatalf("unexpected msg string %v", err.Error())
+			}
+			if n != 0 {
+				t.Fatalf("unexpected msg len %v", buf.Len())
+			}
+			if !clean {
+				t.Fatalf("unexpected clean value %v", clean)
+			}
+		}
+	}
+}
+
+func TestReadIntegerStream(t *testing.T) {
+	data := ":-1234567\r\n"
+	for i := 1; i <= len(data); i++ {
+		buf := bytes.NewBuffer(nil)
+		n, err, clean := streamTo(bufio.NewReader(io.LimitReader(strings.NewReader(data), int64(i))), buf)
+		if i < len(data) {
+			if err == nil {
+				t.Fatalf("unexpected no error: %v", i)
+			}
+		} else {
+			if err != nil {
+				t.Fatal(err)
+			}
+			if buf.String() != "-1234567" {
+				t.Fatalf("unexpected msg string %v", buf.String())
+			}
+			if n != int64(buf.Len()) {
+				t.Fatalf("unexpected msg len %v", buf.Len())
+			}
+			if !clean {
+				t.Fatalf("unexpected clean value %v", clean)
+			}
+		}
+	}
+}
+
+func TestReadPrefixPushIntegerStream(t *testing.T) {
+	data := ">2\r\n+ignore\r\n+ignore\r\n:-1234567\r\n"
+	for i := 1; i <= len(data); i++ {
+		buf := bytes.NewBuffer(nil)
+		n, err, clean := streamTo(bufio.NewReader(io.LimitReader(strings.NewReader(data), int64(i))), buf)
+		if i < len(data) {
+			if err == nil {
+				t.Fatalf("unexpected no error: %v", i)
+			}
+		} else {
+			if err != nil {
+				t.Fatal(err)
+			}
+			if buf.String() != "-1234567" {
+				t.Fatalf("unexpected msg string %v", buf.String())
+			}
+			if n != int64(buf.Len()) {
+				t.Fatalf("unexpected msg len %v", buf.Len())
+			}
+			if !clean {
+				t.Fatalf("unexpected clean value %v", clean)
+			}
+		}
+	}
+}
+
+func TestReadComplexTypesStream(t *testing.T) {
+	data := "%1\r\n+ignore\r\n+ignore\r\n"
+	for i := 1; i <= len(data); i++ {
+		buf := bytes.NewBuffer(nil)
+		n, err, clean := streamTo(bufio.NewReader(io.LimitReader(strings.NewReader(data), int64(i))), buf)
+		if i < len(data) {
+			if err == nil {
+				t.Fatalf("unexpected no error: %v", i)
+			}
+		} else {
+			if !strings.HasPrefix(err.Error(), "unsupported") {
+				t.Fatal(err)
+			}
+			if n != 0 {
+				t.Fatalf("unexpected msg len %v", buf.Len())
+			}
+			if !clean {
+				t.Fatalf("unexpected clean value %v", clean)
+			}
+		}
+	}
+}
+
 func TestReadStringCRLFErr(t *testing.T) {
 	data := "+\n"
 	if _, err := readNextMessage(bufio.NewReader(strings.NewReader(data))); err.Error() != unexpectedNoCRLF {
+		t.Fatalf("unexpected err %v", err)
+	}
+}
+
+func TestReadStringStreamCRLFErr(t *testing.T) {
+	data := "+\n"
+	buf := bytes.NewBuffer(nil)
+	if _, err, _ := streamTo(bufio.NewReader(strings.NewReader(data)), buf); err.Error() != unexpectedNoCRLF {
 		t.Fatalf("unexpected err %v", err)
 	}
 }
@@ -232,6 +367,32 @@ func TestReadChunkedString(t *testing.T) {
 			}
 			if m.string != "Hello word" {
 				t.Fatalf("unexpected msg string %v", m.string)
+			}
+		}
+	}
+}
+
+func TestReadChunkedStringStream(t *testing.T) {
+	data := "$?\r\n;4\r\nHell\r\n;5\r\no wor\r\n;1\r\nd\r\n;0\r\n"
+	for i := 1; i <= len(data); i++ {
+		buf := bytes.NewBuffer(nil)
+		n, err, clean := streamTo(bufio.NewReader(io.LimitReader(strings.NewReader(data), int64(i))), buf)
+		if i < len(data) {
+			if err == nil {
+				t.Fatalf("unexpected no error: %v", i)
+			}
+		} else {
+			if err != nil {
+				t.Fatal(err)
+			}
+			if buf.String() != "Hello word" {
+				t.Fatalf("unexpected msg string %v", buf.String())
+			}
+			if n != int64(buf.Len()) {
+				t.Fatalf("unexpected msg len %v", buf.Len())
+			}
+			if !clean {
+				t.Fatalf("unexpected clean value %v", clean)
 			}
 		}
 	}
@@ -345,6 +506,56 @@ func TestReadRESP2NullString(t *testing.T) {
 			}
 			if m.typ != '_' {
 				t.Fatalf("unexpected msg type %v", m.typ)
+			}
+		}
+	}
+}
+
+func TestReadRESP3NullStream(t *testing.T) {
+	data := "_\r\n"
+	for i := 1; i <= len(data); i++ {
+		buf := bytes.NewBuffer(nil)
+		n, err, clean := streamTo(bufio.NewReader(io.LimitReader(strings.NewReader(data), int64(i))), buf)
+		if i < len(data) {
+			if err == nil {
+				t.Fatalf("unexpected no error: %v", i)
+			}
+		} else {
+			if m, ok := err.(*RedisError); !ok {
+				t.Fatal(err)
+			} else if m.typ != '_' {
+				t.Fatalf("unexpected msg type %v", m.typ)
+			}
+			if !clean {
+				t.Fatalf("unexpected clean value %v", clean)
+			}
+			if n != 0 {
+				t.Fatalf("unexpected n value %v", n)
+			}
+		}
+	}
+}
+
+func TestReadRESP2NullStringStream(t *testing.T) {
+	data := "$-1\r\n"
+	for i := 1; i <= len(data); i++ {
+		buf := bytes.NewBuffer(nil)
+		n, err, clean := streamTo(bufio.NewReader(io.LimitReader(strings.NewReader(data), int64(i))), buf)
+		if i < len(data) {
+			if err == nil {
+				t.Fatalf("unexpected no error: %v", i)
+			}
+		} else {
+			if m, ok := err.(*RedisError); !ok {
+				t.Fatal(err)
+			} else if m.typ != '_' {
+				t.Fatalf("unexpected msg type %v", m.typ)
+			}
+			if !clean {
+				t.Fatalf("unexpected clean value %v", clean)
+			}
+			if n != 0 {
+				t.Fatalf("unexpected n value %v", n)
 			}
 		}
 	}

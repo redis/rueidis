@@ -3,6 +3,7 @@ package rueidis
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"io"
 	"math"
 	"strconv"
@@ -320,16 +321,24 @@ next:
 			return n, err, clean
 		}
 		if n == -1 {
-			return 0, &RedisError{typ: typeNull}, true
+			return 0, Nil, true
 		}
-		lr := lrs.Get().(*io.LimitedReader)
-		lr.R = i
-		lr.N = n
 		full := n + 2
-		n, err = io.Copy(w, lr)
-		lrs.Put(lr)
-		_, err2 := i.Discard(int(full - n))
-		return n, err, err2 == nil
+		if n != 0 {
+			lr := lrs.Get().(*io.LimitedReader)
+			lr.R = i
+			lr.N = n
+			n, err = io.Copy(w, lr)
+			lrs.Put(lr)
+		} else if typ == typeChunk {
+			return n, err, true
+		}
+		if _, err2 := i.Discard(int(full - n)); err2 == nil {
+			clean = true
+		} else if err == nil {
+			err = err2
+		}
+		return n, err, clean
 	default:
 		_ = i.UnreadByte()
 		m, err := readNextMessage(i)
@@ -340,7 +349,9 @@ next:
 		case typeSimpleString, typeFloat, typeBigNumber:
 			n, err := w.Write([]byte(m.string))
 			return int64(n), err, true
-		case typeNull, typeSimpleErr, typeBlobErr:
+		case typeNull:
+			return 0, Nil, true
+		case typeSimpleErr, typeBlobErr:
 			mm := m
 			return 0, (*RedisError)(&mm), true
 		case typeInteger, typeBool:
@@ -349,7 +360,7 @@ next:
 		case typePush:
 			goto next
 		default:
-			panic("unsupported streaming message type: " + strconv.Itoa(int(typ)))
+			return 0, fmt.Errorf("unsupported redis %q response for streaming read", typeNames[typ]), true
 		}
 	}
 }

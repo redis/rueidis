@@ -1036,9 +1036,6 @@ func (s *RedisResultStream) WriteTo(w io.Writer) (n int64, err error) {
 }
 
 func (p *pipe) DoStream(ctx context.Context, pool *pool, cmd Completed) RedisResultStream {
-	if cmd.NoReply() {
-		panic("NoReply in DoStream is not supported")
-	}
 	cmds.CompletedCS(cmd).Verify()
 
 	if err := ctx.Err(); err != nil {
@@ -1070,18 +1067,18 @@ func (p *pipe) DoStream(ctx context.Context, pool *pool, cmd Completed) RedisRes
 			p.error.CompareAndSwap(nil, &errs{error: err})
 			p.conn.Close()
 			p.background() // start the background worker to clean up goroutines
-			return RedisResultStream{e: err}
+		} else {
+			return RedisResultStream{p: pool, w: p, n: 1}
 		}
-		return RedisResultStream{p: pool, w: p, n: 1}
 	}
+	atomic.AddInt32(&p.blcksig, -1)
+	atomic.AddInt32(&p.waits, -1)
+	pool.Store(p)
 	return RedisResultStream{e: p.Error()}
 }
 
 func (p *pipe) DoMultiStream(ctx context.Context, pool *pool, multi ...Completed) MultiRedisResultStream {
 	for _, cmd := range multi {
-		if cmd.NoReply() {
-			panic("NoReply in DoMultiStream is not supported")
-		}
 		cmds.CompletedCS(cmd).Verify()
 	}
 
@@ -1123,10 +1120,13 @@ func (p *pipe) DoMultiStream(ctx context.Context, pool *pool, multi ...Completed
 			p.error.CompareAndSwap(nil, &errs{error: err})
 			p.conn.Close()
 			p.background() // start the background worker to clean up goroutines
-			return RedisResultStream{e: err}
+		} else {
+			return RedisResultStream{p: pool, w: p, n: len(multi)}
 		}
-		return RedisResultStream{p: pool, w: p, n: len(multi)}
 	}
+	atomic.AddInt32(&p.blcksig, -1)
+	atomic.AddInt32(&p.waits, -1)
+	pool.Store(p)
 	return RedisResultStream{e: p.Error()}
 }
 

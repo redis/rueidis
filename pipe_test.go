@@ -2,6 +2,7 @@ package rueidis
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -65,6 +66,15 @@ func (r *redisExpect) ReplyString(replies ...string) *redisExpect {
 	return r
 }
 
+func (r *redisExpect) ReplyBlobString(replies ...string) *redisExpect {
+	for _, reply := range replies {
+		if r.err == nil {
+			r.Reply(RedisMessage{typ: '$', string: reply})
+		}
+	}
+	return r
+}
+
 func (r *redisExpect) ReplyError(replies ...string) *redisExpect {
 	for _, reply := range replies {
 		if r.err == nil {
@@ -99,6 +109,9 @@ func (r *redisMock) Close() {
 func write(o io.Writer, m RedisMessage) (err error) {
 	_, err = o.Write([]byte{m.typ})
 	switch m.typ {
+	case '$':
+		_, err = o.Write(append([]byte(strconv.Itoa(len(m.string))), '\r', '\n'))
+		_, err = o.Write(append([]byte(m.string), '\r', '\n'))
 	case '+', '-', '_':
 		_, err = o.Write(append([]byte(m.string), '\r', '\n'))
 	case ':':
@@ -845,6 +858,216 @@ func TestWriteMultiPipelineFlush(t *testing.T) {
 
 	for i := 0; i < times; i++ {
 		mock.Expect("PING").Expect("PING").ReplyString("OK").ReplyString("OK")
+	}
+}
+
+func TestDoStreamAutoPipelinePanic(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	p, _, _, shutdown := setup(t, ClientOption{})
+	p.background()
+	defer func() {
+		if msg := recover(); !strings.Contains(msg.(string), "bug") {
+			t.Fatal("should panic")
+		}
+		shutdown()
+	}()
+	p.DoStream(context.Background(), nil, cmds.NewCompleted([]string{"PING"}))
+}
+
+func TestDoMultiStreamAutoPipelinePanic(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	p, _, _, shutdown := setup(t, ClientOption{})
+	p.background()
+	defer func() {
+		if msg := recover(); !strings.Contains(msg.(string), "bug") {
+			t.Fatal("should panic")
+		}
+		shutdown()
+	}()
+	p.DoMultiStream(context.Background(), nil, cmds.NewCompleted([]string{"PING"}))
+}
+
+func TestDoStreamConcurrentPanic(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	p, mock, _, shutdown := setup(t, ClientOption{})
+	defer func() {
+		if msg := recover(); !strings.Contains(msg.(string), "bug") {
+			t.Fatal("should panic")
+		}
+		shutdown()
+	}()
+	go func() {
+		mock.Expect("PING")
+	}()
+	p.DoStream(context.Background(), nil, cmds.NewCompleted([]string{"PING"}))
+	p.DoStream(context.Background(), nil, cmds.NewCompleted([]string{"PING"}))
+}
+
+func TestDoMultiStreamConcurrentPanic(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	p, mock, _, shutdown := setup(t, ClientOption{})
+	defer func() {
+		if msg := recover(); !strings.Contains(msg.(string), "bug") {
+			t.Fatal("should panic")
+		}
+		shutdown()
+	}()
+	go func() {
+		mock.Expect("PING")
+	}()
+	p.DoMultiStream(context.Background(), nil, cmds.NewCompleted([]string{"PING"}))
+	p.DoMultiStream(context.Background(), nil, cmds.NewCompleted([]string{"PING"}))
+}
+
+func TestDoStreamRecycle(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	p, mock, cancel, _ := setup(t, ClientOption{})
+	defer cancel()
+	go func() {
+		mock.Expect("PING").ReplyString("OK")
+	}()
+	conns := newPool(1, nil, nil)
+	s := p.DoStream(context.Background(), conns, cmds.NewCompleted([]string{"PING"}))
+	buf := bytes.NewBuffer(nil)
+	if err := s.Error(); err != nil {
+		t.Errorf("unexpected err %v\n", err)
+	}
+	for s.HasNext() {
+		n, err := s.WriteTo(buf)
+		if err != nil {
+			t.Errorf("unexpected err %v\n", err)
+		}
+		if n != 2 {
+			t.Errorf("unexpected n %v\n", n)
+		}
+	}
+	if buf.String() != "OK" {
+		t.Errorf("unexpected result %v\n", buf.String())
+	}
+	if err := s.Error(); err != io.EOF {
+		t.Errorf("unexpected err %v\n", err)
+	}
+	if w := conns.Acquire(); w != p {
+		t.Errorf("pipe is not recycled\n")
+	}
+}
+
+type limitedbuffer struct {
+	buf []byte
+}
+
+func (b *limitedbuffer) String() string {
+	return string(b.buf)
+}
+
+func (b *limitedbuffer) Write(buf []byte) (n int, err error) {
+	return n, err
+}
+
+func (b *limitedbuffer) ReadFrom(r io.Reader) (n int64, err error) {
+	if n, err := r.Read(b.buf); err == nil {
+		return int64(n), io.EOF
+	} else {
+		return int64(n), err
+	}
+}
+
+func TestDoStreamRecycleDestinationFull(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	p, mock, cancel, _ := setup(t, ClientOption{})
+	defer cancel()
+	go func() {
+		mock.Expect("PING").ReplyBlobString("OK")
+	}()
+	conns := newPool(1, nil, nil)
+	s := p.DoStream(context.Background(), conns, cmds.NewCompleted([]string{"PING"}))
+	buf := &limitedbuffer{buf: make([]byte, 1)}
+	if err := s.Error(); err != nil {
+		t.Errorf("unexpected err %v\n", err)
+	}
+	for s.HasNext() {
+		n, err := s.WriteTo(buf)
+		if err != io.EOF {
+			t.Errorf("unexpected err %v\n", err)
+		}
+		if n != 1 {
+			t.Errorf("unexpected n %v\n", n)
+		}
+	}
+	if buf.String() != "O" {
+		t.Errorf("unexpected result %v\n", buf.String())
+	}
+	if err := s.Error(); err != io.EOF {
+		t.Errorf("unexpected err %v\n", err)
+	}
+	if w := conns.Acquire(); w != p {
+		t.Errorf("pipe is not recycled\n")
+	}
+}
+
+func TestDoMultiStreamRecycle(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	p, mock, cancel, _ := setup(t, ClientOption{})
+	defer cancel()
+	go func() {
+		mock.Expect("PING").Expect("PING").ReplyString("OK").ReplyString("OK")
+	}()
+	conns := newPool(1, nil, nil)
+	s := p.DoMultiStream(context.Background(), conns, cmds.NewCompleted([]string{"PING"}), cmds.NewCompleted([]string{"PING"}))
+	buf := bytes.NewBuffer(nil)
+	if err := s.Error(); err != nil {
+		t.Errorf("unexpected err %v\n", err)
+	}
+	for s.HasNext() {
+		n, err := s.WriteTo(buf)
+		if err != nil {
+			t.Errorf("unexpected err %v\n", err)
+		}
+		if n != 2 {
+			t.Errorf("unexpected n %v\n", n)
+		}
+	}
+	if buf.String() != "OKOK" {
+		t.Errorf("unexpected result %v\n", buf.String())
+	}
+	if err := s.Error(); err != io.EOF {
+		t.Errorf("unexpected err %v\n", err)
+	}
+	if w := conns.Acquire(); w != p {
+		t.Errorf("pipe is not recycled\n")
+	}
+}
+
+func TestDoMultiStreamRecycleDestinationFull(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	p, mock, cancel, _ := setup(t, ClientOption{})
+	defer cancel()
+	go func() {
+		mock.Expect("PING").Expect("PING").ReplyBlobString("OK").ReplyBlobString("OK")
+	}()
+	conns := newPool(1, nil, nil)
+	s := p.DoMultiStream(context.Background(), conns, cmds.NewCompleted([]string{"PING"}), cmds.NewCompleted([]string{"PING"}))
+	buf := &limitedbuffer{buf: make([]byte, 1)}
+	if err := s.Error(); err != nil {
+		t.Errorf("unexpected err %v\n", err)
+	}
+	for s.HasNext() {
+		n, err := s.WriteTo(buf)
+		if err != io.EOF {
+			t.Errorf("unexpected err %v\n", err)
+		}
+		if n != 1 {
+			t.Errorf("unexpected n %v\n", n)
+		}
+	}
+	if buf.String() != "O" {
+		t.Errorf("unexpected result %v\n", buf.String())
+	}
+	if err := s.Error(); err != io.EOF {
+		t.Errorf("unexpected err %v\n", err)
+	}
+	if w := conns.Acquire(); w != p {
+		t.Errorf("pipe is not recycled\n")
 	}
 }
 
@@ -3186,6 +3409,7 @@ func TestCloseAndWaitPendingCMDs(t *testing.T) {
 }
 
 func TestAlreadyCanceledContext(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, _, close, closeConn := setup(t, ClientOption{})
 	defer closeConn()
 
@@ -3197,6 +3421,14 @@ func TestAlreadyCanceledContext(t *testing.T) {
 	}
 	if err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"})).s[0].NonRedisError(); !errors.Is(err, context.Canceled) {
 		t.Fatalf("unexpected err %v", err)
+	}
+
+	cp := newPool(1, nil, nil)
+	if s := p.DoStream(ctx, cp, cmds.NewCompleted([]string{"GET", "a"})); !errors.Is(s.Error(), context.Canceled) {
+		t.Fatalf("unexpected err %v", s.Error())
+	}
+	if s := p.DoMultiStream(ctx, cp, cmds.NewCompleted([]string{"GET", "a"})); !errors.Is(s.Error(), context.Canceled) {
+		t.Fatalf("unexpected err %v", s.Error())
 	}
 
 	ctx, cancel = context.WithDeadline(context.Background(), time.Now().Add(-1*time.Second))
@@ -3226,6 +3458,23 @@ func TestCancelContext_Do(t *testing.T) {
 		t.Fatalf("unexpected err %v", err)
 	}
 	shutdown()
+}
+
+func TestCancelContext_DoStream(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	p, _, _, _ := setup(t, ClientOption{})
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*50)
+	defer cancel()
+
+	cp := newPool(1, nil, nil)
+	s := p.DoStream(ctx, cp, cmds.NewCompleted([]string{"GET", "a"}))
+	if err := s.Error(); err != io.EOF && !strings.Contains(err.Error(), "i/o") {
+		t.Fatalf("unexpected err %v", err)
+	}
+	if len(cp.list) != 0 {
+		t.Fatalf("unexpected pool length %v", len(cp.list))
+	}
 }
 
 func TestCancelContext_Do_Block(t *testing.T) {
@@ -3279,6 +3528,23 @@ func TestCancelContext_DoMulti_Block(t *testing.T) {
 	shutdown()
 }
 
+func TestCancelContext_DoMultiStream(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	p, _, _, _ := setup(t, ClientOption{})
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*50)
+	defer cancel()
+
+	cp := newPool(1, nil, nil)
+	s := p.DoMultiStream(ctx, cp, cmds.NewCompleted([]string{"GET", "a"}))
+	if err := s.Error(); err != io.EOF && !strings.Contains(err.Error(), "i/o") {
+		t.Fatalf("unexpected err %v", err)
+	}
+	if len(cp.list) != 0 {
+		t.Fatalf("unexpected pool length %v", len(cp.list))
+	}
+}
+
 func TestForceClose_Do_Block(t *testing.T) {
 	p, mock, _, _ := setup(t, ClientOption{})
 
@@ -3289,6 +3555,51 @@ func TestForceClose_Do_Block(t *testing.T) {
 
 	if err := p.Do(context.Background(), cmds.NewBlockingCompleted([]string{"GET", "a"})).NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 		t.Fatalf("unexpected err %v", err)
+	}
+}
+
+func TestTimeout_DoStream(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	p, _, _, _ := setup(t, ClientOption{ConnWriteTimeout: time.Millisecond * 30})
+
+	cp := newPool(1, nil, nil)
+
+	s := p.DoStream(context.Background(), cp, cmds.NewCompleted([]string{"GET", "a"}))
+	if err := s.Error(); err != io.EOF && !strings.Contains(err.Error(), "i/o") {
+		t.Fatalf("unexpected err %v", s.Error())
+	}
+	if len(cp.list) != 0 {
+		t.Fatalf("unexpected pool length %v", len(cp.list))
+	}
+}
+
+func TestForceClose_DoStream_Block(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	p, mock, _, _ := setup(t, ClientOption{ConnWriteTimeout: time.Second})
+
+	go func() {
+		mock.Expect("GET", "a")
+		p.Close()
+	}()
+
+	cp := newPool(1, nil, nil)
+
+	s := p.DoStream(context.Background(), cp, cmds.NewBlockingCompleted([]string{"GET", "a"}))
+	if s.Error() != nil {
+		t.Fatalf("unexpected err %v", s.Error())
+	}
+	buf := bytes.NewBuffer(nil)
+	for s.HasNext() {
+		n, err := s.WriteTo(buf)
+		if err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
+			t.Errorf("unexpected err %v\n", err)
+		}
+		if n != 0 {
+			t.Errorf("unexpected n %v\n", n)
+		}
+	}
+	if len(cp.list) != 0 {
+		t.Fatalf("unexpected pool length %v", len(cp.list))
 	}
 }
 
@@ -3319,6 +3630,51 @@ func TestForceClose_DoMulti_Block(t *testing.T) {
 
 	if err := p.DoMulti(context.Background(), cmds.NewBlockingCompleted([]string{"GET", "a"})).s[0].NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 		t.Fatalf("unexpected err %v", err)
+	}
+}
+
+func TestTimeout_DoMultiStream(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	p, _, _, _ := setup(t, ClientOption{ConnWriteTimeout: time.Millisecond * 30})
+
+	cp := newPool(1, nil, nil)
+
+	s := p.DoMultiStream(context.Background(), cp, cmds.NewCompleted([]string{"GET", "a"}))
+	if err := s.Error(); err != io.EOF && !strings.Contains(err.Error(), "i/o") {
+		t.Fatalf("unexpected err %v", s.Error())
+	}
+	if len(cp.list) != 0 {
+		t.Fatalf("unexpected pool length %v", len(cp.list))
+	}
+}
+
+func TestForceClose_DoMultiStream_Block(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	p, mock, _, _ := setup(t, ClientOption{ConnWriteTimeout: time.Second})
+
+	go func() {
+		mock.Expect("GET", "a")
+		p.Close()
+	}()
+
+	cp := newPool(1, nil, nil)
+
+	s := p.DoMultiStream(context.Background(), cp, cmds.NewBlockingCompleted([]string{"GET", "a"}))
+	if s.Error() != nil {
+		t.Fatalf("unexpected err %v", s.Error())
+	}
+	buf := bytes.NewBuffer(nil)
+	for s.HasNext() {
+		n, err := s.WriteTo(buf)
+		if err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
+			t.Errorf("unexpected err %v\n", err)
+		}
+		if n != 0 {
+			t.Errorf("unexpected n %v\n", n)
+		}
+	}
+	if len(cp.list) != 0 {
+		t.Fatalf("unexpected pool length %v", len(cp.list))
 	}
 }
 
@@ -3368,7 +3724,7 @@ func TestSyncModeSwitchingWithDeadlineExceed_DoMulti(t *testing.T) {
 	p, mock, _, closeConn := setup(t, ClientOption{})
 	defer closeConn()
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Microsecond*100)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*100)
 	defer cancel()
 
 	var wg sync.WaitGroup

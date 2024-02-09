@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"io"
 	"reflect"
 	"sort"
 	"strconv"
@@ -941,12 +942,18 @@ func TestClusterClient(t *testing.T) {
 			}
 			return RedisResult{}
 		},
+		DoStreamFn: func(cmd Completed) RedisResultStream {
+			return RedisResultStream{e: errors.New(cmd.Commands()[1])}
+		},
 		DoMultiFn: func(multi ...Completed) *redisresults {
 			resps := make([]RedisResult, len(multi))
 			for i, cmd := range multi {
 				resps[i] = newResult(RedisMessage{typ: '+', string: strings.Join(cmd.Commands(), " ")}, nil)
 			}
 			return &redisresults{s: resps}
+		},
+		DoMultiStreamFn: func(cmd ...Completed) MultiRedisResultStream {
+			return MultiRedisResultStream{e: errors.New(cmd[0].Commands()[1])}
 		},
 		DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
 			resps := make([]RedisResult, len(multi))
@@ -999,9 +1006,22 @@ func TestClusterClient(t *testing.T) {
 		}
 	})
 
+	t.Run("Delegate DoStream", func(t *testing.T) {
+		c := client.B().Get().Key("Do").Build()
+		if s := client.DoStream(context.Background(), c); s.Error().Error() != "Do" {
+			t.Fatalf("unexpected response %v", s.Error())
+		}
+	})
+
 	t.Run("Delegate DoMulti Empty", func(t *testing.T) {
 		if resps := client.DoMulti(context.Background()); resps != nil {
 			t.Fatalf("unexpected response %v", resps)
+		}
+	})
+
+	t.Run("Delegate DoMultiStream Empty", func(t *testing.T) {
+		if s := client.DoMultiStream(context.Background()); s.Error() != io.EOF {
+			t.Fatalf("unexpected response %v", err)
 		}
 	})
 
@@ -1017,6 +1037,14 @@ func TestClusterClient(t *testing.T) {
 		}
 	})
 
+	t.Run("Delegate DoMultiStream Single Slot", func(t *testing.T) {
+		c1 := client.B().Get().Key("K1{a}").Build()
+		c2 := client.B().Get().Key("K2{a}").Build()
+		if s := client.DoMultiStream(context.Background(), c1, c2); s.Error().Error() != "K1{a}" {
+			t.Fatalf("unexpected response %v", s.Error())
+		}
+	})
+
 	t.Run("Delegate DoMulti Single Slot + Init Slot", func(t *testing.T) {
 		c1 := client.B().Get().Key("K1{a}").Build()
 		c2 := client.B().Info().Build()
@@ -1026,6 +1054,14 @@ func TestClusterClient(t *testing.T) {
 		}
 		if v, err := resps[1].ToString(); err != nil || v != "INFO" {
 			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("Delegate DoMultiStream Single Slot + Init Slot", func(t *testing.T) {
+		c1 := client.B().Info().Section("ANY").Build()
+		c2 := client.B().Get().Key("K1{a}").Build()
+		if s := client.DoMultiStream(context.Background(), c1, c2); s.Error().Error() != "ANY" {
+			t.Fatalf("unexpected response %v", s.Error())
 		}
 	})
 
@@ -1039,6 +1075,18 @@ func TestClusterClient(t *testing.T) {
 		c2 := client.B().Get().Key("K1{b}").Build()
 		c3 := client.B().Info().Build()
 		client.DoMulti(context.Background(), c1, c2, c3)
+	})
+
+	t.Run("Delegate DoMultiStream Cross Slot + Init Slot", func(t *testing.T) {
+		defer func() {
+			if err := recover(); !strings.Contains(err.(string), "across multiple slots") {
+				t.Errorf("DoMulti should panic if Cross Slot + Init Slot")
+			}
+		}()
+		c1 := client.B().Get().Key("K1{a}").Build()
+		c2 := client.B().Get().Key("K1{b}").Build()
+		c3 := client.B().Info().Build()
+		client.DoMultiStream(context.Background(), c1, c2, c3)
 	})
 
 	t.Run("Delegate DoMulti Multi Slot", func(t *testing.T) {
@@ -3226,12 +3274,18 @@ func TestClusterClientErr(t *testing.T) {
 				}
 				return newErrResult(v)
 			},
+			DoStreamFn: func(cmd Completed) RedisResultStream {
+				return RedisResultStream{e: v}
+			},
 			DoMultiFn: func(multi ...Completed) *redisresults {
 				res := make([]RedisResult, len(multi))
 				for i := range res {
 					res[i] = newErrResult(v)
 				}
 				return &redisresults{s: res}
+			},
+			DoMultiStreamFn: func(cmd ...Completed) MultiRedisResultStream {
+				return MultiRedisResultStream{e: v}
 			},
 			DoCacheFn: func(cmd Cacheable, ttl time.Duration) RedisResult {
 				return newErrResult(v)
@@ -3256,8 +3310,14 @@ func TestClusterClientErr(t *testing.T) {
 		if err := client.Do(ctx, client.B().Get().Key("a").Build()).Error(); err != v {
 			t.Fatalf("unexpected err %v", err)
 		}
+		if s := client.DoStream(ctx, client.B().Get().Key("a").Build()); s.Error() != v {
+			t.Fatalf("unexpected err %v", s.Error())
+		}
 		if err := client.DoMulti(ctx, client.B().Get().Key("a").Build())[0].Error(); err != v {
 			t.Fatalf("unexpected err %v", err)
+		}
+		if s := client.DoMultiStream(ctx, client.B().Get().Key("a").Build()); s.Error() != v {
+			t.Fatalf("unexpected err %v", s.Error())
 		}
 		if err := client.DoCache(ctx, client.B().Get().Key("a").Cache(), 100).Error(); err != v {
 			t.Fatalf("unexpected err %v", err)
@@ -3296,8 +3356,14 @@ func TestClusterClientErr(t *testing.T) {
 		if err := client.Do(context.Background(), client.B().Get().Key("a").Build()).Error(); err != v {
 			t.Fatalf("unexpected err %v", err)
 		}
+		if s := client.DoStream(context.Background(), client.B().Get().Key("a").Build()); s.Error() != v {
+			t.Fatalf("unexpected err %v", s.Error())
+		}
 		if err := client.DoMulti(context.Background(), client.B().Get().Key("a").Build())[0].Error(); err != v {
 			t.Fatalf("unexpected err %v", err)
+		}
+		if s := client.DoMultiStream(context.Background(), client.B().Get().Key("a").Build()); s.Error() != v {
+			t.Fatalf("unexpected err %v", s.Error())
 		}
 		for _, resp := range client.DoMulti(context.Background(), client.B().Get().Key("a").Build(), client.B().Get().Key("b").Build()) {
 			if err := resp.Error(); err != v {

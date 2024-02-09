@@ -3,6 +3,7 @@ package rueidis
 import (
 	"context"
 	"errors"
+	"io"
 	"net"
 	"reflect"
 	"strconv"
@@ -17,8 +18,8 @@ type mockConn struct {
 	DoMultiFn       func(multi ...Completed) *redisresults
 	DoMultiCacheFn  func(multi ...CacheableTTL) *redisresults
 	ReceiveFn       func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error
-	DoStreamFn      func(ctx context.Context, cmd Completed) RedisResultStream
-	DoMultiStreamFn func(ctx context.Context, cmd ...Completed) MultiRedisResultStream
+	DoStreamFn      func(cmd Completed) RedisResultStream
+	DoMultiStreamFn func(cmd ...Completed) MultiRedisResultStream
 	InfoFn          func() map[string]RedisMessage
 	VersionFn       func() int
 	ErrorFn         func() error
@@ -124,14 +125,14 @@ func (m *mockConn) Receive(ctx context.Context, subscribe Completed, hdl func(me
 
 func (m *mockConn) DoStream(ctx context.Context, cmd Completed) RedisResultStream {
 	if m.DoStreamFn != nil {
-		return m.DoStreamFn(ctx, cmd)
+		return m.DoStreamFn(cmd)
 	}
 	return RedisResultStream{}
 }
 
 func (m *mockConn) DoMultiStream(ctx context.Context, cmd ...Completed) MultiRedisResultStream {
 	if m.DoMultiStreamFn != nil {
-		return m.DoMultiStreamFn(ctx, cmd...)
+		return m.DoMultiStreamFn(cmd...)
 	}
 	return MultiRedisResultStream{}
 }
@@ -253,6 +254,16 @@ func TestSingleClient(t *testing.T) {
 		}
 	})
 
+	t.Run("Delegate DoStream", func(t *testing.T) {
+		c := client.B().Get().Key("Do").Build()
+		m.DoStreamFn = func(cmd Completed) RedisResultStream {
+			return RedisResultStream{e: errors.New(cmd.Commands()[1])}
+		}
+		if s := client.DoStream(context.Background(), c); s.Error().Error() != "Do" {
+			t.Fatalf("unexpected response %v", s.Error())
+		}
+	})
+
 	t.Run("Delegate DoMulti", func(t *testing.T) {
 		c := client.B().Get().Key("Do").Build()
 		m.DoMultiFn = func(cmd ...Completed) *redisresults {
@@ -266,6 +277,19 @@ func TestSingleClient(t *testing.T) {
 		}
 		if v, err := client.DoMulti(context.Background(), c)[0].ToString(); err != nil || v != "Do" {
 			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("Delegate DoMultiStream", func(t *testing.T) {
+		c := client.B().Get().Key("Do").Build()
+		m.DoMultiStreamFn = func(cmd ...Completed) MultiRedisResultStream {
+			return MultiRedisResultStream{e: errors.New(cmd[0].Commands()[1])}
+		}
+		if s := client.DoMultiStream(context.Background()); s.Error() != io.EOF {
+			t.Fatalf("unexpected response %v", err)
+		}
+		if s := client.DoMultiStream(context.Background(), c); s.Error().Error() != "Do" {
+			t.Fatalf("unexpected response %v", s.Error())
 		}
 	})
 
