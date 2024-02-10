@@ -309,20 +309,21 @@ list, err := script.Exec(ctx, client, []string{"k1", "k2"}, []string{"a1", "a2"}
 ## Streaming Read
 
 `client.DoStream()` and `client.DoMultiStream()` can be used to send large redis responses to an `io.Writer`
-without allocating the full responses in memory. They work by first sending commands to a dedicated connection acquired from a pool,
+directly without allocating them in the memory. They work by first sending commands to a dedicated connection acquired from a pool,
 then directly copying the response values to the given `io.Writer`, and finally recycling the connection.
 
 ```go
 s := client.DoMultiStream(ctx, client.B().Get().Key("a{slot1}").Build(), client.B().Get().Key("b{slot1}").Build())
 for s.HasNext() {
     n, err := s.WriteTo(io.Discard)
-    // ...
+    if rueidis.IsRedisNil(err) {
+        // ...
+    }
 }
 ```
 
 Note that these two methods will occupy connections until all responses are written to the given `io.Writer`.
-This can take a long time and hurt performance. Use the normal `Do()` and `DoMulti()` instead unless you want to avoid
-allocating memory for large redis response.
+This can take a long time and hurt performance. Use the normal `Do()` and `DoMulti()` instead unless you want to avoid allocating memory for large redis response.
 
 Also note that these two methods only work with `string`, `integer`, and `float` redis responses. And `DoMultiStream` currently
 does not support pipelining keys across multiple slots when connecting to a redis cluster.
