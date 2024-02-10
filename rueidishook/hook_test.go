@@ -3,6 +3,7 @@ package rueidishook
 import (
 	"context"
 	"errors"
+	"io"
 	"testing"
 	"time"
 
@@ -102,6 +103,20 @@ func testHooked(t *testing.T, hooked rueidis.Client, mocked *mock.Client) {
 			if err := resp.Error(); !rueidis.IsRedisNil(err) {
 				t.Fatalf("unexpected err %v", err)
 			}
+		}
+	}
+	{
+		mocked.EXPECT().DoStream(ctx, mock.Match("GET", "e")).Return(mock.RedisResultStream(mock.RedisNil()))
+		s := hooked.DoStream(ctx, hooked.B().Get().Key("e").Build())
+		if _, err := s.WriteTo(io.Discard); !rueidis.IsRedisNil(err) {
+			t.Fatalf("unexpected err %v", err)
+		}
+	}
+	{
+		mocked.EXPECT().DoMultiStream(ctx, mock.Match("GET", "e"), mock.Match("GET", "f")).Return(mock.MultiRedisResultStream(mock.RedisNil()))
+		s := hooked.DoMultiStream(ctx, hooked.B().Get().Key("e").Build(), hooked.B().Get().Key("f").Build())
+		if _, err := s.WriteTo(io.Discard); !rueidis.IsRedisNil(err) {
+			t.Fatalf("unexpected err %v", err)
 		}
 	}
 	{
@@ -257,6 +272,16 @@ func TestForbiddenMethodForDedicatedClient(t *testing.T) {
 				client.Nodes()
 			},
 			msg: "Nodes() is not allowed with rueidis.DedicatedClient",
+		}, {
+			fn: func(client rueidis.Client) {
+				client.DoStream(context.Background(), client.B().Get().Key("").Build())
+			},
+			msg: "DoStream() is not allowed with rueidis.DedicatedClient",
+		}, {
+			fn: func(client rueidis.Client) {
+				client.DoMultiStream(context.Background(), client.B().Get().Key("").Build())
+			},
+			msg: "DoMultiStream() is not allowed with rueidis.DedicatedClient",
 		},
 	} {
 		shouldpanic(c.fn, c.msg)

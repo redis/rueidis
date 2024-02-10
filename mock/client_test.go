@@ -3,6 +3,7 @@ package mock
 import (
 	"context"
 	"errors"
+	"io"
 	"testing"
 	"time"
 
@@ -54,6 +55,20 @@ func TestNewClient(t *testing.T) {
 			if err := resp.Error(); !rueidis.IsRedisNil(err) {
 				t.Fatalf("unexpected err %v", err)
 			}
+		}
+	}
+	{
+		client.EXPECT().DoStream(ctx, Match("GET", "e")).Return(RedisResultStream(RedisNil()))
+		s := client.DoStream(ctx, client.B().Get().Key("e").Build())
+		if _, err := s.WriteTo(io.Discard); !rueidis.IsRedisNil(err) {
+			t.Fatalf("unexpected err %v", err)
+		}
+	}
+	{
+		client.EXPECT().DoMultiStream(ctx, Match("GET", "e"), Match("GET", "f")).Return(MultiRedisResultStream(RedisNil()))
+		s := client.DoMultiStream(ctx, client.B().Get().Key("e").Build(), client.B().Get().Key("f").Build())
+		if _, err := s.WriteTo(io.Discard); !rueidis.IsRedisNil(err) {
+			t.Fatalf("unexpected err %v", err)
 		}
 	}
 	{

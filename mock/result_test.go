@@ -1,8 +1,11 @@
 package mock
 
 import (
+	"bytes"
 	"errors"
+	"io"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/redis/rueidis"
@@ -99,5 +102,117 @@ func TestErrorResult(t *testing.T) {
 	r := ErrorResult(errors.New("any"))
 	if err := r.Error(); err.Error() != "any" {
 		t.Fatalf("unexpected value %v", err)
+	}
+}
+
+func TestErrorResultStream(t *testing.T) {
+	s := RedisResultStreamError(errors.New("any"))
+	if err := s.Error(); err.Error() != "any" {
+		t.Fatalf("unexpected value %v", err)
+	}
+}
+
+func TestErrorMultiResultStream(t *testing.T) {
+	s := MultiRedisResultStreamError(errors.New("any"))
+	if err := s.Error(); err.Error() != "any" {
+		t.Fatalf("unexpected value %v", err)
+	}
+}
+
+func TestResultStream(t *testing.T) {
+	type test struct {
+		msg []rueidis.RedisMessage
+		out []string
+		err []string
+	}
+	tests := []test{
+		{msg: []rueidis.RedisMessage{RedisString("")}, out: []string{""}, err: []string{""}},
+		{msg: []rueidis.RedisMessage{RedisString("0"), RedisBlobString("12345")}, out: []string{"0", "12345"}, err: []string{"", ""}},
+		{msg: []rueidis.RedisMessage{RedisInt64(123), RedisInt64(-456)}, out: []string{"123", "-456"}, err: []string{"", ""}},
+		{msg: []rueidis.RedisMessage{RedisString(""), RedisNil()}, out: []string{"", ""}, err: []string{"", "nil"}},
+		{msg: []rueidis.RedisMessage{RedisArray(RedisString("n")), RedisString("ok"), RedisNil(), RedisMap(map[string]rueidis.RedisMessage{"b": RedisBlobString("b")})}, out: []string{"", "ok", "", ""}, err: []string{"unsupported", "", "nil", "unsupported"}},
+	}
+	for _, tc := range tests {
+		s := RedisResultStream(tc.msg...)
+		if err := s.Error(); err != nil {
+			t.Fatalf("unexpected value %v", err)
+		}
+		if !s.HasNext() {
+			t.Fatalf("unexpected value %v", s.HasNext())
+		}
+		buf := bytes.NewBuffer(nil)
+		for i := 0; s.HasNext(); i++ {
+			n, err := s.WriteTo(buf)
+			if tc.err[i] != "" {
+				if err == nil {
+					t.Fatalf("unexpected value %v", err)
+				} else if !strings.Contains(err.Error(), tc.err[i]) {
+					t.Fatalf("unexpected value %v", err)
+				}
+			} else if err != nil {
+				t.Fatalf("unexpected value %v", err)
+			}
+			if n != int64(len(tc.out[i])) {
+				t.Fatalf("unexpected value %v", n)
+			}
+		}
+		if buf.String() != strings.Join(tc.out, "") {
+			t.Fatalf("unexpected value %v", buf.String())
+		}
+		if s.HasNext() {
+			t.Fatalf("unexpected value %v", s.HasNext())
+		}
+		if err := s.Error(); err != io.EOF {
+			t.Fatalf("unexpected value %v", err)
+		}
+	}
+}
+
+func TestMultiResultStream(t *testing.T) {
+	type test struct {
+		msg []rueidis.RedisMessage
+		out []string
+		err []string
+	}
+	tests := []test{
+		{msg: []rueidis.RedisMessage{RedisString("")}, out: []string{""}, err: []string{""}},
+		{msg: []rueidis.RedisMessage{RedisString("0"), RedisBlobString("12345")}, out: []string{"0", "12345"}, err: []string{"", ""}},
+		{msg: []rueidis.RedisMessage{RedisInt64(123), RedisInt64(-456)}, out: []string{"123", "-456"}, err: []string{"", ""}},
+		{msg: []rueidis.RedisMessage{RedisString(""), RedisNil()}, out: []string{"", ""}, err: []string{"", "nil"}},
+		{msg: []rueidis.RedisMessage{RedisArray(RedisString("n")), RedisString("ok"), RedisNil(), RedisMap(map[string]rueidis.RedisMessage{"b": RedisBlobString("b")})}, out: []string{"", "ok", "", ""}, err: []string{"unsupported", "", "nil", "unsupported"}},
+	}
+	for _, tc := range tests {
+		s := MultiRedisResultStream(tc.msg...)
+		if err := s.Error(); err != nil {
+			t.Fatalf("unexpected value %v", err)
+		}
+		if !s.HasNext() {
+			t.Fatalf("unexpected value %v", s.HasNext())
+		}
+		buf := bytes.NewBuffer(nil)
+		for i := 0; s.HasNext(); i++ {
+			n, err := s.WriteTo(buf)
+			if tc.err[i] != "" {
+				if err == nil {
+					t.Fatalf("unexpected value %v", err)
+				} else if !strings.Contains(err.Error(), tc.err[i]) {
+					t.Fatalf("unexpected value %v", err)
+				}
+			} else if err != nil {
+				t.Fatalf("unexpected value %v", err)
+			}
+			if n != int64(len(tc.out[i])) {
+				t.Fatalf("unexpected value %v", n)
+			}
+		}
+		if buf.String() != strings.Join(tc.out, "") {
+			t.Fatalf("unexpected value %v", buf.String())
+		}
+		if s.HasNext() {
+			t.Fatalf("unexpected value %v", s.HasNext())
+		}
+		if err := s.Error(); err != io.EOF {
+			t.Fatalf("unexpected value %v", err)
+		}
 	}
 }

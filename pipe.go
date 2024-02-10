@@ -1021,21 +1021,19 @@ func (s *RedisResultStream) Error() error {
 func (s *RedisResultStream) WriteTo(w io.Writer) (n int64, err error) {
 	if err = s.e; err == nil && s.n > 0 {
 		var clean bool
-		if n, err, clean = streamTo(s.w.r, w); err != nil {
-			for s.e = err; clean && s.n > 1; s.n-- {
-				_, _, clean = streamTo(s.w.r, io.Discard)
-			}
-			if !clean {
-				s.w.Close()
-			}
+		if n, err, clean = streamTo(s.w.r, w); !clean {
+			s.e = err // err must not be nil in case of !clean
+			s.n = 1
 		}
 		if s.n--; s.n == 0 {
 			atomic.AddInt32(&s.w.blcksig, -1)
 			atomic.AddInt32(&s.w.waits, -1)
-			s.p.Store(s.w)
 			if s.e == nil {
 				s.e = io.EOF
+			} else {
+				s.w.Close()
 			}
+			s.p.Store(s.w)
 		}
 	}
 	return n, err
