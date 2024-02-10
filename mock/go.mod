@@ -1,4 +1,4 @@
-module mock
+module github.com/redis/rueidis/mock
 
 go 1.20
 
