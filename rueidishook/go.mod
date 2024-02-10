@@ -1,4 +1,4 @@
-module rueidishook
+module github.com/redis/rueidis/rueidishook
 
 go 1.20
 
