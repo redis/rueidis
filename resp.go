@@ -3,10 +3,12 @@ package rueidis
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"io"
 	"math"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 var errChunked = errors.New("unbounded redis message")
@@ -29,6 +31,7 @@ const (
 	typeSet            = byte('~')
 	typeAttribute      = byte('|')
 	typePush           = byte('>')
+	typeChunk          = byte(';')
 )
 
 var typeNames = make(map[byte]string, 16)
@@ -294,6 +297,71 @@ func readNextMessage(i *bufio.Reader) (m RedisMessage, err error) {
 		}
 		m.attrs = attrs
 		return m, nil
+	}
+}
+
+var lrs = sync.Pool{New: func() any { return &io.LimitedReader{} }}
+
+func streamTo(i *bufio.Reader, w io.Writer) (n int64, err error, clean bool) {
+next:
+	var typ byte
+	if typ, err = i.ReadByte(); err != nil {
+		return 0, err, false
+	}
+	switch typ {
+	case typeBlobString, typeVerbatimString, typeChunk:
+		if n, err = readI(i); err != nil {
+			if err == errChunked {
+				var nn int64
+				nn, err, clean = streamTo(i, w)
+				for n += nn; nn != 0 && clean && err == nil; n += nn {
+					nn, err, clean = streamTo(i, w)
+				}
+			}
+			return n, err, clean
+		}
+		if n == -1 {
+			return 0, Nil, true
+		}
+		full := n + 2
+		if n != 0 {
+			lr := lrs.Get().(*io.LimitedReader)
+			lr.R = i
+			lr.N = n
+			n, err = io.Copy(w, lr)
+			lrs.Put(lr)
+		} else if typ == typeChunk {
+			return n, err, true
+		}
+		if _, err2 := i.Discard(int(full - n)); err2 == nil {
+			clean = true
+		} else if err == nil {
+			err = err2
+		}
+		return n, err, clean
+	default:
+		_ = i.UnreadByte()
+		m, err := readNextMessage(i)
+		if err != nil {
+			return 0, err, false
+		}
+		switch m.typ {
+		case typeSimpleString, typeFloat, typeBigNumber:
+			n, err := w.Write([]byte(m.string))
+			return int64(n), err, true
+		case typeNull:
+			return 0, Nil, true
+		case typeSimpleErr, typeBlobErr:
+			mm := m
+			return 0, (*RedisError)(&mm), true
+		case typeInteger, typeBool:
+			n, err := w.Write([]byte(strconv.FormatInt(m.integer, 10)))
+			return int64(n), err, true
+		case typePush:
+			goto next
+		default:
+			return 0, fmt.Errorf("unsupported redis %q response for streaming read", typeNames[typ]), true
+		}
 	}
 }
 

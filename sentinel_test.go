@@ -3,6 +3,7 @@ package rueidis
 import (
 	"context"
 	"errors"
+	"io"
 	"reflect"
 	"sync/atomic"
 	"testing"
@@ -712,6 +713,16 @@ func TestSentinelClientDelegate(t *testing.T) {
 		}
 	})
 
+	t.Run("Delegate DoStream", func(t *testing.T) {
+		c := client.B().Get().Key("Do").Build()
+		m.DoStreamFn = func(cmd Completed) RedisResultStream {
+			return RedisResultStream{e: errors.New(cmd.Commands()[1])}
+		}
+		if s := client.DoStream(context.Background(), c); s.Error().Error() != "Do" {
+			t.Fatalf("unexpected response %v", s.Error())
+		}
+	})
+
 	t.Run("Delegate DoMulti", func(t *testing.T) {
 		c := client.B().Get().Key("Do").Build()
 		m.DoMultiFn = func(cmd ...Completed) *redisresults {
@@ -725,6 +736,19 @@ func TestSentinelClientDelegate(t *testing.T) {
 		}
 		if v, err := client.DoMulti(context.Background(), c)[0].ToString(); err != nil || v != "Do" {
 			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("Delegate DoMultiStream", func(t *testing.T) {
+		c := client.B().Get().Key("Do").Build()
+		m.DoMultiStreamFn = func(cmd ...Completed) MultiRedisResultStream {
+			return MultiRedisResultStream{e: errors.New(cmd[0].Commands()[1])}
+		}
+		if s := client.DoMultiStream(context.Background()); s.Error() != io.EOF {
+			t.Fatalf("unexpected response %v", err)
+		}
+		if s := client.DoMultiStream(context.Background(), c); s.Error().Error() != "Do" {
+			t.Fatalf("unexpected response %v", s.Error())
 		}
 	})
 

@@ -1,6 +1,7 @@
 package rueidis
 
 import (
+	"bytes"
 	"context"
 	"math/rand"
 	"net"
@@ -137,6 +138,21 @@ func testSETGET(t *testing.T, client Client, csc bool) {
 			val, err := client.Do(ctx, client.B().Get().Key(key).Build()).ToString()
 			if v, ok := kvs[key]; !((ok && val == v) || (!ok && IsRedisNil(err))) {
 				t.Errorf("unexpected get response %v %v %v", val, err, ok)
+			}
+		}
+	}
+	wait()
+
+	t.Logf("testing stream GET with %d keys and %d parallelism\n", keys*2, para)
+	jobs, wait = parallel(para)
+	for i := 0; i < keys*2; i++ {
+		key := strconv.Itoa(rand.Intn(keys * 2))
+		jobs <- func() {
+			s := client.DoStream(ctx, client.B().Get().Key(key).Build())
+			buf := bytes.NewBuffer(nil)
+			n, err := s.WriteTo(buf)
+			if v, ok := kvs[key]; !((ok && buf.String() == v && n == int64(buf.Len())) || (!ok && IsRedisNil(err))) {
+				t.Errorf("unexpected get response %v %v %v", buf.String(), err, ok)
 			}
 		}
 	}

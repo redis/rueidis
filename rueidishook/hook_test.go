@@ -3,6 +3,7 @@ package rueidishook
 import (
 	"context"
 	"errors"
+	"io"
 	"testing"
 	"time"
 
@@ -33,6 +34,14 @@ func (h *hook) Receive(client rueidis.Client, ctx context.Context, subscribe rue
 	return client.Receive(ctx, subscribe, fn)
 }
 
+func (h *hook) DoStream(client rueidis.Client, ctx context.Context, cmd rueidis.Completed) rueidis.RedisResultStream {
+	return client.DoStream(ctx, cmd)
+}
+
+func (h *hook) DoMultiStream(client rueidis.Client, ctx context.Context, multi ...rueidis.Completed) rueidis.MultiRedisResultStream {
+	return client.DoMultiStream(ctx, multi...)
+}
+
 type wronghook struct {
 	DoFn func(client rueidis.Client)
 }
@@ -55,6 +64,14 @@ func (w *wronghook) DoMultiCache(client rueidis.Client, ctx context.Context, mul
 }
 
 func (w *wronghook) Receive(client rueidis.Client, ctx context.Context, subscribe rueidis.Completed, fn func(msg rueidis.PubSubMessage)) (err error) {
+	panic("implement me")
+}
+
+func (w *wronghook) DoStream(client rueidis.Client, ctx context.Context, cmd rueidis.Completed) rueidis.RedisResultStream {
+	panic("implement me")
+}
+
+func (w *wronghook) DoMultiStream(client rueidis.Client, ctx context.Context, multi ...rueidis.Completed) rueidis.MultiRedisResultStream {
 	panic("implement me")
 }
 
@@ -86,6 +103,20 @@ func testHooked(t *testing.T, hooked rueidis.Client, mocked *mock.Client) {
 			if err := resp.Error(); !rueidis.IsRedisNil(err) {
 				t.Fatalf("unexpected err %v", err)
 			}
+		}
+	}
+	{
+		mocked.EXPECT().DoStream(ctx, mock.Match("GET", "e")).Return(mock.RedisResultStream(mock.RedisNil()))
+		s := hooked.DoStream(ctx, hooked.B().Get().Key("e").Build())
+		if _, err := s.WriteTo(io.Discard); !rueidis.IsRedisNil(err) {
+			t.Fatalf("unexpected err %v", err)
+		}
+	}
+	{
+		mocked.EXPECT().DoMultiStream(ctx, mock.Match("GET", "e"), mock.Match("GET", "f")).Return(mock.MultiRedisResultStream(mock.RedisNil()))
+		s := hooked.DoMultiStream(ctx, hooked.B().Get().Key("e").Build(), hooked.B().Get().Key("f").Build())
+		if _, err := s.WriteTo(io.Discard); !rueidis.IsRedisNil(err) {
+			t.Fatalf("unexpected err %v", err)
 		}
 	}
 	{
@@ -241,6 +272,16 @@ func TestForbiddenMethodForDedicatedClient(t *testing.T) {
 				client.Nodes()
 			},
 			msg: "Nodes() is not allowed with rueidis.DedicatedClient",
+		}, {
+			fn: func(client rueidis.Client) {
+				client.DoStream(context.Background(), client.B().Get().Key("").Build())
+			},
+			msg: "DoStream() is not allowed with rueidis.DedicatedClient",
+		}, {
+			fn: func(client rueidis.Client) {
+				client.DoMultiStream(context.Background(), client.B().Get().Key("").Build())
+			},
+			msg: "DoMultiStream() is not allowed with rueidis.DedicatedClient",
 		},
 	} {
 		shouldpanic(c.fn, c.msg)

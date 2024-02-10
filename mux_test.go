@@ -23,16 +23,17 @@ func setupMux(wires []*mockWire) (conn *mux, checkClean func(t *testing.T)) {
 func setupMuxWithOption(wires []*mockWire, option *ClientOption) (conn *mux, checkClean func(t *testing.T)) {
 	var mu sync.Mutex
 	var count = -1
-	return newMux("", option, (*mockWire)(nil), (*mockWire)(nil), func() wire {
-			mu.Lock()
-			defer mu.Unlock()
-			count++
-			return wires[count]
-		}), func(t *testing.T) {
-			if count != len(wires)-1 {
-				t.Fatalf("there is %d remaining unused wires", len(wires)-count-1)
-			}
+	wfn := func() wire {
+		mu.Lock()
+		defer mu.Unlock()
+		count++
+		return wires[count]
+	}
+	return newMux("", option, (*mockWire)(nil), (*mockWire)(nil), wfn, wfn), func(t *testing.T) {
+		if count != len(wires)-1 {
+			t.Fatalf("there is %d remaining unused wires", len(wires)-count-1)
 		}
+	}
 }
 
 func TestNewMuxDailErr(t *testing.T) {
@@ -103,6 +104,7 @@ func TestNewMux(t *testing.T) {
 		m2.Close()
 	})
 }
+
 func TestNewMuxPipelineMultiplex(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	for _, v := range []int{-1, 0, 1, 2} {
@@ -128,6 +130,8 @@ func TestMuxDialSuppress(t *testing.T) {
 	m := newMux("", &ClientOption{}, (*mockWire)(nil), (*mockWire)(nil), func() wire {
 		atomic.AddInt64(&wires, 1)
 		<-blocking
+		return &mockWire{}
+	}, func() wire {
 		return &mockWire{}
 	})
 	for i := 0; i < 1000; i++ {
@@ -328,6 +332,21 @@ func TestMuxDelegation(t *testing.T) {
 		}
 	})
 
+	t.Run("wire do stream", func(t *testing.T) {
+		m, checkClean := setupMux([]*mockWire{
+			{
+				DoStreamFn: func(pool *pool, cmd Completed) RedisResultStream {
+					return RedisResultStream{e: errors.New(cmd.Commands()[0])}
+				},
+			},
+		})
+		defer checkClean(t)
+		defer m.Close()
+		if s := m.DoStream(context.Background(), cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"})); s.Error().Error() != "READONLY_COMMAND" {
+			t.Fatalf("unexpected error %v", s.Error())
+		}
+	})
+
 	t.Run("wire do multi", func(t *testing.T) {
 		m, checkClean := setupMux([]*mockWire{
 			{
@@ -353,6 +372,21 @@ func TestMuxDelegation(t *testing.T) {
 			t.Fatalf("unexpected error %v", err)
 		} else if val != "MULTI_COMMANDS_RESPONSE" {
 			t.Fatalf("unexpected response %v", val)
+		}
+	})
+
+	t.Run("wire do multi stream", func(t *testing.T) {
+		m, checkClean := setupMux([]*mockWire{
+			{
+				DoMultiStreamFn: func(pool *pool, cmd ...Completed) MultiRedisResultStream {
+					return MultiRedisResultStream{e: errors.New(cmd[0].Commands()[0])}
+				},
+			},
+		})
+		defer checkClean(t)
+		defer m.Close()
+		if s := m.DoMultiStream(context.Background(), cmds.NewReadOnlyCompleted([]string{"READONLY_COMMAND"})); s.Error().Error() != "READONLY_COMMAND" {
+			t.Fatalf("unexpected error %v", s.Error())
 		}
 	})
 
@@ -792,15 +826,17 @@ func BenchmarkClientSideCaching(b *testing.B) {
 }
 
 type mockWire struct {
-	DoFn           func(cmd Completed) RedisResult
-	DoCacheFn      func(cmd Cacheable, ttl time.Duration) RedisResult
-	DoMultiFn      func(multi ...Completed) *redisresults
-	DoMultiCacheFn func(multi ...CacheableTTL) *redisresults
-	ReceiveFn      func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error
-	InfoFn         func() map[string]RedisMessage
-	VersionFn      func() int
-	ErrorFn        func() error
-	CloseFn        func()
+	DoFn            func(cmd Completed) RedisResult
+	DoCacheFn       func(cmd Cacheable, ttl time.Duration) RedisResult
+	DoMultiFn       func(multi ...Completed) *redisresults
+	DoMultiCacheFn  func(multi ...CacheableTTL) *redisresults
+	ReceiveFn       func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error
+	DoStreamFn      func(pool *pool, cmd Completed) RedisResultStream
+	DoMultiStreamFn func(pool *pool, cmd ...Completed) MultiRedisResultStream
+	InfoFn          func() map[string]RedisMessage
+	VersionFn       func() int
+	ErrorFn         func() error
+	CloseFn         func()
 
 	CleanSubscriptionsFn func()
 	SetPubSubHooksFn     func(hooks PubSubHooks) <-chan error
@@ -840,6 +876,20 @@ func (m *mockWire) Receive(ctx context.Context, subscribe Completed, fn func(mes
 		return m.ReceiveFn(ctx, subscribe, fn)
 	}
 	return nil
+}
+
+func (m *mockWire) DoStream(ctx context.Context, pool *pool, cmd Completed) RedisResultStream {
+	if m.DoStreamFn != nil {
+		return m.DoStreamFn(pool, cmd)
+	}
+	return RedisResultStream{}
+}
+
+func (m *mockWire) DoMultiStream(ctx context.Context, pool *pool, cmd ...Completed) MultiRedisResultStream {
+	if m.DoMultiStreamFn != nil {
+		return m.DoMultiStreamFn(pool, cmd...)
+	}
+	return MultiRedisResultStream{}
 }
 
 func (m *mockWire) CleanSubscriptions() {

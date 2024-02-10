@@ -3,6 +3,7 @@ package rueidis
 import (
 	"context"
 	"errors"
+	"io"
 	"math/rand"
 	"net"
 	"runtime"
@@ -999,6 +1000,43 @@ ret:
 		cmds.PutCompleted(subscribe)
 	}
 	return err
+}
+
+func (c *clusterClient) DoStream(ctx context.Context, cmd Completed) RedisResultStream {
+	cc, err := c.pick(ctx, cmd.Slot(), c.toReplica(cmd))
+	if err != nil {
+		return RedisResultStream{e: err}
+	}
+	ret := cc.DoStream(ctx, cmd)
+	cmds.PutCompleted(cmd)
+	return ret
+}
+
+func (c *clusterClient) DoMultiStream(ctx context.Context, multi ...Completed) MultiRedisResultStream {
+	if len(multi) == 0 {
+		return RedisResultStream{e: io.EOF}
+	}
+	slot := multi[0].Slot()
+	repl := c.toReplica(multi[0])
+	for i := 1; i < len(multi); i++ {
+		if s := multi[i].Slot(); s != cmds.InitSlot {
+			if slot == cmds.InitSlot {
+				slot = s
+			} else if slot != s {
+				panic("DoMultiStream across multiple slots is not supported")
+			}
+		}
+		repl = repl && c.toReplica(multi[i])
+	}
+	cc, err := c.pick(ctx, slot, repl)
+	if err != nil {
+		return RedisResultStream{e: err}
+	}
+	ret := cc.DoMultiStream(ctx, multi...)
+	for _, cmd := range multi {
+		cmds.PutCompleted(cmd)
+	}
+	return ret
 }
 
 func (c *clusterClient) Dedicated(fn func(DedicatedClient) error) (err error) {

@@ -93,6 +93,12 @@ func testWithClient(t *testing.T, client rueidis.Client, exp *tracetest.InMemory
 	client.DoMulti(ctx, client.B().Set().Key("key").Value("val").Build(), client.B().Set().Key("key").Value("val").Build())
 	validateTrace(t, exp, "SET SET", codes.Ok)
 
+	client.DoStream(ctx, client.B().Set().Key("key").Value("val").Build())
+	validateTrace(t, exp, "SET", codes.Ok)
+
+	client.DoMultiStream(ctx, client.B().Set().Key("key").Value("val").Build(), client.B().Set().Key("key").Value("val").Build())
+	validateTrace(t, exp, "SET SET", codes.Ok)
+
 	// first DoCache
 	client.DoCache(ctx, client.B().Get().Key("key").Cache(), time.Minute)
 	validateTrace(t, exp, "GET", codes.Ok)
