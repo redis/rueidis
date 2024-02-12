@@ -36,8 +36,9 @@ import (
 	"testing"
 	"time"
 
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
+	"github.com/onsi/ginkgo/v2"
+	"github.com/onsi/gomega"
+
 	"github.com/redis/rueidis"
 )
 
@@ -51,8 +52,8 @@ func (t *TimeValue) ScanRedis(s string) (err error) {
 }
 
 func TestAdapter(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Adapter Suite")
+	gomega.RegisterFailHandler(ginkgo.Fail)
+	ginkgo.RunSpecs(t, "Adapter Suite")
 }
 
 var (
@@ -68,18 +69,18 @@ var (
 	adaptercluster3 Cmdable
 )
 
-var _ = BeforeSuite(func() {
+var _ = ginkgo.BeforeSuite(func() {
 	ctx = context.Background()
 	clientresp3, err = rueidis.NewClient(rueidis.ClientOption{
 		InitAddress: []string{"127.0.0.1:6378"},
 		ClientName:  "rueidis",
 	})
-	Expect(err).NotTo(HaveOccurred())
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 	clusterresp3, err = rueidis.NewClient(rueidis.ClientOption{
 		InitAddress: []string{"127.0.0.1:7010"},
 		ClientName:  "rueidis",
 	})
-	Expect(err).NotTo(HaveOccurred())
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 	adapterresp3 = NewAdapter(clientresp3)
 	adaptercluster3 = NewAdapter(clusterresp3)
 	clientresp2, err = rueidis.NewClient(rueidis.ClientOption{
@@ -87,33 +88,33 @@ var _ = BeforeSuite(func() {
 		ClientName:   "rueidis",
 		DisableCache: true,
 	})
-	Expect(err).NotTo(HaveOccurred())
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 	clusterresp2, err = rueidis.NewClient(rueidis.ClientOption{
 		InitAddress:  []string{"127.0.0.1:7007"},
 		ClientName:   "rueidis",
 		DisableCache: true,
 	})
-	Expect(err).NotTo(HaveOccurred())
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 	adapterresp2 = NewAdapter(clientresp2)
 	adaptercluster2 = NewAdapter(clusterresp2)
 })
 
-var _ = AfterSuite(func() {
-	Expect(adapterresp3.FlushDB(ctx).Err()).NotTo(HaveOccurred())
-	Expect(adapterresp3.Quit(ctx).Err()).NotTo(HaveOccurred())
+var _ = ginkgo.AfterSuite(func() {
+	gomega.Expect(adapterresp3.FlushDB(ctx).Err()).NotTo(gomega.HaveOccurred())
+	gomega.Expect(adapterresp3.Quit(ctx).Err()).NotTo(gomega.HaveOccurred())
 	clientresp3.Close()
-	Expect(adapterresp2.FlushDB(ctx).Err()).NotTo(HaveOccurred())
-	Expect(adapterresp2.Quit(ctx).Err()).NotTo(HaveOccurred())
+	gomega.Expect(adapterresp2.FlushDB(ctx).Err()).NotTo(gomega.HaveOccurred())
+	gomega.Expect(adapterresp2.Quit(ctx).Err()).NotTo(gomega.HaveOccurred())
 	clientresp2.Close()
 })
 
-var _ = Describe("RESP3 Commands", func() {
+var _ = ginkgo.Describe("RESP3 Commands", func() {
 	testAdapter(true)
 	testAdapterCache(true)
 	testCluster(true)
 })
 
-var _ = Describe("RESP2 Commands", func() {
+var _ = ginkgo.Describe("RESP2 Commands", func() {
 	testAdapter(false)
 	testCluster(false)
 })
@@ -121,7 +122,7 @@ var _ = Describe("RESP2 Commands", func() {
 func testCluster(resp3 bool) {
 	var adapter Cmdable
 
-	BeforeEach(func() {
+	ginkgo.BeforeEach(func() {
 		if resp3 {
 			adapter = adaptercluster3
 		} else {
@@ -129,11 +130,11 @@ func testCluster(resp3 bool) {
 		}
 	})
 
-	Describe("Cluster", func() {
+	ginkgo.Describe("Cluster", func() {
 		if resp3 {
-			It("ClusterShards", func() {
+			ginkgo.It("ClusterShards", func() {
 				shards, err := adapter.ClusterShards(ctx).Result()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				m := make(map[int64]struct{})
 				for _, shard := range shards {
 					for _, slot := range shard.Slots {
@@ -142,49 +143,49 @@ func testCluster(resp3 bool) {
 						}
 					}
 				}
-				Expect(m).To(HaveLen(16384))
+				gomega.Expect(m).To(gomega.HaveLen(16384))
 			})
 		}
-		It("ClusterSlots", func() {
+		ginkgo.It("ClusterSlots", func() {
 			slots, err := adapter.ClusterSlots(ctx).Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			m := make(map[int64]struct{})
 			for _, slot := range slots {
 				for i := slot.Start; i <= slot.End; i++ {
 					m[i] = struct{}{}
 				}
 			}
-			Expect(m).To(HaveLen(16384))
+			gomega.Expect(m).To(gomega.HaveLen(16384))
 		})
-		It("ClusterNodes", func() {
+		ginkgo.It("ClusterNodes", func() {
 			nodes, err := adapter.ClusterNodes(ctx).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(strings.Split(strings.TrimSpace(nodes), "\n")).To(HaveLen(3))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(strings.Split(strings.TrimSpace(nodes), "\n")).To(gomega.HaveLen(3))
 		})
-		It("ClusterInfo", func() {
+		ginkgo.It("ClusterInfo", func() {
 			info, err := adapter.ClusterInfo(ctx).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(info).NotTo(BeEmpty())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(info).NotTo(gomega.BeEmpty())
 		})
-		It("ClusterKeySlot", func() {
+		ginkgo.It("ClusterKeySlot", func() {
 			slot, err := adapter.ClusterKeySlot(ctx, "1").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(slot).To(Equal(int64(9842)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(slot).To(gomega.Equal(int64(9842)))
 		})
-		It("ClusterGetKeysInSlot", func() {
-			Expect(adapter.Set(ctx, "1", "1", 0).Err()).NotTo(HaveOccurred())
+		ginkgo.It("ClusterGetKeysInSlot", func() {
+			gomega.Expect(adapter.Set(ctx, "1", "1", 0).Err()).NotTo(gomega.HaveOccurred())
 			keys, err := adapter.ClusterGetKeysInSlot(ctx, 9842, 1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(keys).To(Equal([]string{"1"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(keys).To(gomega.Equal([]string{"1"}))
 			kc, err := adapter.ClusterCountKeysInSlot(ctx, 9842).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(kc).To(Equal(int64(1)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(kc).To(gomega.Equal(int64(1)))
 		})
-		It("ClusterCountFailureReports", func() {
-			Expect(adapter.ClusterCountFailureReports(ctx, "1").Err()).To(MatchError("Unknown node 1"))
+		ginkgo.It("ClusterCountFailureReports", func() {
+			gomega.Expect(adapter.ClusterCountFailureReports(ctx, "1").Err()).To(gomega.MatchError("Unknown node 1"))
 		})
-		It("ClusterSlaves", func() {
-			Expect(adapter.ClusterSlaves(ctx, "1").Err()).To(MatchError("Unknown node 1"))
+		ginkgo.It("ClusterSlaves", func() {
+			gomega.Expect(adapter.ClusterSlaves(ctx, "1").Err()).To(gomega.MatchError("Unknown node 1"))
 		})
 	})
 }
@@ -192,236 +193,236 @@ func testCluster(resp3 bool) {
 func testAdapter(resp3 bool) {
 	var adapter Cmdable
 
-	BeforeEach(func() {
+	ginkgo.BeforeEach(func() {
 		if resp3 {
 			adapter = adapterresp3
 		} else {
 			adapter = adapterresp2
 		}
-		Expect(adapter.FlushDB(ctx).Err()).NotTo(HaveOccurred())
-		Expect(adapter.FlushAll(ctx).Err()).NotTo(HaveOccurred())
+		gomega.Expect(adapter.FlushDB(ctx).Err()).NotTo(gomega.HaveOccurred())
+		gomega.Expect(adapter.FlushAll(ctx).Err()).NotTo(gomega.HaveOccurred())
 	})
 
-	Describe("server", func() {
-		It("should Echo", func() {
+	ginkgo.Describe("server", func() {
+		ginkgo.It("should Echo", func() {
 			echo := adapter.Echo(ctx, "hello")
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
-			Expect(echo.Err()).NotTo(HaveOccurred())
-			Expect(echo.Val()).To(Equal("hello"))
+			gomega.Expect(echo.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(echo.Val()).To(gomega.Equal("hello"))
 		})
 
-		It("should Ping", func() {
+		ginkgo.It("should Ping", func() {
 			ping := adapter.Ping(ctx)
-			Expect(ping.Err()).NotTo(HaveOccurred())
-			Expect(ping.Val()).To(Equal("PONG"))
+			gomega.Expect(ping.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(ping.Val()).To(gomega.Equal("PONG"))
 		})
 
-		It("should Migrate", func() {
+		ginkgo.It("should Migrate", func() {
 			var r *StatusCmd
 			if resp3 {
 				r = adapter.Migrate(ctx, "127.0.0.1", 6378, "nonkey", 0, 1)
 			} else {
 				r = adapter.Migrate(ctx, "127.0.0.1", 6356, "nonkey", 0, 1)
 			}
-			Expect(r.Err()).To(BeNil())
-			Expect(r.Val()).To(Equal("NOKEY"))
+			gomega.Expect(r.Err()).To(gomega.BeNil())
+			gomega.Expect(r.Val()).To(gomega.Equal("NOKEY"))
 		})
 
-		It("should Move", func() {
-			Expect(adapter.Set(ctx, "movekey", "1", 0).Err()).To(BeNil())
+		ginkgo.It("should Move", func() {
+			gomega.Expect(adapter.Set(ctx, "movekey", "1", 0).Err()).To(gomega.BeNil())
 			r := adapter.Move(ctx, "movekey", 1)
-			Expect(r.Err()).To(BeNil())
-			Expect(r.Val()).To(BeTrue())
+			gomega.Expect(r.Err()).To(gomega.BeNil())
+			gomega.Expect(r.Val()).To(gomega.BeTrue())
 		})
 
-		It("should ClientKill", func() {
+		ginkgo.It("should ClientKill", func() {
 			r := adapter.ClientKill(ctx, "1.1.1.1:1111")
-			Expect(r.Err()).To(MatchError("No such client"))
-			Expect(r.Val()).To(Equal(""))
+			gomega.Expect(r.Err()).To(gomega.MatchError("No such client"))
+			gomega.Expect(r.Val()).To(gomega.Equal(""))
 		})
 
-		It("should ClientKillByFilter", func() {
+		ginkgo.It("should ClientKillByFilter", func() {
 			r := adapter.ClientKillByFilter(ctx, "ID", "12039487")
-			Expect(r.Err()).To(BeNil())
-			Expect(r.Val()).To(Equal(int64(0)))
+			gomega.Expect(r.Err()).To(gomega.BeNil())
+			gomega.Expect(r.Val()).To(gomega.Equal(int64(0)))
 		})
 
-		It("should ClientList", func() {
+		ginkgo.It("should ClientList", func() {
 			r := adapter.ClientList(ctx)
-			Expect(r.Err()).To(BeNil())
-			Expect(r.Val()).NotTo(Equal(""))
+			gomega.Expect(r.Err()).To(gomega.BeNil())
+			gomega.Expect(r.Val()).NotTo(gomega.Equal(""))
 		})
 
-		It("should ClientID", func() {
+		ginkgo.It("should ClientID", func() {
 			err := adapter.ClientID(ctx).Err()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(adapter.ClientID(ctx).Val()).To(BeNumerically(">=", 0))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(adapter.ClientID(ctx).Val()).To(gomega.BeNumerically(">=", 0))
 		})
 
-		It("should ClientGetName", func() {
+		ginkgo.It("should ClientGetName", func() {
 			r := adapter.ClientGetName(ctx)
-			Expect(r.Err()).NotTo(HaveOccurred())
-			Expect(r.Val()).To(Equal("rueidis"))
+			gomega.Expect(r.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(r.Val()).To(gomega.Equal("rueidis"))
 		})
 
-		It("should ConfigGet", func() {
+		ginkgo.It("should ConfigGet", func() {
 			val, err := adapter.ConfigGet(ctx, "*").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).NotTo(BeEmpty())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(val).NotTo(gomega.BeEmpty())
 		})
 
-		It("should ConfigResetStat", func() {
+		ginkgo.It("should ConfigResetStat", func() {
 			r := adapter.ConfigResetStat(ctx)
-			Expect(r.Err()).NotTo(HaveOccurred())
-			Expect(r.Val()).To(Equal("OK"))
+			gomega.Expect(r.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(r.Val()).To(gomega.Equal("OK"))
 		})
 
-		It("should ConfigSet", func() {
+		ginkgo.It("should ConfigSet", func() {
 			configGet := adapter.ConfigGet(ctx, "maxmemory")
-			Expect(configGet.Err()).NotTo(HaveOccurred())
-			Expect(configGet.Val()).To(HaveLen(1))
-			Expect(configGet.Val()["maxmemory"]).NotTo(BeEmpty())
+			gomega.Expect(configGet.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(configGet.Val()).To(gomega.HaveLen(1))
+			gomega.Expect(configGet.Val()["maxmemory"]).NotTo(gomega.BeEmpty())
 
 			configSet := adapter.ConfigSet(ctx, "maxmemory", configGet.Val()["maxmemory"])
-			Expect(configSet.Err()).NotTo(HaveOccurred())
-			Expect(configSet.Val()).To(Equal("OK"))
+			gomega.Expect(configSet.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(configSet.Val()).To(gomega.Equal("OK"))
 		})
 
-		It("should DBSize", func() {
+		ginkgo.It("should DBSize", func() {
 			size, err := adapter.DBSize(ctx).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(size).To(Equal(int64(0)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(size).To(gomega.Equal(int64(0)))
 		})
 
-		It("should Info", func() {
+		ginkgo.It("should Info", func() {
 			info := adapter.Info(ctx)
-			Expect(info.Err()).NotTo(HaveOccurred())
-			Expect(info.Val()).NotTo(Equal(""))
+			gomega.Expect(info.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(info.Val()).NotTo(gomega.Equal(""))
 		})
 
-		It("should Info cpu", func() {
+		ginkgo.It("should Info cpu", func() {
 			info := adapter.Info(ctx, "cpu")
-			Expect(info.Err()).NotTo(HaveOccurred())
-			Expect(info.Val()).NotTo(Equal(""))
-			Expect(info.Val()).To(ContainSubstring(`used_cpu_sys`))
+			gomega.Expect(info.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(info.Val()).NotTo(gomega.Equal(""))
+			gomega.Expect(info.Val()).To(gomega.ContainSubstring(`used_cpu_sys`))
 		})
 
-		It("should LastSave", func() {
+		ginkgo.It("should LastSave", func() {
 			lastSave := adapter.LastSave(ctx)
-			Expect(lastSave.Err()).NotTo(HaveOccurred())
-			Expect(lastSave.Val()).NotTo(Equal(0))
+			gomega.Expect(lastSave.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lastSave.Val()).NotTo(gomega.Equal(0))
 		})
 
-		It("should Save", func() {
+		ginkgo.It("should Save", func() {
 			// workaround for "ERR Background save already in progress"
-			Eventually(func() string {
+			gomega.Eventually(func() string {
 				return adapter.Save(ctx).Val()
-			}, "10s").Should(Equal("OK"))
+			}, "10s").Should(gomega.Equal("OK"))
 		})
 
-		It("should Time", func() {
+		ginkgo.It("should Time", func() {
 			tm, err := adapter.Time(ctx).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(tm).To(BeTemporally("~", time.Now(), 3*time.Second))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(tm).To(gomega.BeTemporally("~", time.Now(), 3*time.Second))
 		})
 
-		It("should Command", func() {
+		ginkgo.It("should Command", func() {
 			cmds, err := adapter.Command(ctx).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(len(cmds)).To(BeNumerically(">=", 200))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(len(cmds)).To(gomega.BeNumerically(">=", 200))
 
 			cmd := cmds["mget"]
-			Expect(cmd.Name).To(Equal("mget"))
-			Expect(cmd.Arity).To(Equal(int64(-2)))
-			Expect(cmd.Flags).To(ContainElement("readonly"))
-			Expect(cmd.FirstKeyPos).To(Equal(int64(1)))
-			Expect(cmd.LastKeyPos).To(Equal(int64(-1)))
-			Expect(cmd.StepCount).To(Equal(int64(1)))
+			gomega.Expect(cmd.Name).To(gomega.Equal("mget"))
+			gomega.Expect(cmd.Arity).To(gomega.Equal(int64(-2)))
+			gomega.Expect(cmd.Flags).To(gomega.ContainElement("readonly"))
+			gomega.Expect(cmd.FirstKeyPos).To(gomega.Equal(int64(1)))
+			gomega.Expect(cmd.LastKeyPos).To(gomega.Equal(int64(-1)))
+			gomega.Expect(cmd.StepCount).To(gomega.Equal(int64(1)))
 
 			cmd = cmds["ping"]
-			Expect(cmd.Name).To(Equal("ping"))
-			Expect(cmd.Arity).To(Equal(int64(-1)))
-			Expect(cmd.Flags).To(ContainElement("fast"))
-			Expect(cmd.FirstKeyPos).To(Equal(int64(0)))
-			Expect(cmd.LastKeyPos).To(Equal(int64(0)))
-			Expect(cmd.StepCount).To(Equal(int64(0)))
+			gomega.Expect(cmd.Name).To(gomega.Equal("ping"))
+			gomega.Expect(cmd.Arity).To(gomega.Equal(int64(-1)))
+			gomega.Expect(cmd.Flags).To(gomega.ContainElement("fast"))
+			gomega.Expect(cmd.FirstKeyPos).To(gomega.Equal(int64(0)))
+			gomega.Expect(cmd.LastKeyPos).To(gomega.Equal(int64(0)))
+			gomega.Expect(cmd.StepCount).To(gomega.Equal(int64(0)))
 		})
 
 		if resp3 {
-			It("should return all command names", func() {
+			ginkgo.It("should return all command names", func() {
 				cmdList := adapter.CommandList(ctx, FilterBy{})
-				Expect(cmdList.Err()).NotTo(HaveOccurred())
+				gomega.Expect(cmdList.Err()).NotTo(gomega.HaveOccurred())
 				cmdNames := cmdList.Val()
 
-				Expect(cmdNames).NotTo(BeEmpty())
+				gomega.Expect(cmdNames).NotTo(gomega.BeEmpty())
 
 				// Assert that some expected commands are present in the list
-				Expect(cmdNames).To(ContainElement("get"))
-				Expect(cmdNames).To(ContainElement("set"))
-				Expect(cmdNames).To(ContainElement("hset"))
+				gomega.Expect(cmdNames).To(gomega.ContainElement("get"))
+				gomega.Expect(cmdNames).To(gomega.ContainElement("set"))
+				gomega.Expect(cmdNames).To(gomega.ContainElement("hset"))
 			})
 
-			It("should filter commands by module", func() {
+			ginkgo.It("should filter commands by module", func() {
 				filter := FilterBy{
 					Module: "JSON",
 				}
 				cmdList := adapter.CommandList(ctx, filter)
-				Expect(cmdList.Err()).NotTo(HaveOccurred())
-				Expect(cmdList.Val()).To(HaveLen(0))
+				gomega.Expect(cmdList.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmdList.Val()).To(gomega.HaveLen(0))
 			})
 
-			It("should filter commands by ACL category", func() {
+			ginkgo.It("should filter commands by ACL category", func() {
 
 				filter := FilterBy{
 					ACLCat: "admin",
 				}
 
 				cmdList := adapter.CommandList(ctx, filter)
-				Expect(cmdList.Err()).NotTo(HaveOccurred())
+				gomega.Expect(cmdList.Err()).NotTo(gomega.HaveOccurred())
 				cmdNames := cmdList.Val()
 
 				// Assert that the returned list only contains commands from the admin ACL category
-				Expect(len(cmdNames)).To(BeNumerically(">", 10))
+				gomega.Expect(len(cmdNames)).To(gomega.BeNumerically(">", 10))
 			})
 
-			It("should filter commands by pattern", func() {
+			ginkgo.It("should filter commands by pattern", func() {
 				filter := FilterBy{
 					Pattern: "*GET*",
 				}
 				cmdList := adapter.CommandList(ctx, filter)
-				Expect(cmdList.Err()).NotTo(HaveOccurred())
+				gomega.Expect(cmdList.Err()).NotTo(gomega.HaveOccurred())
 				cmdNames := cmdList.Val()
 
 				// Assert that the returned list only contains commands that match the given pattern
-				Expect(cmdNames).To(ContainElement("get"))
-				Expect(cmdNames).To(ContainElement("getbit"))
-				Expect(cmdNames).To(ContainElement("getrange"))
-				Expect(cmdNames).NotTo(ContainElement("set"))
+				gomega.Expect(cmdNames).To(gomega.ContainElement("get"))
+				gomega.Expect(cmdNames).To(gomega.ContainElement("getbit"))
+				gomega.Expect(cmdNames).To(gomega.ContainElement("getrange"))
+				gomega.Expect(cmdNames).NotTo(gomega.ContainElement("set"))
 			})
 
-			It("Should CommandGetKeys", func() {
+			ginkgo.It("Should CommandGetKeys", func() {
 				keys, err := adapter.CommandGetKeys(ctx, "MSET", "a", "b", "c", "d", "e", "f").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(keys).To(Equal([]string{"a", "c", "e"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(keys).To(gomega.Equal([]string{"a", "c", "e"}))
 
 				keys, err = adapter.CommandGetKeys(ctx, "EVAL", "not consulted", "3", "key1", "key2", "key3", "arg1", "arg2", "arg3", "argN").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(keys).To(Equal([]string{"key1", "key2", "key3"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(keys).To(gomega.Equal([]string{"key1", "key2", "key3"}))
 
 				keys, err = adapter.CommandGetKeys(ctx, "SORT", "mylist", "ALPHA", "STORE", "outlist").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(keys).To(Equal([]string{"mylist", "outlist"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(keys).To(gomega.Equal([]string{"mylist", "outlist"}))
 
 				_, err = adapter.CommandGetKeys(ctx, "FAKECOMMAND", "arg1", "arg2").Result()
-				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(Equal("Invalid command specified"))
+				gomega.Expect(err).To(gomega.HaveOccurred())
+				gomega.Expect(err.Error()).To(gomega.Equal("Invalid command specified"))
 			})
 
-			It("should CommandGetKeysAndFlags", func() {
+			ginkgo.It("should CommandGetKeysAndFlags", func() {
 				keysAndFlags, err := adapter.CommandGetKeysAndFlags(ctx, "LMOVE", "mylist1", "mylist2", "left", "left").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(keysAndFlags).To(Equal([]KeyFlags{
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(keysAndFlags).To(gomega.Equal([]KeyFlags{
 					{
 						Key:   "mylist1",
 						Flags: []string{"RW", "access", "delete"},
@@ -433,426 +434,426 @@ func testAdapter(resp3 bool) {
 				}))
 
 				_, err = adapter.CommandGetKeysAndFlags(ctx, "FAKECOMMAND", "arg1", "arg2").Result()
-				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(Equal("Invalid command specified"))
+				gomega.Expect(err).To(gomega.HaveOccurred())
+				gomega.Expect(err.Error()).To(gomega.Equal("Invalid command specified"))
 			})
 		}
 	})
 
-	Describe("debugging", func() {
-		It("should MemoryUsage", func() {
+	ginkgo.Describe("debugging", func() {
+		ginkgo.It("should MemoryUsage", func() {
 			err := adapter.MemoryUsage(ctx, "foo").Err()
-			Expect(rueidis.IsRedisNil(err)).To(BeTrue())
+			gomega.Expect(rueidis.IsRedisNil(err)).To(gomega.BeTrue())
 
 			err = adapter.Set(ctx, "foo", "bar", 0).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			n, err := adapter.MemoryUsage(ctx, "foo").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(n).NotTo(BeZero())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(n).NotTo(gomega.BeZero())
 
 			n, err = adapter.MemoryUsage(ctx, "foo", 0).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(n).NotTo(BeZero())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(n).NotTo(gomega.BeZero())
 		})
 	})
 
-	Describe("keys", func() {
-		It("should Del", func() {
+	ginkgo.Describe("keys", func() {
+		ginkgo.It("should Del", func() {
 			err := adapter.Set(ctx, "key1", "Hello", 0).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.Set(ctx, "key2", "World", 0).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			n, err := adapter.Del(ctx, "key1", "key2", "key3").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(n).To(Equal(int64(2)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(n).To(gomega.Equal(int64(2)))
 		})
 
-		It("should Unlink", func() {
+		ginkgo.It("should Unlink", func() {
 			err := adapter.Set(ctx, "key1", "Hello", 0).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.Set(ctx, "key2", "World", 0).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			n, err := adapter.Unlink(ctx, "key1", "key2", "key3").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(n).To(Equal(int64(2)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(n).To(gomega.Equal(int64(2)))
 		})
 
-		It("should Dump", func() {
+		ginkgo.It("should Dump", func() {
 			set := adapter.Set(ctx, "key", "hello", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			dump := adapter.Dump(ctx, "key")
-			Expect(dump.Err()).NotTo(HaveOccurred())
-			Expect(dump.Val()).NotTo(BeEmpty())
+			gomega.Expect(dump.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(dump.Val()).NotTo(gomega.BeEmpty())
 		})
 
-		It("should Exists", func() {
+		ginkgo.It("should Exists", func() {
 			set := adapter.Set(ctx, "key1", "Hello", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			n, err := adapter.Exists(ctx, "key1").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(n).To(Equal(int64(1)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(n).To(gomega.Equal(int64(1)))
 
 			n, err = adapter.Exists(ctx, "key2").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(n).To(Equal(int64(0)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(n).To(gomega.Equal(int64(0)))
 
 			n, err = adapter.Exists(ctx, "key1", "key2").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(n).To(Equal(int64(1)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(n).To(gomega.Equal(int64(1)))
 
 			n, err = adapter.Exists(ctx, "key1", "key1").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(n).To(Equal(int64(2)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(n).To(gomega.Equal(int64(2)))
 		})
 
-		It("should Expire", func() {
+		ginkgo.It("should Expire", func() {
 			set := adapter.Set(ctx, "key", "Hello", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			expire := adapter.Expire(ctx, "key", 10*time.Second)
-			Expect(expire.Err()).NotTo(HaveOccurred())
-			Expect(expire.Val()).To(Equal(true))
+			gomega.Expect(expire.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(expire.Val()).To(gomega.Equal(true))
 
 			ttl := adapter.TTL(ctx, "key")
-			Expect(ttl.Err()).NotTo(HaveOccurred())
-			Expect(ttl.Val()).To(Equal(10 * time.Second))
+			gomega.Expect(ttl.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(ttl.Val()).To(gomega.Equal(10 * time.Second))
 
 			set = adapter.Set(ctx, "key", "Hello World", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			ttl = adapter.TTL(ctx, "key")
-			Expect(ttl.Err()).NotTo(HaveOccurred())
-			Expect(ttl.Val()).To(Equal(time.Duration(-1)))
+			gomega.Expect(ttl.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(ttl.Val()).To(gomega.Equal(time.Duration(-1)))
 
 			ttl = adapter.TTL(ctx, "nonexistent_key")
-			Expect(ttl.Err()).NotTo(HaveOccurred())
-			Expect(ttl.Val()).To(Equal(time.Duration(-2)))
+			gomega.Expect(ttl.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(ttl.Val()).To(gomega.Equal(time.Duration(-2)))
 		})
 
 		if resp3 {
-			It("should ExpireNX", func() {
+			ginkgo.It("should ExpireNX", func() {
 				set := adapter.Set(ctx, "key", "Hello", 0)
-				Expect(set.Err()).NotTo(HaveOccurred())
-				Expect(set.Val()).To(Equal("OK"))
+				gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 				expire := adapter.ExpireNX(ctx, "key", 10*time.Second)
-				Expect(expire.Err()).NotTo(HaveOccurred())
-				Expect(expire.Val()).To(Equal(true))
+				gomega.Expect(expire.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(expire.Val()).To(gomega.Equal(true))
 
 				ttl := adapter.TTL(ctx, "key")
-				Expect(ttl.Err()).NotTo(HaveOccurred())
-				Expect(ttl.Val()).To(Equal(10 * time.Second))
+				gomega.Expect(ttl.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(ttl.Val()).To(gomega.Equal(10 * time.Second))
 
 				expire = adapter.ExpireNX(ctx, "key", 20*time.Second)
-				Expect(expire.Err()).NotTo(HaveOccurred())
-				Expect(expire.Val()).To(Equal(false))
+				gomega.Expect(expire.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(expire.Val()).To(gomega.Equal(false))
 			})
 
-			It("should ExpireXX", func() {
+			ginkgo.It("should ExpireXX", func() {
 				set := adapter.Set(ctx, "key", "Hello", 0)
-				Expect(set.Err()).NotTo(HaveOccurred())
-				Expect(set.Val()).To(Equal("OK"))
+				gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 				expire := adapter.ExpireXX(ctx, "key", 10*time.Second)
-				Expect(expire.Err()).NotTo(HaveOccurred())
-				Expect(expire.Val()).To(Equal(false))
+				gomega.Expect(expire.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(expire.Val()).To(gomega.Equal(false))
 
 				expire = adapter.ExpireNX(ctx, "key", 10*time.Second)
-				Expect(expire.Err()).NotTo(HaveOccurred())
-				Expect(expire.Val()).To(Equal(true))
+				gomega.Expect(expire.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(expire.Val()).To(gomega.Equal(true))
 
 				expire = adapter.ExpireXX(ctx, "key", 20*time.Second)
-				Expect(expire.Err()).NotTo(HaveOccurred())
-				Expect(expire.Val()).To(Equal(true))
+				gomega.Expect(expire.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(expire.Val()).To(gomega.Equal(true))
 			})
 
-			It("should ExpireGT", func() {
+			ginkgo.It("should ExpireGT", func() {
 				set := adapter.Set(ctx, "key", "Hello", 5*time.Second)
-				Expect(set.Err()).NotTo(HaveOccurred())
-				Expect(set.Val()).To(Equal("OK"))
+				gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 				expire := adapter.ExpireGT(ctx, "key", 10*time.Second)
-				Expect(expire.Err()).NotTo(HaveOccurred())
-				Expect(expire.Val()).To(Equal(true))
+				gomega.Expect(expire.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(expire.Val()).To(gomega.Equal(true))
 
 				expire = adapter.ExpireGT(ctx, "key", 5*time.Second)
-				Expect(expire.Err()).NotTo(HaveOccurred())
-				Expect(expire.Val()).To(Equal(false))
+				gomega.Expect(expire.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(expire.Val()).To(gomega.Equal(false))
 			})
 
-			It("should ExpireLT", func() {
+			ginkgo.It("should ExpireLT", func() {
 				set := adapter.Set(ctx, "key", "Hello", 10*time.Second)
-				Expect(set.Err()).NotTo(HaveOccurred())
-				Expect(set.Val()).To(Equal("OK"))
+				gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 				expire := adapter.ExpireLT(ctx, "key", 5*time.Second)
-				Expect(expire.Err()).NotTo(HaveOccurred())
-				Expect(expire.Val()).To(Equal(true))
+				gomega.Expect(expire.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(expire.Val()).To(gomega.Equal(true))
 
 				expire = adapter.ExpireLT(ctx, "key", 10*time.Second)
-				Expect(expire.Err()).NotTo(HaveOccurred())
-				Expect(expire.Val()).To(Equal(false))
+				gomega.Expect(expire.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(expire.Val()).To(gomega.Equal(false))
 			})
 		}
 
 		if resp3 {
-			It("should ExpireAt", func() {
+			ginkgo.It("should ExpireAt", func() {
 				set := adapter.Set(ctx, "key", "Hello", 0)
-				Expect(set.Err()).NotTo(HaveOccurred())
-				Expect(set.Val()).To(Equal("OK"))
+				gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 				n, err := adapter.Exists(ctx, "key").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(n).To(Equal(int64(1)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(n).To(gomega.Equal(int64(1)))
 
 				// Check correct expiration time is set in the future
 				expireAt := time.Now().Add(time.Minute)
 				expireAtCmd := adapter.ExpireAt(ctx, "key", expireAt)
-				Expect(expireAtCmd.Err()).NotTo(HaveOccurred())
-				Expect(expireAtCmd.Val()).To(Equal(true))
+				gomega.Expect(expireAtCmd.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(expireAtCmd.Val()).To(gomega.Equal(true))
 
 				timeCmd := adapter.ExpireTime(ctx, "key")
-				Expect(timeCmd.Err()).NotTo(HaveOccurred())
-				Expect(timeCmd.Val().Seconds()).To(BeNumerically("==", expireAt.Unix()))
+				gomega.Expect(timeCmd.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(timeCmd.Val().Seconds()).To(gomega.BeNumerically("==", expireAt.Unix()))
 
 				ptimeCmd := adapter.PExpireTime(ctx, "key")
-				Expect(ptimeCmd.Err()).NotTo(HaveOccurred())
-				Expect(ptimeCmd.Val().Seconds()).To(BeNumerically("==", expireAt.Unix()))
+				gomega.Expect(ptimeCmd.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(ptimeCmd.Val().Seconds()).To(gomega.BeNumerically("==", expireAt.Unix()))
 
 				// Check correct expiration in the past
 				expireAtCmd = adapter.ExpireAt(ctx, "key", time.Now().Add(-time.Hour))
-				Expect(expireAtCmd.Err()).NotTo(HaveOccurred())
-				Expect(expireAtCmd.Val()).To(Equal(true))
+				gomega.Expect(expireAtCmd.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(expireAtCmd.Val()).To(gomega.Equal(true))
 
 				n, err = adapter.Exists(ctx, "key").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(n).To(Equal(int64(0)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(n).To(gomega.Equal(int64(0)))
 			})
 		}
 
-		It("should Keys", func() {
+		ginkgo.It("should Keys", func() {
 			mset := adapter.MSet(ctx, "one", "1", "two", "2", "three", "3", "four", "4")
-			Expect(mset.Err()).NotTo(HaveOccurred())
-			Expect(mset.Val()).To(Equal("OK"))
+			gomega.Expect(mset.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(mset.Val()).To(gomega.Equal("OK"))
 
 			keys := adapter.Keys(ctx, "*o*")
-			Expect(keys.Err()).NotTo(HaveOccurred())
-			Expect(keys.Val()).To(ConsistOf([]string{"four", "one", "two"}))
+			gomega.Expect(keys.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(keys.Val()).To(gomega.ConsistOf([]string{"four", "one", "two"}))
 
 			keys = adapter.Keys(ctx, "t??")
-			Expect(keys.Err()).NotTo(HaveOccurred())
-			Expect(keys.Val()).To(Equal([]string{"two"}))
+			gomega.Expect(keys.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(keys.Val()).To(gomega.Equal([]string{"two"}))
 
 			keys = adapter.Keys(ctx, "*")
-			Expect(keys.Err()).NotTo(HaveOccurred())
-			Expect(keys.Val()).To(ConsistOf([]string{"four", "one", "three", "two"}))
+			gomega.Expect(keys.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(keys.Val()).To(gomega.ConsistOf([]string{"four", "one", "three", "two"}))
 		})
 
-		It("should Object", func() {
+		ginkgo.It("should Object", func() {
 			start := time.Now()
 			set := adapter.Set(ctx, "key", "hello", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			refCount := adapter.ObjectRefCount(ctx, "key")
-			Expect(refCount.Err()).NotTo(HaveOccurred())
-			Expect(refCount.Val()).To(Equal(int64(1)))
+			gomega.Expect(refCount.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(refCount.Val()).To(gomega.Equal(int64(1)))
 
 			err := adapter.ObjectEncoding(ctx, "key").Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			idleTime := adapter.ObjectIdleTime(ctx, "key")
-			Expect(idleTime.Err()).NotTo(HaveOccurred())
+			gomega.Expect(idleTime.Err()).NotTo(gomega.HaveOccurred())
 
 			// Redis returned milliseconds/1000, which may cause ObjectIdleTime to be at a critical value,
 			// should be +1s to deal with the critical value problem.
 			// if too much time (>1s) is used during command execution, it may also cause the test to fail.
 			// so the ObjectIdleTime result should be <=now-start+1s
 			// link: https://github.com/redis/redis/blob/5b48d900498c85bbf4772c1d466c214439888115/src/object.c#L1265-L1272
-			Expect(idleTime.Val()).To(BeNumerically("<=", time.Now().Sub(start)+time.Second))
+			gomega.Expect(idleTime.Val()).To(gomega.BeNumerically("<=", time.Now().Sub(start)+time.Second))
 		})
 
-		It("should Persist", func() {
+		ginkgo.It("should Persist", func() {
 			set := adapter.Set(ctx, "key", "Hello", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			expire := adapter.Expire(ctx, "key", 10*time.Second)
-			Expect(expire.Err()).NotTo(HaveOccurred())
-			Expect(expire.Val()).To(Equal(true))
+			gomega.Expect(expire.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(expire.Val()).To(gomega.Equal(true))
 
 			ttl := adapter.TTL(ctx, "key")
-			Expect(ttl.Err()).NotTo(HaveOccurred())
-			Expect(ttl.Val()).To(Equal(10 * time.Second))
+			gomega.Expect(ttl.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(ttl.Val()).To(gomega.Equal(10 * time.Second))
 
 			persist := adapter.Persist(ctx, "key")
-			Expect(persist.Err()).NotTo(HaveOccurred())
-			Expect(persist.Val()).To(Equal(true))
+			gomega.Expect(persist.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(persist.Val()).To(gomega.Equal(true))
 
 			ttl = adapter.TTL(ctx, "key")
-			Expect(ttl.Err()).NotTo(HaveOccurred())
-			Expect(ttl.Val() < 0).To(Equal(true))
+			gomega.Expect(ttl.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(ttl.Val() < 0).To(gomega.Equal(true))
 		})
 
-		It("should PExpire", func() {
+		ginkgo.It("should PExpire", func() {
 			set := adapter.Set(ctx, "key", "Hello", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			expiration := 900 * time.Millisecond
 			pexpire := adapter.PExpire(ctx, "key", expiration)
-			Expect(pexpire.Err()).NotTo(HaveOccurred())
-			Expect(pexpire.Val()).To(Equal(true))
+			gomega.Expect(pexpire.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(pexpire.Val()).To(gomega.Equal(true))
 
 			ttl := adapter.TTL(ctx, "key")
-			Expect(ttl.Err()).NotTo(HaveOccurred())
-			Expect(ttl.Val()).To(Equal(time.Second))
+			gomega.Expect(ttl.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(ttl.Val()).To(gomega.Equal(time.Second))
 
 			pttl := adapter.PTTL(ctx, "key")
-			Expect(pttl.Err()).NotTo(HaveOccurred())
-			Expect(pttl.Val()).To(BeNumerically("~", expiration, 100*time.Millisecond))
+			gomega.Expect(pttl.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(pttl.Val()).To(gomega.BeNumerically("~", expiration, 100*time.Millisecond))
 		})
 
-		It("should PExpireAt", func() {
+		ginkgo.It("should PExpireAt", func() {
 			set := adapter.Set(ctx, "key", "Hello", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			expiration := 900 * time.Millisecond
 			pexpireat := adapter.PExpireAt(ctx, "key", time.Now().Add(expiration))
-			Expect(pexpireat.Err()).NotTo(HaveOccurred())
-			Expect(pexpireat.Val()).To(Equal(true))
+			gomega.Expect(pexpireat.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(pexpireat.Val()).To(gomega.Equal(true))
 
 			ttl := adapter.TTL(ctx, "key")
-			Expect(ttl.Err()).NotTo(HaveOccurred())
-			Expect(ttl.Val()).To(Equal(time.Second))
+			gomega.Expect(ttl.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(ttl.Val()).To(gomega.Equal(time.Second))
 
 			pttl := adapter.PTTL(ctx, "key")
-			Expect(pttl.Err()).NotTo(HaveOccurred())
-			Expect(pttl.Val()).To(BeNumerically("~", expiration, 100*time.Millisecond))
+			gomega.Expect(pttl.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(pttl.Val()).To(gomega.BeNumerically("~", expiration, 100*time.Millisecond))
 		})
 
-		It("should PTTL", func() {
+		ginkgo.It("should PTTL", func() {
 			set := adapter.Set(ctx, "key", "Hello", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			expiration := time.Second
 			expire := adapter.Expire(ctx, "key", expiration)
-			Expect(expire.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(expire.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			pttl := adapter.PTTL(ctx, "key")
-			Expect(pttl.Err()).NotTo(HaveOccurred())
-			Expect(pttl.Val()).To(BeNumerically("~", expiration, 100*time.Millisecond))
+			gomega.Expect(pttl.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(pttl.Val()).To(gomega.BeNumerically("~", expiration, 100*time.Millisecond))
 		})
 
-		It("should RandomKey", func() {
+		ginkgo.It("should RandomKey", func() {
 			randomKey := adapter.RandomKey(ctx)
-			Expect(rueidis.IsRedisNil(randomKey.Err())).To(BeTrue())
-			Expect(randomKey.Val()).To(Equal(""))
+			gomega.Expect(rueidis.IsRedisNil(randomKey.Err())).To(gomega.BeTrue())
+			gomega.Expect(randomKey.Val()).To(gomega.Equal(""))
 
 			set := adapter.Set(ctx, "key", "hello", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			randomKey = adapter.RandomKey(ctx)
-			Expect(randomKey.Err()).NotTo(HaveOccurred())
-			Expect(randomKey.Val()).To(Equal("key"))
+			gomega.Expect(randomKey.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(randomKey.Val()).To(gomega.Equal("key"))
 		})
 
-		It("should Rename", func() {
+		ginkgo.It("should Rename", func() {
 			set := adapter.Set(ctx, "key", "hello", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			status := adapter.Rename(ctx, "key", "key1")
-			Expect(status.Err()).NotTo(HaveOccurred())
-			Expect(status.Val()).To(Equal("OK"))
+			gomega.Expect(status.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(status.Val()).To(gomega.Equal("OK"))
 
 			get := adapter.Get(ctx, "key1")
-			Expect(get.Err()).NotTo(HaveOccurred())
-			Expect(get.Val()).To(Equal("hello"))
+			gomega.Expect(get.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(get.Val()).To(gomega.Equal("hello"))
 		})
 
-		It("should RenameNX", func() {
+		ginkgo.It("should RenameNX", func() {
 			set := adapter.Set(ctx, "key", "hello", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			renameNX := adapter.RenameNX(ctx, "key", "key1")
-			Expect(renameNX.Err()).NotTo(HaveOccurred())
-			Expect(renameNX.Val()).To(Equal(true))
+			gomega.Expect(renameNX.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(renameNX.Val()).To(gomega.Equal(true))
 
 			get := adapter.Get(ctx, "key1")
-			Expect(get.Err()).NotTo(HaveOccurred())
-			Expect(get.Val()).To(Equal("hello"))
+			gomega.Expect(get.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(get.Val()).To(gomega.Equal("hello"))
 		})
 
-		It("should Restore", func() {
+		ginkgo.It("should Restore", func() {
 			err := adapter.Set(ctx, "key", "hello", 0).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			dump := adapter.Dump(ctx, "key")
-			Expect(dump.Err()).NotTo(HaveOccurred())
+			gomega.Expect(dump.Err()).NotTo(gomega.HaveOccurred())
 
 			err = adapter.Del(ctx, "key").Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			restore, err := adapter.Restore(ctx, "key", 0, dump.Val()).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(restore).To(Equal("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(restore).To(gomega.Equal("OK"))
 
 			type_, err := adapter.Type(ctx, "key").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(type_).To(Equal("string"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(type_).To(gomega.Equal("string"))
 
 			val, err := adapter.Get(ctx, "key").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal("hello"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(val).To(gomega.Equal("hello"))
 		})
 
-		It("should RestoreReplace", func() {
+		ginkgo.It("should RestoreReplace", func() {
 			err := adapter.Set(ctx, "key", "hello", 0).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			dump := adapter.Dump(ctx, "key")
-			Expect(dump.Err()).NotTo(HaveOccurred())
+			gomega.Expect(dump.Err()).NotTo(gomega.HaveOccurred())
 
 			restore, err := adapter.RestoreReplace(ctx, "key", 0, dump.Val()).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(restore).To(Equal("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(restore).To(gomega.Equal("OK"))
 
 			type_, err := adapter.Type(ctx, "key").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(type_).To(Equal("string"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(type_).To(gomega.Equal("string"))
 
 			val, err := adapter.Get(ctx, "key").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal("hello"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(val).To(gomega.Equal("hello"))
 		})
 
-		It("should Sort", func() {
+		ginkgo.It("should Sort", func() {
 			size, err := adapter.LPush(ctx, "list", "1").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(size).To(Equal(int64(1)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(size).To(gomega.Equal(int64(1)))
 
 			size, err = adapter.LPush(ctx, "list", "3").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(size).To(Equal(int64(2)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(size).To(gomega.Equal(int64(2)))
 
 			size, err = adapter.LPush(ctx, "list", "2").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(size).To(Equal(int64(3)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(size).To(gomega.Equal(int64(3)))
 
 			els, err := adapter.Sort(ctx, "list", Sort{
 				Offset: 0,
@@ -860,45 +861,45 @@ func testAdapter(resp3 bool) {
 				Order:  "ASC",
 				Alpha:  true,
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(els).To(Equal([]string{"1", "2"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(els).To(gomega.Equal([]string{"1", "2"}))
 		})
 
-		It("should Sort By", func() {
+		ginkgo.It("should Sort By", func() {
 			size, err := adapter.LPush(ctx, "list_by", "1").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(size).To(Equal(int64(1)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(size).To(gomega.Equal(int64(1)))
 
 			size, err = adapter.LPush(ctx, "list_by", "3").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(size).To(Equal(int64(2)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(size).To(gomega.Equal(int64(2)))
 
 			size, err = adapter.LPush(ctx, "list_by", "2").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(size).To(Equal(int64(3)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(size).To(gomega.Equal(int64(3)))
 
 			els, err := adapter.Sort(ctx, "list_by", Sort{
 				Offset: 0,
 				Count:  2,
 				By:     "nosort",
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(els).To(Equal([]string{"2", "3"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(els).To(gomega.Equal([]string{"2", "3"}))
 		})
 
 		if resp3 {
-			It("should Sort", func() {
+			ginkgo.It("should Sort", func() {
 				size, err := adapter.LPush(ctx, "list", "1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(size).To(Equal(int64(1)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(size).To(gomega.Equal(int64(1)))
 
 				size, err = adapter.LPush(ctx, "list", "3").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(size).To(Equal(int64(2)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(size).To(gomega.Equal(int64(2)))
 
 				size, err = adapter.LPush(ctx, "list", "2").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(size).To(Equal(int64(3)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(size).To(gomega.Equal(int64(3)))
 
 				els, err := adapter.SortRO(ctx, "list", Sort{
 					Offset: 0,
@@ -906,594 +907,594 @@ func testAdapter(resp3 bool) {
 					Order:  "ASC",
 					Alpha:  true,
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(els).To(Equal([]string{"1", "2"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(els).To(gomega.Equal([]string{"1", "2"}))
 			})
 
-			It("should Sort By", func() {
+			ginkgo.It("should Sort By", func() {
 				size, err := adapter.LPush(ctx, "list_by", "1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(size).To(Equal(int64(1)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(size).To(gomega.Equal(int64(1)))
 
 				size, err = adapter.LPush(ctx, "list_by", "3").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(size).To(Equal(int64(2)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(size).To(gomega.Equal(int64(2)))
 
 				size, err = adapter.LPush(ctx, "list_by", "2").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(size).To(Equal(int64(3)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(size).To(gomega.Equal(int64(3)))
 
 				els, err := adapter.SortRO(ctx, "list_by", Sort{
 					Offset: 0,
 					Count:  2,
 					By:     "nosort",
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(els).To(Equal([]string{"2", "3"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(els).To(gomega.Equal([]string{"2", "3"}))
 			})
 		}
 
-		It("should Sort Panic", func() {
-			Expect(func() {
+		ginkgo.It("should Sort Panic", func() {
+			gomega.Expect(func() {
 				adapter.Sort(ctx, "list", Sort{Order: "PANIC"})
-			}).To(Panic())
+			}).To(gomega.Panic())
 		})
 
-		It("should Sort and Get", func() {
+		ginkgo.It("should Sort and Get", func() {
 			size, err := adapter.LPush(ctx, "list", "1").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(size).To(Equal(int64(1)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(size).To(gomega.Equal(int64(1)))
 
 			size, err = adapter.LPush(ctx, "list", "3").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(size).To(Equal(int64(2)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(size).To(gomega.Equal(int64(2)))
 
 			size, err = adapter.LPush(ctx, "list", "2").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(size).To(Equal(int64(3)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(size).To(gomega.Equal(int64(3)))
 
 			err = adapter.Set(ctx, "object_2", "value2", 0).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			{
 				els, err := adapter.Sort(ctx, "list", Sort{
 					Get: []string{"object_*"},
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(els).To(Equal([]string{"", "value2", ""}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(els).To(gomega.Equal([]string{"", "value2", ""}))
 			}
 
 			{
 				els, err := adapter.SortInterfaces(ctx, "list", Sort{
 					Get: []string{"object_*"},
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(els).To(Equal([]any{nil, "value2", nil}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(els).To(gomega.Equal([]any{nil, "value2", nil}))
 			}
 		})
 
-		It("should Sort and Store", func() {
+		ginkgo.It("should Sort and Store", func() {
 			size, err := adapter.LPush(ctx, "list", "1").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(size).To(Equal(int64(1)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(size).To(gomega.Equal(int64(1)))
 
 			size, err = adapter.LPush(ctx, "list", "3").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(size).To(Equal(int64(2)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(size).To(gomega.Equal(int64(2)))
 
 			size, err = adapter.LPush(ctx, "list", "2").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(size).To(Equal(int64(3)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(size).To(gomega.Equal(int64(3)))
 
 			n, err := adapter.SortStore(ctx, "list", "list2", Sort{
 				Offset: 0,
 				Count:  2,
 				Order:  "ASC",
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(n).To(Equal(int64(2)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(n).To(gomega.Equal(int64(2)))
 
 			els, err := adapter.LRange(ctx, "list2", 0, -1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(els).To(Equal([]string{"1", "2"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(els).To(gomega.Equal([]string{"1", "2"}))
 		})
 
-		It("should Touch", func() {
+		ginkgo.It("should Touch", func() {
 			set1 := adapter.Set(ctx, "touch1", "hello", 0)
-			Expect(set1.Err()).NotTo(HaveOccurred())
-			Expect(set1.Val()).To(Equal("OK"))
+			gomega.Expect(set1.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set1.Val()).To(gomega.Equal("OK"))
 
 			set2 := adapter.Set(ctx, "touch2", "hello", 0)
-			Expect(set2.Err()).NotTo(HaveOccurred())
-			Expect(set2.Val()).To(Equal("OK"))
+			gomega.Expect(set2.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set2.Val()).To(gomega.Equal("OK"))
 
 			touch := adapter.Touch(ctx, "touch1", "touch2", "touch3")
-			Expect(touch.Err()).NotTo(HaveOccurred())
-			Expect(touch.Val()).To(Equal(int64(2)))
+			gomega.Expect(touch.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(touch.Val()).To(gomega.Equal(int64(2)))
 		})
 
-		It("should TTL", func() {
+		ginkgo.It("should TTL", func() {
 			ttl := adapter.TTL(ctx, "key")
-			Expect(ttl.Err()).NotTo(HaveOccurred())
-			Expect(ttl.Val() < 0).To(Equal(true))
+			gomega.Expect(ttl.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(ttl.Val() < 0).To(gomega.Equal(true))
 
 			set := adapter.Set(ctx, "key", "hello", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			expire := adapter.Expire(ctx, "key", 60*time.Second)
-			Expect(expire.Err()).NotTo(HaveOccurred())
-			Expect(expire.Val()).To(Equal(true))
+			gomega.Expect(expire.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(expire.Val()).To(gomega.Equal(true))
 
 			ttl = adapter.TTL(ctx, "key")
-			Expect(ttl.Err()).NotTo(HaveOccurred())
-			Expect(ttl.Val()).To(Equal(60 * time.Second))
+			gomega.Expect(ttl.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(ttl.Val()).To(gomega.Equal(60 * time.Second))
 		})
 
-		It("should Type", func() {
+		ginkgo.It("should Type", func() {
 			set := adapter.Set(ctx, "key", "hello", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			type_ := adapter.Type(ctx, "key")
-			Expect(type_.Err()).NotTo(HaveOccurred())
-			Expect(type_.Val()).To(Equal("string"))
+			gomega.Expect(type_.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(type_.Val()).To(gomega.Equal("string"))
 		})
 	})
 
-	Describe("scanning", func() {
-		It("should Scan", func() {
+	ginkgo.Describe("scanning", func() {
+		ginkgo.It("should Scan", func() {
 			for i := 0; i < 1000; i++ {
 				set := adapter.Set(ctx, fmt.Sprintf("key%d", i), "hello", 0)
-				Expect(set.Err()).NotTo(HaveOccurred())
+				gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
 			}
 
 			keys, cursor, err := adapter.Scan(ctx, 0, "key*", 100).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(keys).NotTo(BeEmpty())
-			Expect(cursor).NotTo(BeZero())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(keys).NotTo(gomega.BeEmpty())
+			gomega.Expect(cursor).NotTo(gomega.BeZero())
 		})
 
 		if resp3 {
-			It("should ScanType", func() {
+			ginkgo.It("should ScanType", func() {
 				for i := 0; i < 1000; i++ {
 					set := adapter.Set(ctx, fmt.Sprintf("key%d", i), "hello", 0)
-					Expect(set.Err()).NotTo(HaveOccurred())
+					gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
 				}
 
 				keys, cursor, err := adapter.ScanType(ctx, 0, "key*", 100, "string").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(keys).NotTo(BeEmpty())
-				Expect(cursor).NotTo(BeZero())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(keys).NotTo(gomega.BeEmpty())
+				gomega.Expect(cursor).NotTo(gomega.BeZero())
 			})
 		}
 
-		It("should SScan", func() {
+		ginkgo.It("should SScan", func() {
 			for i := 0; i < 1000; i++ {
 				sadd := adapter.SAdd(ctx, "myset", fmt.Sprintf("member%d", i))
-				Expect(sadd.Err()).NotTo(HaveOccurred())
+				gomega.Expect(sadd.Err()).NotTo(gomega.HaveOccurred())
 			}
 
 			keys, cursor, err := adapter.SScan(ctx, "myset", 0, "member*", 100).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(keys).NotTo(BeEmpty())
-			Expect(cursor).NotTo(BeZero())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(keys).NotTo(gomega.BeEmpty())
+			gomega.Expect(cursor).NotTo(gomega.BeZero())
 		})
 
-		It("should HScan", func() {
+		ginkgo.It("should HScan", func() {
 			for i := 0; i < 1000; i++ {
 				sadd := adapter.HSet(ctx, "myhash", fmt.Sprintf("key%d", i), "hello")
-				Expect(sadd.Err()).NotTo(HaveOccurred())
+				gomega.Expect(sadd.Err()).NotTo(gomega.HaveOccurred())
 			}
 
 			keys, cursor, err := adapter.HScan(ctx, "myhash", 0, "key*", 100).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(keys).NotTo(BeEmpty())
-			Expect(cursor).NotTo(BeZero())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(keys).NotTo(gomega.BeEmpty())
+			gomega.Expect(cursor).NotTo(gomega.BeZero())
 		})
 
-		It("should ZScan", func() {
+		ginkgo.It("should ZScan", func() {
 			for i := 0; i < 1000; i++ {
 				err := adapter.ZAdd(ctx, "myset", Z{
 					Score:  float64(i),
 					Member: fmt.Sprintf("member%d", i),
 				}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			}
 
 			keys, cursor, err := adapter.ZScan(ctx, "myset", 0, "member*", 100).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(keys).NotTo(BeEmpty())
-			Expect(cursor).NotTo(BeZero())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(keys).NotTo(gomega.BeEmpty())
+			gomega.Expect(cursor).NotTo(gomega.BeZero())
 		})
 	})
 
-	Describe("strings", func() {
-		It("should Append", func() {
+	ginkgo.Describe("strings", func() {
+		ginkgo.It("should Append", func() {
 			n, err := adapter.Exists(ctx, "key").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(n).To(Equal(int64(0)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(n).To(gomega.Equal(int64(0)))
 
 			append := adapter.Append(ctx, "key", "Hello")
-			Expect(append.Err()).NotTo(HaveOccurred())
-			Expect(append.Val()).To(Equal(int64(5)))
+			gomega.Expect(append.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(append.Val()).To(gomega.Equal(int64(5)))
 
 			append = adapter.Append(ctx, "key", " World")
-			Expect(append.Err()).NotTo(HaveOccurred())
-			Expect(append.Val()).To(Equal(int64(11)))
+			gomega.Expect(append.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(append.Val()).To(gomega.Equal(int64(11)))
 
 			get := adapter.Get(ctx, "key")
-			Expect(get.Err()).NotTo(HaveOccurred())
-			Expect(get.Val()).To(Equal("Hello World"))
+			gomega.Expect(get.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(get.Val()).To(gomega.Equal("Hello World"))
 		})
 
-		It("should BitCount", func() {
+		ginkgo.It("should BitCount", func() {
 			set := adapter.Set(ctx, "key", "foobar", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			bitCount := adapter.BitCount(ctx, "key", nil)
-			Expect(bitCount.Err()).NotTo(HaveOccurred())
-			Expect(bitCount.Val()).To(Equal(int64(26)))
+			gomega.Expect(bitCount.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(bitCount.Val()).To(gomega.Equal(int64(26)))
 
 			bitCount = adapter.BitCount(ctx, "key", &BitCount{
 				Start: 0,
 				End:   0,
 			})
-			Expect(bitCount.Err()).NotTo(HaveOccurred())
-			Expect(bitCount.Val()).To(Equal(int64(4)))
+			gomega.Expect(bitCount.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(bitCount.Val()).To(gomega.Equal(int64(4)))
 
 			bitCount = adapter.BitCount(ctx, "key", &BitCount{
 				Start: 1,
 				End:   1,
 			})
-			Expect(bitCount.Err()).NotTo(HaveOccurred())
-			Expect(bitCount.Val()).To(Equal(int64(6)))
+			gomega.Expect(bitCount.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(bitCount.Val()).To(gomega.Equal(int64(6)))
 		})
 
-		It("should BitOpAnd", func() {
+		ginkgo.It("should BitOpAnd", func() {
 			set := adapter.Set(ctx, "key1", "1", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			set = adapter.Set(ctx, "key2", "0", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			bitOpAnd := adapter.BitOpAnd(ctx, "dest", "key1", "key2")
-			Expect(bitOpAnd.Err()).NotTo(HaveOccurred())
-			Expect(bitOpAnd.Val()).To(Equal(int64(1)))
+			gomega.Expect(bitOpAnd.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(bitOpAnd.Val()).To(gomega.Equal(int64(1)))
 
 			get := adapter.Get(ctx, "dest")
-			Expect(get.Err()).NotTo(HaveOccurred())
-			Expect(get.Val()).To(Equal("0"))
+			gomega.Expect(get.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(get.Val()).To(gomega.Equal("0"))
 		})
 
-		It("should BitOpOr", func() {
+		ginkgo.It("should BitOpOr", func() {
 			set := adapter.Set(ctx, "key1", "1", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			set = adapter.Set(ctx, "key2", "0", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			bitOpOr := adapter.BitOpOr(ctx, "dest", "key1", "key2")
-			Expect(bitOpOr.Err()).NotTo(HaveOccurred())
-			Expect(bitOpOr.Val()).To(Equal(int64(1)))
+			gomega.Expect(bitOpOr.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(bitOpOr.Val()).To(gomega.Equal(int64(1)))
 
 			get := adapter.Get(ctx, "dest")
-			Expect(get.Err()).NotTo(HaveOccurred())
-			Expect(get.Val()).To(Equal("1"))
+			gomega.Expect(get.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(get.Val()).To(gomega.Equal("1"))
 		})
 
-		It("should BitOpXor", func() {
+		ginkgo.It("should BitOpXor", func() {
 			set := adapter.Set(ctx, "key1", "\xff", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			set = adapter.Set(ctx, "key2", "\x0f", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			bitOpXor := adapter.BitOpXor(ctx, "dest", "key1", "key2")
-			Expect(bitOpXor.Err()).NotTo(HaveOccurred())
-			Expect(bitOpXor.Val()).To(Equal(int64(1)))
+			gomega.Expect(bitOpXor.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(bitOpXor.Val()).To(gomega.Equal(int64(1)))
 
 			get := adapter.Get(ctx, "dest")
-			Expect(get.Err()).NotTo(HaveOccurred())
-			Expect(get.Val()).To(Equal("\xf0"))
+			gomega.Expect(get.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(get.Val()).To(gomega.Equal("\xf0"))
 		})
 
-		It("should BitOpNot", func() {
+		ginkgo.It("should BitOpNot", func() {
 			set := adapter.Set(ctx, "key1", "\x00", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			bitOpNot := adapter.BitOpNot(ctx, "dest", "key1")
-			Expect(bitOpNot.Err()).NotTo(HaveOccurred())
-			Expect(bitOpNot.Val()).To(Equal(int64(1)))
+			gomega.Expect(bitOpNot.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(bitOpNot.Val()).To(gomega.Equal(int64(1)))
 
 			get := adapter.Get(ctx, "dest")
-			Expect(get.Err()).NotTo(HaveOccurred())
-			Expect(get.Val()).To(Equal("\xff"))
+			gomega.Expect(get.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(get.Val()).To(gomega.Equal("\xff"))
 		})
 
-		It("BitPos should panic", func() {
-			Expect(func() {
+		ginkgo.It("BitPos should panic", func() {
+			gomega.Expect(func() {
 				adapter.BitPos(ctx, "mykey", 0, 0, 0, 0)
-			}).To(Panic())
+			}).To(gomega.Panic())
 		})
 
-		It("should BitPos", func() {
+		ginkgo.It("should BitPos", func() {
 			err := adapter.Set(ctx, "mykey", "\xff\xf0\x00", 0).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			pos, err := adapter.BitPos(ctx, "mykey", 0).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(pos).To(Equal(int64(12)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(pos).To(gomega.Equal(int64(12)))
 
 			pos, err = adapter.BitPos(ctx, "mykey", 1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(pos).To(Equal(int64(0)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(pos).To(gomega.Equal(int64(0)))
 
 			pos, err = adapter.BitPos(ctx, "mykey", 0, 2).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(pos).To(Equal(int64(16)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(pos).To(gomega.Equal(int64(16)))
 
 			pos, err = adapter.BitPos(ctx, "mykey", 1, 2).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(pos).To(Equal(int64(-1)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(pos).To(gomega.Equal(int64(-1)))
 
 			pos, err = adapter.BitPos(ctx, "mykey", 0, -1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(pos).To(Equal(int64(16)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(pos).To(gomega.Equal(int64(16)))
 
 			pos, err = adapter.BitPos(ctx, "mykey", 1, -1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(pos).To(Equal(int64(-1)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(pos).To(gomega.Equal(int64(-1)))
 
 			pos, err = adapter.BitPos(ctx, "mykey", 0, 2, 1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(pos).To(Equal(int64(-1)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(pos).To(gomega.Equal(int64(-1)))
 
 			pos, err = adapter.BitPos(ctx, "mykey", 0, 0, -3).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(pos).To(Equal(int64(-1)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(pos).To(gomega.Equal(int64(-1)))
 
 			pos, err = adapter.BitPos(ctx, "mykey", 0, 0, 0).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(pos).To(Equal(int64(-1)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(pos).To(gomega.Equal(int64(-1)))
 		})
 
 		if resp3 {
-			It("should BitPosSpan", func() {
+			ginkgo.It("should BitPosSpan", func() {
 				err := adapter.Set(ctx, "mykey", "\x00\xff\x00", 0).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				pos, err := adapter.BitPosSpan(ctx, "mykey", 0, 1, 3, "byte").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(pos).To(Equal(int64(16)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(pos).To(gomega.Equal(int64(16)))
 
 				pos, err = adapter.BitPosSpan(ctx, "mykey", 0, 1, 3, "bit").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(pos).To(Equal(int64(1)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(pos).To(gomega.Equal(int64(1)))
 			})
 		}
 
-		It("should BitField", func() {
+		ginkgo.It("should BitField", func() {
 			nn, err := adapter.BitField(ctx, "mykey", "INCRBY", "i5", 100, 1, "GET", "u4", 0).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(nn).To(Equal([]int64{1, 0}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(nn).To(gomega.Equal([]int64{1, 0}))
 		})
 
-		It("should Decr", func() {
+		ginkgo.It("should Decr", func() {
 			set := adapter.Set(ctx, "key", "10", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			decr := adapter.Decr(ctx, "key")
-			Expect(decr.Err()).NotTo(HaveOccurred())
-			Expect(decr.Val()).To(Equal(int64(9)))
+			gomega.Expect(decr.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(decr.Val()).To(gomega.Equal(int64(9)))
 
 			set = adapter.Set(ctx, "key", "234293482390480948029348230948", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			decr = adapter.Decr(ctx, "key")
-			Expect(decr.Err()).To(MatchError("value is not an integer or out of range"))
-			Expect(decr.Val()).To(Equal(int64(0)))
+			gomega.Expect(decr.Err()).To(gomega.MatchError("value is not an integer or out of range"))
+			gomega.Expect(decr.Val()).To(gomega.Equal(int64(0)))
 		})
 
-		It("should DecrBy", func() {
+		ginkgo.It("should DecrBy", func() {
 			set := adapter.Set(ctx, "key", "10", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			decrBy := adapter.DecrBy(ctx, "key", 5)
-			Expect(decrBy.Err()).NotTo(HaveOccurred())
-			Expect(decrBy.Val()).To(Equal(int64(5)))
+			gomega.Expect(decrBy.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(decrBy.Val()).To(gomega.Equal(int64(5)))
 		})
 
-		It("should Get", func() {
+		ginkgo.It("should Get", func() {
 			get := adapter.Get(ctx, "_")
-			Expect(rueidis.IsRedisNil(get.Err())).To(BeTrue())
-			Expect(get.Val()).To(Equal(""))
+			gomega.Expect(rueidis.IsRedisNil(get.Err())).To(gomega.BeTrue())
+			gomega.Expect(get.Val()).To(gomega.Equal(""))
 
 			set := adapter.Set(ctx, "key", "hello", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			get = adapter.Get(ctx, "key")
-			Expect(get.Err()).NotTo(HaveOccurred())
-			Expect(get.Val()).To(Equal("hello"))
+			gomega.Expect(get.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(get.Val()).To(gomega.Equal("hello"))
 		})
 
-		It("should GetBit", func() {
+		ginkgo.It("should GetBit", func() {
 			setBit := adapter.SetBit(ctx, "key", 7, 1)
-			Expect(setBit.Err()).NotTo(HaveOccurred())
-			Expect(setBit.Val()).To(Equal(int64(0)))
+			gomega.Expect(setBit.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(setBit.Val()).To(gomega.Equal(int64(0)))
 
 			getBit := adapter.GetBit(ctx, "key", 0)
-			Expect(getBit.Err()).NotTo(HaveOccurred())
-			Expect(getBit.Val()).To(Equal(int64(0)))
+			gomega.Expect(getBit.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(getBit.Val()).To(gomega.Equal(int64(0)))
 
 			getBit = adapter.GetBit(ctx, "key", 7)
-			Expect(getBit.Err()).NotTo(HaveOccurred())
-			Expect(getBit.Val()).To(Equal(int64(1)))
+			gomega.Expect(getBit.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(getBit.Val()).To(gomega.Equal(int64(1)))
 
 			getBit = adapter.GetBit(ctx, "key", 100)
-			Expect(getBit.Err()).NotTo(HaveOccurred())
-			Expect(getBit.Val()).To(Equal(int64(0)))
+			gomega.Expect(getBit.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(getBit.Val()).To(gomega.Equal(int64(0)))
 		})
 
-		It("should GetRange", func() {
+		ginkgo.It("should GetRange", func() {
 			set := adapter.Set(ctx, "key", "This is a string", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			getRange := adapter.GetRange(ctx, "key", 0, 3)
-			Expect(getRange.Err()).NotTo(HaveOccurred())
-			Expect(getRange.Val()).To(Equal("This"))
+			gomega.Expect(getRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(getRange.Val()).To(gomega.Equal("This"))
 
 			getRange = adapter.GetRange(ctx, "key", -3, -1)
-			Expect(getRange.Err()).NotTo(HaveOccurred())
-			Expect(getRange.Val()).To(Equal("ing"))
+			gomega.Expect(getRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(getRange.Val()).To(gomega.Equal("ing"))
 
 			getRange = adapter.GetRange(ctx, "key", 0, -1)
-			Expect(getRange.Err()).NotTo(HaveOccurred())
-			Expect(getRange.Val()).To(Equal("This is a string"))
+			gomega.Expect(getRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(getRange.Val()).To(gomega.Equal("This is a string"))
 
 			getRange = adapter.GetRange(ctx, "key", 10, 100)
-			Expect(getRange.Err()).NotTo(HaveOccurred())
-			Expect(getRange.Val()).To(Equal("string"))
+			gomega.Expect(getRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(getRange.Val()).To(gomega.Equal("string"))
 		})
 
-		It("should GetSet", func() {
+		ginkgo.It("should GetSet", func() {
 			incr := adapter.Incr(ctx, "key")
-			Expect(incr.Err()).NotTo(HaveOccurred())
-			Expect(incr.Val()).To(Equal(int64(1)))
+			gomega.Expect(incr.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(incr.Val()).To(gomega.Equal(int64(1)))
 
 			getSet := adapter.GetSet(ctx, "key", "0")
-			Expect(getSet.Err()).NotTo(HaveOccurred())
-			Expect(getSet.Val()).To(Equal("1"))
+			gomega.Expect(getSet.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(getSet.Val()).To(gomega.Equal("1"))
 
 			get := adapter.Get(ctx, "key")
-			Expect(get.Err()).NotTo(HaveOccurred())
-			Expect(get.Val()).To(Equal("0"))
+			gomega.Expect(get.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(get.Val()).To(gomega.Equal("0"))
 		})
 
 		if resp3 {
-			It("should GetEX", func() {
+			ginkgo.It("should GetEX", func() {
 				set := adapter.Set(ctx, "key", "value", 100*time.Second)
-				Expect(set.Err()).NotTo(HaveOccurred())
-				Expect(set.Val()).To(Equal("OK"))
+				gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 				ttl := adapter.TTL(ctx, "key")
-				Expect(ttl.Err()).NotTo(HaveOccurred())
-				Expect(ttl.Val()).To(BeNumerically("~", 100*time.Second, 3*time.Second))
+				gomega.Expect(ttl.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(ttl.Val()).To(gomega.BeNumerically("~", 100*time.Second, 3*time.Second))
 
 				getEX := adapter.GetEx(ctx, "key", 200*time.Second)
-				Expect(getEX.Err()).NotTo(HaveOccurred())
-				Expect(getEX.Val()).To(Equal("value"))
+				gomega.Expect(getEX.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(getEX.Val()).To(gomega.Equal("value"))
 
 				ttl = adapter.TTL(ctx, "key")
-				Expect(ttl.Err()).NotTo(HaveOccurred())
-				Expect(ttl.Val()).To(BeNumerically("~", 200*time.Second, 3*time.Second))
+				gomega.Expect(ttl.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(ttl.Val()).To(gomega.BeNumerically("~", 200*time.Second, 3*time.Second))
 			})
 
-			It("should GetEX 2", func() {
+			ginkgo.It("should GetEX 2", func() {
 				set := adapter.Set(ctx, "key", "value", 0)
-				Expect(set.Err()).NotTo(HaveOccurred())
-				Expect(set.Val()).To(Equal("OK"))
+				gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 				getEX := adapter.GetEx(ctx, "key", 0)
-				Expect(getEX.Err()).NotTo(HaveOccurred())
-				Expect(getEX.Val()).To(Equal("value"))
+				gomega.Expect(getEX.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(getEX.Val()).To(gomega.Equal("value"))
 
 				ttl := adapter.TTL(ctx, "key")
-				Expect(ttl.Err()).NotTo(HaveOccurred())
-				Expect(ttl.Val()).To(Equal(time.Duration(-1)))
+				gomega.Expect(ttl.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(ttl.Val()).To(gomega.Equal(time.Duration(-1)))
 
 				getEX = adapter.GetEx(ctx, "key", 100*time.Millisecond)
-				Expect(getEX.Err()).NotTo(HaveOccurred())
-				Expect(getEX.Val()).To(Equal("value"))
+				gomega.Expect(getEX.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(getEX.Val()).To(gomega.Equal("value"))
 
 				ttl = adapter.PTTL(ctx, "key")
-				Expect(ttl.Err()).NotTo(HaveOccurred())
-				Expect(ttl.Val()).To(BeNumerically("~", 100*time.Millisecond, 10*time.Millisecond))
+				gomega.Expect(ttl.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(ttl.Val()).To(gomega.BeNumerically("~", 100*time.Millisecond, 10*time.Millisecond))
 			})
 
-			It("should GetDel", func() {
+			ginkgo.It("should GetDel", func() {
 				set := adapter.Set(ctx, "key", "value", 0)
-				Expect(set.Err()).NotTo(HaveOccurred())
-				Expect(set.Val()).To(Equal("OK"))
+				gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 				getDel := adapter.GetDel(ctx, "key")
-				Expect(getDel.Err()).NotTo(HaveOccurred())
-				Expect(getDel.Val()).To(Equal("value"))
+				gomega.Expect(getDel.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(getDel.Val()).To(gomega.Equal("value"))
 
 				get := adapter.Get(ctx, "key")
-				Expect(rueidis.IsRedisNil(get.Err())).To(BeTrue())
+				gomega.Expect(rueidis.IsRedisNil(get.Err())).To(gomega.BeTrue())
 			})
 		}
 
-		It("should Incr", func() {
+		ginkgo.It("should Incr", func() {
 			set := adapter.Set(ctx, "key", "10", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			incr := adapter.Incr(ctx, "key")
-			Expect(incr.Err()).NotTo(HaveOccurred())
-			Expect(incr.Val()).To(Equal(int64(11)))
+			gomega.Expect(incr.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(incr.Val()).To(gomega.Equal(int64(11)))
 
 			get := adapter.Get(ctx, "key")
-			Expect(get.Err()).NotTo(HaveOccurred())
-			Expect(get.Val()).To(Equal("11"))
+			gomega.Expect(get.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(get.Val()).To(gomega.Equal("11"))
 		})
 
-		It("should IncrBy", func() {
+		ginkgo.It("should IncrBy", func() {
 			set := adapter.Set(ctx, "key", "10", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			incrBy := adapter.IncrBy(ctx, "key", 5)
-			Expect(incrBy.Err()).NotTo(HaveOccurred())
-			Expect(incrBy.Val()).To(Equal(int64(15)))
+			gomega.Expect(incrBy.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(incrBy.Val()).To(gomega.Equal(int64(15)))
 		})
 
-		It("should IncrByFloat", func() {
+		ginkgo.It("should IncrByFloat", func() {
 			set := adapter.Set(ctx, "key", "10.50", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			incrByFloat := adapter.IncrByFloat(ctx, "key", 0.1)
-			Expect(incrByFloat.Err()).NotTo(HaveOccurred())
-			Expect(incrByFloat.Val()).To(Equal(10.6))
+			gomega.Expect(incrByFloat.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(incrByFloat.Val()).To(gomega.Equal(10.6))
 
 			set = adapter.Set(ctx, "key", "5.0e3", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			incrByFloat = adapter.IncrByFloat(ctx, "key", 2.0e2)
-			Expect(incrByFloat.Err()).NotTo(HaveOccurred())
-			Expect(incrByFloat.Val()).To(Equal(float64(5200)))
+			gomega.Expect(incrByFloat.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(incrByFloat.Val()).To(gomega.Equal(float64(5200)))
 		})
 
-		It("should IncrByFloatOverflow", func() {
+		ginkgo.It("should IncrByFloatOverflow", func() {
 			incrByFloat := adapter.IncrByFloat(ctx, "key", 996945661)
-			Expect(incrByFloat.Err()).NotTo(HaveOccurred())
-			Expect(incrByFloat.Val()).To(Equal(float64(996945661)))
+			gomega.Expect(incrByFloat.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(incrByFloat.Val()).To(gomega.Equal(float64(996945661)))
 		})
 
-		It("should MSetMGet", func() {
+		ginkgo.It("should MSetMGet", func() {
 			mSet := adapter.MSet(ctx, "key1", "hello1", "key2", "hello2")
-			Expect(mSet.Err()).NotTo(HaveOccurred())
-			Expect(mSet.Val()).To(Equal("OK"))
+			gomega.Expect(mSet.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(mSet.Val()).To(gomega.Equal("OK"))
 
 			mGet := adapter.MGet(ctx, "key1", "key2", "_")
-			Expect(mGet.Err()).NotTo(HaveOccurred())
-			Expect(mGet.Val()).To(Equal([]interface{}{"hello1", "hello2", nil}))
+			gomega.Expect(mGet.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(mGet.Val()).To(gomega.Equal([]interface{}{"hello1", "hello2", nil}))
 
 			// MSet struct
 			type set struct {
@@ -1510,12 +1511,12 @@ func testAdapter(resp3 bool) {
 				Set4: nil,
 				Set5: map[string]interface{}{"k1": 1},
 			})
-			Expect(mSet.Err()).NotTo(HaveOccurred())
-			Expect(mSet.Val()).To(Equal("OK"))
+			gomega.Expect(mSet.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(mSet.Val()).To(gomega.Equal("OK"))
 
 			mGet = adapter.MGet(ctx, "set1", "set2", "set3", "set4")
-			Expect(mGet.Err()).NotTo(HaveOccurred())
-			Expect(mGet.Val()).To(Equal([]interface{}{
+			gomega.Expect(mGet.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(mGet.Val()).To(gomega.Equal([]interface{}{
 				"val1",
 				"1024",
 				strconv.Itoa(int(2 * time.Millisecond.Nanoseconds())),
@@ -1523,14 +1524,14 @@ func testAdapter(resp3 bool) {
 			}))
 		})
 
-		It("should scan Mget", func() {
+		ginkgo.It("should scan Mget", func() {
 			now := time.Now()
 
 			err := adapter.MSet(ctx, "key1", "hello1", "key2", 123, "time", now.Format(time.RFC3339Nano)).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			res := adapter.MGet(ctx, "key1", "key2", "_", "time")
-			Expect(res.Err()).NotTo(HaveOccurred())
+			gomega.Expect(res.Err()).NotTo(gomega.HaveOccurred())
 
 			type data struct {
 				Key1 string    `redis:"key1"`
@@ -1538,24 +1539,24 @@ func testAdapter(resp3 bool) {
 				Time TimeValue `redis:"time"`
 			}
 			var d data
-			Expect(res.Scan(&d)).NotTo(HaveOccurred())
-			Expect(d.Time.UnixNano()).To(Equal(now.UnixNano()))
+			gomega.Expect(res.Scan(&d)).NotTo(gomega.HaveOccurred())
+			gomega.Expect(d.Time.UnixNano()).To(gomega.Equal(now.UnixNano()))
 			d.Time.Time = time.Time{}
-			Expect(d).To(Equal(data{
+			gomega.Expect(d).To(gomega.Equal(data{
 				Key1: "hello1",
 				Key2: 123,
 				Time: TimeValue{Time: time.Time{}},
 			}))
 		})
 
-		It("should MSetNX", func() {
+		ginkgo.It("should MSetNX", func() {
 			mSetNX := adapter.MSetNX(ctx, "key1", "hello1", "key2", "hello2")
-			Expect(mSetNX.Err()).NotTo(HaveOccurred())
-			Expect(mSetNX.Val()).To(Equal(true))
+			gomega.Expect(mSetNX.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(mSetNX.Val()).To(gomega.Equal(true))
 
 			mSetNX = adapter.MSetNX(ctx, "key2", "hello1", "key3", "hello2")
-			Expect(mSetNX.Err()).NotTo(HaveOccurred())
-			Expect(mSetNX.Val()).To(Equal(false))
+			gomega.Expect(mSetNX.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(mSetNX.Val()).To(gomega.Equal(false))
 
 			// set struct
 			// MSet struct
@@ -1573,184 +1574,184 @@ func testAdapter(resp3 bool) {
 				Set4: nil,
 				Set5: map[string]interface{}{"k1": 1},
 			})
-			Expect(mSetNX.Err()).NotTo(HaveOccurred())
-			Expect(mSetNX.Val()).To(Equal(true))
+			gomega.Expect(mSetNX.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(mSetNX.Val()).To(gomega.Equal(true))
 		})
-		It("SetWithArgs should panic wrong mode", func() {
-			Expect(func() {
+		ginkgo.It("SetWithArgs should panic wrong mode", func() {
+			gomega.Expect(func() {
 				adapter.SetArgs(ctx, "key", "hello", SetArgs{Mode: "ANY"})
-			}).To(Panic())
+			}).To(gomega.Panic())
 		})
 
-		It("should SetWithArgs with TTL", func() {
+		ginkgo.It("should SetWithArgs with TTL", func() {
 			args := SetArgs{
 				TTL: 500 * time.Millisecond,
 			}
 			err := adapter.SetArgs(ctx, "key", "hello", args).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			val, err := adapter.Get(ctx, "key").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal("hello"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(val).To(gomega.Equal("hello"))
 
-			Eventually(func() bool {
+			gomega.Eventually(func() bool {
 				return rueidis.IsRedisNil(adapter.Get(ctx, "key").Err())
-			}, "2s", "100ms").Should(BeTrue())
+			}, "2s", "100ms").Should(gomega.BeTrue())
 		})
 
 		if resp3 {
-			It("should SetWithArgs with expiration date", func() {
+			ginkgo.It("should SetWithArgs with expiration date", func() {
 				expireAt := time.Now().AddDate(1, 1, 1)
 				args := SetArgs{
 					ExpireAt: expireAt,
 				}
 				err := adapter.SetArgs(ctx, "key", "hello", args).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				val, err := adapter.Get(ctx, "key").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(val).To(Equal("hello"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(val).To(gomega.Equal("hello"))
 
 				// check the key has an expiration date
 				// (so a TTL value different of -1)
 				ttl := adapter.TTL(ctx, "key")
-				Expect(ttl.Err()).NotTo(HaveOccurred())
-				Expect(ttl.Val()).ToNot(Equal(-1))
+				gomega.Expect(ttl.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(ttl.Val()).ToNot(gomega.Equal(-1))
 			})
 
-			It("should SetWithArgs with negative expiration date", func() {
+			ginkgo.It("should SetWithArgs with negative expiration date", func() {
 				args := SetArgs{
 					ExpireAt: time.Now().AddDate(-3, 1, 1),
 				}
 				// redis accepts a timestamp less than the current date
 				// but returns nil when trying to get the key
 				err := adapter.SetArgs(ctx, "key", "hello", args).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				val, err := adapter.Get(ctx, "key").Result()
-				Expect(rueidis.IsRedisNil(err)).To(BeTrue())
-				Expect(val).To(Equal(""))
+				gomega.Expect(rueidis.IsRedisNil(err)).To(gomega.BeTrue())
+				gomega.Expect(val).To(gomega.Equal(""))
 			})
 
-			It("should SetWithArgs with keepttl", func() {
+			ginkgo.It("should SetWithArgs with keepttl", func() {
 				// Set with ttl
 				argsWithTTL := SetArgs{
 					TTL: 5 * time.Second,
 				}
 				set := adapter.SetArgs(ctx, "key", "hello", argsWithTTL)
-				Expect(set.Err()).NotTo(HaveOccurred())
-				Expect(set.Result()).To(Equal("OK"))
+				gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(set.Result()).To(gomega.Equal("OK"))
 
 				// Set with keepttl
 				argsWithKeepTTL := SetArgs{
 					KeepTTL: true,
 				}
 				set = adapter.SetArgs(ctx, "key", "hello", argsWithKeepTTL)
-				Expect(set.Err()).NotTo(HaveOccurred())
-				Expect(set.Result()).To(Equal("OK"))
+				gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(set.Result()).To(gomega.Equal("OK"))
 
 				ttl := adapter.TTL(ctx, "key")
-				Expect(ttl.Err()).NotTo(HaveOccurred())
+				gomega.Expect(ttl.Err()).NotTo(gomega.HaveOccurred())
 				// set keepttl will Retain the ttl associated with the key
-				Expect(ttl.Val().Nanoseconds()).NotTo(Equal(-1))
+				gomega.Expect(ttl.Val().Nanoseconds()).NotTo(gomega.Equal(-1))
 			})
 		}
 
-		It("should SetWithArgs with NX mode and key exists", func() {
+		ginkgo.It("should SetWithArgs with NX mode and key exists", func() {
 			err := adapter.Set(ctx, "key", "hello", 0).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			args := SetArgs{
 				Mode: "nx",
 			}
 			val, err := adapter.SetArgs(ctx, "key", "hello", args).Result()
-			Expect(rueidis.IsRedisNil(err)).To(BeTrue())
-			Expect(val).To(Equal(""))
+			gomega.Expect(rueidis.IsRedisNil(err)).To(gomega.BeTrue())
+			gomega.Expect(val).To(gomega.Equal(""))
 		})
 
-		It("should SetWithArgs with NX mode and key does not exist", func() {
+		ginkgo.It("should SetWithArgs with NX mode and key does not exist", func() {
 			args := SetArgs{
 				Mode: "nx",
 			}
 			val, err := adapter.SetArgs(ctx, "key", "hello", args).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(val).To(gomega.Equal("OK"))
 		})
 
-		It("should SetWithArgs with expiration, NX mode, and key does not exist", func() {
+		ginkgo.It("should SetWithArgs with expiration, NX mode, and key does not exist", func() {
 			args := SetArgs{
 				TTL:  500 * time.Millisecond,
 				Mode: "nx",
 			}
 			val, err := adapter.SetArgs(ctx, "key", "hello", args).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(val).To(gomega.Equal("OK"))
 
-			Eventually(func() bool {
+			gomega.Eventually(func() bool {
 				return rueidis.IsRedisNil(adapter.Get(ctx, "key").Err())
-			}, "1s", "100ms").Should(BeTrue())
+			}, "1s", "100ms").Should(gomega.BeTrue())
 		})
 
-		It("should SetWithArgs with expiration, NX mode, and key exists", func() {
+		ginkgo.It("should SetWithArgs with expiration, NX mode, and key exists", func() {
 			e := adapter.Set(ctx, "key", "hello", 0)
-			Expect(e.Err()).NotTo(HaveOccurred())
+			gomega.Expect(e.Err()).NotTo(gomega.HaveOccurred())
 
 			args := SetArgs{
 				TTL:  500 * time.Millisecond,
 				Mode: "nx",
 			}
 			val, err := adapter.SetArgs(ctx, "key", "world", args).Result()
-			Expect(rueidis.IsRedisNil(err)).To(BeTrue())
-			Expect(val).To(Equal(""))
+			gomega.Expect(rueidis.IsRedisNil(err)).To(gomega.BeTrue())
+			gomega.Expect(val).To(gomega.Equal(""))
 		})
 
-		It("should SetWithArgs with XX mode and key does not exist", func() {
+		ginkgo.It("should SetWithArgs with XX mode and key does not exist", func() {
 			args := SetArgs{
 				Mode: "xx",
 			}
 			val, err := adapter.SetArgs(ctx, "key", "world", args).Result()
-			Expect(rueidis.IsRedisNil(err)).To(BeTrue())
-			Expect(val).To(Equal(""))
+			gomega.Expect(rueidis.IsRedisNil(err)).To(gomega.BeTrue())
+			gomega.Expect(val).To(gomega.Equal(""))
 		})
 
-		It("should SetWithArgs with XX mode and key exists", func() {
+		ginkgo.It("should SetWithArgs with XX mode and key exists", func() {
 			e := adapter.Set(ctx, "key", "hello", 0).Err()
-			Expect(e).NotTo(HaveOccurred())
+			gomega.Expect(e).NotTo(gomega.HaveOccurred())
 
 			args := SetArgs{
 				Mode: "xx",
 			}
 			val, err := adapter.SetArgs(ctx, "key", "world", args).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(val).To(gomega.Equal("OK"))
 		})
 
 		if resp3 {
-			It("should SetWithArgs with XX mode and GET option, and key exists", func() {
+			ginkgo.It("should SetWithArgs with XX mode and GET option, and key exists", func() {
 				e := adapter.Set(ctx, "key", "hello", 0).Err()
-				Expect(e).NotTo(HaveOccurred())
+				gomega.Expect(e).NotTo(gomega.HaveOccurred())
 
 				args := SetArgs{
 					Mode: "xx",
 					Get:  true,
 				}
 				val, err := adapter.SetArgs(ctx, "key", "world", args).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(val).To(Equal("hello"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(val).To(gomega.Equal("hello"))
 			})
 
-			It("should SetWithArgs with XX mode and GET option, and key does not exist", func() {
+			ginkgo.It("should SetWithArgs with XX mode and GET option, and key does not exist", func() {
 				args := SetArgs{
 					Mode: "xx",
 					Get:  true,
 				}
 
 				val, err := adapter.SetArgs(ctx, "key", "world", args).Result()
-				Expect(rueidis.IsRedisNil(err)).To(BeTrue())
-				Expect(val).To(Equal(""))
+				gomega.Expect(rueidis.IsRedisNil(err)).To(gomega.BeTrue())
+				gomega.Expect(val).To(gomega.Equal(""))
 			})
 
-			It("should SetWithArgs with expiration, XX mode, GET option, and key does not exist", func() {
+			ginkgo.It("should SetWithArgs with expiration, XX mode, GET option, and key does not exist", func() {
 				args := SetArgs{
 					TTL:  500 * time.Millisecond,
 					Mode: "xx",
@@ -1758,13 +1759,13 @@ func testAdapter(resp3 bool) {
 				}
 
 				val, err := adapter.SetArgs(ctx, "key", "world", args).Result()
-				Expect(rueidis.IsRedisNil(err)).To(BeTrue())
-				Expect(val).To(Equal(""))
+				gomega.Expect(rueidis.IsRedisNil(err)).To(gomega.BeTrue())
+				gomega.Expect(val).To(gomega.Equal(""))
 			})
 
-			It("should SetWithArgs with expiration, XX mode, GET option, and key exists", func() {
+			ginkgo.It("should SetWithArgs with expiration, XX mode, GET option, and key exists", func() {
 				e := adapter.Set(ctx, "key", "hello", 0)
-				Expect(e.Err()).NotTo(HaveOccurred())
+				gomega.Expect(e.Err()).NotTo(gomega.HaveOccurred())
 
 				args := SetArgs{
 					TTL:  500 * time.Millisecond,
@@ -1773,346 +1774,346 @@ func testAdapter(resp3 bool) {
 				}
 
 				val, err := adapter.SetArgs(ctx, "key", "world", args).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(val).To(Equal("hello"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(val).To(gomega.Equal("hello"))
 
-				Eventually(func() bool {
+				gomega.Eventually(func() bool {
 					return rueidis.IsRedisNil(adapter.Get(ctx, "key").Err())
-				}, "1s", "100ms").Should(BeTrue())
+				}, "1s", "100ms").Should(gomega.BeTrue())
 			})
 
-			It("should SetWithArgs with Get and key does not exist yet", func() {
+			ginkgo.It("should SetWithArgs with Get and key does not exist yet", func() {
 				args := SetArgs{
 					Get: true,
 				}
 
 				val, err := adapter.SetArgs(ctx, "key", "hello", args).Result()
-				Expect(rueidis.IsRedisNil(err)).To(BeTrue())
-				Expect(val).To(Equal(""))
+				gomega.Expect(rueidis.IsRedisNil(err)).To(gomega.BeTrue())
+				gomega.Expect(val).To(gomega.Equal(""))
 			})
 
-			It("should SetWithArgs with Get and key exists", func() {
+			ginkgo.It("should SetWithArgs with Get and key exists", func() {
 				e := adapter.Set(ctx, "key", "hello", 0)
-				Expect(e.Err()).NotTo(HaveOccurred())
+				gomega.Expect(e.Err()).NotTo(gomega.HaveOccurred())
 
 				args := SetArgs{
 					Get: true,
 				}
 
 				val, err := adapter.SetArgs(ctx, "key", "world", args).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(val).To(Equal("hello"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(val).To(gomega.Equal("hello"))
 			})
 
-			It("should Set with keepttl", func() {
+			ginkgo.It("should Set with keepttl", func() {
 				// set with ttl
 				set := adapter.Set(ctx, "key", "hello", 5*time.Second)
-				Expect(set.Err()).NotTo(HaveOccurred())
-				Expect(set.Val()).To(Equal("OK"))
+				gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 				// set with keepttl
 				set = adapter.Set(ctx, "key", "hello1", KeepTTL)
-				Expect(set.Err()).NotTo(HaveOccurred())
-				Expect(set.Val()).To(Equal("OK"))
+				gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 				ttl := adapter.TTL(ctx, "key")
-				Expect(ttl.Err()).NotTo(HaveOccurred())
+				gomega.Expect(ttl.Err()).NotTo(gomega.HaveOccurred())
 				// set keepttl will Retain the ttl associated with the key
-				Expect(ttl.Val().Nanoseconds()).NotTo(Equal(-1))
+				gomega.Expect(ttl.Val().Nanoseconds()).NotTo(gomega.Equal(-1))
 			})
 		}
 
-		It("should Set with expiration", func() {
+		ginkgo.It("should Set with expiration", func() {
 			err := adapter.Set(ctx, "key", "hello", 100*time.Millisecond).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			val, err := adapter.Get(ctx, "key").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal("hello"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(val).To(gomega.Equal("hello"))
 
-			Eventually(func() bool {
+			gomega.Eventually(func() bool {
 				return rueidis.IsRedisNil(adapter.Get(ctx, "key").Err())
-			}, "1s", "100ms").Should(BeTrue())
+			}, "1s", "100ms").Should(gomega.BeTrue())
 		})
 
-		It("should SetGet", func() {
+		ginkgo.It("should SetGet", func() {
 			set := adapter.Set(ctx, "key", "hello", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			get := adapter.Get(ctx, "key")
-			Expect(get.Err()).NotTo(HaveOccurred())
-			Expect(get.Val()).To(Equal("hello"))
+			gomega.Expect(get.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(get.Val()).To(gomega.Equal("hello"))
 		})
 
-		It("should SetEX", func() {
+		ginkgo.It("should SetEX", func() {
 			err := adapter.SetEX(ctx, "key", "hello", 1*time.Second).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			val, err := adapter.Get(ctx, "key").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal("hello"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(val).To(gomega.Equal("hello"))
 
-			Eventually(func() bool {
+			gomega.Eventually(func() bool {
 				return rueidis.IsRedisNil(adapter.Get(ctx, "foo").Err())
-			}, "2s", "100ms").Should(BeTrue())
+			}, "2s", "100ms").Should(gomega.BeTrue())
 		})
 
-		It("should SetNX", func() {
+		ginkgo.It("should SetNX", func() {
 			setNX := adapter.SetNX(ctx, "key", "hello", 0)
-			Expect(setNX.Err()).NotTo(HaveOccurred())
-			Expect(setNX.Val()).To(Equal(true))
+			gomega.Expect(setNX.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(setNX.Val()).To(gomega.Equal(true))
 
 			setNX = adapter.SetNX(ctx, "key", "hello2", 0)
-			Expect(setNX.Err()).NotTo(HaveOccurred())
-			Expect(setNX.Val()).To(Equal(false))
+			gomega.Expect(setNX.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(setNX.Val()).To(gomega.Equal(false))
 
 			get := adapter.Get(ctx, "key")
-			Expect(get.Err()).NotTo(HaveOccurred())
-			Expect(get.Val()).To(Equal("hello"))
+			gomega.Expect(get.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(get.Val()).To(gomega.Equal("hello"))
 		})
 
-		It("should SetNX with expiration", func() {
+		ginkgo.It("should SetNX with expiration", func() {
 			isSet, err := adapter.SetNX(ctx, "key", "hello", time.Second).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(isSet).To(Equal(true))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(isSet).To(gomega.Equal(true))
 
 			isSet, err = adapter.SetNX(ctx, "key", "hello2", time.Second).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(isSet).To(Equal(false))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(isSet).To(gomega.Equal(false))
 
 			val, err := adapter.Get(ctx, "key").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal("hello"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(val).To(gomega.Equal("hello"))
 		})
 
-		It("should SetNX with expiration 2", func() {
+		ginkgo.It("should SetNX with expiration 2", func() {
 			isSet, err := adapter.SetNX(ctx, "key", "hello", 100*time.Millisecond).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(isSet).To(Equal(true))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(isSet).To(gomega.Equal(true))
 
 			isSet, err = adapter.SetNX(ctx, "key", "hello2", 100*time.Millisecond).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(isSet).To(Equal(false))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(isSet).To(gomega.Equal(false))
 
 			val, err := adapter.Get(ctx, "key").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal("hello"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(val).To(gomega.Equal("hello"))
 		})
 
 		if resp3 {
-			It("should SetNX with keepttl", func() {
+			ginkgo.It("should SetNX with keepttl", func() {
 				isSet, err := adapter.SetNX(ctx, "key", "hello1", KeepTTL).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(isSet).To(Equal(true))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(isSet).To(gomega.Equal(true))
 
 				ttl := adapter.TTL(ctx, "key")
-				Expect(ttl.Err()).NotTo(HaveOccurred())
-				Expect(ttl.Val().Nanoseconds()).To(Equal(int64(-1)))
+				gomega.Expect(ttl.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(ttl.Val().Nanoseconds()).To(gomega.Equal(int64(-1)))
 			})
 		}
 
-		It("should SetXX", func() {
+		ginkgo.It("should SetXX", func() {
 			isSet, err := adapter.SetXX(ctx, "key", "hello2", 0).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(isSet).To(Equal(false))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(isSet).To(gomega.Equal(false))
 
 			err = adapter.Set(ctx, "key", "hello", 0).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			isSet, err = adapter.SetXX(ctx, "key", "hello2", 0).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(isSet).To(Equal(true))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(isSet).To(gomega.Equal(true))
 
 			val, err := adapter.Get(ctx, "key").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal("hello2"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(val).To(gomega.Equal("hello2"))
 		})
 
-		It("should SetXX with expiration", func() {
+		ginkgo.It("should SetXX with expiration", func() {
 			isSet, err := adapter.SetXX(ctx, "key", "hello2", time.Second).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(isSet).To(Equal(false))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(isSet).To(gomega.Equal(false))
 
 			err = adapter.Set(ctx, "key", "hello", time.Second).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			isSet, err = adapter.SetXX(ctx, "key", "hello2", time.Second).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(isSet).To(Equal(true))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(isSet).To(gomega.Equal(true))
 
 			val, err := adapter.Get(ctx, "key").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal("hello2"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(val).To(gomega.Equal("hello2"))
 		})
 
-		It("should SetXX with expiration", func() {
+		ginkgo.It("should SetXX with expiration", func() {
 			isSet, err := adapter.SetXX(ctx, "key", "hello2", 100*time.Millisecond).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(isSet).To(Equal(false))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(isSet).To(gomega.Equal(false))
 
 			err = adapter.Set(ctx, "key", "hello", time.Second).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			isSet, err = adapter.SetXX(ctx, "key", "hello2", 100*time.Millisecond).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(isSet).To(Equal(true))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(isSet).To(gomega.Equal(true))
 
 			val, err := adapter.Get(ctx, "key").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal("hello2"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(val).To(gomega.Equal("hello2"))
 		})
 
 		if resp3 {
-			It("should SetXX with keepttl", func() {
+			ginkgo.It("should SetXX with keepttl", func() {
 				isSet, err := adapter.SetXX(ctx, "key", "hello2", time.Second).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(isSet).To(Equal(false))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(isSet).To(gomega.Equal(false))
 
 				err = adapter.Set(ctx, "key", "hello", time.Second).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				isSet, err = adapter.SetXX(ctx, "key", "hello2", 5*time.Second).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(isSet).To(Equal(true))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(isSet).To(gomega.Equal(true))
 
 				isSet, err = adapter.SetXX(ctx, "key", "hello3", KeepTTL).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(isSet).To(Equal(true))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(isSet).To(gomega.Equal(true))
 
 				val, err := adapter.Get(ctx, "key").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(val).To(Equal("hello3"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(val).To(gomega.Equal("hello3"))
 
 				// set keepttl will Retain the ttl associated with the key
 				ttl, err := adapter.TTL(ctx, "key").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(ttl).NotTo(Equal(-1))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(ttl).NotTo(gomega.Equal(-1))
 			})
 		}
 
-		It("should SetRange", func() {
+		ginkgo.It("should SetRange", func() {
 			set := adapter.Set(ctx, "key", "Hello World", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			range_ := adapter.SetRange(ctx, "key", 6, "Redis")
-			Expect(range_.Err()).NotTo(HaveOccurred())
-			Expect(range_.Val()).To(Equal(int64(11)))
+			gomega.Expect(range_.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(range_.Val()).To(gomega.Equal(int64(11)))
 
 			get := adapter.Get(ctx, "key")
-			Expect(get.Err()).NotTo(HaveOccurred())
-			Expect(get.Val()).To(Equal("Hello Redis"))
+			gomega.Expect(get.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(get.Val()).To(gomega.Equal("Hello Redis"))
 		})
 
-		It("should StrLen", func() {
+		ginkgo.It("should StrLen", func() {
 			set := adapter.Set(ctx, "key", "hello", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			strLen := adapter.StrLen(ctx, "key")
-			Expect(strLen.Err()).NotTo(HaveOccurred())
-			Expect(strLen.Val()).To(Equal(int64(5)))
+			gomega.Expect(strLen.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(strLen.Val()).To(gomega.Equal(int64(5)))
 
 			strLen = adapter.StrLen(ctx, "_")
-			Expect(strLen.Err()).NotTo(HaveOccurred())
-			Expect(strLen.Val()).To(Equal(int64(0)))
+			gomega.Expect(strLen.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(strLen.Val()).To(gomega.Equal(int64(0)))
 		})
 
 		if resp3 {
-			It("should Copy", func() {
+			ginkgo.It("should Copy", func() {
 				set := adapter.Set(ctx, "key", "hello", 0)
-				Expect(set.Err()).NotTo(HaveOccurred())
-				Expect(set.Val()).To(Equal("OK"))
+				gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 				copy := adapter.Copy(ctx, "key", "newKey", 0, false)
-				Expect(copy.Err()).NotTo(HaveOccurred())
-				Expect(copy.Val()).To(Equal(int64(1)))
+				gomega.Expect(copy.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(copy.Val()).To(gomega.Equal(int64(1)))
 
 				// Value is available by both keys now
 				getOld := adapter.Get(ctx, "key")
-				Expect(getOld.Err()).NotTo(HaveOccurred())
-				Expect(getOld.Val()).To(Equal("hello"))
+				gomega.Expect(getOld.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(getOld.Val()).To(gomega.Equal("hello"))
 				getNew := adapter.Get(ctx, "newKey")
-				Expect(getNew.Err()).NotTo(HaveOccurred())
-				Expect(getNew.Val()).To(Equal("hello"))
+				gomega.Expect(getNew.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(getNew.Val()).To(gomega.Equal("hello"))
 
 				// Overwriting an existing key should not succeed
 				overwrite := adapter.Copy(ctx, "newKey", "key", 0, false)
-				Expect(overwrite.Val()).To(Equal(int64(0)))
+				gomega.Expect(overwrite.Val()).To(gomega.Equal(int64(0)))
 
 				// Overwrite is allowed when replace=rue
 				replace := adapter.Copy(ctx, "newKey", "key", 0, true)
-				Expect(replace.Val()).To(Equal(int64(1)))
+				gomega.Expect(replace.Val()).To(gomega.Equal(int64(1)))
 			})
 
-			It("should acl dryrun", func() {
+			ginkgo.It("should acl dryrun", func() {
 				dryRun := adapter.ACLDryRun(ctx, "default", "get", "randomKey")
-				Expect(dryRun.Err()).NotTo(HaveOccurred())
-				Expect(dryRun.Val()).To(Equal("OK"))
+				gomega.Expect(dryRun.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(dryRun.Val()).To(gomega.Equal("OK"))
 			})
 		}
 	})
 
-	Describe("hashes", func() {
-		It("should HDel", func() {
+	ginkgo.Describe("hashes", func() {
+		ginkgo.It("should HDel", func() {
 			hSet := adapter.HSet(ctx, "hash", "key", "hello")
-			Expect(hSet.Err()).NotTo(HaveOccurred())
+			gomega.Expect(hSet.Err()).NotTo(gomega.HaveOccurred())
 
 			hDel := adapter.HDel(ctx, "hash", "key")
-			Expect(hDel.Err()).NotTo(HaveOccurred())
-			Expect(hDel.Val()).To(Equal(int64(1)))
+			gomega.Expect(hDel.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(hDel.Val()).To(gomega.Equal(int64(1)))
 
 			hDel = adapter.HDel(ctx, "hash", "key")
-			Expect(hDel.Err()).NotTo(HaveOccurred())
-			Expect(hDel.Val()).To(Equal(int64(0)))
+			gomega.Expect(hDel.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(hDel.Val()).To(gomega.Equal(int64(0)))
 		})
 
-		It("should HExists", func() {
+		ginkgo.It("should HExists", func() {
 			hSet := adapter.HSet(ctx, "hash", "key", "hello")
-			Expect(hSet.Err()).NotTo(HaveOccurred())
+			gomega.Expect(hSet.Err()).NotTo(gomega.HaveOccurred())
 
 			hExists := adapter.HExists(ctx, "hash", "key")
-			Expect(hExists.Err()).NotTo(HaveOccurred())
-			Expect(hExists.Val()).To(Equal(true))
+			gomega.Expect(hExists.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(hExists.Val()).To(gomega.Equal(true))
 
 			hExists = adapter.HExists(ctx, "hash", "key1")
-			Expect(hExists.Err()).NotTo(HaveOccurred())
-			Expect(hExists.Val()).To(Equal(false))
+			gomega.Expect(hExists.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(hExists.Val()).To(gomega.Equal(false))
 		})
 
-		It("should HGet", func() {
+		ginkgo.It("should HGet", func() {
 			hSet := adapter.HSet(ctx, "hash", "key", "hello")
-			Expect(hSet.Err()).NotTo(HaveOccurred())
+			gomega.Expect(hSet.Err()).NotTo(gomega.HaveOccurred())
 
 			hGet := adapter.HGet(ctx, "hash", "key")
-			Expect(hGet.Err()).NotTo(HaveOccurred())
-			Expect(hGet.Val()).To(Equal("hello"))
+			gomega.Expect(hGet.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(hGet.Val()).To(gomega.Equal("hello"))
 
 			hGet = adapter.HGet(ctx, "hash", "key1")
-			Expect(rueidis.IsRedisNil(hGet.Err())).To(BeTrue())
-			Expect(hGet.Val()).To(Equal(""))
+			gomega.Expect(rueidis.IsRedisNil(hGet.Err())).To(gomega.BeTrue())
+			gomega.Expect(hGet.Val()).To(gomega.Equal(""))
 		})
 
-		It("should HGetAll", func() {
+		ginkgo.It("should HGetAll", func() {
 			err := adapter.HSet(ctx, "hash", "key1", "hello1").Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.HSet(ctx, "hash", "key2", "hello2").Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			m, err := adapter.HGetAll(ctx, "hash").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(m).To(Equal(map[string]string{"key1": "hello1", "key2": "hello2"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(m).To(gomega.Equal(map[string]string{"key1": "hello1", "key2": "hello2"}))
 		})
 
-		It("should scan", func() {
+		ginkgo.It("should scan", func() {
 			now := time.Now()
 
 			err := adapter.HMSet(ctx, "hash", "key1", "hello1", "key2", 123, "time", now.Format(time.RFC3339Nano)).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			res := adapter.HGetAll(ctx, "hash")
-			Expect(res.Err()).NotTo(HaveOccurred())
+			gomega.Expect(res.Err()).NotTo(gomega.HaveOccurred())
 
 			type data struct {
 				Key1 string    `redis:"key1"`
@@ -2120,10 +2121,10 @@ func testAdapter(resp3 bool) {
 				Time TimeValue `redis:"time"`
 			}
 			var d data
-			Expect(res.Scan(&d)).NotTo(HaveOccurred())
-			Expect(d.Time.UnixNano()).To(Equal(now.UnixNano()))
+			gomega.Expect(res.Scan(&d)).NotTo(gomega.HaveOccurred())
+			gomega.Expect(d.Time.UnixNano()).To(gomega.Equal(now.UnixNano()))
 			d.Time.Time = time.Time{}
-			Expect(d).To(Equal(data{
+			gomega.Expect(d).To(gomega.Equal(data{
 				Key1: "hello1",
 				Key2: 123,
 				Time: TimeValue{Time: time.Time{}},
@@ -2139,115 +2140,115 @@ func testAdapter(resp3 bool) {
 				Key2: 200,
 				Time: now,
 			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			var d2 data2
 			err = adapter.HMGet(ctx, "hash", "key1", "key2", "time").Scan(&d2)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(d2.Key1).To(Equal("hello2"))
-			Expect(d2.Key2).To(Equal(200))
-			Expect(d2.Time.Unix()).To(Equal(now.Unix()))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(d2.Key1).To(gomega.Equal("hello2"))
+			gomega.Expect(d2.Key2).To(gomega.Equal(200))
+			gomega.Expect(d2.Time.Unix()).To(gomega.Equal(now.Unix()))
 		})
 
-		It("should HIncrBy", func() {
+		ginkgo.It("should HIncrBy", func() {
 			hSet := adapter.HSet(ctx, "hash", "key", "5")
-			Expect(hSet.Err()).NotTo(HaveOccurred())
+			gomega.Expect(hSet.Err()).NotTo(gomega.HaveOccurred())
 
 			hIncrBy := adapter.HIncrBy(ctx, "hash", "key", 1)
-			Expect(hIncrBy.Err()).NotTo(HaveOccurred())
-			Expect(hIncrBy.Val()).To(Equal(int64(6)))
+			gomega.Expect(hIncrBy.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(hIncrBy.Val()).To(gomega.Equal(int64(6)))
 
 			hIncrBy = adapter.HIncrBy(ctx, "hash", "key", -1)
-			Expect(hIncrBy.Err()).NotTo(HaveOccurred())
-			Expect(hIncrBy.Val()).To(Equal(int64(5)))
+			gomega.Expect(hIncrBy.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(hIncrBy.Val()).To(gomega.Equal(int64(5)))
 
 			hIncrBy = adapter.HIncrBy(ctx, "hash", "key", -10)
-			Expect(hIncrBy.Err()).NotTo(HaveOccurred())
-			Expect(hIncrBy.Val()).To(Equal(int64(-5)))
+			gomega.Expect(hIncrBy.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(hIncrBy.Val()).To(gomega.Equal(int64(-5)))
 		})
 
-		It("should HIncrByFloat", func() {
+		ginkgo.It("should HIncrByFloat", func() {
 			hSet := adapter.HSet(ctx, "hash", "field", "10.50")
-			Expect(hSet.Err()).NotTo(HaveOccurred())
-			Expect(hSet.Val()).To(Equal(int64(1)))
+			gomega.Expect(hSet.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(hSet.Val()).To(gomega.Equal(int64(1)))
 
 			hIncrByFloat := adapter.HIncrByFloat(ctx, "hash", "field", 0.1)
-			Expect(hIncrByFloat.Err()).NotTo(HaveOccurred())
-			Expect(hIncrByFloat.Val()).To(Equal(10.6))
+			gomega.Expect(hIncrByFloat.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(hIncrByFloat.Val()).To(gomega.Equal(10.6))
 
 			hSet = adapter.HSet(ctx, "hash", "field", "5.0e3")
-			Expect(hSet.Err()).NotTo(HaveOccurred())
-			Expect(hSet.Val()).To(Equal(int64(0)))
+			gomega.Expect(hSet.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(hSet.Val()).To(gomega.Equal(int64(0)))
 
 			hIncrByFloat = adapter.HIncrByFloat(ctx, "hash", "field", 2.0e2)
-			Expect(hIncrByFloat.Err()).NotTo(HaveOccurred())
-			Expect(hIncrByFloat.Val()).To(Equal(float64(5200)))
+			gomega.Expect(hIncrByFloat.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(hIncrByFloat.Val()).To(gomega.Equal(float64(5200)))
 		})
 
-		It("should HKeys", func() {
+		ginkgo.It("should HKeys", func() {
 			hkeys := adapter.HKeys(ctx, "hash")
-			Expect(hkeys.Err()).NotTo(HaveOccurred())
-			Expect(hkeys.Val()).To(Equal([]string{}))
+			gomega.Expect(hkeys.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(hkeys.Val()).To(gomega.Equal([]string{}))
 
 			hset := adapter.HSet(ctx, "hash", "key1", "hello1")
-			Expect(hset.Err()).NotTo(HaveOccurred())
+			gomega.Expect(hset.Err()).NotTo(gomega.HaveOccurred())
 			hset = adapter.HSet(ctx, "hash", "key2", "hello2")
-			Expect(hset.Err()).NotTo(HaveOccurred())
+			gomega.Expect(hset.Err()).NotTo(gomega.HaveOccurred())
 
 			hkeys = adapter.HKeys(ctx, "hash")
-			Expect(hkeys.Err()).NotTo(HaveOccurred())
-			Expect(hkeys.Val()).To(Equal([]string{"key1", "key2"}))
+			gomega.Expect(hkeys.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(hkeys.Val()).To(gomega.Equal([]string{"key1", "key2"}))
 		})
 
-		It("should HLen", func() {
+		ginkgo.It("should HLen", func() {
 			hSet := adapter.HSet(ctx, "hash", "key1", "hello1")
-			Expect(hSet.Err()).NotTo(HaveOccurred())
+			gomega.Expect(hSet.Err()).NotTo(gomega.HaveOccurred())
 			hSet = adapter.HSet(ctx, "hash", "key2", "hello2")
-			Expect(hSet.Err()).NotTo(HaveOccurred())
+			gomega.Expect(hSet.Err()).NotTo(gomega.HaveOccurred())
 
 			hLen := adapter.HLen(ctx, "hash")
-			Expect(hLen.Err()).NotTo(HaveOccurred())
-			Expect(hLen.Val()).To(Equal(int64(2)))
+			gomega.Expect(hLen.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(hLen.Val()).To(gomega.Equal(int64(2)))
 		})
 
-		It("should HMGet", func() {
+		ginkgo.It("should HMGet", func() {
 			err := adapter.HSet(ctx, "hash", "key1", "hello1", "key2", "hello2").Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			vals, err := adapter.HMGet(ctx, "hash", "key1", "key2", "_").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]any{"hello1", "hello2", nil}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]any{"hello1", "hello2", nil}))
 		})
 
-		It("should HSet", func() {
+		ginkgo.It("should HSet", func() {
 			ok, err := adapter.HSet(ctx, "hash", map[string]interface{}{
 				"key1": "hello1",
 				"key2": "hello2",
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(ok).To(Equal(int64(2)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(ok).To(gomega.Equal(int64(2)))
 
 			v, err := adapter.HGet(ctx, "hash", "key1").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(v).To(Equal("hello1"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(v).To(gomega.Equal("hello1"))
 
 			v, err = adapter.HGet(ctx, "hash", "key2").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(v).To(Equal("hello2"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(v).To(gomega.Equal("hello2"))
 
 			keys, err := adapter.HKeys(ctx, "hash").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(keys).To(ConsistOf([]string{"key1", "key2"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(keys).To(gomega.ConsistOf([]string{"key1", "key2"}))
 		})
 
-		It("should HSet", func() {
+		ginkgo.It("should HSet", func() {
 			hSet := adapter.HSet(ctx, "hash", "key", "hello")
-			Expect(hSet.Err()).NotTo(HaveOccurred())
-			Expect(hSet.Val()).To(Equal(int64(1)))
+			gomega.Expect(hSet.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(hSet.Val()).To(gomega.Equal(int64(1)))
 
 			hGet := adapter.HGet(ctx, "hash", "key")
-			Expect(hGet.Err()).NotTo(HaveOccurred())
-			Expect(hGet.Val()).To(Equal("hello"))
+			gomega.Expect(hGet.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(hGet.Val()).To(gomega.Equal("hello"))
 
 			// set struct
 			// MSet struct
@@ -2271,12 +2272,12 @@ func testAdapter(resp3 bool) {
 				Set7: &str,
 				Set8: nil,
 			})
-			Expect(hSet.Err()).NotTo(HaveOccurred())
-			Expect(hSet.Val()).To(Equal(int64(5)))
+			gomega.Expect(hSet.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(hSet.Val()).To(gomega.Equal(int64(5)))
 
 			hMGet := adapter.HMGet(ctx, "hash", "set1", "set2", "set3", "set4", "set5", "set6", "set7", "set8")
-			Expect(hMGet.Err()).NotTo(HaveOccurred())
-			Expect(hMGet.Val()).To(Equal([]interface{}{
+			gomega.Expect(hMGet.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(hMGet.Val()).To(gomega.Equal([]interface{}{
 				"val1",
 				"1024",
 				strconv.Itoa(int(2 * time.Millisecond.Nanoseconds())),
@@ -2291,1149 +2292,1149 @@ func testAdapter(resp3 bool) {
 				Set1: "val2",
 				Set6: "val",
 			})
-			Expect(hSet.Err()).NotTo(HaveOccurred())
-			Expect(hSet.Val()).To(Equal(int64(5)))
+			gomega.Expect(hSet.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(hSet.Val()).To(gomega.Equal(int64(5)))
 
 			hMGet = adapter.HMGet(ctx, "hash2", "set1", "set6")
-			Expect(hMGet.Err()).NotTo(HaveOccurred())
-			Expect(hMGet.Val()).To(Equal([]interface{}{
+			gomega.Expect(hMGet.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(hMGet.Val()).To(gomega.Equal([]interface{}{
 				"val2",
 				"val",
 			}))
 		})
 
-		It("should HSetNX", func() {
+		ginkgo.It("should HSetNX", func() {
 			hSetNX := adapter.HSetNX(ctx, "hash", "key", "hello")
-			Expect(hSetNX.Err()).NotTo(HaveOccurred())
-			Expect(hSetNX.Val()).To(Equal(true))
+			gomega.Expect(hSetNX.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(hSetNX.Val()).To(gomega.Equal(true))
 
 			hSetNX = adapter.HSetNX(ctx, "hash", "key", "hello")
-			Expect(hSetNX.Err()).NotTo(HaveOccurred())
-			Expect(hSetNX.Val()).To(Equal(false))
+			gomega.Expect(hSetNX.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(hSetNX.Val()).To(gomega.Equal(false))
 
 			hGet := adapter.HGet(ctx, "hash", "key")
-			Expect(hGet.Err()).NotTo(HaveOccurred())
-			Expect(hGet.Val()).To(Equal("hello"))
+			gomega.Expect(hGet.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(hGet.Val()).To(gomega.Equal("hello"))
 		})
 
-		It("should HVals", func() {
+		ginkgo.It("should HVals", func() {
 			err := adapter.HSet(ctx, "hash", "key1", "hello1").Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.HSet(ctx, "hash", "key2", "hello2").Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			v, err := adapter.HVals(ctx, "hash").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(v).To(Equal([]string{"hello1", "hello2"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(v).To(gomega.Equal([]string{"hello1", "hello2"}))
 
 			// TODO
-			//var slice []string
-			//err = adapter.HVals(ctx, "hash").ScanSlice(&slice)
-			//Expect(err).NotTo(HaveOccurred())
-			//Expect(slice).To(Equal([]string{"hello1", "hello2"}))
+			// var slice []string
+			// err = adapter.HVals(ctx, "hash").ScanSlice(&slice)
+			// gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			// gomega.Expect(slice).To(gomega.Equal([]string{"hello1", "hello2"}))
 		})
 
 		if resp3 {
-			It("should HRandField", func() {
+			ginkgo.It("should HRandField", func() {
 				err := adapter.HSet(ctx, "hash", "key1", "hello1").Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.HSet(ctx, "hash", "key2", "hello2").Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				v := adapter.HRandField(ctx, "hash", 1)
-				Expect(v.Err()).NotTo(HaveOccurred())
-				Expect(v.Val()).To(Or(Equal([]string{"key1"}), Equal([]string{"key2"})))
+				gomega.Expect(v.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(v.Val()).To(gomega.Or(gomega.Equal([]string{"key1"}), gomega.Equal([]string{"key2"})))
 
 				v = adapter.HRandField(ctx, "hash", 0)
-				Expect(v.Err()).NotTo(HaveOccurred())
-				Expect(v.Val()).To(HaveLen(0))
+				gomega.Expect(v.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(v.Val()).To(gomega.HaveLen(0))
 
 				kv, err := adapter.HRandFieldWithValues(ctx, "hash", -1).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(kv).To(Or(
-					Equal([]KeyValue{{Key: "key1", Value: "hello1"}}),
-					Equal([]KeyValue{{Key: "key2", Value: "hello2"}}),
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(kv).To(gomega.Or(
+					gomega.Equal([]KeyValue{{Key: "key1", Value: "hello1"}}),
+					gomega.Equal([]KeyValue{{Key: "key2", Value: "hello2"}}),
 				))
 			})
 		}
 	})
 
-	Describe("hyperloglog", func() {
-		It("should PFMerge", func() {
+	ginkgo.Describe("hyperloglog", func() {
+		ginkgo.It("should PFMerge", func() {
 			pfAdd := adapter.PFAdd(ctx, "hll1", "1", "2", "3", "4", "5")
-			Expect(pfAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(pfAdd.Err()).NotTo(gomega.HaveOccurred())
 
 			pfCount := adapter.PFCount(ctx, "hll1")
-			Expect(pfCount.Err()).NotTo(HaveOccurred())
-			Expect(pfCount.Val()).To(Equal(int64(5)))
+			gomega.Expect(pfCount.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(pfCount.Val()).To(gomega.Equal(int64(5)))
 
 			pfAdd = adapter.PFAdd(ctx, "hll2", "a", "b", "c", "d", "e")
-			Expect(pfAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(pfAdd.Err()).NotTo(gomega.HaveOccurred())
 
 			pfMerge := adapter.PFMerge(ctx, "hllMerged", "hll1", "hll2")
-			Expect(pfMerge.Err()).NotTo(HaveOccurred())
+			gomega.Expect(pfMerge.Err()).NotTo(gomega.HaveOccurred())
 
 			pfCount = adapter.PFCount(ctx, "hllMerged")
-			Expect(pfCount.Err()).NotTo(HaveOccurred())
-			Expect(pfCount.Val()).To(Equal(int64(10)))
+			gomega.Expect(pfCount.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(pfCount.Val()).To(gomega.Equal(int64(10)))
 
 			pfCount = adapter.PFCount(ctx, "hll1", "hll2")
-			Expect(pfCount.Err()).NotTo(HaveOccurred())
-			Expect(pfCount.Val()).To(Equal(int64(10)))
+			gomega.Expect(pfCount.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(pfCount.Val()).To(gomega.Equal(int64(10)))
 		})
 	})
 
-	Describe("lists", func() {
-		It("should BLPop", func() {
+	ginkgo.Describe("lists", func() {
+		ginkgo.It("should BLPop", func() {
 			rPush := adapter.RPush(ctx, "list1", "a", "b", "c")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 
 			bLPop := adapter.BLPop(ctx, 0, "list1", "list2")
-			Expect(bLPop.Err()).NotTo(HaveOccurred())
-			Expect(bLPop.Val()).To(Equal([]string{"list1", "a"}))
+			gomega.Expect(bLPop.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(bLPop.Val()).To(gomega.Equal([]string{"list1", "a"}))
 		})
 
-		It("should BLPopBlocks", func() {
+		ginkgo.It("should BLPopBlocks", func() {
 			started := make(chan bool)
 			done := make(chan bool)
 			go func() {
-				defer GinkgoRecover()
+				defer ginkgo.GinkgoRecover()
 
 				started <- true
 				bLPop := adapter.BLPop(ctx, 0, "list")
-				Expect(bLPop.Err()).NotTo(HaveOccurred())
-				Expect(bLPop.Val()).To(Equal([]string{"list", "a"}))
+				gomega.Expect(bLPop.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(bLPop.Val()).To(gomega.Equal([]string{"list", "a"}))
 				done <- true
 			}()
 			<-started
 
 			select {
 			case <-done:
-				Fail("BLPop is not blocked")
+				ginkgo.Fail("BLPop is not blocked")
 			case <-time.After(time.Second):
 				// ok
 			}
 
 			rPush := adapter.RPush(ctx, "list", "a")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 
 			select {
 			case <-done:
 				// ok
 			case <-time.After(time.Second):
-				Fail("BLPop is still blocked")
+				ginkgo.Fail("BLPop is still blocked")
 			}
 		})
 
-		It("should BLPop timeout", func() {
+		ginkgo.It("should BLPop timeout", func() {
 			val, err := adapter.BLPop(ctx, time.Second, "list1").Result()
-			Expect(rueidis.IsRedisNil(err)).To(BeTrue())
-			Expect(val).To(BeNil())
+			gomega.Expect(rueidis.IsRedisNil(err)).To(gomega.BeTrue())
+			gomega.Expect(val).To(gomega.BeNil())
 
-			Expect(adapter.Ping(ctx).Err()).NotTo(HaveOccurred())
+			gomega.Expect(adapter.Ping(ctx).Err()).NotTo(gomega.HaveOccurred())
 		})
 
-		It("should BRPop", func() {
+		ginkgo.It("should BRPop", func() {
 			rPush := adapter.RPush(ctx, "list1", "a", "b", "c")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 
 			bRPop := adapter.BRPop(ctx, 0, "list1", "list2")
-			Expect(bRPop.Err()).NotTo(HaveOccurred())
-			Expect(bRPop.Val()).To(Equal([]string{"list1", "c"}))
+			gomega.Expect(bRPop.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(bRPop.Val()).To(gomega.Equal([]string{"list1", "c"}))
 		})
 
-		It("should BRPop blocks", func() {
+		ginkgo.It("should BRPop blocks", func() {
 			started := make(chan bool)
 			done := make(chan bool)
 			go func() {
-				defer GinkgoRecover()
+				defer ginkgo.GinkgoRecover()
 
 				started <- true
 				brpop := adapter.BRPop(ctx, 0, "list")
-				Expect(brpop.Err()).NotTo(HaveOccurred())
-				Expect(brpop.Val()).To(Equal([]string{"list", "a"}))
+				gomega.Expect(brpop.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(brpop.Val()).To(gomega.Equal([]string{"list", "a"}))
 				done <- true
 			}()
 			<-started
 
 			select {
 			case <-done:
-				Fail("BRPop is not blocked")
+				ginkgo.Fail("BRPop is not blocked")
 			case <-time.After(time.Second):
 				// ok
 			}
 
 			rPush := adapter.RPush(ctx, "list", "a")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 
 			select {
 			case <-done:
 				// ok
 			case <-time.After(time.Second):
-				Fail("BRPop is still blocked")
+				ginkgo.Fail("BRPop is still blocked")
 				// ok
 			}
 		})
 
-		It("should BRPopLPush", func() {
+		ginkgo.It("should BRPopLPush", func() {
 			_, err := adapter.BRPopLPush(ctx, "list1", "list2", time.Second).Result()
-			Expect(rueidis.IsRedisNil(err)).To(BeTrue())
+			gomega.Expect(rueidis.IsRedisNil(err)).To(gomega.BeTrue())
 
 			err = adapter.RPush(ctx, "list1", "a", "b", "c").Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			v, err := adapter.BRPopLPush(ctx, "list1", "list2", 0).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(v).To(Equal("c"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(v).To(gomega.Equal("c"))
 		})
 
-		It("should LIndex", func() {
+		ginkgo.It("should LIndex", func() {
 			lPush := adapter.LPush(ctx, "list", "World")
-			Expect(lPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(lPush.Err()).NotTo(gomega.HaveOccurred())
 			lPush = adapter.LPush(ctx, "list", "Hello")
-			Expect(lPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(lPush.Err()).NotTo(gomega.HaveOccurred())
 
 			lIndex := adapter.LIndex(ctx, "list", 0)
-			Expect(lIndex.Err()).NotTo(HaveOccurred())
-			Expect(lIndex.Val()).To(Equal("Hello"))
+			gomega.Expect(lIndex.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lIndex.Val()).To(gomega.Equal("Hello"))
 
 			lIndex = adapter.LIndex(ctx, "list", -1)
-			Expect(lIndex.Err()).NotTo(HaveOccurred())
-			Expect(lIndex.Val()).To(Equal("World"))
+			gomega.Expect(lIndex.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lIndex.Val()).To(gomega.Equal("World"))
 
 			lIndex = adapter.LIndex(ctx, "list", 3)
-			Expect(rueidis.IsRedisNil(lIndex.Err())).To(BeTrue())
-			Expect(lIndex.Val()).To(Equal(""))
+			gomega.Expect(rueidis.IsRedisNil(lIndex.Err())).To(gomega.BeTrue())
+			gomega.Expect(lIndex.Val()).To(gomega.Equal(""))
 		})
 
-		It("LInsert should panic", func() {
-			Expect(func() {
+		ginkgo.It("LInsert should panic", func() {
+			gomega.Expect(func() {
 				adapter.LInsert(ctx, "list", "ANY", "World", "There")
-			}).To(Panic())
+			}).To(gomega.Panic())
 		})
 
-		It("should LInsert", func() {
+		ginkgo.It("should LInsert", func() {
 			rPush := adapter.RPush(ctx, "list", "Hello")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 			rPush = adapter.RPush(ctx, "list", "World")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 
 			lInsert := adapter.LInsert(ctx, "list", "BEFORE", "World", "There")
-			Expect(lInsert.Err()).NotTo(HaveOccurred())
-			Expect(lInsert.Val()).To(Equal(int64(3)))
+			gomega.Expect(lInsert.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lInsert.Val()).To(gomega.Equal(int64(3)))
 
 			lRange := adapter.LRange(ctx, "list", 0, -1)
-			Expect(lRange.Err()).NotTo(HaveOccurred())
-			Expect(lRange.Val()).To(Equal([]string{"Hello", "There", "World"}))
+			gomega.Expect(lRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lRange.Val()).To(gomega.Equal([]string{"Hello", "There", "World"}))
 
 			lInsert = adapter.LInsert(ctx, "list", "AFTER", "World", "There")
-			Expect(lInsert.Err()).NotTo(HaveOccurred())
-			Expect(lInsert.Val()).To(Equal(int64(4)))
+			gomega.Expect(lInsert.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lInsert.Val()).To(gomega.Equal(int64(4)))
 
 			lRange = adapter.LRange(ctx, "list", 0, -1)
-			Expect(lRange.Err()).NotTo(HaveOccurred())
-			Expect(lRange.Val()).To(Equal([]string{"Hello", "There", "World", "There"}))
+			gomega.Expect(lRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lRange.Val()).To(gomega.Equal([]string{"Hello", "There", "World", "There"}))
 		})
 
-		It("should LInsert", func() {
+		ginkgo.It("should LInsert", func() {
 			rPush := adapter.RPush(ctx, "list", "Hello")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 			rPush = adapter.RPush(ctx, "list", "World")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 
 			lInsert := adapter.LInsertBefore(ctx, "list", "World", "There")
-			Expect(lInsert.Err()).NotTo(HaveOccurred())
-			Expect(lInsert.Val()).To(Equal(int64(3)))
+			gomega.Expect(lInsert.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lInsert.Val()).To(gomega.Equal(int64(3)))
 
 			lRange := adapter.LRange(ctx, "list", 0, -1)
-			Expect(lRange.Err()).NotTo(HaveOccurred())
-			Expect(lRange.Val()).To(Equal([]string{"Hello", "There", "World"}))
+			gomega.Expect(lRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lRange.Val()).To(gomega.Equal([]string{"Hello", "There", "World"}))
 
 			lInsert = adapter.LInsertAfter(ctx, "list", "World", "There")
-			Expect(lInsert.Err()).NotTo(HaveOccurred())
-			Expect(lInsert.Val()).To(Equal(int64(4)))
+			gomega.Expect(lInsert.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lInsert.Val()).To(gomega.Equal(int64(4)))
 
 			lRange = adapter.LRange(ctx, "list", 0, -1)
-			Expect(lRange.Err()).NotTo(HaveOccurred())
-			Expect(lRange.Val()).To(Equal([]string{"Hello", "There", "World", "There"}))
+			gomega.Expect(lRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lRange.Val()).To(gomega.Equal([]string{"Hello", "There", "World", "There"}))
 		})
 
 		if resp3 {
-			It("should LMPop", func() {
+			ginkgo.It("should LMPop", func() {
 				err := adapter.LPush(ctx, "list1", "one", "two", "three", "four", "five").Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				err = adapter.LPush(ctx, "list2", "a", "b", "c", "d", "e").Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				key, val, err := adapter.LMPop(ctx, "left", 3, "list1", "list2").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(key).To(Equal("list1"))
-				Expect(val).To(Equal([]string{"five", "four", "three"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(key).To(gomega.Equal("list1"))
+				gomega.Expect(val).To(gomega.Equal([]string{"five", "four", "three"}))
 
 				key, val, err = adapter.LMPop(ctx, "right", 3, "list1", "list2").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(key).To(Equal("list1"))
-				Expect(val).To(Equal([]string{"one", "two"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(key).To(gomega.Equal("list1"))
+				gomega.Expect(val).To(gomega.Equal([]string{"one", "two"}))
 
 				key, val, err = adapter.LMPop(ctx, "left", 1, "list1", "list2").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(key).To(Equal("list2"))
-				Expect(val).To(Equal([]string{"e"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(key).To(gomega.Equal("list2"))
+				gomega.Expect(val).To(gomega.Equal([]string{"e"}))
 
 				key, val, err = adapter.LMPop(ctx, "right", 10, "list1", "list2").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(key).To(Equal("list2"))
-				Expect(val).To(Equal([]string{"a", "b", "c", "d"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(key).To(gomega.Equal("list2"))
+				gomega.Expect(val).To(gomega.Equal([]string{"a", "b", "c", "d"}))
 
 				err = adapter.LMPop(ctx, "left", 10, "list1", "list2").Err()
-				Expect(err).To(Equal(rueidis.Nil))
+				gomega.Expect(err).To(gomega.Equal(rueidis.Nil))
 
 				err = adapter.Set(ctx, "list3", 1024, 0).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				err = adapter.LMPop(ctx, "left", 10, "list1", "list2", "list3").Err()
-				Expect(err.Error()).To(Equal("WRONGTYPE Operation against a key holding the wrong kind of value"))
+				gomega.Expect(err.Error()).To(gomega.Equal("WRONGTYPE Operation against a key holding the wrong kind of value"))
 
 				err = adapter.LMPop(ctx, "right", 0, "list1", "list2").Err()
-				Expect(err).To(HaveOccurred())
+				gomega.Expect(err).To(gomega.HaveOccurred())
 			})
 
-			It("should BLMPop", func() {
+			ginkgo.It("should BLMPop", func() {
 				err := adapter.LPush(ctx, "list1", "one", "two", "three", "four", "five").Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				err = adapter.LPush(ctx, "list2", "a", "b", "c", "d", "e").Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				key, val, err := adapter.BLMPop(ctx, 0, "left", 3, "list1", "list2").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(key).To(Equal("list1"))
-				Expect(val).To(Equal([]string{"five", "four", "three"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(key).To(gomega.Equal("list1"))
+				gomega.Expect(val).To(gomega.Equal([]string{"five", "four", "three"}))
 
 				key, val, err = adapter.BLMPop(ctx, 0, "right", 3, "list1", "list2").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(key).To(Equal("list1"))
-				Expect(val).To(Equal([]string{"one", "two"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(key).To(gomega.Equal("list1"))
+				gomega.Expect(val).To(gomega.Equal([]string{"one", "two"}))
 
 				key, val, err = adapter.BLMPop(ctx, 0, "left", 1, "list1", "list2").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(key).To(Equal("list2"))
-				Expect(val).To(Equal([]string{"e"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(key).To(gomega.Equal("list2"))
+				gomega.Expect(val).To(gomega.Equal([]string{"e"}))
 
 				key, val, err = adapter.BLMPop(ctx, 0, "right", 10, "list1", "list2").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(key).To(Equal("list2"))
-				Expect(val).To(Equal([]string{"a", "b", "c", "d"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(key).To(gomega.Equal("list2"))
+				gomega.Expect(val).To(gomega.Equal([]string{"a", "b", "c", "d"}))
 
 			})
 
-			It("should BLMPopBlocks", func() {
+			ginkgo.It("should BLMPopBlocks", func() {
 				started := make(chan bool)
 				done := make(chan bool)
 				go func() {
-					defer GinkgoRecover()
+					defer ginkgo.GinkgoRecover()
 
 					started <- true
 					key, val, err := adapter.BLMPop(ctx, 0, "left", 1, "list_list").Result()
-					Expect(err).NotTo(HaveOccurred())
-					Expect(key).To(Equal("list_list"))
-					Expect(val).To(Equal([]string{"a"}))
+					gomega.Expect(err).NotTo(gomega.HaveOccurred())
+					gomega.Expect(key).To(gomega.Equal("list_list"))
+					gomega.Expect(val).To(gomega.Equal([]string{"a"}))
 					done <- true
 				}()
 				<-started
 
 				select {
 				case <-done:
-					Fail("BLMPop is not blocked")
+					ginkgo.Fail("BLMPop is not blocked")
 				case <-time.After(time.Second):
-					//ok
+					// ok
 				}
 
 				_, err := adapter.LPush(ctx, "list_list", "a").Result()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				select {
 				case <-done:
-					//ok
+					// ok
 				case <-time.After(time.Second):
-					Fail("BLMPop is still blocked")
+					ginkgo.Fail("BLMPop is still blocked")
 				}
 			})
 
-			It("should BLMPop timeout", func() {
+			ginkgo.It("should BLMPop timeout", func() {
 				_, val, err := adapter.BLMPop(ctx, time.Second, "left", 1, "list1").Result()
-				Expect(err).To(Equal(rueidis.Nil))
-				Expect(val).To(BeNil())
+				gomega.Expect(err).To(gomega.Equal(rueidis.Nil))
+				gomega.Expect(val).To(gomega.BeNil())
 
-				Expect(adapter.Ping(ctx).Err()).NotTo(HaveOccurred())
+				gomega.Expect(adapter.Ping(ctx).Err()).NotTo(gomega.HaveOccurred())
 			})
 		}
 
-		It("should LLen", func() {
+		ginkgo.It("should LLen", func() {
 			lPush := adapter.LPush(ctx, "list", "World")
-			Expect(lPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(lPush.Err()).NotTo(gomega.HaveOccurred())
 			lPush = adapter.LPush(ctx, "list", "Hello")
-			Expect(lPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(lPush.Err()).NotTo(gomega.HaveOccurred())
 
 			lLen := adapter.LLen(ctx, "list")
-			Expect(lLen.Err()).NotTo(HaveOccurred())
-			Expect(lLen.Val()).To(Equal(int64(2)))
+			gomega.Expect(lLen.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lLen.Val()).To(gomega.Equal(int64(2)))
 		})
 
-		It("should LPop", func() {
+		ginkgo.It("should LPop", func() {
 			rPush := adapter.RPush(ctx, "list", "one")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 			rPush = adapter.RPush(ctx, "list", "two")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 			rPush = adapter.RPush(ctx, "list", "three")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 
 			lPop := adapter.LPop(ctx, "list")
-			Expect(lPop.Err()).NotTo(HaveOccurred())
-			Expect(lPop.Val()).To(Equal("one"))
+			gomega.Expect(lPop.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lPop.Val()).To(gomega.Equal("one"))
 
 			lRange := adapter.LRange(ctx, "list", 0, -1)
-			Expect(lRange.Err()).NotTo(HaveOccurred())
-			Expect(lRange.Val()).To(Equal([]string{"two", "three"}))
+			gomega.Expect(lRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lRange.Val()).To(gomega.Equal([]string{"two", "three"}))
 		})
 
 		if resp3 {
-			It("should LPopCount", func() {
+			ginkgo.It("should LPopCount", func() {
 				rPush := adapter.RPush(ctx, "list", "one")
-				Expect(rPush.Err()).NotTo(HaveOccurred())
+				gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 				rPush = adapter.RPush(ctx, "list", "two")
-				Expect(rPush.Err()).NotTo(HaveOccurred())
+				gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 				rPush = adapter.RPush(ctx, "list", "three")
-				Expect(rPush.Err()).NotTo(HaveOccurred())
+				gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 				rPush = adapter.RPush(ctx, "list", "four")
-				Expect(rPush.Err()).NotTo(HaveOccurred())
+				gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 
 				lPopCount := adapter.LPopCount(ctx, "list", 2)
-				Expect(lPopCount.Err()).NotTo(HaveOccurred())
-				Expect(lPopCount.Val()).To(Equal([]string{"one", "two"}))
+				gomega.Expect(lPopCount.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(lPopCount.Val()).To(gomega.Equal([]string{"one", "two"}))
 
 				lRange := adapter.LRange(ctx, "list", 0, -1)
-				Expect(lRange.Err()).NotTo(HaveOccurred())
-				Expect(lRange.Val()).To(Equal([]string{"three", "four"}))
+				gomega.Expect(lRange.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(lRange.Val()).To(gomega.Equal([]string{"three", "four"}))
 			})
 
-			It("should LPos", func() {
+			ginkgo.It("should LPos", func() {
 				rPush := adapter.RPush(ctx, "list", "a")
-				Expect(rPush.Err()).NotTo(HaveOccurred())
+				gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 				rPush = adapter.RPush(ctx, "list", "b")
-				Expect(rPush.Err()).NotTo(HaveOccurred())
+				gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 				rPush = adapter.RPush(ctx, "list", "c")
-				Expect(rPush.Err()).NotTo(HaveOccurred())
+				gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 				rPush = adapter.RPush(ctx, "list", "b")
-				Expect(rPush.Err()).NotTo(HaveOccurred())
+				gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 
 				lPos := adapter.LPos(ctx, "list", "b", LPosArgs{})
-				Expect(lPos.Err()).NotTo(HaveOccurred())
-				Expect(lPos.Val()).To(Equal(int64(1)))
+				gomega.Expect(lPos.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(lPos.Val()).To(gomega.Equal(int64(1)))
 
 				lPos = adapter.LPos(ctx, "list", "b", LPosArgs{Rank: 2})
-				Expect(lPos.Err()).NotTo(HaveOccurred())
-				Expect(lPos.Val()).To(Equal(int64(3)))
+				gomega.Expect(lPos.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(lPos.Val()).To(gomega.Equal(int64(3)))
 
 				lPos = adapter.LPos(ctx, "list", "b", LPosArgs{Rank: -2})
-				Expect(lPos.Err()).NotTo(HaveOccurred())
-				Expect(lPos.Val()).To(Equal(int64(1)))
+				gomega.Expect(lPos.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(lPos.Val()).To(gomega.Equal(int64(1)))
 
 				lPos = adapter.LPos(ctx, "list", "b", LPosArgs{Rank: 2, MaxLen: 1})
-				Expect(rueidis.IsRedisNil(lPos.Err())).To(BeTrue())
+				gomega.Expect(rueidis.IsRedisNil(lPos.Err())).To(gomega.BeTrue())
 
 				lPos = adapter.LPos(ctx, "list", "z", LPosArgs{})
-				Expect(rueidis.IsRedisNil(lPos.Err())).To(BeTrue())
+				gomega.Expect(rueidis.IsRedisNil(lPos.Err())).To(gomega.BeTrue())
 			})
 
-			It("should LPosCount", func() {
+			ginkgo.It("should LPosCount", func() {
 				rPush := adapter.RPush(ctx, "list", "a")
-				Expect(rPush.Err()).NotTo(HaveOccurred())
+				gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 				rPush = adapter.RPush(ctx, "list", "b")
-				Expect(rPush.Err()).NotTo(HaveOccurred())
+				gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 				rPush = adapter.RPush(ctx, "list", "c")
-				Expect(rPush.Err()).NotTo(HaveOccurred())
+				gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 				rPush = adapter.RPush(ctx, "list", "b")
-				Expect(rPush.Err()).NotTo(HaveOccurred())
+				gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 
 				lPos := adapter.LPosCount(ctx, "list", "b", 2, LPosArgs{})
-				Expect(lPos.Err()).NotTo(HaveOccurred())
-				Expect(lPos.Val()).To(Equal([]int64{1, 3}))
+				gomega.Expect(lPos.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(lPos.Val()).To(gomega.Equal([]int64{1, 3}))
 
 				lPos = adapter.LPosCount(ctx, "list", "b", 2, LPosArgs{Rank: 2})
-				Expect(lPos.Err()).NotTo(HaveOccurred())
-				Expect(lPos.Val()).To(Equal([]int64{3}))
+				gomega.Expect(lPos.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(lPos.Val()).To(gomega.Equal([]int64{3}))
 
 				lPos = adapter.LPosCount(ctx, "list", "b", 1, LPosArgs{Rank: 1, MaxLen: 1})
-				Expect(lPos.Err()).NotTo(HaveOccurred())
-				Expect(lPos.Val()).To(Equal([]int64{}))
+				gomega.Expect(lPos.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(lPos.Val()).To(gomega.Equal([]int64{}))
 
 				lPos = adapter.LPosCount(ctx, "list", "b", 1, LPosArgs{Rank: 1, MaxLen: 0})
-				Expect(lPos.Err()).NotTo(HaveOccurred())
-				Expect(lPos.Val()).To(Equal([]int64{1}))
+				gomega.Expect(lPos.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(lPos.Val()).To(gomega.Equal([]int64{1}))
 			})
 		}
 
-		It("should LPush", func() {
+		ginkgo.It("should LPush", func() {
 			lPush := adapter.LPush(ctx, "list", "World")
-			Expect(lPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(lPush.Err()).NotTo(gomega.HaveOccurred())
 			lPush = adapter.LPush(ctx, "list", "Hello")
-			Expect(lPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(lPush.Err()).NotTo(gomega.HaveOccurred())
 
 			lRange := adapter.LRange(ctx, "list", 0, -1)
-			Expect(lRange.Err()).NotTo(HaveOccurred())
-			Expect(lRange.Val()).To(Equal([]string{"Hello", "World"}))
+			gomega.Expect(lRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lRange.Val()).To(gomega.Equal([]string{"Hello", "World"}))
 		})
 
-		It("should LPushX", func() {
+		ginkgo.It("should LPushX", func() {
 			lPush := adapter.LPush(ctx, "list", "World")
-			Expect(lPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(lPush.Err()).NotTo(gomega.HaveOccurred())
 
 			lPushX := adapter.LPushX(ctx, "list", "Hello")
-			Expect(lPushX.Err()).NotTo(HaveOccurred())
-			Expect(lPushX.Val()).To(Equal(int64(2)))
+			gomega.Expect(lPushX.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lPushX.Val()).To(gomega.Equal(int64(2)))
 
 			lPush = adapter.LPush(ctx, "list1", "three")
-			Expect(lPush.Err()).NotTo(HaveOccurred())
-			Expect(lPush.Val()).To(Equal(int64(1)))
+			gomega.Expect(lPush.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lPush.Val()).To(gomega.Equal(int64(1)))
 
 			lPushX = adapter.LPushX(ctx, "list1", "two", "one")
-			Expect(lPushX.Err()).NotTo(HaveOccurred())
-			Expect(lPushX.Val()).To(Equal(int64(3)))
+			gomega.Expect(lPushX.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lPushX.Val()).To(gomega.Equal(int64(3)))
 
 			lPushX = adapter.LPushX(ctx, "list2", "Hello")
-			Expect(lPushX.Err()).NotTo(HaveOccurred())
-			Expect(lPushX.Val()).To(Equal(int64(0)))
+			gomega.Expect(lPushX.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lPushX.Val()).To(gomega.Equal(int64(0)))
 
 			lRange := adapter.LRange(ctx, "list", 0, -1)
-			Expect(lRange.Err()).NotTo(HaveOccurred())
-			Expect(lRange.Val()).To(Equal([]string{"Hello", "World"}))
+			gomega.Expect(lRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lRange.Val()).To(gomega.Equal([]string{"Hello", "World"}))
 
 			lRange = adapter.LRange(ctx, "list1", 0, -1)
-			Expect(lRange.Err()).NotTo(HaveOccurred())
-			Expect(lRange.Val()).To(Equal([]string{"one", "two", "three"}))
+			gomega.Expect(lRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lRange.Val()).To(gomega.Equal([]string{"one", "two", "three"}))
 
 			lRange = adapter.LRange(ctx, "list2", 0, -1)
-			Expect(lRange.Err()).NotTo(HaveOccurred())
-			Expect(lRange.Val()).To(Equal([]string{}))
+			gomega.Expect(lRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lRange.Val()).To(gomega.Equal([]string{}))
 		})
 
-		It("should LRange", func() {
+		ginkgo.It("should LRange", func() {
 			rPush := adapter.RPush(ctx, "list", "one")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 			rPush = adapter.RPush(ctx, "list", "two")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 			rPush = adapter.RPush(ctx, "list", "three")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 
 			lRange := adapter.LRange(ctx, "list", 0, 0)
-			Expect(lRange.Err()).NotTo(HaveOccurred())
-			Expect(lRange.Val()).To(Equal([]string{"one"}))
+			gomega.Expect(lRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lRange.Val()).To(gomega.Equal([]string{"one"}))
 
 			lRange = adapter.LRange(ctx, "list", -3, 2)
-			Expect(lRange.Err()).NotTo(HaveOccurred())
-			Expect(lRange.Val()).To(Equal([]string{"one", "two", "three"}))
+			gomega.Expect(lRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lRange.Val()).To(gomega.Equal([]string{"one", "two", "three"}))
 
 			lRange = adapter.LRange(ctx, "list", -100, 100)
-			Expect(lRange.Err()).NotTo(HaveOccurred())
-			Expect(lRange.Val()).To(Equal([]string{"one", "two", "three"}))
+			gomega.Expect(lRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lRange.Val()).To(gomega.Equal([]string{"one", "two", "three"}))
 
 			lRange = adapter.LRange(ctx, "list", 5, 10)
-			Expect(lRange.Err()).NotTo(HaveOccurred())
-			Expect(lRange.Val()).To(Equal([]string{}))
+			gomega.Expect(lRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lRange.Val()).To(gomega.Equal([]string{}))
 		})
 
-		It("should LRem", func() {
+		ginkgo.It("should LRem", func() {
 			rPush := adapter.RPush(ctx, "list", "hello")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 			rPush = adapter.RPush(ctx, "list", "hello")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 			rPush = adapter.RPush(ctx, "list", "key")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 			rPush = adapter.RPush(ctx, "list", "hello")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 
 			lRem := adapter.LRem(ctx, "list", -2, "hello")
-			Expect(lRem.Err()).NotTo(HaveOccurred())
-			Expect(lRem.Val()).To(Equal(int64(2)))
+			gomega.Expect(lRem.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lRem.Val()).To(gomega.Equal(int64(2)))
 
 			lRange := adapter.LRange(ctx, "list", 0, -1)
-			Expect(lRange.Err()).NotTo(HaveOccurred())
-			Expect(lRange.Val()).To(Equal([]string{"hello", "key"}))
+			gomega.Expect(lRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lRange.Val()).To(gomega.Equal([]string{"hello", "key"}))
 		})
 
-		It("should LSet", func() {
+		ginkgo.It("should LSet", func() {
 			rPush := adapter.RPush(ctx, "list", "one")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 			rPush = adapter.RPush(ctx, "list", "two")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 			rPush = adapter.RPush(ctx, "list", "three")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 
 			lSet := adapter.LSet(ctx, "list", 0, "four")
-			Expect(lSet.Err()).NotTo(HaveOccurred())
-			Expect(lSet.Val()).To(Equal("OK"))
+			gomega.Expect(lSet.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lSet.Val()).To(gomega.Equal("OK"))
 
 			lSet = adapter.LSet(ctx, "list", -2, "five")
-			Expect(lSet.Err()).NotTo(HaveOccurred())
-			Expect(lSet.Val()).To(Equal("OK"))
+			gomega.Expect(lSet.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lSet.Val()).To(gomega.Equal("OK"))
 
 			lRange := adapter.LRange(ctx, "list", 0, -1)
-			Expect(lRange.Err()).NotTo(HaveOccurred())
-			Expect(lRange.Val()).To(Equal([]string{"four", "five", "three"}))
+			gomega.Expect(lRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lRange.Val()).To(gomega.Equal([]string{"four", "five", "three"}))
 		})
 
-		It("should LTrim", func() {
+		ginkgo.It("should LTrim", func() {
 			rPush := adapter.RPush(ctx, "list", "one")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 			rPush = adapter.RPush(ctx, "list", "two")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 			rPush = adapter.RPush(ctx, "list", "three")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 
 			lTrim := adapter.LTrim(ctx, "list", 1, -1)
-			Expect(lTrim.Err()).NotTo(HaveOccurred())
-			Expect(lTrim.Val()).To(Equal("OK"))
+			gomega.Expect(lTrim.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lTrim.Val()).To(gomega.Equal("OK"))
 
 			lRange := adapter.LRange(ctx, "list", 0, -1)
-			Expect(lRange.Err()).NotTo(HaveOccurred())
-			Expect(lRange.Val()).To(Equal([]string{"two", "three"}))
+			gomega.Expect(lRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lRange.Val()).To(gomega.Equal([]string{"two", "three"}))
 		})
 
-		It("should RPop", func() {
+		ginkgo.It("should RPop", func() {
 			rPush := adapter.RPush(ctx, "list", "one")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 			rPush = adapter.RPush(ctx, "list", "two")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 			rPush = adapter.RPush(ctx, "list", "three")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 
 			rPop := adapter.RPop(ctx, "list")
-			Expect(rPop.Err()).NotTo(HaveOccurred())
-			Expect(rPop.Val()).To(Equal("three"))
+			gomega.Expect(rPop.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(rPop.Val()).To(gomega.Equal("three"))
 
 			lRange := adapter.LRange(ctx, "list", 0, -1)
-			Expect(lRange.Err()).NotTo(HaveOccurred())
-			Expect(lRange.Val()).To(Equal([]string{"one", "two"}))
+			gomega.Expect(lRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lRange.Val()).To(gomega.Equal([]string{"one", "two"}))
 		})
 
 		if resp3 {
-			It("should RPopCount", func() {
+			ginkgo.It("should RPopCount", func() {
 				rPush := adapter.RPush(ctx, "list", "one", "two", "three", "four")
-				Expect(rPush.Err()).NotTo(HaveOccurred())
-				Expect(rPush.Val()).To(Equal(int64(4)))
+				gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(rPush.Val()).To(gomega.Equal(int64(4)))
 
 				rPopCount := adapter.RPopCount(ctx, "list", 2)
-				Expect(rPopCount.Err()).NotTo(HaveOccurred())
-				Expect(rPopCount.Val()).To(Equal([]string{"four", "three"}))
+				gomega.Expect(rPopCount.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(rPopCount.Val()).To(gomega.Equal([]string{"four", "three"}))
 
 				lRange := adapter.LRange(ctx, "list", 0, -1)
-				Expect(lRange.Err()).NotTo(HaveOccurred())
-				Expect(lRange.Val()).To(Equal([]string{"one", "two"}))
+				gomega.Expect(lRange.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(lRange.Val()).To(gomega.Equal([]string{"one", "two"}))
 			})
 		}
 
-		It("should RPopLPush", func() {
+		ginkgo.It("should RPopLPush", func() {
 			rPush := adapter.RPush(ctx, "list", "one")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 			rPush = adapter.RPush(ctx, "list", "two")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 			rPush = adapter.RPush(ctx, "list", "three")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 
 			rPopLPush := adapter.RPopLPush(ctx, "list", "list2")
-			Expect(rPopLPush.Err()).NotTo(HaveOccurred())
-			Expect(rPopLPush.Val()).To(Equal("three"))
+			gomega.Expect(rPopLPush.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(rPopLPush.Val()).To(gomega.Equal("three"))
 
 			lRange := adapter.LRange(ctx, "list", 0, -1)
-			Expect(lRange.Err()).NotTo(HaveOccurred())
-			Expect(lRange.Val()).To(Equal([]string{"one", "two"}))
+			gomega.Expect(lRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lRange.Val()).To(gomega.Equal([]string{"one", "two"}))
 
 			lRange = adapter.LRange(ctx, "list2", 0, -1)
-			Expect(lRange.Err()).NotTo(HaveOccurred())
-			Expect(lRange.Val()).To(Equal([]string{"three"}))
+			gomega.Expect(lRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lRange.Val()).To(gomega.Equal([]string{"three"}))
 		})
 
-		It("should RPush", func() {
+		ginkgo.It("should RPush", func() {
 			rPush := adapter.RPush(ctx, "list", "Hello")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
-			Expect(rPush.Val()).To(Equal(int64(1)))
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(rPush.Val()).To(gomega.Equal(int64(1)))
 
 			rPush = adapter.RPush(ctx, "list", "World")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
-			Expect(rPush.Val()).To(Equal(int64(2)))
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(rPush.Val()).To(gomega.Equal(int64(2)))
 
 			lRange := adapter.LRange(ctx, "list", 0, -1)
-			Expect(lRange.Err()).NotTo(HaveOccurred())
-			Expect(lRange.Val()).To(Equal([]string{"Hello", "World"}))
+			gomega.Expect(lRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lRange.Val()).To(gomega.Equal([]string{"Hello", "World"}))
 		})
 
-		It("should RPushX", func() {
+		ginkgo.It("should RPushX", func() {
 			rPush := adapter.RPush(ctx, "list", "Hello")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
-			Expect(rPush.Val()).To(Equal(int64(1)))
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(rPush.Val()).To(gomega.Equal(int64(1)))
 
 			rPushX := adapter.RPushX(ctx, "list", "World")
-			Expect(rPushX.Err()).NotTo(HaveOccurred())
-			Expect(rPushX.Val()).To(Equal(int64(2)))
+			gomega.Expect(rPushX.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(rPushX.Val()).To(gomega.Equal(int64(2)))
 
 			rPush = adapter.RPush(ctx, "list1", "one")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
-			Expect(rPush.Val()).To(Equal(int64(1)))
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(rPush.Val()).To(gomega.Equal(int64(1)))
 
 			rPushX = adapter.RPushX(ctx, "list1", "two", "three")
-			Expect(rPushX.Err()).NotTo(HaveOccurred())
-			Expect(rPushX.Val()).To(Equal(int64(3)))
+			gomega.Expect(rPushX.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(rPushX.Val()).To(gomega.Equal(int64(3)))
 
 			rPushX = adapter.RPushX(ctx, "list2", "World")
-			Expect(rPushX.Err()).NotTo(HaveOccurred())
-			Expect(rPushX.Val()).To(Equal(int64(0)))
+			gomega.Expect(rPushX.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(rPushX.Val()).To(gomega.Equal(int64(0)))
 
 			lRange := adapter.LRange(ctx, "list", 0, -1)
-			Expect(lRange.Err()).NotTo(HaveOccurred())
-			Expect(lRange.Val()).To(Equal([]string{"Hello", "World"}))
+			gomega.Expect(lRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lRange.Val()).To(gomega.Equal([]string{"Hello", "World"}))
 
 			lRange = adapter.LRange(ctx, "list1", 0, -1)
-			Expect(lRange.Err()).NotTo(HaveOccurred())
-			Expect(lRange.Val()).To(Equal([]string{"one", "two", "three"}))
+			gomega.Expect(lRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lRange.Val()).To(gomega.Equal([]string{"one", "two", "three"}))
 
 			lRange = adapter.LRange(ctx, "list2", 0, -1)
-			Expect(lRange.Err()).NotTo(HaveOccurred())
-			Expect(lRange.Val()).To(Equal([]string{}))
+			gomega.Expect(lRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lRange.Val()).To(gomega.Equal([]string{}))
 		})
 
 		if resp3 {
-			It("should LMove", func() {
+			ginkgo.It("should LMove", func() {
 				rPush := adapter.RPush(ctx, "lmove1", "ichi")
-				Expect(rPush.Err()).NotTo(HaveOccurred())
-				Expect(rPush.Val()).To(Equal(int64(1)))
+				gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(rPush.Val()).To(gomega.Equal(int64(1)))
 
 				rPush = adapter.RPush(ctx, "lmove1", "ni")
-				Expect(rPush.Err()).NotTo(HaveOccurred())
-				Expect(rPush.Val()).To(Equal(int64(2)))
+				gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(rPush.Val()).To(gomega.Equal(int64(2)))
 
 				rPush = adapter.RPush(ctx, "lmove1", "san")
-				Expect(rPush.Err()).NotTo(HaveOccurred())
-				Expect(rPush.Val()).To(Equal(int64(3)))
+				gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(rPush.Val()).To(gomega.Equal(int64(3)))
 
 				lMove := adapter.LMove(ctx, "lmove1", "lmove2", "RIGHT", "LEFT")
-				Expect(lMove.Err()).NotTo(HaveOccurred())
-				Expect(lMove.Val()).To(Equal("san"))
+				gomega.Expect(lMove.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(lMove.Val()).To(gomega.Equal("san"))
 
 				lRange := adapter.LRange(ctx, "lmove2", 0, -1)
-				Expect(lRange.Err()).NotTo(HaveOccurred())
-				Expect(lRange.Val()).To(Equal([]string{"san"}))
+				gomega.Expect(lRange.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(lRange.Val()).To(gomega.Equal([]string{"san"}))
 			})
 
-			It("should BLMove", func() {
+			ginkgo.It("should BLMove", func() {
 				rPush := adapter.RPush(ctx, "blmove1", "ichi")
-				Expect(rPush.Err()).NotTo(HaveOccurred())
-				Expect(rPush.Val()).To(Equal(int64(1)))
+				gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(rPush.Val()).To(gomega.Equal(int64(1)))
 
 				rPush = adapter.RPush(ctx, "blmove1", "ni")
-				Expect(rPush.Err()).NotTo(HaveOccurred())
-				Expect(rPush.Val()).To(Equal(int64(2)))
+				gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(rPush.Val()).To(gomega.Equal(int64(2)))
 
 				rPush = adapter.RPush(ctx, "blmove1", "san")
-				Expect(rPush.Err()).NotTo(HaveOccurred())
-				Expect(rPush.Val()).To(Equal(int64(3)))
+				gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(rPush.Val()).To(gomega.Equal(int64(3)))
 
 				blMove := adapter.BLMove(ctx, "blmove1", "blmove2", "RIGHT", "LEFT", time.Second)
-				Expect(blMove.Err()).NotTo(HaveOccurred())
-				Expect(blMove.Val()).To(Equal("san"))
+				gomega.Expect(blMove.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(blMove.Val()).To(gomega.Equal("san"))
 
 				lRange := adapter.LRange(ctx, "blmove2", 0, -1)
-				Expect(lRange.Err()).NotTo(HaveOccurred())
-				Expect(lRange.Val()).To(Equal([]string{"san"}))
+				gomega.Expect(lRange.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(lRange.Val()).To(gomega.Equal([]string{"san"}))
 			})
 		}
 	})
 
-	Describe("sets", func() {
-		It("should SAdd", func() {
+	ginkgo.Describe("sets", func() {
+		ginkgo.It("should SAdd", func() {
 			sAdd := adapter.SAdd(ctx, "set", "Hello")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
-			Expect(sAdd.Val()).To(Equal(int64(1)))
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sAdd.Val()).To(gomega.Equal(int64(1)))
 
 			sAdd = adapter.SAdd(ctx, "set", "World")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
-			Expect(sAdd.Val()).To(Equal(int64(1)))
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sAdd.Val()).To(gomega.Equal(int64(1)))
 
 			sAdd = adapter.SAdd(ctx, "set", "World")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
-			Expect(sAdd.Val()).To(Equal(int64(0)))
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sAdd.Val()).To(gomega.Equal(int64(0)))
 
 			sMembers := adapter.SMembers(ctx, "set")
-			Expect(sMembers.Err()).NotTo(HaveOccurred())
-			Expect(sMembers.Val()).To(ConsistOf([]string{"Hello", "World"}))
+			gomega.Expect(sMembers.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sMembers.Val()).To(gomega.ConsistOf([]string{"Hello", "World"}))
 		})
 
-		It("should SAdd strings", func() {
+		ginkgo.It("should SAdd strings", func() {
 			set := []string{"Hello", "World", "World"}
 			sAdd := adapter.SAdd(ctx, "set", set)
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
-			Expect(sAdd.Val()).To(Equal(int64(2)))
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sAdd.Val()).To(gomega.Equal(int64(2)))
 
 			sMembers := adapter.SMembers(ctx, "set")
-			Expect(sMembers.Err()).NotTo(HaveOccurred())
-			Expect(sMembers.Val()).To(ConsistOf([]string{"Hello", "World"}))
+			gomega.Expect(sMembers.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sMembers.Val()).To(gomega.ConsistOf([]string{"Hello", "World"}))
 		})
 
-		It("should SCard", func() {
+		ginkgo.It("should SCard", func() {
 			sAdd := adapter.SAdd(ctx, "set", "Hello")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
-			Expect(sAdd.Val()).To(Equal(int64(1)))
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sAdd.Val()).To(gomega.Equal(int64(1)))
 
 			sAdd = adapter.SAdd(ctx, "set", "World")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
-			Expect(sAdd.Val()).To(Equal(int64(1)))
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sAdd.Val()).To(gomega.Equal(int64(1)))
 
 			sCard := adapter.SCard(ctx, "set")
-			Expect(sCard.Err()).NotTo(HaveOccurred())
-			Expect(sCard.Val()).To(Equal(int64(2)))
+			gomega.Expect(sCard.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sCard.Val()).To(gomega.Equal(int64(2)))
 		})
 
-		It("should SDiff", func() {
+		ginkgo.It("should SDiff", func() {
 			sAdd := adapter.SAdd(ctx, "set1", "a")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 			sAdd = adapter.SAdd(ctx, "set1", "b")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 			sAdd = adapter.SAdd(ctx, "set1", "c")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 
 			sAdd = adapter.SAdd(ctx, "set2", "c")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 			sAdd = adapter.SAdd(ctx, "set2", "d")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 			sAdd = adapter.SAdd(ctx, "set2", "e")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 
 			sDiff := adapter.SDiff(ctx, "set1", "set2")
-			Expect(sDiff.Err()).NotTo(HaveOccurred())
-			Expect(sDiff.Val()).To(ConsistOf([]string{"a", "b"}))
+			gomega.Expect(sDiff.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sDiff.Val()).To(gomega.ConsistOf([]string{"a", "b"}))
 		})
 
-		It("should SDiffStore", func() {
+		ginkgo.It("should SDiffStore", func() {
 			sAdd := adapter.SAdd(ctx, "set1", "a")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 			sAdd = adapter.SAdd(ctx, "set1", "b")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 			sAdd = adapter.SAdd(ctx, "set1", "c")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 
 			sAdd = adapter.SAdd(ctx, "set2", "c")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 			sAdd = adapter.SAdd(ctx, "set2", "d")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 			sAdd = adapter.SAdd(ctx, "set2", "e")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 
 			sDiffStore := adapter.SDiffStore(ctx, "set", "set1", "set2")
-			Expect(sDiffStore.Err()).NotTo(HaveOccurred())
-			Expect(sDiffStore.Val()).To(Equal(int64(2)))
+			gomega.Expect(sDiffStore.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sDiffStore.Val()).To(gomega.Equal(int64(2)))
 
 			sMembers := adapter.SMembers(ctx, "set")
-			Expect(sMembers.Err()).NotTo(HaveOccurred())
-			Expect(sMembers.Val()).To(ConsistOf([]string{"a", "b"}))
+			gomega.Expect(sMembers.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sMembers.Val()).To(gomega.ConsistOf([]string{"a", "b"}))
 		})
 
-		It("should SInter", func() {
+		ginkgo.It("should SInter", func() {
 			sAdd := adapter.SAdd(ctx, "set1", "a")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 			sAdd = adapter.SAdd(ctx, "set1", "b")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 			sAdd = adapter.SAdd(ctx, "set1", "c")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 
 			sAdd = adapter.SAdd(ctx, "set2", "c")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 			sAdd = adapter.SAdd(ctx, "set2", "d")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 			sAdd = adapter.SAdd(ctx, "set2", "e")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 
 			sInter := adapter.SInter(ctx, "set1", "set2")
-			Expect(sInter.Err()).NotTo(HaveOccurred())
-			Expect(sInter.Val()).To(Equal([]string{"c"}))
+			gomega.Expect(sInter.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sInter.Val()).To(gomega.Equal([]string{"c"}))
 		})
 
 		if resp3 {
-			It("should SInterCard", func() {
+			ginkgo.It("should SInterCard", func() {
 				sAdd := adapter.SAdd(ctx, "set1", "a")
-				Expect(sAdd.Err()).NotTo(HaveOccurred())
+				gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 				sAdd = adapter.SAdd(ctx, "set1", "b")
-				Expect(sAdd.Err()).NotTo(HaveOccurred())
+				gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 				sAdd = adapter.SAdd(ctx, "set1", "c")
-				Expect(sAdd.Err()).NotTo(HaveOccurred())
+				gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 
 				sAdd = adapter.SAdd(ctx, "set2", "b")
-				Expect(sAdd.Err()).NotTo(HaveOccurred())
+				gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 				sAdd = adapter.SAdd(ctx, "set2", "c")
-				Expect(sAdd.Err()).NotTo(HaveOccurred())
+				gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 				sAdd = adapter.SAdd(ctx, "set2", "d")
-				Expect(sAdd.Err()).NotTo(HaveOccurred())
+				gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 				sAdd = adapter.SAdd(ctx, "set2", "e")
-				Expect(sAdd.Err()).NotTo(HaveOccurred())
+				gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 				// limit 0 means no limit,see https://redis.io/commands/sintercard/ for more details
 				sInterCard := adapter.SInterCard(ctx, 0, "set1", "set2")
-				Expect(sInterCard.Err()).NotTo(HaveOccurred())
-				Expect(sInterCard.Val()).To(Equal(int64(2)))
+				gomega.Expect(sInterCard.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(sInterCard.Val()).To(gomega.Equal(int64(2)))
 
 				sInterCard = adapter.SInterCard(ctx, 1, "set1", "set2")
-				Expect(sInterCard.Err()).NotTo(HaveOccurred())
-				Expect(sInterCard.Val()).To(Equal(int64(1)))
+				gomega.Expect(sInterCard.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(sInterCard.Val()).To(gomega.Equal(int64(1)))
 
 				sInterCard = adapter.SInterCard(ctx, 3, "set1", "set2")
-				Expect(sInterCard.Err()).NotTo(HaveOccurred())
-				Expect(sInterCard.Val()).To(Equal(int64(2)))
+				gomega.Expect(sInterCard.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(sInterCard.Val()).To(gomega.Equal(int64(2)))
 			})
 		}
 
-		It("should SInterStore", func() {
+		ginkgo.It("should SInterStore", func() {
 			sAdd := adapter.SAdd(ctx, "set1", "a")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 			sAdd = adapter.SAdd(ctx, "set1", "b")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 			sAdd = adapter.SAdd(ctx, "set1", "c")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 
 			sAdd = adapter.SAdd(ctx, "set2", "c")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 			sAdd = adapter.SAdd(ctx, "set2", "d")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 			sAdd = adapter.SAdd(ctx, "set2", "e")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 
 			sInterStore := adapter.SInterStore(ctx, "set", "set1", "set2")
-			Expect(sInterStore.Err()).NotTo(HaveOccurred())
-			Expect(sInterStore.Val()).To(Equal(int64(1)))
+			gomega.Expect(sInterStore.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sInterStore.Val()).To(gomega.Equal(int64(1)))
 
 			sMembers := adapter.SMembers(ctx, "set")
-			Expect(sMembers.Err()).NotTo(HaveOccurred())
-			Expect(sMembers.Val()).To(Equal([]string{"c"}))
+			gomega.Expect(sMembers.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sMembers.Val()).To(gomega.Equal([]string{"c"}))
 		})
 
-		It("should IsMember", func() {
+		ginkgo.It("should IsMember", func() {
 			sAdd := adapter.SAdd(ctx, "set", "one")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 
 			sIsMember := adapter.SIsMember(ctx, "set", "one")
-			Expect(sIsMember.Err()).NotTo(HaveOccurred())
-			Expect(sIsMember.Val()).To(Equal(true))
+			gomega.Expect(sIsMember.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sIsMember.Val()).To(gomega.Equal(true))
 
 			sIsMember = adapter.SIsMember(ctx, "set", "two")
-			Expect(sIsMember.Err()).NotTo(HaveOccurred())
-			Expect(sIsMember.Val()).To(Equal(false))
+			gomega.Expect(sIsMember.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sIsMember.Val()).To(gomega.Equal(false))
 		})
 
 		if resp3 {
-			It("should SMIsMember", func() {
+			ginkgo.It("should SMIsMember", func() {
 				sAdd := adapter.SAdd(ctx, "set", "one")
-				Expect(sAdd.Err()).NotTo(HaveOccurred())
+				gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 
 				sMIsMember := adapter.SMIsMember(ctx, "set", "one", "two")
-				Expect(sMIsMember.Err()).NotTo(HaveOccurred())
-				Expect(sMIsMember.Val()).To(Equal([]bool{true, false}))
+				gomega.Expect(sMIsMember.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(sMIsMember.Val()).To(gomega.Equal([]bool{true, false}))
 			})
 		}
 
-		It("should SMembers", func() {
+		ginkgo.It("should SMembers", func() {
 			sAdd := adapter.SAdd(ctx, "set", "Hello")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 			sAdd = adapter.SAdd(ctx, "set", "World")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 
 			sMembers := adapter.SMembers(ctx, "set")
-			Expect(sMembers.Err()).NotTo(HaveOccurred())
-			Expect(sMembers.Val()).To(ConsistOf([]string{"Hello", "World"}))
+			gomega.Expect(sMembers.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sMembers.Val()).To(gomega.ConsistOf([]string{"Hello", "World"}))
 		})
 
-		It("should SMembersMap", func() {
+		ginkgo.It("should SMembersMap", func() {
 			sAdd := adapter.SAdd(ctx, "set", "Hello")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 			sAdd = adapter.SAdd(ctx, "set", "World")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 
 			sMembersMap := adapter.SMembersMap(ctx, "set")
-			Expect(sMembersMap.Err()).NotTo(HaveOccurred())
-			Expect(sMembersMap.Val()).To(Equal(map[string]struct{}{"Hello": {}, "World": {}}))
+			gomega.Expect(sMembersMap.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sMembersMap.Val()).To(gomega.Equal(map[string]struct{}{"Hello": {}, "World": {}}))
 		})
 
-		It("should SMove", func() {
+		ginkgo.It("should SMove", func() {
 			sAdd := adapter.SAdd(ctx, "set1", "one")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 			sAdd = adapter.SAdd(ctx, "set1", "two")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 
 			sAdd = adapter.SAdd(ctx, "set2", "three")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 
 			sMove := adapter.SMove(ctx, "set1", "set2", "two")
-			Expect(sMove.Err()).NotTo(HaveOccurred())
-			Expect(sMove.Val()).To(Equal(true))
+			gomega.Expect(sMove.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sMove.Val()).To(gomega.Equal(true))
 
 			sMembers := adapter.SMembers(ctx, "set1")
-			Expect(sMembers.Err()).NotTo(HaveOccurred())
-			Expect(sMembers.Val()).To(Equal([]string{"one"}))
+			gomega.Expect(sMembers.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sMembers.Val()).To(gomega.Equal([]string{"one"}))
 
 			sMembers = adapter.SMembers(ctx, "set2")
-			Expect(sMembers.Err()).NotTo(HaveOccurred())
-			Expect(sMembers.Val()).To(ConsistOf([]string{"three", "two"}))
+			gomega.Expect(sMembers.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sMembers.Val()).To(gomega.ConsistOf([]string{"three", "two"}))
 		})
 
-		It("should SPop", func() {
+		ginkgo.It("should SPop", func() {
 			sAdd := adapter.SAdd(ctx, "set", "one")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 			sAdd = adapter.SAdd(ctx, "set", "two")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 			sAdd = adapter.SAdd(ctx, "set", "three")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 
 			sPop := adapter.SPop(ctx, "set")
-			Expect(sPop.Err()).NotTo(HaveOccurred())
-			Expect(sPop.Val()).NotTo(Equal(""))
+			gomega.Expect(sPop.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sPop.Val()).NotTo(gomega.Equal(""))
 
 			sMembers := adapter.SMembers(ctx, "set")
-			Expect(sMembers.Err()).NotTo(HaveOccurred())
-			Expect(sMembers.Val()).To(HaveLen(2))
+			gomega.Expect(sMembers.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sMembers.Val()).To(gomega.HaveLen(2))
 		})
 
-		It("should SPopN", func() {
+		ginkgo.It("should SPopN", func() {
 			sAdd := adapter.SAdd(ctx, "set", "one")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 			sAdd = adapter.SAdd(ctx, "set", "two")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 			sAdd = adapter.SAdd(ctx, "set", "three")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 			sAdd = adapter.SAdd(ctx, "set", "four")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 
 			sPopN := adapter.SPopN(ctx, "set", 1)
-			Expect(sPopN.Err()).NotTo(HaveOccurred())
-			Expect(sPopN.Val()).NotTo(Equal([]string{""}))
+			gomega.Expect(sPopN.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sPopN.Val()).NotTo(gomega.Equal([]string{""}))
 
 			sMembers := adapter.SMembers(ctx, "set")
-			Expect(sMembers.Err()).NotTo(HaveOccurred())
-			Expect(sMembers.Val()).To(HaveLen(3))
+			gomega.Expect(sMembers.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sMembers.Val()).To(gomega.HaveLen(3))
 
 			sPopN = adapter.SPopN(ctx, "set", 4)
-			Expect(sPopN.Err()).NotTo(HaveOccurred())
-			Expect(sPopN.Val()).To(HaveLen(3))
+			gomega.Expect(sPopN.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sPopN.Val()).To(gomega.HaveLen(3))
 
 			sMembers = adapter.SMembers(ctx, "set")
-			Expect(sMembers.Err()).NotTo(HaveOccurred())
-			Expect(sMembers.Val()).To(HaveLen(0))
+			gomega.Expect(sMembers.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sMembers.Val()).To(gomega.HaveLen(0))
 		})
 
-		It("should SRandMember and SRandMemberN", func() {
+		ginkgo.It("should SRandMember and SRandMemberN", func() {
 			err := adapter.SAdd(ctx, "set", "one").Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.SAdd(ctx, "set", "two").Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.SAdd(ctx, "set", "three").Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			members, err := adapter.SMembers(ctx, "set").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(members).To(HaveLen(3))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(members).To(gomega.HaveLen(3))
 
 			member, err := adapter.SRandMember(ctx, "set").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(member).NotTo(Equal(""))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(member).NotTo(gomega.Equal(""))
 
 			members, err = adapter.SRandMemberN(ctx, "set", 2).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(members).To(HaveLen(2))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(members).To(gomega.HaveLen(2))
 		})
 
-		It("should SRem", func() {
+		ginkgo.It("should SRem", func() {
 			sAdd := adapter.SAdd(ctx, "set", "one")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 			sAdd = adapter.SAdd(ctx, "set", "two")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 			sAdd = adapter.SAdd(ctx, "set", "three")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 
 			sRem := adapter.SRem(ctx, "set", "one")
-			Expect(sRem.Err()).NotTo(HaveOccurred())
-			Expect(sRem.Val()).To(Equal(int64(1)))
+			gomega.Expect(sRem.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sRem.Val()).To(gomega.Equal(int64(1)))
 
 			sRem = adapter.SRem(ctx, "set", "four")
-			Expect(sRem.Err()).NotTo(HaveOccurred())
-			Expect(sRem.Val()).To(Equal(int64(0)))
+			gomega.Expect(sRem.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sRem.Val()).To(gomega.Equal(int64(0)))
 
 			sMembers := adapter.SMembers(ctx, "set")
-			Expect(sMembers.Err()).NotTo(HaveOccurred())
-			Expect(sMembers.Val()).To(ConsistOf([]string{"three", "two"}))
+			gomega.Expect(sMembers.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sMembers.Val()).To(gomega.ConsistOf([]string{"three", "two"}))
 		})
 
-		It("should SUnion", func() {
+		ginkgo.It("should SUnion", func() {
 			sAdd := adapter.SAdd(ctx, "set1", "a")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 			sAdd = adapter.SAdd(ctx, "set1", "b")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 			sAdd = adapter.SAdd(ctx, "set1", "c")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 
 			sAdd = adapter.SAdd(ctx, "set2", "c")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 			sAdd = adapter.SAdd(ctx, "set2", "d")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 			sAdd = adapter.SAdd(ctx, "set2", "e")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 
 			sUnion := adapter.SUnion(ctx, "set1", "set2")
-			Expect(sUnion.Err()).NotTo(HaveOccurred())
-			Expect(sUnion.Val()).To(HaveLen(5))
+			gomega.Expect(sUnion.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sUnion.Val()).To(gomega.HaveLen(5))
 		})
 
-		It("should SUnionStore", func() {
+		ginkgo.It("should SUnionStore", func() {
 			sAdd := adapter.SAdd(ctx, "set1", "a")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 			sAdd = adapter.SAdd(ctx, "set1", "b")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 			sAdd = adapter.SAdd(ctx, "set1", "c")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 
 			sAdd = adapter.SAdd(ctx, "set2", "c")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 			sAdd = adapter.SAdd(ctx, "set2", "d")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 			sAdd = adapter.SAdd(ctx, "set2", "e")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 
 			sUnionStore := adapter.SUnionStore(ctx, "set", "set1", "set2")
-			Expect(sUnionStore.Err()).NotTo(HaveOccurred())
-			Expect(sUnionStore.Val()).To(Equal(int64(5)))
+			gomega.Expect(sUnionStore.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sUnionStore.Val()).To(gomega.Equal(int64(5)))
 
 			sMembers := adapter.SMembers(ctx, "set")
-			Expect(sMembers.Err()).NotTo(HaveOccurred())
-			Expect(sMembers.Val()).To(HaveLen(5))
+			gomega.Expect(sMembers.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sMembers.Val()).To(gomega.HaveLen(5))
 		})
 	})
 
-	Describe("sorted sets", func() {
-		It("should BZPopMax", func() {
+	ginkgo.Describe("sorted sets", func() {
+		ginkgo.It("should BZPopMax", func() {
 			err := adapter.ZAdd(ctx, "zset1", Z{
 				Score:  1,
 				Member: "one",
 			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset1", Z{
 				Score:  2,
 				Member: "two",
 			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset1", Z{
 				Score:  3,
 				Member: "three",
 			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			member, err := adapter.BZPopMax(ctx, 0, "zset1", "zset2").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(member).To(Equal(ZWithKey{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(member).To(gomega.Equal(ZWithKey{
 				Z: Z{
 					Score:  3,
 					Member: "three",
@@ -3442,16 +3443,16 @@ func testAdapter(resp3 bool) {
 			}))
 		})
 
-		It("should BZPopMax blocks", func() {
+		ginkgo.It("should BZPopMax blocks", func() {
 			started := make(chan bool)
 			done := make(chan bool)
 			go func() {
-				defer GinkgoRecover()
+				defer ginkgo.GinkgoRecover()
 
 				started <- true
 				bZPopMax := adapter.BZPopMax(ctx, 0, "zset")
-				Expect(bZPopMax.Err()).NotTo(HaveOccurred())
-				Expect(bZPopMax.Val()).To(Equal(ZWithKey{
+				gomega.Expect(bZPopMax.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(bZPopMax.Val()).To(gomega.Equal(ZWithKey{
 					Z: Z{
 						Member: "a",
 						Score:  1,
@@ -3464,7 +3465,7 @@ func testAdapter(resp3 bool) {
 
 			select {
 			case <-done:
-				Fail("BZPopMax is not blocked")
+				ginkgo.Fail("BZPopMax is not blocked")
 			case <-time.After(time.Second):
 				// ok
 			}
@@ -3473,43 +3474,43 @@ func testAdapter(resp3 bool) {
 				Member: "a",
 				Score:  1,
 			})
-			Expect(zAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(zAdd.Err()).NotTo(gomega.HaveOccurred())
 
 			select {
 			case <-done:
 				// ok
 			case <-time.After(time.Second):
-				Fail("BZPopMax is still blocked")
+				ginkgo.Fail("BZPopMax is still blocked")
 			}
 		})
 
-		It("should BZPopMax timeout", func() {
+		ginkgo.It("should BZPopMax timeout", func() {
 			_, err := adapter.BZPopMax(ctx, time.Second, "zset1").Result()
-			Expect(rueidis.IsRedisNil(err)).To(BeTrue())
+			gomega.Expect(rueidis.IsRedisNil(err)).To(gomega.BeTrue())
 
-			Expect(adapter.Ping(ctx).Err()).NotTo(HaveOccurred())
+			gomega.Expect(adapter.Ping(ctx).Err()).NotTo(gomega.HaveOccurred())
 		})
 
-		It("should BZPopMin", func() {
+		ginkgo.It("should BZPopMin", func() {
 			err := adapter.ZAdd(ctx, "zset1", Z{
 				Score:  1,
 				Member: "one",
 			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset1", Z{
 				Score:  2,
 				Member: "two",
 			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset1", Z{
 				Score:  3,
 				Member: "three",
 			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			member, err := adapter.BZPopMin(ctx, 0, "zset1", "zset2").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(member).To(Equal(ZWithKey{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(member).To(gomega.Equal(ZWithKey{
 				Z: Z{
 					Score:  1,
 					Member: "one",
@@ -3518,16 +3519,16 @@ func testAdapter(resp3 bool) {
 			}))
 		})
 
-		It("should BZPopMin blocks", func() {
+		ginkgo.It("should BZPopMin blocks", func() {
 			started := make(chan bool)
 			done := make(chan bool)
 			go func() {
-				defer GinkgoRecover()
+				defer ginkgo.GinkgoRecover()
 
 				started <- true
 				bZPopMin := adapter.BZPopMin(ctx, 0, "zset")
-				Expect(bZPopMin.Err()).NotTo(HaveOccurred())
-				Expect(bZPopMin.Val()).To(Equal(ZWithKey{
+				gomega.Expect(bZPopMin.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(bZPopMin.Val()).To(gomega.Equal(ZWithKey{
 					Z: Z{
 						Member: "a",
 						Score:  1,
@@ -3540,7 +3541,7 @@ func testAdapter(resp3 bool) {
 
 			select {
 			case <-done:
-				Fail("BZPopMin is not blocked")
+				ginkgo.Fail("BZPopMin is not blocked")
 			case <-time.After(time.Second):
 				// ok
 			}
@@ -3549,55 +3550,55 @@ func testAdapter(resp3 bool) {
 				Member: "a",
 				Score:  1,
 			})
-			Expect(zAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(zAdd.Err()).NotTo(gomega.HaveOccurred())
 
 			select {
 			case <-done:
 				// ok
 			case <-time.After(time.Second):
-				Fail("BZPopMin is still blocked")
+				ginkgo.Fail("BZPopMin is still blocked")
 			}
 		})
 
-		It("should BZPopMin timeout", func() {
+		ginkgo.It("should BZPopMin timeout", func() {
 			_, err := adapter.BZPopMin(ctx, time.Second, "zset1").Result()
-			Expect(rueidis.IsRedisNil(err)).To(BeTrue())
+			gomega.Expect(rueidis.IsRedisNil(err)).To(gomega.BeTrue())
 
-			Expect(adapter.Ping(ctx).Err()).NotTo(HaveOccurred())
+			gomega.Expect(adapter.Ping(ctx).Err()).NotTo(gomega.HaveOccurred())
 		})
 
-		It("should ZAdd", func() {
+		ginkgo.It("should ZAdd", func() {
 			added, err := adapter.ZAdd(ctx, "zset", Z{
 				Score:  1,
 				Member: "one",
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(added).To(Equal(int64(1)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(added).To(gomega.Equal(int64(1)))
 
 			added, err = adapter.ZAdd(ctx, "zset", Z{
 				Score:  1,
 				Member: "uno",
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(added).To(Equal(int64(1)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(added).To(gomega.Equal(int64(1)))
 
 			added, err = adapter.ZAdd(ctx, "zset", Z{
 				Score:  2,
 				Member: "two",
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(added).To(Equal(int64(1)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(added).To(gomega.Equal(int64(1)))
 
 			added, err = adapter.ZAdd(ctx, "zset", Z{
 				Score:  3,
 				Member: "two",
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(added).To(Equal(int64(0)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(added).To(gomega.Equal(int64(0)))
 
 			vals, err := adapter.ZRangeWithScores(ctx, "zset", 0, -1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]Z{{
 				Score:  1,
 				Member: "one",
 			}, {
@@ -3609,38 +3610,38 @@ func testAdapter(resp3 bool) {
 			}}))
 		})
 
-		It("should ZAdd bytes", func() {
+		ginkgo.It("should ZAdd bytes", func() {
 			added, err := adapter.ZAdd(ctx, "zset", Z{
 				Score:  1,
 				Member: "one",
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(added).To(Equal(int64(1)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(added).To(gomega.Equal(int64(1)))
 
 			added, err = adapter.ZAdd(ctx, "zset", Z{
 				Score:  1,
 				Member: "uno",
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(added).To(Equal(int64(1)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(added).To(gomega.Equal(int64(1)))
 
 			added, err = adapter.ZAdd(ctx, "zset", Z{
 				Score:  2,
 				Member: "two",
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(added).To(Equal(int64(1)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(added).To(gomega.Equal(int64(1)))
 
 			added, err = adapter.ZAdd(ctx, "zset", Z{
 				Score:  3,
 				Member: "two",
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(added).To(Equal(int64(0)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(added).To(gomega.Equal(int64(0)))
 
 			vals, err := adapter.ZRangeWithScores(ctx, "zset", 0, -1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]Z{{
 				Score:  1,
 				Member: "one",
 			}, {
@@ -3653,236 +3654,236 @@ func testAdapter(resp3 bool) {
 		})
 
 		if resp3 {
-			It("should ZAddArgs", func() {
+			ginkgo.It("should ZAddArgs", func() {
 				// Test only the GT+LT options.
 				added, err := adapter.ZAddArgs(ctx, "zset", ZAddArgs{
 					GT:      true,
 					Members: []Z{{Score: 1, Member: "one"}},
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(added).To(Equal(int64(1)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(added).To(gomega.Equal(int64(1)))
 
 				vals, err := adapter.ZRangeWithScores(ctx, "zset", 0, -1).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(vals).To(Equal([]Z{{Score: 1, Member: "one"}}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(vals).To(gomega.Equal([]Z{{Score: 1, Member: "one"}}))
 
 				added, err = adapter.ZAddArgs(ctx, "zset", ZAddArgs{
 					GT:      true,
 					Members: []Z{{Score: 2, Member: "one"}},
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(added).To(Equal(int64(0)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(added).To(gomega.Equal(int64(0)))
 
 				vals, err = adapter.ZRangeWithScores(ctx, "zset", 0, -1).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(vals).To(Equal([]Z{{Score: 2, Member: "one"}}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(vals).To(gomega.Equal([]Z{{Score: 2, Member: "one"}}))
 
 				added, err = adapter.ZAddArgs(ctx, "zset", ZAddArgs{
 					LT:      true,
 					Members: []Z{{Score: 1, Member: "one"}},
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(added).To(Equal(int64(0)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(added).To(gomega.Equal(int64(0)))
 
 				vals, err = adapter.ZRangeWithScores(ctx, "zset", 0, -1).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(vals).To(Equal([]Z{{Score: 1, Member: "one"}}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(vals).To(gomega.Equal([]Z{{Score: 1, Member: "one"}}))
 			})
 		}
 
 		if resp3 {
-			It("should ZAddArgsLT", func() {
+			ginkgo.It("should ZAddArgsLT", func() {
 				added, err := adapter.ZAddLT(ctx, "zset", Z{
 					Score:  2,
 					Member: "one",
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(added).To(Equal(int64(1)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(added).To(gomega.Equal(int64(1)))
 
 				vals, err := adapter.ZRangeWithScores(ctx, "zset", 0, -1).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(vals).To(Equal([]Z{{Score: 2, Member: "one"}}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(vals).To(gomega.Equal([]Z{{Score: 2, Member: "one"}}))
 
 				added, err = adapter.ZAddLT(ctx, "zset", Z{
 					Score:  3,
 					Member: "one",
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(added).To(Equal(int64(0)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(added).To(gomega.Equal(int64(0)))
 
 				vals, err = adapter.ZRangeWithScores(ctx, "zset", 0, -1).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(vals).To(Equal([]Z{{Score: 2, Member: "one"}}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(vals).To(gomega.Equal([]Z{{Score: 2, Member: "one"}}))
 
 				added, err = adapter.ZAddLT(ctx, "zset", Z{
 					Score:  1,
 					Member: "one",
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(added).To(Equal(int64(0)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(added).To(gomega.Equal(int64(0)))
 
 				vals, err = adapter.ZRangeWithScores(ctx, "zset", 0, -1).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(vals).To(Equal([]Z{{Score: 1, Member: "one"}}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(vals).To(gomega.Equal([]Z{{Score: 1, Member: "one"}}))
 			})
 
-			It("should ZAddArgsGT", func() {
+			ginkgo.It("should ZAddArgsGT", func() {
 				added, err := adapter.ZAddGT(ctx, "zset", Z{
 					Score:  2,
 					Member: "one",
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(added).To(Equal(int64(1)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(added).To(gomega.Equal(int64(1)))
 
 				vals, err := adapter.ZRangeWithScores(ctx, "zset", 0, -1).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(vals).To(Equal([]Z{{Score: 2, Member: "one"}}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(vals).To(gomega.Equal([]Z{{Score: 2, Member: "one"}}))
 
 				added, err = adapter.ZAddGT(ctx, "zset", Z{
 					Score:  3,
 					Member: "one",
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(added).To(Equal(int64(0)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(added).To(gomega.Equal(int64(0)))
 
 				vals, err = adapter.ZRangeWithScores(ctx, "zset", 0, -1).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(vals).To(Equal([]Z{{Score: 3, Member: "one"}}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(vals).To(gomega.Equal([]Z{{Score: 3, Member: "one"}}))
 
 				added, err = adapter.ZAddGT(ctx, "zset", Z{
 					Score:  1,
 					Member: "one",
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(added).To(Equal(int64(0)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(added).To(gomega.Equal(int64(0)))
 
 				vals, err = adapter.ZRangeWithScores(ctx, "zset", 0, -1).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(vals).To(Equal([]Z{{Score: 3, Member: "one"}}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(vals).To(gomega.Equal([]Z{{Score: 3, Member: "one"}}))
 			})
 		}
 
-		It("should ZAddNX", func() {
+		ginkgo.It("should ZAddNX", func() {
 			added, err := adapter.ZAddNX(ctx, "zset", Z{
 				Score:  1,
 				Member: "one",
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(added).To(Equal(int64(1)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(added).To(gomega.Equal(int64(1)))
 
 			vals, err := adapter.ZRangeWithScores(ctx, "zset", 0, -1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]Z{{Score: 1, Member: "one"}}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]Z{{Score: 1, Member: "one"}}))
 
 			added, err = adapter.ZAddNX(ctx, "zset", Z{
 				Score:  2,
 				Member: "one",
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(added).To(Equal(int64(0)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(added).To(gomega.Equal(int64(0)))
 
 			vals, err = adapter.ZRangeWithScores(ctx, "zset", 0, -1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]Z{{Score: 1, Member: "one"}}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]Z{{Score: 1, Member: "one"}}))
 		})
 
-		It("should ZAddXX", func() {
+		ginkgo.It("should ZAddXX", func() {
 			added, err := adapter.ZAddXX(ctx, "zset", Z{
 				Score:  1,
 				Member: "one",
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(added).To(Equal(int64(0)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(added).To(gomega.Equal(int64(0)))
 
 			vals, err := adapter.ZRangeWithScores(ctx, "zset", 0, -1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(BeEmpty())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.BeEmpty())
 
 			added, err = adapter.ZAdd(ctx, "zset", Z{
 				Score:  1,
 				Member: "one",
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(added).To(Equal(int64(1)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(added).To(gomega.Equal(int64(1)))
 
 			added, err = adapter.ZAddXX(ctx, "zset", Z{
 				Score:  2,
 				Member: "one",
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(added).To(Equal(int64(0)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(added).To(gomega.Equal(int64(0)))
 
 			vals, err = adapter.ZRangeWithScores(ctx, "zset", 0, -1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]Z{{Score: 2, Member: "one"}}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]Z{{Score: 2, Member: "one"}}))
 		})
 
-		It("should ZCard", func() {
+		ginkgo.It("should ZCard", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{
 				Score:  1,
 				Member: "one",
 			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{
 				Score:  2,
 				Member: "two",
 			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			card, err := adapter.ZCard(ctx, "zset").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(card).To(Equal(int64(2)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(card).To(gomega.Equal(int64(2)))
 		})
 
-		It("should ZCount", func() {
+		ginkgo.It("should ZCount", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{
 				Score:  1,
 				Member: "one",
 			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{
 				Score:  2,
 				Member: "two",
 			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{
 				Score:  3,
 				Member: "three",
 			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			count, err := adapter.ZCount(ctx, "zset", "-inf", "+inf").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(count).To(Equal(int64(3)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(count).To(gomega.Equal(int64(3)))
 
 			count, err = adapter.ZCount(ctx, "zset", "(1", "3").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(count).To(Equal(int64(2)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(count).To(gomega.Equal(int64(2)))
 
 			count, err = adapter.ZLexCount(ctx, "zset", "-", "+").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(count).To(Equal(int64(3)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(count).To(gomega.Equal(int64(3)))
 		})
 
-		It("should ZIncrBy", func() {
+		ginkgo.It("should ZIncrBy", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{
 				Score:  1,
 				Member: "one",
 			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{
 				Score:  2,
 				Member: "two",
 			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			n, err := adapter.ZIncrBy(ctx, "zset", 2, "one").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(n).To(Equal(float64(3)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(n).To(gomega.Equal(float64(3)))
 
 			val, err := adapter.ZRangeWithScores(ctx, "zset", 0, -1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(val).To(gomega.Equal([]Z{{
 				Score:  2,
 				Member: "two",
 			}, {
@@ -3891,35 +3892,35 @@ func testAdapter(resp3 bool) {
 			}}))
 		})
 
-		It("should ZInterStore", func() {
+		ginkgo.It("should ZInterStore", func() {
 			err := adapter.ZAdd(ctx, "zset1", Z{
 				Score:  1,
 				Member: "one",
 			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset1", Z{
 				Score:  2,
 				Member: "two",
 			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			err = adapter.ZAdd(ctx, "zset2", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset2", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset3", Z{Score: 3, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			n, err := adapter.ZInterStore(ctx, "out", ZStore{
 				Keys:    []string{"zset1", "zset2"},
 				Weights: []int64{2, 3},
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(n).To(Equal(int64(2)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(n).To(gomega.Equal(int64(2)))
 
 			vals, err := adapter.ZRangeWithScores(ctx, "out", 0, -1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]Z{{
 				Score:  5,
 				Member: "one",
 			}, {
@@ -3929,54 +3930,54 @@ func testAdapter(resp3 bool) {
 		})
 
 		if resp3 {
-			It("should ZMScore", func() {
+			ginkgo.It("should ZMScore", func() {
 				zmScore := adapter.ZMScore(ctx, "zset", "one", "three")
-				Expect(zmScore.Err()).NotTo(HaveOccurred())
-				Expect(zmScore.Val()).To(HaveLen(2))
-				Expect(zmScore.Val()[0]).To(Equal(float64(0)))
+				gomega.Expect(zmScore.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(zmScore.Val()).To(gomega.HaveLen(2))
+				gomega.Expect(zmScore.Val()[0]).To(gomega.Equal(float64(0)))
 
 				err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				zmScore = adapter.ZMScore(ctx, "zset", "one", "three")
-				Expect(zmScore.Err()).NotTo(HaveOccurred())
-				Expect(zmScore.Val()).To(HaveLen(2))
-				Expect(zmScore.Val()[0]).To(Equal(float64(1)))
+				gomega.Expect(zmScore.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(zmScore.Val()).To(gomega.HaveLen(2))
+				gomega.Expect(zmScore.Val()[0]).To(gomega.Equal(float64(1)))
 
 				zmScore = adapter.ZMScore(ctx, "zset", "four")
-				Expect(zmScore.Err()).NotTo(HaveOccurred())
-				Expect(zmScore.Val()).To(HaveLen(1))
+				gomega.Expect(zmScore.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(zmScore.Val()).To(gomega.HaveLen(1))
 
 				zmScore = adapter.ZMScore(ctx, "zset", "four", "one")
-				Expect(zmScore.Err()).NotTo(HaveOccurred())
-				Expect(zmScore.Val()).To(HaveLen(2))
+				gomega.Expect(zmScore.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(zmScore.Val()).To(gomega.HaveLen(2))
 			})
 		}
 
-		It("should ZPopMax", func() {
+		ginkgo.It("should ZPopMax", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{
 				Score:  1,
 				Member: "one",
 			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{
 				Score:  2,
 				Member: "two",
 			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{
 				Score:  3,
 				Member: "three",
 			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			members, err := adapter.ZPopMax(ctx, "zset").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(members).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(members).To(gomega.Equal([]Z{{
 				Score:  3,
 				Member: "three",
 			}}))
@@ -3986,10 +3987,10 @@ func testAdapter(resp3 bool) {
 				Score:  3,
 				Member: "three",
 			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			members, err = adapter.ZPopMax(ctx, "zset", 2).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(members).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(members).To(gomega.Equal([]Z{{
 				Score:  3,
 				Member: "three",
 			}, {
@@ -4002,15 +4003,15 @@ func testAdapter(resp3 bool) {
 				Score:  3,
 				Member: "three",
 			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{
 				Score:  2,
 				Member: "two",
 			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			members, err = adapter.ZPopMax(ctx, "zset", 10).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(members).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(members).To(gomega.Equal([]Z{{
 				Score:  3,
 				Member: "three",
 			}, {
@@ -4022,26 +4023,26 @@ func testAdapter(resp3 bool) {
 			}}))
 		})
 
-		It("should ZPopMin", func() {
+		ginkgo.It("should ZPopMin", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{
 				Score:  1,
 				Member: "one",
 			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{
 				Score:  2,
 				Member: "two",
 			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{
 				Score:  3,
 				Member: "three",
 			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			members, err := adapter.ZPopMin(ctx, "zset").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(members).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(members).To(gomega.Equal([]Z{{
 				Score:  1,
 				Member: "one",
 			}}))
@@ -4051,10 +4052,10 @@ func testAdapter(resp3 bool) {
 				Score:  1,
 				Member: "one",
 			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			members, err = adapter.ZPopMin(ctx, "zset", 2).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(members).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(members).To(gomega.Equal([]Z{{
 				Score:  1,
 				Member: "one",
 			}, {
@@ -4067,17 +4068,17 @@ func testAdapter(resp3 bool) {
 				Score:  1,
 				Member: "one",
 			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			err = adapter.ZAdd(ctx, "zset", Z{
 				Score:  2,
 				Member: "two",
 			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			members, err = adapter.ZPopMin(ctx, "zset", 10).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(members).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(members).To(gomega.Equal([]Z{{
 				Score:  1,
 				Member: "one",
 			}, {
@@ -4089,38 +4090,38 @@ func testAdapter(resp3 bool) {
 			}}))
 		})
 
-		It("should ZRange", func() {
+		ginkgo.It("should ZRange", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			zRange := adapter.ZRange(ctx, "zset", 0, -1)
-			Expect(zRange.Err()).NotTo(HaveOccurred())
-			Expect(zRange.Val()).To(Equal([]string{"one", "two", "three"}))
+			gomega.Expect(zRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRange.Val()).To(gomega.Equal([]string{"one", "two", "three"}))
 
 			zRange = adapter.ZRange(ctx, "zset", 2, 3)
-			Expect(zRange.Err()).NotTo(HaveOccurred())
-			Expect(zRange.Val()).To(Equal([]string{"three"}))
+			gomega.Expect(zRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRange.Val()).To(gomega.Equal([]string{"three"}))
 
 			zRange = adapter.ZRange(ctx, "zset", -2, -1)
-			Expect(zRange.Err()).NotTo(HaveOccurred())
-			Expect(zRange.Val()).To(Equal([]string{"two", "three"}))
+			gomega.Expect(zRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRange.Val()).To(gomega.Equal([]string{"two", "three"}))
 		})
 
-		It("should ZRangeWithScores", func() {
+		ginkgo.It("should ZRangeWithScores", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			vals, err := adapter.ZRangeWithScores(ctx, "zset", 0, -1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]Z{{
 				Score:  1,
 				Member: "one",
 			}, {
@@ -4132,12 +4133,12 @@ func testAdapter(resp3 bool) {
 			}}))
 
 			vals, err = adapter.ZRangeWithScores(ctx, "zset", 2, 3).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]Z{{Score: 3, Member: "three"}}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]Z{{Score: 3, Member: "three"}}))
 
 			vals, err = adapter.ZRangeWithScores(ctx, "zset", -2, -1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]Z{{
 				Score:  2,
 				Member: "two",
 			}, {
@@ -4147,7 +4148,7 @@ func testAdapter(resp3 bool) {
 		})
 
 		if resp3 {
-			It("should ZRangeArgs", func() {
+			ginkgo.It("should ZRangeArgs", func() {
 				added, err := adapter.ZAddArgs(ctx, "zset", ZAddArgs{
 					Members: []Z{
 						{Score: 1, Member: "one"},
@@ -4156,8 +4157,8 @@ func testAdapter(resp3 bool) {
 						{Score: 4, Member: "four"},
 					},
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(added).To(Equal(int64(4)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(added).To(gomega.Equal(int64(4)))
 
 				zRange, err := adapter.ZRangeArgs(ctx, ZRangeArgs{
 					Key:     "zset",
@@ -4168,8 +4169,8 @@ func testAdapter(resp3 bool) {
 					Offset:  1,
 					Count:   2,
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(zRange).To(Equal([]string{"three", "two"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(zRange).To(gomega.Equal([]string{"three", "two"}))
 
 				zRange, err = adapter.ZRangeArgs(ctx, ZRangeArgs{
 					Key:    "zset",
@@ -4180,8 +4181,8 @@ func testAdapter(resp3 bool) {
 					Offset: 2,
 					Count:  2,
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(zRange).To(Equal([]string{"two", "one"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(zRange).To(gomega.Equal([]string{"two", "one"}))
 
 				zRange, err = adapter.ZRangeArgs(ctx, ZRangeArgs{
 					Key:     "zset",
@@ -4189,8 +4190,8 @@ func testAdapter(resp3 bool) {
 					Stop:    "(4",
 					ByScore: true,
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(zRange).To(Equal([]string{"two", "three"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(zRange).To(gomega.Equal([]string{"two", "three"}))
 
 				// withScores.
 				zSlice, err := adapter.ZRangeArgsWithScores(ctx, ZRangeArgs{
@@ -4202,28 +4203,28 @@ func testAdapter(resp3 bool) {
 					Offset:  1,
 					Count:   2,
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(zSlice).To(Equal([]Z{
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(zSlice).To(gomega.Equal([]Z{
 					{Score: 3, Member: "three"},
 					{Score: 2, Member: "two"},
 				}))
 			})
 		}
 
-		It("should ZRangeByScore", func() {
+		ginkgo.It("should ZRangeByScore", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			zRangeByScore := adapter.ZRangeByScore(ctx, "zset", ZRangeBy{
 				Min: "-inf",
 				Max: "+inf",
 			})
-			Expect(zRangeByScore.Err()).NotTo(HaveOccurred())
-			Expect(zRangeByScore.Val()).To(Equal([]string{"one", "two", "three"}))
+			gomega.Expect(zRangeByScore.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRangeByScore.Val()).To(gomega.Equal([]string{"one", "two", "three"}))
 
 			zRangeByScore = adapter.ZRangeByScore(ctx, "zset", ZRangeBy{
 				Min:    "-inf",
@@ -4231,54 +4232,54 @@ func testAdapter(resp3 bool) {
 				Offset: 1,
 				Count:  2,
 			})
-			Expect(zRangeByScore.Err()).NotTo(HaveOccurred())
-			Expect(zRangeByScore.Val()).To(Equal([]string{"two", "three"}))
+			gomega.Expect(zRangeByScore.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRangeByScore.Val()).To(gomega.Equal([]string{"two", "three"}))
 
 			zRangeByScore = adapter.ZRangeByScore(ctx, "zset", ZRangeBy{
 				Min: "1",
 				Max: "2",
 			})
-			Expect(zRangeByScore.Err()).NotTo(HaveOccurred())
-			Expect(zRangeByScore.Val()).To(Equal([]string{"one", "two"}))
+			gomega.Expect(zRangeByScore.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRangeByScore.Val()).To(gomega.Equal([]string{"one", "two"}))
 
 			zRangeByScore = adapter.ZRangeByScore(ctx, "zset", ZRangeBy{
 				Min: "(1",
 				Max: "2",
 			})
-			Expect(zRangeByScore.Err()).NotTo(HaveOccurred())
-			Expect(zRangeByScore.Val()).To(Equal([]string{"two"}))
+			gomega.Expect(zRangeByScore.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRangeByScore.Val()).To(gomega.Equal([]string{"two"}))
 
 			zRangeByScore = adapter.ZRangeByScore(ctx, "zset", ZRangeBy{
 				Min: "(1",
 				Max: "(2",
 			})
-			Expect(zRangeByScore.Err()).NotTo(HaveOccurred())
-			Expect(zRangeByScore.Val()).To(Equal([]string{}))
+			gomega.Expect(zRangeByScore.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRangeByScore.Val()).To(gomega.Equal([]string{}))
 		})
 
-		It("should ZRangeByLex", func() {
+		ginkgo.It("should ZRangeByLex", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{
 				Score:  0,
 				Member: "a",
 			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{
 				Score:  0,
 				Member: "b",
 			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{
 				Score:  0,
 				Member: "c",
 			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			zRangeByLex := adapter.ZRangeByLex(ctx, "zset", ZRangeBy{
 				Min: "-",
 				Max: "+",
 			})
-			Expect(zRangeByLex.Err()).NotTo(HaveOccurred())
-			Expect(zRangeByLex.Val()).To(Equal([]string{"a", "b", "c"}))
+			gomega.Expect(zRangeByLex.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRangeByLex.Val()).To(gomega.Equal([]string{"a", "b", "c"}))
 
 			zRangeByLex = adapter.ZRangeByLex(ctx, "zset", ZRangeBy{
 				Min:    "-",
@@ -4286,45 +4287,45 @@ func testAdapter(resp3 bool) {
 				Offset: 1,
 				Count:  2,
 			})
-			Expect(zRangeByLex.Err()).NotTo(HaveOccurred())
-			Expect(zRangeByLex.Val()).To(Equal([]string{"b", "c"}))
+			gomega.Expect(zRangeByLex.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRangeByLex.Val()).To(gomega.Equal([]string{"b", "c"}))
 
 			zRangeByLex = adapter.ZRangeByLex(ctx, "zset", ZRangeBy{
 				Min: "[a",
 				Max: "[b",
 			})
-			Expect(zRangeByLex.Err()).NotTo(HaveOccurred())
-			Expect(zRangeByLex.Val()).To(Equal([]string{"a", "b"}))
+			gomega.Expect(zRangeByLex.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRangeByLex.Val()).To(gomega.Equal([]string{"a", "b"}))
 
 			zRangeByLex = adapter.ZRangeByLex(ctx, "zset", ZRangeBy{
 				Min: "(a",
 				Max: "[b",
 			})
-			Expect(zRangeByLex.Err()).NotTo(HaveOccurred())
-			Expect(zRangeByLex.Val()).To(Equal([]string{"b"}))
+			gomega.Expect(zRangeByLex.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRangeByLex.Val()).To(gomega.Equal([]string{"b"}))
 
 			zRangeByLex = adapter.ZRangeByLex(ctx, "zset", ZRangeBy{
 				Min: "(a",
 				Max: "(b",
 			})
-			Expect(zRangeByLex.Err()).NotTo(HaveOccurred())
-			Expect(zRangeByLex.Val()).To(Equal([]string{}))
+			gomega.Expect(zRangeByLex.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRangeByLex.Val()).To(gomega.Equal([]string{}))
 		})
 
-		It("should ZRangeByScoreWithScoresMap", func() {
+		ginkgo.It("should ZRangeByScoreWithScoresMap", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			vals, err := adapter.ZRangeByScoreWithScores(ctx, "zset", ZRangeBy{
 				Min: "-inf",
 				Max: "+inf",
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]Z{{
 				Score:  1,
 				Member: "one",
 			}, {
@@ -4341,8 +4342,8 @@ func testAdapter(resp3 bool) {
 				Offset: 1,
 				Count:  2,
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]Z{{
 				Score:  2,
 				Member: "two",
 			}, {
@@ -4354,8 +4355,8 @@ func testAdapter(resp3 bool) {
 				Min: "1",
 				Max: "2",
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]Z{{
 				Score:  1,
 				Member: "one",
 			}, {
@@ -4367,19 +4368,19 @@ func testAdapter(resp3 bool) {
 				Min: "(1",
 				Max: "2",
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]Z{{Score: 2, Member: "two"}}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]Z{{Score: 2, Member: "two"}}))
 
 			vals, err = adapter.ZRangeByScoreWithScores(ctx, "zset", ZRangeBy{
 				Min: "(1",
 				Max: "(2",
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]Z{}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]Z{}))
 		})
 
 		if resp3 {
-			It("should ZRangeStore", func() {
+			ginkgo.It("should ZRangeStore", func() {
 				added, err := adapter.ZAddArgs(ctx, "zset", ZAddArgs{
 					Members: []Z{
 						{Score: 1, Member: "one"},
@@ -4388,8 +4389,8 @@ func testAdapter(resp3 bool) {
 						{Score: 4, Member: "four"},
 					},
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(added).To(Equal(int64(4)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(added).To(gomega.Equal(int64(4)))
 
 				rangeStore, err := adapter.ZRangeStore(ctx, "new-zset", ZRangeArgs{
 					Key:    "zset",
@@ -4400,14 +4401,14 @@ func testAdapter(resp3 bool) {
 					Offset: 1,
 					Count:  2,
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(rangeStore).To(Equal(int64(2)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(rangeStore).To(gomega.Equal(int64(2)))
 
 				zRange, err := adapter.ZRange(ctx, "new-zset", 0, -1).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(zRange).To(Equal([]string{"two", "three"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(zRange).To(gomega.Equal([]string{"two", "three"}))
 			})
-			It("should ZRangeStore Rev", func() {
+			ginkgo.It("should ZRangeStore Rev", func() {
 				added, err := adapter.ZAddArgs(ctx, "zset", ZAddArgs{
 					Members: []Z{
 						{Score: 1, Member: "one"},
@@ -4416,8 +4417,8 @@ func testAdapter(resp3 bool) {
 						{Score: 4, Member: "four"},
 					},
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(added).To(Equal(int64(4)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(added).To(gomega.Equal(int64(4)))
 
 				rangeStore, err := adapter.ZRangeStore(ctx, "new-zset", ZRangeArgs{
 					Key:     "zset",
@@ -4428,74 +4429,74 @@ func testAdapter(resp3 bool) {
 					Offset:  1,
 					Count:   2,
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(rangeStore).To(Equal(int64(2)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(rangeStore).To(gomega.Equal(int64(2)))
 
 				zRange, err := adapter.ZRange(ctx, "new-zset", 0, -1).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(zRange).To(Equal([]string{"two", "three"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(zRange).To(gomega.Equal([]string{"two", "three"}))
 			})
 		}
 
-		It("should ZRank", func() {
+		ginkgo.It("should ZRank", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			zRank := adapter.ZRank(ctx, "zset", "three")
-			Expect(zRank.Err()).NotTo(HaveOccurred())
-			Expect(zRank.Val()).To(Equal(int64(2)))
+			gomega.Expect(zRank.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRank.Val()).To(gomega.Equal(int64(2)))
 
 			zRank = adapter.ZRank(ctx, "zset", "four")
-			Expect(rueidis.IsRedisNil(zRank.Err())).To(BeTrue())
-			Expect(zRank.Val()).To(Equal(int64(0)))
+			gomega.Expect(rueidis.IsRedisNil(zRank.Err())).To(gomega.BeTrue())
+			gomega.Expect(zRank.Val()).To(gomega.Equal(int64(0)))
 		})
 
 		if resp3 {
-			It("should ZRankWithScore", func() {
+			ginkgo.It("should ZRankWithScore", func() {
 				err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				zRankWithScore := adapter.ZRankWithScore(ctx, "zset", "one")
-				Expect(zRankWithScore.Err()).NotTo(HaveOccurred())
-				Expect(zRankWithScore.Result()).To(Equal(RankScore{Rank: 0, Score: 1}))
+				gomega.Expect(zRankWithScore.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(zRankWithScore.Result()).To(gomega.Equal(RankScore{Rank: 0, Score: 1}))
 
 				zRankWithScore = adapter.ZRankWithScore(ctx, "zset", "two")
-				Expect(zRankWithScore.Err()).NotTo(HaveOccurred())
-				Expect(zRankWithScore.Result()).To(Equal(RankScore{Rank: 1, Score: 2}))
+				gomega.Expect(zRankWithScore.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(zRankWithScore.Result()).To(gomega.Equal(RankScore{Rank: 1, Score: 2}))
 
 				zRankWithScore = adapter.ZRankWithScore(ctx, "zset", "three")
-				Expect(zRankWithScore.Err()).NotTo(HaveOccurred())
-				Expect(zRankWithScore.Result()).To(Equal(RankScore{Rank: 2, Score: 3}))
+				gomega.Expect(zRankWithScore.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(zRankWithScore.Result()).To(gomega.Equal(RankScore{Rank: 2, Score: 3}))
 
 				zRankWithScore = adapter.ZRankWithScore(ctx, "zset", "four")
-				Expect(zRankWithScore.Err()).To(HaveOccurred())
-				Expect(zRankWithScore.Err()).To(Equal(rueidis.Nil))
+				gomega.Expect(zRankWithScore.Err()).To(gomega.HaveOccurred())
+				gomega.Expect(zRankWithScore.Err()).To(gomega.Equal(rueidis.Nil))
 			})
 		}
 
-		It("should ZRem", func() {
+		ginkgo.It("should ZRem", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			zRem := adapter.ZRem(ctx, "zset", "two")
-			Expect(zRem.Err()).NotTo(HaveOccurred())
-			Expect(zRem.Val()).To(Equal(int64(1)))
+			gomega.Expect(zRem.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRem.Val()).To(gomega.Equal(int64(1)))
 
 			vals, err := adapter.ZRangeWithScores(ctx, "zset", 0, -1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]Z{{
 				Score:  1,
 				Member: "one",
 			}, {
@@ -4504,41 +4505,41 @@ func testAdapter(resp3 bool) {
 			}}))
 		})
 
-		It("should ZRemRangeByRank", func() {
+		ginkgo.It("should ZRemRangeByRank", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			zRemRangeByRank := adapter.ZRemRangeByRank(ctx, "zset", 0, 1)
-			Expect(zRemRangeByRank.Err()).NotTo(HaveOccurred())
-			Expect(zRemRangeByRank.Val()).To(Equal(int64(2)))
+			gomega.Expect(zRemRangeByRank.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRemRangeByRank.Val()).To(gomega.Equal(int64(2)))
 
 			vals, err := adapter.ZRangeWithScores(ctx, "zset", 0, -1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]Z{{
 				Score:  3,
 				Member: "three",
 			}}))
 		})
 
-		It("should ZRemRangeByScore", func() {
+		ginkgo.It("should ZRemRangeByScore", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			zRemRangeByScore := adapter.ZRemRangeByScore(ctx, "zset", "-inf", "(2")
-			Expect(zRemRangeByScore.Err()).NotTo(HaveOccurred())
-			Expect(zRemRangeByScore.Val()).To(Equal(int64(1)))
+			gomega.Expect(zRemRangeByScore.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRemRangeByScore.Val()).To(gomega.Equal(int64(1)))
 
 			vals, err := adapter.ZRangeWithScores(ctx, "zset", 0, -1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]Z{{
 				Score:  2,
 				Member: "two",
 			}, {
@@ -4547,7 +4548,7 @@ func testAdapter(resp3 bool) {
 			}}))
 		})
 
-		It("should ZRemRangeByLex", func() {
+		ginkgo.It("should ZRemRangeByLex", func() {
 			zz := []Z{
 				{Score: 0, Member: "aaaa"},
 				{Score: 0, Member: "b"},
@@ -4562,50 +4563,50 @@ func testAdapter(resp3 bool) {
 			}
 			for _, z := range zz {
 				err := adapter.ZAdd(ctx, "zset", z).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			}
 
 			n, err := adapter.ZRemRangeByLex(ctx, "zset", "[alpha", "[omega").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(n).To(Equal(int64(6)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(n).To(gomega.Equal(int64(6)))
 
 			vals, err := adapter.ZRange(ctx, "zset", 0, -1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]string{"ALPHA", "aaaa", "zap", "zip"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]string{"ALPHA", "aaaa", "zap", "zip"}))
 		})
 
-		It("should ZRevRange", func() {
+		ginkgo.It("should ZRevRange", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			zRevRange := adapter.ZRevRange(ctx, "zset", 0, -1)
-			Expect(zRevRange.Err()).NotTo(HaveOccurred())
-			Expect(zRevRange.Val()).To(Equal([]string{"three", "two", "one"}))
+			gomega.Expect(zRevRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRevRange.Val()).To(gomega.Equal([]string{"three", "two", "one"}))
 
 			zRevRange = adapter.ZRevRange(ctx, "zset", 2, 3)
-			Expect(zRevRange.Err()).NotTo(HaveOccurred())
-			Expect(zRevRange.Val()).To(Equal([]string{"one"}))
+			gomega.Expect(zRevRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRevRange.Val()).To(gomega.Equal([]string{"one"}))
 
 			zRevRange = adapter.ZRevRange(ctx, "zset", -2, -1)
-			Expect(zRevRange.Err()).NotTo(HaveOccurred())
-			Expect(zRevRange.Val()).To(Equal([]string{"two", "one"}))
+			gomega.Expect(zRevRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRevRange.Val()).To(gomega.Equal([]string{"two", "one"}))
 		})
 
-		It("should ZRevRangeWithScoresMap", func() {
+		ginkgo.It("should ZRevRangeWithScoresMap", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			val, err := adapter.ZRevRangeWithScores(ctx, "zset", 0, -1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(val).To(gomega.Equal([]Z{{
 				Score:  3,
 				Member: "three",
 			}, {
@@ -4617,12 +4618,12 @@ func testAdapter(resp3 bool) {
 			}}))
 
 			val, err = adapter.ZRevRangeWithScores(ctx, "zset", 2, 3).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]Z{{Score: 1, Member: "one"}}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(val).To(gomega.Equal([]Z{{Score: 1, Member: "one"}}))
 
 			val, err = adapter.ZRevRangeWithScores(ctx, "zset", -2, -1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(val).To(gomega.Equal([]Z{{
 				Score:  2,
 				Member: "two",
 			}, {
@@ -4631,76 +4632,76 @@ func testAdapter(resp3 bool) {
 			}}))
 		})
 
-		It("should ZRevRangeByScore", func() {
+		ginkgo.It("should ZRevRangeByScore", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			vals, err := adapter.ZRevRangeByScore(
 				ctx, "zset", ZRangeBy{Max: "+inf", Min: "-inf"}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]string{"three", "two", "one"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]string{"three", "two", "one"}))
 
 			vals, err = adapter.ZRevRangeByScore(
 				ctx, "zset", ZRangeBy{Max: "+inf", Min: "-inf", Offset: 1, Count: 2}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]string{"two", "one"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]string{"two", "one"}))
 
 			vals, err = adapter.ZRevRangeByScore(
 				ctx, "zset", ZRangeBy{Max: "2", Min: "(1"}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]string{"two"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]string{"two"}))
 
 			vals, err = adapter.ZRevRangeByScore(
 				ctx, "zset", ZRangeBy{Max: "(2", Min: "(1"}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]string{}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]string{}))
 		})
 
-		It("should ZRevRangeByLex", func() {
+		ginkgo.It("should ZRevRangeByLex", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{Score: 0, Member: "a"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 0, Member: "b"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 0, Member: "c"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			vals, err := adapter.ZRevRangeByLex(
 				ctx, "zset", ZRangeBy{Max: "+", Min: "-"}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]string{"c", "b", "a"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]string{"c", "b", "a"}))
 
 			vals, err = adapter.ZRevRangeByLex(
 				ctx, "zset", ZRangeBy{Max: "+", Min: "-", Offset: 1, Count: 2}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]string{"b", "a"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]string{"b", "a"}))
 
 			vals, err = adapter.ZRevRangeByLex(
 				ctx, "zset", ZRangeBy{Max: "[b", Min: "(a"}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]string{"b"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]string{"b"}))
 
 			vals, err = adapter.ZRevRangeByLex(
 				ctx, "zset", ZRangeBy{Max: "(b", Min: "(a"}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]string{}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]string{}))
 		})
 
-		It("should ZRevRangeByScoreWithScores", func() {
+		ginkgo.It("should ZRevRangeByScoreWithScores", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			vals, err := adapter.ZRevRangeByScoreWithScores(
 				ctx, "zset", ZRangeBy{Max: "+inf", Min: "-inf"}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]Z{{
 				Score:  3,
 				Member: "three",
 			}, {
@@ -4713,8 +4714,8 @@ func testAdapter(resp3 bool) {
 
 			vals, err = adapter.ZRevRangeByScoreWithScores(
 				ctx, "zset", ZRangeBy{Max: "+inf", Min: "-inf", Offset: 1, Count: 2}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]Z{{
 				Score:  2,
 				Member: "two",
 			}, {
@@ -4723,18 +4724,18 @@ func testAdapter(resp3 bool) {
 			}}))
 		})
 
-		It("should ZRevRangeByScoreWithScoresMap", func() {
+		ginkgo.It("should ZRevRangeByScoreWithScoresMap", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			vals, err := adapter.ZRevRangeByScoreWithScores(
 				ctx, "zset", ZRangeBy{Max: "+inf", Min: "-inf"}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]Z{{
 				Score:  3,
 				Member: "three",
 			}, {
@@ -4747,77 +4748,77 @@ func testAdapter(resp3 bool) {
 
 			vals, err = adapter.ZRevRangeByScoreWithScores(
 				ctx, "zset", ZRangeBy{Max: "2", Min: "(1"}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]Z{{Score: 2, Member: "two"}}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]Z{{Score: 2, Member: "two"}}))
 
 			vals, err = adapter.ZRevRangeByScoreWithScores(
 				ctx, "zset", ZRangeBy{Max: "(2", Min: "(1"}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]Z{}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]Z{}))
 		})
 
-		It("should ZRevRank", func() {
+		ginkgo.It("should ZRevRank", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			zRevRank := adapter.ZRevRank(ctx, "zset", "one")
-			Expect(zRevRank.Err()).NotTo(HaveOccurred())
-			Expect(zRevRank.Val()).To(Equal(int64(2)))
+			gomega.Expect(zRevRank.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRevRank.Val()).To(gomega.Equal(int64(2)))
 
 			zRevRank = adapter.ZRevRank(ctx, "zset", "four")
-			Expect(rueidis.IsRedisNil(zRevRank.Err())).To(BeTrue())
-			Expect(zRevRank.Val()).To(Equal(int64(0)))
+			gomega.Expect(rueidis.IsRedisNil(zRevRank.Err())).To(gomega.BeTrue())
+			gomega.Expect(zRevRank.Val()).To(gomega.Equal(int64(0)))
 		})
 
 		if resp3 {
-			It("should ZRevRankWithScore", func() {
+			ginkgo.It("should ZRevRankWithScore", func() {
 				err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				zRevRankWithScore := adapter.ZRevRankWithScore(ctx, "zset", "one")
-				Expect(zRevRankWithScore.Err()).NotTo(HaveOccurred())
-				Expect(zRevRankWithScore.Result()).To(Equal(RankScore{Rank: 2, Score: 1}))
+				gomega.Expect(zRevRankWithScore.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(zRevRankWithScore.Result()).To(gomega.Equal(RankScore{Rank: 2, Score: 1}))
 
 				zRevRankWithScore = adapter.ZRevRankWithScore(ctx, "zset", "two")
-				Expect(zRevRankWithScore.Err()).NotTo(HaveOccurred())
-				Expect(zRevRankWithScore.Result()).To(Equal(RankScore{Rank: 1, Score: 2}))
+				gomega.Expect(zRevRankWithScore.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(zRevRankWithScore.Result()).To(gomega.Equal(RankScore{Rank: 1, Score: 2}))
 
 				zRevRankWithScore = adapter.ZRevRankWithScore(ctx, "zset", "three")
-				Expect(zRevRankWithScore.Err()).NotTo(HaveOccurred())
-				Expect(zRevRankWithScore.Result()).To(Equal(RankScore{Rank: 0, Score: 3}))
+				gomega.Expect(zRevRankWithScore.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(zRevRankWithScore.Result()).To(gomega.Equal(RankScore{Rank: 0, Score: 3}))
 
 				zRevRankWithScore = adapter.ZRevRankWithScore(ctx, "zset", "four")
-				Expect(zRevRankWithScore.Err()).To(HaveOccurred())
-				Expect(zRevRankWithScore.Err()).To(Equal(rueidis.Nil))
+				gomega.Expect(zRevRankWithScore.Err()).To(gomega.HaveOccurred())
+				gomega.Expect(zRevRankWithScore.Err()).To(gomega.Equal(rueidis.Nil))
 			})
 		}
 
-		It("should ZScore", func() {
+		ginkgo.It("should ZScore", func() {
 			zAdd := adapter.ZAdd(ctx, "zset", Z{Score: 1.001, Member: "one"})
-			Expect(zAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(zAdd.Err()).NotTo(gomega.HaveOccurred())
 
 			zScore := adapter.ZScore(ctx, "zset", "one")
-			Expect(zScore.Err()).NotTo(HaveOccurred())
-			Expect(zScore.Val()).To(Equal(float64(1.001)))
+			gomega.Expect(zScore.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zScore.Val()).To(gomega.Equal(float64(1.001)))
 		})
 
 		if resp3 {
-			It("should ZUnion", func() {
+			ginkgo.It("should ZUnion", func() {
 				err := adapter.ZAddArgs(ctx, "zset1", ZAddArgs{
 					Members: []Z{
 						{Score: 1, Member: "one"},
 						{Score: 2, Member: "two"},
 					},
 				}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				err = adapter.ZAddArgs(ctx, "zset2", ZAddArgs{
 					Members: []Z{
@@ -4826,23 +4827,23 @@ func testAdapter(resp3 bool) {
 						{Score: 3, Member: "three"},
 					},
 				}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				union, err := adapter.ZUnion(ctx, ZStore{
 					Keys:      []string{"zset1", "zset2"},
 					Weights:   []int64{2, 3},
 					Aggregate: "sum",
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(union).To(Equal([]string{"one", "three", "two"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(union).To(gomega.Equal([]string{"one", "three", "two"}))
 
 				unionScores, err := adapter.ZUnionWithScores(ctx, ZStore{
 					Keys:      []string{"zset1", "zset2"},
 					Weights:   []int64{2, 3},
 					Aggregate: "sum",
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(unionScores).To(Equal([]Z{
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(unionScores).To(gomega.Equal([]Z{
 					{Score: 5, Member: "one"},
 					{Score: 9, Member: "three"},
 					{Score: 10, Member: "two"},
@@ -4850,29 +4851,29 @@ func testAdapter(resp3 bool) {
 			})
 		}
 
-		It("should ZUnionStore", func() {
+		ginkgo.It("should ZUnionStore", func() {
 			err := adapter.ZAdd(ctx, "zset1", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset1", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			err = adapter.ZAdd(ctx, "zset2", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset2", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset2", Z{Score: 3, Member: "three"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			n, err := adapter.ZUnionStore(ctx, "out", ZStore{
 				Keys:    []string{"zset1", "zset2"},
 				Weights: []int64{2, 3},
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(n).To(Equal(int64(3)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(n).To(gomega.Equal(int64(3)))
 
 			val, err := adapter.ZRangeWithScores(ctx, "out", 0, -1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(val).To(gomega.Equal([]Z{{
 				Score:  5,
 				Member: "one",
 			}, {
@@ -4885,56 +4886,56 @@ func testAdapter(resp3 bool) {
 		})
 
 		if resp3 {
-			It("should ZRandMember", func() {
+			ginkgo.It("should ZRandMember", func() {
 				err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				v := adapter.ZRandMember(ctx, "zset", 1)
-				Expect(v.Err()).NotTo(HaveOccurred())
-				Expect(v.Val()).To(Or(Equal([]string{"one"}), Equal([]string{"two"})))
+				gomega.Expect(v.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(v.Val()).To(gomega.Or(gomega.Equal([]string{"one"}), gomega.Equal([]string{"two"})))
 
 				v = adapter.ZRandMember(ctx, "zset", 0)
-				Expect(v.Err()).NotTo(HaveOccurred())
-				Expect(v.Val()).To(HaveLen(0))
+				gomega.Expect(v.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(v.Val()).To(gomega.HaveLen(0))
 
 				kv, err := adapter.ZRandMemberWithScores(ctx, "zset", 1).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(kv).To(Or(
-					Equal([]Z{{Member: "one", Score: 1}}),
-					Equal([]Z{{Member: "two", Score: 2}}),
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(kv).To(gomega.Or(
+					gomega.Equal([]Z{{Member: "one", Score: 1}}),
+					gomega.Equal([]Z{{Member: "two", Score: 2}}),
 				))
 			})
 
-			It("should ZDiff", func() {
+			ginkgo.It("should ZDiff", func() {
 				err := adapter.ZAdd(ctx, "zset1", Z{Score: 1, Member: "one"}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.ZAdd(ctx, "zset1", Z{Score: 2, Member: "two"}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.ZAdd(ctx, "zset1", Z{Score: 3, Member: "three"}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.ZAdd(ctx, "zset2", Z{Score: 1, Member: "one"}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				v, err := adapter.ZDiff(ctx, "zset1", "zset2").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(v).To(Equal([]string{"two", "three"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(v).To(gomega.Equal([]string{"two", "three"}))
 			})
 
-			It("should ZDiffWithScores", func() {
+			ginkgo.It("should ZDiffWithScores", func() {
 				err := adapter.ZAdd(ctx, "zset1", Z{Score: 1, Member: "one"}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.ZAdd(ctx, "zset1", Z{Score: 2, Member: "two"}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.ZAdd(ctx, "zset1", Z{Score: 3, Member: "three"}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.ZAdd(ctx, "zset2", Z{Score: 1, Member: "one"}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				v, err := adapter.ZDiffWithScores(ctx, "zset1", "zset2").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(v).To(Equal([]Z{
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(v).To(gomega.Equal([]Z{
 					{
 						Member: "two",
 						Score:  2,
@@ -4946,70 +4947,70 @@ func testAdapter(resp3 bool) {
 				}))
 			})
 
-			It("should ZInter", func() {
+			ginkgo.It("should ZInter", func() {
 				err := adapter.ZAdd(ctx, "zset1", Z{Score: 1, Member: "one"}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.ZAdd(ctx, "zset1", Z{Score: 2, Member: "two"}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.ZAdd(ctx, "zset2", Z{Score: 1, Member: "one"}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.ZAdd(ctx, "zset2", Z{Score: 2, Member: "two"}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.ZAdd(ctx, "zset2", Z{Score: 3, Member: "three"}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				v, err := adapter.ZInter(ctx, ZStore{
 					Keys: []string{"zset1", "zset2"},
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(v).To(Equal([]string{"one", "two"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(v).To(gomega.Equal([]string{"one", "two"}))
 			})
 
-			It("should ZInterCard", func() {
+			ginkgo.It("should ZInterCard", func() {
 				err := adapter.ZAdd(ctx, "zset1", Z{Score: 1, Member: "one"}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.ZAdd(ctx, "zset1", Z{Score: 2, Member: "two"}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.ZAdd(ctx, "zset2", Z{Score: 1, Member: "one"}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.ZAdd(ctx, "zset2", Z{Score: 2, Member: "two"}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.ZAdd(ctx, "zset2", Z{Score: 3, Member: "three"}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				// limit 0 means no limit
 				sInterCard := adapter.ZInterCard(ctx, 0, "zset1", "zset2")
-				Expect(sInterCard.Err()).NotTo(HaveOccurred())
-				Expect(sInterCard.Val()).To(Equal(int64(2)))
+				gomega.Expect(sInterCard.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(sInterCard.Val()).To(gomega.Equal(int64(2)))
 
 				sInterCard = adapter.ZInterCard(ctx, 1, "zset1", "zset2")
-				Expect(sInterCard.Err()).NotTo(HaveOccurred())
-				Expect(sInterCard.Val()).To(Equal(int64(1)))
+				gomega.Expect(sInterCard.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(sInterCard.Val()).To(gomega.Equal(int64(1)))
 
 				sInterCard = adapter.ZInterCard(ctx, 3, "zset1", "zset2")
-				Expect(sInterCard.Err()).NotTo(HaveOccurred())
-				Expect(sInterCard.Val()).To(Equal(int64(2)))
+				gomega.Expect(sInterCard.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(sInterCard.Val()).To(gomega.Equal(int64(2)))
 			})
 
-			It("should ZInterWithScores", func() {
+			ginkgo.It("should ZInterWithScores", func() {
 				err := adapter.ZAdd(ctx, "zset1", Z{Score: 1, Member: "one"}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.ZAdd(ctx, "zset1", Z{Score: 2, Member: "two"}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.ZAdd(ctx, "zset2", Z{Score: 1, Member: "one"}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.ZAdd(ctx, "zset2", Z{Score: 2, Member: "two"}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.ZAdd(ctx, "zset2", Z{Score: 3, Member: "three"}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				v, err := adapter.ZInterWithScores(ctx, ZStore{
 					Keys:      []string{"zset1", "zset2"},
 					Weights:   []int64{2, 3},
 					Aggregate: "Max",
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(v).To(Equal([]Z{
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(v).To(gomega.Equal([]Z{
 					{
 						Member: "one",
 						Score:  3,
@@ -5021,26 +5022,26 @@ func testAdapter(resp3 bool) {
 				}))
 			})
 
-			It("should ZDiffStore", func() {
+			ginkgo.It("should ZDiffStore", func() {
 				err := adapter.ZAdd(ctx, "zset1", Z{Score: 1, Member: "one"}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.ZAdd(ctx, "zset1", Z{Score: 2, Member: "two"}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.ZAdd(ctx, "zset2", Z{Score: 1, Member: "one"}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.ZAdd(ctx, "zset2", Z{Score: 2, Member: "two"}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.ZAdd(ctx, "zset2", Z{Score: 3, Member: "three"}).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				v, err := adapter.ZDiffStore(ctx, "out1", "zset1", "zset2").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(v).To(Equal(int64(0)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(v).To(gomega.Equal(int64(0)))
 				v, err = adapter.ZDiffStore(ctx, "out1", "zset2", "zset1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(v).To(Equal(int64(1)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(v).To(gomega.Equal(int64(1)))
 				vals, err := adapter.ZRangeWithScores(ctx, "out1", 0, -1).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(vals).To(Equal([]Z{{
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(vals).To(gomega.Equal([]Z{{
 					Score:  3,
 					Member: "three",
 				}}))
@@ -5048,8 +5049,8 @@ func testAdapter(resp3 bool) {
 		}
 	})
 
-	Describe("streams", func() {
-		BeforeEach(func() {
+	ginkgo.Describe("streams", func() {
+		ginkgo.BeforeEach(func() {
 			if resp3 {
 				_, err := adapter.XAdd(ctx, XAddArgs{
 					Stream:     "stream",
@@ -5057,7 +5058,7 @@ func testAdapter(resp3 bool) {
 					Values:     map[string]any{"uno": "un"},
 					NoMkStream: true,
 				}).Result()
-				Expect(rueidis.IsRedisNil(err)).To(BeTrue())
+				gomega.Expect(rueidis.IsRedisNil(err)).To(gomega.BeTrue())
 			}
 
 			id, err := adapter.XAdd(ctx, XAddArgs{
@@ -5065,8 +5066,8 @@ func testAdapter(resp3 bool) {
 				ID:     "1-0",
 				Values: map[string]any{"uno": "un"},
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(id).To(Equal("1-0"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(id).To(gomega.Equal("1-0"))
 
 			// Values supports []any.
 			id, err = adapter.XAdd(ctx, XAddArgs{
@@ -5074,8 +5075,8 @@ func testAdapter(resp3 bool) {
 				ID:     "2-0",
 				Values: []any{"dos", "deux"},
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(id).To(Equal("2-0"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(id).To(gomega.Equal("2-0"))
 
 			// Value supports []string.
 			id, err = adapter.XAdd(ctx, XAddArgs{
@@ -5083,52 +5084,52 @@ func testAdapter(resp3 bool) {
 				ID:     "3-0",
 				Values: []string{"tres", "troix"},
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(id).To(Equal("3-0"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(id).To(gomega.Equal("3-0"))
 		})
 
-		It("should XTrimMaxLen", func() {
+		ginkgo.It("should XTrimMaxLen", func() {
 			n, err := adapter.XTrimMaxLen(ctx, "stream", 0).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(n).To(Equal(int64(3)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(n).To(gomega.Equal(int64(3)))
 		})
 
-		It("should XTrimMaxLenApprox", func() {
+		ginkgo.It("should XTrimMaxLenApprox", func() {
 			n, err := adapter.XTrimMaxLenApprox(ctx, "stream", 0, 0).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(n).To(Equal(int64(3)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(n).To(gomega.Equal(int64(3)))
 		})
 
 		if resp3 {
-			It("should XTrimMaxLenApprox Limit", func() {
+			ginkgo.It("should XTrimMaxLenApprox Limit", func() {
 				n, err := adapter.XTrimMaxLenApprox(ctx, "stream", 0, 1).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(n).To(Equal(int64(0)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(n).To(gomega.Equal(int64(0)))
 			})
 
-			It("should XTrimMinID", func() {
+			ginkgo.It("should XTrimMinID", func() {
 				n, err := adapter.XTrimMinID(ctx, "stream", "4-0").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(n).To(Equal(int64(3)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(n).To(gomega.Equal(int64(3)))
 			})
 
-			It("should XTrimMinIDApprox", func() {
+			ginkgo.It("should XTrimMinIDApprox", func() {
 				n, err := adapter.XTrimMinIDApprox(ctx, "stream", "4-0", 0).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(n).To(Equal(int64(3)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(n).To(gomega.Equal(int64(3)))
 			})
 		}
 
-		It("should XAdd", func() {
+		ginkgo.It("should XAdd", func() {
 			id, err := adapter.XAdd(ctx, XAddArgs{
 				Stream: "stream",
 				Values: map[string]any{"quatro": "quatre"},
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			vals, err := adapter.XRange(ctx, "stream", "-", "+").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]XMessage{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]XMessage{
 				{ID: "1-0", Values: map[string]any{"uno": "un"}},
 				{ID: "2-0", Values: map[string]any{"dos": "deux"}},
 				{ID: "3-0", Values: map[string]any{"tres": "troix"}},
@@ -5139,33 +5140,33 @@ func testAdapter(resp3 bool) {
 		// TODO XAdd There is a bug in the limit parameter.
 		// TODO Don't test it for now.
 		// TODO link: https://github.com/redis/redis/issues/9046
-		It("should XAdd with MaxLen", func() {
+		ginkgo.It("should XAdd with MaxLen", func() {
 			id, err := adapter.XAdd(ctx, XAddArgs{
 				Stream: "stream",
 				MaxLen: 1,
 				Values: map[string]any{"quatro": "quatre"},
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			vals, err := adapter.XRange(ctx, "stream", "-", "+").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]XMessage{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]XMessage{
 				{ID: id, Values: map[string]any{"quatro": "quatre"}},
 			}))
 		})
 
-		It("should XAdd with MaxLen Approx", func() {
+		ginkgo.It("should XAdd with MaxLen Approx", func() {
 			id, err := adapter.XAdd(ctx, XAddArgs{
 				Stream: "stream",
 				MaxLen: 1,
 				Approx: true,
 				Values: map[string]any{"quatro": "quatre"},
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			vals, err := adapter.XRange(ctx, "stream", "-", "+").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]XMessage{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]XMessage{
 				{ID: "1-0", Values: map[string]any{"uno": "un"}},
 				{ID: "2-0", Values: map[string]any{"dos": "deux"}},
 				{ID: "3-0", Values: map[string]any{"tres": "troix"}},
@@ -5174,22 +5175,22 @@ func testAdapter(resp3 bool) {
 		})
 
 		if resp3 {
-			It("should XAdd with MinID", func() {
+			ginkgo.It("should XAdd with MinID", func() {
 				id, err := adapter.XAdd(ctx, XAddArgs{
 					Stream: "stream",
 					MinID:  "5-0",
 					ID:     "4-0",
 					Values: map[string]any{"quatro": "quatre"},
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(id).To(Equal("4-0"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(id).To(gomega.Equal("4-0"))
 
 				vals, err := adapter.XRange(ctx, "stream", "-", "+").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(vals).To(HaveLen(0))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(vals).To(gomega.HaveLen(0))
 			})
 
-			It("should XAdd with MinID Approx", func() {
+			ginkgo.It("should XAdd with MinID Approx", func() {
 				id, err := adapter.XAdd(ctx, XAddArgs{
 					Stream: "stream",
 					MinID:  "5-0",
@@ -5197,15 +5198,15 @@ func testAdapter(resp3 bool) {
 					Approx: true,
 					Values: map[string]any{"quatro": "quatre"},
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(id).To(Equal("4-0"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(id).To(gomega.Equal("4-0"))
 
 				vals, err := adapter.XRange(ctx, "stream", "-", "+").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(vals).To(HaveLen(0))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(vals).To(gomega.HaveLen(0))
 			})
 
-			It("should XAdd with MinID Limit", func() {
+			ginkgo.It("should XAdd with MinID Limit", func() {
 				id, err := adapter.XAdd(ctx, XAddArgs{
 					Stream: "stream",
 					MinID:  "5-0",
@@ -5214,12 +5215,12 @@ func testAdapter(resp3 bool) {
 					Values: map[string]any{"quatro": "quatre"},
 					Limit:  1,
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(id).To(Equal("4-0"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(id).To(gomega.Equal("4-0"))
 
 				vals, err := adapter.XRange(ctx, "stream", "-", "+").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(vals).To(Equal([]XMessage{
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(vals).To(gomega.Equal([]XMessage{
 					{ID: "1-0", Values: map[string]any{"uno": "un"}},
 					{ID: "2-0", Values: map[string]any{"dos": "deux"}},
 					{ID: "3-0", Values: map[string]any{"tres": "troix"}},
@@ -5228,99 +5229,99 @@ func testAdapter(resp3 bool) {
 			})
 		}
 
-		It("should XDel", func() {
+		ginkgo.It("should XDel", func() {
 			n, err := adapter.XDel(ctx, "stream", "1-0", "2-0", "3-0").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(n).To(Equal(int64(3)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(n).To(gomega.Equal(int64(3)))
 		})
 
-		It("should XLen", func() {
+		ginkgo.It("should XLen", func() {
 			n, err := adapter.XLen(ctx, "stream").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(n).To(Equal(int64(3)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(n).To(gomega.Equal(int64(3)))
 		})
 
-		It("should XRange", func() {
+		ginkgo.It("should XRange", func() {
 			msgs, err := adapter.XRange(ctx, "stream", "-", "+").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(msgs).To(Equal([]XMessage{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(msgs).To(gomega.Equal([]XMessage{
 				{ID: "1-0", Values: map[string]any{"uno": "un"}},
 				{ID: "2-0", Values: map[string]any{"dos": "deux"}},
 				{ID: "3-0", Values: map[string]any{"tres": "troix"}},
 			}))
 
 			msgs, err = adapter.XRange(ctx, "stream", "2", "+").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(msgs).To(Equal([]XMessage{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(msgs).To(gomega.Equal([]XMessage{
 				{ID: "2-0", Values: map[string]any{"dos": "deux"}},
 				{ID: "3-0", Values: map[string]any{"tres": "troix"}},
 			}))
 
 			msgs, err = adapter.XRange(ctx, "stream", "-", "2").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(msgs).To(Equal([]XMessage{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(msgs).To(gomega.Equal([]XMessage{
 				{ID: "1-0", Values: map[string]any{"uno": "un"}},
 				{ID: "2-0", Values: map[string]any{"dos": "deux"}},
 			}))
 		})
 
-		It("should XRangeN", func() {
+		ginkgo.It("should XRangeN", func() {
 			msgs, err := adapter.XRangeN(ctx, "stream", "-", "+", 2).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(msgs).To(Equal([]XMessage{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(msgs).To(gomega.Equal([]XMessage{
 				{ID: "1-0", Values: map[string]any{"uno": "un"}},
 				{ID: "2-0", Values: map[string]any{"dos": "deux"}},
 			}))
 
 			msgs, err = adapter.XRangeN(ctx, "stream", "2", "+", 1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(msgs).To(Equal([]XMessage{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(msgs).To(gomega.Equal([]XMessage{
 				{ID: "2-0", Values: map[string]any{"dos": "deux"}},
 			}))
 
 			msgs, err = adapter.XRangeN(ctx, "stream", "-", "2", 1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(msgs).To(Equal([]XMessage{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(msgs).To(gomega.Equal([]XMessage{
 				{ID: "1-0", Values: map[string]any{"uno": "un"}},
 			}))
 		})
 
-		It("should XRevRange", func() {
+		ginkgo.It("should XRevRange", func() {
 			msgs, err := adapter.XRevRange(ctx, "stream", "+", "-").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(msgs).To(Equal([]XMessage{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(msgs).To(gomega.Equal([]XMessage{
 				{ID: "3-0", Values: map[string]any{"tres": "troix"}},
 				{ID: "2-0", Values: map[string]any{"dos": "deux"}},
 				{ID: "1-0", Values: map[string]any{"uno": "un"}},
 			}))
 
 			msgs, err = adapter.XRevRange(ctx, "stream", "+", "2").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(msgs).To(Equal([]XMessage{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(msgs).To(gomega.Equal([]XMessage{
 				{ID: "3-0", Values: map[string]any{"tres": "troix"}},
 				{ID: "2-0", Values: map[string]any{"dos": "deux"}},
 			}))
 		})
 
-		It("should XRevRangeN", func() {
+		ginkgo.It("should XRevRangeN", func() {
 			msgs, err := adapter.XRevRangeN(ctx, "stream", "+", "-", 2).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(msgs).To(Equal([]XMessage{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(msgs).To(gomega.Equal([]XMessage{
 				{ID: "3-0", Values: map[string]any{"tres": "troix"}},
 				{ID: "2-0", Values: map[string]any{"dos": "deux"}},
 			}))
 
 			msgs, err = adapter.XRevRangeN(ctx, "stream", "+", "2", 1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(msgs).To(Equal([]XMessage{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(msgs).To(gomega.Equal([]XMessage{
 				{ID: "3-0", Values: map[string]any{"tres": "troix"}},
 			}))
 		})
 
-		It("should XRead", func() {
+		ginkgo.It("should XRead", func() {
 			res, err := adapter.XReadStreams(ctx, "stream", "0").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(res).To(Equal([]XStream{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(res).To(gomega.Equal([]XStream{
 				{
 					Stream: "stream",
 					Messages: []XMessage{
@@ -5332,17 +5333,17 @@ func testAdapter(resp3 bool) {
 			}))
 
 			_, err = adapter.XReadStreams(ctx, "stream", "3").Result()
-			Expect(rueidis.IsRedisNil(err)).To(BeTrue())
+			gomega.Expect(rueidis.IsRedisNil(err)).To(gomega.BeTrue())
 		})
 
-		It("should XRead", func() {
+		ginkgo.It("should XRead", func() {
 			res, err := adapter.XRead(ctx, XReadArgs{
 				Streams: []string{"stream", "0"},
 				Count:   2,
 				Block:   100 * time.Millisecond,
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(res).To(Equal([]XStream{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(res).To(gomega.Equal([]XStream{
 				{
 					Stream: "stream",
 					Messages: []XMessage{
@@ -5357,23 +5358,23 @@ func testAdapter(resp3 bool) {
 				Count:   1,
 				Block:   100 * time.Millisecond,
 			}).Result()
-			Expect(rueidis.IsRedisNil(err)).To(BeTrue())
+			gomega.Expect(rueidis.IsRedisNil(err)).To(gomega.BeTrue())
 		})
 
-		Describe("group", func() {
-			BeforeEach(func() {
+		ginkgo.Describe("group", func() {
+			ginkgo.BeforeEach(func() {
 				err := adapter.XGroupCreate(ctx, "stream", "group", "0").Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.XGroupSetID(ctx, "stream", "group", "0").Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				res, err := adapter.XReadGroup(ctx, XReadGroupArgs{
 					Group:    "group",
 					Consumer: "consumer",
 					Streams:  []string{"stream", ">"},
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(res).To(Equal([]XStream{
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(res).To(gomega.Equal([]XStream{
 					{
 						Stream: "stream",
 						Messages: []XMessage{
@@ -5385,16 +5386,16 @@ func testAdapter(resp3 bool) {
 				}))
 			})
 
-			AfterEach(func() {
+			ginkgo.AfterEach(func() {
 				n, err := adapter.XGroupDestroy(ctx, "stream", "group").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(n).To(Equal(int64(1)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(n).To(gomega.Equal(int64(1)))
 			})
 
-			It("should XReadGroup skip empty", func() {
+			ginkgo.It("should XReadGroup skip empty", func() {
 				n, err := adapter.XDel(ctx, "stream", "2-0").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(n).To(Equal(int64(1)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(n).To(gomega.Equal(int64(1)))
 
 				res, err := adapter.XReadGroup(ctx, XReadGroupArgs{
 					Group:    "group",
@@ -5403,8 +5404,8 @@ func testAdapter(resp3 bool) {
 					NoAck:    true,
 					Block:    -1,
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(res).To(Equal([]XStream{
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(res).To(gomega.Equal([]XStream{
 					{
 						Stream: "stream",
 						Messages: []XMessage{
@@ -5416,27 +5417,27 @@ func testAdapter(resp3 bool) {
 				}))
 			})
 
-			It("should XGroupCreateMkStream", func() {
+			ginkgo.It("should XGroupCreateMkStream", func() {
 				err := adapter.XGroupCreateMkStream(ctx, "stream2", "group", "0").Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				err = adapter.XGroupCreateMkStream(ctx, "stream2", "group", "0").Err()
-				Expect(err.Error()).To(Equal("BUSYGROUP Consumer Group name already exists"))
+				gomega.Expect(err.Error()).To(gomega.Equal("BUSYGROUP Consumer Group name already exists"))
 
 				n, err := adapter.XGroupDestroy(ctx, "stream2", "group").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(n).To(Equal(int64(1)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(n).To(gomega.Equal(int64(1)))
 
 				n, err = adapter.Del(ctx, "stream2").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(n).To(Equal(int64(1)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(n).To(gomega.Equal(int64(1)))
 			})
 
 			if resp3 {
-				It("should XPending", func() {
+				ginkgo.It("should XPending", func() {
 					info, err := adapter.XPending(ctx, "stream", "group").Result()
-					Expect(err).NotTo(HaveOccurred())
-					Expect(info).To(Equal(XPending{
+					gomega.Expect(err).NotTo(gomega.HaveOccurred())
+					gomega.Expect(info).To(gomega.Equal(XPending{
 						Count:     3,
 						Lower:     "1-0",
 						Higher:    "3-0",
@@ -5451,11 +5452,11 @@ func testAdapter(resp3 bool) {
 						Consumer: "consumer",
 					}
 					infoExt, err := adapter.XPendingExt(ctx, args).Result()
-					Expect(err).NotTo(HaveOccurred())
+					gomega.Expect(err).NotTo(gomega.HaveOccurred())
 					for i := range infoExt {
 						infoExt[i].Idle = 0
 					}
-					Expect(infoExt).To(Equal([]XPendingExt{
+					gomega.Expect(infoExt).To(gomega.Equal([]XPendingExt{
 						{ID: "1-0", Consumer: "consumer", Idle: 0, RetryCount: 1},
 						{ID: "2-0", Consumer: "consumer", Idle: 0, RetryCount: 1},
 						{ID: "3-0", Consumer: "consumer", Idle: 0, RetryCount: 1},
@@ -5463,21 +5464,21 @@ func testAdapter(resp3 bool) {
 
 					args.Idle = 72 * time.Hour
 					infoExt, err = adapter.XPendingExt(ctx, args).Result()
-					Expect(err).NotTo(HaveOccurred())
-					Expect(infoExt).To(HaveLen(0))
+					gomega.Expect(err).NotTo(gomega.HaveOccurred())
+					gomega.Expect(infoExt).To(gomega.HaveLen(0))
 				})
 
-				It("should XGroup Create Delete Consumer", func() {
+				ginkgo.It("should XGroup Create Delete Consumer", func() {
 					n, err := adapter.XGroupCreateConsumer(ctx, "stream", "group", "c1").Result()
-					Expect(err).NotTo(HaveOccurred())
-					Expect(n).To(Equal(int64(1)))
+					gomega.Expect(err).NotTo(gomega.HaveOccurred())
+					gomega.Expect(n).To(gomega.Equal(int64(1)))
 
 					n, err = adapter.XGroupDelConsumer(ctx, "stream", "group", "consumer").Result()
-					Expect(err).NotTo(HaveOccurred())
-					Expect(n).To(Equal(int64(3)))
+					gomega.Expect(err).NotTo(gomega.HaveOccurred())
+					gomega.Expect(n).To(gomega.Equal(int64(3)))
 				})
 
-				It("should XAutoClaim", func() {
+				ginkgo.It("should XAutoClaim", func() {
 					xca := XAutoClaimArgs{
 						Stream:   "stream",
 						Group:    "group",
@@ -5486,9 +5487,9 @@ func testAdapter(resp3 bool) {
 						Count:    2,
 					}
 					msgs, start, err := adapter.XAutoClaim(ctx, xca).Result()
-					Expect(err).NotTo(HaveOccurred())
-					Expect(start).To(Equal("3-0"))
-					Expect(msgs).To(Equal([]XMessage{{
+					gomega.Expect(err).NotTo(gomega.HaveOccurred())
+					gomega.Expect(start).To(gomega.Equal("3-0"))
+					gomega.Expect(msgs).To(gomega.Equal([]XMessage{{
 						ID:     "1-0",
 						Values: map[string]any{"uno": "un"},
 					}, {
@@ -5498,20 +5499,20 @@ func testAdapter(resp3 bool) {
 
 					xca.Start = start
 					msgs, start, err = adapter.XAutoClaim(ctx, xca).Result()
-					Expect(err).NotTo(HaveOccurred())
-					Expect(start).To(Equal("0-0"))
-					Expect(msgs).To(Equal([]XMessage{{
+					gomega.Expect(err).NotTo(gomega.HaveOccurred())
+					gomega.Expect(start).To(gomega.Equal("0-0"))
+					gomega.Expect(msgs).To(gomega.Equal([]XMessage{{
 						ID:     "3-0",
 						Values: map[string]any{"tres": "troix"},
 					}}))
 
 					ids, start, err := adapter.XAutoClaimJustID(ctx, xca).Result()
-					Expect(err).NotTo(HaveOccurred())
-					Expect(start).To(Equal("0-0"))
-					Expect(ids).To(Equal([]string{"3-0"}))
+					gomega.Expect(err).NotTo(gomega.HaveOccurred())
+					gomega.Expect(start).To(gomega.Equal("0-0"))
+					gomega.Expect(ids).To(gomega.Equal([]string{"3-0"}))
 				})
 
-				It("should XAutoClaim NoCount", func() {
+				ginkgo.It("should XAutoClaim NoCount", func() {
 					xca := XAutoClaimArgs{
 						Stream:   "stream",
 						Group:    "group",
@@ -5519,9 +5520,9 @@ func testAdapter(resp3 bool) {
 						Start:    "-",
 					}
 					msgs, start, err := adapter.XAutoClaim(ctx, xca).Result()
-					Expect(err).NotTo(HaveOccurred())
-					Expect(start).To(Equal("0-0"))
-					Expect(msgs).To(Equal([]XMessage{{
+					gomega.Expect(err).NotTo(gomega.HaveOccurred())
+					gomega.Expect(start).To(gomega.Equal("0-0"))
+					gomega.Expect(msgs).To(gomega.Equal([]XMessage{{
 						ID:     "1-0",
 						Values: map[string]any{"uno": "un"},
 					}, {
@@ -5533,21 +5534,21 @@ func testAdapter(resp3 bool) {
 					}}))
 
 					ids, start, err := adapter.XAutoClaimJustID(ctx, xca).Result()
-					Expect(err).NotTo(HaveOccurred())
-					Expect(start).To(Equal("0-0"))
-					Expect(ids).To(Equal([]string{"1-0", "2-0", "3-0"}))
+					gomega.Expect(err).NotTo(gomega.HaveOccurred())
+					gomega.Expect(start).To(gomega.Equal("0-0"))
+					gomega.Expect(ids).To(gomega.Equal([]string{"1-0", "2-0", "3-0"}))
 				})
 			}
 
-			It("should XClaim", func() {
+			ginkgo.It("should XClaim", func() {
 				msgs, err := adapter.XClaim(ctx, XClaimArgs{
 					Stream:   "stream",
 					Group:    "group",
 					Consumer: "consumer",
 					Messages: []string{"1-0", "2-0", "3-0"},
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(msgs).To(Equal([]XMessage{{
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(msgs).To(gomega.Equal([]XMessage{{
 					ID:     "1-0",
 					Values: map[string]any{"uno": "un"},
 				}, {
@@ -5564,21 +5565,21 @@ func testAdapter(resp3 bool) {
 					Consumer: "consumer",
 					Messages: []string{"1-0", "2-0", "3-0"},
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(ids).To(Equal([]string{"1-0", "2-0", "3-0"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(ids).To(gomega.Equal([]string{"1-0", "2-0", "3-0"}))
 			})
 
-			It("should XAck", func() {
+			ginkgo.It("should XAck", func() {
 				n, err := adapter.XAck(ctx, "stream", "group", "1-0", "2-0", "4-0").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(n).To(Equal(int64(2)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(n).To(gomega.Equal(int64(2)))
 			})
 		})
 
-		Describe("xinfo", func() {
-			BeforeEach(func() {
+		ginkgo.Describe("xinfo", func() {
+			ginkgo.BeforeEach(func() {
 				err := adapter.XGroupCreate(ctx, "stream", "group1", "0").Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				res, err := adapter.XReadGroup(ctx, XReadGroupArgs{
 					Group:    "group1",
@@ -5586,8 +5587,8 @@ func testAdapter(resp3 bool) {
 					Streams:  []string{"stream", ">"},
 					Count:    2,
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(res).To(Equal([]XStream{
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(res).To(gomega.Equal([]XStream{
 					{
 						Stream: "stream",
 						Messages: []XMessage{
@@ -5602,8 +5603,8 @@ func testAdapter(resp3 bool) {
 					Consumer: "consumer2",
 					Streams:  []string{"stream", ">"},
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(res).To(Equal([]XStream{
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(res).To(gomega.Equal([]XStream{
 					{
 						Stream: "stream",
 						Messages: []XMessage{
@@ -5613,15 +5614,15 @@ func testAdapter(resp3 bool) {
 				}))
 
 				err = adapter.XGroupCreate(ctx, "stream", "group2", "1-0").Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				res, err = adapter.XReadGroup(ctx, XReadGroupArgs{
 					Group:    "group2",
 					Consumer: "consumer1",
 					Streams:  []string{"stream", ">"},
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(res).To(Equal([]XStream{
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(res).To(gomega.Equal([]XStream{
 					{
 						Stream: "stream",
 						Messages: []XMessage{
@@ -5632,23 +5633,23 @@ func testAdapter(resp3 bool) {
 				}))
 			})
 
-			AfterEach(func() {
+			ginkgo.AfterEach(func() {
 				n, err := adapter.XGroupDestroy(ctx, "stream", "group1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(n).To(Equal(int64(1)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(n).To(gomega.Equal(int64(1)))
 				n, err = adapter.XGroupDestroy(ctx, "stream", "group2").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(n).To(Equal(int64(1)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(n).To(gomega.Equal(int64(1)))
 			})
 
-			It("should XINFO STREAM", func() {
+			ginkgo.It("should XINFO STREAM", func() {
 				res, err := adapter.XInfoStream(ctx, "stream").Result()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				res.RadixTreeKeys = 0
 				res.RadixTreeNodes = 0
 
 				if resp3 {
-					Expect(res).To(Equal(XInfoStream{
+					gomega.Expect(res).To(gomega.Equal(XInfoStream{
 						Length:            3,
 						RadixTreeKeys:     0,
 						RadixTreeNodes:    0,
@@ -5667,7 +5668,7 @@ func testAdapter(resp3 bool) {
 						RecordedFirstEntryID: "1-0",
 					}))
 				} else {
-					Expect(res).To(Equal(XInfoStream{
+					gomega.Expect(res).To(gomega.Equal(XInfoStream{
 						Length:          3,
 						RadixTreeKeys:   0,
 						RadixTreeNodes:  0,
@@ -5686,16 +5687,16 @@ func testAdapter(resp3 bool) {
 
 				// stream is empty
 				n, err := adapter.XDel(ctx, "stream", "1-0", "2-0", "3-0").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(n).To(Equal(int64(3)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(n).To(gomega.Equal(int64(3)))
 
 				res, err = adapter.XInfoStream(ctx, "stream").Result()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				res.RadixTreeKeys = 0
 				res.RadixTreeNodes = 0
 
 				if resp3 {
-					Expect(res).To(Equal(XInfoStream{
+					gomega.Expect(res).To(gomega.Equal(XInfoStream{
 						Length:               0,
 						RadixTreeKeys:        0,
 						RadixTreeNodes:       0,
@@ -5708,7 +5709,7 @@ func testAdapter(resp3 bool) {
 						RecordedFirstEntryID: "0-0",
 					}))
 				} else {
-					Expect(res).To(Equal(XInfoStream{
+					gomega.Expect(res).To(gomega.Equal(XInfoStream{
 						Length:          0,
 						RadixTreeKeys:   0,
 						RadixTreeNodes:  0,
@@ -5721,9 +5722,9 @@ func testAdapter(resp3 bool) {
 			})
 
 			if resp3 {
-				It("should XINFO STREAM FULL", func() {
+				ginkgo.It("should XINFO STREAM FULL", func() {
 					res, err := adapter.XInfoStreamFull(ctx, "stream", 2).Result()
-					Expect(err).NotTo(HaveOccurred())
+					gomega.Expect(err).NotTo(gomega.HaveOccurred())
 					res.RadixTreeKeys = 0
 					res.RadixTreeNodes = 0
 
@@ -5732,21 +5733,21 @@ func testAdapter(resp3 bool) {
 					maxElapsed := 10 * time.Minute
 					for k, g := range res.Groups {
 						for k2, p := range g.Pending {
-							Expect(now.Sub(p.DeliveryTime)).To(BeNumerically("<=", maxElapsed))
+							gomega.Expect(now.Sub(p.DeliveryTime)).To(gomega.BeNumerically("<=", maxElapsed))
 							res.Groups[k].Pending[k2].DeliveryTime = time.Time{}
 						}
 						for k3, c := range g.Consumers {
-							Expect(now.Sub(c.SeenTime)).To(BeNumerically("<=", maxElapsed))
+							gomega.Expect(now.Sub(c.SeenTime)).To(gomega.BeNumerically("<=", maxElapsed))
 							res.Groups[k].Consumers[k3].SeenTime = time.Time{}
 
 							for k4, p := range c.Pending {
-								Expect(now.Sub(p.DeliveryTime)).To(BeNumerically("<=", maxElapsed))
+								gomega.Expect(now.Sub(p.DeliveryTime)).To(gomega.BeNumerically("<=", maxElapsed))
 								res.Groups[k].Consumers[k3].Pending[k4].DeliveryTime = time.Time{}
 							}
 						}
 					}
 
-					Expect(res).To(Equal(XInfoStreamFull{
+					gomega.Expect(res).To(gomega.Equal(XInfoStreamFull{
 						Length:            3,
 						RadixTreeKeys:     0,
 						RadixTreeNodes:    0,
@@ -5854,31 +5855,31 @@ func testAdapter(resp3 bool) {
 				})
 			}
 
-			It("should XINFO GROUPS", func() {
+			ginkgo.It("should XINFO GROUPS", func() {
 				res, err := adapter.XInfoGroups(ctx, "stream").Result()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				if resp3 {
-					Expect(res).To(Equal([]XInfoGroup{
+					gomega.Expect(res).To(gomega.Equal([]XInfoGroup{
 						{Name: "group1", Consumers: 2, Pending: 3, LastDeliveredID: "3-0", EntriesRead: 3},
 						{Name: "group2", Consumers: 1, Pending: 2, LastDeliveredID: "3-0", EntriesRead: 3},
 					}))
 				} else {
-					Expect(res).To(Equal([]XInfoGroup{
+					gomega.Expect(res).To(gomega.Equal([]XInfoGroup{
 						{Name: "group1", Consumers: 2, Pending: 3, LastDeliveredID: "3-0"},
 						{Name: "group2", Consumers: 1, Pending: 2, LastDeliveredID: "3-0"},
 					}))
 				}
 			})
 
-			It("should XINFO CONSUMERS", func() {
+			ginkgo.It("should XINFO CONSUMERS", func() {
 				time.Sleep(time.Millisecond * 2) // make consumer idle > 0
 				res, err := adapter.XInfoConsumers(ctx, "stream", "group1").Result()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				for i := range res {
-					Expect(res[i].Idle > 0).To(BeTrue())
+					gomega.Expect(res[i].Idle > 0).To(gomega.BeTrue())
 					res[i].Idle = 0
 				}
-				Expect(res).To(Equal([]XInfoConsumer{
+				gomega.Expect(res).To(gomega.Equal([]XInfoConsumer{
 					{Name: "consumer1", Pending: 2, Idle: 0},
 					{Name: "consumer2", Pending: 1, Idle: 0},
 				}))
@@ -5886,79 +5887,79 @@ func testAdapter(resp3 bool) {
 		})
 	})
 
-	Describe("Geo add and radius search", func() {
-		BeforeEach(func() {
+	ginkgo.Describe("Geo add and radius search", func() {
+		ginkgo.BeforeEach(func() {
 			n, err := adapter.GeoAdd(
 				ctx,
 				"Sicily",
 				GeoLocation{Longitude: 13.361389, Latitude: 38.115556, Name: "Palermo"},
 				GeoLocation{Longitude: 15.087269, Latitude: 37.502669, Name: "Catania"},
 			).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(n).To(Equal(int64(2)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(n).To(gomega.Equal(int64(2)))
 		})
 
-		It("should not add same geo location", func() {
+		ginkgo.It("should not add same geo location", func() {
 			geoAdd := adapter.GeoAdd(
 				ctx,
 				"Sicily",
 				GeoLocation{Longitude: 13.361389, Latitude: 38.115556, Name: "Palermo"},
 			)
-			Expect(geoAdd.Err()).NotTo(HaveOccurred())
-			Expect(geoAdd.Val()).To(Equal(int64(0)))
+			gomega.Expect(geoAdd.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(geoAdd.Val()).To(gomega.Equal(int64(0)))
 		})
 
-		It("should search geo radius", func() {
+		ginkgo.It("should search geo radius", func() {
 			res, err := adapter.GeoRadius(ctx, "Sicily", 15, 37, GeoRadiusQuery{
 				Radius: 200,
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(res).To(HaveLen(2))
-			Expect(res[0].Name).To(Equal("Palermo"))
-			Expect(res[1].Name).To(Equal("Catania"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(res).To(gomega.HaveLen(2))
+			gomega.Expect(res[0].Name).To(gomega.Equal("Palermo"))
+			gomega.Expect(res[1].Name).To(gomega.Equal("Catania"))
 		})
 
-		It("should geo radius and store the result", func() {
+		ginkgo.It("should geo radius and store the result", func() {
 			n, err := adapter.GeoRadiusStore(ctx, "Sicily", 15, 37, GeoRadiusQuery{
 				Radius: 200,
 				Store:  "result",
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(n).To(Equal(int64(2)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(n).To(gomega.Equal(int64(2)))
 
 			res, err := adapter.ZRangeWithScores(ctx, "result", 0, -1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(res).To(ContainElement(Z{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(res).To(gomega.ContainElement(Z{
 				Score:  3.479099956230698e+15,
 				Member: "Palermo",
 			}))
-			Expect(res).To(ContainElement(Z{
+			gomega.Expect(res).To(gomega.ContainElement(Z{
 				Score:  3.479447370796909e+15,
 				Member: "Catania",
 			}))
 		})
 
-		It("should geo radius and store dist", func() {
+		ginkgo.It("should geo radius and store dist", func() {
 			n, err := adapter.GeoRadiusStore(ctx, "Sicily", 15, 37, GeoRadiusQuery{
 				Radius:    200,
 				StoreDist: "result",
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(n).To(Equal(int64(2)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(n).To(gomega.Equal(int64(2)))
 
 			res, err := adapter.ZRangeWithScores(ctx, "result", 0, -1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(res).To(ContainElement(Z{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(res).To(gomega.ContainElement(Z{
 				Score:  190.44242984775784,
 				Member: "Palermo",
 			}))
-			Expect(res).To(ContainElement(Z{
+			gomega.Expect(res).To(gomega.ContainElement(Z{
 				Score:  56.4412578701582,
 				Member: "Catania",
 			}))
 		})
 
-		It("should search geo radius with options", func() {
+		ginkgo.It("should search geo radius with options", func() {
 			res, err := adapter.GeoRadius(ctx, "Sicily", 15, 37, GeoRadiusQuery{
 				Radius:      200,
 				Unit:        "km",
@@ -5968,21 +5969,21 @@ func testAdapter(resp3 bool) {
 				Count:       2,
 				Sort:        "ASC",
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(res).To(HaveLen(2))
-			Expect(res[1].Name).To(Equal("Palermo"))
-			Expect(res[1].Dist).To(Equal(190.4424))
-			Expect(res[1].GeoHash).To(Equal(int64(3479099956230698)))
-			Expect(res[1].Longitude).To(Equal(13.361389338970184))
-			Expect(res[1].Latitude).To(Equal(38.115556395496299))
-			Expect(res[0].Name).To(Equal("Catania"))
-			Expect(res[0].Dist).To(Equal(56.4413))
-			Expect(res[0].GeoHash).To(Equal(int64(3479447370796909)))
-			Expect(res[0].Longitude).To(Equal(15.087267458438873))
-			Expect(res[0].Latitude).To(Equal(37.50266842333162))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(res).To(gomega.HaveLen(2))
+			gomega.Expect(res[1].Name).To(gomega.Equal("Palermo"))
+			gomega.Expect(res[1].Dist).To(gomega.Equal(190.4424))
+			gomega.Expect(res[1].GeoHash).To(gomega.Equal(int64(3479099956230698)))
+			gomega.Expect(res[1].Longitude).To(gomega.Equal(13.361389338970184))
+			gomega.Expect(res[1].Latitude).To(gomega.Equal(38.115556395496299))
+			gomega.Expect(res[0].Name).To(gomega.Equal("Catania"))
+			gomega.Expect(res[0].Dist).To(gomega.Equal(56.4413))
+			gomega.Expect(res[0].GeoHash).To(gomega.Equal(int64(3479447370796909)))
+			gomega.Expect(res[0].Longitude).To(gomega.Equal(15.087267458438873))
+			gomega.Expect(res[0].Latitude).To(gomega.Equal(37.50266842333162))
 		})
 
-		It("should search geo radius with WithDist=false", func() {
+		ginkgo.It("should search geo radius with WithDist=false", func() {
 			res, err := adapter.GeoRadius(ctx, "Sicily", 15, 37, GeoRadiusQuery{
 				Radius:      200,
 				Unit:        "km",
@@ -5991,21 +5992,21 @@ func testAdapter(resp3 bool) {
 				Count:       2,
 				Sort:        "ASC",
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(res).To(HaveLen(2))
-			Expect(res[1].Name).To(Equal("Palermo"))
-			Expect(res[1].Dist).To(Equal(float64(0)))
-			Expect(res[1].GeoHash).To(Equal(int64(3479099956230698)))
-			Expect(res[1].Longitude).To(Equal(13.361389338970184))
-			Expect(res[1].Latitude).To(Equal(38.115556395496299))
-			Expect(res[0].Name).To(Equal("Catania"))
-			Expect(res[0].Dist).To(Equal(float64(0)))
-			Expect(res[0].GeoHash).To(Equal(int64(3479447370796909)))
-			Expect(res[0].Longitude).To(Equal(15.087267458438873))
-			Expect(res[0].Latitude).To(Equal(37.50266842333162))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(res).To(gomega.HaveLen(2))
+			gomega.Expect(res[1].Name).To(gomega.Equal("Palermo"))
+			gomega.Expect(res[1].Dist).To(gomega.Equal(float64(0)))
+			gomega.Expect(res[1].GeoHash).To(gomega.Equal(int64(3479099956230698)))
+			gomega.Expect(res[1].Longitude).To(gomega.Equal(13.361389338970184))
+			gomega.Expect(res[1].Latitude).To(gomega.Equal(38.115556395496299))
+			gomega.Expect(res[0].Name).To(gomega.Equal("Catania"))
+			gomega.Expect(res[0].Dist).To(gomega.Equal(float64(0)))
+			gomega.Expect(res[0].GeoHash).To(gomega.Equal(int64(3479447370796909)))
+			gomega.Expect(res[0].Longitude).To(gomega.Equal(15.087267458438873))
+			gomega.Expect(res[0].Latitude).To(gomega.Equal(37.50266842333162))
 		})
 
-		It("should search geo radius by member with options", func() {
+		ginkgo.It("should search geo radius by member with options", func() {
 			res, err := adapter.GeoRadiusByMember(ctx, "Sicily", "Catania", GeoRadiusQuery{
 				Radius:      200,
 				Unit:        "km",
@@ -6015,18 +6016,18 @@ func testAdapter(resp3 bool) {
 				Count:       2,
 				Sort:        "ASC",
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(res).To(HaveLen(2))
-			Expect(res[0].Name).To(Equal("Catania"))
-			Expect(res[0].Dist).To(Equal(0.0))
-			Expect(res[0].GeoHash).To(Equal(int64(3479447370796909)))
-			Expect(res[0].Longitude).To(Equal(15.087267458438873))
-			Expect(res[0].Latitude).To(Equal(37.50266842333162))
-			Expect(res[1].Name).To(Equal("Palermo"))
-			Expect(res[1].Dist).To(Equal(166.2742))
-			Expect(res[1].GeoHash).To(Equal(int64(3479099956230698)))
-			Expect(res[1].Longitude).To(Equal(13.361389338970184))
-			Expect(res[1].Latitude).To(Equal(38.115556395496299))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(res).To(gomega.HaveLen(2))
+			gomega.Expect(res[0].Name).To(gomega.Equal("Catania"))
+			gomega.Expect(res[0].Dist).To(gomega.Equal(0.0))
+			gomega.Expect(res[0].GeoHash).To(gomega.Equal(int64(3479447370796909)))
+			gomega.Expect(res[0].Longitude).To(gomega.Equal(15.087267458438873))
+			gomega.Expect(res[0].Latitude).To(gomega.Equal(37.50266842333162))
+			gomega.Expect(res[1].Name).To(gomega.Equal("Palermo"))
+			gomega.Expect(res[1].Dist).To(gomega.Equal(166.2742))
+			gomega.Expect(res[1].GeoHash).To(gomega.Equal(int64(3479099956230698)))
+			gomega.Expect(res[1].Longitude).To(gomega.Equal(13.361389338970184))
+			gomega.Expect(res[1].Latitude).To(gomega.Equal(38.115556395496299))
 
 			ress, err := adapter.GeoRadiusByMemberStore(ctx, "Sicily", "Catania", GeoRadiusQuery{
 				Radius: 200,
@@ -6034,11 +6035,11 @@ func testAdapter(resp3 bool) {
 				Count:  2,
 				Store:  "Sicily2",
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(ress).To(Equal(int64(2)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(ress).To(gomega.Equal(int64(2)))
 		})
 
-		It("should search geo radius with no results", func() {
+		ginkgo.It("should search geo radius with no results", func() {
 			res, err := adapter.GeoRadius(ctx, "Sicily", 99, 37, GeoRadiusQuery{
 				Radius:      200,
 				Unit:        "km",
@@ -6046,11 +6047,11 @@ func testAdapter(resp3 bool) {
 				WithCoord:   true,
 				WithDist:    true,
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(res).To(HaveLen(0))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(res).To(gomega.HaveLen(0))
 		})
 
-		It("should get geo distance with unit options", func() {
+		ginkgo.It("should get geo distance with unit options", func() {
 			// From Redis CLI, note the difference in rounding in m vs
 			// km on Redis itself.
 			//
@@ -6060,30 +6061,30 @@ func testAdapter(resp3 bool) {
 			// GEODIST Sicily Palermo Catania km
 			// "166.27415156960032"
 			dist, err := adapter.GeoDist(ctx, "Sicily", "Palermo", "Catania", "km").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(dist).To(BeNumerically("~", 166.27, 0.01))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(dist).To(gomega.BeNumerically("~", 166.27, 0.01))
 
 			dist, err = adapter.GeoDist(ctx, "Sicily", "Palermo", "Catania", "m").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(dist).To(BeNumerically("~", 166274.15, 0.01))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(dist).To(gomega.BeNumerically("~", 166274.15, 0.01))
 
 			_, err = adapter.GeoDist(ctx, "Sicily", "Palermo", "Catania", "mi").Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			_, err = adapter.GeoDist(ctx, "Sicily", "Palermo", "Catania", "ft").Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 		})
 
-		It("should get geo hash in string representation", func() {
+		ginkgo.It("should get geo hash in string representation", func() {
 			hashes, err := adapter.GeoHash(ctx, "Sicily", "Palermo", "Catania").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(hashes).To(ConsistOf([]string{"sqc8b49rny0", "sqdtr74hyu0"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(hashes).To(gomega.ConsistOf([]string{"sqc8b49rny0", "sqdtr74hyu0"}))
 		})
 
-		It("should return geo position", func() {
+		ginkgo.It("should return geo position", func() {
 			pos, err := adapter.GeoPos(ctx, "Sicily", "Palermo", "Catania", "NonExisting").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(pos).To(ConsistOf([]*GeoPos{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(pos).To(gomega.ConsistOf([]*GeoPos{
 				{
 					Longitude: 13.361389338970184,
 					Latitude:  38.1155563954963,
@@ -6097,7 +6098,7 @@ func testAdapter(resp3 bool) {
 		})
 
 		if resp3 {
-			It("should geo search", func() {
+			ginkgo.It("should geo search", func() {
 				q := GeoSearchQuery{
 					Member:    "Catania",
 					BoxWidth:  400,
@@ -6106,23 +6107,23 @@ func testAdapter(resp3 bool) {
 					Sort:      "asc",
 				}
 				val, err := adapter.GeoSearch(ctx, "Sicily", q).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(val).To(Equal([]string{"Catania"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(val).To(gomega.Equal([]string{"Catania"}))
 
 				q.BoxHeight = 400
 				val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(val).To(Equal([]string{"Catania", "Palermo"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(val).To(gomega.Equal([]string{"Catania", "Palermo"}))
 
 				q.Count = 1
 				val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(val).To(Equal([]string{"Catania"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(val).To(gomega.Equal([]string{"Catania"}))
 
 				q.CountAny = true
 				val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(val).To(Equal([]string{"Palermo"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(val).To(gomega.Equal([]string{"Palermo"}))
 
 				q = GeoSearchQuery{
 					Member:     "Catania",
@@ -6131,23 +6132,23 @@ func testAdapter(resp3 bool) {
 					Sort:       "asc",
 				}
 				val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(val).To(Equal([]string{"Catania"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(val).To(gomega.Equal([]string{"Catania"}))
 
 				q.Radius = 400
 				val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(val).To(Equal([]string{"Catania", "Palermo"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(val).To(gomega.Equal([]string{"Catania", "Palermo"}))
 
 				q.Count = 1
 				val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(val).To(Equal([]string{"Catania"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(val).To(gomega.Equal([]string{"Catania"}))
 
 				q.CountAny = true
 				val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(val).To(Equal([]string{"Palermo"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(val).To(gomega.Equal([]string{"Palermo"}))
 
 				q = GeoSearchQuery{
 					Longitude: 15,
@@ -6158,23 +6159,23 @@ func testAdapter(resp3 bool) {
 					Sort:      "asc",
 				}
 				val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(val).To(Equal([]string{"Catania"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(val).To(gomega.Equal([]string{"Catania"}))
 
 				q.BoxWidth, q.BoxHeight = 400, 400
 				val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(val).To(Equal([]string{"Catania", "Palermo"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(val).To(gomega.Equal([]string{"Catania", "Palermo"}))
 
 				q.Count = 1
 				val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(val).To(Equal([]string{"Catania"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(val).To(gomega.Equal([]string{"Catania"}))
 
 				q.CountAny = true
 				val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(val).To(Equal([]string{"Palermo"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(val).To(gomega.Equal([]string{"Palermo"}))
 
 				q = GeoSearchQuery{
 					Longitude:  15,
@@ -6184,26 +6185,26 @@ func testAdapter(resp3 bool) {
 					Sort:       "asc",
 				}
 				val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(val).To(Equal([]string{"Catania"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(val).To(gomega.Equal([]string{"Catania"}))
 
 				q.Radius = 200
 				val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(val).To(Equal([]string{"Catania", "Palermo"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(val).To(gomega.Equal([]string{"Catania", "Palermo"}))
 
 				q.Count = 1
 				val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(val).To(Equal([]string{"Catania"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(val).To(gomega.Equal([]string{"Catania"}))
 
 				q.CountAny = true
 				val, err = adapter.GeoSearch(ctx, "Sicily", q).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(val).To(Equal([]string{"Palermo"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(val).To(gomega.Equal([]string{"Palermo"}))
 			})
 
-			It("should geo search with options", func() {
+			ginkgo.It("should geo search with options", func() {
 				q := GeoSearchLocationQuery{
 					GeoSearchQuery: GeoSearchQuery{
 						Longitude:  15,
@@ -6217,8 +6218,8 @@ func testAdapter(resp3 bool) {
 					WithCoord: true,
 				}
 				val, err := adapter.GeoSearchLocation(ctx, "Sicily", q).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(val).To(Equal([]GeoLocation{
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(val).To(gomega.Equal([]GeoLocation{
 					{
 						Name:      "Catania",
 						Longitude: 15.08726745843887329,
@@ -6236,7 +6237,7 @@ func testAdapter(resp3 bool) {
 				}))
 			})
 
-			It("should geo search store", func() {
+			ginkgo.It("should geo search store", func() {
 				q := GeoSearchStoreQuery{
 					GeoSearchQuery: GeoSearchQuery{
 						Longitude:  15,
@@ -6249,13 +6250,13 @@ func testAdapter(resp3 bool) {
 				}
 
 				val, err := adapter.GeoSearchStore(ctx, "Sicily", "key1", q).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(val).To(Equal(int64(2)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(val).To(gomega.Equal(int64(2)))
 
 				q.StoreDist = true
 				val, err = adapter.GeoSearchStore(ctx, "Sicily", "key2", q).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(val).To(Equal(int64(2)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(val).To(gomega.Equal(int64(2)))
 
 				loc, err := adapter.GeoSearchLocation(ctx, "key1", GeoSearchLocationQuery{
 					GeoSearchQuery: q.GeoSearchQuery,
@@ -6263,8 +6264,8 @@ func testAdapter(resp3 bool) {
 					WithDist:       true,
 					WithHash:       true,
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(loc).To(Equal([]GeoLocation{
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(loc).To(gomega.Equal([]GeoLocation{
 					{
 						Name:      "Catania",
 						Longitude: 15.08726745843887329,
@@ -6282,8 +6283,8 @@ func testAdapter(resp3 bool) {
 				}))
 
 				v, err := adapter.ZRangeWithScores(ctx, "key2", 0, -1).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(v).To(Equal([]Z{
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(v).To(gomega.Equal([]Z{
 					{
 						Score:  56.441257870158204,
 						Member: "Catania",
@@ -6297,7 +6298,7 @@ func testAdapter(resp3 bool) {
 		}
 	})
 
-	Describe("marshaling/unmarshaling", func() {
+	ginkgo.Describe("marshaling/unmarshaling", func() {
 		type convTest struct {
 			value  any
 			dest   any
@@ -6306,7 +6307,7 @@ func testAdapter(resp3 bool) {
 
 		convTests := []convTest{
 			// TODO
-			//{nil, "", nil},
+			// {nil, "", nil},
 			{"hello", new(string), "hello"},
 			{[]byte("hello"), new([]byte), "hello"},
 			{int(1), new(int), "1"},
@@ -6325,127 +6326,127 @@ func testAdapter(resp3 bool) {
 			{false, new(bool), "0"},
 		}
 
-		It("should convert to string", func() {
+		ginkgo.It("should convert to string", func() {
 			for _, test := range convTests {
 				err := adapter.Set(ctx, "key", test.value, 0).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				s, err := adapter.Get(ctx, "key").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(s).To(Equal(test.wanted))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(s).To(gomega.Equal(test.wanted))
 
 				if test.dest == nil {
 					continue
 				}
 				// TODO
-				//err = adapter.Get(ctx, "key").Scan(test.dest)
-				//Expect(err).NotTo(HaveOccurred())
-				//Expect(deref(test.dest)).To(Equal(test.value))
+				// err = adapter.Get(ctx, "key").Scan(test.dest)
+				// gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				// gomega.Expect(deref(test.dest)).To(gomega.Equal(test.value))
 			}
 		})
 	})
 
-	Describe("json marshaling/unmarshaling", func() {
-		BeforeEach(func() {
+	ginkgo.Describe("json marshaling/unmarshaling", func() {
+		ginkgo.BeforeEach(func() {
 			value := &numberStruct{Number: 42}
 			err := adapter.Set(ctx, "key", value, 0).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 		})
 
-		It("should marshal custom values using json", func() {
+		ginkgo.It("should marshal custom values using json", func() {
 			s, err := adapter.Get(ctx, "key").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(s).To(Equal(`{"Number":42}`))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(s).To(gomega.Equal(`{"Number":42}`))
 		})
 
 		// TODO
-		//It("should scan custom values using json", func() {
+		// ginkgo.It("should scan custom values using json", func() {
 		//	value := &numberStruct{}
 		//	err := adapter.Get(ctx, "key").Scan(value)
-		//	Expect(err).NotTo(HaveOccurred())
-		//	Expect(value.Number).To(Equal(42))
-		//})
+		//	gomega.Expect(err).NotTo(gomega.HaveOccurred())
+		//	gomega.Expect(value.Number).To(gomega.Equal(42))
+		// })
 	})
 
-	Describe("Pub/Sub", func() {
-		It("Publish", func() {
+	ginkgo.Describe("Pub/Sub", func() {
+		ginkgo.It("Publish", func() {
 			v, err := adapter.Publish(ctx, "ch", "1").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(v).To(Equal(int64(0)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(v).To(gomega.Equal(int64(0)))
 		})
 
-		It("PubSubChannels", func() {
+		ginkgo.It("PubSubChannels", func() {
 			v, err := adapter.PubSubChannels(ctx, "*").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(v).To(Equal([]string{}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(v).To(gomega.Equal([]string{}))
 		})
 
-		It("PubSubNumPat", func() {
+		ginkgo.It("PubSubNumPat", func() {
 			v, err := adapter.PubSubNumPat(ctx).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(v).To(Equal(int64(0)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(v).To(gomega.Equal(int64(0)))
 		})
 
-		It("PubSubNumSub", func() {
+		ginkgo.It("PubSubNumSub", func() {
 			v, err := adapter.PubSubNumSub(ctx, "ch").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(v).To(Equal(map[string]int64{"ch": 0}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(v).To(gomega.Equal(map[string]int64{"ch": 0}))
 		})
 
 		if resp3 {
-			It("SPublish", func() {
+			ginkgo.It("SPublish", func() {
 				v, err := adapter.SPublish(ctx, "ch", "1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(v).To(Equal(int64(0)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(v).To(gomega.Equal(int64(0)))
 			})
 
-			It("PubSubShardChannels", func() {
+			ginkgo.It("PubSubShardChannels", func() {
 				v, err := adapter.PubSubShardChannels(ctx, "*").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(v).To(Equal([]string{}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(v).To(gomega.Equal([]string{}))
 			})
 
-			It("PubSubShardNumSub", func() {
+			ginkgo.It("PubSubShardNumSub", func() {
 				v, err := adapter.PubSubShardNumSub(ctx, "ch").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(v).To(Equal(map[string]int64{"ch": 0}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(v).To(gomega.Equal(map[string]int64{"ch": 0}))
 			})
 		}
 	})
 
-	Describe("Script", func() {
-		It("returns keys and values", func() {
+	ginkgo.Describe("Script", func() {
+		ginkgo.It("returns keys and values", func() {
 			vals, err := adapter.Eval(
 				ctx,
 				"return {KEYS[1],ARGV[1]}",
 				[]string{"key"},
 				"hello",
 			).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]any{"key", "hello"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]any{"key", "hello"}))
 		})
 
-		It("returns all values after an error", func() {
+		ginkgo.It("returns all values after an error", func() {
 			vals, err := adapter.Eval(
 				ctx,
 				`return {12, {err="error"}, "abc"}`,
 				nil,
 			).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals.([]any)[0]).To(Equal(int64(12)))
-			Expect(vals.([]any)[1].(error).Error()).To(Equal("error"))
-			Expect(vals.([]any)[2]).To(Equal("abc"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals.([]any)[0]).To(gomega.Equal(int64(12)))
+			gomega.Expect(vals.([]any)[1].(error).Error()).To(gomega.Equal("error"))
+			gomega.Expect(vals.([]any)[2]).To(gomega.Equal("abc"))
 		})
 
-		It("script load", func() {
+		ginkgo.It("script load", func() {
 			val, err := adapter.ScriptLoad(
 				ctx,
 				"return {KEYS[1],ARGV[1]}",
 			).Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			ret, err := adapter.ScriptExists(ctx, val).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(ret).To(Equal([]bool{true}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(ret).To(gomega.Equal([]bool{true}))
 
 			vals, err := adapter.EvalSha(
 				ctx,
@@ -6453,20 +6454,20 @@ func testAdapter(resp3 bool) {
 				[]string{"key"},
 				"hello",
 			).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]any{"key", "hello"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]any{"key", "hello"}))
 		})
 
 		if resp3 {
-			It("script load", func() {
+			ginkgo.It("script load", func() {
 				val, err := adapter.ScriptLoad(
 					ctx,
 					"return {KEYS[1],ARGV[1]}",
 				).Result()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				ret, err := adapter.ScriptExists(ctx, val).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(ret).To(Equal([]bool{true}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(ret).To(gomega.Equal([]bool{true}))
 
 				valsRo, err := adapter.EvalShaRO(
 					ctx,
@@ -6474,14 +6475,14 @@ func testAdapter(resp3 bool) {
 					[]string{"key"},
 					"hello",
 				).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(valsRo).To(Equal([]any{"key", "hello"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(valsRo).To(gomega.Equal([]any{"key", "hello"}))
 			})
 		}
 
-		It("script kill & flush", func() {
-			Expect(adapter.ScriptKill(ctx).Err()).To(MatchError("NOTBUSY No scripts in execution right now."))
-			Expect(adapter.ScriptFlush(ctx).Err()).NotTo(HaveOccurred())
+		ginkgo.It("script kill & flush", func() {
+			gomega.Expect(adapter.ScriptKill(ctx).Err()).To(gomega.MatchError("NOTBUSY No scripts in execution right now."))
+			gomega.Expect(adapter.ScriptFlush(ctx).Err()).NotTo(gomega.HaveOccurred())
 		})
 	})
 }
@@ -6490,92 +6491,92 @@ func testAdapterCache(resp3 bool) {
 
 	var adapter Cmdable
 
-	BeforeEach(func() {
+	ginkgo.BeforeEach(func() {
 		if resp3 {
 			adapter = adapterresp3
 		} else {
 			adapter = adapterresp2
 		}
-		Expect(adapter.FlushDB(ctx).Err()).NotTo(HaveOccurred())
-		Expect(adapter.FlushAll(ctx).Err()).NotTo(HaveOccurred())
+		gomega.Expect(adapter.FlushDB(ctx).Err()).NotTo(gomega.HaveOccurred())
+		gomega.Expect(adapter.FlushAll(ctx).Err()).NotTo(gomega.HaveOccurred())
 	})
 
-	Describe("Config", func() {
-		It("Flush", func() {
-			Expect(adapter.FlushDBAsync(ctx).Err()).NotTo(HaveOccurred())
+	ginkgo.Describe("Config", func() {
+		ginkgo.It("Flush", func() {
+			gomega.Expect(adapter.FlushDBAsync(ctx).Err()).NotTo(gomega.HaveOccurred())
 			time.Sleep(2 * time.Second)
-			Expect(adapter.FlushAllAsync(ctx).Err()).NotTo(HaveOccurred())
-			time.Sleep(2 * time.Second)
-		})
-		It("BgSave", func() {
-			Expect(adapter.BgRewriteAOF(ctx).Err()).NotTo(HaveOccurred())
-			time.Sleep(2 * time.Second)
-			Expect(adapter.BgSave(ctx).Err()).NotTo(HaveOccurred())
+			gomega.Expect(adapter.FlushAllAsync(ctx).Err()).NotTo(gomega.HaveOccurred())
 			time.Sleep(2 * time.Second)
 		})
-		It("Config Rewrite", func() {
-			Expect(adapter.ConfigRewrite(ctx).Err()).To(MatchError("The server is running without a config file"))
+		ginkgo.It("BgSave", func() {
+			gomega.Expect(adapter.BgRewriteAOF(ctx).Err()).NotTo(gomega.HaveOccurred())
+			time.Sleep(2 * time.Second)
+			gomega.Expect(adapter.BgSave(ctx).Err()).NotTo(gomega.HaveOccurred())
+			time.Sleep(2 * time.Second)
 		})
-		It("DebugObject", func() {
-			Expect(adapter.DebugObject(ctx, "non").Err().Error()).To(HavePrefix("DEBUG command not allowed."))
+		ginkgo.It("Config Rewrite", func() {
+			gomega.Expect(adapter.ConfigRewrite(ctx).Err()).To(gomega.MatchError("The server is running without a config file"))
 		})
-		It("ReadOnly & ReadWrite", func() {
-			Expect(adapter.ReadOnly(ctx).Err()).To(MatchError("This instance has cluster support disabled"))
-			Expect(adapter.ReadWrite(ctx).Err()).To(MatchError("This instance has cluster support disabled"))
+		ginkgo.It("DebugObject", func() {
+			gomega.Expect(adapter.DebugObject(ctx, "non").Err().Error()).To(gomega.HavePrefix("DEBUG command not allowed."))
+		})
+		ginkgo.It("ReadOnly & ReadWrite", func() {
+			gomega.Expect(adapter.ReadOnly(ctx).Err()).To(gomega.MatchError("This instance has cluster support disabled"))
+			gomega.Expect(adapter.ReadWrite(ctx).Err()).To(gomega.MatchError("This instance has cluster support disabled"))
 		})
 	})
 
-	Describe("Client", func() {
-		It("should ClientUnblock", func() {
+	ginkgo.Describe("Client", func() {
+		ginkgo.It("should ClientUnblock", func() {
 			id := adapter.ClientID(ctx).Val()
 			r, err := adapter.ClientUnblock(ctx, id).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(r).To(Equal(int64(0)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(r).To(gomega.Equal(int64(0)))
 		})
 
-		It("should ClientUnblockWithError", func() {
+		ginkgo.It("should ClientUnblockWithError", func() {
 			id := adapter.ClientID(ctx).Val()
 			r, err := adapter.ClientUnblockWithError(ctx, id).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(r).To(Equal(int64(0)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(r).To(gomega.Equal(int64(0)))
 		})
 
-		It("ClientPause", func() {
-			Expect(adapter.ClientPause(ctx, time.Second).Err()).NotTo(HaveOccurred())
+		ginkgo.It("ClientPause", func() {
+			gomega.Expect(adapter.ClientPause(ctx, time.Second).Err()).NotTo(gomega.HaveOccurred())
 		})
 
-		It("ClientUnpause", func() {
-			Expect(adapter.ClientUnpause(ctx).Err()).NotTo(HaveOccurred())
+		ginkgo.It("ClientUnpause", func() {
+			gomega.Expect(adapter.ClientUnpause(ctx).Err()).NotTo(gomega.HaveOccurred())
 		})
 	})
 
-	Describe("EvalRO", func() {
-		It("returns keys and values", func() {
+	ginkgo.Describe("EvalRO", func() {
+		ginkgo.It("returns keys and values", func() {
 			vals, err := adapter.EvalRO(
 				ctx,
 				"return {KEYS[1],ARGV[1]}",
 				[]string{"key"},
 				"hello",
 			).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]any{"key", "hello"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]any{"key", "hello"}))
 		})
 
-		It("returns all values after an error", func() {
+		ginkgo.It("returns all values after an error", func() {
 			vals, err := adapter.EvalRO(
 				ctx,
 				`return {12, {err="error"}, "abc"}`,
 				nil,
 			).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals.([]any)[0]).To(Equal(int64(12)))
-			Expect(vals.([]any)[1].(error).Error()).To(Equal("error"))
-			Expect(vals.([]any)[2]).To(Equal("abc"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals.([]any)[0]).To(gomega.Equal(int64(12)))
+			gomega.Expect(vals.([]any)[1].(error).Error()).To(gomega.Equal("error"))
+			gomega.Expect(vals.([]any)[2]).To(gomega.Equal("abc"))
 		})
 	})
 
 	if resp3 {
-		Describe("Functions", func() {
+		ginkgo.Describe("Functions", func() {
 			var (
 				q        FunctionListQuery
 				lib1Code string
@@ -6584,9 +6585,9 @@ func testAdapterCache(resp3 bool) {
 				lib2     Library
 			)
 
-			BeforeEach(func() {
+			ginkgo.BeforeEach(func() {
 				flush := adapter.FunctionFlush(ctx)
-				Expect(flush.Err()).NotTo(HaveOccurred())
+				gomega.Expect(flush.Err()).NotTo(gomega.HaveOccurred())
 
 				lib1 = Library{
 					Name:   "mylib1",
@@ -6661,20 +6662,20 @@ func testAdapterCache(resp3 bool) {
 				q = FunctionListQuery{}
 			})
 
-			It("Loads a new library", func() {
+			ginkgo.It("Loads a new library", func() {
 				functionLoad := adapter.FunctionLoad(ctx, lib1Code)
-				Expect(functionLoad.Err()).NotTo(HaveOccurred())
-				Expect(functionLoad.Val()).To(Equal(lib1.Name))
+				gomega.Expect(functionLoad.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(functionLoad.Val()).To(gomega.Equal(lib1.Name))
 
 				functionList := adapter.FunctionList(ctx, q)
-				Expect(functionList.Err()).NotTo(HaveOccurred())
-				Expect(functionList.Val()).To(HaveLen(1))
+				gomega.Expect(functionList.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(functionList.Val()).To(gomega.HaveLen(1))
 			})
 
-			It("Loads and replaces a new library", func() {
+			ginkgo.It("Loads and replaces a new library", func() {
 				// Load a library for the first time
 				err := adapter.FunctionLoad(ctx, lib1Code).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				newFuncName := "replaces_func_name"
 				newFuncDesc := "replaces_func_desc"
@@ -6683,12 +6684,12 @@ func testAdapterCache(resp3 bool) {
 
 				// And then replace it
 				functionLoadReplace := adapter.FunctionLoadReplace(ctx, newCode)
-				Expect(functionLoadReplace.Err()).NotTo(HaveOccurred())
-				Expect(functionLoadReplace.Val()).To(Equal(lib1.Name))
+				gomega.Expect(functionLoadReplace.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(functionLoadReplace.Val()).To(gomega.Equal(lib1.Name))
 
 				lib, err := adapter.FunctionList(ctx, q).First()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(lib.Functions).To(Equal([]Function{
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(lib.Functions).To(gomega.Equal([]Function{
 					{
 						Name:        newFuncName,
 						Description: newFuncDesc,
@@ -6697,260 +6698,260 @@ func testAdapterCache(resp3 bool) {
 				}))
 			})
 
-			It("Deletes a library", func() {
+			ginkgo.It("Deletes a library", func() {
 				err := adapter.FunctionLoad(ctx, lib1Code).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				err = adapter.FunctionDelete(ctx, lib1.Name).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				val, err := adapter.FunctionList(ctx, FunctionListQuery{
 					LibraryNamePattern: lib1.Name,
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(val).To(HaveLen(0))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(val).To(gomega.HaveLen(0))
 			})
 
-			It("Flushes all libraries", func() {
+			ginkgo.It("Flushes all libraries", func() {
 				err := adapter.FunctionLoad(ctx, lib1Code).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				err = adapter.FunctionLoad(ctx, lib2Code).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				err = adapter.FunctionFlush(ctx).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				val, err := adapter.FunctionList(ctx, q).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(val).To(HaveLen(0))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(val).To(gomega.HaveLen(0))
 			})
 
-			It("Flushes all libraries asynchronously", func() {
+			ginkgo.It("Flushes all libraries asynchronously", func() {
 				functionLoad := adapter.FunctionLoad(ctx, lib1Code)
-				Expect(functionLoad.Err()).NotTo(HaveOccurred())
+				gomega.Expect(functionLoad.Err()).NotTo(gomega.HaveOccurred())
 
 				// we only verify the command result.
 				functionFlush := adapter.FunctionFlushAsync(ctx)
-				Expect(functionFlush.Err()).NotTo(HaveOccurred())
+				gomega.Expect(functionFlush.Err()).NotTo(gomega.HaveOccurred())
 			})
 
-			It("Kills a running function", func() {
+			ginkgo.It("Kills a running function", func() {
 				functionKill := adapter.FunctionKill(ctx)
-				Expect(functionKill.Err()).To(MatchError("NOTBUSY No scripts in execution right now."))
+				gomega.Expect(functionKill.Err()).To(gomega.MatchError("NOTBUSY No scripts in execution right now."))
 
 				// Add test for a long-running function, once we make the test for `function stats` pass
 			})
 
-			It("Lists registered functions", func() {
+			ginkgo.It("Lists registered functions", func() {
 				err := adapter.FunctionLoad(ctx, lib1Code).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				val, err := adapter.FunctionList(ctx, FunctionListQuery{
 					LibraryNamePattern: "*",
 					WithCode:           true,
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(val).To(HaveLen(1))
-				Expect(val[0].Name).To(Equal(lib1.Name))
-				Expect(val[0].Engine).To(Equal(lib1.Engine))
-				Expect(val[0].Code).To(Equal(lib1Code))
-				Expect(val[0].Functions).Should(ConsistOf(lib1.Functions))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(val).To(gomega.HaveLen(1))
+				gomega.Expect(val[0].Name).To(gomega.Equal(lib1.Name))
+				gomega.Expect(val[0].Engine).To(gomega.Equal(lib1.Engine))
+				gomega.Expect(val[0].Code).To(gomega.Equal(lib1Code))
+				gomega.Expect(val[0].Functions).Should(gomega.ConsistOf(lib1.Functions))
 
 				err = adapter.FunctionLoad(ctx, lib2Code).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				val, err = adapter.FunctionList(ctx, FunctionListQuery{
 					WithCode: true,
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(val).To(HaveLen(2))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(val).To(gomega.HaveLen(2))
 
 				lib, err := adapter.FunctionList(ctx, FunctionListQuery{
 					LibraryNamePattern: lib2.Name,
 					WithCode:           false,
 				}).First()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(lib.Name).To(Equal(lib2.Name))
-				Expect(lib.Code).To(Equal(""))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(lib.Name).To(gomega.Equal(lib2.Name))
+				gomega.Expect(lib.Code).To(gomega.Equal(""))
 
 				_, err = adapter.FunctionList(ctx, FunctionListQuery{
 					LibraryNamePattern: "non_lib",
 					WithCode:           true,
 				}).First()
-				Expect(err).To(Equal(rueidis.Nil))
+				gomega.Expect(err).To(gomega.Equal(rueidis.Nil))
 			})
 
-			It("Dump and restores all libraries", func() {
+			ginkgo.It("Dump and restores all libraries", func() {
 				err := adapter.FunctionLoad(ctx, lib1Code).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.FunctionLoad(ctx, lib2Code).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				dump, err := adapter.FunctionDump(ctx).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(dump).NotTo(BeEmpty())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(dump).NotTo(gomega.BeEmpty())
 
 				err = adapter.FunctionRestore(ctx, dump).Err()
-				Expect(err).To(HaveOccurred())
+				gomega.Expect(err).To(gomega.HaveOccurred())
 
 				err = adapter.FunctionFlush(ctx).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				list, err := adapter.FunctionList(ctx, q).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(list).To(HaveLen(0))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(list).To(gomega.HaveLen(0))
 
 				err = adapter.FunctionRestore(ctx, dump).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				list, err = adapter.FunctionList(ctx, q).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(list).To(HaveLen(2))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(list).To(gomega.HaveLen(2))
 			})
 
-			It("Calls a function", func() {
+			ginkgo.It("Calls a function", func() {
 				lib1Code = fmt.Sprintf(lib1.Code, lib1.Name, lib1.Functions[0].Name,
 					lib1.Functions[0].Description, lib1.Functions[0].Flags[0], lib1.Functions[0].Flags[1])
 
 				err := adapter.FunctionLoad(ctx, lib1Code).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				x := adapter.FCall(ctx, lib1.Functions[0].Name, []string{"my_hash"}, "a", 1, "b", 2)
-				Expect(x.Err()).NotTo(HaveOccurred())
-				Expect(x.Int()).To(Equal(3))
+				gomega.Expect(x.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(x.Int()).To(gomega.Equal(3))
 			})
 
-			It("Calls a function as read-only", func() {
+			ginkgo.It("Calls a function as read-only", func() {
 				lib1Code = fmt.Sprintf(lib1.Code, lib1.Name, lib1.Functions[0].Name,
 					lib1.Functions[0].Description, lib1.Functions[0].Flags[0], lib1.Functions[0].Flags[1])
 
 				err := adapter.FunctionLoad(ctx, lib1Code).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				// This function doesn't have a "no-writes" flag
 				x := adapter.FCallRO(ctx, lib1.Functions[0].Name, []string{"my_hash"}, "a", 1, "b", 2)
 
-				Expect(x.Err()).To(HaveOccurred())
+				gomega.Expect(x.Err()).To(gomega.HaveOccurred())
 
 				lib2Code = fmt.Sprintf(lib2.Code, lib2.Name, lib2.Functions[0].Name, lib2.Functions[1].Name,
 					lib2.Functions[1].Description, lib2.Functions[1].Flags[0])
 
 				// This function has a "no-writes" flag
 				err = adapter.FunctionLoad(ctx, lib2Code).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				x = adapter.FCallRO(ctx, lib2.Functions[1].Name, []string{})
 
-				Expect(x.Err()).NotTo(HaveOccurred())
-				Expect(x.Text()).To(Equal("Function 2"))
+				gomega.Expect(x.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(x.Text()).To(gomega.Equal("Function 2"))
 			})
 		})
 	}
 
-	Describe("keys", func() {
+	ginkgo.Describe("keys", func() {
 
-		It("should Expire", func() {
+		ginkgo.It("should Expire", func() {
 			ttl := adapter.Cache(time.Hour).TTL(ctx, "nonexistent_key")
-			Expect(ttl.Err()).NotTo(HaveOccurred())
-			Expect(ttl.Val()).To(Equal(time.Duration(-2)))
+			gomega.Expect(ttl.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(ttl.Val()).To(gomega.Equal(time.Duration(-2)))
 
 			set := adapter.Set(ctx, "key", "Hello", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			expire := adapter.Expire(ctx, "key", 10*time.Second)
-			Expect(expire.Err()).NotTo(HaveOccurred())
-			Expect(expire.Val()).To(Equal(true))
+			gomega.Expect(expire.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(expire.Val()).To(gomega.Equal(true))
 
 			ttl = adapter.Cache(time.Hour).TTL(ctx, "key")
-			Expect(ttl.Err()).NotTo(HaveOccurred())
-			Expect(ttl.Val()).To(Equal(10 * time.Second))
+			gomega.Expect(ttl.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(ttl.Val()).To(gomega.Equal(10 * time.Second))
 
 			set = adapter.Set(ctx, "key", "Hello World", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			time.Sleep(time.Millisecond * 100)
 
 			ttl = adapter.Cache(time.Hour).TTL(ctx, "key")
-			Expect(ttl.Err()).NotTo(HaveOccurred())
-			Expect(ttl.Val()).To(Equal(time.Duration(-1)))
+			gomega.Expect(ttl.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(ttl.Val()).To(gomega.Equal(time.Duration(-1)))
 		})
 
-		It("should PExpire", func() {
+		ginkgo.It("should PExpire", func() {
 			set := adapter.Set(ctx, "key", "Hello", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			expiration := 900 * time.Millisecond
 			pexpire := adapter.PExpire(ctx, "key", expiration)
-			Expect(pexpire.Err()).NotTo(HaveOccurred())
-			Expect(pexpire.Val()).To(Equal(true))
+			gomega.Expect(pexpire.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(pexpire.Val()).To(gomega.Equal(true))
 
 			ttl := adapter.Cache(time.Hour).TTL(ctx, "key")
-			Expect(ttl.Err()).NotTo(HaveOccurred())
-			Expect(ttl.Val()).To(Equal(time.Second))
+			gomega.Expect(ttl.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(ttl.Val()).To(gomega.Equal(time.Second))
 
 			pttl := adapter.Cache(time.Hour).PTTL(ctx, "key")
-			Expect(pttl.Err()).NotTo(HaveOccurred())
-			Expect(pttl.Val()).To(BeNumerically("~", expiration, 100*time.Millisecond))
+			gomega.Expect(pttl.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(pttl.Val()).To(gomega.BeNumerically("~", expiration, 100*time.Millisecond))
 		})
 
-		It("should PExpireAt", func() {
+		ginkgo.It("should PExpireAt", func() {
 			set := adapter.Set(ctx, "key", "Hello", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			expiration := 900 * time.Millisecond
 			pexpireat := adapter.PExpireAt(ctx, "key", time.Now().Add(expiration))
-			Expect(pexpireat.Err()).NotTo(HaveOccurred())
-			Expect(pexpireat.Val()).To(Equal(true))
+			gomega.Expect(pexpireat.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(pexpireat.Val()).To(gomega.Equal(true))
 
 			ttl := adapter.Cache(time.Hour).TTL(ctx, "key")
-			Expect(ttl.Err()).NotTo(HaveOccurred())
-			Expect(ttl.Val()).To(Equal(time.Second))
+			gomega.Expect(ttl.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(ttl.Val()).To(gomega.Equal(time.Second))
 
 			pttl := adapter.Cache(time.Hour).PTTL(ctx, "key")
-			Expect(pttl.Err()).NotTo(HaveOccurred())
-			Expect(pttl.Val()).To(BeNumerically("~", expiration, 100*time.Millisecond))
+			gomega.Expect(pttl.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(pttl.Val()).To(gomega.BeNumerically("~", expiration, 100*time.Millisecond))
 		})
 
-		It("should PTTL", func() {
+		ginkgo.It("should PTTL", func() {
 			set := adapter.Set(ctx, "key", "Hello", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			expiration := time.Second
 			expire := adapter.Expire(ctx, "key", expiration)
-			Expect(expire.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(expire.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			pttl := adapter.Cache(time.Hour).PTTL(ctx, "key")
-			Expect(pttl.Err()).NotTo(HaveOccurred())
-			Expect(pttl.Val()).To(BeNumerically("~", expiration, 100*time.Millisecond))
+			gomega.Expect(pttl.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(pttl.Val()).To(gomega.BeNumerically("~", expiration, 100*time.Millisecond))
 		})
 
-		It("should Sort", func() {
-			Expect(func() {
+		ginkgo.It("should Sort", func() {
+			gomega.Expect(func() {
 				adapter.Cache(time.Hour).SortRO(ctx, "list", Sort{
 					Order: "PANIC",
 				})
-			}).To(Panic())
+			}).To(gomega.Panic())
 		})
 
-		It("should Sort", func() {
+		ginkgo.It("should Sort", func() {
 			size, err := adapter.LPush(ctx, "list", "1").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(size).To(Equal(int64(1)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(size).To(gomega.Equal(int64(1)))
 
 			size, err = adapter.LPush(ctx, "list", "3").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(size).To(Equal(int64(2)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(size).To(gomega.Equal(int64(2)))
 
 			size, err = adapter.LPush(ctx, "list", "2").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(size).To(Equal(int64(3)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(size).To(gomega.Equal(int64(3)))
 
 			els, err := adapter.Cache(time.Hour).SortRO(ctx, "list", Sort{
 				Offset: 0,
@@ -6958,201 +6959,201 @@ func testAdapterCache(resp3 bool) {
 				Order:  "ASC",
 				Alpha:  true,
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(els).To(Equal([]string{"1", "2"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(els).To(gomega.Equal([]string{"1", "2"}))
 		})
 
-		It("should Sort By", func() {
+		ginkgo.It("should Sort By", func() {
 			size, err := adapter.LPush(ctx, "list_by", "1").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(size).To(Equal(int64(1)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(size).To(gomega.Equal(int64(1)))
 
 			size, err = adapter.LPush(ctx, "list_by", "3").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(size).To(Equal(int64(2)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(size).To(gomega.Equal(int64(2)))
 
 			size, err = adapter.LPush(ctx, "list_by", "2").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(size).To(Equal(int64(3)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(size).To(gomega.Equal(int64(3)))
 
 			els, err := adapter.Cache(time.Hour).SortRO(ctx, "list_by", Sort{
 				Offset: 0,
 				Count:  2,
 				By:     "nosort",
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(els).To(Equal([]string{"2", "3"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(els).To(gomega.Equal([]string{"2", "3"}))
 		})
 
-		It("should Sort and Get", func() {
+		ginkgo.It("should Sort and Get", func() {
 			size, err := adapter.LPush(ctx, "list", "1").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(size).To(Equal(int64(1)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(size).To(gomega.Equal(int64(1)))
 
 			size, err = adapter.LPush(ctx, "list", "3").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(size).To(Equal(int64(2)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(size).To(gomega.Equal(int64(2)))
 
 			size, err = adapter.LPush(ctx, "list", "2").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(size).To(Equal(int64(3)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(size).To(gomega.Equal(int64(3)))
 
 			err = adapter.Set(ctx, "object_2", "value2", 0).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			{
 				els, err := adapter.Cache(time.Hour).SortRO(ctx, "list", Sort{
 					Get: []string{"object_*"},
 				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(els).To(Equal([]string{"", "value2", ""}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(els).To(gomega.Equal([]string{"", "value2", ""}))
 			}
 
 		})
 
-		It("should TTL", func() {
+		ginkgo.It("should TTL", func() {
 			ttl := adapter.Cache(time.Hour).TTL(ctx, "key")
-			Expect(ttl.Err()).NotTo(HaveOccurred())
-			Expect(ttl.Val() < 0).To(Equal(true))
+			gomega.Expect(ttl.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(ttl.Val() < 0).To(gomega.Equal(true))
 
 			set := adapter.Set(ctx, "key", "hello", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			expire := adapter.Expire(ctx, "key", 60*time.Second)
-			Expect(expire.Err()).NotTo(HaveOccurred())
-			Expect(expire.Val()).To(Equal(true))
+			gomega.Expect(expire.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(expire.Val()).To(gomega.Equal(true))
 
 			ttl = adapter.Cache(time.Hour).TTL(ctx, "key")
-			Expect(ttl.Err()).NotTo(HaveOccurred())
-			Expect(ttl.Val()).To(Equal(60 * time.Second))
+			gomega.Expect(ttl.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(ttl.Val()).To(gomega.Equal(60 * time.Second))
 		})
 
-		It("should Type", func() {
+		ginkgo.It("should Type", func() {
 			set := adapter.Set(ctx, "key", "hello", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			type_ := adapter.Cache(time.Hour).Type(ctx, "key")
-			Expect(type_.Err()).NotTo(HaveOccurred())
-			Expect(type_.Val()).To(Equal("string"))
+			gomega.Expect(type_.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(type_.Val()).To(gomega.Equal("string"))
 		})
 	})
 
-	Describe("strings", func() {
+	ginkgo.Describe("strings", func() {
 
-		It("should BitCount", func() {
+		ginkgo.It("should BitCount", func() {
 			set := adapter.Set(ctx, "key", "foobar", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			bitCount := adapter.Cache(time.Hour).BitCount(ctx, "key", nil)
-			Expect(bitCount.Err()).NotTo(HaveOccurred())
-			Expect(bitCount.Val()).To(Equal(int64(26)))
+			gomega.Expect(bitCount.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(bitCount.Val()).To(gomega.Equal(int64(26)))
 
 			bitCount = adapter.Cache(time.Hour).BitCount(ctx, "key", &BitCount{
 				Start: 0,
 				End:   0,
 			})
-			Expect(bitCount.Err()).NotTo(HaveOccurred())
-			Expect(bitCount.Val()).To(Equal(int64(4)))
+			gomega.Expect(bitCount.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(bitCount.Val()).To(gomega.Equal(int64(4)))
 
 			bitCount = adapter.Cache(time.Hour).BitCount(ctx, "key", &BitCount{
 				Start: 1,
 				End:   1,
 			})
-			Expect(bitCount.Err()).NotTo(HaveOccurred())
-			Expect(bitCount.Val()).To(Equal(int64(6)))
+			gomega.Expect(bitCount.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(bitCount.Val()).To(gomega.Equal(int64(6)))
 		})
 
-		It("should BitPos", func() {
+		ginkgo.It("should BitPos", func() {
 			err := adapter.Set(ctx, "mykey", "\xff\xf0\x00", 0).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			pos, err := adapter.Cache(time.Hour).BitPos(ctx, "mykey", 0).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(pos).To(Equal(int64(12)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(pos).To(gomega.Equal(int64(12)))
 
 			pos, err = adapter.Cache(time.Hour).BitPos(ctx, "mykey", 1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(pos).To(Equal(int64(0)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(pos).To(gomega.Equal(int64(0)))
 
 			pos, err = adapter.Cache(time.Hour).BitPos(ctx, "mykey", 0, 2).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(pos).To(Equal(int64(16)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(pos).To(gomega.Equal(int64(16)))
 
 			pos, err = adapter.Cache(time.Hour).BitPos(ctx, "mykey", 1, 2).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(pos).To(Equal(int64(-1)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(pos).To(gomega.Equal(int64(-1)))
 
 			pos, err = adapter.Cache(time.Hour).BitPos(ctx, "mykey", 0, -1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(pos).To(Equal(int64(16)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(pos).To(gomega.Equal(int64(16)))
 
 			pos, err = adapter.Cache(time.Hour).BitPos(ctx, "mykey", 1, -1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(pos).To(Equal(int64(-1)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(pos).To(gomega.Equal(int64(-1)))
 
 			pos, err = adapter.Cache(time.Hour).BitPos(ctx, "mykey", 0, 2, 1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(pos).To(Equal(int64(-1)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(pos).To(gomega.Equal(int64(-1)))
 
 			pos, err = adapter.Cache(time.Hour).BitPos(ctx, "mykey", 0, 0, -3).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(pos).To(Equal(int64(-1)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(pos).To(gomega.Equal(int64(-1)))
 
 			pos, err = adapter.Cache(time.Hour).BitPos(ctx, "mykey", 0, 0, 0).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(pos).To(Equal(int64(-1)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(pos).To(gomega.Equal(int64(-1)))
 		})
 
-		It("should BitPosSpan", func() {
+		ginkgo.It("should BitPosSpan", func() {
 			err := adapter.Set(ctx, "mykey", "\x00\xff\x00", 0).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			pos, err := adapter.Cache(time.Hour).BitPosSpan(ctx, "mykey", 0, 1, 3, "byte").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(pos).To(Equal(int64(16)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(pos).To(gomega.Equal(int64(16)))
 
 			pos, err = adapter.Cache(time.Hour).BitPosSpan(ctx, "mykey", 0, 1, 3, "bit").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(pos).To(Equal(int64(1)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(pos).To(gomega.Equal(int64(1)))
 		})
 
-		Describe("EvalRO", func() {
-			It("returns keys and values", func() {
+		ginkgo.Describe("EvalRO", func() {
+			ginkgo.It("returns keys and values", func() {
 				vals, err := adapter.Cache(time.Hour).EvalRO(
 					ctx,
 					"return {KEYS[1],ARGV[1]}",
 					[]string{"key"},
 					"hello",
 				).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(vals).To(Equal([]any{"key", "hello"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(vals).To(gomega.Equal([]any{"key", "hello"}))
 			})
 
-			It("returns all values after an error", func() {
+			ginkgo.It("returns all values after an error", func() {
 				vals, err := adapter.Cache(time.Hour).EvalRO(
 					ctx,
 					`return {12, {err="error"}, "abc"}`,
 					[]string{"key"},
 				).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(vals.([]any)[0]).To(Equal(int64(12)))
-				Expect(vals.([]any)[1].(error).Error()).To(Equal("error"))
-				Expect(vals.([]any)[2]).To(Equal("abc"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(vals.([]any)[0]).To(gomega.Equal(int64(12)))
+				gomega.Expect(vals.([]any)[1].(error).Error()).To(gomega.Equal("error"))
+				gomega.Expect(vals.([]any)[2]).To(gomega.Equal("abc"))
 			})
 		})
 
-		It("script load", func() {
+		ginkgo.It("script load", func() {
 			val, err := adapter.ScriptLoad(
 				ctx,
 				"return {KEYS[1],ARGV[1]}",
 			).Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			ret, err := adapter.ScriptExists(ctx, val).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(ret).To(Equal([]bool{true}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(ret).To(gomega.Equal([]bool{true}))
 
 			valsRo, err := adapter.Cache(time.Hour).EvalShaRO(
 				ctx,
@@ -7160,11 +7161,11 @@ func testAdapterCache(resp3 bool) {
 				[]string{"key"},
 				"hello",
 			).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(valsRo).To(Equal([]any{"key", "hello"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(valsRo).To(gomega.Equal([]any{"key", "hello"}))
 		})
 
-		Describe("Functions", func() {
+		ginkgo.Describe("Functions", func() {
 			var (
 				lib1Code string
 				lib2Code string
@@ -7172,9 +7173,9 @@ func testAdapterCache(resp3 bool) {
 				lib2     Library
 			)
 
-			BeforeEach(func() {
+			ginkgo.BeforeEach(func() {
 				flush := adapter.FunctionFlush(ctx)
-				Expect(flush.Err()).NotTo(HaveOccurred())
+				gomega.Expect(flush.Err()).NotTo(gomega.HaveOccurred())
 
 				lib1 = Library{
 					Name:   "mylib1",
@@ -7247,390 +7248,390 @@ func testAdapterCache(resp3 bool) {
 					lib2.Functions[1].Name, lib2.Functions[1].Description, lib2.Functions[1].Flags[0])
 			})
 
-			It("Calls a function as read-only", func() {
+			ginkgo.It("Calls a function as read-only", func() {
 				lib1Code = fmt.Sprintf(lib1.Code, lib1.Name, lib1.Functions[0].Name,
 					lib1.Functions[0].Description, lib1.Functions[0].Flags[0], lib1.Functions[0].Flags[1])
 
 				err := adapter.FunctionLoad(ctx, lib1Code).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				// This function doesn't have a "no-writes" flag
 				x := adapter.Cache(time.Hour).FCallRO(ctx, lib1.Functions[0].Name, []string{"my_hash"}, "a", 1, "b", 2)
 
-				Expect(x.Err()).To(HaveOccurred())
+				gomega.Expect(x.Err()).To(gomega.HaveOccurred())
 
 				lib2Code = fmt.Sprintf(lib2.Code, lib2.Name, lib2.Functions[0].Name, lib2.Functions[1].Name,
 					lib2.Functions[1].Description, lib2.Functions[1].Flags[0])
 
 				// This function has a "no-writes" flag
 				err = adapter.FunctionLoad(ctx, lib2Code).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				x = adapter.Cache(time.Hour).FCallRO(ctx, lib2.Functions[1].Name, []string{"my_hash"})
 
-				Expect(x.Err()).NotTo(HaveOccurred())
-				Expect(x.Text()).To(Equal("Function 2"))
+				gomega.Expect(x.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(x.Text()).To(gomega.Equal("Function 2"))
 			})
 		})
 
-		It("should Get", func() {
+		ginkgo.It("should Get", func() {
 			get := adapter.Cache(time.Hour).Get(ctx, "_")
-			Expect(rueidis.IsRedisNil(get.Err())).To(BeTrue())
-			Expect(get.Val()).To(Equal(""))
+			gomega.Expect(rueidis.IsRedisNil(get.Err())).To(gomega.BeTrue())
+			gomega.Expect(get.Val()).To(gomega.Equal(""))
 
 			set := adapter.Set(ctx, "key", "hello", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			get = adapter.Cache(time.Hour).Get(ctx, "key")
-			Expect(get.Err()).NotTo(HaveOccurred())
-			Expect(get.Val()).To(Equal("hello"))
+			gomega.Expect(get.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(get.Val()).To(gomega.Equal("hello"))
 		})
 
-		It("should GetBit", func() {
+		ginkgo.It("should GetBit", func() {
 			setBit := adapter.SetBit(ctx, "key", 7, 1)
-			Expect(setBit.Err()).NotTo(HaveOccurred())
-			Expect(setBit.Val()).To(Equal(int64(0)))
+			gomega.Expect(setBit.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(setBit.Val()).To(gomega.Equal(int64(0)))
 
 			getBit := adapter.Cache(time.Hour).GetBit(ctx, "key", 0)
-			Expect(getBit.Err()).NotTo(HaveOccurred())
-			Expect(getBit.Val()).To(Equal(int64(0)))
+			gomega.Expect(getBit.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(getBit.Val()).To(gomega.Equal(int64(0)))
 
 			getBit = adapter.Cache(time.Hour).GetBit(ctx, "key", 7)
-			Expect(getBit.Err()).NotTo(HaveOccurred())
-			Expect(getBit.Val()).To(Equal(int64(1)))
+			gomega.Expect(getBit.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(getBit.Val()).To(gomega.Equal(int64(1)))
 
 			getBit = adapter.Cache(time.Hour).GetBit(ctx, "key", 100)
-			Expect(getBit.Err()).NotTo(HaveOccurred())
-			Expect(getBit.Val()).To(Equal(int64(0)))
+			gomega.Expect(getBit.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(getBit.Val()).To(gomega.Equal(int64(0)))
 		})
 
-		It("should GetRange", func() {
+		ginkgo.It("should GetRange", func() {
 			set := adapter.Set(ctx, "key", "This is a string", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			getRange := adapter.Cache(time.Hour).GetRange(ctx, "key", 0, 3)
-			Expect(getRange.Err()).NotTo(HaveOccurred())
-			Expect(getRange.Val()).To(Equal("This"))
+			gomega.Expect(getRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(getRange.Val()).To(gomega.Equal("This"))
 
 			getRange = adapter.Cache(time.Hour).GetRange(ctx, "key", -3, -1)
-			Expect(getRange.Err()).NotTo(HaveOccurred())
-			Expect(getRange.Val()).To(Equal("ing"))
+			gomega.Expect(getRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(getRange.Val()).To(gomega.Equal("ing"))
 
 			getRange = adapter.Cache(time.Hour).GetRange(ctx, "key", 0, -1)
-			Expect(getRange.Err()).NotTo(HaveOccurred())
-			Expect(getRange.Val()).To(Equal("This is a string"))
+			gomega.Expect(getRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(getRange.Val()).To(gomega.Equal("This is a string"))
 
 			getRange = adapter.Cache(time.Hour).GetRange(ctx, "key", 10, 100)
-			Expect(getRange.Err()).NotTo(HaveOccurred())
-			Expect(getRange.Val()).To(Equal("string"))
+			gomega.Expect(getRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(getRange.Val()).To(gomega.Equal("string"))
 		})
 
-		It("should StrLen", func() {
+		ginkgo.It("should StrLen", func() {
 			set := adapter.Set(ctx, "key", "hello", 0)
-			Expect(set.Err()).NotTo(HaveOccurred())
-			Expect(set.Val()).To(Equal("OK"))
+			gomega.Expect(set.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(set.Val()).To(gomega.Equal("OK"))
 
 			strLen := adapter.Cache(time.Hour).StrLen(ctx, "key")
-			Expect(strLen.Err()).NotTo(HaveOccurred())
-			Expect(strLen.Val()).To(Equal(int64(5)))
+			gomega.Expect(strLen.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(strLen.Val()).To(gomega.Equal(int64(5)))
 
 			strLen = adapter.Cache(time.Hour).StrLen(ctx, "_")
-			Expect(strLen.Err()).NotTo(HaveOccurred())
-			Expect(strLen.Val()).To(Equal(int64(0)))
+			gomega.Expect(strLen.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(strLen.Val()).To(gomega.Equal(int64(0)))
 		})
 	})
 
-	Describe("hashes", func() {
+	ginkgo.Describe("hashes", func() {
 
-		It("should HExists", func() {
+		ginkgo.It("should HExists", func() {
 			hSet := adapter.HSet(ctx, "hash", "key", "hello")
-			Expect(hSet.Err()).NotTo(HaveOccurred())
+			gomega.Expect(hSet.Err()).NotTo(gomega.HaveOccurred())
 
 			hExists := adapter.Cache(time.Hour).HExists(ctx, "hash", "key")
-			Expect(hExists.Err()).NotTo(HaveOccurred())
-			Expect(hExists.Val()).To(Equal(true))
+			gomega.Expect(hExists.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(hExists.Val()).To(gomega.Equal(true))
 
 			hExists = adapter.Cache(time.Hour).HExists(ctx, "hash", "key1")
-			Expect(hExists.Err()).NotTo(HaveOccurred())
-			Expect(hExists.Val()).To(Equal(false))
+			gomega.Expect(hExists.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(hExists.Val()).To(gomega.Equal(false))
 		})
 
-		It("should HGet", func() {
+		ginkgo.It("should HGet", func() {
 			hSet := adapter.HSet(ctx, "hash", "key", "hello")
-			Expect(hSet.Err()).NotTo(HaveOccurred())
+			gomega.Expect(hSet.Err()).NotTo(gomega.HaveOccurred())
 
 			hGet := adapter.Cache(time.Hour).HGet(ctx, "hash", "key")
-			Expect(hGet.Err()).NotTo(HaveOccurred())
-			Expect(hGet.Val()).To(Equal("hello"))
+			gomega.Expect(hGet.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(hGet.Val()).To(gomega.Equal("hello"))
 
 			hGet = adapter.Cache(time.Hour).HGet(ctx, "hash", "key1")
-			Expect(rueidis.IsRedisNil(hGet.Err())).To(BeTrue())
-			Expect(hGet.Val()).To(Equal(""))
+			gomega.Expect(rueidis.IsRedisNil(hGet.Err())).To(gomega.BeTrue())
+			gomega.Expect(hGet.Val()).To(gomega.Equal(""))
 		})
 
-		It("should HGetAll", func() {
+		ginkgo.It("should HGetAll", func() {
 			err := adapter.HSet(ctx, "hash", "key1", "hello1").Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.HSet(ctx, "hash", "key2", "hello2").Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			m, err := adapter.Cache(time.Hour).HGetAll(ctx, "hash").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(m).To(Equal(map[string]string{"key1": "hello1", "key2": "hello2"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(m).To(gomega.Equal(map[string]string{"key1": "hello1", "key2": "hello2"}))
 		})
 
-		It("should HKeys", func() {
+		ginkgo.It("should HKeys", func() {
 			hkeys := adapter.HKeys(ctx, "hash")
-			Expect(hkeys.Err()).NotTo(HaveOccurred())
-			Expect(hkeys.Val()).To(Equal([]string{}))
+			gomega.Expect(hkeys.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(hkeys.Val()).To(gomega.Equal([]string{}))
 
 			hset := adapter.HSet(ctx, "hash", "key1", "hello1")
-			Expect(hset.Err()).NotTo(HaveOccurred())
+			gomega.Expect(hset.Err()).NotTo(gomega.HaveOccurred())
 			hset = adapter.HSet(ctx, "hash", "key2", "hello2")
-			Expect(hset.Err()).NotTo(HaveOccurred())
+			gomega.Expect(hset.Err()).NotTo(gomega.HaveOccurred())
 
 			hkeys = adapter.Cache(time.Hour).HKeys(ctx, "hash")
-			Expect(hkeys.Err()).NotTo(HaveOccurred())
-			Expect(hkeys.Val()).To(Equal([]string{"key1", "key2"}))
+			gomega.Expect(hkeys.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(hkeys.Val()).To(gomega.Equal([]string{"key1", "key2"}))
 		})
 
-		It("should HLen", func() {
+		ginkgo.It("should HLen", func() {
 			hSet := adapter.HSet(ctx, "hash", "key1", "hello1")
-			Expect(hSet.Err()).NotTo(HaveOccurred())
+			gomega.Expect(hSet.Err()).NotTo(gomega.HaveOccurred())
 			hSet = adapter.HSet(ctx, "hash", "key2", "hello2")
-			Expect(hSet.Err()).NotTo(HaveOccurred())
+			gomega.Expect(hSet.Err()).NotTo(gomega.HaveOccurred())
 
 			hLen := adapter.Cache(time.Hour).HLen(ctx, "hash")
-			Expect(hLen.Err()).NotTo(HaveOccurred())
-			Expect(hLen.Val()).To(Equal(int64(2)))
+			gomega.Expect(hLen.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(hLen.Val()).To(gomega.Equal(int64(2)))
 		})
 
-		It("should HMGet", func() {
+		ginkgo.It("should HMGet", func() {
 			err := adapter.HSet(ctx, "hash", "key1", "hello1", "key2", "hello2").Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			vals, err := adapter.Cache(time.Hour).HMGet(ctx, "hash", "key1", "key2", "_").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]any{"hello1", "hello2", nil}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]any{"hello1", "hello2", nil}))
 		})
 
-		It("should HVals", func() {
+		ginkgo.It("should HVals", func() {
 			err := adapter.HSet(ctx, "hash", "key1", "hello1").Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.HSet(ctx, "hash", "key2", "hello2").Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			v, err := adapter.Cache(time.Hour).HVals(ctx, "hash").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(v).To(Equal([]string{"hello1", "hello2"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(v).To(gomega.Equal([]string{"hello1", "hello2"}))
 
 			// TODO
-			//var slice []string
-			//err = adapter.Cache(time.Hour).HVals(ctx, "hash").ScanSlice(&slice)
-			//Expect(err).NotTo(HaveOccurred())
-			//Expect(slice).To(Equal([]string{"hello1", "hello2"}))
+			// var slice []string
+			// err = adapter.Cache(time.Hour).HVals(ctx, "hash").ScanSlice(&slice)
+			// gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			// gomega.Expect(slice).To(gomega.Equal([]string{"hello1", "hello2"}))
 		})
 	})
 
-	Describe("lists", func() {
+	ginkgo.Describe("lists", func() {
 
-		It("should LIndex", func() {
+		ginkgo.It("should LIndex", func() {
 			lPush := adapter.LPush(ctx, "list", "World")
-			Expect(lPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(lPush.Err()).NotTo(gomega.HaveOccurred())
 			lPush = adapter.LPush(ctx, "list", "Hello")
-			Expect(lPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(lPush.Err()).NotTo(gomega.HaveOccurred())
 
 			lIndex := adapter.Cache(time.Hour).LIndex(ctx, "list", 0)
-			Expect(lIndex.Err()).NotTo(HaveOccurred())
-			Expect(lIndex.Val()).To(Equal("Hello"))
+			gomega.Expect(lIndex.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lIndex.Val()).To(gomega.Equal("Hello"))
 
 			lIndex = adapter.Cache(time.Hour).LIndex(ctx, "list", -1)
-			Expect(lIndex.Err()).NotTo(HaveOccurred())
-			Expect(lIndex.Val()).To(Equal("World"))
+			gomega.Expect(lIndex.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lIndex.Val()).To(gomega.Equal("World"))
 
 			lIndex = adapter.Cache(time.Hour).LIndex(ctx, "list", 3)
-			Expect(rueidis.IsRedisNil(lIndex.Err())).To(BeTrue())
-			Expect(lIndex.Val()).To(Equal(""))
+			gomega.Expect(rueidis.IsRedisNil(lIndex.Err())).To(gomega.BeTrue())
+			gomega.Expect(lIndex.Val()).To(gomega.Equal(""))
 		})
 
-		It("should LLen", func() {
+		ginkgo.It("should LLen", func() {
 			lPush := adapter.LPush(ctx, "list", "World")
-			Expect(lPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(lPush.Err()).NotTo(gomega.HaveOccurred())
 			lPush = adapter.LPush(ctx, "list", "Hello")
-			Expect(lPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(lPush.Err()).NotTo(gomega.HaveOccurred())
 
 			lLen := adapter.Cache(time.Hour).LLen(ctx, "list")
-			Expect(lLen.Err()).NotTo(HaveOccurred())
-			Expect(lLen.Val()).To(Equal(int64(2)))
+			gomega.Expect(lLen.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lLen.Val()).To(gomega.Equal(int64(2)))
 		})
 
-		It("should LPos", func() {
+		ginkgo.It("should LPos", func() {
 			rPush := adapter.RPush(ctx, "list", "a")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 			rPush = adapter.RPush(ctx, "list", "b")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 			rPush = adapter.RPush(ctx, "list", "c")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 			rPush = adapter.RPush(ctx, "list", "b")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 
 			lPos := adapter.Cache(time.Hour).LPos(ctx, "list", "b", LPosArgs{})
-			Expect(lPos.Err()).NotTo(HaveOccurred())
-			Expect(lPos.Val()).To(Equal(int64(1)))
+			gomega.Expect(lPos.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lPos.Val()).To(gomega.Equal(int64(1)))
 
 			lPos = adapter.Cache(time.Hour).LPos(ctx, "list", "b", LPosArgs{Rank: 2})
-			Expect(lPos.Err()).NotTo(HaveOccurred())
-			Expect(lPos.Val()).To(Equal(int64(3)))
+			gomega.Expect(lPos.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lPos.Val()).To(gomega.Equal(int64(3)))
 
 			lPos = adapter.Cache(time.Hour).LPos(ctx, "list", "b", LPosArgs{Rank: -2})
-			Expect(lPos.Err()).NotTo(HaveOccurred())
-			Expect(lPos.Val()).To(Equal(int64(1)))
+			gomega.Expect(lPos.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lPos.Val()).To(gomega.Equal(int64(1)))
 
 			lPos = adapter.Cache(time.Hour).LPos(ctx, "list", "b", LPosArgs{Rank: 2, MaxLen: 1})
-			Expect(rueidis.IsRedisNil(lPos.Err())).To(BeTrue())
+			gomega.Expect(rueidis.IsRedisNil(lPos.Err())).To(gomega.BeTrue())
 
 			lPos = adapter.Cache(time.Hour).LPos(ctx, "list", "z", LPosArgs{})
-			Expect(rueidis.IsRedisNil(lPos.Err())).To(BeTrue())
+			gomega.Expect(rueidis.IsRedisNil(lPos.Err())).To(gomega.BeTrue())
 		})
 
-		It("should LRange", func() {
+		ginkgo.It("should LRange", func() {
 			rPush := adapter.RPush(ctx, "list", "one")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 			rPush = adapter.RPush(ctx, "list", "two")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 			rPush = adapter.RPush(ctx, "list", "three")
-			Expect(rPush.Err()).NotTo(HaveOccurred())
+			gomega.Expect(rPush.Err()).NotTo(gomega.HaveOccurred())
 
 			lRange := adapter.Cache(time.Hour).LRange(ctx, "list", 0, 0)
-			Expect(lRange.Err()).NotTo(HaveOccurred())
-			Expect(lRange.Val()).To(Equal([]string{"one"}))
+			gomega.Expect(lRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lRange.Val()).To(gomega.Equal([]string{"one"}))
 
 			lRange = adapter.Cache(time.Hour).LRange(ctx, "list", -3, 2)
-			Expect(lRange.Err()).NotTo(HaveOccurred())
-			Expect(lRange.Val()).To(Equal([]string{"one", "two", "three"}))
+			gomega.Expect(lRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lRange.Val()).To(gomega.Equal([]string{"one", "two", "three"}))
 
 			lRange = adapter.Cache(time.Hour).LRange(ctx, "list", -100, 100)
-			Expect(lRange.Err()).NotTo(HaveOccurred())
-			Expect(lRange.Val()).To(Equal([]string{"one", "two", "three"}))
+			gomega.Expect(lRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lRange.Val()).To(gomega.Equal([]string{"one", "two", "three"}))
 
 			lRange = adapter.Cache(time.Hour).LRange(ctx, "list", 5, 10)
-			Expect(lRange.Err()).NotTo(HaveOccurred())
-			Expect(lRange.Val()).To(Equal([]string{}))
+			gomega.Expect(lRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(lRange.Val()).To(gomega.Equal([]string{}))
 		})
 	})
 
-	Describe("sets", func() {
+	ginkgo.Describe("sets", func() {
 
-		It("should SCard", func() {
+		ginkgo.It("should SCard", func() {
 			sAdd := adapter.SAdd(ctx, "set", "Hello")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
-			Expect(sAdd.Val()).To(Equal(int64(1)))
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sAdd.Val()).To(gomega.Equal(int64(1)))
 
 			sAdd = adapter.SAdd(ctx, "set", "World")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
-			Expect(sAdd.Val()).To(Equal(int64(1)))
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sAdd.Val()).To(gomega.Equal(int64(1)))
 
 			sCard := adapter.Cache(time.Hour).SCard(ctx, "set")
-			Expect(sCard.Err()).NotTo(HaveOccurred())
-			Expect(sCard.Val()).To(Equal(int64(2)))
+			gomega.Expect(sCard.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sCard.Val()).To(gomega.Equal(int64(2)))
 		})
 
-		It("should IsMember", func() {
+		ginkgo.It("should IsMember", func() {
 			sAdd := adapter.SAdd(ctx, "set", "one")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 
 			sIsMember := adapter.Cache(time.Hour).SIsMember(ctx, "set", "one")
-			Expect(sIsMember.Err()).NotTo(HaveOccurred())
-			Expect(sIsMember.Val()).To(Equal(true))
+			gomega.Expect(sIsMember.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sIsMember.Val()).To(gomega.Equal(true))
 
 			sIsMember = adapter.Cache(time.Hour).SIsMember(ctx, "set", "two")
-			Expect(sIsMember.Err()).NotTo(HaveOccurred())
-			Expect(sIsMember.Val()).To(Equal(false))
+			gomega.Expect(sIsMember.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sIsMember.Val()).To(gomega.Equal(false))
 		})
 
-		It("should SMIsMember", func() {
+		ginkgo.It("should SMIsMember", func() {
 			sAdd := adapter.SAdd(ctx, "set", "one")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 
 			sMIsMember := adapter.Cache(time.Hour).SMIsMember(ctx, "set", "one", "two")
-			Expect(sMIsMember.Err()).NotTo(HaveOccurred())
-			Expect(sMIsMember.Val()).To(Equal([]bool{true, false}))
+			gomega.Expect(sMIsMember.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sMIsMember.Val()).To(gomega.Equal([]bool{true, false}))
 		})
 
-		It("should SMembers", func() {
+		ginkgo.It("should SMembers", func() {
 			sAdd := adapter.SAdd(ctx, "set", "Hello")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 			sAdd = adapter.SAdd(ctx, "set", "World")
-			Expect(sAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(sAdd.Err()).NotTo(gomega.HaveOccurred())
 
 			sMembers := adapter.Cache(time.Hour).SMembers(ctx, "set")
-			Expect(sMembers.Err()).NotTo(HaveOccurred())
-			Expect(sMembers.Val()).To(ConsistOf([]string{"Hello", "World"}))
+			gomega.Expect(sMembers.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(sMembers.Val()).To(gomega.ConsistOf([]string{"Hello", "World"}))
 		})
 	})
 
-	Describe("sorted sets", func() {
+	ginkgo.Describe("sorted sets", func() {
 
-		It("should ZCard", func() {
+		ginkgo.It("should ZCard", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{
 				Score:  1,
 				Member: "one",
 			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{
 				Score:  2,
 				Member: "two",
 			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			card, err := adapter.Cache(time.Hour).ZCard(ctx, "zset").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(card).To(Equal(int64(2)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(card).To(gomega.Equal(int64(2)))
 		})
 
-		It("should ZCount", func() {
+		ginkgo.It("should ZCount", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{
 				Score:  1,
 				Member: "one",
 			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{
 				Score:  2,
 				Member: "two",
 			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{
 				Score:  3,
 				Member: "three",
 			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			count, err := adapter.Cache(time.Hour).ZCount(ctx, "zset", "-inf", "+inf").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(count).To(Equal(int64(3)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(count).To(gomega.Equal(int64(3)))
 
 			count, err = adapter.Cache(time.Hour).ZCount(ctx, "zset", "(1", "3").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(count).To(Equal(int64(2)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(count).To(gomega.Equal(int64(2)))
 
 			count, err = adapter.Cache(time.Hour).ZLexCount(ctx, "zset", "-", "+").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(count).To(Equal(int64(3)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(count).To(gomega.Equal(int64(3)))
 		})
 
-		It("should ZRangeWithScores", func() {
+		ginkgo.It("should ZRangeWithScores", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			vals, err := adapter.Cache(time.Hour).ZRangeWithScores(ctx, "zset", 0, -1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]Z{{
 				Score:  1,
 				Member: "one",
 			}, {
@@ -7642,12 +7643,12 @@ func testAdapterCache(resp3 bool) {
 			}}))
 
 			vals, err = adapter.Cache(time.Hour).ZRangeWithScores(ctx, "zset", 2, 3).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]Z{{Score: 3, Member: "three"}}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]Z{{Score: 3, Member: "three"}}))
 
 			vals, err = adapter.Cache(time.Hour).ZRangeWithScores(ctx, "zset", -2, -1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]Z{{
 				Score:  2,
 				Member: "two",
 			}, {
@@ -7656,7 +7657,7 @@ func testAdapterCache(resp3 bool) {
 			}}))
 		})
 
-		It("should ZRangeArgs", func() {
+		ginkgo.It("should ZRangeArgs", func() {
 			added, err := adapter.ZAddArgs(ctx, "zset", ZAddArgs{
 				Members: []Z{
 					{Score: 1, Member: "one"},
@@ -7664,8 +7665,8 @@ func testAdapterCache(resp3 bool) {
 					{Score: 3, Member: "three"},
 				},
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(added).To(Equal(int64(3)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(added).To(gomega.Equal(int64(3)))
 
 			added, err = adapter.ZAddArgs(ctx, "zset", ZAddArgs{
 				NX: true,
@@ -7673,8 +7674,8 @@ func testAdapterCache(resp3 bool) {
 					{Score: 4, Member: "four"},
 				},
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(added).To(Equal(int64(1)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(added).To(gomega.Equal(int64(1)))
 
 			added, err = adapter.ZAddArgs(ctx, "zsetxx", ZAddArgs{
 				XX: true,
@@ -7683,16 +7684,16 @@ func testAdapterCache(resp3 bool) {
 				},
 				Ch: true,
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(added).To(Equal(int64(0)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(added).To(gomega.Equal(int64(0)))
 
 			score, err := adapter.ZAddArgsIncr(ctx, "zsetxx", ZAddArgs{
 				Members: []Z{
 					{Score: 1, Member: "one"},
 				},
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(score).To(Equal(float64(1)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(score).To(gomega.Equal(float64(1)))
 
 			zRange, err := adapter.Cache(time.Hour).ZRangeArgs(ctx, ZRangeArgs{
 				Key:     "zset",
@@ -7703,8 +7704,8 @@ func testAdapterCache(resp3 bool) {
 				Offset:  1,
 				Count:   2,
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(zRange).To(Equal([]string{"three", "two"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRange).To(gomega.Equal([]string{"three", "two"}))
 
 			zRange, err = adapter.Cache(time.Hour).ZRangeArgs(ctx, ZRangeArgs{
 				Key:    "zset",
@@ -7715,8 +7716,8 @@ func testAdapterCache(resp3 bool) {
 				Offset: 2,
 				Count:  2,
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(zRange).To(Equal([]string{"two", "one"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRange).To(gomega.Equal([]string{"two", "one"}))
 
 			zRange, err = adapter.Cache(time.Hour).ZRangeArgs(ctx, ZRangeArgs{
 				Key:     "zset",
@@ -7724,8 +7725,8 @@ func testAdapterCache(resp3 bool) {
 				Stop:    "(4",
 				ByScore: true,
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(zRange).To(Equal([]string{"two", "three"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRange).To(gomega.Equal([]string{"two", "three"}))
 
 			// withScores.
 			zSlice, err := adapter.Cache(time.Hour).ZRangeArgsWithScores(ctx, ZRangeArgs{
@@ -7737,27 +7738,27 @@ func testAdapterCache(resp3 bool) {
 				Offset:  1,
 				Count:   2,
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(zSlice).To(Equal([]Z{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zSlice).To(gomega.Equal([]Z{
 				{Score: 3, Member: "three"},
 				{Score: 2, Member: "two"},
 			}))
 		})
 
-		It("should ZRangeByScore", func() {
+		ginkgo.It("should ZRangeByScore", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			zRangeByScore := adapter.Cache(time.Hour).ZRangeByScore(ctx, "zset", ZRangeBy{
 				Min: "-inf",
 				Max: "+inf",
 			})
-			Expect(zRangeByScore.Err()).NotTo(HaveOccurred())
-			Expect(zRangeByScore.Val()).To(Equal([]string{"one", "two", "three"}))
+			gomega.Expect(zRangeByScore.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRangeByScore.Val()).To(gomega.Equal([]string{"one", "two", "three"}))
 
 			zRangeByScore = adapter.Cache(time.Hour).ZRangeByScore(ctx, "zset", ZRangeBy{
 				Min:    "-inf",
@@ -7765,54 +7766,54 @@ func testAdapterCache(resp3 bool) {
 				Offset: 1,
 				Count:  2,
 			})
-			Expect(zRangeByScore.Err()).NotTo(HaveOccurred())
-			Expect(zRangeByScore.Val()).To(Equal([]string{"two", "three"}))
+			gomega.Expect(zRangeByScore.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRangeByScore.Val()).To(gomega.Equal([]string{"two", "three"}))
 
 			zRangeByScore = adapter.Cache(time.Hour).ZRangeByScore(ctx, "zset", ZRangeBy{
 				Min: "1",
 				Max: "2",
 			})
-			Expect(zRangeByScore.Err()).NotTo(HaveOccurred())
-			Expect(zRangeByScore.Val()).To(Equal([]string{"one", "two"}))
+			gomega.Expect(zRangeByScore.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRangeByScore.Val()).To(gomega.Equal([]string{"one", "two"}))
 
 			zRangeByScore = adapter.Cache(time.Hour).ZRangeByScore(ctx, "zset", ZRangeBy{
 				Min: "(1",
 				Max: "2",
 			})
-			Expect(zRangeByScore.Err()).NotTo(HaveOccurred())
-			Expect(zRangeByScore.Val()).To(Equal([]string{"two"}))
+			gomega.Expect(zRangeByScore.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRangeByScore.Val()).To(gomega.Equal([]string{"two"}))
 
 			zRangeByScore = adapter.Cache(time.Hour).ZRangeByScore(ctx, "zset", ZRangeBy{
 				Min: "(1",
 				Max: "(2",
 			})
-			Expect(zRangeByScore.Err()).NotTo(HaveOccurred())
-			Expect(zRangeByScore.Val()).To(Equal([]string{}))
+			gomega.Expect(zRangeByScore.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRangeByScore.Val()).To(gomega.Equal([]string{}))
 		})
 
-		It("should ZRangeByLex", func() {
+		ginkgo.It("should ZRangeByLex", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{
 				Score:  0,
 				Member: "a",
 			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{
 				Score:  0,
 				Member: "b",
 			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{
 				Score:  0,
 				Member: "c",
 			}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			zRangeByLex := adapter.Cache(time.Hour).ZRangeByLex(ctx, "zset", ZRangeBy{
 				Min: "-",
 				Max: "+",
 			})
-			Expect(zRangeByLex.Err()).NotTo(HaveOccurred())
-			Expect(zRangeByLex.Val()).To(Equal([]string{"a", "b", "c"}))
+			gomega.Expect(zRangeByLex.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRangeByLex.Val()).To(gomega.Equal([]string{"a", "b", "c"}))
 
 			zRangeByLex = adapter.Cache(time.Hour).ZRangeByLex(ctx, "zset", ZRangeBy{
 				Min:    "-",
@@ -7820,45 +7821,45 @@ func testAdapterCache(resp3 bool) {
 				Offset: 1,
 				Count:  2,
 			})
-			Expect(zRangeByLex.Err()).NotTo(HaveOccurred())
-			Expect(zRangeByLex.Val()).To(Equal([]string{"b", "c"}))
+			gomega.Expect(zRangeByLex.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRangeByLex.Val()).To(gomega.Equal([]string{"b", "c"}))
 
 			zRangeByLex = adapter.Cache(time.Hour).ZRangeByLex(ctx, "zset", ZRangeBy{
 				Min: "[a",
 				Max: "[b",
 			})
-			Expect(zRangeByLex.Err()).NotTo(HaveOccurred())
-			Expect(zRangeByLex.Val()).To(Equal([]string{"a", "b"}))
+			gomega.Expect(zRangeByLex.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRangeByLex.Val()).To(gomega.Equal([]string{"a", "b"}))
 
 			zRangeByLex = adapter.Cache(time.Hour).ZRangeByLex(ctx, "zset", ZRangeBy{
 				Min: "(a",
 				Max: "[b",
 			})
-			Expect(zRangeByLex.Err()).NotTo(HaveOccurred())
-			Expect(zRangeByLex.Val()).To(Equal([]string{"b"}))
+			gomega.Expect(zRangeByLex.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRangeByLex.Val()).To(gomega.Equal([]string{"b"}))
 
 			zRangeByLex = adapter.Cache(time.Hour).ZRangeByLex(ctx, "zset", ZRangeBy{
 				Min: "(a",
 				Max: "(b",
 			})
-			Expect(zRangeByLex.Err()).NotTo(HaveOccurred())
-			Expect(zRangeByLex.Val()).To(Equal([]string{}))
+			gomega.Expect(zRangeByLex.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRangeByLex.Val()).To(gomega.Equal([]string{}))
 		})
 
-		It("should ZRangeByScoreWithScoresMap", func() {
+		ginkgo.It("should ZRangeByScoreWithScoresMap", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			vals, err := adapter.Cache(time.Hour).ZRangeByScoreWithScores(ctx, "zset", ZRangeBy{
 				Min: "-inf",
 				Max: "+inf",
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]Z{{
 				Score:  1,
 				Member: "one",
 			}, {
@@ -7875,8 +7876,8 @@ func testAdapterCache(resp3 bool) {
 				Offset: 1,
 				Count:  2,
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]Z{{
 				Score:  2,
 				Member: "two",
 			}, {
@@ -7888,8 +7889,8 @@ func testAdapterCache(resp3 bool) {
 				Min: "1",
 				Max: "2",
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]Z{{
 				Score:  1,
 				Member: "one",
 			}, {
@@ -7901,91 +7902,91 @@ func testAdapterCache(resp3 bool) {
 				Min: "(1",
 				Max: "2",
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]Z{{Score: 2, Member: "two"}}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]Z{{Score: 2, Member: "two"}}))
 
 			vals, err = adapter.Cache(time.Hour).ZRangeByScoreWithScores(ctx, "zset", ZRangeBy{
 				Min: "(1",
 				Max: "(2",
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]Z{}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]Z{}))
 		})
 
-		It("should ZRank", func() {
+		ginkgo.It("should ZRank", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			zRank := adapter.Cache(time.Hour).ZRank(ctx, "zset", "three")
-			Expect(zRank.Err()).NotTo(HaveOccurred())
-			Expect(zRank.Val()).To(Equal(int64(2)))
+			gomega.Expect(zRank.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRank.Val()).To(gomega.Equal(int64(2)))
 
 			zRank = adapter.Cache(time.Hour).ZRank(ctx, "zset", "four")
-			Expect(rueidis.IsRedisNil(zRank.Err())).To(BeTrue())
-			Expect(zRank.Val()).To(Equal(int64(0)))
+			gomega.Expect(rueidis.IsRedisNil(zRank.Err())).To(gomega.BeTrue())
+			gomega.Expect(zRank.Val()).To(gomega.Equal(int64(0)))
 		})
 
-		It("should ZRankWithScore", func() {
+		ginkgo.It("should ZRankWithScore", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			zRankWithScore := adapter.Cache(time.Hour).ZRankWithScore(ctx, "zset", "one")
-			Expect(zRankWithScore.Err()).NotTo(HaveOccurred())
-			Expect(zRankWithScore.Result()).To(Equal(RankScore{Rank: 0, Score: 1}))
+			gomega.Expect(zRankWithScore.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRankWithScore.Result()).To(gomega.Equal(RankScore{Rank: 0, Score: 1}))
 
 			zRankWithScore = adapter.Cache(time.Hour).ZRankWithScore(ctx, "zset", "two")
-			Expect(zRankWithScore.Err()).NotTo(HaveOccurred())
-			Expect(zRankWithScore.Result()).To(Equal(RankScore{Rank: 1, Score: 2}))
+			gomega.Expect(zRankWithScore.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRankWithScore.Result()).To(gomega.Equal(RankScore{Rank: 1, Score: 2}))
 
 			zRankWithScore = adapter.Cache(time.Hour).ZRankWithScore(ctx, "zset", "three")
-			Expect(zRankWithScore.Err()).NotTo(HaveOccurred())
-			Expect(zRankWithScore.Result()).To(Equal(RankScore{Rank: 2, Score: 3}))
+			gomega.Expect(zRankWithScore.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRankWithScore.Result()).To(gomega.Equal(RankScore{Rank: 2, Score: 3}))
 
 			zRankWithScore = adapter.Cache(time.Hour).ZRankWithScore(ctx, "zset", "four")
-			Expect(zRankWithScore.Err()).To(HaveOccurred())
-			Expect(zRankWithScore.Err()).To(Equal(rueidis.Nil))
+			gomega.Expect(zRankWithScore.Err()).To(gomega.HaveOccurred())
+			gomega.Expect(zRankWithScore.Err()).To(gomega.Equal(rueidis.Nil))
 		})
 
-		It("should ZRevRange", func() {
+		ginkgo.It("should ZRevRange", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			zRevRange := adapter.Cache(time.Hour).ZRevRange(ctx, "zset", 0, -1)
-			Expect(zRevRange.Err()).NotTo(HaveOccurred())
-			Expect(zRevRange.Val()).To(Equal([]string{"three", "two", "one"}))
+			gomega.Expect(zRevRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRevRange.Val()).To(gomega.Equal([]string{"three", "two", "one"}))
 
 			zRevRange = adapter.Cache(time.Hour).ZRevRange(ctx, "zset", 2, 3)
-			Expect(zRevRange.Err()).NotTo(HaveOccurred())
-			Expect(zRevRange.Val()).To(Equal([]string{"one"}))
+			gomega.Expect(zRevRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRevRange.Val()).To(gomega.Equal([]string{"one"}))
 
 			zRevRange = adapter.Cache(time.Hour).ZRevRange(ctx, "zset", -2, -1)
-			Expect(zRevRange.Err()).NotTo(HaveOccurred())
-			Expect(zRevRange.Val()).To(Equal([]string{"two", "one"}))
+			gomega.Expect(zRevRange.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRevRange.Val()).To(gomega.Equal([]string{"two", "one"}))
 		})
 
-		It("should ZRevRangeWithScoresMap", func() {
+		ginkgo.It("should ZRevRangeWithScoresMap", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			val, err := adapter.Cache(time.Hour).ZRevRangeWithScores(ctx, "zset", 0, -1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(val).To(gomega.Equal([]Z{{
 				Score:  3,
 				Member: "three",
 			}, {
@@ -7997,12 +7998,12 @@ func testAdapterCache(resp3 bool) {
 			}}))
 
 			val, err = adapter.Cache(time.Hour).ZRevRangeWithScores(ctx, "zset", 2, 3).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]Z{{Score: 1, Member: "one"}}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(val).To(gomega.Equal([]Z{{Score: 1, Member: "one"}}))
 
 			val, err = adapter.Cache(time.Hour).ZRevRangeWithScores(ctx, "zset", -2, -1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(val).To(gomega.Equal([]Z{{
 				Score:  2,
 				Member: "two",
 			}, {
@@ -8011,76 +8012,76 @@ func testAdapterCache(resp3 bool) {
 			}}))
 		})
 
-		It("should ZRevRangeByScore", func() {
+		ginkgo.It("should ZRevRangeByScore", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			vals, err := adapter.Cache(time.Hour).ZRevRangeByScore(
 				ctx, "zset", ZRangeBy{Max: "+inf", Min: "-inf"}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]string{"three", "two", "one"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]string{"three", "two", "one"}))
 
 			vals, err = adapter.Cache(time.Hour).ZRevRangeByScore(
 				ctx, "zset", ZRangeBy{Max: "+inf", Min: "-inf", Offset: 1, Count: 2}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]string{"two", "one"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]string{"two", "one"}))
 
 			vals, err = adapter.Cache(time.Hour).ZRevRangeByScore(
 				ctx, "zset", ZRangeBy{Max: "2", Min: "(1"}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]string{"two"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]string{"two"}))
 
 			vals, err = adapter.Cache(time.Hour).ZRevRangeByScore(
 				ctx, "zset", ZRangeBy{Max: "(2", Min: "(1"}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]string{}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]string{}))
 		})
 
-		It("should ZRevRangeByLex", func() {
+		ginkgo.It("should ZRevRangeByLex", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{Score: 0, Member: "a"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 0, Member: "b"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 0, Member: "c"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			vals, err := adapter.Cache(time.Hour).ZRevRangeByLex(
 				ctx, "zset", ZRangeBy{Max: "+", Min: "-"}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]string{"c", "b", "a"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]string{"c", "b", "a"}))
 
 			vals, err = adapter.Cache(time.Hour).ZRevRangeByLex(
 				ctx, "zset", ZRangeBy{Max: "+", Min: "-", Offset: 1, Count: 2}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]string{"b", "a"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]string{"b", "a"}))
 
 			vals, err = adapter.Cache(time.Hour).ZRevRangeByLex(
 				ctx, "zset", ZRangeBy{Max: "[b", Min: "(a"}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]string{"b"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]string{"b"}))
 
 			vals, err = adapter.Cache(time.Hour).ZRevRangeByLex(
 				ctx, "zset", ZRangeBy{Max: "(b", Min: "(a"}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]string{}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]string{}))
 		})
 
-		It("should ZRevRangeByScoreWithScores", func() {
+		ginkgo.It("should ZRevRangeByScoreWithScores", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			vals, err := adapter.Cache(time.Hour).ZRevRangeByScoreWithScores(
 				ctx, "zset", ZRangeBy{Max: "+inf", Min: "-inf"}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]Z{{
 				Score:  3,
 				Member: "three",
 			}, {
@@ -8093,8 +8094,8 @@ func testAdapterCache(resp3 bool) {
 
 			vals, err = adapter.Cache(time.Hour).ZRevRangeByScoreWithScores(
 				ctx, "zset", ZRangeBy{Max: "+inf", Min: "-inf", Offset: 1, Count: 2}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]Z{{
 				Score:  2,
 				Member: "two",
 			}, {
@@ -8103,18 +8104,18 @@ func testAdapterCache(resp3 bool) {
 			}}))
 		})
 
-		It("should ZRevRangeByScoreWithScoresMap", func() {
+		ginkgo.It("should ZRevRangeByScoreWithScoresMap", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			vals, err := adapter.Cache(time.Hour).ZRevRangeByScoreWithScores(
 				ctx, "zset", ZRangeBy{Max: "+inf", Min: "-inf"}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]Z{{
 				Score:  3,
 				Member: "three",
 			}, {
@@ -8127,112 +8128,112 @@ func testAdapterCache(resp3 bool) {
 
 			vals, err = adapter.Cache(time.Hour).ZRevRangeByScoreWithScores(
 				ctx, "zset", ZRangeBy{Max: "2", Min: "(1"}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]Z{{Score: 2, Member: "two"}}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]Z{{Score: 2, Member: "two"}}))
 
 			vals, err = adapter.Cache(time.Hour).ZRevRangeByScoreWithScores(
 				ctx, "zset", ZRangeBy{Max: "(2", Min: "(1"}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(vals).To(Equal([]Z{}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(vals).To(gomega.Equal([]Z{}))
 		})
 
-		It("should ZRevRank", func() {
+		ginkgo.It("should ZRevRank", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			zRevRank := adapter.Cache(time.Hour).ZRevRank(ctx, "zset", "one")
-			Expect(zRevRank.Err()).NotTo(HaveOccurred())
-			Expect(zRevRank.Val()).To(Equal(int64(2)))
+			gomega.Expect(zRevRank.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRevRank.Val()).To(gomega.Equal(int64(2)))
 
 			zRevRank = adapter.Cache(time.Hour).ZRevRank(ctx, "zset", "four")
-			Expect(rueidis.IsRedisNil(zRevRank.Err())).To(BeTrue())
-			Expect(zRevRank.Val()).To(Equal(int64(0)))
+			gomega.Expect(rueidis.IsRedisNil(zRevRank.Err())).To(gomega.BeTrue())
+			gomega.Expect(zRevRank.Val()).To(gomega.Equal(int64(0)))
 		})
 
-		It("should ZRevRankWithScore", func() {
+		ginkgo.It("should ZRevRankWithScore", func() {
 			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			zRevRankWithScore := adapter.Cache(time.Hour).ZRevRankWithScore(ctx, "zset", "one")
-			Expect(zRevRankWithScore.Err()).NotTo(HaveOccurred())
-			Expect(zRevRankWithScore.Result()).To(Equal(RankScore{Rank: 2, Score: 1}))
+			gomega.Expect(zRevRankWithScore.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRevRankWithScore.Result()).To(gomega.Equal(RankScore{Rank: 2, Score: 1}))
 
 			zRevRankWithScore = adapter.Cache(time.Hour).ZRevRankWithScore(ctx, "zset", "two")
-			Expect(zRevRankWithScore.Err()).NotTo(HaveOccurred())
-			Expect(zRevRankWithScore.Result()).To(Equal(RankScore{Rank: 1, Score: 2}))
+			gomega.Expect(zRevRankWithScore.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRevRankWithScore.Result()).To(gomega.Equal(RankScore{Rank: 1, Score: 2}))
 
 			zRevRankWithScore = adapter.Cache(time.Hour).ZRevRankWithScore(ctx, "zset", "three")
-			Expect(zRevRankWithScore.Err()).NotTo(HaveOccurred())
-			Expect(zRevRankWithScore.Result()).To(Equal(RankScore{Rank: 0, Score: 3}))
+			gomega.Expect(zRevRankWithScore.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zRevRankWithScore.Result()).To(gomega.Equal(RankScore{Rank: 0, Score: 3}))
 
 			zRevRankWithScore = adapter.Cache(time.Hour).ZRevRankWithScore(ctx, "zset", "four")
-			Expect(zRevRankWithScore.Err()).To(HaveOccurred())
-			Expect(zRevRankWithScore.Err()).To(Equal(rueidis.Nil))
+			gomega.Expect(zRevRankWithScore.Err()).To(gomega.HaveOccurred())
+			gomega.Expect(zRevRankWithScore.Err()).To(gomega.Equal(rueidis.Nil))
 		})
 
-		It("should ZScore", func() {
+		ginkgo.It("should ZScore", func() {
 			zAdd := adapter.ZAdd(ctx, "zset", Z{Score: 1.001, Member: "one"})
-			Expect(zAdd.Err()).NotTo(HaveOccurred())
+			gomega.Expect(zAdd.Err()).NotTo(gomega.HaveOccurred())
 
 			zScore := adapter.Cache(time.Hour).ZScore(ctx, "zset", "one")
-			Expect(zScore.Err()).NotTo(HaveOccurred())
-			Expect(zScore.Val()).To(Equal(float64(1.001)))
+			gomega.Expect(zScore.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zScore.Val()).To(gomega.Equal(float64(1.001)))
 		})
 
-		It("should ZMPop", func() {
+		ginkgo.It("should ZMPop", func() {
 
 			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			err = adapter.ZAdd(ctx, "zset2", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset2", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset2", Z{Score: 3, Member: "three"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			key, elems, err := adapter.ZMPop(ctx, "min", 1, "zset").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(key).To(Equal("zset"))
-			Expect(elems).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(key).To(gomega.Equal("zset"))
+			gomega.Expect(elems).To(gomega.Equal([]Z{{
 				Score:  1,
 				Member: "one",
 			}}))
 
 			_, _, err = adapter.ZMPop(ctx, "min", 1, "nosuchkey").Result()
-			Expect(err).To(Equal(rueidis.Nil))
+			gomega.Expect(err).To(gomega.Equal(rueidis.Nil))
 
 			err = adapter.ZAdd(ctx, "myzset", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "myzset", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "myzset", Z{Score: 3, Member: "three"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			key, elems, err = adapter.ZMPop(ctx, "min", 1, "myzset").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(key).To(Equal("myzset"))
-			Expect(elems).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(key).To(gomega.Equal("myzset"))
+			gomega.Expect(elems).To(gomega.Equal([]Z{{
 				Score:  1,
 				Member: "one",
 			}}))
 
 			key, elems, err = adapter.ZMPop(ctx, "max", 10, "myzset").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(key).To(Equal("myzset"))
-			Expect(elems).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(key).To(gomega.Equal("myzset"))
+			gomega.Expect(elems).To(gomega.Equal([]Z{{
 				Score:  3,
 				Member: "three",
 			}, {
@@ -8241,16 +8242,16 @@ func testAdapterCache(resp3 bool) {
 			}}))
 
 			err = adapter.ZAdd(ctx, "myzset2", Z{Score: 4, Member: "four"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "myzset2", Z{Score: 5, Member: "five"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "myzset2", Z{Score: 6, Member: "six"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			key, elems, err = adapter.ZMPop(ctx, "min", 10, "myzset", "myzset2").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(key).To(Equal("myzset2"))
-			Expect(elems).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(key).To(gomega.Equal("myzset2"))
+			gomega.Expect(elems).To(gomega.Equal([]Z{{
 				Score:  4,
 				Member: "four",
 			}, {
@@ -8262,48 +8263,48 @@ func testAdapterCache(resp3 bool) {
 			}}))
 		})
 
-		It("should BZMPop", func() {
+		ginkgo.It("should BZMPop", func() {
 
 			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			err = adapter.ZAdd(ctx, "zset2", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset2", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset2", Z{Score: 3, Member: "three"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			key, elems, err := adapter.BZMPop(ctx, 0, "min", 1, "zset").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(key).To(Equal("zset"))
-			Expect(elems).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(key).To(gomega.Equal("zset"))
+			gomega.Expect(elems).To(gomega.Equal([]Z{{
 				Score:  1,
 				Member: "one",
 			}}))
 			key, elems, err = adapter.BZMPop(ctx, 0, "max", 1, "zset").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(key).To(Equal("zset"))
-			Expect(elems).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(key).To(gomega.Equal("zset"))
+			gomega.Expect(elems).To(gomega.Equal([]Z{{
 				Score:  3,
 				Member: "three",
 			}}))
 			key, elems, err = adapter.BZMPop(ctx, 0, "min", 10, "zset").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(key).To(Equal("zset"))
-			Expect(elems).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(key).To(gomega.Equal("zset"))
+			gomega.Expect(elems).To(gomega.Equal([]Z{{
 				Score:  2,
 				Member: "two",
 			}}))
 
 			key, elems, err = adapter.BZMPop(ctx, 0, "max", 10, "zset2").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(key).To(Equal("zset2"))
-			Expect(elems).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(key).To(gomega.Equal("zset2"))
+			gomega.Expect(elems).To(gomega.Equal([]Z{{
 				Score:  3,
 				Member: "three",
 			}, {
@@ -8315,24 +8316,24 @@ func testAdapterCache(resp3 bool) {
 			}}))
 
 			err = adapter.ZAdd(ctx, "myzset", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			key, elems, err = adapter.BZMPop(ctx, 0, "min", 10, "myzset").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(key).To(Equal("myzset"))
-			Expect(elems).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(key).To(gomega.Equal("myzset"))
+			gomega.Expect(elems).To(gomega.Equal([]Z{{
 				Score:  1,
 				Member: "one",
 			}}))
 
 			err = adapter.ZAdd(ctx, "myzset2", Z{Score: 4, Member: "four"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "myzset2", Z{Score: 5, Member: "five"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			key, elems, err = adapter.BZMPop(ctx, 0, "min", 10, "myzset", "myzset2").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(key).To(Equal("myzset2"))
-			Expect(elems).To(Equal([]Z{{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(key).To(gomega.Equal("myzset2"))
+			gomega.Expect(elems).To(gomega.Equal([]Z{{
 				Score:  4,
 				Member: "four",
 			}, {
@@ -8341,17 +8342,17 @@ func testAdapterCache(resp3 bool) {
 			}}))
 		})
 
-		It("should BZMPopBlocks", func() {
+		ginkgo.It("should BZMPopBlocks", func() {
 			started := make(chan bool)
 			done := make(chan bool)
 			go func() {
-				defer GinkgoRecover()
+				defer ginkgo.GinkgoRecover()
 
 				started <- true
 				key, elems, err := adapter.BZMPop(ctx, 0, "min", 1, "list_list").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(key).To(Equal("list_list"))
-				Expect(elems).To(Equal([]Z{{
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(key).To(gomega.Equal("list_list"))
+				gomega.Expect(elems).To(gomega.Equal([]Z{{
 					Score:  1,
 					Member: "one",
 				}}))
@@ -8361,81 +8362,81 @@ func testAdapterCache(resp3 bool) {
 
 			select {
 			case <-done:
-				Fail("BZMPop is not blocked")
+				ginkgo.Fail("BZMPop is not blocked")
 			case <-time.After(time.Second):
-				//ok
+				// ok
 			}
 
 			err := adapter.ZAdd(ctx, "list_list", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			select {
 			case <-done:
-				//ok
+				// ok
 			case <-time.After(time.Second):
-				Fail("BZMPop is still blocked")
+				ginkgo.Fail("BZMPop is still blocked")
 			}
 		})
 
-		It("should BZMPop timeout", func() {
+		ginkgo.It("should BZMPop timeout", func() {
 			_, val, err := adapter.BZMPop(ctx, time.Second, "min", 1, "list1").Result()
-			Expect(err).To(Equal(rueidis.Nil))
-			Expect(val).To(BeNil())
+			gomega.Expect(err).To(gomega.Equal(rueidis.Nil))
+			gomega.Expect(val).To(gomega.BeNil())
 
-			Expect(adapter.Ping(ctx).Err()).NotTo(HaveOccurred())
+			gomega.Expect(adapter.Ping(ctx).Err()).NotTo(gomega.HaveOccurred())
 		})
 
-		It("should ZMScore", func() {
+		ginkgo.It("should ZMScore", func() {
 			zmScore := adapter.Cache(time.Hour).ZMScore(ctx, "zset", "one", "three")
-			Expect(zmScore.Err()).NotTo(HaveOccurred())
-			Expect(zmScore.Val()).To(HaveLen(2))
-			Expect(zmScore.Val()[0]).To(Equal(float64(0)))
+			gomega.Expect(zmScore.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zmScore.Val()).To(gomega.HaveLen(2))
+			gomega.Expect(zmScore.Val()[0]).To(gomega.Equal(float64(0)))
 
 			err := adapter.ZAdd(ctx, "zset", Z{Score: 1, Member: "one"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 2, Member: "two"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			err = adapter.ZAdd(ctx, "zset", Z{Score: 3, Member: "three"}).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			zmScore = adapter.Cache(time.Hour).ZMScore(ctx, "zset", "one", "three")
-			Expect(zmScore.Err()).NotTo(HaveOccurred())
-			Expect(zmScore.Val()).To(HaveLen(2))
-			Expect(zmScore.Val()[0]).To(Equal(float64(1)))
+			gomega.Expect(zmScore.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zmScore.Val()).To(gomega.HaveLen(2))
+			gomega.Expect(zmScore.Val()[0]).To(gomega.Equal(float64(1)))
 
 			zmScore = adapter.Cache(time.Hour).ZMScore(ctx, "zset", "four")
-			Expect(zmScore.Err()).NotTo(HaveOccurred())
-			Expect(zmScore.Val()).To(HaveLen(1))
+			gomega.Expect(zmScore.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zmScore.Val()).To(gomega.HaveLen(1))
 
 			zmScore = adapter.Cache(time.Hour).ZMScore(ctx, "zset", "four", "one")
-			Expect(zmScore.Err()).NotTo(HaveOccurred())
-			Expect(zmScore.Val()).To(HaveLen(2))
+			gomega.Expect(zmScore.Err()).NotTo(gomega.HaveOccurred())
+			gomega.Expect(zmScore.Val()).To(gomega.HaveLen(2))
 		})
 	})
 
-	Describe("Geo add and radius search", func() {
-		BeforeEach(func() {
+	ginkgo.Describe("Geo add and radius search", func() {
+		ginkgo.BeforeEach(func() {
 			n, err := adapter.GeoAdd(
 				ctx,
 				"Sicily",
 				GeoLocation{Longitude: 13.361389, Latitude: 38.115556, Name: "Palermo"},
 				GeoLocation{Longitude: 15.087269, Latitude: 37.502669, Name: "Catania"},
 			).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(n).To(Equal(int64(2)))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(n).To(gomega.Equal(int64(2)))
 		})
 
-		It("should search geo radius", func() {
+		ginkgo.It("should search geo radius", func() {
 			res, err := adapter.Cache(time.Hour).GeoRadius(ctx, "Sicily", 15, 37, GeoRadiusQuery{
 				Radius: 200,
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(res).To(HaveLen(2))
-			Expect(res[0].Name).To(Equal("Palermo"))
-			Expect(res[1].Name).To(Equal("Catania"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(res).To(gomega.HaveLen(2))
+			gomega.Expect(res[0].Name).To(gomega.Equal("Palermo"))
+			gomega.Expect(res[1].Name).To(gomega.Equal("Catania"))
 		})
 
-		It("should search geo radius with options", func() {
+		ginkgo.It("should search geo radius with options", func() {
 			res, err := adapter.Cache(time.Hour).GeoRadius(ctx, "Sicily", 15, 37, GeoRadiusQuery{
 				Radius:      200,
 				Unit:        "km",
@@ -8445,21 +8446,21 @@ func testAdapterCache(resp3 bool) {
 				Count:       2,
 				Sort:        "ASC",
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(res).To(HaveLen(2))
-			Expect(res[1].Name).To(Equal("Palermo"))
-			Expect(res[1].Dist).To(Equal(190.4424))
-			Expect(res[1].GeoHash).To(Equal(int64(3479099956230698)))
-			Expect(res[1].Longitude).To(Equal(13.361389338970184))
-			Expect(res[1].Latitude).To(Equal(38.115556395496299))
-			Expect(res[0].Name).To(Equal("Catania"))
-			Expect(res[0].Dist).To(Equal(56.4413))
-			Expect(res[0].GeoHash).To(Equal(int64(3479447370796909)))
-			Expect(res[0].Longitude).To(Equal(15.087267458438873))
-			Expect(res[0].Latitude).To(Equal(37.50266842333162))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(res).To(gomega.HaveLen(2))
+			gomega.Expect(res[1].Name).To(gomega.Equal("Palermo"))
+			gomega.Expect(res[1].Dist).To(gomega.Equal(190.4424))
+			gomega.Expect(res[1].GeoHash).To(gomega.Equal(int64(3479099956230698)))
+			gomega.Expect(res[1].Longitude).To(gomega.Equal(13.361389338970184))
+			gomega.Expect(res[1].Latitude).To(gomega.Equal(38.115556395496299))
+			gomega.Expect(res[0].Name).To(gomega.Equal("Catania"))
+			gomega.Expect(res[0].Dist).To(gomega.Equal(56.4413))
+			gomega.Expect(res[0].GeoHash).To(gomega.Equal(int64(3479447370796909)))
+			gomega.Expect(res[0].Longitude).To(gomega.Equal(15.087267458438873))
+			gomega.Expect(res[0].Latitude).To(gomega.Equal(37.50266842333162))
 		})
 
-		It("should search geo radius with WithDist=false", func() {
+		ginkgo.It("should search geo radius with WithDist=false", func() {
 			res, err := adapter.Cache(time.Hour).GeoRadius(ctx, "Sicily", 15, 37, GeoRadiusQuery{
 				Radius:      200,
 				Unit:        "km",
@@ -8468,21 +8469,21 @@ func testAdapterCache(resp3 bool) {
 				Count:       2,
 				Sort:        "ASC",
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(res).To(HaveLen(2))
-			Expect(res[1].Name).To(Equal("Palermo"))
-			Expect(res[1].Dist).To(Equal(float64(0)))
-			Expect(res[1].GeoHash).To(Equal(int64(3479099956230698)))
-			Expect(res[1].Longitude).To(Equal(13.361389338970184))
-			Expect(res[1].Latitude).To(Equal(38.115556395496299))
-			Expect(res[0].Name).To(Equal("Catania"))
-			Expect(res[0].Dist).To(Equal(float64(0)))
-			Expect(res[0].GeoHash).To(Equal(int64(3479447370796909)))
-			Expect(res[0].Longitude).To(Equal(15.087267458438873))
-			Expect(res[0].Latitude).To(Equal(37.50266842333162))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(res).To(gomega.HaveLen(2))
+			gomega.Expect(res[1].Name).To(gomega.Equal("Palermo"))
+			gomega.Expect(res[1].Dist).To(gomega.Equal(float64(0)))
+			gomega.Expect(res[1].GeoHash).To(gomega.Equal(int64(3479099956230698)))
+			gomega.Expect(res[1].Longitude).To(gomega.Equal(13.361389338970184))
+			gomega.Expect(res[1].Latitude).To(gomega.Equal(38.115556395496299))
+			gomega.Expect(res[0].Name).To(gomega.Equal("Catania"))
+			gomega.Expect(res[0].Dist).To(gomega.Equal(float64(0)))
+			gomega.Expect(res[0].GeoHash).To(gomega.Equal(int64(3479447370796909)))
+			gomega.Expect(res[0].Longitude).To(gomega.Equal(15.087267458438873))
+			gomega.Expect(res[0].Latitude).To(gomega.Equal(37.50266842333162))
 		})
 
-		It("should search geo radius by member with options", func() {
+		ginkgo.It("should search geo radius by member with options", func() {
 			res, err := adapter.Cache(time.Hour).GeoRadiusByMember(ctx, "Sicily", "Catania", GeoRadiusQuery{
 				Radius:      200,
 				Unit:        "km",
@@ -8492,21 +8493,21 @@ func testAdapterCache(resp3 bool) {
 				Count:       2,
 				Sort:        "ASC",
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(res).To(HaveLen(2))
-			Expect(res[0].Name).To(Equal("Catania"))
-			Expect(res[0].Dist).To(Equal(0.0))
-			Expect(res[0].GeoHash).To(Equal(int64(3479447370796909)))
-			Expect(res[0].Longitude).To(Equal(15.087267458438873))
-			Expect(res[0].Latitude).To(Equal(37.50266842333162))
-			Expect(res[1].Name).To(Equal("Palermo"))
-			Expect(res[1].Dist).To(Equal(166.2742))
-			Expect(res[1].GeoHash).To(Equal(int64(3479099956230698)))
-			Expect(res[1].Longitude).To(Equal(13.361389338970184))
-			Expect(res[1].Latitude).To(Equal(38.115556395496299))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(res).To(gomega.HaveLen(2))
+			gomega.Expect(res[0].Name).To(gomega.Equal("Catania"))
+			gomega.Expect(res[0].Dist).To(gomega.Equal(0.0))
+			gomega.Expect(res[0].GeoHash).To(gomega.Equal(int64(3479447370796909)))
+			gomega.Expect(res[0].Longitude).To(gomega.Equal(15.087267458438873))
+			gomega.Expect(res[0].Latitude).To(gomega.Equal(37.50266842333162))
+			gomega.Expect(res[1].Name).To(gomega.Equal("Palermo"))
+			gomega.Expect(res[1].Dist).To(gomega.Equal(166.2742))
+			gomega.Expect(res[1].GeoHash).To(gomega.Equal(int64(3479099956230698)))
+			gomega.Expect(res[1].Longitude).To(gomega.Equal(13.361389338970184))
+			gomega.Expect(res[1].Latitude).To(gomega.Equal(38.115556395496299))
 		})
 
-		It("should search geo radius with no results", func() {
+		ginkgo.It("should search geo radius with no results", func() {
 			res, err := adapter.Cache(time.Hour).GeoRadius(ctx, "Sicily", 99, 37, GeoRadiusQuery{
 				Radius:      200,
 				Unit:        "km",
@@ -8514,11 +8515,11 @@ func testAdapterCache(resp3 bool) {
 				WithCoord:   true,
 				WithDist:    true,
 			}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(res).To(HaveLen(0))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(res).To(gomega.HaveLen(0))
 		})
 
-		It("should get geo distance with unit options", func() {
+		ginkgo.It("should get geo distance with unit options", func() {
 			// From Redis CLI, note the difference in rounding in m vs
 			// km on Redis itself.
 			//
@@ -8528,30 +8529,30 @@ func testAdapterCache(resp3 bool) {
 			// GEODIST Sicily Palermo Catania km
 			// "166.27415156960032"
 			dist, err := adapter.Cache(time.Hour).GeoDist(ctx, "Sicily", "Palermo", "Catania", "km").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(dist).To(BeNumerically("~", 166.27, 0.01))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(dist).To(gomega.BeNumerically("~", 166.27, 0.01))
 
 			dist, err = adapter.Cache(time.Hour).GeoDist(ctx, "Sicily", "Palermo", "Catania", "m").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(dist).To(BeNumerically("~", 166274.15, 0.01))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(dist).To(gomega.BeNumerically("~", 166274.15, 0.01))
 
 			_, err = adapter.Cache(time.Hour).GeoDist(ctx, "Sicily", "Palermo", "Catania", "mi").Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			_, err = adapter.Cache(time.Hour).GeoDist(ctx, "Sicily", "Palermo", "Catania", "ft").Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 		})
 
-		It("should get geo hash in string representation", func() {
+		ginkgo.It("should get geo hash in string representation", func() {
 			hashes, err := adapter.Cache(time.Hour).GeoHash(ctx, "Sicily", "Palermo", "Catania").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(hashes).To(ConsistOf([]string{"sqc8b49rny0", "sqdtr74hyu0"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(hashes).To(gomega.ConsistOf([]string{"sqc8b49rny0", "sqdtr74hyu0"}))
 		})
 
-		It("should return geo position", func() {
+		ginkgo.It("should return geo position", func() {
 			pos, err := adapter.Cache(time.Hour).GeoPos(ctx, "Sicily", "Palermo", "Catania", "NonExisting").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(pos).To(ConsistOf([]*GeoPos{
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(pos).To(gomega.ConsistOf([]*GeoPos{
 				{
 					Longitude: 13.361389338970184,
 					Latitude:  38.1155563954963,
@@ -8564,7 +8565,7 @@ func testAdapterCache(resp3 bool) {
 			}))
 		})
 
-		It("should geo search", func() {
+		ginkgo.It("should geo search", func() {
 			q := GeoSearchQuery{
 				Member:    "Catania",
 				BoxWidth:  400,
@@ -8573,23 +8574,23 @@ func testAdapterCache(resp3 bool) {
 				Sort:      "asc",
 			}
 			val, err := adapter.Cache(time.Hour).GeoSearch(ctx, "Sicily", q).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]string{"Catania"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(val).To(gomega.Equal([]string{"Catania"}))
 
 			q.BoxHeight = 400
 			val, err = adapter.Cache(time.Hour).GeoSearch(ctx, "Sicily", q).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]string{"Catania", "Palermo"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(val).To(gomega.Equal([]string{"Catania", "Palermo"}))
 
 			q.Count = 1
 			val, err = adapter.Cache(time.Hour).GeoSearch(ctx, "Sicily", q).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]string{"Catania"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(val).To(gomega.Equal([]string{"Catania"}))
 
 			q.CountAny = true
 			val, err = adapter.Cache(time.Hour).GeoSearch(ctx, "Sicily", q).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]string{"Palermo"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(val).To(gomega.Equal([]string{"Palermo"}))
 
 			q = GeoSearchQuery{
 				Member:     "Catania",
@@ -8598,23 +8599,23 @@ func testAdapterCache(resp3 bool) {
 				Sort:       "asc",
 			}
 			val, err = adapter.Cache(time.Hour).GeoSearch(ctx, "Sicily", q).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]string{"Catania"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(val).To(gomega.Equal([]string{"Catania"}))
 
 			q.Radius = 400
 			val, err = adapter.Cache(time.Hour).GeoSearch(ctx, "Sicily", q).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]string{"Catania", "Palermo"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(val).To(gomega.Equal([]string{"Catania", "Palermo"}))
 
 			q.Count = 1
 			val, err = adapter.Cache(time.Hour).GeoSearch(ctx, "Sicily", q).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]string{"Catania"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(val).To(gomega.Equal([]string{"Catania"}))
 
 			q.CountAny = true
 			val, err = adapter.Cache(time.Hour).GeoSearch(ctx, "Sicily", q).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]string{"Palermo"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(val).To(gomega.Equal([]string{"Palermo"}))
 
 			q = GeoSearchQuery{
 				Longitude: 15,
@@ -8625,23 +8626,23 @@ func testAdapterCache(resp3 bool) {
 				Sort:      "asc",
 			}
 			val, err = adapter.Cache(time.Hour).GeoSearch(ctx, "Sicily", q).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]string{"Catania"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(val).To(gomega.Equal([]string{"Catania"}))
 
 			q.BoxWidth, q.BoxHeight = 400, 400
 			val, err = adapter.Cache(time.Hour).GeoSearch(ctx, "Sicily", q).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]string{"Catania", "Palermo"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(val).To(gomega.Equal([]string{"Catania", "Palermo"}))
 
 			q.Count = 1
 			val, err = adapter.Cache(time.Hour).GeoSearch(ctx, "Sicily", q).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]string{"Catania"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(val).To(gomega.Equal([]string{"Catania"}))
 
 			q.CountAny = true
 			val, err = adapter.Cache(time.Hour).GeoSearch(ctx, "Sicily", q).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]string{"Palermo"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(val).To(gomega.Equal([]string{"Palermo"}))
 
 			q = GeoSearchQuery{
 				Longitude:  15,
@@ -8651,27 +8652,27 @@ func testAdapterCache(resp3 bool) {
 				Sort:       "asc",
 			}
 			val, err = adapter.Cache(time.Hour).GeoSearch(ctx, "Sicily", q).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]string{"Catania"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(val).To(gomega.Equal([]string{"Catania"}))
 
 			q.Radius = 200
 			val, err = adapter.Cache(time.Hour).GeoSearch(ctx, "Sicily", q).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]string{"Catania", "Palermo"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(val).To(gomega.Equal([]string{"Catania", "Palermo"}))
 
 			q.Count = 1
 			val, err = adapter.Cache(time.Hour).GeoSearch(ctx, "Sicily", q).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]string{"Catania"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(val).To(gomega.Equal([]string{"Catania"}))
 
 			q.CountAny = true
 			val, err = adapter.Cache(time.Hour).GeoSearch(ctx, "Sicily", q).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(val).To(Equal([]string{"Palermo"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(val).To(gomega.Equal([]string{"Palermo"}))
 		})
 	})
 
-	Describe("marshaling/unmarshaling", func() {
+	ginkgo.Describe("marshaling/unmarshaling", func() {
 		type convTest struct {
 			value  any
 			dest   any
@@ -8680,7 +8681,7 @@ func testAdapterCache(resp3 bool) {
 
 		convTests := []convTest{
 			// TODO
-			//{nil, "", nil},
+			// {nil, "", nil},
 			{"hello", new(string), "hello"},
 			{[]byte("hello"), new([]byte), "hello"},
 			{int(1), new(int), "1"},
@@ -8699,210 +8700,210 @@ func testAdapterCache(resp3 bool) {
 			{false, new(bool), "0"},
 		}
 
-		It("should convert to string", func() {
+		ginkgo.It("should convert to string", func() {
 			for _, test := range convTests {
 				err := adapter.Set(ctx, "key", test.value, 0).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				time.Sleep(time.Millisecond * 10)
 				s, err := adapter.Cache(time.Hour).Get(ctx, "key").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(s).To(Equal(test.wanted))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(s).To(gomega.Equal(test.wanted))
 
 				if test.dest == nil {
 					continue
 				}
 				// TODO
-				//err = adapter.Cache(time.Hour).Get(ctx, "key").Scan(test.dest)
-				//Expect(err).NotTo(HaveOccurred())
-				//Expect(deref(test.dest)).To(Equal(test.value))
+				// err = adapter.Cache(time.Hour).Get(ctx, "key").Scan(test.dest)
+				// gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				// gomega.Expect(deref(test.dest)).To(gomega.Equal(test.value))
 			}
 		})
 	})
 
-	Describe("json marshaling/unmarshaling", func() {
-		BeforeEach(func() {
+	ginkgo.Describe("json marshaling/unmarshaling", func() {
+		ginkgo.BeforeEach(func() {
 			value := &numberStruct{Number: 42}
 			err := adapter.Set(ctx, "key", value, 0).Err()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 		})
 
-		It("should marshal custom values using json", func() {
+		ginkgo.It("should marshal custom values using json", func() {
 			s, err := adapter.Cache(time.Hour).Get(ctx, "key").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(s).To(Equal(`{"Number":42}`))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(s).To(gomega.Equal(`{"Number":42}`))
 		})
 
 		// TODO
-		//It("should scan custom values using json", func() {
+		// ginkgo.It("should scan custom values using json", func() {
 		//	value := &numberStruct{}
 		//	err := adapter.Cache(time.Hour).Get(ctx, "key").Scan(value)
-		//	Expect(err).NotTo(HaveOccurred())
-		//	Expect(value.Number).To(Equal(42))
-		//})
+		//	gomega.Expect(err).NotTo(gomega.HaveOccurred())
+		//	gomega.Expect(value.Number).To(gomega.Equal(42))
+		// })
 	})
 
-	Describe("GearsCmdable", func() {
-		BeforeEach(func() {
-			Expect(adapter.FlushDB(ctx).Err()).NotTo(HaveOccurred())
+	ginkgo.Describe("GearsCmdable", func() {
+		ginkgo.BeforeEach(func() {
+			gomega.Expect(adapter.FlushDB(ctx).Err()).NotTo(gomega.HaveOccurred())
 			adapter.TFunctionDelete(ctx, "lib1")
 		})
 		// Copied from go-redis
 		// https://github.com/redis/go-redis/blob/f994ff1cd96299a5c8029ae3403af7b17ef06e8a/gears_commands_test.go
-		It("should TFunctionLoad, TFunctionLoadArgs and TFunctionDelete ", Label("gears", "tfunctionload"), func() {
+		ginkgo.It("should TFunctionLoad, TFunctionLoadArgs and TFunctionDelete ", ginkgo.Label("gears", "tfunctionload"), func() {
 			resultAdd, err := adapter.TFunctionLoad(ctx, libCode("lib1")).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultAdd).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultAdd).To(gomega.BeEquivalentTo("OK"))
 			opt := &TFunctionLoadOptions{Replace: true, Config: `{"last_update_field_name":"last_update"}`}
 			resultAdd, err = adapter.TFunctionLoadArgs(ctx, libCodeWithConfig("lib1"), opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultAdd).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultAdd).To(gomega.BeEquivalentTo("OK"))
 		})
-		It("should TFunctionList", Label("gears", "tfunctionlist"), func() {
+		ginkgo.It("should TFunctionList", ginkgo.Label("gears", "tfunctionlist"), func() {
 			resultAdd, err := adapter.TFunctionLoad(ctx, libCode("lib1")).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultAdd).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultAdd).To(gomega.BeEquivalentTo("OK"))
 			resultList, err := adapter.TFunctionList(ctx).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultList[0]["engine"]).To(BeEquivalentTo("js"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultList[0]["engine"]).To(gomega.BeEquivalentTo("js"))
 			opt := &TFunctionListOptions{Withcode: true, Verbose: 2}
 			resultListArgs, err := adapter.TFunctionListArgs(ctx, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultListArgs[0]["code"]).NotTo(BeEquivalentTo(""))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultListArgs[0]["code"]).NotTo(gomega.BeEquivalentTo(""))
 		})
 
-		It("should TFCall", Label("gears", "tfcall"), func() {
+		ginkgo.It("should TFCall", ginkgo.Label("gears", "tfcall"), func() {
 			var resultAdd interface{}
 			resultAdd, err := adapter.TFunctionLoad(ctx, libCode("lib1")).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultAdd).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultAdd).To(gomega.BeEquivalentTo("OK"))
 			resultAdd, err = adapter.TFCall(ctx, "lib1", "foo", 0).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultAdd).To(BeEquivalentTo("bar"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultAdd).To(gomega.BeEquivalentTo("bar"))
 		})
 
-		It("should TFCallArgs", Label("gears", "tfcallargs"), func() {
+		ginkgo.It("should TFCallArgs", ginkgo.Label("gears", "tfcallargs"), func() {
 			var resultAdd interface{}
 			resultAdd, err := adapter.TFunctionLoad(ctx, libCode("lib1")).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultAdd).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultAdd).To(gomega.BeEquivalentTo("OK"))
 			opt := &TFCallOptions{Arguments: []string{"foo", "bar"}}
 			resultAdd, err = adapter.TFCallArgs(ctx, "lib1", "foo", 0, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultAdd).To(BeEquivalentTo("bar"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultAdd).To(gomega.BeEquivalentTo("bar"))
 		})
 
-		It("should TFCallASYNC", Label("gears", "TFCallASYNC"), func() {
+		ginkgo.It("should TFCallASYNC", ginkgo.Label("gears", "TFCallASYNC"), func() {
 			var resultAdd interface{}
 			resultAdd, err := adapter.TFunctionLoad(ctx, libCode("lib1")).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultAdd).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultAdd).To(gomega.BeEquivalentTo("OK"))
 			resultAdd, err = adapter.TFCallASYNC(ctx, "lib1", "foo", 0).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultAdd).To(BeEquivalentTo("bar"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultAdd).To(gomega.BeEquivalentTo("bar"))
 		})
 
-		It("should TFCallASYNCArgs", Label("gears", "TFCallASYNCargs"), func() {
+		ginkgo.It("should TFCallASYNCArgs", ginkgo.Label("gears", "TFCallASYNCargs"), func() {
 			var resultAdd interface{}
 			resultAdd, err := adapter.TFunctionLoad(ctx, libCode("lib1")).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultAdd).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultAdd).To(gomega.BeEquivalentTo("OK"))
 			opt := &TFCallOptions{Arguments: []string{"foo", "bar"}}
 			resultAdd, err = adapter.TFCallASYNCArgs(ctx, "lib1", "foo", 0, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultAdd).To(BeEquivalentTo("bar"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultAdd).To(gomega.BeEquivalentTo("bar"))
 		})
 	})
 	// https://github.com/redis/go-redis/blob/master/probabilistic_test.go#L14
-	Describe("ProbabilisticCmdable", func() {
+	ginkgo.Describe("ProbabilisticCmdable", func() {
 		ctx := context.TODO()
-		BeforeEach(func() {
-			Expect(adapter.FlushDB(ctx).Err()).NotTo(HaveOccurred())
+		ginkgo.BeforeEach(func() {
+			gomega.Expect(adapter.FlushDB(ctx).Err()).NotTo(gomega.HaveOccurred())
 		})
-		Describe("bloom", Label("bloom"), func() {
-			It("should BFAdd", Label("bloom", "bfadd"), func() {
+		ginkgo.Describe("bloom", ginkgo.Label("bloom"), func() {
+			ginkgo.It("should BFAdd", ginkgo.Label("bloom", "bfadd"), func() {
 				resultAdd, err := adapter.BFAdd(ctx, "testbf1", 1).Result()
 
-				Expect(err).NotTo(HaveOccurred())
-				Expect(resultAdd).To(BeTrue())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(resultAdd).To(gomega.BeTrue())
 
 				resultInfo, err := adapter.BFInfo(ctx, "testbf1").Result()
 
-				Expect(err).NotTo(HaveOccurred())
-				Expect(resultInfo).To(BeAssignableToTypeOf(BFInfo{}))
-				Expect(resultInfo.ItemsInserted).To(BeEquivalentTo(int64(1)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(resultInfo).To(gomega.BeAssignableToTypeOf(BFInfo{}))
+				gomega.Expect(resultInfo.ItemsInserted).To(gomega.BeEquivalentTo(int64(1)))
 			})
 
-			It("should BFCard", Label("bloom", "bfcard"), func() {
+			ginkgo.It("should BFCard", ginkgo.Label("bloom", "bfcard"), func() {
 				// This is a probabilistic data structure, and it's not always guaranteed that we will get back
 				// the exact number of inserted items, during hash collisions
 				// But with such a low number of items (only 3),
 				// the probability of a collision is very low, so we can expect to get back the exact number of items
 				_, err := adapter.BFAdd(ctx, "testbf1", "item1").Result()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				_, err = adapter.BFAdd(ctx, "testbf1", "item2").Result()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				_, err = adapter.BFAdd(ctx, "testbf1", 3).Result()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				result, err := adapter.BFCard(ctx, "testbf1").Result()
 
-				Expect(err).NotTo(HaveOccurred())
-				Expect(result).To(BeEquivalentTo(int64(3)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(result).To(gomega.BeEquivalentTo(int64(3)))
 			})
 
-			It("should BFExists", Label("bloom", "bfexists"), func() {
+			ginkgo.It("should BFExists", ginkgo.Label("bloom", "bfexists"), func() {
 				exists, err := adapter.BFExists(ctx, "testbf1", "item1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(exists).To(BeFalse())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(exists).To(gomega.BeFalse())
 
 				_, err = adapter.BFAdd(ctx, "testbf1", "item1").Result()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				exists, err = adapter.BFExists(ctx, "testbf1", "item1").Result()
 
-				Expect(err).NotTo(HaveOccurred())
-				Expect(exists).To(BeTrue())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(exists).To(gomega.BeTrue())
 			})
 
-			It("should BFInfo and BFReserve", Label("bloom", "bfinfo", "bfreserve"), func() {
+			ginkgo.It("should BFInfo and BFReserve", ginkgo.Label("bloom", "bfinfo", "bfreserve"), func() {
 				err := adapter.BFReserve(ctx, "testbf1", 0.001, 2000).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				result, err := adapter.BFInfo(ctx, "testbf1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(result).To(BeAssignableToTypeOf(BFInfo{}))
-				Expect(result.Capacity).To(BeEquivalentTo(int64(2000)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(result).To(gomega.BeAssignableToTypeOf(BFInfo{}))
+				gomega.Expect(result.Capacity).To(gomega.BeEquivalentTo(int64(2000)))
 			})
 
-			It("should BFInfoCapacity, BFInfoSize, BFInfoFilters, BFInfoItems, BFInfoExpansion, ", Label("bloom", "bfinfocapacity", "bfinfosize", "bfinfofilters", "bfinfoitems", "bfinfoexpansion"), func() {
+			ginkgo.It("should BFInfoCapacity, BFInfoSize, BFInfoFilters, BFInfoItems, BFInfoExpansion, ", ginkgo.Label("bloom", "bfinfocapacity", "bfinfosize", "bfinfofilters", "bfinfoitems", "bfinfoexpansion"), func() {
 				err := adapter.BFReserve(ctx, "testbf1", 0.001, 2000).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				result, err := adapter.BFInfoCapacity(ctx, "testbf1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(result.Capacity).To(BeEquivalentTo(int64(2000)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(result.Capacity).To(gomega.BeEquivalentTo(int64(2000)))
 
 				result, err = adapter.BFInfoItems(ctx, "testbf1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(result.ItemsInserted).To(BeEquivalentTo(int64(0)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(result.ItemsInserted).To(gomega.BeEquivalentTo(int64(0)))
 
 				result, err = adapter.BFInfoSize(ctx, "testbf1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(result.Size).To(BeEquivalentTo(int64(4056)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(result.Size).To(gomega.BeEquivalentTo(int64(4056)))
 
 				err = adapter.BFReserveExpansion(ctx, "testbf2", 0.001, 2000, 3).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				result, err = adapter.BFInfoFilters(ctx, "testbf2").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(result.Filters).To(BeEquivalentTo(int64(1)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(result.Filters).To(gomega.BeEquivalentTo(int64(1)))
 
 				result, err = adapter.BFInfoExpansion(ctx, "testbf2").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(result.ExpansionRate).To(BeEquivalentTo(int64(3)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(result.ExpansionRate).To(gomega.BeEquivalentTo(int64(3)))
 			})
 
-			It("should BFInsert", Label("bloom", "bfinsert"), func() {
+			ginkgo.It("should BFInsert", ginkgo.Label("bloom", "bfinsert"), func() {
 				options := &BFInsertOptions{
 					Capacity:   2000,
 					Error:      0.001,
@@ -8912,8 +8913,8 @@ func testAdapterCache(resp3 bool) {
 				}
 
 				resultInsert, err := adapter.BFInsert(ctx, "testbf1", options, "item1").Result()
-				Expect(err).To(HaveOccurred())
-				Expect(err).To(MatchError("not found"))
+				gomega.Expect(err).To(gomega.HaveOccurred())
+				gomega.Expect(err).To(gomega.MatchError("not found"))
 
 				options = &BFInsertOptions{
 					Capacity:   2000,
@@ -8924,81 +8925,81 @@ func testAdapterCache(resp3 bool) {
 				}
 
 				resultInsert, err = adapter.BFInsert(ctx, "testbf1", options, "item1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(resultInsert)).To(BeEquivalentTo(1))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(len(resultInsert)).To(gomega.BeEquivalentTo(1))
 
 				exists, err := adapter.BFExists(ctx, "testbf1", "item1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(exists).To(BeTrue())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(exists).To(gomega.BeTrue())
 
 				result, err := adapter.BFInfo(ctx, "testbf1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(result).To(BeAssignableToTypeOf(BFInfo{}))
-				Expect(result.Capacity).To(BeEquivalentTo(int64(2000)))
-				Expect(result.ExpansionRate).To(BeEquivalentTo(int64(3)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(result).To(gomega.BeAssignableToTypeOf(BFInfo{}))
+				gomega.Expect(result.Capacity).To(gomega.BeEquivalentTo(int64(2000)))
+				gomega.Expect(result.ExpansionRate).To(gomega.BeEquivalentTo(int64(3)))
 			})
 
-			It("should BFMAdd", Label("bloom", "bfmadd"), func() {
+			ginkgo.It("should BFMAdd", ginkgo.Label("bloom", "bfmadd"), func() {
 				resultAdd, err := adapter.BFMAdd(ctx, "testbf1", "item1", "item2", "item3").Result()
 
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(resultAdd)).To(Equal(3))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(len(resultAdd)).To(gomega.Equal(3))
 
 				resultInfo, err := adapter.BFInfo(ctx, "testbf1").Result()
 
-				Expect(err).NotTo(HaveOccurred())
-				Expect(resultInfo).To(BeAssignableToTypeOf(BFInfo{}))
-				Expect(resultInfo.ItemsInserted).To(BeEquivalentTo(int64(3)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(resultInfo).To(gomega.BeAssignableToTypeOf(BFInfo{}))
+				gomega.Expect(resultInfo.ItemsInserted).To(gomega.BeEquivalentTo(int64(3)))
 				resultAdd2, err := adapter.BFMAdd(ctx, "testbf1", "item1", "item2", "item4").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(resultAdd2[0]).To(BeFalse())
-				Expect(resultAdd2[1]).To(BeFalse())
-				Expect(resultAdd2[2]).To(BeTrue())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(resultAdd2[0]).To(gomega.BeFalse())
+				gomega.Expect(resultAdd2[1]).To(gomega.BeFalse())
+				gomega.Expect(resultAdd2[2]).To(gomega.BeTrue())
 			})
 
-			It("should BFMExists", Label("bloom", "bfmexists"), func() {
+			ginkgo.It("should BFMExists", ginkgo.Label("bloom", "bfmexists"), func() {
 				exist, err := adapter.BFMExists(ctx, "testbf1", "item1", "item2", "item3").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(exist)).To(Equal(3))
-				Expect(exist[0]).To(BeFalse())
-				Expect(exist[1]).To(BeFalse())
-				Expect(exist[2]).To(BeFalse())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(len(exist)).To(gomega.Equal(3))
+				gomega.Expect(exist[0]).To(gomega.BeFalse())
+				gomega.Expect(exist[1]).To(gomega.BeFalse())
+				gomega.Expect(exist[2]).To(gomega.BeFalse())
 
 				_, err = adapter.BFMAdd(ctx, "testbf1", "item1", "item2", "item3").Result()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				exist, err = adapter.BFMExists(ctx, "testbf1", "item1", "item2", "item3", "item4").Result()
 
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(exist)).To(Equal(4))
-				Expect(exist[0]).To(BeTrue())
-				Expect(exist[1]).To(BeTrue())
-				Expect(exist[2]).To(BeTrue())
-				Expect(exist[3]).To(BeFalse())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(len(exist)).To(gomega.Equal(4))
+				gomega.Expect(exist[0]).To(gomega.BeTrue())
+				gomega.Expect(exist[1]).To(gomega.BeTrue())
+				gomega.Expect(exist[2]).To(gomega.BeTrue())
+				gomega.Expect(exist[3]).To(gomega.BeFalse())
 			})
 
-			It("should BFReserveExpansion", Label("bloom", "bfreserveexpansion"), func() {
+			ginkgo.It("should BFReserveExpansion", ginkgo.Label("bloom", "bfreserveexpansion"), func() {
 				err := adapter.BFReserveExpansion(ctx, "testbf1", 0.001, 2000, 3).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				result, err := adapter.BFInfo(ctx, "testbf1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(result).To(BeAssignableToTypeOf(BFInfo{}))
-				Expect(result.Capacity).To(BeEquivalentTo(int64(2000)))
-				Expect(result.ExpansionRate).To(BeEquivalentTo(int64(3)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(result).To(gomega.BeAssignableToTypeOf(BFInfo{}))
+				gomega.Expect(result.Capacity).To(gomega.BeEquivalentTo(int64(2000)))
+				gomega.Expect(result.ExpansionRate).To(gomega.BeEquivalentTo(int64(3)))
 			})
 
-			It("should BFReserveNonScaling", Label("bloom", "bfreservenonscaling"), func() {
+			ginkgo.It("should BFReserveNonScaling", ginkgo.Label("bloom", "bfreservenonscaling"), func() {
 				err := adapter.BFReserveNonScaling(ctx, "testbfns1", 0.001, 1000).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				_, err = adapter.BFInfo(ctx, "testbfns1").Result()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			})
 
-			It("should BFScanDump and BFLoadChunk", Label("bloom", "bfscandump", "bfloadchunk"), func() {
+			ginkgo.It("should BFScanDump and BFLoadChunk", ginkgo.Label("bloom", "bfscandump", "bfloadchunk"), func() {
 				err := adapter.BFReserve(ctx, "testbfsd1", 0.001, 3000).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				for i := 0; i < 1000; i++ {
 					adapter.BFAdd(ctx, "testbfsd1", i)
 				}
@@ -9009,7 +9010,7 @@ func testAdapterCache(resp3 bool) {
 					if sd.Iter == 0 {
 						break
 					}
-					Expect(err).NotTo(HaveOccurred())
+					gomega.Expect(err).NotTo(gomega.HaveOccurred())
 					fd = append(fd, sd)
 					sd, err = adapter.BFScanDump(ctx, "testbfsd1", sd.Iter).Result()
 				}
@@ -9018,10 +9019,10 @@ func testAdapterCache(resp3 bool) {
 					adapter.BFLoadChunk(ctx, "testbfsd1", e.Iter, e.Data)
 				}
 				infAfter := adapter.BFInfoSize(ctx, "testbfsd1")
-				Expect(infBefore).To(BeEquivalentTo(infAfter))
+				gomega.Expect(infBefore).To(gomega.BeEquivalentTo(infAfter))
 			})
 
-			It("should BFReserveWithArgs", Label("bloom", "bfreserveargs"), func() {
+			ginkgo.It("should BFReserveWithArgs", ginkgo.Label("bloom", "bfreserveargs"), func() {
 				options := &BFReserveOptions{
 					Capacity:   2000,
 					Error:      0.001,
@@ -9029,100 +9030,100 @@ func testAdapterCache(resp3 bool) {
 					NonScaling: false,
 				}
 				err := adapter.BFReserveWithArgs(ctx, "testbf", options).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				result, err := adapter.BFInfo(ctx, "testbf").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(result).To(BeAssignableToTypeOf(BFInfo{}))
-				Expect(result.Capacity).To(BeEquivalentTo(int64(2000)))
-				Expect(result.ExpansionRate).To(BeEquivalentTo(int64(3)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(result).To(gomega.BeAssignableToTypeOf(BFInfo{}))
+				gomega.Expect(result.Capacity).To(gomega.BeEquivalentTo(int64(2000)))
+				gomega.Expect(result.ExpansionRate).To(gomega.BeEquivalentTo(int64(3)))
 			})
 		})
 
-		Describe("cuckoo", Label("cuckoo"), func() {
-			It("should CFAdd", Label("cuckoo", "cfadd"), func() {
+		ginkgo.Describe("cuckoo", ginkgo.Label("cuckoo"), func() {
+			ginkgo.It("should CFAdd", ginkgo.Label("cuckoo", "cfadd"), func() {
 				add, err := adapter.CFAdd(ctx, "testcf1", "item1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(add).To(BeTrue())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(add).To(gomega.BeTrue())
 
 				exists, err := adapter.CFExists(ctx, "testcf1", "item1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(exists).To(BeTrue())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(exists).To(gomega.BeTrue())
 
 				info, err := adapter.CFInfo(ctx, "testcf1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(info).To(BeAssignableToTypeOf(CFInfo{}))
-				Expect(info.NumItemsInserted).To(BeEquivalentTo(int64(1)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(info).To(gomega.BeAssignableToTypeOf(CFInfo{}))
+				gomega.Expect(info.NumItemsInserted).To(gomega.BeEquivalentTo(int64(1)))
 			})
 
-			It("should CFAddNX", Label("cuckoo", "cfaddnx"), func() {
+			ginkgo.It("should CFAddNX", ginkgo.Label("cuckoo", "cfaddnx"), func() {
 				add, err := adapter.CFAddNX(ctx, "testcf1", "item1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(add).To(BeTrue())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(add).To(gomega.BeTrue())
 
 				exists, err := adapter.CFExists(ctx, "testcf1", "item1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(exists).To(BeTrue())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(exists).To(gomega.BeTrue())
 
 				result, err := adapter.CFAddNX(ctx, "testcf1", "item1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(result).To(BeFalse())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(result).To(gomega.BeFalse())
 
 				info, err := adapter.CFInfo(ctx, "testcf1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(info).To(BeAssignableToTypeOf(CFInfo{}))
-				Expect(info.NumItemsInserted).To(BeEquivalentTo(int64(1)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(info).To(gomega.BeAssignableToTypeOf(CFInfo{}))
+				gomega.Expect(info.NumItemsInserted).To(gomega.BeEquivalentTo(int64(1)))
 			})
 
-			It("should CFCount", Label("cuckoo", "cfcount"), func() {
+			ginkgo.It("should CFCount", ginkgo.Label("cuckoo", "cfcount"), func() {
 				err := adapter.CFAdd(ctx, "testcf1", "item1").Err()
 				cnt, err := adapter.CFCount(ctx, "testcf1", "item1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(cnt).To(BeEquivalentTo(int64(1)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cnt).To(gomega.BeEquivalentTo(int64(1)))
 
 				err = adapter.CFAdd(ctx, "testcf1", "item1").Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				cnt, err = adapter.CFCount(ctx, "testcf1", "item1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(cnt).To(BeEquivalentTo(int64(2)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cnt).To(gomega.BeEquivalentTo(int64(2)))
 			})
 
-			It("should CFDel and CFExists", Label("cuckoo", "cfdel", "cfexists"), func() {
+			ginkgo.It("should CFDel and CFExists", ginkgo.Label("cuckoo", "cfdel", "cfexists"), func() {
 				err := adapter.CFAdd(ctx, "testcf1", "item1").Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				exists, err := adapter.CFExists(ctx, "testcf1", "item1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(exists).To(BeTrue())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(exists).To(gomega.BeTrue())
 
 				del, err := adapter.CFDel(ctx, "testcf1", "item1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(del).To(BeTrue())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(del).To(gomega.BeTrue())
 
 				exists, err = adapter.CFExists(ctx, "testcf1", "item1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(exists).To(BeFalse())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(exists).To(gomega.BeFalse())
 			})
 
-			It("should CFInfo and CFReserve", Label("cuckoo", "cfinfo", "cfreserve"), func() {
+			ginkgo.It("should CFInfo and CFReserve", ginkgo.Label("cuckoo", "cfinfo", "cfreserve"), func() {
 				err := adapter.CFReserve(ctx, "testcf1", 1000).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.CFReserveExpansion(ctx, "testcfe1", 1000, 1).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.CFReserveBucketSize(ctx, "testcfbs1", 1000, 4).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.CFReserveMaxIterations(ctx, "testcfmi1", 1000, 10).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				result, err := adapter.CFInfo(ctx, "testcf1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(result).To(BeAssignableToTypeOf(CFInfo{}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(result).To(gomega.BeAssignableToTypeOf(CFInfo{}))
 			})
 
-			It("should CFScanDump and CFLoadChunk", Label("bloom", "cfscandump", "cfloadchunk"), func() {
+			ginkgo.It("should CFScanDump and CFLoadChunk", ginkgo.Label("bloom", "cfscandump", "cfloadchunk"), func() {
 				err := adapter.CFReserve(ctx, "testcfsd1", 1000).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				for i := 0; i < 1000; i++ {
 					Item := fmt.Sprintf("item%d", i)
 					adapter.CFAdd(ctx, "testcfsd1", Item)
@@ -9134,7 +9135,7 @@ func testAdapterCache(resp3 bool) {
 					if sd.Iter == 0 {
 						break
 					}
-					Expect(err).NotTo(HaveOccurred())
+					gomega.Expect(err).NotTo(gomega.HaveOccurred())
 					fd = append(fd, sd)
 					sd, err = adapter.CFScanDump(ctx, "testcfsd1", sd.Iter).Result()
 				}
@@ -9143,10 +9144,10 @@ func testAdapterCache(resp3 bool) {
 					adapter.CFLoadChunk(ctx, "testcfsd1", e.Iter, e.Data)
 				}
 				infAfter := adapter.CFInfo(ctx, "testcfsd1")
-				Expect(infBefore).To(BeEquivalentTo(infAfter))
+				gomega.Expect(infBefore).To(gomega.BeEquivalentTo(infAfter))
 			})
 
-			It("should CFInfo and CFReserveWithArgs", Label("cuckoo", "cfinfo", "cfreserveargs"), func() {
+			ginkgo.It("should CFInfo and CFReserveWithArgs", ginkgo.Label("cuckoo", "cfinfo", "cfreserveargs"), func() {
 				args := &CFReserveOptions{
 					Capacity:      2048,
 					BucketSize:    3,
@@ -9155,24 +9156,24 @@ func testAdapterCache(resp3 bool) {
 				}
 
 				err := adapter.CFReserveWithArgs(ctx, "testcf1", args).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				result, err := adapter.CFInfo(ctx, "testcf1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(result).To(BeAssignableToTypeOf(CFInfo{}))
-				Expect(result.BucketSize).To(BeEquivalentTo(int64(3)))
-				Expect(result.MaxIteration).To(BeEquivalentTo(int64(15)))
-				Expect(result.ExpansionRate).To(BeEquivalentTo(int64(2)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(result).To(gomega.BeAssignableToTypeOf(CFInfo{}))
+				gomega.Expect(result.BucketSize).To(gomega.BeEquivalentTo(int64(3)))
+				gomega.Expect(result.MaxIteration).To(gomega.BeEquivalentTo(int64(15)))
+				gomega.Expect(result.ExpansionRate).To(gomega.BeEquivalentTo(int64(2)))
 			})
 
-			It("should CFInsert", Label("cuckoo", "cfinsert"), func() {
+			ginkgo.It("should CFInsert", ginkgo.Label("cuckoo", "cfinsert"), func() {
 				args := &CFInsertOptions{
 					Capacity: 3000,
 					NoCreate: true,
 				}
 
 				result, err := adapter.CFInsert(ctx, "testcf1", args, "item1", "item2", "item3").Result()
-				Expect(err).To(HaveOccurred())
+				gomega.Expect(err).To(gomega.HaveOccurred())
 
 				args = &CFInsertOptions{
 					Capacity: 3000,
@@ -9180,18 +9181,18 @@ func testAdapterCache(resp3 bool) {
 				}
 
 				result, err = adapter.CFInsert(ctx, "testcf1", args, "item1", "item2", "item3").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(result)).To(BeEquivalentTo(3))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(len(result)).To(gomega.BeEquivalentTo(3))
 			})
 
-			It("should CFInsertNX", Label("cuckoo", "cfinsertnx"), func() {
+			ginkgo.It("should CFInsertNX", ginkgo.Label("cuckoo", "cfinsertnx"), func() {
 				args := &CFInsertOptions{
 					Capacity: 3000,
 					NoCreate: true,
 				}
 
 				result, err := adapter.CFInsertNX(ctx, "testcf1", args, "item1", "item2", "item2").Result()
-				Expect(err).To(HaveOccurred())
+				gomega.Expect(err).To(gomega.HaveOccurred())
 
 				args = &CFInsertOptions{
 					Capacity: 3000,
@@ -9199,647 +9200,647 @@ func testAdapterCache(resp3 bool) {
 				}
 
 				result, err = adapter.CFInsertNX(ctx, "testcf2", args, "item1", "item2", "item2").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(result)).To(BeEquivalentTo(3))
-				Expect(result[0]).To(BeEquivalentTo(int64(1)))
-				Expect(result[1]).To(BeEquivalentTo(int64(1)))
-				Expect(result[2]).To(BeEquivalentTo(int64(0)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(len(result)).To(gomega.BeEquivalentTo(3))
+				gomega.Expect(result[0]).To(gomega.BeEquivalentTo(int64(1)))
+				gomega.Expect(result[1]).To(gomega.BeEquivalentTo(int64(1)))
+				gomega.Expect(result[2]).To(gomega.BeEquivalentTo(int64(0)))
 			})
 
-			It("should CFMexists", Label("cuckoo", "cfmexists"), func() {
+			ginkgo.It("should CFMexists", ginkgo.Label("cuckoo", "cfmexists"), func() {
 				err := adapter.CFInsert(ctx, "testcf1", nil, "item1", "item2", "item3").Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				result, err := adapter.CFMExists(ctx, "testcf1", "item1", "item2", "item3", "item4").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(result)).To(BeEquivalentTo(4))
-				Expect(result[0]).To(BeTrue())
-				Expect(result[1]).To(BeTrue())
-				Expect(result[2]).To(BeTrue())
-				Expect(result[3]).To(BeFalse())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(len(result)).To(gomega.BeEquivalentTo(4))
+				gomega.Expect(result[0]).To(gomega.BeTrue())
+				gomega.Expect(result[1]).To(gomega.BeTrue())
+				gomega.Expect(result[2]).To(gomega.BeTrue())
+				gomega.Expect(result[3]).To(gomega.BeFalse())
 			})
 		})
 
-		Describe("CMS", Label("cms"), func() {
-			It("should CMSIncrBy", Label("cms", "cmsincrby"), func() {
+		ginkgo.Describe("CMS", ginkgo.Label("cms"), func() {
+			ginkgo.It("should CMSIncrBy", ginkgo.Label("cms", "cmsincrby"), func() {
 				err := adapter.CMSInitByDim(ctx, "testcms1", 5, 10).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				result, err := adapter.CMSIncrBy(ctx, "testcms1", "item1", 1, "item2", 2, "item3", 3).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(result)).To(BeEquivalentTo(3))
-				Expect(result[0]).To(BeEquivalentTo(int64(1)))
-				Expect(result[1]).To(BeEquivalentTo(int64(2)))
-				Expect(result[2]).To(BeEquivalentTo(int64(3)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(len(result)).To(gomega.BeEquivalentTo(3))
+				gomega.Expect(result[0]).To(gomega.BeEquivalentTo(int64(1)))
+				gomega.Expect(result[1]).To(gomega.BeEquivalentTo(int64(2)))
+				gomega.Expect(result[2]).To(gomega.BeEquivalentTo(int64(3)))
 			})
 
-			It("should CMSInitByDim and CMSInfo", Label("cms", "cmsinitbydim", "cmsinfo"), func() {
+			ginkgo.It("should CMSInitByDim and CMSInfo", ginkgo.Label("cms", "cmsinitbydim", "cmsinfo"), func() {
 				err := adapter.CMSInitByDim(ctx, "testcms1", 5, 10).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				info, err := adapter.CMSInfo(ctx, "testcms1").Result()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
-				Expect(info).To(BeAssignableToTypeOf(CMSInfo{}))
-				Expect(info.Width).To(BeEquivalentTo(int64(5)))
-				Expect(info.Depth).To(BeEquivalentTo(int64(10)))
+				gomega.Expect(info).To(gomega.BeAssignableToTypeOf(CMSInfo{}))
+				gomega.Expect(info.Width).To(gomega.BeEquivalentTo(int64(5)))
+				gomega.Expect(info.Depth).To(gomega.BeEquivalentTo(int64(10)))
 			})
 
-			It("should CMSInitByProb", Label("cms", "cmsinitbyprob"), func() {
+			ginkgo.It("should CMSInitByProb", ginkgo.Label("cms", "cmsinitbyprob"), func() {
 				err := adapter.CMSInitByProb(ctx, "testcms1", 0.002, 0.01).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				info, err := adapter.CMSInfo(ctx, "testcms1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(info).To(BeAssignableToTypeOf(CMSInfo{}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(info).To(gomega.BeAssignableToTypeOf(CMSInfo{}))
 			})
 
-			It("should CMSMerge, CMSMergeWithWeight and CMSQuery", Label("cms", "cmsmerge", "cmsquery"), func() {
+			ginkgo.It("should CMSMerge, CMSMergeWithWeight and CMSQuery", ginkgo.Label("cms", "cmsmerge", "cmsquery"), func() {
 				err := adapter.CMSMerge(ctx, "destCms1", "testcms2", "testcms3").Err()
-				Expect(err).To(HaveOccurred())
-				Expect(err).To(MatchError("CMS: key does not exist"))
+				gomega.Expect(err).To(gomega.HaveOccurred())
+				gomega.Expect(err).To(gomega.MatchError("CMS: key does not exist"))
 
 				err = adapter.CMSInitByDim(ctx, "destCms1", 5, 10).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.CMSInitByDim(ctx, "destCms2", 5, 10).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.CMSInitByDim(ctx, "cms1", 2, 20).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.CMSInitByDim(ctx, "cms2", 3, 20).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				err = adapter.CMSMerge(ctx, "destCms1", "cms1", "cms2").Err()
-				Expect(err).To(MatchError("CMS: width/depth is not equal"))
+				gomega.Expect(err).To(gomega.MatchError("CMS: width/depth is not equal"))
 
 				adapter.Del(ctx, "cms1", "cms2")
 
 				err = adapter.CMSInitByDim(ctx, "cms1", 5, 10).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.CMSInitByDim(ctx, "cms2", 5, 10).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				adapter.CMSIncrBy(ctx, "cms1", "item1", 1, "item2", 2)
 				adapter.CMSIncrBy(ctx, "cms2", "item2", 2, "item3", 3)
 
 				err = adapter.CMSMerge(ctx, "destCms1", "cms1", "cms2").Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				result, err := adapter.CMSQuery(ctx, "destCms1", "item1", "item2", "item3").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(result)).To(BeEquivalentTo(3))
-				Expect(result[0]).To(BeEquivalentTo(int64(1)))
-				Expect(result[1]).To(BeEquivalentTo(int64(4)))
-				Expect(result[2]).To(BeEquivalentTo(int64(3)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(len(result)).To(gomega.BeEquivalentTo(3))
+				gomega.Expect(result[0]).To(gomega.BeEquivalentTo(int64(1)))
+				gomega.Expect(result[1]).To(gomega.BeEquivalentTo(int64(4)))
+				gomega.Expect(result[2]).To(gomega.BeEquivalentTo(int64(3)))
 
 				sourceSketches := map[string]int64{
 					"cms1": 1,
 					"cms2": 2,
 				}
 				err = adapter.CMSMergeWithWeight(ctx, "destCms2", sourceSketches).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				result, err = adapter.CMSQuery(ctx, "destCms2", "item1", "item2", "item3").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(result)).To(BeEquivalentTo(3))
-				Expect(result[0]).To(BeEquivalentTo(int64(1)))
-				Expect(result[1]).To(BeEquivalentTo(int64(6)))
-				Expect(result[2]).To(BeEquivalentTo(int64(6)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(len(result)).To(gomega.BeEquivalentTo(3))
+				gomega.Expect(result[0]).To(gomega.BeEquivalentTo(int64(1)))
+				gomega.Expect(result[1]).To(gomega.BeEquivalentTo(int64(6)))
+				gomega.Expect(result[2]).To(gomega.BeEquivalentTo(int64(6)))
 			})
 		})
 
-		Describe("TopK", Label("topk"), func() {
-			It("should TopKReserve, TopKInfo, TopKAdd, TopKQuery, TopKCount, TopKIncrBy, TopKList, TopKListWithCount", Label("topk", "topkreserve", "topkinfo", "topkadd", "topkquery", "topkcount", "topkincrby", "topklist", "topklistwithcount"), func() {
+		ginkgo.Describe("TopK", ginkgo.Label("topk"), func() {
+			ginkgo.It("should TopKReserve, TopKInfo, TopKAdd, TopKQuery, TopKCount, TopKIncrBy, TopKList, TopKListWithCount", ginkgo.Label("topk", "topkreserve", "topkinfo", "topkadd", "topkquery", "topkcount", "topkincrby", "topklist", "topklistwithcount"), func() {
 				err := adapter.TopKReserve(ctx, "topk1", 3).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				resultInfo, err := adapter.TopKInfo(ctx, "topk1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(resultInfo.K).To(BeEquivalentTo(int64(3)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(resultInfo.K).To(gomega.BeEquivalentTo(int64(3)))
 
 				resultAdd, err := adapter.TopKAdd(ctx, "topk1", "item1", "item2", 3, "item1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(resultAdd)).To(BeEquivalentTo(int64(4)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(len(resultAdd)).To(gomega.BeEquivalentTo(int64(4)))
 
 				resultQuery, err := adapter.TopKQuery(ctx, "topk1", "item1", "item2", 4, 3).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(resultQuery)).To(BeEquivalentTo(4))
-				Expect(resultQuery[0]).To(BeTrue())
-				Expect(resultQuery[1]).To(BeTrue())
-				Expect(resultQuery[2]).To(BeFalse())
-				Expect(resultQuery[3]).To(BeTrue())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(len(resultQuery)).To(gomega.BeEquivalentTo(4))
+				gomega.Expect(resultQuery[0]).To(gomega.BeTrue())
+				gomega.Expect(resultQuery[1]).To(gomega.BeTrue())
+				gomega.Expect(resultQuery[2]).To(gomega.BeFalse())
+				gomega.Expect(resultQuery[3]).To(gomega.BeTrue())
 
 				resultCount, err := adapter.TopKCount(ctx, "topk1", "item1", "item2", "item3").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(resultCount)).To(BeEquivalentTo(3))
-				Expect(resultCount[0]).To(BeEquivalentTo(int64(2)))
-				Expect(resultCount[1]).To(BeEquivalentTo(int64(1)))
-				Expect(resultCount[2]).To(BeEquivalentTo(int64(0)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(len(resultCount)).To(gomega.BeEquivalentTo(3))
+				gomega.Expect(resultCount[0]).To(gomega.BeEquivalentTo(int64(2)))
+				gomega.Expect(resultCount[1]).To(gomega.BeEquivalentTo(int64(1)))
+				gomega.Expect(resultCount[2]).To(gomega.BeEquivalentTo(int64(0)))
 
 				resultIncr, err := adapter.TopKIncrBy(ctx, "topk1", "item1", 5, "item2", 10).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(resultIncr)).To(BeEquivalentTo(2))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(len(resultIncr)).To(gomega.BeEquivalentTo(2))
 
 				resultCount, err = adapter.TopKCount(ctx, "topk1", "item1", "item2", "item3").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(resultCount)).To(BeEquivalentTo(3))
-				Expect(resultCount[0]).To(BeEquivalentTo(int64(7)))
-				Expect(resultCount[1]).To(BeEquivalentTo(int64(11)))
-				Expect(resultCount[2]).To(BeEquivalentTo(int64(0)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(len(resultCount)).To(gomega.BeEquivalentTo(3))
+				gomega.Expect(resultCount[0]).To(gomega.BeEquivalentTo(int64(7)))
+				gomega.Expect(resultCount[1]).To(gomega.BeEquivalentTo(int64(11)))
+				gomega.Expect(resultCount[2]).To(gomega.BeEquivalentTo(int64(0)))
 
 				resultList, err := adapter.TopKList(ctx, "topk1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(resultList)).To(BeEquivalentTo(3))
-				Expect(resultList).To(ContainElements("item2", "item1", "3"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(len(resultList)).To(gomega.BeEquivalentTo(3))
+				gomega.Expect(resultList).To(gomega.ContainElements("item2", "item1", "3"))
 
 				resultListWithCount, err := adapter.TopKListWithCount(ctx, "topk1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(resultListWithCount)).To(BeEquivalentTo(3))
-				Expect(resultListWithCount["3"]).To(BeEquivalentTo(int64(1)))
-				Expect(resultListWithCount["item1"]).To(BeEquivalentTo(int64(7)))
-				Expect(resultListWithCount["item2"]).To(BeEquivalentTo(int64(11)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(len(resultListWithCount)).To(gomega.BeEquivalentTo(3))
+				gomega.Expect(resultListWithCount["3"]).To(gomega.BeEquivalentTo(int64(1)))
+				gomega.Expect(resultListWithCount["item1"]).To(gomega.BeEquivalentTo(int64(7)))
+				gomega.Expect(resultListWithCount["item2"]).To(gomega.BeEquivalentTo(int64(11)))
 			})
 
-			It("should TopKReserveWithOptions", Label("topk", "topkreservewithoptions"), func() {
+			ginkgo.It("should TopKReserveWithOptions", ginkgo.Label("topk", "topkreservewithoptions"), func() {
 				err := adapter.TopKReserveWithOptions(ctx, "topk1", 3, 1500, 8, 0.5).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				resultInfo, err := adapter.TopKInfo(ctx, "topk1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(resultInfo.K).To(BeEquivalentTo(int64(3)))
-				Expect(resultInfo.Width).To(BeEquivalentTo(int64(1500)))
-				Expect(resultInfo.Depth).To(BeEquivalentTo(int64(8)))
-				Expect(resultInfo.Decay).To(BeEquivalentTo(0.5))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(resultInfo.K).To(gomega.BeEquivalentTo(int64(3)))
+				gomega.Expect(resultInfo.Width).To(gomega.BeEquivalentTo(int64(1500)))
+				gomega.Expect(resultInfo.Depth).To(gomega.BeEquivalentTo(int64(8)))
+				gomega.Expect(resultInfo.Decay).To(gomega.BeEquivalentTo(0.5))
 			})
 		})
 
-		Describe("t-digest", Label("tdigest"), func() {
-			It("should TDigestAdd, TDigestCreate, TDigestInfo, TDigestByRank, TDigestByRevRank, TDigestCDF, TDigestMax, TDigestMin, TDigestQuantile, TDigestRank, TDigestRevRank, TDigestTrimmedMean, TDigestReset, ", Label("tdigest", "tdigestadd", "tdigestcreate", "tdigestinfo", "tdigestbyrank", "tdigestbyrevrank", "tdigestcdf", "tdigestmax", "tdigestmin", "tdigestquantile", "tdigestrank", "tdigestrevrank", "tdigesttrimmedmean", "tdigestreset"), func() {
+		ginkgo.Describe("t-digest", ginkgo.Label("tdigest"), func() {
+			ginkgo.It("should TDigestAdd, TDigestCreate, TDigestInfo, TDigestByRank, TDigestByRevRank, TDigestCDF, TDigestMax, TDigestMin, TDigestQuantile, TDigestRank, TDigestRevRank, TDigestTrimmedMean, TDigestReset, ", ginkgo.Label("tdigest", "tdigestadd", "tdigestcreate", "tdigestinfo", "tdigestbyrank", "tdigestbyrevrank", "tdigestcdf", "tdigestmax", "tdigestmin", "tdigestquantile", "tdigestrank", "tdigestrevrank", "tdigesttrimmedmean", "tdigestreset"), func() {
 				err := adapter.TDigestCreate(ctx, "tdigest1").Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				info, err := adapter.TDigestInfo(ctx, "tdigest1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(info.Observations).To(BeEquivalentTo(int64(0)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(info.Observations).To(gomega.BeEquivalentTo(int64(0)))
 
 				// Test with empty sketch
 				byRank, err := adapter.TDigestByRank(ctx, "tdigest1", 0, 1, 2, 3).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(byRank)).To(BeEquivalentTo(4))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(len(byRank)).To(gomega.BeEquivalentTo(4))
 
 				byRevRank, err := adapter.TDigestByRevRank(ctx, "tdigest1", 0, 1, 2).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(byRevRank)).To(BeEquivalentTo(3))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(len(byRevRank)).To(gomega.BeEquivalentTo(3))
 
 				cdf, err := adapter.TDigestCDF(ctx, "tdigest1", 15, 35, 70).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(cdf)).To(BeEquivalentTo(3))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(len(cdf)).To(gomega.BeEquivalentTo(3))
 
 				max, err := adapter.TDigestMax(ctx, "tdigest1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(math.IsNaN(max)).To(BeTrue())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(math.IsNaN(max)).To(gomega.BeTrue())
 
 				min, err := adapter.TDigestMin(ctx, "tdigest1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(math.IsNaN(min)).To(BeTrue())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(math.IsNaN(min)).To(gomega.BeTrue())
 
 				quantile, err := adapter.TDigestQuantile(ctx, "tdigest1", 0.1, 0.2).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(quantile)).To(BeEquivalentTo(2))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(len(quantile)).To(gomega.BeEquivalentTo(2))
 
 				rank, err := adapter.TDigestRank(ctx, "tdigest1", 10, 20).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(rank)).To(BeEquivalentTo(2))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(len(rank)).To(gomega.BeEquivalentTo(2))
 
 				revRank, err := adapter.TDigestRevRank(ctx, "tdigest1", 10, 20).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(revRank)).To(BeEquivalentTo(2))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(len(revRank)).To(gomega.BeEquivalentTo(2))
 
 				trimmedMean, err := adapter.TDigestTrimmedMean(ctx, "tdigest1", 0.1, 0.6).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(math.IsNaN(trimmedMean)).To(BeTrue())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(math.IsNaN(trimmedMean)).To(gomega.BeTrue())
 
 				// Add elements
 				err = adapter.TDigestAdd(ctx, "tdigest1", 10, 20, 30, 40, 50, 60, 70, 80, 90, 100).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				info, err = adapter.TDigestInfo(ctx, "tdigest1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(info.Observations).To(BeEquivalentTo(int64(10)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(info.Observations).To(gomega.BeEquivalentTo(int64(10)))
 
 				byRank, err = adapter.TDigestByRank(ctx, "tdigest1", 0, 1, 2).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(byRank)).To(BeEquivalentTo(3))
-				Expect(byRank[0]).To(BeEquivalentTo(float64(10)))
-				Expect(byRank[1]).To(BeEquivalentTo(float64(20)))
-				Expect(byRank[2]).To(BeEquivalentTo(float64(30)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(len(byRank)).To(gomega.BeEquivalentTo(3))
+				gomega.Expect(byRank[0]).To(gomega.BeEquivalentTo(float64(10)))
+				gomega.Expect(byRank[1]).To(gomega.BeEquivalentTo(float64(20)))
+				gomega.Expect(byRank[2]).To(gomega.BeEquivalentTo(float64(30)))
 
 				byRevRank, err = adapter.TDigestByRevRank(ctx, "tdigest1", 0, 1, 2).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(byRevRank)).To(BeEquivalentTo(3))
-				Expect(byRevRank[0]).To(BeEquivalentTo(float64(100)))
-				Expect(byRevRank[1]).To(BeEquivalentTo(float64(90)))
-				Expect(byRevRank[2]).To(BeEquivalentTo(float64(80)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(len(byRevRank)).To(gomega.BeEquivalentTo(3))
+				gomega.Expect(byRevRank[0]).To(gomega.BeEquivalentTo(float64(100)))
+				gomega.Expect(byRevRank[1]).To(gomega.BeEquivalentTo(float64(90)))
+				gomega.Expect(byRevRank[2]).To(gomega.BeEquivalentTo(float64(80)))
 
 				cdf, err = adapter.TDigestCDF(ctx, "tdigest1", 15, 35, 70).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(cdf)).To(BeEquivalentTo(3))
-				Expect(cdf[0]).To(BeEquivalentTo(0.1))
-				Expect(cdf[1]).To(BeEquivalentTo(0.3))
-				Expect(cdf[2]).To(BeEquivalentTo(0.65))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(len(cdf)).To(gomega.BeEquivalentTo(3))
+				gomega.Expect(cdf[0]).To(gomega.BeEquivalentTo(0.1))
+				gomega.Expect(cdf[1]).To(gomega.BeEquivalentTo(0.3))
+				gomega.Expect(cdf[2]).To(gomega.BeEquivalentTo(0.65))
 
 				max, err = adapter.TDigestMax(ctx, "tdigest1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(max).To(BeEquivalentTo(float64(100)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(max).To(gomega.BeEquivalentTo(float64(100)))
 
 				min, err = adapter.TDigestMin(ctx, "tdigest1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(min).To(BeEquivalentTo(float64(10)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(min).To(gomega.BeEquivalentTo(float64(10)))
 
 				quantile, err = adapter.TDigestQuantile(ctx, "tdigest1", 0.1, 0.2).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(quantile)).To(BeEquivalentTo(2))
-				Expect(quantile[0]).To(BeEquivalentTo(float64(20)))
-				Expect(quantile[1]).To(BeEquivalentTo(float64(30)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(len(quantile)).To(gomega.BeEquivalentTo(2))
+				gomega.Expect(quantile[0]).To(gomega.BeEquivalentTo(float64(20)))
+				gomega.Expect(quantile[1]).To(gomega.BeEquivalentTo(float64(30)))
 
 				rank, err = adapter.TDigestRank(ctx, "tdigest1", 10, 20).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(rank)).To(BeEquivalentTo(2))
-				Expect(rank[0]).To(BeEquivalentTo(int64(0)))
-				Expect(rank[1]).To(BeEquivalentTo(int64(1)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(len(rank)).To(gomega.BeEquivalentTo(2))
+				gomega.Expect(rank[0]).To(gomega.BeEquivalentTo(int64(0)))
+				gomega.Expect(rank[1]).To(gomega.BeEquivalentTo(int64(1)))
 
 				revRank, err = adapter.TDigestRevRank(ctx, "tdigest1", 10, 20).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(revRank)).To(BeEquivalentTo(2))
-				Expect(revRank[0]).To(BeEquivalentTo(int64(9)))
-				Expect(revRank[1]).To(BeEquivalentTo(int64(8)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(len(revRank)).To(gomega.BeEquivalentTo(2))
+				gomega.Expect(revRank[0]).To(gomega.BeEquivalentTo(int64(9)))
+				gomega.Expect(revRank[1]).To(gomega.BeEquivalentTo(int64(8)))
 
 				trimmedMean, err = adapter.TDigestTrimmedMean(ctx, "tdigest1", 0.1, 0.6).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(trimmedMean).To(BeEquivalentTo(float64(40)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(trimmedMean).To(gomega.BeEquivalentTo(float64(40)))
 
 				reset, err := adapter.TDigestReset(ctx, "tdigest1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(reset).To(BeEquivalentTo("OK"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(reset).To(gomega.BeEquivalentTo("OK"))
 			})
 
-			It("should TDigestCreateWithCompression", Label("tdigest", "tcreatewithcompression"), func() {
+			ginkgo.It("should TDigestCreateWithCompression", ginkgo.Label("tdigest", "tcreatewithcompression"), func() {
 				err := adapter.TDigestCreateWithCompression(ctx, "tdigest1", 2000).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				info, err := adapter.TDigestInfo(ctx, "tdigest1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(info.Compression).To(BeEquivalentTo(int64(2000)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(info.Compression).To(gomega.BeEquivalentTo(int64(2000)))
 			})
 
-			It("should TDigestMerge", Label("tdigest", "tmerge"), func() {
+			ginkgo.It("should TDigestMerge", ginkgo.Label("tdigest", "tmerge"), func() {
 				err := adapter.TDigestCreate(ctx, "tdigest1").Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.TDigestAdd(ctx, "tdigest1", 10, 20, 30, 40, 50, 60, 70, 80, 90, 100).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				err = adapter.TDigestCreate(ctx, "tdigest2").Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.TDigestAdd(ctx, "tdigest2", 15, 25, 35, 45, 55, 65, 75, 85, 95, 105).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				err = adapter.TDigestCreate(ctx, "tdigest3").Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				err = adapter.TDigestAdd(ctx, "tdigest3", 50, 60, 70, 80, 90, 100, 110, 120, 130, 140).Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				options := &TDigestMergeOptions{
 					Compression: 1000,
 					Override:    false,
 				}
 				err = adapter.TDigestMerge(ctx, "tdigest1", options, "tdigest2", "tdigest3").Err()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 				info, err := adapter.TDigestInfo(ctx, "tdigest1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(info.Observations).To(BeEquivalentTo(int64(30)))
-				Expect(info.Compression).To(BeEquivalentTo(int64(1000)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(info.Observations).To(gomega.BeEquivalentTo(int64(30)))
+				gomega.Expect(info.Compression).To(gomega.BeEquivalentTo(int64(1000)))
 
 				max, err := adapter.TDigestMax(ctx, "tdigest1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(max).To(BeEquivalentTo(float64(140)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(max).To(gomega.BeEquivalentTo(float64(140)))
 			})
 		})
 	})
-	Describe("RedisTimeseries commands", Label("timeseries"), func() {
+	ginkgo.Describe("RedisTimeseries commands", ginkgo.Label("timeseries"), func() {
 		ctx := context.TODO()
 
-		BeforeEach(func() {
-			Expect(adapter.FlushDB(ctx).Err()).NotTo(HaveOccurred())
+		ginkgo.BeforeEach(func() {
+			gomega.Expect(adapter.FlushDB(ctx).Err()).NotTo(gomega.HaveOccurred())
 		})
 
-		It("should TSCreate and TSCreateWithArgs", Label("timeseries", "tscreate", "tscreateWithArgs"), func() {
+		ginkgo.It("should TSCreate and TSCreateWithArgs", ginkgo.Label("timeseries", "tscreate", "tscreateWithArgs"), func() {
 			result, err := adapter.TSCreate(ctx, "1").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result).To(gomega.BeEquivalentTo("OK"))
 			// Test TSCreateWithArgs
 			opt := &TSOptions{Retention: 5}
 			result, err = adapter.TSCreateWithArgs(ctx, "2", opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result).To(gomega.BeEquivalentTo("OK"))
 			opt = &TSOptions{Labels: map[string]string{"Redis": "Labs"}}
 			result, err = adapter.TSCreateWithArgs(ctx, "3", opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result).To(gomega.BeEquivalentTo("OK"))
 			opt = &TSOptions{Labels: map[string]string{"Time": "Series"}, Retention: 20}
 			result, err = adapter.TSCreateWithArgs(ctx, "4", opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result).To(gomega.BeEquivalentTo("OK"))
 			resultInfo, err := adapter.TSInfo(ctx, "4").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultInfo["labels"].(map[string]interface{})["Time"]).To(BeEquivalentTo("Series"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultInfo["labels"].(map[string]interface{})["Time"]).To(gomega.BeEquivalentTo("Series"))
 			// Test chunk size
 			opt = &TSOptions{ChunkSize: 128}
 			result, err = adapter.TSCreateWithArgs(ctx, "ts-cs-1", opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result).To(gomega.BeEquivalentTo("OK"))
 			resultInfo, err = adapter.TSInfo(ctx, "ts-cs-1").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultInfo["chunkSize"]).To(BeEquivalentTo(128))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultInfo["chunkSize"]).To(gomega.BeEquivalentTo(128))
 			// Test duplicate policy
 			duplicate_policies := []string{"BLOCK", "LAST", "FIRST", "MIN", "MAX"}
 			for _, dup := range duplicate_policies {
 				keyName := "ts-dup-" + dup
 				opt = &TSOptions{DuplicatePolicy: dup}
 				result, err = adapter.TSCreateWithArgs(ctx, keyName, opt).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(result).To(BeEquivalentTo("OK"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(result).To(gomega.BeEquivalentTo("OK"))
 				resultInfo, err = adapter.TSInfo(ctx, keyName).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(strings.ToUpper(resultInfo["duplicatePolicy"].(string))).To(BeEquivalentTo(dup))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(strings.ToUpper(resultInfo["duplicatePolicy"].(string))).To(gomega.BeEquivalentTo(dup))
 
 			}
 		})
-		It("should TSAdd and TSAddWithArgs", Label("timeseries", "tsadd", "tsaddWithArgs"), func() {
+		ginkgo.It("should TSAdd and TSAddWithArgs", ginkgo.Label("timeseries", "tsadd", "tsaddWithArgs"), func() {
 			result, err := adapter.TSAdd(ctx, "1", 1, 1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(BeEquivalentTo(1))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result).To(gomega.BeEquivalentTo(1))
 			// Test TSAddWithArgs
 			opt := &TSOptions{Retention: 10}
 			result, err = adapter.TSAddWithArgs(ctx, "2", 2, 3, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(BeEquivalentTo(2))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result).To(gomega.BeEquivalentTo(2))
 			opt = &TSOptions{Labels: map[string]string{"Redis": "Labs"}}
 			result, err = adapter.TSAddWithArgs(ctx, "3", 3, 2, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(BeEquivalentTo(3))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result).To(gomega.BeEquivalentTo(3))
 			opt = &TSOptions{Labels: map[string]string{"Redis": "Labs", "Time": "Series"}, Retention: 10}
 			result, err = adapter.TSAddWithArgs(ctx, "4", 4, 2, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(BeEquivalentTo(4))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result).To(gomega.BeEquivalentTo(4))
 			resultInfo, err := adapter.TSInfo(ctx, "4").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultInfo["labels"].(map[string]interface{})["Time"]).To(BeEquivalentTo("Series"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultInfo["labels"].(map[string]interface{})["Time"]).To(gomega.BeEquivalentTo("Series"))
 			// Test chunk size
 			opt = &TSOptions{ChunkSize: 128}
 			result, err = adapter.TSAddWithArgs(ctx, "ts-cs-1", 1, 10, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(BeEquivalentTo(1))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result).To(gomega.BeEquivalentTo(1))
 			resultInfo, err = adapter.TSInfo(ctx, "ts-cs-1").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultInfo["chunkSize"]).To(BeEquivalentTo(128))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultInfo["chunkSize"]).To(gomega.BeEquivalentTo(128))
 			// Test duplicate policy
 			// LAST
 			opt = &TSOptions{DuplicatePolicy: "LAST"}
 			result, err = adapter.TSAddWithArgs(ctx, "tsal-1", 1, 5, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(BeEquivalentTo(1))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result).To(gomega.BeEquivalentTo(1))
 			result, err = adapter.TSAddWithArgs(ctx, "tsal-1", 1, 10, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(BeEquivalentTo(1))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result).To(gomega.BeEquivalentTo(1))
 			resultGet, err := adapter.TSGet(ctx, "tsal-1").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultGet.Value).To(BeEquivalentTo(10))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultGet.Value).To(gomega.BeEquivalentTo(10))
 			// FIRST
 			opt = &TSOptions{DuplicatePolicy: "FIRST"}
 			result, err = adapter.TSAddWithArgs(ctx, "tsaf-1", 1, 5, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(BeEquivalentTo(1))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result).To(gomega.BeEquivalentTo(1))
 			result, err = adapter.TSAddWithArgs(ctx, "tsaf-1", 1, 10, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(BeEquivalentTo(1))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result).To(gomega.BeEquivalentTo(1))
 			resultGet, err = adapter.TSGet(ctx, "tsaf-1").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultGet.Value).To(BeEquivalentTo(5))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultGet.Value).To(gomega.BeEquivalentTo(5))
 			// MAX
 			opt = &TSOptions{DuplicatePolicy: "MAX"}
 			result, err = adapter.TSAddWithArgs(ctx, "tsam-1", 1, 5, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(BeEquivalentTo(1))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result).To(gomega.BeEquivalentTo(1))
 			result, err = adapter.TSAddWithArgs(ctx, "tsam-1", 1, 10, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(BeEquivalentTo(1))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result).To(gomega.BeEquivalentTo(1))
 			resultGet, err = adapter.TSGet(ctx, "tsam-1").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultGet.Value).To(BeEquivalentTo(10))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultGet.Value).To(gomega.BeEquivalentTo(10))
 			// MIN
 			opt = &TSOptions{DuplicatePolicy: "MIN"}
 			result, err = adapter.TSAddWithArgs(ctx, "tsami-1", 1, 5, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(BeEquivalentTo(1))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result).To(gomega.BeEquivalentTo(1))
 			result, err = adapter.TSAddWithArgs(ctx, "tsami-1", 1, 10, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(BeEquivalentTo(1))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result).To(gomega.BeEquivalentTo(1))
 			resultGet, err = adapter.TSGet(ctx, "tsami-1").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultGet.Value).To(BeEquivalentTo(5))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultGet.Value).To(gomega.BeEquivalentTo(5))
 		})
 
-		It("should TSAlter", Label("timeseries", "tsalter"), func() {
+		ginkgo.It("should TSAlter", ginkgo.Label("timeseries", "tsalter"), func() {
 			result, err := adapter.TSCreate(ctx, "1").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result).To(gomega.BeEquivalentTo("OK"))
 			resultInfo, err := adapter.TSInfo(ctx, "1").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultInfo["retentionTime"]).To(BeEquivalentTo(0))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultInfo["retentionTime"]).To(gomega.BeEquivalentTo(0))
 
 			opt := &TSAlterOptions{Retention: 10}
 			resultAlter, err := adapter.TSAlter(ctx, "1", opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultAlter).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultAlter).To(gomega.BeEquivalentTo("OK"))
 
 			resultInfo, err = adapter.TSInfo(ctx, "1").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultInfo["retentionTime"]).To(BeEquivalentTo(10))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultInfo["retentionTime"]).To(gomega.BeEquivalentTo(10))
 
 			resultInfo, err = adapter.TSInfo(ctx, "1").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultInfo["labels"]).To(BeEquivalentTo(map[string]interface{}{}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultInfo["labels"]).To(gomega.BeEquivalentTo(map[string]interface{}{}))
 
 			opt = &TSAlterOptions{Labels: map[string]string{"Time": "Series"}}
 			resultAlter, err = adapter.TSAlter(ctx, "1", opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultAlter).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultAlter).To(gomega.BeEquivalentTo("OK"))
 
 			resultInfo, err = adapter.TSInfo(ctx, "1").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultInfo["labels"].(map[string]interface{})["Time"]).To(BeEquivalentTo("Series"))
-			Expect(resultInfo["retentionTime"]).To(BeEquivalentTo(10))
-			Expect(resultInfo["duplicatePolicy"]).To(BeNil())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultInfo["labels"].(map[string]interface{})["Time"]).To(gomega.BeEquivalentTo("Series"))
+			gomega.Expect(resultInfo["retentionTime"]).To(gomega.BeEquivalentTo(10))
+			gomega.Expect(resultInfo["duplicatePolicy"]).To(gomega.BeNil())
 			opt = &TSAlterOptions{DuplicatePolicy: "min"}
 			resultAlter, err = adapter.TSAlter(ctx, "1", opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultAlter).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultAlter).To(gomega.BeEquivalentTo("OK"))
 
 			resultInfo, err = adapter.TSInfo(ctx, "1").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultInfo["duplicatePolicy"]).To(BeEquivalentTo("min"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultInfo["duplicatePolicy"]).To(gomega.BeEquivalentTo("min"))
 		})
 
-		It("should TSCreateRule and TSDeleteRule", Label("timeseries", "tscreaterule", "tsdeleterule"), func() {
+		ginkgo.It("should TSCreateRule and TSDeleteRule", ginkgo.Label("timeseries", "tscreaterule", "tsdeleterule"), func() {
 			result, err := adapter.TSCreate(ctx, "1").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result).To(gomega.BeEquivalentTo("OK"))
 			result, err = adapter.TSCreate(ctx, "2").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result).To(gomega.BeEquivalentTo("OK"))
 			result, err = adapter.TSCreateRule(ctx, "1", "2", Avg, 100).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result).To(gomega.BeEquivalentTo("OK"))
 			for i := 0; i < 50; i++ {
 				resultAdd, err := adapter.TSAdd(ctx, "1", 100+i*2, 1).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(resultAdd).To(BeEquivalentTo(100 + i*2))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(resultAdd).To(gomega.BeEquivalentTo(100 + i*2))
 				resultAdd, err = adapter.TSAdd(ctx, "1", 100+i*2+1, 2).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(resultAdd).To(BeEquivalentTo(100 + i*2 + 1))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(resultAdd).To(gomega.BeEquivalentTo(100 + i*2 + 1))
 
 			}
 			resultAdd, err := adapter.TSAdd(ctx, "1", 100*2, 1.5).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultAdd).To(BeEquivalentTo(100 * 2))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultAdd).To(gomega.BeEquivalentTo(100 * 2))
 			resultGet, err := adapter.TSGet(ctx, "2").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultGet.Value).To(BeEquivalentTo(1.5))
-			Expect(resultGet.Timestamp).To(BeEquivalentTo(100))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultGet.Value).To(gomega.BeEquivalentTo(1.5))
+			gomega.Expect(resultGet.Timestamp).To(gomega.BeEquivalentTo(100))
 
 			resultDeleteRule, err := adapter.TSDeleteRule(ctx, "1", "2").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultDeleteRule).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultDeleteRule).To(gomega.BeEquivalentTo("OK"))
 			resultInfo, err := adapter.TSInfo(ctx, "1").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultInfo["rules"]).To(BeEquivalentTo(map[string]interface{}{}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultInfo["rules"]).To(gomega.BeEquivalentTo(map[string]interface{}{}))
 		})
 
-		It("should TSIncrBy, TSIncrByWithArgs, TSDecrBy and TSDecrByWithArgs", Label("timeseries", "tsincrby", "tsdecrby", "tsincrbyWithArgs", "tsdecrbyWithArgs"), func() {
+		ginkgo.It("should TSIncrBy, TSIncrByWithArgs, TSDecrBy and TSDecrByWithArgs", ginkgo.Label("timeseries", "tsincrby", "tsdecrby", "tsincrbyWithArgs", "tsdecrbyWithArgs"), func() {
 			for i := 0; i < 100; i++ {
 				_, err := adapter.TSIncrBy(ctx, "1", 1).Result()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			}
 			result, err := adapter.TSGet(ctx, "1").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result.Value).To(BeEquivalentTo(100))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result.Value).To(gomega.BeEquivalentTo(100))
 
 			for i := 0; i < 100; i++ {
 				_, err := adapter.TSDecrBy(ctx, "1", 1).Result()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			}
 			result, err = adapter.TSGet(ctx, "1").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result.Value).To(BeEquivalentTo(0))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result.Value).To(gomega.BeEquivalentTo(0))
 
 			opt := &TSIncrDecrOptions{Timestamp: 5}
 			_, err = adapter.TSIncrByWithArgs(ctx, "2", 1.5, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			result, err = adapter.TSGet(ctx, "2").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result.Timestamp).To(BeEquivalentTo(5))
-			Expect(result.Value).To(BeEquivalentTo(1.5))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result.Timestamp).To(gomega.BeEquivalentTo(5))
+			gomega.Expect(result.Value).To(gomega.BeEquivalentTo(1.5))
 
 			opt = &TSIncrDecrOptions{Timestamp: 7}
 			_, err = adapter.TSIncrByWithArgs(ctx, "2", 2.25, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			result, err = adapter.TSGet(ctx, "2").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result.Timestamp).To(BeEquivalentTo(7))
-			Expect(result.Value).To(BeEquivalentTo(3.75))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result.Timestamp).To(gomega.BeEquivalentTo(7))
+			gomega.Expect(result.Value).To(gomega.BeEquivalentTo(3.75))
 
 			opt = &TSIncrDecrOptions{Timestamp: 15}
 			_, err = adapter.TSDecrByWithArgs(ctx, "2", 1.5, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			result, err = adapter.TSGet(ctx, "2").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result.Timestamp).To(BeEquivalentTo(15))
-			Expect(result.Value).To(BeEquivalentTo(2.25))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result.Timestamp).To(gomega.BeEquivalentTo(15))
+			gomega.Expect(result.Value).To(gomega.BeEquivalentTo(2.25))
 
 			// Test chunk size INCRBY
 			opt = &TSIncrDecrOptions{ChunkSize: 128}
 			_, err = adapter.TSIncrByWithArgs(ctx, "3", 10, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			resultInfo, err := adapter.TSInfo(ctx, "3").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultInfo["chunkSize"]).To(BeEquivalentTo(128))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultInfo["chunkSize"]).To(gomega.BeEquivalentTo(128))
 
 			// Test chunk size DECRBY
 			opt = &TSIncrDecrOptions{ChunkSize: 128}
 			_, err = adapter.TSDecrByWithArgs(ctx, "4", 10, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			resultInfo, err = adapter.TSInfo(ctx, "4").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultInfo["chunkSize"]).To(BeEquivalentTo(128))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultInfo["chunkSize"]).To(gomega.BeEquivalentTo(128))
 		})
 
-		It("should TSGet", Label("timeseries", "tsget"), func() {
+		ginkgo.It("should TSGet", ginkgo.Label("timeseries", "tsget"), func() {
 			opt := &TSOptions{DuplicatePolicy: "max"}
 			resultGet, err := adapter.TSAddWithArgs(ctx, "foo", 2265985, 151, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultGet).To(BeEquivalentTo(2265985))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultGet).To(gomega.BeEquivalentTo(2265985))
 			result, err := adapter.TSGet(ctx, "foo").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result.Timestamp).To(BeEquivalentTo(2265985))
-			Expect(result.Value).To(BeEquivalentTo(151))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result.Timestamp).To(gomega.BeEquivalentTo(2265985))
+			gomega.Expect(result.Value).To(gomega.BeEquivalentTo(151))
 		})
 
-		It("should TSGet Latest", Label("timeseries", "tsgetlatest"), func() {
+		ginkgo.It("should TSGet Latest", ginkgo.Label("timeseries", "tsgetlatest"), func() {
 			resultGet, err := adapter.TSCreate(ctx, "tsgl-1").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultGet).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultGet).To(gomega.BeEquivalentTo("OK"))
 			resultGet, err = adapter.TSCreate(ctx, "tsgl-2").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultGet).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultGet).To(gomega.BeEquivalentTo("OK"))
 			resultGet, err = adapter.TSCreateRule(ctx, "tsgl-1", "tsgl-2", Sum, 10).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultGet).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultGet).To(gomega.BeEquivalentTo("OK"))
 			_, err = adapter.TSAdd(ctx, "tsgl-1", 1, 1).Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			_, err = adapter.TSAdd(ctx, "tsgl-1", 2, 3).Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			_, err = adapter.TSAdd(ctx, "tsgl-1", 11, 7).Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			_, err = adapter.TSAdd(ctx, "tsgl-1", 13, 1).Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			result, errGet := adapter.TSGet(ctx, "tsgl-2").Result()
-			Expect(errGet).NotTo(HaveOccurred())
-			Expect(result.Timestamp).To(BeEquivalentTo(0))
-			Expect(result.Value).To(BeEquivalentTo(4))
+			gomega.Expect(errGet).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result.Timestamp).To(gomega.BeEquivalentTo(0))
+			gomega.Expect(result.Value).To(gomega.BeEquivalentTo(4))
 			result, errGet = adapter.TSGetWithArgs(ctx, "tsgl-2", &TSGetOptions{Latest: true}).Result()
-			Expect(errGet).NotTo(HaveOccurred())
-			Expect(result.Timestamp).To(BeEquivalentTo(10))
-			Expect(result.Value).To(BeEquivalentTo(8))
+			gomega.Expect(errGet).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result.Timestamp).To(gomega.BeEquivalentTo(10))
+			gomega.Expect(result.Value).To(gomega.BeEquivalentTo(8))
 		})
 
-		It("should TSInfo", Label("timeseries", "tsinfo"), func() {
+		ginkgo.It("should TSInfo", ginkgo.Label("timeseries", "tsinfo"), func() {
 			resultGet, err := adapter.TSAdd(ctx, "foo", 2265985, 151).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultGet).To(BeEquivalentTo(2265985))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultGet).To(gomega.BeEquivalentTo(2265985))
 			result, err := adapter.TSInfo(ctx, "foo").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result["firstTimestamp"]).To(BeEquivalentTo(2265985))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result["firstTimestamp"]).To(gomega.BeEquivalentTo(2265985))
 		})
 
-		It("should TSMAdd", Label("timeseries", "tsmadd"), func() {
+		ginkgo.It("should TSMAdd", ginkgo.Label("timeseries", "tsmadd"), func() {
 			resultGet, err := adapter.TSCreate(ctx, "a").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultGet).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultGet).To(gomega.BeEquivalentTo("OK"))
 			ktvSlices := make([][]interface{}, 3)
 			for i := 0; i < 3; i++ {
 				ktvSlices[i] = make([]interface{}, 3)
@@ -9849,232 +9850,232 @@ func testAdapterCache(resp3 bool) {
 				}
 			}
 			result, err := adapter.TSMAdd(ctx, ktvSlices).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(BeEquivalentTo([]int64{1, 2, 3}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result).To(gomega.BeEquivalentTo([]int64{1, 2, 3}))
 		})
 
-		It("should TSMGet and TSMGetWithArgs", Label("timeseries", "tsmget", "tsmgetWithArgs"), func() {
+		ginkgo.It("should TSMGet and TSMGetWithArgs", ginkgo.Label("timeseries", "tsmget", "tsmgetWithArgs"), func() {
 			opt := &TSOptions{Labels: map[string]string{"Test": "This"}}
 			resultCreate, err := adapter.TSCreateWithArgs(ctx, "a", opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultCreate).To(gomega.BeEquivalentTo("OK"))
 			opt = &TSOptions{Labels: map[string]string{"Test": "This", "Taste": "That"}}
 			resultCreate, err = adapter.TSCreateWithArgs(ctx, "b", opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultCreate).To(gomega.BeEquivalentTo("OK"))
 			_, err = adapter.TSAdd(ctx, "a", "*", 15).Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			_, err = adapter.TSAdd(ctx, "b", "*", 25).Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			result, err := adapter.TSMGet(ctx, []string{"Test=This"}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result["a"][1].([]interface{})[1]).To(BeEquivalentTo(15))
-			Expect(result["b"][1].([]interface{})[1]).To(BeEquivalentTo(25))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result["a"][1].([]interface{})[1]).To(gomega.BeEquivalentTo(15))
+			gomega.Expect(result["b"][1].([]interface{})[1]).To(gomega.BeEquivalentTo(25))
 			mgetOpt := &TSMGetOptions{WithLabels: true}
 			result, err = adapter.TSMGetWithArgs(ctx, []string{"Test=This"}, mgetOpt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result["b"][0]).To(BeEquivalentTo(map[string]interface{}{"Test": "This", "Taste": "That"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result["b"][0]).To(gomega.BeEquivalentTo(map[string]interface{}{"Test": "This", "Taste": "That"}))
 
 			resultCreate, err = adapter.TSCreate(ctx, "c").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultCreate).To(gomega.BeEquivalentTo("OK"))
 			opt = &TSOptions{Labels: map[string]string{"is_compaction": "true"}}
 			resultCreate, err = adapter.TSCreateWithArgs(ctx, "d", opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultCreate).To(gomega.BeEquivalentTo("OK"))
 			resultCreateRule, err := adapter.TSCreateRule(ctx, "c", "d", Sum, 10).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultCreateRule).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultCreateRule).To(gomega.BeEquivalentTo("OK"))
 			_, err = adapter.TSAdd(ctx, "c", 1, 1).Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			_, err = adapter.TSAdd(ctx, "c", 2, 3).Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			_, err = adapter.TSAdd(ctx, "c", 11, 7).Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			_, err = adapter.TSAdd(ctx, "c", 13, 1).Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			result, err = adapter.TSMGet(ctx, []string{"is_compaction=true"}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result["d"][1]).To(BeEquivalentTo([]interface{}{int64(0), 4.0}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result["d"][1]).To(gomega.BeEquivalentTo([]interface{}{int64(0), 4.0}))
 			mgetOpt = &TSMGetOptions{Latest: true}
 			result, err = adapter.TSMGetWithArgs(ctx, []string{"is_compaction=true"}, mgetOpt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result["d"][1]).To(BeEquivalentTo([]interface{}{int64(10), 8.0}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result["d"][1]).To(gomega.BeEquivalentTo([]interface{}{int64(10), 8.0}))
 		})
 
-		It("should TSQueryIndex", Label("timeseries", "tsqueryindex"), func() {
+		ginkgo.It("should TSQueryIndex", ginkgo.Label("timeseries", "tsqueryindex"), func() {
 			opt := &TSOptions{Labels: map[string]string{"Test": "This"}}
 			resultCreate, err := adapter.TSCreateWithArgs(ctx, "a", opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultCreate).To(gomega.BeEquivalentTo("OK"))
 			opt = &TSOptions{Labels: map[string]string{"Test": "This", "Taste": "That"}}
 			resultCreate, err = adapter.TSCreateWithArgs(ctx, "b", opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultCreate).To(gomega.BeEquivalentTo("OK"))
 			result, err := adapter.TSQueryIndex(ctx, []string{"Test=This"}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(len(result)).To(BeEquivalentTo(2))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(len(result)).To(gomega.BeEquivalentTo(2))
 			result, err = adapter.TSQueryIndex(ctx, []string{"Taste=That"}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(len(result)).To(BeEquivalentTo(1))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(len(result)).To(gomega.BeEquivalentTo(1))
 		})
 
-		It("should TSDel and TSRange", Label("timeseries", "tsdel", "tsrange"), func() {
+		ginkgo.It("should TSDel and TSRange", ginkgo.Label("timeseries", "tsdel", "tsrange"), func() {
 			for i := 0; i < 100; i++ {
 				_, err := adapter.TSAdd(ctx, "a", i, float64(i%7)).Result()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			}
 			resultDelete, err := adapter.TSDel(ctx, "a", 0, 21).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultDelete).To(BeEquivalentTo(22))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultDelete).To(gomega.BeEquivalentTo(22))
 
 			resultRange, err := adapter.TSRange(ctx, "a", 0, 21).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultRange).To(BeEquivalentTo([]TSTimestampValue{}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultRange).To(gomega.BeEquivalentTo([]TSTimestampValue{}))
 
 			resultRange, err = adapter.TSRange(ctx, "a", 22, 22).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultRange[0]).To(BeEquivalentTo(TSTimestampValue{Timestamp: 22, Value: 1}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultRange[0]).To(gomega.BeEquivalentTo(TSTimestampValue{Timestamp: 22, Value: 1}))
 		})
 
-		It("should TSRange, TSRangeWithArgs", Label("timeseries", "tsrange", "tsrangeWithArgs"), func() {
+		ginkgo.It("should TSRange, TSRangeWithArgs", ginkgo.Label("timeseries", "tsrange", "tsrangeWithArgs"), func() {
 			for i := 0; i < 100; i++ {
 				_, err := adapter.TSAdd(ctx, "a", i, float64(i%7)).Result()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			}
 			result, err := adapter.TSRange(ctx, "a", 0, 200).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(len(result)).To(BeEquivalentTo(100))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(len(result)).To(gomega.BeEquivalentTo(100))
 			for i := 0; i < 100; i++ {
 				adapter.TSAdd(ctx, "a", i+200, float64(i%7))
 			}
 			result, err = adapter.TSRange(ctx, "a", 0, 500).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(len(result)).To(BeEquivalentTo(200))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(len(result)).To(gomega.BeEquivalentTo(200))
 			fts := make([]int, 0)
 			for i := 10; i < 20; i++ {
 				fts = append(fts, i)
 			}
 			opt := &TSRangeOptions{FilterByTS: fts, FilterByValue: []int{1, 2}}
 			result, err = adapter.TSRangeWithArgs(ctx, "a", 0, 500, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(len(result)).To(BeEquivalentTo(2))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(len(result)).To(gomega.BeEquivalentTo(2))
 			opt = &TSRangeOptions{Aggregator: Count, BucketDuration: 10, Align: "+"}
 			result, err = adapter.TSRangeWithArgs(ctx, "a", 0, 10, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(BeEquivalentTo([]TSTimestampValue{{Timestamp: 0, Value: 10}, {Timestamp: 10, Value: 1}}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result).To(gomega.BeEquivalentTo([]TSTimestampValue{{Timestamp: 0, Value: 10}, {Timestamp: 10, Value: 1}}))
 			opt = &TSRangeOptions{Aggregator: Count, BucketDuration: 10, Align: "5"}
 			result, err = adapter.TSRangeWithArgs(ctx, "a", 0, 10, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(BeEquivalentTo([]TSTimestampValue{{Timestamp: 0, Value: 5}, {Timestamp: 5, Value: 6}}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result).To(gomega.BeEquivalentTo([]TSTimestampValue{{Timestamp: 0, Value: 5}, {Timestamp: 5, Value: 6}}))
 			opt = &TSRangeOptions{Aggregator: Twa, BucketDuration: 10}
 			result, err = adapter.TSRangeWithArgs(ctx, "a", 0, 10, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(BeEquivalentTo([]TSTimestampValue{{Timestamp: 0, Value: 2.55}, {Timestamp: 10, Value: 3}}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result).To(gomega.BeEquivalentTo([]TSTimestampValue{{Timestamp: 0, Value: 2.55}, {Timestamp: 10, Value: 3}}))
 			// Test Range Latest
 			resultCreate, err := adapter.TSCreate(ctx, "t1").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultCreate).To(gomega.BeEquivalentTo("OK"))
 			resultCreate, err = adapter.TSCreate(ctx, "t2").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultCreate).To(gomega.BeEquivalentTo("OK"))
 			resultRule, err := adapter.TSCreateRule(ctx, "t1", "t2", Sum, 10).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultRule).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultRule).To(gomega.BeEquivalentTo("OK"))
 			_, errAdd := adapter.TSAdd(ctx, "t1", 1, 1).Result()
-			Expect(errAdd).NotTo(HaveOccurred())
+			gomega.Expect(errAdd).NotTo(gomega.HaveOccurred())
 			_, errAdd = adapter.TSAdd(ctx, "t1", 2, 3).Result()
-			Expect(errAdd).NotTo(HaveOccurred())
+			gomega.Expect(errAdd).NotTo(gomega.HaveOccurred())
 			_, errAdd = adapter.TSAdd(ctx, "t1", 11, 7).Result()
-			Expect(errAdd).NotTo(HaveOccurred())
+			gomega.Expect(errAdd).NotTo(gomega.HaveOccurred())
 			_, errAdd = adapter.TSAdd(ctx, "t1", 13, 1).Result()
-			Expect(errAdd).NotTo(HaveOccurred())
+			gomega.Expect(errAdd).NotTo(gomega.HaveOccurred())
 			resultRange, err := adapter.TSRange(ctx, "t1", 0, 20).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultRange[0]).To(BeEquivalentTo(TSTimestampValue{Timestamp: 1, Value: 1}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultRange[0]).To(gomega.BeEquivalentTo(TSTimestampValue{Timestamp: 1, Value: 1}))
 
 			opt = &TSRangeOptions{Latest: true}
 			resultRange, err = adapter.TSRangeWithArgs(ctx, "t2", 0, 10, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultRange[0]).To(BeEquivalentTo(TSTimestampValue{Timestamp: 0, Value: 4}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultRange[0]).To(gomega.BeEquivalentTo(TSTimestampValue{Timestamp: 0, Value: 4}))
 			// Test Bucket Timestamp
 			resultCreate, err = adapter.TSCreate(ctx, "t3").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultCreate).To(gomega.BeEquivalentTo("OK"))
 			_, errAdd = adapter.TSAdd(ctx, "t3", 15, 1).Result()
-			Expect(errAdd).NotTo(HaveOccurred())
+			gomega.Expect(errAdd).NotTo(gomega.HaveOccurred())
 			_, errAdd = adapter.TSAdd(ctx, "t3", 17, 4).Result()
-			Expect(errAdd).NotTo(HaveOccurred())
+			gomega.Expect(errAdd).NotTo(gomega.HaveOccurred())
 			_, errAdd = adapter.TSAdd(ctx, "t3", 51, 3).Result()
-			Expect(errAdd).NotTo(HaveOccurred())
+			gomega.Expect(errAdd).NotTo(gomega.HaveOccurred())
 			_, errAdd = adapter.TSAdd(ctx, "t3", 73, 5).Result()
-			Expect(errAdd).NotTo(HaveOccurred())
+			gomega.Expect(errAdd).NotTo(gomega.HaveOccurred())
 			_, errAdd = adapter.TSAdd(ctx, "t3", 75, 3).Result()
-			Expect(errAdd).NotTo(HaveOccurred())
+			gomega.Expect(errAdd).NotTo(gomega.HaveOccurred())
 
 			opt = &TSRangeOptions{Aggregator: Max, Align: 0, BucketDuration: 10}
 			resultRange, err = adapter.TSRangeWithArgs(ctx, "t3", 0, 100, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultRange[0]).To(BeEquivalentTo(TSTimestampValue{Timestamp: 10, Value: 4}))
-			Expect(len(resultRange)).To(BeEquivalentTo(3))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultRange[0]).To(gomega.BeEquivalentTo(TSTimestampValue{Timestamp: 10, Value: 4}))
+			gomega.Expect(len(resultRange)).To(gomega.BeEquivalentTo(3))
 
 			opt = &TSRangeOptions{Aggregator: Max, Align: 0, BucketDuration: 10, BucketTimestamp: "+"}
 			resultRange, err = adapter.TSRangeWithArgs(ctx, "t3", 0, 100, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultRange[0]).To(BeEquivalentTo(TSTimestampValue{Timestamp: 20, Value: 4}))
-			Expect(len(resultRange)).To(BeEquivalentTo(3))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultRange[0]).To(gomega.BeEquivalentTo(TSTimestampValue{Timestamp: 20, Value: 4}))
+			gomega.Expect(len(resultRange)).To(gomega.BeEquivalentTo(3))
 			// Test Empty
 			_, errAdd = adapter.TSAdd(ctx, "t4", 15, 1).Result()
-			Expect(errAdd).NotTo(HaveOccurred())
+			gomega.Expect(errAdd).NotTo(gomega.HaveOccurred())
 			_, errAdd = adapter.TSAdd(ctx, "t4", 17, 4).Result()
-			Expect(errAdd).NotTo(HaveOccurred())
+			gomega.Expect(errAdd).NotTo(gomega.HaveOccurred())
 			_, errAdd = adapter.TSAdd(ctx, "t4", 51, 3).Result()
-			Expect(errAdd).NotTo(HaveOccurred())
+			gomega.Expect(errAdd).NotTo(gomega.HaveOccurred())
 			_, errAdd = adapter.TSAdd(ctx, "t4", 73, 5).Result()
-			Expect(errAdd).NotTo(HaveOccurred())
+			gomega.Expect(errAdd).NotTo(gomega.HaveOccurred())
 			_, errAdd = adapter.TSAdd(ctx, "t4", 75, 3).Result()
-			Expect(errAdd).NotTo(HaveOccurred())
+			gomega.Expect(errAdd).NotTo(gomega.HaveOccurred())
 
 			opt = &TSRangeOptions{Aggregator: Max, Align: 0, BucketDuration: 10}
 			resultRange, err = adapter.TSRangeWithArgs(ctx, "t4", 0, 100, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultRange[0]).To(BeEquivalentTo(TSTimestampValue{Timestamp: 10, Value: 4}))
-			Expect(len(resultRange)).To(BeEquivalentTo(3))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultRange[0]).To(gomega.BeEquivalentTo(TSTimestampValue{Timestamp: 10, Value: 4}))
+			gomega.Expect(len(resultRange)).To(gomega.BeEquivalentTo(3))
 
 			opt = &TSRangeOptions{Aggregator: Max, Align: 0, BucketDuration: 10, Empty: true}
 			resultRange, err = adapter.TSRangeWithArgs(ctx, "t4", 0, 100, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultRange[0]).To(BeEquivalentTo(TSTimestampValue{Timestamp: 10, Value: 4}))
-			Expect(len(resultRange)).To(BeEquivalentTo(7))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultRange[0]).To(gomega.BeEquivalentTo(TSTimestampValue{Timestamp: 10, Value: 4}))
+			gomega.Expect(len(resultRange)).To(gomega.BeEquivalentTo(7))
 		})
 
-		It("should TSRevRange, TSRevRangeWithArgs", Label("timeseries", "tsrevrange", "tsrevrangeWithArgs"), func() {
+		ginkgo.It("should TSRevRange, TSRevRangeWithArgs", ginkgo.Label("timeseries", "tsrevrange", "tsrevrangeWithArgs"), func() {
 			for i := 0; i < 100; i++ {
 				_, err := adapter.TSAdd(ctx, "a", i, float64(i%7)).Result()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			}
 			result, err := adapter.TSRange(ctx, "a", 0, 200).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(len(result)).To(BeEquivalentTo(100))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(len(result)).To(gomega.BeEquivalentTo(100))
 			for i := 0; i < 100; i++ {
 				adapter.TSAdd(ctx, "a", i+200, float64(i%7))
 			}
 			result, err = adapter.TSRange(ctx, "a", 0, 500).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(len(result)).To(BeEquivalentTo(200))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(len(result)).To(gomega.BeEquivalentTo(200))
 
 			opt := &TSRevRangeOptions{Aggregator: Avg, BucketDuration: 10}
 			result, err = adapter.TSRevRangeWithArgs(ctx, "a", 0, 500, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(len(result)).To(BeEquivalentTo(20))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(len(result)).To(gomega.BeEquivalentTo(20))
 
 			opt = &TSRevRangeOptions{Count: 10}
 			result, err = adapter.TSRevRangeWithArgs(ctx, "a", 0, 500, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(len(result)).To(BeEquivalentTo(10))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(len(result)).To(gomega.BeEquivalentTo(10))
 
 			fts := make([]int, 0)
 			for i := 10; i < 20; i++ {
@@ -10082,150 +10083,150 @@ func testAdapterCache(resp3 bool) {
 			}
 			opt = &TSRevRangeOptions{FilterByTS: fts, FilterByValue: []int{1, 2}}
 			result, err = adapter.TSRevRangeWithArgs(ctx, "a", 0, 500, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(len(result)).To(BeEquivalentTo(2))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(len(result)).To(gomega.BeEquivalentTo(2))
 
 			opt = &TSRevRangeOptions{Aggregator: Count, BucketDuration: 10, Align: "+"}
 			result, err = adapter.TSRevRangeWithArgs(ctx, "a", 0, 10, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(BeEquivalentTo([]TSTimestampValue{{Timestamp: 10, Value: 1}, {Timestamp: 0, Value: 10}}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result).To(gomega.BeEquivalentTo([]TSTimestampValue{{Timestamp: 10, Value: 1}, {Timestamp: 0, Value: 10}}))
 
 			opt = &TSRevRangeOptions{Aggregator: Count, BucketDuration: 10, Align: "1"}
 			result, err = adapter.TSRevRangeWithArgs(ctx, "a", 0, 10, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(BeEquivalentTo([]TSTimestampValue{{Timestamp: 1, Value: 10}, {Timestamp: 0, Value: 1}}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result).To(gomega.BeEquivalentTo([]TSTimestampValue{{Timestamp: 1, Value: 10}, {Timestamp: 0, Value: 1}}))
 
 			opt = &TSRevRangeOptions{Aggregator: Twa, BucketDuration: 10}
 			result, err = adapter.TSRevRangeWithArgs(ctx, "a", 0, 10, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(BeEquivalentTo([]TSTimestampValue{{Timestamp: 10, Value: 3}, {Timestamp: 0, Value: 2.55}}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result).To(gomega.BeEquivalentTo([]TSTimestampValue{{Timestamp: 10, Value: 3}, {Timestamp: 0, Value: 2.55}}))
 			// Test Range Latest
 			resultCreate, err := adapter.TSCreate(ctx, "t1").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultCreate).To(gomega.BeEquivalentTo("OK"))
 			resultCreate, err = adapter.TSCreate(ctx, "t2").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultCreate).To(gomega.BeEquivalentTo("OK"))
 			resultRule, err := adapter.TSCreateRule(ctx, "t1", "t2", Sum, 10).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultRule).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultRule).To(gomega.BeEquivalentTo("OK"))
 			_, errAdd := adapter.TSAdd(ctx, "t1", 1, 1).Result()
-			Expect(errAdd).NotTo(HaveOccurred())
+			gomega.Expect(errAdd).NotTo(gomega.HaveOccurred())
 			_, errAdd = adapter.TSAdd(ctx, "t1", 2, 3).Result()
-			Expect(errAdd).NotTo(HaveOccurred())
+			gomega.Expect(errAdd).NotTo(gomega.HaveOccurred())
 			_, errAdd = adapter.TSAdd(ctx, "t1", 11, 7).Result()
-			Expect(errAdd).NotTo(HaveOccurred())
+			gomega.Expect(errAdd).NotTo(gomega.HaveOccurred())
 			_, errAdd = adapter.TSAdd(ctx, "t1", 13, 1).Result()
-			Expect(errAdd).NotTo(HaveOccurred())
+			gomega.Expect(errAdd).NotTo(gomega.HaveOccurred())
 			resultRange, err := adapter.TSRange(ctx, "t2", 0, 10).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultRange[0]).To(BeEquivalentTo(TSTimestampValue{Timestamp: 0, Value: 4}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultRange[0]).To(gomega.BeEquivalentTo(TSTimestampValue{Timestamp: 0, Value: 4}))
 			opt = &TSRevRangeOptions{Latest: true}
 			resultRange, err = adapter.TSRevRangeWithArgs(ctx, "t2", 0, 10, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultRange[0]).To(BeEquivalentTo(TSTimestampValue{Timestamp: 10, Value: 8}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultRange[0]).To(gomega.BeEquivalentTo(TSTimestampValue{Timestamp: 10, Value: 8}))
 			resultRange, err = adapter.TSRevRangeWithArgs(ctx, "t2", 0, 9, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultRange[0]).To(BeEquivalentTo(TSTimestampValue{Timestamp: 0, Value: 4}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultRange[0]).To(gomega.BeEquivalentTo(TSTimestampValue{Timestamp: 0, Value: 4}))
 			// Test Bucket Timestamp
 			resultCreate, err = adapter.TSCreate(ctx, "t3").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultCreate).To(gomega.BeEquivalentTo("OK"))
 			_, errAdd = adapter.TSAdd(ctx, "t3", 15, 1).Result()
-			Expect(errAdd).NotTo(HaveOccurred())
+			gomega.Expect(errAdd).NotTo(gomega.HaveOccurred())
 			_, errAdd = adapter.TSAdd(ctx, "t3", 17, 4).Result()
-			Expect(errAdd).NotTo(HaveOccurred())
+			gomega.Expect(errAdd).NotTo(gomega.HaveOccurred())
 			_, errAdd = adapter.TSAdd(ctx, "t3", 51, 3).Result()
-			Expect(errAdd).NotTo(HaveOccurred())
+			gomega.Expect(errAdd).NotTo(gomega.HaveOccurred())
 			_, errAdd = adapter.TSAdd(ctx, "t3", 73, 5).Result()
-			Expect(errAdd).NotTo(HaveOccurred())
+			gomega.Expect(errAdd).NotTo(gomega.HaveOccurred())
 			_, errAdd = adapter.TSAdd(ctx, "t3", 75, 3).Result()
-			Expect(errAdd).NotTo(HaveOccurred())
+			gomega.Expect(errAdd).NotTo(gomega.HaveOccurred())
 
 			opt = &TSRevRangeOptions{Aggregator: Max, Align: 0, BucketDuration: 10}
 			resultRange, err = adapter.TSRevRangeWithArgs(ctx, "t3", 0, 100, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultRange[0]).To(BeEquivalentTo(TSTimestampValue{Timestamp: 70, Value: 5}))
-			Expect(len(resultRange)).To(BeEquivalentTo(3))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultRange[0]).To(gomega.BeEquivalentTo(TSTimestampValue{Timestamp: 70, Value: 5}))
+			gomega.Expect(len(resultRange)).To(gomega.BeEquivalentTo(3))
 
 			opt = &TSRevRangeOptions{Aggregator: Max, Align: 0, BucketDuration: 10, BucketTimestamp: "+"}
 			resultRange, err = adapter.TSRevRangeWithArgs(ctx, "t3", 0, 100, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultRange[0]).To(BeEquivalentTo(TSTimestampValue{Timestamp: 80, Value: 5}))
-			Expect(len(resultRange)).To(BeEquivalentTo(3))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultRange[0]).To(gomega.BeEquivalentTo(TSTimestampValue{Timestamp: 80, Value: 5}))
+			gomega.Expect(len(resultRange)).To(gomega.BeEquivalentTo(3))
 			// Test Empty
 			_, errAdd = adapter.TSAdd(ctx, "t4", 15, 1).Result()
-			Expect(errAdd).NotTo(HaveOccurred())
+			gomega.Expect(errAdd).NotTo(gomega.HaveOccurred())
 			_, errAdd = adapter.TSAdd(ctx, "t4", 17, 4).Result()
-			Expect(errAdd).NotTo(HaveOccurred())
+			gomega.Expect(errAdd).NotTo(gomega.HaveOccurred())
 			_, errAdd = adapter.TSAdd(ctx, "t4", 51, 3).Result()
-			Expect(errAdd).NotTo(HaveOccurred())
+			gomega.Expect(errAdd).NotTo(gomega.HaveOccurred())
 			_, errAdd = adapter.TSAdd(ctx, "t4", 73, 5).Result()
-			Expect(errAdd).NotTo(HaveOccurred())
+			gomega.Expect(errAdd).NotTo(gomega.HaveOccurred())
 			_, errAdd = adapter.TSAdd(ctx, "t4", 75, 3).Result()
-			Expect(errAdd).NotTo(HaveOccurred())
+			gomega.Expect(errAdd).NotTo(gomega.HaveOccurred())
 
 			opt = &TSRevRangeOptions{Aggregator: Max, Align: 0, BucketDuration: 10}
 			resultRange, err = adapter.TSRevRangeWithArgs(ctx, "t4", 0, 100, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultRange[0]).To(BeEquivalentTo(TSTimestampValue{Timestamp: 70, Value: 5}))
-			Expect(len(resultRange)).To(BeEquivalentTo(3))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultRange[0]).To(gomega.BeEquivalentTo(TSTimestampValue{Timestamp: 70, Value: 5}))
+			gomega.Expect(len(resultRange)).To(gomega.BeEquivalentTo(3))
 
 			opt = &TSRevRangeOptions{Aggregator: Max, Align: 0, BucketDuration: 10, Empty: true}
 			resultRange, err = adapter.TSRevRangeWithArgs(ctx, "t4", 0, 100, opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultRange[0]).To(BeEquivalentTo(TSTimestampValue{Timestamp: 70, Value: 5}))
-			Expect(len(resultRange)).To(BeEquivalentTo(7))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultRange[0]).To(gomega.BeEquivalentTo(TSTimestampValue{Timestamp: 70, Value: 5}))
+			gomega.Expect(len(resultRange)).To(gomega.BeEquivalentTo(7))
 		})
 
-		It("should TSMRange and TSMRangeWithArgs", Label("timeseries", "tsmrange", "tsmrangeWithArgs"), func() {
+		ginkgo.It("should TSMRange and TSMRangeWithArgs", ginkgo.Label("timeseries", "tsmrange", "tsmrangeWithArgs"), func() {
 			createOpt := &TSOptions{Labels: map[string]string{"Test": "This", "team": "ny"}}
 			resultCreate, err := adapter.TSCreateWithArgs(ctx, "a", createOpt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultCreate).To(gomega.BeEquivalentTo("OK"))
 			createOpt = &TSOptions{Labels: map[string]string{"Test": "This", "Taste": "That", "team": "sf"}}
 			resultCreate, err = adapter.TSCreateWithArgs(ctx, "b", createOpt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultCreate).To(gomega.BeEquivalentTo("OK"))
 
 			for i := 0; i < 100; i++ {
 				_, err := adapter.TSAdd(ctx, "a", i, float64(i%7)).Result()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				_, err = adapter.TSAdd(ctx, "b", i, float64(i%11)).Result()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			}
 
 			result, err := adapter.TSMRange(ctx, 0, 200, []string{"Test=This"}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(len(result)).To(BeEquivalentTo(2))
-			Expect(len(result["a"][2].([]interface{}))).To(BeEquivalentTo(100))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(len(result)).To(gomega.BeEquivalentTo(2))
+			gomega.Expect(len(result["a"][2].([]interface{}))).To(gomega.BeEquivalentTo(100))
 			// Test Count
 			mrangeOpt := &TSMRangeOptions{Count: 10}
 			result, err = adapter.TSMRangeWithArgs(ctx, 0, 200, []string{"Test=This"}, mrangeOpt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(len(result["a"][2].([]interface{}))).To(BeEquivalentTo(10))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(len(result["a"][2].([]interface{}))).To(gomega.BeEquivalentTo(10))
 			// Test Aggregation and BucketDuration
 			for i := 0; i < 100; i++ {
 				_, err := adapter.TSAdd(ctx, "a", i+200, float64(i%7)).Result()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			}
 			mrangeOpt = &TSMRangeOptions{Aggregator: Avg, BucketDuration: 10}
 			result, err = adapter.TSMRangeWithArgs(ctx, 0, 500, []string{"Test=This"}, mrangeOpt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(len(result)).To(BeEquivalentTo(2))
-			Expect(len(result["a"][2].([]interface{}))).To(BeEquivalentTo(20))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(len(result)).To(gomega.BeEquivalentTo(2))
+			gomega.Expect(len(result["a"][2].([]interface{}))).To(gomega.BeEquivalentTo(20))
 			// Test WithLabels
-			Expect(result["a"][0]).To(BeEquivalentTo(map[string]interface{}{}))
+			gomega.Expect(result["a"][0]).To(gomega.BeEquivalentTo(map[string]interface{}{}))
 			mrangeOpt = &TSMRangeOptions{WithLabels: true}
 			result, err = adapter.TSMRangeWithArgs(ctx, 0, 200, []string{"Test=This"}, mrangeOpt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result["a"][0]).To(BeEquivalentTo(map[string]interface{}{"Test": "This", "team": "ny"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result["a"][0]).To(gomega.BeEquivalentTo(map[string]interface{}{"Test": "This", "team": "ny"}))
 			// Test SelectedLabels
 			mrangeOpt = &TSMRangeOptions{SelectedLabels: []interface{}{"team"}}
 			result, err = adapter.TSMRangeWithArgs(ctx, 0, 200, []string{"Test=This"}, mrangeOpt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result["a"][0]).To(BeEquivalentTo(map[string]interface{}{"team": "ny"}))
-			Expect(result["b"][0]).To(BeEquivalentTo(map[string]interface{}{"team": "sf"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result["a"][0]).To(gomega.BeEquivalentTo(map[string]interface{}{"team": "ny"}))
+			gomega.Expect(result["b"][0]).To(gomega.BeEquivalentTo(map[string]interface{}{"team": "sf"}))
 			// Test FilterBy
 			fts := make([]int, 0)
 			for i := 10; i < 20; i++ {
@@ -10233,132 +10234,132 @@ func testAdapterCache(resp3 bool) {
 			}
 			mrangeOpt = &TSMRangeOptions{FilterByTS: fts, FilterByValue: []int{1, 2}}
 			result, err = adapter.TSMRangeWithArgs(ctx, 0, 200, []string{"Test=This"}, mrangeOpt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result["a"][2]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(15), 1.0}, []interface{}{int64(16), 2.0}}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result["a"][2]).To(gomega.BeEquivalentTo([]interface{}{[]interface{}{int64(15), 1.0}, []interface{}{int64(16), 2.0}}))
 			// Test GroupBy
 			mrangeOpt = &TSMRangeOptions{GroupByLabel: "Test", Reducer: "sum"}
 			result, err = adapter.TSMRangeWithArgs(ctx, 0, 3, []string{"Test=This"}, mrangeOpt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result["Test=This"][3]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(0), 0.0}, []interface{}{int64(1), 2.0}, []interface{}{int64(2), 4.0}, []interface{}{int64(3), 6.0}}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result["Test=This"][3]).To(gomega.BeEquivalentTo([]interface{}{[]interface{}{int64(0), 0.0}, []interface{}{int64(1), 2.0}, []interface{}{int64(2), 4.0}, []interface{}{int64(3), 6.0}}))
 
 			mrangeOpt = &TSMRangeOptions{GroupByLabel: "Test", Reducer: "max"}
 			result, err = adapter.TSMRangeWithArgs(ctx, 0, 3, []string{"Test=This"}, mrangeOpt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result["Test=This"][3]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(0), 0.0}, []interface{}{int64(1), 1.0}, []interface{}{int64(2), 2.0}, []interface{}{int64(3), 3.0}}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result["Test=This"][3]).To(gomega.BeEquivalentTo([]interface{}{[]interface{}{int64(0), 0.0}, []interface{}{int64(1), 1.0}, []interface{}{int64(2), 2.0}, []interface{}{int64(3), 3.0}}))
 
 			mrangeOpt = &TSMRangeOptions{GroupByLabel: "team", Reducer: "min"}
 			result, err = adapter.TSMRangeWithArgs(ctx, 0, 3, []string{"Test=This"}, mrangeOpt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(len(result)).To(BeEquivalentTo(2))
-			Expect(result["team=ny"][3]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(0), 0.0}, []interface{}{int64(1), 1.0}, []interface{}{int64(2), 2.0}, []interface{}{int64(3), 3.0}}))
-			Expect(result["team=sf"][3]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(0), 0.0}, []interface{}{int64(1), 1.0}, []interface{}{int64(2), 2.0}, []interface{}{int64(3), 3.0}}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(len(result)).To(gomega.BeEquivalentTo(2))
+			gomega.Expect(result["team=ny"][3]).To(gomega.BeEquivalentTo([]interface{}{[]interface{}{int64(0), 0.0}, []interface{}{int64(1), 1.0}, []interface{}{int64(2), 2.0}, []interface{}{int64(3), 3.0}}))
+			gomega.Expect(result["team=sf"][3]).To(gomega.BeEquivalentTo([]interface{}{[]interface{}{int64(0), 0.0}, []interface{}{int64(1), 1.0}, []interface{}{int64(2), 2.0}, []interface{}{int64(3), 3.0}}))
 			// Test Align
 			mrangeOpt = &TSMRangeOptions{Aggregator: Count, BucketDuration: 10, Align: "-"}
 			result, err = adapter.TSMRangeWithArgs(ctx, 0, 10, []string{"team=ny"}, mrangeOpt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result["a"][2]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(0), 10.0}, []interface{}{int64(10), 1.0}}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result["a"][2]).To(gomega.BeEquivalentTo([]interface{}{[]interface{}{int64(0), 10.0}, []interface{}{int64(10), 1.0}}))
 
 			mrangeOpt = &TSMRangeOptions{Aggregator: Count, BucketDuration: 10, Align: 5}
 			result, err = adapter.TSMRangeWithArgs(ctx, 0, 10, []string{"team=ny"}, mrangeOpt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result["a"][2]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(0), 5.0}, []interface{}{int64(5), 6.0}}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result["a"][2]).To(gomega.BeEquivalentTo([]interface{}{[]interface{}{int64(0), 5.0}, []interface{}{int64(5), 6.0}}))
 		})
 
-		It("should TSMRangeWithArgs Latest", Label("timeseries", "tsmrangeWithArgs", "tsmrangelatest"), func() {
+		ginkgo.It("should TSMRangeWithArgs Latest", ginkgo.Label("timeseries", "tsmrangeWithArgs", "tsmrangelatest"), func() {
 			resultCreate, err := adapter.TSCreate(ctx, "a").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultCreate).To(gomega.BeEquivalentTo("OK"))
 			opt := &TSOptions{Labels: map[string]string{"is_compaction": "true"}}
 			resultCreate, err = adapter.TSCreateWithArgs(ctx, "b", opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultCreate).To(gomega.BeEquivalentTo("OK"))
 
 			resultCreate, err = adapter.TSCreate(ctx, "c").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultCreate).To(gomega.BeEquivalentTo("OK"))
 			opt = &TSOptions{Labels: map[string]string{"is_compaction": "true"}}
 			resultCreate, err = adapter.TSCreateWithArgs(ctx, "d", opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultCreate).To(gomega.BeEquivalentTo("OK"))
 
 			resultCreateRule, err := adapter.TSCreateRule(ctx, "a", "b", Sum, 10).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultCreateRule).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultCreateRule).To(gomega.BeEquivalentTo("OK"))
 			resultCreateRule, err = adapter.TSCreateRule(ctx, "c", "d", Sum, 10).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultCreateRule).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultCreateRule).To(gomega.BeEquivalentTo("OK"))
 
 			_, err = adapter.TSAdd(ctx, "a", 1, 1).Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			_, err = adapter.TSAdd(ctx, "a", 2, 3).Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			_, err = adapter.TSAdd(ctx, "a", 11, 7).Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			_, err = adapter.TSAdd(ctx, "a", 13, 1).Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			_, err = adapter.TSAdd(ctx, "c", 1, 1).Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			_, err = adapter.TSAdd(ctx, "c", 2, 3).Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			_, err = adapter.TSAdd(ctx, "c", 11, 7).Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			_, err = adapter.TSAdd(ctx, "c", 13, 1).Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			mrangeOpt := &TSMRangeOptions{Latest: true}
 			result, err := adapter.TSMRangeWithArgs(ctx, 0, 10, []string{"is_compaction=true"}, mrangeOpt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result["b"][2]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(0), 4.0}, []interface{}{int64(10), 8.0}}))
-			Expect(result["d"][2]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(0), 4.0}, []interface{}{int64(10), 8.0}}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result["b"][2]).To(gomega.BeEquivalentTo([]interface{}{[]interface{}{int64(0), 4.0}, []interface{}{int64(10), 8.0}}))
+			gomega.Expect(result["d"][2]).To(gomega.BeEquivalentTo([]interface{}{[]interface{}{int64(0), 4.0}, []interface{}{int64(10), 8.0}}))
 		})
-		It("should TSMRevRange and TSMRevRangeWithArgs", Label("timeseries", "tsmrevrange", "tsmrevrangeWithArgs"), func() {
+		ginkgo.It("should TSMRevRange and TSMRevRangeWithArgs", ginkgo.Label("timeseries", "tsmrevrange", "tsmrevrangeWithArgs"), func() {
 			createOpt := &TSOptions{Labels: map[string]string{"Test": "This", "team": "ny"}}
 			resultCreate, err := adapter.TSCreateWithArgs(ctx, "a", createOpt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultCreate).To(gomega.BeEquivalentTo("OK"))
 			createOpt = &TSOptions{Labels: map[string]string{"Test": "This", "Taste": "That", "team": "sf"}}
 			resultCreate, err = adapter.TSCreateWithArgs(ctx, "b", createOpt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultCreate).To(gomega.BeEquivalentTo("OK"))
 
 			for i := 0; i < 100; i++ {
 				_, err := adapter.TSAdd(ctx, "a", i, float64(i%7)).Result()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 				_, err = adapter.TSAdd(ctx, "b", i, float64(i%11)).Result()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			}
 			result, err := adapter.TSMRevRange(ctx, 0, 200, []string{"Test=This"}).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(len(result)).To(BeEquivalentTo(2))
-			Expect(len(result["a"][2].([]interface{}))).To(BeEquivalentTo(100))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(len(result)).To(gomega.BeEquivalentTo(2))
+			gomega.Expect(len(result["a"][2].([]interface{}))).To(gomega.BeEquivalentTo(100))
 			// Test Count
 			mrangeOpt := &TSMRevRangeOptions{Count: 10}
 			result, err = adapter.TSMRevRangeWithArgs(ctx, 0, 200, []string{"Test=This"}, mrangeOpt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(len(result["a"][2].([]interface{}))).To(BeEquivalentTo(10))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(len(result["a"][2].([]interface{}))).To(gomega.BeEquivalentTo(10))
 			// Test Aggregation and BucketDuration
 			for i := 0; i < 100; i++ {
 				_, err := adapter.TSAdd(ctx, "a", i+200, float64(i%7)).Result()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			}
 			mrangeOpt = &TSMRevRangeOptions{Aggregator: Avg, BucketDuration: 10}
 			result, err = adapter.TSMRevRangeWithArgs(ctx, 0, 500, []string{"Test=This"}, mrangeOpt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(len(result)).To(BeEquivalentTo(2))
-			Expect(len(result["a"][2].([]interface{}))).To(BeEquivalentTo(20))
-			Expect(result["a"][0]).To(BeEquivalentTo(map[string]interface{}{}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(len(result)).To(gomega.BeEquivalentTo(2))
+			gomega.Expect(len(result["a"][2].([]interface{}))).To(gomega.BeEquivalentTo(20))
+			gomega.Expect(result["a"][0]).To(gomega.BeEquivalentTo(map[string]interface{}{}))
 			// Test WithLabels
-			Expect(result["a"][0]).To(BeEquivalentTo(map[string]interface{}{}))
+			gomega.Expect(result["a"][0]).To(gomega.BeEquivalentTo(map[string]interface{}{}))
 			mrangeOpt = &TSMRevRangeOptions{WithLabels: true}
 			result, err = adapter.TSMRevRangeWithArgs(ctx, 0, 200, []string{"Test=This"}, mrangeOpt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result["a"][0]).To(BeEquivalentTo(map[string]interface{}{"Test": "This", "team": "ny"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result["a"][0]).To(gomega.BeEquivalentTo(map[string]interface{}{"Test": "This", "team": "ny"}))
 			// Test SelectedLabels
 			mrangeOpt = &TSMRevRangeOptions{SelectedLabels: []interface{}{"team"}}
 			result, err = adapter.TSMRevRangeWithArgs(ctx, 0, 200, []string{"Test=This"}, mrangeOpt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result["a"][0]).To(BeEquivalentTo(map[string]interface{}{"team": "ny"}))
-			Expect(result["b"][0]).To(BeEquivalentTo(map[string]interface{}{"team": "sf"}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result["a"][0]).To(gomega.BeEquivalentTo(map[string]interface{}{"team": "ny"}))
+			gomega.Expect(result["b"][0]).To(gomega.BeEquivalentTo(map[string]interface{}{"team": "sf"}))
 			// Test FilterBy
 			fts := make([]int, 0)
 			for i := 10; i < 20; i++ {
@@ -10366,144 +10367,144 @@ func testAdapterCache(resp3 bool) {
 			}
 			mrangeOpt = &TSMRevRangeOptions{FilterByTS: fts, FilterByValue: []int{1, 2}}
 			result, err = adapter.TSMRevRangeWithArgs(ctx, 0, 200, []string{"Test=This"}, mrangeOpt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result["a"][2]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(16), 2.0}, []interface{}{int64(15), 1.0}}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result["a"][2]).To(gomega.BeEquivalentTo([]interface{}{[]interface{}{int64(16), 2.0}, []interface{}{int64(15), 1.0}}))
 			// Test GroupBy
 			mrangeOpt = &TSMRevRangeOptions{GroupByLabel: "Test", Reducer: "sum"}
 			result, err = adapter.TSMRevRangeWithArgs(ctx, 0, 3, []string{"Test=This"}, mrangeOpt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result["Test=This"][3]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(3), 6.0}, []interface{}{int64(2), 4.0}, []interface{}{int64(1), 2.0}, []interface{}{int64(0), 0.0}}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result["Test=This"][3]).To(gomega.BeEquivalentTo([]interface{}{[]interface{}{int64(3), 6.0}, []interface{}{int64(2), 4.0}, []interface{}{int64(1), 2.0}, []interface{}{int64(0), 0.0}}))
 
 			mrangeOpt = &TSMRevRangeOptions{GroupByLabel: "Test", Reducer: "max"}
 			result, err = adapter.TSMRevRangeWithArgs(ctx, 0, 3, []string{"Test=This"}, mrangeOpt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result["Test=This"][3]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(3), 3.0}, []interface{}{int64(2), 2.0}, []interface{}{int64(1), 1.0}, []interface{}{int64(0), 0.0}}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result["Test=This"][3]).To(gomega.BeEquivalentTo([]interface{}{[]interface{}{int64(3), 3.0}, []interface{}{int64(2), 2.0}, []interface{}{int64(1), 1.0}, []interface{}{int64(0), 0.0}}))
 
 			mrangeOpt = &TSMRevRangeOptions{GroupByLabel: "team", Reducer: "min"}
 			result, err = adapter.TSMRevRangeWithArgs(ctx, 0, 3, []string{"Test=This"}, mrangeOpt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(len(result)).To(BeEquivalentTo(2))
-			Expect(result["team=ny"][3]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(3), 3.0}, []interface{}{int64(2), 2.0}, []interface{}{int64(1), 1.0}, []interface{}{int64(0), 0.0}}))
-			Expect(result["team=sf"][3]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(3), 3.0}, []interface{}{int64(2), 2.0}, []interface{}{int64(1), 1.0}, []interface{}{int64(0), 0.0}}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(len(result)).To(gomega.BeEquivalentTo(2))
+			gomega.Expect(result["team=ny"][3]).To(gomega.BeEquivalentTo([]interface{}{[]interface{}{int64(3), 3.0}, []interface{}{int64(2), 2.0}, []interface{}{int64(1), 1.0}, []interface{}{int64(0), 0.0}}))
+			gomega.Expect(result["team=sf"][3]).To(gomega.BeEquivalentTo([]interface{}{[]interface{}{int64(3), 3.0}, []interface{}{int64(2), 2.0}, []interface{}{int64(1), 1.0}, []interface{}{int64(0), 0.0}}))
 			// Test Align
 			mrangeOpt = &TSMRevRangeOptions{Aggregator: Count, BucketDuration: 10, Align: "-"}
 			result, err = adapter.TSMRevRangeWithArgs(ctx, 0, 10, []string{"team=ny"}, mrangeOpt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result["a"][2]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(10), 1.0}, []interface{}{int64(0), 10.0}}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result["a"][2]).To(gomega.BeEquivalentTo([]interface{}{[]interface{}{int64(10), 1.0}, []interface{}{int64(0), 10.0}}))
 
 			mrangeOpt = &TSMRevRangeOptions{Aggregator: Count, BucketDuration: 10, Align: 1}
 			result, err = adapter.TSMRevRangeWithArgs(ctx, 0, 10, []string{"team=ny"}, mrangeOpt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result["a"][2]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(1), 10.0}, []interface{}{int64(0), 1.0}}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result["a"][2]).To(gomega.BeEquivalentTo([]interface{}{[]interface{}{int64(1), 10.0}, []interface{}{int64(0), 1.0}}))
 		})
 
-		It("should TSMRevRangeWithArgs Latest", Label("timeseries", "tsmrevrangeWithArgs", "tsmrevrangelatest"), func() {
+		ginkgo.It("should TSMRevRangeWithArgs Latest", ginkgo.Label("timeseries", "tsmrevrangeWithArgs", "tsmrevrangelatest"), func() {
 			resultCreate, err := adapter.TSCreate(ctx, "a").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultCreate).To(gomega.BeEquivalentTo("OK"))
 			opt := &TSOptions{Labels: map[string]string{"is_compaction": "true"}}
 			resultCreate, err = adapter.TSCreateWithArgs(ctx, "b", opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultCreate).To(gomega.BeEquivalentTo("OK"))
 
 			resultCreate, err = adapter.TSCreate(ctx, "c").Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultCreate).To(gomega.BeEquivalentTo("OK"))
 			opt = &TSOptions{Labels: map[string]string{"is_compaction": "true"}}
 			resultCreate, err = adapter.TSCreateWithArgs(ctx, "d", opt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultCreate).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultCreate).To(gomega.BeEquivalentTo("OK"))
 
 			resultCreateRule, err := adapter.TSCreateRule(ctx, "a", "b", Sum, 10).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultCreateRule).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultCreateRule).To(gomega.BeEquivalentTo("OK"))
 			resultCreateRule, err = adapter.TSCreateRule(ctx, "c", "d", Sum, 10).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(resultCreateRule).To(BeEquivalentTo("OK"))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(resultCreateRule).To(gomega.BeEquivalentTo("OK"))
 
 			_, err = adapter.TSAdd(ctx, "a", 1, 1).Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			_, err = adapter.TSAdd(ctx, "a", 2, 3).Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			_, err = adapter.TSAdd(ctx, "a", 11, 7).Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			_, err = adapter.TSAdd(ctx, "a", 13, 1).Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 			_, err = adapter.TSAdd(ctx, "c", 1, 1).Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			_, err = adapter.TSAdd(ctx, "c", 2, 3).Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			_, err = adapter.TSAdd(ctx, "c", 11, 7).Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			_, err = adapter.TSAdd(ctx, "c", 13, 1).Result()
-			Expect(err).NotTo(HaveOccurred())
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			mrangeOpt := &TSMRevRangeOptions{Latest: true}
 			result, err := adapter.TSMRevRangeWithArgs(ctx, 0, 10, []string{"is_compaction=true"}, mrangeOpt).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result["b"][2]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(10), 8.0}, []interface{}{int64(0), 4.0}}))
-			Expect(result["d"][2]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(10), 8.0}, []interface{}{int64(0), 4.0}}))
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			gomega.Expect(result["b"][2]).To(gomega.BeEquivalentTo([]interface{}{[]interface{}{int64(10), 8.0}, []interface{}{int64(0), 4.0}}))
+			gomega.Expect(result["d"][2]).To(gomega.BeEquivalentTo([]interface{}{[]interface{}{int64(10), 8.0}, []interface{}{int64(0), 4.0}}))
 		})
 	})
-	Describe("JSON Commands", Label("json"), func() {
-		BeforeEach(func() {
-			Expect(adapter.FlushDB(ctx).Err()).NotTo(HaveOccurred())
+	ginkgo.Describe("JSON Commands", ginkgo.Label("json"), func() {
+		ginkgo.BeforeEach(func() {
+			gomega.Expect(adapter.FlushDB(ctx).Err()).NotTo(gomega.HaveOccurred())
 		})
 
-		Describe("arrays", Label("arrays"), func() {
-			It("should JSONArrAppend", Label("json.arrappend", "json"), func() {
+		ginkgo.Describe("arrays", ginkgo.Label("arrays"), func() {
+			ginkgo.It("should JSONArrAppend", ginkgo.Label("json.arrappend", "json"), func() {
 				cmd1 := adapter.JSONSet(ctx, "append2", "$", `{"a": [10], "b": {"a": [12, 13]}}`)
-				Expect(cmd1.Err()).NotTo(HaveOccurred())
-				Expect(cmd1.Val()).To(Equal("OK"))
+				gomega.Expect(cmd1.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd1.Val()).To(gomega.Equal("OK"))
 
 				cmd2 := adapter.JSONArrAppend(ctx, "append2", "$..a", 10)
-				Expect(cmd2.Err()).NotTo(HaveOccurred())
-				Expect(cmd2.Val()).To(Equal([]int64{2, 3}))
+				gomega.Expect(cmd2.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd2.Val()).To(gomega.Equal([]int64{2, 3}))
 			})
 
-			It("should JSONArrIndex and JSONArrIndexWithArgs", Label("json.arrindex", "json"), func() {
+			ginkgo.It("should JSONArrIndex and JSONArrIndexWithArgs", ginkgo.Label("json.arrindex", "json"), func() {
 				cmd1, err := adapter.JSONSet(ctx, "index1", "$", `{"a": [10], "b": {"a": [12, 10]}}`).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(cmd1).To(Equal("OK"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd1).To(gomega.Equal("OK"))
 
 				cmd2, err := adapter.JSONArrIndex(ctx, "index1", "$.b.a", 10).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(cmd2).To(Equal([]int64{1}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd2).To(gomega.Equal([]int64{1}))
 
 				cmd3, err := adapter.JSONSet(ctx, "index2", "$", `[0,1,2,3,4]`).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(cmd3).To(Equal("OK"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd3).To(gomega.Equal("OK"))
 
 				res, err := adapter.JSONArrIndex(ctx, "index2", "$", 1).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(res[0]).To(Equal(int64(1)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(res[0]).To(gomega.Equal(int64(1)))
 
 				res, err = adapter.JSONArrIndex(ctx, "index2", "$", 1, 2).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(res[0]).To(Equal(int64(-1)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(res[0]).To(gomega.Equal(int64(-1)))
 
 				res, err = adapter.JSONArrIndex(ctx, "index2", "$", 4).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(res[0]).To(Equal(int64(4)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(res[0]).To(gomega.Equal(int64(4)))
 
 				res, err = adapter.JSONArrIndexWithArgs(ctx, "index2", "$", &JSONArrIndexArgs{}, 4).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(res[0]).To(Equal(int64(4)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(res[0]).To(gomega.Equal(int64(4)))
 
 				stop := 5000
 				res, err = adapter.JSONArrIndexWithArgs(ctx, "index2", "$", &JSONArrIndexArgs{Stop: &stop}, 4).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(res[0]).To(Equal(int64(4)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(res[0]).To(gomega.Equal(int64(4)))
 
 				stop = -1
 				res, err = adapter.JSONArrIndexWithArgs(ctx, "index2", "$", &JSONArrIndexArgs{Stop: &stop}, 4).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(res[0]).To(Equal(int64(-1)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(res[0]).To(gomega.Equal(int64(-1)))
 
 			})
 
 			// FIXME: how to deal with expanded ?
-			It("should JSONArrIndex and JSONArrIndexWithArgs with $", Label("json.arrindex", "json"), func() {
+			ginkgo.It("should JSONArrIndex and JSONArrIndexWithArgs with $", ginkgo.Label("json.arrindex", "json"), func() {
 				doc := `{
 					"store": {
 						"book": [
@@ -10542,235 +10543,235 @@ func testAdapterCache(resp3 bool) {
 					}
 				}`
 				res, err := adapter.JSONSet(ctx, "doc1", "$", doc).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(res).To(Equal("OK"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(res).To(gomega.Equal("OK"))
 
 				resGet, err := adapter.JSONGet(ctx, "doc1", "$.store.book[?(@.price<10)].size").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(resGet).To(Equal("[[10,20,30,40],[5,10,20,30]]"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(resGet).To(gomega.Equal("[[10,20,30,40],[5,10,20,30]]"))
 
 				resArr, err := adapter.JSONArrIndex(ctx, "doc1", "$.store.book[?(@.price<10)].size", 20).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(resArr).To(Equal([]int64{1, 2}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(resArr).To(gomega.Equal([]int64{1, 2}))
 			})
 
-			It("should JSONArrInsert", Label("json.arrinsert", "json"), func() {
+			ginkgo.It("should JSONArrInsert", ginkgo.Label("json.arrinsert", "json"), func() {
 				cmd1 := adapter.JSONSet(ctx, "insert2", "$", `[100, 200, 300, 200]`)
-				Expect(cmd1.Err()).NotTo(HaveOccurred())
-				Expect(cmd1.Val()).To(Equal("OK"))
+				gomega.Expect(cmd1.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd1.Val()).To(gomega.Equal("OK"))
 
 				cmd2 := adapter.JSONArrInsert(ctx, "insert2", "$", -1, 1, 2)
-				Expect(cmd2.Err()).NotTo(HaveOccurred())
-				Expect(cmd2.Val()).To(Equal([]int64{6}))
+				gomega.Expect(cmd2.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd2.Val()).To(gomega.Equal([]int64{6}))
 
 				cmd3 := adapter.JSONGet(ctx, "insert2")
-				Expect(cmd3.Err()).NotTo(HaveOccurred())
-				Expect(cmd3.Val()).To(Or(
-					Equal(`[[100,200,300,1,2,200]]`)))
+				gomega.Expect(cmd3.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd3.Val()).To(gomega.Or(
+					gomega.Equal(`[[100,200,300,1,2,200]]`)))
 			})
 
-			It("should JSONArrLen", Label("json.arrlen", "json"), func() {
+			ginkgo.It("should JSONArrLen", ginkgo.Label("json.arrlen", "json"), func() {
 				cmd1 := adapter.JSONSet(ctx, "length2", "$", `{"a": [10], "b": {"a": [12, 10, 20, 12, 90, 10]}}`)
-				Expect(cmd1.Err()).NotTo(HaveOccurred())
-				Expect(cmd1.Val()).To(Equal("OK"))
+				gomega.Expect(cmd1.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd1.Val()).To(gomega.Equal("OK"))
 
 				cmd2 := adapter.JSONArrLen(ctx, "length2", "$..a")
-				Expect(cmd2.Err()).NotTo(HaveOccurred())
-				Expect(cmd2.Val()).To(Equal([]int64{1, 6}))
+				gomega.Expect(cmd2.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd2.Val()).To(gomega.Equal([]int64{1, 6}))
 			})
 
-			It("should JSONArrPop", Label("json.arrpop"), func() {
+			ginkgo.It("should JSONArrPop", ginkgo.Label("json.arrpop"), func() {
 				cmd1 := adapter.JSONSet(ctx, "pop4", "$", `[100, 200, 300, 200]`)
-				Expect(cmd1.Err()).NotTo(HaveOccurred())
-				Expect(cmd1.Val()).To(Equal("OK"))
+				gomega.Expect(cmd1.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd1.Val()).To(gomega.Equal("OK"))
 
 				cmd2 := adapter.JSONArrPop(ctx, "pop4", "$", 2)
-				Expect(cmd2.Err()).NotTo(HaveOccurred())
-				Expect(cmd2.Val()).To(Equal([]string{"300"}))
+				gomega.Expect(cmd2.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd2.Val()).To(gomega.Equal([]string{"300"}))
 
 				cmd3 := adapter.JSONGet(ctx, "pop4", "$")
-				Expect(cmd3.Err()).NotTo(HaveOccurred())
-				Expect(cmd3.Val()).To(Equal("[[100,200,200]]"))
+				gomega.Expect(cmd3.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd3.Val()).To(gomega.Equal("[[100,200,200]]"))
 			})
 
-			It("should JSONArrTrim", Label("json.arrtrim", "json"), func() {
+			ginkgo.It("should JSONArrTrim", ginkgo.Label("json.arrtrim", "json"), func() {
 				cmd1, err := adapter.JSONSet(ctx, "trim1", "$", `[0,1,2,3,4]`).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(cmd1).To(Equal("OK"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd1).To(gomega.Equal("OK"))
 
 				stop := 3
 				cmd2, err := adapter.JSONArrTrimWithArgs(ctx, "trim1", "$", &JSONArrTrimArgs{Start: 1, Stop: &stop}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(cmd2).To(Equal([]int64{3}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd2).To(gomega.Equal([]int64{3}))
 
 				res, err := adapter.JSONGet(ctx, "trim1", "$").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(res).To(Equal(`[[1,2,3]]`))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(res).To(gomega.Equal(`[[1,2,3]]`))
 
 				cmd3, err := adapter.JSONSet(ctx, "trim2", "$", `[0,1,2,3,4]`).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(cmd3).To(Equal("OK"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd3).To(gomega.Equal("OK"))
 
 				stop = 3
 				cmd4, err := adapter.JSONArrTrimWithArgs(ctx, "trim2", "$", &JSONArrTrimArgs{Start: -1, Stop: &stop}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(cmd4).To(Equal([]int64{0}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd4).To(gomega.Equal([]int64{0}))
 
 				cmd5, err := adapter.JSONSet(ctx, "trim3", "$", `[0,1,2,3,4]`).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(cmd5).To(Equal("OK"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd5).To(gomega.Equal("OK"))
 
 				stop = 99
 				cmd6, err := adapter.JSONArrTrimWithArgs(ctx, "trim3", "$", &JSONArrTrimArgs{Start: 3, Stop: &stop}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(cmd6).To(Equal([]int64{2}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd6).To(gomega.Equal([]int64{2}))
 
 				cmd7, err := adapter.JSONSet(ctx, "trim4", "$", `[0,1,2,3,4]`).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(cmd7).To(Equal("OK"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd7).To(gomega.Equal("OK"))
 
 				stop = 1
 				cmd8, err := adapter.JSONArrTrimWithArgs(ctx, "trim4", "$", &JSONArrTrimArgs{Start: 9, Stop: &stop}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(cmd8).To(Equal([]int64{0}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd8).To(gomega.Equal([]int64{0}))
 
 				cmd9, err := adapter.JSONSet(ctx, "trim5", "$", `[0,1,2,3,4]`).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(cmd9).To(Equal("OK"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd9).To(gomega.Equal("OK"))
 
 				stop = 11
 				cmd10, err := adapter.JSONArrTrimWithArgs(ctx, "trim5", "$", &JSONArrTrimArgs{Start: 9, Stop: &stop}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(cmd10).To(Equal([]int64{0}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd10).To(gomega.Equal([]int64{0}))
 			})
 
-			It("should JSONArrPop", Label("json.arrpop", "json"), func() {
+			ginkgo.It("should JSONArrPop", ginkgo.Label("json.arrpop", "json"), func() {
 				cmd1 := adapter.JSONSet(ctx, "pop4", "$", `[100, 200, 300, 200]`)
-				Expect(cmd1.Err()).NotTo(HaveOccurred())
-				Expect(cmd1.Val()).To(Equal("OK"))
+				gomega.Expect(cmd1.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd1.Val()).To(gomega.Equal("OK"))
 
 				cmd2 := adapter.JSONArrPop(ctx, "pop4", "$", 2)
-				Expect(cmd2.Err()).NotTo(HaveOccurred())
-				Expect(cmd2.Val()).To(Equal([]string{"300"}))
+				gomega.Expect(cmd2.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd2.Val()).To(gomega.Equal([]string{"300"}))
 
 				cmd3 := adapter.JSONGet(ctx, "pop4", "$")
-				Expect(cmd3.Err()).NotTo(HaveOccurred())
-				Expect(cmd3.Val()).To(Equal("[[100,200,200]]"))
+				gomega.Expect(cmd3.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd3.Val()).To(gomega.Equal("[[100,200,200]]"))
 			})
 
 		})
 
-		Describe("get/set", Label("getset"), func() {
-			It("should JSONSet", Label("json.set", "json"), func() {
+		ginkgo.Describe("get/set", ginkgo.Label("getset"), func() {
+			ginkgo.It("should JSONSet", ginkgo.Label("json.set", "json"), func() {
 				cmd := adapter.JSONSet(ctx, "set1", "$", `{"a": 1, "b": 2, "hello": "world"}`)
-				Expect(cmd.Err()).NotTo(HaveOccurred())
-				Expect(cmd.Val()).To(Equal("OK"))
+				gomega.Expect(cmd.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd.Val()).To(gomega.Equal("OK"))
 			})
 
-			It("should JSONGet", Label("json.get", "json"), func() {
+			ginkgo.It("should JSONGet", ginkgo.Label("json.get", "json"), func() {
 				res, err := adapter.JSONSet(ctx, "get3", "$", `{"a": 1, "b": 2}`).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(res).To(Equal("OK"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(res).To(gomega.Equal("OK"))
 
 				res, err = adapter.JSONGetWithArgs(ctx, "get3", &JSONGetArgs{Indent: "-"}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(res).To(Equal(`[-{--"a":1,--"b":2-}]`))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(res).To(gomega.Equal(`[-{--"a":1,--"b":2-}]`))
 
 				res, err = adapter.JSONGetWithArgs(ctx, "get3", &JSONGetArgs{Indent: "-", Newline: `~`, Space: `!`}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(res).To(Equal(`[~-{~--"a":!1,~--"b":!2~-}~]`))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(res).To(gomega.Equal(`[~-{~--"a":!1,~--"b":!2~-}~]`))
 			})
 
-			It("should JSONMerge", Label("json.merge", "json"), func() {
+			ginkgo.It("should JSONMerge", ginkgo.Label("json.merge", "json"), func() {
 				res, err := adapter.JSONSet(ctx, "merge1", "$", `{"a": 1, "b": 2}`).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(res).To(Equal("OK"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(res).To(gomega.Equal("OK"))
 
 				res, err = adapter.JSONMerge(ctx, "merge1", "$", `{"b": 3, "c": 4}`).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(res).To(Equal("OK"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(res).To(gomega.Equal("OK"))
 
 				res, err = adapter.JSONGet(ctx, "merge1", "$").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(res).To(Equal(`[{"a":1,"b":3,"c":4}]`))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(res).To(gomega.Equal(`[{"a":1,"b":3,"c":4}]`))
 			})
 
-			It("should JSONMSet", Label("json.mset", "json"), func() {
+			ginkgo.It("should JSONMSet", ginkgo.Label("json.mset", "json"), func() {
 				doc1 := JSONSetArgs{Key: "mset1", Path: "$", Value: `{"a": 1}`}
 				doc2 := JSONSetArgs{Key: "mset2", Path: "$", Value: 2}
 				docs := []JSONSetArgs{doc1, doc2}
 
 				mSetResult, err := adapter.JSONMSetArgs(ctx, docs).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(mSetResult).To(Equal("OK"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(mSetResult).To(gomega.Equal("OK"))
 
 				res, err := adapter.JSONMGet(ctx, "$", "mset1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(res).To(Equal([]interface{}{`[{"a":1}]`}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(res).To(gomega.Equal([]interface{}{`[{"a":1}]`}))
 
 				res, err = adapter.JSONMGet(ctx, "$", "mset1", "mset2").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(res).To(Equal([]interface{}{`[{"a":1}]`, "[2]"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(res).To(gomega.Equal([]interface{}{`[{"a":1}]`, "[2]"}))
 
 				mSetResult, err = adapter.JSONMSet(ctx, "mset1", "$.a", 2, "mset3", "$", `[1]`).Result()
-				Expect(err).NotTo(HaveOccurred())
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			})
 
-			It("should JSONMGet", Label("json.mget", "json"), func() {
+			ginkgo.It("should JSONMGet", ginkgo.Label("json.mget", "json"), func() {
 				cmd1 := adapter.JSONSet(ctx, "mget2a", "$", `{"a": ["aa", "ab", "ac", "ad"], "b": {"a": ["ba", "bb", "bc", "bd"]}}`)
-				Expect(cmd1.Err()).NotTo(HaveOccurred())
-				Expect(cmd1.Val()).To(Equal("OK"))
+				gomega.Expect(cmd1.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd1.Val()).To(gomega.Equal("OK"))
 				cmd2 := adapter.JSONSet(ctx, "mget2b", "$", `{"a": [100, 200, 300, 200], "b": {"a": [100, 200, 300, 200]}}`)
-				Expect(cmd2.Err()).NotTo(HaveOccurred())
-				Expect(cmd2.Val()).To(Equal("OK"))
+				gomega.Expect(cmd2.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd2.Val()).To(gomega.Equal("OK"))
 
 				cmd3 := adapter.JSONMGet(ctx, "$..a", "mget2a", "mget2b")
-				Expect(cmd3.Err()).NotTo(HaveOccurred())
-				Expect(cmd3.Val()).To(HaveLen(2))
-				Expect(cmd3.Val()[0]).To(Equal(`[["aa","ab","ac","ad"],["ba","bb","bc","bd"]]`))
-				Expect(cmd3.Val()[1]).To(Equal(`[[100,200,300,200],[100,200,300,200]]`))
+				gomega.Expect(cmd3.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd3.Val()).To(gomega.HaveLen(2))
+				gomega.Expect(cmd3.Val()[0]).To(gomega.Equal(`[["aa","ab","ac","ad"],["ba","bb","bc","bd"]]`))
+				gomega.Expect(cmd3.Val()[1]).To(gomega.Equal(`[[100,200,300,200],[100,200,300,200]]`))
 			})
 
-			It("should JSONMget with $", Label("json.mget", "json"), func() {
+			ginkgo.It("should JSONMget with $", ginkgo.Label("json.mget", "json"), func() {
 				res, err := adapter.JSONSet(ctx, "doc1", "$", `{"a": 1, "b": 2, "nested": {"a": 3}, "c": "", "nested2": {"a": ""}}`).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(res).To(Equal("OK"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(res).To(gomega.Equal("OK"))
 
 				res, err = adapter.JSONSet(ctx, "doc2", "$", `{"a": 4, "b": 5, "nested": {"a": 6}, "c": "", "nested2": {"a": [""]}}`).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(res).To(Equal("OK"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(res).To(gomega.Equal("OK"))
 
 				iRes, err := adapter.JSONMGet(ctx, "$..a", "doc1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(iRes).To(Equal([]interface{}{`[1,3,""]`}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(iRes).To(gomega.Equal([]interface{}{`[1,3,""]`}))
 
 				iRes, err = adapter.JSONMGet(ctx, "$..a", "doc1", "doc2").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(iRes).To(Equal([]interface{}{`[1,3,""]`, `[4,6,[""]]`}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(iRes).To(gomega.Equal([]interface{}{`[1,3,""]`, `[4,6,[""]]`}))
 
 				iRes, err = adapter.JSONMGet(ctx, "$..a", "non_existing_doc", "non_existing_doc1").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(iRes).To(Equal([]interface{}{nil, nil}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(iRes).To(gomega.Equal([]interface{}{nil, nil}))
 			})
 		})
 
-		Describe("Misc", Label("misc"), func() {
+		ginkgo.Describe("Misc", ginkgo.Label("misc"), func() {
 
-			It("should JSONClear", Label("json.clear", "json"), func() {
+			ginkgo.It("should JSONClear", ginkgo.Label("json.clear", "json"), func() {
 				cmd1 := adapter.JSONSet(ctx, "clear1", "$", `[1]`)
-				Expect(cmd1.Err()).NotTo(HaveOccurred())
-				Expect(cmd1.Val()).To(Equal("OK"))
+				gomega.Expect(cmd1.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd1.Val()).To(gomega.Equal("OK"))
 
 				cmd2 := adapter.JSONClear(ctx, "clear1", "$")
-				Expect(cmd2.Err()).NotTo(HaveOccurred())
-				Expect(cmd2.Val()).To(Equal(int64(1)))
+				gomega.Expect(cmd2.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd2.Val()).To(gomega.Equal(int64(1)))
 
 				cmd3 := adapter.JSONGet(ctx, "clear1", "$")
-				Expect(cmd3.Err()).NotTo(HaveOccurred())
-				Expect(cmd3.Val()).To(Equal(`[[]]`))
+				gomega.Expect(cmd3.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd3.Val()).To(gomega.Equal(`[[]]`))
 			})
 
-			It("should JSONClear with $", Label("json.clear", "json"), func() {
+			ginkgo.It("should JSONClear with $", ginkgo.Label("json.clear", "json"), func() {
 				doc := `{
 					"nested1": {"a": {"foo": 10, "bar": 20}},
 					"a": ["foo"],
@@ -10778,71 +10779,71 @@ func testAdapterCache(resp3 bool) {
 					"nested3": {"a": {"baz": 50}}
 				}`
 				res, err := adapter.JSONSet(ctx, "doc1", "$", doc).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(res).To(Equal("OK"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(res).To(gomega.Equal("OK"))
 
 				iRes, err := adapter.JSONClear(ctx, "doc1", "$..a").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(iRes).To(Equal(int64(3)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(iRes).To(gomega.Equal(int64(3)))
 
 				resGet, err := adapter.JSONGet(ctx, "doc1", `$`).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(resGet).To(Equal(`[{"nested1":{"a":{}},"a":[],"nested2":{"a":"claro"},"nested3":{"a":{}}}]`))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(resGet).To(gomega.Equal(`[{"nested1":{"a":{}},"a":[],"nested2":{"a":"claro"},"nested3":{"a":{}}}]`))
 
 				res, err = adapter.JSONSet(ctx, "doc1", "$", doc).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(res).To(Equal("OK"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(res).To(gomega.Equal("OK"))
 
 				iRes, err = adapter.JSONClear(ctx, "doc1", "$.nested1.a").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(iRes).To(Equal(int64(1)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(iRes).To(gomega.Equal(int64(1)))
 
 				resGet, err = adapter.JSONGet(ctx, "doc1", `$`).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(resGet).To(Equal(`[{"nested1":{"a":{}},"a":["foo"],"nested2":{"a":"claro"},"nested3":{"a":{"baz":50}}}]`))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(resGet).To(gomega.Equal(`[{"nested1":{"a":{}},"a":["foo"],"nested2":{"a":"claro"},"nested3":{"a":{"baz":50}}}]`))
 			})
 
-			It("should JSONDel", Label("json.del", "json"), func() {
+			ginkgo.It("should JSONDel", ginkgo.Label("json.del", "json"), func() {
 				cmd1 := adapter.JSONSet(ctx, "del1", "$", `[1]`)
-				Expect(cmd1.Err()).NotTo(HaveOccurred())
-				Expect(cmd1.Val()).To(Equal("OK"))
+				gomega.Expect(cmd1.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd1.Val()).To(gomega.Equal("OK"))
 
 				cmd2 := adapter.JSONDel(ctx, "del1", "$")
-				Expect(cmd2.Err()).NotTo(HaveOccurred())
-				Expect(cmd2.Val()).To(Equal(int64(1)))
+				gomega.Expect(cmd2.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd2.Val()).To(gomega.Equal(int64(1)))
 
 				cmd3 := adapter.JSONGet(ctx, "del1", "$")
 				// go-redis's test assertion is wrong.
 				// based on the result from redis/redis-stack:7.2.0-v3,
 				// cmd3.Err() should be rueidis.Nil, not nil
-				Expect(cmd3.Err()).To(Equal(rueidis.Nil))
-				Expect(cmd3.Val()).To(HaveLen(0))
+				gomega.Expect(cmd3.Err()).To(gomega.Equal(rueidis.Nil))
+				gomega.Expect(cmd3.Val()).To(gomega.HaveLen(0))
 			})
 
-			It("should JSONDel with $", Label("json.del", "json"), func() {
+			ginkgo.It("should JSONDel with $", ginkgo.Label("json.del", "json"), func() {
 				res, err := adapter.JSONSet(ctx, "del1", "$", `{"a": 1, "nested": {"a": 2, "b": 3}}`).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(res).To(Equal("OK"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(res).To(gomega.Equal("OK"))
 
 				iRes, err := adapter.JSONDel(ctx, "del1", "$..a").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(iRes).To(Equal(int64(2)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(iRes).To(gomega.Equal(int64(2)))
 
 				resGet, err := adapter.JSONGet(ctx, "del1", "$").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(resGet).To(Equal(`[{"nested":{"b":3}}]`))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(resGet).To(gomega.Equal(`[{"nested":{"b":3}}]`))
 
 				res, err = adapter.JSONSet(ctx, "del2", "$", `{"a": {"a": 2, "b": 3}, "b": ["a", "b"], "nested": {"b": [true, "a", "b"]}}`).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(res).To(Equal("OK"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(res).To(gomega.Equal("OK"))
 
 				iRes, err = adapter.JSONDel(ctx, "del2", "$..a").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(iRes).To(Equal(int64(1)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(iRes).To(gomega.Equal(int64(1)))
 
 				resGet, err = adapter.JSONGet(ctx, "del2", "$").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(resGet).To(Equal(`[{"nested":{"b":[true,"a","b"]},"b":["a","b"]}]`))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(resGet).To(gomega.Equal(`[{"nested":{"b":[true,"a","b"]},"b":["a","b"]}]`))
 
 				doc := `[
 					{
@@ -10857,58 +10858,58 @@ func testAdapterCache(resp3 bool) {
 					}
 				]`
 				res, err = adapter.JSONSet(ctx, "del3", "$", doc).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(res).To(Equal("OK"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(res).To(gomega.Equal("OK"))
 
 				iRes, err = adapter.JSONDel(ctx, "del3", `$.[0]["nested"]..ciao`).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(iRes).To(Equal(int64(3)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(iRes).To(gomega.Equal(int64(3)))
 
 				resVal := `[[{"ciao":["non ancora"],"nested":[{},{},{"ciaoc":[3,"non","ciao"]},{},{"e":[5,"non","ciao"]}]}]]`
 				resGet, err = adapter.JSONGet(ctx, "del3", "$").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(resGet).To(Equal(resVal))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(resGet).To(gomega.Equal(resVal))
 			})
 
-			It("should JSONForget", Label("json.forget", "json"), func() {
+			ginkgo.It("should JSONForget", ginkgo.Label("json.forget", "json"), func() {
 				cmd1 := adapter.JSONSet(ctx, "forget3", "$", `{"a": [1,2,3], "b": {"a": [1,2,3], "b": "annie"}}`)
-				Expect(cmd1.Err()).NotTo(HaveOccurred())
-				Expect(cmd1.Val()).To(Equal("OK"))
+				gomega.Expect(cmd1.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd1.Val()).To(gomega.Equal("OK"))
 
 				cmd2 := adapter.JSONForget(ctx, "forget3", "$..a")
-				Expect(cmd2.Err()).NotTo(HaveOccurred())
-				Expect(cmd2.Val()).To(Equal(int64(2)))
+				gomega.Expect(cmd2.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd2.Val()).To(gomega.Equal(int64(2)))
 
 				cmd3 := adapter.JSONGet(ctx, "forget3", "$")
-				Expect(cmd3.Err()).NotTo(HaveOccurred())
-				Expect(cmd3.Val()).To(Equal(`[{"b":{"b":"annie"}}]`))
+				gomega.Expect(cmd3.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd3.Val()).To(gomega.Equal(`[{"b":{"b":"annie"}}]`))
 
 			})
 
-			It("should JSONForget with $", Label("json.forget", "json"), func() {
+			ginkgo.It("should JSONForget with $", ginkgo.Label("json.forget", "json"), func() {
 				res, err := adapter.JSONSet(ctx, "doc1", "$", `{"a": 1, "nested": {"a": 2, "b": 3}}`).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(res).To(Equal("OK"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(res).To(gomega.Equal("OK"))
 
 				iRes, err := adapter.JSONForget(ctx, "doc1", "$..a").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(iRes).To(Equal(int64(2)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(iRes).To(gomega.Equal(int64(2)))
 
 				resGet, err := adapter.JSONGet(ctx, "doc1", "$").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(resGet).To(Equal(`[{"nested":{"b":3}}]`))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(resGet).To(gomega.Equal(`[{"nested":{"b":3}}]`))
 
 				res, err = adapter.JSONSet(ctx, "doc2", "$", `{"a": {"a": 2, "b": 3}, "b": ["a", "b"], "nested": {"b": [true, "a", "b"]}}`).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(res).To(Equal("OK"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(res).To(gomega.Equal("OK"))
 
 				iRes, err = adapter.JSONForget(ctx, "doc2", "$..a").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(iRes).To(Equal(int64(1)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(iRes).To(gomega.Equal(int64(1)))
 
 				resGet, err = adapter.JSONGet(ctx, "doc2", "$").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(resGet).To(Equal(`[{"nested":{"b":[true,"a","b"]},"b":["a","b"]}]`))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(resGet).To(gomega.Equal(`[{"nested":{"b":[true,"a","b"]},"b":["a","b"]}]`))
 
 				doc := `[
 					{
@@ -10923,178 +10924,178 @@ func testAdapterCache(resp3 bool) {
 					}
 				]`
 				res, err = adapter.JSONSet(ctx, "doc3", "$", doc).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(res).To(Equal("OK"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(res).To(gomega.Equal("OK"))
 
 				iRes, err = adapter.JSONForget(ctx, "doc3", `$.[0]["nested"]..ciao`).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(iRes).To(Equal(int64(3)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(iRes).To(gomega.Equal(int64(3)))
 
 				resVal := `[[{"ciao":["non ancora"],"nested":[{},{},{"ciaoc":[3,"non","ciao"]},{},{"e":[5,"non","ciao"]}]}]]`
 				resGet, err = adapter.JSONGet(ctx, "doc3", "$").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(resGet).To(Equal(resVal))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(resGet).To(gomega.Equal(resVal))
 			})
 
-			It("should JSONNumIncrBy", Label("json.numincrby", "json"), func() {
+			ginkgo.It("should JSONNumIncrBy", ginkgo.Label("json.numincrby", "json"), func() {
 				cmd1 := adapter.JSONSet(ctx, "incr3", "$", `{"a": [1, 2], "b": {"a": [0, -1]}}`)
-				Expect(cmd1.Err()).NotTo(HaveOccurred())
-				Expect(cmd1.Val()).To(Equal("OK"))
+				gomega.Expect(cmd1.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd1.Val()).To(gomega.Equal("OK"))
 
 				cmd2 := adapter.JSONNumIncrBy(ctx, "incr3", "$..a[1]", float64(1))
-				Expect(cmd2.Err()).NotTo(HaveOccurred())
-				Expect(cmd2.Val()).To(Equal(`[3,0]`))
+				gomega.Expect(cmd2.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd2.Val()).To(gomega.Equal(`[3,0]`))
 
 				cmd3 := adapter.JSONSet(ctx, "incr4", "$", `{"a": [1, 2], "b": {"a": [0, -1], "c": "z"}, "c": 2}`)
-				Expect(cmd3.Err()).NotTo(HaveOccurred())
-				Expect(cmd3.Val()).To(Equal("OK"))
+				gomega.Expect(cmd3.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd3.Val()).To(gomega.Equal("OK"))
 
 				cmd4 := adapter.JSONNumIncrBy(ctx, "incr4", "$..c", float64(1))
-				Expect(cmd4.Err()).NotTo(HaveOccurred())
+				gomega.Expect(cmd4.Err()).NotTo(gomega.HaveOccurred())
 				// for NaN field, it should be null
-				Expect(cmd4.Val()).To(Equal(`[3,null]`))
+				gomega.Expect(cmd4.Val()).To(gomega.Equal(`[3,null]`))
 			})
 
-			It("should JSONNumIncrBy with $", Label("json.numincrby", "json"), func() {
+			ginkgo.It("should JSONNumIncrBy with $", ginkgo.Label("json.numincrby", "json"), func() {
 				res, err := adapter.JSONSet(ctx, "doc1", "$", `{"a": "b", "b": [{"a": 2}, {"a": 5.0}, {"a": "c"}]}`).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(res).To(Equal("OK"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(res).To(gomega.Equal("OK"))
 
 				res, err = adapter.JSONNumIncrBy(ctx, "doc1", "$.b[1].a", 2).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(res).To(Equal(`[7]`))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(res).To(gomega.Equal(`[7]`))
 
 				res, err = adapter.JSONNumIncrBy(ctx, "doc1", "$.b[1].a", 3.5).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(res).To(Equal(`[10.5]`))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(res).To(gomega.Equal(`[10.5]`))
 
 				res, err = adapter.JSONSet(ctx, "doc2", "$", `{"a": "b", "b": [{"a": 2}, {"a": 5.0}, {"a": "c"}]}`).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(res).To(Equal("OK"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(res).To(gomega.Equal("OK"))
 
 				res, err = adapter.JSONNumIncrBy(ctx, "doc2", "$.b[0].a", 3).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(res).To(Equal(`[5]`))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(res).To(gomega.Equal(`[5]`))
 			})
 
-			It("should JSONObjKeys", Label("json.objkeys", "json"), func() {
+			ginkgo.It("should JSONObjKeys", ginkgo.Label("json.objkeys", "json"), func() {
 				cmd1 := adapter.JSONSet(ctx, "objkeys1", "$", `{"a": [1, 2], "b": {"a": [0, -1]}}`)
-				Expect(cmd1.Err()).NotTo(HaveOccurred())
-				Expect(cmd1.Val()).To(Equal("OK"))
+				gomega.Expect(cmd1.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd1.Val()).To(gomega.Equal("OK"))
 
 				cmd2 := adapter.JSONObjKeys(ctx, "objkeys1", "$..*")
-				Expect(cmd2.Err()).NotTo(HaveOccurred())
-				Expect(cmd2.Val()).To(HaveLen(7))
-				Expect(cmd2.Val()).To(Equal([]interface{}{nil, []interface{}{"a"}, nil, nil, nil, nil, nil}))
+				gomega.Expect(cmd2.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd2.Val()).To(gomega.HaveLen(7))
+				gomega.Expect(cmd2.Val()).To(gomega.Equal([]interface{}{nil, []interface{}{"a"}, nil, nil, nil, nil, nil}))
 			})
 
-			It("should JSONObjKeys with $", Label("json.objkeys", "json"), func() {
+			ginkgo.It("should JSONObjKeys with $", ginkgo.Label("json.objkeys", "json"), func() {
 				doc := `{
 					"nested1": {"a": {"foo": 10, "bar": 20}},
 					"a": ["foo"],
 					"nested2": {"a": {"baz": 50}}
 				}`
 				cmd1, err := adapter.JSONSet(ctx, "objkeys1", "$", doc).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(cmd1).To(Equal("OK"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd1).To(gomega.Equal("OK"))
 
 				cmd2, err := adapter.JSONObjKeys(ctx, "objkeys1", "$.nested1.a").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(cmd2).To(Equal([]interface{}{[]interface{}{"foo", "bar"}}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd2).To(gomega.Equal([]interface{}{[]interface{}{"foo", "bar"}}))
 
 				cmd2, err = adapter.JSONObjKeys(ctx, "objkeys1", ".*.a").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(cmd2).To(Equal([]interface{}{"foo", "bar"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd2).To(gomega.Equal([]interface{}{"foo", "bar"}))
 
 				cmd2, err = adapter.JSONObjKeys(ctx, "objkeys1", ".nested2.a").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(cmd2).To(Equal([]interface{}{"baz"}))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd2).To(gomega.Equal([]interface{}{"baz"}))
 
 				_, err = adapter.JSONObjKeys(ctx, "non_existing_doc", "..a").Result()
-				Expect(err).To(HaveOccurred())
+				gomega.Expect(err).To(gomega.HaveOccurred())
 			})
 
-			It("should JSONObjLen", Label("json.objlen", "json"), func() {
+			ginkgo.It("should JSONObjLen", ginkgo.Label("json.objlen", "json"), func() {
 				cmd1 := adapter.JSONSet(ctx, "objlen2", "$", `{"a": [1, 2], "b": {"a": [0, -1]}}`)
-				Expect(cmd1.Err()).NotTo(HaveOccurred())
-				Expect(cmd1.Val()).To(Equal("OK"))
+				gomega.Expect(cmd1.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd1.Val()).To(gomega.Equal("OK"))
 
 				cmd2 := adapter.JSONObjLen(ctx, "objlen2", "$..*")
-				Expect(cmd2.Err()).NotTo(HaveOccurred())
-				Expect(cmd2.Val()).To(HaveLen(7))
-				Expect(cmd2.Val()[0]).To(BeNil())
-				Expect(*cmd2.Val()[1]).To(Equal(int64(1)))
+				gomega.Expect(cmd2.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd2.Val()).To(gomega.HaveLen(7))
+				gomega.Expect(cmd2.Val()[0]).To(gomega.BeNil())
+				gomega.Expect(*cmd2.Val()[1]).To(gomega.Equal(int64(1)))
 			})
 
-			It("should JSONStrLen", Label("json.strlen", "json"), func() {
+			ginkgo.It("should JSONStrLen", ginkgo.Label("json.strlen", "json"), func() {
 				cmd1 := adapter.JSONSet(ctx, "strlen2", "$", `{"a": "alice", "b": "bob", "c": {"a": "alice", "b": "bob"}}`)
-				Expect(cmd1.Err()).NotTo(HaveOccurred())
-				Expect(cmd1.Val()).To(Equal("OK"))
+				gomega.Expect(cmd1.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd1.Val()).To(gomega.Equal("OK"))
 
 				cmd2 := adapter.JSONStrLen(ctx, "strlen2", "$..*")
-				Expect(cmd2.Err()).NotTo(HaveOccurred())
-				Expect(cmd2.Val()).To(HaveLen(5))
+				gomega.Expect(cmd2.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd2.Val()).To(gomega.HaveLen(5))
 				var tmp int64 = 20
-				Expect(cmd2.Val()[0]).To(BeAssignableToTypeOf(&tmp))
-				Expect(*cmd2.Val()[0]).To(Equal(int64(5)))
-				Expect(*cmd2.Val()[1]).To(Equal(int64(3)))
-				Expect(cmd2.Val()[2]).To(BeNil())
-				Expect(*cmd2.Val()[3]).To(Equal(int64(5)))
-				Expect(*cmd2.Val()[4]).To(Equal(int64(3)))
+				gomega.Expect(cmd2.Val()[0]).To(gomega.BeAssignableToTypeOf(&tmp))
+				gomega.Expect(*cmd2.Val()[0]).To(gomega.Equal(int64(5)))
+				gomega.Expect(*cmd2.Val()[1]).To(gomega.Equal(int64(3)))
+				gomega.Expect(cmd2.Val()[2]).To(gomega.BeNil())
+				gomega.Expect(*cmd2.Val()[3]).To(gomega.Equal(int64(5)))
+				gomega.Expect(*cmd2.Val()[4]).To(gomega.Equal(int64(3)))
 			})
 
-			It("should JSONStrAppend", Label("json.strappend", "json"), func() {
+			ginkgo.It("should JSONStrAppend", ginkgo.Label("json.strappend", "json"), func() {
 				cmd1, err := adapter.JSONSet(ctx, "strapp1", "$", `"foo"`).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(cmd1).To(Equal("OK"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd1).To(gomega.Equal("OK"))
 				cmd2, err := adapter.JSONStrAppend(ctx, "strapp1", "$", `"bar"`).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(*cmd2[0]).To(Equal(int64(6)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(*cmd2[0]).To(gomega.Equal(int64(6)))
 				cmd3, err := adapter.JSONGet(ctx, "strapp1", "$").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(cmd3).To(Equal(`["foobar"]`))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd3).To(gomega.Equal(`["foobar"]`))
 
 			})
 
-			It("should JSONStrAppend and JSONStrLen with $", Label("json.strappend", "json.strlen", "json"), func() {
+			ginkgo.It("should JSONStrAppend and JSONStrLen with $", ginkgo.Label("json.strappend", "json.strlen", "json"), func() {
 				res, err := adapter.JSONSet(ctx, "doc1", "$", `{"a": "foo", "nested1": {"a": "hello"}, "nested2": {"a": 31}}`).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(res).To(Equal("OK"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(res).To(gomega.Equal("OK"))
 
 				intArrayResult, err := adapter.JSONStrAppend(ctx, "doc1", "$.nested1.a", `"baz"`).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(*intArrayResult[0]).To(Equal(int64(8)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(*intArrayResult[0]).To(gomega.Equal(int64(8)))
 
 				res, err = adapter.JSONSet(ctx, "doc2", "$", `{"a": "foo", "nested1": {"a": "hello"}, "nested2": {"a": 31}}`).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(res).To(Equal("OK"))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(res).To(gomega.Equal("OK"))
 
 				intResult, err := adapter.JSONStrLen(ctx, "doc2", "$.nested1.a").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(*intResult[0]).To(Equal(int64(5)))
+				gomega.Expect(err).NotTo(gomega.HaveOccurred())
+				gomega.Expect(*intResult[0]).To(gomega.Equal(int64(5)))
 			})
 
-			It("should JSONToggle", Label("json.toggle", "json"), func() {
+			ginkgo.It("should JSONToggle", ginkgo.Label("json.toggle", "json"), func() {
 				cmd1 := adapter.JSONSet(ctx, "toggle1", "$", `[true]`)
-				Expect(cmd1.Err()).NotTo(HaveOccurred())
-				Expect(cmd1.Val()).To(Equal("OK"))
+				gomega.Expect(cmd1.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd1.Val()).To(gomega.Equal("OK"))
 
 				cmd2 := adapter.JSONToggle(ctx, "toggle1", "$[0]")
-				Expect(cmd2.Err()).NotTo(HaveOccurred())
-				Expect(cmd2.Val()).To(HaveLen(1))
-				Expect(*cmd2.Val()[0]).To(Equal(int64(0)))
+				gomega.Expect(cmd2.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd2.Val()).To(gomega.HaveLen(1))
+				gomega.Expect(*cmd2.Val()[0]).To(gomega.Equal(int64(0)))
 			})
 
-			It("should JSONType", Label("json.type", "json"), func() {
+			ginkgo.It("should JSONType", ginkgo.Label("json.type", "json"), func() {
 				cmd1 := adapter.JSONSet(ctx, "type1", "$", `[true]`)
-				Expect(cmd1.Err()).NotTo(HaveOccurred())
-				Expect(cmd1.Val()).To(Equal("OK"))
+				gomega.Expect(cmd1.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd1.Val()).To(gomega.Equal("OK"))
 
 				cmd2 := adapter.JSONType(ctx, "type1", "$[0]")
-				Expect(cmd2.Err()).NotTo(HaveOccurred())
-				Expect(cmd2.Val()).To(HaveLen(1))
+				gomega.Expect(cmd2.Err()).NotTo(gomega.HaveOccurred())
+				gomega.Expect(cmd2.Val()).To(gomega.HaveLen(1))
 				// RESP2 v RESP3
-				Expect(cmd2.Val()[0]).To(Or(Equal([]interface{}{"boolean"}), Equal("boolean")))
+				gomega.Expect(cmd2.Val()[0]).To(gomega.Or(gomega.Equal([]interface{}{"boolean"}), gomega.Equal("boolean")))
 			})
 		})
 	})
