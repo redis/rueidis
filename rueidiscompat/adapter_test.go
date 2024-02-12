@@ -38,6 +38,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+
 	"github.com/redis/rueidis"
 )
 
@@ -2327,10 +2328,10 @@ func testAdapter(resp3 bool) {
 			Expect(v).To(Equal([]string{"hello1", "hello2"}))
 
 			// TODO
-			//var slice []string
-			//err = adapter.HVals(ctx, "hash").ScanSlice(&slice)
-			//Expect(err).NotTo(HaveOccurred())
-			//Expect(slice).To(Equal([]string{"hello1", "hello2"}))
+			// var slice []string
+			// err = adapter.HVals(ctx, "hash").ScanSlice(&slice)
+			// Expect(err).NotTo(HaveOccurred())
+			// Expect(slice).To(Equal([]string{"hello1", "hello2"}))
 		})
 
 		if resp3 {
@@ -2647,7 +2648,7 @@ func testAdapter(resp3 bool) {
 				case <-done:
 					Fail("BLMPop is not blocked")
 				case <-time.After(time.Second):
-					//ok
+					// ok
 				}
 
 				_, err := adapter.LPush(ctx, "list_list", "a").Result()
@@ -2655,7 +2656,7 @@ func testAdapter(resp3 bool) {
 
 				select {
 				case <-done:
-					//ok
+					// ok
 				case <-time.After(time.Second):
 					Fail("BLMPop is still blocked")
 				}
@@ -6306,7 +6307,7 @@ func testAdapter(resp3 bool) {
 
 		convTests := []convTest{
 			// TODO
-			//{nil, "", nil},
+			// {nil, "", nil},
 			{"hello", new(string), "hello"},
 			{[]byte("hello"), new([]byte), "hello"},
 			{int(1), new(int), "1"},
@@ -6338,9 +6339,9 @@ func testAdapter(resp3 bool) {
 					continue
 				}
 				// TODO
-				//err = adapter.Get(ctx, "key").Scan(test.dest)
-				//Expect(err).NotTo(HaveOccurred())
-				//Expect(deref(test.dest)).To(Equal(test.value))
+				// err = adapter.Get(ctx, "key").Scan(test.dest)
+				// Expect(err).NotTo(HaveOccurred())
+				// Expect(deref(test.dest)).To(Equal(test.value))
 			}
 		})
 	})
@@ -6359,12 +6360,12 @@ func testAdapter(resp3 bool) {
 		})
 
 		// TODO
-		//It("should scan custom values using json", func() {
+		// It("should scan custom values using json", func() {
 		//	value := &numberStruct{}
 		//	err := adapter.Get(ctx, "key").Scan(value)
 		//	Expect(err).NotTo(HaveOccurred())
 		//	Expect(value.Number).To(Equal(42))
-		//})
+		// })
 	})
 
 	Describe("Pub/Sub", func() {
@@ -7427,10 +7428,10 @@ func testAdapterCache(resp3 bool) {
 			Expect(v).To(Equal([]string{"hello1", "hello2"}))
 
 			// TODO
-			//var slice []string
-			//err = adapter.Cache(time.Hour).HVals(ctx, "hash").ScanSlice(&slice)
-			//Expect(err).NotTo(HaveOccurred())
-			//Expect(slice).To(Equal([]string{"hello1", "hello2"}))
+			// var slice []string
+			// err = adapter.Cache(time.Hour).HVals(ctx, "hash").ScanSlice(&slice)
+			// Expect(err).NotTo(HaveOccurred())
+			// Expect(slice).To(Equal([]string{"hello1", "hello2"}))
 		})
 	})
 
@@ -8363,7 +8364,7 @@ func testAdapterCache(resp3 bool) {
 			case <-done:
 				Fail("BZMPop is not blocked")
 			case <-time.After(time.Second):
-				//ok
+				// ok
 			}
 
 			err := adapter.ZAdd(ctx, "list_list", Z{Score: 1, Member: "one"}).Err()
@@ -8371,7 +8372,7 @@ func testAdapterCache(resp3 bool) {
 
 			select {
 			case <-done:
-				//ok
+				// ok
 			case <-time.After(time.Second):
 				Fail("BZMPop is still blocked")
 			}
@@ -8680,7 +8681,7 @@ func testAdapterCache(resp3 bool) {
 
 		convTests := []convTest{
 			// TODO
-			//{nil, "", nil},
+			// {nil, "", nil},
 			{"hello", new(string), "hello"},
 			{[]byte("hello"), new([]byte), "hello"},
 			{int(1), new(int), "1"},
@@ -8712,9 +8713,9 @@ func testAdapterCache(resp3 bool) {
 					continue
 				}
 				// TODO
-				//err = adapter.Cache(time.Hour).Get(ctx, "key").Scan(test.dest)
-				//Expect(err).NotTo(HaveOccurred())
-				//Expect(deref(test.dest)).To(Equal(test.value))
+				// err = adapter.Cache(time.Hour).Get(ctx, "key").Scan(test.dest)
+				// Expect(err).NotTo(HaveOccurred())
+				// Expect(deref(test.dest)).To(Equal(test.value))
 			}
 		})
 	})
@@ -8733,12 +8734,12 @@ func testAdapterCache(resp3 bool) {
 		})
 
 		// TODO
-		//It("should scan custom values using json", func() {
+		// It("should scan custom values using json", func() {
 		//	value := &numberStruct{}
 		//	err := adapter.Cache(time.Hour).Get(ctx, "key").Scan(value)
 		//	Expect(err).NotTo(HaveOccurred())
 		//	Expect(value.Number).To(Equal(42))
-		//})
+		// })
 	})
 
 	Describe("GearsCmdable", func() {
