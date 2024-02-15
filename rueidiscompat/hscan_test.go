@@ -31,8 +31,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/onsi/ginkgo/v2"
-	"github.com/onsi/gomega"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
 type data struct {
@@ -86,24 +86,24 @@ type TimeData struct {
 
 type i []interface{}
 
-var _ = ginkgo.Describe("Scan", func() {
-	ginkgo.It("catches bad args", func() {
+var _ = Describe("Scan", func() {
+	It("catches bad args", func() {
 		var d data
 
-		gomega.Expect(Scan(&d, []string{}, i{})).NotTo(gomega.HaveOccurred())
-		gomega.Expect(d).To(gomega.Equal(data{}))
+		Expect(Scan(&d, []string{}, i{})).NotTo(HaveOccurred())
+		Expect(d).To(Equal(data{}))
 
-		gomega.Expect(Scan(&d, []string{"key"}, i{})).To(gomega.HaveOccurred())
-		gomega.Expect(Scan(&d, []string{"key"}, i{"1", "2"})).To(gomega.HaveOccurred())
-		gomega.Expect(Scan(nil, []string{"key", "1"}, i{})).To(gomega.HaveOccurred())
+		Expect(Scan(&d, []string{"key"}, i{})).To(HaveOccurred())
+		Expect(Scan(&d, []string{"key"}, i{"1", "2"})).To(HaveOccurred())
+		Expect(Scan(nil, []string{"key", "1"}, i{})).To(HaveOccurred())
 
 		var m map[string]interface{}
-		gomega.Expect(Scan(&m, []string{"key"}, i{"1"})).To(gomega.HaveOccurred())
-		gomega.Expect(Scan(data{}, []string{"key"}, i{"1"})).To(gomega.HaveOccurred())
-		gomega.Expect(Scan(data{}, []string{"key", "string"}, i{nil, nil})).To(gomega.HaveOccurred())
+		Expect(Scan(&m, []string{"key"}, i{"1"})).To(HaveOccurred())
+		Expect(Scan(data{}, []string{"key"}, i{"1"})).To(HaveOccurred())
+		Expect(Scan(data{}, []string{"key", "string"}, i{nil, nil})).To(HaveOccurred())
 	})
 
-	ginkgo.It("number out of range", func() {
+	It("number out of range", func() {
 		f := func(v uint64) string {
 			return strconv.FormatUint(v, 10) + "1"
 		}
@@ -115,7 +115,7 @@ var _ = ginkgo.Describe("Scan", func() {
 		}
 		for k, v := range keys {
 			var d data
-			gomega.Expect(Scan(&d, []string{v}, i{vals[k]})).To(gomega.HaveOccurred())
+			Expect(Scan(&d, []string{v}, i{vals[k]})).To(HaveOccurred())
 		}
 
 		// success
@@ -129,8 +129,8 @@ var _ = ginkgo.Describe("Scan", func() {
 			"3.40282346638528859811704183484516925440e+38", "1.797693134862315708145274237317043567981e+308",
 		}
 		var d data
-		gomega.Expect(Scan(&d, keys, vals)).NotTo(gomega.HaveOccurred())
-		gomega.Expect(d).To(gomega.Equal(data{
+		Expect(Scan(&d, keys, vals)).NotTo(HaveOccurred())
+		Expect(d).To(Equal(data{
 			Int8:    math.MaxInt8,
 			Int16:   math.MaxInt16,
 			Int32:   math.MaxInt32,
@@ -144,20 +144,20 @@ var _ = ginkgo.Describe("Scan", func() {
 		}))
 	})
 
-	ginkgo.It("scans good values", func() {
+	It("scans good values", func() {
 		var d data
 
 		// non-tagged fields.
-		gomega.Expect(Scan(&d, []string{"key"}, i{"value"})).NotTo(gomega.HaveOccurred())
-		gomega.Expect(d).To(gomega.Equal(data{}))
+		Expect(Scan(&d, []string{"key"}, i{"value"})).NotTo(HaveOccurred())
+		Expect(d).To(Equal(data{}))
 
 		keys := []string{"string", "byte", "int", "int64", "uint", "uint64", "float", "float64", "bool"}
 		vals := i{
 			"str!", "bytes!", "123", "123456789123456789", "456", "987654321987654321",
 			"123.456", "123456789123456789.987654321987654321", "1",
 		}
-		gomega.Expect(Scan(&d, keys, vals)).NotTo(gomega.HaveOccurred())
-		gomega.Expect(d).To(gomega.Equal(data{
+		Expect(Scan(&d, keys, vals)).NotTo(HaveOccurred())
+		Expect(d).To(Equal(data{
 			String:  "str!",
 			Bytes:   []byte("bytes!"),
 			Int:     123,
@@ -180,8 +180,8 @@ var _ = ginkgo.Describe("Scan", func() {
 			Bool   bool    `redis:"bool"`
 		}
 		var d2 data2
-		gomega.Expect(Scan(&d2, keys, vals)).NotTo(gomega.HaveOccurred())
-		gomega.Expect(d2).To(gomega.Equal(data2{
+		Expect(Scan(&d2, keys, vals)).NotTo(HaveOccurred())
+		Expect(d2).To(Equal(data2{
 			String: "str!",
 			Bytes:  []byte("bytes!"),
 			Int:    123,
@@ -190,8 +190,8 @@ var _ = ginkgo.Describe("Scan", func() {
 			Bool:   true,
 		}))
 
-		gomega.Expect(Scan(&d, []string{"string", "float", "bool"}, i{"", "1", "t"})).NotTo(gomega.HaveOccurred())
-		gomega.Expect(d).To(gomega.Equal(data{
+		Expect(Scan(&d, []string{"string", "float", "bool"}, i{"", "1", "t"})).NotTo(HaveOccurred())
+		Expect(d).To(Equal(data{
 			String:  "",
 			Bytes:   []byte("bytes!"),
 			Int:     123,
@@ -216,8 +216,8 @@ var _ = ginkgo.Describe("Scan", func() {
 		var d3 data
 		keys = []string{"stringPointer", "intPointer", "int64Pointer", "uintPointer", "uint64Pointer", "floatPointer", "float64Pointer", "boolPointer"}
 		vals = i{"str", "123", "123456789123456789", "456", "987654321987654321", "123.456", "123456789123456789.987654321987654321", "1"}
-		gomega.Expect(Scan(&d3, keys, vals)).NotTo(gomega.HaveOccurred())
-		gomega.Expect(d3).To(gomega.Equal(data{
+		Expect(Scan(&d3, keys, vals)).NotTo(HaveOccurred())
+		Expect(d3).To(Equal(data{
 			StringPointer:  &String,
 			IntPointer:     &Int,
 			Int64Pointer:   &Int64,
@@ -229,38 +229,38 @@ var _ = ginkgo.Describe("Scan", func() {
 		}))
 	})
 
-	ginkgo.It("omits untagged fields", func() {
+	It("omits untagged fields", func() {
 		var d data
 
-		gomega.Expect(Scan(&d, []string{"empty", "omit", "string"}, i{"value", "value", "str!"})).NotTo(gomega.HaveOccurred())
-		gomega.Expect(d).To(gomega.Equal(data{
+		Expect(Scan(&d, []string{"empty", "omit", "string"}, i{"value", "value", "str!"})).NotTo(HaveOccurred())
+		Expect(d).To(Equal(data{
 			String: "str!",
 		}))
 	})
 
-	ginkgo.It("catches bad values", func() {
+	It("catches bad values", func() {
 		var d data
 
-		gomega.Expect(Scan(&d, []string{"int"}, i{"a"})).To(gomega.HaveOccurred())
-		gomega.Expect(Scan(&d, []string{"uint"}, i{"a"})).To(gomega.HaveOccurred())
-		gomega.Expect(Scan(&d, []string{"uint"}, i{""})).To(gomega.HaveOccurred())
-		gomega.Expect(Scan(&d, []string{"float"}, i{"b"})).To(gomega.HaveOccurred())
-		gomega.Expect(Scan(&d, []string{"bool"}, i{"-1"})).To(gomega.HaveOccurred())
-		gomega.Expect(Scan(&d, []string{"bool"}, i{""})).To(gomega.HaveOccurred())
-		gomega.Expect(Scan(&d, []string{"bool"}, i{"123"})).To(gomega.HaveOccurred())
+		Expect(Scan(&d, []string{"int"}, i{"a"})).To(HaveOccurred())
+		Expect(Scan(&d, []string{"uint"}, i{"a"})).To(HaveOccurred())
+		Expect(Scan(&d, []string{"uint"}, i{""})).To(HaveOccurred())
+		Expect(Scan(&d, []string{"float"}, i{"b"})).To(HaveOccurred())
+		Expect(Scan(&d, []string{"bool"}, i{"-1"})).To(HaveOccurred())
+		Expect(Scan(&d, []string{"bool"}, i{""})).To(HaveOccurred())
+		Expect(Scan(&d, []string{"bool"}, i{"123"})).To(HaveOccurred())
 	})
 
-	ginkgo.It("Implements Scanner", func() {
+	It("Implements Scanner", func() {
 		var td TimeData
 
 		now := time.Now()
-		gomega.Expect(Scan(&td, []string{"name", "login"}, i{"hello", now.Format(time.RFC3339Nano)})).NotTo(gomega.HaveOccurred())
-		gomega.Expect(td.Name).To(gomega.Equal("hello"))
-		gomega.Expect(td.Time.UnixNano()).To(gomega.Equal(now.UnixNano()))
-		gomega.Expect(td.Time.Format(time.RFC3339Nano)).To(gomega.Equal(now.Format(time.RFC3339Nano)))
+		Expect(Scan(&td, []string{"name", "login"}, i{"hello", now.Format(time.RFC3339Nano)})).NotTo(HaveOccurred())
+		Expect(td.Name).To(Equal("hello"))
+		Expect(td.Time.UnixNano()).To(Equal(now.UnixNano()))
+		Expect(td.Time.Format(time.RFC3339Nano)).To(Equal(now.Format(time.RFC3339Nano)))
 	})
 
-	ginkgo.It("should time.Time RFC3339Nano", func() {
+	It("should time.Time RFC3339Nano", func() {
 		type TimeTime struct {
 			Time time.Time `redis:"time"`
 		}
@@ -268,7 +268,7 @@ var _ = ginkgo.Describe("Scan", func() {
 		now := time.Now()
 
 		var tt TimeTime
-		gomega.Expect(Scan(&tt, []string{"time"}, i{now.Format(time.RFC3339Nano)})).NotTo(gomega.HaveOccurred())
-		gomega.Expect(now.Unix()).To(gomega.Equal(tt.Time.Unix()))
+		Expect(Scan(&tt, []string{"time"}, i{now.Format(time.RFC3339Nano)})).NotTo(HaveOccurred())
+		Expect(now.Unix()).To(Equal(tt.Time.Unix()))
 	})
 })
