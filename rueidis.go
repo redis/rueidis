@@ -135,7 +135,7 @@ type ClientOption struct {
 
 	// ConnWriteTimeout is read/write timeout for each connection. If specified,
 	// it is used to control the maximum duration waits for responses to pipeline commands.
-	// Also, ConnWriteTimeout is applied net.Conn.SetWriteDeadline and periodic PING to redis
+	// Also, ConnWriteTimeout is applied net.Conn.SetDeadline and periodic PING to redis
 	// Since the Dialer.KeepAlive will not be triggered if there is data in the outgoing buffer,
 	// ConnWriteTimeout should be set in order to detect local congestion or unresponsive redis server.
 	// This default is ClientOption.Dialer.KeepAlive * (9+1), where 9 is the default of tcp_keepalive_probes on Linux.
