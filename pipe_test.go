@@ -3502,6 +3502,27 @@ func TestCancelContext_DoStream(t *testing.T) {
 	}
 }
 
+func TestWriteDeadlineIsShorterThanContextDeadline_DoStream(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	p, _, _, _ := setup(t, ClientOption{ConnWriteTimeout: 100 * time.Millisecond})
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	cp := newPool(1, nil, nil)
+	startTime := time.Now()
+	s := p.DoStream(ctx, cp, cmds.NewCompleted([]string{"GET", "a"}))
+	if err := s.Error(); err != io.EOF && !strings.Contains(err.Error(), "i/o") {
+		t.Fatalf("unexpected err %v", err)
+	}
+	if time.Since(startTime) >= time.Second {
+		t.Fatalf("unexpected time %v", time.Since(startTime))
+	}
+	if len(cp.list) != 0 {
+		t.Fatalf("unexpected pool length %v", len(cp.list))
+	}
+}
+
 func TestCancelContext_Do_Block(t *testing.T) {
 	p, mock, shutdown, _ := setup(t, ClientOption{})
 
@@ -3564,6 +3585,27 @@ func TestCancelContext_DoMultiStream(t *testing.T) {
 	s := p.DoMultiStream(ctx, cp, cmds.NewCompleted([]string{"GET", "a"}))
 	if err := s.Error(); err != io.EOF && !strings.Contains(err.Error(), "i/o") {
 		t.Fatalf("unexpected err %v", err)
+	}
+	if len(cp.list) != 0 {
+		t.Fatalf("unexpected pool length %v", len(cp.list))
+	}
+}
+
+func TestWriteDeadlineIsShorterThanContextDeadline_DoMultiStream(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	p, _, _, _ := setup(t, ClientOption{ConnWriteTimeout: 100 * time.Millisecond})
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	cp := newPool(1, nil, nil)
+	startTime := time.Now()
+	s := p.DoMultiStream(ctx, cp, cmds.NewCompleted([]string{"GET", "a"}))
+	if err := s.Error(); err != io.EOF && !strings.Contains(err.Error(), "i/o") {
+		t.Fatalf("unexpected err %v", err)
+	}
+	if time.Since(startTime) >= time.Second {
+		t.Fatalf("unexpected time %v", time.Since(startTime))
 	}
 	if len(cp.list) != 0 {
 		t.Fatalf("unexpected pool length %v", len(cp.list))
@@ -3793,6 +3835,25 @@ func TestWriteDeadlineInSyncMode_Do(t *testing.T) {
 	p.Close()
 }
 
+func TestWriteDeadlineIsShorterThanContextDeadlineInSyncMode_Do(t *testing.T) {
+	p, _, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: 100 * time.Millisecond, Dialer: net.Dialer{KeepAlive: time.Second}})
+	defer closeConn()
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	startTime := time.Now()
+	if err := p.Do(ctx, cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("unexpected err %v", err)
+	}
+
+	if time.Since(startTime) >= time.Second {
+		t.Fatalf("unexpected time %v", time.Since(startTime))
+	}
+
+	p.Close()
+}
+
 func TestOngoingDeadlineContextInSyncMode_DoMulti(t *testing.T) {
 	p, _, _, closeConn := setup(t, ClientOption{})
 	defer closeConn()
@@ -3813,6 +3874,25 @@ func TestWriteDeadlineInSyncMode_DoMulti(t *testing.T) {
 	if err := p.DoMulti(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).s[0].NonRedisError(); !errors.Is(err, context.DeadlineExceeded) {
 		t.Fatalf("unexpected err %v", err)
 	}
+	p.Close()
+}
+
+func TestWriteDeadlineIsShorterThanContextDeadlineInSyncMode_DoMulti(t *testing.T) {
+	p, _, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: 100 * time.Millisecond, Dialer: net.Dialer{KeepAlive: time.Second}})
+	defer closeConn()
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	startTime := time.Now()
+	if err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"})).s[0].NonRedisError(); !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("unexpected err %v", err)
+	}
+
+	if time.Since(startTime) >= time.Second {
+		t.Fatalf("unexpected time %v", time.Since(startTime))
+	}
+
 	p.Close()
 }
 
