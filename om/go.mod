@@ -9,4 +9,4 @@ require (
 	github.com/redis/rueidis v1.0.28
 )
 
-require golang.org/x/sys v0.14.0 // indirect
+require golang.org/x/sys v0.15.0 // indirect
