@@ -7,10 +7,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/metric"
-
 	"github.com/redis/rueidis"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
 )
 
 var (
@@ -19,8 +19,30 @@ var (
 	}
 )
 
+// MetricAttrs set additional attributes to append to each metric.
+func MetricAttrs(attrs ...attribute.KeyValue) Option {
+	return func(o *otelclient) {
+		o.mAttrs = metric.WithAttributes(attrs...)
+	}
+}
+
+// WithMeterProvider sets the MeterProvider for the otelclient.
+func WithMeterProvider(provider metric.MeterProvider) Option {
+	return func(o *otelclient) {
+		o.meterProvider = provider
+	}
+}
+
 type HistogramOption struct {
 	Buckets []float64
+}
+
+type dialMetrics struct {
+	mAttrs  metric.MeasurementOption
+	attempt metric.Int64Counter
+	success metric.Int64Counter
+	counts  metric.Int64UpDownCounter
+	latency metric.Float64Histogram
 }
 
 // WithHistogramOption sets the HistogramOption.
@@ -47,25 +69,24 @@ func NewClient(clientOption rueidis.ClientOption, opts ...Option) (rueidis.Clien
 		clientOption.DialFn = defaultDialFn
 	}
 
-	attempt, err := oclient.meter.Int64Counter("rueidis_dial_attempt")
+	metrics := dialMetrics{mAttrs: oclient.mAttrs}
+
+	metrics.attempt, err = oclient.meter.Int64Counter("rueidis_dial_attempt")
 	if err != nil {
 		return nil, err
 	}
-	oclient.attempt = attempt
 
-	success, err := oclient.meter.Int64Counter("rueidis_dial_success")
+	metrics.success, err = oclient.meter.Int64Counter("rueidis_dial_success")
 	if err != nil {
 		return nil, err
 	}
-	oclient.success = success
 
-	conns, err := oclient.meter.Int64UpDownCounter("rueidis_dial_conns")
+	metrics.counts, err = oclient.meter.Int64UpDownCounter("rueidis_dial_conns")
 	if err != nil {
 		return nil, err
 	}
-	oclient.conns = conns
 
-	dialLatency, err := oclient.meter.Float64Histogram(
+	metrics.latency, err = oclient.meter.Float64Histogram(
 		"rueidis_dial_latency",
 		metric.WithUnit("s"),
 		metric.WithExplicitBucketBoundaries(oclient.histogramOption.Buckets...),
@@ -73,11 +94,8 @@ func NewClient(clientOption rueidis.ClientOption, opts ...Option) (rueidis.Clien
 	if err != nil {
 		return nil, err
 	}
-	oclient.dialLatency = dialLatency
 
-	clientOption.DialFn = trackDialing(
-		attempt, success, conns, dialLatency, clientOption.DialFn,
-	)
+	clientOption.DialFn = trackDialing(metrics, clientOption.DialFn)
 	cli, err := rueidis.NewClient(clientOption)
 	if err != nil {
 		return nil, err
@@ -118,16 +136,10 @@ func newClient(opts ...Option) (*otelclient, error) {
 	return cli, nil
 }
 
-func trackDialing(
-	attempt metric.Int64Counter,
-	success metric.Int64Counter,
-	conns metric.Int64UpDownCounter,
-	dialLatency metric.Float64Histogram,
-	dialFn func(string, *net.Dialer, *tls.Config) (conn net.Conn, err error),
-) func(string, *net.Dialer, *tls.Config) (conn net.Conn, err error) {
+func trackDialing(m dialMetrics, dialFn func(string, *net.Dialer, *tls.Config) (conn net.Conn, err error)) func(string, *net.Dialer, *tls.Config) (conn net.Conn, err error) {
 	return func(network string, dialer *net.Dialer, tlsConfig *tls.Config) (conn net.Conn, err error) {
 		ctx := context.Background()
-		attempt.Add(ctx, 1)
+		m.attempt.Add(ctx, 1, m.mAttrs)
 
 		start := time.Now()
 
@@ -137,27 +149,29 @@ func trackDialing(
 		}
 
 		// Use floating point division for higher precision (instead of Seconds method).
-		dialLatency.Record(ctx, float64(time.Since(start))/float64(time.Second))
-		success.Add(ctx, 1)
-		conns.Add(ctx, 1)
+		m.latency.Record(ctx, float64(time.Since(start))/float64(time.Second), m.mAttrs)
+		m.success.Add(ctx, 1, m.mAttrs)
+		m.counts.Add(ctx, 1, m.mAttrs)
 
 		return &connTracker{
-			Conn:  conn,
-			conns: conns,
-			once:  0,
+			Conn:   conn,
+			counts: m.counts,
+			mAttrs: m.mAttrs,
+			once:   0,
 		}, nil
 	}
 }
 
 type connTracker struct {
 	net.Conn
-	conns metric.Int64UpDownCounter
-	once  int32
+	counts metric.Int64UpDownCounter
+	mAttrs metric.MeasurementOption
+	once   int32
 }
 
 func (t *connTracker) Close() error {
 	if atomic.CompareAndSwapInt32(&t.once, 0, 1) {
-		t.conns.Add(context.Background(), -1)
+		t.counts.Add(context.Background(), -1, t.mAttrs)
 	}
 
 	return t.Conn.Close()

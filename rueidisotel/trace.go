@@ -36,24 +36,10 @@ func WithClient(client rueidis.Client, opts ...Option) rueidis.Client {
 // Option is the Functional Options interface
 type Option func(o *otelclient)
 
-// MetricAttrs set additional attributes to append to each metric.
-func MetricAttrs(attrs ...attribute.KeyValue) Option {
-	return func(o *otelclient) {
-		o.mAttrs = attrs
-	}
-}
-
 // TraceAttrs set additional attributes to append to each trace.
 func TraceAttrs(attrs ...attribute.KeyValue) Option {
 	return func(o *otelclient) {
-		o.tAttrs = attrs
-	}
-}
-
-// WithMeterProvider sets the MeterProvider for the otelclient.
-func WithMeterProvider(provider metric.MeterProvider) Option {
-	return func(o *otelclient) {
-		o.meterProvider = provider
+		o.tAttrs = trace.WithAttributes(attrs...)
 	}
 }
 
@@ -72,13 +58,9 @@ type otelclient struct {
 	meter           metric.Meter
 	cscMiss         metric.Int64Counter
 	cscHits         metric.Int64Counter
-	mAttrs          []attribute.KeyValue
-	tAttrs          []attribute.KeyValue
+	mAttrs          metric.MeasurementOption
+	tAttrs          trace.SpanStartEventOption
 	histogramOption HistogramOption
-	attempt         metric.Int64Counter
-	success         metric.Int64Counter
-	conns           metric.Int64UpDownCounter
-	dialLatency     metric.Float64Histogram
 }
 
 func (o *otelclient) B() rueidis.Builder {
@@ -118,9 +100,9 @@ func (o *otelclient) DoCache(ctx context.Context, cmd rueidis.Cacheable, ttl tim
 	resp = o.client.DoCache(ctx, cmd, ttl)
 	if resp.NonRedisError() == nil {
 		if resp.IsCacheHit() {
-			o.cscHits.Add(ctx, 1, metric.WithAttributes(o.tAttrs...))
+			o.cscHits.Add(ctx, 1, o.mAttrs)
 		} else {
-			o.cscMiss.Add(ctx, 1, metric.WithAttributes(o.tAttrs...))
+			o.cscMiss.Add(ctx, 1, o.mAttrs)
 		}
 	}
 	o.end(span, resp.Error())
@@ -133,9 +115,9 @@ func (o *otelclient) DoMultiCache(ctx context.Context, multi ...rueidis.Cacheabl
 	for _, resp := range resps {
 		if resp.NonRedisError() == nil {
 			if resp.IsCacheHit() {
-				o.cscHits.Add(ctx, 1, metric.WithAttributes(o.tAttrs...))
+				o.cscHits.Add(ctx, 1, o.mAttrs)
 			} else {
-				o.cscMiss.Add(ctx, 1, metric.WithAttributes(o.tAttrs...))
+				o.cscMiss.Add(ctx, 1, o.mAttrs)
 			}
 		}
 	}
@@ -146,13 +128,9 @@ func (o *otelclient) DoMultiCache(ctx context.Context, multi ...rueidis.Cacheabl
 func (o *otelclient) Dedicated(fn func(rueidis.DedicatedClient) error) (err error) {
 	return o.client.Dedicated(func(client rueidis.DedicatedClient) error {
 		return fn(&dedicated{
-			client:  client,
-			mAttrs:  o.mAttrs,
-			tAttrs:  o.tAttrs,
-			tracer:  o.tracer,
-			meter:   o.meter,
-			cscMiss: o.cscMiss,
-			cscHits: o.cscHits,
+			client: client,
+			tAttrs: o.tAttrs,
+			tracer: o.tracer,
 		})
 	})
 }
@@ -160,13 +138,9 @@ func (o *otelclient) Dedicated(fn func(rueidis.DedicatedClient) error) (err erro
 func (o *otelclient) Dedicate() (rueidis.DedicatedClient, func()) {
 	client, cancel := o.client.Dedicate()
 	return &dedicated{
-		client:  client,
-		mAttrs:  o.mAttrs,
-		tAttrs:  o.tAttrs,
-		tracer:  o.tracer,
-		meter:   o.meter,
-		cscMiss: o.cscMiss,
-		cscHits: o.cscHits,
+		client: client,
+		tAttrs: o.tAttrs,
+		tracer: o.tracer,
 	}, cancel
 }
 
@@ -202,13 +176,9 @@ func (o *otelclient) Close() {
 var _ rueidis.DedicatedClient = (*dedicated)(nil)
 
 type dedicated struct {
-	client  rueidis.DedicatedClient
-	tracer  trace.Tracer
-	meter   metric.Meter
-	cscMiss metric.Int64Counter
-	cscHits metric.Int64Counter
-	mAttrs  []attribute.KeyValue
-	tAttrs  []attribute.KeyValue
+	client rueidis.DedicatedClient
+	tracer trace.Tracer
+	tAttrs trace.SpanStartEventOption
 }
 
 func (d *dedicated) B() rueidis.Builder {
@@ -328,24 +298,24 @@ func multiCacheableFirst(multi []rueidis.CacheableTTL) string {
 	return sb.String()
 }
 
-func (o *otelclient) start(ctx context.Context, op string, size int, attrs []attribute.KeyValue) (context.Context, trace.Span) {
-	return startSpan(o.tracer, ctx, op, size, attrs...)
+func (o *otelclient) start(ctx context.Context, op string, size int, attrs trace.SpanStartEventOption) (context.Context, trace.Span) {
+	return startSpan(o.tracer, ctx, op, size, attrs)
 }
 
 func (o *otelclient) end(span trace.Span, err error) {
 	endSpan(span, err)
 }
 
-func (d *dedicated) start(ctx context.Context, op string, size int, attrs []attribute.KeyValue) (context.Context, trace.Span) {
-	return startSpan(d.tracer, ctx, op, size, attrs...)
+func (d *dedicated) start(ctx context.Context, op string, size int, attrs trace.SpanStartEventOption) (context.Context, trace.Span) {
+	return startSpan(d.tracer, ctx, op, size, attrs)
 }
 
 func (d *dedicated) end(span trace.Span, err error) {
 	endSpan(span, err)
 }
 
-func startSpan(tracer trace.Tracer, ctx context.Context, op string, size int, attrs ...attribute.KeyValue) (context.Context, trace.Span) {
-	return tracer.Start(ctx, op, kind, attr(op, size), trace.WithAttributes(attrs...))
+func startSpan(tracer trace.Tracer, ctx context.Context, op string, size int, attrs trace.SpanStartEventOption) (context.Context, trace.Span) {
+	return tracer.Start(ctx, op, kind, attr(op, size), attrs)
 }
 
 func endSpan(span trace.Span, err error) {
