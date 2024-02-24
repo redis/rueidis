@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/onsi/gomega v1.31.1
-	golang.org/x/sys v0.15.0
+	golang.org/x/sys v0.17.0
 )
 
 require (
