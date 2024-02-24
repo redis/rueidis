@@ -11,6 +11,7 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/trace"
 )
 
 var (
@@ -106,7 +107,10 @@ func NewClient(clientOption rueidis.ClientOption, opts ...Option) (rueidis.Clien
 }
 
 func newClient(opts ...Option) (*otelclient, error) {
-	cli := &otelclient{}
+	cli := &otelclient{
+		mAttrs: metric.WithAttributes(),
+		tAttrs: trace.WithAttributes(),
+	}
 	for _, opt := range opts {
 		opt(cli)
 	}
