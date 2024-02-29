@@ -138,11 +138,107 @@
   "GRAPH.CONSTRAINT DROP": {
     "summary": "Deletes a constraint from specified graph",
     "since": "2.12.0",
-    "group": "graph"
+    "group": "graph",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "mode",
+        "type": "oneof",
+        "arguments": [
+          {
+            "name": "MANDATORY",
+            "type": "pure-token",
+            "token": "MANDATORY"
+          },
+          {
+            "name": "UNIQUE",
+            "type": "pure-token",
+            "token": "UNIQUE"
+          }
+        ]
+      },
+      {
+        "name": "entity",
+        "type": "oneof",
+        "arguments": [
+          {
+            "name": "NODE",
+            "type": "string",
+            "command": "NODE"
+          },
+          {
+            "name": "RELATIONSHIP",
+            "type": "string",
+            "command": "RELATIONSHIP"
+          }
+        ]
+      },
+      {
+        "name": "PROPERTIES",
+        "command": "PROPERTIES",
+        "type": "integer"
+      },
+      {
+        "name": "PROP",
+        "type": "string",
+        "multiple": true
+      }
+    ]
   },
   "GRAPH.CONSTRAINT CREATE": {
     "summary": "Creates a constraint on specified graph",
     "since": "2.12.0",
-    "group": "graph"
+    "group": "graph",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "mode",
+        "type": "oneof",
+        "arguments": [
+          {
+            "name": "MANDATORY",
+            "type": "pure-token",
+            "token": "MANDATORY"
+          },
+          {
+            "name": "UNIQUE",
+            "type": "pure-token",
+            "token": "UNIQUE"
+          }
+        ]
+      },
+      {
+        "name": "entity",
+        "type": "oneof",
+        "arguments": [
+          {
+            "name": "NODE",
+            "type": "string",
+            "command": "NODE"
+          },
+          {
+            "name": "RELATIONSHIP",
+            "type": "string",
+            "command": "RELATIONSHIP"
+          }
+        ]
+      },
+      {
+        "name": "PROPERTIES",
+        "command": "PROPERTIES",
+        "type": "integer"
+      },
+      {
+        "name": "PROP",
+        "type": "string",
+        "multiple": true
+      }
+    ]
   }
 }

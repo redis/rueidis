@@ -59,9 +59,83 @@ func (b Builder) GraphConstraintCreate() (c GraphConstraintCreate) {
 	return c
 }
 
-func (c GraphConstraintCreate) Build() Completed {
+func (c GraphConstraintCreate) Key(key string) GraphConstraintCreateKey {
+	if c.ks&NoSlot == NoSlot {
+		c.ks = NoSlot | slot(key)
+	} else {
+		c.ks = check(c.ks, slot(key))
+	}
+	c.cs.s = append(c.cs.s, key)
+	return (GraphConstraintCreateKey)(c)
+}
+
+type GraphConstraintCreateEntityNode Incomplete
+
+func (c GraphConstraintCreateEntityNode) Properties(properties int64) GraphConstraintCreateProperties {
+	c.cs.s = append(c.cs.s, "PROPERTIES", strconv.FormatInt(properties, 10))
+	return (GraphConstraintCreateProperties)(c)
+}
+
+type GraphConstraintCreateEntityRelationship Incomplete
+
+func (c GraphConstraintCreateEntityRelationship) Properties(properties int64) GraphConstraintCreateProperties {
+	c.cs.s = append(c.cs.s, "PROPERTIES", strconv.FormatInt(properties, 10))
+	return (GraphConstraintCreateProperties)(c)
+}
+
+type GraphConstraintCreateKey Incomplete
+
+func (c GraphConstraintCreateKey) Mandatory() GraphConstraintCreateModeMandatory {
+	c.cs.s = append(c.cs.s, "MANDATORY")
+	return (GraphConstraintCreateModeMandatory)(c)
+}
+
+func (c GraphConstraintCreateKey) Unique() GraphConstraintCreateModeUnique {
+	c.cs.s = append(c.cs.s, "UNIQUE")
+	return (GraphConstraintCreateModeUnique)(c)
+}
+
+type GraphConstraintCreateModeMandatory Incomplete
+
+func (c GraphConstraintCreateModeMandatory) Node(node string) GraphConstraintCreateEntityNode {
+	c.cs.s = append(c.cs.s, "NODE", node)
+	return (GraphConstraintCreateEntityNode)(c)
+}
+
+func (c GraphConstraintCreateModeMandatory) Relationship(relationship string) GraphConstraintCreateEntityRelationship {
+	c.cs.s = append(c.cs.s, "RELATIONSHIP", relationship)
+	return (GraphConstraintCreateEntityRelationship)(c)
+}
+
+type GraphConstraintCreateModeUnique Incomplete
+
+func (c GraphConstraintCreateModeUnique) Node(node string) GraphConstraintCreateEntityNode {
+	c.cs.s = append(c.cs.s, "NODE", node)
+	return (GraphConstraintCreateEntityNode)(c)
+}
+
+func (c GraphConstraintCreateModeUnique) Relationship(relationship string) GraphConstraintCreateEntityRelationship {
+	c.cs.s = append(c.cs.s, "RELATIONSHIP", relationship)
+	return (GraphConstraintCreateEntityRelationship)(c)
+}
+
+type GraphConstraintCreateProp Incomplete
+
+func (c GraphConstraintCreateProp) Prop(prop ...string) GraphConstraintCreateProp {
+	c.cs.s = append(c.cs.s, prop...)
+	return c
+}
+
+func (c GraphConstraintCreateProp) Build() Completed {
 	c.cs.Build()
 	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type GraphConstraintCreateProperties Incomplete
+
+func (c GraphConstraintCreateProperties) Prop(prop ...string) GraphConstraintCreateProp {
+	c.cs.s = append(c.cs.s, prop...)
+	return (GraphConstraintCreateProp)(c)
 }
 
 type GraphConstraintDrop Incomplete
@@ -72,9 +146,83 @@ func (b Builder) GraphConstraintDrop() (c GraphConstraintDrop) {
 	return c
 }
 
-func (c GraphConstraintDrop) Build() Completed {
+func (c GraphConstraintDrop) Key(key string) GraphConstraintDropKey {
+	if c.ks&NoSlot == NoSlot {
+		c.ks = NoSlot | slot(key)
+	} else {
+		c.ks = check(c.ks, slot(key))
+	}
+	c.cs.s = append(c.cs.s, key)
+	return (GraphConstraintDropKey)(c)
+}
+
+type GraphConstraintDropEntityNode Incomplete
+
+func (c GraphConstraintDropEntityNode) Properties(properties int64) GraphConstraintDropProperties {
+	c.cs.s = append(c.cs.s, "PROPERTIES", strconv.FormatInt(properties, 10))
+	return (GraphConstraintDropProperties)(c)
+}
+
+type GraphConstraintDropEntityRelationship Incomplete
+
+func (c GraphConstraintDropEntityRelationship) Properties(properties int64) GraphConstraintDropProperties {
+	c.cs.s = append(c.cs.s, "PROPERTIES", strconv.FormatInt(properties, 10))
+	return (GraphConstraintDropProperties)(c)
+}
+
+type GraphConstraintDropKey Incomplete
+
+func (c GraphConstraintDropKey) Mandatory() GraphConstraintDropModeMandatory {
+	c.cs.s = append(c.cs.s, "MANDATORY")
+	return (GraphConstraintDropModeMandatory)(c)
+}
+
+func (c GraphConstraintDropKey) Unique() GraphConstraintDropModeUnique {
+	c.cs.s = append(c.cs.s, "UNIQUE")
+	return (GraphConstraintDropModeUnique)(c)
+}
+
+type GraphConstraintDropModeMandatory Incomplete
+
+func (c GraphConstraintDropModeMandatory) Node(node string) GraphConstraintDropEntityNode {
+	c.cs.s = append(c.cs.s, "NODE", node)
+	return (GraphConstraintDropEntityNode)(c)
+}
+
+func (c GraphConstraintDropModeMandatory) Relationship(relationship string) GraphConstraintDropEntityRelationship {
+	c.cs.s = append(c.cs.s, "RELATIONSHIP", relationship)
+	return (GraphConstraintDropEntityRelationship)(c)
+}
+
+type GraphConstraintDropModeUnique Incomplete
+
+func (c GraphConstraintDropModeUnique) Node(node string) GraphConstraintDropEntityNode {
+	c.cs.s = append(c.cs.s, "NODE", node)
+	return (GraphConstraintDropEntityNode)(c)
+}
+
+func (c GraphConstraintDropModeUnique) Relationship(relationship string) GraphConstraintDropEntityRelationship {
+	c.cs.s = append(c.cs.s, "RELATIONSHIP", relationship)
+	return (GraphConstraintDropEntityRelationship)(c)
+}
+
+type GraphConstraintDropProp Incomplete
+
+func (c GraphConstraintDropProp) Prop(prop ...string) GraphConstraintDropProp {
+	c.cs.s = append(c.cs.s, prop...)
+	return c
+}
+
+func (c GraphConstraintDropProp) Build() Completed {
 	c.cs.Build()
 	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type GraphConstraintDropProperties Incomplete
+
+func (c GraphConstraintDropProperties) Prop(prop ...string) GraphConstraintDropProp {
+	c.cs.s = append(c.cs.s, prop...)
+	return (GraphConstraintDropProp)(c)
 }
 
 type GraphDelete Incomplete
