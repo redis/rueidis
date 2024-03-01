@@ -75,6 +75,11 @@ func (r *RedisError) IsNoScript() bool {
 	return strings.HasPrefix(r.string, "NOSCRIPT")
 }
 
+// IsBusyGroup checks if it is a redis BUSYGROUP message.
+func (r *RedisError) IsBusyGroup() bool {
+	return strings.HasPrefix(r.string, "BUSYGROUP")
+}
+
 func newResult(val RedisMessage, err error) RedisResult {
 	return RedisResult{val: val, err: err}
 }
