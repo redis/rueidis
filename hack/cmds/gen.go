@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"sort"
 	"strings"
 	"unicode"
@@ -413,7 +414,9 @@ func main() {
 			n.Walk(func(n *node) {
 				for _, s := range n.GoStructs() {
 					if v, ok := structs[g][s.FullName]; ok {
-						panic("struct conflict " + v.FullName)
+						if !reflect.DeepEqual(v, s) {
+							panic("struct conflict " + v.FullName)
+						}
 					}
 					structs[g][s.FullName] = s
 				}
