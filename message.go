@@ -23,6 +23,14 @@ func IsRedisNil(err error) bool {
 	return err == Nil
 }
 
+// IsRedisBusyGroup checks if it is a redis BUSYGROUP message.
+func IsRedisBusyGroup(err error) bool {
+	if ret, yes := IsRedisErr(err); yes {
+		return ret.IsBusyGroup()
+	}
+	return false
+}
+
 // IsRedisErr is a handy method to check if error is a redis ERR response.
 func IsRedisErr(err error) (ret *RedisError, ok bool) {
 	ret, ok = err.(*RedisError)
@@ -73,6 +81,11 @@ func (r *RedisError) IsClusterDown() bool {
 // IsNoScript checks if it is a redis NOSCRIPT message.
 func (r *RedisError) IsNoScript() bool {
 	return strings.HasPrefix(r.string, "NOSCRIPT")
+}
+
+// IsBusyGroup checks if it is a redis BUSYGROUP message.
+func (r *RedisError) IsBusyGroup() bool {
+	return strings.HasPrefix(r.string, "BUSYGROUP")
 }
 
 func newResult(val RedisMessage, err error) RedisResult {

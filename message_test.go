@@ -58,6 +58,18 @@ func TestIsRedisErr(t *testing.T) {
 	}
 }
 
+func TestIsRedisBusyGroup(t *testing.T) {
+	err := errors.New("other")
+	if IsRedisBusyGroup(err) {
+		t.Fatal("TestIsRedisBusyGroup fail")
+	}
+
+	err = &RedisError{string: "BUSYGROUP Consumer Group name already exists"}
+	if !IsRedisBusyGroup(err) {
+		t.Fatal("TestIsRedisBusyGroup fail")
+	}
+}
+
 //gocyclo:ignore
 func TestRedisResult(t *testing.T) {
 	//Add erroneous type
