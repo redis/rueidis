@@ -1,0 +1,29 @@
+{
+  "CL.THROTTLE": {
+    "summary": "Creates or Get a Throttle",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "max_burst",
+        "type": "integer"
+      },
+      {
+        "name": "count_per_period",
+        "type": "integer"
+      },
+      {
+        "name": "period",
+        "type": "integer"
+      },
+      {
+        "name": "quantity",
+        "type": "integer",
+        "optional": true
+      }
+    ],
+    "group": "cl"
+  }
+}
