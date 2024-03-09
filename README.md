@@ -21,6 +21,8 @@ A fast Golang Redis client that does auto pipelining and supports server-assiste
 * Pub/Sub, Sharded Pub/Sub, Streams
 * Redis Cluster, Sentinel, RedisJSON, RedisBloom, RediSearch, RedisTimeseries, etc.
 
+---
+
 ## Getting Started
 
 ```golang
@@ -48,6 +50,62 @@ func main() {
 
 Checkout more examples: [Command Response Cheatsheet](https://github.com/redis/rueidis#command-response-cheatsheet)
 
+## Instantiating a new Redis Client
+
+You can create a new redis client using `NewClient` and provide several options.
+
+- Connect to a single redis node:
+```golang
+client, err := rueidis.NewClient(rueidis.ClientOption{
+    InitAddress: []string{"127.0.0.1:6379"},
+})
+```
+
+- Connect to a redis cluster:
+```golang
+client, err := rueidis.NewClient(rueidis.ClientOption{
+    InitAddress: []string{"127.0.0.1:7001", "127.0.0.1:7002", "127.0.0.1:7003"},
+    ShuffleInit: true,
+})
+```
+
+- Connect to a redis cluster and use replicas for read operations:
+```golang
+client, err := rueidis.NewClient(rueidis.ClientOption{
+    InitAddress: []string{"127.0.0.1:7001", "127.0.0.1:7002", "127.0.0.1:7003"},
+    SendToReplicas: func(cmd rueidis.Completed) bool {
+        return cmd.IsReadOnly()
+    },
+})
+```
+
+- Connect to sentinels:
+```golang
+client, err := rueidis.NewClient(rueidis.ClientOption{
+    InitAddress: []string{"127.0.0.1:26379", "127.0.0.1:26380", "127.0.0.1:26381"},
+    Sentinel: rueidis.SentinelOption{
+        MasterSet: "my_master",
+    },
+})
+```
+
+### Redis URL
+
+You can use `ParseURL` or `MustParseURL` to construct a `ClientOption`.
+
+The provided url must be started with either `redis://`, `rediss://` or `unix://`.
+
+Currently supported url parameters are `db`, `dial_timeout`, `write_timeout`, `addr`, `protocol`, `client_cache`, `client_name`, `max_retries`, and `master_set`.
+
+```go
+// connect to a redis cluster
+client, err = rueidis.NewClient(rueidis.MustParseURL("redis://127.0.0.1:7001?addr=127.0.0.1:7002&addr=127.0.0.1:7003"))
+// connect to a redis node
+client, err = rueidis.NewClient(rueidis.MustParseURL("redis://127.0.0.1:6379/0"))
+// connect to a redis sentinel
+client, err = rueidis.NewClient(rueidis.MustParseURL("redis://127.0.0.1:26379/0?master_set=my_master"))
+```
+
 ## Developer Friendly Command Builder
 
 `client.B()` is the builder entrypoint to construct a redis command:
@@ -62,7 +120,10 @@ Once a command is built, use either `client.Do()` or `client.DoMulti()` to send 
 
 To reuse a command, use `Pin()` after `Build()` and it will prevent the command being recycled. 
 
-## [Auto Pipelining](https://redis.io/docs/manual/pipelining/)
+
+## [Pipelining](https://redis.io/docs/manual/pipelining/)
+
+### Auto Pipelining
 
 All concurrent non-blocking redis commands (such as `GET`, `SET`) are automatically pipelined,
 which reduces the overall round trips and system calls, and gets higher throughput. You can easily get the benefit
@@ -338,53 +399,6 @@ In that case, you may consider reducing `ClientOption.RingScaleEachConn` to 8 or
 
 You may also consider setting the value of `ClientOption.PipelineMultiplex` to `-1`, which will let rueidis use only 1 connection for pipelining to each redis node.
 
-## Redis Cluster, Single Redis and Sentinel
-
-To connect to a redis cluster, the `NewClient` should be used:
-
-```golang
-client, err := rueidis.NewClient(rueidis.ClientOption{
-    InitAddress: []string{"127.0.0.1:7001", "127.0.0.1:7002", "127.0.0.1:7003"},
-    ShuffleInit: true,
-})
-```
-
-To connect to a single redis node, still use the `NewClient` with one InitAddress
-
-```golang
-client, err := rueidis.NewClient(rueidis.ClientOption{
-    InitAddress: []string{"127.0.0.1:6379"},
-})
-```
-
-To connect to sentinels, specify the required master set name:
-
-```golang
-client, err := rueidis.NewClient(rueidis.ClientOption{
-    InitAddress: []string{"127.0.0.1:26379", "127.0.0.1:26380", "127.0.0.1:26381"},
-    Sentinel: rueidis.SentinelOption{
-        MasterSet: "my_master",
-    },
-})
-```
-
-### Redis URL
-
-You can use `ParseURL` or `MustParseURL` to construct a `ClientOption`:
-
-```go
-// connect to a redis cluster
-client, err = rueidis.NewClient(rueidis.MustParseURL("redis://127.0.0.1:7001?addr=127.0.0.1:7002&addr=127.0.0.1:7003"))
-// connect to a redis node
-client, err = rueidis.NewClient(rueidis.MustParseURL("redis://127.0.0.1:6379/0"))
-// connect to a redis sentinel
-client, err = rueidis.NewClient(rueidis.MustParseURL("redis://127.0.0.1:26379/0?master_set=my_master"))
-```
-
-The url must be started with either `redis://`, `rediss://` or `unix://`.
-
-Currently supported parameters `dial_timeout`, `write_timeout`, `protocol`, `client_cache`, `client_name`, `max_retries`
-
 ## Arbitrary Command
 
 If you want to construct commands that are absent from the command builder, you can use `client.B().Arbitrary()`:
@@ -473,6 +487,8 @@ client.Do(ctx, client.B().FtSearch().Index("idx").Query("@f:v").Build()).AsFtSea
 // GEOSEARCH
 client.Do(ctx, client.B().Geosearch().Key("k").Fromlonlat(1, 1).Bybox(1).Height(1).Km().Build()).AsGeosearch()
 ```
+
+---
 
 ## Contributing
 
