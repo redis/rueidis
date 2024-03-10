@@ -34,9 +34,7 @@ local setBits = redis.call('BITFIELD', unpack(bitfieldArgs))
 local counter = 0
 local oneBits = 0
 for i=1, #setBits do
-	if setBits[i] == 1 then
-		oneBits = oneBits + 1
-	end
+	oneBits = oneBits + setBits[i]
 
 	if i % hashIterations == 0 then
 		if oneBits ~= hashIterations then
