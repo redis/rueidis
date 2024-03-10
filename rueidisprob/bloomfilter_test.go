@@ -12,7 +12,7 @@ import (
 
 var address = []string{"127.0.0.1:7001", "127.0.0.1:7002", "127.0.0.1:7003"}
 
-func cleanup(t *testing.T, client rueidis.Client, keys ...string) {
+func cleanup(client rueidis.Client, keys ...string) error {
 	cmds := make([]rueidis.Completed, 0, len(keys))
 	for _, key := range keys {
 		cmds = append(cmds, client.B().Del().Key(key).Build())
@@ -22,10 +22,11 @@ func cleanup(t *testing.T, client rueidis.Client, keys ...string) {
 	for _, resp := range resps {
 		if resp.Error() != nil {
 			if !rueidis.IsRedisNil(resp.Error()) {
-				t.Error(resp.Error())
+				return resp.Error()
 			}
 		}
 	}
+	return nil
 }
 
 func TestNewBloomFilter(t *testing.T) {
@@ -161,7 +162,10 @@ func TestBloomFilterAdd(t *testing.T) {
 	}
 
 	// cleanup
-	cleanup(t, client, "{test}", "{test}:c")
+	err = cleanup(client, "{test}", "{test}:c")
+	if err != nil {
+		t.Error(err)
+	}
 }
 
 func TestBloomFilterAddError(t *testing.T) {
@@ -221,7 +225,10 @@ func TestBloomFilterAddMulti(t *testing.T) {
 			t.Error("Count is not 3")
 		}
 
-		cleanup(t, client, "{test}", "{test}:c")
+		err = cleanup(client, "{test}", "{test}:c")
+		if err != nil {
+			t.Error(err)
+		}
 	})
 
 	t.Run("add empty items", func(t *testing.T) {
@@ -247,6 +254,96 @@ func TestBloomFilterAddMulti(t *testing.T) {
 		}
 		if count != 0 {
 			t.Error("Count is not 0")
+		}
+	})
+
+	t.Run("add already exists items", func(t *testing.T) {
+		client, err := rueidis.NewClient(
+			rueidis.ClientOption{InitAddress: address},
+		)
+		if err != nil {
+			t.Error(err)
+		}
+		bf, err := NewBloomFilter(client, "test", 100, 0.01)
+		if err != nil {
+			t.Error(err)
+		}
+
+		err = bf.Add(context.Background(), "1")
+		if err != nil {
+			t.Error(err)
+		}
+		exist, err := bf.Exists(context.Background(), "1")
+		if err != nil {
+			t.Error(err)
+		}
+		if !exist {
+			t.Error("Key 1 does not exist")
+		}
+
+		err = bf.AddMulti(context.Background(), []string{"1", "2", "3"})
+		if err != nil {
+			t.Error(err)
+		}
+
+		for _, key := range []string{"1", "2", "3"} {
+			exists, err := bf.Exists(context.Background(), key)
+			if err != nil {
+				t.Error(err)
+			}
+			if !exists {
+				t.Errorf("Key %s does not exist", key)
+			}
+		}
+
+		count, err := bf.Count(context.Background())
+		if err != nil {
+			t.Error(err)
+		}
+		if count != 3 {
+			t.Error("Count is not 3")
+		}
+
+		err = cleanup(client, "{test}", "{test}:c")
+		if err != nil {
+			t.Error(err)
+		}
+	})
+
+	t.Run("add duplicate items", func(t *testing.T) {
+		client, err := rueidis.NewClient(
+			rueidis.ClientOption{InitAddress: address},
+		)
+		if err != nil {
+			t.Error(err)
+		}
+		bf, err := NewBloomFilter(client, "test", 100, 0.01)
+		if err != nil {
+			t.Error(err)
+		}
+
+		keys := []string{"1", "2", "3", "1", "2", "3"}
+		err = bf.AddMulti(context.Background(), keys)
+		if err != nil {
+			t.Error(err)
+		}
+
+		err = bf.AddMulti(context.Background(), keys)
+		if err != nil {
+			t.Error(err)
+		}
+
+		count, err := bf.Count(context.Background())
+		if err != nil {
+			t.Error(err)
+		}
+		if count != 3 {
+			t.Error("Count is not 3")
+		}
+
+		err = cleanup(client, "{test}", "{test}:c")
+		if err != nil {
+			t.Error(err)
 		}
 	})
 }
@@ -297,7 +394,10 @@ func TestBloomFilterExists(t *testing.T) {
 			t.Error("Key test does not exist")
 		}
 
-		cleanup(t, client, "{test}", "{test}:c")
+		err = cleanup(client, "{test}", "{test}:c")
+		if err != nil {
+			t.Error(err)
+		}
 	})
 
 	t.Run("does not exist", func(t *testing.T) {
@@ -320,7 +420,10 @@ func TestBloomFilterExists(t *testing.T) {
 			t.Error("Key test exists")
 		}
 
-		cleanup(t, client, "{test}", "{test}:c")
+		err = cleanup(client, "{test}", "{test}:c")
+		if err != nil {
+			t.Error(err)
+		}
 	})
 }
 
@@ -372,7 +475,10 @@ func TestBloomFilterExistsMulti(t *testing.T) {
 			}
 		}
 
-		cleanup(t, client, "{test}", "{test}:c")
+		err = cleanup(client, "{test}", "{test}:c")
+		if err != nil {
+			t.Error(err)
+		}
 	})
 
 	t.Run("does not exist", func(t *testing.T) {
@@ -397,7 +503,10 @@ func TestBloomFilterExistsMulti(t *testing.T) {
 			}
 		}
 
-		cleanup(t, client, "{test}", "{test}:c")
+		err = cleanup(client, "{test}", "{test}:c")
+		if err != nil {
+			t.Error(err)
+		}
 	})
 
 	t.Run("empty keys", func(t *testing.T) {
@@ -481,7 +590,10 @@ func TestBloomFilterReset(t *testing.T) {
 			t.Error("Count is not 0")
 		}
 
-		cleanup(t, client, "{test}", "{test}:c")
+		err = cleanup(client, "{test}", "{test}:c")
+		if err != nil {
+			t.Error(err)
+		}
 	})
 
 	t.Run("reset does not exist", func(t *testing.T) {
@@ -650,7 +762,10 @@ func TestBloomFilterCount(t *testing.T) {
 			t.Error("Count is not 1")
 		}
 
-		cleanup(t, client, "{test}", "{test}:c")
+		err = cleanup(client, "{test}", "{test}:c")
+		if err != nil {
+			t.Error(err)
+		}
 	})
 
 	t.Run("count does not exist", func(t *testing.T) {
@@ -673,7 +788,10 @@ func TestBloomFilterCount(t *testing.T) {
 			t.Error("Count is not 0")
 		}
 
-		cleanup(t, client, "{test}", "{test}:c")
+		err = cleanup(client, "{test}", "{test}:c")
+		if err != nil {
+			t.Error(err)
+		}
 	})
 
 	t.Run("add multiple items", func(t *testing.T) {
@@ -702,7 +820,10 @@ func TestBloomFilterCount(t *testing.T) {
 			t.Error("Count is not 3")
 		}
 
-		cleanup(t, client, "{test}", "{test}:c")
+		err = cleanup(client, "{test}", "{test}:c")
+		if err != nil {
+			t.Error(err)
+		}
 	})
 }
 
@@ -756,7 +877,10 @@ func TestBloomFilterCountError(t *testing.T) {
 			t.Error("Error is not strconv.ErrSyntax")
 		}
 
-		cleanup(t, client, "{test}:c")
+		err = cleanup(client, "{test}:c")
+		if err != nil {
+			t.Error(err)
+		}
 	})
 }
 
@@ -785,6 +909,11 @@ func BenchmarkBloomFilterAddMultiBigSize(b *testing.B) {
 			b.Error(err)
 		}
 	}
+
+	err = cleanup(client, "{test}", "{test}:c")
+	if err != nil {
+		b.Error(err)
+	}
 }
 
 func BenchmarkBloomFilterAddMultiLowRate(b *testing.B) {
@@ -812,6 +941,11 @@ func BenchmarkBloomFilterAddMultiLowRate(b *testing.B) {
 			b.Error(err)
 		}
 	}
+
+	err = cleanup(client, "{test}", "{test}:c")
+	if err != nil {
+		b.Error(err)
+	}
 }
 
 func BenchmarkBloomFilterAddMultiManyKeys(b *testing.B) {
@@ -826,8 +960,8 @@ func BenchmarkBloomFilterAddMultiManyKeys(b *testing.B) {
 		b.Error(err)
 	}
 
-	keys := make([]string, 1000)
-	for i := 0; i < 1000; i++ {
+	keys := make([]string, 200)
+	for i := 0; i < 200; i++ {
 		keys[i] = strconv.Itoa(i)
 	}
 
@@ -838,6 +972,11 @@ func BenchmarkBloomFilterAddMultiManyKeys(b *testing.B) {
 		if err != nil {
 			b.Error(err)
 		}
+	}
+
+	err = cleanup(client, "{test}", "{test}:c")
+	if err != nil {
+		b.Error(err)
 	}
 }
 
@@ -876,6 +1015,11 @@ func BenchmarkBloomFilterExistsMultiBigSize(b *testing.B) {
 			b.Error(err)
 		}
 	}
+
+	err = cleanup(client, "{test}", "{test}:c")
+	if err != nil {
+		b.Error(err)
+	}
 }
 
 func BenchmarkBloomFilterExistsMultiLowRate(b *testing.B) {
@@ -913,6 +1057,11 @@ func BenchmarkBloomFilterExistsMultiLowRate(b *testing.B) {
 			b.Error(err)
 		}
 	}
+
+	err = cleanup(client, "{test}", "{test}:c")
+	if err != nil {
+		b.Error(err)
+	}
 }
 
 func BenchmarkBloomFilterExistsMultiManyKeys(b *testing.B) {
@@ -927,8 +1076,8 @@ func BenchmarkBloomFilterExistsMultiManyKeys(b *testing.B) {
 		b.Error(err)
 	}
 
-	keys := make([]string, 1000)
-	for i := 0; i < 1000; i++ {
+	keys := make([]string, 200)
+	for i := 0; i < 200; i++ {
 		keys[i] = strconv.Itoa(i)
 	}
 	err = bf.AddMulti(context.Background(), keys)
@@ -937,7 +1086,7 @@ func BenchmarkBloomFilterExistsMultiManyKeys(b *testing.B) {
 	}
 
 	var benchKeys []string
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < 200; i++ {
 		key := strconv.Itoa(rand.Intn(b.N))
 		benchKeys = append(benchKeys, key)
 	}
@@ -949,5 +1098,10 @@ func BenchmarkBloomFilterExistsMultiManyKeys(b *testing.B) {
 		if err != nil {
 			b.Error(err)
 		}
+	}
+
+	err = cleanup(client, "{test}", "{test}:c")
+	if err != nil {
+		b.Error(err)
 	}
 }
