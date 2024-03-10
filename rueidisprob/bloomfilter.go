@@ -144,10 +144,12 @@ func NewBloomFilter(
 	}
 	hashIterations := numberOfHashFunctions(size, expectedNumberOfItems)
 
+	// NOTE: https://redis.io/docs/reference/cluster-spec/#hash-tags
+	namespace := "{" + name + "}"
 	return &bloomFilter{
 		client:         client,
-		name:           name,
-		counter:        name + ":c",
+		name:           namespace,
+		counter:        namespace + ":c",
 		hashIterations: hashIterations,
 		size:           size,
 	}, nil

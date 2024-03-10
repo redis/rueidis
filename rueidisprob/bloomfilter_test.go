@@ -10,7 +10,7 @@ import (
 	"github.com/redis/rueidis"
 )
 
-var address = []string{"127.0.0.1:6379"}
+var address = []string{"127.0.0.1:7001", "127.0.0.1:7002", "127.0.0.1:7003"}
 
 func cleanup(t *testing.T, client rueidis.Client, keys ...string) {
 	cmds := make([]rueidis.Completed, 0, len(keys))
@@ -46,10 +46,10 @@ func TestNewBloomFilter(t *testing.T) {
 	if bf.(*bloomFilter).client == nil {
 		t.Error("Client is nil")
 	}
-	if bf.(*bloomFilter).name != "test" {
-		t.Error("Name is not test")
+	if bf.(*bloomFilter).name != "{test}" {
+		t.Error("Name is not {test}")
 	}
-	if bf.(*bloomFilter).counter != "test:c" {
+	if bf.(*bloomFilter).counter != "{test}:c" {
 		t.Error("Counter is not test:c")
 	}
 	if bf.(*bloomFilter).hashIterations != 7 {
@@ -161,7 +161,7 @@ func TestBloomFilterAdd(t *testing.T) {
 	}
 
 	// cleanup
-	cleanup(t, client, "test", "test:c")
+	cleanup(t, client, "{test}", "{test}:c")
 }
 
 func TestBloomFilterAddError(t *testing.T) {
@@ -220,6 +220,8 @@ func TestBloomFilterAddMulti(t *testing.T) {
 		if count != 3 {
 			t.Error("Count is not 3")
 		}
+
+		cleanup(t, client, "{test}", "{test}:c")
 	})
 
 	t.Run("add empty items", func(t *testing.T) {
@@ -295,7 +297,7 @@ func TestBloomFilterExists(t *testing.T) {
 			t.Error("Key test does not exist")
 		}
 
-		cleanup(t, client, "test", "test:c")
+		cleanup(t, client, "{test}", "{test}:c")
 	})
 
 	t.Run("does not exist", func(t *testing.T) {
@@ -318,7 +320,7 @@ func TestBloomFilterExists(t *testing.T) {
 			t.Error("Key test exists")
 		}
 
-		cleanup(t, client, "test", "test:c")
+		cleanup(t, client, "{test}", "{test}:c")
 	})
 }
 
@@ -370,7 +372,7 @@ func TestBloomFilterExistsMulti(t *testing.T) {
 			}
 		}
 
-		cleanup(t, client, "test", "test:c")
+		cleanup(t, client, "{test}", "{test}:c")
 	})
 
 	t.Run("does not exist", func(t *testing.T) {
@@ -395,7 +397,7 @@ func TestBloomFilterExistsMulti(t *testing.T) {
 			}
 		}
 
-		cleanup(t, client, "test", "test:c")
+		cleanup(t, client, "{test}", "{test}:c")
 	})
 
 	t.Run("empty keys", func(t *testing.T) {
@@ -479,7 +481,7 @@ func TestBloomFilterReset(t *testing.T) {
 			t.Error("Count is not 0")
 		}
 
-		cleanup(t, client, "test", "test:c")
+		cleanup(t, client, "{test}", "{test}:c")
 	})
 
 	t.Run("reset does not exist", func(t *testing.T) {
@@ -564,7 +566,7 @@ func TestBloomFilterDelete(t *testing.T) {
 			context.Background(),
 			client.B().
 				Get().
-				Key("test").
+				Key("{test}").
 				Build(),
 		)
 		if !rueidis.IsRedisNil(resp.Error()) {
@@ -575,7 +577,7 @@ func TestBloomFilterDelete(t *testing.T) {
 			context.Background(),
 			client.B().
 				Get().
-				Key("test:c").
+				Key("{test}:c").
 				Build(),
 		)
 		if !rueidis.IsRedisNil(resp.Error()) {
@@ -648,7 +650,7 @@ func TestBloomFilterCount(t *testing.T) {
 			t.Error("Count is not 1")
 		}
 
-		cleanup(t, client, "test", "test:c")
+		cleanup(t, client, "{test}", "{test}:c")
 	})
 
 	t.Run("count does not exist", func(t *testing.T) {
@@ -671,7 +673,7 @@ func TestBloomFilterCount(t *testing.T) {
 			t.Error("Count is not 0")
 		}
 
-		cleanup(t, client, "test", "test:c")
+		cleanup(t, client, "{test}", "{test}:c")
 	})
 
 	t.Run("add multiple items", func(t *testing.T) {
@@ -700,7 +702,7 @@ func TestBloomFilterCount(t *testing.T) {
 			t.Error("Count is not 3")
 		}
 
-		cleanup(t, client, "test", "test:c")
+		cleanup(t, client, "{test}", "{test}:c")
 	})
 }
 
@@ -741,7 +743,7 @@ func TestBloomFilterCountError(t *testing.T) {
 			context.Background(),
 			client.B().
 				Set().
-				Key("test:c").
+				Key("{test}:c").
 				Value("not a number").
 				Build(),
 		)
@@ -754,7 +756,7 @@ func TestBloomFilterCountError(t *testing.T) {
 			t.Error("Error is not strconv.ErrSyntax")
 		}
 
-		cleanup(t, client, "test:c")
+		cleanup(t, client, "{test}:c")
 	})
 }
 
