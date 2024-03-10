@@ -83,7 +83,7 @@ func TestNewBloomFilterError(t *testing.T) {
 			t.Error(err)
 		}
 		_, err = NewBloomFilter(client, "test", 100, -0.01)
-		if !errors.Is(err, ErrFalsePositiveRateNegative) {
+		if !errors.Is(err, ErrFalsePositiveRateLessThanEqualZero) {
 			t.Error("Error is not ErrFalsePositiveRateNegative")
 		}
 	})
