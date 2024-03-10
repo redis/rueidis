@@ -87,11 +87,11 @@ return 1
 )
 
 var (
-	ErrEmptyName                       = errors.New("name cannot be empty")
-	ErrFalsePositiveRateNegative       = errors.New("false positive rate cannot be negative")
-	ErrFalsePositiveRateGreaterThanOne = errors.New("false positive rate cannot be greater than 1")
-	ErrBitsSizeZero                    = errors.New("bits size cannot be zero")
-	ErrBitsSizeTooLarge                = errors.New("bits size is too large")
+	ErrEmptyName                          = errors.New("name cannot be empty")
+	ErrFalsePositiveRateLessThanEqualZero = errors.New("false positive rate cannot be less than or equal to zero")
+	ErrFalsePositiveRateGreaterThanOne    = errors.New("false positive rate cannot be greater than 1")
+	ErrBitsSizeZero                       = errors.New("bits size cannot be zero")
+	ErrBitsSizeTooLarge                   = errors.New("bits size is too large")
 )
 
 // BloomFilter based on Redis Bitmaps.
@@ -158,8 +158,8 @@ func NewBloomFilter(
 		return nil, ErrEmptyName
 	}
 
-	if falsePositiveRate < 0 {
-		return nil, ErrFalsePositiveRateNegative
+	if falsePositiveRate <= 0 {
+		return nil, ErrFalsePositiveRateLessThanEqualZero
 	}
 	if falsePositiveRate > 1 {
 		return nil, ErrFalsePositiveRateGreaterThanOne
@@ -192,9 +192,6 @@ func NewBloomFilter(
 }
 
 func numberOfBits(n uint, r float64) uint {
-	if r == 0 {
-		r = math.SmallestNonzeroFloat64
-	}
 	return uint(math.Ceil(-float64(n) * math.Log(r) / math.Pow(math.Log(2), 2)))
 }
 
