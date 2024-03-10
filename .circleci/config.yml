@@ -66,6 +66,14 @@ jobs:
             for n in {1..5}; do ../dockertest.sh $list && break; done
           no_output_timeout: 15m
 
+      - run: # test ./rueidisprob/go.mod
+          command: |
+            cd $CIRCLE_WORKING_DIRECTORY/rueidisprob
+            list=$(go list ./... | circleci tests split --split-by=timings)
+            echo "Test Packages: $list"
+            for n in {1..5}; do ../dockertest.sh $list && break; done
+          no_output_timeout: 15m
+
       - store_test_results:
           path: .
       - run: curl -Os https://uploader.codecov.io/latest/linux/codecov && chmod +x codecov && ./codecov -t ${CODECOV_TOKEN}
