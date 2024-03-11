@@ -29,12 +29,12 @@ for i=2, numElements+1 do
     table.insert(bitfieldArgs, '1')
 end
 
-local setBits = redis.call('BITFIELD', unpack(bitfieldArgs))
+local bitset = redis.call('BITFIELD', unpack(bitfieldArgs))
 
 local counter = 0
 local oneBits = 0
-for i=1, #setBits do
-	oneBits = oneBits + setBits[i]
+for i=1, #bitset do
+	oneBits = oneBits + bitset[i]
 
 	if i % hashIterations == 0 then
 		if oneBits ~= hashIterations then
@@ -49,12 +49,12 @@ return redis.call('INCRBY', counterKey, counter)
 `
 
 	existsMultiScript = `
-local numElements = tonumber(#ARGV)
+local hashIterations = tonumber(ARGV[1])
+local numElements = tonumber(#ARGV) - 1
 local filterKey = KEYS[1]
-local result = {}
 
 local bitfieldArgs = { filterKey }
-for i=1, numElements do
+for i=2, numElements+1 do
 	local index = tonumber(ARGV[i])
 
 	table.insert(bitfieldArgs, 'GET')
@@ -62,7 +62,25 @@ for i=1, numElements do
 	table.insert(bitfieldArgs, index)
 end
 
-return redis.call('BITFIELD', unpack(bitfieldArgs))
+local bitset = redis.call('BITFIELD', unpack(bitfieldArgs))
+
+local result = {}
+local oneBits = 0
+for i=1, #bitset do
+	oneBits = oneBits + bitset[i]
+
+	if i % hashIterations == 0 then
+		if oneBits == hashIterations then
+			table.insert(result, 1)
+		else
+			table.insert(result, 0)
+		end
+
+		oneBits = 0
+	end
+end
+
+return result
 `
 
 	resetScript = `
@@ -249,7 +267,11 @@ func (c *bloomFilter) ExistsMulti(ctx context.Context, keys []string) ([]bool, e
 
 	indexes := c.indexes(keys)
 
-	resp := c.existsMultiScript.Exec(ctx, c.client, c.existsMultiKeys, indexes)
+	var args []string
+	args = append(args, c.hashIterationString)
+	args = append(args, indexes...)
+
+	resp := c.existsMultiScript.Exec(ctx, c.client, c.existsMultiKeys, args)
 	if resp.Error() != nil {
 		return nil, resp.Error()
 	}
@@ -260,22 +282,8 @@ func (c *bloomFilter) ExistsMulti(ctx context.Context, keys []string) ([]bool, e
 	}
 
 	result := make([]bool, len(keys))
-	resultIdx := 0
-	oneBits := 0
-	iterations := int(c.hashIterations)
 	for i, v := range is {
-		if v == 1 {
-			oneBits++
-		}
-
-		if (i+1)%iterations == 0 {
-			if oneBits == iterations {
-				result[resultIdx] = true
-			}
-
-			resultIdx++
-			oneBits = 0
-		}
+		result[i] = v == 1
 	}
 	return result, nil
 }
