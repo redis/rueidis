@@ -276,13 +276,18 @@ func (c *bloomFilter) ExistsMulti(ctx context.Context, keys []string) ([]bool, e
 		return nil, resp.Error()
 	}
 
-	is, err := resp.AsIntSlice()
+	arr, err := resp.ToArray()
 	if err != nil {
 		return nil, err
 	}
 
 	result := make([]bool, len(keys))
-	for i, v := range is {
+	for i, el := range arr {
+		v, err := el.AsInt64()
+		if err != nil {
+			return nil, err
+		}
+
 		result[i] = v == 1
 	}
 	return result, nil
