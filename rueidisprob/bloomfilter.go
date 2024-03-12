@@ -228,7 +228,7 @@ func (c *bloomFilter) AddMulti(ctx context.Context, keys []string) error {
 
 	indexes := c.indexes(keys)
 
-	var args []string
+	args := make([]string, 0, len(indexes)+1)
 	args = append(args, c.hashIterationString)
 	args = append(args, indexes...)
 
@@ -241,7 +241,7 @@ func (c *bloomFilter) AddMulti(ctx context.Context, keys []string) error {
 }
 
 func (c *bloomFilter) indexes(keys []string) []string {
-	var allIndexes []string
+	allIndexes := make([]string, 0, len(keys)*int(c.hashIterations))
 	for _, key := range keys {
 		indices := indexes([]byte(key), c.hashIterations, c.size)
 		for _, index := range indices {
@@ -267,7 +267,7 @@ func (c *bloomFilter) ExistsMulti(ctx context.Context, keys []string) ([]bool, e
 
 	indexes := c.indexes(keys)
 
-	var args []string
+	args := make([]string, 0, len(indexes)+1)
 	args = append(args, c.hashIterationString)
 	args = append(args, indexes...)
 
