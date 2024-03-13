@@ -2,6 +2,8 @@ package rueidisotel
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -14,12 +16,48 @@ import (
 	"go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 
+	metricapi "go.opentelemetry.io/otel/metric"
+
 	"github.com/redis/rueidis"
+)
+
+var (
+	errMocked = errors.New("ERROR_MOCKED")
 )
 
 // MockMeterProvider for testing purposes
 type MockMeterProvider struct {
 	metric.MeterProvider
+	testName string
+}
+
+func (m *MockMeterProvider) Meter(name string, opts ...metricapi.MeterOption) metricapi.Meter {
+	return &mockMeter{testName: m.testName}
+}
+
+type mockMeter struct {
+	metricapi.Meter
+	testName string
+}
+
+func (m *mockMeter) Int64Counter(name string, options ...metricapi.Int64CounterOption) (metricapi.Int64Counter, error) {
+	if m.testName == name {
+		return nil, fmt.Errorf("%w: %s", errMocked, m.testName)
+	}
+	return nil, nil
+}
+
+func (m *mockMeter) Int64UpDownCounter(name string, options ...metricapi.Int64UpDownCounterOption) (metricapi.Int64UpDownCounter, error) {
+	if m.testName == name {
+		return nil, fmt.Errorf("%w: %s", errMocked, m.testName)
+	}
+	return nil, nil
+}
+func (m *mockMeter) Float64Histogram(name string, options ...metricapi.Float64HistogramOption) (metricapi.Float64Histogram, error) {
+	if m.testName == name {
+		return nil, fmt.Errorf("%w: %s", errMocked, m.testName)
+	}
+	return nil, nil
 }
 
 func TestWithClientGlobalProvider(t *testing.T) {
