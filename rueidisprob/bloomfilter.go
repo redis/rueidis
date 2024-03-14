@@ -238,10 +238,11 @@ func (c *bloomFilter) AddMulti(ctx context.Context, keys []string) error {
 
 func (c *bloomFilter) indexes(keys []string) []string {
 	allIndexes := make([]string, 0, len(keys)*int(c.hashIterations))
+	size := uint64(c.size)
 	for _, key := range keys {
-		indices := indexes([]byte(key), c.hashIterations, c.size)
-		for _, index := range indices {
-			allIndexes = append(allIndexes, strconv.FormatUint(index, 10))
+		h1, h2 := hash([]byte(key))
+		for i := uint(0); i < c.hashIterations; i++ {
+			allIndexes = append(allIndexes, strconv.FormatUint(index(h1, h2, i, size), 10))
 		}
 	}
 	return allIndexes

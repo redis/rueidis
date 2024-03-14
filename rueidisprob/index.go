@@ -2,19 +2,6 @@ package rueidisprob
 
 import "github.com/twmb/murmur3"
 
-// indexes returns a list of hash indexes representing a data item.
-func indexes(data []byte, iteration, maxSize uint) []uint64 {
-	indices := make([]uint64, iteration)
-
-	h1, h2 := murmur3.Sum128(data)
-	size := uint64(maxSize)
-	for i := uint(0); i < iteration; i++ {
-		indices[i] = index(h1, h2, i, size)
-	}
-
-	return indices
-}
-
 func hash(data []byte) (uint64, uint64) {
 	return murmur3.Sum128(data)
 }
