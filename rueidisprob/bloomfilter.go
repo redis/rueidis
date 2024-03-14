@@ -70,11 +70,7 @@ for i=1, #bitset do
 	oneBits = oneBits + bitset[i]
 
 	if i % hashIterations == 0 then
-		if oneBits == hashIterations then
-			table.insert(result, 1)
-		else
-			table.insert(result, 0)
-		end
+		table.insert(result, oneBits == hashIterations)
 
 		oneBits = 0
 	end
@@ -283,12 +279,17 @@ func (c *bloomFilter) ExistsMulti(ctx context.Context, keys []string) ([]bool, e
 
 	result := make([]bool, len(keys))
 	for i, el := range arr {
-		v, err := el.AsInt64()
+		v, err := el.AsBool()
 		if err != nil {
+			if rueidis.IsRedisNil(err) {
+				result[i] = false
+				continue
+			}
+
 			return nil, err
 		}
 
-		result[i] = v == 1
+		result[i] = v
 	}
 	return result, nil
 }
