@@ -3,7 +3,9 @@ package rueidisotel
 import (
 	"context"
 	"crypto/tls"
+	"errors"
 	"net"
+	"strings"
 	"testing"
 
 	"go.opentelemetry.io/otel/sdk/metric"
@@ -61,6 +63,16 @@ func TestNewClient(t *testing.T) {
 		}
 		defer c.Close()
 	})
+
+	t.Run("DialFn by default", func(t *testing.T) {
+		_, err := NewClient(rueidis.ClientOption{
+			InitAddress: []string{"127.0.0.1:6379"},
+		},
+		)
+		if err != nil {
+			t.Error(err)
+		}
+	})
 }
 
 func TestNewClientError(t *testing.T) {
@@ -75,6 +87,30 @@ func TestNewClientError(t *testing.T) {
 			t.Error(err)
 		}
 	})
+}
+
+func TestNewClientMeterError(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		{"rueidis_dial_attempt"}, {"rueidis_dial_success"}, {"rueidis_do_cache_miss"},
+		{"rueidis_do_cache_hits"}, {"rueidis_dial_conns"}, {"rueidis_dial_latency"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			meterProvider := &MockMeterProvider{testName: tt.name}
+			_, err := NewClient(
+				rueidis.ClientOption{
+					InitAddress: []string{"127.0.0.1:6379"},
+				},
+				WithMeterProvider(meterProvider),
+			)
+			if !errors.Is(err, errMocked) || !strings.Contains(err.Error(), tt.name) {
+				t.Errorf("mocked error: got %s, want %s", err, errMocked)
+			}
+		})
+	}
 }
 
 func TestTrackDialing(t *testing.T) {
