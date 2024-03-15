@@ -20,25 +20,27 @@ func setup() (rueidis.Client, func() error, error) {
 		return nil, func() error { return nil }, err
 	}
 
-	flushAll := func() error {
+	flushAllAndClose := func() error {
 		for _, node := range client.Nodes() {
 			resp := node.Do(context.Background(), client.B().Flushall().Build())
 			if resp.Error() != nil {
 				return resp.Error()
 			}
 		}
+
+		client.Close()
 		return nil
 	}
-	return client, flushAll, nil
+	return client, flushAllAndClose, nil
 }
 
 func TestNewBloomFilter(t *testing.T) {
-	client, flushAll, err := setup()
+	client, flushAllAndClose, err := setup()
 	if err != nil {
 		t.Error(err)
 	}
 	defer func() {
-		err := flushAll()
+		err := flushAllAndClose()
 		if err != nil {
 			t.Error(err)
 		}
@@ -71,12 +73,12 @@ func TestNewBloomFilter(t *testing.T) {
 
 func TestNewBloomFilterError(t *testing.T) {
 	t.Run("EmptyName", func(t *testing.T) {
-		client, flushAll, err := setup()
+		client, flushAllAndClose, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
 		defer func() {
-			err := flushAll()
+			err := flushAllAndClose()
 			if err != nil {
 				t.Error(err)
 			}
@@ -89,12 +91,12 @@ func TestNewBloomFilterError(t *testing.T) {
 	})
 
 	t.Run("NegativeFalsePositiveRate", func(t *testing.T) {
-		client, flushAll, err := setup()
+		client, flushAllAndClose, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
 		defer func() {
-			err := flushAll()
+			err := flushAllAndClose()
 			if err != nil {
 				t.Error(err)
 			}
@@ -107,12 +109,12 @@ func TestNewBloomFilterError(t *testing.T) {
 	})
 
 	t.Run("GreaterThanOneFalsePositiveRate", func(t *testing.T) {
-		client, flushAll, err := setup()
+		client, flushAllAndClose, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
 		defer func() {
-			err := flushAll()
+			err := flushAllAndClose()
 			if err != nil {
 				t.Error(err)
 			}
@@ -125,12 +127,12 @@ func TestNewBloomFilterError(t *testing.T) {
 	})
 
 	t.Run("BitsSizeZero", func(t *testing.T) {
-		client, flushAll, err := setup()
+		client, flushAllAndClose, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
 		defer func() {
-			err := flushAll()
+			err := flushAllAndClose()
 			if err != nil {
 				t.Error(err)
 			}
@@ -143,12 +145,12 @@ func TestNewBloomFilterError(t *testing.T) {
 	})
 
 	t.Run("BitsSizeTooLarge", func(t *testing.T) {
-		client, flushAll, err := setup()
+		client, flushAllAndClose, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
 		defer func() {
-			err := flushAll()
+			err := flushAllAndClose()
 			if err != nil {
 				t.Error(err)
 			}
@@ -162,12 +164,12 @@ func TestNewBloomFilterError(t *testing.T) {
 }
 
 func TestBloomFilterAdd(t *testing.T) {
-	client, flushAll, err := setup()
+	client, flushAllAndClose, err := setup()
 	if err != nil {
 		t.Error(err)
 	}
 	defer func() {
-		err := flushAll()
+		err := flushAllAndClose()
 		if err != nil {
 			t.Error(err)
 		}
@@ -201,12 +203,12 @@ func TestBloomFilterAdd(t *testing.T) {
 }
 
 func TestBloomFilterAddError(t *testing.T) {
-	client, flushAll, err := setup()
+	client, flushAllAndClose, err := setup()
 	if err != nil {
 		t.Error(err)
 	}
 	defer func() {
-		err := flushAll()
+		err := flushAllAndClose()
 		if err != nil {
 			t.Error(err)
 		}
@@ -227,12 +229,12 @@ func TestBloomFilterAddError(t *testing.T) {
 
 func TestBloomFilterAddMulti(t *testing.T) {
 	t.Run("add multiple items", func(t *testing.T) {
-		client, flushAll, err := setup()
+		client, flushAllAndClose, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
 		defer func() {
-			err := flushAll()
+			err := flushAllAndClose()
 			if err != nil {
 				t.Error(err)
 			}
@@ -269,12 +271,12 @@ func TestBloomFilterAddMulti(t *testing.T) {
 	})
 
 	t.Run("add empty items", func(t *testing.T) {
-		client, flushAll, err := setup()
+		client, flushAllAndClose, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
 		defer func() {
-			err := flushAll()
+			err := flushAllAndClose()
 			if err != nil {
 				t.Error(err)
 			}
@@ -300,12 +302,12 @@ func TestBloomFilterAddMulti(t *testing.T) {
 	})
 
 	t.Run("add already exists items", func(t *testing.T) {
-		client, flushAll, err := setup()
+		client, flushAllAndClose, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
 		defer func() {
-			err := flushAll()
+			err := flushAllAndClose()
 			if err != nil {
 				t.Error(err)
 			}
@@ -353,12 +355,12 @@ func TestBloomFilterAddMulti(t *testing.T) {
 	})
 
 	t.Run("add duplicate items", func(t *testing.T) {
-		client, flushAll, err := setup()
+		client, flushAllAndClose, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
 		defer func() {
-			err := flushAll()
+			err := flushAllAndClose()
 			if err != nil {
 				t.Error(err)
 			}
@@ -391,12 +393,12 @@ func TestBloomFilterAddMulti(t *testing.T) {
 }
 
 func TestBloomFilterAddMultiError(t *testing.T) {
-	client, flushAll, err := setup()
+	client, flushAllAndClose, err := setup()
 	if err != nil {
 		t.Error(err)
 	}
 	defer func() {
-		err := flushAll()
+		err := flushAllAndClose()
 		if err != nil {
 			t.Error(err)
 		}
@@ -417,12 +419,12 @@ func TestBloomFilterAddMultiError(t *testing.T) {
 
 func TestBloomFilterExists(t *testing.T) {
 	t.Run("exists", func(t *testing.T) {
-		client, flushAll, err := setup()
+		client, flushAllAndClose, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
 		defer func() {
-			err := flushAll()
+			err := flushAllAndClose()
 			if err != nil {
 				t.Error(err)
 			}
@@ -448,12 +450,12 @@ func TestBloomFilterExists(t *testing.T) {
 	})
 
 	t.Run("does not exist", func(t *testing.T) {
-		client, flushAll, err := setup()
+		client, flushAllAndClose, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
 		defer func() {
-			err := flushAll()
+			err := flushAllAndClose()
 			if err != nil {
 				t.Error(err)
 			}
@@ -475,12 +477,12 @@ func TestBloomFilterExists(t *testing.T) {
 }
 
 func TestBloomFilterExistsError(t *testing.T) {
-	client, flushAll, err := setup()
+	client, flushAllAndClose, err := setup()
 	if err != nil {
 		t.Error(err)
 	}
 	defer func() {
-		err := flushAll()
+		err := flushAllAndClose()
 		if err != nil {
 			t.Error(err)
 		}
@@ -501,12 +503,12 @@ func TestBloomFilterExistsError(t *testing.T) {
 
 func TestBloomFilterExistsMulti(t *testing.T) {
 	t.Run("exists", func(t *testing.T) {
-		client, flushAll, err := setup()
+		client, flushAllAndClose, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
 		defer func() {
-			err := flushAll()
+			err := flushAllAndClose()
 			if err != nil {
 				t.Error(err)
 			}
@@ -534,12 +536,12 @@ func TestBloomFilterExistsMulti(t *testing.T) {
 	})
 
 	t.Run("does not exist", func(t *testing.T) {
-		client, flushAll, err := setup()
+		client, flushAllAndClose, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
 		defer func() {
-			err := flushAll()
+			err := flushAllAndClose()
 			if err != nil {
 				t.Error(err)
 			}
@@ -562,12 +564,12 @@ func TestBloomFilterExistsMulti(t *testing.T) {
 	})
 
 	t.Run("empty keys", func(t *testing.T) {
-		client, flushAll, err := setup()
+		client, flushAllAndClose, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
 		defer func() {
-			err := flushAll()
+			err := flushAllAndClose()
 			if err != nil {
 				t.Error(err)
 			}
@@ -589,12 +591,12 @@ func TestBloomFilterExistsMulti(t *testing.T) {
 }
 
 func TestBloomFilterExistsMultiError(t *testing.T) {
-	client, flushAll, err := setup()
+	client, flushAllAndClose, err := setup()
 	if err != nil {
 		t.Error(err)
 	}
 	defer func() {
-		err := flushAll()
+		err := flushAllAndClose()
 		if err != nil {
 			t.Error(err)
 		}
@@ -615,12 +617,12 @@ func TestBloomFilterExistsMultiError(t *testing.T) {
 
 func TestBloomFilterReset(t *testing.T) {
 	t.Run("reset exists", func(t *testing.T) {
-		client, flushAll, err := setup()
+		client, flushAllAndClose, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
 		defer func() {
-			err := flushAll()
+			err := flushAllAndClose()
 			if err != nil {
 				t.Error(err)
 			}
@@ -659,12 +661,12 @@ func TestBloomFilterReset(t *testing.T) {
 	})
 
 	t.Run("reset does not exist", func(t *testing.T) {
-		client, flushAll, err := setup()
+		client, flushAllAndClose, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
 		defer func() {
-			err := flushAll()
+			err := flushAllAndClose()
 			if err != nil {
 				t.Error(err)
 			}
@@ -691,12 +693,12 @@ func TestBloomFilterReset(t *testing.T) {
 }
 
 func TestBloomFilterResetError(t *testing.T) {
-	client, flushAll, err := setup()
+	client, flushAllAndClose, err := setup()
 	if err != nil {
 		t.Error(err)
 	}
 	defer func() {
-		err := flushAll()
+		err := flushAllAndClose()
 		if err != nil {
 			t.Error(err)
 		}
@@ -717,12 +719,12 @@ func TestBloomFilterResetError(t *testing.T) {
 
 func TestBloomFilterDelete(t *testing.T) {
 	t.Run("delete exists", func(t *testing.T) {
-		client, flushAll, err := setup()
+		client, flushAllAndClose, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
 		defer func() {
-			err := flushAll()
+			err := flushAllAndClose()
 			if err != nil {
 				t.Error(err)
 			}
@@ -775,12 +777,12 @@ func TestBloomFilterDelete(t *testing.T) {
 	})
 
 	t.Run("delete does not exist", func(t *testing.T) {
-		client, flushAll, err := setup()
+		client, flushAllAndClose, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
 		defer func() {
-			err := flushAll()
+			err := flushAllAndClose()
 			if err != nil {
 				t.Error(err)
 			}
@@ -799,12 +801,12 @@ func TestBloomFilterDelete(t *testing.T) {
 }
 
 func TestBloomFilterDeleteError(t *testing.T) {
-	client, flushAll, err := setup()
+	client, flushAllAndClose, err := setup()
 	if err != nil {
 		t.Error(err)
 	}
 	defer func() {
-		err := flushAll()
+		err := flushAllAndClose()
 		if err != nil {
 			t.Error(err)
 		}
@@ -825,12 +827,12 @@ func TestBloomFilterDeleteError(t *testing.T) {
 
 func TestBloomFilterCount(t *testing.T) {
 	t.Run("count exists", func(t *testing.T) {
-		client, flushAll, err := setup()
+		client, flushAllAndClose, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
 		defer func() {
-			err := flushAll()
+			err := flushAllAndClose()
 			if err != nil {
 				t.Error(err)
 			}
@@ -856,12 +858,12 @@ func TestBloomFilterCount(t *testing.T) {
 	})
 
 	t.Run("count does not exist", func(t *testing.T) {
-		client, flushAll, err := setup()
+		client, flushAllAndClose, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
 		defer func() {
-			err := flushAll()
+			err := flushAllAndClose()
 			if err != nil {
 				t.Error(err)
 			}
@@ -882,12 +884,12 @@ func TestBloomFilterCount(t *testing.T) {
 	})
 
 	t.Run("add multiple items", func(t *testing.T) {
-		client, flushAll, err := setup()
+		client, flushAllAndClose, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
 		defer func() {
-			err := flushAll()
+			err := flushAllAndClose()
 			if err != nil {
 				t.Error(err)
 			}
@@ -916,12 +918,12 @@ func TestBloomFilterCount(t *testing.T) {
 
 func TestBloomFilterCountError(t *testing.T) {
 	t.Run("count error", func(t *testing.T) {
-		client, flushAll, err := setup()
+		client, flushAllAndClose, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
 		defer func() {
-			err := flushAll()
+			err := flushAllAndClose()
 			if err != nil {
 				t.Error(err)
 			}
@@ -941,12 +943,12 @@ func TestBloomFilterCountError(t *testing.T) {
 	})
 
 	t.Run("counter key is corrupted", func(t *testing.T) {
-		client, flushAll, err := setup()
+		client, flushAllAndClose, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
 		defer func() {
-			err := flushAll()
+			err := flushAllAndClose()
 			if err != nil {
 				t.Error(err)
 			}
@@ -977,12 +979,12 @@ func TestBloomFilterCountError(t *testing.T) {
 }
 
 func BenchmarkBloomFilterAddMultiBigSize(b *testing.B) {
-	client, flushAll, err := setup()
+	client, flushAllAndClose, err := setup()
 	if err != nil {
 		b.Error(err)
 	}
 	defer func() {
-		err := flushAll()
+		err := flushAllAndClose()
 		if err != nil {
 			b.Error(err)
 		}
@@ -1009,12 +1011,12 @@ func BenchmarkBloomFilterAddMultiBigSize(b *testing.B) {
 }
 
 func BenchmarkBloomFilterAddMultiLowRate(b *testing.B) {
-	client, flushAll, err := setup()
+	client, flushAllAndClose, err := setup()
 	if err != nil {
 		b.Error(err)
 	}
 	defer func() {
-		err := flushAll()
+		err := flushAllAndClose()
 		if err != nil {
 			b.Error(err)
 		}
@@ -1041,12 +1043,12 @@ func BenchmarkBloomFilterAddMultiLowRate(b *testing.B) {
 }
 
 func BenchmarkBloomFilterAddMultiManyKeys(b *testing.B) {
-	client, flushAll, err := setup()
+	client, flushAllAndClose, err := setup()
 	if err != nil {
 		b.Error(err)
 	}
 	defer func() {
-		err := flushAll()
+		err := flushAllAndClose()
 		if err != nil {
 			b.Error(err)
 		}
@@ -1073,12 +1075,12 @@ func BenchmarkBloomFilterAddMultiManyKeys(b *testing.B) {
 }
 
 func BenchmarkBloomFilterExistsMultiBigSize(b *testing.B) {
-	client, flushAll, err := setup()
+	client, flushAllAndClose, err := setup()
 	if err != nil {
 		b.Error(err)
 	}
 	defer func() {
-		err := flushAll()
+		err := flushAllAndClose()
 		if err != nil {
 			b.Error(err)
 		}
@@ -1115,12 +1117,12 @@ func BenchmarkBloomFilterExistsMultiBigSize(b *testing.B) {
 }
 
 func BenchmarkBloomFilterExistsMultiLowRate(b *testing.B) {
-	client, flushAll, err := setup()
+	client, flushAllAndClose, err := setup()
 	if err != nil {
 		b.Error(err)
 	}
 	defer func() {
-		err := flushAll()
+		err := flushAllAndClose()
 		if err != nil {
 			b.Error(err)
 		}
@@ -1157,12 +1159,12 @@ func BenchmarkBloomFilterExistsMultiLowRate(b *testing.B) {
 }
 
 func BenchmarkBloomFilterExistsMultiManyKeys(b *testing.B) {
-	client, flushAll, err := setup()
+	client, flushAllAndClose, err := setup()
 	if err != nil {
 		b.Error(err)
 	}
 	defer func() {
-		err := flushAll()
+		err := flushAllAndClose()
 		if err != nil {
 			b.Error(err)
 		}
