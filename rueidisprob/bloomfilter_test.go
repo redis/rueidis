@@ -12,30 +12,38 @@ import (
 
 var address = []string{"127.0.0.1:7001", "127.0.0.1:7002", "127.0.0.1:7003"}
 
-func cleanup(client rueidis.Client, keys ...string) error {
-	cmds := make([]rueidis.Completed, 0, len(keys))
-	for _, key := range keys {
-		cmds = append(cmds, client.B().Del().Key(key).Build())
-	}
-
-	resps := client.DoMulti(context.Background(), cmds...)
-	for _, resp := range resps {
-		if resp.Error() != nil {
-			if !rueidis.IsRedisNil(resp.Error()) {
-				return resp.Error()
-			}
-		}
-	}
-	return nil
-}
-
-func TestNewBloomFilter(t *testing.T) {
+func setup() (rueidis.Client, func() error, error) {
 	client, err := rueidis.NewClient(
 		rueidis.ClientOption{InitAddress: address},
 	)
 	if err != nil {
+		return nil, func() error { return nil }, err
+	}
+
+	flushAll := func() error {
+		for _, node := range client.Nodes() {
+			resp := node.Do(context.Background(), client.B().Flushall().Build())
+			if resp.Error() != nil {
+				return resp.Error()
+			}
+		}
+		return nil
+	}
+	return client, flushAll, nil
+}
+
+func TestNewBloomFilter(t *testing.T) {
+	client, flushAll, err := setup()
+	if err != nil {
 		t.Error(err)
 	}
+	defer func() {
+		err := flushAll()
+		if err != nil {
+			t.Error(err)
+		}
+	}()
+
 	bf, err := NewBloomFilter(client, "test", 100, 0.01)
 	if err != nil {
 		t.Error(err)
@@ -63,12 +71,17 @@ func TestNewBloomFilter(t *testing.T) {
 
 func TestNewBloomFilterError(t *testing.T) {
 	t.Run("EmptyName", func(t *testing.T) {
-		client, err := rueidis.NewClient(
-			rueidis.ClientOption{InitAddress: address},
-		)
+		client, flushAll, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
+		defer func() {
+			err := flushAll()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
 		_, err = NewBloomFilter(client, "", 100, 0.01)
 		if !errors.Is(err, ErrEmptyName) {
 			t.Error("Error is not ErrEmptyName")
@@ -76,12 +89,17 @@ func TestNewBloomFilterError(t *testing.T) {
 	})
 
 	t.Run("NegativeFalsePositiveRate", func(t *testing.T) {
-		client, err := rueidis.NewClient(
-			rueidis.ClientOption{InitAddress: address},
-		)
+		client, flushAll, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
+		defer func() {
+			err := flushAll()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
 		_, err = NewBloomFilter(client, "test", 100, -0.01)
 		if !errors.Is(err, ErrFalsePositiveRateLessThanEqualZero) {
 			t.Error("Error is not ErrFalsePositiveRateNegative")
@@ -89,12 +107,17 @@ func TestNewBloomFilterError(t *testing.T) {
 	})
 
 	t.Run("GreaterThanOneFalsePositiveRate", func(t *testing.T) {
-		client, err := rueidis.NewClient(
-			rueidis.ClientOption{InitAddress: address},
-		)
+		client, flushAll, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
+		defer func() {
+			err := flushAll()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
 		_, err = NewBloomFilter(client, "test", 100, 1.01)
 		if !errors.Is(err, ErrFalsePositiveRateGreaterThanOne) {
 			t.Error("Error is not ErrFalsePositiveRateGreaterThanOne")
@@ -102,12 +125,17 @@ func TestNewBloomFilterError(t *testing.T) {
 	})
 
 	t.Run("BitsSizeZero", func(t *testing.T) {
-		client, err := rueidis.NewClient(
-			rueidis.ClientOption{InitAddress: address},
-		)
+		client, flushAll, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
+		defer func() {
+			err := flushAll()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
 		_, err = NewBloomFilter(client, "test", 0, 0.01)
 		if !errors.Is(err, ErrBitsSizeZero) {
 			t.Error("Error is not ErrBitsSizeZero")
@@ -115,12 +143,17 @@ func TestNewBloomFilterError(t *testing.T) {
 	})
 
 	t.Run("BitsSizeTooLarge", func(t *testing.T) {
-		client, err := rueidis.NewClient(
-			rueidis.ClientOption{InitAddress: address},
-		)
+		client, flushAll, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
+		defer func() {
+			err := flushAll()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
 		_, err = NewBloomFilter(client, "test", 1<<32, 0.01)
 		if !errors.Is(err, ErrBitsSizeTooLarge) {
 			t.Error("Error is not ErrBitsSizeTooLarge")
@@ -129,12 +162,17 @@ func TestNewBloomFilterError(t *testing.T) {
 }
 
 func TestBloomFilterAdd(t *testing.T) {
-	client, err := rueidis.NewClient(
-		rueidis.ClientOption{InitAddress: address},
-	)
+	client, flushAll, err := setup()
 	if err != nil {
 		t.Error(err)
 	}
+	defer func() {
+		err := flushAll()
+		if err != nil {
+			t.Error(err)
+		}
+	}()
+
 	bf, err := NewBloomFilter(client, "test", 100, 0.01)
 	if err != nil {
 		t.Error(err)
@@ -160,21 +198,20 @@ func TestBloomFilterAdd(t *testing.T) {
 	if count != 1 {
 		t.Error("Count is not 1")
 	}
-
-	// cleanup
-	err = cleanup(client, "{test}", "{test}:c")
-	if err != nil {
-		t.Error(err)
-	}
 }
 
 func TestBloomFilterAddError(t *testing.T) {
-	client, err := rueidis.NewClient(
-		rueidis.ClientOption{InitAddress: address},
-	)
+	client, flushAll, err := setup()
 	if err != nil {
 		t.Error(err)
 	}
+	defer func() {
+		err := flushAll()
+		if err != nil {
+			t.Error(err)
+		}
+	}()
+
 	bf, err := NewBloomFilter(client, "test", 100, 0.01)
 	if err != nil {
 		t.Error(err)
@@ -190,12 +227,17 @@ func TestBloomFilterAddError(t *testing.T) {
 
 func TestBloomFilterAddMulti(t *testing.T) {
 	t.Run("add multiple items", func(t *testing.T) {
-		client, err := rueidis.NewClient(
-			rueidis.ClientOption{InitAddress: address},
-		)
+		client, flushAll, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
+		defer func() {
+			err := flushAll()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
 		bf, err := NewBloomFilter(client, "test", 100, 0.01)
 		if err != nil {
 			t.Error(err)
@@ -224,20 +266,20 @@ func TestBloomFilterAddMulti(t *testing.T) {
 		if count != 3 {
 			t.Error("Count is not 3")
 		}
-
-		err = cleanup(client, "{test}", "{test}:c")
-		if err != nil {
-			t.Error(err)
-		}
 	})
 
 	t.Run("add empty items", func(t *testing.T) {
-		client, err := rueidis.NewClient(
-			rueidis.ClientOption{InitAddress: address},
-		)
+		client, flushAll, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
+		defer func() {
+			err := flushAll()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
 		bf, err := NewBloomFilter(client, "test", 100, 0.01)
 		if err != nil {
 			t.Error(err)
@@ -258,12 +300,17 @@ func TestBloomFilterAddMulti(t *testing.T) {
 	})
 
 	t.Run("add already exists items", func(t *testing.T) {
-		client, err := rueidis.NewClient(
-			rueidis.ClientOption{InitAddress: address},
-		)
+		client, flushAll, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
+		defer func() {
+			err := flushAll()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
 		bf, err := NewBloomFilter(client, "test", 100, 0.01)
 		if err != nil {
 			t.Error(err)
@@ -303,20 +350,20 @@ func TestBloomFilterAddMulti(t *testing.T) {
 		if count != 3 {
 			t.Error("Count is not 3")
 		}
-
-		err = cleanup(client, "{test}", "{test}:c")
-		if err != nil {
-			t.Error(err)
-		}
 	})
 
 	t.Run("add duplicate items", func(t *testing.T) {
-		client, err := rueidis.NewClient(
-			rueidis.ClientOption{InitAddress: address},
-		)
+		client, flushAll, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
+		defer func() {
+			err := flushAll()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
 		bf, err := NewBloomFilter(client, "test", 100, 0.01)
 		if err != nil {
 			t.Error(err)
@@ -340,21 +387,21 @@ func TestBloomFilterAddMulti(t *testing.T) {
 		if count != 3 {
 			t.Error("Count is not 3")
 		}
-
-		err = cleanup(client, "{test}", "{test}:c")
-		if err != nil {
-			t.Error(err)
-		}
 	})
 }
 
 func TestBloomFilterAddMultiError(t *testing.T) {
-	client, err := rueidis.NewClient(
-		rueidis.ClientOption{InitAddress: address},
-	)
+	client, flushAll, err := setup()
 	if err != nil {
 		t.Error(err)
 	}
+	defer func() {
+		err := flushAll()
+		if err != nil {
+			t.Error(err)
+		}
+	}()
+
 	bf, err := NewBloomFilter(client, "test", 100, 0.01)
 	if err != nil {
 		t.Error(err)
@@ -370,12 +417,17 @@ func TestBloomFilterAddMultiError(t *testing.T) {
 
 func TestBloomFilterExists(t *testing.T) {
 	t.Run("exists", func(t *testing.T) {
-		client, err := rueidis.NewClient(
-			rueidis.ClientOption{InitAddress: address},
-		)
+		client, flushAll, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
+		defer func() {
+			err := flushAll()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
 		bf, err := NewBloomFilter(client, "test", 100, 0.01)
 		if err != nil {
 			t.Error(err)
@@ -393,20 +445,20 @@ func TestBloomFilterExists(t *testing.T) {
 		if !exists {
 			t.Error("Key test does not exist")
 		}
-
-		err = cleanup(client, "{test}", "{test}:c")
-		if err != nil {
-			t.Error(err)
-		}
 	})
 
 	t.Run("does not exist", func(t *testing.T) {
-		client, err := rueidis.NewClient(
-			rueidis.ClientOption{InitAddress: address},
-		)
+		client, flushAll, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
+		defer func() {
+			err := flushAll()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
 		bf, err := NewBloomFilter(client, "test", 100, 0.01)
 		if err != nil {
 			t.Error(err)
@@ -419,21 +471,21 @@ func TestBloomFilterExists(t *testing.T) {
 		if exists {
 			t.Error("Key test exists")
 		}
-
-		err = cleanup(client, "{test}", "{test}:c")
-		if err != nil {
-			t.Error(err)
-		}
 	})
 }
 
 func TestBloomFilterExistsError(t *testing.T) {
-	client, err := rueidis.NewClient(
-		rueidis.ClientOption{InitAddress: address},
-	)
+	client, flushAll, err := setup()
 	if err != nil {
 		t.Error(err)
 	}
+	defer func() {
+		err := flushAll()
+		if err != nil {
+			t.Error(err)
+		}
+	}()
+
 	bf, err := NewBloomFilter(client, "test", 100, 0.01)
 	if err != nil {
 		t.Error(err)
@@ -449,12 +501,17 @@ func TestBloomFilterExistsError(t *testing.T) {
 
 func TestBloomFilterExistsMulti(t *testing.T) {
 	t.Run("exists", func(t *testing.T) {
-		client, err := rueidis.NewClient(
-			rueidis.ClientOption{InitAddress: address},
-		)
+		client, flushAll, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
+		defer func() {
+			err := flushAll()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
 		bf, err := NewBloomFilter(client, "test", 100, 0.01)
 		if err != nil {
 			t.Error(err)
@@ -474,20 +531,20 @@ func TestBloomFilterExistsMulti(t *testing.T) {
 				t.Error("Key test does not exist")
 			}
 		}
-
-		err = cleanup(client, "{test}", "{test}:c")
-		if err != nil {
-			t.Error(err)
-		}
 	})
 
 	t.Run("does not exist", func(t *testing.T) {
-		client, err := rueidis.NewClient(
-			rueidis.ClientOption{InitAddress: address},
-		)
+		client, flushAll, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
+		defer func() {
+			err := flushAll()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
 		bf, err := NewBloomFilter(client, "test", 100, 0.01)
 		if err != nil {
 			t.Error(err)
@@ -502,20 +559,20 @@ func TestBloomFilterExistsMulti(t *testing.T) {
 				t.Error("Key test exists")
 			}
 		}
-
-		err = cleanup(client, "{test}", "{test}:c")
-		if err != nil {
-			t.Error(err)
-		}
 	})
 
 	t.Run("empty keys", func(t *testing.T) {
-		client, err := rueidis.NewClient(
-			rueidis.ClientOption{InitAddress: address},
-		)
+		client, flushAll, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
+		defer func() {
+			err := flushAll()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
 		bf, err := NewBloomFilter(client, "test", 100, 0.01)
 		if err != nil {
 			t.Error(err)
@@ -532,12 +589,17 @@ func TestBloomFilterExistsMulti(t *testing.T) {
 }
 
 func TestBloomFilterExistsMultiError(t *testing.T) {
-	client, err := rueidis.NewClient(
-		rueidis.ClientOption{InitAddress: address},
-	)
+	client, flushAll, err := setup()
 	if err != nil {
 		t.Error(err)
 	}
+	defer func() {
+		err := flushAll()
+		if err != nil {
+			t.Error(err)
+		}
+	}()
+
 	bf, err := NewBloomFilter(client, "test", 100, 0.01)
 	if err != nil {
 		t.Error(err)
@@ -553,12 +615,17 @@ func TestBloomFilterExistsMultiError(t *testing.T) {
 
 func TestBloomFilterReset(t *testing.T) {
 	t.Run("reset exists", func(t *testing.T) {
-		client, err := rueidis.NewClient(
-			rueidis.ClientOption{InitAddress: address},
-		)
+		client, flushAll, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
+		defer func() {
+			err := flushAll()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
 		bf, err := NewBloomFilter(client, "test", 100, 0.01)
 		if err != nil {
 			t.Error(err)
@@ -589,20 +656,20 @@ func TestBloomFilterReset(t *testing.T) {
 		if count != 0 {
 			t.Error("Count is not 0")
 		}
-
-		err = cleanup(client, "{test}", "{test}:c")
-		if err != nil {
-			t.Error(err)
-		}
 	})
 
 	t.Run("reset does not exist", func(t *testing.T) {
-		client, err := rueidis.NewClient(
-			rueidis.ClientOption{InitAddress: address},
-		)
+		client, flushAll, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
+		defer func() {
+			err := flushAll()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
 		bf, err := NewBloomFilter(client, "test", 100, 0.01)
 		if err != nil {
 			t.Error(err)
@@ -624,12 +691,17 @@ func TestBloomFilterReset(t *testing.T) {
 }
 
 func TestBloomFilterResetError(t *testing.T) {
-	client, err := rueidis.NewClient(
-		rueidis.ClientOption{InitAddress: address},
-	)
+	client, flushAll, err := setup()
 	if err != nil {
 		t.Error(err)
 	}
+	defer func() {
+		err := flushAll()
+		if err != nil {
+			t.Error(err)
+		}
+	}()
+
 	bf, err := NewBloomFilter(client, "test", 100, 0.01)
 	if err != nil {
 		t.Error(err)
@@ -645,12 +717,17 @@ func TestBloomFilterResetError(t *testing.T) {
 
 func TestBloomFilterDelete(t *testing.T) {
 	t.Run("delete exists", func(t *testing.T) {
-		client, err := rueidis.NewClient(
-			rueidis.ClientOption{InitAddress: address},
-		)
+		client, flushAll, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
+		defer func() {
+			err := flushAll()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
 		bf, err := NewBloomFilter(client, "test", 100, 0.01)
 		if err != nil {
 			t.Error(err)
@@ -698,12 +775,17 @@ func TestBloomFilterDelete(t *testing.T) {
 	})
 
 	t.Run("delete does not exist", func(t *testing.T) {
-		client, err := rueidis.NewClient(
-			rueidis.ClientOption{InitAddress: address},
-		)
+		client, flushAll, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
+		defer func() {
+			err := flushAll()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
 		bf, err := NewBloomFilter(client, "test", 100, 0.01)
 		if err != nil {
 			t.Error(err)
@@ -717,12 +799,17 @@ func TestBloomFilterDelete(t *testing.T) {
 }
 
 func TestBloomFilterDeleteError(t *testing.T) {
-	client, err := rueidis.NewClient(
-		rueidis.ClientOption{InitAddress: address},
-	)
+	client, flushAll, err := setup()
 	if err != nil {
 		t.Error(err)
 	}
+	defer func() {
+		err := flushAll()
+		if err != nil {
+			t.Error(err)
+		}
+	}()
+
 	bf, err := NewBloomFilter(client, "test", 100, 0.01)
 	if err != nil {
 		t.Error(err)
@@ -738,12 +825,17 @@ func TestBloomFilterDeleteError(t *testing.T) {
 
 func TestBloomFilterCount(t *testing.T) {
 	t.Run("count exists", func(t *testing.T) {
-		client, err := rueidis.NewClient(
-			rueidis.ClientOption{InitAddress: address},
-		)
+		client, flushAll, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
+		defer func() {
+			err := flushAll()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
 		bf, err := NewBloomFilter(client, "test", 100, 0.01)
 		if err != nil {
 			t.Error(err)
@@ -761,20 +853,20 @@ func TestBloomFilterCount(t *testing.T) {
 		if count != 1 {
 			t.Error("Count is not 1")
 		}
-
-		err = cleanup(client, "{test}", "{test}:c")
-		if err != nil {
-			t.Error(err)
-		}
 	})
 
 	t.Run("count does not exist", func(t *testing.T) {
-		client, err := rueidis.NewClient(
-			rueidis.ClientOption{InitAddress: address},
-		)
+		client, flushAll, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
+		defer func() {
+			err := flushAll()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
 		bf, err := NewBloomFilter(client, "test", 100, 0.01)
 		if err != nil {
 			t.Error(err)
@@ -787,20 +879,20 @@ func TestBloomFilterCount(t *testing.T) {
 		if count != 0 {
 			t.Error("Count is not 0")
 		}
-
-		err = cleanup(client, "{test}", "{test}:c")
-		if err != nil {
-			t.Error(err)
-		}
 	})
 
 	t.Run("add multiple items", func(t *testing.T) {
-		client, err := rueidis.NewClient(
-			rueidis.ClientOption{InitAddress: address},
-		)
+		client, flushAll, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
+		defer func() {
+			err := flushAll()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
 		bf, err := NewBloomFilter(client, "test", 100, 0.01)
 		if err != nil {
 			t.Error(err)
@@ -819,22 +911,22 @@ func TestBloomFilterCount(t *testing.T) {
 		if count != 3 {
 			t.Error("Count is not 3")
 		}
-
-		err = cleanup(client, "{test}", "{test}:c")
-		if err != nil {
-			t.Error(err)
-		}
 	})
 }
 
 func TestBloomFilterCountError(t *testing.T) {
 	t.Run("count error", func(t *testing.T) {
-		client, err := rueidis.NewClient(
-			rueidis.ClientOption{InitAddress: address},
-		)
+		client, flushAll, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
+		defer func() {
+			err := flushAll()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
 		bf, err := NewBloomFilter(client, "test", 100, 0.01)
 		if err != nil {
 			t.Error(err)
@@ -849,12 +941,17 @@ func TestBloomFilterCountError(t *testing.T) {
 	})
 
 	t.Run("counter key is corrupted", func(t *testing.T) {
-		client, err := rueidis.NewClient(
-			rueidis.ClientOption{InitAddress: address},
-		)
+		client, flushAll, err := setup()
 		if err != nil {
 			t.Error(err)
 		}
+		defer func() {
+			err := flushAll()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
 		bf, err := NewBloomFilter(client, "test", 100, 0.01)
 		if err != nil {
 			t.Error(err)
@@ -876,21 +973,21 @@ func TestBloomFilterCountError(t *testing.T) {
 		if !errors.Is(err, strconv.ErrSyntax) {
 			t.Error("Error is not strconv.ErrSyntax")
 		}
-
-		err = cleanup(client, "{test}:c")
-		if err != nil {
-			t.Error(err)
-		}
 	})
 }
 
 func BenchmarkBloomFilterAddMultiBigSize(b *testing.B) {
-	client, err := rueidis.NewClient(
-		rueidis.ClientOption{InitAddress: address},
-	)
+	client, flushAll, err := setup()
 	if err != nil {
 		b.Error(err)
 	}
+	defer func() {
+		err := flushAll()
+		if err != nil {
+			b.Error(err)
+		}
+	}()
+
 	bf, err := NewBloomFilter(client, "test", 100000000, 0.01)
 	if err != nil {
 		b.Error(err)
@@ -908,21 +1005,21 @@ func BenchmarkBloomFilterAddMultiBigSize(b *testing.B) {
 		if err != nil {
 			b.Error(err)
 		}
-	}
-
-	err = cleanup(client, "{test}", "{test}:c")
-	if err != nil {
-		b.Error(err)
 	}
 }
 
 func BenchmarkBloomFilterAddMultiLowRate(b *testing.B) {
-	client, err := rueidis.NewClient(
-		rueidis.ClientOption{InitAddress: address},
-	)
+	client, flushAll, err := setup()
 	if err != nil {
 		b.Error(err)
 	}
+	defer func() {
+		err := flushAll()
+		if err != nil {
+			b.Error(err)
+		}
+	}()
+
 	bf, err := NewBloomFilter(client, "test", 1000000, 0.0000000001)
 	if err != nil {
 		b.Error(err)
@@ -941,20 +1038,20 @@ func BenchmarkBloomFilterAddMultiLowRate(b *testing.B) {
 			b.Error(err)
 		}
 	}
-
-	err = cleanup(client, "{test}", "{test}:c")
-	if err != nil {
-		b.Error(err)
-	}
 }
 
 func BenchmarkBloomFilterAddMultiManyKeys(b *testing.B) {
-	client, err := rueidis.NewClient(
-		rueidis.ClientOption{InitAddress: address},
-	)
+	client, flushAll, err := setup()
 	if err != nil {
 		b.Error(err)
 	}
+	defer func() {
+		err := flushAll()
+		if err != nil {
+			b.Error(err)
+		}
+	}()
+
 	bf, err := NewBloomFilter(client, "test", 1000000, 0.01)
 	if err != nil {
 		b.Error(err)
@@ -973,20 +1070,20 @@ func BenchmarkBloomFilterAddMultiManyKeys(b *testing.B) {
 			b.Error(err)
 		}
 	}
-
-	err = cleanup(client, "{test}", "{test}:c")
-	if err != nil {
-		b.Error(err)
-	}
 }
 
 func BenchmarkBloomFilterExistsMultiBigSize(b *testing.B) {
-	client, err := rueidis.NewClient(
-		rueidis.ClientOption{InitAddress: address},
-	)
+	client, flushAll, err := setup()
 	if err != nil {
 		b.Error(err)
 	}
+	defer func() {
+		err := flushAll()
+		if err != nil {
+			b.Error(err)
+		}
+	}()
+
 	bf, err := NewBloomFilter(client, "test", 100000000, 0.01)
 	if err != nil {
 		b.Error(err)
@@ -1015,20 +1112,20 @@ func BenchmarkBloomFilterExistsMultiBigSize(b *testing.B) {
 			b.Error(err)
 		}
 	}
-
-	err = cleanup(client, "{test}", "{test}:c")
-	if err != nil {
-		b.Error(err)
-	}
 }
 
 func BenchmarkBloomFilterExistsMultiLowRate(b *testing.B) {
-	client, err := rueidis.NewClient(
-		rueidis.ClientOption{InitAddress: address},
-	)
+	client, flushAll, err := setup()
 	if err != nil {
 		b.Error(err)
 	}
+	defer func() {
+		err := flushAll()
+		if err != nil {
+			b.Error(err)
+		}
+	}()
+
 	bf, err := NewBloomFilter(client, "test", 1000000, 0.0000000001)
 	if err != nil {
 		b.Error(err)
@@ -1057,20 +1154,20 @@ func BenchmarkBloomFilterExistsMultiLowRate(b *testing.B) {
 			b.Error(err)
 		}
 	}
-
-	err = cleanup(client, "{test}", "{test}:c")
-	if err != nil {
-		b.Error(err)
-	}
 }
 
 func BenchmarkBloomFilterExistsMultiManyKeys(b *testing.B) {
-	client, err := rueidis.NewClient(
-		rueidis.ClientOption{InitAddress: address},
-	)
+	client, flushAll, err := setup()
 	if err != nil {
 		b.Error(err)
 	}
+	defer func() {
+		err := flushAll()
+		if err != nil {
+			b.Error(err)
+		}
+	}()
+
 	bf, err := NewBloomFilter(client, "test", 1000000, 0.01)
 	if err != nil {
 		b.Error(err)
@@ -1098,10 +1195,5 @@ func BenchmarkBloomFilterExistsMultiManyKeys(b *testing.B) {
 		if err != nil {
 			b.Error(err)
 		}
-	}
-
-	err = cleanup(client, "{test}", "{test}:c")
-	if err != nil {
-		b.Error(err)
 	}
 }
