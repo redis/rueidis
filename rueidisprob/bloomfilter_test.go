@@ -156,7 +156,7 @@ func TestNewBloomFilterError(t *testing.T) {
 			}
 		}()
 
-		_, err = NewBloomFilter(client, "test", 1<<32, 0.01)
+		_, err = NewBloomFilter(client, "test", 1<<33, 0.01)
 		if !errors.Is(err, ErrBitsSizeTooLarge) {
 			t.Error("Error is not ErrBitsSizeTooLarge")
 		}
