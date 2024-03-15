@@ -20,6 +20,7 @@ A fast Golang Redis client that does auto pipelining and supports server-assiste
 * [Go-redis like API adapter](./rueidiscompat) by [@418Coffee](https://github.com/418Coffee)
 * Pub/Sub, Sharded Pub/Sub, Streams
 * Redis Cluster, Sentinel, RedisJSON, RedisBloom, RediSearch, RedisTimeseries, etc.
+* [Probabilistic Data Structures without Redis Stack](./rueidisprob)
 
 ## Getting Started
 
