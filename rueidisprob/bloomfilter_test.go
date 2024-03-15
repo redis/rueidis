@@ -20,6 +20,13 @@ func setup() (rueidis.Client, func() error, error) {
 		return nil, func() error { return nil }, err
 	}
 
+	for _, node := range client.Nodes() {
+		resp := node.Do(context.Background(), client.B().Ping().Build())
+		if resp.Error() != nil {
+			return nil, func() error { return nil }, resp.Error()
+		}
+	}
+
 	flushAll := func() error {
 		for _, node := range client.Nodes() {
 			resp := node.Do(context.Background(), client.B().Flushall().Build())
