@@ -20,13 +20,6 @@ func setup() (rueidis.Client, func() error, error) {
 		return nil, func() error { return nil }, err
 	}
 
-	for _, node := range client.Nodes() {
-		resp := node.Do(context.Background(), client.B().Ping().Build())
-		if resp.Error() != nil {
-			return nil, func() error { return nil }, resp.Error()
-		}
-	}
-
 	flushAll := func() error {
 		for _, node := range client.Nodes() {
 			resp := node.Do(context.Background(), client.B().Flushall().Build())
@@ -51,7 +44,7 @@ func TestNewBloomFilter(t *testing.T) {
 		}
 	}()
 
-	bf, err := NewBloomFilter(client, "test", 100, 0.01)
+	bf, err := NewBloomFilter(client, "test", 100, 0.05)
 	if err != nil {
 		t.Error(err)
 	}
@@ -68,8 +61,8 @@ func TestNewBloomFilter(t *testing.T) {
 	if bf.(*bloomFilter).counter != "{test}:c" {
 		t.Error("Counter is not test:c")
 	}
-	if bf.(*bloomFilter).hashIterations != 7 {
-		t.Error("Hash iterations is not 7")
+	if bf.(*bloomFilter).hashIterations != 4 {
+		t.Error("Hash iterations is not 4")
 	}
 	if bf.(*bloomFilter).client != client {
 		t.Error("Client is not equal")
@@ -89,7 +82,7 @@ func TestNewBloomFilterError(t *testing.T) {
 			}
 		}()
 
-		_, err = NewBloomFilter(client, "", 100, 0.01)
+		_, err = NewBloomFilter(client, "", 100, 0.05)
 		if !errors.Is(err, ErrEmptyName) {
 			t.Error("Error is not ErrEmptyName")
 		}
@@ -180,7 +173,7 @@ func TestBloomFilterAdd(t *testing.T) {
 		}
 	}()
 
-	bf, err := NewBloomFilter(client, "test", 100, 0.01)
+	bf, err := NewBloomFilter(client, "test", 100, 0.05)
 	if err != nil {
 		t.Error(err)
 	}
@@ -219,7 +212,7 @@ func TestBloomFilterAddError(t *testing.T) {
 		}
 	}()
 
-	bf, err := NewBloomFilter(client, "test", 100, 0.01)
+	bf, err := NewBloomFilter(client, "test", 100, 0.05)
 	if err != nil {
 		t.Error(err)
 	}
@@ -245,7 +238,7 @@ func TestBloomFilterAddMulti(t *testing.T) {
 			}
 		}()
 
-		bf, err := NewBloomFilter(client, "test", 100, 0.01)
+		bf, err := NewBloomFilter(client, "test", 100, 0.05)
 		if err != nil {
 			t.Error(err)
 		}
@@ -287,7 +280,7 @@ func TestBloomFilterAddMulti(t *testing.T) {
 			}
 		}()
 
-		bf, err := NewBloomFilter(client, "test", 100, 0.01)
+		bf, err := NewBloomFilter(client, "test", 100, 0.05)
 		if err != nil {
 			t.Error(err)
 		}
@@ -318,7 +311,7 @@ func TestBloomFilterAddMulti(t *testing.T) {
 			}
 		}()
 
-		bf, err := NewBloomFilter(client, "test", 100, 0.01)
+		bf, err := NewBloomFilter(client, "test", 100, 0.05)
 		if err != nil {
 			t.Error(err)
 		}
@@ -371,7 +364,7 @@ func TestBloomFilterAddMulti(t *testing.T) {
 			}
 		}()
 
-		bf, err := NewBloomFilter(client, "test", 100, 0.01)
+		bf, err := NewBloomFilter(client, "test", 100, 0.05)
 		if err != nil {
 			t.Error(err)
 		}
@@ -409,7 +402,7 @@ func TestBloomFilterAddMultiError(t *testing.T) {
 		}
 	}()
 
-	bf, err := NewBloomFilter(client, "test", 100, 0.01)
+	bf, err := NewBloomFilter(client, "test", 100, 0.05)
 	if err != nil {
 		t.Error(err)
 	}
@@ -435,7 +428,7 @@ func TestBloomFilterExists(t *testing.T) {
 			}
 		}()
 
-		bf, err := NewBloomFilter(client, "test", 100, 0.01)
+		bf, err := NewBloomFilter(client, "test", 100, 0.05)
 		if err != nil {
 			t.Error(err)
 		}
@@ -466,7 +459,7 @@ func TestBloomFilterExists(t *testing.T) {
 			}
 		}()
 
-		bf, err := NewBloomFilter(client, "test", 100, 0.01)
+		bf, err := NewBloomFilter(client, "test", 100, 0.05)
 		if err != nil {
 			t.Error(err)
 		}
@@ -493,7 +486,7 @@ func TestBloomFilterExistsError(t *testing.T) {
 		}
 	}()
 
-	bf, err := NewBloomFilter(client, "test", 100, 0.01)
+	bf, err := NewBloomFilter(client, "test", 100, 0.05)
 	if err != nil {
 		t.Error(err)
 	}
@@ -519,7 +512,7 @@ func TestBloomFilterExistsMulti(t *testing.T) {
 			}
 		}()
 
-		bf, err := NewBloomFilter(client, "test", 100, 0.01)
+		bf, err := NewBloomFilter(client, "test", 100, 0.05)
 		if err != nil {
 			t.Error(err)
 		}
@@ -552,7 +545,7 @@ func TestBloomFilterExistsMulti(t *testing.T) {
 			}
 		}()
 
-		bf, err := NewBloomFilter(client, "test", 100, 0.01)
+		bf, err := NewBloomFilter(client, "test", 100, 0.05)
 		if err != nil {
 			t.Error(err)
 		}
@@ -580,7 +573,7 @@ func TestBloomFilterExistsMulti(t *testing.T) {
 			}
 		}()
 
-		bf, err := NewBloomFilter(client, "test", 100, 0.01)
+		bf, err := NewBloomFilter(client, "test", 100, 0.05)
 		if err != nil {
 			t.Error(err)
 		}
@@ -607,7 +600,7 @@ func TestBloomFilterExistsMultiError(t *testing.T) {
 		}
 	}()
 
-	bf, err := NewBloomFilter(client, "test", 100, 0.01)
+	bf, err := NewBloomFilter(client, "test", 100, 0.05)
 	if err != nil {
 		t.Error(err)
 	}
@@ -633,7 +626,7 @@ func TestBloomFilterReset(t *testing.T) {
 			}
 		}()
 
-		bf, err := NewBloomFilter(client, "test", 100, 0.01)
+		bf, err := NewBloomFilter(client, "test", 100, 0.05)
 		if err != nil {
 			t.Error(err)
 		}
@@ -677,7 +670,7 @@ func TestBloomFilterReset(t *testing.T) {
 			}
 		}()
 
-		bf, err := NewBloomFilter(client, "test", 100, 0.01)
+		bf, err := NewBloomFilter(client, "test", 100, 0.05)
 		if err != nil {
 			t.Error(err)
 		}
@@ -709,7 +702,7 @@ func TestBloomFilterResetError(t *testing.T) {
 		}
 	}()
 
-	bf, err := NewBloomFilter(client, "test", 100, 0.01)
+	bf, err := NewBloomFilter(client, "test", 100, 0.05)
 	if err != nil {
 		t.Error(err)
 	}
@@ -735,7 +728,7 @@ func TestBloomFilterDelete(t *testing.T) {
 			}
 		}()
 
-		bf, err := NewBloomFilter(client, "test", 100, 0.01)
+		bf, err := NewBloomFilter(client, "test", 100, 0.05)
 		if err != nil {
 			t.Error(err)
 		}
@@ -793,7 +786,7 @@ func TestBloomFilterDelete(t *testing.T) {
 			}
 		}()
 
-		bf, err := NewBloomFilter(client, "test", 100, 0.01)
+		bf, err := NewBloomFilter(client, "test", 100, 0.05)
 		if err != nil {
 			t.Error(err)
 		}
@@ -817,7 +810,7 @@ func TestBloomFilterDeleteError(t *testing.T) {
 		}
 	}()
 
-	bf, err := NewBloomFilter(client, "test", 100, 0.01)
+	bf, err := NewBloomFilter(client, "test", 100, 0.05)
 	if err != nil {
 		t.Error(err)
 	}
@@ -843,7 +836,7 @@ func TestBloomFilterCount(t *testing.T) {
 			}
 		}()
 
-		bf, err := NewBloomFilter(client, "test", 100, 0.01)
+		bf, err := NewBloomFilter(client, "test", 100, 0.05)
 		if err != nil {
 			t.Error(err)
 		}
@@ -874,7 +867,7 @@ func TestBloomFilterCount(t *testing.T) {
 			}
 		}()
 
-		bf, err := NewBloomFilter(client, "test", 100, 0.01)
+		bf, err := NewBloomFilter(client, "test", 100, 0.05)
 		if err != nil {
 			t.Error(err)
 		}
@@ -900,7 +893,7 @@ func TestBloomFilterCount(t *testing.T) {
 			}
 		}()
 
-		bf, err := NewBloomFilter(client, "test", 100, 0.01)
+		bf, err := NewBloomFilter(client, "test", 100, 0.05)
 		if err != nil {
 			t.Error(err)
 		}
@@ -934,7 +927,7 @@ func TestBloomFilterCountError(t *testing.T) {
 			}
 		}()
 
-		bf, err := NewBloomFilter(client, "test", 100, 0.01)
+		bf, err := NewBloomFilter(client, "test", 100, 0.05)
 		if err != nil {
 			t.Error(err)
 		}
@@ -959,7 +952,7 @@ func TestBloomFilterCountError(t *testing.T) {
 			}
 		}()
 
-		bf, err := NewBloomFilter(client, "test", 100, 0.01)
+		bf, err := NewBloomFilter(client, "test", 100, 0.05)
 		if err != nil {
 			t.Error(err)
 		}
