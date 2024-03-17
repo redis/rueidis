@@ -299,8 +299,8 @@ func TestRedisResult(t *testing.T) {
 		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsBoolSlice(); err == nil {
 			t.Fatal("AsBoolSlice not failed as expected")
 		}
-		values := []RedisMessage{{string: "1", typ: '+'}, {string: "0", typ: '+'}}
-		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: values}}).AsBoolSlice(); !reflect.DeepEqual(ret, []bool{true, false}) {
+		values := []RedisMessage{{integer: 1, typ: ':'}, {string: "0", typ: '+'}, {integer: 1, typ: typeBool}}
+		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: values}}).AsBoolSlice(); !reflect.DeepEqual(ret, []bool{true, false, true}) {
 			t.Fatal("AsBoolSlice not get value as expected")
 		}
 	})
