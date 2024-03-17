@@ -292,6 +292,19 @@ func TestRedisResult(t *testing.T) {
 		}
 	})
 
+	t.Run("AsBoolSlice", func(t *testing.T) {
+		if _, err := (RedisResult{err: errors.New("other")}).AsBoolSlice(); err == nil {
+			t.Fatal("AsBoolSlice not failed as expected")
+		}
+		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsBoolSlice(); err == nil {
+			t.Fatal("AsBoolSlice not failed as expected")
+		}
+		values := []RedisMessage{{integer: 1, typ: ':'}, {string: "0", typ: '+'}, {integer: 1, typ: typeBool}}
+		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: values}}).AsBoolSlice(); !reflect.DeepEqual(ret, []bool{true, false, true}) {
+			t.Fatal("AsBoolSlice not get value as expected")
+		}
+	})
+
 	t.Run("AsMap", func(t *testing.T) {
 		if _, err := (RedisResult{err: errors.New("other")}).AsMap(); err == nil {
 			t.Fatal("AsMap not failed as expected")
@@ -1382,6 +1395,19 @@ func TestRedisMessage(t *testing.T) {
 			}
 		}()
 		(&RedisMessage{typ: 't'}).AsFloatSlice()
+	})
+
+	t.Run("AsBoolSlice", func(t *testing.T) {
+		if _, err := (&RedisMessage{typ: '_'}).AsBoolSlice(); err == nil {
+			t.Fatal("AsBoolSlice not failed as expected")
+		}
+
+		defer func() {
+			if !strings.Contains(recover().(string), "redis message type t is not a array") {
+				t.Fatal("AsBoolSlice not panic as expected")
+			}
+		}()
+		(&RedisMessage{typ: 't'}).AsBoolSlice()
 	})
 
 	t.Run("AsMap", func(t *testing.T) {
