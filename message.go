@@ -753,26 +753,16 @@ func (m *RedisMessage) AsFloatSlice() ([]float64, error) {
 	return s, nil
 }
 
-// AsBoolSlice checks if the message is a Redis array/set response, and converts it to []bool.
-// Redis nil elements and other non-boolean elements will be represented as false.
+// AsBoolSlice checks if the message is a redis array/set response, and converts it to []bool.
+// Redis nil elements and other non-boolean elements will be present as false.
 func (m *RedisMessage) AsBoolSlice() ([]bool, error) {
-	if m.typ != '*' {
-		panic(fmt.Sprintf("redis message type %c is not an array", m.typ))
-	}
 	values, err := m.ToArray()
 	if err != nil {
 		return nil, err
 	}
 	s := make([]bool, len(values))
 	for i, v := range values {
-		if len(v.string) != 0 {
-			s[i], err = strconv.ParseBool(v.string)
-			if err != nil {
-				s[i] = false
-			}
-		} else {
-			s[i] = v.integer != 0
-		}
+		s[i] = v.string == "1"
 	}
 	return s, nil
 }

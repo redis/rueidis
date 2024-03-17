@@ -299,17 +299,9 @@ func TestRedisResult(t *testing.T) {
 		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsBoolSlice(); err == nil {
 			t.Fatal("AsBoolSlice not failed as expected")
 		}
-		values := []RedisMessage{{string: "true", typ: '+'}}
-		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: values}}).AsBoolSlice(); !reflect.DeepEqual(ret, []bool{true}) {
+		values := []RedisMessage{{string: "1", typ: '+'}, {string: "0", typ: '+'}}
+		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: values}}).AsBoolSlice(); !reflect.DeepEqual(ret, []bool{true, false}) {
 			t.Fatal("AsBoolSlice not get value as expected")
-		}
-		values = []RedisMessage{{string: "false", typ: '+'}}
-		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: values}}).AsBoolSlice(); !reflect.DeepEqual(ret, []bool{false}) {
-			t.Fatal("AsBoolSlice not get value as expected")
-		}
-		values = []RedisMessage{{string: "notabool", typ: '+'}}
-		if _, err := (RedisResult{val: RedisMessage{typ: '*', values: values}}).AsBoolSlice(); err == nil {
-			t.Fatal("AsBoolSlice not failed as expected")
 		}
 	})
 
@@ -1406,24 +1398,17 @@ func TestRedisMessage(t *testing.T) {
 	})
 
 	t.Run("AsBoolSlice", func(t *testing.T) {
+		if _, err := (&RedisMessage{typ: '_'}).AsBoolSlice(); err == nil {
+			t.Fatal("AsBoolSlice not failed as expected")
+		}
+
 		defer func() {
-			if r := recover(); r == nil {
-				t.Fatal("AsBoolSlice did not panic as expected")
-			} else if !strings.Contains(r.(string), "redis message type _ is not an array") {
-				t.Fatal("AsBoolSlice did not panic with the expected message")
+			if !strings.Contains(recover().(string), "redis message type t is not a array") {
+				t.Fatal("AsBoolSlice not panic as expected")
 			}
 		}()
-		(&RedisMessage{typ: '_'}).AsBoolSlice()
+		(&RedisMessage{typ: 't'}).AsBoolSlice()
 	})
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Fatal("AsBoolSlice did not panic as expected")
-		} else if !strings.Contains(r.(string), "redis message type t is not an array") {
-			t.Fatal("AsBoolSlice did not panic with the expected message")
-		}
-	}()
-	(&RedisMessage{typ: 't'}).AsBoolSlice()
 
 	t.Run("AsMap", func(t *testing.T) {
 		if _, err := (&RedisMessage{typ: '_'}).AsMap(); err == nil {
