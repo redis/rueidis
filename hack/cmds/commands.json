@@ -3013,6 +3013,12 @@
         "name": "count",
         "type": "integer",
         "optional": true
+      },
+      {
+        "name": "NOVALUES",
+        "type": "pure-token",
+        "token": "NOVALUES",
+        "optional": true
       }
     ],
     "since": "2.8.0",
