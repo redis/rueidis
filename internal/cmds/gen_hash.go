@@ -430,6 +430,11 @@ func (c Hscan) Key(key string) HscanKey {
 
 type HscanCount Incomplete
 
+func (c HscanCount) Novalues() HscanNovalues {
+	c.cs.s = append(c.cs.s, "NOVALUES")
+	return (HscanNovalues)(c)
+}
+
 func (c HscanCount) Build() Completed {
 	c.cs.Build()
 	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
@@ -445,6 +450,11 @@ func (c HscanCursor) Match(pattern string) HscanMatch {
 func (c HscanCursor) Count(count int64) HscanCount {
 	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
 	return (HscanCount)(c)
+}
+
+func (c HscanCursor) Novalues() HscanNovalues {
+	c.cs.s = append(c.cs.s, "NOVALUES")
+	return (HscanNovalues)(c)
 }
 
 func (c HscanCursor) Build() Completed {
@@ -466,7 +476,19 @@ func (c HscanMatch) Count(count int64) HscanCount {
 	return (HscanCount)(c)
 }
 
+func (c HscanMatch) Novalues() HscanNovalues {
+	c.cs.s = append(c.cs.s, "NOVALUES")
+	return (HscanNovalues)(c)
+}
+
 func (c HscanMatch) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type HscanNovalues Incomplete
+
+func (c HscanNovalues) Build() Completed {
 	c.cs.Build()
 	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
