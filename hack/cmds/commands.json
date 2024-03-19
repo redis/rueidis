@@ -712,6 +712,12 @@
           "NO"
         ],
         "optional": true
+      },
+      {
+        "name": "MAXAGE",
+        "type": "integer",
+        "token": "MAXAGE",
+        "optional": true
       }
     ],
     "since": "2.4.0",
