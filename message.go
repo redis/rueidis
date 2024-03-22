@@ -1014,8 +1014,9 @@ func (m *RedisMessage) AsZMPop() (kvs KeyZScores, err error) {
 }
 
 type FtSearchDoc struct {
-	Doc map[string]string
-	Key string
+	Doc   map[string]string
+	Key   string
+	Score float64
 }
 
 func (m *RedisMessage) AsFtSearch() (total int64, docs []FtSearchDoc, err error) {
@@ -1037,6 +1038,8 @@ func (m *RedisMessage) AsFtSearch() (total int64, docs []FtSearchDoc, err error)
 							docs[d].Key = record.values[j+1].string
 						case "extra_attributes":
 							docs[d].Doc, _ = record.values[j+1].AsStrMap()
+						case "score":
+							docs[d].Score, _ = strconv.ParseFloat(record.values[j+1].string, 64)
 						}
 					}
 				}
@@ -1051,17 +1054,36 @@ func (m *RedisMessage) AsFtSearch() (total int64, docs []FtSearchDoc, err error)
 	}
 	if len(m.values) > 0 {
 		total = m.values[0].integer
-		if len(m.values) > 2 && m.values[2].string == "" {
-			docs = make([]FtSearchDoc, 0, (len(m.values)-1)/2)
-			for i := 1; i < len(m.values); i += 2 {
-				doc, _ := m.values[i+1].AsStrMap()
-				docs = append(docs, FtSearchDoc{Doc: doc, Key: m.values[i].string})
+		wscore := false
+		wattrs := false
+		offset := 1
+		if len(m.values) > 2 {
+			if m.values[2].string == "" {
+				wattrs = true
+				offset++
+			} else {
+				_, err1 := strconv.ParseFloat(m.values[1].string, 64)
+				_, err2 := strconv.ParseFloat(m.values[2].string, 64)
+				wscore = err1 != nil && err2 == nil
+				offset++
 			}
-		} else {
-			docs = make([]FtSearchDoc, 0, len(m.values)-1)
-			for i := 1; i < len(m.values); i++ {
-				docs = append(docs, FtSearchDoc{Doc: nil, Key: m.values[i].string})
+		}
+		if len(m.values) > 3 && m.values[3].string == "" {
+			wattrs = true
+			offset++
+		}
+		docs = make([]FtSearchDoc, 0, (len(m.values)-1)/offset)
+		for i := 1; i < len(m.values); i++ {
+			doc := FtSearchDoc{Key: m.values[i].string}
+			if wscore {
+				i++
+				doc.Score, _ = strconv.ParseFloat(m.values[i].string, 64)
 			}
+			if wattrs {
+				i++
+				doc.Doc, _ = m.values[i].AsStrMap()
+			}
+			docs = append(docs, doc)
 		}
 		return
 	}
