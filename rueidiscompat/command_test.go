@@ -531,6 +531,8 @@ var _ = Describe("Commands", func() {
 			Expect(v).To(Equal([]string{"1"}))
 			Expect(s).To(Equal("0"))
 			Expect(cmd.Err()).To(BeNil())
+			cmd.SetErr(err)
+			Expect(cmd.Err()).To(Equal(err))
 		}
 		{
 			cmd := &KeyValueSliceCmd{}
@@ -579,6 +581,15 @@ var _ = Describe("Commands", func() {
 			cmd.SetVal([]Library{{Name: "a"}})
 			v := cmd.Val()
 			Expect(v).To(Equal([]Library{{Name: "a"}}))
+			cmd.SetErr(err)
+			Expect(cmd.Err()).To(Equal(err))
+		}
+		{
+			cmd := &JSONCmd{}
+			cmd.SetVal("a")
+			Expect(cmd.Val()).To(Equal("a"))
+			v, _ := cmd.Result()
+			Expect(v).To(Equal("a"))
 			cmd.SetErr(err)
 			Expect(cmd.Err()).To(Equal(err))
 		}
