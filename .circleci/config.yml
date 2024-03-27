@@ -1,7 +1,17 @@
 version: 2.1
+setup: true
 orbs:
   go: circleci/go@1.7.3
+  continuation: circleci/continuation@0.1.2
 jobs:
+  setup:
+    executor: continuation/default
+    steps:
+      - run:
+          name: Generate config
+          # Generate dynamic configuration based on go.mod files
+          command: |
+            ../generate-config.sh > generated_config.yml
   build:
     machine:
       image: ubuntu-2204:current
@@ -11,69 +21,8 @@ jobs:
       - checkout
       - go/install:
           version: 1.21.0
-      - run: # test ./go.mod
-          command: |
-            list=$(go list ./... | circleci tests split --split-by=timings)
-            echo "Test Packages: $list"
-            for n in {1..5}; do ./dockertest.sh $list && break; done
-          no_output_timeout: 15m
-
-      - run: # test ./rueidishook/go.mod
-          command: |
-            cd $CIRCLE_WORKING_DIRECTORY/rueidishook
-            list=$(go list ./... | circleci tests split --split-by=timings)
-            echo "Test Packages: $list"
-            for n in {1..5}; do ../dockertest.sh $list && break; done
-          no_output_timeout: 15m
-
-      - run: # test ./mock/go.mod
-          command: |
-            cd $CIRCLE_WORKING_DIRECTORY/mock
-            list=$(go list ./... | circleci tests split --split-by=timings)
-            echo "Test Packages: $list"
-            for n in {1..5}; do ../dockertest.sh $list && break; done
-          no_output_timeout: 15m
-
-      - run: # test ./om/go.mod
-          command: |
-            cd $CIRCLE_WORKING_DIRECTORY/om
-            list=$(go list ./... | circleci tests split --split-by=timings)
-            echo "Test Packages: $list"
-            for n in {1..5}; do ../dockertest.sh $list && break; done
-          no_output_timeout: 15m
-
-      - run: # test ./rueidisaside/go.mod
-          command: |
-            cd $CIRCLE_WORKING_DIRECTORY/rueidisaside
-            list=$(go list ./... | circleci tests split --split-by=timings)
-            echo "Test Packages: $list"
-            for n in {1..5}; do ../dockertest.sh $list && break; done
-          no_output_timeout: 15m
-
-      - run: # test ./rueidiscompat/go.mod
-          command: |
-            cd $CIRCLE_WORKING_DIRECTORY/rueidiscompat
-            list=$(go list ./... | circleci tests split --split-by=timings)
-            echo "Test Packages: $list"
-            for n in {1..5}; do ../dockertest.sh $list && break; done
-          no_output_timeout: 15m
-
-      - run: # test ./rueidisotel/go.mod
-          command: |
-            cd $CIRCLE_WORKING_DIRECTORY/rueidisotel
-            list=$(go list ./... | circleci tests split --split-by=timings)
-            echo "Test Packages: $list"
-            for n in {1..5}; do ../dockertest.sh $list && break; done
-          no_output_timeout: 15m
-
-      - run: # test ./rueidisprob/go.mod
-          command: |
-            cd $CIRCLE_WORKING_DIRECTORY/rueidisprob
-            list=$(go list ./... | circleci tests split --split-by=timings)
-            echo "Test Packages: $list"
-            for n in {1..5}; do ../dockertest.sh $list && break; done
-          no_output_timeout: 15m
-
+      - continuation/continue:
+          configuration_path: generated_config.yml # use newly generated config to continue
       - store_test_results:
           path: .
       - run: curl -Os https://uploader.codecov.io/latest/linux/codecov && chmod +x codecov && ./codecov -t ${CODECOV_TOKEN}
