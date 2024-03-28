@@ -17,40 +17,43 @@ Example:
 package main
 
 import (
-    "github.com/redis/rueidis"
-    "github.com/redis/rueidis/rueidisprob"
+	"context"
+	"fmt"
+
+	"github.com/redis/rueidis"
+	"github.com/redis/rueidis/rueidisprob"
 )
 
 func main() {
-    client, err := rueidis.NewClient(rueidis.ClientOption{
+	client, err := rueidis.NewClient(rueidis.ClientOption{
 		InitAddress: []string{"localhost:6379"},
-    })
-    if err != nil {
-        panic(err)
-    }
-    
-    bf := rueidisprob.NewBloomFilter(client, "bloom_filter", 1000, 0.01)
-    
-    err := bf.Add("hello")
-    if err != nil {
-        panic(err)
-    }
-    
-    err := bf.Add("world")
-    if err != nil {
-        panic(err)
-    }
-    
-    exists, err := bf.Exists("hello")
-    if err != nil {
-        panic(err)
-    }
-    fmt.Println(exists) // true
-    
-    exists, err = bf.Exists("world")
-    if err != nil {
-        panic(err)
-    }
-    fmt.Println(exists) // true
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	bf, err := rueidisprob.NewBloomFilter(client, "bloom_filter", 1000, 0.01)
+
+	err = bf.Add(context.TODO(), "hello")
+	if err != nil {
+		panic(err)
+	}
+
+	err = bf.Add(context.TODO(), "world")
+	if err != nil {
+		panic(err)
+	}
+
+	exists, err := bf.Exists(context.TODO(), "hello")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(exists) // true
+
+	exists, err = bf.Exists(context.TODO(), "world")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(exists) // true
 }
 ```
