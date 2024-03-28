@@ -34,23 +34,23 @@ func main() {
 
 	bf, err := rueidisprob.NewBloomFilter(client, "bloom_filter", 1000, 0.01)
 
-	err = bf.Add(context.TODO(), "hello")
+	err = bf.Add(context.Background(), "hello")
 	if err != nil {
 		panic(err)
 	}
 
-	err = bf.Add(context.TODO(), "world")
+	err = bf.Add(context.Background(), "world")
 	if err != nil {
 		panic(err)
 	}
 
-	exists, err := bf.Exists(context.TODO(), "hello")
+	exists, err := bf.Exists(context.Background(), "hello")
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println(exists) // true
 
-	exists, err = bf.Exists(context.TODO(), "world")
+	exists, err = bf.Exists(context.Background(), "world")
 	if err != nil {
 		panic(err)
 	}
