@@ -7,22 +7,17 @@ jobs:
   setup:
     executor: continuation/default
     steps:
+      - checkout
       - run:
           name: Generate config
           # Generate dynamic configuration based on go.mod files
           command: |
-            ../generate-config.sh > generated_config.yml
-  build:
-    machine:
-      image: ubuntu-2204:current
-    resource_class: large
-    parallelism: 3
-    steps:
-      - checkout
-      - go/install:
-          version: 1.21.0
+            ./generate_config.sh > generated_config.yml
       - continuation/continue:
           configuration_path: generated_config.yml # use newly generated config to continue
-      - store_test_results:
-          path: .
-      - run: curl -Os https://uploader.codecov.io/latest/linux/codecov && chmod +x codecov && ./codecov -t ${CODECOV_TOKEN}
+
+# our single workflow, that triggers the setup job defined above
+workflows:
+  setup:
+    jobs:
+      - setup
