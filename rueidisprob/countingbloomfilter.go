@@ -125,7 +125,6 @@ type CountingBloomFilter interface {
 	Add(ctx context.Context, key string) error
 
 	// AddMulti adds one or more items to the Counting Bloom Filter.
-	// If there are duplicate keys, they are deduplicated.
 	// NOTE: If keys are too many, it can block the Redis server for a long time.
 	AddMulti(ctx context.Context, keys []string) error
 
@@ -236,19 +235,10 @@ func (f *countingBloomFilter) AddMulti(ctx context.Context, keys []string) error
 		return nil
 	}
 
-	deduplicatedKeys := make([]string, 0, len(keys))
-	keySet := make(map[string]struct{}, len(keys))
-	for _, key := range keys {
-		if _, ok := keySet[key]; !ok {
-			keySet[key] = struct{}{}
-			deduplicatedKeys = append(deduplicatedKeys, key)
-		}
-	}
-
-	indexes := f.indexes(deduplicatedKeys)
+	indexes := f.indexes(keys)
 
 	args := make([]string, 0, len(indexes)+1)
-	args = append(args, strconv.Itoa(len(deduplicatedKeys)))
+	args = append(args, strconv.Itoa(len(keys)))
 	args = append(args, indexes...)
 
 	resp := f.addMultiScript.Exec(ctx, f.client, f.addMultiKeys, args)

@@ -356,13 +356,22 @@ func TestCountingBloomFilterAddMulti(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
+		exists, err := bf.ExistsMulti(context.Background(), []string{"1", "2", "3"})
+		if err != nil {
+			t.Error(err)
+		}
+		for _, e := range exists {
+			if !e {
+				t.Error("Key does not exist")
+			}
+		}
 
 		count, err := bf.Count(context.Background())
 		if err != nil {
 			t.Error(err)
 		}
-		if count != 3 {
-			t.Error("Count is not 3")
+		if count != 6 {
+			t.Error("Count is not 6")
 		}
 	})
 }
