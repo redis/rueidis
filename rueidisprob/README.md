@@ -57,3 +57,80 @@ func main() {
 	fmt.Println(exists) // true
 }
 ```
+
+### Counting Bloom Filter
+
+It is a variation of the standard Bloom filter that adds a counting mechanism to each element.
+This allows for the filter to count the number of times an element has been added to the filter.
+And it allows for the removal of elements from the filter.
+
+Example:
+
+```go
+
+package main
+
+import (
+    "context"
+    "fmt"
+
+    "github.com/redis/rueidis"
+    "github.com/redis/rueidis/rueidisprob"
+)
+
+func main() {
+    client, err := rueidis.NewClient(rueidis.ClientOption{
+        InitAddress: []string{"localhost:6379"},
+    })
+    if err != nil {
+        panic(err)
+    }
+
+    cbf, err := rueidisprob.NewCountingBloomFilter(client, "counting_bloom_filter", 1000, 0.01)
+
+    err = cbf.Add(context.Background(), "hello")
+    if err != nil {
+        panic(err)
+    }
+
+    err = cbf.Add(context.Background(), "world")
+    if err != nil {
+        panic(err)
+    }
+
+    exists, err := cbf.Exists(context.Background(), "hello")
+    if err != nil {
+        panic(err)
+    }
+    fmt.Println(exists) // true
+
+    exists, err = cbf.Exists(context.Background(), "world")
+    if err != nil {
+        panic(err)
+    }
+    fmt.Println(exists) // true
+
+    count, err := cbf.Count(context.Background())
+    if err != nil {
+        panic(err)
+    }
+    fmt.Println(count) // 2
+
+    err = cbf.Remove(context.Background(), "hello")
+    if err != nil {
+        panic(err)
+    }
+
+    exists, err = cbf.Exists(context.Background(), "hello")
+    if err != nil {
+        panic(err)
+    }
+    fmt.Println(exists) // false
+
+    count, err = cbf.Count(context.Background())
+    if err != nil {
+        panic(err)
+    }
+    fmt.Println(count) // 1
+}
+```
