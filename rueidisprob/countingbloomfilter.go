@@ -291,14 +291,12 @@ func (f *countingBloomFilter) ExistsMulti(ctx context.Context, keys []string) ([
 	args = append(args, indexes...)
 
 	resp := f.existsMultiScript.Exec(ctx, f.client, f.existsMultiKeys, args)
-	if resp.Error() != nil {
-		return nil, resp.Error()
-	}
 
 	arr, err := resp.AsBoolSlice()
 	if err != nil {
 		return nil, err
 	}
+
 	return arr, nil
 }
 
@@ -358,16 +356,12 @@ func (f *countingBloomFilter) Count(ctx context.Context) (uint, error) {
 			Key(f.counter).
 			Build(),
 	)
-	if resp.Error() != nil {
-		if rueidis.IsRedisNil(resp.Error()) {
+	count, err := resp.AsUint64()
+	if err != nil {
+		if rueidis.IsRedisNil(err) {
 			return 0, nil
 		}
 
-		return 0, resp.Error()
-	}
-
-	count, err := resp.AsUint64()
-	if err != nil {
 		return 0, err
 	}
 
