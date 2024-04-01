@@ -812,3 +812,53 @@ func TestJsonMSet(t *testing.T) {
 		})
 	})
 }
+
+func TestDecodeSliceOfJSON(t *testing.T) {
+	type Inner struct {
+		Field string
+	}
+	type T struct {
+		ID     int
+		Name   string
+		Inners []*Inner
+	}
+	values := []RedisMessage{
+		{string: `{"ID":1, "Name": "n1", "Inners": [{"Field": "f1"}]}`, typ: '+'},
+		{string: `{"ID":2, "Name": "n2", "Inners": [{"Field": "f2"}]}`, typ: '+'},
+	}
+	result := RedisResult{val: RedisMessage{typ: '*', values: values}}
+
+	t.Run("Scan []T", func(t *testing.T) {
+		got := make([]T, 0)
+		want := []T{
+			{ID: 1, Name: "n1", Inners: []*Inner{{Field: "f1"}}},
+			{ID: 2, Name: "n2", Inners: []*Inner{{Field: "f2"}}},
+		}
+		if err := DecodeSliceOfJSON(result, &got); err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(want, got) {
+			t.Fatalf("DecodeSliceOfJSON not get value as expected %+v", got)
+		}
+	})
+
+	t.Run("Scan []*T", func(t *testing.T) {
+		got := make([]*T, 0)
+		want := []*T{
+			{ID: 1, Name: "n1", Inners: []*Inner{{Field: "f1"}}},
+			{ID: 2, Name: "n2", Inners: []*Inner{{Field: "f2"}}},
+		}
+		if err := DecodeSliceOfJSON(result, &got); err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(want, got) {
+			t.Fatalf("DecodeSliceOfJSON not get value as expected %v", got)
+		}
+	})
+
+	t.Run("Error RedisMessage typ", func(t *testing.T) {
+		if err := DecodeSliceOfJSON(RedisResult{val: RedisMessage{typ: '-'}}, &[]*T{}); err == nil {
+			t.Fatal("DecodeSliceOfJSON not failed as expected")
+		}
+	})
+}

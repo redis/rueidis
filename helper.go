@@ -181,6 +181,25 @@ func JsonMSet(client Client, ctx context.Context, kvs map[string]string, path st
 	return doMultiSet(client, ctx, cmds.s)
 }
 
+// DecodeSliceOfJSON is a helper that struct-scans each RedisMessage into dest, which must be a slice.
+func DecodeSliceOfJSON[T any](resp RedisResult, dest *[]T) error {
+	arr, err := resp.ToArray()
+	if err != nil {
+		return err
+	}
+
+	ts := make([]T, len(arr))
+	for i, a := range arr {
+		var t T
+		if err = a.DecodeJSON(&t); err != nil && !IsRedisNil(err) {
+			return err
+		}
+		ts[i] = t
+	}
+	*dest = ts
+	return nil
+}
+
 func clientMGet(client Client, ctx context.Context, cmd Completed, keys []string) (ret map[string]RedisMessage, err error) {
 	arr, err := client.Do(ctx, cmd).ToArray()
 	if err != nil {
