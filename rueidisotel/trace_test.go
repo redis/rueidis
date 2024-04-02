@@ -295,6 +295,18 @@ func TestWithMeterProvider(t *testing.T) {
 	}
 }
 
+func TestWithDBStatement(t *testing.T) {
+	dbStmtEnabled := true
+
+	client := &otelclient{}
+	option := WithDBStatement(dbStmtEnabled)
+	option(client)
+
+	if client.dbStmtEnabled != dbStmtEnabled {
+		t.Fatalf("unexpected dbStmtEnabled: got %t, expected %t", client.dbStmtEnabled, dbStmtEnabled)
+	}
+}
+
 func TestWithClientSimple(t *testing.T) {
 	client, err := rueidis.NewClient(rueidis.ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
 	if err != nil {
