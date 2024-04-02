@@ -842,8 +842,79 @@ func TestDecodeSliceOfJSON(t *testing.T) {
 		}
 	})
 
-	t.Run("Error RedisMessage typ", func(t *testing.T) {
+	t.Run("Scan []T", func(t *testing.T) {
+		got := make([]T, 0)
+		want := []T{
+			{ID: 1, Name: "n1", Inners: []*Inner{{Field: "f1"}}},
+			{ID: 2, Name: "n2", Inners: []*Inner{{Field: "f2"}}},
+		}
+		if err := DecodeSliceOfJSON(result, &got); err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(want, got) {
+			t.Fatalf("DecodeSliceOfJSON not get value as expected %v", got)
+		}
+	})
+
+	t.Run("Scan []*T: has nil error message", func(t *testing.T) {
+		hasNilValues := []RedisMessage{
+			{string: `{"ID":1, "Name": "n1", "Inners": [{"Field": "f1"}]}`, typ: '+'},
+			{typ: '_'},
+			{string: `{"ID":2, "Name": "n2", "Inners": [{"Field": "f2"}]}`, typ: '+'},
+		}
+		hasNilResult := RedisResult{val: RedisMessage{typ: '*', values: hasNilValues}}
+
+		got := make([]*T, 0)
+		want := []*T{
+			{ID: 1, Name: "n1", Inners: []*Inner{{Field: "f1"}}},
+			nil,
+			{ID: 2, Name: "n2", Inners: []*Inner{{Field: "f2"}}},
+		}
+		if err := DecodeSliceOfJSON(hasNilResult, &got); err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(want, got) {
+			t.Fatalf("DecodeSliceOfJSON not get value as expected %v", got)
+		}
+	})
+
+	t.Run("Scan []T: has nil error message", func(t *testing.T) {
+		hasNilValues := []RedisMessage{
+			{string: `{"ID":1, "Name": "n1", "Inners": [{"Field": "f1"}]}`, typ: '+'},
+			{typ: '_'},
+			{string: `{"ID":2, "Name": "n2", "Inners": [{"Field": "f2"}]}`, typ: '+'},
+		}
+		hasNilResult := RedisResult{val: RedisMessage{typ: '*', values: hasNilValues}}
+
+		got := make([]T, 0)
+		want := []T{
+			{ID: 1, Name: "n1", Inners: []*Inner{{Field: "f1"}}},
+			{ID: 0, Name: "", Inners: nil},
+			{ID: 2, Name: "n2", Inners: []*Inner{{Field: "f2"}}},
+		}
+		if err := DecodeSliceOfJSON(hasNilResult, &got); err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(want, got) {
+			t.Fatalf("DecodeSliceOfJSON not get value as expected %v", got)
+		}
+	})
+
+	t.Run("error result", func(t *testing.T) {
 		if err := DecodeSliceOfJSON(RedisResult{val: RedisMessage{typ: '-'}}, &[]*T{}); err == nil {
+			t.Fatal("DecodeSliceOfJSON not failed as expected")
+		}
+	})
+
+	t.Run("has non-nil error message in result", func(t *testing.T) {
+		hasErrValues := []RedisMessage{
+			{string: `{"ID":1, "Name": "n1", "Inners": [{"Field": "f1"}]}`, typ: '+'},
+			{string: `invalid`, typ: '-'},
+		}
+		hasErrResult := RedisResult{val: RedisMessage{typ: '*', values: hasErrValues}}
+
+		got := make([]*T, 0)
+		if err := DecodeSliceOfJSON(hasErrResult, &got); err == nil {
 			t.Fatal("DecodeSliceOfJSON not failed as expected")
 		}
 	})
