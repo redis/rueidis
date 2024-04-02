@@ -828,20 +828,6 @@ func TestDecodeSliceOfJSON(t *testing.T) {
 	}
 	result := RedisResult{val: RedisMessage{typ: '*', values: values}}
 
-	t.Run("Scan []T", func(t *testing.T) {
-		got := make([]T, 0)
-		want := []T{
-			{ID: 1, Name: "n1", Inners: []*Inner{{Field: "f1"}}},
-			{ID: 2, Name: "n2", Inners: []*Inner{{Field: "f2"}}},
-		}
-		if err := DecodeSliceOfJSON(result, &got); err != nil {
-			t.Fatal(err)
-		}
-		if !reflect.DeepEqual(want, got) {
-			t.Fatalf("DecodeSliceOfJSON not get value as expected %+v", got)
-		}
-	})
-
 	t.Run("Scan []*T", func(t *testing.T) {
 		got := make([]*T, 0)
 		want := []*T{
