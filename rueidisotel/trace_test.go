@@ -97,12 +97,15 @@ func TestWithClient(t *testing.T) {
 	mxp := metric.NewManualReader()
 	meterProvider := metric.NewMeterProvider(metric.WithReader(mxp))
 
+	dbStmtFunc := func(cmdTokens []string) string { return strings.Join(cmdTokens, " ") }
+
 	client = WithClient(
 		client,
 		TraceAttrs(attribute.String("any", "label")),
 		MetricAttrs(attribute.String("any", "label")),
 		WithTracerProvider(tracerProvider),
 		WithMeterProvider(meterProvider),
+		WithDBStatement(dbStmtFunc),
 	)
 	defer client.Close()
 	testWithClient(t, client, exp, mxp)
@@ -325,12 +328,15 @@ func TestWithClientSimple(t *testing.T) {
 	mxp := metric.NewManualReader()
 	meterProvider := metric.NewMeterProvider(metric.WithReader(mxp))
 
+	dbStmtFunc := func(cmdTokens []string) string { return strings.Join(cmdTokens, " ") }
+
 	client = WithClient(
 		client,
 		TraceAttrs(attribute.String("any", "label")),
 		MetricAttrs(attribute.String("any", "label")),
 		WithTracerProvider(tracerProvider),
 		WithMeterProvider(meterProvider),
+		WithDBStatement(dbStmtFunc),
 	)
 	defer client.Close()
 
