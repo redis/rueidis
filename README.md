@@ -484,6 +484,57 @@ client.Do(ctx, client.B().FtSearch().Index("idx").Query("@f:v").Build()).AsFtSea
 client.Do(ctx, client.B().Geosearch().Key("k").Fromlonlat(1, 1).Bybox(1).Height(1).Km().Build()).AsGeosearch()
 ```
 
+## Use DecodeSliceOfJSON to scan array result
+
+DecodeSliceOfJSON is useful when you would like to scan the results of an array into a slice of a specific struct.
+
+```golang
+type User struct {
+	Name string `json:"name"`
+}
+
+// Set some values
+if err = client.Do(ctx, client.B().Set().Key("user1").Value(`{"name": "name1"}`).Build()).Error(); err != nil {
+	return err
+}
+if err = client.Do(ctx, client.B().Set().Key("user2").Value(`{"name": "name2"}`).Build()).Error(); err != nil {
+	return err
+}
+
+// Scan MGET results into []*User
+var users []*User // or []User is also scannable
+if err := rueidis.DecodeSliceOfJSON(client.Do(ctx, client.B().Mget().Key("user1", "user2").Build()), &users); err != nil {
+	return err
+}
+
+for _, user := range users {
+	fmt.Printf("%+v\n", user)
+}
+/*
+&{name:name1}
+&{name:name2}
+*/
+```
+
+### !!!!!! DO NOT DO THIS !!!!!!
+
+Please make sure that all values in the result have same JSON structure.
+
+```golang
+// Set a pure string value
+if err = client.Do(ctx, client.B().Set().Key("user1").Value("userName1").Build()).Error(); err != nil {
+	return err
+}
+
+// Bad
+users := make([]*User, 0)
+if err := rueidis.DecodeSliceOfJSON(client.Do(ctx, client.B().Mget().Key("user1").Build()), &users); err != nil {
+	return err
+}
+// -> Error: invalid character 'u' looking for beginning of value
+// in this case, use client.Do(ctx, client.B().Mget().Key("user1").Build()).AsStrSlice()
+```
+
 ---
 
 ## Contributing
