@@ -52,11 +52,14 @@ func WithTracerProvider(provider trace.TracerProvider) Option {
 }
 
 // WithDBStatement tells the tracing hook to add raw redis commands to db.statement attribute.
-func WithDBStatement(enabled bool) Option {
+func WithDBStatement(f StatementFunc) Option {
 	return func(o *otelclient) {
-		o.dbStmtEnabled = enabled
+		o.dbStmtFunc = f
 	}
 }
+
+// StatementFunc is a the function that maps a command's tokens to a string to put in the db.statement attribute
+type StatementFunc func(cmdTokens []string) string
 
 type otelclient struct {
 	client          rueidis.Client
@@ -69,7 +72,7 @@ type otelclient struct {
 	mAttrs          metric.MeasurementOption
 	tAttrs          trace.SpanStartEventOption
 	histogramOption HistogramOption
-	dbStmtEnabled   bool
+	dbStmtFunc      StatementFunc
 }
 
 func (o *otelclient) B() rueidis.Builder {
@@ -78,8 +81,8 @@ func (o *otelclient) B() rueidis.Builder {
 
 func (o *otelclient) Do(ctx context.Context, cmd rueidis.Completed) (resp rueidis.RedisResult) {
 	ctx, span := o.start(ctx, first(cmd.Commands()), sum(cmd.Commands()), o.tAttrs)
-	if o.dbStmtEnabled {
-		span.SetAttributes(dbstmt.String(all(cmd.Commands())))
+	if o.dbStmtFunc != nil {
+		span.SetAttributes(dbstmt.String(o.dbStmtFunc(cmd.Commands())))
 	}
 
 	resp = o.client.Do(ctx, cmd)
@@ -96,8 +99,8 @@ func (o *otelclient) DoMulti(ctx context.Context, multi ...rueidis.Completed) (r
 
 func (o *otelclient) DoStream(ctx context.Context, cmd rueidis.Completed) (resp rueidis.RedisResultStream) {
 	ctx, span := o.start(ctx, first(cmd.Commands()), sum(cmd.Commands()), o.tAttrs)
-	if o.dbStmtEnabled {
-		span.SetAttributes(dbstmt.String(all(cmd.Commands())))
+	if o.dbStmtFunc != nil {
+		span.SetAttributes(dbstmt.String(o.dbStmtFunc(cmd.Commands())))
 	}
 
 	resp = o.client.DoStream(ctx, cmd)
@@ -114,8 +117,8 @@ func (o *otelclient) DoMultiStream(ctx context.Context, multi ...rueidis.Complet
 
 func (o *otelclient) DoCache(ctx context.Context, cmd rueidis.Cacheable, ttl time.Duration) (resp rueidis.RedisResult) {
 	ctx, span := o.start(ctx, first(cmd.Commands()), sum(cmd.Commands()), o.tAttrs)
-	if o.dbStmtEnabled {
-		span.SetAttributes(dbstmt.String(all(cmd.Commands())))
+	if o.dbStmtFunc != nil {
+		span.SetAttributes(dbstmt.String(o.dbStmtFunc(cmd.Commands())))
 	}
 
 	resp = o.client.DoCache(ctx, cmd, ttl)
@@ -149,10 +152,10 @@ func (o *otelclient) DoMultiCache(ctx context.Context, multi ...rueidis.Cacheabl
 func (o *otelclient) Dedicated(fn func(rueidis.DedicatedClient) error) (err error) {
 	return o.client.Dedicated(func(client rueidis.DedicatedClient) error {
 		return fn(&dedicated{
-			client:        client,
-			tAttrs:        o.tAttrs,
-			tracer:        o.tracer,
-			dbStmtEnabled: o.dbStmtEnabled,
+			client:     client,
+			tAttrs:     o.tAttrs,
+			tracer:     o.tracer,
+			dbStmtFunc: o.dbStmtFunc,
 		})
 	})
 }
@@ -160,17 +163,17 @@ func (o *otelclient) Dedicated(fn func(rueidis.DedicatedClient) error) (err erro
 func (o *otelclient) Dedicate() (rueidis.DedicatedClient, func()) {
 	client, cancel := o.client.Dedicate()
 	return &dedicated{
-		client:        client,
-		tAttrs:        o.tAttrs,
-		tracer:        o.tracer,
-		dbStmtEnabled: o.dbStmtEnabled,
+		client:     client,
+		tAttrs:     o.tAttrs,
+		tracer:     o.tracer,
+		dbStmtFunc: o.dbStmtFunc,
 	}, cancel
 }
 
 func (o *otelclient) Receive(ctx context.Context, subscribe rueidis.Completed, fn func(msg rueidis.PubSubMessage)) (err error) {
 	ctx, span := o.start(ctx, first(subscribe.Commands()), sum(subscribe.Commands()), o.tAttrs)
-	if o.dbStmtEnabled {
-		span.SetAttributes(dbstmt.String(all(subscribe.Commands())))
+	if o.dbStmtFunc != nil {
+		span.SetAttributes(dbstmt.String(o.dbStmtFunc(subscribe.Commands())))
 	}
 
 	err = o.client.Receive(ctx, subscribe, fn)
@@ -192,7 +195,7 @@ func (o *otelclient) Nodes() map[string]rueidis.Client {
 			cscMiss:         o.cscMiss,
 			cscHits:         o.cscHits,
 			histogramOption: o.histogramOption,
-			dbStmtEnabled:   o.dbStmtEnabled,
+			dbStmtFunc:      o.dbStmtFunc,
 		}
 	}
 	return nodes
@@ -205,10 +208,10 @@ func (o *otelclient) Close() {
 var _ rueidis.DedicatedClient = (*dedicated)(nil)
 
 type dedicated struct {
-	client        rueidis.DedicatedClient
-	tracer        trace.Tracer
-	tAttrs        trace.SpanStartEventOption
-	dbStmtEnabled bool
+	client     rueidis.DedicatedClient
+	tracer     trace.Tracer
+	tAttrs     trace.SpanStartEventOption
+	dbStmtFunc StatementFunc
 }
 
 func (d *dedicated) B() rueidis.Builder {
@@ -217,8 +220,8 @@ func (d *dedicated) B() rueidis.Builder {
 
 func (d *dedicated) Do(ctx context.Context, cmd rueidis.Completed) (resp rueidis.RedisResult) {
 	ctx, span := d.start(ctx, first(cmd.Commands()), sum(cmd.Commands()), d.tAttrs)
-	if d.dbStmtEnabled {
-		span.SetAttributes(dbstmt.String(all(cmd.Commands())))
+	if d.dbStmtFunc != nil {
+		span.SetAttributes(dbstmt.String(d.dbStmtFunc(cmd.Commands())))
 	}
 
 	resp = d.client.Do(ctx, cmd)
@@ -235,8 +238,8 @@ func (d *dedicated) DoMulti(ctx context.Context, multi ...rueidis.Completed) (re
 
 func (d *dedicated) Receive(ctx context.Context, subscribe rueidis.Completed, fn func(msg rueidis.PubSubMessage)) (err error) {
 	ctx, span := d.start(ctx, first(subscribe.Commands()), sum(subscribe.Commands()), d.tAttrs)
-	if d.dbStmtEnabled {
-		span.SetAttributes(dbstmt.String(all(subscribe.Commands())))
+	if d.dbStmtFunc != nil {
+		span.SetAttributes(dbstmt.String(d.dbStmtFunc(subscribe.Commands())))
 	}
 
 	err = d.client.Receive(ctx, subscribe, fn)
@@ -250,10 +253,6 @@ func (d *dedicated) SetPubSubHooks(hooks rueidis.PubSubHooks) <-chan error {
 
 func (d *dedicated) Close() {
 	d.client.Close()
-}
-
-func all(s []string) string {
-	return strings.Join(s, " ")
 }
 
 func first(s []string) string {

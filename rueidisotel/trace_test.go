@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -296,14 +297,19 @@ func TestWithMeterProvider(t *testing.T) {
 }
 
 func TestWithDBStatement(t *testing.T) {
-	dbStmtEnabled := true
+	dbStmtFunc := func(cmdTokens []string) string { return strings.Join(cmdTokens, " ") }
 
+	cmd := []string{"SET", "key", "val"}
 	client := &otelclient{}
-	option := WithDBStatement(dbStmtEnabled)
+	option := WithDBStatement(dbStmtFunc)
 	option(client)
 
-	if client.dbStmtEnabled != dbStmtEnabled {
-		t.Fatalf("unexpected dbStmtEnabled: got %t, expected %t", client.dbStmtEnabled, dbStmtEnabled)
+	if client.dbStmtFunc == nil {
+		t.Fatalf("unexpected dbStmtFunc: got nil")
+	}
+
+	if client.dbStmtFunc(cmd) != dbStmtFunc(cmd) {
+		t.Fatalf("unexpected dbStmtFunc result: got %v, expected %v", client.dbStmtFunc(cmd), dbStmtFunc(cmd))
 	}
 }
 
