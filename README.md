@@ -490,19 +490,19 @@ DecodeSliceOfJSON is useful when you would like to scan the results of an array 
 
 ```golang
 type User struct {
-	Name string
+	Name string `json:"name"`
 }
 
 // Set some values
-if err = client.Do(ctx, client.B().Set().Key("user1").Value(`{"Name": "name1"}`).Build()).Error(); err != nil {
+if err = client.Do(ctx, client.B().Set().Key("user1").Value(`{"name": "name1"}`).Build()).Error(); err != nil {
 	return err
 }
-if err = client.Do(ctx, client.B().Set().Key("user2").Value(`{"Name": "name2"}`).Build()).Error(); err != nil {
+if err = client.Do(ctx, client.B().Set().Key("user2").Value(`{"name": "name2"}`).Build()).Error(); err != nil {
 	return err
 }
 
 // Scan MGET results into []*User
-users := make([]*User, 0) // []User is also being scannable
+var users []*User // or []User is also scannable
 if err := rueidis.DecodeSliceOfJSON(client.Do(ctx, client.B().Mget().Key("user1", "user2").Build()), &users); err != nil {
 	return err
 }
@@ -511,41 +511,9 @@ for _, user := range users {
 	fmt.Printf("%+v\n", user)
 }
 /*
-&{Name:name1}
-&{Name:name2}
+&{name:name1}
+&{name:name2}
 */
-```
-
-Implement UnmarshalJSON to scan private fields
-
-```golang
-type User struct {
-	name string
-}
-
-func (u *User) UnmarshalJSON(b []byte) error {
-	tmp := struct {
-		Name string
-	}{}
-
-	if err := json.Unmarshal(b, &tmp); err != nil {
-		return err
-	}
-
-	u.name = tmp.Name
-	return nil
-}
-
-if err = client.Do(ctx, client.B().Set().Key("user1").Value(`{"name": "name1"}`).Build()).Error(); err != nil {
-	return err
-}
-
-
-users := make([]*User, 0)
-if err := rueidis.DecodeSliceOfJSON(client.Do(ctx, client.B().Mget().Key("user1").Build()), &users); err != nil {
-	return err
-}
-// users = [{name:name1}]
 ```
 
 Please make sure that all values in the result have same JSON structure.
