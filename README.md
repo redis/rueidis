@@ -516,6 +516,8 @@ for _, user := range users {
 */
 ```
 
+### !!!!!! DO NOT DO THIS !!!!!!
+
 Please make sure that all values in the result have same JSON structure.
 
 ```golang
@@ -524,6 +526,7 @@ if err = client.Do(ctx, client.B().Set().Key("user1").Value("userName1").Build()
 	return err
 }
 
+// Bad
 users := make([]*User, 0)
 if err := rueidis.DecodeSliceOfJSON(client.Do(ctx, client.B().Mget().Key("user1").Build()), &users); err != nil {
 	return err
