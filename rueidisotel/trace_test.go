@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -96,12 +97,15 @@ func TestWithClient(t *testing.T) {
 	mxp := metric.NewManualReader()
 	meterProvider := metric.NewMeterProvider(metric.WithReader(mxp))
 
+	dbStmtFunc := func(cmdTokens []string) string { return strings.Join(cmdTokens, " ") }
+
 	client = WithClient(
 		client,
 		TraceAttrs(attribute.String("any", "label")),
 		MetricAttrs(attribute.String("any", "label")),
 		WithTracerProvider(tracerProvider),
 		WithMeterProvider(meterProvider),
+		WithDBStatement(dbStmtFunc),
 	)
 	defer client.Close()
 	testWithClient(t, client, exp, mxp)
@@ -295,6 +299,23 @@ func TestWithMeterProvider(t *testing.T) {
 	}
 }
 
+func TestWithDBStatement(t *testing.T) {
+	dbStmtFunc := func(cmdTokens []string) string { return strings.Join(cmdTokens, " ") }
+
+	cmd := []string{"SET", "key", "val"}
+	client := &otelclient{}
+	option := WithDBStatement(dbStmtFunc)
+	option(client)
+
+	if client.dbStmtFunc == nil {
+		t.Fatalf("unexpected dbStmtFunc: got nil")
+	}
+
+	if client.dbStmtFunc(cmd) != dbStmtFunc(cmd) {
+		t.Fatalf("unexpected dbStmtFunc result: got %v, expected %v", client.dbStmtFunc(cmd), dbStmtFunc(cmd))
+	}
+}
+
 func TestWithClientSimple(t *testing.T) {
 	client, err := rueidis.NewClient(rueidis.ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
 	if err != nil {
@@ -307,12 +328,15 @@ func TestWithClientSimple(t *testing.T) {
 	mxp := metric.NewManualReader()
 	meterProvider := metric.NewMeterProvider(metric.WithReader(mxp))
 
+	dbStmtFunc := func(cmdTokens []string) string { return strings.Join(cmdTokens, " ") }
+
 	client = WithClient(
 		client,
 		TraceAttrs(attribute.String("any", "label")),
 		MetricAttrs(attribute.String("any", "label")),
 		WithTracerProvider(tracerProvider),
 		WithMeterProvider(meterProvider),
+		WithDBStatement(dbStmtFunc),
 	)
 	defer client.Close()
 
