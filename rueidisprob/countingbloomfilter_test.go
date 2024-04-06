@@ -1140,6 +1140,219 @@ func TestCountingBloomFilterDeleteError(t *testing.T) {
 	}
 }
 
+func TestCountingBloomFilterItemMintCount(t *testing.T) {
+	t.Run("item exists", func(t *testing.T) {
+		client, flushAllAndClose, err := setup()
+		if err != nil {
+			t.Error(err)
+		}
+		defer func() {
+			err := flushAllAndClose()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
+		bf, err := NewCountingBloomFilter(client, "test", 100, 0.05)
+		if err != nil {
+			t.Error(err)
+		}
+
+		err = bf.AddMulti(context.Background(), []string{"1", "1"})
+		if err != nil {
+			t.Error(err)
+		}
+
+		count, err := bf.ItemMinCount(context.Background(), "1")
+		if err != nil {
+			t.Error(err)
+		}
+		if count != 2 {
+			t.Error("Count is not 2")
+		}
+	})
+
+	t.Run("item does not exist", func(t *testing.T) {
+		client, flushAllAndClose, err := setup()
+		if err != nil {
+			t.Error(err)
+		}
+		defer func() {
+			err := flushAllAndClose()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
+		bf, err := NewCountingBloomFilter(client, "test", 100, 0.05)
+		if err != nil {
+			t.Error(err)
+		}
+
+		count, err := bf.ItemMinCount(context.Background(), "1")
+		if err != nil {
+			t.Error(err)
+		}
+		if count != 0 {
+			t.Error("Count is not 0")
+		}
+	})
+}
+
+func TestCountingBloomFilterItemMinCountError(t *testing.T) {
+	t.Run("min item count error", func(t *testing.T) {
+		client, flushAllAndClose, err := setup()
+		if err != nil {
+			t.Error(err)
+		}
+		defer func() {
+			err := flushAllAndClose()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		bf, err := NewCountingBloomFilter(client, "test", 100, 0.05)
+		if err != nil {
+			t.Error(err)
+		}
+
+		_, err = bf.ItemMinCount(ctx, "1")
+		if !errors.Is(err, context.Canceled) {
+			t.Error("Error is not context.Canceled")
+		}
+	})
+}
+
+func TestCountingBloomFilterItemMinCountMulti(t *testing.T) {
+	t.Run("item exists", func(t *testing.T) {
+		client, flushAllAndClose, err := setup()
+		if err != nil {
+			t.Error(err)
+		}
+		defer func() {
+			err := flushAllAndClose()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
+		keys := []string{"1", "2", "3"}
+		bf, err := NewCountingBloomFilter(client, "test", 100, 0.05)
+		if err != nil {
+			t.Error(err)
+		}
+		err = bf.AddMulti(context.Background(), keys)
+		if err != nil {
+			t.Error(err)
+		}
+
+		counts, err := bf.ItemMinCountMulti(context.Background(), keys)
+		if err != nil {
+			t.Error(err)
+		}
+		for _, c := range counts {
+			if c != 1 {
+				t.Error("Count is not 1")
+			}
+		}
+	})
+
+	t.Run("item does not exist", func(t *testing.T) {
+		client, flushAllAndClose, err := setup()
+		if err != nil {
+			t.Error(err)
+		}
+		defer func() {
+			err := flushAllAndClose()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
+		keys := []string{"1", "2", "3"}
+		bf, err := NewCountingBloomFilter(client, "test", 100, 0.05)
+		if err != nil {
+			t.Error(err)
+		}
+
+		counts, err := bf.ItemMinCountMulti(context.Background(), keys)
+		if err != nil {
+			t.Error(err)
+		}
+		for _, c := range counts {
+			if c != 0 {
+				t.Error("Count is not 0")
+			}
+		}
+	})
+
+	t.Run("empty keys", func(t *testing.T) {
+		client, flushAllAndClose, err := setup()
+		if err != nil {
+			t.Error(err)
+		}
+		defer func() {
+			err := flushAllAndClose()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
+		bf, err := NewCountingBloomFilter(client, "test", 100, 0.05)
+		if err != nil {
+			t.Error(err)
+		}
+
+		counts, err := bf.ItemMinCountMulti(context.Background(), []string{})
+		if err != nil {
+			t.Error(err)
+		}
+		if len(counts) != 0 {
+			t.Error("Counts is not empty")
+		}
+	})
+
+	t.Run("zero count items", func(t *testing.T) {
+		client, flushAllAndClose, err := setup()
+		if err != nil {
+			t.Error(err)
+		}
+		defer func() {
+			err := flushAllAndClose()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
+		keys := []string{"1", "2", "3"}
+		bf, err := NewCountingBloomFilter(client, "test", 100, 0.05)
+		if err != nil {
+			t.Error(err)
+		}
+		err = bf.AddMulti(context.Background(), keys)
+		if err != nil {
+			t.Error(err)
+		}
+		err = bf.RemoveMulti(context.Background(), keys)
+		if err != nil {
+			t.Error(err)
+		}
+
+		counts, err := bf.ItemMinCountMulti(context.Background(), keys)
+		if err != nil {
+			t.Error(err)
+		}
+		for _, c := range counts {
+			if c != 0 {
+				t.Error("Count is not 0")
+			}
+		}
+	})
+}
+
 func TestCountingBloomFilterCount(t *testing.T) {
 	t.Run("count exists", func(t *testing.T) {
 		client, flushAllAndClose, err := setup()
@@ -1623,6 +1836,132 @@ func BenchmarkCountingBloomFilterRemoveMultiManyKeys(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		err := bf.RemoveMulti(context.Background(), keys)
+		if err != nil {
+			b.Error(err)
+		}
+	}
+}
+
+func BenchmarkCountingBloomFilterItemMinCountMultiBigSize(b *testing.B) {
+	client, flushAllAndClose, err := setup()
+	if err != nil {
+		b.Error(err)
+	}
+	defer func() {
+		err := flushAllAndClose()
+		if err != nil {
+			b.Error(err)
+		}
+	}()
+
+	bf, err := NewCountingBloomFilter(client, "test", 100000000, 0.01)
+	if err != nil {
+		b.Error(err)
+	}
+
+	keys := make([]string, 10)
+	for i := 0; i < 10; i++ {
+		keys[i] = strconv.Itoa(i)
+	}
+	err = bf.AddMulti(context.Background(), keys)
+	if err != nil {
+		b.Error(err)
+	}
+
+	var benchKeys []string
+	for i := 0; i < 10; i++ {
+		key := strconv.Itoa(rand.Intn(b.N))
+		benchKeys = append(benchKeys, key)
+	}
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, err := bf.ItemMinCountMulti(context.Background(), benchKeys)
+		if err != nil {
+			b.Error(err)
+		}
+	}
+}
+
+func BenchmarkCountingBloomFilterItemMinCountMultiLowRate(b *testing.B) {
+	client, flushAllAndClose, err := setup()
+	if err != nil {
+		b.Error(err)
+	}
+	defer func() {
+		err := flushAllAndClose()
+		if err != nil {
+			b.Error(err)
+		}
+	}()
+
+	bf, err := NewCountingBloomFilter(client, "test", 1000000, 0.0000000001)
+	if err != nil {
+		b.Error(err)
+	}
+
+	keys := make([]string, 10)
+	for i := 0; i < 10; i++ {
+		keys[i] = strconv.Itoa(i)
+	}
+	err = bf.AddMulti(context.Background(), keys)
+	if err != nil {
+		b.Error(err)
+	}
+
+	var benchKeys []string
+	for i := 0; i < 10; i++ {
+		key := strconv.Itoa(rand.Intn(b.N))
+		benchKeys = append(benchKeys, key)
+	}
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, err := bf.ItemMinCountMulti(context.Background(), benchKeys)
+		if err != nil {
+			b.Error(err)
+		}
+	}
+}
+
+func BenchmarkCountingBloomFilterItemMinCountMultiManyKeys(b *testing.B) {
+	client, flushAllAndClose, err := setup()
+	if err != nil {
+		b.Error(err)
+	}
+	defer func() {
+		err := flushAllAndClose()
+		if err != nil {
+			b.Error(err)
+		}
+	}()
+
+	bf, err := NewCountingBloomFilter(client, "test", 1000000, 0.01)
+	if err != nil {
+		b.Error(err)
+	}
+
+	keys := make([]string, 200)
+	for i := 0; i < 200; i++ {
+		keys[i] = strconv.Itoa(i)
+	}
+	err = bf.AddMulti(context.Background(), keys)
+	if err != nil {
+		b.Error(err)
+	}
+
+	var benchKeys []string
+	for i := 0; i < 200; i++ {
+		key := strconv.Itoa(rand.Intn(b.N))
+		benchKeys = append(benchKeys, key)
+	}
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, err := bf.ItemMinCountMulti(context.Background(), benchKeys)
 		if err != nil {
 			b.Error(err)
 		}
