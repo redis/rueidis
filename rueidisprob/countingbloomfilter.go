@@ -219,11 +219,7 @@ func (f *countingBloomFilter) AddMulti(ctx context.Context, keys []string) error
 	args = append(args, indexes...)
 
 	resp := f.addMultiScript.Exec(ctx, f.client, f.addMultiKeys, args)
-	if resp.Error() != nil {
-		return resp.Error()
-	}
-
-	return nil
+	return resp.Error()
 }
 
 func (f *countingBloomFilter) indexes(keys []string) []string {
@@ -320,11 +316,7 @@ func (f *countingBloomFilter) RemoveMulti(ctx context.Context, keys []string) er
 	args = append(args, indexes...)
 
 	resp := f.removeMultiScript.Exec(ctx, f.client, f.removeMultiKeys, args)
-	if resp.Error() != nil {
-		return resp.Error()
-	}
-
-	return nil
+	return resp.Error()
 }
 
 func (f *countingBloomFilter) Delete(ctx context.Context) error {
@@ -337,11 +329,7 @@ func (f *countingBloomFilter) Delete(ctx context.Context) error {
 			Key(f.name, f.counter).
 			Build(),
 	)
-	if resp.Error() != nil {
-		return resp.Error()
-	}
-
-	return nil
+	return resp.Error()
 }
 
 func (f *countingBloomFilter) ItemMinCount(ctx context.Context, key string) (uint, error) {

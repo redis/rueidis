@@ -229,11 +229,7 @@ func (c *bloomFilter) AddMulti(ctx context.Context, keys []string) error {
 	args = append(args, indexes...)
 
 	resp := c.addMultiScript.Exec(ctx, c.client, c.addMultiKeys, args)
-	if resp.Error() != nil {
-		return resp.Error()
-	}
-
-	return nil
+	return resp.Error()
 }
 
 func (c *bloomFilter) indexes(keys []string) []string {
@@ -305,11 +301,7 @@ func (c *bloomFilter) Reset(ctx context.Context) error {
 			Key(c.name, c.counter).
 			Build(),
 	)
-	if resp.Error() != nil {
-		return resp.Error()
-	}
-
-	return nil
+	return resp.Error()
 }
 
 func (c *bloomFilter) Delete(ctx context.Context) error {
@@ -322,11 +314,7 @@ func (c *bloomFilter) Delete(ctx context.Context) error {
 			Key(c.name, c.counter).
 			Build(),
 	)
-	if resp.Error() != nil {
-		return resp.Error()
-	}
-
-	return nil
+	return resp.Error()
 }
 
 func (c *bloomFilter) Count(ctx context.Context) (uint, error) {
