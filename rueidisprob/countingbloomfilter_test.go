@@ -967,11 +967,7 @@ func TestCountingBloomFilterRemoveMulti(t *testing.T) {
 			t.Error(err)
 		}
 
-		keys := []string{"1", "2", "3"}
-		err = bf.AddMulti(context.Background(), keys)
-		if err != nil {
-			t.Error(err)
-		}
+		keys := []string{"1", "1", "1", "2", "2", "2"}
 		err = bf.AddMulti(context.Background(), keys)
 		if err != nil {
 			t.Error(err)
@@ -986,11 +982,11 @@ func TestCountingBloomFilterRemoveMulti(t *testing.T) {
 			}
 		}
 
-		err = bf.RemoveMulti(context.Background(), []string{"1", "2", "3", "1", "2", "3"})
+		err = bf.RemoveMulti(context.Background(), []string{"1", "1", "2", "2"})
 		if err != nil {
 			t.Error(err)
 		}
-		exists, err = bf.ExistsMulti(context.Background(), keys)
+		exists, err = bf.ExistsMulti(context.Background(), []string{"1", "2"})
 		if err != nil {
 			t.Error(err)
 		}
@@ -1003,11 +999,11 @@ func TestCountingBloomFilterRemoveMulti(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		if count != 3 {
-			t.Error("Count is not 3")
+		if count != 2 {
+			t.Error("Count is not 2")
 		}
 
-		removedIndexes := bf.(*countingBloomFilter).indexes([]string{"1", "2", "3"})
+		removedIndexes := bf.(*countingBloomFilter).indexes([]string{"1", "2"})
 		resp := client.Do(
 			context.Background(),
 			client.B().
@@ -1027,6 +1023,74 @@ func TestCountingBloomFilterRemoveMulti(t *testing.T) {
 		for _, v := range arr {
 			if v != 1 {
 				t.Error("Value is not 1")
+			}
+		}
+	})
+
+	t.Run("remove more than count", func(t *testing.T) {
+		client, flushAllAndClose, err := setup()
+		if err != nil {
+			t.Error(err)
+		}
+		defer func() {
+			err := flushAllAndClose()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
+		bf, err := NewCountingBloomFilter(client, "test", 100, 0.05)
+		if err != nil {
+			t.Error(err)
+		}
+
+		keys := []string{"1", "1"}
+		err = bf.AddMulti(context.Background(), keys)
+		if err != nil {
+			t.Error(err)
+		}
+		exists, err := bf.ExistsMulti(context.Background(), keys)
+		if err != nil {
+			t.Error(err)
+		}
+		for _, e := range exists {
+			if !e {
+				t.Error("Key does not exist")
+			}
+		}
+
+		err = bf.RemoveMulti(context.Background(), []string{"1", "1", "1"})
+		if err != nil {
+			t.Error(err)
+		}
+		count, err := bf.Count(context.Background())
+		if err != nil {
+			t.Error(err)
+		}
+		if count != 0 {
+			t.Error("Count is not 0")
+		}
+
+		removedIndexes := bf.(*countingBloomFilter).indexes([]string{"1"})
+		resp := client.Do(
+			context.Background(),
+			client.B().
+				Hmget().
+				Key("{test}:cbf").
+				Field(removedIndexes...).
+				Build(),
+		)
+		if resp.Error() != nil {
+			t.Error(resp.Error())
+		}
+
+		arr, err := resp.AsIntSlice()
+		if err != nil {
+			t.Error(err)
+		}
+		for _, v := range arr {
+			if v != 0 {
+				t.Error("Value is not 0")
 			}
 		}
 	})

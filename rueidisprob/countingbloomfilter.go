@@ -38,46 +38,67 @@ local function MergeTables(t1, t2)
 	return t1
 end
 
-local hashIterations = tonumber(ARGV[1])
 local numElements = tonumber(#ARGV) - 1
+local hashIterations = tonumber(ARGV[#ARGV])
 local filterKey = KEYS[1]
 local counterKey = KEYS[2]
 
 local hmgetArgs = {}
-for i=2, numElements+1 do
+for i=1, numElements do
     table.insert(hmgetArgs, ARGV[i])
 end
 
 local counts = redis.call('HMGET', filterKey, unpack(hmgetArgs))
-
-local existingItemIndexes = {}
-local temp = {}
-local deleteItemCount = 0
-local isExistingItem = true
+local indexCounter = {}
 for i=1, #counts do
-	table.insert(temp, ARGV[i+1])
+	local index = ARGV[i]
 
-    if (not counts[i]) or (tonumber(counts[i]) == 0)  then
-        isExistingItem = false
-    end
+	if (not indexCounter[index]) then
+		if (not counts[i]) then
+			indexCounter[index] = 0
+		else
+			indexCounter[index] = tonumber(counts[i])
+		end
+	end
+end
 
-    if (i % hashIterations == 0) then
-        if isExistingItem then
-            deleteItemCount = deleteItemCount - 1
+local decreaseIndexes = {}
+local deleteItemCount = 0
+for i=1, numElements, hashIterations do
+	local isAbleToRemove = true
+	local temp = {}
+	local rollbackIndex = i
+
+	for j=i, i+hashIterations-1 do
+		local index = ARGV[j]
+
+		table.insert(temp, index)
+		indexCounter[index] = indexCounter[index] - 1
+		
+		if indexCounter[index] < 0 then
+			isAbleToRemove = false
+			rollbackIndex = j
+			break
+		end
+	end
+
+	if isAbleToRemove then
+		decreaseIndexes = MergeTables(decreaseIndexes, temp)
+		deleteItemCount = deleteItemCount + 1
+	else
+		for j=i, rollbackIndex do
+			local index = ARGV[j]
 			
-			existingItemIndexes = MergeTables(existingItemIndexes, temp)
-        end
-
-		temp = {}
-        isExistingItem = true
-    end
+			indexCounter[index] = indexCounter[index] + 1
+		end
+	end
 end
 
-for i=1, #existingItemIndexes do
-    redis.call('HINCRBY', filterKey, existingItemIndexes[i], -1)
+for i=1, #decreaseIndexes do
+    redis.call('HINCRBY', filterKey, decreaseIndexes[i], -1)
 end
 
-return redis.call('INCRBY', counterKey, deleteItemCount)
+return redis.call('DECRBY', counterKey, deleteItemCount)
 `
 
 	countingBloomFilterDeleteScript = `
@@ -113,7 +134,6 @@ type CountingBloomFilter interface {
 	Remove(ctx context.Context, key string) error
 
 	// RemoveMulti removes one or more items from the Counting Bloom Filter.
-	// If there are duplicate keys, they are deduplicated.
 	// NOTE: If keys are too many, it can block the Redis server for a long time.
 	RemoveMulti(ctx context.Context, keys []string) error
 
@@ -301,19 +321,10 @@ func (f *countingBloomFilter) RemoveMulti(ctx context.Context, keys []string) er
 		return nil
 	}
 
-	deduplicatedKeys := make([]string, 0, len(keys))
-	keySet := make(map[string]struct{}, len(keys))
-	for _, key := range keys {
-		if _, ok := keySet[key]; !ok {
-			keySet[key] = struct{}{}
-			deduplicatedKeys = append(deduplicatedKeys, key)
-		}
-	}
-
-	indexes := f.indexes(deduplicatedKeys)
+	indexes := f.indexes(keys)
 	args := make([]string, 0, len(indexes)+1)
-	args = append(args, f.hashIterationString)
 	args = append(args, indexes...)
+	args = append(args, f.hashIterationString)
 
 	resp := f.removeMultiScript.Exec(ctx, f.client, f.removeMultiKeys, args)
 	return resp.Error()
