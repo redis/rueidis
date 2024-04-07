@@ -15,7 +15,7 @@ const (
 )
 
 const (
-	addMultiScript = `
+	bloomFilterAddMultiScript = `
 local hashIterations = tonumber(ARGV[1])
 local numElements = tonumber(#ARGV) - 1
 local filterKey = KEYS[1]
@@ -48,7 +48,7 @@ end
 return redis.call('INCRBY', counterKey, counter)
 `
 
-	existsMultiScript = `
+	bloomFilterExistsMultiScript = `
 local hashIterations = tonumber(ARGV[1])
 local numElements = tonumber(#ARGV) - 1
 local filterKey = KEYS[1]
@@ -79,7 +79,7 @@ end
 return result
 `
 
-	resetScript = `
+	bloomFilterResetScript = `
 local filterKey = KEYS[1]
 local counterKey = KEYS[2]
 
@@ -89,7 +89,7 @@ redis.call('SET', counterKey, 0)
 return 1
 `
 
-	deleteScript = `
+	bloomFilterDeleteScript = `
 local filterKey = KEYS[1]
 local counterKey = KEYS[2]
 
@@ -179,14 +179,14 @@ func NewBloomFilter(
 		return nil, ErrFalsePositiveRateGreaterThanOne
 	}
 
-	size := numberOfBits(expectedNumberOfItems, falsePositiveRate)
+	size := numberOfBloomFilterBits(expectedNumberOfItems, falsePositiveRate)
 	if size == 0 {
 		return nil, ErrBitsSizeZero
 	}
 	if size > maxSize {
 		return nil, ErrBitsSizeTooLarge
 	}
-	hashIterations := numberOfHashFunctions(size, expectedNumberOfItems)
+	hashIterations := numberOfBloomFilterHashFunctions(size, expectedNumberOfItems)
 
 	// NOTE: https://redis.io/docs/reference/cluster-spec/#hash-tags
 	bfName := "{" + name + "}"
@@ -198,18 +198,18 @@ func NewBloomFilter(
 		hashIterations:      hashIterations,
 		hashIterationString: strconv.FormatUint(uint64(hashIterations), 10),
 		size:                size,
-		addMultiScript:      rueidis.NewLuaScript(addMultiScript),
+		addMultiScript:      rueidis.NewLuaScript(bloomFilterAddMultiScript),
 		addMultiKeys:        []string{bfName, counterName},
-		existsMultiScript:   rueidis.NewLuaScript(existsMultiScript),
+		existsMultiScript:   rueidis.NewLuaScript(bloomFilterExistsMultiScript),
 		existsMultiKeys:     []string{bfName},
 	}, nil
 }
 
-func numberOfBits(n uint, r float64) uint {
+func numberOfBloomFilterBits(n uint, r float64) uint {
 	return uint(math.Ceil(-float64(n) * math.Log(r) / math.Pow(math.Log(2), 2)))
 }
 
-func numberOfHashFunctions(s uint, n uint) uint {
+func numberOfBloomFilterHashFunctions(s uint, n uint) uint {
 	return uint(math.Round(float64(s) / float64(n) * math.Log(2)))
 }
 
@@ -229,11 +229,7 @@ func (c *bloomFilter) AddMulti(ctx context.Context, keys []string) error {
 	args = append(args, indexes...)
 
 	resp := c.addMultiScript.Exec(ctx, c.client, c.addMultiKeys, args)
-	if resp.Error() != nil {
-		return resp.Error()
-	}
-
-	return nil
+	return resp.Error()
 }
 
 func (c *bloomFilter) indexes(keys []string) []string {
@@ -300,16 +296,12 @@ func (c *bloomFilter) Reset(ctx context.Context) error {
 		ctx,
 		c.client.B().
 			Eval().
-			Script(resetScript).
+			Script(bloomFilterResetScript).
 			Numkeys(2).
 			Key(c.name, c.counter).
 			Build(),
 	)
-	if resp.Error() != nil {
-		return resp.Error()
-	}
-
-	return nil
+	return resp.Error()
 }
 
 func (c *bloomFilter) Delete(ctx context.Context) error {
@@ -317,16 +309,12 @@ func (c *bloomFilter) Delete(ctx context.Context) error {
 		ctx,
 		c.client.B().
 			Eval().
-			Script(deleteScript).
+			Script(bloomFilterDeleteScript).
 			Numkeys(2).
 			Key(c.name, c.counter).
 			Build(),
 	)
-	if resp.Error() != nil {
-		return resp.Error()
-	}
-
-	return nil
+	return resp.Error()
 }
 
 func (c *bloomFilter) Count(ctx context.Context) (uint, error) {
