@@ -3,6 +3,7 @@ package rueidishook
 import (
 	"context"
 	"time"
+	"unsafe"
 
 	"github.com/redis/rueidis"
 )
@@ -147,4 +148,26 @@ func (e *extended) Dedicate() (client rueidis.DedicatedClient, cancel func()) {
 
 func (e *extended) Nodes() map[string]rueidis.Client {
 	panic("Nodes() is not allowed with rueidis.DedicatedClient")
+}
+
+type result struct {
+	err error
+	val rueidis.RedisMessage
+}
+
+func NewErrorResult(err error) rueidis.RedisResult {
+	r := result{err: err}
+	return *(*rueidis.RedisResult)(unsafe.Pointer(&r))
+}
+
+type stream struct {
+	p *int
+	w *int
+	e error
+	n int
+}
+
+func NewErrorResultStream(err error) rueidis.RedisResultStream {
+	r := stream{e: err}
+	return *(*rueidis.RedisResultStream)(unsafe.Pointer(&r))
 }
