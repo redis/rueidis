@@ -287,3 +287,25 @@ func TestForbiddenMethodForDedicatedClient(t *testing.T) {
 		shouldpanic(c.fn, c.msg)
 	}
 }
+
+func TestNewErrorResult(t *testing.T) {
+	e := errors.New("err")
+	r := NewErrorResult(e)
+	if r.Error() != e {
+		t.Fatal("unexpected err")
+	}
+}
+
+func TestNewErrorResultStream(t *testing.T) {
+	e := errors.New("err")
+	r := NewErrorResultStream(e)
+	if r.Error() != e {
+		t.Fatal("unexpected err")
+	}
+	if r.HasNext() {
+		t.Fatal("unexpected err")
+	}
+	if n, err := r.WriteTo(io.Discard); err != e || n != 0 {
+		t.Fatal("unexpected err or n")
+	}
+}
