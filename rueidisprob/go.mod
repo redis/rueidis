@@ -9,4 +9,4 @@ require (
 	github.com/twmb/murmur3 v1.1.8
 )
 
-require golang.org/x/sys v0.17.0 // indirect
+require golang.org/x/sys v0.19.0 // indirect
