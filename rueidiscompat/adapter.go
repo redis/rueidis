@@ -43,7 +43,11 @@ import (
 	"github.com/redis/rueidis/internal/util"
 )
 
-const KeepTTL = -1
+const (
+	KeepTTL           = -1
+	BitCountIndexByte = "BYTE"
+	BitCountIndexBit  = "BIT"
+)
 
 type Cmdable interface {
 	Cache(ttl time.Duration) CacheCompat
@@ -1094,11 +1098,23 @@ func (c *Compat) SetBit(ctx context.Context, key string, offset int64, value int
 }
 
 func (c *Compat) BitCount(ctx context.Context, key string, bitCount *BitCount) *IntCmd {
+
 	var resp rueidis.RedisResult
 	if bitCount == nil {
 		resp = c.client.Do(ctx, c.client.B().Bitcount().Key(key).Build())
-	} else {
+		return newIntCmd(resp)
+	}
+
+	if bitCount.Unit == nil {
 		resp = c.client.Do(ctx, c.client.B().Bitcount().Key(key).Start(bitCount.Start).End(bitCount.End).Build())
+		return newIntCmd(resp)
+	}
+
+	switch *bitCount.Unit {
+	case BitCountIndexByte:
+		resp = c.client.Do(ctx, c.client.B().Bitcount().Key(key).Start(bitCount.Start).End(bitCount.End).Byte().Build())
+	case BitCountIndexBit:
+		resp = c.client.Do(ctx, c.client.B().Bitcount().Key(key).Start(bitCount.Start).End(bitCount.End).Bit().Build())
 	}
 	return newIntCmd(resp)
 }
