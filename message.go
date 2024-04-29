@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"strconv"
 	"strings"
 	"time"
@@ -55,7 +56,7 @@ func (r *RedisError) IsNil() bool {
 // IsMoved checks if it is a redis MOVED message and returns moved address.
 func (r *RedisError) IsMoved() (addr string, ok bool) {
 	if ok = strings.HasPrefix(r.string, "MOVED"); ok {
-		addr = strings.Split(r.string, " ")[2]
+		addr = fixIPv6HostPort(strings.Split(r.string, " ")[2])
 	}
 	return
 }
@@ -63,9 +64,18 @@ func (r *RedisError) IsMoved() (addr string, ok bool) {
 // IsAsk checks if it is a redis ASK message and returns ask address.
 func (r *RedisError) IsAsk() (addr string, ok bool) {
 	if ok = strings.HasPrefix(r.string, "ASK"); ok {
-		addr = strings.Split(r.string, " ")[2]
+		addr = fixIPv6HostPort(strings.Split(r.string, " ")[2])
 	}
 	return
+}
+
+func fixIPv6HostPort(addr string) string {
+	if strings.IndexByte(addr, '.') < 0 && len(addr) > 0 && addr[0] != '[' { // skip ipv4 and enclosed ipv6
+		if i := strings.LastIndexByte(addr, ':'); i >= 0 {
+			return net.JoinHostPort(addr[:i], addr[i+1:])
+		}
+	}
+	return addr
 }
 
 // IsTryAgain checks if it is a redis TRYAGAIN message and returns ask address.
