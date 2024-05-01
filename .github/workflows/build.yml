@@ -1,6 +1,6 @@
 name: Go Modules Test
 
-on: [push]
+on: [push, pull_request]
 
 jobs:
   prepare-matrix:
