@@ -2696,10 +2696,7 @@ func TestClusterClient_SendReadOperationToReplicaNodesWriteOperationToPrimaryNod
 		&ClientOption{
 			InitAddress: []string{"127.0.0.1:0"},
 			SendToReplicas: func(cmd Completed) bool {
-				if cmd.IsReadOnly() {
-					return true
-				}
-				return false
+				return cmd.IsReadOnly()
 			},
 		},
 		func(dst string, opt *ClientOption) conn {

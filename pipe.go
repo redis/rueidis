@@ -1164,8 +1164,8 @@ func (p *pipe) syncDo(dl time.Time, dlOk bool, cmd Completed) (resp RedisResult)
 	}
 
 	var msg RedisMessage
-	err := writeCmd(p.w, cmd.Commands())
-	if err = p.w.Flush(); err == nil {
+	err := flushCmd(p.w, cmd.Commands())
+	if err == nil {
 		msg, err = syncRead(p.r)
 	}
 	if err != nil {
@@ -1225,7 +1225,6 @@ abort:
 	for i := 0; i < len(resp); i++ {
 		resp[i] = newErrResult(err)
 	}
-	return
 }
 
 func syncRead(r *bufio.Reader) (m RedisMessage, err error) {

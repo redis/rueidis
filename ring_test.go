@@ -128,12 +128,12 @@ func TestRing(t *testing.T) {
 
 	t.Run("PutMulti Wakeup WaitForWrite", func(t *testing.T) {
 		ring := newRing(DefaultRingScale)
-		if _, multi, ch := ring.NextWriteCmd(); ch == nil {
+		if _, _, ch := ring.NextWriteCmd(); ch == nil {
 			go func() {
 				time.Sleep(time.Millisecond * 100)
 				ring.PutMulti([]Completed{cmds.PingCmd}, nil)
 			}()
-			if _, multi, ch = ring.WaitForWrite(); ch != nil && multi[0].Commands()[0] == cmds.PingCmd.Commands()[0] {
+			if _, multi, ch := ring.WaitForWrite(); ch != nil && multi[0].Commands()[0] == cmds.PingCmd.Commands()[0] {
 				return
 			}
 		}
