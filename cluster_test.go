@@ -4330,3 +4330,23 @@ func TestClusterShardsParsing(t *testing.T) {
 		}
 	})
 }
+
+// https://github.com/redis/rueidis/issues/543
+func TestConnectToNonAvailableCluster(t *testing.T) {
+	var wg sync.WaitGroup
+	for i := 0; i < 4; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for i := 0; i < 100; i++ {
+				_, err := NewClient(ClientOption{
+					InitAddress: []string{"127.0.0.1:3000", "127.0.0.1:3001", "127.0.0.1:3002"},
+				})
+				if err == nil {
+					t.Errorf("expected connect error")
+				}
+			}
+		}()
+	}
+	wg.Wait()
+}
