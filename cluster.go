@@ -92,8 +92,8 @@ type connrole struct {
 	replica bool
 }
 
-func newClusterClient(opt *ClientOption, connFn connFn) (client *clusterClient, err error) {
-	client = &clusterClient{
+func newClusterClient(opt *ClientOption, connFn connFn) (*clusterClient, error) {
+	client := &clusterClient{
 		cmd:    cmds.NewBuilder(cmds.InitSlot),
 		connFn: connFn,
 		opt:    opt,
@@ -120,11 +120,11 @@ func newClusterClient(opt *ClientOption, connFn connFn) (client *clusterClient, 
 		return cc
 	}
 
-	if err = client.init(); err != nil {
+	if err := client.init(); err != nil {
 		return nil, err
 	}
 
-	if err = client.refresh(context.Background()); err != nil {
+	if err := client.refresh(context.Background()); err != nil {
 		return client, err
 	}
 
