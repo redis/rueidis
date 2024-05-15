@@ -63,7 +63,7 @@ Once a command is built, use either `client.Do()` or `client.DoMulti()` to send 
 
 **You ❗️SHOULD NOT❗️ reuse the command to another `client.Do()` or `client.DoMulti()` call because it has been recycled to the underlying `sync.Pool` by default.**
 
-To reuse a command, use `Pin()` after `Build()` and it will prevent the command being recycled. 
+To reuse a command, use `Pin()` after `Build()` and it will prevent the command from being recycled. 
 
 
 ## [Pipelining](https://redis.io/docs/manual/pipelining/)
@@ -71,7 +71,7 @@ To reuse a command, use `Pin()` after `Build()` and it will prevent the command 
 ### Auto Pipelining
 
 All concurrent non-blocking redis commands (such as `GET`, `SET`) are automatically pipelined,
-which reduces the overall round trips and system calls, and gets higher throughput. You can easily get the benefit
+which reduces the overall round trips and system calls and gets higher throughput. You can easily get the benefit
 of [pipelining technique](https://redis.io/docs/manual/pipelining/) by just calling `client.Do()` from multiple goroutines concurrently.
 For example:
 
@@ -117,7 +117,7 @@ for _, resp := range client.DoMulti(ctx, cmds...) {
 
 ## [Server-Assisted Client-Side Caching](https://redis.io/docs/manual/client-side-caching/)
 
-The opt-in mode of [server-assisted client-side caching](https://redis.io/docs/manual/client-side-caching/) is enabled by default, and can be used by calling `DoCache()` or `DoMultiCache()` with client-side TTLs specified.
+The opt-in mode of [server-assisted client-side caching](https://redis.io/docs/manual/client-side-caching/) is enabled by default and can be used by calling `DoCache()` or `DoMultiCache()` with client-side TTLs specified.
 
 ```golang
 client.DoCache(ctx, client.B().Hmget().Key("mk").Field("1", "2").Cache(), time.Minute).ToArray()
@@ -210,7 +210,7 @@ This will also fall back `client.DoCache()` and `client.DoMultiCache()` to `clie
 
 ## Context Cancellation
 
-`client.Do()`, `client.DoMulti()`, `client.DoCache()` and `client.DoMultiCache()` can return early if the context is canceled or the deadline is reached.
+`client.Do()`, `client.DoMulti()`, `client.DoCache()`, and `client.DoMultiCache()` can return early if the context is canceled or the deadline is reached.
 
 ```golang
 ctx, cancel := context.WithTimeout(context.Background(), time.Second)
@@ -222,7 +222,7 @@ Please note that though operations can return early, the command is likely sent 
 
 ## Pub/Sub
 
-To receive messages from channels, `client.Receive()` should be used. It supports `SUBSCRIBE`, `PSUBSCRIBE` and Redis 7.0's `SSUBSCRIBE`:
+To receive messages from channels, `client.Receive()` should be used. It supports `SUBSCRIBE`, `PSUBSCRIBE`, and Redis 7.0's `SSUBSCRIBE`:
 
 ```golang
 err = client.Receive(context.Background(), client.B().Subscribe().Channel("ch1", "ch2").Build(), func(msg rueidis.PubSubMessage) {
@@ -230,13 +230,13 @@ err = client.Receive(context.Background(), client.B().Subscribe().Channel("ch1",
 })
 ```
 
-The provided handler will be called with received message.
+The provided handler will be called with the received message.
 
 It is important to note that `client.Receive()` will keep blocking until returning a value in the following cases:
 1. return `nil` when received any unsubscribe/punsubscribe message related to the provided `subscribe` command.
 2. return `rueidis.ErrClosing` when the client is closed manually.
 3. return `ctx.Err()` when the `ctx` is done.
-4. return non-nil `err` when the provided `subscribe` command failed.
+4. return non-nil `err` when the provided `subscribe` command fails.
 
 While the `client.Receive()` call is blocking, the `Client` is still able to accept other concurrent requests,
 and they are sharing the same tcp connection. If your message handler may take some time to complete, it is recommended
@@ -245,7 +245,7 @@ to use the `client.Receive()` inside a `client.Dedicated()` for not blocking oth
 ### Alternative PubSub Hooks
 
 The `client.Receive()` requires users to provide a subscription command in advance.
-There is an alternative `Dedicatedclient.SetPubSubHooks()` allows users to subscribe/unsubscribe channels later.
+There is an alternative `Dedicatedclient.SetPubSubHooks()` that allows users to subscribe/unsubscribe channels later.
 
 ```golang
 c, cancel := client.Dedicate()
@@ -253,14 +253,14 @@ defer cancel()
 
 wait := c.SetPubSubHooks(rueidis.PubSubHooks{
 	OnMessage: func(m rueidis.PubSubMessage) {
-		// Handle message. This callback will be called sequentially, but in another goroutine.
+		// Handle message. This callback will be called sequentially but in another goroutine.
 	}
 })
 c.Do(ctx, c.B().Subscribe().Channel("ch").Build())
 err := <-wait // disconnected with err
 ```
 
-If the hooks are not nil, the above `wait` channel is guaranteed to be close when the hooks will not be called anymore,
+If the hooks are not nil, the above `wait` channel is guaranteed to be closed when the hooks will not be called anymore,
 and produce at most one error describing the reason. Users can use this channel to detect disconnection.
 
 ## CAS Transaction
@@ -294,7 +294,7 @@ c, cancel := client.Dedicate()
 defer cancel()
 
 c.Do(ctx, c.B().Watch().Key("k1", "k2").Build())
-// do the rest CAS operations with the `client` who occupying a connection 
+// do the rest CAS operations with the `client` who occupies a connection 
 ```
 
 However, occupying a connection is not good in terms of throughput. It is better to use [Lua script](#lua-script) to perform
@@ -304,7 +304,7 @@ optimistic locking instead.
 
 The `NewLuaScript` or `NewLuaScriptReadOnly` will create a script which is safe for concurrent usage.
 
-When calling the `script.Exec`, it will try sending `EVALSHA` first and fallback to `EVAL` if the server returns `NOSCRIPT`.
+When calling the `script.Exec`, it will try sending `EVALSHA` first and fall back to `EVAL` if the server returns `NOSCRIPT`.
 
 ```golang
 script := rueidis.NewLuaScript("return {KEYS[1],KEYS[2],ARGV[1],ARGV[2]}")
@@ -329,7 +329,7 @@ for s.HasNext() {
 ```
 
 Note that these two methods will occupy connections until all responses are written to the given `io.Writer`.
-This can take a long time and hurt performance. Use the normal `Do()` and `DoMulti()` instead unless you want to avoid allocating memory for large redis response.
+This can take a long time and hurt performance. Use the normal `Do()` and `DoMulti()` instead unless you want to avoid allocating memory for a large redis response.
 
 Also note that these two methods only work with `string`, `integer`, and `float` redis responses. And `DoMultiStream` currently
 does not support pipelining keys across multiple slots when connecting to a redis cluster.
@@ -339,7 +339,7 @@ does not support pipelining keys across multiple slots when connecting to a redi
 Each underlying connection in rueidis allocates a ring buffer for pipelining.
 Its size is controlled by the `ClientOption.RingScaleEachConn` and the default value is 10 which results into each ring of size 2^10.
 
-If you have many rueidis connections, you may find that they occupy quite amount of memory.
+If you have many rueidis connections, you may find that they occupy quite an amount of memory.
 In that case, you may consider reducing `ClientOption.RingScaleEachConn` to 8 or 9 at the cost of potential throughput degradation.
 
 You may also consider setting the value of `ClientOption.PipelineMultiplex` to `-1`, which will let rueidis use only 1 connection for pipelining to each redis node.
