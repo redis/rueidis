@@ -375,6 +375,11 @@ func writeCmd(o *bufio.Writer, cmd []string) (err error) {
 	return err
 }
 
+func flushCmd(o *bufio.Writer, cmd []string) (err error) {
+	_ = writeCmd(o, cmd)
+	return o.Flush()
+}
+
 const (
 	unexpectedNoCRLF   = "received unexpected simple string message ending without CRLF"
 	unexpectedNumByte  = "received unexpected number byte: "

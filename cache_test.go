@@ -44,7 +44,7 @@ func test(t *testing.T, storeFn func() CacheStore) {
 			t.Fatal("CachePXAT should return a desired pttl")
 		}
 
-		v2, e2 = store.Flight("key", "cmd", time.Millisecond*100, now)
+		v2, _ = store.Flight("key", "cmd", time.Millisecond*100, now)
 		if v2.typ != v.typ || v2.string != v.string {
 			t.Fatal("flights after Update should return updated RedisMessage")
 		}

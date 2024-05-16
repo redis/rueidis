@@ -58,6 +58,38 @@ func TestIsRedisErr(t *testing.T) {
 	}
 }
 
+func TestRedisErrorIsMoved(t *testing.T) {
+	for _, c := range []struct {
+		err  string
+		addr string
+	}{
+		{err: "MOVED 1 127.0.0.1:1", addr: "127.0.0.1:1"},
+		{err: "MOVED 1 [::1]:1", addr: "[::1]:1"},
+		{err: "MOVED 1 ::1:1", addr: "[::1]:1"},
+	} {
+		e := RedisError{typ: '-', string: c.err}
+		if addr, ok := e.IsMoved(); !ok || addr != c.addr {
+			t.Fail()
+		}
+	}
+}
+
+func TestRedisErrorIsAsk(t *testing.T) {
+	for _, c := range []struct {
+		err  string
+		addr string
+	}{
+		{err: "ASK 1 127.0.0.1:1", addr: "127.0.0.1:1"},
+		{err: "ASK 1 [::1]:1", addr: "[::1]:1"},
+		{err: "ASK 1 ::1:1", addr: "[::1]:1"},
+	} {
+		e := RedisError{typ: '-', string: c.err}
+		if addr, ok := e.IsAsk(); !ok || addr != c.addr {
+			t.Fail()
+		}
+	}
+}
+
 func TestIsRedisBusyGroup(t *testing.T) {
 	err := errors.New("other")
 	if IsRedisBusyGroup(err) {

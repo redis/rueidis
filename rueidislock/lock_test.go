@@ -35,11 +35,11 @@ func newClient(t *testing.T) rueidis.Client {
 }
 
 func TestNewLocker(t *testing.T) {
-	l, err := NewLocker(LockerOption{ClientOption: rueidis.ClientOption{InitAddress: nil}})
+	_, err := NewLocker(LockerOption{ClientOption: rueidis.ClientOption{InitAddress: nil}})
 	if err == nil {
 		t.Fatal(err)
 	}
-	l, err = NewLocker(LockerOption{ClientOption: rueidis.ClientOption{InitAddress: address}})
+	l, err := NewLocker(LockerOption{ClientOption: rueidis.ClientOption{InitAddress: address}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -244,7 +244,7 @@ func TestLocker_WithContext_DeadContext(t *testing.T) {
 
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
-		ctx, cancel, err := locker.WithContext(ctx, strconv.Itoa(rand.Int()))
+		_, _, err := locker.WithContext(ctx, strconv.Itoa(rand.Int()))
 		if !errors.Is(err, context.Canceled) {
 			t.Fatal(err)
 		}
@@ -589,7 +589,7 @@ func TestLocker_Flush(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		ctx, cancel, err := locker.WithContext(context.Background(), strconv.Itoa(rand.Int()))
+		_, cancel, err := locker.WithContext(context.Background(), strconv.Itoa(rand.Int()))
 		if err != nil {
 			t.Fatal(err)
 		}

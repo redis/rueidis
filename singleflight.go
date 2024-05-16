@@ -48,7 +48,7 @@ func (c *call) LazyDo(threshold time.Duration, fn func() error) {
 	c.cn++
 	ts := c.ts
 	c.mu.Unlock()
-	time.Sleep(ts.Add(threshold).Sub(time.Now()))
+	time.Sleep(time.Until(ts.Add(threshold)))
 	go c.do(ch, fn)
 }
 

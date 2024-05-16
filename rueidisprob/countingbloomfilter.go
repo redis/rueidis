@@ -143,15 +143,15 @@ type CountingBloomFilter interface {
 	// ItemMinCount returns the minimum count of item in the Counting Bloom Filter.
 	// If the item is not in the Counting Bloom Filter, it returns a zero value.
 	// Minimum count is not always accurate because of the hash collisions.
-	ItemMinCount(ctx context.Context, key string) (uint, error)
+	ItemMinCount(ctx context.Context, key string) (uint64, error)
 
 	// ItemMinCountMulti returns the minimum count of items in the Counting Bloom Filter.
 	// If the item is not in the Counting Bloom Filter, it returns a zero value.
 	// Minimum count is not always accurate because of the hash collisions.
-	ItemMinCountMulti(ctx context.Context, keys []string) ([]uint, error)
+	ItemMinCountMulti(ctx context.Context, keys []string) ([]uint64, error)
 
 	// Count returns count of items in Counting Bloom Filter.
-	Count(ctx context.Context) (uint, error)
+	Count(ctx context.Context) (uint64, error)
 }
 
 type countingBloomFilter struct {
@@ -343,7 +343,7 @@ func (f *countingBloomFilter) Delete(ctx context.Context) error {
 	return resp.Error()
 }
 
-func (f *countingBloomFilter) ItemMinCount(ctx context.Context, key string) (uint, error) {
+func (f *countingBloomFilter) ItemMinCount(ctx context.Context, key string) (uint64, error) {
 	counts, err := f.ItemMinCountMulti(ctx, []string{key})
 	if err != nil {
 		return 0, err
@@ -352,7 +352,7 @@ func (f *countingBloomFilter) ItemMinCount(ctx context.Context, key string) (uin
 	return counts[0], nil
 }
 
-func (f *countingBloomFilter) ItemMinCountMulti(ctx context.Context, keys []string) ([]uint, error) {
+func (f *countingBloomFilter) ItemMinCountMulti(ctx context.Context, keys []string) ([]uint64, error) {
 	if len(keys) == 0 {
 		return nil, nil
 	}
@@ -376,7 +376,7 @@ func (f *countingBloomFilter) ItemMinCountMulti(ctx context.Context, keys []stri
 		return nil, err
 	}
 
-	counts := make([]uint, 0, len(messages))
+	counts := make([]uint64, 0, len(messages))
 	minCount := uint64(math.MaxUint64)
 	for i, message := range messages {
 		cnt, err := message.AsUint64()
@@ -393,7 +393,7 @@ func (f *countingBloomFilter) ItemMinCountMulti(ctx context.Context, keys []stri
 		}
 
 		if (i+1)%int(f.hashIterations) == 0 {
-			counts = append(counts, uint(minCount))
+			counts = append(counts, minCount)
 			minCount = uint64(math.MaxUint64)
 		}
 	}
@@ -401,7 +401,7 @@ func (f *countingBloomFilter) ItemMinCountMulti(ctx context.Context, keys []stri
 	return counts, nil
 }
 
-func (f *countingBloomFilter) Count(ctx context.Context) (uint, error) {
+func (f *countingBloomFilter) Count(ctx context.Context) (uint64, error) {
 	resp := f.client.Do(
 		ctx,
 		f.client.B().
@@ -418,5 +418,5 @@ func (f *countingBloomFilter) Count(ctx context.Context) (uint, error) {
 		return 0, err
 	}
 
-	return uint(count), nil
+	return count, nil
 }
