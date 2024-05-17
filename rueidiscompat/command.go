@@ -1959,7 +1959,7 @@ type SetArgs struct {
 
 type BitCount struct {
 	Start, End int64
-	Unit       *string // Stores BIT or BYTE
+	Unit       string // Stores BIT or BYTE
 }
 
 //type BitPos struct {

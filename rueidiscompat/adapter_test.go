@@ -30,7 +30,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/redis/rueidis/internal/util"
 	"math"
 	"strconv"
 	"strings"
@@ -1152,22 +1151,23 @@ func testAdapter(resp3 bool) {
 			Expect(bitCount.Err()).NotTo(HaveOccurred())
 			Expect(bitCount.Val()).To(Equal(int64(6)))
 
-			bitCount = adapter.BitCount(ctx, "key", &BitCount{
-				Start: 1,
-				End:   1,
-				Unit:  util.ToPtr("BYTE"),
-			})
-			Expect(bitCount.Err()).NotTo(HaveOccurred())
-			Expect(bitCount.Val()).To(Equal(int64(6)))
+			if resp3 {
+				bitCount = adapter.BitCount(ctx, "key", &BitCount{
+					Start: 1,
+					End:   1,
+					Unit:  "BYTE",
+				})
+				Expect(bitCount.Err()).NotTo(HaveOccurred())
+				Expect(bitCount.Val()).To(Equal(int64(6)))
 
-			bitCount = adapter.BitCount(ctx, "key", &BitCount{
-				Start: 1,
-				End:   1,
-				Unit:  util.ToPtr("BIT"),
-			})
-			Expect(bitCount.Err()).NotTo(HaveOccurred())
-			Expect(bitCount.Val()).To(Equal(int64(1)))
-
+				bitCount = adapter.BitCount(ctx, "key", &BitCount{
+					Start: 1,
+					End:   1,
+					Unit:  "BIT",
+				})
+				Expect(bitCount.Err()).NotTo(HaveOccurred())
+				Expect(bitCount.Val()).To(Equal(int64(1)))
+			}
 		})
 
 		It("should BitOpAnd", func() {
@@ -7082,6 +7082,24 @@ func testAdapterCache(resp3 bool) {
 			})
 			Expect(bitCount.Err()).NotTo(HaveOccurred())
 			Expect(bitCount.Val()).To(Equal(int64(6)))
+
+			if resp3 {
+				bitCount = adapter.Cache(time.Hour).BitCount(ctx, "key", &BitCount{
+					Start: 1,
+					End:   1,
+					Unit:  "BIT",
+				})
+				Expect(bitCount.Err()).NotTo(HaveOccurred())
+				Expect(bitCount.Val()).To(Equal(int64(1)))
+
+				bitCount = adapter.Cache(time.Hour).BitCount(ctx, "key", &BitCount{
+					Start: 1,
+					End:   1,
+					Unit:  "BYTE",
+				})
+				Expect(bitCount.Err()).NotTo(HaveOccurred())
+				Expect(bitCount.Val()).To(Equal(int64(6)))
+			}
 		})
 
 		It("should BitPos", func() {
