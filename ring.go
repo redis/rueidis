@@ -27,7 +27,7 @@ func newRing(factor int) *ring {
 		m := &sync.Mutex{}
 		r.store[i].c1 = sync.NewCond(m)
 		r.store[i].c2 = sync.NewCond(m)
-		r.store[i].ch = make(chan RedisResult, 0) // this channel can't be buffered
+		r.store[i].ch = make(chan RedisResult) // this channel can't be buffered
 	}
 	return r
 }

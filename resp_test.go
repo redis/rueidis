@@ -3,13 +3,13 @@ package rueidis
 import (
 	"bufio"
 	"bytes"
+	crand "crypto/rand"
 	"io"
 	"math/rand"
 	"reflect"
 	"strconv"
 	"strings"
 	"testing"
-	"time"
 )
 
 const iteration = 100
@@ -18,8 +18,6 @@ var generators = map[byte]func(i int64, f float64, str string) string{}
 
 //gocyclo:ignore
 func init() {
-	rand.Seed(time.Now().UnixNano())
-
 	generators['$'] = func(i int64, f float64, str string) string {
 		return strconv.Itoa(len(str)) + "\r\n" + str + "\r\n"
 	}
@@ -683,7 +681,7 @@ func source(str string) *bufio.Reader {
 func random(trim bool) string {
 retry:
 	bs := make([]byte, randN(5000))
-	if _, err := rand.Read(bs); err != nil {
+	if _, err := crand.Read(bs); err != nil {
 		panic(err)
 	}
 	if trim {

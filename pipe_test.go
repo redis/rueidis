@@ -110,7 +110,7 @@ func write(o io.Writer, m RedisMessage) (err error) {
 	_, err = o.Write([]byte{m.typ})
 	switch m.typ {
 	case '$':
-		_, err = o.Write(append([]byte(strconv.Itoa(len(m.string))), '\r', '\n'))
+		_, _ = o.Write(append([]byte(strconv.Itoa(len(m.string))), '\r', '\n'))
 		_, err = o.Write(append([]byte(m.string), '\r', '\n'))
 	case '+', '-', '_':
 		_, err = o.Write(append([]byte(m.string), '\r', '\n'))
