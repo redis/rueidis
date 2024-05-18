@@ -29,11 +29,6 @@ func (c BfAddItem) Build() Completed {
 	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-func (c BfAddItem) Cache() Cacheable {
-	c.cs.Build()
-	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
-}
-
 type BfAddKey Incomplete
 
 func (c BfAddKey) Item(item string) BfAddItem {

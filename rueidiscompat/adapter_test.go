@@ -8396,20 +8396,16 @@ func testAdapterCache(resp3 bool) {
 			}}))
 		})
 
-		It("should BFAdd", func() {
-			bfAdd := adapter.Cache(time.Hour).BFAdd(ctx, "key", "element")
-			Expect(bfAdd.Err()).NotTo(HaveOccurred())
-		})
-
 		It("should BFExists", func() {
 			bfExists := adapter.Cache(time.Hour).BFExists(ctx, "key", "element")
 			Expect(bfExists.Err()).NotTo(HaveOccurred())
 		})
 
 		It("should BFInfo", func() {
-			// Add the key
-			bfAdd := adapter.Cache(time.Hour).BFAdd(ctx, "key", "element")
-			Expect(bfAdd.Err()).NotTo(HaveOccurred())
+			bfAdd, err := adapter.BFAdd(ctx, "key", "element").Result()
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(bfAdd).To(BeTrue())
 
 			// Check if the key exists
 			bfExists := adapter.Cache(time.Hour).BFExists(ctx, "key", "element")
@@ -8422,8 +8418,10 @@ func testAdapterCache(resp3 bool) {
 
 		It("should BFInfoArg with CAPACITY", func() {
 			// Add the key
-			bfAdd := adapter.Cache(time.Hour).BFAdd(ctx, "key", "element")
-			Expect(bfAdd.Err()).NotTo(HaveOccurred())
+			bfAdd, err := adapter.BFAdd(ctx, "key", "element").Result()
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(bfAdd).To(BeTrue())
 
 			// Call BFInfoArg with CAPACITY
 			bfInfo := adapter.Cache(time.Hour).BFInfoArg(ctx, "key", "CAPACITY")
@@ -8432,8 +8430,10 @@ func testAdapterCache(resp3 bool) {
 
 		It("should BFInfoArg with SIZE", func() {
 			// Add the key
-			bfAdd := adapter.Cache(time.Hour).BFAdd(ctx, "key", "element")
-			Expect(bfAdd.Err()).NotTo(HaveOccurred())
+			bfAdd, err := adapter.BFAdd(ctx, "key", "element").Result()
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(bfAdd).To(BeTrue())
 
 			// Call BFInfoArg with SIZE
 			bfInfo := adapter.Cache(time.Hour).BFInfoArg(ctx, "key", "SIZE")
@@ -8442,8 +8442,10 @@ func testAdapterCache(resp3 bool) {
 
 		It("should BFInfoArg with FILTERS", func() {
 			// Add the key
-			bfAdd := adapter.Cache(time.Hour).BFAdd(ctx, "key", "element")
-			Expect(bfAdd.Err()).NotTo(HaveOccurred())
+			bfAdd, err := adapter.BFAdd(ctx, "key", "element").Result()
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(bfAdd).To(BeTrue())
 
 			// Call BFInfoArg with FILTERS
 			bfInfo := adapter.Cache(time.Hour).BFInfoArg(ctx, "key", "FILTERS")
@@ -8452,8 +8454,10 @@ func testAdapterCache(resp3 bool) {
 
 		It("should BFInfoArg with ITEMS", func() {
 			// Add the key
-			bfAdd := adapter.Cache(time.Hour).BFAdd(ctx, "key", "element")
-			Expect(bfAdd.Err()).NotTo(HaveOccurred())
+			bfAdd, err := adapter.BFAdd(ctx, "key", "element").Result()
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(bfAdd).To(BeTrue())
 
 			// Call BFInfoArg with ITEMS
 			bfInfo := adapter.Cache(time.Hour).BFInfoArg(ctx, "key", "ITEMS")
@@ -8462,8 +8466,10 @@ func testAdapterCache(resp3 bool) {
 
 		It("should BFInfoArg with EXPANSION", func() {
 			// Add the key
-			bfAdd := adapter.Cache(time.Hour).BFAdd(ctx, "key", "element")
-			Expect(bfAdd.Err()).NotTo(HaveOccurred())
+			bfAdd, err := adapter.BFAdd(ctx, "key", "element").Result()
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(bfAdd).To(BeTrue())
 
 			// Call BFInfoArg with EXPANSION
 			bfInfo := adapter.Cache(time.Hour).BFInfoArg(ctx, "key", "EXPANSION")
@@ -8471,12 +8477,11 @@ func testAdapterCache(resp3 bool) {
 		})
 
 		It("should CFCount", func() {
-			cache := adapter.Cache(time.Hour)
-			// Add the key
-			cfAdd := cache.CFCount(ctx, "cf_key", "element")
+			cfAdd := adapter.CFAdd(ctx, "cf_key", "element")
 			Expect(cfAdd.Err()).NotTo(HaveOccurred())
 
 			// Call CFCount
+			cache := adapter.Cache(time.Hour)
 			cfCount := cache.CFCount(ctx, "cf_key", "element")
 			Expect(cfCount.Err()).NotTo(HaveOccurred())
 		})
@@ -8484,7 +8489,7 @@ func testAdapterCache(resp3 bool) {
 		It("should CFExists", func() {
 			cache := adapter.Cache(time.Hour)
 			// Add the key
-			cfAdd := cache.CFExists(ctx, "cf_key", "element")
+			cfAdd := adapter.CFAdd(ctx, "cf_key", "element")
 			Expect(cfAdd.Err()).NotTo(HaveOccurred())
 
 			// Call CFExists
@@ -8496,7 +8501,7 @@ func testAdapterCache(resp3 bool) {
 			cache := adapter.Cache(time.Hour)
 
 			// Add the key
-			cfAdd := cache.CFAdd(ctx, "cf_key", "element")
+			cfAdd := adapter.CFAdd(ctx, "cf_key", "element")
 			Expect(cfAdd.Err()).NotTo(HaveOccurred())
 
 			// Call CFInfo

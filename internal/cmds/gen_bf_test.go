@@ -6,7 +6,6 @@ import "testing"
 
 func bf0(s Builder) {
 	s.BfAdd().Key("1").Item("1").Build()
-	s.BfAdd().Key("1").Item("1").Cache()
 	s.BfCard().Key("1").Build()
 	s.BfExists().Key("1").Item("1").Build()
 	s.BfExists().Key("1").Item("1").Cache()
