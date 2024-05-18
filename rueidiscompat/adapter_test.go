@@ -1283,7 +1283,6 @@ func testAdapter(resp3 bool) {
 			pos, err = adapter.BitPos(ctx, "mykey", 0, 0, 0).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(pos).To(Equal(int64(-1)))
-
 		})
 
 		if resp3 {
