@@ -6,6 +6,7 @@ import "testing"
 
 func cf0(s Builder) {
 	s.CfAdd().Key("1").Item("1").Build()
+	s.CfAdd().Key("1").Item("1").Cache()
 	s.CfAddnx().Key("1").Item("1").Build()
 	s.CfCount().Key("1").Item("1").Build()
 	s.CfCount().Key("1").Item("1").Cache()
