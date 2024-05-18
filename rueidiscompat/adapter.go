@@ -5050,6 +5050,12 @@ func (c CacheCompat) ZScore(ctx context.Context, key, member string) *FloatCmd {
 	return newFloatCmd(resp)
 }
 
+func (c CacheCompat) BFAdd(ctx context.Context, key string, element interface{}) *BoolCmd {
+	cmd := c.client.B().BfAdd().Key(key).Item(str(element)).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newBoolCmd(resp)
+}
+
 func (c CacheCompat) BFExists(ctx context.Context, key string, element interface{}) *BoolCmd {
 	cmd := c.client.B().BfExists().Key(key).Item(str(element)).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
@@ -5107,6 +5113,11 @@ func (c CacheCompat) BFInfoExpansion(ctx context.Context, key string) *BFInfoCmd
 	cmd := c.client.B().BfInfo().Key(key).Expansion().Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newBFInfoCmd(resp)
+}
+
+func (c *CacheCompat) CFAdd(ctx context.Context, key string, element interface{}) *BoolCmd {
+	cmd := c.client.B().CfAdd().Key(key).Item(str(element)).Cache()
+	return newBoolCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
 
 func (c *CacheCompat) CFCount(ctx context.Context, key string, element interface{}) *IntCmd {

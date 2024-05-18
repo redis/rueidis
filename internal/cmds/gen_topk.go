@@ -34,6 +34,11 @@ func (c TopkAddItems) Build() Completed {
 	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
+func (c TopkAddItems) Cache() Cacheable {
+	c.cs.Build()
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
 type TopkAddKey Incomplete
 
 func (c TopkAddKey) Items(items ...string) TopkAddItems {
