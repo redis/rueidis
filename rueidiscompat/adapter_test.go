@@ -7102,6 +7102,23 @@ func testAdapterCache(resp3 bool) {
 			}
 		})
 
+		It("BitPos should panic", func() {
+			Expect(func() {
+				adapter.BitPos(ctx, "mykey", 0, 0, 0, 0)
+			}).To(Panic())
+		})
+
+		It("should panic on too many arguments in BitPos", func() {
+			defer func() {
+				if r := recover(); r == nil {
+					Fail("The code did not panic")
+				}
+			}()
+
+			// This should cause the function to panic due to too many arguments
+			adapter.Cache(time.Hour).BitPos(ctx, "mykey", 0, 0, 1, 2)
+		})
+
 		It("should BitPos", func() {
 			err := adapter.Set(ctx, "mykey", "\xff\xf0\x00", 0).Err()
 			Expect(err).NotTo(HaveOccurred())
@@ -8378,6 +8395,119 @@ func testAdapterCache(resp3 bool) {
 			}}))
 		})
 
+		It("should BFExists", func() {
+			bfExists := adapter.Cache(time.Hour).BFExists(ctx, "key", "element")
+			Expect(bfExists.Err()).NotTo(HaveOccurred())
+		})
+
+		It("should BFInfo", func() {
+			bfAdd, err := adapter.BFAdd(ctx, "key", "element").Result()
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(bfAdd).To(BeTrue())
+
+			// Check if the key exists
+			bfExists := adapter.Cache(time.Hour).BFExists(ctx, "key", "element")
+			Expect(bfExists.Val()).To(BeTrue())
+
+			// Call BFInfo
+			bfInfo := adapter.Cache(time.Hour).BFInfo(ctx, "key")
+			Expect(bfInfo.Err()).NotTo(HaveOccurred())
+		})
+
+		It("should BFInfoArg with CAPACITY", func() {
+			// Add the key
+			bfAdd, err := adapter.BFAdd(ctx, "key", "element").Result()
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(bfAdd).To(BeTrue())
+
+			// Call BFInfoArg with CAPACITY
+			bfInfo := adapter.Cache(time.Hour).BFInfoArg(ctx, "key", "CAPACITY")
+			Expect(bfInfo.Err()).NotTo(HaveOccurred())
+		})
+
+		It("should BFInfoArg with SIZE", func() {
+			// Add the key
+			bfAdd, err := adapter.BFAdd(ctx, "key", "element").Result()
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(bfAdd).To(BeTrue())
+
+			// Call BFInfoArg with SIZE
+			bfInfo := adapter.Cache(time.Hour).BFInfoArg(ctx, "key", "SIZE")
+			Expect(bfInfo.Err()).NotTo(HaveOccurred())
+		})
+
+		It("should BFInfoArg with FILTERS", func() {
+			// Add the key
+			bfAdd, err := adapter.BFAdd(ctx, "key", "element").Result()
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(bfAdd).To(BeTrue())
+
+			// Call BFInfoArg with FILTERS
+			bfInfo := adapter.Cache(time.Hour).BFInfoArg(ctx, "key", "FILTERS")
+			Expect(bfInfo.Err()).NotTo(HaveOccurred())
+		})
+
+		It("should BFInfoArg with ITEMS", func() {
+			// Add the key
+			bfAdd, err := adapter.BFAdd(ctx, "key", "element").Result()
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(bfAdd).To(BeTrue())
+
+			// Call BFInfoArg with ITEMS
+			bfInfo := adapter.Cache(time.Hour).BFInfoArg(ctx, "key", "ITEMS")
+			Expect(bfInfo.Err()).NotTo(HaveOccurred())
+		})
+
+		It("should BFInfoArg with EXPANSION", func() {
+			// Add the key
+			bfAdd, err := adapter.BFAdd(ctx, "key", "element").Result()
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(bfAdd).To(BeTrue())
+
+			// Call BFInfoArg with EXPANSION
+			bfInfo := adapter.Cache(time.Hour).BFInfoArg(ctx, "key", "EXPANSION")
+			Expect(bfInfo.Err()).NotTo(HaveOccurred())
+		})
+
+		It("should CFCount", func() {
+			cfAdd := adapter.CFAdd(ctx, "cf_key", "element")
+			Expect(cfAdd.Err()).NotTo(HaveOccurred())
+
+			// Call CFCount
+			cache := adapter.Cache(time.Hour)
+			cfCount := cache.CFCount(ctx, "cf_key", "element")
+			Expect(cfCount.Err()).NotTo(HaveOccurred())
+		})
+
+		It("should CFExists", func() {
+			cache := adapter.Cache(time.Hour)
+			// Add the key
+			cfAdd := adapter.CFAdd(ctx, "cf_key", "element")
+			Expect(cfAdd.Err()).NotTo(HaveOccurred())
+
+			// Call CFExists
+			cfExists := cache.CFExists(ctx, "cf_key", "element")
+			Expect(cfExists.Err()).NotTo(HaveOccurred())
+		})
+
+		It("should CFInfo", func() {
+			cache := adapter.Cache(time.Hour)
+
+			// Add the key
+			cfAdd := adapter.CFAdd(ctx, "cf_key", "element")
+			Expect(cfAdd.Err()).NotTo(HaveOccurred())
+
+			// Call CFInfo
+			cfInfo := cache.CFInfo(ctx, "cf_key")
+			Expect(cfInfo.Err()).NotTo(HaveOccurred())
+		})
+
 		It("should BZMPopBlocks", func() {
 			started := make(chan bool)
 			done := make(chan bool)
@@ -8553,6 +8683,17 @@ func testAdapterCache(resp3 bool) {
 			}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res).To(HaveLen(0))
+		})
+
+		It("should panic on invalid unit in GeoDist", func() {
+			defer func() {
+				if r := recover(); r == nil {
+					Fail("The code did not panic")
+				}
+			}()
+
+			// This should cause the function to panic due to an invalid unit
+			adapter.Cache(time.Hour).GeoDist(ctx, "Sicily", "Palermo", "Catania", "invalid_unit")
 		})
 
 		It("should get geo distance with unit options", func() {
@@ -8867,6 +9008,48 @@ func testAdapterCache(resp3 bool) {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(resultInfo).To(BeAssignableToTypeOf(BFInfo{}))
 				Expect(resultInfo.ItemsInserted).To(BeEquivalentTo(int64(1)))
+			})
+
+			It("should get Bloom filter information with specific options", Label("bloom", "bfinfoarg"), func() {
+				// Set up the test data
+				err := adapter.BFAdd(ctx, "testbf1", "element").Err()
+				Expect(err).NotTo(HaveOccurred())
+
+				// Test CAPACITY option
+				info, err := adapter.BFInfoArg(ctx, "testbf1", "CAPACITY").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(info).NotTo(BeNil())
+
+				// Test SIZE option
+				info, err = adapter.BFInfoArg(ctx, "testbf1", "SIZE").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(info).NotTo(BeNil())
+
+				// Test FILTERS option
+				info, err = adapter.BFInfoArg(ctx, "testbf1", "FILTERS").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(info).NotTo(BeNil())
+
+				// Test ITEMS option
+				info, err = adapter.BFInfoArg(ctx, "testbf1", "ITEMS").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(info).NotTo(BeNil())
+
+				// Test EXPANSION option
+				info, err = adapter.BFInfoArg(ctx, "testbf1", "EXPANSION").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(info).NotTo(BeNil())
+			})
+
+			It("should panic on unknown option in BFInfoArg", Label("bloom", "bfinfoarg"), func() {
+				defer func() {
+					if r := recover(); r == nil {
+						Fail("The code did not panic")
+					}
+				}()
+
+				// This should cause the function to panic due to an unknown option
+				adapter.BFInfoArg(ctx, "testbf1", "UNKNOWN_OPTION")
 			})
 
 			It("should BFCard", Label("bloom", "bfcard"), func() {
@@ -10730,6 +10913,18 @@ func testAdapterCache(resp3 bool) {
 				res, err = adapter.JSONGet(ctx, "merge1", "$").Result()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(res).To(Equal(`[{"a":1,"b":3,"c":4}]`))
+			})
+
+			It("should JSONSetMode with NX", Label("json.setmode", "json"), func() {
+				cmd := adapter.JSONSetMode(ctx, "setmode1", "$", `{"a": 1, "b": 2, "hello": "world"}`, "NX")
+				Expect(cmd.Err()).NotTo(HaveOccurred())
+				Expect(cmd.Val()).To(Equal("OK"))
+			})
+
+			It("should panic with invalid mode", Label("json.setmode", "json"), func() {
+				Expect(func() {
+					adapter.JSONSetMode(ctx, "setmode3", "$", `{"a": 1, "b": 2, "hello": "world"}`, "INVALID")
+				}).To(Panic())
 			})
 
 			It("should JSONMSet", Label("json.mset", "json"), func() {
