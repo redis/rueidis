@@ -95,6 +95,7 @@ func NewLocker(option LockerOption) (Locker, error) {
 		}
 		option.ClientOption.OnInvalidations = impl.onInvalidations
 	}
+	option.ClientOption.PipelineMultiplex = -1 // this ensures the CSC goes to the same connection.
 
 	var err error
 	if option.ClientBuilder != nil {
@@ -276,6 +277,7 @@ func (m *locker) try(ctx context.Context, cancel context.CancelFunc, name string
 				case <-timer.C:
 					deadline = deadline.Add(m.interval)
 					if err = m.script(ctx, extend, key, val, deadline); err == nil {
+						m.client.Do(ctx, m.client.B().Get().Key(key).Build()) // reconstruct OPTOUT CSC
 						timer.Reset(m.interval)
 						if !m.noloop {
 							<-csc
@@ -283,6 +285,7 @@ func (m *locker) try(ctx context.Context, cancel context.CancelFunc, name string
 					}
 				case <-csc:
 					if err = m.script(ctx, extend, key, val, deadline); err == nil {
+						m.client.Do(ctx, m.client.B().Get().Key(key).Build()) // reconstruct OPTOUT CSC
 						if !m.noloop {
 							<-csc
 						}
