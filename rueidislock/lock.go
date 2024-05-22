@@ -277,7 +277,6 @@ func (m *locker) try(ctx context.Context, cancel context.CancelFunc, name string
 				case <-timer.C:
 					deadline = deadline.Add(m.interval)
 					if err = m.script(ctx, extend, key, val, deadline); err == nil {
-						m.client.Do(ctx, m.client.B().Get().Key(key).Build()) // reconstruct OPTOUT CSC
 						timer.Reset(m.interval)
 						if !m.noloop {
 							<-csc
@@ -285,7 +284,6 @@ func (m *locker) try(ctx context.Context, cancel context.CancelFunc, name string
 					}
 				case <-csc:
 					if err = m.script(ctx, extend, key, val, deadline); err == nil {
-						m.client.Do(ctx, m.client.B().Get().Key(key).Build()) // reconstruct OPTOUT CSC
 						if !m.noloop {
 							<-csc
 						}
@@ -393,8 +391,8 @@ func (m *locker) Close() {
 }
 
 var (
-	delkey = rueidis.NewLuaScript(`if redis.call("GET",KEYS[1]) == ARGV[1] then return redis.call("DEL",KEYS[1]) else return 0 end`)
-	extend = rueidis.NewLuaScript(`if redis.call("GET",KEYS[1]) == ARGV[1] then return redis.call("PEXPIREAT",KEYS[1],ARGV[2]) else return 0 end`)
+	delkey = rueidis.NewLuaScript(`if redis.call("GET",KEYS[1]) == ARGV[1] then return redis.call("DEL",KEYS[1]) end; return 0`)
+	extend = rueidis.NewLuaScript(`if redis.call("GET",KEYS[1]) == ARGV[1] then local r = redis.call("PEXPIREAT",KEYS[1],ARGV[2]); redis.call("GET",KEYS[1]); return r end; return 0`)
 )
 
 // ErrNotLocked is returned from the Locker.TryWithContext when it fails
