@@ -95,6 +95,7 @@ func NewLocker(option LockerOption) (Locker, error) {
 		}
 		option.ClientOption.OnInvalidations = impl.onInvalidations
 	}
+	option.ClientOption.PipelineMultiplex = -1 // this ensures the CSC goes to the same connection.
 
 	var err error
 	if option.ClientBuilder != nil {
@@ -160,15 +161,14 @@ func keyname(prefix, name string, i int32) string {
 
 func (m *locker) acquire(ctx context.Context, key, val string, deadline time.Time) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, m.timeout)
-	var set rueidis.Completed
+	var resp rueidis.RedisResult
 	if m.setpx {
-		set = m.client.B().Set().Key(key).Value(val).Nx().PxMilliseconds(m.validity.Milliseconds()).Build()
+		resp = acqms.Exec(ctx, m.client, []string{key}, []string{val, strconv.FormatInt(m.validity.Milliseconds(), 10)})
 	} else {
-		set = m.client.B().Set().Key(key).Value(val).Nx().PxatMillisecondsTimestamp(deadline.UnixMilli()).Build()
+		resp = acqat.Exec(ctx, m.client, []string{key}, []string{val, strconv.FormatInt(deadline.UnixMilli(), 10)})
 	}
-	resp := m.client.DoMulti(ctx, set, m.client.B().Get().Key(key).Build())
 	cancel()
-	if err = resp[0].Error(); rueidis.IsRedisNil(err) {
+	if err = resp.Error(); rueidis.IsRedisNil(err) {
 		return ErrNotLocked
 	}
 	return err
@@ -390,8 +390,10 @@ func (m *locker) Close() {
 }
 
 var (
-	delkey = rueidis.NewLuaScript(`if redis.call("GET",KEYS[1]) == ARGV[1] then return redis.call("DEL",KEYS[1]) else return 0 end`)
-	extend = rueidis.NewLuaScript(`if redis.call("GET",KEYS[1]) == ARGV[1] then return redis.call("PEXPIREAT",KEYS[1],ARGV[2]) else return 0 end`)
+	delkey = rueidis.NewLuaScript(`if redis.call("GET",KEYS[1]) == ARGV[1] then return redis.call("DEL",KEYS[1]) end;return 0`)
+	extend = rueidis.NewLuaScript(`if redis.call("GET",KEYS[1]) == ARGV[1] then local r = redis.call("PEXPIREAT",KEYS[1],ARGV[2]);redis.call("GET",KEYS[1]);return r end;return 0`)
+	acqms  = rueidis.NewLuaScript(`local r = redis.call("SET",KEYS[1],ARGV[1],"NX","PX",ARGV[2]);redis.call("GET",KEYS[1]);return r`)
+	acqat  = rueidis.NewLuaScript(`local r = redis.call("SET",KEYS[1],ARGV[1],"NX","PXAT",ARGV[2]);redis.call("GET",KEYS[1]);return r`)
 )
 
 // ErrNotLocked is returned from the Locker.TryWithContext when it fails
