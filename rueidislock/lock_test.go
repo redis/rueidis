@@ -162,6 +162,152 @@ func TestLocker_WithContext_UnlockByClientSideCaching(t *testing.T) {
 	})
 }
 
+func TestLocker_WithContext_UnlockBySelfForceWithContext(t *testing.T) {
+	test := func(t *testing.T, noLoop, setpx bool) {
+		locker := newLocker(t, noLoop, setpx, false)
+		locker.timeout = time.Second
+		defer locker.Close()
+		lck := strconv.Itoa(rand.Int())
+		ctx, cancel, err := locker.WithContext(context.Background(), lck)
+		if err != nil {
+			t.Fatal(err)
+		}
+		go func() {
+			_, cancel2, err2 := locker.ForceWithContext(context.Background(), lck)
+			if err2 != nil {
+				t.Errorf("unexpected err %v", err2)
+				return
+			}
+			cancel2()
+		}()
+		<-ctx.Done()
+		cancel()
+		if !errors.Is(ctx.Err(), context.Canceled) {
+			t.Fatalf("unexpected err %v", err)
+		}
+	}
+	t.Run("Tracking Loop", func(t *testing.T) {
+		test(t, false, false)
+	})
+	t.Run("Tracking NoLoop", func(t *testing.T) {
+		test(t, true, false)
+	})
+	t.Run("SET PX", func(t *testing.T) {
+		test(t, true, true)
+	})
+}
+
+func TestLocker_WithContext_UnlockByOtherForceWithContext(t *testing.T) {
+	test := func(t *testing.T, noLoop, setpx bool) {
+		locker := newLocker(t, noLoop, setpx, false)
+		locker.timeout = time.Second
+		defer locker.Close()
+		lck := strconv.Itoa(rand.Int())
+		ctx, cancel, err := locker.WithContext(context.Background(), lck)
+		if err != nil {
+			t.Fatal(err)
+		}
+		go func() {
+			locker2 := newLocker(t, noLoop, setpx, false)
+			locker2.timeout = time.Second
+			defer locker2.Close()
+			_, cancel2, err2 := locker2.ForceWithContext(context.Background(), lck)
+			if err2 != nil {
+				t.Errorf("unexpected err %v", err2)
+				return
+			}
+			cancel2()
+		}()
+		<-ctx.Done()
+		cancel()
+		if !errors.Is(ctx.Err(), context.Canceled) {
+			t.Fatalf("unexpected err %v", err)
+		}
+	}
+	t.Run("Tracking Loop", func(t *testing.T) {
+		test(t, false, false)
+	})
+	t.Run("Tracking NoLoop", func(t *testing.T) {
+		test(t, true, false)
+	})
+	t.Run("SET PX", func(t *testing.T) {
+		test(t, true, true)
+	})
+}
+
+func TestLocker_ForceWithContext_UnlockBySelfForceWithContext(t *testing.T) {
+	test := func(t *testing.T, noLoop, setpx bool) {
+		locker := newLocker(t, noLoop, setpx, false)
+		locker.timeout = time.Second
+		defer locker.Close()
+		lck := strconv.Itoa(rand.Int())
+		ctx, cancel, err := locker.ForceWithContext(context.Background(), lck)
+		if err != nil {
+			t.Fatal(err)
+		}
+		go func() {
+			_, cancel2, err2 := locker.ForceWithContext(context.Background(), lck)
+			if err2 != nil {
+				t.Errorf("unexpected err %v", err2)
+				return
+			}
+			cancel2()
+		}()
+		<-ctx.Done()
+		cancel()
+		if !errors.Is(ctx.Err(), context.Canceled) {
+			t.Fatalf("unexpected err %v", err)
+		}
+	}
+	t.Run("Tracking Loop", func(t *testing.T) {
+		test(t, false, false)
+	})
+	t.Run("Tracking NoLoop", func(t *testing.T) {
+		test(t, true, false)
+	})
+	t.Run("SET PX", func(t *testing.T) {
+		test(t, true, true)
+	})
+}
+
+func TestLocker_ForceWithContext_UnlockByOtherForceWithContext(t *testing.T) {
+	test := func(t *testing.T, noLoop, setpx bool) {
+		locker := newLocker(t, noLoop, setpx, false)
+		locker.timeout = time.Second
+		defer locker.Close()
+		lck := strconv.Itoa(rand.Int())
+		ctx, cancel, err := locker.ForceWithContext(context.Background(), lck)
+		if err != nil {
+			t.Fatal(err)
+		}
+		go func() {
+			locker2 := newLocker(t, noLoop, setpx, false)
+			locker2.timeout = time.Second
+			defer locker2.Close()
+			_, cancel2, err2 := locker2.ForceWithContext(context.Background(), lck)
+			if err2 != nil {
+				t.Errorf("unexpected err %v", err2)
+				return
+			}
+			cancel2()
+		}()
+		<-ctx.Done()
+		cancel()
+		if !errors.Is(ctx.Err(), context.Canceled) {
+			t.Fatalf("unexpected err %v", err)
+		}
+	}
+	t.Run("Tracking Loop", func(t *testing.T) {
+		test(t, false, false)
+	})
+	t.Run("Tracking NoLoop", func(t *testing.T) {
+		test(t, true, false)
+	})
+	t.Run("SET PX", func(t *testing.T) {
+		test(t, true, true)
+	})
+}
+
 func TestLocker_WithContext_ExtendByClientSideCaching(t *testing.T) {
 	test := func(t *testing.T, noLoop, setpx bool) {
 		locker := newLocker(t, noLoop, setpx, false)
@@ -308,6 +454,35 @@ func TestLocker_TryWithContext(t *testing.T) {
 
 		lck := strconv.Itoa(rand.Int())
 		ctx, cancel, err := locker.TryWithContext(context.Background(), lck)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, _, err := locker.TryWithContext(ctx, lck); err != ErrNotLocked {
+			t.Fatal(err)
+		}
+		cancel()
+	}
+	for _, nocsc := range []bool{false, true} {
+		t.Run("Tracking Loop", func(t *testing.T) {
+			test(t, false, false, nocsc)
+		})
+		t.Run("Tracking NoLoop", func(t *testing.T) {
+			test(t, true, false, nocsc)
+		})
+		t.Run("SET PX", func(t *testing.T) {
+			test(t, true, true, nocsc)
+		})
+	}
+}
+
+func TestLocker_ForceWithContextThenTryWithContext(t *testing.T) {
+	test := func(t *testing.T, noLoop, setpx, nocsc bool) {
+		locker := newLocker(t, noLoop, setpx, nocsc)
+		locker.timeout = time.Second
+		defer locker.Close()
+
+		lck := strconv.Itoa(rand.Int())
+		ctx, cancel, err := locker.ForceWithContext(context.Background(), lck)
 		if err != nil {
 			t.Fatal(err)
 		}
