@@ -28,6 +28,8 @@ package rueidiscompat
 
 import (
 	"errors"
+	"fmt"
+	"testing"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -671,4 +673,92 @@ func testCmd(resp3 bool) {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(tm2).To(BeTemporally("==", tm))
 	})
+}
+func TestGeoSearchQueryArgs(t *testing.T) {
+	tests := []struct {
+		name     string
+		query    GeoSearchQuery
+		expected []string
+	}{
+		{
+			name: "Radius with default unit",
+			query: GeoSearchQuery{
+				Radius: 5.0,
+			},
+			expected: []string{"FROMLONLAT", "0", "0", "BYRADIUS", "5", "KM"},
+		},
+		{
+			name: "Radius with specified unit",
+			query: GeoSearchQuery{
+				Radius:     5.0,
+				RadiusUnit: "M",
+			},
+			expected: []string{"FROMLONLAT", "0", "0", "BYRADIUS", "5", "M"},
+		},
+		{
+			name: "Box with default unit",
+			query: GeoSearchQuery{
+				BoxWidth:  10.0,
+				BoxHeight: 20.0,
+			},
+			expected: []string{"FROMLONLAT", "0", "0", "BYBOX", "10", "20", "KM"},
+		},
+		{
+			name: "Box with specified unit",
+			query: GeoSearchQuery{
+				BoxWidth:  10.0,
+				BoxHeight: 20.0,
+				BoxUnit:   "M",
+			},
+			expected: []string{"FROMLONLAT", "0", "0", "BYBOX", "10", "20", "M"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := tt.query.args()
+			if len(result) != len(tt.expected) {
+				t.Errorf("Expected %v args, got %v", len(tt.expected), len(result))
+			}
+			for i, v := range result {
+				if v != tt.expected[i] {
+					t.Errorf("Expected %v at position %d, got %v", tt.expected[i], i, v)
+				}
+			}
+		})
+	}
+}
+
+func TestSetErr(t *testing.T) {
+	// Create a new XAutoClaimCmd instance
+	cmd := &XAutoClaimCmd{}
+
+	// Set an error using the SetErr method
+	errMsg := "test error"
+	cmd.SetErr(fmt.Errorf(errMsg))
+
+	// Check if the error is properly set in the command object
+	if cmd.Err() == nil {
+		t.Error("expected non-nil error, got nil")
+	}
+
+	// Check if the error message matches the expected error message
+	if cmd.Err().Error() != errMsg {
+		t.Errorf("expected error message: %s, got: %s", errMsg, cmd.Err().Error())
+	}
+}
+func TestStringInvalid(t *testing.T) {
+	agg := Invalid
+	expected := ""
+	if result := agg.String(); result != expected {
+		t.Errorf("Invalid: expected %s, got %s", expected, result)
+	}
+}
+
+func TestStringAvg(t *testing.T) {
+	agg := Avg
+	expected := "AVG"
+	if result := agg.String(); result != expected {
+		t.Errorf("Avg: expected %s, got %s", expected, result)
+	}
 }
