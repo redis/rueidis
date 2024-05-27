@@ -902,18 +902,18 @@ func TestStringDefault(t *testing.T) {
 //	}
 //}
 
-// Helper function to compare two slices of interfaces
-func isEqual(slice1, slice2 []interface{}) bool {
-	if len(slice1) != len(slice2) {
-		return false
-	}
-	for i := range slice1 {
-		if slice1[i] != slice2[i] {
-			return false
-		}
-	}
-	return true
-}
+//// Helper function to compare two slices of interfaces
+//func isEqual(slice1, slice2 []interface{}) bool {
+//	if len(slice1) != len(slice2) {
+//		return false
+//	}
+//	for i := range slice1 {
+//		if slice1[i] != slice2[i] {
+//			return false
+//		}
+//	}
+//	return true
+//}
 
 func TestFormatMs(t *testing.T) {
 	// Test case 1: Duration greater than 0 and less than 1 millisecond
