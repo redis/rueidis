@@ -729,34 +729,6 @@ func TestGeoSearchQueryArgs(t *testing.T) {
 	}
 }
 
-type MockRedisResult struct {
-	arr    []MockRedisResult
-	str    string
-	i64    int64
-	hasErr bool
-}
-
-func (m MockRedisResult) ToArray() ([]MockRedisResult, error) {
-	if m.hasErr {
-		return nil, fmt.Errorf("mock error")
-	}
-	return m.arr, nil
-}
-
-func (m MockRedisResult) ToString() (string, error) {
-	if m.hasErr {
-		return "", fmt.Errorf("mock error")
-	}
-	return m.str, nil
-}
-
-func (m MockRedisResult) AsInt64() (int64, error) {
-	if m.hasErr {
-		return 0, fmt.Errorf("mock error")
-	}
-	return m.i64, nil
-}
-
 func TestSetErr(t *testing.T) {
 	// Create a new XAutoClaimCmd instance
 	cmd := &XAutoClaimCmd{}
