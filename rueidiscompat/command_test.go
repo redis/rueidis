@@ -762,3 +762,155 @@ func TestStringAvg(t *testing.T) {
 		t.Errorf("Avg: expected %s, got %s", expected, result)
 	}
 }
+
+func TestStringSum(t *testing.T) {
+	agg := Sum
+	expected := "SUM"
+	if result := agg.String(); result != expected {
+		t.Errorf("Sum: expected %s, got %s", expected, result)
+	}
+}
+
+func TestStringMin(t *testing.T) {
+	agg := Min
+	expected := "MIN"
+	if result := agg.String(); result != expected {
+		t.Errorf("Min: expected %s, got %s", expected, result)
+	}
+}
+
+func TestStringMax(t *testing.T) {
+	agg := Max
+	expected := "MAX"
+	if result := agg.String(); result != expected {
+		t.Errorf("MAX: expected %s, got %s", expected, result)
+	}
+}
+
+func TestStringRange(t *testing.T) {
+	agg := Range
+	expected := "RANGE"
+	if result := agg.String(); result != expected {
+		t.Errorf("Range: expected %s, got %s", expected, result)
+	}
+}
+
+func TestStringCount(t *testing.T) {
+	agg := Count
+	expected := "COUNT"
+	if result := agg.String(); result != expected {
+		t.Errorf("Count: expected %s, got %s", expected, result)
+	}
+}
+
+func TestStringFirst(t *testing.T) {
+	agg := First
+	expected := "FIRST"
+	if result := agg.String(); result != expected {
+		t.Errorf("First: expected %s, got %s", expected, result)
+	}
+}
+
+func TestStringLast(t *testing.T) {
+	agg := Last
+	expected := "LAST"
+	if result := agg.String(); result != expected {
+		t.Errorf("Last: expected %s, got %s", expected, result)
+	}
+}
+
+func TestStringStdP(t *testing.T) {
+	agg := StdP
+	expected := "STD.P"
+	if result := agg.String(); result != expected {
+		t.Errorf("StdP: expected %s, got %s", expected, result)
+	}
+}
+
+func TestStringStdS(t *testing.T) {
+	agg := StdS
+	expected := "STD.S"
+	if result := agg.String(); result != expected {
+		t.Errorf("StdS: expected %s, got %s", expected, result)
+	}
+}
+
+func TestStringVarP(t *testing.T) {
+	agg := VarP
+	expected := "VAR.P"
+	if result := agg.String(); result != expected {
+		t.Errorf("VarP: expected %s, got %s", expected, result)
+	}
+}
+
+func TestStringVarS(t *testing.T) {
+	agg := VarS
+	expected := "VAR.S"
+	if result := agg.String(); result != expected {
+		t.Errorf("VarS: expected %s, got %s", expected, result)
+	}
+}
+
+func TestStringTwa(t *testing.T) {
+	agg := Aggregator(100)
+	expected := ""
+	if result := agg.String(); result != expected {
+		t.Errorf("Empty string: expected %s, got %s", expected, result)
+	}
+}
+
+func TestStringDefault(t *testing.T) {
+	agg := Twa
+	expected := "TWA"
+	if result := agg.String(); result != expected {
+		t.Errorf("Twa: expected %s, got %s", expected, result)
+	}
+}
+
+func TestExpandedString(t *testing.T) {
+	// Create a JSONCmd instance with type TYP_STRING
+	cmd := &JSONCmd{typ: TYP_STRING}
+
+	// Call the Expanded method
+	result, err := cmd.Expanded()
+
+	// Verify the result
+	if err != nil {
+		t.Errorf("Expected no error, got: %v", err)
+	}
+	expected := []interface{}{"test"}
+	if !isEqual(result, expected) {
+		t.Errorf("Expected %v, got: %v", expected, result)
+	}
+}
+
+func TestExpandedArray(t *testing.T) {
+	// Create a JSONCmd instance with type TYP_ARRAY
+	expanded := []interface{}{1, "two", true}
+	cmd := &JSONCmd{typ: TYP_ARRAY, expanded: expanded}
+
+	// Call the Expanded method
+	result, err := cmd.Expanded()
+
+	// Verify the result
+	if err != nil {
+		t.Errorf("Expected no error, got: %v", err)
+	}
+	expected := expanded
+	if !isEqual(result, expected) {
+		t.Errorf("Expected %v, got: %v", expected, result)
+	}
+}
+
+// Helper function to compare two slices of interfaces
+func isEqual(slice1, slice2 []interface{}) bool {
+	if len(slice1) != len(slice2) {
+		return false
+	}
+	for i := range slice1 {
+		if slice1[i] != slice2[i] {
+			return false
+		}
+	}
+	return true
+}

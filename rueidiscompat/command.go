@@ -2958,9 +2958,17 @@ func (cmd *JSONCmd) Val() string {
 }
 
 // https://github.com/redis/go-redis/blob/v9.3.0/json.go#L105
-func (cmd *JSONCmd) Expanded() (any, error) {
+//
+//	func (cmd *JSONCmd) Expanded() (any, error) {
+//		if cmd.typ == TYP_STRING {
+//			return cmd.Val(), nil
+//		}
+//		// TYP_ARRAY
+//		return cmd.expanded, nil
+//	}
+func (cmd *JSONCmd) Expanded() ([]interface{}, error) {
 	if cmd.typ == TYP_STRING {
-		return cmd.Val(), nil
+		return []interface{}{cmd.val}, nil
 	}
 	// TYP_ARRAY
 	return cmd.expanded, nil
