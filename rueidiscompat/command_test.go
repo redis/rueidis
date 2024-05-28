@@ -866,7 +866,6 @@ func TestStringDefault(t *testing.T) {
 		t.Errorf("Twa: expected %s, got %s", expected, result)
 	}
 }
-<<<<<<< HEAD
 
 //func TestExpandedString(t *testing.T) {
 //	// Create a JSONCmd instance with type TYP_STRING
@@ -931,5 +930,3 @@ func TestFormatMs(t *testing.T) {
 		t.Errorf("Test case 2 failed: Expected %d, got %d", expected2, result2)
 	}
 }
-=======
->>>>>>> f78ad19 (Fix conflict, add String() test case)
