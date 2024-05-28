@@ -867,54 +867,6 @@ func TestStringDefault(t *testing.T) {
 	}
 }
 
-//func TestExpandedString(t *testing.T) {
-//	// Create a JSONCmd instance with type TYP_STRING
-//	cmd := &JSONCmd{typ: TYP_STRING}
-//
-//	// Call the Expanded method
-//	result, err := cmd.Expanded()
-//
-//	// Verify the result
-//	if err != nil {
-//		t.Errorf("Expected no error, got: %v", err)
-//	}
-//	expected := []interface{}{} // An empty slice since no value is set
-//	if !isEqual(result, expected) {
-//		t.Errorf("Expected %v, got: %v", expected, result)
-//	}
-//}
-
-//func TestExpandedArray(t *testing.T) {
-//	// Create a JSONCmd instance with type TYP_ARRAY
-//	expanded := []interface{}{1, "two", true}
-//	cmd := &JSONCmd{typ: TYP_ARRAY, expanded: expanded}
-//
-//	// Call the Expanded method
-//	result, err := cmd.Expanded()
-//
-//	// Verify the result
-//	if err != nil {
-//		t.Errorf("Expected no error, got: %v", err)
-//	}
-//	expected := expanded
-//	if !isEqual(result, expected) {
-//		t.Errorf("Expected %v, got: %v", expected, result)
-//	}
-//}
-
-//// Helper function to compare two slices of interfaces
-//func isEqual(slice1, slice2 []interface{}) bool {
-//	if len(slice1) != len(slice2) {
-//		return false
-//	}
-//	for i := range slice1 {
-//		if slice1[i] != slice2[i] {
-//			return false
-//		}
-//	}
-//	return true
-//}
-
 func TestFormatMs(t *testing.T) {
 	// Test case 1: Duration greater than 0 and less than 1 millisecond
 	dur1 := time.Microsecond / 2 // Half a microsecond
