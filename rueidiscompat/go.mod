@@ -7,7 +7,7 @@ replace github.com/redis/rueidis => ../
 require (
 	github.com/onsi/ginkgo/v2 v2.15.0
 	github.com/onsi/gomega v1.31.1
-	github.com/redis/rueidis v1.0.37
+	github.com/redis/rueidis v1.0.38
 )
 
 require (
