@@ -1,11 +1,11 @@
-//go:build !go1.22
-// +build !go1.22
+//go:build go1.22
+// +build go1.22
 
 package rueidis
 
 import (
 	"context"
-	"math/rand"
+	"math/rand/v2"
 	"net"
 	"runtime"
 	"sync"
@@ -397,16 +397,8 @@ func isBroken(err error, w wire) bool {
 	return err != nil && err != ErrClosing && w.Error() != nil
 }
 
-var rngPool = sync.Pool{
-	New: func() any {
-		return rand.New(rand.NewSource(time.Now().UnixNano()))
-	},
-}
-
 func fastrand(n int) (r int) {
-	s := rngPool.Get().(*rand.Rand)
-	r = s.Intn(n)
-	rngPool.Put(s)
+	r = rand.IntN(n)
 	return
 }
 

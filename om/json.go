@@ -3,6 +3,7 @@ package om
 import (
 	"context"
 	"encoding/json"
+	"github.com/oklog/ulid/v2"
 	"reflect"
 	"strconv"
 	"strings"
@@ -42,7 +43,7 @@ type JSONRepository[T any] struct {
 // NewEntity returns an empty entity and will have the `redis:",key"` field be set with ULID automatically.
 func (r *JSONRepository[T]) NewEntity() *T {
 	var v T
-	reflect.ValueOf(&v).Elem().Field(r.schema.key.idx).Set(reflect.ValueOf(id()))
+	reflect.ValueOf(&v).Elem().Field(r.schema.key.idx).Set(reflect.ValueOf(ulid.Make().String()))
 	return &v
 }
 
