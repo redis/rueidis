@@ -762,3 +762,123 @@ func TestStringAvg(t *testing.T) {
 		t.Errorf("Avg: expected %s, got %s", expected, result)
 	}
 }
+
+func TestStringSum(t *testing.T) {
+	agg := Sum
+	expected := "SUM"
+	if result := agg.String(); result != expected {
+		t.Errorf("Sum: expected %s, got %s", expected, result)
+	}
+}
+
+func TestStringMin(t *testing.T) {
+	agg := Min
+	expected := "MIN"
+	if result := agg.String(); result != expected {
+		t.Errorf("Min: expected %s, got %s", expected, result)
+	}
+}
+
+func TestStringMax(t *testing.T) {
+	agg := Max
+	expected := "MAX"
+	if result := agg.String(); result != expected {
+		t.Errorf("MAX: expected %s, got %s", expected, result)
+	}
+}
+
+func TestStringRange(t *testing.T) {
+	agg := Range
+	expected := "RANGE"
+	if result := agg.String(); result != expected {
+		t.Errorf("Range: expected %s, got %s", expected, result)
+	}
+}
+
+func TestStringCount(t *testing.T) {
+	agg := Count
+	expected := "COUNT"
+	if result := agg.String(); result != expected {
+		t.Errorf("Count: expected %s, got %s", expected, result)
+	}
+}
+
+func TestStringFirst(t *testing.T) {
+	agg := First
+	expected := "FIRST"
+	if result := agg.String(); result != expected {
+		t.Errorf("First: expected %s, got %s", expected, result)
+	}
+}
+
+func TestStringLast(t *testing.T) {
+	agg := Last
+	expected := "LAST"
+	if result := agg.String(); result != expected {
+		t.Errorf("Last: expected %s, got %s", expected, result)
+	}
+}
+
+func TestStringStdP(t *testing.T) {
+	agg := StdP
+	expected := "STD.P"
+	if result := agg.String(); result != expected {
+		t.Errorf("StdP: expected %s, got %s", expected, result)
+	}
+}
+
+func TestStringStdS(t *testing.T) {
+	agg := StdS
+	expected := "STD.S"
+	if result := agg.String(); result != expected {
+		t.Errorf("StdS: expected %s, got %s", expected, result)
+	}
+}
+
+func TestStringVarP(t *testing.T) {
+	agg := VarP
+	expected := "VAR.P"
+	if result := agg.String(); result != expected {
+		t.Errorf("VarP: expected %s, got %s", expected, result)
+	}
+}
+
+func TestStringVarS(t *testing.T) {
+	agg := VarS
+	expected := "VAR.S"
+	if result := agg.String(); result != expected {
+		t.Errorf("VarS: expected %s, got %s", expected, result)
+	}
+}
+
+func TestStringTwa(t *testing.T) {
+	agg := Aggregator(100)
+	expected := ""
+	if result := agg.String(); result != expected {
+		t.Errorf("Empty string: expected %s, got %s", expected, result)
+	}
+}
+
+func TestStringDefault(t *testing.T) {
+	agg := Twa
+	expected := "TWA"
+	if result := agg.String(); result != expected {
+		t.Errorf("Twa: expected %s, got %s", expected, result)
+	}
+}
+
+func TestFormatMs(t *testing.T) {
+	// Test case 1: Duration greater than 0 and less than 1 millisecond
+	dur1 := time.Microsecond / 2 // Half a microsecond
+	expected1 := int64(1)
+	if result1 := formatMs(dur1); result1 != expected1 {
+		t.Errorf("Test case 1 failed: Expected %d, got %d", expected1, result1)
+	}
+
+	// Test case 2: Duration equal to 1 millisecond
+	dur2 := time.Millisecond
+	expected2 := int64(1)
+	if result2 := formatMs(dur2); result2 != expected2 {
+		t.Errorf("Test case 2 failed: Expected %d, got %d", expected2, result2)
+	}
+}
