@@ -5,14 +5,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/redis/rueidis/internal/util"
 	"io"
 	"net"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
-
-	"math/rand"
 
 	"github.com/redis/rueidis/internal/cmds"
 )
@@ -436,7 +435,7 @@ func pickReplica(resp []RedisResult) (string, error) {
 	}
 
 	// choose a replica randomly
-	m := eligible[rand.Intn(len(eligible))]
+	m := eligible[util.IntN(len(eligible))]
 	return net.JoinHostPort(m["ip"], m["port"]), nil
 }
 

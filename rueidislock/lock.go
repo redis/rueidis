@@ -1,13 +1,9 @@
-//go:build !go1.22
-// +build !go1.22
-
 package rueidislock
 
 import (
 	"context"
-	"encoding/binary"
 	"errors"
-	"math/rand"
+	"github.com/redis/rueidis/internal/util"
 	"strconv"
 	"strings"
 	"sync"
@@ -16,12 +12,6 @@ import (
 
 	"github.com/redis/rueidis"
 )
-
-var sources sync.Pool
-
-func init() {
-	sources = sync.Pool{New: func() any { return rand.New(rand.NewSource(time.Now().UnixNano())) }}
-}
 
 // LockerOption should be passed to NewLocker to construct a Locker
 type LockerOption struct {
@@ -143,13 +133,7 @@ func makegate(size int32) *gate {
 }
 
 func random() string {
-	val := make([]byte, 24)
-	src := sources.Get().(rand.Source64)
-	binary.BigEndian.PutUint64(val[0:8], src.Uint64())
-	binary.BigEndian.PutUint64(val[8:16], src.Uint64())
-	binary.BigEndian.PutUint64(val[16:24], src.Uint64())
-	sources.Put(src)
-	return rueidis.BinaryString(val)
+	return rueidis.BinaryString(util.BinaryString())
 }
 
 func keyname(prefix, name string, i int32) string {

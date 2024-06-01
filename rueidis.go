@@ -7,8 +7,8 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
+	"github.com/redis/rueidis/internal/util"
 	"math"
-	"math/rand"
 	"net"
 	"runtime"
 	"strings"
@@ -332,7 +332,7 @@ func NewClient(option ClientOption) (client Client, err error) {
 		option.ConnWriteTimeout = option.Dialer.KeepAlive * 10
 	}
 	if option.ShuffleInit {
-		rand.Shuffle(len(option.InitAddress), func(i, j int) {
+		util.Shuffle(len(option.InitAddress), func(i, j int) {
 			option.InitAddress[i], option.InitAddress[j] = option.InitAddress[j], option.InitAddress[i]
 		})
 	}
