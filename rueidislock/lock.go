@@ -133,7 +133,7 @@ func makegate(size int32) *gate {
 }
 
 func random() string {
-	return rueidis.BinaryString(util.BinaryString())
+	return rueidis.BinaryString(util.RandomBytes())
 }
 
 func keyname(prefix, name string, i int32) string {

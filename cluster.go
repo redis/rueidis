@@ -272,7 +272,7 @@ func (c *clusterClient) _refresh() (err error) {
 			nodesCount := len(g.nodes)
 			for _, slot := range g.slots {
 				for i := slot[0]; i <= slot[1]; i++ {
-					pslots[i] = conns[g.nodes[1+util.IntN(nodesCount-1)]].conn
+					pslots[i] = conns[g.nodes[1+util.FastRand(nodesCount-1)]].conn
 				}
 			}
 		case c.rOpt != nil: // implies c.opt.SendToReplicas != nil
@@ -283,7 +283,7 @@ func (c *clusterClient) _refresh() (err error) {
 				for _, slot := range g.slots {
 					for i := slot[0]; i <= slot[1]; i++ {
 						pslots[i] = conns[master].conn
-						rslots[i] = conns[g.nodes[1+util.IntN(len(g.nodes)-1)]].conn
+						rslots[i] = conns[g.nodes[1+util.FastRand(len(g.nodes)-1)]].conn
 					}
 				}
 			} else {

@@ -435,7 +435,7 @@ func pickReplica(resp []RedisResult) (string, error) {
 	}
 
 	// choose a replica randomly
-	m := eligible[util.IntN(len(eligible))]
+	m := eligible[util.FastRand(len(eligible))]
 	return net.JoinHostPort(m["ip"], m["port"]), nil
 }
 

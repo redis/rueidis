@@ -20,10 +20,6 @@ func Shuffle(n int, swap func(i, j int)) {
 	rand.Shuffle(n, swap)
 }
 
-func IntN(n int) int {
-	return rand.Intn(n)
-}
-
 var rngPool = sync.Pool{
 	New: func() any {
 		return rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -37,7 +33,7 @@ func FastRand(n int) (r int) {
 	return
 }
 
-func BinaryString() []byte {
+func RandomBytes() []byte {
 	val := make([]byte, 24)
 	src := sources.Get().(rand.Source64)
 	binary.BigEndian.PutUint64(val[0:8], src.Uint64())
