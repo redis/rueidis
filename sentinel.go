@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/redis/rueidis/internal/util"
 	"io"
 	"net"
 	"strings"
@@ -14,6 +13,7 @@ import (
 	"time"
 
 	"github.com/redis/rueidis/internal/cmds"
+	"github.com/redis/rueidis/internal/util"
 )
 
 func newSentinelClient(opt *ClientOption, connFn connFn) (client *sentinelClient, err error) {

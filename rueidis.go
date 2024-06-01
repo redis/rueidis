@@ -7,12 +7,13 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
-	"github.com/redis/rueidis/internal/util"
 	"math"
 	"net"
 	"runtime"
 	"strings"
 	"time"
+
+	"github.com/redis/rueidis/internal/util"
 )
 
 const (

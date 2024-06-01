@@ -3,7 +3,6 @@ package rueidislock
 import (
 	"context"
 	"errors"
-	"github.com/redis/rueidis/internal/util"
 	"strconv"
 	"strings"
 	"sync"
@@ -11,6 +10,7 @@ import (
 	"time"
 
 	"github.com/redis/rueidis"
+	"github.com/redis/rueidis/internal/util"
 )
 
 // LockerOption should be passed to NewLocker to construct a Locker
