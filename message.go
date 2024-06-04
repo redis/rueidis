@@ -571,8 +571,7 @@ func (m *RedisMessage) ToString() (val string, err error) {
 	}
 	if m.IsInt64() || m.values != nil {
 		typ := m.typ
-		return "",
-			fmt.Errorf("redis message type %s is not a string", typeNames[typ])
+		return "", fmt.Errorf("redis message type %s is not a string", typeNames[typ])
 	}
 	return m.string, m.Error()
 }
@@ -646,8 +645,7 @@ func (m *RedisMessage) AsBool() (val bool, err error) {
 		return
 	default:
 		typ := m.typ
-		return false,
-			fmt.Errorf("redis message type %s is not a int, string or bool", typeNames[typ])
+		return false, fmt.Errorf("redis message type %s is not a int, string or bool", typeNames[typ])
 	}
 }
 
@@ -936,7 +934,7 @@ func (m *RedisMessage) AsMap() (map[string]RedisMessage, error) {
 		return nil, err
 	}
 	if (m.IsMap() || m.IsArray()) && len(m.values)%2 == 0 {
-		return toMap(m.values), nil
+		return toMap(m.values)
 	}
 	typ := m.typ
 	return nil, fmt.Errorf("redis message type %s is not a map/array/set or its length is not even", typeNames[typ])
@@ -1208,7 +1206,7 @@ func (m *RedisMessage) AsGeosearch() ([]GeoLocation, error) {
 // ToMap check if message is a redis RESP3 map response, and return it
 func (m *RedisMessage) ToMap() (map[string]RedisMessage, error) {
 	if m.IsMap() {
-		return toMap(m.values), nil
+		return toMap(m.values)
 	}
 	if err := m.Error(); err != nil {
 		return nil, err
@@ -1313,7 +1311,7 @@ func (m *RedisMessage) setExpireAt(pttl int64) {
 	m.ttl[6] = byte(pttl >> 48)
 }
 
-func toMap(values []RedisMessage) map[string]RedisMessage {
+func toMap(values []RedisMessage) (map[string]RedisMessage, error) {
 	r := make(map[string]RedisMessage, len(values)/2)
 	for i := 0; i < len(values); i += 2 {
 		if values[i].typ == typeBlobString || values[i].typ == typeSimpleString {
@@ -1321,11 +1319,9 @@ func toMap(values []RedisMessage) map[string]RedisMessage {
 			continue
 		}
 		typ := values[i].typ
-		return map[string]RedisMessage{
-			"error": {typ: typeSimpleErr, string: fmt.Sprintf("redis message type %s as map key is not supported", typeNames[typ])},
-		}
+		return nil, fmt.Errorf("redis message type %s as map key is not supported", typeNames[typ])
 	}
-	return r
+	return r, nil
 }
 
 func (m *RedisMessage) approximateSize() (s int) {
