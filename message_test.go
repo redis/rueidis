@@ -1286,315 +1286,401 @@ func TestRedisMessage(t *testing.T) {
 		}
 	})
 	t.Run("ToInt64", func(t *testing.T) {
-		if _, err := (&RedisMessage{typ: '_'}).ToInt64(); err == nil {
-			t.Fatal("ToInt64 not failed as expected")
+		// Test case where the message type is '_', which is not a RESP3 int64
+		if val, err := (&RedisMessage{typ: '_'}).ToInt64(); err == nil {
+			t.Fatal("ToInt64 did not fail as expected")
+		} else if val != 0 {
+			t.Fatalf("expected 0, got %d", val)
 		}
 
-		defer func() {
-			if !strings.Contains(recover().(string), "redis message type t is not a RESP3 int64") {
-				t.Fatal("ToInt64 not panic as expected")
-			}
-		}()
-		(&RedisMessage{typ: 't'}).ToInt64()
+		// Test case where the message type is 't', which is not a RESP3 int64
+		if val, err := (&RedisMessage{typ: 't'}).ToInt64(); err == nil {
+			t.Fatal("ToInt64 did not fail as expected")
+		} else if val != 0 {
+			t.Fatalf("expected 0, got %d", val)
+		} else if !strings.Contains(err.Error(), "redis message type t is not a RESP3 int64") {
+			t.Fatalf("unexpected error: %v", err)
+		}
 	})
 
 	t.Run("ToBool", func(t *testing.T) {
-		if _, err := (&RedisMessage{typ: '_'}).ToBool(); err == nil {
-			t.Fatal("ToBool not failed as expected")
+		// Test case where the message type is '_', which is not a RESP3 bool
+		if val, err := (&RedisMessage{typ: '_'}).ToBool(); err == nil {
+			t.Fatal("ToBool did not fail as expected")
+		} else if val != false {
+			t.Fatalf("expected false, got %v", val)
 		}
 
-		defer func() {
-			if !strings.Contains(recover().(string), "redis message type t is not a RESP3 bool") {
-				t.Fatal("ToBool not panic as expected")
-			}
-		}()
-		(&RedisMessage{typ: 't'}).ToBool()
+		// Test case where the message type is 't', which is not a RESP3 bool
+		if val, err := (&RedisMessage{typ: 't'}).ToBool(); err == nil {
+			t.Fatal("ToBool did not fail as expected")
+		} else if val != false {
+			t.Fatalf("expected false, got %v", val)
+		} else if !strings.Contains(err.Error(), "redis message type t is not a RESP3 bool") {
+			t.Fatalf("unexpected error: %v", err)
+		}
 	})
 
 	t.Run("AsBool", func(t *testing.T) {
-		if _, err := (&RedisMessage{typ: '_'}).AsBool(); err == nil {
-			t.Fatal("AsBool not failed as expected")
+		// Test case where the message type is '_', which is not a RESP3 int, string, or bool
+		if val, err := (&RedisMessage{typ: '_'}).AsBool(); err == nil {
+			t.Fatal("AsBool did not fail as expected")
+		} else if val != false {
+			t.Fatalf("expected false, got %v", val)
 		}
 
-		defer func() {
-			if !strings.Contains(recover().(string), "redis message type t is not a int, string or bool") {
-				t.Fatal("AsBool not panic as expected")
-			}
-		}()
-		(&RedisMessage{typ: 't'}).AsBool()
+		// Test case where the message type is 't', which is not a RESP3 int, string, or bool
+		if val, err := (&RedisMessage{typ: 't'}).AsBool(); err == nil {
+			t.Fatal("AsBool did not fail as expected")
+		} else if val != false {
+			t.Fatalf("expected false, got %v", val)
+		} else if !strings.Contains(err.Error(), "redis message type t is not a int, string or bool") {
+			t.Fatalf("unexpected error: %v", err)
+		}
 	})
 
 	t.Run("ToFloat64", func(t *testing.T) {
-		if _, err := (&RedisMessage{typ: '_'}).ToFloat64(); err == nil {
-			t.Fatal("ToFloat64 not failed as expected")
+		// Test case where the message type is '_', which is not a RESP3 float64
+		if val, err := (&RedisMessage{typ: '_'}).ToFloat64(); err == nil {
+			t.Fatal("ToFloat64 did not fail as expected")
+		} else if val != 0 {
+			t.Fatalf("expected 0, got %f", val)
 		}
 
-		defer func() {
-			if !strings.Contains(recover().(string), "redis message type t is not a RESP3 float64") {
-				t.Fatal("ToFloat64 not panic as expected")
-			}
-		}()
-		(&RedisMessage{typ: 't'}).ToFloat64()
+		// Test case where the message type is 't', which is not a RESP3 float64
+		if val, err := (&RedisMessage{typ: 't'}).ToFloat64(); err == nil {
+			t.Fatal("ToFloat64 did not fail as expected")
+		} else if val != 0 {
+			t.Fatalf("expected 0, got %f", val)
+		} else if !strings.Contains(err.Error(), "redis message type t is not a RESP3 float64") {
+			t.Fatalf("unexpected error: %v", err)
+		}
 	})
 
 	t.Run("ToString", func(t *testing.T) {
-		if _, err := (&RedisMessage{typ: '_'}).ToString(); err == nil {
-			t.Fatal("ToString not failed as expected")
+		// Test case where the message type is '_', which is not a RESP3 string
+		if val, err := (&RedisMessage{typ: '_'}).ToString(); err == nil {
+			t.Fatal("ToString did not fail as expected")
+		} else if val != "" {
+			t.Fatalf("expected empty string, got %v", val)
 		}
 
-		defer func() {
-			if !strings.Contains(recover().(string), fmt.Sprintf("redis message type %s is not a string", typeNames[':'])) {
-				t.Fatal("ToString not panic as expected")
-			}
-		}()
-		(&RedisMessage{typ: ':'}).ToString()
+		// Test case where the message type is ':', which is not a RESP3 string
+		if val, err := (&RedisMessage{typ: ':'}).ToString(); err == nil {
+			t.Fatal("ToString did not fail as expected")
+		} else if val != "" {
+			t.Fatalf("expected empty string, got %v", val)
+		} else if !strings.Contains(err.Error(), fmt.Sprintf("redis message type %s is not a string", typeNames[':'])) {
+			t.Fatalf("unexpected error: %v", err)
+		}
 	})
 
 	t.Run("AsReader", func(t *testing.T) {
-		if _, err := (&RedisMessage{typ: '_'}).AsReader(); err == nil {
-			t.Fatal("AsReader not failed as expected")
+		// Test case where the message type is '_', which is not a RESP3 string
+		if val, err := (&RedisMessage{typ: '_'}).AsReader(); err == nil {
+			t.Fatal("AsReader did not fail as expected")
+		} else if val != nil {
+			t.Fatalf("expected nil, got %v", val)
 		}
 
-		defer func() {
-			if !strings.Contains(recover().(string), fmt.Sprintf("redis message type %s is not a string", typeNames[':'])) {
-				t.Fatal("AsReader not panic as expected")
-			}
-		}()
-		(&RedisMessage{typ: ':'}).AsReader()
+		// Test case where the message type is ':', which is not a RESP3 string
+		if val, err := (&RedisMessage{typ: ':'}).AsReader(); err == nil {
+			t.Fatal("AsReader did not fail as expected")
+		} else if val != nil {
+			t.Fatalf("expected nil, got %v", val)
+		} else if !strings.Contains(err.Error(), fmt.Sprintf("redis message type %s is not a string", typeNames[':'])) {
+			t.Fatalf("unexpected error: %v", err)
+		}
 	})
 
 	t.Run("AsBytes", func(t *testing.T) {
-		if _, err := (&RedisMessage{typ: '_'}).AsBytes(); err == nil {
-			t.Fatal("AsBytes not failed as expected")
+		// Test case where the message type is '_', which is not a RESP3 string
+		if val, err := (&RedisMessage{typ: '_'}).AsBytes(); err == nil {
+			t.Fatal("AsBytes did not fail as expected")
+		} else if val != nil {
+			t.Fatalf("expected nil, got %v", val)
 		}
 
-		defer func() {
-			if !strings.Contains(recover().(string), fmt.Sprintf("redis message type %s is not a string", typeNames[':'])) {
-				t.Fatal("AsBytes not panic as expected")
-			}
-		}()
-		(&RedisMessage{typ: ':'}).AsBytes()
+		// Test case where the message type is ':', which is not a RESP3 string
+		if val, err := (&RedisMessage{typ: ':'}).AsBytes(); err == nil {
+			t.Fatal("AsBytes did not fail as expected")
+		} else if val != nil {
+			t.Fatalf("expected nil, got %v", val)
+		} else if !strings.Contains(err.Error(), fmt.Sprintf("redis message type %s is not a string", typeNames[':'])) {
+			t.Fatalf("unexpected error: %v", err)
+		}
 	})
 
 	t.Run("DecodeJSON", func(t *testing.T) {
+		// Test case where the message type is '_', which is not a RESP3 string
 		if err := (&RedisMessage{typ: '_'}).DecodeJSON(nil); err == nil {
-			t.Fatal("DecodeJSON not failed as expected")
+			t.Fatal("DecodeJSON did not fail as expected")
 		}
 
-		defer func() {
-			if !strings.Contains(recover().(string), fmt.Sprintf("redis message type %s is not a string", typeNames[':'])) {
-				t.Fatal("DecodeJSON not panic as expected")
-			}
-		}()
-		(&RedisMessage{typ: ':'}).DecodeJSON(nil)
+		// Test case where the message type is ':', which is not a RESP3 string
+		if err := (&RedisMessage{typ: ':'}).DecodeJSON(nil); err == nil {
+			t.Fatal("DecodeJSON did not fail as expected")
+		} else if !strings.Contains(err.Error(), fmt.Sprintf("redis message type %s is not a string", typeNames[':'])) {
+			t.Fatalf("unexpected error: %v", err)
+		}
 	})
 
 	t.Run("AsInt64", func(t *testing.T) {
-		if _, err := (&RedisMessage{typ: '_'}).AsInt64(); err == nil {
-			t.Fatal("AsInt64 not failed as expected")
+		// Test case where the message type is '_', which is not a RESP3 string
+		if val, err := (&RedisMessage{typ: '_'}).AsInt64(); err == nil {
+			t.Fatal("AsInt64 did not fail as expected")
+		} else if val != 0 {
+			t.Fatalf("expected 0, got %d", val)
 		}
-		defer func() {
-			if !strings.Contains(recover().(string), fmt.Sprintf("redis message type %s is not a string", typeNames['*'])) {
-				t.Fatal("AsInt64 not panic as expected")
-			}
-		}()
-		(&RedisMessage{typ: '*', values: []RedisMessage{{}}}).AsInt64()
+
+		// Test case where the message type is '*', which is not a RESP3 string
+		if val, err := (&RedisMessage{typ: '*', values: []RedisMessage{{}}}).AsInt64(); err == nil {
+			t.Fatal("AsInt64 did not fail as expected")
+		} else if val != 0 {
+			t.Fatalf("expected 0, got %d", val)
+		} else if !strings.Contains(err.Error(), fmt.Sprintf("redis message type %s is not a string", typeNames['*'])) {
+			t.Fatalf("unexpected error: %v", err)
+		}
 	})
 
 	t.Run("AsUint64", func(t *testing.T) {
-		if _, err := (&RedisMessage{typ: '_'}).AsUint64(); err == nil {
-			t.Fatal("AsUint64 not failed as expected")
+		// Test case where the message type is '_', which is not a RESP3 string
+		if val, err := (&RedisMessage{typ: '_'}).AsUint64(); err == nil {
+			t.Fatal("AsUint64 did not fail as expected")
+		} else if val != 0 {
+			t.Fatalf("expected 0, got %d", val)
 		}
-		defer func() {
-			if !strings.Contains(recover().(string), fmt.Sprintf("redis message type %s is not a string", typeNames['*'])) {
-				t.Fatal("AsUint64 not panic as expected")
-			}
-		}()
-		(&RedisMessage{typ: '*', values: []RedisMessage{{}}}).AsUint64()
+
+		// Test case where the message type is '*', which is not a RESP3 string
+		if val, err := (&RedisMessage{typ: '*', values: []RedisMessage{{}}}).AsUint64(); err == nil {
+			t.Fatal("AsUint64 did not fail as expected")
+		} else if val != 0 {
+			t.Fatalf("expected 0, got %d", val)
+		} else if !strings.Contains(err.Error(), fmt.Sprintf("redis message type %s is not a string", typeNames['*'])) {
+			t.Fatalf("unexpected error: %v", err)
+		}
 	})
 
 	t.Run("AsFloat64", func(t *testing.T) {
-		if _, err := (&RedisMessage{typ: '_'}).AsFloat64(); err == nil {
-			t.Fatal("AsFloat64 not failed as expected")
+		// Test case where the message type is '_', which is not a RESP3 string
+		if val, err := (&RedisMessage{typ: '_'}).AsFloat64(); err == nil {
+			t.Fatal("AsFloat64 did not fail as expected")
+		} else if val != 0 {
+			t.Fatalf("expected 0, got %f", val)
 		}
-		defer func() {
-			if !strings.Contains(recover().(string), fmt.Sprintf("redis message type %s is not a string", typeNames[':'])) {
-				t.Fatal("AsFloat64 not panic as expected")
-			}
-		}()
-		(&RedisMessage{typ: ':'}).AsFloat64()
+
+		// Test case where the message type is ':', which is not a RESP3 string
+		if val, err := (&RedisMessage{typ: ':'}).AsFloat64(); err == nil {
+			t.Fatal("AsFloat64 did not fail as expected")
+		} else if val != 0 {
+			t.Fatalf("expected 0, got %f", val)
+		} else if !strings.Contains(err.Error(), fmt.Sprintf("redis message type %s is not a string", typeNames[':'])) {
+			t.Fatalf("unexpected error: %v", err)
+		}
 	})
 
 	t.Run("ToArray", func(t *testing.T) {
-		if _, err := (&RedisMessage{typ: '_'}).ToArray(); err == nil {
-			t.Fatal("ToArray not failed as expected")
+		// Test case where the message type is '_', which is not a RESP3 array
+		if val, err := (&RedisMessage{typ: '_'}).ToArray(); err == nil {
+			t.Fatal("ToArray did not fail as expected")
+		} else if val != nil {
+			t.Fatalf("expected nil, got %v", val)
 		}
 
-		defer func() {
-			if !strings.Contains(recover().(string), "redis message type t is not a array") {
-				t.Fatal("ToArray not panic as expected")
-			}
-		}()
-		(&RedisMessage{typ: 't'}).ToArray()
+		// Test case where the message type is 't', which is not a RESP3 array
+		if val, err := (&RedisMessage{typ: 't'}).ToArray(); err == nil {
+			t.Fatal("ToArray did not fail as expected")
+		} else if val != nil {
+			t.Fatalf("expected nil, got %v", val)
+		} else if !strings.Contains(err.Error(), "redis message type t is not a array") {
+			t.Fatalf("unexpected error: %v", err)
+		}
 	})
 
 	t.Run("AsStrSlice", func(t *testing.T) {
-		if _, err := (&RedisMessage{typ: '_'}).AsStrSlice(); err == nil {
-			t.Fatal("AsStrSlice not failed as expected")
+		// Test case where the message type is '_', which is not a RESP3 array
+		if val, err := (&RedisMessage{typ: '_'}).AsStrSlice(); err == nil {
+			t.Fatal("AsStrSlice did not fail as expected")
+		} else if val != nil {
+			t.Fatalf("expected nil, got %v", val)
 		}
 
-		defer func() {
-			if !strings.Contains(recover().(string), "redis message type t is not a array") {
-				t.Fatal("AsStrSlice not panic as expected")
-			}
-		}()
-		(&RedisMessage{typ: 't'}).AsStrSlice()
+		// Test case where the message type is 't', which is not a RESP3 array
+		if val, err := (&RedisMessage{typ: 't'}).AsStrSlice(); err == nil {
+			t.Fatal("AsStrSlice did not fail as expected")
+		} else if val != nil {
+			t.Fatalf("expected nil, got %v", val)
+		} else if !strings.Contains(err.Error(), "redis message type t is not a array") {
+			t.Fatalf("unexpected error: %v", err)
+		}
 	})
 
 	t.Run("AsIntSlice", func(t *testing.T) {
-		if _, err := (&RedisMessage{typ: '_'}).AsIntSlice(); err == nil {
-			t.Fatal("AsIntSlice not failed as expected")
+		if val, err := (&RedisMessage{typ: '_'}).AsIntSlice(); err == nil {
+			t.Fatal("AsIntSlice did not fail as expected")
+		} else if val != nil {
+			t.Fatalf("expected nil, got %v", val)
 		}
 
-		defer func() {
-			if !strings.Contains(recover().(string), "redis message type t is not a array") {
-				t.Fatal("AsIntSlice not panic as expected")
-			}
-		}()
-		(&RedisMessage{typ: 't'}).AsIntSlice()
+		if val, err := (&RedisMessage{typ: 't'}).AsIntSlice(); err == nil {
+			t.Fatal("AsIntSlice did not fail as expected")
+		} else if val != nil {
+			t.Fatalf("expected nil, got %v", val)
+		} else if !strings.Contains(err.Error(), "redis message type t is not a array") {
+			t.Fatalf("unexpected error: %v", err)
+		}
 	})
 
 	t.Run("AsFloatSlice", func(t *testing.T) {
-		if _, err := (&RedisMessage{typ: '_'}).AsFloatSlice(); err == nil {
-			t.Fatal("AsFloatSlice not failed as expected")
+		if val, err := (&RedisMessage{typ: '_'}).AsFloatSlice(); err == nil {
+			t.Fatal("AsFloatSlice did not fail as expected")
+		} else if val != nil {
+			t.Fatalf("expected nil, got %v", val)
 		}
 
-		defer func() {
-			if !strings.Contains(recover().(string), "redis message type t is not a array") {
-				t.Fatal("AsFloatSlice not panic as expected")
-			}
-		}()
-		(&RedisMessage{typ: 't'}).AsFloatSlice()
+		if val, err := (&RedisMessage{typ: 't'}).AsFloatSlice(); err == nil {
+			t.Fatal("AsFloatSlice did not fail as expected")
+		} else if val != nil {
+			t.Fatalf("expected nil, got %v", val)
+		} else if !strings.Contains(err.Error(), "redis message type t is not a array") {
+			t.Fatalf("unexpected error: %v", err)
+		}
 	})
 
 	t.Run("AsBoolSlice", func(t *testing.T) {
-		if _, err := (&RedisMessage{typ: '_'}).AsBoolSlice(); err == nil {
-			t.Fatal("AsBoolSlice not failed as expected")
+		if val, err := (&RedisMessage{typ: '_'}).AsBoolSlice(); err == nil {
+			t.Fatal("AsBoolSlice did not fail as expected")
+		} else if val != nil {
+			t.Fatalf("expected nil, got %v", val)
 		}
 
-		defer func() {
-			if !strings.Contains(recover().(string), "redis message type t is not a array") {
-				t.Fatal("AsBoolSlice not panic as expected")
-			}
-		}()
-		(&RedisMessage{typ: 't'}).AsBoolSlice()
+		if val, err := (&RedisMessage{typ: 't'}).AsBoolSlice(); err == nil {
+			t.Fatal("AsBoolSlice did not fail as expected")
+		} else if val != nil {
+			t.Fatalf("expected nil, got %v", val)
+		} else if !strings.Contains(err.Error(), "redis message type t is not a array") {
+			t.Fatalf("unexpected error: %v", err)
+		}
 	})
 
 	t.Run("AsMap", func(t *testing.T) {
-		if _, err := (&RedisMessage{typ: '_'}).AsMap(); err == nil {
-			t.Fatal("AsMap not failed as expected")
+		if val, err := (&RedisMessage{typ: '_'}).AsMap(); err == nil {
+			t.Fatal("AsMap did not fail as expected")
+		} else if val != nil {
+			t.Fatalf("expected nil, got %v", val)
 		}
 
-		defer func() {
-			if !strings.Contains(recover().(string), "redis message type t is not a map/array/set or its length is not even") {
-				t.Fatal("AsMap not panic as expected")
-			}
-		}()
-		(&RedisMessage{typ: 't'}).AsMap()
+		if val, err := (&RedisMessage{typ: 't'}).AsMap(); err == nil {
+			t.Fatal("AsMap did not fail as expected")
+		} else if val != nil {
+			t.Fatalf("expected nil, got %v", val)
+		} else if !strings.Contains(err.Error(), "redis message type t is not a map/array/set or its length is not even") {
+			t.Fatalf("unexpected error: %v", err)
+		}
 	})
 
 	t.Run("AsStrMap", func(t *testing.T) {
-		if _, err := (&RedisMessage{typ: '_'}).AsStrMap(); err == nil {
-			t.Fatal("AsStrMap not failed as expected")
+		if val, err := (&RedisMessage{typ: '_'}).AsStrMap(); err == nil {
+			t.Fatal("AsStrMap did not fail as expected")
+		} else if val != nil {
+			t.Fatalf("expected nil, got %v", val)
 		}
 
-		defer func() {
-			if !strings.Contains(recover().(string), "redis message type t is not a map/array/set") {
-				t.Fatal("AsMap not panic as expected")
-			}
-		}()
-		(&RedisMessage{typ: 't'}).AsStrMap()
+		if val, err := (&RedisMessage{typ: 't'}).AsStrMap(); err == nil {
+			t.Fatal("AsStrMap did not fail as expected")
+		} else if val != nil {
+			t.Fatalf("expected nil, got %v", val)
+		} else if !strings.Contains(err.Error(), "redis message type t is not a map/array/set") {
+			t.Fatalf("unexpected error: %v", err)
+		}
 	})
 
 	t.Run("AsIntMap", func(t *testing.T) {
-		if _, err := (&RedisMessage{typ: '_'}).AsIntMap(); err == nil {
-			t.Fatal("AsIntMap not failed as expected")
+		if val, err := (&RedisMessage{typ: '_'}).AsIntMap(); err == nil {
+			t.Fatal("AsIntMap did not fail as expected")
+		} else if val != nil {
+			t.Fatalf("expected nil, got %v", val)
 		}
 
-		defer func() {
-			if !strings.Contains(recover().(string), "redis message type t is not a map/array/set") {
-				t.Fatal("AsMap not panic as expected")
-			}
-		}()
-		(&RedisMessage{typ: 't'}).AsIntMap()
+		if val, err := (&RedisMessage{typ: 't'}).AsIntMap(); err == nil {
+			t.Fatal("AsIntMap did not fail as expected")
+		} else if val != nil {
+			t.Fatalf("expected nil, got %v", val)
+		} else if !strings.Contains(err.Error(), "redis message type t is not a map/array/set") {
+			t.Fatalf("unexpected error: %v", err)
+		}
 	})
 
 	t.Run("ToMap", func(t *testing.T) {
-		if _, err := (&RedisMessage{typ: '_'}).ToMap(); err == nil {
-			t.Fatal("ToMap not failed as expected")
+		if val, err := (&RedisMessage{typ: '_'}).ToMap(); err == nil {
+			t.Fatal("ToMap did not fail as expected")
+		} else if val != nil {
+			t.Fatalf("expected nil, got %v", val)
 		}
 
-		defer func() {
-			if !strings.Contains(recover().(string), "redis message type t is not a RESP3 map") {
-				t.Fatal("ToMap not panic as expected")
-			}
-		}()
-		(&RedisMessage{typ: 't'}).ToMap()
+		if val, err := (&RedisMessage{typ: 't'}).ToMap(); err == nil {
+			t.Fatal("ToMap did not fail as expected")
+		} else if val != nil {
+			t.Fatalf("expected nil, got %v", val)
+		} else if !strings.Contains(err.Error(), "redis message type t is not a RESP3 map") {
+			t.Fatalf("unexpected error: %v", err)
+		}
 	})
 
 	t.Run("ToAny", func(t *testing.T) {
-		if _, err := (&RedisMessage{typ: '_'}).ToAny(); err == nil {
-			t.Fatal("ToAny not failed as expected")
+		if val, err := (&RedisMessage{typ: '_'}).ToAny(); err == nil {
+			t.Fatal("ToAny did not fail as expected")
+		} else if val != nil {
+			t.Fatalf("expected nil, got %v", val)
 		}
 
-		defer func() {
-			if !strings.Contains(recover().(string), "redis message type t is not a supported in ToAny") {
-				t.Fatal("ToAny not panic as expected")
-			}
-		}()
-		(&RedisMessage{typ: 't'}).ToAny()
+		if val, err := (&RedisMessage{typ: 't'}).ToAny(); err == nil {
+			t.Fatal("ToAny did not fail as expected")
+		} else if val != nil {
+			t.Fatalf("expected nil, got %v", val)
+		} else if !strings.Contains(err.Error(), "redis message type t is not a supported in ToAny") {
+			t.Fatalf("unexpected error: %v", err)
+		}
 	})
 
 	t.Run("AsXRangeEntry - no range id", func(t *testing.T) {
 		if _, err := (&RedisMessage{typ: '_'}).AsXRangeEntry(); err == nil {
-			t.Fatal("AsXRangeEntry not failed as expected")
+			t.Fatal("AsXRangeEntry did not fail as expected")
 		}
 
 		if _, err := (&RedisMessage{typ: '*'}).AsXRangeEntry(); err == nil {
-			t.Fatal("AsXRangeEntry not failed as expected")
+			t.Fatal("AsXRangeEntry did not fail as expected")
 		}
 
 		if _, err := (&RedisMessage{typ: '*', values: []RedisMessage{{typ: '_'}, {typ: '%'}}}).AsXRangeEntry(); err == nil {
-			t.Fatal("AsXRangeEntry not failed as expected")
+			t.Fatal("AsXRangeEntry did not fail as expected")
 		}
 
-		defer func() {
-			if !strings.Contains(recover().(string), fmt.Sprintf("redis message type %s is not a string", typeNames[':'])) {
-				t.Fatal("AsXRangeEntry not panic as expected")
-			}
-		}()
-		(&RedisMessage{typ: '*', values: []RedisMessage{{typ: ':'}, {typ: '%'}}}).AsXRangeEntry()
+		if _, err := (&RedisMessage{typ: '*', values: []RedisMessage{{typ: ':'}, {typ: '%'}}}).AsXRangeEntry(); err == nil {
+			t.Fatal("AsXRangeEntry did not fail as expected")
+		} else if !strings.Contains(err.Error(), fmt.Sprintf("redis message type %s is not a string", typeNames[':'])) {
+			t.Fatalf("unexpected error: %v", err)
+		}
 	})
 
 	t.Run("AsXRangeEntry - no range field values", func(t *testing.T) {
 		if _, err := (&RedisMessage{typ: '_'}).AsXRangeEntry(); err == nil {
-			t.Fatal("AsXRangeEntry not failed as expected")
+			t.Fatal("AsXRangeEntry did not fail as expected")
 		}
 
 		if _, err := (&RedisMessage{typ: '*'}).AsXRangeEntry(); err == nil {
-			t.Fatal("AsXRangeEntry not failed as expected")
+			t.Fatal("AsXRangeEntry did not fail as expected")
 		}
 
 		if _, err := (&RedisMessage{typ: '*', values: []RedisMessage{{typ: '+'}, {typ: '-'}}}).AsXRangeEntry(); err == nil {
-			t.Fatal("AsXRangeEntry not failed as expected")
+			t.Fatal("AsXRangeEntry did not fail as expected")
 		}
 
-		defer func() {
-			if !strings.Contains(recover().(string), "redis message type t is not a map/array/set") {
-				t.Fatal("AsXRangeEntry not panic as expected")
-			}
-		}()
-		(&RedisMessage{typ: '*', values: []RedisMessage{{typ: '+'}, {typ: 't'}}}).AsXRangeEntry()
+		if _, err := (&RedisMessage{typ: '*', values: []RedisMessage{{typ: '+'}, {typ: 't'}}}).AsXRangeEntry(); err == nil {
+			t.Fatal("AsXRangeEntry did not fail as expected")
+		} else if !strings.Contains(err.Error(), "redis message type t is not a map/array/set") {
+			t.Fatalf("unexpected error: %v", err)
+		}
 	})
 
 	t.Run("AsXRange", func(t *testing.T) {
@@ -1609,48 +1695,50 @@ func TestRedisMessage(t *testing.T) {
 
 	t.Run("AsXRead", func(t *testing.T) {
 		if _, err := (&RedisMessage{typ: '_'}).AsXRead(); err == nil {
-			t.Fatal("AsXRead not failed as expected")
+			t.Fatal("AsXRead did not fail as expected")
 		}
+
 		if _, err := (&RedisMessage{typ: '%', values: []RedisMessage{
 			{typ: '+', string: "stream1"},
 			{typ: '*', values: []RedisMessage{{typ: '*', values: []RedisMessage{{string: "id1", typ: '+'}}}}},
 		}}).AsXRead(); err == nil {
-			t.Fatal("AsXRead not failed as expected")
+			t.Fatal("AsXRead did not fail as expected")
 		}
+
 		if _, err := (&RedisMessage{typ: '*', values: []RedisMessage{
 			{typ: '*', values: []RedisMessage{
 				{typ: '+', string: "stream1"},
 			}},
 		}}).AsXRead(); err == nil {
-			t.Fatal("AsXRead not failed as expected")
+			t.Fatal("AsXRead did not fail as expected")
 		}
+
 		if _, err := (&RedisMessage{typ: '*', values: []RedisMessage{
 			{typ: '*', values: []RedisMessage{
 				{typ: '+', string: "stream1"},
 				{typ: '*', values: []RedisMessage{{typ: '*', values: []RedisMessage{{string: "id1", typ: '+'}}}}},
 			}},
 		}}).AsXRead(); err == nil {
-			t.Fatal("AsXRead not failed as expected")
+			t.Fatal("AsXRead did not fail as expected")
 		}
 
-		defer func() {
-			if !strings.Contains(recover().(string), "redis message type t is not a map/array/set") {
-				t.Fatal("AsXRangeEntry not panic as expected")
-			}
-		}()
-		(&RedisMessage{typ: 't'}).AsXRead()
+		if _, err := (&RedisMessage{typ: 't'}).AsXRead(); err == nil {
+			t.Fatal("AsXRead did not fail as expected")
+		} else if !strings.Contains(err.Error(), "redis message type t is not a map/array/set") {
+			t.Fatalf("unexpected error: %v", err)
+		}
 	})
 
 	t.Run("AsZScore", func(t *testing.T) {
 		if _, err := (&RedisMessage{typ: '_'}).AsZScore(); err == nil {
-			t.Fatal("AsZScore not failed as expected")
+			t.Fatal("AsZScore did not fail as expected")
 		}
-		defer func() {
-			if !strings.Contains(recover().(string), "redis message is not a map/array/set or its length is not 2") {
-				t.Fatal("AsZScore not panic as expected")
-			}
-		}()
-		(&RedisMessage{typ: '*'}).AsZScore()
+
+		if _, err := (&RedisMessage{typ: '*'}).AsZScore(); err == nil {
+			t.Fatal("AsZScore did not fail as expected")
+		} else if !strings.Contains(err.Error(), "redis message is not a map/array/set or its length is not 2") {
+			t.Fatalf("unexpected error: %v", err)
+		}
 	})
 
 	t.Run("AsZScores", func(t *testing.T) {
@@ -1675,78 +1763,80 @@ func TestRedisMessage(t *testing.T) {
 
 	t.Run("AsLMPop", func(t *testing.T) {
 		if _, err := (&RedisMessage{typ: '_'}).AsLMPop(); err == nil {
-			t.Fatal("AsLMPop not failed as expected")
+			t.Fatal("AsLMPop did not fail as expected")
 		}
+
 		if _, err := (&RedisMessage{typ: '*', values: []RedisMessage{
 			{typ: '+', string: "k"},
 			{typ: '_'},
 		}}).AsLMPop(); err == nil {
-			t.Fatal("AsLMPop not fails as expected")
+			t.Fatal("AsLMPop did not fail as expected")
 		}
-		defer func() {
-			if !strings.Contains(recover().(string), fmt.Sprintf("redis message type %s is not a LMPOP response", typeNames['*'])) {
-				t.Fatal("AsLMPop not panic as expected")
-			}
-		}()
-		(&RedisMessage{typ: '*', values: []RedisMessage{
+
+		if _, err := (&RedisMessage{typ: '*', values: []RedisMessage{
 			{typ: '+', string: "k"},
-		}}).AsLMPop()
+		}}).AsLMPop(); err == nil {
+			t.Fatal("AsLMPop did not fail as expected")
+		} else if !strings.Contains(err.Error(), fmt.Sprintf("redis message type %s is not a LMPOP response", typeNames['*'])) {
+			t.Fatalf("unexpected error: %v", err)
+		}
 	})
 
 	t.Run("AsZMPop", func(t *testing.T) {
 		if _, err := (&RedisMessage{typ: '_'}).AsZMPop(); err == nil {
-			t.Fatal("AsZMPop not failed as expected")
+			t.Fatal("AsZMPop did not fail as expected")
 		}
+
 		if _, err := (&RedisMessage{typ: '*', values: []RedisMessage{
 			{typ: '+', string: "k"},
 			{typ: '_'},
 		}}).AsZMPop(); err == nil {
-			t.Fatal("AsZMPop not fails as expected")
+			t.Fatal("AsZMPop did not fail as expected")
 		}
-		defer func() {
-			if !strings.Contains(recover().(string), fmt.Sprintf("redis message type %s is not a ZMPOP response", typeNames['*'])) {
-				t.Fatal("AsZMPop not panic as expected")
-			}
-		}()
-		(&RedisMessage{typ: '*', values: []RedisMessage{
+
+		if _, err := (&RedisMessage{typ: '*', values: []RedisMessage{
 			{typ: '+', string: "k"},
-		}}).AsZMPop()
+		}}).AsZMPop(); err == nil {
+			t.Fatal("AsZMPop did not fail as expected")
+		} else if !strings.Contains(err.Error(), fmt.Sprintf("redis message type %s is not a ZMPOP response", typeNames['*'])) {
+			t.Fatalf("unexpected error: %v", err)
+		}
 	})
 
 	t.Run("AsFtSearch", func(t *testing.T) {
 		if _, _, err := (&RedisMessage{typ: '_'}).AsFtSearch(); err == nil {
-			t.Fatal("AsFtSearch not failed as expected")
+			t.Fatal("AsFtSearch did not fail as expected")
 		}
-		defer func() {
-			if !strings.Contains(recover().(string), fmt.Sprintf("redis message type %s is not a FT.SEARCH response", typeNames['*'])) {
-				t.Fatal("AsFtSearch not panic as expected")
-			}
-		}()
-		(&RedisMessage{typ: '*', values: []RedisMessage{}}).AsFtSearch()
+
+		if _, _, err := (&RedisMessage{typ: '*'}).AsFtSearch(); err == nil {
+			t.Fatal("AsFtSearch did not fail as expected")
+		} else if !strings.Contains(err.Error(), fmt.Sprintf("redis message type %s is not a FT.SEARCH response", typeNames['*'])) {
+			t.Fatalf("unexpected error: %v", err)
+		}
 	})
 
 	t.Run("AsFtAggregate", func(t *testing.T) {
 		if _, _, err := (&RedisMessage{typ: '_'}).AsFtAggregate(); err == nil {
-			t.Fatal("AsFtAggregate not failed as expected")
+			t.Fatal("AsFtAggregate did not fail as expected")
 		}
-		defer func() {
-			if !strings.Contains(recover().(string), fmt.Sprintf("redis message type %s is not a FT.AGGREGATE response", typeNames['*'])) {
-				t.Fatal("AsFtAggregate not panic as expected")
-			}
-		}()
-		(&RedisMessage{typ: '*', values: []RedisMessage{}}).AsFtAggregate()
+
+		if _, _, err := (&RedisMessage{typ: '*'}).AsFtAggregate(); err == nil {
+			t.Fatal("AsFtAggregate did not fail as expected")
+		} else if !strings.Contains(err.Error(), fmt.Sprintf("redis message type %s is not a FT.AGGREGATE response", typeNames['*'])) {
+			t.Fatalf("unexpected error: %v", err)
+		}
 	})
 
 	t.Run("AsFtAggregateCursor", func(t *testing.T) {
 		if _, _, _, err := (&RedisMessage{typ: '_'}).AsFtAggregateCursor(); err == nil {
-			t.Fatal("AsFtAggregate not failed as expected")
+			t.Fatal("AsFtAggregateCursor did not fail as expected")
 		}
-		defer func() {
-			if !strings.Contains(recover().(string), fmt.Sprintf("redis message type %s is not a FT.AGGREGATE response", typeNames['*'])) {
-				t.Fatal("AsFtAggregate not panic as expected")
-			}
-		}()
-		(&RedisMessage{typ: '*', values: []RedisMessage{}}).AsFtAggregateCursor()
+
+		if _, _, _, err := (&RedisMessage{typ: '*'}).AsFtAggregateCursor(); err == nil {
+			t.Fatal("AsFtAggregateCursor did not fail as expected")
+		} else if !strings.Contains(err.Error(), fmt.Sprintf("redis message type %s is not a FT.AGGREGATE response", typeNames['*'])) {
+			t.Fatalf("unexpected error: %v", err)
+		}
 	})
 
 	t.Run("AsScanEntry", func(t *testing.T) {
@@ -1765,22 +1855,16 @@ func TestRedisMessage(t *testing.T) {
 		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{string: "0", typ: '+'}, {typ: '_'}}}}).AsScanEntry(); !reflect.DeepEqual(ScanEntry{}, ret) {
 			t.Fatal("AsScanEntry not get value as expected")
 		}
-
-		defer func() {
-			if !strings.Contains(recover().(string), fmt.Sprintf("redis message type %s is not a scan response or its length is not at least 2", typeNames['*'])) {
-				t.Fatal("AsScanEntry not panic as expected")
-			}
-		}()
-		(&RedisMessage{typ: '*', values: []RedisMessage{{typ: ':'}}}).AsScanEntry()
 	})
 
-	t.Run("ToMap with non string key", func(t *testing.T) {
-		defer func() {
-			if !strings.Contains(recover().(string), fmt.Sprintf("redis message type %s as map key is not supported", typeNames[':'])) {
-				t.Fatal("ToMap not panic as expected")
-			}
-		}()
-		(&RedisMessage{typ: '%', values: []RedisMessage{{typ: ':'}, {typ: ':'}}}).ToMap()
+	t.Run("ToMap with non-string key", func(t *testing.T) {
+		_, err := (&RedisMessage{typ: '~', values: []RedisMessage{{typ: ':'}, {typ: ':'}}}).ToMap()
+		if err == nil {
+			t.Fatal("ToMap did not fail as expected")
+		}
+		if !strings.Contains(err.Error(), "redis message type set is not a RESP3 map") {
+			t.Fatalf("ToMap failed with unexpected error: %v", err)
+		}
 	})
 
 	t.Run("IsCacheHit", func(t *testing.T) {
