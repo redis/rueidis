@@ -2873,8 +2873,9 @@
         ]
       },
       {
-        "name": "FIELDS",
-        "type": "string"
+        "name": "fields",
+        "type": "enum",
+        "enum": ["FIELDS"]
       },
       {
         "name": "numfields",
@@ -2930,8 +2931,9 @@
         ]
       },
       {
-        "name": "FIELDS",
-        "type": "string"
+        "name": "fields",
+        "type": "enum",
+        "enum": ["FIELDS"]
       },
       {
         "name": "numfields",
@@ -2956,8 +2958,9 @@
         "key_spec_index": 0
       },
       {
-        "name": "FIELDS",
-        "type": "string"
+        "name": "fields",
+        "type": "enum",
+        "enum": ["FIELDS"]
       },
       {
         "name": "numfields",
@@ -3114,8 +3117,9 @@
         "key_spec_index": 0
       },
       {
-        "name": "FIELDS",
-        "type": "string"
+        "name": "fields",
+        "type": "enum",
+        "enum": ["FIELDS"]
       },
       {
         "name": "numfields",
@@ -3171,8 +3175,9 @@
         ]
       },
       {
-        "name": "FIELDS",
-        "type": "string"
+        "name": "fields",
+        "type": "enum",
+        "enum": ["FIELDS"]
       },
       {
         "name": "numfields",
@@ -3228,8 +3233,9 @@
         ]
       },
       {
-        "name": "FIELDS",
-        "type": "string"
+        "name": "fields",
+        "type": "enum",
+        "enum": ["FIELDS"]
       },
       {
         "name": "numfields",
@@ -3254,8 +3260,9 @@
         "key_spec_index": 0
       },
       {
-        "name": "FIELDS",
-        "type": "string"
+        "name": "fields",
+        "type": "enum",
+        "enum": ["FIELDS"]
       },
       {
         "name": "numfields",
@@ -3280,8 +3287,9 @@
         "key_spec_index": 0
       },
       {
-        "name": "FIELDS",
-        "type": "string"
+        "name": "fields",
+        "type": "enum",
+        "enum": ["FIELDS"]
       },
       {
         "name": "numfields",
@@ -3430,8 +3438,9 @@
         "key_spec_index": 0
       },
       {
-        "name": "FIELDS",
-        "type": "string"
+        "name": "fields",
+        "type": "enum",
+        "enum": ["FIELDS"]
       },
       {
         "name": "numfields",

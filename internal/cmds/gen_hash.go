@@ -98,29 +98,29 @@ func (c Hexpire) Key(key string) HexpireKey {
 
 type HexpireConditionGt Incomplete
 
-func (c HexpireConditionGt) Fields(fields string) HexpireFields {
-	c.cs.s = append(c.cs.s, fields)
+func (c HexpireConditionGt) Fields() HexpireFields {
+	c.cs.s = append(c.cs.s, "FIELDS")
 	return (HexpireFields)(c)
 }
 
 type HexpireConditionLt Incomplete
 
-func (c HexpireConditionLt) Fields(fields string) HexpireFields {
-	c.cs.s = append(c.cs.s, fields)
+func (c HexpireConditionLt) Fields() HexpireFields {
+	c.cs.s = append(c.cs.s, "FIELDS")
 	return (HexpireFields)(c)
 }
 
 type HexpireConditionNx Incomplete
 
-func (c HexpireConditionNx) Fields(fields string) HexpireFields {
-	c.cs.s = append(c.cs.s, fields)
+func (c HexpireConditionNx) Fields() HexpireFields {
+	c.cs.s = append(c.cs.s, "FIELDS")
 	return (HexpireFields)(c)
 }
 
 type HexpireConditionXx Incomplete
 
-func (c HexpireConditionXx) Fields(fields string) HexpireFields {
-	c.cs.s = append(c.cs.s, fields)
+func (c HexpireConditionXx) Fields() HexpireFields {
+	c.cs.s = append(c.cs.s, "FIELDS")
 	return (HexpireFields)(c)
 }
 
@@ -179,8 +179,8 @@ func (c HexpireSeconds) Lt() HexpireConditionLt {
 	return (HexpireConditionLt)(c)
 }
 
-func (c HexpireSeconds) Fields(fields string) HexpireFields {
-	c.cs.s = append(c.cs.s, fields)
+func (c HexpireSeconds) Fields() HexpireFields {
+	c.cs.s = append(c.cs.s, "FIELDS")
 	return (HexpireFields)(c)
 }
 
@@ -204,29 +204,29 @@ func (c Hexpireat) Key(key string) HexpireatKey {
 
 type HexpireatConditionGt Incomplete
 
-func (c HexpireatConditionGt) Fields(fields string) HexpireatFields {
-	c.cs.s = append(c.cs.s, fields)
+func (c HexpireatConditionGt) Fields() HexpireatFields {
+	c.cs.s = append(c.cs.s, "FIELDS")
 	return (HexpireatFields)(c)
 }
 
 type HexpireatConditionLt Incomplete
 
-func (c HexpireatConditionLt) Fields(fields string) HexpireatFields {
-	c.cs.s = append(c.cs.s, fields)
+func (c HexpireatConditionLt) Fields() HexpireatFields {
+	c.cs.s = append(c.cs.s, "FIELDS")
 	return (HexpireatFields)(c)
 }
 
 type HexpireatConditionNx Incomplete
 
-func (c HexpireatConditionNx) Fields(fields string) HexpireatFields {
-	c.cs.s = append(c.cs.s, fields)
+func (c HexpireatConditionNx) Fields() HexpireatFields {
+	c.cs.s = append(c.cs.s, "FIELDS")
 	return (HexpireatFields)(c)
 }
 
 type HexpireatConditionXx Incomplete
 
-func (c HexpireatConditionXx) Fields(fields string) HexpireatFields {
-	c.cs.s = append(c.cs.s, fields)
+func (c HexpireatConditionXx) Fields() HexpireatFields {
+	c.cs.s = append(c.cs.s, "FIELDS")
 	return (HexpireatFields)(c)
 }
 
@@ -285,8 +285,8 @@ func (c HexpireatUnixTimeSeconds) Lt() HexpireatConditionLt {
 	return (HexpireatConditionLt)(c)
 }
 
-func (c HexpireatUnixTimeSeconds) Fields(fields string) HexpireatFields {
-	c.cs.s = append(c.cs.s, fields)
+func (c HexpireatUnixTimeSeconds) Fields() HexpireatFields {
+	c.cs.s = append(c.cs.s, "FIELDS")
 	return (HexpireatFields)(c)
 }
 
@@ -329,8 +329,8 @@ func (c HexpiretimeFields) Numfields(numfields int64) HexpiretimeNumfields {
 
 type HexpiretimeKey Incomplete
 
-func (c HexpiretimeKey) Fields(fields string) HexpiretimeFields {
-	c.cs.s = append(c.cs.s, fields)
+func (c HexpiretimeKey) Fields() HexpiretimeFields {
+	c.cs.s = append(c.cs.s, "FIELDS")
 	return (HexpiretimeFields)(c)
 }
 
@@ -663,8 +663,8 @@ func (c HpersistFields) Numfields(numfields int64) HpersistNumfields {
 
 type HpersistKey Incomplete
 
-func (c HpersistKey) Fields(fields string) HpersistFields {
-	c.cs.s = append(c.cs.s, fields)
+func (c HpersistKey) Fields() HpersistFields {
+	c.cs.s = append(c.cs.s, "FIELDS")
 	return (HpersistFields)(c)
 }
 
@@ -695,29 +695,29 @@ func (c Hpexpire) Key(key string) HpexpireKey {
 
 type HpexpireConditionGt Incomplete
 
-func (c HpexpireConditionGt) Fields(fields string) HpexpireFields {
-	c.cs.s = append(c.cs.s, fields)
+func (c HpexpireConditionGt) Fields() HpexpireFields {
+	c.cs.s = append(c.cs.s, "FIELDS")
 	return (HpexpireFields)(c)
 }
 
 type HpexpireConditionLt Incomplete
 
-func (c HpexpireConditionLt) Fields(fields string) HpexpireFields {
-	c.cs.s = append(c.cs.s, fields)
+func (c HpexpireConditionLt) Fields() HpexpireFields {
+	c.cs.s = append(c.cs.s, "FIELDS")
 	return (HpexpireFields)(c)
 }
 
 type HpexpireConditionNx Incomplete
 
-func (c HpexpireConditionNx) Fields(fields string) HpexpireFields {
-	c.cs.s = append(c.cs.s, fields)
+func (c HpexpireConditionNx) Fields() HpexpireFields {
+	c.cs.s = append(c.cs.s, "FIELDS")
 	return (HpexpireFields)(c)
 }
 
 type HpexpireConditionXx Incomplete
 
-func (c HpexpireConditionXx) Fields(fields string) HpexpireFields {
-	c.cs.s = append(c.cs.s, fields)
+func (c HpexpireConditionXx) Fields() HpexpireFields {
+	c.cs.s = append(c.cs.s, "FIELDS")
 	return (HpexpireFields)(c)
 }
 
@@ -769,8 +769,8 @@ func (c HpexpireMilliseconds) Lt() HpexpireConditionLt {
 	return (HpexpireConditionLt)(c)
 }
 
-func (c HpexpireMilliseconds) Fields(fields string) HpexpireFields {
-	c.cs.s = append(c.cs.s, fields)
+func (c HpexpireMilliseconds) Fields() HpexpireFields {
+	c.cs.s = append(c.cs.s, "FIELDS")
 	return (HpexpireFields)(c)
 }
 
@@ -801,29 +801,29 @@ func (c Hpexpireat) Key(key string) HpexpireatKey {
 
 type HpexpireatConditionGt Incomplete
 
-func (c HpexpireatConditionGt) Fields(fields string) HpexpireatFields {
-	c.cs.s = append(c.cs.s, fields)
+func (c HpexpireatConditionGt) Fields() HpexpireatFields {
+	c.cs.s = append(c.cs.s, "FIELDS")
 	return (HpexpireatFields)(c)
 }
 
 type HpexpireatConditionLt Incomplete
 
-func (c HpexpireatConditionLt) Fields(fields string) HpexpireatFields {
-	c.cs.s = append(c.cs.s, fields)
+func (c HpexpireatConditionLt) Fields() HpexpireatFields {
+	c.cs.s = append(c.cs.s, "FIELDS")
 	return (HpexpireatFields)(c)
 }
 
 type HpexpireatConditionNx Incomplete
 
-func (c HpexpireatConditionNx) Fields(fields string) HpexpireatFields {
-	c.cs.s = append(c.cs.s, fields)
+func (c HpexpireatConditionNx) Fields() HpexpireatFields {
+	c.cs.s = append(c.cs.s, "FIELDS")
 	return (HpexpireatFields)(c)
 }
 
 type HpexpireatConditionXx Incomplete
 
-func (c HpexpireatConditionXx) Fields(fields string) HpexpireatFields {
-	c.cs.s = append(c.cs.s, fields)
+func (c HpexpireatConditionXx) Fields() HpexpireatFields {
+	c.cs.s = append(c.cs.s, "FIELDS")
 	return (HpexpireatFields)(c)
 }
 
@@ -882,8 +882,8 @@ func (c HpexpireatUnixTimeMilliseconds) Lt() HpexpireatConditionLt {
 	return (HpexpireatConditionLt)(c)
 }
 
-func (c HpexpireatUnixTimeMilliseconds) Fields(fields string) HpexpireatFields {
-	c.cs.s = append(c.cs.s, fields)
+func (c HpexpireatUnixTimeMilliseconds) Fields() HpexpireatFields {
+	c.cs.s = append(c.cs.s, "FIELDS")
 	return (HpexpireatFields)(c)
 }
 
@@ -926,8 +926,8 @@ func (c HpexpiretimeFields) Numfields(numfields int64) HpexpiretimeNumfields {
 
 type HpexpiretimeKey Incomplete
 
-func (c HpexpiretimeKey) Fields(fields string) HpexpiretimeFields {
-	c.cs.s = append(c.cs.s, fields)
+func (c HpexpiretimeKey) Fields() HpexpiretimeFields {
+	c.cs.s = append(c.cs.s, "FIELDS")
 	return (HpexpiretimeFields)(c)
 }
 
@@ -977,8 +977,8 @@ func (c HpttlFields) Numfields(numfields int64) HpttlNumfields {
 
 type HpttlKey Incomplete
 
-func (c HpttlKey) Fields(fields string) HpttlFields {
-	c.cs.s = append(c.cs.s, fields)
+func (c HpttlKey) Fields() HpttlFields {
+	c.cs.s = append(c.cs.s, "FIELDS")
 	return (HpttlFields)(c)
 }
 
@@ -1272,8 +1272,8 @@ func (c HttlFields) Numfields(numfields int64) HttlNumfields {
 
 type HttlKey Incomplete
 
-func (c HttlKey) Fields(fields string) HttlFields {
-	c.cs.s = append(c.cs.s, fields)
+func (c HttlKey) Fields() HttlFields {
+	c.cs.s = append(c.cs.s, "FIELDS")
 	return (HttlFields)(c)
 }
 
