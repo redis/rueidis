@@ -78,6 +78,269 @@ func (c HexistsKey) Field(field string) HexistsField {
 	return (HexistsField)(c)
 }
 
+type Hexpire Incomplete
+
+func (b Builder) Hexpire() (c Hexpire) {
+	c = Hexpire{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "HEXPIRE")
+	return c
+}
+
+func (c Hexpire) Key(key string) HexpireKey {
+	if c.ks&NoSlot == NoSlot {
+		c.ks = NoSlot | slot(key)
+	} else {
+		c.ks = check(c.ks, slot(key))
+	}
+	c.cs.s = append(c.cs.s, key)
+	return (HexpireKey)(c)
+}
+
+type HexpireConditionGt Incomplete
+
+func (c HexpireConditionGt) Fields(fields string) HexpireFields {
+	c.cs.s = append(c.cs.s, fields)
+	return (HexpireFields)(c)
+}
+
+type HexpireConditionLt Incomplete
+
+func (c HexpireConditionLt) Fields(fields string) HexpireFields {
+	c.cs.s = append(c.cs.s, fields)
+	return (HexpireFields)(c)
+}
+
+type HexpireConditionNx Incomplete
+
+func (c HexpireConditionNx) Fields(fields string) HexpireFields {
+	c.cs.s = append(c.cs.s, fields)
+	return (HexpireFields)(c)
+}
+
+type HexpireConditionXx Incomplete
+
+func (c HexpireConditionXx) Fields(fields string) HexpireFields {
+	c.cs.s = append(c.cs.s, fields)
+	return (HexpireFields)(c)
+}
+
+type HexpireField Incomplete
+
+func (c HexpireField) Field(field ...string) HexpireField {
+	c.cs.s = append(c.cs.s, field...)
+	return c
+}
+
+func (c HexpireField) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type HexpireFields Incomplete
+
+func (c HexpireFields) Numfields(numfields int64) HexpireNumfields {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(numfields, 10))
+	return (HexpireNumfields)(c)
+}
+
+type HexpireKey Incomplete
+
+func (c HexpireKey) Seconds(seconds int64) HexpireSeconds {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(seconds, 10))
+	return (HexpireSeconds)(c)
+}
+
+type HexpireNumfields Incomplete
+
+func (c HexpireNumfields) Field(field ...string) HexpireField {
+	c.cs.s = append(c.cs.s, field...)
+	return (HexpireField)(c)
+}
+
+type HexpireSeconds Incomplete
+
+func (c HexpireSeconds) Nx() HexpireConditionNx {
+	c.cs.s = append(c.cs.s, "NX")
+	return (HexpireConditionNx)(c)
+}
+
+func (c HexpireSeconds) Xx() HexpireConditionXx {
+	c.cs.s = append(c.cs.s, "XX")
+	return (HexpireConditionXx)(c)
+}
+
+func (c HexpireSeconds) Gt() HexpireConditionGt {
+	c.cs.s = append(c.cs.s, "GT")
+	return (HexpireConditionGt)(c)
+}
+
+func (c HexpireSeconds) Lt() HexpireConditionLt {
+	c.cs.s = append(c.cs.s, "LT")
+	return (HexpireConditionLt)(c)
+}
+
+func (c HexpireSeconds) Fields(fields string) HexpireFields {
+	c.cs.s = append(c.cs.s, fields)
+	return (HexpireFields)(c)
+}
+
+type Hexpireat Incomplete
+
+func (b Builder) Hexpireat() (c Hexpireat) {
+	c = Hexpireat{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "HEXPIREAT")
+	return c
+}
+
+func (c Hexpireat) Key(key string) HexpireatKey {
+	if c.ks&NoSlot == NoSlot {
+		c.ks = NoSlot | slot(key)
+	} else {
+		c.ks = check(c.ks, slot(key))
+	}
+	c.cs.s = append(c.cs.s, key)
+	return (HexpireatKey)(c)
+}
+
+type HexpireatConditionGt Incomplete
+
+func (c HexpireatConditionGt) Fields(fields string) HexpireatFields {
+	c.cs.s = append(c.cs.s, fields)
+	return (HexpireatFields)(c)
+}
+
+type HexpireatConditionLt Incomplete
+
+func (c HexpireatConditionLt) Fields(fields string) HexpireatFields {
+	c.cs.s = append(c.cs.s, fields)
+	return (HexpireatFields)(c)
+}
+
+type HexpireatConditionNx Incomplete
+
+func (c HexpireatConditionNx) Fields(fields string) HexpireatFields {
+	c.cs.s = append(c.cs.s, fields)
+	return (HexpireatFields)(c)
+}
+
+type HexpireatConditionXx Incomplete
+
+func (c HexpireatConditionXx) Fields(fields string) HexpireatFields {
+	c.cs.s = append(c.cs.s, fields)
+	return (HexpireatFields)(c)
+}
+
+type HexpireatField Incomplete
+
+func (c HexpireatField) Field(field ...string) HexpireatField {
+	c.cs.s = append(c.cs.s, field...)
+	return c
+}
+
+func (c HexpireatField) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type HexpireatFields Incomplete
+
+func (c HexpireatFields) Numfields(numfields int64) HexpireatNumfields {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(numfields, 10))
+	return (HexpireatNumfields)(c)
+}
+
+type HexpireatKey Incomplete
+
+func (c HexpireatKey) UnixTimeSeconds(unixTimeSeconds int64) HexpireatUnixTimeSeconds {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(unixTimeSeconds, 10))
+	return (HexpireatUnixTimeSeconds)(c)
+}
+
+type HexpireatNumfields Incomplete
+
+func (c HexpireatNumfields) Field(field ...string) HexpireatField {
+	c.cs.s = append(c.cs.s, field...)
+	return (HexpireatField)(c)
+}
+
+type HexpireatUnixTimeSeconds Incomplete
+
+func (c HexpireatUnixTimeSeconds) Nx() HexpireatConditionNx {
+	c.cs.s = append(c.cs.s, "NX")
+	return (HexpireatConditionNx)(c)
+}
+
+func (c HexpireatUnixTimeSeconds) Xx() HexpireatConditionXx {
+	c.cs.s = append(c.cs.s, "XX")
+	return (HexpireatConditionXx)(c)
+}
+
+func (c HexpireatUnixTimeSeconds) Gt() HexpireatConditionGt {
+	c.cs.s = append(c.cs.s, "GT")
+	return (HexpireatConditionGt)(c)
+}
+
+func (c HexpireatUnixTimeSeconds) Lt() HexpireatConditionLt {
+	c.cs.s = append(c.cs.s, "LT")
+	return (HexpireatConditionLt)(c)
+}
+
+func (c HexpireatUnixTimeSeconds) Fields(fields string) HexpireatFields {
+	c.cs.s = append(c.cs.s, fields)
+	return (HexpireatFields)(c)
+}
+
+type Hexpiretime Incomplete
+
+func (b Builder) Hexpiretime() (c Hexpiretime) {
+	c = Hexpiretime{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "HEXPIRETIME")
+	return c
+}
+
+func (c Hexpiretime) Key(key string) HexpiretimeKey {
+	if c.ks&NoSlot == NoSlot {
+		c.ks = NoSlot | slot(key)
+	} else {
+		c.ks = check(c.ks, slot(key))
+	}
+	c.cs.s = append(c.cs.s, key)
+	return (HexpiretimeKey)(c)
+}
+
+type HexpiretimeField Incomplete
+
+func (c HexpiretimeField) Field(field ...string) HexpiretimeField {
+	c.cs.s = append(c.cs.s, field...)
+	return c
+}
+
+func (c HexpiretimeField) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type HexpiretimeFields Incomplete
+
+func (c HexpiretimeFields) Numfields(numfields int64) HexpiretimeNumfields {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(numfields, 10))
+	return (HexpiretimeNumfields)(c)
+}
+
+type HexpiretimeKey Incomplete
+
+func (c HexpiretimeKey) Fields(fields string) HexpiretimeFields {
+	c.cs.s = append(c.cs.s, fields)
+	return (HexpiretimeFields)(c)
+}
+
+type HexpiretimeNumfields Incomplete
+
+func (c HexpiretimeNumfields) Field(field ...string) HexpiretimeField {
+	c.cs.s = append(c.cs.s, field...)
+	return (HexpiretimeField)(c)
+}
+
 type Hget Incomplete
 
 func (b Builder) Hget() (c Hget) {
@@ -361,6 +624,371 @@ func (c HmsetKey) FieldValue() HmsetFieldValue {
 	return (HmsetFieldValue)(c)
 }
 
+type Hpersist Incomplete
+
+func (b Builder) Hpersist() (c Hpersist) {
+	c = Hpersist{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "HPERSIST")
+	return c
+}
+
+func (c Hpersist) Key(key string) HpersistKey {
+	if c.ks&NoSlot == NoSlot {
+		c.ks = NoSlot | slot(key)
+	} else {
+		c.ks = check(c.ks, slot(key))
+	}
+	c.cs.s = append(c.cs.s, key)
+	return (HpersistKey)(c)
+}
+
+type HpersistField Incomplete
+
+func (c HpersistField) Field(field ...string) HpersistField {
+	c.cs.s = append(c.cs.s, field...)
+	return c
+}
+
+func (c HpersistField) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type HpersistFields Incomplete
+
+func (c HpersistFields) Numfields(numfields int64) HpersistNumfields {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(numfields, 10))
+	return (HpersistNumfields)(c)
+}
+
+type HpersistKey Incomplete
+
+func (c HpersistKey) Fields(fields string) HpersistFields {
+	c.cs.s = append(c.cs.s, fields)
+	return (HpersistFields)(c)
+}
+
+type HpersistNumfields Incomplete
+
+func (c HpersistNumfields) Field(field ...string) HpersistField {
+	c.cs.s = append(c.cs.s, field...)
+	return (HpersistField)(c)
+}
+
+type Hpexpire Incomplete
+
+func (b Builder) Hpexpire() (c Hpexpire) {
+	c = Hpexpire{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "HPEXPIRE")
+	return c
+}
+
+func (c Hpexpire) Key(key string) HpexpireKey {
+	if c.ks&NoSlot == NoSlot {
+		c.ks = NoSlot | slot(key)
+	} else {
+		c.ks = check(c.ks, slot(key))
+	}
+	c.cs.s = append(c.cs.s, key)
+	return (HpexpireKey)(c)
+}
+
+type HpexpireConditionGt Incomplete
+
+func (c HpexpireConditionGt) Fields(fields string) HpexpireFields {
+	c.cs.s = append(c.cs.s, fields)
+	return (HpexpireFields)(c)
+}
+
+type HpexpireConditionLt Incomplete
+
+func (c HpexpireConditionLt) Fields(fields string) HpexpireFields {
+	c.cs.s = append(c.cs.s, fields)
+	return (HpexpireFields)(c)
+}
+
+type HpexpireConditionNx Incomplete
+
+func (c HpexpireConditionNx) Fields(fields string) HpexpireFields {
+	c.cs.s = append(c.cs.s, fields)
+	return (HpexpireFields)(c)
+}
+
+type HpexpireConditionXx Incomplete
+
+func (c HpexpireConditionXx) Fields(fields string) HpexpireFields {
+	c.cs.s = append(c.cs.s, fields)
+	return (HpexpireFields)(c)
+}
+
+type HpexpireField Incomplete
+
+func (c HpexpireField) Field(field ...string) HpexpireField {
+	c.cs.s = append(c.cs.s, field...)
+	return c
+}
+
+func (c HpexpireField) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type HpexpireFields Incomplete
+
+func (c HpexpireFields) Numfields(numfields int64) HpexpireNumfields {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(numfields, 10))
+	return (HpexpireNumfields)(c)
+}
+
+type HpexpireKey Incomplete
+
+func (c HpexpireKey) Milliseconds(milliseconds int64) HpexpireMilliseconds {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(milliseconds, 10))
+	return (HpexpireMilliseconds)(c)
+}
+
+type HpexpireMilliseconds Incomplete
+
+func (c HpexpireMilliseconds) Nx() HpexpireConditionNx {
+	c.cs.s = append(c.cs.s, "NX")
+	return (HpexpireConditionNx)(c)
+}
+
+func (c HpexpireMilliseconds) Xx() HpexpireConditionXx {
+	c.cs.s = append(c.cs.s, "XX")
+	return (HpexpireConditionXx)(c)
+}
+
+func (c HpexpireMilliseconds) Gt() HpexpireConditionGt {
+	c.cs.s = append(c.cs.s, "GT")
+	return (HpexpireConditionGt)(c)
+}
+
+func (c HpexpireMilliseconds) Lt() HpexpireConditionLt {
+	c.cs.s = append(c.cs.s, "LT")
+	return (HpexpireConditionLt)(c)
+}
+
+func (c HpexpireMilliseconds) Fields(fields string) HpexpireFields {
+	c.cs.s = append(c.cs.s, fields)
+	return (HpexpireFields)(c)
+}
+
+type HpexpireNumfields Incomplete
+
+func (c HpexpireNumfields) Field(field ...string) HpexpireField {
+	c.cs.s = append(c.cs.s, field...)
+	return (HpexpireField)(c)
+}
+
+type Hpexpireat Incomplete
+
+func (b Builder) Hpexpireat() (c Hpexpireat) {
+	c = Hpexpireat{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "HPEXPIREAT")
+	return c
+}
+
+func (c Hpexpireat) Key(key string) HpexpireatKey {
+	if c.ks&NoSlot == NoSlot {
+		c.ks = NoSlot | slot(key)
+	} else {
+		c.ks = check(c.ks, slot(key))
+	}
+	c.cs.s = append(c.cs.s, key)
+	return (HpexpireatKey)(c)
+}
+
+type HpexpireatConditionGt Incomplete
+
+func (c HpexpireatConditionGt) Fields(fields string) HpexpireatFields {
+	c.cs.s = append(c.cs.s, fields)
+	return (HpexpireatFields)(c)
+}
+
+type HpexpireatConditionLt Incomplete
+
+func (c HpexpireatConditionLt) Fields(fields string) HpexpireatFields {
+	c.cs.s = append(c.cs.s, fields)
+	return (HpexpireatFields)(c)
+}
+
+type HpexpireatConditionNx Incomplete
+
+func (c HpexpireatConditionNx) Fields(fields string) HpexpireatFields {
+	c.cs.s = append(c.cs.s, fields)
+	return (HpexpireatFields)(c)
+}
+
+type HpexpireatConditionXx Incomplete
+
+func (c HpexpireatConditionXx) Fields(fields string) HpexpireatFields {
+	c.cs.s = append(c.cs.s, fields)
+	return (HpexpireatFields)(c)
+}
+
+type HpexpireatField Incomplete
+
+func (c HpexpireatField) Field(field ...string) HpexpireatField {
+	c.cs.s = append(c.cs.s, field...)
+	return c
+}
+
+func (c HpexpireatField) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type HpexpireatFields Incomplete
+
+func (c HpexpireatFields) Numfields(numfields int64) HpexpireatNumfields {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(numfields, 10))
+	return (HpexpireatNumfields)(c)
+}
+
+type HpexpireatKey Incomplete
+
+func (c HpexpireatKey) UnixTimeMilliseconds(unixTimeMilliseconds int64) HpexpireatUnixTimeMilliseconds {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(unixTimeMilliseconds, 10))
+	return (HpexpireatUnixTimeMilliseconds)(c)
+}
+
+type HpexpireatNumfields Incomplete
+
+func (c HpexpireatNumfields) Field(field ...string) HpexpireatField {
+	c.cs.s = append(c.cs.s, field...)
+	return (HpexpireatField)(c)
+}
+
+type HpexpireatUnixTimeMilliseconds Incomplete
+
+func (c HpexpireatUnixTimeMilliseconds) Nx() HpexpireatConditionNx {
+	c.cs.s = append(c.cs.s, "NX")
+	return (HpexpireatConditionNx)(c)
+}
+
+func (c HpexpireatUnixTimeMilliseconds) Xx() HpexpireatConditionXx {
+	c.cs.s = append(c.cs.s, "XX")
+	return (HpexpireatConditionXx)(c)
+}
+
+func (c HpexpireatUnixTimeMilliseconds) Gt() HpexpireatConditionGt {
+	c.cs.s = append(c.cs.s, "GT")
+	return (HpexpireatConditionGt)(c)
+}
+
+func (c HpexpireatUnixTimeMilliseconds) Lt() HpexpireatConditionLt {
+	c.cs.s = append(c.cs.s, "LT")
+	return (HpexpireatConditionLt)(c)
+}
+
+func (c HpexpireatUnixTimeMilliseconds) Fields(fields string) HpexpireatFields {
+	c.cs.s = append(c.cs.s, fields)
+	return (HpexpireatFields)(c)
+}
+
+type Hpexpiretime Incomplete
+
+func (b Builder) Hpexpiretime() (c Hpexpiretime) {
+	c = Hpexpiretime{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "HPEXPIRETIME")
+	return c
+}
+
+func (c Hpexpiretime) Key(key string) HpexpiretimeKey {
+	if c.ks&NoSlot == NoSlot {
+		c.ks = NoSlot | slot(key)
+	} else {
+		c.ks = check(c.ks, slot(key))
+	}
+	c.cs.s = append(c.cs.s, key)
+	return (HpexpiretimeKey)(c)
+}
+
+type HpexpiretimeField Incomplete
+
+func (c HpexpiretimeField) Field(field ...string) HpexpiretimeField {
+	c.cs.s = append(c.cs.s, field...)
+	return c
+}
+
+func (c HpexpiretimeField) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type HpexpiretimeFields Incomplete
+
+func (c HpexpiretimeFields) Numfields(numfields int64) HpexpiretimeNumfields {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(numfields, 10))
+	return (HpexpiretimeNumfields)(c)
+}
+
+type HpexpiretimeKey Incomplete
+
+func (c HpexpiretimeKey) Fields(fields string) HpexpiretimeFields {
+	c.cs.s = append(c.cs.s, fields)
+	return (HpexpiretimeFields)(c)
+}
+
+type HpexpiretimeNumfields Incomplete
+
+func (c HpexpiretimeNumfields) Field(field ...string) HpexpiretimeField {
+	c.cs.s = append(c.cs.s, field...)
+	return (HpexpiretimeField)(c)
+}
+
+type Hpttl Incomplete
+
+func (b Builder) Hpttl() (c Hpttl) {
+	c = Hpttl{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "HPTTL")
+	return c
+}
+
+func (c Hpttl) Key(key string) HpttlKey {
+	if c.ks&NoSlot == NoSlot {
+		c.ks = NoSlot | slot(key)
+	} else {
+		c.ks = check(c.ks, slot(key))
+	}
+	c.cs.s = append(c.cs.s, key)
+	return (HpttlKey)(c)
+}
+
+type HpttlField Incomplete
+
+func (c HpttlField) Field(field ...string) HpttlField {
+	c.cs.s = append(c.cs.s, field...)
+	return c
+}
+
+func (c HpttlField) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type HpttlFields Incomplete
+
+func (c HpttlFields) Numfields(numfields int64) HpttlNumfields {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(numfields, 10))
+	return (HpttlNumfields)(c)
+}
+
+type HpttlKey Incomplete
+
+func (c HpttlKey) Fields(fields string) HpttlFields {
+	c.cs.s = append(c.cs.s, fields)
+	return (HpttlFields)(c)
+}
+
+type HpttlNumfields Incomplete
+
+func (c HpttlNumfields) Field(field ...string) HpttlField {
+	c.cs.s = append(c.cs.s, field...)
+	return (HpttlField)(c)
+}
+
 type Hrandfield Incomplete
 
 func (b Builder) Hrandfield() (c Hrandfield) {
@@ -603,6 +1231,57 @@ type HstrlenKey Incomplete
 func (c HstrlenKey) Field(field string) HstrlenField {
 	c.cs.s = append(c.cs.s, field)
 	return (HstrlenField)(c)
+}
+
+type Httl Incomplete
+
+func (b Builder) Httl() (c Httl) {
+	c = Httl{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "HTTL")
+	return c
+}
+
+func (c Httl) Key(key string) HttlKey {
+	if c.ks&NoSlot == NoSlot {
+		c.ks = NoSlot | slot(key)
+	} else {
+		c.ks = check(c.ks, slot(key))
+	}
+	c.cs.s = append(c.cs.s, key)
+	return (HttlKey)(c)
+}
+
+type HttlField Incomplete
+
+func (c HttlField) Field(field ...string) HttlField {
+	c.cs.s = append(c.cs.s, field...)
+	return c
+}
+
+func (c HttlField) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type HttlFields Incomplete
+
+func (c HttlFields) Numfields(numfields int64) HttlNumfields {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(numfields, 10))
+	return (HttlNumfields)(c)
+}
+
+type HttlKey Incomplete
+
+func (c HttlKey) Fields(fields string) HttlFields {
+	c.cs.s = append(c.cs.s, fields)
+	return (HttlFields)(c)
+}
+
+type HttlNumfields Incomplete
+
+func (c HttlNumfields) Field(field ...string) HttlField {
+	c.cs.s = append(c.cs.s, field...)
+	return (HttlField)(c)
 }
 
 type Hvals Incomplete
