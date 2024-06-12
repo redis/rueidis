@@ -16,6 +16,7 @@ type ClientOption struct {
 	ClientBuilder func(option rueidis.ClientOption) (rueidis.Client, error)
 	ClientOption  rueidis.ClientOption
 	ClientTTL     time.Duration // TTL for the client marker, refreshed every 1/2 TTL. Defaults to 10s. The marker allows other client to know if this client is still alive.
+	UseLuaScripts bool          // Use Lua scripts for compatibility with older Redis versions
 }
 
 type CacheAsideClient interface {
@@ -30,8 +31,9 @@ func NewClient(option ClientOption) (cc CacheAsideClient, err error) {
 		option.ClientTTL = 10 * time.Second
 	}
 	ca := &Client{
-		waits: make(map[string]chan struct{}),
-		ttl:   option.ClientTTL,
+		waits:       make(map[string]chan struct{}),
+		ttl:         option.ClientTTL,
+		useLua:      option.UseLuaScripts,
 	}
 	option.ClientOption.OnInvalidations = ca.onInvalidation
 	if option.ClientBuilder != nil {
@@ -53,6 +55,7 @@ type Client struct {
 	cancel context.CancelFunc
 	id     string
 	ttl    time.Duration
+	useLua bool
 	mu     sync.Mutex
 }
 
@@ -114,7 +117,12 @@ func (c *Client) keepalive() (id string, err error) {
 	c.mu.Unlock()
 	if id == "" {
 		id = PlaceholderPrefix + ulid.Make().String()
-		if err = c.client.Do(c.ctx, c.client.B().Set().Key(id).Value("").Px(c.ttl).Build()).Error(); err == nil {
+		if c.useLua {
+			err = setKeyLua.Exec(c.ctx, c.client, []string{id}, []string{strconv.FormatInt(c.ttl.Milliseconds(), 10)}).Error()
+		} else {
+			err = c.client.Do(c.ctx, c.client.B().Set().Key(id).Value("").Nx().Get().Px(c.ttl).Build()).Error()
+		}
+		if err == nil {
 			c.mu.Lock()
 			if c.id == "" {
 				c.id = id
@@ -138,7 +146,11 @@ retry:
 	if rueidis.IsRedisNil(err) && fn != nil { // cache miss, prepare to populate the value by fn()
 		var id string
 		if id, err = c.keepalive(); err == nil { // acquire client id
-			val, err = c.client.Do(ctx, c.client.B().Set().Key(key).Value(id).Nx().Get().Px(ttl).Build()).ToString()
+			if c.useLua {
+				val, err = setKeyLua.Exec(ctx, c.client, []string{key}, []string{id, strconv.FormatInt(ttl.Milliseconds(), 10)}).ToString()
+			} else {
+				val, err = c.client.Do(ctx, c.client.B().Set().Key(key).Value(id).Nx().Get().Px(ttl).Build()).ToString()
+			}
 			if rueidis.IsRedisNil(err) { // successfully set client id on the key as a lock
 				if val, err = fn(ctx, key); err == nil {
 					err = setkey.Exec(ctx, c.client, []string{key}, []string{id, val, strconv.FormatInt(ttl.Milliseconds(), 10)}).Error()
@@ -199,4 +211,5 @@ const PlaceholderPrefix = "rueidisid:"
 var (
 	delkey = rueidis.NewLuaScript(`if redis.call("GET",KEYS[1]) == ARGV[1] then return redis.call("DEL",KEYS[1]) else return 0 end`)
 	setkey = rueidis.NewLuaScript(`if redis.call("GET",KEYS[1]) == ARGV[1] then return redis.call("SET",KEYS[1],ARGV[2],"PX",ARGV[3]) else return 0 end`)
+	setKeyLua = rueidis.NewLuaScript(`if redis.call("SET", KEYS[1], ARGV[1], "NX", "PX", ARGV[2]) then return KEYS[1] else return nil end`)
 )
