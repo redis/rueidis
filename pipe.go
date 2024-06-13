@@ -1481,7 +1481,10 @@ func (p *pipe) Close() {
 			p.background()
 		}
 		if block == 1 && (stopping1 || stopping2) { // make sure there is no block cmd
-			<-p.queue.PutOne(cmds.PingCmd)
+			select {
+			case <-p.queue.PutOne(cmds.PingCmd):
+			case <-time.After(time.Second):
+			}
 		}
 	}
 	atomic.AddInt32(&p.waits, -1)
