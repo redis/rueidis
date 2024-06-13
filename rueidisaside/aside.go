@@ -117,12 +117,7 @@ func (c *Client) keepalive() (id string, err error) {
 	c.mu.Unlock()
 	if id == "" {
 		id = PlaceholderPrefix + ulid.Make().String()
-		if c.useLua {
-			err = setKeyLua.Exec(c.ctx, c.client, []string{id}, []string{strconv.FormatInt(c.ttl.Milliseconds(), 10)}).Error()
-		} else {
-			err = c.client.Do(c.ctx, c.client.B().Set().Key(id).Value("").Nx().Get().Px(c.ttl).Build()).Error()
-		}
-		if err == nil {
+		if err = setKeyLua.Exec(c.ctx, c.client, []string{id}, []string{strconv.FormatInt(c.ttl.Milliseconds(), 10)}).Error(); err == nil {
 			c.mu.Lock()
 			if c.id == "" {
 				c.id = id
