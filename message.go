@@ -19,7 +19,7 @@ const messageStructSize = int(unsafe.Sizeof(RedisMessage{}))
 // Nil represents a Redis Nil message
 var Nil = &RedisError{typ: typeNull}
 
-// Parse represents a parse error message
+// // ErrParse is a parse error that occurs when a Redis message cannot be parsed correctly.
 var ErrParse = errors.New("rueidis: parse error")
 
 // IsRedisNil is a handy method to check if error is a redis nil response.
