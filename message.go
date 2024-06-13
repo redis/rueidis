@@ -19,8 +19,8 @@ const messageStructSize = int(unsafe.Sizeof(RedisMessage{}))
 // Nil represents a Redis Nil message
 var Nil = &RedisError{typ: typeNull}
 
-// // ErrParse is a parse error that occurs when a Redis message cannot be parsed correctly.
-var ErrParse = errors.New("rueidis: parse error")
+// ErrParse is a parse error that occurs when a Redis message cannot be parsed correctly.
+var errParse = errors.New("rueidis: parse error")
 
 // IsRedisNil is a handy method to check if error is a redis nil response.
 // All redis nil response returns as an error.
@@ -527,7 +527,7 @@ func (m *RedisMessage) IsNil() bool {
 
 // IsParseErr checks if the error is a parse error
 func (m *RedisMessage) IsParseErr() bool {
-	return errors.Is(m.Error(), ErrParse)
+	return errors.Is(m.Error(), errParse)
 }
 
 // IsInt64 check if message is a redis RESP3 int response
@@ -580,7 +580,7 @@ func (m *RedisMessage) ToString() (val string, err error) {
 		return m.string, nil
 	}
 	if m.IsParseErr() {
-		return "", fmt.Errorf("%w: redis message type %s is not a string", ErrParse, typeNames[m.typ])
+		return "", fmt.Errorf("%w: redis message type %s is not a string", errParse, typeNames[m.typ])
 	}
 	if m.IsInt64() || m.values != nil {
 		typ := m.typ
@@ -680,7 +680,7 @@ func (m *RedisMessage) ToInt64() (val int64, err error) {
 		return m.integer, nil
 	}
 	if m.IsParseErr() {
-		return 0, fmt.Errorf("%w: redis message type %s is not a RESP3 int64", ErrParse, typeNames[m.typ])
+		return 0, fmt.Errorf("%w: redis message type %s is not a RESP3 int64", errParse, typeNames[m.typ])
 	}
 	if err = m.Error(); err != nil {
 		return 0, err
@@ -695,7 +695,7 @@ func (m *RedisMessage) ToBool() (val bool, err error) {
 		return m.integer == 1, nil
 	}
 	if m.IsParseErr() {
-		return false, fmt.Errorf("%w: redis message type %s is not a RESP3 bool", ErrParse, typeNames[m.typ])
+		return false, fmt.Errorf("%w: redis message type %s is not a RESP3 bool", errParse, typeNames[m.typ])
 	}
 	if err = m.Error(); err != nil {
 		return false, err
@@ -710,7 +710,7 @@ func (m *RedisMessage) ToFloat64() (val float64, err error) {
 		return util.ToFloat64(m.string)
 	}
 	if m.IsParseErr() {
-		return 0, fmt.Errorf("%w: redis message type %s is not a RESP3 float64", ErrParse, typeNames[m.typ])
+		return 0, fmt.Errorf("%w: redis message type %s is not a RESP3 float64", errParse, typeNames[m.typ])
 	}
 	if err = m.Error(); err != nil {
 		return 0, err
@@ -725,7 +725,7 @@ func (m *RedisMessage) ToArray() ([]RedisMessage, error) {
 		return m.values, nil
 	}
 	if m.IsParseErr() {
-		return nil, fmt.Errorf("%w: redis message type %s is not a array", ErrParse, typeNames[m.typ])
+		return nil, fmt.Errorf("%w: redis message type %s is not a array", errParse, typeNames[m.typ])
 	}
 	if err := m.Error(); err != nil {
 		return nil, err
@@ -1234,7 +1234,7 @@ func (m *RedisMessage) ToMap() (map[string]RedisMessage, error) {
 		return toMap(m.values)
 	}
 	if m.IsParseErr() {
-		return nil, fmt.Errorf("%w: redis message type %s is not a RESP3 map", ErrParse, typeNames[m.typ])
+		return nil, fmt.Errorf("%w: redis message type %s is not a RESP3 map", errParse, typeNames[m.typ])
 	}
 	if err := m.Error(); err != nil {
 		return nil, err
