@@ -2,6 +2,7 @@ package rueidis
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -17,6 +18,9 @@ const messageStructSize = int(unsafe.Sizeof(RedisMessage{}))
 
 // Nil represents a Redis Nil message
 var Nil = &RedisError{typ: typeNull}
+
+// Parse represents a parse error message
+var ErrParse = errors.New("rueidis: parse error")
 
 // IsRedisNil is a handy method to check if error is a redis nil response.
 // All redis nil response returns as an error.
@@ -116,6 +120,7 @@ type RedisResult struct {
 // NonRedisError can be used to check if there is an underlying error (ex. network timeout).
 func (r RedisResult) NonRedisError() error {
 	return r.err
+
 }
 
 // Error returns either underlying error or redis error or nil
@@ -520,6 +525,11 @@ func (m *RedisMessage) IsNil() bool {
 	return m.typ == typeNull
 }
 
+// IsParseErr checks if the error is a parse error
+func (m *RedisMessage) IsParseErr() bool {
+	return errors.Is(m.Error(), ErrParse)
+}
+
 // IsInt64 check if message is a redis RESP3 int response
 func (m *RedisMessage) IsInt64() bool {
 	return m.typ == typeInteger
@@ -568,6 +578,9 @@ func (m *RedisMessage) Error() error {
 func (m *RedisMessage) ToString() (val string, err error) {
 	if m.IsString() {
 		return m.string, nil
+	}
+	if m.IsParseErr() {
+		return "", fmt.Errorf("%w: redis message type %s is not a string", ErrParse, typeNames[m.typ])
 	}
 	if m.IsInt64() || m.values != nil {
 		typ := m.typ
@@ -666,6 +679,9 @@ func (m *RedisMessage) ToInt64() (val int64, err error) {
 	if m.IsInt64() {
 		return m.integer, nil
 	}
+	if m.IsParseErr() {
+		return 0, fmt.Errorf("%w: redis message type %s is not a RESP3 int64", ErrParse, typeNames[m.typ])
+	}
 	if err = m.Error(); err != nil {
 		return 0, err
 	}
@@ -677,6 +693,9 @@ func (m *RedisMessage) ToInt64() (val int64, err error) {
 func (m *RedisMessage) ToBool() (val bool, err error) {
 	if m.IsBool() {
 		return m.integer == 1, nil
+	}
+	if m.IsParseErr() {
+		return false, fmt.Errorf("%w: redis message type %s is not a RESP3 bool", ErrParse, typeNames[m.typ])
 	}
 	if err = m.Error(); err != nil {
 		return false, err
@@ -690,6 +709,9 @@ func (m *RedisMessage) ToFloat64() (val float64, err error) {
 	if m.IsFloat64() {
 		return util.ToFloat64(m.string)
 	}
+	if m.IsParseErr() {
+		return 0, fmt.Errorf("%w: redis message type %s is not a RESP3 float64", ErrParse, typeNames[m.typ])
+	}
 	if err = m.Error(); err != nil {
 		return 0, err
 	}
@@ -701,6 +723,9 @@ func (m *RedisMessage) ToFloat64() (val float64, err error) {
 func (m *RedisMessage) ToArray() ([]RedisMessage, error) {
 	if m.IsArray() {
 		return m.values, nil
+	}
+	if m.IsParseErr() {
+		return nil, fmt.Errorf("%w: redis message type %s is not a array", ErrParse, typeNames[m.typ])
 	}
 	if err := m.Error(); err != nil {
 		return nil, err
@@ -1207,6 +1232,9 @@ func (m *RedisMessage) AsGeosearch() ([]GeoLocation, error) {
 func (m *RedisMessage) ToMap() (map[string]RedisMessage, error) {
 	if m.IsMap() {
 		return toMap(m.values)
+	}
+	if m.IsParseErr() {
+		return nil, fmt.Errorf("%w: redis message type %s is not a RESP3 map", ErrParse, typeNames[m.typ])
 	}
 	if err := m.Error(); err != nil {
 		return nil, err
