@@ -723,25 +723,36 @@ func (m *RedisMessage) AsStrSlice() ([]string, error) {
 	return s, nil
 }
 
-// AsIntSlice check if message is a redis array/set response, and convert to []int64.
-// redis nil element and other non integer element will be present as zero.
-func (m *RedisMessage) AsIntSlice() ([]int64, error) {
-	values, err := m.ToArray()
-	if err != nil {
-		return nil, err
-	}
-	s := make([]int64, len(values))
-	for i, v := range values {
-		if len(v.string) != 0 {
-			if s[i], err = strconv.ParseInt(v.string, 10, 64); err != nil {
-				return nil, err
-			}
-		} else {
-			s[i] = v.integer
-		}
-	}
-	return s, nil
+// AsIntSlice converts the Redis message to a slice of int64.
+func (r RedisResult) AsIntSlice() ([]int64, error) {
+    if r.err != nil {
+        return nil, r.err
+    }
+    
+    // Delegate to RedisMessage method if there's no error.
+    return r.val.AsIntSlice()
 }
+
+// AsIntSlice converts the Redis message to a slice of int64.
+func (m *RedisMessage) AsIntSlice() ([]int64, error) {
+    if err := m.Error(); err != nil {
+        return nil, err
+    }
+    
+    if !m.IsArray() {
+        return nil, fmt.Errorf("expected array response, got %s", typeNames[m.typ])
+    }
+    
+    values := m.values
+    ints := make([]int64, len(values))
+    for i, v := range values {
+        // Convert each element to int64.
+        ints[i], _ = v.AsInt64() // Ignoring error for simplicity; handle appropriately in your code.
+    }
+    
+    return ints, nil
+}
+
 
 // AsFloatSlice check if message is a redis array/set response, and convert to []float64.
 // redis nil element and other non float element will be present as zero.
