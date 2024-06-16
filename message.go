@@ -2,6 +2,7 @@ package rueidis
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -18,10 +19,18 @@ const messageStructSize = int(unsafe.Sizeof(RedisMessage{}))
 // Nil represents a Redis Nil message
 var Nil = &RedisError{typ: typeNull}
 
+// ErrParse is a parse error that occurs when a Redis message cannot be parsed correctly.
+var errParse = errors.New("rueidis: parse error")
+
 // IsRedisNil is a handy method to check if error is a redis nil response.
 // All redis nil response returns as an error.
 func IsRedisNil(err error) bool {
 	return err == Nil
+}
+
+// IsParseErr checks if the error is a parse error
+func IsParseErr(err error) bool {
+	return errors.Is(err, errParse)
 }
 
 // IsRedisBusyGroup checks if it is a redis BUSYGROUP message.
@@ -571,7 +580,7 @@ func (m *RedisMessage) ToString() (val string, err error) {
 	}
 	if m.IsInt64() || m.values != nil {
 		typ := m.typ
-		return "", fmt.Errorf("redis message type %s is not a string", typeNames[typ])
+		return "", fmt.Errorf("%w: redis message type %s is not a string", errParse, typeNames[typ])
 	}
 	return m.string, m.Error()
 }
@@ -645,7 +654,7 @@ func (m *RedisMessage) AsBool() (val bool, err error) {
 		return
 	default:
 		typ := m.typ
-		return false, fmt.Errorf("redis message type %s is not a int, string or bool", typeNames[typ])
+		return false, fmt.Errorf("%w: redis message type %s is not a int, string or bool", errParse, typeNames[typ])
 	}
 }
 
@@ -670,7 +679,7 @@ func (m *RedisMessage) ToInt64() (val int64, err error) {
 		return 0, err
 	}
 	typ := m.typ
-	return 0, fmt.Errorf("redis message type %s is not a RESP3 int64", typeNames[typ])
+	return 0, fmt.Errorf("%w: redis message type %s is not a RESP3 int64", errParse, typeNames[typ])
 }
 
 // ToBool check if message is a redis RESP3 bool response, and return it
@@ -682,7 +691,7 @@ func (m *RedisMessage) ToBool() (val bool, err error) {
 		return false, err
 	}
 	typ := m.typ
-	return false, fmt.Errorf("redis message type %s is not a RESP3 bool", typeNames[typ])
+	return false, fmt.Errorf("%w: redis message type %s is not a RESP3 bool", errParse, typeNames[typ])
 }
 
 // ToFloat64 check if message is a redis RESP3 double response, and return it
@@ -694,7 +703,7 @@ func (m *RedisMessage) ToFloat64() (val float64, err error) {
 		return 0, err
 	}
 	typ := m.typ
-	return 0, fmt.Errorf("redis message type %s is not a RESP3 float64", typeNames[typ])
+	return 0, fmt.Errorf("%w: redis message type %s is not a RESP3 float64", errParse, typeNames[typ])
 }
 
 // ToArray check if message is a redis array/set response, and return it
@@ -706,7 +715,7 @@ func (m *RedisMessage) ToArray() ([]RedisMessage, error) {
 		return nil, err
 	}
 	typ := m.typ
-	return nil, fmt.Errorf("redis message type %s is not a array", typeNames[typ])
+	return nil, fmt.Errorf("%w: redis message type %s is not a array", errParse, typeNames[typ])
 }
 
 // AsStrSlice check if message is a redis array/set response, and convert to []string.
@@ -853,7 +862,7 @@ func (m *RedisMessage) AsXRead() (ret map[string][]XRangeEntry, err error) {
 		return ret, nil
 	}
 	typ := m.typ
-	return nil, fmt.Errorf("redis message type %s is not a map/array/set", typeNames[typ])
+	return nil, fmt.Errorf("%w: redis message type %s is not a map/array/set", errParse, typeNames[typ])
 }
 
 // ZScore is the element type of ZRANGE WITHSCORES, ZDIFF WITHSCORES and ZPOPMAX command response
@@ -925,7 +934,7 @@ func (m *RedisMessage) AsScanEntry() (e ScanEntry, err error) {
 		return e, err
 	}
 	typ := m.typ
-	return ScanEntry{}, fmt.Errorf("redis message type %s is not a scan response or its length is not at least 2", typeNames[typ])
+	return ScanEntry{}, fmt.Errorf("%w: redis message type %s is not a scan response or its length is not at least 2", errParse, typeNames[typ])
 }
 
 // AsMap check if message is a redis array/set response, and convert to map[string]RedisMessage
@@ -937,7 +946,7 @@ func (m *RedisMessage) AsMap() (map[string]RedisMessage, error) {
 		return toMap(m.values)
 	}
 	typ := m.typ
-	return nil, fmt.Errorf("redis message type %s is not a map/array/set or its length is not even", typeNames[typ])
+	return nil, fmt.Errorf("%w: redis message type %s is not a map/array/set or its length is not even", errParse, typeNames[typ])
 }
 
 // AsStrMap check if message is a redis map/array/set response, and convert to map[string]string.
@@ -956,7 +965,7 @@ func (m *RedisMessage) AsStrMap() (map[string]string, error) {
 		return r, nil
 	}
 	typ := m.typ
-	return nil, fmt.Errorf("redis message type %s is not a map/array/set or its length is not even", typeNames[typ])
+	return nil, fmt.Errorf("%w: redis message type %s is not a map/array/set or its length is not even", errParse, typeNames[typ])
 }
 
 // AsIntMap check if message is a redis map/array/set response, and convert to map[string]int64.
@@ -984,7 +993,7 @@ func (m *RedisMessage) AsIntMap() (map[string]int64, error) {
 		return r, nil
 	}
 	typ := m.typ
-	return nil, fmt.Errorf("redis message type %s is not a map/array/set or its length is not even", typeNames[typ])
+	return nil, fmt.Errorf("%w: redis message type %s is not a map/array/set or its length is not even", errParse, typeNames[typ])
 }
 
 type KeyValues struct {
@@ -1002,7 +1011,7 @@ func (m *RedisMessage) AsLMPop() (kvs KeyValues, err error) {
 		return
 	}
 	typ := m.typ
-	return KeyValues{}, fmt.Errorf("redis message type %s is not a LMPOP response", typeNames[typ])
+	return KeyValues{}, fmt.Errorf("%w: redis message type %s is not a LMPOP response", errParse, typeNames[typ])
 }
 
 type KeyZScores struct {
@@ -1020,7 +1029,7 @@ func (m *RedisMessage) AsZMPop() (kvs KeyZScores, err error) {
 		return
 	}
 	typ := m.typ
-	return KeyZScores{}, fmt.Errorf("redis message type %s is not a ZMPOP response", typeNames[typ])
+	return KeyZScores{}, fmt.Errorf("%w: redis message type %s is not a ZMPOP response", errParse, typeNames[typ])
 }
 
 type FtSearchDoc struct {
@@ -1098,7 +1107,7 @@ func (m *RedisMessage) AsFtSearch() (total int64, docs []FtSearchDoc, err error)
 		return
 	}
 	typ := m.typ
-	return 0, nil, fmt.Errorf("redis message type %s is not a FT.SEARCH response", typeNames[typ])
+	return 0, nil, fmt.Errorf("%w: redis message type %s is not a FT.SEARCH response", errParse, typeNames[typ])
 }
 
 func (m *RedisMessage) AsFtAggregate() (total int64, docs []map[string]string, err error) {
@@ -1139,7 +1148,7 @@ func (m *RedisMessage) AsFtAggregate() (total int64, docs []map[string]string, e
 		return
 	}
 	typ := m.typ
-	return 0, nil, fmt.Errorf("redis message type %s is not a FT.AGGREGATE response", typeNames[typ])
+	return 0, nil, fmt.Errorf("%w: redis message type %s is not a FT.AGGREGATE response", errParse, typeNames[typ])
 }
 
 func (m *RedisMessage) AsFtAggregateCursor() (cursor, total int64, docs []map[string]string, err error) {
@@ -1212,7 +1221,7 @@ func (m *RedisMessage) ToMap() (map[string]RedisMessage, error) {
 		return nil, err
 	}
 	typ := m.typ
-	return nil, fmt.Errorf("redis message type %s is not a RESP3 map", typeNames[typ])
+	return nil, fmt.Errorf("%w: redis message type %s is not a RESP3 map", errParse, typeNames[typ])
 }
 
 // ToAny turns message into go any value
@@ -1251,7 +1260,7 @@ func (m *RedisMessage) ToAny() (any, error) {
 		return vs, nil
 	}
 	typ := m.typ
-	return nil, fmt.Errorf("redis message type %s is not a supported in ToAny", typeNames[typ])
+	return nil, fmt.Errorf("%w: redis message type %s is not a supported in ToAny", errParse, typeNames[typ])
 }
 
 // IsCacheHit check if message is from client side cache
@@ -1319,7 +1328,7 @@ func toMap(values []RedisMessage) (map[string]RedisMessage, error) {
 			continue
 		}
 		typ := values[i].typ
-		return nil, fmt.Errorf("redis message type %s as map key is not supported", typeNames[typ])
+		return nil, fmt.Errorf("%w: redis message type %s as map key is not supported", errParse, typeNames[typ])
 	}
 	return r, nil
 }
