@@ -401,9 +401,7 @@ var rngPool = sync.Pool{
 }
 
 func fastrand(n int) (r int) {
-	s := rngPool.Get().(*rand.Rand)
-	r = s.Intn(n)
-	rngPool.Put(s)
+	r = util.FastRand(n)
 	return
 }
 
