@@ -2,12 +2,15 @@ package rueidisaside
 
 import (
 	"context"
+	"encoding/binary"
+	"encoding/hex"
+	"math/rand"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+	"unsafe"
 
-	"github.com/oklog/ulid/v2"
 	"github.com/redis/rueidis"
 )
 
@@ -113,7 +116,7 @@ func (c *Client) keepalive() (id string, err error) {
 	id = c.id
 	c.mu.Unlock()
 	if id == "" {
-		id = PlaceholderPrefix + ulid.Make().String()
+		id = PlaceholderPrefix + randStr()
 		if err = c.client.Do(c.ctx, c.client.B().Set().Key(id).Value("").Px(c.ttl).Build()).Error(); err == nil {
 			c.mu.Lock()
 			if c.id == "" {
@@ -126,6 +129,16 @@ func (c *Client) keepalive() (id string, err error) {
 		}
 	}
 	return id, err
+}
+
+// randStr generates a 24-byte long, random string.
+func randStr() string {
+	b := make([]byte, 24)
+	binary.LittleEndian.PutUint64(b[12:], rand.Uint64())
+	binary.LittleEndian.PutUint32(b[20:], rand.Uint32())
+	hex.Encode(b, b[12:])
+
+	return unsafe.String(unsafe.SliceData(b), len(b))
 }
 
 func (c *Client) Get(ctx context.Context, ttl time.Duration, key string, fn func(ctx context.Context, key string) (val string, err error)) (string, error) {
