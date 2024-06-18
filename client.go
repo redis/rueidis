@@ -10,10 +10,11 @@ import (
 )
 
 type singleClient struct {
-	conn  conn
-	stop  uint32
-	cmd   Builder
-	retry bool
+	conn         conn
+	stop         uint32
+	cmd          Builder
+	retry        bool
+	DisableCache bool
 }
 
 func newSingleClient(opt *ClientOption, prev conn, connFn connFn) (*singleClient, error) {
@@ -30,11 +31,11 @@ func newSingleClient(opt *ClientOption, prev conn, connFn connFn) (*singleClient
 	if err := conn.Dial(); err != nil {
 		return nil, err
 	}
-	return newSingleClientWithConn(conn, cmds.NewBuilder(cmds.NoSlot), !opt.DisableRetry), nil
+	return newSingleClientWithConn(conn, cmds.NewBuilder(cmds.NoSlot), !opt.DisableRetry, opt.DisableCache), nil
 }
 
-func newSingleClientWithConn(conn conn, builder Builder, retry bool) *singleClient {
-	return &singleClient{cmd: builder, conn: conn, retry: retry}
+func newSingleClientWithConn(conn conn, builder Builder, retry, disableCache bool) *singleClient {
+	return &singleClient{cmd: builder, conn: conn, retry: retry, DisableCache: disableCache}
 }
 
 func (c *singleClient) B() Builder {
