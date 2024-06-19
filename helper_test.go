@@ -18,6 +18,17 @@ func TestMGetCache(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
+		disableCacheClient, err := newSingleClient(&ClientOption{InitAddress: []string{""}, DisableCache: true}, m, func(dst string, opt *ClientOption) conn {
+			return m
+		})
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		t.Run("DisableCache", func(t *testing.T) {
+			if v, err := MGetCache(disableCacheClient, context.Background(), 100, []string{"1", "2"}); err != nil || v == nil {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		})
 		t.Run("Delegate DoCache", func(t *testing.T) {
 			m.DoMultiCacheFn = func(multi ...CacheableTTL) *redisresults {
 				if reflect.DeepEqual(multi[0].Cmd.Commands(), []string{"GET", "1"}) && multi[0].TTL == 100 &&

@@ -1053,10 +1053,7 @@ func (c *clusterClient) Dedicate() (DedicatedClient, func()) {
 func (c *clusterClient) Nodes() map[string]Client {
 	c.mu.RLock()
 	nodes := make(map[string]Client, len(c.conns))
-	disableCache := false
-	if (c.opt != nil && c.opt.DisableCache) || (c.rOpt != nil && c.rOpt.DisableCache) {
-		disableCache = true
-	}
+	disableCache := c.opt != nil && c.opt.DisableCache
 	for addr, cc := range c.conns {
 		nodes[addr] = newSingleClientWithConn(cc.conn, c.cmd, c.retry, disableCache)
 	}
