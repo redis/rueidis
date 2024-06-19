@@ -340,12 +340,15 @@ func (p *pipe) _background() {
 	}()
 	{
 		p._exit(p._backgroundRead())
-		atomic.CompareAndSwapInt32(&p.state, 2, 3) // make write goroutine to exit
-		atomic.AddInt32(&p.waits, 1)
-		go func() {
-			<-p.queue.PutOne(cmds.PingCmd) // avoid _backgroundWrite hanging at p.queue.WaitForWrite()
-			atomic.AddInt32(&p.waits, -1)
-		}()
+		select {
+		case <-p.close:
+		default:
+			atomic.AddInt32(&p.waits, 1)
+			go func() {
+				<-p.queue.PutOne(cmds.PingCmd) // avoid _backgroundWrite hanging at p.queue.WaitForWrite()
+				atomic.AddInt32(&p.waits, -1)
+			}()
+		}
 	}
 	err := p.Error()
 	p.nsubs.Close()
