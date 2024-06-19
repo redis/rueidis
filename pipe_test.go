@@ -3433,6 +3433,16 @@ func TestCloseAndWaitPendingCMDs(t *testing.T) {
 	wg.Wait()
 }
 
+func TestCloseWithGracefulPeriodExceeded(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	p, mock, _, _ := setup(t, ClientOption{})
+	go func() {
+		p.Close()
+	}()
+	mock.Expect("PING")
+	<-p.close
+}
+
 func TestAlreadyCanceledContext(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	p, _, close, closeConn := setup(t, ClientOption{})
