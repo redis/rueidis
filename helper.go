@@ -60,14 +60,11 @@ func MGetCache(client Client, ctx context.Context, ttl time.Duration, keys []str
 func isCacheDisabled(client Client) bool {
 	switch c := client.(type) {
 	case *singleClient:
-		if c.DisableCache {
-			return true
-		}
-		return false
+		return c.DisableCache
 	case *sentinelClient:
-		return (c.mOpt != nil && c.mOpt.DisableCache) || (c.sOpt != nil && c.sOpt.DisableCache)
+		return (c.mOpt != nil && c.mOpt.DisableCache)
 	case *clusterClient:
-		return (c.opt != nil && c.opt.DisableCache) || (c.rOpt != nil && c.rOpt.DisableCache)
+		return (c.opt != nil && c.opt.DisableCache)
 	}
 	return false
 }
