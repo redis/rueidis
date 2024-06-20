@@ -202,6 +202,7 @@ func TestNewSingleClientReplicaOnlyNotSupported(t *testing.T) {
 }
 
 func TestNewSingleClientError(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	v := errors.New("dail err")
 	if _, err := newSingleClient(&ClientOption{InitAddress: []string{""}}, nil, func(dst string, opt *ClientOption) conn {
 		return &mockConn{DialFn: func() error { return v }}
@@ -211,6 +212,7 @@ func TestNewSingleClientError(t *testing.T) {
 }
 
 func TestNewSingleClientOverride(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	m1 := &mockConn{}
 	var m2 conn
 	if _, err := newSingleClient(&ClientOption{InitAddress: []string{""}}, m1, func(dst string, opt *ClientOption) conn {
@@ -225,6 +227,7 @@ func TestNewSingleClientOverride(t *testing.T) {
 
 //gocyclo:ignore
 func TestSingleClient(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	m := &mockConn{
 		AddrFn: func() string { return "myaddr" },
 	}
@@ -587,6 +590,7 @@ func TestSingleClient(t *testing.T) {
 }
 
 func TestSingleClientRetry(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	SetupClientRetry(t, func(m *mockConn) Client {
 		c, err := newSingleClient(&ClientOption{InitAddress: []string{""}}, m, func(dst string, opt *ClientOption) conn {
 			return m

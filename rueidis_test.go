@@ -316,6 +316,7 @@ func TestTLSClient(t *testing.T) {
 }
 
 func TestNewClientMaxMultiplex(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	_, err := NewClient(ClientOption{
 		InitAddress:       []string{"127.0.0.1:6379"},
 		PipelineMultiplex: MaxPipelineMultiplex + 1,

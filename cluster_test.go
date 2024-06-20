@@ -4333,6 +4333,7 @@ func TestClusterShardsParsing(t *testing.T) {
 
 // https://github.com/redis/rueidis/issues/543
 func TestConnectToNonAvailableCluster(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	var wg sync.WaitGroup
 	for i := 0; i < 4; i++ {
 		wg.Add(1)
