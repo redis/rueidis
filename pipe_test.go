@@ -3443,6 +3443,16 @@ func TestCloseWithGracefulPeriodExceeded(t *testing.T) {
 	<-p.close
 }
 
+func TestCloseWithPipeliningAndGracefulPeriodExceeded(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	p, mock, _, _ := setup(t, ClientOption{AlwaysPipelining: true})
+	go func() {
+		p.Close()
+	}()
+	mock.Expect("PING")
+	<-p.close
+}
+
 func TestAlreadyCanceledContext(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	p, _, close, closeConn := setup(t, ClientOption{})
