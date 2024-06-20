@@ -62,9 +62,9 @@ func isCacheDisabled(client Client) bool {
 	case *singleClient:
 		return c.DisableCache
 	case *sentinelClient:
-		return (c.mOpt != nil && c.mOpt.DisableCache)
+		return c.mOpt != nil && c.mOpt.DisableCache
 	case *clusterClient:
-		return (c.opt != nil && c.opt.DisableCache)
+		return c.opt != nil && c.opt.DisableCache
 	}
 	return false
 }

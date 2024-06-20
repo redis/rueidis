@@ -18,6 +18,23 @@ func TestMGetCache(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
+		disabledCacheClient, err := newSingleClient(&ClientOption{InitAddress: []string{""}, DisableCache: true}, m, func(dst string, opt *ClientOption) conn {
+			return m
+		})
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		t.Run("Delegate DisabledCache MGetCache", func(t *testing.T) {
+			m.DoFn = func(cmd Completed) RedisResult {
+				if !reflect.DeepEqual(cmd.Commands(), []string{"MGET", "1", "2"}) {
+					t.Fatalf("unexpected command %v", cmd)
+				}
+				return newResult(RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "1"}, {typ: '+', string: "2"}}}, nil)
+			}
+			if v, err := MGetCache(disabledCacheClient, context.Background(), 100, []string{"1", "2"}); err != nil || v == nil {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		})
 		t.Run("Delegate DoCache", func(t *testing.T) {
 			m.DoMultiCacheFn = func(multi ...CacheableTTL) *redisresults {
 				if reflect.DeepEqual(multi[0].Cmd.Commands(), []string{"GET", "1"}) && multi[0].TTL == 100 &&
