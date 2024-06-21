@@ -38,6 +38,24 @@ func TestIsRedisNil(t *testing.T) {
 	}
 }
 
+func TestIsParseErr(t *testing.T) {
+	err := errParse
+	if !IsParseErr(err) {
+		t.Fatal("IsParseErr fail")
+	}
+	if IsParseErr(errors.New("other")) {
+		t.Fatal("IsParseErr fail")
+	}
+	if err.Error() != "rueidis: parse error" {
+		t.Fatal("IsRedisNil fail")
+	}
+	wrappedErr := wrapped{msg: "wrapped", err: errParse}
+	wrappedNonParseErr := wrapped{msg: "wrapped", err: errors.New("other")}
+	if !IsParseErr(wrappedErr) || IsParseErr(wrappedNonParseErr) {
+		t.Fatal("IsParseErr fail : wrapped error")
+	}
+}
+
 func TestIsRedisErr(t *testing.T) {
 	err := Nil
 	if ret, ok := IsRedisErr(err); ok || ret != Nil {
@@ -1855,6 +1873,9 @@ func TestRedisMessage(t *testing.T) {
 		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{string: "0", typ: '+'}, {typ: '_'}}}}).AsScanEntry(); !reflect.DeepEqual(ScanEntry{}, ret) {
 			t.Fatal("AsScanEntry not get value as expected")
 		}
+		if _, err := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{string: "0", typ: '+'}}}}).AsScanEntry(); err == nil || !strings.Contains(err.Error(), "a scan response or its length is not at least 2") {
+			t.Fatal("AsScanEntry not get value as expected")
+		}
 	})
 
 	t.Run("ToMap with non-string key", func(t *testing.T) {
@@ -1863,6 +1884,13 @@ func TestRedisMessage(t *testing.T) {
 			t.Fatal("ToMap did not fail as expected")
 		}
 		if !strings.Contains(err.Error(), "redis message type set is not a RESP3 map") {
+			t.Fatalf("ToMap failed with unexpected error: %v", err)
+		}
+		_, err = (&RedisMessage{typ: '%', values: []RedisMessage{{typ: ':'}, {typ: ':'}}}).ToMap()
+		if err == nil {
+			t.Fatal("ToMap did not fail as expected")
+		}
+		if !strings.Contains(err.Error(), "int64 as map key is not supported") {
 			t.Fatalf("ToMap failed with unexpected error: %v", err)
 		}
 	})

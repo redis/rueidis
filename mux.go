@@ -2,7 +2,6 @@ package rueidis
 
 import (
 	"context"
-	"math/rand"
 	"net"
 	"runtime"
 	"sync"
@@ -394,24 +393,11 @@ func isBroken(err error, w wire) bool {
 	return err != nil && err != ErrClosing && w.Error() != nil
 }
 
-var rngPool = sync.Pool{
-	New: func() any {
-		return rand.New(rand.NewSource(time.Now().UnixNano()))
-	},
-}
-
-func fastrand(n int) (r int) {
-	s := rngPool.Get().(*rand.Rand)
-	r = s.Intn(n)
-	rngPool.Put(s)
-	return
-}
-
 func slotfn(n int, ks uint16, noreply bool) uint16 {
 	if n == 1 || ks == cmds.NoSlot || noreply {
 		return 0
 	}
-	return uint16(fastrand(n))
+	return uint16(util.FastRand(n))
 }
 
 type muxslots struct {

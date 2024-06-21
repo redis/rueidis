@@ -2,6 +2,7 @@ package om
 
 import (
 	"context"
+	"github.com/oklog/ulid/v2"
 	"reflect"
 	"strconv"
 	"time"
@@ -42,7 +43,7 @@ type HashRepository[T any] struct {
 // NewEntity returns an empty entity and will have the `redis:",key"` field be set with ULID automatically.
 func (r *HashRepository[T]) NewEntity() (entity *T) {
 	var v T
-	reflect.ValueOf(&v).Elem().Field(r.schema.key.idx).Set(reflect.ValueOf(id()))
+	reflect.ValueOf(&v).Elem().Field(r.schema.key.idx).Set(reflect.ValueOf(ulid.Make().String()))
 	return &v
 }
 

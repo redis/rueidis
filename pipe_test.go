@@ -1302,6 +1302,7 @@ func TestClientSideCachingWithNonRedisError(t *testing.T) {
 }
 
 func TestClientSideCachingMGet(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, cancel, _ := setup(t, ClientOption{})
 	defer cancel()
 
@@ -1435,6 +1436,7 @@ func TestClientSideCachingMGet(t *testing.T) {
 }
 
 func TestClientSideCachingJSONMGet(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, cancel, _ := setup(t, ClientOption{})
 	defer cancel()
 
@@ -1568,6 +1570,7 @@ func TestClientSideCachingJSONMGet(t *testing.T) {
 }
 
 func TestClientSideCachingExecAbortMGet(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, cancel, _ := setup(t, ClientOption{})
 	defer cancel()
 
@@ -1602,6 +1605,7 @@ func TestClientSideCachingExecAbortMGet(t *testing.T) {
 }
 
 func TestClientSideCachingWithNonRedisErrorMGet(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, _, _, closeConn := setup(t, ClientOption{})
 	closeConn()
 
@@ -1621,6 +1625,7 @@ func TestClientSideCachingWithNonRedisErrorMGet(t *testing.T) {
 }
 
 func TestClientSideCachingWithSideChannelMGet(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, _, _, closeConn := setup(t, ClientOption{})
 	closeConn()
 
@@ -1639,6 +1644,7 @@ func TestClientSideCachingWithSideChannelMGet(t *testing.T) {
 }
 
 func TestClientSideCachingWithSideChannelErrorMGet(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, _, _, closeConn := setup(t, ClientOption{})
 	closeConn()
 
@@ -1655,6 +1661,7 @@ func TestClientSideCachingWithSideChannelErrorMGet(t *testing.T) {
 }
 
 func TestClientSideCachingDoMultiCacheMGet(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, _, cancel, _ := setup(t, ClientOption{})
 	defer cancel()
 
@@ -1669,6 +1676,7 @@ func TestClientSideCachingDoMultiCacheMGet(t *testing.T) {
 }
 
 func TestClientSideCachingDoMultiCache(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	testfn := func(t *testing.T, option ClientOption) {
 		p, mock, cancel, _ := setup(t, option)
 		defer cancel()
@@ -1847,6 +1855,7 @@ func TestClientSideCachingDoMultiCache(t *testing.T) {
 }
 
 func TestClientSideCachingExecAbortDoMultiCache(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	testfn := func(t *testing.T, option ClientOption) {
 		p, mock, cancel, _ := setup(t, option)
 		defer cancel()
@@ -1919,6 +1928,7 @@ func TestClientSideCachingExecAbortDoMultiCache(t *testing.T) {
 }
 
 func TestClientSideCachingWithNonRedisErrorDoMultiCache(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	testfn := func(t *testing.T, option ClientOption) {
 		p, _, _, closeConn := setup(t, option)
 		closeConn()
@@ -1956,6 +1966,7 @@ func TestClientSideCachingWithNonRedisErrorDoMultiCache(t *testing.T) {
 }
 
 func TestClientSideCachingWithSideChannelDoMultiCache(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	testfn := func(t *testing.T, option ClientOption) {
 		p, _, _, closeConn := setup(t, option)
 		closeConn()
@@ -1988,6 +1999,7 @@ func TestClientSideCachingWithSideChannelDoMultiCache(t *testing.T) {
 }
 
 func TestClientSideCachingWithSideChannelErrorDoMultiCache(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	testfn := func(t *testing.T, option ClientOption) {
 		p, _, _, closeConn := setup(t, option)
 		closeConn()
@@ -2017,6 +2029,7 @@ func TestClientSideCachingWithSideChannelErrorDoMultiCache(t *testing.T) {
 }
 
 func TestClientSideCachingMissCacheTTL(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	testfn := func(t *testing.T, option ClientOption) {
 		t.Run("DoCache GET", func(t *testing.T) {
 			p, mock, cancel, _ := setup(t, option)
@@ -2167,6 +2180,7 @@ func TestClientSideCachingMissCacheTTL(t *testing.T) {
 
 // https://github.com/redis/redis/issues/8935
 func TestClientSideCachingRedis6InvalidationBug1(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, cancel, _ := setup(t, ClientOption{})
 	defer cancel()
 
@@ -2228,6 +2242,7 @@ func TestClientSideCachingRedis6InvalidationBug1(t *testing.T) {
 
 // https://github.com/redis/redis/issues/8935
 func TestClientSideCachingRedis6InvalidationBug2(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, cancel, _ := setup(t, ClientOption{})
 	defer cancel()
 
@@ -2289,6 +2304,7 @@ func TestClientSideCachingRedis6InvalidationBug2(t *testing.T) {
 
 // https://github.com/redis/redis/issues/8935
 func TestClientSideCachingRedis6InvalidationBugErr(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, _, closeConn := setup(t, ClientOption{})
 
 	expectCSC := func() {
@@ -2325,6 +2341,7 @@ func TestClientSideCachingRedis6InvalidationBugErr(t *testing.T) {
 }
 
 func TestDisableClientSideCaching(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, cancel, _ := setup(t, ClientOption{DisableCache: true})
 	defer cancel()
 	p.background()
@@ -2361,6 +2378,7 @@ func TestDisableClientSideCaching(t *testing.T) {
 }
 
 func TestOnInvalidations(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	ch := make(chan []RedisMessage)
 	_, mock, cancel, _ := setup(t, ClientOption{
 		OnInvalidations: func(messages []RedisMessage) {
@@ -2404,6 +2422,7 @@ func TestOnInvalidations(t *testing.T) {
 }
 
 func TestMultiHalfErr(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, _, closeConn := setup(t, ClientOption{})
 
 	expectCSC := func() {
@@ -2429,6 +2448,7 @@ func TestMultiHalfErr(t *testing.T) {
 
 //gocyclo:ignore
 func TestPubSub(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	builder := cmds.NewBuilder(cmds.NoSlot)
 	t.Run("NoReply Commands In Do", func(t *testing.T) {
 		p, mock, cancel, _ := setup(t, ClientOption{})
@@ -3002,6 +3022,7 @@ func TestPubSub(t *testing.T) {
 
 //gocyclo:ignore
 func TestPubSubHooks(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	builder := cmds.NewBuilder(cmds.NoSlot)
 
 	t.Run("Empty Hooks", func(t *testing.T) {
@@ -3221,6 +3242,7 @@ func TestPubSubHooks(t *testing.T) {
 }
 
 func TestExitOnWriteError(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, _, _, closeConn := setup(t, ClientOption{})
 
 	closeConn()
@@ -3233,6 +3255,7 @@ func TestExitOnWriteError(t *testing.T) {
 }
 
 func TestExitOnPubSubSubscribeWriteError(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, _, _, closeConn := setup(t, ClientOption{})
 
 	activate := cmds.NewBuilder(cmds.NoSlot).Subscribe().Channel("a").Build()
@@ -3258,6 +3281,7 @@ func TestExitOnPubSubSubscribeWriteError(t *testing.T) {
 }
 
 func TestExitOnWriteMultiError(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, _, _, closeConn := setup(t, ClientOption{})
 
 	closeConn()
@@ -3270,6 +3294,7 @@ func TestExitOnWriteMultiError(t *testing.T) {
 }
 
 func TestExitOnRingFullAndConnError(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, _, closeConn := setup(t, ClientOption{
 		RingScaleEachConn: 1,
 	})
@@ -3297,6 +3322,7 @@ func TestExitOnRingFullAndConnError(t *testing.T) {
 }
 
 func TestExitOnRingFullAndPingTimout(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, _, _ := setup(t, ClientOption{
 		RingScaleEachConn: 1,
 		ConnWriteTimeout:  500 * time.Millisecond,
@@ -3323,6 +3349,7 @@ func TestExitOnRingFullAndPingTimout(t *testing.T) {
 }
 
 func TestExitAllGoroutineOnWriteError(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	conn, mock, _, closeConn := setup(t, ClientOption{})
 
 	// start the background worker
@@ -3349,6 +3376,7 @@ func TestExitAllGoroutineOnWriteError(t *testing.T) {
 }
 
 func TestExitOnReadError(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, _, closeConn := setup(t, ClientOption{})
 
 	go func() {
@@ -3364,6 +3392,7 @@ func TestExitOnReadError(t *testing.T) {
 }
 
 func TestExitOnReadMultiError(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, _, closeConn := setup(t, ClientOption{})
 
 	go func() {
@@ -3379,6 +3408,7 @@ func TestExitOnReadMultiError(t *testing.T) {
 }
 
 func TestExitAllGoroutineOnReadError(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, _, closeConn := setup(t, ClientOption{})
 
 	go func() {
@@ -3404,6 +3434,7 @@ func TestExitAllGoroutineOnReadError(t *testing.T) {
 }
 
 func TestCloseAndWaitPendingCMDs(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, _, _ := setup(t, ClientOption{})
 
 	var (
@@ -3431,6 +3462,26 @@ func TestCloseAndWaitPendingCMDs(t *testing.T) {
 	mock.Expect("PING").ReplyString("OK")
 	mock.Close()
 	wg.Wait()
+}
+
+func TestCloseWithGracefulPeriodExceeded(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	p, mock, _, _ := setup(t, ClientOption{})
+	go func() {
+		p.Close()
+	}()
+	mock.Expect("PING")
+	<-p.close
+}
+
+func TestCloseWithPipeliningAndGracefulPeriodExceeded(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	p, mock, _, _ := setup(t, ClientOption{AlwaysPipelining: true})
+	go func() {
+		p.Close()
+	}()
+	mock.Expect("PING")
+	<-p.close
 }
 
 func TestAlreadyCanceledContext(t *testing.T) {
@@ -3469,6 +3520,7 @@ func TestAlreadyCanceledContext(t *testing.T) {
 }
 
 func TestCancelContext_Do(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, shutdown, _ := setup(t, ClientOption{})
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -3524,6 +3576,7 @@ func TestWriteDeadlineIsShorterThanContextDeadline_DoStream(t *testing.T) {
 }
 
 func TestCancelContext_Do_Block(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, shutdown, _ := setup(t, ClientOption{})
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -3541,6 +3594,7 @@ func TestCancelContext_Do_Block(t *testing.T) {
 }
 
 func TestCancelContext_DoMulti(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, shutdown, _ := setup(t, ClientOption{})
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -3558,6 +3612,7 @@ func TestCancelContext_DoMulti(t *testing.T) {
 }
 
 func TestCancelContext_DoMulti_Block(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, shutdown, _ := setup(t, ClientOption{})
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -3613,6 +3668,7 @@ func TestWriteDeadlineIsShorterThanContextDeadline_DoMultiStream(t *testing.T) {
 }
 
 func TestForceClose_Do_Block(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, _, _ := setup(t, ClientOption{})
 
 	go func() {
@@ -3671,6 +3727,7 @@ func TestForceClose_DoStream_Block(t *testing.T) {
 }
 
 func TestForceClose_Do_Canceled_Block(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, _, _ := setup(t, ClientOption{})
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -3688,6 +3745,7 @@ func TestForceClose_Do_Canceled_Block(t *testing.T) {
 }
 
 func TestForceClose_DoMulti_Block(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, _, _ := setup(t, ClientOption{})
 
 	go func() {
@@ -3746,6 +3804,7 @@ func TestForceClose_DoMultiStream_Block(t *testing.T) {
 }
 
 func TestForceClose_DoMulti_Canceled_Block(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, _, _ := setup(t, ClientOption{})
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -3763,6 +3822,7 @@ func TestForceClose_DoMulti_Canceled_Block(t *testing.T) {
 }
 
 func TestSyncModeSwitchingWithDeadlineExceed_Do(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, _, closeConn := setup(t, ClientOption{})
 	defer closeConn()
 
@@ -3788,6 +3848,7 @@ func TestSyncModeSwitchingWithDeadlineExceed_Do(t *testing.T) {
 }
 
 func TestSyncModeSwitchingWithDeadlineExceed_DoMulti(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, _, closeConn := setup(t, ClientOption{})
 	defer closeConn()
 
@@ -3813,6 +3874,7 @@ func TestSyncModeSwitchingWithDeadlineExceed_DoMulti(t *testing.T) {
 }
 
 func TestOngoingDeadlineContextInSyncMode_Do(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, _, _, closeConn := setup(t, ClientOption{})
 	defer closeConn()
 
@@ -3826,6 +3888,7 @@ func TestOngoingDeadlineContextInSyncMode_Do(t *testing.T) {
 }
 
 func TestWriteDeadlineInSyncMode_Do(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, _, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: 1 * time.Second / 2, Dialer: net.Dialer{KeepAlive: time.Second / 3}})
 	defer closeConn()
 
@@ -3836,6 +3899,7 @@ func TestWriteDeadlineInSyncMode_Do(t *testing.T) {
 }
 
 func TestWriteDeadlineIsShorterThanContextDeadlineInSyncMode_Do(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, _, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: 100 * time.Millisecond, Dialer: net.Dialer{KeepAlive: time.Second}})
 	defer closeConn()
 
@@ -3855,6 +3919,7 @@ func TestWriteDeadlineIsShorterThanContextDeadlineInSyncMode_Do(t *testing.T) {
 }
 
 func TestOngoingDeadlineContextInSyncMode_DoMulti(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, _, _, closeConn := setup(t, ClientOption{})
 	defer closeConn()
 
@@ -3868,6 +3933,7 @@ func TestOngoingDeadlineContextInSyncMode_DoMulti(t *testing.T) {
 }
 
 func TestWriteDeadlineInSyncMode_DoMulti(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, _, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: time.Second / 2, Dialer: net.Dialer{KeepAlive: time.Second / 3}})
 	defer closeConn()
 
@@ -3878,6 +3944,7 @@ func TestWriteDeadlineInSyncMode_DoMulti(t *testing.T) {
 }
 
 func TestWriteDeadlineIsShorterThanContextDeadlineInSyncMode_DoMulti(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, _, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: 100 * time.Millisecond, Dialer: net.Dialer{KeepAlive: time.Second}})
 	defer closeConn()
 
@@ -3897,6 +3964,7 @@ func TestWriteDeadlineIsShorterThanContextDeadlineInSyncMode_DoMulti(t *testing.
 }
 
 func TestOngoingCancelContextInPipelineMode_Do(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, close, closeConn := setup(t, ClientOption{})
 	defer closeConn()
 
@@ -3937,6 +4005,7 @@ func TestOngoingCancelContextInPipelineMode_Do(t *testing.T) {
 }
 
 func TestOngoingWriteTimeoutInPipelineMode_Do(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, _, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: time.Second / 2, Dialer: net.Dialer{KeepAlive: time.Second / 3}})
 	defer closeConn()
 
@@ -3969,6 +4038,7 @@ func TestOngoingWriteTimeoutInPipelineMode_Do(t *testing.T) {
 }
 
 func TestOngoingCancelContextInPipelineMode_DoMulti(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, close, closeConn := setup(t, ClientOption{})
 	defer closeConn()
 
@@ -4009,6 +4079,7 @@ func TestOngoingCancelContextInPipelineMode_DoMulti(t *testing.T) {
 }
 
 func TestOngoingWriteTimeoutInPipelineMode_DoMulti(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, _, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: time.Second / 2, Dialer: net.Dialer{KeepAlive: time.Second / 3}})
 	defer closeConn()
 
@@ -4041,6 +4112,7 @@ func TestOngoingWriteTimeoutInPipelineMode_DoMulti(t *testing.T) {
 }
 
 func TestPipe_CleanSubscriptions_6(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, cancel, _ := setup(t, ClientOption{ConnWriteTimeout: time.Second / 2, Dialer: net.Dialer{KeepAlive: time.Second / 3}})
 	defer cancel()
 	p.background()
@@ -4061,6 +4133,7 @@ func TestPipe_CleanSubscriptions_6(t *testing.T) {
 }
 
 func TestPipe_CleanSubscriptions_7(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, cancel, _ := setup(t, ClientOption{ConnWriteTimeout: time.Second / 2, Dialer: net.Dialer{KeepAlive: time.Second / 3}})
 	p.version = 7
 	defer cancel()
@@ -4087,6 +4160,7 @@ func TestPipe_CleanSubscriptions_7(t *testing.T) {
 }
 
 func TestPingOnConnError(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	t.Run("sync", func(t *testing.T) {
 		p, mock, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: 3 * time.Second, Dialer: net.Dialer{KeepAlive: time.Second / 3}})
 		mock.Expect("PING")
@@ -4112,6 +4186,7 @@ func TestPingOnConnError(t *testing.T) {
 
 //gocyclo:ignore
 func TestBlockingCommandNoDeadline(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	// blocking command should not apply timeout
 	timeout := 100 * time.Millisecond
 	t.Run("sync do", func(t *testing.T) {
@@ -4203,6 +4278,7 @@ func TestBlockingCommandNoDeadline(t *testing.T) {
 }
 
 func TestDeadPipe(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	ctx := context.Background()
 	if err := deadFn().Error(); err != ErrClosing {
 		t.Fatalf("unexpected err %v", err)
@@ -4225,6 +4301,7 @@ func TestDeadPipe(t *testing.T) {
 }
 
 func TestErrorPipe(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	ctx := context.Background()
 	target := errors.New("any")
 	if err := epipeFn(target).Error(); err != target {
@@ -4248,6 +4325,7 @@ func TestErrorPipe(t *testing.T) {
 }
 
 func TestCloseHook(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	t.Run("normal close", func(t *testing.T) {
 		var flag int32
 		p, _, cancel, _ := setup(t, ClientOption{})
@@ -4275,6 +4353,7 @@ func TestCloseHook(t *testing.T) {
 }
 
 func TestNoHelloRegex(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
 	tests := []struct {
 		name  string
 		match bool
