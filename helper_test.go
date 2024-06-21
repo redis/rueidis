@@ -125,35 +125,6 @@ func TestMGetCache(t *testing.T) {
 			}
 		})
 	})
-	// TODO: @SoulPancake I have some doubts about this @rueian
-	//t.Run("sentinel client", func(t *testing.T) {
-	//	m := &mockConn{
-	//		DoFn: func(cmd Completed) RedisResult {
-	//			return slotsResp
-	//		},
-	//	}
-	//	sentinelClient, err := newSentinelClient(&ClientOption{
-	//		InitAddress:  []string{":0"},
-	//		Sentinel:     SentinelOption{MasterSet: "masters"},
-	//		DisableCache: true,
-	//	}, func(dst string, opt *ClientOption) conn {
-	//		return m
-	//	})
-	//	if err != nil {
-	//		t.Fatalf("unexpected err %v", err)
-	//	}
-	//	t.Run("Delegate DisabledCache MGetCache", func(t *testing.T) {
-	//		m.DoFn = func(cmd Completed) RedisResult {
-	//			if !reflect.DeepEqual(cmd.Commands(), []string{"MGET", "1", "2"}) {
-	//				t.Fatalf("unexpected command %v", cmd)
-	//			}
-	//			return newResult(RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "1"}, {typ: '+', string: "2"}}}, nil)
-	//		}
-	//		if v, err := MGetCache(sentinelClient, context.Background(), 100, []string{"1", "2"}); err != nil || v == nil {
-	//			t.Fatalf("unexpected response %v %v", v, err)
-	//		}
-	//	})
-	//})
 }
 
 //gocyclo:ignore
