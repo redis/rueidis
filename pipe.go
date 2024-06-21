@@ -240,8 +240,8 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps, nobg 
 					if !r2 && noHello.MatchString(re.string) {
 						r2 = true
 						continue
-					} else if strings.Contains(re.string, "CLIENT") {
-						err = fmt.Errorf("%s: %w", re.string, ErrNoCache)
+					} else if init[i][0] == "CLIENT" {
+						err = fmt.Errorf("%s: %v\n%w", re.string, init[i], ErrNoCache)
 					} else if r2 {
 						continue
 					}
