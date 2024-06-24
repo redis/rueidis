@@ -72,6 +72,9 @@ func TestMGetCache(t *testing.T) {
 			DoFn: func(cmd Completed) RedisResult {
 				return slotsResp
 			},
+			DoMultiFn: func(cmd ...Completed) *redisresults {
+				return &redisresults{s: []RedisResult{newErrResult(context.Canceled), newErrResult(context.Canceled)}}
+			},
 		}
 		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
 			return m
@@ -79,6 +82,39 @@ func TestMGetCache(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
+		disabledCacheClient, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}, DisableCache: true}, func(dst string, opt *ClientOption) conn {
+			return m
+		})
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		t.Run("Delegate DisabledCache DoCache", func(t *testing.T) {
+			keys := make([]string, 100)
+			for i := range keys {
+				keys[i] = strconv.Itoa(i)
+			}
+			m.DoMultiCacheFn = func(multi ...CacheableTTL) *redisresults {
+				result := make([]RedisResult, len(multi))
+				for i, key := range keys {
+					if !reflect.DeepEqual(multi[i].Cmd.Commands(), []string{"GET", key}) || multi[i].TTL != 100 {
+						t.Fatalf("unexpected command %v", multi)
+						return nil
+					}
+					result[i] = newResult(RedisMessage{typ: '+', string: key}, nil)
+				}
+				return &redisresults{s: result}
+			}
+			v, err := MGetCache(disabledCacheClient, context.Background(), 100, keys)
+			if err != nil {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+			for _, key := range keys {
+				if v[key].string != key {
+					t.Fatalf("unexpected response %v", v)
+				}
+			}
+		})
+
 		t.Run("Delegate DoCache", func(t *testing.T) {
 			keys := make([]string, 100)
 			for i := range keys {
