@@ -4119,7 +4119,7 @@ func TestPipe_CleanSubscriptions_6(t *testing.T) {
 	go func() {
 		p.CleanSubscriptions()
 	}()
-	mock.Expect("UNSUBSCRIBE").Expect("PUNSUBSCRIBE").Reply(
+	mock.Expect("UNSUBSCRIBE").Expect("PUNSUBSCRIBE").Expect("DISCARD").Reply(
 		RedisMessage{typ: '>', values: []RedisMessage{
 			{typ: '+', string: "unsubscribe"},
 			{typ: '_'},
@@ -4129,6 +4129,11 @@ func TestPipe_CleanSubscriptions_6(t *testing.T) {
 			{typ: '+', string: "punsubscribe"},
 			{typ: '_'},
 			{typ: ':', integer: 2},
+		}},
+		RedisMessage{typ: '>', values: []RedisMessage{
+			{typ: '+', string: "discard"},
+			{typ: '_'},
+			{typ: ':', integer: 3},
 		}})
 }
 
@@ -4141,7 +4146,7 @@ func TestPipe_CleanSubscriptions_7(t *testing.T) {
 	go func() {
 		p.CleanSubscriptions()
 	}()
-	mock.Expect("UNSUBSCRIBE").Expect("PUNSUBSCRIBE").Expect("SUNSUBSCRIBE").Reply(
+	mock.Expect("UNSUBSCRIBE").Expect("PUNSUBSCRIBE").Expect("SUNSUBSCRIBE").Expect("DISCARD").Reply(
 		RedisMessage{typ: '>', values: []RedisMessage{
 			{typ: '+', string: "unsubscribe"},
 			{typ: '_'},
@@ -4155,7 +4160,12 @@ func TestPipe_CleanSubscriptions_7(t *testing.T) {
 		RedisMessage{typ: '>', values: []RedisMessage{
 			{typ: '+', string: "sunsubscribe"},
 			{typ: '_'},
-			{typ: ':', integer: 2},
+			{typ: ':', integer: 3},
+		}},
+		RedisMessage{typ: '>', values: []RedisMessage{
+			{typ: '+', string: "discard"},
+			{typ: '_'},
+			{typ: ':', integer: 4},
 		}})
 }
 
