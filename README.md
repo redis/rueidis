@@ -435,7 +435,17 @@ n, resp, err := client.Do(ctx, cmd).AsFtSearch()
 ## Command Response Cheatsheet
 
 While the command builder is developer-friendly, the response parser is a little unfriendly. Developers must know what
-type of Redis response will be returned from the server beforehand and which parser they should use. Otherwise, it panics. 
+type of Redis response will be returned from the server beforehand and which parser they should use.
+
+Error Handling:
+If an incorrect parser function is chosen, an errParse will be returned. You can use the IsParseErr helper to check for this case.
+
+```golang
+// Attempt to parse the response. If a parsing error occurs, check if the error is a parse error and handle it.
+if err := client.Do(ctx, client.B().Get().Key("k").Build()).AsInt64(); IsParseErr(err) {
+    fmt.Println("Parsing error:", err)
+}
+```
 
 It is hard to remember what type of message will be returned and which parsing to use. So, here are some common examples:
 
