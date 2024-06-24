@@ -76,6 +76,12 @@ var (
 		cs: newCommandSlice([]string{"UNSUBSCRIBE", "+sentinel", "+slave", "-sdown", "+sdown", "+switch-master", "+reboot"}),
 		cf: noRetTag,
 	}
+
+	// DiscardCmd is predefined DISCARD
+	DiscardCmd = Completed{
+		cs: newCommandSlice([]string{"DISCARD"}),
+		cf: noRetTag,
+	}
 )
 
 // ToBlock marks the command with blockTag
