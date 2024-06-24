@@ -93,11 +93,11 @@ func TestMGetCache(t *testing.T) {
 			for i := range keys {
 				keys[i] = strconv.Itoa(i)
 			}
-			m.DoMultiCacheFn = func(multi ...CacheableTTL) *redisresults {
-				result := make([]RedisResult, len(multi))
+			m.DoMultiFn = func(cmd ...Completed) *redisresults {
+				result := make([]RedisResult, len(cmd))
 				for i, key := range keys {
-					if !reflect.DeepEqual(multi[i].Cmd.Commands(), []string{"GET", key}) || multi[i].TTL != 100 {
-						t.Fatalf("unexpected command %v", multi)
+					if !reflect.DeepEqual(cmd[i].Commands(), []string{"GET", key}) {
+						t.Fatalf("unexpected command %v", cmd)
 						return nil
 					}
 					result[i] = newResult(RedisMessage{typ: '+', string: key}, nil)
