@@ -72,9 +72,6 @@ func TestMGetCache(t *testing.T) {
 			DoFn: func(cmd Completed) RedisResult {
 				return slotsResp
 			},
-			DoMultiFn: func(cmd ...Completed) *redisresults {
-				return &redisresults{s: []RedisResult{newErrResult(context.Canceled), newErrResult(context.Canceled)}}
-			},
 		}
 		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
 			return m
