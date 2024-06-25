@@ -177,7 +177,8 @@ func (c *sentinelClient) Dedicate() (DedicatedClient, func()) {
 
 func (c *sentinelClient) Nodes() map[string]Client {
 	conn := c.mConn.Load().(conn)
-	return map[string]Client{conn.Addr(): newSingleClientWithConn(conn, c.cmd, c.retry)}
+	disableCache := c.mOpt != nil && c.mOpt.DisableCache
+	return map[string]Client{conn.Addr(): newSingleClientWithConn(conn, c.cmd, c.retry, disableCache)}
 }
 
 func (c *sentinelClient) Close() {

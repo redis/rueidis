@@ -46,12 +46,27 @@ func MGetCache(client Client, ctx context.Context, ttl time.Duration, keys []str
 	if len(keys) == 0 {
 		return make(map[string]RedisMessage), nil
 	}
+	if isCacheDisabled(client) {
+		return MGet(client, ctx, keys)
+	}
 	cmds := mgetcachecmdsp.Get(len(keys), len(keys))
 	defer mgetcachecmdsp.Put(cmds)
 	for i := range cmds.s {
 		cmds.s[i] = CT(client.B().Get().Key(keys[i]).Cache(), ttl)
 	}
 	return doMultiCache(client, ctx, cmds.s, keys)
+}
+
+func isCacheDisabled(client Client) bool {
+	switch c := client.(type) {
+	case *singleClient:
+		return c.DisableCache
+	case *sentinelClient:
+		return c.mOpt != nil && c.mOpt.DisableCache
+	case *clusterClient:
+		return c.opt != nil && c.opt.DisableCache
+	}
+	return false
 }
 
 // MGet is a helper that consults the redis directly with multiple keys by grouping keys within same slot into MGET or multiple GETs

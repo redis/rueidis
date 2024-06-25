@@ -694,6 +694,46 @@ func TestSentinelClientDelegate(t *testing.T) {
 	}
 	defer client.Close()
 
+	disabledCacheClient, err := newSentinelClient(&ClientOption{InitAddress: []string{":0"}, DisableCache: true}, func(dst string, opt *ClientOption) conn {
+		if dst == ":0" {
+			return s0
+		}
+		if dst == ":1" {
+			return m
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+	defer disabledCacheClient.Close()
+
+	t.Run("Delegate MGetCache", func(t *testing.T) {
+		keys := []string{"key1", "key2"}
+		expectedCommand := []string{"MGET", "key1", "key2"}
+
+		m.DoMultiFn = func(cmd ...Completed) *redisresults {
+			if !reflect.DeepEqual(cmd[0].Commands(), expectedCommand) {
+				t.Fatalf("unexpected command %v", cmd)
+			}
+			return &redisresults{s: []RedisResult{
+				newResult(RedisMessage{typ: '+', string: "master"}, nil),
+			}}
+		}
+
+		ret, err := MGetCache(disabledCacheClient, context.Background(), time.Second, keys)
+		if err != nil {
+			t.Fatalf("unexpected error %v", err)
+		}
+
+		expected := map[string]RedisMessage{
+			"key1": {typ: '+', string: "master"},
+		}
+		if !reflect.DeepEqual(ret, expected) {
+			t.Fatalf("unexpected result %v, expected %v", ret, expected)
+		}
+	})
+
 	t.Run("Nodes", func(t *testing.T) {
 		if nodes := client.Nodes(); len(nodes) != 1 || nodes[":1"] == nil {
 			t.Fatalf("unexpected nodes")
