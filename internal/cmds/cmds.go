@@ -80,7 +80,6 @@ var (
 	// DiscardCmd is predefined DISCARD
 	DiscardCmd = Completed{
 		cs: newCommandSlice([]string{"DISCARD"}),
-		cf: noRetTag,
 	}
 )
 
