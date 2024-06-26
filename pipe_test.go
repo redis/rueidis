@@ -4130,11 +4130,8 @@ func TestPipe_CleanSubscriptions_6(t *testing.T) {
 			{typ: '_'},
 			{typ: ':', integer: 2},
 		}},
-		RedisMessage{typ: '>', values: []RedisMessage{
-			{typ: '+', string: "discard"},
-			{typ: '_'},
-			{typ: ':', integer: 3},
-		}})
+		RedisMessage{typ: '+', string: "OK"},
+	)
 }
 
 func TestPipe_CleanSubscriptions_7(t *testing.T) {
@@ -4162,11 +4159,8 @@ func TestPipe_CleanSubscriptions_7(t *testing.T) {
 			{typ: '_'},
 			{typ: ':', integer: 3},
 		}},
-		RedisMessage{typ: '>', values: []RedisMessage{
-			{typ: '+', string: "discard"},
-			{typ: '_'},
-			{typ: ':', integer: 4},
-		}})
+		RedisMessage{typ: '+', string: "OK"},
+	)
 }
 
 func TestPingOnConnError(t *testing.T) {
