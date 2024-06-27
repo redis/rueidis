@@ -18,6 +18,8 @@ require (
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/pprof v0.0.0-20230207041349-798e818bf904 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/redis/rueidis/mock v1.0.40 // indirect
+	go.uber.org/mock v0.3.0 // indirect
 	golang.org/x/net v0.24.0 // indirect
 	golang.org/x/sys v0.19.0 // indirect
 	golang.org/x/text v0.14.0 // indirect

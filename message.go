@@ -1386,8 +1386,3 @@ func (m *prettyRedisMessage) MarshalJSON() ([]byte, error) {
 	}
 	return json.Marshal(obj)
 }
-
-// NewMockResult is a mock method to send back RedisResult with err for test coverage
-func NewMockResult(val RedisMessage, err error) RedisResult {
-	return RedisResult{val: val, err: err}
-}
