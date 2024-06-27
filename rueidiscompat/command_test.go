@@ -29,6 +29,8 @@ package rueidiscompat
 import (
 	"errors"
 	"fmt"
+	"github.com/redis/rueidis"
+	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
 
@@ -881,4 +883,124 @@ func TestFormatMs(t *testing.T) {
 	if result2 := formatMs(dur2); result2 != expected2 {
 		t.Errorf("Test case 2 failed: Expected %d, got %d", expected2, result2)
 	}
+}
+
+func TestInitialErrorInRedisResult(t *testing.T) {
+	t.Run("Initial error in RedisResult", func(t *testing.T) {
+		mockRes := rueidis.NewMockResult(rueidis.RedisMessage{}, errors.New("Initial error"))
+		cmd := newJSONSliceCmd(mockRes)
+		assert.NotNil(t, cmd.Err())
+		assert.EqualError(t, cmd.Err(), "Initial error")
+		cmd2 := newIntPointerSliceCmd(mockRes)
+		assert.NotNil(t, cmd2.Err())
+		assert.EqualError(t, cmd2.Err(), "Initial error")
+		cmd3 := newMapStringSliceInterfaceCmd(mockRes)
+		assert.NotNil(t, cmd3.Err())
+		assert.EqualError(t, cmd3.Err(), "Initial error")
+		cmd4 := newTSTimestampValueSliceCmd(mockRes)
+		assert.NotNil(t, cmd4.Err())
+		assert.EqualError(t, cmd4.Err(), "Initial error")
+		cmd5 := newMapStringInterfaceCmd(mockRes)
+		assert.NotNil(t, cmd5.Err())
+		assert.EqualError(t, cmd5.Err(), "Initial error")
+		cmd6 := newTSTimestampValueCmd(mockRes)
+		assert.NotNil(t, cmd6.Err())
+		assert.EqualError(t, cmd6.Err(), "Initial error")
+
+		cmd7 := newTDigestInfoCmd(mockRes)
+		assert.NotNil(t, cmd7.Err())
+		assert.EqualError(t, cmd7.Err(), "Initial error")
+
+		cmd8 := newMapStringIntCmd(mockRes)
+		assert.NotNil(t, cmd8.Err())
+		assert.EqualError(t, cmd8.Err(), "Initial error")
+
+		cmd9 := newTopKInfoCmd(mockRes)
+		assert.NotNil(t, cmd9.Err())
+		assert.EqualError(t, cmd9.Err(), "Initial error")
+
+		cmd10 := newCMSInfoCmd(mockRes)
+		assert.NotNil(t, cmd10.Err())
+		assert.EqualError(t, cmd10.Err(), "Initial error")
+
+		cmd11 := newCFInfoCmd(mockRes)
+		assert.NotNil(t, cmd11.Err())
+		assert.EqualError(t, cmd11.Err(), "Initial error")
+
+		cmd12 := newScanDumpCmd(mockRes)
+		assert.NotNil(t, cmd12.Err())
+		assert.EqualError(t, cmd12.Err(), "Initial error")
+
+		cmd13 := newBFInfoCmd(mockRes)
+		assert.NotNil(t, cmd13.Err())
+		assert.EqualError(t, cmd13.Err(), "Initial error")
+
+		cmd14 := newMapStringInterfaceSliceCmd(mockRes)
+		assert.NotNil(t, cmd14.Err())
+		assert.EqualError(t, cmd14.Err(), "Initial error")
+
+		cmd15 := newFunctionListCmd(mockRes)
+		assert.NotNil(t, cmd15.Err())
+		assert.EqualError(t, cmd15.Err(), "Initial error")
+
+		cmd16 := newCommandsInfoCmd(mockRes)
+		assert.NotNil(t, cmd16.Err())
+		assert.EqualError(t, cmd16.Err(), "Initial error")
+
+		cmd17 := newGeoPosCmd(mockRes)
+		assert.NotNil(t, cmd17.Err())
+		assert.EqualError(t, cmd17.Err(), "Initial error")
+
+		cmd18 := newClusterShardsCmd(mockRes)
+		assert.NotNil(t, cmd18.Err())
+		assert.EqualError(t, cmd18.Err(), "Initial error")
+
+		cmd19 := newClusterSlotsCmd(mockRes)
+		assert.NotNil(t, cmd19.Err())
+		assert.EqualError(t, cmd19.Err(), "Initial error")
+
+		cmd20 := newTimeCmd(mockRes)
+		assert.NotNil(t, cmd20.Err())
+		assert.EqualError(t, cmd20.Err(), "Initial error")
+
+		cmd21 := newXInfoConsumersCmd(mockRes)
+		assert.NotNil(t, cmd21.Err())
+		assert.EqualError(t, cmd21.Err(), "Initial error")
+
+		cmd22 := newXInfoStreamFullCmd(mockRes)
+		assert.NotNil(t, cmd22.Err())
+		assert.EqualError(t, cmd22.Err(), "Initial error")
+
+		cmd23 := newXInfoStreamCmd(mockRes)
+		assert.NotNil(t, cmd23.Err())
+		assert.EqualError(t, cmd23.Err(), "Initial error")
+
+		cmd24 := newXInfoGroupsCmd(mockRes)
+		assert.NotNil(t, cmd24.Err())
+		assert.EqualError(t, cmd24.Err(), "Initial error")
+
+		cmd25 := newXAutoClaimCmd(mockRes)
+		assert.NotNil(t, cmd25.Err())
+		assert.EqualError(t, cmd25.Err(), "Initial error")
+
+		cmd26 := newXPendingExtCmd(mockRes)
+		assert.NotNil(t, cmd26.Err())
+		assert.EqualError(t, cmd26.Err(), "Initial error")
+
+		cmd27 := newXPendingCmd(mockRes)
+		assert.NotNil(t, cmd27.Err())
+		assert.EqualError(t, cmd27.Err(), "Initial error")
+
+		cmd28 := newStringStructMapCmd(mockRes)
+		assert.NotNil(t, cmd28.Err())
+		assert.EqualError(t, cmd28.Err(), "Initial error")
+
+		cmd29 := newZSliceSingleCmd(mockRes)
+		assert.NotNil(t, cmd29.Err())
+		assert.EqualError(t, cmd29.Err(), "Initial error")
+
+		cmd30 := newZSliceCmd(mockRes)
+		assert.NotNil(t, cmd30.Err())
+		assert.EqualError(t, cmd30.Err(), "Initial error")
+	})
 }
