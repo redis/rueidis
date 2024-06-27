@@ -162,6 +162,15 @@ func testCluster(resp3 bool) {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(strings.Split(strings.TrimSpace(nodes), "\n")).To(HaveLen(3))
 		})
+		It("ClusterMeet", func() {
+			Expect(adapter.ClusterMeet(ctx, "localhost", 8080).Err()).To(MatchError("Invalid node address specified: localhost:8080"))
+		})
+		It("ClusterForget", func() {
+			Expect(adapter.ClusterForget(ctx, "1").Err()).To(MatchError("Unknown node 1"))
+		})
+		It("ClusterReplicate", func() {
+			Expect(adapter.ClusterReplicate(ctx, "1").Err()).To(MatchError("Unknown node 1"))
+		})
 		It("ClusterInfo", func() {
 			info, err := adapter.ClusterInfo(ctx).Result()
 			Expect(err).NotTo(HaveOccurred())
