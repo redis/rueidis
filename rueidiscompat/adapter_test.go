@@ -8943,6 +8943,10 @@ func testAdapterCache(resp3 bool) {
 			resultAdd, err = adapter.TFunctionLoadArgs(ctx, libCodeWithConfig("lib1"), opt).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(resultAdd).To(BeEquivalentTo("OK"))
+			opt.Replace = false
+			resultAdd, err = adapter.TFunctionLoadArgs(ctx, libCodeWithConfig("lib2"), opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultAdd).To(BeEquivalentTo("OK"))
 		})
 		It("should TFunctionList", Label("gears", "tfunctionlist"), func() {
 			resultAdd, err := adapter.TFunctionLoad(ctx, libCode("lib1")).Result()
@@ -8953,6 +8957,10 @@ func testAdapterCache(resp3 bool) {
 			Expect(resultList[0]["engine"]).To(BeEquivalentTo("js"))
 			opt := &TFunctionListOptions{Withcode: true, Verbose: 2}
 			resultListArgs, err := adapter.TFunctionListArgs(ctx, opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultListArgs[0]["code"]).NotTo(BeEquivalentTo(""))
+			opt.Library = "VERBOSE"
+			resultListArgs, err = adapter.TFunctionListArgs(ctx, opt).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(resultListArgs[0]["code"]).NotTo(BeEquivalentTo(""))
 		})
@@ -9165,6 +9173,21 @@ func testAdapterCache(resp3 bool) {
 				Expect(result).To(BeAssignableToTypeOf(BFInfo{}))
 				Expect(result.Capacity).To(BeEquivalentTo(int64(2000)))
 				Expect(result.ExpansionRate).To(BeEquivalentTo(int64(3)))
+
+				options.NonScaling = true
+				resultInsert, err = adapter.BFInsert(ctx, "testbf2", options, "item1").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(resultInsert)).To(BeEquivalentTo(1))
+
+				exists, err = adapter.BFExists(ctx, "testbf2", "item1").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(exists).To(BeTrue())
+
+				result, err = adapter.BFInfo(ctx, "testbf2").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(result).To(BeAssignableToTypeOf(BFInfo{}))
+				Expect(result.Capacity).To(BeEquivalentTo(int64(2000)))
+				Expect(result.ExpansionRate).To(BeEquivalentTo(int64(0)))
 			})
 
 			It("should BFMAdd", Label("bloom", "bfmadd"), func() {
@@ -9265,6 +9288,10 @@ func testAdapterCache(resp3 bool) {
 				Expect(result).To(BeAssignableToTypeOf(BFInfo{}))
 				Expect(result.Capacity).To(BeEquivalentTo(int64(2000)))
 				Expect(result.ExpansionRate).To(BeEquivalentTo(int64(3)))
+
+				options.NonScaling = true
+				err = adapter.BFReserveWithArgs(ctx, "testbf2", options).Err()
+				Expect(err).To(HaveOccurred())
 			})
 		})
 
@@ -9749,6 +9776,19 @@ func testAdapterCache(resp3 bool) {
 				Expect(info.Compression).To(BeEquivalentTo(int64(1000)))
 
 				max, err := adapter.TDigestMax(ctx, "tdigest1").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(max).To(BeEquivalentTo(float64(140)))
+
+				options.Override = true
+				err = adapter.TDigestMerge(ctx, "tdigest1", options, "tdigest2", "tdigest3").Err()
+				Expect(err).NotTo(HaveOccurred())
+
+				info, err = adapter.TDigestInfo(ctx, "tdigest1").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(info.Observations).To(BeEquivalentTo(int64(20)))
+				Expect(info.Compression).To(BeEquivalentTo(int64(1000)))
+
+				max, err = adapter.TDigestMax(ctx, "tdigest1").Result()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(max).To(BeEquivalentTo(float64(140)))
 			})
