@@ -3,6 +3,7 @@ module github.com/redis/rueidis/rueidiscompat
 go 1.20
 
 replace github.com/redis/rueidis => ../
+
 replace github.com/redis/rueidis/mock => ../mock
 
 require (
