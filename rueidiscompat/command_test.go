@@ -372,6 +372,14 @@ var _ = Describe("Commands", func() {
 			Expect(cmd.Err()).To(BeNil())
 		}
 		{
+			cmd := &ScanCmd{err: errors.New("invalid error")}
+			cmd.SetVal([]string{"1"}, 1)
+			keys, cursor := cmd.Val()
+			Expect(keys).To(Equal([]string{"1"}))
+			Expect(cursor).To(Equal(uint64(1)))
+			Expect(cmd.Err().Error()).To(Equal("invalid error"))
+		}
+		{
 			cmd := &ZSliceCmd{}
 			cmd.SetVal([]Z{{Score: 1}})
 			Expect(cmd.Val()).To(Equal([]Z{{Score: 1}}))

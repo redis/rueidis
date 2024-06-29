@@ -8944,6 +8944,7 @@ func testAdapterCache(resp3 bool) {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(resultAdd).To(BeEquivalentTo("OK"))
 			opt.Replace = false
+			adapter.TFunctionDelete(ctx, libCodeWithConfig("lib2")).Result()
 			resultAdd, err = adapter.TFunctionLoadArgs(ctx, libCodeWithConfig("lib2"), opt).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(resultAdd).To(BeEquivalentTo("OK"))
