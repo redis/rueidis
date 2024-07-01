@@ -11,14 +11,15 @@ import (
 	"time"
 	"unsafe"
 
+	"github.com/oklog/ulid/v2"
 	"github.com/redis/rueidis"
 )
 
 type ClientOption struct {
-	// ClientBuilder can be used to modify rueidis.Client used by Locker
 	ClientBuilder func(option rueidis.ClientOption) (rueidis.Client, error)
 	ClientOption  rueidis.ClientOption
-	ClientTTL     time.Duration // TTL for the client marker, refreshed every 1/2 TTL. Defaults to 10s. The marker allows other client to know if this client is still alive.
+	ClientTTL     time.Duration
+	UseLuaScripts bool
 }
 
 type CacheAsideClient interface {
@@ -33,8 +34,9 @@ func NewClient(option ClientOption) (cc CacheAsideClient, err error) {
 		option.ClientTTL = 10 * time.Second
 	}
 	ca := &Client{
-		waits: make(map[string]chan struct{}),
-		ttl:   option.ClientTTL,
+		waits:  make(map[string]chan struct{}),
+		ttl:    option.ClientTTL,
+		useLua: option.UseLuaScripts,
 	}
 	option.ClientOption.OnInvalidations = ca.onInvalidation
 	if option.ClientBuilder != nil {
@@ -56,6 +58,7 @@ type Client struct {
 	cancel context.CancelFunc
 	id     string
 	ttl    time.Duration
+	useLua bool
 	mu     sync.Mutex
 }
 
@@ -102,7 +105,7 @@ func (c *Client) refresh(id string) {
 			id2 := c.id
 			c.mu.Unlock()
 			if id2 != id {
-				return // client id has changed, abort this goroutine
+				return
 			}
 			c.client.Do(c.ctx, c.client.B().Set().Key(id).Value("").Px(c.ttl).Build())
 		case <-c.ctx.Done():
@@ -116,7 +119,7 @@ func (c *Client) keepalive() (id string, err error) {
 	id = c.id
 	c.mu.Unlock()
 	if id == "" {
-		id = PlaceholderPrefix + randStr()
+		id = PlaceholderPrefix + ulid.Make().String()
 		if err = c.client.Do(c.ctx, c.client.B().Set().Key(id).Value("").Px(c.ttl).Build()).Error(); err == nil {
 			c.mu.Lock()
 			if c.id == "" {
@@ -148,15 +151,20 @@ retry:
 	wait := c.register(key)
 	resp := c.client.DoCache(ctx, c.client.B().Get().Key(key).Cache(), ttl)
 	val, err := resp.ToString()
-	if rueidis.IsRedisNil(err) && fn != nil { // cache miss, prepare to populate the value by fn()
+	if rueidis.IsRedisNil(err) && fn != nil {
 		var id string
-		if id, err = c.keepalive(); err == nil { // acquire client id
-			val, err = c.client.Do(ctx, c.client.B().Set().Key(key).Value(id).Nx().Get().Px(ttl).Build()).ToString()
-			if rueidis.IsRedisNil(err) { // successfully set client id on the key as a lock
+		if id, err = c.keepalive(); err == nil {
+			ttlStr := strconv.FormatInt(ttl.Milliseconds(), 10)
+			if c.useLua {
+				val, err = setKeyLua.Exec(ctx, c.client, []string{key}, []string{id, ttlStr}).ToString()
+			} else {
+				val, err = c.client.Do(ctx, c.client.B().Set().Key(key).Value(id).Nx().Get().Px(ttl).Build()).ToString()
+			}
+			if rueidis.IsRedisNil(err) {
 				if val, err = fn(ctx, key); err == nil {
-					err = setkey.Exec(ctx, c.client, []string{key}, []string{id, val, strconv.FormatInt(ttl.Milliseconds(), 10)}).Error()
+					err = setkey.Exec(ctx, c.client, []string{key}, []string{id, val, ttlStr}).Error()
 				}
-				if err != nil { // failed to populate the value, release the lock.
+				if err != nil {
 					delkey.Exec(context.Background(), c.client, []string{key}, []string{id})
 				}
 			}
@@ -169,7 +177,6 @@ retry:
 		ph := c.register(val)
 		err = c.client.DoCache(ctx, c.client.B().Get().Key(val).Cache(), c.ttl).Error()
 		if rueidis.IsRedisNil(err) {
-			// the client who held the lock has gone, release the lock.
 			delkey.Exec(context.Background(), c.client, []string{key}, []string{val})
 			goto retry
 		}
@@ -191,7 +198,6 @@ func (c *Client) Del(ctx context.Context, key string) error {
 	return c.client.Do(ctx, c.client.B().Del().Key(key).Build()).Error()
 }
 
-// Client exports the underlying rueidis.Client
 func (c *Client) Client() rueidis.Client {
 	return c.client
 }
@@ -210,6 +216,7 @@ func (c *Client) Close() {
 const PlaceholderPrefix = "rueidisid:"
 
 var (
-	delkey = rueidis.NewLuaScript(`if redis.call("GET",KEYS[1]) == ARGV[1] then return redis.call("DEL",KEYS[1]) else return 0 end`)
-	setkey = rueidis.NewLuaScript(`if redis.call("GET",KEYS[1]) == ARGV[1] then return redis.call("SET",KEYS[1],ARGV[2],"PX",ARGV[3]) else return 0 end`)
+	delkey    = rueidis.NewLuaScript(`if redis.call("GET",KEYS[1]) == ARGV[1] then return redis.call("DEL",KEYS[1]) else return 0 end`)
+	setkey    = rueidis.NewLuaScript(`if redis.call("GET",KEYS[1]) == ARGV[1] then return redis.call("SET",KEYS[1],ARGV[2],"PX",ARGV[3]) else return 0 end`)
+	setKeyLua = rueidis.NewLuaScript(`local set = redis.call("SET", KEYS[1], ARGV[1], "NX", "PX", ARGV[2]) if set then return nil else return redis.call("GET", KEYS[1]) end`)
 )
