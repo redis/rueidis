@@ -378,9 +378,6 @@ func NewClient(option ClientOption) (client Client, err error) {
 		}
 		return singleClt, nil
 	}
-	if option.ForceClusterClient {
-
-	}
 	if client, err = newClusterClient(&option, makeConn); err != nil {
 		if client == (*clusterClient)(nil) && option.ForceClusterClient {
 			// Return a clusterClient instance if ForceClusterClient is enabled
