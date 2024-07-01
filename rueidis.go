@@ -168,8 +168,8 @@ type ClientOption struct {
 	//  ForceSingleClient force the usage of a single client connection, without letting the lib guessing
 	//  if redis instance is a cluster or a single redis instance.
 	ForceSingleClient bool
-	//  ForceClusterClient forces the usage of a cluster client connection, without letting the lib guess
-	//  if the Redis instance is a cluster or a single Redis instance.
+	//  ForceClusterClient forces the usage of a cluster client connection,
+	// and returns a concrete cluster client despite any of the errors in the dial
 	ForceClusterClient bool
 
 	// ReplicaOnly indicates that this client will only try to connect to readonly replicas of redis setup.
