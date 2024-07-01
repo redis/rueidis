@@ -4,9 +4,11 @@ package rueidis
 //go:generate go run hack/cmds/gen.go internal/cmds hack/cmds/*.json
 
 import (
+	"container/list"
 	"context"
 	"crypto/tls"
 	"errors"
+	"github.com/redis/rueidis/internal/cmds"
 	"math"
 	"net"
 	"runtime"
@@ -166,6 +168,9 @@ type ClientOption struct {
 	//  ForceSingleClient force the usage of a single client connection, without letting the lib guessing
 	//  if redis instance is a cluster or a single redis instance.
 	ForceSingleClient bool
+	//  ForceClusterClient forces the usage of a cluster client connection, without letting the lib guess
+	//  if the Redis instance is a cluster or a single Redis instance.
+	ForceClusterClient bool
 
 	// ReplicaOnly indicates that this client will only try to connect to readonly replicas of redis setup.
 	ReplicaOnly bool
@@ -342,14 +347,52 @@ func NewClient(option ClientOption) (client Client, err error) {
 	}
 	if option.Sentinel.MasterSet != "" {
 		option.PipelineMultiplex = singleClientMultiplex(option.PipelineMultiplex)
-		return newSentinelClient(&option, makeConn)
+		sentinelClt, err := newSentinelClient(&option, makeConn)
+		if err != nil {
+			// Handle the error gracefully
+			// TODO: @SoulPancake how to ensure the client can work after Redis is back
+			return &sentinelClient{
+				cmd:       cmds.NewBuilder(cmds.NoSlot),
+				mOpt:      &option,
+				sOpt:      newSentinelOpt(&option),
+				connFn:    makeConn,
+				sentinels: list.New(),
+				retry:     !option.DisableRetry,
+				replica:   option.ReplicaOnly,
+			}, nil
+		}
+		return sentinelClt, nil
 	}
 	if option.ForceSingleClient {
 		option.PipelineMultiplex = singleClientMultiplex(option.PipelineMultiplex)
-		return newSingleClient(&option, nil, makeConn)
+		singleClt, err := newSingleClient(&option, nil, makeConn)
+		if err != nil {
+			// Handle the error gracefully
+			// TODO: @SoulPancake how to ensure the client can work after Redis is back
+			return &singleClient{
+				cmd:          cmds.NewBuilder(cmds.NoSlot),
+				conn:         nil,
+				retry:        !option.DisableRetry,
+				DisableCache: option.DisableCache,
+			}, nil
+		}
+		return singleClt, nil
+	}
+	if option.ForceClusterClient {
+
 	}
 	if client, err = newClusterClient(&option, makeConn); err != nil {
-		if client == (*clusterClient)(nil) {
+		if client == (*clusterClient)(nil) && option.ForceClusterClient {
+			// Return a clusterClient instance if ForceClusterClient is enabled
+			return &clusterClient{
+				cmd:    cmds.NewBuilder(cmds.InitSlot),
+				connFn: makeConn,
+				opt:    &option,
+				conns:  make(map[string]connrole),
+				retry:  !option.DisableRetry,
+				aws:    len(option.InitAddress) == 1 && strings.Contains(option.InitAddress[0], "amazonaws.com"),
+			}, nil
+		} else if client == (*clusterClient)(nil) {
 			return nil, err
 		}
 		if len(option.InitAddress) == 1 && (err.Error() == redisErrMsgCommandNotAllow || strings.Contains(strings.ToUpper(err.Error()), "CLUSTER")) {
