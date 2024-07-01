@@ -34,6 +34,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/redis/rueidis/mock"
 )
 
 var _ = Describe("Commands", func() {
@@ -369,6 +370,14 @@ var _ = Describe("Commands", func() {
 			Expect(keys).To(Equal([]string{"1"}))
 			Expect(cursor).To(Equal(uint64(1)))
 			Expect(cmd.Err()).To(BeNil())
+		}
+		{
+			cmd := &ScanCmd{err: errors.New("invalid error")}
+			cmd.SetVal([]string{"1"}, 1)
+			keys, cursor := cmd.Val()
+			Expect(keys).To(Equal([]string{"1"}))
+			Expect(cursor).To(Equal(uint64(1)))
+			Expect(cmd.Err().Error()).To(Equal("invalid error"))
 		}
 		{
 			cmd := &ZSliceCmd{}
@@ -880,5 +889,265 @@ func TestFormatMs(t *testing.T) {
 	expected2 := int64(1)
 	if result2 := formatMs(dur2); result2 != expected2 {
 		t.Errorf("Test case 2 failed: Expected %d, got %d", expected2, result2)
+	}
+}
+
+func TestCommandErrorHandling(t *testing.T) {
+	mockRes := mock.ErrorResult(errors.New("initial error"))
+
+	tests := []struct {
+		name     string
+		command  func() error
+		expected string
+	}{
+		{
+			name: "JSONSliceCmd",
+			command: func() error {
+				cmd := newJSONSliceCmd(mockRes)
+				return cmd.Err()
+			},
+			expected: "initial error",
+		},
+		{
+			name: "IntPointerSliceCmd",
+			command: func() error {
+				cmd := newIntPointerSliceCmd(mockRes)
+				return cmd.Err()
+			},
+			expected: "initial error",
+		},
+		{
+			name: "MapStringSliceInterfaceCmd",
+			command: func() error {
+				cmd := newMapStringSliceInterfaceCmd(mockRes)
+				return cmd.Err()
+			},
+			expected: "initial error",
+		},
+		{
+			name: "TSTimestampValueSliceCmd",
+			command: func() error {
+				cmd := newTSTimestampValueSliceCmd(mockRes)
+				return cmd.Err()
+			},
+			expected: "initial error",
+		},
+		{
+			name: "MapStringInterfaceCmd",
+			command: func() error {
+				cmd := newMapStringInterfaceCmd(mockRes)
+				return cmd.Err()
+			},
+			expected: "initial error",
+		},
+		{
+			name: "TSTimestampValueCmd",
+			command: func() error {
+				cmd := newTSTimestampValueCmd(mockRes)
+				return cmd.Err()
+			},
+			expected: "initial error",
+		},
+		{
+			name: "TDigestInfoCmd",
+			command: func() error {
+				cmd := newTDigestInfoCmd(mockRes)
+				return cmd.Err()
+			},
+			expected: "initial error",
+		},
+		{
+			name: "MapStringIntCmd",
+			command: func() error {
+				cmd := newMapStringIntCmd(mockRes)
+				return cmd.Err()
+			},
+			expected: "initial error",
+		},
+		{
+			name: "TopKInfoCmd",
+			command: func() error {
+				cmd := newTopKInfoCmd(mockRes)
+				return cmd.Err()
+			},
+			expected: "initial error",
+		},
+		{
+			name: "CMSInfoCmd",
+			command: func() error {
+				cmd := newCMSInfoCmd(mockRes)
+				return cmd.Err()
+			},
+			expected: "initial error",
+		},
+		{
+			name: "CFInfoCmd",
+			command: func() error {
+				cmd := newCFInfoCmd(mockRes)
+				return cmd.Err()
+			},
+			expected: "initial error",
+		},
+		{
+			name: "ScanDumpCmd",
+			command: func() error {
+				cmd := newScanDumpCmd(mockRes)
+				return cmd.Err()
+			},
+			expected: "initial error",
+		},
+		{
+			name: "BFInfoCmd",
+			command: func() error {
+				cmd := newBFInfoCmd(mockRes)
+				return cmd.Err()
+			},
+			expected: "initial error",
+		},
+		{
+			name: "MapStringInterfaceSliceCmd",
+			command: func() error {
+				cmd := newMapStringInterfaceSliceCmd(mockRes)
+				return cmd.Err()
+			},
+			expected: "initial error",
+		},
+		{
+			name: "FunctionListCmd",
+			command: func() error {
+				cmd := newFunctionListCmd(mockRes)
+				return cmd.Err()
+			},
+			expected: "initial error",
+		},
+		{
+			name: "CommandsInfoCmd",
+			command: func() error {
+				cmd := newCommandsInfoCmd(mockRes)
+				return cmd.Err()
+			},
+			expected: "initial error",
+		},
+		{
+			name: "GeoPosCmd",
+			command: func() error {
+				cmd := newGeoPosCmd(mockRes)
+				return cmd.Err()
+			},
+			expected: "initial error",
+		},
+		{
+			name: "ClusterShardsCmd",
+			command: func() error {
+				cmd := newClusterShardsCmd(mockRes)
+				return cmd.Err()
+			},
+			expected: "initial error",
+		},
+		{
+			name: "ClusterSlotsCmd",
+			command: func() error {
+				cmd := newClusterSlotsCmd(mockRes)
+				return cmd.Err()
+			},
+			expected: "initial error",
+		},
+		{
+			name: "TimeCmd",
+			command: func() error {
+				cmd := newTimeCmd(mockRes)
+				return cmd.Err()
+			},
+			expected: "initial error",
+		},
+		{
+			name: "XInfoConsumersCmd",
+			command: func() error {
+				cmd := newXInfoConsumersCmd(mockRes)
+				return cmd.Err()
+			},
+			expected: "initial error",
+		},
+		{
+			name: "XInfoStreamFullCmd",
+			command: func() error {
+				cmd := newXInfoStreamFullCmd(mockRes)
+				return cmd.Err()
+			},
+			expected: "initial error",
+		},
+		{
+			name: "XInfoStreamCmd",
+			command: func() error {
+				cmd := newXInfoStreamCmd(mockRes)
+				return cmd.Err()
+			},
+			expected: "initial error",
+		},
+		{
+			name: "XInfoGroupsCmd",
+			command: func() error {
+				cmd := newXInfoGroupsCmd(mockRes)
+				return cmd.Err()
+			},
+			expected: "initial error",
+		},
+		{
+			name: "XAutoClaimCmd",
+			command: func() error {
+				cmd := newXAutoClaimCmd(mockRes)
+				return cmd.Err()
+			},
+			expected: "initial error",
+		},
+		{
+			name: "XPendingExtCmd",
+			command: func() error {
+				cmd := newXPendingExtCmd(mockRes)
+				return cmd.Err()
+			},
+			expected: "initial error",
+		},
+		{
+			name: "XPendingCmd",
+			command: func() error {
+				cmd := newXPendingCmd(mockRes)
+				return cmd.Err()
+			},
+			expected: "initial error",
+		},
+		{
+			name: "StringStructMapCmd",
+			command: func() error {
+				cmd := newStringStructMapCmd(mockRes)
+				return cmd.Err()
+			},
+			expected: "initial error",
+		},
+		{
+			name: "ZSliceSingleCmd",
+			command: func() error {
+				cmd := newZSliceSingleCmd(mockRes)
+				return cmd.Err()
+			},
+			expected: "initial error",
+		},
+		{
+			name: "ZSliceCmd",
+			command: func() error {
+				cmd := newZSliceCmd(mockRes)
+				return cmd.Err()
+			},
+			expected: "initial error",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.command()
+			if err == nil || err.Error() != tt.expected {
+				t.Errorf("Expected error %v, got %v", tt.expected, err)
+			}
+		})
 	}
 }
