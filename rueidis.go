@@ -359,7 +359,7 @@ func NewClient(option ClientOption) (client Client, err error) {
 				sentinels: list.New(),
 				retry:     !option.DisableRetry,
 				replica:   option.ReplicaOnly,
-			}, nil
+			}, err
 		}
 		return sentinelClt, nil
 	}
@@ -374,7 +374,7 @@ func NewClient(option ClientOption) (client Client, err error) {
 				conn:         nil,
 				retry:        !option.DisableRetry,
 				DisableCache: option.DisableCache,
-			}, nil
+			}, err
 		}
 		return singleClt, nil
 	}
@@ -388,7 +388,7 @@ func NewClient(option ClientOption) (client Client, err error) {
 				conns:  make(map[string]connrole),
 				retry:  !option.DisableRetry,
 				aws:    len(option.InitAddress) == 1 && strings.Contains(option.InitAddress[0], "amazonaws.com"),
-			}, nil
+			}, err
 		} else if client == (*clusterClient)(nil) {
 			return nil, err
 		}
