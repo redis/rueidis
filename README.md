@@ -466,6 +466,10 @@ client.Do(ctx, client.B().Hget().Key("k").Field("f").Build()).ToString()
 client.Do(ctx, client.B().Hmget().Key("h").Field("a", "b").Build()).ToArray()
 // HGETALL
 client.Do(ctx, client.B().Hgetall().Key("h").Build()).AsStrMap()
+// EXPIRE
+client.Do(ctx, client.B().Expire().Key("k").Seconds(1).Build()).AsInt64()
+// HEXPIRE
+client.Do(ctx, client.B().Hexpire().Key("h").Seconds(1).Fields().Numfields(2).Field("f1", "f2").Build()).AsIntSlice()
 // ZRANGE
 client.Do(ctx, client.B().Zrange().Key("k").Min("1").Max("2").Build()).AsStrSlice()
 // ZRANK
