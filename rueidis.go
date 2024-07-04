@@ -367,8 +367,6 @@ func NewClient(option ClientOption) (client Client, err error) {
 		option.PipelineMultiplex = singleClientMultiplex(option.PipelineMultiplex)
 		singleClt, err := newSingleClient(&option, nil, makeConn)
 		if err != nil {
-			// Handle the error gracefully
-			// TODO: @SoulPancake how to ensure the client can work after Redis is back
 			return &singleClient{
 				cmd:          cmds.NewBuilder(cmds.NoSlot),
 				conn:         nil,
