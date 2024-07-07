@@ -9,8 +9,8 @@ replace github.com/redis/rueidis/mock => ../mock
 require (
 	github.com/onsi/ginkgo/v2 v2.15.0
 	github.com/onsi/gomega v1.31.1
-	github.com/redis/rueidis v1.0.40
-	github.com/redis/rueidis/mock v1.0.40
+	github.com/redis/rueidis v1.0.41
+	github.com/redis/rueidis/mock v1.0.41
 )
 
 require (
