@@ -956,13 +956,13 @@ func TestDragonflyDBSingleClientIntegration(t *testing.T) {
 	client, err := NewClient(ClientOption{
 		InitAddress:      []string{"127.0.0.1:6333"},
 		ConnWriteTimeout: 180 * time.Second,
-		DisableCache:     true,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testMultiSETGETRESP2Helpers, testPubSub, testLua)
+	run(t, client, testSETGETCSC, testMultiSETGETCSC, testMultiSETGETCSCHelpers, testMultiExec, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
+	run(t, client, testFlush)
 
 	client.Close()
 }
