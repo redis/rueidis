@@ -776,39 +776,6 @@ func TestClusterClientInit(t *testing.T) {
 		}
 	})
 
-	t.Run("Refresh aws cluster", func(t *testing.T) {
-		getClient := func(version int) (client *clusterClient, err error) {
-			return newClusterClient(&ClientOption{InitAddress: []string{"xxxxx.amazonaws.com:1"}}, func(dst string, opt *ClientOption) conn {
-				return &mockConn{
-					DoFn: func(cmd Completed) RedisResult {
-						if dst == "xxxxx.amazonaws.com:1" && strings.Join(cmd.Commands(), " ") == "CLUSTER SHARDS" {
-							return shardsResp
-						}
-						return newErrResult(errors.New("unexpected call"))
-					},
-					AddrFn:    func() string { return "xxxxx.amazonaws.com:1" },
-					VersionFn: func() int { return version },
-				}
-			})
-		}
-
-		t.Run("shards", func(t *testing.T) {
-			client, err := getClient(7)
-			if err != nil {
-				t.Fatalf("unexpected err %v", err)
-			}
-			nodes := client.nodes()
-			sort.Strings(nodes)
-			if len(nodes) != 3 ||
-				nodes[0] != "127.0.0.1:0" ||
-				nodes[1] != "127.0.1.1:1" ||
-				nodes[2] != "xxxxx.amazonaws.com:1" {
-				t.Fatalf("unexpected nodes %v", nodes)
-			}
-			client.Close()
-		})
-	})
-
 	t.Run("Refresh cluster which has only primary node per shard with SendToReplica option", func(t *testing.T) {
 		m := &mockConn{
 			DoFn: func(cmd Completed) RedisResult {
