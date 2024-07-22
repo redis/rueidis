@@ -3509,6 +3509,42 @@ func TestClusterClientErr(t *testing.T) {
 		}
 	})
 
+	t.Run("slot moved redirect once", func(t *testing.T) {
+		var count int64
+		client, err := newClusterClient(
+			&ClientOption{InitAddress: []string{":0"}},
+			func(dst string, opt *ClientOption) conn {
+				return &mockConn{
+					DoFn: func(cmd Completed) RedisResult {
+						if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
+							return slotsMultiResp
+						}
+
+						if strings.Contains(dst, ":0") {
+							atomic.AddInt64(&count, 1)
+							return newResult(RedisMessage{typ: '-', string: "MOVED 0 :2"}, nil)
+						}
+
+						return newResult(RedisMessage{typ: '+', string: "b"}, nil)
+					},
+				}
+			},
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+
+		for i := 0; i < 10; i++ {
+			if v, err := client.Do(context.Background(), client.B().Get().Key("a").Build()).ToString(); err != nil || v != "b" {
+				t.Fatalf("unexpected resp %v %v", v, err)
+			}
+		}
+
+		if atomic.LoadInt64(&count) != 1 {
+			t.Fatalf("unexpected count %v", count)
+		}
+	})
+
 	t.Run("slot moved DoMulti (single)", func(t *testing.T) {
 		var count int64
 		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
@@ -3533,6 +3569,49 @@ func TestClusterClientErr(t *testing.T) {
 		}
 		if v, err := client.DoMulti(context.Background(), client.B().Get().Key("a").Build())[0].ToString(); err != nil || v != "a" {
 			t.Fatalf("unexpected resp %v %v", v, err)
+		}
+	})
+
+	t.Run("slot moved DoMulti (single) redirect once", func(t *testing.T) {
+		var count int64
+		client, err := newClusterClient(
+			&ClientOption{InitAddress: []string{":0"}},
+			func(dst string, opt *ClientOption) conn {
+				return &mockConn{
+					DoFn: func(cmd Completed) RedisResult {
+						return slotsMultiResp
+					},
+					DoMultiFn: func(multi ...Completed) *redisresults {
+						ret := make([]RedisResult, len(multi))
+
+						if strings.Contains(dst, ":0") {
+							atomic.AddInt64(&count, 1)
+							for i := range ret {
+								ret[i] = newResult(RedisMessage{typ: '-', string: "MOVED 0 :2"}, nil)
+							}
+							return &redisresults{s: ret}
+						}
+
+						for i := range ret {
+							ret[i] = newResult(RedisMessage{typ: '+', string: multi[i].Commands()[1]}, nil)
+						}
+						return &redisresults{s: ret}
+					},
+				}
+			},
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+
+		for i := 0; i < 10; i++ {
+			if v, err := client.DoMulti(context.Background(), client.B().Get().Key("a").Build())[0].ToString(); err != nil || v != "a" {
+				t.Fatalf("unexpected resp %v %v", v, err)
+			}
+		}
+
+		if atomic.LoadInt64(&count) != 1 {
+			t.Fatalf("unexpected count %v", count)
 		}
 	})
 
@@ -3754,6 +3833,41 @@ func TestClusterClientErr(t *testing.T) {
 		}
 	})
 
+	t.Run("slot moved (cache) redirect once", func(t *testing.T) {
+		var count int64
+		client, err := newClusterClient(
+			&ClientOption{InitAddress: []string{":0"}},
+			func(dst string, opt *ClientOption) conn {
+				return &mockConn{
+					DoFn: func(cmd Completed) RedisResult {
+						return slotsMultiResp
+					},
+					DoCacheFn: func(cmd Cacheable, ttl time.Duration) RedisResult {
+						if strings.Contains(dst, ":0") {
+							atomic.AddInt64(&count, 1)
+							return newResult(RedisMessage{typ: '-', string: "MOVED 0 :2"}, nil)
+						}
+
+						return newResult(RedisMessage{typ: '+', string: "b"}, nil)
+					},
+				}
+			},
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+
+		for i := 0; i < 10; i++ {
+			if v, err := client.DoCache(context.Background(), client.B().Get().Key("a").Cache(), 100).ToString(); err != nil || v != "b" {
+				t.Fatalf("unexpected resp %v %v", v, err)
+			}
+		}
+
+		if atomic.LoadInt64(&count) != 1 {
+			t.Fatalf("unexpected count %v", count)
+		}
+	})
+
 	t.Run("slot moved (cache multi 1)", func(t *testing.T) {
 		var count int64
 		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
@@ -3778,6 +3892,49 @@ func TestClusterClientErr(t *testing.T) {
 		}
 		if v, err := client.DoMultiCache(context.Background(), CT(client.B().Get().Key("a").Cache(), 100))[0].ToString(); err != nil || v != "a" {
 			t.Fatalf("unexpected resp %v %v", v, err)
+		}
+	})
+
+	t.Run("slot moved (cache multi 1) redirect once", func(t *testing.T) {
+		var count int64
+		client, err := newClusterClient(
+			&ClientOption{InitAddress: []string{":0"}},
+			func(dst string, opt *ClientOption) conn {
+				return &mockConn{
+					DoFn: func(cmd Completed) RedisResult {
+						return slotsMultiResp
+					},
+					DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
+						ret := make([]RedisResult, len(multi))
+
+						if strings.Contains(dst, ":0") {
+							atomic.AddInt64(&count, 1)
+							for i := range ret {
+								ret[i] = newResult(RedisMessage{typ: '-', string: "MOVED 0 :2"}, nil)
+							}
+							return &redisresults{s: ret}
+						}
+
+						for i := range ret {
+							ret[i] = newResult(RedisMessage{typ: '+', string: multi[i].Cmd.Commands()[1]}, nil)
+						}
+						return &redisresults{s: ret}
+					},
+				}
+			},
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+
+		for i := 0; i < 10; i++ {
+			if v, err := client.DoMultiCache(context.Background(), CT(client.B().Get().Key("a").Cache(), 100))[0].ToString(); err != nil || v != "a" {
+				t.Fatalf("unexpected resp %v %v", v, err)
+			}
+		}
+
+		if atomic.LoadInt64(&count) != 1 {
+			t.Fatalf("unexpected count %v", count)
 		}
 	})
 

@@ -444,7 +444,7 @@ func (c *clusterClient) pick(ctx context.Context, slot uint16, toReplica bool) (
 	return p, nil
 }
 
-func (c *clusterClient) redirectOrNew(addr string, prev conn) (p conn) {
+func (c *clusterClient) redirectOrNew(addr string, prev conn, slot uint16, mode RedirectMode) (p conn) {
 	c.mu.RLock()
 	cc := c.conns[addr]
 	c.mu.RUnlock()
@@ -456,6 +456,9 @@ func (c *clusterClient) redirectOrNew(addr string, prev conn) (p conn) {
 	if cc = c.conns[addr]; cc.conn == nil {
 		p = c.connFn(addr, c.opt)
 		c.conns[addr] = connrole{conn: p, replica: false}
+		if mode == RedirectMove {
+			c.pslots[slot] = p
+		}
 	} else if prev == cc.conn {
 		// try reconnection if the MOVED redirects to the same host,
 		// because the same hostname may actually be resolved into another destination
@@ -466,6 +469,14 @@ func (c *clusterClient) redirectOrNew(addr string, prev conn) (p conn) {
 		}(prev)
 		p = c.connFn(addr, c.opt)
 		c.conns[addr] = connrole{conn: p, replica: cc.replica}
+
+		if mode == RedirectMove {
+			if cc.replica {
+				c.rslots[slot] = p
+			} else {
+				c.pslots[slot] = p
+			}
+		}
 	}
 	c.mu.Unlock()
 	return p
@@ -492,10 +503,10 @@ retry:
 process:
 	switch addr, mode := c.shouldRefreshRetry(resp.Error(), ctx); mode {
 	case RedirectMove:
-		resp = c.redirectOrNew(addr, cc).Do(ctx, cmd)
+		resp = c.redirectOrNew(addr, cc, cmd.Slot(), mode).Do(ctx, cmd)
 		goto process
 	case RedirectAsk:
-		results := c.redirectOrNew(addr, cc).DoMulti(ctx, cmds.AskingCmd, cmd)
+		results := c.redirectOrNew(addr, cc, cmd.Slot(), mode).DoMulti(ctx, cmds.AskingCmd, cmd)
 		resp = results.s[1]
 		resultsp.Put(results)
 		goto process
@@ -628,7 +639,7 @@ func (c *clusterClient) doresultfn(ctx context.Context, results *redisresults, r
 					continue
 				}
 			} else {
-				nc = c.redirectOrNew(addr, cc)
+				nc = c.redirectOrNew(addr, cc, cm.Slot(), mode)
 			}
 			mu.Lock()
 			nr := retries.m[nc]
@@ -726,18 +737,18 @@ retry:
 	}
 	resps := cc.DoMulti(ctx, multi...)
 process:
-	for _, resp := range resps.s {
+	for i, resp := range resps.s {
 		switch addr, mode := c.shouldRefreshRetry(resp.Error(), ctx); mode {
 		case RedirectMove:
 			if c.retry && allReadOnly(multi) {
 				resultsp.Put(resps)
-				resps = c.redirectOrNew(addr, cc).DoMulti(ctx, multi...)
+				resps = c.redirectOrNew(addr, cc, multi[i].Slot(), mode).DoMulti(ctx, multi...)
 				goto process
 			}
 		case RedirectAsk:
 			if c.retry && allReadOnly(multi) {
 				resultsp.Put(resps)
-				resps = askingMulti(c.redirectOrNew(addr, cc), ctx, multi)
+				resps = askingMulti(c.redirectOrNew(addr, cc, multi[i].Slot(), mode), ctx, multi)
 				goto process
 			}
 		case RedirectRetry:
@@ -761,10 +772,10 @@ retry:
 process:
 	switch addr, mode := c.shouldRefreshRetry(resp.Error(), ctx); mode {
 	case RedirectMove:
-		resp = c.redirectOrNew(addr, cc).DoCache(ctx, cmd, ttl)
+		resp = c.redirectOrNew(addr, cc, cmd.Slot(), mode).DoCache(ctx, cmd, ttl)
 		goto process
 	case RedirectAsk:
-		results := askingMultiCache(c.redirectOrNew(addr, cc), ctx, []CacheableTTL{CT(cmd, ttl)})
+		results := askingMultiCache(c.redirectOrNew(addr, cc, cmd.Slot(), mode), ctx, []CacheableTTL{CT(cmd, ttl)})
 		resp = results.s[0]
 		resultsp.Put(results)
 		goto process
@@ -908,7 +919,7 @@ func (c *clusterClient) resultcachefn(ctx context.Context, results *redisresults
 					continue
 				}
 			} else {
-				nc = c.redirectOrNew(addr, cc)
+				nc = c.redirectOrNew(addr, cc, cm.Cmd.Slot(), mode)
 			}
 			mu.Lock()
 			nr := retries.m[nc]
