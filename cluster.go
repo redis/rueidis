@@ -7,7 +7,6 @@ import (
 	"net"
 	"runtime"
 	"strconv"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -82,7 +81,6 @@ type clusterClient struct {
 	stop   uint32
 	cmd    Builder
 	retry  bool
-	aws    bool
 }
 
 // NOTE: connrole and conn must be initialized at the same time
@@ -98,7 +96,6 @@ func newClusterClient(opt *ClientOption, connFn connFn) (*clusterClient, error) 
 		opt:    opt,
 		conns:  make(map[string]connrole),
 		retry:  !opt.DisableRetry,
-		aws:    len(opt.InitAddress) == 1 && strings.Contains(opt.InitAddress[0], "amazonaws.com"),
 	}
 
 	if opt.ReplicaOnly && opt.SendToReplicas != nil {
@@ -198,12 +195,8 @@ func (c *clusterClient) _refresh() (err error) {
 	c.mu.RLock()
 	results := make(chan clusterslots, len(c.conns))
 	pending := make([]conn, 0, len(c.conns))
-	if c.aws {
-		pending = append(pending, c.conns[c.opt.InitAddress[0]].conn)
-	} else {
-		for _, cc := range c.conns {
-			pending = append(pending, cc.conn)
-		}
+	for _, cc := range c.conns {
+		pending = append(pending, cc.conn)
 	}
 	c.mu.RUnlock()
 
