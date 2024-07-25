@@ -469,6 +469,10 @@ type ProbabilisticCmdable interface {
 	TDigestReset(ctx context.Context, key string) *StatusCmd
 	TDigestRevRank(ctx context.Context, key string, values ...float64) *IntSliceCmd
 	TDigestTrimmedMean(ctx context.Context, key string, lowCutQuantile, highCutQuantile float64) *FloatCmd
+
+	Subscribe(ctx context.Context, channels ...string) PubSub
+	PSubscribe(ctx context.Context, patterns ...string) PubSub
+	SSubscribe(ctx context.Context, channels ...string) PubSub
 }
 
 // Align with go-redis
@@ -4594,6 +4598,24 @@ func (c *Compat) JSONToggle(ctx context.Context, key, path string) *IntPointerSl
 func (c *Compat) JSONType(ctx context.Context, key, path string) *JSONSliceCmd {
 	cmd := c.client.B().JsonType().Key(key).Path(path).Build()
 	return newJSONSliceCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) Subscribe(ctx context.Context, channels ...string) PubSub {
+	p := newPubSub(c.client)
+	_ = p.Subscribe(ctx, channels...)
+	return p
+}
+
+func (c *Compat) SSubscribe(ctx context.Context, channels ...string) PubSub {
+	p := newPubSub(c.client)
+	_ = p.SSubscribe(ctx, channels...)
+	return p
+}
+
+func (c *Compat) PSubscribe(ctx context.Context, patterns ...string) PubSub {
+	p := newPubSub(c.client)
+	_ = p.PSubscribe(ctx, patterns...)
+	return p
 }
 
 func (c CacheCompat) BitCount(ctx context.Context, key string, bitCount *BitCount) *IntCmd {
