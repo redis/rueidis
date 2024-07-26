@@ -548,10 +548,10 @@ func TestSingleClient(t *testing.T) {
 		}
 	})
 
-	t.Run("Dedicate panic after released", func(t *testing.T) {
+	t.Run("Dedicate ErrDedicatedClientRecycled after released", func(t *testing.T) {
 		m.AcquireFn = func() wire { return &mockWire{} }
-		check := func() {
-			if err := recover(); err != dedicatedClientUsedAfterReleased {
+		check := func(err error) {
+			if !errors.Is(err, ErrDedicatedClientRecycled) {
 				t.Fatalf("unexpected err %v", err)
 			}
 		}
@@ -567,20 +567,22 @@ func TestSingleClient(t *testing.T) {
 			closeFn(c, cancel)
 			for _, fn := range []func(){
 				func() {
-					defer check()
-					c.Do(context.Background(), c.B().Get().Key("k").Build())
+					resp := c.Do(context.Background(), c.B().Get().Key("k").Build())
+					check(resp.Error())
 				},
 				func() {
-					defer check()
-					c.DoMulti(context.Background(), c.B().Get().Key("k").Build())
+					resp := c.DoMulti(context.Background(), c.B().Get().Key("k").Build())
+					for _, r := range resp {
+						check(r.Error())
+					}
 				},
 				func() {
-					defer check()
-					c.Receive(context.Background(), c.B().Subscribe().Channel("k").Build(), func(msg PubSubMessage) {})
+					err := c.Receive(context.Background(), c.B().Subscribe().Channel("k").Build(), func(msg PubSubMessage) {})
+					check(err)
 				},
 				func() {
-					defer check()
-					c.SetPubSubHooks(PubSubHooks{})
+					ch := c.SetPubSubHooks(PubSubHooks{})
+					check(<-ch)
 				},
 			} {
 				fn()

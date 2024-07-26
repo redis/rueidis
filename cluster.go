@@ -1111,7 +1111,7 @@ func (c *dedicatedClusterClient) acquire(ctx context.Context, slot uint16) (wire
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.mark {
-		panic(dedicatedClientUsedAfterReleased)
+		return nil, ErrDedicatedClientRecycled
 	}
 	if c.slot == cmds.NoSlot {
 		c.slot = slot
@@ -1241,7 +1241,9 @@ func (c *dedicatedClusterClient) SetPubSubHooks(hooks PubSubHooks) <-chan error 
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.mark {
-		panic(dedicatedClientUsedAfterReleased)
+		ch := make(chan error, 1)
+		ch <- ErrDedicatedClientRecycled
+		return ch
 	}
 	if p := c.pshks; p != nil {
 		c.pshks = nil
