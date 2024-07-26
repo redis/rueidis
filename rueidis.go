@@ -51,7 +51,7 @@ var (
 	ErrReplicaOnlyNotSupported = errors.New("ReplicaOnly is not supported for single client")
 	// ErrWrongPipelineMultiplex means wrong value for ClientOption.PipelineMultiplex
 	ErrWrongPipelineMultiplex = errors.New("ClientOption.PipelineMultiplex must not be bigger than MaxPipelineMultiplex")
-	// ErrDedicatedClientRecycled means the caller attempted to use the client which has been already recycled (after canceled/closed).
+	// ErrDedicatedClientRecycled means the caller attempted to use the dedicated client which has been already recycled (after canceled/closed).
 	ErrDedicatedClientRecycled = errors.New("dedicated client should not be used after recycled")
 )
 
