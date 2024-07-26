@@ -548,10 +548,10 @@ func TestSingleClient(t *testing.T) {
 		}
 	})
 
-	t.Run("Dedicate ErrClosing after released", func(t *testing.T) {
+	t.Run("Dedicate ErrDedicatedClientRecycled after released", func(t *testing.T) {
 		m.AcquireFn = func() wire { return &mockWire{} }
 		check := func(err error) {
-			if !errors.Is(err, ErrClosing) {
+			if !errors.Is(err, ErrDedicatedClientRecycled) {
 				t.Fatalf("unexpected err %v", err)
 			}
 		}

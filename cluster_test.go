@@ -1520,9 +1520,9 @@ func TestClusterClient(t *testing.T) {
 		}
 	})
 
-	t.Run("Dedicate ErrClosing after released", func(t *testing.T) {
+	t.Run("Dedicate ErrDedicatedClientRecycled after released", func(t *testing.T) {
 		check := func(err error) {
-			if !errors.Is(err, ErrClosing) {
+			if !errors.Is(err, ErrDedicatedClientRecycled) {
 				t.Fatalf("unexpected err %v", err)
 			}
 		}

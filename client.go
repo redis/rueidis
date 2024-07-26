@@ -247,7 +247,7 @@ func (c *dedicatedSingleClient) Close() {
 
 func (c *dedicatedSingleClient) check() error {
 	if atomic.LoadUint32(&c.mark) != 0 {
-		return ErrClosing
+		return ErrDedicatedClientRecycled
 	}
 	return nil
 }
