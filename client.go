@@ -259,7 +259,7 @@ func (c *dedicatedSingleClient) release() {
 }
 
 func (c *singleClient) isRetryable(err error, ctx context.Context) bool {
-	return err != nil && atomic.LoadUint32(&c.stop) == 0 && ctx.Err() == nil
+	return err != nil && err != ErrDoCacheAborted && atomic.LoadUint32(&c.stop) == 0 && ctx.Err() == nil
 }
 
 func isRetryable(err error, w wire, ctx context.Context) bool {
