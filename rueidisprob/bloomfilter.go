@@ -21,21 +21,12 @@ local numElements = tonumber(#ARGV) - 1
 local filterKey = KEYS[1]
 local counterKey = KEYS[2]
 
-local bitfieldArgs = { filterKey }
-for i=2, numElements+1 do
-    table.insert(bitfieldArgs, 'SET')
-    table.insert(bitfieldArgs, 'u1')
-    table.insert(bitfieldArgs, ARGV[i])
-    table.insert(bitfieldArgs, '1')
-end
-
-local bitset = redis.call('BITFIELD', unpack(bitfieldArgs))
-
 local counter = 0
 local oneBits = 0
-for i=1, #bitset do
-	oneBits = oneBits + bitset[i]
+for i=1, numElements do
+	local bitset = redis.call('BITFIELD', filterKey, 'SET', 'u1', ARGV[i+1], '1')
 
+	oneBits = oneBits + bitset[1]
 	if i % hashIterations == 0 then
 		if oneBits ~= hashIterations then
 			counter = counter + 1
@@ -53,22 +44,13 @@ local hashIterations = tonumber(ARGV[1])
 local numElements = tonumber(#ARGV) - 1
 local filterKey = KEYS[1]
 
-local bitfieldArgs = { filterKey }
-for i=2, numElements+1 do
-	local index = tonumber(ARGV[i])
-
-	table.insert(bitfieldArgs, 'GET')
-	table.insert(bitfieldArgs, 'u1')
-	table.insert(bitfieldArgs, index)
-end
-
-local bitset = redis.call('BITFIELD', unpack(bitfieldArgs))
-
 local result = {}
 local oneBits = 0
-for i=1, #bitset do
-	oneBits = oneBits + bitset[i]
+for i=1, numElements do
+	local index = tonumber(ARGV[i+1])
+	local bitset = redis.call('BITFIELD', filterKey, 'GET', 'u1', index)
 
+	oneBits = oneBits + bitset[1]
 	if i % hashIterations == 0 then
 		table.insert(result, oneBits == hashIterations)
 

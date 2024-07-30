@@ -3,9 +3,10 @@ package rueidisprob
 import (
 	"context"
 	"errors"
-	"github.com/redis/rueidis"
 	"math"
 	"strconv"
+
+	"github.com/redis/rueidis"
 )
 
 var (
@@ -43,21 +44,16 @@ local hashIterations = tonumber(ARGV[#ARGV])
 local filterKey = KEYS[1]
 local counterKey = KEYS[2]
 
-local hmgetArgs = {}
-for i=1, numElements do
-    table.insert(hmgetArgs, ARGV[i])
-end
-
-local counts = redis.call('HMGET', filterKey, unpack(hmgetArgs))
 local indexCounter = {}
-for i=1, #counts do
+for i=1, numElements do
 	local index = ARGV[i]
+	local count = redis.call('HGET', filterKey, index)
 
 	if (not indexCounter[index]) then
-		if (not counts[i]) then
+		if (not count) then
 			indexCounter[index] = 0
 		else
-			indexCounter[index] = tonumber(counts[i])
+			indexCounter[index] = tonumber(count)
 		end
 	end
 end
