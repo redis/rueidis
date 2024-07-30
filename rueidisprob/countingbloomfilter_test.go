@@ -3,10 +3,12 @@ package rueidisprob
 import (
 	"context"
 	"errors"
-	"github.com/redis/rueidis"
+	"fmt"
 	"math/rand"
 	"strconv"
 	"testing"
+
+	"github.com/redis/rueidis"
 )
 
 func TestNewCountingBloomFilter(t *testing.T) {
@@ -1091,6 +1093,50 @@ func TestCountingBloomFilterRemoveMulti(t *testing.T) {
 		for _, v := range arr {
 			if v != 0 {
 				t.Error("Value is not 0")
+			}
+		}
+	})
+
+	t.Run("remove very large items", func(t *testing.T) {
+		client, flushAllAndClose, err := setup()
+		if err != nil {
+			t.Error(err)
+		}
+		defer func() {
+			err := flushAllAndClose()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
+		// Above `LUAI_MAXCSTACK`(8000) limit
+		keys := make([]string, 8001)
+		for i := 0; i < 8001; i++ {
+			keys[i] = fmt.Sprintf("%d", i)
+		}
+
+		bf, err := NewCountingBloomFilter(client, "test", 10000, 0.05)
+		if err != nil {
+			t.Error(err)
+		}
+
+		err = bf.AddMulti(context.Background(), keys)
+		if err != nil {
+			t.Error(err)
+		}
+
+		err = bf.RemoveMulti(context.Background(), keys)
+		if err != nil {
+			t.Error(err)
+		}
+
+		exists, err := bf.ExistsMulti(context.Background(), keys)
+		if err != nil {
+			t.Error(err)
+		}
+		for _, e := range exists {
+			if e {
+				t.Error("Key exists")
 			}
 		}
 	})

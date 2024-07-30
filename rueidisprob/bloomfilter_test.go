@@ -390,6 +390,43 @@ func TestBloomFilterAddMulti(t *testing.T) {
 			t.Error("Count is not 3")
 		}
 	})
+
+	t.Run("add very large number of items", func(t *testing.T) {
+		client, flushAllAndClose, err := setup()
+		if err != nil {
+			t.Error(err)
+		}
+		defer func() {
+			err := flushAllAndClose()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
+		bf, err := NewBloomFilter(client, "test", 10000000, 0.1)
+		if err != nil {
+			t.Error(err)
+		}
+
+		// Above `LUAI_MAXCSTACK`(8000) limit
+		keys := make([]string, 8001)
+		for i := 0; i < 8001; i++ {
+			keys[i] = strconv.Itoa(i)
+		}
+
+		err = bf.AddMulti(context.Background(), keys)
+		if err != nil {
+			t.Error(err)
+		}
+
+		count, err := bf.Count(context.Background())
+		if err != nil {
+			t.Error(err)
+		}
+		if count != 8001 {
+			t.Error("Count is not 1000")
+		}
+	})
 }
 
 func TestBloomFilterAddMultiError(t *testing.T) {
@@ -586,6 +623,45 @@ func TestBloomFilterExistsMulti(t *testing.T) {
 		}
 		if len(exists) != 0 {
 			t.Error("Exists is not empty")
+		}
+	})
+
+	t.Run("exists very large number of items", func(t *testing.T) {
+		client, flushAllAndClose, err := setup()
+		if err != nil {
+			t.Error(err)
+		}
+		defer func() {
+			err := flushAllAndClose()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
+		bf, err := NewBloomFilter(client, "test", 10000000, 0.1)
+		if err != nil {
+			t.Error(err)
+		}
+
+		// Above `LUAI_MAXCSTACK`(8000) limit
+		keys := make([]string, 8001)
+		for i := 0; i < 8001; i++ {
+			keys[i] = strconv.Itoa(i)
+		}
+
+		err = bf.AddMulti(context.Background(), keys)
+		if err != nil {
+			t.Error(err)
+		}
+
+		exists, err := bf.ExistsMulti(context.Background(), keys)
+		if err != nil {
+			t.Error(err)
+		}
+		for _, e := range exists {
+			if !e {
+				t.Error("Key test does not exist")
+			}
 		}
 	})
 }
