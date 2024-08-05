@@ -1,12 +1,13 @@
 package rueidisprob
 
 import (
+	"bufio"
 	"context"
 	"errors"
+	"github.com/redis/rueidis"
 	"math"
 	"strconv"
-
-	"github.com/redis/rueidis"
+	"strings"
 )
 
 const (
@@ -61,6 +62,28 @@ end
 return result
 `
 
+	bloomFilterExistsMultiReadOnlyScript = `
+local hashIterations = tonumber(ARGV[1])
+local numElements = tonumber(#ARGV) - 1
+local filterKey = KEYS[1]
+
+local result = {}
+local oneBits = 0
+for i=1, numElements do
+	local index = tonumber(ARGV[i+1])
+	local bitset = redis.call('BITFIELD_RO', filterKey, 'GET', 'u1', index)
+
+	oneBits = oneBits + bitset[1]
+	if i % hashIterations == 0 then
+		table.insert(result, oneBits == hashIterations)
+
+		oneBits = 0
+	end
+end
+
+return result
+`
+
 	bloomFilterResetScript = `
 local filterKey = KEYS[1]
 local counterKey = KEYS[2]
@@ -83,12 +106,30 @@ return 1
 )
 
 var (
-	ErrEmptyName                          = errors.New("name cannot be empty")
-	ErrFalsePositiveRateLessThanEqualZero = errors.New("false positive rate cannot be less than or equal to zero")
-	ErrFalsePositiveRateGreaterThanOne    = errors.New("false positive rate cannot be greater than 1")
-	ErrBitsSizeZero                       = errors.New("bits size cannot be zero")
-	ErrBitsSizeTooLarge                   = errors.New("bits size is too large")
+	ErrEmptyName                               = errors.New("name cannot be empty")
+	ErrFalsePositiveRateLessThanEqualZero      = errors.New("false positive rate cannot be less than or equal to zero")
+	ErrFalsePositiveRateGreaterThanOne         = errors.New("false positive rate cannot be greater than 1")
+	ErrBitsSizeZero                            = errors.New("bits size cannot be zero")
+	ErrBitsSizeTooLarge                        = errors.New("bits size is too large")
+	ErrUnsupportedRedisVersionForReadOperation = errors.New("minimum redis version should be 7.0.0 for read operation")
 )
+
+// BloomFilterOptions is used to configure BloomFilter.
+type BloomFilterOptions struct {
+	enableReadOperation bool
+}
+
+// BloomFilterOptionFunc is used to configure BloomFilter.
+type BloomFilterOptionFunc func(*BloomFilterOptions)
+
+// WithEnableReadOperation enables read operation.
+// If enabled, Exists and ExistsMulti methods will be available as read-only operations.
+// NOTE: If enabled, minimum redis version should be 7.0.0.
+func WithEnableReadOperation(enableReadOperations bool) BloomFilterOptionFunc {
+	return func(o *BloomFilterOptions) {
+		o.enableReadOperation = enableReadOperations
+	}
+}
 
 // BloomFilter based on Redis Bitmaps.
 // BloomFilter uses 128-bit murmur3 hash function.
@@ -149,6 +190,7 @@ func NewBloomFilter(
 	name string,
 	expectedNumberOfItems uint,
 	falsePositiveRate float64,
+	opts ...BloomFilterOptionFunc,
 ) (BloomFilter, error) {
 	if len(name) == 0 {
 		return nil, ErrEmptyName
@@ -170,6 +212,32 @@ func NewBloomFilter(
 	}
 	hashIterations := numberOfBloomFilterHashFunctions(size, expectedNumberOfItems)
 
+	options := &BloomFilterOptions{}
+	for _, opt := range opts {
+		opt(options)
+	}
+
+	var existsMultiScript *rueidis.Lua
+	if options.enableReadOperation {
+		resp := client.Do(context.Background(), client.B().Info().Section("server").Build())
+		if resp.Error() != nil {
+			return nil, resp.Error()
+		}
+
+		info, err := resp.ToString()
+		if err != nil {
+			return nil, err
+		}
+
+		if parseRedisMajorVersion(info) < 7 {
+			return nil, ErrUnsupportedRedisVersionForReadOperation
+		}
+
+		existsMultiScript = rueidis.NewLuaScriptReadOnly(bloomFilterExistsMultiReadOnlyScript)
+	} else {
+		existsMultiScript = rueidis.NewLuaScript(bloomFilterExistsMultiScript)
+	}
+
 	// NOTE: https://redis.io/docs/reference/cluster-spec/#hash-tags
 	bfName := "{" + name + "}"
 	counterName := bfName + ":c"
@@ -182,7 +250,7 @@ func NewBloomFilter(
 		size:                size,
 		addMultiScript:      rueidis.NewLuaScript(bloomFilterAddMultiScript),
 		addMultiKeys:        []string{bfName, counterName},
-		existsMultiScript:   rueidis.NewLuaScript(bloomFilterExistsMultiScript),
+		existsMultiScript:   existsMultiScript,
 		existsMultiKeys:     []string{bfName},
 	}, nil
 }
@@ -193,6 +261,25 @@ func numberOfBloomFilterBits(n uint, r float64) uint {
 
 func numberOfBloomFilterHashFunctions(s uint, n uint) uint {
 	return uint(math.Round(float64(s) / float64(n) * math.Log(2)))
+}
+
+func parseRedisMajorVersion(info string) int {
+	scanner := bufio.NewScanner(strings.NewReader(info))
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.HasPrefix(line, "redis_version:") {
+			parts := strings.Split(strings.TrimSpace(line), ":")
+			if len(parts) == 2 {
+				ver := strings.Split(parts[1], ".")
+				if len(ver) == 3 {
+					vv, _ := strconv.ParseInt(ver[0], 10, 32)
+					return int(vv)
+				}
+			}
+		}
+	}
+
+	return 0
 }
 
 func (c *bloomFilter) Add(ctx context.Context, key string) error {
